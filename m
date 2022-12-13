@@ -1,74 +1,127 @@
-From: hanjinke <hanjinke.666-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
-Subject: Re: [External] Re: [RFC PATCH] blk-throtl: Introduce sync queue for
- write ios
-Date: Tue, 13 Dec 2022 11:55:16 +0800
-Message-ID: <f42d81c1-47c8-e283-1259-8c554bf46c46@bytedance.com>
-References: <20221206163826.10700-1-hanjinke.666@bytedance.com>
- <Y5et48VryiKgL/eD@slm.duckdns.org>
+From: "Huang, Ying" <ying.huang@intel.com>
+Subject: Re: [PATCH v3] mm: Add nodes= arg to memory.reclaim
+Date: Tue, 13 Dec 2022 14:30:57 +0800
+Message-ID: <87k02volwe.fsf@yhuang6-desk2.ccr.corp.intel.com>
+References: <20221202223533.1785418-1-almasrymina@google.com>
+        <Y5bsmpCyeryu3Zz1@dhcp22.suse.cz>
+        <CAHS8izM-XdLgFrQ1k13X-4YrK=JGayRXV_G3c3Qh4NLKP7cH_g@mail.gmail.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=bytedance-com.20210112.gappssmtp.com; s=20210112;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to:subject
-         :user-agent:mime-version:date:message-id:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=fYjaVxJ8zzYY/wcJIpDE24JVFr7zT7qIcwbkFsHmVvs=;
-        b=QWEx+gZ2PhKWDG0bgn2LpnDM2ERwR0BtZxJCkzyxSMzyqp91gjIp9nztK75ZbkIZGj
-         fH+BckFZpqbGaNDMTQvYT0GjUCFDXpaT9Q68Pqcq8dg87e9Ubp7zgxs06kgGcFtsyM6v
-         X+wXRVQqk0dEG5RCr0OeSEf6bWScfcfyi88jC3lI9JU6yW0Z8Or3q7+HwHvcgd1s0nNK
-         wTC98sUh2PBmkmNZy9lWh+6vpPmvAMXTOmE+8Y4uVxaELC/6Rbstvc0upqU86ZS0yVxa
-         Bqdux28uMNN0+pHpHGZyd4FihPpyg7GALCAh4lAEqE2oXwGEZTmtq4DJPSqfab7wzTqI
-         lRKA==
-In-Reply-To: <Y5et48VryiKgL/eD-NiLfg/pYEd1N0TnZuCh8vA@public.gmane.org>
+Return-path: <linux-doc-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1670913120; x=1702449120;
+  h=from:to:cc:subject:references:date:in-reply-to:
+   message-id:mime-version;
+  bh=RRn4X9Gdnegzf1sgNDrCXchtLeBUYjVOO9r5f4wlFyE=;
+  b=AP7hYFzAaexLawNiFKtq3/JiYfE6/BB/yWkckKMj8j2pITxPnOMkJGSr
+   tNT03SAebeqnQjXADhBzIEH37T8k5E75kb/LHmwcluXcfKa8SrE1bVVw+
+   XpvF2Gg8to1M2RHoQOHjx01TvekRFqxrGUaTxqUW7LApYq+QccAlSZbXj
+   KVolPuykPVN5hZKDraPtaoJmoCSgaG7SmFjkixkK6dL0CBQmGaMgLxQha
+   011Jn2TnGBzFVLsBToqCZedGGs0j9OHxB0/j26fZbLbR7qEIOJyZRjYi5
+   2s1ZWyLqEu20vtlCLWwWl6beunZWpl2Quch7rudgc+PBKyKIG18DkGKqu
+   A==;
+In-Reply-To: <CAHS8izM-XdLgFrQ1k13X-4YrK=JGayRXV_G3c3Qh4NLKP7cH_g@mail.gmail.com>
+        (Mina Almasry's message of "Mon, 12 Dec 2022 16:54:27 -0800")
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="utf-8"; format="flowed"
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: josef-DigfWCa+lFGyeJad7bwFQA@public.gmane.org, axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Mina Almasry <almasrymina@google.com>, Michal Hocko <mhocko@suse.com>
+Cc: Tejun Heo <tj@kernel.org>, Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, Jonathan Corbet <corbet@lwn.net>, Roman Gushchin <roman.gushchin@linux.dev>, Shakeel Butt <shakeelb@google.com>, Muchun Song <songmuchun@bytedance.com>, Andrew Morton <akpm@linux-foundation.org>, Yang Shi <yang.shi@linux.alibaba.com>, Yosry Ahmed <yosryahmed@google.com>, weixugc@google.com, fvdl@google.com, bagasdotme@gmail.com, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org
 
+Mina Almasry <almasrymina@google.com> writes:
 
-
-在 2022/12/13 上午6:40, Tejun Heo 写道:
-> On Wed, Dec 07, 2022 at 12:38:26AM +0800, Jinke Han wrote:
->> From: Jinke Han <hanjinke.666-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
+> On Mon, Dec 12, 2022 at 12:55 AM Michal Hocko <mhocko@suse.com> wrote:
 >>
->> Now we don't distinguish sync write ios from normal buffer write ios
->> in blk-throtl. A bio with REQ_SYNC tagged always mean it will be wait
->> until write completion soon after it submit. So it's reasonable for sync
->> io to complete as soon as possible.
+>> On Fri 02-12-22 14:35:31, Mina Almasry wrote:
+>> > The nodes= arg instructs the kernel to only scan the given nodes for
+>> > proactive reclaim. For example use cases, consider a 2 tier memory system:
+>> >
+>> > nodes 0,1 -> top tier
+>> > nodes 2,3 -> second tier
+>> >
+>> > $ echo "1m nodes=0" > memory.reclaim
+>> >
+>> > This instructs the kernel to attempt to reclaim 1m memory from node 0.
+>> > Since node 0 is a top tier node, demotion will be attempted first. This
+>> > is useful to direct proactive reclaim to specific nodes that are under
+>> > pressure.
+>> >
+>> > $ echo "1m nodes=2,3" > memory.reclaim
+>> >
+>> > This instructs the kernel to attempt to reclaim 1m memory in the second tier,
+>> > since this tier of memory has no demotion targets the memory will be
+>> > reclaimed.
+>> >
+>> > $ echo "1m nodes=0,1" > memory.reclaim
+>> >
+>> > Instructs the kernel to reclaim memory from the top tier nodes, which can
+>> > be desirable according to the userspace policy if there is pressure on
+>> > the top tiers. Since these nodes have demotion targets, the kernel will
+>> > attempt demotion first.
+>> >
+>> > Since commit 3f1509c57b1b ("Revert "mm/vmscan: never demote for memcg
+>> > reclaim""), the proactive reclaim interface memory.reclaim does both
+>> > reclaim and demotion. Reclaim and demotion incur different latency costs
+>> > to the jobs in the cgroup. Demoted memory would still be addressable
+>> > by the userspace at a higher latency, but reclaimed memory would need to
+>> > incur a pagefault.
+>> >
+>> > The 'nodes' arg is useful to allow the userspace to control demotion
+>> > and reclaim independently according to its policy: if the memory.reclaim
+>> > is called on a node with demotion targets, it will attempt demotion first;
+>> > if it is called on a node without demotion targets, it will only attempt
+>> > reclaim.
+>> >
+>> > Acked-by: Michal Hocko <mhocko@suse.com>
+>> > Signed-off-by: Mina Almasry <almasrymina@google.com>
 >>
->> In our test, fio writes a 100g file in sequential 4k blocksize in
->> a container with low bps limit configured (wbps=10M). More than 1200
->> ios were throttled in blk-throtl queue and the avarage throtle time
->> of each io is 140s. At the same time, the operation of saving a small
->> file by vim will be blocked amolst 140s. As a fsync will be send by vim,
->> the sync ios of fsync will be blocked by a huge amount of buffer write
->> ios ahead. This is also a priority inversion problem within one cgroup.
->> In the database scene, things got really bad with blk-throtle enabled
->> as fsync is called very often.
+>> After discussion in [1] I have realized that I haven't really thought
+>> through all the consequences of this patch and therefore I am retracting
+>> my ack here. I am not nacking the patch at this statge but I also think
+>> this shouldn't be merged now and we should really consider all the
+>> consequences.
 >>
->> This patch introduces a independent sync queue for write ios and gives
->> a huge priority to sync write ios. I think it's a nice respond to the
->> semantics of REQ_SYNC. Bios with REQ_META and REQ_PRIO gains the same
->> priority as they are important to fs. This may avoid some potential
->> priority inversion problems.
-> 
-> I think the idea makes sense but wonder whether the implementation would be
-> cleaner / simpler if the sq->queued[] are indexed by SYNC, ASYNC and the
-> sync writes are queued in the sync queue together with reads.
-> 
-> Thanks.
-> 
+>> Let me summarize my main concerns here as well. The proposed
+>> implementation doesn't apply the provided nodemask to the whole reclaim
+>> process. This means that demotion can happen outside of the mask so the
+>> the user request cannot really control demotion targets and that limits
+>> the interface should there be any need for a finer grained control in
+>> the future (see an example in [2]).
+>> Another problem is that this can limit future reclaim extensions because
+>> of existing assumptions of the interface [3] - specify only top-tier
+>> node to force the aging without actually reclaiming any charges and
+>> (ab)use the interface only for aging on multi-tier system. A change to
+>> the reclaim to not demote in some cases could break this usecase.
+>>
+>
+> I think this is correct. My use case is to request from the kernel to
+> do demotion without reclaim in the cgroup, and the reason for that is
+> stated in the commit message:
+>
+> "Reclaim and demotion incur different latency costs to the jobs in the
+> cgroup. Demoted memory would still be addressable by the userspace at
+> a higher latency, but reclaimed memory would need to incur a
+> pagefault."
+>
+> For jobs of some latency tiers, we would like to trigger proactive
+> demotion (which incurs relatively low latency on the job), but not
+> trigger proactive reclaim (which incurs a pagefault). I initially had
+> proposed a separate interface for this, but Johannes directed me to
+> this interface instead in [1]. In the same email Johannes also tells
+> me that meta's reclaim stack relies on memory.reclaim triggering
+> demotion, so it seems that I'm not the first to take a dependency on
+> this. Additionally in [2] Johannes also says it would be great if in
+> the long term reclaim policy and demotion policy do not diverge.
+>
+> [1] https://lore.kernel.org/linux-mm/Y35fw2JSAeAddONg@cmpxchg.org/
+> [2] https://lore.kernel.org/linux-mm/Y36fIGFCFKiocAd6@cmpxchg.org/
 
-If something is said wrong, please correct me.
+After these discussion, I think the solution maybe use different
+interfaces for "proactive demote" and "proactive reclaim".  That is,
+reconsider "memory.demote".  In this way, we will always uncharge the
+cgroup for "memory.reclaim".  This avoid the possible confusion there.
+And, because demotion is considered aging, we don't need to disable
+demotion for "memory.reclaim", just don't count it.
 
-If sq->queue[] were only classfied SYNC and ASYNC, some things may 
-become a little difficult to handle。As we put sync write and read 
-together into SYNC queue, the two may influence each other.
-Whit wbps=1M and rbps=100M configured, sync io likely be throtled while 
-read ios after it may can be dispatched within the limit. In that case,
-maybe we should scan the whole SYNC queue to check read io.
-
-Thanks.
-Jinke
-
+Best Regards,
+Huang, Ying
