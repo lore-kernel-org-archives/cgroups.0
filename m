@@ -1,49 +1,137 @@
-From: David Laight <David.Laight-ZS65k/vG3HxXrIkS9f7CXA@public.gmane.org>
-Subject: RE: [PATCH] block/blk-iocost (gcc13): cast enum members to int in
- prints
-Date: Tue, 13 Dec 2022 12:58:10 +0000
-Message-ID: <d26f03e828c94df5b4653ac6980def59@AcuMS.aculab.com>
-References: <20221031114520.10518-1-jirislaby@kernel.org>
- <Y1++fLJXkeZgtXR2@infradead.org> <Y2AMcSPAJpj6obSA@slm.duckdns.org>
- <d833ad15-f458-d43d-cab7-de62ff54a939@kernel.org>
- <Y2FNa4bGhJoevRKT@slm.duckdns.org>
- <2b975ee3117e45aaa7882203cf9a4db8@AcuMS.aculab.com>
- <Y2Kaghnu/sPvl0+g@slm.duckdns.org> <Y2KePvYRRMOrqzOe@slm.duckdns.org>
- <320c939e-a3f0-1b1e-77e4-f3ecca00465d@kernel.org>
- <Y5ehU524daymEKgf@slm.duckdns.org>
- <f5220f08bd7f45248d718f1919503261@AcuMS.aculab.com>
- <9d2ead31-efab-cf49-08d4-1e613382d89f@kernel.org>
- <542d413b9d044474a34b6e7a40d70541@AcuMS.aculab.com>
- <c7539121-c8fc-b4b7-b722-ead833420b2b@kernel.org>
+From: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Subject: Re: [PATCH v3] mm: Add nodes= arg to memory.reclaim
+Date: Tue, 13 Dec 2022 14:30:40 +0100
+Message-ID: <Y5h+gHBneexFQcR3@cmpxchg.org>
+References: <20221202223533.1785418-1-almasrymina@google.com>
+ <Y5bsmpCyeryu3Zz1@dhcp22.suse.cz>
+ <CAHS8izM-XdLgFrQ1k13X-4YrK=JGayRXV_G3c3Qh4NLKP7cH_g@mail.gmail.com>
+ <87k02volwe.fsf@yhuang6-desk2.ccr.corp.intel.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: base64
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <c7539121-c8fc-b4b7-b722-ead833420b2b-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Content-Language: en-US
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=cmpxchg-org.20210112.gappssmtp.com; s=20210112;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=GkAga1fPXNCvgWWr0y17vOcwxqzOIKIhEW49YSLUBLs=;
+        b=zXfkNNv5mXOMPEanvux+4bWlBQnFuzxE2MzUd22vOUfuSUzuyhRUOfDzB0ggA71T8F
+         U4BoSvDNvouPUsFnxzBhZ9PkJKNOOi+r+fWw9vIFexrfG0KwcjqamyWJH78bxvSa+wEK
+         sviWJZdff4IfSH7PcbdsfV9IggXAnSU97epnS/d0NovCmFSRag3LxiwLBWEbw0wia48V
+         YbDPBVUWD+T8qS9AWX0q7GxruKFPjvBYZuFfVuhZJcW2vVgQJ/wUPa1YAkGfHLEO3TNv
+         ut45RL2Pkoauar+k5MQKvHAfX+4LQXjfZ+Tr4d/sXdDmzrGpjYfmw5ayEfmXxR2ffeRd
+         2uuQ==
+Content-Disposition: inline
+In-Reply-To: <87k02volwe.fsf-fFUE1NP8JkzwuUmzmnQr+vooFf0ArEBIu+b9c/7xato@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: 'Jiri Slaby' <jirislaby-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, 'Tejun Heo' <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: Christoph Hellwig <hch-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, "linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Martin Liska <mliska-AlSwsSmVLrQ@public.gmane.org>, Josef Bacik <josef-DigfWCa+lFGyeJad7bwFQA@public.gmane.org>, Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, "cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Transfer-Encoding: 7bit
+To: "Huang, Ying" <ying.huang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+Cc: Mina Almasry <almasrymina-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Jonathan Corbet <corbet-T1hC0tSOHrs@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Yang Shi <yang.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>, Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, weixugc-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, fvdl-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, bagasdotme-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
 
-RnJvbTogSmlyaSBTbGFieSA8amlyaXNsYWJ5QGtlcm5lbC5vcmc+DQo+IFNlbnQ6IDEzIERlY2Vt
-YmVyIDIwMjIgMTI6MDUNCj4gDQo+IE9uIDEzLiAxMi4gMjIsIDEyOjUwLCBEYXZpZCBMYWlnaHQg
-d3JvdGU6DQo+ID4gRnJvbTogSmlyaSBTbGFieQ0KPiA+PiBTZW50OiAxMyBEZWNlbWJlciAyMDIy
-IDExOjE1DQo+ID4+DQouLi4NCj4gPj4+PiBPaCBtYW4sIGl0J3Mga2luZGEgY3JhenkgdGhhdCB0
-aGUgY29tcGlsZXIgaXMgY2hhbmdpbmcgaW4gYSB3YXkgdGhhdCB0aGUNCj4gPj4+PiBzYW1lIHBp
-ZWNlIG9mIGNvZGUgY2FuJ3QgYmUgY29tcGlsZWQgdGhlIHNhbWUgd2F5IGFjcm9zcyB0d28gYWRq
-b2luaW5nDQo+ID4+Pj4gdmVyc2lvbnMgb2YgdGhlIHNhbWUgY29tcGlsZXIuIEJ1dCwgeWVhaCwg
-aWYgdGhhdCdzIHdoYXQgZ2NjIGlzIGdvbm5hIGRvIGFuZA0KPiA+Pj4+IHNwbGl0dGluZyBlbnVt
-cyBpcyB0aGUgb25seSB3YXkgdG8gYmUgb2theSBhY3Jvc3MgdGhlIGNvbXBpbGVyIHZlcnNpb25z
-LA0KPiA+Pj4+IHRoZXJlIGlzbid0IGFueSBvdGhlciBjaG9pY2Ugd2UgY2FuIG1ha2UuDQo+ID4+
-Pg0KPiA+Pj4gSXQgaXMgYWxzbyBhIHNpbGVudCBjb2RlLWJyZWFrZXIuDQo+ID4+PiBDb21waWxl
-IHRoaXMgZm9yIDMyYml0IHg4NjoNCj4gPj4+DQo+ID4+PiBlbnVtIHsgYSA9IDEsIGIgPSB+MHVs
-bH07DQo+ID4+DQo+ID4+IEJ1dCBoYXZpbmcgdWxsIGluIGFuIGVudW0gaXMgdW5kZWZpbmVkIGFu
-eXdheS4gQzk5IGFsbG93cyBvbmx5IGludA0KPiA+PiBjb25zdGFudHMuIGdudUMgc3VwcG9ydHMg
-dWxvbmcgZXhwcmVzc2lvbnMgKElJUkMpLg0KPiA+DQo+ID4gZ2NjIHN1cHBvcnRzICdsb25nIGxv
-bmcnIGFzIHdlbGwgLSA2NGJpdCBvbiAzMmJpdCBzeXN0ZW1zLg0KPiANCj4gQ2FuIHlvdSBlbGFi
-b3JhdGUgd2hhdCdzIHNvdXJjZSBvZiB0aGlzPyAuLi4NCg0KRXhwZXJpbWVudGF0aW9uLCBmb3Ig
-ZXhhbXBsZToNCg0KaHR0cHM6Ly9nb2Rib2x0Lm9yZy96L240cm5jN2NLRw0KDQoNCglEYXZpZA0K
-DQotDQpSZWdpc3RlcmVkIEFkZHJlc3MgTGFrZXNpZGUsIEJyYW1sZXkgUm9hZCwgTW91bnQgRmFy
-bSwgTWlsdG9uIEtleW5lcywgTUsxIDFQVCwgVUsNClJlZ2lzdHJhdGlvbiBObzogMTM5NzM4NiAo
-V2FsZXMpDQo=
+On Tue, Dec 13, 2022 at 02:30:57PM +0800, Huang, Ying wrote:
+> Mina Almasry <almasrymina-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org> writes:
+> 
+> > On Mon, Dec 12, 2022 at 12:55 AM Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org> wrote:
+> >>
+> >> On Fri 02-12-22 14:35:31, Mina Almasry wrote:
+> >> > The nodes= arg instructs the kernel to only scan the given nodes for
+> >> > proactive reclaim. For example use cases, consider a 2 tier memory system:
+> >> >
+> >> > nodes 0,1 -> top tier
+> >> > nodes 2,3 -> second tier
+> >> >
+> >> > $ echo "1m nodes=0" > memory.reclaim
+> >> >
+> >> > This instructs the kernel to attempt to reclaim 1m memory from node 0.
+> >> > Since node 0 is a top tier node, demotion will be attempted first. This
+> >> > is useful to direct proactive reclaim to specific nodes that are under
+> >> > pressure.
+> >> >
+> >> > $ echo "1m nodes=2,3" > memory.reclaim
+> >> >
+> >> > This instructs the kernel to attempt to reclaim 1m memory in the second tier,
+> >> > since this tier of memory has no demotion targets the memory will be
+> >> > reclaimed.
+> >> >
+> >> > $ echo "1m nodes=0,1" > memory.reclaim
+> >> >
+> >> > Instructs the kernel to reclaim memory from the top tier nodes, which can
+> >> > be desirable according to the userspace policy if there is pressure on
+> >> > the top tiers. Since these nodes have demotion targets, the kernel will
+> >> > attempt demotion first.
+> >> >
+> >> > Since commit 3f1509c57b1b ("Revert "mm/vmscan: never demote for memcg
+> >> > reclaim""), the proactive reclaim interface memory.reclaim does both
+> >> > reclaim and demotion. Reclaim and demotion incur different latency costs
+> >> > to the jobs in the cgroup. Demoted memory would still be addressable
+> >> > by the userspace at a higher latency, but reclaimed memory would need to
+> >> > incur a pagefault.
+> >> >
+> >> > The 'nodes' arg is useful to allow the userspace to control demotion
+> >> > and reclaim independently according to its policy: if the memory.reclaim
+> >> > is called on a node with demotion targets, it will attempt demotion first;
+> >> > if it is called on a node without demotion targets, it will only attempt
+> >> > reclaim.
+> >> >
+> >> > Acked-by: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
+> >> > Signed-off-by: Mina Almasry <almasrymina-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+> >>
+> >> After discussion in [1] I have realized that I haven't really thought
+> >> through all the consequences of this patch and therefore I am retracting
+> >> my ack here. I am not nacking the patch at this statge but I also think
+> >> this shouldn't be merged now and we should really consider all the
+> >> consequences.
+> >>
+> >> Let me summarize my main concerns here as well. The proposed
+> >> implementation doesn't apply the provided nodemask to the whole reclaim
+> >> process. This means that demotion can happen outside of the mask so the
+> >> the user request cannot really control demotion targets and that limits
+> >> the interface should there be any need for a finer grained control in
+> >> the future (see an example in [2]).
+> >> Another problem is that this can limit future reclaim extensions because
+> >> of existing assumptions of the interface [3] - specify only top-tier
+> >> node to force the aging without actually reclaiming any charges and
+> >> (ab)use the interface only for aging on multi-tier system. A change to
+> >> the reclaim to not demote in some cases could break this usecase.
+> >>
+> >
+> > I think this is correct. My use case is to request from the kernel to
+> > do demotion without reclaim in the cgroup, and the reason for that is
+> > stated in the commit message:
+> >
+> > "Reclaim and demotion incur different latency costs to the jobs in the
+> > cgroup. Demoted memory would still be addressable by the userspace at
+> > a higher latency, but reclaimed memory would need to incur a
+> > pagefault."
+> >
+> > For jobs of some latency tiers, we would like to trigger proactive
+> > demotion (which incurs relatively low latency on the job), but not
+> > trigger proactive reclaim (which incurs a pagefault). I initially had
+> > proposed a separate interface for this, but Johannes directed me to
+> > this interface instead in [1]. In the same email Johannes also tells
+> > me that meta's reclaim stack relies on memory.reclaim triggering
+> > demotion, so it seems that I'm not the first to take a dependency on
+> > this. Additionally in [2] Johannes also says it would be great if in
+> > the long term reclaim policy and demotion policy do not diverge.
+> >
+> > [1] https://lore.kernel.org/linux-mm/Y35fw2JSAeAddONg-druUgvl0LCNAfugRpC6u6w@public.gmane.org/
+> > [2] https://lore.kernel.org/linux-mm/Y36fIGFCFKiocAd6-druUgvl0LCNAfugRpC6u6w@public.gmane.org/
+> 
+> After these discussion, I think the solution maybe use different
+> interfaces for "proactive demote" and "proactive reclaim".  That is,
+> reconsider "memory.demote".  In this way, we will always uncharge the
+> cgroup for "memory.reclaim".  This avoid the possible confusion there.
+> And, because demotion is considered aging, we don't need to disable
+> demotion for "memory.reclaim", just don't count it.
 
+Hm, so in summary:
+
+1) memory.reclaim would demote and reclaim like today, but it would
+   change to only count reclaimed pages against the goal.
+
+2) memory.demote would only demote.
+
+   a) What if the demotion targets are full? Would it reclaim or fail?
+
+3) Would memory.reclaim and memory.demote still need nodemasks? Would
+   they return -EINVAL if a) memory.reclaim gets passed only toptier
+   nodes or b) memory.demote gets passed any lasttier nodes?
