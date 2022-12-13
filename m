@@ -1,123 +1,77 @@
-From: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Subject: [PATCH-block v3 2/2] blk-cgroup: Flush stats at blkgs destruction path
-Date: Tue, 13 Dec 2022 13:44:46 -0500
-Message-ID: <20221213184446.50181-3-longman@redhat.com>
+From: Waiman Long <longman@redhat.com>
+Subject: [PATCH-block v3 1/2] bdi, blk-cgroup: Fix potential UAF of blkcg
+Date: Tue, 13 Dec 2022 13:44:45 -0500
+Message-ID: <20221213184446.50181-2-longman@redhat.com>
 References: <20221213184446.50181-1-longman@redhat.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Transfer-Encoding: base64
+Return-path: <linux-block-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1670957105;
+        s=mimecast20190719; t=1670957103;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=h+iH+gyUSP9RmZybF0rRU4rA5/id1U9+eBsl2PUnAPQ=;
-        b=YP5lnMduBFZ6I4jUYCaTX44pr3sGK8e8jIJw7ETVcFG0uil2Ay6Ux+3oPx0q9xIauDu7RZ
-        bcDg68Y7NvU7w/gRFRHbbFcDmwAylfx79mjv8t9fIwVM8vuWgFSdQW2ZLA7J7nTl+mfuv2
-        PV9W9dEnzDVPorBwCDwYCuUjeIlZCgA=
-In-Reply-To: <20221213184446.50181-1-longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+        bh=XKtEb7DX5sCj2p62DhFAWIKVGv8SYAUBUDgGPKa8O/0=;
+        b=Q822aMYKwgls0VAuvvolUQeg/XGipJ3aWV0MZNsRmg6x3024yiDgP+uyOtZc1YwP1ec8fC
+        iRNDixTQaVbuPv6/noR/JLKX7hObjMVaweS0f4a5dvZy7SBLPUHJbk2tp0zAdLGpoQu9Qo
+        D0qPLESQvrKMfbZt98HQ5Uwi/WZsPnk=
+In-Reply-To: <20221213184446.50181-1-longman@redhat.com>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-To: Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Josef Bacik <josef-DigfWCa+lFGyeJad7bwFQA@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, =?UTF-8?q?Michal=20Koutn=C3=BD?= <mkoutny-IBi9RG/b67k@public.gmane.org>, "Dennis Zhou (Facebook)" <dennisszhou-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Content-Type: text/plain; charset="macroman"
+To: Jens Axboe <axboe@kernel.dk>, Tejun Heo <tj@kernel.org>, Josef Bacik <josef@toxicpanda.com>, Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, Andrew Morton <akpm@linux-foundation.org>
+Cc: cgroups@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org, =?UTF-8?q?Michal=20Koutn=C3=BD?= <mkoutny@suse.com>, "Dennis Zhou (Facebook)" <dennisszhou@gmail.com>, Waiman Long <longman@redhat.com>, Yi Zhang <yi.zhang@redhat.com>
 
-As noted by Michal, the blkg_iostat_set's in the lockless list
-hold reference to blkg's to protect against their removal. Those
-blkg's hold reference to blkcg. When a cgroup is being destroyed,
-cgroup_rstat_flush() is only called at css_release_work_fn() which is
-called when the blkcg reference count reaches 0. This circular dependency
-will prevent blkcg from being freed until some other events cause
-cgroup_rstat_flush() to be called to flush out the pending blkcg stats.
-
-To prevent this delayed blkcg removal, add a new cgroup_rstat_css_flush()
-function to flush stats for a given css and cpu and call it at the blkgs
-destruction path, blkcg_destroy_blkgs(), whenever there are still some
-pending stats to be flushed. This will ensure that blkcg reference
-count can reach 0 ASAP.
-
-Signed-off-by: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Acked-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
----
- block/blk-cgroup.c     | 15 +++++++++++++++
- include/linux/cgroup.h |  1 +
- kernel/cgroup/rstat.c  | 18 ++++++++++++++++++
- 3 files changed, 34 insertions(+)
-
-diff --git a/block/blk-cgroup.c b/block/blk-cgroup.c
-index ca28306aa1b1..ddd27a714d3e 100644
---- a/block/blk-cgroup.c
-+++ b/block/blk-cgroup.c
-@@ -1084,6 +1084,8 @@ struct list_head *blkcg_get_cgwb_list(struct cgroup_subsys_state *css)
-  */
- static void blkcg_destroy_blkgs(struct blkcg *blkcg)
- {
-+	int cpu;
-+
- 	/*
- 	 * blkcg_destroy_blkgs() shouldn't be called with all the blkcg
- 	 * references gone.
-@@ -1093,6 +1095,19 @@ static void blkcg_destroy_blkgs(struct blkcg *blkcg)
- 
- 	might_sleep();
- 
-+	/*
-+	 * Flush all the non-empty percpu lockless lists so as to release
-+	 * the blkg references held by those lists which, in turn, may
-+	 * allow the blkgs to be freed and release their references to
-+	 * blkcg speeding up its freeing.
-+	 */
-+	for_each_possible_cpu(cpu) {
-+		struct llist_head *lhead = per_cpu_ptr(blkcg->lhead, cpu);
-+
-+		if (!llist_empty(lhead))
-+			cgroup_rstat_css_cpu_flush(&blkcg->css, cpu);
-+	}
-+
- 	spin_lock_irq(&blkcg->lock);
- 
- 	while (!hlist_empty(&blkcg->blkg_list)) {
-diff --git a/include/linux/cgroup.h b/include/linux/cgroup.h
-index 528bd44b59e2..6c4e66b3fa84 100644
---- a/include/linux/cgroup.h
-+++ b/include/linux/cgroup.h
-@@ -766,6 +766,7 @@ void cgroup_rstat_flush(struct cgroup *cgrp);
- void cgroup_rstat_flush_irqsafe(struct cgroup *cgrp);
- void cgroup_rstat_flush_hold(struct cgroup *cgrp);
- void cgroup_rstat_flush_release(void);
-+void cgroup_rstat_css_cpu_flush(struct cgroup_subsys_state *css, int cpu);
- 
- /*
-  * Basic resource stats.
-diff --git a/kernel/cgroup/rstat.c b/kernel/cgroup/rstat.c
-index 793ecff29038..2e44be44351f 100644
---- a/kernel/cgroup/rstat.c
-+++ b/kernel/cgroup/rstat.c
-@@ -281,6 +281,24 @@ void cgroup_rstat_flush_release(void)
- 	spin_unlock_irq(&cgroup_rstat_lock);
- }
- 
-+/**
-+ * cgroup_rstat_css_cpu_flush - flush stats for the given css and cpu
-+ * @css: target css to be flush
-+ * @cpu: the cpu that holds the stats to be flush
-+ *
-+ * A lightweight rstat flush operation for a given css and cpu.
-+ * Only the cpu_lock is being held for mutual exclusion, the cgroup_rstat_lock
-+ * isn't used.
-+ */
-+void cgroup_rstat_css_cpu_flush(struct cgroup_subsys_state *css, int cpu)
-+{
-+	raw_spinlock_t *cpu_lock = per_cpu_ptr(&cgroup_rstat_cpu_lock, cpu);
-+
-+	raw_spin_lock_irq(cpu_lock);
-+	css->ss->css_rstat_flush(css, cpu);
-+	raw_spin_unlock_irq(cpu_lock);
-+}
-+
- int cgroup_rstat_init(struct cgroup *cgrp)
- {
- 	int cpu;
--- 
-2.31.1
-
+Q29tbWl0IDU5YjU3NzE3ZmZmOCAoImJsa2NnOiBkZWxheSBibGtnIGRlc3RydWN0aW9uIHVudGls
+IGFmdGVyCndyaXRlYmFjayBoYXMgZmluaXNoZWQiKSBkZWxheWVkIGNhbGwgdG8gYmxrY2dfZGVz
+dHJveV9ibGtncygpIHRvCmNnd2JfcmVsZWFzZV93b3JrZm4oKS4gSG93ZXZlciwgaXQgaXMgZG9u
+ZSBhZnRlciBhIGNzc19wdXQoKSBvZiBibGtjZwp3aGljaCBtYXkgYmUgdGhlIGZpbmFsIHB1dCB0
+aGF0IGNhdXNlcyB0aGUgYmxrY2cgdG8gYmUgZnJlZWQgYXMgUkNVCnJlYWQgbG9jayBpc24ndCBo
+ZWxkLgoKQW5vdGhlciBwbGFjZSB3aGVyZSBibGtjZ19kZXN0cm95X2Jsa2dzKCkgY2FuIGJlIGNh
+bGxlZCBpbmRpcmVjdGx5IHZpYQpibGtjZ191bnBpbl9vbmxpbmUoKSBpcyBmcm9tIHRoZSBvZmZs
+aW5lX2NzcygpIGZ1bmN0aW9uIGNhbGxlZCBmcm9tCmNzc19raWxsZWRfd29ya19mbigpLiBPdmVy
+IHRoZXJlLCB0aGUgcG90ZW50aWFsbHkgZmluYWwgY3NzX3B1dCgpIGNhbGwKaXMgaXNzdWVkIGFm
+dGVyIG9mZmxpbmVfY3NzKCkuCgpCeSBhZGRpbmcgYSBjc3NfdHJ5Z2V0KCkgaW50byBibGtjZ19k
+ZXN0cm95X2Jsa2dzKCkgYW5kIHdhcm5pbmcgaXRzCmZhaWx1cmUsIHRoZSBmb2xsb3dpbmcgc3Rh
+Y2sgdHJhY2Ugd2FzIHByb2R1Y2VkIGluIGEgdGVzdCBzeXN0ZW0gb24KYm9vdHVwLgoKWyAgIDM0
+LjI1NDI0MF0gUklQOiAwMDEwOmJsa2NnX2Rlc3Ryb3lfYmxrZ3MrMHgxNmEvMHgxYTAKICAgICAg
+OgpbICAgMzQuMzM5OTQzXSBDYWxsIFRyYWNlOgpbICAgMzQuMzQ0NTEwXSAgYmxrY2dfdW5waW5f
+b25saW5lKzB4MzgvMHg2MApbICAgMzQuMzQ4NTIzXSAgY2d3Yl9yZWxlYXNlX3dvcmtmbisweDZh
+LzB4MjAwClsgICAzNC4zNTI3MDhdICBwcm9jZXNzX29uZV93b3JrKzB4MWU1LzB4M2IwClsgICAz
+NC4zNjA3NThdICB3b3JrZXJfdGhyZWFkKzB4NTAvMHgzYTAKWyAgIDM0LjM2ODQ0N10gIGt0aHJl
+YWQrMHhkOS8weDEwMApbICAgMzQuMzc2Mzg2XSAgcmV0X2Zyb21fZm9yaysweDIyLzB4MzAKClRo
+aXMgY29uZmlybXMgdGhhdCBhIHBvdGVudGlhbCBVQUYgc2l0dWF0aW9uIGNhbiByZWFsbHkgaGFw
+cGVuIGluCmNnd2JfcmVsZWFzZV93b3JrZm4oKS4KCkZpeCB0aGF0IGJ5IGRlbGF5aW5nIHRoZSBj
+c3NfcHV0KCkgdW50aWwgYWZ0ZXIgdGhlIGJsa2NnX3VucGluX29ubGluZSgpCmNhbGwuIEFsc28g
+dXNlIGNzc190cnlnZXQoKSBpbiBibGtjZ19kZXN0cm95X2Jsa2dzKCkgYW5kIGlzc3VlIGEgd2Fy
+bmluZwppZiBjc3NfdHJ5Z2V0KCkgZmFpbHMuCgpUaGUgcmVwcm9kdWNpbmcgc3lzdGVtIGNhbiBu
+byBsb25nZXIgcHJvZHVjZSBhIHdhcm5pbmcgd2l0aCB0aGlzIHBhdGNoLgpBbGwgdGhlIHJ1bm5h
+YmxlIGJsb2NrLzAqIHRlc3RzIGluY2x1ZGluZyBibG9jay8wMjcgd2VyZSBydW4gc3VjY2Vzc2Z1
+bGx5CndpdGhvdXQgZmFpbHVyZS4KCkZpeGVzOiA1OWI1NzcxN2ZmZjggKCJibGtjZzogZGVsYXkg
+YmxrZyBkZXN0cnVjdGlvbiB1bnRpbCBhZnRlciB3cml0ZWJhY2sgaGFzIGZpbmlzaGVkIikKU3Vn
+Z2VzdGVkLWJ5OiBNaWNoYWwgS291dG7DvSA8bWtvdXRueUBzdXNlLmNvbT4KUmVwb3J0ZWQtYnk6
+IFlpIFpoYW5nIDx5aS56aGFuZ0ByZWRoYXQuY29tPgpTaWduZWQtb2ZmLWJ5OiBXYWltYW4gTG9u
+ZyA8bG9uZ21hbkByZWRoYXQuY29tPgotLS0KIGJsb2NrL2Jsay1jZ3JvdXAuYyB8IDcgKysrKysr
+KwogbW0vYmFja2luZy1kZXYuYyAgIHwgOCArKysrKystLQogMiBmaWxlcyBjaGFuZ2VkLCAxMyBp
+bnNlcnRpb25zKCspLCAyIGRlbGV0aW9ucygtKQoKZGlmZiAtLWdpdCBhL2Jsb2NrL2Jsay1jZ3Jv
+dXAuYyBiL2Jsb2NrL2Jsay1jZ3JvdXAuYwppbmRleCAxYmI5MzlkM2I3OTMuLmNhMjgzMDZhYTFi
+MSAxMDA2NDQKLS0tIGEvYmxvY2svYmxrLWNncm91cC5jCisrKyBiL2Jsb2NrL2Jsay1jZ3JvdXAu
+YwpAQCAtMTA4NCw2ICsxMDg0LDEzIEBAIHN0cnVjdCBsaXN0X2hlYWQgKmJsa2NnX2dldF9jZ3di
+X2xpc3Qoc3RydWN0IGNncm91cF9zdWJzeXNfc3RhdGUgKmNzcykKICAqLwogc3RhdGljIHZvaWQg
+YmxrY2dfZGVzdHJveV9ibGtncyhzdHJ1Y3QgYmxrY2cgKmJsa2NnKQogeworCS8qCisJICogYmxr
+Y2dfZGVzdHJveV9ibGtncygpIHNob3VsZG4ndCBiZSBjYWxsZWQgd2l0aCBhbGwgdGhlIGJsa2Nn
+CisJICogcmVmZXJlbmNlcyBnb25lLgorCSAqLworCWlmIChXQVJOX09OX09OQ0UocGVyY3B1X3Jl
+Zl9pc196ZXJvKCZibGtjZy0+Y3NzLnJlZmNudCkpKQorCQlyZXR1cm47CisKIAltaWdodF9zbGVl
+cCgpOwogCiAJc3Bpbl9sb2NrX2lycSgmYmxrY2ctPmxvY2spOwpkaWZmIC0tZ2l0IGEvbW0vYmFj
+a2luZy1kZXYuYyBiL21tL2JhY2tpbmctZGV2LmMKaW5kZXggYzMwNDE5YTVlMTE5Li4zNmY3NWIw
+NzIzMjUgMTAwNjQ0Ci0tLSBhL21tL2JhY2tpbmctZGV2LmMKKysrIGIvbW0vYmFja2luZy1kZXYu
+YwpAQCAtMzkwLDExICszOTAsMTUgQEAgc3RhdGljIHZvaWQgY2d3Yl9yZWxlYXNlX3dvcmtmbihz
+dHJ1Y3Qgd29ya19zdHJ1Y3QgKndvcmspCiAJd2Jfc2h1dGRvd24od2IpOwogCiAJY3NzX3B1dCh3
+Yi0+bWVtY2dfY3NzKTsKLQljc3NfcHV0KHdiLT5ibGtjZ19jc3MpOwogCW11dGV4X3VubG9jaygm
+d2ItPmJkaS0+Y2d3Yl9yZWxlYXNlX211dGV4KTsKIAotCS8qIHRyaWdnZXJzIGJsa2cgZGVzdHJ1
+Y3Rpb24gaWYgbm8gb25saW5lIHVzZXJzIGxlZnQgKi8KKwkvKgorCSAqIFRyaWdnZXJzIGJsa2cg
+ZGVzdHJ1Y3Rpb24gaWYgbm8gb25saW5lIHVzZXJzIGxlZnQKKwkgKiBUaGUgZmluYWwgYmxrY2cg
+Y3NzX3B1dCgpIGhhcyB0byBiZSBkb25lIGFmdGVyIGJsa2NnX3VucGluX29ubGluZSgpCisJICog
+dG8gYXZvaWQgdXNlLWFmdGVyLWZyZWUuCisJICovCiAJYmxrY2dfdW5waW5fb25saW5lKHdiLT5i
+bGtjZ19jc3MpOworCWNzc19wdXQod2ItPmJsa2NnX2Nzcyk7CiAKIAlmcHJvcF9sb2NhbF9kZXN0
+cm95X3BlcmNwdSgmd2ItPm1lbWNnX2NvbXBsZXRpb25zKTsKIAotLSAKMi4zMS4xCgo=
