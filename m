@@ -1,56 +1,68 @@
-From: Michal Hocko <mhocko@suse.com>
-Subject: Re: [PATCH v3] mm: Add nodes= arg to memory.reclaim
-Date: Tue, 13 Dec 2022 09:51:27 +0100
-Message-ID: <Y5g9D12uEr7HpP5K@dhcp22.suse.cz>
-References: <20221202223533.1785418-1-almasrymina@google.com>
- <Y5bsmpCyeryu3Zz1@dhcp22.suse.cz>
- <CAHS8izM-XdLgFrQ1k13X-4YrK=JGayRXV_G3c3Qh4NLKP7cH_g@mail.gmail.com>
- <87k02volwe.fsf@yhuang6-desk2.ccr.corp.intel.com>
+From: Jiri Slaby <jirislaby-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCH] block/blk-iocost (gcc13): cast enum members to int in
+ prints
+Date: Tue, 13 Dec 2022 12:15:03 +0100
+Message-ID: <9d2ead31-efab-cf49-08d4-1e613382d89f@kernel.org>
+References: <20221031114520.10518-1-jirislaby@kernel.org>
+ <Y1++fLJXkeZgtXR2@infradead.org> <Y2AMcSPAJpj6obSA@slm.duckdns.org>
+ <d833ad15-f458-d43d-cab7-de62ff54a939@kernel.org>
+ <Y2FNa4bGhJoevRKT@slm.duckdns.org>
+ <2b975ee3117e45aaa7882203cf9a4db8@AcuMS.aculab.com>
+ <Y2Kaghnu/sPvl0+g@slm.duckdns.org> <Y2KePvYRRMOrqzOe@slm.duckdns.org>
+ <320c939e-a3f0-1b1e-77e4-f3ecca00465d@kernel.org>
+ <Y5ehU524daymEKgf@slm.duckdns.org>
+ <f5220f08bd7f45248d718f1919503261@AcuMS.aculab.com>
 Mime-Version: 1.0
-Return-path: <linux-doc-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
-        t=1670921488; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=cJqVpp0rgt2DpLfJteOt1+knopZ57BAnBRXhD56Saew=;
-        b=MfMJRehQtolYF5vDu/F2qedFOWN5WjmU9c57R+GI1JCJbJYbMgJO0bjjf4S1YVNy0qGtIo
-        u672Fjtmqv/Ii8avOlmNsNaT+W4ZkjnojFEgAYgg+bY/BIy2tr2FefoWzPGm0l/yfl6CEJ
-        bn5zrj+XgsAI5VrL7PTa5ET5Aefo6Ok=
-Content-Disposition: inline
-In-Reply-To: <87k02volwe.fsf@yhuang6-desk2.ccr.corp.intel.com>
-List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: "Huang, Ying" <ying.huang@intel.com>
-Cc: Mina Almasry <almasrymina@google.com>, Tejun Heo <tj@kernel.org>, Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, Jonathan Corbet <corbet@lwn.net>, Roman Gushchin <roman.gushchin@linux.dev>, Shakeel Butt <shakeelb@google.com>, Muchun Song <songmuchun@bytedance.com>, Andrew Morton <akpm@linux-foundation.org>, Yang Shi <yang.shi@linux.alibaba.com>, Yosry Ahmed <yosryahmed@google.com>, weixugc@google.com, fvdl@google.com, bagasdotme@gmail.com, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Language: en-US
+In-Reply-To: <f5220f08bd7f45248d718f1919503261-1XygrNkDbNvwg4NCKwmqgw@public.gmane.org>
+List-ID: <cgroups.vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"; format="flowed"
+To: David Laight <David.Laight-ZS65k/vG3HxXrIkS9f7CXA@public.gmane.org>, 'Tejun Heo' <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: Christoph Hellwig <hch-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, "linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Martin Liska <mliska-AlSwsSmVLrQ@public.gmane.org>, Josef Bacik <josef-DigfWCa+lFGyeJad7bwFQA@public.gmane.org>, Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, "cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 
-On Tue 13-12-22 14:30:57, Huang, Ying wrote:
-> Mina Almasry <almasrymina@google.com> writes:
-[...]
-> After these discussion, I think the solution maybe use different
-> interfaces for "proactive demote" and "proactive reclaim".  That is,
-> reconsider "memory.demote".  In this way, we will always uncharge the
-> cgroup for "memory.reclaim".  This avoid the possible confusion there.
-> And, because demotion is considered aging, we don't need to disable
-> demotion for "memory.reclaim", just don't count it.
+On 13. 12. 22, 9:30, David Laight wrote:
+> From: Tejun Heo <htejun-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org> On Behalf Of 'Tejun Heo'
+>> Sent: 12 December 2022 21:47
+>> To: Jiri Slaby <jirislaby-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+>> Cc: David Laight <David.Laight-ZS65k/vG3HxXrIkS9f7CXA@public.gmane.org>; Christoph Hellwig <hch-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>; linux-
+>> kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org; Martin Liska <mliska-AlSwsSmVLrQ@public.gmane.org>; Josef Bacik <josef-DigfWCa+lFGyeJad7bwFQA@public.gmane.org>; Jens Axboe
+>> <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>; cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org; linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+>> Subject: Re: [PATCH] block/blk-iocost (gcc13): cast enum members to int in prints
+>>
+>> On Mon, Dec 12, 2022 at 01:14:31PM +0100, Jiri Slaby wrote:
+>>>> If so, my suggestion is just sticking with the old behavior until we switch
+>>>> to --std=g2x and then make one time adjustment at that point.
+>>>
+>>> So is the enum split OK under these circumstances?
+>>
+>> Oh man, it's kinda crazy that the compiler is changing in a way that the
+>> same piece of code can't be compiled the same way across two adjoining
+>> versions of the same compiler. But, yeah, if that's what gcc is gonna do and
+>> splitting enums is the only way to be okay across the compiler versions,
+>> there isn't any other choice we can make.
+> 
+> It is also a silent code-breaker.
+> Compile this for 32bit x86:
+> 
+> enum { a = 1, b = ~0ull};
 
-As already pointed out in my previous email, we should really think more
-about future requirements. Do we add memory.promote interface when there
-is a request to implement numa balancing into the userspace? Maybe yes
-but maybe the node balancing should be more generic than bound to memory
-tiering and apply to a more fine grained nodemask control.
+But having ull in an enum is undefined anyway. C99 allows only int 
+constants. gnuC supports ulong expressions (IIRC).
 
-Fundamentally we already have APIs to age (MADV_COLD, MADV_FREE),
-reclaim (MADV_PAGEOUT, MADV_DONTNEED) and MADV_WILLNEED to prioritize
-(swap in, or read ahead) which are per mm/file. Their primary usability
-issue is that they are process centric and that requires a very deep
-understanding of the process mm layout so it is not really usable for a
-larger scale orchestration.
-The important part of those interfaces is that they do not talk about
-demotion because that is an implementation detail. I think we want to
-follow that model at least. From a higher level POV I believe we really
-need an interface to age&reclaim and balance memory among nodes. Are
-there more higher level usecases?
+> extern int foo(int, ...);
+> int f(void)
+> {
+>      return foo(0, a, 2);
+> }
+> 
+> gcc13 pushes an extra zero onto the stack between the 1 and 2.
+
+So this is sort of "expected".
+
+thanks,
 -- 
-Michal Hocko
-SUSE Labs
+js
+suse labs
+
