@@ -1,84 +1,75 @@
-From: Jiri Slaby <jirislaby-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH] block/blk-iocost (gcc13): cast enum members to int in
- prints
-Date: Tue, 13 Dec 2022 13:05:11 +0100
-Message-ID: <c7539121-c8fc-b4b7-b722-ead833420b2b@kernel.org>
-References: <20221031114520.10518-1-jirislaby@kernel.org>
- <Y1++fLJXkeZgtXR2@infradead.org> <Y2AMcSPAJpj6obSA@slm.duckdns.org>
- <d833ad15-f458-d43d-cab7-de62ff54a939@kernel.org>
- <Y2FNa4bGhJoevRKT@slm.duckdns.org>
- <2b975ee3117e45aaa7882203cf9a4db8@AcuMS.aculab.com>
- <Y2Kaghnu/sPvl0+g@slm.duckdns.org> <Y2KePvYRRMOrqzOe@slm.duckdns.org>
- <320c939e-a3f0-1b1e-77e4-f3ecca00465d@kernel.org>
- <Y5ehU524daymEKgf@slm.duckdns.org>
- <f5220f08bd7f45248d718f1919503261@AcuMS.aculab.com>
- <9d2ead31-efab-cf49-08d4-1e613382d89f@kernel.org>
- <542d413b9d044474a34b6e7a40d70541@AcuMS.aculab.com>
+From: "Jiri Slaby (SUSE)" <jirislaby-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: [PATCH v3] block/blk-iocost (gcc13): keep large values in a new enum
+Date: Tue, 13 Dec 2022 13:08:26 +0100
+Message-ID: <20221213120826.17446-1-jirislaby@kernel.org>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Content-Language: en-US
-In-Reply-To: <542d413b9d044474a34b6e7a40d70541-1XygrNkDbNvwg4NCKwmqgw@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1670933310;
+        bh=1tNxadmfkO3wj3an2rLdn3PtureG9sBU9F7brxxdtrU=;
+        h=From:To:Cc:Subject:Date:From;
+        b=rFY4pyCHiVD7KgWofs2wsmFjqM4rL08Dplh3GbhT9v7DJqVBDyvjDzATa8bB6cib3
+         S3+6iIZgeD1l684fNA0IHiBdi1TiF2dNj+prfU+U9kdA9nwWyZksd38HhAfwi7pJd/
+         VP+paDps1N+Ojb/Q00qQPFRgGYNuNvbl5ilUwZtRZmc9T58WWMU3JEKoZYXADkMKKM
+         9QW7KHZe4k34GlxbCG/Do/pExBrOJGlck9Cpmk5EkAYO3U3FPWNtcRJZoMQk2ciJ55
+         iBKv69j6Ra/XaMe2t5KQiKS/Nx5p9iVksp2zkaPBlqaBJlRGHupKNUe8wqAjYb6Kmv
+         dIiOkw7waa/Dw==
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="utf-8"; format="flowed"
-To: David Laight <David.Laight-ZS65k/vG3HxXrIkS9f7CXA@public.gmane.org>, 'Tejun Heo' <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: Christoph Hellwig <hch-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, "linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Martin Liska <mliska-AlSwsSmVLrQ@public.gmane.org>, Josef Bacik <josef-DigfWCa+lFGyeJad7bwFQA@public.gmane.org>, Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, "cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Type: text/plain; charset="us-ascii"
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, "Jiri Slaby (SUSE)" <jirislaby-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Martin Liska <mliska-AlSwsSmVLrQ@public.gmane.org>, Josef Bacik <josef-DigfWCa+lFGyeJad7bwFQA@public.gmane.org>, Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On 13. 12. 22, 12:50, David Laight wrote:
-> From: Jiri Slaby
->> Sent: 13 December 2022 11:15
->>
->> On 13. 12. 22, 9:30, David Laight wrote:
->>> From: Tejun Heo <htejun-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org> On Behalf Of 'Tejun Heo'
->>>> Sent: 12 December 2022 21:47
->>>> To: Jiri Slaby <jirislaby-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
->>>> Cc: David Laight <David.Laight-ZS65k/vG3HxXrIkS9f7CXA@public.gmane.org>; Christoph Hellwig <hch-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>; linux-
->>>> kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org; Martin Liska <mliska-AlSwsSmVLrQ@public.gmane.org>; Josef Bacik <josef-DigfWCa+lFGyeJad7bwFQA@public.gmane.org>; Jens
->> Axboe
->>>> <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>; cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org; linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
->>>> Subject: Re: [PATCH] block/blk-iocost (gcc13): cast enum members to int in prints
->>>>
->>>> On Mon, Dec 12, 2022 at 01:14:31PM +0100, Jiri Slaby wrote:
->>>>>> If so, my suggestion is just sticking with the old behavior until we switch
->>>>>> to --std=g2x and then make one time adjustment at that point.
->>>>>
->>>>> So is the enum split OK under these circumstances?
->>>>
->>>> Oh man, it's kinda crazy that the compiler is changing in a way that the
->>>> same piece of code can't be compiled the same way across two adjoining
->>>> versions of the same compiler. But, yeah, if that's what gcc is gonna do and
->>>> splitting enums is the only way to be okay across the compiler versions,
->>>> there isn't any other choice we can make.
->>>
->>> It is also a silent code-breaker.
->>> Compile this for 32bit x86:
->>>
->>> enum { a = 1, b = ~0ull};
->>
->> But having ull in an enum is undefined anyway. C99 allows only int
->> constants. gnuC supports ulong expressions (IIRC).
-> 
-> gcc supports 'long long' as well - 64bit on 32bit systems.
+Since gcc13, each member of an enum has the same type as the enum [1]. And
+that is inherited from its members. Provided:
+  VTIME_PER_SEC_SHIFT     = 37,
+  VTIME_PER_SEC           = 1LLU << VTIME_PER_SEC_SHIFT,
+  ...
+  AUTOP_CYCLE_NSEC        = 10LLU * NSEC_PER_SEC,
+the named type is unsigned long.
 
-Can you elaborate what's source of this? Gcc manual says this about enum 
-values:
+This generates warnings with gcc-13:
+  block/blk-iocost.c: In function 'ioc_weight_prfill':
+  block/blk-iocost.c:3037:37: error: format '%u' expects argument of type 'unsigned int', but argument 4 has type 'long unsigned int'
 
-The integer type compatible with each enumerated type (C90 6.5.2.2, C99 
-and C11 6.7.2.2).
+  block/blk-iocost.c: In function 'ioc_weight_show':
+  block/blk-iocost.c:3047:34: error: format '%u' expects argument of type 'unsigned int', but argument 3 has type 'long unsigned int'
 
-Normally, the type is unsigned int if there are no negative values in 
-the enumeration, otherwise int. If ‘-fshort-enums’ is specified, ..., 
-otherwise it is the first of unsigned char, unsigned short and unsigned 
-int that can represent all the values.
+So split the anonumois enum with large values to a separate enum, so
+that they don't affect other members.
 
-I.e. the documentation says uint is the highest possible enum value.
+[1] https://gcc.gnu.org/bugzilla/show_bug.cgi?id=36113
 
-C2x/g2x also supports ulong (that's what it is all about). But we don't 
-do c2x quite yet.
+Cc: Martin Liska <mliska-AlSwsSmVLrQ@public.gmane.org>
+Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: Josef Bacik <josef-DigfWCa+lFGyeJad7bwFQA@public.gmane.org>
+Cc: Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Cc: linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Signed-off-by: Jiri Slaby (SUSE) <jirislaby-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+---
 
-thanks,
+Notes:
+    [v3] move more to a new enum (effectively split the enums)
+    [v2] move to a new enum
+
+ block/blk-iocost.c | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/block/blk-iocost.c b/block/blk-iocost.c
+index d1bdc12deaa7..549ddc9e0c6f 100644
+--- a/block/blk-iocost.c
++++ b/block/blk-iocost.c
+@@ -232,7 +232,9 @@ enum {
+ 
+ 	/* 1/64k is granular enough and can easily be handled w/ u32 */
+ 	WEIGHT_ONE		= 1 << 16,
++};
+ 
++enum {
+ 	/*
+ 	 * As vtime is used to calculate the cost of each IO, it needs to
+ 	 * be fairly high precision.  For example, it should be able to
 -- 
--- 
-js
-suse labs
+2.39.0
 
