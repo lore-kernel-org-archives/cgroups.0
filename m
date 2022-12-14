@@ -1,63 +1,54 @@
-From: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH-block v3 1/2] bdi, blk-cgroup: Fix potential UAF of blkcg
-Date: Wed, 14 Dec 2022 11:55:24 -0500
-Message-ID: <306d760d-fe6d-d02c-ad6c-e2467d8da4af@redhat.com>
-References: <20221213184446.50181-1-longman@redhat.com>
- <20221213184446.50181-2-longman@redhat.com>
- <Y5jSllwwBdmQ1jQz@slm.duckdns.org>
- <34a8c4a7-a58d-63fc-4599-accf1cbb6aae@redhat.com>
- <5fbaea42-14a7-27a8-cea1-3a59161ceba0@kernel.dk>
+From: Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>
+Subject: Re: [PATCH v3] block/blk-iocost (gcc13): keep large values in a new
+ enum
+Date: Wed, 14 Dec 2022 09:56:48 -0700
+Message-ID: <974973f8-c703-59aa-5afe-40b33429fdbb@kernel.dk>
+References: <20221213120826.17446-1-jirislaby@kernel.org>
 Mime-Version: 1.0
 Content-Transfer-Encoding: quoted-printable
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1671036932;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=5KkvyfAVh7ov91U1zVhHBRTT/9tXTJw1vQiOpy6VtBw=;
-        b=fYCwqan0UluxefVFN51PXERhMUPnVkiiHHSjGku/il6wpUKU1tVueTu7At8XyCZMO/dTYc
-        5J00o2UoajkSfBPhZLG5eFMHoKGFcs/uAFKrFtisL2kXueBOEEdCqYTcR0GySRxTKWDM5B
-        0caDtKoVB6cTXhGLx9rjjjto2T4dYBs=
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=kernel-dk.20210112.gappssmtp.com; s=20210112;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=qQKY6n7m8NgblNOiTPoGQcWD1P9sRiAJmGKmfHIQaJI=;
+        b=qDiKuv3fl7iPMbNQg9zsteNnbztHAVsD0qiatsZnMDeWRzSCENzuNxv7fKTpR+Aw+r
+         ECz5GcXEvCuKQDcHXOMTehJ1L5S4PpdMcTf3ybKc3xVfHxgUG12zlkpPgbt2fzGVRC6f
+         kUPYozQIOLOtXEUGvyVZSPyQFiS9fFd2SO6uuS5xj/GSFMWnpKviC2uBk0oaJKCm6zE+
+         DsWWHeR3MKc7e8NNBk6Uyqp0DVkcJypwUYLBfpKRPRrjJ5WjnsyTpod1l/oQeYM1VKur
+         Rm4ThNy1htZjuZnUjH2X/8HKwcDCdQRCIWa8WwnxmqFFMAWZlr0dsHlqBsENZZAQbuBw
+         E3rg==
 Content-Language: en-US
-In-Reply-To: <5fbaea42-14a7-27a8-cea1-3a59161ceba0-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>
+In-Reply-To: <20221213120826.17446-1-jirislaby-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="windows-1252"; format="flowed"
-To: Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: Josef Bacik <josef-DigfWCa+lFGyeJad7bwFQA@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, =?UTF-8?Q?Michal_Koutn=c3=bd?= <mkoutny-IBi9RG/b67k@public.gmane.org>, "Dennis Zhou (Facebook)" <dennisszhou-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Yi Zhang <yi.zhang-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Content-Type: text/plain; charset="windows-1252"
+To: "Jiri Slaby (SUSE)" <jirislaby-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Martin Liska <mliska-AlSwsSmVLrQ@public.gmane.org>, Josef Bacik <josef-DigfWCa+lFGyeJad7bwFQA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
+On 12/13/22 5:08=E2=80=AFAM, Jiri Slaby (SUSE) wrote:
+> Since gcc13, each member of an enum has the same type as the enum [1]. And
+> that is inherited from its members. Provided:
+>   VTIME_PER_SEC_SHIFT     =3D 37,
+>   VTIME_PER_SEC           =3D 1LLU << VTIME_PER_SEC_SHIFT,
+>   ...
+>   AUTOP_CYCLE_NSEC        =3D 10LLU * NSEC_PER_SEC,
+> the named type is unsigned long.
+>=20
+> This generates warnings with gcc-13:
+>   block/blk-iocost.c: In function 'ioc_weight_prfill':
+>   block/blk-iocost.c:3037:37: error: format '%u' expects argument of type=
+ 'unsigned int', but argument 4 has type 'long unsigned int'
+>=20
+>   block/blk-iocost.c: In function 'ioc_weight_show':
+>   block/blk-iocost.c:3047:34: error: format '%u' expects argument of type=
+ 'unsigned int', but argument 3 has type 'long unsigned int'
+>=20
+> So split the anonumois enum with large values to a separate enum, so
 
-On 12/14/22 11:54, Jens Axboe wrote:
-> On 12/13/22 12:53=E2=80=AFPM, Waiman Long wrote:
->> On 12/13/22 14:29, Tejun Heo wrote:
->>> On Tue, Dec 13, 2022 at 01:44:45PM -0500, Waiman Long wrote:
->>>> Commit 59b57717fff8 ("blkcg: delay blkg destruction until after
->>>> writeback has finished") delayed call to blkcg_destroy_blkgs() to
->>>> cgwb_release_workfn(). However, it is done after a css_put() of blkcg
->>>> which may be the final put that causes the blkcg to be freed as RCU
->>>> read lock isn't held.
->>>>
->>>> Another place where blkcg_destroy_blkgs() can be called indirectly via
->>>> blkcg_unpin_online() is from the offline_css() function called from
->>>> css_killed_work_fn(). Over there, the potentially final css_put() call
->>>> is issued after offline_css().
->>>>
->>>> By adding a css_tryget() into blkcg_destroy_blkgs() and warning its
->>>> failure, the following stack trace was produced in a test system on
->>>> bootup.
->>> This doesn't agree with the code anymore. Otherwise
->>>
->>> Acked-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
->> Sorry, I overlooked the commit log in my update. I will update it if I n=
-eed another version, or Jens can make the following edit:
->>
->> css_tryget() -> percpu_ref_is_zero().
-> Since the other one also needs an edit, would be great if you could
-> just send out a v4.
->
-Sure, will do that.
+anonymous?
 
-Cheers,
-Longman
+--=20
+Jens Axboe
+
 
