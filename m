@@ -1,45 +1,47 @@
-From: Jens Axboe <axboe@kernel.dk>
-Subject: Re: [PATCH v3] block/blk-iocost (gcc13): keep large values in a new enum
-Date: Wed, 14 Dec 2022 09:56:56 -0700
-Message-ID: <167103701689.7871.5096840115794235278.b4-ty@kernel.dk>
-References: <20221213120826.17446-1-jirislaby@kernel.org>
+From: Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>
+Subject: Re: [PATCH 0/2] block, bfq: minor cleanups
+Date: Wed, 14 Dec 2022 09:56:55 -0700
+Message-ID: <167103701587.7871.17006883057809106433.b4-ty@kernel.dk>
+References: <20221214033155.3455754-1-yukuai1@huaweicloud.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-block-owner@vger.kernel.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=kernel-dk.20210112.gappssmtp.com; s=20210112;
         h=content-transfer-encoding:mime-version:date:message-id:subject
          :references:in-reply-to:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=6Ju0SN0CEVcplXYOw1X7EyarT02yn23kHgLqVSbDEE4=;
-        b=QhWtChl13fEjzn+c7stogJNanm2k7IHx55x+oP67ZKqO6ImEwYdM+5fiS9G+uqiooE
-         a1/ZHEP9J+4tgZZZNRYS2+lcbPgkq2Jfcdz0vFEDOM36QIQUIlzMj1qza+w6pOueO7n3
-         tZZJeS227c7o6UQSCclnUN28FezhrZrlkv/Yj+TtnCSJfgWNZTjRKZbvTAIdi4/kHL84
-         5oWKCJHAD34g81IWBxv7KeV1EE/JMQ0Lkk9R40PZIrUcx+b4TtXyuw5IU4wTgLw/1IHG
-         gg5CCs44vTq7EwWicegB+poRTotw8JsjL13C/6+Sly36aZVJMT5gNJmRBpsYzYxeDF5l
-         3pOQ==
-In-Reply-To: <20221213120826.17446-1-jirislaby@kernel.org>
+        bh=+IqN/UFmzZrEibODg3m/L1J+2MIkf8gPpvi4AhxE0rI=;
+        b=Tr9KjKxPfOrvyg/SlAr3G0wYWAk1UreVI+Jp0ogHuK9sYGPI6TLN2bdwSO7JE9YN5P
+         ksq36k620RJublNfl2UgV0rcqufHvRy3WPZ1/DwJY5mEzTkXsKBQpFeYNSQafVJs/g5m
+         bddWHvyIRkWIjk6XLgscQ22NQRzC1MS/db8GVzT3NAYZmp4T13GzoGp9XmQLdGHWALMt
+         0WokKjmKiiOxdGDB4hkRHUOCnT/AeUKWtXKcLAEmpX/i/FeNibZqDKuK34fXQ4DdD9lX
+         kMHALlS4FAY2jJZj/5A9zLlipomJ24/3huviN/0VKdXs7IKs+uzS51RYhIZDc3VLHkem
+         1LiA==
+In-Reply-To: <20221214033155.3455754-1-yukuai1-XF6JlduFytWkHkcT6e4Xnw@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Tejun Heo <tj@kernel.org>, "Jiri Slaby (SUSE)" <jirislaby@kernel.org>
-Cc: linux-kernel@vger.kernel.org, Martin Liska <mliska@suse.cz>, Josef Bacik <josef@toxicpanda.com>, cgroups@vger.kernel.org, linux-block@vger.kernel.org
+To: paolo.valente-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, josef-DigfWCa+lFGyeJad7bwFQA@public.gmane.org, Yu Kuai <yukuai1-XF6JlduFytWkHkcT6e4Xnw@public.gmane.org>
+Cc: linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, yi.zhang-hv44wF8Li93QT0dZR+AlfA@public.gmane.org
 
 
-On Tue, 13 Dec 2022 13:08:26 +0100, Jiri Slaby (SUSE) wrote:
-> Since gcc13, each member of an enum has the same type as the enum [1]. And
-> that is inherited from its members. Provided:
->   VTIME_PER_SEC_SHIFT     = 37,
->   VTIME_PER_SEC           = 1LLU << VTIME_PER_SEC_SHIFT,
->   ...
->   AUTOP_CYCLE_NSEC        = 10LLU * NSEC_PER_SEC,
-> the named type is unsigned long.
+On Wed, 14 Dec 2022 11:31:53 +0800, Yu Kuai wrote:
+> Yu Kuai (2):
+>   block, bfq: don't return bfqg from __bfq_bic_change_cgroup()
+>   block, bfq: replace 0/1 with false/true in bic apis
+> 
+> block/bfq-cgroup.c  | 16 +++++++---------
+>  block/bfq-iosched.c |  4 ++--
+>  2 files changed, 9 insertions(+), 11 deletions(-)
 > 
 > [...]
 
 Applied, thanks!
 
-[1/1] block/blk-iocost (gcc13): keep large values in a new enum
-      commit: ff1cc97b1f4c10db224f276d9615b22835b8c424
+[1/2] block, bfq: don't return bfqg from __bfq_bic_change_cgroup()
+      commit: 452af7dc59033a76372d51a24682503377872b11
+[2/2] block, bfq: replace 0/1 with false/true in bic apis
+      commit: 337366e02b370d2800110fbc99940f6ddddcbdfa
 
 Best regards,
 -- 
