@@ -1,54 +1,48 @@
-From: Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>
-Subject: Re: [PATCH v3] block/blk-iocost (gcc13): keep large values in a new
- enum
-Date: Wed, 14 Dec 2022 09:56:48 -0700
-Message-ID: <974973f8-c703-59aa-5afe-40b33429fdbb@kernel.dk>
+From: Jens Axboe <axboe@kernel.dk>
+Subject: Re: [PATCH v3] block/blk-iocost (gcc13): keep large values in a new enum
+Date: Wed, 14 Dec 2022 09:56:56 -0700
+Message-ID: <167103701689.7871.5096840115794235278.b4-ty@kernel.dk>
 References: <20221213120826.17446-1-jirislaby@kernel.org>
 Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-block-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=kernel-dk.20210112.gappssmtp.com; s=20210112;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=qQKY6n7m8NgblNOiTPoGQcWD1P9sRiAJmGKmfHIQaJI=;
-        b=qDiKuv3fl7iPMbNQg9zsteNnbztHAVsD0qiatsZnMDeWRzSCENzuNxv7fKTpR+Aw+r
-         ECz5GcXEvCuKQDcHXOMTehJ1L5S4PpdMcTf3ybKc3xVfHxgUG12zlkpPgbt2fzGVRC6f
-         kUPYozQIOLOtXEUGvyVZSPyQFiS9fFd2SO6uuS5xj/GSFMWnpKviC2uBk0oaJKCm6zE+
-         DsWWHeR3MKc7e8NNBk6Uyqp0DVkcJypwUYLBfpKRPRrjJ5WjnsyTpod1l/oQeYM1VKur
-         Rm4ThNy1htZjuZnUjH2X/8HKwcDCdQRCIWa8WwnxmqFFMAWZlr0dsHlqBsENZZAQbuBw
-         E3rg==
-Content-Language: en-US
-In-Reply-To: <20221213120826.17446-1-jirislaby-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+        h=content-transfer-encoding:mime-version:date:message-id:subject
+         :references:in-reply-to:cc:to:from:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=6Ju0SN0CEVcplXYOw1X7EyarT02yn23kHgLqVSbDEE4=;
+        b=QhWtChl13fEjzn+c7stogJNanm2k7IHx55x+oP67ZKqO6ImEwYdM+5fiS9G+uqiooE
+         a1/ZHEP9J+4tgZZZNRYS2+lcbPgkq2Jfcdz0vFEDOM36QIQUIlzMj1qza+w6pOueO7n3
+         tZZJeS227c7o6UQSCclnUN28FezhrZrlkv/Yj+TtnCSJfgWNZTjRKZbvTAIdi4/kHL84
+         5oWKCJHAD34g81IWBxv7KeV1EE/JMQ0Lkk9R40PZIrUcx+b4TtXyuw5IU4wTgLw/1IHG
+         gg5CCs44vTq7EwWicegB+poRTotw8JsjL13C/6+Sly36aZVJMT5gNJmRBpsYzYxeDF5l
+         3pOQ==
+In-Reply-To: <20221213120826.17446-1-jirislaby@kernel.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="windows-1252"
-To: "Jiri Slaby (SUSE)" <jirislaby-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Martin Liska <mliska-AlSwsSmVLrQ@public.gmane.org>, Josef Bacik <josef-DigfWCa+lFGyeJad7bwFQA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Type: text/plain; charset="us-ascii"
+To: Tejun Heo <tj@kernel.org>, "Jiri Slaby (SUSE)" <jirislaby@kernel.org>
+Cc: linux-kernel@vger.kernel.org, Martin Liska <mliska@suse.cz>, Josef Bacik <josef@toxicpanda.com>, cgroups@vger.kernel.org, linux-block@vger.kernel.org
 
-On 12/13/22 5:08=E2=80=AFAM, Jiri Slaby (SUSE) wrote:
+
+On Tue, 13 Dec 2022 13:08:26 +0100, Jiri Slaby (SUSE) wrote:
 > Since gcc13, each member of an enum has the same type as the enum [1]. And
 > that is inherited from its members. Provided:
->   VTIME_PER_SEC_SHIFT     =3D 37,
->   VTIME_PER_SEC           =3D 1LLU << VTIME_PER_SEC_SHIFT,
+>   VTIME_PER_SEC_SHIFT     = 37,
+>   VTIME_PER_SEC           = 1LLU << VTIME_PER_SEC_SHIFT,
 >   ...
->   AUTOP_CYCLE_NSEC        =3D 10LLU * NSEC_PER_SEC,
+>   AUTOP_CYCLE_NSEC        = 10LLU * NSEC_PER_SEC,
 > the named type is unsigned long.
->=20
-> This generates warnings with gcc-13:
->   block/blk-iocost.c: In function 'ioc_weight_prfill':
->   block/blk-iocost.c:3037:37: error: format '%u' expects argument of type=
- 'unsigned int', but argument 4 has type 'long unsigned int'
->=20
->   block/blk-iocost.c: In function 'ioc_weight_show':
->   block/blk-iocost.c:3047:34: error: format '%u' expects argument of type=
- 'unsigned int', but argument 3 has type 'long unsigned int'
->=20
-> So split the anonumois enum with large values to a separate enum, so
+> 
+> [...]
 
-anonymous?
+Applied, thanks!
 
---=20
+[1/1] block/blk-iocost (gcc13): keep large values in a new enum
+      commit: ff1cc97b1f4c10db224f276d9615b22835b8c424
+
+Best regards,
+-- 
 Jens Axboe
 
 
