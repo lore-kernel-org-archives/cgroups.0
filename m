@@ -1,52 +1,81 @@
-From: Yu Kuai <yukuai1-XF6JlduFytWkHkcT6e4Xnw@public.gmane.org>
-Subject: [PATCH 1/2] block, bfq: don't return bfqg from __bfq_bic_change_cgroup()
-Date: Wed, 14 Dec 2022 11:31:54 +0800
-Message-ID: <20221214033155.3455754-2-yukuai1@huaweicloud.com>
+From: Yu Kuai <yukuai1@huaweicloud.com>
+Subject: [PATCH 2/2] block, bfq: replace 0/1 with false/true in bic apis
+Date: Wed, 14 Dec 2022 11:31:55 +0800
+Message-ID: <20221214033155.3455754-3-yukuai1@huaweicloud.com>
 References: <20221214033155.3455754-1-yukuai1@huaweicloud.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <20221214033155.3455754-1-yukuai1-XF6JlduFytWkHkcT6e4Xnw@public.gmane.org>
+Return-path: <linux-block-owner@vger.kernel.org>
+In-Reply-To: <20221214033155.3455754-1-yukuai1@huaweicloud.com>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: paolo.valente-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org, axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, josef-DigfWCa+lFGyeJad7bwFQA@public.gmane.org
-Cc: linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, yukuai1-XF6JlduFytWkHkcT6e4Xnw@public.gmane.org, yi.zhang-hv44wF8Li93QT0dZR+AlfA@public.gmane.org
+To: paolo.valente@linaro.org, axboe@kernel.dk, tj@kernel.org, josef@toxicpanda.com
+Cc: linux-block@vger.kernel.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, yukuai3@huawei.com, yukuai1@huaweicloud.com, yi.zhang@huawei.com
 
-From: Yu Kuai <yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+From: Yu Kuai <yukuai3@huawei.com>
 
-The return value is not used, hence remove it.
+Just to make the code a litter cleaner, there are no functional changes.
 
-Signed-off-by: Yu Kuai <yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Signed-off-by: Yu Kuai <yukuai3@huawei.com>
 ---
- block/bfq-cgroup.c | 8 +++-----
- 1 file changed, 3 insertions(+), 5 deletions(-)
+ block/bfq-cgroup.c  | 8 ++++----
+ block/bfq-iosched.c | 4 ++--
+ 2 files changed, 6 insertions(+), 6 deletions(-)
 
 diff --git a/block/bfq-cgroup.c b/block/bfq-cgroup.c
-index 627476bc6495..23dc355a106d 100644
+index 23dc355a106d..1b2829e99dad 100644
 --- a/block/bfq-cgroup.c
 +++ b/block/bfq-cgroup.c
-@@ -724,9 +724,9 @@ void bfq_bfqq_move(struct bfq_data *bfqd, struct bfq_queue *bfqq,
-  * sure that the reference to cgroup is valid across the call (see
-  * comments in bfq_bic_update_cgroup on this issue)
-  */
--static void *__bfq_bic_change_cgroup(struct bfq_data *bfqd,
--				     struct bfq_io_cq *bic,
--				     struct bfq_group *bfqg)
-+static void __bfq_bic_change_cgroup(struct bfq_data *bfqd,
-+				    struct bfq_io_cq *bic,
-+				    struct bfq_group *bfqg)
+@@ -728,15 +728,15 @@ static void __bfq_bic_change_cgroup(struct bfq_data *bfqd,
+ 				    struct bfq_io_cq *bic,
+ 				    struct bfq_group *bfqg)
  {
- 	struct bfq_queue *async_bfqq = bic_to_bfqq(bic, 0);
- 	struct bfq_queue *sync_bfqq = bic_to_bfqq(bic, 1);
-@@ -776,8 +776,6 @@ static void *__bfq_bic_change_cgroup(struct bfq_data *bfqd,
+-	struct bfq_queue *async_bfqq = bic_to_bfqq(bic, 0);
+-	struct bfq_queue *sync_bfqq = bic_to_bfqq(bic, 1);
++	struct bfq_queue *async_bfqq = bic_to_bfqq(bic, false);
++	struct bfq_queue *sync_bfqq = bic_to_bfqq(bic, true);
+ 	struct bfq_entity *entity;
+ 
+ 	if (async_bfqq) {
+ 		entity = &async_bfqq->entity;
+ 
+ 		if (entity->sched_data != &bfqg->sched_data) {
+-			bic_set_bfqq(bic, NULL, 0);
++			bic_set_bfqq(bic, NULL, false);
+ 			bfq_release_process_ref(bfqd, async_bfqq);
+ 		}
+ 	}
+@@ -772,7 +772,7 @@ static void __bfq_bic_change_cgroup(struct bfq_data *bfqd,
+ 				 */
+ 				bfq_put_cooperator(sync_bfqq);
+ 				bfq_release_process_ref(bfqd, sync_bfqq);
+-				bic_set_bfqq(bic, NULL, 1);
++				bic_set_bfqq(bic, NULL, true);
  			}
  		}
  	}
--
--	return bfqg;
- }
+diff --git a/block/bfq-iosched.c b/block/bfq-iosched.c
+index b111a7b8dca6..dc576b90ddfe 100644
+--- a/block/bfq-iosched.c
++++ b/block/bfq-iosched.c
+@@ -3114,7 +3114,7 @@ bfq_merge_bfqqs(struct bfq_data *bfqd, struct bfq_io_cq *bic,
+ 	/*
+ 	 * Merge queues (that is, let bic redirect its requests to new_bfqq)
+ 	 */
+-	bic_set_bfqq(bic, new_bfqq, 1);
++	bic_set_bfqq(bic, new_bfqq, true);
+ 	bfq_mark_bfqq_coop(new_bfqq);
+ 	/*
+ 	 * new_bfqq now belongs to at least two bics (it is a shared queue):
+@@ -6562,7 +6562,7 @@ bfq_split_bfqq(struct bfq_io_cq *bic, struct bfq_queue *bfqq)
+ 		return bfqq;
+ 	}
  
- void bfq_bic_update_cgroup(struct bfq_io_cq *bic, struct bio *bio)
+-	bic_set_bfqq(bic, NULL, 1);
++	bic_set_bfqq(bic, NULL, true);
+ 
+ 	bfq_put_cooperator(bfqq);
+ 
 -- 
 2.31.1
 
