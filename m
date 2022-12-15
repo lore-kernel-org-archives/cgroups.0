@@ -1,51 +1,151 @@
-From: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Subject: [PATCH v4 0/2] blk-cgroup: Fix potential UAF & flush rstat at blkgs destruction path
-Date: Wed, 14 Dec 2022 22:31:30 -0500
-Message-ID: <20221215033132.230023-1-longman@redhat.com>
+From: "Huang, Ying" <ying.huang@intel.com>
+Subject: Re: [PATCH v3] mm: Add nodes= arg to memory.reclaim
+Date: Thu, 15 Dec 2022 13:50:14 +0800
+Message-ID: <87mt7pdxm1.fsf@yhuang6-desk2.ccr.corp.intel.com>
+References: <20221202223533.1785418-1-almasrymina@google.com>
+        <Y5bsmpCyeryu3Zz1@dhcp22.suse.cz>
+        <CAHS8izM-XdLgFrQ1k13X-4YrK=JGayRXV_G3c3Qh4NLKP7cH_g@mail.gmail.com>
+        <87k02volwe.fsf@yhuang6-desk2.ccr.corp.intel.com>
+        <Y5h+gHBneexFQcR3@cmpxchg.org> <Y5iGJ/9PMmSCwqLj@dhcp22.suse.cz>
+        <CAHS8izOuT_-p-N1xPApi+BPJQ+P--2YVSUeiWBROGvGinN0vcg@mail.gmail.com>
+        <Y5mkJL6I5Zlc1k97@dhcp22.suse.cz>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1671075117;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding;
-        bh=veCyvm43EvJLg9G9hhu4AmM7THRxqVqHEQtr8ufuCSo=;
-        b=iJoJqwZ+7thbe+rwo3QNBWbueHh9VCFIGkejROPzRkVSbsPAojqqecLxoH6F6mSEZzjqXr
-        TxeFq9SpJQnlbIYxgBQczKUi9MpqTKxuLiLK4Hab5L4Egukt+WXlLHkq8m4n9XuB4vAhK2
-        wgm9OY5q3R2ztYNeHN1nLVTdSQKjk1c=
+Return-path: <linux-doc-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1671083476; x=1702619476;
+  h=from:to:cc:subject:references:date:in-reply-to:
+   message-id:mime-version;
+  bh=Vy1nnsBUMyfJdWB0HL7AxX9ZAnGiu08F+Oqh6ALowk0=;
+  b=Y0f6k6Ob/PVLCF7ZV8Cn8u4/Y1FeG0TEP0ks29g7L98rs+pRQZAf2s8Y
+   isvFerH0xEt7LpCCtQhIKfSkyOdnMtCjlSHnRlo9UAz+pD7ppom6yf6tx
+   yJUrPh6QisJo/160AOUnw6Tae0JrP7H/8dunmntoAiruoKWdUyfidhzaV
+   M4TvNwcONIR0ApnfGb32+Cv61rkwDp4Sn9Dp/jPVVpgsOb/dyDU39luec
+   KaL+8l1IDb4V7QdvHHbmMVQ86EFqb1GvypxhYFb/OzC3RxbJTILNta/qi
+   WRVbKIgyUiYrEcQXV2UW/5l4BN2RpDoJcaewaKWR1DrIEYeJITWO/YO1E
+   A==;
+In-Reply-To: <Y5mkJL6I5Zlc1k97@dhcp22.suse.cz> (Michal Hocko's message of
+        "Wed, 14 Dec 2022 11:23:32 +0100")
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Josef Bacik <josef-DigfWCa+lFGyeJad7bwFQA@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, =?UTF-8?q?Michal=20Koutn=C3=BD?= <mkoutny-IBi9RG/b67k@public.gmane.org>, "Dennis Zhou (Facebook)" <dennisszhou-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Content-Transfer-Encoding: 7bit
+To: Michal Hocko <mhocko@suse.com>
+Cc: Mina Almasry <almasrymina@google.com>, Johannes Weiner <hannes@cmpxchg.org>, Tejun Heo <tj@kernel.org>, Zefan Li <lizefan.x@bytedance.com>, Jonathan Corbet <corbet@lwn.net>, Roman Gushchin <roman.gushchin@linux.dev>, Shakeel Butt <shakeelb@google.com>, Muchun Song <songmuchun@bytedance.com>, Andrew Morton <akpm@linux-foundation.org>, Yang Shi <yang.shi@linux.alibaba.com>, Yosry Ahmed <yosryahmed@google.com>, weixugc@google.com, fvdl@google.com, bagasdotme@gmail.com, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org
 
- v4:
-  - Update comment and commit logs for both patches.
+Michal Hocko <mhocko@suse.com> writes:
 
- v3:
-  - Drop v2 patch 2 as it may not be needed.
-  - Replace css_tryget() with percpu_ref_is_zero() in patch 1 as
-    suggested by Tejun.
-  - Expand comment on patch 2 to elaborate the reason for this patch.
+> On Tue 13-12-22 11:29:45, Mina Almasry wrote:
+>> On Tue, Dec 13, 2022 at 6:03 AM Michal Hocko <mhocko@suse.com> wrote:
+>> >
+>> > On Tue 13-12-22 14:30:40, Johannes Weiner wrote:
+>> > > On Tue, Dec 13, 2022 at 02:30:57PM +0800, Huang, Ying wrote:
+>> > [...]
+>> > > > After these discussion, I think the solution maybe use different
+>> > > > interfaces for "proactive demote" and "proactive reclaim".  That is,
+>> > > > reconsider "memory.demote".  In this way, we will always uncharge the
+>> > > > cgroup for "memory.reclaim".  This avoid the possible confusion there.
+>> > > > And, because demotion is considered aging, we don't need to disable
+>> > > > demotion for "memory.reclaim", just don't count it.
+>> > >
+>> > > Hm, so in summary:
+>> > >
+>> > > 1) memory.reclaim would demote and reclaim like today, but it would
+>> > >    change to only count reclaimed pages against the goal.
+>> > >
+>> > > 2) memory.demote would only demote.
+>> > >
+>> 
+>> If the above 2 points are agreeable then yes, this sounds good to me
+>> and does address our use case.
+>> 
+>> > >    a) What if the demotion targets are full? Would it reclaim or fail?
+>> > >
+>> 
+>> Wei will chime in if he disagrees, but I think we _require_ that it
+>> fails, not falls back to reclaim. The interface is asking for
+>> demotion, and is called memory.demote. For such an interface to fall
+>> back to reclaim would be very confusing to userspace and may trigger
+>> reclaim on a high priority job that we want to shield from proactive
+>> reclaim.
+>
+> But what should happen if the immediate demotion target is full but
+> lower tiers are still usable. Should the first one demote before
+> allowing to demote from the top tier?
+>  
+>> > > 3) Would memory.reclaim and memory.demote still need nodemasks?
+>> 
+>> memory.demote will need a nodemask, for sure. Today the nodemask would
+>> be useful if there is a specific node in the top tier that is
+>> overloaded and we want to reduce the pressure by demoting. In the
+>> future there will be N tiers and the nodemask says which tier to
+>> demote from.
+>
+> OK, so what is the exact semantic of the node mask. Does it control
+> where to demote from or to or both?
+>
+>> I don't think memory.reclaim would need a nodemask anymore? At least I
+>> no longer see the use for it for us.
+>> 
+>> > >    Would
+>> > >    they return -EINVAL if a) memory.reclaim gets passed only toptier
+>> > >    nodes or b) memory.demote gets passed any lasttier nodes?
+>> >
+>> 
+>> Honestly it would be great if memory.reclaim can force reclaim from a
+>> top tier nodes. It breaks the aginig pipeline, yes, but if the user is
+>> specifically asking for that because they decided in their usecase
+>> it's a good idea then the kernel should comply IMO. Not a strict
+>> requirement for us. Wei will chime in if he disagrees.
+>
+> That would require a nodemask to say which nodes to reclaim, no? The
+> default behavior should be in line with what standard memory reclaim
+> does. If the demotion is a part of that process so should be
+> memory.reclaim part of it. If we want to have a finer control then a
+> nodemask is really a must and then the nodemaks should constrain both
+> agining and reclaim.
+>
+>> memory.demote returning -EINVAL for lasttier nodes makes sense to me.
+>> 
+>> > I would also add
+>> > 4) Do we want to allow to control the demotion path (e.g. which node to
+>> >    demote from and to) and how to achieve that?
+>> 
+>> We care deeply about specifying which node to demote _from_. That
+>> would be some node that is approaching pressure and we're looking for
+>> proactive saving from. So far I haven't seen any reason to control
+>> which nodes to demote _to_. The kernel deciding that based on the
+>> aging pipeline and the node distances sounds good to me. Obviously
+>> someone else may find that useful.
+>
+> Please keep in mind that the interface should be really prepared for
+> future extensions so try to abstract from your immediate usecases.
 
- v2:
-  - Remove unnecessary rcu_read_{lock|unlock} from
-    cgroup_rstat_css_cpu_flush() in patch 3.
+I see two requirements here, one is to control the demotion source, that
+is, which nodes to free memory.  The other is to control the demotion
+path.  I think that we can use two different parameters for them, for
+example, "from=<demotion source nodes>" and "to=<demotion target
+nodes>".  In most cases we don't need to control the demotion path.
+Because in current implementation, the nodes in the lower tiers in the
+same socket (local nodes) will be preferred.  I think that this is
+the desired behavior in most cases.
 
-It was found that blkcg_destroy_blkgs() may be called with all blkcg
-references gone. This may potentially cause user-after-free and so should
-be fixed. The second patch flushes rstat when calling blkcg_destroy_blkgs().
+>> > 5) Is the demotion api restricted to multi-tier systems or any numa
+>> >    configuration allowed as well?
+>> >
+>> 
+>> demotion will of course not work on single tiered systems. The
+>> interface may return some failure on such systems or not be available
+>> at all.
+>
+> Is there any strong reason for that? We do not have any interface to
+> control NUMA balancing from userspace. Why cannot we use the interface
+> for that purpose? 
 
-Waiman Long (2):
-  bdi, blk-cgroup: Fix potential UAF of blkcg
-  blk-cgroup: Flush stats at blkgs destruction path
+Do you mean to demote the cold pages from the specified source nodes to
+the specified target nodes in different sockets?  We don't do that to
+avoid loop in the demotion path.  If we prevent the target nodes from
+demoting cold pages to the source nodes at the same time, it seems
+doable.
 
- block/blk-cgroup.c     | 23 +++++++++++++++++++++++
- include/linux/cgroup.h |  1 +
- kernel/cgroup/rstat.c  | 18 ++++++++++++++++++
- mm/backing-dev.c       |  8 ++++++--
- 4 files changed, 48 insertions(+), 2 deletions(-)
-
--- 
-2.31.1
-
+Best Regards,
+Huang, Ying
