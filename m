@@ -1,80 +1,51 @@
 From: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Subject: [PATCH v4 1/2] bdi, blk-cgroup: Fix potential UAF of blkcg
-Date: Wed, 14 Dec 2022 22:31:31 -0500
-Message-ID: <20221215033132.230023-2-longman@redhat.com>
-References: <20221215033132.230023-1-longman@redhat.com>
+Subject: [PATCH v4 0/2] blk-cgroup: Fix potential UAF & flush rstat at blkgs destruction path
+Date: Wed, 14 Dec 2022 22:31:30 -0500
+Message-ID: <20221215033132.230023-1-longman@redhat.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: base64
+Content-Transfer-Encoding: 8bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1671075113;
+        s=mimecast20190719; t=1671075117;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=JQg3oq06Uw+1wG32ld/l34XBIlmOl7KcZS/r8y8eH90=;
-        b=BNOOOfQqNCwnIVq5uI1Gv6r+0NBA2km1aEquWDKmN4DNp7r+/v11I1OPj3bGw6cdDIQEpU
-        1TOr/FBSkY210y0yAYAfKtD9T9M8YrAaZcti41LBW9f7Z3YgU9izwICJ/C602IYdW44erP
-        SBAdBBFAT/9pC3hP+W6Oj3Snax2UcRc=
-In-Reply-To: <20221215033132.230023-1-longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+         content-transfer-encoding:content-transfer-encoding;
+        bh=veCyvm43EvJLg9G9hhu4AmM7THRxqVqHEQtr8ufuCSo=;
+        b=iJoJqwZ+7thbe+rwo3QNBWbueHh9VCFIGkejROPzRkVSbsPAojqqecLxoH6F6mSEZzjqXr
+        TxeFq9SpJQnlbIYxgBQczKUi9MpqTKxuLiLK4Hab5L4Egukt+WXlLHkq8m4n9XuB4vAhK2
+        wgm9OY5q3R2ztYNeHN1nLVTdSQKjk1c=
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="macroman"
+Content-Type: text/plain; charset="us-ascii"
 To: Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Josef Bacik <josef-DigfWCa+lFGyeJad7bwFQA@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, =?UTF-8?q?Michal=20Koutn=C3=BD?= <mkoutny-IBi9RG/b67k@public.gmane.org>, "Dennis Zhou (Facebook)" <dennisszhou-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Yi Zhang <yi.zhang-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, =?UTF-8?q?Michal=20Koutn=C3=BD?= <mkoutny-IBi9RG/b67k@public.gmane.org>, "Dennis Zhou (Facebook)" <dennisszhou-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 
-Q29tbWl0IDU5YjU3NzE3ZmZmOCAoImJsa2NnOiBkZWxheSBibGtnIGRlc3RydWN0aW9uIHVudGls
-IGFmdGVyCndyaXRlYmFjayBoYXMgZmluaXNoZWQiKSBkZWxheWVkIGNhbGwgdG8gYmxrY2dfZGVz
-dHJveV9ibGtncygpIHRvCmNnd2JfcmVsZWFzZV93b3JrZm4oKS4gSG93ZXZlciwgaXQgaXMgZG9u
-ZSBhZnRlciBhIGNzc19wdXQoKSBvZiBibGtjZwp3aGljaCBtYXkgYmUgdGhlIGZpbmFsIHB1dCB0
-aGF0IGNhdXNlcyB0aGUgYmxrY2cgdG8gYmUgZnJlZWQgYXMgUkNVCnJlYWQgbG9jayBpc24ndCBo
-ZWxkLgoKQW5vdGhlciBwbGFjZSB3aGVyZSBibGtjZ19kZXN0cm95X2Jsa2dzKCkgY2FuIGJlIGNh
-bGxlZCBpbmRpcmVjdGx5IHZpYQpibGtjZ191bnBpbl9vbmxpbmUoKSBpcyBmcm9tIHRoZSBvZmZs
-aW5lX2NzcygpIGZ1bmN0aW9uIGNhbGxlZCBmcm9tCmNzc19raWxsZWRfd29ya19mbigpLiBPdmVy
-IHRoZXJlLCB0aGUgcG90ZW50aWFsbHkgZmluYWwgY3NzX3B1dCgpIGNhbGwKaXMgaXNzdWVkIGFm
-dGVyIG9mZmxpbmVfY3NzKCkuCgpCeSBhZGRpbmcgYSBjc3NfdHJ5Z2V0KCkgaW50byBibGtjZ19k
-ZXN0cm95X2Jsa2dzKCkgYW5kIHdhcm5pbmcgaXRzCmZhaWx1cmUsIHRoZSBmb2xsb3dpbmcgc3Rh
-Y2sgdHJhY2Ugd2FzIHByb2R1Y2VkIGluIGEgdGVzdCBzeXN0ZW0gb24KYm9vdHVwLgoKWyAgIDM0
-LjI1NDI0MF0gUklQOiAwMDEwOmJsa2NnX2Rlc3Ryb3lfYmxrZ3MrMHgxNmEvMHgxYTAKICAgICAg
-OgpbICAgMzQuMzM5OTQzXSBDYWxsIFRyYWNlOgpbICAgMzQuMzQ0NTEwXSAgYmxrY2dfdW5waW5f
-b25saW5lKzB4MzgvMHg2MApbICAgMzQuMzQ4NTIzXSAgY2d3Yl9yZWxlYXNlX3dvcmtmbisweDZh
-LzB4MjAwClsgICAzNC4zNTI3MDhdICBwcm9jZXNzX29uZV93b3JrKzB4MWU1LzB4M2IwClsgICAz
-NC4zNjA3NThdICB3b3JrZXJfdGhyZWFkKzB4NTAvMHgzYTAKWyAgIDM0LjM2ODQ0N10gIGt0aHJl
-YWQrMHhkOS8weDEwMApbICAgMzQuMzc2Mzg2XSAgcmV0X2Zyb21fZm9yaysweDIyLzB4MzAKClRo
-aXMgY29uZmlybXMgdGhhdCBhIHBvdGVudGlhbCBVQUYgc2l0dWF0aW9uIGNhbiByZWFsbHkgaGFw
-cGVuIGluCmNnd2JfcmVsZWFzZV93b3JrZm4oKS4KCkZpeCB0aGF0IGJ5IGRlbGF5aW5nIHRoZSBj
-c3NfcHV0KCkgdW50aWwgYWZ0ZXIgdGhlIGJsa2NnX3VucGluX29ubGluZSgpCmNhbGwuIEFsc28g
-dXNlIHBlcmNwdV9yZWZfaXNfemVybygpIGluIGJsa2NnX2Rlc3Ryb3lfYmxrZ3MoKSBhbmQgaXNz
-dWUKYSB3YXJuaW5nIGlmIHJlZmVyZW5jZSBjb3VudCBpcyB6ZXJvLgoKVGhlIHJlcHJvZHVjaW5n
-IHN5c3RlbSBjYW4gbm8gbG9uZ2VyIHByb2R1Y2UgYSB3YXJuaW5nIHdpdGggdGhpcyBwYXRjaC4K
-QWxsIHRoZSBydW5uYWJsZSBibG9jay8wKiB0ZXN0cyBpbmNsdWRpbmcgYmxvY2svMDI3IHdlcmUg
-cnVuIHN1Y2Nlc3NmdWxseQp3aXRob3V0IGZhaWx1cmUuCgpGaXhlczogNTliNTc3MTdmZmY4ICgi
-YmxrY2c6IGRlbGF5IGJsa2cgZGVzdHJ1Y3Rpb24gdW50aWwgYWZ0ZXIgd3JpdGViYWNrIGhhcyBm
-aW5pc2hlZCIpClN1Z2dlc3RlZC1ieTogTWljaGFsIEtvdXRuw70gPG1rb3V0bnktSUJpOVJHL2I2
-N2tAcHVibGljLmdtYW5lLm9yZz4KUmVwb3J0ZWQtYnk6IFlpIFpoYW5nIDx5aS56aGFuZy1IK3dY
-YUh4ZjdhTFFUMGRaUitBbGZBQHB1YmxpYy5nbWFuZS5vcmc+ClNpZ25lZC1vZmYtYnk6IFdhaW1h
-biBMb25nIDxsb25nbWFuLUgrd1hhSHhmN2FMUVQwZFpSK0FsZkFAcHVibGljLmdtYW5lLm9yZz4K
-QWNrZWQtYnk6ICBUZWp1biBIZW8gPHRqLURnRWpUK0FpMnlnZG5tK3lST2ZFMEFAcHVibGljLmdt
-YW5lLm9yZz4KLS0tCiBibG9jay9ibGstY2dyb3VwLmMgfCA3ICsrKysrKysKIG1tL2JhY2tpbmct
-ZGV2LmMgICB8IDggKysrKysrLS0KIDIgZmlsZXMgY2hhbmdlZCwgMTMgaW5zZXJ0aW9ucygrKSwg
-MiBkZWxldGlvbnMoLSkKCmRpZmYgLS1naXQgYS9ibG9jay9ibGstY2dyb3VwLmMgYi9ibG9jay9i
-bGstY2dyb3VwLmMKaW5kZXggMWJiOTM5ZDNiNzkzLi5jYTI4MzA2YWExYjEgMTAwNjQ0Ci0tLSBh
-L2Jsb2NrL2Jsay1jZ3JvdXAuYworKysgYi9ibG9jay9ibGstY2dyb3VwLmMKQEAgLTEwODQsNiAr
-MTA4NCwxMyBAQCBzdHJ1Y3QgbGlzdF9oZWFkICpibGtjZ19nZXRfY2d3Yl9saXN0KHN0cnVjdCBj
-Z3JvdXBfc3Vic3lzX3N0YXRlICpjc3MpCiAgKi8KIHN0YXRpYyB2b2lkIGJsa2NnX2Rlc3Ryb3lf
-YmxrZ3Moc3RydWN0IGJsa2NnICpibGtjZykKIHsKKwkvKgorCSAqIGJsa2NnX2Rlc3Ryb3lfYmxr
-Z3MoKSBzaG91bGRuJ3QgYmUgY2FsbGVkIHdpdGggYWxsIHRoZSBibGtjZworCSAqIHJlZmVyZW5j
-ZXMgZ29uZS4KKwkgKi8KKwlpZiAoV0FSTl9PTl9PTkNFKHBlcmNwdV9yZWZfaXNfemVybygmYmxr
-Y2ctPmNzcy5yZWZjbnQpKSkKKwkJcmV0dXJuOworCiAJbWlnaHRfc2xlZXAoKTsKIAogCXNwaW5f
-bG9ja19pcnEoJmJsa2NnLT5sb2NrKTsKZGlmZiAtLWdpdCBhL21tL2JhY2tpbmctZGV2LmMgYi9t
-bS9iYWNraW5nLWRldi5jCmluZGV4IGMzMDQxOWE1ZTExOS4uMzZmNzViMDcyMzI1IDEwMDY0NAot
-LS0gYS9tbS9iYWNraW5nLWRldi5jCisrKyBiL21tL2JhY2tpbmctZGV2LmMKQEAgLTM5MCwxMSAr
-MzkwLDE1IEBAIHN0YXRpYyB2b2lkIGNnd2JfcmVsZWFzZV93b3JrZm4oc3RydWN0IHdvcmtfc3Ry
-dWN0ICp3b3JrKQogCXdiX3NodXRkb3duKHdiKTsKIAogCWNzc19wdXQod2ItPm1lbWNnX2Nzcyk7
-Ci0JY3NzX3B1dCh3Yi0+YmxrY2dfY3NzKTsKIAltdXRleF91bmxvY2soJndiLT5iZGktPmNnd2Jf
-cmVsZWFzZV9tdXRleCk7CiAKLQkvKiB0cmlnZ2VycyBibGtnIGRlc3RydWN0aW9uIGlmIG5vIG9u
-bGluZSB1c2VycyBsZWZ0ICovCisJLyoKKwkgKiBUcmlnZ2VycyBibGtnIGRlc3RydWN0aW9uIGlm
-IG5vIG9ubGluZSB1c2VycyBsZWZ0CisJICogVGhlIGZpbmFsIGJsa2NnIGNzc19wdXQoKSBoYXMg
-dG8gYmUgZG9uZSBhZnRlciBibGtjZ191bnBpbl9vbmxpbmUoKQorCSAqIHRvIGF2b2lkIHVzZS1h
-ZnRlci1mcmVlLgorCSAqLwogCWJsa2NnX3VucGluX29ubGluZSh3Yi0+YmxrY2dfY3NzKTsKKwlj
-c3NfcHV0KHdiLT5ibGtjZ19jc3MpOwogCiAJZnByb3BfbG9jYWxfZGVzdHJveV9wZXJjcHUoJndi
-LT5tZW1jZ19jb21wbGV0aW9ucyk7CiAKLS0gCjIuMzEuMQoK
+ v4:
+  - Update comment and commit logs for both patches.
+
+ v3:
+  - Drop v2 patch 2 as it may not be needed.
+  - Replace css_tryget() with percpu_ref_is_zero() in patch 1 as
+    suggested by Tejun.
+  - Expand comment on patch 2 to elaborate the reason for this patch.
+
+ v2:
+  - Remove unnecessary rcu_read_{lock|unlock} from
+    cgroup_rstat_css_cpu_flush() in patch 3.
+
+It was found that blkcg_destroy_blkgs() may be called with all blkcg
+references gone. This may potentially cause user-after-free and so should
+be fixed. The second patch flushes rstat when calling blkcg_destroy_blkgs().
+
+Waiman Long (2):
+  bdi, blk-cgroup: Fix potential UAF of blkcg
+  blk-cgroup: Flush stats at blkgs destruction path
+
+ block/blk-cgroup.c     | 23 +++++++++++++++++++++++
+ include/linux/cgroup.h |  1 +
+ kernel/cgroup/rstat.c  | 18 ++++++++++++++++++
+ mm/backing-dev.c       |  8 ++++++--
+ 4 files changed, 48 insertions(+), 2 deletions(-)
+
+-- 
+2.31.1
+
