@@ -1,199 +1,132 @@
-From: Yuanchu Xie <yuanchu-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Subject: [RFC PATCH 2/2] mm: multi-gen LRU: cgroup working set stats
-Date: Wed, 14 Dec 2022 14:51:23 -0800
-Message-ID: <20221214225123.2770216-3-yuanchu@google.com>
-References: <20221214225123.2770216-1-yuanchu@google.com>
+From: Waiman Long <longman@redhat.com>
+Subject: [PATCH v4 2/2] blk-cgroup: Flush stats at blkgs destruction path
+Date: Wed, 14 Dec 2022 22:31:32 -0500
+Message-ID: <20221215033132.230023-3-longman@redhat.com>
+References: <20221215033132.230023-1-longman@redhat.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20210112;
-        h=cc:to:from:subject:message-id:references:mime-version:in-reply-to
-         :date:from:to:cc:subject:date:message-id:reply-to;
-        bh=pP1HscS3NBizlWxdjalcxiOCxdTFFXWst9Um78lFYew=;
-        b=T1vg6NpxLo6/eIwoy3Qed3mwYZrRcOaXUysYifLHaPi+vYhazUnDs6UDkTZlfRIw7V
-         Y5hy6nvWH1kyT8kmze9eEa6nJSZiNVpW3N3UXMgfEqMuN0e25TVhuhO9D7VqOL/r6JiD
-         44j5nrRtBPJjeCrY/eBcV76Ko9qHQL7Uf12YDUe97/+MP0nkOYsl4soDy9ktZnmEK6x+
-         JG4eyDx3Gz2L0H7brEud6mnsIZbHYNBVEQ+rFXpJSg7KtZwCH9Hw29QGY6vvNpzSWtha
-         wOUPLTllmlPcjgFW+I/5/U+W1WIJ6SDoiC88ehNVmoHhh1WhKqr8mBzhsap235RbUrOI
-         kVPQ==
-In-Reply-To: <20221214225123.2770216-1-yuanchu-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1671075109;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=P/pLznPGQVdkseYoFw2OMUXPOTJl7XFp+0+LqLupem4=;
+        b=A5l3Yp0IYh7jB5T04zh0ldDq0/a9tDNuk5RCgLG+Nkgo0FTKPjwtskhUYRv9MiyLq+ifHW
+        AEGBWadcGcpr4BlZr1qYuFLcUzYmeySKgxgJYZnzuPXcQJurIXUHSVQGGjiQDlCEMgU1K3
+        Femu0LawMLrtoUIqmN6+tkFHkQl+xRM=
+In-Reply-To: <20221215033132.230023-1-longman@redhat.com>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Yu Zhao <yuzhao-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Yuanchu Xie <yuanchu-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+To: Jens Axboe <axboe@kernel.dk>, Tejun Heo <tj@kernel.org>, Josef Bacik <josef@toxicpanda.com>, Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, Andrew Morton <akpm@linux-foundation.org>
+Cc: cgroups@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org, =?UTF-8?q?Michal=20Koutn=C3=BD?= <mkoutny@suse.com>, "Dennis Zhou (Facebook)" <dennisszhou@gmail.com>, Waiman Long <longman@redhat.com>
 
-Expose MGLRU generations as working set stats in cgroupfs as
-memory.page_idle_age, where we group pages into idle age ranges, and
-present the number of pages per node per pagetype in each range. This
-aggregates the time information from MGLRU generations hierarchically.
+As noted by Michal, the blkg_iostat_set's in the lockless list
+hold reference to blkg's to protect against their removal. Those
+blkg's hold reference to blkcg. When a cgroup is being destroyed,
+cgroup_rstat_flush() is only called at css_release_work_fn() which
+is called when the blkcg reference count reaches 0. This circular
+dependency will prevent blkcg and some blkgs from being freed after
+they are made offline.
 
-Signed-off-by: Yuanchu Xie <yuanchu-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+It is less a problem if the cgroup to be destroyed also has other
+controllers like memory that will call cgroup_rstat_flush() which will
+clean up the reference count. If block is the only controller that uses
+rstat, these offline blkcg and blkgs may never be freed leaking more
+and more memory over time.
+
+To prevent this potential memory leak, a new cgroup_rstat_css_cpu_flush()
+function is added to flush stats for a given css and cpu. This new
+function will be called at blkgs destruction path, blkcg_destroy_blkgs(),
+whenever there are still pending stats to be flushed. This will release
+the references to blkgs allowing them to be freed and indirectly allow
+the freeing of blkcg.
+
+Fixes: 3b8cc6298724 ("blk-cgroup: Optimize blkcg_rstat_flush()")
+Signed-off-by: Waiman Long <longman@redhat.com>
+Acked-by: Tejun Heo <tj@kernel.org>
 ---
- mm/memcontrol.c | 136 ++++++++++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 136 insertions(+)
+ block/blk-cgroup.c     | 16 ++++++++++++++++
+ include/linux/cgroup.h |  1 +
+ kernel/cgroup/rstat.c  | 18 ++++++++++++++++++
+ 3 files changed, 35 insertions(+)
 
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index 7d2fb3fc4580..86554e17be58 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -1655,6 +1655,130 @@ void mem_cgroup_print_oom_meminfo(struct mem_cgroup *memcg)
- 	pr_info("%s", buf);
- }
- 
-+#ifdef CONFIG_LRU_GEN
-+static const unsigned long page_idle_age_ranges[] = {
-+	1,   2,	  5,   10,  20,	 30,   45,   60,   90,	 120, 180,
-+	240, 360, 480, 720, 960, 1440, 1920, 2880, 3840, -1
-+};
-+
-+#define PAGE_IDLE_AGE_NR_RANGES ARRAY_SIZE(page_idle_age_ranges)
-+
-+static unsigned int lru_gen_time_to_page_idle_age_range(unsigned long timestamp)
-+{
-+	unsigned int i;
-+	unsigned long gen_age = jiffies_to_msecs(jiffies - timestamp) / MSEC_PER_SEC;
-+
-+	for (i = 0; i < PAGE_IDLE_AGE_NR_RANGES - 1; ++i)
-+		if (gen_age <= page_idle_age_ranges[i])
-+			return i;
-+
-+	return PAGE_IDLE_AGE_NR_RANGES - 1;
-+}
-+
-+static void lru_gen_fill_page_idle_age_table(unsigned long *table,
-+					     struct lru_gen_struct *lrugen,
-+					     int nid)
-+{
-+	unsigned long max_seq = READ_ONCE(lrugen->max_seq);
-+	unsigned long min_seq[ANON_AND_FILE] = {
-+		READ_ONCE(lrugen->min_seq[LRU_GEN_ANON]),
-+		READ_ONCE(lrugen->min_seq[LRU_GEN_FILE]),
-+	};
-+	unsigned long seq;
-+	unsigned int pagetype;
-+
-+	/*
-+	 * what do we want to do here?
-+	 * iterate over all the generations, for each anon and file
-+	 */
-+
-+	for (pagetype = LRU_GEN_ANON; pagetype < ANON_AND_FILE; ++pagetype) {
-+		for (seq = min_seq[pagetype]; seq <= max_seq; ++seq) {
-+			unsigned int zone;
-+			unsigned int gen = lru_gen_from_seq(seq);
-+			unsigned int idle_age = lru_gen_time_to_page_idle_age_range(
-+				READ_ONCE(lrugen->timestamps[gen]));
-+			unsigned long page_count = 0;
-+
-+			for (zone = 0; zone < MAX_NR_ZONES; ++zone) {
-+				page_count += READ_ONCE(
-+					lrugen->nr_pages[gen][pagetype][zone]);
-+			}
-+			table[pagetype * PAGE_IDLE_AGE_NR_RANGES *
-+				      nr_node_ids +
-+			      PAGE_IDLE_AGE_NR_RANGES * nid + idle_age] +=
-+				page_count;
-+		}
-+	}
-+}
-+
-+static void memory_page_idle_age_print(struct seq_file *m, unsigned long *table)
-+{
-+	static const char *type_str[ANON_AND_FILE] = { "anon", "file" };
-+	unsigned int i, nid, pagetype;
-+	unsigned int lower = 0;
-+
-+	for (i = 0; i < PAGE_IDLE_AGE_NR_RANGES; ++i) {
-+		unsigned int upper = page_idle_age_ranges[i];
-+
-+		for (pagetype = LRU_GEN_ANON; pagetype < ANON_AND_FILE;
-+		     ++pagetype) {
-+			if (upper == -1)
-+				seq_printf(m, "%u-inf %s", lower,
-+					  type_str[pagetype]);
-+			else
-+				seq_printf(m, "%u-%u %s", lower, upper,
-+					   type_str[pagetype]);
-+			for_each_node_state(nid, N_MEMORY) {
-+				unsigned long page_count = table
-+					[pagetype *
-+						 PAGE_IDLE_AGE_NR_RANGES *
-+						 nr_node_ids +
-+					 PAGE_IDLE_AGE_NR_RANGES * nid +
-+					 i];
-+				seq_printf(m, " N%u=%lu", nid, page_count);
-+			}
-+			seq_puts(m, "\n");
-+		}
-+
-+		lower = upper;
-+	}
-+}
-+
-+static int memory_page_idle_age_format(struct mem_cgroup *root,
-+				       struct seq_file *m)
-+{
-+	struct mem_cgroup *memcg;
-+	unsigned long *table;
-+
-+	/*
-+	 * table contains PAGE_IDLE_AGE_NR_RANGES entries
-+	 * per node per pagetype
-+	 */
-+	table = kmalloc_array(PAGE_IDLE_AGE_NR_RANGES * nr_node_ids *
-+				      ANON_AND_FILE,
-+			      sizeof(*table), __GFP_ZERO | GFP_KERNEL);
-+
-+	if (!table)
-+		return -ENOMEM;
-+
-+	memcg = mem_cgroup_iter(root, NULL, NULL);
-+	do {
-+		int nid;
-+
-+		for_each_node_state(nid, N_MEMORY) {
-+			struct lru_gen_struct *lrugen =
-+				&memcg->nodeinfo[nid]->lruvec.lrugen;
-+
-+			lru_gen_fill_page_idle_age_table(table, lrugen, nid);
-+		}
-+	} while ((memcg = mem_cgroup_iter(root, memcg, NULL)));
-+
-+	memory_page_idle_age_print(m, table);
-+	return 0;
-+}
-+#endif /* CONFIG_LRU_GEN */
-+
- /*
-  * Return the memory (and swap, if configured) limit for a memcg.
+diff --git a/block/blk-cgroup.c b/block/blk-cgroup.c
+index ca28306aa1b1..a2a1081d9d1d 100644
+--- a/block/blk-cgroup.c
++++ b/block/blk-cgroup.c
+@@ -1084,6 +1084,8 @@ struct list_head *blkcg_get_cgwb_list(struct cgroup_subsys_state *css)
   */
-@@ -6571,6 +6695,13 @@ static ssize_t memory_oom_group_write(struct kernfs_open_file *of,
+ static void blkcg_destroy_blkgs(struct blkcg *blkcg)
+ {
++	int cpu;
++
+ 	/*
+ 	 * blkcg_destroy_blkgs() shouldn't be called with all the blkcg
+ 	 * references gone.
+@@ -1093,6 +1095,20 @@ static void blkcg_destroy_blkgs(struct blkcg *blkcg)
+ 
+ 	might_sleep();
+ 
++	/*
++	 * Flush all the non-empty percpu lockless lists to release the
++	 * blkg references held by those lists which, in turn, will
++	 * allow those blkgs to be freed and release their references to
++	 * blkcg. Otherwise, they may not be freed at all becase of this
++	 * circular dependency resulting in memory leak.
++	 */
++	for_each_possible_cpu(cpu) {
++		struct llist_head *lhead = per_cpu_ptr(blkcg->lhead, cpu);
++
++		if (!llist_empty(lhead))
++			cgroup_rstat_css_cpu_flush(&blkcg->css, cpu);
++	}
++
+ 	spin_lock_irq(&blkcg->lock);
+ 
+ 	while (!hlist_empty(&blkcg->blkg_list)) {
+diff --git a/include/linux/cgroup.h b/include/linux/cgroup.h
+index 528bd44b59e2..6c4e66b3fa84 100644
+--- a/include/linux/cgroup.h
++++ b/include/linux/cgroup.h
+@@ -766,6 +766,7 @@ void cgroup_rstat_flush(struct cgroup *cgrp);
+ void cgroup_rstat_flush_irqsafe(struct cgroup *cgrp);
+ void cgroup_rstat_flush_hold(struct cgroup *cgrp);
+ void cgroup_rstat_flush_release(void);
++void cgroup_rstat_css_cpu_flush(struct cgroup_subsys_state *css, int cpu);
+ 
+ /*
+  * Basic resource stats.
+diff --git a/kernel/cgroup/rstat.c b/kernel/cgroup/rstat.c
+index 793ecff29038..2e44be44351f 100644
+--- a/kernel/cgroup/rstat.c
++++ b/kernel/cgroup/rstat.c
+@@ -281,6 +281,24 @@ void cgroup_rstat_flush_release(void)
+ 	spin_unlock_irq(&cgroup_rstat_lock);
  }
  
- #ifdef CONFIG_LRU_GEN
-+static int memory_page_idle_age_show(struct seq_file *m, void *v)
++/**
++ * cgroup_rstat_css_cpu_flush - flush stats for the given css and cpu
++ * @css: target css to be flush
++ * @cpu: the cpu that holds the stats to be flush
++ *
++ * A lightweight rstat flush operation for a given css and cpu.
++ * Only the cpu_lock is being held for mutual exclusion, the cgroup_rstat_lock
++ * isn't used.
++ */
++void cgroup_rstat_css_cpu_flush(struct cgroup_subsys_state *css, int cpu)
 +{
-+	struct mem_cgroup *memcg = mem_cgroup_from_seq(m);
++	raw_spinlock_t *cpu_lock = per_cpu_ptr(&cgroup_rstat_cpu_lock, cpu);
 +
-+	return memory_page_idle_age_format(memcg, m);
++	raw_spin_lock_irq(cpu_lock);
++	css->ss->css_rstat_flush(css, cpu);
++	raw_spin_unlock_irq(cpu_lock);
 +}
 +
- static int memory_periodic_aging_show(struct seq_file *m, void *v)
+ int cgroup_rstat_init(struct cgroup *cgrp)
  {
- 	unsigned int interval = kold_get_interval();
-@@ -6724,6 +6855,11 @@ static struct cftype memory_files[] = {
- 		.write = memory_reclaim,
- 	},
- #ifdef CONFIG_LRU_GEN
-+	{
-+		.name = "page_idle_age",
-+		.flags = CFTYPE_NS_DELEGATABLE,
-+		.seq_show = memory_page_idle_age_show,
-+	},
- 	{
- 		.name = "periodic_aging",
- 		.flags = CFTYPE_ONLY_ON_ROOT,
+ 	int cpu;
 -- 
-2.39.0.314.g84b9a713c41-goog
+2.31.1
 
