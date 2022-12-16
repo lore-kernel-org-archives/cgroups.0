@@ -1,171 +1,43 @@
-From: "Huang, Ying" <ying.huang@intel.com>
-Subject: Re: [PATCH v3] mm: Add nodes= arg to memory.reclaim
-Date: Fri, 16 Dec 2022 11:02:22 +0800
-Message-ID: <87bko49hkx.fsf@yhuang6-desk2.ccr.corp.intel.com>
-References: <20221202223533.1785418-1-almasrymina@google.com>
-        <Y5bsmpCyeryu3Zz1@dhcp22.suse.cz>
-        <CAHS8izM-XdLgFrQ1k13X-4YrK=JGayRXV_G3c3Qh4NLKP7cH_g@mail.gmail.com>
-        <87k02volwe.fsf@yhuang6-desk2.ccr.corp.intel.com>
-        <Y5h+gHBneexFQcR3@cmpxchg.org> <Y5iGJ/9PMmSCwqLj@dhcp22.suse.cz>
-        <CAHS8izOuT_-p-N1xPApi+BPJQ+P--2YVSUeiWBROGvGinN0vcg@mail.gmail.com>
-        <Y5mkJL6I5Zlc1k97@dhcp22.suse.cz>
-        <87mt7pdxm1.fsf@yhuang6-desk2.ccr.corp.intel.com>
-        <Y5rnFbOqHQUT5da7@dhcp22.suse.cz>
+From: Kemeng Shi <shikemeng-XF6JlduFytWkHkcT6e4Xnw@public.gmane.org>
+Subject: [PATCH v2 00/10] A few bugfix and cleancode patch for bfq
+Date: Fri, 16 Dec 2022 19:12:20 +0800
+Message-ID: <20221216111230.3638832-1-shikemeng@huaweicloud.com>
 Mime-Version: 1.0
-Return-path: <linux-doc-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1671159809; x=1702695809;
-  h=from:to:cc:subject:references:date:in-reply-to:
-   message-id:mime-version;
-  bh=gCrxsFtqjirdLVPFluZe2uGgcAEuFJc+TUH1x+Gd2rA=;
-  b=m7/DH1rjMaciifsGLyVJoD5pIxLba46DK3KGk0jZiPLl3I6Yp8UpuFLv
-   IQP3CZjwklLKMtrH3DJaXKNIQR9Q19vRVuxrRIeprMHHOlOzybfKkcJxP
-   kQBRbpz8SuedG1fiOZkq1Q4IuU7cwxu6Uq+AAwyrmphMJHNJk0+pyQ4Yq
-   YApvYhzdxjziD2uyQlMJO8rAVvYzpIzZ16GLgTJtRg+93KW13MKPuSnnj
-   0FAYYCm0JtY33tkRIX/eR13ejABUvRrxvk6oo70f4K50xo5zgCI7phiFk
-   n3XP/MO1jH4P+nuHA/5yVjLU9YfQimjRF19SlGZeOic3gdxNxhFQGMBXZ
-   g==;
-In-Reply-To: <Y5rnFbOqHQUT5da7@dhcp22.suse.cz> (Michal Hocko's message of
-        "Thu, 15 Dec 2022 10:21:25 +0100")
+Content-Transfer-Encoding: 8bit
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Michal Hocko <mhocko@suse.com>
-Cc: Mina Almasry <almasrymina@google.com>, Johannes Weiner <hannes@cmpxchg.org>, Tejun Heo <tj@kernel.org>, Zefan Li <lizefan.x@bytedance.com>, Jonathan Corbet <corbet@lwn.net>, Roman Gushchin <roman.gushchin@linux.dev>, Shakeel Butt <shakeelb@google.com>, Muchun Song <songmuchun@bytedance.com>, Andrew Morton <akpm@linux-foundation.org>, Yang Shi <yang.shi@linux.alibaba.com>, Yosry Ahmed <yosryahmed@google.com>, weixugc@google.com, fvdl@google.com, bagasdotme@gmail.com, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org
+To: jack-AlSwsSmVLrQ@public.gmane.org, paolo.valente-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, josef-DigfWCa+lFGyeJad7bwFQA@public.gmane.org, axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linfeilong-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, liuzhiqiang-L7zZNxrQPSE@public.gmane.org, shikemeng-XF6JlduFytWkHkcT6e4Xnw@public.gmane.org
 
-Michal Hocko <mhocko@suse.com> writes:
+Hi, this series contain two patches to fix bug in request injection
+mechanism and some random cleancode patches.
+Thanks!
 
-> On Thu 15-12-22 13:50:14, Huang, Ying wrote:
->> Michal Hocko <mhocko@suse.com> writes:
->> 
->> > On Tue 13-12-22 11:29:45, Mina Almasry wrote:
->> >> On Tue, Dec 13, 2022 at 6:03 AM Michal Hocko <mhocko@suse.com> wrote:
->> >> >
->> >> > On Tue 13-12-22 14:30:40, Johannes Weiner wrote:
->> >> > > On Tue, Dec 13, 2022 at 02:30:57PM +0800, Huang, Ying wrote:
->> >> > [...]
->> >> > > > After these discussion, I think the solution maybe use different
->> >> > > > interfaces for "proactive demote" and "proactive reclaim".  That is,
->> >> > > > reconsider "memory.demote".  In this way, we will always uncharge the
->> >> > > > cgroup for "memory.reclaim".  This avoid the possible confusion there.
->> >> > > > And, because demotion is considered aging, we don't need to disable
->> >> > > > demotion for "memory.reclaim", just don't count it.
->> >> > >
->> >> > > Hm, so in summary:
->> >> > >
->> >> > > 1) memory.reclaim would demote and reclaim like today, but it would
->> >> > >    change to only count reclaimed pages against the goal.
->> >> > >
->> >> > > 2) memory.demote would only demote.
->> >> > >
->> >> 
->> >> If the above 2 points are agreeable then yes, this sounds good to me
->> >> and does address our use case.
->> >> 
->> >> > >    a) What if the demotion targets are full? Would it reclaim or fail?
->> >> > >
->> >> 
->> >> Wei will chime in if he disagrees, but I think we _require_ that it
->> >> fails, not falls back to reclaim. The interface is asking for
->> >> demotion, and is called memory.demote. For such an interface to fall
->> >> back to reclaim would be very confusing to userspace and may trigger
->> >> reclaim on a high priority job that we want to shield from proactive
->> >> reclaim.
->> >
->> > But what should happen if the immediate demotion target is full but
->> > lower tiers are still usable. Should the first one demote before
->> > allowing to demote from the top tier?
->> >  
->> >> > > 3) Would memory.reclaim and memory.demote still need nodemasks?
->> >> 
->> >> memory.demote will need a nodemask, for sure. Today the nodemask would
->> >> be useful if there is a specific node in the top tier that is
->> >> overloaded and we want to reduce the pressure by demoting. In the
->> >> future there will be N tiers and the nodemask says which tier to
->> >> demote from.
->> >
->> > OK, so what is the exact semantic of the node mask. Does it control
->> > where to demote from or to or both?
->> >
->> >> I don't think memory.reclaim would need a nodemask anymore? At least I
->> >> no longer see the use for it for us.
->> >> 
->> >> > >    Would
->> >> > >    they return -EINVAL if a) memory.reclaim gets passed only toptier
->> >> > >    nodes or b) memory.demote gets passed any lasttier nodes?
->> >> >
->> >> 
->> >> Honestly it would be great if memory.reclaim can force reclaim from a
->> >> top tier nodes. It breaks the aginig pipeline, yes, but if the user is
->> >> specifically asking for that because they decided in their usecase
->> >> it's a good idea then the kernel should comply IMO. Not a strict
->> >> requirement for us. Wei will chime in if he disagrees.
->> >
->> > That would require a nodemask to say which nodes to reclaim, no? The
->> > default behavior should be in line with what standard memory reclaim
->> > does. If the demotion is a part of that process so should be
->> > memory.reclaim part of it. If we want to have a finer control then a
->> > nodemask is really a must and then the nodemaks should constrain both
->> > agining and reclaim.
->> >
->> >> memory.demote returning -EINVAL for lasttier nodes makes sense to me.
->> >> 
->> >> > I would also add
->> >> > 4) Do we want to allow to control the demotion path (e.g. which node to
->> >> >    demote from and to) and how to achieve that?
->> >> 
->> >> We care deeply about specifying which node to demote _from_. That
->> >> would be some node that is approaching pressure and we're looking for
->> >> proactive saving from. So far I haven't seen any reason to control
->> >> which nodes to demote _to_. The kernel deciding that based on the
->> >> aging pipeline and the node distances sounds good to me. Obviously
->> >> someone else may find that useful.
->> >
->> > Please keep in mind that the interface should be really prepared for
->> > future extensions so try to abstract from your immediate usecases.
->> 
->> I see two requirements here, one is to control the demotion source, that
->> is, which nodes to free memory.  The other is to control the demotion
->> path.  I think that we can use two different parameters for them, for
->> example, "from=<demotion source nodes>" and "to=<demotion target
->> nodes>".  In most cases we don't need to control the demotion path.
->> Because in current implementation, the nodes in the lower tiers in the
->> same socket (local nodes) will be preferred.  I think that this is
->> the desired behavior in most cases.
->
-> Even if the demotion path is not really required at the moment we should
-> keep in mind future potential extensions. E.g. when a userspace based
-> balancing is to be implemented because the default behavior cannot
-> capture userspace policies (one example would be enforcing a
-> prioritization of containers when some container's demoted pages would
-> need to be demoted further to free up a space for a different
-> workload). 
+---
+v2:
+ -improve git log.
+---
 
-Yes.  We should consider the potential requirements.
+Kemeng Shi (10):
+  block, bfq: correctly raise inject limit in
+    bfq_choose_bfqq_for_injection
+  block, bfq: remove unsed parameter reason in bfq_bfqq_is_slow
+  block, bfq: initialize bfqq->decrease_time_jif correctly
+  block, bfq: use helper macro RQ_BFQQ to get bfqq of request
+  block, bfq: remove unnecessary dereference to get async_bfqq
+  block, bfq: remove redundant bfqd->rq_in_driver > 0 check in
+    bfq_add_request
+  block, bfq: remove redundant check in bfq_put_cooperator
+  block, bfq: remove unnecessary goto tag in bfq_dispatch_rq_from_bfqq
+  block, bfq: remove unused bfq_wr_max_time in struct bfq_data
+  block, bfq: remove check of bfq_wr_max_softrt_rate which is always
+    greater than 0
 
->> >> > 5) Is the demotion api restricted to multi-tier systems or any numa
->> >> >    configuration allowed as well?
->> >> >
->> >> 
->> >> demotion will of course not work on single tiered systems. The
->> >> interface may return some failure on such systems or not be available
->> >> at all.
->> >
->> > Is there any strong reason for that? We do not have any interface to
->> > control NUMA balancing from userspace. Why cannot we use the interface
->> > for that purpose? 
->> 
->> Do you mean to demote the cold pages from the specified source nodes to
->> the specified target nodes in different sockets?  We don't do that to
->> avoid loop in the demotion path.  If we prevent the target nodes from
->> demoting cold pages to the source nodes at the same time, it seems
->> doable.
->
-> Loops could be avoid by properly specifying from and to nodes if this is
-> going to be a fine grained interface to control demotion.
+ block/bfq-iosched.c | 49 +++++++++++++++++----------------------------
+ block/bfq-iosched.h |  2 --
+ 2 files changed, 18 insertions(+), 33 deletions(-)
 
-Yes.
+-- 
+2.30.0
 
-Best Regards,
-Huang, Ying
