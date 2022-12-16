@@ -1,43 +1,62 @@
-From: Kemeng Shi <shikemeng-XF6JlduFytWkHkcT6e4Xnw@public.gmane.org>
-Subject: [PATCH v2 00/10] A few bugfix and cleancode patch for bfq
-Date: Fri, 16 Dec 2022 19:12:20 +0800
-Message-ID: <20221216111230.3638832-1-shikemeng@huaweicloud.com>
+From: Kemeng Shi <shikemeng@huaweicloud.com>
+Subject: [PATCH v2 01/10] block, bfq: correctly raise inject limit in bfq_choose_bfqq_for_injection
+Date: Fri, 16 Dec 2022 19:12:21 +0800
+Message-ID: <20221216111230.3638832-2-shikemeng@huaweicloud.com>
+References: <20221216111230.3638832-1-shikemeng@huaweicloud.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <linux-block-owner@vger.kernel.org>
+In-Reply-To: <20221216111230.3638832-1-shikemeng@huaweicloud.com>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: jack-AlSwsSmVLrQ@public.gmane.org, paolo.valente-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, josef-DigfWCa+lFGyeJad7bwFQA@public.gmane.org, axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linfeilong-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, liuzhiqiang-L7zZNxrQPSE@public.gmane.org, shikemeng-XF6JlduFytWkHkcT6e4Xnw@public.gmane.org
+To: jack@suse.cz, paolo.valente@linaro.org, tj@kernel.org, josef@toxicpanda.com, axboe@kernel.dk
+Cc: cgroups@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, linfeilong@huawei.com, liuzhiqiang@26.com, shikemeng@huaweicloud.com
 
-Hi, this series contain two patches to fix bug in request injection
-mechanism and some random cleancode patches.
-Thanks!
+Function bfq_choose_bfqq_for_injection may temporarily raise inject limit
+to one request if current inject_limit is 0 before search of the source
+queue for injection. However the search below will reset inject limit to
+bfqd->in_service_queue which is zero for raised inject limit. Then the
+temporarily raised inject limit never works as expected.
+Assigment limit to bfqd->in_service_queue in search is needed as limit
+maybe overwriten to min_t(unsigned int, 1, limit) for condition that
+a large in-flight request is on non-rotational devices in found queue.
+So we need to reset limit to bfqd->in_service_queue for normal case.
 
+Actually, we have already make sure bfqd->rq_in_driver is < limit before
+search, then
+ -Limit is >= 1 as bfqd->rq_in_driver is >= 0. Then min_t(unsigned int,
+1, limit) is always 1. So we can simply check bfqd->rq_in_driver with
+1 instead of result of min_t(unsigned int, 1, limit) for larget request in
+non-rotational device case to avoid overwritting limit and the bug is gone.
+ -For normal case, we have already check bfqd->rq_in_driver is < limit,
+so we can return found bfqq unconditionally to remove unncessary check.
+
+Signed-off-by: Kemeng Shi <shikemeng@huaweicloud.com>
 ---
-v2:
- -improve git log.
----
+ block/bfq-iosched.c | 10 ++++------
+ 1 file changed, 4 insertions(+), 6 deletions(-)
 
-Kemeng Shi (10):
-  block, bfq: correctly raise inject limit in
-    bfq_choose_bfqq_for_injection
-  block, bfq: remove unsed parameter reason in bfq_bfqq_is_slow
-  block, bfq: initialize bfqq->decrease_time_jif correctly
-  block, bfq: use helper macro RQ_BFQQ to get bfqq of request
-  block, bfq: remove unnecessary dereference to get async_bfqq
-  block, bfq: remove redundant bfqd->rq_in_driver > 0 check in
-    bfq_add_request
-  block, bfq: remove redundant check in bfq_put_cooperator
-  block, bfq: remove unnecessary goto tag in bfq_dispatch_rq_from_bfqq
-  block, bfq: remove unused bfq_wr_max_time in struct bfq_data
-  block, bfq: remove check of bfq_wr_max_softrt_rate which is always
-    greater than 0
-
- block/bfq-iosched.c | 49 +++++++++++++++++----------------------------
- block/bfq-iosched.h |  2 --
- 2 files changed, 18 insertions(+), 33 deletions(-)
-
+diff --git a/block/bfq-iosched.c b/block/bfq-iosched.c
+index a72304c728fc..1220c41fc767 100644
+--- a/block/bfq-iosched.c
++++ b/block/bfq-iosched.c
+@@ -4641,12 +4641,10 @@ bfq_choose_bfqq_for_injection(struct bfq_data *bfqd)
+ 			 */
+ 			if (blk_queue_nonrot(bfqd->queue) &&
+ 			    blk_rq_sectors(bfqq->next_rq) >=
+-			    BFQQ_SECT_THR_NONROT)
+-				limit = min_t(unsigned int, 1, limit);
+-			else
+-				limit = in_serv_bfqq->inject_limit;
+-
+-			if (bfqd->rq_in_driver < limit) {
++			    BFQQ_SECT_THR_NONROT &&
++			    bfqd->rq_in_driver >= 1)
++				continue;
++			else {
+ 				bfqd->rqs_injected = true;
+ 				return bfqq;
+ 			}
 -- 
 2.30.0
 
