@@ -1,7 +1,7 @@
 From: Kemeng Shi <shikemeng@huaweicloud.com>
-Subject: [PATCH v2 07/10] block, bfq: remove redundant check in bfq_put_cooperator
-Date: Fri, 16 Dec 2022 19:12:27 +0800
-Message-ID: <20221216111230.3638832-8-shikemeng@huaweicloud.com>
+Subject: [PATCH v2 04/10] block, bfq: use helper macro RQ_BFQQ to get bfqq of request
+Date: Fri, 16 Dec 2022 19:12:24 +0800
+Message-ID: <20221216111230.3638832-5-shikemeng@huaweicloud.com>
 References: <20221216111230.3638832-1-shikemeng@huaweicloud.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
@@ -12,28 +12,35 @@ Content-Type: text/plain; charset="us-ascii"
 To: jack@suse.cz, paolo.valente@linaro.org, tj@kernel.org, josef@toxicpanda.com, axboe@kernel.dk
 Cc: cgroups@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, linfeilong@huawei.com, liuzhiqiang@26.com, shikemeng@huaweicloud.com
 
-We have already avoided a circular list in bfq_setup_merge (see comments
-in bfq_setup_merge() for details), so bfq_queue will not appear in it's
-new_bfqq list. Just remove this check.
+Use helper macro RQ_BFQQ to get bfqq of request.
 
 Signed-off-by: Kemeng Shi <shikemeng@huaweicloud.com>
 ---
- block/bfq-iosched.c | 2 --
- 1 file changed, 2 deletions(-)
+ block/bfq-iosched.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
 diff --git a/block/bfq-iosched.c b/block/bfq-iosched.c
-index 7c91d16dbf6f..89995815dbae 100644
+index 9441fc98961a..c3c4c83ee95f 100644
 --- a/block/bfq-iosched.c
 +++ b/block/bfq-iosched.c
-@@ -5273,8 +5273,6 @@ void bfq_put_cooperator(struct bfq_queue *bfqq)
+@@ -6683,14 +6683,14 @@ static struct bfq_queue *bfq_init_rq(struct request *rq)
+ 		return NULL;
+ 
+ 	/*
+-	 * Assuming that elv.priv[1] is set only if everything is set
++	 * Assuming that RQ_BFQQ(rq) is set only if everything is set
+ 	 * for this rq. This holds true, because this function is
+ 	 * invoked only for insertion or merging, and, after such
+ 	 * events, a request cannot be manipulated any longer before
+ 	 * being removed from bfq.
  	 */
- 	__bfqq = bfqq->new_bfqq;
- 	while (__bfqq) {
--		if (__bfqq == bfqq)
--			break;
- 		next = __bfqq->new_bfqq;
- 		bfq_put_queue(__bfqq);
- 		__bfqq = next;
+-	if (rq->elv.priv[1])
+-		return rq->elv.priv[1];
++	if (RQ_BFQQ(rq))
++		return RQ_BFQQ(rq);
+ 
+ 	bic = icq_to_bic(rq->elv.icq);
+ 
 -- 
 2.30.0
 
