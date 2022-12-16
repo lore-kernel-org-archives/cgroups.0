@@ -1,7 +1,7 @@
 From: Kemeng Shi <shikemeng@huaweicloud.com>
-Subject: [PATCH v2 09/10] block, bfq: remove unused bfq_wr_max_time in struct bfq_data
-Date: Fri, 16 Dec 2022 19:12:29 +0800
-Message-ID: <20221216111230.3638832-10-shikemeng@huaweicloud.com>
+Subject: [PATCH v2 08/10] block, bfq: remove unnecessary goto tag in bfq_dispatch_rq_from_bfqq
+Date: Fri, 16 Dec 2022 19:12:28 +0800
+Message-ID: <20221216111230.3638832-9-shikemeng@huaweicloud.com>
 References: <20221216111230.3638832-1-shikemeng@huaweicloud.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
@@ -12,51 +12,42 @@ Content-Type: text/plain; charset="us-ascii"
 To: jack@suse.cz, paolo.valente@linaro.org, tj@kernel.org, josef@toxicpanda.com, axboe@kernel.dk
 Cc: cgroups@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, linfeilong@huawei.com, liuzhiqiang@26.com, shikemeng@huaweicloud.com
 
-bfqd->bfq_wr_max_time is set to 0 in bfq_init_queue and is never changed.
-It is only used in bfq_wr_duration when bfq_wr_max_time > 0 which never
-meets, so bfqd->bfq_wr_max_time is not used actually. Just remove it.
+We jump to tag only for returning current rq. Return directly to
+remove this tag.
 
 Signed-off-by: Kemeng Shi <shikemeng@huaweicloud.com>
 ---
- block/bfq-iosched.c | 4 ----
- block/bfq-iosched.h | 2 --
- 2 files changed, 6 deletions(-)
+ block/bfq-iosched.c | 9 +++------
+ 1 file changed, 3 insertions(+), 6 deletions(-)
 
 diff --git a/block/bfq-iosched.c b/block/bfq-iosched.c
-index 195cdc6be087..91bc68fba72d 100644
+index 89995815dbae..195cdc6be087 100644
 --- a/block/bfq-iosched.c
 +++ b/block/bfq-iosched.c
-@@ -1068,9 +1068,6 @@ static unsigned int bfq_wr_duration(struct bfq_data *bfqd)
- {
- 	u64 dur;
+@@ -4965,7 +4965,7 @@ static struct request *bfq_dispatch_rq_from_bfqq(struct bfq_data *bfqd,
+ 	bfq_dispatch_remove(bfqd->queue, rq);
  
--	if (bfqd->bfq_wr_max_time > 0)
--		return bfqd->bfq_wr_max_time;
+ 	if (bfqq != bfqd->in_service_queue)
+-		goto return_rq;
++		return rq;
+ 
+ 	/*
+ 	 * If weight raising has to terminate for bfqq, then next
+@@ -4985,12 +4985,9 @@ static struct request *bfq_dispatch_rq_from_bfqq(struct bfq_data *bfqd,
+ 	 * belongs to CLASS_IDLE and other queues are waiting for
+ 	 * service.
+ 	 */
+-	if (!(bfq_tot_busy_queues(bfqd) > 1 && bfq_class_idle(bfqq)))
+-		goto return_rq;
++	if ((bfq_tot_busy_queues(bfqd) > 1 && bfq_class_idle(bfqq)))
++		bfq_bfqq_expire(bfqd, bfqq, false, BFQQE_BUDGET_EXHAUSTED);
+ 
+-	bfq_bfqq_expire(bfqd, bfqq, false, BFQQE_BUDGET_EXHAUSTED);
 -
- 	dur = bfqd->rate_dur_prod;
- 	do_div(dur, bfqd->peak_rate);
+-return_rq:
+ 	return rq;
+ }
  
-@@ -7079,7 +7076,6 @@ static int bfq_init_queue(struct request_queue *q, struct elevator_type *e)
- 	 */
- 	bfqd->bfq_wr_coeff = 30;
- 	bfqd->bfq_wr_rt_max_time = msecs_to_jiffies(300);
--	bfqd->bfq_wr_max_time = 0;
- 	bfqd->bfq_wr_min_idle_time = msecs_to_jiffies(2000);
- 	bfqd->bfq_wr_min_inter_arr_async = msecs_to_jiffies(500);
- 	bfqd->bfq_wr_max_softrt_rate = 7000; /*
-diff --git a/block/bfq-iosched.h b/block/bfq-iosched.h
-index 9fa89577322d..0b1a5438046a 100644
---- a/block/bfq-iosched.h
-+++ b/block/bfq-iosched.h
-@@ -719,8 +719,6 @@ struct bfq_data {
- 	 * is multiplied.
- 	 */
- 	unsigned int bfq_wr_coeff;
--	/* maximum duration of a weight-raising period (jiffies) */
--	unsigned int bfq_wr_max_time;
- 
- 	/* Maximum weight-raising duration for soft real-time processes */
- 	unsigned int bfq_wr_rt_max_time;
 -- 
 2.30.0
 
