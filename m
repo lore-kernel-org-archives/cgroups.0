@@ -1,79 +1,47 @@
-From: Bagas Sanjaya <bagasdotme@gmail.com>
+From: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
 Subject: Re: [PATCH] Revert "mm: add nodes= arg to memory.reclaim"
-Date: Fri, 16 Dec 2022 19:28:13 +0700
-Message-ID: <85f627d5-7572-1fc7-db1f-bc1337767a68@gmail.com>
+Date: Fri, 16 Dec 2022 10:18:20 -0800
+Message-ID: <20221216101820.3f4a370af2c93d3c2e78ed8a@linux-foundation.org>
 References: <20221202223533.1785418-1-almasrymina@google.com>
- <Y5bsmpCyeryu3Zz1@dhcp22.suse.cz> <Y5xASNe1x8cusiTx@dhcp22.suse.cz>
+        <Y5bsmpCyeryu3Zz1@dhcp22.suse.cz>
+        <Y5xASNe1x8cusiTx@dhcp22.suse.cz>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-doc-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=XN2BUIyyxfcPTn0lH7csIpbvsG2W/DIuROkPMqaCcZA=;
-        b=gTmjQHIthgTaarmTiJIFcOmKO18lOJx70K41j/h8aKXjh6KsuWGEkZFj33q3evneNQ
-         Z2aOHDpL36LFgscqFBHNKzMVJ9mYIx0ZAod72hmvUaLZsAbM7hZrGu12f8gqDapCACMi
-         41FVVH0qwRa4z0G6jmKXty6+LfGNMpKKDSTCYx8cJ/m33BMfthqrsxXH+AzoxBx8M9Yn
-         C/3DIhGswmw+wRwrjR6uyzMYIeKhpQu3fKP+73cPXx9rO1TkIqOY+++ZfmE+EG9Mnlfb
-         Id6KF6Rn3DAwHZhYd2fmrXGE5W6ntZV+znP4hk8sgPNWBl6FZtqOqmGU/m0AG/lTtkaW
-         KYyA==
-Content-Language: en-US
-In-Reply-To: <Y5xASNe1x8cusiTx@dhcp22.suse.cz>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linux-foundation.org;
+        s=korg; t=1671214701;
+        bh=vRbKCiLdExOTUt5BW7wyrYFNrRg54Ri2oAjQj3d/9yk=;
+        h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
+        b=Bln6FejpwP8y1LDhKqmy+1hWW84LthPXn0iMaqmr7jjsV8vUCNoa3AbTP6gTXvcnt
+         5k1MnZzSKSjSw8zGq4T3SDYvSuIrSIPn0I5ykHvHgLObdmF1BnKHrl2EV/YTJxvSLm
+         jUEqZ7JjMxY2xhleRkc/9KbfpeUuDBAyINIcUquE=
+In-Reply-To: <Y5xASNe1x8cusiTx-2MMpYkNvuYDjFM9bn6wA6Q@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Michal Hocko <mhocko@suse.com>, Mina Almasry <almasrymina@google.com>, Andrew Morton <akpm@linux-foundation.org>
-Cc: Tejun Heo <tj@kernel.org>, Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, Jonathan Corbet <corbet@lwn.net>, Roman Gushchin <roman.gushchin@linux.dev>, Shakeel Butt <shakeelb@google.com>, Muchun Song <songmuchun@bytedance.com>, Huang Ying <ying.huang@intel.com>, Yang Shi <yang.shi@linux.alibaba.com>, Yosry Ahmed <yosryahmed@google.com>, weixugc@google.com, fvdl@google.com, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org
+To: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
+Cc: Mina Almasry <almasrymina-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Jonathan Corbet <corbet-T1hC0tSOHrs@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Huang Ying <ying.huang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Yang Shi <yang.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>, Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, weixugc-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, fvdl-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, bagasdotme-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
 
-On 12/16/22 16:54, Michal Hocko wrote:
-> diff --git a/Documentation/admin-guide/cgroup-v2.rst b/Documentation/admin-guide/cgroup-v2.rst
-> index c8ae7c897f14..74cec76be9f2 100644
-> --- a/Documentation/admin-guide/cgroup-v2.rst
-> +++ b/Documentation/admin-guide/cgroup-v2.rst
-> @@ -1245,13 +1245,17 @@ PAGE_SIZE multiple when read back.
->  	This is a simple interface to trigger memory reclaim in the
->  	target cgroup.
->  
-> -	This file accepts a string which contains the number of bytes to
-> -	reclaim.
-> +	This file accepts a single key, the number of bytes to reclaim.
-> +	No nested keys are currently supported.
->  
->  	Example::
->  
->  	  echo "1G" > memory.reclaim
->  
-> +	The interface can be later extended with nested keys to
-> +	configure the reclaim behavior. For example, specify the
-> +	type of memory to reclaim from (anon, file, ..).
-> +
->  	Please note that the kernel can over or under reclaim from
->  	the target cgroup. If less bytes are reclaimed than the
->  	specified amount, -EAGAIN is returned.
-> @@ -1263,13 +1267,6 @@ PAGE_SIZE multiple when read back.
->  	This means that the networking layer will not adapt based on
->  	reclaim induced by memory.reclaim.
->  
-> -	This file also allows the user to specify the nodes to reclaim from,
-> -	via the 'nodes=' key, for example::
-> -
-> -	  echo "1G nodes=0,1" > memory.reclaim
-> -
-> -	The above instructs the kernel to reclaim memory from nodes 0,1.
-> -
->    memory.peak
->  	A read-only single value file which exists on non-root
->  	cgroups.
+On Fri, 16 Dec 2022 10:54:16 +0100 Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org> wrote:
 
-Ah! I forgot to add my Reviewed-by: tag when the original patch was
-submitted. However, I was Cc'ed the revert presumably due to Cc: tag in the
-original.
+> I have noticed that the patch made it into Linus tree already. Can we
+> please revert it because the semantic is not really clear and we should
+> really not create yet another user API maintenance problem.
 
-In any case, for the documentation part:
+Well dang.  I was waiting for the discussion to converge, blissfully
+unaware that the thing was sitting in mm-stable :(  I guess the
 
-Acked-by: Bagas Sanjaya <bagasdotme@gmail.com>
+	Acked-by: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
+	Acked-by: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+	Acked-by: Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
 
--- 
-An old man doll... just what I always wanted! - Clara
+fooled me.
+
+
+I think it's a bit premature to revert at this stage.  Possibly we can
+get to the desired end state by modifying the existing code.  Possibly
+we can get to the desired end state by reverting this and by adding
+something new.
+
+If we can't get to the desired end state at all then yes, I'll send
+Linus a revert of this patch later in this -rc cycle.
 
