@@ -1,63 +1,118 @@
-From: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
-Subject: Re: [PATCH] Revert "mm: add nodes= arg to memory.reclaim"
-Date: Sat, 17 Dec 2022 10:57:06 +0100
-Message-ID: <Y52Scge3ynvn/mB4@dhcp22.suse.cz>
-References: <20221202223533.1785418-1-almasrymina@google.com>
- <Y5bsmpCyeryu3Zz1@dhcp22.suse.cz>
- <Y5xASNe1x8cusiTx@dhcp22.suse.cz>
- <20221216101820.3f4a370af2c93d3c2e78ed8a@linux-foundation.org>
+From: Qais Yousef <qyousef-wp2msK0BRk8tq7phqP6ubQ@public.gmane.org>
+Subject: Re: [PATCH v9 3/8] cpuset: Rebuild root domain deadline accounting
+ information
+Date: Sat, 17 Dec 2022 22:10:11 +0000
+Message-ID: <20221217221011.pqunktdfgkaoufrd@airbuntu>
+References: <20190719140000.31694-1-juri.lelli@redhat.com>
+ <20190719140000.31694-4-juri.lelli@redhat.com>
+ <20221216233501.gh6m75e7s66dmjgo@airbuntu>
+ <af29b121-b1da-64f3-a739-1b233fa04002@redhat.com>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
-        t=1671271027; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=SoLRNQRrRqUNC0cGrLyDcGJ7nXiwl9BQ5rqnla0AEQg=;
-        b=LzEcwgGhGGz8nj03JB5W4TiSbEKztKdG7hrQa5MIO0bwc5t2NC30MAA0U3vd2UhSj4T2Pz
-        Tx7x3OMd+ZGReDRDIwwbXqxis7W8upuGmgfxuw87vV+OuG3oq1SRHDCSet4bS0DJKP0ag6
-        XpG0vDOWegM0J6b+oztGV495X5UdU2I=
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=layalina-io.20210112.gappssmtp.com; s=20210112;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=KgznWvPnejDwQ5G194p3C76c3g3BZCk+ljWB2J8CwsQ=;
+        b=z60Sqh8HjXVzJehaGoNvHfThICmNQU5lyWECyXUwoLZzKHyW9IHSXNmSWfyibVk0qW
+         sLCWrbAdZFv6iyQBOPoWofv3FHef9K4l2JVI3ilXVkmp5ccAWbk07qMJTtcBt33VvGt6
+         w61fp0MZNGXsFgXU9m9Uw+w0IsRqbnGCDFzMh5PEiav/r5b/Y5eJxOBH2qVNIOIP9RXv
+         /WOsw+fuuy0EViw1TBP9jTZXo8bFfl2dWhIoXkQlCE2V9ULtRLS1vqMxUpV+/WuBNhVY
+         vkwYXE8cUzsNbKOqkn+wgFEixC0PPzcsIl2XmdOoES8b7dJ3OUn14AomYEJA4XwRi2bC
+         zNRg==
 Content-Disposition: inline
-In-Reply-To: <20221216101820.3f4a370af2c93d3c2e78ed8a-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+In-Reply-To: <af29b121-b1da-64f3-a739-1b233fa04002-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
-Cc: Mina Almasry <almasrymina-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Jonathan Corbet <corbet-T1hC0tSOHrs@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Huang Ying <ying.huang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Yang Shi <yang.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>, Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, weixugc-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, fvdl-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, bagasdotme-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
+To: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Cc: Juri Lelli <juri.lelli-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, rostedt-nx8X9YLhiw1AfugRpC6u6w@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, luca.abeni-5rdYK369eBLQB0XuIGIEkQ@public.gmane.org, claudio-YOzL5CV4y4YG1A2ADO40+w@public.gmane.org, tommaso.cucinotta-5rdYK369eBLQB0XuIGIEkQ@public.gmane.org, bristot-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, mathieu.poirier-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, dietmar.eggemann-5wv7dgnIgG8@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Vincent Guittot <vincent.guittot-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, Wei Wang <wvw-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Rick Yiu <rickyiu-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Quentin Perret <qperret-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 
-On Fri 16-12-22 10:18:20, Andrew Morton wrote:
-> On Fri, 16 Dec 2022 10:54:16 +0100 Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org> wrote:
+On 12/16/22 21:26, Waiman Long wrote:
+> On 12/16/22 18:35, Qais Yousef wrote:
+> > Hi
+> > 
+> > On 07/19/19 15:59, Juri Lelli wrote:
+> > > When the topology of root domains is modified by CPUset or CPUhotplug
+> > > operations information about the current deadline bandwidth held in the
+> > > root domain is lost.
+> > > 
+> > > This patch addresses the issue by recalculating the lost deadline
+> > > bandwidth information by circling through the deadline tasks held in
+> > > CPUsets and adding their current load to the root domain they are
+> > > associated with.
+> > > 
+> > > Signed-off-by: Mathieu Poirier <mathieu.poirier-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>
+> > > Signed-off-by: Juri Lelli <juri.lelli-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+> > > ---
+> > We see that rebuild_root_domain() can take 10+ ms (I get a max of 20ms quite
+> > consistently) on suspend/resume.
+> > 
+> > Do we actually need to rebuild_root_domain() if we're going through
+> > a suspend/resume cycle?
+> > 
+> > ie: would something like the below make sense? We'd skip this logic if
+> > cpuhp_tasks_frozen is set which indicates it's not a real hotplug operation but
+> > we're suspending/resuming.
+> > 
+> > 
+> > Cheers
+> > 
+> > --
+> > Qais Yousef
+> > 
+> > 
+> > --->8---
+> > 
+> > 
+> >  From 4cfd50960ad872c5eb810ad3038eaf840bab5182 Mon Sep 17 00:00:00 2001
+> > From: Qais Yousef <qyousef-wp2msK0BRk8tq7phqP6ubQ@public.gmane.org>
+> > Date: Tue, 29 Nov 2022 19:01:52 +0000
+> > Subject: [PATCH] sched: cpuset: Don't rebuild sched domains on suspend-resume
+> > 
+> > Commit f9a25f776d78 ("cpusets: Rebuild root domain deadline accounting information")
+> > enabled rebuilding sched domain on cpuset and hotplug operations to
+> > correct deadline accounting.
+> > 
+> > Rebuilding sched domain is a slow operation and we see 10+ ms delays
+> > on suspend-resume because of that.
+> > 
+> > Since nothing is expected to change on suspend-resume operation; skip
+> > rebuilding the sched domains to regain some of the time lost.
+> > 
+> > Debugged-by: Rick Yiu <rickyiu-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+> > Signed-off-by: Qais Yousef (Google) <qyousef-wp2msK0BRk8tq7phqP6ubQ@public.gmane.org>
+> > ---
+> >   kernel/cgroup/cpuset.c  | 6 ++++++
+> >   kernel/sched/deadline.c | 3 +++
+> >   2 files changed, 9 insertions(+)
+> > 
+> > diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
+> > index b474289c15b8..2ff68d625b7b 100644
+> > --- a/kernel/cgroup/cpuset.c
+> > +++ b/kernel/cgroup/cpuset.c
+> > @@ -1067,6 +1067,9 @@ static void update_tasks_root_domain(struct cpuset *cs)
+> >   	struct css_task_iter it;
+> >   	struct task_struct *task;
+> > +	if (cpuhp_tasks_frozen)
+> > +		return;
+> > +
+> >   	css_task_iter_start(&cs->css, 0, &it);
+> >   	while ((task = css_task_iter_next(&it)))
+> > @@ -1084,6 +1087,9 @@ static void rebuild_root_domains(void)
+> >   	lockdep_assert_cpus_held();
+> >   	lockdep_assert_held(&sched_domains_mutex);
+> > +	if (cpuhp_tasks_frozen)
+> > +		return;
+> > +
+> >   	rcu_read_lock();
+> >   	/*
 > 
-> > I have noticed that the patch made it into Linus tree already. Can we
-> > please revert it because the semantic is not really clear and we should
-> > really not create yet another user API maintenance problem.
-> 
-> Well dang.  I was waiting for the discussion to converge, blissfully
-> unaware that the thing was sitting in mm-stable :(  I guess the
-> 
-> 	Acked-by: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
-> 	Acked-by: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-> 	Acked-by: Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
-> 
-> fooled me.
+> rebuild_root_domains() is the only caller of update_tasks_root_domain(). So
+> the first hunk is redundant as update_tasks_root_domain() won't be called
+> when cpuhp_tasks_frozen is set.
 
-Hmm, as pointed out in http://lkml.kernel.org/r/Y5bsmpCyeryu3Zz1-2MMpYkNvuYDjFM9bn6wA6Q@public.gmane.org
-I've failed to see through all the consequences of the implementation.
-SO my bad here to add my ack before fully understanding all the
-implications.
+True. I went overzealous and protected all the functions.
 
-> I think it's a bit premature to revert at this stage.  Possibly we can
-> get to the desired end state by modifying the existing code.  Possibly
-> we can get to the desired end state by reverting this and by adding
-> something new.
 
-Sure if we can converge to a proper implementation during the rc phase
-then it would be ok. I cannot speak for others but at least for me
-upcoming 2 weeks would be mostly offline so I cannot really contribute
-much. A revert would be much more easier from the coordination POV IMHO.
-
-Also I do not think there is any strong reason to rush this in. I do not
-really see any major problems to have this extension in 6.2
-
--- 
-Michal Hocko
-SUSE Labs
+Thanks!
