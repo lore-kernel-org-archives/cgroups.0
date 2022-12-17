@@ -1,7 +1,7 @@
 From: Yu Kuai <yukuai1@huaweicloud.com>
-Subject: [PATCH -next 3/4] blk-iocost: dispatch all throttled bio in ioc_pd_offline
-Date: Sat, 17 Dec 2022 11:05:26 +0800
-Message-ID: <20221217030527.1250083-4-yukuai1@huaweicloud.com>
+Subject: [PATCH -next 4/4] blk-iocost: guarantee the exit order of iocg
+Date: Sat, 17 Dec 2022 11:05:27 +0800
+Message-ID: <20221217030527.1250083-5-yukuai1@huaweicloud.com>
 References: <20221217030527.1250083-1-yukuai1@huaweicloud.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
@@ -14,79 +14,66 @@ Cc: cgroups@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kern
 
 From: Yu Kuai <yukuai3@huawei.com>
 
-Currently, if cgroup is removed while some bio is still throttled, such
-bio will still wait for timer to dispatch. On the one hand, it
-doesn't make sense to throttle bio while cgroup is removed, on the other
-hand, this behaviour makes it hard to guarantee the exit order for
-iocg(in ioc_pd_free() currently).
+pd_offline_fn() is ensured to be called in order(parent after child),
+while pd_free_fn() is not. Furthermore, rq_qos_exit() can also be called
+before pd_free_fn(). For conclusion, doing cleanups in ioc_pd_free() is
+not safe, which can cause many problems. By the way, iocost is the only
+policy to do cleanups in pd_free_fn().
 
-This patch make iocg->online updated under both 'ioc->lock' and
-'iocg->waitq.lock', so it can be guaranteed that iocg will stay online
-while holding any lock. In the meantime, all throttled bio will be
-dispatched immediately in ioc_pd_offline().
-
-This patch also prepare to move operations on iocg from ioc_pd_free()
-to ioc_pd_offline().
+Since previous patches guarantee that ioc_pd_offline() will dispatch
+throttled bio and prevent new io to be throttled. It's safe to move
+cleanup operations for iocg from ioc_pd_free() to ioc_pd_offline().
 
 Signed-off-by: Yu Kuai <yukuai3@huawei.com>
 ---
- block/blk-iocost.c | 25 ++++++++++++++++---------
- 1 file changed, 16 insertions(+), 9 deletions(-)
+ block/blk-iocost.c | 26 ++++++++++----------------
+ 1 file changed, 10 insertions(+), 16 deletions(-)
 
 diff --git a/block/blk-iocost.c b/block/blk-iocost.c
-index 23cc734dbe43..b63ecfdd815c 100644
+index b63ecfdd815c..d634ea73f991 100644
 --- a/block/blk-iocost.c
 +++ b/block/blk-iocost.c
-@@ -1448,14 +1448,18 @@ static int iocg_wake_fn(struct wait_queue_entry *wq_entry, unsigned mode,
- {
- 	struct iocg_wait *wait = container_of(wq_entry, struct iocg_wait, wait);
- 	struct iocg_wake_ctx *ctx = key;
--	u64 cost = abs_cost_to_cost(wait->abs_cost, ctx->hw_inuse);
+@@ -3011,21 +3011,6 @@ static void ioc_pd_offline(struct blkg_policy_data *pd)
  
--	ctx->vbudget -= cost;
-+	if (ctx->iocg->online) {
-+		u64 cost = abs_cost_to_cost(wait->abs_cost, ctx->hw_inuse);
- 
--	if (ctx->vbudget < 0)
--		return -1;
-+		ctx->vbudget -= cost;
-+
-+		if (ctx->vbudget < 0)
-+			return -1;
-+
-+		iocg_commit_bio(ctx->iocg, wait->bio, wait->abs_cost, cost);
-+	}
- 
--	iocg_commit_bio(ctx->iocg, wait->bio, wait->abs_cost, cost);
- 	wait->committed = true;
- 
- 	/*
-@@ -3003,9 +3007,14 @@ static void ioc_pd_offline(struct blkg_policy_data *pd)
- 	unsigned long flags;
- 
- 	if (ioc) {
--		spin_lock_irqsave(&ioc->lock, flags);
-+		struct iocg_wake_ctx ctx = { .iocg = iocg };
-+
-+		iocg_lock(iocg, true, &flags);
+ 		iocg_lock(iocg, true, &flags);
  		iocg->online = false;
+-		iocg_unlock(iocg, true, &flags);
+-
+-		hrtimer_cancel(&iocg->waitq_timer);
+-		__wake_up(&iocg->waitq, TASK_NORMAL, 0, &ctx);
+-	}
+-}
+-
+-static void ioc_pd_free(struct blkg_policy_data *pd)
+-{
+-	struct ioc_gq *iocg = pd_to_iocg(pd);
+-	struct ioc *ioc = iocg->ioc;
+-	unsigned long flags;
+-
+-	if (ioc) {
+-		spin_lock_irqsave(&ioc->lock, flags);
+ 
+ 		if (!list_empty(&iocg->active_list)) {
+ 			struct ioc_now now;
+@@ -3038,8 +3023,17 @@ static void ioc_pd_free(struct blkg_policy_data *pd)
+ 		WARN_ON_ONCE(!list_empty(&iocg->walk_list));
+ 		WARN_ON_ONCE(!list_empty(&iocg->surplus_list));
+ 
 -		spin_unlock_irqrestore(&ioc->lock, flags);
 +		iocg_unlock(iocg, true, &flags);
 +
 +		hrtimer_cancel(&iocg->waitq_timer);
 +		__wake_up(&iocg->waitq, TASK_NORMAL, 0, &ctx);
  	}
- }
- 
-@@ -3030,8 +3039,6 @@ static void ioc_pd_free(struct blkg_policy_data *pd)
- 		WARN_ON_ONCE(!list_empty(&iocg->surplus_list));
- 
- 		spin_unlock_irqrestore(&ioc->lock, flags);
--
--		hrtimer_cancel(&iocg->waitq_timer);
- 	}
++}
++
++static void ioc_pd_free(struct blkg_policy_data *pd)
++{
++	struct ioc_gq *iocg = pd_to_iocg(pd);
++
  	free_percpu(iocg->pcpu_stat);
  	kfree(iocg);
+ }
 -- 
 2.31.1
 
