@@ -1,96 +1,53 @@
-From: Yu Kuai <yukuai1@huaweicloud.com>
-Subject: [PATCH -next 2/4] blk-iocost: don't throttle bio if iocg is offlined
-Date: Sat, 17 Dec 2022 11:05:25 +0800
-Message-ID: <20221217030527.1250083-3-yukuai1@huaweicloud.com>
-References: <20221217030527.1250083-1-yukuai1@huaweicloud.com>
+From: Yu Kuai <yukuai1-XF6JlduFytWkHkcT6e4Xnw@public.gmane.org>
+Subject: [PATCH -next 0/4] blk-cgroup: synchronize del_gendisk() with configuring cgroup policy
+Date: Sat, 17 Dec 2022 11:09:04 +0800
+Message-ID: <20221217030908.1261787-1-yukuai1@huaweicloud.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Return-path: <linux-block-owner@vger.kernel.org>
-In-Reply-To: <20221217030527.1250083-1-yukuai1@huaweicloud.com>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: tj@kernel.org, hch@infradead.org, josef@toxicpanda.com, axboe@kernel.dk
-Cc: cgroups@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, yukuai3@huawei.com, yukuai1@huaweicloud.com, yi.zhang@huawei.com
+To: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, hch-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, josef-DigfWCa+lFGyeJad7bwFQA@public.gmane.org, axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, yukuai1-XF6JlduFytWkHkcT6e4Xnw@public.gmane.org, yi.zhang-hv44wF8Li93QT0dZR+AlfA@public.gmane.org
 
-From: Yu Kuai <yukuai3@huawei.com>
+From: Yu Kuai <yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 
-bio will grab blkg reference, however, blkcg->online_pin is not grabbed,
-hence cgroup can be removed after thread exit while bio is still in
-progress. Bypass io in this case since it doesn't make sense to
-throttle bio while cgroup is removed.
+iocost is initialized when it's configured the first time, and iocost
+initializing can race with del_gendisk(), which will cause null pointer
+dereference:
 
-This patch also prepare to move operations on iocg from ioc_pd_free()
-to ioc_pd_offline().
+t1				t2
+ioc_qos_write
+ blk_iocost_init
+  rq_qos_add
+  				del_gendisk
+  				 rq_qos_exit
+  				 //iocost is removed from q->roqs
+  blkcg_activate_policy
+   pd_init_fn
+    ioc_pd_init
+     ioc = q_to_ioc(blkg->q)
+     //can't find iocost and return null
 
-Signed-off-by: Yu Kuai <yukuai3@huawei.com>
----
- block/blk-iocost.c | 24 ++++++++++++++++++++----
- 1 file changed, 20 insertions(+), 4 deletions(-)
+And iolatency is about to switch to the same lazy initialization.
 
-diff --git a/block/blk-iocost.c b/block/blk-iocost.c
-index 1498879c4a52..23cc734dbe43 100644
---- a/block/blk-iocost.c
-+++ b/block/blk-iocost.c
-@@ -695,6 +695,20 @@ static struct ioc_cgrp *blkcg_to_iocc(struct blkcg *blkcg)
- 			    struct ioc_cgrp, cpd);
- }
- 
-+static struct ioc_gq *ioc_bio_iocg(struct bio *bio)
-+{
-+	struct blkcg_gq *blkg = bio->bi_blkg;
-+
-+	if (blkg && blkg->online) {
-+		struct ioc_gq *iocg = blkg_to_iocg(blkg);
-+
-+		if (iocg && iocg->online)
-+			return iocg;
-+	}
-+
-+	return NULL;
-+}
-+
- /*
-  * Scale @abs_cost to the inverse of @hw_inuse.  The lower the hierarchical
-  * weight, the more expensive each IO.  Must round up.
-@@ -1262,6 +1276,9 @@ static bool iocg_activate(struct ioc_gq *iocg, struct ioc_now *now)
- 
- 	spin_lock_irq(&ioc->lock);
- 
-+	if (!iocg->online)
-+		goto fail_unlock;
-+
- 	ioc_now(ioc, now);
- 
- 	/* update period */
-@@ -2561,9 +2578,8 @@ static u64 calc_size_vtime_cost(struct request *rq, struct ioc *ioc)
- 
- static void ioc_rqos_throttle(struct rq_qos *rqos, struct bio *bio)
- {
--	struct blkcg_gq *blkg = bio->bi_blkg;
- 	struct ioc *ioc = rqos_to_ioc(rqos);
--	struct ioc_gq *iocg = blkg_to_iocg(blkg);
-+	struct ioc_gq *iocg = ioc_bio_iocg(bio);
- 	struct ioc_now now;
- 	struct iocg_wait wait;
- 	u64 abs_cost, cost, vtime;
-@@ -2697,7 +2713,7 @@ static void ioc_rqos_throttle(struct rq_qos *rqos, struct bio *bio)
- static void ioc_rqos_merge(struct rq_qos *rqos, struct request *rq,
- 			   struct bio *bio)
- {
--	struct ioc_gq *iocg = blkg_to_iocg(bio->bi_blkg);
-+	struct ioc_gq *iocg = ioc_bio_iocg(bio);
- 	struct ioc *ioc = rqos_to_ioc(rqos);
- 	sector_t bio_end = bio_end_sector(bio);
- 	struct ioc_now now;
-@@ -2755,7 +2771,7 @@ static void ioc_rqos_merge(struct rq_qos *rqos, struct request *rq,
- 
- static void ioc_rqos_done_bio(struct rq_qos *rqos, struct bio *bio)
- {
--	struct ioc_gq *iocg = blkg_to_iocg(bio->bi_blkg);
-+	struct ioc_gq *iocg = ioc_bio_iocg(bio);
- 
- 	if (iocg && bio->bi_iocost_cost)
- 		atomic64_add(bio->bi_iocost_cost, &iocg->done_vtime);
+This patchset fix this problem by synchronize rq_qos_add() and
+blkcg_activate_policy() with rq_qos_exit().
+
+Yu Kuai (4):
+  block/rq_qos: protect 'q->rq_qos' with queue_lock in rq_qos_exit()
+  block/rq_qos: fail rq_qos_add() after del_gendisk()
+  blk-cgroup: add a new interface blkcg_conf_close_bdev()
+  blk-cgroup: synchronize del_gendisk() with configuring cgroup policy
+
+ block/blk-cgroup.c     | 12 ++++++++++--
+ block/blk-cgroup.h     |  1 +
+ block/blk-iocost.c     |  8 ++++----
+ block/blk-rq-qos.c     | 25 ++++++++++++++++++++-----
+ block/blk-rq-qos.h     | 17 +++++++++++++----
+ include/linux/blkdev.h |  1 +
+ 6 files changed, 49 insertions(+), 15 deletions(-)
+
 -- 
 2.31.1
 
