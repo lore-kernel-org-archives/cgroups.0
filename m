@@ -1,143 +1,47 @@
-From: Nikolay Borisov <nikolay.borisov-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>
-Subject: [PATCH 1/2] devcg: Move match_exception_partial before match_exception PSBM-144033
-Date: Mon, 19 Dec 2022 13:40:51 +0200
-Message-ID: <20221219114052.1582992-2-nikolay.borisov@virtuozzo.com>
-References: <20221219114052.1582992-1-nikolay.borisov@virtuozzo.com>
+From: Michal Hocko <mhocko@suse.com>
+Subject: Re: [PATCH v2] mm: memcontrol: protect the memory in cgroup from
+ being oom killed
+Date: Mon, 19 Dec 2022 13:06:51 +0100
+Message-ID: <Y6Atfc8ijws/A/f5@dhcp22.suse.cz>
+References: <395B1998-38A9-4A68-96F8-6EDF44686231@didiglobal.com>
+ <BE56B09A-7C70-4152-B4D4-B8433A37465D@didiglobal.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <20221219114052.1582992-1-nikolay.borisov-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>
+Return-path: <linux-doc-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
+        t=1671451611; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=vcYyeovvyeIUt7S0vbCFAC7dHaOjTv+mzzbe5d276WA=;
+        b=cKH6lPcm6qTERFkgfs95izoDW3LTVijdvzrmfJn690l+1owObw0m+Kz7Y06qsjOaD6EqbN
+        1nQu1wgzRFe45utSi3lZdgUiSHYfJhsXYSCl4AiM7stbZoFRgU5YJjZf7vof2Pl0jVnVap
+        3Cb7KuvdLUWZo1lmVQy5c4TDx9dQfMk=
+Content-Disposition: inline
+In-Reply-To: <BE56B09A-7C70-4152-B4D4-B8433A37465D@didiglobal.com>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-To: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, paul-r2n+y4ga6xFZroRs9YW3xA@public.gmane.org, kernel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, Nikolay Borisov <nikolay.borisov-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>
+Content-Type: text/plain; charset="utf-8"
+To: =?utf-8?B?56iL5Z6y5rab?= Chengkaitao Cheng <chengkaitao@didiglobal.com>
+Cc: chengkaitao <pilgrimtao@gmail.com>, "tj@kernel.org" <tj@kernel.org>, "lizefan.x@bytedance.com" <lizefan.x@bytedance.com>, "hannes@cmpxchg.org" <hannes@cmpxchg.org>, "corbet@lwn.net" <corbet@lwn.net>, "roman.gushchin@linux.dev" <roman.gushchin@linux.dev>, "shakeelb@google.com" <shakeelb@google.com>, "akpm@linux-foundation.org" <akpm@linux-foundation.org>, "songmuchun@bytedance.com" <songmuchun@bytedance.com>, "viro@zeniv.linux.org.uk" <viro@zeniv.linux.org.uk>, "zhengqi.arch@bytedance.com" <zhengqi.arch@bytedance.com>, "ebiederm@xmission.com" <ebiederm@xmission.com>, "Liam.Howlett@oracle.com" <Liam.Howlett@oracle.com>, "chengzhihao1@huawei.com" <chengzhihao1@huawei.com>, "haolee.swjtu@gmail.com" <haolee.swjtu@gmail.com>, "yuzhao@google.com" <yuzhao@google.com>
 
-This is required as the latter would call the former in upcoming
-patches.
+On Mon 19-12-22 03:16:33, 程垲涛 Chengkaitao Cheng wrote:
+> Hi Michal Hocko,
+> Looking forward to your reply.
 
-Signed-off-by: Nikolay Borisov <nikolay.borisov-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>
----
- security/device_cgroup.c | 66 ++++++++++++++++++++--------------------
- 1 file changed, 33 insertions(+), 33 deletions(-)
+I am sorry, I do not have anything to add to my previous concerns. But
+let me summarize. I think your way of mixing per memcg protection with
+the per-process oom_score is very dubious. This is not an unfixable
+problem. All you need to do is the discount all processes in the same
+memcg equally. A bigger problem is, though, that I am not convinced the
+memory protection based interface is really viable. Based on experiences
+with the existing reclaim protection interface this is not really
+trivial interface to use. You either have to have a good overview of the
+working set size or you have to auto-tune it based on a feedback
+mechanism (e.g. PSI). Auto-tuning based on oom which should be a
+rare event is rather problematic I would say.
 
-diff --git a/security/device_cgroup.c b/security/device_cgroup.c
-index bef2b9285fb3..2d234e7c0c70 100644
---- a/security/device_cgroup.c
-+++ b/security/device_cgroup.c
-@@ -312,34 +312,45 @@ static int devcgroup_seq_show(struct seq_file *m, void *v)
- }
- 
- /**
-- * match_exception	- iterates the exception list trying to find a complete match
-+ * match_exception_partial - iterates the exception list trying to find a partial match
-  * @exceptions: list of exceptions
-  * @type: device type (DEVCG_DEV_BLOCK or DEVCG_DEV_CHAR)
-  * @major: device file major number, ~0 to match all
-  * @minor: device file minor number, ~0 to match all
-  * @access: permission mask (DEVCG_ACC_READ, DEVCG_ACC_WRITE, DEVCG_ACC_MKNOD)
-  *
-- * It is considered a complete match if an exception is found that will
-- * contain the entire range of provided parameters.
-+ * It is considered a partial match if an exception's range is found to
-+ * contain *any* of the devices specified by provided parameters. This is
-+ * used to make sure no extra access is being granted that is forbidden by
-+ * any of the exception list.
-  *
-- * Return: true in case it matches an exception completely
-+ * Return: true in case the provided range mat matches an exception completely
-  */
--static bool match_exception(struct list_head *exceptions, short type,
--			    u32 major, u32 minor, short access)
-+static bool match_exception_partial(struct list_head *exceptions, short type,
-+				    u32 major, u32 minor, short access)
- {
- 	struct dev_exception_item *ex;
- 
--	list_for_each_entry_rcu(ex, exceptions, list) {
-+	list_for_each_entry_rcu(ex, exceptions, list,
-+				lockdep_is_held(&devcgroup_mutex)) {
- 		if ((type & DEVCG_DEV_BLOCK) && !(ex->type & DEVCG_DEV_BLOCK))
- 			continue;
- 		if ((type & DEVCG_DEV_CHAR) && !(ex->type & DEVCG_DEV_CHAR))
- 			continue;
--		if (ex->major != ~0 && ex->major != major)
-+		/*
-+		 * We must be sure that both the exception and the provided
-+		 * range aren't masking all devices
-+		 */
-+		if (ex->major != ~0 && major != ~0 && ex->major != major)
- 			continue;
--		if (ex->minor != ~0 && ex->minor != minor)
-+		if (ex->minor != ~0 && minor != ~0 && ex->minor != minor)
- 			continue;
--		/* provided access cannot have more than the exception rule */
--		if (access & (~ex->access))
-+		/*
-+		 * In order to make sure the provided range isn't matching
-+		 * an exception, all its access bits shouldn't match the
-+		 * exception's access bits
-+		 */
-+		if (!(access & ex->access))
- 			continue;
- 		return true;
- 	}
-@@ -347,45 +358,34 @@ static bool match_exception(struct list_head *exceptions, short type,
- }
- 
- /**
-- * match_exception_partial - iterates the exception list trying to find a partial match
-+ * match_exception	- iterates the exception list trying to find a complete match
-  * @exceptions: list of exceptions
-  * @type: device type (DEVCG_DEV_BLOCK or DEVCG_DEV_CHAR)
-  * @major: device file major number, ~0 to match all
-  * @minor: device file minor number, ~0 to match all
-  * @access: permission mask (DEVCG_ACC_READ, DEVCG_ACC_WRITE, DEVCG_ACC_MKNOD)
-  *
-- * It is considered a partial match if an exception's range is found to
-- * contain *any* of the devices specified by provided parameters. This is
-- * used to make sure no extra access is being granted that is forbidden by
-- * any of the exception list.
-+ * It is considered a complete match if an exception is found that will
-+ * contain the entire range of provided parameters.
-  *
-- * Return: true in case the provided range mat matches an exception completely
-+ * Return: true in case it matches an exception completely
-  */
--static bool match_exception_partial(struct list_head *exceptions, short type,
--				    u32 major, u32 minor, short access)
-+static bool match_exception(struct list_head *exceptions, short type,
-+			    u32 major, u32 minor, short access)
- {
- 	struct dev_exception_item *ex;
- 
--	list_for_each_entry_rcu(ex, exceptions, list,
--				lockdep_is_held(&devcgroup_mutex)) {
-+	list_for_each_entry_rcu(ex, exceptions, list) {
- 		if ((type & DEVCG_DEV_BLOCK) && !(ex->type & DEVCG_DEV_BLOCK))
- 			continue;
- 		if ((type & DEVCG_DEV_CHAR) && !(ex->type & DEVCG_DEV_CHAR))
- 			continue;
--		/*
--		 * We must be sure that both the exception and the provided
--		 * range aren't masking all devices
--		 */
--		if (ex->major != ~0 && major != ~0 && ex->major != major)
-+		if (ex->major != ~0 && ex->major != major)
- 			continue;
--		if (ex->minor != ~0 && minor != ~0 && ex->minor != minor)
-+		if (ex->minor != ~0 && ex->minor != minor)
- 			continue;
--		/*
--		 * In order to make sure the provided range isn't matching
--		 * an exception, all its access bits shouldn't match the
--		 * exception's access bits
--		 */
--		if (!(access & ex->access))
-+		/* provided access cannot have more than the exception rule */
-+		if (access & (~ex->access))
- 			continue;
- 		return true;
- 	}
+All that being said I am not convinced that the interface is practically
+usable and you haven't really provided good examples to prove me wrong.
 -- 
-2.34.1
-
+Michal Hocko
+SUSE Labs
