@@ -1,132 +1,150 @@
-From: Vincent Guittot <vincent.guittot-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH v9 3/8] cpuset: Rebuild root domain deadline accounting information
-Date: Mon, 19 Dec 2022 09:07:21 +0100
-Message-ID: <CAKfTPtA0M5XOP4UdkFeSNen98e842OfKTBDOt0r-y_TD4w54jw@mail.gmail.com>
-References: <20190719140000.31694-1-juri.lelli@redhat.com> <20190719140000.31694-4-juri.lelli@redhat.com>
- <20221216233501.gh6m75e7s66dmjgo@airbuntu>
+From: Nikolay Borisov <nikolay.borisov-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>
+Subject: [PATCH 2/2] devcg: Allow wildcard exceptions in DENY child cgroups PSBM-144033
+Date: Mon, 19 Dec 2022 13:40:52 +0200
+Message-ID: <20221219114052.1582992-3-nikolay.borisov@virtuozzo.com>
+References: <20221219114052.1582992-1-nikolay.borisov@virtuozzo.com>
 Mime-Version: 1.0
+Content-Transfer-Encoding: 8bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:from:to:cc:subject:date:message-id:reply-to;
-        bh=SEgPCMOuM3toHAMRnPEv0nKP/n56PHLERtNl5qSP27Y=;
-        b=GeCE1XpHOPsjmhot1alfGm10UwZR8WweYcK7Ys0ml6q0SKl29iSB4V/YGoLSd4bF1D
-         k/gNkETnjVkPJ3Mu1VpAF8eFG5GiSNeo69v3wu2KtdmT4uHcvtB1BF5MN9dPZFmdphob
-         1mLvk0O3KpQe0zjxF6uDeaTIgsHmR8OuHDTH08g4AUFwm1wAsHiRLxiWMjfR8b1Dt2bt
-         iyWWQAJD+eRSch1JqaY7QuT/BfK6poPY9PQY9D0PW4C07QFqWjcRmkGZNLBGT1Q6HBOs
-         oyx07AoRsJLtXSd2iqJrF0eHZPK97da/C0T3ywoEpIBiJqNzLY4mwLdMjx05xon0pZLw
-         nANw==
-In-Reply-To: <20221216233501.gh6m75e7s66dmjgo@airbuntu>
+In-Reply-To: <20221219114052.1582992-1-nikolay.borisov-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Qais Yousef <qyousef-wp2msK0BRk8tq7phqP6ubQ@public.gmane.org>
-Cc: Juri Lelli <juri.lelli-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, rostedt-nx8X9YLhiw1AfugRpC6u6w@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, luca.abeni-5rdYK369eBLQB0XuIGIEkQ@public.gmane.org, claudio-YOzL5CV4y4YG1A2ADO40+w@public.gmane.org, tommaso.cucinotta-5rdYK369eBLQB0XuIGIEkQ@public.gmane.org, bristot-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, mathieu.poirier-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, dietmar.eggemann-5wv7dgnIgG8@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Wei Wang <wvw-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Rick Yiu <rickyiu-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Quentin Perret <qperret-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+To: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, paul-r2n+y4ga6xFZroRs9YW3xA@public.gmane.org, kernel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, Nikolay Borisov <nikolay.borisov-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>
 
-On Sat, 17 Dec 2022 at 00:35, Qais Yousef <qyousef-wp2msK0BRk8tq7phqP6ubQ@public.gmane.org> wrote:
->
-> Hi
->
-> On 07/19/19 15:59, Juri Lelli wrote:
-> > When the topology of root domains is modified by CPUset or CPUhotplug
-> > operations information about the current deadline bandwidth held in the
-> > root domain is lost.
-> >
-> > This patch addresses the issue by recalculating the lost deadline
-> > bandwidth information by circling through the deadline tasks held in
-> > CPUsets and adding their current load to the root domain they are
-> > associated with.
-> >
-> > Signed-off-by: Mathieu Poirier <mathieu.poirier-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>
-> > Signed-off-by: Juri Lelli <juri.lelli-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-> > ---
->
-> We see that rebuild_root_domain() can take 10+ ms (I get a max of 20ms quite
-> consistently) on suspend/resume.
->
-> Do we actually need to rebuild_root_domain() if we're going through
-> a suspend/resume cycle?
+In containerized environments there arise cases where we might want to
+allow wildcard exceptions when the parent cg doesn't have such. This for
+example arises when systemd services are being setup in containers. In
+order to allow systemd to function we must allow it to write wildcard
+(i.e b *:* rwm) rules in the child group. At the same time in order not
+to break the fundamental invariant of the device cgroup hierarchy that
+children cannot be more permissive than their parents instead of blindly
+trusting those rules, simply skip them in the child cgroup and defer to
+the parent's exceptions.
 
-During suspend to ram, there are cpus hotplug operation but If you use
-suspend to idle, you will skip cpus hotplug operation and its
-associated rebuild.
+For example assume we have A/B, where A has default behavior 'deny' and
+B was created afterwards and subsequently also has 'deny' default
+behavior. With this patch it's possible to write "b *:* rwm" in B which
+would also result in EPERM when trying to access any device that doesn't
+contain an exception in A:
 
->
-> ie: would something like the below make sense? We'd skip this logic if
-> cpuhp_tasks_frozen is set which indicates it's not a real hotplug operation but
-> we're suspending/resuming.
->
->
-> Cheers
->
-> --
-> Qais Yousef
->
->
-> --->8---
->
->
-> From 4cfd50960ad872c5eb810ad3038eaf840bab5182 Mon Sep 17 00:00:00 2001
-> From: Qais Yousef <qyousef-wp2msK0BRk8tq7phqP6ubQ@public.gmane.org>
-> Date: Tue, 29 Nov 2022 19:01:52 +0000
-> Subject: [PATCH] sched: cpuset: Don't rebuild sched domains on suspend-resume
->
-> Commit f9a25f776d78 ("cpusets: Rebuild root domain deadline accounting information")
-> enabled rebuilding sched domain on cpuset and hotplug operations to
-> correct deadline accounting.
->
-> Rebuilding sched domain is a slow operation and we see 10+ ms delays
-> on suspend-resume because of that.
->
-> Since nothing is expected to change on suspend-resume operation; skip
-> rebuilding the sched domains to regain some of the time lost.
->
-> Debugged-by: Rick Yiu <rickyiu-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-> Signed-off-by: Qais Yousef (Google) <qyousef-wp2msK0BRk8tq7phqP6ubQ@public.gmane.org>
-> ---
->  kernel/cgroup/cpuset.c  | 6 ++++++
->  kernel/sched/deadline.c | 3 +++
->  2 files changed, 9 insertions(+)
->
-> diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
-> index b474289c15b8..2ff68d625b7b 100644
-> --- a/kernel/cgroup/cpuset.c
-> +++ b/kernel/cgroup/cpuset.c
-> @@ -1067,6 +1067,9 @@ static void update_tasks_root_domain(struct cpuset *cs)
->         struct css_task_iter it;
->         struct task_struct *task;
->
-> +       if (cpuhp_tasks_frozen)
-> +               return;
-> +
->         css_task_iter_start(&cs->css, 0, &it);
->
->         while ((task = css_task_iter_next(&it)))
-> @@ -1084,6 +1087,9 @@ static void rebuild_root_domains(void)
->         lockdep_assert_cpus_held();
->         lockdep_assert_held(&sched_domains_mutex);
->
-> +       if (cpuhp_tasks_frozen)
-> +               return;
-> +
->         rcu_read_lock();
->
->         /*
-> diff --git a/kernel/sched/deadline.c b/kernel/sched/deadline.c
-> index 0d97d54276cc..42c1143a3956 100644
-> --- a/kernel/sched/deadline.c
-> +++ b/kernel/sched/deadline.c
-> @@ -2575,6 +2575,9 @@ void dl_clear_root_domain(struct root_domain *rd)
->  {
->         unsigned long flags;
->
-> +       if (cpuhp_tasks_frozen)
-> +               return;
-> +
->         raw_spin_lock_irqsave(&rd->dl_bw.lock, flags);
->         rd->dl_bw.total_bw = 0;
->         raw_spin_unlock_irqrestore(&rd->dl_bw.lock, flags);
-> --
-> 2.25.1
->
+    mkdir A
+    echo "a" > A/devices.deny
+    mkdir A/B
+    echo "c *:*" > A/B/devices.allow <-- allows to create the exception
+					 but it's essentially a noop
+
+    echo "c 1:3 rw" > A < -- now trying to open /dev/nul (matching 1:3)
+			     by a process in B would succeed.
+
+Implementing this doesn't really break the main invariant that children
+shouldn't have more access than their ancestors.
+
+Signed-off-by: Nikolay Borisov <nikolay.borisov-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>
+---
+ security/device_cgroup.c | 44 ++++++++++++++++++++++++++++++++--------
+ 1 file changed, 36 insertions(+), 8 deletions(-)
+
+diff --git a/security/device_cgroup.c b/security/device_cgroup.c
+index 2d234e7c0c70..1d91c3e9aa99 100644
+--- a/security/device_cgroup.c
++++ b/security/device_cgroup.c
+@@ -46,6 +46,11 @@ struct dev_cgroup {
+ 	enum devcg_behavior behavior;
+ };
+
++static bool is_wildcard_exception(struct dev_exception_item *ex)
++{
++	return ex->minor == ~0 || ex->major == ~0;
++}
++
+ static inline struct dev_cgroup *css_to_devcgroup(struct cgroup_subsys_state *s)
+ {
+ 	return s ? container_of(s, struct dev_cgroup, css) : NULL;
+@@ -364,16 +369,20 @@ static bool match_exception_partial(struct list_head *exceptions, short type,
+  * @major: device file major number, ~0 to match all
+  * @minor: device file minor number, ~0 to match all
+  * @access: permission mask (DEVCG_ACC_READ, DEVCG_ACC_WRITE, DEVCG_ACC_MKNOD)
++ * @check_parent: defer wild card exception checking to parent
+  *
+  * It is considered a complete match if an exception is found that will
+  * contain the entire range of provided parameters.
+  *
+  * Return: true in case it matches an exception completely
+  */
+-static bool match_exception(struct list_head *exceptions, short type,
+-			    u32 major, u32 minor, short access)
++static bool match_exception(struct dev_cgroup *devcg, short type, u32 major,
++			    u32 minor, short access, bool check_parent)
+ {
++	struct list_head *exceptions = &devcg->exceptions;
+ 	struct dev_exception_item *ex;
++	bool wildcard_matched = false;
++	struct cgroup_subsys_state *parent = devcg->css.parent;
+
+ 	list_for_each_entry_rcu(ex, exceptions, list) {
+ 		if ((type & DEVCG_DEV_BLOCK) && !(ex->type & DEVCG_DEV_BLOCK))
+@@ -384,11 +393,30 @@ static bool match_exception(struct list_head *exceptions, short type,
+ 			continue;
+ 		if (ex->minor != ~0 && ex->minor != minor)
+ 			continue;
++		if (is_wildcard_exception(ex) && parent) {
++			wildcard_matched = true;
++			continue;
++		}
+ 		/* provided access cannot have more than the exception rule */
+ 		if (access & (~ex->access))
+ 			continue;
+ 		return true;
+ 	}
++
++	/* We matched a wildcard rule, so let's see if the parent allows it */
++	if (wildcard_matched && check_parent) {
++		struct dev_cgroup *devcg_parent = css_to_devcgroup(parent);
++
++		if (devcg_parent->behavior == DEVCG_DEFAULT_ALLOW)
++			/* Can't match any of the exceptions, even partially */
++			return  !match_exception_partial(&devcg_parent->exceptions,
++						      type, major, minor, access);
++		else
++			/* Need to match completely one exception to be allowed */
++			return match_exception(devcg_parent, type, major, minor,
++					       access, false);
++	}
++
+ 	return false;
+ }
+
+@@ -441,9 +469,8 @@ static bool verify_new_ex(struct dev_cgroup *dev_cgroup,
+ 		 * be contained completely in an parent's exception to be
+ 		 * allowed
+ 		 */
+-		match = match_exception(&dev_cgroup->exceptions, refex->type,
+-					refex->major, refex->minor,
+-					refex->access);
++		match = match_exception(dev_cgroup, refex->type, refex->major,
++					refex->minor, refex->access, false);
+
+ 		if (match)
+ 			/* parent has an exception that matches the proposed */
+@@ -755,7 +782,8 @@ static int devcgroup_update_access(struct dev_cgroup *devcgroup,
+ 			break;
+ 		}
+
+-		if (!parent_has_perm(devcgroup, &ex))
++		if (!is_wildcard_exception(&ex) &&
++		    !parent_has_perm(devcgroup, &ex))
+ 			return -EPERM;
+ 		rc = dev_exception_add(devcgroup, &ex);
+ 		break;
+@@ -844,8 +872,8 @@ static int devcgroup_legacy_check_permission(short type, u32 major, u32 minor,
+ 					      type, major, minor, access);
+ 	else
+ 		/* Need to match completely one exception to be allowed */
+-		rc = match_exception(&dev_cgroup->exceptions, type, major,
+-				     minor, access);
++		rc = match_exception(dev_cgroup, type, major, minor, access,
++				     true);
+ 	rcu_read_unlock();
+
+ 	if (!rc)
