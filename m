@@ -1,175 +1,132 @@
-From: Bagas Sanjaya <bagasdotme@gmail.com>
-Subject: [PATCH 09/10] docs: cgroup-v1: add internal cross-references
-Date: Mon, 19 Dec 2022 11:22:08 +0700
-Message-ID: <20221219042209.22898-10-bagasdotme@gmail.com>
-References: <20221219042209.22898-1-bagasdotme@gmail.com>
+From: Vincent Guittot <vincent.guittot-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCH v9 3/8] cpuset: Rebuild root domain deadline accounting information
+Date: Mon, 19 Dec 2022 09:07:21 +0100
+Message-ID: <CAKfTPtA0M5XOP4UdkFeSNen98e842OfKTBDOt0r-y_TD4w54jw@mail.gmail.com>
+References: <20190719140000.31694-1-juri.lelli@redhat.com> <20190719140000.31694-4-juri.lelli@redhat.com>
+ <20221216233501.gh6m75e7s66dmjgo@airbuntu>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-doc-owner@vger.kernel.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=m1lEXUxDv+RQRfIU+EhWl1xsmh7T8TN0B09r+Rt+f6E=;
-        b=mRDBpTfsKGJFj9sStOs+u6rafPXo1yrNY3co/JxzhxWdSf+Ee9lJP+AcKfTLxqHGJ7
-         /ruFXJ54tEJ4/+rcvJpAXQGBvu8w2UNqb0qeXxzf0gv8Jkp/oTNCrG9/na5e2adVEq5C
-         WuJOTPR+DvmUilQKp2CDo8N0Cc5zHA/oHv8XtyTh95Op/bEJ3NuqFA7gFCBB7/YTl1bk
-         h8H9Tdq13+dru7pjLYX0hoC91Z+4PFfcpUS8bKiUP/j1BA+kOvIF7kF1ElNq7ehaveTa
-         5BiBrlFzSwLanGEXndk8Nv7qoHt5phcg46YAkWLGp+UfoZmPVmgbEzGUnf4RnmEo06ab
-         3+2g==
-In-Reply-To: <20221219042209.22898-1-bagasdotme@gmail.com>
-X-Developer-Signature: v=1; a=openpgp-sha256; l=5927; i=bagasdotme@gmail.com; h=from:subject; bh=9S/rkKjh7S+VIO4A14dIVvNcepKziJ1wiMcg1+yyND0=; b=owGbwMvMwCX2bWenZ2ig32LG02pJDMnzn33w62KZ2zBTurxBrqKy41HuS1ff56zOJzwbQ/9xeLTv dD3XUcrCIMbFICumyDIpka/p9C4jkQvtax1h5rAygQxh4OIUgIlYGTEyvOj691Dsls78a7/0WFe6uD IcOLpg2rH2CUdm9buXrS6X6WFk6Jj/+OPi+BmnM//9uHV+710Pl3/vj6/KOTgzaOJd5+dMz1gA
-X-Developer-Key: i=bagasdotme@gmail.com; a=openpgp; fpr=701B806FDCA5D3A58FFB8F7D7C276C64A5E44A1D
+        d=linaro.org; s=google;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:from:to:cc:subject:date:message-id:reply-to;
+        bh=SEgPCMOuM3toHAMRnPEv0nKP/n56PHLERtNl5qSP27Y=;
+        b=GeCE1XpHOPsjmhot1alfGm10UwZR8WweYcK7Ys0ml6q0SKl29iSB4V/YGoLSd4bF1D
+         k/gNkETnjVkPJ3Mu1VpAF8eFG5GiSNeo69v3wu2KtdmT4uHcvtB1BF5MN9dPZFmdphob
+         1mLvk0O3KpQe0zjxF6uDeaTIgsHmR8OuHDTH08g4AUFwm1wAsHiRLxiWMjfR8b1Dt2bt
+         iyWWQAJD+eRSch1JqaY7QuT/BfK6poPY9PQY9D0PW4C07QFqWjcRmkGZNLBGT1Q6HBOs
+         oyx07AoRsJLtXSd2iqJrF0eHZPK97da/C0T3ywoEpIBiJqNzLY4mwLdMjx05xon0pZLw
+         nANw==
+In-Reply-To: <20221216233501.gh6m75e7s66dmjgo@airbuntu>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, Linux Memory Management List <linux-mm@kvack.org>
-Cc: Tejun Heo <tj@kernel.org>, Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, Jonathan Corbet <corbet@lwn.net>, Michal Hocko <mhocko@suse.com>, Andrew Morton <akpm@linux-foundation.org>, Hugh Dickins <hughd@google.com>, Shakeel Butt <shakeelb@google.com>, Bagas Sanjaya <bagasdotme@gmail.com>
+Content-Transfer-Encoding: 7bit
+To: Qais Yousef <qyousef-wp2msK0BRk8tq7phqP6ubQ@public.gmane.org>
+Cc: Juri Lelli <juri.lelli-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, rostedt-nx8X9YLhiw1AfugRpC6u6w@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, luca.abeni-5rdYK369eBLQB0XuIGIEkQ@public.gmane.org, claudio-YOzL5CV4y4YG1A2ADO40+w@public.gmane.org, tommaso.cucinotta-5rdYK369eBLQB0XuIGIEkQ@public.gmane.org, bristot-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, mathieu.poirier-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, dietmar.eggemann-5wv7dgnIgG8@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Wei Wang <wvw-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Rick Yiu <rickyiu-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Quentin Perret <qperret-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 
-The documentation contains references to other sections in the doc
-(internal). Add cross-references for them so that these can be accessed
-without having to manually search for them.
+On Sat, 17 Dec 2022 at 00:35, Qais Yousef <qyousef-wp2msK0BRk8tq7phqP6ubQ@public.gmane.org> wrote:
+>
+> Hi
+>
+> On 07/19/19 15:59, Juri Lelli wrote:
+> > When the topology of root domains is modified by CPUset or CPUhotplug
+> > operations information about the current deadline bandwidth held in the
+> > root domain is lost.
+> >
+> > This patch addresses the issue by recalculating the lost deadline
+> > bandwidth information by circling through the deadline tasks held in
+> > CPUsets and adding their current load to the root domain they are
+> > associated with.
+> >
+> > Signed-off-by: Mathieu Poirier <mathieu.poirier-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>
+> > Signed-off-by: Juri Lelli <juri.lelli-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+> > ---
+>
+> We see that rebuild_root_domain() can take 10+ ms (I get a max of 20ms quite
+> consistently) on suspend/resume.
+>
+> Do we actually need to rebuild_root_domain() if we're going through
+> a suspend/resume cycle?
 
-Signed-off-by: Bagas Sanjaya <bagasdotme@gmail.com>
----
- .../admin-guide/cgroup-v1/memory.rst          | 43 +++++++++++++------
- 1 file changed, 30 insertions(+), 13 deletions(-)
+During suspend to ram, there are cpus hotplug operation but If you use
+suspend to idle, you will skip cpus hotplug operation and its
+associated rebuild.
 
-diff --git a/Documentation/admin-guide/cgroup-v1/memory.rst b/Documentation/admin-guide/cgroup-v1/memory.rst
-index 863e0f17ca0067..ae3a1d3873d73b 100644
---- a/Documentation/admin-guide/cgroup-v1/memory.rst
-+++ b/Documentation/admin-guide/cgroup-v1/memory.rst
-@@ -55,7 +55,8 @@ Features:
-  - Root cgroup has no limit controls.
- 
-  Kernel memory support is a work in progress, and the current version provides
-- basically functionality. (See Section 2.7)
-+ basically functionality. (See :ref:`section 2.7
-+ <cgroup-v1-memory-kernel-extension>`)
- 
- Brief summary of control files.
- 
-@@ -223,8 +224,9 @@ behind this approach is that a cgroup that aggressively uses a shared
- page will eventually get charged for it (once it is uncharged from
- the cgroup that brought it in -- this will happen on memory pressure).
- 
--But see section 8.2: when moving a task to another cgroup, its pages may
--be recharged to the new cgroup, if move_charge_at_immigrate has been chosen.
-+But see :ref:`section 8.2 <cgroup-v1-memory-movable-charges>` when moving a
-+task to another cgroup, its pages may be recharged to the new cgroup, if
-+move_charge_at_immigrate has been chosen.
- 
- 2.4 Swap Extension
- --------------------------------------
-@@ -272,7 +274,7 @@ global VM. When a cgroup goes over its limit, we first try
- to reclaim memory from the cgroup so as to make space for the new
- pages that the cgroup has touched. If the reclaim is unsuccessful,
- an OOM routine is invoked to select and kill the bulkiest task in the
--cgroup. (See 10. OOM Control below.)
-+cgroup. (See :ref:`10. OOM Control <cgroup-v1-memory-oom-control>` below.)
- 
- The reclaim algorithm has not been modified for cgroups, except that
- pages that are selected for reclaiming come from the per-cgroup LRU
-@@ -286,7 +288,7 @@ list.
-    When panic_on_oom is set to "2", the whole system will panic.
- 
- When oom event notifier is registered, event will be delivered.
--(See oom_control section)
-+(See :ref:`oom_control <cgroup-v1-memory-oom-control>` section)
- 
- 2.6 Locking
- -----------
-@@ -303,6 +305,8 @@ Per-node-per-memcgroup LRU (cgroup's private LRU) is guarded by
- lruvec->lru_lock; PG_lru bit of page->flags is cleared before
- isolating a page from its LRU under lruvec->lru_lock.
- 
-+.. _cgroup-v1-memory-kernel-extension:
-+
- 2.7 Kernel Memory Extension
- -----------------------------------------------
- 
-@@ -462,6 +466,8 @@ test because it has noise of shared objects/status.
- But the above two are testing extreme situations.
- Trying usual test under memory controller is always helpful.
- 
-+.. _cgroup-v1-memory-test-troubleshoot:
-+
- 4.1 Troubleshooting
- -------------------
- 
-@@ -474,8 +480,11 @@ terminated by the OOM killer. There are several causes for this:
- A sync followed by echo 1 > /proc/sys/vm/drop_caches will help get rid of
- some of the pages cached in the cgroup (page cache pages).
- 
--To know what happens, disabling OOM_Kill as per "10. OOM Control" (below) and
--seeing what happens will be helpful.
-+To know what happens, disabling OOM_Kill as per :ref:`"10. OOM Control"
-+<cgroup-v1-memory-oom-control>` (below) and seeing what happens will be
-+helpful.
-+
-+.. _cgroup-v1-memory-test-task-migration:
- 
- 4.2 Task migration
- ------------------
-@@ -486,15 +495,16 @@ remain charged to it, the charge is dropped when the page is freed or
- reclaimed.
- 
- You can move charges of a task along with task migration.
--See 8. "Move charges at task migration"
-+See :ref:`8. "Move charges at task migration" <cgroup-v1-memory-move-charges>`
- 
- 4.3 Removing a cgroup
- ---------------------
- 
--A cgroup can be removed by rmdir, but as discussed in sections 4.1 and 4.2, a
--cgroup might have some charge associated with it, even though all
--tasks have migrated away from it. (because we charge against pages, not
--against tasks.)
-+A cgroup can be removed by rmdir, but as discussed in :ref:`sections 4.1
-+<cgroup-v1-memory-test-troubleshoot>` and :ref:`4.2
-+<cgroup-v1-memory-test-task-migration>`, a cgroup might have some charge
-+associated with it, even though all tasks have migrated away from it. (because
-+we charge against pages, not against tasks.)
- 
- We move the stats to parent, and no change on the charge except uncharging
- from the child.
-@@ -721,6 +731,8 @@ If we want to change this to 1G, we can at any time use::
-        It is recommended to set the soft limit always below the hard limit,
-        otherwise the hard limit will take precedence.
- 
-+.. _cgroup-v1-memory-move-charges:
-+
- 8. Move charges at task migration (DEPRECATED!)
- ===============================================
- 
-@@ -750,7 +762,8 @@ If you want to enable it::
- 
- .. note::
-       Each bits of move_charge_at_immigrate has its own meaning about what type
--      of charges should be moved. See 8.2 for details.
-+      of charges should be moved. See :ref:`section 8.2
-+      <cgroup-v1-memory-movable-charges>` for details.
- 
- .. note::
-       Charges are moved only when you move mm->owner, in other words,
-@@ -768,6 +781,8 @@ And if you want disable it again::
- 
- 	# echo 0 > memory.move_charge_at_immigrate
- 
-+.. _cgroup-v1-memory-movable-charges:
-+
- 8.2 Type of charges which can be moved
- --------------------------------------
- 
-@@ -817,6 +832,8 @@ threshold in any direction.
- 
- It's applicable for root and non-root cgroup.
- 
-+.. _cgroup-v1-memory-oom-control:
-+
- 10. OOM Control
- ===============
- 
--- 
-An old man doll... just what I always wanted! - Clara
-
+>
+> ie: would something like the below make sense? We'd skip this logic if
+> cpuhp_tasks_frozen is set which indicates it's not a real hotplug operation but
+> we're suspending/resuming.
+>
+>
+> Cheers
+>
+> --
+> Qais Yousef
+>
+>
+> --->8---
+>
+>
+> From 4cfd50960ad872c5eb810ad3038eaf840bab5182 Mon Sep 17 00:00:00 2001
+> From: Qais Yousef <qyousef-wp2msK0BRk8tq7phqP6ubQ@public.gmane.org>
+> Date: Tue, 29 Nov 2022 19:01:52 +0000
+> Subject: [PATCH] sched: cpuset: Don't rebuild sched domains on suspend-resume
+>
+> Commit f9a25f776d78 ("cpusets: Rebuild root domain deadline accounting information")
+> enabled rebuilding sched domain on cpuset and hotplug operations to
+> correct deadline accounting.
+>
+> Rebuilding sched domain is a slow operation and we see 10+ ms delays
+> on suspend-resume because of that.
+>
+> Since nothing is expected to change on suspend-resume operation; skip
+> rebuilding the sched domains to regain some of the time lost.
+>
+> Debugged-by: Rick Yiu <rickyiu-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+> Signed-off-by: Qais Yousef (Google) <qyousef-wp2msK0BRk8tq7phqP6ubQ@public.gmane.org>
+> ---
+>  kernel/cgroup/cpuset.c  | 6 ++++++
+>  kernel/sched/deadline.c | 3 +++
+>  2 files changed, 9 insertions(+)
+>
+> diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
+> index b474289c15b8..2ff68d625b7b 100644
+> --- a/kernel/cgroup/cpuset.c
+> +++ b/kernel/cgroup/cpuset.c
+> @@ -1067,6 +1067,9 @@ static void update_tasks_root_domain(struct cpuset *cs)
+>         struct css_task_iter it;
+>         struct task_struct *task;
+>
+> +       if (cpuhp_tasks_frozen)
+> +               return;
+> +
+>         css_task_iter_start(&cs->css, 0, &it);
+>
+>         while ((task = css_task_iter_next(&it)))
+> @@ -1084,6 +1087,9 @@ static void rebuild_root_domains(void)
+>         lockdep_assert_cpus_held();
+>         lockdep_assert_held(&sched_domains_mutex);
+>
+> +       if (cpuhp_tasks_frozen)
+> +               return;
+> +
+>         rcu_read_lock();
+>
+>         /*
+> diff --git a/kernel/sched/deadline.c b/kernel/sched/deadline.c
+> index 0d97d54276cc..42c1143a3956 100644
+> --- a/kernel/sched/deadline.c
+> +++ b/kernel/sched/deadline.c
+> @@ -2575,6 +2575,9 @@ void dl_clear_root_domain(struct root_domain *rd)
+>  {
+>         unsigned long flags;
+>
+> +       if (cpuhp_tasks_frozen)
+> +               return;
+> +
+>         raw_spin_lock_irqsave(&rd->dl_bw.lock, flags);
+>         rd->dl_bw.total_bw = 0;
+>         raw_spin_unlock_irqrestore(&rd->dl_bw.lock, flags);
+> --
+> 2.25.1
+>
