@@ -1,63 +1,72 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH 0/2] Defer checking wildcard exceptions to parent
-Date: Mon, 19 Dec 2022 07:21:49 -1000
-Message-ID: <Y6CdrYdbiBnUSxQi@slm.duckdns.org>
-References: <20221219114052.1582992-1-nikolay.borisov@virtuozzo.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH -next 0/4] blk-cgroup: synchronize del_gendisk() with
+ configuring cgroup policy
+Date: Mon, 19 Dec 2022 10:55:57 -1000
+Message-ID: <Y6DP3aOSad8+D1yY@slm.duckdns.org>
+References: <20221217030908.1261787-1-yukuai1@huaweicloud.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <linux-block-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20210112;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:sender:from:to:cc:subject:date:message-id
          :reply-to;
-        bh=eSN/Hlv/5HI+5br/xw+yoZ8A3PY4ltv42IV6oSp+bf4=;
-        b=GU3Iqx7TE/nIcLU9/rUE+9n0oR0xwjOzb98XevQ/KERqjPTJ9LQClvSxkPYnJaszYx
-         0wBPIsZ4KiGyGuf8OFpVI7OCiVDaprpOQrNBIqYk27NgibTsReLANi9P5gtu+Kyeylsq
-         oeu1AIovcst6uT1EqIDmFLZtouMnUslUbvhYcfnB8ugjacfkoglICWeKjTrKi6Q2Mp/L
-         o6qUGgYK05xLDL9t65FeDh9ZlGMaxQmTz53/scE4MfDDq/1XsFUN0Q23m/f5XKnOfMoa
-         wfb1hV5TdfezRUEflgIvTdZ53ndH1zUZmxY8eldsGsCnSLqa8hYOvwMx1KMYBkfXkmak
-         /erA==
-Sender: Tejun Heo <htejun-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+        bh=NakfROSMki8cV2nnpMoQ1MJIRum6ZgALihcXreebAZQ=;
+        b=P9vTDBW4Z9V3T+vz64KijYP0mRwH/VSJa3JCdcPiIQ8AckWvIFsGQVP9FZKvi0ENkr
+         1iFYZCLDOJljki+cWdV2+/aQdMYLTHmsVq0uLQ8/VGQcQORfO1eTRB4xyZi/viWROc1H
+         Zpm2AvuHS8iRTJngk6WIbwIDOjlMe7N9wHr2/MPlcTPD8bUALFqvER4S0Cq4/zhB5RNG
+         2nRPGHMhjgP99prOQ3hUchptv3SsOS/A+CYtVYvc5w55arPw+hxIrkBXcdSVD5wwonlD
+         8LkK2tpGZVXLH58UsGQ1HdFqMn1ZcCj7+IJPojJSk3Qr5+CxgUnLSfzAUwBMBQwnPE8e
+         IFaQ==
+Sender: Tejun Heo <htejun@gmail.com>
 Content-Disposition: inline
-In-Reply-To: <20221219114052.1582992-1-nikolay.borisov-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>
+In-Reply-To: <20221217030908.1261787-1-yukuai1@huaweicloud.com>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Nikolay Borisov <nikolay.borisov-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, paul-r2n+y4ga6xFZroRs9YW3xA@public.gmane.org, kernel-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org
+To: Yu Kuai <yukuai1@huaweicloud.com>
+Cc: hch@infradead.org, josef@toxicpanda.com, axboe@kernel.dk, cgroups@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, yukuai3@huawei.com, yi.zhang@huawei.com
 
-Hello, Nikolay.
+Hello,
 
-On Mon, Dec 19, 2022 at 01:40:50PM +0200, Nikolay Borisov wrote:
-> The situation I described is how systemd functions, in particular when setting up
-> a devcg for a service it would first disable all devices, then add a bunch of
-> well-known characters devices and finally evaluate the respective cgroup-related
-> directives in the service file, in particular that's how systemd is being run.
-
-I agree that this would have been the right thing to do in the first place.
-That said, the behavior has been like this since the beginning and it's
-difficult to rule out there may be users that depend on the current behavior
-of a child config being rejected if it contains anything beyond the
-parent's.
-
-> Without this series systemd-udevd service ends up in a cgroup whose devices.list
-> contains:
->
-...
+On Sat, Dec 17, 2022 at 11:09:04AM +0800, Yu Kuai wrote:
+> From: Yu Kuai <yukuai3@huawei.com>
 > 
-> But its .service file also instructs it to add 'b *:* rwm' and 'c *:* rwm'. The
-> parent cg in turn contains:
+> iocost is initialized when it's configured the first time, and iocost
+> initializing can race with del_gendisk(), which will cause null pointer
+> dereference:
 > 
-...
+> t1				t2
+> ioc_qos_write
+>  blk_iocost_init
+>   rq_qos_add
+>   				del_gendisk
+>   				 rq_qos_exit
+>   				 //iocost is removed from q->roqs
+>   blkcg_activate_policy
+>    pd_init_fn
+>     ioc_pd_init
+>      ioc = q_to_ioc(blkg->q)
+>      //can't find iocost and return null
 > 
-> In this case we'd want wildcard exceptions in the child to match any of the
-> exceptions in the parent.
+> And iolatency is about to switch to the same lazy initialization.
+> 
+> This patchset fix this problem by synchronize rq_qos_add() and
+> blkcg_activate_policy() with rq_qos_exit().
 
-and as your example illustrates users already implemented the needed
-semantics on top of the existing interface or moved to cgroup2.
+So, the patchset seems a bit overly complicated to me. What do you think
+about the following?
 
-I'm not sure about introducing a behavior change this drastic now when users
-would expect stability than anything else.
+* These init/exit paths are super cold path, just protecting them with a
+  global mutex is probably enough. If we encounter a scalability problem,
+  it's easy to fix down the line.
+
+* If we're synchronizing this with a mutex anyway, no need to grab the
+  queue_lock, right? rq_qos_add/del/exit() can all just hold the mutex.
+
+* And we can keep the state tracking within rq_qos. When rq_qos_exit() is
+  called, mark it so that future adds will fail - be that a special ->next
+  value a queue flag or whatever.
 
 Thanks.
 
