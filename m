@@ -1,111 +1,86 @@
-From: hanjinke <hanjinke.666@bytedance.com>
-Subject: Re: [External] Re: [PATCH] blk-throtl: Introduce sync and async
- queues for blk-throtl
-Date: Tue, 20 Dec 2022 10:38:08 +0800
-Message-ID: <78028f86-4fb4-e24e-a01b-d1f8a51cff87@bytedance.com>
-References: <20221218111314.55525-1-hanjinke.666@bytedance.com>
- <Y6DWGBQSP/DA7apC@slm.duckdns.org>
+From: Yu Kuai <yukuai1@huaweicloud.com>
+Subject: Re: [PATCH -next 0/4] blk-cgroup: synchronize del_gendisk() with
+ configuring cgroup policy
+Date: Tue, 20 Dec 2022 17:19:12 +0800
+Message-ID: <e01daffe-a3e3-8bf2-40ee-192a9e70d911@huaweicloud.com>
+References: <20221217030908.1261787-1-yukuai1@huaweicloud.com>
+ <Y6DP3aOSad8+D1yY@slm.duckdns.org>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-block-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=bytedance-com.20210112.gappssmtp.com; s=20210112;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to:subject
-         :user-agent:mime-version:date:message-id:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=XdsW29O/6Xn6rXQsu5aPcLciaxL4xlcszGahdv8fEa4=;
-        b=JX+Yf4WHK86OHRDqIF+sLMufhIcZDg+3+srs173HnZoa49DGsPAWF5Dr5GAckDMRWz
-         FKHkNX+zSoaW4T6mj7PFoBB+R7aIPFkoDT6C/zaKh7Fr6YFcJKKB+3TP03RHpygnFjIk
-         zT4pk334VL7ur7W5QNW3BqlUa/W794r2umr3pX1aAVp3AXfUJGFwSzJu8dGpw7ZCgTEG
-         4NVifBZ8i6VMj0URqFcOG+fZKYrG0HAfPsGfyCS0BgcNENC/nKgRAk4PMZc5vosOwenc
-         Y434W1ZNjXPpGBrbmjcVPOpgMpveICUYsPsb8oI5lQrxmvtyQ5C3+4gEoXEATonYs6ZV
-         7YBw==
-In-Reply-To: <Y6DWGBQSP/DA7apC@slm.duckdns.org>
+Content-Transfer-Encoding: quoted-printable
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <Y6DP3aOSad8+D1yY@slm.duckdns.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="utf-8"; format="flowed"
-To: Tejun Heo <tj@kernel.org>
-Cc: josef@toxicpanda.com, axboe@kernel.dk, cgroups@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, yinxin.x@bytedance.com
+Content-Type: text/plain; charset="iso-8859-1"; format="flowed"
+To: Tejun Heo <tj@kernel.org>, Yu Kuai <yukuai1@huaweicloud.com>
+Cc: hch@infradead.org, josef@toxicpanda.com, axboe@kernel.dk, cgroups@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, yi.zhang@huawei.com, "yukuai (C)" <yukuai3@huawei.com>
 
+Hi,
 
-
-在 2022/12/20 上午5:22, Tejun Heo 写道:
+=D4=DA 2022/12/20 4:55, Tejun Heo =D0=B4=B5=C0:
 > Hello,
-> 
-> This looks generally fine to me. Some nits below.
-> 
->> +static inline struct bio *throtl_qnode_bio_peek(struct throtl_qnode *qn)
->> +{
->> +	struct bio *bio1, *bio2;
->> +
->> +	/* qn for read ios */
->> +	if (qn->dispatch_sync_cnt == UINT_MAX)
->> +		return bio_list_peek(&qn->bios[SYNC]);
->> +
->> +	/* qn for write ios */
->> +	bio1 = bio_list_peek(&qn->bios[SYNC]);
->> +	bio2 = bio_list_peek(&qn->bios[ASYNC]);
->> +
->> +	if (bio1 && bio2) {
->> +		if (qn->dispatch_sync_cnt == THROTL_SYNC_FACTOR)
->> +			return bio2;
->> +		return bio1;
->> +	}
->> +
->> +	return bio1 ?: bio2;
->> +}
-> 
-> Wouldn't it be simpler to write:
-> 
->          if (qn->dispatch_sync_count < THROTL_SYNC_FACTOR)
->                  return bio1 ?: bio2;
->          else
->                  return bio2 ?: bio1;
-> 
->> +/**
->> + * throtl_qnode_bio_pop: pop a bio from a qnode
->> + * @qn: the qnode to pop a bio from
->> + *
->> + * For read io qn, just pop bio from sync queu and return.
->> + * For write io qn, the target queue to pop was determined by the dispatch_sync_cnt.
->> + * Try to pop bio from target queue, fetch the bio and return when it is not empty.
->> + * If the target queue empty, pop bio from other queue instead.
->> + */
->> +static inline struct bio *throtl_qnode_bio_pop(struct throtl_qnode *qn)
->> +{
->> +	struct bio *bio;
->> +
->> +	/* qn for read ios */
->> +	if (qn->dispatch_sync_cnt == UINT_MAX)
->> +		return bio_list_pop(&qn->bios[SYNC]);
->> +
->> +	/* try to dispatch sync io */
->> +	if (qn->dispatch_sync_cnt < THROTL_SYNC_FACTOR) {
->> +		bio = bio_list_pop(&qn->bios[SYNC]);
->> +		if (bio) {
->> +			qn->dispatch_sync_cnt++;
->> +			return bio;
->> +		}
->> +		bio = bio_list_pop(&qn->bios[ASYNC]);
->> +		qn->dispatch_sync_cnt = 0;
->> +		return bio;
->> +	}
->> +
->> +	/* try to dispatch async io */
->> +	bio = bio_list_pop(&qn->bios[ASYNC]);
->> +	if (bio) {
->> +		qn->dispatch_sync_cnt = 0;
->> +		return bio;
->> +	}
->> +	bio = bio_list_pop(&qn->bios[SYNC]);
->> +
->> +	return bio;
->> +}
-> 
-> This also seems like it can be simplified a bit.
-> 
+>=20
+> On Sat, Dec 17, 2022 at 11:09:04AM +0800, Yu Kuai wrote:
+>> From: Yu Kuai <yukuai3@huawei.com>
+>>
+>> iocost is initialized when it's configured the first time, and iocost
+>> initializing can race with del_gendisk(), which will cause null pointer
+>> dereference:
+>>
+>> t1				t2
+>> ioc_qos_write
+>>   blk_iocost_init
+>>    rq_qos_add
+>>    				del_gendisk
+>>    				 rq_qos_exit
+>>    				 //iocost is removed from q->roqs
+>>    blkcg_activate_policy
+>>     pd_init_fn
+>>      ioc_pd_init
+>>       ioc =3D q_to_ioc(blkg->q)
+>>       //can't find iocost and return null
+>>
+>> And iolatency is about to switch to the same lazy initialization.
+>>
+>> This patchset fix this problem by synchronize rq_qos_add() and
+>> blkcg_activate_policy() with rq_qos_exit().
+>=20
+> So, the patchset seems a bit overly complicated to me. What do you think
+> about the following?
+>=20
+> * These init/exit paths are super cold path, just protecting them with a
+>    global mutex is probably enough. If we encounter a scalability problem,
+>    it's easy to fix down the line.
+>=20
+> * If we're synchronizing this with a mutex anyway, no need to grab the
+>    queue_lock, right? rq_qos_add/del/exit() can all just hold the mutex.
+>=20
+> * And we can keep the state tracking within rq_qos. When rq_qos_exit() is
+>    called, mark it so that future adds will fail - be that a special ->ne=
+xt
+>    value a queue flag or whatever.
+
+Yes, that sounds good. BTW, queue_lock is also used to protect
+pd_alloc_fn/pd_init_fn=A3=ACand we found that blkcg_activate_policy() is
+problematic:
+
+blkcg_activate_policy
+  spin_lock_irq(&q->queue_lock);
+  list_for_each_entry_reverse(blkg, &q->blkg_list
+   pd_alloc_fn(GFP_NOWAIT | __GFP_NOWARN,...) -> failed
+
+   spin_unlock_irq(&q->queue_lock);
+   // release queue_lock here is problematic, this will cause
+pd_offline_fn called without pd_init_fn.
+   pd_alloc_fn(__GFP_NOWARN,...)
+
+If we are using a mutex to protect rq_qos ops, it seems the right thing
+to do do also using the mutex to protect blkcg_policy ops, and this
+problem can be fixed because mutex can be held to alloc memroy with
+GFP_KERNEL. What do you think?
+
+Thanks,
+Kuai
+>=20
 > Thanks.
-> 
+>=20
 
-Indeed, I will make it more clear and send the v2.
-
-Thanks.
