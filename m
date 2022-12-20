@@ -1,64 +1,56 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH -next 0/4] blk-cgroup: synchronize del_gendisk() with
- configuring cgroup policy
-Date: Tue, 20 Dec 2022 06:01:30 -1000
-Message-ID: <Y6HcWiJbaWjN3jlt@slm.duckdns.org>
-References: <20221217030908.1261787-1-yukuai1@huaweicloud.com>
- <Y6DP3aOSad8+D1yY@slm.duckdns.org>
- <e01daffe-a3e3-8bf2-40ee-192a9e70d911@huaweicloud.com>
+From: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH] cgroup/cpuset: no need to explicitly init a global static
+ variable
+Date: Tue, 20 Dec 2022 11:59:00 -0500
+Message-ID: <9295b73a-5a3c-b1f6-d892-0da1d356ab9f@redhat.com>
+References: <20221220151415.856093-1-neelx@redhat.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :mime-version:references:message-id:subject:cc:to:from:date:sender
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=CZMmU+pGQ8I5cymzBUpFRodcntV5ODz7Rjd+p+IjcxM=;
-        b=FgJB7RQvMGsU5maNwk7Ibn2Kug3rClLlbV+23BVAoBFTwzYdicUZXx3BxJFCWZACEC
-         POblY96MELR7T8nVNu6GLXbVj3mdBhx9OWg+ZlzMjrulDNLSzZubdpBOCyAOuYAk1GLg
-         6rEUYa4jn5ws84VoWzD+jGpalbsPbcEv6MtfvQfmUe3Bwh0ZymytgdtxzCe4SAxSrrZW
-         JRsTSU42YJ8g0PZRLD5Dt3rOnvuYZyElq0JPi8DYrCTyyg7ARVSRAGy7Z5/+NF+zqMkJ
-         O+XjDFoi/9ao4U8frNn+BxeKGEMMB+OkJytTxfidyNroPX4BqWLhwMp6/SNiMJGUxwc6
-         GPyQ==
-Sender: Tejun Heo <htejun-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <e01daffe-a3e3-8bf2-40ee-192a9e70d911-XF6JlduFytWkHkcT6e4Xnw@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1671555545;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=KRZ5NBQkSBEMSzVXiSUDsWEBTOjISuGVrqOh0e75EmM=;
+        b=gUb1ar3FA9jIQMgMFmjoB3CAfUSSsRO80YQAz8kSE0/QxXF22l8G4cCH7+e3V9zWd9zsHC
+        9KOxqbaOTi7Wg0ECmL7Mf6yTX3ef7Q16Ets7EAqEHk7FjNoU2+xZkHltPHY/SrVDuBGAYx
+        gmCU/fYxr4rLwbIYERL6/MCIdDCo7vw=
+Content-Language: en-US
+In-Reply-To: <20221220151415.856093-1-neelx-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="windows-1252"
-To: Yu Kuai <yukuai1-XF6JlduFytWkHkcT6e4Xnw@public.gmane.org>
-Cc: hch-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, josef-DigfWCa+lFGyeJad7bwFQA@public.gmane.org, axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, yi.zhang-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, "yukuai (C)" <yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Content-Type: text/plain; charset="us-ascii"; format="flowed"
+To: Daniel Vacek <neelx-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-Hello,
+On 12/20/22 10:14, Daniel Vacek wrote:
+> cpuset_rwsem is a static variable. It's initialized at build time and so
+> there's no need for explicit runtime init leaking one percpu int.
+>
+> Signed-off-by: Daniel Vacek <neelx-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+> ---
+>   kernel/cgroup/cpuset.c | 2 --
+>   1 file changed, 2 deletions(-)
+>
+> diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
+> index a29c0b13706bb..87fe410361b3d 100644
+> --- a/kernel/cgroup/cpuset.c
+> +++ b/kernel/cgroup/cpuset.c
+> @@ -3281,8 +3281,6 @@ struct cgroup_subsys cpuset_cgrp_subsys = {
+>   
+>   int __init cpuset_init(void)
+>   {
+> -	BUG_ON(percpu_init_rwsem(&cpuset_rwsem));
+> -
+>   	BUG_ON(!alloc_cpumask_var(&top_cpuset.cpus_allowed, GFP_KERNEL));
+>   	BUG_ON(!alloc_cpumask_var(&top_cpuset.effective_cpus, GFP_KERNEL));
+>   	BUG_ON(!zalloc_cpumask_var(&top_cpuset.subparts_cpus, GFP_KERNEL));
 
-On Tue, Dec 20, 2022 at 05:19:12PM +0800, Yu Kuai wrote:
-> Yes, that sounds good. BTW, queue_lock is also used to protect
-> pd_alloc_fn/pd_init_fn=EF=BC=8Cand we found that blkcg_activate_policy() =
-is
-> problematic:
->=20
-> blkcg_activate_policy
->  spin_lock_irq(&q->queue_lock);
->  list_for_each_entry_reverse(blkg, &q->blkg_list
->   pd_alloc_fn(GFP_NOWAIT | __GFP_NOWARN,...) -> failed
->=20
->   spin_unlock_irq(&q->queue_lock);
->   // release queue_lock here is problematic, this will cause
-> pd_offline_fn called without pd_init_fn.
->   pd_alloc_fn(__GFP_NOWARN,...)
+It will be clearer if you mention that DEFINE_STATIC_PERCPU_RWSEM() is 
+used to set up cpuset_rwsem at build time. Other than that, the patch 
+looks good to me.
 
-So, if a blkg is destroyed while a policy is being activated, right?
+Cheers,
+Longman
 
-> If we are using a mutex to protect rq_qos ops, it seems the right thing
-> to do do also using the mutex to protect blkcg_policy ops, and this
-> problem can be fixed because mutex can be held to alloc memroy with
-> GFP_KERNEL. What do you think?
-
-One worry is that switching to mutex can be more headache due to destroy
-path synchronization. Another approach would be using a per-blkg flag to
-track whether a blkg has been initialized.
-
-Thanks.
-
---=20
-tejun
