@@ -1,83 +1,42 @@
-From: Pavel Machek <pavel@ucw.cz>
-Subject: Re: [PATCH] treewide: Convert del_timer*() to timer_shutdown*()
-Date: Tue, 20 Dec 2022 20:39:56 +0100
-Message-ID: <Y6IPjC9mpnoquL8S@duo.ucw.cz>
-References: <20221220134519.3dd1318b@gandalf.local.home>
+From: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH RFC 1/2] mm: kmem: optimize get_obj_cgroup_from_current()
+Date: Tue, 20 Dec 2022 11:55:34 -0800
+Message-ID: <CALvZod5q0koAckpTr4VBq-_KiQpsmC86bE4eP9gzX71PzRdicA@mail.gmail.com>
+References: <20221220182745.1903540-1-roman.gushchin@linux.dev> <20221220182745.1903540-2-roman.gushchin@linux.dev>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-        protocol="application/pgp-signature"; boundary="Q4QndSuPZQc8d5xp"
-Return-path: <linux-acpi-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ucw.cz; s=gen1;
-        t=1671565196;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=Z6Z4LV97YlfeiHNsI0GPtvBWuPiFBia9iXHj9p0V7f4=;
-        b=iSK/6k6YdYfe0pf3QIaGF0m9os72nxF3CAqc4kVpFydNcBeDZyAXwLd29ygI3aWdCD/P4E
-        hjb1tP04xpxvEqTGSku5jVwZ3Ze5vyiRMUS/PfukmleXTPDA24OIQLtf5lIYLLX2i19Nc9
-        ctnIK+xkRK2AK199jxQW3iEge/uxrTY=
-Content-Disposition: inline
-In-Reply-To: <20221220134519.3dd1318b@gandalf.local.home>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20210112;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:from:to:cc:subject:date:message-id:reply-to;
+        bh=T6Ibv8lELNGtBRxXq2xqbZ6XNIWdISjKd5l36khEMAE=;
+        b=KSZwcjFTFFO55WSmVmRgONnRwskWoYawCL4xr2GcTp5EfCyO5dWsx7AbSD6Ir/ybby
+         C7hVXroJGbjMZ6JZecHbZizIkqMntO9LCfTQjh70KYV62x3n7GT3pigY+IdDXJ6+hW0U
+         mEwxE2cJuzhZ473p3CRLSLMKt5y1k+WqODiXLaurmLprlQIu83KIRui/7aB62vVSerFG
+         oJ6BbA0p2cayN9RAavaPE83CL3JFmwg8mr83/EY4R4NMFXcDSamu5fqDMXFsJi4+yNTL
+         KYFBpfYMu9bW5ttoTGe9B6d7fqichfkqe1iiFZLjZZbtB+BAkuBEyxDREF+RcnvyviBH
+         sPNw==
+In-Reply-To: <20221220182745.1903540-2-roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-To: Steven Rostedt <rostedt@goodmis.org>
-Cc: Linus Torvalds <torvalds@linux-foundation.org>, Thomas Gleixner <tglx@linutronix.de>, LKML <linux-kernel@vger.kernel.org>, Stephen Boyd <sboyd@kernel.org>, Guenter Roeck <linux@roeck-us.net>, Anna-Maria Gleixner <anna-maria@linutronix.de>, Andrew Morton <akpm@linux-foundation.org>, Julia Lawall <Julia.Lawall@inria.fr>, linux-sh@vger.kernel.org, cgroups@vger.kernel.org, linux-block@vger.kernel.org, linux-acpi@vger.kernel.org, linux-atm-general@lists.sourceforge.net, netdev@vger.kernel.org, drbd-dev@lists.linbit.com, linux-bluetooth@vger.kernel.org, intel-gfx@lists.freedesktop.org, dri-devel@lists.freedesktop.org, linux-input@vger.kernel.org, linux-leds@vger.kernel.org, linux-media@vger.kernel.org, intel-wired-lan@lists.osuosl.org, linux-usb@vger.kernel.org, linux-wir
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>
+Cc: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Muchun Song <muchun.song-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
 
+On Tue, Dec 20, 2022 at 10:28 AM Roman Gushchin
+<roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org> wrote:
+>
+> Manually inline memcg_kmem_bypass() and active_memcg() to speed up
+> get_obj_cgroup_from_current() by avoiding duplicate in_task() checks
+> and active_memcg() readings.
+>
+> Also add a likely() macro to __get_obj_cgroup_from_memcg():
+> obj_cgroup_tryget() should succeed at almost all times except
+> a very unlikely race with the memcg deletion path.
+>
+> Signed-off-by: Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>
 
---Q4QndSuPZQc8d5xp
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Can you please add your performance experiment setup and result of
+this patch in the commit description of this patch as well?
 
-On Tue 2022-12-20 13:45:19, Steven Rostedt wrote:
-> [
->   Linus,
->=20
->     I ran the script against your latest master branch:
->     commit b6bb9676f2165d518b35ba3bea5f1fcfc0d969bf
->=20
->     As the timer_shutdown*() code is now in your tree, I figured
->     we can start doing the conversions. At least add the trivial ones
->     now as Thomas suggested that this gets applied at the end of the
->     merge window, to avoid conflicts with linux-next during the
->     development cycle. I can wait to Friday to run it again, and
->     resubmit.
->=20
->     What is the best way to handle this?
-> ]
->=20
-> From: "Steven Rostedt (Google)" <rostedt@goodmis.org>
->=20
-> Due to several bugs caused by timers being re-armed after they are
-> shutdown and just before they are freed, a new state of timers was added
-> called "shutdown". After a timer is set to this state, then it can no
-> longer be re-armed.
->=20
-> The following script was run to find all the trivial locations where
-> del_timer() or del_timer_sync() is called in the same function that the
-> object holding the timer is freed. It also ignores any locations where the
-> timer->function is modified between the del_timer*() and the free(), as
-> that is not considered a "trivial" case.
->=20
-> This was created by using a coccinelle script and the following
-commands:
-
-LED parts looks good to me.
-
-Getting it in just before -rc1 would be best solution for me.
-
-Best regards,
-								Pavel
---=20
-People of Russia, stop Putin before his war on Ukraine escalates.
-
---Q4QndSuPZQc8d5xp
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-
-iF0EABECAB0WIQRPfPO7r0eAhk010v0w5/Bqldv68gUCY6IPjAAKCRAw5/Bqldv6
-8qFnAJ4h7/YkgMmaMAi5FTo4aeUHj64lowCgv7jO/1JyimzJx+06JHTOXFlIAIk=
-=01ne
------END PGP SIGNATURE-----
-
---Q4QndSuPZQc8d5xp--
+Acked-by: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
