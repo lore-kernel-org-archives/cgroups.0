@@ -1,53 +1,60 @@
-From: Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>
-Subject: Re: [PATCH RFC 1/2] mm: kmem: optimize get_obj_cgroup_from_current()
-Date: Tue, 20 Dec 2022 13:15:16 -0800
-Message-ID: <Y6Il5L00NIviTIe4@P9FQF9L96D.corp.robot.car>
-References: <20221220182745.1903540-1-roman.gushchin@linux.dev>
- <20221220182745.1903540-2-roman.gushchin@linux.dev>
- <CALvZod5q0koAckpTr4VBq-_KiQpsmC86bE4eP9gzX71PzRdicA@mail.gmail.com>
+From: Yu Kuai <yukuai1-XF6JlduFytWkHkcT6e4Xnw@public.gmane.org>
+Subject: Re: [PATCH -next 0/4] blk-cgroup: synchronize del_gendisk() with
+ configuring cgroup policy
+Date: Wed, 21 Dec 2022 09:10:33 +0800
+Message-ID: <c2fecf04-6e9e-25a1-f14c-47862837cc54@huaweicloud.com>
+References: <20221217030908.1261787-1-yukuai1@huaweicloud.com>
+ <Y6DP3aOSad8+D1yY@slm.duckdns.org>
+ <e01daffe-a3e3-8bf2-40ee-192a9e70d911@huaweicloud.com>
+ <Y6HcWiJbaWjN3jlt@slm.duckdns.org>
 Mime-Version: 1.0
+Content-Transfer-Encoding: 8bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
-        t=1671570922;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=YR2G1tfnt1QeRb9BvoQh2xZ0Hit39TayrVYxM23Ti5o=;
-        b=cBJO2EIe6oiGh2ENr1dP4PUWluxLFCOQnl1rnqFwsqvzqef+3Rd/UJmBPLbq5IL4/dcQEn
-        gN4B8V37nJGryYOHvpTd23Gf5nrA6ZTRW9dEdQKd/He/k9s9kK8CV0Agq/XwjtfIEVbjoQ
-        ujr36SB+a8Yw8C6daF2iwukLgcHSDDY=
-Content-Disposition: inline
-In-Reply-To: <CALvZod5q0koAckpTr4VBq-_KiQpsmC86bE4eP9gzX71PzRdicA-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+In-Reply-To: <Y6HcWiJbaWjN3jlt-NiLfg/pYEd1N0TnZuCh8vA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Cc: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Muchun Song <muchun.song-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+Content-Type: text/plain; charset="utf-8"; format="flowed"
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Yu Kuai <yukuai1-XF6JlduFytWkHkcT6e4Xnw@public.gmane.org>
+Cc: hch-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, josef-DigfWCa+lFGyeJad7bwFQA@public.gmane.org, axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, yi.zhang-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, "yukuai (C)" <yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 
-On Tue, Dec 20, 2022 at 11:55:34AM -0800, Shakeel Butt wrote:
-> On Tue, Dec 20, 2022 at 10:28 AM Roman Gushchin
-> <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org> wrote:
-> >
-> > Manually inline memcg_kmem_bypass() and active_memcg() to speed up
-> > get_obj_cgroup_from_current() by avoiding duplicate in_task() checks
-> > and active_memcg() readings.
-> >
-> > Also add a likely() macro to __get_obj_cgroup_from_memcg():
-> > obj_cgroup_tryget() should succeed at almost all times except
-> > a very unlikely race with the memcg deletion path.
-> >
-> > Signed-off-by: Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>
+Hi,
+
+在 2022/12/21 0:01, Tejun Heo 写道:
+> Hello,
 > 
-> Can you please add your performance experiment setup and result of
-> this patch in the commit description of this patch as well?
-
-Sure. I used a small hack to just do a bunch of allocations in a raw
-and measured the time. Will include it into the commit message.
-
-Also will fix the #ifdef thing from the second patch, thanks for spotting
-it.
+> On Tue, Dec 20, 2022 at 05:19:12PM +0800, Yu Kuai wrote:
+>> Yes, that sounds good. BTW, queue_lock is also used to protect
+>> pd_alloc_fn/pd_init_fn，and we found that blkcg_activate_policy() is
+>> problematic:
+>>
+>> blkcg_activate_policy
+>>   spin_lock_irq(&q->queue_lock);
+>>   list_for_each_entry_reverse(blkg, &q->blkg_list
+>>    pd_alloc_fn(GFP_NOWAIT | __GFP_NOWARN,...) -> failed
+>>
+>>    spin_unlock_irq(&q->queue_lock);
+>>    // release queue_lock here is problematic, this will cause
+>> pd_offline_fn called without pd_init_fn.
+>>    pd_alloc_fn(__GFP_NOWARN,...)
+> 
+> So, if a blkg is destroyed while a policy is being activated, right?
+Yes, remove cgroup can race with this, for bfq null pointer deference
+will be triggered in bfq_pd_offline().
 
 > 
-> Acked-by: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+>> If we are using a mutex to protect rq_qos ops, it seems the right thing
+>> to do do also using the mutex to protect blkcg_policy ops, and this
+>> problem can be fixed because mutex can be held to alloc memroy with
+>> GFP_KERNEL. What do you think?
+> 
+> One worry is that switching to mutex can be more headache due to destroy
+> path synchronization. Another approach would be using a per-blkg flag to
+> track whether a blkg has been initialized.
+I think perhaps you mean per blkg_policy_data flag? per blkg flag should
+not work in this case.
 
-Thank you for taking a look!
+Thanks,
+Kuai
+> 
+> Thanks.
+> 
+
