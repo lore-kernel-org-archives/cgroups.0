@@ -1,257 +1,102 @@
-From: Jinke Han <hanjinke.666-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
-Subject: [PATCH v2] blk-throtl: Introduce sync and async queues for blk-throtl
-Date: Wed, 21 Dec 2022 18:42:46 +0800
-Message-ID: <20221221104246.37714-1-hanjinke.666@bytedance.com>
-References: <20221218111314.55525-1-hanjinke.666@bytedance.com>
+From: Kalle Valo <kvalo@kernel.org>
+Subject: Re: [PATCH] treewide: Convert del_timer*() to timer_shutdown*()
+Date: Wed, 21 Dec 2022 20:47:50 +0200
+Message-ID: <87mt7gk2zt.fsf@kernel.org>
+References: <20221220134519.3dd1318b@gandalf.local.home>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=bytedance-com.20210112.gappssmtp.com; s=20210112;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=EXjeVHBjgltp+/cJKno9ptSj0CNQ0nCLFPpP59WHeTg=;
-        b=v2cmregMrOgOmaHu3rRG6LJSTP80ziH9u8gUdncnLU79cFiheMn2QQheiuo3ocdciu
-         MoE7g+CJ6bnGGTrRdEfJ1DOWfANVEQ0wOVgz6esUHbzhcBt57qEtkghDqYw5C5K0ax4q
-         Ex+Q+PBasUjQmEPgCtc7LwDSNazovn2cFMY8LLJ3WdjzhvtECGxD2Cnio5A7278uXSty
-         X6VUExuPNhGkYVotqXKqymLbxbDCqavFKx5vMWL+PjyeSEobhwVm4uEt0iDGeJHnvsjE
-         J9SWzOUy6OPC7wqZLlEBLHpLo0vOdh5C0oGqDpEKfCH2HFK3t+HuMJflxn7f7IkqwEPX
-         bAbA==
-In-Reply-To: <20221218111314.55525-1-hanjinke.666-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
+Return-path: <linux-acpi-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1671648479;
+        bh=hTuIjHBHd+Tec1DAOqqIPFW5jFXlpQ7ZWnftXs2hg6Q=;
+        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
+        b=XiS53svtnGlZKUpJLWpjIb00pvlTavkGyE/yhXeS7hKFYS8V/5Xav/+mlpRGezW6h
+         BljUFnHKQWw/igsJKn42+z68Zwy3Z5sPZrjhFME/Kwqkbwjx7njFSsJY/zjJWCYIs2
+         hg7VB/Upxxl01DViL7TGCOLjNQW9ZDg1YFt1aai4iFOc2yVu8ujua8wy7VEyZXvui4
+         /1bJ/zTi5VZkqa0c9me5b9nyIRR+8AGM7a6aXGScjL7jgysNOOGh6mrX4vs3UGAGXF
+         1s0aX5L7Ze9A8zWY2oezGwBJF7QaIiwiLIJLyqjhe4qpPeepExO7oc4XqzOCONcDBc
+         /pYLvZHxEpyuQ==
+In-Reply-To: <20221220134519.3dd1318b@gandalf.local.home> (Steven Rostedt's
+        message of "Tue, 20 Dec 2022 13:45:19 -0500")
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, josef-DigfWCa+lFGyeJad7bwFQA@public.gmane.org, axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, yinxin.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org, Jinke Han <hanjinke.666-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
+Content-Transfer-Encoding: 7bit
+To: Steven Rostedt <rostedt@goodmis.org>
+Cc: Linus Torvalds <torvalds@linux-foundation.org>, Thomas Gleixner <tglx@linutronix.de>, LKML <linux-kernel@vger.kernel.org>, Stephen Boyd <sboyd@kernel.org>, Guenter Roeck <linux@roeck-us.net>, Anna-Maria Gleixner <anna-maria@linutronix.de>, Andrew Morton <akpm@linux-foundation.org>, Julia Lawall <Julia.Lawall@inria.fr>, linux-sh@vger.kernel.org, cgroups@vger.kernel.org, linux-block@vger.kernel.org, linux-acpi@vger.kernel.org, linux-atm-general@lists.sourceforge.net, netdev@vger.kernel.org, drbd-dev@lists.linbit.com, linux-bluetooth@vger.kernel.org, intel-gfx@lists.freedesktop.org, dri-devel@lists.freedesktop.org, linux-input@vger.kernel.org, linux-leds@vger.kernel.org, linux-media@vger.kernel.org, intel-wired-lan@lists.osuosl.org, linux-usb@vger.kernel.org, linux-wir
 
-From: Jinke Han <hanjinke.666-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
+Steven Rostedt <rostedt@goodmis.org> writes:
 
-Now we don't distinguish sync write ios from normal buffer write ios
-in blk-throtl. A bio with REQ_SYNC tagged always mean it will be wait
-until write completion soon after it submit. So it's reasonable for sync
-io to complete as soon as possible.
+> [
+>   Linus,
+>
+>     I ran the script against your latest master branch:
+>     commit b6bb9676f2165d518b35ba3bea5f1fcfc0d969bf
+>
+>     As the timer_shutdown*() code is now in your tree, I figured
+>     we can start doing the conversions. At least add the trivial ones
+>     now as Thomas suggested that this gets applied at the end of the
+>     merge window, to avoid conflicts with linux-next during the
+>     development cycle. I can wait to Friday to run it again, and
+>     resubmit.
+>
+>     What is the best way to handle this?
+> ]
+>
+> From: "Steven Rostedt (Google)" <rostedt@goodmis.org>
+>
+> Due to several bugs caused by timers being re-armed after they are
+> shutdown and just before they are freed, a new state of timers was added
+> called "shutdown". After a timer is set to this state, then it can no
+> longer be re-armed.
+>
+> The following script was run to find all the trivial locations where
+> del_timer() or del_timer_sync() is called in the same function that the
+> object holding the timer is freed. It also ignores any locations where the
+> timer->function is modified between the del_timer*() and the free(), as
+> that is not considered a "trivial" case.
+>
+> This was created by using a coccinelle script and the following commands:
+>
+>  $ cat timer.cocci
+> @@
+> expression ptr, slab;
+> identifier timer, rfield;
+> @@
+> (
+> -       del_timer(&ptr->timer);
+> +       timer_shutdown(&ptr->timer);
+> |
+> -       del_timer_sync(&ptr->timer);
+> +       timer_shutdown_sync(&ptr->timer);
+> )
+>   ... when strict
+>       when != ptr->timer
+> (
+>         kfree_rcu(ptr, rfield);
+> |
+>         kmem_cache_free(slab, ptr);
+> |
+>         kfree(ptr);
+> )
+>
+>  $ spatch timer.cocci . > /tmp/t.patch
+>  $ patch -p1 < /tmp/t.patch
+>
+> Link: https://lore.kernel.org/lkml/20221123201306.823305113@linutronix.de/
+>
+> Signed-off-by: Steven Rostedt (Google) <rostedt@goodmis.org>
 
-In our test, fio writes a 100g file in sequential 4k blocksize in
-a container with low bps limit configured (wbps=10M). More than 1200
-ios were throttled in blk-throtl queue and the avarage throtle time
-of each io is 140s. At the same time, the operation of saving a small
-file by vim will be blocked amolst 140s. As a fsync will be send by vim,
-the sync ios of fsync will be blocked by a huge amount of buffer write
-ios ahead. This is also a priority inversion problem within one cgroup.
-In the database scene, things got really bad with blk-throtle enabled
-as fsync is called very often.
+For wireless:
 
-This patch splits bio queue into sync and async queues for blk-throtl
-and gives a huge priority to sync write ios. Sync queue only make sense
-for write ios as we treat all read io as sync io. I think it's a nice
-respond to the semantics of REQ_SYNC. Bios with REQ_META and REQ_PRIO
-gains the same priority as they are important to fs. This may avoid
-some potential priority inversion problems.
+>  .../broadcom/brcm80211/brcmfmac/btcoex.c         |  2 +-
+>  drivers/net/wireless/intel/iwlwifi/iwl-dbg-tlv.c |  2 +-
+>  drivers/net/wireless/intel/iwlwifi/mvm/sta.c     |  2 +-
+>  drivers/net/wireless/intersil/hostap/hostap_ap.c |  2 +-
+>  drivers/net/wireless/marvell/mwifiex/main.c      |  2 +-
+>  drivers/net/wireless/microchip/wilc1000/hif.c    |  6 +++---
 
-With this patch, do the same test above, the duration of the fsync sent
-by vim drops to servral hundreds of milliseconds.
+Acked-by: Kalle Valo <kvalo@kernel.org>
 
-Signed-off-by: Jinke Han <hanjinke.666-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
-Signed-off-by: Xin Yin <yinxin.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
----
-
-Changes in v2:
-- Make the code more simple
-
- block/blk-throttle.c | 105 +++++++++++++++++++++++++++++++++++++++----
- block/blk-throttle.h |  12 ++++-
- 2 files changed, 108 insertions(+), 9 deletions(-)
-
-diff --git a/block/blk-throttle.c b/block/blk-throttle.c
-index 847721dc2b2b..f3285c7da9f7 100644
---- a/block/blk-throttle.c
-+++ b/block/blk-throttle.c
-@@ -21,6 +21,13 @@
- /* Total max dispatch from all groups in one round */
- #define THROTL_QUANTUM 32
- 
-+/* For write ios, dispatch 4 sync ios and 1 normal io in one loop */
-+#define THROTL_SYNC_FACTOR 4
-+
-+/* Only make sense for write ios, all read ios are treated as SYNC */
-+#define SYNC	0
-+#define ASYNC	1
-+
- /* Throttling is performed over a slice and after that slice is renewed */
- #define DFL_THROTL_SLICE_HD (HZ / 10)
- #define DFL_THROTL_SLICE_SSD (HZ / 50)
-@@ -241,11 +248,27 @@ static inline unsigned int throtl_bio_data_size(struct bio *bio)
- 	return bio->bi_iter.bi_size;
- }
- 
--static void throtl_qnode_init(struct throtl_qnode *qn, struct throtl_grp *tg)
-+static void throtl_qnode_init(struct throtl_qnode *qn, struct throtl_grp *tg,
-+			      bool rw)
- {
- 	INIT_LIST_HEAD(&qn->node);
--	bio_list_init(&qn->bios);
-+	bio_list_init(&qn->bios[SYNC]);
-+	bio_list_init(&qn->bios[ASYNC]);
- 	qn->tg = tg;
-+	qn->dispatch_sync_cnt = (rw == READ) ? UINT_MAX : 0;
-+}
-+
-+#define BLK_THROTL_SYNC(bio) (bio->bi_opf & (REQ_SYNC | REQ_META | REQ_PRIO))
-+
-+static inline void throtl_qnode_add_bio_list(struct throtl_qnode *qn,
-+					     struct bio *bio)
-+{
-+	bool rw = bio_data_dir(bio);
-+
-+	if ((rw == READ) || BLK_THROTL_SYNC(bio))
-+		bio_list_add(&qn->bios[SYNC], bio);
-+	else
-+		bio_list_add(&qn->bios[ASYNC], bio);
- }
- 
- /**
-@@ -261,13 +284,34 @@ static void throtl_qnode_init(struct throtl_qnode *qn, struct throtl_grp *tg)
- static void throtl_qnode_add_bio(struct bio *bio, struct throtl_qnode *qn,
- 				 struct list_head *queued)
- {
--	bio_list_add(&qn->bios, bio);
-+	throtl_qnode_add_bio_list(qn, bio);
- 	if (list_empty(&qn->node)) {
- 		list_add_tail(&qn->node, queued);
- 		blkg_get(tg_to_blkg(qn->tg));
- 	}
- }
- 
-+static inline struct bio *throtl_qnode_bio_peek(struct throtl_qnode *qn)
-+{
-+	struct bio *bio;
-+	int from = SYNC;
-+
-+	/* qn for read ios */
-+	if (qn->dispatch_sync_cnt == UINT_MAX)
-+		return bio_list_peek(&qn->bios[from]);
-+
-+	/* qn for write ios */
-+	if (qn->dispatch_sync_cnt == THROTL_SYNC_FACTOR)
-+		from = ASYNC;
-+	bio = bio_list_peek(&qn->bios[from]);
-+	if (!bio) {
-+		from = 1 - from;
-+		bio = bio_list_peek(&qn->bios[from]);
-+	}
-+
-+	return bio;
-+}
-+
- /**
-  * throtl_peek_queued - peek the first bio on a qnode list
-  * @queued: the qnode list to peek
-@@ -281,11 +325,56 @@ static struct bio *throtl_peek_queued(struct list_head *queued)
- 		return NULL;
- 
- 	qn = list_first_entry(queued, struct throtl_qnode, node);
--	bio = bio_list_peek(&qn->bios);
-+	bio = throtl_qnode_bio_peek(qn);
- 	WARN_ON_ONCE(!bio);
- 	return bio;
- }
- 
-+/**
-+ * throtl_qnode_bio_pop: pop a bio from a qnode
-+ * @qn: the qnode to pop a bio from
-+ *
-+ * For read io qn, just pop bio from sync queue and return.
-+ * For write io qn, the target queue to pop was determined by the dispatch_sync_cnt.
-+ * Try to pop bio from target queue, fetch the bio and return when it is not empty.
-+ * If the target queue empty, pop bio from other queue instead.
-+ */
-+static inline struct bio *throtl_qnode_bio_pop(struct throtl_qnode *qn)
-+{
-+	struct bio *bio;
-+	int from = SYNC;
-+
-+	/* qn for read ios */
-+	if (qn->dispatch_sync_cnt == UINT_MAX)
-+		return bio_list_pop(&qn->bios[from]);
-+
-+	/* qn for write ios */
-+	if (qn->dispatch_sync_cnt == THROTL_SYNC_FACTOR)
-+		from = ASYNC;
-+
-+	bio = bio_list_pop(&qn->bios[from]);
-+	if (!bio) {
-+		from = 1 - from;
-+		bio = bio_list_pop(&qn->bios[from]);
-+	}
-+
-+	if ((qn->dispatch_sync_cnt < THROTL_SYNC_FACTOR) &&
-+		(from == SYNC))
-+		qn->dispatch_sync_cnt++;
-+	else if (from == ASYNC)
-+		qn->dispatch_sync_cnt = 0;
-+
-+	return bio;
-+}
-+
-+static inline bool throtl_qnode_empty(struct throtl_qnode *qn)
-+{
-+	if (bio_list_empty(&qn->bios[SYNC]) &&
-+		bio_list_empty(&qn->bios[ASYNC]))
-+		return true;
-+	return false;
-+}
-+
- /**
-  * throtl_pop_queued - pop the first bio form a qnode list
-  * @queued: the qnode list to pop a bio from
-@@ -310,10 +399,10 @@ static struct bio *throtl_pop_queued(struct list_head *queued,
- 		return NULL;
- 
- 	qn = list_first_entry(queued, struct throtl_qnode, node);
--	bio = bio_list_pop(&qn->bios);
-+	bio = throtl_qnode_bio_pop(qn);
- 	WARN_ON_ONCE(!bio);
- 
--	if (bio_list_empty(&qn->bios)) {
-+	if (throtl_qnode_empty(qn)) {
- 		list_del_init(&qn->node);
- 		if (tg_to_put)
- 			*tg_to_put = qn->tg;
-@@ -355,8 +444,8 @@ static struct blkg_policy_data *throtl_pd_alloc(gfp_t gfp,
- 	throtl_service_queue_init(&tg->service_queue);
- 
- 	for (rw = READ; rw <= WRITE; rw++) {
--		throtl_qnode_init(&tg->qnode_on_self[rw], tg);
--		throtl_qnode_init(&tg->qnode_on_parent[rw], tg);
-+		throtl_qnode_init(&tg->qnode_on_self[rw], tg, rw);
-+		throtl_qnode_init(&tg->qnode_on_parent[rw], tg, rw);
- 	}
- 
- 	RB_CLEAR_NODE(&tg->rb_node);
-diff --git a/block/blk-throttle.h b/block/blk-throttle.h
-index ef4b7a4de987..55f3a9594e0d 100644
---- a/block/blk-throttle.h
-+++ b/block/blk-throttle.h
-@@ -28,8 +28,18 @@
-  */
- struct throtl_qnode {
- 	struct list_head	node;		/* service_queue->queued[] */
--	struct bio_list		bios;		/* queued bios */
-+	struct bio_list		bios[2];	/* queued bios */
- 	struct throtl_grp	*tg;		/* tg this qnode belongs to */
-+
-+	/*
-+	 * 1) for write throtl_qnode:
-+	 * [0, THROTL_SYNC_FACTOR-1]: dispatch sync io
-+	 * [THROTL_SYNC_FACTOR]: dispatch async io
-+	 *
-+	 * 2) for read throtl_qnode:
-+	 * UINT_MAX
-+	 */
-+	unsigned int dispatch_sync_cnt;         /* sync io dispatch counter */
- };
- 
- struct throtl_service_queue {
 -- 
-2.20.1
+https://patchwork.kernel.org/project/linux-wireless/list/
 
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
