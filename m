@@ -1,75 +1,53 @@
-From: Yu Kuai <yukuai1@huaweicloud.com>
-Subject: Re: [PATCH -next 0/4] blk-cgroup: synchronize del_gendisk() with
- configuring cgroup policy
-Date: Wed, 21 Dec 2022 10:48:19 +0800
-Message-ID: <ebfd3d01-9fd1-3453-6cf5-05e8540359c7@huaweicloud.com>
-References: <20221217030908.1261787-1-yukuai1@huaweicloud.com>
- <Y6DP3aOSad8+D1yY@slm.duckdns.org>
- <e01daffe-a3e3-8bf2-40ee-192a9e70d911@huaweicloud.com>
- <Y6HcWiJbaWjN3jlt@slm.duckdns.org>
- <c2fecf04-6e9e-25a1-f14c-47862837cc54@huaweicloud.com>
+From: Mukesh Ojha <quic_mojha-jfJNa2p1gH1BDgjK7y7TUQ@public.gmane.org>
+Subject: Re: [PATCH] cgroup/cpuset: no need to explicitly init a global static
+ variable
+Date: Wed, 21 Dec 2022 11:49:55 +0530
+Message-ID: <f4c63e18-9666-b1db-8474-ea32da9daccb@quicinc.com>
+References: <20221220151415.856093-1-neelx@redhat.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-block-owner@vger.kernel.org>
-In-Reply-To: <c2fecf04-6e9e-25a1-f14c-47862837cc54@huaweicloud.com>
+Content-Transfer-Encoding: 7bit
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=message-id : date :
+ mime-version : subject : to : cc : references : from : in-reply-to :
+ content-type : content-transfer-encoding; s=qcppdkim1;
+ bh=bmZs5x1Uo0vIxNOpNufK8v9HsHBzoKzBVIakLqwAiFU=;
+ b=hum+6+XmnsXTqdDSRzsYZmKoYTEYe7oMOOaQePpnNXk1EkNJ9zYfOtXtBrc5O0WPLJpH
+ FgeTcclUWHyeAjj7ls4jDN/2j8kN5B/BoeDIauXR+oXF8hwLBQ7+3hjBZlGBkycxxbKY
+ PWn996zcSTiWwryNWYshbt6yBUPIKJ+szAa+e2jVyJcqsV6NZEZH+ZxAmwXJw0hGEL05
+ O2YuwkPtOdr5hy+AdquKUiRDtTUti6hMPT5N13ZG9fSUUngDLTUtjgcN5AKGySLEuLBl
+ SEeGryXXUUnajvbJ4coOiOyK3HI9FPOFG09YFqSEwFgvzSxkcOMBANtRUs4jvPjEQC1B XA== 
+Content-Language: en-US
+In-Reply-To: <20221220151415.856093-1-neelx-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="utf-8"; format="flowed"
-To: Yu Kuai <yukuai1@huaweicloud.com>, Tejun Heo <tj@kernel.org>
-Cc: hch@infradead.org, josef@toxicpanda.com, axboe@kernel.dk, cgroups@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, yi.zhang@huawei.com, "yukuai (C)" <yukuai3@huawei.com>
+Content-Type: text/plain; charset="us-ascii"; format="flowed"
+To: Daniel Vacek <neelx-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
 Hi,
 
-在 2022/12/21 9:10, Yu Kuai 写道:
-> Hi,
+On 12/20/2022 8:44 PM, Daniel Vacek wrote:
+> cpuset_rwsem is a static variable. It's initialized at build time and so
+> there's no need for explicit runtime init leaking one percpu int.
 > 
-> 在 2022/12/21 0:01, Tejun Heo 写道:
->> Hello,
->>
->> On Tue, Dec 20, 2022 at 05:19:12PM +0800, Yu Kuai wrote:
->>> Yes, that sounds good. BTW, queue_lock is also used to protect
->>> pd_alloc_fn/pd_init_fn，and we found that blkcg_activate_policy() is
->>> problematic:
->>>
->>> blkcg_activate_policy
->>>   spin_lock_irq(&q->queue_lock);
->>>   list_for_each_entry_reverse(blkg, &q->blkg_list
->>>    pd_alloc_fn(GFP_NOWAIT | __GFP_NOWARN,...) -> failed
->>>
->>>    spin_unlock_irq(&q->queue_lock);
->>>    // release queue_lock here is problematic, this will cause
->>> pd_offline_fn called without pd_init_fn.
->>>    pd_alloc_fn(__GFP_NOWARN,...)
->>
->> So, if a blkg is destroyed while a policy is being activated, right?
-> Yes, remove cgroup can race with this, for bfq null pointer deference
-> will be triggered in bfq_pd_offline().
+> Signed-off-by: Daniel Vacek <neelx-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+> ---
+>   kernel/cgroup/cpuset.c | 2 --
+>   1 file changed, 2 deletions(-)
+> 
+> diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
+> index a29c0b13706bb..87fe410361b3d 100644
+> --- a/kernel/cgroup/cpuset.c
+> +++ b/kernel/cgroup/cpuset.c
+> @@ -3281,8 +3281,6 @@ struct cgroup_subsys cpuset_cgrp_subsys = {
+>   
+>   int __init cpuset_init(void)
+>   {
+> -	BUG_ON(percpu_init_rwsem(&cpuset_rwsem));
+> -
+>   	BUG_ON(!alloc_cpumask_var(&top_cpuset.cpus_allowed, GFP_KERNEL));
+>   	BUG_ON(!alloc_cpumask_var(&top_cpuset.effective_cpus, GFP_KERNEL));
+>   	BUG_ON(!zalloc_cpumask_var(&top_cpuset.subparts_cpus, GFP_KERNEL));
 
-BTW, We just found that pd_online_fn() is missed in
-blkcg_activate_policy()... Currently this is not a problem because only
-bl-throttle implement it, and blk-throttle is activated while creating
-blkg.
+Acked-by: Mukesh Ojha <quic_mojha-jfJNa2p1gH1BDgjK7y7TUQ@public.gmane.org>
 
-Thanks,
-Kuai
-> 
->>
->>> If we are using a mutex to protect rq_qos ops, it seems the right thing
->>> to do do also using the mutex to protect blkcg_policy ops, and this
->>> problem can be fixed because mutex can be held to alloc memroy with
->>> GFP_KERNEL. What do you think?
->>
->> One worry is that switching to mutex can be more headache due to destroy
->> path synchronization. Another approach would be using a per-blkg flag to
->> track whether a blkg has been initialized.
-> I think perhaps you mean per blkg_policy_data flag? per blkg flag should
-> not work in this case.
-> 
-> Thanks,
-> Kuai
->>
->> Thanks.
->>
-> 
-> .
-> 
-
+-Mukesh
