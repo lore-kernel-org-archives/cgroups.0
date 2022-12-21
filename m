@@ -1,42 +1,45 @@
-From: Daniel Vacek <neelx-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH] cgroup/cpuset: no need to explicitly init a global static variable
-Date: Wed, 21 Dec 2022 09:49:28 +0100
-Message-ID: <CACjP9X90VT=sd_wT9MWg062qs=CRadsaj6V9gOMXSEJ7Up5Hzg@mail.gmail.com>
-References: <20221220151415.856093-1-neelx@redhat.com> <9295b73a-5a3c-b1f6-d892-0da1d356ab9f@redhat.com>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH -next 1/4] blk-iocost: track whether iocg is still online
+Date: Wed, 21 Dec 2022 02:33:51 -0800
+Message-ID: <Y6LhD8CEkcgLUJoQ@infradead.org>
+References: <20221217030527.1250083-1-yukuai1@huaweicloud.com>
+ <20221217030527.1250083-2-yukuai1@huaweicloud.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1671612606;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=4dBwPnF71tq2OBO2+/MVeKfW3ISUERpMcMh5zSeUYQo=;
-        b=Dvwe/fgv3RdROeps1ZWhjDPLHSHBwevbfmt7eSB2Nzc53XzlRvHPQ7iyE4BLI/ntvzfkJG
-        PmEmykTwOIWB2xPKOLcuuQO7ydgU3PENnNPS+tkaZNU9Qyy/dpADEx8VBFlj9AOwqnkZ/M
-        tjTN2VjC35GFEkZMPiFFsn7vZ/cwS5A=
-In-Reply-To: <9295b73a-5a3c-b1f6-d892-0da1d356ab9f-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Return-path: <linux-block-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
+        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=qo0/7oh20JB4vOMTtkVk74rFMV3lr/eFERwPDckaJ84=; b=CvfudaDgduzGkGO/tL8HCoG0cx
+        Vc/Ed3d8vSiE7XbGKRh+aPrjOZK9rolmp/I9Vno85q9Wpgb9tIcV+ooTCk+Xt2ZwvR7x9tN3fepaG
+        gtzJIt4P+lDSpucNMSjQtI4yAY0UKUMweQd09/TuwkZmfTzkVEA4P2vJIHz2vrjXm59VmfO/Bfj34
+        ypTGRrN68fpcqATg/QgkQw3pIstO2GHIgsKOc/EAK+00mzVQ+SMX/1Tybvg5gv3sW/xMzfxsEBaus
+        Lguks2sBH0yrSLIvW+onUv8D1bH/W4BjFIr39DPBJXCxQm4lKvdWg2xCmSM/i781J3eoDJgTEY1dr
+        ifUFXrfQ==;
+Content-Disposition: inline
+In-Reply-To: <20221217030527.1250083-2-yukuai1@huaweicloud.com>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Cc: Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Yu Kuai <yukuai1@huaweicloud.com>
+Cc: tj@kernel.org, hch@infradead.org, josef@toxicpanda.com, axboe@kernel.dk, cgroups@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, yukuai3@huawei.com, yi.zhang@huawei.com
 
-On Tue, Dec 20, 2022 at 5:59 PM Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org> wrote:
->
-> On 12/20/22 10:14, Daniel Vacek wrote:
-> > cpuset_rwsem is a static variable. It's initialized at build time and so
-> > there's no need for explicit runtime init leaking one percpu int.
->
-> It will be clearer if you mention that DEFINE_STATIC_PERCPU_RWSEM() is
-> used to set up cpuset_rwsem at build time. Other than that, the patch
-> looks good to me.
+On Sat, Dec 17, 2022 at 11:05:24AM +0800, Yu Kuai wrote:
+> @@ -459,6 +459,8 @@ struct ioc_gq {
+>  	struct blkg_policy_data		pd;
+>  	struct ioc			*ioc;
+>  
+> +	bool online;
 
-That's true. I only figured later.
-Whoever is going to apply it, feel free to amend the message if you like.
+Nit: maybe tab align this field like the fields above it.
 
---nX
+> +static void ioc_pd_offline(struct blkg_policy_data *pd)
+> +{
+> +	struct ioc_gq *iocg = pd_to_iocg(pd);
+> +	struct ioc *ioc = iocg->ioc;
+> +	unsigned long flags;
+> +
+> +	if (ioc) {
 
-> Cheers,
-> Longman
->
+How could ioc be NULL here?
 
