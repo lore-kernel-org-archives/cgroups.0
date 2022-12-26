@@ -1,41 +1,57 @@
-From: Yu Kuai <yukuai1-XF6JlduFytWkHkcT6e4Xnw@public.gmane.org>
-Subject: [PATCH v3 1/5] blk-iocost: check return value of match_u64()
-Date: Mon, 26 Dec 2022 16:58:55 +0800
-Message-ID: <20221226085859.2701195-2-yukuai1@huaweicloud.com>
+From: Yu Kuai <yukuai1@huaweicloud.com>
+Subject: [PATCH v3 2/5] blk-iocost: don't allow to configure bio based device
+Date: Mon, 26 Dec 2022 16:58:56 +0800
+Message-ID: <20221226085859.2701195-3-yukuai1@huaweicloud.com>
 References: <20221226085859.2701195-1-yukuai1@huaweicloud.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <20221226085859.2701195-1-yukuai1-XF6JlduFytWkHkcT6e4Xnw@public.gmane.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20221226085859.2701195-1-yukuai1@huaweicloud.com>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, josef-DigfWCa+lFGyeJad7bwFQA@public.gmane.org, axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, yukuai1-XF6JlduFytWkHkcT6e4Xnw@public.gmane.org, yi.zhang-hv44wF8Li93QT0dZR+AlfA@public.gmane.org
+To: tj@kernel.org, josef@toxicpanda.com, axboe@kernel.dk
+Cc: cgroups@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, yukuai3@huawei.com, yukuai1@huaweicloud.com, yi.zhang@huawei.com
 
-From: Yu Kuai <yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+From: Yu Kuai <yukuai3@huawei.com>
 
-This patch fixs that the return value of match_u64() from ioc_qos_write()
-is not checked,
+iocost is based on rq_qos, which can only work for request based device,
+thus it doesn't make sense to configure iocost for bio based device.
 
-Signed-off-by: Yu Kuai <yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Signed-off-by: Yu Kuai <yukuai3@huawei.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+Acked-by: Tejun Heo <tj@kernel.org>
 ---
- block/blk-iocost.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+ block/blk-iocost.c | 10 ++++++++++
+ 1 file changed, 10 insertions(+)
 
 diff --git a/block/blk-iocost.c b/block/blk-iocost.c
-index 549ddc9e0c6f..93b938517be3 100644
+index 93b938517be3..ce4eafbada56 100644
 --- a/block/blk-iocost.c
 +++ b/block/blk-iocost.c
-@@ -3212,7 +3212,8 @@ static ssize_t ioc_qos_write(struct kernfs_open_file *of, char *input,
+@@ -3185,6 +3185,11 @@ static ssize_t ioc_qos_write(struct kernfs_open_file *of, char *input,
+ 		return PTR_ERR(bdev);
  
- 		switch (match_token(p, qos_ctrl_tokens, args)) {
- 		case QOS_ENABLE:
--			match_u64(&args[0], &v);
-+			if (match_u64(&args[0], &v))
-+				goto einval;
- 			enable = v;
- 			continue;
- 		case QOS_CTRL:
+ 	disk = bdev->bd_disk;
++	if (!queue_is_mq(disk->queue)) {
++		ret = -EOPNOTSUPP;
++		goto err;
++	}
++
+ 	ioc = q_to_ioc(disk->queue);
+ 	if (!ioc) {
+ 		ret = blk_iocost_init(disk);
+@@ -3365,6 +3370,11 @@ static ssize_t ioc_cost_model_write(struct kernfs_open_file *of, char *input,
+ 		return PTR_ERR(bdev);
+ 
+ 	q = bdev_get_queue(bdev);
++	if (!queue_is_mq(q)) {
++		ret = -EOPNOTSUPP;
++		goto err;
++	}
++
+ 	ioc = q_to_ioc(q);
+ 	if (!ioc) {
+ 		ret = blk_iocost_init(bdev->bd_disk);
 -- 
 2.31.1
 
