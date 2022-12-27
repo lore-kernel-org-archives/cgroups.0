@@ -1,65 +1,77 @@
-From: Jarkko Sakkinen <jarkko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH v2 14/18] x86/sgx: Add EPC OOM path to forcefully reclaim
- EPC
-Date: Mon, 26 Dec 2022 20:43:58 +0000
-Message-ID: <Y6oHjrLCbDzWh7nE@kernel.org>
-References: <20221202183655.3767674-1-kristen@linux.intel.com>
- <20221202183655.3767674-15-kristen@linux.intel.com>
- <Y5IBCOuF8X7jEK3+@kernel.org>
- <cb5abce531c1b14118de419ba68c2a501b016873.camel@linux.intel.com>
- <e5aff02b-713c-ccd8-7211-d07ff6d7adb2@intel.com>
- <Y5duYxIHtSpK1qkj@google.com>
+From: Yu Kuai <yukuai1@huaweicloud.com>
+Subject: [PATCH RFC] block, bfq: switch 'bfqg->ref' to use atomic refcount apis
+Date: Tue, 27 Dec 2022 11:15:41 +0800
+Message-ID: <20221227031541.2595647-1-yukuai1@huaweicloud.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1672087444;
-        bh=VLhGkOHxbqetrgJSPLuZfKUGT1KN0pIDoxofw9mA2Jw=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=BaRZ3mCREa+kLUp5TDH7ap3HWYze/UUbPBAAOV501rVkFpg9IJfJfco0Mduf/PHuM
-         WbmConD42iTDblIo9JtxYbuxDPU5LV969xNFTFJChhok3zLYN4OeG7Xh8XiSwbDDLq
-         vFrxVIqMZU9AGAD/f1N5vbJsPUBuGgDPVdGNuv+w6DswNVS8v6JZItJmucQAi4BILf
-         R9pBjahfOUYA9ib/VwrBG3df6NOyUcMYJ6isZYIyfjCS29DR4UU0RJf3ukanPAtPwd
-         wjZUERuQRSJ4en+w/QHiEG/2bVBzhfMUrNPBsHyVpvLj1XLcpS8KRAoNi6F21B/S0Y
-         Ru9W5pX2h0lYQ==
-Content-Disposition: inline
-In-Reply-To: <Y5duYxIHtSpK1qkj-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Sean Christopherson <seanjc-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Cc: Dave Hansen <dave.hansen-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Kristen Carlson Accardi <kristen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, dave.hansen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-sgx-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Thomas Gleixner <tglx-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>, Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Borislav Petkov <bp-Gina5bIWoIWzQB+pC5nmwQ@public.gmane.org>, x86-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, "H. Peter Anvin" <hpa-YMNOUZJC4hwAvxtiuMwx3w@public.gmane.org>, zhiquan1.li-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org
+To: jack@suse.cz, tj@kernel.org, josef@toxicpanda.com, axboe@kernel.dk, paolo.valente@linaro.org
+Cc: cgroups@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, yukuai3@huawei.com, yukuai1@huaweicloud.com, yi.zhang@huawei.com
 
-On Mon, Dec 12, 2022 at 06:09:39PM +0000, Sean Christopherson wrote:
-> On Fri, Dec 09, 2022, Dave Hansen wrote:
-> > On 12/9/22 08:05, Kristen Carlson Accardi wrote:
-> > > Aside from that though, I don't think that killing enclaves makes sense
-> > > outside the context of cgroup limits. 
-> > 
-> > I think it makes a lot of sense in theory.  Whatever situation we get
-> > into with a cgroup's EPC we can also get into with the whole system's EPC.
-> > 
-> > *But*, it's orders of magnitude harder to hit on the whole system.
-> 
-> ...
-> 
-> > If someone wants to extend this OOM support to system-wide EPC later, then go
-> > ahead.  But, I don't think it makes a lot of sense to invert this series for
-> > it.
-> 
-> +1 from the peanut gallery.  With VMM EPC oversubscription suport, no sane VMM
-> will oversubscribe VEPC pages.  And for VA pages, supporting swap of VA pages is
-> likely a more userspace-friendly approach if system-wide EPC OOM is a concern.
+From: Yu Kuai <yukuai3@huawei.com>
 
-When swapping VA pages the topology of the VA page cache for swapped VA
-pages is the main question. It is compromise between how long swap-in and
-swap-out can take, and how generic solution it be, meaning how deep
-hierarchies you want to build, or is just a flat list of parent VA pages
-"good enough".
+The updating of 'bfqg->ref' should be protected by 'bfqd->lock', however,
+during code review, we found that bfq_pd_free() update 'bfqg->ref'
+without holding the lock, which is problematic:
 
-Also, there's the question whether it should be a global cache, per cgroup
-and so forth.
+1) bfq_pd_free() triggered by removing cgroup is called asynchronously;
+2) bfqq will grab bfqg reference, and exit bfqq will drop the reference,
+which can concurrenty with 1).
 
-Implementing any solution is not overly complicated. Locking in these
-options is what puzzles me.
+Unfortunately, 'bfqd->lock' can't be held here because 'bfqd' might already
+be freed in bfq_pd_free(). Fix the problem by using atomic refcount apis.
 
-BR, Jarkko
+Signed-off-by: Yu Kuai <yukuai3@huawei.com>
+---
+ block/bfq-cgroup.c  | 8 +++-----
+ block/bfq-iosched.h | 2 +-
+ 2 files changed, 4 insertions(+), 6 deletions(-)
+
+diff --git a/block/bfq-cgroup.c b/block/bfq-cgroup.c
+index 1b2829e99dad..aa9c4f02e3a3 100644
+--- a/block/bfq-cgroup.c
++++ b/block/bfq-cgroup.c
+@@ -316,14 +316,12 @@ struct bfq_group *bfqq_group(struct bfq_queue *bfqq)
+ 
+ static void bfqg_get(struct bfq_group *bfqg)
+ {
+-	bfqg->ref++;
++	refcount_inc(&bfqg->ref);
+ }
+ 
+ static void bfqg_put(struct bfq_group *bfqg)
+ {
+-	bfqg->ref--;
+-
+-	if (bfqg->ref == 0)
++	if (refcount_dec_and_test(bfqg->ref))
+ 		kfree(bfqg);
+ }
+ 
+@@ -530,7 +528,7 @@ static struct blkg_policy_data *bfq_pd_alloc(gfp_t gfp, struct request_queue *q,
+ 	}
+ 
+ 	/* see comments in bfq_bic_update_cgroup for why refcounting */
+-	bfqg_get(bfqg);
++	refcount_set(&bfqg->ref, 1);
+ 	return &bfqg->pd;
+ }
+ 
+diff --git a/block/bfq-iosched.h b/block/bfq-iosched.h
+index 41aa151ccc22..466e4865ace6 100644
+--- a/block/bfq-iosched.h
++++ b/block/bfq-iosched.h
+@@ -928,7 +928,7 @@ struct bfq_group {
+ 	char blkg_path[128];
+ 
+ 	/* reference counter (see comments in bfq_bic_update_cgroup) */
+-	int ref;
++	refcount_t ref;
+ 	/* Is bfq_group still online? */
+ 	bool online;
+ 
+-- 
+2.31.1
+
