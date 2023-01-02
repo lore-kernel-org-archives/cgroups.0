@@ -1,85 +1,89 @@
-From: Jan Kara <jack-AlSwsSmVLrQ@public.gmane.org>
-Subject: Re: [PATCH RFC] block, bfq: switch 'bfqg->ref' to use atomic
- refcount apis
-Date: Mon, 2 Jan 2023 12:22:58 +0100
-Message-ID: <20230102112258.3fixhuialamu6pkd@quack3>
-References: <20221227031541.2595647-1-yukuai1@huaweicloud.com>
- <ba5e74a6-b3de-844d-16b8-84eb429c7058@huaweicloud.com>
+From: Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny-IBi9RG/b67k@public.gmane.org>
+Subject: Re: [PATCH RFC 2/2] mm: kmem: add direct objcg pointer to task_struct
+Date: Mon, 2 Jan 2023 17:09:46 +0100
+Message-ID: <20230102160946.GD16704@blackbody.suse.cz>
+References: <20221220182745.1903540-1-roman.gushchin@linux.dev>
+ <20221220182745.1903540-3-roman.gushchin@linux.dev>
+ <20221222135044.GB20830@blackbody.suse.cz>
+ <Y6SEHTkHSNYQmv5k@P9FQF9L96D>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: multipart/signed; micalg=pgp-sha256;
+        protocol="application/pgp-signature"; boundary="0eh6TmSyL6TZE2Uz"
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
-        t=1672658578; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
+        t=1672675787; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
          mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=VqwR+u//1iVHsLjS8ecEfHM3m/I8nXvJ9KjV1eh5WXs=;
-        b=QhMvVVMsVf6x5AViodhwkQFpoKLW/PYRa0Ijf7o3mskGYh6S4+61ZECF9G3TYScuIp7trv
-        mK8+RjALUdvmq5ZNuTg5/Tz5jodjLfufzWzjON0Kq+iFv13oOJ9np0a2VmyjWDhzfGRKVI
-        EWhorYbh0tj61v8YqB35xiUgkTRvk6A=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
-        s=susede2_ed25519; t=1672658578;
-        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=VqwR+u//1iVHsLjS8ecEfHM3m/I8nXvJ9KjV1eh5WXs=;
-        b=K0tV4Q/xIo8tj99PVm3YZoJHBPvz4Lgq/VAnMDEUg/pj96U16eNquZmpyyQjnPO+/riu1/
-        l4ZdCXpQqX/S11Cw==
+        bh=3TXMFafqZSk+G4FHe0dFtLpO4ewGe6qnJ+N0wbs8SPY=;
+        b=QTi3UzxN6Jw/VzGJjLhZQdsQ+UBM7B4GAP4tthZfQGXeYmVgc6UTwe+BvVvpUaumfvoFOC
+        pDu4+IXoLkjUUez0lGE1mlsK48eJaXenqfirr60jtzJzW9r835sNXpqfDa7As9HZ2CZPx1
+        9zOUopaIcFyvLCNDzjWv/+lTgbqQR0o=
 Content-Disposition: inline
-In-Reply-To: <ba5e74a6-b3de-844d-16b8-84eb429c7058-XF6JlduFytWkHkcT6e4Xnw@public.gmane.org>
+In-Reply-To: <Y6SEHTkHSNYQmv5k@P9FQF9L96D>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="utf-8"
-To: Yu Kuai <yukuai1-XF6JlduFytWkHkcT6e4Xnw@public.gmane.org>
-Cc: jack-AlSwsSmVLrQ@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, josef-DigfWCa+lFGyeJad7bwFQA@public.gmane.org, axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, paolo.valente-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, yi.zhang-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, "yukuai (C)" <yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+To: Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>
+Cc: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Muchun Song <muchun.song-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
 
-On Tue 27-12-22 14:09:40, Yu Kuai wrote:
-> Hi, Jan!
-> 
-> 在 2022/12/27 11:15, Yu Kuai 写道:
-> > From: Yu Kuai <yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-> > 
-> > The updating of 'bfqg->ref' should be protected by 'bfqd->lock', however,
-> > during code review, we found that bfq_pd_free() update 'bfqg->ref'
-> > without holding the lock, which is problematic:
-> > 
-> > 1) bfq_pd_free() triggered by removing cgroup is called asynchronously;
-> > 2) bfqq will grab bfqg reference, and exit bfqq will drop the reference,
-> > which can concurrenty with 1).
-> > 
-> > Unfortunately, 'bfqd->lock' can't be held here because 'bfqd' might already
-> > be freed in bfq_pd_free(). Fix the problem by using atomic refcount apis.
-> > 
-> > Signed-off-by: Yu Kuai <yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-> > ---
-> >   block/bfq-cgroup.c  | 8 +++-----
-> >   block/bfq-iosched.h | 2 +-
-> >   2 files changed, 4 insertions(+), 6 deletions(-)
-> > 
-> > diff --git a/block/bfq-cgroup.c b/block/bfq-cgroup.c
-> > index 1b2829e99dad..aa9c4f02e3a3 100644
-> > --- a/block/bfq-cgroup.c
-> > +++ b/block/bfq-cgroup.c
-> > @@ -316,14 +316,12 @@ struct bfq_group *bfqq_group(struct bfq_queue *bfqq)
-> >   static void bfqg_get(struct bfq_group *bfqg)
-> >   {
-> > -	bfqg->ref++;
-> > +	refcount_inc(&bfqg->ref);
-> >   }
-> >   static void bfqg_put(struct bfq_group *bfqg)
-> >   {
-> > -	bfqg->ref--;
-> > -
-> > -	if (bfqg->ref == 0)
-> > +	if (refcount_dec_and_test(bfqg->ref))
-> Sorry that here should be '&bfqg->ref'.
-> 
-> Anyway, I'll wait for you, and send a new version if you think this
-> patch make sense.
 
-Yes, the patch makes sense to me so feel free to send fixed version.
+--0eh6TmSyL6TZE2Uz
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-								Honza
--- 
-Jan Kara <jack-IBi9RG/b67k@public.gmane.org>
-SUSE Labs, CR
+Hello.
+
+On Thu, Dec 22, 2022 at 08:21:49AM -0800, Roman Gushchin <roman.gushchin@li=
+nux.dev> wrote:
+> Do you have any numbers to share?
+
+The numbers are in bko#216038, let me explain them here a bit.
+I used the will-it-scale benchmark that repeatedly locks/unlocks a file
+and runs in parallel.
+
+The final numbers were:
+  sample			metric	 	  =CE=B4	 =CE=B4_cg
+  no accounting implemented	32307750	  0 %	 =C2=AD
+  accounting in cg		2.49577e+07	-23 %	 0 %
+  accounting in cg + cache	2.51642e+07 	-22 %	+1 %
+
+Hence my result was only 1% improvement.
+
+(But it was a very simple try, not delving into any of the CPU cache
+statistics.)
+
+Question: Were your measurements multi-threaded?
+
+> 1) some people periodically complain that accounted allocations are slow
+>    in comparison to non-accounted and slower than they were with page-bas=
+ed
+>    accounting,
+
+My result above would not likely satisfy those complainers I know about.
+But if your additional changes are better the additional code complexity
+may be justified in the end.
+
+
+> Btw, I'm working on a patch 3 for this series, which in early tests brings
+> additional ~25% improvement in my benchmark, hopefully will post it soon =
+as
+> a part of v1.
+
+Please send it with more details about your benchmark to put the numbers
+into context.
+
+
+Michal
+
+--0eh6TmSyL6TZE2Uz
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+
+-----BEGIN PGP SIGNATURE-----
+
+iHUEARYIAB0WIQTrXXag4J0QvXXBmkMkDQmsBEOquQUCY7MByAAKCRAkDQmsBEOq
+uUG/AQC11XKCM/wWsjYXa9wOcZSD924NsT+jZ2ZVsvw96HBebAD9EYkrKAMMTTlE
+Zk65EirkknPYoU5zwvfnv8zzrOvGWgk=
+=ihb/
+-----END PGP SIGNATURE-----
+
+--0eh6TmSyL6TZE2Uz--
