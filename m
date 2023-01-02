@@ -1,89 +1,58 @@
-From: Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny-IBi9RG/b67k@public.gmane.org>
-Subject: Re: [PATCH RFC 2/2] mm: kmem: add direct objcg pointer to task_struct
-Date: Mon, 2 Jan 2023 17:09:46 +0100
-Message-ID: <20230102160946.GD16704@blackbody.suse.cz>
-References: <20221220182745.1903540-1-roman.gushchin@linux.dev>
- <20221220182745.1903540-3-roman.gushchin@linux.dev>
- <20221222135044.GB20830@blackbody.suse.cz>
- <Y6SEHTkHSNYQmv5k@P9FQF9L96D>
+From: Jonathan Corbet <corbet@lwn.net>
+Subject: Re: [PATCH 00/10] docs: cgroup-v1: formatting improv for "Memory
+ Resource Controller" doc
+Date: Mon, 02 Jan 2023 16:35:20 -0700
+Message-ID: <87a630h5mv.fsf@meer.lwn.net>
+References: <20221219042209.22898-1-bagasdotme@gmail.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha256;
-        protocol="application/pgp-signature"; boundary="0eh6TmSyL6TZE2Uz"
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
-        t=1672675787; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=3TXMFafqZSk+G4FHe0dFtLpO4ewGe6qnJ+N0wbs8SPY=;
-        b=QTi3UzxN6Jw/VzGJjLhZQdsQ+UBM7B4GAP4tthZfQGXeYmVgc6UTwe+BvVvpUaumfvoFOC
-        pDu4+IXoLkjUUez0lGE1mlsK48eJaXenqfirr60jtzJzW9r835sNXpqfDa7As9HZ2CZPx1
-        9zOUopaIcFyvLCNDzjWv/+lTgbqQR0o=
-Content-Disposition: inline
-In-Reply-To: <Y6SEHTkHSNYQmv5k@P9FQF9L96D>
+Return-path: <linux-doc-owner@vger.kernel.org>
+DKIM-Filter: OpenDKIM Filter v2.11.0 ms.lwn.net E4C0C6D6
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=lwn.net; s=20201203;
+        t=1672702521; bh=8Urwkhnl8X2pfaw1kHAwUmTLLQL4RD3KeQARX6NwZkU=;
+        h=From:To:Cc:Subject:In-Reply-To:References:Date:From;
+        b=b3dpElX9lrF8bY2SqAacBRKrkzHM/rKdJm2qvbaZ+Hq0pJel6SdXe+SVKo2vkg2ds
+         FjDMKwPXOpB3z4WVlZwhla8yaU+9gbuymFblf/2XWo3Syos1WdOjC31p3sg+hXVpZl
+         33hFPhk3NLwKAU0hmi6X2N2HqCfOSnGCnC2VvGnoKwMXC1HMKeucfgxnUJT/uDnQ9p
+         C9wg1Wfdc8Y531+MydMRDCBCsMxrnn9SRzLAMjbmm9Br9vrlqhaNQxoWw06emOMgzh
+         iQLz6aa13KRJyP2ZKmV3DmjQjPHhsn7pUOyowBykiaGdmwhHByNMM9oEFwBeUVM4G+
+         3dzHBtJRU6qVQ==
+In-Reply-To: <20221219042209.22898-1-bagasdotme@gmail.com>
 List-ID: <cgroups.vger.kernel.org>
-To: Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>
-Cc: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Muchun Song <muchun.song-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Bagas Sanjaya <bagasdotme@gmail.com>, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, Linux Memory Management List <linux-mm@kvack.org>
+Cc: Tejun Heo <tj@kernel.org>, Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@suse.com>, Andrew Morton <akpm@linux-foundation.org>, Hugh Dickins <hughd@google.com>, Shakeel Butt <shakeelb@google.com>, Bagas Sanjaya <bagasdotme@gmail.com>
 
+Bagas Sanjaya <bagasdotme@gmail.com> writes:
 
---0eh6TmSyL6TZE2Uz
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+> "Memory Resource Controller" CGroup v1 documentation has been in reST
+> since 99c8b231ae6c6c ("docs: cgroup-v1: convert docs to ReST and rename to *.rst"). The current doc look is kinda ugly, so improve the formatting (only
+> htmldocs is tested).
+>
+> The first patch is a fix for recently reported htmldocs warning, which can
+> be pickup separately from rest of the series.
+>
+> Bagas Sanjaya (10):
+>   docs: cgroup-v1: extend underline of section 8
+>   docs: cgroup-v1: replace custom note constructs with appropriate
+>     admonition blocks
+>   docs: cgroup-v1: wrap remaining admonitions in admonition blocks
+>   docs: cgroup-v1: use code block for locking order schema
+>   docs: cgroup-v1: fix footnotes
+>   docs: cgroup-v1: move hierarchy of accounting caption
+>   docs: cgroup-v1: use bullet lists for list of stat file tables
+>   docs: cgroup-v1: use make swap extension subsections subsections
+>   docs: cgroup-v1: add internal cross-references
+>   docs: cgroup-v1: use numbered lists for user interface setup
+>
+>  .../admin-guide/cgroup-v1/cgroups.rst         |   2 +
+>  .../admin-guide/cgroup-v1/memory.rst          | 290 ++++++++++--------
+>  2 files changed, 158 insertions(+), 134 deletions(-)
 
-Hello.
+Tejun, do you have an opinion on these?  I'm not really sure we need to
+be tweaking the v1 docs at this point, but I don't see anything in here
+that seems harmful either...
 
-On Thu, Dec 22, 2022 at 08:21:49AM -0800, Roman Gushchin <roman.gushchin@li=
-nux.dev> wrote:
-> Do you have any numbers to share?
+Thanks,
 
-The numbers are in bko#216038, let me explain them here a bit.
-I used the will-it-scale benchmark that repeatedly locks/unlocks a file
-and runs in parallel.
-
-The final numbers were:
-  sample			metric	 	  =CE=B4	 =CE=B4_cg
-  no accounting implemented	32307750	  0 %	 =C2=AD
-  accounting in cg		2.49577e+07	-23 %	 0 %
-  accounting in cg + cache	2.51642e+07 	-22 %	+1 %
-
-Hence my result was only 1% improvement.
-
-(But it was a very simple try, not delving into any of the CPU cache
-statistics.)
-
-Question: Were your measurements multi-threaded?
-
-> 1) some people periodically complain that accounted allocations are slow
->    in comparison to non-accounted and slower than they were with page-bas=
-ed
->    accounting,
-
-My result above would not likely satisfy those complainers I know about.
-But if your additional changes are better the additional code complexity
-may be justified in the end.
-
-
-> Btw, I'm working on a patch 3 for this series, which in early tests brings
-> additional ~25% improvement in my benchmark, hopefully will post it soon =
-as
-> a part of v1.
-
-Please send it with more details about your benchmark to put the numbers
-into context.
-
-
-Michal
-
---0eh6TmSyL6TZE2Uz
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-
------BEGIN PGP SIGNATURE-----
-
-iHUEARYIAB0WIQTrXXag4J0QvXXBmkMkDQmsBEOquQUCY7MByAAKCRAkDQmsBEOq
-uUG/AQC11XKCM/wWsjYXa9wOcZSD924NsT+jZ2ZVsvw96HBebAD9EYkrKAMMTTlE
-Zk65EirkknPYoU5zwvfnv8zzrOvGWgk=
-=ihb/
------END PGP SIGNATURE-----
-
---0eh6TmSyL6TZE2Uz--
+jon
