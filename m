@@ -1,70 +1,111 @@
-From: Michal Hocko <mhocko@suse.com>
-Subject: Re: [PATCH] Revert "mm: add nodes= arg to memory.reclaim"
-Date: Tue, 3 Jan 2023 09:37:54 +0100
-Message-ID: <Y7PpYsbv1xC6m/Hu@dhcp22.suse.cz>
-References: <20221202223533.1785418-1-almasrymina@google.com>
- <Y5bsmpCyeryu3Zz1@dhcp22.suse.cz>
- <Y5xASNe1x8cusiTx@dhcp22.suse.cz>
- <20221216101820.3f4a370af2c93d3c2e78ed8a@linux-foundation.org>
- <Y52Scge3ynvn/mB4@dhcp22.suse.cz>
- <20221219144252.f3da256e75e176905346b4d1@linux-foundation.org>
+From: Jan Kara <jack@suse.cz>
+Subject: Re: [PATCH] block, bfq: switch 'bfqg->ref' to use atomic refcount
+ apis
+Date: Tue, 3 Jan 2023 11:30:34 +0100
+Message-ID: <20230103103034.6wtj7fzyoqdsqdqy@quack3>
+References: <20230103084755.1256479-1-yukuai1@huaweicloud.com>
 Mime-Version: 1.0
-Return-path: <linux-doc-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
-        t=1672735075; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+Return-path: <linux-block-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
+        t=1672741835; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
          mime-version:mime-version:content-type:content-type:
          in-reply-to:in-reply-to:references:references;
-        bh=cxucqJyzfnCNVadtYHxDXtyUdE5BQ5o27Kjd3R83JAg=;
-        b=pB+jvQ4LqFEtRQBnhrTspiYshQvgyQetx3pEFEuajdpgDTi17C9MFciV3ESup3uhcsSOzj
-        /TQS3rxhGPtDbogm4hadF52JYRROPgu0QbRk5MeKfowBOv1rpXcYMrimuSK9YBgnfQRH5I
-        3l4+qWHER2nf3zdpdyBBsQePl9eBXWA=
+        bh=S0fpHD/aVGPATEkhmOtr6aAZx/NtaItvDcnKgARuLII=;
+        b=H4mcgN5iwaCxNhoNI3/q08ZUacejngcauGzDH+dk+dpcF9FQBIIsXzQV1LrxwH0/ku6gAM
+        pddlOUcy2LO9usoiT+Aw339rgv7i5minKnyUKngRPN7YVjuSwB59vodu9U9GcxjlitZdxA
+        OJM8wz/kcVDn+sgiPbxZfzoVc3PjGYw=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
+        s=susede2_ed25519; t=1672741835;
+        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=S0fpHD/aVGPATEkhmOtr6aAZx/NtaItvDcnKgARuLII=;
+        b=JkKdihtsGYCvv+QGCsisIZsWGCg6twEmkStVBFoz31bLwCuwwwCMa76eH88Tlt4BZ06zYd
+        SuInez8hHXd36TAg==
 Content-Disposition: inline
-In-Reply-To: <20221219144252.f3da256e75e176905346b4d1@linux-foundation.org>
+In-Reply-To: <20230103084755.1256479-1-yukuai1@huaweicloud.com>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: Mina Almasry <almasrymina@google.com>, Tejun Heo <tj@kernel.org>, Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, Jonathan Corbet <corbet@lwn.net>, Roman Gushchin <roman.gushchin@linux.dev>, Shakeel Butt <shakeelb@google.com>, Muchun Song <songmuchun@bytedance.com>, Huang Ying <ying.huang@intel.com>, Yang Shi <yang.shi@linux.alibaba.com>, Yosry Ahmed <yosryahmed@google.com>, weixugc@google.com, fvdl@google.com, bagasdotme@gmail.com, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org
+To: Yu Kuai <yukuai1@huaweicloud.com>
+Cc: jack@suse.cz, paolo.valente@linaro.org, axboe@kernel.dk, tj@kernel.org, josef@toxicpanda.com, linux-block@vger.kernel.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, yukuai3@huawei.com, yi.zhang@huawei.com, yangerkun@huawei.com
 
-[Sorry I was offline]
-
-On Mon 19-12-22 14:42:52, Andrew Morton wrote:
-> On Sat, 17 Dec 2022 10:57:06 +0100 Michal Hocko <mhocko@suse.com> wrote:
+On Tue 03-01-23 16:47:55, Yu Kuai wrote:
+> From: Yu Kuai <yukuai3@huawei.com>
 > 
-> > > I think it's a bit premature to revert at this stage.  Possibly we can
-> > > get to the desired end state by modifying the existing code.  Possibly
-> > > we can get to the desired end state by reverting this and by adding
-> > > something new.
-> > 
-> > Sure if we can converge to a proper implementation during the rc phase
-> > then it would be ok. I cannot speak for others but at least for me
-> > upcoming 2 weeks would be mostly offline so I cannot really contribute
-> > much. A revert would be much more easier from the coordination POV IMHO.
-> > 
-> > Also I do not think there is any strong reason to rush this in. I do not
-> > really see any major problems to have this extension in 6.2
+> The updating of 'bfqg->ref' should be protected by 'bfqd->lock', however,
+> during code review, we found that bfq_pd_free() update 'bfqg->ref'
+> without holding the lock, which is problematic:
 > 
-> I'll queue the revert in mm-unstable with a plan to merge it upstream
-> around the -rc5 timeframe if there hasn't been resolution.
+> 1) bfq_pd_free() triggered by removing cgroup is called asynchronously;
+> 2) bfqq will grab bfqg reference, and exit bfqq will drop the reference,
+> which can concurrent with 1).
+> 
+> Unfortunately, 'bfqd->lock' can't be held here because 'bfqd' might already
+> be freed in bfq_pd_free(). Fix the problem by using atomic refcount apis.
+> 
+> Signed-off-by: Yu Kuai <yukuai3@huawei.com>
 
-Thanks! I do not really think we need to rush node based reclaim and
-better have a reasonable and more futureproof interface.
+The patch looks good to me. Feel free to add:
 
-> Please check Mina's issues with this revert's current changelog and
-> perhaps send along a revised one.
+Reviewed-by: Jan Kara <jack@suse.cz>
 
-Yes, I believe, I have addressed all the feedback but I am open to alter
-the wording of course. The biggest concern by Mina IIRC was that the
-nr_reclaimed reporting has been a pre-existing problem. And I agree with
-that. The thing is that this doesn't matter without node specification
-because the memory gets reclaimed even if the reported value is over
-accounted. With nodemask specification the value becomes bogus if no
-demotion nodes are specified because no memory gets reclaimed
-potentially while the success is still reported. Mina has tried to
-address that but I am not convinced the fix is actually future proof.
+								Honza
 
-This really requires more discussion.
-
+> ---
+> Changes from RFC:
+>  - refcount_dec_and_test(bfqg->ref) -> refcount_dec_and_test(&bfqg->ref)
+> 
+>  block/bfq-cgroup.c  | 8 +++-----
+>  block/bfq-iosched.h | 2 +-
+>  2 files changed, 4 insertions(+), 6 deletions(-)
+> 
+> diff --git a/block/bfq-cgroup.c b/block/bfq-cgroup.c
+> index 1b2829e99dad..7d9b15f0dbd5 100644
+> --- a/block/bfq-cgroup.c
+> +++ b/block/bfq-cgroup.c
+> @@ -316,14 +316,12 @@ struct bfq_group *bfqq_group(struct bfq_queue *bfqq)
+>  
+>  static void bfqg_get(struct bfq_group *bfqg)
+>  {
+> -	bfqg->ref++;
+> +	refcount_inc(&bfqg->ref);
+>  }
+>  
+>  static void bfqg_put(struct bfq_group *bfqg)
+>  {
+> -	bfqg->ref--;
+> -
+> -	if (bfqg->ref == 0)
+> +	if (refcount_dec_and_test(&bfqg->ref))
+>  		kfree(bfqg);
+>  }
+>  
+> @@ -530,7 +528,7 @@ static struct blkg_policy_data *bfq_pd_alloc(gfp_t gfp, struct request_queue *q,
+>  	}
+>  
+>  	/* see comments in bfq_bic_update_cgroup for why refcounting */
+> -	bfqg_get(bfqg);
+> +	refcount_set(&bfqg->ref, 1);
+>  	return &bfqg->pd;
+>  }
+>  
+> diff --git a/block/bfq-iosched.h b/block/bfq-iosched.h
+> index 41aa151ccc22..466e4865ace6 100644
+> --- a/block/bfq-iosched.h
+> +++ b/block/bfq-iosched.h
+> @@ -928,7 +928,7 @@ struct bfq_group {
+>  	char blkg_path[128];
+>  
+>  	/* reference counter (see comments in bfq_bic_update_cgroup) */
+> -	int ref;
+> +	refcount_t ref;
+>  	/* Is bfq_group still online? */
+>  	bool online;
+>  
+> -- 
+> 2.31.1
+> 
 -- 
-Michal Hocko
-SUSE Labs
+Jan Kara <jack@suse.com>
+SUSE Labs, CR
