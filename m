@@ -1,59 +1,52 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH] blk-iocost: don't make all constants unsigned long long
-Date: Wed, 4 Jan 2023 12:17:13 -1000
-Message-ID: <Y7X66RDNGhB45rzZ@slm.duckdns.org>
-References: <20221220201819.1497577-1-ydroneaud@opteya.com>
- <20221222135855.GC20830@blackbody.suse.cz>
- <Y7X6ajqnPrtFAL0C@slm.duckdns.org>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCH] cgroup/cpuset: no need to explicitly init a global
+ static variable
+Date: Wed, 4 Jan 2023 12:21:54 -1000
+Message-ID: <Y7X8Asv25sntht6t@slm.duckdns.org>
+References: <20221220151415.856093-1-neelx@redhat.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-Return-path: <linux-block-owner@vger.kernel.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20210112;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :mime-version:references:message-id:subject:cc:to:from:date:sender
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=mBdR1OYvv5zIjW+hrNHEjqsBYdzTVZarSCYttdRP9P0=;
-        b=QMHC+W+cPdzEvzu7OmXQnPcvd3ozAn24UBAx+NJZqCwKaCIFamFDpMO5+0fusnSF32
-         7rMEcXxCkh4xwbepxkxjCAqOfToVfBsCo5T4Zhh1dfX2BqcKbKxuLLFRvRk+KozCh6mx
-         PiCfloJVXYuGwuqkgKdvzg966p0QrHBmHM/DBZD5gJ4Ko0FRf6GQKmkum04ZTwYAA9cE
-         driK/F8H6DubpL+VDkSG5dj/M2uRgMqzRORN7tTGUotYlF33zztJk2LStCylCgiyWQTH
-         E2UEA+UtPJK0jAs+7pXInfPnzlYTC2Q7qiiRVolqUUgI1DbrVvUN8MvIboES+bgyLdJg
-         tq2w==
-Sender: Tejun Heo <htejun@gmail.com>
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:sender:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=B/3ppUmh4bmqybcFcsNaCu/D7XFzMdaZVgO4yNK9uS8=;
+        b=m3Sl/7J9Eg2xJBzdmZbdAe60sOL/fthI5hRvSskmpX6OHx15gV3HeMT50kSGqypuOh
+         FCbow/o8gEu5cXqV5g56v5bzEP2U6cGZuJNvfRWaO+dLFhB5eKEX571YWfow8VgC0Vfu
+         hCngLTiyWszq+yaoa8COFsKDVGPnTZJnNFt3olQhC/dRejvoy6Qh5WUbe+qDJ0YQ/DzM
+         8+p2WwcZXk2+nwhC3EcLF0Tw0EClGyI5FwPJSFUoiBXpN5qKRXPQry85sGYRy+4ez/j0
+         M17e5MNoHlAmPyA/fHz4Gkh689AVXyJFuGxYRuSEfNg8daWv61TBk/mopeymvSnfm4AR
+         pKjQ==
+Sender: Tejun Heo <htejun-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 Content-Disposition: inline
-In-Reply-To: <Y7X6ajqnPrtFAL0C@slm.duckdns.org>
+In-Reply-To: <20221220151415.856093-1-neelx-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="iso-8859-1"
-To: Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny@suse.com>
-Cc: Yann Droneaud <ydroneaud@opteya.com>, Josef Bacik <josef@toxicpanda.com>, Jens Axboe <axboe@kernel.dk>, cgroups@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Daniel Vacek <neelx-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Cc: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Wed, Jan 04, 2023 at 12:15:06PM -1000, Tejun Heo wrote:
-> On Thu, Dec 22, 2022 at 02:58:55PM +0100, Michal Koutn=FD wrote:
-> > On Tue, Dec 20, 2022 at 09:18:19PM +0100, Yann Droneaud <ydroneaud@opte=
-ya.com> wrote:
-> > > +enum {
-> > >  	/* switch iff the conditions are met for longer than this */
-> > >  	AUTOP_CYCLE_NSEC	=3D 10LLU * NSEC_PER_SEC,
-> > > +};
-> >=20
-> > This looks gratuitous.
-> >=20
-> > What about indivudial #defines with typed literals instead of the "lazy
-> > splitting"?
->=20
-> enums are so much better for debugging and tracing. This is a gcc caused
-> problem where there's no other way to generate the same code between two =
-gcc
-> versions without splitting the enum definitions. I'm kinda baffled that t=
-his
-> is what they chose to do but can't think of a better way to work around i=
-t.
+On Tue, Dec 20, 2022 at 04:14:15PM +0100, Daniel Vacek wrote:
+> cpuset_rwsem is a static variable. It's initialized at build time and so
+> there's no need for explicit runtime init leaking one percpu int.
+> 
+> Signed-off-by: Daniel Vacek <neelx-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 
-I thought this was the other patch addressing this issue. The proposed patch
-is rather painful to look at. The other one splits it into two groups.
+Applied to cgroup/for-6.2-fixes with the following description:
+
+    cgroup/cpuset: no need to explicitly init a global static variable
+    
+    cpuset_rwsem is a static variable defined with DEFINE_STATIC_PERCPU_RWSEM().
+    It's initialized at build time and so there's no need for explicit runtime
+    init leaking one percpu int.
+    
+    Signed-off-by: Daniel Vacek <neelx-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+    Reviewed-by: Aaron Tomlin <atomlin-OvwSCxsgXNNBDgjK7y7TUQ@public.gmane.org>
+    Acked-by: Mukesh Ojha <quic_mojha-jfJNa2p1gH1BDgjK7y7TUQ@public.gmane.org>
+    Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 
 Thanks.
 
---=20
+-- 
 tejun
