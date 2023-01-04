@@ -1,9 +1,10 @@
 From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH 00/10] docs: cgroup-v1: formatting improv for "Memory
- Resource Controller" doc
-Date: Wed, 4 Jan 2023 11:27:39 -1000
-Message-ID: <Y7XvS5LJK01lWq48@slm.duckdns.org>
-References: <20221219042209.22898-1-bagasdotme@gmail.com>
+Subject: Re: [PATCH -next 1/4] block/rq_qos: move implementions of init/exit
+ rq-qos apis to blk-rq-qos.c
+Date: Wed, 4 Jan 2023 11:30:34 -1000
+Message-ID: <Y7Xv+rtqXQM8gf+A@slm.duckdns.org>
+References: <20230104085354.2343590-1-yukuai1@huaweicloud.com>
+ <20230104085354.2343590-2-yukuai1@huaweicloud.com>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
@@ -11,49 +12,34 @@ DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:sender:from:to:cc:subject:date:message-id
          :reply-to;
-        bh=xdMyQrIHWeXBS5vaDhN2cRckBSGcEP38oOfunYml57w=;
-        b=iX1y43d8OBGxLwGmJscAlBFVnoWSPofv9iXyHsuaXj45BXH9vjeirS5X7+rIV9ZZhI
-         kgmsMBU1MysDrFbe5rtEWFt3D2dmZmvt2X51oLkbTZJaWB5ewxlLnwJhiMW7BreTmtfW
-         gUO9PK9xlkX5hzeZQafxvgzJNW1B/yl2HD4O0wLbybwd/pYpO6kvt2y4c332bDDpWc17
-         buMOo5EORzykQc5P1bAlU++s1JKjLPniSHO9H1zEkv4emgaz3yQe4kJPFanSwrCTgIK3
-         /Q+NYDb2RAQraD1dbEv0ycfBtTFyFeBCuk0miK7rATtvKPXxIMcj5DbUXdFZIDn6+JSO
-         5q5w==
+        bh=QUxjPqi8cIjWiZ4wgk9iUZ3U2OAiaNP4OQpT53WV9V4=;
+        b=XHg29x/xZNjdTm//dbuc775EIoI9HMgi3iyEYs8SyHdybx5CB84wsv0dt8CY18Rb6+
+         n8NNZRGZm0EPHN/tL8w/1pzIx1GCaTryX0QV0R/UI7JrYWTUAr3hJ9Qp2iaYPtOg+Jh3
+         QQXIhBzb9qDYiD98zixXkhWfzrJE7RUj7UBTHemmMDjKssASMTxLBNyimWO/IxlX6Qt/
+         QEocTqc3A9MZWTqSmLuiUkNXiDDCNW0hU43r/6bkTwpt+uHX7/FZV+cRc5ctkX2YDPo+
+         gToPpHWLhdLXOpMYeN/OnEstNepYdbn2ikoN7J3fOEsl9CLGMAKYzCAEXEqPHzd1cFm2
+         hzCg==
 Sender: Tejun Heo <htejun-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 Content-Disposition: inline
-In-Reply-To: <20221219042209.22898-1-bagasdotme-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+In-Reply-To: <20230104085354.2343590-2-yukuai1-XF6JlduFytWkHkcT6e4Xnw@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Bagas Sanjaya <bagasdotme-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Linux Memory Management List <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Jonathan Corbet <corbet-T1hC0tSOHrs@public.gmane.org>, Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+To: Yu Kuai <yukuai1-XF6JlduFytWkHkcT6e4Xnw@public.gmane.org>
+Cc: hch-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, josef-DigfWCa+lFGyeJad7bwFQA@public.gmane.org, axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, yi.zhang-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, yangerkun-hv44wF8Li93QT0dZR+AlfA@public.gmane.org
 
-On Mon, Dec 19, 2022 at 11:21:59AM +0700, Bagas Sanjaya wrote:
-> "Memory Resource Controller" CGroup v1 documentation has been in reST
-> since 99c8b231ae6c6c ("docs: cgroup-v1: convert docs to ReST and rename to *.rst"). The current doc look is kinda ugly, so improve the formatting (only
-> htmldocs is tested).
+On Wed, Jan 04, 2023 at 04:53:51PM +0800, Yu Kuai wrote:
+> From: Yu Kuai <yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 > 
-> The first patch is a fix for recently reported htmldocs warning, which can
-> be pickup separately from rest of the series.
+> These init/exit rq-qos apis are super cold path, there is no need to
+> inline them to improve performance. This patch also prepare to use a
+> global mutex to protect these apis, move these implementions to
+> blk-rq-qos.c so that the global mutex won't be exposed. There are no
+> functional changes.
 > 
-> Bagas Sanjaya (10):
->   docs: cgroup-v1: extend underline of section 8
->   docs: cgroup-v1: replace custom note constructs with appropriate
->     admonition blocks
->   docs: cgroup-v1: wrap remaining admonitions in admonition blocks
->   docs: cgroup-v1: use code block for locking order schema
->   docs: cgroup-v1: fix footnotes
->   docs: cgroup-v1: move hierarchy of accounting caption
->   docs: cgroup-v1: use bullet lists for list of stat file tables
->   docs: cgroup-v1: use make swap extension subsections subsections
->   docs: cgroup-v1: add internal cross-references
->   docs: cgroup-v1: use numbered lists for user interface setup
-> 
->  .../admin-guide/cgroup-v1/cgroups.rst         |   2 +
->  .../admin-guide/cgroup-v1/memory.rst          | 290 ++++++++++--------
->  2 files changed, 158 insertions(+), 134 deletions(-)
+> Signed-off-by: Yu Kuai <yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 
-Patchset doesn't apply. Can you please rebase on top of linus#master and
-drop reference to the commit in -next?
+Acked-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 
 Thanks.
 
