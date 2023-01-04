@@ -1,184 +1,132 @@
-From: Yu Kuai <yukuai1@huaweicloud.com>
-Subject: [PATCH -next 1/4] block/rq_qos: move implementions of init/exit rq-qos apis to blk-rq-qos.c
-Date: Wed,  4 Jan 2023 16:53:51 +0800
-Message-ID: <20230104085354.2343590-2-yukuai1@huaweicloud.com>
+From: Yu Kuai <yukuai1-XF6JlduFytWkHkcT6e4Xnw@public.gmane.org>
+Subject: [PATCH -next 2/4] block/rq_qos: factor out a helper to add rq_qos and activate policy
+Date: Wed,  4 Jan 2023 16:53:52 +0800
+Message-ID: <20230104085354.2343590-3-yukuai1@huaweicloud.com>
 References: <20230104085354.2343590-1-yukuai1@huaweicloud.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Return-path: <linux-block-owner@vger.kernel.org>
-In-Reply-To: <20230104085354.2343590-1-yukuai1@huaweicloud.com>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <20230104085354.2343590-1-yukuai1-XF6JlduFytWkHkcT6e4Xnw@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: tj@kernel.org, hch@infradead.org, josef@toxicpanda.com, axboe@kernel.dk
-Cc: cgroups@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, yukuai3@huawei.com, yukuai1@huaweicloud.com, yi.zhang@huawei.com, yangerkun@huawei.com
+To: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, hch-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, josef-DigfWCa+lFGyeJad7bwFQA@public.gmane.org, axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, yukuai1-XF6JlduFytWkHkcT6e4Xnw@public.gmane.org, yi.zhang-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, yangerkun-hv44wF8Li93QT0dZR+AlfA@public.gmane.org
 
-From: Yu Kuai <yukuai3@huawei.com>
+From: Yu Kuai <yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 
-These init/exit rq-qos apis are super cold path, there is no need to
-inline them to improve performance. This patch also prepare to use a
-global mutex to protect these apis, move these implementions to
-blk-rq-qos.c so that the global mutex won't be exposed. There are no
-functional changes.
+For the policy that use both rq_qos and blkcg_policy, rq_qos_add() and
+blkcg_activate_policy() should be atomic, otherwise null-ptr-deference
+can be triggered. This patch prepare to use a global mutex to protect
+them, there are no functional changes.
 
-Signed-off-by: Yu Kuai <yukuai3@huawei.com>
+Signed-off-by: Yu Kuai <yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 ---
- block/blk-rq-qos.c | 59 +++++++++++++++++++++++++++++++++++++++++
- block/blk-rq-qos.h | 65 +++-------------------------------------------
- 2 files changed, 62 insertions(+), 62 deletions(-)
+ block/blk-iocost.c    | 14 +-------------
+ block/blk-iolatency.c |  7 +------
+ block/blk-rq-qos.c    | 23 +++++++++++++++++++++++
+ block/blk-rq-qos.h    |  6 ++++++
+ 4 files changed, 31 insertions(+), 19 deletions(-)
 
+diff --git a/block/blk-iocost.c b/block/blk-iocost.c
+index 6955605629e4..9199124f0cc2 100644
+--- a/block/blk-iocost.c
++++ b/block/blk-iocost.c
+@@ -2883,23 +2883,11 @@ static int blk_iocost_init(struct gendisk *disk)
+ 	ioc_refresh_params(ioc, true);
+ 	spin_unlock_irq(&ioc->lock);
+ 
+-	/*
+-	 * rqos must be added before activation to allow ioc_pd_init() to
+-	 * lookup the ioc from q. This means that the rqos methods may get
+-	 * called before policy activation completion, can't assume that the
+-	 * target bio has an iocg associated and need to test for NULL iocg.
+-	 */
+-	ret = rq_qos_add(q, rqos);
++	ret = rq_qos_add_and_activate_policy(q, rqos, &blkcg_policy_iocost);
+ 	if (ret)
+ 		goto err_free_ioc;
+-
+-	ret = blkcg_activate_policy(q, &blkcg_policy_iocost);
+-	if (ret)
+-		goto err_del_qos;
+ 	return 0;
+ 
+-err_del_qos:
+-	rq_qos_del(q, rqos);
+ err_free_ioc:
+ 	free_percpu(ioc->pcpu_stat);
+ 	kfree(ioc);
+diff --git a/block/blk-iolatency.c b/block/blk-iolatency.c
+index ecdc10741836..a29b923e2a6a 100644
+--- a/block/blk-iolatency.c
++++ b/block/blk-iolatency.c
+@@ -771,20 +771,15 @@ int blk_iolatency_init(struct gendisk *disk)
+ 	rqos->ops = &blkcg_iolatency_ops;
+ 	rqos->q = q;
+ 
+-	ret = rq_qos_add(q, rqos);
++	ret = rq_qos_add_and_activate_policy(q, rqos, &blkcg_policy_iolatency);
+ 	if (ret)
+ 		goto err_free;
+-	ret = blkcg_activate_policy(q, &blkcg_policy_iolatency);
+-	if (ret)
+-		goto err_qos_del;
+ 
+ 	timer_setup(&blkiolat->timer, blkiolatency_timer_fn, 0);
+ 	INIT_WORK(&blkiolat->enable_work, blkiolatency_enable_work_fn);
+ 
+ 	return 0;
+ 
+-err_qos_del:
+-	rq_qos_del(q, rqos);
+ err_free:
+ 	kfree(blkiolat);
+ 	return ret;
 diff --git a/block/blk-rq-qos.c b/block/blk-rq-qos.c
-index 88f0fe7dcf54..b6ea40775b2a 100644
+index b6ea40775b2a..50544bfb12f1 100644
 --- a/block/blk-rq-qos.c
 +++ b/block/blk-rq-qos.c
-@@ -286,6 +286,65 @@ void rq_qos_wait(struct rq_wait *rqw, void *private_data,
- 	finish_wait(&rqw->wait, &data.wq);
+@@ -353,3 +353,26 @@ void rq_qos_exit(struct request_queue *q)
+ 		rqos->ops->exit(rqos);
+ 	}
  }
- 
-+int rq_qos_add(struct request_queue *q, struct rq_qos *rqos)
++
++#ifdef CONFIG_BLK_CGROUP
++int rq_qos_add_and_activate_policy(struct request_queue *q, struct rq_qos *rqos,
++				   const struct blkcg_policy *pol)
 +{
 +	/*
-+	 * No IO can be in-flight when adding rqos, so freeze queue, which
-+	 * is fine since we only support rq_qos for blk-mq queue.
-+	 *
-+	 * Reuse ->queue_lock for protecting against other concurrent
-+	 * rq_qos adding/deleting
++	 * rqos must be added before activation to allow pd_init_fn() to
++	 * lookup the global structure from q. This means that the rqos methods
++	 * may get called before policy activation completion, can't assume that
++	 * the target bio has an pd associated and need to test for NULL.
 +	 */
-+	blk_mq_freeze_queue(q);
++	int ret = rq_qos_add(q, rqos);
 +
-+	spin_lock_irq(&q->queue_lock);
-+	if (rq_qos_id(q, rqos->id))
-+		goto ebusy;
-+	rqos->next = q->rq_qos;
-+	q->rq_qos = rqos;
-+	spin_unlock_irq(&q->queue_lock);
++	if (ret)
++		return ret;
 +
-+	blk_mq_unfreeze_queue(q);
++	ret = blkcg_activate_policy(q, pol);
++	if (ret)
++		rq_qos_del(q, rqos);
 +
-+	if (rqos->ops->debugfs_attrs) {
-+		mutex_lock(&q->debugfs_mutex);
-+		blk_mq_debugfs_register_rqos(rqos);
-+		mutex_unlock(&q->debugfs_mutex);
-+	}
-+
-+	return 0;
-+ebusy:
-+	spin_unlock_irq(&q->queue_lock);
-+	blk_mq_unfreeze_queue(q);
-+	return -EBUSY;
++	return ret;
 +}
-+
-+void rq_qos_del(struct request_queue *q, struct rq_qos *rqos)
-+{
-+	struct rq_qos **cur;
-+
-+	/*
-+	 * See comment in rq_qos_add() about freezing queue & using
-+	 * ->queue_lock.
-+	 */
-+	blk_mq_freeze_queue(q);
-+
-+	spin_lock_irq(&q->queue_lock);
-+	for (cur = &q->rq_qos; *cur; cur = &(*cur)->next) {
-+		if (*cur == rqos) {
-+			*cur = rqos->next;
-+			break;
-+		}
-+	}
-+	spin_unlock_irq(&q->queue_lock);
-+
-+	blk_mq_unfreeze_queue(q);
-+
-+	mutex_lock(&q->debugfs_mutex);
-+	blk_mq_debugfs_unregister_rqos(rqos);
-+	mutex_unlock(&q->debugfs_mutex);
-+}
-+
- void rq_qos_exit(struct request_queue *q)
- {
- 	while (q->rq_qos) {
++#endif
 diff --git a/block/blk-rq-qos.h b/block/blk-rq-qos.h
-index 1ef1f7d4bc3c..f2d95e19d7a8 100644
+index f2d95e19d7a8..0778cff3777c 100644
 --- a/block/blk-rq-qos.h
 +++ b/block/blk-rq-qos.h
-@@ -85,69 +85,12 @@ static inline void rq_wait_init(struct rq_wait *rq_wait)
- 	init_waitqueue_head(&rq_wait->wait);
- }
- 
--static inline int rq_qos_add(struct request_queue *q, struct rq_qos *rqos)
--{
--	/*
--	 * No IO can be in-flight when adding rqos, so freeze queue, which
--	 * is fine since we only support rq_qos for blk-mq queue.
--	 *
--	 * Reuse ->queue_lock for protecting against other concurrent
--	 * rq_qos adding/deleting
--	 */
--	blk_mq_freeze_queue(q);
--
--	spin_lock_irq(&q->queue_lock);
--	if (rq_qos_id(q, rqos->id))
--		goto ebusy;
--	rqos->next = q->rq_qos;
--	q->rq_qos = rqos;
--	spin_unlock_irq(&q->queue_lock);
--
--	blk_mq_unfreeze_queue(q);
--
--	if (rqos->ops->debugfs_attrs) {
--		mutex_lock(&q->debugfs_mutex);
--		blk_mq_debugfs_register_rqos(rqos);
--		mutex_unlock(&q->debugfs_mutex);
--	}
--
--	return 0;
--ebusy:
--	spin_unlock_irq(&q->queue_lock);
--	blk_mq_unfreeze_queue(q);
--	return -EBUSY;
--
--}
--
--static inline void rq_qos_del(struct request_queue *q, struct rq_qos *rqos)
--{
--	struct rq_qos **cur;
--
--	/*
--	 * See comment in rq_qos_add() about freezing queue & using
--	 * ->queue_lock.
--	 */
--	blk_mq_freeze_queue(q);
--
--	spin_lock_irq(&q->queue_lock);
--	for (cur = &q->rq_qos; *cur; cur = &(*cur)->next) {
--		if (*cur == rqos) {
--			*cur = rqos->next;
--			break;
--		}
--	}
--	spin_unlock_irq(&q->queue_lock);
--
--	blk_mq_unfreeze_queue(q);
--
--	mutex_lock(&q->debugfs_mutex);
--	blk_mq_debugfs_unregister_rqos(rqos);
--	mutex_unlock(&q->debugfs_mutex);
--}
--
- typedef bool (acquire_inflight_cb_t)(struct rq_wait *rqw, void *private_data);
- typedef void (cleanup_cb_t)(struct rq_wait *rqw, void *private_data);
- 
-+int rq_qos_add(struct request_queue *q, struct rq_qos *rqos);
-+void rq_qos_del(struct request_queue *q, struct rq_qos *rqos);
-+void rq_qos_exit(struct request_queue *q);
- void rq_qos_wait(struct rq_wait *rqw, void *private_data,
- 		 acquire_inflight_cb_t *acquire_inflight_cb,
- 		 cleanup_cb_t *cleanup_cb);
-@@ -230,6 +173,4 @@ static inline void rq_qos_queue_depth_changed(struct request_queue *q)
+@@ -173,4 +173,10 @@ static inline void rq_qos_queue_depth_changed(struct request_queue *q)
  		__rq_qos_queue_depth_changed(q->rq_qos);
  }
  
--void rq_qos_exit(struct request_queue *);
--
++#ifdef CONFIG_BLK_CGROUP
++#include "blk-cgroup.h"
++int rq_qos_add_and_activate_policy(struct request_queue *q, struct rq_qos *rqos,
++				   const struct blkcg_policy *pol);
++#endif
++
  #endif
 -- 
 2.31.1
