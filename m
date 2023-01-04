@@ -1,71 +1,70 @@
-From: Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny@suse.com>
-Subject: Re: [PATCH] blk-cgroup: fix missing pd_online_fn() while activating
- policy
-Date: Wed, 4 Jan 2023 16:12:41 +0100
-Message-ID: <20230104151241.GA13268@blackbody.suse.cz>
-References: <20230103112833.2013432-1-yukuai1@huaweicloud.com>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCH 00/10] docs: cgroup-v1: formatting improv for "Memory
+ Resource Controller" doc
+Date: Wed, 4 Jan 2023 06:53:59 -1000
+Message-ID: <Y7WvJzquc8r81X9u@slm.duckdns.org>
+References: <20221219042209.22898-1-bagasdotme@gmail.com>
+ <87a630h5mv.fsf@meer.lwn.net>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha256;
-        protocol="application/pgp-signature"; boundary="AqsLC8rIMeq19msA"
-Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
-        t=1672845162; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=cK854pd9Zs98xPWzA1GXwHSTWLX/srzXjI6ZWiC477A=;
-        b=cH+VtVgskkQNDth3N6NwWyDS9lN1sKVg8Vn/Qi8LKSu1lriebiOJim04EXndrnDvUNug7u
-        +A76W+SQbvN0ieAmwxN+ZD5aH2sNPdMAOgFhd113uLs6EwGno5wQ1ez3+J0t1+MO1+bu1A
-        0qb7mZ9ZapFiyIPvI9PzKB68szHUApk=
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:sender:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=bbOBQVb3RdLyfUHgOO8SrdRe73a4J3V0VjVeqsiIMyg=;
+        b=EA3IfsuvB4+ngQcFgXazs9up+BHg+GXLXmIVafCOFWXPSUT8axBmcCc1JLrx5b6W1g
+         siIkRYQTpey+yElpHtfv87wOzTxE1v0zyYy3Ex6tm3thIOOa4gDPySQs03+yg6balCQx
+         qNCujaog5PzmZaRXHveJ3HYnAXxfGp/cPKgwa3pVXzBDvE03j9DPoc3cObdHkE9krfiE
+         vD/7euCAVa13V48VfRFiUeNVkDMFrV0BEofVemxwLx5Iry3H/bmcrseymZRPP1F+yyPW
+         PNFU4dOkcT52xQ3eLLHRLdsJZRRT/fAIt8ug5+5mwBK9th/QDNdlPXPJ61BMzrsAauOP
+         vTZw==
+Sender: Tejun Heo <htejun-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 Content-Disposition: inline
-In-Reply-To: <20230103112833.2013432-1-yukuai1@huaweicloud.com>
+In-Reply-To: <87a630h5mv.fsf-K7Oyngvb+qHk1uMJSBkQmQ@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-To: Yu Kuai <yukuai1@huaweicloud.com>
-Cc: tj@kernel.org, josef@toxicpanda.com, axboe@kernel.dk, cgroups@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, yukuai3@huawei.com, yi.zhang@huawei.com, yangerkun@huawei.com
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Jonathan Corbet <corbet-T1hC0tSOHrs@public.gmane.org>
+Cc: Bagas Sanjaya <bagasdotme-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Linux Memory Management List <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 
+On Mon, Jan 02, 2023 at 04:35:20PM -0700, Jonathan Corbet wrote:
+> Bagas Sanjaya <bagasdotme-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org> writes:
+> 
+> > "Memory Resource Controller" CGroup v1 documentation has been in reST
+> > since 99c8b231ae6c6c ("docs: cgroup-v1: convert docs to ReST and rename to *.rst"). The current doc look is kinda ugly, so improve the formatting (only
+> > htmldocs is tested).
+> >
+> > The first patch is a fix for recently reported htmldocs warning, which can
+> > be pickup separately from rest of the series.
+> >
+> > Bagas Sanjaya (10):
+> >   docs: cgroup-v1: extend underline of section 8
+> >   docs: cgroup-v1: replace custom note constructs with appropriate
+> >     admonition blocks
+> >   docs: cgroup-v1: wrap remaining admonitions in admonition blocks
+> >   docs: cgroup-v1: use code block for locking order schema
+> >   docs: cgroup-v1: fix footnotes
+> >   docs: cgroup-v1: move hierarchy of accounting caption
+> >   docs: cgroup-v1: use bullet lists for list of stat file tables
+> >   docs: cgroup-v1: use make swap extension subsections subsections
+> >   docs: cgroup-v1: add internal cross-references
+> >   docs: cgroup-v1: use numbered lists for user interface setup
+> >
+> >  .../admin-guide/cgroup-v1/cgroups.rst         |   2 +
+> >  .../admin-guide/cgroup-v1/memory.rst          | 290 ++++++++++--------
+> >  2 files changed, 158 insertions(+), 134 deletions(-)
+> 
+> Tejun, do you have an opinion on these?  I'm not really sure we need to
+> be tweaking the v1 docs at this point, but I don't see anything in here
+> that seems harmful either...
 
---AqsLC8rIMeq19msA
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+One of the patches doesn't apply because it's against -next (it's
+referencing -next sha1 too) and the series feels a bit overly elaborate but,
+I mean, why not? I was planning to pick up the series after the holidays
+unless you wanna route it through the doc tree.
 
-Hello.
+Thanks.
 
-On Tue, Jan 03, 2023 at 07:28:33PM +0800, Yu Kuai <yukuai1@huaweicloud.com>=
- wrote:
-> If the policy defines pd_online_fn(), it should be called after
-> pd_init_fn(), like blkg_create().
-
-Is this based only on code review or has it some negative effects?
-
-I assume this would affect hot-plugged (read after cgroup creation) devices.
-
-I took a cursory look at:
-
-	blkcg_init_disk
-	  blkg_create
-	    pol->pd_init_fn(blkg->pd[i]);
-	    pol->pd_online_fn(blkg->pd[i]);
-	  blk_throtl_init
-	    blkcg_activate_policy
-	      pol->pd_init_fn(blkg->pd[i]);
-	      ?? pol->pd_online_fn(blkg->pd[i]);
-
-I.e. the pd_online_fn is already called and pd_init_fn is called 2nd
-time?=20
-
-Thanks,
-Michal
-
---AqsLC8rIMeq19msA
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-
------BEGIN PGP SIGNATURE-----
-
-iHUEARYIAB0WIQTrXXag4J0QvXXBmkMkDQmsBEOquQUCY7WXZwAKCRAkDQmsBEOq
-uYzCAQCQJvItX+0rH8KzvN8r0AYCi6gTM5ah+aXAYQr8dUNElAD/e8CzXJ5O5Duv
-Pv8irMcwqhh3xMyMa381dZ2QS/G2iAo=
-=m4Pb
------END PGP SIGNATURE-----
-
---AqsLC8rIMeq19msA--
+-- 
+tejun
