@@ -1,103 +1,115 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH v3 4/5] blk-iocost: fix divide by 0 error in calc_lcoefs()
-Date: Wed, 4 Jan 2023 11:54:04 -1000
-Message-ID: <Y7X1fFO4UP7QnwkC@slm.duckdns.org>
-References: <20221226085859.2701195-1-yukuai1@huaweicloud.com>
- <20221226085859.2701195-5-yukuai1@huaweicloud.com>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCH v3] blk-throtl: Introduce sync and async queues for
+ blk-throtl
+Date: Wed, 4 Jan 2023 12:11:58 -1000
+Message-ID: <Y7X5rsnYCAAYRGQd@slm.duckdns.org>
+References: <20221226130505.7186-1-hanjinke.666@bytedance.com>
 Mime-Version: 1.0
-Return-path: <linux-block-owner@vger.kernel.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20210112;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:sender:from:to:cc:subject:date:message-id
          :reply-to;
-        bh=Sj90lDqlFKxEDVLKZWeE4EHCh7ABoWinmRYd1NYrBKs=;
-        b=q3KzqC+gP9yLfE3aszoMQ7HEr0XeZw3R7grDqDP7d4QVjYR9LM/P8JyWUSF/pHbHEw
-         PJRl86/tE5xksAbgnZo5CNML6uwGSP5uBw5w5jb+o7vqkXDR5SF5rVqW9LOBhwPaNcVd
-         AkN2NY+dcNhh3cVDfC+x2eGxh/cPI2/6KBaEmEN7RhrvA9eFvzLuxkOSHWMT9utuU+C5
-         60ywfJkB2KdMFKZ1E1Ckyl3MeMoBOMGFCsEZ//y5XSNozt5WpabZW0sFLuqr74IHTmUW
-         sMbGNeSq01e5OIKeizSnpThputbvC/3Da1hRa+FXDINniKdMSekabCHB6xJPJDNt7zDr
-         9DFw==
-Sender: Tejun Heo <htejun@gmail.com>
+        bh=pKNXM54CWmj3ArGU8axmSVIl3xxiHyUVTW8v6DzGRHA=;
+        b=XeyuieaOtOOzRKGFjqn1IrRy3FbUpNBsXgm5p31jD6s62WfLwgMNey9QWnbRAniiTI
+         ffWLGD3JyLqTrn3kDeC6Ye79OjQ9b6aI1KxXAOg5mJ3cnwHIaz/XNdSIgPHgKy092C/9
+         z/dU/KUeru7A2hoGC84bFrOi1V8+5haTDs+DANlEuNy538SPL7H6GGtJAlBRJoSfsWdV
+         Q5EHgRKCpgfbJ0J0+VAKOYZIV9+y4JrXs1V78W16MvAFzweAYYPwAeOe3Zszj6osT6jl
+         1qtpRy83+l5cPjnq5rwOlsAona6qhEYXLVJlPd/jFHHWHQMNjHm+7F8OCm59Q09zUY3F
+         CrIg==
+Sender: Tejun Heo <htejun-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 Content-Disposition: inline
-In-Reply-To: <20221226085859.2701195-5-yukuai1@huaweicloud.com>
+In-Reply-To: <20221226130505.7186-1-hanjinke.666-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Yu Kuai <yukuai1@huaweicloud.com>
-Cc: josef@toxicpanda.com, axboe@kernel.dk, cgroups@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, yukuai3@huawei.com, yi.zhang@huawei.com
+To: Jinke Han <hanjinke.666-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
+Cc: josef-DigfWCa+lFGyeJad7bwFQA@public.gmane.org, axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, yinxin.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org
 
-On Mon, Dec 26, 2022 at 04:58:58PM +0800, Yu Kuai wrote:
-> From: Li Nan <linan122@huawei.com>
-> 
-> echo max of u64 to cost.model can cause divide by 0 error.
-> 
->   # echo 8:0 rbps=18446744073709551615 > /sys/fs/cgroup/io.cost.model
-> 
->   divide error: 0000 [#1] PREEMPT SMP
->   RIP: 0010:calc_lcoefs+0x4c/0xc0
->   Call Trace:
->    <TASK>
->    ioc_refresh_params+0x2b3/0x4f0
->    ioc_cost_model_write+0x3cb/0x4c0
->    ? _copy_from_iter+0x6d/0x6c0
->    ? kernfs_fop_write_iter+0xfc/0x270
->    cgroup_file_write+0xa0/0x200
->    kernfs_fop_write_iter+0x17d/0x270
->    vfs_write+0x414/0x620
->    ksys_write+0x73/0x160
->    __x64_sys_write+0x1e/0x30
->    do_syscall_64+0x35/0x80
->    entry_SYSCALL_64_after_hwframe+0x63/0xcd
-> 
-> calc_lcoefs() uses the input value of cost.model in DIV_ROUND_UP_ULL,
-> overflow would happen if bps plus IOC_PAGE_SIZE is greater than
-> ULLONG_MAX, it can cause divide by 0 error.
-> 
-> Fix the problem by setting basecost
-> 
-> Signed-off-by: Li Nan <linan122@huawei.com>
-> Signed-off-by: Yu Kuai <yukuai3@huawei.com>
-> ---
->  block/blk-iocost.c | 10 +++++++---
->  1 file changed, 7 insertions(+), 3 deletions(-)
-> 
-> diff --git a/block/blk-iocost.c b/block/blk-iocost.c
-> index f8726e20da20..c6b39024117b 100644
-> --- a/block/blk-iocost.c
-> +++ b/block/blk-iocost.c
-> @@ -866,9 +866,13 @@ static void calc_lcoefs(u64 bps, u64 seqiops, u64 randiops,
->  
->  	*page = *seqio = *randio = 0;
->  
-> -	if (bps)
-> -		*page = DIV64_U64_ROUND_UP(VTIME_PER_SEC,
-> -					   DIV_ROUND_UP_ULL(bps, IOC_PAGE_SIZE));
-> +	if (bps) {
-> +		if (bps >= U64_MAX - IOC_PAGE_SIZE)
-> +			*page = 1;
-> +		else
-> +			*page = DIV64_U64_ROUND_UP(VTIME_PER_SEC,
-> +					DIV_ROUND_UP_ULL(bps, IOC_PAGE_SIZE));
+Hello,
+
+On Mon, Dec 26, 2022 at 09:05:05PM +0800, Jinke Han wrote:
+>  static void throtl_pending_timer_fn(struct timer_list *t);
+> +static inline struct bio *throtl_qnode_bio_list_pop(struct throtl_qnode *qn);
+
+Just define it before the first usage? Also, I think it'd be fine to let the
+compiler decide whether to inline.
+
+> +#define BLK_THROTL_SYNC(bio) (bio->bi_opf & (REQ_SYNC | REQ_META | REQ_PRIO))
+
+Nitpick but the above is used only in one place. Does it help to define it
+as a macro?
+
+> +/**
+> + * throtl_qnode_bio_peek - peek a bio for a qn
+> + * @qn: the qnode to peek from
+> + *
+> + * For read qn, just peek bio from the SYNC queue and return.
+> + * For write qn, we first ask the next_to_disp for bio and will pop a bio
+> + * to fill it if it's NULL. The next_to_disp is used to pin the bio for
+> + * next to dispatch. It is necessary. In the dispatching  process, a peeked
+> + * bio may can't be dispatched due to lack of budget and has to wait, the
+> + * dispatching process may give up and the spin lock of the request queue
+> + * will be released. New bio may be queued in as the spin lock were released.
+> + * When it's time to dispatch the waiting bio, another bio may be selected to
+> + * check the limit and may be dispatched. If the dispatched bio is smaller
+> + * than the waiting bio, the bandwidth may be hard to satisfied as we may
+> + * trim the slice after each dispatch.
+> + * So pinning the next_to_disp to make sure that the waiting bio and the
+> + * dispatched one later always the same one in case that the spin lock of
+> + * queue was released and re-holded.
+
+Can you please format it better and proof-read it. I can mostly understand
+what it's saying but it can be improved quite a bit. Can you elaborate the
+starvation scenario further? What about the [a]sync queue split makes this
+more likely?
+
+> +/**
+> + * throtl_qnode_bio_pop: pop a bio from sync/async queue
+> + * @qn: the qnode to pop a bio from
+> + *
+> + * For write io qn, the target queue to pop was determined by the disp_sync_cnt.
+> + * Try to pop bio from target queue, fetch the bio and return it when it is not
+> + * empty. If the target queue empty, pop bio from another queue instead.
+
+How about:
+
+        For reads, always pop from the ASYNC queue. For writes, target SYNC
+        or ASYNC queue based on disp_sync_cnt. If empty, try the other
+        queue.
+
+> +static inline struct bio *throtl_qnode_bio_list_pop(struct throtl_qnode *qn)
+> +{
+> +	struct bio *bio;
+> +	int from = SYNC;
+> +
+> +	if (qn->disp_sync_cnt == THROTL_SYNC_FACTOR)
+> +		from = ASYNC;
+
+?: often is less readable but I wonder whether it'd be more readable here:
+
+        from = qn->disp_sync_cnt == THROTL_SYNC_FACTOR ? ASYNC : SYNC;
+
+> +
+> +	bio = bio_list_pop(&qn->bios[from]);
+> +	if (!bio) {
+> +		from = 1 - from;
+> +		bio = bio_list_pop(&qn->bios[from]);
 > +	}
+> +
+> +	if ((qn->disp_sync_cnt < THROTL_SYNC_FACTOR) &&
+> +		(from == SYNC))
 
-This is a nitpick but wouldn't something like the following be easier to
-understand?
+Why the line break? Also, this may be more personal preference but I'm not
+sure the parentheses are helping much here.
 
-        if (bps) {
-                u64 bps_pages = DIV_ROUND_UP_ULL(bps, IOC_PAGE_SIZE);
-
-                if (bps_pages)
-                        *pages = DIV64_U64_ROUND_UP(VTIME_PER_SEC, bps_pages);
-                else
-                        *pages = 1;
-        }
-
-Out of scope but this seems more like a bug in the DIV macros. The fact that
-it returns 0 is an implementation artifact more than anything and a
-surprising one at that as it ends up returning 0 for an input that a regular
-division would handle just fine and the rounded up result fits well within
-the result type.
+> +		qn->disp_sync_cnt++;
+> +	else
+> +		qn->disp_sync_cnt = 0;
+> +
+> +	return bio;
+> +}
 
 Thanks.
 
