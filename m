@@ -1,53 +1,62 @@
-From: Bagas Sanjaya <bagasdotme@gmail.com>
-Subject: [PATCH v2 3/9] docs: cgroup-v1: use code block for locking order schema
-Date: Thu,  5 Jan 2023 20:16:28 +0700
-Message-ID: <20230105131633.553574-4-bagasdotme@gmail.com>
+From: Bagas Sanjaya <bagasdotme-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Subject: [PATCH v2 5/9] docs: cgroup-v1: move hierarchy of accounting caption
+Date: Thu,  5 Jan 2023 20:16:30 +0700
+Message-ID: <20230105131633.553574-6-bagasdotme@gmail.com>
 References: <20230105131633.553574-1-bagasdotme@gmail.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Return-path: <linux-doc-owner@vger.kernel.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20210112;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=XHKqH/mTeMAtJX+k1fwhOFwTW56tZzYBJVqR/bzkhlc=;
-        b=XkW/T1soWfm4Rl1XX1uhjbNQfx1mx3n00vAID2EM9vtxWbYXinFO4hH0F/Sh76u8Nt
-         T+gnK2msfrDFO1KmUccj24rF4UB8vifHeM6vVJGG4BqzWmkF5LR+KlioizvkKNFhtzGI
-         DqZ08ByEgPPDNotBdzpS9VmCEyShtWZsvx3n8EAJPOHu1HX5kpNBORHmuWbj2c2tqTYV
-         kKkA+xB6Fxx4Jc5iZgdCkvewR5ElvC1Q8mCbRjR5m0aVPDHOhmprl5Z6bpMJhV7aZOd2
-         jqwuT8bQYA/2qPzKPL/nYTtz+E24L3VfdAWrshv08AHCMMHGZLUBryatFJX7kP89y92r
-         Wa8g==
-In-Reply-To: <20230105131633.553574-1-bagasdotme@gmail.com>
-X-Developer-Signature: v=1; a=openpgp-sha256; l=903; i=bagasdotme@gmail.com; h=from:subject; bh=IgqigKn9DkjPklU4lRTNbnqTt63GfYY/akiSBYrKIlo=; b=owGbwMvMwCX2bWenZ2ig32LG02pJDMnbzq4XDnK5Z2Dspp/XK6O/hDH/vy9jfrHcT7XO5Wcey2i5 SQp3lLIwiHExyIopskxK5Gs6vctI5EL7WkeYOaxMIEMYuDgFYCICVQz/a/lu5hjddea89ev3r8tRkp XRb02+MnYu/XFlWaNkJntyKyPDAc1vbdt6LNecrSx/q+j+h/XJHfs98c6Fk0yPFO7av6OBHQA=
-X-Developer-Key: i=bagasdotme@gmail.com; a=openpgp; fpr=701B806FDCA5D3A58FFB8F7D7C276C64A5E44A1D
+        bh=wkiZx8G6kdpCzam2vHq1Krq/P436bxFUUtcX4wR/YOk=;
+        b=BAV6F8Yry5m7pE15IbeDN664RrsiJsNm9vbYob0JFJ2Ju/wOA0FWzzb/8xhmm9hA7C
+         v/izEcjV1ZWW0M0eYpLFDCeiib6kON4L2EJObpomid/HgCPtHZuwpF/MZbVzgOOMVBxA
+         2eQ/j3CEQDk9/feT47ZDi8n0VmyCnOLONMBO9N6B87pyCEjB3dZEEQGjkaaTnHQVfsB1
+         9iSMexDvgOSQsSASKop+FTY3ugsqALhgHQCstrTJtedG0BviKysorT5ivSoL2VR9qTuN
+         r2nMIplNNT4c3bC9AXof2DUjXncmHxPhxjzVUz8sHd3mIA/hwGrQAcq953i+u4hITGhc
+         hlaA==
+In-Reply-To: <20230105131633.553574-1-bagasdotme-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+X-Developer-Signature: v=1; a=openpgp-sha256; l=1218; i=bagasdotme-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org; h=from:subject; bh=TtcaCybTo5E7/N6tLTMu/WowHmwrmC15HAxU0Etkee0=; b=owGbwMvMwCX2bWenZ2ig32LG02pJDMnbzm6QcbE4K32OSZZjtpvtW73vYXYp6j8ub5d/5Jc/icVt 0/PJHaUsDGJcDLJiiiyTEvmaTu8yErnQvtYRZg4rE8gQBi5OAZjIoiCG/67NdXrclae/rl4qPj1HKP 1KjaXzB8dJLA0uxtGtGaKxdxgZHjisMcn4dnP232h9H7YC7h1W0yar8uexCGecca19c8yFCwA=
+X-Developer-Key: i=bagasdotme-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org; a=openpgp; fpr=701B806FDCA5D3A58FFB8F7D7C276C64A5E44A1D
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Linux CGroups <cgroups@vger.kernel.org>, Linux Documentation <linux-doc@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, Linux Memory Management List <linux-mm@kvack.org>
-Cc: Tejun Heo <tj@kernel.org>, Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, Jonathan Corbet <corbet@lwn.net>, Michal Hocko <mhocko@suse.com>, Andrew Morton <akpm@linux-foundation.org>, Hugh Dickins <hughd@google.com>, Shakeel Butt <shakeelb@google.com>, Bagas Sanjaya <bagasdotme@gmail.com>
+To: Linux CGroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux Documentation <linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux Memory Management List <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>
+Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Jonathan Corbet <corbet-T1hC0tSOHrs@public.gmane.org>, Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Bagas Sanjaya <bagasdotme-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 
-The locking order schema is a figure (like diagram), which should have
-been formatted with literal code block for consistency with other
-figures.
+The caption for hierarchy of accounting figure is in the code block,
+which is quite odd. Move the caption into :caption: option of
+code-block:: directive instead.
 
-Signed-off-by: Bagas Sanjaya <bagasdotme@gmail.com>
+Signed-off-by: Bagas Sanjaya <bagasdotme-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 ---
- Documentation/admin-guide/cgroup-v1/memory.rst | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ Documentation/admin-guide/cgroup-v1/memory.rst | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
 diff --git a/Documentation/admin-guide/cgroup-v1/memory.rst b/Documentation/admin-guide/cgroup-v1/memory.rst
-index b0353c40639b7e..2b807fc128c662 100644
+index 8d1cedcf44f6ea..4d96a5bbbfcfdc 100644
 --- a/Documentation/admin-guide/cgroup-v1/memory.rst
 +++ b/Documentation/admin-guide/cgroup-v1/memory.rst
-@@ -287,7 +287,7 @@ When oom event notifier is registered, event will be delivered.
- 2.6 Locking
- -----------
+@@ -147,7 +147,8 @@ specific data structure (mem_cgroup) associated with it.
+ 2.2. Accounting
+ ---------------
  
--Lock order is as follows:
-+Lock order is as follows::
+-::
++.. code-block::
++   :caption: Figure 1: Hierarchy of Accounting
  
-   Page lock (PG_locked bit of page->flags)
-     mm->page_table_lock or split pte_lock
+ 		+--------------------+
+ 		|  mem_cgroup        |
+@@ -167,7 +168,6 @@ specific data structure (mem_cgroup) associated with it.
+            |               |           |               |
+            +---------------+           +---------------+
+ 
+-             (Figure 1: Hierarchy of Accounting)
+ 
+ 
+ Figure 1 shows the important aspects of the controller
 -- 
 An old man doll... just what I always wanted! - Clara
 
