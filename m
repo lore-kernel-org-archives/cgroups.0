@@ -1,55 +1,53 @@
-From: Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny@suse.com>
-Subject: Re: [PATCH] blk-cgroup: fix missing pd_online_fn() while activating
- policy
-Date: Thu, 5 Jan 2023 11:45:08 +0100
-Message-ID: <20230105104241.GA16920@blackbody.suse.cz>
-References: <20230103112833.2013432-1-yukuai1@huaweicloud.com>
- <20230104151241.GA13268@blackbody.suse.cz>
- <4b559d1d-31e4-6049-4548-451bf7afb4f4@huaweicloud.com>
+From: Bagas Sanjaya <bagasdotme@gmail.com>
+Subject: [PATCH v2 3/9] docs: cgroup-v1: use code block for locking order schema
+Date: Thu,  5 Jan 2023 20:16:28 +0700
+Message-ID: <20230105131633.553574-4-bagasdotme@gmail.com>
+References: <20230105131633.553574-1-bagasdotme@gmail.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha256;
-        protocol="application/pgp-signature"; boundary="mojUlQ0s9EVzWg2t"
-Return-path: <linux-block-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <4b559d1d-31e4-6049-4548-451bf7afb4f4@huaweicloud.com>
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-doc-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=XHKqH/mTeMAtJX+k1fwhOFwTW56tZzYBJVqR/bzkhlc=;
+        b=XkW/T1soWfm4Rl1XX1uhjbNQfx1mx3n00vAID2EM9vtxWbYXinFO4hH0F/Sh76u8Nt
+         T+gnK2msfrDFO1KmUccj24rF4UB8vifHeM6vVJGG4BqzWmkF5LR+KlioizvkKNFhtzGI
+         DqZ08ByEgPPDNotBdzpS9VmCEyShtWZsvx3n8EAJPOHu1HX5kpNBORHmuWbj2c2tqTYV
+         kKkA+xB6Fxx4Jc5iZgdCkvewR5ElvC1Q8mCbRjR5m0aVPDHOhmprl5Z6bpMJhV7aZOd2
+         jqwuT8bQYA/2qPzKPL/nYTtz+E24L3VfdAWrshv08AHCMMHGZLUBryatFJX7kP89y92r
+         Wa8g==
+In-Reply-To: <20230105131633.553574-1-bagasdotme@gmail.com>
+X-Developer-Signature: v=1; a=openpgp-sha256; l=903; i=bagasdotme@gmail.com; h=from:subject; bh=IgqigKn9DkjPklU4lRTNbnqTt63GfYY/akiSBYrKIlo=; b=owGbwMvMwCX2bWenZ2ig32LG02pJDMnbzq4XDnK5Z2Dspp/XK6O/hDH/vy9jfrHcT7XO5Wcey2i5 SQp3lLIwiHExyIopskxK5Gs6vctI5EL7WkeYOaxMIEMYuDgFYCICVQz/a/lu5hjddea89ev3r8tRkp XRb02+MnYu/XFlWaNkJntyKyPDAc1vbdt6LNecrSx/q+j+h/XJHfs98c6Fk0yPFO7av6OBHQA=
+X-Developer-Key: i=bagasdotme@gmail.com; a=openpgp; fpr=701B806FDCA5D3A58FFB8F7D7C276C64A5E44A1D
 List-ID: <cgroups.vger.kernel.org>
-To: Yu Kuai <yukuai1@huaweicloud.com>
-Cc: tj@kernel.org, josef@toxicpanda.com, axboe@kernel.dk, cgroups@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, yi.zhang@huawei.com, yangerkun@huawei.com, "yukuai (C)" <yukuai3@huawei.com>
+Content-Type: text/plain; charset="us-ascii"
+To: Linux CGroups <cgroups@vger.kernel.org>, Linux Documentation <linux-doc@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, Linux Memory Management List <linux-mm@kvack.org>
+Cc: Tejun Heo <tj@kernel.org>, Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, Jonathan Corbet <corbet@lwn.net>, Michal Hocko <mhocko@suse.com>, Andrew Morton <akpm@linux-foundation.org>, Hugh Dickins <hughd@google.com>, Shakeel Butt <shakeelb@google.com>, Bagas Sanjaya <bagasdotme@gmail.com>
 
+The locking order schema is a figure (like diagram), which should have
+been formatted with literal code block for consistency with other
+figures.
 
---mojUlQ0s9EVzWg2t
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+Signed-off-by: Bagas Sanjaya <bagasdotme@gmail.com>
+---
+ Documentation/admin-guide/cgroup-v1/memory.rst | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-On Thu, Jan 05, 2023 at 09:43:02AM +0800, Yu Kuai <yukuai1@huaweicloud.com> wrote:
-> This is based only on code review, currently the only negative effects
-> is that root blkg from blk-throtl won't call pd_online_fn().
+diff --git a/Documentation/admin-guide/cgroup-v1/memory.rst b/Documentation/admin-guide/cgroup-v1/memory.rst
+index b0353c40639b7e..2b807fc128c662 100644
+--- a/Documentation/admin-guide/cgroup-v1/memory.rst
++++ b/Documentation/admin-guide/cgroup-v1/memory.rst
+@@ -287,7 +287,7 @@ When oom event notifier is registered, event will be delivered.
+ 2.6 Locking
+ -----------
+ 
+-Lock order is as follows:
++Lock order is as follows::
+ 
+   Page lock (PG_locked bit of page->flags)
+     mm->page_table_lock or split pte_lock
+-- 
+An old man doll... just what I always wanted! - Clara
 
-Good, that's a NOP and there are no other uses of pd_online_fn.
-
-I wonder are the separate pd_init_fn and pd_online_fn callbacks
-necessary today?
-(IOW your fixup is a good catch and looks correct to me; I'd suggest
-more of a clean up. Shall I look into that?)
-
-> No, this is not true, before blkcg_activate_policy() is called,
-> blkg_create() won't see this policy, hence pd_init_fn/pd_online_fn won't
-> be called from blkg_create().
-
-Thanks, I missed the q->blkcg_pols bit.
-
-Michal
-
---mojUlQ0s9EVzWg2t
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-
------BEGIN PGP SIGNATURE-----
-
-iHUEARYIAB0WIQTrXXag4J0QvXXBmkMkDQmsBEOquQUCY7aqMgAKCRAkDQmsBEOq
-udG/AP443o4fnN2JypjVdH6EZJPRY/O5O0N3ywlBupWqtBkSeQD8DIJhUF+tVjlL
-zXTyjDqKPgE2Ri3wEWklUqmarfiGJg4=
-=7FAl
------END PGP SIGNATURE-----
-
---mojUlQ0s9EVzWg2t--
