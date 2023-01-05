@@ -1,50 +1,66 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH] cgroup/cpuset: no need to explicitly init a global
- static variable
-Date: Wed, 4 Jan 2023 12:21:54 -1000
-Message-ID: <Y7X8Asv25sntht6t@slm.duckdns.org>
-References: <20221220151415.856093-1-neelx@redhat.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH -next 3/4] block/rq_qos: use a global mutex to protect
+ rq_qos apis
+Date: Wed, 4 Jan 2023 14:28:12 -1000
+Message-ID: <Y7YZnM/nqb0gxOei@slm.duckdns.org>
+References: <20230104085354.2343590-1-yukuai1@huaweicloud.com>
+ <20230104085354.2343590-4-yukuai1@huaweicloud.com>
+ <Y7XyIzGptuqO8EAt@slm.duckdns.org>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20210112;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:sender:from:to:cc:subject:date:message-id
          :reply-to;
-        bh=B/3ppUmh4bmqybcFcsNaCu/D7XFzMdaZVgO4yNK9uS8=;
-        b=m3Sl/7J9Eg2xJBzdmZbdAe60sOL/fthI5hRvSskmpX6OHx15gV3HeMT50kSGqypuOh
-         FCbow/o8gEu5cXqV5g56v5bzEP2U6cGZuJNvfRWaO+dLFhB5eKEX571YWfow8VgC0Vfu
-         hCngLTiyWszq+yaoa8COFsKDVGPnTZJnNFt3olQhC/dRejvoy6Qh5WUbe+qDJ0YQ/DzM
-         8+p2WwcZXk2+nwhC3EcLF0Tw0EClGyI5FwPJSFUoiBXpN5qKRXPQry85sGYRy+4ez/j0
-         M17e5MNoHlAmPyA/fHz4Gkh689AVXyJFuGxYRuSEfNg8daWv61TBk/mopeymvSnfm4AR
-         pKjQ==
-Sender: Tejun Heo <htejun-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+        bh=f4sAIIgxsgcM6zCelHdPEl6Pb++H0W0grrXecdKrLDE=;
+        b=jpt0IjXHlEgXNsAkpNEBgOwddPdEdRQokPy72ekZwKiT9h1afZv3+0Y4oXUI/ls7Da
+         M+lJJZOATHkcXS8p4V510taPyr9xXF7StKG/iLf/FyRk4QB5KkHnSty9uIoyvOkVEeZp
+         BjWy7mnsoa+F5PzRBvplc7mgoYOJQneKp8y4lVh70aA2iDkRWv1Gk6jCaojSw4D9E2Bk
+         3F2PBjQt2WR6/GrDvKG05PY2M2awwB5cviAxOW/rjtO1YHw+QghI+hb+CDctmysNGaIk
+         hHcK1Qf9kK0iFdF3AGULMaOcqtu7EQUufxbz6ldBgJi+mvtPViLghN4F9jUJtZzyrGgO
+         3kvA==
+Sender: Tejun Heo <htejun@gmail.com>
 Content-Disposition: inline
-In-Reply-To: <20221220151415.856093-1-neelx-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+In-Reply-To: <Y7XyIzGptuqO8EAt@slm.duckdns.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Daniel Vacek <neelx-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Cc: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Yu Kuai <yukuai1@huaweicloud.com>
+Cc: hch@infradead.org, josef@toxicpanda.com, axboe@kernel.dk, cgroups@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, yukuai3@huawei.com, yi.zhang@huawei.com, yangerkun@huawei.com
 
-On Tue, Dec 20, 2022 at 04:14:15PM +0100, Daniel Vacek wrote:
-> cpuset_rwsem is a static variable. It's initialized at build time and so
-> there's no need for explicit runtime init leaking one percpu int.
+Hello, again.
+
+On Wed, Jan 04, 2023 at 11:39:47AM -1000, Tejun Heo wrote:
+> > 2) rq_qos_add() and blkcg_activate_policy() is not atomic, if
+> >    rq_qos_exit() is done before blkcg_activate_policy(),
+> >    null-ptr-deference can be triggered.
 > 
-> Signed-off-by: Daniel Vacek <neelx-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+> I'm not sure this part does. I think it'd be better to guarantee that device
+> destruction is blocked while these configuration operations are in progress
+> which can be built into blkg_conf helpers.
 
-Applied to cgroup/for-6.2-fixes with the following description:
+A bit more explanation:
 
-    cgroup/cpuset: no need to explicitly init a global static variable
-    
-    cpuset_rwsem is a static variable defined with DEFINE_STATIC_PERCPU_RWSEM().
-    It's initialized at build time and so there's no need for explicit runtime
-    init leaking one percpu int.
-    
-    Signed-off-by: Daniel Vacek <neelx-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-    Reviewed-by: Aaron Tomlin <atomlin-OvwSCxsgXNNBDgjK7y7TUQ@public.gmane.org>
-    Acked-by: Mukesh Ojha <quic_mojha-jfJNa2p1gH1BDgjK7y7TUQ@public.gmane.org>
-    Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Usually, this would be handled in the core - when a device goes away, its
+sysfs files get shut down before stuff gets freed and the sysfs file removal
+waits for in-flight operations to finish and prevents new ones from
+starting, so we don't have to worry about in-flight config file operations
+racing against device removal.
+
+Here, the problem isn't solved by that because the config files live on
+cgroupfs and their lifetimes are not coupled with the block devices'. So, we
+need to synchronize manually. And, given that, the right place to do is the
+blkg config helpers cuz they're the ones which establish the connection
+between cgroup and block layer.
+
+Can you please take a look at the following patchset I just posted:
+
+  https://lkml.kernel.org/r/20230105002007.157497-1-tj@kernel.org
+
+After that, all these configuration operations are wrapped between
+blkg_conf_init() and blkg_conf_exit() which probably are the right place to
+implement the synchronization.
 
 Thanks.
 
