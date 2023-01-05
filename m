@@ -1,176 +1,63 @@
 From: Bagas Sanjaya <bagasdotme@gmail.com>
-Subject: [PATCH v2 1/9] docs: cgroup-v1: replace custom note constructs with appropriate admonition blocks
-Date: Thu,  5 Jan 2023 20:16:26 +0700
-Message-ID: <20230105131633.553574-2-bagasdotme@gmail.com>
+Subject: [PATCH v2 7/9] docs: cgroup-v1: make swap extension subsections subsections
+Date: Thu,  5 Jan 2023 20:16:32 +0700
+Message-ID: <20230105131633.553574-8-bagasdotme@gmail.com>
 References: <20230105131633.553574-1-bagasdotme@gmail.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Return-path: <linux-doc-owner@vger.kernel.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20210112;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=kEyDN1DoPB92rHtz9Bu6YtukEjhpZoR1SaNfSfYIFW4=;
-        b=KZ7VuUCIf/RIhfW0Ha0Xh1OvaTK8RR2Ace8AZf12WVCOnGaDE++Tuix77O0TG+tqiI
-         UWbd7O/vXR0K9zscx6A2zOnv4chr/TVaiURpCNyhxVrNgpvVq+IGIwz7lfE/M1oPlINT
-         NOImTaNK7y8SYUX9EPUpfeB+pyGG+UOwZJWLFHpvj9UKA2txvhk4n80kTWxu4ASs586K
-         ZZEhS3Z5gKACg1SwAWYMQXZ6lTapo9WARtjcGi9fJorXpCMpiMmKe1majuwpBybQ57ct
-         aDlKlivxjCkkztxSPZMmfGBDQO3qVzGV7zDAJZOreudO+D52wAYUJ/ZO0UBifALXXsuJ
-         P4xw==
+        bh=rGNG7VnZJT5NrQNN6BhNmvq0EdhUnj+GOmFvACaLTXk=;
+        b=lsPMxNWnGO17JgyijK7xfpZgFbuz6KdZizssrHuAy+1vnSLEkHZ63zNwolvfA1EZEs
+         Yopw5rWH6hUbO2tHXYC4UMNhlDh78F3wuO5FOS6QUvLG84FLyKpKHbp7hgUK0mrDE266
+         XFK59lSLCDz2YVDChTwwU7qUKHhu1uIN5laO41h+2Xb5hv3qgLeG3wzzfnlc0bTq9PX3
+         B9H6zlDTXgbwY9BgPwwxV0LscCEfKgt5D2hFe+ZZT8ELPkfmsPIC1zLGoCFfwT9ptYRJ
+         OiI/zEhACIbeIQZj4gX3ZNOIZWwBHgLZd5nSmrNibY2Y9ohvzqWNBRiWXIYx71tYtErD
+         dHeA==
 In-Reply-To: <20230105131633.553574-1-bagasdotme@gmail.com>
-X-Developer-Signature: v=1; a=openpgp-sha256; l=5301; i=bagasdotme@gmail.com; h=from:subject; bh=DlZUnry3AswBM9GzCcO9SGcvMxRqxgXh0Yg3NkkBNXs=; b=owGbwMvMwCX2bWenZ2ig32LG02pJDMnbzq6zkfwiJlWTZq4w3UpyzsfuB5u2XBOcKPWCf9efiZ8l TRiEO0pZGMS4GGTFFFkmJfI1nd5lJHKhfa0jzBxWJpAhDFycAjCRxUsZfrPHF16fd5hv0fNbsQuerm Hv9+Q/dKNXRJdnxrNENY8Iw9UM/9359n8NbLm8K+J17eds1aCraype/s+5+KVnt4jYtvkLeVgB
+X-Developer-Signature: v=1; a=openpgp-sha256; l=1657; i=bagasdotme@gmail.com; h=from:subject; bh=uE+t77fun6ccoXEmhoP8hbo16qhF0xOO2tCNjGXW6A8=; b=owGbwMvMwCX2bWenZ2ig32LG02pJDMnbzm5YGvPgaJDfiTkV7UzLnq4MEK/bPdWvcsokjUbebY/v rmbK7ShlYRDjYpAVU2SZlMjXdHqXkciF9rWOMHNYmUCGMHBxCsBEqp0Y/ulb/hKJai3vXfLFNSWXae H1vUlBd6u7eT2tliVyViYL5jP84arouyobqPV75r2/0RX/O3V5z9t+3Sd1Y83q6smtj7ZZcgEA
 X-Developer-Key: i=bagasdotme@gmail.com; a=openpgp; fpr=701B806FDCA5D3A58FFB8F7D7C276C64A5E44A1D
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 To: Linux CGroups <cgroups@vger.kernel.org>, Linux Documentation <linux-doc@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, Linux Memory Management List <linux-mm@kvack.org>
 Cc: Tejun Heo <tj@kernel.org>, Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, Jonathan Corbet <corbet@lwn.net>, Michal Hocko <mhocko@suse.com>, Andrew Morton <akpm@linux-foundation.org>, Hugh Dickins <hughd@google.com>, Shakeel Butt <shakeelb@google.com>, Bagas Sanjaya <bagasdotme@gmail.com>
 
-Admonition constructs on the documentation use definition lists, which
-isn't fit for the purpose. Replace them with appropriate blocks:
-
-  * Use caution:: for outdated document notice
-  * hint:: for memo
-  * note:: for other constructs
-  * warning:: for memory reclaim
+Subsections text of swap extension section is marked up as bold text,
+whereas making them proper subsection is more appropriate.
 
 Signed-off-by: Bagas Sanjaya <bagasdotme@gmail.com>
 ---
- .../admin-guide/cgroup-v1/memory.rst          | 58 ++++++++++---------
- 1 file changed, 31 insertions(+), 27 deletions(-)
+ Documentation/admin-guide/cgroup-v1/memory.rst | 6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
 
 diff --git a/Documentation/admin-guide/cgroup-v1/memory.rst b/Documentation/admin-guide/cgroup-v1/memory.rst
-index 60370f2c67b99c..d0d8c780cb6bd9 100644
+index 162cc26dcddb25..0e583a6f783955 100644
 --- a/Documentation/admin-guide/cgroup-v1/memory.rst
 +++ b/Documentation/admin-guide/cgroup-v1/memory.rst
-@@ -2,13 +2,13 @@
- Memory Resource Controller
- ==========================
+@@ -244,7 +244,8 @@ In this case, setting memsw.limit_in_bytes=3G will prevent bad use of swap.
+ By using the memsw limit, you can avoid system OOM which can be caused by swap
+ shortage.
  
--NOTE:
-+.. caution::
-       This document is hopelessly outdated and it asks for a complete
-       rewrite. It still contains a useful information so we are keeping it
-       here but make sure to check the current code if you need a deeper
-       understanding.
+-**why 'memory+swap' rather than swap**
++2.4.1 why 'memory+swap' rather than swap
++~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
  
--NOTE:
-+.. note::
-       The Memory Resource Controller has generically been referred to as the
-       memory controller in this document. Do not confuse memory controller
-       used here with the memory controller that is used in hardware.
-@@ -274,12 +274,12 @@ The reclaim algorithm has not been modified for cgroups, except that
- pages that are selected for reclaiming come from the per-cgroup LRU
- list.
+ The global LRU(kswapd) can swap out arbitrary pages. Swap-out means
+ to move account from memory to swap...there is no change in usage of
+@@ -252,7 +253,8 @@ memory+swap. In other words, when we want to limit the usage of swap without
+ affecting global LRU, memory+swap limit is better than just limiting swap from
+ an OS point of view.
  
--NOTE:
--  Reclaim does not work for the root cgroup, since we cannot set any
--  limits on the root cgroup.
-+.. note::
-+   Reclaim does not work for the root cgroup, since we cannot set any
-+   limits on the root cgroup.
+-**What happens when a cgroup hits memory.memsw.limit_in_bytes**
++2.4.2. What happens when a cgroup hits memory.memsw.limit_in_bytes
++~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
  
--Note2:
--  When panic_on_oom is set to "2", the whole system will panic.
-+.. note::
-+   When panic_on_oom is set to "2", the whole system will panic.
- 
- When oom event notifier is registered, event will be delivered.
- (See oom_control section)
-@@ -367,10 +367,10 @@ U != 0, K < U:
-     never greater than the total memory, and freely set U at the cost of his
-     QoS.
- 
--WARNING:
--    In the current implementation, memory reclaim will NOT be
--    triggered for a cgroup when it hits K while staying below U, which makes
--    this setup impractical.
-+    .. warning::
-+       In the current implementation, memory reclaim will NOT be triggered for
-+       a cgroup when it hits K while staying below U, which makes this setup
-+       impractical.
- 
- U != 0, K >= U:
-     Since kmem charges will also be fed to the user counter and reclaim will be
-@@ -405,16 +405,16 @@ Since now we're in the 0 cgroup, we can alter the memory limit::
- 
- 	# echo 4M > /sys/fs/cgroup/memory/0/memory.limit_in_bytes
- 
--NOTE:
--  We can use a suffix (k, K, m, M, g or G) to indicate values in kilo,
--  mega or gigabytes. (Here, Kilo, Mega, Giga are Kibibytes, Mebibytes,
--  Gibibytes.)
-+.. note::
-+   We can use a suffix (k, K, m, M, g or G) to indicate values in kilo,
-+   mega or gigabytes. (Here, Kilo, Mega, Giga are Kibibytes, Mebibytes,
-+   Gibibytes.)
- 
--NOTE:
--  We can write "-1" to reset the ``*.limit_in_bytes(unlimited)``.
-+.. note::
-+   We can write "-1" to reset the ``*.limit_in_bytes(unlimited)``.
- 
--NOTE:
--  We cannot set limits on the root cgroup any more.
-+.. note::
-+   We cannot set limits on the root cgroup any more.
- 
- ::
- 
-@@ -574,12 +574,12 @@ recent_scanned_anon	  VM internal parameter. (see mm/vmscan.c)
- recent_scanned_file	  VM internal parameter. (see mm/vmscan.c)
- ========================= ========================================
- 
--Memo:
-+.. hint::
- 	recent_rotated means recent frequency of LRU rotation.
- 	recent_scanned means recent # of scans to LRU.
- 	showing for better debug please see the code for meanings.
- 
--Note:
-+.. note::
- 	Only anonymous and swap cache memory is listed as part of 'rss' stat.
- 	This should not be confused with the true 'resident set size' or the
- 	amount of physical memory used by the cgroup.
-@@ -710,10 +710,11 @@ If we want to change this to 1G, we can at any time use::
- 
- 	# echo 1G > memory.soft_limit_in_bytes
- 
--NOTE1:
-+.. note::
-        Soft limits take effect over a long period of time, since they involve
-        reclaiming memory for balancing between memory cgroups
--NOTE2:
-+
-+.. note::
-        It is recommended to set the soft limit always below the hard limit,
-        otherwise the hard limit will take precedence.
- 
-@@ -735,17 +736,20 @@ If you want to enable it::
- 
- 	# echo (some positive value) > memory.move_charge_at_immigrate
- 
--Note:
-+.. note::
-       Each bits of move_charge_at_immigrate has its own meaning about what type
-       of charges should be moved. See 8.2 for details.
--Note:
-+
-+.. note::
-       Charges are moved only when you move mm->owner, in other words,
-       a leader of a thread group.
--Note:
-+
-+.. note::
-       If we cannot find enough space for the task in the destination cgroup, we
-       try to make space by reclaiming memory. Task migration may fail if we
-       cannot make enough space.
--Note:
-+
-+.. note::
-       It can take several seconds if you move charges much.
- 
- And if you want disable it again::
+ When a cgroup hits memory.memsw.limit_in_bytes, it's useless to do swap-out
+ in this cgroup. Then, swap-out will not be done by cgroup routine and file
 -- 
 An old man doll... just what I always wanted! - Clara
 
