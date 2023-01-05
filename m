@@ -1,98 +1,55 @@
-From: kernel test robot <lkp-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
-Subject: [tj-cgroup:for-next] BUILD SUCCESS
- 21786e5cb375a1e58a9175fee423e1d7f892d965
-Date: Thu, 05 Jan 2023 18:31:14 +0800
-Message-ID: <63b6a6f2.kedxrqkA4mpMHNvR%lkp@intel.com>
+From: Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny@suse.com>
+Subject: Re: [PATCH] blk-cgroup: fix missing pd_online_fn() while activating
+ policy
+Date: Thu, 5 Jan 2023 11:45:08 +0100
+Message-ID: <20230105104241.GA16920@blackbody.suse.cz>
+References: <20230103112833.2013432-1-yukuai1@huaweicloud.com>
+ <20230104151241.GA13268@blackbody.suse.cz>
+ <4b559d1d-31e4-6049-4548-451bf7afb4f4@huaweicloud.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1672914706; x=1704450706;
-  h=date:from:to:cc:subject:message-id:mime-version:
-   content-transfer-encoding;
-  bh=p//dgkXaSRaAXYrWVLyuFQT8CV14x392E80VhZ3qB5A=;
-  b=k+PBM7gEKZ7ggvweniU7a0flNeAlFDjini7YD4vI20g2eBLC2Mpzfx4i
-   8VXM2FP7/WK8s9TIlv3sAgWTU3xMdPY2Z2QjU/s0reyXsFxJOYZl+9CKA
-   oBgDcD3poaIyGCGAMJtkPij7y1n2Y3Nk55NopMZssZJxDgCHJGMapFdT5
-   Yh/kWwD72D6QYhEa0V2T0NNQ8lp0mMv5PPEZdgpAc1swKcdH5htnpPWxL
-   oy6lDTFNf9E0V+VYK3bOc0dMjeEg7EPXZWQGAtkZ5TC7P2+XG9tUYJ/+Y
-   B26CEf7p5o4WD7o34ldbp1vdHpCAfHe3fs+VtGp1Yo5sfItYcccdP+wtp
-   g==;
+Content-Type: multipart/signed; micalg=pgp-sha256;
+        protocol="application/pgp-signature"; boundary="mojUlQ0s9EVzWg2t"
+Return-path: <linux-block-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <4b559d1d-31e4-6049-4548-451bf7afb4f4@huaweicloud.com>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Yu Kuai <yukuai1@huaweicloud.com>
+Cc: tj@kernel.org, josef@toxicpanda.com, axboe@kernel.dk, cgroups@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, yi.zhang@huawei.com, yangerkun@huawei.com, "yukuai (C)" <yukuai3@huawei.com>
 
-tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git for-next
-branch HEAD: 21786e5cb375a1e58a9175fee423e1d7f892d965  cgroup/cpuset: no need to explicitly init a global static variable
 
-elapsed time: 724m
+--mojUlQ0s9EVzWg2t
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 
-configs tested: 54
-configs skipped: 2
+On Thu, Jan 05, 2023 at 09:43:02AM +0800, Yu Kuai <yukuai1@huaweicloud.com> wrote:
+> This is based only on code review, currently the only negative effects
+> is that root blkg from blk-throtl won't call pd_online_fn().
 
-The following configs have been built successfully.
-More configs may be tested in the coming days.
+Good, that's a NOP and there are no other uses of pd_online_fn.
 
-gcc tested configs:
-arc                                 defconfig
-alpha                               defconfig
-s390                             allmodconfig
-s390                                defconfig
-powerpc                           allnoconfig
-x86_64                            allnoconfig
-alpha                            allyesconfig
-m68k                             allmodconfig
-arc                              allyesconfig
-m68k                             allyesconfig
-s390                             allyesconfig
-sh                               allmodconfig
-mips                             allyesconfig
-powerpc                          allmodconfig
-ia64                             allmodconfig
-um                             i386_defconfig
-um                           x86_64_defconfig
-x86_64                           rhel-8.3-syz
-x86_64                           rhel-8.3-kvm
-x86_64                           rhel-8.3-bpf
-x86_64                         rhel-8.3-kunit
-i386                 randconfig-a004-20230102
-i386                 randconfig-a003-20230102
-i386                 randconfig-a001-20230102
-i386                 randconfig-a002-20230102
-i386                 randconfig-a005-20230102
-x86_64                              defconfig
-i386                 randconfig-a006-20230102
-x86_64                               rhel-8.3
-arm                                 defconfig
-x86_64                           allyesconfig
-x86_64                    rhel-8.3-kselftests
-x86_64                          rhel-8.3-func
-x86_64               randconfig-a004-20230102
-x86_64               randconfig-a002-20230102
-x86_64               randconfig-a003-20230102
-x86_64               randconfig-a001-20230102
-x86_64               randconfig-a005-20230102
-x86_64               randconfig-a006-20230102
-x86_64                        randconfig-a004
-x86_64                        randconfig-a002
-i386                                defconfig
-x86_64                        randconfig-a006
-i386                             allyesconfig
-arm64                            allyesconfig
-arm                              allyesconfig
-i386                          debian-10.3-kvm
-i386                        debian-10.3-kunit
-i386                         debian-10.3-func
+I wonder are the separate pd_init_fn and pd_online_fn callbacks
+necessary today?
+(IOW your fixup is a good catch and looks correct to me; I'd suggest
+more of a clean up. Shall I look into that?)
 
-clang tested configs:
-x86_64                          rhel-8.3-rust
-x86_64                        randconfig-k001
-x86_64                        randconfig-a001
-x86_64                        randconfig-a003
-x86_64                        randconfig-a005
+> No, this is not true, before blkcg_activate_policy() is called,
+> blkg_create() won't see this policy, hence pd_init_fn/pd_online_fn won't
+> be called from blkg_create().
 
--- 
-0-DAY CI Kernel Test Service
-https://01.org/lkp
+Thanks, I missed the q->blkcg_pols bit.
+
+Michal
+
+--mojUlQ0s9EVzWg2t
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+
+-----BEGIN PGP SIGNATURE-----
+
+iHUEARYIAB0WIQTrXXag4J0QvXXBmkMkDQmsBEOquQUCY7aqMgAKCRAkDQmsBEOq
+udG/AP443o4fnN2JypjVdH6EZJPRY/O5O0N3ywlBupWqtBkSeQD8DIJhUF+tVjlL
+zXTyjDqKPgE2Ri3wEWklUqmarfiGJg4=
+=7FAl
+-----END PGP SIGNATURE-----
+
+--mojUlQ0s9EVzWg2t--
