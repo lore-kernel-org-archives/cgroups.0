@@ -1,114 +1,91 @@
-From: Bagas Sanjaya <bagasdotme-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: [PATCH v2 9/9] docs: cgroup-v1: use numbered lists for user interface setup
-Date: Thu,  5 Jan 2023 20:16:34 +0700
-Message-ID: <20230105131633.553574-10-bagasdotme@gmail.com>
-References: <20230105131633.553574-1-bagasdotme@gmail.com>
+From: Bagas Sanjaya <bagasdotme@gmail.com>
+Subject: [PATCH v2 0/9] docs: cgroup-v1: formatting improv for "Memory Resource Controller" doc
+Date: Thu,  5 Jan 2023 20:16:25 +0700
+Message-ID: <20230105131633.553574-1-bagasdotme@gmail.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <linux-doc-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20210112;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=/8J8qW+Vq8pd6T9oMP3SU6TUuvWLiPg70zvs+kZ90og=;
-        b=iCXg4LXUCBckmKqWrrrxIf26SHrZFmi22auf4ZaicKRigcxRH4J1pPKSfOGqGrx+70
-         2Dz9hHlbyfiE4Ej5uw8WLiINWCrDAzbB2ANP3+/gbqzdOwBY6PAVA7BUZTzjTjN9cnpk
-         w7tPekaV9ZL3vtm3yJhU/niRomQUa/kb4CWyJH8y8iuAh/qLPl6JCDrc6ste8rMI94Vb
-         txsfBlJ+2NXRQscx4WGe5FgfV4qryQy/us+G8v74ohmJ9dZ1/1Yydjnm5pMDR4CGIFWd
-         rFyAaog+Q+WI+4vFL84NNY7n+NkZ1tRC3x6sboqGdsT7/ikXBHb5637YYaiNJOQxgOy1
-         wIXQ==
-In-Reply-To: <20230105131633.553574-1-bagasdotme-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-X-Developer-Signature: v=1; a=openpgp-sha256; l=3017; i=bagasdotme-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org; h=from:subject; bh=nysWUkfThi/UCTzfZAv3ZXQWTYDkn/SrXnv8ebwTGco=; b=owGbwMvMwCX2bWenZ2ig32LG02pJDMnbzm5cWtCq0ng04TEHZ7mB8SLVvBOR8ztZH9yf/zX6aJlM um9YRykLgxgXg6yYIsukRL6m07uMRC60r3WEmcPKBDKEgYtTACbibcPwT83d3Ur0YVzhzYLHnCdO+i /VN2/wf6tmmSycLGTr8LlwKsN/L4kJ/ZbNi2Kc+F4s8DBN49CYLV1rXfH+fJz40j4rB2VOAA==
-X-Developer-Key: i=bagasdotme-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org; a=openpgp; fpr=701B806FDCA5D3A58FFB8F7D7C276C64A5E44A1D
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=HUkOkbYzuv5WTxnO2sv3n0IBM4omUdA6IheQF/z4HEk=;
+        b=NGtacwLgGIfh31U+j37UAkxT1pREhpEa5I7Zke513uzhR7ayCdgCJbrs6KJiPvm06G
+         fFnCmYRv+PHI1g5DcOZktq7IN/66rGcEzHoW3YjMbKRqEvewBDT8rUuYaoaaHqHZ78QP
+         PtEv4zWfcdWbJYB7ILQwRDe/bGViy3ZC63cJeYMXvm8MbStVEc3cjzLQnVHYp+FNYSb5
+         PQNcD40i+b5wMdGICjjhXSmU5X7aytJ1yHYPs94FSKOKHIuzzpjLwfEopRxYZyhe2GU3
+         nrs86tF5hzi0AXjOlJujcpTA+Bmag6mafIsPZcuIeq6mpMF3FF8GB3vZHPbXUaTjKHqL
+         Jn2g==
+X-Developer-Signature: v=1; a=openpgp-sha256; l=3353; i=bagasdotme@gmail.com; h=from:subject; bh=/kf4xrQxZdifPynYl0ZAE3ZdLLa3+RCO1xkFVH/rr78=; b=owGbwMvMwCX2bWenZ2ig32LG02pJDMnbzq74Oaf24mtmL1epe2kFR1t/Gskr2N2/xXXUT5Cp7Mit N8vOdJSyMIhxMciKKbJMSuRrOr3LSORC+1pHmDmsTCBDGLg4BWAiAWcZGU5FLnntdv6I4smC0myPyx r1nxvn7So4dqmS6VnI/EmdLxYx/FOWCK2cymic2LvpZ6Cq+MkLArusbB7tVZ543rpZb8f/2WwA
+X-Developer-Key: i=bagasdotme@gmail.com; a=openpgp; fpr=701B806FDCA5D3A58FFB8F7D7C276C64A5E44A1D
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Linux CGroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux Documentation <linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux Memory Management List <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>
-Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Jonathan Corbet <corbet-T1hC0tSOHrs@public.gmane.org>, Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Bagas Sanjaya <bagasdotme-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+To: Linux CGroups <cgroups@vger.kernel.org>, Linux Documentation <linux-doc@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, Linux Memory Management List <linux-mm@kvack.org>
+Cc: Tejun Heo <tj@kernel.org>, Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, Jonathan Corbet <corbet@lwn.net>, Michal Hocko <mhocko@suse.com>, Andrew Morton <akpm@linux-foundation.org>, Hugh Dickins <hughd@google.com>, Shakeel Butt <shakeelb@google.com>, Bagas Sanjaya <bagasdotme@gmail.com>
 
-Setup instructions for memory resource controller UI uses a mix of
-section headings and normal paragraphs, whereas numbered lists are
-better fit for this purpose.
+"Memory Resource Controller" CGroup v1 documentation has been in reST since
+99c8b231ae6c6c ("docs: cgroup-v1: convert docs to ReST and rename to *.rst").
+The current doc look is kinda ugly, so improve the formatting (only htmldocs is
+tested).
 
-While at it, also slightly reword the instructions and add reference to
-"Why are cgroups needed?" in the main cgroups documentation.
+Changes since v1 [1]:
+  * Drop the underline fix, since the blamed commit had been dropped
+  * Rebase on top of current cgroup tree (for-next branch)
 
-Signed-off-by: Bagas Sanjaya <bagasdotme-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
----
- .../admin-guide/cgroup-v1/cgroups.rst         |  2 ++
- .../admin-guide/cgroup-v1/memory.rst          | 26 ++++++++-----------
- 2 files changed, 13 insertions(+), 15 deletions(-)
+Range-diff against v1:
 
-diff --git a/Documentation/admin-guide/cgroup-v1/cgroups.rst b/Documentation/admin-guide/cgroup-v1/cgroups.rst
-index b0688011ed06de..9343148ee99366 100644
---- a/Documentation/admin-guide/cgroup-v1/cgroups.rst
-+++ b/Documentation/admin-guide/cgroup-v1/cgroups.rst
-@@ -80,6 +80,8 @@ access. For example, cpusets (see Documentation/admin-guide/cgroup-v1/cpusets.rs
- you to associate a set of CPUs and a set of memory nodes with the
- tasks in each cgroup.
- 
-+.. _cgroups-why-needed:
-+
- 1.2 Why are cgroups needed ?
- ----------------------------
- 
-diff --git a/Documentation/admin-guide/cgroup-v1/memory.rst b/Documentation/admin-guide/cgroup-v1/memory.rst
-index 16d938abe69f81..27d89495ac880a 100644
---- a/Documentation/admin-guide/cgroup-v1/memory.rst
-+++ b/Documentation/admin-guide/cgroup-v1/memory.rst
-@@ -387,30 +387,30 @@ U != 0, K >= U:
- 3. User Interface
- =================
- 
--3.0. Configuration
--------------------
-+To use the user interface:
- 
--a. Enable CONFIG_CGROUPS
--b. Enable CONFIG_MEMCG
--
--3.1. Prepare the cgroups (see cgroups.txt, Why are cgroups needed?)
---------------------------------------------------------------------
--
--::
-+1. Enable CONFIG_CGROUPS and CONFIG_MEMCG options
-+2. Prepare the cgroups (see :ref:`Why are cgroups needed?
-+   <cgroups-why-needed>` for the background information)::
- 
- 	# mount -t tmpfs none /sys/fs/cgroup
- 	# mkdir /sys/fs/cgroup/memory
- 	# mount -t cgroup none /sys/fs/cgroup/memory -o memory
- 
--3.2. Make the new group and move bash into it::
-+3. Make the new group and move bash into it::
- 
- 	# mkdir /sys/fs/cgroup/memory/0
- 	# echo $$ > /sys/fs/cgroup/memory/0/tasks
- 
--Since now we're in the 0 cgroup, we can alter the memory limit::
-+4. Since now we're in the 0 cgroup, we can alter the memory limit::
- 
- 	# echo 4M > /sys/fs/cgroup/memory/0/memory.limit_in_bytes
- 
-+   The limit can now be queried::
-+
-+	# cat /sys/fs/cgroup/memory/0/memory.limit_in_bytes
-+	4194304
-+
- .. note::
-    We can use a suffix (k, K, m, M, g or G) to indicate values in kilo,
-    mega or gigabytes. (Here, Kilo, Mega, Giga are Kibibytes, Mebibytes,
-@@ -422,10 +422,6 @@ Since now we're in the 0 cgroup, we can alter the memory limit::
- .. note::
-    We cannot set limits on the root cgroup any more.
- 
--::
--
--  # cat /sys/fs/cgroup/memory/0/memory.limit_in_bytes
--  4194304
- 
- We can check the usage::
- 
+ 1:  e0f2b878ad6435 <  -:  -------------- docs: cgroup-v1: extend underline of section 8
+ 2:  4e26b743ce9b42 =  1:  cb31249cacdad6 docs: cgroup-v1: replace custom note constructs with appropriate admonition blocks
+ 3:  c89f9aa1e6dac9 <  -:  -------------- docs: cgroup-v1: wrap remaining admonitions in admonition blocks
+ -:  -------------- >  2:  8e03baf289c4f2 docs: cgroup-v1: wrap remaining admonitions in admonition blocks
+ 4:  b901b2b0407e23 =  3:  790ac70bcf31e1 docs: cgroup-v1: use code block for locking order schema
+ 5:  f4112d2f9990ce =  4:  2af22c24977a38 docs: cgroup-v1: fix footnotes
+ 6:  d5d16831555e6b =  5:  9788d0e8c87cc5 docs: cgroup-v1: move hierarchy of accounting caption
+ 7:  92db959851e2c8 =  6:  b191e2bd87871b docs: cgroup-v1: use bullet lists for list of stat file tables
+ 8:  767988658f58b8 !  7:  56e4ba363e4e65 docs: cgroup-v1: use make swap extension subsections subsections
+    @@ Metadata
+     Author: Bagas Sanjaya <bagasdotme@gmail.com>
+     
+      ## Commit message ##
+    -    docs: cgroup-v1: use make swap extension subsections subsections
+    +    docs: cgroup-v1: make swap extension subsections subsections
+     
+         Subsections text of swap extension section is marked up as bold text,
+         whereas making them proper subsection is more appropriate.
+ 9:  a502f09f9a3c33 !  8:  6895ee7c84e840 docs: cgroup-v1: add internal cross-references
+    @@ Documentation/admin-guide/cgroup-v1/memory.rst: If we want to change this to 1G,
+      
+     +.. _cgroup-v1-memory-move-charges:
+     +
+    - 8. Move charges at task migration (DEPRECATED!)
+    - ===============================================
+    + 8. Move charges at task migration
+    + =================================
+      
+     @@ Documentation/admin-guide/cgroup-v1/memory.rst: If you want to enable it::
+      
+10:  895b1f1aa37d33 =  9:  b179c2788f2a36 docs: cgroup-v1: use numbered lists for user interface setup
+
+[1]: https://lore.kernel.org/linux-doc/20221219042209.22898-1-bagasdotme@gmail.com/
+
+Bagas Sanjaya (9):
+  docs: cgroup-v1: replace custom note constructs with appropriate
+    admonition blocks
+  docs: cgroup-v1: wrap remaining admonitions in admonition blocks
+  docs: cgroup-v1: use code block for locking order schema
+  docs: cgroup-v1: fix footnotes
+  docs: cgroup-v1: move hierarchy of accounting caption
+  docs: cgroup-v1: use bullet lists for list of stat file tables
+  docs: cgroup-v1: make swap extension subsections subsections
+  docs: cgroup-v1: add internal cross-references
+  docs: cgroup-v1: use numbered lists for user interface setup
+
+ .../admin-guide/cgroup-v1/cgroups.rst         |   2 +
+ .../admin-guide/cgroup-v1/memory.rst          | 268 ++++++++++--------
+ 2 files changed, 146 insertions(+), 124 deletions(-)
+
+
+base-commit: 21786e5cb375a1e58a9175fee423e1d7f892d965
 -- 
 An old man doll... just what I always wanted! - Clara
 
