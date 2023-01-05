@@ -1,56 +1,41 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH v3] blk-throtl: Introduce sync and async queues for
- blk-throtl
-Date: Thu, 5 Jan 2023 07:35:59 -1000
-Message-ID: <Y7cKf7IH+FJ/6IyV@slm.duckdns.org>
-References: <20221226130505.7186-1-hanjinke.666@bytedance.com>
- <20230105161854.GA1259@blackbody.suse.cz>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH v2 0/9] docs: cgroup-v1: formatting improv for "Memory
+ Resource Controller" doc
+Date: Thu, 5 Jan 2023 07:39:01 -1000
+Message-ID: <Y7cLNTlazRghuxoy@slm.duckdns.org>
+References: <20230105131633.553574-1-bagasdotme@gmail.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <linux-doc-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20210112;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :mime-version:references:message-id:subject:cc:to:from:date:sender
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=gkjsNq+41nhz5t6YNHufJptj0TXGHPydjE1ADy7+6FM=;
-        b=F7AETA8YmQngoALJiwWtbL0ff8RtVbY4EEr53C6FVlL+DjvgCS7aideTdCWmxjFESd
-         SeiRq631vXOAX++cF5PyZgvg1K66m5yYZ1/kNZWXsC6IwAeKeSZd5dJI25JEOakb5hTn
-         koOxsxdTnhPtdbZa50u70QRWGBbgPhkudNr+UVeZO49V+rJahQKqkZ1pZR+sqjplBze3
-         q35Wqugk6MwBc7S+ubvDZFqhYjXGVsB/XPQOU15imjrES3mE+4jS6D5EO6hub0FHZxAT
-         +zCaPPlxhFluLFItLj3F5QdevNoFUcoaXuo+CM0bND1qvelEblmhqLuD8fraDS1YHsIn
-         MT+g==
-Sender: Tejun Heo <htejun-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:sender:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=4AnT3159KFsCJ48uEVH/264Q/p+zAUBME0hFPZg68eg=;
+        b=T9iSn5FzZm2l6Viva4kX8AvyD/WH9zRn2pTLbOVeXmWhVoEA3zpe9CRAuPUy4dHkYO
+         NSEHuZBHhD7KkKwFEfQ813/AlSTenvi1RJG1FcbvgbZ+7ZUQNUnO0rRYOHeSbGu7N0Jz
+         zX5irW0PrakMdmoGO8/byqY6133m/OW/YjIjk8fvB3BXE2hQzzZH31EP4UcUT9NLJO+y
+         VsxxhttA20KpNwTY8Y1df+pY11APnUzx7R8kAUFT6FFTWMRmotpMQ9CPxn3/McTfkyRW
+         09CG7J9+RCQCT5mE0j9mlUzE+YZ+/rtBM+aToJXX/NN4hXZV1PtSUTF21KLFAJQ1s97h
+         Wi0g==
+Sender: Tejun Heo <htejun@gmail.com>
 Content-Disposition: inline
-In-Reply-To: <20230105161854.GA1259-9OudH3eul5jcvrawFnH+a6VXKuFTiq87@public.gmane.org>
+In-Reply-To: <20230105131633.553574-1-bagasdotme@gmail.com>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="iso-8859-1"
-To: Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny-IBi9RG/b67k@public.gmane.org>
-Cc: Jinke Han <hanjinke.666-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, josef-DigfWCa+lFGyeJad7bwFQA@public.gmane.org, axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, yinxin.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org, jack-AlSwsSmVLrQ@public.gmane.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Bagas Sanjaya <bagasdotme@gmail.com>
+Cc: Linux CGroups <cgroups@vger.kernel.org>, Linux Documentation <linux-doc@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, Linux Memory Management List <linux-mm@kvack.org>, Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, Jonathan Corbet <corbet@lwn.net>, Michal Hocko <mhocko@suse.com>, Andrew Morton <akpm@linux-foundation.org>, Hugh Dickins <hughd@google.com>, Shakeel Butt <shakeelb@google.com>
 
-Hello,
+On Thu, Jan 05, 2023 at 08:16:25PM +0700, Bagas Sanjaya wrote:
+> "Memory Resource Controller" CGroup v1 documentation has been in reST since
+> 99c8b231ae6c6c ("docs: cgroup-v1: convert docs to ReST and rename to *.rst").
+> The current doc look is kinda ugly, so improve the formatting (only htmldocs is
+> tested).
 
-On Thu, Jan 05, 2023 at 05:18:54PM +0100, Michal Koutn=FD wrote:
-> I guess similar problem would arise for devices that are "naturally"
-> slow.
-> Then:
-> a) it must have been solved elsewhere in the block layer (but it's
->    broken),
-> b) it should be solved generically in the block layer (thus this is only
->    a partial solution).
-
-Hard limits tend to make this sort of problems a lot more pronounced because
-the existing mechanisms tend to break down for the users which are severely
-throttled down even while the device as a whole is fairly idle. cpu.max
-often triggers severe priority inversions too, so it isn't too surprising
-that people hit severe priority inversion issues w/ io.max.
-
-Another problem with blk-throttle is that it doesn't prioritize shared IOs
-identified by bio_issue_as_root_blkg() like iolatency and iocost do, so
-there can be very severe priority inversions when e.g. journal commit gets
-trapped in a low priority cgroup further exacerbating issues like this.
+Applied to cgroup/for-6.2-fixes.
 
 Thanks.
 
---=20
+-- 
 tejun
