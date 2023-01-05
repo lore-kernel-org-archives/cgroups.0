@@ -1,68 +1,56 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH -next 3/4] block/rq_qos: use a global mutex to protect
- rq_qos apis
-Date: Wed, 4 Jan 2023 14:28:12 -1000
-Message-ID: <Y7YZnM/nqb0gxOei@slm.duckdns.org>
-References: <20230104085354.2343590-1-yukuai1@huaweicloud.com>
- <20230104085354.2343590-4-yukuai1@huaweicloud.com>
- <Y7XyIzGptuqO8EAt@slm.duckdns.org>
+From: Yu Kuai <yukuai1@huaweicloud.com>
+Subject: Re: [PATCH v2 1/2] blk-iocost: add refcounting for iocg
+Date: Thu, 5 Jan 2023 09:14:07 +0800
+Message-ID: <c63ee2ad-23d5-3be0-c731-28494398b391@huaweicloud.com>
+References: <20221227125502.541931-1-yukuai1@huaweicloud.com>
+ <20221227125502.541931-2-yukuai1@huaweicloud.com>
+ <Y7XzUee5Bq+DoIC1@slm.duckdns.org>
 Mime-Version: 1.0
-Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:sender:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=f4sAIIgxsgcM6zCelHdPEl6Pb++H0W0grrXecdKrLDE=;
-        b=jpt0IjXHlEgXNsAkpNEBgOwddPdEdRQokPy72ekZwKiT9h1afZv3+0Y4oXUI/ls7Da
-         M+lJJZOATHkcXS8p4V510taPyr9xXF7StKG/iLf/FyRk4QB5KkHnSty9uIoyvOkVEeZp
-         BjWy7mnsoa+F5PzRBvplc7mgoYOJQneKp8y4lVh70aA2iDkRWv1Gk6jCaojSw4D9E2Bk
-         3F2PBjQt2WR6/GrDvKG05PY2M2awwB5cviAxOW/rjtO1YHw+QghI+hb+CDctmysNGaIk
-         hHcK1Qf9kK0iFdF3AGULMaOcqtu7EQUufxbz6ldBgJi+mvtPViLghN4F9jUJtZzyrGgO
-         3kvA==
-Sender: Tejun Heo <htejun@gmail.com>
-Content-Disposition: inline
-In-Reply-To: <Y7XyIzGptuqO8EAt@slm.duckdns.org>
+Content-Transfer-Encoding: quoted-printable
+Return-path: <linux-block-owner@vger.kernel.org>
+In-Reply-To: <Y7XzUee5Bq+DoIC1@slm.duckdns.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Yu Kuai <yukuai1@huaweicloud.com>
-Cc: hch@infradead.org, josef@toxicpanda.com, axboe@kernel.dk, cgroups@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, yukuai3@huawei.com, yi.zhang@huawei.com, yangerkun@huawei.com
+Content-Type: text/plain; charset="iso-8859-1"; format="flowed"
+To: Tejun Heo <tj@kernel.org>, Yu Kuai <yukuai1@huaweicloud.com>
+Cc: hch@infradead.org, josef@toxicpanda.com, axboe@kernel.dk, cgroups@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, yi.zhang@huawei.com, "yukuai (C)" <yukuai3@huawei.com>
 
-Hello, again.
+Hi,
 
-On Wed, Jan 04, 2023 at 11:39:47AM -1000, Tejun Heo wrote:
-> > 2) rq_qos_add() and blkcg_activate_policy() is not atomic, if
-> >    rq_qos_exit() is done before blkcg_activate_policy(),
-> >    null-ptr-deference can be triggered.
-> 
-> I'm not sure this part does. I think it'd be better to guarantee that device
-> destruction is blocked while these configuration operations are in progress
-> which can be built into blkg_conf helpers.
+=D4=DA 2023/01/05 5:44, Tejun Heo =D0=B4=B5=C0:
+> On Tue, Dec 27, 2022 at 08:55:01PM +0800, Yu Kuai wrote:
+>> From: Yu Kuai <yukuai3@huawei.com>
+>>
+>> iocost requires that child iocg must exit before parent iocg, otherwise
+>> kernel might crash in ioc_timer_fn(). However, currently iocg is exited
+>> in pd_free_fn(), which can't guarantee such order:
+>>
+>> 1) remove cgroup can concurrent with deactivate policy;
+>> 2) blkg_free() triggered by remove cgroup is asynchronously, remove
+>> child cgroup can concurrent with remove parent cgroup;
+>>
+>> Fix the problem by add refcounting for iocg, and child iocg will grab
+>> reference of parent iocg, so that parent iocg will wait for all child
+>> iocg to be exited.
+>=20
+> Wouldn't it be better to do this refcnting in the blk-cgroup core code
+> rather than in blk-iocost?
+>=20
 
-A bit more explanation:
+The problem is that I can't find a proper way to fix the competition
+that pd_free_fn() can be called from different context:
 
-Usually, this would be handled in the core - when a device goes away, its
-sysfs files get shut down before stuff gets freed and the sysfs file removal
-waits for in-flight operations to finish and prevents new ones from
-starting, so we don't have to worry about in-flight config file operations
-racing against device removal.
+1) from blkg_free() that is called asynchronously from removing cgroup;
+2) from blkcg_deactivate_policy() that is called from removing device;
 
-Here, the problem isn't solved by that because the config files live on
-cgroupfs and their lifetimes are not coupled with the block devices'. So, we
-need to synchronize manually. And, given that, the right place to do is the
-blkg config helpers cuz they're the ones which establish the connection
-between cgroup and block layer.
+1) is related to blkg, while 2) is not, hence refcnting from blkg can't
+fix the problem. refcnting from blkcg_policy_data should be ok, but I
+see that bfq already has the similar refcnting, while other policy
+doesn't require such refcnting.
 
-Can you please take a look at the following patchset I just posted:
+Any suggestions?
 
-  https://lkml.kernel.org/r/20230105002007.157497-1-tj@kernel.org
+Thanks,
+Kuai
+> Thanks.
+>=20
 
-After that, all these configuration operations are wrapped between
-blkg_conf_init() and blkg_conf_exit() which probably are the right place to
-implement the synchronization.
-
-Thanks.
-
--- 
-tejun
