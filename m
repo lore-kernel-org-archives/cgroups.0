@@ -1,92 +1,122 @@
-From: Yu Kuai <yukuai1@huaweicloud.com>
-Subject: Re: [PATCH v3 4/5] blk-iocost: fix divide by 0 error in calc_lcoefs()
-Date: Thu, 5 Jan 2023 09:53:38 +0800
-Message-ID: <9b23b5a9-c730-1156-cd59-772f5559b4f7@huaweicloud.com>
-References: <20221226085859.2701195-1-yukuai1@huaweicloud.com>
- <20221226085859.2701195-5-yukuai1@huaweicloud.com>
- <Y7X1fFO4UP7QnwkC@slm.duckdns.org>
+From: hanjinke <hanjinke.666-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
+Subject: Re: [External] Re: [PATCH v3] blk-throtl: Introduce sync and async
+ queues for blk-throtl
+Date: Thu, 5 Jan 2023 15:28:17 +0800
+Message-ID: <4d4f0a3f-6906-0c9b-1b56-22b9ff8795d4@bytedance.com>
+References: <20221226130505.7186-1-hanjinke.666@bytedance.com>
+ <Y7X5rsnYCAAYRGQd@slm.duckdns.org>
 Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-Return-path: <linux-block-owner@vger.kernel.org>
-In-Reply-To: <Y7X1fFO4UP7QnwkC@slm.duckdns.org>
+Content-Transfer-Encoding: 8bit
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=bytedance-com.20210112.gappssmtp.com; s=20210112;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to:subject
+         :user-agent:mime-version:date:message-id:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=qt1/1jt/A2jfQF0MWqTApdHyZ/eifCsttJnc6t5bAhc=;
+        b=ljjg/ss9Lr0VO0mLUyc8ixTvn6Ok2pFNoVH+NGeMcx1aPc7QRcxbtAKSBTSKNkWSJL
+         Nb/hAeuEZCNR9DsrceMmOedZ/y3fCBj7dVamRS83iFoMnySckQHIqS9y2lWDvFGNmUKQ
+         LZQZwPi91qAHOF/LoG+aTj8j0fkARFuKmXRNt4gAia446UDCDgELl3oY78P8vDyEEn1A
+         QbJNDLj/IvL8GY6MRRNWNXXGYhMsgxi2LRYKivmjdjG8Cn0zSBNmLK+lGzTdFKTDrxVM
+         eu7DTiCavtT8mJeqwi0Thp1Sj87Sn9tp9v1eS6DoCk9AdWdne67kBmKDkumdQyFuaVqx
+         9ivQ==
+In-Reply-To: <Y7X5rsnYCAAYRGQd-NiLfg/pYEd1N0TnZuCh8vA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="iso-8859-1"; format="flowed"
-To: Tejun Heo <tj@kernel.org>, Yu Kuai <yukuai1@huaweicloud.com>
-Cc: josef@toxicpanda.com, axboe@kernel.dk, cgroups@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, yi.zhang@huawei.com, "yukuai (C)" <yukuai3@huawei.com>
+Content-Type: text/plain; charset="utf-8"; format="flowed"
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: josef-DigfWCa+lFGyeJad7bwFQA@public.gmane.org, axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, yinxin.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org
 
-Hi,
 
-=D4=DA 2023/01/05 5:54, Tejun Heo =D0=B4=B5=C0:
-> On Mon, Dec 26, 2022 at 04:58:58PM +0800, Yu Kuai wrote:
->> From: Li Nan <linan122@huawei.com>
->>
->> echo max of u64 to cost.model can cause divide by 0 error.
->>
->>    # echo 8:0 rbps=3D18446744073709551615 > /sys/fs/cgroup/io.cost.model
->>
->>    divide error: 0000 [#1] PREEMPT SMP
->>    RIP: 0010:calc_lcoefs+0x4c/0xc0
->>    Call Trace:
->>     <TASK>
->>     ioc_refresh_params+0x2b3/0x4f0
->>     ioc_cost_model_write+0x3cb/0x4c0
->>     ? _copy_from_iter+0x6d/0x6c0
->>     ? kernfs_fop_write_iter+0xfc/0x270
->>     cgroup_file_write+0xa0/0x200
->>     kernfs_fop_write_iter+0x17d/0x270
->>     vfs_write+0x414/0x620
->>     ksys_write+0x73/0x160
->>     __x64_sys_write+0x1e/0x30
->>     do_syscall_64+0x35/0x80
->>     entry_SYSCALL_64_after_hwframe+0x63/0xcd
->>
->> calc_lcoefs() uses the input value of cost.model in DIV_ROUND_UP_ULL,
->> overflow would happen if bps plus IOC_PAGE_SIZE is greater than
->> ULLONG_MAX, it can cause divide by 0 error.
->>
->> Fix the problem by setting basecost
->>
->> Signed-off-by: Li Nan <linan122@huawei.com>
->> Signed-off-by: Yu Kuai <yukuai3@huawei.com>
->> ---
->>   block/blk-iocost.c | 10 +++++++---
->>   1 file changed, 7 insertions(+), 3 deletions(-)
->>
->> diff --git a/block/blk-iocost.c b/block/blk-iocost.c
->> index f8726e20da20..c6b39024117b 100644
->> --- a/block/blk-iocost.c
->> +++ b/block/blk-iocost.c
->> @@ -866,9 +866,13 @@ static void calc_lcoefs(u64 bps, u64 seqiops, u64 r=
-andiops,
->>  =20
->>   	*page =3D *seqio =3D *randio =3D 0;
->>  =20
->> -	if (bps)
->> -		*page =3D DIV64_U64_ROUND_UP(VTIME_PER_SEC,
->> -					   DIV_ROUND_UP_ULL(bps, IOC_PAGE_SIZE));
->> +	if (bps) {
->> +		if (bps >=3D U64_MAX - IOC_PAGE_SIZE)
->> +			*page =3D 1;
->> +		else
->> +			*page =3D DIV64_U64_ROUND_UP(VTIME_PER_SEC,
->> +					DIV_ROUND_UP_ULL(bps, IOC_PAGE_SIZE));
+
+在 2023/1/5 上午6:11, Tejun Heo 写道:
+> Hello,
+> 
+> On Mon, Dec 26, 2022 at 09:05:05PM +0800, Jinke Han wrote:
+>>   static void throtl_pending_timer_fn(struct timer_list *t);
+>> +static inline struct bio *throtl_qnode_bio_list_pop(struct throtl_qnode *qn);
+> 
+> Just define it before the first usage? Also, I think it'd be fine to let the
+> compiler decide whether to inline.
+> 
+>> +#define BLK_THROTL_SYNC(bio) (bio->bi_opf & (REQ_SYNC | REQ_META | REQ_PRIO))
+> 
+> Nitpick but the above is used only in one place. Does it help to define it
+> as a macro?
+> 
+>> +/**
+>> + * throtl_qnode_bio_peek - peek a bio for a qn
+>> + * @qn: the qnode to peek from
+>> + *
+>> + * For read qn, just peek bio from the SYNC queue and return.
+>> + * For write qn, we first ask the next_to_disp for bio and will pop a bio
+>> + * to fill it if it's NULL. The next_to_disp is used to pin the bio for
+>> + * next to dispatch. It is necessary. In the dispatching  process, a peeked
+>> + * bio may can't be dispatched due to lack of budget and has to wait, the
+>> + * dispatching process may give up and the spin lock of the request queue
+>> + * will be released. New bio may be queued in as the spin lock were released.
+>> + * When it's time to dispatch the waiting bio, another bio may be selected to
+>> + * check the limit and may be dispatched. If the dispatched bio is smaller
+>> + * than the waiting bio, the bandwidth may be hard to satisfied as we may
+>> + * trim the slice after each dispatch.
+>> + * So pinning the next_to_disp to make sure that the waiting bio and the
+>> + * dispatched one later always the same one in case that the spin lock of
+>> + * queue was released and re-holded.
+> 
+> Can you please format it better and proof-read it. I can mostly understand
+> what it's saying but it can be improved quite a bit. Can you elaborate the
+> starvation scenario further? What about the [a]sync queue split makes this
+> more likely?
+> 
+>> +/**
+>> + * throtl_qnode_bio_pop: pop a bio from sync/async queue
+>> + * @qn: the qnode to pop a bio from
+>> + *
+>> + * For write io qn, the target queue to pop was determined by the disp_sync_cnt.
+>> + * Try to pop bio from target queue, fetch the bio and return it when it is not
+>> + * empty. If the target queue empty, pop bio from another queue instead.
+> 
+> How about:
+> 
+>          For reads, always pop from the ASYNC queue. For writes, target SYNC
+>          or ASYNC queue based on disp_sync_cnt. If empty, try the other
+>          queue.
+> 
+>> +static inline struct bio *throtl_qnode_bio_list_pop(struct throtl_qnode *qn)
+>> +{
+>> +	struct bio *bio;
+>> +	int from = SYNC;
+>> +
+>> +	if (qn->disp_sync_cnt == THROTL_SYNC_FACTOR)
+>> +		from = ASYNC;
+> 
+> ?: often is less readable but I wonder whether it'd be more readable here:
+> 
+>          from = qn->disp_sync_cnt == THROTL_SYNC_FACTOR ? ASYNC : SYNC;
+> 
+>> +
+>> +	bio = bio_list_pop(&qn->bios[from]);
+>> +	if (!bio) {
+>> +		from = 1 - from;
+>> +		bio = bio_list_pop(&qn->bios[from]);
 >> +	}
->=20
-> This is a nitpick but wouldn't something like the following be easier to
-> understand?
->=20
->          if (bps) {
->                  u64 bps_pages =3D DIV_ROUND_UP_ULL(bps, IOC_PAGE_SIZE);
->=20
->                  if (bps_pages)
->                          *pages =3D DIV64_U64_ROUND_UP(VTIME_PER_SEC, bps=
-_pages);
->                  else
->                          *pages =3D 1;
->          }
->=20
-Yes, I agree that this is better to understand. I'll send a new version.
+>> +
+>> +	if ((qn->disp_sync_cnt < THROTL_SYNC_FACTOR) &&
+>> +		(from == SYNC))
+> 
+> Why the line break? Also, this may be more personal preference but I'm not
+> sure the parentheses are helping much here.
+> 
+>> +		qn->disp_sync_cnt++;
+>> +	else
+>> +		qn->disp_sync_cnt = 0;
+>> +
+>> +	return bio;
+>> +}
+> 
+> Thanks.
+> 
 
-Thanks,
-Kuai
+Thanks. Your suggestion is detailed and helpful. I will accept it and 
+send the v4.
 
+Thanks.
