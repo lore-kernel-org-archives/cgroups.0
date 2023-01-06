@@ -1,106 +1,74 @@
-From: kernel test robot <lkp-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
-Subject: [tj-cgroup:for-next] BUILD SUCCESS
- 980660cae7994ab03b31b2a32940c70e8421fc99
-Date: Fri, 06 Jan 2023 14:49:08 +0800
-Message-ID: <63b7c464.ZOXle8Ow7lBDtrz6%lkp@intel.com>
+From: Jan Kara <jack-AlSwsSmVLrQ@public.gmane.org>
+Subject: Re: [PATCH v3] blk-throtl: Introduce sync and async queues for
+ blk-throtl
+Date: Fri, 6 Jan 2023 16:38:13 +0100
+Message-ID: <20230106153813.4ttyuikzaagkk2sc@quack3>
+References: <20221226130505.7186-1-hanjinke.666@bytedance.com>
+ <20230105161854.GA1259@blackbody.suse.cz>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: quoted-printable
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1672987793; x=1704523793;
-  h=date:from:to:cc:subject:message-id:mime-version:
-   content-transfer-encoding;
-  bh=oQQNlW233skbq3EJwlwoMPlwJ/s4JIGZDq3ttf0iuRs=;
-  b=kJXcaJ4N+eJKGLvV1jmez4vGqg8mEEdsu8HXk5TBxs5gtoCEwBrUrAl9
-   pvkKWLuj5ZB+ho4e/3wbsSmI2axPqbOFvEHnoN40Ck3Q2HELypKnIe/tn
-   e3VOWpduuHXW4PjThRcOiXyn7w2bgIHnF5ZOG9pFcFEKVM7qkjdvClKtO
-   jFvBp2Qh1EhulBLsdyOOmAe8p/mFatpgqSH1UNhyuLn9keoSN4YYJLrGK
-   AsHiq1pZZomrwbNVsDXwXsMio9qU1QyfOtwXvsCw5mH/TXvqZcXvDudJb
-   6+idaKl4oAgSCkJTs/PvS3clQLzkdyBOmX46ETRcVW9vqhOFTDoZ/HF8g
-   Q==;
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
+        t=1673019494; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=D7BVs+c1jJrTgfTP4y3v5/V0eGmeqdXDwPfl0iJaAd4=;
+        b=3E3Lgs2aAGpDdYW5+AKcNWdB5l9w4zvWCacqafvED4WVf1Z7fBzgAfn2miDNOdc50rpRcF
+        /gPnEqvTuPLTE8Kk9wNQfTkQquPSENw6dOkP6baW5IQ0Juhba85jdQ8Erk0oTWmTJT8+Cw
+        TZV1dEMWE0AzpAAHzknBF1M3LaDLsbI=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
+        s=susede2_ed25519; t=1673019494;
+        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=D7BVs+c1jJrTgfTP4y3v5/V0eGmeqdXDwPfl0iJaAd4=;
+        b=1q0HHYB9DZXlBTx+ZpLaeAQje6jIDfq0gkybOD0Eto4yfx1n9s7rlKVsVBxz+DfiCkAVpl
+        X4mbSYxsz7b2OeDg==
+Content-Disposition: inline
+In-Reply-To: <20230105161854.GA1259-9OudH3eul5jcvrawFnH+a6VXKuFTiq87@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Type: text/plain; charset="iso-8859-1"
+To: Michal =?utf-8?Q?Koutn=C3=BD?= <mkoutny-IBi9RG/b67k@public.gmane.org>
+Cc: Jinke Han <hanjinke.666-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, josef-DigfWCa+lFGyeJad7bwFQA@public.gmane.org, axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, yinxin.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org, jack-AlSwsSmVLrQ@public.gmane.org
 
-tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git for-next
-branch HEAD: 980660cae7994ab03b31b2a32940c70e8421fc99  docs: cgroup-v1: use numbered lists for user interface setup
+On Thu 05-01-23 17:18:54, Michal Koutn=FD wrote:
+> Hello Jinke.
+>=20
+> On Mon, Dec 26, 2022 at 09:05:05PM +0800, Jinke Han <hanjinke.666-EC8Uxl6=
+Npydl57MIdRCFDg@public.gmane.org> wrote:
+> > In our test, fio writes a 100g file in sequential 4k blocksize in
+> > a container with low bps limit configured (wbps=3D10M).
+> > [...]
+> > At the same time, the operation of saving a small file by vim will be
+> > blocked amolst 140s.
+>=20
+> Could you please elaborate why is this specific to blk-throtl?
+>=20
+> I guess similar problem would arise for devices that are "naturally"
+> slow.
+> Then:
+> a) it must have been solved elsewhere in the block layer (but it's
+>    broken),
+> b) it should be solved generically in the block layer (thus this is only
+>    a partial solution).
 
-elapsed time: 729m
+Generally, problems are this are taken care of by IO schedulers. E.g. BFQ
+has quite a lot of logic exactly to reduce problems like this. Sync and
+async queues are one part of this logic inside BFQ (but there's more).
 
-configs tested: 62
-configs skipped: 2
+But given current architecture of the block layer IO schedulers are below
+throttling frameworks such as blk-throtl so they have no chance of
+influencing problems like this. So we are bound to reinvent the scheduling
+logic IO schedulers are already doing. That being said I don't have a good
+solution for this or architecture suggestion. Because implementing various
+throttling frameworks within IO schedulers is cumbersome (complex
+interactions) and generally the perfomance is too slow for some usecases.
+We've been there (that's why there's cgroup support in BFQ) and really
+the current architecture is much easier to reason about.
 
-The following configs have been built successfully.
-More configs may be tested in the coming days.
-
-gcc tested configs:
-arc                                 defconfig
-alpha                               defconfig
-s390                             allmodconfig
-x86_64                            allnoconfig
-s390                                defconfig
-um                           x86_64_defconfig
-um                             i386_defconfig
-powerpc                           allnoconfig
-mips                             allyesconfig
-s390                 randconfig-r044-20230105
-sh                               allmodconfig
-s390                             allyesconfig
-i386                          randconfig-a014
-i386                          randconfig-a012
-i386                          randconfig-a016
-arc                  randconfig-r043-20230105
-x86_64                              defconfig
-i386                          randconfig-a001
-i386                          randconfig-a003
-x86_64                        randconfig-a004
-x86_64                        randconfig-a002
-m68k                             allyesconfig
-m68k                             allmodconfig
-alpha                            allyesconfig
-i386                          randconfig-a005
-arc                              allyesconfig
-x86_64                        randconfig-a006
-x86_64                           rhel-8.3-bpf
-x86_64                    rhel-8.3-kselftests
-x86_64                           rhel-8.3-syz
-x86_64                        randconfig-a013
-powerpc                          allmodconfig
-x86_64                        randconfig-a011
-x86_64                         rhel-8.3-kunit
-riscv                randconfig-r042-20230105
-i386                                defconfig
-x86_64                           rhel-8.3-kvm
-x86_64                               rhel-8.3
-x86_64                           allyesconfig
-x86_64                          rhel-8.3-func
-x86_64                        randconfig-a015
-arm                                 defconfig
-ia64                             allmodconfig
-i386                             allyesconfig
-arm64                            allyesconfig
-arm                              allyesconfig
-
-clang tested configs:
-i386                          randconfig-a013
-i386                          randconfig-a011
-arm                  randconfig-r046-20230105
-hexagon              randconfig-r045-20230105
-hexagon              randconfig-r041-20230105
-i386                          randconfig-a015
-i386                          randconfig-a002
-i386                          randconfig-a004
-x86_64                        randconfig-a001
-x86_64                        randconfig-a003
-x86_64                          rhel-8.3-rust
-x86_64                        randconfig-a014
-i386                          randconfig-a006
-x86_64                        randconfig-a016
-x86_64                        randconfig-a005
-x86_64                        randconfig-a012
-
--- 
-0-DAY CI Kernel Test Service
-https://01.org/lkp
+								Honza
+--=20
+Jan Kara <jack-IBi9RG/b67k@public.gmane.org>
+SUSE Labs, CR
