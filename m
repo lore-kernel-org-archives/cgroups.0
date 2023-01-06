@@ -1,65 +1,120 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [External] Re: [PATCH v3] blk-throtl: Introduce sync and async
- queues for blk-throtl
-Date: Fri, 6 Jan 2023 08:15:59 -1000
-Message-ID: <Y7hlX4T1UOmQHiGf@slm.duckdns.org>
-References: <20221226130505.7186-1-hanjinke.666@bytedance.com>
- <20230105161854.GA1259@blackbody.suse.cz>
- <20230106153813.4ttyuikzaagkk2sc@quack3>
- <Y7hTHZQYsCX6EHIN@slm.duckdns.org>
- <c839ba6c-80ac-6d92-af64-5c0e1956ae93@bytedance.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH -next 3/4] block/rq_qos: use a global mutex to protect
+ rq_qos apis
+Date: Fri, 6 Jan 2023 08:23:27 -1000
+Message-ID: <Y7hnH9GT6D469Vuu@slm.duckdns.org>
+References: <20230104085354.2343590-1-yukuai1@huaweicloud.com>
+ <20230104085354.2343590-4-yukuai1@huaweicloud.com>
+ <Y7XyIzGptuqO8EAt@slm.duckdns.org>
+ <Y7YZnM/nqb0gxOei@slm.duckdns.org>
+ <df2f7a60-467f-08ce-2a3e-1dc7853424aa@huaweicloud.com>
+ <Y7cYKdOwSlfHtj7t@slm.duckdns.org>
+ <ef55a0f1-d3c2-3979-963e-2fa10ba3c2ff@huaweicloud.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <linux-block-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20210112;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :mime-version:references:message-id:subject:cc:to:from:date:sender
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=tFVy3Y9MVCWte671WOFf60PfUPv+ycHx3SxmfV5kFG8=;
-        b=lbibIMuJyMXbJ2f2OyL1viffjumwMgpmMNynEDue06Z/2mLcY1PturmpBQ0tKz+++O
-         zcR2ZA6fIwexsqo2cb8HATM3qQbVR1vIJDfjMrJwfXDravZuN2XGnn211EJY2m4Pekrz
-         ZVat6RYBgxyrhjNjFOy4L1ereNBKykwwzQU/zYEZPSqFIHwOjbamjqY2NijUtQK8BrJo
-         2nW31/OdZsXqJn/cfjY7+T6dm/lg933yEtQaz4xDtodbAm6qvYILdifMMTBT0N3KQvvv
-         2aIxeB9W2cozL3Gk8bbaJX5HG9/ThseB+GM55mLOAURBKE3rgYfSMlL4/rdL1Nq/cJVC
-         GLiA==
-Sender: Tejun Heo <htejun-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:sender:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=FviiSBK5p0B4z+PC3fKC8+sEAADVb45SBnYPZfnLnEY=;
+        b=OV2BDC9JXxEtkmQOPrOeD3bwcQtCLLjCUmlAiID2R9QRkow5CEhZf+zKDwvAPy4lhL
+         0+S5/f5rhE0cHTLytLdC04LYcWbZG0JtV3cI3T+M6D/kdT1dvI3xqyjSsEl+8dC09BIs
+         8f130BruK0EHVNtD/HofxHMcznp3LwowZq3HTaHLnsO5X1jeSY8zf8iO4k5BfGp9Kk3U
+         Rehva+a0ZqY6Zy6AZyFt+k1wVqGs8PMKeQ9p/qz/WyLSRSbIGfIU7VjRXxDZBb+T5Nvm
+         9JjJT8oCy8Icc4vEUsFLn0e4W/JQAL8ztmFh20lB+H8rqDJP9nhXkfcFCFpHk/4tpK/o
+         C/Dw==
+Sender: Tejun Heo <htejun@gmail.com>
 Content-Disposition: inline
-In-Reply-To: <c839ba6c-80ac-6d92-af64-5c0e1956ae93-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
+In-Reply-To: <ef55a0f1-d3c2-3979-963e-2fa10ba3c2ff@huaweicloud.com>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="utf-8"
-To: hanjinke <hanjinke.666-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
-Cc: Jan Kara <jack-AlSwsSmVLrQ@public.gmane.org>, Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny-IBi9RG/b67k@public.gmane.org>, josef-DigfWCa+lFGyeJad7bwFQA@public.gmane.org, axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, yinxin.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Yu Kuai <yukuai1@huaweicloud.com>
+Cc: hch@infradead.org, josef@toxicpanda.com, axboe@kernel.dk, cgroups@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, yi.zhang@huawei.com, yangerkun@huawei.com, "yukuai (C)" <yukuai3@huawei.com>
 
 Hello,
 
-On Sat, Jan 07, 2023 at 02:07:38AM +0800, hanjinke wrote:
-> In our internal scenario, iocost has been deployed as the main io isolation
-> method and is gradually spreading。
+On Fri, Jan 06, 2023 at 09:33:26AM +0800, Yu Kuai wrote:
+> > wbt's lazy init is tied to one of the block device sysfs files, right? So,
+> > it *should* already be protected against device removal.
+> 
+> That seems not true, I don't think q->sysfs_lock can protect that,
+> consider that queue_wb_lat_store() doesn't check if del_gendisk() is
+> called or not:
+> 
+> t1: wbt lazy init		t2: remove device
+> queue_attr_store
+> 				del_gendisk
+> 				blk_unregister_queue
+> 				 mutex_lock(&q->sysfs_lock)
+> 			         ...
+> 				 mutex_unlock(&q->sysfs_lock);
+> 				rq_qos_exit
+>  mutex_lock(&q->sysfs_lock);
+>   queue_wb_lat_store
+>   wbt_init
+>    rq_qos_add
+>  mutex_unlock(&q->sysfs_lock);
 
-Ah, glad to hear. If you don't mind sharing, how are you configuring iocost
-currently? How do you derive the parameters?
+So, it's not sysfs_lock but sysfs file deletion. When a kernfs, which backs
+sysfs, file is removed, it disables future operations and drains all
+inflight ones before returning, so you remove the interface files before
+cleaning up the object that it interacts with, you don't have to worry about
+racing against file operations as none can be in flight at that point.
 
-> But for some specific scenarios with old kernel versions, blk-throtl
-> is alose needed. The scenario described in my email is in the early stage of
+> I tried to comfirm that by adding following delay:
+> 
+> diff --git a/block/blk-sysfs.c b/block/blk-sysfs.c
+> index 93d9e9c9a6ea..101c33cb0a2b 100644
+> --- a/block/blk-sysfs.c
+> +++ b/block/blk-sysfs.c
+> @@ -11,6 +11,7 @@
+>  #include <linux/blktrace_api.h>
+>  #include <linux/blk-mq.h>
+>  #include <linux/debugfs.h>
+> +#include <linux/delay.h>
+> 
+>  #include "blk.h"
+>  #include "blk-mq.h"
+> @@ -734,6 +735,8 @@ queue_attr_store(struct kobject *kobj, struct attribute
+> *attr,
+>         if (!entry->store)
+>                 return -EIO;
+> 
+> +       msleep(10000);
+> +
+>         mutex_lock(&q->sysfs_lock);
+>         res = entry->store(q, page, length);
+>         mutex_unlock(&q->sysfs_lock);
+> 
+> And then do the following test:
+> 
+> 1) echo 10000 > /sys/block/sdb/queue/wbt_lat_usec &
+> 2) echo 1 > /sys/block/sda/device/delete
+> 
+> Then, following bug is triggered:
+> 
+> [   51.923642] BUG: unable to handle page fault for address:
+> ffffffffffffffed
+> [   51.924294] #PF: supervisor read access in kernel mode
+> [   51.924773] #PF: error_code(0x0000) - not-present page
+> [   51.925252] PGD 1820b067 P4D 1820b067 PUD 1820d067 PMD 0
+> [   51.925754] Oops: 0000 [#1] PREEMPT SMP
+> [   51.926123] CPU: 1 PID: 539 Comm: bash Tainted: G        W
+> 6.2.0-rc1-next-202212267
+> [   51.927124] Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS
+> ?-20190727_073836-b4
+> [   51.928334] RIP: 0010:__rq_qos_issue+0x30/0x60
 
-Yeah, I think we use blk-throttle in very limited cases currently but might
-need to deploy hard limits more in the future.
+This indicates that we aren't getting the destruction order right. It could
+be that there are other reasons why the ordering is like this and we might
+have to synchronize separately.
 
-> research and extensive testing for it. During this period，some priority
-> inversion issues amoug cgroups or within one cgroup have been observed. So I
-> send this patch to try to fix or mitigate some of these issues.
-
-blk-throttle has a lot of issues which may be difficult to address. Even the
-way it's configured is pretty difficult to scale across different hardware /
-application combinations and we've neglected its control performance and
-behavior (like handling of shared IOs) for quite a while.
-
-While iocost's work-conserving control does address a lot of the use cases
-we see today, it's likely that we'll need hard limits more in the future
-too. I've been thinking about implementing io.max on top of iocost. There
-are some challenges around dynamic vrate adj semantics but it's kinda
-attractive because iocost already has the concept of total device capacity.
+Sorry that I've been asking you to go round and round but block device
+add/remove paths have always been really tricky and we wanna avoid adding
+more complications if at all possible. Can you see why the device is being
+destroyed before the queue attr is removed?
 
 Thanks.
 
