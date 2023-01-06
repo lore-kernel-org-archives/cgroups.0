@@ -1,74 +1,77 @@
-From: Jan Kara <jack-AlSwsSmVLrQ@public.gmane.org>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 Subject: Re: [PATCH v3] blk-throtl: Introduce sync and async queues for
  blk-throtl
-Date: Fri, 6 Jan 2023 16:38:13 +0100
-Message-ID: <20230106153813.4ttyuikzaagkk2sc@quack3>
+Date: Fri, 6 Jan 2023 06:58:05 -1000
+Message-ID: <Y7hTHZQYsCX6EHIN@slm.duckdns.org>
 References: <20221226130505.7186-1-hanjinke.666@bytedance.com>
  <20230105161854.GA1259@blackbody.suse.cz>
+ <20230106153813.4ttyuikzaagkk2sc@quack3>
 Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
-        t=1673019494; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=D7BVs+c1jJrTgfTP4y3v5/V0eGmeqdXDwPfl0iJaAd4=;
-        b=3E3Lgs2aAGpDdYW5+AKcNWdB5l9w4zvWCacqafvED4WVf1Z7fBzgAfn2miDNOdc50rpRcF
-        /gPnEqvTuPLTE8Kk9wNQfTkQquPSENw6dOkP6baW5IQ0Juhba85jdQ8Erk0oTWmTJT8+Cw
-        TZV1dEMWE0AzpAAHzknBF1M3LaDLsbI=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
-        s=susede2_ed25519; t=1673019494;
-        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=D7BVs+c1jJrTgfTP4y3v5/V0eGmeqdXDwPfl0iJaAd4=;
-        b=1q0HHYB9DZXlBTx+ZpLaeAQje6jIDfq0gkybOD0Eto4yfx1n9s7rlKVsVBxz+DfiCkAVpl
-        X4mbSYxsz7b2OeDg==
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:sender:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=snReoJ52ndOwVl0ihFne37Ntk/YfJwEwK939SBaIpCs=;
+        b=Gx4xxHNFjIVJ/RowxB+wt373DC9fu+a85w9xTcZD8wARaeDbA3mxC/HyWuGb/ZeYqo
+         PY68+XpwGGM2iTW5bU2vmHoqPKqEK2v7dDsrIAqu70HLSDIWC+Hwh5FC1NX6sSGpGCc6
+         LSBdG8LBPd+JCFyu4atqv2TiZQgf8cZhOs9+Y/bAsdcJd7V81VxcIcfss1N8XLHv1djY
+         CYx3y9m8FJNmh94zY/LasS6vhHg8gj5iyd2cs9kb1bL0G+TT/I94Dw0oiTJcZfzC1aFJ
+         LLvbzhY/wziR1nvD96f2rXcMGCDchif+jWC5dAoOLWmEJYeJTz7BJc2GGA7rbSta4Bjt
+         7+Fg==
+Sender: Tejun Heo <htejun-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 Content-Disposition: inline
-In-Reply-To: <20230105161854.GA1259-9OudH3eul5jcvrawFnH+a6VXKuFTiq87@public.gmane.org>
+In-Reply-To: <20230106153813.4ttyuikzaagkk2sc@quack3>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="iso-8859-1"
-To: Michal =?utf-8?Q?Koutn=C3=BD?= <mkoutny-IBi9RG/b67k@public.gmane.org>
-Cc: Jinke Han <hanjinke.666-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, josef-DigfWCa+lFGyeJad7bwFQA@public.gmane.org, axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, yinxin.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org, jack-AlSwsSmVLrQ@public.gmane.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Jan Kara <jack-AlSwsSmVLrQ@public.gmane.org>
+Cc: Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny-IBi9RG/b67k@public.gmane.org>, Jinke Han <hanjinke.666-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, josef-DigfWCa+lFGyeJad7bwFQA@public.gmane.org, axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, yinxin.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org
 
-On Thu 05-01-23 17:18:54, Michal Koutn=FD wrote:
-> Hello Jinke.
->=20
-> On Mon, Dec 26, 2022 at 09:05:05PM +0800, Jinke Han <hanjinke.666-EC8Uxl6=
-Npydl57MIdRCFDg@public.gmane.org> wrote:
-> > In our test, fio writes a 100g file in sequential 4k blocksize in
-> > a container with low bps limit configured (wbps=3D10M).
-> > [...]
-> > At the same time, the operation of saving a small file by vim will be
-> > blocked amolst 140s.
->=20
-> Could you please elaborate why is this specific to blk-throtl?
->=20
-> I guess similar problem would arise for devices that are "naturally"
-> slow.
-> Then:
-> a) it must have been solved elsewhere in the block layer (but it's
->    broken),
-> b) it should be solved generically in the block layer (thus this is only
->    a partial solution).
+Hello,
 
-Generally, problems are this are taken care of by IO schedulers. E.g. BFQ
-has quite a lot of logic exactly to reduce problems like this. Sync and
-async queues are one part of this logic inside BFQ (but there's more).
+On Fri, Jan 06, 2023 at 04:38:13PM +0100, Jan Kara wrote:
+> Generally, problems are this are taken care of by IO schedulers. E.g. BFQ
+> has quite a lot of logic exactly to reduce problems like this. Sync and
+> async queues are one part of this logic inside BFQ (but there's more).
 
-But given current architecture of the block layer IO schedulers are below
-throttling frameworks such as blk-throtl so they have no chance of
-influencing problems like this. So we are bound to reinvent the scheduling
-logic IO schedulers are already doing. That being said I don't have a good
-solution for this or architecture suggestion. Because implementing various
-throttling frameworks within IO schedulers is cumbersome (complex
-interactions) and generally the perfomance is too slow for some usecases.
-We've been there (that's why there's cgroup support in BFQ) and really
-the current architecture is much easier to reason about.
+With modern ssd's, even deadline's overhead is too high and a lot (but
+clearly not all) of what the IO schedulers do are no longer necessary. I
+don't see a good way back to elevators.
 
-								Honza
---=20
-Jan Kara <jack-IBi9RG/b67k@public.gmane.org>
-SUSE Labs, CR
+> But given current architecture of the block layer IO schedulers are below
+> throttling frameworks such as blk-throtl so they have no chance of
+> influencing problems like this. So we are bound to reinvent the scheduling
+> logic IO schedulers are already doing. That being said I don't have a good
+> solution for this or architecture suggestion. Because implementing various
+> throttling frameworks within IO schedulers is cumbersome (complex
+> interactions) and generally the perfomance is too slow for some usecases.
+> We've been there (that's why there's cgroup support in BFQ) and really
+> the current architecture is much easier to reason about.
+
+Another layering problem w/ controlling from elevators is that that's after
+request allocation and the issuer has already moved on. We used to have
+per-cgroup rq pools but ripped that out, so it's pretty easy to cause severe
+priority inversions by depleting the shared request pool, and the fact that
+throttling takes place after the issuing task returned from issue path makes
+propagating the throttling operation upwards more challenging too.
+
+At least in terms of cgroup control, the new bio based behavior is a lot
+better. In the fb fleet, iocost is deployed on most (virtually all) of the
+machines and we don't see issues with severe priority inversions.
+Cross-cgroup control is pretty well controlled. Inside each cgroup, sync
+writes aren't prioritized but nobody seems to be troubled by that.
+
+My bet is that inversion issues are a lot more severe with blk-throttle
+because it's not work-conserving and not doing things like issue-as-root or
+other measures to alleviate issues which can arise from inversions.
+
+Jinke, is the case you described in the original email what you actually saw
+in production or a simplified test case for demonstration? If the latter,
+can you describe actual problems seen in production?
+
+Thanks.
+
+-- 
+tejun
