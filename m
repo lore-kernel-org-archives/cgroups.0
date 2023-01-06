@@ -1,77 +1,56 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH v3] blk-throtl: Introduce sync and async queues for
- blk-throtl
-Date: Fri, 6 Jan 2023 06:58:05 -1000
-Message-ID: <Y7hTHZQYsCX6EHIN@slm.duckdns.org>
+From: hanjinke <hanjinke.666-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
+Subject: Re: [External] Re: [PATCH v3] blk-throtl: Introduce sync and async
+ queues for blk-throtl
+Date: Sat, 7 Jan 2023 02:07:38 +0800
+Message-ID: <c839ba6c-80ac-6d92-af64-5c0e1956ae93@bytedance.com>
 References: <20221226130505.7186-1-hanjinke.666@bytedance.com>
  <20230105161854.GA1259@blackbody.suse.cz>
- <20230106153813.4ttyuikzaagkk2sc@quack3>
+ <20230106153813.4ttyuikzaagkk2sc@quack3> <Y7hTHZQYsCX6EHIN@slm.duckdns.org>
 Mime-Version: 1.0
+Content-Transfer-Encoding: 8bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:sender:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=snReoJ52ndOwVl0ihFne37Ntk/YfJwEwK939SBaIpCs=;
-        b=Gx4xxHNFjIVJ/RowxB+wt373DC9fu+a85w9xTcZD8wARaeDbA3mxC/HyWuGb/ZeYqo
-         PY68+XpwGGM2iTW5bU2vmHoqPKqEK2v7dDsrIAqu70HLSDIWC+Hwh5FC1NX6sSGpGCc6
-         LSBdG8LBPd+JCFyu4atqv2TiZQgf8cZhOs9+Y/bAsdcJd7V81VxcIcfss1N8XLHv1djY
-         CYx3y9m8FJNmh94zY/LasS6vhHg8gj5iyd2cs9kb1bL0G+TT/I94Dw0oiTJcZfzC1aFJ
-         LLvbzhY/wziR1nvD96f2rXcMGCDchif+jWC5dAoOLWmEJYeJTz7BJc2GGA7rbSta4Bjt
-         7+Fg==
-Sender: Tejun Heo <htejun-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <20230106153813.4ttyuikzaagkk2sc@quack3>
+        d=bytedance-com.20210112.gappssmtp.com; s=20210112;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to:subject
+         :user-agent:mime-version:date:message-id:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=//4YyY+R3Zvxj//qrfQ/8SUpcqPL2BUP4S2f+8LppsI=;
+        b=GjNGe87iarMz9xzLWJbvuTpMDWCQA2+W1WVxnP+fJYjnmMv7m/6p9+01ELwcZGYByN
+         sp+8DGsECa67c/twZDqrpNNIeNrZR84IzoPJgyp25dPCHvXXT7VlsAXvjYRBKMK9KT0K
+         U3WxvQeLLXYTtteKi9iuV0Xmx18QLICl7dsCCpXPElWxet+sH1a4y7Y7TWBiTaU4nhZo
+         80fA6E6O8WzBkJgHlTbZ5T2b4qjLpExO7alWown5M6oReIgqYyQXQq3dayus2N1Ut+S8
+         V+J0Tf2Bq4Y+HIoRdcE92fZz0DNtzggABrgBoSijo2SFq+rEuHkMXS8gQRQAQeGL/gRn
+         RKmQ==
+In-Reply-To: <Y7hTHZQYsCX6EHIN-NiLfg/pYEd1N0TnZuCh8vA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Jan Kara <jack-AlSwsSmVLrQ@public.gmane.org>
-Cc: Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny-IBi9RG/b67k@public.gmane.org>, Jinke Han <hanjinke.666-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, josef-DigfWCa+lFGyeJad7bwFQA@public.gmane.org, axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, yinxin.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org
+Content-Type: text/plain; charset="utf-8"; format="flowed"
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Jan Kara <jack-AlSwsSmVLrQ@public.gmane.org>
+Cc: =?UTF-8?Q?Michal_Koutn=c3=bd?= <mkoutny-IBi9RG/b67k@public.gmane.org>, josef-DigfWCa+lFGyeJad7bwFQA@public.gmane.org, axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, yinxin.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org
 
-Hello,
 
-On Fri, Jan 06, 2023 at 04:38:13PM +0100, Jan Kara wrote:
-> Generally, problems are this are taken care of by IO schedulers. E.g. BFQ
-> has quite a lot of logic exactly to reduce problems like this. Sync and
-> async queues are one part of this logic inside BFQ (but there's more).
 
-With modern ssd's, even deadline's overhead is too high and a lot (but
-clearly not all) of what the IO schedulers do are no longer necessary. I
-don't see a good way back to elevators.
+在 2023/1/7 上午12:58, Tejun Heo 写道:
 
-> But given current architecture of the block layer IO schedulers are below
-> throttling frameworks such as blk-throtl so they have no chance of
-> influencing problems like this. So we are bound to reinvent the scheduling
-> logic IO schedulers are already doing. That being said I don't have a good
-> solution for this or architecture suggestion. Because implementing various
-> throttling frameworks within IO schedulers is cumbersome (complex
-> interactions) and generally the perfomance is too slow for some usecases.
-> We've been there (that's why there's cgroup support in BFQ) and really
-> the current architecture is much easier to reason about.
+> 
+> Jinke, is the case you described in the original email what you actually saw
+> in production or a simplified test case for demonstration? If the latter,
+> can you describe actual problems seen in production?
+> 
+> Thanks.
+> 
 
-Another layering problem w/ controlling from elevators is that that's after
-request allocation and the issuer has already moved on. We used to have
-per-cgroup rq pools but ripped that out, so it's pretty easy to cause severe
-priority inversions by depleting the shared request pool, and the fact that
-throttling takes place after the issuing task returned from issue path makes
-propagating the throttling operation upwards more challenging too.
+Hi
 
-At least in terms of cgroup control, the new bio based behavior is a lot
-better. In the fb fleet, iocost is deployed on most (virtually all) of the
-machines and we don't see issues with severe priority inversions.
-Cross-cgroup control is pretty well controlled. Inside each cgroup, sync
-writes aren't prioritized but nobody seems to be troubled by that.
+In our internal scenario, iocost has been deployed as the main io 
+isolation method and is gradually spreading。
 
-My bet is that inversion issues are a lot more severe with blk-throttle
-because it's not work-conserving and not doing things like issue-as-root or
-other measures to alleviate issues which can arise from inversions.
+But for some specific scenarios with old kernel versions, blk-throtl
+is alose needed. The scenario described in my email is in the early 
+stage of research and extensive testing for it. During this period，some 
+priority inversion issues amoug cgroups or within one cgroup have been 
+observed. So I send this patch to try to fix or mitigate some of these 
+issues.
 
-Jinke, is the case you described in the original email what you actually saw
-in production or a simplified test case for demonstration? If the latter,
-can you describe actual problems seen in production?
+Thanks
 
-Thanks.
-
--- 
-tejun
+Jinke
