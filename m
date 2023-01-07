@@ -1,122 +1,82 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH -next 3/4] block/rq_qos: use a global mutex to protect
- rq_qos apis
-Date: Fri, 6 Jan 2023 08:23:27 -1000
-Message-ID: <Y7hnH9GT6D469Vuu@slm.duckdns.org>
-References: <20230104085354.2343590-1-yukuai1@huaweicloud.com>
- <20230104085354.2343590-4-yukuai1@huaweicloud.com>
- <Y7XyIzGptuqO8EAt@slm.duckdns.org>
- <Y7YZnM/nqb0gxOei@slm.duckdns.org>
- <df2f7a60-467f-08ce-2a3e-1dc7853424aa@huaweicloud.com>
- <Y7cYKdOwSlfHtj7t@slm.duckdns.org>
- <ef55a0f1-d3c2-3979-963e-2fa10ba3c2ff@huaweicloud.com>
+From: hanjinke <hanjinke.666@bytedance.com>
+Subject: Re: [External] Re: [PATCH v3] blk-throtl: Introduce sync and async
+ queues for blk-throtl
+Date: Sat, 7 Jan 2023 12:44:35 +0800
+Message-ID: <e499f088-8ed9-2e19-b2e5-efaa4f9738f0@bytedance.com>
+References: <20221226130505.7186-1-hanjinke.666@bytedance.com>
+ <20230105161854.GA1259@blackbody.suse.cz>
+ <20230106153813.4ttyuikzaagkk2sc@quack3> <Y7hTHZQYsCX6EHIN@slm.duckdns.org>
+ <c839ba6c-80ac-6d92-af64-5c0e1956ae93@bytedance.com>
+ <Y7hlX4T1UOmQHiGf@slm.duckdns.org>
 Mime-Version: 1.0
-Return-path: <linux-block-owner@vger.kernel.org>
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:sender:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=FviiSBK5p0B4z+PC3fKC8+sEAADVb45SBnYPZfnLnEY=;
-        b=OV2BDC9JXxEtkmQOPrOeD3bwcQtCLLjCUmlAiID2R9QRkow5CEhZf+zKDwvAPy4lhL
-         0+S5/f5rhE0cHTLytLdC04LYcWbZG0JtV3cI3T+M6D/kdT1dvI3xqyjSsEl+8dC09BIs
-         8f130BruK0EHVNtD/HofxHMcznp3LwowZq3HTaHLnsO5X1jeSY8zf8iO4k5BfGp9Kk3U
-         Rehva+a0ZqY6Zy6AZyFt+k1wVqGs8PMKeQ9p/qz/WyLSRSbIGfIU7VjRXxDZBb+T5Nvm
-         9JjJT8oCy8Icc4vEUsFLn0e4W/JQAL8ztmFh20lB+H8rqDJP9nhXkfcFCFpHk/4tpK/o
-         C/Dw==
-Sender: Tejun Heo <htejun@gmail.com>
-Content-Disposition: inline
-In-Reply-To: <ef55a0f1-d3c2-3979-963e-2fa10ba3c2ff@huaweicloud.com>
+        d=bytedance-com.20210112.gappssmtp.com; s=20210112;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to:subject
+         :user-agent:mime-version:date:message-id:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=ZeUPS2iKNE5OrN4vW8ZJQleZwh3WJYgGdDBNvXHEJYc=;
+        b=OGcIprLg/imeJCuDYwJBLKaKHytu+oosVJno5w7Yr3wgiFgmnzXnr1Nl+0w6dZkuyj
+         bVWz/aMUwD5CuH5eRpIOyK9e60S5jbQ8rDUhqFOksAKbNucMI6FMlI6PuVkyS847mbQS
+         lYrSoXAVHGN8q9pRHISuHJO2Dmf1gDsJ/8tILU2M10Jm3/73zvNFOJ61PUtHJX5c7tF7
+         B6YLPAHPVtXAsti0eDHGXuyKa4kCHvyeoLqkTBM/b5YXCi+SMlSSvdIPh96dTo02SLVq
+         hsWCrzmn0M0liCwxM2oJDLgOLTk9d0X2uG4kYtSCQftSFfueOy3Q65jwAGwlUV7sH4SP
+         8LMw==
+In-Reply-To: <Y7hlX4T1UOmQHiGf@slm.duckdns.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Yu Kuai <yukuai1@huaweicloud.com>
-Cc: hch@infradead.org, josef@toxicpanda.com, axboe@kernel.dk, cgroups@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, yi.zhang@huawei.com, yangerkun@huawei.com, "yukuai (C)" <yukuai3@huawei.com>
+Content-Type: text/plain; charset="utf-8"; format="flowed"
+To: Tejun Heo <tj@kernel.org>
+Cc: Jan Kara <jack@suse.cz>, =?UTF-8?Q?Michal_Koutn=c3=bd?= <mkoutny@suse.com>, josef@toxicpanda.com, axboe@kernel.dk, cgroups@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, yinxin.x@bytedance.com
 
-Hello,
 
-On Fri, Jan 06, 2023 at 09:33:26AM +0800, Yu Kuai wrote:
-> > wbt's lazy init is tied to one of the block device sysfs files, right? So,
-> > it *should* already be protected against device removal.
-> 
-> That seems not true, I don't think q->sysfs_lock can protect that,
-> consider that queue_wb_lat_store() doesn't check if del_gendisk() is
-> called or not:
-> 
-> t1: wbt lazy init		t2: remove device
-> queue_attr_store
-> 				del_gendisk
-> 				blk_unregister_queue
-> 				 mutex_lock(&q->sysfs_lock)
-> 			         ...
-> 				 mutex_unlock(&q->sysfs_lock);
-> 				rq_qos_exit
->  mutex_lock(&q->sysfs_lock);
->   queue_wb_lat_store
->   wbt_init
->    rq_qos_add
->  mutex_unlock(&q->sysfs_lock);
 
-So, it's not sysfs_lock but sysfs file deletion. When a kernfs, which backs
-sysfs, file is removed, it disables future operations and drains all
-inflight ones before returning, so you remove the interface files before
-cleaning up the object that it interacts with, you don't have to worry about
-racing against file operations as none can be in flight at that point.
+在 2023/1/7 上午2:15, Tejun Heo 写道:
+> Hello,
+> 
+> On Sat, Jan 07, 2023 at 02:07:38AM +0800, hanjinke wrote:
+>> In our internal scenario, iocost has been deployed as the main io isolation
+>> method and is gradually spreading。
+> 
+> Ah, glad to hear. If you don't mind sharing, how are you configuring iocost
+> currently? How do you derive the parameters?
+> 
 
-> I tried to comfirm that by adding following delay:
-> 
-> diff --git a/block/blk-sysfs.c b/block/blk-sysfs.c
-> index 93d9e9c9a6ea..101c33cb0a2b 100644
-> --- a/block/blk-sysfs.c
-> +++ b/block/blk-sysfs.c
-> @@ -11,6 +11,7 @@
->  #include <linux/blktrace_api.h>
->  #include <linux/blk-mq.h>
->  #include <linux/debugfs.h>
-> +#include <linux/delay.h>
-> 
->  #include "blk.h"
->  #include "blk-mq.h"
-> @@ -734,6 +735,8 @@ queue_attr_store(struct kobject *kobj, struct attribute
-> *attr,
->         if (!entry->store)
->                 return -EIO;
-> 
-> +       msleep(10000);
-> +
->         mutex_lock(&q->sysfs_lock);
->         res = entry->store(q, page, length);
->         mutex_unlock(&q->sysfs_lock);
-> 
-> And then do the following test:
-> 
-> 1) echo 10000 > /sys/block/sdb/queue/wbt_lat_usec &
-> 2) echo 1 > /sys/block/sda/device/delete
-> 
-> Then, following bug is triggered:
-> 
-> [   51.923642] BUG: unable to handle page fault for address:
-> ffffffffffffffed
-> [   51.924294] #PF: supervisor read access in kernel mode
-> [   51.924773] #PF: error_code(0x0000) - not-present page
-> [   51.925252] PGD 1820b067 P4D 1820b067 PUD 1820d067 PMD 0
-> [   51.925754] Oops: 0000 [#1] PREEMPT SMP
-> [   51.926123] CPU: 1 PID: 539 Comm: bash Tainted: G        W
-> 6.2.0-rc1-next-202212267
-> [   51.927124] Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS
-> ?-20190727_073836-b4
-> [   51.928334] RIP: 0010:__rq_qos_issue+0x30/0x60
+For cost.model setting, We first use the tools iocost provided to test 
+the benchmark model parameters of different types of disks online, and 
+then save these benchmark parameters to a parametric Model Table. During 
+the deployment process, pull and set the corresponding model parameters 
+according to the type of disk.
 
-This indicates that we aren't getting the destruction order right. It could
-be that there are other reasons why the ordering is like this and we might
-have to synchronize separately.
+The setting of cost.qos should be considered slightly more，we need to 
+make some compromises between overall disk throughput and io latency.
+The average disk utilization of the entire disk on a specific business 
+and the RLA（if it is io sensitive） of key businesses will be taken as 
+important input considerations. The cost.qos will be dynamically 
+fine-tuned according to the health status monitoring of key businesses.
 
-Sorry that I've been asking you to go round and round but block device
-add/remove paths have always been really tricky and we wanna avoid adding
-more complications if at all possible. Can you see why the device is being
-destroyed before the queue attr is removed?
+For cost.weight setting, high-priority services  will gain greater 
+advantages through weight settings to deal with a large number of io 
+requests in a short period of time. It works fine as work-conservation
+of iocost works well according to our observation.
 
+These practices can be done better and I look forward to your better 
+suggestions.
+
+
+> blk-throttle has a lot of issues which may be difficult to address. Even the
+> way it's configured is pretty difficult to scale across different hardware /
+> application combinations and we've neglected its control performance and
+> behavior (like handling of shared IOs) for quite a while.
+> 
+> While iocost's work-conserving control does address a lot of the use cases
+> we see today, it's likely that we'll need hard limits more in the future
+> too. I've been thinking about implementing io.max on top of iocost. There
+> are some challenges around dynamic vrate adj semantics but it's kinda
+> attractive because iocost already has the concept of total device capacity.
+
+Indeed in our multi-tenancy scenario, the hard limits are necessary.
+
+Jinke
 Thanks.
 
--- 
-tejun
