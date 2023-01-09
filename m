@@ -1,93 +1,89 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [External] Re: [PATCH v3] blk-throtl: Introduce sync and async
- queues for blk-throtl
-Date: Mon, 9 Jan 2023 08:08:37 -1000
-Message-ID: <Y7xYJfRLSMYk9tj9@slm.duckdns.org>
-References: <20221226130505.7186-1-hanjinke.666@bytedance.com>
- <20230105161854.GA1259@blackbody.suse.cz>
- <20230106153813.4ttyuikzaagkk2sc@quack3>
- <Y7hTHZQYsCX6EHIN@slm.duckdns.org>
- <c839ba6c-80ac-6d92-af64-5c0e1956ae93@bytedance.com>
- <Y7hlX4T1UOmQHiGf@slm.duckdns.org>
- <e499f088-8ed9-2e19-b2e5-efaa4f9738f0@bytedance.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH v2 1/2] blk-iocost: add refcounting for iocg
+Date: Mon, 9 Jan 2023 08:23:34 -1000
+Message-ID: <Y7xbpidpq7+DqJan@slm.duckdns.org>
+References: <20221227125502.541931-1-yukuai1@huaweicloud.com>
+ <20221227125502.541931-2-yukuai1@huaweicloud.com>
+ <Y7XzUee5Bq+DoIC1@slm.duckdns.org>
+ <c63ee2ad-23d5-3be0-c731-28494398b391@huaweicloud.com>
+ <Y7cX0SJ0y6+EIY5Q@slm.duckdns.org>
+ <7dcdaef3-65c1-8175-fea7-53076f39697f@huaweicloud.com>
+ <Y7iCId3pnEnLqY8G@slm.duckdns.org>
+ <875eb43e-202d-5b81-0bff-ef0434358d99@huaweicloud.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <linux-block-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20210112;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :mime-version:references:message-id:subject:cc:to:from:date:sender
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=v8mDl6z8HZB+9Kmvxhak2TbVtn9xL/oPkERHONVaK/o=;
-        b=IrAiD+WenjCOrXbXt8CHP0KM/kRGlzZglFdJYig8j5c+YduPyy214fU95mZg19YZkQ
-         6If8TiMTCLETa696jiUhr8lxUtbHqo/oWKanSDA1M81PLYUn5V8qOopxrztev4v2o+xS
-         V2WA8iphWw18eOMfI2BgQAfYq1ZX2nlK2k5EoWL9e5OUP6fgSnLqENq/CIg9Sh9q6iu4
-         vV+CoMLnAbgl8Fzj2B+BU+TrePgajPu1J04qyNvFN2hRraF72WvETFCxK7Xy32dwolKT
-         aKdW3jdopXXVKJ7gmLyeqSd2CfFnMBbrBjyC614BjE2lw+mf0XsK77jr5I5etdCJOh6A
-         0MHA==
-Sender: Tejun Heo <htejun-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:sender:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=NgVKC3NmcxxKrnQWmSerqqDaGhLOMoPMCbrmW5GVKVk=;
+        b=qewQu0vk4Nwlo4LFhzKWR6EMnRJh/XhktdhcuuMLJzHXnLsWf8U7fgWVovAVzLQgLe
+         DeAEVAeyCjNwGPETUlQL6Nb17w8G/1bsiS/0/qc7clbmBVPMWLaVQ9JljHwXzt5cJA2+
+         aSxCPG8HvjEcZvwjL+wRu1fZKx1Qx/DpAB/9v4gjX+99NiJv/8/866g3KaKAM6DAehOY
+         7TbHUhRsPDtNNqHcqjxNHyGFPqMQ6WIhMiuFxm0AjfzwupH8ibQAs/oPDTIPyoHYIMsx
+         1GpJDL5vWZJu1nQq+wpHacVi3pRyjumovgtqe7jEPXeDvyWSmldn+4FUP6xZBBocggZx
+         rWLA==
+Sender: Tejun Heo <htejun@gmail.com>
 Content-Disposition: inline
-In-Reply-To: <e499f088-8ed9-2e19-b2e5-efaa4f9738f0-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
+In-Reply-To: <875eb43e-202d-5b81-0bff-ef0434358d99@huaweicloud.com>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="utf-8"
-To: hanjinke <hanjinke.666-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
-Cc: Jan Kara <jack-AlSwsSmVLrQ@public.gmane.org>, Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny-IBi9RG/b67k@public.gmane.org>, josef-DigfWCa+lFGyeJad7bwFQA@public.gmane.org, axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, yinxin.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Yu Kuai <yukuai1@huaweicloud.com>
+Cc: hch@infradead.org, josef@toxicpanda.com, axboe@kernel.dk, cgroups@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, yi.zhang@huawei.com, "yukuai (C)" <yukuai3@huawei.com>
 
 Hello,
 
-On Sat, Jan 07, 2023 at 12:44:35PM +0800, hanjinke wrote:
-> For cost.model setting, We first use the tools iocost provided to test the
-> benchmark model parameters of different types of disks online, and then save
-> these benchmark parameters to a parametric Model Table. During the
-> deployment process, pull and set the corresponding model parameters
-> according to the type of disk.
+On Mon, Jan 09, 2023 at 09:32:46AM +0800, Yu Kuai wrote:
+> >   59b57717fff8 ("blkcg: delay blkg destruction until after writeback has finished")
+> >   d866dbf61787 ("blkcg: rename blkcg->cgwb_refcnt to ->online_pin and always use it")
 > 
-> The setting of cost.qos should be considered slightly more，we need to make
-> some compromises between overall disk throughput and io latency.
-> The average disk utilization of the entire disk on a specific business and
-> the RLA（if it is io sensitive） of key businesses will be taken as
-> important input considerations. The cost.qos will be dynamically fine-tuned
-> according to the health status monitoring of key businesses.
+> These two commits are applied for three years, I don't check the details
+> yet but they seem can't guarantee that no io will be handled by
+> rq_qos_throttle() after pd_offline_fn(), because I just reproduced this
+> in another problem:
+> 
+> f02be9002c48 ("block, bfq: fix null pointer dereference in bfq_bio_bfqg()")
+> 
+> User thread can issue async io, and io can be throttled by
+> blk-throttle(not writeback), then user thread can exit and cgroup can be
+> removed before such io is dispatched to rq_qos_throttle.
 
-Ah, I see. Do you use the latency targets and min/max ranges or just fixate
-the vrate by setting min == max?
+I see.
 
-> For cost.weight setting, high-priority services  will gain greater
-> advantages through weight settings to deal with a large number of io
-> requests in a short period of time. It works fine as work-conservation
-> of iocost works well according to our observation.
+> > After the above two commits, ->pd_offline_fn() is called only after all
+> > possible writebacks are complete, so it shouldn't allow mass escapes to
+> > root. With writebacks out of the picture, it might be that there can be no
+> > further IOs once ->pd_offline_fn() is called too as there can be no tasks
+> > left in it and no dirty pages, but best to confirm that.
+> > 
+> > So, yeah, the original approach you took should work although I'm not sure
+> > the patches that you added to make offline blkg to bypass are necessary
+> > (that also contributed to my assumption that there will be more IOs on those
+> > blkg's). Have you seen more IOs coming down the pipeline after offline? If
+> > so, can you dump some backtraces and see where they're coming from?
+> 
+> Currently I'm sure such IOs can come from blk-throttle, and I'm not sure
+> yet but I also suspect io_uring can do this.
 
-Glad to hear.
+Yeah, that's unfortunate. There are several options here:
 
-> These practices can be done better and I look forward to your better
-> suggestions.
+1. Do what you originally suggested - bypass to root after offline. I feel
+   uneasy about this. Both iolatency and throtl clear their configs on
+   offline but that's punting to the parent. For iocost it'd be bypassing
+   all controls, which can actually be exploited.
 
-It's still in progress but resctl-bench's iocost-tune benchmark is what
-we're starting to use:
+2. Make all possible IO issuers use blkcg_[un]pin_online() and shift the
+   iocost shutdown to pd_offline_fn(). This likely is the most canonical
+   solution given the current situation but it's kinda nasty to add another
+   layer of refcnting all over the place.
 
- https://github.com/facebookexperimental/resctl-demo/blob/main/resctl-bench/doc/iocost-tune.md
+3. Order blkg free so that parents are never freed before children. You did
+   this by adding refcnts in iocost but shouldn't it be possible to simply
+   shift blkg_put(blkg->parent) in __blkg_release() to blkg_free_workfn()?
 
-The benchmark takes like 6 hours and what it does is probing the whole vrate
-range looking for behavior inflection points given the scenario of
-protecting a latency sensitive workload against memory leak. On completion,
-it provides several solutions based on the behavior observed.
-
-The benchmark is destructive (to the content on the target ssd) and can be
-tricky to set up. There's installable image to help setting up and running
-the benchmark:
-
- https://github.com/iocost-benchmark/resctl-demo-image-recipe/actions
-
-The eventual goal is collecting these benchmark results in the following git
-repo:
-
- https://github.com/iocost-benchmark/iocost-benchmarks
-
-which generates hwdb files describing all the found solution and make
-systemd apply the appropriate configuration on boot automatically.
-
-It's still all a work in progress but hopefully we should be able to
-configure iocost reasonably on boot on most SSDs.
+#3 seems the most logical to me. What do you thinK?
 
 Thanks.
 
