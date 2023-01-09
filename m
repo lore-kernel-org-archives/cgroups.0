@@ -1,152 +1,75 @@
-From: "T.J. Mercier" <tjmercier-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Subject: [PATCH 1/4] memcg: Track exported dma-buffers
-Date: Mon,  9 Jan 2023 21:38:04 +0000
-Message-ID: <20230109213809.418135-2-tjmercier@google.com>
-References: <20230109213809.418135-1-tjmercier@google.com>
+From: "T.J. Mercier" <tjmercier@google.com>
+Subject: [PATCH 0/4] Track exported dma-buffers with memcg
+Date: Mon,  9 Jan 2023 21:38:03 +0000
+Message-ID: <20230109213809.418135-1-tjmercier@google.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <linux-security-module-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=google.com; s=20210112;
-        h=cc:to:from:subject:message-id:references:mime-version:in-reply-to
-         :date:from:to:cc:subject:date:message-id:reply-to;
-        bh=ZzZnon9AuhDOmqXXwy+4pPV98gk0DXyzNf2lwwH3FVc=;
-        b=MIKhBBBnQ+bqQnJww8/fPsZhi0whxCGIUG6kEGUGMp4FOf1NaJ2uHO5gbQnelxNiQA
-         /zZow36TcojzDwPLoUOvG98yay8W+H/pD2HMrI1l93vbQq7yL0EPGLWZQ0R6+VY7DRtV
-         JNWPRrorFPERhG5pCoV73P8K4BeUX6WEsXjfyFLgqrSJKvyOp3o0siNMo696W/r6yKXU
-         y8RJ2vfZCTDjh6Oi2w1rHjBj4wQlmL0t+ZRPOFSxOTrZS7vGovErpCiunYz6Rey8BJDi
-         cncB+zuYtfJ9rQv3FhWwefPz3sWwVINattaPynPAVTeC+nbR6FJw+i6h1qaddB0J7iUL
-         VYgw==
-In-Reply-To: <20230109213809.418135-1-tjmercier-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+        h=cc:to:from:subject:message-id:mime-version:date:from:to:cc:subject
+         :date:message-id:reply-to;
+        bh=g7XZ6zbY4DVhx/1OXdLF/gOX5xZT7N2TM5K+hmXQB+Q=;
+        b=lp6mFgIFtl15wfLpEIICylaN7ba0rLKWyBcSmwWXHBIHGw2PfI8uc5JoYpz78iGrzt
+         q7BwcvepUR121HS9evBvJZvukxIVfLEQnv4pKm0uyiAQHZ2lPiVMGwyZcSxUFbhaL90/
+         ucKWwiEICRsvndQmUOtOCqlM9msyGSEUsXD5lwlIQfLeTtimxNUVh0grkxXS2J8ZCHmG
+         Om+IZIdCATJX9OXIuWLzOFPLT1CV83yldN+eGwxCxvUZBerXOoxKxtFA5g5ttfCJSVS7
+         8JY1ciKixBdA0fOe8xhy0huWzEPzI2dQz1uyE93OBKFPfOC0Iwt7BiU0pYO43R8uQXJv
+         jjig==
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: tjmercier-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Jonathan Corbet <corbet-T1hC0tSOHrs@public.gmane.org>, Sumit Semwal <sumit.semwal-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, =?UTF-8?q?Christian=20K=C3=B6nig?= <christian.koenig-5C7GfCeVMHo@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Muchun Song <muchun.song-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
-Cc: daniel.vetter-/w4YWyX8dFk@public.gmane.org, android-mm-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, jstultz-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-media-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, dri-devel-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org, linaro-mm-sig-cunTk1MwBs8s++Sfvej+rw@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
+To: tjmercier@google.com, Tejun Heo <tj@kernel.org>, Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, Jonathan Corbet <corbet@lwn.net>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, =?UTF-8?q?Arve=20Hj=C3=B8nnev=C3=A5g?= <arve@android.com>, Todd Kjos <tkjos@android.com>, Martijn Coenen <maco@android.com>, Joel Fernandes <joel@joelfernandes.org>, Christian Brauner <brauner@kernel.org>, Carlos Llamas <cmllamas@google.com>, Suren Baghdasaryan <surenb@google.com>, Sumit Semwal <sumit.semwal@linaro.org>, =?UTF-8?q?Christian=20K=C3=B6nig?= <christian.koenig@amd.com>, Michal Hocko <mhocko@kernel.org>, Roman Gushchin <roman.gushchin@linux.dev>, Shakeel Butt <shakeelb@google.com>, Muchun Song <muchun.song@linux.dev>, Andrew
+Cc: daniel.vetter@ffwll.ch, android-mm@google.com, jstultz@google.com, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, linux-media@vger.kernel.org, dri-devel@lists.freedesktop.org, linaro-mm-sig@lists.linaro.org, linux-mm@kvack.org, linux-security-module@vger.kernel.org, selinux@vger.kernel.org
 
-When a buffer is exported to userspace, use memcg to attribute the
-buffer to the allocating cgroup until all buffer references are
-released.
+Based on discussions at LPC, this series adds a memory.stat counter for
+exported dmabufs. This counter allows us to continue tracking
+system-wide total exported buffer sizes which there is no longer any
+way to get without DMABUF_SYSFS_STATS, and adds a new capability to
+track per-cgroup exported buffer sizes. The total (root counter) is
+helpful for accounting in-kernel dmabuf use (by comparing with the sum
+of child nodes or with the sum of sizes of mapped buffers or FD
+references in procfs) in addition to helping identify driver memory
+leaks when in-kernel use continually increases over time. With
+per-application cgroups, the per-cgroup counter allows us to quickly
+see how much dma-buf memory an application has caused to be allocated.
+This avoids the need to read through all of procfs which can be a
+lengthy process, and causes the charge to "stick" to the allocating
+process/cgroup as long as the buffer is alive, regardless of how the
+buffer is shared (unless the charge is transferred).
 
-Unlike the dmabuf sysfs stats implementation, this memcg accounting
-avoids contention over the kernfs_rwsem incurred when creating or
-removing nodes.
+The first patch adds the counter to memcg. The next two patches allow
+the charge for a buffer to be transferred across cgroups which is
+necessary because of the way most dmabufs are allocated from a central
+process on Android. The fourth patch adds a SELinux hook to binder in
+order to control who is allowed to transfer buffer charges.
 
-Signed-off-by: T.J. Mercier <tjmercier-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
----
- Documentation/admin-guide/cgroup-v2.rst | 4 ++++
- drivers/dma-buf/dma-buf.c               | 5 +++++
- include/linux/dma-buf.h                 | 3 +++
- include/linux/memcontrol.h              | 1 +
- mm/memcontrol.c                         | 4 ++++
- 5 files changed, 17 insertions(+)
+[1] https://lore.kernel.org/all/20220617085702.4298-1-christian.koenig@amd.com/
 
-diff --git a/Documentation/admin-guide/cgroup-v2.rst b/Documentation/admin-guide/cgroup-v2.rst
-index c8ae7c897f14..538ae22bc514 100644
---- a/Documentation/admin-guide/cgroup-v2.rst
-+++ b/Documentation/admin-guide/cgroup-v2.rst
-@@ -1455,6 +1455,10 @@ PAGE_SIZE multiple when read back.
- 		Amount of memory used for storing in-kernel data
- 		structures.
- 
-+	  dmabuf (npn)
-+		Amount of memory used for exported DMA buffers allocated by the cgroup.
-+		Stays with the allocating cgroup regardless of how the buffer is shared.
-+
- 	  workingset_refault_anon
- 		Number of refaults of previously evicted anonymous pages.
- 
-diff --git a/drivers/dma-buf/dma-buf.c b/drivers/dma-buf/dma-buf.c
-index e6528767efc7..ac45dd101c4d 100644
---- a/drivers/dma-buf/dma-buf.c
-+++ b/drivers/dma-buf/dma-buf.c
-@@ -75,6 +75,8 @@ static void dma_buf_release(struct dentry *dentry)
- 	 */
- 	BUG_ON(dmabuf->cb_in.active || dmabuf->cb_out.active);
- 
-+	mod_memcg_state(dmabuf->memcg, MEMCG_DMABUF, -dmabuf->size);
-+	mem_cgroup_put(dmabuf->memcg);
- 	dma_buf_stats_teardown(dmabuf);
- 	dmabuf->ops->release(dmabuf);
- 
-@@ -673,6 +675,9 @@ struct dma_buf *dma_buf_export(const struct dma_buf_export_info *exp_info)
- 	if (ret)
- 		goto err_dmabuf;
- 
-+	dmabuf->memcg = get_mem_cgroup_from_mm(current->mm);
-+	mod_memcg_state(dmabuf->memcg, MEMCG_DMABUF, dmabuf->size);
-+
- 	file->private_data = dmabuf;
- 	file->f_path.dentry->d_fsdata = dmabuf;
- 	dmabuf->file = file;
-diff --git a/include/linux/dma-buf.h b/include/linux/dma-buf.h
-index 6fa8d4e29719..1f0ffb8e4bf5 100644
---- a/include/linux/dma-buf.h
-+++ b/include/linux/dma-buf.h
-@@ -22,6 +22,7 @@
- #include <linux/fs.h>
- #include <linux/dma-fence.h>
- #include <linux/wait.h>
-+#include <linux/memcontrol.h>
- 
- struct device;
- struct dma_buf;
-@@ -446,6 +447,8 @@ struct dma_buf {
- 		struct dma_buf *dmabuf;
- 	} *sysfs_entry;
- #endif
-+	/* The cgroup to which this buffer is currently attributed */
-+	struct mem_cgroup *memcg;
- };
- 
- /**
-diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
-index d3c8203cab6c..1c1da2da20a6 100644
---- a/include/linux/memcontrol.h
-+++ b/include/linux/memcontrol.h
-@@ -37,6 +37,7 @@ enum memcg_stat_item {
- 	MEMCG_KMEM,
- 	MEMCG_ZSWAP_B,
- 	MEMCG_ZSWAPPED,
-+	MEMCG_DMABUF,
- 	MEMCG_NR_STAT,
- };
- 
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index ab457f0394ab..680189bec7e0 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -1502,6 +1502,7 @@ static const struct memory_stat memory_stats[] = {
- 	{ "unevictable",		NR_UNEVICTABLE			},
- 	{ "slab_reclaimable",		NR_SLAB_RECLAIMABLE_B		},
- 	{ "slab_unreclaimable",		NR_SLAB_UNRECLAIMABLE_B		},
-+	{ "dmabuf",			MEMCG_DMABUF			},
- 
- 	/* The memory events */
- 	{ "workingset_refault_anon",	WORKINGSET_REFAULT_ANON		},
-@@ -1519,6 +1520,7 @@ static int memcg_page_state_unit(int item)
- 	switch (item) {
- 	case MEMCG_PERCPU_B:
- 	case MEMCG_ZSWAP_B:
-+	case MEMCG_DMABUF:
- 	case NR_SLAB_RECLAIMABLE_B:
- 	case NR_SLAB_UNRECLAIMABLE_B:
- 	case WORKINGSET_REFAULT_ANON:
-@@ -4042,6 +4044,7 @@ static const unsigned int memcg1_stats[] = {
- 	WORKINGSET_REFAULT_ANON,
- 	WORKINGSET_REFAULT_FILE,
- 	MEMCG_SWAP,
-+	MEMCG_DMABUF,
- };
- 
- static const char *const memcg1_stat_names[] = {
-@@ -4057,6 +4060,7 @@ static const char *const memcg1_stat_names[] = {
- 	"workingset_refault_anon",
- 	"workingset_refault_file",
- 	"swap",
-+	"dmabuf",
- };
- 
- /* Universal VM events cgroup1 shows, original sort order */
+Hridya Valsaraju (1):
+  binder: Add flags to relinquish ownership of fds
+
+T.J. Mercier (3):
+  memcg: Track exported dma-buffers
+  dmabuf: Add cgroup charge transfer function
+  security: binder: Add transfer_charge SElinux hook
+
+ Documentation/admin-guide/cgroup-v2.rst |  5 +++
+ drivers/android/binder.c                | 36 +++++++++++++++--
+ drivers/dma-buf/dma-buf.c               | 54 +++++++++++++++++++++++--
+ include/linux/dma-buf.h                 |  5 +++
+ include/linux/lsm_hook_defs.h           |  2 +
+ include/linux/lsm_hooks.h               |  6 +++
+ include/linux/memcontrol.h              |  7 ++++
+ include/linux/security.h                |  2 +
+ include/uapi/linux/android/binder.h     | 23 +++++++++--
+ mm/memcontrol.c                         |  4 ++
+ security/security.c                     |  6 +++
+ security/selinux/hooks.c                |  9 +++++
+ security/selinux/include/classmap.h     |  2 +-
+ 13 files changed, 149 insertions(+), 12 deletions(-)
+
+
+base-commit: b7bfaa761d760e72a969d116517eaa12e404c262
 -- 
 2.39.0.314.g84b9a713c41-goog
 
