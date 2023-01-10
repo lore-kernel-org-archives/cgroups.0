@@ -1,86 +1,54 @@
-From: hanjinke <hanjinke.666@bytedance.com>
-Subject: Re: [External] Re: [PATCH v4] blk-throtl: Introduce sync and async
- queues for blk-throtl
-Date: Tue, 10 Jan 2023 23:59:09 +0800
-Message-ID: <b4cf040e-a9d9-8b7a-10cf-80b01d02848f@bytedance.com>
-References: <20230107130738.75640-1-hanjinke.666@bytedance.com>
- <Y7x7yq5YmcXhVkQf@slm.duckdns.org>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH v2 1/2] blk-iocost: add refcounting for iocg
+Date: Tue, 10 Jan 2023 08:36:07 -1000
+Message-ID: <Y72wF/b0/xNRmP7f@slm.duckdns.org>
+References: <20221227125502.541931-1-yukuai1@huaweicloud.com>
+ <20221227125502.541931-2-yukuai1@huaweicloud.com>
+ <Y7XzUee5Bq+DoIC1@slm.duckdns.org>
+ <c63ee2ad-23d5-3be0-c731-28494398b391@huaweicloud.com>
+ <Y7cX0SJ0y6+EIY5Q@slm.duckdns.org>
+ <7dcdaef3-65c1-8175-fea7-53076f39697f@huaweicloud.com>
+ <Y7iCId3pnEnLqY8G@slm.duckdns.org>
+ <875eb43e-202d-5b81-0bff-ef0434358d99@huaweicloud.com>
+ <Y7xbpidpq7+DqJan@slm.duckdns.org>
+ <a71f997f-6cae-d57b-85dd-2fd499d238f6@huaweicloud.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
 Return-path: <linux-block-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=bytedance-com.20210112.gappssmtp.com; s=20210112;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to:subject
-         :user-agent:mime-version:date:message-id:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=2R/55S8jT4stsBsiIv+FPNzG31bz0/CdEe06+rGUk1k=;
-        b=61Jwo1uWFCLRsb3ILZ7lkZPW4qjqzqjsluq35w5Ij+AWN0s+nRwdMCrbrPRVqY6nN4
-         kJw2BfytRBn2Xj5nvil9XL8+SySFkSZVuinHm5JYtCQJScp6fmHnmG6IHt9qVVYSyJIl
-         oyHjT+6SxrvHACnLSAWNBfs/s7CcN3GwNIOnYbS1EQmf35tp84dIIAXZs7qNWpDSb4Jb
-         mAGGBh5GBCKZCjT8iF+nmoo1/PwiD+qN5ypq8MpGcw1BXdgExhO4T3cENLzzkT5bV1eW
-         tw1eyptt7PA5nbcLQnjfM4ALqtFktFZBHc3iI46z67WOClTyJPZx73W7zUo8eWFHq9vu
-         8IzQ==
-In-Reply-To: <Y7x7yq5YmcXhVkQf@slm.duckdns.org>
+        d=gmail.com; s=20210112;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:sender:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=Mx/8qw1hk0L/Apnt3h31WEr91WdxE2C/9NCB2yBSTjc=;
+        b=o2u7cWdt7toQAtBB1r2+RF8CrYllIElK6OiiBW7wEL36HiAiGM6Y5Y+GSqXBnLwxof
+         J2CX/fG3C6YW+hxVwI3eD3mFXEqOg0pczDLmkdUuC7ijnZVTZ7zLy8TTI6d+2SWSJE0P
+         mCu0rClnWtooXrdXjRBb8yufcNeAk4c5ASu97PPYq1oL91DFQ3NbFOeFtPDTcRxTIHV6
+         0ZcAcwd7KaO6JwF8M6jRYCQZJZ4RdGVQVHB6czKnlkllG/V4R2epPHHYLQ7H3JDqT7kq
+         XbFF1cm+bjAAjJG7jXWjXI6N0/DHD9dcbNGLAB3FHCwiCggwtAh63+EFIxdhADoi3qPZ
+         yIHQ==
+Sender: Tejun Heo <htejun@gmail.com>
+Content-Disposition: inline
+In-Reply-To: <a71f997f-6cae-d57b-85dd-2fd499d238f6@huaweicloud.com>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="utf-8"; format="flowed"
-To: Tejun Heo <tj@kernel.org>
-Cc: josef@toxicpanda.com, axboe@kernel.dk, cgroups@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, yinxin.x@bytedance.com
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Yu Kuai <yukuai1@huaweicloud.com>
+Cc: hch@infradead.org, josef@toxicpanda.com, axboe@kernel.dk, cgroups@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, yi.zhang@huawei.com, "yukuai (C)" <yukuai3@huawei.com>
 
+Hello,
 
+On Tue, Jan 10, 2023 at 09:39:44AM +0800, Yu Kuai wrote:
+> As I tried to explain before, we can make sure blkg_free() is called
+> in order, but blkg_free() from remove cgroup can concurrent with
+> deactivate policy, and we can't guarantee the order of ioc_pd_free()
+> that is called both from blkg_free() and blkcg_deactivate_policy().
+> Hence I don't think #3 is possible.
 
-在 2023/1/10 上午4:40, Tejun Heo 写道:
-> On Sat, Jan 07, 2023 at 09:07:38PM +0800, Jinke Han wrote:
->> + * Assumed that there were only bios queued in ASYNC queue and the SYNC
->> + * queue was empty. The ASYNC bio was selected to dispatch and the
->> + * disp_sync_cnt was set to 0 after each dispatching. If a ASYNC bio
->> + * can't be dispatched because of overlimit in current slice, the process
->> + * of dispatch should give up and the spin lock of the request queue
->> + * may be released. A new SYNC bio may be queued in the SYNC queue then.
->> + * When it's time to dispatch this tg, the SYNC bio was selected and pop
->> + * to dispatch as the disp_sync_cnt is 0 and the SYNC queue is no-empty.
->> + * If the dispatched bio is smaller than the waiting bio, the bandwidth
->> + * may be hard to satisfied as the slice may be trimed after each dispatch.
-> 
-> I still can't make a good sense of this scenario. Can you give concrete
-> example scenarios with IOs and why it would matter?
-> 
-> Thanks.
-> 
+Hahaha, sorry that I keep forgetting that. This doesn't really feel like
+that important or difficult part of the problem tho. Can't it be solved by
+synchronizing blkg free work item against the deactivate path with a mutex?
 
-Assumed that there are many buffer write bios queued in ASYNC queue and 
-the SYNC queue is empty. The buffer write bios are all 1M in size and 
-the bps limit is 1M/s. The throtl_slice is 100ms.
+Thanks.
 
-Assumed that the start/end_slice is [jiffies1, jiffies1+100] and 
-bytes_disp[w] = 0. The next ASYNC bio can't dispatch because of 
-overlimit within this slice. The wait time is 900ms and the slice will 
-be extended to [jiffies1, jiffies1 + 1000] in tg_may_dispatch.
-
-During the waiting of the ASYNC bio, a SYNC 4k bio be queued in SYNC 
-queue. After 900ms, it's time to dispatch the ASYNC io, but the SYNC 4k 
-bio be selected to be dispatched. Now the slice is [jiffies1, 
-jiffies1+1000] and the byte_disp[w] = 4k. The slice may be extended to
-[jiffies1, jiffies1+1100]. In tg_dispatch_one_bio, the slice will be 
-trimed to [jiffies1+1000, jiffies1+1100], the byte_disp[w] will set 0.
-
-After the 4k SYNC bio be dispatched, the WAITING ASYNC bio still cann't
-be dispatched because of overlimit within this slice.
-
-The same thing may happen DISPACH_SYNC_FACTOR times if alway there is a 
-SYNC bio be queued in the SYNC queue when the ASYNC bio is waiting.
-
-This means that in nearly 5s, we have dispathed 4 4k SYNC bios and a 1m 
-ASYNC bio.
-
-In our test, with 100M/s bps limit setted, the bps only reach to ~80m/s
-when a fio generate buffer write ios and fsync continuous generated by 
-dbench in same cgroup.
-
-Thanks
-Jinke.
-
-
-
-
-
-
+-- 
+tejun
