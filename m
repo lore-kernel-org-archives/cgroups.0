@@ -1,103 +1,86 @@
 From: hanjinke <hanjinke.666@bytedance.com>
-Subject: Re: [External] Re: [PATCH v3] blk-throtl: Introduce sync and async
+Subject: Re: [External] Re: [PATCH v4] blk-throtl: Introduce sync and async
  queues for blk-throtl
-Date: Tue, 10 Jan 2023 21:07:25 +0800
-Message-ID: <f9b8e682-92aa-c39c-4d91-d77d104e0767@bytedance.com>
-References: <20221226130505.7186-1-hanjinke.666@bytedance.com>
- <20230105161854.GA1259@blackbody.suse.cz>
- <20230106153813.4ttyuikzaagkk2sc@quack3> <Y7hTHZQYsCX6EHIN@slm.duckdns.org>
- <c839ba6c-80ac-6d92-af64-5c0e1956ae93@bytedance.com>
- <Y7hlX4T1UOmQHiGf@slm.duckdns.org>
- <e499f088-8ed9-2e19-b2e5-efaa4f9738f0@bytedance.com>
- <Y7xYJfRLSMYk9tj9@slm.duckdns.org>
+Date: Tue, 10 Jan 2023 23:59:09 +0800
+Message-ID: <b4cf040e-a9d9-8b7a-10cf-80b01d02848f@bytedance.com>
+References: <20230107130738.75640-1-hanjinke.666@bytedance.com>
+ <Y7x7yq5YmcXhVkQf@slm.duckdns.org>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <linux-block-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=bytedance-com.20210112.gappssmtp.com; s=20210112;
         h=content-transfer-encoding:in-reply-to:from:references:cc:to:subject
          :user-agent:mime-version:date:message-id:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=0b3RSYe8mQauTsHJUs6ykMcTgur4za2xftvbQNqIJa0=;
-        b=RLUlg0vAPGTz4hMSALnOAbA95CQ2QhiAPu67CW1t5ndi5fYQvoHNRfl2s9mmbfxynC
-         n5Hl26i2wnPo3Po7VVrtnQueuJ9LNMFdRz54SOR0UzQpuEPMsDS42Z/bO4BEb4COnlqZ
-         Yhl/RGwxFnAkY+cH1otEhavspwfCl0FOYahc2kH+YxTr3TQTFwyb+jOHwd6AbOmhbT/k
-         UrCTqXrRr5OpYjY6+L/mYlkYPUtgEqwUoG1lp5ywtifFjrif5++oGbE8puNRSkItokP8
-         ieNDdz1XkqTFKhhlST3mTca31Q50kVpZqKIC7YfgyJEYf+TFUH4gcW9m3mBKjOdd53dv
-         s+jQ==
-In-Reply-To: <Y7xYJfRLSMYk9tj9@slm.duckdns.org>
+        bh=2R/55S8jT4stsBsiIv+FPNzG31bz0/CdEe06+rGUk1k=;
+        b=61Jwo1uWFCLRsb3ILZ7lkZPW4qjqzqjsluq35w5Ij+AWN0s+nRwdMCrbrPRVqY6nN4
+         kJw2BfytRBn2Xj5nvil9XL8+SySFkSZVuinHm5JYtCQJScp6fmHnmG6IHt9qVVYSyJIl
+         oyHjT+6SxrvHACnLSAWNBfs/s7CcN3GwNIOnYbS1EQmf35tp84dIIAXZs7qNWpDSb4Jb
+         mAGGBh5GBCKZCjT8iF+nmoo1/PwiD+qN5ypq8MpGcw1BXdgExhO4T3cENLzzkT5bV1eW
+         tw1eyptt7PA5nbcLQnjfM4ALqtFktFZBHc3iI46z67WOClTyJPZx73W7zUo8eWFHq9vu
+         8IzQ==
+In-Reply-To: <Y7x7yq5YmcXhVkQf@slm.duckdns.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="utf-8"; format="flowed"
 To: Tejun Heo <tj@kernel.org>
-Cc: Jan Kara <jack@suse.cz>, =?UTF-8?Q?Michal_Koutn=c3=bd?= <mkoutny@suse.com>, josef@toxicpanda.com, axboe@kernel.dk, cgroups@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, yinxin.x@bytedance.com
+Cc: josef@toxicpanda.com, axboe@kernel.dk, cgroups@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, yinxin.x@bytedance.com
 
 
 
-在 2023/1/10 上午2:08, Tejun Heo 写道:
-> Hello,
+在 2023/1/10 上午4:40, Tejun Heo 写道:
+> On Sat, Jan 07, 2023 at 09:07:38PM +0800, Jinke Han wrote:
+>> + * Assumed that there were only bios queued in ASYNC queue and the SYNC
+>> + * queue was empty. The ASYNC bio was selected to dispatch and the
+>> + * disp_sync_cnt was set to 0 after each dispatching. If a ASYNC bio
+>> + * can't be dispatched because of overlimit in current slice, the process
+>> + * of dispatch should give up and the spin lock of the request queue
+>> + * may be released. A new SYNC bio may be queued in the SYNC queue then.
+>> + * When it's time to dispatch this tg, the SYNC bio was selected and pop
+>> + * to dispatch as the disp_sync_cnt is 0 and the SYNC queue is no-empty.
+>> + * If the dispatched bio is smaller than the waiting bio, the bandwidth
+>> + * may be hard to satisfied as the slice may be trimed after each dispatch.
 > 
-> On Sat, Jan 07, 2023 at 12:44:35PM +0800, hanjinke wrote:
->> For cost.model setting, We first use the tools iocost provided to test the
->> benchmark model parameters of different types of disks online, and then save
->> these benchmark parameters to a parametric Model Table. During the
->> deployment process, pull and set the corresponding model parameters
->> according to the type of disk.
->>
->> The setting of cost.qos should be considered slightly more，we need to make
->> some compromises between overall disk throughput and io latency.
->> The average disk utilization of the entire disk on a specific business and
->> the RLA（if it is io sensitive） of key businesses will be taken as
->> important input considerations. The cost.qos will be dynamically fine-tuned
->> according to the health status monitoring of key businesses.
-> 
-> Ah, I see. Do you use the latency targets and min/max ranges or just fixate
-> the vrate by setting min == max?
-
-Currently we use the former.
-
-> 
->> For cost.weight setting, high-priority services  will gain greater
->> advantages through weight settings to deal with a large number of io
->> requests in a short period of time. It works fine as work-conservation
->> of iocost works well according to our observation.
-> 
-> Glad to hear.
-> 
->> These practices can be done better and I look forward to your better
->> suggestions.
-> 
-> It's still in progress but resctl-bench's iocost-tune benchmark is what
-> we're starting to use:
-> 
->   https://github.com/facebookexperimental/resctl-demo/blob/main/resctl-bench/doc/iocost-tune.md
-> 
-> The benchmark takes like 6 hours and what it does is probing the whole vrate
-> range looking for behavior inflection points given the scenario of
-> protecting a latency sensitive workload against memory leak. On completion,
-> it provides several solutions based on the behavior observed.
-> 
-> The benchmark is destructive (to the content on the target ssd) and can be
-> tricky to set up. There's installable image to help setting up and running
-> the benchmark:
-> 
->   https://github.com/iocost-benchmark/resctl-demo-image-recipe/actions
-> 
-> The eventual goal is collecting these benchmark results in the following git
-> repo:
-> 
->   https://github.com/iocost-benchmark/iocost-benchmarks
-> 
-> which generates hwdb files describing all the found solution and make
-> systemd apply the appropriate configuration on boot automatically.
-> 
-> It's still all a work in progress but hopefully we should be able to
-> configure iocost reasonably on boot on most SSDs.
+> I still can't make a good sense of this scenario. Can you give concrete
+> example scenarios with IOs and why it would matter?
 > 
 > Thanks.
 > 
 
-These methodologies are worthy of our study and will definitely help our 
-future deployment of iocost. Thanks a lot.
+Assumed that there are many buffer write bios queued in ASYNC queue and 
+the SYNC queue is empty. The buffer write bios are all 1M in size and 
+the bps limit is 1M/s. The throtl_slice is 100ms.
 
-Thanks.
+Assumed that the start/end_slice is [jiffies1, jiffies1+100] and 
+bytes_disp[w] = 0. The next ASYNC bio can't dispatch because of 
+overlimit within this slice. The wait time is 900ms and the slice will 
+be extended to [jiffies1, jiffies1 + 1000] in tg_may_dispatch.
+
+During the waiting of the ASYNC bio, a SYNC 4k bio be queued in SYNC 
+queue. After 900ms, it's time to dispatch the ASYNC io, but the SYNC 4k 
+bio be selected to be dispatched. Now the slice is [jiffies1, 
+jiffies1+1000] and the byte_disp[w] = 4k. The slice may be extended to
+[jiffies1, jiffies1+1100]. In tg_dispatch_one_bio, the slice will be 
+trimed to [jiffies1+1000, jiffies1+1100], the byte_disp[w] will set 0.
+
+After the 4k SYNC bio be dispatched, the WAITING ASYNC bio still cann't
+be dispatched because of overlimit within this slice.
+
+The same thing may happen DISPACH_SYNC_FACTOR times if alway there is a 
+SYNC bio be queued in the SYNC queue when the ASYNC bio is waiting.
+
+This means that in nearly 5s, we have dispathed 4 4k SYNC bios and a 1m 
+ASYNC bio.
+
+In our test, with 100M/s bps limit setted, the bps only reach to ~80m/s
+when a fio generate buffer write ios and fsync continuous generated by 
+dbench in same cgroup.
+
+Thanks
+Jinke.
+
+
+
+
+
 
