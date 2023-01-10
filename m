@@ -1,82 +1,64 @@
-From: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH 0/4] Track exported dma-buffers with memcg
-Date: Mon, 9 Jan 2023 16:18:12 -0800
-Message-ID: <CALvZod4ru7F38tAO-gM9ZFKaEhS0w3KqFbPwhwcTvgJs4xMUow@mail.gmail.com>
-References: <20230109213809.418135-1-tjmercier@google.com>
+From: Yu Kuai <yukuai1-XF6JlduFytWkHkcT6e4Xnw@public.gmane.org>
+Subject: Re: [PATCH v2 1/2] blk-iocost: add refcounting for iocg
+Date: Tue, 10 Jan 2023 09:39:44 +0800
+Message-ID: <a71f997f-6cae-d57b-85dd-2fd499d238f6@huaweicloud.com>
+References: <20221227125502.541931-1-yukuai1@huaweicloud.com>
+ <20221227125502.541931-2-yukuai1@huaweicloud.com>
+ <Y7XzUee5Bq+DoIC1@slm.duckdns.org>
+ <c63ee2ad-23d5-3be0-c731-28494398b391@huaweicloud.com>
+ <Y7cX0SJ0y6+EIY5Q@slm.duckdns.org>
+ <7dcdaef3-65c1-8175-fea7-53076f39697f@huaweicloud.com>
+ <Y7iCId3pnEnLqY8G@slm.duckdns.org>
+ <875eb43e-202d-5b81-0bff-ef0434358d99@huaweicloud.com>
+ <Y7xbpidpq7+DqJan@slm.duckdns.org>
 Mime-Version: 1.0
+Content-Transfer-Encoding: quoted-printable
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20210112;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:from:to:cc:subject:date:message-id:reply-to;
-        bh=sgQCt0va7Fj5/9fGcldqaAxXWYK8cBxGZmP9xyPfdn4=;
-        b=CjxZ1mdpIhqu8VGPVCMoqsbsDlIhqCjEmsPqq5qkb1qszkge1Jm7eoOuPAcP/ZV3bk
-         wPP+sf8id+ynxeTBPKOWQaibXFQF9VkirxIevCIzpGAQ21ueiyMyljdoDpqBwv6iADhp
-         JWDpspg8gxuUz/g8o8f3Q/TpOZXD4wUkStfMnP3bNMTdaoT8E8PrN4XpF0W1y5T9lIyj
-         m9H9otSUCpmNvNlNujrmOWTRlgks+Pwp+EXc1GX8tr1KUVIqmZXacuPH98ZfnNVZNFn8
-         /a3FCftCVuu8stwkCKaAOtd2Rf8qgv7JUkOT3SOOPfRdmX4H3QpcqFd3fI60DVZdrWVr
-         exyg==
-In-Reply-To: <20230109213809.418135-1-tjmercier-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+In-Reply-To: <Y7xbpidpq7+DqJan-NiLfg/pYEd1N0TnZuCh8vA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: "T.J. Mercier" <tjmercier-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Jonathan Corbet <corbet-T1hC0tSOHrs@public.gmane.org>, Greg Kroah-Hartman <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>, =?UTF-8?B?QXJ2ZSBIasO4bm5ldsOlZw==?= <arve-z5hGa2qSFaRBDgjK7y7TUQ@public.gmane.org>, Todd Kjos <tkjos-z5hGa2qSFaRBDgjK7y7TUQ@public.gmane.org>, Martijn Coenen <maco-z5hGa2qSFaRBDgjK7y7TUQ@public.gmane.org>, Joel Fernandes <joel-QYYGw3jwrUn5owFQY34kdNi2O/JbrIOy@public.gmane.org>, Christian Brauner <brauner-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Carlos Llamas <cmllamas-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Suren Baghdasaryan <surenb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Sumit Semwal <sumit.semwal-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, =?UTF-8?Q?Christian_K=C3=B6nig?= <christian.koenig-5C7GfCeVMHo@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Muchun Song <muchun.song-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Paul Moore <paul-r2n+y4ga6xFZroRs9YW3xA@public.gmane.org>
+Content-Type: text/plain; charset="iso-8859-1"; format="flowed"
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Yu Kuai <yukuai1-XF6JlduFytWkHkcT6e4Xnw@public.gmane.org>
+Cc: hch-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, josef-DigfWCa+lFGyeJad7bwFQA@public.gmane.org, axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, yi.zhang-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, "yukuai (C)" <yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 
-Hi T.J.,
+Hi,
 
-On Mon, Jan 9, 2023 at 1:38 PM T.J. Mercier <tjmercier-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org> wrote:
->
-> Based on discussions at LPC, this series adds a memory.stat counter for
-> exported dmabufs. This counter allows us to continue tracking
-> system-wide total exported buffer sizes which there is no longer any
-> way to get without DMABUF_SYSFS_STATS, and adds a new capability to
-> track per-cgroup exported buffer sizes. The total (root counter) is
-> helpful for accounting in-kernel dmabuf use (by comparing with the sum
-> of child nodes or with the sum of sizes of mapped buffers or FD
-> references in procfs) in addition to helping identify driver memory
-> leaks when in-kernel use continually increases over time. With
-> per-application cgroups, the per-cgroup counter allows us to quickly
-> see how much dma-buf memory an application has caused to be allocated.
-> This avoids the need to read through all of procfs which can be a
-> lengthy process, and causes the charge to "stick" to the allocating
-> process/cgroup as long as the buffer is alive, regardless of how the
-> buffer is shared (unless the charge is transferred).
->
-> The first patch adds the counter to memcg. The next two patches allow
-> the charge for a buffer to be transferred across cgroups which is
-> necessary because of the way most dmabufs are allocated from a central
-> process on Android. The fourth patch adds a SELinux hook to binder in
-> order to control who is allowed to transfer buffer charges.
->
-> [1] https://lore.kernel.org/all/20220617085702.4298-1-christian.koenig-5C7GfCeVMHo@public.gmane.org/
->
+=D4=DA 2023/01/10 2:23, Tejun Heo =D0=B4=B5=C0:
+> Yeah, that's unfortunate. There are several options here:
+>=20
+> 1. Do what you originally suggested - bypass to root after offline. I feel
+>     uneasy about this. Both iolatency and throtl clear their configs on
+>     offline but that's punting to the parent. For iocost it'd be bypassing
+>     all controls, which can actually be exploited.
+>=20
+> 2. Make all possible IO issuers use blkcg_[un]pin_online() and shift the
+>     iocost shutdown to pd_offline_fn(). This likely is the most canonical
+>     solution given the current situation but it's kinda nasty to add anot=
+her
+>     layer of refcnting all over the place.
+>=20
+> 3. Order blkg free so that parents are never freed before children. You d=
+id
+>     this by adding refcnts in iocost but shouldn't it be possible to simp=
+ly
+>     shift blkg_put(blkg->parent) in __blkg_release() to blkg_free_workfn(=
+)?
 
-I am a bit confused by the term "charge" used in this patch series.
-From the patches, it seems like only a memcg stat is added and nothing
-is charged to the memcg.
+As I tried to explain before, we can make sure blkg_free() is called
+in order, but blkg_free() from remove cgroup can concurrent with
+deactivate policy, and we can't guarantee the order of ioc_pd_free()
+that is called both from blkg_free() and blkcg_deactivate_policy().
+Hence I don't think #3 is possible.
 
-This leads me to the question: Why add this stat in memcg if the
-underlying memory is not charged to the memcg and if we don't really
-want to limit the usage?
+I personaly prefer #1, I don't see any real use case about the defect
+that you described, and actually in cgroup v1 blk-throtl is bypassed to
+no limit as well.
 
-I see two ways forward:
+I'm not sure about #2, that sounds a possible solution but I'm not quite
+familiar with the implementations here.
 
-1. Instead of memcg, use bpf-rstat [1] infra to implement the
-per-cgroup stat for dmabuf. (You may need an additional hook for the
-stat transfer).
+Consider that bfq already has such refcounting for bfqg, perhaps
+similiar refcounting is acceptable?
 
-2. Charge the actual memory to the memcg. Since the size of dmabuf is
-immutable across its lifetime, you will not need to do accounting at
-page level and instead use something similar to the network memory
-accounting interface/mechanism (or even more simple). However you
-would need to handle the reclaim, OOM and charge context and failure
-cases. However if you are not looking to limit the usage of dmabuf
-then this option is an overkill.
+Thanks,
+Kuai
 
-Please let me know if I misunderstood something.
-
-[1] https://lore.kernel.org/all/20220824233117.1312810-1-haoluo-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org/
-
-thanks,
-Shakeel
