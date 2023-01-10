@@ -1,53 +1,103 @@
-From: Michal Hocko <mhocko@suse.com>
-Subject: Re: [PATCH 1/4] memcg: Track exported dma-buffers
-Date: Tue, 10 Jan 2023 09:58:19 +0100
-Message-ID: <Y70oqxejnUqkJVPx@dhcp22.suse.cz>
-References: <20230109213809.418135-1-tjmercier@google.com>
- <20230109213809.418135-2-tjmercier@google.com>
+From: hanjinke <hanjinke.666@bytedance.com>
+Subject: Re: [External] Re: [PATCH v3] blk-throtl: Introduce sync and async
+ queues for blk-throtl
+Date: Tue, 10 Jan 2023 21:07:25 +0800
+Message-ID: <f9b8e682-92aa-c39c-4d91-d77d104e0767@bytedance.com>
+References: <20221226130505.7186-1-hanjinke.666@bytedance.com>
+ <20230105161854.GA1259@blackbody.suse.cz>
+ <20230106153813.4ttyuikzaagkk2sc@quack3> <Y7hTHZQYsCX6EHIN@slm.duckdns.org>
+ <c839ba6c-80ac-6d92-af64-5c0e1956ae93@bytedance.com>
+ <Y7hlX4T1UOmQHiGf@slm.duckdns.org>
+ <e499f088-8ed9-2e19-b2e5-efaa4f9738f0@bytedance.com>
+ <Y7xYJfRLSMYk9tj9@slm.duckdns.org>
 Mime-Version: 1.0
-Return-path: <linux-doc-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
-        t=1673341100; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=MQLMOsWeyfQ9OMwOEPpBfSY/zX1K5gLRGoJXs0PRFhQ=;
-        b=d0/gJhZr3338arujv292RDCpaFVCNpNRhfmbIWIBvXye7cZy8BnXDKXCy9uBlP+DXmqzhv
-        vH5AzxAF9dGjzxCxyUj1ty+EwLrjZ3mqqo1g8JsfnV+KA79R00NSzTgm9DNtTFXOX4Gf8S
-        h+jlN7NEV2XA5L/y7LnIoWd7unR8GQs=
-Content-Disposition: inline
-In-Reply-To: <20230109213809.418135-2-tjmercier@google.com>
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=bytedance-com.20210112.gappssmtp.com; s=20210112;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to:subject
+         :user-agent:mime-version:date:message-id:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=0b3RSYe8mQauTsHJUs6ykMcTgur4za2xftvbQNqIJa0=;
+        b=RLUlg0vAPGTz4hMSALnOAbA95CQ2QhiAPu67CW1t5ndi5fYQvoHNRfl2s9mmbfxynC
+         n5Hl26i2wnPo3Po7VVrtnQueuJ9LNMFdRz54SOR0UzQpuEPMsDS42Z/bO4BEb4COnlqZ
+         Yhl/RGwxFnAkY+cH1otEhavspwfCl0FOYahc2kH+YxTr3TQTFwyb+jOHwd6AbOmhbT/k
+         UrCTqXrRr5OpYjY6+L/mYlkYPUtgEqwUoG1lp5ywtifFjrif5++oGbE8puNRSkItokP8
+         ieNDdz1XkqTFKhhlST3mTca31Q50kVpZqKIC7YfgyJEYf+TFUH4gcW9m3mBKjOdd53dv
+         s+jQ==
+In-Reply-To: <Y7xYJfRLSMYk9tj9@slm.duckdns.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: "T.J. Mercier" <tjmercier@google.com>
-Cc: Tejun Heo <tj@kernel.org>, Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, Jonathan Corbet <corbet@lwn.net>, Sumit Semwal <sumit.semwal@linaro.org>, Christian =?iso-8859-1?Q?K=F6nig?= <christian.koenig@amd.com>, Roman Gushchin <roman.gushchin@linux.dev>, Shakeel Butt <shakeelb@google.com>, Muchun Song <muchun.song@linux.dev>, Andrew Morton <akpm@linux-foundation.org>, daniel.vetter@ffwll.ch, android-mm@google.com, jstultz@google.com, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, linux-media@vger.kernel.org, dri-devel@lists.freedesktop.org, linaro-mm-sig@lists.linaro.org, linux-mm@kvack.org
+Content-Type: text/plain; charset="utf-8"; format="flowed"
+To: Tejun Heo <tj@kernel.org>
+Cc: Jan Kara <jack@suse.cz>, =?UTF-8?Q?Michal_Koutn=c3=bd?= <mkoutny@suse.com>, josef@toxicpanda.com, axboe@kernel.dk, cgroups@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, yinxin.x@bytedance.com
 
-On Mon 09-01-23 21:38:04, T.J. Mercier wrote:
-> When a buffer is exported to userspace, use memcg to attribute the
-> buffer to the allocating cgroup until all buffer references are
-> released.
+
+
+在 2023/1/10 上午2:08, Tejun Heo 写道:
+> Hello,
 > 
-> Unlike the dmabuf sysfs stats implementation, this memcg accounting
-> avoids contention over the kernfs_rwsem incurred when creating or
-> removing nodes.
+> On Sat, Jan 07, 2023 at 12:44:35PM +0800, hanjinke wrote:
+>> For cost.model setting, We first use the tools iocost provided to test the
+>> benchmark model parameters of different types of disks online, and then save
+>> these benchmark parameters to a parametric Model Table. During the
+>> deployment process, pull and set the corresponding model parameters
+>> according to the type of disk.
+>>
+>> The setting of cost.qos should be considered slightly more，we need to make
+>> some compromises between overall disk throughput and io latency.
+>> The average disk utilization of the entire disk on a specific business and
+>> the RLA（if it is io sensitive） of key businesses will be taken as
+>> important input considerations. The cost.qos will be dynamically fine-tuned
+>> according to the health status monitoring of key businesses.
+> 
+> Ah, I see. Do you use the latency targets and min/max ranges or just fixate
+> the vrate by setting min == max?
 
-I am not familiar with dmabuf infrastructure so please bear with me.
-AFAIU this patch adds a dmabuf specific counter to find out the amount
-of dmabuf memory used. But I do not see any actual charging implemented
-for that memory.
+Currently we use the former.
 
-I have looked at two random users of dma_buf_export cma_heap_allocate
-and it allocates pages to back the dmabuf (AFAIU) by cma_alloc
-which doesn't account to memcg, system_heap_allocate uses
-alloc_largest_available which relies on order_flags which doesn't seem
-to ever use __GFP_ACCOUNT.
+> 
+>> For cost.weight setting, high-priority services  will gain greater
+>> advantages through weight settings to deal with a large number of io
+>> requests in a short period of time. It works fine as work-conservation
+>> of iocost works well according to our observation.
+> 
+> Glad to hear.
+> 
+>> These practices can be done better and I look forward to your better
+>> suggestions.
+> 
+> It's still in progress but resctl-bench's iocost-tune benchmark is what
+> we're starting to use:
+> 
+>   https://github.com/facebookexperimental/resctl-demo/blob/main/resctl-bench/doc/iocost-tune.md
+> 
+> The benchmark takes like 6 hours and what it does is probing the whole vrate
+> range looking for behavior inflection points given the scenario of
+> protecting a latency sensitive workload against memory leak. On completion,
+> it provides several solutions based on the behavior observed.
+> 
+> The benchmark is destructive (to the content on the target ssd) and can be
+> tricky to set up. There's installable image to help setting up and running
+> the benchmark:
+> 
+>   https://github.com/iocost-benchmark/resctl-demo-image-recipe/actions
+> 
+> The eventual goal is collecting these benchmark results in the following git
+> repo:
+> 
+>   https://github.com/iocost-benchmark/iocost-benchmarks
+> 
+> which generates hwdb files describing all the found solution and make
+> systemd apply the appropriate configuration on boot automatically.
+> 
+> It's still all a work in progress but hopefully we should be able to
+> configure iocost reasonably on boot on most SSDs.
+> 
+> Thanks.
+> 
 
-This would mean that the counter doesn't represent any actual memory
-reflected in the overall memory consumption of a memcg. I believe this
-is rather unexpected and confusing behavior. While some counters
-overlap and their sum would exceed the charged memory we do not have any
-that doesn't correspond to any memory (at least not for non-root memcgs).
+These methodologies are worthy of our study and will definitely help our 
+future deployment of iocost. Thanks a lot.
 
--- 
-Michal Hocko
-SUSE Labs
+Thanks.
+
