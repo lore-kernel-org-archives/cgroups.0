@@ -1,63 +1,89 @@
-From: "T.J. Mercier" <tjmercier@google.com>
-Subject: Re: [PATCH 1/4] memcg: Track exported dma-buffers
-Date: Tue, 10 Jan 2023 11:08:04 -0800
-Message-ID: <CABdmKX3hBX1O8fJ2Zz0ajL=f+tROqWe-Kzr7oPjs46qBYBXV1g@mail.gmail.com>
-References: <20230109213809.418135-1-tjmercier@google.com> <20230109213809.418135-2-tjmercier@google.com>
- <Y70oqxejnUqkJVPx@dhcp22.suse.cz>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [External] Re: [PATCH v4] blk-throtl: Introduce sync and async
+ queues for blk-throtl
+Date: Tue, 10 Jan 2023 12:21:07 -1000
+Message-ID: <Y73k04BhpY/SuwGB@slm.duckdns.org>
+References: <20230107130738.75640-1-hanjinke.666@bytedance.com>
+ <Y7x7yq5YmcXhVkQf@slm.duckdns.org>
+ <b4cf040e-a9d9-8b7a-10cf-80b01d02848f@bytedance.com>
 Mime-Version: 1.0
-Return-path: <linux-media-owner@vger.kernel.org>
+Content-Transfer-Encoding: 8bit
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20210112;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:from:to:cc:subject:date:message-id:reply-to;
-        bh=eB6zDLr3jptFznjCY+cJ6LV+lGxSv6mlgWXUb4GRVLE=;
-        b=kNneCXnUbGtaezFZly8EELiFvrMI8uCxra4hUNp5F8h55KzRcraX6HTcL/eoX2slxU
-         5eIut2BW8V2KxE4ECFGrtM+afRxG/KTeduZVHs5S8WSaTnrTAKUpQ9LGjuGWxJrrW+Rb
-         HL3W/mk5/ZWXlu153IFY6bWd5ku/c5DQ1P/WEPBZYa8NWqLe/FC6eZ+nVcj+NfNmapAJ
-         hhVfZ0STKoz+rrAswTAQZmVDSFu+39MDK4KoXl6hbj290qVSa10/hwUiXT3+ysS6+4M+
-         Fn8gtLHQRlRNe7nlS5w5XbzHPW/6rq2M3KUaxPGuT+9WamrHs6La624Sedcyvl8v1GSa
-         pxXw==
-In-Reply-To: <Y70oqxejnUqkJVPx@dhcp22.suse.cz>
+        d=gmail.com; s=20210112;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :mime-version:references:message-id:subject:cc:to:from:date:sender
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=xQqgkH+X4DgNMo+bVnhMEmwdgUyr4sbsfxgP11tD+Hs=;
+        b=aCsRfL5G+B/Q0wKECpcJVdg90d8G+GjqB68k8Pj0uCxNIHy948tppcSeOOjkuwG1ZA
+         pCad+QFepRkPEjtp4Gt7b6T7N36io7W4gNa7QYZJXdyxGfQLTxAekKAodf2J9Jtkuauy
+         1Vi7e0NID2zLACf5Flq07v2MV0YdyAtFLiSudMFtdETOtd6m8vg7PEwW1uh/CrsmbkVG
+         bUu4Z0r+quneEtb5GGEVn8dzzsA7dBw2tz1bVJWQh+EV1pC/M99MZlp0xfkBZpbY1Mcn
+         uS4T6ZqMrg6+bjUPzj6jh8/+X8WZ9AARQvjQh1DMKvN6bs19uVNHEsg3vrXV9D9govgQ
+         t6Vg==
+Sender: Tejun Heo <htejun-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <b4cf040e-a9d9-8b7a-10cf-80b01d02848f-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Michal Hocko <mhocko@suse.com>
-Cc: Tejun Heo <tj@kernel.org>, Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, Jonathan Corbet <corbet@lwn.net>, Sumit Semwal <sumit.semwal@linaro.org>, =?UTF-8?Q?Christian_K=C3=B6nig?= <christian.koenig@amd.com>, Roman Gushchin <roman.gushchin@linux.dev>, Shakeel Butt <shakeelb@google.com>, Muchun Song <muchun.song@linux.dev>, Andrew Morton <akpm@linux-foundation.org>, daniel.vetter@ffwll.ch, android-mm@google.com, jstultz@google.com, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, linux-media@vger.kernel.org, dri-devel@lists.freedesktop.org, linaro-mm-sig@lists.linaro.org, linux-mm@kvack.org
+Content-Type: text/plain; charset="utf-8"
+To: hanjinke <hanjinke.666-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
+Cc: josef-DigfWCa+lFGyeJad7bwFQA@public.gmane.org, axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, yinxin.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org
 
-On Tue, Jan 10, 2023 at 12:58 AM Michal Hocko <mhocko@suse.com> wrote:
->
-> On Mon 09-01-23 21:38:04, T.J. Mercier wrote:
-> > When a buffer is exported to userspace, use memcg to attribute the
-> > buffer to the allocating cgroup until all buffer references are
-> > released.
-> >
-> > Unlike the dmabuf sysfs stats implementation, this memcg accounting
-> > avoids contention over the kernfs_rwsem incurred when creating or
-> > removing nodes.
->
-> I am not familiar with dmabuf infrastructure so please bear with me.
-> AFAIU this patch adds a dmabuf specific counter to find out the amount
-> of dmabuf memory used. But I do not see any actual charging implemented
-> for that memory.
->
-> I have looked at two random users of dma_buf_export cma_heap_allocate
-> and it allocates pages to back the dmabuf (AFAIU) by cma_alloc
-> which doesn't account to memcg, system_heap_allocate uses
-> alloc_largest_available which relies on order_flags which doesn't seem
-> to ever use __GFP_ACCOUNT.
->
-> This would mean that the counter doesn't represent any actual memory
-> reflected in the overall memory consumption of a memcg. I believe this
-> is rather unexpected and confusing behavior. While some counters
-> overlap and their sum would exceed the charged memory we do not have any
-> that doesn't correspond to any memory (at least not for non-root memcgs).
->
-> --
-> Michal Hocko
-> SUSE Labs
+On Tue, Jan 10, 2023 at 11:59:09PM +0800, hanjinke wrote:
+> 
+> 
+> 在 2023/1/10 上午4:40, Tejun Heo 写道:
+> > On Sat, Jan 07, 2023 at 09:07:38PM +0800, Jinke Han wrote:
+> > > + * Assumed that there were only bios queued in ASYNC queue and the SYNC
+> > > + * queue was empty. The ASYNC bio was selected to dispatch and the
+> > > + * disp_sync_cnt was set to 0 after each dispatching. If a ASYNC bio
+> > > + * can't be dispatched because of overlimit in current slice, the process
+> > > + * of dispatch should give up and the spin lock of the request queue
+> > > + * may be released. A new SYNC bio may be queued in the SYNC queue then.
+> > > + * When it's time to dispatch this tg, the SYNC bio was selected and pop
+> > > + * to dispatch as the disp_sync_cnt is 0 and the SYNC queue is no-empty.
+> > > + * If the dispatched bio is smaller than the waiting bio, the bandwidth
+> > > + * may be hard to satisfied as the slice may be trimed after each dispatch.
+> > 
+> > I still can't make a good sense of this scenario. Can you give concrete
+> > example scenarios with IOs and why it would matter?
+> > 
+> > Thanks.
+> > 
+> 
+> Assumed that there are many buffer write bios queued in ASYNC queue and the
+> SYNC queue is empty. The buffer write bios are all 1M in size and the bps
+> limit is 1M/s. The throtl_slice is 100ms.
+> 
+> Assumed that the start/end_slice is [jiffies1, jiffies1+100] and
+> bytes_disp[w] = 0. The next ASYNC bio can't dispatch because of overlimit
+> within this slice. The wait time is 900ms and the slice will be extended to
+> [jiffies1, jiffies1 + 1000] in tg_may_dispatch.
+> 
+> During the waiting of the ASYNC bio, a SYNC 4k bio be queued in SYNC queue.
+> After 900ms, it's time to dispatch the ASYNC io, but the SYNC 4k bio be
+> selected to be dispatched. Now the slice is [jiffies1, jiffies1+1000] and
+> the byte_disp[w] = 4k. The slice may be extended to
+> [jiffies1, jiffies1+1100]. In tg_dispatch_one_bio, the slice will be trimed
+> to [jiffies1+1000, jiffies1+1100], the byte_disp[w] will set 0.
+> 
+> After the 4k SYNC bio be dispatched, the WAITING ASYNC bio still cann't
+> be dispatched because of overlimit within this slice.
+> 
+> The same thing may happen DISPACH_SYNC_FACTOR times if alway there is a SYNC
+> bio be queued in the SYNC queue when the ASYNC bio is waiting.
+> 
+> This means that in nearly 5s, we have dispathed 4 4k SYNC bios and a 1m
+> ASYNC bio.
+> 
+> In our test, with 100M/s bps limit setted, the bps only reach to ~80m/s
+> when a fio generate buffer write ios and fsync continuous generated by
+> dbench in same cgroup.
 
-Thank you, that behavior is not intentional. I'm not looking at the
-overall memcg charge yet otherwise I would have noticed this. I think
-I understand what's needed for the charging part, but Shakeel
-mentioned some additional work for "reclaim, OOM and charge context
-and failure cases" on the cover letter which I need to look into.
+That makes sense to me. Thanks for the explanation. It'd probably a good
+idea to expand the explanation in the comment tho.
+
+Thanks.
+
+-- 
+tejun
