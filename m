@@ -1,110 +1,69 @@
-From: kernel test robot <lkp-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
-Subject: [tj-cgroup:for-next] BUILD SUCCESS
- 32a47817d07557ffca9992964c514fd79bda6fba
-Date: Wed, 11 Jan 2023 18:32:02 +0800
-Message-ID: <63be9022.dV2GuG+zKzioP4xX%lkp@intel.com>
+From: Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny@suse.com>
+Subject: Re: [External] Re: [PATCH v3] blk-throtl: Introduce sync and async
+ queues for blk-throtl
+Date: Wed, 11 Jan 2023 13:35:32 +0100
+Message-ID: <20230111123532.GB3673@blackbody.suse.cz>
+References: <20221226130505.7186-1-hanjinke.666@bytedance.com>
+ <20230105161854.GA1259@blackbody.suse.cz>
+ <20230106153813.4ttyuikzaagkk2sc@quack3>
+ <Y7hTHZQYsCX6EHIN@slm.duckdns.org>
+ <c839ba6c-80ac-6d92-af64-5c0e1956ae93@bytedance.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1673433176; x=1704969176;
-  h=date:from:to:cc:subject:message-id:mime-version:
-   content-transfer-encoding;
-  bh=VweBvKjHJD+r5ZR2MO5op5fuxLWkKhRPAyTdeyT7nFc=;
-  b=fvz9ngN1hN1IN8m10z0ToLKtY1cjmVM5pyzSO2Pn5ql86dvMZ/BJyjRU
-   qkkxdxG7M1Pb/CDDqU/ergRhq8RPNlqxKK27ycLFbvfM+wpN4s5LXsr3C
-   vsA3mjn+E2JIwDiiAbBvMn1ISzApvUojzbRk5HYX65eXnzaa0YrARo4cj
-   Hv4LHdDma6lx/21/UA/AnQgpHaWKfwoOl/SycHBu0YI2waqY3qRAxY33L
-   RGqlzuUyl+Xbfxylu+UFQdCkb7VxBDmBaNho6Rj4Cz78M62PDY3Fr+qLF
-   Ki6MkHg7DSR5lwbRK7hfeFBdfnS1K1QUuZybOn0v3am8K0Ch/JzbdhaM1
-   w==;
+Content-Type: multipart/signed; micalg=pgp-sha256;
+        protocol="application/pgp-signature"; boundary="L6iaP+gRLNZHKoI4"
+Return-path: <linux-block-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
+        t=1673440534; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=KUl6YA1IKQUKcScNMyJ415yLqRxEtI8kTOV2MucdUwI=;
+        b=j8rDezHZBy0CHoXmut/N/eeDkVcSrSq7aWYb5DR4MRZOYPn0lF3k4OfsNWh/JMkukmXI5a
+        jnVqayNAkJa2dXnAOZ2jAW7c3IzpBFryMclHuyPIidoCAeQy0Uz42dbyRCZp1Waf/ELEBW
+        WMG/RLx2vU0i9sSpqAnw6cTTTox7xYM=
+Content-Disposition: inline
+In-Reply-To: <c839ba6c-80ac-6d92-af64-5c0e1956ae93@bytedance.com>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: hanjinke <hanjinke.666@bytedance.com>, Tejun Heo <tj@kernel.org>
+Cc: Jan Kara <jack@suse.cz>, josef@toxicpanda.com, axboe@kernel.dk, cgroups@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, yinxin.x@bytedance.com
 
-tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git for-next
-branch HEAD: 32a47817d07557ffca9992964c514fd79bda6fba  cgroup/cpuset: fix a few kernel-doc warnings & coding style
 
-elapsed time: 720m
+--L6iaP+gRLNZHKoI4
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-configs tested: 66
-configs skipped: 2
+Hello.
 
-The following configs have been built successfully.
-More configs may be tested in the coming days.
+Thanks all for sharing ideas and more details (in time-previous messages).
 
-gcc tested configs:
-arc                                 defconfig
-s390                             allmodconfig
-alpha                               defconfig
-s390                                defconfig
-powerpc                           allnoconfig
-s390                             allyesconfig
-x86_64                            allnoconfig
-m68k                             allmodconfig
-alpha                            allyesconfig
-m68k                             allyesconfig
-arc                              allyesconfig
-arc                  randconfig-r043-20230110
-s390                 randconfig-r044-20230110
-riscv                randconfig-r042-20230110
-sh                               allmodconfig
-x86_64                           rhel-8.3-bpf
-x86_64                           rhel-8.3-syz
-ia64                             allmodconfig
-x86_64                         rhel-8.3-kunit
-x86_64                           rhel-8.3-kvm
-mips                             allyesconfig
-um                           x86_64_defconfig
-um                             i386_defconfig
-i386                                defconfig
-x86_64                          rhel-8.3-func
-x86_64                    rhel-8.3-kselftests
-powerpc                          allmodconfig
-x86_64                              defconfig
-i386                          randconfig-a001
-i386                          randconfig-a005
-i386                          randconfig-a003
-x86_64                               rhel-8.3
-x86_64                        randconfig-a006
-x86_64                        randconfig-a004
-x86_64                        randconfig-a002
-i386                             allyesconfig
-x86_64                        randconfig-a015
-x86_64                           allyesconfig
-x86_64                        randconfig-a013
-x86_64                        randconfig-a011
-arm                                 defconfig
-arm64                            allyesconfig
-arm                              allyesconfig
-i386                          randconfig-a016
-i386                          randconfig-a014
-i386                          randconfig-a012
+On Sat, Jan 07, 2023 at 02:07:38AM +0800, hanjinke <hanjinke.666@bytedance.=
+com> wrote:
+> But for some specific scenarios with old kernel versions, blk-throtl
+> is alose needed. The scenario described in my email is in the early stage=
+ of
+> research and extensive testing for it. During this period=EF=BC=8Csome pr=
+iority
+> inversion issues amoug cgroups or within one cgroup have been observed. S=
+o I
+> send this patch to try to fix or mitigate some of these issues.
 
-clang tested configs:
-arm                  randconfig-r046-20230110
-hexagon              randconfig-r045-20230110
-hexagon              randconfig-r041-20230110
-x86_64                          rhel-8.3-rust
-i386                          randconfig-a002
-i386                          randconfig-a004
-x86_64                        randconfig-a001
-i386                          randconfig-a006
-x86_64                        randconfig-a005
-x86_64                        randconfig-a003
-x86_64                        randconfig-a014
-x86_64                        randconfig-a016
-x86_64                        randconfig-a012
-riscv                randconfig-r042-20230111
-s390                 randconfig-r044-20230111
-hexagon              randconfig-r041-20230111
-hexagon              randconfig-r045-20230111
-i386                          randconfig-a013
-i386                          randconfig-a011
-i386                          randconfig-a015
+Jinke, do you combine blk-throtl with memory limits? (As that could in theo=
+ry
+indirectly reduce async requests as dirtier would be slowed down.)
 
--- 
-0-DAY CI Kernel Test Service
-https://01.org/lkp
+Thanks,
+Michal
+
+--L6iaP+gRLNZHKoI4
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+
+-----BEGIN PGP SIGNATURE-----
+
+iHUEARYIAB0WIQTrXXag4J0QvXXBmkMkDQmsBEOquQUCY76tEgAKCRAkDQmsBEOq
+uTntAQCFo6a3wu0l6VAEdVs14UXuwMrppoC19q2D3MXh03vohQEAjdb/QSHK87YF
+XpY7Qj73w0N3r7QhlT9J4wOlGj1WVQ4=
+=m0hK
+-----END PGP SIGNATURE-----
+
+--L6iaP+gRLNZHKoI4--
