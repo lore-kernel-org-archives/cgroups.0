@@ -1,50 +1,95 @@
-From: Yu Kuai <yukuai1-XF6JlduFytWkHkcT6e4Xnw@public.gmane.org>
-Subject: Re: [PATCH v2 1/2] blk-iocost: add refcounting for iocg
-Date: Wed, 11 Jan 2023 09:36:25 +0800
-Message-ID: <53b30ac8-d608-ba0b-8b1b-7fe5cfed6d61@huaweicloud.com>
-References: <20221227125502.541931-1-yukuai1@huaweicloud.com>
- <20221227125502.541931-2-yukuai1@huaweicloud.com>
- <Y7XzUee5Bq+DoIC1@slm.duckdns.org>
- <c63ee2ad-23d5-3be0-c731-28494398b391@huaweicloud.com>
- <Y7cX0SJ0y6+EIY5Q@slm.duckdns.org>
- <7dcdaef3-65c1-8175-fea7-53076f39697f@huaweicloud.com>
- <Y7iCId3pnEnLqY8G@slm.duckdns.org>
- <875eb43e-202d-5b81-0bff-ef0434358d99@huaweicloud.com>
- <Y7xbpidpq7+DqJan@slm.duckdns.org>
- <a71f997f-6cae-d57b-85dd-2fd499d238f6@huaweicloud.com>
- <Y72wF/b0/xNRmP7f@slm.duckdns.org>
+From: hanjinke <hanjinke.666@bytedance.com>
+Subject: Re: [External] Re: [PATCH v4] blk-throtl: Introduce sync and async
+ queues for blk-throtl
+Date: Wed, 11 Jan 2023 11:18:13 +0800
+Message-ID: <f152b853-6f22-bce5-a1b2-3ea29310f628@bytedance.com>
+References: <20230107130738.75640-1-hanjinke.666@bytedance.com>
+ <Y7x7yq5YmcXhVkQf@slm.duckdns.org>
+ <b4cf040e-a9d9-8b7a-10cf-80b01d02848f@bytedance.com>
+ <Y73k04BhpY/SuwGB@slm.duckdns.org>
 Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <Y72wF/b0/xNRmP7f-NiLfg/pYEd1N0TnZuCh8vA@public.gmane.org>
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=bytedance-com.20210112.gappssmtp.com; s=20210112;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to:subject
+         :user-agent:mime-version:date:message-id:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=eGHT4vYdNOhHiGD97YLPBDr6shSnsxjPas88Q21AiMY=;
+        b=jFBW2mIkZHMNoZLfVGNPbAdx519BSUVMAo/NE6OsGHp70A8bQeEAib8cs1pv8IRqJe
+         l39fAfpTcLoYmCNR/21reJI/7kUZVE2XGnC9KWa6LFRXeCmyVbchb6SMVvb6mmOl2zVx
+         MgKYhNd74n2Q0qgNwoWJUdnXi8pbtxGmWuCfe5fi/bDwY3QxLhf6bVxhNjJkRF4Q30Wd
+         wojCogkEvN6Y17CTJ4dFaIqvVJOpUkZRqD84gAnoN7kT0rayzlAhXfzlYWlVE4JL/8gY
+         iwbLX8tju52Z1cpQ0xftM+D9qE+TQF/yZQg5mRdekQwpZ6MQVQ9LoTpIlByjhxLBAATj
+         b5Hg==
+In-Reply-To: <Y73k04BhpY/SuwGB@slm.duckdns.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="iso-8859-1"; format="flowed"
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Yu Kuai <yukuai1-XF6JlduFytWkHkcT6e4Xnw@public.gmane.org>
-Cc: hch-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, josef-DigfWCa+lFGyeJad7bwFQA@public.gmane.org, axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, yi.zhang-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, "yukuai (C)" <yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Content-Type: text/plain; charset="utf-8"; format="flowed"
+To: Tejun Heo <tj@kernel.org>
+Cc: josef@toxicpanda.com, axboe@kernel.dk, cgroups@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, yinxin.x@bytedance.com
 
-Hi,
 
-=D4=DA 2023/01/11 2:36, Tejun Heo =D0=B4=B5=C0:
-> Hello,
->=20
-> On Tue, Jan 10, 2023 at 09:39:44AM +0800, Yu Kuai wrote:
->> As I tried to explain before, we can make sure blkg_free() is called
->> in order, but blkg_free() from remove cgroup can concurrent with
->> deactivate policy, and we can't guarantee the order of ioc_pd_free()
->> that is called both from blkg_free() and blkcg_deactivate_policy().
->> Hence I don't think #3 is possible.
->=20
-> Hahaha, sorry that I keep forgetting that. This doesn't really feel like
-> that important or difficult part of the problem tho. Can't it be solved by
-> synchronizing blkg free work item against the deactivate path with a mute=
-x?
->=20
 
-I'm not sure, of course this can fix the problem, but two spinlock
-'blkcg->lock' and 'q->queue_lock' are used to protect blkg_destroy()
-currently, add a mutex=A3=A8disk level?) requires a refactor, which seems
-complex to me.
+在 2023/1/11 上午6:21, Tejun Heo 写道:
+> On Tue, Jan 10, 2023 at 11:59:09PM +0800, hanjinke wrote:
+>>
+>>
+>> 在 2023/1/10 上午4:40, Tejun Heo 写道:
+>>> On Sat, Jan 07, 2023 at 09:07:38PM +0800, Jinke Han wrote:
+>>>> + * Assumed that there were only bios queued in ASYNC queue and the SYNC
+>>>> + * queue was empty. The ASYNC bio was selected to dispatch and the
+>>>> + * disp_sync_cnt was set to 0 after each dispatching. If a ASYNC bio
+>>>> + * can't be dispatched because of overlimit in current slice, the process
+>>>> + * of dispatch should give up and the spin lock of the request queue
+>>>> + * may be released. A new SYNC bio may be queued in the SYNC queue then.
+>>>> + * When it's time to dispatch this tg, the SYNC bio was selected and pop
+>>>> + * to dispatch as the disp_sync_cnt is 0 and the SYNC queue is no-empty.
+>>>> + * If the dispatched bio is smaller than the waiting bio, the bandwidth
+>>>> + * may be hard to satisfied as the slice may be trimed after each dispatch.
+>>>
+>>> I still can't make a good sense of this scenario. Can you give concrete
+>>> example scenarios with IOs and why it would matter?
+>>>
+>>> Thanks.
+>>>
+>>
+>> Assumed that there are many buffer write bios queued in ASYNC queue and the
+>> SYNC queue is empty. The buffer write bios are all 1M in size and the bps
+>> limit is 1M/s. The throtl_slice is 100ms.
+>>
+>> Assumed that the start/end_slice is [jiffies1, jiffies1+100] and
+>> bytes_disp[w] = 0. The next ASYNC bio can't dispatch because of overlimit
+>> within this slice. The wait time is 900ms and the slice will be extended to
+>> [jiffies1, jiffies1 + 1000] in tg_may_dispatch.
+>>
+>> During the waiting of the ASYNC bio, a SYNC 4k bio be queued in SYNC queue.
+>> After 900ms, it's time to dispatch the ASYNC io, but the SYNC 4k bio be
+>> selected to be dispatched. Now the slice is [jiffies1, jiffies1+1000] and
+>> the byte_disp[w] = 4k. The slice may be extended to
+>> [jiffies1, jiffies1+1100]. In tg_dispatch_one_bio, the slice will be trimed
+>> to [jiffies1+1000, jiffies1+1100], the byte_disp[w] will set 0.
+>>
+>> After the 4k SYNC bio be dispatched, the WAITING ASYNC bio still cann't
+>> be dispatched because of overlimit within this slice.
+>>
+>> The same thing may happen DISPACH_SYNC_FACTOR times if alway there is a SYNC
+>> bio be queued in the SYNC queue when the ASYNC bio is waiting.
+>>
+>> This means that in nearly 5s, we have dispathed 4 4k SYNC bios and a 1m
+>> ASYNC bio.
+>>
+>> In our test, with 100M/s bps limit setted, the bps only reach to ~80m/s
+>> when a fio generate buffer write ios and fsync continuous generated by
+>> dbench in same cgroup.
+> 
+> That makes sense to me. Thanks for the explanation. It'd probably a good
+> idea to expand the explanation in the comment tho.
+> 
+> Thanks.
+> 
 
-Thanks,
-Kuai
+I will be glad to do so and send the v5.
+
+Thanks.
+Jinke
 
