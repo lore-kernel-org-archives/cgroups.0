@@ -1,53 +1,59 @@
-From: Yuanchu Xie <yuanchu-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [RFC PATCH 0/2] mm: multi-gen LRU: working set extensions
-Date: Wed, 11 Jan 2023 17:50:02 -0800
-Message-ID: <CAJj2-QFg_7msfB+k2hv2jx13HCJ_-EBhqbuHwLjOVUhZvTN38w@mail.gmail.com>
-References: <20221214225123.2770216-1-yuanchu@google.com> <87k01ulxdd.fsf@linux.ibm.com>
+From: hanjinke <hanjinke.666-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
+Subject: Re: [External] Re: [PATCH v3] blk-throtl: Introduce sync and async
+ queues for blk-throtl
+Date: Thu, 12 Jan 2023 11:26:42 +0800
+Message-ID: <0e03867e-54ea-fb10-1f8a-f098c9dbb026@bytedance.com>
+References: <20221226130505.7186-1-hanjinke.666@bytedance.com>
+ <20230105161854.GA1259@blackbody.suse.cz>
+ <20230106153813.4ttyuikzaagkk2sc@quack3> <Y7hTHZQYsCX6EHIN@slm.duckdns.org>
+ <c839ba6c-80ac-6d92-af64-5c0e1956ae93@bytedance.com>
+ <20230111123532.GB3673@blackbody.suse.cz>
 Mime-Version: 1.0
+Content-Transfer-Encoding: 8bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20210112;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:from:to:cc:subject:date:message-id:reply-to;
-        bh=UI4K5mRi88yph1Y15SVIzngc8V0hAChiN1WwnseNjSo=;
-        b=iX6gRZV8sICaehqfIKKCsTSZN1Qto1VW/o+R0dPGvkB24JZnDkCpMXaGC1UFCMCDAc
-         65kuNToXIj4iXR4wXhLwWIDCeYuJgxjaQ/q+do9MI07FludH6aZA3vLr/9IkjsITho1/
-         ZgBV3Si+v22hTmbdtckw6PN7PpNig1Dew2+7PUya3A5kMFGyHhvVHfD+DbOlVm71omPW
-         1SwwzDe4Gs6f0NzLBZ+IIXwOGRD9kSi2XJe8Qd8ijsWWpakPWge0tVjudFgQAW3GGS2R
-         cIJHdBLnBJ4GCsGFjMH/J/n5H+PMYqXtd3GCNGPPiJ91I14Hcy8XzkCIj2evn8CIcQit
-         LY4g==
-In-Reply-To: <87k01ulxdd.fsf-tEXmvtCZX7AybS5Ee8rs3A@public.gmane.org>
+        d=bytedance-com.20210112.gappssmtp.com; s=20210112;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to:subject
+         :user-agent:mime-version:date:message-id:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=SsH0mjnH0SeMzrOGfLla9s5TybpBmyzM+PHEYBJpLrQ=;
+        b=8NifJggs/yh5SMPhQK1Rns2F/N9YHJzl2Ypi9i9jYMCq8JvNLfeXx0wDvwNbHAEYZS
+         aiNsnWSqgv0g2jFpnl9MK1Y2zgFOOtY1/Cr1ukz7V2f3c//7jqoojUzeAWiPtkAkNsu3
+         y5NrTN9VglZvUCli+KS+Fuep2brgdFlSuTBp++iYWwI3HI8Urzjnp02w/NY3kipmZii8
+         UqqCazVNBK5ELchNv1pdLGUa9DDY77/ME9StIercWWbZEJGmjbAcWyWNj+BuzivqdALs
+         /zWjgQfVGjobtikFVWg83AqJJYWvGhvXR0D+XrKxLiyTjTVPhVt3cnyakg9mR7p1e29N
+         I3Sg==
+In-Reply-To: <20230111123532.GB3673-9OudH3eul5jcvrawFnH+a6VXKuFTiq87@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: "Aneesh Kumar K.V" <aneesh.kumar-tEXmvtCZX7AybS5Ee8rs3A@public.gmane.org>
-Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Yu Zhao <yuzhao-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Type: text/plain; charset="utf-8"; format="flowed"
+To: =?UTF-8?Q?Michal_Koutn=c3=bd?= <mkoutny-IBi9RG/b67k@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: Jan Kara <jack-AlSwsSmVLrQ@public.gmane.org>, josef-DigfWCa+lFGyeJad7bwFQA@public.gmane.org, axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, yinxin.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org
 
-On Mon, Jan 9, 2023 at 10:25 PM Aneesh Kumar K.V
-<aneesh.kumar-tEXmvtCZX7AybS5Ee8rs3A@public.gmane.org> wrote:
->
-> Yuanchu Xie <yuanchu-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org> writes:
->
-> > Introduce a way of monitoring the working set of a workload, per page
-> > type and per NUMA node, with granularity in minutes. It has page-level
-> > granularity and minimal memory overhead by building on the
-> > Multi-generational LRU framework, which already has most of the
-> > infrastructure and is just missing a useful interface.
-> >
-> > MGLRU organizes pages in generations, where an older generation contains
-> > colder pages, and aging promotes the recently used pages into the young
-> > generation and creates a new one. The working set size is how much
-> > memory an application needs to keep working, the amount of "hot" memory
-> > that's frequently used. The only missing pieces between MGLRU
-> > generations and working set estimation are a consistent aging cadence
-> > and an interface; we introduce the two additions.
->
-> So with kold kthread do we need aging in reclaim ? Should we switch reciam
-> to wakeup up kold kthread to do aging instead of doing try_to_inc_max_seq?
-> This would also help us to try different aging mechanism which can run
-> better in a kthread.
-If I understand correctly, MGLRU tries to put off aging as much as
-possible for reclaim, and prefers aging uniformly in kswapd, so that
-already sort of happens. With periodic aging on, reclaim only triggers
-aging when it reclaims memory less than (MIN_NR_GENS * aging_interval)
-cold.
+
+
+在 2023/1/11 下午8:35, Michal Koutný 写道:
+> Hello.
+> 
+> Thanks all for sharing ideas and more details (in time-previous messages).
+> 
+> On Sat, Jan 07, 2023 at 02:07:38AM +0800, hanjinke <hanjinke.666-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org> wrote:
+>> But for some specific scenarios with old kernel versions, blk-throtl
+>> is alose needed. The scenario described in my email is in the early stage of
+>> research and extensive testing for it. During this period，some priority
+>> inversion issues amoug cgroups or within one cgroup have been observed. So I
+>> send this patch to try to fix or mitigate some of these issues.
+> 
+> Jinke, do you combine blk-throtl with memory limits? (As that could in theory
+> indirectly reduce async requests as dirtier would be slowed down.)
+> 
+
+Hi
+
+In fact, some of those tests above are done in vm with only total 16g 
+memory.
+
+Agree with what you said, if we further tighten the memory usage, things 
+will get better because this will indirectly reduces writeback pages in
+blk-throtl queue.
+
+Thanks.
