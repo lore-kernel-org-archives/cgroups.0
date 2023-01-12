@@ -1,23 +1,24 @@
 From: Tvrtko Ursulin <tvrtko.ursulin@linux.intel.com>
-Subject: [RFC 09/12] cgroup/drm: Client exit hook
-Date: Thu, 12 Jan 2023 16:56:06 +0000
-Message-ID: <20230112165609.1083270-10-tvrtko.ursulin@linux.intel.com>
+Subject: [RFC 11/12] drm/i915: Wire up with drm controller GPU
+ time query
+Date: Thu, 12 Jan 2023 16:56:08 +0000
+Message-ID: <20230112165609.1083270-12-tvrtko.ursulin@linux.intel.com>
 References: <20230112165609.1083270-1-tvrtko.ursulin@linux.intel.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 8bit
 Return-path: <intel-gfx-bounces@lists.freedesktop.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
- t=1673542673; x=1705078673;
+ t=1673542679; x=1705078679;
  h=from:to:cc:subject:date:message-id:in-reply-to:
  references:mime-version:content-transfer-encoding;
- bh=wO4vq8DTSbSrK6Q8SSiu3RWC+/DM/VhnYEUQ6NLXXx0=;
- b=TC796vYsJ8JOXMGv1HNywJG9U8Z/Tghl6V/HVSbKB1rrVkFQFg6J3jFH
- BigP0ie4fCTNFwjVOvSCsipl/A/dR1bJ6Qc6gGpMVntsUC7d2fOsqWhQR
- 6t8ARVD2fZTUgGBJBzrkrbxBBHXx+zKQvGQRQsGeilLlpX6iwIA95QZIf
- LPJJncYEtd7qjn03y5UiOC4Y1yhLKQT4eNj7k/nJSMulLuvPrrUml6o4u
- dy/5yCwsAgvlUQWhscdWZgF99AQ5GtwZGZ7T9fH/C43MR/93O3YT7j1UJ
- BmYYswX4sTG3f7C6mxJUqZGQ6DPf/h12KAOcghzbbQcuKclJmnlYiSYJM Q==;
+ bh=iKX25k37KrR8F3/a+XNt177zp1Ljuj+PLsGTKxsR9n8=;
+ b=S++vtHKutiYuyKOeJcmOp1Uc3NXeKRJmJzvuRy/trmvsiUQ4vBxZGIWU
+ 5/F7R3B6V1v3dcibZBISLY+m66Pqs9gky7wjx/UqQ6+omkPlnOB27TdBu
+ F3Beq3EWwdqkZX4Q8sza8opqn9Y78O0ZwvC0KzOJiknwZ6JRmLSqTkPjD
+ HdO9hx/OHCvb0+zi9yc4PXabCO0/2h0GCaNueUhzYFEdJj824cMUd1dPF
+ Ek+nb9/Qye3pxeJc3p2fwr/iHkdEnYTffL4CW7smjVaLVm7CfXvLcvQSy
+ XYCW07gtbN6nT9YYWJHdhNPg7HB8paehcq3+RaLs5amwjwAJ4fYpLxQ28 g==;
 In-Reply-To: <20230112165609.1083270-1-tvrtko.ursulin@linux.intel.com>
 List-Id: <cgroups.vger.kernel.org>
 List-Unsubscribe: <https://lists.freedesktop.org/mailman/options/intel-gfx>,
@@ -29,103 +30,161 @@ List-Subscribe: <https://lists.freedesktop.org/mailman/listinfo/intel-gfx>,
  <mailto:intel-gfx-request@lists.freedesktop.org?subject=subscribe>
 Errors-To: intel-gfx-bounces@lists.freedesktop.org
 Sender: "Intel-gfx" <intel-gfx-bounces@lists.freedesktop.org>
-Content-Type: text/plain; charset="iso-8859-1"
+Content-Type: text/plain; charset="us-ascii"
 To: Intel-gfx@lists.freedesktop.org, dri-devel@lists.freedesktop.org
 Cc: Rob Clark <robdclark@chromium.org>, Kenny.Ho@amd.com, Daniel Vetter <daniel.vetter@ffwll.ch>, Johannes Weiner <hannes@cmpxchg.org>, linux-kernel@vger.kernel.org, =?UTF-8?q?St=C3=A9phane=20Marchesin?= <marcheu@chromium.org>, =?UTF-8?q?Christian=20K=C3=B6nig?= <christian.koenig@amd.com>, Zefan Li <lizefan.x@bytedance.com>, Dave Airlie <airlied@redhat.com>, Tejun Heo <tj@kernel.org>, cgroups@vger.kernel.org, "T . J . Mercier" <tjmercier@google.com>
 
 From: Tvrtko Ursulin <tvrtko.ursulin@intel.com>
 
-We need the ability for DRM core to inform the cgroup controller when a
-client has closed a DRM file descriptor. This will allow us not needing
-to keep state relating to GPU time usage by tasks sets in the cgroup
-controller itself.
+Implement the drm_cgroup_ops->active_time_us callback.
 
 Signed-off-by: Tvrtko Ursulin <tvrtko.ursulin@intel.com>
 ---
- drivers/gpu/drm/drm_cgroup.c |  9 +++++++++
- include/linux/cgroup_drm.h   |  4 ++++
- kernel/cgroup/drm.c          | 13 +++++++++++++
- 3 files changed, 26 insertions(+)
+ drivers/gpu/drm/i915/i915_driver.c     | 10 ++++
+ drivers/gpu/drm/i915/i915_drm_client.c | 76 ++++++++++++++++++++++----
+ drivers/gpu/drm/i915/i915_drm_client.h |  2 +
+ 3 files changed, 78 insertions(+), 10 deletions(-)
 
-diff --git a/drivers/gpu/drm/drm_cgroup.c b/drivers/gpu/drm/drm_cgroup.c
-index 09249f795af3..ea1479d05355 100644
---- a/drivers/gpu/drm/drm_cgroup.c
-+++ b/drivers/gpu/drm/drm_cgroup.c
-@@ -3,6 +3,8 @@
-  * Copyright =C2=A9 2022 Intel Corporation
-  */
-=20
-+#include <linux/cgroup_drm.h>
+diff --git a/drivers/gpu/drm/i915/i915_driver.c b/drivers/gpu/drm/i915/i915_driver.c
+index c1e427ba57ae..50935cdb3a93 100644
+--- a/drivers/gpu/drm/i915/i915_driver.c
++++ b/drivers/gpu/drm/i915/i915_driver.c
+@@ -1897,6 +1897,12 @@ static const struct drm_ioctl_desc i915_ioctls[] = {
+ 	DRM_IOCTL_DEF_DRV(I915_GEM_VM_DESTROY, i915_gem_vm_destroy_ioctl, DRM_RENDER_ALLOW),
+ };
+ 
++#ifdef CONFIG_CGROUP_DRM
++static const struct drm_cgroup_ops i915_drm_cgroup_ops = {
++	.active_time_us = i915_drm_cgroup_get_active_time_us,
++};
++#endif
 +
- #include <drm/drm_drv.h>
- #include <drm/drm_clients.h>
- #include <drm/drm_print.h>
-@@ -32,6 +34,7 @@ void drm_clients_close(struct drm_file *file_priv)
+ /*
+  * Interface history:
+  *
+@@ -1925,6 +1931,10 @@ static const struct drm_driver i915_drm_driver = {
+ 	.lastclose = i915_driver_lastclose,
+ 	.postclose = i915_driver_postclose,
+ 
++#ifdef CONFIG_CGROUP_DRM
++	.cg_ops = &i915_drm_cgroup_ops,
++#endif
++
+ 	.prime_handle_to_fd = drm_gem_prime_handle_to_fd,
+ 	.prime_fd_to_handle = drm_gem_prime_fd_to_handle,
+ 	.gem_prime_import = i915_gem_prime_import,
+diff --git a/drivers/gpu/drm/i915/i915_drm_client.c b/drivers/gpu/drm/i915/i915_drm_client.c
+index b09d1d386574..c9754cb0277f 100644
+--- a/drivers/gpu/drm/i915/i915_drm_client.c
++++ b/drivers/gpu/drm/i915/i915_drm_client.c
+@@ -75,7 +75,7 @@ void i915_drm_clients_fini(struct i915_drm_clients *clients)
+ 	xa_destroy(&clients->xarray);
+ }
+ 
+-#ifdef CONFIG_PROC_FS
++#if defined(CONFIG_PROC_FS) || defined(CONFIG_CGROUP_DRM)
+ static const char * const uabi_class_names[] = {
+ 	[I915_ENGINE_CLASS_RENDER] = "render",
+ 	[I915_ENGINE_CLASS_COPY] = "copy",
+@@ -100,22 +100,78 @@ static u64 busy_add(struct i915_gem_context *ctx, unsigned int class)
+ 	return total;
+ }
+ 
+-static void
+-show_client_class(struct seq_file *m,
+-		  struct i915_drm_client *client,
+-		  unsigned int class)
++static u64 get_class_active_ns(struct i915_drm_client *client,
++			       unsigned int class,
++			       unsigned int *capacity)
  {
- 	struct drm_device *dev =3D file_priv->minor->dev;
- 	struct drm_pid_clients *clients;
-+	struct task_struct *task;
- 	struct pid *pid;
-=20
- 	lockdep_assert_held(&dev->filelist_mutex);
-@@ -44,6 +47,12 @@ void drm_clients_close(struct drm_file *file_priv)
- 	if (drm_WARN_ON_ONCE(dev, !clients))
- 		return;
-=20
-+	task =3D get_pid_task(pid, PIDTYPE_PID);
-+	if (task) {
-+		drmcgroup_client_exited(task);
-+		put_task_struct(task);
+-	const struct list_head *list = &client->ctx_list;
+-	u64 total = atomic64_read(&client->past_runtime[class]);
+-	const unsigned int capacity =
+-		client->clients->i915->engine_uabi_class_count[class];
+ 	struct i915_gem_context *ctx;
++	u64 total;
++
++	*capacity =
++	    client->clients->i915->engine_uabi_class_count[class];
++	if (!*capacity)
++		return 0;
++
++	total = atomic64_read(&client->past_runtime[class]);
+ 
+ 	rcu_read_lock();
+-	list_for_each_entry_rcu(ctx, list, client_link)
++	list_for_each_entry_rcu(ctx, &client->ctx_list, client_link)
+ 		total += busy_add(ctx, class);
+ 	rcu_read_unlock();
+ 
++	return total;
++}
++#endif
++
++#ifdef CONFIG_CGROUP_DRM
++static bool supports_stats(struct drm_i915_private *i915)
++{
++	if (GRAPHICS_VER(i915) < 8)
++		return false;
++
++	/* temporary... */
++	if (intel_uc_uses_guc_submission(&to_gt(i915)->uc))
++		return false;
++
++	return true;
++}
++
++u64 i915_drm_cgroup_get_active_time_us(struct drm_file *file)
++{
++	struct drm_i915_file_private *fpriv = file->driver_priv;
++	struct i915_drm_client *client = fpriv->client;
++	unsigned int i;
++	u64 busy = 0;
++
++	if (!supports_stats(client->clients->i915))
++		return 0;
++
++	for (i = 0; i < ARRAY_SIZE(uabi_class_names); i++) {
++		unsigned int capacity;
++		u64 b;
++
++		b = get_class_active_ns(client, i, &capacity);
++		if (capacity) {
++			b = DIV_ROUND_UP_ULL(b, capacity * 1000);
++			busy += b;
++		}
 +	}
 +
- 	__del_clients(clients, file_priv, (unsigned long)pid);
- }
-=20
-diff --git a/include/linux/cgroup_drm.h b/include/linux/cgroup_drm.h
-index bf8abc6b8ebf..2f755b896136 100644
---- a/include/linux/cgroup_drm.h
-+++ b/include/linux/cgroup_drm.h
-@@ -6,4 +6,8 @@
- #ifndef _CGROUP_DRM_H
- #define _CGROUP_DRM_H
-=20
-+struct task_struct;
-+
-+void drmcgroup_client_exited(struct task_struct *task);
-+
- #endif	/* _CGROUP_DRM_H */
-diff --git a/kernel/cgroup/drm.c b/kernel/cgroup/drm.c
-index 48a8d646a094..3e7f165806de 100644
---- a/kernel/cgroup/drm.c
-+++ b/kernel/cgroup/drm.c
-@@ -22,6 +22,11 @@ css_to_drmcs(struct cgroup_subsys_state *css)
- 	return container_of(css, struct drm_cgroup_state, css);
- }
-=20
-+static inline struct drm_cgroup_state *get_task_drmcs(struct task_struct *=
-task)
-+{
-+	return css_to_drmcs(task_get_css(task, drm_cgrp_id));
++	return busy;
 +}
++#endif
 +
- static struct drm_root_cgroup_state root_drmcs;
-=20
- static void drmcs_free(struct cgroup_subsys_state *css)
-@@ -46,6 +51,14 @@ drmcs_alloc(struct cgroup_subsys_state *parent_css)
- 	return &drmcs->css;
- }
-=20
-+void drmcgroup_client_exited(struct task_struct *task)
++#ifdef CONFIG_PROC_FS
++static void
++show_client_class(struct seq_file *m,
++		  struct i915_drm_client *client,
++		  unsigned int class)
 +{
-+	struct drm_cgroup_state *drmcs =3D get_task_drmcs(task);
++	unsigned int capacity;
++	u64 total;
 +
-+	css_put(&drmcs->css);
-+}
-+EXPORT_SYMBOL_GPL(drmcgroup_client_exited);
++	total = get_class_active_ns(client, class, &capacity);
 +
- struct cftype files[] =3D {
- 	{ } /* Zero entry terminates. */
- };
---=20
+ 	if (capacity)
+ 		seq_printf(m, "drm-engine-%s:\t%llu ns\n",
+ 			   uabi_class_names[class], total);
+diff --git a/drivers/gpu/drm/i915/i915_drm_client.h b/drivers/gpu/drm/i915/i915_drm_client.h
+index 69496af996d9..c8439eaa89be 100644
+--- a/drivers/gpu/drm/i915/i915_drm_client.h
++++ b/drivers/gpu/drm/i915/i915_drm_client.h
+@@ -65,4 +65,6 @@ void i915_drm_client_fdinfo(struct seq_file *m, struct file *f);
+ 
+ void i915_drm_clients_fini(struct i915_drm_clients *clients);
+ 
++u64 i915_drm_cgroup_get_active_time_us(struct drm_file *file);
++
+ #endif /* !__I915_DRM_CLIENT_H__ */
+-- 
 2.34.1
 
