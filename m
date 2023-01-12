@@ -1,78 +1,60 @@
-From: Artem Chernyshev <artem.chernyshev-a9g+nWUDRNQox3rIn2DAYQ@public.gmane.org>
-Subject: [PATCH] block: bfq fix null pointer dereference of bfqg in bfq_bio_bfqg()
-Date: Thu, 12 Jan 2023 12:43:58 +0300
-Message-ID: <20230112094358.451029-1-artem.chernyshev@red-soft.ru>
+From: Michal Hocko <mhocko@suse.com>
+Subject: Re: [PATCH 0/4] Track exported dma-buffers with memcg
+Date: Thu, 12 Jan 2023 11:25:37 +0100
+Message-ID: <Y7/gIRv9aJfPK7/f@dhcp22.suse.cz>
+References: <20230109213809.418135-1-tjmercier@google.com>
+ <CALvZod4ru7F38tAO-gM9ZFKaEhS0w3KqFbPwhwcTvgJs4xMUow@mail.gmail.com>
+ <Y78+rfzXPq5XGs9O@phenom.ffwll.local>
+ <20230112075631.wc6fd54ci55drhkp@google.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <linux-media-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
+        t=1673519138; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=RFRkZ+Fj3t8T5BZaiHz5NCYqROwzY9AM/nVOyatEKtk=;
+        b=kXlRU9udXbFgZotDjntGowEBuvchX+T2tPOQt4l2B/QItP41pyuGf09UekzD58fu0LIxRc
+        w76yu+pkH0Ua7YBS6uJ2rwWDxCoFeyaVSAeCGGeNdqLbR3tAQh+xq9uDiO7GTSj2Wj7bNn
+        HineNr8vyQXh2nAR99gNAKtfqxMYBuI=
+Content-Disposition: inline
+In-Reply-To: <20230112075631.wc6fd54ci55drhkp@google.com>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Paolo Valente <paolo.valente-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>
-Cc: Artem Chernyshev <artem.chernyshev-a9g+nWUDRNQox3rIn2DAYQ@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, lvc-project-tpLiQldItUH5n4uC9ZG1Ww@public.gmane.org, Anton Fadeev <anton.fadeev-a9g+nWUDRNQox3rIn2DAYQ@public.gmane.org>
+Content-Transfer-Encoding: 7bit
+To: Shakeel Butt <shakeelb@google.com>
+Cc: "T.J. Mercier" <tjmercier@google.com>, Tejun Heo <tj@kernel.org>, Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, Jonathan Corbet <corbet@lwn.net>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Arve =?iso-8859-1?B?SGr4bm5lduVn?= <arve@android.com>, Todd Kjos <tkjos@android.com>, Martijn Coenen <maco@android.com>, Joel Fernandes <joel@joelfernandes.org>, Christian Brauner <brauner@kernel.org>, Carlos Llamas <cmllamas@google.com>, Suren Baghdasaryan <surenb@google.com>, Sumit Semwal <sumit.semwal@linaro.org>, Christian =?iso-8859-1?Q?K=F6nig?= <christian.koenig@amd.com>, Roman Gushchin <roman.gushchin@linux.dev>, Muchun Song <muchun.song@linux.dev>, Andrew Morton <akpm@linux-foundation.org>, Paul Moore <paul@paul-moore.com>
 
-It is possible for bfqg to be NULL after being initialized as result of
-blkg_to_bfqg() function.
+On Thu 12-01-23 07:56:31, Shakeel Butt wrote:
+> On Wed, Jan 11, 2023 at 11:56:45PM +0100, Daniel Vetter wrote:
+> > 
+> [...]
+> > I think eventually, at least for other "account gpu stuff in cgroups" use
+> > case we do want to actually charge the memory.
+> > 
+> > The problem is a bit that with gpu allocations reclaim is essentially "we
+> > pass the error to userspace and they get to sort the mess out". There are
+> > some exceptions (some gpu drivers to have shrinkers) would we need to make
+> > sure these shrinkers are tied into the cgroup stuff before we could enable
+> > charging for them?
+> > 
+> 
+> No, there is no requirement to have shrinkers or making such memory
+> reclaimable before charging it. Though existing shrinkers and the
+> possible future shrinkers would need to be converted into memcg aware
+> shrinkers.
+> 
+> Though there will be a need to update user expectations that if they 
+> use memcgs with hard limits, they may start seeing memcg OOMs after the
+> charging of dmabuf.
 
-That was achieved on kernel 5.15.78, but should exist in mainline as
-well
+Agreed. This wouldn't be the first in kernel memory charged memory that
+is not directly reclaimable. With a dedicated counter an excessive
+dmabuf usage would be visible in the oom report because we do print
+memcg stats.
 
-host1 login: [ 460.855794] watchdog: watchdog0: watchdog did not stop!
-[  898.944512] BUG: kernel NULL pointer dereference, address: 0000000000000094
-[  899.285776] #PF: supervisor read access in kernel mode
-[  899.536511] #PF: error_code(0x0000) - not-present page
-[  899.647305]  connection4:0: detected conn error (1020)
-[  899.786794] PGD 0 P4D 0
-[  899.786799] Oops: 0000 [#1] SMP PTI
-[  899.786802] CPU: 15 PID: 6073 Comm: ID iothread1 Not tainted 5.15.78-1.el7virt.x86_64 #1
-[  899.786804] Hardware name: HP ProLiant DL360 Gen9/ProLiant DL360 Gen9, BIOS P89 10/21/2019
-[  899.786806] RIP: 0010:bfq_bio_bfqg+0x26/0x80
-[  901.325944] Code: 0f 1f 40 00 0f 1f 44 00 00 55 48 89 fd 48 89 f7 53 48 8b 56 48 48 85 d2
-74 32 48 63 05 83 7f 35 01 48 83 c0 16 48 8b 5c c2 08 <80> bb 94 00 00 00 00 00
-[  902.237825] RSP: 0018:ffffae2649437688 EFLAGS: 00010002
-[  902.493396] RAX: 0000000000000019 RBX: 0000000000000000 RCX: dead000000000122
-[  902.841529] RDX: ffff8b6012cb3a00 RSI: ffff8b71002bbed0 RDI: ffff8b71002bbed0
-[  903.189374] RBP: ffff8b601c46e800 R08: ffffae26494377c8 R09: 0000000000000000
-[  903.532985] R10: 0000000000000001 R11: 0000000000000008 R12: ffff8b6f844c5b30
-[  903.880809] R13: ffff8b601c46e800 R14: ffffae2649437760 R15: ffff8b601c46e800
-[  904.220054] FS:  00007fec2fc4a700(0000) GS:ffff8b7f7f640000(0000) kn1GS:00000000000000000
-[  904.614349] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-[  904.894717] CR2: 0000000000000094 CR3: 0000000111fd8002 CR4: 00000000003726e0
-[  905.243702] DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
-[  905.592493] DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
-[  905.936859] Call Trace:
-[  906.055955] <TASK>
-[  906.158109] bfq_bic_update_cgroup+0x2c/0x1f0
-[  906.371057] bfq_insert_requests+0x2c2/0x1fb0
-[  906.579207] blk_mq_sched_insert_request+0xc2/0x140
-[  906.817640] __blk_mq_try_issue_directly+0xe0/0x1f0
-[  907.055737] blk_mq_request_issue_directly+0x4e/0xa0
-[  907.298547] dm_mq_queue_rq+0x217/0x3e0
-[  907.485935] blk_mq_dispatch_rq_list+0x14b/0x860
-[  907.711973] ? sbitmap_get+0x87/0x1a0
-[  907.890370] blk_mq_do_dispatch_sched+0x350/0x3b0
-[  908.074869] NMI watchdog: Watchdog detected hard LOCKUP on cpu 40
-
-Fixes: 075a53b78b81 ("bfq: Make sure bfqg for which we are queueing requests is online")
-Co-developed-by: Anton Fadeev <anton.fadeev-a9g+nWUDRNQox3rIn2DAYQ@public.gmane.org>
-Signed-off-by: Anton Fadeev <anton.fadeev-a9g+nWUDRNQox3rIn2DAYQ@public.gmane.org>
-Signed-off-by: Artem Chernyshev <artem.chernyshev-a9g+nWUDRNQox3rIn2DAYQ@public.gmane.org>
----
- block/bfq-cgroup.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/block/bfq-cgroup.c b/block/bfq-cgroup.c
-index 1b2829e99dad..d4e9428cdbe5 100644
---- a/block/bfq-cgroup.c
-+++ b/block/bfq-cgroup.c
-@@ -616,7 +616,7 @@ struct bfq_group *bfq_bio_bfqg(struct bfq_data *bfqd, struct bio *bio)
- 			continue;
- 		}
- 		bfqg = blkg_to_bfqg(blkg);
--		if (bfqg->online) {
-+		if (bfqg && bfqg->online) {
- 			bio_associate_blkg_from_css(bio, &blkg->blkcg->css);
- 			return bfqg;
- 		}
+It is definitely preferable to have a shrinker mechanism but if that is
+to be done in a follow up step then this is acceptable. But leaving out
+charging from early on sounds like a bad choice to me.
 -- 
-2.30.3
-
+Michal Hocko
+SUSE Labs
