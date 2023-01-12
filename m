@@ -1,133 +1,67 @@
-From: hanjinke <hanjinke.666-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
-Subject: Re: [External] Re: [PATCH v5] blk-throtl: Introduce sync and async
- queues for blk-throtl
-Date: Thu, 12 Jan 2023 16:42:00 +0800
-Message-ID: <7a348aec-0e5c-ec6a-36cd-30a844d276ad@bytedance.com>
-References: <20230111162030.31094-1-hanjinke.666@bytedance.com>
- <Y77sVSbS6fIXh3jp@slm.duckdns.org>
+From: =?utf-8?B?TGl4aW9uZyBMaXUgKOWImOWIqembhCk=?= 
+        <Lixiong.Liu-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org>
+Subject: cgroup user-after-free
+Date: Thu, 12 Jan 2023 09:48:55 +0000
+Message-ID: <697032f2331a92eec0e03e85e46cb78bd975a788.camel@mediatek.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: base64
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
+        h=MIME-Version:Content-Transfer-Encoding:Content-ID:Content-Type:Message-ID:Date:Subject:CC:To:From; bh=Uc6KOZdKqaVjGbmZMALE9tJ11cr4lOR4fM38tMkynLM=;
+        b=G6IxiEQPvJTtqq+zxdCu8Ca3Skfk0F6ojjvYVtKhWBqHLpUgVlvbFr4Wmd5wlzRIl/RAyXGhaMMAAwBbCvDV7kbaZLXP9uDYik7sk2symIJmA6T+UFbhBdKUR0H75DRciqSxTjoY8f5wZ7Zq5YVRYs1vRTQzNqnF7pcRrRVkEKY=;
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=bytedance-com.20210112.gappssmtp.com; s=20210112;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to:subject
-         :user-agent:mime-version:date:message-id:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=oEg4bQ6lpGrIUrq1T+gt3Ejj1Swr0qeWVL35vq5Po6U=;
-        b=taeeV0OMcAkInTg8vAnOBHKivystFadZ28hvDI0CRtwa+zGUkmuuJu7s9CY8olfEfk
-         qYZrKNb6EcrIunkCdUNwZOAq4VfeqVujcPa7tVQc8BA76qqjKZhZAhBzWc+jX2sqof7r
-         ul7kG0Bjc5Tc10dUdtw0rTwQte2dYX1xBwWVBKzngl1A8MkFOwgTRwbnDYREbIb+YN4k
-         6hOeggaxJLEhFqPiB2Pt7c7cFL+PaDDjC86ZHH2OgweCaxY+gCMRhjR3u7Lo0awYAExv
-         3KMpqRcm6JSeIgk5HKR3aosi302Hjr+guXh7/sC/IeC0DvalkGby20ZNib2af+AOc5Fc
-         AJsA==
-In-Reply-To: <Y77sVSbS6fIXh3jp-NiLfg/pYEd1N0TnZuCh8vA@public.gmane.org>
+ d=mediateko365.onmicrosoft.com; s=selector2-mediateko365-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=Uc6KOZdKqaVjGbmZMALE9tJ11cr4lOR4fM38tMkynLM=;
+ b=qia9UcD3MpLmwCow3+7hb04w20rkakQe+zffkxgANNpaLXyXuKGnZrdUtGwnzhXmcDyXImyY1GCzUOpiVD2ES1JxbCKVSAddmWOl4WnjLbuc/O0ekIMasq+G8SE5QR/rc77I6lYW9xxkOriulnInDOexFj05mwJcAMqAPtUFXBM=
+Content-Language: en-US
+Content-ID: <11B4495EAA0FBA47ABB21324D1A92613-Ld2OyNlpylScE4WynfumptQqCkab/8FMAL8bYrjMMd8@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="utf-8"; format="flowed"
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: josef-DigfWCa+lFGyeJad7bwFQA@public.gmane.org, axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, yinxin.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org
+Content-Type: text/plain; charset="windows-1252"
+To: "tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org" <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, "lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org" <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, "hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org" <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Cc: "linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-mediatek-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org" <linux-mediatek-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org>, =?utf-8?B?TGl4aW9uZyBMaXUgKOWImOWIqembhCk=?= <Lixiong.Liu-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org>, "cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, =?utf-8?B?V2VuanUgWHUgKOiuuOaWh+S4vik=?= <Wenju.Xu-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org>, wsd_upstream <wsd_upstream-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org>, =?utf-8?B?SmluZy1UaW5nIFd1ICjlkLPpnZzlqbcp?= <Jing-Ting.Wu-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org>, =?utf-8?B?V0ogV2FuZyAo546L5YabKQ==?= <wj.wang-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org>, "linux-arm-kernel-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org" <linux-arm-kernel-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org>, =?utf-8?B?QW5kcmVzcyBLdW8gKOmDreWtn+S/rik=?= <Andress.Kuo-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org>, "matthias.bgg-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org" <matthias.bgg-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 
-
-
-在 2023/1/12 上午1:05, Tejun Heo 写道:
-> On Thu, Jan 12, 2023 at 12:20:30AM +0800, Jinke Han wrote:
->> From: Jinke Han <hanjinke.666-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
->>
->> Now we don't distinguish sync write ios from normal buffer write ios
->> in blk-throtl. A bio with REQ_SYNC tagged always mean it will be wait
->> until write completion soon after it submit. So it's reasonable for sync
->> io to complete as soon as possible.
->>
->> In our test, fio writes a 100g file in sequential 4k blocksize in
->> a container with low bps limit configured (wbps=10M). More than 1200
->> ios were throttled in blk-throtl queue and the avarage throtle time
->> of each io is 140s. At the same time, the operation of saving a small
->> file by vim will be blocked amolst 140s. As a fsync will be send by vim,
->> the sync ios of fsync will be blocked by a huge amount of buffer write
->> ios ahead. This is also a priority inversion problem within one cgroup.
->> In the database scene, things got really bad with blk-throtle enabled
->> as fsync is called very often.
->>
->> This patch splits bio queue into sync and async queues for blk-throtl
->> and gives a huge priority to sync write ios. Sync queue only make sense
->> for write ios as we treat all read io as sync io. I think it's a nice
->> respond to the semantics of REQ_SYNC. Bios with REQ_META and REQ_PRIO
->> gains the same priority as they are important to fs. This may avoid
->> some potential priority inversion problems.
->>
->> With this patch, do the same test above, the duration of the fsync sent
->> by vim drops to several hundreds of milliseconds.
->>
->> Signed-off-by: Jinke Han <hanjinke.666-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
->> Signed-off-by: Xin Yin <yinxin.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
-> 
-> Acked-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-> 
-> with some nits below:
-> 
->> +/**
->> + * throtl_qnode_bio_peek - peek a bio from a qn
->> + * @qn: the qnode to peek from
->> + *
->> + * For read, always peek bio from the SYNC queue.
->> + *
->> + * For write, we always peek bio from next_to_disp. If it's NULL, a bio
->                      ^
->                      first
-> 
->> + * will be popped from SYNC or ASYNC queue to fill it. The next_to_disp
->> + * is used to make sure that the peeked bio and the next popped bio are
->                                     ^
->                                     previously
-> 
->> + * always the same even in case that the spinlock of queue was released
->> + * and re-holded.
->            ^
->            re-grabbed / re-acquired
->> + *
->> + * Without the next_to_disp, consider the following situation:
->        ^^^^^^^^^^^^^^^^^^^^^^^^^^
->        maybe drop this part and move the latter part to the end of the
->        previous para?
-> 
->> + * Assumed that there are only bios queued in ASYNC queue and the SYNC
->        ^
->        Assume
-> 
->> + * queue is empty and all ASYNC bios are 1M in size and the bps limit is
->> + * 1M/s. The throtl_slice is 100ms. The current slice is [jiffies1,
->> + * jiffies1+100] and the bytes_disp[w] is 0.
->> + *
->> + * The disp_sync_cnt is 0 as it was set 0 after each dispatching of a
->> + * ASYNC bio. A ASYNC bio wil be peeked to check in tg_may_dispatch.
->> + * Obviously, it can't be dispatched in current slice and the wait time
->> + * is 900ms. The slice will be extended to [jiffies1, jiffies1+1000] in
->> + * tg_may_dispatch. The spinlock of the queue will be released after the
->> + * process of dispatch giving up. A 4k size SYNC bio was queued in and
->> + * the SYNC queue becomes no-empty. After 900ms, it's time to dispatch
->> + * the tg, the SYNC bio will be popped to dispatched as the disp_sync_cnt
->> + * is 0 and the SYNC queue is no-empty. The slice will be extended to
->        ^
->   Maybe combine the previous several sentences like:
-> 
->   The queue lock is released and a 4k SYNC bio gets queued during the 900ms
->   wait.
-> 
->> + * [jiffies1, jiffies1+1100] in tg_may_dispatch. Then the slice will be
->> + * trimed to [jiffies1+1000, jiffies1+1100] after the SYNC bio was
->> + * dispatched. Then the former 1M size ASYNC bio will be peeked to be
->> + * checked and still can't be dispatched because of overlimit within
->> + * the current slice. The same thing may happen DISPACH_SYNC_FACTOR times
->> + * if always there is a SYNC bio be queued in the SYNC queue when the
->> + * ASYNC bio is waiting. This means that in nearly 5s, we have dispathed
->> + * four 4k SYNC bios and one  1M ASYNC bio. It is hard to fill up the
->> + * bandwidth considering that the bps limit is 1M/s.
-> 
-> Simiarly I think the information can be conveyed in a more compact form.
-> 
-> Thanks.
-> 
-The comment will be further adjusted based on your suggestions and the
-v6 with your Acked-by will be send.
-
-Thanks
-Jinke
+SGksDQoNCldlIG1lZXQgY2dyb3VwIHVzZS1hZnRlci1mcmVlIGhhcHBlbmVkIGluIFQgU1cgdmVy
+c2lvbiB3aXRoIA0KDQprZXJuZWwtNS4xNS4NCiANClJvb3QgY2F1c2U6IA0KY2dyb3VwX21pZ3Jh
+dGVfZmluaXNoIGZyZWUgY3NldOKAmXMgY2dyb3VwLA0KDQpidXQgY2dyb3VwX3NrX2FsbG9jIHVz
+ZSB0aGUgZnJlZWQgY2dyb3VwLA0KDQp0aGVuIHVzZS1hZnRlci1mcmVlIGhhcHBlbmVkLg0KDQoN
+Cg0KRGV0YWlsOg0KW25hbWU6cmVwb3J0Jl1CVUc6IEtBU0FOOiB1c2UtYWZ0ZXItZnJlZSBpbiBj
+Z3JvdXBfc2tfYWxsb2MNCg0KW25hbWU6cmVwb3J0Jl1SZWFkIG9mIHNpemUgOCBhdCBhZGRyIGZm
+ZmZmZjgwZDZkMmEwNDggYnkgdGFzaw0KDQpDaHJvbWl1bU5ldC81MjU5DQpDYWxsIHRyYWNlOg0K
+ZHVtcF9iYWNrdHJhY2UNCnNob3dfc3RhY2sNCmR1bXBfc3RhY2tfbHZsDQpwcmludF9hZGRyZXNz
+X2Rlc2NyaXB0aW9uDQpfX2thc2FuX3JlcG9ydA0Ka2FzYW5fcmVwb3J0DQpfX2FzYW5fcmVwb3J0
+X2xvYWQ4X25vYWJvcnQNCmNncm91cF9za19hbGxvYw0Kc2tfYWxsb2MNCnVuaXhfY3JlYXRlMQ0K
+dW5peF9jcmVhdGUNCl9fc29ja19jcmVhdGUNCl9fc3lzX3NvY2tldA0KX19hcm02NF9zeXNfc29j
+a2V0DQppbnZva2Vfc3lzY2FsbA0KZWwwX3N2Y19jb21tb24NCmRvX2VsMF9zdmMNCmVsMF9zdmMN
+CmVsMHRfNjRfc3luY19oYW5kbGVyDQplbDB0XzY0X3N5bmMNCg0KW25hbWU6cmVwb3J0Jl1BbGxv
+Y2F0ZWQgYnkgdGFzayAxMzgwOg0KX19fX2thc2FuX2ttYWxsb2MNCl9fa2FzYW5fa21hbGxvYw0K
+a21lbV9jYWNoZV9hbGxvY190cmFjZQ0KZmluZF9jc3Nfc2V0DQpjZ3JvdXBfbWlncmF0ZV9wcmVw
+YXJlX2RzdA0KY2dyb3VwX2F0dGFjaF90YXNrDQpfX2Nncm91cDFfcHJvY3Nfd3JpdGUNCmNncm91
+cDFfcHJvY3Nfd3JpdGUNCmNncm91cF9maWxlX3dyaXRlDQprZXJuZnNfZm9wX3dyaXRlX2l0ZXIN
+CnZmc193cml0ZQ0Ka3N5c193cml0ZQ0KX19hcm02NF9zeXNfd3JpdGUNCmludm9rZV9zeXNjYWxs
+DQplbDBfc3ZjX2NvbW1vbg0KZG9fZWwwX3N2Yw0KZWwwX3N2Yw0KZWwwdF82NF9zeW5jX2hhbmRs
+ZXINCmVsMHRfNjRfc3luYw0KDQpbbmFtZTpyZXBvcnQmXUZyZWVkIGJ5IHRhc2sgNDUzMDoNCmth
+c2FuX3NldF90cmFjaw0Ka2FzYW5fc2V0X2ZyZWVfaW5mbw0KX19fX2thc2FuX3NsYWJfZnJlZQ0K
+X19rYXNhbl9zbGFiX2ZyZWUNCnNsYWJfZnJlZV9mcmVlbGlzdF9ob29rDQprbWVtX2NhY2hlX2Zy
+ZWVfYnVsaw0Ka2ZyZWVfcmN1X3dvcmsNCnByb2Nlc3Nfb25lX3dvcmsNCndvcmtlcl90aHJlYWQN
+Cmt0aHJlYWQNCnJldF9mcm9tX2ZvcmsNCg0KW25hbWU6cmVwb3J0Jl1MYXN0IHBvdGVudGlhbGx5
+IHJlbGF0ZWQgd29yayBjcmVhdGlvbjoNCmthc2FuX3NhdmVfc3RhY2sNCl9fa2FzYW5fcmVjb3Jk
+X2F1eF9zdGFjaw0Ka2FzYW5fcmVjb3JkX2F1eF9zdGFja19ub2FsbG9jDQprdmZyZWVfY2FsbF9y
+Y3UNCnB1dF9jc3Nfc2V0X2xvY2tlZA0KY2dyb3VwX21pZ3JhdGVfZmluaXNoDQpjZ3JvdXBfYXR0
+YWNoX3Rhc2sNCl9fY2dyb3VwMV9wcm9jc193cml0ZQ0KY2dyb3VwMV9wcm9jc193cml0ZQ0KY2dy
+b3VwX2ZpbGVfd3JpdGUNCmtlcm5mc19mb3Bfd3JpdGVfaXRlcg0KdmZzX3dyaXRlDQprc3lzX3dy
+aXRlDQpfX2FybTY0X3N5c193cml0ZQ0KaW52b2tlX3N5c2NhbGwNCmVsMF9zdmNfY29tbW9uDQpk
+b19lbDBfc3ZjDQplbDBfc3ZjDQplbDB0XzY0X3N5bmNfaGFuZGxlDQplbDB0XzY0X3N5bmMNCg0K
+W25hbWU6cmVwb3J0Jl1UaGUgYnVnZ3kgYWRkcmVzcyBiZWxvbmdzIHRvIHRoZSBvYmplY3QgYXQN
+CmZmZmZmZjgwZDZkMmEwMDAgd2hpY2ggYmVsb25ncyB0byB0aGUgY2FjaGUga21hbGxvYy01MTIg
+b2Ygc2l6ZSA1MTINCg0KW25hbWU6cmVwb3J0Jl1UaGUgYnVnZ3kgYWRkcmVzcyBpcyBsb2NhdGVk
+IDcyIGJ5dGVzIGluc2lkZSBvZg0KNTEyLWJ5dGUgcmVnaW9uDQoNCltuYW1lOmRlYnVnJl1wYWdl
+IGR1bXBlZCBiZWNhdXNlOiBrYXNhbjogYmFkIGFjY2VzcyBkZXRlY3RlZA0KDQoiY2dyb3VwX3Nr
+X2FsbG9jIiwga2VybmVsLTUuMTUva2VybmVsL2Nncm91cC9jZ3JvdXAuYyINCiBjc2V0ID0gdGFz
+a19jc3Nfc2V0KGN1cnJlbnQpOw0KIGlmIChsaWtlbHkoY2dyb3VwX3RyeWdldChjc2V0LT5kZmxf
+Y2dycCkpKSB7DQogICAgICAgIGNncm91cCA9IGNzZXQtPmRmbF9jZ3JwOw0KIH0NCiANCihnZGIp
+IHAveCAmKChzdHJ1Y3QgY3NzX3NldCAqKTApLT5kZmxfY2dycA0KJDIgPSAweDQ4DQogDQpEbyB5
+b3UgaGF2ZSBhbnkgc3VnZ2VzdGlvbiBmb3IgdGhpcyBpc3N1ZT8gDQoNCkNhbiB3ZSB3b3JrYXJv
+dW5kIHRoaXMgaXNzdWUganVzdCBieSBob2xkIA0KDQpjc3Nfc2V0X2xvY2sgYmVmb3JlIGFjY2Vz
+cyBjc2V0LT5kZmxfY2dycCANCg0KaW4gY2dyb3VwX3NrX2FsbG9jPw0KDQpUaGFua3MhDQoNCkJl
+c3QgcmVnYXJkcywNCkxpeGlvbmcgTGl1DQo=
