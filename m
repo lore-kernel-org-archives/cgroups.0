@@ -1,7 +1,7 @@
 From: Vincent Guittot <vincent.guittot-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>
-Subject: [PATCH v10 1/9] sched/fair: fix unfairness at wakeup
-Date: Fri, 13 Jan 2023 15:12:26 +0100
-Message-ID: <20230113141234.260128-2-vincent.guittot@linaro.org>
+Subject: [PATCH v10 2/9] sched: Introduce latency-nice as a per-task attribute
+Date: Fri, 13 Jan 2023 15:12:27 +0100
+Message-ID: <20230113141234.260128-3-vincent.guittot@linaro.org>
 References: <20230113141234.260128-1-vincent.guittot@linaro.org>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
@@ -11,167 +11,95 @@ DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=zlloFS7Bj1vz8MB/gY8ujw3edPCeBj7FeQ8wX2SHm40=;
-        b=XM70w7KZMtRcIGeyzBW5f5aEzTdbfuDdmw3koOm1IKpbkMOynQ0dDy1sXObUQxUUWD
-         ylsbugkfXukjgr2ZrF4CzFZZTDMJZZA1RLYrwIZA/c4qJD3Ne3i15wxjLNQoDiDI7u4O
-         S6WBxFtLE52OjuIVEbFG3wzgvhrTd+GYe+5fW+thyzxDa58mJvNW3vuKNoZ7JCaSo7c9
-         BM7MoMBTJQIDEUqt5PxdWglEbTdmA5eU27MKeQEmEJGzRP5loLiU+kHmIctlVzW8XtFt
-         PVHXElyLfJnlio7LdY04U36p+JckjuSQhhcDlFuFeLD+PVqecnaxEnK66LD+w7XOZ0NP
-         9XmQ==
+        bh=kiVS63wbAWm+QNHUVgj2Zht/JYfZt2Iaghb+UJPmGJA=;
+        b=Qh85uD1YsNWfsXSd0d73mm0u8hDaGmsaRhIZGgLJv8V9BgvN+HigCnzW5b9dMcw03V
+         LcFIYpE7cA4lzuSa8n9vvPMFUvGTtVjfNY9gpmAGy9CGlYRhkqXxwXn8Nl0IrWDqRUhe
+         S4uaRLOt5G79qMoW8ItaBtopKB9BDhstDF+PQKqqhRIuTheyU/YuaGxhtjsfZivHQwVl
+         5epEhNrXjIJhyXgi3pMDMbwWSwcglnz+3DzHSPNhas1TcW4iyDzZwzhHFYm4S6884GVj
+         SszmSBo/CQH+3x+o+201a6zSuaD3xxy9PeGmUEZCnVzq3ykO+k+v8MbDsyoeNyR1JihL
+         In1A==
 In-Reply-To: <20230113141234.260128-1-vincent.guittot-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 To: mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, juri.lelli-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, dietmar.eggemann-5wv7dgnIgG8@public.gmane.org, rostedt-nx8X9YLhiw1AfugRpC6u6w@public.gmane.org, bsegall-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, mgorman-l3A5Bk7waGM@public.gmane.org, bristot-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, vschneid-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, parth-tEXmvtCZX7AybS5Ee8rs3A@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 Cc: qyousef-wp2msK0BRk8tq7phqP6ubQ@public.gmane.org, chris.hyser-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org, patrick.bellasi-X6neQFFVdzGsTnJN9+BGXg@public.gmane.org, David.Laight-JxhZ9S5GRejQT0dZR+AlfA@public.gmane.org, pjt-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, pavel-+ZI9xUNit7I@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, qperret-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, tim.c.chen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org, joshdon-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, timj-mXXj517/zsQ@public.gmane.org, kprateek.nayak-5C7GfCeVMHo@public.gmane.org, yu.c.chen-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org, youssefesmat-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org, joel-QYYGw3jwrUn5owFQY34kdNi2O/JbrIOy@public.gmane.org, Vincent Guittot <vincent.guittot-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>
 
-At wake up, the vruntime of a task is updated to not be more older than
-a sched_latency period behind the min_vruntime. This prevents long sleeping
-task to get unlimited credit at wakeup.
-Such waking task should preempt current one to use its CPU bandwidth but
-wakeup_gran() can be larger than sched_latency, filter out the
-wakeup preemption and as a results steals some CPU bandwidth to
-the waking task.
+From: Parth Shah <parth-tEXmvtCZX7AybS5Ee8rs3A@public.gmane.org>
 
-Make sure that a task, which vruntime has been capped, will preempt current
-task and use its CPU bandwidth even if wakeup_gran() is in the same range
-as sched_latency.
+Latency-nice indicates the latency requirements of a task with respect
+to the other tasks in the system. The value of the attribute can be within
+the range of [-20, 19] both inclusive to be in-line with the values just
+like task nice values.
 
-If the waking task failed to preempt current it could to wait up to
-sysctl_sched_min_granularity before preempting it during next tick.
+latency_nice = -20 indicates the task to have the least latency as
+compared to the tasks having latency_nice = +19.
 
-Strictly speaking, we should use cfs->min_vruntime instead of
-curr->vruntime but it doesn't worth the additional overhead and complexity
-as the vruntime of current should be close to min_vruntime if not equal.
+The latency_nice may affect only the CFS SCHED_CLASS by getting
+latency requirements from the userspace.
 
-Reported-by: Youssef Esmat <youssefesmat-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>
+Additionally, add debugging bits for newly added latency_nice attribute.
+
+Signed-off-by: Parth Shah <parth-tEXmvtCZX7AybS5Ee8rs3A@public.gmane.org>
+[rebase, move defines in sched/prio.h]
 Signed-off-by: Vincent Guittot <vincent.guittot-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>
-Reviewed-by: Joel Fernandes (Google) <joel-QYYGw3jwrUn5owFQY34kdNi2O/JbrIOy@public.gmane.org>
 Tested-by: K Prateek Nayak <kprateek.nayak-5C7GfCeVMHo@public.gmane.org>
 ---
- kernel/sched/fair.c  | 46 ++++++++++++++++++++------------------------
- kernel/sched/sched.h | 34 +++++++++++++++++++++++++++++++-
- 2 files changed, 54 insertions(+), 26 deletions(-)
+ include/linux/sched.h      |  1 +
+ include/linux/sched/prio.h | 18 ++++++++++++++++++
+ kernel/sched/debug.c       |  1 +
+ 3 files changed, 20 insertions(+)
 
-diff --git a/kernel/sched/fair.c b/kernel/sched/fair.c
-index e9d906a9bba9..8a85c6cf781e 100644
---- a/kernel/sched/fair.c
-+++ b/kernel/sched/fair.c
-@@ -4657,33 +4657,17 @@ place_entity(struct cfs_rq *cfs_rq, struct sched_entity *se, int initial)
- {
- 	u64 vruntime = cfs_rq->min_vruntime;
+diff --git a/include/linux/sched.h b/include/linux/sched.h
+index 4df2b3e76b30..6c61bde49152 100644
+--- a/include/linux/sched.h
++++ b/include/linux/sched.h
+@@ -784,6 +784,7 @@ struct task_struct {
+ 	int				static_prio;
+ 	int				normal_prio;
+ 	unsigned int			rt_priority;
++	int				latency_nice;
  
--	/*
--	 * The 'current' period is already promised to the current tasks,
--	 * however the extra weight of the new task will slow them down a
--	 * little, place the new task so that it fits in the slot that
--	 * stays open at the end.
--	 */
--	if (initial && sched_feat(START_DEBIT))
--		vruntime += sched_vslice(cfs_rq, se);
--
--	/* sleeps up to a single latency don't count. */
--	if (!initial) {
--		unsigned long thresh;
--
--		if (se_is_idle(se))
--			thresh = sysctl_sched_min_granularity;
--		else
--			thresh = sysctl_sched_latency;
--
-+	if (!initial)
-+		/* sleeps up to a single latency don't count. */
-+		vruntime -= get_sleep_latency(se_is_idle(se));
-+	else if (sched_feat(START_DEBIT))
- 		/*
--		 * Halve their sleep time's effect, to allow
--		 * for a gentler effect of sleepers:
-+		 * The 'current' period is already promised to the current tasks,
-+		 * however the extra weight of the new task will slow them down a
-+		 * little, place the new task so that it fits in the slot that
-+		 * stays open at the end.
- 		 */
--		if (sched_feat(GENTLE_FAIR_SLEEPERS))
--			thresh >>= 1;
--
--		vruntime -= thresh;
--	}
-+		vruntime += sched_vslice(cfs_rq, se);
+ 	struct sched_entity		se;
+ 	struct sched_rt_entity		rt;
+diff --git a/include/linux/sched/prio.h b/include/linux/sched/prio.h
+index ab83d85e1183..bfcd7f1d1e11 100644
+--- a/include/linux/sched/prio.h
++++ b/include/linux/sched/prio.h
+@@ -42,4 +42,22 @@ static inline long rlimit_to_nice(long prio)
+ 	return (MAX_NICE - prio + 1);
+ }
  
- 	/* ensure we never gain time by being placed backwards. */
- 	se->vruntime = max_vruntime(se->vruntime, vruntime);
-@@ -7656,6 +7640,18 @@ wakeup_preempt_entity(struct sched_entity *curr, struct sched_entity *se)
- 		return -1;
- 
- 	gran = wakeup_gran(se);
++/*
++ * Latency nice is meant to provide scheduler hints about the relative
++ * latency requirements of a task with respect to other tasks.
++ * Thus a task with latency_nice == 19 can be hinted as the task with no
++ * latency requirements, in contrast to the task with latency_nice == -20
++ * which should be given priority in terms of lower latency.
++ */
++#define MAX_LATENCY_NICE	19
++#define MIN_LATENCY_NICE	-20
 +
-+	/*
-+	 * At wake up, the vruntime of a task is capped to not be older than
-+	 * a sched_latency period compared to min_vruntime. This prevents long
-+	 * sleeping task to get unlimited credit at wakeup. Such waking up task
-+	 * has to preempt current in order to not lose its share of CPU
-+	 * bandwidth but wakeup_gran() can become higher than scheduling period
-+	 * for low priority task. Make sure that long sleeping task will get a
-+	 * chance to preempt current.
-+	 */
-+	gran = min_t(s64, gran, get_latency_max());
++#define LATENCY_NICE_WIDTH	\
++	(MAX_LATENCY_NICE - MIN_LATENCY_NICE + 1)
 +
- 	if (vdiff > gran)
- 		return 1;
- 
-diff --git a/kernel/sched/sched.h b/kernel/sched/sched.h
-index 1072502976df..df7db06c9943 100644
---- a/kernel/sched/sched.h
-+++ b/kernel/sched/sched.h
-@@ -2459,9 +2459,9 @@ extern void check_preempt_curr(struct rq *rq, struct task_struct *p, int flags);
- extern const_debug unsigned int sysctl_sched_nr_migrate;
- extern const_debug unsigned int sysctl_sched_migration_cost;
- 
--#ifdef CONFIG_SCHED_DEBUG
- extern unsigned int sysctl_sched_latency;
- extern unsigned int sysctl_sched_min_granularity;
-+#ifdef CONFIG_SCHED_DEBUG
- extern unsigned int sysctl_sched_idle_min_granularity;
- extern unsigned int sysctl_sched_wakeup_granularity;
- extern int sysctl_resched_latency_warn_ms;
-@@ -2476,6 +2476,38 @@ extern unsigned int sysctl_numa_balancing_scan_size;
- extern unsigned int sysctl_numa_balancing_hot_threshold;
++/*
++ * Default tasks should be treated as a task with latency_nice = 0.
++ */
++#define DEFAULT_LATENCY_NICE	0
++
+ #endif /* _LINUX_SCHED_PRIO_H */
+diff --git a/kernel/sched/debug.c b/kernel/sched/debug.c
+index 1637b65ba07a..68be7a3e42a3 100644
+--- a/kernel/sched/debug.c
++++ b/kernel/sched/debug.c
+@@ -1043,6 +1043,7 @@ void proc_sched_show_task(struct task_struct *p, struct pid_namespace *ns,
  #endif
- 
-+static inline unsigned long get_sleep_latency(bool idle)
-+{
-+	unsigned long thresh;
-+
-+	if (idle)
-+		thresh = sysctl_sched_min_granularity;
-+	else
-+		thresh = sysctl_sched_latency;
-+
-+	/*
-+	 * Halve their sleep time's effect, to allow
-+	 * for a gentler effect of sleepers:
-+	 */
-+	if (sched_feat(GENTLE_FAIR_SLEEPERS))
-+		thresh >>= 1;
-+
-+	return thresh;
-+}
-+
-+static inline unsigned long get_latency_max(void)
-+{
-+	unsigned long thresh = get_sleep_latency(false);
-+
-+	 /*
-+	  * If the waking task failed to preempt current it could to wait up to
-+	  * sysctl_sched_min_granularity before preempting it during next tick.
-+	  */
-+	thresh -= sysctl_sched_min_granularity;
-+
-+	return thresh;
-+}
-+
- #ifdef CONFIG_SCHED_HRTICK
- 
- /*
+ 	P(policy);
+ 	P(prio);
++	P(latency_nice);
+ 	if (task_has_dl_policy(p)) {
+ 		P(dl.runtime);
+ 		P(dl.deadline);
 -- 
 2.34.1
 
