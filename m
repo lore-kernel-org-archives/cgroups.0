@@ -1,7 +1,7 @@
-From: Tejun Heo <tj@kernel.org>
+From: Yu Kuai <yukuai1-XF6JlduFytWkHkcT6e4Xnw@public.gmane.org>
 Subject: Re: [PATCH v2 1/2] blk-iocost: add refcounting for iocg
-Date: Thu, 12 Jan 2023 14:53:42 -1000
-Message-ID: <Y8CrloCDGhbU42OH@slm.duckdns.org>
+Date: Fri, 13 Jan 2023 09:10:25 +0800
+Message-ID: <efa1c73b-e94f-373f-e535-2cfc32ce2433@huaweicloud.com>
 References: <Y7cX0SJ0y6+EIY5Q@slm.duckdns.org>
  <7dcdaef3-65c1-8175-fea7-53076f39697f@huaweicloud.com>
  <Y7iCId3pnEnLqY8G@slm.duckdns.org>
@@ -12,53 +12,50 @@ References: <Y7cX0SJ0y6+EIY5Q@slm.duckdns.org>
  <53b30ac8-d608-ba0b-8b1b-7fe5cfed6d61@huaweicloud.com>
  <Y77s0f741mFfGlTO@slm.duckdns.org>
  <4aeef320-c6c8-d9b4-8826-d58f00ea6264@huaweicloud.com>
+ <Y8CrloCDGhbU42OH@slm.duckdns.org>
 Mime-Version: 1.0
-Return-path: <linux-block-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:sender:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=LFhlmdG7Cx41399yo/ozHBL4wwrrh2PAewE6ufP94qA=;
-        b=i6ekoKSewTItPgRE2QdLfrvZixqAENBhz4Yj1/vL3BIQX1WDTpF0k3GyYEmg0KIHxA
-         wj+1HMU7ALqFSNrA9RlqGF4D/uEBUivlqxRFfFOol7sG1QIJ1Sw2zxDYHbNQIys/Qsky
-         0NFmblrpzx0KKcGh8kB+gjKI8HWtpVlNhmvIdyqXpDUvEnmzDJXr7Od4S3iqm/kBPJFZ
-         vh4y1phX2awKQOOPubl5cOJ3nzq2TOqpX3SUlgiRM9D7awAY5ju8+KGxseEdOdDZZsoa
-         fltbWpnTBk5i6j0UldFDab4ttCBFzpQSgO25zUk2bw5vHS/A6x2A/K5WVpUVGXOfc1WB
-         PCCQ==
-Sender: Tejun Heo <htejun@gmail.com>
-Content-Disposition: inline
-In-Reply-To: <4aeef320-c6c8-d9b4-8826-d58f00ea6264@huaweicloud.com>
+Content-Transfer-Encoding: quoted-printable
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <Y8CrloCDGhbU42OH-NiLfg/pYEd1N0TnZuCh8vA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Yu Kuai <yukuai1@huaweicloud.com>
-Cc: hch@infradead.org, josef@toxicpanda.com, axboe@kernel.dk, cgroups@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, yi.zhang@huawei.com, "yukuai (C)" <yukuai3@huawei.com>
+Content-Type: text/plain; charset="iso-8859-1"; format="flowed"
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Yu Kuai <yukuai1-XF6JlduFytWkHkcT6e4Xnw@public.gmane.org>
+Cc: hch-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, josef-DigfWCa+lFGyeJad7bwFQA@public.gmane.org, axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, yi.zhang-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, "yukuai (C)" <yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 
-Hello,
+Hi,
 
-On Thu, Jan 12, 2023 at 02:18:15PM +0800, Yu Kuai wrote:
-> remove the blkcg_deactivate_policy() from rq_qos_exit() from deleting
-> the device, and delay the policy cleanup and free to blkg_destroy_all().
-> Then the policies(other than bfq) can only call pd_free_fn() from
-> blkg_destroy(), and it's easy to guarantee the order. For bfq, it can
-> stay the same since bfq has refcounting itself.
-> 
-> Then for the problem that ioc can be freed in pd_free_fn(), we can fix
-> it by freeing ioc in ioc_pd_free() for root blkg instead of
-> rq_qos_exit().
-> 
-> What do you think?
+=D4=DA 2023/01/13 8:53, Tejun Heo =D0=B4=B5=C0:
+> Hello,
+>=20
+> On Thu, Jan 12, 2023 at 02:18:15PM +0800, Yu Kuai wrote:
+>> remove the blkcg_deactivate_policy() from rq_qos_exit() from deleting
+>> the device, and delay the policy cleanup and free to blkg_destroy_all().
+>> Then the policies(other than bfq) can only call pd_free_fn() from
+>> blkg_destroy(), and it's easy to guarantee the order. For bfq, it can
+>> stay the same since bfq has refcounting itself.
+>>
+>> Then for the problem that ioc can be freed in pd_free_fn(), we can fix
+>> it by freeing ioc in ioc_pd_free() for root blkg instead of
+>> rq_qos_exit().
+>>
+>> What do you think?
+>=20
+> That would remove the ability to dynamically remove an rq_qos policy, rig=
+ht?
+> We don't currently do it but given that having an rq_qos registered comes
+> with perf overhead, it's something we might want to do in the future - e.=
+g.
 
-That would remove the ability to dynamically remove an rq_qos policy, right?
-We don't currently do it but given that having an rq_qos registered comes
-with perf overhead, it's something we might want to do in the future - e.g.
-only activate the policy when the controller is actually enabled. So, idk.
-What's wrong with synchronizing the two removal paths? blkcg policies are
-combinations of cgroups and block device configurations, so having exit
-paths from both sides is kinda natural.
+Yes, that make sense, remove ioc and other policies dynamically.
 
-Thanks.
+> only activate the policy when the controller is actually enabled. So, idk.
+> What's wrong with synchronizing the two removal paths? blkcg policies are
+> combinations of cgroups and block device configurations, so having exit
+> paths from both sides is kinda natural.
 
--- 
-tejun
+I still can't figure out how to synchronizing them will a mutex. Maybe
+I'm being foolish...
+
+Thanks,
+Kuai
+
