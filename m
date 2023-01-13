@@ -1,7 +1,7 @@
 From: Vincent Guittot <vincent.guittot-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>
-Subject: [PATCH v10 6/9] sched/fair: Add sched group latency support
-Date: Fri, 13 Jan 2023 15:12:31 +0100
-Message-ID: <20230113141234.260128-7-vincent.guittot@linaro.org>
+Subject: [PATCH v10 4/9] sched: Allow sched_{get,set}attr to change latency_nice of the task
+Date: Fri, 13 Jan 2023 15:12:29 +0100
+Message-ID: <20230113141234.260128-5-vincent.guittot@linaro.org>
 References: <20230113141234.260128-1-vincent.guittot@linaro.org>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
@@ -11,214 +11,195 @@ DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=5wKU8uiBTq3EBSEKs7HoauBnDIh2Fc9iGzBeoPlJTDY=;
-        b=Y4VJe97fZY3loO27wJAyXfrN3a+KVh5Zuffg0d4rOcwZDSmq3CSYIZFG3xDZcfwMYo
-         xwxgY1zulnkbJyf9oSgwf0zje7+WKqKSmyU6BOvPTy03kxdFJ+x5eeqsqRoLbY5Edb+s
-         VMOoJefJhpGY+yjXT18tQ+KPR9GLt3BE51lpmpUE3E9cHbDvnukSoaD6w0N0dyEGOXgp
-         GvVkFtpBnJblg1D2oxP7hByCNefNkcHOE5eQgEvRLFhxVZfbFETpyopGlEcY5G0nLWPU
-         GiqDDJX6Cj6VUBbx0uHbxewx4vQXY5oOMQcv3P5FBERiMmSeYeLGzW0739e3uZnDvMQj
-         mLdg==
+        bh=2Am1q/bEvRn6pheYQNrR7HS5jvhXqf4XcHEu+7BBCYA=;
+        b=NbVbWvwm3dS9NPvSb1fzuMi3VKuQ6EhjoB3vCoplqZQl2sh2bg01jMlbprGg5xfKg/
+         B+4PqQkCl03dIKYokB+i6GxtDdLgzQv0k+mzoEO6cuAlF9FLmnT3LCTI6O9f6OrR+Peh
+         kgb6gBsfsZfRVsB+gcnD2Ylh9O4eQRpMPsDv/4n7CsoPIjCup2yz3U3ZBflSbLqyOIbP
+         ZQ2Wk3xGXJ+Ank/cocUu2n+RI44sbzx5stllUYTh1uTb7UmMDudTj6QMibXj7OFXfVd/
+         PSXwF+mFKr8M+92q2RlyHDx6/IoVvjxAqwyCu6G2lTs74gRz5iYi5ymBR/CWyqp8bNGk
+         pZHw==
 In-Reply-To: <20230113141234.260128-1-vincent.guittot-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 To: mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, juri.lelli-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, dietmar.eggemann-5wv7dgnIgG8@public.gmane.org, rostedt-nx8X9YLhiw1AfugRpC6u6w@public.gmane.org, bsegall-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, mgorman-l3A5Bk7waGM@public.gmane.org, bristot-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, vschneid-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, parth-tEXmvtCZX7AybS5Ee8rs3A@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 Cc: qyousef-wp2msK0BRk8tq7phqP6ubQ@public.gmane.org, chris.hyser-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org, patrick.bellasi-X6neQFFVdzGsTnJN9+BGXg@public.gmane.org, David.Laight-JxhZ9S5GRejQT0dZR+AlfA@public.gmane.org, pjt-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, pavel-+ZI9xUNit7I@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, qperret-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, tim.c.chen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org, joshdon-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, timj-mXXj517/zsQ@public.gmane.org, kprateek.nayak-5C7GfCeVMHo@public.gmane.org, yu.c.chen-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org, youssefesmat-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org, joel-QYYGw3jwrUn5owFQY34kdNi2O/JbrIOy@public.gmane.org, Vincent Guittot <vincent.guittot-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>
 
-Task can set its latency priority with sched_setattr(), which is then used
-to set the latency offset of its sched_enity, but sched group entities
-still have the default latency offset value.
+From: Parth Shah <parth-tEXmvtCZX7AybS5Ee8rs3A@public.gmane.org>
 
-Add a latency.nice field in cpu cgroup controller to set the latency
-priority of the group similarly to sched_setattr(). The latency priority
-is then used to set the offset of the sched_entities of the group.
+Introduce the latency_nice attribute to sched_attr and provide a
+mechanism to change the value with the use of sched_setattr/sched_getattr
+syscall.
 
+Also add new flag "SCHED_FLAG_LATENCY_NICE" to hint the change in
+latency_nice of the task on every sched_setattr syscall.
+
+Signed-off-by: Parth Shah <parth-tEXmvtCZX7AybS5Ee8rs3A@public.gmane.org>
+[rebase and add a dedicated __setscheduler_latency ]
 Signed-off-by: Vincent Guittot <vincent.guittot-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>
 Tested-by: K Prateek Nayak <kprateek.nayak-5C7GfCeVMHo@public.gmane.org>
 ---
- Documentation/admin-guide/cgroup-v2.rst | 10 +++++
- kernel/sched/core.c                     | 52 +++++++++++++++++++++++++
- kernel/sched/fair.c                     | 33 ++++++++++++++++
- kernel/sched/sched.h                    |  4 ++
- 4 files changed, 99 insertions(+)
+ include/uapi/linux/sched.h       |  4 +++-
+ include/uapi/linux/sched/types.h | 19 +++++++++++++++++++
+ kernel/sched/core.c              | 24 ++++++++++++++++++++++++
+ tools/include/uapi/linux/sched.h |  4 +++-
+ 4 files changed, 49 insertions(+), 2 deletions(-)
 
-diff --git a/Documentation/admin-guide/cgroup-v2.rst b/Documentation/admin-guide/cgroup-v2.rst
-index 1b3ed1c3b3f1..c08424593e4a 100644
---- a/Documentation/admin-guide/cgroup-v2.rst
-+++ b/Documentation/admin-guide/cgroup-v2.rst
-@@ -1121,6 +1121,16 @@ All time durations are in microseconds.
-         values similar to the sched_setattr(2). This maximum utilization
-         value is used to clamp the task specific maximum utilization clamp.
+diff --git a/include/uapi/linux/sched.h b/include/uapi/linux/sched.h
+index 3bac0a8ceab2..b2e932c25be6 100644
+--- a/include/uapi/linux/sched.h
++++ b/include/uapi/linux/sched.h
+@@ -132,6 +132,7 @@ struct clone_args {
+ #define SCHED_FLAG_KEEP_PARAMS		0x10
+ #define SCHED_FLAG_UTIL_CLAMP_MIN	0x20
+ #define SCHED_FLAG_UTIL_CLAMP_MAX	0x40
++#define SCHED_FLAG_LATENCY_NICE		0x80
  
-+  cpu.latency.nice
-+	A read-write single value file which exists on non-root
-+	cgroups.  The default is "0".
-+
-+	The nice value is in the range [-20, 19].
-+
-+	This interface file allows reading and setting latency using the
-+	same values used by sched_setattr(2). The latency_nice of a group is
-+	used to limit the impact of the latency_nice of a task outside the
-+	group.
+ #define SCHED_FLAG_KEEP_ALL	(SCHED_FLAG_KEEP_POLICY | \
+ 				 SCHED_FLAG_KEEP_PARAMS)
+@@ -143,6 +144,7 @@ struct clone_args {
+ 			 SCHED_FLAG_RECLAIM		| \
+ 			 SCHED_FLAG_DL_OVERRUN		| \
+ 			 SCHED_FLAG_KEEP_ALL		| \
+-			 SCHED_FLAG_UTIL_CLAMP)
++			 SCHED_FLAG_UTIL_CLAMP		| \
++			 SCHED_FLAG_LATENCY_NICE)
  
+ #endif /* _UAPI_LINUX_SCHED_H */
+diff --git a/include/uapi/linux/sched/types.h b/include/uapi/linux/sched/types.h
+index f2c4589d4dbf..db1e8199e8c8 100644
+--- a/include/uapi/linux/sched/types.h
++++ b/include/uapi/linux/sched/types.h
+@@ -10,6 +10,7 @@ struct sched_param {
  
- Memory
+ #define SCHED_ATTR_SIZE_VER0	48	/* sizeof first published struct */
+ #define SCHED_ATTR_SIZE_VER1	56	/* add: util_{min,max} */
++#define SCHED_ATTR_SIZE_VER2	60	/* add: latency_nice */
+ 
+ /*
+  * Extended scheduling parameters data structure.
+@@ -98,6 +99,22 @@ struct sched_param {
+  * scheduled on a CPU with no more capacity than the specified value.
+  *
+  * A task utilization boundary can be reset by setting the attribute to -1.
++ *
++ * Latency Tolerance Attributes
++ * ===========================
++ *
++ * A subset of sched_attr attributes allows to specify the relative latency
++ * requirements of a task with respect to the other tasks running/queued in the
++ * system.
++ *
++ * @ sched_latency_nice	task's latency_nice value
++ *
++ * The latency_nice of a task can have any value in a range of
++ * [MIN_LATENCY_NICE..MAX_LATENCY_NICE].
++ *
++ * A task with latency_nice with the value of LATENCY_NICE_MIN can be
++ * taken for a task requiring a lower latency as opposed to the task with
++ * higher latency_nice.
+  */
+ struct sched_attr {
+ 	__u32 size;
+@@ -120,6 +137,8 @@ struct sched_attr {
+ 	__u32 sched_util_min;
+ 	__u32 sched_util_max;
+ 
++	/* latency requirement hints */
++	__s32 sched_latency_nice;
+ };
+ 
+ #endif /* _UAPI_LINUX_SCHED_TYPES_H */
 diff --git a/kernel/sched/core.c b/kernel/sched/core.c
-index 402c8d622b76..6798c9a297d6 100644
+index 012a1f551f4f..981665550f8c 100644
 --- a/kernel/sched/core.c
 +++ b/kernel/sched/core.c
-@@ -11007,6 +11007,47 @@ static int cpu_idle_write_s64(struct cgroup_subsys_state *css,
- {
- 	return sched_group_set_idle(css_tg(css), idle);
+@@ -7392,6 +7392,14 @@ static void __setscheduler_params(struct task_struct *p,
+ 	p->rt_priority = attr->sched_priority;
+ 	p->normal_prio = normal_prio(p);
+ 	set_load_weight(p, true);
++
++}
++
++static void __setscheduler_latency(struct task_struct *p,
++		const struct sched_attr *attr)
++{
++	if (attr->sched_flags & SCHED_FLAG_LATENCY_NICE)
++		p->latency_nice = attr->sched_latency_nice;
  }
-+
-+static s64 cpu_latency_nice_read_s64(struct cgroup_subsys_state *css,
-+				    struct cftype *cft)
-+{
-+	int prio, delta, last_delta = INT_MAX;
-+	s64 weight;
-+
-+	weight = css_tg(css)->latency_offset * NICE_LATENCY_WEIGHT_MAX;
-+	weight = div_s64(weight, get_sleep_latency(false));
-+
-+	/* Find the closest nice value to the current weight */
-+	for (prio = 0; prio < ARRAY_SIZE(sched_latency_to_weight); prio++) {
-+		delta = abs(sched_latency_to_weight[prio] - weight);
-+		if (delta >= last_delta)
-+			break;
-+		last_delta = delta;
-+	}
-+
-+	return LATENCY_TO_NICE(prio-1);
-+}
-+
-+static int cpu_latency_nice_write_s64(struct cgroup_subsys_state *css,
-+				     struct cftype *cft, s64 nice)
-+{
-+	s64 latency_offset;
-+	long weight;
-+	int idx;
-+
-+	if (nice < MIN_LATENCY_NICE || nice > MAX_LATENCY_NICE)
-+		return -ERANGE;
-+
-+	idx = NICE_TO_LATENCY(nice);
-+	idx = array_index_nospec(idx, LATENCY_NICE_WIDTH);
-+	weight = sched_latency_to_weight[idx];
-+
-+	latency_offset = weight * get_sleep_latency(false);
-+	latency_offset = div_s64(latency_offset, NICE_LATENCY_WEIGHT_MAX);
-+
-+	return sched_group_set_latency(css_tg(css), latency_offset);
-+}
-+
- #endif
  
- static struct cftype cpu_legacy_files[] = {
-@@ -11021,6 +11062,11 @@ static struct cftype cpu_legacy_files[] = {
- 		.read_s64 = cpu_idle_read_s64,
- 		.write_s64 = cpu_idle_write_s64,
- 	},
-+	{
-+		.name = "latency.nice",
-+		.read_s64 = cpu_latency_nice_read_s64,
-+		.write_s64 = cpu_latency_nice_write_s64,
-+	},
- #endif
- #ifdef CONFIG_CFS_BANDWIDTH
- 	{
-@@ -11238,6 +11284,12 @@ static struct cftype cpu_files[] = {
- 		.read_s64 = cpu_idle_read_s64,
- 		.write_s64 = cpu_idle_write_s64,
- 	},
-+	{
-+		.name = "latency.nice",
-+		.flags = CFTYPE_NOT_ON_ROOT,
-+		.read_s64 = cpu_latency_nice_read_s64,
-+		.write_s64 = cpu_latency_nice_write_s64,
-+	},
- #endif
- #ifdef CONFIG_CFS_BANDWIDTH
- 	{
-diff --git a/kernel/sched/fair.c b/kernel/sched/fair.c
-index e87a863a2aa6..80ad27ddb4a1 100644
---- a/kernel/sched/fair.c
-+++ b/kernel/sched/fair.c
-@@ -12296,6 +12296,7 @@ int alloc_fair_sched_group(struct task_group *tg, struct task_group *parent)
- 		goto err;
- 
- 	tg->shares = NICE_0_LOAD;
-+	tg->latency_offset = 0;
- 
- 	init_cfs_bandwidth(tg_cfs_bandwidth(tg));
- 
-@@ -12394,6 +12395,9 @@ void init_tg_cfs_entry(struct task_group *tg, struct cfs_rq *cfs_rq,
+ /*
+@@ -7534,6 +7542,13 @@ static int __sched_setscheduler(struct task_struct *p,
+ 			return retval;
  	}
  
- 	se->my_q = cfs_rq;
-+
-+	se->latency_offset = tg->latency_offset;
-+
- 	/* guarantee group entities always have weight */
- 	update_load_set(&se->load, NICE_0_LOAD);
- 	se->parent = parent;
-@@ -12524,6 +12528,35 @@ int sched_group_set_idle(struct task_group *tg, long idle)
- 	return 0;
- }
- 
-+int sched_group_set_latency(struct task_group *tg, s64 latency)
-+{
-+	int i;
-+
-+	if (tg == &root_task_group)
-+		return -EINVAL;
-+
-+	if (abs(latency) > sysctl_sched_latency)
-+		return -EINVAL;
-+
-+	mutex_lock(&shares_mutex);
-+
-+	if (tg->latency_offset == latency) {
-+		mutex_unlock(&shares_mutex);
-+		return 0;
++	if (attr->sched_flags & SCHED_FLAG_LATENCY_NICE) {
++		if (attr->sched_latency_nice > MAX_LATENCY_NICE)
++			return -EINVAL;
++		if (attr->sched_latency_nice < MIN_LATENCY_NICE)
++			return -EINVAL;
 +	}
 +
-+	tg->latency_offset = latency;
-+
-+	for_each_possible_cpu(i) {
-+		struct sched_entity *se = tg->se[i];
-+
-+		WRITE_ONCE(se->latency_offset, latency);
-+	}
-+
-+	mutex_unlock(&shares_mutex);
-+	return 0;
-+}
-+
- #else /* CONFIG_FAIR_GROUP_SCHED */
+ 	if (pi)
+ 		cpuset_read_lock();
  
- void free_fair_sched_group(struct task_group *tg) { }
-diff --git a/kernel/sched/sched.h b/kernel/sched/sched.h
-index fd099f3961e4..5a4ce8e61f47 100644
---- a/kernel/sched/sched.h
-+++ b/kernel/sched/sched.h
-@@ -383,6 +383,8 @@ struct task_group {
+@@ -7568,6 +7583,9 @@ static int __sched_setscheduler(struct task_struct *p,
+ 			goto change;
+ 		if (attr->sched_flags & SCHED_FLAG_UTIL_CLAMP)
+ 			goto change;
++		if (attr->sched_flags & SCHED_FLAG_LATENCY_NICE &&
++		    attr->sched_latency_nice != p->latency_nice)
++			goto change;
  
- 	/* A positive value indicates that this is a SCHED_IDLE group. */
- 	int			idle;
-+	/* latency constraint of the group. */
-+	int			latency_offset;
+ 		p->sched_reset_on_fork = reset_on_fork;
+ 		retval = 0;
+@@ -7656,6 +7674,7 @@ static int __sched_setscheduler(struct task_struct *p,
+ 		__setscheduler_params(p, attr);
+ 		__setscheduler_prio(p, newprio);
+ 	}
++	__setscheduler_latency(p, attr);
+ 	__setscheduler_uclamp(p, attr);
  
- #ifdef	CONFIG_SMP
+ 	if (queued) {
+@@ -7866,6 +7885,9 @@ static int sched_copy_attr(struct sched_attr __user *uattr, struct sched_attr *a
+ 	    size < SCHED_ATTR_SIZE_VER1)
+ 		return -EINVAL;
+ 
++	if ((attr->sched_flags & SCHED_FLAG_LATENCY_NICE) &&
++	    size < SCHED_ATTR_SIZE_VER2)
++		return -EINVAL;
  	/*
-@@ -493,6 +495,8 @@ extern int sched_group_set_shares(struct task_group *tg, unsigned long shares);
+ 	 * XXX: Do we want to be lenient like existing syscalls; or do we want
+ 	 * to be strict and return an error on out-of-bounds values?
+@@ -8103,6 +8125,8 @@ SYSCALL_DEFINE4(sched_getattr, pid_t, pid, struct sched_attr __user *, uattr,
+ 	get_params(p, &kattr);
+ 	kattr.sched_flags &= SCHED_FLAG_ALL;
  
- extern int sched_group_set_idle(struct task_group *tg, long idle);
- 
-+extern int sched_group_set_latency(struct task_group *tg, s64 latency);
++	kattr.sched_latency_nice = p->latency_nice;
 +
- #ifdef CONFIG_SMP
- extern void set_task_rq_fair(struct sched_entity *se,
- 			     struct cfs_rq *prev, struct cfs_rq *next);
+ #ifdef CONFIG_UCLAMP_TASK
+ 	/*
+ 	 * This could race with another potential updater, but this is fine
+diff --git a/tools/include/uapi/linux/sched.h b/tools/include/uapi/linux/sched.h
+index 3bac0a8ceab2..b2e932c25be6 100644
+--- a/tools/include/uapi/linux/sched.h
++++ b/tools/include/uapi/linux/sched.h
+@@ -132,6 +132,7 @@ struct clone_args {
+ #define SCHED_FLAG_KEEP_PARAMS		0x10
+ #define SCHED_FLAG_UTIL_CLAMP_MIN	0x20
+ #define SCHED_FLAG_UTIL_CLAMP_MAX	0x40
++#define SCHED_FLAG_LATENCY_NICE		0x80
+ 
+ #define SCHED_FLAG_KEEP_ALL	(SCHED_FLAG_KEEP_POLICY | \
+ 				 SCHED_FLAG_KEEP_PARAMS)
+@@ -143,6 +144,7 @@ struct clone_args {
+ 			 SCHED_FLAG_RECLAIM		| \
+ 			 SCHED_FLAG_DL_OVERRUN		| \
+ 			 SCHED_FLAG_KEEP_ALL		| \
+-			 SCHED_FLAG_UTIL_CLAMP)
++			 SCHED_FLAG_UTIL_CLAMP		| \
++			 SCHED_FLAG_LATENCY_NICE)
+ 
+ #endif /* _UAPI_LINUX_SCHED_H */
 -- 
 2.34.1
 
