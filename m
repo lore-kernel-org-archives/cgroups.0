@@ -1,37 +1,61 @@
-From: =?utf-8?B?TGl4aW9uZyBMaXUgKOWImOWIqembhCk=?= 
-        <Lixiong.Liu-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org>
-Subject: Re: cgroup user-after-free
-Date: Fri, 13 Jan 2023 05:40:08 +0000
-Message-ID: <f8b24df3bd009d112479e9d5db36ec4afff9bb71.camel@mediatek.com>
-References: <697032f2331a92eec0e03e85e46cb78bd975a788.camel@mediatek.com>
-         <Y8Cwdsk5pYNd8fX8@slm.duckdns.org>
+From: Yu Kuai <yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Subject: [PATCH] block, bfq: fix uaf for bfqq in bic_set_bfqq()
+Date: Fri, 13 Jan 2023 17:44:10 +0800
+Message-ID: <20230113094410.2907223-1-yukuai3@huawei.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: base64
+Content-Transfer-Encoding: 7BIT
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
-        h=MIME-Version:Content-Transfer-Encoding:Content-ID:Content-Type:In-Reply-To:References:Message-ID:Date:Subject:CC:To:From; bh=NYbeQh7Rgw1KknPgPEBf6Uxnq0LgTEYU6DiZQiPCXTw=;
-        b=PwWmZf7LpqsdSAKthP5lAa08228STm5VEK0ShPH7eZ4MGtDuZagdGnPyW6VibYs7G5h4jcwibuPX+gnNve7sWC0QPhFeDwnAGrJJiqOCkC/qwbEgPAZg/SacqmMpNIOnriOCKNXFAB99vV/UhIqnWgdZ75WJ9KBIrd8Tyn24CWE=;
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=mediateko365.onmicrosoft.com; s=selector2-mediateko365-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=NYbeQh7Rgw1KknPgPEBf6Uxnq0LgTEYU6DiZQiPCXTw=;
- b=RFUNMO/2x0xxQwk7dIg92fvy2RcTSDXoBFmNhOidXkEcnwpRAffSdx2RXl29oNaz3rN05h7HrAxg1UB6WFlIl+2WXLlwNhEj8u7eFaW6OxTWFX6b7TTRHmq9TYtTzSEJZLxlhjq138LSjZszbuLpSEWUz3/DZ99msWtTGdaBDqY=
-In-Reply-To: <Y8Cwdsk5pYNd8fX8-NiLfg/pYEd1N0TnZuCh8vA@public.gmane.org>
-Content-Language: en-US
-Content-ID: <C0A90EC1935DAD4A9CBB0ED17B719D39-Ld2OyNlpylScE4WynfumptQqCkab/8FMAL8bYrjMMd8@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="windows-1252"
-To: "tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org" <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: "lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org" <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, "linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-mediatek-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org" <linux-mediatek-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org>, "cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, =?utf-8?B?V2VuanUgWHUgKOiuuOaWh+S4vik=?= <Wenju.Xu-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org>, wsd_upstream <wsd_upstream-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org>, =?utf-8?B?SmluZy1UaW5nIFd1ICjlkLPpnZzlqbcp?= <Jing-Ting.Wu-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org>, "hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org" <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, =?utf-8?B?V0ogV2FuZyAo546L5YabKQ==?= <wj.wang-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org>, "linux-arm-kernel-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org" <linux-arm-kernel-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org>, =?utf-8?B?QW5kcmVzcyBLdW8gKOmDreWtn+S/rik=?= <Andress.Kuo-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org>, "matthias.bgg-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org" <matthias.bgg-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Content-Type: text/plain; charset="us-ascii"
+To: jack-AlSwsSmVLrQ@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, josef-DigfWCa+lFGyeJad7bwFQA@public.gmane.org, axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, paolo.valente-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org, shinichiro.kawasaki-Sjgp3cTcYWE@public.gmane.org, yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, yukuai1-XF6JlduFytWkHkcT6e4Xnw@public.gmane.org, yi.zhang-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, yangerkun-hv44wF8Li93QT0dZR+AlfA@public.gmane.org
 
-PiA+IFJvb3QgY2F1c2U6IA0KPiA+IGNncm91cF9taWdyYXRlX2ZpbmlzaCBmcmVlIGNzZXTigJlz
-IGNncm91cCwNCj4gPiANCj4gPiBidXQgY2dyb3VwX3NrX2FsbG9jIHVzZSB0aGUgZnJlZWQgY2dy
-b3VwLA0KPiA+IA0KPiA+IHRoZW4gdXNlLWFmdGVyLWZyZWUgaGFwcGVuZWQuDQo+IA0KPiBTb3Vu
-ZHMgc2ltaWxhciB0byB0aGUgcHJvYmxlbSBmaXhlZCBieSAwN2ZkNWI2Y2RmM2MgKCJjZ3JvdXA6
-IFVzZQ0KPiBzZXBhcmF0ZQ0KPiBzcmMvZHN0IG5vZGVzIHdoZW4gcHJlbG9hZGluZyBjc3Nfc2V0
-cyBmb3IgbWlncmF0aW9uIikuIENhbiB5b3UgdHJ5DQo+IGl0IG91dD8NCj4gDQo+IFRoYW5rcy4N
-Cj4gDQoNCg0KVGhhbmtzIGZvciB5b3VyIHF1aWNrIGZlZWRiYWNrLg0KDQoNCiAgDQpCdXQgd2Ug
-ZW5jb3VudGVyZWQgdXNlLWFmdGVyLWZyZWUgdmVyc2lvbg0KDQphbHJlYWR5IGNvbnRhaW5zIHRo
-aXMgcGF0Y2guDQoNCg0KDQpTbywgd2l0aCB0aGlzIHBhdGNoIHdpbGwgYWxzbyBlbmNvdW50ZXIN
-Cg0KdGhpcyB1c2UtYWZ0ZXItZnJlZS4NCg0KVGhhbmtzIQ0KDQoNCg0KQmVzdCByZWdhcmRzLA0K
-TGl4aW9uZyBMaXUNCg==
+After commit 64dc8c732f5c ("block, bfq: fix possible uaf for 'bfqq->bic'"),
+bic->bfqq will be accessed in bic_set_bfqq(), however, in some context
+bic->bfqq will be freed first, and bic_set_bfqq() is called with the freed
+bic->bfqq.
+
+Fix the problem by always freeing bfqq after bic_set_bfqq().
+
+Fixes: 64dc8c732f5c ("block, bfq: fix possible uaf for 'bfqq->bic'")
+Reported-and-tested-by: Shinichiro Kawasaki <shinichiro.kawasaki-Sjgp3cTcYWE@public.gmane.org>
+Signed-off-by: Yu Kuai <yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+---
+ block/bfq-cgroup.c  | 2 +-
+ block/bfq-iosched.c | 4 +++-
+ 2 files changed, 4 insertions(+), 2 deletions(-)
+
+diff --git a/block/bfq-cgroup.c b/block/bfq-cgroup.c
+index a6e8da5f5cfd..feb13ac25557 100644
+--- a/block/bfq-cgroup.c
++++ b/block/bfq-cgroup.c
+@@ -749,8 +749,8 @@ static void bfq_sync_bfqq_move(struct bfq_data *bfqd,
+ 		 * old cgroup.
+ 		 */
+ 		bfq_put_cooperator(sync_bfqq);
+-		bfq_release_process_ref(bfqd, sync_bfqq);
+ 		bic_set_bfqq(bic, NULL, true, act_idx);
++		bfq_release_process_ref(bfqd, sync_bfqq);
+ 	}
+ }
+ 
+diff --git a/block/bfq-iosched.c b/block/bfq-iosched.c
+index 815b884d6c5a..2ddf831221c4 100644
+--- a/block/bfq-iosched.c
++++ b/block/bfq-iosched.c
+@@ -5581,9 +5581,11 @@ static void bfq_check_ioprio_change(struct bfq_io_cq *bic, struct bio *bio)
+ 
+ 	bfqq = bic_to_bfqq(bic, false, bfq_actuator_index(bfqd, bio));
+ 	if (bfqq) {
+-		bfq_release_process_ref(bfqd, bfqq);
++		struct bfq_queue *old_bfqq = bfqq;
++
+ 		bfqq = bfq_get_queue(bfqd, bio, false, bic, true);
+ 		bic_set_bfqq(bic, bfqq, false, bfq_actuator_index(bfqd, bio));
++		bfq_release_process_ref(bfqd, old_bfqq);
+ 	}
+ 
+ 	bfqq = bic_to_bfqq(bic, true, bfq_actuator_index(bfqd, bio));
+-- 
+2.31.1
+
