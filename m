@@ -1,323 +1,64 @@
-From: Tvrtko Ursulin <tvrtko.ursulin@linux.intel.com>
-Subject: [RFC 12/12] drm/i915: Implement cgroup controller over
- budget throttling
-Date: Thu, 12 Jan 2023 16:56:09 +0000
-Message-ID: <20230112165609.1083270-13-tvrtko.ursulin@linux.intel.com>
-References: <20230112165609.1083270-1-tvrtko.ursulin@linux.intel.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH v2 1/2] blk-iocost: add refcounting for iocg
+Date: Thu, 12 Jan 2023 14:53:42 -1000
+Message-ID: <Y8CrloCDGhbU42OH@slm.duckdns.org>
+References: <Y7cX0SJ0y6+EIY5Q@slm.duckdns.org>
+ <7dcdaef3-65c1-8175-fea7-53076f39697f@huaweicloud.com>
+ <Y7iCId3pnEnLqY8G@slm.duckdns.org>
+ <875eb43e-202d-5b81-0bff-ef0434358d99@huaweicloud.com>
+ <Y7xbpidpq7+DqJan@slm.duckdns.org>
+ <a71f997f-6cae-d57b-85dd-2fd499d238f6@huaweicloud.com>
+ <Y72wF/b0/xNRmP7f@slm.duckdns.org>
+ <53b30ac8-d608-ba0b-8b1b-7fe5cfed6d61@huaweicloud.com>
+ <Y77s0f741mFfGlTO@slm.duckdns.org>
+ <4aeef320-c6c8-d9b4-8826-d58f00ea6264@huaweicloud.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-Return-path: <intel-gfx-bounces@lists.freedesktop.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
- d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
- t=1673542680; x=1705078680;
- h=from:to:cc:subject:date:message-id:in-reply-to:
- references:mime-version:content-transfer-encoding;
- bh=f0q7RWdjWc7bT/dk3KoBtvbgBH0mVKLA43taVZS41KM=;
- b=O+WxDoC/oH7XA2pmlStFeL4qcSaKeEebbYO7qSFvPPcpueay1gK1Oiuz
- 7dFQ+0y5LpAcQBlInGqwAb8GxAYiZQgaOxWtSOZFp5ykqkZ7XfOjCecTB
- B1OJPLUanAekQMuegQiLfLBw1jPoUY17zQwa26L+c7S+LjXV3HCXGZSyn
- L0b4Ur31JJ98+En6f5R39nI+TIoy2fIAvlTrqQzr0LbBACzwRYVLsW5Hs
- qAfcd5+IGKuUnxY6NPoY9qSDBKmzqPLWwXz4H98O1p4cAhbW95093n1VI
- pGqxxy8LvRyJhTx8ydlpAUSV9noDwsiFx+GUawgnGzQ7xcp4sJcHPUWJA Q==;
-In-Reply-To: <20230112165609.1083270-1-tvrtko.ursulin@linux.intel.com>
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.freedesktop.org/mailman/options/intel-gfx>,
- <mailto:intel-gfx-request@lists.freedesktop.org?subject=unsubscribe>
-List-Archive: <https://lists.freedesktop.org/archives/intel-gfx>
-List-Post: <mailto:intel-gfx@lists.freedesktop.org>
-List-Help: <mailto:intel-gfx-request@lists.freedesktop.org?subject=help>
-List-Subscribe: <https://lists.freedesktop.org/mailman/listinfo/intel-gfx>,
- <mailto:intel-gfx-request@lists.freedesktop.org?subject=subscribe>
-Errors-To: intel-gfx-bounces@lists.freedesktop.org
-Sender: "Intel-gfx" <intel-gfx-bounces@lists.freedesktop.org>
-Content-Type: text/plain; charset="windows-1252"
-To: Intel-gfx@lists.freedesktop.org, dri-devel@lists.freedesktop.org
-Cc: Rob Clark <robdclark@chromium.org>, Kenny.Ho@amd.com, Daniel Vetter <daniel.vetter@ffwll.ch>, Johannes Weiner <hannes@cmpxchg.org>, linux-kernel@vger.kernel.org, =?UTF-8?q?St=C3=A9phane=20Marchesin?= <marcheu@chromium.org>, =?UTF-8?q?Christian=20K=C3=B6nig?= <christian.koenig@amd.com>, Zefan Li <lizefan.x@bytedance.com>, Dave Airlie <airlied@redhat.com>, Tejun Heo <tj@kernel.org>, cgroups@vger.kernel.org, "T . J . Mercier" <tjmercier@google.com>
+Return-path: <linux-block-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:sender:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=LFhlmdG7Cx41399yo/ozHBL4wwrrh2PAewE6ufP94qA=;
+        b=i6ekoKSewTItPgRE2QdLfrvZixqAENBhz4Yj1/vL3BIQX1WDTpF0k3GyYEmg0KIHxA
+         wj+1HMU7ALqFSNrA9RlqGF4D/uEBUivlqxRFfFOol7sG1QIJ1Sw2zxDYHbNQIys/Qsky
+         0NFmblrpzx0KKcGh8kB+gjKI8HWtpVlNhmvIdyqXpDUvEnmzDJXr7Od4S3iqm/kBPJFZ
+         vh4y1phX2awKQOOPubl5cOJ3nzq2TOqpX3SUlgiRM9D7awAY5ju8+KGxseEdOdDZZsoa
+         fltbWpnTBk5i6j0UldFDab4ttCBFzpQSgO25zUk2bw5vHS/A6x2A/K5WVpUVGXOfc1WB
+         PCCQ==
+Sender: Tejun Heo <htejun@gmail.com>
+Content-Disposition: inline
+In-Reply-To: <4aeef320-c6c8-d9b4-8826-d58f00ea6264@huaweicloud.com>
+List-ID: <cgroups.vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Yu Kuai <yukuai1@huaweicloud.com>
+Cc: hch@infradead.org, josef@toxicpanda.com, axboe@kernel.dk, cgroups@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, yi.zhang@huawei.com, "yukuai (C)" <yukuai3@huawei.com>
 
-From: Tvrtko Ursulin <tvrtko.ursulin@intel.com>
+Hello,
 
-When notified by the drm core we are over our allotted time budget, i915
-instance will check if any of the GPU engines it is reponsible for is
-fully saturated. If it is, and the client in question is using that
-engine, it will throttle it.
+On Thu, Jan 12, 2023 at 02:18:15PM +0800, Yu Kuai wrote:
+> remove the blkcg_deactivate_policy() from rq_qos_exit() from deleting
+> the device, and delay the policy cleanup and free to blkg_destroy_all().
+> Then the policies(other than bfq) can only call pd_free_fn() from
+> blkg_destroy(), and it's easy to guarantee the order. For bfq, it can
+> stay the same since bfq has refcounting itself.
+> 
+> Then for the problem that ioc can be freed in pd_free_fn(), we can fix
+> it by freeing ioc in ioc_pd_free() for root blkg instead of
+> rq_qos_exit().
+> 
+> What do you think?
 
-For now throttling is done simplistically by lowering the scheduling
-priority while clients are throttled.
+That would remove the ability to dynamically remove an rq_qos policy, right?
+We don't currently do it but given that having an rq_qos registered comes
+with perf overhead, it's something we might want to do in the future - e.g.
+only activate the policy when the controller is actually enabled. So, idk.
+What's wrong with synchronizing the two removal paths? blkcg policies are
+combinations of cgroups and block device configurations, so having exit
+paths from both sides is kinda natural.
 
-Signed-off-by: Tvrtko Ursulin <tvrtko.ursulin@intel.com>
----
- .../gpu/drm/i915/gem/i915_gem_execbuffer.c    |  38 ++++-
- drivers/gpu/drm/i915/i915_driver.c            |   1 +
- drivers/gpu/drm/i915/i915_drm_client.c        | 133 ++++++++++++++++++
- drivers/gpu/drm/i915/i915_drm_client.h        |  11 ++
- 4 files changed, 182 insertions(+), 1 deletion(-)
+Thanks.
 
-diff --git a/drivers/gpu/drm/i915/gem/i915_gem_execbuffer.c b/drivers/gpu/d=
-rm/i915/gem/i915_gem_execbuffer.c
-index 94d86ee24693..c3e57b51a106 100644
---- a/drivers/gpu/drm/i915/gem/i915_gem_execbuffer.c
-+++ b/drivers/gpu/drm/i915/gem/i915_gem_execbuffer.c
-@@ -3065,6 +3065,42 @@ static void retire_requests(struct intel_timeline *t=
-l, struct i915_request *end)
- 			break;
- }
-=20
-+#ifdef CONFIG_CGROUP_DRM
-+static unsigned int
-+__get_class(struct drm_i915_file_private *fpriv, const struct i915_request=
- *rq)
-+{
-+	unsigned int class;
-+
-+	class =3D rq->context->engine->uabi_class;
-+
-+	if (WARN_ON_ONCE(class >=3D ARRAY_SIZE(fpriv->client->throttle)))
-+		class =3D 0;
-+
-+	return class;
-+}
-+
-+static void copy_priority(struct i915_sched_attr *attr,
-+			  const struct i915_execbuffer *eb,
-+			  const struct i915_request *rq)
-+{
-+	struct drm_i915_file_private *file_priv =3D eb->file->driver_priv;
-+	int prio;
-+
-+	*attr =3D eb->gem_context->sched;
-+
-+	prio =3D file_priv->client->throttle[__get_class(file_priv, rq)];
-+	if (prio)
-+		attr->priority =3D prio;
-+}
-+#else
-+static void copy_priority(struct i915_sched_attr *attr,
-+			  const struct i915_execbuffer *eb,
-+			  const struct i915_request *rq)
-+{
-+	*attr =3D eb->gem_context->sched;
-+}
-+#endif
-+
- static int eb_request_add(struct i915_execbuffer *eb, struct i915_request =
-*rq,
- 			  int err, bool last_parallel)
- {
-@@ -3081,7 +3117,7 @@ static int eb_request_add(struct i915_execbuffer *eb,=
- struct i915_request *rq,
-=20
- 	/* Check that the context wasn't destroyed before submission */
- 	if (likely(!intel_context_is_closed(eb->context))) {
--		attr =3D eb->gem_context->sched;
-+		copy_priority(&attr, eb, rq);
- 	} else {
- 		/* Serialise with context_close via the add_to_timeline */
- 		i915_request_set_error_once(rq, -ENOENT);
-diff --git a/drivers/gpu/drm/i915/i915_driver.c b/drivers/gpu/drm/i915/i915=
-_driver.c
-index 50935cdb3a93..11c0c6f45e57 100644
---- a/drivers/gpu/drm/i915/i915_driver.c
-+++ b/drivers/gpu/drm/i915/i915_driver.c
-@@ -1900,6 +1900,7 @@ static const struct drm_ioctl_desc i915_ioctls[] =3D {
- #ifdef CONFIG_CGROUP_DRM
- static const struct drm_cgroup_ops i915_drm_cgroup_ops =3D {
- 	.active_time_us =3D i915_drm_cgroup_get_active_time_us,
-+	.signal_budget =3D i915_drm_cgroup_signal_budget,
- };
- #endif
-=20
-diff --git a/drivers/gpu/drm/i915/i915_drm_client.c b/drivers/gpu/drm/i915/=
-i915_drm_client.c
-index c9754cb0277f..72d92ee292ae 100644
---- a/drivers/gpu/drm/i915/i915_drm_client.c
-+++ b/drivers/gpu/drm/i915/i915_drm_client.c
-@@ -4,6 +4,7 @@
-  */
-=20
- #include <linux/kernel.h>
-+#include <linux/ktime.h>
- #include <linux/slab.h>
- #include <linux/types.h>
-=20
-@@ -159,6 +160,138 @@ u64 i915_drm_cgroup_get_active_time_us(struct drm_fil=
-e *file)
-=20
- 	return busy;
- }
-+
-+int i915_drm_cgroup_signal_budget(struct drm_file *file, u64 usage, u64 bu=
-dget)
-+{
-+	struct drm_i915_file_private *fpriv =3D file->driver_priv;
-+	u64 class_usage[I915_LAST_UABI_ENGINE_CLASS + 1];
-+	u64 class_last[I915_LAST_UABI_ENGINE_CLASS + 1];
-+	struct drm_i915_private *i915 =3D fpriv->dev_priv;
-+	struct i915_drm_client *client =3D fpriv->client;
-+	struct intel_engine_cs *engine;
-+	bool over =3D usage > budget;
-+	struct task_struct *task;
-+	struct pid *pid;
-+	unsigned int i;
-+	ktime_t unused;
-+	int ret =3D 0;
-+	u64 t;
-+
-+	if (!supports_stats(i915))
-+		return -EINVAL;
-+
-+	if (usage =3D=3D 0 && budget =3D=3D 0)
-+		return 0;
-+
-+	rcu_read_lock();
-+	pid =3D rcu_dereference(file->pid);
-+	task =3D pid_task(pid, PIDTYPE_TGID);
-+	if (over) {
-+		client->over_budget++;
-+		if (!client->over_budget)
-+			client->over_budget =3D 2;
-+
-+		drm_dbg(&i915->drm, "%s[%u] over budget (%llu/%llu)\n",
-+			task ? task->comm : "<unknown>", pid_vnr(pid),
-+			usage, budget);
-+	} else {
-+		client->over_budget =3D 0;
-+		memset(client->class_last, 0, sizeof(client->class_last));
-+		memset(client->throttle, 0, sizeof(client->throttle));
-+
-+		drm_dbg(&i915->drm, "%s[%u] un-throttled; under budget\n",
-+			task ? task->comm : "<unknown>", pid_vnr(pid));
-+
-+		rcu_read_unlock();
-+		return 0;
-+	}
-+	rcu_read_unlock();
-+
-+	memset(class_usage, 0, sizeof(class_usage));
-+	for_each_uabi_engine(engine, i915)
-+		class_usage[engine->uabi_class] +=3D
-+			ktime_to_ns(intel_engine_get_busy_time(engine, &unused));
-+
-+	memcpy(class_last, client->class_last, sizeof(class_last));
-+	memcpy(client->class_last, class_usage, sizeof(class_last));
-+
-+	for (i =3D 0; i < ARRAY_SIZE(uabi_class_names); i++)
-+		class_usage[i] -=3D class_last[i];
-+
-+	t =3D client->last;
-+	client->last =3D ktime_get_raw_ns();
-+	t =3D client->last - t;
-+
-+	if (client->over_budget =3D=3D 1)
-+		return 0;
-+
-+	for (i =3D 0; i < ARRAY_SIZE(uabi_class_names); i++) {
-+		u64 client_class_usage[I915_LAST_UABI_ENGINE_CLASS + 1];
-+		unsigned int capacity, rel_usage;
-+
-+		if (!i915->engine_uabi_class_count[i])
-+			continue;
-+
-+		t =3D DIV_ROUND_UP_ULL(t, 1000);
-+		class_usage[i] =3D DIV_ROUND_CLOSEST_ULL(class_usage[i], 1000);
-+		rel_usage =3D DIV_ROUND_CLOSEST_ULL(class_usage[i] * 100ULL,
-+						  t *
-+						  i915->engine_uabi_class_count[i]);
-+		if (rel_usage < 95) {
-+			/* Physical class not oversubsribed. */
-+			if (client->throttle[i]) {
-+				client->throttle[i] =3D 0;
-+
-+				rcu_read_lock();
-+				pid =3D rcu_dereference(file->pid);
-+				task =3D pid_task(pid, PIDTYPE_TGID);
-+				drm_dbg(&i915->drm,
-+					"%s[%u] un-throttled; physical class %s utilisation %u%%\n",
-+					task ? task->comm : "<unknown>",
-+					pid_vnr(pid),
-+					uabi_class_names[i],
-+					rel_usage);
-+				rcu_read_unlock();
-+			}
-+			continue;
-+		}
-+
-+		client_class_usage[i] =3D
-+			get_class_active_ns(client, i, &capacity);
-+		if (client_class_usage[i]) {
-+			int permille;
-+
-+			ret |=3D 1;
-+
-+			permille =3D DIV_ROUND_CLOSEST_ULL((usage - budget) *
-+							 1000,
-+							 budget);
-+			client->throttle[i] =3D
-+			    DIV_ROUND_CLOSEST(permille *
-+					      I915_CONTEXT_MIN_USER_PRIORITY,
-+					      1000);
-+			if (client->throttle[i] <
-+			    I915_CONTEXT_MIN_USER_PRIORITY)
-+				client->throttle[i] =3D
-+					I915_CONTEXT_MIN_USER_PRIORITY;
-+
-+			rcu_read_lock();
-+			pid =3D rcu_dereference(file->pid);
-+			task =3D pid_task(pid, PIDTYPE_TGID);
-+			drm_dbg(&i915->drm,
-+				"%s[%u] %d=E2=80=B0 over budget, throttled to priority %d; physical cl=
-ass %s utilisation %u%%\n",
-+				task ? task->comm : "<unknown>",
-+				pid_vnr(pid),
-+				permille,
-+				client->throttle[i],
-+				uabi_class_names[i],
-+				rel_usage);
-+			rcu_read_unlock();
-+		}
-+	}
-+
-+	return ret;
-+}
- #endif
-=20
- #ifdef CONFIG_PROC_FS
-diff --git a/drivers/gpu/drm/i915/i915_drm_client.h b/drivers/gpu/drm/i915/=
-i915_drm_client.h
-index c8439eaa89be..092a7952a67b 100644
---- a/drivers/gpu/drm/i915/i915_drm_client.h
-+++ b/drivers/gpu/drm/i915/i915_drm_client.h
-@@ -15,6 +15,8 @@
-=20
- #define I915_LAST_UABI_ENGINE_CLASS I915_ENGINE_CLASS_COMPUTE
-=20
-+struct drm_file;
-+
- struct drm_i915_private;
-=20
- struct i915_drm_clients {
-@@ -38,6 +40,13 @@ struct i915_drm_client {
- 	 * @past_runtime: Accumulation of pphwsp runtimes from closed contexts.
- 	 */
- 	atomic64_t past_runtime[I915_LAST_UABI_ENGINE_CLASS + 1];
-+
-+#ifdef CONFIG_CGROUP_DRM
-+	int throttle[I915_LAST_UABI_ENGINE_CLASS + 1];
-+	unsigned int over_budget;
-+	u64 last;
-+	u64 class_last[I915_LAST_UABI_ENGINE_CLASS + 1];
-+#endif
- };
-=20
- void i915_drm_clients_init(struct i915_drm_clients *clients,
-@@ -66,5 +75,7 @@ void i915_drm_client_fdinfo(struct seq_file *m, struct fi=
-le *f);
- void i915_drm_clients_fini(struct i915_drm_clients *clients);
-=20
- u64 i915_drm_cgroup_get_active_time_us(struct drm_file *file);
-+int i915_drm_cgroup_signal_budget(struct drm_file *file,
-+				  u64 usage, u64 budget);
-=20
- #endif /* !__I915_DRM_CLIENT_H__ */
---=20
-2.34.1
-
+-- 
+tejun
