@@ -1,200 +1,177 @@
 From: Vincent Guittot <vincent.guittot-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>
-Subject: [PATCH v10 0/9] Add latency priority for CFS class
-Date: Fri, 13 Jan 2023 15:12:25 +0100
-Message-ID: <20230113141234.260128-1-vincent.guittot@linaro.org>
+Subject: [PATCH v10 1/9] sched/fair: fix unfairness at wakeup
+Date: Fri, 13 Jan 2023 15:12:26 +0100
+Message-ID: <20230113141234.260128-2-vincent.guittot@linaro.org>
+References: <20230113141234.260128-1-vincent.guittot@linaro.org>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=linaro.org; s=google;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=MqfMh8t7FDpVsHqomVE7x4DvcZ36lWGIQPizP58CuQA=;
-        b=njaeZPzX9AzGpMEeo4rYWFT0+/BCJ5uyG4xNrZT1Z0o0wKIP9m4HLgcziB6NbpZp2w
-         OEvJ5SjARC7sCbrjJ8r6b8i/HJZ1/JrifDOdy/EIkKwzDJc6bozVc16vNhCJSVUWPXjx
-         R+pCU9C8YzTe1RN+z/HI67W72/YWoXPBcxrIBJwL95nXhAg8cl+J1x2geluCyfK13Pw8
-         BbTBbh/tvqBxrpvEh5RgFSDRh/8lLiDNQGaWUMPuihYGVwvbZTXg7otiwYEJhU5WyO3d
-         qJ9fV+ohj/t2OELvp+CtTluVeoVJSuOlUAK4OV3FzgyDcobfKPkG8p1XLcJhhjPvhDhY
-         piiQ==
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=zlloFS7Bj1vz8MB/gY8ujw3edPCeBj7FeQ8wX2SHm40=;
+        b=XM70w7KZMtRcIGeyzBW5f5aEzTdbfuDdmw3koOm1IKpbkMOynQ0dDy1sXObUQxUUWD
+         ylsbugkfXukjgr2ZrF4CzFZZTDMJZZA1RLYrwIZA/c4qJD3Ne3i15wxjLNQoDiDI7u4O
+         S6WBxFtLE52OjuIVEbFG3wzgvhrTd+GYe+5fW+thyzxDa58mJvNW3vuKNoZ7JCaSo7c9
+         BM7MoMBTJQIDEUqt5PxdWglEbTdmA5eU27MKeQEmEJGzRP5loLiU+kHmIctlVzW8XtFt
+         PVHXElyLfJnlio7LdY04U36p+JckjuSQhhcDlFuFeLD+PVqecnaxEnK66LD+w7XOZ0NP
+         9XmQ==
+In-Reply-To: <20230113141234.260128-1-vincent.guittot-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 To: mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, juri.lelli-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, dietmar.eggemann-5wv7dgnIgG8@public.gmane.org, rostedt-nx8X9YLhiw1AfugRpC6u6w@public.gmane.org, bsegall-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, mgorman-l3A5Bk7waGM@public.gmane.org, bristot-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, vschneid-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, parth-tEXmvtCZX7AybS5Ee8rs3A@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 Cc: qyousef-wp2msK0BRk8tq7phqP6ubQ@public.gmane.org, chris.hyser-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org, patrick.bellasi-X6neQFFVdzGsTnJN9+BGXg@public.gmane.org, David.Laight-JxhZ9S5GRejQT0dZR+AlfA@public.gmane.org, pjt-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, pavel-+ZI9xUNit7I@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, qperret-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, tim.c.chen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org, joshdon-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, timj-mXXj517/zsQ@public.gmane.org, kprateek.nayak-5C7GfCeVMHo@public.gmane.org, yu.c.chen-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org, youssefesmat-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org, joel-QYYGw3jwrUn5owFQY34kdNi2O/JbrIOy@public.gmane.org, Vincent Guittot <vincent.guittot-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>
 
-This patchset restarts the work about adding a latency priority to describe
-the latency tolerance of cfs tasks.
+At wake up, the vruntime of a task is updated to not be more older than
+a sched_latency period behind the min_vruntime. This prevents long sleeping
+task to get unlimited credit at wakeup.
+Such waking task should preempt current one to use its CPU bandwidth but
+wakeup_gran() can be larger than sched_latency, filter out the
+wakeup preemption and as a results steals some CPU bandwidth to
+the waking task.
 
-Patch [1] is a new one that has been added with v6. It fixes an
-unfairness for low prio tasks because of wakeup_gran() being bigger
-than the maximum vruntime credit that a waking task can keep after
-sleeping.
+Make sure that a task, which vruntime has been capped, will preempt current
+task and use its CPU bandwidth even if wakeup_gran() is in the same range
+as sched_latency.
 
-The patches [2-4] have been done by Parth:
-https://lore.kernel.org/lkml/20200228090755.22829-1-parth-tEXmvtCZX7AybS5Ee8rs3A@public.gmane.org/
+If the waking task failed to preempt current it could to wait up to
+sysctl_sched_min_granularity before preempting it during next tick.
 
-I have just rebased and moved the set of latency priority outside the
-priority update. I have removed the reviewed tag because the patches
-are 2 years old.
+Strictly speaking, we should use cfs->min_vruntime instead of
+curr->vruntime but it doesn't worth the additional overhead and complexity
+as the vruntime of current should be close to min_vruntime if not equal.
 
-This aims to be a generic interface and the following patches is one use
-of it to improve the scheduling latency of cfs tasks.
+Reported-by: Youssef Esmat <youssefesmat-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>
+Signed-off-by: Vincent Guittot <vincent.guittot-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>
+Reviewed-by: Joel Fernandes (Google) <joel-QYYGw3jwrUn5owFQY34kdNi2O/JbrIOy@public.gmane.org>
+Tested-by: K Prateek Nayak <kprateek.nayak-5C7GfCeVMHo@public.gmane.org>
+---
+ kernel/sched/fair.c  | 46 ++++++++++++++++++++------------------------
+ kernel/sched/sched.h | 34 +++++++++++++++++++++++++++++++-
+ 2 files changed, 54 insertions(+), 26 deletions(-)
 
-Patch [5] uses latency nice priority to define a latency offset
-and then decide if a cfs task can or should preempt the current
-running task. The patch gives some tests results with cyclictests and
-hackbench to highlight the benefit of latency priority for short
-interactive task or long intensive tasks.
-
-Patch [6] adds the support of latency nice priority to task group by
-adding a cpu.latency.nice field. The range is [-20:19] as for setting task
-latency priority.
-
-Patch [7] makes sched_core taking into account the latency offset.
-
-Patch [8] adds a rb tree to cover some corner cases where the latency
-sensitive task (priority < 0) is preempted by high priority task (RT/DL)
-or fails to preempt them. This patch ensures that tasks will have at least
-a slice of sched_min_granularity in priority at wakeup.
-
-Patch [9] removes useless check after adding a latency rb tree.
-
-I have also backported the patchset on a dragonboard RB3 with an android
-mainline kernel based on v5.18 for a quick test. I have used the
-TouchLatency app which is part of AOSP and described to be a very good
-test to highlight jitter and jank frame sources of a system [1].
-In addition to the app, I have added some short running tasks waking-up
-regularly (to use the 8 cpus for 4 ms every 37777us) to stress the system
-without overloading it (and disabling EAS). The 1st results shows that the
-patchset helps to reduce the missed deadline frames from 5% to less than
-0.1% when the cpu.latency.nice of task group are set. I haven't rerun the
-test with latest version.
-
-I have also tested the patchset with the modified version of the alsa
-latency test that has been shared by Tim. The test quickly xruns with
-default latency nice priority 0 but is able to run without underuns with
-a latency -20 and hackbench running simultaneously.
-
-While preparing the version 8, I have evaluated the benefit of using an
-augmented rbtree instead of adding a rbtree for latency sensitive entities,
-which was a relevant suggestion done by PeterZ. Although the augmented
-rbtree enables to sort additional information in the tree with a limited
-overhead, it has more impact on legacy use cases (latency_nice >= 0)
-because the augmented callbacks are always called to maintain this
-additional information even when there is no sensitive tasks. In such
-cases, the dedicated rbtree remains empty and the overhead is reduced to
-loading a cached null node pointer. Nevertheless, we might want to
-reconsider the augmented rbtree once the use of negative latency_nice will
-be more widlely deployed. At now, the different tests that I have done,
-have not shown improvements with augmented rbtree.
-
-Below are some hackbench results:
-        2 rbtrees               augmented rbtree        augmented rbtree	
-                                sorted by vruntime      sorted by wakeup_vruntime
-sched	pipe	
-avg     26311,000               25976,667               25839,556
-stdev   0,15 %                  0,28 %                  0,24 %
-vs tip  0,50 %                  -0,78 %                 -1,31 %
-hackbench	1 group	
-avg     1,315                   1,344                   1,359
-stdev   0,88 %                  1,55 %                  1,82 %
-vs tip  -0,47 %                 -2,68 %                 -3,87 %
-hackbench	4 groups
-avg     1,339                   1,365                   1,367
-stdev   2,39 %                  2,26 %                  3,58 %
-vs tip  -0,08 %                 -2,01 %                 -2,22 %
-hackbench	8 groups
-avg     1,233                   1,286                   1,301
-stdev   0,74 %                  1,09 %                  1,52 %
-vs tip  0,29 %                  -4,05 %                 -5,27 %
-hackbench	16 groups	
-avg     1,268                   1,313                   1,319
-stdev   0,85 %                  1,60 %                  0,68 %
-vs tip  -0,02 %                 -3,56 %                 -4,01 %
-
-[1] https://source.android.com/docs/core/debug/eval_perf#touchlatency
-
-Change since v9:
-- Rebase
-- add tags
-
-Change since v8:
-- Rename get_sched_latency by get_sleep_latency
-- move latency nice defines in sched/prio.h and fix latency_prio init value
-- Fix typo and comments
-
-Change since v7:
-- Replaced se->on_latency by using RB_CLEAR_NODE() and RB_EMPTY_NODE()
-- Clarify the limit behavior fo the cgroup cpu.latenyc_nice
-
-Change since v6:
-- Fix compilation error for !CONFIG_SCHED_DEBUG
-
-Change since v5:
-- Add patch 1 to fix unfairness for low prio task. This has been
-  discovered while studying Youssef's tests results with latency nice
-  which were hitting the same problem.
-- Fixed latency_offset computation to take into account
-  GENTLE_FAIR_SLEEPERS. This has diseappeared with v2and has been raised
-  by Youssef's tests.
-- Reworked and optimized how latency_offset in used to check for
-  preempting current task at wakeup and tick. This cover more cases too.
-- Add patch 9 to remove check_preempt_from_others() which is not needed
-  anymore with the rb tree.
-
-Change since v4:
-- Removed permission checks to set latency priority. This enables user
-  without elevated privilege like audio application to set their latency
-  priority as requested by Tim.
-- Removed cpu.latency and replaced it by cpu.latency.nice so we keep a
-  generic interface not tied to latency_offset which can be used to
-  implement other latency features.
-- Added an entry in Documentation/admin-guide/cgroup-v2.rst to describe
-  cpu.latency.nice.
-- Fix some typos.
-
-Change since v3:
-- Fix 2 compilation warnings raised by kernel test robot <lkp-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
-
-Change since v2:
-- Set a latency_offset field instead of saving a weight and computing it
-  on the fly.
-- Make latency_offset available for task group: cpu.latency
-- Fix some corner cases to make latency sensitive tasks schedule first and
-  add a rb tree for latency sensitive task.
-
-Change since v1:
-- fix typo
-- move some codes in the right patch to make bisect happy
-- simplify and fixed how the weight is computed
-- added support of sched core patch 7
-
-Parth Shah (3):
-  sched: Introduce latency-nice as a per-task attribute
-  sched/core: Propagate parent task's latency requirements to the child
-    task
-  sched: Allow sched_{get,set}attr to change latency_nice of the task
-
-Vincent Guittot (6):
-  sched/fair: fix unfairness at wakeup
-  sched/fair: Take into account latency priority at wakeup
-  sched/fair: Add sched group latency support
-  sched/core: Support latency priority with sched core
-  sched/fair: Add latency list
-  sched/fair: remove check_preempt_from_others
-
- Documentation/admin-guide/cgroup-v2.rst |  10 ++
- include/linux/sched.h                   |   4 +
- include/linux/sched/prio.h              |  27 +++
- include/uapi/linux/sched.h              |   4 +-
- include/uapi/linux/sched/types.h        |  19 +++
- init/init_task.c                        |   1 +
- kernel/sched/core.c                     | 106 ++++++++++++
- kernel/sched/debug.c                    |   1 +
- kernel/sched/fair.c                     | 209 ++++++++++++++++++++----
- kernel/sched/sched.h                    |  45 ++++-
- tools/include/uapi/linux/sched.h        |   4 +-
- 11 files changed, 394 insertions(+), 36 deletions(-)
-
+diff --git a/kernel/sched/fair.c b/kernel/sched/fair.c
+index e9d906a9bba9..8a85c6cf781e 100644
+--- a/kernel/sched/fair.c
++++ b/kernel/sched/fair.c
+@@ -4657,33 +4657,17 @@ place_entity(struct cfs_rq *cfs_rq, struct sched_entity *se, int initial)
+ {
+ 	u64 vruntime = cfs_rq->min_vruntime;
+ 
+-	/*
+-	 * The 'current' period is already promised to the current tasks,
+-	 * however the extra weight of the new task will slow them down a
+-	 * little, place the new task so that it fits in the slot that
+-	 * stays open at the end.
+-	 */
+-	if (initial && sched_feat(START_DEBIT))
+-		vruntime += sched_vslice(cfs_rq, se);
+-
+-	/* sleeps up to a single latency don't count. */
+-	if (!initial) {
+-		unsigned long thresh;
+-
+-		if (se_is_idle(se))
+-			thresh = sysctl_sched_min_granularity;
+-		else
+-			thresh = sysctl_sched_latency;
+-
++	if (!initial)
++		/* sleeps up to a single latency don't count. */
++		vruntime -= get_sleep_latency(se_is_idle(se));
++	else if (sched_feat(START_DEBIT))
+ 		/*
+-		 * Halve their sleep time's effect, to allow
+-		 * for a gentler effect of sleepers:
++		 * The 'current' period is already promised to the current tasks,
++		 * however the extra weight of the new task will slow them down a
++		 * little, place the new task so that it fits in the slot that
++		 * stays open at the end.
+ 		 */
+-		if (sched_feat(GENTLE_FAIR_SLEEPERS))
+-			thresh >>= 1;
+-
+-		vruntime -= thresh;
+-	}
++		vruntime += sched_vslice(cfs_rq, se);
+ 
+ 	/* ensure we never gain time by being placed backwards. */
+ 	se->vruntime = max_vruntime(se->vruntime, vruntime);
+@@ -7656,6 +7640,18 @@ wakeup_preempt_entity(struct sched_entity *curr, struct sched_entity *se)
+ 		return -1;
+ 
+ 	gran = wakeup_gran(se);
++
++	/*
++	 * At wake up, the vruntime of a task is capped to not be older than
++	 * a sched_latency period compared to min_vruntime. This prevents long
++	 * sleeping task to get unlimited credit at wakeup. Such waking up task
++	 * has to preempt current in order to not lose its share of CPU
++	 * bandwidth but wakeup_gran() can become higher than scheduling period
++	 * for low priority task. Make sure that long sleeping task will get a
++	 * chance to preempt current.
++	 */
++	gran = min_t(s64, gran, get_latency_max());
++
+ 	if (vdiff > gran)
+ 		return 1;
+ 
+diff --git a/kernel/sched/sched.h b/kernel/sched/sched.h
+index 1072502976df..df7db06c9943 100644
+--- a/kernel/sched/sched.h
++++ b/kernel/sched/sched.h
+@@ -2459,9 +2459,9 @@ extern void check_preempt_curr(struct rq *rq, struct task_struct *p, int flags);
+ extern const_debug unsigned int sysctl_sched_nr_migrate;
+ extern const_debug unsigned int sysctl_sched_migration_cost;
+ 
+-#ifdef CONFIG_SCHED_DEBUG
+ extern unsigned int sysctl_sched_latency;
+ extern unsigned int sysctl_sched_min_granularity;
++#ifdef CONFIG_SCHED_DEBUG
+ extern unsigned int sysctl_sched_idle_min_granularity;
+ extern unsigned int sysctl_sched_wakeup_granularity;
+ extern int sysctl_resched_latency_warn_ms;
+@@ -2476,6 +2476,38 @@ extern unsigned int sysctl_numa_balancing_scan_size;
+ extern unsigned int sysctl_numa_balancing_hot_threshold;
+ #endif
+ 
++static inline unsigned long get_sleep_latency(bool idle)
++{
++	unsigned long thresh;
++
++	if (idle)
++		thresh = sysctl_sched_min_granularity;
++	else
++		thresh = sysctl_sched_latency;
++
++	/*
++	 * Halve their sleep time's effect, to allow
++	 * for a gentler effect of sleepers:
++	 */
++	if (sched_feat(GENTLE_FAIR_SLEEPERS))
++		thresh >>= 1;
++
++	return thresh;
++}
++
++static inline unsigned long get_latency_max(void)
++{
++	unsigned long thresh = get_sleep_latency(false);
++
++	 /*
++	  * If the waking task failed to preempt current it could to wait up to
++	  * sysctl_sched_min_granularity before preempting it during next tick.
++	  */
++	thresh -= sysctl_sched_min_granularity;
++
++	return thresh;
++}
++
+ #ifdef CONFIG_SCHED_HRTICK
+ 
+ /*
 -- 
 2.34.1
 
