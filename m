@@ -1,50 +1,162 @@
-From: Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>
-Subject: Re: [PATCH] block, bfq: switch 'bfqg->ref' to use atomic refcount
- apis
-Date: Sun, 15 Jan 2023 20:53:50 -0700
-Message-ID: <167384123010.165459.4491550988140898321.b4-ty@kernel.dk>
-References: <20230103084755.1256479-1-yukuai1@huaweicloud.com>
+From: Yu Kuai <yukuai1-XF6JlduFytWkHkcT6e4Xnw@public.gmane.org>
+Subject: Re: [RFC] block, bfq: use-after-free with bfq <==> cgroup
+ interactions
+Date: Mon, 16 Jan 2023 11:55:42 +0800
+Message-ID: <902f11a9-20f7-a044-6b7f-0285aee0ea2f@huaweicloud.com>
+References: <20230114153801.3932380-1-sashal@kernel.org>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: quoted-printable
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=kernel-dk.20210112.gappssmtp.com; s=20210112;
-        h=content-transfer-encoding:mime-version:date:message-id:subject
-         :references:in-reply-to:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=XeL2aMm/FlBSF1QP/YxXM0H+2tWA4RrG/z4nLNj/C5A=;
-        b=Nm6l1cDkz2vKYpYch7neC71ii3Ml4A0/rJ0KvUmcnWfdFsSMdtGXrTzG1/moOYv8TK
-         iWmbHXm3dqOaO2vRzYj/4hXl9g5NrIJUb0FO2TT8Pbp5ptAoadGB5kUxcaW7jUhPIgKG
-         PRV5Y4mkwxImAB2LaNRbOljmMaoIJ07SeqDdWqX979SvzmpCEKSuLVG6UF3KsEWUejne
-         eL8Yf4ZgKHMkunkjP2JjMIqY7woGKaaf+2WBxb9EuIXafNBxjibsOUyU3ahj84Bbl+9i
-         yVxqB7uo70jIKu7kQfXMAYreaiMbZ/SkmYBbVAWgHpeoz2usqc11XDCygHZz17mSGfuP
-         VIGQ==
-In-Reply-To: <20230103084755.1256479-1-yukuai1-XF6JlduFytWkHkcT6e4Xnw@public.gmane.org>
+In-Reply-To: <20230114153801.3932380-1-sashal-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-To: jack-AlSwsSmVLrQ@public.gmane.org, paolo.valente-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, josef-DigfWCa+lFGyeJad7bwFQA@public.gmane.org, Yu Kuai <yukuai1-XF6JlduFytWkHkcT6e4Xnw@public.gmane.org>
-Cc: linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, yi.zhang-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, yangerkun-hv44wF8Li93QT0dZR+AlfA@public.gmane.org
+Content-Type: text/plain; charset="iso-8859-1"; format="flowed"
+To: Sasha Levin <sashal-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, josef-DigfWCa+lFGyeJad7bwFQA@public.gmane.org, axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, paolo.valente-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org, jack-AlSwsSmVLrQ@public.gmane.org
+Cc: khazhy-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, "yukuai (C)" <yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 
+Hi,
 
-On Tue, 03 Jan 2023 16:47:55 +0800, Yu Kuai wrote:
-> The updating of 'bfqg->ref' should be protected by 'bfqd->lock', however,
-> during code review, we found that bfq_pd_free() update 'bfqg->ref'
-> without holding the lock, which is problematic:
-> 
-> 1) bfq_pd_free() triggered by removing cgroup is called asynchronously;
-> 2) bfqq will grab bfqg reference, and exit bfqq will drop the reference,
-> which can concurrent with 1).
-> 
-> [...]
+=D4=DA 2023/01/14 23:38, Sasha Levin =D0=B4=B5=C0:
+> I've observed the follow use after free after commit 64dc8c732f5c
+> ("block, bfq: fix possible uaf for 'bfqq->bic'"):
+>=20
+> [  114.277139] BUG: unable to handle page fault for address: ffff9edd3a52=
+9f58
+> [  114.284173] #PF: supervisor read access in kernel mode
+> [  114.289338] #PF: error_code(0x0000) - not-present page
+> [  114.294478] PGD a661c01067 P4D a661c01067 PUD c03f1c2067 PMD c03efef06=
+7 PTE 800ffffe85ad6060
+> [  114.302947] Oops: 0000 [#1] SMP DEBUG_PAGEALLOC NOPTI
+> [  114.308000] CPU: 153 PID: 4171 Comm: udevd Tainted: G        W   5.15.=
+88-dbg-DEV #5
+> [  114.316215] Hardware name: Google, Inc.
+>                            Arcadia_IT_80/Arcadia_IT_80, BIOS 34.2.2 10/03=
+/2022
+> [  114.329301] RIP: 0010:bic_set_bfqq (./block/bfq-iosched.c:392)
+> [  114.333599] Code: 38 5d c3 66 2e 0f 1f 84 00 00 00 00 00 0f 1f 40 00
+> 0f 1f 44 00 00 55 48 89 e5 53 48 89 fb 89 d0 48 8b 4c c7 38 48 85 c9
+> 74 14 <48> 39 99 98 01 00 00 75 0b 48 c7 81 98 01 00 00 00 00 00 00 48
+> 89
+> All code
+> =3D=3D=3D=3D=3D=3D=3D=3D
+>     0:   38 5d c3                cmp    %bl,-0x3d(%rbp)
+>     3:   66 2e 0f 1f 84 00 00    cs nopw 0x0(%rax,%rax,1)
+>     a:   00 00 00
+>     d:   0f 1f 40 00             nopl   0x0(%rax)
+>    11:   0f 1f 44 00 00          nopl   0x0(%rax,%rax,1)
+>    16:   55                      push   %rbp
+>    17:   48 89 e5                mov    %rsp,%rbp
+>    1a:   53                      push   %rbx
+>    1b:   48 89 fb                mov    %rdi,%rbx
+>    1e:   89 d0                   mov    %edx,%eax
+>    20:   48 8b 4c c7 38          mov    0x38(%rdi,%rax,8),%rcx
+>    25:   48 85 c9                test   %rcx,%rcx
+>    28:   74 14                   je     0x3e
+>    2a:*  48 39 99 98 01 00 00    cmp    %rbx,0x198(%rcx)         <-- trap=
+ping instruction
+>    31:   75 0b                   jne    0x3e
+>    33:   48 c7 81 98 01 00 00    movq   $0x0,0x198(%rcx)
+>    3a:   00 00 00 00
+>    3e:   48                      rex.W
+>    3f:   89                      .byte 0x89
+>=20
+> Code starting with the faulting instruction
+> =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
+>     0:   48 39 99 98 01 00 00    cmp    %rbx,0x198(%rcx)
+>     7:   75 0b                   jne    0x14
+>     9:   48 c7 81 98 01 00 00    movq   $0x0,0x198(%rcx)
+>    10:   00 00 00 00
+>    14:   48                      rex.W
+>    15:   89                      .byte 0x89
+> [  114.352382] RSP: 0018:ffffb94be342b5b8 EFLAGS: 00010086
+> [  114.357607] RAX: 0000000000000001 RBX: ffff9edd3a4f5f08 RCX: ffff9edd3=
+a529dc0
+> [  114.364730] RDX: 0000000000000001 RSI: 0000000000000000 RDI: ffff9edd3=
+a4f5f08
+> [  114.371856] RBP: ffffb94be342b5c0 R08: 0000000000000000 R09: 000000000=
+0000001
+> [  114.378989] R10: 00000000000a0027 R11: ffffffff9f6c9500 R12: 000000000=
+0000060
+> [  114.386120] R13: ffff9edd3a529dc0 R14: ffff9edd3a4f5f08 R15: ffff9edcd=
+12d3800
+> [  114.393252] FS:  00007fa7ab3e5740(0000) GS:ffff9f3a8e440000(0000) knlG=
+S:0000000000000000
+> [  114.401340] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+> [  114.407086] CR2: ffff9edd3a529f58 CR3: 000000011006e004 CR4: 000000000=
+0370ee0
+> [  114.414255] Call Trace:
+> [  114.416706]  <TASK>
+> [  114.418821] bfq_bic_update_cgroup (././include/linux/blk-cgroup.h:401 =
+./block/bfq-cgroup.c:286 ./block/bfq-cgroup.c:774)
+> [  114.425087] bfq_bio_merge (./block/bfq-iosched.c:?)
+> [  114.430599] __blk_mq_sched_bio_merge (./block/blk-mq-sched.c:383)
+> [  114.436950] blk_mq_submit_bio (./block/blk-mq.c:2220)
+> [  114.442776] __submit_bio (./block/blk-core.c:928)
+> [  114.448262] submit_bio_noacct (././include/linux/bio.h:618 ./block/blk=
+-core.c:1009 ./block/blk-core.c:1038)
+> [  114.454181] submit_bio (./block/blk-core.c:1101)
+> [  114.459338] ext4_io_submit (./fs/ext4/page-io.c:383)
+> [  114.464824] ext4_writepages (./fs/ext4/inode.c:?)
+> [  114.470692] ? do_writepages (./mm/page-writeback.c:2364)
+> [  114.476440] ? lock_is_held_type (./kernel/locking/lockdep.c:5365 ./ker=
+nel/locking/lockdep.c:5665)
+> [  114.482468] ? lock_is_held_type (./kernel/locking/lockdep.c:5365 ./ker=
+nel/locking/lockdep.c:5665)
+> [  114.488477] do_writepages (./mm/page-writeback.c:2364)
+> [  114.494048] ? wbc_attach_and_unlock_inode (./fs/fs-writeback.c:719)
+> [  114.500948] filemap_fdatawrite_wbc (./mm/filemap.c:400)
+> [  114.507125] filemap_flush (./mm/filemap.c:? ./mm/filemap.c:439 ./mm/fi=
+lemap.c:466)
+> [  114.512526] ext4_alloc_da_blocks (./fs/ext4/inode.c:?)
+> [  114.518555] ext4_rename2 (./fs/ext4/namei.c:? ./fs/ext4/namei.c:4191)
+> [  114.524124] ? down_write_nested (./kernel/locking/rwsem.c:1643)
+> [  114.530038] ? lock_two_nondirectories (./fs/inode.c:1044)
+> [  114.536471] vfs_rename (./fs/namei.c:4680)
+> [  114.541785] do_renameat2 (./fs/namei.c:?)
+> [  114.547307] __x64_sys_rename (./fs/namei.c:4877 ./fs/namei.c:4875 ./fs=
+/namei.c:4875)
+> [  114.552988] do_syscall_64 (./arch/x86/entry/common.c:50 ./arch/x86/ent=
+ry/common.c:80)
+> [  114.558389] ? sysvec_call_function_single (./arch/x86/kernel/smp.c:243)
+> [  114.565209] entry_SYSCALL_64_after_hwframe (./arch/x86/entry/entry_64.=
+S:118)
+> [  114.572083] RIP: 0033:0x7fa7ab490327
+>=20
+> The proposed fix is based purely on an observation that earlier in the
+> same function the call order is reversed where we first bic_set_bfqq()
+> and only then bfq_release_process_ref().
+>=20
+> And thus, this explanation is only a "how" and not a "why", which is why
+> the patch is going out as an RFC.
+>=20
+> Fixes: 64dc8c732f5c ("block, bfq: fix possible uaf for 'bfqq->bic'")
+> Signed-off-by: Sasha Levin <sashal-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.or=
+g>
+> ---
+>   block/bfq-cgroup.c | 2 +-
+>   1 file changed, 1 insertion(+), 1 deletion(-)
+>=20
+> diff --git a/block/bfq-cgroup.c b/block/bfq-cgroup.c
+> index 1b2829e99dad..cec4d88f6de7 100644
+> --- a/block/bfq-cgroup.c
+> +++ b/block/bfq-cgroup.c
+> @@ -770,9 +770,9 @@ static void __bfq_bic_change_cgroup(struct bfq_data *=
+bfqd,
+>   				 * bfqq now so that we cannot merge bio to a
+>   				 * request from the old cgroup.
+>   				 */
+> +				bic_set_bfqq(bic, NULL, true);
+>   				bfq_put_cooperator(sync_bfqq);
+>   				bfq_release_process_ref(bfqd, sync_bfqq);
+> -				bic_set_bfqq(bic, NULL, true);
+>   			}
+>   		}
+>   	}
+>=20
 
-Applied, thanks!
+Thanks for the patch, I already posted one here:
+https://patchwork.kernel.org/project/linux-block/patch/20230113094410.29072=
+23-1-yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org/
 
-[1/1] block, bfq: switch 'bfqg->ref' to use atomic refcount apis
-      commit: 216f764716f34fe68cedc7296ae2043a7727e640
-
-Best regards,
--- 
-Jens Axboe
-
-
+Kuai
 
