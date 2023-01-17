@@ -1,45 +1,57 @@
-From: Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>
-Subject: Re: [PATCH] blk-cgroup: fix missing pd_online_fn() while
- activating policy
-Date: Mon, 16 Jan 2023 19:04:13 -0700
-Message-ID: <167392105396.441215.10700011927533380031.b4-ty@kernel.dk>
-References: <20230103112833.2013432-1-yukuai1@huaweicloud.com>
+From: Yu Kuai <yukuai1@huaweicloud.com>
+Subject: [PATCH v4 2/5] blk-iocost: don't allow to configure bio based device
+Date: Tue, 17 Jan 2023 15:08:03 +0800
+Message-ID: <20230117070806.3857142-3-yukuai1@huaweicloud.com>
+References: <20230117070806.3857142-1-yukuai1@huaweicloud.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=kernel-dk.20210112.gappssmtp.com; s=20210112;
-        h=content-transfer-encoding:mime-version:date:message-id:subject
-         :references:in-reply-to:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=SExj9sPYRI5nvri+f4hPOSN0wQyEHXBODvypNoBRz/E=;
-        b=Gh1phClZGkEjfMyk7PFqNeMBC2BIMQscw5aErf3bX7JD7N4WENyYXGTvElDfKcp44g
-         gR6v9FsUAlk3gLf+hll8ixHOu2Go53fjYr7VQw4w95GZqyidqq1U5/9JWWE6a9ksmjBx
-         R7FDsKTErGWvXlNdJ1lh9Op1clvxpjFkY4/nJRgPJNEG2X6u0GbCcPWm3bnobYNDO1t1
-         6SrPvB96sAFFi3J2LM9YgqfSuf39ca1gBny1IMzDsrP+RNhFbdFHORnBShPzbFGHE3A/
-         SpzuwiNuEAVIP7kvNXqWXUUX9bIMkwC3jehvlsSwzEM/T6QBR2UBYgEkN7KNwXoa5LKq
-         mUcA==
-In-Reply-To: <20230103112833.2013432-1-yukuai1-XF6JlduFytWkHkcT6e4Xnw@public.gmane.org>
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-block-owner@vger.kernel.org>
+In-Reply-To: <20230117070806.3857142-1-yukuai1@huaweicloud.com>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, josef-DigfWCa+lFGyeJad7bwFQA@public.gmane.org, Yu Kuai <yukuai1-XF6JlduFytWkHkcT6e4Xnw@public.gmane.org>
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, yi.zhang-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, yangerkun-hv44wF8Li93QT0dZR+AlfA@public.gmane.org
+To: tj@kernel.org, josef@toxicpanda.com, axboe@kernel.dk
+Cc: cgroups@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, yukuai3@huawei.com, yukuai1@huaweicloud.com, yi.zhang@huawei.com, yangerkun@huawei.com
 
+From: Yu Kuai <yukuai3@huawei.com>
 
-On Tue, 03 Jan 2023 19:28:33 +0800, Yu Kuai wrote:
-> If the policy defines pd_online_fn(), it should be called after
-> pd_init_fn(), like blkg_create().
-> 
-> 
+iocost is based on rq_qos, which can only work for request based device,
+thus it doesn't make sense to configure iocost for bio based device.
 
-Applied, thanks!
+Signed-off-by: Yu Kuai <yukuai3@huawei.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+Acked-by: Tejun Heo <tj@kernel.org>
+---
+ block/blk-iocost.c | 10 ++++++++++
+ 1 file changed, 10 insertions(+)
 
-[1/1] blk-cgroup: fix missing pd_online_fn() while activating policy
-      commit: e3ff8887e7db757360f97634e0d6f4b8e27a8c46
-
-Best regards,
+diff --git a/block/blk-iocost.c b/block/blk-iocost.c
+index f1166582fb64..d6256731cae4 100644
+--- a/block/blk-iocost.c
++++ b/block/blk-iocost.c
+@@ -3185,6 +3185,11 @@ static ssize_t ioc_qos_write(struct kernfs_open_file *of, char *input,
+ 		return PTR_ERR(bdev);
+ 
+ 	disk = bdev->bd_disk;
++	if (!queue_is_mq(disk->queue)) {
++		ret = -EOPNOTSUPP;
++		goto err;
++	}
++
+ 	ioc = q_to_ioc(disk->queue);
+ 	if (!ioc) {
+ 		ret = blk_iocost_init(disk);
+@@ -3365,6 +3370,11 @@ static ssize_t ioc_cost_model_write(struct kernfs_open_file *of, char *input,
+ 		return PTR_ERR(bdev);
+ 
+ 	q = bdev_get_queue(bdev);
++	if (!queue_is_mq(q)) {
++		ret = -EOPNOTSUPP;
++		goto err;
++	}
++
+ 	ioc = q_to_ioc(q);
+ 	if (!ioc) {
+ 		ret = blk_iocost_init(bdev->bd_disk);
 -- 
-Jens Axboe
-
-
+2.31.1
 
