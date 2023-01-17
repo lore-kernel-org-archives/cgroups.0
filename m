@@ -1,7 +1,7 @@
 From: Yu Kuai <yukuai1@huaweicloud.com>
-Subject: [PATCH v4 2/5] blk-iocost: don't allow to configure bio based device
-Date: Tue, 17 Jan 2023 15:08:03 +0800
-Message-ID: <20230117070806.3857142-3-yukuai1@huaweicloud.com>
+Subject: [PATCH v4 1/5] blk-iocost: check return value of match_u64()
+Date: Tue, 17 Jan 2023 15:08:02 +0800
+Message-ID: <20230117070806.3857142-2-yukuai1@huaweicloud.com>
 References: <20230117070806.3857142-1-yukuai1@huaweicloud.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
@@ -14,44 +14,29 @@ Cc: cgroups@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kern
 
 From: Yu Kuai <yukuai3@huawei.com>
 
-iocost is based on rq_qos, which can only work for request based device,
-thus it doesn't make sense to configure iocost for bio based device.
+This patch fixs that the return value of match_u64() from ioc_qos_write()
+is not checked,
 
 Signed-off-by: Yu Kuai <yukuai3@huawei.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
 Acked-by: Tejun Heo <tj@kernel.org>
 ---
- block/blk-iocost.c | 10 ++++++++++
- 1 file changed, 10 insertions(+)
+ block/blk-iocost.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
 diff --git a/block/blk-iocost.c b/block/blk-iocost.c
-index f1166582fb64..d6256731cae4 100644
+index 6955605629e4..f1166582fb64 100644
 --- a/block/blk-iocost.c
 +++ b/block/blk-iocost.c
-@@ -3185,6 +3185,11 @@ static ssize_t ioc_qos_write(struct kernfs_open_file *of, char *input,
- 		return PTR_ERR(bdev);
+@@ -3212,7 +3212,8 @@ static ssize_t ioc_qos_write(struct kernfs_open_file *of, char *input,
  
- 	disk = bdev->bd_disk;
-+	if (!queue_is_mq(disk->queue)) {
-+		ret = -EOPNOTSUPP;
-+		goto err;
-+	}
-+
- 	ioc = q_to_ioc(disk->queue);
- 	if (!ioc) {
- 		ret = blk_iocost_init(disk);
-@@ -3365,6 +3370,11 @@ static ssize_t ioc_cost_model_write(struct kernfs_open_file *of, char *input,
- 		return PTR_ERR(bdev);
- 
- 	q = bdev_get_queue(bdev);
-+	if (!queue_is_mq(q)) {
-+		ret = -EOPNOTSUPP;
-+		goto err;
-+	}
-+
- 	ioc = q_to_ioc(q);
- 	if (!ioc) {
- 		ret = blk_iocost_init(bdev->bd_disk);
+ 		switch (match_token(p, qos_ctrl_tokens, args)) {
+ 		case QOS_ENABLE:
+-			match_u64(&args[0], &v);
++			if (match_u64(&args[0], &v))
++				goto einval;
+ 			enable = v;
+ 			continue;
+ 		case QOS_CTRL:
 -- 
 2.31.1
 
