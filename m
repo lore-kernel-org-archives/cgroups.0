@@ -1,26 +1,28 @@
-From: Stanislaw Gruszka <stanislaw.gruszka@linux.intel.com>
+From: Tvrtko Ursulin <tvrtko.ursulin@linux.intel.com>
 Subject: Re: [RFC 04/12] drm/cgroup: Track clients per owning
  process
-Date: Tue, 17 Jan 2023 17:03:11 +0100
-Message-ID: <20230117160311.GA15842@linux.intel.com>
+Date: Tue, 17 Jan 2023 16:25:09 +0000
+Message-ID: <db60bb1d-51b6-6830-5a4c-100ba38a2dbc@linux.intel.com>
 References: <20230112165609.1083270-1-tvrtko.ursulin@linux.intel.com>
  <20230112165609.1083270-5-tvrtko.ursulin@linux.intel.com>
+ <20230117160311.GA15842@linux.intel.com>
 Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Return-path: <intel-gfx-bounces@lists.freedesktop.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
- t=1673971492; x=1705507492;
- h=date:from:to:cc:subject:message-id:references:
- mime-version:in-reply-to;
- bh=83QUm+B1soJY7/5R+o87e442WuYAgBdKXUVW9VPPJwY=;
- b=IubsWkpoktWBNxNWo8Q20thw0LC165CNAyzo7Oolz9r+RtyZIgAjm3Rp
- A/KNXhaa+IEwcTMt5Ph+RxLkBkgsEQZY9LVP3tYJxmTFH/aLk88lXdWnt
- aFtxpoz1uPdcB4ouCvVb7boRTeDp7yz3qtCWa3OfyL3MqBKtYNQlJ3nGJ
- hmC67UgXtRZghYLUei/7ZifIEYnggj8toKfMSOwe4PP5alA9kxuXsqbBq
- 8qnV9g5hcBbyOUZcFx2FQQ352MwtCF5o1BYUroOLBp46aa6EV7XzLXvI8
- /SebZ+j30dkD1d3Jsvwwu9gZjHcHjt04nFfviYG1V2k9Nmx8AeVxDu4gp Q==;
-Content-Disposition: inline
-In-Reply-To: <20230112165609.1083270-5-tvrtko.ursulin@linux.intel.com>
+ t=1673972737; x=1705508737;
+ h=message-id:date:mime-version:subject:to:cc:references:
+ from:in-reply-to:content-transfer-encoding;
+ bh=HxFIc/F4tODmGWHQvVFrU/McHRhB0/99ZlsYIwoeLug=;
+ b=Zm7qUylfsx5griY8YzThxM32K11zvvoDEfu2azG7QY3Oj+w2QyLhKitp
+ ejIeaPNpiggmYVXpQ5mySVVgGOYg1fFPkytHNU4oVfPqVj9vQgK8x2NtX
+ JT3XBVrohK0pBbOQ9x3+vIka73CL+G+yP5HI5EpkNjgs961Pl5bSRHYUK
+ 0v6WSuNKAFc7u1kTvTXWpka6zFjvKerGI/8RxveBN/k/xcQ2/nUN0O+4l
+ YLtYbZkZClndfk6v/WLe3a8Z6DGgeax1okNE2zXKzbsUL7D3b3AP3BCxE
+ WlZo+Yp4G1VfdZ4vNBkY6YF5LE/3V8LTkYC6zQl5fioPjck0DY+nCmX0m g==;
+Content-Language: en-US
+In-Reply-To: <20230117160311.GA15842@linux.intel.com>
 List-Id: <cgroups.vger.kernel.org>
 List-Unsubscribe: <https://lists.freedesktop.org/mailman/options/intel-gfx>,
  <mailto:intel-gfx-request@lists.freedesktop.org?subject=unsubscribe>
@@ -31,59 +33,64 @@ List-Subscribe: <https://lists.freedesktop.org/mailman/listinfo/intel-gfx>,
  <mailto:intel-gfx-request@lists.freedesktop.org?subject=subscribe>
 Errors-To: intel-gfx-bounces@lists.freedesktop.org
 Sender: "Intel-gfx" <intel-gfx-bounces@lists.freedesktop.org>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Tvrtko Ursulin <tvrtko.ursulin@linux.intel.com>
-Cc: Rob Clark <robdclark@chromium.org>, cgroups@vger.kernel.org, Dave Airlie <airlied@redhat.com>, Kenny.Ho@amd.com, Intel-gfx@lists.freedesktop.org, linux-kernel@vger.kernel.org, dri-devel@lists.freedesktop.org, "T . J . Mercier" <tjmercier@google.com>, Johannes Weiner <hannes@cmpxchg.org>, Zefan Li <lizefan.x@bytedance.com>, Daniel Vetter <daniel.vetter@ffwll.ch>, Tejun Heo <tj@kernel.org>, =?iso-8859-1?Q?St=E9phane?= Marchesin <marcheu@chromium.org>, Christian =?iso-8859-1?Q?K=F6nig?= <christian.koenig@amd.com>
+Content-Type: text/plain; charset="us-ascii"; format="flowed"
+To: Stanislaw Gruszka <stanislaw.gruszka@linux.intel.com>
+Cc: Rob Clark <robdclark@chromium.org>, cgroups@vger.kernel.org, Dave Airlie <airlied@redhat.com>, Kenny.Ho@amd.com, Intel-gfx@lists.freedesktop.org, linux-kernel@vger.kernel.org, dri-devel@lists.freedesktop.org, "T . J . Mercier" <tjmercier@google.com>, Johannes Weiner <hannes@cmpxchg.org>, Zefan Li <lizefan.x@bytedance.com>, Daniel Vetter <daniel.vetter@ffwll.ch>, Tejun Heo <tj@kernel.org>, =?UTF-8?Q?St=c3=a9phane_Marchesin?= <marcheu@chromium.org>, =?UTF-8?Q?Christian_K=c3=b6nig?= <christian.koenig@amd.com>
 
-Hi
 
-On Thu, Jan 12, 2023 at 04:56:01PM +0000, Tvrtko Ursulin wrote:
-> From: Tvrtko Ursulin <tvrtko.ursulin@intel.com>
+On 17/01/2023 16:03, Stanislaw Gruszka wrote:
+> Hi
 > 
-> To enable propagation of settings from the cgroup drm controller to drm we
-> need to start tracking which processes own which drm clients.
+> On Thu, Jan 12, 2023 at 04:56:01PM +0000, Tvrtko Ursulin wrote:
+>> From: Tvrtko Ursulin <tvrtko.ursulin@intel.com>
+>>
+>> To enable propagation of settings from the cgroup drm controller to drm we
+>> need to start tracking which processes own which drm clients.
+>>
+>> Implement that by tracking the struct pid pointer of the owning process in
+>> a new XArray, pointing to a structure containing a list of associated
+>> struct drm_file pointers.
+>>
+>> Clients are added and removed under the filelist mutex and RCU list
+>> operations are used below it to allow for lockless lookup.
+>>
+>> Signed-off-by: Tvrtko Ursulin <tvrtko.ursulin@intel.com>
 > 
-> Implement that by tracking the struct pid pointer of the owning process in
-> a new XArray, pointing to a structure containing a list of associated
-> struct drm_file pointers.
+> <snip>
 > 
-> Clients are added and removed under the filelist mutex and RCU list
-> operations are used below it to allow for lockless lookup.
+>> +int drm_clients_open(struct drm_file *file_priv)
+>> +{
+>> +	struct drm_device *dev = file_priv->minor->dev;
+>> +	struct drm_pid_clients *clients;
+>> +	bool new_client = false;
+>> +	unsigned long pid;
+>> +
+>> +	lockdep_assert_held(&dev->filelist_mutex);
+>> +
+>> +	pid = (unsigned long)rcu_access_pointer(file_priv->pid);
+>> +	clients = xa_load(&drm_pid_clients, pid);
+>> +	if (!clients) {
+>> +		clients = __alloc_clients();
+>> +		if (!clients)
+>> +			return -ENOMEM;
+>> +		new_client = true;
+>> +	}
+>> +	atomic_inc(&clients->num);
+>> +	list_add_tail_rcu(&file_priv->clink, &clients->file_list);
+>> +	if (new_client) {
+>> +		void *xret;
+>> +
+>> +		xret = xa_store(&drm_pid_clients, pid, clients, GFP_KERNEL);
+>> +		if (xa_err(xret)) {
+>> +			list_del_init(&file_priv->clink);
+>> +			kfree(clients);
+>> +			return PTR_ERR(clients);
 > 
-> Signed-off-by: Tvrtko Ursulin <tvrtko.ursulin@intel.com>
+> This looks incorrect, rather xa_err(xret) should be returned.
 
-<snip>
+Thanks, looks like a copy & paste error. Noted to correct before next 
+public post.
 
-> +int drm_clients_open(struct drm_file *file_priv)
-> +{
-> +	struct drm_device *dev = file_priv->minor->dev;
-> +	struct drm_pid_clients *clients;
-> +	bool new_client = false;
-> +	unsigned long pid;
-> +
-> +	lockdep_assert_held(&dev->filelist_mutex);
-> +
-> +	pid = (unsigned long)rcu_access_pointer(file_priv->pid);
-> +	clients = xa_load(&drm_pid_clients, pid);
-> +	if (!clients) {
-> +		clients = __alloc_clients();
-> +		if (!clients)
-> +			return -ENOMEM;
-> +		new_client = true;
-> +	}
-> +	atomic_inc(&clients->num);
-> +	list_add_tail_rcu(&file_priv->clink, &clients->file_list);
-> +	if (new_client) {
-> +		void *xret;
-> +
-> +		xret = xa_store(&drm_pid_clients, pid, clients, GFP_KERNEL);
-> +		if (xa_err(xret)) {
-> +			list_del_init(&file_priv->clink);
-> +			kfree(clients);
-> +			return PTR_ERR(clients);
+Regards,
 
-This looks incorrect, rather xa_err(xret) should be returned.
-
-Regards
-Stanislaw
+Tvrtko
