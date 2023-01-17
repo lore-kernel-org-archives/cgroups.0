@@ -1,107 +1,105 @@
-From: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
-Subject: [PATCH 01/15] blk-cgroup: don't defer blkg_free to a workqueue
-Date: Tue, 17 Jan 2023 09:12:43 +0100
-Message-ID: <20230117081257.3089859-2-hch@lst.de>
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH 03/15] blk-cgroup: delay blk-cgroup initialization until add_disk
+Date: Tue, 17 Jan 2023 09:12:45 +0100
+Message-ID: <20230117081257.3089859-4-hch@lst.de>
 References: <20230117081257.3089859-1-hch@lst.de>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <linux-block-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
         MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender
         :Reply-To:Content-Type:Content-ID:Content-Description;
-        bh=u4BtYojSSHY1pr6Qxzatfu3KbcIWTBHedcaCK8xLKug=; b=hx+K9Y8IA0k+SYJ85uMwwiUnVB
-        NaavNZsaNToJt0wtJ0lQCrmHpaKxQgPpOwl4ujAwgWlHVxwBxekTEXy342aYndOjey6HAVX9sdD+I
-        Gy4px6sJW9fii2UUFHBcY1xfrEx/N1Prs7z3WrDAhcQU+j3WU+DdiaYugUliuis9CHZVa0mub9WPK
-        /z4lHLOqF85vP41uoIoFQ3bPlHNEzH0cA43yHWb7CEstpWfMOyEqSemYLJ+e2y/YIlxK7QZv6J9rK
-        QxcU1+d524jVaYtsOTRQI3Ll4mGZS2VYDDPAmFBT5MiON8dTT+TDwXTxGqIec6mfuej0+NuGtEnWw
-        X8PX9jrQ==;
-In-Reply-To: <20230117081257.3089859-1-hch-jcswGhMUV9g@public.gmane.org>
+        bh=t79ScEKFFWGwdQXbMIOuqC6iBTrnY4NcEplu2ubT2eI=; b=sfva6z35Lhxf9ouEZtZ4gvh0ac
+        HC4MIGpu/VW71iKICgMuzdywze3zYGBBNvR/6lKUuh9zdj6CvK2AIFrJbr4dWo0Slw8aXMdxy1seg
+        cmFTKD1lky5aYubxisbZT+FXR7IPbLBAE7D9kaiYsZT1IFkdeVJLQwkEg+L6quFwdsA4V6gmkzXOd
+        kOgZTJ5Uo0P36u/kUM+EenvutBj2AMrpCPv4D3lHOEVwLv34FHCJh+O8lu4BxUxQ5NIgdBw832G+u
+        xg1Ra/+ME2UkpP4kyct5lKGL3StkY67z7uj5kJBbIJGYbWIhVvF/0diXAfQJQaXIeVlohE43+m5JM
+        Y1a6S9Wg==;
+In-Reply-To: <20230117081257.3089859-1-hch@lst.de>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Josef Bacik <josef-DigfWCa+lFGyeJad7bwFQA@public.gmane.org>
-Cc: linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Jens Axboe <axboe@kernel.dk>, Tejun Heo <tj@kernel.org>, Josef Bacik <josef@toxicpanda.com>
+Cc: linux-block@vger.kernel.org, cgroups@vger.kernel.org
 
-Now that blk_put_queue can be called from process context, ther is no
-need for the asynchronous execution.
+There is no need to initialize the group code before the disk is marked
+live.  Moving the cgroup initialization earlier will help to have a
+fully initialized struct device in the gendisk for the cgroup code to
+use in the future.  Similarly tear the cgroup information down in
+del_gendisk to be symmetric and because none of the cgroup tracking is
+needed once non-passthrough I/O stops.
 
-This effectively reverts commit d578c770c85233af592e54537f93f3831bde7e9a.
-
-Signed-off-by: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
+Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- block/blk-cgroup.c | 32 ++++++++++----------------------
- block/blk-cgroup.h |  5 +----
- 2 files changed, 11 insertions(+), 26 deletions(-)
+ block/genhd.c | 17 +++++++++--------
+ 1 file changed, 9 insertions(+), 8 deletions(-)
 
-diff --git a/block/blk-cgroup.c b/block/blk-cgroup.c
-index ce6a2b7d3dfb2b..30d493b43f9272 100644
---- a/block/blk-cgroup.c
-+++ b/block/blk-cgroup.c
-@@ -114,12 +114,19 @@ static bool blkcg_policy_enabled(struct request_queue *q,
- 	return pol && test_bit(pol->plid, q->blkcg_pols);
- }
+diff --git a/block/genhd.c b/block/genhd.c
+index 23cf83b3331cde..705dec0800d62e 100644
+--- a/block/genhd.c
++++ b/block/genhd.c
+@@ -466,10 +466,14 @@ int __must_check device_add_disk(struct device *parent, struct gendisk *disk,
+ 	 */
+ 	pm_runtime_set_memalloc_noio(ddev, true);
  
--static void blkg_free_workfn(struct work_struct *work)
-+/**
-+ * blkg_free - free a blkg
-+ * @blkg: blkg to free
-+ *
-+ * Free @blkg which may be partially allocated.
-+ */
-+static void blkg_free(struct blkcg_gq *blkg)
- {
--	struct blkcg_gq *blkg = container_of(work, struct blkcg_gq,
--					     free_work);
- 	int i;
+-	ret = blk_integrity_add(disk);
++	ret = blkcg_init_disk(disk);
+ 	if (ret)
+ 		goto out_del_block_link;
  
-+	if (!blkg)
-+		return;
++	ret = blk_integrity_add(disk);
++	if (ret)
++		goto out_blkcg_exit;
 +
- 	for (i = 0; i < BLKCG_MAX_POLS; i++)
- 		if (blkg->pd[i])
- 			blkcg_policy[i]->pd_free_fn(blkg->pd[i]);
-@@ -131,25 +138,6 @@ static void blkg_free_workfn(struct work_struct *work)
- 	kfree(blkg);
- }
+ 	disk->part0->bd_holder_dir =
+ 		kobject_create_and_add("holders", &ddev->kobj);
+ 	if (!disk->part0->bd_holder_dir) {
+@@ -534,6 +538,8 @@ int __must_check device_add_disk(struct device *parent, struct gendisk *disk,
+ 	kobject_put(disk->part0->bd_holder_dir);
+ out_del_integrity:
+ 	blk_integrity_del(disk);
++out_blkcg_exit:
++	blkcg_exit_disk(disk);
+ out_del_block_link:
+ 	if (!sysfs_deprecated)
+ 		sysfs_remove_link(block_depr, dev_name(ddev));
+@@ -662,6 +668,8 @@ void del_gendisk(struct gendisk *disk)
+ 	rq_qos_exit(q);
+ 	blk_mq_unquiesce_queue(q);
  
--/**
-- * blkg_free - free a blkg
-- * @blkg: blkg to free
-- *
-- * Free @blkg which may be partially allocated.
-- */
--static void blkg_free(struct blkcg_gq *blkg)
--{
--	if (!blkg)
--		return;
++	blkcg_exit_disk(disk);
++
+ 	/*
+ 	 * If the disk does not own the queue, allow using passthrough requests
+ 	 * again.  Else leave the queue frozen to fail all I/O.
+@@ -1171,8 +1179,6 @@ static void disk_release(struct device *dev)
+ 	    !test_bit(GD_ADDED, &disk->state))
+ 		blk_mq_exit_queue(disk->queue);
+ 
+-	blkcg_exit_disk(disk);
 -
--	/*
--	 * Both ->pd_free_fn() and request queue's release handler may
--	 * sleep, so free us by scheduling one work func
--	 */
--	INIT_WORK(&blkg->free_work, blkg_free_workfn);
--	schedule_work(&blkg->free_work);
--}
+ 	bioset_exit(&disk->bio_split);
+ 
+ 	disk_release_events(disk);
+@@ -1385,9 +1391,6 @@ struct gendisk *__alloc_disk_node(struct request_queue *q, int node_id,
+ 	if (xa_insert(&disk->part_tbl, 0, disk->part0, GFP_KERNEL))
+ 		goto out_destroy_part_tbl;
+ 
+-	if (blkcg_init_disk(disk))
+-		goto out_erase_part0;
 -
- static void __blkg_release(struct rcu_head *rcu)
- {
- 	struct blkcg_gq *blkg = container_of(rcu, struct blkcg_gq, rcu_head);
-diff --git a/block/blk-cgroup.h b/block/blk-cgroup.h
-index 1e94e404eaa80a..f126fe36001eb3 100644
---- a/block/blk-cgroup.h
-+++ b/block/blk-cgroup.h
-@@ -75,10 +75,7 @@ struct blkcg_gq {
+ 	rand_initialize_disk(disk);
+ 	disk_to_dev(disk)->class = &block_class;
+ 	disk_to_dev(disk)->type = &disk_type;
+@@ -1400,8 +1403,6 @@ struct gendisk *__alloc_disk_node(struct request_queue *q, int node_id,
+ #endif
+ 	return disk;
  
- 	spinlock_t			async_bio_lock;
- 	struct bio_list			async_bios;
--	union {
--		struct work_struct	async_bio_work;
--		struct work_struct	free_work;
--	};
-+	struct work_struct		async_bio_work;
- 
- 	atomic_t			use_delay;
- 	atomic64_t			delay_nsec;
+-out_erase_part0:
+-	xa_erase(&disk->part_tbl, 0);
+ out_destroy_part_tbl:
+ 	xa_destroy(&disk->part_tbl);
+ 	disk->part0->bd_disk = NULL;
 -- 
 2.39.0
 
