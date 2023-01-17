@@ -1,7 +1,7 @@
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 12/15] blk-cgroup: pass a gendisk to blkcg_{de,}activate_policy
-Date: Tue, 17 Jan 2023 09:12:54 +0100
-Message-ID: <20230117081257.3089859-13-hch@lst.de>
+Subject: [PATCH 09/15] blk-rq-qos: make rq_qos_add and rq_qos_del more useful
+Date: Tue, 17 Jan 2023 09:12:51 +0100
+Message-ID: <20230117081257.3089859-10-hch@lst.de>
 References: <20230117081257.3089859-1-hch@lst.de>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
@@ -10,227 +10,290 @@ DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
         MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender
         :Reply-To:Content-Type:Content-ID:Content-Description;
-        bh=A23OIQpHJBbfdMy7NDpTTucE9rEoEBN1Sau1RM53B1U=; b=OdnkfJevAMN7mZTZVyumCcBhVT
-        EzwZdI4gEP8dBswYedN92gefLKpza1vlKbirppjlQSqK8u6HO7TNM4fwn+EO25y3AbwydHwwgAFwm
-        SAKnZAPKqUJkm1301wZSC3CnoVckrSeJ3eyM02axdJgmJ1pDRJN477lfMFgK4l/S0W0B/uhCn56H1
-        pD6X7+ol+nsQ7qLRp+FdXFDVe6it8cCuCEkxPd5SvB0rRlmkGWbr63eqT1YHs+eAGTKB19CYNyd3k
-        GtTjCxKG5XIRva8c4XgThuhIdH/FUaoKq9upDI+UlUPVgG7gCPhznjHWs9JTEpvaMpTOKC7p48VVG
-        +jIoAEPQ==;
+        bh=PTrSdtrrFCTNt5QEBug34y3/Y0QuN2pyLp7l/cA/COY=; b=vUq49c9R0cI0VQQpwQSq8gpuZ5
+        f06mX1QP3tETVZDmVO3w7vuc++cVZkZK7gxJ5QlM0DrmcDrzpBb7EkdFdnmix2gJCMbZUV+z9NLhW
+        ZBrJBl2djB1tc9YQ6c6ZyrqAC5h+ruzWAcJSm9WYecQSaNDUG6IA3VI7cldPvHv9gSu8xYttd3bwX
+        BGwUdM6jAgtIHux6CZUNYWkFxdmcz8P6K4CR8Go6kGnJmtzO7vhCKmPDByJALPlKYmbGmKq3Uewid
+        KxzhDs+nRxUmBe+uSUZVri0IhOd7BEY591hDL9oz5gvi1hx+8T7dV88n/s5/HJDa8NsG6zyRO8ylx
+        HjqZS8Sg==;
 In-Reply-To: <20230117081257.3089859-1-hch@lst.de>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 To: Jens Axboe <axboe@kernel.dk>, Tejun Heo <tj@kernel.org>, Josef Bacik <josef@toxicpanda.com>
 Cc: linux-block@vger.kernel.org, cgroups@vger.kernel.org
 
-Prepare for storing the blkcg information in the gendisk instead of
-the request_queue.
+Switch to passing a gendisk, and make rq_qos_add initialize all required
+fields and drop the not required q argument from rq_qos_del.  Also move
+the code out of line given how large it is.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- block/bfq-cgroup.c    |  2 +-
- block/bfq-iosched.c   |  2 +-
- block/blk-cgroup.c    | 19 ++++++++++---------
- block/blk-cgroup.h    |  9 ++++-----
- block/blk-iocost.c    |  4 ++--
- block/blk-iolatency.c |  4 ++--
- block/blk-ioprio.c    |  4 ++--
- block/blk-throttle.c  |  4 ++--
- 8 files changed, 24 insertions(+), 24 deletions(-)
+ block/blk-iocost.c    | 13 ++-------
+ block/blk-iolatency.c | 14 +++------
+ block/blk-rq-qos.c    | 67 +++++++++++++++++++++++++++++++++++++++++++
+ block/blk-rq-qos.h    | 62 ++-------------------------------------
+ block/blk-wbt.c       |  5 +---
+ 5 files changed, 78 insertions(+), 83 deletions(-)
 
-diff --git a/block/bfq-cgroup.c b/block/bfq-cgroup.c
-index 72a033776722c9..b1b8eca99d988f 100644
---- a/block/bfq-cgroup.c
-+++ b/block/bfq-cgroup.c
-@@ -1293,7 +1293,7 @@ struct bfq_group *bfq_create_group_hierarchy(struct bfq_data *bfqd, int node)
- {
- 	int ret;
- 
--	ret = blkcg_activate_policy(bfqd->queue, &blkcg_policy_bfq);
-+	ret = blkcg_activate_policy(bfqd->queue->disk, &blkcg_policy_bfq);
- 	if (ret)
- 		return NULL;
- 
-diff --git a/block/bfq-iosched.c b/block/bfq-iosched.c
-index 68062243f2c142..eda3a838f3c3fd 100644
---- a/block/bfq-iosched.c
-+++ b/block/bfq-iosched.c
-@@ -7155,7 +7155,7 @@ static void bfq_exit_queue(struct elevator_queue *e)
- 	bfqg_and_blkg_put(bfqd->root_group);
- 
- #ifdef CONFIG_BFQ_GROUP_IOSCHED
--	blkcg_deactivate_policy(bfqd->queue, &blkcg_policy_bfq);
-+	blkcg_deactivate_policy(bfqd->queue->disk, &blkcg_policy_bfq);
- #else
- 	spin_lock_irq(&bfqd->lock);
- 	bfq_put_async_queues(bfqd, bfqd->root_group);
-diff --git a/block/blk-cgroup.c b/block/blk-cgroup.c
-index 603e911d1350db..353421afe1d70d 100644
---- a/block/blk-cgroup.c
-+++ b/block/blk-cgroup.c
-@@ -1363,13 +1363,13 @@ EXPORT_SYMBOL_GPL(io_cgrp_subsys);
- 
- /**
-  * blkcg_activate_policy - activate a blkcg policy on a request_queue
-- * @q: request_queue of interest
-+ * @disk: gendisk of interest
-  * @pol: blkcg policy to activate
-  *
-- * Activate @pol on @q.  Requires %GFP_KERNEL context.  @q goes through
-+ * Activate @pol on @disk.  Requires %GFP_KERNEL context.  @disk goes through
-  * bypass mode to populate its blkgs with policy_data for @pol.
-  *
-- * Activation happens with @q bypassed, so nobody would be accessing blkgs
-+ * Activation happens with @disk bypassed, so nobody would be accessing blkgs
-  * from IO path.  Update of each blkg is protected by both queue and blkcg
-  * locks so that holding either lock and testing blkcg_policy_enabled() is
-  * always enough for dereferencing policy data.
-@@ -1377,9 +1377,9 @@ EXPORT_SYMBOL_GPL(io_cgrp_subsys);
-  * The caller is responsible for synchronizing [de]activations and policy
-  * [un]registerations.  Returns 0 on success, -errno on failure.
-  */
--int blkcg_activate_policy(struct request_queue *q,
--			  const struct blkcg_policy *pol)
-+int blkcg_activate_policy(struct gendisk *disk, const struct blkcg_policy *pol)
- {
-+	struct request_queue *q = disk->queue;
- 	struct blkg_policy_data *pd_prealloc = NULL;
- 	struct blkcg_gq *blkg, *pinned_blkg = NULL;
- 	int ret;
-@@ -1473,16 +1473,17 @@ int blkcg_activate_policy(struct request_queue *q,
- EXPORT_SYMBOL_GPL(blkcg_activate_policy);
- 
- /**
-- * blkcg_deactivate_policy - deactivate a blkcg policy on a request_queue
-- * @q: request_queue of interest
-+ * blkcg_deactivate_policy - deactivate a blkcg policy on a gendisk
-+ * @disk: gendisk of interest
-  * @pol: blkcg policy to deactivate
-  *
-- * Deactivate @pol on @q.  Follows the same synchronization rules as
-+ * Deactivate @pol on @disk.  Follows the same synchronization rules as
-  * blkcg_activate_policy().
-  */
--void blkcg_deactivate_policy(struct request_queue *q,
-+void blkcg_deactivate_policy(struct gendisk *disk,
- 			     const struct blkcg_policy *pol)
- {
-+	struct request_queue *q = disk->queue;
- 	struct blkcg_gq *blkg;
- 
- 	if (!blkcg_policy_enabled(q, pol))
-diff --git a/block/blk-cgroup.h b/block/blk-cgroup.h
-index 85b267234823ab..e9e0c00d13d64d 100644
---- a/block/blk-cgroup.h
-+++ b/block/blk-cgroup.h
-@@ -190,9 +190,8 @@ void blkcg_exit_disk(struct gendisk *disk);
- /* Blkio controller policy registration */
- int blkcg_policy_register(struct blkcg_policy *pol);
- void blkcg_policy_unregister(struct blkcg_policy *pol);
--int blkcg_activate_policy(struct request_queue *q,
--			  const struct blkcg_policy *pol);
--void blkcg_deactivate_policy(struct request_queue *q,
-+int blkcg_activate_policy(struct gendisk *disk, const struct blkcg_policy *pol);
-+void blkcg_deactivate_policy(struct gendisk *disk,
- 			     const struct blkcg_policy *pol);
- 
- const char *blkg_dev_name(struct blkcg_gq *blkg);
-@@ -491,9 +490,9 @@ static inline int blkcg_init_disk(struct gendisk *disk) { return 0; }
- static inline void blkcg_exit_disk(struct gendisk *disk) { }
- static inline int blkcg_policy_register(struct blkcg_policy *pol) { return 0; }
- static inline void blkcg_policy_unregister(struct blkcg_policy *pol) { }
--static inline int blkcg_activate_policy(struct request_queue *q,
-+static inline int blkcg_activate_policy(struct gendisk *disk,
- 					const struct blkcg_policy *pol) { return 0; }
--static inline void blkcg_deactivate_policy(struct request_queue *q,
-+static inline void blkcg_deactivate_policy(struct gendisk *disk,
- 					   const struct blkcg_policy *pol) { }
- 
- static inline struct blkg_policy_data *blkg_to_pd(struct blkcg_gq *blkg,
 diff --git a/block/blk-iocost.c b/block/blk-iocost.c
-index 54e42b22b3599f..6557bbd409b57e 100644
+index 6f39ca99e9d76f..9b5c0d23c9ce8b 100644
 --- a/block/blk-iocost.c
 +++ b/block/blk-iocost.c
-@@ -2814,7 +2814,7 @@ static void ioc_rqos_exit(struct rq_qos *rqos)
+@@ -2836,9 +2836,7 @@ static struct rq_qos_ops ioc_rqos_ops = {
+ 
+ static int blk_iocost_init(struct gendisk *disk)
  {
- 	struct ioc *ioc = rqos_to_ioc(rqos);
+-	struct request_queue *q = disk->queue;
+ 	struct ioc *ioc;
+-	struct rq_qos *rqos;
+ 	int i, cpu, ret;
  
--	blkcg_deactivate_policy(rqos->disk->queue, &blkcg_policy_iocost);
-+	blkcg_deactivate_policy(rqos->disk, &blkcg_policy_iocost);
+ 	ioc = kzalloc(sizeof(*ioc), GFP_KERNEL);
+@@ -2861,11 +2859,6 @@ static int blk_iocost_init(struct gendisk *disk)
+ 		local64_set(&ccs->rq_wait_ns, 0);
+ 	}
  
- 	spin_lock_irq(&ioc->lock);
- 	ioc->running = IOC_STOP;
-@@ -2886,7 +2886,7 @@ static int blk_iocost_init(struct gendisk *disk)
+-	rqos = &ioc->rqos;
+-	rqos->id = RQ_QOS_COST;
+-	rqos->ops = &ioc_rqos_ops;
+-	rqos->q = q;
+-
+ 	spin_lock_init(&ioc->lock);
+ 	timer_setup(&ioc->timer, ioc_timer_fn, 0);
+ 	INIT_LIST_HEAD(&ioc->active_iocgs);
+@@ -2889,17 +2882,17 @@ static int blk_iocost_init(struct gendisk *disk)
+ 	 * called before policy activation completion, can't assume that the
+ 	 * target bio has an iocg associated and need to test for NULL iocg.
+ 	 */
+-	ret = rq_qos_add(q, rqos);
++	ret = rq_qos_add(&ioc->rqos, disk, RQ_QOS_COST, &ioc_rqos_ops);
  	if (ret)
  		goto err_free_ioc;
  
--	ret = blkcg_activate_policy(disk->queue, &blkcg_policy_iocost);
-+	ret = blkcg_activate_policy(disk, &blkcg_policy_iocost);
+-	ret = blkcg_activate_policy(q, &blkcg_policy_iocost);
++	ret = blkcg_activate_policy(disk->queue, &blkcg_policy_iocost);
  	if (ret)
  		goto err_del_qos;
  	return 0;
+ 
+ err_del_qos:
+-	rq_qos_del(q, rqos);
++	rq_qos_del(&ioc->rqos);
+ err_free_ioc:
+ 	free_percpu(ioc->pcpu_stat);
+ 	kfree(ioc);
 diff --git a/block/blk-iolatency.c b/block/blk-iolatency.c
-index 8e1e43bbde6f0b..39853fc5c2b02f 100644
+index b55eac2cf91944..1c394bd77aa0b4 100644
 --- a/block/blk-iolatency.c
 +++ b/block/blk-iolatency.c
-@@ -646,7 +646,7 @@ static void blkcg_iolatency_exit(struct rq_qos *rqos)
+@@ -757,24 +757,18 @@ static void blkiolatency_enable_work_fn(struct work_struct *work)
  
- 	timer_shutdown_sync(&blkiolat->timer);
- 	flush_work(&blkiolat->enable_work);
--	blkcg_deactivate_policy(rqos->disk->queue, &blkcg_policy_iolatency);
-+	blkcg_deactivate_policy(rqos->disk, &blkcg_policy_iolatency);
- 	kfree(blkiolat);
- }
+ int blk_iolatency_init(struct gendisk *disk)
+ {
+-	struct request_queue *q = disk->queue;
+ 	struct blk_iolatency *blkiolat;
+-	struct rq_qos *rqos;
+ 	int ret;
  
-@@ -768,7 +768,7 @@ int blk_iolatency_init(struct gendisk *disk)
- 			 &blkcg_iolatency_ops);
+ 	blkiolat = kzalloc(sizeof(*blkiolat), GFP_KERNEL);
+ 	if (!blkiolat)
+ 		return -ENOMEM;
+ 
+-	rqos = &blkiolat->rqos;
+-	rqos->id = RQ_QOS_LATENCY;
+-	rqos->ops = &blkcg_iolatency_ops;
+-	rqos->q = q;
+-
+-	ret = rq_qos_add(q, rqos);
++	ret = rq_qos_add(&blkiolat->rqos, disk, RQ_QOS_LATENCY,
++			 &blkcg_iolatency_ops);
  	if (ret)
  		goto err_free;
--	ret = blkcg_activate_policy(disk->queue, &blkcg_policy_iolatency);
-+	ret = blkcg_activate_policy(disk, &blkcg_policy_iolatency);
+-	ret = blkcg_activate_policy(q, &blkcg_policy_iolatency);
++	ret = blkcg_activate_policy(disk->queue, &blkcg_policy_iolatency);
  	if (ret)
  		goto err_qos_del;
  
-diff --git a/block/blk-ioprio.c b/block/blk-ioprio.c
-index 8bb6b8eba4cee8..8194826cc824bc 100644
---- a/block/blk-ioprio.c
-+++ b/block/blk-ioprio.c
-@@ -204,12 +204,12 @@ void blkcg_set_ioprio(struct bio *bio)
+@@ -784,7 +778,7 @@ int blk_iolatency_init(struct gendisk *disk)
+ 	return 0;
  
- void blk_ioprio_exit(struct gendisk *disk)
- {
--	blkcg_deactivate_policy(disk->queue, &ioprio_policy);
-+	blkcg_deactivate_policy(disk, &ioprio_policy);
+ err_qos_del:
+-	rq_qos_del(q, rqos);
++	rq_qos_del(&blkiolat->rqos);
+ err_free:
+ 	kfree(blkiolat);
+ 	return ret;
+diff --git a/block/blk-rq-qos.c b/block/blk-rq-qos.c
+index 88f0fe7dcf5451..14bee1bd761362 100644
+--- a/block/blk-rq-qos.c
++++ b/block/blk-rq-qos.c
+@@ -294,3 +294,70 @@ void rq_qos_exit(struct request_queue *q)
+ 		rqos->ops->exit(rqos);
+ 	}
+ }
++
++int rq_qos_add(struct rq_qos *rqos, struct gendisk *disk, enum rq_qos_id id,
++		struct rq_qos_ops *ops)
++{
++	struct request_queue *q = disk->queue;
++
++	rqos->q = q;
++	rqos->id = id;
++	rqos->ops = ops;
++
++	/*
++	 * No IO can be in-flight when adding rqos, so freeze queue, which
++	 * is fine since we only support rq_qos for blk-mq queue.
++	 *
++	 * Reuse ->queue_lock for protecting against other concurrent
++	 * rq_qos adding/deleting
++	 */
++	blk_mq_freeze_queue(q);
++
++	spin_lock_irq(&q->queue_lock);
++	if (rq_qos_id(q, rqos->id))
++		goto ebusy;
++	rqos->next = q->rq_qos;
++	q->rq_qos = rqos;
++	spin_unlock_irq(&q->queue_lock);
++
++	blk_mq_unfreeze_queue(q);
++
++	if (rqos->ops->debugfs_attrs) {
++		mutex_lock(&q->debugfs_mutex);
++		blk_mq_debugfs_register_rqos(rqos);
++		mutex_unlock(&q->debugfs_mutex);
++	}
++
++	return 0;
++ebusy:
++	spin_unlock_irq(&q->queue_lock);
++	blk_mq_unfreeze_queue(q);
++	return -EBUSY;
++}
++
++void rq_qos_del(struct rq_qos *rqos)
++{
++	struct request_queue *q = rqos->q;
++	struct rq_qos **cur;
++
++	/*
++	 * See comment in rq_qos_add() about freezing queue & using
++	 * ->queue_lock.
++	 */
++	blk_mq_freeze_queue(q);
++
++	spin_lock_irq(&q->queue_lock);
++	for (cur = &q->rq_qos; *cur; cur = &(*cur)->next) {
++		if (*cur == rqos) {
++			*cur = rqos->next;
++			break;
++		}
++	}
++	spin_unlock_irq(&q->queue_lock);
++
++	blk_mq_unfreeze_queue(q);
++
++	mutex_lock(&q->debugfs_mutex);
++	blk_mq_debugfs_unregister_rqos(rqos);
++	mutex_unlock(&q->debugfs_mutex);
++}
+diff --git a/block/blk-rq-qos.h b/block/blk-rq-qos.h
+index 1ef1f7d4bc3cbc..22552785aa31ed 100644
+--- a/block/blk-rq-qos.h
++++ b/block/blk-rq-qos.h
+@@ -85,65 +85,9 @@ static inline void rq_wait_init(struct rq_wait *rq_wait)
+ 	init_waitqueue_head(&rq_wait->wait);
  }
  
- int blk_ioprio_init(struct gendisk *disk)
- {
--	return blkcg_activate_policy(disk->queue, &ioprio_policy);
-+	return blkcg_activate_policy(disk, &ioprio_policy);
- }
+-static inline int rq_qos_add(struct request_queue *q, struct rq_qos *rqos)
+-{
+-	/*
+-	 * No IO can be in-flight when adding rqos, so freeze queue, which
+-	 * is fine since we only support rq_qos for blk-mq queue.
+-	 *
+-	 * Reuse ->queue_lock for protecting against other concurrent
+-	 * rq_qos adding/deleting
+-	 */
+-	blk_mq_freeze_queue(q);
+-
+-	spin_lock_irq(&q->queue_lock);
+-	if (rq_qos_id(q, rqos->id))
+-		goto ebusy;
+-	rqos->next = q->rq_qos;
+-	q->rq_qos = rqos;
+-	spin_unlock_irq(&q->queue_lock);
+-
+-	blk_mq_unfreeze_queue(q);
+-
+-	if (rqos->ops->debugfs_attrs) {
+-		mutex_lock(&q->debugfs_mutex);
+-		blk_mq_debugfs_register_rqos(rqos);
+-		mutex_unlock(&q->debugfs_mutex);
+-	}
+-
+-	return 0;
+-ebusy:
+-	spin_unlock_irq(&q->queue_lock);
+-	blk_mq_unfreeze_queue(q);
+-	return -EBUSY;
+-
+-}
+-
+-static inline void rq_qos_del(struct request_queue *q, struct rq_qos *rqos)
+-{
+-	struct rq_qos **cur;
+-
+-	/*
+-	 * See comment in rq_qos_add() about freezing queue & using
+-	 * ->queue_lock.
+-	 */
+-	blk_mq_freeze_queue(q);
+-
+-	spin_lock_irq(&q->queue_lock);
+-	for (cur = &q->rq_qos; *cur; cur = &(*cur)->next) {
+-		if (*cur == rqos) {
+-			*cur = rqos->next;
+-			break;
+-		}
+-	}
+-	spin_unlock_irq(&q->queue_lock);
+-
+-	blk_mq_unfreeze_queue(q);
+-
+-	mutex_lock(&q->debugfs_mutex);
+-	blk_mq_debugfs_unregister_rqos(rqos);
+-	mutex_unlock(&q->debugfs_mutex);
+-}
++int rq_qos_add(struct rq_qos *rqos, struct gendisk *disk, enum rq_qos_id id,
++		struct rq_qos_ops *ops);
++void rq_qos_del(struct rq_qos *rqos);
  
- static int __init ioprio_init(void)
-diff --git a/block/blk-throttle.c b/block/blk-throttle.c
-index f802d8f9099430..efc0a9092c6942 100644
---- a/block/blk-throttle.c
-+++ b/block/blk-throttle.c
-@@ -2395,7 +2395,7 @@ int blk_throtl_init(struct gendisk *disk)
- 	td->low_downgrade_time = jiffies;
+ typedef bool (acquire_inflight_cb_t)(struct rq_wait *rqw, void *private_data);
+ typedef void (cleanup_cb_t)(struct rq_wait *rqw, void *private_data);
+diff --git a/block/blk-wbt.c b/block/blk-wbt.c
+index 473ae72befaf1a..97149a4f10e600 100644
+--- a/block/blk-wbt.c
++++ b/block/blk-wbt.c
+@@ -855,9 +855,6 @@ int wbt_init(struct gendisk *disk)
+ 	for (i = 0; i < WBT_NUM_RWQ; i++)
+ 		rq_wait_init(&rwb->rq_wait[i]);
  
- 	/* activate policy */
--	ret = blkcg_activate_policy(q, &blkcg_policy_throtl);
-+	ret = blkcg_activate_policy(disk, &blkcg_policy_throtl);
- 	if (ret) {
- 		free_percpu(td->latency_buckets[READ]);
- 		free_percpu(td->latency_buckets[WRITE]);
-@@ -2411,7 +2411,7 @@ void blk_throtl_exit(struct gendisk *disk)
- 	BUG_ON(!q->td);
- 	del_timer_sync(&q->td->service_queue.pending_timer);
- 	throtl_shutdown_wq(q);
--	blkcg_deactivate_policy(q, &blkcg_policy_throtl);
-+	blkcg_deactivate_policy(disk, &blkcg_policy_throtl);
- 	free_percpu(q->td->latency_buckets[READ]);
- 	free_percpu(q->td->latency_buckets[WRITE]);
- 	kfree(q->td);
+-	rwb->rqos.id = RQ_QOS_WBT;
+-	rwb->rqos.ops = &wbt_rqos_ops;
+-	rwb->rqos.q = q;
+ 	rwb->last_comp = rwb->last_issue = jiffies;
+ 	rwb->win_nsec = RWB_WINDOW_NSEC;
+ 	rwb->enable_state = WBT_STATE_ON_DEFAULT;
+@@ -870,7 +867,7 @@ int wbt_init(struct gendisk *disk)
+ 	/*
+ 	 * Assign rwb and add the stats callback.
+ 	 */
+-	ret = rq_qos_add(q, &rwb->rqos);
++	ret = rq_qos_add(&rwb->rqos, q->disk, RQ_QOS_WBT, &wbt_rqos_ops);
+ 	if (ret)
+ 		goto err_free;
+ 
 -- 
 2.39.0
 
