@@ -1,55 +1,60 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH -next v2 1/3] blk-cgroup: dropping parent refcount after
- pd_free_fn() is done
-Date: Wed, 18 Jan 2023 06:54:41 -1000
-Message-ID: <Y8gkUZtbWltG/vI3@slm.duckdns.org>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH -next v2 2/3] blk-cgroup: support to track if policy is
+ online
+Date: Wed, 18 Jan 2023 06:55:03 -1000
+Message-ID: <Y8gkZzvhnL6+0YQz@slm.duckdns.org>
 References: <20230118123152.1926314-1-yukuai1@huaweicloud.com>
- <20230118123152.1926314-2-yukuai1@huaweicloud.com>
+ <20230118123152.1926314-3-yukuai1@huaweicloud.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <linux-block-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20210112;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:sender:from:to:cc:subject:date:message-id
          :reply-to;
-        bh=d9OP8oV65JxIUAfGtsGFxPR9aOpiL07LaKAZQ5LY4+8=;
-        b=FMmwB5hmA/Th3ZFkKr78WupQ0I9Ky1YNdVlkyiJ7vyA3gwsXckPf4Llnr8mFrlAW+d
-         MnUuagJq15CF2N4gvUdJMh8vL7aJREH8allAUTWEUp7NUV/I587rdeuR7c1JQ8YpR3Yk
-         zUxdqkr46VnVTiwH7YUpbJXhVZWu59iWkWBh/lULZ8rl8RmZH/dgJnZXiP76gjrdeuX+
-         Bk5Pd9ufG2BvWVFURawcDgu+DVrcuCPxeO04P83wI9MIIjQ5H0iDGgrdRV4Fe5rqOrDd
-         TI4MlgnElMy1eCczsySheHNHs9ur+IwcfltR/jrns20VlYCSFxON2DD3Z0zb78IqLdG6
-         BtzQ==
-Sender: Tejun Heo <htejun-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+        bh=A7F6VPbhMnzjimtiCShZ77ZvG/bSXxm/Jis8nNrNKeM=;
+        b=XuT/m/jKqKU3pK9KFC1rR7pyI+ajP9HGz+9CmIHpgh9GlUoRUpIPOtc0TZvnqpZeyr
+         Ba3IlJooRL4qJQ3msXeozWveqt8Mcrz6dGVGKYWbzSDJ1UQCLQ+ws1lYXWPsIon2u4J9
+         lbFzmO0dVPXbG0hO2DHEJi/m9XEnW3NXwdDlu+62sjYnKx3N7prYNncVKORJG6bZ41UV
+         0lGBxSy1NHQ9hmvIlI/dFom49BtT0+7K3i2/vlrDyT2rV5g7bakA1oJe/3dcZ0yip8J2
+         ounssrODrQORokHwzX3OmhLnodUuQtZ1dAMe6Ii4bdqQ6lxlbD7WrllvZ0TnnMjRQAPq
+         BGqg==
+Sender: Tejun Heo <htejun@gmail.com>
 Content-Disposition: inline
-In-Reply-To: <20230118123152.1926314-2-yukuai1-XF6JlduFytWkHkcT6e4Xnw@public.gmane.org>
+In-Reply-To: <20230118123152.1926314-3-yukuai1@huaweicloud.com>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Yu Kuai <yukuai1-XF6JlduFytWkHkcT6e4Xnw@public.gmane.org>
-Cc: hch-jcswGhMUV9g@public.gmane.org, josef-DigfWCa+lFGyeJad7bwFQA@public.gmane.org, axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, yi.zhang-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, yangerkun-hv44wF8Li93QT0dZR+AlfA@public.gmane.org
+To: Yu Kuai <yukuai1@huaweicloud.com>
+Cc: hch@lst.de, josef@toxicpanda.com, axboe@kernel.dk, cgroups@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, yukuai3@huawei.com, yi.zhang@huawei.com, yangerkun@huawei.com
 
-On Wed, Jan 18, 2023 at 08:31:50PM +0800, Yu Kuai wrote:
-> From: Yu Kuai <yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+On Wed, Jan 18, 2023 at 08:31:51PM +0800, Yu Kuai wrote:
+> From: Yu Kuai <yukuai3@huawei.com>
 > 
-> Some cgroup policies will access parent pd through child pd even
-> after pd_offline_fn() is done. If pd_free_fn() for parent is called
-> before child, then UAF can be triggered. Hence it's better to guarantee
-> the order of pd_free_fn().
+> A new field 'online' is added to blkg_policy_date to fix following
+                                                  ^
+                                                  a
+> 2 problem:
 > 
-> Currently refcount of parent blkg is dropped in __blkg_release(), which
-> is before pd_free_fn() is called in blkg_free_work_fn() while
-> blkg_free_work_fn() is called asynchronously.
+> 1) In blkcg_activate_policy(), if pd_alloc_fn() with 'GFP_NOWAIT'
+>    failed, 'queue_lock' will be dropped and pd_alloc_fn() will try again
+>    without 'GFP_NOWAIT'. In the meantime, remove cgroup can race with
+>    it, and pd_offline_fn() will be called without pd_init_fn() and
+>    pd_online_fn(). This way null-ptr-deference can be triggered.
 > 
-> This patch make sure pd_free_fn() called from removing cgroup is ordered
-> by delaying dropping parent refcount after calling pd_free_fn() for
-> child.
+> 2) In order to synchronize pd_free_fn() from blkg_free_workfn() and
+>    blkcg_deactivate_policy(), 'list_del_init(&blkg->q_node)' will be
+>    delayed to blkg_free_workfn(), hence pd_offline_fn() can be called
+>    first in blkg_destroy(), and then blkcg_deactivate_policy() will
+>    call it again, we must prevent it.
 > 
-> BTW, pd_free_fn() will also be called from blkcg_deactivate_policy()
-> from deleting device, and following patches will guarantee the order.
+> The new field 'online' will be set after pd_online_fn() and will be
+> cleared after pd_offline_fn(), in the meantime pd_offline_fn() will only
+> be called if 'online' is set.
 > 
-> Signed-off-by: Yu Kuai <yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+> Signed-off-by: Yu Kuai <yukuai3@huawei.com>
 
-Acked-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Acked-by: Tejun Heo <tj@kernel.org>
 
 Thanks.
 
