@@ -1,96 +1,73 @@
-From: Tvrtko Ursulin <tvrtko.ursulin@linux.intel.com>
-Subject: Re: [RFC 04/12] drm/cgroup: Track clients per owning
- process
-Date: Tue, 17 Jan 2023 16:25:09 +0000
-Message-ID: <db60bb1d-51b6-6830-5a4c-100ba38a2dbc@linux.intel.com>
-References: <20230112165609.1083270-1-tvrtko.ursulin@linux.intel.com>
- <20230112165609.1083270-5-tvrtko.ursulin@linux.intel.com>
- <20230117160311.GA15842@linux.intel.com>
+From: Arnd Bergmann <arnd-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: [PATCH] blk-iocost: avoid 64-bit division in ioc_timer_fn
+Date: Wed, 18 Jan 2023 09:07:01 +0100
+Message-ID: <20230118080706.3303186-1-arnd@kernel.org>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <intel-gfx-bounces@lists.freedesktop.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
- d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
- t=1673972737; x=1705508737;
- h=message-id:date:mime-version:subject:to:cc:references:
- from:in-reply-to:content-transfer-encoding;
- bh=HxFIc/F4tODmGWHQvVFrU/McHRhB0/99ZlsYIwoeLug=;
- b=Zm7qUylfsx5griY8YzThxM32K11zvvoDEfu2azG7QY3Oj+w2QyLhKitp
- ejIeaPNpiggmYVXpQ5mySVVgGOYg1fFPkytHNU4oVfPqVj9vQgK8x2NtX
- JT3XBVrohK0pBbOQ9x3+vIka73CL+G+yP5HI5EpkNjgs961Pl5bSRHYUK
- 0v6WSuNKAFc7u1kTvTXWpka6zFjvKerGI/8RxveBN/k/xcQ2/nUN0O+4l
- YLtYbZkZClndfk6v/WLe3a8Z6DGgeax1okNE2zXKzbsUL7D3b3AP3BCxE
- WlZo+Yp4G1VfdZ4vNBkY6YF5LE/3V8LTkYC6zQl5fioPjck0DY+nCmX0m g==;
-Content-Language: en-US
-In-Reply-To: <20230117160311.GA15842@linux.intel.com>
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.freedesktop.org/mailman/options/intel-gfx>,
- <mailto:intel-gfx-request@lists.freedesktop.org?subject=unsubscribe>
-List-Archive: <https://lists.freedesktop.org/archives/intel-gfx>
-List-Post: <mailto:intel-gfx@lists.freedesktop.org>
-List-Help: <mailto:intel-gfx-request@lists.freedesktop.org?subject=help>
-List-Subscribe: <https://lists.freedesktop.org/mailman/listinfo/intel-gfx>,
- <mailto:intel-gfx-request@lists.freedesktop.org?subject=subscribe>
-Errors-To: intel-gfx-bounces@lists.freedesktop.org
-Sender: "Intel-gfx" <intel-gfx-bounces@lists.freedesktop.org>
-Content-Type: text/plain; charset="us-ascii"; format="flowed"
-To: Stanislaw Gruszka <stanislaw.gruszka@linux.intel.com>
-Cc: Rob Clark <robdclark@chromium.org>, cgroups@vger.kernel.org, Dave Airlie <airlied@redhat.com>, Kenny.Ho@amd.com, Intel-gfx@lists.freedesktop.org, linux-kernel@vger.kernel.org, dri-devel@lists.freedesktop.org, "T . J . Mercier" <tjmercier@google.com>, Johannes Weiner <hannes@cmpxchg.org>, Zefan Li <lizefan.x@bytedance.com>, Daniel Vetter <daniel.vetter@ffwll.ch>, Tejun Heo <tj@kernel.org>, =?UTF-8?Q?St=c3=a9phane_Marchesin?= <marcheu@chromium.org>, =?UTF-8?Q?Christian_K=c3=b6nig?= <christian.koenig@amd.com>
+Content-Transfer-Encoding: 8bit
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1674029233;
+        bh=jV7i9GOJFI/Ud+m8L/XR9u5kzqRqvbbtkxuVTnegFv0=;
+        h=From:To:Cc:Subject:Date:From;
+        b=hE9uf9tA9pYO+pI66/xY5O8+jR+zScqB63M3U6aiTPIAe1bwEzMc5i+1ivbvdYs8C
+         Y/NoVnKf6GSXY6DmNtXLL4WutHYj2zCjiy9q9zxjgrBaHX44DOd0ym+L63Z0kr54AN
+         uChgkqEihIGa9nIoOMWtS/qJCBpC8iEYmTq7BipJKGEUHhnYs1Yw9BERk97XugR8+P
+         D8JHi4jthfx/TajyRznKPg8X9J6MV6SzVBWukSRwkeO+TClzAywpoK6izRxeZsVvNV
+         O9RzDY6EQnSELfSMmuOsjcagdPrNhauThPFk+Azop9nDovIJ6gZoYMfbc5HQgb+3iz
+         i1t2zSYZ5Jw8A==
+List-ID: <cgroups.vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Josef Bacik <josef-DigfWCa+lFGyeJad7bwFQA@public.gmane.org>, Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>
+Cc: Arnd Bergmann <arnd-r2nGTMty4D4@public.gmane.org>, Kemeng Shi <shikemeng-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Andreas Herrmann <aherrmann-l3A5Bk7waGM@public.gmane.org>, Yu Kuai <yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Chengming Zhou <zhouchengming-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Jinke Han <hanjinke.666-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
+From: Arnd Bergmann <arnd-r2nGTMty4D4@public.gmane.org>
 
-On 17/01/2023 16:03, Stanislaw Gruszka wrote:
-> Hi
-> 
-> On Thu, Jan 12, 2023 at 04:56:01PM +0000, Tvrtko Ursulin wrote:
->> From: Tvrtko Ursulin <tvrtko.ursulin@intel.com>
->>
->> To enable propagation of settings from the cgroup drm controller to drm we
->> need to start tracking which processes own which drm clients.
->>
->> Implement that by tracking the struct pid pointer of the owning process in
->> a new XArray, pointing to a structure containing a list of associated
->> struct drm_file pointers.
->>
->> Clients are added and removed under the filelist mutex and RCU list
->> operations are used below it to allow for lockless lookup.
->>
->> Signed-off-by: Tvrtko Ursulin <tvrtko.ursulin@intel.com>
-> 
-> <snip>
-> 
->> +int drm_clients_open(struct drm_file *file_priv)
->> +{
->> +	struct drm_device *dev = file_priv->minor->dev;
->> +	struct drm_pid_clients *clients;
->> +	bool new_client = false;
->> +	unsigned long pid;
->> +
->> +	lockdep_assert_held(&dev->filelist_mutex);
->> +
->> +	pid = (unsigned long)rcu_access_pointer(file_priv->pid);
->> +	clients = xa_load(&drm_pid_clients, pid);
->> +	if (!clients) {
->> +		clients = __alloc_clients();
->> +		if (!clients)
->> +			return -ENOMEM;
->> +		new_client = true;
->> +	}
->> +	atomic_inc(&clients->num);
->> +	list_add_tail_rcu(&file_priv->clink, &clients->file_list);
->> +	if (new_client) {
->> +		void *xret;
->> +
->> +		xret = xa_store(&drm_pid_clients, pid, clients, GFP_KERNEL);
->> +		if (xa_err(xret)) {
->> +			list_del_init(&file_priv->clink);
->> +			kfree(clients);
->> +			return PTR_ERR(clients);
-> 
-> This looks incorrect, rather xa_err(xret) should be returned.
+The behavior of 'enum' types has changed in gcc-13, so now the
+UNBUSY_THR_PCT constant is interpreted as a 64-bit number because
+it is defined as part of the same enum definition as some other
+constants that do not fit within a 32-bit integer. This in turn
+leads to some inefficient code on 32-bit architectures as well
+as a link error:
 
-Thanks, looks like a copy & paste error. Noted to correct before next 
-public post.
+arm-linux-gnueabi/bin/arm-linux-gnueabi-ld: block/blk-iocost.o: in function `ioc_timer_fn':
+blk-iocost.c:(.text+0x68e8): undefined reference to `__aeabi_uldivmod'
+arm-linux-gnueabi-ld: blk-iocost.c:(.text+0x6908): undefined reference to `__aeabi_uldivmod'
 
-Regards,
+Split the enum definition to keep the 64-bit timing constants in
+a separate enum type from those constants that can clearly fit
+within a smaller type.
 
-Tvrtko
+Signed-off-by: Arnd Bergmann <arnd-r2nGTMty4D4@public.gmane.org>
+---
+ block/blk-iocost.c | 8 +++++---
+ 1 file changed, 5 insertions(+), 3 deletions(-)
+
+diff --git a/block/blk-iocost.c b/block/blk-iocost.c
+index 6955605629e4..b691b6bb498f 100644
+--- a/block/blk-iocost.c
++++ b/block/blk-iocost.c
+@@ -258,6 +258,11 @@ enum {
+ 	VRATE_MIN		= VTIME_PER_USEC * VRATE_MIN_PPM / MILLION,
+ 	VRATE_CLAMP_ADJ_PCT	= 4,
+ 
++	/* switch iff the conditions are met for longer than this */
++	AUTOP_CYCLE_NSEC	= 10LLU * NSEC_PER_SEC,
++};
++
++enum {
+ 	/* if IOs end up waiting for requests, issue less */
+ 	RQ_WAIT_BUSY_PCT	= 5,
+ 
+@@ -296,9 +301,6 @@ enum {
+ 	/* don't let cmds which take a very long time pin lagging for too long */
+ 	MAX_LAGGING_PERIODS	= 10,
+ 
+-	/* switch iff the conditions are met for longer than this */
+-	AUTOP_CYCLE_NSEC	= 10LLU * NSEC_PER_SEC,
+-
+ 	/*
+ 	 * Count IO size in 4k pages.  The 12bit shift helps keeping
+ 	 * size-proportional components of cost calculation in closer
+-- 
+2.39.0
+
