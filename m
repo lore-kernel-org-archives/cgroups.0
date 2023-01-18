@@ -1,155 +1,54 @@
-From: Yu Kuai <yukuai1@huaweicloud.com>
-Subject: [PATCH -next v2 3/3] blk-cgroup: synchronize pd_free_fn() from blkg_free_workfn() and blkcg_deactivate_policy()
-Date: Wed, 18 Jan 2023 20:31:52 +0800
-Message-ID: <20230118123152.1926314-4-yukuai1@huaweicloud.com>
-References: <20230118123152.1926314-1-yukuai1@huaweicloud.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH] blk-iocost: avoid 64-bit division in ioc_timer_fn
+Date: Wed, 18 Jan 2023 06:42:19 -1000
+Message-ID: <Y8gha8kL5yG3RQ2w@slm.duckdns.org>
+References: <20230118080706.3303186-1-arnd@kernel.org>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
 Return-path: <linux-block-owner@vger.kernel.org>
-In-Reply-To: <20230118123152.1926314-1-yukuai1@huaweicloud.com>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:sender:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=KQ5UR3/Xa0Iypn0NjAFlzAel5UzlsAahE0Mxf3hKvNI=;
+        b=HtEWoLc8/L8ms4jJfUX7yuSxC/Ev6BsvXo78m11rO02Mzvft0bqOU5nHJgEf2x1UOF
+         /frnN6FGr41Nzz9l7f4WNhNmhFM+Hfgqp8pt3ow80dUdKeRavboRhpPEoyCbap8j3Fxy
+         wEocSwLplENYxRNL0PmIkZOLr9oWalRRzl2+xOKKJawaoTvVPMks6Qc17rxKKr3B5d0V
+         qss+BaOxZucT4h29rQah3MOgKACtPm5b+WhTWvXH7xQqoz2v7+pDlfBBlECIGW2XTIIG
+         dx5jRtIW6M5uiMLHssv7ZCc8/7Yre8vncxwYpn2gyCTGVEYlUzpml7Flz0KFVJ1gBlwY
+         zwpg==
+Sender: Tejun Heo <htejun@gmail.com>
+Content-Disposition: inline
+In-Reply-To: <20230118080706.3303186-1-arnd@kernel.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: tj@kernel.org, hch@lst.de, josef@toxicpanda.com, axboe@kernel.dk
-Cc: cgroups@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, yukuai3@huawei.com, yukuai1@huaweicloud.com, yi.zhang@huawei.com, yangerkun@huawei.com
+Content-Transfer-Encoding: 7bit
+To: Arnd Bergmann <arnd@kernel.org>
+Cc: Josef Bacik <josef@toxicpanda.com>, Jens Axboe <axboe@kernel.dk>, Arnd Bergmann <arnd@arndb.de>, Kemeng Shi <shikemeng@huawei.com>, Andreas Herrmann <aherrmann@suse.de>, Yu Kuai <yukuai3@huawei.com>, Chengming Zhou <zhouchengming@bytedance.com>, Jinke Han <hanjinke.666@bytedance.com>, cgroups@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org
 
-From: Yu Kuai <yukuai3@huawei.com>
+On Wed, Jan 18, 2023 at 09:07:01AM +0100, Arnd Bergmann wrote:
+> From: Arnd Bergmann <arnd@arndb.de>
+> 
+> The behavior of 'enum' types has changed in gcc-13, so now the
+> UNBUSY_THR_PCT constant is interpreted as a 64-bit number because
+> it is defined as part of the same enum definition as some other
+> constants that do not fit within a 32-bit integer. This in turn
+> leads to some inefficient code on 32-bit architectures as well
+> as a link error:
+> 
+> arm-linux-gnueabi/bin/arm-linux-gnueabi-ld: block/blk-iocost.o: in function `ioc_timer_fn':
+> blk-iocost.c:(.text+0x68e8): undefined reference to `__aeabi_uldivmod'
+> arm-linux-gnueabi-ld: blk-iocost.c:(.text+0x6908): undefined reference to `__aeabi_uldivmod'
+> 
+> Split the enum definition to keep the 64-bit timing constants in
+> a separate enum type from those constants that can clearly fit
+> within a smaller type.
+> 
+> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
 
-Currently parent pd can be freed before child pd:
+Acked-by: Tejun Heo <tj@kernel.org>
 
-t1: remove cgroup C1
-blkcg_destroy_blkgs
- blkg_destroy
-  list_del_init(&blkg->q_node)
-  // remove blkg from queue list
-  percpu_ref_kill(&blkg->refcnt)
-   blkg_release
-    call_rcu
+Thanks.
 
-t2: from t1
-__blkg_release
- blkg_free
-  schedule_work
-			t4: deactivate policy
-			blkcg_deactivate_policy
-			 pd_free_fn
-			 // parent of C1 is freed first
-t3: from t2
- blkg_free_workfn
-  pd_free_fn
-
-If policy(for example, ioc_timer_fn() from iocost) access parent pd from
-child pd after pd_offline_fn(), then UAF can be triggered.
-
-Fix the problem by delaying 'list_del_init(&blkg->q_node)' from
-blkg_destroy() to blkg_free_workfn(), and use a new disk level mutex to
-protect blkg_free_workfn() and blkcg_deactivate_policy).
-
-Signed-off-by: Yu Kuai <yukuai3@huawei.com>
----
- block/blk-cgroup.c     | 33 +++++++++++++++++++++++++++------
- include/linux/blkdev.h |  1 +
- 2 files changed, 28 insertions(+), 6 deletions(-)
-
-diff --git a/block/blk-cgroup.c b/block/blk-cgroup.c
-index 75f3c4460715..4098e8030e01 100644
---- a/block/blk-cgroup.c
-+++ b/block/blk-cgroup.c
-@@ -118,16 +118,26 @@ static void blkg_free_workfn(struct work_struct *work)
- {
- 	struct blkcg_gq *blkg = container_of(work, struct blkcg_gq,
- 					     free_work);
-+	struct request_queue *q = blkg->q;
- 	int i;
- 
-+	if (q)
-+		mutex_lock(&q->blkcg_mutex);
-+
- 	for (i = 0; i < BLKCG_MAX_POLS; i++)
- 		if (blkg->pd[i])
- 			blkcg_policy[i]->pd_free_fn(blkg->pd[i]);
- 
- 	if (blkg->parent)
- 		blkg_put(blkg->parent);
--	if (blkg->q)
--		blk_put_queue(blkg->q);
-+
-+	if (q) {
-+		if (!list_empty(&blkg->q_node))
-+			list_del_init(&blkg->q_node);
-+		mutex_unlock(&q->blkcg_mutex);
-+		blk_put_queue(q);
-+	}
-+
- 	free_percpu(blkg->iostat_cpu);
- 	percpu_ref_exit(&blkg->refcnt);
- 	kfree(blkg);
-@@ -462,9 +472,14 @@ static void blkg_destroy(struct blkcg_gq *blkg)
- 	lockdep_assert_held(&blkg->q->queue_lock);
- 	lockdep_assert_held(&blkcg->lock);
- 
--	/* Something wrong if we are trying to remove same group twice */
--	WARN_ON_ONCE(list_empty(&blkg->q_node));
--	WARN_ON_ONCE(hlist_unhashed(&blkg->blkcg_node));
-+	/*
-+	 * blkg is removed from queue list in blkg_free_workfn(), hence this
-+	 * function can be called from blkcg_destroy_blkgs() first, and then
-+	 * before blkg_free_workfn(), this function can be called again in
-+	 * blkg_destroy_all().
-+	 */
-+	if (hlist_unhashed(&blkg->blkcg_node))
-+		return;
- 
- 	for (i = 0; i < BLKCG_MAX_POLS; i++) {
- 		struct blkcg_policy *pol = blkcg_policy[i];
-@@ -478,8 +493,11 @@ static void blkg_destroy(struct blkcg_gq *blkg)
- 
- 	blkg->online = false;
- 
-+	/*
-+	 * Delay deleting list blkg->q_node to blkg_free_workfn() to synchronize
-+	 * pd_free_fn() from blkg_free_workfn() and blkcg_deactivate_policy().
-+	 */
- 	radix_tree_delete(&blkcg->blkg_tree, blkg->q->id);
--	list_del_init(&blkg->q_node);
- 	hlist_del_init_rcu(&blkg->blkcg_node);
- 
- 	/*
-@@ -1280,6 +1298,7 @@ int blkcg_init_disk(struct gendisk *disk)
- 	int ret;
- 
- 	INIT_LIST_HEAD(&q->blkg_list);
-+	mutex_init(&q->blkcg_mutex);
- 
- 	new_blkg = blkg_alloc(&blkcg_root, disk, GFP_KERNEL);
- 	if (!new_blkg)
-@@ -1520,6 +1539,7 @@ void blkcg_deactivate_policy(struct request_queue *q,
- 	if (queue_is_mq(q))
- 		blk_mq_freeze_queue(q);
- 
-+	mutex_lock(&q->blkcg_mutex);
- 	spin_lock_irq(&q->queue_lock);
- 
- 	__clear_bit(pol->plid, q->blkcg_pols);
-@@ -1538,6 +1558,7 @@ void blkcg_deactivate_policy(struct request_queue *q,
- 	}
- 
- 	spin_unlock_irq(&q->queue_lock);
-+	mutex_unlock(&q->blkcg_mutex);
- 
- 	if (queue_is_mq(q))
- 		blk_mq_unfreeze_queue(q);
-diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
-index b87ed829ab94..53ae0a7fe377 100644
---- a/include/linux/blkdev.h
-+++ b/include/linux/blkdev.h
-@@ -485,6 +485,7 @@ struct request_queue {
- 	DECLARE_BITMAP		(blkcg_pols, BLKCG_MAX_POLS);
- 	struct blkcg_gq		*root_blkg;
- 	struct list_head	blkg_list;
-+	struct mutex		blkcg_mutex;
- #endif
- 
- 	struct queue_limits	limits;
 -- 
-2.31.1
-
+tejun
