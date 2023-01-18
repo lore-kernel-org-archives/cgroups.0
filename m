@@ -1,10 +1,12 @@
 From: Yu Kuai <yukuai1@huaweicloud.com>
-Subject: [PATCH -next v2 0/3] blk-cgroup: make sure pd_free_fn() is called in order
-Date: Wed, 18 Jan 2023 20:31:49 +0800
-Message-ID: <20230118123152.1926314-1-yukuai1@huaweicloud.com>
+Subject: [PATCH -next v2 1/3] blk-cgroup: dropping parent refcount after pd_free_fn() is done
+Date: Wed, 18 Jan 2023 20:31:50 +0800
+Message-ID: <20230118123152.1926314-2-yukuai1@huaweicloud.com>
+References: <20230118123152.1926314-1-yukuai1@huaweicloud.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-block-owner@vger.kernel.org>
+In-Reply-To: <20230118123152.1926314-1-yukuai1@huaweicloud.com>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 To: tj@kernel.org, hch@lst.de, josef@toxicpanda.com, axboe@kernel.dk
@@ -12,30 +14,49 @@ Cc: cgroups@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kern
 
 From: Yu Kuai <yukuai3@huawei.com>
 
-The problem was found in iocost orignally([1]) that ioc can be freed in
-ioc_pd_free(). And later we found that there are more problem in
-iocost([2]).
+Some cgroup policies will access parent pd through child pd even
+after pd_offline_fn() is done. If pd_free_fn() for parent is called
+before child, then UAF can be triggered. Hence it's better to guarantee
+the order of pd_free_fn().
 
-After some discussion, as suggested by Tejun([3]), we decide to fix the
-problem that parent pd can be freed before child pd in cgroup layer
-first. And the problem in [1] will be fixed later if this patchset is
-applied.
+Currently refcount of parent blkg is dropped in __blkg_release(), which
+is before pd_free_fn() is called in blkg_free_work_fn() while
+blkg_free_work_fn() is called asynchronously.
 
-[1] https://lore.kernel.org/all/20221130132156.2836184-8-linan122@huawei.com/
-[2] https://lore.kernel.org/all/aa924294-2f54-1b53-fc6e-e4f8fa019b14@huaweicloud.com/
-[3] https://lore.kernel.org/all/20221227125502.541931-1-yukuai1@huaweicloud.com/
+This patch make sure pd_free_fn() called from removing cgroup is ordered
+by delaying dropping parent refcount after calling pd_free_fn() for
+child.
 
-Yu Kuai (3):
-  blk-cgroup: dropping parent refcount after pd_free_fn() is done
-  blk-cgroup: support to track if policy is online
-  blk-cgroup: synchronize pd_free_fn() from blkg_free_workfn() and
-    blkcg_deactivate_policy()
+BTW, pd_free_fn() will also be called from blkcg_deactivate_policy()
+from deleting device, and following patches will guarantee the order.
 
- block/blk-cgroup.c     | 61 +++++++++++++++++++++++++++++++-----------
- block/blk-cgroup.h     |  1 +
- include/linux/blkdev.h |  1 +
- 3 files changed, 48 insertions(+), 15 deletions(-)
+Signed-off-by: Yu Kuai <yukuai3@huawei.com>
+---
+ block/blk-cgroup.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
+diff --git a/block/blk-cgroup.c b/block/blk-cgroup.c
+index 4c94a6560f62..c6d7d1fce65a 100644
+--- a/block/blk-cgroup.c
++++ b/block/blk-cgroup.c
+@@ -124,6 +124,8 @@ static void blkg_free_workfn(struct work_struct *work)
+ 		if (blkg->pd[i])
+ 			blkcg_policy[i]->pd_free_fn(blkg->pd[i]);
+ 
++	if (blkg->parent)
++		blkg_put(blkg->parent);
+ 	if (blkg->q)
+ 		blk_put_queue(blkg->q);
+ 	free_percpu(blkg->iostat_cpu);
+@@ -158,8 +160,6 @@ static void __blkg_release(struct rcu_head *rcu)
+ 
+ 	/* release the blkcg and parent blkg refs this blkg has been holding */
+ 	css_put(&blkg->blkcg->css);
+-	if (blkg->parent)
+-		blkg_put(blkg->parent);
+ 	blkg_free(blkg);
+ }
+ 
 -- 
 2.31.1
 
