@@ -1,7 +1,7 @@
 From: Yu Kuai <yukuai1@huaweicloud.com>
-Subject: [PATCH -next v2 2/3] blk-cgroup: support to track if policy is online
-Date: Wed, 18 Jan 2023 20:31:51 +0800
-Message-ID: <20230118123152.1926314-3-yukuai1@huaweicloud.com>
+Subject: [PATCH -next v2 3/3] blk-cgroup: synchronize pd_free_fn() from blkg_free_workfn() and blkcg_deactivate_policy()
+Date: Wed, 18 Jan 2023 20:31:52 +0800
+Message-ID: <20230118123152.1926314-4-yukuai1@huaweicloud.com>
 References: <20230118123152.1926314-1-yukuai1@huaweicloud.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
@@ -14,114 +14,142 @@ Cc: cgroups@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kern
 
 From: Yu Kuai <yukuai3@huawei.com>
 
-A new field 'online' is added to blkg_policy_date to fix following
-2 problem:
+Currently parent pd can be freed before child pd:
 
-1) In blkcg_activate_policy(), if pd_alloc_fn() with 'GFP_NOWAIT'
-   failed, 'queue_lock' will be dropped and pd_alloc_fn() will try again
-   without 'GFP_NOWAIT'. In the meantime, remove cgroup can race with
-   it, and pd_offline_fn() will be called without pd_init_fn() and
-   pd_online_fn(). This way null-ptr-deference can be triggered.
+t1: remove cgroup C1
+blkcg_destroy_blkgs
+ blkg_destroy
+  list_del_init(&blkg->q_node)
+  // remove blkg from queue list
+  percpu_ref_kill(&blkg->refcnt)
+   blkg_release
+    call_rcu
 
-2) In order to synchronize pd_free_fn() from blkg_free_workfn() and
-   blkcg_deactivate_policy(), 'list_del_init(&blkg->q_node)' will be
-   delayed to blkg_free_workfn(), hence pd_offline_fn() can be called
-   first in blkg_destroy(), and then blkcg_deactivate_policy() will
-   call it again, we must prevent it.
+t2: from t1
+__blkg_release
+ blkg_free
+  schedule_work
+			t4: deactivate policy
+			blkcg_deactivate_policy
+			 pd_free_fn
+			 // parent of C1 is freed first
+t3: from t2
+ blkg_free_workfn
+  pd_free_fn
 
-The new field 'online' will be set after pd_online_fn() and will be
-cleared after pd_offline_fn(), in the meantime pd_offline_fn() will only
-be called if 'online' is set.
+If policy(for example, ioc_timer_fn() from iocost) access parent pd from
+child pd after pd_offline_fn(), then UAF can be triggered.
+
+Fix the problem by delaying 'list_del_init(&blkg->q_node)' from
+blkg_destroy() to blkg_free_workfn(), and use a new disk level mutex to
+protect blkg_free_workfn() and blkcg_deactivate_policy).
 
 Signed-off-by: Yu Kuai <yukuai3@huawei.com>
 ---
- block/blk-cgroup.c | 24 +++++++++++++++++-------
- block/blk-cgroup.h |  1 +
- 2 files changed, 18 insertions(+), 7 deletions(-)
+ block/blk-cgroup.c     | 33 +++++++++++++++++++++++++++------
+ include/linux/blkdev.h |  1 +
+ 2 files changed, 28 insertions(+), 6 deletions(-)
 
 diff --git a/block/blk-cgroup.c b/block/blk-cgroup.c
-index c6d7d1fce65a..75f3c4460715 100644
+index 75f3c4460715..4098e8030e01 100644
 --- a/block/blk-cgroup.c
 +++ b/block/blk-cgroup.c
-@@ -288,6 +288,7 @@ static struct blkcg_gq *blkg_alloc(struct blkcg *blkcg, struct gendisk *disk,
- 		blkg->pd[i] = pd;
- 		pd->blkg = blkg;
- 		pd->plid = i;
-+		pd->online = false;
- 	}
+@@ -118,16 +118,26 @@ static void blkg_free_workfn(struct work_struct *work)
+ {
+ 	struct blkcg_gq *blkg = container_of(work, struct blkcg_gq,
+ 					     free_work);
++	struct request_queue *q = blkg->q;
+ 	int i;
  
- 	return blkg;
-@@ -359,8 +360,11 @@ static struct blkcg_gq *blkg_create(struct blkcg *blkcg, struct gendisk *disk,
- 		for (i = 0; i < BLKCG_MAX_POLS; i++) {
- 			struct blkcg_policy *pol = blkcg_policy[i];
++	if (q)
++		mutex_lock(&q->blkcg_mutex);
++
+ 	for (i = 0; i < BLKCG_MAX_POLS; i++)
+ 		if (blkg->pd[i])
+ 			blkcg_policy[i]->pd_free_fn(blkg->pd[i]);
  
--			if (blkg->pd[i] && pol->pd_online_fn)
--				pol->pd_online_fn(blkg->pd[i]);
-+			if (blkg->pd[i]) {
-+				if (pol->pd_online_fn)
-+					pol->pd_online_fn(blkg->pd[i]);
-+				blkg->pd[i]->online = true;
-+			}
- 		}
- 	}
- 	blkg->online = true;
-@@ -465,8 +469,11 @@ static void blkg_destroy(struct blkcg_gq *blkg)
+ 	if (blkg->parent)
+ 		blkg_put(blkg->parent);
+-	if (blkg->q)
+-		blk_put_queue(blkg->q);
++
++	if (q) {
++		if (!list_empty(&blkg->q_node))
++			list_del_init(&blkg->q_node);
++		mutex_unlock(&q->blkcg_mutex);
++		blk_put_queue(q);
++	}
++
+ 	free_percpu(blkg->iostat_cpu);
+ 	percpu_ref_exit(&blkg->refcnt);
+ 	kfree(blkg);
+@@ -462,9 +472,14 @@ static void blkg_destroy(struct blkcg_gq *blkg)
+ 	lockdep_assert_held(&blkg->q->queue_lock);
+ 	lockdep_assert_held(&blkcg->lock);
+ 
+-	/* Something wrong if we are trying to remove same group twice */
+-	WARN_ON_ONCE(list_empty(&blkg->q_node));
+-	WARN_ON_ONCE(hlist_unhashed(&blkg->blkcg_node));
++	/*
++	 * blkg is removed from queue list in blkg_free_workfn(), hence this
++	 * function can be called from blkcg_destroy_blkgs() first, and then
++	 * before blkg_free_workfn(), this function can be called again in
++	 * blkg_destroy_all().
++	 */
++	if (hlist_unhashed(&blkg->blkcg_node))
++		return;
+ 
  	for (i = 0; i < BLKCG_MAX_POLS; i++) {
  		struct blkcg_policy *pol = blkcg_policy[i];
- 
--		if (blkg->pd[i] && pol->pd_offline_fn)
--			pol->pd_offline_fn(blkg->pd[i]);
-+		if (blkg->pd[i] && blkg->pd[i]->online) {
-+			if (pol->pd_offline_fn)
-+				pol->pd_offline_fn(blkg->pd[i]);
-+			blkg->pd[i]->online = false;
-+		}
- 	}
+@@ -478,8 +493,11 @@ static void blkg_destroy(struct blkcg_gq *blkg)
  
  	blkg->online = false;
-@@ -1448,6 +1455,7 @@ int blkcg_activate_policy(struct request_queue *q,
- 		blkg->pd[pol->plid] = pd;
- 		pd->blkg = blkg;
- 		pd->plid = pol->plid;
-+		pd->online = false;
+ 
++	/*
++	 * Delay deleting list blkg->q_node to blkg_free_workfn() to synchronize
++	 * pd_free_fn() from blkg_free_workfn() and blkcg_deactivate_policy().
++	 */
+ 	radix_tree_delete(&blkcg->blkg_tree, blkg->q->id);
+-	list_del_init(&blkg->q_node);
+ 	hlist_del_init_rcu(&blkg->blkcg_node);
+ 
+ 	/*
+@@ -1280,6 +1298,7 @@ int blkcg_init_disk(struct gendisk *disk)
+ 	int ret;
+ 
+ 	INIT_LIST_HEAD(&q->blkg_list);
++	mutex_init(&q->blkcg_mutex);
+ 
+ 	new_blkg = blkg_alloc(&blkcg_root, disk, GFP_KERNEL);
+ 	if (!new_blkg)
+@@ -1520,6 +1539,7 @@ void blkcg_deactivate_policy(struct request_queue *q,
+ 	if (queue_is_mq(q))
+ 		blk_mq_freeze_queue(q);
+ 
++	mutex_lock(&q->blkcg_mutex);
+ 	spin_lock_irq(&q->queue_lock);
+ 
+ 	__clear_bit(pol->plid, q->blkcg_pols);
+@@ -1538,6 +1558,7 @@ void blkcg_deactivate_policy(struct request_queue *q,
  	}
  
- 	/* all allocated, init in the same order */
-@@ -1455,9 +1463,11 @@ int blkcg_activate_policy(struct request_queue *q,
- 		list_for_each_entry_reverse(blkg, &q->blkg_list, q_node)
- 			pol->pd_init_fn(blkg->pd[pol->plid]);
+ 	spin_unlock_irq(&q->queue_lock);
++	mutex_unlock(&q->blkcg_mutex);
  
--	if (pol->pd_online_fn)
--		list_for_each_entry_reverse(blkg, &q->blkg_list, q_node)
-+	list_for_each_entry_reverse(blkg, &q->blkg_list, q_node) {
-+		if (pol->pd_online_fn)
- 			pol->pd_online_fn(blkg->pd[pol->plid]);
-+		blkg->pd[pol->plid]->online = true;
-+	}
+ 	if (queue_is_mq(q))
+ 		blk_mq_unfreeze_queue(q);
+diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
+index b87ed829ab94..53ae0a7fe377 100644
+--- a/include/linux/blkdev.h
++++ b/include/linux/blkdev.h
+@@ -485,6 +485,7 @@ struct request_queue {
+ 	DECLARE_BITMAP		(blkcg_pols, BLKCG_MAX_POLS);
+ 	struct blkcg_gq		*root_blkg;
+ 	struct list_head	blkg_list;
++	struct mutex		blkcg_mutex;
+ #endif
  
- 	__set_bit(pol->plid, q->blkcg_pols);
- 	ret = 0;
-@@ -1519,7 +1529,7 @@ void blkcg_deactivate_policy(struct request_queue *q,
- 
- 		spin_lock(&blkcg->lock);
- 		if (blkg->pd[pol->plid]) {
--			if (pol->pd_offline_fn)
-+			if (blkg->pd[pol->plid]->online && pol->pd_offline_fn)
- 				pol->pd_offline_fn(blkg->pd[pol->plid]);
- 			pol->pd_free_fn(blkg->pd[pol->plid]);
- 			blkg->pd[pol->plid] = NULL;
-diff --git a/block/blk-cgroup.h b/block/blk-cgroup.h
-index 1e94e404eaa8..b13ee84f358e 100644
---- a/block/blk-cgroup.h
-+++ b/block/blk-cgroup.h
-@@ -135,6 +135,7 @@ struct blkg_policy_data {
- 	/* the blkg and policy id this per-policy data belongs to */
- 	struct blkcg_gq			*blkg;
- 	int				plid;
-+	bool				online;
- };
- 
- /*
+ 	struct queue_limits	limits;
 -- 
 2.31.1
 
