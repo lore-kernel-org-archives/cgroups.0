@@ -1,49 +1,51 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: switch blk-cgroup to work on gendisk
-Date: Thu, 19 Jan 2023 07:13:51 -1000
-Message-ID: <Y8l6TySjEuGT9Q+5@slm.duckdns.org>
-References: <20230117081257.3089859-1-hch@lst.de>
- <Y8l34/qeHPLV4rKJ@slm.duckdns.org>
- <20230119170526.GA5050@lst.de>
+From: Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>
+Subject: Re: [PATCH -next v3 0/3] blk-cgroup: make sure pd_free_fn() is called
+ in order
+Date: Thu, 19 Jan 2023 11:54:00 -0700
+Message-ID: <bd1c347b-cbf8-3917-401a-ed85c6ccb956@kernel.dk>
+References: <20230119110350.2287325-1-yukuai1@huaweicloud.com>
 Mime-Version: 1.0
+Content-Transfer-Encoding: quoted-printable
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:sender:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=HFfg4vjHMlgAnxwHU0IZDYXZDE9o/oiWwSlrAYq3R5g=;
-        b=X+pv9m4dyfqTTh7NZfU1L4amF07biWIPm63cC9fNYYpkbNI0qpBHzcRDEv4T/Ejr6i
-         A8E2+JfZ8da4ELFsiatHjimOU/8/kDX4+Q2aI4BH5PlPLP/vNFa9ivtY4/SeqnH4eQt7
-         3e5QyZ3SiaUZmmuYD2krSfow7EB8PfehPb2FJ6/jkd4AvvjmG/wMjAWv6r4mxsNPgLQ+
-         YEk2ItBSLWk4QGxz9SHfCz73gwCT0SaDHLePGGsb//2+m8NuJX4oBZtDS2poXWWNLHfE
-         CesCZu9SCOOJuAaxeea6v6eSExq26OGrje6hH+Q7kSvUlpXYKXyfvWO0f+X1BxpOsUGR
-         IX2Q==
-Sender: Tejun Heo <htejun-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <20230119170526.GA5050-jcswGhMUV9g@public.gmane.org>
+        d=kernel-dk.20210112.gappssmtp.com; s=20210112;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=sa8Oz+7EARYAtQ0WLnCqgtp/WsCMus/3I6/+CNJ1OPw=;
+        b=sPzq1KJuKnyasXRpxYhl2vyV/bYi9yVZ56Vqego/VjuHdzz/5dWCi47UX2CUDpoDNC
+         CcC5wYt/hUVVEpFkHtyZ89U3S4NTWky0LrDtrtiFDdFrjZELyHOpVBHxbNELtKnQ2iw4
+         nr1fs0E0gGKpdnwRST07vzvNPYUzWsF4Vi012BPK68GyqhQejq7mymG62LbNctNk1H5z
+         ANiECjUYn3uY98+hJ+kIU7gfPJH2vu/HOgNnNuH23TbDVW4pbv+weD5qebAzq+j5ja3T
+         n2GpBO55V9L6Il8+jeulDNzuo2GKi68Gu59deOK6KEDsKNVjB9594cAWwGeunxMF6FhC
+         vCiQ==
+Content-Language: en-US
+In-Reply-To: <20230119110350.2287325-1-yukuai1-XF6JlduFytWkHkcT6e4Xnw@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
-Cc: Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, Josef Bacik <josef-DigfWCa+lFGyeJad7bwFQA@public.gmane.org>, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Type: text/plain; charset="windows-1252"
+To: Yu Kuai <yukuai1-XF6JlduFytWkHkcT6e4Xnw@public.gmane.org>, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, hch-jcswGhMUV9g@public.gmane.org, josef-DigfWCa+lFGyeJad7bwFQA@public.gmane.org
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, yi.zhang-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, yangerkun-hv44wF8Li93QT0dZR+AlfA@public.gmane.org
 
-On Thu, Jan 19, 2023 at 06:05:26PM +0100, Christoph Hellwig wrote:
-> Yes, it can.  Not sure if my sentence was unclear, but:
-> 
->  - everything doing non-passthrough I/O only should be in the gendisk
->  - everything related to blk-mq, including infrastruture for passthrough
->    should remain in the request_queue
-> 
-> The idea that the request_queue will eventually become a blk-mq only
-> data structure and not exist (or just have a very leight weight stub)
-> for bio based drivers.
+On 1/19/23 4:03=E2=80=AFAM, Yu Kuai wrote:
+> From: Yu Kuai <yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+>=20
+> Changes in v3:
+>  - add ack tag from Tejun for patch 1,2
+>  - as suggested by Tejun, update commit message and comments in patch 3
+>=20
+> The problem was found in iocost orignally([1]) that ioc can be freed in
+> ioc_pd_free(). And later we found that there are more problem in
+> iocost([2]).
+>=20
+> After some discussion, as suggested by Tejun([3]), we decide to fix the
+> problem that parent pd can be freed before child pd in cgroup layer
+> first. And the problem in [1] will be fixed later if this patchset is
+> applied.
 
-That makes sense. I was thinking about it the other way around. Yeah, genhd
-would exist for everybody. request_queue only for the ones which are
-actually handling rq's.
+Doesn't apply against for-6.3/block (or linux-next or my for-next, for
+that matter). Can you resend a tested one against for-6.3/block?
 
-Thanks.
+--=20
+Jens Axboe
 
--- 
-tejun
+
