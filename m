@@ -1,19 +1,23 @@
-From: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
-Subject: Re: [PATCH -next v3 2/3] blk-cgroup: support to track if policy is
- online
-Date: Thu, 19 Jan 2023 17:42:07 +0100
-Message-ID: <20230119164207.GB3332@lst.de>
-References: <20230119110350.2287325-1-yukuai1@huaweicloud.com> <20230119110350.2287325-3-yukuai1@huaweicloud.com>
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH -next v3 3/3] blk-cgroup: synchronize pd_free_fn() from
+ blkg_free_workfn() and blkcg_deactivate_policy()
+Date: Thu, 19 Jan 2023 17:43:45 +0100
+Message-ID: <20230119164345.GC3332@lst.de>
+References: <20230119110350.2287325-1-yukuai1@huaweicloud.com> <20230119110350.2287325-4-yukuai1@huaweicloud.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <linux-block-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <20230119110350.2287325-3-yukuai1-XF6JlduFytWkHkcT6e4Xnw@public.gmane.org>
+In-Reply-To: <20230119110350.2287325-4-yukuai1@huaweicloud.com>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Yu Kuai <yukuai1-XF6JlduFytWkHkcT6e4Xnw@public.gmane.org>
-Cc: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, hch-jcswGhMUV9g@public.gmane.org, josef-DigfWCa+lFGyeJad7bwFQA@public.gmane.org, axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, yi.zhang-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, yangerkun-hv44wF8Li93QT0dZR+AlfA@public.gmane.org
+To: Yu Kuai <yukuai1@huaweicloud.com>
+Cc: tj@kernel.org, hch@lst.de, josef@toxicpanda.com, axboe@kernel.dk, cgroups@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, yukuai3@huawei.com, yi.zhang@huawei.com, yangerkun@huawei.com
 
-Looks good:
+The this change itself looks good, but it will clash badly with my
+"switch blk-cgroup to work on gendisk" series:
 
-Reviewed-by: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+
+Can I get some reviews for that series once I rebase and repost it
+after this series is merged?
