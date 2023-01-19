@@ -1,128 +1,63 @@
-From: Yu Kuai <yukuai1@huaweicloud.com>
-Subject: [PATCH -next v3 2/3] blk-cgroup: support to track if policy is online
-Date: Thu, 19 Jan 2023 19:03:49 +0800
-Message-ID: <20230119110350.2287325-3-yukuai1@huaweicloud.com>
+From: Yu Kuai <yukuai1-XF6JlduFytWkHkcT6e4Xnw@public.gmane.org>
+Subject: [PATCH -next v3 1/3] blk-cgroup: dropping parent refcount after pd_free_fn() is done
+Date: Thu, 19 Jan 2023 19:03:48 +0800
+Message-ID: <20230119110350.2287325-2-yukuai1@huaweicloud.com>
 References: <20230119110350.2287325-1-yukuai1@huaweicloud.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Return-path: <linux-block-owner@vger.kernel.org>
-In-Reply-To: <20230119110350.2287325-1-yukuai1@huaweicloud.com>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <20230119110350.2287325-1-yukuai1-XF6JlduFytWkHkcT6e4Xnw@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: tj@kernel.org, hch@lst.de, josef@toxicpanda.com, axboe@kernel.dk
-Cc: cgroups@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, yukuai3@huawei.com, yukuai1@huaweicloud.com, yi.zhang@huawei.com, yangerkun@huawei.com
+To: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, hch-jcswGhMUV9g@public.gmane.org, josef-DigfWCa+lFGyeJad7bwFQA@public.gmane.org, axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, yukuai1-XF6JlduFytWkHkcT6e4Xnw@public.gmane.org, yi.zhang-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, yangerkun-hv44wF8Li93QT0dZR+AlfA@public.gmane.org
 
-From: Yu Kuai <yukuai3@huawei.com>
+From: Yu Kuai <yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 
-A new field 'online' is added to blkg_policy_data to fix following
-2 problem:
+Some cgroup policies will access parent pd through child pd even
+after pd_offline_fn() is done. If pd_free_fn() for parent is called
+before child, then UAF can be triggered. Hence it's better to guarantee
+the order of pd_free_fn().
 
-1) In blkcg_activate_policy(), if pd_alloc_fn() with 'GFP_NOWAIT'
-   failed, 'queue_lock' will be dropped and pd_alloc_fn() will try again
-   without 'GFP_NOWAIT'. In the meantime, remove cgroup can race with
-   it, and pd_offline_fn() will be called without pd_init_fn() and
-   pd_online_fn(). This way null-ptr-deference can be triggered.
+Currently refcount of parent blkg is dropped in __blkg_release(), which
+is before pd_free_fn() is called in blkg_free_work_fn() while
+blkg_free_work_fn() is called asynchronously.
 
-2) In order to synchronize pd_free_fn() from blkg_free_workfn() and
-   blkcg_deactivate_policy(), 'list_del_init(&blkg->q_node)' will be
-   delayed to blkg_free_workfn(), hence pd_offline_fn() can be called
-   first in blkg_destroy(), and then blkcg_deactivate_policy() will
-   call it again, we must prevent it.
+This patch make sure pd_free_fn() called from removing cgroup is ordered
+by delaying dropping parent refcount after calling pd_free_fn() for
+child.
 
-The new field 'online' will be set after pd_online_fn() and will be
-cleared after pd_offline_fn(), in the meantime pd_offline_fn() will only
-be called if 'online' is set.
+BTW, pd_free_fn() will also be called from blkcg_deactivate_policy()
+from deleting device, and following patches will guarantee the order.
 
-Signed-off-by: Yu Kuai <yukuai3@huawei.com>
-Acked-by: Tejun Heo <tj@kernel.org>
+Signed-off-by: Yu Kuai <yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Acked-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 ---
- block/blk-cgroup.c | 24 +++++++++++++++++-------
- block/blk-cgroup.h |  1 +
- 2 files changed, 18 insertions(+), 7 deletions(-)
+ block/blk-cgroup.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
 diff --git a/block/blk-cgroup.c b/block/blk-cgroup.c
-index c6d7d1fce65a..75f3c4460715 100644
+index 4c94a6560f62..c6d7d1fce65a 100644
 --- a/block/blk-cgroup.c
 +++ b/block/blk-cgroup.c
-@@ -288,6 +288,7 @@ static struct blkcg_gq *blkg_alloc(struct blkcg *blkcg, struct gendisk *disk,
- 		blkg->pd[i] = pd;
- 		pd->blkg = blkg;
- 		pd->plid = i;
-+		pd->online = false;
- 	}
+@@ -124,6 +124,8 @@ static void blkg_free_workfn(struct work_struct *work)
+ 		if (blkg->pd[i])
+ 			blkcg_policy[i]->pd_free_fn(blkg->pd[i]);
  
- 	return blkg;
-@@ -359,8 +360,11 @@ static struct blkcg_gq *blkg_create(struct blkcg *blkcg, struct gendisk *disk,
- 		for (i = 0; i < BLKCG_MAX_POLS; i++) {
- 			struct blkcg_policy *pol = blkcg_policy[i];
++	if (blkg->parent)
++		blkg_put(blkg->parent);
+ 	if (blkg->q)
+ 		blk_put_queue(blkg->q);
+ 	free_percpu(blkg->iostat_cpu);
+@@ -158,8 +160,6 @@ static void __blkg_release(struct rcu_head *rcu)
  
--			if (blkg->pd[i] && pol->pd_online_fn)
--				pol->pd_online_fn(blkg->pd[i]);
-+			if (blkg->pd[i]) {
-+				if (pol->pd_online_fn)
-+					pol->pd_online_fn(blkg->pd[i]);
-+				blkg->pd[i]->online = true;
-+			}
- 		}
- 	}
- 	blkg->online = true;
-@@ -465,8 +469,11 @@ static void blkg_destroy(struct blkcg_gq *blkg)
- 	for (i = 0; i < BLKCG_MAX_POLS; i++) {
- 		struct blkcg_policy *pol = blkcg_policy[i];
+ 	/* release the blkcg and parent blkg refs this blkg has been holding */
+ 	css_put(&blkg->blkcg->css);
+-	if (blkg->parent)
+-		blkg_put(blkg->parent);
+ 	blkg_free(blkg);
+ }
  
--		if (blkg->pd[i] && pol->pd_offline_fn)
--			pol->pd_offline_fn(blkg->pd[i]);
-+		if (blkg->pd[i] && blkg->pd[i]->online) {
-+			if (pol->pd_offline_fn)
-+				pol->pd_offline_fn(blkg->pd[i]);
-+			blkg->pd[i]->online = false;
-+		}
- 	}
- 
- 	blkg->online = false;
-@@ -1448,6 +1455,7 @@ int blkcg_activate_policy(struct request_queue *q,
- 		blkg->pd[pol->plid] = pd;
- 		pd->blkg = blkg;
- 		pd->plid = pol->plid;
-+		pd->online = false;
- 	}
- 
- 	/* all allocated, init in the same order */
-@@ -1455,9 +1463,11 @@ int blkcg_activate_policy(struct request_queue *q,
- 		list_for_each_entry_reverse(blkg, &q->blkg_list, q_node)
- 			pol->pd_init_fn(blkg->pd[pol->plid]);
- 
--	if (pol->pd_online_fn)
--		list_for_each_entry_reverse(blkg, &q->blkg_list, q_node)
-+	list_for_each_entry_reverse(blkg, &q->blkg_list, q_node) {
-+		if (pol->pd_online_fn)
- 			pol->pd_online_fn(blkg->pd[pol->plid]);
-+		blkg->pd[pol->plid]->online = true;
-+	}
- 
- 	__set_bit(pol->plid, q->blkcg_pols);
- 	ret = 0;
-@@ -1519,7 +1529,7 @@ void blkcg_deactivate_policy(struct request_queue *q,
- 
- 		spin_lock(&blkcg->lock);
- 		if (blkg->pd[pol->plid]) {
--			if (pol->pd_offline_fn)
-+			if (blkg->pd[pol->plid]->online && pol->pd_offline_fn)
- 				pol->pd_offline_fn(blkg->pd[pol->plid]);
- 			pol->pd_free_fn(blkg->pd[pol->plid]);
- 			blkg->pd[pol->plid] = NULL;
-diff --git a/block/blk-cgroup.h b/block/blk-cgroup.h
-index 1e94e404eaa8..b13ee84f358e 100644
---- a/block/blk-cgroup.h
-+++ b/block/blk-cgroup.h
-@@ -135,6 +135,7 @@ struct blkg_policy_data {
- 	/* the blkg and policy id this per-policy data belongs to */
- 	struct blkcg_gq			*blkg;
- 	int				plid;
-+	bool				online;
- };
- 
- /*
 -- 
 2.31.1
 
