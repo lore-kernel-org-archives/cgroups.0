@@ -1,196 +1,128 @@
-From: "Huang, Ying" <ying.huang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
-Subject: Re: Proactive reclaim/demote discussion (was Re: [PATCH] Revert
- "mm: add nodes= arg to memory.reclaim")
-Date: Thu, 19 Jan 2023 16:29:33 +0800
-Message-ID: <87a62fdj0y.fsf@yhuang6-desk2.ccr.corp.intel.com>
-References: <20221202223533.1785418-1-almasrymina@google.com>
-        <Y5bsmpCyeryu3Zz1@dhcp22.suse.cz> <Y5xASNe1x8cusiTx@dhcp22.suse.cz>
-        <20221216101820.3f4a370af2c93d3c2e78ed8a@linux-foundation.org>
-        <Y52Scge3ynvn/mB4@dhcp22.suse.cz>
-        <20221219144252.f3da256e75e176905346b4d1@linux-foundation.org>
-        <Y7PpYsbv1xC6m/Hu@dhcp22.suse.cz>
-        <87lemiitdd.fsf_-_@yhuang6-desk2.ccr.corp.intel.com>
-        <Y8gqkub3AM6c+Z5y@dhcp22.suse.cz>
+From: Yu Kuai <yukuai1@huaweicloud.com>
+Subject: [PATCH -next v3 2/3] blk-cgroup: support to track if policy is online
+Date: Thu, 19 Jan 2023 19:03:49 +0800
+Message-ID: <20230119110350.2287325-3-yukuai1@huaweicloud.com>
+References: <20230119110350.2287325-1-yukuai1@huaweicloud.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1674117040; x=1705653040;
-  h=from:to:cc:subject:references:date:in-reply-to:
-   message-id:mime-version;
-  bh=LxcRD6HtB+g61OccydTNj4VaTJvaQZCVLDO3oTLNvDo=;
-  b=Yo8OWacdV5VyAA28nuKCWPqrUuKpurkwTynHun6DX4vRWBjbZm1WlhwU
-   UyBGtrprcdqBfzni5UI7OEaeIYEbaD/LctX4siQrJGih3EL8Ne6tRdGh0
-   jeo8sBkLXc65VGugEXzRvD7rik0S0eS0bLmIADye/Pl7yAtvVukoSQRi3
-   FQai+gOLJJZAVqpzmYbCXgA7ZewfWKnlPH336QWvmWOdD3nmMXzWwxxEg
-   0kWTYAXP554lhH5CtIcoTrU3aL2U4fFaQDPCDOoUVksn8/jCfPMEQPUg5
-   TdYpXi75mMfRKolPAxbOmevQuasPo5DUEyFr5jgzNmlvgLnRxAf7mHmHi
-   A==;
-In-Reply-To: <Y8gqkub3AM6c+Z5y-2MMpYkNvuYDjFM9bn6wA6Q@public.gmane.org> (Michal Hocko's message of
-        "Wed, 18 Jan 2023 18:21:22 +0100")
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-block-owner@vger.kernel.org>
+In-Reply-To: <20230119110350.2287325-1-yukuai1@huaweicloud.com>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
-Cc: Mina Almasry <almasrymina-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Yang Shi <yang.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>, Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, weixugc-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, Tim Chen <tim.c.chen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Jonathan Corbet <corbet-T1hC0tSOHrs@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, fvdl-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, bagasdotme-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Yuanchu Xie <yuanchu-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+To: tj@kernel.org, hch@lst.de, josef@toxicpanda.com, axboe@kernel.dk
+Cc: cgroups@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, yukuai3@huawei.com, yukuai1@huaweicloud.com, yi.zhang@huawei.com, yangerkun@huawei.com
 
-Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org> writes:
+From: Yu Kuai <yukuai3@huawei.com>
 
-> On Wed 04-01-23 16:41:50, Huang, Ying wrote:
->> Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org> writes:
->> 
->> [snip]
->> 
->> > This really requires more discussion.
->> 
->> Let's start the discussion with some summary.
->> 
->> Requirements:
->> 
->> - Proactive reclaim.  The counting of current per-memcg proactive
->>   reclaim (memory.reclaim) isn't correct.  The demoted, but not
->>   reclaimed pages will be counted as reclaimed.  So "echo XXM >
->>   memory.reclaim" may exit prematurely before the specified number of
->>   memory is reclaimed.
->
-> This is reportedly a problem because memory.reclaim interface cannot be
-> used for proper memcg sizing IIRC.
->
->> - Proactive demote.  We need an interface to do per-memcg proactive
->>   demote.
->
-> For the further discussion it would be useful to reference the usecase
-> that is requiring this functionality. I believe this has been mentioned
-> somewhere but having it in this thread would help.
+A new field 'online' is added to blkg_policy_data to fix following
+2 problem:
 
-Sure.
+1) In blkcg_activate_policy(), if pd_alloc_fn() with 'GFP_NOWAIT'
+   failed, 'queue_lock' will be dropped and pd_alloc_fn() will try again
+   without 'GFP_NOWAIT'. In the meantime, remove cgroup can race with
+   it, and pd_offline_fn() will be called without pd_init_fn() and
+   pd_online_fn(). This way null-ptr-deference can be triggered.
 
-Google people in [1] and [2] request a per-cgroup interface to demote
-but not reclaim proactively.
+2) In order to synchronize pd_free_fn() from blkg_free_workfn() and
+   blkcg_deactivate_policy(), 'list_del_init(&blkg->q_node)' will be
+   delayed to blkg_free_workfn(), hence pd_offline_fn() can be called
+   first in blkg_destroy(), and then blkcg_deactivate_policy() will
+   call it again, we must prevent it.
 
-"
-For jobs of some latency tiers, we would like to trigger proactive
-demotion (which incurs relatively low latency on the job), but not
-trigger proactive reclaim (which incurs a pagefault).
-"
+The new field 'online' will be set after pd_online_fn() and will be
+cleared after pd_offline_fn(), in the meantime pd_offline_fn() will only
+be called if 'online' is set.
 
-Meta people (Johannes) in [3] say they used per-cgroup memory.reclaim
-for demote and reclaim proactively.
+Signed-off-by: Yu Kuai <yukuai3@huawei.com>
+Acked-by: Tejun Heo <tj@kernel.org>
+---
+ block/blk-cgroup.c | 24 +++++++++++++++++-------
+ block/blk-cgroup.h |  1 +
+ 2 files changed, 18 insertions(+), 7 deletions(-)
 
- [1] https://lore.kernel.org/linux-mm/CAHS8izM-XdLgFrQ1k13X-4YrK=JGayRXV_G3c3Qh4NLKP7cH_g-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org/
- [2] https://lore.kernel.org/linux-mm/CAJD7tkZNW=u1TD-Fd_3RuzRNtaFjxihbGm0836QHkdp0Nn-vyQ-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org/
- [3] https://lore.kernel.org/linux-mm/Y35fw2JSAeAddONg-druUgvl0LCNAfugRpC6u6w@public.gmane.org/
+diff --git a/block/blk-cgroup.c b/block/blk-cgroup.c
+index c6d7d1fce65a..75f3c4460715 100644
+--- a/block/blk-cgroup.c
++++ b/block/blk-cgroup.c
+@@ -288,6 +288,7 @@ static struct blkcg_gq *blkg_alloc(struct blkcg *blkcg, struct gendisk *disk,
+ 		blkg->pd[i] = pd;
+ 		pd->blkg = blkg;
+ 		pd->plid = i;
++		pd->online = false;
+ 	}
+ 
+ 	return blkg;
+@@ -359,8 +360,11 @@ static struct blkcg_gq *blkg_create(struct blkcg *blkcg, struct gendisk *disk,
+ 		for (i = 0; i < BLKCG_MAX_POLS; i++) {
+ 			struct blkcg_policy *pol = blkcg_policy[i];
+ 
+-			if (blkg->pd[i] && pol->pd_online_fn)
+-				pol->pd_online_fn(blkg->pd[i]);
++			if (blkg->pd[i]) {
++				if (pol->pd_online_fn)
++					pol->pd_online_fn(blkg->pd[i]);
++				blkg->pd[i]->online = true;
++			}
+ 		}
+ 	}
+ 	blkg->online = true;
+@@ -465,8 +469,11 @@ static void blkg_destroy(struct blkcg_gq *blkg)
+ 	for (i = 0; i < BLKCG_MAX_POLS; i++) {
+ 		struct blkcg_policy *pol = blkcg_policy[i];
+ 
+-		if (blkg->pd[i] && pol->pd_offline_fn)
+-			pol->pd_offline_fn(blkg->pd[i]);
++		if (blkg->pd[i] && blkg->pd[i]->online) {
++			if (pol->pd_offline_fn)
++				pol->pd_offline_fn(blkg->pd[i]);
++			blkg->pd[i]->online = false;
++		}
+ 	}
+ 
+ 	blkg->online = false;
+@@ -1448,6 +1455,7 @@ int blkcg_activate_policy(struct request_queue *q,
+ 		blkg->pd[pol->plid] = pd;
+ 		pd->blkg = blkg;
+ 		pd->plid = pol->plid;
++		pd->online = false;
+ 	}
+ 
+ 	/* all allocated, init in the same order */
+@@ -1455,9 +1463,11 @@ int blkcg_activate_policy(struct request_queue *q,
+ 		list_for_each_entry_reverse(blkg, &q->blkg_list, q_node)
+ 			pol->pd_init_fn(blkg->pd[pol->plid]);
+ 
+-	if (pol->pd_online_fn)
+-		list_for_each_entry_reverse(blkg, &q->blkg_list, q_node)
++	list_for_each_entry_reverse(blkg, &q->blkg_list, q_node) {
++		if (pol->pd_online_fn)
+ 			pol->pd_online_fn(blkg->pd[pol->plid]);
++		blkg->pd[pol->plid]->online = true;
++	}
+ 
+ 	__set_bit(pol->plid, q->blkcg_pols);
+ 	ret = 0;
+@@ -1519,7 +1529,7 @@ void blkcg_deactivate_policy(struct request_queue *q,
+ 
+ 		spin_lock(&blkcg->lock);
+ 		if (blkg->pd[pol->plid]) {
+-			if (pol->pd_offline_fn)
++			if (blkg->pd[pol->plid]->online && pol->pd_offline_fn)
+ 				pol->pd_offline_fn(blkg->pd[pol->plid]);
+ 			pol->pd_free_fn(blkg->pd[pol->plid]);
+ 			blkg->pd[pol->plid] = NULL;
+diff --git a/block/blk-cgroup.h b/block/blk-cgroup.h
+index 1e94e404eaa8..b13ee84f358e 100644
+--- a/block/blk-cgroup.h
++++ b/block/blk-cgroup.h
+@@ -135,6 +135,7 @@ struct blkg_policy_data {
+ 	/* the blkg and policy id this per-policy data belongs to */
+ 	struct blkcg_gq			*blkg;
+ 	int				plid;
++	bool				online;
+ };
+ 
+ /*
+-- 
+2.31.1
 
->> We may reuse memory.reclaim via extending the concept of
->>   reclaiming to include demoting.  Or, we can add a new interface for
->>   that (for example, memory.demote).  In addition to demote from fast
->>   tier to slow tier, in theory, we may need to demote from a set of
->>   nodes to another set of nodes for something like general node
->>   balancing.
->> 
->> - Proactive promote.  In theory, this is possible, but there's no real
->>   life requirements yet.  And it should use a separate interface, so I
->>   don't think we need to discuss that here.
->
-> Yes, proactive promotion is not backed by any real usecase at the
-> moment. We do not really have to focus on it but we should be aware of
-> the posibility and alow future extentions towards that functionality.
-
-OK.
-
-> There is one requirement missing here.
->  - Per NUMA node control - this is what makes the distinction between
->    demotion and charge reclaim really semantically challenging - e.g.
->    should demotions constrained by the provided nodemask or they should
->    be implicit?
-
-Yes.  We may need to specify the NUMA nodes for demotion/reclaiming
-source, target, or even path.  That is, to fine control the proactive
-demotion/reclaiming.
-
->> Open questions:
->> 
->> - Use memory.reclaim or memory.demote for proactive demote.  In current
->>   memcg context, reclaiming and demoting is quite different, because
->>   reclaiming will uncharge, while demoting will not.  But if we will add
->>   per-memory-tier charging finally, the difference disappears.  So the
->>   question becomes whether will we add per-memory-tier charging.
->
-> The question is not whether but when IMHO. We've had a similar situation
-> with the swap accounting. Originally we have considered swap as a shared
-> resource but cgroupv2 goes with per swap limits because contention for
-> the swap space is really something people do care about.
-
-So, when we design user space interface for proactive demotion, we
-should keep per-memory-tier charging in mind.
-
->> - Whether should we demote from faster tier nodes to lower tier nodes
->>   during the proactive reclaiming.
->
-> I thought we are aligned on that. Demotion is a part of aging and that
-> is an integral part of the reclaim.
-
-As in the choice A/B of the below text, we should keep more fast memory
-size or slow memory size?  For original active/inactive LRU lists, we
-will balance the size of lists.  But we don't have similar stuff for the
-memory tiers.  What is the preferred balancing policy?  Choice A/B below
-are 2 extreme policies that are defined clearly.
-
->>   Choice A is to keep as much fast
->>   memory as possible.  That is, reclaim from the lowest tier nodes
->>   firstly, then the secondary lowest tier nodes, and so on.  Choice B is
->>   to demote at the same time of reclaiming.  In this way, if we
->>   proactively reclaim XX MB memory, we may free XX MB memory on the
->>   fastest memory nodes.
->> 
->> - When we proactively demote some memory from a fast memory tier, should
->>   we trigger memory competition in the slower memory tiers?  That is,
->>   whether to wake up kswapd of the slower memory tiers nodes?
->
-> Johannes made some very strong arguments that there is no other choice
-> than involve kswapd (https://lore.kernel.org/all/Y5nEQeXj6HQBEHEY-druUgvl0LCNAfugRpC6u6w@public.gmane.org/).
-
-I have no objection for that too.  The below is just another choice.  If
-people don't think it's useful.  I will not insist on it.
-
->>   If we
->>   want to make per-memcg proactive demoting to be per-memcg strictly, we
->>   should avoid to trigger the global behavior such as triggering memory
->>   competition in the slower memory tiers.  Instead, we can add a global
->>   proactive demote interface for that (such as per-memory-tier or
->>   per-node).
->
-> I suspect we are left with a real usecase and then follow the path we
-> took for the swap accounting.
-
-Thanks for adding that.
-
-> Other open questions I do see are
-> - what to do when the memory.reclaim is constrained by a nodemask as
->   mentioned above. Is the whole reclaim process (including aging) bound to
->   the given nodemask or does demotion escape from it.
-
-Per my understanding, we can use multiple node masks if necessary.  For
-example, for "source=<mask1>", we may demote from <mask1> to other
-nodes; for "source=<mask1> destination=<mask2>", we will demote from
-<mask1> to <mask2>, but will not demote to other nodes.
-
-> - should the demotion be specific to multi-tier systems or the interface
->   should be just NUMA based and users could use the scheme to shuffle
->   memory around and allow numa balancing from userspace that way. That
->   would imply that demotion is a dedicated interface of course.
-
-It appears that if we can force the demotion target nodes (even in the
-same tier).  We can implement numa balancing from user space?
-
-> - there are other usecases that would like to trigger aging from
->   userspace (http://lkml.kernel.org/r/20221214225123.2770216-1-yuanchu-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org).
->   Isn't demotion just a special case of aging in general or should we
->   end up with 3 different interfaces?
-
-Thanks for pointer!  If my understanding were correct, this appears a
-user of proactive reclaiming/demotion interface?  Cced the patch author
-for any further requirements for the interface.
-
-Best Regards,
-Huang, Ying
