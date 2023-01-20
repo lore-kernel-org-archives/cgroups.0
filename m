@@ -1,319 +1,129 @@
-From: Andreas Herrmann <aherrmann-l3A5Bk7waGM@public.gmane.org>
-Subject: Re: [PATCH 09/15] blk-rq-qos: make rq_qos_add and rq_qos_del more
- useful
-Date: Fri, 20 Jan 2023 10:57:23 +0100
-Message-ID: <Y8plg6OAa4lrnyZZ@suselix>
+From: Andreas Herrmann <aherrmann@suse.de>
+Subject: Re: [PATCH 10/15] blk-rq-qos: constify rq_qos_ops
+Date: Fri, 20 Jan 2023 11:01:37 +0100
+Message-ID: <Y8pmgdjIEHYeukV6@suselix>
 References: <20230117081257.3089859-1-hch@lst.de>
- <20230117081257.3089859-10-hch@lst.de>
+ <20230117081257.3089859-11-hch@lst.de>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <linux-block-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-        t=1674208645; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+        t=1674208899; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
          mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=k+2SLGS+RiuQg7uymh7FDC/11pmomuG5XPrmdOkq2BM=;
-        b=PFtwtDP9YTc1oC5pEUGgtTP85WF8fwZGmiWGA0YJ52zWPjMUijNwBCCos58RikbRmolSHH
-        GqGIurMHMIgyt+3nPR3x7ssyLkq7KjqAVvuQuLoMHSMYBHbkywtc5ipTrthKbXP4yaVcj0
-        6KYa1vZXm86wQ2Lv4wp3t+eXhX6o1Nc=
+        bh=rOggy0j58InUB8SiXSRc2Eo+dgWqbqflLrWfKx5LZJY=;
+        b=z7EXQqcR1C05HASuYqotDx9UQ7BVradQ/+fcg2HBDhuMcsOUc8lk9x9qsP7oiJJSnPPQG3
+        yAzZI+BNWVxpb0apueuto2YZjb30rEo2PAdn2b8x79kG/pmcnoe14+1p2TWq26lqWrinLW
+        x1iJ3Qk1bH6KFkORJFXiAahK80ma+Mc=
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-        s=susede2_ed25519; t=1674208645;
+        s=susede2_ed25519; t=1674208899;
         h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
          mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=k+2SLGS+RiuQg7uymh7FDC/11pmomuG5XPrmdOkq2BM=;
-        b=etzU59yFSkB8hEB4y+ZJjp+eOBb56KtQsDY3aTrPs5FZCVy+b3BBC1XNpB1hx10YEaK5N4
-        ckWwWHyghU4QJ9Cg==
+        bh=rOggy0j58InUB8SiXSRc2Eo+dgWqbqflLrWfKx5LZJY=;
+        b=BZzjkRuk46QPaVCDrumpziKLw0oXQvyRpsma1GO9qj0WL2xGUjx9uCSaZkPdkSHasauk4S
+        vodgGxUqaBvH7yBg==
 Content-Disposition: inline
-In-Reply-To: <20230117081257.3089859-10-hch-jcswGhMUV9g@public.gmane.org>
+In-Reply-To: <20230117081257.3089859-11-hch@lst.de>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="utf-8"
-To: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
-Cc: Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Josef Bacik <josef-DigfWCa+lFGyeJad7bwFQA@public.gmane.org>, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Christoph Hellwig <hch@lst.de>
+Cc: Jens Axboe <axboe@kernel.dk>, Tejun Heo <tj@kernel.org>, Josef Bacik <josef@toxicpanda.com>, linux-block@vger.kernel.org, cgroups@vger.kernel.org
 
-On Tue, Jan 17, 2023 at 09:12:51AM +0100, Christoph Hellwig wrote:
-> Switch to passing a gendisk, and make rq_qos_add initialize all required
-> fields and drop the not required q argument from rq_qos_del.  Also move
-> the code out of line given how large it is.
+On Tue, Jan 17, 2023 at 09:12:52AM +0100, Christoph Hellwig wrote:
+> These op vectors are constant, so mark them const.
 > 
-> Signed-off-by: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
 > ---
->  block/blk-iocost.c    | 13 ++-------
->  block/blk-iolatency.c | 14 +++------
->  block/blk-rq-qos.c    | 67 +++++++++++++++++++++++++++++++++++++++++++
->  block/blk-rq-qos.h    | 62 ++-------------------------------------
->  block/blk-wbt.c       |  5 +---
->  5 files changed, 78 insertions(+), 83 deletions(-)
-> 
+>  block/blk-iocost.c    | 2 +-
+>  block/blk-iolatency.c | 2 +-
+>  block/blk-rq-qos.c    | 2 +-
+>  block/blk-rq-qos.h    | 4 ++--
+>  block/blk-wbt.c       | 2 +-
+>  5 files changed, 6 insertions(+), 6 deletions(-)
+
+Looks good to me. Feel free to add
+Reviewed-by: Andreas Herrmann <aherrmann@suse.de>
+
 > diff --git a/block/blk-iocost.c b/block/blk-iocost.c
-> index 6f39ca99e9d76f..9b5c0d23c9ce8b 100644
+> index 9b5c0d23c9ce8b..73f09e3556d7e4 100644
 > --- a/block/blk-iocost.c
 > +++ b/block/blk-iocost.c
-> @@ -2836,9 +2836,7 @@ static struct rq_qos_ops ioc_rqos_ops = {
->  
->  static int blk_iocost_init(struct gendisk *disk)
->  {
-> -	struct request_queue *q = disk->queue;
->  	struct ioc *ioc;
-> -	struct rq_qos *rqos;
->  	int i, cpu, ret;
->  
->  	ioc = kzalloc(sizeof(*ioc), GFP_KERNEL);
-> @@ -2861,11 +2859,6 @@ static int blk_iocost_init(struct gendisk *disk)
->  		local64_set(&ccs->rq_wait_ns, 0);
->  	}
->  
-> -	rqos = &ioc->rqos;
-> -	rqos->id = RQ_QOS_COST;
-> -	rqos->ops = &ioc_rqos_ops;
-> -	rqos->q = q;
-> -
->  	spin_lock_init(&ioc->lock);
->  	timer_setup(&ioc->timer, ioc_timer_fn, 0);
->  	INIT_LIST_HEAD(&ioc->active_iocgs);
-> @@ -2889,17 +2882,17 @@ static int blk_iocost_init(struct gendisk *disk)
->  	 * called before policy activation completion, can't assume that the
->  	 * target bio has an iocg associated and need to test for NULL iocg.
->  	 */
-> -	ret = rq_qos_add(q, rqos);
-> +	ret = rq_qos_add(&ioc->rqos, disk, RQ_QOS_COST, &ioc_rqos_ops);
->  	if (ret)
->  		goto err_free_ioc;
->  
-> -	ret = blkcg_activate_policy(q, &blkcg_policy_iocost);
-> +	ret = blkcg_activate_policy(disk->queue, &blkcg_policy_iocost);
->  	if (ret)
->  		goto err_del_qos;
->  	return 0;
->  
->  err_del_qos:
-> -	rq_qos_del(q, rqos);
-> +	rq_qos_del(&ioc->rqos);
->  err_free_ioc:
->  	free_percpu(ioc->pcpu_stat);
+> @@ -2825,7 +2825,7 @@ static void ioc_rqos_exit(struct rq_qos *rqos)
 >  	kfree(ioc);
+>  }
+>  
+> -static struct rq_qos_ops ioc_rqos_ops = {
+> +static const struct rq_qos_ops ioc_rqos_ops = {
+>  	.throttle = ioc_rqos_throttle,
+>  	.merge = ioc_rqos_merge,
+>  	.done_bio = ioc_rqos_done_bio,
 > diff --git a/block/blk-iolatency.c b/block/blk-iolatency.c
-> index b55eac2cf91944..1c394bd77aa0b4 100644
+> index 1c394bd77aa0b4..f6aeb3d3fdae59 100644
 > --- a/block/blk-iolatency.c
 > +++ b/block/blk-iolatency.c
-> @@ -757,24 +757,18 @@ static void blkiolatency_enable_work_fn(struct work_struct *work)
->  
->  int blk_iolatency_init(struct gendisk *disk)
->  {
-> -	struct request_queue *q = disk->queue;
->  	struct blk_iolatency *blkiolat;
-> -	struct rq_qos *rqos;
->  	int ret;
->  
->  	blkiolat = kzalloc(sizeof(*blkiolat), GFP_KERNEL);
->  	if (!blkiolat)
->  		return -ENOMEM;
->  
-> -	rqos = &blkiolat->rqos;
-> -	rqos->id = RQ_QOS_LATENCY;
-> -	rqos->ops = &blkcg_iolatency_ops;
-> -	rqos->q = q;
-> -
-> -	ret = rq_qos_add(q, rqos);
-> +	ret = rq_qos_add(&blkiolat->rqos, disk, RQ_QOS_LATENCY,
-> +			 &blkcg_iolatency_ops);
->  	if (ret)
->  		goto err_free;
-> -	ret = blkcg_activate_policy(q, &blkcg_policy_iolatency);
-> +	ret = blkcg_activate_policy(disk->queue, &blkcg_policy_iolatency);
->  	if (ret)
->  		goto err_qos_del;
->  
-> @@ -784,7 +778,7 @@ int blk_iolatency_init(struct gendisk *disk)
->  	return 0;
->  
->  err_qos_del:
-> -	rq_qos_del(q, rqos);
-> +	rq_qos_del(&blkiolat->rqos);
->  err_free:
+> @@ -650,7 +650,7 @@ static void blkcg_iolatency_exit(struct rq_qos *rqos)
 >  	kfree(blkiolat);
->  	return ret;
+>  }
+>  
+> -static struct rq_qos_ops blkcg_iolatency_ops = {
+> +static const struct rq_qos_ops blkcg_iolatency_ops = {
+>  	.throttle = blkcg_iolatency_throttle,
+>  	.done_bio = blkcg_iolatency_done_bio,
+>  	.exit = blkcg_iolatency_exit,
 > diff --git a/block/blk-rq-qos.c b/block/blk-rq-qos.c
-> index 88f0fe7dcf5451..14bee1bd761362 100644
+> index 14bee1bd761362..8e83734cfe8dbc 100644
 > --- a/block/blk-rq-qos.c
 > +++ b/block/blk-rq-qos.c
-> @@ -294,3 +294,70 @@ void rq_qos_exit(struct request_queue *q)
->  		rqos->ops->exit(rqos);
->  	}
+> @@ -296,7 +296,7 @@ void rq_qos_exit(struct request_queue *q)
 >  }
-> +
-> +int rq_qos_add(struct rq_qos *rqos, struct gendisk *disk, enum rq_qos_id id,
-> +		struct rq_qos_ops *ops)
-> +{
-> +	struct request_queue *q = disk->queue;
-> +
-> +	rqos->q = q;
-> +	rqos->id = id;
-> +	rqos->ops = ops;
-> +
-> +	/*
-> +	 * No IO can be in-flight when adding rqos, so freeze queue, which
-> +	 * is fine since we only support rq_qos for blk-mq queue.
-> +	 *
-> +	 * Reuse ->queue_lock for protecting against other concurrent
-> +	 * rq_qos adding/deleting
-> +	 */
-> +	blk_mq_freeze_queue(q);
-> +
-> +	spin_lock_irq(&q->queue_lock);
-> +	if (rq_qos_id(q, rqos->id))
-> +		goto ebusy;
-> +	rqos->next = q->rq_qos;
-> +	q->rq_qos = rqos;
-> +	spin_unlock_irq(&q->queue_lock);
-> +
-> +	blk_mq_unfreeze_queue(q);
-> +
-> +	if (rqos->ops->debugfs_attrs) {
-> +		mutex_lock(&q->debugfs_mutex);
-> +		blk_mq_debugfs_register_rqos(rqos);
-> +		mutex_unlock(&q->debugfs_mutex);
-> +	}
-> +
-> +	return 0;
-> +ebusy:
-> +	spin_unlock_irq(&q->queue_lock);
-> +	blk_mq_unfreeze_queue(q);
-> +	return -EBUSY;
-> +}
-> +
-> +void rq_qos_del(struct rq_qos *rqos)
-> +{
-> +	struct request_queue *q = rqos->q;
-> +	struct rq_qos **cur;
-> +
-> +	/*
-> +	 * See comment in rq_qos_add() about freezing queue & using
-> +	 * ->queue_lock.
-> +	 */
-> +	blk_mq_freeze_queue(q);
-> +
-> +	spin_lock_irq(&q->queue_lock);
-> +	for (cur = &q->rq_qos; *cur; cur = &(*cur)->next) {
-> +		if (*cur == rqos) {
-> +			*cur = rqos->next;
-> +			break;
-> +		}
-> +	}
-> +	spin_unlock_irq(&q->queue_lock);
-> +
-> +	blk_mq_unfreeze_queue(q);
-> +
-> +	mutex_lock(&q->debugfs_mutex);
-> +	blk_mq_debugfs_unregister_rqos(rqos);
-> +	mutex_unlock(&q->debugfs_mutex);
-> +}
+>  
+>  int rq_qos_add(struct rq_qos *rqos, struct gendisk *disk, enum rq_qos_id id,
+> -		struct rq_qos_ops *ops)
+> +		const struct rq_qos_ops *ops)
+>  {
+>  	struct request_queue *q = disk->queue;
+>  
 > diff --git a/block/blk-rq-qos.h b/block/blk-rq-qos.h
-> index 1ef1f7d4bc3cbc..22552785aa31ed 100644
+> index 22552785aa31ed..2b7b668479f71a 100644
 > --- a/block/blk-rq-qos.h
 > +++ b/block/blk-rq-qos.h
-> @@ -85,65 +85,9 @@ static inline void rq_wait_init(struct rq_wait *rq_wait)
->  	init_waitqueue_head(&rq_wait->wait);
+> @@ -25,7 +25,7 @@ struct rq_wait {
+>  };
+>  
+>  struct rq_qos {
+> -	struct rq_qos_ops *ops;
+> +	const struct rq_qos_ops *ops;
+>  	struct request_queue *q;
+>  	enum rq_qos_id id;
+>  	struct rq_qos *next;
+> @@ -86,7 +86,7 @@ static inline void rq_wait_init(struct rq_wait *rq_wait)
 >  }
 >  
-> -static inline int rq_qos_add(struct request_queue *q, struct rq_qos *rqos)
-> -{
-> -	/*
-> -	 * No IO can be in-flight when adding rqos, so freeze queue, which
-> -	 * is fine since we only support rq_qos for blk-mq queue.
-> -	 *
-> -	 * Reuse ->queue_lock for protecting against other concurrent
-> -	 * rq_qos adding/deleting
-> -	 */
-> -	blk_mq_freeze_queue(q);
-> -
-> -	spin_lock_irq(&q->queue_lock);
-> -	if (rq_qos_id(q, rqos->id))
-> -		goto ebusy;
-> -	rqos->next = q->rq_qos;
-> -	q->rq_qos = rqos;
-> -	spin_unlock_irq(&q->queue_lock);
-> -
-> -	blk_mq_unfreeze_queue(q);
-> -
-> -	if (rqos->ops->debugfs_attrs) {
-> -		mutex_lock(&q->debugfs_mutex);
-> -		blk_mq_debugfs_register_rqos(rqos);
-> -		mutex_unlock(&q->debugfs_mutex);
-> -	}
-> -
-> -	return 0;
-> -ebusy:
-> -	spin_unlock_irq(&q->queue_lock);
-> -	blk_mq_unfreeze_queue(q);
-> -	return -EBUSY;
-> -
-> -}
-> -
-> -static inline void rq_qos_del(struct request_queue *q, struct rq_qos *rqos)
-> -{
-> -	struct rq_qos **cur;
-> -
-> -	/*
-> -	 * See comment in rq_qos_add() about freezing queue & using
-> -	 * ->queue_lock.
-> -	 */
-> -	blk_mq_freeze_queue(q);
-> -
-> -	spin_lock_irq(&q->queue_lock);
-> -	for (cur = &q->rq_qos; *cur; cur = &(*cur)->next) {
-> -		if (*cur == rqos) {
-> -			*cur = rqos->next;
-> -			break;
-> -		}
-> -	}
-> -	spin_unlock_irq(&q->queue_lock);
-> -
-> -	blk_mq_unfreeze_queue(q);
-> -
-> -	mutex_lock(&q->debugfs_mutex);
-> -	blk_mq_debugfs_unregister_rqos(rqos);
-> -	mutex_unlock(&q->debugfs_mutex);
-> -}
-> +int rq_qos_add(struct rq_qos *rqos, struct gendisk *disk, enum rq_qos_id id,
-> +		struct rq_qos_ops *ops);
-> +void rq_qos_del(struct rq_qos *rqos);
+>  int rq_qos_add(struct rq_qos *rqos, struct gendisk *disk, enum rq_qos_id id,
+> -		struct rq_qos_ops *ops);
+> +		const struct rq_qos_ops *ops);
+>  void rq_qos_del(struct rq_qos *rqos);
 >  
 >  typedef bool (acquire_inflight_cb_t)(struct rq_wait *rqw, void *private_data);
->  typedef void (cleanup_cb_t)(struct rq_wait *rqw, void *private_data);
 > diff --git a/block/blk-wbt.c b/block/blk-wbt.c
-> index 473ae72befaf1a..97149a4f10e600 100644
+> index 97149a4f10e600..1c4469f9962de8 100644
 > --- a/block/blk-wbt.c
 > +++ b/block/blk-wbt.c
-> @@ -855,9 +855,6 @@ int wbt_init(struct gendisk *disk)
->  	for (i = 0; i < WBT_NUM_RWQ; i++)
->  		rq_wait_init(&rwb->rq_wait[i]);
+> @@ -821,7 +821,7 @@ static const struct blk_mq_debugfs_attr wbt_debugfs_attrs[] = {
+>  };
+>  #endif
 >  
-> -	rwb->rqos.id = RQ_QOS_WBT;
-> -	rwb->rqos.ops = &wbt_rqos_ops;
-> -	rwb->rqos.q = q;
->  	rwb->last_comp = rwb->last_issue = jiffies;
->  	rwb->win_nsec = RWB_WINDOW_NSEC;
->  	rwb->enable_state = WBT_STATE_ON_DEFAULT;
-> @@ -870,7 +867,7 @@ int wbt_init(struct gendisk *disk)
->  	/*
->  	 * Assign rwb and add the stats callback.
->  	 */
-> -	ret = rq_qos_add(q, &rwb->rqos);
-> +	ret = rq_qos_add(&rwb->rqos, q->disk, RQ_QOS_WBT, &wbt_rqos_ops);
-                                     ^^^^^^^
-				     disk (no?)
->  	if (ret)
->  		goto err_free;
->  
+> -static struct rq_qos_ops wbt_rqos_ops = {
+> +static const struct rq_qos_ops wbt_rqos_ops = {
+>  	.throttle = wbt_wait,
+>  	.issue = wbt_issue,
+>  	.track = wbt_track,
 > -- 
 > 2.39.0
 > 
-
-Otherwise looks good to me. Feel free to add
-Reviewed-by: Andreas Herrmann <aherrmann-l3A5Bk7waGM@public.gmane.org>
 
 -- 
 Regards,
