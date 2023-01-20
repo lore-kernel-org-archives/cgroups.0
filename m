@@ -1,70 +1,120 @@
 From: Andreas Herrmann <aherrmann-l3A5Bk7waGM@public.gmane.org>
-Subject: Re: [PATCH 02/15] block: don't call blk_throtl_stat_add for
- non-READ/WRITE commands
-Date: Fri, 20 Jan 2023 09:55:31 +0100
-Message-ID: <Y8pXAyRs5lABGdsD@suselix>
+Subject: Re: [PATCH 03/15] blk-cgroup: delay blk-cgroup initialization until
+ add_disk
+Date: Fri, 20 Jan 2023 09:56:27 +0100
+Message-ID: <Y8pXO32m7XVO+DH5@suselix>
 References: <20230117081257.3089859-1-hch@lst.de>
- <20230117081257.3089859-3-hch@lst.de>
+ <20230117081257.3089859-4-hch@lst.de>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-        t=1674204933; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+        t=1674204989; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
          mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=e4Q1VHGGcDhGS3UBPXctvtuTi2sVs/AqValPMfoWSYE=;
-        b=Su6hdgzchZCXt2HTOTOjgHNxtpHGqdPLqfJJkMOHMurMPCV4yMqMCnYQAezfefQdiYvAvk
-        wL8S7fl568RRar4j3Hm3zw+ZvcSwvHncGjZwdIlEuZ6x+BAvTAIT85Tk/HwB2A2H7zQmuv
-        rZCDaypwyod4q5cySeYww2Zxa0g8KTA=
+        bh=R+VY303Ws8dGkaDGBPNhrzJj03hZ+b198pLbrWjdjSU=;
+        b=guW/Oqq+LgKF6FqmMI1h4vuCoK2WasH4opDmZbo6K9RnFJyPXUKTsaaCS6WLA9FciywVYf
+        5v3edZp5Cq0A5Ake8BBI63HUOk6eMpJT1/GqI3Gmd/98nK/Hbn17MyatBRDZkZqsWAf6yX
+        HZ3DRiqhUs430d4AkMySEAxd2zDiN8w=
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-        s=susede2_ed25519; t=1674204933;
+        s=susede2_ed25519; t=1674204989;
         h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
          mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=e4Q1VHGGcDhGS3UBPXctvtuTi2sVs/AqValPMfoWSYE=;
-        b=j4qsZrhR7S36Hkx+UjJnhv91ntaLtfw16raFwIR7bcP7jxeZa/787+JmWt1Yc0WjQHNstZ
-        3NVG7kHoBxNc5fDA==
+        bh=R+VY303Ws8dGkaDGBPNhrzJj03hZ+b198pLbrWjdjSU=;
+        b=ur2AaTg1RaUBvo9rkdgDeoVLfowbVV5OIItnoclJ+iJ/mBF56oQYEv/KsTVMD8W2rXFFCJ
+        Jk0QrfF1hB9BmACA==
 Content-Disposition: inline
-In-Reply-To: <20230117081257.3089859-3-hch-jcswGhMUV9g@public.gmane.org>
+In-Reply-To: <20230117081257.3089859-4-hch-jcswGhMUV9g@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="utf-8"
 To: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
 Cc: Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Josef Bacik <josef-DigfWCa+lFGyeJad7bwFQA@public.gmane.org>, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Tue, Jan 17, 2023 at 09:12:44AM +0100, Christoph Hellwig wrote:
-> blk_throtl_stat_add is called from blk_stat_add explicitly, unlike the
-> other stats that go through q->stats->callbacks.  To prepare for cgroup
-> data moving to the gendisk, ensure blk_throtl_stat_add is only called
-> for the plain READ and WRITE commands that it actually handles internally,
-> as blk_stat_add can also be called for passthrough commands on queues that
-> do not have a genisk associated with them.
-                ^^^^^^
-		gendisk
+On Tue, Jan 17, 2023 at 09:12:45AM +0100, Christoph Hellwig wrote:
+> There is no need to initialize the group code before the disk is marked
+> live.  Moving the cgroup initialization earlier will help to have a
+> fully initialized struct device in the gendisk for the cgroup code to
+> use in the future.  Similarly tear the cgroup information down in
+> del_gendisk to be symmetric and because none of the cgroup tracking is
+> needed once non-passthrough I/O stops.
 > 
 > Signed-off-by: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
 > ---
->  block/blk-stat.c | 3 ++-
->  1 file changed, 2 insertions(+), 1 deletion(-)
+>  block/genhd.c | 17 +++++++++--------
+>  1 file changed, 9 insertions(+), 8 deletions(-)
 
 Looks good to me. Feel free to add
 Reviewed-by: Andreas Herrmann <aherrmann-l3A5Bk7waGM@public.gmane.org>
 
-> diff --git a/block/blk-stat.c b/block/blk-stat.c
-> index 2ea01b5c1aca04..c6ca16abf911e2 100644
-> --- a/block/blk-stat.c
-> +++ b/block/blk-stat.c
-> @@ -58,7 +58,8 @@ void blk_stat_add(struct request *rq, u64 now)
+> diff --git a/block/genhd.c b/block/genhd.c
+> index 23cf83b3331cde..705dec0800d62e 100644
+> --- a/block/genhd.c
+> +++ b/block/genhd.c
+> @@ -466,10 +466,14 @@ int __must_check device_add_disk(struct device *parent, struct gendisk *disk,
+>  	 */
+>  	pm_runtime_set_memalloc_noio(ddev, true);
 >  
->  	value = (now >= rq->io_start_time_ns) ? now - rq->io_start_time_ns : 0;
+> -	ret = blk_integrity_add(disk);
+> +	ret = blkcg_init_disk(disk);
+>  	if (ret)
+>  		goto out_del_block_link;
 >  
-> -	blk_throtl_stat_add(rq, value);
-> +	if (req_op(rq) == REQ_OP_READ || req_op(rq) == REQ_OP_WRITE)
-> +		blk_throtl_stat_add(rq, value);
+> +	ret = blk_integrity_add(disk);
+> +	if (ret)
+> +		goto out_blkcg_exit;
+> +
+>  	disk->part0->bd_holder_dir =
+>  		kobject_create_and_add("holders", &ddev->kobj);
+>  	if (!disk->part0->bd_holder_dir) {
+> @@ -534,6 +538,8 @@ int __must_check device_add_disk(struct device *parent, struct gendisk *disk,
+>  	kobject_put(disk->part0->bd_holder_dir);
+>  out_del_integrity:
+>  	blk_integrity_del(disk);
+> +out_blkcg_exit:
+> +	blkcg_exit_disk(disk);
+>  out_del_block_link:
+>  	if (!sysfs_deprecated)
+>  		sysfs_remove_link(block_depr, dev_name(ddev));
+> @@ -662,6 +668,8 @@ void del_gendisk(struct gendisk *disk)
+>  	rq_qos_exit(q);
+>  	blk_mq_unquiesce_queue(q);
 >  
->  	rcu_read_lock();
->  	cpu = get_cpu();
+> +	blkcg_exit_disk(disk);
+> +
+>  	/*
+>  	 * If the disk does not own the queue, allow using passthrough requests
+>  	 * again.  Else leave the queue frozen to fail all I/O.
+> @@ -1171,8 +1179,6 @@ static void disk_release(struct device *dev)
+>  	    !test_bit(GD_ADDED, &disk->state))
+>  		blk_mq_exit_queue(disk->queue);
+>  
+> -	blkcg_exit_disk(disk);
+> -
+>  	bioset_exit(&disk->bio_split);
+>  
+>  	disk_release_events(disk);
+> @@ -1385,9 +1391,6 @@ struct gendisk *__alloc_disk_node(struct request_queue *q, int node_id,
+>  	if (xa_insert(&disk->part_tbl, 0, disk->part0, GFP_KERNEL))
+>  		goto out_destroy_part_tbl;
+>  
+> -	if (blkcg_init_disk(disk))
+> -		goto out_erase_part0;
+> -
+>  	rand_initialize_disk(disk);
+>  	disk_to_dev(disk)->class = &block_class;
+>  	disk_to_dev(disk)->type = &disk_type;
+> @@ -1400,8 +1403,6 @@ struct gendisk *__alloc_disk_node(struct request_queue *q, int node_id,
+>  #endif
+>  	return disk;
+>  
+> -out_erase_part0:
+> -	xa_erase(&disk->part_tbl, 0);
+>  out_destroy_part_tbl:
+>  	xa_destroy(&disk->part_tbl);
+>  	disk->part0->bd_disk = NULL;
 > -- 
 > 2.39.0
 > 
