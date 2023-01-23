@@ -1,7 +1,7 @@
 From: "T.J. Mercier" <tjmercier-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Subject: [PATCH v2 1/4] memcg: Track exported dma-buffers
-Date: Mon, 23 Jan 2023 19:17:23 +0000
-Message-ID: <20230123191728.2928839-2-tjmercier@google.com>
+Subject: [PATCH v2 2/4] dmabuf: Add cgroup charge transfer function
+Date: Mon, 23 Jan 2023 19:17:24 +0000
+Message-ID: <20230123191728.2928839-3-tjmercier@google.com>
 References: <20230123191728.2928839-1-tjmercier@google.com>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
@@ -9,239 +9,133 @@ DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=google.com; s=20210112;
         h=cc:to:from:subject:message-id:references:mime-version:in-reply-to
          :date:from:to:cc:subject:date:message-id:reply-to;
-        bh=29eNHuXkN4Biw7YjDro7DKxD9MLgh2JPpCUKKyMlqpA=;
-        b=Subdt7mbpSJ3q++6bJrXZjJZZw2B5aXVhcYIOjpWp1e7w65W6r5oAUZpnmuhuuxtGC
-         m6yHwVIfAM74kNHnxjivy2kMGAg6vCfv+3hhWBYw2BJN0Dja1Y7NQKOgWr6COa+8oUkk
-         rUnUidJgv1sRL2Bt6YdHCPqVzpfizdrAy9YnM1stYfRMcfzP4DXyiUe0ObHRm1rO0ZdX
-         Z1ZA/fI74arWwHwvDOYrrcmDZGCsMH3Nq+OQolvzt4CNc9tJFsaB0vn3Yw+H2aqetp8n
-         bmppFH7vBRP4aW++HEHSq4uD8ir3GpzrY/G/loULfk/4Fe0e7jWIDY4IGgw0L9zKW6Fz
-         9YCg==
+        bh=9WOZzSEfhu/PT9TWBWMQDCCNsrofWV34oFDU/0sj1mQ=;
+        b=CLJ2JxK/Tm4oa2T67r1/7AoCewa4cPoaCpXx/gVHbZ1m+FYlbdBISpcie92wke9qiT
+         ywnZGTRRWgUyvtV2GeIN6CSF1A1BpACoPsOvCJSqkdka36IG7lwA9jHJB0/1Y37BiDn6
+         UZyz4QR44eh7OHGKOjLnRuXG7qELlMRlfRNYaxnDlTMYAnQZZAKF7GLGFraikV5q7pPa
+         PqEGE55YfXGgQoOaL42PCJmSLM5OLIrr2pXTamoSK+ZBJQZ3xablgI1e6ZxykShX+C1V
+         OGCeujU9/+VSQurUIb0N4LKyFw0PX0Xvt3l2bOlWDy6qNiZqzVXsJcA5m/zeCrF4rUUR
+         ohNg==
 In-Reply-To: <20230123191728.2928839-1-tjmercier-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: tjmercier-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Jonathan Corbet <corbet-T1hC0tSOHrs@public.gmane.org>, Sumit Semwal <sumit.semwal-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, =?UTF-8?q?Christian=20K=C3=B6nig?= <christian.koenig-5C7GfCeVMHo@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Muchun Song <muchun.song-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
-Cc: daniel.vetter-/w4YWyX8dFk@public.gmane.org, android-mm-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, jstultz-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, jeffv-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, cmllamas-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, linux-security-module-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, selinux-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-media-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, dri-devel-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org, linaro-mm-sig-cunTk1MwBs8s++Sfvej+rw@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
+To: tjmercier-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, Sumit Semwal <sumit.semwal-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, =?UTF-8?q?Christian=20K=C3=B6nig?= <christian.koenig-5C7GfCeVMHo@public.gmane.org>
+Cc: hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, daniel.vetter-/w4YWyX8dFk@public.gmane.org, android-mm-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, jstultz-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, jeffv-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, cmllamas-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, linux-security-module-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, selinux-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-media-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, dri-devel-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org, linaro-mm-sig-cunTk1MwBs8s++Sfvej+rw@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-When a buffer is exported to userspace, use memcg to attribute the
-buffer to the allocating cgroup until all buffer references are
-released.
-
-Unlike the dmabuf sysfs stats implementation, this memcg accounting
-avoids contention over the kernfs_rwsem incurred when creating or
-removing nodes.
+The dma_buf_transfer_charge function provides a way for processes to
+transfer charge of a buffer to a different cgroup. This is essential
+for the cases where a central allocator process does allocations for
+various subsystems, hands over the fd to the client who requested the
+memory, and drops all references to the allocated memory.
 
 Signed-off-by: T.J. Mercier <tjmercier-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 ---
- Documentation/admin-guide/cgroup-v2.rst |  4 +++
- drivers/dma-buf/dma-buf.c               | 13 +++++++++
- include/linux/dma-buf.h                 |  3 ++
- include/linux/memcontrol.h              | 38 +++++++++++++++++++++++++
- mm/memcontrol.c                         | 19 +++++++++++++
- 5 files changed, 77 insertions(+)
+ drivers/dma-buf/dma-buf.c  | 56 ++++++++++++++++++++++++++++++++++++++
+ include/linux/dma-buf.h    |  1 +
+ include/linux/memcontrol.h |  5 ++++
+ 3 files changed, 62 insertions(+)
 
-diff --git a/Documentation/admin-guide/cgroup-v2.rst b/Documentation/admin-guide/cgroup-v2.rst
-index c8ae7c897f14..538ae22bc514 100644
---- a/Documentation/admin-guide/cgroup-v2.rst
-+++ b/Documentation/admin-guide/cgroup-v2.rst
-@@ -1455,6 +1455,10 @@ PAGE_SIZE multiple when read back.
- 		Amount of memory used for storing in-kernel data
- 		structures.
- 
-+	  dmabuf (npn)
-+		Amount of memory used for exported DMA buffers allocated by the cgroup.
-+		Stays with the allocating cgroup regardless of how the buffer is shared.
-+
- 	  workingset_refault_anon
- 		Number of refaults of previously evicted anonymous pages.
- 
 diff --git a/drivers/dma-buf/dma-buf.c b/drivers/dma-buf/dma-buf.c
-index e6528767efc7..a6a8cb5cb32d 100644
+index a6a8cb5cb32d..ac3d02a7ecf8 100644
 --- a/drivers/dma-buf/dma-buf.c
 +++ b/drivers/dma-buf/dma-buf.c
-@@ -75,6 +75,9 @@ static void dma_buf_release(struct dentry *dentry)
- 	 */
- 	BUG_ON(dmabuf->cb_in.active || dmabuf->cb_out.active);
+@@ -11,6 +11,7 @@
+  * refining of this idea.
+  */
  
-+	mem_cgroup_uncharge_dmabuf(dmabuf->memcg, PAGE_ALIGN(dmabuf->size) / PAGE_SIZE);
-+	mem_cgroup_put(dmabuf->memcg);
++#include <linux/atomic.h>
+ #include <linux/fs.h>
+ #include <linux/slab.h>
+ #include <linux/dma-buf.h>
+@@ -1626,6 +1627,61 @@ void dma_buf_vunmap_unlocked(struct dma_buf *dmabuf, struct iosys_map *map)
+ }
+ EXPORT_SYMBOL_NS_GPL(dma_buf_vunmap_unlocked, DMA_BUF);
+ 
++/**
++ * dma_buf_transfer_charge - Change the cgroup to which the provided dma_buf is charged.
++ * @dmabuf_file:	[in]	file for buffer whose charge will be migrated to a different cgroup
++ * @target:		[in]	the task_struct of the destination process for the cgroup charge
++ *
++ * Only tasks that belong to the same cgroup the buffer is currently charged to
++ * may call this function, otherwise it will return -EPERM.
++ *
++ * Returns 0 on success, or a negative errno code otherwise.
++ */
++int dma_buf_transfer_charge(struct file *dmabuf_file, struct task_struct *target)
++{
++	struct mem_cgroup *current_cg, *target_cg;
++	struct dma_buf *dmabuf;
++	unsigned int nr_pages;
++	int ret = 0;
 +
- 	dma_buf_stats_teardown(dmabuf);
- 	dmabuf->ops->release(dmabuf);
- 
-@@ -673,6 +676,13 @@ struct dma_buf *dma_buf_export(const struct dma_buf_export_info *exp_info)
- 	if (ret)
- 		goto err_dmabuf;
- 
-+	dmabuf->memcg = get_mem_cgroup_from_mm(current->mm);
-+	if (!mem_cgroup_charge_dmabuf(dmabuf->memcg, PAGE_ALIGN(dmabuf->size) / PAGE_SIZE,
-+				      GFP_KERNEL)) {
++	if (!IS_ENABLED(CONFIG_MEMCG))
++		return 0;
++
++	if (WARN_ON(!dmabuf_file) || WARN_ON(!target))
++		return -EINVAL;
++
++	if (!is_dma_buf_file(dmabuf_file))
++		return -EBADF;
++	dmabuf = dmabuf_file->private_data;
++
++	nr_pages = PAGE_ALIGN(dmabuf->size) / PAGE_SIZE;
++	current_cg = mem_cgroup_from_task(current);
++	target_cg = get_mem_cgroup_from_mm(target->mm);
++
++	if (current_cg == target_cg)
++		goto skip_transfer;
++
++	if (!mem_cgroup_charge_dmabuf(target_cg, nr_pages, GFP_KERNEL)) {
 +		ret = -ENOMEM;
-+		goto err_memcg;
++		goto skip_transfer;
 +	}
 +
- 	file->private_data = dmabuf;
- 	file->f_path.dentry->d_fsdata = dmabuf;
- 	dmabuf->file = file;
-@@ -683,6 +693,9 @@ struct dma_buf *dma_buf_export(const struct dma_buf_export_info *exp_info)
- 
- 	return dmabuf;
- 
-+err_memcg:
-+	mem_cgroup_put(dmabuf->memcg);
-+	dma_buf_stats_teardown(dmabuf);
- err_dmabuf:
- 	if (!resv)
- 		dma_resv_fini(dmabuf->resv);
++	if (cmpxchg(&dmabuf->memcg, current_cg, target_cg) != current_cg) {
++		/* Only the current owner can transfer the charge */
++		ret = -EPERM;
++		mem_cgroup_uncharge_dmabuf(target_cg, nr_pages);
++		goto skip_transfer;
++	}
++
++	mem_cgroup_uncharge_dmabuf(current_cg, nr_pages);
++	mem_cgroup_put(current_cg); /* unref from buffer - buffer keeps new ref to target_cg */
++	return 0;
++
++skip_transfer:
++	mem_cgroup_put(target_cg);
++	return ret;
++}
++
+ #ifdef CONFIG_DEBUG_FS
+ static int dma_buf_debug_show(struct seq_file *s, void *unused)
+ {
 diff --git a/include/linux/dma-buf.h b/include/linux/dma-buf.h
-index 6fa8d4e29719..1f0ffb8e4bf5 100644
+index 1f0ffb8e4bf5..f25eb8e60fb2 100644
 --- a/include/linux/dma-buf.h
 +++ b/include/linux/dma-buf.h
-@@ -22,6 +22,7 @@
- #include <linux/fs.h>
- #include <linux/dma-fence.h>
- #include <linux/wait.h>
-+#include <linux/memcontrol.h>
- 
- struct device;
- struct dma_buf;
-@@ -446,6 +447,8 @@ struct dma_buf {
- 		struct dma_buf *dmabuf;
- 	} *sysfs_entry;
- #endif
-+	/* The cgroup to which this buffer is currently attributed */
-+	struct mem_cgroup *memcg;
- };
- 
- /**
+@@ -634,4 +634,5 @@ int dma_buf_vmap(struct dma_buf *dmabuf, struct iosys_map *map);
+ void dma_buf_vunmap(struct dma_buf *dmabuf, struct iosys_map *map);
+ int dma_buf_vmap_unlocked(struct dma_buf *dmabuf, struct iosys_map *map);
+ void dma_buf_vunmap_unlocked(struct dma_buf *dmabuf, struct iosys_map *map);
++int dma_buf_transfer_charge(struct file *dmabuf_file, struct task_struct *target);
+ #endif /* __DMA_BUF_H__ */
 diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
-index d3c8203cab6c..c10b8565fdbf 100644
+index c10b8565fdbf..009298a446fe 100644
 --- a/include/linux/memcontrol.h
 +++ b/include/linux/memcontrol.h
-@@ -37,6 +37,7 @@ enum memcg_stat_item {
- 	MEMCG_KMEM,
- 	MEMCG_ZSWAP_B,
- 	MEMCG_ZSWAPPED,
-+	MEMCG_DMABUF,
- 	MEMCG_NR_STAT,
- };
- 
-@@ -673,6 +674,25 @@ static inline int mem_cgroup_charge(struct folio *folio, struct mm_struct *mm,
- 
- int mem_cgroup_swapin_charge_folio(struct folio *folio, struct mm_struct *mm,
- 				  gfp_t gfp, swp_entry_t entry);
-+
-+/**
-+ * mem_cgroup_charge_dmabuf - Charge dma-buf memory to a cgroup and update stat counter
-+ * @memcg: memcg to charge
-+ * @nr_pages: number of pages to charge
-+ * @gfp_mask: reclaim mode
-+ *
-+ * Charges @nr_pages to @memcg. Returns %true if the charge fit within
-+ * @memcg's configured limit, %false if it doesn't.
-+ */
-+bool __mem_cgroup_charge_dmabuf(struct mem_cgroup *memcg, unsigned int nr_pages, gfp_t gfp_mask);
-+static inline bool mem_cgroup_charge_dmabuf(struct mem_cgroup *memcg, unsigned int nr_pages,
-+					    gfp_t gfp_mask)
-+{
-+	if (mem_cgroup_disabled())
-+		return 0;
-+	return __mem_cgroup_charge_dmabuf(memcg, nr_pages, gfp_mask);
-+}
-+
- void mem_cgroup_swapin_uncharge_swap(swp_entry_t entry);
- 
- void __mem_cgroup_uncharge(struct folio *folio);
-@@ -690,6 +710,14 @@ static inline void mem_cgroup_uncharge(struct folio *folio)
- 	__mem_cgroup_uncharge(folio);
+@@ -1335,6 +1335,11 @@ struct mem_cgroup *mem_cgroup_from_css(struct cgroup_subsys_state *css)
+ 	return NULL;
  }
  
-+void __mem_cgroup_uncharge_dmabuf(struct mem_cgroup *memcg, unsigned int nr_pages);
-+static inline void mem_cgroup_uncharge_dmabuf(struct mem_cgroup *memcg, unsigned int nr_pages)
++static inline struct mem_cgroup *mem_cgroup_from_task(struct task_struct *p)
 +{
-+	if (mem_cgroup_disabled())
-+		return;
-+	__mem_cgroup_uncharge_dmabuf(memcg, nr_pages);
++	return NULL;
 +}
 +
- void __mem_cgroup_uncharge_list(struct list_head *page_list);
- static inline void mem_cgroup_uncharge_list(struct list_head *page_list)
- {
-@@ -1242,6 +1270,12 @@ static inline int mem_cgroup_swapin_charge_folio(struct folio *folio,
- 	return 0;
- }
- 
-+static inline bool mem_cgroup_charge_dmabuf(struct mem_cgroup *memcg, unsigned int nr_pages,
-+					    gfp_t gfp_mask)
-+{
-+	return true;
-+}
-+
- static inline void mem_cgroup_swapin_uncharge_swap(swp_entry_t entry)
+ static inline void obj_cgroup_put(struct obj_cgroup *objcg)
  {
  }
-@@ -1250,6 +1284,10 @@ static inline void mem_cgroup_uncharge(struct folio *folio)
- {
- }
- 
-+static inline void mem_cgroup_uncharge_dmabuf(struct mem_cgroup *memcg, unsigned int nr_pages)
-+{
-+}
-+
- static inline void mem_cgroup_uncharge_list(struct list_head *page_list)
- {
- }
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index ab457f0394ab..375d18370f4b 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -1502,6 +1502,7 @@ static const struct memory_stat memory_stats[] = {
- 	{ "unevictable",		NR_UNEVICTABLE			},
- 	{ "slab_reclaimable",		NR_SLAB_RECLAIMABLE_B		},
- 	{ "slab_unreclaimable",		NR_SLAB_UNRECLAIMABLE_B		},
-+	{ "dmabuf",			MEMCG_DMABUF			},
- 
- 	/* The memory events */
- 	{ "workingset_refault_anon",	WORKINGSET_REFAULT_ANON		},
-@@ -4042,6 +4043,7 @@ static const unsigned int memcg1_stats[] = {
- 	WORKINGSET_REFAULT_ANON,
- 	WORKINGSET_REFAULT_FILE,
- 	MEMCG_SWAP,
-+	MEMCG_DMABUF,
- };
- 
- static const char *const memcg1_stat_names[] = {
-@@ -4057,6 +4059,7 @@ static const char *const memcg1_stat_names[] = {
- 	"workingset_refault_anon",
- 	"workingset_refault_file",
- 	"swap",
-+	"dmabuf",
- };
- 
- /* Universal VM events cgroup1 shows, original sort order */
-@@ -7299,6 +7302,22 @@ void mem_cgroup_uncharge_skmem(struct mem_cgroup *memcg, unsigned int nr_pages)
- 	refill_stock(memcg, nr_pages);
- }
- 
-+bool __mem_cgroup_charge_dmabuf(struct mem_cgroup *memcg, unsigned int nr_pages, gfp_t gfp_mask)
-+{
-+	if (try_charge(memcg, gfp_mask, nr_pages) == 0) {
-+		mod_memcg_state(memcg, MEMCG_DMABUF, nr_pages);
-+		return true;
-+	}
-+
-+	return false;
-+}
-+
-+void __mem_cgroup_uncharge_dmabuf(struct mem_cgroup *memcg, unsigned int nr_pages)
-+{
-+	mod_memcg_state(memcg, MEMCG_DMABUF, -nr_pages);
-+	refill_stock(memcg, nr_pages);
-+}
-+
- static int __init cgroup_memory(char *s)
- {
- 	char *token;
 -- 
 2.39.0.246.g2a6d74b583-goog
 
