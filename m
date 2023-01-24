@@ -1,63 +1,152 @@
-From: Bernard Metzler <BMT-OA+xvbQnYDHMbYB6QlFGEg@public.gmane.org>
-Subject: RE: [RFC PATCH 05/19] RMDA/siw: Convert to use vm_account
-Date: Tue, 24 Jan 2023 15:56:28 +0000
-Message-ID: <SA0PR15MB3919F0CCF1D878DE8B243B0199C99@SA0PR15MB3919.namprd15.prod.outlook.com>
+From: Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [RFC PATCH 00/19] mm: Introduce a cgroup to limit the amount of
+ locked and pinned memory
+Date: Tue, 24 Jan 2023 10:26:49 -0800
+Message-ID: <CAJD7tkavoSu9WOnw4Nbxz41nq+Rm6Sq5EeOjh3CTyA=AT5=ujg@mail.gmail.com>
 References: <cover.f52b9eb2792bccb8a9ecd6bc95055705cfe2ae03.1674538665.git-series.apopple@nvidia.com>
- <4f8b1d54ab5d6909c46ba5470065f8326f9fcc62.1674538665.git-series.apopple@nvidia.com>
- <Y8/tGIeg5mI9bDOa@nvidia.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: base64
-Return-path: <linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=from : to : cc : date :
- message-id : references : in-reply-to : content-type :
- content-transfer-encoding : mime-version : subject; s=pp1;
- bh=N5IP4z0z/5Vfarfc/5X+XSUUoGuChSya1w3mM115v1M=;
- b=dBw+mrQIcMZB7MX+EPMllATo24wScriJg6zEiKVSrgGmRyYnx02QlXa24VbbfWKZ9naA
- YE3WkBXWU9GjoMmYRnBkTabMfS95ITMrgGGCGPoaFXAMoZ5Ry7oRSGj6Mr7ZyBdkqY+E
- ynuUdpJavNneQlAQQtGe6PrgXzFFalvSuKTJ0pXcO+BKjL4WS8DclgDcGh5DlsdeE9r2
- vrVUrqRUl+60EOe+Rq5aGX4nYFZJddVhqEehYJW1JboCXxMMwUspHxgHQ/L6h2UipfPi
- AlazEOoFzUuBdB6dbyBDtleU2p/xrIHLn8Yvpe/rRFq8T8JDPiDROoTJUDm+S2obqwND JQ== 
-In-Reply-To: <Y8/tGIeg5mI9bDOa-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>
-Content-Language: en-US
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20210112;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:from:to:cc:subject:date:message-id:reply-to;
+        bh=RIwygwRM9tzobh7QaVo0cnmbFvKeH50XulwOSqSD844=;
+        b=cBbJb/Nx3OmOGYqdI8Yo1XttKVQwMvETRTZnmA/yBdPsHIR2qt4/Iv5TghMNeWcf7g
+         3NwPmcWCiVrWVMIFPwvpqPx777Yo9B1ExCJfTWMFeKrUQllNjdvxr0DdCrlBzyrV0gov
+         T7fZd0SmjzqKN8Jz/z4d6G+zYENz5OUYmVrXV2gxXpGfvL2OHf5b+orFKoR9hII5TC11
+         uHTu8Shf5tqIRjjT4iaN2O23SRGB5uf9WaYPy4t4ihT2foBPhFAGS9TDdMbZxzUEywuo
+         RGHCjr7/DDLcUoFp0xwsRRdmX81H2m/F8AKB5c/eM0Z+e0GoeLC9zauUJ/knC5ZVdtwt
+         hM+w==
+In-Reply-To: <cover.f52b9eb2792bccb8a9ecd6bc95055705cfe2ae03.1674538665.git-series.apopple-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Jason Gunthorpe <jgg-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>, Alistair Popple <apopple-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>
-Cc: "linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org" <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, "cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "jhubbard-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org" <jhubbard-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>, "tjmercier-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org" <tjmercier-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, "hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org" <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, "surenb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org" <surenb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, "mkoutny-IBi9RG/b67k@public.gmane.org" <mkoutny-IBi9RG/b67k@public.gmane.org>, "daniel-/w4YWyX8dFk@public.gmane.org" <daniel-/w4YWyX8dFk@public.gmane.org>, Leon Romanovsky <leon-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, "linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Transfer-Encoding: 7bit
+To: Alistair Popple <apopple-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>
+Cc: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, jgg-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org, jhubbard-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org, tjmercier-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, surenb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, mkoutny-IBi9RG/b67k@public.gmane.org, daniel-/w4YWyX8dFk@public.gmane.org
 
-DQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogSmFzb24gR3VudGhvcnBl
-IDxqZ2dAbnZpZGlhLmNvbT4NCj4gU2VudDogVHVlc2RheSwgMjQgSmFudWFyeSAyMDIzIDE1OjM3
-DQo+IFRvOiBBbGlzdGFpciBQb3BwbGUgPGFwb3BwbGVAbnZpZGlhLmNvbT4NCj4gQ2M6IGxpbnV4
-LW1tQGt2YWNrLm9yZzsgY2dyb3Vwc0B2Z2VyLmtlcm5lbC5vcmc7IGxpbnV4LQ0KPiBrZXJuZWxA
-dmdlci5rZXJuZWwub3JnOyBqaHViYmFyZEBudmlkaWEuY29tOyB0am1lcmNpZXJAZ29vZ2xlLmNv
-bTsNCj4gaGFubmVzQGNtcHhjaGcub3JnOyBzdXJlbmJAZ29vZ2xlLmNvbTsgbWtvdXRueUBzdXNl
-LmNvbTsgZGFuaWVsQGZmd2xsLmNoOw0KPiBCZXJuYXJkIE1ldHpsZXIgPEJNVEB6dXJpY2guaWJt
-LmNvbT47IExlb24gUm9tYW5vdnNreSA8bGVvbkBrZXJuZWwub3JnPjsNCj4gbGludXgtcmRtYUB2
-Z2VyLmtlcm5lbC5vcmcNCj4gU3ViamVjdDogW0VYVEVSTkFMXSBSZTogW1JGQyBQQVRDSCAwNS8x
-OV0gUk1EQS9zaXc6IENvbnZlcnQgdG8gdXNlDQo+IHZtX2FjY291bnQNCj4gDQo+IE9uIFR1ZSwg
-SmFuIDI0LCAyMDIzIGF0IDA0OjQyOjM0UE0gKzExMDAsIEFsaXN0YWlyIFBvcHBsZSB3cm90ZToN
-Cj4gDQo+ID4gQEAgLTM4NSwyMCArMzgyLDE2IEBAIHN0cnVjdCBzaXdfdW1lbSAqc2l3X3VtZW1f
-Z2V0KHU2NCBzdGFydCwgdTY0IGxlbiwNCj4gYm9vbCB3cml0YWJsZSkNCj4gPiAgCWlmICghdW1l
-bSkNCj4gPiAgCQlyZXR1cm4gRVJSX1BUUigtRU5PTUVNKTsNCj4gPg0KPiA+IC0JbW1fcyA9IGN1
-cnJlbnQtPm1tOw0KPiA+IC0JdW1lbS0+b3duaW5nX21tID0gbW1fczsNCj4gPiAgCXVtZW0tPndy
-aXRhYmxlID0gd3JpdGFibGU7DQo+ID4NCj4gPiAtCW1tZ3JhYihtbV9zKTsNCj4gPiArCXZtX2Fj
-Y291bnRfaW5pdF9jdXJyZW50KCZ1bWVtLT52bV9hY2NvdW50KTsNCj4gPg0KPiA+ICAJaWYgKHdy
-aXRhYmxlKQ0KPiA+ICAJCWZvbGxfZmxhZ3MgfD0gRk9MTF9XUklURTsNCj4gPg0KPiA+IC0JbW1h
-cF9yZWFkX2xvY2sobW1fcyk7DQo+ID4gKwltbWFwX3JlYWRfbG9jayhjdXJyZW50LT5tbSk7DQo+
-ID4NCj4gPiAtCW1sb2NrX2xpbWl0ID0gcmxpbWl0KFJMSU1JVF9NRU1MT0NLKSA+PiBQQUdFX1NI
-SUZUOw0KPiA+IC0NCj4gPiAtCWlmIChudW1fcGFnZXMgKyBhdG9taWM2NF9yZWFkKCZtbV9zLT5w
-aW5uZWRfdm0pID4gbWxvY2tfbGltaXQpIHsNCj4gPiArCWlmICh2bV9hY2NvdW50X3Bpbm5lZCgm
-dW1lbS0+dm1fYWNjb3VudCwgbnVtX3BhZ2VzKSkgew0KPiA+ICAJCXJ2ID0gLUVOT01FTTsNCj4g
-PiAgCQlnb3RvIG91dF9zZW1fdXA7DQo+ID4gIAl9DQo+ID4gQEAgLTQyOSw3ICs0MjIsNiBAQCBz
-dHJ1Y3Qgc2l3X3VtZW0gKnNpd191bWVtX2dldCh1NjQgc3RhcnQsIHU2NCBsZW4sDQo+IGJvb2wg
-d3JpdGFibGUpDQo+ID4gIAkJCQlnb3RvIG91dF9zZW1fdXA7DQo+ID4NCj4gPiAgCQkJdW1lbS0+
-bnVtX3BhZ2VzICs9IHJ2Ow0KPiA+IC0JCQlhdG9taWM2NF9hZGQocnYsICZtbV9zLT5waW5uZWRf
-dm0pOw0KPiANCj4gQWxzbyBmaXhlcyB0aGUgcmFjZSBidWcNCg0KQnV0IGludHJvZHVjZXMgYW5v
-dGhlciBvbmUuIEluIHRoYXQgbG9vcCwgdW1lbS0+bnVtX3BhZ2VzIGtlZXBzIHRoZQ0KbnVtYmVy
-IG9mIHBhZ2VzIGN1cnJlbnRseSBwaW5uZWQsIG5vdCB0aGUgdGFyZ2V0IG51bWJlci4gVGhlIGN1
-cnJlbnQNCnBhdGNoIHVzZXMgdGhhdCB1bWVtLT5udW1fcGFnZXMgdG8gY2FsbCB2bV91bmFjY291
-bnRfcGlubmVkKCkgaW4NCnNpd191bWVtX3JlbGVhc2UoKS4gQmFpbGluZyBvdXQgYmVmb3JlIGFs
-bCBwYWdlcyBhcmUgcGlubmVkIHdvdWxkDQptZXNzIHVwIHRoYXQgYWNjb3VudGluZyBkdXJpbmcg
-cmVsZWFzZS4gTWF5YmUgaW50cm9kdWNlIGFub3RoZXINCnBhcmFtZXRlciB0byBzaXdfdW1lbV9y
-ZWxlYXNlKCksIG9yIGJldHRlciBoYXZlIGFub3RoZXIgdW1lbSBtZW1iZXINCid1bWVtLT5udW1f
-cGFnZXNfYWNjb3VudGVkJyBmb3IgY29ycmVjdCBhY2NvdW50aW5nIGR1cmluZyByZWxlYXNlLg0K
-DQpCZXJuYXJkLg0KPiANCj4gSmFzb24NCg==
+On Mon, Jan 23, 2023 at 9:43 PM Alistair Popple <apopple-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org> wrote:
+>
+> Having large amounts of unmovable or unreclaimable memory in a system
+> can lead to system instability due to increasing the likelihood of
+> encountering out-of-memory conditions. Therefore it is desirable to
+> limit the amount of memory users can lock or pin.
+>
+> From userspace such limits can be enforced by setting
+> RLIMIT_MEMLOCK. However there is no standard method that drivers and
+> other in-kernel users can use to check and enforce this limit.
+>
+> This has lead to a large number of inconsistencies in how limits are
+> enforced. For example some drivers will use mm->locked_mm while others
+> will use mm->pinned_mm or user->locked_mm. It is therefore possible to
+> have up to three times RLIMIT_MEMLOCKED pinned.
+>
+> Having pinned memory limited per-task also makes it easy for users to
+> exceed the limit. For example drivers that pin memory with
+> pin_user_pages() it tends to remain pinned after fork. To deal with
+> this and other issues this series introduces a cgroup for tracking and
+> limiting the number of pages pinned or locked by tasks in the group.
+>
+> However the existing behaviour with regards to the rlimit needs to be
+> maintained. Therefore the lesser of the two limits is
+> enforced. Furthermore having CAP_IPC_LOCK usually bypasses the rlimit,
+> but this bypass is not allowed for the cgroup.
+>
+> The first part of this series converts existing drivers which
+> open-code the use of locked_mm/pinned_mm over to a common interface
+> which manages the refcounts of the associated task/mm/user
+> structs. This ensures accounting of pages is consistent and makes it
+> easier to add charging of the cgroup.
+>
+> The second part of the series adds the cgroup and converts core mm
+> code such as mlock over to charging the cgroup before finally
+> introducing some selftests.
+
+
+I didn't go through the entire series, so apologies if this was
+mentioned somewhere, but do you mind elaborating on why this is added
+as a separate cgroup controller rather than an extension of the memory
+cgroup controller?
+
+>
+>
+> As I don't have access to systems with all the various devices I
+> haven't been able to test all driver changes. Any help there would be
+> appreciated.
+>
+> Alistair Popple (19):
+>   mm: Introduce vm_account
+>   drivers/vhost: Convert to use vm_account
+>   drivers/vdpa: Convert vdpa to use the new vm_structure
+>   infiniband/umem: Convert to use vm_account
+>   RMDA/siw: Convert to use vm_account
+>   RDMA/usnic: convert to use vm_account
+>   vfio/type1: Charge pinned pages to pinned_vm instead of locked_vm
+>   vfio/spapr_tce: Convert accounting to pinned_vm
+>   io_uring: convert to use vm_account
+>   net: skb: Switch to using vm_account
+>   xdp: convert to use vm_account
+>   kvm/book3s_64_vio: Convert account_locked_vm() to vm_account_pinned()
+>   fpga: dfl: afu: convert to use vm_account
+>   mm: Introduce a cgroup for pinned memory
+>   mm/util: Extend vm_account to charge pages against the pin cgroup
+>   mm/util: Refactor account_locked_vm
+>   mm: Convert mmap and mlock to use account_locked_vm
+>   mm/mmap: Charge locked memory to pins cgroup
+>   selftests/vm: Add pins-cgroup selftest for mlock/mmap
+>
+>  MAINTAINERS                              |   8 +-
+>  arch/powerpc/kvm/book3s_64_vio.c         |  10 +-
+>  arch/powerpc/mm/book3s64/iommu_api.c     |  29 +--
+>  drivers/fpga/dfl-afu-dma-region.c        |  11 +-
+>  drivers/fpga/dfl-afu.h                   |   1 +-
+>  drivers/infiniband/core/umem.c           |  16 +-
+>  drivers/infiniband/core/umem_odp.c       |   6 +-
+>  drivers/infiniband/hw/usnic/usnic_uiom.c |  13 +-
+>  drivers/infiniband/hw/usnic/usnic_uiom.h |   1 +-
+>  drivers/infiniband/sw/siw/siw.h          |   2 +-
+>  drivers/infiniband/sw/siw/siw_mem.c      |  20 +--
+>  drivers/infiniband/sw/siw/siw_verbs.c    |  15 +-
+>  drivers/vdpa/vdpa_user/vduse_dev.c       |  20 +--
+>  drivers/vfio/vfio_iommu_spapr_tce.c      |  15 +-
+>  drivers/vfio/vfio_iommu_type1.c          |  59 +----
+>  drivers/vhost/vdpa.c                     |   9 +-
+>  drivers/vhost/vhost.c                    |   2 +-
+>  drivers/vhost/vhost.h                    |   1 +-
+>  include/linux/cgroup.h                   |  20 ++-
+>  include/linux/cgroup_subsys.h            |   4 +-
+>  include/linux/io_uring_types.h           |   3 +-
+>  include/linux/kvm_host.h                 |   1 +-
+>  include/linux/mm.h                       |   5 +-
+>  include/linux/mm_types.h                 |  88 ++++++++-
+>  include/linux/skbuff.h                   |   6 +-
+>  include/net/sock.h                       |   2 +-
+>  include/net/xdp_sock.h                   |   2 +-
+>  include/rdma/ib_umem.h                   |   1 +-
+>  io_uring/io_uring.c                      |  20 +--
+>  io_uring/notif.c                         |   4 +-
+>  io_uring/notif.h                         |  10 +-
+>  io_uring/rsrc.c                          |  38 +---
+>  io_uring/rsrc.h                          |   9 +-
+>  mm/Kconfig                               |  11 +-
+>  mm/Makefile                              |   1 +-
+>  mm/internal.h                            |   2 +-
+>  mm/mlock.c                               |  76 +------
+>  mm/mmap.c                                |  76 +++----
+>  mm/mremap.c                              |  54 +++--
+>  mm/pins_cgroup.c                         | 273 ++++++++++++++++++++++++-
+>  mm/secretmem.c                           |   6 +-
+>  mm/util.c                                | 196 +++++++++++++++--
+>  net/core/skbuff.c                        |  47 +---
+>  net/rds/message.c                        |   9 +-
+>  net/xdp/xdp_umem.c                       |  38 +--
+>  tools/testing/selftests/vm/Makefile      |   1 +-
+>  tools/testing/selftests/vm/pins-cgroup.c | 271 ++++++++++++++++++++++++-
+>  virt/kvm/kvm_main.c                      |   3 +-
+>  48 files changed, 1114 insertions(+), 401 deletions(-)
+>  create mode 100644 mm/pins_cgroup.c
+>  create mode 100644 tools/testing/selftests/vm/pins-cgroup.c
+>
+> base-commit: 2241ab53cbb5cdb08a6b2d4688feb13971058f65
+> --
+> git-series 0.9.1
+>
