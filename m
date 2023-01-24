@@ -1,195 +1,188 @@
 From: Alistair Popple <apopple@nvidia.com>
-Subject: [RFC PATCH 08/19] vfio/spapr_tce: Convert accounting to pinned_vm
-Date: Tue, 24 Jan 2023 16:42:37 +1100
-Message-ID: <876047347220d490313293a41e261999d1619030.1674538665.git-series.apopple@nvidia.com>
+Subject: [RFC PATCH 07/19] vfio/type1: Charge pinned pages to pinned_vm instead of locked_vm
+Date: Tue, 24 Jan 2023 16:42:36 +1100
+Message-ID: <1235619c5394aa67fe116f89f22fafa370707c90.1674538665.git-series.apopple@nvidia.com>
 References: <cover.f52b9eb2792bccb8a9ecd6bc95055705cfe2ae03.1674538665.git-series.apopple@nvidia.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Return-path: <linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane-mx.org@lists.ozlabs.org>
+Return-path: <kvm-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
  s=selector2;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=m+GpPc9JMDnZkAHSZ8sR9hzGtxuRq+aAmVdCeEX8IvI=;
- b=rihIAfNvyXZqnt+0xpvBWi1FoOEFMDZBokr7LRw/2EeqNaDoznZEaZCIk7alKXs6YLIP/L+OJYqcgHI8LXxHtaUBRQ0X/ChlubjWtH0kgXjiGhMH43KGqLWJLDR7VZAHUaeybPg7hGCMNHM/2oTIihl0KGyhiS0Wo45iP1erH7UQSnbWc+qLdm45iO7QGDKmR+bSBccItXleOP7m4XQO0WeAS8Zz42iQwf2l52k5CTbPIb1JvA4bg80r0DzsFfyx26NILghbAJ/Wme7C9+ki5b47FvjcR0BjH7bY79f3PG3j2m2kII4lrUoBxMJbxh/51rkr6yyPgTh7hrc4bmlLfA==
+ bh=nD8gOnzuByFYMkvEBPVA+p64gDK/jl6+XilYj2DMivY=;
+ b=b5fIBhQy0+x/JFIklkT8yrZxAs2+ODukZzTkXjwMv3lnDsdva7NAqyd3UDoYKDDFjB1Oy1rCR5z/p1MecTvpKZHBmj84dzAr6UkDsWyK5zlt6VFwOLV7Zrk5uHGXcHbGthtN7rRTJ0o/TZU+Z7ngVz88MvdaObLV2gmGOvF8b7KH7lGo2VxZKRyiOqvQXBPHbKM2EcM3YuDgRkYsHntO2kGV59iXlhQJfGpBc/hhgUIimp/7aLKa9oT17yvo0kq1oFB194ukRPNs7loQ8BeWd+MBkEkfEQ1hM9b0zH1LEya/jmmhC4emMA6gIAJyfm6tM1pCtz7Sa/hXJwdkq1mqCg==
 In-Reply-To: <cover.f52b9eb2792bccb8a9ecd6bc95055705cfe2ae03.1674538665.git-series.apopple@nvidia.com>
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.ozlabs.org/options/linuxppc-dev>,
- <mailto:linuxppc-dev-request@lists.ozlabs.org?subject=unsubscribe>
-List-Archive: <http://lists.ozlabs.org/pipermail/linuxppc-dev/>
-List-Post: <mailto:linuxppc-dev@lists.ozlabs.org>
-List-Help: <mailto:linuxppc-dev-request@lists.ozlabs.org?subject=help>
-List-Subscribe: <https://lists.ozlabs.org/listinfo/linuxppc-dev>,
- <mailto:linuxppc-dev-request@lists.ozlabs.org?subject=subscribe>
-Errors-To: linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane-mx.org@lists.ozlabs.org
-Sender: "Linuxppc-dev" <linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane-mx.org@lists.ozlabs.org>
+List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 To: linux-mm@kvack.org, cgroups@vger.kernel.org
-Cc: Cornelia Huck <cohuck@redhat.com>, daniel@ffwll.ch, kvm@vger.kernel.org, Alexey Kardashevskiy <aik@ozlabs.ru>, jhubbard@nvidia.com, Alistair Popple <apopple@nvidia.com>, linux-kernel@vger.kernel.org, Nicholas Piggin <npiggin@gmail.com>, linuxppc-dev@lists.ozlabs.org, Alex Williamson <alex.williamson@redhat.com>, mkoutny@suse.com, jgg@nvidia.com, hannes@cmpxchg.org, surenb@google.com, tjmercier@google.com
+Cc: linux-kernel@vger.kernel.org, jgg@nvidia.com, jhubbard@nvidia.com, tjmercier@google.com, hannes@cmpxchg.org, surenb@google.com, mkoutny@suse.com, daniel@ffwll.ch, Alistair Popple <apopple@nvidia.com>, Alex Williamson <alex.williamson@redhat.com>, Cornelia Huck <cohuck@redhat.com>, kvm@vger.kernel.org
 
-Convert from accounting pages against locked_vm to accounting them to
-pinned_vm. This allows struct vm_account to be used to track the
-mm_struct used to charge the pages. A future change also uses this to
-track a cgroup for controlling pinned pages.
+This switches the charge to pinned_vm to be consistent with other
+drivers that pin pages with FOLL_LONGTERM. It also allows the use of
+the vm_account helper struct which makes a future change to implement
+cgroup accounting of pinned pages easier to implement as that requires
+a reference to the cgroup to be maintained.
 
 Signed-off-by: Alistair Popple <apopple@nvidia.com>
-Cc: Michael Ellerman <mpe@ellerman.id.au>
-Cc: Nicholas Piggin <npiggin@gmail.com>
-Cc: Christophe Leroy <christophe.leroy@csgroup.eu>
 Cc: Alex Williamson <alex.williamson@redhat.com>
 Cc: Cornelia Huck <cohuck@redhat.com>
-Cc: Alexey Kardashevskiy <aik@ozlabs.ru>
-Cc: linuxppc-dev@lists.ozlabs.org
-Cc: linux-kernel@vger.kernel.org
 Cc: kvm@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
 ---
- arch/powerpc/mm/book3s64/iommu_api.c | 29 ++++++++++++++++++-----------
- drivers/vfio/vfio_iommu_spapr_tce.c  | 15 ++++++++++-----
- 2 files changed, 28 insertions(+), 16 deletions(-)
+ drivers/vfio/vfio_iommu_type1.c | 59 +++++++++-------------------------
+ 1 file changed, 16 insertions(+), 43 deletions(-)
 
-diff --git a/arch/powerpc/mm/book3s64/iommu_api.c b/arch/powerpc/mm/book3s64/iommu_api.c
-index 7fcfba1..6c57603 100644
---- a/arch/powerpc/mm/book3s64/iommu_api.c
-+++ b/arch/powerpc/mm/book3s64/iommu_api.c
-@@ -30,6 +30,7 @@ struct mm_iommu_table_group_mem_t {
- 	unsigned long used;
- 	atomic64_t mapped;
- 	unsigned int pageshift;
-+	struct vm_account vm_account;
- 	u64 ua;			/* userspace address */
- 	u64 entries;		/* number of entries in hpas/hpages[] */
- 	/*
-@@ -62,20 +63,24 @@ static long mm_iommu_do_alloc(struct mm_struct *mm, unsigned long ua,
- 	unsigned int pageshift;
- 	unsigned long entry, chunk;
+diff --git a/drivers/vfio/vfio_iommu_type1.c b/drivers/vfio/vfio_iommu_type1.c
+index 23c24fe..828f6c7 100644
+--- a/drivers/vfio/vfio_iommu_type1.c
++++ b/drivers/vfio/vfio_iommu_type1.c
+@@ -95,11 +95,11 @@ struct vfio_dma {
+ 	size_t			size;		/* Map size (bytes) */
+ 	int			prot;		/* IOMMU_READ/WRITE */
+ 	bool			iommu_mapped;
+-	bool			lock_cap;	/* capable(CAP_IPC_LOCK) */
+ 	bool			vaddr_invalid;
+ 	struct task_struct	*task;
+ 	struct rb_root		pfn_list;	/* Ex-user pinned pfn list */
+ 	unsigned long		*bitmap;
++	struct vm_account       vm_account;
+ };
  
--	if (dev_hpa == MM_IOMMU_TABLE_INVALID_HPA) {
--		ret = account_locked_vm(mm, entries, true);
--		if (ret)
--			return ret;
+ struct vfio_batch {
+@@ -412,31 +412,6 @@ static int vfio_iova_put_vfio_pfn(struct vfio_dma *dma, struct vfio_pfn *vpfn)
+ 	return ret;
+ }
+ 
+-static int vfio_lock_acct(struct vfio_dma *dma, long npage, bool async)
+-{
+-	struct mm_struct *mm;
+-	int ret;
 -
--		locked_entries = entries;
+-	if (!npage)
+-		return 0;
+-
+-	mm = async ? get_task_mm(dma->task) : dma->task->mm;
+-	if (!mm)
+-		return -ESRCH; /* process exited */
+-
+-	ret = mmap_write_lock_killable(mm);
+-	if (!ret) {
+-		ret = __account_locked_vm(mm, abs(npage), npage > 0, dma->task,
+-					  dma->lock_cap);
+-		mmap_write_unlock(mm);
 -	}
 -
- 	mem = kzalloc(sizeof(*mem), GFP_KERNEL);
- 	if (!mem) {
- 		ret = -ENOMEM;
- 		goto unlock_exit;
+-	if (async)
+-		mmput(mm);
+-
+-	return ret;
+-}
+-
+ /*
+  * Some mappings aren't backed by a struct page, for example an mmap'd
+  * MMIO range for our own or another device.  These use a different
+@@ -715,16 +690,8 @@ static long vfio_pin_pages_remote(struct vfio_dma *dma, unsigned long vaddr,
+ 			 * externally pinned pages are already counted against
+ 			 * the user.
+ 			 */
+-			if (!rsvd && !vfio_find_vpfn(dma, iova)) {
+-				if (!dma->lock_cap &&
+-				    mm->locked_vm + lock_acct + 1 > limit) {
+-					pr_warn("%s: RLIMIT_MEMLOCK (%ld) exceeded\n",
+-						__func__, limit << PAGE_SHIFT);
+-					ret = -ENOMEM;
+-					goto unpin_out;
+-				}
++			if (!rsvd && !vfio_find_vpfn(dma, iova))
+ 				lock_acct++;
+-			}
+ 
+ 			pinned++;
+ 			npage--;
+@@ -744,7 +711,11 @@ static long vfio_pin_pages_remote(struct vfio_dma *dma, unsigned long vaddr,
  	}
  
-+	vm_account_init_current(&mem->vm_account);
-+	if (dev_hpa == MM_IOMMU_TABLE_INVALID_HPA) {
-+		ret = vm_account_pinned(&mem->vm_account, entries);
-+		if (ret) {
-+			vm_account_release(&mem->vm_account);
-+			kfree(mem);
-+			return ret;
-+		}
-+
-+		locked_entries = entries;
+ out:
+-	ret = vfio_lock_acct(dma, lock_acct, false);
++	if (vm_account_pinned(&dma->vm_account, lock_acct)) {
++		ret = -ENOMEM;
++		lock_acct = 0;
++		pr_warn("%s: RLIMIT_MEMLOCK exceeded\n", __func__);
 +	}
-+
- 	if (dev_hpa != MM_IOMMU_TABLE_INVALID_HPA) {
- 		mem->pageshift = __ffs(dev_hpa | (entries << PAGE_SHIFT));
- 		mem->dev_hpa = dev_hpa;
-@@ -175,10 +180,11 @@ static long mm_iommu_do_alloc(struct mm_struct *mm, unsigned long ua,
- 	unpin_user_pages(mem->hpages, pinned);
  
- 	vfree(mem->hpas);
--	kfree(mem);
+ unpin_out:
+ 	if (batch->size == 1 && !batch->offset) {
+@@ -759,6 +730,7 @@ static long vfio_pin_pages_remote(struct vfio_dma *dma, unsigned long vaddr,
+ 				put_pfn(pfn, dma->prot);
+ 		}
+ 		vfio_batch_unpin(batch, dma);
++		vm_unaccount_pinned(&dma->vm_account, lock_acct);
  
- unlock_exit:
--	account_locked_vm(mm, locked_entries, false);
-+	vm_unaccount_pinned(&mem->vm_account, locked_entries);
-+	vm_account_release(&mem->vm_account);
-+	kfree(mem);
- 
- 	return ret;
- }
-@@ -229,6 +235,7 @@ static void mm_iommu_do_free(struct mm_iommu_table_group_mem_t *mem)
- 
- 	mm_iommu_unpin(mem);
- 	vfree(mem->hpas);
-+	vm_account_release(&mem->vm_account);
- 	kfree(mem);
- }
- 
-@@ -279,7 +286,7 @@ long mm_iommu_put(struct mm_struct *mm, struct mm_iommu_table_group_mem_t *mem)
- unlock_exit:
- 	mutex_unlock(&mem_list_mutex);
- 
--	account_locked_vm(mm, unlock_entries, false);
-+	vm_unaccount_pinned(&mem->vm_account, unlock_entries);
- 
- 	return ret;
- }
-diff --git a/drivers/vfio/vfio_iommu_spapr_tce.c b/drivers/vfio/vfio_iommu_spapr_tce.c
-index 60a50ce..a58281b 100644
---- a/drivers/vfio/vfio_iommu_spapr_tce.c
-+++ b/drivers/vfio/vfio_iommu_spapr_tce.c
-@@ -67,6 +67,7 @@ struct tce_container {
- 	bool def_window_pending;
- 	unsigned long locked_pages;
- 	struct mm_struct *mm;
-+	struct vm_account vm_account;
- 	struct iommu_table *tables[IOMMU_TABLE_GROUP_MAX_TABLES];
- 	struct list_head group_list;
- 	struct list_head prereg_list;
-@@ -82,6 +83,7 @@ static long tce_iommu_mm_set(struct tce_container *container)
- 	BUG_ON(!current->mm);
- 	container->mm = current->mm;
- 	mmgrab(container->mm);
-+	vm_account_init_current(&container->vm_account);
- 
- 	return 0;
- }
-@@ -291,7 +293,7 @@ static int tce_iommu_enable(struct tce_container *container)
  		return ret;
+ 	}
+@@ -782,7 +754,7 @@ static long vfio_unpin_pages_remote(struct vfio_dma *dma, dma_addr_t iova,
+ 	}
  
- 	locked = table_group->tce32_size >> PAGE_SHIFT;
--	ret = account_locked_vm(container->mm, locked, true);
-+	ret = vm_account_pinned(&container->vm_accounnt, locked);
- 	if (ret)
- 		return ret;
+ 	if (do_accounting)
+-		vfio_lock_acct(dma, locked - unlocked, true);
++		vm_unaccount_pinned(&dma->vm_account, locked - unlocked);
  
-@@ -310,7 +312,7 @@ static void tce_iommu_disable(struct tce_container *container)
- 	container->enabled = false;
+ 	return unlocked;
+ }
+@@ -805,7 +777,7 @@ static int vfio_pin_page_external(struct vfio_dma *dma, unsigned long vaddr,
+ 	ret = 0;
  
- 	BUG_ON(!container->mm);
--	account_locked_vm(container->mm, container->locked_pages, false);
-+	vm_account_pinned(&container->vm_account, container->locked_pages);
+ 	if (do_accounting && !is_invalid_reserved_pfn(*pfn_base)) {
+-		ret = vfio_lock_acct(dma, 1, true);
++		ret = vm_account_pinned(&dma->vm_account, 1);
+ 		if (ret) {
+ 			put_pfn(*pfn_base, dma->prot);
+ 			if (ret == -ENOMEM)
+@@ -833,7 +805,7 @@ static int vfio_unpin_page_external(struct vfio_dma *dma, dma_addr_t iova,
+ 	unlocked = vfio_iova_put_vfio_pfn(dma, vpfn);
+ 
+ 	if (do_accounting)
+-		vfio_lock_acct(dma, -unlocked, true);
++		vm_unaccount_pinned(&dma->vm_account, unlocked);
+ 
+ 	return unlocked;
+ }
+@@ -921,7 +893,7 @@ static int vfio_iommu_type1_pin_pages(void *iommu_data,
+ 		ret = vfio_add_to_pfn_list(dma, iova, phys_pfn);
+ 		if (ret) {
+ 			if (put_pfn(phys_pfn, dma->prot) && do_accounting)
+-				vfio_lock_acct(dma, -1, true);
++				vm_unaccount_pinned(&dma->vm_account, 1);
+ 			goto pin_unwind;
+ 		}
+ 
+@@ -1162,7 +1134,7 @@ static long vfio_unmap_unpin(struct vfio_iommu *iommu, struct vfio_dma *dma,
+ 	}
+ 
+ 	if (do_accounting) {
+-		vfio_lock_acct(dma, -unlocked, true);
++		vm_unaccount_pinned(&dma->vm_account, unlocked);
+ 		return 0;
+ 	}
+ 	return unlocked;
+@@ -1674,7 +1646,8 @@ static int vfio_dma_do_map(struct vfio_iommu *iommu,
+ 	 */
+ 	get_task_struct(current->group_leader);
+ 	dma->task = current->group_leader;
+-	dma->lock_cap = capable(CAP_IPC_LOCK);
++	vm_account_init(&dma->vm_account, dma->task, NULL, VM_ACCOUNT_TASK |
++		(capable(CAP_IPC_LOCK) ? VM_ACCOUNT_BYPASS : 0));
+ 
+ 	dma->pfn_list = RB_ROOT;
+ 
+@@ -2398,7 +2371,7 @@ static void vfio_iommu_unmap_unpin_reaccount(struct vfio_iommu *iommu)
+ 			if (!is_invalid_reserved_pfn(vpfn->pfn))
+ 				locked++;
+ 		}
+-		vfio_lock_acct(dma, locked - unlocked, true);
++		vm_unaccount_pinned(&dma->vm_account, locked - unlocked);
+ 	}
  }
  
- static void *tce_iommu_open(unsigned long arg)
-@@ -372,8 +374,10 @@ static void tce_iommu_release(void *iommu_data)
- 		WARN_ON(tce_iommu_prereg_free(container, tcemem));
- 
- 	tce_iommu_disable(container);
--	if (container->mm)
-+	if (container->mm) {
- 		mmdrop(container->mm);
-+		vm_account_release(&container->vm_account);
-+	}
- 	mutex_destroy(&container->lock);
- 
- 	kfree(container);
-@@ -619,7 +623,8 @@ static long tce_iommu_create_table(struct tce_container *container,
- 	if (!table_size)
- 		return -EINVAL;
- 
--	ret = account_locked_vm(container->mm, table_size >> PAGE_SHIFT, true);
-+	ret = vm_account_pinned(&container->vm_account,
-+				table_size >> PAGE_SHIFT);
- 	if (ret)
- 		return ret;
- 
-@@ -638,7 +643,7 @@ static void tce_iommu_free_table(struct tce_container *container,
- 	unsigned long pages = tbl->it_allocated_size >> PAGE_SHIFT;
- 
- 	iommu_tce_table_put(tbl);
--	account_locked_vm(container->mm, pages, false);
-+	vm_unaccount_pinned(&container->vm_account, pages);
- }
- 
- static long tce_iommu_create_window(struct tce_container *container,
 -- 
 git-series 0.9.1
