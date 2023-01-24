@@ -1,22 +1,22 @@
 From: Sasha Levin <sashal-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: [PATCH AUTOSEL 5.15 10/14] blk-cgroup: fix missing pd_online_fn() while activating policy
-Date: Tue, 24 Jan 2023 08:42:53 -0500
-Message-ID: <20230124134257.637523-10-sashal@kernel.org>
-References: <20230124134257.637523-1-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.10 6/8] blk-cgroup: fix missing pd_online_fn() while activating policy
+Date: Tue, 24 Jan 2023 08:43:26 -0500
+Message-ID: <20230124134328.637707-6-sashal@kernel.org>
+References: <20230124134328.637707-1-sashal@kernel.org>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1674567802;
-        bh=mJLPCi/3sB+LqCzxEK11/00G7g5mPE/RTW6D4kkkB5M=;
+        s=k20201202; t=1674567821;
+        bh=tfqkFwdSGSs2pUHF3ZMa11LzL7JgNr+nwO7nifF8Q1g=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=LgVisdwT7H50R31VxcMgggTZ/I+BfDpDMu5lJkWRV/Uucmd+7TdF50iNL3EeyoCNa
-         Hwslc4OfTaLpJ1vXQN5YSx8XXjyZUsqbDIyOpyeey4UQY7tR6J2kynBSnOT/YEA4Vb
-         MZoHR16vtZ4zxKakbIWexi07SAcTF4kFJ2yjOOxJ+NvSvrgBKJ5XQ0nLFmNuWaq66b
-         DzvrAj8T7s+5pp8f0sD3LUMDxGndlA7qMjj+QWJxABV0xGphiCiaW3lqW0O/vn7ScH
-         Hpr4yV9vsrYqoFtcIGWSbdmTyDSdfVmkYHqAqBZV1eR8sm58nAScdI+iIAbEhEFzHl
-         BPL8rad4CcrlQ==
-In-Reply-To: <20230124134257.637523-1-sashal-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+        b=MwOOYrGAL/g7qXNK6ohpTcHWwcovJo73KdHliwcl2VwEMkBgDG6TclnfnXlBIE056
+         4B5/TRwyE9BwyHv5R5RTl2QCnaoexf9ok5WZBqbKMmpMG8wOqj//PRWruvbIx9CSBl
+         c9UmOEjm81mMgo1uutGE84T6JpmQhyi3HtarG1UtgegAtE1V9ymoaDXmV2rd/Yihds
+         RVtvNIuqh57GuZSlZkCUNuQnqR9LhPbk4G4XnraMGjaED2zdi0HshblPigt43TZ1zQ
+         /v46IngrpNK3STPV/5kDlT1hP7moHQW4D4Y3MQZxhFXhJiRqztzW/bGW2AhJF3yBEF
+         7BwvdwBTcYW+g==
+In-Reply-To: <20230124134328.637707-1-sashal-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 To: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, stable-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
@@ -39,10 +39,10 @@ Signed-off-by: Sasha Levin <sashal-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
  1 file changed, 4 insertions(+)
 
 diff --git a/block/blk-cgroup.c b/block/blk-cgroup.c
-index ce5858dadca5..3ee4c1217b63 100644
+index 484c6b2dd264..c623632c1cda 100644
 --- a/block/blk-cgroup.c
 +++ b/block/blk-cgroup.c
-@@ -1360,6 +1360,10 @@ int blkcg_activate_policy(struct request_queue *q,
+@@ -1370,6 +1370,10 @@ int blkcg_activate_policy(struct request_queue *q,
  		list_for_each_entry_reverse(blkg, &q->blkg_list, q_node)
  			pol->pd_init_fn(blkg->pd[pol->plid]);
  
