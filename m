@@ -1,22 +1,22 @@
 From: Bernard Metzler <BMT-OA+xvbQnYDHMbYB6QlFGEg@public.gmane.org>
 Subject: RE: [RFC PATCH 05/19] RMDA/siw: Convert to use vm_account
-Date: Tue, 24 Jan 2023 15:22:32 +0000
-Message-ID: <SA0PR15MB3919CF22BBACD6A25ECFAD2699C99@SA0PR15MB3919.namprd15.prod.outlook.com>
+Date: Tue, 24 Jan 2023 15:56:28 +0000
+Message-ID: <SA0PR15MB3919F0CCF1D878DE8B243B0199C99@SA0PR15MB3919.namprd15.prod.outlook.com>
 References: <cover.f52b9eb2792bccb8a9ecd6bc95055705cfe2ae03.1674538665.git-series.apopple@nvidia.com>
  <4f8b1d54ab5d6909c46ba5470065f8326f9fcc62.1674538665.git-series.apopple@nvidia.com>
  <Y8/tGIeg5mI9bDOa@nvidia.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: base64
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=from : to : cc : date :
  message-id : references : in-reply-to : content-type :
  content-transfer-encoding : mime-version : subject; s=pp1;
- bh=zKahx/26rU2y5d8c6FBCmzIL/utDrXbK8NwDGiNVaAY=;
- b=fcbGN5z+UgIRxlJSHjJoTvwj1wfiywWaB7m4yqxnwIefp5Nr2pcAC3x+qkeht6h3xy9c
- xHHLUJowvN2aL31s8w19PbYSr/zfSI/ghejkAhtmuPUc9LK2Xfg8wLZiaIvTR3Rl8QkO
- B8u9pvgmoAkyHRjoK3vVe/7COEIZL/64Dm0IiDbACBNFNOD7wOaMkwdEWSewqBVxkFN+
- GAArOUty19lLrPZAL2UllrBxReShJ+z/xpmqkE4EGkTjQ0G2A95dRKhJVOTjQpSuV7jf
- gU18mDNXB3PrXFUDgUgAXjnco55V7zGI6K1Iq0fSLoE6ppBkBh0lZFLBC7c3tlAp/9qP vw== 
+ bh=N5IP4z0z/5Vfarfc/5X+XSUUoGuChSya1w3mM115v1M=;
+ b=dBw+mrQIcMZB7MX+EPMllATo24wScriJg6zEiKVSrgGmRyYnx02QlXa24VbbfWKZ9naA
+ YE3WkBXWU9GjoMmYRnBkTabMfS95ITMrgGGCGPoaFXAMoZ5Ry7oRSGj6Mr7ZyBdkqY+E
+ ynuUdpJavNneQlAQQtGe6PrgXzFFalvSuKTJ0pXcO+BKjL4WS8DclgDcGh5DlsdeE9r2
+ vrVUrqRUl+60EOe+Rq5aGX4nYFZJddVhqEehYJW1JboCXxMMwUspHxgHQ/L6h2UipfPi
+ AlazEOoFzUuBdB6dbyBDtleU2p/xrIHLn8Yvpe/rRFq8T8JDPiDROoTJUDm+S2obqwND JQ== 
 In-Reply-To: <Y8/tGIeg5mI9bDOa-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>
 Content-Language: en-US
 List-ID: <cgroups.vger.kernel.org>
@@ -51,6 +51,13 @@ PiAgCQlnb3RvIG91dF9zZW1fdXA7DQo+ID4gIAl9DQo+ID4gQEAgLTQyOSw3ICs0MjIsNiBAQCBz
 dHJ1Y3Qgc2l3X3VtZW0gKnNpd191bWVtX2dldCh1NjQgc3RhcnQsIHU2NCBsZW4sDQo+IGJvb2wg
 d3JpdGFibGUpDQo+ID4gIAkJCQlnb3RvIG91dF9zZW1fdXA7DQo+ID4NCj4gPiAgCQkJdW1lbS0+
 bnVtX3BhZ2VzICs9IHJ2Ow0KPiA+IC0JCQlhdG9taWM2NF9hZGQocnYsICZtbV9zLT5waW5uZWRf
-dm0pOw0KPiANCj4gQWxzbyBmaXhlcyB0aGUgcmFjZSBidWcNCj4gDQpUcnVlISBTaG91bGQgaGF2
-ZSB1c2VkIGF0b21pYzY0X2FkZF9yZXR1cm4oKSBpbiB0aGUgZmlyc3QgcGxhY2UuLi4NCg0KQmVy
-bmFyZC4NCg0K
+dm0pOw0KPiANCj4gQWxzbyBmaXhlcyB0aGUgcmFjZSBidWcNCg0KQnV0IGludHJvZHVjZXMgYW5v
+dGhlciBvbmUuIEluIHRoYXQgbG9vcCwgdW1lbS0+bnVtX3BhZ2VzIGtlZXBzIHRoZQ0KbnVtYmVy
+IG9mIHBhZ2VzIGN1cnJlbnRseSBwaW5uZWQsIG5vdCB0aGUgdGFyZ2V0IG51bWJlci4gVGhlIGN1
+cnJlbnQNCnBhdGNoIHVzZXMgdGhhdCB1bWVtLT5udW1fcGFnZXMgdG8gY2FsbCB2bV91bmFjY291
+bnRfcGlubmVkKCkgaW4NCnNpd191bWVtX3JlbGVhc2UoKS4gQmFpbGluZyBvdXQgYmVmb3JlIGFs
+bCBwYWdlcyBhcmUgcGlubmVkIHdvdWxkDQptZXNzIHVwIHRoYXQgYWNjb3VudGluZyBkdXJpbmcg
+cmVsZWFzZS4gTWF5YmUgaW50cm9kdWNlIGFub3RoZXINCnBhcmFtZXRlciB0byBzaXdfdW1lbV9y
+ZWxlYXNlKCksIG9yIGJldHRlciBoYXZlIGFub3RoZXIgdW1lbSBtZW1iZXINCid1bWVtLT5udW1f
+cGFnZXNfYWNjb3VudGVkJyBmb3IgY29ycmVjdCBhY2NvdW50aW5nIGR1cmluZyByZWxlYXNlLg0K
+DQpCZXJuYXJkLg0KPiANCj4gSmFzb24NCg==
