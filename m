@@ -1,57 +1,56 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [RFC PATCH 01/19] mm: Introduce vm_account
-Date: Mon, 23 Jan 2023 22:29:14 -0800
-Message-ID: <Y896ugI8HoXDRjp3@infradead.org>
-References: <cover.f52b9eb2792bccb8a9ecd6bc95055705cfe2ae03.1674538665.git-series.apopple@nvidia.com>
- <748338ffe4c42d86669923159fe0426808ecb04d.1674538665.git-series.apopple@nvidia.com>
+From: Christoph Hellwig <hch@lst.de>
+Subject: switch blk-cgroup to work on gendisk v2
+Date: Tue, 24 Jan 2023 07:57:00 +0100
+Message-ID: <20230124065716.152286-1-hch@lst.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <virtualization-bounces@lists.linux-foundation.org>
-DKIM-Filter: OpenDKIM Filter v2.11.0 smtp3.osuosl.org 78C6B60BFF
-DKIM-Filter: OpenDKIM Filter v2.11.0 smtp3.osuosl.org 89BE360A69
-DKIM-Filter: OpenDKIM Filter v2.11.0 smtp3.osuosl.org 1E03D60BB0
-DKIM-Filter: OpenDKIM Filter v2.11.0 smtp3.osuosl.org 66C4360A69
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-block-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
- d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
- :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
- Content-Transfer-Encoding:Content-ID:Content-Description;
- bh=4u7sdeygL2SI0vuOn3AQXqOOeojipj5nJ8JBXiSMSP4=; b=Y1N1Bp85zWT1Yc4mWO5RM/5swn
- z1s/ae7nZBU1XI2LeDBAOv+06U0Bu1PJWHXCDrEjlbbph1xr+oh6cmoXIod4hdcTSIhg05KsUMsH6
- Mt0SAUZbeNMdj95LikeyPio6/J/WyHzPQbupOE2KMJ+OXZv8xSLLdBNtO7Ot/A8dx2JalSA7ubKi2
- aFuBB1XW7qW1wiu2y2b/BJd4x/N6dLqevlGltWAruZGC7j2J5NPe6Xz6f5IgVH1uIF87LFk4mGzQ9
- 1iI2DWcT8gQ30YpVU8YQ5BM2WIzRNm5oNr5lR1NU6lLpwGy0B15qzrZcjDOK9MRUi3zNGYFfM5749
- r4m38yZA==;
-Content-Disposition: inline
-In-Reply-To: <748338ffe4c42d86669923159fe0426808ecb04d.1674538665.git-series.apopple@nvidia.com>
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/virtualization>, 
- <mailto:virtualization-request@lists.linux-foundation.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/virtualization/>
-List-Post: <mailto:virtualization@lists.linux-foundation.org>
-List-Help: <mailto:virtualization-request@lists.linux-foundation.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/virtualization>, 
- <mailto:virtualization-request@lists.linux-foundation.org?subject=subscribe>
-Errors-To: virtualization-bounces@lists.linux-foundation.org
-Sender: "Virtualization" <virtualization-bounces@lists.linux-foundation.org>
-To: Alistair Popple <apopple@nvidia.com>
-Cc: linux-kselftest@vger.kernel.org, rds-devel@oss.oracle.com, daniel@ffwll.ch, kvm@vger.kernel.org, linux-rdma@vger.kernel.org, jhubbard@nvidia.com, linux-fpga@vger.kernel.org, linuxppc-dev@lists.ozlabs.org, linux-kernel@vger.kernel.org, virtualization@lists.linux-foundation.org, linux-mm@kvack.org, netdev@vger.kernel.org, mkoutny@suse.com, jgg@nvidia.com, hannes@cmpxchg.org, cgroups@vger.kernel.org, bpf@vger.kernel.org, surenb@google.com, tjmercier@google.com, io-uring@vger.kernel.org
+        d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
+        MIME-Version:Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:
+        Content-ID:Content-Description:In-Reply-To:References;
+        bh=VmYGANj5EWw8Lo4TLS15TVfS0hjnPfIXbECc6g3JZec=; b=cFatyu2CSvkHizkSFbuyleHtBb
+        LKYY2w1tKlWZ+BbxR6ZL26qnFDlAAH8L5jxJuAZhSbVqrGHQhFzRfII0g0uCo67pZBYa5azgqsD07
+        NTmLTs0ctgryv5x47YoyMMnbNSNQGhReS/ofPuPK15kBY84vcmuRjJtRVCDQABhTL6wJuf+tWLZrL
+        4upq31PcJ1eLUXeyurgvIMS5bCj+3iS4iCFEedpi6As62PNJmu2+4RgCuS+ToKByb0QgKjCxjEUz0
+        FRX5eU4qOsjmMyt21MrFfF18RVfejlLOLwy2NpHzMpyhc/52L1f+QaQbinrHP9Rud6i2uTbBsmPOk
+        GxIcU5KA==;
+List-ID: <cgroups.vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"
+To: Jens Axboe <axboe@kernel.dk>, Tejun Heo <tj@kernel.org>, Josef Bacik <josef@toxicpanda.com>
+Cc: linux-block@vger.kernel.org, cgroups@vger.kernel.org
 
-> +/**
-> + * vm_account_init - Initialise a new struct vm_account.
-> + * @vm_account: pointer to uninitialised vm_account.
-> + * @task: task to charge against.
-> + * @user: user to charge against. Must be non-NULL for VM_ACCOUNT_USER.
-> + * @flags: flags to use when charging to vm_account.
-> + *
-> + * Initialise a new uninitialiused struct vm_account. Takes references
-> + * on the task/mm/user/cgroup as required although callers must ensure
-> + * any references passed in remain valid for the duration of this
-> + * call.
-> + */
-> +void vm_account_init(struct vm_account *vm_account, struct task_struct *task,
-> +		struct user_struct *user, enum vm_account_flags flags);
+Hi all,
 
+blk-cgroup works on only on live disks and "file system" I/O from bios.
+This all the information should be in the gendisk, and not the
+request_queue that also exists for pure passthrough request based
+devices.
 
-kerneldoc comments are supposed to be next to the implementation, and
-not the declaration in the header.
+Changes since v1:
+ - use the local disk variable in wbt_init instead of q->disk
+ - various spelling fixes
+
+Diffstat:
+ block/bfq-cgroup.c        |   18 ++--
+ block/bfq-iosched.c       |    6 -
+ block/blk-cgroup-rwstat.c |    2 
+ block/blk-cgroup.c        |  185 +++++++++++++++++++++-------------------------
+ block/blk-cgroup.h        |   41 ++++------
+ block/blk-iocost.c        |   40 ++++-----
+ block/blk-iolatency.c     |   41 ++++------
+ block/blk-ioprio.c        |    6 -
+ block/blk-mq-debugfs.c    |   10 --
+ block/blk-rq-qos.c        |   67 ++++++++++++++++
+ block/blk-rq-qos.h        |   66 +---------------
+ block/blk-stat.c          |    3 
+ block/blk-sysfs.c         |    4 
+ block/blk-throttle.c      |   31 ++++---
+ block/blk-wbt.c           |   39 ++++-----
+ block/blk-wbt.h           |   12 +-
+ block/genhd.c             |   17 ++--
+ include/linux/blkdev.h    |   10 +-
+ include/linux/sched.h     |    2 
+ kernel/fork.c             |    2 
+ mm/swapfile.c             |    2 
+ 21 files changed, 292 insertions(+), 312 deletions(-)
