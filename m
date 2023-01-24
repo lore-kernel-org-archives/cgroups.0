@@ -1,56 +1,68 @@
-From: Jason Gunthorpe <jgg@nvidia.com>
-Subject: Re: [RFC PATCH 05/19] RMDA/siw: Convert to use vm_account
-Date: Tue, 24 Jan 2023 10:37:12 -0400
-Message-ID: <Y8/tGIeg5mI9bDOa@nvidia.com>
+From: Jason Gunthorpe <jgg-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [RFC PATCH 06/19] RDMA/usnic: convert to use vm_account
+Date: Tue, 24 Jan 2023 10:41:28 -0400
+Message-ID: <Y8/uGL+TA7ow4Zmu@nvidia.com>
 References: <cover.f52b9eb2792bccb8a9ecd6bc95055705cfe2ae03.1674538665.git-series.apopple@nvidia.com>
- <4f8b1d54ab5d6909c46ba5470065f8326f9fcc62.1674538665.git-series.apopple@nvidia.com>
+ <03ed2d166826cd7055810c66a175e20fa2153c52.1674538665.git-series.apopple@nvidia.com>
 Mime-Version: 1.0
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
  s=selector2;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=hwC0Xt8mAoKubuWYL73vUFZNMWCWco00MGWx6+xqe7w=;
- b=F6aRMKcrtYzmchAcCMBpQgCwE4OR+0DTdfFqi5dNV+Tc20lEFcyupldB1sdp9m1scJ8wiSkpvGiWloI/yUoRG6ZwlIYcwd3eo38PC74MxjvGDizEpc93Slro/7TpOc4PkPgdyMEyJ7TTslEvIoGIZVwEff9Pg8iFQgo0E+agijDB2bVsQBEtzLE0mwBna+FCzu0MGE7RlBCdnm7Yq+0wMMLz/NQQm0D/E6vZch5T0NgBBqOR3QfXRBjfCfQXi5wPDRxz+3CQbqPT/mghzWhh3qk3Mg2zrdeEV85mn6TcI4p2Sr/OYtaSe5mpgwfmB78SUGEjGtFkn1KE1LriVDIpqw==
+ bh=ywtsCLu+RvrSzqntvW+kqIVqxdEncdFU1vtcnEF3TRQ=;
+ b=czhv9+m+4tZFRqqvaTO9pz+tjvg/KrN/fxDdGq/COZrao6LzGW2f6kNi3Ak17UuprxKwLj9C74ru1Chj+d2E1ee/UYYUQv2bd9svCQsM6nV+8YPyCc4hLGJ7Cu8/wVk4GU5TT7y3x4Wf+yHO6nKjbLqVRNQAkiDzqmXvT4j3qh6tcLFrBvJRAta8ejhSQ98rqBUsUSu0MAZWcxC60OcA819P0hUNuzZsFGCSUUV4/jMV6c55PNKj01/Fa7cMMuBDty8Qv7mhfYdOSyM8+B5jAJF2UjMy1e2vDUrJr4yG6/W5bmYbYuS3RFfDmvARB74U9RlsFPnXWmV7mA+vZhsRYw==
 Content-Disposition: inline
-In-Reply-To: <4f8b1d54ab5d6909c46ba5470065f8326f9fcc62.1674538665.git-series.apopple@nvidia.com>
+In-Reply-To: <03ed2d166826cd7055810c66a175e20fa2153c52.1674538665.git-series.apopple-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Alistair Popple <apopple@nvidia.com>
-Cc: linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, jhubbard@nvidia.com, tjmercier@google.com, hannes@cmpxchg.org, surenb@google.com, mkoutny@suse.com, daniel@ffwll.ch, Bernard Metzler <bmt@zurich.ibm.com>, Leon Romanovsky <leon@kernel.org>, linux-rdma@vger.kernel.org
+To: Alistair Popple <apopple-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>
+Cc: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, jhubbard-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org, tjmercier-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, surenb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, mkoutny-IBi9RG/b67k@public.gmane.org, daniel-/w4YWyX8dFk@public.gmane.org, Christian Benvenuti <benve-FYB4Gu1CFyUAvxtiuMwx3w@public.gmane.org>, Nelson Escobar <neescoba-FYB4Gu1CFyUAvxtiuMwx3w@public.gmane.org>, Leon Romanovsky <leon-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Tue, Jan 24, 2023 at 04:42:34PM +1100, Alistair Popple wrote:
-
-> @@ -385,20 +382,16 @@ struct siw_umem *siw_umem_get(u64 start, u64 len, bool writable)
->  	if (!umem)
->  		return ERR_PTR(-ENOMEM);
+On Tue, Jan 24, 2023 at 04:42:35PM +1100, Alistair Popple wrote:
+> diff --git a/drivers/infiniband/hw/usnic/usnic_uiom.c b/drivers/infiniband/hw/usnic/usnic_uiom.c
+> index c301b3b..250276e 100644
+> --- a/drivers/infiniband/hw/usnic/usnic_uiom.c
+> +++ b/drivers/infiniband/hw/usnic/usnic_uiom.c
+> @@ -89,8 +89,6 @@ static int usnic_uiom_get_pages(unsigned long addr, size_t size, int writable,
+>  	struct page **page_list;
+>  	struct scatterlist *sg;
+>  	struct usnic_uiom_chunk *chunk;
+> -	unsigned long locked;
+> -	unsigned long lock_limit;
+>  	unsigned long cur_base;
+>  	unsigned long npages;
+>  	int ret;
+> @@ -123,10 +121,8 @@ static int usnic_uiom_get_pages(unsigned long addr, size_t size, int writable,
+>  	uiomr->owning_mm = mm = current->mm;
+>  	mmap_read_lock(mm);
 >  
-> -	mm_s = current->mm;
-> -	umem->owning_mm = mm_s;
->  	umem->writable = writable;
->  
-> -	mmgrab(mm_s);
-> +	vm_account_init_current(&umem->vm_account);
->  
->  	if (writable)
->  		foll_flags |= FOLL_WRITE;
->  
-> -	mmap_read_lock(mm_s);
-> +	mmap_read_lock(current->mm);
->  
-> -	mlock_limit = rlimit(RLIMIT_MEMLOCK) >> PAGE_SHIFT;
+> -	locked = atomic64_add_return(npages, &current->mm->pinned_vm);
+> -	lock_limit = rlimit(RLIMIT_MEMLOCK) >> PAGE_SHIFT;
 > -
-> -	if (num_pages + atomic64_read(&mm_s->pinned_vm) > mlock_limit) {
-> +	if (vm_account_pinned(&umem->vm_account, num_pages)) {
->  		rv = -ENOMEM;
->  		goto out_sem_up;
+> -	if ((locked > lock_limit) && !capable(CAP_IPC_LOCK)) {
+> +	vm_account_init_current(&uiomr->vm_account);
+> +	if (vm_account_pinned(&uiomr->vm_account, npages)) {
+>  		ret = -ENOMEM;
+>  		goto out;
 >  	}
-> @@ -429,7 +422,6 @@ struct siw_umem *siw_umem_get(u64 start, u64 len, bool writable)
->  				goto out_sem_up;
->  
->  			umem->num_pages += rv;
-> -			atomic64_add(rv, &mm_s->pinned_vm);
 
-Also fixes the race bug
+Is this error handling right? This driver tried to avoid the race by
+using atomic64_add_return() but it means that the out label undoes the add:
+
+
+> @@ -178,7 +174,8 @@ static int usnic_uiom_get_pages(unsigned long addr, size_t size, int writable,
+>  out:
+>  	if (ret < 0) {
+>  		usnic_uiom_put_pages(chunk_list, 0);
+> -		atomic64_sub(npages, &current->mm->pinned_vm);
+
+Here
+
+> +		vm_unaccount_pinned(&uiomr->vm_account, npages);
+> +		vm_account_release(&uiomr->vm_account);
+
+But with the new API we shouldn't call vm_unaccount_pinned() if
+vm_account_pinned() doesn't succeed?
 
 Jason
