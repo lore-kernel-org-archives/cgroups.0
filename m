@@ -1,125 +1,109 @@
-From: Alistair Popple <apopple@nvidia.com>
-Subject: [RFC PATCH 12/19] kvm/book3s_64_vio: Convert account_locked_vm() to vm_account_pinned()
-Date: Tue, 24 Jan 2023 16:42:41 +1100
-Message-ID: <3ef4b18a0ff174fcb2c81f8fafe900b43216d473.1674538665.git-series.apopple@nvidia.com>
+From: Alistair Popple <apopple-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>
+Subject: [RFC PATCH 15/19] mm/util: Extend vm_account to charge pages against the pin cgroup
+Date: Tue, 24 Jan 2023 16:42:44 +1100
+Message-ID: <76d61af0219560c03910a189f1ffa340d108858e.1674538665.git-series.apopple@nvidia.com>
 References: <cover.f52b9eb2792bccb8a9ecd6bc95055705cfe2ae03.1674538665.git-series.apopple@nvidia.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Return-path: <linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane-mx.org@lists.ozlabs.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
  s=selector2;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=OiXAsGxFz4TnMqFpYvIEfO7AjQpGiup8ce6UITBOatk=;
- b=rgnlu9rLsxAYDcNmduxLEEeqHjkqyJS3VwgYTl7/AIDwfxlMSrj0wUWbB1hiNextRggFqomxQobZDTBP2aMhutu2VibNwARNt+b9Q7eMFhFJNMF9x+umjhMmRbG0FWe3HZ/YsLqRo2dBeFb7A3nzM9TE9FhPlqZ3CSRVYLdkksCs7Ty7EtoaZj2xPj6VvEE4/aJOTT9ibTj++8gnvdY+Sdyq/N0iN+4VhT5kxl3iAoydB+HNzwr0qDA5wQY6ZSys/hCtULqLO53ik4/AMCK03iWoGPL6Uqe/9aDpLpycnuwThsGaBx1cuZljMspBJmO5B/rHUR0Qr8sCNB1gSmTpVw==
-In-Reply-To: <cover.f52b9eb2792bccb8a9ecd6bc95055705cfe2ae03.1674538665.git-series.apopple@nvidia.com>
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.ozlabs.org/options/linuxppc-dev>,
- <mailto:linuxppc-dev-request@lists.ozlabs.org?subject=unsubscribe>
-List-Archive: <http://lists.ozlabs.org/pipermail/linuxppc-dev/>
-List-Post: <mailto:linuxppc-dev@lists.ozlabs.org>
-List-Help: <mailto:linuxppc-dev-request@lists.ozlabs.org?subject=help>
-List-Subscribe: <https://lists.ozlabs.org/listinfo/linuxppc-dev>,
- <mailto:linuxppc-dev-request@lists.ozlabs.org?subject=subscribe>
-Errors-To: linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane-mx.org@lists.ozlabs.org
-Sender: "Linuxppc-dev" <linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane-mx.org@lists.ozlabs.org>
+ bh=W/5i1Fiv3xI56uStZR+8ynxVAuNk9x18QJkcNkaDcTA=;
+ b=noUdmKq7L7A1uoz1VAMekURGEuYiqz9E77tY/yHmYnMRvS6Zsgb+95kGUfa2NxDQNSLoF2NVF/64Df7Bjh4nTyZ9z70M5iKT9BHL0XywyGYEFmjorE5/B1FXeNYe5ARSelzarS6TeMbMKc2OuA45pIaVgiXWlOEKMeMA2+bFChR7MswdHhORfFQg6s22j/0h749Ev2Wct+25OoiQwpVu4tE1TYQxwbtsmTa5a4NHKaXBTBd77UgZ8/29HEJqw141QmiAdHyU5pflfRqHELOyBfrrSQ08q/DU3jHed2kS20B3KvZwif0/yOntBrzupPIbRoM5l9oP6Kn8khp7wlkavA==
+In-Reply-To: <cover.f52b9eb2792bccb8a9ecd6bc95055705cfe2ae03.1674538665.git-series.apopple-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>
+List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: linux-mm@kvack.org, cgroups@vger.kernel.org
-Cc: linuxppc-dev@lists.ozlabs.org, daniel@ffwll.ch, kvm@vger.kernel.org, Alexey Kardashevskiy <aik@ozlabs.ru>, jhubbard@nvidia.com, Alistair Popple <apopple@nvidia.com>, linux-kernel@vger.kernel.org, Nicholas Piggin <npiggin@gmail.com>, mkoutny@suse.com, jgg@nvidia.com, hannes@cmpxchg.org, Paolo Bonzini <pbonzini@redhat.com>, surenb@google.com, tjmercier@google.com
+To: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, jgg-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org, jhubbard-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org, tjmercier-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, surenb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, mkoutny-IBi9RG/b67k@public.gmane.org, daniel-/w4YWyX8dFk@public.gmane.org, Alistair Popple <apopple-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>
 
-book3s_64_vio currently accounts for pinned pages with
-account_locked_vm() which charges the pages to mm->locked_vm. To make
-this consistent with other drivers switch to using
-vm_account_pinned().
+The vm_account_pinned() functions currently only account pages against
+pinned_vm/locked_vm and enforce limits against RLIMIT_MEMLOCK. Extend
+these to account pages and enforce limits using the pin count cgroup.
 
-Signed-off-by: Alistair Popple <apopple@nvidia.com>
-Cc: Michael Ellerman <mpe@ellerman.id.au>
-Cc: Nicholas Piggin <npiggin@gmail.com>
-Cc: Christophe Leroy <christophe.leroy@csgroup.eu>
-Cc: Paolo Bonzini <pbonzini@redhat.com>
-Cc: Alexey Kardashevskiy <aik@ozlabs.ru>
-Cc: linuxppc-dev@lists.ozlabs.org
-Cc: linux-kernel@vger.kernel.org
-Cc: kvm@vger.kernel.org
+Accounting of pages will fail if either RLIMIT_MEMLOCK or the cgroup
+limit is exceeded. Unlike rlimit enforcement which can be bypassed if
+the user has CAP_IPC_LOCK cgroup limits can not be bypassed.
+
+Signed-off-by: Alistair Popple <apopple-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>
+Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Cc: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
 ---
- arch/powerpc/kvm/book3s_64_vio.c | 10 +++++-----
- include/linux/kvm_host.h         |  1 +
- virt/kvm/kvm_main.c              |  3 +++
- 3 files changed, 9 insertions(+), 5 deletions(-)
+ include/linux/mm_types.h |  1 +
+ mm/util.c                | 22 ++++++++++++++++++----
+ 2 files changed, 19 insertions(+), 4 deletions(-)
 
-diff --git a/arch/powerpc/kvm/book3s_64_vio.c b/arch/powerpc/kvm/book3s_64_vio.c
-index 95e738e..ecd1deb 100644
---- a/arch/powerpc/kvm/book3s_64_vio.c
-+++ b/arch/powerpc/kvm/book3s_64_vio.c
-@@ -273,8 +273,8 @@ static int kvm_spapr_tce_release(struct inode *inode, struct file *filp)
- 		}
+diff --git a/include/linux/mm_types.h b/include/linux/mm_types.h
+index 7de2168..4adf8dc 100644
+--- a/include/linux/mm_types.h
++++ b/include/linux/mm_types.h
+@@ -1116,6 +1116,7 @@ struct vm_account {
+ 		struct mm_struct *mm;
+ 		struct user_struct *user;
+ 	} a;
++	struct pins_cgroup *pins_cg;
+ 	enum vm_account_flags flags;
+ };
+ 
+diff --git a/mm/util.c b/mm/util.c
+index af40b1e..e5fb01a 100644
+--- a/mm/util.c
++++ b/mm/util.c
+@@ -442,6 +442,7 @@ void vm_account_init(struct vm_account *vm_account, struct task_struct *task,
+ 		vm_account->a.mm = task->mm;
  	}
  
--	account_locked_vm(kvm->mm,
--		kvmppc_stt_pages(kvmppc_tce_pages(stt->size)), false);
-+	vm_unaccount_pinned(&kvm->vm_account,
-+		kvmppc_stt_pages(kvmppc_tce_pages(stt->size)));
++	vm_account->pins_cg = get_pins_cg(task);
+ 	vm_account->flags = flags;
+ }
+ EXPORT_SYMBOL_GPL(vm_account_init);
+@@ -459,6 +460,7 @@ void vm_account_release(struct vm_account *vm_account)
+ 		free_uid(vm_account->a.user);
+ 	else
+ 		mmdrop(vm_account->a.mm);
++	put_pins_cg(vm_account->pins_cg);
+ }
+ EXPORT_SYMBOL_GPL(vm_account_release);
  
- 	kvm_put_kvm(stt->kvm);
- 
-@@ -301,8 +301,8 @@ long kvm_vm_ioctl_create_spapr_tce(struct kvm *kvm,
- 		(args->offset + args->size > (ULLONG_MAX >> args->page_shift)))
- 		return -EINVAL;
- 
--	npages = kvmppc_tce_pages(args->size);
--	ret = account_locked_vm(mm, kvmppc_stt_pages(npages), true);
-+	npages = kvmppc_tce_pages(size);
-+	ret = vm_account_pinned(&kvm->vm_account, kvmppc_stt_pages(npages));
- 	if (ret)
- 		return ret;
- 
-@@ -347,7 +347,7 @@ long kvm_vm_ioctl_create_spapr_tce(struct kvm *kvm,
- 
- 	kfree(stt);
-  fail_acct:
--	account_locked_vm(mm, kvmppc_stt_pages(npages), false);
-+	vm_unaccount_pinned(&kvm->vm_account, kvmppc_stt_pages(npages));
- 	return ret;
+@@ -489,6 +491,15 @@ static int vm_account_cmpxchg(struct vm_account *vm_account,
+ 	}
  }
  
-diff --git a/include/linux/kvm_host.h b/include/linux/kvm_host.h
-index 4f26b24..25ed390 100644
---- a/include/linux/kvm_host.h
-+++ b/include/linux/kvm_host.h
-@@ -717,6 +717,7 @@ struct kvm {
- 	 */
- 	struct mutex slots_arch_lock;
- 	struct mm_struct *mm; /* userspace tied to this vm */
-+	struct vm_account vm_account;
- 	unsigned long nr_memslot_pages;
- 	/* The two memslot sets - active and inactive (per address space) */
- 	struct kvm_memslots __memslots[KVM_ADDRESS_SPACE_NUM][2];
-diff --git a/virt/kvm/kvm_main.c b/virt/kvm/kvm_main.c
-index 9c60384..770d037 100644
---- a/virt/kvm/kvm_main.c
-+++ b/virt/kvm/kvm_main.c
-@@ -1142,6 +1142,7 @@ static struct kvm *kvm_create_vm(unsigned long type, const char *fdname)
- 	KVM_MMU_LOCK_INIT(kvm);
- 	mmgrab(current->mm);
- 	kvm->mm = current->mm;
-+	vm_account_init_current(&kvm->vm_account);
- 	kvm_eventfd_init(kvm);
- 	mutex_init(&kvm->lock);
- 	mutex_init(&kvm->irq_lock);
-@@ -1258,6 +1259,7 @@ static struct kvm *kvm_create_vm(unsigned long type, const char *fdname)
- out_err_no_srcu:
- 	kvm_arch_free_vm(kvm);
- 	mmdrop(current->mm);
-+	vm_account_release(&kvm->vm_account);
- 	module_put(kvm_chardev_ops.owner);
- 	return ERR_PTR(r);
++static void vm_unaccount_legacy(struct vm_account *vm_account,
++				unsigned long npages)
++{
++	if (vm_account->flags & VM_ACCOUNT_USER)
++		atomic_long_sub(npages, &vm_account->a.user->locked_vm);
++	else
++		atomic64_sub(npages, &vm_account->a.mm->pinned_vm);
++}
++
+ int vm_account_pinned(struct vm_account *vm_account, unsigned long npages)
+ {
+ 	unsigned long lock_limit = RLIM_INFINITY;
+@@ -506,16 +517,19 @@ int vm_account_pinned(struct vm_account *vm_account, unsigned long npages)
+ 			return ret;
+ 	}
+ 
++	if (pins_try_charge(vm_account->pins_cg, npages)) {
++		vm_unaccount_legacy(vm_account, npages);
++		return -ENOMEM;
++	}
++
+ 	return 0;
  }
-@@ -1327,6 +1329,7 @@ static void kvm_destroy_vm(struct kvm *kvm)
- 	preempt_notifier_dec();
- 	hardware_disable_all();
- 	mmdrop(mm);
-+	vm_account_release(&kvm->vm_account);
- 	module_put(kvm_chardev_ops.owner);
+ EXPORT_SYMBOL_GPL(vm_account_pinned);
+ 
+ void vm_unaccount_pinned(struct vm_account *vm_account, unsigned long npages)
+ {
+-	if (vm_account->flags & VM_ACCOUNT_USER)
+-		atomic_long_sub(npages, &vm_account->a.user->locked_vm);
+-	else
+-		atomic64_sub(npages, &vm_account->a.mm->pinned_vm);
++	vm_unaccount_legacy(vm_account, npages);
++	pins_uncharge(vm_account->pins_cg, npages);
  }
+ EXPORT_SYMBOL_GPL(vm_unaccount_pinned);
  
 -- 
 git-series 0.9.1
