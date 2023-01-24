@@ -1,44 +1,56 @@
-From: Jason Gunthorpe <jgg-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [RFC PATCH 03/19] drivers/vdpa: Convert vdpa to use the new
- vm_structure
-Date: Tue, 24 Jan 2023 10:35:27 -0400
-Message-ID: <Y8/sr4SfnuoXxApR@nvidia.com>
+From: Jason Gunthorpe <jgg@nvidia.com>
+Subject: Re: [RFC PATCH 05/19] RMDA/siw: Convert to use vm_account
+Date: Tue, 24 Jan 2023 10:37:12 -0400
+Message-ID: <Y8/tGIeg5mI9bDOa@nvidia.com>
 References: <cover.f52b9eb2792bccb8a9ecd6bc95055705cfe2ae03.1674538665.git-series.apopple@nvidia.com>
- <f2e4696380f6678527a14e885556cb1bbd314737.1674538665.git-series.apopple@nvidia.com>
+ <4f8b1d54ab5d6909c46ba5470065f8326f9fcc62.1674538665.git-series.apopple@nvidia.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
  s=selector2;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=GUHgQxTr7xl07KNqhlFX5ZY6CeT1FVDbvzOWKgAF2hE=;
- b=fkjM3q73RLaTXaxImm1j505ZKO2zK1hvY+cW3vqrgccwtO7Sg4Lo5DBa1KCRjD84JsoGLGFFB5kzr7ArUj0DS8GeZ2JOkmnU/m90sKUIzM3I4jfTjbZLwqIuDXuhBOIaWYE3pWB8kcqpEFe909fB0UUKghZYKzEnR9ObEK2rcT0eeLhORzrRLcUX3eGXohsIdMVrD3N2NCPAJcGTlAlMGwFWnRXL6kciJbbZyafMiwJy5SLLBVOnHFKXB3y47B8rm5KCtd4MHn0TspPj7iaV9bi5ovlbFXOMhyEL09rNQOEhDgbfOUV61wf5N+DRn3OVMp/dkPaDtrTsgxH1S8r9XA==
+ bh=hwC0Xt8mAoKubuWYL73vUFZNMWCWco00MGWx6+xqe7w=;
+ b=F6aRMKcrtYzmchAcCMBpQgCwE4OR+0DTdfFqi5dNV+Tc20lEFcyupldB1sdp9m1scJ8wiSkpvGiWloI/yUoRG6ZwlIYcwd3eo38PC74MxjvGDizEpc93Slro/7TpOc4PkPgdyMEyJ7TTslEvIoGIZVwEff9Pg8iFQgo0E+agijDB2bVsQBEtzLE0mwBna+FCzu0MGE7RlBCdnm7Yq+0wMMLz/NQQm0D/E6vZch5T0NgBBqOR3QfXRBjfCfQXi5wPDRxz+3CQbqPT/mghzWhh3qk3Mg2zrdeEV85mn6TcI4p2Sr/OYtaSe5mpgwfmB78SUGEjGtFkn1KE1LriVDIpqw==
 Content-Disposition: inline
-In-Reply-To: <f2e4696380f6678527a14e885556cb1bbd314737.1674538665.git-series.apopple-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>
+In-Reply-To: <4f8b1d54ab5d6909c46ba5470065f8326f9fcc62.1674538665.git-series.apopple@nvidia.com>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Alistair Popple <apopple-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>
-Cc: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, jhubbard-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org, tjmercier-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, surenb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, mkoutny-IBi9RG/b67k@public.gmane.org, daniel-/w4YWyX8dFk@public.gmane.org, "Michael S. Tsirkin" <mst-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Jason Wang <jasowang-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, virtualization-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+To: Alistair Popple <apopple@nvidia.com>
+Cc: linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, jhubbard@nvidia.com, tjmercier@google.com, hannes@cmpxchg.org, surenb@google.com, mkoutny@suse.com, daniel@ffwll.ch, Bernard Metzler <bmt@zurich.ibm.com>, Leon Romanovsky <leon@kernel.org>, linux-rdma@vger.kernel.org
 
-On Tue, Jan 24, 2023 at 04:42:32PM +1100, Alistair Popple wrote:
-> @@ -990,8 +989,8 @@ static int vduse_dev_reg_umem(struct vduse_dev *dev,
+On Tue, Jan 24, 2023 at 04:42:34PM +1100, Alistair Popple wrote:
+
+> @@ -385,20 +382,16 @@ struct siw_umem *siw_umem_get(u64 start, u64 len, bool writable)
+>  	if (!umem)
+>  		return ERR_PTR(-ENOMEM);
 >  
->  	mmap_read_lock(current->mm);
+> -	mm_s = current->mm;
+> -	umem->owning_mm = mm_s;
+>  	umem->writable = writable;
 >  
-> -	lock_limit = PFN_DOWN(rlimit(RLIMIT_MEMLOCK));
-> -	if (npages + atomic64_read(&current->mm->pinned_vm) > lock_limit)
+> -	mmgrab(mm_s);
 > +	vm_account_init_current(&umem->vm_account);
-> +	if (vm_account_pinned(&umem->vm_account, npages))
->  		goto out;
 >  
->  	pinned = pin_user_pages(uaddr, npages, FOLL_LONGTERM | FOLL_WRITE,
-> @@ -1006,22 +1005,21 @@ static int vduse_dev_reg_umem(struct vduse_dev *dev,
->  	if (ret)
->  		goto out;
+>  	if (writable)
+>  		foll_flags |= FOLL_WRITE;
 >  
-> -	atomic64_add(npages, &current->mm->pinned_vm);
+> -	mmap_read_lock(mm_s);
+> +	mmap_read_lock(current->mm);
+>  
+> -	mlock_limit = rlimit(RLIMIT_MEMLOCK) >> PAGE_SHIFT;
+> -
+> -	if (num_pages + atomic64_read(&mm_s->pinned_vm) > mlock_limit) {
+> +	if (vm_account_pinned(&umem->vm_account, num_pages)) {
+>  		rv = -ENOMEM;
+>  		goto out_sem_up;
+>  	}
+> @@ -429,7 +422,6 @@ struct siw_umem *siw_umem_get(u64 start, u64 len, bool writable)
+>  				goto out_sem_up;
+>  
+>  			umem->num_pages += rv;
+> -			atomic64_add(rv, &mm_s->pinned_vm);
 
-Mention in the commit message that this fixes a bug where vdpa would
-race the update of mm->pinned_vm and might go past the limit.
+Also fixes the race bug
 
 Jason
