@@ -1,56 +1,108 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: switch blk-cgroup to work on gendisk v2
-Date: Tue, 24 Jan 2023 07:57:00 +0100
-Message-ID: <20230124065716.152286-1-hch@lst.de>
+From: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
+Subject: [PATCH 01/15] blk-cgroup: don't defer blkg_free to a workqueue
+Date: Tue, 24 Jan 2023 07:57:01 +0100
+Message-ID: <20230124065716.152286-2-hch@lst.de>
+References: <20230124065716.152286-1-hch@lst.de>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Return-path: <linux-block-owner@vger.kernel.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
-        MIME-Version:Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:
-        Content-ID:Content-Description:In-Reply-To:References;
-        bh=VmYGANj5EWw8Lo4TLS15TVfS0hjnPfIXbECc6g3JZec=; b=cFatyu2CSvkHizkSFbuyleHtBb
-        LKYY2w1tKlWZ+BbxR6ZL26qnFDlAAH8L5jxJuAZhSbVqrGHQhFzRfII0g0uCo67pZBYa5azgqsD07
-        NTmLTs0ctgryv5x47YoyMMnbNSNQGhReS/ofPuPK15kBY84vcmuRjJtRVCDQABhTL6wJuf+tWLZrL
-        4upq31PcJ1eLUXeyurgvIMS5bCj+3iS4iCFEedpi6As62PNJmu2+4RgCuS+ToKByb0QgKjCxjEUz0
-        FRX5eU4qOsjmMyt21MrFfF18RVfejlLOLwy2NpHzMpyhc/52L1f+QaQbinrHP9Rud6i2uTbBsmPOk
-        GxIcU5KA==;
+        MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender
+        :Reply-To:Content-Type:Content-ID:Content-Description;
+        bh=30NLUDFY6LwZkFlJss4wE81ByRWLz/1+fz+0qS7Tg/s=; b=fr+cpc3Un7SR+MPks821I9do58
+        4gvK6XD7UwBOfLrsYQrp3od3butIZSOmtLLOvXIL8Om/vErdYLTCwegnRDH3s7H1cDE0h5YQewKWs
+        L5IW1drnvQxnB5ecRuA8IHCMELafyXHiDEwqi/ONMr2hL6CbbKReaebCVGP76S8zGpoSSXbzPuQDX
+        fYh/KKahuSfQ2SbgzXF9e/Dv/l1+b0ztaXQc3Rs8LnebFukkL9GJNvTcdbRHORaOtIJ3hNhsDDkc5
+        Pi6Ov3Opx2CQdlCKTwS8T74vgFE4GSQcF58WTS9F04yTCImoCfgCC51MXTugYi8m2lMKrfwyPvU5u
+        zQ+XqFUw==;
+In-Reply-To: <20230124065716.152286-1-hch-jcswGhMUV9g@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Jens Axboe <axboe@kernel.dk>, Tejun Heo <tj@kernel.org>, Josef Bacik <josef@toxicpanda.com>
-Cc: linux-block@vger.kernel.org, cgroups@vger.kernel.org
+To: Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Josef Bacik <josef-DigfWCa+lFGyeJad7bwFQA@public.gmane.org>
+Cc: linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Andreas Herrmann <aherrmann-l3A5Bk7waGM@public.gmane.org>
 
-Hi all,
+Now that blk_put_queue can be called from process context, there is no
+need for the asynchronous execution.
 
-blk-cgroup works on only on live disks and "file system" I/O from bios.
-This all the information should be in the gendisk, and not the
-request_queue that also exists for pure passthrough request based
-devices.
+This effectively reverts commit d578c770c85233af592e54537f93f3831bde7e9a.
 
-Changes since v1:
- - use the local disk variable in wbt_init instead of q->disk
- - various spelling fixes
+Signed-off-by: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
+Reviewed-by: Andreas Herrmann <aherrmann-l3A5Bk7waGM@public.gmane.org>
+---
+ block/blk-cgroup.c | 32 ++++++++++----------------------
+ block/blk-cgroup.h |  5 +----
+ 2 files changed, 11 insertions(+), 26 deletions(-)
 
-Diffstat:
- block/bfq-cgroup.c        |   18 ++--
- block/bfq-iosched.c       |    6 -
- block/blk-cgroup-rwstat.c |    2 
- block/blk-cgroup.c        |  185 +++++++++++++++++++++-------------------------
- block/blk-cgroup.h        |   41 ++++------
- block/blk-iocost.c        |   40 ++++-----
- block/blk-iolatency.c     |   41 ++++------
- block/blk-ioprio.c        |    6 -
- block/blk-mq-debugfs.c    |   10 --
- block/blk-rq-qos.c        |   67 ++++++++++++++++
- block/blk-rq-qos.h        |   66 +---------------
- block/blk-stat.c          |    3 
- block/blk-sysfs.c         |    4 
- block/blk-throttle.c      |   31 ++++---
- block/blk-wbt.c           |   39 ++++-----
- block/blk-wbt.h           |   12 +-
- block/genhd.c             |   17 ++--
- include/linux/blkdev.h    |   10 +-
- include/linux/sched.h     |    2 
- kernel/fork.c             |    2 
- mm/swapfile.c             |    2 
- 21 files changed, 292 insertions(+), 312 deletions(-)
+diff --git a/block/blk-cgroup.c b/block/blk-cgroup.c
+index ce6a2b7d3dfb2b..30d493b43f9272 100644
+--- a/block/blk-cgroup.c
++++ b/block/blk-cgroup.c
+@@ -114,12 +114,19 @@ static bool blkcg_policy_enabled(struct request_queue *q,
+ 	return pol && test_bit(pol->plid, q->blkcg_pols);
+ }
+ 
+-static void blkg_free_workfn(struct work_struct *work)
++/**
++ * blkg_free - free a blkg
++ * @blkg: blkg to free
++ *
++ * Free @blkg which may be partially allocated.
++ */
++static void blkg_free(struct blkcg_gq *blkg)
+ {
+-	struct blkcg_gq *blkg = container_of(work, struct blkcg_gq,
+-					     free_work);
+ 	int i;
+ 
++	if (!blkg)
++		return;
++
+ 	for (i = 0; i < BLKCG_MAX_POLS; i++)
+ 		if (blkg->pd[i])
+ 			blkcg_policy[i]->pd_free_fn(blkg->pd[i]);
+@@ -131,25 +138,6 @@ static void blkg_free_workfn(struct work_struct *work)
+ 	kfree(blkg);
+ }
+ 
+-/**
+- * blkg_free - free a blkg
+- * @blkg: blkg to free
+- *
+- * Free @blkg which may be partially allocated.
+- */
+-static void blkg_free(struct blkcg_gq *blkg)
+-{
+-	if (!blkg)
+-		return;
+-
+-	/*
+-	 * Both ->pd_free_fn() and request queue's release handler may
+-	 * sleep, so free us by scheduling one work func
+-	 */
+-	INIT_WORK(&blkg->free_work, blkg_free_workfn);
+-	schedule_work(&blkg->free_work);
+-}
+-
+ static void __blkg_release(struct rcu_head *rcu)
+ {
+ 	struct blkcg_gq *blkg = container_of(rcu, struct blkcg_gq, rcu_head);
+diff --git a/block/blk-cgroup.h b/block/blk-cgroup.h
+index 1e94e404eaa80a..f126fe36001eb3 100644
+--- a/block/blk-cgroup.h
++++ b/block/blk-cgroup.h
+@@ -75,10 +75,7 @@ struct blkcg_gq {
+ 
+ 	spinlock_t			async_bio_lock;
+ 	struct bio_list			async_bios;
+-	union {
+-		struct work_struct	async_bio_work;
+-		struct work_struct	free_work;
+-	};
++	struct work_struct		async_bio_work;
+ 
+ 	atomic_t			use_delay;
+ 	atomic64_t			delay_nsec;
+-- 
+2.39.0
+
