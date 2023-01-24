@@ -1,338 +1,62 @@
-From: Alistair Popple <apopple-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>
-Subject: [RFC PATCH 19/19] selftests/vm: Add pins-cgroup selftest for mlock/mmap
-Date: Tue, 24 Jan 2023 16:42:48 +1100
-Message-ID: <9e24fb108c8fae43c18e0189d86cbb978848fbb0.1674538665.git-series.apopple@nvidia.com>
+From: "Michael S. Tsirkin" <mst@redhat.com>
+Subject: Re: [RFC PATCH 02/19] drivers/vhost: Convert to use vm_account
+Date: Tue, 24 Jan 2023 00:55:06 -0500
+Message-ID: <20230124005356-mutt-send-email-mst@kernel.org>
 References: <cover.f52b9eb2792bccb8a9ecd6bc95055705cfe2ae03.1674538665.git-series.apopple@nvidia.com>
+ <97a17a6ab7e59be4287a2a94d43bb787300476b4.1674538665.git-series.apopple@nvidia.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
- s=selector2;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=CGKTTJbiu7jo+yKcPAlQKTQIKt8ia+61r7AgkXzDJs4=;
- b=L9m5dbqSXd5PZ1FXIMuhCAMwXcfHhBscfWWGOTrz7txmi80DMBxphaqvJ6fNZdyb/zMXzHEqHsaH7/w5R2oXo2LCD5Qpm2ozj+4k+TuMQcmO4gZ6JlyFb5OBaT1aEmLqJZEsIjfgEd2+PAUIiXscE9HB7iKGzHOs5b6W2Rvcl6DUY7LJNrnYQlvWC0/P2pBFx5dtCQ0RaCo/rNiTwHFSdKJrQuTKiQUCooU+sJc2hvG7Dv2V+fSHUC7/Z/wVVNbPYm/0Gt/eYNftxiPhheaXJt73FlPdQ0RKV3QmFwpAeXaaEZC9vdaQ9kJbzZrAQNXzR80yVGyOGbPmm3E+2TlYig==
-In-Reply-To: <cover.f52b9eb2792bccb8a9ecd6bc95055705cfe2ae03.1674538665.git-series.apopple-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>
-List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, jgg-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org, jhubbard-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org, tjmercier-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, surenb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, mkoutny-IBi9RG/b67k@public.gmane.org, daniel-/w4YWyX8dFk@public.gmane.org, Alistair Popple <apopple-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>, Shuah Khan <shuah-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, linux-kselftest-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Transfer-Encoding: 7bit
+Return-path: <virtualization-bounces@lists.linux-foundation.org>
+DKIM-Filter: OpenDKIM Filter v2.11.0 smtp4.osuosl.org C236E416FC
+DKIM-Filter: OpenDKIM Filter v2.11.0 smtp4.osuosl.org DC19F41705
+DKIM-Filter: OpenDKIM Filter v2.11.0 smtp1.osuosl.org 61C3B81E87
+DKIM-Filter: OpenDKIM Filter v2.11.0 smtp1.osuosl.org 4CD9581E6E
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+ s=mimecast20190719; t=1674539717;
+ h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+ to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+ in-reply-to:in-reply-to:references:references;
+ bh=9+nMn4Y7ib+ksp4an8hs+mxpzKixV/6cqrHGLxmxmZs=;
+ b=Fv+zftM/+sdrzkt6rdetvf/WJi6bEZ2SsstXemXyQrpRJ3fmrYrDGhqUdH0JcAW3dESW+P
+ hc8x7Zz6VZ53s4Vff+RN9wZqfkEXCRqOIanlbsboXXhBzAl6T7uprwDIH2qitYh2NePZVp
+ j+5kgltXBJADMgAFT2cFsSDmIe1mTt8=
+In-Reply-To: <97a17a6ab7e59be4287a2a94d43bb787300476b4.1674538665.git-series.apopple@nvidia.com>
+Content-Disposition: inline
+List-Id: <cgroups.vger.kernel.org>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/virtualization>, 
+ <mailto:virtualization-request@lists.linux-foundation.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/virtualization/>
+List-Post: <mailto:virtualization@lists.linux-foundation.org>
+List-Help: <mailto:virtualization-request@lists.linux-foundation.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/virtualization>, 
+ <mailto:virtualization-request@lists.linux-foundation.org?subject=subscribe>
+Errors-To: virtualization-bounces@lists.linux-foundation.org
+Sender: "Virtualization" <virtualization-bounces@lists.linux-foundation.org>
+To: Alistair Popple <apopple@nvidia.com>
+Cc: daniel@ffwll.ch, kvm@vger.kernel.org, jhubbard@nvidia.com, linux-kernel@vger.kernel.org, virtualization@lists.linux-foundation.org, linux-mm@kvack.org, netdev@vger.kernel.org, mkoutny@suse.com, jgg@nvidia.com, hannes@cmpxchg.org, cgroups@vger.kernel.org, surenb@google.com, tjmercier@google.com
 
-Add some basic tests of mlock/mmap cgroup accounting for pinned
-memory.
+On Tue, Jan 24, 2023 at 04:42:31PM +1100, Alistair Popple wrote:
+> diff --git a/drivers/vhost/vdpa.c b/drivers/vhost/vdpa.c
+> index ec32f78..a31dd53 100644
+> --- a/drivers/vhost/vdpa.c
+> +++ b/drivers/vhost/vdpa.c
 
-Signed-off-by: Alistair Popple <apopple-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>
-Cc: Shuah Khan <shuah-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-Cc: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
-Cc: linux-kselftest-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
----
- MAINTAINERS                              |   1 +-
- tools/testing/selftests/vm/Makefile      |   1 +-
- tools/testing/selftests/vm/pins-cgroup.c | 271 ++++++++++++++++++++++++-
- 3 files changed, 273 insertions(+)
- create mode 100644 tools/testing/selftests/vm/pins-cgroup.c
+...
 
-diff --git a/MAINTAINERS b/MAINTAINERS
-index f8526e2..4c4eed9 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -5387,6 +5387,7 @@ L:	cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
- L:	linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
- S:	Maintained
- F:	mm/pins_cgroup.c
-+F:	tools/testing/selftests/vm/pins-cgroup.c
- 
- CORETEMP HARDWARE MONITORING DRIVER
- M:	Fenghua Yu <fenghua.yu-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
-diff --git a/tools/testing/selftests/vm/Makefile b/tools/testing/selftests/vm/Makefile
-index 89c14e4..0653720 100644
---- a/tools/testing/selftests/vm/Makefile
-+++ b/tools/testing/selftests/vm/Makefile
-@@ -56,6 +56,7 @@ TEST_GEN_PROGS += soft-dirty
- TEST_GEN_PROGS += split_huge_page_test
- TEST_GEN_FILES += ksm_tests
- TEST_GEN_PROGS += ksm_functional_tests
-+TEST_GEN_FILES += pins-cgroup
- 
- ifeq ($(MACHINE),x86_64)
- CAN_BUILD_I386 := $(shell ./../x86/check_cc.sh "$(CC)" ../x86/trivial_32bit_program.c -m32)
-diff --git a/tools/testing/selftests/vm/pins-cgroup.c b/tools/testing/selftests/vm/pins-cgroup.c
-new file mode 100644
-index 0000000..c2eabc2
---- /dev/null
-+++ b/tools/testing/selftests/vm/pins-cgroup.c
-@@ -0,0 +1,271 @@
-+// SPDX-License-Identifier: GPL-2.0
-+#include "../kselftest_harness.h"
-+
-+#define _GNU_SOURCE
-+#include <fcntl.h>
-+#include <assert.h>
-+#include <stdio.h>
-+#include <stdlib.h>
-+#include <string.h>
-+#include <sys/mman.h>
-+#include <sys/types.h>
-+#include <sys/stat.h>
-+#include <sys/ioctl.h>
-+#include <sys/prctl.h>
-+#include <sys/resource.h>
-+#include <sys/capability.h>
-+#include <unistd.h>
-+
-+#define CGROUP_TEMP "/sys/fs/cgroup/pins_XXXXXX"
-+#define PINS_MAX (-1UL)
-+
-+FIXTURE(pins_cg)
-+{
-+	char *cg_path;
-+	long page_size;
-+};
-+
-+static char *cgroup_new(void)
-+{
-+	char *cg;
-+
-+	cg = malloc(sizeof(CGROUP_TEMP));
-+	strcpy(cg, CGROUP_TEMP);
-+	if (!mkdtemp(cg)) {
-+		perror("Failed to create cgroup");
-+		return NULL;
-+	}
-+
-+	return cg;
-+}
-+
-+static int cgroup_add_proc(char *cg, pid_t pid)
-+{
-+	char *cg_proc;
-+	FILE *f;
-+	int ret = 0;
-+
-+	if (asprintf(&cg_proc, "%s/cgroup.procs", cg) < 0)
-+		return -1;
-+
-+	f = fopen(cg_proc, "w");
-+	free(cg_proc);
-+	if (!f)
-+		return -1;
-+
-+	if (fprintf(f, "%ld\n", (long) pid) < 0)
-+		ret = -1;
-+
-+	fclose(f);
-+	return ret;
-+}
-+
-+static int cgroup_set_limit(char *cg, unsigned long limit)
-+{
-+	char *cg_pins_max;
-+	FILE *f;
-+	int ret = 0;
-+
-+	if (asprintf(&cg_pins_max, "%s/pins.max", cg) < 0)
-+		return -1;
-+
-+	f = fopen(cg_pins_max, "w");
-+	free(cg_pins_max);
-+	if (!f)
-+		return -1;
-+
-+	if (limit != PINS_MAX) {
-+		if (fprintf(f, "%ld\n", limit) < 0)
-+			ret = -1;
-+	} else {
-+		if (fprintf(f, "max\n") < 0)
-+			ret = -1;
-+	}
-+
-+	fclose(f);
-+	return ret;
-+}
-+
-+FIXTURE_SETUP(pins_cg)
-+{
-+	char *cg_subtree_control;
-+	FILE *f;
-+
-+	if (asprintf(&cg_subtree_control,
-+			"/sys/fs/cgroup/cgroup.subtree_control") < 0)
-+		return;
-+
-+	f = fopen(cg_subtree_control, "w");
-+	free(cg_subtree_control);
-+	if (!f)
-+		return;
-+
-+	fprintf(f, "+pins\n");
-+	fclose(f);
-+
-+	self->cg_path = cgroup_new();
-+	self->page_size = sysconf(_SC_PAGE_SIZE);
-+}
-+
-+FIXTURE_TEARDOWN(pins_cg)
-+{
-+	cgroup_add_proc("/sys/fs/cgroup", getpid());
-+
-+	rmdir(self->cg_path);
-+	free(self->cg_path);
-+}
-+
-+static long cgroup_pins(char *cg)
-+{
-+	long pin_count;
-+	char *cg_pins_current;
-+	FILE *f;
-+	int ret;
-+
-+	if (asprintf(&cg_pins_current, "%s/pins.current", cg) < 0)
-+		return -1;
-+
-+	f = fopen(cg_pins_current, "r");
-+	if (!f) {
-+		printf("Can't open %s\n", cg_pins_current);
-+		getchar();
-+		free(cg_pins_current);
-+		return -2;
-+	}
-+
-+	free(cg_pins_current);
-+
-+	if (fscanf(f, "%ld", &pin_count) == EOF)
-+		ret = -3;
-+	else
-+		ret = pin_count;
-+
-+	fclose(f);
-+	return ret;
-+}
-+
-+static int set_rlim_memlock(unsigned long size)
-+{
-+	struct rlimit rlim_memlock = {
-+		.rlim_cur = size,
-+		.rlim_max = size,
-+	};
-+	cap_t cap;
-+	cap_value_t capability[1] = { CAP_IPC_LOCK };
-+
-+	/*
-+	 * Many of the rlimit checks are skipped if a process has
-+	 * CAP_IP_LOCK. As this test should be run as root we need to
-+	 * explicitly drop it.
-+	 */
-+	cap = cap_get_proc();
-+	if (!cap)
-+		return -1;
-+	if (cap_set_flag(cap, CAP_EFFECTIVE, 1, capability, CAP_CLEAR))
-+		return -1;
-+	if (cap_set_proc(cap))
-+		return -1;
-+	return setrlimit(RLIMIT_MEMLOCK, &rlim_memlock);
-+}
-+
-+TEST_F(pins_cg, basic)
-+{
-+	pid_t child_pid;
-+	long page_size = self->page_size;
-+	char *p;
-+
-+	ASSERT_EQ(cgroup_add_proc(self->cg_path, getpid()), 0);
-+	p = mmap(NULL, 32*page_size, PROT_READ | PROT_WRITE,
-+		MAP_ANONYMOUS | MAP_PRIVATE, -1, 0);
-+	ASSERT_NE(p, MAP_FAILED);
-+
-+	ASSERT_EQ(cgroup_pins(self->cg_path), 0);
-+	memset(p, 0, 16*page_size);
-+	ASSERT_EQ(mlock(p, page_size), 0);
-+	ASSERT_EQ(cgroup_pins(self->cg_path), 1);
-+	ASSERT_EQ(mlock(p + page_size, page_size), 0);
-+	ASSERT_EQ(cgroup_pins(self->cg_path), 2);
-+	ASSERT_EQ(mlock(p, page_size), 0);
-+	ASSERT_EQ(cgroup_pins(self->cg_path), 2);
-+	ASSERT_EQ(mlock(p, 4*page_size), 0);
-+	ASSERT_EQ(cgroup_pins(self->cg_path), 4);
-+	ASSERT_EQ(munlock(p + 2*page_size, 2*page_size), 0);
-+	ASSERT_EQ(cgroup_pins(self->cg_path), 2);
-+	ASSERT_EQ(cgroup_set_limit(self->cg_path, 8), 0);
-+	ASSERT_EQ(mlock(p, 16*page_size), -1);
-+	ASSERT_EQ(errno, ENOMEM);
-+	ASSERT_EQ(cgroup_pins(self->cg_path), 2);
-+	ASSERT_EQ(cgroup_set_limit(self->cg_path, PINS_MAX), 0);
-+
-+	/* check mremap() a locked region correctly accounts locked pages */
-+	ASSERT_EQ(mlock(p, 32*page_size), 0);
-+	ASSERT_EQ(cgroup_pins(self->cg_path), 32);
-+	p = mremap(p, 32*page_size, 64*page_size, MREMAP_MAYMOVE);
-+	ASSERT_NE(p, MAP_FAILED);
-+	ASSERT_EQ(cgroup_pins(self->cg_path), 64);
-+	ASSERT_EQ(munmap(p + 32*page_size, 32*page_size), 0)
-+	ASSERT_EQ(cgroup_pins(self->cg_path), 32);
-+	p = mremap(p, 32*page_size, 32*page_size, MREMAP_MAYMOVE | MREMAP_DONTUNMAP);
-+	ASSERT_NE(p, MAP_FAILED);
-+	ASSERT_EQ(cgroup_pins(self->cg_path), 32);
-+	ASSERT_EQ(munlock(p, 32*page_size), 0);
-+
-+	/* mremap() a locked region should fail if limit exceeded */
-+	ASSERT_EQ(set_rlim_memlock(32*page_size), 0);
-+	ASSERT_EQ(mlock(p, 32*page_size), 0);
-+	ASSERT_EQ(mremap(p, 32*page_size, 64*page_size, 0), MAP_FAILED);
-+	ASSERT_EQ(munlock(p, 32*page_size), 0);
-+
-+	/* Exceeds rlimit, expected to fail */
-+	ASSERT_EQ(set_rlim_memlock(16*page_size), 0);
-+	ASSERT_EQ(mlock(p, 32*page_size), -1);
-+	ASSERT_EQ(errno, ENOMEM);
-+
-+	/* memory in the child isn't locked so shouldn't increase pin_cg count */
-+	ASSERT_EQ(mlock(p, 16*page_size), 0);
-+	child_pid = fork();
-+	if (!child_pid) {
-+		ASSERT_EQ(cgroup_pins(self->cg_path), 16);
-+		ASSERT_EQ(mlock(p, 16*page_size), 0);
-+		ASSERT_EQ(cgroup_pins(self->cg_path), 32);
-+		return;
-+
-+	}
-+	waitpid(child_pid, NULL, 0);
-+
-+	/* check that child exit uncharged the pins */
-+	ASSERT_EQ(cgroup_pins(self->cg_path), 16);
-+}
-+
-+TEST_F(pins_cg, mmap)
-+{
-+	char *p;
-+
-+	ASSERT_EQ(cgroup_add_proc(self->cg_path, getpid()), 0);
-+	p = mmap(NULL, 4*self->page_size, PROT_READ | PROT_WRITE,
-+		MAP_ANONYMOUS | MAP_PRIVATE | MAP_LOCKED, -1, 0);
-+	ASSERT_NE(p, MAP_FAILED);
-+	ASSERT_EQ(cgroup_pins(self->cg_path), 4);
-+}
-+
-+/*
-+ * Test moving to a different cgroup.
-+ */
-+TEST_F(pins_cg, move_cg)
-+{
-+	char *p, *new_cg;
-+
-+	ASSERT_EQ(cgroup_add_proc(self->cg_path, getpid()), 0);
-+	p = mmap(NULL, 16*self->page_size, PROT_READ | PROT_WRITE,
-+		MAP_ANONYMOUS | MAP_PRIVATE, -1, 0);
-+	ASSERT_NE(p, MAP_FAILED);
-+	memset(p, 0, 16*self->page_size);
-+	ASSERT_EQ(mlock(p, 16*self->page_size), 0);
-+	ASSERT_EQ(cgroup_pins(self->cg_path), 16);
-+	ASSERT_NE(new_cg = cgroup_new(), NULL);
-+	ASSERT_EQ(cgroup_add_proc(new_cg, getpid()), 0);
-+	ASSERT_EQ(cgroup_pins(new_cg), 16);
-+	ASSERT_EQ(cgroup_add_proc(self->cg_path, getpid()), 0);
-+	rmdir(new_cg);
-+}
-+TEST_HARNESS_MAIN
--- 
-git-series 0.9.1
+> @@ -780,6 +780,10 @@ static int vhost_vdpa_map(struct vhost_vdpa *v, struct vhost_iotlb *iotlb,
+>  	u32 asid = iotlb_to_asid(iotlb);
+>  	int r = 0;
+>  
+> +	if (!vdpa->use_va)
+> +		if (vm_account_pinned(&dev->vm_account, PFN_DOWN(size)))
+> +			return -ENOMEM;
+> +
+>  	r = vhost_iotlb_add_range_ctx(iotlb, iova, iova + size - 1,
+>  				      pa, perm, opaque);
+>  	if (r)
+
+I suspect some error handling will have to be reworked then, no?
+
+> -- 
+> git-series 0.9.1
