@@ -1,99 +1,104 @@
-From: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
-Subject: Re: [PATCH v2 0/5] Introduce memcg_stock_pcp remote draining
-Date: Wed, 25 Jan 2023 12:39:25 +0100
-Message-ID: <Y9EU7awmpZaqbFtP@dhcp22.suse.cz>
-References: <20230125073502.743446-1-leobras@redhat.com>
- <Y9DpbVF+JR/G+5Or@dhcp22.suse.cz>
- <9e61ab53e1419a144f774b95230b789244895424.camel@redhat.com>
+From: Michal Hocko <mhocko@suse.com>
+Subject: Re: [PATCH v2 1/4] memcg: Track exported dma-buffers
+Date: Wed, 25 Jan 2023 12:52:26 +0100
+Message-ID: <Y9EX+usSpAjZ/8LS@dhcp22.suse.cz>
+References: <20230123191728.2928839-1-tjmercier@google.com>
+ <20230123191728.2928839-2-tjmercier@google.com>
+ <Y8/ybgp2FW+e3bjc@dhcp22.suse.cz>
+ <20230124194628.d44rtcfsv23fndxw@google.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <linux-doc-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
-        t=1674646766; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+        t=1674647547; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
          mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=Oqqka9Owzafd2X56BISD/lkkMSHTDdTB9S6csfU4aLY=;
-        b=KYsnXNxxrnUiZeznqoi+EbhT2L0rtf5QYqic6aQTX5P5VQ1STxtKjbDnMPgtlg7/Y1p61L
-        KvRwG/pY12Ow/MVHYy249SOWJfTwl35GWdrSy9yvyhUV3hBWnCJBOumPvpNF2+dJ1WFAWP
-        qn7IAe/rCU0k7ivrlr77GeNUyPbpS2M=
+        bh=SJ/Hov8dA5AtQwjazEvVbMXGIJ9ndLLp47N7ofQ4cx4=;
+        b=pXgacsTdHgiGYyBVN9vgcoDkHPc99KMqxN2lHF4x8BCAe49JWYrvjhluYPBo8Aeiyuau/n
+        HZpptJzXCIUorXumCdWJLU1ZdriRaVaJLMK8evnFcYo8OX8aItgG9bo+TU9MqtAEMbhTxh
+        0FmX6ijtqb1rsOdAc8WxYlw22VbBysI=
 Content-Disposition: inline
-In-Reply-To: <9e61ab53e1419a144f774b95230b789244895424.camel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+In-Reply-To: <20230124194628.d44rtcfsv23fndxw@google.com>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="iso-8859-1"
-To: Leonardo =?iso-8859-1?Q?Br=E1s?= <leobras-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Muchun Song <muchun.song-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Marcelo Tosatti <mtosatti-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Shakeel Butt <shakeelb@google.com>
+Cc: "T.J. Mercier" <tjmercier@google.com>, Tejun Heo <tj@kernel.org>, Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, Jonathan Corbet <corbet@lwn.net>, Sumit Semwal <sumit.semwal@linaro.org>, Christian =?iso-8859-1?Q?K=F6nig?= <christian.koenig@amd.com>, Roman Gushchin <roman.gushchin@linux.dev>, Muchun Song <muchun.song@linux.dev>, Andrew Morton <akpm@linux-foundation.org>, daniel.vetter@ffwll.ch, android-mm@google.com, jstultz@google.com, jeffv@google.com, cmllamas@google.com, linux-security-module@vger.kernel.org, selinux@vger.kernel.org, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, linux-media@vger.kernel.org, dri-devel@lists.freedesktop.org, linaro-mm-sig@lists.linaro.org, linux-mm@kvack.org
 
-On Wed 25-01-23 08:06:46, Leonardo Br=E1s wrote:
-> On Wed, 2023-01-25 at 09:33 +0100, Michal Hocko wrote:
-> > On Wed 25-01-23 04:34:57, Leonardo Bras wrote:
-> > > Disclaimer:
-> > > a - The cover letter got bigger than expected, so I had to split it in
-> > >     sections to better organize myself. I am not very confortable wit=
-h it.
-> > > b - Performance numbers below did not include patch 5/5 (Remove flags
-> > >     from memcg_stock_pcp), which could further improve performance for
-> > >     drain_all_stock(), but I could only notice the optimization at the
-> > >     last minute.
-> > >=20
-> > >=20
-> > > 0 - Motivation:
-> > > On current codebase, when drain_all_stock() is ran, it will schedule a
-> > > drain_local_stock() for each cpu that has a percpu stock associated w=
-ith a
-> > > descendant of a given root_memcg.
-> > >=20
-> > > This happens even on 'isolated cpus', a feature commonly used on work=
-loads that
-> > > are sensitive to interruption and context switching such as vRAN and =
-Industrial
-> > > Control Systems.
-> > >=20
-> > > Since this scheduling behavior is a problem to those workloads, the p=
-roposal is
-> > > to replace the current local_lock + schedule_work_on() solution with =
-a per-cpu
-> > > spinlock.
-> >=20
-> > If IIRC we have also discussed that isolated CPUs can simply opt out
-> > from the pcp caching and therefore the problem would be avoided
-> > altogether without changes to the locking scheme. I do not see anything
-> > regarding that in this submission. Could you elaborate why you have
-> > abandoned this option?
->=20
-> Hello Michal,
->=20
-> I understand pcp caching is a nice to have.
-> So while I kept the idea of disabling pcp caching in mind as an option, I=
- first
-> tried to understand what kind of impacts we would be seeing when trying to
-> change the locking scheme.
->=20
-> After I raised the data in the cover letter, I found that the performance=
- impact
-> appears not be that big. So in order to try keeping the pcp cache on isol=
-ated
-> cpus active, I decided to focus effort on the locking scheme change.
->=20
-> I mean, my rationale is: if is there a non-expensive way of keeping the f=
-eature,
-> why should we abandon it?
+On Tue 24-01-23 19:46:28, Shakeel Butt wrote:
+> On Tue, Jan 24, 2023 at 03:59:58PM +0100, Michal Hocko wrote:
+> > On Mon 23-01-23 19:17:23, T.J. Mercier wrote:
+> > > When a buffer is exported to userspace, use memcg to attribute the
+> > > buffer to the allocating cgroup until all buffer references are
+> > > released.
+> > 
+> > Is there any reason why this memory cannot be charged during the
+> > allocation (__GFP_ACCOUNT used)?
+> > Also you do charge and account the memory but underlying pages do not
+> > know about their memcg (this is normally done with commit_charge for
+> > user mapped pages). This would become a problem if the memory is
+> > migrated for example.
+> 
+> I don't think this is movable memory.
+> 
+> > This also means that you have to maintain memcg
+> > reference outside of the memcg proper which is not really nice either.
+> > This mimicks tcp kmem limit implementation which I really have to say I
+> > am not a great fan of and this pattern shouldn't be coppied.
+> > 
+> 
+> I think we should keep the discussion on technical merits instead of
+> personal perference. To me using skmem like interface is totally fine
+> but the pros/cons need to be very explicit and the clear reasons to
+> select that option should be included.
 
-Because any locking to pcp adds a potential contention. You haven't been
-able to trigger that contention by your testing but that doesn't really
-mean it is non-existent.
+I do agree with that. I didn't want sound to be personal wrt tcp kmem
+accounting but the overall code maintenance cost is higher because
+of how tcp take on accounting differs from anything else in the memcg
+proper. I would prefer to not grow another example like that.
 
-Besided that opt-out for isolated cpus should be a much smaller change
-with a much more predictable behavior. The overall performance for
-charging on isolated cpus will be slightly worse but it hasn't been seen
-this is anything really noticeable. Most workloads which do care about
-isolcpus tend to not enter kernel much AFAIK so this should have
-relatively small impact.
+> To me there are two options:
+> 
+> 1. Using skmem like interface as this patch series:
+> 
+> The main pros of this option is that it is very simple. Let me list down
+> the cons of this approach:
+> 
+> a. There is time window between the actual memory allocation/free and
+> the charge and uncharge and [un]charge happen when the whole memory is
+> allocated or freed. I think for the charge path that might not be a big
+> issue but on the uncharge, this can cause issues. The application and
+> the potential shrinkers have freed some of this dmabuf memory but until
+> the whole dmabuf is freed, the memcg uncharge will not happen. This can
+> consequences on reclaim and oom behavior of the application.
+> 
+> b. Due to the usage model i.e. a central daemon allocating the dmabuf
+> memory upfront, there is a requirement to have a memcg charge transfer
+> functionality to transfer the charge from the central daemon to the
+> client applications. This does introduce complexity and avenues of weird
+> reclaim and oom behavior.
+> 
+> 
+> 2. Allocate and charge the memory on page fault by actual user
+> 
+> In this approach, the memory is not allocated upfront by the central
+> daemon but rather on the page fault by the client application and the
+> memcg charge happen at the same time.
+> 
+> The only cons I can think of is this approach is more involved and may
+> need some clever tricks to track the page on the free patch i.e. we to
+> decrement the dmabuf memcg stat on free path. Maybe a page flag.
+> 
+> The pros of this approach is there is no need have a charge transfer
+> functionality and the charge/uncharge being closely tied to the actual
+> memory allocation and free.
+> 
+> Personally I would prefer the second approach but I don't want to just
+> block this work if the dmabuf folks are ok with the cons mentioned of
+> the first approach.
 
-All that being said I would prefer a simpler solution which seems to be
-to simply opt out from pcp caching and if the performance for real
-world workloads shows regressions then we can start thinking about a
-more complex solution.
---=20
+I am not familiar with dmabuf internals to judge complexity on their end
+but I fully agree that charge-when-used is much more easier to reason
+about and it should have less subtle surprises.
+-- 
 Michal Hocko
 SUSE Labs
