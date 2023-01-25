@@ -1,67 +1,64 @@
-From: Jason Gunthorpe <jgg-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [RFC PATCH 00/19] mm: Introduce a cgroup to limit the amount of
- locked and pinned memory
-Date: Tue, 24 Jan 2023 16:12:00 -0400
-Message-ID: <Y9A7kDjm3ZFAttRR@nvidia.com>
-References: <cover.f52b9eb2792bccb8a9ecd6bc95055705cfe2ae03.1674538665.git-series.apopple@nvidia.com>
+From: kernel test robot <lkp@intel.com>
+Subject: Re: [PATCH v2 3/4] binder: Add flags to relinquish ownership of fds
+Date: Wed, 25 Jan 2023 12:20:49 +0800
+Message-ID: <202301251234.klClMpZF-lkp@intel.com>
+References: <20230123191728.2928839-4-tjmercier@google.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
- s=selector2;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=wfSdJyyULtrOpfbSVhYDUgYUP+Kcr0i4zzjub7Vqyzg=;
- b=jCc/4Xi3cG4QC8+cTl98C0JhhPrXgsiOQ+vFDcUm8/oFr5jXi3ji/4NLcUe+52qT5O0bl6kWepfKanv6k5OTE35UIbcReoK3RqdzJ7u2PmflmMfE8aIUVUFNLWUGrhtpJJzxdl1EArKxIkCPP386KKW3pJ4+2HcXwsPADZCiqUoB/wgGDciI2esHZTmOfYSez7prE/qMq8rccA5fXVDsrd5rLw8d7o+eokxRdukW+rZZ6ffPJqmp3roIY3QUBD4SSYPgHGl/aojC8jCefyOQYGI40pW6UulFbxnlAkBHed5zZBEY6i0cMijI3p7KnrSXE0IuW/D1cdtprEM9JwTORA==
+Return-path: <linux-doc-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1674620525; x=1706156525;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:in-reply-to;
+  bh=NhOPx0gE0BklEYBntjw2S+n2t7urmONIUgn/cw4sNzQ=;
+  b=cmZ/hpHuoi62xxIcTXpfAEozZ4cthOFFo5c8At44kqH5FJkVKQg54rPQ
+   mtwrELPFObeZqdpgPpfgtW7gbsMwusud/pTS50NWnNQLiO3JOI6eYJ4wb
+   6x1zKEtkulQbCwvApEFoR9t5/FN1zbVzDC/BDLK1uvadUDxtiybx0DYrW
+   9v3uTyW/l2+86+kfxZmPXSQzdTfQrz5ubG2i7xIuB79oWz4N4OeACtAmr
+   Pz1c05rwyy0Bx4F/iaGND6Q/R+/8U/83QgdRPVQDxHSVKnOT3Auy/vWga
+   +AiStsNc94j+Xv6djwwIOGvfwMkWFB6P4yJsxXcTs4OTgfLL7UKOztDKl
+   A==;
 Content-Disposition: inline
-In-Reply-To: <cover.f52b9eb2792bccb8a9ecd6bc95055705cfe2ae03.1674538665.git-series.apopple-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>
+In-Reply-To: <20230123191728.2928839-4-tjmercier@google.com>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Alistair Popple <apopple-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>
-Cc: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, jhubbard-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org, tjmercier-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, surenb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, mkoutny-IBi9RG/b67k@public.gmane.org, daniel-/w4YWyX8dFk@public.gmane.org
+To: "T.J. Mercier" <tjmercier@google.com>, Tejun Heo <tj@kernel.org>, Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, Jonathan Corbet <corbet@lwn.net>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Arve =?iso-8859-1?B?SGr4bm5lduVn?= <arve@android.com>, Todd Kjos <tkjos@android.com>, Martijn Coenen <maco@android.com>, Joel Fernandes <joel@joelfernandes.org>, Christian Brauner <brauner@kernel.org>, Carlos Llamas <cmllamas@google.com>, Suren Baghdasaryan <surenb@google.com>
+Cc: llvm@lists.linux.dev, oe-kbuild-all@lists.linux.dev, daniel.vetter@ffwll.ch, android-mm@google.com, jstultz@google.com, jeffv@google.com, linux-security-module@vger.kernel.org, selinux@vger.kernel.org, cgroups@vger.kernel.org, Hridya Valsaraju <hridya@google.com>, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Tue, Jan 24, 2023 at 04:42:29PM +1100, Alistair Popple wrote:
-> Having large amounts of unmovable or unreclaimable memory in a system
-> can lead to system instability due to increasing the likelihood of
-> encountering out-of-memory conditions. Therefore it is desirable to
-> limit the amount of memory users can lock or pin.
-> 
-> From userspace such limits can be enforced by setting
-> RLIMIT_MEMLOCK. However there is no standard method that drivers and
-> other in-kernel users can use to check and enforce this limit.
-> 
-> This has lead to a large number of inconsistencies in how limits are
-> enforced. For example some drivers will use mm->locked_mm while others
-> will use mm->pinned_mm or user->locked_mm. It is therefore possible to
-> have up to three times RLIMIT_MEMLOCKED pinned.
-> 
-> Having pinned memory limited per-task also makes it easy for users to
-> exceed the limit. For example drivers that pin memory with
-> pin_user_pages() it tends to remain pinned after fork. To deal with
-> this and other issues this series introduces a cgroup for tracking and
-> limiting the number of pages pinned or locked by tasks in the group.
-> 
-> However the existing behaviour with regards to the rlimit needs to be
-> maintained. Therefore the lesser of the two limits is
-> enforced. Furthermore having CAP_IPC_LOCK usually bypasses the rlimit,
-> but this bypass is not allowed for the cgroup.
-> 
-> The first part of this series converts existing drivers which
-> open-code the use of locked_mm/pinned_mm over to a common interface
-> which manages the refcounts of the associated task/mm/user
-> structs. This ensures accounting of pages is consistent and makes it
-> easier to add charging of the cgroup.
-> 
-> The second part of the series adds the cgroup and converts core mm
-> code such as mlock over to charging the cgroup before finally
-> introducing some selftests.
->
-> As I don't have access to systems with all the various devices I
-> haven't been able to test all driver changes. Any help there would be
-> appreciated.
+Hi Mercier",
 
-I'm excited by this series, thanks for making it.
+Thank you for the patch! Yet something to improve:
 
-The pin accounting has been a long standing problem and cgroups will
-really help!
+[auto build test ERROR on 2241ab53cbb5cdb08a6b2d4688feb13971058f65]
 
-Jason
+url:    https://github.com/intel-lab-lkp/linux/commits/T-J-Mercier/memcg-Track-exported-dma-buffers/20230124-032017
+base:   2241ab53cbb5cdb08a6b2d4688feb13971058f65
+patch link:    https://lore.kernel.org/r/20230123191728.2928839-4-tjmercier%40google.com
+patch subject: [PATCH v2 3/4] binder: Add flags to relinquish ownership of fds
+config: x86_64-randconfig-a016-20230123 (https://download.01.org/0day-ci/archive/20230125/202301251234.klClMpZF-lkp@intel.com/config)
+compiler: clang version 14.0.6 (https://github.com/llvm/llvm-project f28c006a5895fc0e329fe15fead81e37457cb1d1)
+reproduce (this is a W=1 build):
+        wget https://raw.githubusercontent.com/intel/lkp-tests/master/sbin/make.cross -O ~/bin/make.cross
+        chmod +x ~/bin/make.cross
+        # https://github.com/intel-lab-lkp/linux/commit/41e80f59d1b70691eefc0490e7f1df800cead9f2
+        git remote add linux-review https://github.com/intel-lab-lkp/linux
+        git fetch --no-tags linux-review T-J-Mercier/memcg-Track-exported-dma-buffers/20230124-032017
+        git checkout 41e80f59d1b70691eefc0490e7f1df800cead9f2
+        # save the config file
+        mkdir build_dir && cp config build_dir/.config
+        COMPILER_INSTALL_PATH=$HOME/0day COMPILER=clang make.cross W=1 O=build_dir ARCH=x86_64 olddefconfig
+        COMPILER_INSTALL_PATH=$HOME/0day COMPILER=clang make.cross W=1 O=build_dir ARCH=x86_64 SHELL=/bin/bash
+
+If you fix the issue, kindly add following tag where applicable
+| Reported-by: kernel test robot <lkp@intel.com>
+
+All errors (new ones prefixed by >>):
+
+>> ld.lld: error: undefined symbol: dma_buf_transfer_charge
+   >>> referenced by binder.c:2280 (drivers/android/binder.c:2280)
+   >>>               drivers/android/binder.o:(binder_translate_fd) in archive vmlinux.a
+
+-- 
+0-DAY CI Kernel Test Service
+https://github.com/intel/lkp-tests
