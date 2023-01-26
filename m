@@ -1,79 +1,88 @@
-From: Tvrtko Ursulin <tvrtko.ursulin@linux.intel.com>
-Subject: Re: [RFC v3 00/12] DRM scheduling cgroup controller
-Date: Thu, 26 Jan 2023 18:14:46 +0000
-Message-ID: <2c14b00c-c3bc-75dd-361b-54c6846fc59a@linux.intel.com>
-References: <20230112165609.1083270-1-tvrtko.ursulin@linux.intel.com>
- <20230123154239.GA24348@blackbody.suse.cz>
- <371f3ce5-3468-b91d-d688-7e89499ff347@linux.intel.com>
- <20230126130050.GA22442@blackbody.suse.cz> <Y9KyiCPYj2Mzym3Z@slm.duckdns.org>
- <b8a0872c-fe86-b174-ca3b-0fc04a98e224@linux.intel.com>
+From: Marcelo Tosatti <mtosatti-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH v2 0/5] Introduce memcg_stock_pcp remote draining
+Date: Thu, 26 Jan 2023 15:19:45 -0300
+Message-ID: <Y9LEQfX5dkEyBOkT@tpad>
+References: <20230125073502.743446-1-leobras@redhat.com>
+ <Y9DpbVF+JR/G+5Or@dhcp22.suse.cz>
+ <9e61ab53e1419a144f774b95230b789244895424.camel@redhat.com>
+ <Y9FzSBw10MGXm2TK@tpad>
+ <Y9G36AiqPPFDlax3@P9FQF9L96D.corp.robot.car>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <intel-gfx-bounces@lists.freedesktop.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
- d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
- t=1674756984; x=1706292984;
- h=message-id:date:mime-version:subject:from:to:cc:
- references:in-reply-to:content-transfer-encoding;
- bh=fR8V4aQuW/ZVKBC+MbolGNbeqVBRPpZSaKYM1TDnfic=;
- b=hButNLzdVYQAzhOBJxi/+34liyGebvcPW8oIunwyZGLr9D/cVl/Blgux
- EM5qq0w+2UZv0XVja909bb2oBRCsP1GRXxNgQ3J81QtVPbuWBQmZOlRxp
- DhMOtBdUNNIo0Law9QYfh4GOhMJhK+Hl8koa1DJh5AAv7BQXl2JgmsPrb
- UxWVu9gQdEit91NFQ8W1vaJxEu9rzRxKTa2qpAgYskgPMCeO5zrUFR7Pn
- UXSRUozSnt3p30jfY7UzIqT2vd4LgvQK4K4PnjXCqZWTXGcFDK+FtiN02
- W7Tq7/nj40osRofc5R4fU6xERn2KMvObDFs4WPyYD//bIo0bDnXeYbbAr w==;
-Content-Language: en-US
-In-Reply-To: <b8a0872c-fe86-b174-ca3b-0fc04a98e224@linux.intel.com>
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.freedesktop.org/mailman/options/intel-gfx>,
- <mailto:intel-gfx-request@lists.freedesktop.org?subject=unsubscribe>
-List-Archive: <https://lists.freedesktop.org/archives/intel-gfx>
-List-Post: <mailto:intel-gfx@lists.freedesktop.org>
-List-Help: <mailto:intel-gfx-request@lists.freedesktop.org?subject=help>
-List-Subscribe: <https://lists.freedesktop.org/mailman/listinfo/intel-gfx>,
- <mailto:intel-gfx-request@lists.freedesktop.org?subject=subscribe>
-Errors-To: intel-gfx-bounces@lists.freedesktop.org
-Sender: "Intel-gfx" <intel-gfx-bounces@lists.freedesktop.org>
-Content-Type: text/plain; charset="us-ascii"; format="flowed"
-To: Tejun Heo <tj@kernel.org>, =?UTF-8?Q?Michal_Koutn=c3=bd?= <mkoutny@suse.com>
-Cc: Rob Clark <robdclark@chromium.org>, Kenny.Ho@amd.com, Dave Airlie <airlied@redhat.com>, =?UTF-8?Q?St=c3=a9phane_Marchesin?= <marcheu@chromium.org>, Daniel Vetter <daniel.vetter@ffwll.ch>, Intel-gfx@lists.freedesktop.org, linux-kernel@vger.kernel.org, dri-devel@lists.freedesktop.org, =?UTF-8?Q?Christian_K=c3=b6nig?= <christian.koenig@amd.com>, Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, cgroups@vger.kernel.org, "T . J . Mercier" <tjmercier@google.com>
+Content-Transfer-Encoding: 8bit
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1674758236;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=GCnG7e8Wg2ZPkYk2BgwcAsCpETyBPYzxTKI98DQimBw=;
+        b=Tnf3GW5Jr5TKIVNpqR7pLUqJR2QU3+mWOdP8zMn8JVLwh5j1+8nagmGcXaFHszxFk/YNO0
+        /EGg2ihonBMO13c00rsppXyWAlM69X4d6xpZGbsw/qmCTQktg1+JauWQoyo25lnzUeJnOm
+        7zflCS/uXloL0KIZnF2oNrxKaQu5DjE=
+Content-Disposition: inline
+In-Reply-To: <Y9G36AiqPPFDlax3-+xijCwNIfdoLQcUKs7qKB+WAnPUfkyWGUBSOeVevoDU@public.gmane.org>
+List-ID: <cgroups.vger.kernel.org>
+Content-Type: text/plain; charset="utf-8"
+To: Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>
+Cc: Leonardo =?iso-8859-1?Q?Br=E1s?= <leobras-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Muchun Song <muchun.song-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-
-On 26/01/2023 17:57, Tvrtko Ursulin wrote:
-> On 26/01/2023 17:04, Tejun Heo wrote:
-
->> driver folks think about the current RFC tho. Is at least AMD on board 
->> with
->> the approach?
+On Wed, Jan 25, 2023 at 03:14:48PM -0800, Roman Gushchin wrote:
+> On Wed, Jan 25, 2023 at 03:22:00PM -0300, Marcelo Tosatti wrote:
+> > On Wed, Jan 25, 2023 at 08:06:46AM -0300, Leonardo Brás wrote:
+> > > On Wed, 2023-01-25 at 09:33 +0100, Michal Hocko wrote:
+> > > > On Wed 25-01-23 04:34:57, Leonardo Bras wrote:
+> > > > > Disclaimer:
+> > > > > a - The cover letter got bigger than expected, so I had to split it in
+> > > > >     sections to better organize myself. I am not very confortable with it.
+> > > > > b - Performance numbers below did not include patch 5/5 (Remove flags
+> > > > >     from memcg_stock_pcp), which could further improve performance for
+> > > > >     drain_all_stock(), but I could only notice the optimization at the
+> > > > >     last minute.
+> > > > > 
+> > > > > 
+> > > > > 0 - Motivation:
+> > > > > On current codebase, when drain_all_stock() is ran, it will schedule a
+> > > > > drain_local_stock() for each cpu that has a percpu stock associated with a
+> > > > > descendant of a given root_memcg.
 > 
-> Yes I am keenly awaiting comments from the DRM colleagues as well.
+> Do you know what caused those drain_all_stock() calls? I wonder if we should look
+> into why we have many of them and whether we really need them?
+> 
+> It's either some user's actions (e.g. reducing memory.max), either some memcg
+> is entering pre-oom conditions. In the latter case a lot of drain calls can be
+> scheduled without a good reason (assuming the cgroup contain multiple tasks running
+> on multiple cpus). Essentially each cpu will try to grab the remains of the memory quota
+> and move it locally. I wonder in such circumstances if we need to disable the pcp-caching
+> on per-cgroup basis.
+> 
+> Generally speaking, draining of pcpu stocks is useful only if an idle cpu is holding some
+> charges/memcg references (it might be not completely idle, but running some very special
+> workload which is not doing any kernel allocations or a process belonging to the root memcg).
+> In all other cases pcpu stock will be either drained naturally by an allocation from another
+> memcg or an allocation from the same memcg will "restore" it, making draining useless.
+> 
+> We also can into drain_all_pages() opportunistically, without waiting for the result.
+> On a busy system it's most likely useless, we might oom before scheduled works will be executed.
+> 
+> I admit I planned to do some work around and even started, but then never had enough time to
+> finish it.
+> 
+> Overall I'm somewhat resistant to an idea of making generic allocation & free paths slower
+> for an improvement of stock draining. It's not a strong objection, but IMO we should avoid
+> doing this without a really strong reason.
 
-Forgot to mention one thing on this point which may interest AMD.
+The expectation would be that cache locking should not cause slowdown of
+the allocation and free paths:
 
-Some time ago I tested the super primitive "throttling via lowering the 
-scheduling priority" on a GuC based i915 GPU, so only three supported 
-priority levels, and FWIW it can be somewhat effective.
+https://manualsbrain.com/en/manuals/1246877/?page=313
 
-It certainly was effective for my main use case which is "run this GPU 
-workload in the background while I use the GPU for something else".
+For the P6 and more recent processor families, if the area of memory being locked 
+during a LOCK operation is cached in the processor that is performing the LOCK oper-
+ation as write-back memory and is completely contained in a cache line, the 
+processor may not assert the LOCK# signal on the bus. Instead, it will modify the 
+memory location internally and allow it’s cache coherency mechanism to insure that 
+the operation is carried out atomically. This operation is called “cache locking.” The 
+cache coherency mechanism automatically prevents two or more processors that ...
 
-The actual test was along the lines of running a GPU hog in parallel to 
-an interactive client which can measure dropped frames.
 
-With equal drm.weights the interactive client was seeing ~10 (i915 
-pre-GuC) or ~27 (i915 GuC) dropped frames per second (60 fps target). 
-With the GPU hog drm.weight lowered to 1:10 that dropped to ~3 dropped 
-frames per second (all 3 before the over budget condition was noticed by 
-the controller).
-
-Main take here is that improved user experience is possible even with 
-this primitive throttling method and even on GPUs which support only 
-three scheduling priority levels.
-
-Although main thing still is that individual drivers are completely free 
-to improve their method of handling to the over budget signal. Nothing 
-in the controller itself should be precluding that.
-
-Regards,
-
-Tvrtko
