@@ -1,100 +1,114 @@
-From: Frederic Weisbecker <frederic-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH v2 0/5] Introduce memcg_stock_pcp remote draining
-Date: Fri, 27 Jan 2023 14:03:59 +0100
-Message-ID: <Y9PLvzI8WU0vYWUt@lothringen>
-References: <20230125073502.743446-1-leobras@redhat.com>
- <Y9DpbVF+JR/G+5Or@dhcp22.suse.cz>
- <9e61ab53e1419a144f774b95230b789244895424.camel@redhat.com>
- <Y9FzSBw10MGXm2TK@tpad>
- <Y9G36AiqPPFDlax3@P9FQF9L96D.corp.robot.car>
- <Y9Iurktut9B9T+Tl@dhcp22.suse.cz>
- <Y9MI42NSLooyVZNu@P9FQF9L96D.corp.robot.car>
- <Y9N5CI8PpsfiaY9c@dhcp22.suse.cz>
- <52a0f1e593b1ec0ca7e417ba37680d65df22de82.camel@redhat.com>
- <601fc35a8cc2167e53e45c636fccb2d899fd7c50.camel@redhat.com>
+From: Tvrtko Ursulin <tvrtko.ursulin-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
+Subject: Re: [RFC 10/12] cgroup/drm: Introduce weight based drm cgroup control
+Date: Fri, 27 Jan 2023 13:31:54 +0000
+Message-ID: <a96e6b5c-b538-f7e7-d603-cabb29137de7@linux.intel.com>
+References: <20230112165609.1083270-1-tvrtko.ursulin@linux.intel.com>
+ <20230112165609.1083270-11-tvrtko.ursulin@linux.intel.com>
+ <20230127130134.GA15846@blackbody.suse.cz>
 Mime-Version: 1.0
 Content-Transfer-Encoding: quoted-printable
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1674824642;
-        bh=5/c2AB+sVfBr3bN7TBwjNlpfu3p70/0YG6h0yWH9Mpg=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=UHJpxk7EFq6ak/R8ldY7KoUAXIlE2dZyXktge26XKHv9g66w8Izx9NuNibJZEOrwz
-         HxgvWvRBRErjHhikZlfyKKCHqBxbFM3JYu6q2pUincrQeHyB5ye561Ic/ed1NnY5wC
-         znydMQCtv2iEuj6odOpLLra+NAdugUihIlaD7nwrbZnuZI8L9JMr2az2IqhC5Lsy+h
-         y45Gis+7DoDk/XNeosPI979PPqlzsCRl6GF73eF9/yUAZxdtDwFVVvgxEQudOUhGH7
-         ZY1rOejeZI0pqRMK2/Wk+85B4AZ/IhS29y6GRuxXlaDIuQ5CWk6Zg/qxpmyau11j8o
-         rSLXu+bX8FWaw==
-Content-Disposition: inline
-In-Reply-To: <601fc35a8cc2167e53e45c636fccb2d899fd7c50.camel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1674826320; x=1706362320;
+  h=message-id:date:mime-version:subject:to:cc:references:
+   from:in-reply-to:content-transfer-encoding;
+  bh=7mC15fOVSE6NegzxHk/BX7UWkKB1AkE7p5o74pyZvt0=;
+  b=FQuWs8hjrBVGcHF4IWhbLkPxigoAJ+8TMm+tL72Kw5mBIlLc8FtqUxj4
+   y0H9jw3H9709it7RHmVedqxV9OYZ791r5l1PEVPP9AZmygWJH0xpyhkDM
+   uyv8UvptWrsYwsR05TGEbQAith9JmLUHHovB5ZESjuBIravMUaH57sbIv
+   8kM1tTcNFZSwoRNsPsOofO8pRwPnjlNK3KpcWILu2Rci+cTUDCeyFK37y
+   UO/xJ8cUjyIx+ApHq8D6CJZJrEVXl/xcXELFppdczC5OyKxIhVOYQgyt8
+   azQl7EcmGoNi0Kz5wLJ4U/8CHcJHsJkegGkc1FWoHvZjcDHvT9fJ9rHMK
+   g==;
+Content-Language: en-US
+In-Reply-To: <20230127130134.GA15846-9OudH3eul5jcvrawFnH+a6VXKuFTiq87@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="iso-8859-1"
-To: Leonardo =?iso-8859-1?Q?Br=E1s?= <leobras-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Cc: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Marcelo Tosatti <mtosatti-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Muchun Song <muchun.song-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Frederic Weisbecker <fweisbecker-l3A5Bk7waGM@public.gmane.org>
+Content-Type: text/plain; charset="iso-8859-1"; format="flowed"
+To: =?UTF-8?Q?Michal_Koutn=c3=bd?= <mkoutny-IBi9RG/b67k@public.gmane.org>
+Cc: Intel-gfx-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org, dri-devel-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Dave Airlie <airlied-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Daniel Vetter <daniel.vetter-/w4YWyX8dFk@public.gmane.org>, Rob Clark <robdclark-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>, =?UTF-8?Q?St=c3=a9phane_Marchesin?= <marcheu-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>, "T . J . Mercier" <tjmercier-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Kenny.Ho-5C7GfCeVMHo@public.gmane.org, =?UTF-8?Q?Christian_K=c3=b6nig?= <christian.koenig-5C7GfCeVMHo@public.gmane.org>, Brian Welty <brian.welty-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Tvrtko Ursulin <tvrtko.ursulin-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
 
-On Fri, Jan 27, 2023 at 05:12:13AM -0300, Leonardo Br=E1s wrote:
-> On Fri, 2023-01-27 at 04:22 -0300, Leonardo Br=E1s wrote:
-> > > Hmm, OK, I have misunderstood your proposal. Yes, the overal pcp char=
-ges
-> > > potentially left behind should be small and that shouldn't really be a
-> > > concern for memcg oom situations (unless the limit is very small and
-> > > workloads on isolated cpus using small hard limits is way beyond my
-> > > imagination).
-> > >=20
-> > > My first thought was that those charges could be left behind without =
-any
-> > > upper bound but in reality sooner or later something should be running
-> > > on those cpus and if the memcg is gone the pcp cache would get refill=
-ed
-> > > and old charges gone.
-> > >=20
-> > > So yes, this is actually a better and even simpler solution. All we n=
-eed
-> > > is something like this
-> > > diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-> > > index ab457f0394ab..13b84bbd70ba 100644
-> > > --- a/mm/memcontrol.c
-> > > +++ b/mm/memcontrol.c
-> > > @@ -2344,6 +2344,9 @@ static void drain_all_stock(struct mem_cgroup *=
-root_memcg)
-> > >  		struct mem_cgroup *memcg;
-> > >  		bool flush =3D false;
-> > > =20
-> > > +		if (cpu_is_isolated(cpu))
-> > > +			continue;
-> > > +
-> > >  		rcu_read_lock();
-> > >  		memcg =3D stock->cached;
-> > >  		if (memcg && stock->nr_pages &&
-> > >=20
-> > > There is no such cpu_is_isolated() AFAICS so we would need a help from
-> > > NOHZ and cpuisol people to create one for us. Frederic, would such an
-> > > abstraction make any sense from your POV?
-> >=20
-> >=20
-> > IIUC, 'if (cpu_is_isolated())' would be instead:
-> >=20
-> > if (!housekeeping_cpu(smp_processor_id(), HK_TYPE_DOMAIN) ||
-> > !housekeeping_cpu(smp_processor_id(), HK_TYPE_WQ)
+
+On 27/01/2023 13:01, Michal Koutn=C3=BD wrote:
+> On Thu, Jan 12, 2023 at 04:56:07PM +0000, Tvrtko Ursulin <tvrtko.ursulin-=
+VuQAYsv1563Yd54FQh9/CA@public.gmane.org> wrote:
+>> +static int drmcs_can_attach(struct cgroup_taskset *tset)
+>> +{
+>> +	int ret;
+>> +
+>> +	/*
+>> +	 * As processes are getting moved between groups we need to ensure
+>> +	 * both that the old group does not see a sudden downward jump in the
+>> +	 * GPU utilisation, and that the new group does not see a sudden jump
+>> +	 * up with all the GPU time clients belonging to the migrated process
+>> +	 * have accumulated.
+>> +	 *
+>> +	 * To achieve that we suspend the scanner until the migration is
+>> +	 * completed where the resume at the end ensures both groups start
+>> +	 * observing GPU utilisation from a reset state.
+>> +	 */
+>> +
+>> +	ret =3D mutex_lock_interruptible(&drmcg_mutex);
+>> +	if (ret)
+>> +		return ret;
+>> +	start_suspend_scanning();
+>> +	mutex_unlock(&drmcg_mutex);
+>> +
+>> +	finish_suspend_scanning();
 >=20
-> oh, sorry 's/smp_processor_id()/cpu/' here:
+> Here's scanning suspension, communicated via
 >=20
-> if(!housekeeping_cpu(cpu, HK_TYPE_DOMAIN) || !housekeeping_cpu(cpu, HK_TY=
-PE_WQ))
+> 	root_drmcs.scanning_suspended =3D true;
+> 	root_drmcs.suspended_period_us =3D root_drmcs.period_us;
+> 	root_drmcs.period_us =3D 0;
+>=20
+> but I don't see those used in scan_worker() and the scanning traversal
+> can apparently run concurrently with a task migration.
 
-Do you also need to handle cpuset.sched_load_balance=3D0 (aka. cpuset v2 "i=
-solated"
-partition type). It has the same effect as isolcpus=3D, but it can be chang=
-ed at
-runtime.
+I think you missed the finish_suspend_scanning() part:
 
-And then on_null_domain() look like what you need. You'd have to make that =
-API
-more generally available though, and rename it to something like
-"bool cpu_has_null_domain(int cpu)".
+	if (root_drmcs.suspended_period_us)
+		cancel_delayed_work_sync(&root_drmcs.scan_work);
 
-But then you also need to handle concurrent cpuset changes. If you can tole=
-rate
-it to be racy, then RCU alone is fine.
+So if scanning was in progress migration will wait until it finishes.=20
+And re-start only when migration is done (drmcs_attach), or it failed=20
+(drmcs_cancel_attach).
 
-Thanks.
+Not claiming I did not miss something because I was totally new with=20
+cgroup internals when I started working on this. So it is definitely=20
+useful to have more eyes looking.
+
+>> [...]
+>> +static bool
+>> +__start_scanning(struct drm_cgroup_state *root, unsigned int period_us)
+>> [...]
+>> +	css_for_each_descendant_post(node, &root->css) {
+>> [...]
+>> +		active =3D drmcs_get_active_time_us(drmcs);
+>> +		if (period_us && active > drmcs->prev_active_us)
+>> +			drmcs->active_us +=3D active - drmcs->prev_active_us;
+>> +		drmcs->prev_active_us =3D active;
+>=20
+> drmcs_get_active_time_us() could count a task's contribution here,
+> the task would migrate to a different drmcs,
+> and it'd be counted 2nd time.
+
+Lets see.. __start_scanning() can be called from the worker, so max one=20
+instance at a time, no issue.
+
+Then from resume scanning, so it is guaranteed worker is not running and=20
+can't restart since mutex guards the re-start.
+
+Finally from drmcs_write_period_us() - yes there __start_scanning() can=20
+race with it being invoked by the worker - oops! However.. this is just=20
+a debugging aid as the cover letter explains. This file is not intended=20
+to be present in the final version, rather as per earlier discussion=20
+with Tejun the idea is to only have boot time option to control the=20
+functionality (enable/disable or period).
+
+I will nevertheless try to fix this race up for the next posting to=20
+avoid further confusion!
+
+Regards,
+
+Tvrtko
