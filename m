@@ -1,29 +1,53 @@
-From: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
-Subject: Re: [PATCH 01/15] blk-cgroup: don't defer blkg_free to a workqueue
-Date: Fri, 27 Jan 2023 08:07:54 +0100
-Message-ID: <20230127070754.GB4180@lst.de>
-References: <20230117081257.3089859-1-hch@lst.de> <20230117081257.3089859-2-hch@lst.de> <b4622942-67e7-969b-4439-0aea7c5bd165@suse.de>
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: [PATCH 09/15] blk-rq-qos: make rq_qos_add and rq_qos_del more
+ useful
+Date: Fri, 27 Jan 2023 08:08:16 +0100
+Message-ID: <f9e03e4f-d23c-0986-1869-b12b590f2626@suse.de>
+References: <20230117081257.3089859-1-hch@lst.de>
+ <20230117081257.3089859-10-hch@lst.de>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <b4622942-67e7-969b-4439-0aea7c5bd165-l3A5Bk7waGM@public.gmane.org>
+Content-Transfer-Encoding: base64
+Return-path: <linux-block-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+        t=1674803297; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=ExcPerhX7tYt3BlJ7meGQRxIOmEdq2FNRdX7onGlasQ=;
+        b=hVYgMFrYuFnahY6OG0m3NPFOehRTPOkMZOS40S2W8hYGL/L0lLqsaqiEM3vD52CKvm5moc
+        Lz764CW+k9U3JHUtC1Zbdr8oL87n2fzQW/8P4UzKhD+Ce/Ai2UCpDRWOPZ7gU0NaamL5zz
+        jSKoGbe50mOU8wO35Z8vO4PToqPrQHI=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+        s=susede2_ed25519; t=1674803297;
+        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=ExcPerhX7tYt3BlJ7meGQRxIOmEdq2FNRdX7onGlasQ=;
+        b=I9aPHEwGleLbRif0MGahEZsDhN32CUZONiWbpWYd3cbssF5+il2caQ96RKfaRhA0A9XsPa
+        GVNRsJ6EKOtlcfCw==
+Content-Language: en-US
+In-Reply-To: <20230117081257.3089859-10-hch@lst.de>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Hannes Reinecke <hare-l3A5Bk7waGM@public.gmane.org>
-Cc: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>, Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Josef Bacik <josef-DigfWCa+lFGyeJad7bwFQA@public.gmane.org>, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Type: text/plain; charset="euc-kr"; format="flowed"
+To: Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>, Tejun Heo <tj@kernel.org>, Josef Bacik <josef@toxicpanda.com>
+Cc: linux-block@vger.kernel.org, cgroups@vger.kernel.org
 
-On Fri, Jan 27, 2023 at 07:59:23AM +0100, Hannes Reinecke wrote:
-> On 1/17/23 09:12, Christoph Hellwig wrote:
->> Now that blk_put_queue can be called from process context, ther is no
->> need for the asynchronous execution.
->>
-> Can you clarify 'now'?
-> IE point to the commit introducing the change?
-
-49e4d04f0486117ac57a97890eb1db6d52bf82b3
-Author: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Date:   Fri Jan 6 10:34:10 2023 -1000
-
-    block: Drop spurious might_sleep() from blk_put_queue()
-
+T24gMS8xNy8yMyAwOToxMiwgQ2hyaXN0b3BoIEhlbGx3aWcgd3JvdGU6Cj4gU3dpdGNoIHRvIHBh
+c3NpbmcgYSBnZW5kaXNrLCBhbmQgbWFrZSBycV9xb3NfYWRkIGluaXRpYWxpemUgYWxsIHJlcXVp
+cmVkCj4gZmllbGRzIGFuZCBkcm9wIHRoZSBub3QgcmVxdWlyZWQgcSBhcmd1bWVudCBmcm9tIHJx
+X3Fvc19kZWwuICBBbHNvIG1vdmUKPiB0aGUgY29kZSBvdXQgb2YgbGluZSBnaXZlbiBob3cgbGFy
+Z2UgaXQgaXMuCj4gCj4gU2lnbmVkLW9mZi1ieTogQ2hyaXN0b3BoIEhlbGx3aWcgPGhjaEBsc3Qu
+ZGU+Cj4gLS0tCj4gICBibG9jay9ibGstaW9jb3N0LmMgICAgfCAxMyArKy0tLS0tLS0KPiAgIGJs
+b2NrL2Jsay1pb2xhdGVuY3kuYyB8IDE0ICsrKy0tLS0tLQo+ICAgYmxvY2svYmxrLXJxLXFvcy5j
+ICAgIHwgNjcgKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKwo+ICAg
+YmxvY2svYmxrLXJxLXFvcy5oICAgIHwgNjIgKystLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
+LS0tLS0tLS0tCj4gICBibG9jay9ibGstd2J0LmMgICAgICAgfCAgNSArLS0tCj4gICA1IGZpbGVz
+IGNoYW5nZWQsIDc4IGluc2VydGlvbnMoKyksIDgzIGRlbGV0aW9ucygtKQo+IApSZXZpZXdlZC1i
+eTogSGFubmVzIFJlaW5lY2tlIDxoYXJlQHN1c2UuZGU+CgpDaGVlcnMsCgpIYW5uZXMKLS0gCkRy
+LiBIYW5uZXMgUmVpbmVja2UgICAgICAgICAgICAgICAgS2VybmVsIFN0b3JhZ2UgQXJjaGl0ZWN0
+CmhhcmVAc3VzZS5kZSAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICs0OSA5MTEgNzQwNTMg
+Njg4ClNVU0UgU29mdHdhcmUgU29sdXRpb25zIEdtYkgsIE1heGZlbGRzdHIuIDUsIDkwNDA5IE7D
+vHJuYmVyZwpIUkIgMzY4MDkgKEFHIE7DvHJuYmVyZyksIEdlc2Now6RmdHNmw7xocmVyOiBJdm8g
+VG90ZXYsIEFuZHJldwpNeWVycywgQW5kcmV3IE1jRG9uYWxkLCBNYXJ0amUgQm91ZGllbiBNb2Vy
+bWFuCgo=
