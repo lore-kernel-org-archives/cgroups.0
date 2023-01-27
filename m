@@ -1,87 +1,52 @@
-From: Leonardo =?ISO-8859-1?Q?Br=E1s?= <leobras@redhat.com>
-Subject: Re: [PATCH v2 0/5] Introduce memcg_stock_pcp remote draining
-Date: Fri, 27 Jan 2023 04:35:22 -0300
-Message-ID: <15c605f27f87d732e80e294f13fd9513697b65e3.camel@redhat.com>
-References: <20230125073502.743446-1-leobras@redhat.com>
-         <Y9DpbVF+JR/G+5Or@dhcp22.suse.cz>
-         <9e61ab53e1419a144f774b95230b789244895424.camel@redhat.com>
-         <Y9FzSBw10MGXm2TK@tpad> <Y9G36AiqPPFDlax3@P9FQF9L96D.corp.robot.car>
-         <Y9Iurktut9B9T+Tl@dhcp22.suse.cz>
-         <Y9MI42NSLooyVZNu@P9FQF9L96D.corp.robot.car>
-         <55ac6e3cbb97c7d13c49c3125c1455d8a2c785c3.camel@redhat.com>
-         <Y9N7UMrLTyZT71uA@dhcp22.suse.cz>
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: [PATCH 01/15] blk-cgroup: don't defer blkg_free to a workqueue
+Date: Fri, 27 Jan 2023 08:43:18 +0100
+Message-ID: <df9c772c-6fb5-1ebe-6b9a-7d052d9f05f0@suse.de>
+References: <20230117081257.3089859-1-hch@lst.de>
+ <20230117081257.3089859-2-hch@lst.de>
+ <b4622942-67e7-969b-4439-0aea7c5bd165@suse.de> <20230127070754.GB4180@lst.de>
 Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1674804930;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+Content-Transfer-Encoding: base64
+Return-path: <linux-block-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+        t=1674805399; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=AOQxAgAAK0FHDcI+jB5U3fyhR/dhMwJss/kdGg+mJds=;
-        b=NhX5PZ7681qynWPUrWTadTCqSE00zaRsie31izol5b2ehfv0E8nfJIuC8SFw5fKsORzvmw
-        pruJmdM3RbyXcHBe8+o7pd1uvsETF+rXVN7pCWYfB2lOXKVh95YYqH1XeoGKUXIEcG1G2y
-        flSUkU1bqbjurbbFtL/zGbIVMcew/h4=
-In-Reply-To: <Y9N7UMrLTyZT71uA@dhcp22.suse.cz>
+        bh=4JI/wpxgIv1o0sTmnkxzVSGkE+8mTK7sPuU0QG23TKI=;
+        b=EqIDPXJijHRpJFC0wlMxMNVbRlqW2RwIS8I1Lqz9jGoxXM7jFvfzghk13Grp77m1uFVnV8
+        0KDjgbR+/TI8SY5RIb/Bd2ltnat8wZ7zyvXGhGVSgzg7yZv+ZeDD6CDKa8FAcUSu1euLsj
+        JHx9EI5fDMCuR5gvKu+XrvSaFggUC5w=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+        s=susede2_ed25519; t=1674805399;
+        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=4JI/wpxgIv1o0sTmnkxzVSGkE+8mTK7sPuU0QG23TKI=;
+        b=/twYLq2i4LDG1Ix54DAMhGZf7aVUb/GyfOdsvaMgkiHhWCxxpyHc+eCrPChILIYvin406D
+        zv8pa6Mqh0Ai25Aw==
+Content-Language: en-US
+In-Reply-To: <20230127070754.GB4180@lst.de>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="utf-8"
-To: Michal Hocko <mhocko@suse.com>
-Cc: Roman Gushchin <roman.gushchin@linux.dev>, Marcelo Tosatti <mtosatti@redhat.com>, Johannes Weiner <hannes@cmpxchg.org>, Shakeel Butt <shakeelb@google.com>, Muchun Song <muchun.song@linux.dev>, Andrew Morton <akpm@linux-foundation.org>, cgroups@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset="euc-kr"; format="flowed"
+To: Christoph Hellwig <hch@lst.de>
+Cc: Jens Axboe <axboe@kernel.dk>, Tejun Heo <tj@kernel.org>, Josef Bacik <josef@toxicpanda.com>, linux-block@vger.kernel.org, cgroups@vger.kernel.org
 
-On Fri, 2023-01-27 at 08:20 +0100, Michal Hocko wrote:
-> On Fri 27-01-23 04:14:19, Leonardo Br=C3=A1s wrote:
-> > On Thu, 2023-01-26 at 15:12 -0800, Roman Gushchin wrote:
-> [...]
-> > > I'd rather opt out of stock draining for isolated cpus: it might slig=
-htly reduce
-> > > the accuracy of memory limits and slightly increase the memory footpr=
-int (all
-> > > those dying memcgs...), but the impact will be limited. Actually it i=
-s limited
-> > > by the number of cpus.
-> >=20
-> > I was discussing this same idea with Marcelo yesterday morning.
-> >=20
-> > The questions had in the topic were:
-> > a - About how many pages the pcp cache will hold before draining them i=
-tself?=C2=A0
->=20
-> MEMCG_CHARGE_BATCH (64 currently). And one more clarification. The cache
-> doesn't really hold any pages. It is a mere counter of how many charges
-> have been accounted for the memcg page counter. So it is not really
-> consuming proportional amount of resources. It just pins the
-> corresponding memcg. Have a look at consume_stock and refill_stock
-
-I see. Thanks for pointing that out!
-
-So in worst case scenario the memcg would have reserved 64 pages * (numcpus=
- - 1)
-that are not getting used, and may cause an 'earlier' OOM if this amount is
-needed but can't be freed.
-
-In the wave of worst case, supposing a big powerpc machine, 256 CPUs, each
-holding 64k * 64 pages =3D> 1GB memory - 4MB (one cpu using resources).
-It's starting to get too big, but still ok for a machine this size.
-
-The thing is that it can present an odd behavior:=20
-You have a cgroup created before, now empty, and try to run given applicati=
-on,
-and hits OOM.
-You then restart the cgroup, run the same application without an issue.
-
-Even though it looks a good possibility, this can be perceived by user as
-instability.
-
->=20
-> > b - Would it cache any kind of bigger page, or huge page in this same a=
-spect?
->=20
-> The above should answer this as well as those following up I hope. If
-> not let me know.
-
-IIUC we are talking normal pages, is that it?
-
-Best regards,
-Leo
-
+T24gMS8yNy8yMyAwODowNywgQ2hyaXN0b3BoIEhlbGx3aWcgd3JvdGU6Cj4gT24gRnJpLCBKYW4g
+MjcsIDIwMjMgYXQgMDc6NTk6MjNBTSArMDEwMCwgSGFubmVzIFJlaW5lY2tlIHdyb3RlOgo+PiBP
+biAxLzE3LzIzIDA5OjEyLCBDaHJpc3RvcGggSGVsbHdpZyB3cm90ZToKPj4+IE5vdyB0aGF0IGJs
+a19wdXRfcXVldWUgY2FuIGJlIGNhbGxlZCBmcm9tIHByb2Nlc3MgY29udGV4dCwgdGhlciBpcyBu
+bwo+Pj4gbmVlZCBmb3IgdGhlIGFzeW5jaHJvbm91cyBleGVjdXRpb24uCj4+Pgo+PiBDYW4geW91
+IGNsYXJpZnkgJ25vdyc/Cj4+IElFIHBvaW50IHRvIHRoZSBjb21taXQgaW50cm9kdWNpbmcgdGhl
+IGNoYW5nZT8KPiAKPiA0OWU0ZDA0ZjA0ODYxMTdhYzU3YTk3ODkwZWIxZGI2ZDUyYmY4MmIzCj4g
+QXV0aG9yOiBUZWp1biBIZW8gPHRqQGtlcm5lbC5vcmc+Cj4gRGF0ZTogICBGcmkgSmFuIDYgMTA6
+MzQ6MTAgMjAyMyAtMTAwMAo+IAo+ICAgICAgYmxvY2s6IERyb3Agc3B1cmlvdXMgbWlnaHRfc2xl
+ZXAoKSBmcm9tIGJsa19wdXRfcXVldWUoKQo+IApDYW4gd2UgcGxlYXNlIGhhdmUgaXQgaW4gdGhl
+IHBhdGNoIGNvbW1lbnQ/ClRvIGNsYXJpZnkgdGhhdCB0aGlzIGlzIGEgcHJlLXJlcXVpc2l0ZSBm
+b3IgdGhpcyBwYXRjaD8KClRoYW5rcy4KCkNoZWVycywKCkhhbm5lcwotLSAKRHIuIEhhbm5lcyBS
+ZWluZWNrZSAgICAgICAgICAgICAgICBLZXJuZWwgU3RvcmFnZSBBcmNoaXRlY3QKaGFyZUBzdXNl
+LmRlICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgKzQ5IDkxMSA3NDA1MyA2ODgKU1VTRSBT
+b2Z0d2FyZSBTb2x1dGlvbnMgR21iSCwgTWF4ZmVsZHN0ci4gNSwgOTA0MDkgTsO8cm5iZXJnCkhS
+QiAzNjgwOSAoQUcgTsO8cm5iZXJnKSwgR2VzY2jDpGZ0c2bDvGhyZXI6IEl2byBUb3RldiwgQW5k
+cmV3Ck15ZXJzLCBBbmRyZXcgTWNEb25hbGQsIE1hcnRqZSBCb3VkaWVuIE1vZXJtYW4KCg==
