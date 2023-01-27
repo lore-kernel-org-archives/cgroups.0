@@ -1,37 +1,53 @@
-From: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
+From: Leonardo =?ISO-8859-1?Q?Br=E1s?= <leobras@redhat.com>
 Subject: Re: [PATCH v2 0/5] Introduce memcg_stock_pcp remote draining
-Date: Fri, 27 Jan 2023 08:20:48 +0100
-Message-ID: <Y9N7UMrLTyZT71uA@dhcp22.suse.cz>
+Date: Fri, 27 Jan 2023 04:22:20 -0300
+Message-ID: <52a0f1e593b1ec0ca7e417ba37680d65df22de82.camel@redhat.com>
 References: <20230125073502.743446-1-leobras@redhat.com>
- <Y9DpbVF+JR/G+5Or@dhcp22.suse.cz>
- <9e61ab53e1419a144f774b95230b789244895424.camel@redhat.com>
- <Y9FzSBw10MGXm2TK@tpad>
- <Y9G36AiqPPFDlax3@P9FQF9L96D.corp.robot.car>
- <Y9Iurktut9B9T+Tl@dhcp22.suse.cz>
- <Y9MI42NSLooyVZNu@P9FQF9L96D.corp.robot.car>
- <55ac6e3cbb97c7d13c49c3125c1455d8a2c785c3.camel@redhat.com>
+         <Y9DpbVF+JR/G+5Or@dhcp22.suse.cz>
+         <9e61ab53e1419a144f774b95230b789244895424.camel@redhat.com>
+         <Y9FzSBw10MGXm2TK@tpad> <Y9G36AiqPPFDlax3@P9FQF9L96D.corp.robot.car>
+         <Y9Iurktut9B9T+Tl@dhcp22.suse.cz>
+         <Y9MI42NSLooyVZNu@P9FQF9L96D.corp.robot.car>
+         <Y9N5CI8PpsfiaY9c@dhcp22.suse.cz>
 Mime-Version: 1.0
 Content-Transfer-Encoding: quoted-printable
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
-        t=1674804049; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
+Return-path: <linux-kernel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1674804149;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=J1b282C081iblMIexq22+0/YOFRCsX9BkcK/Nyqy0So=;
-        b=JMW3EofPMuJ2RfjKSleTooHn6JwOp8Aj+7pQcj73S3EoOVFbIy3N8lOq8a5hiKXj9BaSBV
-        oX4l1jcsimsbQfka8Gp3SOjtMk9ndSR+AhMEkipWR4Jbpmjg4vKYsJpexZNCPN2NBievBB
-        tbgBkCPmBFSmSp+InsONX5T/WMDxLQE=
-Content-Disposition: inline
-In-Reply-To: <55ac6e3cbb97c7d13c49c3125c1455d8a2c785c3.camel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+        bh=78CU6PVXyI3TCut8pJAaTXp7IGKel4v7tbwx9feohu0=;
+        b=HxuZErlGQyg1KsLdNsa3+oSrLtIY0wgC73nCHXYElHaFLltJLP2LazU8NhpFCXcCu7oImz
+        8t0bU6PVgsojxRjIHrhBD5ZYArBsRRjQVV1NDhn8oXazAAfkVsWtKK5SlchUhTxcpIZ9aR
+        MlXjQ4ywIUIScT0EsSywxcxKY2Bs5cw=
+In-Reply-To: <Y9N5CI8PpsfiaY9c@dhcp22.suse.cz>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="iso-8859-1"
-To: Leonardo =?iso-8859-1?Q?Br=E1s?= <leobras-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Cc: Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Marcelo Tosatti <mtosatti-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Muchun Song <muchun.song-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Type: text/plain; charset="us-ascii"
+To: Michal Hocko <mhocko@suse.com>, Roman Gushchin <roman.gushchin@linux.dev>
+Cc: Marcelo Tosatti <mtosatti@redhat.com>, Johannes Weiner <hannes@cmpxchg.org>, Shakeel Butt <shakeelb@google.com>, Muchun Song <muchun.song@linux.dev>, Andrew Morton <akpm@linux-foundation.org>, cgroups@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org, Frederic Weisbecker <fweisbecker@suse.de>
 
-On Fri 27-01-23 04:14:19, Leonardo Br=E1s wrote:
-> On Thu, 2023-01-26 at 15:12 -0800, Roman Gushchin wrote:
-[...]
+On Fri, 2023-01-27 at 08:11 +0100, Michal Hocko wrote:
+> [Cc Frederic]
+>=20
+> On Thu 26-01-23 15:12:35, Roman Gushchin wrote:
+> > On Thu, Jan 26, 2023 at 08:41:34AM +0100, Michal Hocko wrote:
+> [...]
+> > > > Essentially each cpu will try to grab the remains of the memory quo=
+ta
+> > > > and move it locally. I wonder in such circumstances if we need to d=
+isable the pcp-caching
+> > > > on per-cgroup basis.
+> > >=20
+> > > I think it would be more than sufficient to disable pcp charging on a=
+n
+> > > isolated cpu.
+> >=20
+> > It might have significant performance consequences.
+>=20
+> Is it really significant?
+>=20
 > > I'd rather opt out of stock draining for isolated cpus: it might slight=
 ly reduce
 > > the accuracy of memory limits and slightly increase the memory footprin=
@@ -40,23 +56,42 @@ t (all
 limited
 > > by the number of cpus.
 >=20
-> I was discussing this same idea with Marcelo yesterday morning.
+> Hmm, OK, I have misunderstood your proposal. Yes, the overal pcp charges
+> potentially left behind should be small and that shouldn't really be a
+> concern for memcg oom situations (unless the limit is very small and
+> workloads on isolated cpus using small hard limits is way beyond my
+> imagination).
 >=20
-> The questions had in the topic were:
-> a - About how many pages the pcp cache will hold before draining them its=
-elf?=A0
+> My first thought was that those charges could be left behind without any
+> upper bound but in reality sooner or later something should be running
+> on those cpus and if the memcg is gone the pcp cache would get refilled
+> and old charges gone.
+>=20
+> So yes, this is actually a better and even simpler solution. All we need
+> is something like this
+> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+> index ab457f0394ab..13b84bbd70ba 100644
+> --- a/mm/memcontrol.c
+> +++ b/mm/memcontrol.c
+> @@ -2344,6 +2344,9 @@ static void drain_all_stock(struct mem_cgroup *root=
+_memcg)
+>  		struct mem_cgroup *memcg;
+>  		bool flush =3D false;
+> =20
+> +		if (cpu_is_isolated(cpu))
+> +			continue;
+> +
+>  		rcu_read_lock();
+>  		memcg =3D stock->cached;
+>  		if (memcg && stock->nr_pages &&
+>=20
+> There is no such cpu_is_isolated() AFAICS so we would need a help from
+> NOHZ and cpuisol people to create one for us. Frederic, would such an
+> abstraction make any sense from your POV?
 
-MEMCG_CHARGE_BATCH (64 currently). And one more clarification. The cache
-doesn't really hold any pages. It is a mere counter of how many charges
-have been accounted for the memcg page counter. So it is not really
-consuming proportional amount of resources. It just pins the
-corresponding memcg. Have a look at consume_stock and refill_stock
 
-> b - Would it cache any kind of bigger page, or huge page in this same asp=
-ect?
+IIUC, 'if (cpu_is_isolated())' would be instead:
 
-The above should answer this as well as those following up I hope. If
-not let me know.
---=20
-Michal Hocko
-SUSE Labs
+if (!housekeeping_cpu(smp_processor_id(), HK_TYPE_DOMAIN) ||
+!housekeeping_cpu(smp_processor_id(), HK_TYPE_WQ)
+
