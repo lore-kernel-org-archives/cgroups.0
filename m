@@ -1,126 +1,50 @@
-From: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
-Subject: Re: [PATCH v2 0/5] Introduce memcg_stock_pcp remote draining
-Date: Fri, 27 Jan 2023 07:58:32 +0100
-Message-ID: <Y9N2GC9Vk2k68Svs@dhcp22.suse.cz>
-References: <20230125073502.743446-1-leobras@redhat.com>
- <Y9DpbVF+JR/G+5Or@dhcp22.suse.cz>
- <9e61ab53e1419a144f774b95230b789244895424.camel@redhat.com>
- <Y9FzSBw10MGXm2TK@tpad>
- <Y9G36AiqPPFDlax3@P9FQF9L96D.corp.robot.car>
- <Y9Iurktut9B9T+Tl@dhcp22.suse.cz>
- <Y9LAf4pRyClZ1vfx@tpad>
- <Y9LSjnNEEUiF/70R@dhcp22.suse.cz>
- <Y9MbkuBDI+08AtgN@tpad>
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: [PATCH 01/15] blk-cgroup: don't defer blkg_free to a workqueue
+Date: Fri, 27 Jan 2023 07:59:23 +0100
+Message-ID: <b4622942-67e7-969b-4439-0aea7c5bd165@suse.de>
+References: <20230117081257.3089859-1-hch@lst.de>
+ <20230117081257.3089859-2-hch@lst.de>
 Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
-        t=1674802714; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+Content-Transfer-Encoding: base64
+Return-path: <linux-block-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+        t=1674802763; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
          mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=g+E5xBJ3UOLpBqu7Q/7w5cQuQLqZh3v0sZZi4etorHM=;
-        b=YGGNoTNQSsBG2crAEEf577da9ZlMzCQfCzd1kLQO55iHcOKNihErXr7ZcEAiMcI3Nhh4OP
-        Po3w6eO0WJ6HNVdNfx5oWkuZax3loRjgY6iHwTSCaqhEVGvHYBknYbOSpV4VkJ4h2CvyAp
-        V4rM4uxPXKoxjeLA7/drrCxbfEz8Wb4=
-Content-Disposition: inline
-In-Reply-To: <Y9MbkuBDI+08AtgN@tpad>
+        bh=SLT9CjpwUzvWOcEZLv9zytJzCJGpAe8NLiJP8y0cIzA=;
+        b=Loka0f/lOTAOKetC36RiUPXf8LKkgEV8RKNWurxl8EXsFRV+1STEi8WnNo2DYHGcDq1B/P
+        lZfypDW21xT+8FiHpkr79HVWbdB/O0L3R3iPskcQa9blJ5HWipqZZr/fhEpkeI0JnW2CK/
+        Huy2VSWEi1oMETy5kQh0OPK7B2BJScQ=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+        s=susede2_ed25519; t=1674802763;
+        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=SLT9CjpwUzvWOcEZLv9zytJzCJGpAe8NLiJP8y0cIzA=;
+        b=Jkf/KBwpbKNvyVKMeIIKyN5EinnlU/ebIN6HYt5eOZHu0aC2vhBvuAKdv2mdpPJo/mskWm
+        o+P/iBouYlF34gDQ==
+Content-Language: en-US
+In-Reply-To: <20230117081257.3089859-2-hch@lst.de>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="iso-8859-1"
-To: Marcelo Tosatti <mtosatti-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Cc: Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Leonardo =?iso-8859-1?Q?Br=E1s?= <leobras-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Muchun Song <muchun.song-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Type: text/plain; charset="euc-kr"; format="flowed"
+To: Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>, Tejun Heo <tj@kernel.org>, Josef Bacik <josef@toxicpanda.com>
+Cc: linux-block@vger.kernel.org, cgroups@vger.kernel.org
 
-On Thu 26-01-23 21:32:18, Marcelo Tosatti wrote:
-> On Thu, Jan 26, 2023 at 08:20:46PM +0100, Michal Hocko wrote:
-> > On Thu 26-01-23 15:03:43, Marcelo Tosatti wrote:
-> > > On Thu, Jan 26, 2023 at 08:41:34AM +0100, Michal Hocko wrote:
-> > > > On Wed 25-01-23 15:14:48, Roman Gushchin wrote:
-> > > > > On Wed, Jan 25, 2023 at 03:22:00PM -0300, Marcelo Tosatti wrote:
-> > > > > > On Wed, Jan 25, 2023 at 08:06:46AM -0300, Leonardo Br=E1s wrote:
-> > > > > > > On Wed, 2023-01-25 at 09:33 +0100, Michal Hocko wrote:
-> > > > > > > > On Wed 25-01-23 04:34:57, Leonardo Bras wrote:
-> > > > > > > > > Disclaimer:
-> > > > > > > > > a - The cover letter got bigger than expected, so I had t=
-o split it in
-> > > > > > > > >     sections to better organize myself. I am not very con=
-fortable with it.
-> > > > > > > > > b - Performance numbers below did not include patch 5/5 (=
-Remove flags
-> > > > > > > > >     from memcg_stock_pcp), which could further improve pe=
-rformance for
-> > > > > > > > >     drain_all_stock(), but I could only notice the optimi=
-zation at the
-> > > > > > > > >     last minute.
-> > > > > > > > >=20
-> > > > > > > > >=20
-> > > > > > > > > 0 - Motivation:
-> > > > > > > > > On current codebase, when drain_all_stock() is ran, it wi=
-ll schedule a
-> > > > > > > > > drain_local_stock() for each cpu that has a percpu stock =
-associated with a
-> > > > > > > > > descendant of a given root_memcg.
-> > > > >=20
-> > > > > Do you know what caused those drain_all_stock() calls? I wonder i=
-f we should look
-> > > > > into why we have many of them and whether we really need them?
-> > > > >=20
-> > > > > It's either some user's actions (e.g. reducing memory.max), eithe=
-r some memcg
-> > > > > is entering pre-oom conditions. In the latter case a lot of drain=
- calls can be
-> > > > > scheduled without a good reason (assuming the cgroup contain mult=
-iple tasks running
-> > > > > on multiple cpus).
-> > > >=20
-> > > > I believe I've never got a specific answer to that. We
-> > > > have discussed that in the previous version submission
-> > > > (20221102020243.522358-1-leobras-H+wXaHxf7aLQT0dZR+AlfA@public.gman=
-e.org and specifically
-> > > > Y2TQLavnLVd4qHMT-2MMpYkNvuYDjFM9bn6wA6Q@public.gmane.org). Leonardo=
- has mentioned a mix of RT and
-> > > > isolcpus. I was wondering about using memcgs in RT workloads because
-> > > > that just sounds weird but let's say this is the case indeed.=20
-> > >=20
-> > > This could be the case. You can consider an "edge device" where it is
-> > > necessary to run a RT workload. It might also be useful to run=20
-> > > non realtime applications on the same system.
-> > >=20
-> > > > Then an RT task or whatever task that is running on an isolated
-> > > > cpu can have pcp charges.
-> > >=20
-> > > Usually the RT task (or more specifically the realtime sensitive loop
-> > > of the application) runs entirely on userspace. But i suppose there
-> > > could be charges on application startup.
-> >=20
-> > What is the role of memcg then? If the memory limit is in place and the
-> > workload doesn't fit in then it will get reclaimed during start up and
-> > memory would need to be refaulted if not mlocked. If it is mlocked then
-> > the limit cannot be enforced and the start up would likely fail as a
-> > result of the memcg oom killer.
->=20
-> 1) Application which is not time sensitive executes on isolated CPU,
-> with memcg control enabled. Per-CPU stock is created.
->=20
-> 2) App with memcg control enabled exits, per-CPU stock is not drained.
->=20
-> 3) Latency sensitive application starts, isolated per-CPU has stock to
-> be drained, and:
->=20
-> /*
->  * Drains all per-CPU charge caches for given root_memcg resp. subtree
->  * of the hierarchy under it.
->  */
-> static void drain_all_stock(struct mem_cgroup *root_memcg)
-
-No, this is not really answering my question. See
-Y9LQ615H13RmG7wL-2MMpYkNvuYDjFM9bn6wA6Q@public.gmane.org which already expl=
-ains how the draining
-would be triggered. This is not really happening on any operation.
-
-I am really asking for specific workloads which are running multiple
-processes on a mix of isolated and non-isolated cpus yet they share
-memcg so that they can interfere. The consequences of the common memcg
-are described above.
---=20
-Michal Hocko
-SUSE Labs
+T24gMS8xNy8yMyAwOToxMiwgQ2hyaXN0b3BoIEhlbGx3aWcgd3JvdGU6Cj4gTm93IHRoYXQgYmxr
+X3B1dF9xdWV1ZSBjYW4gYmUgY2FsbGVkIGZyb20gcHJvY2VzcyBjb250ZXh0LCB0aGVyIGlzIG5v
+Cj4gbmVlZCBmb3IgdGhlIGFzeW5jaHJvbm91cyBleGVjdXRpb24uCj4gCkNhbiB5b3UgY2xhcmlm
+eSAnbm93Jz8KSUUgcG9pbnQgdG8gdGhlIGNvbW1pdCBpbnRyb2R1Y2luZyB0aGUgY2hhbmdlPwoK
+PiBUaGlzIGVmZmVjdGl2ZWx5IHJldmVydHMgY29tbWl0IGQ1NzhjNzcwYzg1MjMzYWY1OTJlNTQ1
+MzdmOTNmMzgzMWJkZTdlOWEuCj4gCj4gU2lnbmVkLW9mZi1ieTogQ2hyaXN0b3BoIEhlbGx3aWcg
+PGhjaEBsc3QuZGU+Cj4gLS0tCj4gICBibG9jay9ibGstY2dyb3VwLmMgfCAzMiArKysrKysrKysr
+LS0tLS0tLS0tLS0tLS0tLS0tLS0tLQo+ICAgYmxvY2svYmxrLWNncm91cC5oIHwgIDUgKy0tLS0K
+PiAgIDIgZmlsZXMgY2hhbmdlZCwgMTEgaW5zZXJ0aW9ucygrKSwgMjYgZGVsZXRpb25zKC0pCj4g
+ClJldmlld2VkLWJ5OiBIYW5uZXMgUmVpbmVja2UgPGhhcmVAc3VzZS5kZT4KCkNoZWVycywKCkhh
+bm5lcwotLSAKRHIuIEhhbm5lcyBSZWluZWNrZSAgICAgICAgICAgICAgICBLZXJuZWwgU3RvcmFn
+ZSBBcmNoaXRlY3QKaGFyZUBzdXNlLmRlICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgKzQ5
+IDkxMSA3NDA1MyA2ODgKU1VTRSBTb2Z0d2FyZSBTb2x1dGlvbnMgR21iSCwgTWF4ZmVsZHN0ci4g
+NSwgOTA0MDkgTsO8cm5iZXJnCkhSQiAzNjgwOSAoQUcgTsO8cm5iZXJnKSwgR2VzY2jDpGZ0c2bD
+vGhyZXI6IEl2byBUb3RldiwgQW5kcmV3Ck15ZXJzLCBBbmRyZXcgTWNEb25hbGQsIE1hcnRqZSBC
+b3VkaWVuIE1vZXJtYW4KCg==
