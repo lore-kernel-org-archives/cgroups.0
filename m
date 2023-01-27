@@ -1,51 +1,84 @@
-From: Hannes Reinecke <hare-l3A5Bk7waGM@public.gmane.org>
-Subject: Re: [PATCH 13/15] blk-cgroup: pass a gendisk to pd_alloc_fn
-Date: Fri, 27 Jan 2023 08:10:53 +0100
-Message-ID: <7d96ab9b-757f-6513-73c6-8653c8785839@suse.de>
-References: <20230117081257.3089859-1-hch@lst.de>
- <20230117081257.3089859-14-hch@lst.de>
+From: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
+Subject: Re: [PATCH v2 0/5] Introduce memcg_stock_pcp remote draining
+Date: Fri, 27 Jan 2023 08:11:04 +0100
+Message-ID: <Y9N5CI8PpsfiaY9c@dhcp22.suse.cz>
+References: <20230125073502.743446-1-leobras@redhat.com>
+ <Y9DpbVF+JR/G+5Or@dhcp22.suse.cz>
+ <9e61ab53e1419a144f774b95230b789244895424.camel@redhat.com>
+ <Y9FzSBw10MGXm2TK@tpad>
+ <Y9G36AiqPPFDlax3@P9FQF9L96D.corp.robot.car>
+ <Y9Iurktut9B9T+Tl@dhcp22.suse.cz>
+ <Y9MI42NSLooyVZNu@P9FQF9L96D.corp.robot.car>
 Mime-Version: 1.0
-Content-Transfer-Encoding: base64
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-        t=1674803453; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
+        t=1674803464; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
          mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=oAfqBzQqYP3VsTiXRw/uj9hOAmLoJ++UOqGfgLn7TpY=;
-        b=kUb1py6wjARTzXHl8KzRUWCF7GzBz9iA6ab/yohm6Veb7MM3qodTV1tXZXmQTbPk0qfN+D
-        vlJVd+OuoPNmfnvvoyRv4ztmg9xP02D1Ig2J4//LRe/nDySla75ygrG6k2KGovCPVflqJY
-        Qa3KA9lpvDMpoarVAuuIntkaEv0YRNQ=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-        s=susede2_ed25519; t=1674803453;
-        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=oAfqBzQqYP3VsTiXRw/uj9hOAmLoJ++UOqGfgLn7TpY=;
-        b=w4Q+78MF4vvJ2/LWyPvawJV6ny0aEAw6XolMk0IW5ozmLTGtq83aBYl3kD71m9k0/T4v0f
-        eCLTRu5T1nrug1AA==
-Content-Language: en-US
-In-Reply-To: <20230117081257.3089859-14-hch-jcswGhMUV9g@public.gmane.org>
+        bh=6JbbjV8XPl8L1h6/eaMpCzQteeSN53ss/rnYjmgTrXA=;
+        b=nFLaAeUQ5whgylpP8TWBYrurt2mzJIePEHISY2sElbE/wV9zCG0kZLTksxYkCGkDMJ7/e/
+        3puaE1H2LxgFT2FnCyyJCM4ifWQt1a4LNfl8BvN/MsCuVlN/GJYyr42sQpyKXrL+diYIO4
+        uUAvQrDLDXGn7N/8wzS93CpH+RrBNFs=
+Content-Disposition: inline
+In-Reply-To: <Y9MI42NSLooyVZNu-+xijCwNIfdoLQcUKs7qKB+WAnPUfkyWGUBSOeVevoDU@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="euc-kr"; format="flowed"
-To: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>, Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Josef Bacik <josef-DigfWCa+lFGyeJad7bwFQA@public.gmane.org>
-Cc: linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>
+Cc: Marcelo Tosatti <mtosatti-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Leonardo =?iso-8859-1?Q?Br=E1s?= <leobras-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Muchun Song <muchun.song-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Frederic Weisbecker <fweisbecker-l3A5Bk7waGM@public.gmane.org>
 
-T24gMS8xNy8yMyAwOToxMiwgQ2hyaXN0b3BoIEhlbGx3aWcgd3JvdGU6Cj4gTm8gbmVlZCB0byB0
-aGUgcmVxdWVzdF9xdWV1ZSBoZXJlLCBwYXNzIGEgZ2VuZGlzayBhbmQgZXh0cmFjdCB0aGUKPiBu
-b2RlIGlkcyBmcm9tIHRoYXQuCj4gCj4gU2lnbmVkLW9mZi1ieTogQ2hyaXN0b3BoIEhlbGx3aWcg
-PGhjaC1qY3N3R2hNVVY5Z0BwdWJsaWMuZ21hbmUub3JnPgo+IC0tLQo+ICAgYmxvY2svYmZxLWNn
-cm91cC5jICAgIHwgIDYgKysrLS0tCj4gICBibG9jay9ibGstY2dyb3VwLmMgICAgfCAxMCArKysr
-Ky0tLS0tCj4gICBibG9jay9ibGstY2dyb3VwLmggICAgfCAgNCArKy0tCj4gICBibG9jay9ibGst
-aW9jb3N0LmMgICAgfCAgNyArKysrLS0tCj4gICBibG9jay9ibGstaW9sYXRlbmN5LmMgfCAgNyAr
-KystLS0tCj4gICBibG9jay9ibGstaW9wcmlvLmMgICAgfCAgMiArLQo+ICAgYmxvY2svYmxrLXRo
-cm90dGxlLmMgIHwgIDcgKysrLS0tLQo+ICAgNyBmaWxlcyBjaGFuZ2VkLCAyMSBpbnNlcnRpb25z
-KCspLCAyMiBkZWxldGlvbnMoLSkKPiBSZXZpZXdlZC1ieTogSGFubmVzIFJlaW5lY2tlIDxoYXJl
-LWwzQTVCazd3YUdNQHB1YmxpYy5nbWFuZS5vcmc+CgpDaGVlcnMsCgpIYW5uZXMKLS0gCkRyLiBI
-YW5uZXMgUmVpbmVja2UgICAgICAgICAgICAgICAgS2VybmVsIFN0b3JhZ2UgQXJjaGl0ZWN0Cmhh
-cmUtbDNBNUJrN3dhR01AcHVibGljLmdtYW5lLm9yZyAgICAgICAgICAgICAgICAgICAgICAgICAg
-ICAgICs0OSA5MTEgNzQwNTMgNjg4ClNVU0UgU29mdHdhcmUgU29sdXRpb25zIEdtYkgsIE1heGZl
-bGRzdHIuIDUsIDkwNDA5IE7DvHJuYmVyZwpIUkIgMzY4MDkgKEFHIE7DvHJuYmVyZyksIEdlc2No
-w6RmdHNmw7xocmVyOiBJdm8gVG90ZXYsIEFuZHJldwpNeWVycywgQW5kcmV3IE1jRG9uYWxkLCBN
-YXJ0amUgQm91ZGllbiBNb2VybWFuCgo=
+[Cc Frederic]
+
+On Thu 26-01-23 15:12:35, Roman Gushchin wrote:
+> On Thu, Jan 26, 2023 at 08:41:34AM +0100, Michal Hocko wrote:
+[...]
+> > > Essentially each cpu will try to grab the remains of the memory quota
+> > > and move it locally. I wonder in such circumstances if we need to disable the pcp-caching
+> > > on per-cgroup basis.
+> > 
+> > I think it would be more than sufficient to disable pcp charging on an
+> > isolated cpu.
+> 
+> It might have significant performance consequences.
+
+Is it really significant?
+
+> I'd rather opt out of stock draining for isolated cpus: it might slightly reduce
+> the accuracy of memory limits and slightly increase the memory footprint (all
+> those dying memcgs...), but the impact will be limited. Actually it is limited
+> by the number of cpus.
+
+Hmm, OK, I have misunderstood your proposal. Yes, the overal pcp charges
+potentially left behind should be small and that shouldn't really be a
+concern for memcg oom situations (unless the limit is very small and
+workloads on isolated cpus using small hard limits is way beyond my
+imagination).
+
+My first thought was that those charges could be left behind without any
+upper bound but in reality sooner or later something should be running
+on those cpus and if the memcg is gone the pcp cache would get refilled
+and old charges gone.
+
+So yes, this is actually a better and even simpler solution. All we need
+is something like this
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index ab457f0394ab..13b84bbd70ba 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -2344,6 +2344,9 @@ static void drain_all_stock(struct mem_cgroup *root_memcg)
+ 		struct mem_cgroup *memcg;
+ 		bool flush = false;
+ 
++		if (cpu_is_isolated(cpu))
++			continue;
++
+ 		rcu_read_lock();
+ 		memcg = stock->cached;
+ 		if (memcg && stock->nr_pages &&
+
+There is no such cpu_is_isolated() AFAICS so we would need a help from
+NOHZ and cpuisol people to create one for us. Frederic, would such an
+abstraction make any sense from your POV?
+-- 
+Michal Hocko
+SUSE Labs
