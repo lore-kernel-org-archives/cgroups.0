@@ -1,144 +1,310 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [RFC 10/12] cgroup/drm: Introduce weight based drm cgroup control
-Date: Fri, 27 Jan 2023 15:11:19 -1000
-Message-ID: <Y9R2N8sl+7f8Zacv@slm.duckdns.org>
-References: <20230112165609.1083270-1-tvrtko.ursulin@linux.intel.com>
- <20230112165609.1083270-11-tvrtko.ursulin@linux.intel.com>
+From: hanjinke <hanjinke.666-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
+Subject: Re: [PATCH v6] blk-throtl: Introduce sync and async queues for
+ blk-throtl
+Date: Sat, 28 Jan 2023 23:11:12 +0800
+Message-ID: <3140b37c-a2b5-3421-da32-748fc2a54e6f@bytedance.com>
+References: <20230112152549.89298-1-hanjinke.666@bytedance.com>
 Mime-Version: 1.0
+Content-Transfer-Encoding: 8bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:sender:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=GkIPhMBlAguq3FpLF2bZhv+JUE0U4Yd9XqKOrWVb86U=;
-        b=T/yjCD7aAOS7VSevYpoV8uPNqOX9/HTALgteOMMYgpyI3MhRyAu+YD3dWSItr3uMKd
-         3GxM6KwOplc8c6T2VCDElYplaPui6ZBpurwTBcTp/88En30KDkoRkhGQXY2kDyN56U16
-         YDo679wn6KpfLCufDkgvlAzyD2zTsSicSs0GZMqfZcjwhFhfqpbM1JCdXS323w1NVpfQ
-         xMSXjIqAhLoFdyE5ztg6T0XEIj2653LI/UHlea/dw8asYDJFXYjh3wkPSbrQ+8Mw7s0q
-         +Oz7NwncqTLmicgOYmqhSzXhfUKVBCVVefB/BmtsjrJJV7AuzKO8JXM3EvSbWhGK7ir6
-         9vng==
-Sender: Tejun Heo <htejun-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <20230112165609.1083270-11-tvrtko.ursulin-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
+        d=bytedance-com.20210112.gappssmtp.com; s=20210112;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to:subject
+         :user-agent:mime-version:date:message-id:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=ZYAFavlxQFaJhWSxB+w7MwpALqzvK86VNtGnD6AffUs=;
+        b=A7xaQz5dHemok/0ttYbrBjrC7bMN6AuElf7lZOsZ6CzdHtggTZRI/zRMQLPpIdI3dX
+         P9XlxHrpsneXrWTzR+/TBlt2sphHI+gDEO8qUJRt3ZYz6eVyX7gAbf8FlXx2QQDBmgNX
+         VzuAQiEwvuh7jUEVCtPmOfstvNpoNCE5qhUa9lyOWqgQG6PNL59dXZddXoK6P2hSUwwn
+         dJK1tVytb7U2F54FknQhST5F2qkGaf+zHT/XOhClLT75cIXBskw6WuBwVStqJt/wu75C
+         0h5NE+CJTGBHEhEuQZNzK7KsGlHb3pDcwWHR0T4e5LH0et9yUfdt6olcercDrT14IoLF
+         DrwQ==
+In-Reply-To: <20230112152549.89298-1-hanjinke.666-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Tvrtko Ursulin <tvrtko.ursulin-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
-Cc: Intel-gfx-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org, dri-devel-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Dave Airlie <airlied-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Daniel Vetter <daniel.vetter-/w4YWyX8dFk@public.gmane.org>, Rob Clark <robdclark-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>, =?iso-8859-1?Q?St=E9phane?= Marchesin <marcheu-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>, "T . J . Mercier" <tjmercier-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Kenny.Ho-5C7GfCeVMHo@public.gmane.org, Christian =?iso-8859-1?Q?K=F6nig?= <christian.koenig-5C7GfCeVMHo@public.gmane.org>, Brian Welty <brian.welty-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Tvrtko Ursulin <tvrtko.ursulin-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+Content-Type: text/plain; charset="utf-8"; format="flowed"
+To: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, josef-DigfWCa+lFGyeJad7bwFQA@public.gmane.org, axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, yinxin.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org
 
-On Thu, Jan 12, 2023 at 04:56:07PM +0000, Tvrtko Ursulin wrote:
-...
+Hi
+pinging...
+
+在 2023/1/12 下午11:25, Jinke Han 写道:
+> From: Jinke Han <hanjinke.666-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
+> 
+> Now we don't distinguish sync write ios from normal buffer write ios
+> in blk-throtl. A bio with REQ_SYNC tagged always mean it will be wait
+> until write completion soon after it submit. So it's reasonable for sync
+> io to complete as soon as possible.
+> 
+> In our test, fio writes a 100g file in sequential 4k blocksize in
+> a container with low bps limit configured (wbps=10M). More than 1200
+> ios were throttled in blk-throtl queue and the avarage throtle time
+> of each io is 140s. At the same time, the operation of saving a small
+> file by vim will be blocked amolst 140s. As a fsync will be send by vim,
+> the sync ios of fsync will be blocked by a huge amount of buffer write
+> ios ahead. This is also a priority inversion problem within one cgroup.
+> In the database scene, things got really bad with blk-throtle enabled
+> as fsync is called very often.
+> 
+> This patch splits bio queue into sync and async queues for blk-throtl
+> and gives a huge priority to sync write ios. Sync queue only make sense
+> for write ios as we treat all read io as sync io. I think it's a nice
+> respond to the semantics of REQ_SYNC. Bios with REQ_META and REQ_PRIO
+> gains the same priority as they are important to fs. This may avoid
+> some potential priority inversion problems.
+> 
+> With this patch, do the same test above, the duration of the fsync sent
+> by vim drops to several hundreds of milliseconds.
+> 
+> Acked-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+> Signed-off-by: Jinke Han <hanjinke.666-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
+> Signed-off-by: Xin Yin <yinxin.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
+> ---
+> 
+> Changes in v2
+> - Make code more simple.
+> Changes in v3
+> - Fix mismatch of waiting bio and the next dispatched bio.
+> - Rename dispatch_sync_cnt to disp_sync_cnt.
+> - Add more comments.
+> Changes in v4
+> - Improve patch in code style and code comments.
+> Changes in v5
+> - Add more comments for next_to_disp.
+> Changes in v6
+> - Adjust the comments for next_to_disp.
+>    
+>   block/blk-throttle.c | 144 ++++++++++++++++++++++++++++++++++++++++---
+>   block/blk-throttle.h |  13 +++-
+>   2 files changed, 148 insertions(+), 9 deletions(-)
+> 
+> diff --git a/block/blk-throttle.c b/block/blk-throttle.c
+> index 6fb5a2f9e1ee..966b7ee48fd8 100644
+> --- a/block/blk-throttle.c
+> +++ b/block/blk-throttle.c
+> @@ -21,6 +21,13 @@
+>   /* Total max dispatch from all groups in one round */
+>   #define THROTL_QUANTUM 32
+>   
+> +/* For write ios, dispatch 4 sync ios and 1 normal io in one loop */
+> +#define THROTL_SYNC_FACTOR 4
+> +
+> +/* Only make sense for write ios, all read ios are treated as SYNC */
+> +#define SYNC	0
+> +#define ASYNC	1
+> +
+>   /* Throttling is performed over a slice and after that slice is renewed */
+>   #define DFL_THROTL_SLICE_HD (HZ / 10)
+>   #define DFL_THROTL_SLICE_SSD (HZ / 50)
+> @@ -241,11 +248,30 @@ static inline unsigned int throtl_bio_data_size(struct bio *bio)
+>   	return bio->bi_iter.bi_size;
+>   }
+>   
+> -static void throtl_qnode_init(struct throtl_qnode *qn, struct throtl_grp *tg)
+> +static void throtl_qnode_init(struct throtl_qnode *qn, struct throtl_grp *tg,
+> +			      bool rw)
+>   {
+>   	INIT_LIST_HEAD(&qn->node);
+> -	bio_list_init(&qn->bios);
+> +	bio_list_init(&qn->bios[SYNC]);
+> +	bio_list_init(&qn->bios[ASYNC]);
+>   	qn->tg = tg;
+> +	qn->disp_sync_cnt = rw == READ ? UINT_MAX : 0;
+> +	qn->next_to_disp = NULL;
+> +}
+> +
+> +static inline void throtl_qnode_add_bio_list(struct throtl_qnode *qn,
+> +					     struct bio *bio)
+> +{
+> +	bool rw = bio_data_dir(bio);
+> +
 > +	/*
-> +	 * 1st pass - reset working values and update hierarchical weights and
-> +	 * GPU utilisation.
+> +	 * All read bios and those write bios with REQ_SYNC, REQ_META or
+> +	 * REQ_PRIO flags set are treated as SYNC io.
 > +	 */
-> +	if (!__start_scanning(root, period_us))
-> +		goto out_retry; /*
-> +				 * Always come back later if scanner races with
-> +				 * core cgroup management. (Repeated pattern.)
-> +				 */
+> +	if (rw == READ || bio->bi_opf & (REQ_SYNC | REQ_META | REQ_PRIO))
+> +		bio_list_add(&qn->bios[SYNC], bio);
+> +	else
+> +		bio_list_add(&qn->bios[ASYNC], bio);
+>   }
+>   
+>   /**
+> @@ -261,13 +287,84 @@ static void throtl_qnode_init(struct throtl_qnode *qn, struct throtl_grp *tg)
+>   static void throtl_qnode_add_bio(struct bio *bio, struct throtl_qnode *qn,
+>   				 struct list_head *queued)
+>   {
+> -	bio_list_add(&qn->bios, bio);
+> +	throtl_qnode_add_bio_list(qn, bio);
+>   	if (list_empty(&qn->node)) {
+>   		list_add_tail(&qn->node, queued);
+>   		blkg_get(tg_to_blkg(qn->tg));
+>   	}
+>   }
+>   
+> +/**
+> + * throtl_qnode_bio_list_pop: pop a bio from sync/async queue
+> + * @qn: the qnode to pop a bio from
+> + *
+> + * For writes, target SYNC or ASYNC queue based on disp_sync_cnt. If empty,
+> + * try the other queue.
+> + */
+> +static struct bio *throtl_qnode_bio_list_pop(struct throtl_qnode *qn)
+> +{
+> +	struct bio *bio;
+> +	int from = qn->disp_sync_cnt == THROTL_SYNC_FACTOR ? ASYNC : SYNC;
 > +
-> +	css_for_each_descendant_pre(node, &root->css) {
-> +		struct drm_cgroup_state *drmcs = css_to_drmcs(node);
-> +		struct cgroup_subsys_state *css;
-> +		unsigned int over_weights = 0;
-> +		u64 unused_us = 0;
-> +
-> +		if (!css_tryget_online(node))
-> +			goto out_retry;
-> +
-> +		/*
-> +		 * 2nd pass - calculate initial budgets, mark over budget
-> +		 * siblings and add up unused budget for the group.
-> +		 */
-> +		css_for_each_child(css, &drmcs->css) {
-> +			struct drm_cgroup_state *sibling = css_to_drmcs(css);
-> +
-> +			if (!css_tryget_online(css)) {
-> +				css_put(node);
-> +				goto out_retry;
-> +			}
-> +
-> +			sibling->per_s_budget_us  =
-> +				DIV_ROUND_UP_ULL(drmcs->per_s_budget_us *
-> +						 sibling->weight,
-> +						 drmcs->sum_children_weights);
-> +
-> +			sibling->over = sibling->active_us >
-> +					sibling->per_s_budget_us;
-> +			if (sibling->over)
-> +				over_weights += sibling->weight;
-> +			else
-> +				unused_us += sibling->per_s_budget_us -
-> +					     sibling->active_us;
-> +
-> +			css_put(css);
-> +		}
-> +
-> +		/*
-> +		 * 3rd pass - spread unused budget according to relative weights
-> +		 * of over budget siblings.
-> +		 */
-> +		css_for_each_child(css, &drmcs->css) {
-> +			struct drm_cgroup_state *sibling = css_to_drmcs(css);
-> +
-> +			if (!css_tryget_online(css)) {
-> +				css_put(node);
-> +				goto out_retry;
-> +			}
-> +
-> +			if (sibling->over) {
-> +				u64 budget_us =
-> +					DIV_ROUND_UP_ULL(unused_us *
-> +							 sibling->weight,
-> +							 over_weights);
-> +				sibling->per_s_budget_us += budget_us;
-> +				sibling->over = sibling->active_us  >
-> +						sibling->per_s_budget_us;
-> +			}
-> +
-> +			css_put(css);
-> +		}
-> +
-> +		css_put(node);
+> +	bio = bio_list_pop(&qn->bios[from]);
+> +	if (!bio) {
+> +		from = 1 - from;
+> +		bio = bio_list_pop(&qn->bios[from]);
 > +	}
 > +
-> +	/*
-> +	 * 4th pass - send out over/under budget notifications.
-> +	 */
-> +	css_for_each_descendant_post(node, &root->css) {
-> +		struct drm_cgroup_state *drmcs = css_to_drmcs(node);
+> +	if (qn->disp_sync_cnt < THROTL_SYNC_FACTOR && from == SYNC)
+> +		qn->disp_sync_cnt++;
+> +	else
+> +		qn->disp_sync_cnt = 0;
 > +
-> +		if (!css_tryget_online(node))
-> +			goto out_retry;
+> +	return bio;
+> +}
 > +
-> +		if (drmcs->over || drmcs->over_budget)
-> +			signal_drm_budget(drmcs,
-> +					  drmcs->active_us,
-> +					  drmcs->per_s_budget_us);
-> +		drmcs->over_budget = drmcs->over;
+> +/**
+> + * throtl_qnode_bio_peek - peek a bio from a qn
+> + * @qn: the qnode to peek from
+> + *
+> + * For read, always peek bio from the SYNC queue.
+> + *
+> + * For write, we first peek bio from next_to_disp. If it's NULL, a bio
+> + * will be popped from SYNC or ASYNC queue to fill it. The next_to_disp
+> + * is used to make sure that the previously bio and the next popped bio
+> + * are always the same even in case that the spin lock of queue was
+> + * released and re-grabbed. Consider the following situation:
+> + *
+> + * Assume that there are only bios queued in ASYNC queue and the SYNC
+> + * queue is empty and all ASYNC bios are 1M in size and the bps limit is
+> + * 1M/s. The throtl_slice is 100ms. The current slice is [jiffies1,
+> + * jiffies1+100] and the bytes_disp[w] is 0.
+> + *
+> + * The disp_sync_cnt is 0 as it was set 0 after each dispatching of a
+> + * ASYNC bio. A ASYNC bio wil be peeked to check in tg_may_dispatch.
+> + * Obviously, it can't be dispatched in current slice and the wait time
+> + * is 1000ms. The slice will be extended to [jiffies1, jiffies1+1000] in
+> + * tg_may_dispatch. The queue lock is released and a 4k SYNC bio gets
+> + * queued during the 1000ms wait. After 1000ms, it's time to dispatch the
+> + * tg, the SYNC bio will be popped to dispatched as the disp_sync_cnt is 0
+> + * and the SYNC queue is no-empty. The slice will be extended to [jiffies1,
+> + * jiffies1+1100] in tg_may_dispatch. Then the slice will be trimed to
+> + * [jiffies1+1000, jiffies1+1100] after the SYNC bio was dispatched. This
+> + * means that only 4k size was dispatched in last 1000ms and the budget for
+> + * this 1000ms has be voided immediately with the trim. If this happens
+> + * often, it is hard to fill up the bandwidth considering that the bps
+> + * limit is 1M/s.
+> + */
+> +static inline struct bio *throtl_qnode_bio_peek(struct throtl_qnode *qn)
+> +{
+> +	/* qn for read ios */
+> +	if (qn->disp_sync_cnt == UINT_MAX)
+> +		return bio_list_peek(&qn->bios[SYNC]);
 > +
-> +		css_put(node);
+> +	/* qn for write ios */
+> +	if (!qn->next_to_disp)
+> +		qn->next_to_disp  = throtl_qnode_bio_list_pop(qn);
+> +
+> +	return qn->next_to_disp;
+> +}
+> +
+>   /**
+>    * throtl_peek_queued - peek the first bio on a qnode list
+>    * @queued: the qnode list to peek
+> @@ -281,11 +378,42 @@ static struct bio *throtl_peek_queued(struct list_head *queued)
+>   		return NULL;
+>   
+>   	qn = list_first_entry(queued, struct throtl_qnode, node);
+> -	bio = bio_list_peek(&qn->bios);
+> +	bio = throtl_qnode_bio_peek(qn);
+>   	WARN_ON_ONCE(!bio);
+>   	return bio;
+>   }
+>   
+> +/**
+> + * throtl_qnode_bio_pop: pop a bio from a qnode
+> + * @qn: the qnode to pop a bio from
+> + */
+> +static inline struct bio *throtl_qnode_bio_pop(struct throtl_qnode *qn)
+> +{
+> +	struct bio *bio;
+> +
+> +	/* qn for read ios */
+> +	if (qn->disp_sync_cnt == UINT_MAX)
+> +		return bio_list_pop(&qn->bios[SYNC]);
+> +
+> +	/* qn for write ios */
+> +	if (qn->next_to_disp) {
+> +		bio = qn->next_to_disp;
+> +		qn->next_to_disp = NULL;
+> +		return bio;
 > +	}
-
-It keeps bothering me that the distribution logic has no memory. Maybe this
-is good enough for coarse control with long cycle durations but it likely
-will get in trouble if pushed to finer grained control. State keeping
-doesn't require a lot of complexity. The only state that needs tracking is
-each cgroup's vtime and then the core should be able to tell specific
-drivers how much each cgroup is over or under fairly accurately at any given
-time.
-
-That said, this isn't a blocker. What's implemented can work well enough
-with coarse enough time grain and that might be enough for the time being
-and we can get back to it later. I think Michal already mentioned it but it
-might be a good idea to track active and inactive cgroups and build the
-weight tree with only active ones. There are machines with a lot of mostly
-idle cgroups (> tens of thousands) and tree wide scanning even at low
-frequency can become a pretty bad bottleneck.
-
-Thanks.
-
--- 
-tejun
+> +
+> +	return throtl_qnode_bio_list_pop(qn);
+> +}
+> +
+> +static inline bool throtl_qnode_empty(struct throtl_qnode *qn)
+> +{
+> +	if (!qn->next_to_disp &&
+> +	    bio_list_empty(&qn->bios[SYNC]) &&
+> +			   bio_list_empty(&qn->bios[ASYNC]))
+> +		return true;
+> +	return false;
+> +}
+> +
+>   /**
+>    * throtl_pop_queued - pop the first bio form a qnode list
+>    * @queued: the qnode list to pop a bio from
+> @@ -310,10 +438,10 @@ static struct bio *throtl_pop_queued(struct list_head *queued,
+>   		return NULL;
+>   
+>   	qn = list_first_entry(queued, struct throtl_qnode, node);
+> -	bio = bio_list_pop(&qn->bios);
+> +	bio = throtl_qnode_bio_pop(qn);
+>   	WARN_ON_ONCE(!bio);
+>   
+> -	if (bio_list_empty(&qn->bios)) {
+> +	if (throtl_qnode_empty(qn)) {
+>   		list_del_init(&qn->node);
+>   		if (tg_to_put)
+>   			*tg_to_put = qn->tg;
+> @@ -355,8 +483,8 @@ static struct blkg_policy_data *throtl_pd_alloc(gfp_t gfp,
+>   	throtl_service_queue_init(&tg->service_queue);
+>   
+>   	for (rw = READ; rw <= WRITE; rw++) {
+> -		throtl_qnode_init(&tg->qnode_on_self[rw], tg);
+> -		throtl_qnode_init(&tg->qnode_on_parent[rw], tg);
+> +		throtl_qnode_init(&tg->qnode_on_self[rw], tg, rw);
+> +		throtl_qnode_init(&tg->qnode_on_parent[rw], tg, rw);
+>   	}
+>   
+>   	RB_CLEAR_NODE(&tg->rb_node);
+> diff --git a/block/blk-throttle.h b/block/blk-throttle.h
+> index ef4b7a4de987..bd4fff65b6d9 100644
+> --- a/block/blk-throttle.h
+> +++ b/block/blk-throttle.h
+> @@ -28,8 +28,19 @@
+>    */
+>   struct throtl_qnode {
+>   	struct list_head	node;		/* service_queue->queued[] */
+> -	struct bio_list		bios;		/* queued bios */
+> +	struct bio_list		bios[2];	/* queued bios */
+>   	struct throtl_grp	*tg;		/* tg this qnode belongs to */
+> +
+> +	struct bio		*next_to_disp;	/* pinned for next to dispatch */
+> +	/*
+> +	 * 1) for write throtl_qnode:
+> +	 * [0, THROTL_SYNC_FACTOR-1]: dispatch sync io
+> +	 * [THROTL_SYNC_FACTOR]: dispatch async io
+> +	 *
+> +	 * 2) for read throtl_qnode:
+> +	 * UINT_MAX
+> +	 */
+> +	unsigned int disp_sync_cnt;         /* sync io dispatch counter */
+>   };
+>   
+>   struct throtl_service_queue {
