@@ -1,54 +1,54 @@
 From: Jens Axboe <axboe@kernel.dk>
-Subject: Re: [PATCH] block, bfq: fix uaf for bfqq in bic_set_bfqq()
-Date: Sun, 29 Jan 2023 14:51:38 -0700
-Message-ID: <7ae20fa2-d9b4-9e21-4209-81bf4845a3c5@kernel.dk>
-References: <20230113094410.2907223-1-yukuai3@huawei.com>
- <4d3f6183-f9d4-b657-0205-fc240bc24c76@huaweicloud.com>
+Subject: Re: [PATCH -next v3 0/3] blk-cgroup: make sure pd_free_fn() is
+ called in order
+Date: Sun, 29 Jan 2023 15:20:30 -0700
+Message-ID: <167503083019.59803.12005563665423303861.b4-ty@kernel.dk>
+References: <20230119110350.2287325-1-yukuai1@huaweicloud.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-block-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=kernel-dk.20210112.gappssmtp.com; s=20210112;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=10Pr4T3evkPPQKg3Z4WSUnPLk+n8TOgwlOyguzNlXvc=;
-        b=kQM+1CafTz4AifPNzW97tONzVLTLm+vEF8Iyye32LSIsoi36btod+M6SMhwuSjChID
-         zoAjW+MhRE5AHd/9nnVasiSpPfx2pFhRz3w2VPXdeyyOtvIb0S/9kAPn3cO7p/a5Bids
-         4i0kl0sV79hfhMzgfrww/yDdoYXYhA93VWWmIWzdY4wLIh8bCkz6sf4Dv0eT/eJBHJVw
-         CX1cNIeOco0O1UHvXPSnM9nKEC4GoupqFJ3XcRc641i547oql4Ae23OUNhxjPGAluSYA
-         vevkYAgoZjnI4OWp703RysiiS3knD9jAWzR/HP2wCXH/XmwtGDrxBiMBb9lx7oai85kP
-         Ny+w==
-Content-Language: en-US
-In-Reply-To: <4d3f6183-f9d4-b657-0205-fc240bc24c76@huaweicloud.com>
+        h=content-transfer-encoding:mime-version:date:message-id:subject
+         :references:in-reply-to:cc:to:from:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=PaWOdTWb/BaPcMrfWb0OI2BnQ5NRhvslPHB9PaY2czM=;
+        b=bSlmnlpDPVJKHl8Ffvd1webJtnqNaWXDEXWAQNGHj+jalLonYk3eGyf9SeIpq1BOg6
+         ZP1JHTvOyuYq0rBU6JKuasQzCF0kqyUlIYxZSeWZdCENAa5OxWXBFJhGwuH6Ca4eDC0E
+         2oUU0dR+w+fKBn1TVUAGKuMOufVG3GrRU5E9NI3ASKx0DtMyRwwn0aV77msXgVUFMKcy
+         O8JTdKE6cAOpKZBKfS+bxtcSsAP8oghB0pcfpfP+qrE6tFjyzcwnDils1ZYhHKHwkP0o
+         BQgJXcT9BEenssOUSVckjG6UwLYw1C986N/6o/DgTJVrw2hbV0nSciHCqpFNh2S7mTBu
+         XIoQ==
+In-Reply-To: <20230119110350.2287325-1-yukuai1@huaweicloud.com>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="utf-8"
-To: Yu Kuai <yukuai1@huaweicloud.com>, jack@suse.cz, tj@kernel.org, josef@toxicpanda.com, paolo.valente@linaro.org, shinichiro.kawasaki@wdc.com
-Cc: cgroups@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, yi.zhang@huawei.com, yangerkun@huawei.com, "yukuai (C)" <yukuai3@huawei.com>
+Content-Type: text/plain; charset="us-ascii"
+To: tj@kernel.org, hch@lst.de, josef@toxicpanda.com, Yu Kuai <yukuai1@huaweicloud.com>
+Cc: cgroups@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, yukuai3@huawei.com, yi.zhang@huawei.com, yangerkun@huawei.com
 
-On 1/28/23 6:38 PM, Yu Kuai wrote:
-> Hi, Jens
-> 
-> 在 2023/01/13 17:44, Yu Kuai 写道:
->> After commit 64dc8c732f5c ("block, bfq: fix possible uaf for 'bfqq->bic'"),
->> bic->bfqq will be accessed in bic_set_bfqq(), however, in some context
->> bic->bfqq will be freed first, and bic_set_bfqq() is called with the freed
->> bic->bfqq.
->>
->> Fix the problem by always freeing bfqq after bic_set_bfqq().
->>
-> 
-> Sorry that I send this patch will wrong email, and you might missed this
-> patch.
-> 
-> Can you apply this patch? This patch can't be applied directly to lower
-> version due to Paolo's patchset, I'll send lts patch seperately.
 
-I'm confused... So this patch only applies to the 6.3 branch, yet we
-need it in 6.2 as far as I can tell. Why isn't it against block-6.2
-then?
+On Thu, 19 Jan 2023 19:03:47 +0800, Yu Kuai wrote:
+> Changes in v3:
+>  - add ack tag from Tejun for patch 1,2
+>  - as suggested by Tejun, update commit message and comments in patch 3
+> 
+> The problem was found in iocost orignally([1]) that ioc can be freed in
+> ioc_pd_free(). And later we found that there are more problem in
+> iocost([2]).
+> 
+> [...]
 
+Applied, thanks!
+
+[1/3] blk-cgroup: dropping parent refcount after pd_free_fn() is done
+      commit: c7241babf0855d8a6180cd1743ff0ec34de40b4e
+[2/3] blk-cgroup: support to track if policy is online
+      commit: dfd6200a095440b663099d8d42f1efb0175a1ce3
+[3/3] blk-cgroup: synchronize pd_free_fn() from blkg_free_workfn() and blkcg_deactivate_policy()
+      commit: f1c006f1c6850c14040f8337753a63119bba39b9
+
+Best regards,
 -- 
 Jens Axboe
+
 
 
