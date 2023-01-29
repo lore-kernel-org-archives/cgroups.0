@@ -1,45 +1,32 @@
-From: Ming Lei <ming.lei@redhat.com>
-Subject: Re: [PATCH 01/15] blk-cgroup: don't defer blkg_free to a workqueue
-Date: Sat, 28 Jan 2023 23:12:13 +0800
-Message-ID: <Y9U7TZQtjnMd6snm@T590>
-References: <20230124065716.152286-1-hch@lst.de>
- <20230124065716.152286-2-hch@lst.de>
+From: Yu Kuai <yukuai1-XF6JlduFytWkHkcT6e4Xnw@public.gmane.org>
+Subject: Re: [PATCH] block, bfq: fix uaf for bfqq in bic_set_bfqq()
+Date: Sun, 29 Jan 2023 09:18:14 +0800
+Message-ID: <38b5d9a6-bed6-c139-404b-94aca49f38c6@huaweicloud.com>
+References: <20230113094410.2907223-1-yukuai3@huawei.com>
+ <20230124000925.pfosl6pfuhjyggbp@shindev>
 Mime-Version: 1.0
-Return-path: <linux-block-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1674918745;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=g0QUGzoJoebh4v+PZGDYLFFagPOPP/ZNw/+BWJ9IUG4=;
-        b=jA1Bi/0QFMudeRnQsH8J8zeTP0xVabpZkyVMVo8iVaHRaE9HAvTN9lk1OEZvd47tsnNPZ0
-        4GOvROMdG27J5w2F1KSMNVN4aXVbHkYBSroDtLQMNCsLOG0mK5Sl6yndUi8WR0Pypdxjv+
-        NFPESMcardyF+c+MBKF6tYv5mYeg/f0=
-Content-Disposition: inline
-In-Reply-To: <20230124065716.152286-2-hch@lst.de>
+Content-Transfer-Encoding: quoted-printable
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <20230124000925.pfosl6pfuhjyggbp@shindev>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Christoph Hellwig <hch@lst.de>
-Cc: Jens Axboe <axboe@kernel.dk>, Tejun Heo <tj@kernel.org>, Josef Bacik <josef@toxicpanda.com>, linux-block@vger.kernel.org, cgroups@vger.kernel.org, Andreas Herrmann <aherrmann@suse.de>, ming.lei@redhat.com
+Content-Type: text/plain; charset="iso-8859-1"; format="flowed"
+To: Shinichiro Kawasaki <shinichiro.kawasaki-Sjgp3cTcYWE@public.gmane.org>
+Cc: "jack-AlSwsSmVLrQ@public.gmane.org" <jack-AlSwsSmVLrQ@public.gmane.org>, "tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org" <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, "josef-DigfWCa+lFGyeJad7bwFQA@public.gmane.org" <josef-DigfWCa+lFGyeJad7bwFQA@public.gmane.org>, "axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org" <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, "paolo.valente-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org" <paolo.valente-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, "cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "yukuai1-XF6JlduFytWkHkcT6e4Xnw@public.gmane.org" <yukuai1-XF6JlduFytWkHkcT6e4Xnw@public.gmane.org>, "yi.zhang-hv44wF8Li93QT0dZR+AlfA@public.gmane.org" <yi.zhang-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, "yangerkun-hv44wF8Li93QT0dZR+AlfA@public.gmane.org" <yangerkun-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, "yukuai (C)" <yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 
-On Tue, Jan 24, 2023 at 07:57:01AM +0100, Christoph Hellwig wrote:
-> Now that blk_put_queue can be called from process context, there is no
+Hi,
 
-s/process/atomic?
+=D4=DA 2023/01/24 8:09, Shinichiro Kawasaki =D0=B4=B5=C0:
+>=20
+> Yu, thanks for posting this fix, but it can not be applied to v6.2-rc5. T=
+he
+> hunk above looks different from the patch I tested. Could you take a look?
+>=20
 
-> need for the asynchronous execution.
-> 
-> This effectively reverts commit d578c770c85233af592e54537f93f3831bde7e9a.
+This patch was rebased with following patch that add a new param for
+bic_set_bfqq():
 
-blkg_free() can be called with ->queue_lock, and:
-
-- del_timer_sync(&tg->service_queue.pending_timer) is called from throtl_pd_free().
-
-- queue_lock is required by throtl_pending_timer_fn
-
-So there is deadlock risk if the above commit is reverted.
+51ec2387623a block, bfq: split sync bfq_queues on a per-actuator basis
 
 Thanks,
-Ming
+Kuai
 
