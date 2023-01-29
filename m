@@ -1,69 +1,52 @@
 From: Jens Axboe <axboe@kernel.dk>
-Subject: Re: [PATCH -next v3 0/3] blk-cgroup: make sure pd_free_fn() is called
- in order
-Date: Sun, 29 Jan 2023 14:48:50 -0700
-Message-ID: <7f3221eb-d5c1-5018-cdcc-979d436fa386@kernel.dk>
-References: <20230119110350.2287325-1-yukuai1@huaweicloud.com>
- <bd1c347b-cbf8-3917-401a-ed85c6ccb956@kernel.dk>
- <0ddce9e4-d027-0bb0-d260-093ccc4c2d4d@huaweicloud.com>
+Subject: Re: [PATCH] block, bfq: fix uaf for bfqq in bic_set_bfqq()
+Date: Sun, 29 Jan 2023 14:51:38 -0700
+Message-ID: <7ae20fa2-d9b4-9e21-4209-81bf4845a3c5@kernel.dk>
+References: <20230113094410.2907223-1-yukuai3@huawei.com>
+ <4d3f6183-f9d4-b657-0205-fc240bc24c76@huaweicloud.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Return-path: <linux-block-owner@vger.kernel.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=kernel-dk.20210112.gappssmtp.com; s=20210112;
         h=content-transfer-encoding:in-reply-to:from:references:cc:to
          :content-language:subject:user-agent:mime-version:date:message-id
          :from:to:cc:subject:date:message-id:reply-to;
-        bh=3orRjVyl8TlIILy5P9DmDDw4aLYfFk+iiK2J9hLXKM8=;
-        b=K1fLjf+3hEV58xhvHFnsNkPRmfFbB/yPlBUiSkM2CGxnZWzGSqtk3KPkx/ha0qH3ZL
-         UKBWyX3E+s/0xU9Zz8QEPIxguy8r0W4uChf90dCI7oDJs7z6Xit2L4Ta5Xze4aK5G7tv
-         FOsD3TnzR8xOKdHZEO4CsX2VJFgrAz5On4sCtcTX21R/BUdUqP0BMQ3GZNfUpClv8w4J
-         xWlqFlMyL2XxrVsk/HOj/vTQrXWSJwPmqqgCiOqy/yPTe8WtXA5FWBlcar420KcW7b/o
-         gdPKdWaDk9ql92NcXajcU66E8LOcwnb3ynt0bPiEOJ7CuBm/IzYAQVKhHDDRheSz+Lav
-         ESxg==
+        bh=10Pr4T3evkPPQKg3Z4WSUnPLk+n8TOgwlOyguzNlXvc=;
+        b=kQM+1CafTz4AifPNzW97tONzVLTLm+vEF8Iyye32LSIsoi36btod+M6SMhwuSjChID
+         zoAjW+MhRE5AHd/9nnVasiSpPfx2pFhRz3w2VPXdeyyOtvIb0S/9kAPn3cO7p/a5Bids
+         4i0kl0sV79hfhMzgfrww/yDdoYXYhA93VWWmIWzdY4wLIh8bCkz6sf4Dv0eT/eJBHJVw
+         CX1cNIeOco0O1UHvXPSnM9nKEC4GoupqFJ3XcRc641i547oql4Ae23OUNhxjPGAluSYA
+         vevkYAgoZjnI4OWp703RysiiS3knD9jAWzR/HP2wCXH/XmwtGDrxBiMBb9lx7oai85kP
+         Ny+w==
 Content-Language: en-US
-In-Reply-To: <0ddce9e4-d027-0bb0-d260-093ccc4c2d4d@huaweicloud.com>
+In-Reply-To: <4d3f6183-f9d4-b657-0205-fc240bc24c76@huaweicloud.com>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="utf-8"
-To: Yu Kuai <yukuai1@huaweicloud.com>, tj@kernel.org, hch@lst.de, josef@toxicpanda.com
+To: Yu Kuai <yukuai1@huaweicloud.com>, jack@suse.cz, tj@kernel.org, josef@toxicpanda.com, paolo.valente@linaro.org, shinichiro.kawasaki@wdc.com
 Cc: cgroups@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, yi.zhang@huawei.com, yangerkun@huawei.com, "yukuai (C)" <yukuai3@huawei.com>
 
-On 1/28/23 11:06 PM, Yu Kuai wrote:
+On 1/28/23 6:38 PM, Yu Kuai wrote:
 > Hi, Jens
 > 
-> 在 2023/01/20 2:54, Jens Axboe 写道:
->> On 1/19/23 4:03 AM, Yu Kuai wrote:
->>> From: Yu Kuai <yukuai3@huawei.com>
->>>
->>> Changes in v3:
->>>   - add ack tag from Tejun for patch 1,2
->>>   - as suggested by Tejun, update commit message and comments in patch 3
->>>
->>> The problem was found in iocost orignally([1]) that ioc can be freed in
->>> ioc_pd_free(). And later we found that there are more problem in
->>> iocost([2]).
->>>
->>> After some discussion, as suggested by Tejun([3]), we decide to fix the
->>> problem that parent pd can be freed before child pd in cgroup layer
->>> first. And the problem in [1] will be fixed later if this patchset is
->>> applied.
+> 在 2023/01/13 17:44, Yu Kuai 写道:
+>> After commit 64dc8c732f5c ("block, bfq: fix possible uaf for 'bfqq->bic'"),
+>> bic->bfqq will be accessed in bic_set_bfqq(), however, in some context
+>> bic->bfqq will be freed first, and bic_set_bfqq() is called with the freed
+>> bic->bfqq.
 >>
->> Doesn't apply against for-6.3/block (or linux-next or my for-next, for
->> that matter). Can you resend a tested one against for-6.3/block?
+>> Fix the problem by always freeing bfqq after bic_set_bfqq().
 >>
 > 
-> This is weird, I just test latest linux-next, and I can apply this
-> patchset on the top of following commit:
+> Sorry that I send this patch will wrong email, and you might missed this
+> patch.
 > 
-> For latest for-6.3/block, this patch 2 can't be applied because
-> following commit is not here:
-> 
-> e3ff8887e7db blk-cgroup: fix missing pd_online_fn() while activating policy
-> 
-> But this patch is already merged into 6.2-rc5.
+> Can you apply this patch? This patch can't be applied directly to lower
+> version due to Paolo's patchset, I'll send lts patch seperately.
 
-Since I have one more conflict, I think we'll just rebase for-6.3/block
-when -rc6 is out, and then it should apply cleanly.
+I'm confused... So this patch only applies to the 6.3 branch, yet we
+need it in 6.2 as far as I can tell. Why isn't it against block-6.2
+then?
 
 -- 
 Jens Axboe
