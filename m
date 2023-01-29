@@ -1,83 +1,71 @@
-From: Matthew Wilcox <willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
-Subject: Re: [PATCH] fscrypt: Copy the memcg information to the ciphertext
- page
-Date: Sun, 29 Jan 2023 21:26:57 +0000
-Message-ID: <Y9bkoasmAmtQ2nSV@casper.infradead.org>
-References: <20230129121851.2248378-1-willy@infradead.org>
- <Y9a2m8uvmXmCVYvE@sol.localdomain>
+From: Jens Axboe <axboe@kernel.dk>
+Subject: Re: [PATCH -next v3 0/3] blk-cgroup: make sure pd_free_fn() is called
+ in order
+Date: Sun, 29 Jan 2023 14:48:50 -0700
+Message-ID: <7f3221eb-d5c1-5018-cdcc-979d436fa386@kernel.dk>
+References: <20230119110350.2287325-1-yukuai1@huaweicloud.com>
+ <bd1c347b-cbf8-3917-401a-ed85c6ccb956@kernel.dk>
+ <0ddce9e4-d027-0bb0-d260-093ccc4c2d4d@huaweicloud.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
-        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=bXKHXmqEaebxMzK8gnHyzoWXhX9Kr2E4BvSYUnQui+s=; b=IxMHpJnXGWl1mAd9RBC6Fzs9tN
-        /g2C0765JWZhKFeJDvJac3rnrbux8FmFABeZaU67CqtwPrSCEYxMm37nwuy4iuy7sFMtF8J16OHQO
-        AhoX3yt7iYvrcw/aIwYbNJrbKrOhPAVYpg3zqChpqv1rO0hTL3A9y8BmG7vBf+889jCkVVHMScdES
-        K2jIJ4U2SkTozsLcoHUNIRdmhj3BtcHFfoExh40VIL8wXG89Gby/vBoMwKaVoUGeHyldtIXa4x+9o
-        5q2v3Ke1jzOwYBGPBii/hIRmojfICe5/UAWHdOQ9NJILhSpLOmb8DWdZox/0LXt4/MP0T+9bygsP1
-        S2t2wNrQ==;
-Content-Disposition: inline
-In-Reply-To: <Y9a2m8uvmXmCVYvE-8Kz7deQLoS0mYvmMESoHnA@public.gmane.org>
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-block-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=kernel-dk.20210112.gappssmtp.com; s=20210112;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=3orRjVyl8TlIILy5P9DmDDw4aLYfFk+iiK2J9hLXKM8=;
+        b=K1fLjf+3hEV58xhvHFnsNkPRmfFbB/yPlBUiSkM2CGxnZWzGSqtk3KPkx/ha0qH3ZL
+         UKBWyX3E+s/0xU9Zz8QEPIxguy8r0W4uChf90dCI7oDJs7z6Xit2L4Ta5Xze4aK5G7tv
+         FOsD3TnzR8xOKdHZEO4CsX2VJFgrAz5On4sCtcTX21R/BUdUqP0BMQ3GZNfUpClv8w4J
+         xWlqFlMyL2XxrVsk/HOj/vTQrXWSJwPmqqgCiOqy/yPTe8WtXA5FWBlcar420KcW7b/o
+         gdPKdWaDk9ql92NcXajcU66E8LOcwnb3ynt0bPiEOJ7CuBm/IzYAQVKhHDDRheSz+Lav
+         ESxg==
+Content-Language: en-US
+In-Reply-To: <0ddce9e4-d027-0bb0-d260-093ccc4c2d4d@huaweicloud.com>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Eric Biggers <ebiggers-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: "Theodore Y . Ts'o" <tytso-3s7WtUTddSA@public.gmane.org>, Jaegeuk Kim <jaegeuk-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, linux-fscrypt-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-ext4-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-f2fs-devel-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org, stable-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Content-Type: text/plain; charset="utf-8"
+To: Yu Kuai <yukuai1@huaweicloud.com>, tj@kernel.org, hch@lst.de, josef@toxicpanda.com
+Cc: cgroups@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, yi.zhang@huawei.com, yangerkun@huawei.com, "yukuai (C)" <yukuai3@huawei.com>
 
-On Sun, Jan 29, 2023 at 10:10:35AM -0800, Eric Biggers wrote:
-> On Sun, Jan 29, 2023 at 12:18:51PM +0000, Matthew Wilcox (Oracle) wrote:
-> > Both f2fs and ext4 end up passing the ciphertext page to
-> > wbc_account_cgroup_owner().  At the moment, the ciphertext page appears
-> > to belong to no cgroup, so it is accounted to the root_mem_cgroup instead
-> > of whatever cgroup the original page was in.
-> > 
-> > It's hard to say how far back this is a bug.  The crypto code shared
-> > between ext4 & f2fs was created in May 2015 with commit 0b81d0779072,
-> > but neither filesystem did anything with memcg_data before then.  memcg
-> > writeback accounting was added to ext4 in July 2015 in commit 001e4a8775f6
-> > and it wasn't added to f2fs until January 2018 (commit 578c647879f7).
+On 1/28/23 11:06 PM, Yu Kuai wrote:
+> Hi, Jens
 > 
-> What is the actual effect of this bug?
+> 在 2023/01/20 2:54, Jens Axboe 写道:
+>> On 1/19/23 4:03 AM, Yu Kuai wrote:
+>>> From: Yu Kuai <yukuai3@huawei.com>
+>>>
+>>> Changes in v3:
+>>>   - add ack tag from Tejun for patch 1,2
+>>>   - as suggested by Tejun, update commit message and comments in patch 3
+>>>
+>>> The problem was found in iocost orignally([1]) that ioc can be freed in
+>>> ioc_pd_free(). And later we found that there are more problem in
+>>> iocost([2]).
+>>>
+>>> After some discussion, as suggested by Tejun([3]), we decide to fix the
+>>> problem that parent pd can be freed before child pd in cgroup layer
+>>> first. And the problem in [1] will be fixed later if this patchset is
+>>> applied.
+>>
+>> Doesn't apply against for-6.3/block (or linux-next or my for-next, for
+>> that matter). Can you resend a tested one against for-6.3/block?
+>>
 > 
-> The bounce pages are short-lived, so surely it doesn't really matter what memory
-> cgroup they get charged to?
-
-Ah, we don't want to charge the _memory_ of the bounce pages to the
-cgroup.  We want to charge the _I/O_ to the cgroup.
-
-Looking at the original commits, the effect will be that if you have
-an unencrypted filesystem, writeback will be throttled according to
-the cgroup's rules, but if you have an encrypted filesystem, it will
-escape the cgroup I/O limits.
-
-> I guess it's really more about the effect on cgroup writeback?  And that's also
-> the reason why this is a problem here but not e.g. in dm-crypt?
-
-I haven't looked at dm-crypt at all, but my assumption is that the fs
-charges the I/O of the pagecache page to the cgroup, and there's no need
-to do it again.
-
-> > diff --git a/fs/crypto/crypto.c b/fs/crypto/crypto.c
-> > index e78be66bbf01..a4e76f96f291 100644
-> > --- a/fs/crypto/crypto.c
-> > +++ b/fs/crypto/crypto.c
-> > @@ -205,6 +205,9 @@ struct page *fscrypt_encrypt_pagecache_blocks(struct page *page,
-> >  	}
-> >  	SetPagePrivate(ciphertext_page);
-> >  	set_page_private(ciphertext_page, (unsigned long)page);
-> > +#ifdef CONFIG_MEMCG
-> > +	ciphertext_page->memcg_data = page->memcg_data;
-> > +#endif
-> >  	return ciphertext_page;
-> >  }
+> This is weird, I just test latest linux-next, and I can apply this
+> patchset on the top of following commit:
 > 
-> Nothing outside mm/ and include/linux/memcontrol.h does anything with memcg_data
-> directly.  Are you sure this is the right thing to do here?
+> For latest for-6.3/block, this patch 2 can't be applied because
+> following commit is not here:
+> 
+> e3ff8887e7db blk-cgroup: fix missing pd_online_fn() while activating policy
+> 
+> But this patch is already merged into 6.2-rc5.
 
-Nope ;-)  Happy to hear from people who know more about cgroups than I
-do.  Adding some more ccs.
+Since I have one more conflict, I think we'll just rebase for-6.3/block
+when -rc6 is out, and then it should apply cleanly.
 
-> Also, this patch causes the following:
+-- 
+Jens Axboe
 
-Oops.  Clearly memcg_data needs to be set to NULL before we free it.
+
