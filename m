@@ -1,43 +1,83 @@
-From: Jason Gunthorpe <jgg@nvidia.com>
-Subject: Re: [RFC PATCH 09/19] io_uring: convert to use vm_account
-Date: Mon, 30 Jan 2023 09:21:36 -0400
-Message-ID: <Y9fEYNQOV0+iDvWJ@nvidia.com>
+From: Bernard Metzler <BMT@zurich.ibm.com>
+Subject: RE: Re: [RFC PATCH 05/19] RMDA/siw: Convert to use vm_account
+Date: Mon, 30 Jan 2023 13:27:53 +0000
+Message-ID: <SA0PR15MB391928BD9B0B20F85A061A2E99D39@SA0PR15MB3919.namprd15.prod.outlook.com>
 References: <cover.f52b9eb2792bccb8a9ecd6bc95055705cfe2ae03.1674538665.git-series.apopple@nvidia.com>
- <9f63cf4ab74d6e56e434c1c3d7c98352bb282895.1674538665.git-series.apopple@nvidia.com>
- <Y8/uyBKHf5XoXvTW@nvidia.com>
- <87tu08z2zv.fsf@nvidia.com>
+ <4f8b1d54ab5d6909c46ba5470065f8326f9fcc62.1674538665.git-series.apopple@nvidia.com>
+ <Y8/tGIeg5mI9bDOa@nvidia.com>
+ <SA0PR15MB3919F0CCF1D878DE8B243B0199C99@SA0PR15MB3919.namprd15.prod.outlook.com>
+ <87lelkz23e.fsf@nvidia.com>
 Mime-Version: 1.0
-Return-path: <io-uring-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
- s=selector2;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=g47Ib/RumelIOz6micA8aQgCRRk/pRAB+0AK/E6UWPc=;
- b=KtZSDy1cP3jyUWeP7cVvaaiJZI+LrpOVBljPMUCErnA5pZiutoniN/OxF1wuYrBJpQ0/s+qtQtZR9724CwuXEj0PHXIeZB6+n21RDtwrtCRPhr6V4Ez2hFy3t0w9uk24GROPhLAoQavu/d39C7VSvt19L0KLobZ6r//StX5gCo4dJdyVrqsTq15GmeT0NaMEQGHscfNRrSO/aD9Kq2BJ1aUGYsiSkH2L7vz/8Mk0wC0TV22+QwGCL5D2vd1zhM1Qo5EArNwQpYwo/7ETws1ZbdtoXehiqb94r7n+OOkR5x4HeBZusoWeK7w3a/iBjgYMpXtDshZYD3/V9UrA8e3EVA==
-Content-Disposition: inline
-In-Reply-To: <87tu08z2zv.fsf@nvidia.com>
+Content-Transfer-Encoding: base64
+Return-path: <linux-kernel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=from : to : cc : subject
+ : date : message-id : references : in-reply-to : content-type :
+ content-transfer-encoding : mime-version; s=pp1;
+ bh=WIHsb5JpPCYF+LWCn+6uV+U71uCxw88BhUtBF5ip6kQ=;
+ b=DpMH9iW0aVzxWIzZIEan5gPlXOwT79Tds7M0A9lSWFPJBw13E/FhhdFQEXj0eSzay1rP
+ a84UahsS/eTpvKBVd+ufNCtS3gYtcGkpafwaheu3QKGRUZ3oItPdE1hLyATQb+lLFfpm
+ nK7+itt+n0ishBKy5VP+B4zXnbfGr/ivhVjobn5RBtETO04t6osDgEHf9yhcdCFe8d/I
+ cFu6AFiDorRhh3LdlcmTbrBnnM+PemfLNN/JWpsZwdhgFQbJu7U/Fy5GRIU0anTFGSDl
+ aapntVfjRVl2XX2glkTDKjLk/Jd9eDb5FElPr/IxOwfE3KFdzBkzaL8XJZhAqi1wA2av cw== 
+In-Reply-To: <87lelkz23e.fsf@nvidia.com>
+Content-Language: en-US
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
 To: Alistair Popple <apopple@nvidia.com>
-Cc: linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, jhubbard@nvidia.com, tjmercier@google.com, hannes@cmpxchg.org, surenb@google.com, mkoutny@suse.com, daniel@ffwll.ch, Jens Axboe <axboe@kernel.dk>, Pavel Begunkov <asml.silence@gmail.com>, io-uring@vger.kernel.org
+Cc: Jason Gunthorpe <jgg@nvidia.com>, "linux-mm@kvack.org" <linux-mm@kvack.org>, "cgroups@vger.kernel.org" <cgroups@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "jhubbard@nvidia.com" <jhubbard@nvidia.com>, "tjmercier@google.com" <tjmercier@google.com>, "hannes@cmpxchg.org" <hannes@cmpxchg.org>, "surenb@google.com" <surenb@google.com>, "mkoutny@suse.com" <mkoutny@suse.com>, "daniel@ffwll.ch" <daniel@ffwll.ch>, Leon Romanovsky <leon@kernel.org>, "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>
 
-On Mon, Jan 30, 2023 at 10:12:43PM +1100, Alistair Popple wrote:
-> 
-> Jason Gunthorpe <jgg@nvidia.com> writes:
-> 
-> > On Tue, Jan 24, 2023 at 04:42:38PM +1100, Alistair Popple wrote:
-> >> Convert io_uring to use vm_account instead of directly charging pages
-> >> against the user/mm. Rather than charge pages to both user->locked_vm
-> >> and mm->pinned_vm this will only charge pages to user->locked_vm.
-> >
-> > I think this is a mistake in the first patch, the pinned_vm should
-> > still increment (but not checked against the rlimit), though its main
-> > purpose in this mode is for debugging in proc.
-> 
-> Sorry, didn't quite follow - are you saying we should always increment
-> mm->pinned_vm and only use VM_ACCOUNT_USER vs. TASK to select which one
-> the rlimit is enforced against?
-
-yes pinned_vm was created primarily a debugging counter in proc
-
-Jason
+DQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogQWxpc3RhaXIgUG9wcGxl
+IDxhcG9wcGxlQG52aWRpYS5jb20+DQo+IFNlbnQ6IE1vbmRheSwgMzAgSmFudWFyeSAyMDIzIDEy
+OjM1DQo+IFRvOiBCZXJuYXJkIE1ldHpsZXIgPEJNVEB6dXJpY2guaWJtLmNvbT4NCj4gQ2M6IEph
+c29uIEd1bnRob3JwZSA8amdnQG52aWRpYS5jb20+OyBsaW51eC1tbUBrdmFjay5vcmc7DQo+IGNn
+cm91cHNAdmdlci5rZXJuZWwub3JnOyBsaW51eC1rZXJuZWxAdmdlci5rZXJuZWwub3JnOyBqaHVi
+YmFyZEBudmlkaWEuY29tOw0KPiB0am1lcmNpZXJAZ29vZ2xlLmNvbTsgaGFubmVzQGNtcHhjaGcu
+b3JnOyBzdXJlbmJAZ29vZ2xlLmNvbTsNCj4gbWtvdXRueUBzdXNlLmNvbTsgZGFuaWVsQGZmd2xs
+LmNoOyBMZW9uIFJvbWFub3Zza3kgPGxlb25Aa2VybmVsLm9yZz47DQo+IGxpbnV4LXJkbWFAdmdl
+ci5rZXJuZWwub3JnDQo+IFN1YmplY3Q6IFtFWFRFUk5BTF0gUmU6IFtSRkMgUEFUQ0ggMDUvMTld
+IFJNREEvc2l3OiBDb252ZXJ0IHRvIHVzZQ0KPiB2bV9hY2NvdW50DQo+IA0KPiANCj4gQmVybmFy
+ZCBNZXR6bGVyIDxCTVRAenVyaWNoLmlibS5jb20+IHdyaXRlczoNCj4gDQo+ID4+IC0tLS0tT3Jp
+Z2luYWwgTWVzc2FnZS0tLS0tDQo+ID4+IEZyb206IEphc29uIEd1bnRob3JwZSA8amdnQG52aWRp
+YS5jb20+DQo+ID4+IFNlbnQ6IFR1ZXNkYXksIDI0IEphbnVhcnkgMjAyMyAxNTozNw0KPiA+PiBU
+bzogQWxpc3RhaXIgUG9wcGxlIDxhcG9wcGxlQG52aWRpYS5jb20+DQo+ID4+IENjOiBsaW51eC1t
+bUBrdmFjay5vcmc7IGNncm91cHNAdmdlci5rZXJuZWwub3JnOyBsaW51eC0NCj4gPj4ga2VybmVs
+QHZnZXIua2VybmVsLm9yZzsgamh1YmJhcmRAbnZpZGlhLmNvbTsgdGptZXJjaWVyQGdvb2dsZS5j
+b207DQo+ID4+IGhhbm5lc0BjbXB4Y2hnLm9yZzsgc3VyZW5iQGdvb2dsZS5jb207IG1rb3V0bnlA
+c3VzZS5jb207DQo+IGRhbmllbEBmZndsbC5jaDsNCj4gPj4gQmVybmFyZCBNZXR6bGVyIDxCTVRA
+enVyaWNoLmlibS5jb20+OyBMZW9uIFJvbWFub3Zza3kgPGxlb25Aa2VybmVsLm9yZz47DQo+ID4+
+IGxpbnV4LXJkbWFAdmdlci5rZXJuZWwub3JnDQo+ID4+IFN1YmplY3Q6IFtFWFRFUk5BTF0gUmU6
+IFtSRkMgUEFUQ0ggMDUvMTldIFJNREEvc2l3OiBDb252ZXJ0IHRvIHVzZQ0KPiA+PiB2bV9hY2Nv
+dW50DQo+ID4+DQo+ID4+IE9uIFR1ZSwgSmFuIDI0LCAyMDIzIGF0IDA0OjQyOjM0UE0gKzExMDAs
+IEFsaXN0YWlyIFBvcHBsZSB3cm90ZToNCj4gPj4NCj4gPj4gPiBAQCAtMzg1LDIwICszODIsMTYg
+QEAgc3RydWN0IHNpd191bWVtICpzaXdfdW1lbV9nZXQodTY0IHN0YXJ0LCB1NjQNCj4gbGVuLA0K
+PiA+PiBib29sIHdyaXRhYmxlKQ0KPiA+PiA+ICAJaWYgKCF1bWVtKQ0KPiA+PiA+ICAJCXJldHVy
+biBFUlJfUFRSKC1FTk9NRU0pOw0KPiA+PiA+DQo+ID4+ID4gLQltbV9zID0gY3VycmVudC0+bW07
+DQo+ID4+ID4gLQl1bWVtLT5vd25pbmdfbW0gPSBtbV9zOw0KPiA+PiA+ICAJdW1lbS0+d3JpdGFi
+bGUgPSB3cml0YWJsZTsNCj4gPj4gPg0KPiA+PiA+IC0JbW1ncmFiKG1tX3MpOw0KPiA+PiA+ICsJ
+dm1fYWNjb3VudF9pbml0X2N1cnJlbnQoJnVtZW0tPnZtX2FjY291bnQpOw0KPiA+PiA+DQo+ID4+
+ID4gIAlpZiAod3JpdGFibGUpDQo+ID4+ID4gIAkJZm9sbF9mbGFncyB8PSBGT0xMX1dSSVRFOw0K
+PiA+PiA+DQo+ID4+ID4gLQltbWFwX3JlYWRfbG9jayhtbV9zKTsNCj4gPj4gPiArCW1tYXBfcmVh
+ZF9sb2NrKGN1cnJlbnQtPm1tKTsNCj4gPj4gPg0KPiA+PiA+IC0JbWxvY2tfbGltaXQgPSBybGlt
+aXQoUkxJTUlUX01FTUxPQ0spID4+IFBBR0VfU0hJRlQ7DQo+ID4+ID4gLQ0KPiA+PiA+IC0JaWYg
+KG51bV9wYWdlcyArIGF0b21pYzY0X3JlYWQoJm1tX3MtPnBpbm5lZF92bSkgPiBtbG9ja19saW1p
+dCkgew0KPiA+PiA+ICsJaWYgKHZtX2FjY291bnRfcGlubmVkKCZ1bWVtLT52bV9hY2NvdW50LCBu
+dW1fcGFnZXMpKSB7DQo+ID4+ID4gIAkJcnYgPSAtRU5PTUVNOw0KPiA+PiA+ICAJCWdvdG8gb3V0
+X3NlbV91cDsNCj4gPj4gPiAgCX0NCj4gPj4gPiBAQCAtNDI5LDcgKzQyMiw2IEBAIHN0cnVjdCBz
+aXdfdW1lbSAqc2l3X3VtZW1fZ2V0KHU2NCBzdGFydCwgdTY0IGxlbiwNCj4gPj4gYm9vbCB3cml0
+YWJsZSkNCj4gPj4gPiAgCQkJCWdvdG8gb3V0X3NlbV91cDsNCj4gPj4gPg0KPiA+PiA+ICAJCQl1
+bWVtLT5udW1fcGFnZXMgKz0gcnY7DQo+ID4+ID4gLQkJCWF0b21pYzY0X2FkZChydiwgJm1tX3Mt
+PnBpbm5lZF92bSk7DQo+ID4+DQo+ID4+IEFsc28gZml4ZXMgdGhlIHJhY2UgYnVnDQo+ID4NCj4g
+PiBCdXQgaW50cm9kdWNlcyBhbm90aGVyIG9uZS4gSW4gdGhhdCBsb29wLCB1bWVtLT5udW1fcGFn
+ZXMga2VlcHMgdGhlDQo+ID4gbnVtYmVyIG9mIHBhZ2VzIGN1cnJlbnRseSBwaW5uZWQsIG5vdCB0
+aGUgdGFyZ2V0IG51bWJlci4gVGhlIGN1cnJlbnQNCj4gPiBwYXRjaCB1c2VzIHRoYXQgdW1lbS0+
+bnVtX3BhZ2VzIHRvIGNhbGwgdm1fdW5hY2NvdW50X3Bpbm5lZCgpIGluDQo+ID4gc2l3X3VtZW1f
+cmVsZWFzZSgpLiBCYWlsaW5nIG91dCBiZWZvcmUgYWxsIHBhZ2VzIGFyZSBwaW5uZWQgd291bGQN
+Cj4gPiBtZXNzIHVwIHRoYXQgYWNjb3VudGluZyBkdXJpbmcgcmVsZWFzZS4gTWF5YmUgaW50cm9k
+dWNlIGFub3RoZXINCj4gPiBwYXJhbWV0ZXIgdG8gc2l3X3VtZW1fcmVsZWFzZSgpLCBvciBiZXR0
+ZXIgaGF2ZSBhbm90aGVyIHVtZW0gbWVtYmVyDQo+ID4gJ3VtZW0tPm51bV9wYWdlc19hY2NvdW50
+ZWQnIGZvciBjb3JyZWN0IGFjY291bnRpbmcgZHVyaW5nIHJlbGVhc2UuDQo+IA0KPiBZZXMsIEkg
+c2VlIHRoZSBwcm9ibGVtIHRoYW5rcyBmb3IgcG9pbnRpbmcgaXQgb3V0LiBXaWxsIGZpeCBmb3Ig
+dGhlIG5leHQNCj4gdmVyc2lvbi4NCg0KVGhhbmsgeW91ISBMZXQgbWUgc2VuZCBhIHBhdGNoIHRv
+IHRoZSBvcmlnaW5hbCBjb2RlLA0KanVzdCBjaGVja2luZyBpZiBub3QgYWxsIHBhZ2VzIGFyZSBw
+aW5uZWQgYW5kIGZpeCB0aGUNCmNvdW50ZXIgYWNjb3JkaW5nbHkuIE1heWJlIHlvdSBjYW4gZ28g
+ZnJvbSB0aGVyZS4uPw0KDQpUaGFuayB5b3UsDQpCZXJuYXJkLg0KDQo=
