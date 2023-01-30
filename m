@@ -1,88 +1,66 @@
-From: Alistair Popple <apopple-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [RFC PATCH 05/19] RMDA/siw: Convert to use vm_account
-Date: Mon, 30 Jan 2023 22:34:50 +1100
-Message-ID: <87lelkz23e.fsf@nvidia.com>
+From: Alistair Popple <apopple@nvidia.com>
+Subject: Re: [RFC PATCH 01/19] mm: Introduce vm_account
+Date: Mon, 30 Jan 2023 22:36:43 +1100
+Message-ID: <87h6w8z1qr.fsf@nvidia.com>
 References: <cover.f52b9eb2792bccb8a9ecd6bc95055705cfe2ae03.1674538665.git-series.apopple@nvidia.com>
- <4f8b1d54ab5d6909c46ba5470065f8326f9fcc62.1674538665.git-series.apopple@nvidia.com>
- <Y8/tGIeg5mI9bDOa@nvidia.com>
- <SA0PR15MB3919F0CCF1D878DE8B243B0199C99@SA0PR15MB3919.namprd15.prod.outlook.com>
+ <748338ffe4c42d86669923159fe0426808ecb04d.1674538665.git-series.apopple@nvidia.com>
+ <Y8/r91PGGiY5JJvE@nvidia.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <io-uring-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
  s=selector2;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=tIiPdkfZ/fZE2PAtlhpufWZGeI6OlvxeJR6i/u8E6ZE=;
- b=IKmcfYZIzTzE+FOa9C3ZcvcOQ5+xrQCUSqHncijXIwvBmirsKytj0A7M/kwsE7d/H/D19ZWtknuMw8Zcn6PeNfD4aQOeqkZVRtX/5fxpsayNRTWOq3QcRb4abf3aI7FogIC0ECl984cN6FLW06FSxKS1A53E6zVpuPRFfOV2f5TblTaswez8dsHlGu2Z8JeSVOc+pyQynxbv2BVY0xQnqq8qN9xrx2lz+SqrBor/sYenCC3RLXJXWElmoXlGiYyijpHLNKUEo33AUSsVhgLbrxtj/J6ubVFc1SdJ9lmNjlQe80TlXgDRtMZ5H6r5XFDoB4kiNV/vAI7X8/BxsOl/2w==
-In-reply-to: <SA0PR15MB3919F0CCF1D878DE8B243B0199C99-QVqTciyWr1pbckbNN7pyz4d3EbNNOtPMvxpqHgZTriW3zl9H0oFU5g@public.gmane.org>
+ bh=rAEhd6lFjlqhsDdSkhLZD2XuXICiUrmsfT/om6jGR28=;
+ b=NhcaMtDdSc7GvoNYC6GXRJW8dIm46N744ndgUWEZuurJdki0rxPvhs6nqT46KdJbDWUU4Y2QhBroK1B3HtGCSvnWFxLlUhCz/6AsJhbVAQYPzZ4u9wzD2m+wruAEb9o7SmBMKZftAelHaq7xi1nIQCD1jn8ZDsItLppDLNryI+c4WV61kuu87Eq/VicY52JQrgZXmzvrit/xgfO33PdK9yPoDZlFoCoWv2WWlezMj4a4k/LNTxjw9u5/YQwQDbsMDao84SqOY1qVsl/GoRlz94oTGGYyheDS8dKOKDtwtYb0amgJKikfB2+tv3PiIdIihdOKw7Q2lo/N2AaiAYtXkw==
+In-reply-to: <Y8/r91PGGiY5JJvE@nvidia.com>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Bernard Metzler <BMT-OA+xvbQnYDHMbYB6QlFGEg@public.gmane.org>
-Cc: Jason Gunthorpe <jgg-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>, "linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org" <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, "cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "jhubbard-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org" <jhubbard-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>, "tjmercier-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org" <tjmercier-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, "hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org" <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, "surenb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org" <surenb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, "mkoutny-IBi9RG/b67k@public.gmane.org" <mkoutny-IBi9RG/b67k@public.gmane.org>, "daniel-/w4YWyX8dFk@public.gmane.org" <daniel-/w4YWyX8dFk@public.gmane.org>, Leon Romanovsky <leon-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, "linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+To: Jason Gunthorpe <jgg@nvidia.com>
+Cc: linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, jhubbard@nvidia.com, tjmercier@google.com, hannes@cmpxchg.org, surenb@google.com, mkoutny@suse.com, daniel@ffwll.ch, linuxppc-dev@lists.ozlabs.org, linux-fpga@vger.kernel.org, linux-rdma@vger.kernel.org, virtualization@lists.linux-foundation.org, kvm@vger.kernel.org, netdev@vger.kernel.org, io-uring@vger.kernel.org, bpf@vger.kernel.org, rds-devel@oss.oracle.com, linux-kselftest@vger.kernel.org
 
 
-Bernard Metzler <BMT-OA+xvbQnYDHMbYB6QlFGEg@public.gmane.org> writes:
+Jason Gunthorpe <jgg@nvidia.com> writes:
 
->> -----Original Message-----
->> From: Jason Gunthorpe <jgg-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>
->> Sent: Tuesday, 24 January 2023 15:37
->> To: Alistair Popple <apopple-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>
->> Cc: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org; cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org; linux-
->> kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org; jhubbard-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org; tjmercier-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org;
->> hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org; surenb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org; mkoutny-IBi9RG/b67k@public.gmane.org; daniel-/w4YWyX8dFk@public.gmane.org;
->> Bernard Metzler <BMT-OA+xvbQnYDHMbYB6QlFGEg@public.gmane.org>; Leon Romanovsky <leon-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>;
->> linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
->> Subject: [EXTERNAL] Re: [RFC PATCH 05/19] RMDA/siw: Convert to use
->> vm_account
->> 
->> On Tue, Jan 24, 2023 at 04:42:34PM +1100, Alistair Popple wrote:
->> 
->> > @@ -385,20 +382,16 @@ struct siw_umem *siw_umem_get(u64 start, u64 len,
->> bool writable)
->> >  	if (!umem)
->> >  		return ERR_PTR(-ENOMEM);
->> >
->> > -	mm_s = current->mm;
->> > -	umem->owning_mm = mm_s;
->> >  	umem->writable = writable;
->> >
->> > -	mmgrab(mm_s);
->> > +	vm_account_init_current(&umem->vm_account);
->> >
->> >  	if (writable)
->> >  		foll_flags |= FOLL_WRITE;
->> >
->> > -	mmap_read_lock(mm_s);
->> > +	mmap_read_lock(current->mm);
->> >
->> > -	mlock_limit = rlimit(RLIMIT_MEMLOCK) >> PAGE_SHIFT;
->> > -
->> > -	if (num_pages + atomic64_read(&mm_s->pinned_vm) > mlock_limit) {
->> > +	if (vm_account_pinned(&umem->vm_account, num_pages)) {
->> >  		rv = -ENOMEM;
->> >  		goto out_sem_up;
->> >  	}
->> > @@ -429,7 +422,6 @@ struct siw_umem *siw_umem_get(u64 start, u64 len,
->> bool writable)
->> >  				goto out_sem_up;
->> >
->> >  			umem->num_pages += rv;
->> > -			atomic64_add(rv, &mm_s->pinned_vm);
->> 
->> Also fixes the race bug
+> On Tue, Jan 24, 2023 at 04:42:30PM +1100, Alistair Popple wrote:
+>> +/**
+>> + * enum vm_account_flags - Determine how pinned/locked memory is accounted.
+>> + * @VM_ACCOUNT_TASK: Account pinned memory to mm->pinned_vm.
+>> + * @VM_ACCOUNT_BYPASS: Don't enforce rlimit on any charges.
+>> + * @VM_ACCOUNT_USER: Accounnt locked memory to user->locked_vm.
+>> + *
+>> + * Determines which statistic pinned/locked memory is accounted
+>> + * against. All limits will be enforced against RLIMIT_MEMLOCK and the
+>> + * pins cgroup if CONFIG_CGROUP_PINS is enabled.
+>> + *
+>> + * New drivers should use VM_ACCOUNT_TASK. VM_ACCOUNT_USER is used by
+>> + * pre-existing drivers to maintain existing accounting against
+>> + * user->locked_mm rather than mm->pinned_mm.
 >
-> But introduces another one. In that loop, umem->num_pages keeps the
-> number of pages currently pinned, not the target number. The current
-> patch uses that umem->num_pages to call vm_unaccount_pinned() in
-> siw_umem_release(). Bailing out before all pages are pinned would
-> mess up that accounting during release. Maybe introduce another
-> parameter to siw_umem_release(), or better have another umem member
-> 'umem->num_pages_accounted' for correct accounting during release.
+> I thought the guidance was the opposite of this, it is the newer
+> places in the kernel that are using VM_ACCOUNT_USER?
 
-Yes, I see the problem thanks for pointing it out. Will fix for the next
-version.
+I'd just assumed mm->pinned_vm was preferred because that's what most
+drivers use. user->locked_mm does seem more sensible though as at least
+it's possible to meaningfully enforce some overall limit. Will switch
+the flags/comment around to suggest new users use VM_ACCOUNT_USER.
 
-> Bernard.
->> 
->> Jason
+> I haven't got to the rest of the patches yet, but isn't there also a
+> mm->pinned_vm vs mm->locked_vm variation in the current drivers as
+> well?
+>
+>> +void vm_account_init_current(struct vm_account *vm_account)
+>> +{
+>> +	vm_account_init(vm_account, current, NULL, VM_ACCOUNT_TASK);
+>> +}
+>> +EXPORT_SYMBOL_GPL(vm_account_init_current);
+>
+> This can probably just be a static inline
+>
+> You might consider putting all this in some new vm_account.h - given
+> how rarely it is used? Compile times and all
+
+Works for me.
+
+> Jason
 
