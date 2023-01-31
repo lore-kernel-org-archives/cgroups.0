@@ -1,86 +1,81 @@
-From: Jason Gunthorpe <jgg@nvidia.com>
-Subject: Re: [RFC PATCH 00/19] mm: Introduce a cgroup to limit the amount of
- locked and pinned memory
-Date: Tue, 31 Jan 2023 10:21:07 -0400
-Message-ID: <Y9kj04z/jLcUesaL@nvidia.com>
-References: <cover.f52b9eb2792bccb8a9ecd6bc95055705cfe2ae03.1674538665.git-series.apopple@nvidia.com>
- <Y9A7kDjm3ZFAttRR@nvidia.com>
- <6369225e-3522-341b-cd20-d95b1f11ea71@redhat.com>
- <Y9kfn4YX59PIxj7+@nvidia.com>
- <2e78d261-9ae9-d203-446e-eaa3c652ca6e@redhat.com>
- <Y9khYwunmC/xdXT9@nvidia.com>
- <1a2417bc-f3ac-3e63-a930-bdefaab2578e@redhat.com>
+From: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Subject: [PATCH] cgroup/cpuset: Fix wrong check in update_parent_subparts_cpumask()
+Date: Tue, 31 Jan 2023 10:48:03 -0500
+Message-ID: <20230131154803.192530-1-longman@redhat.com>
 Mime-Version: 1.0
-Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
- s=selector2;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=ci0s1FunZu7mXxKw9DuoTYbsCMkB0qkkoGkfq62lsoc=;
- b=q4qV0ry/odvW59GeefDHzSibRO/gEzD89jj6HfGblJuTLkb2mOUnbPohTGYBTfHVUsNZa8zuigydrJVe/WDyChA5Oul/ch1RNkb3SD89EkHZFRGDQpKlGzCPucZ7ZQZ3ja9/X+mav8LBnisYtVRSeUBpMl7YRjhEkATT28fhQ7FqYgOGusYXIrdKdMitSmXYXQZL1fjEd8ukxp9ZC4PtHhP0SilVN8FcseGxZpPm0AdqNIkJJBZ1jJu1vRnCVYduqO3seFnhPJVgmRM/X787wl5G6NC9gJLfBB543mUhV44/bs1g0Uwnr4q04kkgiuY2FxZq3c7eIyZ9rB5Y645X0g==
-Content-Disposition: inline
-In-Reply-To: <1a2417bc-f3ac-3e63-a930-bdefaab2578e@redhat.com>
+Content-Transfer-Encoding: 8bit
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1675180091;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:
+         content-transfer-encoding:content-transfer-encoding;
+        bh=jj+MngsoDFpfREm8kwbslfBpvRZkqzFwR4JCZm4vAvo=;
+        b=K5SVmdrStxIOeJ63k/RLjyRQMp4nceXdYuE4vQnJQtlgSxsbQUHmHFvYl1NwDfqugw3hgo
+        dpPxHgLYLfKbpaEcz2GEn1RiyHroMKBshGrf8gCS+lLkBF3+apJ8JchHyNvcEUcA9geiI/
+        CDrhbxmy1sPG8XvUVTG3w6uo5bzGbNU=
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: David Hildenbrand <david@redhat.com>
-Cc: Alistair Popple <apopple@nvidia.com>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, jhubbard@nvidia.com, tjmercier@google.com, hannes@cmpxchg.org, surenb@google.com, mkoutny@suse.com, daniel@ffwll.ch
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Shuah Khan <shuah-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kselftest-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Srinivas Pandruvada <srinivas.pandruvada-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
 
-On Tue, Jan 31, 2023 at 03:15:49PM +0100, David Hildenbrand wrote:
-> On 31.01.23 15:10, Jason Gunthorpe wrote:
-> > On Tue, Jan 31, 2023 at 03:06:10PM +0100, David Hildenbrand wrote:
-> > > On 31.01.23 15:03, Jason Gunthorpe wrote:
-> > > > On Tue, Jan 31, 2023 at 02:57:20PM +0100, David Hildenbrand wrote:
-> > > > 
-> > > > > > I'm excited by this series, thanks for making it.
-> > > > > > 
-> > > > > > The pin accounting has been a long standing problem and cgroups will
-> > > > > > really help!
-> > > > > 
-> > > > > Indeed. I'm curious how GUP-fast, pinning the same page multiple times, and
-> > > > > pinning subpages of larger folios are handled :)
-> > > > 
-> > > > The same as today. The pinning is done based on the result from GUP,
-> > > > and we charge every returned struct page.
-> > > > 
-> > > > So duplicates are counted multiple times, folios are ignored.
-> > > > 
-> > > > Removing duplicate charges would be costly, it would require storage
-> > > > to keep track of how many times individual pages have been charged to
-> > > > each cgroup (eg an xarray indexed by PFN of integers in each cgroup).
-> > > > 
-> > > > It doesn't seem worth the cost, IMHO.
-> > > > 
-> > > > We've made alot of investment now with iommufd to remove the most
-> > > > annoying sources of duplicated pins so it is much less of a problem in
-> > > > the qemu context at least.
-> > > 
-> > > Wasn't there the discussion regarding using vfio+io_uring+rdma+$whatever on
-> > > a VM and requiring multiple times the VM size as memlock limit?
-> > 
-> > Yes, but iommufd gives us some more options to mitigate this.
-> > 
-> > eg it makes some of logical sense to point RDMA at the iommufd page
-> > table that is already pinned when trying to DMA from guest memory, in
-> > this case it could ride on the existing pin.
-> 
-> Right, I suspect some issue is that the address space layout for the RDMA
-> device might be completely different. But I'm no expert on IOMMUs at all :)
+It was found that the check to see if a partition could use up all
+the cpus from the parent cpuset in update_parent_subparts_cpumask()
+was incorrect. As a result, it is possible to leave parent with no
+effective cpu left even if there are tasks in the parent cpuset. This
+can lead to system panic as reported in [1].
 
-Oh it doesn't matter, it is all virtualized so many times..
+Fix this probem by updating the check to fail the enabling the partition
+if parent's effective_cpus is a subset of the child's cpus_allowed.
 
-> I do understand that at least multiple VFIO containers could benefit by only
-> pinning once (IIUC that mgiht have been an issue?).
+Also record the error code when an error happens in update_prstate()
+and add a test case where parent partition and child have the same cpu
+list and parent has task. Enabling partition in the child will fail in
+this case.
 
-iommufd has fixed this completely.
+[1] https://www.spinics.net/lists/cgroups/msg36254.html
 
-> It's all still a big improvement, because I also asked for TDX restrictedmem
-> to be accounted somehow as unmovable.
+Fixes: f0af1bfc27b5 ("cgroup/cpuset: Relax constraints to partition & cpus changes")
+Reported-by: Srinivas Pandruvada <srinivas.pandruvada-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+Signed-off-by: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+---
+ kernel/cgroup/cpuset.c                            | 3 ++-
+ tools/testing/selftests/cgroup/test_cpuset_prs.sh | 1 +
+ 2 files changed, 3 insertions(+), 1 deletion(-)
 
-Yeah, it is sort of reasonable to think of the CC "secret memory" as
-memory that is no different from memory being DMA'd to. The DMA is
-just some other vCPU.
+diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
+index a29c0b13706b..205dc9edcaa9 100644
+--- a/kernel/cgroup/cpuset.c
++++ b/kernel/cgroup/cpuset.c
+@@ -1346,7 +1346,7 @@ static int update_parent_subparts_cpumask(struct cpuset *cs, int cmd,
+ 		 * A parent can be left with no CPU as long as there is no
+ 		 * task directly associated with the parent partition.
+ 		 */
+-		if (!cpumask_intersects(cs->cpus_allowed, parent->effective_cpus) &&
++		if (cpumask_subset(parent->effective_cpus, cs->cpus_allowed) &&
+ 		    partition_is_populated(parent, cs))
+ 			return PERR_NOCPUS;
+ 
+@@ -2324,6 +2324,7 @@ static int update_prstate(struct cpuset *cs, int new_prs)
+ 		new_prs = -new_prs;
+ 	spin_lock_irq(&callback_lock);
+ 	cs->partition_root_state = new_prs;
++	WRITE_ONCE(cs->prs_err, err);
+ 	spin_unlock_irq(&callback_lock);
+ 	/*
+ 	 * Update child cpusets, if present.
+diff --git a/tools/testing/selftests/cgroup/test_cpuset_prs.sh b/tools/testing/selftests/cgroup/test_cpuset_prs.sh
+index 186e1c26867e..75c100de90ff 100755
+--- a/tools/testing/selftests/cgroup/test_cpuset_prs.sh
++++ b/tools/testing/selftests/cgroup/test_cpuset_prs.sh
+@@ -268,6 +268,7 @@ TEST_MATRIX=(
+ 	# Taking away all CPUs from parent or itself if there are tasks
+ 	# will make the partition invalid.
+ 	"  S+ C2-3:P1:S+  C3:P1  .      .      T     C2-3    .      .     0 A1:2-3,A2:2-3 A1:P1,A2:P-1"
++	"  S+  C3:P1:S+    C3    .      .      T      P1     .      .     0 A1:3,A2:3 A1:P1,A2:P-1"
+ 	"  S+ $SETUP_A123_PARTITIONS    .    T:C2-3   .      .      .     0 A1:2-3,A2:2-3,A3:3 A1:P1,A2:P-1,A3:P-1"
+ 	"  S+ $SETUP_A123_PARTITIONS    . T:C2-3:C1-3 .      .      .     0 A1:1,A2:2,A3:3 A1:P1,A2:P1,A3:P1"
+ 
+-- 
+2.31.1
 
-I still don't have a clear idea how all this CC memory is going to
-actually work. Eventually it has to get into iommufd as well, somehow.
-
-Jason
