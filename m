@@ -1,51 +1,56 @@
 From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: [GIT PULL] cgroup fixes for v6.2-rc6
-Date: Tue, 31 Jan 2023 12:21:10 -1000
-Message-ID: <Y9mUVtmR0AGJKWty@slm.duckdns.org>
+Subject: Re: [PATCH] cgroup/cpuset: Fix wrong check in
+ update_parent_subparts_cpumask()
+Date: Tue, 31 Jan 2023 12:21:35 -1000
+Message-ID: <Y9mUb22hOY9CmEIt@slm.duckdns.org>
+References: <20230131154803.192530-1-longman@redhat.com>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20210112;
-        h=content-disposition:mime-version:message-id:subject:cc:to:from:date
-         :sender:from:to:cc:subject:date:message-id:reply-to;
-        bh=hYlTCWU4D6zFu1UQJkS9/xemXij0e8AmBdRmgEzuwoo=;
-        b=A57+gxlvG503jp1nTjrGMT9lh0+EOn8owntFD9UdE5J1fd2F30Ujva0Lz5SysUVETD
-         atDNmEDGCctu41xqxCLpZ4UtYQbIHIvjq2L2T2Gd4P0Ds9h1lqdpY3yjvCATtCB3LwmH
-         lj0c4PSH9OA1dn414ej95BXEc/B8O2lozGpmennj1ErMXSDvyQvR0ehjn1sjR/AgQRkn
-         sybHt2aOTPz7UnCHwFmtf4uISgfy0BqTXOC6aEh1sYqXAsqqLCHEsHiEpVb6fOiVJCZ3
-         EU74R4GZLOkrTr9bnAC6ogOsom6+Xh6URJs4d8YSiZy+QXd10wL+0hBjcDGGRZudjF8I
-         0G2g==
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:sender:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=7ZnMNTNoXOmaGSq2MU9iWJuW3qH7F1Tm7PkorK2d7rA=;
+        b=HiHAGDju3Xjyz1jNGsC+PEn/3kaBnTTCUXPnV4kiqQLzMXAiFDCg59wVh1JdDG2m1Q
+         oUkmbvwIw5N9kn3zynuIPTrCsOydyyjtwwS0jG1BJkXoVGd1kyRXajjGlMX5Dzk1hZDC
+         qzfcY/tUf2GnwP+yLK2jBt343L2Y93l6ecpycpnnmhV4ukJlwbJKmzXeFdHu0MtUnl3q
+         mm98BKdprBgGW72wB+YE8bebOdgZ95CHTCfkBYZbX5WVZ0yrGoqdfK9DLtuuStFRB5ko
+         JzyTgRUckBpz+dtdBZBhlMYe+FbybhZyUE+RCosRACCoYpZWZbxr+sKYYg0I7j3+t760
+         kVhw==
 Sender: Tejun Heo <htejun-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 Content-Disposition: inline
+In-Reply-To: <20230131154803.192530-1-longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Linus Torvalds <torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
-Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+To: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Cc: Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Shuah Khan <shuah-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kselftest-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Srinivas Pandruvada <srinivas.pandruvada-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
 
-The following changes since commit 58706f7fb045b7019bada81fa17f372189315fe5:
+On Tue, Jan 31, 2023 at 10:48:03AM -0500, Waiman Long wrote:
+> It was found that the check to see if a partition could use up all
+> the cpus from the parent cpuset in update_parent_subparts_cpumask()
+> was incorrect. As a result, it is possible to leave parent with no
+> effective cpu left even if there are tasks in the parent cpuset. This
+> can lead to system panic as reported in [1].
+> 
+> Fix this probem by updating the check to fail the enabling the partition
+> if parent's effective_cpus is a subset of the child's cpus_allowed.
+> 
+> Also record the error code when an error happens in update_prstate()
+> and add a test case where parent partition and child have the same cpu
+> list and parent has task. Enabling partition in the child will fail in
+> this case.
+> 
+> [1] https://www.spinics.net/lists/cgroups/msg36254.html
+> 
+> Fixes: f0af1bfc27b5 ("cgroup/cpuset: Relax constraints to partition & cpus changes")
+> Reported-by: Srinivas Pandruvada <srinivas.pandruvada-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+> Signed-off-by: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 
-  Merge tag 'scsi-fixes' of git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi (2023-01-31 11:39:08 -0800)
+Applied to cgroup/for-6.2-fixes w/ stable cc added.
 
-are available in the Git repository at:
+Thanks.
 
-  git://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git/ tags/cgroup-for-6.2-fixes
-
-for you to fetch changes up to e5ae8803847b80fe9d744a3174abe2b7bfed222a:
-
-  cgroup/cpuset: Fix wrong check in update_parent_subparts_cpumask() (2023-01-31 12:14:02 -1000)
-
-----------------------------------------------------------------
-Cgroup fixes for v6.2-rc6
-
-This is a very late pull request but cpuset has a bug which can cause an
-oops after some configuration operations, which is introduced during the
-v6.1 cycle. This pull request contains only one commit to fix the bug.
-
-----------------------------------------------------------------
-Waiman Long (1):
-      cgroup/cpuset: Fix wrong check in update_parent_subparts_cpumask()
-
- kernel/cgroup/cpuset.c                            | 3 ++-
- tools/testing/selftests/cgroup/test_cpuset_prs.sh | 1 +
- 2 files changed, 3 insertions(+), 1 deletion(-)
+-- 
+tejun
