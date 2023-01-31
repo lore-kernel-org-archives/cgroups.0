@@ -1,200 +1,71 @@
-From: Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [RFC PATCH 00/19] mm: Introduce a cgroup to limit the amount of
- locked and pinned memory
-Date: Tue, 31 Jan 2023 11:49:22 -0800
-Message-ID: <CAJD7tkZcZ2mzEAv5x5TQk8of9A7w2p_fY3dGJAM29sXPvS7_RA@mail.gmail.com>
-References: <cover.f52b9eb2792bccb8a9ecd6bc95055705cfe2ae03.1674538665.git-series.apopple@nvidia.com>
- <CAJD7tkavoSu9WOnw4Nbxz41nq+Rm6Sq5EeOjh3CTyA=AT5=ujg@mail.gmail.com>
- <874js7zf38.fsf@nvidia.com> <CAJD7tkZTvXjoNZYC99yekbA0zHkD4iFj0J3+8dsOMht6rxrRcQ@mail.gmail.com>
- <87r0vblzf3.fsf@nvidia.com>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCH] fscrypt: Copy the memcg information to the ciphertext
+ page
+Date: Tue, 31 Jan 2023 11:27:44 -1000
+Message-ID: <Y9mH0PCcZoGPryXw@slm.duckdns.org>
+References: <20230129121851.2248378-1-willy@infradead.org>
+ <Y9a2m8uvmXmCVYvE@sol.localdomain>
+ <Y9bkoasmAmtQ2nSV@casper.infradead.org>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20210112;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:from:to:cc:subject:date:message-id:reply-to;
-        bh=gBGYSHhxIz39bWAegoggfzJ6ks2CGggvwHv6lw1lI78=;
-        b=j+D8hqiIH8+0MHEgypl/+feUSt1xb9I4p44epkjKOGrtZCbmzJpfq0vEEe9dimZZau
-         kceU273RfoWQlTCrCqXG3zlBYya9fH3W5qskHtSh1WsHIWMEwvrR8OCQCIC/OzRpzbHz
-         qijkEebgtWzYDmlwg4BtVyfwpNWhTAx6qkmVu2Oo0JwVPwZJKTCCsBB+s+hUi0ihKmCq
-         Ios8NnaF3PeUQNEYLrm03TZw2T/lel7fUC0TAyU7sDgeAmnIQYuxWpqgFvF0EG1MBXj8
-         TU8NhYgga/8N758Tk/jmeirtaqmG4gbyaK8lmyb2SA/5dtq3HV6DOUHDX91VqroXe0qA
-         eF6w==
-In-Reply-To: <87r0vblzf3.fsf-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>
+        d=gmail.com; s=20210112;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:sender:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=AzK7zbHqMHdeBmanV3yZyUjocxSjOS0P2zK4GlPV5fg=;
+        b=D6wvD2En7fL/J4jxZGOIQBNq1r2srmO4HOmSSPNUtrliYfnfu+LBoGk5BxIcMiuq2I
+         +zwJ+mRwxgYtBtoDsGT1p7nE5JifYqFUf8hP1sgEtkOKyHfWhW4umWi9ewBl4h6lpann
+         1FKRMTut+C+QYs/Mg9T/XGdMWHxAvc4vm7coGsd3WvOgoQt73PDTLpV3MfO+X+lC2HD/
+         QNpAi6vLbe5SEo1NIxJIxqYOYG4hgDKEIE7e8sbyQhb8Yes6j5hPRgz/GjUPNoMDssZL
+         IfTNvheB70L2NHCzBcWcOzJp3YlrWN80ciuNtnhhN2fCo38Ky5KInmRB9oeQm46P5CX+
+         WVnQ==
+Sender: Tejun Heo <htejun-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <Y9bkoasmAmtQ2nSV-FZi0V3Vbi30CUdFEqe4BF2D2FQJk+8+b@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Alistair Popple <apopple-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>
-Cc: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, jgg-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org, jhubbard-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org, tjmercier-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, surenb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, mkoutny-IBi9RG/b67k@public.gmane.org, daniel-/w4YWyX8dFk@public.gmane.org
+To: Matthew Wilcox <willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
+Cc: Eric Biggers <ebiggers-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, "Theodore Y . Ts'o" <tytso-3s7WtUTddSA@public.gmane.org>, Jaegeuk Kim <jaegeuk-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, linux-fscrypt-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-ext4-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-f2fs-devel-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org, stable-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Tue, Jan 31, 2023 at 3:24 AM Alistair Popple <apopple-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org> wrote:
->
->
-> Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org> writes:
->
-> > On Mon, Jan 30, 2023 at 5:07 PM Alistair Popple <apopple-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org> wrote:
-> >>
-> >>
-> >> Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org> writes:
-> >>
-> >> > On Mon, Jan 23, 2023 at 9:43 PM Alistair Popple <apopple-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org> wrote:
-> >> >>
-> >> >> Having large amounts of unmovable or unreclaimable memory in a system
-> >> >> can lead to system instability due to increasing the likelihood of
-> >> >> encountering out-of-memory conditions. Therefore it is desirable to
-> >> >> limit the amount of memory users can lock or pin.
-> >> >>
-> >> >> From userspace such limits can be enforced by setting
-> >> >> RLIMIT_MEMLOCK. However there is no standard method that drivers and
-> >> >> other in-kernel users can use to check and enforce this limit.
-> >> >>
-> >> >> This has lead to a large number of inconsistencies in how limits are
-> >> >> enforced. For example some drivers will use mm->locked_mm while others
-> >> >> will use mm->pinned_mm or user->locked_mm. It is therefore possible to
-> >> >> have up to three times RLIMIT_MEMLOCKED pinned.
-> >> >>
-> >> >> Having pinned memory limited per-task also makes it easy for users to
-> >> >> exceed the limit. For example drivers that pin memory with
-> >> >> pin_user_pages() it tends to remain pinned after fork. To deal with
-> >> >> this and other issues this series introduces a cgroup for tracking and
-> >> >> limiting the number of pages pinned or locked by tasks in the group.
-> >> >>
-> >> >> However the existing behaviour with regards to the rlimit needs to be
-> >> >> maintained. Therefore the lesser of the two limits is
-> >> >> enforced. Furthermore having CAP_IPC_LOCK usually bypasses the rlimit,
-> >> >> but this bypass is not allowed for the cgroup.
-> >> >>
-> >> >> The first part of this series converts existing drivers which
-> >> >> open-code the use of locked_mm/pinned_mm over to a common interface
-> >> >> which manages the refcounts of the associated task/mm/user
-> >> >> structs. This ensures accounting of pages is consistent and makes it
-> >> >> easier to add charging of the cgroup.
-> >> >>
-> >> >> The second part of the series adds the cgroup and converts core mm
-> >> >> code such as mlock over to charging the cgroup before finally
-> >> >> introducing some selftests.
-> >> >
-> >> >
-> >> > I didn't go through the entire series, so apologies if this was
-> >> > mentioned somewhere, but do you mind elaborating on why this is added
-> >> > as a separate cgroup controller rather than an extension of the memory
-> >> > cgroup controller?
-> >>
-> >> One of my early prototypes actually did add this to the memcg
-> >> controller. However pinned pages fall under their own limit, and we
-> >> wanted to always account pages to the cgroup of the task using the
-> >> driver rather than say folio_memcg(). So adding it to memcg didn't seem
-> >> to have much benefit as we didn't end up using any of the infrastructure
-> >> provided by memcg. Hence I thought it was clearer to just add it as it's
-> >> own controller.
-> >
-> > To clarify, you account and limit pinned memory based on the cgroup of
-> > the process pinning the pages, not based on the cgroup that the pages
-> > are actually charged to? Is my understanding correct?
->
-> That's correct.
+Hello,
 
-Interesting.
+On Sun, Jan 29, 2023 at 09:26:57PM +0000, Matthew Wilcox wrote:
+> > > diff --git a/fs/crypto/crypto.c b/fs/crypto/crypto.c
+> > > index e78be66bbf01..a4e76f96f291 100644
+> > > --- a/fs/crypto/crypto.c
+> > > +++ b/fs/crypto/crypto.c
+> > > @@ -205,6 +205,9 @@ struct page *fscrypt_encrypt_pagecache_blocks(struct page *page,
+> > >  	}
+> > >  	SetPagePrivate(ciphertext_page);
+> > >  	set_page_private(ciphertext_page, (unsigned long)page);
+> > > +#ifdef CONFIG_MEMCG
+> > > +	ciphertext_page->memcg_data = page->memcg_data;
+> > > +#endif
+> > >  	return ciphertext_page;
+> > >  }
+> > 
+> > Nothing outside mm/ and include/linux/memcontrol.h does anything with memcg_data
+> > directly.  Are you sure this is the right thing to do here?
+> 
+> Nope ;-)  Happy to hear from people who know more about cgroups than I
+> do.  Adding some more ccs.
+> 
+> > Also, this patch causes the following:
+> 
+> Oops.  Clearly memcg_data needs to be set to NULL before we free it.
 
->
-> > IOW, you limit the amount of memory that processes in a cgroup can
-> > pin, not the amount of memory charged to a cgroup that can be pinned?
->
-> Right, that's a good clarification which I might steal and add to the
-> cover letter.
+These can usually be handled by explicitly associating the bio's to the
+desired cgroups using one of bio_associate_blkg*() or
+bio_clone_blkg_association(). It is possible to go through memcg ownership
+too using set_active_memcg() so that the page is owned by the target cgroup;
+however, the page ownership doesn't directly map to IO ownership as the
+relationship depends on the type of the page (e.g. IO ownership for
+pagecache writeback is determined per-inode, not per-page). If the in-flight
+pages are limited, it probably is better to set bio association directly.
 
-Feel free to :)
+Thanks.
 
-Please also clarify this in the code/docs. Glancing through the
-patches I was asking myself multiple times why this is not
-"memory.pinned.[current/max]" or similar.
-
->
-> >>
-> >>  - Alistair
-> >>
-> >> >>
-> >> >>
-> >> >> As I don't have access to systems with all the various devices I
-> >> >> haven't been able to test all driver changes. Any help there would be
-> >> >> appreciated.
-> >> >>
-> >> >> Alistair Popple (19):
-> >> >>   mm: Introduce vm_account
-> >> >>   drivers/vhost: Convert to use vm_account
-> >> >>   drivers/vdpa: Convert vdpa to use the new vm_structure
-> >> >>   infiniband/umem: Convert to use vm_account
-> >> >>   RMDA/siw: Convert to use vm_account
-> >> >>   RDMA/usnic: convert to use vm_account
-> >> >>   vfio/type1: Charge pinned pages to pinned_vm instead of locked_vm
-> >> >>   vfio/spapr_tce: Convert accounting to pinned_vm
-> >> >>   io_uring: convert to use vm_account
-> >> >>   net: skb: Switch to using vm_account
-> >> >>   xdp: convert to use vm_account
-> >> >>   kvm/book3s_64_vio: Convert account_locked_vm() to vm_account_pinned()
-> >> >>   fpga: dfl: afu: convert to use vm_account
-> >> >>   mm: Introduce a cgroup for pinned memory
-> >> >>   mm/util: Extend vm_account to charge pages against the pin cgroup
-> >> >>   mm/util: Refactor account_locked_vm
-> >> >>   mm: Convert mmap and mlock to use account_locked_vm
-> >> >>   mm/mmap: Charge locked memory to pins cgroup
-> >> >>   selftests/vm: Add pins-cgroup selftest for mlock/mmap
-> >> >>
-> >> >>  MAINTAINERS                              |   8 +-
-> >> >>  arch/powerpc/kvm/book3s_64_vio.c         |  10 +-
-> >> >>  arch/powerpc/mm/book3s64/iommu_api.c     |  29 +--
-> >> >>  drivers/fpga/dfl-afu-dma-region.c        |  11 +-
-> >> >>  drivers/fpga/dfl-afu.h                   |   1 +-
-> >> >>  drivers/infiniband/core/umem.c           |  16 +-
-> >> >>  drivers/infiniband/core/umem_odp.c       |   6 +-
-> >> >>  drivers/infiniband/hw/usnic/usnic_uiom.c |  13 +-
-> >> >>  drivers/infiniband/hw/usnic/usnic_uiom.h |   1 +-
-> >> >>  drivers/infiniband/sw/siw/siw.h          |   2 +-
-> >> >>  drivers/infiniband/sw/siw/siw_mem.c      |  20 +--
-> >> >>  drivers/infiniband/sw/siw/siw_verbs.c    |  15 +-
-> >> >>  drivers/vdpa/vdpa_user/vduse_dev.c       |  20 +--
-> >> >>  drivers/vfio/vfio_iommu_spapr_tce.c      |  15 +-
-> >> >>  drivers/vfio/vfio_iommu_type1.c          |  59 +----
-> >> >>  drivers/vhost/vdpa.c                     |   9 +-
-> >> >>  drivers/vhost/vhost.c                    |   2 +-
-> >> >>  drivers/vhost/vhost.h                    |   1 +-
-> >> >>  include/linux/cgroup.h                   |  20 ++-
-> >> >>  include/linux/cgroup_subsys.h            |   4 +-
-> >> >>  include/linux/io_uring_types.h           |   3 +-
-> >> >>  include/linux/kvm_host.h                 |   1 +-
-> >> >>  include/linux/mm.h                       |   5 +-
-> >> >>  include/linux/mm_types.h                 |  88 ++++++++-
-> >> >>  include/linux/skbuff.h                   |   6 +-
-> >> >>  include/net/sock.h                       |   2 +-
-> >> >>  include/net/xdp_sock.h                   |   2 +-
-> >> >>  include/rdma/ib_umem.h                   |   1 +-
-> >> >>  io_uring/io_uring.c                      |  20 +--
-> >> >>  io_uring/notif.c                         |   4 +-
-> >> >>  io_uring/notif.h                         |  10 +-
-> >> >>  io_uring/rsrc.c                          |  38 +---
-> >> >>  io_uring/rsrc.h                          |   9 +-
-> >> >>  mm/Kconfig                               |  11 +-
-> >> >>  mm/Makefile                              |   1 +-
-> >> >>  mm/internal.h                            |   2 +-
-> >> >>  mm/mlock.c                               |  76 +------
-> >> >>  mm/mmap.c                                |  76 +++----
-> >> >>  mm/mremap.c                              |  54 +++--
-> >> >>  mm/pins_cgroup.c                         | 273 ++++++++++++++++++++++++-
-> >> >>  mm/secretmem.c                           |   6 +-
-> >> >>  mm/util.c                                | 196 +++++++++++++++--
-> >> >>  net/core/skbuff.c                        |  47 +---
-> >> >>  net/rds/message.c                        |   9 +-
-> >> >>  net/xdp/xdp_umem.c                       |  38 +--
-> >> >>  tools/testing/selftests/vm/Makefile      |   1 +-
-> >> >>  tools/testing/selftests/vm/pins-cgroup.c | 271 ++++++++++++++++++++++++-
-> >> >>  virt/kvm/kvm_main.c                      |   3 +-
-> >> >>  48 files changed, 1114 insertions(+), 401 deletions(-)
-> >> >>  create mode 100644 mm/pins_cgroup.c
-> >> >>  create mode 100644 tools/testing/selftests/vm/pins-cgroup.c
-> >> >>
-> >> >> base-commit: 2241ab53cbb5cdb08a6b2d4688feb13971058f65
-> >> >> --
-> >> >> git-series 0.9.1
-> >> >>
-> >>
->
+-- 
+tejun
