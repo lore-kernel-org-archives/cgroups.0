@@ -1,182 +1,58 @@
-From: Alistair Popple <apopple-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [RFC PATCH 00/19] mm: Introduce a cgroup to limit the amount of
- locked and pinned memory
-Date: Tue, 31 Jan 2023 22:22:42 +1100
-Message-ID: <87r0vblzf3.fsf@nvidia.com>
-References: <cover.f52b9eb2792bccb8a9ecd6bc95055705cfe2ae03.1674538665.git-series.apopple@nvidia.com>
- <CAJD7tkavoSu9WOnw4Nbxz41nq+Rm6Sq5EeOjh3CTyA=AT5=ujg@mail.gmail.com>
- <874js7zf38.fsf@nvidia.com>
- <CAJD7tkZTvXjoNZYC99yekbA0zHkD4iFj0J3+8dsOMht6rxrRcQ@mail.gmail.com>
+From: patchwork-bot+netdevbpf@kernel.org
+Subject: Re: [PATCH 0/9] Documentation: correct lots of spelling errors (series 2)
+Date: Tue, 31 Jan 2023 12:10:17 +0000
+Message-ID: <167516701747.19012.10728935395396675001.git-patchwork-notify@kernel.org>
+References: <20230129231053.20863-1-rdunlap@infradead.org>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
- s=selector2;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=JeHapgeMSTJHuaCYtM4Ojl2PzuU/BBrQLgS6y/7KXys=;
- b=Kc0lU2ZunmGHh6Os5WENRf2FuB/fDyna6dvjkRBUYycR7UQLvq4eAv7XtEUgCZfGb/yX3P8cH/WoWlIR4zwNwTfleR4895LaQCUatGKoZ73ciEhJhMnqaHU0rJ53/dblGC9O8ojbfEOyluwMguacZvXEYwE7sD4aEiASOYp1jQ/45VjghfSqPYLX8N1up7XmxZgljNXQ3e0NE78f+vbeEYfkA1X7bQT2CwtL1zmA8XqeEfNgi19M2/AyF1MHVxd73fiBYSGW7uGnZTe08l7/jB6ZRkHsUPl4Jwm7rY2GLkJVWMTBwYLbrBhdhSq8Y+euG1OKb48I7Y5Oo3KEblUYOA==
-In-reply-to: <CAJD7tkZTvXjoNZYC99yekbA0zHkD4iFj0J3+8dsOMht6rxrRcQ-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-doc-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1675167017;
+        bh=05Q0a0laoCL7B6cNeIdWae9i1mi1jqE1MmHEn48y7wY=;
+        h=Subject:From:Date:References:In-Reply-To:To:Cc:From;
+        b=AiLDIkfX/yC0s7oWbtxL2qgShGmaWg6DGpF2fcHDuTAYOpe4a0iGTOaS6tx1RZ7Na
+         y9uZae2xgPIq5V8e5Uwh3KWRbXPs/2kTYa4F1NdAZpGtECOprYO7b8lUGzbEWfbpRf
+         ZHvZzYUDj+Y/+NwYcyBDD/3Bj82qhjsbu3dP1BO5Rrkfj4jl7Tkbtin8JNyymkiFJa
+         IO+rix27EvPxnRVABnUcTTGGzu6v5gKk15JhkBCsgtnRe4Nk9cbI10R/FYiCalCEjJ
+         AewgByYVYe6k8wGX3tbIjdvlUsVbjKG5sps5v2mWvEaoR+hd2pQAJkeYt52xf2vZOQ
+         ciDD188aOinZw==
+In-Reply-To: <20230129231053.20863-1-rdunlap@infradead.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Cc: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, jgg-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org, jhubbard-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org, tjmercier-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, surenb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, mkoutny-IBi9RG/b67k@public.gmane.org, daniel-/w4YWyX8dFk@public.gmane.org
+To: Randy Dunlap <rdunlap@infradead.org>
+Cc: linux-kernel@vger.kernel.org, corbet@lwn.net, linux-doc@vger.kernel.org, tj@kernel.org, lizefan.x@bytedance.com, hannes@cmpxchg.org, cgroups@vger.kernel.org, agk@redhat.com, snitzer@kernel.org, dm-devel@redhat.com, mchehab@kernel.org, linux-media@vger.kernel.org, linux-mm@kvack.org, dan.j.williams@intel.com, vishal.l.verma@intel.com, dave.jiang@intel.com, nvdimm@lists.linux.dev, vkoul@kernel.org, dmaengine@vger.kernel.org, song@kernel.org, linux-raid@vger.kernel.org, gregkh@linuxfoundation.org, linux-usb@vger.kernel.org, jdelvare@suse.com, linux@roeck-us.net, linux-hwmon@vger.kernel.org, jiri@nvidia.com, davem@davemloft.net, edumazet@google.com, kuba@kernel.org, pabeni@redhat.com, netdev@vger.kernel.org, paulmck@kernel.org, frederic@kernel.org, quic_neeraju@quicinc.com, josh@joshtr
 
+Hello:
 
-Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org> writes:
+This patch was applied to netdev/net-next.git (master)
+by Paolo Abeni <pabeni@redhat.com>:
 
-> On Mon, Jan 30, 2023 at 5:07 PM Alistair Popple <apopple-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org> wrote:
->>
->>
->> Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org> writes:
->>
->> > On Mon, Jan 23, 2023 at 9:43 PM Alistair Popple <apopple-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org> wrote:
->> >>
->> >> Having large amounts of unmovable or unreclaimable memory in a system
->> >> can lead to system instability due to increasing the likelihood of
->> >> encountering out-of-memory conditions. Therefore it is desirable to
->> >> limit the amount of memory users can lock or pin.
->> >>
->> >> From userspace such limits can be enforced by setting
->> >> RLIMIT_MEMLOCK. However there is no standard method that drivers and
->> >> other in-kernel users can use to check and enforce this limit.
->> >>
->> >> This has lead to a large number of inconsistencies in how limits are
->> >> enforced. For example some drivers will use mm->locked_mm while others
->> >> will use mm->pinned_mm or user->locked_mm. It is therefore possible to
->> >> have up to three times RLIMIT_MEMLOCKED pinned.
->> >>
->> >> Having pinned memory limited per-task also makes it easy for users to
->> >> exceed the limit. For example drivers that pin memory with
->> >> pin_user_pages() it tends to remain pinned after fork. To deal with
->> >> this and other issues this series introduces a cgroup for tracking and
->> >> limiting the number of pages pinned or locked by tasks in the group.
->> >>
->> >> However the existing behaviour with regards to the rlimit needs to be
->> >> maintained. Therefore the lesser of the two limits is
->> >> enforced. Furthermore having CAP_IPC_LOCK usually bypasses the rlimit,
->> >> but this bypass is not allowed for the cgroup.
->> >>
->> >> The first part of this series converts existing drivers which
->> >> open-code the use of locked_mm/pinned_mm over to a common interface
->> >> which manages the refcounts of the associated task/mm/user
->> >> structs. This ensures accounting of pages is consistent and makes it
->> >> easier to add charging of the cgroup.
->> >>
->> >> The second part of the series adds the cgroup and converts core mm
->> >> code such as mlock over to charging the cgroup before finally
->> >> introducing some selftests.
->> >
->> >
->> > I didn't go through the entire series, so apologies if this was
->> > mentioned somewhere, but do you mind elaborating on why this is added
->> > as a separate cgroup controller rather than an extension of the memory
->> > cgroup controller?
->>
->> One of my early prototypes actually did add this to the memcg
->> controller. However pinned pages fall under their own limit, and we
->> wanted to always account pages to the cgroup of the task using the
->> driver rather than say folio_memcg(). So adding it to memcg didn't seem
->> to have much benefit as we didn't end up using any of the infrastructure
->> provided by memcg. Hence I thought it was clearer to just add it as it's
->> own controller.
->
-> To clarify, you account and limit pinned memory based on the cgroup of
-> the process pinning the pages, not based on the cgroup that the pages
-> are actually charged to? Is my understanding correct?
+On Sun, 29 Jan 2023 15:10:44 -0800 you wrote:
+> Maintainers of specific kernel subsystems are only Cc-ed on their
+> respective patches, not the entire series. [if all goes well]
+> 
+> These patches are based on linux-next-20230127.
+> 
+> 
+>  [PATCH 1/9] Documentation: admin-guide: correct spelling
+>  [PATCH 2/9] Documentation: driver-api: correct spelling
+>  [PATCH 3/9] Documentation: hwmon: correct spelling
+>  [PATCH 4/9] Documentation: networking: correct spelling
+>  [PATCH 5/9] Documentation: RCU: correct spelling
+>  [PATCH 6/9] Documentation: scsi/ChangeLog*: correct spelling
+>  [PATCH 7/9] Documentation: scsi: correct spelling
+>  [PATCH 8/9] Documentation: sparc: correct spelling
+>  [PATCH 9/9] Documentation: userspace-api: correct spelling
+> 
+> [...]
 
-That's correct.
+Here is the summary with links:
+  - [4/9] Documentation: networking: correct spelling
+    https://git.kernel.org/netdev/net-next/c/a266ef69b890
 
-> IOW, you limit the amount of memory that processes in a cgroup can
-> pin, not the amount of memory charged to a cgroup that can be pinned?
+You are awesome, thank you!
+-- 
+Deet-doot-dot, I am a bot.
+https://korg.docs.kernel.org/patchwork/pwbot.html
 
-Right, that's a good clarification which I might steal and add to the
-cover letter.
-
->>
->>  - Alistair
->>
->> >>
->> >>
->> >> As I don't have access to systems with all the various devices I
->> >> haven't been able to test all driver changes. Any help there would be
->> >> appreciated.
->> >>
->> >> Alistair Popple (19):
->> >>   mm: Introduce vm_account
->> >>   drivers/vhost: Convert to use vm_account
->> >>   drivers/vdpa: Convert vdpa to use the new vm_structure
->> >>   infiniband/umem: Convert to use vm_account
->> >>   RMDA/siw: Convert to use vm_account
->> >>   RDMA/usnic: convert to use vm_account
->> >>   vfio/type1: Charge pinned pages to pinned_vm instead of locked_vm
->> >>   vfio/spapr_tce: Convert accounting to pinned_vm
->> >>   io_uring: convert to use vm_account
->> >>   net: skb: Switch to using vm_account
->> >>   xdp: convert to use vm_account
->> >>   kvm/book3s_64_vio: Convert account_locked_vm() to vm_account_pinned()
->> >>   fpga: dfl: afu: convert to use vm_account
->> >>   mm: Introduce a cgroup for pinned memory
->> >>   mm/util: Extend vm_account to charge pages against the pin cgroup
->> >>   mm/util: Refactor account_locked_vm
->> >>   mm: Convert mmap and mlock to use account_locked_vm
->> >>   mm/mmap: Charge locked memory to pins cgroup
->> >>   selftests/vm: Add pins-cgroup selftest for mlock/mmap
->> >>
->> >>  MAINTAINERS                              |   8 +-
->> >>  arch/powerpc/kvm/book3s_64_vio.c         |  10 +-
->> >>  arch/powerpc/mm/book3s64/iommu_api.c     |  29 +--
->> >>  drivers/fpga/dfl-afu-dma-region.c        |  11 +-
->> >>  drivers/fpga/dfl-afu.h                   |   1 +-
->> >>  drivers/infiniband/core/umem.c           |  16 +-
->> >>  drivers/infiniband/core/umem_odp.c       |   6 +-
->> >>  drivers/infiniband/hw/usnic/usnic_uiom.c |  13 +-
->> >>  drivers/infiniband/hw/usnic/usnic_uiom.h |   1 +-
->> >>  drivers/infiniband/sw/siw/siw.h          |   2 +-
->> >>  drivers/infiniband/sw/siw/siw_mem.c      |  20 +--
->> >>  drivers/infiniband/sw/siw/siw_verbs.c    |  15 +-
->> >>  drivers/vdpa/vdpa_user/vduse_dev.c       |  20 +--
->> >>  drivers/vfio/vfio_iommu_spapr_tce.c      |  15 +-
->> >>  drivers/vfio/vfio_iommu_type1.c          |  59 +----
->> >>  drivers/vhost/vdpa.c                     |   9 +-
->> >>  drivers/vhost/vhost.c                    |   2 +-
->> >>  drivers/vhost/vhost.h                    |   1 +-
->> >>  include/linux/cgroup.h                   |  20 ++-
->> >>  include/linux/cgroup_subsys.h            |   4 +-
->> >>  include/linux/io_uring_types.h           |   3 +-
->> >>  include/linux/kvm_host.h                 |   1 +-
->> >>  include/linux/mm.h                       |   5 +-
->> >>  include/linux/mm_types.h                 |  88 ++++++++-
->> >>  include/linux/skbuff.h                   |   6 +-
->> >>  include/net/sock.h                       |   2 +-
->> >>  include/net/xdp_sock.h                   |   2 +-
->> >>  include/rdma/ib_umem.h                   |   1 +-
->> >>  io_uring/io_uring.c                      |  20 +--
->> >>  io_uring/notif.c                         |   4 +-
->> >>  io_uring/notif.h                         |  10 +-
->> >>  io_uring/rsrc.c                          |  38 +---
->> >>  io_uring/rsrc.h                          |   9 +-
->> >>  mm/Kconfig                               |  11 +-
->> >>  mm/Makefile                              |   1 +-
->> >>  mm/internal.h                            |   2 +-
->> >>  mm/mlock.c                               |  76 +------
->> >>  mm/mmap.c                                |  76 +++----
->> >>  mm/mremap.c                              |  54 +++--
->> >>  mm/pins_cgroup.c                         | 273 ++++++++++++++++++++++++-
->> >>  mm/secretmem.c                           |   6 +-
->> >>  mm/util.c                                | 196 +++++++++++++++--
->> >>  net/core/skbuff.c                        |  47 +---
->> >>  net/rds/message.c                        |   9 +-
->> >>  net/xdp/xdp_umem.c                       |  38 +--
->> >>  tools/testing/selftests/vm/Makefile      |   1 +-
->> >>  tools/testing/selftests/vm/pins-cgroup.c | 271 ++++++++++++++++++++++++-
->> >>  virt/kvm/kvm_main.c                      |   3 +-
->> >>  48 files changed, 1114 insertions(+), 401 deletions(-)
->> >>  create mode 100644 mm/pins_cgroup.c
->> >>  create mode 100644 tools/testing/selftests/vm/pins-cgroup.c
->> >>
->> >> base-commit: 2241ab53cbb5cdb08a6b2d4688feb13971058f65
->> >> --
->> >> git-series 0.9.1
->> >>
->>
 
