@@ -1,122 +1,51 @@
-From: Will Deacon <will-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: [PATCH 1/2] cpuset: Fix cpuset_cpus_allowed() to not filter offline CPUs
-Date: Tue, 31 Jan 2023 22:17:18 +0000
-Message-ID: <20230131221719.3176-2-will@kernel.org>
-References: <20230131221719.3176-1-will@kernel.org>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: [GIT PULL] cgroup fixes for v6.2-rc6
+Date: Tue, 31 Jan 2023 12:21:10 -1000
+Message-ID: <Y9mUVtmR0AGJKWty@slm.duckdns.org>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1675203446;
-        bh=ELfyS2nEQLpVpTwQYA/Y76BnsftBMsvCjEcLwiHp7V4=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=nfTuawChPCNl9Geuhr0xvy93l5JDQisVlKYHhjH/PfAaEzwpic+WNs3QMvLjz93I0
-         WOrnIvHvp81Y3wCqXP4jLx48EN45G9jZxuM2l7EofC6G0X9VeoszRHJ+QCSEZYJaZ5
-         ra4tk+7dO/u7a8vCq0Aw9iOCSq3lipvtj+wcDtJweZVxO1w//nQtG/59RA6sHZPvKt
-         XY3PVrGHBw+yA5zPqPCNG/eao/QPJ6RxpN+yCjaYrPN4dtH+WZE1VMGKzPpPhJBAJQ
-         gpArYGeEzyBb8EIQ7ehvR5aklzi7yKQ2yVjAXW3JTXY+08g8MRfQHiozQ+0jYuQWaq
-         e0ddTf9L2Vrcg==
-In-Reply-To: <20230131221719.3176-1-will-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=content-disposition:mime-version:message-id:subject:cc:to:from:date
+         :sender:from:to:cc:subject:date:message-id:reply-to;
+        bh=hYlTCWU4D6zFu1UQJkS9/xemXij0e8AmBdRmgEzuwoo=;
+        b=A57+gxlvG503jp1nTjrGMT9lh0+EOn8owntFD9UdE5J1fd2F30Ujva0Lz5SysUVETD
+         atDNmEDGCctu41xqxCLpZ4UtYQbIHIvjq2L2T2Gd4P0Ds9h1lqdpY3yjvCATtCB3LwmH
+         lj0c4PSH9OA1dn414ej95BXEc/B8O2lozGpmennj1ErMXSDvyQvR0ehjn1sjR/AgQRkn
+         sybHt2aOTPz7UnCHwFmtf4uISgfy0BqTXOC6aEh1sYqXAsqqLCHEsHiEpVb6fOiVJCZ3
+         EU74R4GZLOkrTr9bnAC6ogOsom6+Xh6URJs4d8YSiZy+QXd10wL+0hBjcDGGRZudjF8I
+         0G2g==
+Sender: Tejun Heo <htejun-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Content-Disposition: inline
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-Cc: kernel-team-z5hGa2qSFaRBDgjK7y7TUQ@public.gmane.org, Will Deacon <will-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Transfer-Encoding: 7bit
+To: Linus Torvalds <torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 
-From: Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
+The following changes since commit 58706f7fb045b7019bada81fa17f372189315fe5:
 
-There is a difference in behaviour between CPUSET={y,n} that is now
-wrecking havoc with {relax,force}_compatible_cpus_allowed_ptr().
+  Merge tag 'scsi-fixes' of git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi (2023-01-31 11:39:08 -0800)
 
-Specifically, since commit 8f9ea86fdf99 ("sched: Always preserve the
-user requested cpumask")  relax_compatible_cpus_allowed_ptr() is
-calling __sched_setaffinity() unconditionally.
+are available in the Git repository at:
 
-But the underlying problem goes back a lot further, possibly to
-commit: ae1c802382f7 ("cpuset: apply cs->effective_{cpus,mems}") which
-switched cpuset_cpus_allowed() from cs->cpus_allowed to
-cs->effective_cpus.
+  git://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git/ tags/cgroup-for-6.2-fixes
 
-The problem is that for CPUSET=y cpuset_cpus_allowed() will filter out
-all offline CPUs. For tasks that are part of a (!root) cpuset this is
-then later fixed up by the cpuset hotplug notifiers that re-evaluate
-and re-apply cs->effective_cpus, but for (normal) tasks in the root
-cpuset this does not happen and they will forever after be excluded
-from CPUs onlined later.
+for you to fetch changes up to e5ae8803847b80fe9d744a3174abe2b7bfed222a:
 
-As such, rewrite cpuset_cpus_allowed() to return a wider mask,
-including the offline CPUs.
+  cgroup/cpuset: Fix wrong check in update_parent_subparts_cpumask() (2023-01-31 12:14:02 -1000)
 
-Fixes: 8f9ea86fdf99 ("sched: Always preserve the user requested cpumask")
-Reported-by: Will Deacon <will-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Signed-off-by: Peter Zijlstra (Intel) <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
-Link: https://lkml.kernel.org/r/20230117160825.GA17756@willie-the-truck
-Signed-off-by: Will Deacon <will-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
----
- kernel/cgroup/cpuset.c | 39 ++++++++++++++++++++++++++++++++++-----
- 1 file changed, 34 insertions(+), 5 deletions(-)
+----------------------------------------------------------------
+Cgroup fixes for v6.2-rc6
 
-diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
-index a29c0b13706b..8552cc2c586a 100644
---- a/kernel/cgroup/cpuset.c
-+++ b/kernel/cgroup/cpuset.c
-@@ -3683,23 +3683,52 @@ void __init cpuset_init_smp(void)
- 	BUG_ON(!cpuset_migrate_mm_wq);
- }
- 
-+static const struct cpumask *__cs_cpus_allowed(struct cpuset *cs)
-+{
-+	const struct cpumask *cs_mask = cs->cpus_allowed;
-+	if (!parent_cs(cs))
-+		cs_mask = cpu_possible_mask;
-+	return cs_mask;
-+}
-+
-+static void cs_cpus_allowed(struct cpuset *cs, struct cpumask *pmask)
-+{
-+	do {
-+		cpumask_and(pmask, pmask, __cs_cpus_allowed(cs));
-+		cs = parent_cs(cs);
-+	} while (cs);
-+}
-+
- /**
-  * cpuset_cpus_allowed - return cpus_allowed mask from a tasks cpuset.
-  * @tsk: pointer to task_struct from which to obtain cpuset->cpus_allowed.
-  * @pmask: pointer to struct cpumask variable to receive cpus_allowed set.
-  *
-- * Description: Returns the cpumask_var_t cpus_allowed of the cpuset
-- * attached to the specified @tsk.  Guaranteed to return some non-empty
-- * subset of cpu_online_mask, even if this means going outside the
-- * tasks cpuset.
-+ * Description: Returns the cpumask_var_t cpus_allowed of the cpuset attached
-+ * to the specified @tsk.  Guaranteed to return some non-empty intersection
-+ * with cpu_online_mask, even if this means going outside the tasks cpuset.
-  **/
- 
- void cpuset_cpus_allowed(struct task_struct *tsk, struct cpumask *pmask)
- {
- 	unsigned long flags;
-+	struct cpuset *cs;
- 
- 	spin_lock_irqsave(&callback_lock, flags);
--	guarantee_online_cpus(tsk, pmask);
-+	rcu_read_lock();
-+
-+	cs = task_cs(tsk);
-+	do {
-+		cpumask_copy(pmask, task_cpu_possible_mask(tsk));
-+		cs_cpus_allowed(cs, pmask);
-+
-+		if (cpumask_intersects(pmask, cpu_online_mask))
-+			break;
-+
-+		cs = parent_cs(cs);
-+	} while (cs);
-+
-+	rcu_read_unlock();
- 	spin_unlock_irqrestore(&callback_lock, flags);
- }
- 
--- 
-2.39.1.456.gfc5497dd1b-goog
+This is a very late pull request but cpuset has a bug which can cause an
+oops after some configuration operations, which is introduced during the
+v6.1 cycle. This pull request contains only one commit to fix the bug.
 
+----------------------------------------------------------------
+Waiman Long (1):
+      cgroup/cpuset: Fix wrong check in update_parent_subparts_cpumask()
+
+ kernel/cgroup/cpuset.c                            | 3 ++-
+ tools/testing/selftests/cgroup/test_cpuset_prs.sh | 1 +
+ 2 files changed, 3 insertions(+), 1 deletion(-)
