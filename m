@@ -1,90 +1,261 @@
-From: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH 1/2] cpuset: Fix cpuset_cpus_allowed() to not filter
- offline CPUs
-Date: Tue, 31 Jan 2023 23:14:27 -0500
-Message-ID: <6b068916-5e1b-a943-1aad-554964d8b746@redhat.com>
-References: <20230131221719.3176-1-will@kernel.org>
- <20230131221719.3176-2-will@kernel.org>
+From: Hou Tao <houtao@huaweicloud.com>
+Subject: [PATCH] blk-ioprio: Introduce promote-to-rt policy
+Date: Wed,  1 Feb 2023 12:52:27 +0800
+Message-ID: <20230201045227.2203123-1-houtao@huaweicloud.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1675224872;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=/eKFn64VzPTEGVhGDDJ4Rj8PWdwFHGYC51EzAnMCzcw=;
-        b=brjveYrL/0ZZcQ4zTYRg6o3a1QMZR0DmPsf0iUU0M3BG0ochPV/FaNtOLw+Pf5yPfqUdRu
-        nWIdaQ4a/rY8RNH/j60cyfBt3kHPTwbQ9DRTzPnjy9CFrWWXePqhAewt4/v4E6EoOmyEvD
-        HKkvHd+NOV3/lfLmeTjnaMIyPdOt+Ws=
-Content-Language: en-US
-In-Reply-To: <20230131221719.3176-2-will-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-doc-owner@vger.kernel.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"; format="flowed"
-To: Will Deacon <will-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-Cc: kernel-team-z5hGa2qSFaRBDgjK7y7TUQ@public.gmane.org, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Type: text/plain; charset="us-ascii"
+To: linux-block@vger.kernel.org
+Cc: Bart Van Assche <bvanassche@acm.org>, Jan Kara <jack@suse.cz>, Jens Axboe <axboe@kernel.dk>, cgroups@vger.kernel.org, Tejun Heo <tj@kernel.org>, Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, Jonathan Corbet <corbet@lwn.net>, linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org, houtao1@huawei.com
 
-On 1/31/23 17:17, Will Deacon wrote:
-> From: Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
->
-> There is a difference in behaviour between CPUSET={y,n} that is now
-> wrecking havoc with {relax,force}_compatible_cpus_allowed_ptr().
->
-> Specifically, since commit 8f9ea86fdf99 ("sched: Always preserve the
-> user requested cpumask")  relax_compatible_cpus_allowed_ptr() is
-> calling __sched_setaffinity() unconditionally.
->
-> But the underlying problem goes back a lot further, possibly to
-> commit: ae1c802382f7 ("cpuset: apply cs->effective_{cpus,mems}") which
-> switched cpuset_cpus_allowed() from cs->cpus_allowed to
-> cs->effective_cpus.
->
-> The problem is that for CPUSET=y cpuset_cpus_allowed() will filter out
-> all offline CPUs. For tasks that are part of a (!root) cpuset this is
-> then later fixed up by the cpuset hotplug notifiers that re-evaluate
-> and re-apply cs->effective_cpus, but for (normal) tasks in the root
-> cpuset this does not happen and they will forever after be excluded
-> from CPUs onlined later.
->
-> As such, rewrite cpuset_cpus_allowed() to return a wider mask,
-> including the offline CPUs.
->
-> Fixes: 8f9ea86fdf99 ("sched: Always preserve the user requested cpumask")
-> Reported-by: Will Deacon <will-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-> Signed-off-by: Peter Zijlstra (Intel) <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
-> Link: https://lkml.kernel.org/r/20230117160825.GA17756@willie-the-truck
-> Signed-off-by: Will Deacon <will-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+From: Hou Tao <houtao1@huawei.com>
 
-Before cgroup v2, cpuset had only one cpumask - cpus_allowed. It only 
-tracked online cpus and ignored the offline ones. It behaves more like 
-effective_cpus in cpuset v2. With v2, we have 2 cpumasks - cpus_allowed 
-and effective_cpus. When cpuset v1 is mounted, cpus_allowed and 
-effective_cpus are effectively the same and track online cpus. With 
-cpuset v2, cpus_allowed contains what the user has written into and it 
-won't be changed until another write happen. However, what the user 
-written may not be what the system can give it and effective_cpus is 
-what the system decides a cpuset can use.
+Since commit a78418e6a04c ("block: Always initialize bio IO priority on
+submit"), bio->bi_ioprio will never be IOPRIO_CLASS_NONE when calling
+blkcg_set_ioprio(), so there will be no way to promote the io-priority
+of one cgroup to IOPRIO_CLASS_RT, because bi_ioprio will always be
+greater than or equals to IOPRIO_CLASS_RT.
 
-Cpuset v2 is able to handle hotplug correctly and update the task's 
-cpumask accordingly. So missing previously offline cpus won't happen 
-with v2.
+It seems possible to call blkcg_set_ioprio() first then try to
+initialize bi_ioprio later in bio_set_ioprio(), but this doesn't work
+for bio in which bi_ioprio is already initialized (e.g., direct-io), so
+introduce a new ioprio policy to promote the iopriority of bio to
+IOPRIO_CLASS_RT if the ioprio is not already RT.
 
-Since v1 keeps the old behavior, previously offlined cpus are lost in 
-the cpuset's cpus_allowed. However tasks in the root cpuset will still 
-be fine with cpu hotplug as its cpus_allowed should track 
-cpu_online_mask. IOW, only tasks in a non-root cpuset suffer this problem.
+To distinguish between the demotion policy and the promotion policy,
+use a bit in upper 16-bits of the policy to accomplish that and handle
+the bit accordingly in blkcg_set_ioprio().
 
-It was a known issue in v1 and I believe is one of the major reasons of 
-the cpuset v2 redesign.
+Signed-off-by: Hou Tao <houtao1@huawei.com>
+---
+ Documentation/admin-guide/cgroup-v2.rst | 38 ++++++----
+ block/blk-ioprio.c                      | 94 +++++++++++++++++--------
+ 2 files changed, 92 insertions(+), 40 deletions(-)
 
-A major concern I have is the overhead of creating a poor man version of 
-v2 cpus_allowed. This issue can be worked around even for cpuset v1 if 
-it is mounted with the cpuset_v2_mode option to behave more like v2 in 
-its cpumask handling. Alternatively we may be able to provide a config 
-option to make this the default for v1 without the special mount option, 
-if necessary.
-
-Cheers,
-Longman
+diff --git a/Documentation/admin-guide/cgroup-v2.rst b/Documentation/admin-guide/cgroup-v2.rst
+index c8ae7c897f14..e0b9f73ef62a 100644
+--- a/Documentation/admin-guide/cgroup-v2.rst
++++ b/Documentation/admin-guide/cgroup-v2.rst
+@@ -2038,17 +2038,27 @@ that attribute:
+ 	Change the I/O priority class of all requests into IDLE, the lowest
+ 	I/O priority class.
+ 
++  promote-to-rt
++	For requests that have I/O priority class BE or that have I/O priority
++        class IDLE, change it into RT. Do not modify the I/O priority class
++        of requests that have priority class RT.
++
+ The following numerical values are associated with the I/O priority policies:
+ 
+-+-------------+---+
+-| no-change   | 0 |
+-+-------------+---+
+-| none-to-rt  | 1 |
+-+-------------+---+
+-| rt-to-be    | 2 |
+-+-------------+---+
+-| all-to-idle | 3 |
+-+-------------+---+
++
+++---------------+---------+-----+
++| policy        | inst    | num |
+++---------------+---------+-----+
++| no-change     | demote  | 0   |
+++---------------+---------+-----+
++| none-to-rt    | demote  | 1   |
+++---------------+---------+-----+
++| rt-to-be      | demote  | 2   |
+++---------------+---------+-----+
++| idle          | demote  | 3   |
+++---------------+---------+-----+
++| promote-to-rt | promote | 1   |
+++---------------+---------+-----+
+ 
+ The numerical value that corresponds to each I/O priority class is as follows:
+ 
+@@ -2064,9 +2074,13 @@ The numerical value that corresponds to each I/O priority class is as follows:
+ 
+ The algorithm to set the I/O priority class for a request is as follows:
+ 
+-- Translate the I/O priority class policy into a number.
+-- Change the request I/O priority class into the maximum of the I/O priority
+-  class policy number and the numerical I/O priority class.
++-- Translate the I/O priority class policy into an instruction and a number
++-- If the instruction is demotion, change the request I/O priority class
++-  into the maximum of the I/O priority class policy number and the numerical
++-  I/O priority class.
++-- If the instruction is promotion, change the request I/O priority class
++-  into the minimum of the I/O priority class policy number and the numerical
++-  I/O priority class.
+ 
+ PID
+ ---
+diff --git a/block/blk-ioprio.c b/block/blk-ioprio.c
+index 8bb6b8eba4ce..0d400bee9c72 100644
+--- a/block/blk-ioprio.c
++++ b/block/blk-ioprio.c
+@@ -20,6 +20,13 @@
+ #include "blk-ioprio.h"
+ #include "blk-rq-qos.h"
+ 
++/*
++ * Upper 16-bits are reserved for special flags.
++ *
++ * @IOPRIO_POL_PROMOTION: Promote bi_ioprio instead of demote it.
++ */
++#define IOPRIO_POL_PROMOTION (1U << 17)
++
+ /**
+  * enum prio_policy - I/O priority class policy.
+  * @POLICY_NO_CHANGE: (default) do not modify the I/O priority class.
+@@ -27,21 +34,30 @@
+  * @POLICY_RESTRICT_TO_BE: modify IOPRIO_CLASS_NONE and IOPRIO_CLASS_RT into
+  *		IOPRIO_CLASS_BE.
+  * @POLICY_ALL_TO_IDLE: change the I/O priority class into IOPRIO_CLASS_IDLE.
+- *
++ * @POLICY_PROMOTE_TO_RT: modify IOPRIO_CLASS_NONE and IOPRIO_CLASS_BE into
++ * 		IOPRIO_CLASS_RT.
+  * See also <linux/ioprio.h>.
+  */
+ enum prio_policy {
+-	POLICY_NO_CHANGE	= 0,
+-	POLICY_NONE_TO_RT	= 1,
+-	POLICY_RESTRICT_TO_BE	= 2,
+-	POLICY_ALL_TO_IDLE	= 3,
++	POLICY_NO_CHANGE	= IOPRIO_CLASS_NONE,
++	POLICY_NONE_TO_RT	= IOPRIO_CLASS_RT,
++	POLICY_RESTRICT_TO_BE	= IOPRIO_CLASS_BE,
++	POLICY_ALL_TO_IDLE	= IOPRIO_CLASS_IDLE,
++	POLICY_PROMOTE_TO_RT	= IOPRIO_CLASS_RT | IOPRIO_POL_PROMOTION,
++};
++
++struct ioprio_policy_tuple {
++	const char *name;
++	enum prio_policy policy;
+ };
+ 
+-static const char *policy_name[] = {
+-	[POLICY_NO_CHANGE]	= "no-change",
+-	[POLICY_NONE_TO_RT]	= "none-to-rt",
+-	[POLICY_RESTRICT_TO_BE]	= "restrict-to-be",
+-	[POLICY_ALL_TO_IDLE]	= "idle",
++/* ioprio_alloc_cpd() needs POLICY_NO_CHANGE to be the first policy */
++static const struct ioprio_policy_tuple ioprio_policies[] = {
++	{ "no-change",		POLICY_NO_CHANGE },
++	{ "none-to-rt",		POLICY_NONE_TO_RT },
++	{ "restrict-to-be",	POLICY_RESTRICT_TO_BE },
++	{ "idle",		POLICY_ALL_TO_IDLE },
++	{ "promote-to-rt",	POLICY_PROMOTE_TO_RT }
+ };
+ 
+ static struct blkcg_policy ioprio_policy;
+@@ -57,11 +73,11 @@ struct ioprio_blkg {
+ /**
+  * struct ioprio_blkcg - Per cgroup data.
+  * @cpd: blkcg_policy_data structure.
+- * @prio_policy: One of the IOPRIO_CLASS_* values. See also <linux/ioprio.h>.
++ * @ioprio: Policy name and definition.
+  */
+ struct ioprio_blkcg {
+ 	struct blkcg_policy_data cpd;
+-	enum prio_policy	 prio_policy;
++	const struct ioprio_policy_tuple *ioprio;
+ };
+ 
+ static inline struct ioprio_blkg *pd_to_ioprio(struct blkg_policy_data *pd)
+@@ -95,23 +111,35 @@ static int ioprio_show_prio_policy(struct seq_file *sf, void *v)
+ {
+ 	struct ioprio_blkcg *blkcg = ioprio_blkcg_from_css(seq_css(sf));
+ 
+-	seq_printf(sf, "%s\n", policy_name[blkcg->prio_policy]);
++	seq_printf(sf, "%s\n", blkcg->ioprio->name);
+ 	return 0;
+ }
+ 
++static const struct ioprio_policy_tuple *ioprio_match_policy(const char *buf)
++{
++	int i;
++
++	for (i = 0; i < ARRAY_SIZE(ioprio_policies); i++) {
++		if (sysfs_streq(ioprio_policies[i].name, buf))
++			return &ioprio_policies[i];
++	}
++
++	return NULL;
++}
++
+ static ssize_t ioprio_set_prio_policy(struct kernfs_open_file *of, char *buf,
+ 				      size_t nbytes, loff_t off)
+ {
+ 	struct ioprio_blkcg *blkcg = ioprio_blkcg_from_css(of_css(of));
+-	int ret;
++	const struct ioprio_policy_tuple *ioprio;
+ 
+ 	if (off != 0)
+ 		return -EIO;
+ 	/* kernfs_fop_write_iter() terminates 'buf' with '\0'. */
+-	ret = sysfs_match_string(policy_name, buf);
+-	if (ret < 0)
+-		return ret;
+-	blkcg->prio_policy = ret;
++	ioprio = ioprio_match_policy(buf);
++	if (!ioprio)
++		return -EINVAL;
++	blkcg->ioprio = ioprio;
+ 	return nbytes;
+ }
+ 
+@@ -141,7 +169,7 @@ static struct blkcg_policy_data *ioprio_alloc_cpd(gfp_t gfp)
+ 	blkcg = kzalloc(sizeof(*blkcg), gfp);
+ 	if (!blkcg)
+ 		return NULL;
+-	blkcg->prio_policy = POLICY_NO_CHANGE;
++	blkcg->ioprio = &ioprio_policies[0];
+ 	return &blkcg->cpd;
+ }
+ 
+@@ -186,20 +214,30 @@ void blkcg_set_ioprio(struct bio *bio)
+ 	struct ioprio_blkcg *blkcg = ioprio_blkcg_from_bio(bio);
+ 	u16 prio;
+ 
+-	if (!blkcg || blkcg->prio_policy == POLICY_NO_CHANGE)
++	if (!blkcg || blkcg->ioprio->policy == POLICY_NO_CHANGE)
+ 		return;
+ 
++	WARN_ON_ONCE(bio->bi_ioprio == IOPRIO_CLASS_NONE);
++
+ 	/*
+ 	 * Except for IOPRIO_CLASS_NONE, higher I/O priority numbers
+-	 * correspond to a lower priority. Hence, the max_t() below selects
+-	 * the lower priority of bi_ioprio and the cgroup I/O priority class.
+-	 * If the bio I/O priority equals IOPRIO_CLASS_NONE, the cgroup I/O
+-	 * priority is assigned to the bio.
++	 * correspond to a lower priority.
++	 *
++	 * When IOPRIO_POL_PROMOTION is enabled, the min_t() below selects
++	 * the higher priority of bi_ioprio and the cgroup I/O priority class,
++	 * otherwise the lower priority is selected.
+ 	 */
+-	prio = max_t(u16, bio->bi_ioprio,
+-			IOPRIO_PRIO_VALUE(blkcg->prio_policy, 0));
+-	if (prio > bio->bi_ioprio)
+-		bio->bi_ioprio = prio;
++	if (blkcg->ioprio->policy & IOPRIO_POL_PROMOTION) {
++		prio = min_t(u16, bio->bi_ioprio,
++				IOPRIO_PRIO_VALUE(blkcg->ioprio->policy, 0));
++		if (prio < bio->bi_ioprio)
++			bio->bi_ioprio = prio;
++	} else {
++		prio = max_t(u16, bio->bi_ioprio,
++				IOPRIO_PRIO_VALUE(blkcg->ioprio->policy, 0));
++		if (prio > bio->bi_ioprio)
++			bio->bi_ioprio = prio;
++	}
+ }
+ 
+ void blk_ioprio_exit(struct gendisk *disk)
+-- 
+2.29.2
 
