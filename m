@@ -1,56 +1,36 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH] cgroup/cpuset: Fix wrong check in
- update_parent_subparts_cpumask()
-Date: Tue, 31 Jan 2023 12:21:35 -1000
-Message-ID: <Y9mUb22hOY9CmEIt@slm.duckdns.org>
-References: <20230131154803.192530-1-longman@redhat.com>
-Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:sender:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=7ZnMNTNoXOmaGSq2MU9iWJuW3qH7F1Tm7PkorK2d7rA=;
-        b=HiHAGDju3Xjyz1jNGsC+PEn/3kaBnTTCUXPnV4kiqQLzMXAiFDCg59wVh1JdDG2m1Q
-         oUkmbvwIw5N9kn3zynuIPTrCsOydyyjtwwS0jG1BJkXoVGd1kyRXajjGlMX5Dzk1hZDC
-         qzfcY/tUf2GnwP+yLK2jBt343L2Y93l6ecpycpnnmhV4ukJlwbJKmzXeFdHu0MtUnl3q
-         mm98BKdprBgGW72wB+YE8bebOdgZ95CHTCfkBYZbX5WVZ0yrGoqdfK9DLtuuStFRB5ko
-         JzyTgRUckBpz+dtdBZBhlMYe+FbybhZyUE+RCosRACCoYpZWZbxr+sKYYg0I7j3+t760
-         kVhw==
-Sender: Tejun Heo <htejun-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <20230131154803.192530-1-longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+From: pr-tracker-bot@kernel.org
+Subject: Re: [GIT PULL] cgroup fixes for v6.2-rc6
+Date: Wed, 01 Feb 2023 00:06:16 +0000
+Message-ID: <167520997621.4702.12116728808966510071.pr-tracker-bot@kernel.org>
+References: <Y9mUVtmR0AGJKWty@slm.duckdns.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1675209976;
+        bh=FTwoca2NX3VXIIS27ritNTfRi3/YYVuX1RuxhHafJ48=;
+        h=Subject:From:In-Reply-To:References:Date:To:Cc:From;
+        b=ePoX56bShu8uJzLKM3+KlxxfQpGWhdZrDsrtj1l3ZuNEkbQ5pF9Zn4ednYiPkwgeH
+         jU7bVFb8NaJC0pqp4AVQk2ErU/IiTPDSoqifA0FBQeBY7sZWlixGLRIjJUpNjy3fmy
+         AhYgJLO4slrq8UHUXemYqclRp1V3RB/e09szd2lEQ3lJhUet3fSynSk1JTZjDV56d7
+         88hjeqkKisSqfH8DVaZjLrBlmCKJOUtvrCiE7PLVsU92JnMOKGluQn+sBs/dhMvJzB
+         yuGICsWUXBUAmnzgUWD4dxnf9NmYPEmglGhwDM4jKdrP5SX712oFzK4XJItyyWHEeO
+         c2EkZK+7mG6ag==
+In-Reply-To: <Y9mUVtmR0AGJKWty@slm.duckdns.org>
 List-ID: <cgroups.vger.kernel.org>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Cc: Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Shuah Khan <shuah-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kselftest-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Srinivas Pandruvada <srinivas.pandruvada-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+To: Tejun Heo <tj@kernel.org>
+Cc: Linus Torvalds <torvalds@linux-foundation.org>, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, Waiman Long <longman@redhat.com>
 
-On Tue, Jan 31, 2023 at 10:48:03AM -0500, Waiman Long wrote:
-> It was found that the check to see if a partition could use up all
-> the cpus from the parent cpuset in update_parent_subparts_cpumask()
-> was incorrect. As a result, it is possible to leave parent with no
-> effective cpu left even if there are tasks in the parent cpuset. This
-> can lead to system panic as reported in [1].
-> 
-> Fix this probem by updating the check to fail the enabling the partition
-> if parent's effective_cpus is a subset of the child's cpus_allowed.
-> 
-> Also record the error code when an error happens in update_prstate()
-> and add a test case where parent partition and child have the same cpu
-> list and parent has task. Enabling partition in the child will fail in
-> this case.
-> 
-> [1] https://www.spinics.net/lists/cgroups/msg36254.html
-> 
-> Fixes: f0af1bfc27b5 ("cgroup/cpuset: Relax constraints to partition & cpus changes")
-> Reported-by: Srinivas Pandruvada <srinivas.pandruvada-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
-> Signed-off-by: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+The pull request you sent on Tue, 31 Jan 2023 12:21:10 -1000:
 
-Applied to cgroup/for-6.2-fixes w/ stable cc added.
+> git://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git/ tags/cgroup-for-6.2-fixes
 
-Thanks.
+has been merged into torvalds/linux.git:
+https://git.kernel.org/torvalds/c/c0b67534c95c537f7a506a06b98e5e85d72e2b7d
+
+Thank you!
 
 -- 
-tejun
+Deet-doot-dot, I am a bot.
+https://korg.docs.kernel.org/prtracker.html
