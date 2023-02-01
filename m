@@ -1,43 +1,72 @@
-From: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+From: Peter Zijlstra <peterz@infradead.org>
 Subject: Re: [PATCH 1/2] cpuset: Fix cpuset_cpus_allowed() to not filter
  offline CPUs
-Date: Wed, 1 Feb 2023 14:17:59 -0500
-Message-ID: <5a1a6e1f-2d19-e2ff-8f2c-63d185aa057b@redhat.com>
+Date: Wed, 1 Feb 2023 22:10:46 +0100
+Message-ID: <Y9rVVldS19oyIZ+g@hirez.programming.kicks-ass.net>
 References: <20230131221719.3176-1-will@kernel.org>
  <20230131221719.3176-2-will@kernel.org>
  <6b068916-5e1b-a943-1aad-554964d8b746@redhat.com>
  <Y9otWX+MGOLDKU6t@hirez.programming.kicks-ass.net>
  <83e53632-27ed-8dde-84f4-68c6776d6da8@redhat.com>
  <a892d340-ea99-1562-0e70-176f02f195c2@redhat.com>
- <37f158af-6ca8-9f5a-c87a-0266d8bb21a6@redhat.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1675279086;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=e12sH+zkKNX78AjXSikDkdXZisiXuIfpSmor0Y5G9UI=;
-        b=UPbwi0eGz7miwa5Ntn9dFkaT3jpjI+B1R6BnA0+LUObL2ULHkfcLvrdRx7F5efqAq6h34t
-        0ANWmmIcVXNczOAFw0nS2AL/biqXBug++U3CyUfX1DK/9gwy4A8ULq00MoLuNxDtB2XB79
-        DzO7OoSnesAGT9nUA8HR9LXEarIGBV0=
-Content-Language: en-US
-In-Reply-To: <37f158af-6ca8-9f5a-c87a-0266d8bb21a6-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Content-Transfer-Encoding: quoted-printable
+Return-path: <linux-kernel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=desiato.20200630; h=In-Reply-To:Content-Transfer-Encoding:
+        Content-Type:MIME-Version:References:Message-ID:Subject:Cc:To:From:Date:
+        Sender:Reply-To:Content-ID:Content-Description;
+        bh=eQ62sI2LaH5K93mDteIKKvfXZlAXtr2Rm8TFfldgNso=; b=i5XQu02i0rUZkkaMlzRQPLcq6n
+        c15AesJp084H/0wYTlUcdNMnfX6McXTm88rbMrGAIO1WhNY8ud/aPxhaWn2bmBd6Dal/a/8qATMZ9
+        60qWxuyRtROY/s6+MWvfT0Y7hSCdyaxN1mCwWG5+KgS61otXliI5GJpPoAN2JM3CeC2IgQpHR5Il3
+        65uMjyrak7qWnWZ5I+2ajEJ72rOS/BWQLnM4PmzzccnZokOIjeu5hIXVsUL8sRumyVLPPwhDKxn/h
+        6egXjLvlI67XNJIDJc21H787lqbAel0wYy6PzotdyneH9zZA/gIG+zBCPTpWCdK9F+65Q9p7yQyBr
+        5MgXYw7w==;
+Content-Disposition: inline
+In-Reply-To: <a892d340-ea99-1562-0e70-176f02f195c2@redhat.com>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"; format="flowed"
-To: Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
-Cc: Will Deacon <will-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-z5hGa2qSFaRBDgjK7y7TUQ@public.gmane.org, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Type: text/plain; charset="iso-8859-1"
+To: Waiman Long <longman@redhat.com>
+Cc: Will Deacon <will@kernel.org>, linux-kernel@vger.kernel.org, kernel-team@android.com, Zefan Li <lizefan.x@bytedance.com>, Tejun Heo <tj@kernel.org>, Johannes Weiner <hannes@cmpxchg.org>, cgroups@vger.kernel.org
 
-On 2/1/23 14:14, Waiman Long wrote:
-> One possible solution is to use cpuset_cpus_allowed_fallback() in case 
-> none of the cpus in the current cpuset is allowed to be used to run a 
-> given task.
+On Wed, Feb 01, 2023 at 01:46:11PM -0500, Waiman Long wrote:
 
-It looks like we will need to enhance cpuset_cpus_allowed_fallback() to 
-walk up cpuset tree to find one that have useable cpus.
+> Note that using cpus_allowed directly in cgroup v2 may not be right becau=
+se
+> cpus_allowed may have no relationship to effective_cpus at all in some
+> cases, e.g.
+>=20
+> =A0=A0 root
+> =A0=A0=A0 |
+> =A0=A0=A0 V
+> =A0=A0=A0 A (cpus_allowed =3D 1-4, effective_cpus =3D 1-4)
+> =A0=A0=A0 |
+> =A0=A0=A0 V
+> =A0=A0=A0 B (cpus_allowed =3D 5-8, effective_cpus =3D 1-4)
+>=20
+> In the case of cpuset B, passing back cpus 5-8 as the allowed_cpus is wro=
+ng.
 
-Cheers,
-Longman
+I think my patch as written does the right thing here. Since the
+intersection of (1-4) and (5-8) is empty it will move up the hierarchy
+and we'll end up with (1-4) from the cgroup side of things.
+
+So the purpose of __cs_cpus_allowed() is to override the cpus_allowed of
+the root set and force it to cpu_possible_mask.
+
+Then cs_cpus_allowed() computes the intersection of cs->cpus_allowed and
+all it's parents. This will, in the case of B above, result in the empty
+mask.
+
+Then cpuset_cpus_allowed() has a loop that starts with
+task_cpu_possible_mask(), intersects that with cs_cpus_allowed() and if
+the intersection of that and cpu_online_mask is empty, moves up the
+hierarchy. Given cs_cpus_allowed(B) is the empty mask, we'll move to A.
+
+Note that since we force the mask of root to cpu_possible_mask,
+cs_cpus_allowed(root) will be a no-op and if we guarantee (in arch code)
+that cpu_online_mask always has a non-empty intersection with
+task_cpu_possible_mask(), this loop is guaranteed to terminate with a
+viable mask.
+
 
