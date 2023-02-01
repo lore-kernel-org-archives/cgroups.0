@@ -1,68 +1,54 @@
-From: Yu Kuai <yukuai1@huaweicloud.com>
-Subject: [PATCH -next] block, bfq: cleanup 'bfqg->online'
-Date: Wed,  1 Feb 2023 20:06:09 +0800
-Message-ID: <20230201120609.4151432-1-yukuai1@huaweicloud.com>
+From: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
+Subject: Re: [PATCH v2 0/5] Introduce memcg_stock_pcp remote draining
+Date: Wed, 1 Feb 2023 13:41:16 +0100
+Message-ID: <Y9pd7AxAILUSHrpe@dhcp22.suse.cz>
+References: <20230125073502.743446-1-leobras@redhat.com>
+ <Y9DpbVF+JR/G+5Or@dhcp22.suse.cz>
+ <9e61ab53e1419a144f774b95230b789244895424.camel@redhat.com>
+ <Y9FzSBw10MGXm2TK@tpad>
+ <Y9IvoDJbLbFcitTc@dhcp22.suse.cz>
+ <Y9LDAZmApLeffrT8@tpad>
+ <Y9LQ615H13RmG7wL@dhcp22.suse.cz>
+ <0122005439ffb7895efda7a1a67992cbe41392fe.camel@redhat.com>
+ <Y9j9BnMwfm4TJks7@tpad>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-block-owner@vger.kernel.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
+        t=1675255277; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=pgarzvo5Cio7GL8GEMMFzzwnzoa+QoIct7DEsSsHtqA=;
+        b=MWzo9/68aPfyUUKt0sBZONEVCQnB5Rnc7js3asZl1hGklDyD/kUD3l3yb52I05gyiwCGwJ
+        FkltqazCB0qBi1IKYo4fWm7hphLeefGDPXjfrTgp8Qe/444/6AfB68SNhBTUfZhen1TiXu
+        2Go0U87UliFst4DLvBn7AcwTkPETxhg=
+Content-Disposition: inline
+In-Reply-To: <Y9j9BnMwfm4TJks7@tpad>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: jack@suse.cz, tj@kernel.org, josef@toxicpanda.com, axboe@kernel.dk, paolo.valente@linaro.org
-Cc: cgroups@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, yukuai3@huawei.com, yukuai1@huaweicloud.com, yi.zhang@huawei.com, yangerkun@huawei.com
+Content-Transfer-Encoding: 7bit
+To: Marcelo Tosatti <mtosatti-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Cc: Leonardo =?iso-8859-1?Q?Br=E1s?= <leobras-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Muchun Song <muchun.song-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-From: Yu Kuai <yukuai3@huawei.com>
+On Tue 31-01-23 08:35:34, Marcelo Tosatti wrote:
+[...]
+> So it would be good to point out a specific problematic 
+> testcase/scenario with using the spinlock in this particular case?
 
-After commit dfd6200a0954 ("blk-cgroup: support to track if policy is
-online"), there is no need to do this again in bfq.
+Please think about it some more. The sole purpose of the pcp charge
+caching is to avoid atomics because the normal fast path (i.e. no limit
+hit) is a page counter which is an atomic counter. If you go with a spin
+lock for the pcp cache you are just losing some of the advantage of the
+caching. Sure that would be a smaller atomics use than a deeper memcg
+hierarchy but still.
 
-Signed-off-by: Yu Kuai <yukuai3@huawei.com>
----
- block/bfq-cgroup.c  | 4 +---
- block/bfq-iosched.h | 2 --
- 2 files changed, 1 insertion(+), 5 deletions(-)
-
-diff --git a/block/bfq-cgroup.c b/block/bfq-cgroup.c
-index b42956ab5550..a35136dae713 100644
---- a/block/bfq-cgroup.c
-+++ b/block/bfq-cgroup.c
-@@ -551,7 +551,6 @@ static void bfq_pd_init(struct blkg_policy_data *pd)
- 	bfqg->bfqd = bfqd;
- 	bfqg->active_entities = 0;
- 	bfqg->num_queues_with_pending_reqs = 0;
--	bfqg->online = true;
- 	bfqg->rq_pos_tree = RB_ROOT;
- }
- 
-@@ -614,7 +613,7 @@ struct bfq_group *bfq_bio_bfqg(struct bfq_data *bfqd, struct bio *bio)
- 			continue;
- 		}
- 		bfqg = blkg_to_bfqg(blkg);
--		if (bfqg->online) {
-+		if (bfqg->pd.online) {
- 			bio_associate_blkg_from_css(bio, &blkg->blkcg->css);
- 			return bfqg;
- 		}
-@@ -985,7 +984,6 @@ static void bfq_pd_offline(struct blkg_policy_data *pd)
- 
- put_async_queues:
- 	bfq_put_async_queues(bfqd, bfqg);
--	bfqg->online = false;
- 
- 	spin_unlock_irqrestore(&bfqd->lock, flags);
- 	/*
-diff --git a/block/bfq-iosched.h b/block/bfq-iosched.h
-index 75cc6a324267..69aaee52285a 100644
---- a/block/bfq-iosched.h
-+++ b/block/bfq-iosched.h
-@@ -1009,8 +1009,6 @@ struct bfq_group {
- 
- 	/* reference counter (see comments in bfq_bic_update_cgroup) */
- 	refcount_t ref;
--	/* Is bfq_group still online? */
--	bool online;
- 
- 	struct bfq_entity entity;
- 	struct bfq_sched_data sched_data;
+Not to mention a potential contention which is hard to predict and it
+will depend on the specific runtime very much. So not something that
+would be easy to test for other than artificial testcases. Full cpu
+pcp draining is not a very common operation and one could argue that
+the problem will be limited but so far I haven't really heard any strong
+arguments against the proposal to avoid scheduling the work on isolated
+cpus which is a much more simpler solution and achieves the same
+effect.
 -- 
-2.31.1
-
+Michal Hocko
+SUSE Labs
