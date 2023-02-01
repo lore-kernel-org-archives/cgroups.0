@@ -1,165 +1,42 @@
 From: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 Subject: Re: [PATCH 1/2] cpuset: Fix cpuset_cpus_allowed() to not filter
  offline CPUs
-Date: Wed, 1 Feb 2023 14:14:35 -0500
-Message-ID: <37f158af-6ca8-9f5a-c87a-0266d8bb21a6@redhat.com>
+Date: Wed, 1 Feb 2023 14:17:59 -0500
+Message-ID: <5a1a6e1f-2d19-e2ff-8f2c-63d185aa057b@redhat.com>
 References: <20230131221719.3176-1-will@kernel.org>
  <20230131221719.3176-2-will@kernel.org>
  <6b068916-5e1b-a943-1aad-554964d8b746@redhat.com>
  <Y9otWX+MGOLDKU6t@hirez.programming.kicks-ass.net>
  <83e53632-27ed-8dde-84f4-68c6776d6da8@redhat.com>
  <a892d340-ea99-1562-0e70-176f02f195c2@redhat.com>
+ <37f158af-6ca8-9f5a-c87a-0266d8bb21a6@redhat.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1675278880;
+        s=mimecast20190719; t=1675279086;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=cuqGhw5CrTyYGMQvt6qIeYyPYM2sElOjNwdkz69VdtU=;
-        b=bkvbu2PLwKYotPCz2oX6K6t3GrBjVYwVPzFZOAcRkBULnG9NxA8a9OOh1djMOKYvFAROt0
-        FPlqTBHLmpRq1alR7zJxikQMu1FdXFiMHnlKGygbnfw2NO7vDJhb/GmJIkBl6uKgnyLrVS
-        SJMXJihD+N/MJTDMTAc04TxqjwcgTHg=
+        bh=e12sH+zkKNX78AjXSikDkdXZisiXuIfpSmor0Y5G9UI=;
+        b=UPbwi0eGz7miwa5Ntn9dFkaT3jpjI+B1R6BnA0+LUObL2ULHkfcLvrdRx7F5efqAq6h34t
+        0ANWmmIcVXNczOAFw0nS2AL/biqXBug++U3CyUfX1DK/9gwy4A8ULq00MoLuNxDtB2XB79
+        DzO7OoSnesAGT9nUA8HR9LXEarIGBV0=
 Content-Language: en-US
-In-Reply-To: <a892d340-ea99-1562-0e70-176f02f195c2-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+In-Reply-To: <37f158af-6ca8-9f5a-c87a-0266d8bb21a6-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="utf-8"; format="flowed"
+Content-Type: text/plain; charset="us-ascii"; format="flowed"
 To: Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
 Cc: Will Deacon <will-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-z5hGa2qSFaRBDgjK7y7TUQ@public.gmane.org, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On 2/1/23 13:46, Waiman Long wrote:
-> On 2/1/23 10:16, Waiman Long wrote:
->> On 2/1/23 04:14, Peter Zijlstra wrote:
->>> On Tue, Jan 31, 2023 at 11:14:27PM -0500, Waiman Long wrote:
->>>> On 1/31/23 17:17, Will Deacon wrote:
->>>>> From: Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
->>>>>
->>>>> There is a difference in behaviour between CPUSET={y,n} that is now
->>>>> wrecking havoc with {relax,force}_compatible_cpus_allowed_ptr().
->>>>>
->>>>> Specifically, since commit 8f9ea86fdf99 ("sched: Always preserve the
->>>>> user requested cpumask") relax_compatible_cpus_allowed_ptr() is
->>>>> calling __sched_setaffinity() unconditionally.
->>>>>
->>>>> But the underlying problem goes back a lot further, possibly to
->>>>> commit: ae1c802382f7 ("cpuset: apply cs->effective_{cpus,mems}") 
->>>>> which
->>>>> switched cpuset_cpus_allowed() from cs->cpus_allowed to
->>>>> cs->effective_cpus.
->>>>>
->>>>> The problem is that for CPUSET=y cpuset_cpus_allowed() will filter 
->>>>> out
->>>>> all offline CPUs. For tasks that are part of a (!root) cpuset this is
->>>>> then later fixed up by the cpuset hotplug notifiers that re-evaluate
->>>>> and re-apply cs->effective_cpus, but for (normal) tasks in the root
->>>>> cpuset this does not happen and they will forever after be excluded
->>>>> from CPUs onlined later.
->>>>>
->>>>> As such, rewrite cpuset_cpus_allowed() to return a wider mask,
->>>>> including the offline CPUs.
->>>>>
->>>>> Fixes: 8f9ea86fdf99 ("sched: Always preserve the user requested 
->>>>> cpumask")
->>>>> Reported-by: Will Deacon <will-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
->>>>> Signed-off-by: Peter Zijlstra (Intel) <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
->>>>> Link: 
->>>>> https://lkml.kernel.org/r/20230117160825.GA17756@willie-the-truck
->>>>> Signed-off-by: Will Deacon <will-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
->>>> Before cgroup v2, cpuset had only one cpumask - cpus_allowed. It only
->>>> tracked online cpus and ignored the offline ones. It behaves more like
->>>> effective_cpus in cpuset v2. With v2, we have 2 cpumasks - 
->>>> cpus_allowed and
->>>> effective_cpus. When cpuset v1 is mounted, cpus_allowed and 
->>>> effective_cpus
->>>> are effectively the same and track online cpus. With cpuset v2, 
->>>> cpus_allowed
->>>> contains what the user has written into and it won't be changed until
->>>> another write happen. However, what the user written may not be 
->>>> what the
->>>> system can give it and effective_cpus is what the system decides a 
->>>> cpuset
->>>> can use.
->>>>
->>>> Cpuset v2 is able to handle hotplug correctly and update the task's 
->>>> cpumask
->>>> accordingly. So missing previously offline cpus won't happen with v2.
->>>>
->>>> Since v1 keeps the old behavior, previously offlined cpus are lost 
->>>> in the
->>>> cpuset's cpus_allowed. However tasks in the root cpuset will still 
->>>> be fine
->>>> with cpu hotplug as its cpus_allowed should track cpu_online_mask. 
->>>> IOW, only
->>>> tasks in a non-root cpuset suffer this problem.
->>>>
->>>> It was a known issue in v1 and I believe is one of the major 
->>>> reasons of the
->>>> cpuset v2 redesign.
->>>>
->>>> A major concern I have is the overhead of creating a poor man 
->>>> version of v2
->>>> cpus_allowed. This issue can be worked around even for cpuset v1 if 
->>>> it is
->>>> mounted with the cpuset_v2_mode option to behave more like v2 in 
->>>> its cpumask
->>>> handling. Alternatively we may be able to provide a config option 
->>>> to make
->>>> this the default for v1 without the special mount option, if 
->>>> necessary.
->>> You're still not getting it -- even cpuset (be it v1 or v2) *MUST* 
->>> *NOT*
->>> mask offline cpus for root cgroup tasks, ever. (And the only reason it
->>> gets away with masking offline for !root is that it re-applies the mask
->>> every time it changes.)
->>>
->>> Yes it did that for a fair while -- but it is wrong and broken and a
->>> very big behavioural difference between CONFIG_CPUSET={y,n}. This must
->>> not be.
->>>
->>> Arguably cpuset-v2 is still wrong for masking offline cpus in it's
->>> effective_cpus mask, but I really didn't want to go rewrite cpuset.c 
->>> for
->>> something that needs to go into /urgent *now*.
->>>
->>> Hence this minimal patch that at least lets sched_setaffinity() work as
->>> intended.
->>
->> I don't object to the general idea of keeping offline cpus in a 
->> task's cpu affinity. In the case of cpu offline event, we can skip 
->> removing that offline cpu from the task's cpu affinity. That will 
->> partially solve the problem here and is also simpler.
->>
->> I believe a main reason why effective_cpus holds only online cpus is 
->> because of the need to detect when there is no online cpus available 
->> in a given cpuset. In this case, it will fall back to the nearest 
->> ancestors with online cpus.
->>
->> This offline cpu problem with cpuset v1 is a known problem for a long 
->> time. It is not a recent regression.
->
-> Note that using cpus_allowed directly in cgroup v2 may not be right 
-> because cpus_allowed may have no relationship to effective_cpus at all 
-> in some cases, e.g.
->
->    root
->     |
->     V
->     A (cpus_allowed = 1-4, effective_cpus = 1-4)
->     |
->     V
->     B (cpus_allowed = 5-8, effective_cpus = 1-4)
->
-> In the case of cpuset B, passing back cpus 5-8 as the allowed_cpus is 
-> wrong.
->
-> I wonder how often is cpu hotplug happening in those arm64 cpu systems 
-> that only have a subset of cpus that can run 32-bit programs.
+On 2/1/23 14:14, Waiman Long wrote:
+> One possible solution is to use cpuset_cpus_allowed_fallback() in case 
+> none of the cpus in the current cpuset is allowed to be used to run a 
+> given task.
 
-One possible solution is to use cpuset_cpus_allowed_fallback() in case 
-none of the cpus in the current cpuset is allowed to be used to run a 
-given task.
+It looks like we will need to enhance cpuset_cpus_allowed_fallback() to 
+walk up cpuset tree to find one that have useable cpus.
 
 Cheers,
 Longman
