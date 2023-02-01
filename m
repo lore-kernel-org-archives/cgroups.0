@@ -1,239 +1,171 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 16/19] blk-cgroup: pass a gendisk to blkcg_{de,}activate_policy
-Date: Wed,  1 Feb 2023 14:41:20 +0100
-Message-ID: <20230201134123.2656505-17-hch@lst.de>
+From: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
+Subject: [PATCH 18/19] blk-cgroup: pass a gendisk to blkg_lookup
+Date: Wed,  1 Feb 2023 14:41:22 +0100
+Message-ID: <20230201134123.2656505-19-hch@lst.de>
 References: <20230201134123.2656505-1-hch@lst.de>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Return-path: <linux-block-owner@vger.kernel.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
         MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender
         :Reply-To:Content-Type:Content-ID:Content-Description;
-        bh=v+obufci+DGgkXvQyPdg2o6sD2Xhhd3zUYA1DRutKso=; b=bWsemC/zShKS8eBgnL4MKIjde0
-        3NcNW9JIJ3gFoLUnCTOo2/5k4dC5Rq+8FhgdlIL6/VA4lGvR10P/Vkz5lPJ87kfqfYAAVqgFmqbqP
-        G0UD+pVhUQZ8gWZFwjP8IOReK0ilDo+LzY8+FXmVk0A5guPbWiQYM6gPAT/2Cb9yV98ZmicxTwRWQ
-        S7lVQghtBo8qdcsPyGbuQt8T4NcivFP4TXeWZ9O4zU6CLy1+7JLIm2TzMDn0TQaQJDkmuGHJqTRjr
-        Eq//9PeCNk/k7Tf6FFDo5s+twkGIFRQABhYBkQx3tRglc+rP4tsoQ6ByFgfptFMrL081xqpl6+fx3
-        NlNIoixw==;
-In-Reply-To: <20230201134123.2656505-1-hch@lst.de>
+        bh=fOGOx7e997UyhE/H2aX4dIhpMik0QXhxCSAXCp1fhFo=; b=neXFBvgJcg/0jAQ9hmWEXZrTMS
+        /3AC0Y9ww3y1Gh70aBC03aQ55PqLEbg7cY5whZr3E3AiC9fAHxiYbM5zG/gUoN0JomnkkEWrtSAeM
+        GbknKq9H3TksuVz1nTtzNouo+U1QXibSpz6SRXIhuUwMLP18HwmrsHpGtOsXslKl9UMCbYwRIOyCw
+        ispME693FZuuB9LZGlJud1GPU3a2Ey0zngUr+bsIUrh2JGW1NIrmjyC5PkGUxJe+YPRK1LZYIunBE
+        nysA4I7jplhlHI7qrTbREv6iyscCrog/tNpIF6KHUXzxqQ66MiqQnxrsJAA0WIhu1LYqJ/lh2g9En
+        Mnfz9+zg==;
+In-Reply-To: <20230201134123.2656505-1-hch-jcswGhMUV9g@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Jens Axboe <axboe@kernel.dk>, Tejun Heo <tj@kernel.org>, Josef Bacik <josef@toxicpanda.com>
-Cc: linux-block@vger.kernel.org, cgroups@vger.kernel.org, Andreas Herrmann <aherrmann@suse.de>
+To: Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Josef Bacik <josef-DigfWCa+lFGyeJad7bwFQA@public.gmane.org>
+Cc: linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Andreas Herrmann <aherrmann-l3A5Bk7waGM@public.gmane.org>
 
-Prepare for storing the blkcg information in the gendisk instead of
-the request_queue.
+Pass a gendisk to blkg_lookup and use that to find the match as part
+of phasing out usage of the request_queue in the blk-cgroup code.
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Andreas Herrmann <aherrmann@suse.de>
+Signed-off-by: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
+Reviewed-by: Andreas Herrmann <aherrmann-l3A5Bk7waGM@public.gmane.org>
 ---
- block/bfq-cgroup.c    |  2 +-
- block/bfq-iosched.c   |  2 +-
- block/blk-cgroup.c    | 21 +++++++++++----------
- block/blk-cgroup.h    |  9 ++++-----
- block/blk-iocost.c    |  4 ++--
- block/blk-iolatency.c |  4 ++--
- block/blk-ioprio.c    |  4 ++--
- block/blk-throttle.c  |  4 ++--
- 8 files changed, 25 insertions(+), 25 deletions(-)
+ block/blk-cgroup.c | 16 ++++++++--------
+ block/blk-cgroup.h | 20 ++++++++++----------
+ 2 files changed, 18 insertions(+), 18 deletions(-)
 
-diff --git a/block/bfq-cgroup.c b/block/bfq-cgroup.c
-index 1d4a3f15049bda..032c14f0451a1d 100644
---- a/block/bfq-cgroup.c
-+++ b/block/bfq-cgroup.c
-@@ -1291,7 +1291,7 @@ struct bfq_group *bfq_create_group_hierarchy(struct bfq_data *bfqd, int node)
- {
- 	int ret;
- 
--	ret = blkcg_activate_policy(bfqd->queue, &blkcg_policy_bfq);
-+	ret = blkcg_activate_policy(bfqd->queue->disk, &blkcg_policy_bfq);
- 	if (ret)
- 		return NULL;
- 
-diff --git a/block/bfq-iosched.c b/block/bfq-iosched.c
-index 5afa661fa2ea4c..777dcab73c8e28 100644
---- a/block/bfq-iosched.c
-+++ b/block/bfq-iosched.c
-@@ -7146,7 +7146,7 @@ static void bfq_exit_queue(struct elevator_queue *e)
- 	bfqg_and_blkg_put(bfqd->root_group);
- 
- #ifdef CONFIG_BFQ_GROUP_IOSCHED
--	blkcg_deactivate_policy(bfqd->queue, &blkcg_policy_bfq);
-+	blkcg_deactivate_policy(bfqd->queue->disk, &blkcg_policy_bfq);
- #else
- 	spin_lock_irq(&bfqd->lock);
- 	bfq_put_async_queues(bfqd, bfqd->root_group);
 diff --git a/block/blk-cgroup.c b/block/blk-cgroup.c
-index 83fb519fd7d539..f8e77fac0df406 100644
+index 4fa727542571ea..9907d3c95f8f48 100644
 --- a/block/blk-cgroup.c
 +++ b/block/blk-cgroup.c
-@@ -1390,14 +1390,14 @@ struct cgroup_subsys io_cgrp_subsys = {
- EXPORT_SYMBOL_GPL(io_cgrp_subsys);
+@@ -337,7 +337,7 @@ static struct blkcg_gq *blkg_create(struct blkcg *blkcg, struct gendisk *disk,
  
- /**
-- * blkcg_activate_policy - activate a blkcg policy on a request_queue
-- * @q: request_queue of interest
-+ * blkcg_activate_policy - activate a blkcg policy on a gendisk
-+ * @disk: gendisk of interest
-  * @pol: blkcg policy to activate
-  *
-- * Activate @pol on @q.  Requires %GFP_KERNEL context.  @q goes through
-+ * Activate @pol on @disk.  Requires %GFP_KERNEL context.  @disk goes through
-  * bypass mode to populate its blkgs with policy_data for @pol.
-  *
-- * Activation happens with @q bypassed, so nobody would be accessing blkgs
-+ * Activation happens with @disk bypassed, so nobody would be accessing blkgs
-  * from IO path.  Update of each blkg is protected by both queue and blkcg
-  * locks so that holding either lock and testing blkcg_policy_enabled() is
-  * always enough for dereferencing policy data.
-@@ -1405,9 +1405,9 @@ EXPORT_SYMBOL_GPL(io_cgrp_subsys);
-  * The caller is responsible for synchronizing [de]activations and policy
-  * [un]registerations.  Returns 0 on success, -errno on failure.
-  */
--int blkcg_activate_policy(struct request_queue *q,
--			  const struct blkcg_policy *pol)
-+int blkcg_activate_policy(struct gendisk *disk, const struct blkcg_policy *pol)
- {
-+	struct request_queue *q = disk->queue;
- 	struct blkg_policy_data *pd_prealloc = NULL;
- 	struct blkcg_gq *blkg, *pinned_blkg = NULL;
- 	int ret;
-@@ -1508,16 +1508,17 @@ int blkcg_activate_policy(struct request_queue *q,
- EXPORT_SYMBOL_GPL(blkcg_activate_policy);
+ 	/* link parent */
+ 	if (blkcg_parent(blkcg)) {
+-		blkg->parent = blkg_lookup(blkcg_parent(blkcg), disk->queue);
++		blkg->parent = blkg_lookup(blkcg_parent(blkcg), disk);
+ 		if (WARN_ON_ONCE(!blkg->parent)) {
+ 			ret = -ENODEV;
+ 			goto err_put_css;
+@@ -409,12 +409,12 @@ static struct blkcg_gq *blkg_lookup_create(struct blkcg *blkcg,
  
- /**
-- * blkcg_deactivate_policy - deactivate a blkcg policy on a request_queue
-- * @q: request_queue of interest
-+ * blkcg_deactivate_policy - deactivate a blkcg policy on a gendisk
-+ * @disk: gendisk of interest
-  * @pol: blkcg policy to deactivate
-  *
-- * Deactivate @pol on @q.  Follows the same synchronization rules as
-+ * Deactivate @pol on @disk.  Follows the same synchronization rules as
-  * blkcg_activate_policy().
-  */
--void blkcg_deactivate_policy(struct request_queue *q,
-+void blkcg_deactivate_policy(struct gendisk *disk,
- 			     const struct blkcg_policy *pol)
- {
-+	struct request_queue *q = disk->queue;
- 	struct blkcg_gq *blkg;
+ 	WARN_ON_ONCE(!rcu_read_lock_held());
  
- 	if (!blkcg_policy_enabled(q, pol))
+-	blkg = blkg_lookup(blkcg, q);
++	blkg = blkg_lookup(blkcg, disk);
+ 	if (blkg)
+ 		return blkg;
+ 
+ 	spin_lock_irqsave(&q->queue_lock, flags);
+-	blkg = blkg_lookup(blkcg, q);
++	blkg = blkg_lookup(blkcg, disk);
+ 	if (blkg) {
+ 		if (blkcg != &blkcg_root &&
+ 		    blkg != rcu_dereference(blkcg->blkg_hint))
+@@ -433,7 +433,7 @@ static struct blkcg_gq *blkg_lookup_create(struct blkcg *blkcg,
+ 		struct blkcg_gq *ret_blkg = q->root_blkg;
+ 
+ 		while (parent) {
+-			blkg = blkg_lookup(parent, q);
++			blkg = blkg_lookup(parent, disk);
+ 			if (blkg) {
+ 				/* remember closest blkg */
+ 				ret_blkg = blkg;
+@@ -719,7 +719,7 @@ int blkg_conf_prep(struct blkcg *blkcg, const struct blkcg_policy *pol,
+ 		goto fail_unlock;
+ 	}
+ 
+-	blkg = blkg_lookup(blkcg, q);
++	blkg = blkg_lookup(blkcg, disk);
+ 	if (blkg)
+ 		goto success;
+ 
+@@ -733,7 +733,7 @@ int blkg_conf_prep(struct blkcg *blkcg, const struct blkcg_policy *pol,
+ 		struct blkcg_gq *new_blkg;
+ 
+ 		parent = blkcg_parent(blkcg);
+-		while (parent && !blkg_lookup(parent, q)) {
++		while (parent && !blkg_lookup(parent, disk)) {
+ 			pos = parent;
+ 			parent = blkcg_parent(parent);
+ 		}
+@@ -763,7 +763,7 @@ int blkg_conf_prep(struct blkcg *blkcg, const struct blkcg_policy *pol,
+ 			goto fail_preloaded;
+ 		}
+ 
+-		blkg = blkg_lookup(pos, q);
++		blkg = blkg_lookup(pos, disk);
+ 		if (blkg) {
+ 			blkg_free(new_blkg);
+ 		} else {
+@@ -1841,7 +1841,7 @@ void blkcg_maybe_throttle_current(void)
+ 	blkcg = css_to_blkcg(blkcg_css());
+ 	if (!blkcg)
+ 		goto out;
+-	blkg = blkg_lookup(blkcg, disk->queue);
++	blkg = blkg_lookup(blkcg, disk);
+ 	if (!blkg)
+ 		goto out;
+ 	if (!blkg_tryget(blkg))
 diff --git a/block/blk-cgroup.h b/block/blk-cgroup.h
-index 996572a9a0b72e..27068faa2cd086 100644
+index 3d9e42c519db86..151f24de253985 100644
 --- a/block/blk-cgroup.h
 +++ b/block/blk-cgroup.h
-@@ -194,9 +194,8 @@ void blkcg_exit_disk(struct gendisk *disk);
- /* Blkio controller policy registration */
- int blkcg_policy_register(struct blkcg_policy *pol);
- void blkcg_policy_unregister(struct blkcg_policy *pol);
--int blkcg_activate_policy(struct request_queue *q,
--			  const struct blkcg_policy *pol);
--void blkcg_deactivate_policy(struct request_queue *q,
-+int blkcg_activate_policy(struct gendisk *disk, const struct blkcg_policy *pol);
-+void blkcg_deactivate_policy(struct gendisk *disk,
- 			     const struct blkcg_policy *pol);
- 
- const char *blkg_dev_name(struct blkcg_gq *blkg);
-@@ -495,9 +494,9 @@ static inline int blkcg_init_disk(struct gendisk *disk) { return 0; }
- static inline void blkcg_exit_disk(struct gendisk *disk) { }
- static inline int blkcg_policy_register(struct blkcg_policy *pol) { return 0; }
- static inline void blkcg_policy_unregister(struct blkcg_policy *pol) { }
--static inline int blkcg_activate_policy(struct request_queue *q,
-+static inline int blkcg_activate_policy(struct gendisk *disk,
- 					const struct blkcg_policy *pol) { return 0; }
--static inline void blkcg_deactivate_policy(struct request_queue *q,
-+static inline void blkcg_deactivate_policy(struct gendisk *disk,
- 					   const struct blkcg_policy *pol) { }
- 
- static inline struct blkg_policy_data *blkg_to_pd(struct blkcg_gq *blkg,
-diff --git a/block/blk-iocost.c b/block/blk-iocost.c
-index a2e9bf30039bcd..078b7770951962 100644
---- a/block/blk-iocost.c
-+++ b/block/blk-iocost.c
-@@ -2821,7 +2821,7 @@ static void ioc_rqos_exit(struct rq_qos *rqos)
- {
- 	struct ioc *ioc = rqos_to_ioc(rqos);
- 
--	blkcg_deactivate_policy(rqos->disk->queue, &blkcg_policy_iocost);
-+	blkcg_deactivate_policy(rqos->disk, &blkcg_policy_iocost);
- 
- 	spin_lock_irq(&ioc->lock);
- 	ioc->running = IOC_STOP;
-@@ -2893,7 +2893,7 @@ static int blk_iocost_init(struct gendisk *disk)
- 	if (ret)
- 		goto err_free_ioc;
- 
--	ret = blkcg_activate_policy(disk->queue, &blkcg_policy_iocost);
-+	ret = blkcg_activate_policy(disk, &blkcg_policy_iocost);
- 	if (ret)
- 		goto err_del_qos;
- 	return 0;
-diff --git a/block/blk-iolatency.c b/block/blk-iolatency.c
-index 8e1e43bbde6f0b..39853fc5c2b02f 100644
---- a/block/blk-iolatency.c
-+++ b/block/blk-iolatency.c
-@@ -646,7 +646,7 @@ static void blkcg_iolatency_exit(struct rq_qos *rqos)
- 
- 	timer_shutdown_sync(&blkiolat->timer);
- 	flush_work(&blkiolat->enable_work);
--	blkcg_deactivate_policy(rqos->disk->queue, &blkcg_policy_iolatency);
-+	blkcg_deactivate_policy(rqos->disk, &blkcg_policy_iolatency);
- 	kfree(blkiolat);
+@@ -234,30 +234,30 @@ static inline bool bio_issue_as_root_blkg(struct bio *bio)
  }
  
-@@ -768,7 +768,7 @@ int blk_iolatency_init(struct gendisk *disk)
- 			 &blkcg_iolatency_ops);
- 	if (ret)
- 		goto err_free;
--	ret = blkcg_activate_policy(disk->queue, &blkcg_policy_iolatency);
-+	ret = blkcg_activate_policy(disk, &blkcg_policy_iolatency);
- 	if (ret)
- 		goto err_qos_del;
+ /**
+- * blkg_lookup - lookup blkg for the specified blkcg - q pair
++ * blkg_lookup - lookup blkg for the specified blkcg - disk pair
+  * @blkcg: blkcg of interest
+- * @q: request_queue of interest
++ * @disk: gendisk of interest
+  *
+- * Lookup blkg for the @blkcg - @q pair.
++ * Lookup blkg for the @blkcg - @disk pair.
  
-diff --git a/block/blk-ioprio.c b/block/blk-ioprio.c
-index 8bb6b8eba4cee8..8194826cc824bc 100644
---- a/block/blk-ioprio.c
-+++ b/block/blk-ioprio.c
-@@ -204,12 +204,12 @@ void blkcg_set_ioprio(struct bio *bio)
- 
- void blk_ioprio_exit(struct gendisk *disk)
+  * Must be called in a RCU critical section.
+  */
+ static inline struct blkcg_gq *blkg_lookup(struct blkcg *blkcg,
+-					   struct request_queue *q)
++					   struct gendisk *disk)
  {
--	blkcg_deactivate_policy(disk->queue, &ioprio_policy);
-+	blkcg_deactivate_policy(disk, &ioprio_policy);
+ 	struct blkcg_gq *blkg;
+ 
+ 	WARN_ON_ONCE(!rcu_read_lock_held());
+ 
+ 	if (blkcg == &blkcg_root)
+-		return q->root_blkg;
++		return disk->queue->root_blkg;
+ 
+ 	blkg = rcu_dereference(blkcg->blkg_hint);
+-	if (blkg && blkg->disk->queue == q)
++	if (blkg && blkg->disk == disk)
+ 		return blkg;
+ 
+-	blkg = radix_tree_lookup(&blkcg->blkg_tree, q->id);
+-	if (blkg && blkg->disk->queue != q)
++	blkg = radix_tree_lookup(&blkcg->blkg_tree, disk->queue->id);
++	if (blkg && blkg->disk != disk)
+ 		blkg = NULL;
+ 	return blkg;
  }
+@@ -357,7 +357,7 @@ static inline void blkg_put(struct blkcg_gq *blkg)
+ #define blkg_for_each_descendant_pre(d_blkg, pos_css, p_blkg)		\
+ 	css_for_each_descendant_pre((pos_css), &(p_blkg)->blkcg->css)	\
+ 		if (((d_blkg) = blkg_lookup(css_to_blkcg(pos_css),	\
+-					    (p_blkg)->disk->queue)))
++					    (p_blkg)->disk)))
  
- int blk_ioprio_init(struct gendisk *disk)
- {
--	return blkcg_activate_policy(disk->queue, &ioprio_policy);
-+	return blkcg_activate_policy(disk, &ioprio_policy);
- }
+ /**
+  * blkg_for_each_descendant_post - post-order walk of a blkg's descendants
+@@ -372,7 +372,7 @@ static inline void blkg_put(struct blkcg_gq *blkg)
+ #define blkg_for_each_descendant_post(d_blkg, pos_css, p_blkg)		\
+ 	css_for_each_descendant_post((pos_css), &(p_blkg)->blkcg->css)	\
+ 		if (((d_blkg) = blkg_lookup(css_to_blkcg(pos_css),	\
+-					    (p_blkg)->disk->queue)))
++					    (p_blkg)->disk)))
  
- static int __init ioprio_init(void)
-diff --git a/block/blk-throttle.c b/block/blk-throttle.c
-index f802d8f9099430..efc0a9092c6942 100644
---- a/block/blk-throttle.c
-+++ b/block/blk-throttle.c
-@@ -2395,7 +2395,7 @@ int blk_throtl_init(struct gendisk *disk)
- 	td->low_downgrade_time = jiffies;
+ bool __blkcg_punt_bio_submit(struct bio *bio);
  
- 	/* activate policy */
--	ret = blkcg_activate_policy(q, &blkcg_policy_throtl);
-+	ret = blkcg_activate_policy(disk, &blkcg_policy_throtl);
- 	if (ret) {
- 		free_percpu(td->latency_buckets[READ]);
- 		free_percpu(td->latency_buckets[WRITE]);
-@@ -2411,7 +2411,7 @@ void blk_throtl_exit(struct gendisk *disk)
- 	BUG_ON(!q->td);
- 	del_timer_sync(&q->td->service_queue.pending_timer);
- 	throtl_shutdown_wq(q);
--	blkcg_deactivate_policy(q, &blkcg_policy_throtl);
-+	blkcg_deactivate_policy(disk, &blkcg_policy_throtl);
- 	free_percpu(q->td->latency_buckets[READ]);
- 	free_percpu(q->td->latency_buckets[WRITE]);
- 	kfree(q->td);
 -- 
 2.39.0
 
