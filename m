@@ -1,41 +1,120 @@
-From: =?utf-8?B?TGl4aW9uZyBMaXUgKOWImOWIqembhCk=?= 
-        <Lixiong.Liu-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org>
-Subject: Re: cgroup user-after-free
-Date: Wed, 1 Feb 2023 06:04:04 +0000
-Message-ID: <3bb8e65797b905e4e9d4fad93a8f4fe26b8958a4.camel@mediatek.com>
-References: <697032f2331a92eec0e03e85e46cb78bd975a788.camel@mediatek.com>
-         <Y8Cwdsk5pYNd8fX8@slm.duckdns.org>
-         <f8b24df3bd009d112479e9d5db36ec4afff9bb71.camel@mediatek.com>
+From: Eric Biggers <ebiggers-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCH] fscrypt: Copy the memcg information to the ciphertext
+ page
+Date: Tue, 31 Jan 2023 22:31:31 -0800
+Message-ID: <Y9oHQ6MfRbfwmFyK@sol.localdomain>
+References: <20230129121851.2248378-1-willy@infradead.org>
+ <Y9a2m8uvmXmCVYvE@sol.localdomain>
+ <Y9bkoasmAmtQ2nSV@casper.infradead.org>
+ <Y9mH0PCcZoGPryXw@slm.duckdns.org>
 Mime-Version: 1.0
-Content-Transfer-Encoding: base64
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
-        h=MIME-Version:Content-Transfer-Encoding:Content-ID:Content-Type:In-Reply-To:References:Message-ID:Date:Subject:CC:To:From; bh=yzvs+YvZPWqNwv/4NYDDD2VPWghmfGCFkmwOGLsLv80=;
-        b=Ia5xwtaPZzabpQtAtLr17Zd65MdHk9j20LQE4vRy6Glkf5Mgup9Qlupcq3Q4kSm57twDQKabz4v+RnoaQY8Wr4yLvdkb+oFYR0YDbJuy7NDhioQSxhp9dY/+P4nU+yGULhwPQzkpcmIA3jsK01K8UmWy+7KNuSN37XU3HEQmlHM=;
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=mediateko365.onmicrosoft.com; s=selector2-mediateko365-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=yzvs+YvZPWqNwv/4NYDDD2VPWghmfGCFkmwOGLsLv80=;
- b=iFFDfg9B/QexmaEKnag4XuFBs4a/g6a9JsZdss94cEnVWkWaVBZ5480dMXrmFCG3c9TWxbWVEuyf6vMeiVjV8N8jUFMChh5EEfiTY+S7cqxoI7MfrL7mrO3csTKkwHcoU9SyXsmdpcNEAR8AZDYHSmi5sJbXXzdHcbER0o87J00=
-In-Reply-To: <f8b24df3bd009d112479e9d5db36ec4afff9bb71.camel-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org>
-Content-Language: en-US
-Content-ID: <07E3047408019941B471670B8603DAC7-Ld2OyNlpylScE4WynfumptQqCkab/8FMAL8bYrjMMd8@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1675233093;
+        bh=kODbu8v8FoJJKSYLR/mctHsB9SNw4l1AhxYgBT5F4R8=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=a9FoKfofj9I8z7FRGoI5KTEFES31+jAGm9T1tXLHLt1ICF1vzD9lVLQ1PMHKF118R
+         6gxgIJ4cvI9lNcgU8jhgYhiEgv0BWrRs5Y/zh8bBLAXcpiK3QfXg6S7LZIzG/slYMS
+         swQmWjHUhSmrxd2OTgLY5hwoNrZgsycTEcAuddMz581Mil5Ri2sQKK3WIB2+xpqArZ
+         kEhjGm4ZjunZ/TEXjM0KgrLsC6WGXeZTQmZl679nScLECIBqVi2GGuQ9cdxWQq4Zgo
+         u0iSFo5+bK8fU17enBhGUD60FFec9CC5212xX0Hf8PjBrr4OTPvVVBpviTK7zVBKNh
+         4741njuFWUngA==
+Content-Disposition: inline
+In-Reply-To: <Y9mH0PCcZoGPryXw-NiLfg/pYEd1N0TnZuCh8vA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="windows-1252"
-To: "tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org" <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: "linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-mediatek-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org" <linux-mediatek-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org>, "cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, =?utf-8?B?V2VuanUgWHUgKOiuuOaWh+S4vik=?= <Wenju.Xu-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org>, wsd_upstream <wsd_upstream-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org>, =?utf-8?B?SmluZy1UaW5nIFd1ICjlkLPpnZzlqbcp?= <Jing-Ting.Wu-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org>, "hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org" <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, =?utf-8?B?V0ogV2FuZyAo546L5YabKQ==?= <wj.wang-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org>, "linux-arm-kernel-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org" <linux-arm-kernel-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org>, =?utf-8?B?QW5kcmVzcyBLdW8gKOmDreWtn+S/rik=?= <Andress.Kuo-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org>, "matthias.bgg-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org" <matthias.bgg-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: Matthew Wilcox <willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, "Theodore Y . Ts'o" <tytso-3s7WtUTddSA@public.gmane.org>, Jaegeuk Kim <jaegeuk-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, linux-fscrypt-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-ext4-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-f2fs-devel-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org, stable-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-T24gRnJpLCAyMDIzLTAxLTEzIGF0IDEzOjQwICswODAwLCBsaXhpb25nIGxpdSB3cm90ZToNCj4g
-PiA+IFJvb3QgY2F1c2U6IA0KPiA+ID4gY2dyb3VwX21pZ3JhdGVfZmluaXNoIGZyZWUgY3NldOKA
-mXMgY2dyb3VwLA0KPiA+ID4gDQo+ID4gPiBidXQgY2dyb3VwX3NrX2FsbG9jIHVzZSB0aGUgZnJl
-ZWQgY2dyb3VwLA0KPiA+ID4gDQo+ID4gPiB0aGVuIHVzZS1hZnRlci1mcmVlIGhhcHBlbmVkLg0K
-PiA+IA0KPiA+IFNvdW5kcyBzaW1pbGFyIHRvIHRoZSBwcm9ibGVtIGZpeGVkIGJ5IDA3ZmQ1YjZj
-ZGYzYyAoImNncm91cDogVXNlDQo+ID4gc2VwYXJhdGUNCj4gPiBzcmMvZHN0IG5vZGVzIHdoZW4g
-cHJlbG9hZGluZyBjc3Nfc2V0cyBmb3IgbWlncmF0aW9uIikuIENhbiB5b3UgdHJ5DQo+ID4gaXQg
-b3V0Pw0KPiA+IA0KPiA+IFRoYW5rcy4NCj4gPiANCj4gDQo+IA0KPiBUaGFua3MgZm9yIHlvdXIg
-cXVpY2sgZmVlZGJhY2suDQo+IA0KPiANCj4gICANCj4gQnV0IHdlIGVuY291bnRlcmVkIHVzZS1h
-ZnRlci1mcmVlIHZlcnNpb24NCj4gDQo+IGFscmVhZHkgY29udGFpbnMgdGhpcyBwYXRjaC4NCj4g
-DQo+IA0KPiANCj4gU28sIHdpdGggdGhpcyBwYXRjaCB3aWxsIGFsc28gZW5jb3VudGVyDQo+IA0K
-PiB0aGlzIHVzZS1hZnRlci1mcmVlLg0KPiANCj4gVGhhbmtzIQ0KPiANCj4gDQogIERvIHlvdSBo
-YXZlIGFueSBzdWdnZXN0aW9uIGZvciB0aGlzIGlzc3VlPw0KDQogIEJlc3QgcmVnYXJkcywNCiAg
-TGl4aW9uZyBMaXUNCg==
+On Tue, Jan 31, 2023 at 11:27:44AM -1000, Tejun Heo wrote:
+> Hello,
+> 
+> On Sun, Jan 29, 2023 at 09:26:57PM +0000, Matthew Wilcox wrote:
+> > > > diff --git a/fs/crypto/crypto.c b/fs/crypto/crypto.c
+> > > > index e78be66bbf01..a4e76f96f291 100644
+> > > > --- a/fs/crypto/crypto.c
+> > > > +++ b/fs/crypto/crypto.c
+> > > > @@ -205,6 +205,9 @@ struct page *fscrypt_encrypt_pagecache_blocks(struct page *page,
+> > > >  	}
+> > > >  	SetPagePrivate(ciphertext_page);
+> > > >  	set_page_private(ciphertext_page, (unsigned long)page);
+> > > > +#ifdef CONFIG_MEMCG
+> > > > +	ciphertext_page->memcg_data = page->memcg_data;
+> > > > +#endif
+> > > >  	return ciphertext_page;
+> > > >  }
+> > > 
+> > > Nothing outside mm/ and include/linux/memcontrol.h does anything with memcg_data
+> > > directly.  Are you sure this is the right thing to do here?
+> > 
+> > Nope ;-)  Happy to hear from people who know more about cgroups than I
+> > do.  Adding some more ccs.
+> > 
+> > > Also, this patch causes the following:
+> > 
+> > Oops.  Clearly memcg_data needs to be set to NULL before we free it.
+> 
+> These can usually be handled by explicitly associating the bio's to the
+> desired cgroups using one of bio_associate_blkg*() or
+> bio_clone_blkg_association().
+
+Here that already happens in wbc_init_bio(), called from io_submit_init_bio() in
+fs/ext4/page-io.c.
+
+> It is possible to go through memcg ownership
+> too using set_active_memcg() so that the page is owned by the target cgroup;
+> however, the page ownership doesn't directly map to IO ownership as the
+> relationship depends on the type of the page (e.g. IO ownership for
+> pagecache writeback is determined per-inode, not per-page). If the in-flight
+> pages are limited, it probably is better to set bio association directly.
+
+ext4 also calls wbc_account_cgroup_owner() for each pagecache page that's
+written out.  It seems this is for a different purpose -- it looks like the
+fs-writeback code is trying to figure out which cgroup "owns" the inode based on
+which cgroup "owns" most of the pagecache pages?
+
+The bug we're discussing here is that when ext4 writes out a pagecache page in
+an encrypted file, it first encrypts the data into a bounce page, then passes
+the bounce page (which don't have a memcg) to wbc_account_cgroup_owner().  Maybe
+the proper fix is to just pass the pagecache page to wbc_account_cgroup_owner()
+instead?  See below for ext4 (a separate patch would be needed for f2fs):
+
+diff --git a/fs/ext4/page-io.c b/fs/ext4/page-io.c
+index beaec6d81074a..1e4db96a04e63 100644
+--- a/fs/ext4/page-io.c
++++ b/fs/ext4/page-io.c
+@@ -409,7 +409,8 @@ static void io_submit_init_bio(struct ext4_io_submit *io,
+ 
+ static void io_submit_add_bh(struct ext4_io_submit *io,
+ 			     struct inode *inode,
+-			     struct page *page,
++			     struct page *pagecache_page,
++			     struct page *bounce_page,
+ 			     struct buffer_head *bh)
+ {
+ 	int ret;
+@@ -421,10 +422,11 @@ static void io_submit_add_bh(struct ext4_io_submit *io,
+ 	}
+ 	if (io->io_bio == NULL)
+ 		io_submit_init_bio(io, bh);
+-	ret = bio_add_page(io->io_bio, page, bh->b_size, bh_offset(bh));
++	ret = bio_add_page(io->io_bio, bounce_page ?: pagecache_page,
++			   bh->b_size, bh_offset(bh));
+ 	if (ret != bh->b_size)
+ 		goto submit_and_retry;
+-	wbc_account_cgroup_owner(io->io_wbc, page, bh->b_size);
++	wbc_account_cgroup_owner(io->io_wbc, pagecache_page, bh->b_size);
+ 	io->io_next_block++;
+ }
+ 
+@@ -561,8 +563,7 @@ int ext4_bio_write_page(struct ext4_io_submit *io,
+ 	do {
+ 		if (!buffer_async_write(bh))
+ 			continue;
+-		io_submit_add_bh(io, inode,
+-				 bounce_page ? bounce_page : page, bh);
++		io_submit_add_bh(io, inode, page, bounce_page, bh);
+ 	} while ((bh = bh->b_this_page) != head);
+ unlock:
+ 	unlock_page(page);
