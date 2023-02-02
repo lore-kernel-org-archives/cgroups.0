@@ -1,65 +1,93 @@
-From: Hou Tao <houtao@huaweicloud.com>
-Subject: Re: [PATCH] blk-ioprio: Introduce promote-to-rt policy
-Date: Thu, 2 Feb 2023 19:09:24 +0800
-Message-ID: <4f7dcb3e-2d5a-cae3-0e1c-a82bcc3d2217@huaweicloud.com>
-References: <20230201045227.2203123-1-houtao@huaweicloud.com>
- <8c068af3-7199-11cf-5c69-a523c7c22d9a@acm.org>
+From: Yu Kuai <yukuai1-XF6JlduFytWkHkcT6e4Xnw@public.gmane.org>
+Subject: [PATCH -next v2] block, bfq: cleanup 'bfqg->online'
+Date: Thu,  2 Feb 2023 21:45:04 +0800
+Message-ID: <20230202134504.2353787-1-yukuai1@huaweicloud.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Return-path: <linux-doc-owner@vger.kernel.org>
-In-Reply-To: <8c068af3-7199-11cf-5c69-a523c7c22d9a@acm.org>
-Content-Language: en-US
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="utf-8"
-To: Bart Van Assche <bvanassche@acm.org>, linux-block@vger.kernel.org
-Cc: Jan Kara <jack@suse.cz>, Jens Axboe <axboe@kernel.dk>, cgroups@vger.kernel.org, Tejun Heo <tj@kernel.org>, Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, Jonathan Corbet <corbet@lwn.net>, linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org, houtao1@huawei.com
+Content-Type: text/plain; charset="us-ascii"
+To: jack-AlSwsSmVLrQ@public.gmane.org, paolo.valente-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org, axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, josef-DigfWCa+lFGyeJad7bwFQA@public.gmane.org
+Cc: linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, yukuai1-XF6JlduFytWkHkcT6e4Xnw@public.gmane.org, yi.zhang-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, yangerkun-hv44wF8Li93QT0dZR+AlfA@public.gmane.org
 
-Hi,
+From: Yu Kuai <yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 
-On 2/2/2023 1:33 AM, Bart Van Assche wrote:
-> On 1/31/23 20:52, Hou Tao wrote:
->>   /**
->>    * enum prio_policy - I/O priority class policy.
->>    * @POLICY_NO_CHANGE: (default) do not modify the I/O priority class.
->> @@ -27,21 +34,30 @@
->>    * @POLICY_RESTRICT_TO_BE: modify IOPRIO_CLASS_NONE and IOPRIO_CLASS_RT into
->>    *        IOPRIO_CLASS_BE.
->>    * @POLICY_ALL_TO_IDLE: change the I/O priority class into IOPRIO_CLASS_IDLE.
->> - *
->> + * @POLICY_PROMOTE_TO_RT: modify IOPRIO_CLASS_NONE and IOPRIO_CLASS_BE into
->> + *         IOPRIO_CLASS_RT.
->>    * See also <linux/ioprio.h>.
->>    */
->>   enum prio_policy {
->> -    POLICY_NO_CHANGE    = 0,
->> -    POLICY_NONE_TO_RT    = 1,
->> -    POLICY_RESTRICT_TO_BE    = 2,
->> -    POLICY_ALL_TO_IDLE    = 3,
->> +    POLICY_NO_CHANGE    = IOPRIO_CLASS_NONE,
->> +    POLICY_NONE_TO_RT    = IOPRIO_CLASS_RT,
->> +    POLICY_RESTRICT_TO_BE    = IOPRIO_CLASS_BE,
->> +    POLICY_ALL_TO_IDLE    = IOPRIO_CLASS_IDLE,
->> +    POLICY_PROMOTE_TO_RT    = IOPRIO_CLASS_RT | IOPRIO_POL_PROMOTION,
->> +};
->
-> The above change complicates the ioprio code. Additionally, I'm concerned that
-> it makes the ioprio code slower. Has it been considered to keep the numerical
-> values for the existing policies, to assign the number 4 to
-> POLICY_PROMOTE_TO_RT and to use a lookup-array in blkcg_set_ioprio() to
-> convert the policy number into an IOPRIO_CLASS value?
-For the slowness, do you meaning the extra dereference of blkcg->ioprio->policy
-when policy is no-change or the handle of IOPRIO_POL_PROMOTION in
-blkcg_set_ioprio()? It seems other functions (e.g., ioprio_show_prio_policy()
-and ioprio_set_prio_policy()) are not on the hot path. Using a lookup array in
-blkcg_set_ioprio() to do the conversion will also be OK, although it will
-introduce an extra lookup each time when policy is not no-change. I don't have
-strong preference. If you are OK with lookup array in blkcg_set_ioprio(), will
-do it in v2.
->
-> Thanks,
->
-> Bart.
->
->
-> .
+After commit dfd6200a0954 ("blk-cgroup: support to track if policy is
+online"), there is no need to do this again in bfq.
+
+However, 'pd->online' is protected by 'bfqd->lock', in order to make
+sure bfq won't see that 'pd->online' is still set after bfq_pd_offline(),
+clear it before bfq_pd_offline_() is called. This is fine because
+'pd->online' is only used in bfq policy and bfq_pd_offline() will move
+active bfqq to root cgroup anyway.
+
+Signed-off-by: Yu Kuai <yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+---
+Changes in v2:
+ - clear 'pd->online' before calling bfq_pd_offline()
+
+ block/bfq-cgroup.c  | 4 +---
+ block/bfq-iosched.h | 2 --
+ block/blk-cgroup.c  | 2 +-
+ 3 files changed, 2 insertions(+), 6 deletions(-)
+
+diff --git a/block/bfq-cgroup.c b/block/bfq-cgroup.c
+index b42956ab5550..a35136dae713 100644
+--- a/block/bfq-cgroup.c
++++ b/block/bfq-cgroup.c
+@@ -551,7 +551,6 @@ static void bfq_pd_init(struct blkg_policy_data *pd)
+ 	bfqg->bfqd = bfqd;
+ 	bfqg->active_entities = 0;
+ 	bfqg->num_queues_with_pending_reqs = 0;
+-	bfqg->online = true;
+ 	bfqg->rq_pos_tree = RB_ROOT;
+ }
+ 
+@@ -614,7 +613,7 @@ struct bfq_group *bfq_bio_bfqg(struct bfq_data *bfqd, struct bio *bio)
+ 			continue;
+ 		}
+ 		bfqg = blkg_to_bfqg(blkg);
+-		if (bfqg->online) {
++		if (bfqg->pd.online) {
+ 			bio_associate_blkg_from_css(bio, &blkg->blkcg->css);
+ 			return bfqg;
+ 		}
+@@ -985,7 +984,6 @@ static void bfq_pd_offline(struct blkg_policy_data *pd)
+ 
+ put_async_queues:
+ 	bfq_put_async_queues(bfqd, bfqg);
+-	bfqg->online = false;
+ 
+ 	spin_unlock_irqrestore(&bfqd->lock, flags);
+ 	/*
+diff --git a/block/bfq-iosched.h b/block/bfq-iosched.h
+index 75cc6a324267..69aaee52285a 100644
+--- a/block/bfq-iosched.h
++++ b/block/bfq-iosched.h
+@@ -1009,8 +1009,6 @@ struct bfq_group {
+ 
+ 	/* reference counter (see comments in bfq_bic_update_cgroup) */
+ 	refcount_t ref;
+-	/* Is bfq_group still online? */
+-	bool online;
+ 
+ 	struct bfq_entity entity;
+ 	struct bfq_sched_data sched_data;
+diff --git a/block/blk-cgroup.c b/block/blk-cgroup.c
+index cb110fc51940..a228dfe65253 100644
+--- a/block/blk-cgroup.c
++++ b/block/blk-cgroup.c
+@@ -491,9 +491,9 @@ static void blkg_destroy(struct blkcg_gq *blkg)
+ 		struct blkcg_policy *pol = blkcg_policy[i];
+ 
+ 		if (blkg->pd[i] && blkg->pd[i]->online) {
++			blkg->pd[i]->online = false;
+ 			if (pol->pd_offline_fn)
+ 				pol->pd_offline_fn(blkg->pd[i]);
+-			blkg->pd[i]->online = false;
+ 		}
+ 	}
+ 
+-- 
+2.31.1
 
