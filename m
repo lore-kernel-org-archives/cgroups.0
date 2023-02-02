@@ -1,61 +1,72 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH 05/15] blk-cgroup: store a gendisk to throttle in struct
- task_struct
-Date: Thu, 2 Feb 2023 07:57:46 -1000
-Message-ID: <Y9v5mqqd8tVy67KJ@slm.duckdns.org>
-References: <20230124065716.152286-1-hch@lst.de>
- <20230124065716.152286-6-hch@lst.de>
- <Y9Rg0GuNAmJPlDri@slm.duckdns.org>
- <20230201080635.GA8112@lst.de>
+From: Bart Van Assche <bvanassche@acm.org>
+Subject: Re: [PATCH] blk-ioprio: Introduce promote-to-rt policy
+Date: Thu, 2 Feb 2023 10:05:23 -0800
+Message-ID: <b6b3c498-e90b-7d1f-6ad5-a31334e433ae@acm.org>
+References: <20230201045227.2203123-1-houtao@huaweicloud.com>
+ <8c068af3-7199-11cf-5c69-a523c7c22d9a@acm.org>
+ <4f7dcb3e-2d5a-cae3-0e1c-a82bcc3d2217@huaweicloud.com>
 Mime-Version: 1.0
-Return-path: <linux-block-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:sender:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=J868v/GWsw/sdOuEih4FZi6MVpQ5U6Xfy4+ZzeGKSSY=;
-        b=WnuM3wG3BnaRK/PHa4g1RIcgwiErDE8gggba3If8Q8GnilHU08DD31ANGbVa8Q6KCs
-         vbb6XzZNI9axv+/+M7kiweOTOm6aY901RBHzczpV0ay+u0bh/1uqFOqwhZALoT66eDWG
-         YrA138bUs+3/EjIQjIogajqW5bzCGHwfqLHtTSZvjTAWoklFC919icaurVy9VVRgYg+L
-         AcgkxPk9d23q3MbUyEkY0qQDegJobtaT46ivyBih+y0Kcj/z7mZi6fsMUigzgSrosMlW
-         coCAfkX5CSUEdJUafUnEioT3kNqhN6X1exwcHtKqyQUd+dQBVjizzSkIEAY9cFxmPAXN
-         B0PQ==
-Sender: Tejun Heo <htejun@gmail.com>
-Content-Disposition: inline
-In-Reply-To: <20230201080635.GA8112@lst.de>
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-doc-owner@vger.kernel.org>
+Content-Language: en-US
+In-Reply-To: <4f7dcb3e-2d5a-cae3-0e1c-a82bcc3d2217@huaweicloud.com>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Christoph Hellwig <hch@lst.de>
-Cc: Jens Axboe <axboe@kernel.dk>, Josef Bacik <josef@toxicpanda.com>, linux-block@vger.kernel.org, cgroups@vger.kernel.org, Andreas Herrmann <aherrmann@suse.de>
+Content-Type: text/plain; charset="utf-8"; format="flowed"
+To: Hou Tao <houtao@huaweicloud.com>, linux-block@vger.kernel.org
+Cc: Jan Kara <jack@suse.cz>, Jens Axboe <axboe@kernel.dk>, cgroups@vger.kernel.org, Tejun Heo <tj@kernel.org>, Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, Jonathan Corbet <corbet@lwn.net>, linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org, houtao1@huawei.com
 
-Sorry about late reply.
-
-On Wed, Feb 01, 2023 at 09:06:35AM +0100, Christoph Hellwig wrote:
-> On Fri, Jan 27, 2023 at 01:40:00PM -1000, Tejun Heo wrote:
-> > So, we're shifting the dead test from schedule to the actual throttle path,
-> > which makes sense but I think this should at least be mentioned in the
-> > description if not put in its own patch.
+On 2/2/23 03:09, Hou Tao wrote:
+> Hi,
 > 
-> That's what I tried to say with:
-> 
-> "Move the check for the dead disk to the latest place now that is is
->  unbundled from the reference grab."
-> 
-> what else would you want me to write?
+> On 2/2/2023 1:33 AM, Bart Van Assche wrote:
+>> On 1/31/23 20:52, Hou Tao wrote:
+>>>    /**
+>>>     * enum prio_policy - I/O priority class policy.
+>>>     * @POLICY_NO_CHANGE: (default) do not modify the I/O priority class.
+>>> @@ -27,21 +34,30 @@
+>>>     * @POLICY_RESTRICT_TO_BE: modify IOPRIO_CLASS_NONE and IOPRIO_CLASS_RT into
+>>>     *        IOPRIO_CLASS_BE.
+>>>     * @POLICY_ALL_TO_IDLE: change the I/O priority class into IOPRIO_CLASS_IDLE.
+>>> - *
+>>> + * @POLICY_PROMOTE_TO_RT: modify IOPRIO_CLASS_NONE and IOPRIO_CLASS_BE into
+>>> + *         IOPRIO_CLASS_RT.
+>>>     * See also <linux/ioprio.h>.
+>>>     */
+>>>    enum prio_policy {
+>>> -    POLICY_NO_CHANGE    = 0,
+>>> -    POLICY_NONE_TO_RT    = 1,
+>>> -    POLICY_RESTRICT_TO_BE    = 2,
+>>> -    POLICY_ALL_TO_IDLE    = 3,
+>>> +    POLICY_NO_CHANGE    = IOPRIO_CLASS_NONE,
+>>> +    POLICY_NONE_TO_RT    = IOPRIO_CLASS_RT,
+>>> +    POLICY_RESTRICT_TO_BE    = IOPRIO_CLASS_BE,
+>>> +    POLICY_ALL_TO_IDLE    = IOPRIO_CLASS_IDLE,
+>>> +    POLICY_PROMOTE_TO_RT    = IOPRIO_CLASS_RT | IOPRIO_POL_PROMOTION,
+>>> +};
+>>
+>> The above change complicates the ioprio code. Additionally, I'm concerned that
+>> it makes the ioprio code slower. Has it been considered to keep the numerical
+>> values for the existing policies, to assign the number 4 to
+>> POLICY_PROMOTE_TO_RT and to use a lookup-array in blkcg_set_ioprio() to
+>> convert the policy number into an IOPRIO_CLASS value?
+> For the slowness, do you meaning the extra dereference of blkcg->ioprio->policy
+> when policy is no-change or the handle of IOPRIO_POL_PROMOTION in
+> blkcg_set_ioprio()? It seems other functions (e.g., ioprio_show_prio_policy()
+> and ioprio_set_prio_policy()) are not on the hot path. Using a lookup array in
+> blkcg_set_ioprio() to do the conversion will also be OK, although it will
+> introduce an extra lookup each time when policy is not no-change. I don't have
+> strong preference. If you are OK with lookup array in blkcg_set_ioprio(), will
+> do it in v2.
 
-It'd be better if the paragraph actually said where that change is being
-made along with why and whether it causes any behavior difference.
+Hi Hou,
 
-This seems safe to me but I can't tell why it's being moved. Maybe it's
-better because that's "latest" but that's a lot hanging on that single word.
-If this is better because we're testing it later instead of to accomodate
-other changes being made, this should be a separate patch, right? It's a
-subtle behavior change which is buried with a bunch of other mechanical
-changes.
+I prefer the lookup array because with the lookup array approach the 
+IOPRIO_POL_PROMOTION constant is no longer needed and because I expect 
+that this will result in code that is easier to read. Additionally, the 
+lookup array will be small so the compiler may be clever enough to 
+optimize it away.
 
-Thanks.
+Thanks,
 
--- 
-tejun
+Bart.
+
