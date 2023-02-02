@@ -1,48 +1,61 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH v2 0/2] cgroup/cpuset: Make hotplug code more efficient
-Date: Thu, 2 Feb 2023 11:52:46 -1000
-Message-ID: <Y9wwrvRDCspI6fhT@slm.duckdns.org>
-References: <20230202143200.128753-1-longman@redhat.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH v4 2/2] blk-cgroup: Flush stats at blkgs destruction path
+Date: Thu, 2 Feb 2023 12:35:08 -1000
+Message-ID: <Y9w6nDJoekdCYZXr@slm.duckdns.org>
+References: <20221215033132.230023-1-longman@redhat.com>
+ <20221215033132.230023-3-longman@redhat.com>
+ <Y9s4+Nop1eluWmJ4@T590>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20210112;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:sender:from:to:cc:subject:date:message-id
          :reply-to;
-        bh=oPbQKX8+ZHiavjG0GpX1JkPzLwnGdWH//FsOE0v5fqg=;
-        b=bTh7QzdUcluIUmAbaGdliBuyZhCIto2AflV+SltaNWnV46dCPIwNeCePIU/9c2iMdE
-         c6MwnYIygtVy7olhrptGdPXQjAa9Q6ihDAnkj8cr8R7i20RxQB61n1B4xgkDK0EKyPJU
-         H30Ap1rasAQ6UMfg6pTjk6LImI1CDQLtjwa+xH9vtnoJmdbFWtWeI/tom+KRXoLqylLU
-         K91crbJ7H5Ct1sRQgomr/sJnDoxBRZnJznWLinf7LvUE3Dnn/1YtM/mbcr0aDOpL8L7+
-         teP4fSUkgNPFgT6zZnAvhFu3OaiORiA1SV60V25P7R1rM7RwiBQUTpg9H6jfAVzQD8py
-         J+EQ==
-Sender: Tejun Heo <htejun-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+        bh=I/vBtaUtvuAYUBDEagef+6G4CYpgzu4YV3aIy4NBUrk=;
+        b=oq3M/1+tIFcjv9hjEaGa28A24jGTHUseAgRYiuLI/10z8o5Lu4Qv1oa6JxbgQXY8G/
+         NWn04KLhk0SYfQ9EGUP/PUl6RXvmhYklHrGecdQSjHvDeGxa+23/5lw2SZDNNpP2G6Ex
+         bXiRpKzgO0zlaxeKzE62bplLdiPUyA0NiWPWk6rqquMKzN/+0G1MZJ1g/HBunRJ7Vjpy
+         2aF/039Mt6/+eZW5dumlEg3q8OiNbRBwGXKUfUiktWBQpxBo85aRZwaGVCyNPfa7N4HN
+         VPiDYCFWuMcfQ64NEL+osMeaqbfpL7BPZy8kkFiWtYnvWtQKN7ZwtotoQmnj8jQ5Dquc
+         +NNQ==
+Sender: Tejun Heo <htejun@gmail.com>
 Content-Disposition: inline
-In-Reply-To: <20230202143200.128753-1-longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+In-Reply-To: <Y9s4+Nop1eluWmJ4@T590>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Cc: Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Will Deacon <will-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-z5hGa2qSFaRBDgjK7y7TUQ@public.gmane.org
+To: Ming Lei <ming.lei@redhat.com>
+Cc: Waiman Long <longman@redhat.com>, Jens Axboe <axboe@kernel.dk>, Josef Bacik <josef@toxicpanda.com>, Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, Andrew Morton <akpm@linux-foundation.org>, cgroups@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org, Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny@suse.com>, "Dennis Zhou (Facebook)" <dennisszhou@gmail.com>
 
-On Thu, Feb 02, 2023 at 09:31:58AM -0500, Waiman Long wrote:
->  v2:
->   - It turns out it works around the v1 cpuset missing offline cpu
->     problem better than I originally thought. So the patch description
->     is updated accordingly.
+On Thu, Feb 02, 2023 at 12:15:52PM +0800, Ming Lei wrote:
+> > @@ -1093,6 +1095,20 @@ static void blkcg_destroy_blkgs(struct blkcg *blkcg)
+> >  
+> >  	might_sleep();
+> >  
+> > +	/*
+> > +	 * Flush all the non-empty percpu lockless lists to release the
+> > +	 * blkg references held by those lists which, in turn, will
+> > +	 * allow those blkgs to be freed and release their references to
+> > +	 * blkcg. Otherwise, they may not be freed at all becase of this
+> > +	 * circular dependency resulting in memory leak.
+> > +	 */
+> > +	for_each_possible_cpu(cpu) {
+> > +		struct llist_head *lhead = per_cpu_ptr(blkcg->lhead, cpu);
+> > +
+> > +		if (!llist_empty(lhead))
+> > +			cgroup_rstat_css_cpu_flush(&blkcg->css, cpu);
+> > +	}
 > 
-> This small patch series makes the cpuset hotplug a bit more efficient
-> by eliminating unnecessary task iteration and cpu/node masks update
-> when a cpu hotplug event (online/offline) happens.
-> 
-> It can also largely work around the known problem of missing previously
-> offlined cpus in v1 cpuset with some exceptions.
+> I guess it is possible for new iostat_cpu to be added just after the
+> llist_empty() check.
 
-Imma hold on these patches for now. Let's see how the regression fix goes
-and revisit after the merge window.
+Ah, good point. Maybe:
 
-Thanks.
+* Move flush below the blkg kill loop.
+
+* In blk_cgroup_bio_start(), use percpu_ref_tryget() to decide whether to
+  add to llist or not.
 
 -- 
 tejun
