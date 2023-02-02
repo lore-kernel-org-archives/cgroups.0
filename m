@@ -1,77 +1,94 @@
-From: Waiman Long <longman@redhat.com>
-Subject: Re: [PATCH 1/2] cpuset: Fix cpuset_cpus_allowed() to not filter
- offline CPUs
-Date: Wed, 1 Feb 2023 22:34:00 -0500
-Message-ID: <773e2f22-211e-163f-64bb-15ae29ad161b@redhat.com>
-References: <20230131221719.3176-1-will@kernel.org>
- <20230131221719.3176-2-will@kernel.org>
- <6b068916-5e1b-a943-1aad-554964d8b746@redhat.com>
- <Y9otWX+MGOLDKU6t@hirez.programming.kicks-ass.net>
- <83e53632-27ed-8dde-84f4-68c6776d6da8@redhat.com>
- <a892d340-ea99-1562-0e70-176f02f195c2@redhat.com>
- <Y9rVVldS19oyIZ+g@hirez.programming.kicks-ass.net>
+From: Ming Lei <ming.lei@redhat.com>
+Subject: Re: [PATCH v4 2/2] blk-cgroup: Flush stats at blkgs destruction path
+Date: Thu, 2 Feb 2023 12:15:52 +0800
+Message-ID: <Y9s4+Nop1eluWmJ4@T590>
+References: <20221215033132.230023-1-longman@redhat.com>
+ <20221215033132.230023-3-longman@redhat.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <linux-block-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1675308851;
+        s=mimecast20190719; t=1675311371;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=J25aygLZYRtVKk3o+FCXZY8yPzqAyLq7HmtB3PexRQI=;
-        b=feZbXbqU8p2PR/AjNHlRI51GOXOZaUK8hpQQIW99HVwYKOk+Dqu/6wlRH9Bbn7t95ruKw0
-        hD6xasd0h0SnL/Pv6Q+M5KLrsjiTRZvgGbt2cJzV0juLUk4l2/cksCMmEqi0KPMGlX8eZX
-        fW6K9Jr/RA9kcr2cYXCZcTx+qBg4cuA=
-Content-Language: en-US
-In-Reply-To: <Y9rVVldS19oyIZ+g@hirez.programming.kicks-ass.net>
+        bh=0Evaq+uKsw2JRl30GbWwAirFdc+12RiKunGeodqBwPs=;
+        b=XzrDcsxwOaBz9psXY4Gn3iGyhvus53RuZ2l89NQ5d9kM32nsUcDDOpogr2CJEBA/husQJA
+        rfjYRCY5vVU8N3YzlsCuq/PCWXBt/FBD/u4KG8uDTE8TalUfluJ2CBzauDVvBL25dcpzF0
+        5Gb8nPT6G0vFbw2td3wjekblhk0KIdA=
+Content-Disposition: inline
+In-Reply-To: <20221215033132.230023-3-longman@redhat.com>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="utf-8"; format="flowed"
-To: Peter Zijlstra <peterz@infradead.org>
-Cc: Will Deacon <will@kernel.org>, linux-kernel@vger.kernel.org, kernel-team@android.com, Zefan Li <lizefan.x@bytedance.com>, Tejun Heo <tj@kernel.org>, Johannes Weiner <hannes@cmpxchg.org>, cgroups@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Waiman Long <longman@redhat.com>
+Cc: Jens Axboe <axboe@kernel.dk>, Tejun Heo <tj@kernel.org>, Josef Bacik <josef@toxicpanda.com>, Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, Andrew Morton <akpm@linux-foundation.org>, cgroups@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org, Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny@suse.com>, "Dennis Zhou (Facebook)" <dennisszhou@gmail.com>, ming.lei@redhat.com
 
-On 2/1/23 16:10, Peter Zijlstra wrote:
-> On Wed, Feb 01, 2023 at 01:46:11PM -0500, Waiman Long wrote:
->
->> Note that using cpus_allowed directly in cgroup v2 may not be right because
->> cpus_allowed may have no relationship to effective_cpus at all in some
->> cases, e.g.
->>
->>     root
->>      |
->>      V
->>      A (cpus_allowed = 1-4, effective_cpus = 1-4)
->>      |
->>      V
->>      B (cpus_allowed = 5-8, effective_cpus = 1-4)
->>
->> In the case of cpuset B, passing back cpus 5-8 as the allowed_cpus is wrong.
-> I think my patch as written does the right thing here. Since the
-> intersection of (1-4) and (5-8) is empty it will move up the hierarchy
-> and we'll end up with (1-4) from the cgroup side of things.
->
-> So the purpose of __cs_cpus_allowed() is to override the cpus_allowed of
-> the root set and force it to cpu_possible_mask.
->
-> Then cs_cpus_allowed() computes the intersection of cs->cpus_allowed and
-> all it's parents. This will, in the case of B above, result in the empty
-> mask.
->
-> Then cpuset_cpus_allowed() has a loop that starts with
-> task_cpu_possible_mask(), intersects that with cs_cpus_allowed() and if
-> the intersection of that and cpu_online_mask is empty, moves up the
-> hierarchy. Given cs_cpus_allowed(B) is the empty mask, we'll move to A.
->
-> Note that since we force the mask of root to cpu_possible_mask,
-> cs_cpus_allowed(root) will be a no-op and if we guarantee (in arch code)
-> that cpu_online_mask always has a non-empty intersection with
-> task_cpu_possible_mask(), this loop is guaranteed to terminate with a
-> viable mask.
+On Wed, Dec 14, 2022 at 10:31:32PM -0500, Waiman Long wrote:
+> As noted by Michal, the blkg_iostat_set's in the lockless list
+> hold reference to blkg's to protect against their removal. Those
+> blkg's hold reference to blkcg. When a cgroup is being destroyed,
+> cgroup_rstat_flush() is only called at css_release_work_fn() which
+> is called when the blkcg reference count reaches 0. This circular
+> dependency will prevent blkcg and some blkgs from being freed after
+> they are made offline.
+> 
+> It is less a problem if the cgroup to be destroyed also has other
+> controllers like memory that will call cgroup_rstat_flush() which will
+> clean up the reference count. If block is the only controller that uses
+> rstat, these offline blkcg and blkgs may never be freed leaking more
+> and more memory over time.
+> 
+> To prevent this potential memory leak, a new cgroup_rstat_css_cpu_flush()
+> function is added to flush stats for a given css and cpu. This new
+> function will be called at blkgs destruction path, blkcg_destroy_blkgs(),
+> whenever there are still pending stats to be flushed. This will release
+> the references to blkgs allowing them to be freed and indirectly allow
+> the freeing of blkcg.
+> 
+> Fixes: 3b8cc6298724 ("blk-cgroup: Optimize blkcg_rstat_flush()")
+> Signed-off-by: Waiman Long <longman@redhat.com>
+> Acked-by: Tejun Heo <tj@kernel.org>
+> ---
+>  block/blk-cgroup.c     | 16 ++++++++++++++++
+>  include/linux/cgroup.h |  1 +
+>  kernel/cgroup/rstat.c  | 18 ++++++++++++++++++
+>  3 files changed, 35 insertions(+)
+> 
+> diff --git a/block/blk-cgroup.c b/block/blk-cgroup.c
+> index ca28306aa1b1..a2a1081d9d1d 100644
+> --- a/block/blk-cgroup.c
+> +++ b/block/blk-cgroup.c
+> @@ -1084,6 +1084,8 @@ struct list_head *blkcg_get_cgwb_list(struct cgroup_subsys_state *css)
+>   */
+>  static void blkcg_destroy_blkgs(struct blkcg *blkcg)
+>  {
+> +	int cpu;
+> +
+>  	/*
+>  	 * blkcg_destroy_blkgs() shouldn't be called with all the blkcg
+>  	 * references gone.
+> @@ -1093,6 +1095,20 @@ static void blkcg_destroy_blkgs(struct blkcg *blkcg)
+>  
+>  	might_sleep();
+>  
+> +	/*
+> +	 * Flush all the non-empty percpu lockless lists to release the
+> +	 * blkg references held by those lists which, in turn, will
+> +	 * allow those blkgs to be freed and release their references to
+> +	 * blkcg. Otherwise, they may not be freed at all becase of this
+> +	 * circular dependency resulting in memory leak.
+> +	 */
+> +	for_each_possible_cpu(cpu) {
+> +		struct llist_head *lhead = per_cpu_ptr(blkcg->lhead, cpu);
+> +
+> +		if (!llist_empty(lhead))
+> +			cgroup_rstat_css_cpu_flush(&blkcg->css, cpu);
+> +	}
 
-I will take a closer look at that tomorrow. I will be more comfortable 
-ack'ing that if this is specific to v1 cpuset instead of applying this 
-in both v1 and v2 since it is only v1 that is problematic.
+I guess it is possible for new iostat_cpu to be added just after the
+llist_empty() check.
 
-Cheers,
-Longman
+
+Thanks,
+Ming
 
