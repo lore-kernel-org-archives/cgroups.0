@@ -1,75 +1,51 @@
-From: "tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org" <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: cgroup user-after-free
-Date: Thu, 2 Feb 2023 09:50:08 -1000
-Message-ID: <Y9wT8At0MF1S5v0k@slm.duckdns.org>
-References: <697032f2331a92eec0e03e85e46cb78bd975a788.camel@mediatek.com>
- <Y8Cwdsk5pYNd8fX8@slm.duckdns.org>
- <f8b24df3bd009d112479e9d5db36ec4afff9bb71.camel@mediatek.com>
- <3bb8e65797b905e4e9d4fad93a8f4fe26b8958a4.camel@mediatek.com>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [RFC 10/12] cgroup/drm: Introduce weight based drm cgroup control
+Date: Thu, 2 Feb 2023 10:00:14 -1000
+Message-ID: <Y9wWTspETnYYodDc@slm.duckdns.org>
+References: <20230112165609.1083270-1-tvrtko.ursulin@linux.intel.com>
+ <20230112165609.1083270-11-tvrtko.ursulin@linux.intel.com>
+ <Y9R2N8sl+7f8Zacv@slm.duckdns.org>
+ <27b7882e-1201-b173-6f56-9ececb5780e8@linux.intel.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20210112;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :mime-version:references:message-id:subject:cc:to:from:date:sender
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=0XqCItSDIlA9UN2KgN+ixgTMg/eGZMlJcrANVyohEDY=;
-        b=iNBaT8Z+Ig7zrOQHc1RHN6iLOys2Q0io9gpYMeH9LzsUki6o83huVNzd3aSQV5JEzL
-         QaQrK6iF24BTp/OaynHeDuVzOKVK72wVPLciBF0niO4O89anZ3czxsEFPo9KcbK3hZOt
-         xG4jzE2Scyetx+HzYrSSxtl9aOcoJWt7DO4NNuUYH0sVPe9PeEABvNn+l8pjQ4rYu3hh
-         1m/ogKgjMf6hFOFKPOWgr9Yndv0LRIChXjzkP0tt8mBZy2lLUtpjoTvaLh+fjVvLr1Kj
-         EyoozxTzk5b4ThayMM0cCuOkOqWvXk59XVYxSz5oynrw23D0jagogoyMumcW0Jk+MF/k
-         NQKw==
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:sender:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=KTEXTLdEtQvrB7aVFpBYAbH4Vf/ihPabgDflRw+s72o=;
+        b=CuJhJ9UTVuPY/jraolwLg+hw6h/pKxRy1SLRd/hEO8GnE3cDoiPidADrjRGw4Tat7E
+         jsPj+B5/JWPEzkR1ov2cP4QLjkGjelgudaCyhdc4WTw+8Tb5Oonu+M6rmd85VoAp+09n
+         p29yqXXOCqF9Y85uU7Om7KJ2ttMYgVWNGXZB9YxNzDvxDzbpksNHc1G+p86CxKdlN0Ty
+         +rwXXExzAQPU5AL4D29Etk7FWGP466Or/Daf4dCE9QSEqudpR8qq8SpggqjYy48/R5Nd
+         XYVHbi+FsHBVz+Wv+DIRXgY0DRGWK3xQsCPpOzfidwB7nrd2hKVFHAH562MKRavuNJmY
+         xtXQ==
 Sender: Tejun Heo <htejun-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 Content-Disposition: inline
-In-Reply-To: <3bb8e65797b905e4e9d4fad93a8f4fe26b8958a4.camel-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org>
+In-Reply-To: <27b7882e-1201-b173-6f56-9ececb5780e8-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="utf-8"
-To: Lixiong Liu =?utf-8?B?KOWImOWIqembhCk=?= <Lixiong.Liu-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org>
-Cc: "linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-mediatek-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org" <linux-mediatek-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org>, "cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Wenju Xu =?utf-8?B?KOiuuOaWh+S4vik=?= <Wenju.Xu-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org>, wsd_upstream <wsd_upstream-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org>, Jing-Ting Wu =?utf-8?B?KOWQs+mdnOWptyk=?= <Jing-Ting.Wu-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org>, "hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org" <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, WJ Wang =?utf-8?B?KOeOi+WGmyk=?= <wj.wang-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org>, "linux-arm-kernel-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org" <linux-arm-kernel-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org>, Andress Kuo =?utf-8?B?KOmDreWtn+S/rik=?= <Andress.Kuo-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org>, "matthias.bgg-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org" <matthias.bgg-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Tvrtko Ursulin <tvrtko.ursulin-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
+Cc: Intel-gfx-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org, dri-devel-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Dave Airlie <airlied-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Daniel Vetter <daniel.vetter-/w4YWyX8dFk@public.gmane.org>, Rob Clark <robdclark-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>, =?iso-8859-1?Q?St=E9phane?= Marchesin <marcheu-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>, "T . J . Mercier" <tjmercier-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Kenny.Ho-5C7GfCeVMHo@public.gmane.org, Christian =?iso-8859-1?Q?K=F6nig?= <christian.koenig-5C7GfCeVMHo@public.gmane.org>, Brian Welty <brian.welty-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Tvrtko Ursulin <tvrtko.ursulin-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
 
-On Wed, Feb 01, 2023 at 06:04:04AM +0000, Lixiong Liu (刘利雄) wrote:
-> On Fri, 2023-01-13 at 13:40 +0800, lixiong liu wrote:
-> > > > Root cause: 
-> > > > cgroup_migrate_finish free cset’s cgroup,
-> > > > 
-> > > > but cgroup_sk_alloc use the freed cgroup,
-> > > > 
-> > > > then use-after-free happened.
-> > > 
-> > > Sounds similar to the problem fixed by 07fd5b6cdf3c ("cgroup: Use
-> > > separate
-> > > src/dst nodes when preloading css_sets for migration"). Can you try
-> > > it out?
-> > > 
-> > > Thanks.
-> > > 
-> > 
-> > 
-> > Thanks for your quick feedback.
-> > 
-> > 
-> >   
-> > But we encountered use-after-free version
-> > 
-> > already contains this patch.
-> > 
-> > 
-> > 
-> > So, with this patch will also encounter
-> > 
-> > this use-after-free.
-> > 
-> > Thanks!
-> > 
-> > 
->   Do you have any suggestion for this issue?
+Hello,
 
-Unfortunately, there isn't a lot to latch onto. It's on an older kernel and
-there's no reproducer. Refcnting in the path is tricky and it wouldn't be
-too surprising for some bugs to be there. If you can repro on a recent
-kernel, that'd help a lot.
+On Thu, Feb 02, 2023 at 02:26:06PM +0000, Tvrtko Ursulin wrote:
+> When you say active/inactive - to what you are referring in the cgroup
+> world? Offline/online? For those my understanding was offline was a
+> temporary state while css is getting destroyed.
+
+Oh, it's just based on activity. So, for example, iocost puts a cgroup on
+its active list which is canned periodically when an IO is issued from an
+inactive cgroup. If an active cgroup doesn't have any activity between two
+scans, it becomes inactive and dropped from the list. drm can prolly use the
+same approach?
+
+> Also, I am really postponing implementing those changes until I hear at
+> least something from the DRM community.
+
+Yeah, that sounds like a good idea.
 
 Thanks.
 
