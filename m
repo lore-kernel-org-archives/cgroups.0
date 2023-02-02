@@ -1,81 +1,61 @@
-From: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [RFC PATCH] mm: memcontrol: don't account swap failures not due
- to cgroup limits
-Date: Thu, 2 Feb 2023 10:27:16 -0800
-Message-ID: <CALvZod6m-XOb6LvjAD0wXv1doP_LJb1yUJ-QRpJt3H+G=xyQXg@mail.gmail.com>
-References: <20230202155626.1829121-1-hannes@cmpxchg.org>
+From: Randy Dunlap <rdunlap@infradead.org>
+Subject: Re: [PATCH 0/9] Documentation: correct lots of spelling
+ errors (series 2)
+Date: Thu, 2 Feb 2023 10:33:17 -0800
+Message-ID: <a2c560bb-3b5c-ca56-c5c2-93081999281d@infradead.org>
+References: <20230129231053.20863-1-rdunlap@infradead.org>
+ <875yckvt1b.fsf@meer.lwn.net>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20210112;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:from:to:cc:subject:date:message-id:reply-to;
-        bh=pjDgomZIywp7e6CSQ2Vxhlha4qbmdscu2vXAz8lYKTA=;
-        b=kBmTcd8o1o1lVFPHTCamTTlrH1XgzC6/Lm8P51JWY63/kZfoZBGAxxVnl7fM/nB325
-         IxzufFGHbol1OmmWvAiywYQ+Fy1QBuXWrZwLlN1qQ9z7IxRm32vgeSaVK119yYYHHSqD
-         TChuw3JNRefL7J6YRb8mNWhTuYUswyasUCYKhDwn09eouJjPhcFUN0BUZQV2duIsSs/+
-         fYf40hTpoQqE25xwSQupwMUMWfX4lPXh6vDLt1AW/718EH/LIEdCdGVP5lsYKzieKxN9
-         ASVVs6xST3c54vncqQG/W+tR2N8h6Dj53Uzd1jGD1vjnvlqo65wzLMf6u8eqeM5CeZar
-         VTgw==
-In-Reply-To: <20230202155626.1829121-1-hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Cc: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Christian Brauner <brauner-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Return-path: <dm-devel-bounces@redhat.com>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1675362835;
+	h=from:from:sender:sender:reply-to:subject:subject:date:date:
+	 message-id:message-id:to:to:cc:cc:mime-version:mime-version:
+	 content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references:list-id:list-help:
+	 list-unsubscribe:list-subscribe:list-post;
+	bh=X89YYZa5QwwoFoyVa+cjqv3j8qodot1iuTODrRYZyJE=;
+	b=bUPDWklZHlTE1fxd0Nwv54+ymXoIRMfKdCfhvR9IMSe3QEwLveSX7TM6+xHokm30beZqFM
+	dn1rDjnmrRVf5258UXU8955TrWMoVJE0AsaIe5OpjfrOYgKikpUmVsTK/UUfG6/EZjWX9q
+	t/fVhI/L8NSYIfiD4hwnQcpI7c4d3ug=
+In-Reply-To: <875yckvt1b.fsf@meer.lwn.net>
+List-Id: <cgroups.vger.kernel.org>
+List-Unsubscribe: <https://listman.redhat.com/mailman/options/dm-devel>,
+ <mailto:dm-devel-request@redhat.com?subject=unsubscribe>
+List-Archive: <http://listman.redhat.com/archives/dm-devel/>
+List-Post: <mailto:dm-devel@redhat.com>
+List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
+List-Subscribe: <https://listman.redhat.com/mailman/listinfo/dm-devel>,
+ <mailto:dm-devel-request@redhat.com?subject=subscribe>
+Errors-To: dm-devel-bounces@redhat.com
+Sender: "dm-devel" <dm-devel-bounces@redhat.com>
+Content-Language: en-US
+To: Jonathan Corbet <corbet@lwn.net>, linux-kernel@vger.kernel.org
+Cc: nvdimm@lists.linux.dev, linux-doc@vger.kernel.org, Song Liu <song@kernel.org>, dm-devel@redhat.com, netdev@vger.kernel.org, Zefan Li <lizefan.x@bytedance.com>, sparclinux@vger.kernel.org, Neeraj Upadhyay <quic_neeraju@quicinc.com>, Alasdair Kergon <agk@redhat.com>, Dave Jiang <dave.jiang@intel.com>, linux-scsi@vger.kernel.org, Vishal Verma <vishal.l.verma@intel.com>, Jakub Kicinski <kuba@kernel.org>, Paolo Abeni <pabeni@redhat.com>, "James E.J. Bottomley" <jejb@linux.ibm.com>, Guenter Roeck <linux@roeck-us.net>, linux-media@vger.kernel.org, Jean Delvare <jdelvare@suse.com>, "Paul E. McKenney" <paulmck@kernel.org>, Frederic Weisbecker <frederic@kernel.org>, Mike Snitzer <snitzer@kernel.org>, Josh Triplett <josh@joshtriplett.org>, linux-raid@vger.kernel.org, Tejun Heo <tj@kernel.org>, Jiri Pirko <jiri@nvidia.com>, cgroups@vger.kernel.org, Dan Williams <dan.j.williams@intel.>
 
-On Thu, Feb 2, 2023 at 7:56 AM Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org> wrote:
->
-> Christian reports the following situation in a cgroup that doesn't
-> have memory.swap.max configured:
->
->   $ cat memory.swap.events
->   high 0
->   max 0
->   fail 6218
->
-> Upon closer examination, this is an ARM64 machine that doesn't support
-> swapping out THPs. In that case, the first get_swap_page() fails, and
-> the kernel falls back to splitting the THP and swapping the 4k
-> constituents one by one. /proc/vmstat confirms this with a high rate
-> of thp_swpout_fallback events.
->
-> While the behavior can ultimately be explained, it's unexpected and
-> confusing. I see three choices how to address this:
->
-> a) Specifically exlude THP fallbacks from being counted, as the
->    failure is transient and the memory is ultimately swapped.
->
->    Arguably, though, the user would like to know if their cgroup's
->    swap limit is causing high rates of THP splitting during swapout.
->
-> b) Only count cgroup swap events when they are actually due to a
->    cgroup's own limit. Exclude failures that are due to physical swap
->    shortage or other system-level conditions (like !THP_SWAP). Also
->    count them at the level where the limit is configured, which may be
->    above the local cgroup that holds the page-to-be-swapped.
->
->    This is in line with how memory.swap.high, memory.high and
->    memory.max events are counted.
->
->    However, it's a change in documented behavior.
->
-> c) Leave it as is. The documentation says system-level events are
->    counted, so stick to that.
->
->    This is the conservative option, but isn't very user friendly.
->    Cgroup events are usually due to a local control choice made by the
->    user. Mixing in events that are beyond the user's control makes it
->    difficult to id root causes and configure the system properly.
->
-> Implement option b).
 
-I prefer option b too.
 
->
-> Reported-by: Christian Brauner <brauner-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-> Signed-off-by: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+On 2/2/23 10:09, Jonathan Corbet wrote:
+> Randy Dunlap <rdunlap@infradead.org> writes:
+> 
+>> Maintainers of specific kernel subsystems are only Cc-ed on their
+>> respective patches, not the entire series. [if all goes well]
+>>
+>> These patches are based on linux-next-20230127.
+> 
+> So I've applied a bunch of these
+> 
 
-Acked-by: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+>>  [PATCH 6/9] Documentation: scsi/ChangeLog*: correct spelling
+>>  [PATCH 7/9] Documentation: scsi: correct spelling
+> 
+> I've left these for the SCSI folks for now.  Do we *really* want to be
+> fixing spelling in ChangeLog files from almost 20 years ago?
 
-I think we should CC stable as well for early exposure.
+That's why I made it a separate patch -- so the SCSI folks can decide that...
+
+-- 
+~Randy
