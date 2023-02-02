@@ -1,7 +1,7 @@
 From: Yu Kuai <yukuai1-XF6JlduFytWkHkcT6e4Xnw@public.gmane.org>
-Subject: [PATCH -next v2] block, bfq: cleanup 'bfqg->online'
-Date: Thu,  2 Feb 2023 21:45:04 +0800
-Message-ID: <20230202134504.2353787-1-yukuai1@huaweicloud.com>
+Subject: [PATCH -next v3] block, bfq: cleanup 'bfqg->online'
+Date: Thu,  2 Feb 2023 21:49:13 +0800
+Message-ID: <20230202134913.2364549-1-yukuai1@huaweicloud.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
@@ -15,14 +15,17 @@ From: Yu Kuai <yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 After commit dfd6200a0954 ("blk-cgroup: support to track if policy is
 online"), there is no need to do this again in bfq.
 
-However, 'pd->online' is protected by 'bfqd->lock', in order to make
+However, 'pd->online' is not protected by 'bfqd->lock', in order to make
 sure bfq won't see that 'pd->online' is still set after bfq_pd_offline(),
-clear it before bfq_pd_offline_() is called. This is fine because
-'pd->online' is only used in bfq policy and bfq_pd_offline() will move
-active bfqq to root cgroup anyway.
+clear it before bfq_pd_offline() is called. This is fine because other
+polices doesn't use 'pd->online' and bfq_pd_offline() will move active
+bfqq to root cgroup anyway.
 
 Signed-off-by: Yu Kuai <yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 ---
+Changes in v3:
+ - in commit message: protected -> not protected, bfq_pd_offline_() ->
+ bfq_pd_offline().
 Changes in v2:
  - clear 'pd->online' before calling bfq_pd_offline()
 
