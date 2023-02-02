@@ -1,110 +1,65 @@
 From: Hou Tao <houtao@huaweicloud.com>
 Subject: Re: [PATCH] blk-ioprio: Introduce promote-to-rt policy
-Date: Thu, 2 Feb 2023 18:50:07 +0800
-Message-ID: <336ed542-6b73-0f69-a4ee-4119e73ddb1d@huaweicloud.com>
+Date: Thu, 2 Feb 2023 19:09:24 +0800
+Message-ID: <4f7dcb3e-2d5a-cae3-0e1c-a82bcc3d2217@huaweicloud.com>
 References: <20230201045227.2203123-1-houtao@huaweicloud.com>
- <Y9or5PkdXj/D94fR@debian.me>
+ <8c068af3-7199-11cf-5c69-a523c7c22d9a@acm.org>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-doc-owner@vger.kernel.org>
-In-Reply-To: <Y9or5PkdXj/D94fR@debian.me>
+In-Reply-To: <8c068af3-7199-11cf-5c69-a523c7c22d9a@acm.org>
 Content-Language: en-US
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-To: Bagas Sanjaya <bagasdotme@gmail.com>, linux-block@vger.kernel.org
-Cc: Bart Van Assche <bvanassche@acm.org>, Jan Kara <jack@suse.cz>, Jens Axboe <axboe@kernel.dk>, cgroups@vger.kernel.org, Tejun Heo <tj@kernel.org>, Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, Jonathan Corbet <corbet@lwn.net>, linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org, houtao1@huawei.com
+Content-Type: text/plain; charset="utf-8"
+To: Bart Van Assche <bvanassche@acm.org>, linux-block@vger.kernel.org
+Cc: Jan Kara <jack@suse.cz>, Jens Axboe <axboe@kernel.dk>, cgroups@vger.kernel.org, Tejun Heo <tj@kernel.org>, Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, Jonathan Corbet <corbet@lwn.net>, linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org, houtao1@huawei.com
 
 Hi,
 
-On 2/1/2023 5:07 PM, Bagas Sanjaya wrote:
-> On Wed, Feb 01, 2023 at 12:52:27PM +0800, Hou Tao wrote:
->>  The following numerical values are associated with the I/O priority policies:
->>  
->> -+-------------+---+
->> -| no-change   | 0 |
->> -+-------------+---+
->> -| none-to-rt  | 1 |
->> -+-------------+---+
->> -| rt-to-be    | 2 |
->> -+-------------+---+
->> -| all-to-idle | 3 |
->> -+-------------+---+
->> +
->> ++---------------+---------+-----+
->> +| policy        | inst    | num |
->> ++---------------+---------+-----+
->> +| no-change     | demote  | 0   |
->> ++---------------+---------+-----+
->> +| none-to-rt    | demote  | 1   |
->> ++---------------+---------+-----+
->> +| rt-to-be      | demote  | 2   |
->> ++---------------+---------+-----+
->> +| idle          | demote  | 3   |
->> ++---------------+---------+-----+
->> +| promote-to-rt | promote | 1   |
->> ++---------------+---------+-----+
->>  
-> The first row should have been header row:
+On 2/2/2023 1:33 AM, Bart Van Assche wrote:
+> On 1/31/23 20:52, Hou Tao wrote:
+>>   /**
+>>    * enum prio_policy - I/O priority class policy.
+>>    * @POLICY_NO_CHANGE: (default) do not modify the I/O priority class.
+>> @@ -27,21 +34,30 @@
+>>    * @POLICY_RESTRICT_TO_BE: modify IOPRIO_CLASS_NONE and IOPRIO_CLASS_RT into
+>>    *        IOPRIO_CLASS_BE.
+>>    * @POLICY_ALL_TO_IDLE: change the I/O priority class into IOPRIO_CLASS_IDLE.
+>> - *
+>> + * @POLICY_PROMOTE_TO_RT: modify IOPRIO_CLASS_NONE and IOPRIO_CLASS_BE into
+>> + *         IOPRIO_CLASS_RT.
+>>    * See also <linux/ioprio.h>.
+>>    */
+>>   enum prio_policy {
+>> -    POLICY_NO_CHANGE    = 0,
+>> -    POLICY_NONE_TO_RT    = 1,
+>> -    POLICY_RESTRICT_TO_BE    = 2,
+>> -    POLICY_ALL_TO_IDLE    = 3,
+>> +    POLICY_NO_CHANGE    = IOPRIO_CLASS_NONE,
+>> +    POLICY_NONE_TO_RT    = IOPRIO_CLASS_RT,
+>> +    POLICY_RESTRICT_TO_BE    = IOPRIO_CLASS_BE,
+>> +    POLICY_ALL_TO_IDLE    = IOPRIO_CLASS_IDLE,
+>> +    POLICY_PROMOTE_TO_RT    = IOPRIO_CLASS_RT | IOPRIO_POL_PROMOTION,
+>> +};
 >
-> ---- >8 ----
-> diff --git a/Documentation/admin-guide/cgroup-v2.rst b/Documentation/admin-guide/cgroup-v2.rst
-> index e0b9f73ef62a9e..55f9b579716564 100644
-> --- a/Documentation/admin-guide/cgroup-v2.rst
-> +++ b/Documentation/admin-guide/cgroup-v2.rst
-> @@ -2048,7 +2048,7 @@ The following numerical values are associated with the I/O priority policies:
->  
->  +---------------+---------+-----+
->  | policy        | inst    | num |
-> -+---------------+---------+-----+
-> ++===============+=========+=====+
->  | no-change     | demote  | 0   |
->  +---------------+---------+-----+
->  | none-to-rt    | demote  | 1   |
+> The above change complicates the ioprio code. Additionally, I'm concerned that
+> it makes the ioprio code slower. Has it been considered to keep the numerical
+> values for the existing policies, to assign the number 4 to
+> POLICY_PROMOTE_TO_RT and to use a lookup-array in blkcg_set_ioprio() to
+> convert the policy number into an IOPRIO_CLASS value?
+For the slowness, do you meaning the extra dereference of blkcg->ioprio->policy
+when policy is no-change or the handle of IOPRIO_POL_PROMOTION in
+blkcg_set_ioprio()? It seems other functions (e.g., ioprio_show_prio_policy()
+and ioprio_set_prio_policy()) are not on the hot path. Using a lookup array in
+blkcg_set_ioprio() to do the conversion will also be OK, although it will
+introduce an extra lookup each time when policy is not no-change. I don't have
+strong preference. If you are OK with lookup array in blkcg_set_ioprio(), will
+do it in v2.
 >
->> @@ -2064,9 +2074,13 @@ The numerical value that corresponds to each I/O priority class is as follows:
->>  
->>  The algorithm to set the I/O priority class for a request is as follows:
->>  
->> -- Translate the I/O priority class policy into a number.
->> -- Change the request I/O priority class into the maximum of the I/O priority
->> -  class policy number and the numerical I/O priority class.
->> +-- Translate the I/O priority class policy into an instruction and a number
->> +-- If the instruction is demotion, change the request I/O priority class
->> +-  into the maximum of the I/O priority class policy number and the numerical
->> +-  I/O priority class.
->> +-- If the instruction is promotion, change the request I/O priority class
->> +-  into the minimum of the I/O priority class policy number and the numerical
->> +-  I/O priority class.
->>  
-> Remove the excessive bullet list marker or the list above become paragraph
-> instead:
+> Thanks,
 >
-> ---- >8 ----
-> diff --git a/Documentation/admin-guide/cgroup-v2.rst b/Documentation/admin-guide/cgroup-v2.rst
-> index 55f9b579716564..c3f16386c47bdf 100644
-> --- a/Documentation/admin-guide/cgroup-v2.rst
-> +++ b/Documentation/admin-guide/cgroup-v2.rst
-> @@ -2074,12 +2074,12 @@ The numerical value that corresponds to each I/O priority class is as follows:
->  
->  The algorithm to set the I/O priority class for a request is as follows:
->  
-> --- Translate the I/O priority class policy into an instruction and a number
-> --- If the instruction is demotion, change the request I/O priority class
-> --  into the maximum of the I/O priority class policy number and the numerical
-> --  I/O priority class.
-> --- If the instruction is promotion, change the request I/O priority class
-> --  into the minimum of the I/O priority class policy number and the numerical
-> +- Translate the I/O priority class policy into an instruction-number pair.
-> +- If the instruction is demotion, change the request I/O priority class
-> +  into the maximum of the I/O priority class policy number and the numerical
-> +  I/O priority class.
-> +- If the instruction is promotion, change the request I/O priority class
-> +  into the minimum of the I/O priority class policy number and the numerical
->  -  I/O priority class.
->  
->  PID
+> Bart.
 >
-> Thanks.
-Thanks for your comments. Will fix in v2.
 >
+> .
 
