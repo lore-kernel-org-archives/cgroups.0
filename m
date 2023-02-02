@@ -1,145 +1,93 @@
-From: Qais Yousef <qyousef-wp2msK0BRk8tq7phqP6ubQ@public.gmane.org>
-Subject: Re: [PATCH v2] sched: cpuset: Don't rebuild sched domains on
- suspend-resume
-Date: Thu, 2 Feb 2023 19:20:34 +0000
-Message-ID: <20230202192018.acposzsasdu656a6@airbuntu>
-References: <20230120194822.962958-1-qyousef@layalina.io>
- <c4c2dec6-a72b-d675-fb42-be40e384ea2c@redhat.com>
- <20230125163546.pspvigh4groiwjy7@airbuntu>
- <45e0f8ea-d229-1ae7-5c12-7f0a64c6767a@redhat.com>
- <20230130130038.2qx3pkzut6ypqdub@airbuntu>
- <253ced33-c3a8-269f-90cc-b69e66b10370@redhat.com>
- <20230130194826.rxwk4ryvpyxemflm@airbuntu>
- <17537d7f-8734-2186-b27c-f39f3110ffe5@redhat.com>
- <20230131192223.jf3aydhafpmjg5z4@airbuntu>
- <6587af4f-5012-ef33-8e0e-d6c43d662e43@redhat.com>
+From: Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
+Subject: Re: [PATCH 1/2] cpuset: Fix cpuset_cpus_allowed() to not filter
+ offline CPUs
+Date: Thu, 2 Feb 2023 20:42:03 +0100
+Message-ID: <Y9wSC1Wxlm8CKKlN@hirez.programming.kicks-ass.net>
+References: <20230131221719.3176-1-will@kernel.org>
+ <20230131221719.3176-2-will@kernel.org>
+ <6b068916-5e1b-a943-1aad-554964d8b746@redhat.com>
+ <Y9t1sP/6nFht7RSN@hirez.programming.kicks-ass.net>
+ <d630ca53-71f0-c735-fbc3-e826479aa86b@redhat.com>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=layalina-io.20210112.gappssmtp.com; s=20210112;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=ojpftLu9RZ48oCgsI3CXWQo5/d0TOA3DD5XLCjKPEks=;
-        b=m9MP88UsHyvffDZ28DQtkYW8c3uBiWmuQ0KqgSBzQxFNpIhNi7+zCXDF5VihN5ipMS
-         vFrIhMAr08p9dNFciboRlVDxN1Y25rdEPPhDHMwy56bfCmemWzDrEiKlSC3vBIhZiU+c
-         AYwZfAIf6b3d7R87DcMgSgNDGLU0oqpR4lbupP/QOM84xdUNbM/ZJqSwIZEJOK5YctR8
-         rbR1Nql5tQHAhHiOf5mL5+hp7lTA49NBj32jvGQzHGB1r9f3s+2L/RuT0G0MXH3RiFLw
-         LGjvrq9QaA9dHn3Lm+jZKJFQzfHeGkgBFNyLvWtVTLUEeq04jrbylnkDkac2AzB3DGhR
-         m+RQ==
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
+        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=eKs4vAUwEv0arCZAQ6y5NgakMpLZsicc4cD1nO/mnYw=; b=I2dAg18TWwn0J9HsHUU4oS/mwI
+        ZIg0D78vzxqetQTkb+D+GnPnsU+n84veLlmahHdfkrLFyYyvAtBNwpAmIP2jSuGeZuJZlxs8yyvCI
+        wzU+QRCsATbApLYTsE9fOUHlWPbYtiGA3vQl4tYW4tVqLLq9nN1Lqqr4ugR3TRTP1xUs7bk1VIUad
+        o3fe+JORg8EF9KEtmOdw4YOx10+VeCTbdsJVmTnM/tFlFpHXdWnhaNaWTKIOcKuIAZvlicxrcejVn
+        qMUMNBzbZt/GbcUmKToJBycax+vU24XD41FR+VRzgEXO3XX/13Tlu7d4IpuIjsTkRyx5YwtLL4TQF
+        S5ItgR+w==;
 Content-Disposition: inline
-In-Reply-To: <6587af4f-5012-ef33-8e0e-d6c43d662e43-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+In-Reply-To: <d630ca53-71f0-c735-fbc3-e826479aa86b-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Cc: Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Ingo Molnar <mingo-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Juri Lelli <juri.lelli-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Steven Rostedt <rostedt-nx8X9YLhiw1AfugRpC6u6w@public.gmane.org>, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, luca.abeni-5rdYK369eBLQB0XuIGIEkQ@public.gmane.org, claudio-YOzL5CV4y4YG1A2ADO40+w@public.gmane.org, tommaso.cucinotta-5rdYK369eBLQB0XuIGIEkQ@public.gmane.org, bristot-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, mathieu.poirier-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org, Dietmar Eggemann <dietmar.eggemann-5wv7dgnIgG8@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Vincent Guittot <vincent.guittot-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, Wei Wang <wvw-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Rick Yiu <rickyiu-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Quentin Perret <qperret-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Cc: Will Deacon <will-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-z5hGa2qSFaRBDgjK7y7TUQ@public.gmane.org, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On 01/31/23 14:33, Waiman Long wrote:
+On Thu, Feb 02, 2023 at 11:06:51AM -0500, Waiman Long wrote:
+
+> After taking a close look at the patch, my understanding of what it is doing
+> is as follows:
 > 
-> On 1/31/23 14:22, Qais Yousef wrote:
-> > On 01/30/23 14:57, Waiman Long wrote:
-> > > On 1/30/23 14:48, Qais Yousef wrote:
-> > > > On 01/30/23 11:29, Waiman Long wrote:
-> > > > > On 1/30/23 08:00, Qais Yousef wrote:
-> > > > > 
-> > > > >           just skip the call here if the condition is right? Like
-> > > > > 
-> > > > >                   /* rebuild sched domains if cpus_allowed has changed */
-> > > > >                   if (cpus_updated || (force_rebuild && !cpuhp_tasks_frozen)) {
-> > > > >                           force_rebuild = false;
-> > > > >                           rebuild_sched_domains();
-> > > > >                   }
-> > > > > 
-> > > > >           Still, we will need to confirm that cpuhp_tasks_frozen will be cleared
-> > > > >           outside of the suspend/resume cycle.
-> > > > > 
-> > > > >       I think it's fine to use this variable from the cpuhp callback context only.
-> > > > >       Which I think this cpuset workfn is considered an extension of.
-> > > > > 
-> > > > >       But you're right, I can't use cpuhp_tasks_frozen directly in
-> > > > >       rebuild_root_domains() as I did in v1 because it doesn't get cleared after
-> > > > >       calling the last _cpu_up().
-> > > > > 
-> > > > > That is what I suspect. So we can't use that cpuhp_tasks_frozen variable here
-> > > > > in cpuset.
-> > > > > 
-> > > > >        force_rebuild will only be set after the last cpu
-> > > > >       is brought online though - so this should happen once at the end.
-> > > > > 
-> > > > > Perhaps you can add another tracking variable for detecting if suspend/resume
-> > > > > is in progress.
-> > > > I think cpuhp_tasks_frozen is meant for that. All users who cared so far
-> > > > belonged to the cpuhp callback. I think reading it from cpuset_hotplug_workfn()
-> > > > is fine too as this function will only run as a consequence of the cpuhp
-> > > > callback AFAICS. cpuset_cpu_active() takes care of not forcing a rebuild of
-> > > > sched_domains until the last cpu becomes active - so the part of it being done
-> > > > once at the end at resume is handled too.
-> > > Well we will have to add code to clear cpuhp_tasks_frozen at the end of
-> > > resume then. We don't want to affect other callers unless we are sure that
-> > > it won't affect them.
-> > Actually I think since the cpuset_hotplug_workfn() is called later, there's
-> > a chance to race with another cpuhp operation just after resume.
-> > 
-> > Anyway. I think we don't have to use this flag. But we'd have to better distill
-> > the reasons of why we force_rebuild.
-> > 
-> > Your 2 new users are tripping me so far - do they handle errors where the shape
-> > of cpuset changes? If yes, then we must take dl accounting update into
-> > consideration for these errors.
-> The 2 new users is for the cpuset cpu partition which is used to create a
-> secondary scheduling domain and hence have to call rebuilds_sched_domains()
-> to set it up. Those should not be used that frequently.
-
-Okay, thanks. So honouring these looks important, unlike the force_rebuild on
-suspend/resume.
-
+> v2: cpus_allowed will not be affected by hotplug. So the new
+> cpuset_cpus_allowed() will return effective_cpus + offline cpus that should
+> have been part of effective_cpus if online before masking it with allowable
+> cpus and then go up the cpuset hierarchy if necessary.
 > 
-> > 
-> > Juri, I'd still would appreciate a confirmation from you that I'm not
-> > understanding things completely wrong.
-> > 
-> > > > It's just rebuild_sched_domains() will always assume it needs to clear and
-> > > > rebuild deadline accounting - which is not true for suspend/resume case. But
-> > > > now looking at other users of rebuild_sched_domains(), others might be getting
-> > > > the hit too. For example rebuild_sched_domains_locked() is called on
-> > > > update_relax_domain_level() which AFAIU should not impact dl accounting.
-> > > > 
-> > > > FWIW, I did capture a worst case scenario of 21ms because of
-> > > > rebuild_root_domains().
-> > > > 
-> > > > /me thinks rebuild_root_domains() is a misleading name too as it just fixes
-> > > > dl accounting but not rebuild the rd itself.
-> > > > 
-> > > > What makes sense to me now is to pass whether dl accounting requires updating
-> > > > to rebuild_sched_domains() as an arg so that the caller can decide whether the
-> > > > reason can affect dl accounting.
-> > > > 
-> > > > Or maybe pull rebuild_root_domains() out of the chain and let the caller call
-> > > > it directly. And probably rename it to update_do_rd_accounting() or something.
-> > > > 
-> > > > I'll continue to dig more..
-> > > Looking forward to see that.
-> > Another thought I had is maybe worth trying to optimize the rebuild root domain
-> > process. Interestingly in my system there are no dl tasks but
-> > 
-> > 	rebuilds_sched_domains()
-> > 	  cpuset_for_each_descendant_pre()
-> > 	    update_tasks_root_domain()
-> > 	      css_task_iter_next()
-> > 	        dl_add_task_root_domain()
-> > 
-> > seems to be going through every task in the hierarchy anyway which would
-> > explain the slow down. We can have special variants to iterate through
-> > hierarchies that ever seen a dl task attached to them and a special variant to
-> > iterate through dl tasks only in a css - but I'm not sure if I'm brave enough
-> > to go down this rabbit hole :D
+> v1: cpus_allowed is equivalent to v2 effective_cpus. It starts at the
+> current cpuset and move up the hierarchy if necessary to find a cpuset that
+> have at least one allowable cpu.
 > 
-> Yes, it seems like we have to check every tasks in the system to see if they
-> are dl tasks. It can be expensive if there are a large number of tasks.
-> Maybe we should track the # of dl tasks in each cgroup and skip this
-> operation if there is none.
+> First of all, it does not take into account of the v2 partition feature that
+> may cause it to produce incorrect result if partition is enabled somewhere.
 
-Yep, would be nice to have, hehe.
+How so? For a partition the cpus_allowed mask should be the parition
+CPUs. The only magical bit about partitions is that any one CPU cannot
+belong to two partitions and load-balancing is split.
 
+> Secondly, I don't see any benefit other than having some additional offline
+> cpu available in a task's cpumask which the scheduler will ignore anyway.
 
-Cheers
+Those CPUs can come online again -- you're *again* dismissing the true
+bug :/
+
+If you filter out the offline CPUs at sched_setaffinity() time, you
+forever lose those CPUs, the task will never again move to those CPUs,
+even if they do come online after.
+
+It is really simple to reproduce this:
+
+ - boot machine
+ - offline all CPUs except one
+ - taskset -p ffffffff $$
+ - online all CPUs
+
+and observe your shell (and all its decendants) being stuck to the one
+CPU. Do the same thing on a CPUSET=n build and note the difference (you
+retain the full mask).
+
+> v2 is able to recover a previously offlined cpu. So we don't gain any
+> net benefit other than the going up the cpuset hierarchy part.
+
+Only for !root tasks. Not even v2 will re-set the affinity of root tasks
+afaict.
+
+> For v1, I agree we should go up the cpuset hierarchy to find a usable
+> cpuset. Instead of introducing such a complexity in cpuset_cpus_allowed(),
+> my current preference is to do the hierarchy climbing part in an enhanced
+> cpuset_cpus_allowed_fallback() after an initial failure of
+> cpuset_cpus_allowed(). That will be easier to understand than having such
+> complexity and overhead in cpuset_cpus_allowed() alone.
+> 
+> I will work on a patchset to do that as a counter offer.
+
+We will need a small and simple patch for /urgent, or I will need to
+revert all your patches -- your call.
+
+I also don't tihnk you fully appreciate the ramifications of
+task_cpu_possible_mask(), cpuset currently gets that quite wrong.
+
