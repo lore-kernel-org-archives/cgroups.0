@@ -1,75 +1,61 @@
-From: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH 1/2] cpuset: Fix cpuset_cpus_allowed() to not filter
- offline CPUs
-Date: Thu, 2 Feb 2023 11:06:51 -0500
-Message-ID: <d630ca53-71f0-c735-fbc3-e826479aa86b@redhat.com>
-References: <20230131221719.3176-1-will@kernel.org>
- <20230131221719.3176-2-will@kernel.org>
- <6b068916-5e1b-a943-1aad-554964d8b746@redhat.com>
- <Y9t1sP/6nFht7RSN@hirez.programming.kicks-ass.net>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH 05/15] blk-cgroup: store a gendisk to throttle in struct
+ task_struct
+Date: Thu, 2 Feb 2023 07:57:46 -1000
+Message-ID: <Y9v5mqqd8tVy67KJ@slm.duckdns.org>
+References: <20230124065716.152286-1-hch@lst.de>
+ <20230124065716.152286-6-hch@lst.de>
+ <Y9Rg0GuNAmJPlDri@slm.duckdns.org>
+ <20230201080635.GA8112@lst.de>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1675354020;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=K7phcfiE83fVwz5I8bWRnbFjaiLhRCsY0h7b3g24mK8=;
-        b=AW496yp2glKYX90OUYaHtuuGXVy+pO2vCOPu3U/eqrxBJb/1aifyPa4E2eT6Nsibj/wGAA
-        TWO9tljCuFdD+8dgGMhVlf47CHsWUTZPvqhiTGEDGcYLqJqqnpxCw64sCDaG8pYDG3ukbP
-        mniapK6/BXwr1Ak/skk4rJvzLu22WuU=
-Content-Language: en-US
-In-Reply-To: <Y9t1sP/6nFht7RSN-Nxj+rRp3nVydTX5a5knrm8zTDFooKrT+cvkQGrU6aU0@public.gmane.org>
+Return-path: <linux-block-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:sender:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=J868v/GWsw/sdOuEih4FZi6MVpQ5U6Xfy4+ZzeGKSSY=;
+        b=WnuM3wG3BnaRK/PHa4g1RIcgwiErDE8gggba3If8Q8GnilHU08DD31ANGbVa8Q6KCs
+         vbb6XzZNI9axv+/+M7kiweOTOm6aY901RBHzczpV0ay+u0bh/1uqFOqwhZALoT66eDWG
+         YrA138bUs+3/EjIQjIogajqW5bzCGHwfqLHtTSZvjTAWoklFC919icaurVy9VVRgYg+L
+         AcgkxPk9d23q3MbUyEkY0qQDegJobtaT46ivyBih+y0Kcj/z7mZi6fsMUigzgSrosMlW
+         coCAfkX5CSUEdJUafUnEioT3kNqhN6X1exwcHtKqyQUd+dQBVjizzSkIEAY9cFxmPAXN
+         B0PQ==
+Sender: Tejun Heo <htejun@gmail.com>
+Content-Disposition: inline
+In-Reply-To: <20230201080635.GA8112@lst.de>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"; format="flowed"
-To: Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
-Cc: Will Deacon <will-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-z5hGa2qSFaRBDgjK7y7TUQ@public.gmane.org, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Christoph Hellwig <hch@lst.de>
+Cc: Jens Axboe <axboe@kernel.dk>, Josef Bacik <josef@toxicpanda.com>, linux-block@vger.kernel.org, cgroups@vger.kernel.org, Andreas Herrmann <aherrmann@suse.de>
 
-On 2/2/23 03:34, Peter Zijlstra wrote:
-> On Tue, Jan 31, 2023 at 11:14:27PM -0500, Waiman Long wrote:
->
->> A major concern I have is the overhead of creating a poor man version of v2
->> cpus_allowed. This issue can be worked around even for cpuset v1 if it is
->> mounted with the cpuset_v2_mode option to behave more like v2 in its cpumask
->> handling. Alternatively we may be able to provide a config option to make
->> this the default for v1 without the special mount option, if necessary.
-> It is equally broken for v2, it masks against effective_cpus. Not to
-> mention it explicitly starts with cpu_online_mask.
+Sorry about late reply.
 
-After taking a close look at the patch, my understanding of what it is 
-doing is as follows:
+On Wed, Feb 01, 2023 at 09:06:35AM +0100, Christoph Hellwig wrote:
+> On Fri, Jan 27, 2023 at 01:40:00PM -1000, Tejun Heo wrote:
+> > So, we're shifting the dead test from schedule to the actual throttle path,
+> > which makes sense but I think this should at least be mentioned in the
+> > description if not put in its own patch.
+> 
+> That's what I tried to say with:
+> 
+> "Move the check for the dead disk to the latest place now that is is
+>  unbundled from the reference grab."
+> 
+> what else would you want me to write?
 
-v2: cpus_allowed will not be affected by hotplug. So the new 
-cpuset_cpus_allowed() will return effective_cpus + offline cpus that 
-should have been part of effective_cpus if online before masking it with 
-allowable cpus and then go up the cpuset hierarchy if necessary.
+It'd be better if the paragraph actually said where that change is being
+made along with why and whether it causes any behavior difference.
 
-v1: cpus_allowed is equivalent to v2 effective_cpus. It starts at the 
-current cpuset and move up the hierarchy if necessary to find a cpuset 
-that have at least one allowable cpu.
+This seems safe to me but I can't tell why it's being moved. Maybe it's
+better because that's "latest" but that's a lot hanging on that single word.
+If this is better because we're testing it later instead of to accomodate
+other changes being made, this should be a separate patch, right? It's a
+subtle behavior change which is buried with a bunch of other mechanical
+changes.
 
-First of all, it does not take into account of the v2 partition feature 
-that may cause it to produce incorrect result if partition is enabled 
-somewhere. Secondly, I don't see any benefit other than having some 
-additional offline cpu available in a task's cpumask which the scheduler 
-will ignore anyway. v2 is able to recover a previously offlined cpu. So 
-we don't gain any net benefit other than the going up the cpuset 
-hierarchy part.
+Thanks.
 
-For v1, I agree we should go up the cpuset hierarchy to find a usable 
-cpuset. Instead of introducing such a complexity in 
-cpuset_cpus_allowed(), my current preference is to do the hierarchy 
-climbing part in an enhanced cpuset_cpus_allowed_fallback() after an 
-initial failure of cpuset_cpus_allowed(). That will be easier to 
-understand than having such complexity and overhead in 
-cpuset_cpus_allowed() alone.
-
-I will work on a patchset to do that as a counter offer.
-
-Cheers,
-Longman
-
-
-
+-- 
+tejun
