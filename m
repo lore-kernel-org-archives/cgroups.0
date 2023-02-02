@@ -1,53 +1,111 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [RFC 10/12] cgroup/drm: Introduce weight based drm cgroup control
-Date: Thu, 2 Feb 2023 10:00:14 -1000
-Message-ID: <Y9wWTspETnYYodDc@slm.duckdns.org>
-References: <20230112165609.1083270-1-tvrtko.ursulin@linux.intel.com>
- <20230112165609.1083270-11-tvrtko.ursulin@linux.intel.com>
- <Y9R2N8sl+7f8Zacv@slm.duckdns.org>
- <27b7882e-1201-b173-6f56-9ececb5780e8@linux.intel.com>
+From: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH 1/2] cpuset: Fix cpuset_cpus_allowed() to not filter
+ offline CPUs
+Date: Thu, 2 Feb 2023 15:46:02 -0500
+Message-ID: <2bc730db-704d-080b-6869-02f6d0035fad@redhat.com>
+References: <20230131221719.3176-1-will@kernel.org>
+ <20230131221719.3176-2-will@kernel.org>
+ <6b068916-5e1b-a943-1aad-554964d8b746@redhat.com>
+ <Y9t1sP/6nFht7RSN@hirez.programming.kicks-ass.net>
+ <d630ca53-71f0-c735-fbc3-e826479aa86b@redhat.com>
+ <Y9wSC1Wxlm8CKKlN@hirez.programming.kicks-ass.net>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:sender:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=KTEXTLdEtQvrB7aVFpBYAbH4Vf/ihPabgDflRw+s72o=;
-        b=CuJhJ9UTVuPY/jraolwLg+hw6h/pKxRy1SLRd/hEO8GnE3cDoiPidADrjRGw4Tat7E
-         jsPj+B5/JWPEzkR1ov2cP4QLjkGjelgudaCyhdc4WTw+8Tb5Oonu+M6rmd85VoAp+09n
-         p29yqXXOCqF9Y85uU7Om7KJ2ttMYgVWNGXZB9YxNzDvxDzbpksNHc1G+p86CxKdlN0Ty
-         +rwXXExzAQPU5AL4D29Etk7FWGP466Or/Daf4dCE9QSEqudpR8qq8SpggqjYy48/R5Nd
-         XYVHbi+FsHBVz+Wv+DIRXgY0DRGWK3xQsCPpOzfidwB7nrd2hKVFHAH562MKRavuNJmY
-         xtXQ==
-Sender: Tejun Heo <htejun-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <27b7882e-1201-b173-6f56-9ececb5780e8-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
-List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Tvrtko Ursulin <tvrtko.ursulin-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
-Cc: Intel-gfx-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org, dri-devel-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Dave Airlie <airlied-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Daniel Vetter <daniel.vetter-/w4YWyX8dFk@public.gmane.org>, Rob Clark <robdclark-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>, =?iso-8859-1?Q?St=E9phane?= Marchesin <marcheu-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>, "T . J . Mercier" <tjmercier-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Kenny.Ho-5C7GfCeVMHo@public.gmane.org, Christian =?iso-8859-1?Q?K=F6nig?= <christian.koenig-5C7GfCeVMHo@public.gmane.org>, Brian Welty <brian.welty-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Tvrtko Ursulin <tvrtko.ursulin-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1675370766;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=aQR1X76WMCq90MTRO1i7qJ75QChOwEsWK87cj0V0RuA=;
+        b=a+iSWoWqJ3OB7PRyhiVFJXxV0bl/xHZafgryN+aATc0sWGwsdqXnieHYxvLYLu6oG/zWK1
+        xiLx0VAU9inpjbEhLEF7GJvJ8Wl9w2sGNB0WqFU5SNwsrBb5znnAg+nOfUaHuxsAThK4zQ
+        Q9Qw1ZhNyKFPghGgm223emqzWp2SIVQ=
+Content-Language: en-US
+In-Reply-To: <Y9wSC1Wxlm8CKKlN-Nxj+rRp3nVydTX5a5knrm8zTDFooKrT+cvkQGrU6aU0@public.gmane.org>
+List-ID: <cgroups.vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"; format="flowed"
+To: Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: Will Deacon <will-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-z5hGa2qSFaRBDgjK7y7TUQ@public.gmane.org, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-Hello,
+On 2/2/23 14:42, Peter Zijlstra wrote:
+> On Thu, Feb 02, 2023 at 11:06:51AM -0500, Waiman Long wrote:
+>
+>> After taking a close look at the patch, my understanding of what it is doing
+>> is as follows:
+>>
+>> v2: cpus_allowed will not be affected by hotplug. So the new
+>> cpuset_cpus_allowed() will return effective_cpus + offline cpus that should
+>> have been part of effective_cpus if online before masking it with allowable
+>> cpus and then go up the cpuset hierarchy if necessary.
+>>
+>> v1: cpus_allowed is equivalent to v2 effective_cpus. It starts at the
+>> current cpuset and move up the hierarchy if necessary to find a cpuset that
+>> have at least one allowable cpu.
+>>
+>> First of all, it does not take into account of the v2 partition feature that
+>> may cause it to produce incorrect result if partition is enabled somewhere.
+> How so? For a partition the cpus_allowed mask should be the parition
+> CPUs. The only magical bit about partitions is that any one CPU cannot
+> belong to two partitions and load-balancing is split.
+There can be a child partition underneath it that uses up some of the 
+cpus in cpus_allowed mask. So if you cascading up the cpuset tree from 
+another child, your code will wrongly include those cpus that are 
+dedicated to the other child partition.
+>
+>> Secondly, I don't see any benefit other than having some additional offline
+>> cpu available in a task's cpumask which the scheduler will ignore anyway.
+> Those CPUs can come online again -- you're *again* dismissing the true
+> bug :/
+>
+> If you filter out the offline CPUs at sched_setaffinity() time, you
+> forever lose those CPUs, the task will never again move to those CPUs,
+> even if they do come online after.
+>
+> It is really simple to reproduce this:
+>
+>   - boot machine
+>   - offline all CPUs except one
+>   - taskset -p ffffffff $$
+>   - online all CPUs
+>
+> and observe your shell (and all its decendants) being stuck to the one
+> CPU. Do the same thing on a CPUSET=n build and note the difference (you
+> retain the full mask).
 
-On Thu, Feb 02, 2023 at 02:26:06PM +0000, Tvrtko Ursulin wrote:
-> When you say active/inactive - to what you are referring in the cgroup
-> world? Offline/online? For those my understanding was offline was a
-> temporary state while css is getting destroyed.
+With the new sched_setaffinity(), the original mask should be stored in 
+user_cpus_ptr. The cpuset code is supposed to call 
+set_cpus_allowed_ptr() which then set the mask correctly. I will run 
+your test and figure out why it does not work as I would have expected.
 
-Oh, it's just based on activity. So, for example, iocost puts a cgroup on
-its active list which is canned periodically when an IO is issued from an
-inactive cgroup. If an active cgroup doesn't have any activity between two
-scans, it becomes inactive and dropped from the list. drm can prolly use the
-same approach?
 
-> Also, I am really postponing implementing those changes until I hear at
-> least something from the DRM community.
+>
+>> v2 is able to recover a previously offlined cpu. So we don't gain any
+>> net benefit other than the going up the cpuset hierarchy part.
+> Only for !root tasks. Not even v2 will re-set the affinity of root tasks
+> afaict.
+>
+>> For v1, I agree we should go up the cpuset hierarchy to find a usable
+>> cpuset. Instead of introducing such a complexity in cpuset_cpus_allowed(),
+>> my current preference is to do the hierarchy climbing part in an enhanced
+>> cpuset_cpus_allowed_fallback() after an initial failure of
+>> cpuset_cpus_allowed(). That will be easier to understand than having such
+>> complexity and overhead in cpuset_cpus_allowed() alone.
+>>
+>> I will work on a patchset to do that as a counter offer.
+> We will need a small and simple patch for /urgent, or I will need to
+> revert all your patches -- your call.
+>
+> I also don't tihnk you fully appreciate the ramifications of
+> task_cpu_possible_mask(), cpuset currently gets that quite wrong.
 
-Yeah, that sounds like a good idea.
+OK, I don't realize the urgency of that. If it is that urgent, I will 
+have no objection to get it in for now. We can improve it later on. So 
+are you planning to get it into the current 6.2 rc or 6.3?
 
-Thanks.
+Tejun, are you OK with that as you are the cgroup maintainer?
 
--- 
-tejun
+Cheers,
+Longman
+
