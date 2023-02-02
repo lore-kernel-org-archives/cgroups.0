@@ -1,69 +1,145 @@
-From: James Bottomley <jejb@linux.ibm.com>
-Subject: Re: [dm-devel] [PATCH 0/9] Documentation: correct lots of spelling
- errors (series 2)
-Date: Thu, 02 Feb 2023 13:54:33 -0500
-Message-ID: <ac6270fe1dba1b3398dc2b830cf9bda5c89a7a3d.camel@linux.ibm.com>
-References: <20230129231053.20863-1-rdunlap@infradead.org>
-         <875yckvt1b.fsf@meer.lwn.net>
-         <a2c560bb-3b5c-ca56-c5c2-93081999281d@infradead.org>
-         <8540c721-6bb9-3542-d9bd-940b59d3a7a4@acm.org>
-         <87o7qbvra9.fsf@meer.lwn.net>
-Reply-To: jejb@linux.ibm.com
+From: Qais Yousef <qyousef-wp2msK0BRk8tq7phqP6ubQ@public.gmane.org>
+Subject: Re: [PATCH v2] sched: cpuset: Don't rebuild sched domains on
+ suspend-resume
+Date: Thu, 2 Feb 2023 19:20:34 +0000
+Message-ID: <20230202192018.acposzsasdu656a6@airbuntu>
+References: <20230120194822.962958-1-qyousef@layalina.io>
+ <c4c2dec6-a72b-d675-fb42-be40e384ea2c@redhat.com>
+ <20230125163546.pspvigh4groiwjy7@airbuntu>
+ <45e0f8ea-d229-1ae7-5c12-7f0a64c6767a@redhat.com>
+ <20230130130038.2qx3pkzut6ypqdub@airbuntu>
+ <253ced33-c3a8-269f-90cc-b69e66b10370@redhat.com>
+ <20230130194826.rxwk4ryvpyxemflm@airbuntu>
+ <17537d7f-8734-2186-b27c-f39f3110ffe5@redhat.com>
+ <20230131192223.jf3aydhafpmjg5z4@airbuntu>
+ <6587af4f-5012-ef33-8e0e-d6c43d662e43@redhat.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-doc-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=message-id : subject :
- from : reply-to : to : cc : date : in-reply-to : references : content-type
- : mime-version : content-transfer-encoding; s=pp1;
- bh=YS8OxqX6Xa4ReQhYwflKc5aSv/9TMKB2gRMMZTEJZEM=;
- b=CFDCGulP3P9Xe+2FAp6xgIgRdBQw74UWN3jgGISv3dFzGsARHrCHm0mKBX/ELGDgttez
- O2meJewgXXM7+teNdX1OhLZrAIM2aVkDVTHAidhbq037PYHO8U582Sv4uDmN9nO7C+H0
- Ct6DdO3veQD6OKh6pBbNXbO7fmZB2GLhEks2HUnbj9M40HZLiGUM/0/PZYRpNZFTZABc
- KUw69DyK4MX540GbhWsmE2ikKCZ2qfXEtoCa6lzKc4HwYnA/+A4P1qpvOVXru7Rg7Eu5
- s6n0B3YDRpfXh9P9tepOpIUV6KxgO+ZDzTxLDiaQq2Q5zExlYDSpXCevnb+PR2ZAq65+ Hg== 
-In-Reply-To: <87o7qbvra9.fsf@meer.lwn.net>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=layalina-io.20210112.gappssmtp.com; s=20210112;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=ojpftLu9RZ48oCgsI3CXWQo5/d0TOA3DD5XLCjKPEks=;
+        b=m9MP88UsHyvffDZ28DQtkYW8c3uBiWmuQ0KqgSBzQxFNpIhNi7+zCXDF5VihN5ipMS
+         vFrIhMAr08p9dNFciboRlVDxN1Y25rdEPPhDHMwy56bfCmemWzDrEiKlSC3vBIhZiU+c
+         AYwZfAIf6b3d7R87DcMgSgNDGLU0oqpR4lbupP/QOM84xdUNbM/ZJqSwIZEJOK5YctR8
+         rbR1Nql5tQHAhHiOf5mL5+hp7lTA49NBj32jvGQzHGB1r9f3s+2L/RuT0G0MXH3RiFLw
+         LGjvrq9QaA9dHn3Lm+jZKJFQzfHeGkgBFNyLvWtVTLUEeq04jrbylnkDkac2AzB3DGhR
+         m+RQ==
+Content-Disposition: inline
+In-Reply-To: <6587af4f-5012-ef33-8e0e-d6c43d662e43-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="utf-8"
-To: Jonathan Corbet <corbet@lwn.net>, Bart Van Assche <bvanassche@acm.org>, Randy Dunlap <rdunlap@infradead.org>, linux-kernel@vger.kernel.org
-Cc: nvdimm@lists.linux.dev, linux-doc@vger.kernel.org, Song Liu <song@kernel.org>, dm-devel@redhat.com, netdev@vger.kernel.org, Zefan Li <lizefan.x@bytedance.com>, sparclinux@vger.kernel.org, Neeraj Upadhyay <quic_neeraju@quicinc.com>, Alasdair Kergon <agk@redhat.com>, Dave Jiang <dave.jiang@intel.com>, linux-scsi@vger.kernel.org, Vishal Verma <vishal.l.verma@intel.com>, Jakub Kicinski <kuba@kernel.org>, Paolo Abeni <pabeni@redhat.com>, Guenter Roeck <linux@roeck-us.net>, linux-media@vger.kernel.org, Jean Delvare <jdelvare@suse.com>, "Paul E. McKenney" <paulmck@kernel.org>, Frederic Weisbecker <frederic@kernel.org>, Mike Snitzer <snitzer@kernel.org>, Josh Triplett <josh@joshtriplett.org>, linux-raid@vger.kernel.org, Tejun Heo <tj@kernel.org>, Jiri
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Cc: Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Ingo Molnar <mingo-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Juri Lelli <juri.lelli-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Steven Rostedt <rostedt-nx8X9YLhiw1AfugRpC6u6w@public.gmane.org>, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, luca.abeni-5rdYK369eBLQB0XuIGIEkQ@public.gmane.org, claudio-YOzL5CV4y4YG1A2ADO40+w@public.gmane.org, tommaso.cucinotta-5rdYK369eBLQB0XuIGIEkQ@public.gmane.org, bristot-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, mathieu.poirier-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org, Dietmar Eggemann <dietmar.eggemann-5wv7dgnIgG8@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Vincent Guittot <vincent.guittot-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, Wei Wang <wvw-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Rick Yiu <rickyiu-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Quentin Perret <qperret-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 
-On Thu, 2023-02-02 at 11:46 -0700, Jonathan Corbet wrote:
-> Bart Van Assche <bvanassche@acm.org> writes:
+On 01/31/23 14:33, Waiman Long wrote:
 > 
-> > On 2/2/23 10:33, Randy Dunlap wrote:
-> > > On 2/2/23 10:09, Jonathan Corbet wrote:
-> > > > Randy Dunlap <rdunlap@infradead.org> writes:
-> > > > >   [PATCH 6/9] Documentation: scsi/ChangeLog*: correct
-> > > > > spelling
-> > > > >   [PATCH 7/9] Documentation: scsi: correct spelling
-> > > > 
-> > > > I've left these for the SCSI folks for now.  Do we *really*
-> > > > want to be
-> > > > fixing spelling in ChangeLog files from almost 20 years ago?
-> > > 
-> > > That's why I made it a separate patch -- so the SCSI folks can
-> > > decide that...
+> On 1/31/23 14:22, Qais Yousef wrote:
+> > On 01/30/23 14:57, Waiman Long wrote:
+> > > On 1/30/23 14:48, Qais Yousef wrote:
+> > > > On 01/30/23 11:29, Waiman Long wrote:
+> > > > > On 1/30/23 08:00, Qais Yousef wrote:
+> > > > > 
+> > > > >           just skip the call here if the condition is right? Like
+> > > > > 
+> > > > >                   /* rebuild sched domains if cpus_allowed has changed */
+> > > > >                   if (cpus_updated || (force_rebuild && !cpuhp_tasks_frozen)) {
+> > > > >                           force_rebuild = false;
+> > > > >                           rebuild_sched_domains();
+> > > > >                   }
+> > > > > 
+> > > > >           Still, we will need to confirm that cpuhp_tasks_frozen will be cleared
+> > > > >           outside of the suspend/resume cycle.
+> > > > > 
+> > > > >       I think it's fine to use this variable from the cpuhp callback context only.
+> > > > >       Which I think this cpuset workfn is considered an extension of.
+> > > > > 
+> > > > >       But you're right, I can't use cpuhp_tasks_frozen directly in
+> > > > >       rebuild_root_domains() as I did in v1 because it doesn't get cleared after
+> > > > >       calling the last _cpu_up().
+> > > > > 
+> > > > > That is what I suspect. So we can't use that cpuhp_tasks_frozen variable here
+> > > > > in cpuset.
+> > > > > 
+> > > > >        force_rebuild will only be set after the last cpu
+> > > > >       is brought online though - so this should happen once at the end.
+> > > > > 
+> > > > > Perhaps you can add another tracking variable for detecting if suspend/resume
+> > > > > is in progress.
+> > > > I think cpuhp_tasks_frozen is meant for that. All users who cared so far
+> > > > belonged to the cpuhp callback. I think reading it from cpuset_hotplug_workfn()
+> > > > is fine too as this function will only run as a consequence of the cpuhp
+> > > > callback AFAICS. cpuset_cpu_active() takes care of not forcing a rebuild of
+> > > > sched_domains until the last cpu becomes active - so the part of it being done
+> > > > once at the end at resume is handled too.
+> > > Well we will have to add code to clear cpuhp_tasks_frozen at the end of
+> > > resume then. We don't want to affect other callers unless we are sure that
+> > > it won't affect them.
+> > Actually I think since the cpuset_hotplug_workfn() is called later, there's
+> > a chance to race with another cpuhp operation just after resume.
 > > 
-> > How about removing the Documentation/scsi/ChangeLog.* files? I'm
-> > not sure these changelogs are still useful since these duplicate
-> > information that is already available in the output of git log
-> > ${driver_directory}.
+> > Anyway. I think we don't have to use this flag. But we'd have to better distill
+> > the reasons of why we force_rebuild.
+> > 
+> > Your 2 new users are tripping me so far - do they handle errors where the shape
+> > of cpuset changes? If yes, then we must take dl accounting update into
+> > consideration for these errors.
+> The 2 new users is for the cpuset cpu partition which is used to create a
+> secondary scheduling domain and hence have to call rebuilds_sched_domains()
+> to set it up. Those should not be used that frequently.
+
+Okay, thanks. So honouring these looks important, unlike the force_rebuild on
+suspend/resume.
+
 > 
-> Actually, the information in those files mostly predates the git era,
-> so you won't find it that way.  I *still* question their value,
-> though...
+> > 
+> > Juri, I'd still would appreciate a confirmation from you that I'm not
+> > understanding things completely wrong.
+> > 
+> > > > It's just rebuild_sched_domains() will always assume it needs to clear and
+> > > > rebuild deadline accounting - which is not true for suspend/resume case. But
+> > > > now looking at other users of rebuild_sched_domains(), others might be getting
+> > > > the hit too. For example rebuild_sched_domains_locked() is called on
+> > > > update_relax_domain_level() which AFAIU should not impact dl accounting.
+> > > > 
+> > > > FWIW, I did capture a worst case scenario of 21ms because of
+> > > > rebuild_root_domains().
+> > > > 
+> > > > /me thinks rebuild_root_domains() is a misleading name too as it just fixes
+> > > > dl accounting but not rebuild the rd itself.
+> > > > 
+> > > > What makes sense to me now is to pass whether dl accounting requires updating
+> > > > to rebuild_sched_domains() as an arg so that the caller can decide whether the
+> > > > reason can affect dl accounting.
+> > > > 
+> > > > Or maybe pull rebuild_root_domains() out of the chain and let the caller call
+> > > > it directly. And probably rename it to update_do_rd_accounting() or something.
+> > > > 
+> > > > I'll continue to dig more..
+> > > Looking forward to see that.
+> > Another thought I had is maybe worth trying to optimize the rebuild root domain
+> > process. Interestingly in my system there are no dl tasks but
+> > 
+> > 	rebuilds_sched_domains()
+> > 	  cpuset_for_each_descendant_pre()
+> > 	    update_tasks_root_domain()
+> > 	      css_task_iter_next()
+> > 	        dl_add_task_root_domain()
+> > 
+> > seems to be going through every task in the hierarchy anyway which would
+> > explain the slow down. We can have special variants to iterate through
+> > hierarchies that ever seen a dl task attached to them and a special variant to
+> > iterate through dl tasks only in a css - but I'm not sure if I'm brave enough
+> > to go down this rabbit hole :D
+> 
+> Yes, it seems like we have to check every tasks in the system to see if they
+> are dl tasks. It can be expensive if there are a large number of tasks.
+> Maybe we should track the # of dl tasks in each cgroup and skip this
+> operation if there is none.
 
-In the pre-source control days they were the answer to the GPLv2
-Section 2 requirement to " carry prominent notices stating that you
-changed the files and the date of any change." 
-
-If you remove the files you may run afoul of the GPLv2 Section 1
-requirement to "keep intact all the notices that refer to this
-License".  Of course, nowadays we assume the source control does this
-for us, so people rarely think of these requirements, but for files
-that predate source control I think you need to consider the licence
-implications.
-
-James
+Yep, would be nice to have, hehe.
 
 
+Cheers
