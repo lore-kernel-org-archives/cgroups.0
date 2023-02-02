@@ -1,59 +1,52 @@
-From: Jonathan Corbet <corbet@lwn.net>
-Subject: Re: [PATCH 0/9] Documentation: correct lots of spelling errors
- (series 2)
-Date: Thu, 02 Feb 2023 11:09:04 -0700
-Message-ID: <875yckvt1b.fsf@meer.lwn.net>
-References: <20230129231053.20863-1-rdunlap@infradead.org>
+From: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH] mm: introduce entrance for root_mem_cgroup's current
+Date: Thu, 2 Feb 2023 10:24:08 -0800
+Message-ID: <CALvZod5E0s9Vu3wq-Fuvs9z=ViMADn3aNL0f56ELGmFzxKCtkg@mail.gmail.com>
+References: <1675312377-4782-1-git-send-email-zhaoyang.huang@unisoc.com> <Y9tz+0J9fw+Z+O+O@dhcp22.suse.cz>
 Mime-Version: 1.0
-Return-path: <linux-media-owner@vger.kernel.org>
-DKIM-Filter: OpenDKIM Filter v2.11.0 ms.lwn.net 48D347DE
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=lwn.net; s=20201203;
-        t=1675361345; bh=2+a4mZYwqT3vzf0UQzfkcA5CdDxOuo7YvzN9jr8nkig=;
-        h=From:To:Cc:Subject:In-Reply-To:References:Date:From;
-        b=gY7ULbf3et5D4Qc/CNx/w7sCxqXxX6fR0sNacSV7nefpdle702hp6si3iizN6qwiE
-         uEIY7Q78a9h2RN4xfonCmMXE/H1WHGv23zZbRY3a8TD9z3xCs5/ly7iH92i4XVhMfk
-         m1+3SrM+pmOm5qUcXvYL8szbXDpSICOPir4Ff+tNZ80bHoZS0uhfOu3aabBosNVFfP
-         7pgupe9C5u4Sz6v8uZtM64S9OiXXXwx07OTa5szwYHdV6XxaRnf+mq/MpKQwaSbzh0
-         jfCb5rfx6sWATpmne99lGmlwL/b8o+ggGmLTspO1j2VtBWLoL4M3uxU9erIgFeIYC3
-         b3TsgnsFP3UgQ==
-In-Reply-To: <20230129231053.20863-1-rdunlap@infradead.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20210112;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:from:to:cc:subject:date:message-id:reply-to;
+        bh=s9NS8aTMNXwzeLlthekcCZHp7SQir7/xZefiPP7egKI=;
+        b=ZPrIb7wo+lofZV5pa5YbET3hAij+R6gpmGf56bGzIiJJZm+b1Ydw+1BC5EDCg2BRow
+         DbYAkHwSC6cnMronH3NtmDtuswD6tOv1DfX+TKKrEx03PJQaXqg/IZx3QuurzljeH5mJ
+         Dhw7d+sAJ5ylmkLJZLxFcgRhg9vpP/91oQdt5ywhgqHdD47r4rU36XdbzTm25eOxOI1f
+         TjiMYRf3uyMJrt3faPsFxTFVo25AhVanE7TU8icH+qr8A38Aii6b39F4sPLQ0rIAhjka
+         bOy1FLkVCcegtisV0H4khc5iWpFJyjpX0m35PRB5Fvo9nUMDpO+FxWF5rxT5xj2++t1n
+         7qow==
+In-Reply-To: <Y9tz+0J9fw+Z+O+O-2MMpYkNvuYDjFM9bn6wA6Q@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Randy Dunlap <rdunlap@infradead.org>, linux-kernel@vger.kernel.org
-Cc: Randy Dunlap <rdunlap@infradead.org>, linux-doc@vger.kernel.org, Tejun Heo <tj@kernel.org>, Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, cgroups@vger.kernel.org, Alasdair Kergon <agk@redhat.com>, Mike Snitzer <snitzer@kernel.org>, dm-devel@redhat.com, Mauro Carvalho Chehab <mchehab@kernel.org>, linux-media@vger.kernel.org, linux-mm@kvack.org, Dan Williams <dan.j.williams@intel.com>, Vishal Verma <vishal.l.verma@intel.com>, Dave Jiang <dave.jiang@intel.com>, nvdimm@lists.linux.dev, Vinod Koul <vkoul@kernel.org>, dmaengine@vger.kernel.org, Song Liu <song@kernel.org>, linux-raid@vger.kernel.org, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, linux-usb@vger.kernel.org, Jean Delvare <jdelvare@suse.com>, Guenter Roeck <linux@roeck-us.net>, l
+To: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
+Cc: "zhaoyang.huang" <zhaoyang.huang-1tVvrHeaX6nQT0dZR+AlfA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Zhaoyang Huang <huangzhaoyang-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, ke.wang-1tVvrHeaX6nQT0dZR+AlfA@public.gmane.org
 
-Randy Dunlap <rdunlap@infradead.org> writes:
-
-> Maintainers of specific kernel subsystems are only Cc-ed on their
-> respective patches, not the entire series. [if all goes well]
+On Thu, Feb 2, 2023 at 12:27 AM Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org> wrote:
 >
-> These patches are based on linux-next-20230127.
+> On Thu 02-02-23 12:32:57, zhaoyang.huang wrote:
+> > From: Zhaoyang Huang <zhaoyang.huang-1tVvrHeaX6nQT0dZR+AlfA@public.gmane.org>
+> >
+> > Introducing memory.root_current for the memory charges on root_mem_cgroup.
+>
+> Charges are not currently accounted for the root memcg universally. See
+> try_charge which is used for all user space and skmem charges. I am not
+> 100% sure about objcg based accounting because there is no explicit
+> check for the root memcg but this might be hidden somewhere as well.
 
-So I've applied a bunch of these
+Yes in __get_obj_cgroup_from_memcg(). However the reason to use
+try_charge_memcg() to bypass root check was to avoid the race with
+reparenting. More details in c5c8b16b596e ("mm: memcontrol: fix
+root_mem_cgroup charging").
 
->  [PATCH 1/9] Documentation: admin-guide: correct spelling
->  [PATCH 2/9] Documentation: driver-api: correct spelling
+>
+> That means that the patch as is doesn't really provide and usable value.
+> The root exemption has been removed in the past but that has been
+> reverted due to a regression. See ce00a967377b ("mm: memcontrol: revert
+> use of root_mem_cgroup res_counter") for more.
+>
 
-applied
-
->  [PATCH 3/9] Documentation: hwmon: correct spelling
->  [PATCH 4/9] Documentation: networking: correct spelling
->  [PATCH 5/9] Documentation: RCU: correct spelling
-
-These have been taken up elsewhere
-
->  [PATCH 6/9] Documentation: scsi/ChangeLog*: correct spelling
->  [PATCH 7/9] Documentation: scsi: correct spelling
-
-I've left these for the SCSI folks for now.  Do we *really* want to be
-fixing spelling in ChangeLog files from almost 20 years ago?
-
->  [PATCH 8/9] Documentation: sparc: correct spelling
->  [PATCH 9/9] Documentation: userspace-api: correct spelling
-
-Applied.
-
-Thanks,
-
-jon
+One advantage I can see is if someone is looking for usage for all top
+containers (alive or zombie) but I wanted to know if that was the real
+motivation behind the patch.
