@@ -1,72 +1,38 @@
-From: Peter Zijlstra <peterz@infradead.org>
-Subject: Re: [PATCH 1/2] cpuset: Fix cpuset_cpus_allowed() to not filter
- offline CPUs
-Date: Wed, 1 Feb 2023 22:10:46 +0100
-Message-ID: <Y9rVVldS19oyIZ+g@hirez.programming.kicks-ass.net>
-References: <20230131221719.3176-1-will@kernel.org>
- <20230131221719.3176-2-will@kernel.org>
- <6b068916-5e1b-a943-1aad-554964d8b746@redhat.com>
- <Y9otWX+MGOLDKU6t@hirez.programming.kicks-ass.net>
- <83e53632-27ed-8dde-84f4-68c6776d6da8@redhat.com>
- <a892d340-ea99-1562-0e70-176f02f195c2@redhat.com>
+From: Yu Kuai <yukuai1@huaweicloud.com>
+Subject: Re: [PATCH -next] block, bfq: cleanup 'bfqg->online'
+Date: Thu, 2 Feb 2023 09:16:52 +0800
+Message-ID: <76f00d0a-b8d9-ab04-329c-3ba33d12d884@huaweicloud.com>
+References: <20230201120609.4151432-1-yukuai1@huaweicloud.com>
+ <20230201131037.6frw2kpc54k4sx7a@quack3>
 Mime-Version: 1.0
 Content-Transfer-Encoding: quoted-printable
-Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=desiato.20200630; h=In-Reply-To:Content-Transfer-Encoding:
-        Content-Type:MIME-Version:References:Message-ID:Subject:Cc:To:From:Date:
-        Sender:Reply-To:Content-ID:Content-Description;
-        bh=eQ62sI2LaH5K93mDteIKKvfXZlAXtr2Rm8TFfldgNso=; b=i5XQu02i0rUZkkaMlzRQPLcq6n
-        c15AesJp084H/0wYTlUcdNMnfX6McXTm88rbMrGAIO1WhNY8ud/aPxhaWn2bmBd6Dal/a/8qATMZ9
-        60qWxuyRtROY/s6+MWvfT0Y7hSCdyaxN1mCwWG5+KgS61otXliI5GJpPoAN2JM3CeC2IgQpHR5Il3
-        65uMjyrak7qWnWZ5I+2ajEJ72rOS/BWQLnM4PmzzccnZokOIjeu5hIXVsUL8sRumyVLPPwhDKxn/h
-        6egXjLvlI67XNJIDJc21H787lqbAel0wYy6PzotdyneH9zZA/gIG+zBCPTpWCdK9F+65Q9p7yQyBr
-        5MgXYw7w==;
-Content-Disposition: inline
-In-Reply-To: <a892d340-ea99-1562-0e70-176f02f195c2@redhat.com>
+Return-path: <linux-block-owner@vger.kernel.org>
+In-Reply-To: <20230201131037.6frw2kpc54k4sx7a@quack3>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="iso-8859-1"
-To: Waiman Long <longman@redhat.com>
-Cc: Will Deacon <will@kernel.org>, linux-kernel@vger.kernel.org, kernel-team@android.com, Zefan Li <lizefan.x@bytedance.com>, Tejun Heo <tj@kernel.org>, Johannes Weiner <hannes@cmpxchg.org>, cgroups@vger.kernel.org
+Content-Type: text/plain; charset="iso-8859-1"; format="flowed"
+To: Jan Kara <jack@suse.cz>, Yu Kuai <yukuai1@huaweicloud.com>
+Cc: tj@kernel.org, josef@toxicpanda.com, axboe@kernel.dk, paolo.valente@linaro.org, cgroups@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, yi.zhang@huawei.com, yangerkun@huawei.com, "yukuai (C)" <yukuai3@huawei.com>
 
-On Wed, Feb 01, 2023 at 01:46:11PM -0500, Waiman Long wrote:
+Hi, Jan!
 
-> Note that using cpus_allowed directly in cgroup v2 may not be right becau=
-se
-> cpus_allowed may have no relationship to effective_cpus at all in some
-> cases, e.g.
+=D4=DA 2023/02/01 21:10, Jan Kara =D0=B4=B5=C0:
+> On Wed 01-02-23 20:06:09, Yu Kuai wrote:
+>> From: Yu Kuai <yukuai3@huawei.com>
+>>
+>> After commit dfd6200a0954 ("blk-cgroup: support to track if policy is
+>> online"), there is no need to do this again in bfq.
+>>
+>> Signed-off-by: Yu Kuai <yukuai3@huawei.com>
 >=20
-> =A0=A0 root
-> =A0=A0=A0 |
-> =A0=A0=A0 V
-> =A0=A0=A0 A (cpus_allowed =3D 1-4, effective_cpus =3D 1-4)
-> =A0=A0=A0 |
-> =A0=A0=A0 V
-> =A0=A0=A0 B (cpus_allowed =3D 5-8, effective_cpus =3D 1-4)
+> So I agree this is nice to do but it isn't so simple. BFQ relies on the
+> fact that 'online' is cleared under bfqd->lock so we cannot associate bio
+> in bfq_bio_bfqg() with a bfqg that has already its bfq_pd_offline()
+> function run.
 >=20
-> In the case of cpuset B, passing back cpus 5-8 as the allowed_cpus is wro=
-ng.
+> Maybe if you set 'online' to false before calling ->pd_offline() things
+> would work fine for BFQ.
 
-I think my patch as written does the right thing here. Since the
-intersection of (1-4) and (5-8) is empty it will move up the hierarchy
-and we'll end up with (1-4) from the cgroup side of things.
+Yes, you're right. Thanks for the explanation.
 
-So the purpose of __cs_cpus_allowed() is to override the cpus_allowed of
-the root set and force it to cpu_possible_mask.
-
-Then cs_cpus_allowed() computes the intersection of cs->cpus_allowed and
-all it's parents. This will, in the case of B above, result in the empty
-mask.
-
-Then cpuset_cpus_allowed() has a loop that starts with
-task_cpu_possible_mask(), intersects that with cs_cpus_allowed() and if
-the intersection of that and cpu_online_mask is empty, moves up the
-hierarchy. Given cs_cpus_allowed(B) is the empty mask, we'll move to A.
-
-Note that since we force the mask of root to cpu_possible_mask,
-cs_cpus_allowed(root) will be a no-op and if we guarantee (in arch code)
-that cpu_online_mask always has a non-empty intersection with
-task_cpu_possible_mask(), this loop is guaranteed to terminate with a
-viable mask.
-
+Kuai
 
