@@ -1,120 +1,55 @@
-From: Waiman Long <longman@redhat.com>
-Subject: Re: [PATCH] cgroup/cpuset: Don't filter offline CPUs in
- cpuset_cpus_allowed() for top cpuset tasks
-Date: Fri, 3 Feb 2023 17:26:12 -0500
-Message-ID: <1f7fc2a9-259c-8f97-2f0c-a315c0266138@redhat.com>
-References: <20230203164040.213437-1-longman@redhat.com>
- <Y9116OLfP6GoZ0ez@slm.duckdns.org>
+From: Frederic Weisbecker <frederic-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: [PATCH 0/2] sched/isolation: Prep work for pcp cache draining isolation
+Date: Sat,  4 Feb 2023 00:24:07 +0100
+Message-ID: <20230203232409.163847-1-frederic@kernel.org>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1675463177;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=rzqXvls55Lb3EZo0y3v4L8uFMO50qdSpk/N4RhFvVdI=;
-        b=eGgwo4MQ1ErnthcSa8tDiN5JOh98X/gWvJRCvDq3CGAYWZJtCpZ5MgODwejn0pobFyKR7r
-        eUvFftHECJBREDdPohccTsK98/CyMgmRHKYoWB1OsU+8+kcKQL3PjiFwwuQ95LceF1lKYJ
-        cIn/r0AdMSwYZEjEWaBTdXktQTYrBzY=
-Content-Language: en-US
-In-Reply-To: <Y9116OLfP6GoZ0ez@slm.duckdns.org>
+Content-Transfer-Encoding: 8bit
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1675466656;
+        bh=DPCD11U3iraVLwoI0ZmoNtXTwzpTxLUsmQXJIlJGVSE=;
+        h=From:To:Cc:Subject:Date:From;
+        b=iYsRI9WEJSXvQrf3WdnsJctWyoYSHpJ9XXhS6XfxCe9MFaOWmzH9nklIEiPNAFzk8
+         pgm2UXKuqznGQ9qmSaKceq8HGb2NVkuTjU9EHO047NuRFGkIkK7AlwYph4NuaW6CQu
+         Yfv4Tt5Kmfs5Ph+phIQd92418JDtLA37TmbbZntv5WKDNeGCmoA3lLPfpheDROYOBy
+         lex84MWnpMjkDQaUxDAy4Gg9ssjU4vP/ZmUrpgKdpkwdhD6w39f63rijUzdbVrr8Su
+         QF5e33ZTIhClNBvjwku0s/7M1KOLWbStucstrSvrrl6/K6UOTQnzktd7t6vVSWSsLw
+         Wg9XHpLFpy0LA==
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"; format="flowed"
-To: Tejun Heo <tj@kernel.org>
-Cc: Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, Will Deacon <will@kernel.org>, Peter Zijlstra <peterz@infradead.org>, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, kernel-team@android.com
+Content-Type: text/plain; charset="us-ascii"
+To: LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Cc: Frederic Weisbecker <frederic-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>, Marcelo Tosatti <mtosatti-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Leonardo <leobras-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Muchun Song <muchun.song-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Thomas Gleixner <tglx-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
 
-On 2/3/23 16:00, Tejun Heo wrote:
-> On Fri, Feb 03, 2023 at 11:40:40AM -0500, Waiman Long wrote:
->> Since commit 8f9ea86fdf99 ("sched: Always preserve the user
->> requested cpumask"), relax_compatible_cpus_allowed_ptr() is calling
->> __sched_setaffinity() unconditionally. This helps to expose a bug in
->> the current cpuset hotplug code where the cpumasks of the tasks in
->> the top cpuset are not updated at all when some CPUs become online or
->> offline. It is likely caused by the fact that some of the tasks in the
->> top cpuset, like percpu kthreads, cannot have their cpu affinity changed.
->>
->> One way to reproduce this as suggested by Peter is:
->>   - boot machine
->>   - offline all CPUs except one
->>   - taskset -p ffffffff $$
->>   - online all CPUs
->>
->> Fix this by allowing cpuset_cpus_allowed() to return a wider mask that
->> includes offline CPUs for those tasks that are in the top cpuset. For
->> tasks not in the top cpuset, the old rule applies and only online CPUs
->> will be returned in the mask since hotplug events will update their
->> cpumasks accordingly.
->>
->> Fixes: 8f9ea86fdf99 ("sched: Always preserve the user requested cpumask")
->> Reported-by: Will Deacon <will@kernel.org>
->> Originally-from: Peter Zijlstra (Intel) <peterz@infradead.org>
->> Signed-off-by: Waiman Long <longman@redhat.com>
-> So, this is the replacement for the first patch[1] Will posted, right?
+For reference: https://lore.kernel.org/lkml/20230125073502.743446-1-leobras-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org/
+And the latest proposal: https://lore.kernel.org/lkml/Y90mZQhW89HtYfT9-2MMpYkNvuYDjFM9bn6wA6Q@public.gmane.org/
 
-Yes, if Will and Peter has no objection. I think it is less risky and 
-handle the partition case better.
+Pcp cache draining isolation needs a function that abstracts checking
+if a CPU is isolated through isolcpus= or nohz_full=. Take advantage
+of that to do some cleanups.
 
-With v1, Will's patch should get similar result as the existing 
-guarantee_online_cpus() function since we can infer offline cpus from 
-cpus_allowed. With v2, it does include offline cpus correctly, I 
-believe, as long as no partition is enabled. However, the hotplug code 
-is able to update the cpumasks when a CPU is onlined. So the presence of 
-offline CPUs is nice to have, but not essential.
+Frederic Weisbecker (2):
+  sched/isolation: Merge individual nohz_full features into a common
+    housekeeping flag
+  sched/isolation: Add cpu_is_isolated() API
 
->
->>   void cpuset_cpus_allowed(struct task_struct *tsk, struct cpumask *pmask)
->>   {
->>   	unsigned long flags;
->> +	struct cpuset *cs;
->>   
->>   	spin_lock_irqsave(&callback_lock, flags);
->> -	guarantee_online_cpus(tsk, pmask);
->> +	rcu_read_lock();
->> +
->> +	cs = task_cs(tsk);
->> +	if (cs != &top_cpuset)
->> +		guarantee_online_cpus(tsk, pmask);
->> +	/*
->> +	 * TODO: Tasks in the top cpuset won't get update to their cpumasks
->> +	 * when a hotplug online/offline event happens. So we include all
->> +	 * offline cpus in the allowed cpu list.
->> +	 */
->> +	if ((cs == &top_cpuset) || cpumask_empty(pmask)) {
->> +		const struct cpumask *possible_mask = task_cpu_possible_mask(tsk);
->> +
->> +		/*
->> +		 * We first exclude cpus allocated to partitions. If there is no
->> +		 * allowable online cpu left, we fall back to all possible cpus.
->> +		 */
->> +		cpumask_andnot(pmask, possible_mask, top_cpuset.subparts_cpus);
-> and the differences are that
->
-> * It's only applied to the root cgroup.
->
-> * Cpus taken up by partitions are excluded.
->
-> Is my understanding correct?
-Yes, that is correct.
->
->> +		if (!cpumask_intersects(pmask, cpu_online_mask))
->> +			cpumask_copy(pmask, possible_mask);
->> +	}
->> +
->> +	rcu_read_unlock();
->>   	spin_unlock_irqrestore(&callback_lock, flags);
-> So, I suppose you're suggesting applying this patch instead of the one Will
-> Deacon posted[1] and we need Will's second patch[2] on top, right?
-Right. Let hear if Will and Peter agree with this plan. I have tested 
-this patch and it passed Peter's reproducer test correctly. During 
-testing, I uncovered another bug in the cpu affinity code which results 
-in a separate scheduler patch to fix it.
->
-> [1] http://lkml.kernel.org/r/20230131221719.3176-3-will@kernel.org
-> [2] http://lkml.kernel.org/r/20230131221719.3176-3-will@kernel.org
->
-> Thanks.
-Cheers,
-Longman
+ arch/x86/kvm/x86.c              |  2 +-
+ drivers/char/random.c           |  2 +-
+ drivers/pci/pci-driver.c        |  2 +-
+ include/linux/sched/isolation.h | 13 +++++++------
+ include/net/ip_vs.h             |  4 ++--
+ kernel/cpu.c                    |  4 ++--
+ kernel/kthread.c                |  4 ++--
+ kernel/rcu/tasks.h              |  2 +-
+ kernel/rcu/tree_plugin.h        |  6 +++---
+ kernel/sched/core.c             | 12 ++++++------
+ kernel/sched/fair.c             |  6 +++---
+ kernel/sched/isolation.c        | 22 ++++++----------------
+ kernel/watchdog.c               |  2 +-
+ kernel/workqueue.c              |  2 +-
+ net/core/net-sysfs.c            |  2 +-
+ net/netfilter/ipvs/ip_vs_ctl.c  |  2 +-
+ 16 files changed, 39 insertions(+), 48 deletions(-)
+
+-- 
+2.34.1
 
