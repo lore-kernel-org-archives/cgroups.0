@@ -1,99 +1,76 @@
 From: Bart Van Assche <bvanassche-HInyCGIudOg@public.gmane.org>
 Subject: Re: [PATCH] blk-ioprio: Introduce promote-to-rt policy
-Date: Fri, 3 Feb 2023 11:45:32 -0800
-Message-ID: <aedc240d-7c9e-248a-52d2-c9775f3e8ca1@acm.org>
+Date: Fri, 3 Feb 2023 11:51:47 -0800
+Message-ID: <a2d8d491-7410-2dd8-cc11-a0519e2025b6@acm.org>
 References: <20230201045227.2203123-1-houtao@huaweicloud.com>
- <8c068af3-7199-11cf-5c69-a523c7c22d9a@acm.org>
- <4f7dcb3e-2d5a-cae3-0e1c-a82bcc3d2217@huaweicloud.com>
- <b6b3c498-e90b-7d1f-6ad5-a31334e433ae@acm.org>
- <beb7782e-72a4-c350-3750-23a767c88753@huaweicloud.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 Content-Language: en-US
-In-Reply-To: <beb7782e-72a4-c350-3750-23a767c88753-XF6JlduFytWkHkcT6e4Xnw@public.gmane.org>
+In-Reply-To: <20230201045227.2203123-1-houtao-XF6JlduFytWkHkcT6e4Xnw@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"; format="flowed"
 To: Hou Tao <houtao-XF6JlduFytWkHkcT6e4Xnw@public.gmane.org>, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 Cc: Jan Kara <jack-AlSwsSmVLrQ@public.gmane.org>, Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Jonathan Corbet <corbet-T1hC0tSOHrs@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, houtao1-hv44wF8Li93QT0dZR+AlfA@public.gmane.org
 
-On 2/2/23 17:48, Hou Tao wrote:
-> I don't get it on how to remove IOPRIO_POL_PROMOTION when calculating the final
-> ioprio for bio. IOPRIO_POL_PROMOTION is not used for IOPRIO_CLASS values but
-> used to determinate on how to calculate the final ioprio for bio: choosing the
-> maximum or minimum between blkcg ioprio and original bio bi_ioprio.
+On 1/31/23 20:52, Hou Tao wrote:
+> diff --git a/Documentation/admin-guide/cgroup-v2.rst b/Documentation/admin-guide/cgroup-v2.rst
+> index c8ae7c897f14..e0b9f73ef62a 100644
+> --- a/Documentation/admin-guide/cgroup-v2.rst
+> +++ b/Documentation/admin-guide/cgroup-v2.rst
+> @@ -2038,17 +2038,27 @@ that attribute:
+>   	Change the I/O priority class of all requests into IDLE, the lowest
+>   	I/O priority class.
+>   
+> +  promote-to-rt
+> +	For requests that have I/O priority class BE or that have I/O priority
+> +        class IDLE, change it into RT. Do not modify the I/O priority class
+> +        of requests that have priority class RT.
 
-Do the block layer code changes shown below implement the functionality that you
-need?
+Please document whether or not this policy modifies the I/O priority
+(IOPRIO_PRIO_DATA()). Do you agree that the I/O priority should be preserved
+when promoting from BE to RT and that only the I/O priority class should be
+modified for such promotions?
+
+>   The following numerical values are associated with the I/O priority policies:
+>   
+> -+-------------+---+
+> -| no-change   | 0 |
+> -+-------------+---+
+> -| none-to-rt  | 1 |
+> -+-------------+---+
+> -| rt-to-be    | 2 |
+> -+-------------+---+
+> -| all-to-idle | 3 |
+> -+-------------+---+
+> +
+> ++---------------+---------+-----+
+> +| policy        | inst    | num |
+> ++---------------+---------+-----+
+> +| no-change     | demote  | 0   |
+> ++---------------+---------+-----+
+> +| none-to-rt    | demote  | 1   |
+> ++---------------+---------+-----+
+> +| rt-to-be      | demote  | 2   |
+> ++---------------+---------+-----+
+> +| idle          | demote  | 3   |
+> ++---------------+---------+-----+
+> +| promote-to-rt | promote | 1   |
+> ++---------------+---------+-----+
+
+I prefer that this table is not modified. The numerical values associated with
+policies only matters for none-to-rt, rt-to-be and all-to-idle but not for
+promote-to-rt. So I don't think that it is necessary to mention a numerical
+value for the promote-to-rt policy. Additionally, "none-to-rt" is not a policy
+that demotes the I/O priority but a policy that may promote the I/O priority.
+
+> +-- If the instruction is promotion, change the request I/O priority class
+> +-  into the minimum of the I/O priority class policy number and the numerical
+> +-  I/O priority class.
+
+Using the minimum value seems wrong to me because that will change
+IOPRIO_VALUE(IOPRIO_CLASS_RT, 1) into IOPRIO_VALUE(IOPRIO_CLASS_RT, 0).
 
 Thanks,
 
 Bart.
-
-
-
-diff --git a/block/blk-ioprio.c b/block/blk-ioprio.c
-index 8bb6b8eba4ce..4a56da95168e 100644
---- a/block/blk-ioprio.c
-+++ b/block/blk-ioprio.c
-@@ -27,6 +27,8 @@
-   * @POLICY_RESTRICT_TO_BE: modify IOPRIO_CLASS_NONE and IOPRIO_CLASS_RT into
-   *		IOPRIO_CLASS_BE.
-   * @POLICY_ALL_TO_IDLE: change the I/O priority class into IOPRIO_CLASS_IDLE.
-+ * @POLICY_PROMOTE_TO_RT: modify IOPRIO_CLASS_NONE and IOPRIO_CLASS_BE into
-+ * 		IOPRIO_CLASS_RT.
-   *
-   * See also <linux/ioprio.h>.
-   */
-@@ -35,6 +37,7 @@ enum prio_policy {
-  	POLICY_NONE_TO_RT	= 1,
-  	POLICY_RESTRICT_TO_BE	= 2,
-  	POLICY_ALL_TO_IDLE	= 3,
-+	POLICY_PROMOTE_TO_RT,
-  };
-
-  static const char *policy_name[] = {
-@@ -42,6 +45,7 @@ static const char *policy_name[] = {
-  	[POLICY_NONE_TO_RT]	= "none-to-rt",
-  	[POLICY_RESTRICT_TO_BE]	= "restrict-to-be",
-  	[POLICY_ALL_TO_IDLE]	= "idle",
-+	[POLICY_PROMOTE_TO_RT]	= "promote-to-rt",
-  };
-
-  static struct blkcg_policy ioprio_policy;
-@@ -189,17 +193,23 @@ void blkcg_set_ioprio(struct bio *bio)
-  	if (!blkcg || blkcg->prio_policy == POLICY_NO_CHANGE)
-  		return;
-
--	/*
--	 * Except for IOPRIO_CLASS_NONE, higher I/O priority numbers
--	 * correspond to a lower priority. Hence, the max_t() below selects
--	 * the lower priority of bi_ioprio and the cgroup I/O priority class.
--	 * If the bio I/O priority equals IOPRIO_CLASS_NONE, the cgroup I/O
--	 * priority is assigned to the bio.
--	 */
--	prio = max_t(u16, bio->bi_ioprio,
--			IOPRIO_PRIO_VALUE(blkcg->prio_policy, 0));
--	if (prio > bio->bi_ioprio)
--		bio->bi_ioprio = prio;
-+	if (blkcg->prio_policy == PROMOTE_TO_RT) {
-+		if (IOPRIO_PRIO_CLASS(bio->bi_ioprio) != IOPRIO_CLASS_RT)
-+			bio->bi_ioprio = IOPRIO_CLASS_RT;
-+	} else {
-+		/*
-+		 * Except for IOPRIO_CLASS_NONE, higher I/O priority numbers
-+		 * correspond to a lower priority. Hence, the max_t() below
-+		 * selects the lower priority of bi_ioprio and the cgroup I/O
-+		 * priority class.  If the bio I/O priority equals
-+		 * IOPRIO_CLASS_NONE, the cgroup I/O priority is assigned to the
-+		 * bio.
-+		 */
-+		prio = max_t(u16, bio->bi_ioprio,
-+			     IOPRIO_PRIO_VALUE(blkcg->prio_policy, 0));
-+		if (prio > bio->bi_ioprio)
-+			bio->bi_ioprio = prio;
-+	}
-  }
-
-  void blk_ioprio_exit(struct gendisk *disk)
-
