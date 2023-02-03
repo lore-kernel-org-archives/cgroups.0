@@ -1,7 +1,7 @@
 From: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
-Subject: [PATCH 05/19] blk-cgroup: remove the !bdi->dev check in blkg_dev_name
-Date: Fri,  3 Feb 2023 16:03:46 +0100
-Message-ID: <20230203150400.3199230-6-hch@lst.de>
+Subject: [PATCH 07/19] blk-cgroup: store a gendisk to throttle in struct task_struct
+Date: Fri,  3 Feb 2023 16:03:48 +0100
+Message-ID: <20230203150400.3199230-8-hch@lst.de>
 References: <20230203150400.3199230-1-hch@lst.de>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
@@ -10,39 +10,159 @@ DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
         MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender
         :Reply-To:Content-Type:Content-ID:Content-Description;
-        bh=p6drb38Fk8RdhNordfPyoAUltaGgb0aSqtldVyTVQaQ=; b=aQ/AH2M5M8OC+lwn5yKRLql2jo
-        +bfcQzcrzfQESEsKUsWNeeSv6iiYsxfnWZ2YIFG2Dd95SfHpXNfMfDN5tAcvuZtmPGRqReTr0UQcg
-        nYlJu5VNlM0IIcQpPh32aV+ttKyJbvT+yubmJz2INMmX4k7TwrtCMQWq7sNftx0jbi7iUsJ1j7bVs
-        GGWbWp1n/OKVaVV8wlin668+n8DVK04HCpMXoLr1GRl+cbbIJ4EAlMCt6DkMTwkcYKpdtEge82HPd
-        +xSJUT8cVjFO2ctdokbeYz67n39v8iVkDlkj5a5VLlF8lJ7q19Me9D80Ky3xd3xiubZ3oV4Ozl9Pc
-        /67UcfHw==;
+        bh=4ynrZBg8YmufKoopXcB0+Wg6UDM5GsSQ+BkFsLsFRag=; b=fHTIalsZUz74Ini4NWdUUBC61s
+        Jr7XpSXCG86CnH0Sp8P6eOqhrsOFRgK1kj/LMzW1gnFVvWK38R4VLbMN0SMRvH4OYNdNdCAgJvs3q
+        KbQLviEuiGdIxJ79YExhrOESQGgPz/MskKLDyOZXHjKmbegR8KGraYHFRT6Q1pF3JdHnZvf+c2jT7
+        U9kD41Z71gh7wpW8Kfm9k3FO4RIcROnvUO3bF6atGrUvzj/rVp2IO/YJfEOGNLB8MlLiaYguFH82/
+        RtunhF4+XvXw5EYlWlcWB1+CxnQ7G0b+1+6IVoiVGIm3IE/IjbC4KUZ/iY2OBcMssKMZ3k6IGs6+c
+        n16VtdJQ==;
 In-Reply-To: <20230203150400.3199230-1-hch-jcswGhMUV9g@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 To: Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Josef Bacik <josef-DigfWCa+lFGyeJad7bwFQA@public.gmane.org>
-Cc: linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Cc: linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Andreas Herrmann <aherrmann-l3A5Bk7waGM@public.gmane.org>
 
-bdi_dev_name already performs the same check.
+Switch from a request_queue pointer and reference to a gendisk once
+for the throttle information in struct task_struct.
 
 Signed-off-by: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
-Acked-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Reviewed-by: Andreas Herrmann <aherrmann-l3A5Bk7waGM@public.gmane.org>
 ---
- block/blk-cgroup.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ block/blk-cgroup.c    | 32 +++++++++++++++-----------------
+ include/linux/sched.h |  2 +-
+ kernel/fork.c         |  2 +-
+ mm/swapfile.c         |  2 +-
+ 4 files changed, 18 insertions(+), 20 deletions(-)
 
 diff --git a/block/blk-cgroup.c b/block/blk-cgroup.c
-index 1038688568926e..0b3226cbf3f25d 100644
+index 0e368387497d27..168b2f803238f9 100644
 --- a/block/blk-cgroup.c
 +++ b/block/blk-cgroup.c
-@@ -572,7 +572,7 @@ static int blkcg_reset_stats(struct cgroup_subsys_state *css,
+@@ -1362,9 +1362,9 @@ static void blkcg_bind(struct cgroup_subsys_state *root_css)
  
- const char *blkg_dev_name(struct blkcg_gq *blkg)
+ static void blkcg_exit(struct task_struct *tsk)
  {
--	if (!blkg->q->disk || !blkg->q->disk->bdi->dev)
-+	if (!blkg->q->disk)
- 		return NULL;
- 	return bdi_dev_name(blkg->q->disk->bdi);
+-	if (tsk->throttle_queue)
+-		blk_put_queue(tsk->throttle_queue);
+-	tsk->throttle_queue = NULL;
++	if (tsk->throttle_disk)
++		put_disk(tsk->throttle_disk);
++	tsk->throttle_disk = NULL;
  }
+ 
+ struct cgroup_subsys io_cgrp_subsys = {
+@@ -1815,29 +1815,29 @@ static void blkcg_maybe_throttle_blkg(struct blkcg_gq *blkg, bool use_memdelay)
+  *
+  * This is only called if we've been marked with set_notify_resume().  Obviously
+  * we can be set_notify_resume() for reasons other than blkcg throttling, so we
+- * check to see if current->throttle_queue is set and if not this doesn't do
++ * check to see if current->throttle_disk is set and if not this doesn't do
+  * anything.  This should only ever be called by the resume code, it's not meant
+  * to be called by people willy-nilly as it will actually do the work to
+  * throttle the task if it is setup for throttling.
+  */
+ void blkcg_maybe_throttle_current(void)
+ {
+-	struct request_queue *q = current->throttle_queue;
++	struct gendisk *disk = current->throttle_disk;
+ 	struct blkcg *blkcg;
+ 	struct blkcg_gq *blkg;
+ 	bool use_memdelay = current->use_memdelay;
+ 
+-	if (!q)
++	if (!disk)
+ 		return;
+ 
+-	current->throttle_queue = NULL;
++	current->throttle_disk = NULL;
+ 	current->use_memdelay = false;
+ 
+ 	rcu_read_lock();
+ 	blkcg = css_to_blkcg(blkcg_css());
+ 	if (!blkcg)
+ 		goto out;
+-	blkg = blkg_lookup(blkcg, q);
++	blkg = blkg_lookup(blkcg, disk->queue);
+ 	if (!blkg)
+ 		goto out;
+ 	if (!blkg_tryget(blkg))
+@@ -1846,11 +1846,10 @@ void blkcg_maybe_throttle_current(void)
+ 
+ 	blkcg_maybe_throttle_blkg(blkg, use_memdelay);
+ 	blkg_put(blkg);
+-	blk_put_queue(q);
++	put_disk(disk);
+ 	return;
+ out:
+ 	rcu_read_unlock();
+-	blk_put_queue(q);
+ }
+ 
+ /**
+@@ -1872,18 +1871,17 @@ void blkcg_maybe_throttle_current(void)
+  */
+ void blkcg_schedule_throttle(struct gendisk *disk, bool use_memdelay)
+ {
+-	struct request_queue *q = disk->queue;
+-
+ 	if (unlikely(current->flags & PF_KTHREAD))
+ 		return;
+ 
+-	if (current->throttle_queue != q) {
+-		if (!blk_get_queue(q))
++	if (current->throttle_disk != disk) {
++		if (test_bit(GD_DEAD, &disk->state))
+ 			return;
++		get_device(disk_to_dev(disk));
+ 
+-		if (current->throttle_queue)
+-			blk_put_queue(current->throttle_queue);
+-		current->throttle_queue = q;
++		if (current->throttle_disk)
++			put_disk(current->throttle_disk);
++		current->throttle_disk = disk;
+ 	}
+ 
+ 	if (use_memdelay)
+diff --git a/include/linux/sched.h b/include/linux/sched.h
+index 853d08f7562bda..6f6ce9ca709798 100644
+--- a/include/linux/sched.h
++++ b/include/linux/sched.h
+@@ -1436,7 +1436,7 @@ struct task_struct {
+ #endif
+ 
+ #ifdef CONFIG_BLK_CGROUP
+-	struct request_queue		*throttle_queue;
++	struct gendisk			*throttle_disk;
+ #endif
+ 
+ #ifdef CONFIG_UPROBES
+diff --git a/kernel/fork.c b/kernel/fork.c
+index 9f7fe354189785..d9c97704b7c9a4 100644
+--- a/kernel/fork.c
++++ b/kernel/fork.c
+@@ -1044,7 +1044,7 @@ static struct task_struct *dup_task_struct(struct task_struct *orig, int node)
+ #endif
+ 
+ #ifdef CONFIG_BLK_CGROUP
+-	tsk->throttle_queue = NULL;
++	tsk->throttle_disk = NULL;
+ 	tsk->use_memdelay = 0;
+ #endif
+ 
+diff --git a/mm/swapfile.c b/mm/swapfile.c
+index 908a529bca12c9..3e0a742fb7bbff 100644
+--- a/mm/swapfile.c
++++ b/mm/swapfile.c
+@@ -3642,7 +3642,7 @@ void __cgroup_throttle_swaprate(struct page *page, gfp_t gfp_mask)
+ 	 * We've already scheduled a throttle, avoid taking the global swap
+ 	 * lock.
+ 	 */
+-	if (current->throttle_queue)
++	if (current->throttle_disk)
+ 		return;
+ 
+ 	spin_lock(&swap_avail_lock);
 -- 
 2.39.0
 
