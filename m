@@ -1,309 +1,150 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 06/19] blk-cgroup: pin the gendisk in struct blkcg_gq
-Date: Fri,  3 Feb 2023 16:03:47 +0100
-Message-ID: <20230203150400.3199230-7-hch@lst.de>
+From: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
+Subject: [PATCH 08/19] blk-wbt: pass a gendisk to wbt_{enable,disable}_default
+Date: Fri,  3 Feb 2023 16:03:49 +0100
+Message-ID: <20230203150400.3199230-9-hch@lst.de>
 References: <20230203150400.3199230-1-hch@lst.de>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Return-path: <linux-block-owner@vger.kernel.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
         MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender
         :Reply-To:Content-Type:Content-ID:Content-Description;
-        bh=T0Y/fbiJdVkSMXQHulk/tLVOE0B98gcbXNi+H2Ew5aI=; b=N3bdce+tMMUNjUFuB41D2HPTXu
-        Rgfk+2/rSSm5AINykZKPDj9Q939vlPrx9O3UPu3aI9HLviZELW7rGgb0za/PfdMeLFgVg5l+QeAQ8
-        mIwEepraOzKGSdu6MHIospEeNPvcWi7/WzuElpnwTlkKy7BZWdkuO0M2yxX+4+LzyRQuaIQsPP3E5
-        XFboBiuzYDDGrz3UoosXD1YjbC0oenjll3q4smDD/lOlN9HHXydZOvxxWs1XfsRFZuYl5Q8tlsA2T
-        cjOGcSD6C41J3+AoU9t1hfeliYev8v9W5W0vWMscJY9Gb2I45gODB3GUOptN49UfFB4K5HRMk/v2c
-        p0mk6GTQ==;
-In-Reply-To: <20230203150400.3199230-1-hch@lst.de>
+        bh=sd2ZXd6gI2XdMUuQ+4LT+zUu7nneqIWDBCOiAmcz85M=; b=PPl7e6KLdmgqAyi9u9i0zeailR
+        rrcjQx5asRDA0d9b3+9qd6QPW7N2KxxhZ2os2bkTODyHTMdkz2OF7BkT70Yc0uH61PLTfxX0BjHOY
+        eTDwA1Ae/flzmysjE0PnpyWyCOg0+dqFfOGhb1+hiBtw9v3sNS14A9oS6kS4fzNA6gc5ZLdHFOKQt
+        WLGNsSBzcJE2GI6A+aegmcOJr2VbXpWqHaLPPZ59lXT1LzicVfwnzTN1gOWU4FO1F1IWzG3cTwRRR
+        axdv6wFZO0wIQDS0DaxYlvKHCCZYYaRlgLtSiAWWpGogTzS91YUTxc2v4qBEk4YdiinUH6Ys7PlO7
+        Qxkzsd4Q==;
+In-Reply-To: <20230203150400.3199230-1-hch-jcswGhMUV9g@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Jens Axboe <axboe@kernel.dk>, Tejun Heo <tj@kernel.org>, Josef Bacik <josef@toxicpanda.com>
-Cc: linux-block@vger.kernel.org, cgroups@vger.kernel.org, Andreas Herrmann <aherrmann@suse.de>
+To: Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Josef Bacik <josef-DigfWCa+lFGyeJad7bwFQA@public.gmane.org>
+Cc: linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Andreas Herrmann <aherrmann-l3A5Bk7waGM@public.gmane.org>
 
-Currently each blkcg_gq holds a request_queue reference, which is what
-is used in the policies.  But a lot of these interfaces will move over to
-use a gendisk, so store a disk in struct blkcg_gq and hold a reference to
-it.
+Pass a gendisk to wbt_enable_default and wbt_disable_default to
+prepare for phasing out usage of the request_queue in the blk-cgroup
+code.
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Andreas Herrmann <aherrmann@suse.de>
-Acked-by: Tejun Heo <tj@kernel.org>
+Signed-off-by: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
+Reviewed-by: Andreas Herrmann <aherrmann-l3A5Bk7waGM@public.gmane.org>
+Acked-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 ---
- block/bfq-cgroup.c        |  6 +++---
- block/blk-cgroup-rwstat.c |  2 +-
- block/blk-cgroup.c        | 35 +++++++++++++++++------------------
- block/blk-cgroup.h        | 11 +++++------
- block/blk-iocost.c        |  2 +-
- block/blk-iolatency.c     |  4 ++--
- block/blk-throttle.c      |  4 ++--
- 7 files changed, 31 insertions(+), 33 deletions(-)
+ block/bfq-iosched.c | 4 ++--
+ block/blk-iocost.c  | 4 ++--
+ block/blk-sysfs.c   | 2 +-
+ block/blk-wbt.c     | 7 ++++---
+ block/blk-wbt.h     | 8 ++++----
+ 5 files changed, 13 insertions(+), 12 deletions(-)
 
-diff --git a/block/bfq-cgroup.c b/block/bfq-cgroup.c
-index b42956ab555068..1d4a3f15049bda 100644
---- a/block/bfq-cgroup.c
-+++ b/block/bfq-cgroup.c
-@@ -405,7 +405,7 @@ static void bfqg_stats_xfer_dead(struct bfq_group *bfqg)
+diff --git a/block/bfq-iosched.c b/block/bfq-iosched.c
+index 4705c4be90e721..5afa661fa2ea4c 100644
+--- a/block/bfq-iosched.c
++++ b/block/bfq-iosched.c
+@@ -7156,7 +7156,7 @@ static void bfq_exit_queue(struct elevator_queue *e)
  
- 	parent = bfqg_parent(bfqg);
+ 	blk_stat_disable_accounting(bfqd->queue);
+ 	clear_bit(ELEVATOR_FLAG_DISABLE_WBT, &e->flags);
+-	wbt_enable_default(bfqd->queue);
++	wbt_enable_default(bfqd->queue->disk);
  
--	lockdep_assert_held(&bfqg_to_blkg(bfqg)->q->queue_lock);
-+	lockdep_assert_held(&bfqg_to_blkg(bfqg)->disk->queue->queue_lock);
- 
- 	if (unlikely(!parent))
- 		return;
-@@ -536,7 +536,7 @@ static void bfq_pd_init(struct blkg_policy_data *pd)
- {
- 	struct blkcg_gq *blkg = pd_to_blkg(pd);
- 	struct bfq_group *bfqg = blkg_to_bfqg(blkg);
--	struct bfq_data *bfqd = blkg->q->elevator->elevator_data;
-+	struct bfq_data *bfqd = blkg->disk->queue->elevator->elevator_data;
- 	struct bfq_entity *entity = &bfqg->entity;
- 	struct bfq_group_data *d = blkcg_to_bfqgd(blkg->blkcg);
- 
-@@ -1201,7 +1201,7 @@ static u64 bfqg_prfill_stat_recursive(struct seq_file *sf,
- 	struct cgroup_subsys_state *pos_css;
- 	u64 sum = 0;
- 
--	lockdep_assert_held(&blkg->q->queue_lock);
-+	lockdep_assert_held(&blkg->disk->queue->queue_lock);
- 
- 	rcu_read_lock();
- 	blkg_for_each_descendant_pre(pos_blkg, pos_css, blkg) {
-diff --git a/block/blk-cgroup-rwstat.c b/block/blk-cgroup-rwstat.c
-index 3304e841df7ce9..b8b8c82e667a3b 100644
---- a/block/blk-cgroup-rwstat.c
-+++ b/block/blk-cgroup-rwstat.c
-@@ -107,7 +107,7 @@ void blkg_rwstat_recursive_sum(struct blkcg_gq *blkg, struct blkcg_policy *pol,
- 	struct cgroup_subsys_state *pos_css;
- 	unsigned int i;
- 
--	lockdep_assert_held(&blkg->q->queue_lock);
-+	lockdep_assert_held(&blkg->disk->queue->queue_lock);
- 
- 	memset(sum, 0, sizeof(*sum));
- 	rcu_read_lock();
-diff --git a/block/blk-cgroup.c b/block/blk-cgroup.c
-index 0b3226cbf3f25d..0e368387497d27 100644
---- a/block/blk-cgroup.c
-+++ b/block/blk-cgroup.c
-@@ -116,7 +116,6 @@ static bool blkcg_policy_enabled(struct request_queue *q,
- 
- static void blkg_free(struct blkcg_gq *blkg)
- {
--	struct request_queue *q = blkg->q;
- 	int i;
- 
- 	/*
-@@ -126,16 +125,16 @@ static void blkg_free(struct blkcg_gq *blkg)
- 	 * blkcg_mutex is used to synchronize blkg_free_workfn() and
- 	 * blkcg_deactivate_policy().
- 	 */
--	mutex_lock(&q->blkcg_mutex);
-+	mutex_lock(&blkg->disk->queue->blkcg_mutex);
- 	for (i = 0; i < BLKCG_MAX_POLS; i++)
- 		if (blkg->pd[i])
- 			blkcg_policy[i]->pd_free_fn(blkg->pd[i]);
- 	if (blkg->parent)
- 		blkg_put(blkg->parent);
- 	list_del_init(&blkg->q_node);
--	mutex_unlock(&q->blkcg_mutex);
-+	mutex_unlock(&blkg->disk->queue->blkcg_mutex);
- 
--	blk_put_queue(q);
-+	put_disk(blkg->disk);
- 	free_percpu(blkg->iostat_cpu);
- 	percpu_ref_exit(&blkg->refcnt);
- 	kfree(blkg);
-@@ -251,10 +250,12 @@ static struct blkcg_gq *blkg_alloc(struct blkcg *blkcg, struct gendisk *disk,
- 	blkg->iostat_cpu = alloc_percpu_gfp(struct blkg_iostat_set, gfp_mask);
- 	if (!blkg->iostat_cpu)
- 		goto out_exit_refcnt;
--	if (!blk_get_queue(disk->queue))
-+
-+	if (test_bit(GD_DEAD, &disk->state))
- 		goto out_free_iostat;
-+	get_device(disk_to_dev(disk));
-+	blkg->disk = disk;
- 
--	blkg->q = disk->queue;
- 	INIT_LIST_HEAD(&blkg->q_node);
- 	spin_lock_init(&blkg->async_bio_lock);
- 	bio_list_init(&blkg->async_bios);
-@@ -290,7 +291,7 @@ static struct blkcg_gq *blkg_alloc(struct blkcg *blkcg, struct gendisk *disk,
- 	while (--i >= 0)
- 		if (blkg->pd[i])
- 			blkcg_policy[i]->pd_free_fn(blkg->pd[i]);
--	blk_put_queue(disk->queue);
-+	put_disk(blkg->disk);
- out_free_iostat:
- 	free_percpu(blkg->iostat_cpu);
- out_exit_refcnt:
-@@ -461,7 +462,7 @@ static void blkg_destroy(struct blkcg_gq *blkg)
- 	struct blkcg *blkcg = blkg->blkcg;
- 	int i;
- 
--	lockdep_assert_held(&blkg->q->queue_lock);
-+	lockdep_assert_held(&blkg->disk->queue->queue_lock);
- 	lockdep_assert_held(&blkcg->lock);
- 
- 	/*
-@@ -485,7 +486,7 @@ static void blkg_destroy(struct blkcg_gq *blkg)
- 
- 	blkg->online = false;
- 
--	radix_tree_delete(&blkcg->blkg_tree, blkg->q->id);
-+	radix_tree_delete(&blkcg->blkg_tree, blkg->disk->queue->id);
- 	hlist_del_init_rcu(&blkg->blkcg_node);
- 
- 	/*
-@@ -572,9 +573,7 @@ static int blkcg_reset_stats(struct cgroup_subsys_state *css,
- 
- const char *blkg_dev_name(struct blkcg_gq *blkg)
- {
--	if (!blkg->q->disk)
--		return NULL;
--	return bdi_dev_name(blkg->q->disk->bdi);
-+	return bdi_dev_name(blkg->disk->bdi);
+ 	kfree(bfqd);
  }
+@@ -7344,7 +7344,7 @@ static int bfq_init_queue(struct request_queue *q, struct elevator_type *e)
+ 	blk_queue_flag_set(QUEUE_FLAG_SQ_SCHED, q);
  
- /**
-@@ -606,10 +605,10 @@ void blkcg_print_blkgs(struct seq_file *sf, struct blkcg *blkcg,
+ 	set_bit(ELEVATOR_FLAG_DISABLE_WBT, &eq->flags);
+-	wbt_disable_default(q);
++	wbt_disable_default(q->disk);
+ 	blk_stat_enable_accounting(q);
  
- 	rcu_read_lock();
- 	hlist_for_each_entry_rcu(blkg, &blkcg->blkg_list, blkcg_node) {
--		spin_lock_irq(&blkg->q->queue_lock);
--		if (blkcg_policy_enabled(blkg->q, pol))
-+		spin_lock_irq(&blkg->disk->queue->queue_lock);
-+		if (blkcg_policy_enabled(blkg->disk->queue, pol))
- 			total += prfill(sf, blkg->pd[pol->plid], data);
--		spin_unlock_irq(&blkg->q->queue_lock);
-+		spin_unlock_irq(&blkg->disk->queue->queue_lock);
- 	}
- 	rcu_read_unlock();
- 
-@@ -1033,9 +1032,9 @@ static int blkcg_print_stat(struct seq_file *sf, void *v)
- 
- 	rcu_read_lock();
- 	hlist_for_each_entry_rcu(blkg, &blkcg->blkg_list, blkcg_node) {
--		spin_lock_irq(&blkg->q->queue_lock);
-+		spin_lock_irq(&blkg->disk->queue->queue_lock);
- 		blkcg_print_one_stat(blkg, sf);
--		spin_unlock_irq(&blkg->q->queue_lock);
-+		spin_unlock_irq(&blkg->disk->queue->queue_lock);
- 	}
- 	rcu_read_unlock();
  	return 0;
-@@ -1105,7 +1104,7 @@ static void blkcg_destroy_blkgs(struct blkcg *blkcg)
- 	while (!hlist_empty(&blkcg->blkg_list)) {
- 		struct blkcg_gq *blkg = hlist_entry(blkcg->blkg_list.first,
- 						struct blkcg_gq, blkcg_node);
--		struct request_queue *q = blkg->q;
-+		struct request_queue *q = blkg->disk->queue;
- 
- 		if (need_resched() || !spin_trylock(&q->queue_lock)) {
- 			/*
-diff --git a/block/blk-cgroup.h b/block/blk-cgroup.h
-index b13ee84f358e85..996572a9a0b72e 100644
---- a/block/blk-cgroup.h
-+++ b/block/blk-cgroup.h
-@@ -53,8 +53,7 @@ struct blkg_iostat_set {
- 
- /* association between a blk cgroup and a request queue */
- struct blkcg_gq {
--	/* Pointer to the associated request_queue */
--	struct request_queue		*q;
-+	struct gendisk			*disk;
- 	struct list_head		q_node;
- 	struct hlist_node		blkcg_node;
- 	struct blkcg			*blkcg;
-@@ -255,11 +254,11 @@ static inline struct blkcg_gq *blkg_lookup(struct blkcg *blkcg,
- 		return q->root_blkg;
- 
- 	blkg = rcu_dereference(blkcg->blkg_hint);
--	if (blkg && blkg->q == q)
-+	if (blkg && blkg->disk->queue == q)
- 		return blkg;
- 
- 	blkg = radix_tree_lookup(&blkcg->blkg_tree, q->id);
--	if (blkg && blkg->q != q)
-+	if (blkg && blkg->disk->queue != q)
- 		blkg = NULL;
- 	return blkg;
- }
-@@ -359,7 +358,7 @@ static inline void blkg_put(struct blkcg_gq *blkg)
- #define blkg_for_each_descendant_pre(d_blkg, pos_css, p_blkg)		\
- 	css_for_each_descendant_pre((pos_css), &(p_blkg)->blkcg->css)	\
- 		if (((d_blkg) = blkg_lookup(css_to_blkcg(pos_css),	\
--					    (p_blkg)->q)))
-+					    (p_blkg)->disk->queue)))
- 
- /**
-  * blkg_for_each_descendant_post - post-order walk of a blkg's descendants
-@@ -374,7 +373,7 @@ static inline void blkg_put(struct blkcg_gq *blkg)
- #define blkg_for_each_descendant_post(d_blkg, pos_css, p_blkg)		\
- 	css_for_each_descendant_post((pos_css), &(p_blkg)->blkcg->css)	\
- 		if (((d_blkg) = blkg_lookup(css_to_blkcg(pos_css),	\
--					    (p_blkg)->q)))
-+					    (p_blkg)->disk->queue)))
- 
- bool __blkcg_punt_bio_submit(struct bio *bio);
- 
 diff --git a/block/blk-iocost.c b/block/blk-iocost.c
-index 9694394ed883c4..a2b4e7146be5f1 100644
+index a2b4e7146be5f1..dbb93f4f68d979 100644
 --- a/block/blk-iocost.c
 +++ b/block/blk-iocost.c
-@@ -2953,7 +2953,7 @@ static void ioc_pd_init(struct blkg_policy_data *pd)
+@@ -3285,11 +3285,11 @@ static ssize_t ioc_qos_write(struct kernfs_open_file *of, char *input,
+ 		blk_stat_enable_accounting(disk->queue);
+ 		blk_queue_flag_set(QUEUE_FLAG_RQ_ALLOC_TIME, disk->queue);
+ 		ioc->enabled = true;
+-		wbt_disable_default(disk->queue);
++		wbt_disable_default(disk);
+ 	} else {
+ 		blk_queue_flag_clear(QUEUE_FLAG_RQ_ALLOC_TIME, disk->queue);
+ 		ioc->enabled = false;
+-		wbt_enable_default(disk->queue);
++		wbt_enable_default(disk);
+ 	}
+ 
+ 	if (user) {
+diff --git a/block/blk-sysfs.c b/block/blk-sysfs.c
+index 5486b6c57f6b8a..2074103865f45b 100644
+--- a/block/blk-sysfs.c
++++ b/block/blk-sysfs.c
+@@ -826,7 +826,7 @@ int blk_register_queue(struct gendisk *disk)
+ 		goto out_elv_unregister;
+ 
+ 	blk_queue_flag_set(QUEUE_FLAG_REGISTERED, q);
+-	wbt_enable_default(q);
++	wbt_enable_default(disk);
+ 	blk_throtl_register(disk);
+ 
+ 	/* Now everything is ready and send out KOBJ_ADD uevent */
+diff --git a/block/blk-wbt.c b/block/blk-wbt.c
+index 68a774d7a7c9c0..8f9302134339c5 100644
+--- a/block/blk-wbt.c
++++ b/block/blk-wbt.c
+@@ -650,8 +650,9 @@ void wbt_set_write_cache(struct request_queue *q, bool write_cache_on)
+ /*
+  * Enable wbt if defaults are configured that way
+  */
+-void wbt_enable_default(struct request_queue *q)
++void wbt_enable_default(struct gendisk *disk)
  {
- 	struct ioc_gq *iocg = pd_to_iocg(pd);
- 	struct blkcg_gq *blkg = pd_to_blkg(&iocg->pd);
--	struct ioc *ioc = q_to_ioc(blkg->q);
-+	struct ioc *ioc = q_to_ioc(blkg->disk->queue);
- 	struct ioc_now now;
- 	struct blkcg_gq *tblkg;
- 	unsigned long flags;
-diff --git a/block/blk-iolatency.c b/block/blk-iolatency.c
-index ecdc1074183625..b55eac2cf91944 100644
---- a/block/blk-iolatency.c
-+++ b/block/blk-iolatency.c
-@@ -974,12 +974,12 @@ static void iolatency_pd_init(struct blkg_policy_data *pd)
++	struct request_queue *q = disk->queue;
+ 	struct rq_qos *rqos;
+ 	bool disable_flag = q->elevator &&
+ 		    test_bit(ELEVATOR_FLAG_DISABLE_WBT, &q->elevator->flags);
+@@ -718,9 +719,9 @@ static void wbt_exit(struct rq_qos *rqos)
+ /*
+  * Disable wbt, if enabled by default.
+  */
+-void wbt_disable_default(struct request_queue *q)
++void wbt_disable_default(struct gendisk *disk)
  {
- 	struct iolatency_grp *iolat = pd_to_lat(pd);
- 	struct blkcg_gq *blkg = lat_to_blkg(iolat);
--	struct rq_qos *rqos = blkcg_rq_qos(blkg->q);
-+	struct rq_qos *rqos = blkcg_rq_qos(blkg->disk->queue);
- 	struct blk_iolatency *blkiolat = BLKIOLATENCY(rqos);
- 	u64 now = ktime_to_ns(ktime_get());
- 	int cpu;
+-	struct rq_qos *rqos = wbt_rq_qos(q);
++	struct rq_qos *rqos = wbt_rq_qos(disk->queue);
+ 	struct rq_wb *rwb;
+ 	if (!rqos)
+ 		return;
+diff --git a/block/blk-wbt.h b/block/blk-wbt.h
+index e3ea6e7e290076..7ab1cba55c25f7 100644
+--- a/block/blk-wbt.h
++++ b/block/blk-wbt.h
+@@ -91,8 +91,8 @@ static inline unsigned int wbt_inflight(struct rq_wb *rwb)
+ #ifdef CONFIG_BLK_WBT
  
--	if (blk_queue_nonrot(blkg->q))
-+	if (blk_queue_nonrot(blkg->disk->queue))
- 		iolat->ssd = true;
- 	else
- 		iolat->ssd = false;
-diff --git a/block/blk-throttle.c b/block/blk-throttle.c
-index 6fb5a2f9e1eed5..f802d8f9099430 100644
---- a/block/blk-throttle.c
-+++ b/block/blk-throttle.c
-@@ -388,7 +388,7 @@ static void throtl_pd_init(struct blkg_policy_data *pd)
+ int wbt_init(struct request_queue *);
+-void wbt_disable_default(struct request_queue *);
+-void wbt_enable_default(struct request_queue *);
++void wbt_disable_default(struct gendisk *disk);
++void wbt_enable_default(struct gendisk *disk);
+ 
+ u64 wbt_get_min_lat(struct request_queue *q);
+ void wbt_set_min_lat(struct request_queue *q, u64 val);
+@@ -108,10 +108,10 @@ static inline int wbt_init(struct request_queue *q)
  {
- 	struct throtl_grp *tg = pd_to_tg(pd);
- 	struct blkcg_gq *blkg = tg_to_blkg(tg);
--	struct throtl_data *td = blkg->q->td;
-+	struct throtl_data *td = blkg->disk->queue->td;
- 	struct throtl_service_queue *sq = &tg->service_queue;
- 
- 	/*
-@@ -1175,7 +1175,7 @@ static void throtl_pending_timer_fn(struct timer_list *t)
- 
- 	/* throtl_data may be gone, so figure out request queue by blkg */
- 	if (tg)
--		q = tg->pd.blkg->q;
-+		q = tg->pd.blkg->disk->queue;
- 	else
- 		q = td->queue;
- 
+ 	return -EINVAL;
+ }
+-static inline void wbt_disable_default(struct request_queue *q)
++static inline void wbt_disable_default(struct gendisk *disk)
+ {
+ }
+-static inline void wbt_enable_default(struct request_queue *q)
++static inline void wbt_enable_default(struct gendisk *disk)
+ {
+ }
+ static inline void wbt_set_write_cache(struct request_queue *q, bool wc)
 -- 
 2.39.0
 
