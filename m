@@ -1,55 +1,99 @@
-From: Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>
-Subject: Re: [PATCH v2 0/5] Introduce memcg_stock_pcp remote draining
-Date: Fri, 3 Feb 2023 11:25:16 -0800
-Message-ID: <Y91fnF5uEcSA0/99@P9FQF9L96D.corp.robot.car>
-References: <Y9DpbVF+JR/G+5Or@dhcp22.suse.cz>
- <9e61ab53e1419a144f774b95230b789244895424.camel@redhat.com>
- <Y9FzSBw10MGXm2TK@tpad>
- <Y9G36AiqPPFDlax3@P9FQF9L96D.corp.robot.car>
- <Y9Iurktut9B9T+Tl@dhcp22.suse.cz>
- <Y9MI42NSLooyVZNu@P9FQF9L96D.corp.robot.car>
- <Y9N5CI8PpsfiaY9c@dhcp22.suse.cz>
- <Y9PYe1X7dRQOcahg@dhcp22.suse.cz>
- <Y9QVWwAreTlDVdZ0@P9FQF9L96D.corp.robot.car>
- <Y90mZQhW89HtYfT9@dhcp22.suse.cz>
+From: Bart Van Assche <bvanassche-HInyCGIudOg@public.gmane.org>
+Subject: Re: [PATCH] blk-ioprio: Introduce promote-to-rt policy
+Date: Fri, 3 Feb 2023 11:45:32 -0800
+Message-ID: <aedc240d-7c9e-248a-52d2-c9775f3e8ca1@acm.org>
+References: <20230201045227.2203123-1-houtao@huaweicloud.com>
+ <8c068af3-7199-11cf-5c69-a523c7c22d9a@acm.org>
+ <4f7dcb3e-2d5a-cae3-0e1c-a82bcc3d2217@huaweicloud.com>
+ <b6b3c498-e90b-7d1f-6ad5-a31334e433ae@acm.org>
+ <beb7782e-72a4-c350-3750-23a767c88753@huaweicloud.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
-        t=1675452324;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=xemEPS75g6CyaGYVTuNx4T5APXnPBUE9kBl1lVKlrTM=;
-        b=ah/EreyLTKURus8ZQYbvdkwIeyZn+6VcKKQqlNdRE+EKzIxTpJdYzfdCWnCx8dIjocnERr
-        FabQHAoVFjL7/nCF4j6JwNDZ3IxOsSqSwgKBVNOg8H1r2A4U/yDR8aWkgHFDw5EsvHH5ad
-        z01tV+bx4YqgPBnEsnYYSL0KSmKrlEo=
-Content-Disposition: inline
-In-Reply-To: <Y90mZQhW89HtYfT9-2MMpYkNvuYDjFM9bn6wA6Q@public.gmane.org>
-List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
-Cc: Marcelo Tosatti <mtosatti-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Leonardo =?iso-8859-1?Q?Br=E1s?= <leobras-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Muchun Song <muchun.song-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Frederic Weisbecker <fweisbecker-l3A5Bk7waGM@public.gmane.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Language: en-US
+In-Reply-To: <beb7782e-72a4-c350-3750-23a767c88753-XF6JlduFytWkHkcT6e4Xnw@public.gmane.org>
+List-ID: <cgroups.vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"; format="flowed"
+To: Hou Tao <houtao-XF6JlduFytWkHkcT6e4Xnw@public.gmane.org>, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Cc: Jan Kara <jack-AlSwsSmVLrQ@public.gmane.org>, Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Jonathan Corbet <corbet-T1hC0tSOHrs@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, houtao1-hv44wF8Li93QT0dZR+AlfA@public.gmane.org
 
-On Fri, Feb 03, 2023 at 04:21:09PM +0100, Michal Hocko wrote:
-> OK, so this is a speculative patch. cpu_is_isolated doesn't exist yet. I
-> have talked to Frederic off-list and he is working on an implementation.
-> I will be offline next whole week (will be back Feb 13th) so I am
-> sending this early but this patch cannot be merged without his one of
-> course.
-> 
-> I have tried to summarize the reasoning behind both approach should we
-> ever need to revisit this approach. For now I strongly believe a simpler
-> solution should be preferred.
-> 
-> Roman, I have added your ack as you indicated but if you disagree with
-> the reasoning please let me know.
+On 2/2/23 17:48, Hou Tao wrote:
+> I don't get it on how to remove IOPRIO_POL_PROMOTION when calculating the final
+> ioprio for bio. IOPRIO_POL_PROMOTION is not used for IOPRIO_CLASS values but
+> used to determinate on how to calculate the final ioprio for bio: choosing the
+> maximum or minimum between blkcg ioprio and original bio bi_ioprio.
 
-Great, thank you for preparing it up! Really nice summary.
-My ack definitely applies.
+Do the block layer code changes shown below implement the functionality that you
+need?
 
-If you want, feel free to add a
-"Suggested-by: Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>"
-tag to blame me later :)
+Thanks,
 
-Thank you!
+Bart.
+
+
+
+diff --git a/block/blk-ioprio.c b/block/blk-ioprio.c
+index 8bb6b8eba4ce..4a56da95168e 100644
+--- a/block/blk-ioprio.c
++++ b/block/blk-ioprio.c
+@@ -27,6 +27,8 @@
+   * @POLICY_RESTRICT_TO_BE: modify IOPRIO_CLASS_NONE and IOPRIO_CLASS_RT into
+   *		IOPRIO_CLASS_BE.
+   * @POLICY_ALL_TO_IDLE: change the I/O priority class into IOPRIO_CLASS_IDLE.
++ * @POLICY_PROMOTE_TO_RT: modify IOPRIO_CLASS_NONE and IOPRIO_CLASS_BE into
++ * 		IOPRIO_CLASS_RT.
+   *
+   * See also <linux/ioprio.h>.
+   */
+@@ -35,6 +37,7 @@ enum prio_policy {
+  	POLICY_NONE_TO_RT	= 1,
+  	POLICY_RESTRICT_TO_BE	= 2,
+  	POLICY_ALL_TO_IDLE	= 3,
++	POLICY_PROMOTE_TO_RT,
+  };
+
+  static const char *policy_name[] = {
+@@ -42,6 +45,7 @@ static const char *policy_name[] = {
+  	[POLICY_NONE_TO_RT]	= "none-to-rt",
+  	[POLICY_RESTRICT_TO_BE]	= "restrict-to-be",
+  	[POLICY_ALL_TO_IDLE]	= "idle",
++	[POLICY_PROMOTE_TO_RT]	= "promote-to-rt",
+  };
+
+  static struct blkcg_policy ioprio_policy;
+@@ -189,17 +193,23 @@ void blkcg_set_ioprio(struct bio *bio)
+  	if (!blkcg || blkcg->prio_policy == POLICY_NO_CHANGE)
+  		return;
+
+-	/*
+-	 * Except for IOPRIO_CLASS_NONE, higher I/O priority numbers
+-	 * correspond to a lower priority. Hence, the max_t() below selects
+-	 * the lower priority of bi_ioprio and the cgroup I/O priority class.
+-	 * If the bio I/O priority equals IOPRIO_CLASS_NONE, the cgroup I/O
+-	 * priority is assigned to the bio.
+-	 */
+-	prio = max_t(u16, bio->bi_ioprio,
+-			IOPRIO_PRIO_VALUE(blkcg->prio_policy, 0));
+-	if (prio > bio->bi_ioprio)
+-		bio->bi_ioprio = prio;
++	if (blkcg->prio_policy == PROMOTE_TO_RT) {
++		if (IOPRIO_PRIO_CLASS(bio->bi_ioprio) != IOPRIO_CLASS_RT)
++			bio->bi_ioprio = IOPRIO_CLASS_RT;
++	} else {
++		/*
++		 * Except for IOPRIO_CLASS_NONE, higher I/O priority numbers
++		 * correspond to a lower priority. Hence, the max_t() below
++		 * selects the lower priority of bi_ioprio and the cgroup I/O
++		 * priority class.  If the bio I/O priority equals
++		 * IOPRIO_CLASS_NONE, the cgroup I/O priority is assigned to the
++		 * bio.
++		 */
++		prio = max_t(u16, bio->bi_ioprio,
++			     IOPRIO_PRIO_VALUE(blkcg->prio_policy, 0));
++		if (prio > bio->bi_ioprio)
++			bio->bi_ioprio = prio;
++	}
+  }
+
+  void blk_ioprio_exit(struct gendisk *disk)
+
