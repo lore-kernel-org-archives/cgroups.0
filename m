@@ -1,48 +1,84 @@
-From: Eric Biggers <ebiggers@kernel.org>
-Subject: Re: [PATCH] fscrypt: Copy the memcg information to the ciphertext
- page
-Date: Thu, 2 Feb 2023 17:07:24 -0800
-Message-ID: <Y9xeTDOmMZ75G6cq@sol.localdomain>
-References: <20230129121851.2248378-1-willy@infradead.org>
- <Y9a2m8uvmXmCVYvE@sol.localdomain>
- <Y9bkoasmAmtQ2nSV@casper.infradead.org>
- <Y9mH0PCcZoGPryXw@slm.duckdns.org>
- <Y9oHQ6MfRbfwmFyK@sol.localdomain>
- <Y9wrglzrfzTiCjh8@slm.duckdns.org>
+From: Hou Tao <houtao-XF6JlduFytWkHkcT6e4Xnw@public.gmane.org>
+Subject: Re: [PATCH] blk-ioprio: Introduce promote-to-rt policy
+Date: Fri, 3 Feb 2023 09:48:23 +0800
+Message-ID: <beb7782e-72a4-c350-3750-23a767c88753@huaweicloud.com>
+References: <20230201045227.2203123-1-houtao@huaweicloud.com>
+ <8c068af3-7199-11cf-5c69-a523c7c22d9a@acm.org>
+ <4f7dcb3e-2d5a-cae3-0e1c-a82bcc3d2217@huaweicloud.com>
+ <b6b3c498-e90b-7d1f-6ad5-a31334e433ae@acm.org>
 Mime-Version: 1.0
-Return-path: <stable-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1675386446;
-        bh=fz7m0oNp3+iBydgkgnlasJNzPQcxkPq6HJHHFp/eDmU=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=rOPBW7zi68EwVAEdF7hysr6oZSetdbFyWDQ38pu9afuQOyIaPfIj+GPMbinOGVKwF
-         jOpH9BpW+bFA8vk7Oz4cWWpqnAqwPG7tuOwazTT8kOuxLoXmnkIa0biz8NiC8WUZfa
-         NKuoTC94VJ+yKXU7LXEvM8Irk+XI3Mjv332MA4lkEK0Hqeyk7CSKdtUDdl/kqRWCGQ
-         MbybtQGZhULhNZV0MFyzvrt8AOHC1Ggpkq2BaXFEA0/oNk8H6zxXUFJ64hcx5eS5OC
-         MDxra6w/3V4tQGiLhEIhmdYs8ky9b8YHTMa4Rzj2vL9clXunI18/XZsl6ugnW/lVbd
-         KSk8JF2n/4nFw==
-Content-Disposition: inline
-In-Reply-To: <Y9wrglzrfzTiCjh8@slm.duckdns.org>
+Content-Transfer-Encoding: 8bit
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <b6b3c498-e90b-7d1f-6ad5-a31334e433ae-HInyCGIudOg@public.gmane.org>
+Content-Language: en-US
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Tejun Heo <tj@kernel.org>
-Cc: Matthew Wilcox <willy@infradead.org>, "Theodore Y . Ts'o" <tytso@mit.edu>, Jaegeuk Kim <jaegeuk@kernel.org>, linux-fscrypt@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net, stable@vger.kernel.org, cgroups@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+To: Bart Van Assche <bvanassche-HInyCGIudOg@public.gmane.org>, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Cc: Jan Kara <jack-AlSwsSmVLrQ@public.gmane.org>, Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Jonathan Corbet <corbet-T1hC0tSOHrs@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, houtao1-hv44wF8Li93QT0dZR+AlfA@public.gmane.org
 
-On Thu, Feb 02, 2023 at 11:30:42AM -1000, Tejun Heo wrote:
-> > The bug we're discussing here is that when ext4 writes out a pagecache page in
-> > an encrypted file, it first encrypts the data into a bounce page, then passes
-> > the bounce page (which don't have a memcg) to wbc_account_cgroup_owner().  Maybe
-> > the proper fix is to just pass the pagecache page to wbc_account_cgroup_owner()
-> > instead?  See below for ext4 (a separate patch would be needed for f2fs):
-> 
-> Yeah, this makes sense to me and is the right thing to do no matter what.
-> wbc_account_cgroup_owner() should be fed the origin page so that the IO can
-> be blamed on the owner of that page.
+Hi Bart,
 
-Thanks.  These patches fix this for ext4 and f2fs:
+On 2/3/2023 2:05 AM, Bart Van Assche wrote:
+> On 2/2/23 03:09, Hou Tao wrote:
+>> Hi,
+>>
+>> On 2/2/2023 1:33 AM, Bart Van Assche wrote:
+>>> On 1/31/23 20:52, Hou Tao wrote:
+>>>>    /**
+>>>>     * enum prio_policy - I/O priority class policy.
+>>>>     * @POLICY_NO_CHANGE: (default) do not modify the I/O priority class.
+>>>> @@ -27,21 +34,30 @@
+>>>>     * @POLICY_RESTRICT_TO_BE: modify IOPRIO_CLASS_NONE and IOPRIO_CLASS_RT
+>>>> into
+>>>>     *        IOPRIO_CLASS_BE.
+>>>>     * @POLICY_ALL_TO_IDLE: change the I/O priority class into
+>>>> IOPRIO_CLASS_IDLE.
+>>>> - *
+>>>> + * @POLICY_PROMOTE_TO_RT: modify IOPRIO_CLASS_NONE and IOPRIO_CLASS_BE into
+>>>> + *         IOPRIO_CLASS_RT.
+>>>>     * See also <linux/ioprio.h>.
+>>>>     */
+>>>>    enum prio_policy {
+>>>> -    POLICY_NO_CHANGE    = 0,
+>>>> -    POLICY_NONE_TO_RT    = 1,
+>>>> -    POLICY_RESTRICT_TO_BE    = 2,
+>>>> -    POLICY_ALL_TO_IDLE    = 3,
+>>>> +    POLICY_NO_CHANGE    = IOPRIO_CLASS_NONE,
+>>>> +    POLICY_NONE_TO_RT    = IOPRIO_CLASS_RT,
+>>>> +    POLICY_RESTRICT_TO_BE    = IOPRIO_CLASS_BE,
+>>>> +    POLICY_ALL_TO_IDLE    = IOPRIO_CLASS_IDLE,
+>>>> +    POLICY_PROMOTE_TO_RT    = IOPRIO_CLASS_RT | IOPRIO_POL_PROMOTION,
+>>>> +};
+>>>
+>>> The above change complicates the ioprio code. Additionally, I'm concerned that
+>>> it makes the ioprio code slower. Has it been considered to keep the numerical
+>>> values for the existing policies, to assign the number 4 to
+>>> POLICY_PROMOTE_TO_RT and to use a lookup-array in blkcg_set_ioprio() to
+>>> convert the policy number into an IOPRIO_CLASS value?
+>> For the slowness, do you meaning the extra dereference of blkcg->ioprio->policy
+>> when policy is no-change or the handle of IOPRIO_POL_PROMOTION in
+>> blkcg_set_ioprio()? It seems other functions (e.g., ioprio_show_prio_policy()
+>> and ioprio_set_prio_policy()) are not on the hot path. Using a lookup array in
+>> blkcg_set_ioprio() to do the conversion will also be OK, although it will
+>> introduce an extra lookup each time when policy is not no-change. I don't have
+>> strong preference. If you are OK with lookup array in blkcg_set_ioprio(), will
+>> do it in v2.
+>
+> Hi Hou,
+>
+> I prefer the lookup array because with the lookup array approach the
+> IOPRIO_POL_PROMOTION constant is no longer needed and because I expect that
+> this will result in code that is easier to read. Additionally, the lookup
+> array will be small so the compiler may be clever enough to optimize it away.
+I don't get it on how to remove IOPRIO_POL_PROMOTION when calculating the final
+ioprio for bio. IOPRIO_POL_PROMOTION is not used for IOPRIO_CLASS values but
+used to determinate on how to calculate the final ioprio for bio: choosing the
+maximum or minimum between blkcg ioprio and original bio bi_ioprio.
+>
+> Thanks,
+>
+> Bart.
+>
+>
+> .
 
-    * https://lore.kernel.org/r/20230203005503.141557-1-ebiggers@kernel.org
-    * https://lore.kernel.org/r/20230203010239.216421-1-ebiggers@kernel.org
-
-- Eric
