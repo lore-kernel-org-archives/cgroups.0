@@ -1,100 +1,108 @@
-From: Yafang Shao <laoar.shao-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: [PATCH bpf-next 5/5] bpf: allow to disable bpf prog memory accounting
-Date: Sun,  5 Feb 2023 06:58:05 +0000
-Message-ID: <20230205065805.19598-6-laoar.shao@gmail.com>
-References: <20230205065805.19598-1-laoar.shao@gmail.com>
+From: Hou Tao <houtao@huaweicloud.com>
+Subject: Re: [PATCH] blk-ioprio: Introduce promote-to-rt policy
+Date: Sun, 5 Feb 2023 15:04:17 +0800
+Message-ID: <ffcf2d84-7f0a-21b7-8840-433227bc6afb@huaweicloud.com>
+References: <20230201045227.2203123-1-houtao@huaweicloud.com>
+ <8c068af3-7199-11cf-5c69-a523c7c22d9a@acm.org>
+ <4f7dcb3e-2d5a-cae3-0e1c-a82bcc3d2217@huaweicloud.com>
+ <b6b3c498-e90b-7d1f-6ad5-a31334e433ae@acm.org>
+ <beb7782e-72a4-c350-3750-23a767c88753@huaweicloud.com>
+ <aedc240d-7c9e-248a-52d2-c9775f3e8ca1@acm.org>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=UUYnykaARkkOFageVVuRXJFo/+sLEm/iUIcvMP09NQo=;
-        b=a57J4S2w9eyKDMZ9OBUJ6kf6vR1VHJuYUOYq6cGgNDezvgehxMQxiQLzN51fOnil+5
-         DlIcYvlG4h0xQaPY+WdBD9SdZIQsg67KK4axSoellK3vUZSqXtJocopfFVARTJnLQbk4
-         xGzbd3RY72M2M5MSGcfKyymLNNeBoSbRbgxq8BZo9nqCyaZDW83JoZ98YMhPHNIIUdQH
-         AplmWxymxSsBbTx3vRXRWPAve2uLvQTLdcAEMGTrQeiRQJ+2zB1nbaw+WBuBwBQaXiuW
-         T8HRsVyFsv8OzuyK0mXraJ8183a5zu/RW4pS7pQ7r/omuWkXLEv8TbXEHyl5OEJmZyfP
-         HLsQ==
-In-Reply-To: <20230205065805.19598-1-laoar.shao-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Return-path: <linux-block-owner@vger.kernel.org>
+In-Reply-To: <aedc240d-7c9e-248a-52d2-c9775f3e8ca1@acm.org>
+Content-Language: en-US
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-To: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, ast-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, daniel-FeC+5ew28dpmcu3hnIyYJQ@public.gmane.org, andrii-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, kafai-b10kYP2dOMg@public.gmane.org, songliubraving-b10kYP2dOMg@public.gmane.org, yhs-b10kYP2dOMg@public.gmane.org, john.fastabend-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, kpsingh-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, sdf-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, haoluo-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, jolsa-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org, shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, muchun.song-fxUVXftIFDnyG1zEObXtfA@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org
-Cc: bpf-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Yafang Shao <laoar.shao-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Content-Type: text/plain; charset="utf-8"
+To: Bart Van Assche <bvanassche@acm.org>, linux-block@vger.kernel.org
+Cc: Jan Kara <jack@suse.cz>, Jens Axboe <axboe@kernel.dk>, cgroups@vger.kernel.org, Tejun Heo <tj@kernel.org>, Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, Jonathan Corbet <corbet@lwn.net>, linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org, houtao1@huawei.com
 
-We can simply disable the bpf prog memory accouting by not setting the
-GFP_ACCOUNT.
+Hi,
 
-Signed-off-by: Yafang Shao <laoar.shao-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
----
- kernel/bpf/core.c | 13 +++++++------
- 1 file changed, 7 insertions(+), 6 deletions(-)
-
-diff --git a/kernel/bpf/core.c b/kernel/bpf/core.c
-index 16da510..3390961 100644
---- a/kernel/bpf/core.c
-+++ b/kernel/bpf/core.c
-@@ -35,6 +35,7 @@
- #include <linux/bpf_verifier.h>
- #include <linux/nodemask.h>
- #include <linux/bpf_mem_alloc.h>
-+#include <linux/memcontrol.h>
- 
- #include <asm/barrier.h>
- #include <asm/unaligned.h>
-@@ -87,7 +88,7 @@ void *bpf_internal_load_pointer_neg_helper(const struct sk_buff *skb, int k, uns
- 
- struct bpf_prog *bpf_prog_alloc_no_stats(unsigned int size, gfp_t gfp_extra_flags)
- {
--	gfp_t gfp_flags = GFP_KERNEL_ACCOUNT | __GFP_ZERO | gfp_extra_flags;
-+	gfp_t gfp_flags = bpf_memcg_flags(GFP_KERNEL | __GFP_ZERO | gfp_extra_flags);
- 	struct bpf_prog_aux *aux;
- 	struct bpf_prog *fp;
- 
-@@ -96,12 +97,12 @@ struct bpf_prog *bpf_prog_alloc_no_stats(unsigned int size, gfp_t gfp_extra_flag
- 	if (fp == NULL)
- 		return NULL;
- 
--	aux = kzalloc(sizeof(*aux), GFP_KERNEL_ACCOUNT | gfp_extra_flags);
-+	aux = kzalloc(sizeof(*aux), bpf_memcg_flags(GFP_KERNEL | gfp_extra_flags));
- 	if (aux == NULL) {
- 		vfree(fp);
- 		return NULL;
- 	}
--	fp->active = alloc_percpu_gfp(int, GFP_KERNEL_ACCOUNT | gfp_extra_flags);
-+	fp->active = alloc_percpu_gfp(int, bpf_memcg_flags(GFP_KERNEL | gfp_extra_flags));
- 	if (!fp->active) {
- 		vfree(fp);
- 		kfree(aux);
-@@ -126,7 +127,7 @@ struct bpf_prog *bpf_prog_alloc_no_stats(unsigned int size, gfp_t gfp_extra_flag
- 
- struct bpf_prog *bpf_prog_alloc(unsigned int size, gfp_t gfp_extra_flags)
- {
--	gfp_t gfp_flags = GFP_KERNEL_ACCOUNT | __GFP_ZERO | gfp_extra_flags;
-+	gfp_t gfp_flags = bpf_memcg_flags(GFP_KERNEL | __GFP_ZERO | gfp_extra_flags);
- 	struct bpf_prog *prog;
- 	int cpu;
- 
-@@ -159,7 +160,7 @@ int bpf_prog_alloc_jited_linfo(struct bpf_prog *prog)
- 
- 	prog->aux->jited_linfo = kvcalloc(prog->aux->nr_linfo,
- 					  sizeof(*prog->aux->jited_linfo),
--					  GFP_KERNEL_ACCOUNT | __GFP_NOWARN);
-+					  bpf_memcg_flags(GFP_KERNEL | __GFP_NOWARN));
- 	if (!prog->aux->jited_linfo)
- 		return -ENOMEM;
- 
-@@ -234,7 +235,7 @@ void bpf_prog_fill_jited_linfo(struct bpf_prog *prog,
- struct bpf_prog *bpf_prog_realloc(struct bpf_prog *fp_old, unsigned int size,
- 				  gfp_t gfp_extra_flags)
- {
--	gfp_t gfp_flags = GFP_KERNEL_ACCOUNT | __GFP_ZERO | gfp_extra_flags;
-+	gfp_t gfp_flags = bpf_memcg_flags(GFP_KERNEL | __GFP_ZERO | gfp_extra_flags);
- 	struct bpf_prog *fp;
- 	u32 pages;
- 
--- 
-1.8.3.1
+On 2/4/2023 3:45 AM, Bart Van Assche wrote:
+> On 2/2/23 17:48, Hou Tao wrote:
+>> I don't get it on how to remove IOPRIO_POL_PROMOTION when calculating the final
+>> ioprio for bio. IOPRIO_POL_PROMOTION is not used for IOPRIO_CLASS values but
+>> used to determinate on how to calculate the final ioprio for bio: choosing the
+>> maximum or minimum between blkcg ioprio and original bio bi_ioprio.
+>
+> Do the block layer code changes shown below implement the functionality that you
+> need?
+Yes, something like that. The reason for introducing IOPRIO_POL_PROMOTION is to
+support other promotion policy (e.g., promote-to-be), but now I think the
+possibility of adding other promotion policies is low, so the code below is fine
+to me.
+>
+> Thanks,
+>
+> Bart.
+>
+>
+>
+> diff --git a/block/blk-ioprio.c b/block/blk-ioprio.c
+> index 8bb6b8eba4ce..4a56da95168e 100644
+> --- a/block/blk-ioprio.c
+> +++ b/block/blk-ioprio.c
+> @@ -27,6 +27,8 @@
+>   * @POLICY_RESTRICT_TO_BE: modify IOPRIO_CLASS_NONE and IOPRIO_CLASS_RT into
+>   *        IOPRIO_CLASS_BE.
+>   * @POLICY_ALL_TO_IDLE: change the I/O priority class into IOPRIO_CLASS_IDLE.
+> + * @POLICY_PROMOTE_TO_RT: modify IOPRIO_CLASS_NONE and IOPRIO_CLASS_BE into
+> + *         IOPRIO_CLASS_RT.
+>   *
+>   * See also <linux/ioprio.h>.
+>   */
+> @@ -35,6 +37,7 @@ enum prio_policy {
+>      POLICY_NONE_TO_RT    = 1,
+>      POLICY_RESTRICT_TO_BE    = 2,
+>      POLICY_ALL_TO_IDLE    = 3,
+> +    POLICY_PROMOTE_TO_RT,
+>  };
+>
+>  static const char *policy_name[] = {
+> @@ -42,6 +45,7 @@ static const char *policy_name[] = {
+>      [POLICY_NONE_TO_RT]    = "none-to-rt",
+>      [POLICY_RESTRICT_TO_BE]    = "restrict-to-be",
+>      [POLICY_ALL_TO_IDLE]    = "idle",
+> +    [POLICY_PROMOTE_TO_RT]    = "promote-to-rt",
+>  };
+>
+>  static struct blkcg_policy ioprio_policy;
+> @@ -189,17 +193,23 @@ void blkcg_set_ioprio(struct bio *bio)
+>      if (!blkcg || blkcg->prio_policy == POLICY_NO_CHANGE)
+>          return;
+>
+> -    /*
+> -     * Except for IOPRIO_CLASS_NONE, higher I/O priority numbers
+> -     * correspond to a lower priority. Hence, the max_t() below selects
+> -     * the lower priority of bi_ioprio and the cgroup I/O priority class.
+> -     * If the bio I/O priority equals IOPRIO_CLASS_NONE, the cgroup I/O
+> -     * priority is assigned to the bio.
+> -     */
+> -    prio = max_t(u16, bio->bi_ioprio,
+> -            IOPRIO_PRIO_VALUE(blkcg->prio_policy, 0));
+> -    if (prio > bio->bi_ioprio)
+> -        bio->bi_ioprio = prio;
+> +    if (blkcg->prio_policy == PROMOTE_TO_RT) {
+> +        if (IOPRIO_PRIO_CLASS(bio->bi_ioprio) != IOPRIO_CLASS_RT)
+> +            bio->bi_ioprio = IOPRIO_CLASS_RT;
+> +    } else {
+> +        /*
+> +         * Except for IOPRIO_CLASS_NONE, higher I/O priority numbers
+> +         * correspond to a lower priority. Hence, the max_t() below
+> +         * selects the lower priority of bi_ioprio and the cgroup I/O
+> +         * priority class.  If the bio I/O priority equals
+> +         * IOPRIO_CLASS_NONE, the cgroup I/O priority is assigned to the
+> +         * bio.
+> +         */
+> +        prio = max_t(u16, bio->bi_ioprio,
+> +                 IOPRIO_PRIO_VALUE(blkcg->prio_policy, 0));
+> +        if (prio > bio->bi_ioprio)
+> +            bio->bi_ioprio = prio;
+> +    }
+>  }
+>
+>  void blk_ioprio_exit(struct gendisk *disk)
+>
 
