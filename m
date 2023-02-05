@@ -1,89 +1,46 @@
-From: Hou Tao <houtao@huaweicloud.com>
-Subject: Re: [PATCH] blk-ioprio: Introduce promote-to-rt policy
-Date: Sun, 5 Feb 2023 15:17:01 +0800
-Message-ID: <933b39ce-888b-e799-2f49-661356ac50fd@huaweicloud.com>
-References: <20230201045227.2203123-1-houtao@huaweicloud.com>
- <a2d8d491-7410-2dd8-cc11-a0519e2025b6@acm.org>
+From: Ofir Gal <ofir.gal@volumez.com>
+Subject: [PATCH -next] blk-throttle: enable io throttle for root in cgroup v2
+Date: Sun,  5 Feb 2023 17:55:41 +0200
+Message-ID: <20230205155541.1320485-1-ofir.gal@volumez.com>
+References: <YgMxjyVjMjmkMQU5@T590>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-block-owner@vger.kernel.org>
-In-Reply-To: <a2d8d491-7410-2dd8-cc11-a0519e2025b6@acm.org>
-Content-Language: en-US
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+ d=storingio.onmicrosoft.com; s=selector1-storingio-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=XqAgyTAjJKFseuP7AppMe5BCjztupRQBL+3m6KQShX4=;
+ b=ScPN8ADuuKU6w1CM1Z3skUwZB3K+wS5oHfCR273L0Lokuf73HgomoPFp20ziFSiLG87HF9h/0JKM2GlvdvkzCyGVwEcuKoyWvVOEzQZMxELBWi6ksBIXNsqN8Ku9a3yg8DM1TPcTsO9zMHUiFogcYPmKPq4JAwTB9tJk92dRfaHYtQnpTrzur3qM05EGiq34NElfZ4s0nQZB7Pdhmuu26SBiVcrK6mXRTotiRTy87EhbstXmX67+SPeFswVy9HCHj9GRTXtx71kun4ov6wROiRjHzKN68nfo9gc5/Qw81Bs9wi4i8dlJzm08GGnss2wN58oQtQ/ZiDkceWn3ZL2dPg==
+In-Reply-To: <YgMxjyVjMjmkMQU5@T590>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="utf-8"
-To: Bart Van Assche <bvanassche@acm.org>, linux-block@vger.kernel.org
-Cc: Jan Kara <jack@suse.cz>, Jens Axboe <axboe@kernel.dk>, cgroups@vger.kernel.org, Tejun Heo <tj@kernel.org>, Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, Jonathan Corbet <corbet@lwn.net>, linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org, houtao1@huawei.com
+Content-Type: text/plain; charset="us-ascii"
+To: ming.lei@redhat.com
+Cc: axboe@kernel.dk, cgroups@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, tj@kernel.org, yi.zhang@huawei.com, yukuai3@huawei.com, Ofir Gal <ofir@gal.software>
 
-Hi,
+From: Ofir Gal <ofir@gal.software>
 
-On 2/4/2023 3:51 AM, Bart Van Assche wrote:
-> On 1/31/23 20:52, Hou Tao wrote:
->> diff --git a/Documentation/admin-guide/cgroup-v2.rst
->> b/Documentation/admin-guide/cgroup-v2.rst
->> index c8ae7c897f14..e0b9f73ef62a 100644
->> --- a/Documentation/admin-guide/cgroup-v2.rst
->> +++ b/Documentation/admin-guide/cgroup-v2.rst
->> @@ -2038,17 +2038,27 @@ that attribute:
->>       Change the I/O priority class of all requests into IDLE, the lowest
->>       I/O priority class.
->>   +  promote-to-rt
->> +    For requests that have I/O priority class BE or that have I/O priority
->> +        class IDLE, change it into RT. Do not modify the I/O priority class
->> +        of requests that have priority class RT.
->
-> Please document whether or not this policy modifies the I/O priority
-> (IOPRIO_PRIO_DATA()). Do you agree that the I/O priority should be preserved
-> when promoting from BE to RT and that only the I/O priority class should be
-> modified for such promotions?
-I don't think it is a good idea to keep priority data for BE and IDLE class,
-else after the override of bi_ioprio, a priority with IDLE class and high
-priority data (e.g., 0) will have higher priority than BE class with low
-priority data (e.g., 7). So maybe we should assign the lowest priority data to
-the promoted io priority.
->
->>   The following numerical values are associated with the I/O priority policies:
->>   -+-------------+---+
->> -| no-change   | 0 |
->> -+-------------+---+
->> -| none-to-rt  | 1 |
->> -+-------------+---+
->> -| rt-to-be    | 2 |
->> -+-------------+---+
->> -| all-to-idle | 3 |
->> -+-------------+---+
->> +
->> ++---------------+---------+-----+
->> +| policy        | inst    | num |
->> ++---------------+---------+-----+
->> +| no-change     | demote  | 0   |
->> ++---------------+---------+-----+
->> +| none-to-rt    | demote  | 1   |
->> ++---------------+---------+-----+
->> +| rt-to-be      | demote  | 2   |
->> ++---------------+---------+-----+
->> +| idle          | demote  | 3   |
->> ++---------------+---------+-----+
->> +| promote-to-rt | promote | 1   |
->> ++---------------+---------+-----+
->
-> I prefer that this table is not modified. The numerical values associated with
-> policies only matters for none-to-rt, rt-to-be and all-to-idle but not for
-> promote-to-rt. So I don't think that it is necessary to mention a numerical
-> value for the promote-to-rt policy. Additionally, "none-to-rt" is not a policy
-> that demotes the I/O priority but a policy that may promote the I/O priority.
-Yes, this is no need to associate a number with promote-rt policy. Will fix in
-v2. "none-to-rt" may promote io priority when the priority if NONE, although for
-now bi_ioprio will never be NONE when blkcg_set_ioprio() is called.
->
->> +-- If the instruction is promotion, change the request I/O priority class
->> +-  into the minimum of the I/O priority class policy number and the numerical
->> +-  I/O priority class.
->
-> Using the minimum value seems wrong to me because that will change
-> IOPRIO_VALUE(IOPRIO_CLASS_RT, 1) into IOPRIO_VALUE(IOPRIO_CLASS_RT, 0).
-Yes, you are right. Will fix in v2.
->
-> Thanks,
->
-> Bart.
+Hello Ming Lei,
 
+I am trying to use cgroups v2 to throttle a media disk that is controlled by an NVME target.
+Unfortunately, it cannot be done without setting the limit in the root cgroup.
+It can be done via cgroups v1. Yu Kuai's patch allows this to be accomplished.
+
+My setup consist from 3 servers.
+Server #1:
+    a. SSD media disk (needs to be throttled to 100K IOPs)
+    b. NVME target controlling the SSD (1.a)
+
+Server #2:
+    a. NVME initiator is connected to Server #1 NVME target (1.b)
+
+Server #3:
+    a. NVME initiator is connected to Server #1 NVME target (1.b)
+
+My setup accesses this media from multiple servers using NVMe over TCP,
+but the initiator servers' workloads are unknown and can be changed dynamically. I need to limit the media disk to 100K IOPS on the target side.
+
+I have tried to limit the SSD on Server #1, but it seems that the NVME target kworkers are not affected unless I use Yu Kuai's patch.
+
+Can you elaborate on the issues with this patch or how the scenario described above can be done with cgroups v2?
+
+Best regards, Ofir Gal.
