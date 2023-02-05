@@ -1,46 +1,91 @@
-From: Ofir Gal <ofir.gal@volumez.com>
-Subject: [PATCH -next] blk-throttle: enable io throttle for root in cgroup v2
-Date: Sun,  5 Feb 2023 17:55:41 +0200
-Message-ID: <20230205155541.1320485-1-ofir.gal@volumez.com>
-References: <YgMxjyVjMjmkMQU5@T590>
+From: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH v2 2/2] cgroup/cpuset: Don't update tasks' cpumasks for
+ cpu offline events
+Date: Sun, 5 Feb 2023 11:34:50 -0500
+Message-ID: <a9ef4da9-828e-2370-08ed-91bbd8b8e4e5@redhat.com>
+References: <20230202143200.128753-1-longman@redhat.com>
+ <20230202143200.128753-3-longman@redhat.com>
+ <Y94oDD/8PDGqNLTH@hirez.programming.kicks-ass.net>
+ <68d7c246-a678-df0c-6f54-d69725a085cc@redhat.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-block-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=storingio.onmicrosoft.com; s=selector1-storingio-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=XqAgyTAjJKFseuP7AppMe5BCjztupRQBL+3m6KQShX4=;
- b=ScPN8ADuuKU6w1CM1Z3skUwZB3K+wS5oHfCR273L0Lokuf73HgomoPFp20ziFSiLG87HF9h/0JKM2GlvdvkzCyGVwEcuKoyWvVOEzQZMxELBWi6ksBIXNsqN8Ku9a3yg8DM1TPcTsO9zMHUiFogcYPmKPq4JAwTB9tJk92dRfaHYtQnpTrzur3qM05EGiq34NElfZ4s0nQZB7Pdhmuu26SBiVcrK6mXRTotiRTy87EhbstXmX67+SPeFswVy9HCHj9GRTXtx71kun4ov6wROiRjHzKN68nfo9gc5/Qw81Bs9wi4i8dlJzm08GGnss2wN58oQtQ/ZiDkceWn3ZL2dPg==
-In-Reply-To: <YgMxjyVjMjmkMQU5@T590>
+Content-Transfer-Encoding: 7bit
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1675614894;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=d49dbf4ApQLJMnBbAxM6mEjMGR5NZUZ/1QRfKV1iQZI=;
+        b=gMyT/gKu/baTS7LCegfyCT64aYotms6TX9c5DZ7OgItvMdHwhnaUc6HpMrPw7leLK1O8JB
+        jd9hKSN2sS+BQAtfZt5j4uvMBi9h5vbPYMVv3LBeEmvaM+1Lb6YZPfLMKG7Wq9Ngr2AQ0N
+        fm8mkHzWzgvp89Hk+VPAEA/HH2JNKiM=
+Content-Language: en-US
+In-Reply-To: <68d7c246-a678-df0c-6f54-d69725a085cc-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-To: ming.lei@redhat.com
-Cc: axboe@kernel.dk, cgroups@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, tj@kernel.org, yi.zhang@huawei.com, yukuai3@huawei.com, Ofir Gal <ofir@gal.software>
+Content-Type: text/plain; charset="us-ascii"; format="flowed"
+To: Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
+Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Will Deacon <will-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-z5hGa2qSFaRBDgjK7y7TUQ@public.gmane.org
 
-From: Ofir Gal <ofir@gal.software>
+On 2/4/23 23:40, Waiman Long wrote:
+>
+> On 2/4/23 04:40, Peter Zijlstra wrote:
+>> On Thu, Feb 02, 2023 at 09:32:00AM -0500, Waiman Long wrote:
+>>> It is a known issue that when a task is in a non-root v1 cpuset, a cpu
+>>> offline event will cause that cpu to be lost from the task's cpumask
+>>> permanently as the cpuset's cpus_allowed mask won't get back that cpu
+>>> when it becomes online again. A possible workaround for this type of
+>>> cpu offline/online sequence is to leave the offline cpu in the task's
+>>> cpumask and do the update only if new cpus are added. It also has the
+>>> benefit of reducing the overhead of a cpu offline event.
+>>>
+>>> Note that the scheduler is able to ignore the offline cpus and so
+>>> leaving offline cpus in the cpumask won't do any harm.
+>>>
+>>> Now with v2, only the cpu online events will cause a call to
+>>> hotplug_update_tasks() to update the tasks' cpumasks. For tasks
+>>> in a non-root v1 cpuset, the situation is a bit different. The cpu
+>>> offline event will not cause change to a task's cpumask. Neither does a
+>>> subsequent cpu online event because "cpuset.cpus" had that offline cpu
+>>> removed and its subsequent onlining won't be registered as a change
+>>> to the cpuset. An exception is when all the cpus in the original
+>>> "cpuset.cpus" have gone offline once. In that case, "cpuset.cpus" will
+>>> become empty which will force task migration to its parent. A task's
+>>> cpumask will also be changed if set_cpus_allowed_ptr() is somehow 
+>>> called
+>>> for whatever reason.
+>>>
+>>> Of course, this patch can cause a discrepancy between v1's 
+>>> "cpuset.cpus"
+>>> and and its tasks' cpumasks. Howver, it can also largely work around
+>>> the offline cpu losing problem with v1 cpuset.
+>> I don't thikn you can simply not update on offline, even if
+>> effective_cpus doesn't go empty, because the intersection between
+>> task_cpu_possible_mask() and effective_cpus might have gone empty.
+>>
+>> Very fundamentally, the introduction of task_cpu_possible_mask() means
+>> that you now *HAVE* to always consider affinity settings per-task, you
+>> cannot group them anymore.
+>
+> Right, it makes sense to me. That is why I am thinking that we should 
+> have an API like may_have_task_cpu_possible_mask() that returns true 
+> for heterogeneous systems. That will allow us to apply some 
+> optimizations in systems with homogeneous cpus. So far, this is an 
+> arm64 only feature. We shouldn't penalize other arches because arm64 
+> needs that. In the future, maybe more arches will have that.
 
-Hello Ming Lei,
+It turns out there still gaps in the handling of 
+task_cpu_possible_mask() in existing cpuset code. We currently do not 
+check for the returned value of set_cpus_allowed_ptr() which may fails 
+in case task_cpu_possible_mask() returns a different mask. I think it 
+may be too late for the upcoming merge window. I am planning to have 
+that addressed in the next one.
 
-I am trying to use cgroups v2 to throttle a media disk that is controlled by an NVME target.
-Unfortunately, it cannot be done without setting the limit in the root cgroup.
-It can be done via cgroups v1. Yu Kuai's patch allows this to be accomplished.
+In the case of cpu offline, one possible solution may be to move the 
+task to its parent like what is done for v1 when effective_cpus becomes 
+empty. In the case of cpuset.cpus update, perhaps just ignore the 
+failure and print an info message about that.
 
-My setup consist from 3 servers.
-Server #1:
-    a. SSD media disk (needs to be throttled to 100K IOPs)
-    b. NVME target controlling the SSD (1.a)
+Cheers,
+Longman
 
-Server #2:
-    a. NVME initiator is connected to Server #1 NVME target (1.b)
-
-Server #3:
-    a. NVME initiator is connected to Server #1 NVME target (1.b)
-
-My setup accesses this media from multiple servers using NVMe over TCP,
-but the initiator servers' workloads are unknown and can be changed dynamically. I need to limit the media disk to 100K IOPS on the target side.
-
-I have tried to limit the SSD on Server #1, but it seems that the NVME target kworkers are not affected unless I use Yu Kuai's patch.
-
-Can you elaborate on the issues with this patch or how the scenario described above can be done with cgroups v2?
-
-Best regards, Ofir Gal.
