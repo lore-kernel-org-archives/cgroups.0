@@ -1,7 +1,7 @@
 From: Yafang Shao <laoar.shao@gmail.com>
-Subject: [PATCH bpf-next 2/5] bpf: use bpf_map_kvcalloc in bpf_local_storage
-Date: Sun,  5 Feb 2023 06:58:02 +0000
-Message-ID: <20230205065805.19598-3-laoar.shao@gmail.com>
+Subject: [PATCH bpf-next 3/5] bpf: introduce bpf_memcg_flags()
+Date: Sun,  5 Feb 2023 06:58:03 +0000
+Message-ID: <20230205065805.19598-4-laoar.shao@gmail.com>
 References: <20230205065805.19598-1-laoar.shao@gmail.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
@@ -11,96 +11,50 @@ DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=cekXoP31ZR51IJygqDIUgQ8CQ5lvQGcczV3A0ytqEZw=;
-        b=jW10FVIllpk2UmObYJXnztvkxz67v4iRh5dx08YuEgB9VxdIzS1XiVDjSsmQZ/yizH
-         TIx1w+oPsyzs6CxqC+YnzbcuutuyIhN5hMRGUyh1LBjttodYi0B2ZZ7ar3lCimJPaj9E
-         1BuCXvc77bDY99d/CMraUwg0ZxZvNljDPI6nrmwm6bJDgn1eO1VQ7Q5l+ErK1Zqm8Wti
-         p0gcJ1/lWqkOpOlYWBY8uXUqPRdXOwG8a+e7bRG3KoE3rsGDtqBUhGUfTvAA305muR+V
-         qhM185BVxKKTsWE28gnV1B3jLRF9uIiCIbTh3IgK950jdA8lCIlUdvQqDsNSoPnbMPgJ
-         9wKQ==
+        bh=rvT0LPmkis2rub1BPyeQPcuStniilZcgbmYKVTz7Hvo=;
+        b=Oy5xAL4aXjTTwo6yYaI1NHOu5VWyI2xXvQE6gfQ6deE11ldVIy3ideM0a5D+DQHey0
+         1Ch7zNbFrAM2Mxq+adjEPGfyeb6rkTy+HItd92lPh8wBG4qwkyfkKPPwsViylhGza+2R
+         3m4jVEHwA/hpX7IsxmkeHZ7RjPVTU9InZBjXFDXeOK3Lrfwqm8SvHreAqgU64/YUAy6w
+         Kv6b5gjZC6d3vw/2ds1OCOlSAyY5ByndnEwkG1T3n0AZC8BIy9hjKO7Ro6JNzD7+GWxY
+         zNIqq6ubKqbPiTxzqG4R42z68sNVUDjUNaL3mxLmQ1F+t+JTCAnjxOizNdm3nk8hlzL6
+         0q2A==
 In-Reply-To: <20230205065805.19598-1-laoar.shao@gmail.com>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 To: tj@kernel.org, ast@kernel.org, daniel@iogearbox.net, andrii@kernel.org, kafai@fb.com, songliubraving@fb.com, yhs@fb.com, john.fastabend@gmail.com, kpsingh@kernel.org, sdf@google.com, haoluo@google.com, jolsa@kernel.org, hannes@cmpxchg.org, mhocko@kernel.org, roman.gushchin@linux.dev, shakeelb@google.com, muchun.song@linux.dev, akpm@linux-foundation.org
 Cc: bpf@vger.kernel.org, cgroups@vger.kernel.org, linux-mm@kvack.org, Yafang Shao <laoar.shao@gmail.com>
 
-Introduce new helper bpf_map_kvcalloc() for this memory allocation. Then
-bpf_local_storage will be the same with other map's creation.
+This new helper will be used in both bpf prog and bpf map.
 
 Signed-off-by: Yafang Shao <laoar.shao@gmail.com>
 ---
- include/linux/bpf.h            |  8 ++++++++
- kernel/bpf/bpf_local_storage.c |  4 ++--
- kernel/bpf/syscall.c           | 15 +++++++++++++++
- 3 files changed, 25 insertions(+), 2 deletions(-)
+ include/linux/bpf.h | 8 ++++++++
+ 1 file changed, 8 insertions(+)
 
 diff --git a/include/linux/bpf.h b/include/linux/bpf.h
-index 35c18a9..fe0bf48 100644
+index fe0bf48..4385418 100644
 --- a/include/linux/bpf.h
 +++ b/include/linux/bpf.h
-@@ -1886,6 +1886,8 @@ int  generic_map_delete_batch(struct bpf_map *map,
- void *bpf_map_kmalloc_node(const struct bpf_map *map, size_t size, gfp_t flags,
- 			   int node);
- void *bpf_map_kzalloc(const struct bpf_map *map, size_t size, gfp_t flags);
-+void *bpf_map_kvcalloc(struct bpf_map *map, size_t n, size_t size,
-+		       gfp_t flags);
- void __percpu *bpf_map_alloc_percpu(const struct bpf_map *map, size_t size,
- 				    size_t align, gfp_t flags);
- #else
-@@ -1902,6 +1904,12 @@ void __percpu *bpf_map_alloc_percpu(const struct bpf_map *map, size_t size,
- 	return kzalloc(size, flags);
+@@ -28,6 +28,7 @@
+ #include <linux/btf.h>
+ #include <linux/rcupdate_trace.h>
+ #include <linux/static_call.h>
++#include <linux/memcontrol.h>
+ 
+ struct bpf_verifier_env;
+ struct bpf_verifier_log;
+@@ -2933,4 +2934,11 @@ static inline bool type_is_alloc(u32 type)
+ 	return type & MEM_ALLOC;
  }
  
-+static inline void *
-+bpf_map_kvcalloc(struct bpf_map *map, size_t n, size_t size, gfp_t flags)
++static inline gfp_t bpf_memcg_flags(gfp_t flags)
 +{
-+	return kvcalloc(n, size, flags);
++	if (memcg_bpf_enabled())
++		return flags | __GFP_ACCOUNT;
++	return flags;
 +}
 +
- static inline void __percpu *
- bpf_map_alloc_percpu(const struct bpf_map *map, size_t size, size_t align,
- 		     gfp_t flags)
-diff --git a/kernel/bpf/bpf_local_storage.c b/kernel/bpf/bpf_local_storage.c
-index 373c3c2..35f4138 100644
---- a/kernel/bpf/bpf_local_storage.c
-+++ b/kernel/bpf/bpf_local_storage.c
-@@ -568,8 +568,8 @@ static struct bpf_local_storage_map *__bpf_local_storage_map_alloc(union bpf_att
- 	nbuckets = max_t(u32, 2, nbuckets);
- 	smap->bucket_log = ilog2(nbuckets);
- 
--	smap->buckets = kvcalloc(sizeof(*smap->buckets), nbuckets,
--				 GFP_USER | __GFP_NOWARN | __GFP_ACCOUNT);
-+	smap->buckets = bpf_map_kvcalloc(&smap->map, sizeof(*smap->buckets),
-+					 nbuckets, GFP_USER | __GFP_NOWARN);
- 	if (!smap->buckets) {
- 		bpf_map_area_free(smap);
- 		return ERR_PTR(-ENOMEM);
-diff --git a/kernel/bpf/syscall.c b/kernel/bpf/syscall.c
-index bcc9761..9d94a35 100644
---- a/kernel/bpf/syscall.c
-+++ b/kernel/bpf/syscall.c
-@@ -464,6 +464,21 @@ void *bpf_map_kzalloc(const struct bpf_map *map, size_t size, gfp_t flags)
- 	return ptr;
- }
- 
-+void *bpf_map_kvcalloc(struct bpf_map *map, size_t n, size_t size,
-+		       gfp_t flags)
-+{
-+	struct mem_cgroup *memcg, *old_memcg;
-+	void *ptr;
-+
-+	memcg = bpf_map_get_memcg(map);
-+	old_memcg = set_active_memcg(memcg);
-+	ptr = kvcalloc(n, size, flags | __GFP_ACCOUNT);
-+	set_active_memcg(old_memcg);
-+	mem_cgroup_put(memcg);
-+
-+	return ptr;
-+}
-+
- void __percpu *bpf_map_alloc_percpu(const struct bpf_map *map, size_t size,
- 				    size_t align, gfp_t flags)
- {
+ #endif /* _LINUX_BPF_H */
 -- 
 1.8.3.1
 
