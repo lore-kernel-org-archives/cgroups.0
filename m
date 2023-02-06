@@ -1,103 +1,100 @@
-From: Roman Gushchin <roman.gushchin@linux.dev>
-Subject: Re: [PATCH v2 0/5] Introduce memcg_stock_pcp remote draining
-Date: Sun, 5 Feb 2023 11:49:13 -0800
-Message-ID: <Y+AIOQy0HdVXCw8m@P9FQF9L96D>
-References: <Y9DpbVF+JR/G+5Or@dhcp22.suse.cz>
- <9e61ab53e1419a144f774b95230b789244895424.camel@redhat.com>
- <Y9FzSBw10MGXm2TK@tpad>
- <Y9IvoDJbLbFcitTc@dhcp22.suse.cz>
- <Y9LDAZmApLeffrT8@tpad>
- <Y9LQ615H13RmG7wL@dhcp22.suse.cz>
- <0122005439ffb7895efda7a1a67992cbe41392fe.camel@redhat.com>
- <Y9j9BnMwfm4TJks7@tpad>
- <Y9pd7AxAILUSHrpe@dhcp22.suse.cz>
- <28e08669302ad1e7a41bdf8b9988de6a352b5fe1.camel@redhat.com>
+From: Waiman Long <longman@redhat.com>
+Subject: [PATCH v2] cgroup/cpuset: Don't filter offline CPUs in cpuset_cpus_allowed() for top cpuset tasks
+Date: Sun,  5 Feb 2023 22:48:53 -0500
+Message-ID: <20230206034853.330463-1-longman@redhat.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
-        t=1675626564;
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1675655362;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=zCXR2fdD5KUizgsD+r8xIXos+I6YOtrXfgJwLA6SDKs=;
-        b=EiKIcs3Klx+YgeINRkbrjeT48IQMnlUunMLev5pz3djUhjV6YTD/1jYT489gdALY33FZCx
-        dSbnndEJe4EaJCa9nw0etCNxIxWraIHACeTmUQS0DGR5VCNsZsBBcLx7vhAaIdbA07JJPu
-        9kXpNSVt5VA+kI0R8AAL2XXGsKB+Ues=
-Content-Disposition: inline
-In-Reply-To: <28e08669302ad1e7a41bdf8b9988de6a352b5fe1.camel@redhat.com>
+         to:to:cc:cc:mime-version:mime-version:
+         content-transfer-encoding:content-transfer-encoding;
+        bh=IpJlMbJRGMZmMDrtHPjj3U2BT9EG2aPl3b1EE2nsKis=;
+        b=eGu8yv2kdrBsHFNWsAOQPaQtRcHD41phRAFBZ/y3CB5kGVCzH24l5dXkWmpPXlZ1+B+Xvv
+        pCRrTU/etI3bAXeWHYyewH3FB3kmF91kJ5V3Dch0B4Lb0Gqx1wkGz+wcJ7zMNiJ0sd8dFq
+        RjXqQLc3n0vreJV0QwgarK/8bkY/Uog=
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="iso-8859-1"
-To: Leonardo =?iso-8859-1?Q?Br=E1s?= <leobras@redhat.com>
-Cc: Michal Hocko <mhocko@suse.com>, Marcelo Tosatti <mtosatti@redhat.com>, Johannes Weiner <hannes@cmpxchg.org>, Shakeel Butt <shakeelb@google.com>, Muchun Song <muchun.song@linux.dev>, Andrew Morton <akpm@linux-foundation.org>, cgroups@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+To: Tejun Heo <tj@kernel.org>, Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, Will Deacon <will@kernel.org>, Peter Zijlstra <peterz@infradead.org>
+Cc: linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, kernel-team@android.com, Waiman Long <longman@redhat.com>
 
-Hi Leonardo!
+Since commit 8f9ea86fdf99 ("sched: Always preserve the user
+requested cpumask"), relax_compatible_cpus_allowed_ptr() is calling
+__sched_setaffinity() unconditionally. This helps to expose a bug in
+the current cpuset hotplug code where the cpumasks of the tasks in
+the top cpuset are not updated at all when some CPUs become online or
+offline. It is likely caused by the fact that some of the tasks in the
+top cpuset, like percpu kthreads, cannot have their cpu affinity changed.
 
-> Yes, but we are exchanging an "always schedule_work_on()", which is a kin=
-d of
-> contention, for a "sometimes we hit spinlock contention".
->=20
-> For the spinlock proposal, on the local cpu side, the *worst case* conten=
-tion
-> is:
-> 1 - wait the spin_unlock() for a complete <percpu cache drain process>,
-> 2 - wait a cache hit for local per-cpu cacheline=A0
->=20
-> What is current implemented (schedule_work_on() approach), for the local
-> cpu=A0side there is *always* this contention:
-> 1 - wait for a context switch,
-> 2 - wait a cache hit from it's local per-cpu cacheline,
-> 3 - wait a complete <percpu cache drain process>,=A0
-> 4 - then for a new context switch to the current thread.
+One way to reproduce this as suggested by Peter is:
+ - boot machine
+ - offline all CPUs except one
+ - taskset -p ffffffff $$
+ - online all CPUs
 
-I think both Michal and me are thinking of a more generic case in which the=
- cpu
-is not exclusively consumed by 1 special process, so that the draining work=
- can
-be executed during an idle time. In this case the work is basically free.
+Fix this by allowing cpuset_cpus_allowed() to return a wider mask that
+includes offline CPUs for those tasks that are in the top cpuset. For
+tasks not in the top cpuset, the old rule applies and only online CPUs
+will be returned in the mask since hotplug events will update their
+cpumasks accordingly.
 
-And the introduction of a spin_lock() on the hot path is what we're are con=
-cerned
-about. I agree, that on some hardware platforms it won't be that expensive,=
- but
-in general not having any spinlocks is so much better.
+Fixes: 8f9ea86fdf99 ("sched: Always preserve the user requested cpumask")
+Reported-by: Will Deacon <will@kernel.org>
+Originally-from: Peter Zijlstra (Intel) <peterz@infradead.org>
+Tested-by: Will Deacon <will@kernel.org>
+Signed-off-by: Waiman Long <longman@redhat.com>
+---
+ kernel/cgroup/cpuset.c | 27 +++++++++++++++++++++++++--
+ 1 file changed, 25 insertions(+), 2 deletions(-)
 
->=20
-> So moving from schedule_work_on() to spinlocks will save 2 context switch=
-es per
-> cpu every time drain_all_stock() is called.
->=20
-> On the remote cpu side, my tests point that doing the remote draining is =
-faster
-> than scheduling a local draining, so it's also a gain.
->=20
-> Also, IIUC the possible contention in the spinlock approach happens only =
-on
-> page-faulting and syscalls, versus the schedule_work_on() approach that c=
-an
-> interrupt user workload at any time.=A0
->=20
-> In fact, not interrupting the user workload in isolated cpus is just a bo=
-nus of
-> using spinlocks.
+ [v2] Remove "TODO".
 
-I believe it significantly depends on the preemption model: you're right re=
-garding
-fully preemptive kernels, but with voluntary/none preemption it's exactly o=
-pposite:
-the draining work will be executed at some point later (probably with 0 cos=
-t),
-while the remote access from another cpu will potentially cause delays on t=
-he
-spin lock as well as a need to refill the stock.
+diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
+index 207bafdb05e8..6630f74967ea 100644
+--- a/kernel/cgroup/cpuset.c
++++ b/kernel/cgroup/cpuset.c
+@@ -3707,15 +3707,38 @@ void __init cpuset_init_smp(void)
+  * Description: Returns the cpumask_var_t cpus_allowed of the cpuset
+  * attached to the specified @tsk.  Guaranteed to return some non-empty
+  * subset of cpu_online_mask, even if this means going outside the
+- * tasks cpuset.
++ * tasks cpuset, except when the task is in the top cpuset.
+  **/
+ 
+ void cpuset_cpus_allowed(struct task_struct *tsk, struct cpumask *pmask)
+ {
+ 	unsigned long flags;
++	struct cpuset *cs;
+ 
+ 	spin_lock_irqsave(&callback_lock, flags);
+-	guarantee_online_cpus(tsk, pmask);
++	rcu_read_lock();
++
++	cs = task_cs(tsk);
++	if (cs != &top_cpuset)
++		guarantee_online_cpus(tsk, pmask);
++	/*
++	 * Tasks in the top cpuset won't get update to their cpumasks
++	 * when a hotplug online/offline event happens. So we include all
++	 * offline cpus in the allowed cpu list.
++	 */
++	if ((cs == &top_cpuset) || cpumask_empty(pmask)) {
++		const struct cpumask *possible_mask = task_cpu_possible_mask(tsk);
++
++		/*
++		 * We first exclude cpus allocated to partitions. If there is no
++		 * allowable online cpu left, we fall back to all possible cpus.
++		 */
++		cpumask_andnot(pmask, possible_mask, top_cpuset.subparts_cpus);
++		if (!cpumask_intersects(pmask, cpu_online_mask))
++			cpumask_copy(pmask, possible_mask);
++	}
++
++	rcu_read_unlock();
+ 	spin_unlock_irqrestore(&callback_lock, flags);
+ }
+ 
+-- 
+2.31.1
 
-Overall I'd expect a noticeable performance regression from an introduction=
- of
-spin locks and remote draining. Maybe not on all platforms, but at least on=
- some.
-That's my main concern. And I don't think the problem we're aiming to solve=
- here
-justifies this potential regression.
-
-Thanks!
