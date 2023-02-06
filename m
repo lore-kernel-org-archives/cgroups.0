@@ -1,221 +1,236 @@
 From: Alistair Popple <apopple@nvidia.com>
-Subject: [PATCH 09/19] io_uring: convert to use vm_account
-Date: Mon,  6 Feb 2023 18:47:46 +1100
-Message-ID: <44e6ead48bc53789191b22b0e140aeb82459e75f.1675669136.git-series.apopple@nvidia.com>
+Subject: [PATCH 10/19] net: skb: Switch to using vm_account
+Date: Mon,  6 Feb 2023 18:47:47 +1100
+Message-ID: <60a51160809d14e3e4a1c681cd71e37ab303adb8.1675669136.git-series.apopple@nvidia.com>
 References: <cover.c238416f0e82377b449846dbb2459ae9d7030c8e.1675669136.git-series.apopple@nvidia.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Return-path: <io-uring-owner@vger.kernel.org>
+Return-path: <netdev-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
  s=selector2;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=r9iLlWenkXS+qWZNyDxmBNuM9bHSYN74X2PJc4f6L4s=;
- b=Gf8LWJbGXqVUQFIga30K7D5qcFdSDCuAnHvDMezj8AWMzPHRlHJmHv/EgBw3+Pek+2ot4lkY6DzrLks7zPkBQc0mKU7N/HXV7xHUHNFXe/FjnT4ImGnQ26NfbptOrwfbPeylxKJquBK2fUlZUBJFgqjueq6jhj9Ndn42XPKFEL2403dAn3q+H8JGNR3Rc+nAG+Y5bOrcbt7BXB7TdIJhzQDUiESy9IEcx2aKaP9ZQGlk6F2V1Bdp1RfcVhmntk2GLmBchLbVhbgS63AFirVVKjYGHbKotlZw1pKWYxqYi/KkYXUd4gYpnPeE0n5GIN+7ze1yk7KsDLIBPsE4ccatcw==
+ bh=CYW4u4ayE2LZHX01iQfnpEcejDU0yOEhVudNlOUAn3Q=;
+ b=LCGOkAUcbw0vOxMEIqkDhbrUyi+Q/QrFLfm8WDWZwttEqb6SGC6ytVojDYGQ3W8mMwzlLiMgJMgSnx7+zNvr2LQEVYWRea3af/eSAGZaYBm8XzYgewKMCKiq4zxplUG3zXxw671Q60xeqaEtCiKb8tpwKOhM5UdGv6OXJ9hczT+M3xm4a21xSkGcU8nGENwG9zuRr0h/SAFp2kCyXV9veXiWao7bXHNqUZXFR9Wzh29VahK6lyIG+GmV2adHPhQQ+mei1crxC3ZXczm/kChnd/igJYJxz3yWKrpKcjzz4EPYAw9JvWxNelIov5X8e2T6DgBJVaiRUgFG7UANPuk7dw==
 In-Reply-To: <cover.c238416f0e82377b449846dbb2459ae9d7030c8e.1675669136.git-series.apopple@nvidia.com>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 To: linux-mm@kvack.org, cgroups@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org, jgg@nvidia.com, jhubbard@nvidia.com, tjmercier@google.com, hannes@cmpxchg.org, surenb@google.com, mkoutny@suse.com, daniel@ffwll.ch, "Daniel P . Berrange" <berrange@redhat.com>, Alex Williamson <alex.williamson@redhat.com>, Alistair Popple <apopple@nvidia.com>, Jens Axboe <axboe@kernel.dk>, Pavel Begunkov <asml.silence@gmail.com>, io-uring@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org, jgg@nvidia.com, jhubbard@nvidia.com, tjmercier@google.com, hannes@cmpxchg.org, surenb@google.com, mkoutny@suse.com, daniel@ffwll.ch, "Daniel P . Berrange" <berrange@redhat.com>, Alex Williamson <alex.williamson@redhat.com>, Alistair Popple <apopple@nvidia.com>, netdev@vger.kernel.org, linux-rdma@vger.kernel.org, rds-devel@oss.oracle.com
 
-Convert io_uring to use vm_account instead of directly charging pages
-against the user/mm. Rather than charge pages to both user->locked_vm
-and mm->pinned_vm this will only charge pages to user->locked_vm.
+Switch to using vm_account to charge pinned pages. This will allow a
+future change to charge the pinned pages to a cgroup to limit the
+overall number of pinned pages in the system.
 
 Signed-off-by: Alistair Popple <apopple@nvidia.com>
-Cc: Jens Axboe <axboe@kernel.dk>
-Cc: Pavel Begunkov <asml.silence@gmail.com>
-Cc: io-uring@vger.kernel.org
 Cc: linux-kernel@vger.kernel.org
+Cc: netdev@vger.kernel.org
+Cc: linux-rdma@vger.kernel.org
+Cc: rds-devel@oss.oracle.com
 ---
- include/linux/io_uring_types.h |  4 ++--
- io_uring/io_uring.c            | 20 +++---------------
- io_uring/notif.c               |  4 ++--
- io_uring/notif.h               | 10 +++------
- io_uring/rsrc.c                | 38 +++--------------------------------
- io_uring/rsrc.h                |  9 +--------
- 6 files changed, 17 insertions(+), 68 deletions(-)
+ include/linux/skbuff.h |  7 +++---
+ include/net/sock.h     |  3 +++-
+ net/core/skbuff.c      | 47 +++++++++++++++----------------------------
+ net/rds/message.c      | 10 ++++++---
+ 4 files changed, 31 insertions(+), 36 deletions(-)
 
-diff --git a/include/linux/io_uring_types.h b/include/linux/io_uring_types.h
-index 128a67a..45ac75d 100644
---- a/include/linux/io_uring_types.h
-+++ b/include/linux/io_uring_types.h
-@@ -5,6 +5,7 @@
- #include <linux/task_work.h>
- #include <linux/bitmap.h>
+diff --git a/include/linux/skbuff.h b/include/linux/skbuff.h
+index 4c84924..14f29a0 100644
+--- a/include/linux/skbuff.h
++++ b/include/linux/skbuff.h
+@@ -37,6 +37,7 @@
+ #include <linux/in6.h>
+ #include <linux/if_packet.h>
  #include <linux/llist.h>
 +#include <linux/vm_account.h>
- #include <uapi/linux/io_uring.h>
+ #include <net/flow.h>
+ #include <net/page_pool.h>
+ #if IS_ENABLED(CONFIG_NF_CONNTRACK)
+@@ -554,7 +555,6 @@ struct ubuf_info_msgzc {
+ 	};
  
- struct io_wq_work_node {
-@@ -343,8 +344,7 @@ struct io_ring_ctx {
- 	struct io_wq_hash		*hash_map;
+ 	struct mmpin {
+-		struct user_struct *user;
+ 		unsigned int num_pg;
+ 	} mmp;
+ };
+@@ -563,8 +563,9 @@ struct ubuf_info_msgzc {
+ #define uarg_to_msgzc(ubuf_ptr)	container_of((ubuf_ptr), struct ubuf_info_msgzc, \
+ 					     ubuf)
  
- 	/* Only used for accounting purposes */
--	struct user_struct		*user;
--	struct mm_struct		*mm_account;
-+	struct vm_account               vm_account;
+-int mm_account_pinned_pages(struct mmpin *mmp, size_t size);
+-void mm_unaccount_pinned_pages(struct mmpin *mmp);
++int mm_account_pinned_pages(struct vm_account *vm_account, struct mmpin *mmp,
++			size_t size);
++void mm_unaccount_pinned_pages(struct vm_account *vm_account, struct mmpin *mmp);
  
- 	/* ctx exit and cancelation */
- 	struct llist_head		fallback_llist;
-diff --git a/io_uring/io_uring.c b/io_uring/io_uring.c
-index 0a4efad..912da4f 100644
---- a/io_uring/io_uring.c
-+++ b/io_uring/io_uring.c
-@@ -2744,15 +2744,11 @@ static __cold void io_ring_ctx_free(struct io_ring_ctx *ctx)
+ /* This data is invariant across clones and lives at
+  * the end of the header data, ie. at skb->end.
+diff --git a/include/net/sock.h b/include/net/sock.h
+index dcd72e6..0e756d3 100644
+--- a/include/net/sock.h
++++ b/include/net/sock.h
+@@ -63,6 +63,7 @@
+ #include <linux/atomic.h>
+ #include <linux/refcount.h>
+ #include <linux/llist.h>
++#include <linux/vm_account.h>
+ #include <net/dst.h>
+ #include <net/checksum.h>
+ #include <net/tcp_states.h>
+@@ -334,6 +335,7 @@ struct sk_filter;
+   *	@sk_security: used by security modules
+   *	@sk_mark: generic packet mark
+   *	@sk_cgrp_data: cgroup data for this cgroup
++  *	@sk_vm_account: data for pinned memory accounting
+   *	@sk_memcg: this socket's memory cgroup association
+   *	@sk_write_pending: a write to stream socket waits to start
+   *	@sk_state_change: callback to indicate change in the state of the sock
+@@ -523,6 +525,7 @@ struct sock {
+ 	void			*sk_security;
  #endif
- 	WARN_ON_ONCE(!list_empty(&ctx->ltimeout_list));
+ 	struct sock_cgroup_data	sk_cgrp_data;
++	struct vm_account       sk_vm_account;
+ 	struct mem_cgroup	*sk_memcg;
+ 	void			(*sk_state_change)(struct sock *sk);
+ 	void			(*sk_data_ready)(struct sock *sk);
+diff --git a/net/core/skbuff.c b/net/core/skbuff.c
+index 4a0eb55..bed3fc9 100644
+--- a/net/core/skbuff.c
++++ b/net/core/skbuff.c
+@@ -1309,42 +1309,25 @@ struct sk_buff *skb_morph(struct sk_buff *dst, struct sk_buff *src)
+ }
+ EXPORT_SYMBOL_GPL(skb_morph);
  
--	if (ctx->mm_account) {
--		mmdrop(ctx->mm_account);
--		ctx->mm_account = NULL;
--	}
-+	vm_account_release(&ctx->vm_account);
- 	io_mem_free(ctx->rings);
- 	io_mem_free(ctx->sq_sqes);
- 
- 	percpu_ref_exit(&ctx->refs);
--	free_uid(ctx->user);
- 	io_req_caches_free(ctx);
- 	if (ctx->hash_map)
- 		io_wq_put_hash(ctx->hash_map);
-@@ -3585,8 +3581,9 @@ static __cold int io_uring_create(unsigned entries, struct io_uring_params *p,
- 		ctx->syscall_iopoll = 1;
- 
- 	ctx->compat = in_compat_syscall();
--	if (!capable(CAP_IPC_LOCK))
--		ctx->user = get_uid(current_user());
-+	vm_account_init(&ctx->vm_account, current, current_user(),
-+			VM_ACCOUNT_USER |
-+			(capable(CAP_IPC_LOCK) ? VM_ACCOUNT_BYPASS : 0));
- 
- 	/*
- 	 * For SQPOLL, we just need a wakeup, always. For !SQPOLL, if
-@@ -3619,15 +3616,6 @@ static __cold int io_uring_create(unsigned entries, struct io_uring_params *p,
- 		goto err;
- 	}
- 
--	/*
--	 * This is just grabbed for accounting purposes. When a process exits,
--	 * the mm is exited and dropped before the files, hence we need to hang
--	 * on to this mm purely for the purposes of being able to unaccount
--	 * memory (locked/pinned vm). It's not used for anything else.
--	 */
--	mmgrab(current->mm);
--	ctx->mm_account = current->mm;
+-int mm_account_pinned_pages(struct mmpin *mmp, size_t size)
++int mm_account_pinned_pages(struct vm_account *vm_account, struct mmpin *mmp,
++			    size_t size)
+ {
+-	unsigned long max_pg, num_pg, new_pg, old_pg;
+-	struct user_struct *user;
 -
- 	ret = io_allocate_scq_urings(ctx, p);
- 	if (ret)
- 		goto err;
-diff --git a/io_uring/notif.c b/io_uring/notif.c
-index c4bb793..0f589fa 100644
---- a/io_uring/notif.c
-+++ b/io_uring/notif.c
-@@ -17,8 +17,8 @@ static void io_notif_complete_tw_ext(struct io_kiocb *notif, bool *locked)
- 	if (nd->zc_report && (nd->zc_copied || !nd->zc_used))
- 		notif->cqe.res |= IORING_NOTIF_USAGE_ZC_COPIED;
+-	if (capable(CAP_IPC_LOCK) || !size)
+-		return 0;
++	unsigned int num_pg;
  
--	if (nd->account_pages && ctx->user) {
--		__io_unaccount_mem(ctx->user, nd->account_pages);
-+	if (nd->account_pages) {
-+		vm_unaccount_pinned(&ctx->vm_account, nd->account_pages);
- 		nd->account_pages = 0;
- 	}
- 	io_req_task_complete(notif, locked);
-diff --git a/io_uring/notif.h b/io_uring/notif.h
-index c88c800..e2cb44a 100644
---- a/io_uring/notif.h
-+++ b/io_uring/notif.h
-@@ -43,11 +43,9 @@ static inline int io_notif_account_mem(struct io_kiocb *notif, unsigned len)
- 	unsigned nr_pages = (len >> PAGE_SHIFT) + 2;
- 	int ret;
+ 	num_pg = (size >> PAGE_SHIFT) + 2;	/* worst case */
+-	max_pg = rlimit(RLIMIT_MEMLOCK) >> PAGE_SHIFT;
+-	user = mmp->user ? : current_user();
++	if (vm_account_pinned(vm_account, num_pg))
++		return -ENOBUFS;
  
--	if (ctx->user) {
--		ret = __io_account_mem(ctx->user, nr_pages);
--		if (ret)
--			return ret;
--		nd->account_pages += nr_pages;
+-	old_pg = atomic_long_read(&user->locked_vm);
+-	do {
+-		new_pg = old_pg + num_pg;
+-		if (new_pg > max_pg)
+-			return -ENOBUFS;
+-	} while (!atomic_long_try_cmpxchg(&user->locked_vm, &old_pg, new_pg));
+-
+-	if (!mmp->user) {
+-		mmp->user = get_uid(user);
+-		mmp->num_pg = num_pg;
+-	} else {
+-		mmp->num_pg += num_pg;
 -	}
-+	ret = __io_account_mem(&ctx->vm_account, nr_pages);
-+	if (ret)
-+		return ret;
-+	nd->account_pages += nr_pages;
++	mmp->num_pg += num_pg;
+ 
  	return 0;
  }
-diff --git a/io_uring/rsrc.c b/io_uring/rsrc.c
-index 18de10c..aa44528 100644
---- a/io_uring/rsrc.c
-+++ b/io_uring/rsrc.c
-@@ -42,49 +42,19 @@ void io_rsrc_refs_drop(struct io_ring_ctx *ctx)
- 	}
- }
+ EXPORT_SYMBOL_GPL(mm_account_pinned_pages);
  
--int __io_account_mem(struct user_struct *user, unsigned long nr_pages)
-+int __io_account_mem(struct vm_account *vm_account, unsigned long nr_pages)
+-void mm_unaccount_pinned_pages(struct mmpin *mmp)
++void mm_unaccount_pinned_pages(struct vm_account *vm_account, struct mmpin *mmp)
  {
--	unsigned long page_limit, cur_pages, new_pages;
--
--	if (!nr_pages)
--		return 0;
--
--	/* Don't allow more pages than we can safely lock */
--	page_limit = rlimit(RLIMIT_MEMLOCK) >> PAGE_SHIFT;
--
--	cur_pages = atomic_long_read(&user->locked_vm);
--	do {
--		new_pages = cur_pages + nr_pages;
--		if (new_pages > page_limit)
--			return -ENOMEM;
--	} while (!atomic_long_try_cmpxchg(&user->locked_vm,
--					  &cur_pages, new_pages));
--	return 0;
-+	return vm_account_pinned(vm_account, nr_pages);
- }
- 
- static void io_unaccount_mem(struct io_ring_ctx *ctx, unsigned long nr_pages)
- {
--	if (ctx->user)
--		__io_unaccount_mem(ctx->user, nr_pages);
--
--	if (ctx->mm_account)
--		atomic64_sub(nr_pages, &ctx->mm_account->pinned_vm);
-+	vm_unaccount_pinned(&ctx->vm_account, nr_pages);
- }
- 
- static int io_account_mem(struct io_ring_ctx *ctx, unsigned long nr_pages)
- {
--	int ret;
--
--	if (ctx->user) {
--		ret = __io_account_mem(ctx->user, nr_pages);
--		if (ret)
--			return ret;
+-	if (mmp->user) {
+-		atomic_long_sub(mmp->num_pg, &mmp->user->locked_vm);
+-		free_uid(mmp->user);
 -	}
--
--	if (ctx->mm_account)
--		atomic64_add(nr_pages, &ctx->mm_account->pinned_vm);
--
--	return 0;
-+	return vm_account_pinned(&ctx->vm_account, nr_pages);
++	vm_unaccount_pinned(vm_account, mmp->num_pg);
++	vm_account_release(vm_account);
  }
+ EXPORT_SYMBOL_GPL(mm_unaccount_pinned_pages);
  
- static int io_copy_iov(struct io_ring_ctx *ctx, struct iovec *dst,
-diff --git a/io_uring/rsrc.h b/io_uring/rsrc.h
-index 2b87436..d8833d0 100644
---- a/io_uring/rsrc.h
-+++ b/io_uring/rsrc.h
-@@ -167,12 +167,5 @@ static inline u64 *io_get_tag_slot(struct io_rsrc_data *data, unsigned int idx)
- int io_files_update(struct io_kiocb *req, unsigned int issue_flags);
- int io_files_update_prep(struct io_kiocb *req, const struct io_uring_sqe *sqe);
+@@ -1361,9 +1344,12 @@ static struct ubuf_info *msg_zerocopy_alloc(struct sock *sk, size_t size)
  
--int __io_account_mem(struct user_struct *user, unsigned long nr_pages);
--
--static inline void __io_unaccount_mem(struct user_struct *user,
--				      unsigned long nr_pages)
--{
--	atomic_long_sub(nr_pages, &user->locked_vm);
--}
--
-+int __io_account_mem(struct vm_account *vm_account, unsigned long nr_pages);
- #endif
+ 	BUILD_BUG_ON(sizeof(*uarg) > sizeof(skb->cb));
+ 	uarg = (void *)skb->cb;
+-	uarg->mmp.user = NULL;
++	uarg->mmp.num_pg = 0;
++	vm_account_init(&sk->sk_vm_account, current,
++			current_user(), VM_ACCOUNT_USER);
+ 
+-	if (mm_account_pinned_pages(&uarg->mmp, size)) {
++	if (mm_account_pinned_pages(&sk->sk_vm_account, &uarg->mmp, size)) {
++		vm_account_release(&sk->sk_vm_account);
+ 		kfree_skb(skb);
+ 		return NULL;
+ 	}
+@@ -1416,7 +1402,8 @@ struct ubuf_info *msg_zerocopy_realloc(struct sock *sk, size_t size,
+ 
+ 		next = (u32)atomic_read(&sk->sk_zckey);
+ 		if ((u32)(uarg_zc->id + uarg_zc->len) == next) {
+-			if (mm_account_pinned_pages(&uarg_zc->mmp, size))
++			if (mm_account_pinned_pages(&sk->sk_vm_account,
++						    &uarg_zc->mmp, size))
+ 				return NULL;
+ 			uarg_zc->len++;
+ 			uarg_zc->bytelen = bytelen;
+@@ -1466,7 +1453,7 @@ static void __msg_zerocopy_callback(struct ubuf_info_msgzc *uarg)
+ 	u32 lo, hi;
+ 	u16 len;
+ 
+-	mm_unaccount_pinned_pages(&uarg->mmp);
++	mm_unaccount_pinned_pages(&sk->sk_vm_account, &uarg->mmp);
+ 
+ 	/* if !len, there was only 1 call, and it was aborted
+ 	 * so do not queue a completion notification
+diff --git a/net/rds/message.c b/net/rds/message.c
+index b47e4f0..4595540 100644
+--- a/net/rds/message.c
++++ b/net/rds/message.c
+@@ -35,6 +35,7 @@
+ #include <linux/export.h>
+ #include <linux/skbuff.h>
+ #include <linux/list.h>
++#include <linux/vm_account.h>
+ #include <linux/errqueue.h>
+ 
+ #include "rds.h"
+@@ -99,7 +100,7 @@ static void rds_rm_zerocopy_callback(struct rds_sock *rs,
+ 	struct list_head *head;
+ 	unsigned long flags;
+ 
+-	mm_unaccount_pinned_pages(&znotif->z_mmp);
++	mm_unaccount_pinned_pages(&rs->rs_sk.sk_vm_account, &znotif->z_mmp);
+ 	q = &rs->rs_zcookie_queue;
+ 	spin_lock_irqsave(&q->lock, flags);
+ 	head = &q->zcookie_head;
+@@ -367,6 +368,7 @@ static int rds_message_zcopy_from_user(struct rds_message *rm, struct iov_iter *
+ 	int ret = 0;
+ 	int length = iov_iter_count(from);
+ 	struct rds_msg_zcopy_info *info;
++	struct vm_account *vm_account = &rm->m_rs->rs_sk.sk_vm_account;
+ 
+ 	rm->m_inc.i_hdr.h_len = cpu_to_be32(iov_iter_count(from));
+ 
+@@ -380,7 +382,9 @@ static int rds_message_zcopy_from_user(struct rds_message *rm, struct iov_iter *
+ 		return -ENOMEM;
+ 	INIT_LIST_HEAD(&info->rs_zcookie_next);
+ 	rm->data.op_mmp_znotifier = &info->znotif;
+-	if (mm_account_pinned_pages(&rm->data.op_mmp_znotifier->z_mmp,
++	vm_account_init(vm_account, current, current_user(), VM_ACCOUNT_USER);
++	if (mm_account_pinned_pages(vm_account,
++				    &rm->data.op_mmp_znotifier->z_mmp,
+ 				    length)) {
+ 		ret = -ENOMEM;
+ 		goto err;
+@@ -399,7 +403,7 @@ static int rds_message_zcopy_from_user(struct rds_message *rm, struct iov_iter *
+ 			for (i = 0; i < rm->data.op_nents; i++)
+ 				put_page(sg_page(&rm->data.op_sg[i]));
+ 			mmp = &rm->data.op_mmp_znotifier->z_mmp;
+-			mm_unaccount_pinned_pages(mmp);
++			mm_unaccount_pinned_pages(vm_account, mmp);
+ 			ret = -EFAULT;
+ 			goto err;
+ 		}
 -- 
 git-series 0.9.1
