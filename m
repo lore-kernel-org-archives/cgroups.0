@@ -1,236 +1,122 @@
-From: Alistair Popple <apopple@nvidia.com>
-Subject: [PATCH 10/19] net: skb: Switch to using vm_account
-Date: Mon,  6 Feb 2023 18:47:47 +1100
-Message-ID: <60a51160809d14e3e4a1c681cd71e37ab303adb8.1675669136.git-series.apopple@nvidia.com>
+From: Alistair Popple <apopple-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>
+Subject: [PATCH 13/19] fpga: dfl: afu: convert to use vm_account
+Date: Mon,  6 Feb 2023 18:47:50 +1100
+Message-ID: <4c3fcdfd0617ca7e21bb826c8749adcf00bfe956.1675669136.git-series.apopple@nvidia.com>
 References: <cover.c238416f0e82377b449846dbb2459ae9d7030c8e.1675669136.git-series.apopple@nvidia.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Return-path: <netdev-owner@vger.kernel.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
  s=selector2;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=CYW4u4ayE2LZHX01iQfnpEcejDU0yOEhVudNlOUAn3Q=;
- b=LCGOkAUcbw0vOxMEIqkDhbrUyi+Q/QrFLfm8WDWZwttEqb6SGC6ytVojDYGQ3W8mMwzlLiMgJMgSnx7+zNvr2LQEVYWRea3af/eSAGZaYBm8XzYgewKMCKiq4zxplUG3zXxw671Q60xeqaEtCiKb8tpwKOhM5UdGv6OXJ9hczT+M3xm4a21xSkGcU8nGENwG9zuRr0h/SAFp2kCyXV9veXiWao7bXHNqUZXFR9Wzh29VahK6lyIG+GmV2adHPhQQ+mei1crxC3ZXczm/kChnd/igJYJxz3yWKrpKcjzz4EPYAw9JvWxNelIov5X8e2T6DgBJVaiRUgFG7UANPuk7dw==
-In-Reply-To: <cover.c238416f0e82377b449846dbb2459ae9d7030c8e.1675669136.git-series.apopple@nvidia.com>
+ bh=BwomzvkBEgGdYf53g0ZL4eXFuNuoN5c1QyS6vm/9qcg=;
+ b=szKlcEMHt1BgLN5SGRfE+C6PmQoXkp0dTCEshpWFI/Smn6e5C+3VYLY2QZzhs3jW5Zr7Wb/+8xkUe/R4GNRV+cmPWyFKJL8Rtr9kBvKwp3wwldrosMOZQ3UIpx5OzAWgfJTO92qN5mGGd9qIo11rdP7k19YYqVqCHD9Jwlu5k6n83GJqUsitF+DtgNz/H+KWLy8+f5on9rsznstPZHuGI34hmt2ynwQbuw/phRbFl5Ax34Z1QisK+TUxM+R2451e3RmAO8/TsTWUYggivf2fiJuilRN4NluWPVknhV7EPnUE8NEfTowCMIVRHcPY5sjsFOxFtNnxAdD7+VElgb+BPg==
+In-Reply-To: <cover.c238416f0e82377b449846dbb2459ae9d7030c8e.1675669136.git-series.apopple-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: linux-mm@kvack.org, cgroups@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org, jgg@nvidia.com, jhubbard@nvidia.com, tjmercier@google.com, hannes@cmpxchg.org, surenb@google.com, mkoutny@suse.com, daniel@ffwll.ch, "Daniel P . Berrange" <berrange@redhat.com>, Alex Williamson <alex.williamson@redhat.com>, Alistair Popple <apopple@nvidia.com>, netdev@vger.kernel.org, linux-rdma@vger.kernel.org, rds-devel@oss.oracle.com
+To: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, jgg-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org, jhubbard-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org, tjmercier-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, surenb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, mkoutny-IBi9RG/b67k@public.gmane.org, daniel-/w4YWyX8dFk@public.gmane.org, "Daniel P . Berrange" <berrange-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Alex Williamson <alex.williamson-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Alistair Popple <apopple-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>, Wu Hao <hao.wu-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Tom Rix <trix-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Moritz Fischer <mdf-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Xu Yilun <yilun.xu-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, linux-fpga-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-Switch to using vm_account to charge pinned pages. This will allow a
-future change to charge the pinned pages to a cgroup to limit the
-overall number of pinned pages in the system.
+To charge pinned pages against the pins cgroup drivers must use the
+vm_account_pinned() functions which requires initialisation of a
+struct vm_account. Convert the dfl-afu-region code to do this and
+charge any pins to the pins cgroup.
 
-Signed-off-by: Alistair Popple <apopple@nvidia.com>
-Cc: linux-kernel@vger.kernel.org
-Cc: netdev@vger.kernel.org
-Cc: linux-rdma@vger.kernel.org
-Cc: rds-devel@oss.oracle.com
+Signed-off-by: Alistair Popple <apopple-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>
+Cc: Wu Hao <hao.wu-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+Cc: Tom Rix <trix-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Cc: Moritz Fischer <mdf-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: Xu Yilun <yilun.xu-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+Cc: linux-fpga-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 ---
- include/linux/skbuff.h |  7 +++---
- include/net/sock.h     |  3 +++-
- net/core/skbuff.c      | 47 +++++++++++++++----------------------------
- net/rds/message.c      | 10 ++++++---
- 4 files changed, 31 insertions(+), 36 deletions(-)
+ drivers/fpga/dfl-afu-dma-region.c | 11 ++++++++---
+ drivers/fpga/dfl-afu.h            |  2 ++
+ 2 files changed, 10 insertions(+), 3 deletions(-)
 
-diff --git a/include/linux/skbuff.h b/include/linux/skbuff.h
-index 4c84924..14f29a0 100644
---- a/include/linux/skbuff.h
-+++ b/include/linux/skbuff.h
-@@ -37,6 +37,7 @@
- #include <linux/in6.h>
- #include <linux/if_packet.h>
- #include <linux/llist.h>
-+#include <linux/vm_account.h>
- #include <net/flow.h>
- #include <net/page_pool.h>
- #if IS_ENABLED(CONFIG_NF_CONNTRACK)
-@@ -554,7 +555,6 @@ struct ubuf_info_msgzc {
- 	};
+diff --git a/drivers/fpga/dfl-afu-dma-region.c b/drivers/fpga/dfl-afu-dma-region.c
+index 02b60fd..3b99784 100644
+--- a/drivers/fpga/dfl-afu-dma-region.c
++++ b/drivers/fpga/dfl-afu-dma-region.c
+@@ -38,7 +38,7 @@ static int afu_dma_pin_pages(struct dfl_feature_platform_data *pdata,
+ 	struct device *dev = &pdata->dev->dev;
+ 	int ret, pinned;
  
- 	struct mmpin {
--		struct user_struct *user;
- 		unsigned int num_pg;
- 	} mmp;
- };
-@@ -563,8 +563,9 @@ struct ubuf_info_msgzc {
- #define uarg_to_msgzc(ubuf_ptr)	container_of((ubuf_ptr), struct ubuf_info_msgzc, \
- 					     ubuf)
+-	ret = account_locked_vm(current->mm, npages, true);
++	ret = vm_account_pinned(&region->vm_account, npages);
+ 	if (ret)
+ 		return ret;
  
--int mm_account_pinned_pages(struct mmpin *mmp, size_t size);
--void mm_unaccount_pinned_pages(struct mmpin *mmp);
-+int mm_account_pinned_pages(struct vm_account *vm_account, struct mmpin *mmp,
-+			size_t size);
-+void mm_unaccount_pinned_pages(struct vm_account *vm_account, struct mmpin *mmp);
- 
- /* This data is invariant across clones and lives at
-  * the end of the header data, ie. at skb->end.
-diff --git a/include/net/sock.h b/include/net/sock.h
-index dcd72e6..0e756d3 100644
---- a/include/net/sock.h
-+++ b/include/net/sock.h
-@@ -63,6 +63,7 @@
- #include <linux/atomic.h>
- #include <linux/refcount.h>
- #include <linux/llist.h>
-+#include <linux/vm_account.h>
- #include <net/dst.h>
- #include <net/checksum.h>
- #include <net/tcp_states.h>
-@@ -334,6 +335,7 @@ struct sk_filter;
-   *	@sk_security: used by security modules
-   *	@sk_mark: generic packet mark
-   *	@sk_cgrp_data: cgroup data for this cgroup
-+  *	@sk_vm_account: data for pinned memory accounting
-   *	@sk_memcg: this socket's memory cgroup association
-   *	@sk_write_pending: a write to stream socket waits to start
-   *	@sk_state_change: callback to indicate change in the state of the sock
-@@ -523,6 +525,7 @@ struct sock {
- 	void			*sk_security;
- #endif
- 	struct sock_cgroup_data	sk_cgrp_data;
-+	struct vm_account       sk_vm_account;
- 	struct mem_cgroup	*sk_memcg;
- 	void			(*sk_state_change)(struct sock *sk);
- 	void			(*sk_data_ready)(struct sock *sk);
-diff --git a/net/core/skbuff.c b/net/core/skbuff.c
-index 4a0eb55..bed3fc9 100644
---- a/net/core/skbuff.c
-+++ b/net/core/skbuff.c
-@@ -1309,42 +1309,25 @@ struct sk_buff *skb_morph(struct sk_buff *dst, struct sk_buff *src)
+@@ -67,7 +67,7 @@ static int afu_dma_pin_pages(struct dfl_feature_platform_data *pdata,
+ free_pages:
+ 	kfree(region->pages);
+ unlock_vm:
+-	account_locked_vm(current->mm, npages, false);
++	vm_unaccount_pinned(&region->vm_account, npages);
+ 	return ret;
  }
- EXPORT_SYMBOL_GPL(skb_morph);
  
--int mm_account_pinned_pages(struct mmpin *mmp, size_t size)
-+int mm_account_pinned_pages(struct vm_account *vm_account, struct mmpin *mmp,
-+			    size_t size)
- {
--	unsigned long max_pg, num_pg, new_pg, old_pg;
--	struct user_struct *user;
--
--	if (capable(CAP_IPC_LOCK) || !size)
--		return 0;
-+	unsigned int num_pg;
+@@ -87,7 +87,7 @@ static void afu_dma_unpin_pages(struct dfl_feature_platform_data *pdata,
  
- 	num_pg = (size >> PAGE_SHIFT) + 2;	/* worst case */
--	max_pg = rlimit(RLIMIT_MEMLOCK) >> PAGE_SHIFT;
--	user = mmp->user ? : current_user();
-+	if (vm_account_pinned(vm_account, num_pg))
-+		return -ENOBUFS;
+ 	unpin_user_pages(region->pages, npages);
+ 	kfree(region->pages);
+-	account_locked_vm(current->mm, npages, false);
++	vm_unaccount_pinned(&region->vm_account, npages);
  
--	old_pg = atomic_long_read(&user->locked_vm);
--	do {
--		new_pg = old_pg + num_pg;
--		if (new_pg > max_pg)
--			return -ENOBUFS;
--	} while (!atomic_long_try_cmpxchg(&user->locked_vm, &old_pg, new_pg));
--
--	if (!mmp->user) {
--		mmp->user = get_uid(user);
--		mmp->num_pg = num_pg;
--	} else {
--		mmp->num_pg += num_pg;
--	}
-+	mmp->num_pg += num_pg;
+ 	dev_dbg(dev, "%ld pages unpinned\n", npages);
+ }
+@@ -223,6 +223,7 @@ void afu_dma_region_destroy(struct dfl_feature_platform_data *pdata)
+ 			afu_dma_unpin_pages(pdata, region);
+ 
+ 		node = rb_next(node);
++		vm_account_release(&region->vm_account);
+ 		kfree(region);
+ 	}
+ }
+@@ -322,6 +323,8 @@ int afu_dma_map_region(struct dfl_feature_platform_data *pdata,
+ 	region->user_addr = user_addr;
+ 	region->length = length;
+ 
++	vm_account_init_current(&region->vm_account);
++
+ 	/* Pin the user memory region */
+ 	ret = afu_dma_pin_pages(pdata, region);
+ 	if (ret) {
+@@ -365,6 +368,7 @@ int afu_dma_map_region(struct dfl_feature_platform_data *pdata,
+ unpin_pages:
+ 	afu_dma_unpin_pages(pdata, region);
+ free_region:
++	vm_account_release(&region->vm_account);
+ 	kfree(region);
+ 	return ret;
+ }
+@@ -399,6 +403,7 @@ int afu_dma_unmap_region(struct dfl_feature_platform_data *pdata, u64 iova)
+ 	dma_unmap_page(dfl_fpga_pdata_to_parent(pdata),
+ 		       region->iova, region->length, DMA_BIDIRECTIONAL);
+ 	afu_dma_unpin_pages(pdata, region);
++	vm_account_release(&region->vm_account);
+ 	kfree(region);
  
  	return 0;
- }
- EXPORT_SYMBOL_GPL(mm_account_pinned_pages);
+diff --git a/drivers/fpga/dfl-afu.h b/drivers/fpga/dfl-afu.h
+index e5020e2..2ca6117 100644
+--- a/drivers/fpga/dfl-afu.h
++++ b/drivers/fpga/dfl-afu.h
+@@ -18,6 +18,7 @@
+ #define __DFL_AFU_H
  
--void mm_unaccount_pinned_pages(struct mmpin *mmp)
-+void mm_unaccount_pinned_pages(struct vm_account *vm_account, struct mmpin *mmp)
- {
--	if (mmp->user) {
--		atomic_long_sub(mmp->num_pg, &mmp->user->locked_vm);
--		free_uid(mmp->user);
--	}
-+	vm_unaccount_pinned(vm_account, mmp->num_pg);
-+	vm_account_release(vm_account);
- }
- EXPORT_SYMBOL_GPL(mm_unaccount_pinned_pages);
- 
-@@ -1361,9 +1344,12 @@ static struct ubuf_info *msg_zerocopy_alloc(struct sock *sk, size_t size)
- 
- 	BUILD_BUG_ON(sizeof(*uarg) > sizeof(skb->cb));
- 	uarg = (void *)skb->cb;
--	uarg->mmp.user = NULL;
-+	uarg->mmp.num_pg = 0;
-+	vm_account_init(&sk->sk_vm_account, current,
-+			current_user(), VM_ACCOUNT_USER);
- 
--	if (mm_account_pinned_pages(&uarg->mmp, size)) {
-+	if (mm_account_pinned_pages(&sk->sk_vm_account, &uarg->mmp, size)) {
-+		vm_account_release(&sk->sk_vm_account);
- 		kfree_skb(skb);
- 		return NULL;
- 	}
-@@ -1416,7 +1402,8 @@ struct ubuf_info *msg_zerocopy_realloc(struct sock *sk, size_t size,
- 
- 		next = (u32)atomic_read(&sk->sk_zckey);
- 		if ((u32)(uarg_zc->id + uarg_zc->len) == next) {
--			if (mm_account_pinned_pages(&uarg_zc->mmp, size))
-+			if (mm_account_pinned_pages(&sk->sk_vm_account,
-+						    &uarg_zc->mmp, size))
- 				return NULL;
- 			uarg_zc->len++;
- 			uarg_zc->bytelen = bytelen;
-@@ -1466,7 +1453,7 @@ static void __msg_zerocopy_callback(struct ubuf_info_msgzc *uarg)
- 	u32 lo, hi;
- 	u16 len;
- 
--	mm_unaccount_pinned_pages(&uarg->mmp);
-+	mm_unaccount_pinned_pages(&sk->sk_vm_account, &uarg->mmp);
- 
- 	/* if !len, there was only 1 call, and it was aborted
- 	 * so do not queue a completion notification
-diff --git a/net/rds/message.c b/net/rds/message.c
-index b47e4f0..4595540 100644
---- a/net/rds/message.c
-+++ b/net/rds/message.c
-@@ -35,6 +35,7 @@
- #include <linux/export.h>
- #include <linux/skbuff.h>
- #include <linux/list.h>
+ #include <linux/mm.h>
 +#include <linux/vm_account.h>
- #include <linux/errqueue.h>
  
- #include "rds.h"
-@@ -99,7 +100,7 @@ static void rds_rm_zerocopy_callback(struct rds_sock *rs,
- 	struct list_head *head;
- 	unsigned long flags;
+ #include "dfl.h"
  
--	mm_unaccount_pinned_pages(&znotif->z_mmp);
-+	mm_unaccount_pinned_pages(&rs->rs_sk.sk_vm_account, &znotif->z_mmp);
- 	q = &rs->rs_zcookie_queue;
- 	spin_lock_irqsave(&q->lock, flags);
- 	head = &q->zcookie_head;
-@@ -367,6 +368,7 @@ static int rds_message_zcopy_from_user(struct rds_message *rm, struct iov_iter *
- 	int ret = 0;
- 	int length = iov_iter_count(from);
- 	struct rds_msg_zcopy_info *info;
-+	struct vm_account *vm_account = &rm->m_rs->rs_sk.sk_vm_account;
- 
- 	rm->m_inc.i_hdr.h_len = cpu_to_be32(iov_iter_count(from));
- 
-@@ -380,7 +382,9 @@ static int rds_message_zcopy_from_user(struct rds_message *rm, struct iov_iter *
- 		return -ENOMEM;
- 	INIT_LIST_HEAD(&info->rs_zcookie_next);
- 	rm->data.op_mmp_znotifier = &info->znotif;
--	if (mm_account_pinned_pages(&rm->data.op_mmp_znotifier->z_mmp,
-+	vm_account_init(vm_account, current, current_user(), VM_ACCOUNT_USER);
-+	if (mm_account_pinned_pages(vm_account,
-+				    &rm->data.op_mmp_znotifier->z_mmp,
- 				    length)) {
- 		ret = -ENOMEM;
- 		goto err;
-@@ -399,7 +403,7 @@ static int rds_message_zcopy_from_user(struct rds_message *rm, struct iov_iter *
- 			for (i = 0; i < rm->data.op_nents; i++)
- 				put_page(sg_page(&rm->data.op_sg[i]));
- 			mmp = &rm->data.op_mmp_znotifier->z_mmp;
--			mm_unaccount_pinned_pages(mmp);
-+			mm_unaccount_pinned_pages(vm_account, mmp);
- 			ret = -EFAULT;
- 			goto err;
- 		}
+@@ -51,6 +52,7 @@ struct dfl_afu_mmio_region {
+  * @in_use: flag to indicate if this region is in_use.
+  */
+ struct dfl_afu_dma_region {
++	struct vm_account vm_account;
+ 	u64 user_addr;
+ 	u64 length;
+ 	u64 iova;
 -- 
 git-series 0.9.1
