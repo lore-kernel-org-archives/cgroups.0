@@ -1,124 +1,221 @@
 From: Alistair Popple <apopple@nvidia.com>
-Subject: [PATCH 12/19] kvm/book3s_64_vio: Convert account_locked_vm() to vm_account_pinned()
-Date: Mon,  6 Feb 2023 18:47:49 +1100
-Message-ID: <afa65293cb7aa418fd7a02486817a3a81b88baf8.1675669136.git-series.apopple@nvidia.com>
+Subject: [PATCH 09/19] io_uring: convert to use vm_account
+Date: Mon,  6 Feb 2023 18:47:46 +1100
+Message-ID: <44e6ead48bc53789191b22b0e140aeb82459e75f.1675669136.git-series.apopple@nvidia.com>
 References: <cover.c238416f0e82377b449846dbb2459ae9d7030c8e.1675669136.git-series.apopple@nvidia.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Return-path: <kvm-owner@vger.kernel.org>
+Return-path: <io-uring-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
  s=selector2;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=sABmSCNhqUaki37ROAvn5I2o7zlTWP9iNz0mlKPN/jY=;
- b=CHQwI+iS0hEE2NUjjhh1a8duKr1QEY6gPXkrUEGnhAhiYZh+EwVnEAFuu6/3arCe0qEFPyeE2mBJS0Udgi5k66OavT3AMmplZcz+uqJ83WF5eUQ5sS442WqtwUFWuLpFxK/zyKakGOwypeQsFr1EktqHWHS5HGj9MTzIj/AKquxhLnOuUR71GyVwKhW56iQeZoCko6AgUbTs5rLuExRipjp4QI8mrKGzItovJHdZJzO2Fpz/Ba0JCxnBKnH4N5jmB2+0c3yQah1YL+DcG/bEQext5pLO3aDQcjy6sqSW9YyWytpFSiGFz0j/RXveAB7XaOc8DdrOQSGve00kTSX1UA==
+ bh=r9iLlWenkXS+qWZNyDxmBNuM9bHSYN74X2PJc4f6L4s=;
+ b=Gf8LWJbGXqVUQFIga30K7D5qcFdSDCuAnHvDMezj8AWMzPHRlHJmHv/EgBw3+Pek+2ot4lkY6DzrLks7zPkBQc0mKU7N/HXV7xHUHNFXe/FjnT4ImGnQ26NfbptOrwfbPeylxKJquBK2fUlZUBJFgqjueq6jhj9Ndn42XPKFEL2403dAn3q+H8JGNR3Rc+nAG+Y5bOrcbt7BXB7TdIJhzQDUiESy9IEcx2aKaP9ZQGlk6F2V1Bdp1RfcVhmntk2GLmBchLbVhbgS63AFirVVKjYGHbKotlZw1pKWYxqYi/KkYXUd4gYpnPeE0n5GIN+7ze1yk7KsDLIBPsE4ccatcw==
 In-Reply-To: <cover.c238416f0e82377b449846dbb2459ae9d7030c8e.1675669136.git-series.apopple@nvidia.com>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 To: linux-mm@kvack.org, cgroups@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org, jgg@nvidia.com, jhubbard@nvidia.com, tjmercier@google.com, hannes@cmpxchg.org, surenb@google.com, mkoutny@suse.com, daniel@ffwll.ch, "Daniel P . Berrange" <berrange@redhat.com>, Alex Williamson <alex.williamson@redhat.com>, Alistair Popple <apopple@nvidia.com>, Michael Ellerman <mpe@ellerman.id.au>, Nicholas Piggin <npiggin@gmail.com>, Christophe Leroy <christophe.leroy@csgroup.eu>, Paolo Bonzini <pbonzini@redhat.com>, Alexey Kardashevskiy <aik@ozlabs.ru>, linuxppc-dev@lists.ozlabs.org, kvm@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org, jgg@nvidia.com, jhubbard@nvidia.com, tjmercier@google.com, hannes@cmpxchg.org, surenb@google.com, mkoutny@suse.com, daniel@ffwll.ch, "Daniel P . Berrange" <berrange@redhat.com>, Alex Williamson <alex.williamson@redhat.com>, Alistair Popple <apopple@nvidia.com>, Jens Axboe <axboe@kernel.dk>, Pavel Begunkov <asml.silence@gmail.com>, io-uring@vger.kernel.org
 
-book3s_64_vio currently accounts for pinned pages with
-account_locked_vm() which charges the pages to mm->locked_vm. To make
-this consistent with other drivers switch to using
-vm_account_pinned().
+Convert io_uring to use vm_account instead of directly charging pages
+against the user/mm. Rather than charge pages to both user->locked_vm
+and mm->pinned_vm this will only charge pages to user->locked_vm.
 
 Signed-off-by: Alistair Popple <apopple@nvidia.com>
-Cc: Michael Ellerman <mpe@ellerman.id.au>
-Cc: Nicholas Piggin <npiggin@gmail.com>
-Cc: Christophe Leroy <christophe.leroy@csgroup.eu>
-Cc: Paolo Bonzini <pbonzini@redhat.com>
-Cc: Alexey Kardashevskiy <aik@ozlabs.ru>
-Cc: linuxppc-dev@lists.ozlabs.org
+Cc: Jens Axboe <axboe@kernel.dk>
+Cc: Pavel Begunkov <asml.silence@gmail.com>
+Cc: io-uring@vger.kernel.org
 Cc: linux-kernel@vger.kernel.org
-Cc: kvm@vger.kernel.org
 ---
- arch/powerpc/kvm/book3s_64_vio.c | 10 +++++-----
- include/linux/kvm_host.h         |  2 ++
- virt/kvm/kvm_main.c              |  3 +++
- 3 files changed, 10 insertions(+), 5 deletions(-)
+ include/linux/io_uring_types.h |  4 ++--
+ io_uring/io_uring.c            | 20 +++---------------
+ io_uring/notif.c               |  4 ++--
+ io_uring/notif.h               | 10 +++------
+ io_uring/rsrc.c                | 38 +++--------------------------------
+ io_uring/rsrc.h                |  9 +--------
+ 6 files changed, 17 insertions(+), 68 deletions(-)
 
-diff --git a/arch/powerpc/kvm/book3s_64_vio.c b/arch/powerpc/kvm/book3s_64_vio.c
-index 95e738e..ecd1deb 100644
---- a/arch/powerpc/kvm/book3s_64_vio.c
-+++ b/arch/powerpc/kvm/book3s_64_vio.c
-@@ -273,8 +273,8 @@ static int kvm_spapr_tce_release(struct inode *inode, struct file *filp)
- 		}
+diff --git a/include/linux/io_uring_types.h b/include/linux/io_uring_types.h
+index 128a67a..45ac75d 100644
+--- a/include/linux/io_uring_types.h
++++ b/include/linux/io_uring_types.h
+@@ -5,6 +5,7 @@
+ #include <linux/task_work.h>
+ #include <linux/bitmap.h>
+ #include <linux/llist.h>
++#include <linux/vm_account.h>
+ #include <uapi/linux/io_uring.h>
+ 
+ struct io_wq_work_node {
+@@ -343,8 +344,7 @@ struct io_ring_ctx {
+ 	struct io_wq_hash		*hash_map;
+ 
+ 	/* Only used for accounting purposes */
+-	struct user_struct		*user;
+-	struct mm_struct		*mm_account;
++	struct vm_account               vm_account;
+ 
+ 	/* ctx exit and cancelation */
+ 	struct llist_head		fallback_llist;
+diff --git a/io_uring/io_uring.c b/io_uring/io_uring.c
+index 0a4efad..912da4f 100644
+--- a/io_uring/io_uring.c
++++ b/io_uring/io_uring.c
+@@ -2744,15 +2744,11 @@ static __cold void io_ring_ctx_free(struct io_ring_ctx *ctx)
+ #endif
+ 	WARN_ON_ONCE(!list_empty(&ctx->ltimeout_list));
+ 
+-	if (ctx->mm_account) {
+-		mmdrop(ctx->mm_account);
+-		ctx->mm_account = NULL;
+-	}
++	vm_account_release(&ctx->vm_account);
+ 	io_mem_free(ctx->rings);
+ 	io_mem_free(ctx->sq_sqes);
+ 
+ 	percpu_ref_exit(&ctx->refs);
+-	free_uid(ctx->user);
+ 	io_req_caches_free(ctx);
+ 	if (ctx->hash_map)
+ 		io_wq_put_hash(ctx->hash_map);
+@@ -3585,8 +3581,9 @@ static __cold int io_uring_create(unsigned entries, struct io_uring_params *p,
+ 		ctx->syscall_iopoll = 1;
+ 
+ 	ctx->compat = in_compat_syscall();
+-	if (!capable(CAP_IPC_LOCK))
+-		ctx->user = get_uid(current_user());
++	vm_account_init(&ctx->vm_account, current, current_user(),
++			VM_ACCOUNT_USER |
++			(capable(CAP_IPC_LOCK) ? VM_ACCOUNT_BYPASS : 0));
+ 
+ 	/*
+ 	 * For SQPOLL, we just need a wakeup, always. For !SQPOLL, if
+@@ -3619,15 +3616,6 @@ static __cold int io_uring_create(unsigned entries, struct io_uring_params *p,
+ 		goto err;
  	}
  
--	account_locked_vm(kvm->mm,
--		kvmppc_stt_pages(kvmppc_tce_pages(stt->size)), false);
-+	vm_unaccount_pinned(&kvm->vm_account,
-+		kvmppc_stt_pages(kvmppc_tce_pages(stt->size)));
- 
- 	kvm_put_kvm(stt->kvm);
- 
-@@ -301,8 +301,8 @@ long kvm_vm_ioctl_create_spapr_tce(struct kvm *kvm,
- 		(args->offset + args->size > (ULLONG_MAX >> args->page_shift)))
- 		return -EINVAL;
- 
--	npages = kvmppc_tce_pages(args->size);
--	ret = account_locked_vm(mm, kvmppc_stt_pages(npages), true);
-+	npages = kvmppc_tce_pages(size);
-+	ret = vm_account_pinned(&kvm->vm_account, kvmppc_stt_pages(npages));
+-	/*
+-	 * This is just grabbed for accounting purposes. When a process exits,
+-	 * the mm is exited and dropped before the files, hence we need to hang
+-	 * on to this mm purely for the purposes of being able to unaccount
+-	 * memory (locked/pinned vm). It's not used for anything else.
+-	 */
+-	mmgrab(current->mm);
+-	ctx->mm_account = current->mm;
+-
+ 	ret = io_allocate_scq_urings(ctx, p);
  	if (ret)
- 		return ret;
+ 		goto err;
+diff --git a/io_uring/notif.c b/io_uring/notif.c
+index c4bb793..0f589fa 100644
+--- a/io_uring/notif.c
++++ b/io_uring/notif.c
+@@ -17,8 +17,8 @@ static void io_notif_complete_tw_ext(struct io_kiocb *notif, bool *locked)
+ 	if (nd->zc_report && (nd->zc_copied || !nd->zc_used))
+ 		notif->cqe.res |= IORING_NOTIF_USAGE_ZC_COPIED;
  
-@@ -347,7 +347,7 @@ long kvm_vm_ioctl_create_spapr_tce(struct kvm *kvm,
+-	if (nd->account_pages && ctx->user) {
+-		__io_unaccount_mem(ctx->user, nd->account_pages);
++	if (nd->account_pages) {
++		vm_unaccount_pinned(&ctx->vm_account, nd->account_pages);
+ 		nd->account_pages = 0;
+ 	}
+ 	io_req_task_complete(notif, locked);
+diff --git a/io_uring/notif.h b/io_uring/notif.h
+index c88c800..e2cb44a 100644
+--- a/io_uring/notif.h
++++ b/io_uring/notif.h
+@@ -43,11 +43,9 @@ static inline int io_notif_account_mem(struct io_kiocb *notif, unsigned len)
+ 	unsigned nr_pages = (len >> PAGE_SHIFT) + 2;
+ 	int ret;
  
- 	kfree(stt);
-  fail_acct:
--	account_locked_vm(mm, kvmppc_stt_pages(npages), false);
-+	vm_unaccount_pinned(&kvm->vm_account, kvmppc_stt_pages(npages));
- 	return ret;
+-	if (ctx->user) {
+-		ret = __io_account_mem(ctx->user, nr_pages);
+-		if (ret)
+-			return ret;
+-		nd->account_pages += nr_pages;
+-	}
++	ret = __io_account_mem(&ctx->vm_account, nr_pages);
++	if (ret)
++		return ret;
++	nd->account_pages += nr_pages;
+ 	return 0;
+ }
+diff --git a/io_uring/rsrc.c b/io_uring/rsrc.c
+index 18de10c..aa44528 100644
+--- a/io_uring/rsrc.c
++++ b/io_uring/rsrc.c
+@@ -42,49 +42,19 @@ void io_rsrc_refs_drop(struct io_ring_ctx *ctx)
+ 	}
  }
  
-diff --git a/include/linux/kvm_host.h b/include/linux/kvm_host.h
-index 4f26b24..bd7a7be 100644
---- a/include/linux/kvm_host.h
-+++ b/include/linux/kvm_host.h
-@@ -35,6 +35,7 @@
- #include <linux/interval_tree.h>
- #include <linux/rbtree.h>
- #include <linux/xarray.h>
-+#include <linux/vm_account.h>
- #include <asm/signal.h>
- 
- #include <linux/kvm.h>
-@@ -717,6 +718,7 @@ struct kvm {
- 	 */
- 	struct mutex slots_arch_lock;
- 	struct mm_struct *mm; /* userspace tied to this vm */
-+	struct vm_account vm_account;
- 	unsigned long nr_memslot_pages;
- 	/* The two memslot sets - active and inactive (per address space) */
- 	struct kvm_memslots __memslots[KVM_ADDRESS_SPACE_NUM][2];
-diff --git a/virt/kvm/kvm_main.c b/virt/kvm/kvm_main.c
-index 9c60384..770d037 100644
---- a/virt/kvm/kvm_main.c
-+++ b/virt/kvm/kvm_main.c
-@@ -1142,6 +1142,7 @@ static struct kvm *kvm_create_vm(unsigned long type, const char *fdname)
- 	KVM_MMU_LOCK_INIT(kvm);
- 	mmgrab(current->mm);
- 	kvm->mm = current->mm;
-+	vm_account_init_current(&kvm->vm_account);
- 	kvm_eventfd_init(kvm);
- 	mutex_init(&kvm->lock);
- 	mutex_init(&kvm->irq_lock);
-@@ -1258,6 +1259,7 @@ static struct kvm *kvm_create_vm(unsigned long type, const char *fdname)
- out_err_no_srcu:
- 	kvm_arch_free_vm(kvm);
- 	mmdrop(current->mm);
-+	vm_account_release(&kvm->vm_account);
- 	module_put(kvm_chardev_ops.owner);
- 	return ERR_PTR(r);
- }
-@@ -1327,6 +1329,7 @@ static void kvm_destroy_vm(struct kvm *kvm)
- 	preempt_notifier_dec();
- 	hardware_disable_all();
- 	mmdrop(mm);
-+	vm_account_release(&kvm->vm_account);
- 	module_put(kvm_chardev_ops.owner);
+-int __io_account_mem(struct user_struct *user, unsigned long nr_pages)
++int __io_account_mem(struct vm_account *vm_account, unsigned long nr_pages)
+ {
+-	unsigned long page_limit, cur_pages, new_pages;
+-
+-	if (!nr_pages)
+-		return 0;
+-
+-	/* Don't allow more pages than we can safely lock */
+-	page_limit = rlimit(RLIMIT_MEMLOCK) >> PAGE_SHIFT;
+-
+-	cur_pages = atomic_long_read(&user->locked_vm);
+-	do {
+-		new_pages = cur_pages + nr_pages;
+-		if (new_pages > page_limit)
+-			return -ENOMEM;
+-	} while (!atomic_long_try_cmpxchg(&user->locked_vm,
+-					  &cur_pages, new_pages));
+-	return 0;
++	return vm_account_pinned(vm_account, nr_pages);
  }
  
+ static void io_unaccount_mem(struct io_ring_ctx *ctx, unsigned long nr_pages)
+ {
+-	if (ctx->user)
+-		__io_unaccount_mem(ctx->user, nr_pages);
+-
+-	if (ctx->mm_account)
+-		atomic64_sub(nr_pages, &ctx->mm_account->pinned_vm);
++	vm_unaccount_pinned(&ctx->vm_account, nr_pages);
+ }
+ 
+ static int io_account_mem(struct io_ring_ctx *ctx, unsigned long nr_pages)
+ {
+-	int ret;
+-
+-	if (ctx->user) {
+-		ret = __io_account_mem(ctx->user, nr_pages);
+-		if (ret)
+-			return ret;
+-	}
+-
+-	if (ctx->mm_account)
+-		atomic64_add(nr_pages, &ctx->mm_account->pinned_vm);
+-
+-	return 0;
++	return vm_account_pinned(&ctx->vm_account, nr_pages);
+ }
+ 
+ static int io_copy_iov(struct io_ring_ctx *ctx, struct iovec *dst,
+diff --git a/io_uring/rsrc.h b/io_uring/rsrc.h
+index 2b87436..d8833d0 100644
+--- a/io_uring/rsrc.h
++++ b/io_uring/rsrc.h
+@@ -167,12 +167,5 @@ static inline u64 *io_get_tag_slot(struct io_rsrc_data *data, unsigned int idx)
+ int io_files_update(struct io_kiocb *req, unsigned int issue_flags);
+ int io_files_update_prep(struct io_kiocb *req, const struct io_uring_sqe *sqe);
+ 
+-int __io_account_mem(struct user_struct *user, unsigned long nr_pages);
+-
+-static inline void __io_unaccount_mem(struct user_struct *user,
+-				      unsigned long nr_pages)
+-{
+-	atomic_long_sub(nr_pages, &user->locked_vm);
+-}
+-
++int __io_account_mem(struct vm_account *vm_account, unsigned long nr_pages);
+ #endif
 -- 
 git-series 0.9.1
