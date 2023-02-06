@@ -1,100 +1,122 @@
-From: Waiman Long <longman@redhat.com>
-Subject: [PATCH v2] cgroup/cpuset: Don't filter offline CPUs in cpuset_cpus_allowed() for top cpuset tasks
-Date: Sun,  5 Feb 2023 22:48:53 -0500
-Message-ID: <20230206034853.330463-1-longman@redhat.com>
+From: Alistair Popple <apopple-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [RFC PATCH 10/19] net: skb: Switch to using vm_account
+Date: Mon, 06 Feb 2023 15:36:49 +1100
+Message-ID: <878rhbflcs.fsf@nvidia.com>
+References: <cover.f52b9eb2792bccb8a9ecd6bc95055705cfe2ae03.1674538665.git-series.apopple@nvidia.com>
+ <9b54eef0b41b678cc5f318bd5ae0917bba5b8e21.1674538665.git-series.apopple@nvidia.com>
+ <Y8/wWTOOjyfGBrP0@nvidia.com> <87pmawz2ma.fsf@nvidia.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1675655362;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:
-         content-transfer-encoding:content-transfer-encoding;
-        bh=IpJlMbJRGMZmMDrtHPjj3U2BT9EG2aPl3b1EE2nsKis=;
-        b=eGu8yv2kdrBsHFNWsAOQPaQtRcHD41phRAFBZ/y3CB5kGVCzH24l5dXkWmpPXlZ1+B+Xvv
-        pCRrTU/etI3bAXeWHYyewH3FB3kmF91kJ5V3Dch0B4Lb0Gqx1wkGz+wcJ7zMNiJ0sd8dFq
-        RjXqQLc3n0vreJV0QwgarK/8bkY/Uog=
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
+ s=selector2;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=V+4PXpqcCeX1uE8aWt3DfoVSzDIUjmhLieV75BId4Og=;
+ b=VVDpLU4oKKHBHxq0kEWsjZacZ+4lj+pc5NNUckwYV53EHuurMOKlHhmUV2eNfd9KbXAmzv9H/MsFpxecL8jIZxtKj/9UmTyyJOcOYBBDvL6wggi9OhcVVnMx0340exVgJXCKA6tbxh0mHMmCTLPfeo/P3IIdRJOvLYFQH+sDtuabkCSe55aqTudDCfmujdeM3k+bCeeaSpC+cBkK/9r4MCSDgRrDU/BbxR5MHJp8+6o5p2B4w9nf1RMlpIcNDwYXBAl0Zcs7t9GE0V9+sj+X4l2pV0GNMkR9YqH7j+nuyPVXK/R0ddc6C55A5/MFH6ZaopYeQgG4Uxpk0+6VhXqc5g==
+In-reply-to: <87pmawz2ma.fsf-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Tejun Heo <tj@kernel.org>, Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, Will Deacon <will@kernel.org>, Peter Zijlstra <peterz@infradead.org>
-Cc: linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, kernel-team@android.com, Waiman Long <longman@redhat.com>
+Content-Transfer-Encoding: 7bit
+To: Jason Gunthorpe <jgg-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>
+Cc: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, jhubbard-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org, tjmercier-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, surenb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, mkoutny-IBi9RG/b67k@public.gmane.org, daniel-/w4YWyX8dFk@public.gmane.org, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, rds-devel-N0ozoZBvEnrZJqsBc5GL+g@public.gmane.org
 
-Since commit 8f9ea86fdf99 ("sched: Always preserve the user
-requested cpumask"), relax_compatible_cpus_allowed_ptr() is calling
-__sched_setaffinity() unconditionally. This helps to expose a bug in
-the current cpuset hotplug code where the cpumasks of the tasks in
-the top cpuset are not updated at all when some CPUs become online or
-offline. It is likely caused by the fact that some of the tasks in the
-top cpuset, like percpu kthreads, cannot have their cpu affinity changed.
 
-One way to reproduce this as suggested by Peter is:
- - boot machine
- - offline all CPUs except one
- - taskset -p ffffffff $$
- - online all CPUs
+Alistair Popple <apopple-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org> writes:
 
-Fix this by allowing cpuset_cpus_allowed() to return a wider mask that
-includes offline CPUs for those tasks that are in the top cpuset. For
-tasks not in the top cpuset, the old rule applies and only online CPUs
-will be returned in the mask since hotplug events will update their
-cpumasks accordingly.
+> Jason Gunthorpe <jgg-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org> writes:
+>
+>> On Tue, Jan 24, 2023 at 04:42:39PM +1100, Alistair Popple wrote:
+>>> diff --git a/include/net/sock.h b/include/net/sock.h
+>>> index dcd72e6..bc3a868 100644
+>>> --- a/include/net/sock.h
+>>> +++ b/include/net/sock.h
+>>> @@ -334,6 +334,7 @@ struct sk_filter;
+>>>    *	@sk_security: used by security modules
+>>>    *	@sk_mark: generic packet mark
+>>>    *	@sk_cgrp_data: cgroup data for this cgroup
+>>> +  *	@sk_vm_account: data for pinned memory accounting
+>>>    *	@sk_memcg: this socket's memory cgroup association
+>>>    *	@sk_write_pending: a write to stream socket waits to start
+>>>    *	@sk_state_change: callback to indicate change in the state of the sock
+>>> @@ -523,6 +524,7 @@ struct sock {
+>>>  	void			*sk_security;
+>>>  #endif
+>>>  	struct sock_cgroup_data	sk_cgrp_data;
+>>> +	struct vm_account       sk_vm_account;
+>>>  	struct mem_cgroup	*sk_memcg;
+>>>  	void			(*sk_state_change)(struct sock *sk);
+>>>  	void			(*sk_data_ready)(struct sock *sk);
+>>
+>> I'm not sure this makes sense in a sock - each sock can be shared with
+>> different proceses..
+>
+> TBH it didn't feel right to me either so was hoping for some
+> feedback. Will try your suggestion below.
+>
+>>> diff --git a/net/rds/message.c b/net/rds/message.c
+>>> index b47e4f0..2138a70 100644
+>>> --- a/net/rds/message.c
+>>> +++ b/net/rds/message.c
+>>> @@ -99,7 +99,7 @@ static void rds_rm_zerocopy_callback(struct rds_sock *rs,
+>>>  	struct list_head *head;
+>>>  	unsigned long flags;
+>>>  
+>>> -	mm_unaccount_pinned_pages(&znotif->z_mmp);
+>>> +	mm_unaccount_pinned_pages(&rs->rs_sk.sk_vm_account, &znotif->z_mmp);
+>>>  	q = &rs->rs_zcookie_queue;
+>>>  	spin_lock_irqsave(&q->lock, flags);
+>>>  	head = &q->zcookie_head;
+>>> @@ -367,6 +367,7 @@ static int rds_message_zcopy_from_user(struct rds_message *rm, struct iov_iter *
+>>>  	int ret = 0;
+>>>  	int length = iov_iter_count(from);
+>>>  	struct rds_msg_zcopy_info *info;
+>>> +	struct vm_account *vm_account = &rm->m_rs->rs_sk.sk_vm_account;
+>>>  
+>>>  	rm->m_inc.i_hdr.h_len = cpu_to_be32(iov_iter_count(from));
+>>>  
+>>> @@ -380,7 +381,9 @@ static int rds_message_zcopy_from_user(struct rds_message *rm, struct iov_iter *
+>>>  		return -ENOMEM;
+>>>  	INIT_LIST_HEAD(&info->rs_zcookie_next);
+>>>  	rm->data.op_mmp_znotifier = &info->znotif;
+>>> -	if (mm_account_pinned_pages(&rm->data.op_mmp_znotifier->z_mmp,
+>>> +	vm_account_init(vm_account, current, current_user(), VM_ACCOUNT_USER);
+>>> +	if (mm_account_pinned_pages(vm_account,
+>>> +				    &rm->data.op_mmp_znotifier->z_mmp,
+>>>  				    length)) {
+>>>  		ret = -ENOMEM;
+>>>  		goto err;
+>>> @@ -399,7 +402,7 @@ static int rds_message_zcopy_from_user(struct rds_message *rm, struct iov_iter *
+>>>  			for (i = 0; i < rm->data.op_nents; i++)
+>>>  				put_page(sg_page(&rm->data.op_sg[i]));
+>>>  			mmp = &rm->data.op_mmp_znotifier->z_mmp;
+>>> -			mm_unaccount_pinned_pages(mmp);
+>>> +			mm_unaccount_pinned_pages(vm_account, mmp);
+>>>  			ret = -EFAULT;
+>>>  			goto err;
+>>>  		}
+>>
+>> I wonder if RDS should just not be doing accounting? Usually things
+>> related to iov_iter are short term and we don't account for them.
+>
+> Yeah, I couldn't easily figure out why these were accounted for in the
+> first place either.
+>
+>> But then I don't really know how RDS works, Santos?
+>>
+>> Regardless, maybe the vm_account should be stored in the
+>> rds_msg_zcopy_info ?
+>
+> On first glance that looks like a better spot. Thanks for the
+> idea.
 
-Fixes: 8f9ea86fdf99 ("sched: Always preserve the user requested cpumask")
-Reported-by: Will Deacon <will@kernel.org>
-Originally-from: Peter Zijlstra (Intel) <peterz@infradead.org>
-Tested-by: Will Deacon <will@kernel.org>
-Signed-off-by: Waiman Long <longman@redhat.com>
----
- kernel/cgroup/cpuset.c | 27 +++++++++++++++++++++++++--
- 1 file changed, 25 insertions(+), 2 deletions(-)
+That works fine for RDS but not for skbuff. We still need a vm_account
+in the struct sock or somewhere else for that. For example in
+msg_zerocopy_realloc() we only have a struct ubuf_info_msgzc
+available. We can't add a struct vm_account field to that because
+ultimately it is stored in struct sk_buff->ck[] which is not large
+enough to contain ubuf_info_msgzc + vm_account.
 
- [v2] Remove "TODO".
+I'm not terribly familiar with kernel networking code though, so happy
+to hear other suggestions.
 
-diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
-index 207bafdb05e8..6630f74967ea 100644
---- a/kernel/cgroup/cpuset.c
-+++ b/kernel/cgroup/cpuset.c
-@@ -3707,15 +3707,38 @@ void __init cpuset_init_smp(void)
-  * Description: Returns the cpumask_var_t cpus_allowed of the cpuset
-  * attached to the specified @tsk.  Guaranteed to return some non-empty
-  * subset of cpu_online_mask, even if this means going outside the
-- * tasks cpuset.
-+ * tasks cpuset, except when the task is in the top cpuset.
-  **/
- 
- void cpuset_cpus_allowed(struct task_struct *tsk, struct cpumask *pmask)
- {
- 	unsigned long flags;
-+	struct cpuset *cs;
- 
- 	spin_lock_irqsave(&callback_lock, flags);
--	guarantee_online_cpus(tsk, pmask);
-+	rcu_read_lock();
-+
-+	cs = task_cs(tsk);
-+	if (cs != &top_cpuset)
-+		guarantee_online_cpus(tsk, pmask);
-+	/*
-+	 * Tasks in the top cpuset won't get update to their cpumasks
-+	 * when a hotplug online/offline event happens. So we include all
-+	 * offline cpus in the allowed cpu list.
-+	 */
-+	if ((cs == &top_cpuset) || cpumask_empty(pmask)) {
-+		const struct cpumask *possible_mask = task_cpu_possible_mask(tsk);
-+
-+		/*
-+		 * We first exclude cpus allocated to partitions. If there is no
-+		 * allowable online cpu left, we fall back to all possible cpus.
-+		 */
-+		cpumask_andnot(pmask, possible_mask, top_cpuset.subparts_cpus);
-+		if (!cpumask_intersects(pmask, cpu_online_mask))
-+			cpumask_copy(pmask, possible_mask);
-+	}
-+
-+	rcu_read_unlock();
- 	spin_unlock_irqrestore(&callback_lock, flags);
- }
- 
--- 
-2.31.1
+>> Jason
 
