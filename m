@@ -1,57 +1,63 @@
-From: Jason Gunthorpe <jgg-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [RFC PATCH 10/19] net: skb: Switch to using vm_account
-Date: Mon, 6 Feb 2023 09:14:02 -0400
-Message-ID: <Y+D9Gkuo1/l0Ty9W@nvidia.com>
-References: <cover.f52b9eb2792bccb8a9ecd6bc95055705cfe2ae03.1674538665.git-series.apopple@nvidia.com>
- <9b54eef0b41b678cc5f318bd5ae0917bba5b8e21.1674538665.git-series.apopple@nvidia.com>
- <Y8/wWTOOjyfGBrP0@nvidia.com>
- <87pmawz2ma.fsf@nvidia.com>
- <878rhbflcs.fsf@nvidia.com>
+From: Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny@suse.com>
+Subject: Re: [PATCH -next] blk-throttle: enable io throttle for root in
+ cgroup v2
+Date: Mon, 6 Feb 2023 16:00:05 +0100
+Message-ID: <20230206150005.GA21332@blackbody.suse.cz>
+References: <YgMxjyVjMjmkMQU5@T590>
+ <20230205155541.1320485-1-ofir.gal@volumez.com>
 Mime-Version: 1.0
-Return-path: <linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
- s=selector2;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=bCVb2MCW9ACGLt45F4faDfRuz+QD/Q3J00b9Ajq9X/0=;
- b=WN3W9culXiSgH8Hi9GEOn2N4O9/VA9C8nSbibbgf9Uh6fHfM5Bj9Yj2qG/8BGJMbr2jOgaMMWtOCYgMXJcSbd47VDwnRi0G4cquOd0ALyNwM7c4iv9gKq1lmgPlzY7B4713jz4fVjT27kWdllX78/rP+1HbRMZbA562ZKAZgHIJZQqeKcdNYSWJyiK460SdPeIMmGPjtxXUt+bG1UUUrZOllqfYRhQSZs1Oe5IpobxA6wpAl9pnICrfQkr2NLwNbhGsej7f9wTAWRmwHanCPbNl4b2202MYZFyqHsBfPm7O1m9eGSRCBpCE3e6IWhFKLwMEKRK1RbTVt9SwPsahGrg==
+Content-Type: multipart/signed; micalg=pgp-sha256;
+        protocol="application/pgp-signature"; boundary="RnlQjJ0d97Da+TV1"
+Return-path: <linux-kernel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
+        t=1675695607; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=CHr5Q9e/qYSR9V7lQvVbstMTRujY37JvhtvhbDdNFhc=;
+        b=enJco1GFYEfekNRXGEjHa1Y2bGfrnhXYglwlqDZW2Sv4Qk1qm0y4/4RCCjo+Xihi+IuVOA
+        ePgWSGg1LBdHFyZfUnbe0cAI60zlC54RcqWcKG6Xrrc3Y8s61rAy4aQkl18x0CDEKO1L4L
+        cUoroXDioBA0ZPiMfXdkUlPZrOoTikY=
 Content-Disposition: inline
-In-Reply-To: <878rhbflcs.fsf-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>
+In-Reply-To: <20230205155541.1320485-1-ofir.gal@volumez.com>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Alistair Popple <apopple-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>
-Cc: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, jhubbard-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org, tjmercier-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, surenb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, mkoutny-IBi9RG/b67k@public.gmane.org, daniel-/w4YWyX8dFk@public.gmane.org, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, rds-devel-N0ozoZBvEnrZJqsBc5GL+g@public.gmane.org
+To: Ofir Gal <ofir.gal@volumez.com>
+Cc: ming.lei@redhat.com, axboe@kernel.dk, cgroups@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, tj@kernel.org, yi.zhang@huawei.com, yukuai3@huawei.com, Ofir Gal <ofir@gal.software>
 
-On Mon, Feb 06, 2023 at 03:36:49PM +1100, Alistair Popple wrote:
 
-> >> But then I don't really know how RDS works, Santos?
-> >>
-> >> Regardless, maybe the vm_account should be stored in the
-> >> rds_msg_zcopy_info ?
-> >
-> > On first glance that looks like a better spot. Thanks for the
-> > idea.
-> 
-> That works fine for RDS but not for skbuff. 
+--RnlQjJ0d97Da+TV1
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-I would definately put the RDS stuff like that..
+On Sun, Feb 05, 2023 at 05:55:41PM +0200, Ofir Gal <ofir.gal@volumez.com> w=
+rote:
+> I have tried to limit the SSD on Server #1, but it seems that the NVME
+> target kworkers are not affected unless I use Yu Kuai's patch.
+>=20
+> Can you elaborate on the issues with this patch or how the scenario
+> described above can be done with cgroups v2?
 
-> We still need a vm_account in the struct sock or somewhere else for
-> that. For example in msg_zerocopy_realloc() we only have a struct
-> ubuf_info_msgzc available. We can't add a struct vm_account field to
-> that because ultimately it is stored in struct sk_buff->ck[] which
-> is not large enough to contain ubuf_info_msgzc + vm_account.
+The issue is that if there's a client that doesn't implement
+self-throttling you cannot guarantee anything on the server side.
+Hence the mechanism must exist on the server side.
 
-Well, AFAICT this is using iov_iter to get the pages and in general
-iov_iter - eg as used for O_DIRECT - doesn't charge anything.
+The NVME target should charge IO to respective blkcg's (just a generic
+advice, I'm not familiar with that interface; see also
+kthread_associate_blkcg() use in loop device driver).
 
-If this does somehow allow a userspace to hold pin a page for a long
-time then it is already technically wrong because it doesn't use
-FOLL_LONGTERM.
+HTH,
+Michal
 
-Arguably FOLL_LONGTERM should be the key precondition to require
-accounting.
+--RnlQjJ0d97Da+TV1
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
 
-So I wonder if it should just be deleted?
+-----BEGIN PGP SIGNATURE-----
 
-Jason
+iHUEARYIAB0WIQTrXXag4J0QvXXBmkMkDQmsBEOquQUCY+EV8wAKCRAkDQmsBEOq
+uYzSAQC5yFq4obBPBxGW7dUITuiVPv6Svw5a8kySKrK/nZPGYAD+KRMo99VYj9Y2
+xbYlmja7pXl+uBz41omMQ8YYSzDE2Ag=
+=Ujhj
+-----END PGP SIGNATURE-----
+
+--RnlQjJ0d97Da+TV1--
