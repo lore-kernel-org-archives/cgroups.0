@@ -1,63 +1,66 @@
-From: Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny@suse.com>
+From: Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny-IBi9RG/b67k@public.gmane.org>
 Subject: Re: [PATCH -next] blk-throttle: enable io throttle for root in
  cgroup v2
-Date: Mon, 6 Feb 2023 16:00:05 +0100
-Message-ID: <20230206150005.GA21332@blackbody.suse.cz>
-References: <YgMxjyVjMjmkMQU5@T590>
- <20230205155541.1320485-1-ofir.gal@volumez.com>
+Date: Mon, 6 Feb 2023 16:10:31 +0100
+Message-ID: <20230206151031.GB21332@blackbody.suse.cz>
+References: <20220114093000.3323470-1-yukuai3@huawei.com>
+ <YfGE9L4i7DtNTo08@slm.duckdns.org>
+ <235b0757-d322-2b6e-3ab6-ecc8c82f8f1e@huawei.com>
+ <Yflr4FzUTWsiLTC/@slm.duckdns.org>
+ <32b6949d-60b1-82ce-ae44-1cf089a78276@huawei.com>
+ <YgK7J8TFyFvp/rv1@slm.duckdns.org>
+ <34ae7d06-4f6b-73f7-7299-65cb8859aad8@huawei.com>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=pgp-sha256;
-        protocol="application/pgp-signature"; boundary="RnlQjJ0d97Da+TV1"
-Return-path: <linux-kernel-owner@vger.kernel.org>
+        protocol="application/pgp-signature"; boundary="mojUlQ0s9EVzWg2t"
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
-        t=1675695607; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+        t=1675696233; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
          mime-version:mime-version:content-type:content-type:
          in-reply-to:in-reply-to:references:references;
-        bh=CHr5Q9e/qYSR9V7lQvVbstMTRujY37JvhtvhbDdNFhc=;
-        b=enJco1GFYEfekNRXGEjHa1Y2bGfrnhXYglwlqDZW2Sv4Qk1qm0y4/4RCCjo+Xihi+IuVOA
-        ePgWSGg1LBdHFyZfUnbe0cAI60zlC54RcqWcKG6Xrrc3Y8s61rAy4aQkl18x0CDEKO1L4L
-        cUoroXDioBA0ZPiMfXdkUlPZrOoTikY=
+        bh=sd5nDRHXJk++5A7W1c8QOz1iQG/3lZICXPVElgOmb6Y=;
+        b=ThcOtschhlpEv1GvXgf49lGKS1ihus3Qw82rT2rJff2mbZ0TtKu1oxMV3OVvBaZBvjqWzU
+        otCZwlDmUyqwx4FPNSP6bA2xRMz0PlsZXQQzMPIKQg2O1UqclWhVr+KStARpiwPvBq94v3
+        ltYSws6YThw4EeL7+pbVF24NHIzvVz8=
 Content-Disposition: inline
-In-Reply-To: <20230205155541.1320485-1-ofir.gal@volumez.com>
+In-Reply-To: <34ae7d06-4f6b-73f7-7299-65cb8859aad8-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-To: Ofir Gal <ofir.gal@volumez.com>
-Cc: ming.lei@redhat.com, axboe@kernel.dk, cgroups@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, tj@kernel.org, yi.zhang@huawei.com, yukuai3@huawei.com, Ofir Gal <ofir@gal.software>
+To: "yukuai (C)" <yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, yi.zhang-hv44wF8Li93QT0dZR+AlfA@public.gmane.org
 
 
---RnlQjJ0d97Da+TV1
+--mojUlQ0s9EVzWg2t
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
 
-On Sun, Feb 05, 2023 at 05:55:41PM +0200, Ofir Gal <ofir.gal@volumez.com> w=
-rote:
-> I have tried to limit the SSD on Server #1, but it seems that the NVME
-> target kworkers are not affected unless I use Yu Kuai's patch.
->=20
-> Can you elaborate on the issues with this patch or how the scenario
-> described above can be done with cgroups v2?
+Hello Kuai.
 
-The issue is that if there's a client that doesn't implement
-self-throttling you cannot guarantee anything on the server side.
-Hence the mechanism must exist on the server side.
+On Wed, Feb 09, 2022 at 09:22:30AM +0800, "yukuai (C)" <yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org> wrote:
+> Do you agree that the server can't control how many io it can receives
+> from one client if we limit from server? I think the difference is that
+> limit from client can control it...
 
-The NVME target should charge IO to respective blkcg's (just a generic
-advice, I'm not familiar with that interface; see also
-kthread_associate_blkcg() use in loop device driver).
+(Perhaps it depends on the protocol used for the IO but) eventually
+client requests would be noticably lost/dropped and that's how the
+server propagates the requested control onto the clients without relying
+on the clients throttling themselves.
 
-HTH,
+(Maybe better place to implement this would be a "testing" device mapper
+target akin to the 'delay' one.)
+
+Regards,
 Michal
 
---RnlQjJ0d97Da+TV1
+--mojUlQ0s9EVzWg2t
 Content-Type: application/pgp-signature; name="signature.asc"
 Content-Description: Digital signature
 
 -----BEGIN PGP SIGNATURE-----
 
-iHUEARYIAB0WIQTrXXag4J0QvXXBmkMkDQmsBEOquQUCY+EV8wAKCRAkDQmsBEOq
-uYzSAQC5yFq4obBPBxGW7dUITuiVPv6Svw5a8kySKrK/nZPGYAD+KRMo99VYj9Y2
-xbYlmja7pXl+uBz41omMQ8YYSzDE2Ag=
-=Ujhj
+iHUEARYIAB0WIQTrXXag4J0QvXXBmkMkDQmsBEOquQUCY+EYZQAKCRAkDQmsBEOq
+uYmjAPsG5BcOsvviZP85LUOSIeXHZpkSx9/T2c2MgnKfcze59AD6A67gBQWTt2pC
+/s80tllQKtomn3NTxSWL5rdz+oehegI=
+=d/38
 -----END PGP SIGNATURE-----
 
---RnlQjJ0d97Da+TV1--
+--mojUlQ0s9EVzWg2t--
