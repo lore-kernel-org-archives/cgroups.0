@@ -1,122 +1,52 @@
-From: Yosry Ahmed <yosryahmed@google.com>
-Subject: Re: [PATCH 18/19] mm/mmap: Charge locked memory to pins cgroup
-Date: Mon, 6 Feb 2023 13:12:04 -0800
-Message-ID: <CAJD7tkYxiOZF2F1RxEPTX4nYvAtvHn469JP63KDnifsxR_sQhQ@mail.gmail.com>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCH 14/19] mm: Introduce a cgroup for pinned memory
+Date: Mon, 6 Feb 2023 11:14:30 -1000
+Message-ID: <Y+Fttp1ozejoSQzl@slm.duckdns.org>
 References: <cover.c238416f0e82377b449846dbb2459ae9d7030c8e.1675669136.git-series.apopple@nvidia.com>
- <fa58b745a597a32b434b0d92d55cf0b97317cfec.1675669136.git-series.apopple@nvidia.com>
+ <c7b5e502d1a3b9b8f6e96cbf9ca553b143c327e0.1675669136.git-series.apopple@nvidia.com>
 Mime-Version: 1.0
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20210112;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:from:to:cc:subject:date:message-id:reply-to;
-        bh=8VkzU+WzES+4hWs1tpdeJJZNbSILfAlysdpX/rlmqHE=;
-        b=ZUeEFMpmBT/SzJvHqj8fRBYau8YeTEyGGmfBc8wwYprLc5Z0bo2KZ7GT8ZIxYJmsSy
-         ZOXfkGS4p2PcoX+1z+FjOSAv3Q22woi5YGgqPVEN4/IXkVXhPSsoFCHNZknNCB6hq8/z
-         HQTWLK//Sab3YYSk02xGSfiqUdbIgoo5kaqgxTfYwfSnVw4T3m9wTCXA30ZrNjfS4Lni
-         K89czUvausOC1LF6vfPuw8GUljxvcFRFaxg0tLAGtQsHiFK+2kw1zk8twK9D2msu3XVG
-         wSPYVb4gPnTRQjAgMi6q8q8GfU2iZO8XYPs4B9f/+cLN6SC1e8b6ESG/sxcw6CUw7IAT
-         lgAg==
-In-Reply-To: <fa58b745a597a32b434b0d92d55cf0b97317cfec.1675669136.git-series.apopple@nvidia.com>
+        d=gmail.com; s=20210112;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:sender:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=EOmjkak4hSmRchvmEJgN6IqY5BTXXjlVuAkqhp03RaU=;
+        b=Q5VBT+2LKQxS9wiyf3Xi/Hm7NsRvScNG1exKySJO4Dq2OSUmrEmfapxLhGvnAj+nzj
+         lIs5CgcCVS5i90KKIQDoyqNgoIhyL/L16hvRw+RHgrv8d0OuvPx2RucHIaT6yM3eeI6c
+         VodL4y1qwpNmToerzPOBpI9hUs9WPe9VxU0AY0n5FjEY5lqGxPNXDE8SVCw8TqAECtt0
+         4Jwk2uo/SS/hCwspgO7ijlzCfuWtcM16cBVAqg8W72f7DguU3s5ZYlTBHALexjIcU+jV
+         vHZv/KMeqeQiRVHoToYdVOBy2maKr2y4PsNiIcD8qcXTG1sC1F1l4/mm5VckTwB7eo9k
+         dkUw==
+Sender: Tejun Heo <htejun-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <c7b5e502d1a3b9b8f6e96cbf9ca553b143c327e0.1675669136.git-series.apopple-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Alistair Popple <apopple@nvidia.com>
-Cc: linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, jgg@nvidia.com, jhubbard@nvidia.com, tjmercier@google.com, hannes@cmpxchg.org, surenb@google.com, mkoutny@suse.com, daniel@ffwll.ch, "Daniel P . Berrange" <berrange@redhat.com>, Alex Williamson <alex.williamson@redhat.com>
+To: Alistair Popple <apopple-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>
+Cc: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, jgg-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org, jhubbard-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org, tjmercier-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, surenb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, mkoutny-IBi9RG/b67k@public.gmane.org, daniel-/w4YWyX8dFk@public.gmane.org, "Daniel P . Berrange" <berrange-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Alex Williamson <alex.williamson-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
 
-On Sun, Feb 5, 2023 at 11:50 PM Alistair Popple <apopple@nvidia.com> wrote:
->
-> account_locked_vm() is used to account memory to mm->locked_vm. This
-> adds accounting to the pins cgorup as it behaves similarly and should
-> be accounted against the same global limit if set.
->
-> This means memory must now be unaccounted for correctly, as the cgroup
-> typically outlives both the mm and the task. It is assumed that
-> callers of account_locked_vm() only do accounting against the current
-> task. Callers that need to do accounting against remote tasks should
-> use account_pinned_vm() and associated struct vm_account to hold
-> references to the cgroup.
->
-> Signed-off-by: Alistair Popple <apopple@nvidia.com>
-> Cc: linux-mm@kvack.org
-> Cc: linux-kernel@vger.kernel.org
-> ---
->  mm/util.c | 24 +++++++++++++++++++++++-
->  1 file changed, 23 insertions(+), 1 deletion(-)
->
-> diff --git a/mm/util.c b/mm/util.c
-> index 1ca0dfe..755bada 100644
-> --- a/mm/util.c
-> +++ b/mm/util.c
-> @@ -589,15 +589,21 @@ int __account_locked_vm(struct mm_struct *mm, unsigned long pages,
->                         struct task_struct *task, bool bypass_rlim)
->  {
->         unsigned long locked_vm, limit;
-> +       struct pins_cgroup *pins_cg = get_pins_cg(task);
+On Mon, Feb 06, 2023 at 06:47:51PM +1100, Alistair Popple wrote:
+> If too much memory in a system is pinned or locked it can lead to
+> problems such as performance degradation or in the worst case
+> out-of-memory errors as such memory cannot be moved or paged out.
+> 
+> In order to prevent users without CAP_IPC_LOCK from causing these
+> issues the amount of memory that can be pinned is typically limited by
+> RLIMIT_MEMLOCK. However this is inflexible as limits can't be shared
+> between tasks and the enforcement of these limits is inconsistent
+> between in-kernel users of pinned memory such as mlock() and device
+> drivers which may also pin pages with pin_user_pages().
+> 
+> To allow for a single limit to be set introduce a cgroup controller
+> which can be used to limit the number of pages being pinned by all
+> tasks in the cgroup.
 
-Here we get one ref one the pins cgroup for the entire locked region
-that may contain multiple pages, right? During unlock, we drop the
-ref. Is it possible that we lock a region (acquiring one ref), and
-then unlock it in chunks (dropping multiple refs)?
+As I wrote before, I think this might fit better as a part of memcg than as
+its own controller.
 
-If this is possible, we may have a problem here. We may need to
-acquire one ref per pinned page (not sure if this can overflow). We
-may also want to defer the refcount handling to the pins cgroup
-controller code, similar to charge_memcg(), a function that tries to
-charge and acquires any necessary refs, same for uncharging.
+Thanks.
 
-WDYT?
-
->         int ret = 0;
->
->         mmap_assert_write_locked(mm);
->
-> +       if (pins_cg && !pins_try_charge(pins_cg, pages))
-> +               return -ENOMEM;
-> +
->         locked_vm = mm->locked_vm;
->         if (!bypass_rlim) {
->                 limit = task_rlimit(task, RLIMIT_MEMLOCK) >> PAGE_SHIFT;
-> -               if (locked_vm + pages > limit)
-> +               if (locked_vm + pages > limit) {
-> +                       pins_uncharge(pins_cg, pages);
->                         ret = -ENOMEM;
-> +               }
->         }
->
->         if (!ret)
-> @@ -607,6 +613,12 @@ int __account_locked_vm(struct mm_struct *mm, unsigned long pages,
->                  (void *)_RET_IP_, pages << PAGE_SHIFT, locked_vm << PAGE_SHIFT,
->                 task_rlimit(task, RLIMIT_MEMLOCK), ret ? " - exceeded" : "");
->
-> +       pr_debug("%s: [%d] caller %ps %lu %lu/%lu%s\n", __func__, task->pid,
-> +                (void *)_RET_IP_, pages << PAGE_SHIFT, locked_vm << PAGE_SHIFT,
-> +               task_rlimit(task, RLIMIT_MEMLOCK), ret ? " - exceeded" : "");
-> +
-> +       if (pins_cg)
-> +               put_pins_cg(pins_cg);
->         return ret;
->  }
->  EXPORT_SYMBOL_GPL(__account_locked_vm);
-> @@ -622,8 +634,18 @@ void __unaccount_locked_vm(struct mm_struct *mm, unsigned long pages)
->  {
->         unsigned long locked_vm = mm->locked_vm;
->
-> +       /*
-> +        * TODO: Convert book3s vio to use pinned vm to ensure
-> +        * unaccounting happens to the correct cgroup.
-> +        */
-> +       struct pins_cgroup *pins_cg = get_pins_cg(current);
-> +
->         mmap_assert_write_locked(mm);
->         WARN_ON_ONCE(pages > locked_vm);
-> +       if (pins_cg) {
-> +               pins_uncharge(pins_cg, pages);
-> +               put_pins_cg(pins_cg);
-> +       }
->         mm->locked_vm = locked_vm - pages;
->  }
->  EXPORT_SYMBOL_GPL(__unaccount_locked_vm);
-> --
-> git-series 0.9.1
->
+-- 
+tejun
