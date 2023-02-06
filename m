@@ -1,66 +1,62 @@
-From: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH 2/2] sched/isolation: Add cpu_is_isolated() API
-Date: Mon, 6 Feb 2023 11:50:11 -0500
-Message-ID: <c6bd487d-1436-66f7-ed2a-8679303ad9b5@redhat.com>
-References: <20230203232409.163847-1-frederic@kernel.org>
- <20230203232409.163847-3-frederic@kernel.org>
- <0f388863-9498-e61e-e2dc-965654544489@redhat.com>
- <20230206154710.GC21332@blackbody.suse.cz>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCH v2] cgroup/cpuset: Don't filter offline CPUs in
+ cpuset_cpus_allowed() for top cpuset tasks
+Date: Mon, 6 Feb 2023 10:15:32 -1000
+Message-ID: <Y+Ff5Hi3S0ftz+XK@slm.duckdns.org>
+References: <20230206034853.330463-1-longman@redhat.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1675702217;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=yVEU5w2/bUVcxkdB59nbmmH1xHTXkQRMgUkXR85IDjQ=;
-        b=jEP6v2tr7GEBa58iTVb2HkcghJ83ecAkknUsjvHgp+LX3tXzv+GG5CWK3wSCzaHVyzFTyT
-        v1rU+5fvUh98ddhk42P+q2nL0d4Acf6g4Y9SGbYgWhcBr4hr6OAdaOEZOnCDD4HpGjQ3ee
-        O0oWRMI7xDoSdkQTMDMLOvfI3u/A0SU=
-Content-Language: en-US
-In-Reply-To: <20230206154710.GC21332-9OudH3eul5jcvrawFnH+a6VXKuFTiq87@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:sender:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=dJb35mhM2Hbo2R5tiLKHQvqDWiCTe8jrz1+VmmZokUg=;
+        b=pBxCY01r9CDzvCb4m4soEW0AV3WnU9oLYZAyLjld3Nb+mxlySjB4wCvRVd9En70iko
+         L/c/CzynnU7bG0S4aKqtD67H/E/jYTZxDQ5AFgyKeyeKJ+rmonw8UjOog8fEntBVAY0A
+         LBQ5uYBcgGg995N5Pqmf08fP/3vPbIpGu96UwjTh8FgKOBInWv+p67r3FDZdKumz3pHZ
+         pISkxr2SlRYJoylU6ag4JfjJoRRubNx4pDVSLHvNU4iXtM57kBmOjKD+Pt9xexDKVW4/
+         zlru3lnpWVsD/Lm+ZHInNDu6+mBvdn5vmhqNHC5UTlg+pvwysYStqLSytggrrYL7eQCC
+         Z0dQ==
+Sender: Tejun Heo <htejun-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <20230206034853.330463-1-longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="iso-8859-1"; format="flowed"
-To: =?UTF-8?Q?Michal_Koutn=c3=bd?= <mkoutny-IBi9RG/b67k@public.gmane.org>
-Cc: Frederic Weisbecker <frederic-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>, Marcelo Tosatti <mtosatti-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Leonardo <leobras-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Muchun Song <muchun.song-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Thomas Gleixner <tglx-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Cc: Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Will Deacon <will-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-z5hGa2qSFaRBDgjK7y7TUQ@public.gmane.org
 
-On 2/6/23 10:47, Michal Koutn=C3=BD wrote:
-> Hello.
->
-> On Fri, Feb 03, 2023 at 10:53:46PM -0500, Waiman Long <longman-H+wXaHxf7a=
-LQT0dZR+AlfA@public.gmane.org> wrote:
->> CPUs in an isolated cpuset partition is similar to HK_TYPE_DOMAIN CPUs as
->> load balancing is disabled. I can add an API to access the cpumask and a=
-dd
->> to this API. However, that list is dynamic as it can be changed at run t=
-ime.
->> Will that be a problem?
-> I can see a problem already -- as a CPU can be dynamically switched to
-> "isolated" mode so should all dependent operations support that (switch)
-> too, i.e. the CPUs local PCP caches would have to be drained when the
-> CPU enters isolation.
-I see the long term goal is to have more isolation capability to be done=20
-dynamically. However, we are not there yet. There is still a lot of work=20
-to do to achieve that.
->
->> Or should that be used separately?
-> It'd be nice to have both (cpuset and cmdline flags) eventually unified.
->
-> Alas, it only leads me conservatively to:
->
-> #ifndef CONFIG_CPUSETS
-> // the proposed implementaion
-> else
-> static inline bool cpu_is_isolated(int cpu) {
-> 	return true;
-> }
-> #endif
+On Sun, Feb 05, 2023 at 10:48:53PM -0500, Waiman Long wrote:
+> Since commit 8f9ea86fdf99 ("sched: Always preserve the user
+> requested cpumask"), relax_compatible_cpus_allowed_ptr() is calling
+> __sched_setaffinity() unconditionally. This helps to expose a bug in
+> the current cpuset hotplug code where the cpumasks of the tasks in
+> the top cpuset are not updated at all when some CPUs become online or
+> offline. It is likely caused by the fact that some of the tasks in the
+> top cpuset, like percpu kthreads, cannot have their cpu affinity changed.
+> 
+> One way to reproduce this as suggested by Peter is:
+>  - boot machine
+>  - offline all CPUs except one
+>  - taskset -p ffffffff $$
+>  - online all CPUs
+> 
+> Fix this by allowing cpuset_cpus_allowed() to return a wider mask that
+> includes offline CPUs for those tasks that are in the top cpuset. For
+> tasks not in the top cpuset, the old rule applies and only online CPUs
+> will be returned in the mask since hotplug events will update their
+> cpumasks accordingly.
+> 
+> Fixes: 8f9ea86fdf99 ("sched: Always preserve the user requested cpumask")
+> Reported-by: Will Deacon <will-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+> Originally-from: Peter Zijlstra (Intel) <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
+> Tested-by: Will Deacon <will-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+> Signed-off-by: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 
-That is too conservative from my point of view. We can have further=20
-discussion when a patch is ready.
+Applied to cgroup/for-6.2-fixes.
 
-Cheers,
-Longman
+Thanks.
 
+-- 
+tejun
