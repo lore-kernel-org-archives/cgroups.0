@@ -1,359 +1,81 @@
-From: Qais Yousef <qyousef-wp2msK0BRk8tq7phqP6ubQ@public.gmane.org>
-Subject: [PATCH v3] sched: cpuset: Don't rebuild root domains on suspend-resume
-Date: Mon,  6 Feb 2023 22:14:28 +0000
-Message-ID: <20230206221428.2125324-1-qyousef@layalina.io>
+From: "Luck, Tony" <tony.luck-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+Subject: RE: Using cgroup membership for resource access control?
+Date: Mon, 6 Feb 2023 22:18:11 +0000
+Message-ID: <SJ1PR11MB6083C61BCA70A31F8C0F12ECFCDA9@SJ1PR11MB6083.namprd11.prod.outlook.com>
+References: <Y+FvQbfTdcTe9GVu@agluck-desk3.sc.intel.com>
+ <Y+F0NA9iI0zlONz7@slm.duckdns.org> <Y+F0mXS9z0flDhf7@slm.duckdns.org>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=layalina-io.20210112.gappssmtp.com; s=20210112;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=Fhiw+jubOvq1uJrkxqi7dpXCXQ7Pp14PB3qH+9iBvvk=;
-        b=XGaKPmbL+LPNdhbIZ8gNyg5YsQ/9NfkANkq1Me2iOAgz6kMhGtq9KP5uTuMro2fsKV
-         97wXmiwNztvKIsr1w/ZNLTY5Gxg9oylT/9WKs2eqsl0zM4DsMM/35gAcHEhazexIXZUH
-         q+FmIXOW0ikTvR28HeB44B2X3kIRUiiMExS+6DuZddUMzM+b9pl8aVFA8kg5Z5mAPHuJ
-         YMz3p9zhVUF2cfceZu5ZHiPpL1+PIriVHBvo6xZGr+WDk4CoPD8yCCr5snlJ4xcbN6W1
-         HRrAJXhuQPMssea8gyc/xy8fY2rMbGRa+gRmRJOhSlD413QLVPC5z5mxDYDQMKX6CIBs
-         Tmug==
-List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Ingo Molnar <mingo-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Juri Lelli <juri.lelli-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Cc: Steven Rostedt <rostedt-nx8X9YLhiw1AfugRpC6u6w@public.gmane.org>, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, luca.abeni-5rdYK369eBLQB0XuIGIEkQ@public.gmane.org, claudio-YOzL5CV4y4YG1A2ADO40+w@public.gmane.org, tommaso.cucinotta-5rdYK369eBLQB0XuIGIEkQ@public.gmane.org, bristot-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, mathieu.poirier-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org, Dietmar Eggemann <dietmar.eggemann-5wv7dgnIgG8@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Vincent Guittot <vincent.guittot-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, Wei Wang <wvw-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Rick Yiu <rickyiu-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Quentin Perret <qperret-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Heiko Carstens <hca-tEXmvtCZX7AybS5Ee8rs3A@public.gmane.org>, Vasily Gorbik <gor-tEXmvtCZX7AybS5Ee8rs3A@public.gmane.org>, Alexander Gordeev <agordeev-tEXmvtCZX7AybS5Ee8rs3A@public.gmane.org>, Sudeep Holla <sudeep.holla-5wv7dgnIgG8@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, linux-s390-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, x86-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, Qais Yousef <qyousef-wp2msK0BRk8tq7phqP6ubQ@public.gmane.org>
+Content-Transfer-Encoding: quoted-printable
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1675721895; x=1707257895;
+  h=from:to:cc:subject:date:message-id:references:
+   in-reply-to:content-transfer-encoding:mime-version;
+  bh=vBkQGh6/0VEmRsJ8IheNAahzdjWtx0a6BuO2ZvFhNzo=;
+  b=cvNhiU6Trd0heMrLpmnbJ5sVbazUoq4ECCQDhEbmbzmktgrVeg/5u8xD
+   9HqHHZQ1QGq+GDxGjUE/ru4YVdnQSuRZOyuYhvyWgXx/vCZiGe8lqqXUX
+   RqjG1BfHXMs6WeYAIeg37+fZUPvHx3QFBIB66SeeWP+0jKxg/dAQf+mbV
+   AZLejG9lWKGPAcVPVXFUTC3VrrAtOiHCM0FrlgFaZHEpcXT5Je3MhmSzP
+   JoN9DrnlLGrBfwsZfvk11Pr1DRIfkPlYTcdTpp60yr97OdS8lq/7q3PNW
+   hj7Bzhcrj2DmLyyGegxNawPdW1YmGYcQfJgcABoIZLrQgatWjGTkii2lq
+   A==;
+In-Reply-To: <Y+F0mXS9z0flDhf7-NiLfg/pYEd1N0TnZuCh8vA@public.gmane.org>
+Content-Language: en-US
+List-ID: <cgroups.vger.kernel.org>
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, "cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "Thomas, Ramesh" <ramesh.thomas-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
 
-Commit f9a25f776d78 ("cpusets: Rebuild root domain deadline accounting information")
-enabled rebuilding root domain on cpuset and hotplug operations to
-correct deadline accounting.
+Tejun,
 
-Rebuilding root domain is a slow operation and we see 10+ of ms delays
-on suspend-resume because of that (worst case captures 20ms which
-happens often).
+Thanks for the quick response.
 
-Since nothing is expected to change on suspend-resume operation; skip
-rebuilding the root domains to regain the some of the time lost.
+> In case it wasn't clear - use the misc controller to restrict which cgrou=
+ps
+> can get how many but as for sharing domain, use more traditional mechanis=
+ms
+> whether that's sharing through cloning, fd passing, shared path with perm
+> checks or whatever.
 
-Achieve this by refactoring the code to pass whether dl accoutning needs
-an update to rebuild_sched_domains(). And while at it, rename
-rebuild_root_domains() to update_dl_rd_accounting() which I believe is
-a more representative name since we are not really rebuilding the root
-domains, but rather updating dl accounting at the root domain.
+That's always an option. But feels like a lot of complexity during setup th=
+at
+I'd like to explore ways to avoid.
 
-Some users of rebuild_sched_domains() will skip dl accounting update
-now:
+Some extra details of a workload that will use these shared virtual windows=
+.
 
-	* Update sched domains when relaxing the domain level in cpuset
-	  which only impacts searching level in load balance
-	* update sched domains when cpufreq governor changes and we need
-	  to create the perf domains
+Imagine some AI training application with one process running per core on
+a server with a hundred or so cores. Each of these processes wants periodic=
+ally
+to share work so far on a subset of the problem with one or more other proc=
+esses.
+The "virtual windows" allow an accelerator device to copy data between a re=
+gion
+in the source process (the owner of the virtual window) and another process=
+ that
+needs to access/supply updates.
 
-Users in arch/x86 and arch/s390 are left with the old behavior.
+Process tree is easy if the test is just "do these two tasks have the same =
+getppid()?"
+Seems harder if the process tree is more complex and I want "Are these two =
+processes
+both descended from a particular common ancestor?"
 
-Debugged-by: Rick Yiu <rickyiu-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Signed-off-by: Qais Yousef (Google) <qyousef-wp2msK0BRk8tq7phqP6ubQ@public.gmane.org>
----
+Using fd passing would involve an O(N^2) step where each process talks to e=
+ach
+other process in turn to complete a link in the mesh of connections. This w=
+ould need
+to be repeated if additional processes are started.
 
-Changes in v3:
+It would be much nicer to have an operation that matches what the applicati=
+ons
+want to do, namely "I want to broadcast-share this with all my peers".
 
-	* Change the logic to avoid using cpuhp_tasks_frozen which can be racy
-	  and have dependency on context
-	* Refactor the code to pass whether dl accounting needs to be updated
-	  down the call chain
-	* Teach cpuset_force_rebuild() to take a reason argument and convert
-	  the variable into int
-	* Rename rebuild_root_domains() into update_dl_rd_accounting() as
-	  that's what I believe it's only doing
+[N.B. I've suggested that these folks should just re-write their applicatio=
+ns to
+simply attach to a giant blob of shared memory, and thus avoid all of this.=
+ But
+that doesn't fit for various reasons]
 
-v2 discussion: https://lore.kernel.org/lkml/20230120194822.962958-1-qyousef-wp2msK0BRk8tq7phqP6ubQ@public.gmane.org/
-v1 discussion: https://lore.kernel.org/lkml/20221216233501.gh6m75e7s66dmjgo@airbuntu/
-
- arch/s390/kernel/topology.c  |  2 +-
- arch/x86/kernel/itmt.c       |  6 ++---
- drivers/base/arch_topology.c |  2 +-
- include/linux/cpuset.h       | 12 ++++++----
- kernel/cgroup/cpuset.c       | 43 ++++++++++++++++++++----------------
- kernel/sched/core.c          |  2 +-
- kernel/sched/topology.c      |  2 +-
- 7 files changed, 39 insertions(+), 30 deletions(-)
-
-diff --git a/arch/s390/kernel/topology.c b/arch/s390/kernel/topology.c
-index c6eecd4a5302..29d57154a3f1 100644
---- a/arch/s390/kernel/topology.c
-+++ b/arch/s390/kernel/topology.c
-@@ -333,7 +333,7 @@ int arch_update_cpu_topology(void)
- 
- static void topology_work_fn(struct work_struct *work)
- {
--	rebuild_sched_domains();
-+	rebuild_sched_domains(true);
- }
- 
- void topology_schedule_update(void)
-diff --git a/arch/x86/kernel/itmt.c b/arch/x86/kernel/itmt.c
-index 9ff480e94511..6f1446223697 100644
---- a/arch/x86/kernel/itmt.c
-+++ b/arch/x86/kernel/itmt.c
-@@ -56,7 +56,7 @@ static int sched_itmt_update_handler(struct ctl_table *table, int write,
- 
- 	if (!ret && write && old_sysctl != sysctl_sched_itmt_enabled) {
- 		x86_topology_update = true;
--		rebuild_sched_domains();
-+		rebuild_sched_domains(true);
- 	}
- 
- 	mutex_unlock(&itmt_update_mutex);
-@@ -125,7 +125,7 @@ int sched_set_itmt_support(void)
- 	sysctl_sched_itmt_enabled = 1;
- 
- 	x86_topology_update = true;
--	rebuild_sched_domains();
-+	rebuild_sched_domains(true);
- 
- 	mutex_unlock(&itmt_update_mutex);
- 
-@@ -161,7 +161,7 @@ void sched_clear_itmt_support(void)
- 		/* disable sched_itmt if we are no longer ITMT capable */
- 		sysctl_sched_itmt_enabled = 0;
- 		x86_topology_update = true;
--		rebuild_sched_domains();
-+		rebuild_sched_domains(true);
- 	}
- 
- 	mutex_unlock(&itmt_update_mutex);
-diff --git a/drivers/base/arch_topology.c b/drivers/base/arch_topology.c
-index e7d6e6657ffa..90d8a42335e6 100644
---- a/drivers/base/arch_topology.c
-+++ b/drivers/base/arch_topology.c
-@@ -253,7 +253,7 @@ int topology_update_cpu_topology(void)
- static void update_topology_flags_workfn(struct work_struct *work)
- {
- 	update_topology = 1;
--	rebuild_sched_domains();
-+	rebuild_sched_domains(true);
- 	pr_debug("sched_domain hierarchy rebuilt, flags updated\n");
- 	update_topology = 0;
- }
-diff --git a/include/linux/cpuset.h b/include/linux/cpuset.h
-index d58e0476ee8e..e30d4cd35ef7 100644
---- a/include/linux/cpuset.h
-+++ b/include/linux/cpuset.h
-@@ -18,6 +18,10 @@
- #include <linux/mmu_context.h>
- #include <linux/jump_label.h>
- 
-+#define CPUSET_FORCE_REBUILD_RESET		0
-+#define CPUSET_FORCE_REBUILD_SUSPEND_RESUME	1
-+#define CPUSET_FORCE_REBUILD_PRS_ERROR		2
-+
- #ifdef CONFIG_CPUSETS
- 
- /*
-@@ -68,7 +72,7 @@ static inline bool cpusets_insane_config(void)
- 
- extern int cpuset_init(void);
- extern void cpuset_init_smp(void);
--extern void cpuset_force_rebuild(void);
-+extern void cpuset_force_rebuild(int reason);
- extern void cpuset_update_active_cpus(void);
- extern void cpuset_wait_for_hotplug(void);
- extern void cpuset_read_lock(void);
-@@ -132,7 +136,7 @@ static inline int cpuset_do_slab_mem_spread(void)
- 
- extern bool current_cpuset_is_being_rebound(void);
- 
--extern void rebuild_sched_domains(void);
-+extern void rebuild_sched_domains(bool update_dl_accounting);
- 
- extern void cpuset_print_current_mems_allowed(void);
- 
-@@ -187,7 +191,7 @@ static inline bool cpusets_insane_config(void) { return false; }
- static inline int cpuset_init(void) { return 0; }
- static inline void cpuset_init_smp(void) {}
- 
--static inline void cpuset_force_rebuild(void) { }
-+static inline void cpuset_force_rebuild(int reason) { }
- 
- static inline void cpuset_update_active_cpus(void)
- {
-@@ -276,7 +280,7 @@ static inline bool current_cpuset_is_being_rebound(void)
- 	return false;
- }
- 
--static inline void rebuild_sched_domains(void)
-+static inline void rebuild_sched_domains(bool update_dl_accounting)
- {
- 	partition_sched_domains(1, NULL, NULL);
- }
-diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
-index a29c0b13706b..e5ddc8e11e5d 100644
---- a/kernel/cgroup/cpuset.c
-+++ b/kernel/cgroup/cpuset.c
-@@ -1079,7 +1079,7 @@ static void update_tasks_root_domain(struct cpuset *cs)
- 	css_task_iter_end(&it);
- }
- 
--static void rebuild_root_domains(void)
-+static void update_dl_rd_accounting(void)
- {
- 	struct cpuset *cs = NULL;
- 	struct cgroup_subsys_state *pos_css;
-@@ -1117,11 +1117,13 @@ static void rebuild_root_domains(void)
- 
- static void
- partition_and_rebuild_sched_domains(int ndoms_new, cpumask_var_t doms_new[],
--				    struct sched_domain_attr *dattr_new)
-+				    struct sched_domain_attr *dattr_new,
-+				    bool update_dl_accounting)
- {
- 	mutex_lock(&sched_domains_mutex);
- 	partition_sched_domains_locked(ndoms_new, doms_new, dattr_new);
--	rebuild_root_domains();
-+	if (update_dl_accounting)
-+		update_dl_rd_accounting();
- 	mutex_unlock(&sched_domains_mutex);
- }
- 
-@@ -1136,7 +1138,7 @@ partition_and_rebuild_sched_domains(int ndoms_new, cpumask_var_t doms_new[],
-  *
-  * Call with cpuset_rwsem held.  Takes cpus_read_lock().
-  */
--static void rebuild_sched_domains_locked(void)
-+static void rebuild_sched_domains_locked(bool update_dl_accounting)
- {
- 	struct cgroup_subsys_state *pos_css;
- 	struct sched_domain_attr *attr;
-@@ -1185,19 +1187,19 @@ static void rebuild_sched_domains_locked(void)
- 	ndoms = generate_sched_domains(&doms, &attr);
- 
- 	/* Have scheduler rebuild the domains */
--	partition_and_rebuild_sched_domains(ndoms, doms, attr);
-+	partition_and_rebuild_sched_domains(ndoms, doms, attr, update_dl_accounting);
- }
- #else /* !CONFIG_SMP */
--static void rebuild_sched_domains_locked(void)
-+static void rebuild_sched_domains_locked(bool update_dl_accounting)
- {
- }
- #endif /* CONFIG_SMP */
- 
--void rebuild_sched_domains(void)
-+void rebuild_sched_domains(bool update_dl_accounting)
- {
- 	cpus_read_lock();
- 	percpu_down_write(&cpuset_rwsem);
--	rebuild_sched_domains_locked();
-+	rebuild_sched_domains_locked(update_dl_accounting);
- 	percpu_up_write(&cpuset_rwsem);
- 	cpus_read_unlock();
- }
-@@ -1681,7 +1683,7 @@ static void update_cpumasks_hier(struct cpuset *cs, struct tmpmasks *tmp,
- 	rcu_read_unlock();
- 
- 	if (need_rebuild_sched_domains)
--		rebuild_sched_domains_locked();
-+		rebuild_sched_domains_locked(true);
- }
- 
- /**
-@@ -2136,7 +2138,7 @@ static int update_relax_domain_level(struct cpuset *cs, s64 val)
- 		cs->relax_domain_level = val;
- 		if (!cpumask_empty(cs->cpus_allowed) &&
- 		    is_sched_load_balance(cs))
--			rebuild_sched_domains_locked();
-+			rebuild_sched_domains_locked(false);
- 	}
- 
- 	return 0;
-@@ -2202,7 +2204,7 @@ static int update_flag(cpuset_flagbits_t bit, struct cpuset *cs,
- 	spin_unlock_irq(&callback_lock);
- 
- 	if (!cpumask_empty(trialcs->cpus_allowed) && balance_flag_changed)
--		rebuild_sched_domains_locked();
-+		rebuild_sched_domains_locked(true);
- 
- 	if (spread_flag_changed)
- 		update_tasks_flags(cs);
-@@ -2315,7 +2317,7 @@ static int update_prstate(struct cpuset *cs, int new_prs)
- 		update_sibling_cpumasks(parent, cs, &tmpmask);
- 
- 	if (!sched_domain_rebuilt)
--		rebuild_sched_domains_locked();
-+		rebuild_sched_domains_locked(true);
- out:
- 	/*
- 	 * Make partition invalid if an error happen
-@@ -3389,11 +3391,11 @@ hotplug_update_tasks(struct cpuset *cs,
- 		update_tasks_nodemask(cs);
- }
- 
--static bool force_rebuild;
-+static int force_rebuild;
- 
--void cpuset_force_rebuild(void)
-+void cpuset_force_rebuild(int reason)
- {
--	force_rebuild = true;
-+	force_rebuild = reason;
- }
- 
- /**
-@@ -3489,7 +3491,7 @@ static void cpuset_hotplug_update_tasks(struct cpuset *cs, struct tmpmasks *tmp)
- 				WRITE_ONCE(cs->prs_err, PERR_HOTPLUG);
- 			notify_partition_change(cs, old_prs);
- 		}
--		cpuset_force_rebuild();
-+		cpuset_force_rebuild(CPUSET_FORCE_REBUILD_PRS_ERROR);
- 	}
- 
- 	/*
-@@ -3499,7 +3501,7 @@ static void cpuset_hotplug_update_tasks(struct cpuset *cs, struct tmpmasks *tmp)
- 	else if (is_partition_valid(parent) && is_partition_invalid(cs)) {
- 		update_parent_subparts_cpumask(cs, partcmd_update, NULL, tmp);
- 		if (is_partition_valid(cs))
--			cpuset_force_rebuild();
-+			cpuset_force_rebuild(CPUSET_FORCE_REBUILD_PRS_ERROR);
- 	}
- 
- update_tasks:
-@@ -3626,8 +3628,11 @@ static void cpuset_hotplug_workfn(struct work_struct *work)
- 
- 	/* rebuild sched domains if cpus_allowed has changed */
- 	if (cpus_updated || force_rebuild) {
--		force_rebuild = false;
--		rebuild_sched_domains();
-+		bool update_dl_accounting = cpus_updated ||
-+				force_rebuild == CPUSET_FORCE_REBUILD_PRS_ERROR;
-+
-+		force_rebuild = CPUSET_FORCE_REBUILD_RESET;
-+		rebuild_sched_domains(update_dl_accounting);
- 	}
- 
- 	free_cpumasks(NULL, ptmp);
-diff --git a/kernel/sched/core.c b/kernel/sched/core.c
-index 4580fe3e1d0c..d68eac04c851 100644
---- a/kernel/sched/core.c
-+++ b/kernel/sched/core.c
-@@ -9485,7 +9485,7 @@ static void cpuset_cpu_active(void)
- 		 * restore the original sched domains by considering the
- 		 * cpuset configurations.
- 		 */
--		cpuset_force_rebuild();
-+		cpuset_force_rebuild(CPUSET_FORCE_REBUILD_SUSPEND_RESUME);
- 	}
- 	cpuset_update_active_cpus();
- }
-diff --git a/kernel/sched/topology.c b/kernel/sched/topology.c
-index d93c3379e901..bf33b84c511a 100644
---- a/kernel/sched/topology.c
-+++ b/kernel/sched/topology.c
-@@ -214,7 +214,7 @@ void rebuild_sched_domains_energy(void)
- {
- 	mutex_lock(&sched_energy_mutex);
- 	sched_energy_update = true;
--	rebuild_sched_domains();
-+	rebuild_sched_domains(false);
- 	sched_energy_update = false;
- 	mutex_unlock(&sched_energy_mutex);
- }
--- 
-2.25.1
-
+-Tony
