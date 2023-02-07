@@ -1,79 +1,73 @@
-From: Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny-IBi9RG/b67k@public.gmane.org>
-Subject: Re: [PATCH 1/2] sched/isolation: Merge individual nohz_full features
- into a common housekeeping flag
-Date: Tue, 7 Feb 2023 13:59:00 +0100
-Message-ID: <20230207125900.GA24523@blackbody.suse.cz>
-References: <20230203232409.163847-1-frederic@kernel.org>
- <20230203232409.163847-2-frederic@kernel.org>
- <20230206155107.GA31453@blackbody.suse.cz>
- <Y+I61dp5qPkWK4s2@lothringen>
+From: Jens Axboe <axboe@kernel.dk>
+Subject: Re: [PATCH 09/19] io_uring: convert to use vm_account
+Date: Tue, 7 Feb 2023 07:28:56 -0700
+Message-ID: <eff3cc48-7279-2fbf-fdbd-f35eff2124d0@kernel.dk>
+References: <cover.c238416f0e82377b449846dbb2459ae9d7030c8e.1675669136.git-series.apopple@nvidia.com>
+ <44e6ead48bc53789191b22b0e140aeb82459e75f.1675669136.git-series.apopple@nvidia.com>
+ <52d41a7e-1407-e74f-9206-6dd583b7b6b5@kernel.dk> <87k00unusm.fsf@nvidia.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha256;
-        protocol="application/pgp-signature"; boundary="FCuugMFkClbJLl1L"
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
-        t=1675774742; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=7QoTLoXlIMxSw37JX85ExzUtBnHWAzOyLQ2c0uIpTLM=;
-        b=IgskfTMKEaO1jmC/N1nUWksgS2w7L8hHtYNz/l/0AgYHAEeL8SvjUTb1X8N2aT+oc21fQK
-        uVxDNfqkoggQQalEcTuNbwT7BnJg3edJ2qvl5KTiMunxb80wXQkiLAlWEaNbjCA56AE9lC
-        dWFgdQMn5ORKYrhQw9DZoNFkuARlRtw=
-Content-Disposition: inline
-In-Reply-To: <Y+I61dp5qPkWK4s2@lothringen>
+Content-Transfer-Encoding: 7bit
+Return-path: <io-uring-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=kernel-dk.20210112.gappssmtp.com; s=20210112;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=GVbHcngcrxb+EtKZ7t6pGqbRT5EixlZslzmjZrbJg0w=;
+        b=aKxw9JI4eNRmyEHa8pZiz59fi5N4wmsEKjVGoh78GkaeojSICmHq3P/0QQJjtCGoWY
+         tVUtigRisgv/MaRvcsGvEaqU5XmI7siMb3JEJnqmaq2u6k0l1sDvsFB15Cb3uF8PyZnT
+         /lp77ze+OK18ZTdBsQRqjUyC9LLE2R/xvF10LbmVqHfJv+TZlYTm7yhVjWnSnaQ84Pyk
+         dP7pEXBu+ifEiQwpYfRYaQau+ZxgsvtXeyCfxTRkBkXPmZVSeu9YejJ+1MaIfZBocaeo
+         Nlz2geKB6sc8dNPfmPhlRaSX7xgjR7f/h34Q41hurGXg2yT6yNMdJQIYKFDQOqi2K+We
+         zc4g==
+Content-Language: en-US
+In-Reply-To: <87k00unusm.fsf@nvidia.com>
 List-ID: <cgroups.vger.kernel.org>
-To: Frederic Weisbecker <frederic-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>, Marcelo Tosatti <mtosatti-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Leonardo <leobras-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Muchun Song <muchun.song-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Thomas Gleixner <tglx-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
+Content-Type: text/plain; charset="us-ascii"
+To: Alistair Popple <apopple@nvidia.com>
+Cc: linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, jgg@nvidia.com, jhubbard@nvidia.com, tjmercier@google.com, hannes@cmpxchg.org, surenb@google.com, mkoutny@suse.com, daniel@ffwll.ch, "Daniel P . Berrange" <berrange@redhat.com>, Alex Williamson <alex.williamson@redhat.com>, Pavel Begunkov <asml.silence@gmail.com>, io-uring@vger.kernel.org
 
+On 2/6/23 6:03?PM, Alistair Popple wrote:
+> 
+> Jens Axboe <axboe@kernel.dk> writes:
+> 
+>> On 2/6/23 12:47?AM, Alistair Popple wrote:
+>>> Convert io_uring to use vm_account instead of directly charging pages
+>>> against the user/mm. Rather than charge pages to both user->locked_vm
+>>> and mm->pinned_vm this will only charge pages to user->locked_vm.
+>>
+>> Not sure how we're supposed to review this, when you just send us 9/19
+>> and vm_account_release() is supposedly an earlier patch in this series.
+>>
+>> Either CC the whole series, or at least the cover letter, core parts,
+>> and the per-subsystem parts.
+> 
+> Ok, thanks. Will be sure to add everyone to the cover letter and patch
+> 01 when I send the next version.
+> 
+> For reference the cover letter is here:
+> 
+> https://lore.kernel.org/linux-mm/cover.c238416f0e82377b449846dbb2459ae9d7030c8e.1675669136.git-series.apopple@nvidia.com/
+> 
+> And the core patch that introduces vm_account is here:
+> 
+> https://lore.kernel.org/linux-mm/e80b61561f97296a6c08faeebe281cb949333d1d.1675669136.git-series.apopple@nvidia.com/
+> 
+> No problem if you want to wait for the resend/next version before
+> taking another look though.
 
---FCuugMFkClbJLl1L
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+Thanks, that helps. Like listed in the cover letter, I also have to
+agree that this is badly named. It's way too generic, it needs to have a
+name that tells you what it does. There's tons of accounting, you need
+to be more specific.
 
-On Tue, Feb 07, 2023 at 12:49:41PM +0100, Frederic Weisbecker <frederic-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org> wrote:
-> But what do we need these annotations for? The only outcome I've ever
-> seen with these is that it confuses everyone.
+Outside of that, we're now doubling the amount of memory associated with
+tracking this. That isn't necessarily a showstopper, but it is not
+ideal. I didn't take a look at the other conversions (again, because
+they were not sent to me), but seems like the task_struct and flags
+could just be passed in as they may very well be known to many/most
+callers?
 
-Take that as a note of a lone actor then who found it useful documenting
-relations between various parts of the code.
+-- 
+Jens Axboe
 
-> This way I can add the support for each part smoothly.
-
-Yeah, that makes sense.
-
-> For example first patch moves HK_TYPE_TIMER to HK_TYPE_KERNEL_NOISE
-> and unbound timers are supported by cpuset.kernel_noise, second patch
-> moves HK_TYPE_WQ to HK_TYPE_KERNEL_NOISE and unbound workqueues are
-> supported by cpuset.kernel_noise, etc until all of them turned by
-> nohz_full= are supported...
-
-So does this mean you'll re-introduce the finer grained HK_* flags
-again?
-
-The idea (not only mine?) is that this would extend
-cpuset.cpus.partition that only allows HK_TYPE_DOMAIN analogy. The
-mapping to individual flags may not be exposed to users. The graduality
-could be achieved by adding more flags under user_exposed_term.
-
-Just to be on the same page -- that's how I understand it, the original
-HK_* resolution turned out impractical for users and that's why the
-direction is towards some loose combinations representing user
-intentions. Is that right?
-
-
-Cheers,
-Michal
-
---FCuugMFkClbJLl1L
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-
------BEGIN PGP SIGNATURE-----
-
-iHQEARYIAB0WIQTrXXag4J0QvXXBmkMkDQmsBEOquQUCY+JLBQAKCRAkDQmsBEOq
-udOKAPdJq+O7uJgDbO4QNyCO7NcKnOeMid700809Y9NpPfptAP94KF/OZau1bPKP
-nGKv3/uKXc7NKO/TqZ2HmKeGpdNzDg==
-=vDYK
------END PGP SIGNATURE-----
-
---FCuugMFkClbJLl1L--
