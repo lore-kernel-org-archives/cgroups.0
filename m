@@ -1,43 +1,69 @@
-From: Jason Gunthorpe <jgg-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH 09/19] io_uring: convert to use vm_account
-Date: Tue, 7 Feb 2023 10:55:48 -0400
-Message-ID: <Y+JmdMJhPEGN0Zw+@nvidia.com>
-References: <cover.c238416f0e82377b449846dbb2459ae9d7030c8e.1675669136.git-series.apopple@nvidia.com>
- <44e6ead48bc53789191b22b0e140aeb82459e75f.1675669136.git-series.apopple@nvidia.com>
- <52d41a7e-1407-e74f-9206-6dd583b7b6b5@kernel.dk>
- <87k00unusm.fsf@nvidia.com>
- <eff3cc48-7279-2fbf-fdbd-f35eff2124d0@kernel.dk>
+From: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH 1/2] sched/isolation: Merge individual nohz_full features
+ into a common housekeeping flag
+Date: Tue, 7 Feb 2023 10:21:35 -0500
+Message-ID: <a264c69a-8dd9-3724-bfc8-97c60b45630b@redhat.com>
+References: <20230203232409.163847-1-frederic@kernel.org>
+ <20230203232409.163847-2-frederic@kernel.org>
+ <20230206155107.GA31453@blackbody.suse.cz> <Y+I61dp5qPkWK4s2@lothringen>
+ <20230207125900.GA24523@blackbody.suse.cz>
 Mime-Version: 1.0
+Content-Transfer-Encoding: quoted-printable
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
- s=selector2;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=AaOLENurDLVnSrw9Yc9XhqQx5R/WT/mqqywhrEJHFYs=;
- b=cW3mr57zpmCOyfnsv4+t8Bc6KGhWTLkl5Y+K7yPicWsJ65N55CS5eTA3bKY2IP7sezTgcZyOhpd6KbY6t5ZzciFSN48VX3ReQAzKf2LY1zlDCbRK2QiDCOXTehdwOpwbBEpWLNKuBaGegJTJLCFQWciT9P0she8WQavTfod6f/VsJQZdHJ61PspI5IJ32cq1L3gc22HRqTQ9Y5G5uyf04Ao5egF2V2MNaK6mUnlrqrcfYg2LJtCNwIIrDvgS6PrNODQUFuZ7xZjm70zmCp8ln12+2bpQZ58btQBS4GeVM11CDJ4LoAN47ty/Kh3ubYSOw/vz+QI7PKQy+f7GaPQhkw==
-Content-Disposition: inline
-In-Reply-To: <eff3cc48-7279-2fbf-fdbd-f35eff2124d0-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1675783300;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=Mcb+6eBv4ysUkvKYOCW9Qw2SLWinzQcLfFwr3z2U8Vw=;
+        b=WgZhleChQd756gVgKwwOUo+OZyUMwxK6aPE7H5t7VW+zmlFauCsb/U71XskXe0VI6tVhUk
+        M7JdNAgWlNi6n6jCC5E9nBVbruyHE47+LmdfL4pxLRGAeYuuS+opZz/WcemXN2J/4VB8JC
+        k2Bx+4rqIMOi+E69nDKLPwPUgqUjsrE=
+Content-Language: en-US
+In-Reply-To: <20230207125900.GA24523-9OudH3eul5jcvrawFnH+a6VXKuFTiq87@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>
-Cc: Alistair Popple <apopple-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, jhubbard-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org, tjmercier-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, surenb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, mkoutny-IBi9RG/b67k@public.gmane.org, daniel-/w4YWyX8dFk@public.gmane.org, "Daniel P . Berrange" <berrange-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Alex Williamson <alex.williamson-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Pavel Begunkov <asml.silence-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, io-uring-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Type: text/plain; charset="iso-8859-1"; format="flowed"
+To: =?UTF-8?Q?Michal_Koutn=c3=bd?= <mkoutny-IBi9RG/b67k@public.gmane.org>, Frederic Weisbecker <frederic-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>, Marcelo Tosatti <mtosatti-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Leonardo <leobras-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Muchun Song <muchun.song-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Thomas Gleixner <tglx-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
 
-On Tue, Feb 07, 2023 at 07:28:56AM -0700, Jens Axboe wrote:
+On 2/7/23 07:59, Michal Koutn=C3=BD wrote:
+> On Tue, Feb 07, 2023 at 12:49:41PM +0100, Frederic Weisbecker <frederic-D=
+gEjT+Ai2ygdnm+yROfE0A@public.gmane.org> wrote:
+>> But what do we need these annotations for? The only outcome I've ever
+>> seen with these is that it confuses everyone.
+> Take that as a note of a lone actor then who found it useful documenting
+> relations between various parts of the code.
+>
+>> This way I can add the support for each part smoothly.
+> Yeah, that makes sense.
+>
+>> For example first patch moves HK_TYPE_TIMER to HK_TYPE_KERNEL_NOISE
+>> and unbound timers are supported by cpuset.kernel_noise, second patch
+>> moves HK_TYPE_WQ to HK_TYPE_KERNEL_NOISE and unbound workqueues are
+>> supported by cpuset.kernel_noise, etc until all of them turned by
+>> nohz_full=3D are supported...
+> So does this mean you'll re-introduce the finer grained HK_* flags
+> again?
+>
+> The idea (not only mine?) is that this would extend
+> cpuset.cpus.partition that only allows HK_TYPE_DOMAIN analogy. The
+> mapping to individual flags may not be exposed to users. The graduality
+> could be achieved by adding more flags under user_exposed_term.
+>
+> Just to be on the same page -- that's how I understand it, the original
+> HK_* resolution turned out impractical for users and that's why the
+> direction is towards some loose combinations representing user
+> intentions. Is that right?
 
-> Outside of that, we're now doubling the amount of memory associated with
-> tracking this. That isn't necessarily a showstopper, but it is not
-> ideal. I didn't take a look at the other conversions (again, because
-> they were not sent to me), but seems like the task_struct and flags
-> could just be passed in as they may very well be known to many/most
-> callers?
+What I am envisioning is to have additional isolation attributes to an=20
+isolated partition that correspond to what a user can specify on the=20
+kernel command line today. That requires the minimal amount of learning=20
+from the user community. Any finer grained separation of isolation=20
+features will just confuse user. I don't see a problem with a generic=20
+HK_TYPE_KERNEL_NOISE that gets enabled when an attribute that correspond=20
+to nohz_full is used.
 
-For places doing the mm accounting type it cannot use the task struct
-as the underlying mm can be replaced and keep the task, IIRC.
-
-We just had a bug in VFIO related to this..
-
-If we could go back from the mm to the task (even a from a destroyed
-mm though) that might work to reduce storage?
-
-Jason
+Cheers,
+Longman
 
