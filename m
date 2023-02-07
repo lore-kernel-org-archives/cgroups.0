@@ -1,45 +1,202 @@
-From: Alistair Popple <apopple-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH 14/19] mm: Introduce a cgroup for pinned memory
-Date: Tue, 07 Feb 2023 12:50:24 +1100
-Message-ID: <87fsbinsvq.fsf@nvidia.com>
-References: <cover.c238416f0e82377b449846dbb2459ae9d7030c8e.1675669136.git-series.apopple@nvidia.com>
- <c7b5e502d1a3b9b8f6e96cbf9ca553b143c327e0.1675669136.git-series.apopple@nvidia.com>
- <Y+Fttp1ozejoSQzl@slm.duckdns.org>
- <CAJD7tkb_Cr7rTTpKc1VBpS8h=n3Hu+nGiV8dkLH-NdC1bSG9mg@mail.gmail.com>
- <Y+GA6Y7SVhAW5Xm9@slm.duckdns.org>
- <CAJD7tka6SC1ho-dffV0bK_acoZd-5DQzBOy0xg3TkOFG1zAPMg@mail.gmail.com>
- <24668a43-fb00-5240-6072-230c5f5d0943@redhat.com>
- <Y+GjSTu9vE/A/EKG@mtj.duckdns.org>
+From: Leonardo =?ISO-8859-1?Q?Br=E1s?= <leobras@redhat.com>
+Subject: Re: [PATCH v2 0/5] Introduce memcg_stock_pcp remote draining
+Date: Tue, 07 Feb 2023 00:18:01 -0300
+Message-ID: <4b232f47e038ab6fcaa0114f73c28d4bf8799f84.camel@redhat.com>
+References: <Y9DpbVF+JR/G+5Or@dhcp22.suse.cz>
+         <9e61ab53e1419a144f774b95230b789244895424.camel@redhat.com>
+         <Y9FzSBw10MGXm2TK@tpad> <Y9IvoDJbLbFcitTc@dhcp22.suse.cz>
+         <Y9LDAZmApLeffrT8@tpad> <Y9LQ615H13RmG7wL@dhcp22.suse.cz>
+         <0122005439ffb7895efda7a1a67992cbe41392fe.camel@redhat.com>
+         <Y9j9BnMwfm4TJks7@tpad> <Y9pd7AxAILUSHrpe@dhcp22.suse.cz>
+         <28e08669302ad1e7a41bdf8b9988de6a352b5fe1.camel@redhat.com>
+         <Y+AIOQy0HdVXCw8m@P9FQF9L96D>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
- s=selector2;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=gACIV1J6Aakw4ZT8mMl+C83X57q5sM9bE/vQSWr9rN8=;
- b=G05K9hYCVW+QPPlvLzVjLnGVv2s8nJOYfjESSkZ0yoz9EL/wAlg60MyZqY3QXW1MkZUNikI7PXH5+6gcujwPktN/NUa3PWti+iGui6JEXUxOWZbzqLcB4PdV1yYdbv0RvsoyyNKeR8EUPgyFFroJvWSJA4CqyiXEa7MY18GD2Q/vLuedowfESRJYkCtqNNhLaK0Yo5qa9HFOHkZvETaxBIVWdsGgCf88YLlLeyYXnkznVdfZfCkXz2xVP/WRPq1lSGWtWFdAbf+l3r9NPqlml8gxAF2TsOpfD0zObonF0hPH03LM5C3CLLGxN+fNaSwZbNrnphnRd9btzraHQAod4A==
-In-reply-to: <Y+GjSTu9vE/A/EKG-qYNAdHglDFBN0TnZuCh8vA@public.gmane.org>
+Content-Transfer-Encoding: quoted-printable
+Return-path: <linux-kernel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1675739888;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=GIxTMZmbsJ4n4h+wodJFJ7AH4L9sE2etRukeWGfprOQ=;
+        b=eANDvVka1kzOtB2QmbX+LinmbIlao9B/6l1R7qr5DYuNkPP5NcCHal3ixbiFxYHqQPHUjP
+        lpHjTENepvTF1XjUbCwRYdyWiVnxpzpfgfss/AEiYeS586W+hN/nOymAFS8ude9b8RUq2Y
+        QjaDgif+t9OFCU9p+Vr2KitiBUw/Jhk=
+In-Reply-To: <Y+AIOQy0HdVXCw8m@P9FQF9L96D>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, jgg-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org, jhubbard-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org, tjmercier-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, surenb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, mkoutny-IBi9RG/b67k@public.gmane.org, daniel-/w4YWyX8dFk@public.gmane.org, "Daniel P . Berrange" <berrange-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Alex Williamson <alex.williamson-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+Content-Type: text/plain; charset="utf-8"
+To: Roman Gushchin <roman.gushchin@linux.dev>
+Cc: Michal Hocko <mhocko@suse.com>, Marcelo Tosatti <mtosatti@redhat.com>, Johannes Weiner <hannes@cmpxchg.org>, Shakeel Butt <shakeelb@google.com>, Muchun Song <muchun.song@linux.dev>, Andrew Morton <akpm@linux-foundation.org>, cgroups@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org
+
+On Sun, 2023-02-05 at 11:49 -0800, Roman Gushchin wrote:
+> Hi Leonardo!
+
+Hello Roman,
+Thanks a lot for replying!
+
+>=20
+> > Yes, but we are exchanging an "always schedule_work_on()", which is a k=
+ind of
+> > contention, for a "sometimes we hit spinlock contention".
+> >=20
+> > For the spinlock proposal, on the local cpu side, the *worst case* cont=
+ention
+> > is:
+> > 1 - wait the spin_unlock() for a complete <percpu cache drain process>,
+> > 2 - wait a cache hit for local per-cpu cacheline=C2=A0
+> >=20
+> > What is current implemented (schedule_work_on() approach), for the loca=
+l
+> > cpu=C2=A0side there is *always* this contention:
+> > 1 - wait for a context switch,
+> > 2 - wait a cache hit from it's local per-cpu cacheline,
+> > 3 - wait a complete <percpu cache drain process>,=C2=A0
+> > 4 - then for a new context switch to the current thread.
+>=20
+> I think both Michal and me are thinking of a more generic case in which t=
+he cpu
+> is not exclusively consumed by 1 special process, so that the draining wo=
+rk can
+> be executed during an idle time. In this case the work is basically free.
+
+Oh, it makes sense.
+But in such scenarios, wouldn't the same happens to spinlocks?
+
+I mean, most of the contention with spinlocks only happens if the remote cp=
+u is
+trying to drain the cache while the local cpu happens to be draining/chargi=
+ng,
+which is quite rare due to how fast the local cpu operations are.
+
+Also, if the cpu has some idle time, using a little more on a possible spin=
+lock
+contention should not be a problem. Right?
+
+>=20
+> And the introduction of a spin_lock() on the hot path is what we're are c=
+oncerned
+> about. I agree, that on some hardware platforms it won't be that expensiv=
+e,=C2=A0
+>=20
+
+IIRC most hardware platforms with multicore supported by the kernel should =
+have
+the same behavior, since it's better to rely on cache coherence than lockin=
+g the
+memory bus.
+
+For instance, the other popular architectures supported by Linux use the LR=
+/SC
+strategy for atomic operations (tested on ARM, POWER, RISCV) and IIRC the
+LoadReserve slow part waits for the cacheline exclusivity, which is already
+already exclusive in this perCPU structure.
 
 
-Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org> writes:
+> but in general not having any spinlocks is so much better.
 
-> On Mon, Feb 06, 2023 at 08:00:54PM -0500, Waiman Long wrote:
->> If it should not be part of the memcg, does it make sense to make it a
->> resource in the existing misc controller? I believe we don't want a
->> proliferation of new cgroup controllers.
->
-> Yeah, if it's gonna be an independent knob, I suppose so, but I really think
-> the locked accounting should be tied to the page, which mostly likely would
-> mean that it'd be tied to the page ownership too making its natural place
-> memcg.
+I agree that spinlocks may bring contention, which is not ideal in many cas=
+es.
+In this case, though, it may not be a big issue, due to very rare remote ac=
+cess
+in the structure, for the usual case (non-pre-OOMCG)
 
-Yes, I think it might be possible. I looked briefly at doing it when
-initially developing the series but I would like to resolve the question
-of independent knob vs. memcg before heading too far down either path.
+>=20
+> >=20
+> > So moving from schedule_work_on() to spinlocks will save 2 context swit=
+ches per
+> > cpu every time drain_all_stock() is called.
+> >=20
+> > On the remote cpu side, my tests point that doing the remote draining i=
+s faster
+> > than scheduling a local draining, so it's also a gain.
+> >=20
+> > Also, IIUC the possible contention in the spinlock approach happens onl=
+y on
+> > page-faulting and syscalls, versus the schedule_work_on() approach that=
+ can
+> > interrupt user workload at any time.=C2=A0
+> >=20
+> > In fact, not interrupting the user workload in isolated cpus is just a =
+bonus of
+> > using spinlocks.
+>=20
+> I believe it significantly depends on the preemption model: you're right =
+regarding
+> fully preemptive kernels, but with voluntary/none preemption it's exactly=
+ opposite:
+> the draining work will be executed at some point later (probably with 0 c=
+ost),
 
-> Thanks.
+So, in case of voluntary/none preemption with some free cpu time.=20
+
+> while the remote access from another cpu will potentially cause delays on=
+ the
+> spin lock as well as a need to refill the stock.
+
+But if there is some free CPU time, what is the issue of some (potential) d=
+elays
+due to spinlock contention?
+
+I am probably missing the whole picture, but when I think of performance
+improvement, I think on doing more with the same cputime. If we can use fre=
+e
+cputime to do stuff later, it's only fair to also use it in case of content=
+ion,
+right?
+
+I know there are some cases that may need to be more previsible (mostly RT)=
+, but
+when I think of memory allocation, I don't expect it to always take the sam=
+e
+time (as there are caches, pre-OOM, and so)
+
+Also, as previously discussed, in case of a busy cpu, the spinlock approach=
+ will
+probably allow more work to be done.
+
+>=20
+> Overall I'd expect a noticeable performance regression from an introducti=
+on of
+> spin locks and remote draining. Maybe not on all platforms, but at least =
+on some.
+> That's my main concern.
+>=20
+
+I see.=20
+For the platform I have tested (x86) I noticed better overall performance o=
+n
+spinlocks than upstream solution. For other popular platforms, I have brief=
+ly
+read some documentation on locking/atomicity and I think we may keep the
+performance gains.
+
+But to be sure, I could retake the tests on other platforms, such as ARM, P=
+OWER,
+RISCV, and so. Or even perform extra suggested tests.
+
+With that info, would you feel less concerned about a possible change in me=
+mcg
+pcp cache locking scheme?
+
+
+>  And I don't think the problem we're aiming to solve here
+> justifies this potential regression.
+>=20
+
+To be strict, the isolated cpu scheduling problem is already fixed by the
+housekeeping patch (with some limitations).=C2=A0
+
+At this point, I am trying to bring focus to a (possible) performance
+improvement on the memcg pcp cache locking system.
+
+
+> Thanks!
+>=20
+
+Thank you for helping me better understand your arguments and concerns.
+I really appreciate it!
+
+Best regards,
+Leo
 
