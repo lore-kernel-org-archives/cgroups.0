@@ -1,122 +1,126 @@
-From: kernel test robot <lkp-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
-Subject: [tj-cgroup:for-next] BUILD SUCCESS
- 14fffd51f9027fd393b3b074f11bc49c16fdf990
-Date: Tue, 07 Feb 2023 17:24:10 +0800
-Message-ID: <63e218ba.SCYYyKVdnx2yT/JM%lkp@intel.com>
+From: Jan Kara <jack@suse.cz>
+Subject: Re: [PATCH -next v3] block, bfq: cleanup 'bfqg->online'
+Date: Tue, 7 Feb 2023 11:07:14 +0100
+Message-ID: <20230207100714.fv4pfvkt56gb2iqm@quack3>
+References: <20230202134913.2364549-1-yukuai1@huaweicloud.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1675761900; x=1707297900;
-  h=date:from:to:cc:subject:message-id:mime-version:
-   content-transfer-encoding;
-  bh=tZeg7KmC9ygFNzgU2adpRB6vGpha/V8DpA5Cu+yDEHA=;
-  b=j0c/C38MQgtSRYaKTAKPy6vTsjJnR593LyW1dJpY6x396Atu7l6D7x6q
-   XCga4FE/be3JLtvEVPKkqXdSfgv6dGfu9yl+qwmAtbYhXb1wIddWh7tTb
-   05sZtAkopiyqobONelSzMiE9R3YrGBnWqBQJRRzzZnh64eT9XB3JEiNYb
-   3RVAiCJ2cUyvey/trblhMRklFshf0X/zXBq0joxmtBQ+cteub2s7RqZpn
-   11K3JoiizPUDGPxYYvcy3TFGf6TypXs0goxyeY5hj6OabxZoYFKD8rawQ
-   50D6sRay2dMY7FEH4XlvKv9Rb0WQxWoAW+yYHMPgKFR9BywLbmNDdjrf1
-   A==;
+Return-path: <linux-block-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
+        t=1675764435; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=Te9Juz5JzX/nOCXQ+EoNePBpi22PvKhzdWL3Av9Y1p0=;
+        b=UCRF4IFGTr7DLgr/rL6w6A65hmf/9vLYCyaPOVdGLB1qZ7dYPzsg6ODe9uiH+MGNICKgZ2
+        T5c2ZvBtxaUZ2t+ql6ebKBafNqzGUsAYHMxuTaQpieph11q/xM8RDbwf7QZt0OgHEbCv/w
+        D27iFFr8Hxj8m/Egwiauxzi0zUWULo4=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
+        s=susede2_ed25519; t=1675764435;
+        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=Te9Juz5JzX/nOCXQ+EoNePBpi22PvKhzdWL3Av9Y1p0=;
+        b=bsD7xkqHQ3TvgFdVTSmp1oviZ73d9hcV903gE6fA2Ri1IInhW712mNezHriVVaCi48zY4S
+        En+xOuxi/CUUzsBQ==
+Content-Disposition: inline
+In-Reply-To: <20230202134913.2364549-1-yukuai1@huaweicloud.com>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Transfer-Encoding: 7bit
+To: Yu Kuai <yukuai1@huaweicloud.com>
+Cc: jack@suse.cz, paolo.valente@linaro.org, axboe@kernel.dk, tj@kernel.org, josef@toxicpanda.com, linux-block@vger.kernel.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, yukuai3@huawei.com, yi.zhang@huawei.com, yangerkun@huawei.com
 
-tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git for-next
-branch HEAD: 14fffd51f9027fd393b3b074f11bc49c16fdf990  Merge branch 'for-6.2-fixes' into for-next
+On Thu 02-02-23 21:49:13, Yu Kuai wrote:
+> From: Yu Kuai <yukuai3@huawei.com>
+> 
+> After commit dfd6200a0954 ("blk-cgroup: support to track if policy is
+> online"), there is no need to do this again in bfq.
+> 
+> However, 'pd->online' is not protected by 'bfqd->lock', in order to make
+> sure bfq won't see that 'pd->online' is still set after bfq_pd_offline(),
+> clear it before bfq_pd_offline() is called. This is fine because other
+> polices doesn't use 'pd->online' and bfq_pd_offline() will move active
+> bfqq to root cgroup anyway.
+> 
+> Signed-off-by: Yu Kuai <yukuai3@huawei.com>
 
-elapsed time: 729m
+The patch looks good to me now. Thanks! Feel free to add:
 
-configs tested: 78
-configs skipped: 2
+Reviewed-by: Jan Kara <jack@suse.cz>
 
-The following configs have been built successfully.
-More configs may be tested in the coming days.
+								Honza
 
-gcc tested configs:
-x86_64                            allnoconfig
-arc                                 defconfig
-m68k                             allmodconfig
-alpha                            allyesconfig
-alpha                               defconfig
-arc                              allyesconfig
-m68k                             allyesconfig
-um                             i386_defconfig
-um                           x86_64_defconfig
-s390                                defconfig
-ia64                             allmodconfig
-s390                             allmodconfig
-powerpc                           allnoconfig
-s390                             allyesconfig
-i386                 randconfig-a011-20230206
-x86_64                           rhel-8.3-bpf
-i386                 randconfig-a014-20230206
-i386                 randconfig-a012-20230206
-x86_64                           rhel-8.3-syz
-x86_64                         rhel-8.3-kunit
-i386                 randconfig-a013-20230206
-x86_64                           rhel-8.3-kvm
-i386                 randconfig-a016-20230206
-i386                 randconfig-a015-20230206
-x86_64               randconfig-a014-20230206
-x86_64               randconfig-a013-20230206
-x86_64               randconfig-a011-20230206
-x86_64               randconfig-a012-20230206
-x86_64               randconfig-a015-20230206
-x86_64               randconfig-a016-20230206
-sh                               allmodconfig
-x86_64                              defconfig
-mips                             allyesconfig
-x86_64                               rhel-8.3
-powerpc                          allmodconfig
-x86_64                           allyesconfig
-riscv                randconfig-r042-20230204
-arc                  randconfig-r043-20230204
-arc                  randconfig-r043-20230206
-s390                 randconfig-r044-20230204
-riscv                randconfig-r042-20230206
-s390                 randconfig-r044-20230206
-arm                                 defconfig
-i386                                defconfig
-arm64                            allyesconfig
-arm                              allyesconfig
-i386                             allyesconfig
-arm                            mps2_defconfig
-arm                           h3600_defconfig
-m68k                       bvme6000_defconfig
-arm                            xcep_defconfig
-powerpc                       eiger_defconfig
-powerpc                      ppc6xx_defconfig
-x86_64                    rhel-8.3-kselftests
-x86_64                          rhel-8.3-func
-
-clang tested configs:
-x86_64               randconfig-a002-20230206
-x86_64               randconfig-a004-20230206
-x86_64               randconfig-a003-20230206
-x86_64               randconfig-a001-20230206
-i386                 randconfig-a002-20230206
-i386                 randconfig-a004-20230206
-i386                 randconfig-a003-20230206
-x86_64               randconfig-a005-20230206
-x86_64               randconfig-a006-20230206
-i386                 randconfig-a001-20230206
-i386                 randconfig-a005-20230206
-i386                 randconfig-a006-20230206
-hexagon              randconfig-r041-20230206
-hexagon              randconfig-r041-20230204
-arm                  randconfig-r046-20230204
-arm                  randconfig-r046-20230206
-hexagon              randconfig-r045-20230204
-hexagon              randconfig-r045-20230206
-powerpc                 mpc8315_rdb_defconfig
-arm                         hackkit_defconfig
-i386                              allnoconfig
-powerpc                     akebono_defconfig
-x86_64                          rhel-8.3-rust
-
+> ---
+> Changes in v3:
+>  - in commit message: protected -> not protected, bfq_pd_offline_() ->
+>  bfq_pd_offline().
+> Changes in v2:
+>  - clear 'pd->online' before calling bfq_pd_offline()
+> 
+>  block/bfq-cgroup.c  | 4 +---
+>  block/bfq-iosched.h | 2 --
+>  block/blk-cgroup.c  | 2 +-
+>  3 files changed, 2 insertions(+), 6 deletions(-)
+> 
+> diff --git a/block/bfq-cgroup.c b/block/bfq-cgroup.c
+> index b42956ab5550..a35136dae713 100644
+> --- a/block/bfq-cgroup.c
+> +++ b/block/bfq-cgroup.c
+> @@ -551,7 +551,6 @@ static void bfq_pd_init(struct blkg_policy_data *pd)
+>  	bfqg->bfqd = bfqd;
+>  	bfqg->active_entities = 0;
+>  	bfqg->num_queues_with_pending_reqs = 0;
+> -	bfqg->online = true;
+>  	bfqg->rq_pos_tree = RB_ROOT;
+>  }
+>  
+> @@ -614,7 +613,7 @@ struct bfq_group *bfq_bio_bfqg(struct bfq_data *bfqd, struct bio *bio)
+>  			continue;
+>  		}
+>  		bfqg = blkg_to_bfqg(blkg);
+> -		if (bfqg->online) {
+> +		if (bfqg->pd.online) {
+>  			bio_associate_blkg_from_css(bio, &blkg->blkcg->css);
+>  			return bfqg;
+>  		}
+> @@ -985,7 +984,6 @@ static void bfq_pd_offline(struct blkg_policy_data *pd)
+>  
+>  put_async_queues:
+>  	bfq_put_async_queues(bfqd, bfqg);
+> -	bfqg->online = false;
+>  
+>  	spin_unlock_irqrestore(&bfqd->lock, flags);
+>  	/*
+> diff --git a/block/bfq-iosched.h b/block/bfq-iosched.h
+> index 75cc6a324267..69aaee52285a 100644
+> --- a/block/bfq-iosched.h
+> +++ b/block/bfq-iosched.h
+> @@ -1009,8 +1009,6 @@ struct bfq_group {
+>  
+>  	/* reference counter (see comments in bfq_bic_update_cgroup) */
+>  	refcount_t ref;
+> -	/* Is bfq_group still online? */
+> -	bool online;
+>  
+>  	struct bfq_entity entity;
+>  	struct bfq_sched_data sched_data;
+> diff --git a/block/blk-cgroup.c b/block/blk-cgroup.c
+> index cb110fc51940..a228dfe65253 100644
+> --- a/block/blk-cgroup.c
+> +++ b/block/blk-cgroup.c
+> @@ -491,9 +491,9 @@ static void blkg_destroy(struct blkcg_gq *blkg)
+>  		struct blkcg_policy *pol = blkcg_policy[i];
+>  
+>  		if (blkg->pd[i] && blkg->pd[i]->online) {
+> +			blkg->pd[i]->online = false;
+>  			if (pol->pd_offline_fn)
+>  				pol->pd_offline_fn(blkg->pd[i]);
+> -			blkg->pd[i]->online = false;
+>  		}
+>  	}
+>  
+> -- 
+> 2.31.1
+> 
 -- 
-0-DAY CI Kernel Test Service
-https://github.com/intel/lkp-tests
+Jan Kara <jack@suse.com>
+SUSE Labs, CR
