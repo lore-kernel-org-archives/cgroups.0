@@ -1,48 +1,50 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH 14/19] mm: Introduce a cgroup for pinned memory
-Date: Mon, 6 Feb 2023 15:03:05 -1000
-Message-ID: <Y+GjSTu9vE/A/EKG@mtj.duckdns.org>
+From: Alistair Popple <apopple-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH 09/19] io_uring: convert to use vm_account
+Date: Tue, 07 Feb 2023 12:03:33 +1100
+Message-ID: <87k00unusm.fsf@nvidia.com>
 References: <cover.c238416f0e82377b449846dbb2459ae9d7030c8e.1675669136.git-series.apopple@nvidia.com>
- <c7b5e502d1a3b9b8f6e96cbf9ca553b143c327e0.1675669136.git-series.apopple@nvidia.com>
- <Y+Fttp1ozejoSQzl@slm.duckdns.org>
- <CAJD7tkb_Cr7rTTpKc1VBpS8h=n3Hu+nGiV8dkLH-NdC1bSG9mg@mail.gmail.com>
- <Y+GA6Y7SVhAW5Xm9@slm.duckdns.org>
- <CAJD7tka6SC1ho-dffV0bK_acoZd-5DQzBOy0xg3TkOFG1zAPMg@mail.gmail.com>
- <24668a43-fb00-5240-6072-230c5f5d0943@redhat.com>
+ <44e6ead48bc53789191b22b0e140aeb82459e75f.1675669136.git-series.apopple@nvidia.com>
+ <52d41a7e-1407-e74f-9206-6dd583b7b6b5@kernel.dk>
 Mime-Version: 1.0
-Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:sender:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=imn/r+cGKKMSLDP+bAG1xH00VwxyZVzwdCmOeTkk6YA=;
-        b=khb4QZQABICsRfT0uDHHbVzA3UBTkoSIM+PpBu5YmfkTOAxqLsLVa1aTVdtzG3Ky2k
-         nKQgfiI1azs2+BcZYDC+Gycsy4iDLHVVr3TKWabwrX9b23qV7sMWIHQHdcyCgx/ADfik
-         huGHRYbM6/KNcYgxL0UNluXr1VuYJVz18kghNCNtRIk/RdZbE9A1HDC5j6q3QgmiqVQW
-         Pw3V4PGQFYzX7R4hgnpmLjZuY2cLjhNla7okQdtM3of0G5ogtwdosidAfWO6J9WKdhjj
-         Dy7hGLwxzCA9CIjm+MbrBvfXHW1uugbEDNmXv67msNloH/WE9TsHIBKAy5ij6lVf9foa
-         4unA==
-Sender: Tejun Heo <htejun@gmail.com>
-Content-Disposition: inline
-In-Reply-To: <24668a43-fb00-5240-6072-230c5f5d0943@redhat.com>
+Content-Transfer-Encoding: quoted-printable
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
+ s=selector2;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=ulzZsKnPwt8pnwF8OUVxD4NHDYhB5qj3lLTnLog7IN0=;
+ b=H+t/UgZB9U/N+FDkzaaK6EBmuKUq46RJshN9iy21tRecmBY0By929/pnJWlO0PIcmUNvb9G+4NfvWNAlfwsca+IbYFNnR3uBIPs9EEQXykof/lW0CVS9Rb/cmO9VHC4Kos6nZk3SbkqSVb6m5nd3aSysmozvSq3ZWTShHOa0l6zddgtEBqJMzLrfn7jMcsi6h6gI66CPJzw+9KFoyK717FkwcsbBrXe1ZVu7tO1wGbgspYQx96MaaKadkX98cgEDwcmlAvRXqseScroscmRs+Ayr2BbE/cEo7oDqNpMORNWXt84WwYuRqg9vI4JQyrzeNDzgjInn0hVisPxfup9PJg==
+In-reply-to: <52d41a7e-1407-e74f-9206-6dd583b7b6b5-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Waiman Long <longman@redhat.com>
-Cc: Yosry Ahmed <yosryahmed@google.com>, Alistair Popple <apopple@nvidia.com>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, jgg@nvidia.com, jhubbard@nvidia.com, tjmercier@google.com, hannes@cmpxchg.org, surenb@google.com, mkoutny@suse.com, daniel@ffwll.ch, "Daniel P . Berrange" <berrange@redhat.com>, Alex Williamson <alex.williamson@redhat.com>, Zefan Li <lizefan.x@bytedance.com>, Andrew Morton <akpm@linux-foundation.org>
+Content-Type: text/plain; charset="windows-1252"
+To: Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>
+Cc: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, jgg-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org, jhubbard-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org, tjmercier-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, surenb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, mkoutny-IBi9RG/b67k@public.gmane.org, daniel-/w4YWyX8dFk@public.gmane.org, "Daniel P . Berrange" <berrange-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Alex Williamson <alex.williamson-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Pavel Begunkov <asml.silence-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, io-uring-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Mon, Feb 06, 2023 at 08:00:54PM -0500, Waiman Long wrote:
-> If it should not be part of the memcg, does it make sense to make it a
-> resource in the existing misc controller? I believe we don't want a
-> proliferation of new cgroup controllers.
 
-Yeah, if it's gonna be an independent knob, I suppose so, but I really think
-the locked accounting should be tied to the page, which mostly likely would
-mean that it'd be tied to the page ownership too making its natural place
-memcg.
+Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org> writes:
 
-Thanks.
+> On 2/6/23 12:47=E2=80=AFAM, Alistair Popple wrote:
+>> Convert io_uring to use vm_account instead of directly charging pages
+>> against the user/mm. Rather than charge pages to both user->locked_vm
+>> and mm->pinned_vm this will only charge pages to user->locked_vm.
+>
+> Not sure how we're supposed to review this, when you just send us 9/19
+> and vm_account_release() is supposedly an earlier patch in this series.
+>
+> Either CC the whole series, or at least the cover letter, core parts,
+> and the per-subsystem parts.
 
--- 
-tejun
+Ok, thanks. Will be sure to add everyone to the cover letter and patch
+01 when I send the next version.
+
+For reference the cover letter is here:
+
+https://lore.kernel.org/linux-mm/cover.c238416f0e82377b449846dbb2459ae9d703=
+0c8e.1675669136.git-series.apopple-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org/
+
+And the core patch that introduces vm_account is here:
+
+https://lore.kernel.org/linux-mm/e80b61561f97296a6c08faeebe281cb949333d1d.1=
+675669136.git-series.apopple-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org/
+
+No problem if you want to wait for the resend/next version before
+taking another look though.
