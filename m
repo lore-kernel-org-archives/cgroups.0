@@ -1,57 +1,79 @@
-From: Jason Gunthorpe <jgg-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH 14/19] mm: Introduce a cgroup for pinned memory
-Date: Tue, 7 Feb 2023 08:19:57 -0400
-Message-ID: <Y+JB7VQX+Ypof4j6@nvidia.com>
-References: <cover.c238416f0e82377b449846dbb2459ae9d7030c8e.1675669136.git-series.apopple@nvidia.com>
- <c7b5e502d1a3b9b8f6e96cbf9ca553b143c327e0.1675669136.git-series.apopple@nvidia.com>
- <Y+Fttp1ozejoSQzl@slm.duckdns.org>
- <CAJD7tkb_Cr7rTTpKc1VBpS8h=n3Hu+nGiV8dkLH-NdC1bSG9mg@mail.gmail.com>
- <Y+GA6Y7SVhAW5Xm9@slm.duckdns.org>
- <CAJD7tka6SC1ho-dffV0bK_acoZd-5DQzBOy0xg3TkOFG1zAPMg@mail.gmail.com>
- <Y+GMbWWP/YhtJQqe@slm.duckdns.org>
- <Y+GQB9I6MFN6BOFw@nvidia.com>
- <Y+GcJQRhvjqFaaSp@mtj.duckdns.org>
+From: Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny-IBi9RG/b67k@public.gmane.org>
+Subject: Re: [PATCH 1/2] sched/isolation: Merge individual nohz_full features
+ into a common housekeeping flag
+Date: Tue, 7 Feb 2023 13:59:00 +0100
+Message-ID: <20230207125900.GA24523@blackbody.suse.cz>
+References: <20230203232409.163847-1-frederic@kernel.org>
+ <20230203232409.163847-2-frederic@kernel.org>
+ <20230206155107.GA31453@blackbody.suse.cz>
+ <Y+I61dp5qPkWK4s2@lothringen>
 Mime-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha256;
+        protocol="application/pgp-signature"; boundary="FCuugMFkClbJLl1L"
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
- s=selector2;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=ka1JLWFpn998EV2qdaWGP74rkt709l/jFMLXnA2McRI=;
- b=m5OE0QsOAJMuO7sF515kJQhbdVYWm7PbQ1qoPDMRjU+hu8SwYLfcKuvpnj8PnK6DW92p/iV5DwOGd7UDk5WpOpHzLHOnPNcEGURdho9/zdgL93qewYm3BT7ktpSrkfvOx8pqgFqByMapwxsnhf9XEkVxZ4cicYRkWNgJUwnOn40LjQlXvwf/ysRd09mQszOrL3lfPBDKCBbtjAYaeZdEoi95TPyu27VCuB/1rK2KpHWjACa+BP6N8AOajaRa6TXIvADSH2C6auwDsxSrX20MEkNkZwJ/FMw6PuFKHWp+awPf5CQlpOuRLpw3iTPhQKv28Lsdfcw4o46f9AmxoKZ+Hg==
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
+        t=1675774742; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=7QoTLoXlIMxSw37JX85ExzUtBnHWAzOyLQ2c0uIpTLM=;
+        b=IgskfTMKEaO1jmC/N1nUWksgS2w7L8hHtYNz/l/0AgYHAEeL8SvjUTb1X8N2aT+oc21fQK
+        uVxDNfqkoggQQalEcTuNbwT7BnJg3edJ2qvl5KTiMunxb80wXQkiLAlWEaNbjCA56AE9lC
+        dWFgdQMn5ORKYrhQw9DZoNFkuARlRtw=
 Content-Disposition: inline
-In-Reply-To: <Y+GcJQRhvjqFaaSp-qYNAdHglDFBN0TnZuCh8vA@public.gmane.org>
+In-Reply-To: <Y+I61dp5qPkWK4s2@lothringen>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Alistair Popple <apopple-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, jhubbard-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org, tjmercier-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, surenb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, mkoutny-IBi9RG/b67k@public.gmane.org, daniel-/w4YWyX8dFk@public.gmane.org, "Daniel P . Berrange" <berrange-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Alex Williamson <alex.williamson-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+To: Frederic Weisbecker <frederic-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>, Marcelo Tosatti <mtosatti-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Leonardo <leobras-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Muchun Song <muchun.song-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Thomas Gleixner <tglx-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
 
-On Mon, Feb 06, 2023 at 02:32:37PM -1000, Tejun Heo wrote:
-> Hello,
-> 
-> On Mon, Feb 06, 2023 at 07:40:55PM -0400, Jason Gunthorpe wrote:
-> > (a) kind of destroys the point of this as a sandboxing tool
-> > 
-> > It is not so harmful to use memory that someone else has been charged
-> > with allocating.
-> > 
-> > But it is harmful to pin memory if someone else is charged for the
-> > pin. It means it is unpredictable how much memory a sandbox can
-> > actually lock down.
-> > 
-> > Plus we have the double accounting problem, if 1000 processes in
-> > different cgroups open the tmpfs and all pin the memory then cgroup A
-> > will be charged 1000x for the memory and hit its limit, possibly
-> > creating a DOS from less priv to more priv
-> 
-> Let's hear what memcg people think about it. I'm not a fan of disassociating
-> the ownership and locker of the same page but it is true that actively
-> increasing locked consumption on a remote cgroup is awkward too.
 
-The main purpose of all this is to support libvirt, so they need to
-support (a) too.
+--FCuugMFkClbJLl1L
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 
-(b) is what we have now and most closely emulates the way the RLIMIT
-works.
+On Tue, Feb 07, 2023 at 12:49:41PM +0100, Frederic Weisbecker <frederic-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org> wrote:
+> But what do we need these annotations for? The only outcome I've ever
+> seen with these is that it confuses everyone.
 
-Jason
+Take that as a note of a lone actor then who found it useful documenting
+relations between various parts of the code.
+
+> This way I can add the support for each part smoothly.
+
+Yeah, that makes sense.
+
+> For example first patch moves HK_TYPE_TIMER to HK_TYPE_KERNEL_NOISE
+> and unbound timers are supported by cpuset.kernel_noise, second patch
+> moves HK_TYPE_WQ to HK_TYPE_KERNEL_NOISE and unbound workqueues are
+> supported by cpuset.kernel_noise, etc until all of them turned by
+> nohz_full= are supported...
+
+So does this mean you'll re-introduce the finer grained HK_* flags
+again?
+
+The idea (not only mine?) is that this would extend
+cpuset.cpus.partition that only allows HK_TYPE_DOMAIN analogy. The
+mapping to individual flags may not be exposed to users. The graduality
+could be achieved by adding more flags under user_exposed_term.
+
+Just to be on the same page -- that's how I understand it, the original
+HK_* resolution turned out impractical for users and that's why the
+direction is towards some loose combinations representing user
+intentions. Is that right?
+
+
+Cheers,
+Michal
+
+--FCuugMFkClbJLl1L
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+
+-----BEGIN PGP SIGNATURE-----
+
+iHQEARYIAB0WIQTrXXag4J0QvXXBmkMkDQmsBEOquQUCY+JLBQAKCRAkDQmsBEOq
+udOKAPdJq+O7uJgDbO4QNyCO7NcKnOeMid700809Y9NpPfptAP94KF/OZau1bPKP
+nGKv3/uKXc7NKO/TqZ2HmKeGpdNzDg==
+=vDYK
+-----END PGP SIGNATURE-----
+
+--FCuugMFkClbJLl1L--
