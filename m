@@ -1,73 +1,106 @@
-From: Jens Axboe <axboe@kernel.dk>
-Subject: Re: [PATCH 09/19] io_uring: convert to use vm_account
-Date: Tue, 7 Feb 2023 07:28:56 -0700
-Message-ID: <eff3cc48-7279-2fbf-fdbd-f35eff2124d0@kernel.dk>
-References: <cover.c238416f0e82377b449846dbb2459ae9d7030c8e.1675669136.git-series.apopple@nvidia.com>
- <44e6ead48bc53789191b22b0e140aeb82459e75f.1675669136.git-series.apopple@nvidia.com>
- <52d41a7e-1407-e74f-9206-6dd583b7b6b5@kernel.dk> <87k00unusm.fsf@nvidia.com>
+From: Ming Lei <ming.lei@redhat.com>
+Subject: Re: [PATCH 02/19] blk-cgroup: delay blk-cgroup initialization until
+ add_disk
+Date: Tue, 7 Feb 2023 22:40:32 +0800
+Message-ID: <Y+Ji4NL/WkTR8vml@T590>
+References: <20230201134123.2656505-1-hch@lst.de>
+ <20230201134123.2656505-3-hch@lst.de>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <io-uring-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=kernel-dk.20210112.gappssmtp.com; s=20210112;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=GVbHcngcrxb+EtKZ7t6pGqbRT5EixlZslzmjZrbJg0w=;
-        b=aKxw9JI4eNRmyEHa8pZiz59fi5N4wmsEKjVGoh78GkaeojSICmHq3P/0QQJjtCGoWY
-         tVUtigRisgv/MaRvcsGvEaqU5XmI7siMb3JEJnqmaq2u6k0l1sDvsFB15Cb3uF8PyZnT
-         /lp77ze+OK18ZTdBsQRqjUyC9LLE2R/xvF10LbmVqHfJv+TZlYTm7yhVjWnSnaQ84Pyk
-         dP7pEXBu+ifEiQwpYfRYaQau+ZxgsvtXeyCfxTRkBkXPmZVSeu9YejJ+1MaIfZBocaeo
-         Nlz2geKB6sc8dNPfmPhlRaSX7xgjR7f/h34Q41hurGXg2yT6yNMdJQIYKFDQOqi2K+We
-         zc4g==
-Content-Language: en-US
-In-Reply-To: <87k00unusm.fsf@nvidia.com>
+Return-path: <linux-block-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1675780849;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=/kPBdJL3Ml9b2utJGfG1ftdTv2qoNngUd6jMK67nj/w=;
+        b=EVCARjHbLYeohS+qSwZfSUsDl0dAx10dWIvwkgulXCZuhfC+meqbcv4N8gUfO18kA2V+GF
+        gRWHganBkMt1lUXQzTd6x36ZzWghMpiQjlzffL7Z2vi53R/CMz3gyLhq6kBDiYJcDN5GRi
+        cCR7lrc+O/VliSeEHjwnYRfb9KlQnOI=
+Content-Disposition: inline
+In-Reply-To: <20230201134123.2656505-3-hch@lst.de>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Alistair Popple <apopple@nvidia.com>
-Cc: linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, jgg@nvidia.com, jhubbard@nvidia.com, tjmercier@google.com, hannes@cmpxchg.org, surenb@google.com, mkoutny@suse.com, daniel@ffwll.ch, "Daniel P . Berrange" <berrange@redhat.com>, Alex Williamson <alex.williamson@redhat.com>, Pavel Begunkov <asml.silence@gmail.com>, io-uring@vger.kernel.org
+Content-Transfer-Encoding: 7bit
+To: Christoph Hellwig <hch@lst.de>
+Cc: Jens Axboe <axboe@kernel.dk>, Tejun Heo <tj@kernel.org>, Josef Bacik <josef@toxicpanda.com>, linux-block@vger.kernel.org, cgroups@vger.kernel.org, Andreas Herrmann <aherrmann@suse.de>, ming.lei@redhat.com
 
-On 2/6/23 6:03?PM, Alistair Popple wrote:
+On Wed, Feb 01, 2023 at 02:41:06PM +0100, Christoph Hellwig wrote:
+> There is no need to initialize the cgroup code before the disk is marked
+> live.  Moving the cgroup initialization earlier will help to have a
+> fully initialized struct device in the gendisk for the cgroup code to
+> use in the future.  Similarly tear the cgroup information down in
+> del_gendisk to be symmetric and because none of the cgroup tracking is
+> needed once non-passthrough I/O stops.
 > 
-> Jens Axboe <axboe@kernel.dk> writes:
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> Reviewed-by: Andreas Herrmann <aherrmann@suse.de>
+> ---
+>  block/genhd.c | 17 +++++++++--------
+>  1 file changed, 9 insertions(+), 8 deletions(-)
 > 
->> On 2/6/23 12:47?AM, Alistair Popple wrote:
->>> Convert io_uring to use vm_account instead of directly charging pages
->>> against the user/mm. Rather than charge pages to both user->locked_vm
->>> and mm->pinned_vm this will only charge pages to user->locked_vm.
->>
->> Not sure how we're supposed to review this, when you just send us 9/19
->> and vm_account_release() is supposedly an earlier patch in this series.
->>
->> Either CC the whole series, or at least the cover letter, core parts,
->> and the per-subsystem parts.
-> 
-> Ok, thanks. Will be sure to add everyone to the cover letter and patch
-> 01 when I send the next version.
-> 
-> For reference the cover letter is here:
-> 
-> https://lore.kernel.org/linux-mm/cover.c238416f0e82377b449846dbb2459ae9d7030c8e.1675669136.git-series.apopple@nvidia.com/
-> 
-> And the core patch that introduces vm_account is here:
-> 
-> https://lore.kernel.org/linux-mm/e80b61561f97296a6c08faeebe281cb949333d1d.1675669136.git-series.apopple@nvidia.com/
-> 
-> No problem if you want to wait for the resend/next version before
-> taking another look though.
+> diff --git a/block/genhd.c b/block/genhd.c
+> index 23cf83b3331cde..705dec0800d62e 100644
+> --- a/block/genhd.c
+> +++ b/block/genhd.c
+> @@ -466,10 +466,14 @@ int __must_check device_add_disk(struct device *parent, struct gendisk *disk,
+>  	 */
+>  	pm_runtime_set_memalloc_noio(ddev, true);
+>  
+> -	ret = blk_integrity_add(disk);
+> +	ret = blkcg_init_disk(disk);
+>  	if (ret)
+>  		goto out_del_block_link;
+>  
+> +	ret = blk_integrity_add(disk);
+> +	if (ret)
+> +		goto out_blkcg_exit;
+> +
+>  	disk->part0->bd_holder_dir =
+>  		kobject_create_and_add("holders", &ddev->kobj);
+>  	if (!disk->part0->bd_holder_dir) {
+> @@ -534,6 +538,8 @@ int __must_check device_add_disk(struct device *parent, struct gendisk *disk,
+>  	kobject_put(disk->part0->bd_holder_dir);
+>  out_del_integrity:
+>  	blk_integrity_del(disk);
+> +out_blkcg_exit:
+> +	blkcg_exit_disk(disk);
+>  out_del_block_link:
+>  	if (!sysfs_deprecated)
+>  		sysfs_remove_link(block_depr, dev_name(ddev));
+> @@ -662,6 +668,8 @@ void del_gendisk(struct gendisk *disk)
+>  	rq_qos_exit(q);
+>  	blk_mq_unquiesce_queue(q);
+>  
+> +	blkcg_exit_disk(disk);
 
-Thanks, that helps. Like listed in the cover letter, I also have to
-agree that this is badly named. It's way too generic, it needs to have a
-name that tells you what it does. There's tons of accounting, you need
-to be more specific.
+This patch causes kernel panic:
 
-Outside of that, we're now doubling the amount of memory associated with
-tracking this. That isn't necessarily a showstopper, but it is not
-ideal. I didn't take a look at the other conversions (again, because
-they were not sent to me), but seems like the task_struct and flags
-could just be passed in as they may very well be known to many/most
-callers?
+[  581.975121]  bio_associate_blkg+0x28/0x60
+[  581.975798]  bio_init+0x6d/0xc0
+[  581.976364]  blkdev_issue_flush+0x21/0x40
+[  581.977021]  ? _raw_write_unlock+0x12/0x30
+[  581.977686]  ? jbd2_journal_start_commit+0x4b/0x80
+[  581.978418]  ext4_sync_fs+0x1c6/0x1d0
+[  581.979062]  sync_filesystem+0x77/0x90
+[  581.979883]  generic_shutdown_super+0x22/0x130
+[  581.980773]  kill_block_super+0x21/0x50
+[  581.981622]  deactivate_locked_super+0x2c/0xa0
+[  581.982306]  cleanup_mnt+0xbd/0x150
 
--- 
-Jens Axboe
+because disk->root_blkg is freed & set as NULL in del_gendisk().
+
+by the following script:
+
+	modprobe -r scsi_debug
+	modprobe scsi_debug dev_size_mb=1024
+	
+	mkfs.xfs -f /dev/sdc	#suppose sdc is the scsi debug disk
+	mount /dev/sdc /mnt
+	echo 1 > /sys/block/sdc/device/delete
+	sleep 1
+	umount /mnt
+
+
+Thanks, 
+Ming
 
