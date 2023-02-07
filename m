@@ -1,50 +1,66 @@
-From: Will Deacon <will-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH] cgroup/cpuset: Don't filter offline CPUs in
- cpuset_cpus_allowed() for top cpuset tasks
-Date: Tue, 7 Feb 2023 11:32:29 +0000
-Message-ID: <20230207113228.GB12147@willie-the-truck>
-References: <20230203164040.213437-1-longman@redhat.com>
- <Y94s8mzrE9VyUJLa@hirez.programming.kicks-ass.net>
- <f356b916-1c10-1565-73fb-34027c6c510a@redhat.com>
- <20230206110540.GA11024@willie-the-truck>
- <Y+FgQXvnzSF1OrmO@slm.duckdns.org>
+From: Frederic Weisbecker <frederic-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCH 1/2] sched/isolation: Merge individual nohz_full features
+ into a common housekeeping flag
+Date: Tue, 7 Feb 2023 12:49:41 +0100
+Message-ID: <Y+I61dp5qPkWK4s2@lothringen>
+References: <20230203232409.163847-1-frederic@kernel.org>
+ <20230203232409.163847-2-frederic@kernel.org>
+ <20230206155107.GA31453@blackbody.suse.cz>
 Mime-Version: 1.0
+Content-Transfer-Encoding: quoted-printable
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1675769554;
-        bh=Rx3qesTFjYVQZeUfWaFK3pteCQOp67kpFcX7NQe4XWo=;
+        s=k20201202; t=1675770584;
+        bh=RgVgJCrLkTAvmwUYHcxZco9kHb4tcMhvYtkGp0jn4Uw=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=ouCviE7soxWQaxNuMqAEp/UxyNwdNn8JwBvupPyex57tqzN8UnwSOAmK/n07K5s1V
-         ZIfTMQj9JdA+Wli5BUDE1FdqJmcovbxES/o2fXTXMa1QbLe0SrE+N7cE291dLOt4xm
-         rXXdQpWZ7pb2n5wnXoJFRWCAEUgEQ69n8XPo908PMo9vJq7uesEdPujJ0+W8NXUnOO
-         mfPQPcToqZb14qF8B3VmuNl+FJDnXQ/UspowogT2uMKFjoQQvOtdQXDftYwJXh6FT4
-         NoSh2Lqmf4eKMukkM0sd+H+qBsyAsN5ie2mrPtmp+sRl1LozhyJT+naka9fpJR0+hE
-         CaoyFHnIeFhOA==
+        b=tLvug3F3Minye5YXeEpg6rj46hLxC8/p8PnepfTsimLxWG/Th4ZPg+Gppcs2IcXjj
+         YO/kg3jMl1KIODxpVAbL/icPosTwmqgKrebGucclQCTk0BUKZb+qDeIWX9uX0G6kiE
+         vFO/v77bmwVwwMnmFrf7guquDrQDLKHmI6fbPJ17akGjL82op+LxtSRmVVl/h54+8Y
+         Olta0cI33IiMJCCYZrEPuR/VE5rXtKwbD+zVYYSY0iioEp8sjr6VZbyBI7TrVoYUQi
+         4TnJseDLpVDQuCvoCoUTCJyvrgYtEDJUd3jEQorADL8yVmZ4eVu2JtzvcTCvgImn24
+         XbTwOQWCQqhTA==
 Content-Disposition: inline
-In-Reply-To: <Y+FgQXvnzSF1OrmO-NiLfg/pYEd1N0TnZuCh8vA@public.gmane.org>
+In-Reply-To: <20230206155107.GA31453-9OudH3eul5jcvrawFnH+a6VXKuFTiq87@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-z5hGa2qSFaRBDgjK7y7TUQ@public.gmane.org
+Content-Type: text/plain; charset="iso-8859-1"
+To: Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny-IBi9RG/b67k@public.gmane.org>
+Cc: LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>, Marcelo Tosatti <mtosatti-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Leonardo <leobras-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Muchun Song <muchun.song-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Thomas Gleixner <tglx-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
 
-On Mon, Feb 06, 2023 at 10:17:05AM -1000, Tejun Heo wrote:
-> On Mon, Feb 06, 2023 at 11:05:41AM +0000, Will Deacon wrote:
-> > > If we want to get it into the next merge windows, there isn't much time left
-> > > for linux-next testing. So a lower risk solution is better from that
-> > > perspective too.
-> > 
-> > This needs to land for 6.2 to fix the regression. The next merge window is
-> > too late. That's why I cooked the reverts [1] as an alternative.
-> 
-> Yeah, I think Waiman meant before the coming merge window. We have at least
-> one more week so let's try the two patches and see how that goes. We can
-> always revert if it doesn't work out.
+On Mon, Feb 06, 2023 at 04:51:09PM +0100, Michal Koutn=FD wrote:
+> Hello Frederic.
+>=20
+> On Sat, Feb 04, 2023 at 12:24:08AM +0100, Frederic Weisbecker <frederic-D=
+gEjT+Ai2ygdnm+yROfE0A@public.gmane.org> wrote:
+> > The individual isolation features turned on by nohz_full were initially
+> > split in order for each of them to be tunable through cpusets. However
+> > plans have changed in favour of an interface (be it cpusets or sysctl)
+> > grouping all these features to be turned on/off altogether.
+> > Then should the need ever arise, the interface can still be expanded
+> > to handle the individual isolation features.
+> >=20
+> > Therefore the current isolation split between tick/timer/workqueue/rcu/
+> > kthreads/misc doesn't make sense anymore.
+>=20
+> Why it doesn't make sense? I think it's a useful annotation of
+> respective operations wrt CPU isolation.
 
-I see this has landed in Linus' tree now, so thanks for that! I also tested
-his branch just to make sure and it all seems fine in my asymmetric
-environment.
+But what do we need these annotations for? The only outcome I've ever
+seen with these is that it confuses everyone.
 
-Cheers,
+>=20
+> The grouping you did into HK_TYPE_KERNEL_NOISE (or even coarser) should
+> IMO be done at the place where it'll be exposed into the favored
+> interface (like it's with nohz_full=3D).
 
-Will
+That being said I should reserve the grouping to HK_TYPE_KERNEL_NOISE when
+I'll introduce the cpuset interface. This way I can add the support for
+each part smoothly. For example first patch moves HK_TYPE_TIMER to
+HK_TYPE_KERNEL_NOISE and unbound timers are supported by cpuset.kernel_nois=
+e,
+second patch moves HK_TYPE_WQ to HK_TYPE_KERNEL_NOISE and unbound workqueues
+are supported by cpuset.kernel_noise, etc until all of them turned by nohz_=
+full=3D
+are supported... This is what I'm doing in fact but I'm so slow to write th=
+is patchset...
+
+Thanks.
