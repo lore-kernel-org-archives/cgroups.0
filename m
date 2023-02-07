@@ -1,126 +1,50 @@
-From: Jan Kara <jack@suse.cz>
-Subject: Re: [PATCH -next v3] block, bfq: cleanup 'bfqg->online'
-Date: Tue, 7 Feb 2023 11:07:14 +0100
-Message-ID: <20230207100714.fv4pfvkt56gb2iqm@quack3>
-References: <20230202134913.2364549-1-yukuai1@huaweicloud.com>
+From: Will Deacon <will-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCH] cgroup/cpuset: Don't filter offline CPUs in
+ cpuset_cpus_allowed() for top cpuset tasks
+Date: Tue, 7 Feb 2023 11:32:29 +0000
+Message-ID: <20230207113228.GB12147@willie-the-truck>
+References: <20230203164040.213437-1-longman@redhat.com>
+ <Y94s8mzrE9VyUJLa@hirez.programming.kicks-ass.net>
+ <f356b916-1c10-1565-73fb-34027c6c510a@redhat.com>
+ <20230206110540.GA11024@willie-the-truck>
+ <Y+FgQXvnzSF1OrmO@slm.duckdns.org>
 Mime-Version: 1.0
-Return-path: <linux-block-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
-        t=1675764435; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=Te9Juz5JzX/nOCXQ+EoNePBpi22PvKhzdWL3Av9Y1p0=;
-        b=UCRF4IFGTr7DLgr/rL6w6A65hmf/9vLYCyaPOVdGLB1qZ7dYPzsg6ODe9uiH+MGNICKgZ2
-        T5c2ZvBtxaUZ2t+ql6ebKBafNqzGUsAYHMxuTaQpieph11q/xM8RDbwf7QZt0OgHEbCv/w
-        D27iFFr8Hxj8m/Egwiauxzi0zUWULo4=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
-        s=susede2_ed25519; t=1675764435;
-        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=Te9Juz5JzX/nOCXQ+EoNePBpi22PvKhzdWL3Av9Y1p0=;
-        b=bsD7xkqHQ3TvgFdVTSmp1oviZ73d9hcV903gE6fA2Ri1IInhW712mNezHriVVaCi48zY4S
-        En+xOuxi/CUUzsBQ==
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1675769554;
+        bh=Rx3qesTFjYVQZeUfWaFK3pteCQOp67kpFcX7NQe4XWo=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=ouCviE7soxWQaxNuMqAEp/UxyNwdNn8JwBvupPyex57tqzN8UnwSOAmK/n07K5s1V
+         ZIfTMQj9JdA+Wli5BUDE1FdqJmcovbxES/o2fXTXMa1QbLe0SrE+N7cE291dLOt4xm
+         rXXdQpWZ7pb2n5wnXoJFRWCAEUgEQ69n8XPo908PMo9vJq7uesEdPujJ0+W8NXUnOO
+         mfPQPcToqZb14qF8B3VmuNl+FJDnXQ/UspowogT2uMKFjoQQvOtdQXDftYwJXh6FT4
+         NoSh2Lqmf4eKMukkM0sd+H+qBsyAsN5ie2mrPtmp+sRl1LozhyJT+naka9fpJR0+hE
+         CaoyFHnIeFhOA==
 Content-Disposition: inline
-In-Reply-To: <20230202134913.2364549-1-yukuai1@huaweicloud.com>
+In-Reply-To: <Y+FgQXvnzSF1OrmO-NiLfg/pYEd1N0TnZuCh8vA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Yu Kuai <yukuai1@huaweicloud.com>
-Cc: jack@suse.cz, paolo.valente@linaro.org, axboe@kernel.dk, tj@kernel.org, josef@toxicpanda.com, linux-block@vger.kernel.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, yukuai3@huawei.com, yi.zhang@huawei.com, yangerkun@huawei.com
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-z5hGa2qSFaRBDgjK7y7TUQ@public.gmane.org
 
-On Thu 02-02-23 21:49:13, Yu Kuai wrote:
-> From: Yu Kuai <yukuai3@huawei.com>
+On Mon, Feb 06, 2023 at 10:17:05AM -1000, Tejun Heo wrote:
+> On Mon, Feb 06, 2023 at 11:05:41AM +0000, Will Deacon wrote:
+> > > If we want to get it into the next merge windows, there isn't much time left
+> > > for linux-next testing. So a lower risk solution is better from that
+> > > perspective too.
+> > 
+> > This needs to land for 6.2 to fix the regression. The next merge window is
+> > too late. That's why I cooked the reverts [1] as an alternative.
 > 
-> After commit dfd6200a0954 ("blk-cgroup: support to track if policy is
-> online"), there is no need to do this again in bfq.
-> 
-> However, 'pd->online' is not protected by 'bfqd->lock', in order to make
-> sure bfq won't see that 'pd->online' is still set after bfq_pd_offline(),
-> clear it before bfq_pd_offline() is called. This is fine because other
-> polices doesn't use 'pd->online' and bfq_pd_offline() will move active
-> bfqq to root cgroup anyway.
-> 
-> Signed-off-by: Yu Kuai <yukuai3@huawei.com>
+> Yeah, I think Waiman meant before the coming merge window. We have at least
+> one more week so let's try the two patches and see how that goes. We can
+> always revert if it doesn't work out.
 
-The patch looks good to me now. Thanks! Feel free to add:
+I see this has landed in Linus' tree now, so thanks for that! I also tested
+his branch just to make sure and it all seems fine in my asymmetric
+environment.
 
-Reviewed-by: Jan Kara <jack@suse.cz>
+Cheers,
 
-								Honza
-
-> ---
-> Changes in v3:
->  - in commit message: protected -> not protected, bfq_pd_offline_() ->
->  bfq_pd_offline().
-> Changes in v2:
->  - clear 'pd->online' before calling bfq_pd_offline()
-> 
->  block/bfq-cgroup.c  | 4 +---
->  block/bfq-iosched.h | 2 --
->  block/blk-cgroup.c  | 2 +-
->  3 files changed, 2 insertions(+), 6 deletions(-)
-> 
-> diff --git a/block/bfq-cgroup.c b/block/bfq-cgroup.c
-> index b42956ab5550..a35136dae713 100644
-> --- a/block/bfq-cgroup.c
-> +++ b/block/bfq-cgroup.c
-> @@ -551,7 +551,6 @@ static void bfq_pd_init(struct blkg_policy_data *pd)
->  	bfqg->bfqd = bfqd;
->  	bfqg->active_entities = 0;
->  	bfqg->num_queues_with_pending_reqs = 0;
-> -	bfqg->online = true;
->  	bfqg->rq_pos_tree = RB_ROOT;
->  }
->  
-> @@ -614,7 +613,7 @@ struct bfq_group *bfq_bio_bfqg(struct bfq_data *bfqd, struct bio *bio)
->  			continue;
->  		}
->  		bfqg = blkg_to_bfqg(blkg);
-> -		if (bfqg->online) {
-> +		if (bfqg->pd.online) {
->  			bio_associate_blkg_from_css(bio, &blkg->blkcg->css);
->  			return bfqg;
->  		}
-> @@ -985,7 +984,6 @@ static void bfq_pd_offline(struct blkg_policy_data *pd)
->  
->  put_async_queues:
->  	bfq_put_async_queues(bfqd, bfqg);
-> -	bfqg->online = false;
->  
->  	spin_unlock_irqrestore(&bfqd->lock, flags);
->  	/*
-> diff --git a/block/bfq-iosched.h b/block/bfq-iosched.h
-> index 75cc6a324267..69aaee52285a 100644
-> --- a/block/bfq-iosched.h
-> +++ b/block/bfq-iosched.h
-> @@ -1009,8 +1009,6 @@ struct bfq_group {
->  
->  	/* reference counter (see comments in bfq_bic_update_cgroup) */
->  	refcount_t ref;
-> -	/* Is bfq_group still online? */
-> -	bool online;
->  
->  	struct bfq_entity entity;
->  	struct bfq_sched_data sched_data;
-> diff --git a/block/blk-cgroup.c b/block/blk-cgroup.c
-> index cb110fc51940..a228dfe65253 100644
-> --- a/block/blk-cgroup.c
-> +++ b/block/blk-cgroup.c
-> @@ -491,9 +491,9 @@ static void blkg_destroy(struct blkcg_gq *blkg)
->  		struct blkcg_policy *pol = blkcg_policy[i];
->  
->  		if (blkg->pd[i] && blkg->pd[i]->online) {
-> +			blkg->pd[i]->online = false;
->  			if (pol->pd_offline_fn)
->  				pol->pd_offline_fn(blkg->pd[i]);
-> -			blkg->pd[i]->online = false;
->  		}
->  	}
->  
-> -- 
-> 2.31.1
-> 
--- 
-Jan Kara <jack@suse.com>
-SUSE Labs, CR
+Will
