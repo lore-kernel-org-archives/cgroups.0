@@ -1,56 +1,63 @@
-From: Ming Lei <ming.lei-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH 02/19] blk-cgroup: delay blk-cgroup initialization until
- add_disk
-Date: Wed, 8 Feb 2023 15:32:56 +0800
-Message-ID: <Y+NQKABK682e/30a@T590>
-References: <20230201134123.2656505-1-hch@lst.de>
- <20230201134123.2656505-3-hch@lst.de>
- <Y+Ji4NL/WkTR8vml@T590>
- <20230208063552.GA15030@lst.de>
+From: Jan Kara <jack-AlSwsSmVLrQ@public.gmane.org>
+Subject: Re: [PATCH] blk-ioprio: Introduce promote-to-rt policy
+Date: Wed, 8 Feb 2023 14:43:45 +0100
+Message-ID: <20230208134345.77bdep3kzp52haxu@quack3>
+References: <20230201045227.2203123-1-houtao@huaweicloud.com>
+ <8c068af3-7199-11cf-5c69-a523c7c22d9a@acm.org>
+ <4f7dcb3e-2d5a-cae3-0e1c-a82bcc3d2217@huaweicloud.com>
+ <b6b3c498-e90b-7d1f-6ad5-a31334e433ae@acm.org>
+ <beb7782e-72a4-c350-3750-23a767c88753@huaweicloud.com>
+ <aedc240d-7c9e-248a-52d2-c9775f3e8ca1@acm.org>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1675841591;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
+        t=1675863826; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
          in-reply-to:in-reply-to:references:references;
-        bh=73aglTPUHS/85OtfenzciioO7I/A4+2ffz4/jBMkCu0=;
-        b=ENujYjCVQlz9DhsBeBHsAWeqTvMQVrAgUH9d8rkyGKky/pnUNNuE9BJl0apWIx5hUB2DDv
-        cAvicXYgSvbuxEI49AvfCTceCO96ydCsG9cy98n9O9N1F0vPlmDWjZQLonbTjEoBtqD641
-        yS+0fOw42I0zjIP/dLG1QdHiol88FPE=
+        bh=WXjM/s4PhtaTVW4aiVsTAUAHDUvK2wieBkKbPD6AkWk=;
+        b=2D010aeo1gILwXKexBL/H6YeET0ts/vT4M7BCnWuKvynMFw5ep7OJ0Xa25MaH/hW5tWE1+
+        xa+9zp/k13p2fvffFznXRS+HNe8kUteOBo0xNsodoVXkiaeo4cU3FYezFAf/GWmkQtOF8Z
+        UIhQ36DDm0ysHsF12At4bZ6c/bpL/hI=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
+        s=susede2_ed25519; t=1675863826;
+        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=WXjM/s4PhtaTVW4aiVsTAUAHDUvK2wieBkKbPD6AkWk=;
+        b=HYuwSpnsyaTUN5uRxgrezcT+Rs0EYLoKxKybHs0UMdQxjwcVFJPGjarxi1zBkQ9ciulsX7
+        2Ek8luOYzvi3URBQ==
 Content-Disposition: inline
-In-Reply-To: <20230208063552.GA15030-jcswGhMUV9g@public.gmane.org>
+In-Reply-To: <aedc240d-7c9e-248a-52d2-c9775f3e8ca1-HInyCGIudOg@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
-Cc: Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Josef Bacik <josef-DigfWCa+lFGyeJad7bwFQA@public.gmane.org>, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Andreas Herrmann <aherrmann-l3A5Bk7waGM@public.gmane.org>
+To: Bart Van Assche <bvanassche-HInyCGIudOg@public.gmane.org>
+Cc: Hou Tao <houtao-XF6JlduFytWkHkcT6e4Xnw@public.gmane.org>, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Jan Kara <jack-AlSwsSmVLrQ@public.gmane.org>, Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Jonathan Corbet <corbet-T1hC0tSOHrs@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, houtao1-hv44wF8Li93QT0dZR+AlfA@public.gmane.org
 
-On Wed, Feb 08, 2023 at 07:35:52AM +0100, Christoph Hellwig wrote:
-> On Tue, Feb 07, 2023 at 10:40:32PM +0800, Ming Lei wrote:
-> > because disk->root_blkg is freed & set as NULL in del_gendisk().
-> > 
-> > by the following script:
-> > 
-> > 	modprobe -r scsi_debug
-> > 	modprobe scsi_debug dev_size_mb=1024
-> > 	
-> > 	mkfs.xfs -f /dev/sdc	#suppose sdc is the scsi debug disk
-> > 	mount /dev/sdc /mnt
-> > 	echo 1 > /sys/block/sdc/device/delete
-> > 	sleep 1
-> > 	umount /mnt
+On Fri 03-02-23 11:45:32, Bart Van Assche wrote:
+> On 2/2/23 17:48, Hou Tao wrote:
+> > I don't get it on how to remove IOPRIO_POL_PROMOTION when calculating the final
+> > ioprio for bio. IOPRIO_POL_PROMOTION is not used for IOPRIO_CLASS values but
+> > used to determinate on how to calculate the final ioprio for bio: choosing the
+> > maximum or minimum between blkcg ioprio and original bio bi_ioprio.
 > 
-> Thank,
-> 
-> I've sent a fix.  Can you wire up your reproducer in blktests?
+> Do the block layer code changes shown below implement the functionality
+> that you need?
 
-Yeah, it is already sent out:
+Just one question guys: So with my a78418e6a04c ("block: Always initialize
+bio IO priority on submit") none-to-rt policy became effectively a noop as
+Hou properly noticed. Are we aware of any users that were broken by this?
+Shouldn't we rather fix the code so that none-to-rt starts to operate
+correctly again? Or maybe change the none-to-rt meaning to be actually
+promote-to-rt?
 
-https://lore.kernel.org/linux-block/20230208010235.553252-1-ming.lei-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org/T/#u
+I have to admit I'm wondering a bit what was the intended usecase behind
+the introduction of none-to-rt policy. Can someone elaborate? promote-to-rt 
+makes some sense to me - we have a priviledged cgroup we want to provide
+low latency access to IO but none-to-rt just does not make much sense to
+me...
 
-
-
-Thanks,
-Ming
-
+								Honza
+-- 
+Jan Kara <jack-IBi9RG/b67k@public.gmane.org>
+SUSE Labs, CR
