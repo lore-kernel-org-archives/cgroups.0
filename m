@@ -1,73 +1,51 @@
-From: Kairui Song <ryncsn-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: [PATCH 1/2] sched/psi: simplify cgroup psi retrieving
-Date: Thu,  9 Feb 2023 00:16:53 +0800
-Message-ID: <20230208161654.99556-2-ryncsn@gmail.com>
+From: Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny@suse.com>
+Subject: Re: [PATCH 1/2] sched/psi: simplify cgroup psi retrieving
+Date: Wed, 8 Feb 2023 18:17:22 +0100
+Message-ID: <20230208171722.GE24523@blackbody.suse.cz>
 References: <20230208161654.99556-1-ryncsn@gmail.com>
-Reply-To: Kairui Song <kasong-1Nz4purKYjRBDgjK7y7TUQ@public.gmane.org>
+ <20230208161654.99556-2-ryncsn@gmail.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=content-transfer-encoding:mime-version:reply-to:references
-         :in-reply-to:message-id:date:subject:cc:to:from:from:to:cc:subject
-         :date:message-id:reply-to;
-        bh=CLR2LM9bOa8i4/I3y14C5vPCowOG7PM+DN198h0+VAs=;
-        b=n87yh6bfvYPCTO66tuyXJeAxOYVtR5er8Gk+eHejQ2btZam1yZWJTqT47teGvikGq3
-         phDI1MRYT59/UiaAWI2BUi+1Q4j2oVxq2XK3Ke0b25NlcjfyH1ieBcd5CkQ0WEvDGV+h
-         vADCrHGRBuuIf+qtxatJPOUIB0SG13dfhTFR45h8JE/oJDeaTp08BAIcVxxJyQ8FmMI2
-         4ZJDP/ie/FD8+Aq9LP0zmJrEW1D3ByYmyWYsj+f4RYb8Pidapbovhyko7B6avejII/Pw
-         lqDBkiZyH32dIDkG+lGBV/qDRoa1L2jKFIsHQS71X8mq/n07nyo+77OHdYAd/MxQTufX
-         0Y0g==
-In-Reply-To: <20230208161654.99556-1-ryncsn-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Content-Type: multipart/signed; micalg=pgp-sha256;
+        protocol="application/pgp-signature"; boundary="hwvH6HDNit2nSK4j"
+Return-path: <linux-kernel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
+        t=1675876643; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=oKiKDcbX0O3C0B5XD/0OrKN1mlV/CCJFvoMfJCxlhbI=;
+        b=lWaEd33QaHTanA50H4oKn1xkRJTVCdWnoCf0A/vduJWWyNtpD241CG6E07XTVjUv11eFWo
+        ki6GQxVQvonR5jhFfwsVJOZPhfsoUD3UIJzgBWxkcHG7QveRZuXVr069rAKLn30yHjbJJw
+        51UnzDqzVuraHYyBoEhLfLdBUdNMFpc=
+Content-Disposition: inline
+In-Reply-To: <20230208161654.99556-2-ryncsn@gmail.com>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-To: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Suren Baghdasaryan <surenb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Cc: Chengming Zhou <zhouchengming-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, =?UTF-8?q?Michal=20Koutn=C3=BD?= <mkoutny-IBi9RG/b67k@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Kairui Song <kasong-1Nz4purKYjRBDgjK7y7TUQ@public.gmane.org>
+To: Kairui Song <kasong@tencent.com>
+Cc: Johannes Weiner <hannes@cmpxchg.org>, Suren Baghdasaryan <surenb@google.com>, Chengming Zhou <zhouchengming@bytedance.com>, Tejun Heo <tj@kernel.org>, Ingo Molnar <mingo@redhat.com>, Peter Zijlstra <peterz@infradead.org>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
 
-From: Kairui Song <kasong-1Nz4purKYjRBDgjK7y7TUQ@public.gmane.org>
 
-Since the only case where cgroup_psi should return psi_system instead of
-the cgroup's psi_group is the root cgroup, just set root cgroup's psi to
-point to psi_system to remove the if branch.
+--hwvH6HDNit2nSK4j
+Content-Type: text/plain; charset=iso-8859-1
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: Kairui Song <kasong-1Nz4purKYjRBDgjK7y7TUQ@public.gmane.org>
----
- include/linux/psi.h    | 2 +-
- kernel/cgroup/cgroup.c | 7 ++++++-
- 2 files changed, 7 insertions(+), 2 deletions(-)
+On Thu, Feb 09, 2023 at 12:16:53AM +0800, Kairui Song <ryncsn@gmail.com> wr=
+ote:
+>  include/linux/psi.h    | 2 +-
+>  kernel/cgroup/cgroup.c | 7 ++++++-
+>  2 files changed, 7 insertions(+), 2 deletions(-)
 
-diff --git a/include/linux/psi.h b/include/linux/psi.h
-index b029a847def1..9c3a1638b618 100644
---- a/include/linux/psi.h
-+++ b/include/linux/psi.h
-@@ -33,7 +33,7 @@ __poll_t psi_trigger_poll(void **trigger_ptr, struct file *file,
- #ifdef CONFIG_CGROUPS
- static inline struct psi_group *cgroup_psi(struct cgroup *cgrp)
- {
--	return cgroup_ino(cgrp) == 1 ? &psi_system : cgrp->psi;
-+	return cgrp->psi;
- }
- 
- int psi_cgroup_alloc(struct cgroup *cgrp);
-diff --git a/kernel/cgroup/cgroup.c b/kernel/cgroup/cgroup.c
-index c099cf3fa02d..1491d63b06b6 100644
---- a/kernel/cgroup/cgroup.c
-+++ b/kernel/cgroup/cgroup.c
-@@ -163,7 +163,12 @@ static struct static_key_true *cgroup_subsys_on_dfl_key[] = {
- static DEFINE_PER_CPU(struct cgroup_rstat_cpu, cgrp_dfl_root_rstat_cpu);
- 
- /* the default hierarchy */
--struct cgroup_root cgrp_dfl_root = { .cgrp.rstat_cpu = &cgrp_dfl_root_rstat_cpu };
-+struct cgroup_root cgrp_dfl_root = {
-+	.cgrp.rstat_cpu = &cgrp_dfl_root_rstat_cpu,
-+#ifdef CONFIG_PSI
-+	.cgrp.psi = &psi_system
-+#endif
-+};
- EXPORT_SYMBOL_GPL(cgrp_dfl_root);
- 
- /*
--- 
-2.39.1
+Reviewed-by: Michal Koutn=FD <mkoutny@suse.com>
 
+--hwvH6HDNit2nSK4j
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+
+-----BEGIN PGP SIGNATURE-----
+
+iHUEARYIAB0WIQTrXXag4J0QvXXBmkMkDQmsBEOquQUCY+PZIAAKCRAkDQmsBEOq
+uXmaAP9GahvmyU1IMscq/W8nIcRpdXXf5uzJ2rdXIi3O0wGeogEApX/xE7jsIBDr
+aJiP9He48sQ6TTXy0X0NtNU45JjqvQg=
+=h2+9
+-----END PGP SIGNATURE-----
+
+--hwvH6HDNit2nSK4j--
