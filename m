@@ -1,57 +1,80 @@
-From: Bart Van Assche <bvanassche@acm.org>
-Subject: Re: [PATCH] blk-ioprio: Introduce promote-to-rt policy
-Date: Wed, 8 Feb 2023 09:53:41 -0800
-Message-ID: <7fcd4c38-ccbe-6411-e424-a57595ad9c0b@acm.org>
-References: <20230201045227.2203123-1-houtao@huaweicloud.com>
- <8c068af3-7199-11cf-5c69-a523c7c22d9a@acm.org>
- <4f7dcb3e-2d5a-cae3-0e1c-a82bcc3d2217@huaweicloud.com>
- <b6b3c498-e90b-7d1f-6ad5-a31334e433ae@acm.org>
- <beb7782e-72a4-c350-3750-23a767c88753@huaweicloud.com>
- <aedc240d-7c9e-248a-52d2-c9775f3e8ca1@acm.org>
- <20230208134345.77bdep3kzp52haxu@quack3>
+From: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Subject: Re: [PATCH 1/2] sched/psi: simplify cgroup psi retrieving
+Date: Wed, 8 Feb 2023 13:54:54 -0500
+Message-ID: <Y+Pv/kIkUz/YlvNi@cmpxchg.org>
+References: <20230208161654.99556-1-ryncsn@gmail.com>
+ <20230208161654.99556-2-ryncsn@gmail.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-doc-owner@vger.kernel.org>
-Content-Language: en-US
-In-Reply-To: <20230208134345.77bdep3kzp52haxu@quack3>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=cmpxchg-org.20210112.gappssmtp.com; s=20210112;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=h8wnkAyp+UT+1C4mbuuq7uAJNtmK6LABMEs9ejaKbmU=;
+        b=D6besAl+jnXs8HL2wgkgbCj2qj3xJ9fr/H/QmgZCQOBl/ILNdsAnYnJz5z/T00IMUS
+         0LjcTtS5QnJ0TqPgeMn3odKFuB1k7RURDlftGvJvo+M0cbC8W/TgfGGWUivhjQ02WfAL
+         hH75lKyYjyXVvWK2I9cGrN8jkuWCEJxrLFUCUo6h3+mPqU280HNWG2VzpHjmXqrErVPu
+         Dvuhm6cqJup7Slw5HCYXzdphjvFgXJpe5kkkWwrtB1WN9BwLThsX9bBAvaqbN9Rjn+Jw
+         f/6Y7vKq4zhEWwPwKJou0IwNH/fOmSvBArEMpJLpctVxM0xtJhSKz1GfOfQpL+/c/kB1
+         srYw==
+Content-Disposition: inline
+In-Reply-To: <20230208161654.99556-2-ryncsn-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"; format="flowed"
-To: Jan Kara <jack@suse.cz>
-Cc: Hou Tao <houtao@huaweicloud.com>, linux-block@vger.kernel.org, Jens Axboe <axboe@kernel.dk>, cgroups@vger.kernel.org, Tejun Heo <tj@kernel.org>, Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, Jonathan Corbet <corbet@lwn.net>, linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org, houtao1@huawei.com
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Kairui Song <ryncsn-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Cc: Suren Baghdasaryan <surenb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Chengming Zhou <zhouchengming-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny-IBi9RG/b67k@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Kairui Song <kasong-1Nz4purKYjRBDgjK7y7TUQ@public.gmane.org>
 
-On 2/8/23 05:43, Jan Kara wrote:
-> On Fri 03-02-23 11:45:32, Bart Van Assche wrote:
->> On 2/2/23 17:48, Hou Tao wrote:
->>> I don't get it on how to remove IOPRIO_POL_PROMOTION when calculating the final
->>> ioprio for bio. IOPRIO_POL_PROMOTION is not used for IOPRIO_CLASS values but
->>> used to determinate on how to calculate the final ioprio for bio: choosing the
->>> maximum or minimum between blkcg ioprio and original bio bi_ioprio.
->>
->> Do the block layer code changes shown below implement the functionality
->> that you need?
+Hello Kairui,
+
+On Thu, Feb 09, 2023 at 12:16:53AM +0800, Kairui Song wrote:
+> From: Kairui Song <kasong-1Nz4purKYjRBDgjK7y7TUQ@public.gmane.org>
 > 
-> Just one question guys: So with my a78418e6a04c ("block: Always initialize
-> bio IO priority on submit") none-to-rt policy became effectively a noop as
-> Hou properly noticed. Are we aware of any users that were broken by this?
-> Shouldn't we rather fix the code so that none-to-rt starts to operate
-> correctly again? Or maybe change the none-to-rt meaning to be actually
-> promote-to-rt?
+> Since the only case where cgroup_psi should return psi_system instead of
+> the cgroup's psi_group is the root cgroup, just set root cgroup's psi to
+> point to psi_system to remove the if branch.
 > 
-> I have to admit I'm wondering a bit what was the intended usecase behind
-> the introduction of none-to-rt policy. Can someone elaborate? promote-to-rt
-> makes some sense to me - we have a priviledged cgroup we want to provide
-> low latency access to IO but none-to-rt just does not make much sense to
-> me...
+> Signed-off-by: Kairui Song <kasong-1Nz4purKYjRBDgjK7y7TUQ@public.gmane.org>
 
-Hi Jan,
+Thanks for the patches. They overall look good, and the numbers even
+better.
 
-The test results I shared some time ago show that IOPRIO_CLASS_NONE was 
-the default I/O priority two years ago (see also 
-https://lore.kernel.org/linux-block/20210927220328.1410161-5-bvanassche@acm.org/). 
-The none-to-rt policy increases the priority of bio's that have not been 
-assigned an I/O priority to RT. Does this answer your question?
+>  include/linux/psi.h    | 2 +-
+>  kernel/cgroup/cgroup.c | 7 ++++++-
+>  2 files changed, 7 insertions(+), 2 deletions(-)
+> 
+> diff --git a/include/linux/psi.h b/include/linux/psi.h
+> index b029a847def1..9c3a1638b618 100644
+> --- a/include/linux/psi.h
+> +++ b/include/linux/psi.h
+> @@ -33,7 +33,7 @@ __poll_t psi_trigger_poll(void **trigger_ptr, struct file *file,
+>  #ifdef CONFIG_CGROUPS
+>  static inline struct psi_group *cgroup_psi(struct cgroup *cgrp)
+>  {
+> -	return cgroup_ino(cgrp) == 1 ? &psi_system : cgrp->psi;
+> +	return cgrp->psi;
+>  }
+>  
+>  int psi_cgroup_alloc(struct cgroup *cgrp);
+> diff --git a/kernel/cgroup/cgroup.c b/kernel/cgroup/cgroup.c
+> index c099cf3fa02d..1491d63b06b6 100644
+> --- a/kernel/cgroup/cgroup.c
+> +++ b/kernel/cgroup/cgroup.c
+> @@ -163,7 +163,12 @@ static struct static_key_true *cgroup_subsys_on_dfl_key[] = {
+>  static DEFINE_PER_CPU(struct cgroup_rstat_cpu, cgrp_dfl_root_rstat_cpu);
+>  
+>  /* the default hierarchy */
+> -struct cgroup_root cgrp_dfl_root = { .cgrp.rstat_cpu = &cgrp_dfl_root_rstat_cpu };
+> +struct cgroup_root cgrp_dfl_root = {
+> +	.cgrp.rstat_cpu = &cgrp_dfl_root_rstat_cpu,
+> +#ifdef CONFIG_PSI
+> +	.cgrp.psi = &psi_system
+> +#endif
 
-Thanks,
+Nitpick: customary coding style is to keep a comma even after the last
+entry in the struct. Somebody appending new things won't need to touch
+the previous last line, which adds diff noise.
 
-Bart.
+With that, please add:
 
+Acked-by: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
