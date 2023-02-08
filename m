@@ -1,80 +1,74 @@
-From: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Subject: Re: [PATCH 1/2] sched/psi: simplify cgroup psi retrieving
-Date: Wed, 8 Feb 2023 13:54:54 -0500
-Message-ID: <Y+Pv/kIkUz/YlvNi@cmpxchg.org>
-References: <20230208161654.99556-1-ryncsn@gmail.com>
- <20230208161654.99556-2-ryncsn@gmail.com>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCH -next] blk-iocost: fix sleeping in atomic warning for
+ wbt_enable_default()
+Date: Wed, 8 Feb 2023 09:06:01 -1000
+Message-ID: <Y+PymbdtPVONbQAq@slm.duckdns.org>
+References: <20230208034803.2818155-1-yukuai1@huaweicloud.com>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=cmpxchg-org.20210112.gappssmtp.com; s=20210112;
+        d=gmail.com; s=20210112;
         h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=h8wnkAyp+UT+1C4mbuuq7uAJNtmK6LABMEs9ejaKbmU=;
-        b=D6besAl+jnXs8HL2wgkgbCj2qj3xJ9fr/H/QmgZCQOBl/ILNdsAnYnJz5z/T00IMUS
-         0LjcTtS5QnJ0TqPgeMn3odKFuB1k7RURDlftGvJvo+M0cbC8W/TgfGGWUivhjQ02WfAL
-         hH75lKyYjyXVvWK2I9cGrN8jkuWCEJxrLFUCUo6h3+mPqU280HNWG2VzpHjmXqrErVPu
-         Dvuhm6cqJup7Slw5HCYXzdphjvFgXJpe5kkkWwrtB1WN9BwLThsX9bBAvaqbN9Rjn+Jw
-         f/6Y7vKq4zhEWwPwKJou0IwNH/fOmSvBArEMpJLpctVxM0xtJhSKz1GfOfQpL+/c/kB1
-         srYw==
+         :subject:cc:to:from:date:sender:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=rRaVZ9/X0IStuyPV6O60UspWE6lsQv03L6mbYwCmPI4=;
+        b=BKzuUbCjDPwgJnJ3Jej0RMuyANAxCWK3m/MfztEgheROrMlQXQbl+C0fQhEkSkQqWM
+         c+HcZfCGMr21T2mRkK7wW4uDJnEQBxHIPFq0tSGFdthcOzh1UC8pBjM+Od5pI5gMRtVV
+         aXY/rHgTTfG4hQRP3m7twkNWPu5U+H/a2z8fp4O/sIsbzWmnyl5E+JvlzmsYNheFsLvZ
+         jRXzjQaAKD6mPamQd4kc0HJwzrQr2fbQYrwsKQPbfBu827q+sqPQcZ+64i3pa8BxTRTA
+         xDDri/kpY/8FtEBfumEf24xMYUdguB9wz/Ut02XU0lmFnpost9Ebhe1m/+3Bz+zhmNlT
+         9kbg==
+Sender: Tejun Heo <htejun-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 Content-Disposition: inline
-In-Reply-To: <20230208161654.99556-2-ryncsn-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+In-Reply-To: <20230208034803.2818155-1-yukuai1-XF6JlduFytWkHkcT6e4Xnw@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Kairui Song <ryncsn-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Cc: Suren Baghdasaryan <surenb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Chengming Zhou <zhouchengming-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny-IBi9RG/b67k@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Kairui Song <kasong-1Nz4purKYjRBDgjK7y7TUQ@public.gmane.org>
+To: Yu Kuai <yukuai1-XF6JlduFytWkHkcT6e4Xnw@public.gmane.org>
+Cc: josef-DigfWCa+lFGyeJad7bwFQA@public.gmane.org, axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, yi.zhang-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, yangerkun-hv44wF8Li93QT0dZR+AlfA@public.gmane.org
 
-Hello Kairui,
-
-On Thu, Feb 09, 2023 at 12:16:53AM +0800, Kairui Song wrote:
-> From: Kairui Song <kasong-1Nz4purKYjRBDgjK7y7TUQ@public.gmane.org>
-> 
-> Since the only case where cgroup_psi should return psi_system instead of
-> the cgroup's psi_group is the root cgroup, just set root cgroup's psi to
-> point to psi_system to remove the if branch.
-> 
-> Signed-off-by: Kairui Song <kasong-1Nz4purKYjRBDgjK7y7TUQ@public.gmane.org>
-
-Thanks for the patches. They overall look good, and the numbers even
-better.
-
->  include/linux/psi.h    | 2 +-
->  kernel/cgroup/cgroup.c | 7 ++++++-
->  2 files changed, 7 insertions(+), 2 deletions(-)
-> 
-> diff --git a/include/linux/psi.h b/include/linux/psi.h
-> index b029a847def1..9c3a1638b618 100644
-> --- a/include/linux/psi.h
-> +++ b/include/linux/psi.h
-> @@ -33,7 +33,7 @@ __poll_t psi_trigger_poll(void **trigger_ptr, struct file *file,
->  #ifdef CONFIG_CGROUPS
->  static inline struct psi_group *cgroup_psi(struct cgroup *cgrp)
->  {
-> -	return cgroup_ino(cgrp) == 1 ? &psi_system : cgrp->psi;
-> +	return cgrp->psi;
->  }
+On Wed, Feb 08, 2023 at 11:48:03AM +0800, Yu Kuai wrote:
+> diff --git a/block/blk-iocost.c b/block/blk-iocost.c
+> index 7a2dc9dc8e3b..03bfe1dda07c 100644
+> --- a/block/blk-iocost.c
+> +++ b/block/blk-iocost.c
+> @@ -3279,11 +3279,9 @@ static ssize_t ioc_qos_write(struct kernfs_open_file *of, char *input,
+>  		blk_stat_enable_accounting(disk->queue);
+>  		blk_queue_flag_set(QUEUE_FLAG_RQ_ALLOC_TIME, disk->queue);
+>  		ioc->enabled = true;
+> -		wbt_disable_default(disk);
+>  	} else {
+>  		blk_queue_flag_clear(QUEUE_FLAG_RQ_ALLOC_TIME, disk->queue);
+>  		ioc->enabled = false;
+> -		wbt_enable_default(disk);
+>  	}
 >  
->  int psi_cgroup_alloc(struct cgroup *cgrp);
-> diff --git a/kernel/cgroup/cgroup.c b/kernel/cgroup/cgroup.c
-> index c099cf3fa02d..1491d63b06b6 100644
-> --- a/kernel/cgroup/cgroup.c
-> +++ b/kernel/cgroup/cgroup.c
-> @@ -163,7 +163,12 @@ static struct static_key_true *cgroup_subsys_on_dfl_key[] = {
->  static DEFINE_PER_CPU(struct cgroup_rstat_cpu, cgrp_dfl_root_rstat_cpu);
+>  	if (user) {
+> @@ -3296,6 +3294,10 @@ static ssize_t ioc_qos_write(struct kernfs_open_file *of, char *input,
+>  	ioc_refresh_params(ioc, true);
+>  	spin_unlock_irq(&ioc->lock);
 >  
->  /* the default hierarchy */
-> -struct cgroup_root cgrp_dfl_root = { .cgrp.rstat_cpu = &cgrp_dfl_root_rstat_cpu };
-> +struct cgroup_root cgrp_dfl_root = {
-> +	.cgrp.rstat_cpu = &cgrp_dfl_root_rstat_cpu,
-> +#ifdef CONFIG_PSI
-> +	.cgrp.psi = &psi_system
-> +#endif
+> +	if (enable)
+> +		wbt_disable_default(disk);
+> +	else
+> +		wbt_enable_default(disk);
 
-Nitpick: customary coding style is to keep a comma even after the last
-entry in the struct. Somebody appending new things won't need to touch
-the previous last line, which adds diff noise.
+Wouldn't this allow two competiting config attempts to race each other and
+leave wbt in an unexpected state?
 
-With that, please add:
+	task1				task2
 
-Acked-by: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+	ioc_qos_write()			ioc_qos_write()
+	lock()
+	enable
+	unlock()
+					lock()
+					disable
+					unlock()
+					wbt_enable_default()
+	wbt_disable_default()
+
+Thanks.
+
+-- 
+tejun
