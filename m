@@ -1,131 +1,69 @@
-From: Kairui Song <ryncsn-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: Re: [PATCH 2/2] sched/psi: iterate through cgroups directly
-Date: Fri, 10 Feb 2023 00:08:40 +0800
-Message-ID: <CAMgjq7Bem+8g8A_OR26PHhYYx-A7LHHO3tyQNR_tMnaaKNxkug@mail.gmail.com>
-References: <20230208161654.99556-1-ryncsn@gmail.com> <20230208161654.99556-3-ryncsn@gmail.com>
- <20230208172956.GF24523@blackbody.suse.cz> <Y+P17OVZZWVpYIb0@cmpxchg.org>
+From: Bart Van Assche <bvanassche@acm.org>
+Subject: Re: [PATCH] blk-ioprio: Introduce promote-to-rt policy
+Date: Thu, 9 Feb 2023 11:09:33 -0800
+Message-ID: <55a065e7-7d86-d58f-15ba-c631a427843e@acm.org>
+References: <20230201045227.2203123-1-houtao@huaweicloud.com>
+ <8c068af3-7199-11cf-5c69-a523c7c22d9a@acm.org>
+ <4f7dcb3e-2d5a-cae3-0e1c-a82bcc3d2217@huaweicloud.com>
+ <b6b3c498-e90b-7d1f-6ad5-a31334e433ae@acm.org>
+ <beb7782e-72a4-c350-3750-23a767c88753@huaweicloud.com>
+ <aedc240d-7c9e-248a-52d2-c9775f3e8ca1@acm.org>
+ <20230208134345.77bdep3kzp52haxu@quack3>
+ <7fcd4c38-ccbe-6411-e424-a57595ad9c0b@acm.org>
+ <20230209085603.dzqfcc3pp4hacqlz@quack3>
 Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=YZWmpAN7z+mnIIM1VS6ygj9xj2/3VBtdPQMRi1uNDD0=;
-        b=IxGLmL0/yJ2qV/iwG4f069e7/09g6UC26Xw5OIymQepANRtD29sTgbDiRe7d36F7R7
-         jUywBAcvanvgJmhJrtfUskpENyPLxm3nVY3HxCUO6uS5EK6Ie89bctANX4HvaHLHS8MW
-         5ZPD1rP9Q5vl/Y4+B6yo6ArXQp9RpvWSwh1vBpIvs7uVD21eOWhZPLEHcuJcBTKd1rE1
-         O4Vmi+OItjh/5qnPZcVqZtwvq9J7L18CCc7FthYdoTBkv8ewHUVHSPn74wRA6fW5pOEE
-         TH24O7smcRvp2NtYoFnvFNdhFWyPklRnGXVIXijQg8SuRYGIpQCcVTHcUYbxcDQ1HXFF
-         TnAw==
-In-Reply-To: <Y+P17OVZZWVpYIb0-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-doc-owner@vger.kernel.org>
+Content-Language: en-US
+In-Reply-To: <20230209085603.dzqfcc3pp4hacqlz@quack3>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="utf-8"
-To: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Cc: =?UTF-8?Q?Michal_Koutn=C3=BD?= <mkoutny-IBi9RG/b67k@public.gmane.org>, Suren Baghdasaryan <surenb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Chengming Zhou <zhouchengming-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Type: text/plain; charset="us-ascii"; format="flowed"
+To: Jan Kara <jack@suse.cz>
+Cc: Hou Tao <houtao@huaweicloud.com>, linux-block@vger.kernel.org, Jens Axboe <axboe@kernel.dk>, cgroups@vger.kernel.org, Tejun Heo <tj@kernel.org>, Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, Jonathan Corbet <corbet@lwn.net>, linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org, houtao1@huawei.com
 
-Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org> =E4=BA=8E2023=E5=B9=B42=E6=9C=889=E6=
-=97=A5=E5=91=A8=E5=9B=9B 03:20=E5=86=99=E9=81=93=EF=BC=9A
-> On Wed, Feb 08, 2023 at 06:29:56PM +0100, Michal Koutn=C3=BD wrote:
-> > On Thu, Feb 09, 2023 at 12:16:54AM +0800, Kairui Song <ryncsn-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org=
-> wrote:
-> > > Signed-off-by: Kairui Song <kasong-1Nz4purKYjRBDgjK7y7TUQ@public.gmane.org>
-> > > Signed-off-by: Kairui Song <ryncsn-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-> >
-> > Typo?
-> >
-> > > -static inline struct psi_group *task_psi_group(struct task_struct *t=
-ask)
-> > > +static inline struct psi_group *psi_iter_first(struct task_struct *t=
-ask, void **iter)
-> > >  {
-> > >  #ifdef CONFIG_CGROUPS
-> > > -   if (static_branch_likely(&psi_cgroups_enabled))
-> > > -           return cgroup_psi(task_dfl_cgroup(task));
-> > > +   if (static_branch_likely(&psi_cgroups_enabled)) {
-> > > +           struct cgroup *cgroup =3D task_dfl_cgroup(task);
-> > > +
-> > > +           *iter =3D cgroup_parent(cgroup);
-> >
-> > This seems to skip a cgroup level -- maybe that's the observed
-> > performance gain?
->
-> Hm, I don't think it does. It sets up *iter to point to the parent for
-> the _next() call, but it returns task_dfl_cgroup()->psi. The next call
-> does the same: cgroup =3D *iter, *iter =3D parent, return cgroup->psi.
->
-> It could be a bit more readable to have *iter always point to the
-> current cgroup - but no strong preference either way from me:
->
-> psi_groups_first(task, iter)
-> {
-> #ifdef CONFIG_CGROUPS
->         if (static_branch_likely(&psi_cgroups_enabled)) {
->                 struct cgroup *cgroup =3D task_dfl_cgroup(task);
->
->                 *iter =3D cgroup;
->                 return cgroup_psi(cgroup);
->         }
-> #endif
->         return &psi_system;
-> }
->
-> psi_groups_next(iter)
-> {
-> #ifdef CONFIG_CGROUPS
->         if (static_branch_likely(&psi_cgroups_enabled)) {
->                 struct cgroup *cgroup =3D *iter;
->
->                 if (cgroup) {
->                         *iter =3D cgroup_parent(cgroup);
->                         return cgroup_psi(cgroup);
->                 }
->         }
->         return NULL;
-> #endif
-> }
-> psi_groups_next(iter)
-> {
-> #ifdef CONFIG_CGROUPS
->         if (static_branch_likely(&psi_cgroups_enabled)) {
->                 struct cgroup *cgroup =3D *iter;
->
->                 if (cgroup) {
->                         *iter =3D cgroup_parent(cgroup);
->                         return cgroup_psi(cgroup);
->                 }
->         }
->         return NULL;
-> #endif
-> }
+On 2/9/23 00:56, Jan Kara wrote:
+> On Wed 08-02-23 09:53:41, Bart Van Assche wrote:
+>> The test results I shared some time ago show that IOPRIO_CLASS_NONE was the
+>> default I/O priority two years ago (see also https://lore.kernel.org/linux-block/20210927220328.1410161-5-bvanassche@acm.org/).
+>> The none-to-rt policy increases the priority of bio's that have not been
+>> assigned an I/O priority to RT. Does this answer your question?
+> 
+> Not quite. I know that historically we didn't set bio I/O priority in some
+> paths (but we did set it in other paths such as some (but not all) direct
+> IO implementations). But that was exactly a mess because how none-to-rt
+> actually behaved depended on the exact details of the kernel internal IO
+> path.  So my question is: Was none-to-rt actually just a misnomer and the
+> intended behavior was "always override to RT"? Or what was exactly the
+> expectation around when IO priority is not set and should be overridden?
+> 
+> How should it interact with AIO submissions with IOCB_FLAG_IOPRIO? How
+> should it interact with task having its IO priority modified with
+> ioprio_set(2)? And what if task has its normal scheduling priority modified
+> but that translates into different IO priority (which happens in
+> __get_task_ioprio())?
+> 
+> So I think that none-to-rt is just poorly defined and if we can just get
+> rid of it (or redefine to promote-to-rt), that would be good. But maybe I'm
+> missing some intended usecase...
 
-It should be like this, right? For psi_groups_next, retrieving cgroup
-parent should be done before "if (cgroup)".
-+ psi_groups_next(iter)
-+ {
-+ #ifdef CONFIG_CGROUPS
-+         if (static_branch_likely(&psi_cgroups_enabled)) {
-+                 struct cgroup *cgroup =3D *iter;
-+
-+                 cgroup =3D cgroup_parent(cgroup);
-+                 if (cgroup) {
-+                         *iter =3D cgroup;
-+                         return cgroup_psi(cgroup);
-+                 }
-+         }
-+         return NULL;
-+ #endif
-+ }
+Hi Jan,
 
-Thanks for the suggestion!
+We have no plans to use the ioprio_set() system call since it only 
+affects foreground I/O and not page cache writeback.
 
-I think your style is better indeed.
+While Android supports io_uring, there are no plans to support libaio in 
+the Android C library (Bionic).
 
-I tried to re-benchmark the code just in case, and found it seems my
-previous benchmark result is not accurate enough now, some results
-changed after I did a rebase to latest master, or maybe just 100 times
-of perfpipe is not enough to get a stable result.
+Regarding __get_task_ioprio(), I haven't found any code in that function 
+that derives an I/O priority from the scheduling priority. Did I perhaps 
+overlook something?
 
-With a few times of retest, the final conclusion of the commit message
-is still valid, will post V2 later just after more test.
+Until recently "none-to-rt" meant "if no I/O priority has been assigned 
+to a task, use IOPRIO_CLASS_RT". Promoting the I/O priority to 
+IOPRIO_CLASS_RT works for us. I'm fine with changing the meaning of 
+"none-to-rt" into promoting the I/O priority class to RT. Introducing 
+"promote-to-rt" as a synonym of "none-to-rt" is also fine with me.
+
+Thanks,
+
+Bart.
