@@ -1,7 +1,7 @@
 From: Yafang Shao <laoar.shao-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: [PATCH bpf-next v2 3/4] bpf: allow to disable bpf map memory accounting
-Date: Fri, 10 Feb 2023 15:47:33 +0000
-Message-ID: <20230210154734.4416-4-laoar.shao@gmail.com>
+Subject: [PATCH bpf-next v2 2/4] bpf: use bpf_map_kvcalloc in bpf_local_storage
+Date: Fri, 10 Feb 2023 15:47:32 +0000
+Message-ID: <20230210154734.4416-3-laoar.shao@gmail.com>
 References: <20230210154734.4416-1-laoar.shao@gmail.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
@@ -11,94 +11,101 @@ DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=KSCoSnxCH+oujuHlV2ueRvXQv9wOk6fb9r3EfXFy+Xw=;
-        b=Jn96c5OSkEZ79jtvvUAgxCfdeK/vT5MXjAismyeWwqGOzgWUC7tOQxF5/wxGDKBd1+
-         NQDqmadFBtS46XsKBvPQanuRJ4CwVD32afSccI431oQcKgoPI4yakO5ePhv3luG5q4Kq
-         G1OmhSBaxjhnTpnCLISjIYzOyY4hc8swEO+5XOnMEsBhV8Ya3KN0EuX4XEAqdxIK1Qux
-         u/rEUAhudYR05Nnyx77XVHNXBp+2OJQuOwOWJb7EYssyfW/YRSbb/a/Nj8C/Epr16s8S
-         l5ToX2SA9BGj3aEmQ8g2629uZDbs5iDhJl7GvAh40gqex9vmEEaTyV1bl6WUkifgR+Ui
-         sbUw==
+        bh=i3DzMoNfpXAhki9P1E058MwckxQ0M07ZDtVShvGycKA=;
+        b=oZ0tIoXBZYNSfCI21Hayv+qmA7VSMOoMMOB6Lb5LFDSNKWa5ZA1OvywGXFbCWh8rAn
+         fveeyllUwSACZz2OlzAqiEo59qwmLf7GZhgB7W3iSPCLWMmsW6NA4ZnSXreyGxulD3/y
+         9BMmX3XJwetCzbqJ0iYfMiIavh+R1uAh+K3hErbzqpOKmoIYaCalasRZ8UQ2h7L6Ne2i
+         nkGZnjmlwKEJDDtCSqQOZJFTk3tODlmIZL5QpGwW6jhKIrJzTnsshBKamVpjVcGittNQ
+         6qyTM5pH4ToQwYnaUukshYiUudfoiKYDUGugo9i8aciEhz/+nkNDHKspgmXIQmp4xwow
+         ncQg==
 In-Reply-To: <20230210154734.4416-1-laoar.shao-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 To: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, ast-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, daniel-FeC+5ew28dpmcu3hnIyYJQ@public.gmane.org, andrii-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, kafai-b10kYP2dOMg@public.gmane.org, songliubraving-b10kYP2dOMg@public.gmane.org, yhs-b10kYP2dOMg@public.gmane.org, john.fastabend-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, kpsingh-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, sdf-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, haoluo-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, jolsa-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org, shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, muchun.song-fxUVXftIFDnyG1zEObXtfA@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org
 Cc: bpf-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Yafang Shao <laoar.shao-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 
-We can simply set root memcg as the map's memcg to disable bpf memory
-accounting. bpf_map_area_alloc is a little special as it gets the memcg
-from current rather than from the map, so we need to disable GFP_ACCOUNT
-specifically for it.
+Introduce new helper bpf_map_kvcalloc() for the memory allocation in
+bpf_local_storage(). Then the allocation will charge the memory from the
+map instead of from current, though currently they are the same thing as
+it is only used in map creation path now. By charging map's memory into
+the memcg from the map, it will be more clear.
 
 Signed-off-by: Yafang Shao <laoar.shao-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 Acked-by: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
 Acked-by: Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>
 ---
- include/linux/bpf.h   | 8 ++++++++
- kernel/bpf/memalloc.c | 3 ++-
- kernel/bpf/syscall.c  | 5 +++--
- 3 files changed, 13 insertions(+), 3 deletions(-)
+ include/linux/bpf.h            |  8 ++++++++
+ kernel/bpf/bpf_local_storage.c |  4 ++--
+ kernel/bpf/syscall.c           | 15 +++++++++++++++
+ 3 files changed, 25 insertions(+), 2 deletions(-)
 
 diff --git a/include/linux/bpf.h b/include/linux/bpf.h
-index fe0bf48..4385418 100644
+index 35c18a9..fe0bf48 100644
 --- a/include/linux/bpf.h
 +++ b/include/linux/bpf.h
-@@ -28,6 +28,7 @@
- #include <linux/btf.h>
- #include <linux/rcupdate_trace.h>
- #include <linux/static_call.h>
-+#include <linux/memcontrol.h>
- 
- struct bpf_verifier_env;
- struct bpf_verifier_log;
-@@ -2933,4 +2934,11 @@ static inline bool type_is_alloc(u32 type)
- 	return type & MEM_ALLOC;
+@@ -1886,6 +1886,8 @@ int  generic_map_delete_batch(struct bpf_map *map,
+ void *bpf_map_kmalloc_node(const struct bpf_map *map, size_t size, gfp_t flags,
+ 			   int node);
+ void *bpf_map_kzalloc(const struct bpf_map *map, size_t size, gfp_t flags);
++void *bpf_map_kvcalloc(struct bpf_map *map, size_t n, size_t size,
++		       gfp_t flags);
+ void __percpu *bpf_map_alloc_percpu(const struct bpf_map *map, size_t size,
+ 				    size_t align, gfp_t flags);
+ #else
+@@ -1902,6 +1904,12 @@ void __percpu *bpf_map_alloc_percpu(const struct bpf_map *map, size_t size,
+ 	return kzalloc(size, flags);
  }
  
-+static inline gfp_t bpf_memcg_flags(gfp_t flags)
++static inline void *
++bpf_map_kvcalloc(struct bpf_map *map, size_t n, size_t size, gfp_t flags)
 +{
-+	if (memcg_bpf_enabled())
-+		return flags | __GFP_ACCOUNT;
-+	return flags;
++	return kvcalloc(n, size, flags);
 +}
 +
- #endif /* _LINUX_BPF_H */
-diff --git a/kernel/bpf/memalloc.c b/kernel/bpf/memalloc.c
-index ebcc3dd..6da9051 100644
---- a/kernel/bpf/memalloc.c
-+++ b/kernel/bpf/memalloc.c
-@@ -395,7 +395,8 @@ int bpf_mem_alloc_init(struct bpf_mem_alloc *ma, int size, bool percpu)
- 		unit_size = size;
+ static inline void __percpu *
+ bpf_map_alloc_percpu(const struct bpf_map *map, size_t size, size_t align,
+ 		     gfp_t flags)
+diff --git a/kernel/bpf/bpf_local_storage.c b/kernel/bpf/bpf_local_storage.c
+index 373c3c2..35f4138 100644
+--- a/kernel/bpf/bpf_local_storage.c
++++ b/kernel/bpf/bpf_local_storage.c
+@@ -568,8 +568,8 @@ static struct bpf_local_storage_map *__bpf_local_storage_map_alloc(union bpf_att
+ 	nbuckets = max_t(u32, 2, nbuckets);
+ 	smap->bucket_log = ilog2(nbuckets);
  
- #ifdef CONFIG_MEMCG_KMEM
--		objcg = get_obj_cgroup_from_current();
-+		if (memcg_bpf_enabled())
-+			objcg = get_obj_cgroup_from_current();
- #endif
- 		for_each_possible_cpu(cpu) {
- 			c = per_cpu_ptr(pc, cpu);
+-	smap->buckets = kvcalloc(sizeof(*smap->buckets), nbuckets,
+-				 GFP_USER | __GFP_NOWARN | __GFP_ACCOUNT);
++	smap->buckets = bpf_map_kvcalloc(&smap->map, sizeof(*smap->buckets),
++					 nbuckets, GFP_USER | __GFP_NOWARN);
+ 	if (!smap->buckets) {
+ 		bpf_map_area_free(smap);
+ 		return ERR_PTR(-ENOMEM);
 diff --git a/kernel/bpf/syscall.c b/kernel/bpf/syscall.c
-index 9d94a35..cda8d00 100644
+index bcc9761..9d94a35 100644
 --- a/kernel/bpf/syscall.c
 +++ b/kernel/bpf/syscall.c
-@@ -309,7 +309,7 @@ static void *__bpf_map_area_alloc(u64 size, int numa_node, bool mmapable)
- 	 * __GFP_RETRY_MAYFAIL to avoid such situations.
- 	 */
- 
--	const gfp_t gfp = __GFP_NOWARN | __GFP_ZERO | __GFP_ACCOUNT;
-+	gfp_t gfp = bpf_memcg_flags(__GFP_NOWARN | __GFP_ZERO);
- 	unsigned int flags = 0;
- 	unsigned long align = 1;
- 	void *area;
-@@ -418,7 +418,8 @@ static void bpf_map_save_memcg(struct bpf_map *map)
- 	 * So we have to check map->objcg for being NULL each time it's
- 	 * being used.
- 	 */
--	map->objcg = get_obj_cgroup_from_current();
-+	if (memcg_bpf_enabled())
-+		map->objcg = get_obj_cgroup_from_current();
+@@ -464,6 +464,21 @@ void *bpf_map_kzalloc(const struct bpf_map *map, size_t size, gfp_t flags)
+ 	return ptr;
  }
  
- static void bpf_map_release_memcg(struct bpf_map *map)
++void *bpf_map_kvcalloc(struct bpf_map *map, size_t n, size_t size,
++		       gfp_t flags)
++{
++	struct mem_cgroup *memcg, *old_memcg;
++	void *ptr;
++
++	memcg = bpf_map_get_memcg(map);
++	old_memcg = set_active_memcg(memcg);
++	ptr = kvcalloc(n, size, flags | __GFP_ACCOUNT);
++	set_active_memcg(old_memcg);
++	mem_cgroup_put(memcg);
++
++	return ptr;
++}
++
+ void __percpu *bpf_map_alloc_percpu(const struct bpf_map *map, size_t size,
+ 				    size_t align, gfp_t flags)
+ {
 -- 
 1.8.3.1
 
