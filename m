@@ -1,77 +1,139 @@
-From: Yafang Shao <laoar.shao-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: [PATCH bpf-next v2 0/4] bpf, mm: introduce cgroup.memory=nobpf
-Date: Fri, 10 Feb 2023 15:47:30 +0000
-Message-ID: <20230210154734.4416-1-laoar.shao@gmail.com>
+From: Yafang Shao <laoar.shao@gmail.com>
+Subject: [PATCH bpf-next v2 1/4] mm: memcontrol: add new kernel parameter cgroup.memory=nobpf
+Date: Fri, 10 Feb 2023 15:47:31 +0000
+Message-ID: <20230210154734.4416-2-laoar.shao@gmail.com>
+References: <20230210154734.4416-1-laoar.shao@gmail.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <bpf-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20210112;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=s+YH2jubPt3atRm183/M73ZL/tfmWGLNd7PCoTgNemA=;
-        b=QNqX8q2ZIQrMW67nmsy+zUNpS7XR5DpjwMa+QC46vQ4QQmBXgjRWFzUADH3PIVQAvM
-         FZQ0+Lwy2K0/Q2dxn7RUNIP2sSCxrkOWkrr7iR7EFCZjNYeXAt2HozKhomVVZ84I1Req
-         JaybFnw9Q3fIYLoNgQJdOlHfqCehA7iHa+v+DquWbC8y3Quf4X2ILQxsPHjhh2v7hjzD
-         HTVfSVvQSXhPC2803RTP2MCbSbL20xfU1iKSVd1lK5EBjizBudJSJxvBrsNGQuyOaTZ/
-         njYYNt/pF7HbveYbeszG4LcRP2LxwcPrizgibQa72LOJwIrixuInxvYzU7aTn6mCyyiY
-         Ocjg==
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=VfmMbVSSF03x8/EU0op7vkHjUSmnGjVyyVeSw2o/bMM=;
+        b=BQ/iZFengvaZKJ3dJwASQiyVaev+KFw4y51P7WZw4NwSnsRQG2uZNOGB3zBFW1QK0V
+         mQx+3kvpRR5HnwelfEksbJwXc2u9EgEayhBNqtt+GwltUw9XeQz8hIUcZfpmzKK9sCdf
+         kl/LTV3UiLSa3CvLJyeV5nTs30q6wPG1V2oyvHiZgKgYJjZl4Gf5skDU/Ey3PEt0xNYN
+         cwaGROZ0gNhbe5wJ6q1scjleFZojcU35EPTGZHAF5Dwfb0knbSHm0dBe58k63hBXTLbY
+         5MsFuOdqnsx4YIOCLtjhZIicCUH2vtVHUl94uuX3LAX6uFXzti3HsqZA3o0YJuE1FX7o
+         R01g==
+In-Reply-To: <20230210154734.4416-1-laoar.shao@gmail.com>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, ast-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, daniel-FeC+5ew28dpmcu3hnIyYJQ@public.gmane.org, andrii-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, kafai-b10kYP2dOMg@public.gmane.org, songliubraving-b10kYP2dOMg@public.gmane.org, yhs-b10kYP2dOMg@public.gmane.org, john.fastabend-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, kpsingh-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, sdf-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, haoluo-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, jolsa-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org, shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, muchun.song-fxUVXftIFDnyG1zEObXtfA@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org
-Cc: bpf-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Yafang Shao <laoar.shao-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+To: tj@kernel.org, ast@kernel.org, daniel@iogearbox.net, andrii@kernel.org, kafai@fb.com, songliubraving@fb.com, yhs@fb.com, john.fastabend@gmail.com, kpsingh@kernel.org, sdf@google.com, haoluo@google.com, jolsa@kernel.org, hannes@cmpxchg.org, mhocko@kernel.org, roman.gushchin@linux.dev, shakeelb@google.com, muchun.song@linux.dev, akpm@linux-foundation.org
+Cc: bpf@vger.kernel.org, cgroups@vger.kernel.org, linux-mm@kvack.org, Yafang Shao <laoar.shao@gmail.com>
 
-The bpf memory accouting has some known problems in contianer
-environment,
+Add new kernel parameter cgroup.memory=nobpf to allow user disable bpf
+memory accounting. This is a preparation for the followup patch.
 
-- The container memory usage is not consistent if there's pinned bpf
-  program
-  After the container restart, the leftover bpf programs won't account
-  to the new generation, so the memory usage of the container is not
-  consistent. This issue can be resolved by introducing selectable
-  memcg, but we don't have an agreement on the solution yet. See also
-  the discussions at https://lwn.net/Articles/905150/ .
-
-- The leftover non-preallocated bpf map can't be limited
-  The leftover bpf map will be reparented, and thus it will be limited by 
-  the parent, rather than the container itself. Furthermore, if the
-  parent is destroyed, it be will limited by its parent's parent, and so
-  on. It can also be resolved by introducing selectable memcg.
-
-- The memory dynamically allocated in bpf prog is charged into root memcg
-  only
-  Nowdays the bpf prog can dynamically allocate memory, for example via
-  bpf_obj_new(), but it only allocate from the global bpf_mem_alloc
-  pool, so it will charge into root memcg only. That needs to be
-  addressed by a new proposal.
-
-So let's give the container user an option to disable bpf memory accouting.
-
-The idea of "cgroup.memory=nobpf" is originally by Tejun[1].
-
-[1]. https://lwn.net/ml/linux-mm/YxjOawzlgE458ezL-NiLfg/pYEd1N0TnZuCh8vA@public.gmane.org/
-
-Changes,
-v1->v2:
-- squash patches (Roman)
-- commit log improvement in patch #2. (Johannes)
-
-Yafang Shao (4):
-  mm: memcontrol: add new kernel parameter cgroup.memory=nobpf
-  bpf: use bpf_map_kvcalloc in bpf_local_storage
-  bpf: allow to disable bpf map memory accounting
-  bpf: allow to disable bpf prog memory accounting
-
+Signed-off-by: Yafang Shao <laoar.shao@gmail.com>
+Acked-by: Johannes Weiner <hannes@cmpxchg.org>
+Acked-by: Roman Gushchin <roman.gushchin@linux.dev>
+---
  Documentation/admin-guide/kernel-parameters.txt |  1 +
- include/linux/bpf.h                             | 16 ++++++++++++++++
  include/linux/memcontrol.h                      | 11 +++++++++++
- kernel/bpf/bpf_local_storage.c                  |  4 ++--
- kernel/bpf/core.c                               | 13 +++++++------
- kernel/bpf/memalloc.c                           |  3 ++-
- kernel/bpf/syscall.c                            | 20 ++++++++++++++++++--
  mm/memcontrol.c                                 | 18 ++++++++++++++++++
- 8 files changed, 75 insertions(+), 11 deletions(-)
+ 3 files changed, 30 insertions(+)
 
+diff --git a/Documentation/admin-guide/kernel-parameters.txt b/Documentation/admin-guide/kernel-parameters.txt
+index 6cfa6e3..29fb41e 100644
+--- a/Documentation/admin-guide/kernel-parameters.txt
++++ b/Documentation/admin-guide/kernel-parameters.txt
+@@ -557,6 +557,7 @@
+ 			Format: <string>
+ 			nosocket -- Disable socket memory accounting.
+ 			nokmem -- Disable kernel memory accounting.
++			nobpf -- Disable BPF memory accounting.
+ 
+ 	checkreqprot=	[SELINUX] Set initial checkreqprot flag value.
+ 			Format: { "0" | "1" }
+diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
+index d3c8203..26d4bf2 100644
+--- a/include/linux/memcontrol.h
++++ b/include/linux/memcontrol.h
+@@ -1751,6 +1751,12 @@ static inline void set_shrinker_bit(struct mem_cgroup *memcg,
+ int obj_cgroup_charge(struct obj_cgroup *objcg, gfp_t gfp, size_t size);
+ void obj_cgroup_uncharge(struct obj_cgroup *objcg, size_t size);
+ 
++extern struct static_key_false memcg_bpf_enabled_key;
++static inline bool memcg_bpf_enabled(void)
++{
++	return static_branch_likely(&memcg_bpf_enabled_key);
++}
++
+ extern struct static_key_false memcg_kmem_enabled_key;
+ 
+ static inline bool memcg_kmem_enabled(void)
+@@ -1829,6 +1835,11 @@ static inline struct obj_cgroup *get_obj_cgroup_from_page(struct page *page)
+ 	return NULL;
+ }
+ 
++static inline bool memcg_bpf_enabled(void)
++{
++	return false;
++}
++
+ static inline bool memcg_kmem_enabled(void)
+ {
+ 	return false;
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index ab457f0..590526f 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -89,6 +89,9 @@
+ /* Kernel memory accounting disabled? */
+ static bool cgroup_memory_nokmem __ro_after_init;
+ 
++/* BPF memory accounting disabled? */
++static bool cgroup_memory_nobpf __ro_after_init;
++
+ #ifdef CONFIG_CGROUP_WRITEBACK
+ static DECLARE_WAIT_QUEUE_HEAD(memcg_cgwb_frn_waitq);
+ #endif
+@@ -348,6 +351,9 @@ static void memcg_reparent_objcgs(struct mem_cgroup *memcg,
+  */
+ DEFINE_STATIC_KEY_FALSE(memcg_kmem_enabled_key);
+ EXPORT_SYMBOL(memcg_kmem_enabled_key);
++
++DEFINE_STATIC_KEY_FALSE(memcg_bpf_enabled_key);
++EXPORT_SYMBOL(memcg_bpf_enabled_key);
+ #endif
+ 
+ /**
+@@ -5362,6 +5368,11 @@ static struct mem_cgroup *mem_cgroup_alloc(void)
+ 	if (cgroup_subsys_on_dfl(memory_cgrp_subsys) && !cgroup_memory_nosocket)
+ 		static_branch_inc(&memcg_sockets_enabled_key);
+ 
++#if defined(CONFIG_MEMCG_KMEM)
++	if (!cgroup_memory_nobpf)
++		static_branch_inc(&memcg_bpf_enabled_key);
++#endif
++
+ 	return &memcg->css;
+ }
+ 
+@@ -5446,6 +5457,11 @@ static void mem_cgroup_css_free(struct cgroup_subsys_state *css)
+ 	if (!cgroup_subsys_on_dfl(memory_cgrp_subsys) && memcg->tcpmem_active)
+ 		static_branch_dec(&memcg_sockets_enabled_key);
+ 
++#if defined(CONFIG_MEMCG_KMEM)
++	if (!cgroup_memory_nobpf)
++		static_branch_dec(&memcg_bpf_enabled_key);
++#endif
++
+ 	vmpressure_cleanup(&memcg->vmpressure);
+ 	cancel_work_sync(&memcg->high_work);
+ 	mem_cgroup_remove_from_trees(memcg);
+@@ -7310,6 +7326,8 @@ static int __init cgroup_memory(char *s)
+ 			cgroup_memory_nosocket = true;
+ 		if (!strcmp(token, "nokmem"))
+ 			cgroup_memory_nokmem = true;
++		if (!strcmp(token, "nobpf"))
++			cgroup_memory_nobpf = true;
+ 	}
+ 	return 1;
+ }
 -- 
 1.8.3.1
 
