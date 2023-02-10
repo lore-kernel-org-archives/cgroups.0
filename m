@@ -1,139 +1,104 @@
-From: Yafang Shao <laoar.shao@gmail.com>
-Subject: [PATCH bpf-next v2 1/4] mm: memcontrol: add new kernel parameter cgroup.memory=nobpf
-Date: Fri, 10 Feb 2023 15:47:31 +0000
-Message-ID: <20230210154734.4416-2-laoar.shao@gmail.com>
+From: Yafang Shao <laoar.shao-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Subject: [PATCH bpf-next v2 3/4] bpf: allow to disable bpf map memory accounting
+Date: Fri, 10 Feb 2023 15:47:33 +0000
+Message-ID: <20230210154734.4416-4-laoar.shao@gmail.com>
 References: <20230210154734.4416-1-laoar.shao@gmail.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Return-path: <bpf-owner@vger.kernel.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20210112;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=VfmMbVSSF03x8/EU0op7vkHjUSmnGjVyyVeSw2o/bMM=;
-        b=BQ/iZFengvaZKJ3dJwASQiyVaev+KFw4y51P7WZw4NwSnsRQG2uZNOGB3zBFW1QK0V
-         mQx+3kvpRR5HnwelfEksbJwXc2u9EgEayhBNqtt+GwltUw9XeQz8hIUcZfpmzKK9sCdf
-         kl/LTV3UiLSa3CvLJyeV5nTs30q6wPG1V2oyvHiZgKgYJjZl4Gf5skDU/Ey3PEt0xNYN
-         cwaGROZ0gNhbe5wJ6q1scjleFZojcU35EPTGZHAF5Dwfb0knbSHm0dBe58k63hBXTLbY
-         5MsFuOdqnsx4YIOCLtjhZIicCUH2vtVHUl94uuX3LAX6uFXzti3HsqZA3o0YJuE1FX7o
-         R01g==
-In-Reply-To: <20230210154734.4416-1-laoar.shao@gmail.com>
+        bh=KSCoSnxCH+oujuHlV2ueRvXQv9wOk6fb9r3EfXFy+Xw=;
+        b=Jn96c5OSkEZ79jtvvUAgxCfdeK/vT5MXjAismyeWwqGOzgWUC7tOQxF5/wxGDKBd1+
+         NQDqmadFBtS46XsKBvPQanuRJ4CwVD32afSccI431oQcKgoPI4yakO5ePhv3luG5q4Kq
+         G1OmhSBaxjhnTpnCLISjIYzOyY4hc8swEO+5XOnMEsBhV8Ya3KN0EuX4XEAqdxIK1Qux
+         u/rEUAhudYR05Nnyx77XVHNXBp+2OJQuOwOWJb7EYssyfW/YRSbb/a/Nj8C/Epr16s8S
+         l5ToX2SA9BGj3aEmQ8g2629uZDbs5iDhJl7GvAh40gqex9vmEEaTyV1bl6WUkifgR+Ui
+         sbUw==
+In-Reply-To: <20230210154734.4416-1-laoar.shao-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: tj@kernel.org, ast@kernel.org, daniel@iogearbox.net, andrii@kernel.org, kafai@fb.com, songliubraving@fb.com, yhs@fb.com, john.fastabend@gmail.com, kpsingh@kernel.org, sdf@google.com, haoluo@google.com, jolsa@kernel.org, hannes@cmpxchg.org, mhocko@kernel.org, roman.gushchin@linux.dev, shakeelb@google.com, muchun.song@linux.dev, akpm@linux-foundation.org
-Cc: bpf@vger.kernel.org, cgroups@vger.kernel.org, linux-mm@kvack.org, Yafang Shao <laoar.shao@gmail.com>
+To: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, ast-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, daniel-FeC+5ew28dpmcu3hnIyYJQ@public.gmane.org, andrii-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, kafai-b10kYP2dOMg@public.gmane.org, songliubraving-b10kYP2dOMg@public.gmane.org, yhs-b10kYP2dOMg@public.gmane.org, john.fastabend-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, kpsingh-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, sdf-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, haoluo-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, jolsa-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org, shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, muchun.song-fxUVXftIFDnyG1zEObXtfA@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org
+Cc: bpf-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Yafang Shao <laoar.shao-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 
-Add new kernel parameter cgroup.memory=nobpf to allow user disable bpf
-memory accounting. This is a preparation for the followup patch.
+We can simply set root memcg as the map's memcg to disable bpf memory
+accounting. bpf_map_area_alloc is a little special as it gets the memcg
+from current rather than from the map, so we need to disable GFP_ACCOUNT
+specifically for it.
 
-Signed-off-by: Yafang Shao <laoar.shao@gmail.com>
-Acked-by: Johannes Weiner <hannes@cmpxchg.org>
-Acked-by: Roman Gushchin <roman.gushchin@linux.dev>
+Signed-off-by: Yafang Shao <laoar.shao-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Acked-by: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Acked-by: Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>
 ---
- Documentation/admin-guide/kernel-parameters.txt |  1 +
- include/linux/memcontrol.h                      | 11 +++++++++++
- mm/memcontrol.c                                 | 18 ++++++++++++++++++
- 3 files changed, 30 insertions(+)
+ include/linux/bpf.h   | 8 ++++++++
+ kernel/bpf/memalloc.c | 3 ++-
+ kernel/bpf/syscall.c  | 5 +++--
+ 3 files changed, 13 insertions(+), 3 deletions(-)
 
-diff --git a/Documentation/admin-guide/kernel-parameters.txt b/Documentation/admin-guide/kernel-parameters.txt
-index 6cfa6e3..29fb41e 100644
---- a/Documentation/admin-guide/kernel-parameters.txt
-+++ b/Documentation/admin-guide/kernel-parameters.txt
-@@ -557,6 +557,7 @@
- 			Format: <string>
- 			nosocket -- Disable socket memory accounting.
- 			nokmem -- Disable kernel memory accounting.
-+			nobpf -- Disable BPF memory accounting.
+diff --git a/include/linux/bpf.h b/include/linux/bpf.h
+index fe0bf48..4385418 100644
+--- a/include/linux/bpf.h
++++ b/include/linux/bpf.h
+@@ -28,6 +28,7 @@
+ #include <linux/btf.h>
+ #include <linux/rcupdate_trace.h>
+ #include <linux/static_call.h>
++#include <linux/memcontrol.h>
  
- 	checkreqprot=	[SELINUX] Set initial checkreqprot flag value.
- 			Format: { "0" | "1" }
-diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
-index d3c8203..26d4bf2 100644
---- a/include/linux/memcontrol.h
-+++ b/include/linux/memcontrol.h
-@@ -1751,6 +1751,12 @@ static inline void set_shrinker_bit(struct mem_cgroup *memcg,
- int obj_cgroup_charge(struct obj_cgroup *objcg, gfp_t gfp, size_t size);
- void obj_cgroup_uncharge(struct obj_cgroup *objcg, size_t size);
+ struct bpf_verifier_env;
+ struct bpf_verifier_log;
+@@ -2933,4 +2934,11 @@ static inline bool type_is_alloc(u32 type)
+ 	return type & MEM_ALLOC;
+ }
  
-+extern struct static_key_false memcg_bpf_enabled_key;
-+static inline bool memcg_bpf_enabled(void)
++static inline gfp_t bpf_memcg_flags(gfp_t flags)
 +{
-+	return static_branch_likely(&memcg_bpf_enabled_key);
++	if (memcg_bpf_enabled())
++		return flags | __GFP_ACCOUNT;
++	return flags;
 +}
 +
- extern struct static_key_false memcg_kmem_enabled_key;
+ #endif /* _LINUX_BPF_H */
+diff --git a/kernel/bpf/memalloc.c b/kernel/bpf/memalloc.c
+index ebcc3dd..6da9051 100644
+--- a/kernel/bpf/memalloc.c
++++ b/kernel/bpf/memalloc.c
+@@ -395,7 +395,8 @@ int bpf_mem_alloc_init(struct bpf_mem_alloc *ma, int size, bool percpu)
+ 		unit_size = size;
  
- static inline bool memcg_kmem_enabled(void)
-@@ -1829,6 +1835,11 @@ static inline struct obj_cgroup *get_obj_cgroup_from_page(struct page *page)
- 	return NULL;
- }
- 
-+static inline bool memcg_bpf_enabled(void)
-+{
-+	return false;
-+}
-+
- static inline bool memcg_kmem_enabled(void)
- {
- 	return false;
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index ab457f0..590526f 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -89,6 +89,9 @@
- /* Kernel memory accounting disabled? */
- static bool cgroup_memory_nokmem __ro_after_init;
- 
-+/* BPF memory accounting disabled? */
-+static bool cgroup_memory_nobpf __ro_after_init;
-+
- #ifdef CONFIG_CGROUP_WRITEBACK
- static DECLARE_WAIT_QUEUE_HEAD(memcg_cgwb_frn_waitq);
+ #ifdef CONFIG_MEMCG_KMEM
+-		objcg = get_obj_cgroup_from_current();
++		if (memcg_bpf_enabled())
++			objcg = get_obj_cgroup_from_current();
  #endif
-@@ -348,6 +351,9 @@ static void memcg_reparent_objcgs(struct mem_cgroup *memcg,
-  */
- DEFINE_STATIC_KEY_FALSE(memcg_kmem_enabled_key);
- EXPORT_SYMBOL(memcg_kmem_enabled_key);
-+
-+DEFINE_STATIC_KEY_FALSE(memcg_bpf_enabled_key);
-+EXPORT_SYMBOL(memcg_bpf_enabled_key);
- #endif
+ 		for_each_possible_cpu(cpu) {
+ 			c = per_cpu_ptr(pc, cpu);
+diff --git a/kernel/bpf/syscall.c b/kernel/bpf/syscall.c
+index 9d94a35..cda8d00 100644
+--- a/kernel/bpf/syscall.c
++++ b/kernel/bpf/syscall.c
+@@ -309,7 +309,7 @@ static void *__bpf_map_area_alloc(u64 size, int numa_node, bool mmapable)
+ 	 * __GFP_RETRY_MAYFAIL to avoid such situations.
+ 	 */
  
- /**
-@@ -5362,6 +5368,11 @@ static struct mem_cgroup *mem_cgroup_alloc(void)
- 	if (cgroup_subsys_on_dfl(memory_cgrp_subsys) && !cgroup_memory_nosocket)
- 		static_branch_inc(&memcg_sockets_enabled_key);
- 
-+#if defined(CONFIG_MEMCG_KMEM)
-+	if (!cgroup_memory_nobpf)
-+		static_branch_inc(&memcg_bpf_enabled_key);
-+#endif
-+
- 	return &memcg->css;
+-	const gfp_t gfp = __GFP_NOWARN | __GFP_ZERO | __GFP_ACCOUNT;
++	gfp_t gfp = bpf_memcg_flags(__GFP_NOWARN | __GFP_ZERO);
+ 	unsigned int flags = 0;
+ 	unsigned long align = 1;
+ 	void *area;
+@@ -418,7 +418,8 @@ static void bpf_map_save_memcg(struct bpf_map *map)
+ 	 * So we have to check map->objcg for being NULL each time it's
+ 	 * being used.
+ 	 */
+-	map->objcg = get_obj_cgroup_from_current();
++	if (memcg_bpf_enabled())
++		map->objcg = get_obj_cgroup_from_current();
  }
  
-@@ -5446,6 +5457,11 @@ static void mem_cgroup_css_free(struct cgroup_subsys_state *css)
- 	if (!cgroup_subsys_on_dfl(memory_cgrp_subsys) && memcg->tcpmem_active)
- 		static_branch_dec(&memcg_sockets_enabled_key);
- 
-+#if defined(CONFIG_MEMCG_KMEM)
-+	if (!cgroup_memory_nobpf)
-+		static_branch_dec(&memcg_bpf_enabled_key);
-+#endif
-+
- 	vmpressure_cleanup(&memcg->vmpressure);
- 	cancel_work_sync(&memcg->high_work);
- 	mem_cgroup_remove_from_trees(memcg);
-@@ -7310,6 +7326,8 @@ static int __init cgroup_memory(char *s)
- 			cgroup_memory_nosocket = true;
- 		if (!strcmp(token, "nokmem"))
- 			cgroup_memory_nokmem = true;
-+		if (!strcmp(token, "nobpf"))
-+			cgroup_memory_nobpf = true;
- 	}
- 	return 1;
- }
+ static void bpf_map_release_memcg(struct bpf_map *map)
 -- 
 1.8.3.1
 
