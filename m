@@ -1,101 +1,77 @@
-From: Jan Kara <jack-AlSwsSmVLrQ@public.gmane.org>
-Subject: Re: [PATCH] blk-ioprio: Introduce promote-to-rt policy
-Date: Fri, 10 Feb 2023 11:12:44 +0100
-Message-ID: <20230210101244.zsmtmsoo4xjx7suj@quack3>
-References: <20230201045227.2203123-1-houtao@huaweicloud.com>
- <8c068af3-7199-11cf-5c69-a523c7c22d9a@acm.org>
- <4f7dcb3e-2d5a-cae3-0e1c-a82bcc3d2217@huaweicloud.com>
- <b6b3c498-e90b-7d1f-6ad5-a31334e433ae@acm.org>
- <beb7782e-72a4-c350-3750-23a767c88753@huaweicloud.com>
- <aedc240d-7c9e-248a-52d2-c9775f3e8ca1@acm.org>
- <20230208134345.77bdep3kzp52haxu@quack3>
- <7fcd4c38-ccbe-6411-e424-a57595ad9c0b@acm.org>
- <20230209085603.dzqfcc3pp4hacqlz@quack3>
- <55a065e7-7d86-d58f-15ba-c631a427843e@acm.org>
+From: Yafang Shao <laoar.shao-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Subject: [PATCH bpf-next v2 0/4] bpf, mm: introduce cgroup.memory=nobpf
+Date: Fri, 10 Feb 2023 15:47:30 +0000
+Message-ID: <20230210154734.4416-1-laoar.shao@gmail.com>
 Mime-Version: 1.0
+Content-Transfer-Encoding: 8bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
-        t=1676023964; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=1QLhQop7MVEJVqH+irAiadIwt7myVpzIBP9m/xziqnA=;
-        b=VQtbc9tEJLFJF0Pw5PjECmBuPAKFt4AvPORe5P6oZ2MzadE81h99ZIUb7KFajj63MWUyMW
-        m5UgmHAg/UuvODkXLNiw9dIF1tepZSsyV+Ichh0V1iaRREj6quFohULxLUWN2gg5dMVrYA
-        lEdDwq+fhNH/qSTQkitEKwWN3/sfAaA=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
-        s=susede2_ed25519; t=1676023964;
-        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=1QLhQop7MVEJVqH+irAiadIwt7myVpzIBP9m/xziqnA=;
-        b=tUf6mwNmwxBFmfkwRwvlGR/TSOGT0glc5CsHdFA2Mg008Z7jSMcUsJAZvc1DufM4+PFeXg
-        6/fgtb2lJwC5aBAg==
-Content-Disposition: inline
-In-Reply-To: <55a065e7-7d86-d58f-15ba-c631a427843e-HInyCGIudOg@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=s+YH2jubPt3atRm183/M73ZL/tfmWGLNd7PCoTgNemA=;
+        b=QNqX8q2ZIQrMW67nmsy+zUNpS7XR5DpjwMa+QC46vQ4QQmBXgjRWFzUADH3PIVQAvM
+         FZQ0+Lwy2K0/Q2dxn7RUNIP2sSCxrkOWkrr7iR7EFCZjNYeXAt2HozKhomVVZ84I1Req
+         JaybFnw9Q3fIYLoNgQJdOlHfqCehA7iHa+v+DquWbC8y3Quf4X2ILQxsPHjhh2v7hjzD
+         HTVfSVvQSXhPC2803RTP2MCbSbL20xfU1iKSVd1lK5EBjizBudJSJxvBrsNGQuyOaTZ/
+         njYYNt/pF7HbveYbeszG4LcRP2LxwcPrizgibQa72LOJwIrixuInxvYzU7aTn6mCyyiY
+         Ocjg==
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Bart Van Assche <bvanassche-HInyCGIudOg@public.gmane.org>
-Cc: Jan Kara <jack-AlSwsSmVLrQ@public.gmane.org>, Hou Tao <houtao-XF6JlduFytWkHkcT6e4Xnw@public.gmane.org>, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Jonathan Corbet <corbet-T1hC0tSOHrs@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, houtao1-hv44wF8Li93QT0dZR+AlfA@public.gmane.org
+To: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, ast-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, daniel-FeC+5ew28dpmcu3hnIyYJQ@public.gmane.org, andrii-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, kafai-b10kYP2dOMg@public.gmane.org, songliubraving-b10kYP2dOMg@public.gmane.org, yhs-b10kYP2dOMg@public.gmane.org, john.fastabend-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, kpsingh-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, sdf-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, haoluo-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, jolsa-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org, shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, muchun.song-fxUVXftIFDnyG1zEObXtfA@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org
+Cc: bpf-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Yafang Shao <laoar.shao-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 
-On Thu 09-02-23 11:09:33, Bart Van Assche wrote:
-> On 2/9/23 00:56, Jan Kara wrote:
-> > On Wed 08-02-23 09:53:41, Bart Van Assche wrote:
-> > > The test results I shared some time ago show that IOPRIO_CLASS_NONE was the
-> > > default I/O priority two years ago (see also https://lore.kernel.org/linux-block/20210927220328.1410161-5-bvanassche-HInyCGIudOg@public.gmane.org/).
-> > > The none-to-rt policy increases the priority of bio's that have not been
-> > > assigned an I/O priority to RT. Does this answer your question?
-> > 
-> > Not quite. I know that historically we didn't set bio I/O priority in some
-> > paths (but we did set it in other paths such as some (but not all) direct
-> > IO implementations). But that was exactly a mess because how none-to-rt
-> > actually behaved depended on the exact details of the kernel internal IO
-> > path.  So my question is: Was none-to-rt actually just a misnomer and the
-> > intended behavior was "always override to RT"? Or what was exactly the
-> > expectation around when IO priority is not set and should be overridden?
-> > 
-> > How should it interact with AIO submissions with IOCB_FLAG_IOPRIO? How
-> > should it interact with task having its IO priority modified with
-> > ioprio_set(2)? And what if task has its normal scheduling priority modified
-> > but that translates into different IO priority (which happens in
-> > __get_task_ioprio())?
-> > 
-> > So I think that none-to-rt is just poorly defined and if we can just get
-> > rid of it (or redefine to promote-to-rt), that would be good. But maybe I'm
-> > missing some intended usecase...
-> 
-> Hi Jan,
-> 
-> We have no plans to use the ioprio_set() system call since it only affects
-> foreground I/O and not page cache writeback.
-> 
-> While Android supports io_uring, there are no plans to support libaio in the
-> Android C library (Bionic).
-> 
-> Regarding __get_task_ioprio(), I haven't found any code in that function
-> that derives an I/O priority from the scheduling priority. Did I perhaps
-> overlook something?
+The bpf memory accouting has some known problems in contianer
+environment,
 
-This condition in __get_task_ioprio():
+- The container memory usage is not consistent if there's pinned bpf
+  program
+  After the container restart, the leftover bpf programs won't account
+  to the new generation, so the memory usage of the container is not
+  consistent. This issue can be resolved by introducing selectable
+  memcg, but we don't have an agreement on the solution yet. See also
+  the discussions at https://lwn.net/Articles/905150/ .
 
-        if (IOPRIO_PRIO_CLASS(prio) == IOPRIO_CLASS_NONE)
-                prio = IOPRIO_PRIO_VALUE(task_nice_ioclass(p),
-                                         task_nice_ioprio(p));
+- The leftover non-preallocated bpf map can't be limited
+  The leftover bpf map will be reparented, and thus it will be limited by 
+  the parent, rather than the container itself. Furthermore, if the
+  parent is destroyed, it be will limited by its parent's parent, and so
+  on. It can also be resolved by introducing selectable memcg.
 
-sets task's IO priority based on scheduling priority.
+- The memory dynamically allocated in bpf prog is charged into root memcg
+  only
+  Nowdays the bpf prog can dynamically allocate memory, for example via
+  bpf_obj_new(), but it only allocate from the global bpf_mem_alloc
+  pool, so it will charge into root memcg only. That needs to be
+  addressed by a new proposal.
 
-> Until recently "none-to-rt" meant "if no I/O priority has been assigned to a
-> task, use IOPRIO_CLASS_RT". Promoting the I/O priority to IOPRIO_CLASS_RT
-> works for us. I'm fine with changing the meaning of "none-to-rt" into
-> promoting the I/O priority class to RT. Introducing "promote-to-rt" as a
-> synonym of "none-to-rt" is also fine with me.
+So let's give the container user an option to disable bpf memory accouting.
 
-OK, so it seems we are all in agreement here that "none-to-rt" behavior is
-not really needed. Hou, can you perhaps update your patches and the
-documentation to make "none-to-rt" just an alias for "promote-to-rt"?
-Thanks!
+The idea of "cgroup.memory=nobpf" is originally by Tejun[1].
 
-								Honza
+[1]. https://lwn.net/ml/linux-mm/YxjOawzlgE458ezL-NiLfg/pYEd1N0TnZuCh8vA@public.gmane.org/
+
+Changes,
+v1->v2:
+- squash patches (Roman)
+- commit log improvement in patch #2. (Johannes)
+
+Yafang Shao (4):
+  mm: memcontrol: add new kernel parameter cgroup.memory=nobpf
+  bpf: use bpf_map_kvcalloc in bpf_local_storage
+  bpf: allow to disable bpf map memory accounting
+  bpf: allow to disable bpf prog memory accounting
+
+ Documentation/admin-guide/kernel-parameters.txt |  1 +
+ include/linux/bpf.h                             | 16 ++++++++++++++++
+ include/linux/memcontrol.h                      | 11 +++++++++++
+ kernel/bpf/bpf_local_storage.c                  |  4 ++--
+ kernel/bpf/core.c                               | 13 +++++++------
+ kernel/bpf/memalloc.c                           |  3 ++-
+ kernel/bpf/syscall.c                            | 20 ++++++++++++++++++--
+ mm/memcontrol.c                                 | 18 ++++++++++++++++++
+ 8 files changed, 75 insertions(+), 11 deletions(-)
+
 -- 
-Jan Kara <jack-IBi9RG/b67k@public.gmane.org>
-SUSE Labs, CR
+1.8.3.1
+
