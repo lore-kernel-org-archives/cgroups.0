@@ -1,7 +1,7 @@
 From: Yafang Shao <laoar.shao-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: [PATCH bpf-next v2 2/4] bpf: use bpf_map_kvcalloc in bpf_local_storage
-Date: Fri, 10 Feb 2023 15:47:32 +0000
-Message-ID: <20230210154734.4416-3-laoar.shao@gmail.com>
+Subject: [PATCH bpf-next v2 4/4] bpf: allow to disable bpf prog memory accounting
+Date: Fri, 10 Feb 2023 15:47:34 +0000
+Message-ID: <20230210154734.4416-5-laoar.shao@gmail.com>
 References: <20230210154734.4416-1-laoar.shao@gmail.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
@@ -11,101 +11,92 @@ DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=i3DzMoNfpXAhki9P1E058MwckxQ0M07ZDtVShvGycKA=;
-        b=oZ0tIoXBZYNSfCI21Hayv+qmA7VSMOoMMOB6Lb5LFDSNKWa5ZA1OvywGXFbCWh8rAn
-         fveeyllUwSACZz2OlzAqiEo59qwmLf7GZhgB7W3iSPCLWMmsW6NA4ZnSXreyGxulD3/y
-         9BMmX3XJwetCzbqJ0iYfMiIavh+R1uAh+K3hErbzqpOKmoIYaCalasRZ8UQ2h7L6Ne2i
-         nkGZnjmlwKEJDDtCSqQOZJFTk3tODlmIZL5QpGwW6jhKIrJzTnsshBKamVpjVcGittNQ
-         6qyTM5pH4ToQwYnaUukshYiUudfoiKYDUGugo9i8aciEhz/+nkNDHKspgmXIQmp4xwow
-         ncQg==
+        bh=3BzE4dHWY04pl7eRXElI/6nAwQrbbF33iW2gxKhD+d4=;
+        b=j+gxHQfBd7YR9DKjd+QCY3jhunM0qE502k1Q1kOFjTYec6K5h0eypt2BdeB7fPrask
+         zyOtXXHaIaHjLTKHKppAk+Iy+jmgbTPFqltPNUJ8CKtzG4mVYDU3DV9d/VNVRXP8ypOf
+         lK6HEtis6SdYcjcUu0PABvv/+/8NvYPV7hnLtRbdKElboXcv350wk00qsAXJKMK3Fy+g
+         XXIjW6cnwBzFFcNKYrzsNYgo5j/TBfrHuKQOy5NrkBMgMceLhjn1k0+oWJKmb0Qoq8Z4
+         qJX68FnAXTZOjPtdUc3wYrlty43ptBoVJ6kLPOUWuI1ZILmy8c8lp1GSGuApFVrT5irw
+         ISmA==
 In-Reply-To: <20230210154734.4416-1-laoar.shao-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 To: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, ast-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, daniel-FeC+5ew28dpmcu3hnIyYJQ@public.gmane.org, andrii-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, kafai-b10kYP2dOMg@public.gmane.org, songliubraving-b10kYP2dOMg@public.gmane.org, yhs-b10kYP2dOMg@public.gmane.org, john.fastabend-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, kpsingh-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, sdf-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, haoluo-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, jolsa-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org, shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, muchun.song-fxUVXftIFDnyG1zEObXtfA@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org
 Cc: bpf-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Yafang Shao <laoar.shao-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 
-Introduce new helper bpf_map_kvcalloc() for the memory allocation in
-bpf_local_storage(). Then the allocation will charge the memory from the
-map instead of from current, though currently they are the same thing as
-it is only used in map creation path now. By charging map's memory into
-the memcg from the map, it will be more clear.
+We can simply disable the bpf prog memory accouting by not setting the
+GFP_ACCOUNT.
 
 Signed-off-by: Yafang Shao <laoar.shao-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 Acked-by: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
 Acked-by: Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>
 ---
- include/linux/bpf.h            |  8 ++++++++
- kernel/bpf/bpf_local_storage.c |  4 ++--
- kernel/bpf/syscall.c           | 15 +++++++++++++++
- 3 files changed, 25 insertions(+), 2 deletions(-)
+ kernel/bpf/core.c | 13 +++++++------
+ 1 file changed, 7 insertions(+), 6 deletions(-)
 
-diff --git a/include/linux/bpf.h b/include/linux/bpf.h
-index 35c18a9..fe0bf48 100644
---- a/include/linux/bpf.h
-+++ b/include/linux/bpf.h
-@@ -1886,6 +1886,8 @@ int  generic_map_delete_batch(struct bpf_map *map,
- void *bpf_map_kmalloc_node(const struct bpf_map *map, size_t size, gfp_t flags,
- 			   int node);
- void *bpf_map_kzalloc(const struct bpf_map *map, size_t size, gfp_t flags);
-+void *bpf_map_kvcalloc(struct bpf_map *map, size_t n, size_t size,
-+		       gfp_t flags);
- void __percpu *bpf_map_alloc_percpu(const struct bpf_map *map, size_t size,
- 				    size_t align, gfp_t flags);
- #else
-@@ -1902,6 +1904,12 @@ void __percpu *bpf_map_alloc_percpu(const struct bpf_map *map, size_t size,
- 	return kzalloc(size, flags);
- }
+diff --git a/kernel/bpf/core.c b/kernel/bpf/core.c
+index 16da510..3390961 100644
+--- a/kernel/bpf/core.c
++++ b/kernel/bpf/core.c
+@@ -35,6 +35,7 @@
+ #include <linux/bpf_verifier.h>
+ #include <linux/nodemask.h>
+ #include <linux/bpf_mem_alloc.h>
++#include <linux/memcontrol.h>
  
-+static inline void *
-+bpf_map_kvcalloc(struct bpf_map *map, size_t n, size_t size, gfp_t flags)
-+{
-+	return kvcalloc(n, size, flags);
-+}
-+
- static inline void __percpu *
- bpf_map_alloc_percpu(const struct bpf_map *map, size_t size, size_t align,
- 		     gfp_t flags)
-diff --git a/kernel/bpf/bpf_local_storage.c b/kernel/bpf/bpf_local_storage.c
-index 373c3c2..35f4138 100644
---- a/kernel/bpf/bpf_local_storage.c
-+++ b/kernel/bpf/bpf_local_storage.c
-@@ -568,8 +568,8 @@ static struct bpf_local_storage_map *__bpf_local_storage_map_alloc(union bpf_att
- 	nbuckets = max_t(u32, 2, nbuckets);
- 	smap->bucket_log = ilog2(nbuckets);
+ #include <asm/barrier.h>
+ #include <asm/unaligned.h>
+@@ -87,7 +88,7 @@ void *bpf_internal_load_pointer_neg_helper(const struct sk_buff *skb, int k, uns
  
--	smap->buckets = kvcalloc(sizeof(*smap->buckets), nbuckets,
--				 GFP_USER | __GFP_NOWARN | __GFP_ACCOUNT);
-+	smap->buckets = bpf_map_kvcalloc(&smap->map, sizeof(*smap->buckets),
-+					 nbuckets, GFP_USER | __GFP_NOWARN);
- 	if (!smap->buckets) {
- 		bpf_map_area_free(smap);
- 		return ERR_PTR(-ENOMEM);
-diff --git a/kernel/bpf/syscall.c b/kernel/bpf/syscall.c
-index bcc9761..9d94a35 100644
---- a/kernel/bpf/syscall.c
-+++ b/kernel/bpf/syscall.c
-@@ -464,6 +464,21 @@ void *bpf_map_kzalloc(const struct bpf_map *map, size_t size, gfp_t flags)
- 	return ptr;
- }
- 
-+void *bpf_map_kvcalloc(struct bpf_map *map, size_t n, size_t size,
-+		       gfp_t flags)
-+{
-+	struct mem_cgroup *memcg, *old_memcg;
-+	void *ptr;
-+
-+	memcg = bpf_map_get_memcg(map);
-+	old_memcg = set_active_memcg(memcg);
-+	ptr = kvcalloc(n, size, flags | __GFP_ACCOUNT);
-+	set_active_memcg(old_memcg);
-+	mem_cgroup_put(memcg);
-+
-+	return ptr;
-+}
-+
- void __percpu *bpf_map_alloc_percpu(const struct bpf_map *map, size_t size,
- 				    size_t align, gfp_t flags)
+ struct bpf_prog *bpf_prog_alloc_no_stats(unsigned int size, gfp_t gfp_extra_flags)
  {
+-	gfp_t gfp_flags = GFP_KERNEL_ACCOUNT | __GFP_ZERO | gfp_extra_flags;
++	gfp_t gfp_flags = bpf_memcg_flags(GFP_KERNEL | __GFP_ZERO | gfp_extra_flags);
+ 	struct bpf_prog_aux *aux;
+ 	struct bpf_prog *fp;
+ 
+@@ -96,12 +97,12 @@ struct bpf_prog *bpf_prog_alloc_no_stats(unsigned int size, gfp_t gfp_extra_flag
+ 	if (fp == NULL)
+ 		return NULL;
+ 
+-	aux = kzalloc(sizeof(*aux), GFP_KERNEL_ACCOUNT | gfp_extra_flags);
++	aux = kzalloc(sizeof(*aux), bpf_memcg_flags(GFP_KERNEL | gfp_extra_flags));
+ 	if (aux == NULL) {
+ 		vfree(fp);
+ 		return NULL;
+ 	}
+-	fp->active = alloc_percpu_gfp(int, GFP_KERNEL_ACCOUNT | gfp_extra_flags);
++	fp->active = alloc_percpu_gfp(int, bpf_memcg_flags(GFP_KERNEL | gfp_extra_flags));
+ 	if (!fp->active) {
+ 		vfree(fp);
+ 		kfree(aux);
+@@ -126,7 +127,7 @@ struct bpf_prog *bpf_prog_alloc_no_stats(unsigned int size, gfp_t gfp_extra_flag
+ 
+ struct bpf_prog *bpf_prog_alloc(unsigned int size, gfp_t gfp_extra_flags)
+ {
+-	gfp_t gfp_flags = GFP_KERNEL_ACCOUNT | __GFP_ZERO | gfp_extra_flags;
++	gfp_t gfp_flags = bpf_memcg_flags(GFP_KERNEL | __GFP_ZERO | gfp_extra_flags);
+ 	struct bpf_prog *prog;
+ 	int cpu;
+ 
+@@ -159,7 +160,7 @@ int bpf_prog_alloc_jited_linfo(struct bpf_prog *prog)
+ 
+ 	prog->aux->jited_linfo = kvcalloc(prog->aux->nr_linfo,
+ 					  sizeof(*prog->aux->jited_linfo),
+-					  GFP_KERNEL_ACCOUNT | __GFP_NOWARN);
++					  bpf_memcg_flags(GFP_KERNEL | __GFP_NOWARN));
+ 	if (!prog->aux->jited_linfo)
+ 		return -ENOMEM;
+ 
+@@ -234,7 +235,7 @@ void bpf_prog_fill_jited_linfo(struct bpf_prog *prog,
+ struct bpf_prog *bpf_prog_realloc(struct bpf_prog *fp_old, unsigned int size,
+ 				  gfp_t gfp_extra_flags)
+ {
+-	gfp_t gfp_flags = GFP_KERNEL_ACCOUNT | __GFP_ZERO | gfp_extra_flags;
++	gfp_t gfp_flags = bpf_memcg_flags(GFP_KERNEL | __GFP_ZERO | gfp_extra_flags);
+ 	struct bpf_prog *fp;
+ 	u32 pages;
+ 
 -- 
 1.8.3.1
 
