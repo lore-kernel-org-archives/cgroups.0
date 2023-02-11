@@ -1,102 +1,59 @@
-From: Yafang Shao <laoar.shao-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: [PATCH bpf-next v2 4/4] bpf: allow to disable bpf prog memory accounting
-Date: Fri, 10 Feb 2023 15:47:34 +0000
-Message-ID: <20230210154734.4416-5-laoar.shao@gmail.com>
+From: patchwork-bot+netdevbpf-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org
+Subject: Re: [PATCH bpf-next v2 0/4] bpf, mm: introduce cgroup.memory=nobpf
+Date: Sat, 11 Feb 2023 07:10:18 +0000
+Message-ID: <167609941850.20060.1828725334029145544.git-patchwork-notify@kernel.org>
 References: <20230210154734.4416-1-laoar.shao@gmail.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=3BzE4dHWY04pl7eRXElI/6nAwQrbbF33iW2gxKhD+d4=;
-        b=j+gxHQfBd7YR9DKjd+QCY3jhunM0qE502k1Q1kOFjTYec6K5h0eypt2BdeB7fPrask
-         zyOtXXHaIaHjLTKHKppAk+Iy+jmgbTPFqltPNUJ8CKtzG4mVYDU3DV9d/VNVRXP8ypOf
-         lK6HEtis6SdYcjcUu0PABvv/+/8NvYPV7hnLtRbdKElboXcv350wk00qsAXJKMK3Fy+g
-         XXIjW6cnwBzFFcNKYrzsNYgo5j/TBfrHuKQOy5NrkBMgMceLhjn1k0+oWJKmb0Qoq8Z4
-         qJX68FnAXTZOjPtdUc3wYrlty43ptBoVJ6kLPOUWuI1ZILmy8c8lp1GSGuApFVrT5irw
-         ISmA==
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1676099418;
+        bh=IYS1UXEO949wArIgsINV5rvcHrLkfM5cJb+SmCbKbNQ=;
+        h=Subject:From:Date:References:In-Reply-To:To:Cc:From;
+        b=umY86AB+wKf1J1/6UxDpMDn9AlI7GSQ3rBUJM7bEi9PlHfypfObSTswAiVI5/TEXw
+         9mAbkPULSOM3rHA1GDLSyNXB+/KUyS1LvHZ/MlsXOQPYLyrBq6zw7f/laBFFMO18yu
+         mPn39/vQRRbMnWu1vJyihtpBHnq4AZuxn2E/O6s4uPftzgS/QhqiCOeV211rrzVEzE
+         essChqKwfnA2gfwrXgA+naR41bkJf7U+qu0j3KbVg5LDgDWHubjAips6gFE5GTlZiw
+         MornHY3KRSrrokdDqguozFg6+whdbnMwYm8OfBT1KO06/d1kLyJfRHiWS9VVEaY5W+
+         8hbUNrLEA02zA==
 In-Reply-To: <20230210154734.4416-1-laoar.shao-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, ast-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, daniel-FeC+5ew28dpmcu3hnIyYJQ@public.gmane.org, andrii-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, kafai-b10kYP2dOMg@public.gmane.org, songliubraving-b10kYP2dOMg@public.gmane.org, yhs-b10kYP2dOMg@public.gmane.org, john.fastabend-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, kpsingh-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, sdf-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, haoluo-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, jolsa-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org, shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, muchun.song-fxUVXftIFDnyG1zEObXtfA@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org
-Cc: bpf-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Yafang Shao <laoar.shao-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+To: Yafang Shao <laoar.shao-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Cc: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, ast-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, daniel-FeC+5ew28dpmcu3hnIyYJQ@public.gmane.org, andrii-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, kafai-b10kYP2dOMg@public.gmane.org, songliubraving-b10kYP2dOMg@public.gmane.org, yhs-b10kYP2dOMg@public.gmane.org, john.fastabend-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, kpsingh-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, sdf-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, haoluo-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, jolsa-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org, shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, muchun.song-fxUVXftIFDnyG1zEObXtfA@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, bpf-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
 
-We can simply disable the bpf prog memory accouting by not setting the
-GFP_ACCOUNT.
+Hello:
 
-Signed-off-by: Yafang Shao <laoar.shao-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Acked-by: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Acked-by: Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>
----
- kernel/bpf/core.c | 13 +++++++------
- 1 file changed, 7 insertions(+), 6 deletions(-)
+This series was applied to bpf/bpf-next.git (master)
+by Alexei Starovoitov <ast-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>:
 
-diff --git a/kernel/bpf/core.c b/kernel/bpf/core.c
-index 16da510..3390961 100644
---- a/kernel/bpf/core.c
-+++ b/kernel/bpf/core.c
-@@ -35,6 +35,7 @@
- #include <linux/bpf_verifier.h>
- #include <linux/nodemask.h>
- #include <linux/bpf_mem_alloc.h>
-+#include <linux/memcontrol.h>
- 
- #include <asm/barrier.h>
- #include <asm/unaligned.h>
-@@ -87,7 +88,7 @@ void *bpf_internal_load_pointer_neg_helper(const struct sk_buff *skb, int k, uns
- 
- struct bpf_prog *bpf_prog_alloc_no_stats(unsigned int size, gfp_t gfp_extra_flags)
- {
--	gfp_t gfp_flags = GFP_KERNEL_ACCOUNT | __GFP_ZERO | gfp_extra_flags;
-+	gfp_t gfp_flags = bpf_memcg_flags(GFP_KERNEL | __GFP_ZERO | gfp_extra_flags);
- 	struct bpf_prog_aux *aux;
- 	struct bpf_prog *fp;
- 
-@@ -96,12 +97,12 @@ struct bpf_prog *bpf_prog_alloc_no_stats(unsigned int size, gfp_t gfp_extra_flag
- 	if (fp == NULL)
- 		return NULL;
- 
--	aux = kzalloc(sizeof(*aux), GFP_KERNEL_ACCOUNT | gfp_extra_flags);
-+	aux = kzalloc(sizeof(*aux), bpf_memcg_flags(GFP_KERNEL | gfp_extra_flags));
- 	if (aux == NULL) {
- 		vfree(fp);
- 		return NULL;
- 	}
--	fp->active = alloc_percpu_gfp(int, GFP_KERNEL_ACCOUNT | gfp_extra_flags);
-+	fp->active = alloc_percpu_gfp(int, bpf_memcg_flags(GFP_KERNEL | gfp_extra_flags));
- 	if (!fp->active) {
- 		vfree(fp);
- 		kfree(aux);
-@@ -126,7 +127,7 @@ struct bpf_prog *bpf_prog_alloc_no_stats(unsigned int size, gfp_t gfp_extra_flag
- 
- struct bpf_prog *bpf_prog_alloc(unsigned int size, gfp_t gfp_extra_flags)
- {
--	gfp_t gfp_flags = GFP_KERNEL_ACCOUNT | __GFP_ZERO | gfp_extra_flags;
-+	gfp_t gfp_flags = bpf_memcg_flags(GFP_KERNEL | __GFP_ZERO | gfp_extra_flags);
- 	struct bpf_prog *prog;
- 	int cpu;
- 
-@@ -159,7 +160,7 @@ int bpf_prog_alloc_jited_linfo(struct bpf_prog *prog)
- 
- 	prog->aux->jited_linfo = kvcalloc(prog->aux->nr_linfo,
- 					  sizeof(*prog->aux->jited_linfo),
--					  GFP_KERNEL_ACCOUNT | __GFP_NOWARN);
-+					  bpf_memcg_flags(GFP_KERNEL | __GFP_NOWARN));
- 	if (!prog->aux->jited_linfo)
- 		return -ENOMEM;
- 
-@@ -234,7 +235,7 @@ void bpf_prog_fill_jited_linfo(struct bpf_prog *prog,
- struct bpf_prog *bpf_prog_realloc(struct bpf_prog *fp_old, unsigned int size,
- 				  gfp_t gfp_extra_flags)
- {
--	gfp_t gfp_flags = GFP_KERNEL_ACCOUNT | __GFP_ZERO | gfp_extra_flags;
-+	gfp_t gfp_flags = bpf_memcg_flags(GFP_KERNEL | __GFP_ZERO | gfp_extra_flags);
- 	struct bpf_prog *fp;
- 	u32 pages;
- 
+On Fri, 10 Feb 2023 15:47:30 +0000 you wrote:
+> The bpf memory accouting has some known problems in contianer
+> environment,
+> 
+> - The container memory usage is not consistent if there's pinned bpf
+>   program
+>   After the container restart, the leftover bpf programs won't account
+>   to the new generation, so the memory usage of the container is not
+>   consistent. This issue can be resolved by introducing selectable
+>   memcg, but we don't have an agreement on the solution yet. See also
+>   the discussions at https://lwn.net/Articles/905150/ .
+> 
+> [...]
+
+Here is the summary with links:
+  - [bpf-next,v2,1/4] mm: memcontrol: add new kernel parameter cgroup.memory=nobpf
+    https://git.kernel.org/bpf/bpf-next/c/b6c1a8af5b1e
+  - [bpf-next,v2,2/4] bpf: use bpf_map_kvcalloc in bpf_local_storage
+    https://git.kernel.org/bpf/bpf-next/c/ddef81b5fd1d
+  - [bpf-next,v2,3/4] bpf: allow to disable bpf map memory accounting
+    https://git.kernel.org/bpf/bpf-next/c/ee53cbfb1ebf
+  - [bpf-next,v2,4/4] bpf: allow to disable bpf prog memory accounting
+    https://git.kernel.org/bpf/bpf-next/c/bf3965082491
+
+You are awesome, thank you!
 -- 
-1.8.3.1
+Deet-doot-dot, I am a bot.
+https://korg.docs.kernel.org/patchwork/pwbot.html
+
 
