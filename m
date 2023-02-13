@@ -1,38 +1,53 @@
-From: Ming Lei <ming.lei@redhat.com>
-Subject: Re: [PATCH 3/3] blk-cgroup: only grab an inode reference to the disk
- for each blkg
-Date: Mon, 13 Feb 2023 20:11:36 +0800
-Message-ID: <Y+oo+P0MIZK8QMDZ@T590>
-References: <20230213104134.475204-1-hch@lst.de>
- <20230213104134.475204-4-hch@lst.de>
+From: Victor Stewart <v@nametag.social>
+Subject: Re: [BUG ?]: hugetlb.xxx[.rsvd].max implicit write failure
+Date: Mon, 13 Feb 2023 12:47:29 +0000
+Message-ID: <CAM1kxwgh1expSb_zfLy-CDDcH_mNgJEmwNLxmF_YTEcDGgCSmw@mail.gmail.com>
+References: <CAM1kxwgN40r3tqdUFXPNgSAB3djMTDpDAXOACsS2zOF=LXxeyw@mail.gmail.com>
 Mime-Version: 1.0
-Return-path: <linux-block-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1676290310;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=RNqQ9bXDgnnpNFNLGb68QXM6v2J1h53ebKftG058Huc=;
-        b=EfHYRmaFIIhHzMQaz7YjMOYdMLzw4y77wuoQP6b91HynnQ8x169E9zFESaCtrn3IpyI4gB
-        IzsE9HecAktrEeDP1eblp7OGrO9Nqncq3RgS5lAiaW0O9IW0MYkBeoTUvwUdfzD8YXl0eD
-        CgO6IBGdU2W3L72L1Wzop9tEvY5QfoM=
-Content-Disposition: inline
-In-Reply-To: <20230213104134.475204-4-hch@lst.de>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=nametag.social; s=google;
+        h=to:subject:message-id:date:from:in-reply-to:references:mime-version
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=Rh4Kqn4+7KWXS3H/aKAK51ihf1ygtrczxgKWhB+Qs0w=;
+        b=gJug4aVhXfibqFqH+coTt2+jvlis6+zE4jh3tnVRcFv3JobKmeOWVwP+1qi3fjjwHv
+         Z1j+2C4QNPL+UvWdqn8XOcspI48GXcQeaxq+oNHa6AOdfroIdAO3X87RiazVQcIl+eBX
+         3U4I7rdQ8ctXeKx9xqHJUhmPYvW4SGL5+WIkXBlmaAjIbEAu59JeVqb8sKTKMsbdC+P7
+         p/skYrVgy7tXy65wjtM+V2bx2NehZYokREtay8Daqe/TtVz1xgFuL8hB06aJ/Fpzo1ke
+         nrV75IT90nEb73KWIDOOB+pObyhF3USY7HMZfVDxKhRbSBBZhysCIyZZ9jTRzg55k1Ip
+         nZFg==
+In-Reply-To: <CAM1kxwgN40r3tqdUFXPNgSAB3djMTDpDAXOACsS2zOF=LXxeyw-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Christoph Hellwig <hch@lst.de>
-Cc: Jens Axboe <axboe@kernel.dk>, Tejun Heo <tj@kernel.org>, Josef Bacik <josef@toxicpanda.com>, cgroups@vger.kernel.org, linux-block@vger.kernel.org, ming.lei@redhat.com
+To: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Mon, Feb 13, 2023 at 11:41:34AM +0100, Christoph Hellwig wrote:
-> To avoid a circular reference, do not grab a device model reference
-> to the gendisk for each blkg, but just the lower level inode reference
-> preventing the memory from beeing freed.
+On Mon, Feb 13, 2023 at 12:34 AM Victor Stewart <v@nametag.social> wrote:
+>
+> attempted to use hugetlb resource control for the first time. running 6.1.9
+>
+> create the subdirectory, then enable the hugetlb controller. reading the
+> initial value of hugetlb.2MB.rsvd.max returns "max". i write 128 and receive a
+> return value of 3. but then read hugetlb.2MB.rsvd.max and it now returns 0.
+> same exact thing happens for hugetlb.2MB.max
 
-It might not be enough to just prevent gendisk memory from being freed,
-anywhere queue reference via disk->queue could become not safe given
-disk->queue can be released after disk_release() is called.
+ahh, it takes reads/writes with bytes as units, not 2MB pages.
 
-thanks,
-Ming
+kind of confusing and unexpected, even though memory works the same.
 
+>
+> so clearly the write is secretly failing somewhere even though the write
+> operation return success?
+>
+> there are plenty of pages available:
+>
+> HugePages_Total:    4096
+> HugePages_Free:     4096
+> HugePages_Rsvd:        0
+> HugePages_Surp:        0
+> Hugepagesize:       2048 kB
+> Hugetlb:        13631488 kB
+>
+> none of the scarce documentation on this controller leads me to believe there's
+> any required configuration beyond the above. so completely bewildered as to
+> what's going wrong?
