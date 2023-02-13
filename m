@@ -1,53 +1,86 @@
-From: Victor Stewart <v@nametag.social>
-Subject: Re: [BUG ?]: hugetlb.xxx[.rsvd].max implicit write failure
-Date: Mon, 13 Feb 2023 12:47:29 +0000
-Message-ID: <CAM1kxwgh1expSb_zfLy-CDDcH_mNgJEmwNLxmF_YTEcDGgCSmw@mail.gmail.com>
-References: <CAM1kxwgN40r3tqdUFXPNgSAB3djMTDpDAXOACsS2zOF=LXxeyw@mail.gmail.com>
+From: Hou Tao <houtao-XF6JlduFytWkHkcT6e4Xnw@public.gmane.org>
+Subject: Re: [PATCH] blk-ioprio: Introduce promote-to-rt policy
+Date: Mon, 13 Feb 2023 20:51:41 +0800
+Message-ID: <48620099-0311-e752-ba3b-cbb4351cf81e@huaweicloud.com>
+References: <20230201045227.2203123-1-houtao@huaweicloud.com>
+ <8c068af3-7199-11cf-5c69-a523c7c22d9a@acm.org>
+ <4f7dcb3e-2d5a-cae3-0e1c-a82bcc3d2217@huaweicloud.com>
+ <b6b3c498-e90b-7d1f-6ad5-a31334e433ae@acm.org>
+ <beb7782e-72a4-c350-3750-23a767c88753@huaweicloud.com>
+ <aedc240d-7c9e-248a-52d2-c9775f3e8ca1@acm.org>
+ <20230208134345.77bdep3kzp52haxu@quack3>
+ <7fcd4c38-ccbe-6411-e424-a57595ad9c0b@acm.org>
+ <20230209085603.dzqfcc3pp4hacqlz@quack3>
+ <55a065e7-7d86-d58f-15ba-c631a427843e@acm.org>
+ <20230210101244.zsmtmsoo4xjx7suj@quack3>
 Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=nametag.social; s=google;
-        h=to:subject:message-id:date:from:in-reply-to:references:mime-version
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=Rh4Kqn4+7KWXS3H/aKAK51ihf1ygtrczxgKWhB+Qs0w=;
-        b=gJug4aVhXfibqFqH+coTt2+jvlis6+zE4jh3tnVRcFv3JobKmeOWVwP+1qi3fjjwHv
-         Z1j+2C4QNPL+UvWdqn8XOcspI48GXcQeaxq+oNHa6AOdfroIdAO3X87RiazVQcIl+eBX
-         3U4I7rdQ8ctXeKx9xqHJUhmPYvW4SGL5+WIkXBlmaAjIbEAu59JeVqb8sKTKMsbdC+P7
-         p/skYrVgy7tXy65wjtM+V2bx2NehZYokREtay8Daqe/TtVz1xgFuL8hB06aJ/Fpzo1ke
-         nrV75IT90nEb73KWIDOOB+pObyhF3USY7HMZfVDxKhRbSBBZhysCIyZZ9jTRzg55k1Ip
-         nZFg==
-In-Reply-To: <CAM1kxwgN40r3tqdUFXPNgSAB3djMTDpDAXOACsS2zOF=LXxeyw-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+In-Reply-To: <20230210101244.zsmtmsoo4xjx7suj@quack3>
+Content-Language: en-US
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Jan Kara <jack-AlSwsSmVLrQ@public.gmane.org>, Bart Van Assche <bvanassche-HInyCGIudOg@public.gmane.org>
+Cc: linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Jonathan Corbet <corbet-T1hC0tSOHrs@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, houtao1-hv44wF8Li93QT0dZR+AlfA@public.gmane.org
 
-On Mon, Feb 13, 2023 at 12:34 AM Victor Stewart <v@nametag.social> wrote:
->
-> attempted to use hugetlb resource control for the first time. running 6.1.9
->
-> create the subdirectory, then enable the hugetlb controller. reading the
-> initial value of hugetlb.2MB.rsvd.max returns "max". i write 128 and receive a
-> return value of 3. but then read hugetlb.2MB.rsvd.max and it now returns 0.
-> same exact thing happens for hugetlb.2MB.max
+Hi Jan,
 
-ahh, it takes reads/writes with bytes as units, not 2MB pages.
+On 2/10/2023 6:12 PM, Jan Kara wrote:
+> On Thu 09-02-23 11:09:33, Bart Van Assche wrote:
+>> On 2/9/23 00:56, Jan Kara wrote:
+>>> On Wed 08-02-23 09:53:41, Bart Van Assche wrote:
+>>>> The test results I shared some time ago show that IOPRIO_CLASS_NONE was the
+>>>> default I/O priority two years ago (see also https://lore.kernel.org/linux-block/20210927220328.1410161-5-bvanassche-HInyCGIudOg@public.gmane.org/).
+>>>> The none-to-rt policy increases the priority of bio's that have not been
+>>>> assigned an I/O priority to RT. Does this answer your question?
+>>> Not quite. I know that historically we didn't set bio I/O priority in some
+>>> paths (but we did set it in other paths such as some (but not all) direct
+>>> IO implementations). But that was exactly a mess because how none-to-rt
+>>> actually behaved depended on the exact details of the kernel internal IO
+>>> path.  So my question is: Was none-to-rt actually just a misnomer and the
+>>> intended behavior was "always override to RT"? Or what was exactly the
+>>> expectation around when IO priority is not set and should be overridden?
+>>>
+>>> How should it interact with AIO submissions with IOCB_FLAG_IOPRIO? How
+>>> should it interact with task having its IO priority modified with
+>>> ioprio_set(2)? And what if task has its normal scheduling priority modified
+>>> but that translates into different IO priority (which happens in
+>>> __get_task_ioprio())?
+>>>
+>>> So I think that none-to-rt is just poorly defined and if we can just get
+>>> rid of it (or redefine to promote-to-rt), that would be good. But maybe I'm
+>>> missing some intended usecase...
+>> Hi Jan,
+>>
+>> We have no plans to use the ioprio_set() system call since it only affects
+>> foreground I/O and not page cache writeback.
+>>
+>> While Android supports io_uring, there are no plans to support libaio in the
+>> Android C library (Bionic).
+>>
+>> Regarding __get_task_ioprio(), I haven't found any code in that function
+>> that derives an I/O priority from the scheduling priority. Did I perhaps
+>> overlook something?
+> This condition in __get_task_ioprio():
+>
+>         if (IOPRIO_PRIO_CLASS(prio) == IOPRIO_CLASS_NONE)
+>                 prio = IOPRIO_PRIO_VALUE(task_nice_ioclass(p),
+>                                          task_nice_ioprio(p));
+>
+> sets task's IO priority based on scheduling priority.
+>
+>> Until recently "none-to-rt" meant "if no I/O priority has been assigned to a
+>> task, use IOPRIO_CLASS_RT". Promoting the I/O priority to IOPRIO_CLASS_RT
+>> works for us. I'm fine with changing the meaning of "none-to-rt" into
+>> promoting the I/O priority class to RT. Introducing "promote-to-rt" as a
+>> synonym of "none-to-rt" is also fine with me.
+> OK, so it seems we are all in agreement here that "none-to-rt" behavior is
+> not really needed. Hou, can you perhaps update your patches and the
+> documentation to make "none-to-rt" just an alias for "promote-to-rt"?
+> Thanks!
+Should I keep "none-to-rt" and make it work just like "promote-to-rt" or should
+I just remove "none-to-rt" and add "promote-to-rt" ? I think the latter will be
+more appropriate.
+>
+> 								Honza
 
-kind of confusing and unexpected, even though memory works the same.
-
->
-> so clearly the write is secretly failing somewhere even though the write
-> operation return success?
->
-> there are plenty of pages available:
->
-> HugePages_Total:    4096
-> HugePages_Free:     4096
-> HugePages_Rsvd:        0
-> HugePages_Surp:        0
-> Hugepagesize:       2048 kB
-> Hugetlb:        13631488 kB
->
-> none of the scarce documentation on this controller leads me to believe there's
-> any required configuration beyond the above. so completely bewildered as to
-> what's going wrong?
