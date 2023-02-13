@@ -1,44 +1,34 @@
-From: Victor Stewart <v@nametag.social>
-Subject: [BUG ?]: hugetlb.xxx[.rsvd].max implicit write failure
-Date: Mon, 13 Feb 2023 00:34:02 +0000
-Message-ID: <CAM1kxwgN40r3tqdUFXPNgSAB3djMTDpDAXOACsS2zOF=LXxeyw@mail.gmail.com>
+From: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
+Subject: fix circular disk reference in blk-cgroup
+Date: Mon, 13 Feb 2023 11:41:31 +0100
+Message-ID: <20230213104134.475204-1-hch@lst.de>
 Mime-Version: 1.0
+Content-Transfer-Encoding: 8bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=nametag.social; s=google;
-        h=to:subject:message-id:date:from:mime-version:from:to:cc:subject
-         :date:message-id:reply-to;
-        bh=LxA1TCaBk0GL+z3/VOAYiE8xj7jmKbbc+ETm8+jDUgU=;
-        b=KjXI8TpYcB7UD4vda6gQOkHeiQ4OFGAzfFk5l6Gm7duO8dyZlqWIhfz2tWFRHFgIk0
-         08Zps9JGkKuEMBGwt82tOpXYB0K2oT6QEf4YDHbCfyTizO76atpgcGRV1hNYwpe2XKVS
-         WzoZql8vdSoHxWLP/0eH5qjkRZp9+Gey3+AvM/XxBmOtwpEibaxVOQ3hsAiJlK7cZ8nf
-         qt9GyG4yiAeIZNEYatEZIj1N9qaMERIacAqK5pb4W1MV5fX34S3FMukm2iZonlNLwRMS
-         fDrQfG48USrTgH7DAXotpIa8Q6oFEoY4VJz3fLB9mfz6/XV2Azwr0oJprxLm/goZo7L6
-         RC2A==
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
+        MIME-Version:Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:
+        Content-ID:Content-Description:In-Reply-To:References;
+        bh=QFZ+a29GeVUTeCrKA7f2ruTlAoD7iMuLbB/uIVPnxW0=; b=rMSPJdjGCN8rptqoedEr8hCkvc
+        VjM2QSg+CneSLRfeKsGg6vl/T4GO5mQ/PUlb5AjqRH61rdqLpjL4l94ToR+lK5OytBh2g20AMNnl7
+        RRP5mfvMPEhufK2vYM2L2GM9TAoj9eTTEca6p8a8YzHmB1gQYubUbhTyCpwgiB362SFH99d8cFf3n
+        tGZ/+y+qgbAOzDxjygjZ6a05xuOrKxYeNho7mtp1Z7EF8d1NS8irPDQ/90MTPMfBp2sSLgWtBNOlu
+        SWA1qChSFjh9My1Xf+gWOD/TH0zSc7DARAEPuo1mMURewDrq0harT5Dl4m5v3kRg1lHnTbFCSE1+S
+        dIld38bw==;
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Josef Bacik <josef-DigfWCa+lFGyeJad7bwFQA@public.gmane.org>
+Cc: Ming Lei <ming.lei-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-attempted to use hugetlb resource control for the first time. running 6.1.9
+Hi all,
 
-create the subdirectory, then enable the hugetlb controller. reading the
-initial value of hugetlb.2MB.rsvd.max returns "max". i write 128 and receive a
-return value of 3. but then read hugetlb.2MB.rsvd.max and it now returns 0.
-same exact thing happens for hugetlb.2MB.max
+the third patch fixes a problem in haivng a circular disk reference
+for blkgs.  The first two patches clean up blk-throttle to avoid
+queue->disk refernece that get torn down in disk_release but could
+in theory be used in the pd_free handler.
 
-so clearly the write is secretly failing somewhere even though the write
-operation return success?
-
-there are plenty of pages available:
-
-HugePages_Total:    4096
-HugePages_Free:     4096
-HugePages_Rsvd:        0
-HugePages_Surp:        0
-Hugepagesize:       2048 kB
-Hugetlb:        13631488 kB
-
-none of the scarce documentation on this controller leads me to believe there's
-any required configuration beyond the above. so completely bewildered as to
-what's going wrong?
+Diffstat:
+ block/blk-cgroup.c     |   12 +++++++++---
+ block/blk-throttle.c   |   39 ++++++++++++++++-----------------------
+ include/linux/blkdev.h |    8 +++-----
+ 3 files changed, 28 insertions(+), 31 deletions(-)
