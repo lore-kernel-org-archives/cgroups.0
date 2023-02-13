@@ -1,86 +1,67 @@
-From: Hou Tao <houtao-XF6JlduFytWkHkcT6e4Xnw@public.gmane.org>
-Subject: Re: [PATCH] blk-ioprio: Introduce promote-to-rt policy
-Date: Mon, 13 Feb 2023 20:51:41 +0800
-Message-ID: <48620099-0311-e752-ba3b-cbb4351cf81e@huaweicloud.com>
-References: <20230201045227.2203123-1-houtao@huaweicloud.com>
- <8c068af3-7199-11cf-5c69-a523c7c22d9a@acm.org>
- <4f7dcb3e-2d5a-cae3-0e1c-a82bcc3d2217@huaweicloud.com>
- <b6b3c498-e90b-7d1f-6ad5-a31334e433ae@acm.org>
- <beb7782e-72a4-c350-3750-23a767c88753@huaweicloud.com>
- <aedc240d-7c9e-248a-52d2-c9775f3e8ca1@acm.org>
- <20230208134345.77bdep3kzp52haxu@quack3>
- <7fcd4c38-ccbe-6411-e424-a57595ad9c0b@acm.org>
- <20230209085603.dzqfcc3pp4hacqlz@quack3>
- <55a065e7-7d86-d58f-15ba-c631a427843e@acm.org>
- <20230210101244.zsmtmsoo4xjx7suj@quack3>
+From: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
+Subject: Re: [PATCH 2/2] sched/isolation: Add cpu_is_isolated() API
+Date: Mon, 13 Feb 2023 14:34:26 +0100
+Message-ID: <Y+o8Yndho4fpl3IS@dhcp22.suse.cz>
+References: <20230203232409.163847-1-frederic@kernel.org>
+ <20230203232409.163847-3-frederic@kernel.org>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <20230210101244.zsmtmsoo4xjx7suj@quack3>
-Content-Language: en-US
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
+        t=1676295267; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=saciHrBqwPQPzdodH5ZXO9iXT8uGZbs1hjAThfGOX/I=;
+        b=BC6hazDDMXHKpRkZWsOSWgGkkhDysckN0BIGsh9eYVLoFwx8ieX8PHP6IdWYj4e7wjhhNy
+        4gdwyIdrR3ibbBV1z8mYpZgnP+zyuHhminpQI4ngTo2vGnhBHFQ52LNFASsHh32AJgYZHh
+        vYiYeH//eF3kJ8oB0Bkc47W5tRshTgo=
+Content-Disposition: inline
+In-Reply-To: <20230203232409.163847-3-frederic-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Jan Kara <jack-AlSwsSmVLrQ@public.gmane.org>, Bart Van Assche <bvanassche-HInyCGIudOg@public.gmane.org>
-Cc: linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Jonathan Corbet <corbet-T1hC0tSOHrs@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, houtao1-hv44wF8Li93QT0dZR+AlfA@public.gmane.org
+Content-Transfer-Encoding: 7bit
+To: Frederic Weisbecker <frederic-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Marcelo Tosatti <mtosatti-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Leonardo <leobras-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Muchun Song <muchun.song-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Thomas Gleixner <tglx-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
 
-Hi Jan,
+On Sat 04-02-23 00:24:09, Frederic Weisbecker wrote:
+> Provide this new API to check if a CPU has been isolated either through
+> isolcpus= or nohz_full= kernel parameter.
+> 
+> It aims at avoiding kernel load deemed to be safely spared on CPUs
+> running sensitive workload that can't bear any disturbance, such as
+> pcp cache draining.
+> 
+> Suggested-by: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
+> Signed-off-by: Frederic Weisbecker <frederic-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 
-On 2/10/2023 6:12 PM, Jan Kara wrote:
-> On Thu 09-02-23 11:09:33, Bart Van Assche wrote:
->> On 2/9/23 00:56, Jan Kara wrote:
->>> On Wed 08-02-23 09:53:41, Bart Van Assche wrote:
->>>> The test results I shared some time ago show that IOPRIO_CLASS_NONE was the
->>>> default I/O priority two years ago (see also https://lore.kernel.org/linux-block/20210927220328.1410161-5-bvanassche-HInyCGIudOg@public.gmane.org/).
->>>> The none-to-rt policy increases the priority of bio's that have not been
->>>> assigned an I/O priority to RT. Does this answer your question?
->>> Not quite. I know that historically we didn't set bio I/O priority in some
->>> paths (but we did set it in other paths such as some (but not all) direct
->>> IO implementations). But that was exactly a mess because how none-to-rt
->>> actually behaved depended on the exact details of the kernel internal IO
->>> path.  So my question is: Was none-to-rt actually just a misnomer and the
->>> intended behavior was "always override to RT"? Or what was exactly the
->>> expectation around when IO priority is not set and should be overridden?
->>>
->>> How should it interact with AIO submissions with IOCB_FLAG_IOPRIO? How
->>> should it interact with task having its IO priority modified with
->>> ioprio_set(2)? And what if task has its normal scheduling priority modified
->>> but that translates into different IO priority (which happens in
->>> __get_task_ioprio())?
->>>
->>> So I think that none-to-rt is just poorly defined and if we can just get
->>> rid of it (or redefine to promote-to-rt), that would be good. But maybe I'm
->>> missing some intended usecase...
->> Hi Jan,
->>
->> We have no plans to use the ioprio_set() system call since it only affects
->> foreground I/O and not page cache writeback.
->>
->> While Android supports io_uring, there are no plans to support libaio in the
->> Android C library (Bionic).
->>
->> Regarding __get_task_ioprio(), I haven't found any code in that function
->> that derives an I/O priority from the scheduling priority. Did I perhaps
->> overlook something?
-> This condition in __get_task_ioprio():
->
->         if (IOPRIO_PRIO_CLASS(prio) == IOPRIO_CLASS_NONE)
->                 prio = IOPRIO_PRIO_VALUE(task_nice_ioclass(p),
->                                          task_nice_ioprio(p));
->
-> sets task's IO priority based on scheduling priority.
->
->> Until recently "none-to-rt" meant "if no I/O priority has been assigned to a
->> task, use IOPRIO_CLASS_RT". Promoting the I/O priority to IOPRIO_CLASS_RT
->> works for us. I'm fine with changing the meaning of "none-to-rt" into
->> promoting the I/O priority class to RT. Introducing "promote-to-rt" as a
->> synonym of "none-to-rt" is also fine with me.
-> OK, so it seems we are all in agreement here that "none-to-rt" behavior is
-> not really needed. Hou, can you perhaps update your patches and the
-> documentation to make "none-to-rt" just an alias for "promote-to-rt"?
-> Thanks!
-Should I keep "none-to-rt" and make it work just like "promote-to-rt" or should
-I just remove "none-to-rt" and add "promote-to-rt" ? I think the latter will be
-more appropriate.
->
-> 								Honza
+Is there any locking required? I do not think so as these should be
+boot time configured AFAIR. From the discussion around this I have
+understood that this might change in the future once cpusets gain a
+better isolation support. Maybe this should be documented at this stage?
 
+Thanks!
+
+> ---
+>  include/linux/sched/isolation.h | 6 ++++++
+>  1 file changed, 6 insertions(+)
+> 
+> diff --git a/include/linux/sched/isolation.h b/include/linux/sched/isolation.h
+> index b645cc81fe01..088672f08469 100644
+> --- a/include/linux/sched/isolation.h
+> +++ b/include/linux/sched/isolation.h
+> @@ -53,4 +53,10 @@ static inline bool housekeeping_cpu(int cpu, enum hk_type type)
+>  	return true;
+>  }
+>  
+> +static inline bool cpu_is_isolated(int cpu)
+> +{
+> +	return !housekeeping_test_cpu(cpu, HK_TYPE_DOMAIN) ||
+> +		 !housekeeping_test_cpu(cpu, HK_TYPE_KERNEL_NOISE);
+> +}
+> +
+>  #endif /* _LINUX_SCHED_ISOLATION_H */
+> -- 
+> 2.34.1
+
+-- 
+Michal Hocko
+SUSE Labs
