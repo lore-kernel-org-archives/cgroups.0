@@ -1,209 +1,72 @@
-From: SeongJae Park <sj@kernel.org>
-Subject: Re: [PATCH v2 1/4] mm: change to return bool for folio_isolate_lru()
-Date: Tue, 14 Feb 2023 17:46:26 +0000
-Message-ID: <20230214174626.71336-1-sj@kernel.org>
-References: <7abe2897803410fdc8f167b46bb5b0467de0e3c9.1676382188.git.baolin.wang@linux.alibaba.com>
+From: David Hildenbrand <david@redhat.com>
+Subject: Re: [PATCH v2 0/4] Change the return value for page isolation
+ functions
+Date: Tue, 14 Feb 2023 18:52:49 +0100
+Message-ID: <5064ee08-792f-14f2-6f2d-26e81af8a239@redhat.com>
+References: <cover.1676382188.git.baolin.wang@linux.alibaba.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1676396789;
-        bh=MEG6NlLEiDkZKTJsLOd2zm/nDm26I6+i8VdF4xtbs18=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=bi78MPmBkukT5Jrfo8mnvXqS2i2OFtZRbpqm7+zOZPMNAjBb/E3vsgivICgeyqC4b
-         PoEJ1ryoP+jn/irksPJBXMwnY1iEU7BNS52x59OejNuV12o2w4udhcum2TRMJlWbbB
-         Al1YeJ5X5BI+P19U8qtDmhjfj6yg6qr2BiaaoOIQjMpwJoyY6VPz3u9azgy6kMKxp9
-         qMAM7+cyRUg8RRkxBOH9gULqR5KRnO0NdjswwDvJiTITk0jHDkTM82ImdW2bggg52S
-         Rrq4i3YcXL84BO3tHhlhH8OnmMV5e7vy8c1gxln1DqnrdwbtIDmfDvkKo8hnX+XLnV
-         5IG0OglfDXBZg==
-In-Reply-To: <7abe2897803410fdc8f167b46bb5b0467de0e3c9.1676382188.git.baolin.wang@linux.alibaba.com>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1676397174;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=3wcl/mIBo22eXMS7cK2NpuJ4cYApHgRaBD0p8jlitp0=;
+        b=af4G+Z83bFhYKqytrCIrlYfFnY1GWw4b11XqNPVmAqCiZIAYtESX9NjwAbMUDtyxhEN6Hg
+        pYpHT9wUS+V0EK0YVceN5PSo2LxA5RiZOIReZsYm7sDg3PVfVOV56gjpnOFGql4dWytKHX
+        F8HqPjYNpfpRS8ig3BnRSE4SfJyxqMU=
+Content-Language: en-US
+In-Reply-To: <cover.1676382188.git.baolin.wang@linux.alibaba.com>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-To: Baolin Wang <baolin.wang@linux.alibaba.com>
-Cc: akpm@linux-foundation.org, torvalds@linux-foundation.org, sj@kernel.org, hannes@cmpxchg.org, mhocko@kernel.org, roman.gushchin@linux.dev, shakeelb@google.com, muchun.song@linux.dev, naoya.horiguchi@nec.com, linmiaohe@huawei.com, david@redhat.com, osalvador@suse.de, mike.kravetz@oracle.com, willy@infradead.org, damon@lists.linux.dev, cgroups@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"; format="flowed"
+To: Baolin Wang <baolin.wang@linux.alibaba.com>, akpm@linux-foundation.org
+Cc: torvalds@linux-foundation.org, sj@kernel.org, hannes@cmpxchg.org, mhocko@kernel.org, roman.gushchin@linux.dev, shakeelb@google.com, muchun.song@linux.dev, naoya.horiguchi@nec.com, linmiaohe@huawei.com, osalvador@suse.de, mike.kravetz@oracle.com, willy@infradead.org, damon@lists.linux.dev, cgroups@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org
 
-On Tue, 14 Feb 2023 21:59:29 +0800 Baolin Wang <baolin.wang@linux.alibaba.com> wrote:
-
-> Now the folio_isolate_lru() did not return a boolean value to indicate
-> isolation success or not, however below code checking the return value
-> can make people think that it was a boolean success/failure thing, which
-> makes people easy to make mistakes (see the fix patch[1]).
+On 14.02.23 14:59, Baolin Wang wrote:
+> Now the page isolation functions did not return a boolean to indicate
+> success or not, instead it will return a negative error when failed
+> to isolate a page. So below code used in most places seem a boolean
+> success/failure thing, which can confuse people whether the isolation
+> is successful.
 > 
 > if (folio_isolate_lru(folio))
-> 	continue;
+>          continue;
 > 
-> Thus it's better to check the negative error value expilictly returned by
-> folio_isolate_lru(), which makes code more clear per Linus's suggestion[2].
-> Moreover Matthew suggested we can convert the isolation functions to return
-> a boolean[3], since most users did not care about the negative error value,
-> and can also remove the confusing of checking return value.
+> Moreover the page isolation functions only return 0 or -EBUSY, and
+> most users did not care about the negative error except for few users,
+> thus we can convert all page isolation functions to return a boolean
+> value, which can remove the confusion to make code more clear.
 > 
-> So this patch converts the folio_isolate_lru() to return a boolean value,
-> which means return 'true' to indicate the folio isolation is successful, and
-> 'false' means a failure to isolation. Meanwhile changing all users' logic of
-> checking the isolation state.
+> No functional changes intended in this patch series.
 > 
-> No functional changes intended.
-> 
-> [1] https://lore.kernel.org/all/20230131063206.28820-1-Kuan-Ying.Lee@mediatek.com/T/#u
-> [2] https://lore.kernel.org/all/CAHk-=wiBrY+O-4=2mrbVyxR+hOqfdJ=Do6xoucfJ9_5az01L4Q@mail.gmail.com/
-> [3] https://lore.kernel.org/all/Y+sTFqwMNAjDvxw3@casper.infradead.org/
-> 
-> Signed-off-by: Baolin Wang <baolin.wang@linux.alibaba.com>
-> ---
->  mm/damon/paddr.c  |  2 +-
->  mm/folio-compat.c |  8 +++++++-
->  mm/gup.c          |  2 +-
->  mm/internal.h     |  2 +-
->  mm/khugepaged.c   |  2 +-
->  mm/madvise.c      |  4 ++--
->  mm/mempolicy.c    |  2 +-
->  mm/vmscan.c       | 10 +++++-----
->  8 files changed, 19 insertions(+), 13 deletions(-)
-> 
-> diff --git a/mm/damon/paddr.c b/mm/damon/paddr.c
-> index b4df9b9bcc0a..607bb69e526c 100644
-> --- a/mm/damon/paddr.c
-> +++ b/mm/damon/paddr.c
-> @@ -246,7 +246,7 @@ static unsigned long damon_pa_pageout(struct damon_region *r, struct damos *s)
->  
->  		folio_clear_referenced(folio);
->  		folio_test_clear_young(folio);
-> -		if (folio_isolate_lru(folio)) {
-> +		if (!folio_isolate_lru(folio)) {
->  			folio_put(folio);
->  			continue;
->  		}
-> diff --git a/mm/folio-compat.c b/mm/folio-compat.c
-> index 18c48b557926..540373cf904e 100644
-> --- a/mm/folio-compat.c
-> +++ b/mm/folio-compat.c
-> @@ -115,9 +115,15 @@ EXPORT_SYMBOL(grab_cache_page_write_begin);
->  
->  int isolate_lru_page(struct page *page)
->  {
-> +	bool ret;
-> +
->  	if (WARN_RATELIMIT(PageTail(page), "trying to isolate tail page"))
->  		return -EBUSY;
-> -	return folio_isolate_lru((struct folio *)page);
-> +	ret = folio_isolate_lru((struct folio *)page);
-> +	if (ret)
-> +		return 0;
-> +
-> +	return -EBUSY;
->  }
->  
->  void putback_lru_page(struct page *page)
-> diff --git a/mm/gup.c b/mm/gup.c
-> index b0885f70579c..eab18ba045db 100644
-> --- a/mm/gup.c
-> +++ b/mm/gup.c
-> @@ -1939,7 +1939,7 @@ static unsigned long collect_longterm_unpinnable_pages(
->  			drain_allow = false;
->  		}
->  
-> -		if (folio_isolate_lru(folio))
-> +		if (!folio_isolate_lru(folio))
->  			continue;
->  
->  		list_add_tail(&folio->lru, movable_page_list);
-> diff --git a/mm/internal.h b/mm/internal.h
-> index dfb37e94e140..8645e8496537 100644
-> --- a/mm/internal.h
-> +++ b/mm/internal.h
-> @@ -188,7 +188,7 @@ pgprot_t __init early_memremap_pgprot_adjust(resource_size_t phys_addr,
->   * in mm/vmscan.c:
->   */
->  int isolate_lru_page(struct page *page);
-> -int folio_isolate_lru(struct folio *folio);
-> +bool folio_isolate_lru(struct folio *folio);
->  void putback_lru_page(struct page *page);
->  void folio_putback_lru(struct folio *folio);
->  extern void reclaim_throttle(pg_data_t *pgdat, enum vmscan_throttle_state reason);
-> diff --git a/mm/khugepaged.c b/mm/khugepaged.c
-> index a5d32231bfad..cee659cfa3c1 100644
-> --- a/mm/khugepaged.c
-> +++ b/mm/khugepaged.c
-> @@ -2047,7 +2047,7 @@ static int collapse_file(struct mm_struct *mm, unsigned long addr,
->  			goto out_unlock;
->  		}
->  
-> -		if (folio_isolate_lru(folio)) {
-> +		if (!folio_isolate_lru(folio)) {
->  			result = SCAN_DEL_PAGE_LRU;
->  			goto out_unlock;
->  		}
-> diff --git a/mm/madvise.c b/mm/madvise.c
-> index 5a5a687d03c2..c2202f51e9dd 100644
-> --- a/mm/madvise.c
-> +++ b/mm/madvise.c
-> @@ -406,7 +406,7 @@ static int madvise_cold_or_pageout_pte_range(pmd_t *pmd,
->  		folio_clear_referenced(folio);
->  		folio_test_clear_young(folio);
->  		if (pageout) {
-> -			if (!folio_isolate_lru(folio)) {
-> +			if (folio_isolate_lru(folio)) {
->  				if (folio_test_unevictable(folio))
->  					folio_putback_lru(folio);
->  				else
-> @@ -500,7 +500,7 @@ static int madvise_cold_or_pageout_pte_range(pmd_t *pmd,
->  		folio_clear_referenced(folio);
->  		folio_test_clear_young(folio);
->  		if (pageout) {
-> -			if (!folio_isolate_lru(folio)) {
-> +			if (folio_isolate_lru(folio)) {
->  				if (folio_test_unevictable(folio))
->  					folio_putback_lru(folio);
->  				else
-> diff --git a/mm/mempolicy.c b/mm/mempolicy.c
-> index 0919c7a719d4..2751bc3310fd 100644
-> --- a/mm/mempolicy.c
-> +++ b/mm/mempolicy.c
-> @@ -1033,7 +1033,7 @@ static int migrate_folio_add(struct folio *folio, struct list_head *foliolist,
->  	 * expensive, so check the estimated mapcount of the folio instead.
->  	 */
->  	if ((flags & MPOL_MF_MOVE_ALL) || folio_estimated_sharers(folio) == 1) {
-> -		if (!folio_isolate_lru(folio)) {
-> +		if (folio_isolate_lru(folio)) {
->  			list_add_tail(&folio->lru, foliolist);
->  			node_stat_mod_folio(folio,
->  				NR_ISOLATED_ANON + folio_is_file_lru(folio),
-> diff --git a/mm/vmscan.c b/mm/vmscan.c
-> index 34535bbd4fe9..7658b40df947 100644
-> --- a/mm/vmscan.c
-> +++ b/mm/vmscan.c
-> @@ -2337,12 +2337,12 @@ static unsigned long isolate_lru_folios(unsigned long nr_to_scan,
->   * (2) The lru_lock must not be held.
->   * (3) Interrupts must be enabled.
->   *
-> - * Return: 0 if the folio was removed from an LRU list.
-> - * -EBUSY if the folio was not on an LRU list.
-> + * Return: true if the folio was removed from an LRU list.
-> + * false if the folio was not on an LRU list.
->   */
-> -int folio_isolate_lru(struct folio *folio)
-> +bool folio_isolate_lru(struct folio *folio)
->  {
-> -	int ret = -EBUSY;
-> +	bool ret = false;
->  
->  	VM_BUG_ON_FOLIO(!folio_ref_count(folio), folio);
->  
-> @@ -2353,7 +2353,7 @@ int folio_isolate_lru(struct folio *folio)
->  		lruvec = folio_lruvec_lock_irq(folio);
->  		lruvec_del_folio(lruvec, folio);
->  		unlock_page_lruvec_irq(lruvec);
-> -		ret = 0;
-> +		ret = true;
->  	}
->  
->  	return ret;
-> -- 
-> 2.27.0
+> Changes from v1:
+>   - Convert all isolation functions to return bool.
 
-Reviewed-by: SeongJae Park <sj@kernel.org>
+Acked-by: David Hildenbrand <david@redhat.com>
 
+Although it's controversial if
 
+if (!ret)
+	ret = -EBUSY;
+else
+	ret = 0;
+
+is really appealing to the readers eye :)
+
+ret = ret ? 0 : -EBUSY;
+
+It's still confusing.
+
+would be better as
+
+ret = isolated ? 0 : -EBUSY;
+
+IOW, not reusing the "int ret" variable.
+
+-- 
 Thanks,
-SJ
+
+David / dhildenb
+
