@@ -1,57 +1,52 @@
-From: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
-Subject: Re: [PATCH] mm/memcg: Skip high limit check in root memcg
-Date: Tue, 14 Feb 2023 16:56:52 +0100
-Message-ID: <Y+uvRKo7OQ02yB4K@dhcp22.suse.cz>
-References: <20230210094550.5125-1-haifeng.xu@shopee.com>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: (subset) [PATCH 0/9] Documentation: correct lots of spelling errors (series 2)
+Date: Tue, 14 Feb 2023 11:57:36 -0500
+Message-ID: <167639371119.486235.3812806947516384921.b4-ty@oracle.com>
+References: <20230129231053.20863-1-rdunlap@infradead.org>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
-        t=1676390213; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=iAggmlF4GOtadtjvHCG9VGU8bit4Xaqy/p0gnj0OK7A=;
-        b=RK+XbcmgSb5r0n5e5pwKRqGg012gVMCB/BgpEJ1uGLd83kk2Qp9m3ltJOqPkP9HdoV71ij
-        yD8r+HWyxD3FQY7E1msXK+iv/WfYD+Up/+IJfn6AOg6PMsYPTZNikWOPOYu8mVyvx/r+GO
-        7shQ7ft20DZTe/p/FIvp82rBcJfEwGA=
-Content-Disposition: inline
-In-Reply-To: <20230210094550.5125-1-haifeng.xu-LL2PKPoSiP3QT0dZR+AlfA@public.gmane.org>
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-hwmon-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
+ subject : date : message-id : in-reply-to : references : mime-version :
+ content-type : content-transfer-encoding; s=corp-2022-7-12;
+ bh=30UhpvvVeEJ74x+BZp2PjN//3LlD3wleEKrKnHvlEME=;
+ b=2misEQBvI1JJ+56u+Isk0cVjdv3SudPEHPSoait3o7rcSbIUiV8kvbNovJXev5wnzRRT
+ yQ2FDobU5eLDlpUHtycmSVgXhklWuWtXQyHRjAHg4K0sauxjALREy/2VhaHtDgCZdLaF
+ WxYI96R7LpJAVqIrrE5IGe7UCpDyG8ufLqpiszIpg2aGbVIFZRZ6w2Y7Tf675ols5O2I
+ yfYbzI5S2ct/M57g5be3lojAhGOcNXLEw2X/oeo77pxT6TjnWvmZmiG1mlLR5DMbyBcp
+ LmGNOjxpVoIfmfqhy6o1eHoDUtrAQ8cCW6RDnWi5XswKte0lYf8KJhvyj0d5ylUCs/EQ lg== 
+In-Reply-To: <20230129231053.20863-1-rdunlap@infradead.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Haifeng Xu <haifeng.xu-LL2PKPoSiP3QT0dZR+AlfA@public.gmane.org>
-Cc: hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, muchun.song-fxUVXftIFDnyG1zEObXtfA@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: linux-kernel@vger.kernel.org, Randy Dunlap <rdunlap@infradead.org>
+Cc: "Martin K . Petersen" <martin.petersen@oracle.com>, Jonathan Corbet <corbet@lwn.net>, linux-doc@vger.kernel.org, Tejun Heo <tj@kernel.org>, Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, cgroups@vger.kernel.org, Alasdair Kergon <agk@redhat.com>, Mike Snitzer <snitzer@kernel.org>, dm-devel@redhat.com, Mauro Carvalho Chehab <mchehab@kernel.org>, linux-media@vger.kernel.org, linux-mm@kvack.org, Dan Williams <dan.j.williams@intel.com>, Vishal Verma <vishal.l.verma@intel.com>, Dave Jiang <dave.jiang@intel.com>, nvdimm@lists.linux.dev, Vinod Koul <vkoul@kernel.org>, dmaengine@vger.kernel.org, Song Liu <song@kernel.org>, linux-raid@vger.kernel.org, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, linux-usb@vger.kernel.org, Jean Delvare <jdelvare@suse.com>
 
-On Fri 10-02-23 09:45:50, Haifeng Xu wrote:
-> The high limit checks the memory usage from given memcg to root memcg.
-> However, there is no limit in root memcg. So this check makes no sense
-> and we can ignore it.
+On Sun, 29 Jan 2023 15:10:44 -0800, Randy Dunlap wrote:
 
-Is this check actually addining any benefit? Have you measured aby
-performance gains by this change?
-
-> Signed-off-by: Haifeng Xu <haifeng.xu-LL2PKPoSiP3QT0dZR+AlfA@public.gmane.org>
-> ---
->  mm/memcontrol.c | 4 ++++
->  1 file changed, 4 insertions(+)
+> Maintainers of specific kernel subsystems are only Cc-ed on their
+> respective patches, not the entire series. [if all goes well]
 > 
-> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-> index 73afff8062f9..a31a56598f29 100644
-> --- a/mm/memcontrol.c
-> +++ b/mm/memcontrol.c
-> @@ -2780,6 +2780,10 @@ static int try_charge_memcg(struct mem_cgroup *memcg, gfp_t gfp_mask,
->  	do {
->  		bool mem_high, swap_high;
->  
-> +		/* There is no need for root memcg to check high limit */
-> +		if (mem_cgroup_is_root(memcg))
-> +			break;
-> +
->  		mem_high = page_counter_read(&memcg->memory) >
->  			READ_ONCE(memcg->memory.high);
->  		swap_high = page_counter_read(&memcg->swap) >
-> -- 
-> 2.25.1
+> These patches are based on linux-next-20230127.
+> 
+> 
+>  [PATCH 1/9] Documentation: admin-guide: correct spelling
+>  [PATCH 2/9] Documentation: driver-api: correct spelling
+>  [PATCH 3/9] Documentation: hwmon: correct spelling
+>  [PATCH 4/9] Documentation: networking: correct spelling
+>  [PATCH 5/9] Documentation: RCU: correct spelling
+>  [PATCH 6/9] Documentation: scsi/ChangeLog*: correct spelling
+>  [PATCH 7/9] Documentation: scsi: correct spelling
+>  [PATCH 8/9] Documentation: sparc: correct spelling
+>  [PATCH 9/9] Documentation: userspace-api: correct spelling
+> 
+> [...]
+
+Applied to 6.3/scsi-queue, thanks!
+
+[6/9] Documentation: scsi/ChangeLog*: correct spelling
+      https://git.kernel.org/mkp/scsi/c/685d5ef436a9
+[7/9] Documentation: scsi: correct spelling
+      https://git.kernel.org/mkp/scsi/c/cf065a7da517
 
 -- 
-Michal Hocko
-SUSE Labs
+Martin K. Petersen	Oracle Linux Engineering
