@@ -1,38 +1,43 @@
-From: Bart Van Assche <bvanassche@acm.org>
-Subject: Re: [PATCH] blk-ioprio: Introduce promote-to-rt policy
-Date: Mon, 13 Feb 2023 09:10:26 -0800
-Message-ID: <0290f608-6ddf-ecb7-4c05-55b0f7dbfbea@acm.org>
-References: <20230201045227.2203123-1-houtao@huaweicloud.com>
- <8c068af3-7199-11cf-5c69-a523c7c22d9a@acm.org>
- <4f7dcb3e-2d5a-cae3-0e1c-a82bcc3d2217@huaweicloud.com>
- <b6b3c498-e90b-7d1f-6ad5-a31334e433ae@acm.org>
- <beb7782e-72a4-c350-3750-23a767c88753@huaweicloud.com>
- <aedc240d-7c9e-248a-52d2-c9775f3e8ca1@acm.org>
- <20230208134345.77bdep3kzp52haxu@quack3>
- <7fcd4c38-ccbe-6411-e424-a57595ad9c0b@acm.org>
- <20230209085603.dzqfcc3pp4hacqlz@quack3>
- <55a065e7-7d86-d58f-15ba-c631a427843e@acm.org>
- <20230210101244.zsmtmsoo4xjx7suj@quack3>
- <48620099-0311-e752-ba3b-cbb4351cf81e@huaweicloud.com>
+From: Baolin Wang <baolin.wang-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
+Subject: [PATCH 0/3] Some cleanups for page isolation
+Date: Tue, 14 Feb 2023 11:18:05 +0800
+Message-ID: <cover.1676342827.git.baolin.wang@linux.alibaba.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-doc-owner@vger.kernel.org>
-Content-Language: en-US
-In-Reply-To: <48620099-0311-e752-ba3b-cbb4351cf81e@huaweicloud.com>
+Content-Transfer-Encoding: 8bit
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"; format="flowed"
-To: Hou Tao <houtao@huaweicloud.com>, Jan Kara <jack@suse.cz>
-Cc: linux-block@vger.kernel.org, Jens Axboe <axboe@kernel.dk>, cgroups@vger.kernel.org, Tejun Heo <tj@kernel.org>, Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, Jonathan Corbet <corbet@lwn.net>, linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org, houtao1@huawei.com
+Content-Type: text/plain; charset="us-ascii"
+To: akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org
+Cc: torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, sj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org, shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, muchun.song-fxUVXftIFDnyG1zEObXtfA@public.gmane.org, baolin.wang-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org, damon-cunTk1MwBs/YUNznpcFYbw@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On 2/13/23 04:51, Hou Tao wrote:
-> Should I keep "none-to-rt" and make it work just like "promote-to-rt" or should
-> I just remove "none-to-rt" and add "promote-to-rt" ? I think the latter will be
-> more appropriate.
+Hi,
 
-Removing none-to-rt would break existing systems that use this policy. I 
-prefer the former solution.
+The page isolation functions did not return a boolean to indicate
+success or not, instead it will return a negative error when failed
+to isolate a page. So it's better to check the negative error explicitly
+for isolation to make the code more clear per Linus's suggestion in [1].
 
-Thanks,
+No functional changes intended in this patch series.
 
-Bart.
+[1] https://lore.kernel.org/all/CAHk-=wiBrY+O-4=2mrbVyxR+hOqfdJ=Do6xoucfJ9_5az01L4Q-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org/
+
+Baolin Wang (3):
+  mm: check negative error of folio_isolate_lru() when failed to isolate
+    a folio
+  mm: check negative error of isolate_lru_page() when failed to isolate
+    a page
+  mm: mempolicy: check negative error of isolate_hugetlb() when failed
+    to isolate a hugetlb
+
+ mm/damon/paddr.c    | 2 +-
+ mm/gup.c            | 2 +-
+ mm/khugepaged.c     | 4 ++--
+ mm/memcontrol.c     | 2 +-
+ mm/mempolicy.c      | 2 +-
+ mm/migrate.c        | 4 ++--
+ mm/migrate_device.c | 2 +-
+ 7 files changed, 9 insertions(+), 9 deletions(-)
+
+-- 
+2.27.0
 
