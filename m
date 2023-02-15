@@ -1,29 +1,76 @@
-From: Linus Torvalds <torvalds@linux-foundation.org>
-Subject: Re: [PATCH v3 0/4] Change the return value for page isolation functions
-Date: Wed, 15 Feb 2023 12:14:27 -0800
-Message-ID: <CAHk-=wjG+MD3JBJ1qN8tD_di9K+kV0_PSe+DE9MRGd8Vco9CNA@mail.gmail.com>
-References: <cover.1676424378.git.baolin.wang@linux.alibaba.com>
+From: SeongJae Park <sj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCH v3 3/4] mm: hugetlb: change to return bool for isolate_hugetlb()
+Date: Wed, 15 Feb 2023 20:25:48 +0000
+Message-ID: <20230215202548.92462-1-sj@kernel.org>
+References: <12a287c5bebc13df304387087bbecc6421510849.1676424378.git.baolin.wang@linux.alibaba.com>
 Mime-Version: 1.0
-Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linux-foundation.org; s=google;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:from:to:cc:subject:date:message-id:reply-to;
-        bh=PGQ2Tjph2raaiJJrHEWHFU5AYzV1uv01WttFdbl8X1E=;
-        b=V4bh0Fv36Oc96JTrtwDRSTpRRhi4LZ/kX4qEbvP6JqRfZk1/DM5jUVx5Kyj39yoIhi
-         aq33fcQOTI5PPoku2ND7mukiujbjW4a1bQG4ZzuMpv6Onpj3W8XzL9y6VaGZ/XlDqAxd
-         MWIEni88bTVGzfFSjBMo33x9Bj5G7hovJOQRw=
-In-Reply-To: <cover.1676424378.git.baolin.wang@linux.alibaba.com>
+Content-Transfer-Encoding: 8bit
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1676492751;
+        bh=os1l2QpY3JmJBjUKP58QMx61GxEfMBxX9wW/qhau3Wc=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=se8sumWAp4cC6xYEvZm0k/vTiSQ5XuMVkJ5esfyL9vk8I7RlFF6ai7V1E3jZtBRLc
+         Bo3gpsa6aDzKYdqhFYfcVcwCotOIi6qZoeKMMUTMPUnbzPC5pnOB0dy74FSMfLij37
+         vHVqCj7ejNc1HvWWfKN/rkVt2NQim6+7Oab4AF9vbqcVCkg9ximutnuxZ0SB0hroOu
+         iol6UlKKhsGXSGaPMukXtraayv4cKe4cjvO/nk76IQRLkVC3ABAxMbIbj8mmWKoMlk
+         qZvnipkjfdfe6xjVAQkaI0vPIL0ELw3ZkLZE8nCE9GsFvxOG+QPHxDZwizBmgcz+RF
+         DYBmr2aIWSREQ==
+In-Reply-To: <12a287c5bebc13df304387087bbecc6421510849.1676424378.git.baolin.wang-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Baolin Wang <baolin.wang@linux.alibaba.com>
-Cc: akpm@linux-foundation.org, sj@kernel.org, hannes@cmpxchg.org, mhocko@kernel.org, roman.gushchin@linux.dev, shakeelb@google.com, muchun.song@linux.dev, naoya.horiguchi@nec.com, linmiaohe@huawei.com, david@redhat.com, osalvador@suse.de, mike.kravetz@oracle.com, willy@infradead.org, damon@lists.linux.dev, cgroups@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org
+To: Baolin Wang <baolin.wang-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
+Cc: akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, sj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org, shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, muchun.song-fxUVXftIFDnyG1zEObXtfA@public.gmane.org, naoya.horiguchi-YMj9X0ASwKA@public.gmane.org, linmiaohe-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, david-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, osalvador-l3A5Bk7waGM@public.gmane.org, mike.kravetz-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org, willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, damon-cunTk1MwBs/YUNznpcFYbw@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-This v3 series looks like it's making things more readable, so ack as
-far as I'm concerned.
+On Wed, 15 Feb 2023 18:39:36 +0800 Baolin Wang <baolin.wang-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org> wrote:
 
-But it looks like it's firmly in the "Andrew's mm tree" category, so
-I'll leave it up to him to decide.
+> Now the isolate_hugetlb() only returns 0 or -EBUSY, and most users did not
+> care about the negative value, thus we can convert the isolate_hugetlb()
+> to return a boolean value to make code more clear when checking the
+> hugetlb isolation state. Moreover converts 2 users which will consider
+> the negative value returned by isolate_hugetlb().
+> 
+> No functional changes intended.
+> 
+> Signed-off-by: Baolin Wang <baolin.wang-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
+> Acked-by: David Hildenbrand <david-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+> ---
+[...]
+>  include/linux/hugetlb.h |  6 +++---
+>  mm/hugetlb.c            | 13 ++++++++-----
+>  mm/memory-failure.c     |  2 +-
+>  mm/mempolicy.c          |  2 +-
+>  mm/migrate.c            |  7 +++----
+>  5 files changed, 16 insertions(+), 14 deletions(-)
+> 
+[...]
+> diff --git a/mm/hugetlb.c b/mm/hugetlb.c
+> index 3a01a9dbf445..16513cd23d5d 100644
+> --- a/mm/hugetlb.c
+> +++ b/mm/hugetlb.c
+> @@ -2925,13 +2925,16 @@ static int alloc_and_dissolve_hugetlb_folio(struct hstate *h,
+>  		 */
+>  		goto free_new;
+>  	} else if (folio_ref_count(old_folio)) {
+> +		bool isolated;
+> +
+>  		/*
+>  		 * Someone has grabbed the folio, try to isolate it here.
+>  		 * Fail with -EBUSY if not possible.
+>  		 */
+>  		spin_unlock_irq(&hugetlb_lock);
+> -		ret = isolate_hugetlb(old_folio, list);
+> +		isolated = isolate_hugetlb(old_folio, list);
+>  		spin_lock_irq(&hugetlb_lock);
+> +		ret = isolated ? 0 : -EBUSY;
+>  		goto free_new;
 
-                   Linus
+Nit.  I'd personally prefer to set 'ret' before entering this critical section
+to keep the section short, but this would be just a mean comment that wouldn't
+worth request respin.
+
+
+Thanks,
+SJ
+
+[...]
