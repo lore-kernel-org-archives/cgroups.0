@@ -1,76 +1,161 @@
-From: Matthew Wilcox <willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
-Subject: Re: [PATCH v3 4/4] mm: change to return bool for
- isolate_movable_page()
-Date: Wed, 15 Feb 2023 15:44:22 +0000
-Message-ID: <Y+z91pcxAuygc92J@casper.infradead.org>
-References: <cover.1676424378.git.baolin.wang@linux.alibaba.com>
- <cb877f73f4fff8d309611082ec740a7065b1ade0.1676424378.git.baolin.wang@linux.alibaba.com>
+From: Kairui Song <ryncsn-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Subject: Re: [PATCH 2/2] sched/psi: iterate through cgroups directly
+Date: Thu, 16 Feb 2023 01:49:22 +0800
+Message-ID: <CAMgjq7CKG_pNxm5ofciK-aBKwGuRCiyWPm1BXhjmcg=N0bfFcg@mail.gmail.com>
+References: <20230208161654.99556-1-ryncsn@gmail.com> <20230208161654.99556-3-ryncsn@gmail.com>
+ <20230208172956.GF24523@blackbody.suse.cz> <Y+P17OVZZWVpYIb0@cmpxchg.org> <CAMgjq7Bem+8g8A_OR26PHhYYx-A7LHHO3tyQNR_tMnaaKNxkug@mail.gmail.com>
 Mime-Version: 1.0
+Content-Transfer-Encoding: quoted-printable
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
-        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=7O/CtBBPkdDhkIEeL0V0v4LD7N06poGA5q+c+AakFcc=; b=rczzgNYdlPXgCEQdETnrU6Ozg6
-        L6yUQ9uF+/bH9BQwN2r450aDfHyyn9lQrbsH2MOdB1ogqJwqZ/QFp5qwCgymAVO5Eee0PwKED1DBu
-        HJcrLfox+FTvNIBX6S/7yC+XSf+tXQvtOW+nN/7CI/yMuRINSWFosqtCjJCU3nZxjm2CJxeJ/U6Tw
-        h8Zxl50dRjjPnQrEeOXSLYDgM8cehU/AL1DJiH9BZJun+0hqxQhjUbL4gOjgwLg/B+pj4ehal94D3
-        1ZHdcYnOiZc7X0YbcXH85C9Gf3259V0BY2uSUswvyDddtcFyQqOQv78EQf6wDlWwxGirygQItZnHF
-        C6zPg+LA==;
-Content-Disposition: inline
-In-Reply-To: <cb877f73f4fff8d309611082ec740a7065b1ade0.1676424378.git.baolin.wang-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=NyGYVMaZ8vym5t9MdFQCIrY2IHROAIwSOISQjEfCwxo=;
+        b=YNyD754CRXfmTDAUV3IZLfoR/2KiTIE3gmA3PyX6HnyHAwQzzzEmRuZsGNnGanwfcD
+         c8d7jUgm1LBM+4SVlH3OzFtO/VzSFCt/Q17mUUwRcULTyJLJih+jORayIgghgK/WSylD
+         Wd4giTAmuiK0G2xRKXMeBbdtVxmMcwmJHocFU3BIfEiW9dlmBA6zavXtON+kyEPR1AmF
+         PxmW/PB6OOTRrqWDst7srWXplM6cnk3CgUtuIbCMj7ssPGptIT3DvcaAOrpQE9USN3sg
+         /+dfZRyM/n8+g5EFYZqtVWg0ec9B1w+aPJwspwIAZZEa6P52r3ONyU1cZBu3yjIIcpY0
+         l6Kw==
+In-Reply-To: <CAMgjq7Bem+8g8A_OR26PHhYYx-A7LHHO3tyQNR_tMnaaKNxkug-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Baolin Wang <baolin.wang-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
-Cc: akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, sj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org, shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, muchun.song-fxUVXftIFDnyG1zEObXtfA@public.gmane.org, naoya.horiguchi-YMj9X0ASwKA@public.gmane.org, linmiaohe-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, david-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, osalvador-l3A5Bk7waGM@public.gmane.org, mike.kravetz-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org, damon-cunTk1MwBs/YUNznpcFYbw@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Type: text/plain; charset="utf-8"
+To: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Cc: =?UTF-8?Q?Michal_Koutn=C3=BD?= <mkoutny-IBi9RG/b67k@public.gmane.org>, Suren Baghdasaryan <surenb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Chengming Zhou <zhouchengming-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Wed, Feb 15, 2023 at 06:39:37PM +0800, Baolin Wang wrote:
-> Now the isolate_movable_page() can only return 0 or -EBUSY, and no users
-> will care about the negative return value, thus we can convert the
-> isolate_movable_page() to return a boolean value to make the code more
-> clear when checking the movable page isolation state.
-> 
-> No functional changes intended.
-> 
-> Signed-off-by: Baolin Wang <baolin.wang-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
-> Acked-by: David Hildenbrand <david-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Kairui Song <ryncsn-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org> =E4=BA=8E2023=E5=B9=B42=E6=9C=8810=E6=97=A5=
+=E5=91=A8=E4=BA=94 00:08=E5=86=99=E9=81=93=EF=BC=9A
+> Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org> =E4=BA=8E2023=E5=B9=B42=E6=9C=889=E6=
+=97=A5=E5=91=A8=E5=9B=9B 03:20=E5=86=99=E9=81=93=EF=BC=9A
+> > On Wed, Feb 08, 2023 at 06:29:56PM +0100, Michal Koutn=C3=BD wrote:
+> > > On Thu, Feb 09, 2023 at 12:16:54AM +0800, Kairui Song <ryncsn@gmail.c=
+om> wrote:
+> > > > Signed-off-by: Kairui Song <kasong-1Nz4purKYjRBDgjK7y7TUQ@public.gmane.org>
+> > > > Signed-off-by: Kairui Song <ryncsn-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+> > >
+> > > Typo?
+> > >
+> > > > -static inline struct psi_group *task_psi_group(struct task_struct =
+*task)
+> > > > +static inline struct psi_group *psi_iter_first(struct task_struct =
+*task, void **iter)
+> > > >  {
+> > > >  #ifdef CONFIG_CGROUPS
+> > > > -   if (static_branch_likely(&psi_cgroups_enabled))
+> > > > -           return cgroup_psi(task_dfl_cgroup(task));
+> > > > +   if (static_branch_likely(&psi_cgroups_enabled)) {
+> > > > +           struct cgroup *cgroup =3D task_dfl_cgroup(task);
+> > > > +
+> > > > +           *iter =3D cgroup_parent(cgroup);
+> > >
+> > > This seems to skip a cgroup level -- maybe that's the observed
+> > > performance gain?
+> >
+> > Hm, I don't think it does. It sets up *iter to point to the parent for
+> > the _next() call, but it returns task_dfl_cgroup()->psi. The next call
+> > does the same: cgroup =3D *iter, *iter =3D parent, return cgroup->psi.
+> >
+> > It could be a bit more readable to have *iter always point to the
+> > current cgroup - but no strong preference either way from me:
+> >
+> > psi_groups_first(task, iter)
+> > {
+> > #ifdef CONFIG_CGROUPS
+> >         if (static_branch_likely(&psi_cgroups_enabled)) {
+> >                 struct cgroup *cgroup =3D task_dfl_cgroup(task);
+> >
+> >                 *iter =3D cgroup;
+> >                 return cgroup_psi(cgroup);
+> >         }
+> > #endif
+> >         return &psi_system;
+> > }
+> >
+> > psi_groups_next(iter)
+> > {
+> > #ifdef CONFIG_CGROUPS
+> >         if (static_branch_likely(&psi_cgroups_enabled)) {
+> >                 struct cgroup *cgroup =3D *iter;
+> >
+> >                 if (cgroup) {
+> >                         *iter =3D cgroup_parent(cgroup);
+> >                         return cgroup_psi(cgroup);
+> >                 }
+> >         }
+> >         return NULL;
+> > #endif
+> > }
+> > psi_groups_next(iter)
+> > {
+> > #ifdef CONFIG_CGROUPS
+> >         if (static_branch_likely(&psi_cgroups_enabled)) {
+> >                 struct cgroup *cgroup =3D *iter;
+> >
+> >                 if (cgroup) {
+> >                         *iter =3D cgroup_parent(cgroup);
+> >                         return cgroup_psi(cgroup);
+> >                 }
+> >         }
+> >         return NULL;
+> > #endif
+> > }
+>
+> It should be like this, right? For psi_groups_next, retrieving cgroup
+> parent should be done before "if (cgroup)".
+> + psi_groups_next(iter)
+> + {
+> + #ifdef CONFIG_CGROUPS
+> +         if (static_branch_likely(&psi_cgroups_enabled)) {
+> +                 struct cgroup *cgroup =3D *iter;
+> +
+> +                 cgroup =3D cgroup_parent(cgroup);
+> +                 if (cgroup) {
+> +                         *iter =3D cgroup;
+> +                         return cgroup_psi(cgroup);
+> +                 }
+> +         }
+> +         return NULL;
+> + #endif
+> + }
+>
+> Thanks for the suggestion!
+>
+> I think your style is better indeed.
+>
+> I tried to re-benchmark the code just in case, and found it seems my
+> previous benchmark result is not accurate enough now, some results
+> changed after I did a rebase to latest master, or maybe just 100 times
+> of perfpipe is not enough to get a stable result.
+>
+> With a few times of retest, the final conclusion of the commit message
+> is still valid, will post V2 later just after more test.
 
-Reviewed-by: Matthew Wilcox (Oracle) <willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
+Hi, I just ran perf bench test for a few days on a machine to get an
+stable average for latest rebased patch.
+And found it is indeed faster when the cgroup hierarchy is not too deep:
 
-A couple of nits below, not worth respinning the patch series for:
+With rootcg:
+55718.9 op/s (unpatched) compared to 55862.2 (patched)
+With 5 levels:
+49975.5 op/s (unpatched) compared to 50778.5 op/s (patched)
 
-> diff --git a/include/linux/migrate.h b/include/linux/migrate.h
-> index c88b96b48be7..6b252f519c86 100644
-> --- a/include/linux/migrate.h
-> +++ b/include/linux/migrate.h
-> @@ -71,7 +71,7 @@ extern int migrate_pages(struct list_head *l, new_page_t new, free_page_t free,
->  		unsigned long private, enum migrate_mode mode, int reason,
->  		unsigned int *ret_succeeded);
->  extern struct page *alloc_migration_target(struct page *page, unsigned long private);
-> -extern int isolate_movable_page(struct page *page, isolate_mode_t mode);
-> +extern bool isolate_movable_page(struct page *page, isolate_mode_t mode);
+Previous tests are a bit biased since I only run the test for 100 * 3
+times, or maybe it is sensitive to some random kernel structure
+changes.
 
-You can drop the 'extern' here.
+But I ignored one important thing in my previous test, that the
+performance actually drops heavily with deeper levers of cgroups:
+With 8 levels:
+48902.4 op/s (unpatched) compared to 47476.6 op/s (patched)
+With 50 levels of cgroup:
+25605.7375 op/s (unpatched) compared to 20417.275 op/s (patched)
 
-> +++ b/mm/memory_hotplug.c
-> @@ -1668,18 +1668,18 @@ do_migrate_range(unsigned long start_pfn, unsigned long end_pfn)
->  		 * We can skip free pages. And we can deal with pages on
->  		 * LRU and non-lru movable pages.
->  		 */
-> -		if (PageLRU(page)) {
-> +		if (PageLRU(page))
->  			isolated = isolate_lru_page(page);
-> -			ret = isolated ? 0 : -EBUSY;
-> -		} else
-> -			ret = isolate_movable_page(page, ISOLATE_UNEVICTABLE);
-> -		if (!ret) { /* Success */
-> +		else
-> +			isolated = isolate_movable_page(page, ISOLATE_UNEVICTABLE);
-> +		if (isolated) { /* Success */
+That's a terrible regression :( , guess when there are too many cgroup
+structures, CPU cache can't hold them, and since the *parent shares
+same cacheline with rest of psi_group struct (like the bool enblaed,
+which are access every time), so unpatched will be faster.
 
-I would have dropped the "/* Success */" here.  Before, commenting
-"!ret" is quite sensible, but "isolated" seems obviously success to me.
-
-
-Thanks for doing all this.
+Sorry for missing such a critical point in v1, let's drop this series
+until there is a better way to optimize it.
