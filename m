@@ -1,56 +1,29 @@
-From: Mike Kravetz <mike.kravetz-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH v3 3/4] mm: hugetlb: change to return bool for
- isolate_hugetlb()
-Date: Wed, 15 Feb 2023 11:22:11 -0800
-Message-ID: <Y+0w45eacPb8mgvh@monkey>
+From: Linus Torvalds <torvalds@linux-foundation.org>
+Subject: Re: [PATCH v3 0/4] Change the return value for page isolation functions
+Date: Wed, 15 Feb 2023 12:14:27 -0800
+Message-ID: <CAHk-=wjG+MD3JBJ1qN8tD_di9K+kV0_PSe+DE9MRGd8Vco9CNA@mail.gmail.com>
 References: <cover.1676424378.git.baolin.wang@linux.alibaba.com>
- <12a287c5bebc13df304387087bbecc6421510849.1676424378.git.baolin.wang@linux.alibaba.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
- : subject : message-id : references : content-type : in-reply-to :
- mime-version; s=corp-2022-7-12;
- bh=EEpLwX60/JUYsEED8iNKv+LKjcqjPsD3OLbefQgmUqQ=;
- b=GCIvsItmPcqX9+8heBxiM177RRqPa2Y7hMIm9ReIPES7dqKr96osoH1TtLNUwf1xMJqR
- yZ3kyLQ1o7hK7jhMj2UoQGcMTeEGyC6L/HJQvjqDrsGSVOXwEzv93TrpOzJzWKbqsucB
- qQAj6PzREcuajPCZaBEq/m6Wt0mF3IICVM0zQGuSLMkiAzk8ixHQT8HgRZgISy0XtUSP
- YVBb1ldQjymdtoXdNKQa6jAghxm1ldwQdG3a39xLD5+oijQzRRJkHh1m9rZIywxuKbGf
- G87mq/TJI4WK2GoWUNlgIXpThkaKJh7j15HdV4nEdMMwkES4POTdClWkZRsnrMZHjRL3 YQ== 
+Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=EEpLwX60/JUYsEED8iNKv+LKjcqjPsD3OLbefQgmUqQ=;
- b=Y+5QyYDcgey345YioTE7ntLMs6AXlKn+myvQ43JNXEUBXAvJ0yuFCD+xAPJNAC8mWsUJLsDrN/EuN2R815sjVe4rmlRvR2MCPUtZYS8LIOekH10OV7yESDx3c+M+sbH/c2fzDCALTxthPyLvtnB8H+sFA8JV/rmzTUoIYv0ve4I=
-Content-Disposition: inline
-In-Reply-To: <12a287c5bebc13df304387087bbecc6421510849.1676424378.git.baolin.wang-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
+        d=linux-foundation.org; s=google;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:from:to:cc:subject:date:message-id:reply-to;
+        bh=PGQ2Tjph2raaiJJrHEWHFU5AYzV1uv01WttFdbl8X1E=;
+        b=V4bh0Fv36Oc96JTrtwDRSTpRRhi4LZ/kX4qEbvP6JqRfZk1/DM5jUVx5Kyj39yoIhi
+         aq33fcQOTI5PPoku2ND7mukiujbjW4a1bQG4ZzuMpv6Onpj3W8XzL9y6VaGZ/XlDqAxd
+         MWIEni88bTVGzfFSjBMo33x9Bj5G7hovJOQRw=
+In-Reply-To: <cover.1676424378.git.baolin.wang@linux.alibaba.com>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Baolin Wang <baolin.wang-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
-Cc: akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, sj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org, shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, muchun.song-fxUVXftIFDnyG1zEObXtfA@public.gmane.org, naoya.horiguchi-YMj9X0ASwKA@public.gmane.org, linmiaohe-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, david-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, osalvador-l3A5Bk7waGM@public.gmane.org, willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, damon-cunTk1MwBs/YUNznpcFYbw@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Baolin Wang <baolin.wang@linux.alibaba.com>
+Cc: akpm@linux-foundation.org, sj@kernel.org, hannes@cmpxchg.org, mhocko@kernel.org, roman.gushchin@linux.dev, shakeelb@google.com, muchun.song@linux.dev, naoya.horiguchi@nec.com, linmiaohe@huawei.com, david@redhat.com, osalvador@suse.de, mike.kravetz@oracle.com, willy@infradead.org, damon@lists.linux.dev, cgroups@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org
 
-On 02/15/23 18:39, Baolin Wang wrote:
-> Now the isolate_hugetlb() only returns 0 or -EBUSY, and most users did not
-> care about the negative value, thus we can convert the isolate_hugetlb()
-> to return a boolean value to make code more clear when checking the
-> hugetlb isolation state. Moreover converts 2 users which will consider
-> the negative value returned by isolate_hugetlb().
-> 
-> No functional changes intended.
-> 
-> Signed-off-by: Baolin Wang <baolin.wang-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
-> Acked-by: David Hildenbrand <david-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-> ---
->  include/linux/hugetlb.h |  6 +++---
->  mm/hugetlb.c            | 13 ++++++++-----
->  mm/memory-failure.c     |  2 +-
->  mm/mempolicy.c          |  2 +-
->  mm/migrate.c            |  7 +++----
->  5 files changed, 16 insertions(+), 14 deletions(-)
+This v3 series looks like it's making things more readable, so ack as
+far as I'm concerned.
 
-Thanks,
+But it looks like it's firmly in the "Andrew's mm tree" category, so
+I'll leave it up to him to decide.
 
-Reviewed-by: Mike Kravetz <mike.kravetz-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
-
--- 
-Mike Kravetz
+                   Linus
