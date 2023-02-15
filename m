@@ -1,164 +1,57 @@
-From: Baolin Wang <baolin.wang-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
-Subject: [PATCH v3 3/4] mm: hugetlb: change to return bool for isolate_hugetlb()
-Date: Wed, 15 Feb 2023 18:39:36 +0800
-Message-ID: <12a287c5bebc13df304387087bbecc6421510849.1676424378.git.baolin.wang@linux.alibaba.com>
+From: Matthew Wilcox <willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
+Subject: Re: [PATCH v3 1/4] mm: change to return bool for folio_isolate_lru()
+Date: Wed, 15 Feb 2023 15:35:17 +0000
+Message-ID: <Y+z7tT6amGO4wNf4@casper.infradead.org>
 References: <cover.1676424378.git.baolin.wang@linux.alibaba.com>
+ <8a4e3679ed4196168efadf7ea36c038f2f7d5aa9.1676424378.git.baolin.wang@linux.alibaba.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <cover.1676424378.git.baolin.wang-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
+        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=Pp8J3FGpQVVxmK5MKJYP1/LwjqePRMBzRQKB1R9+njg=; b=UQs9d+wk5nXuAIIElOHTs4slay
+        fOiSZ+YlSaPH2aFP+w5aqTClcGg0sOPkwOUqZCBh0KesaAr+45/AXkKaJ+X9QLerJ1hbbpLgbuXtj
+        kdbepirVH+YcR6ZWERVQPhzOONE01jU5U3YT+MQALQPa35xP6ww9uuaTkshx3A1OdwmgCDpgmRq8M
+        qL8AtVCQzZTzkUa29npfQ/r4AMz7q1jp+zE5yg2QHlLrQcJtxbQCZli1NHlxNhQ4VApfIeQCsoT28
+        OUBrR1t1080Po2ONwgYSO0slfeswePnlGFNBux557gNcuhP/8GyQvUxlYDVrn4loM4aJkyyNAWKNR
+        OONpnvLA==;
+Content-Disposition: inline
+In-Reply-To: <8a4e3679ed4196168efadf7ea36c038f2f7d5aa9.1676424378.git.baolin.wang-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org
-Cc: torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, sj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org, shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, muchun.song-fxUVXftIFDnyG1zEObXtfA@public.gmane.org, naoya.horiguchi-YMj9X0ASwKA@public.gmane.org, linmiaohe-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, david-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, osalvador-l3A5Bk7waGM@public.gmane.org, mike.kravetz-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org, willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, baolin.wang-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org, damon-cunTk1MwBs/YUNznpcFYbw@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Transfer-Encoding: 7bit
+To: Baolin Wang <baolin.wang-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
+Cc: akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, sj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org, shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, muchun.song-fxUVXftIFDnyG1zEObXtfA@public.gmane.org, naoya.horiguchi-YMj9X0ASwKA@public.gmane.org, linmiaohe-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, david-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, osalvador-l3A5Bk7waGM@public.gmane.org, mike.kravetz-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org, damon-cunTk1MwBs/YUNznpcFYbw@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-Now the isolate_hugetlb() only returns 0 or -EBUSY, and most users did not
-care about the negative value, thus we can convert the isolate_hugetlb()
-to return a boolean value to make code more clear when checking the
-hugetlb isolation state. Moreover converts 2 users which will consider
-the negative value returned by isolate_hugetlb().
+On Wed, Feb 15, 2023 at 06:39:34PM +0800, Baolin Wang wrote:
+> Now the folio_isolate_lru() did not return a boolean value to indicate
+> isolation success or not, however below code checking the return value
+> can make people think that it was a boolean success/failure thing, which
+> makes people easy to make mistakes (see the fix patch[1]).
+> 
+> if (folio_isolate_lru(folio))
+> 	continue;
+> 
+> Thus it's better to check the negative error value expilictly returned by
+> folio_isolate_lru(), which makes code more clear per Linus's suggestion[2].
+> Moreover Matthew suggested we can convert the isolation functions to return
+> a boolean[3], since most users did not care about the negative error value,
+> and can also remove the confusing of checking return value.
+> 
+> So this patch converts the folio_isolate_lru() to return a boolean value,
+> which means return 'true' to indicate the folio isolation is successful,
+> and 'false' means a failure to isolation. Meanwhile changing all users'
+> logic of checking the isolation state.
+> 
+> No functional changes intended.
+> 
+> [1] https://lore.kernel.org/all/20230131063206.28820-1-Kuan-Ying.Lee-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org/T/#u
+> [2] https://lore.kernel.org/all/CAHk-=wiBrY+O-4=2mrbVyxR+hOqfdJ=Do6xoucfJ9_5az01L4Q-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org/
+> [3] https://lore.kernel.org/all/Y+sTFqwMNAjDvxw3-FZi0V3Vbi30CUdFEqe4BF2D2FQJk+8+b@public.gmane.org/
+> 
+> Signed-off-by: Baolin Wang <baolin.wang-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
+> Reviewed-by: SeongJae Park <sj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+> Acked-by: David Hildenbrand <david-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 
-No functional changes intended.
-
-Signed-off-by: Baolin Wang <baolin.wang-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
-Acked-by: David Hildenbrand <david-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
----
- include/linux/hugetlb.h |  6 +++---
- mm/hugetlb.c            | 13 ++++++++-----
- mm/memory-failure.c     |  2 +-
- mm/mempolicy.c          |  2 +-
- mm/migrate.c            |  7 +++----
- 5 files changed, 16 insertions(+), 14 deletions(-)
-
-diff --git a/include/linux/hugetlb.h b/include/linux/hugetlb.h
-index df6dd624ccfe..5f5e4177b2e0 100644
---- a/include/linux/hugetlb.h
-+++ b/include/linux/hugetlb.h
-@@ -171,7 +171,7 @@ bool hugetlb_reserve_pages(struct inode *inode, long from, long to,
- 						vm_flags_t vm_flags);
- long hugetlb_unreserve_pages(struct inode *inode, long start, long end,
- 						long freed);
--int isolate_hugetlb(struct folio *folio, struct list_head *list);
-+bool isolate_hugetlb(struct folio *folio, struct list_head *list);
- int get_hwpoison_hugetlb_folio(struct folio *folio, bool *hugetlb, bool unpoison);
- int get_huge_page_for_hwpoison(unsigned long pfn, int flags,
- 				bool *migratable_cleared);
-@@ -413,9 +413,9 @@ static inline pte_t *huge_pte_offset(struct mm_struct *mm, unsigned long addr,
- 	return NULL;
- }
- 
--static inline int isolate_hugetlb(struct folio *folio, struct list_head *list)
-+static inline bool isolate_hugetlb(struct folio *folio, struct list_head *list)
- {
--	return -EBUSY;
-+	return false;
- }
- 
- static inline int get_hwpoison_hugetlb_folio(struct folio *folio, bool *hugetlb, bool unpoison)
-diff --git a/mm/hugetlb.c b/mm/hugetlb.c
-index 3a01a9dbf445..16513cd23d5d 100644
---- a/mm/hugetlb.c
-+++ b/mm/hugetlb.c
-@@ -2925,13 +2925,16 @@ static int alloc_and_dissolve_hugetlb_folio(struct hstate *h,
- 		 */
- 		goto free_new;
- 	} else if (folio_ref_count(old_folio)) {
-+		bool isolated;
-+
- 		/*
- 		 * Someone has grabbed the folio, try to isolate it here.
- 		 * Fail with -EBUSY if not possible.
- 		 */
- 		spin_unlock_irq(&hugetlb_lock);
--		ret = isolate_hugetlb(old_folio, list);
-+		isolated = isolate_hugetlb(old_folio, list);
- 		spin_lock_irq(&hugetlb_lock);
-+		ret = isolated ? 0 : -EBUSY;
- 		goto free_new;
- 	} else if (!folio_test_hugetlb_freed(old_folio)) {
- 		/*
-@@ -3005,7 +3008,7 @@ int isolate_or_dissolve_huge_page(struct page *page, struct list_head *list)
- 	if (hstate_is_gigantic(h))
- 		return -ENOMEM;
- 
--	if (folio_ref_count(folio) && !isolate_hugetlb(folio, list))
-+	if (folio_ref_count(folio) && isolate_hugetlb(folio, list))
- 		ret = 0;
- 	else if (!folio_ref_count(folio))
- 		ret = alloc_and_dissolve_hugetlb_folio(h, folio, list);
-@@ -7251,15 +7254,15 @@ __weak unsigned long hugetlb_mask_last_page(struct hstate *h)
-  * These functions are overwritable if your architecture needs its own
-  * behavior.
-  */
--int isolate_hugetlb(struct folio *folio, struct list_head *list)
-+bool isolate_hugetlb(struct folio *folio, struct list_head *list)
- {
--	int ret = 0;
-+	bool ret = true;
- 
- 	spin_lock_irq(&hugetlb_lock);
- 	if (!folio_test_hugetlb(folio) ||
- 	    !folio_test_hugetlb_migratable(folio) ||
- 	    !folio_try_get(folio)) {
--		ret = -EBUSY;
-+		ret = false;
- 		goto unlock;
- 	}
- 	folio_clear_hugetlb_migratable(folio);
-diff --git a/mm/memory-failure.c b/mm/memory-failure.c
-index e504362fdb23..8604753bc644 100644
---- a/mm/memory-failure.c
-+++ b/mm/memory-failure.c
-@@ -2508,7 +2508,7 @@ static bool isolate_page(struct page *page, struct list_head *pagelist)
- 	bool isolated = false;
- 
- 	if (PageHuge(page)) {
--		isolated = !isolate_hugetlb(page_folio(page), pagelist);
-+		isolated = isolate_hugetlb(page_folio(page), pagelist);
- 	} else {
- 		bool lru = !__PageMovable(page);
- 
-diff --git a/mm/mempolicy.c b/mm/mempolicy.c
-index 2751bc3310fd..a256a241fd1d 100644
---- a/mm/mempolicy.c
-+++ b/mm/mempolicy.c
-@@ -609,7 +609,7 @@ static int queue_folios_hugetlb(pte_t *pte, unsigned long hmask,
- 	if (flags & (MPOL_MF_MOVE_ALL) ||
- 	    (flags & MPOL_MF_MOVE && folio_estimated_sharers(folio) == 1 &&
- 	     !hugetlb_pmd_shared(pte))) {
--		if (isolate_hugetlb(folio, qp->pagelist) &&
-+		if (!isolate_hugetlb(folio, qp->pagelist) &&
- 			(flags & MPOL_MF_STRICT))
- 			/*
- 			 * Failed to isolate folio but allow migrating pages
-diff --git a/mm/migrate.c b/mm/migrate.c
-index 53010a142e7f..2db546a0618c 100644
---- a/mm/migrate.c
-+++ b/mm/migrate.c
-@@ -2095,6 +2095,7 @@ static int add_page_for_migration(struct mm_struct *mm, unsigned long addr,
- 	struct vm_area_struct *vma;
- 	struct page *page;
- 	int err;
-+	bool isolated;
- 
- 	mmap_read_lock(mm);
- 	err = -EFAULT;
-@@ -2126,13 +2127,11 @@ static int add_page_for_migration(struct mm_struct *mm, unsigned long addr,
- 
- 	if (PageHuge(page)) {
- 		if (PageHead(page)) {
--			err = isolate_hugetlb(page_folio(page), pagelist);
--			if (!err)
--				err = 1;
-+			isolated = isolate_hugetlb(page_folio(page), pagelist);
-+			err = isolated ? 1 : -EBUSY;
- 		}
- 	} else {
- 		struct page *head;
--		bool isolated;
- 
- 		head = compound_head(page);
- 		isolated = isolate_lru_page(head);
--- 
-2.27.0
-
+Reviewed-by: Matthew Wilcox (Oracle) <willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
