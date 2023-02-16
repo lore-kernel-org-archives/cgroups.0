@@ -1,107 +1,89 @@
-From: David Hildenbrand <david-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH 00/19] mm: Introduce a cgroup to limit the amount of
- locked and pinned memory
-Date: Thu, 16 Feb 2023 12:01:43 +0100
-Message-ID: <fdd3bd7d-526d-d441-00f1-e8321441174e@redhat.com>
-References: <cover.c238416f0e82377b449846dbb2459ae9d7030c8e.1675669136.git-series.apopple@nvidia.com>
+From: Jason Gunthorpe <jgg-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH 14/19] mm: Introduce a cgroup for pinned memory
+Date: Thu, 16 Feb 2023 08:45:38 -0400
+Message-ID: <Y+4lcq4Fge27TQIn@nvidia.com>
+References: <Y+Fttp1ozejoSQzl@slm.duckdns.org>
+ <CAJD7tkb_Cr7rTTpKc1VBpS8h=n3Hu+nGiV8dkLH-NdC1bSG9mg@mail.gmail.com>
+ <Y+GA6Y7SVhAW5Xm9@slm.duckdns.org>
+ <CAJD7tka6SC1ho-dffV0bK_acoZd-5DQzBOy0xg3TkOFG1zAPMg@mail.gmail.com>
+ <Y+GMbWWP/YhtJQqe@slm.duckdns.org>
+ <Y+GQB9I6MFN6BOFw@nvidia.com>
+ <Y+GcJQRhvjqFaaSp@mtj.duckdns.org>
+ <Y+0rxoM4w9nilUMZ@dhcp22.suse.cz>
+ <Y+0tWZxMUx/NZ3Ne@nvidia.com>
+ <Y+3jcw9vo4ml5p0M@dhcp22.suse.cz>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1676545307;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=RT3I0H8bP1HeewuPOTi34AMMwE+sGnWigdoFWwsEuUo=;
-        b=FVn8S7/2Wj28Zj0Ty1m6tPXTbIeBn3wHG7D2mh1enYTMRiwyJi2XjzoySHrRVm1Nhpry4l
-        GdNVwPDiRlv8FgHi+4sMWpow1yIzs+KVMgUR/1emLCZUbmmBUsempa9hnN7aut/o+D+YmR
-        PLayxokyW78umRIko8Gc1ISqeAY8drk=
-Content-Language: en-US
-In-Reply-To: <cover.c238416f0e82377b449846dbb2459ae9d7030c8e.1675669136.git-series.apopple-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
+ s=selector2;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=dueX91XBPxeg3KkiY0Sk6ldj36DhXEK4K7I69eP3Ybs=;
+ b=X71sqwUEX9xGSBw9vUgX1TE1rviSXoyGnsvaC32q5bW3vZmdhrJNa95st8ls2sFoJVEEZsHyv+2sjRN8lQFz9BpFQRKYzM8XiepQkwLP4r6sR+fbIrKlcxT0nJHhsqkbxR4wcDFZ+VMUiR1tJ1drUmH4qL62PWSXZjGDo/f0q1XNROrc14V3FynZ9W1sWGVlBKkUbSysJWUXpjEnTtTyjXNthcLh2Bdw9BePTY4+LSItLP7ALYep+qXyJ84d/GsboIepPdStPHYHvMr4Esl3c2IYaKiOtX+vnzfgWMBkwaFWQvvDEZzE7Lsn+JN0d4uEgK3GcKRcMeHDjDWC6/9XqA==
+Content-Disposition: inline
+In-Reply-To: <Y+3jcw9vo4ml5p0M-2MMpYkNvuYDjFM9bn6wA6Q@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"; format="flowed"
-To: Alistair Popple <apopple-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, jgg-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org, jhubbard-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org, tjmercier-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, surenb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, mkoutny-IBi9RG/b67k@public.gmane.org, daniel-/w4YWyX8dFk@public.gmane.org, "Daniel P . Berrange" <berrange-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Alex Williamson <alex.williamson-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
+Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Alistair Popple <apopple-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, jhubbard-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org, tjmercier-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, surenb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, mkoutny-IBi9RG/b67k@public.gmane.org, daniel-/w4YWyX8dFk@public.gmane.org, "Daniel P . Berrange" <berrange-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Alex Williamson <alex.williamson-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
 
-On 06.02.23 08:47, Alistair Popple wrote:
-> Having large amounts of unmovable or unreclaimable memory in a system
-> can lead to system instability due to increasing the likelihood of
-> encountering out-of-memory conditions. Therefore it is desirable to
-> limit the amount of memory users can lock or pin.
-> 
->  From userspace such limits can be enforced by setting
-> RLIMIT_MEMLOCK. However there is no standard method that drivers and
-> other in-kernel users can use to check and enforce this limit.
-> 
-> This has lead to a large number of inconsistencies in how limits are
-> enforced. For example some drivers will use mm->locked_mm while others
-> will use mm->pinned_mm or user->locked_mm. It is therefore possible to
-> have up to three times RLIMIT_MEMLOCKED pinned.
-> 
-> Having pinned memory limited per-task also makes it easy for users to
-> exceed the limit. For example drivers that pin memory with
-> pin_user_pages() it tends to remain pinned after fork. To deal with
-> this and other issues this series introduces a cgroup for tracking and
-> limiting the number of pages pinned or locked by tasks in the group.
-> 
-> However the existing behaviour with regards to the rlimit needs to be
-> maintained. Therefore the lesser of the two limits is
-> enforced. Furthermore having CAP_IPC_LOCK usually bypasses the rlimit,
-> but this bypass is not allowed for the cgroup.
-> 
-> The first part of this series converts existing drivers which
-> open-code the use of locked_mm/pinned_mm over to a common interface
-> which manages the refcounts of the associated task/mm/user
-> structs. This ensures accounting of pages is consistent and makes it
-> easier to add charging of the cgroup.
-> 
-> The second part of the series adds the cgroup controller and converts
-> core mm code such as mlock over to charging the cgroup before finally
-> introducing some selftests.
-> 
-> Rather than adding onto an exisiting cgroup controller such as memcg
-> we introduce a new controller. This is primarily because we wish to
-> limit the total number of pages tasks within a cgroup may pin/lock.
-> 
-> As I don't have access to systems with all the various devices I
-> haven't been able to test all driver changes. Any help there would be
-> appreciated.
-> 
-> Note that this series is based on v6.2-rc5 and
-> https://lore.kernel.org/linux-rdma/20230201115540.360353-1-bmt-OA+xvbQnYDHMbYB6QlFGEg@public.gmane.org/
-> which makes updating the siw driver easier (thanks Bernard).
-> 
-> Changes from initial RFC:
-> 
->   - Fixes to some driver error handling.
-> 
->   - Pages charged with vm_account will always increment mm->pinned_vm
->     and enforce the limit against user->locked_vm or mm->pinned_vm
->     depending on initialisation flags.
-> 
->   - Moved vm_account prototypes and struct definitions into a separate header.
-> 
->   - Minor updates to commit messages and kernel docs (thanks to Jason,
->     Christoph, Yosry and T.J.).
-> 
-> Outstanding issues:
-> 
->   - David H pointed out that the vm_account naming is potentially
->     confusing and I agree. However I have yet to come up with something
->     better so will rename this in a subsequent version of this series
->     (suggestions welcome).
+On Thu, Feb 16, 2023 at 09:04:03AM +0100, Michal Hocko wrote:
 
+> > In most cases the ownship traces back to a file descriptor. When the
+> > file is closed the pin goes away.
+> 
+> This assumes a specific use of {un}pin_user_page*, right? IIUC the
+> cgroup charging is meant to be used from vm_account but that doesn't
+> really tell anything about the lifetime nor the ownership. Maybe this is
+> just a matter of documentation update...
 
-vm_lockaccount ? vm_pinaccount ?
+Yes documentation.
 
-Less confusing than reusing VM_ACCOUNT which translates to "commit 
-accounting".
+> > > The interface itself doesn't talk about
+> > > anything like that and so it seems perfectly fine to unpin from a
+> > > completely different context then pinning. 
+> > 
+> > Yes, concievably the close of the FD can be in a totally different
+> > process with a different cgroup.
+> 
+> Wouldn't you get an unbalanced charges then? How can admin recover that
+> situation?
 
-Might also make sense to rename VM_ACCOUNT to VM_COMMIT or sth like that.
+No, the approach in this patch series captures the cgroup that was
+charged and stores it in the FD until uncharge.
 
--- 
-Thanks,
+This is the same as we do today for rlimit. The user/process that is
+charged is captured and the uncharge always applies to user/process
+that was charged, not the user/process that happens to be associated
+with the uncharging context.
 
-David / dhildenb
+cgroup just add another option so it is user/process/cgroup that can
+hold the charge.
 
+It is conceptually similar to how each struct page has the memcg that
+its allocation was charged to - we just record this in the FD not the
+page.
+
+> > > Another thing that is not really clear to me is how the limit is
+> > > actually going to be used in practice. As there is no concept of a
+> > > reclaim for pins then I can imagine that it would be quite easy to
+> > > reach the hard limit and essentially DoS any further use of pins. 
+> > 
+> > Yes, that is the purpose. It is to sandbox pin users to put some limit
+> > on the effect they have on the full machine.
+> > 
+> > It replaces the rlimit mess that was doing the same thing.
+> 
+> arguably rlimit has a concept of the owner at least AFAICS. I do realize
+> this is not really great wrt a high level resource control though.
+
+rlimit uses either the user or the process as the "owner". In this
+model we view a cgroup as the "owner". The lifetime logic is all the
+same, you figure out the owner (cgroup/user/process) when the charge
+is made and record it, when the uncharge comes the recorded owner is
+uncharged.
+
+It never allows unbalanced charge/uncharge because that would be a
+security problem even for rlimit cases today.
+
+Jason
