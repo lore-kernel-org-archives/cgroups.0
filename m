@@ -1,73 +1,67 @@
-From: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
-Subject: Re: [PATCH v3 4/4] mm: change to return bool for
- isolate_movable_page()
-Date: Thu, 16 Feb 2023 14:46:58 -0800
-Message-ID: <20230216144658.18add74d133be070f07cf1f5@linux-foundation.org>
-References: <cover.1676424378.git.baolin.wang@linux.alibaba.com>
-        <cb877f73f4fff8d309611082ec740a7065b1ade0.1676424378.git.baolin.wang@linux.alibaba.com>
-        <Y+z91pcxAuygc92J@casper.infradead.org>
+From: Tejun Heo <tj@kernel.org>
+Subject: [GIT PULL] cgroup changes for v6.3-rc1
+Date: Sun, 19 Feb 2023 13:25:50 -1000
+Message-ID: <Y/Kv/v/zdeHfwgcc@slm.duckdns.org>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linux-foundation.org;
-        s=korg; t=1676587619;
-        bh=9oeCHSLszN1ZlteZIP+mKzpT4ngVcpBp4cDal0zXZL0=;
-        h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
-        b=XklABHGuz67Jr6L6q/GiqwCZqRGFa+meW1H0YZ/7JApSIsmEX8CEMBZVPkJ8B+60O
-         FlR0T0McnQ+zkZBfm7a39gFwYc8vtAuogsrnhflLLTuwcTv+vtD/qfquyn7FMcATsT
-         3jqW32IAcaubqFDEOIYbQmm1CSWaRBHcflvOu1P0=
-In-Reply-To: <Y+z91pcxAuygc92J-FZi0V3Vbi30CUdFEqe4BF2D2FQJk+8+b@public.gmane.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=content-disposition:mime-version:message-id:subject:cc:to:from:date
+         :sender:from:to:cc:subject:date:message-id:reply-to;
+        bh=TVsbXUpnD9I9/F1PvXMGIEd9MiHz9LD4rwNzvGPEVYo=;
+        b=RfltPZ9lK1PJDPSiB2nr1+OyTnFqPHeFURn46UrC4hgv+pd4AFDf1epKZEXn3Yk97y
+         L8XFxJkekyn6fwf+aBihZHmAHNQ4gSit4MxvGU4tyE5KVOsvdF/9rRu8n5Y9ZVyzlMZ7
+         jgvlHr/bLgAfbRRQqFoPYgzLvZCe8hlItXbpg7qVrLA69l0Jth0NeyinmWgil6aMuSQG
+         q0k6yYfk+Ul7SqUOoX1vJj9B2lX8p9VPOS/mMzSoxKCBgZQAjVW1QD/FbQ5Fv5PsrKm4
+         3dS8PNplovpOiBnj/HyPEWtBG5nQDC1puEjxKz2AXQpcM5r/53Gsj4BStYXOf3OWztjk
+         3sGA==
+Sender: Tejun Heo <htejun@gmail.com>
+Content-Disposition: inline
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Matthew Wilcox <willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
-Cc: Baolin Wang <baolin.wang-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>, torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, sj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org, shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, muchun.song-fxUVXftIFDnyG1zEObXtfA@public.gmane.org, naoya.horiguchi-YMj9X0ASwKA@public.gmane.org, linmiaohe-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, david-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, osalvador-l3A5Bk7waGM@public.gmane.org, mike.kravetz-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org, damon-cunTk1MwBs/YUNznpcFYbw@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Transfer-Encoding: 7bit
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: linux-kernel@vger.kernel.org, cgroups@vger.kernel.org
 
-On Wed, 15 Feb 2023 15:44:22 +0000 Matthew Wilcox <willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org> wrote:
+The following changes since commit 512dee0c00ad9e9c7ae9f11fc6743702ea40caff:
 
-> >  extern struct page *alloc_migration_target(struct page *page, unsigned long private);
-> > -extern int isolate_movable_page(struct page *page, isolate_mode_t mode);
-> > +extern bool isolate_movable_page(struct page *page, isolate_mode_t mode);
-> 
-> You can drop the 'extern' here.
+  Merge tag 'x86-urgent-2023-01-04' of git://git.kernel.org/pub/scm/linux/kernel/git/tip/tip (2023-01-04 12:11:29 -0800)
 
-There are a bunch of them, so a separate patch would be better.
+are available in the Git repository at:
 
+  git://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git/ tags/cgroup-for-6.3
 
---- a/include/linux/migrate.h~a
-+++ a/include/linux/migrate.h
-@@ -62,16 +62,16 @@ extern const char *migrate_reason_names[
- 
- #ifdef CONFIG_MIGRATION
- 
--extern void putback_movable_pages(struct list_head *l);
-+void putback_movable_pages(struct list_head *l);
- int migrate_folio_extra(struct address_space *mapping, struct folio *dst,
- 		struct folio *src, enum migrate_mode mode, int extra_count);
- int migrate_folio(struct address_space *mapping, struct folio *dst,
- 		struct folio *src, enum migrate_mode mode);
--extern int migrate_pages(struct list_head *l, new_page_t new, free_page_t free,
--		unsigned long private, enum migrate_mode mode, int reason,
--		unsigned int *ret_succeeded);
--extern struct page *alloc_migration_target(struct page *page, unsigned long private);
--extern bool isolate_movable_page(struct page *page, isolate_mode_t mode);
-+int migrate_pages(struct list_head *l, new_page_t new, free_page_t free,
-+		  unsigned long private, enum migrate_mode mode, int reason,
-+		  unsigned int *ret_succeeded);
-+struct page *alloc_migration_target(struct page *page, unsigned long private);
-+bool isolate_movable_page(struct page *page, isolate_mode_t mode);
- 
- int migrate_huge_page_move_mapping(struct address_space *mapping,
- 		struct folio *dst, struct folio *src);
-@@ -142,8 +142,8 @@ const struct movable_operations *page_mo
- }
- 
- #ifdef CONFIG_NUMA_BALANCING
--extern int migrate_misplaced_page(struct page *page,
--				  struct vm_area_struct *vma, int node);
-+int migrate_misplaced_page(struct page *page, struct vm_area_struct *vma,
-+			   int node);
- #else
- static inline int migrate_misplaced_page(struct page *page,
- 					 struct vm_area_struct *vma, int node)
-_
+for you to fetch changes up to 32a47817d07557ffca9992964c514fd79bda6fba:
 
+  cgroup/cpuset: fix a few kernel-doc warnings & coding style (2023-01-10 12:28:17 -1000)
+
+----------------------------------------------------------------
+cgroup changes for v6.3-rc1
+
+All the commits are trivial. Doc updates and a trivial code cleanup.
+
+----------------------------------------------------------------
+Bagas Sanjaya (9):
+      docs: cgroup-v1: replace custom note constructs with appropriate admonition blocks
+      docs: cgroup-v1: wrap remaining admonitions in admonition blocks
+      docs: cgroup-v1: use code block for locking order schema
+      docs: cgroup-v1: fix footnotes
+      docs: cgroup-v1: move hierarchy of accounting caption
+      docs: cgroup-v1: use bullet lists for list of stat file tables
+      docs: cgroup-v1: make swap extension subsections subsections
+      docs: cgroup-v1: add internal cross-references
+      docs: cgroup-v1: use numbered lists for user interface setup
+
+Daniel Vacek (1):
+      cgroup/cpuset: no need to explicitly init a global static variable
+
+Randy Dunlap (1):
+      cgroup/cpuset: fix a few kernel-doc warnings & coding style
+
+ Documentation/admin-guide/cgroup-v1/cgroups.rst |   2 +
+ Documentation/admin-guide/cgroup-v1/memory.rst  | 284 +++++++++++++-----------
+ kernel/cgroup/cpuset.c                          |  15 +-
+ 3 files changed, 162 insertions(+), 139 deletions(-)
+
+-- 
+tejun
