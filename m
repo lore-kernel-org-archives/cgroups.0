@@ -1,93 +1,76 @@
-From: Peter Zijlstra <peterz@infradead.org>
-Subject: Re: [PATCH v10 5/9] sched/fair: Take into account latency priority
- at wakeup
-Date: Tue, 21 Feb 2023 15:51:51 +0100
-Message-ID: <Y/Tah7zRSqAH6IRP@hirez.programming.kicks-ass.net>
+From: Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
+Subject: Re: [PATCH v10 6/9] sched/fair: Add sched group latency support
+Date: Tue, 21 Feb 2023 16:01:22 +0100
+Message-ID: <Y/TcwkmiVXJmQ9nw@hirez.programming.kicks-ass.net>
 References: <20230113141234.260128-1-vincent.guittot@linaro.org>
- <20230113141234.260128-6-vincent.guittot@linaro.org>
- <Y/TBdB23akBbUjqd@hirez.programming.kicks-ass.net>
- <CAKfTPtAk2A8zPgOfpbN0s4LZv+d7ABB9=5tAEMCbVrf263XtjA@mail.gmail.com>
+ <20230113141234.260128-7-vincent.guittot@linaro.org>
 Mime-Version: 1.0
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=desiato.20200630; h=In-Reply-To:Content-Type:MIME-Version:
+        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
         References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
         Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=4gjS0VL1c7Mf2LU1z+Upr3IT88WAxIkZvxMIbrGmLPY=; b=oyOZjduCHNsxUeSdEagS2UwE71
-        ext/glsIX86ijI7qxlwzONE6+w1cbGtZyzR1pucDbVilbs+3Lwj/cmdXmQ22UVbOWZdlQb65Abd+4
-        VUGfW7gO6uvbDfqMLSqyv7b+yYPKWIsOZkHJuHqGmucs2RLbnsmo9WSwJUX5d5N2BTb4j+gr5iSZz
-        Q3PL75Ufn4wb00eQE8paWHDRNO4n3Yw8RuQhKjZwOrzyXsZ5SWOEcRLBldWP4ZaeZ+v6Zq5c7jaaB
-        PWun1btc4VXh+WP0ZOySQem8d/EE7t/WFJMG+f6wySepeAV6qhZCEE2fwRVRGLk05eKOm1DjqjCCI
-        TRRgSwrw==;
+        bh=bCEktfZQBYOidtJzxUm4n6P8jzrl5z+36FM412yPsqs=; b=JDpD0PpWH3pnX8EYDtfDPUDLIy
+        S10rBhUk23wKDrJcvT4gwTBjEdQTEO8uKioDDQMoHCwBLn3wlR476k9xVsrPQKWksABn/2jpJ7R4w
+        aPbh/wOeH17i+dXF6Adx64cKbCrkz18407TYKbZn7U8vkTXkOtqi374xKlqiF0ra5RjDIbuSPOM70
+        6DelKoWS68hL6HpdwmIstsS/hXfpR8N301EpkJ++hWFXgZztyyV9tvQ4ILrVoPRAjwLvYIeKBwW9R
+        kVnvhJmGZU1oAwH9+P+00TX9twcvYMbmkfzBR6yZ+6ulIy60wp/Q7BKKcereIOrFkKYtQnv0mPFD+
+        zyRULY4A==;
 Content-Disposition: inline
-In-Reply-To: <CAKfTPtAk2A8zPgOfpbN0s4LZv+d7ABB9=5tAEMCbVrf263XtjA@mail.gmail.com>
+In-Reply-To: <20230113141234.260128-7-vincent.guittot-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Vincent Guittot <vincent.guittot@linaro.org>
-Cc: mingo@redhat.com, juri.lelli@redhat.com, dietmar.eggemann@arm.com, rostedt@goodmis.org, bsegall@google.com, mgorman@suse.de, bristot@redhat.com, vschneid@redhat.com, linux-kernel@vger.kernel.org, parth@linux.ibm.com, cgroups@vger.kernel.org, qyousef@layalina.io, chris.hyser@oracle.com, patrick.bellasi@matbug.net, David.Laight@aculab.com, pjt@google.com, pavel@ucw.cz, tj@kernel.org, qperret@google.com, tim.c.chen@linux.intel.com, joshdon@google.com, timj@gnu.org, kprateek.nayak@amd.com, yu.c.chen@intel.com, youssefesmat@chromium.org, joel@joelfernandes.org
+To: Vincent Guittot <vincent.guittot-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>
+Cc: mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, juri.lelli-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, dietmar.eggemann-5wv7dgnIgG8@public.gmane.org, rostedt-nx8X9YLhiw1AfugRpC6u6w@public.gmane.org, bsegall-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, mgorman-l3A5Bk7waGM@public.gmane.org, bristot-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, vschneid-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, parth-tEXmvtCZX7AybS5Ee8rs3A@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, qyousef-wp2msK0BRk8tq7phqP6ubQ@public.gmane.org, chris.hyser-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org, patrick.bellasi-X6neQFFVdzGsTnJN9+BGXg@public.gmane.org, David.Laight-JxhZ9S5GRejQT0dZR+AlfA@public.gmane.org, pjt-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, pavel-+ZI9xUNit7I@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, qperret-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, tim.c.chen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org, joshdon-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, timj-mXXj517/zsQ@public.gmane.org, kprateek.nayak-5C7GfCeVMHo@public.gmane.org, yu.c.chen-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org, youssefesmat-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org, joel-QYYGw3jwrUn5owFQY34kdNi2O/JbrIOy@public.gmane.org
 
-On Tue, Feb 21, 2023 at 03:21:54PM +0100, Vincent Guittot wrote:
-> On Tue, 21 Feb 2023 at 14:05, Peter Zijlstra <peterz@infradead.org> wrote:
-> >
-> > On Fri, Jan 13, 2023 at 03:12:30PM +0100, Vincent Guittot wrote:
-> > > @@ -6155,6 +6159,35 @@ static int sched_idle_cpu(int cpu)
-> > >  }
-> > >  #endif
-> > >
-> > > +static void set_next_buddy(struct sched_entity *se);
-> > > +
-> > > +static void check_preempt_from_others(struct cfs_rq *cfs, struct sched_entity *se)
-> > > +{
-> > > +     struct sched_entity *next;
-> > > +
-> > > +     if (se->latency_offset >= 0)
-> > > +             return;
-> > > +
-> > > +     if (cfs->nr_running <= 1)
-> > > +             return;
-> > > +     /*
-> > > +      * When waking from another class, we don't need to check to preempt at
-> > > +      * wakeup and don't set next buddy as a candidate for being picked in
-> > > +      * priority.
-> > > +      * In case of simultaneous wakeup when current is another class, the
-> > > +      * latency sensitive tasks lost opportunity to preempt non sensitive
-> > > +      * tasks which woke up simultaneously.
-> > > +      */
-> > > +
-> > > +     if (cfs->next)
-> > > +             next = cfs->next;
-> > > +     else
-> > > +             next = __pick_first_entity(cfs);
-> > > +
-> > > +     if (next && wakeup_preempt_entity(next, se) == 1)
-> > > +             set_next_buddy(se);
-> > > +}
-> > > +
-> > >  /*
-> > >   * The enqueue_task method is called before nr_running is
-> > >   * increased. Here we update the fair scheduling stats and
-> > > @@ -6241,14 +6274,15 @@ enqueue_task_fair(struct rq *rq, struct task_struct *p, int flags)
-> > >       if (!task_new)
-> > >               update_overutilized_status(rq);
-> > >
-> > > +     if (rq->curr->sched_class != &fair_sched_class)
-> > > +             check_preempt_from_others(cfs_rq_of(&p->se), &p->se);
-> > > +
-> > >  enqueue_throttle:
-> > >       assert_list_leaf_cfs_rq(rq);
-> > >
-> > >       hrtick_update(rq);
-> > >  }
-> >
-> > Hmm.. This sets a next selection when the task gets enqueued while not
-> > running a fair task -- and looses a wakeup preemption opportunity.
-> >
-> > Should we perhaps also do this for latency_nice == 0?, in any case I
-> > think this can be moved to its own patch to avoid doing too much in the
-> > one patch. It seems fairly self contained.
-> 
-> This function is then removed by patch 9 as the additional rb tree
-> fixes all cases
+On Fri, Jan 13, 2023 at 03:12:31PM +0100, Vincent Guittot wrote:
 
-Ah, I'm currently 'stuck' at 8.. I'll get there :-)
+> +static s64 cpu_latency_nice_read_s64(struct cgroup_subsys_state *css,
+> +				    struct cftype *cft)
+> +{
+> +	int prio, delta, last_delta = INT_MAX;
+> +	s64 weight;
+> +
+> +	weight = css_tg(css)->latency_offset * NICE_LATENCY_WEIGHT_MAX;
+> +	weight = div_s64(weight, get_sleep_latency(false));
+> +
+> +	/* Find the closest nice value to the current weight */
+
+This comment isn't entirely accurate, since we only have the nice_write
+interface below, this will be an exact match. The thing with weight is
+that we first had the raw weight value interface and then the nice
+interface had to map random values back to a 'nice' value.
+
+Arguably we can simply store the raw nice value in write and print it
+out again here.
+
+> +	for (prio = 0; prio < ARRAY_SIZE(sched_latency_to_weight); prio++) {
+> +		delta = abs(sched_latency_to_weight[prio] - weight);
+> +		if (delta >= last_delta)
+> +			break;
+> +		last_delta = delta;
+> +	}
+> +
+> +	return LATENCY_TO_NICE(prio-1);
+> +}
+> +
+> +static int cpu_latency_nice_write_s64(struct cgroup_subsys_state *css,
+> +				     struct cftype *cft, s64 nice)
+> +{
+> +	s64 latency_offset;
+> +	long weight;
+> +	int idx;
+> +
+> +	if (nice < MIN_LATENCY_NICE || nice > MAX_LATENCY_NICE)
+> +		return -ERANGE;
+> +
+> +	idx = NICE_TO_LATENCY(nice);
+> +	idx = array_index_nospec(idx, LATENCY_NICE_WIDTH);
+> +	weight = sched_latency_to_weight[idx];
+> +
+> +	latency_offset = weight * get_sleep_latency(false);
+> +	latency_offset = div_s64(latency_offset, NICE_LATENCY_WEIGHT_MAX);
+> +
+> +	return sched_group_set_latency(css_tg(css), latency_offset);
+> +}
