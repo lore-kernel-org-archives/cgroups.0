@@ -1,77 +1,44 @@
-From: Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>
-Subject: Re: [PATCH] mm: change memcg->oom_group access with atomic operations
-Date: Tue, 21 Feb 2023 10:02:51 -0800
-Message-ID: <Y/UHS0QYWoBmVrR9@P9FQF9L96D.corp.robot.car>
-References: <20230220230624.lkobqeagycx7bi7p@google.com>
- <6563189C-7765-4FFA-A8F2-A5CC4860A1EF@linux.dev>
- <CADfL_jBDNZiEWbnn+w9+FhSRPzVwP872XBbhYTZwny8Jzr4bDw@mail.gmail.com>
+From: Chaitanya Kulkarni <chaitanyak@nvidia.com>
+Subject: Re: [PATCH v2] blk-ioprio: Introduce promote-to-rt policy
+Date: Tue, 21 Feb 2023 18:04:03 +0000
+Message-ID: <65a521aa-dbb9-0638-174c-3762df89fe83@nvidia.com>
+References: <20230220135428.2632906-1-houtao@huaweicloud.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
-        t=1677002589;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=sMsd45Umu3YuXLOVUwNN2b4uIloC4nQS/PME1ZUx4QY=;
-        b=SHxsvZwyD5BmnUlPUsuusjZp3+TIl7ZqP0jdYYQwCKbWrkJ5vCHsFzPZQfPOB9oXXIDMOY
-        YDC9T3cOn/usAilO1GAUxTsMoEZsSW9jal21ISKN04+sEI1olhWLV+lwwVv3QF5kklCJF+
-        Q210mi7PR6nlOH1EM4T9+fTSiLRE8gA=
-Content-Disposition: inline
-In-Reply-To: <CADfL_jBDNZiEWbnn+w9+FhSRPzVwP872XBbhYTZwny8Jzr4bDw-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+Content-Transfer-Encoding: base64
+Return-path: <linux-doc-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
+ s=selector2;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=eiZ1T9W8rI0nSik7AWw5HX9R/24n2bpB8kZOYRiZ2Sk=;
+ b=bbt4ZlpbfxrfNdm7pM49dG14wSAcKEL/sqBtK7/u7n4AZ9FmlZjIElz7jKJ4v78U/1A1MqjYj2X3wWNScntCfc7TY5VyxjavMsN1SY1SzodnpZteaPUphp0ibbfgxpoibWXdeOJY2FnBdEnh6yCriLuN6wGCTMX0JnuTL6EX9NJUa/dIhuTzEqVB1P70yEmb0cxqFEmWpzsLq7grQDMgSq/oAsD2Yb4tU57/HWOulTFPFG/zaD7hQxuUvThF+eGcor5BiFbUxMcUeZZ7bc5jzWCZffqTt3dcmXvmnYfRg1HQ7f7Yk4AzeNIWjMQ4z9u+KTIiv0VmEtyPVn6L9IKXGQ==
+In-Reply-To: <20230220135428.2632906-1-houtao@huaweicloud.com>
+Content-Language: en-US
+Content-ID: <16CCC625A940804EA4F52256A538E45C@namprd12.prod.outlook.com>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="utf-8"
-To: Martin Zhao <findns94-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Cc: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, muchun.song-fxUVXftIFDnyG1zEObXtfA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, tangyeechou-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org
+Content-Type: text/plain; charset="us-ascii"
+To: Hou Tao <houtao@huaweicloud.com>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>
+Cc: Bart Van Assche <bvanassche@acm.org>, Jan Kara <jack@suse.cz>, Bagas Sanjaya <bagasdotme@gmail.com>, Jens Axboe <axboe@kernel.dk>, "cgroups@vger.kernel.org" <cgroups@vger.kernel.org>, Tejun Heo <tj@kernel.org>, Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, Jonathan Corbet <corbet@lwn.net>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>, "houtao1@huawei.com" <houtao1@huawei.com>
 
-On Wed, Feb 22, 2023 at 01:00:00AM +0800, Martin Zhao wrote:
-> On Tue, Feb 21, 2023 at 1:17 PM Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org> wrote:
-> >
-> > > On Feb 20, 2023, at 3:06 PM, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org> wrote:
-> > >
-> > > ﻿On Mon, Feb 20, 2023 at 01:09:44PM -0800, Roman Gushchin wrote:
-> > >>> On Mon, Feb 20, 2023 at 11:16:38PM +0800, Yue Zhao wrote:
-> > >>> The knob for cgroup v2 memory controller: memory.oom.group
-> > >>> will be read and written simultaneously by user space
-> > >>> programs, thus we'd better change memcg->oom_group access
-> > >>> with atomic operations to avoid concurrency problems.
-> > >>>
-> > >>> Signed-off-by: Yue Zhao <findns94-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-> > >>
-> > >> Hi Yue!
-> > >>
-> > >> I'm curious, have any seen any real issues which your patch is solving?
-> > >> Can you, please, provide a bit more details.
-> > >>
-> > >
-> > > IMHO such details are not needed. oom_group is being accessed
-> > > concurrently and one of them can be a write access. At least
-> > > READ_ONCE/WRITE_ONCE is needed here.
-> >
-> > Needed for what?
-> >
-> > I mean it’s obviously not a big deal to put READ_ONCE()/WRITE_ONCE() here, but I struggle to imagine a scenario when it will make any difference. IMHO it’s easier to justify a proper atomic operation here, even if it’s most likely an overkill.
-> >
-> > My question is very simple: the commit log mentions “… to avoid concurrency problems”, so I wonder what problems are these.
-> 
-> Thanks for your watching!
-> This topic is found in code review by coincidence, so no real issues
-> recorded for now. I checked other read/write callbacks about other knobs,
-> most of them use READ_ONCE/WRITE_ONCE on the user setting variable.
-
-Sorry, which knobs are you talking about? I actually don't see any user knobs
-in mm/memcontrol.c which are using WRITE_ONCE(). I see some of them using
-xchg(), but it's a different thing.
-
-> Actually I am curious as well why this interface doesn't use
-> READ_ONCE/WRITE_ONCE, is there any other synchronization mechanism I
-> didn't notice yet?
-
-Because nobody saw any issues with the current code?
-
-And again if it's something that makes any automated verifiers/tooling unhappy,
-I'm totally fine for fixing it, just let make it clear (and also fix the commit
-title, which is not true).
-
-Thanks!
+T24gMi8yMC8yMDIzIDU6NTQgQU0sIEhvdSBUYW8gd3JvdGU6DQo+IEZyb206IEhvdSBUYW8gPGhv
+dXRhbzFAaHVhd2VpLmNvbT4NCj4gDQo+IFNpbmNlIGNvbW1pdCBhNzg0MThlNmEwNGMgKCJibG9j
+azogQWx3YXlzIGluaXRpYWxpemUgYmlvIElPIHByaW9yaXR5IG9uDQo+IHN1Ym1pdCIpLCBiaW8t
+PmJpX2lvcHJpbyB3aWxsIG5ldmVyIGJlIElPUFJJT19DTEFTU19OT05FIHdoZW4gY2FsbGluZw0K
+PiBibGtjZ19zZXRfaW9wcmlvKCksIHNvIHRoZXJlIHdpbGwgYmUgbm8gd2F5IHRvIHByb21vdGUg
+dGhlIGlvLXByaW9yaXR5DQo+IG9mIG9uZSBjZ3JvdXAgdG8gSU9QUklPX0NMQVNTX1JULCBiZWNh
+dXNlIGJpX2lvcHJpbyB3aWxsIGFsd2F5cyBiZQ0KPiBncmVhdGVyIHRoYW4gb3IgZXF1YWxzIHRv
+IElPUFJJT19DTEFTU19SVC4NCj4gDQo+IEl0IHNlZW1zIHBvc3NpYmxlIHRvIGNhbGwgYmxrY2df
+c2V0X2lvcHJpbygpIGZpcnN0IHRoZW4gdHJ5IHRvDQo+IGluaXRpYWxpemUgYmlfaW9wcmlvIGxh
+dGVyIGluIGJpb19zZXRfaW9wcmlvKCksIGJ1dCB0aGlzIGRvZXNuJ3Qgd29yaw0KPiBmb3IgYmlv
+IGluIHdoaWNoIGJpX2lvcHJpbyBpcyBhbHJlYWR5IGluaXRpYWxpemVkIChlLmcuLCBkaXJlY3Qt
+aW8pLCBzbw0KPiBpbnRyb2R1Y2UgYSBuZXcgaW9wcmlvIHBvbGljeSB0byBwcm9tb3RlIHRoZSBp
+b3ByaW9yaXR5IG9mIGJpbyB0bw0KPiBJT1BSSU9fQ0xBU1NfUlQgaWYgdGhlIGlvcHJpbyBpcyBu
+b3QgYWxyZWFkeSBSVC4NCj4gDQo+IFNvIGludHJvZHVjZSBhIG5ldyBwcm9tb3RlLXRvLXJ0IHBv
+bGljeSB0byBhY2hpZXZlIHRoaXMuIEZvciBub25lLXRvLXJ0DQo+IHBvbGljeSwgYWx0aG91Z2gg
+aXQgZG9lc24ndCB3b3JrIG5vdywgYnV0IGNvbnNpZGVyaW5nIHRoYXQgaXRzIHB1cnBvc2UNCj4g
+d2FzIGFsc28gdG8gb3ZlcnJpZGUgdGhlIGlvLXByaW9yaXR5IHRvIFJUIGFuZCBhbGxvdyBmb3Ig
+YSBzbW9vdGhlcg0KPiB0cmFuc2l0aW9uLCBqdXN0IGtlZXAgaXQgYW5kIHRyZWF0IGl0IGFzIGFu
+IGFsaWFzIG9mIHRoZSBwcm9tb3RlLXRvLXJ0DQo+IHBvbGljeS4NCj4gDQo+IFNpZ25lZC1vZmYt
+Ynk6IEhvdSBUYW8gPGhvdXRhbzFAaHVhd2VpLmNvbT4NCg0KDQpUaGFua3MgZm9yIHVwZGF0aW5n
+IGRvY3VtZW50YXRpb24gYW5kIGFkZGluZyBtZWFuaW5nZnVsIGNvbW1lbnQuDQoNCkxvb2tzIGdv
+b2QuDQoNClJldmlld2VkLWJ5OiBDaGFpdGFueWEgS3Vsa2FybmkgPGtjaEBudmlkaWEuY29tPg0K
+DQotY2sNCg0KDQo=
