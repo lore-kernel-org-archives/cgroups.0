@@ -1,75 +1,37 @@
-From: Martin Zhao <findns94-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: Re: [PATCH] mm: change memcg->oom_group access with atomic operations
-Date: Wed, 22 Feb 2023 01:00:00 +0800
-Message-ID: <CADfL_jBDNZiEWbnn+w9+FhSRPzVwP872XBbhYTZwny8Jzr4bDw@mail.gmail.com>
-References: <20230220230624.lkobqeagycx7bi7p@google.com> <6563189C-7765-4FFA-A8F2-A5CC4860A1EF@linux.dev>
+From: Jason Gunthorpe <jgg@nvidia.com>
+Subject: Re: [PATCH 14/19] mm: Introduce a cgroup for pinned memory
+Date: Tue, 21 Feb 2023 13:25:59 -0400
+Message-ID: <Y/T+pw25oGmKqz1k@nvidia.com>
+References: <Y+GA6Y7SVhAW5Xm9@slm.duckdns.org>
+ <CAJD7tka6SC1ho-dffV0bK_acoZd-5DQzBOy0xg3TkOFG1zAPMg@mail.gmail.com>
+ <Y+GMbWWP/YhtJQqe@slm.duckdns.org>
+ <Y+GQB9I6MFN6BOFw@nvidia.com>
+ <Y+GcJQRhvjqFaaSp@mtj.duckdns.org>
+ <Y+0rxoM4w9nilUMZ@dhcp22.suse.cz>
+ <Y+0tWZxMUx/NZ3Ne@nvidia.com>
+ <Y+3jcw9vo4ml5p0M@dhcp22.suse.cz>
+ <Y+4lcq4Fge27TQIn@nvidia.com>
+ <Y/T2pNQ70eMAl1sX@slm.duckdns.org>
 Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=sC+l61qoknT1eRg99Cptt6lYzgJ7/E5pHZ5cZZg+HEA=;
-        b=E3v/fWrkgoLvZ5IU6Z/wsyMkwmei+5ld4ItC04k3iIZ/mrR1aWYZlDsmoHnjBrrxBj
-         dBYd+W2meo9XHLZHLYVjzfYEUj5KdyEJf6JrkN4kN63PSxA+AnLFe7DmjpSg1XKxDTTB
-         jEwWgDK73jGLbxzC1UmyWwop6BZZaO6vd+9lPJ51CBQ4sykllhsRambNSkSek8QvjM2A
-         Y2aavvHy04zSorbnx18YIDRUYQTTfWjsEwjxN0yO/l5RGOtoA4ubiRO/63oottneqqxR
-         IZHNhaQSILIxj/MdRF3MSaXJF5L0v+FFpiqXgVF8O7KStGWfantC/txGgB21EhbI7xMY
-         bq7g==
-In-Reply-To: <6563189C-7765-4FFA-A8F2-A5CC4860A1EF-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
+ s=selector2;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=u21dPGAbr4FZY8ULU33FW37RRHqX2D336jNdYJyMEGU=;
+ b=CHoM6+4y8fE5A6zIiGgWag/qgOHuGQEneMEUkh0/59Neh1lJm559dg/06YtIPti5LW+hliggr0Lu1Vnq0VX9yajkTGRVjmbN/fDNyk100TYLDMhgG5obYf03llM4d+Y0e5IkNWt4sKlx5+jRnTotjceO6AF0v1BSHRj3zmvL65j6pvnuXi/IXRG4XDg5rl4TIUGqfRZWzTaed26DNLhXcZZ1aBrYdSm4bHKYuWfLBGy1xDNxGyeMS7usDaX24bQQkHlHybIHg5Qy4vbLpjgn3JxoFemjoQbcMcJbcX6P3jsxlI2zjLFFpir+FhNqaTAv9sLfUH7xcxCn0gkUlc7h0A==
+Content-Disposition: inline
+In-Reply-To: <Y/T2pNQ70eMAl1sX@slm.duckdns.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="utf-8"
-To: Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>
-Cc: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, muchun.song-fxUVXftIFDnyG1zEObXtfA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, tangyeechou-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Tejun Heo <tj@kernel.org>
+Cc: Michal Hocko <mhocko@suse.com>, Yosry Ahmed <yosryahmed@google.com>, Alistair Popple <apopple@nvidia.com>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, jhubbard@nvidia.com, tjmercier@google.com, hannes@cmpxchg.org, surenb@google.com, mkoutny@suse.com, daniel@ffwll.ch, "Daniel P . Berrange" <berrange@redhat.com>, Alex Williamson <alex.williamson@redhat.com>, Zefan Li <lizefan.x@bytedance.com>, Andrew Morton <akpm@linux-foundation.org>
 
-On Tue, Feb 21, 2023 at 1:17 PM Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org> w=
-rote:
->
-> > On Feb 20, 2023, at 3:06 PM, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org> wrote:
-> >
-> > =EF=BB=BFOn Mon, Feb 20, 2023 at 01:09:44PM -0800, Roman Gushchin wrote=
-:
-> >>> On Mon, Feb 20, 2023 at 11:16:38PM +0800, Yue Zhao wrote:
-> >>> The knob for cgroup v2 memory controller: memory.oom.group
-> >>> will be read and written simultaneously by user space
-> >>> programs, thus we'd better change memcg->oom_group access
-> >>> with atomic operations to avoid concurrency problems.
-> >>>
-> >>> Signed-off-by: Yue Zhao <findns94-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-> >>
-> >> Hi Yue!
-> >>
-> >> I'm curious, have any seen any real issues which your patch is solving=
-?
-> >> Can you, please, provide a bit more details.
-> >>
-> >
-> > IMHO such details are not needed. oom_group is being accessed
-> > concurrently and one of them can be a write access. At least
-> > READ_ONCE/WRITE_ONCE is needed here.
->
-> Needed for what?
->
-> I mean it=E2=80=99s obviously not a big deal to put READ_ONCE()/WRITE_ONC=
-E() here, but I struggle to imagine a scenario when it will make any differ=
-ence. IMHO it=E2=80=99s easier to justify a proper atomic operation here, e=
-ven if it=E2=80=99s most likely an overkill.
->
-> My question is very simple: the commit log mentions =E2=80=9C=E2=80=A6 to=
- avoid concurrency problems=E2=80=9D, so I wonder what problems are these.
+On Tue, Feb 21, 2023 at 06:51:48AM -1000, Tejun Heo wrote:
+> cgroup, right? It makes little sense to me to separate the owner of the
+> memory page and the pinner of it. They should be one and the same.
 
-Thanks for your watching!
-This topic is found in code review by coincidence, so no real issues
-recorded for now. I checked other read/write callbacks about other knobs,
-most of them use READ_ONCE/WRITE_ONCE on the user setting variable.
-Actually I am curious as well why this interface doesn't use
-READ_ONCE/WRITE_ONCE, is there any other synchronization mechanism I
-didn't notice yet?
+The owner and pinner are not always the same entity or we could just
+use the page's cgroup.
 
->
-> Also there are other similar cgroup interfaces without READ_ONCE()/WRITE_=
-ONCE().
->
-> Thanks!
+Jason
