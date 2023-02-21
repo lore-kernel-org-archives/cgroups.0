@@ -1,44 +1,112 @@
-From: Chaitanya Kulkarni <chaitanyak@nvidia.com>
-Subject: Re: [PATCH v2] blk-ioprio: Introduce promote-to-rt policy
-Date: Tue, 21 Feb 2023 18:04:03 +0000
-Message-ID: <65a521aa-dbb9-0638-174c-3762df89fe83@nvidia.com>
-References: <20230220135428.2632906-1-houtao@huaweicloud.com>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCH 14/19] mm: Introduce a cgroup for pinned memory
+Date: Tue, 21 Feb 2023 08:07:13 -1000
+Message-ID: <Y/UIURDjR9pv+gzx@slm.duckdns.org>
+References: <Y+GQB9I6MFN6BOFw@nvidia.com>
+ <Y+GcJQRhvjqFaaSp@mtj.duckdns.org>
+ <Y+0rxoM4w9nilUMZ@dhcp22.suse.cz>
+ <Y+0tWZxMUx/NZ3Ne@nvidia.com>
+ <Y+3jcw9vo4ml5p0M@dhcp22.suse.cz>
+ <Y+4lcq4Fge27TQIn@nvidia.com>
+ <Y/T2pNQ70eMAl1sX@slm.duckdns.org>
+ <Y/T+pw25oGmKqz1k@nvidia.com>
+ <Y/T/bkcYc9Krw4rE@slm.duckdns.org>
+ <Y/UEkNn0O65Pfi4e@nvidia.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: base64
-Return-path: <linux-doc-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
- s=selector2;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=eiZ1T9W8rI0nSik7AWw5HX9R/24n2bpB8kZOYRiZ2Sk=;
- b=bbt4ZlpbfxrfNdm7pM49dG14wSAcKEL/sqBtK7/u7n4AZ9FmlZjIElz7jKJ4v78U/1A1MqjYj2X3wWNScntCfc7TY5VyxjavMsN1SY1SzodnpZteaPUphp0ibbfgxpoibWXdeOJY2FnBdEnh6yCriLuN6wGCTMX0JnuTL6EX9NJUa/dIhuTzEqVB1P70yEmb0cxqFEmWpzsLq7grQDMgSq/oAsD2Yb4tU57/HWOulTFPFG/zaD7hQxuUvThF+eGcor5BiFbUxMcUeZZ7bc5jzWCZffqTt3dcmXvmnYfRg1HQ7f7Yk4AzeNIWjMQ4z9u+KTIiv0VmEtyPVn6L9IKXGQ==
-In-Reply-To: <20230220135428.2632906-1-houtao@huaweicloud.com>
-Content-Language: en-US
-Content-ID: <16CCC625A940804EA4F52256A538E45C@namprd12.prod.outlook.com>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:sender:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=iC2+JAOPJ7xBzI8XxPV50aOEhLdtaBVXx3tgIqcIDA8=;
+        b=JxVgPwFf7PjLbqHyg/KF/bgcZTQyoMGHvbtVxDqt6yOY9aGl+AvfLI1AXDxz/r1wvV
+         S+BrCUA9rK42zdI/Nzsaw//jN1f4IG1/si+33bGh8BWt8Ya1CJR38YIebWuF1Mo07cb9
+         ir4sJZrHHOcDWDDxAfugg9OaOSg8y43jssvNXjnAXq2byO9AFBVugRCbXUVssSAMabAd
+         ekkiFJCsuLfKBpDbCzzRVEUuCoCPKn5Hleyy6/LRtTHq0QLWEKOURXVW89vZ9P0Hnt+Y
+         ISdL8k+PVv40iT4STlT7TM32PbUzIoMuXdCOzE+L4zMeW65sJG/C04HXNTUu9KSvEhAu
+         UuPg==
+Sender: Tejun Heo <htejun-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <Y/UEkNn0O65Pfi4e-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Hou Tao <houtao@huaweicloud.com>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>
-Cc: Bart Van Assche <bvanassche@acm.org>, Jan Kara <jack@suse.cz>, Bagas Sanjaya <bagasdotme@gmail.com>, Jens Axboe <axboe@kernel.dk>, "cgroups@vger.kernel.org" <cgroups@vger.kernel.org>, Tejun Heo <tj@kernel.org>, Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, Jonathan Corbet <corbet@lwn.net>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>, "houtao1@huawei.com" <houtao1@huawei.com>
+Content-Transfer-Encoding: 7bit
+To: Jason Gunthorpe <jgg-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>
+Cc: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>, Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Alistair Popple <apopple-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, jhubbard-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org, tjmercier-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, surenb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, mkoutny-IBi9RG/b67k@public.gmane.org, daniel-/w4YWyX8dFk@public.gmane.org, "Daniel P . Berrange" <berrange-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Alex Williamson <alex.williamson-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
 
-T24gMi8yMC8yMDIzIDU6NTQgQU0sIEhvdSBUYW8gd3JvdGU6DQo+IEZyb206IEhvdSBUYW8gPGhv
-dXRhbzFAaHVhd2VpLmNvbT4NCj4gDQo+IFNpbmNlIGNvbW1pdCBhNzg0MThlNmEwNGMgKCJibG9j
-azogQWx3YXlzIGluaXRpYWxpemUgYmlvIElPIHByaW9yaXR5IG9uDQo+IHN1Ym1pdCIpLCBiaW8t
-PmJpX2lvcHJpbyB3aWxsIG5ldmVyIGJlIElPUFJJT19DTEFTU19OT05FIHdoZW4gY2FsbGluZw0K
-PiBibGtjZ19zZXRfaW9wcmlvKCksIHNvIHRoZXJlIHdpbGwgYmUgbm8gd2F5IHRvIHByb21vdGUg
-dGhlIGlvLXByaW9yaXR5DQo+IG9mIG9uZSBjZ3JvdXAgdG8gSU9QUklPX0NMQVNTX1JULCBiZWNh
-dXNlIGJpX2lvcHJpbyB3aWxsIGFsd2F5cyBiZQ0KPiBncmVhdGVyIHRoYW4gb3IgZXF1YWxzIHRv
-IElPUFJJT19DTEFTU19SVC4NCj4gDQo+IEl0IHNlZW1zIHBvc3NpYmxlIHRvIGNhbGwgYmxrY2df
-c2V0X2lvcHJpbygpIGZpcnN0IHRoZW4gdHJ5IHRvDQo+IGluaXRpYWxpemUgYmlfaW9wcmlvIGxh
-dGVyIGluIGJpb19zZXRfaW9wcmlvKCksIGJ1dCB0aGlzIGRvZXNuJ3Qgd29yaw0KPiBmb3IgYmlv
-IGluIHdoaWNoIGJpX2lvcHJpbyBpcyBhbHJlYWR5IGluaXRpYWxpemVkIChlLmcuLCBkaXJlY3Qt
-aW8pLCBzbw0KPiBpbnRyb2R1Y2UgYSBuZXcgaW9wcmlvIHBvbGljeSB0byBwcm9tb3RlIHRoZSBp
-b3ByaW9yaXR5IG9mIGJpbyB0bw0KPiBJT1BSSU9fQ0xBU1NfUlQgaWYgdGhlIGlvcHJpbyBpcyBu
-b3QgYWxyZWFkeSBSVC4NCj4gDQo+IFNvIGludHJvZHVjZSBhIG5ldyBwcm9tb3RlLXRvLXJ0IHBv
-bGljeSB0byBhY2hpZXZlIHRoaXMuIEZvciBub25lLXRvLXJ0DQo+IHBvbGljeSwgYWx0aG91Z2gg
-aXQgZG9lc24ndCB3b3JrIG5vdywgYnV0IGNvbnNpZGVyaW5nIHRoYXQgaXRzIHB1cnBvc2UNCj4g
-d2FzIGFsc28gdG8gb3ZlcnJpZGUgdGhlIGlvLXByaW9yaXR5IHRvIFJUIGFuZCBhbGxvdyBmb3Ig
-YSBzbW9vdGhlcg0KPiB0cmFuc2l0aW9uLCBqdXN0IGtlZXAgaXQgYW5kIHRyZWF0IGl0IGFzIGFu
-IGFsaWFzIG9mIHRoZSBwcm9tb3RlLXRvLXJ0DQo+IHBvbGljeS4NCj4gDQo+IFNpZ25lZC1vZmYt
-Ynk6IEhvdSBUYW8gPGhvdXRhbzFAaHVhd2VpLmNvbT4NCg0KDQpUaGFua3MgZm9yIHVwZGF0aW5n
-IGRvY3VtZW50YXRpb24gYW5kIGFkZGluZyBtZWFuaW5nZnVsIGNvbW1lbnQuDQoNCkxvb2tzIGdv
-b2QuDQoNClJldmlld2VkLWJ5OiBDaGFpdGFueWEgS3Vsa2FybmkgPGtjaEBudmlkaWEuY29tPg0K
-DQotY2sNCg0KDQo=
+Hello,
+
+On Tue, Feb 21, 2023 at 01:51:12PM -0400, Jason Gunthorpe wrote:
+> > Yeah, so, what I'm trying to say is that that might be the source of the
+> > problem. Is the current page ownership attribution correct 
+> 
+> It should be correct.
+> 
+> This mechanism is driven by pin_user_page(), (as it is the only API
+> that can actually create a pin) so the cgroup owner of the page is
+> broadly related to the "owner" of the VMA's inode.
+> 
+> The owner of the pin is the caller of pin_user_page(), which is
+> initated by some FD/proces that is not necessarily related to the
+> VMA's inode.
+> 
+> Eg concretely, something like io_uring will do something like:
+>   buffer = mmap()     <- Charge memcg for the pages
+>   fd = io_uring_setup(..)
+>   io_uring_register(fd,xx,buffer,..);   <- Charge the pincg for the pin
+> 
+> If mmap is a private anonymous VMA created by the same process then it
+> is likely the pages will have the same cgroup as io_uring_register and
+> the FD.
+> 
+> Otherwise the page cgroup is unconstrained. MAP_SHARED mappings will
+> have the page cgroup point at whatever cgroup was first to allocate
+> the page for the VMA's inode.
+> 
+> AFAIK there are few real use cases to establish a pin on MAP_SHARED
+> mappings outside your cgroup. However, it is possible, the APIs allow
+> it, and for security sandbox purposes we can't allow a process inside
+> a cgroup to triger a charge on a different cgroup. That breaks the
+> sandbox goal.
+
+It seems broken anyway. Please consider the following scenario:
+
+1. A is a tiny cgroup which only does streaming IOs and has memory.high of
+   128M which is more than sufficient for IO window. The last file it
+   streamed happened to be F which was about 256M.
+
+2. B is an a lot larger cgroup w/ pin limit way above 256M. B pins the
+   entirety of F.
+
+3. A now tries to stream another file but F is almost fully occupying its
+   memory allowance and can't be evicted. A keeps thrashing due to lack of
+   memory and isolation is completely broken.
+
+This stems directly from page ownership and pin accounting discrepancy.
+
+> If memcg could support multiple owners then it would be logical that
+> the pinner would be one of the memcg owners.
+> 
+> > for whatever reason is determining the pinning ownership or should the page
+> > ownership be attributed the same way too? If they indeed need to differ,
+> > that probably would need pretty strong justifications.
+> 
+> It is inherent to how pin_user_pages() works. It is an API that
+> establishs pins on existing pages. There is nothing about it that says
+> who the page's memcg owner is.
+> 
+> I don't think we can do anything about this without breaking things.
+
+That's a discrepancy in an internal interface and we don't wanna codify
+something like that into userspace interface. Semantially, it seems like if
+pin_user_pages() wanna charge pinning to the cgroup associated with an fd
+(or whatever), it should also claim the ownership of the pages themselves. I
+have no idea how feasiable that'd be from memcg POV tho. Given that this
+would be a fairly cold path (in most cases, the ownership should already
+match), maybe it won't be too bad?
+
+Thanks.
+
+-- 
+tejun
