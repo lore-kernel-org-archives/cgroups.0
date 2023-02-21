@@ -1,43 +1,57 @@
-From: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
-Subject: Re: Sv: [PATCH] mm/memcontrol: add memory.peak in cgroup root
-Date: Tue, 21 Feb 2023 17:16:55 +0100
-Message-ID: <Y/TudzUxEDwn6MHX@dhcp22.suse.cz>
-References: <20230221143421.10385-1-matthew.chae@axis.com>
- <Y/TeKkhQtV7Bck8P@dhcp22.suse.cz>
- <DB4PR02MB93344BAA949FA7E25E298C90FEA59@DB4PR02MB9334.eurprd02.prod.outlook.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH v2] blk-ioprio: Introduce promote-to-rt policy
+Date: Tue, 21 Feb 2023 06:37:36 -1000
+Message-ID: <Y/TzUKbsa6D7+Ui1@slm.duckdns.org>
+References: <20230220135428.2632906-1-houtao@huaweicloud.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
-        t=1676996216; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=VIg5pY0sBhoDHUCkynozPJyyyBzhn0SD+XqJCl/DX2E=;
-        b=ur51GYTE2PM2xTY09JS0cAxfrrMgcksi2E8L5UaVsGStsT6bwlH326WLSm6l65zQtfEdqw
-        Z4arZMuoF0l5KIbPLj1yCjM6zsKeo1KHpZgW4KMeov7zRMniNkkJ4UQHM1oXVcjpqRGzbA
-        UBvQod4cxxgaQzlYpt3NWSL7267moYU=
+Return-path: <linux-doc-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:sender:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=PqDVJNwWIwNFunXvEtWTSAzOUCVvEWbOZPflEYS3dBY=;
+        b=V7Wqb5Q5j7csLQ+YeuJvsKd+kFbhRRHjX+GPXEP0Wc0CpmU2vK4TCu6jCTMzg9fjxn
+         Uj+/7bqoyR2OMrFjmxMpoZA+KbnY8u9Hy9hItNDI/EVMOABnsHYqSlMzf3nJX0/rIwzB
+         FhOYPASmRQFqT9cS91YklOMDNf/LGwsp/+fTP6Hn0K/Dh1M+ILAzNaOPXmiW9W6UUueR
+         sYMa/ZBBXn2uviNq8bUZKDD7owk5NQYzbiFB5OWHbLp4FUKs+o8ifNy9qt472KE+mTuc
+         0XHE2zo5sRqGNHL1KueXlH2hgb8L5Td7CjJjRnTNklbmcPwh+hbXh8PXTe1dxO7vLj0C
+         km7w==
+Sender: Tejun Heo <htejun@gmail.com>
 Content-Disposition: inline
-In-Reply-To: <DB4PR02MB93344BAA949FA7E25E298C90FEA59-7YaF7f4iyy4XcPQCjnbtU2rxpoXoJLNtvxpqHgZTriW3zl9H0oFU5g@public.gmane.org>
+In-Reply-To: <20230220135428.2632906-1-houtao@huaweicloud.com>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Christopher Wong <Christopher.Wong-VrBV9hrLPhE@public.gmane.org>
-Cc: Matthew Chae <Matthew.Chae-VrBV9hrLPhE@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, kernel <kernel-VrBV9hrLPhE@public.gmane.org>, Muchun Song <muchun.song-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, "cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org" <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, "linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+To: Hou Tao <houtao@huaweicloud.com>
+Cc: linux-block@vger.kernel.org, Bart Van Assche <bvanassche@acm.org>, Jan Kara <jack@suse.cz>, Bagas Sanjaya <bagasdotme@gmail.com>, Jens Axboe <axboe@kernel.dk>, cgroups@vger.kernel.org, Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, Jonathan Corbet <corbet@lwn.net>, linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org, houtao1@huawei.com
 
-On Tue 21-02-23 16:13:14, Christopher Wong wrote:
-> Hi Michal,
+On Mon, Feb 20, 2023 at 09:54:28PM +0800, Hou Tao wrote:
+> From: Hou Tao <houtao1@huawei.com>
 > 
-> Thanks for the quick response! I think we are just trying to
-> get the same value that was available for us in cgroup v1
-> memory.max_usage_in_bytes. I guess this value also is incomplete for
-> representing the system memory usage.
+> Since commit a78418e6a04c ("block: Always initialize bio IO priority on
+> submit"), bio->bi_ioprio will never be IOPRIO_CLASS_NONE when calling
+> blkcg_set_ioprio(), so there will be no way to promote the io-priority
+> of one cgroup to IOPRIO_CLASS_RT, because bi_ioprio will always be
+> greater than or equals to IOPRIO_CLASS_RT.
+> 
+> It seems possible to call blkcg_set_ioprio() first then try to
+> initialize bi_ioprio later in bio_set_ioprio(), but this doesn't work
+> for bio in which bi_ioprio is already initialized (e.g., direct-io), so
+> introduce a new ioprio policy to promote the iopriority of bio to
+> IOPRIO_CLASS_RT if the ioprio is not already RT.
+> 
+> So introduce a new promote-to-rt policy to achieve this. For none-to-rt
+> policy, although it doesn't work now, but considering that its purpose
+> was also to override the io-priority to RT and allow for a smoother
+> transition, just keep it and treat it as an alias of the promote-to-rt
+> policy.
+> 
+> Signed-off-by: Hou Tao <houtao1@huawei.com>
 
-Correct.
+Acked-by: Tejun Heo <tj@kernel.org>
 
-> Is it due the incompleteness that the memory.peak has been left out in
-> the root of cgroup v2?
+Thanks.
 
-I think so but I do not remember 100%. You might want to look into email
-archives.
 -- 
-Michal Hocko
-SUSE Labs
+tejun
