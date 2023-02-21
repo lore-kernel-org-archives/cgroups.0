@@ -1,72 +1,89 @@
-From: Matthew Wilcox <willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
-Subject: Re: [PATCH] mm: change memcg->oom_group access with atomic operations
-Date: Tue, 21 Feb 2023 13:51:29 +0000
-Message-ID: <Y/TMYa8DrocppXRu@casper.infradead.org>
-References: <20230220230624.lkobqeagycx7bi7p@google.com>
- <6563189C-7765-4FFA-A8F2-A5CC4860A1EF@linux.dev>
- <CALvZod55K5zbbVYptq8ud=nKVyU1xceGVf6UcambBZ3BA2TZqA@mail.gmail.com>
+From: Vincent Guittot <vincent.guittot-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCH v10 5/9] sched/fair: Take into account latency priority at wakeup
+Date: Tue, 21 Feb 2023 15:12:59 +0100
+Message-ID: <CAKfTPtD2eWfidO+FSrsjDYJkitJPubV+5+S5=dQ+0o00pud-mg@mail.gmail.com>
+References: <20230113141234.260128-1-vincent.guittot@linaro.org>
+ <20230113141234.260128-6-vincent.guittot@linaro.org> <Y/S+qrschy+N+QCQ@hirez.programming.kicks-ass.net>
 Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Transfer-Encoding:
-        Content-Type:MIME-Version:References:Message-ID:Subject:Cc:To:From:Date:
-        Sender:Reply-To:Content-ID:Content-Description;
-        bh=NEdXprvhxHyHHSPQOtkKZLXBLzv1Cy2bQgCVUfMHYac=; b=bH66sA8fhWiJwQgo9PIB7tMy5k
-        CksVVbZTIHgCQSPNdPeVxN0HKxQ1+pV9FYrnABQ3mTEqaH7e1DRPYTwHZYBtSYyXZZWkl8y3Z68zq
-        uQFaZrRSGbPJjxA/REMS6x8QUqcbMZ8qJeQKFzvwdyFT8wL5o/x2mhz5dHl2YFUDSnfQyymSPy8lx
-        FAkT6yQ9vuZLtc5WTQoo3oTYkHeGORlrSkJhFeNKSLbHLDY9ayuIgtw7AEwx/Pb4/9QHd+lXRXmHn
-        rVqTpfRYBenwXyzvbVqvMDx7Sk/DmvQdOJO+34bkSxQdt7ZAIvHFZ7eOl0ME9lDFuAn9uvJ+fpjNG
-        0W6/FiLw==;
-Content-Disposition: inline
-In-Reply-To: <CALvZod55K5zbbVYptq8ud=nKVyU1xceGVf6UcambBZ3BA2TZqA-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:from:to:cc:subject:date:message-id:reply-to;
+        bh=SGZW5MhhWSuzxN07P+ERlBpgYTuis65PtkEETwyVr30=;
+        b=z5ssYAvLlZqpdsQKRVJmHd9Vd7/a58S5YZEryXsdTpWBAD5cUwpm5aPQMlX7VQ/VPs
+         5XbwfqWJNFZqWRi3VOGQurT4VMNSizgezwDv7PdcbW/QOX4rvpjI4g+DEOc7yWkyR+Q/
+         +eoOhQ+wD+5bFkAmlYDfTHeY2WvTXPVS6BHTufB5yxCCvIPAL4auMwMEALsJQhLOhhQq
+         UJErjMobOrO4LOwDYRa8Jj8bRaz1ynnOvDre1Xxyp46AwCk44lNNODOpvKf/w5jgsKBV
+         WNMxpGEVrhmfd1qkCmRKiDdF1DNxY4xjvjXr6zBFvuAlO0g2Sw0o8lJlOba5Sbd8VSwX
+         Pbxg==
+In-Reply-To: <Y/S+qrschy+N+QCQ-Nxj+rRp3nVydTX5a5knrm8zTDFooKrT+cvkQGrU6aU0@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="iso-8859-1"
-To: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Cc: Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Yue Zhao <findns94-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, muchun.song-fxUVXftIFDnyG1zEObXtfA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
+Cc: mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, juri.lelli-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, dietmar.eggemann-5wv7dgnIgG8@public.gmane.org, rostedt-nx8X9YLhiw1AfugRpC6u6w@public.gmane.org, bsegall-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, mgorman-l3A5Bk7waGM@public.gmane.org, bristot-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, vschneid-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, parth-tEXmvtCZX7AybS5Ee8rs3A@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, qyousef-wp2msK0BRk8tq7phqP6ubQ@public.gmane.org, chris.hyser-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org, patrick.bellasi-X6neQFFVdzGsTnJN9+BGXg@public.gmane.org, David.Laight-JxhZ9S5GRejQT0dZR+AlfA@public.gmane.org, pjt-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, pavel-+ZI9xUNit7I@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, qperret-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, tim.c.chen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org, joshdon-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, timj-mXXj517/zsQ@public.gmane.org, kprateek.nayak-5C7GfCeVMHo@public.gmane.org, yu.c.chen-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org, youssefesmat-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org, joel-QYYGw3jwrUn5owFQY34kdNi2O/JbrIOy@public.gmane.org
 
-On Mon, Feb 20, 2023 at 10:52:10PM -0800, Shakeel Butt wrote:
-> On Mon, Feb 20, 2023 at 9:17 PM Roman Gushchin <roman.gushchin-fxUVXftIFD=
-nyG1zEObXtfA@public.gmane.org> wrote:
-> > > On Feb 20, 2023, at 3:06 PM, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR=
-+AlfA@public.gmane.org> wrote:
-> > >
-> > > =EF=BB=BFOn Mon, Feb 20, 2023 at 01:09:44PM -0800, Roman Gushchin wro=
-te:
-> > >>> On Mon, Feb 20, 2023 at 11:16:38PM +0800, Yue Zhao wrote:
-> > >>> The knob for cgroup v2 memory controller: memory.oom.group
-> > >>> will be read and written simultaneously by user space
-> > >>> programs, thus we'd better change memcg->oom_group access
-> > >>> with atomic operations to avoid concurrency problems.
-> > >>>
-> > >>> Signed-off-by: Yue Zhao <findns94-Re5JQEeQqe8AvxtiuMwx3w@public.gma=
-ne.org>
-> > >>
-> > >> Hi Yue!
-> > >>
-> > >> I'm curious, have any seen any real issues which your patch is solvi=
-ng?
-> > >> Can you, please, provide a bit more details.
-> > >>
-> > >
-> > > IMHO such details are not needed. oom_group is being accessed
-> > > concurrently and one of them can be a write access. At least
-> > > READ_ONCE/WRITE_ONCE is needed here.
-> >
-> > Needed for what?
->=20
-> For this particular case, documenting such an access. Though I don't
-> think there are any architectures which may tear a one byte read/write
-> and merging/refetching is not an issue for this.
+On Tue, 21 Feb 2023 at 13:53, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org> wrote:
+>
+> On Fri, Jan 13, 2023 at 03:12:30PM +0100, Vincent Guittot wrote:
+>
+> > diff --git a/include/linux/sched.h b/include/linux/sched.h
+> > index 6c61bde49152..38decae3e156 100644
+> > --- a/include/linux/sched.h
+> > +++ b/include/linux/sched.h
+> > @@ -568,6 +568,8 @@ struct sched_entity {
+> >       /* cached value of my_q->h_nr_running */
+> >       unsigned long                   runnable_weight;
+> >  #endif
+> > +     /* preemption offset in ns */
+> > +     long                            latency_offset;
+>
+> I wonder about the type here; does it make sense to have it depend on
+> the bitness; that is if s32 is big enough on 32bit then surely it is so
+> too on 64bit, and if not, then it should be unconditionally s64.
 
-Wouldn't a compiler be within its rights to implement a one byte store as:
+I mainly wanted to stay aligned with the optimal width of the arch but
+32bits is enough
 
-	load-word
-	modify-byte-in-word
-	store-word
+>
+>
+> > +static void set_latency_offset(struct task_struct *p)
+> > +{
+> > +     long weight = sched_latency_to_weight[p->latency_prio];
+> > +     s64 offset;
+> > +
+> > +     offset = weight * get_sleep_latency(false);
+> > +     offset = div_s64(offset, NICE_LATENCY_WEIGHT_MAX);
+> > +     p->se.latency_offset = (long)offset;
+> > +}
+>
+> > +/*
+> > + * latency weight for wakeup preemption
+> > + */
+> > +const int sched_latency_to_weight[40] = {
+> > + /* -20 */     -1024,     -973,     -922,      -870,      -819,
+> > + /* -15 */      -768,     -717,     -666,      -614,      -563,
+> > + /* -10 */      -512,     -461,     -410,      -358,      -307,
+> > + /*  -5 */      -256,     -205,     -154,      -102,       -51,
+> > + /*   0 */         0,       51,      102,       154,       205,
+> > + /*   5 */       256,      307,      358,       410,       461,
+> > + /*  10 */       512,      563,      614,       666,       717,
+> > + /*  15 */       768,      819,      870,       922,       973,
+> > +};
+>
+> I'm slightly confused by this table, isn't that simply the linear
+> function?
 
-and if this is a lockless store to a word which has an adjacent byte also
-being modified by another CPU, one of those CPUs can lose its store?
-And WRITE_ONCE would prevent the compiler from implementing the store
-in that way.
+Yes, I had in mind to use a nonlinear function at the beginning so the table.
 
+>
+> Isn't all that the same as:
+>
+>         se->se.latency_offset = get_sleep_latency * nice / (NICE_LATENCY_WIDTH/2);
+>
+> ? The reason we have prio_to_weight[] is because it's an exponential,
+> which is a bit more cumbersome to calculate, but surely we can do a
+> linear function at runtime.
+>
+>
