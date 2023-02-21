@@ -1,139 +1,71 @@
-From: "Paul E. McKenney" <paulmck-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH] mm: change memcg->oom_group access with atomic operations
-Date: Tue, 21 Feb 2023 10:23:59 -0800
-Message-ID: <20230221182359.GJ2948950@paulmck-ThinkPad-P17-Gen-1>
-References: <20230220230624.lkobqeagycx7bi7p@google.com>
- <6563189C-7765-4FFA-A8F2-A5CC4860A1EF@linux.dev>
- <CALvZod55K5zbbVYptq8ud=nKVyU1xceGVf6UcambBZ3BA2TZqA@mail.gmail.com>
- <Y/TMYa8DrocppXRu@casper.infradead.org>
- <CALvZod6UM1E6nGgfdORri90m3ju+yYeSeHBqyqutCP2A94WNKg@mail.gmail.com>
-Reply-To: paulmck-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org
+From: Jason Gunthorpe <jgg-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH 14/19] mm: Introduce a cgroup for pinned memory
+Date: Tue, 21 Feb 2023 15:26:33 -0400
+Message-ID: <Y/Ua6VcNe/DFh7X4@nvidia.com>
+References: <Y+GcJQRhvjqFaaSp@mtj.duckdns.org>
+ <Y+0rxoM4w9nilUMZ@dhcp22.suse.cz>
+ <Y+0tWZxMUx/NZ3Ne@nvidia.com>
+ <Y+3jcw9vo4ml5p0M@dhcp22.suse.cz>
+ <Y+4lcq4Fge27TQIn@nvidia.com>
+ <Y/T2pNQ70eMAl1sX@slm.duckdns.org>
+ <Y/T+pw25oGmKqz1k@nvidia.com>
+ <Y/T/bkcYc9Krw4rE@slm.duckdns.org>
+ <Y/UEkNn0O65Pfi4e@nvidia.com>
+ <Y/UIURDjR9pv+gzx@slm.duckdns.org>
 Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1677003839;
-        bh=9ofw9kmJ1/A9L4elUMt/ZOXxCnVJ5NivStbIGbYhioE=;
-        h=Date:From:To:Cc:Subject:Reply-To:References:In-Reply-To:From;
-        b=juAEGmzdsgfKKLgLJNn+Inn1X4C1M6/sxFFCnpsa66BydSQlHcBhJQ8BZlWZl3izN
-         bJTP6eMwLJEaw0CGN50rbbw8xLUi/3lalJm/AvX09Ta6xCwYX3Pr82beAkwouT76FA
-         xnGh8ybiK7K3uCfExn2Gc6EOOFLNJP9FgHRMCK+98Tqi/xWZJXK0fmnltLX+GTkqs4
-         6LIv2HfpocPjQckppEZF9KSI5oITDttJW3l387+BkEOXlkf47QskdX1KRRysWBJ/4Q
-         6sQF3JbaGB5hwfhVHYJr3WVojohK9l6pSGDnvFJ8qWFNExnhUmDpzEQZJi1PHPm4RV
-         YNn+/e5k6iegg==
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
+ s=selector2;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=qJoetxTueRdwFyG7muRq2iwGc/+2jwQdIe1eeQ2yk2w=;
+ b=pCO+Q6umjo/+QS+sxMVcUAonGFKpTnHbjq5/jueZF1XWNYdx/k4T62YUpNARyMyjZy5KAQyGHlIsYpnZHAMD4sJZ8m9fwzu3OLUexUcsN4ua3zRAzzHdiCG/UXjfSz+r5Sb8pYt057W2S1uH63WknLc2yjE+drxFV1x9ZyT/qPlzIZb90Cbw8cYEFInLYGLzbady1RgW+woipbPzCracqGCaNJUElag8o2u2rF+XqljScpdXbQ7lvDkyLBJ0ifJiGm9v9xdnpWGZUejmREFEdGXcOpekVlQGeCwAiLby/coavhLN1tCfFoSL3CxLtrtoSQ0Qb35l+a/Q5ojDr/CvmQ==
 Content-Disposition: inline
-In-Reply-To: <CALvZod6UM1E6nGgfdORri90m3ju+yYeSeHBqyqutCP2A94WNKg-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+In-Reply-To: <Y/UIURDjR9pv+gzx-NiLfg/pYEd1N0TnZuCh8vA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="iso-8859-1"
-To: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Cc: Matthew Wilcox <willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Marco Elver <elver-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Yue Zhao <findns94-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, muchun.song-fxUVXftIFDnyG1zEObXtfA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>, Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Alistair Popple <apopple-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, jhubbard-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org, tjmercier-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, surenb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, mkoutny-IBi9RG/b67k@public.gmane.org, daniel-/w4YWyX8dFk@public.gmane.org, "Daniel P . Berrange" <berrange-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Alex Williamson <alex.williamson-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
 
-On Tue, Feb 21, 2023 at 08:56:59AM -0800, Shakeel Butt wrote:
-> +Paul & Marco
->=20
-> On Tue, Feb 21, 2023 at 5:51 AM Matthew Wilcox <willy-wEGCiKHe2LqWVfeAwA7=
-xHQ@public.gmane.org> wrote:
-> >
-> > On Mon, Feb 20, 2023 at 10:52:10PM -0800, Shakeel Butt wrote:
-> > > On Mon, Feb 20, 2023 at 9:17 PM Roman Gushchin <roman.gushchin-fxUVXf=
-tIFDnyG1zEObXtfA@public.gmane.org> wrote:
-> > > > > On Feb 20, 2023, at 3:06 PM, Shakeel Butt <shakeelb-hpIqsD4AKlfQT=
-0dZR+AlfA@public.gmane.org> wrote:
-> > > > >
-> > > > > =EF=BB=BFOn Mon, Feb 20, 2023 at 01:09:44PM -0800, Roman Gushchin=
- wrote:
-> > > > >>> On Mon, Feb 20, 2023 at 11:16:38PM +0800, Yue Zhao wrote:
-> > > > >>> The knob for cgroup v2 memory controller: memory.oom.group
-> > > > >>> will be read and written simultaneously by user space
-> > > > >>> programs, thus we'd better change memcg->oom_group access
-> > > > >>> with atomic operations to avoid concurrency problems.
-> > > > >>>
-> > > > >>> Signed-off-by: Yue Zhao <findns94-Re5JQEeQqe8AvxtiuMwx3w@public=
-.gmane.org>
-> > > > >>
-> > > > >> Hi Yue!
-> > > > >>
-> > > > >> I'm curious, have any seen any real issues which your patch is s=
-olving?
-> > > > >> Can you, please, provide a bit more details.
-> > > > >>
-> > > > >
-> > > > > IMHO such details are not needed. oom_group is being accessed
-> > > > > concurrently and one of them can be a write access. At least
-> > > > > READ_ONCE/WRITE_ONCE is needed here.
-> > > >
-> > > > Needed for what?
-> > >
-> > > For this particular case, documenting such an access. Though I don't
-> > > think there are any architectures which may tear a one byte read/write
-> > > and merging/refetching is not an issue for this.
-> >
-> > Wouldn't a compiler be within its rights to implement a one byte store =
-as:
-> >
-> >         load-word
-> >         modify-byte-in-word
-> >         store-word
-> >
-> > and if this is a lockless store to a word which has an adjacent byte al=
-so
-> > being modified by another CPU, one of those CPUs can lose its store?
-> > And WRITE_ONCE would prevent the compiler from implementing the store
-> > in that way.
->=20
-> Thanks Willy for pointing this out. If the compiler can really do this
-> then [READ|WRITE]_ONCE are required here. I always have big bad
-> compiler lwn article open in a tab. I couldn't map this transformation
-> to ones mentioned in that article. Do we have name of this one?
+On Tue, Feb 21, 2023 at 08:07:13AM -1000, Tejun Heo wrote:
+> > AFAIK there are few real use cases to establish a pin on MAP_SHARED
+> > mappings outside your cgroup. However, it is possible, the APIs allow
+> > it, and for security sandbox purposes we can't allow a process inside
+> > a cgroup to triger a charge on a different cgroup. That breaks the
+> > sandbox goal.
+> 
+> It seems broken anyway. Please consider the following scenario:
 
-No, recent compilers are absolutely forbidden from doing this sort of
-thing except under very special circumstances.
+Yes, this is broken like this already today - memcg doesn't work
+entirely perfectly for MAP_SHARED scenarios, IMHO.
 
-Before C11, compilers could and in fact did do things like this.  This is
-after all a great way to keep the CPU's vector unit from getting bored.
-Unfortunately for those who prize optimization above all else, doing
-this can introduce data races, for example:
+> > > for whatever reason is determining the pinning ownership or should the page
+> > > ownership be attributed the same way too? If they indeed need to differ,
+> > > that probably would need pretty strong justifications.
+> > 
+> > It is inherent to how pin_user_pages() works. It is an API that
+> > establishs pins on existing pages. There is nothing about it that says
+> > who the page's memcg owner is.
+> > 
+> > I don't think we can do anything about this without breaking things.
+> 
+> That's a discrepancy in an internal interface and we don't wanna codify
+> something like that into userspace interface. Semantially, it seems like if
+> pin_user_pages() wanna charge pinning to the cgroup associated with an fd
+> (or whatever), it should also claim the ownership of the pages
+> themselves.
 
-	char a;
-	char b;
-	spin_lock la;
-	spin_lock lb;
+Multiple cgroup can pin the same page, so it is not as simple as just
+transfering ownership, we need multi-ownership and to really fix the
+memcg limitations with MAP_SHARED without an API impact.
 
-	void change_a(char new_a)
-	{
-		spin_lock(&la);
-		a =3D new_a;
-		spin_unlock(&la);
-	}
+You are right that pinning is really just a special case of
+allocation, but there is a reason the memcg was left with weak support
+for MAP_SHARED and changing that may be more than just hard but an
+infeasible trade off..
 
-	void change_b(char new_b)
-	{
-		spin_lock(&lb);
-		b =3D new_b;
-		spin_unlock(&lb);
-	}
+At least I don't have a good idea how to even approach building a
+reasonable datstructure that can track the number of
+charges per-cgroup per page. :\
 
-If the compiler "optimized" that "a =3D new_a" so as to produce a non-atomic
-read-modify-write sequence, it would be introducing a data race.
-And since C11, the compiler is absolutely forbidden from introducing
-data races.  So, again, no, the compiler cannot invent writes to
-variables.
-
-What are those very special circumstances?
-
-1.	The other variables were going to be written to anyway, and
-	none of the writes was non-volatile and there was no ordering
-	directive between any of those writes.
-
-2.	The other variables are dead, as in there are no subsequent
-	reads from them anywhere in the program.  Of course in that case,
-	there is no need to read the prior values of those variables.
-
-3.	All accesses to all of the variables are visible to the compiler,
-	and the compiler can prove that there are no concurrent accesses
-	to any of them.  For example, all of the variables are on-stack
-	variables whose addresses are never taken.
-
-Does that help, or am I misunderstanding the question?
-
-							Thanx, Paul
+Jason
