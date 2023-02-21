@@ -1,63 +1,59 @@
-From: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
-Subject: Re: [PATCH] mm: change memcg->oom_group access with atomic operations
-Date: Tue, 21 Feb 2023 09:26:05 +0100
-Message-ID: <Y/SAHfHsljuIRBJm@dhcp22.suse.cz>
-References: <20230220151638.1371-1-findns94@gmail.com>
- <Y/PhmEPc/qYeZ52T@P9FQF9L96D>
- <20230220230624.lkobqeagycx7bi7p@google.com>
+From: =?UTF-8?Q?Holger_Hoffst=c3=a4tte?= <holger-yRdLqooqVXZ9NkuW+OO3NY3UfPj+9hkl@public.gmane.org>
+Subject: Re: [PATCH] block, bfq: fix uaf for bfqq in bic_set_bfqq()
+Date: Tue, 21 Feb 2023 11:19:21 +0100
+Message-ID: <3e8c8567-f41d-66ae-0633-dcdbed007228@applied-asynchrony.com>
+References: <20230113094410.2907223-1-yukuai3@huawei.com>
+ <ca9fefd4-7109-042c-3b25-9eb795141145@huaweicloud.com>
 Mime-Version: 1.0
+Content-Transfer-Encoding: 8bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
-        t=1676967966; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=64nOhdqsrfC+GQvY/2yDtSkhDgrub/IRKe6PuUtaoTA=;
-        b=gL/+k88YS+b45aJgVurrBUpl0g1ZFiyovTv6aHjfZ9jSBCOegm2/HVLZmSevsnN8c27HXc
-        qiKMeeqh92MmoN1xTCabTZIByhEkYtbvvgvTGShcDF2NbBr69DSWBVaLW+5RnkbEYyf7y/
-        zzDrC4knnc0O1PBH8hBci/5ov6RFTh0=
-Content-Disposition: inline
-In-Reply-To: <20230220230624.lkobqeagycx7bi7p-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+In-Reply-To: <ca9fefd4-7109-042c-3b25-9eb795141145-XF6JlduFytWkHkcT6e4Xnw@public.gmane.org>
+Content-Language: en-US
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Cc: Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Yue Zhao <findns94-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, muchun.song-fxUVXftIFDnyG1zEObXtfA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Type: text/plain; charset="utf-8"; format="flowed"
+To: Yu Kuai <yukuai1-XF6JlduFytWkHkcT6e4Xnw@public.gmane.org>, jack-AlSwsSmVLrQ@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, josef-DigfWCa+lFGyeJad7bwFQA@public.gmane.org, axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, paolo.valente-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org, shinichiro.kawasaki-Sjgp3cTcYWE@public.gmane.org
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, yi.zhang-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, yangerkun-hv44wF8Li93QT0dZR+AlfA@public.gmane.org
 
-On Mon 20-02-23 23:06:24, Shakeel Butt wrote:
-> On Mon, Feb 20, 2023 at 01:09:44PM -0800, Roman Gushchin wrote:
-> > On Mon, Feb 20, 2023 at 11:16:38PM +0800, Yue Zhao wrote:
-> > > The knob for cgroup v2 memory controller: memory.oom.group
-> > > will be read and written simultaneously by user space
-> > > programs, thus we'd better change memcg->oom_group access
-> > > with atomic operations to avoid concurrency problems.
-> > > 
-> > > Signed-off-by: Yue Zhao <findns94-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-> > 
-> > Hi Yue!
-> > 
-> > I'm curious, have any seen any real issues which your patch is solving?
-> > Can you, please, provide a bit more details.
-> > 
+On 2023-02-21 08:04, Yu Kuai wrote:
+> Hi, Jens
 > 
-> IMHO such details are not needed. oom_group is being accessed
-> concurrently and one of them can be a write access. At least
-> READ_ONCE/WRITE_ONCE is needed here. Most probably syzbot didn't
-> catch this race because it does not know about the memory.oom.group
-> interface.
+> 在 2023/01/13 17:44, Yu Kuai 写道:
+>> After commit 64dc8c732f5c ("block, bfq: fix possible uaf for 'bfqq->bic'"),
+>> bic->bfqq will be accessed in bic_set_bfqq(), however, in some context
+>> bic->bfqq will be freed first, and bic_set_bfqq() is called with the freed
+>> bic->bfqq.
+>>
+>> Fix the problem by always freeing bfqq after bic_set_bfqq().
+>>
+>> Fixes: 64dc8c732f5c ("block, bfq: fix possible uaf for 'bfqq->bic'")
+>> Reported-and-tested-by: Shinichiro Kawasaki <shinichiro.kawasaki-Sjgp3cTcYWE@public.gmane.org>
+>> Signed-off-by: Yu Kuai <yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+>> ---
+>>   block/bfq-cgroup.c  | 2 +-
+>>   block/bfq-iosched.c | 4 +++-
+>>   2 files changed, 4 insertions(+), 2 deletions(-)
+>>
+>> diff --git a/block/bfq-cgroup.c b/block/bfq-cgroup.c
+>> index a6e8da5f5cfd..feb13ac25557 100644
+>> --- a/block/bfq-cgroup.c
+>> +++ b/block/bfq-cgroup.c
+>> @@ -749,8 +749,8 @@ static void bfq_sync_bfqq_move(struct bfq_data *bfqd,
+>>            * old cgroup.
+>>            */
+>>           bfq_put_cooperator(sync_bfqq);
+>> -        bfq_release_process_ref(bfqd, sync_bfqq);
+>>           bic_set_bfqq(bic, NULL, true, act_idx);
+>> +        bfq_release_process_ref(bfqd, sync_bfqq);
+>>       }
+>>   }
+>>
+> 
+> It seems this change is missed in GIT PULL for-6.3. I'll send a seperate
+> patch to fix this...
+> 
 
-I do agree with Roman here. It is _always_ good to mention whether this
-is a tool/review or actual bug triggered fix. Also {READ,WRITE}_ONCE doesn't
-guarantee atomicity so it would be good to rephrase the changelog.
-Something like:
-The knob for cgroup v2 memory controller: memory.oom.group
-is not protected by any locking so it can be modified while it is used.
-This is not an actual problem because races are unlikely (the knob is
-usually configured long before any workloads hits actual memcg oom)
-but it is better to use READ_ONCE/WRITE_ONCE to prevent compiler from
-doing anything funky.
+It was already applied in time for 6.2 as b600de2d7d3a16f9007fad1bdae82a3951a26af2
+and also already merged to 6.1-stable.
 
-This patch is not fixing any actual user visible bug but it is in line
-of a standard practice.
--- 
-Michal Hocko
-SUSE Labs
+cheers
+Holger
