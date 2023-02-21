@@ -1,75 +1,54 @@
-From: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH] mm: change memcg->oom_group access with atomic operations
-Date: Mon, 20 Feb 2023 22:52:10 -0800
-Message-ID: <CALvZod55K5zbbVYptq8ud=nKVyU1xceGVf6UcambBZ3BA2TZqA@mail.gmail.com>
-References: <20230220230624.lkobqeagycx7bi7p@google.com> <6563189C-7765-4FFA-A8F2-A5CC4860A1EF@linux.dev>
+From: Yu Kuai <yukuai1@huaweicloud.com>
+Subject: Re: [PATCH] block, bfq: fix uaf for bfqq in bic_set_bfqq()
+Date: Tue, 21 Feb 2023 15:04:08 +0800
+Message-ID: <ca9fefd4-7109-042c-3b25-9eb795141145@huaweicloud.com>
+References: <20230113094410.2907223-1-yukuai3@huawei.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: quoted-printable
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20210112;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=3usF6y0jP8WdRmsHw7idRFJkuoGf3L15ygmJMO39Keg=;
-        b=Dxb4ANKUF876yt1r6rpWTEgOJzOrrCeT53AkedVhi1afGBbnTzly2/ntvJH0Wiy+Hs
-         A8OQ5p5sjhbAtVUpqM7cmdzqL5bAXHfW5c8tZcugAObcsO9l64l4BtXlkzQF9gXoO+e8
-         mXEErXvCDp3J+4kVqQxrCSgbr8SzEUNW2yq2PewEKlYBmdqY/Ec1iA0pLqpzXf+GdMYd
-         ex+6nV9pa+PGOgK3EJMTg0HTKEpG8mNdIyvFdBT12H/4m8b7fDXcGislJqneW+VG9SmR
-         KpRgA/xYhhbEecBbfZ8ywK/2eK1pkN7NSYzIWQn2BvvbBDuyFQOiNE/7ggzOGWbVypFx
-         CVsg==
-In-Reply-To: <6563189C-7765-4FFA-A8F2-A5CC4860A1EF-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>
+Return-path: <linux-block-owner@vger.kernel.org>
+In-Reply-To: <20230113094410.2907223-1-yukuai3@huawei.com>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="utf-8"
-To: Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>
-Cc: Yue Zhao <findns94-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, muchun.song-fxUVXftIFDnyG1zEObXtfA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Type: text/plain; charset="iso-8859-1"; format="flowed"
+To: jack@suse.cz, tj@kernel.org, josef@toxicpanda.com, axboe@kernel.dk, paolo.valente@linaro.org, shinichiro.kawasaki@wdc.com
+Cc: cgroups@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, yukuai1@huaweicloud.com, yi.zhang@huawei.com, yangerkun@huawei.com
 
-On Mon, Feb 20, 2023 at 9:17 PM Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org> w=
-rote:
->
-> > On Feb 20, 2023, at 3:06 PM, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org> wrote:
-> >
-> > =EF=BB=BFOn Mon, Feb 20, 2023 at 01:09:44PM -0800, Roman Gushchin wrote=
-:
-> >>> On Mon, Feb 20, 2023 at 11:16:38PM +0800, Yue Zhao wrote:
-> >>> The knob for cgroup v2 memory controller: memory.oom.group
-> >>> will be read and written simultaneously by user space
-> >>> programs, thus we'd better change memcg->oom_group access
-> >>> with atomic operations to avoid concurrency problems.
-> >>>
-> >>> Signed-off-by: Yue Zhao <findns94-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-> >>
-> >> Hi Yue!
-> >>
-> >> I'm curious, have any seen any real issues which your patch is solving=
-?
-> >> Can you, please, provide a bit more details.
-> >>
-> >
-> > IMHO such details are not needed. oom_group is being accessed
-> > concurrently and one of them can be a write access. At least
-> > READ_ONCE/WRITE_ONCE is needed here.
->
-> Needed for what?
+Hi, Jens
 
-For this particular case, documenting such an access. Though I don't
-think there are any architectures which may tear a one byte read/write
-and merging/refetching is not an issue for this.
+=D4=DA 2023/01/13 17:44, Yu Kuai =D0=B4=B5=C0:
+> After commit 64dc8c732f5c ("block, bfq: fix possible uaf for 'bfqq->bic'"=
+),
+> bic->bfqq will be accessed in bic_set_bfqq(), however, in some context
+> bic->bfqq will be freed first, and bic_set_bfqq() is called with the freed
+> bic->bfqq.
+>=20
+> Fix the problem by always freeing bfqq after bic_set_bfqq().
+>=20
+> Fixes: 64dc8c732f5c ("block, bfq: fix possible uaf for 'bfqq->bic'")
+> Reported-and-tested-by: Shinichiro Kawasaki <shinichiro.kawasaki@wdc.com>
+> Signed-off-by: Yu Kuai <yukuai3@huawei.com>
+> ---
+>   block/bfq-cgroup.c  | 2 +-
+>   block/bfq-iosched.c | 4 +++-
+>   2 files changed, 4 insertions(+), 2 deletions(-)
+>=20
+> diff --git a/block/bfq-cgroup.c b/block/bfq-cgroup.c
+> index a6e8da5f5cfd..feb13ac25557 100644
+> --- a/block/bfq-cgroup.c
+> +++ b/block/bfq-cgroup.c
+> @@ -749,8 +749,8 @@ static void bfq_sync_bfqq_move(struct bfq_data *bfqd,
+>   		 * old cgroup.
+>   		 */
+>   		bfq_put_cooperator(sync_bfqq);
+> -		bfq_release_process_ref(bfqd, sync_bfqq);
+>   		bic_set_bfqq(bic, NULL, true, act_idx);
+> +		bfq_release_process_ref(bfqd, sync_bfqq);
+>   	}
+>   }
+> =20
 
->
-> I mean it=E2=80=99s obviously not a big deal to put READ_ONCE()/WRITE_ONC=
-E() here, but I struggle to imagine a scenario when it will make any differ=
-ence. IMHO it=E2=80=99s easier to justify a proper atomic operation here, e=
-ven if it=E2=80=99s most likely an overkill.
->
-> My question is very simple: the commit log mentions =E2=80=9C=E2=80=A6 to=
- avoid concurrency problems=E2=80=9D, so I wonder what problems are these.
->
-> Also there are other similar cgroup interfaces without READ_ONCE()/WRITE_=
-ONCE()
+It seems this change is missed in GIT PULL for-6.3. I'll send a seperate
+patch to fix this...
 
-Yeah and those are v1 interfaces e.g. oom_kill_disable, swappiness,
-soft_limit. These definitely need [READ|WRITE]_ONCE primitive.
+Thanks,
+Kuai
 
-Yue, can you update your patch and convert all accesses to these
-fields through [READ|WRITE]_ONCE ?
