@@ -1,69 +1,84 @@
-From: Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>
-Subject: Re: [PATCH] mm: change memcg->oom_group access with atomic operations
-Date: Tue, 21 Feb 2023 09:48:53 -0800
-Message-ID: <Y/UEBc4qyLIqHGIA@P9FQF9L96D.corp.robot.car>
-References: <20230220230624.lkobqeagycx7bi7p@google.com>
- <6563189C-7765-4FFA-A8F2-A5CC4860A1EF@linux.dev>
- <61CA5FFC-547B-4F56-9238-C9096223BF80@linux.dev>
+From: Jason Gunthorpe <jgg-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH 14/19] mm: Introduce a cgroup for pinned memory
+Date: Tue, 21 Feb 2023 13:51:12 -0400
+Message-ID: <Y/UEkNn0O65Pfi4e@nvidia.com>
+References: <Y+GMbWWP/YhtJQqe@slm.duckdns.org>
+ <Y+GQB9I6MFN6BOFw@nvidia.com>
+ <Y+GcJQRhvjqFaaSp@mtj.duckdns.org>
+ <Y+0rxoM4w9nilUMZ@dhcp22.suse.cz>
+ <Y+0tWZxMUx/NZ3Ne@nvidia.com>
+ <Y+3jcw9vo4ml5p0M@dhcp22.suse.cz>
+ <Y+4lcq4Fge27TQIn@nvidia.com>
+ <Y/T2pNQ70eMAl1sX@slm.duckdns.org>
+ <Y/T+pw25oGmKqz1k@nvidia.com>
+ <Y/T/bkcYc9Krw4rE@slm.duckdns.org>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
-        t=1677001755;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=JaPQBeAqUbK/3uqJSLJQEsHhoRu/puBJx1HPQm6lT2k=;
-        b=k4AQBnnNlebWncyyit/YQ4icinXPdj7y+dPZM0jGb8f0Q87q0GA2cL+WHiURqTE7xqk/LQ
-        ZasPA7nfI8VWU2k5NRuBbPxbjzzff5gy14YAPvMueZUMEpggw0lDSCOIidUbvK+0WMuvsj
-        ptaJ8q09dJHrgHQOuhx0x3iMvIEFJzI=
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
+ s=selector2;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=nfsPA5ydF9JSAYHxDEO2XlmhJB5FFetsi9LZA1Lbr0A=;
+ b=gLKYzJNG53oPf6n9IcMdkdK58kNvECq+/1LpO9BTcXcB8r939w50XFMzMSshDC7dwiPGqbtvskfWAErXvW7JQhux3x21jH3D72Gp1Y3/wz36UQmQZfw5LD9/aOGAY5+Q3OKb93K2vS42gBS8SPlM2lDgi6Au2mfIRwgZKxdpNLN7mVtie6NnhkGgISfWvZmdWlo7l3YpyfqzJYx/v52oEvx1AEqITBNJw6Wz65DLnvkdqVTPRsosmINqCB+kKcSnZV/uHO7c4MFjGQHzxZ0/MdiqvB+d8Vid26ppJqpcrUEZacOFjDxoSTbB8354e+hQyoYbXDw8GtbJLK+e5iUY+Q==
 Content-Disposition: inline
-In-Reply-To: <61CA5FFC-547B-4F56-9238-C9096223BF80-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>
+In-Reply-To: <Y/T/bkcYc9Krw4rE-NiLfg/pYEd1N0TnZuCh8vA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="utf-8"
-To: Muchun Song <muchun.song-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>
-Cc: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Yue Zhao <findns94-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Linux Memory Management List <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>, Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Alistair Popple <apopple-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, jhubbard-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org, tjmercier-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, surenb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, mkoutny-IBi9RG/b67k@public.gmane.org, daniel-/w4YWyX8dFk@public.gmane.org, "Daniel P . Berrange" <berrange-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Alex Williamson <alex.williamson-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
 
-On Tue, Feb 21, 2023 at 03:22:32PM +0800, Muchun Song wrote:
+On Tue, Feb 21, 2023 at 07:29:18AM -1000, Tejun Heo wrote:
+> On Tue, Feb 21, 2023 at 01:25:59PM -0400, Jason Gunthorpe wrote:
+> > On Tue, Feb 21, 2023 at 06:51:48AM -1000, Tejun Heo wrote:
+> > > cgroup, right? It makes little sense to me to separate the owner of the
+> > > memory page and the pinner of it. They should be one and the same.
+> > 
+> > The owner and pinner are not always the same entity or we could just
+> > use the page's cgroup.
 > 
-> 
-> > On Feb 21, 2023, at 13:17, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org> wrote:
-> > 
-> >> On Feb 20, 2023, at 3:06 PM, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org> wrote:
-> >> 
-> >> ﻿On Mon, Feb 20, 2023 at 01:09:44PM -0800, Roman Gushchin wrote:
-> >>>> On Mon, Feb 20, 2023 at 11:16:38PM +0800, Yue Zhao wrote:
-> >>>> The knob for cgroup v2 memory controller: memory.oom.group
-> >>>> will be read and written simultaneously by user space
-> >>>> programs, thus we'd better change memcg->oom_group access
-> >>>> with atomic operations to avoid concurrency problems.
-> >>>> 
-> >>>> Signed-off-by: Yue Zhao <findns94-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-> >>> 
-> >>> Hi Yue!
-> >>> 
-> >>> I'm curious, have any seen any real issues which your patch is solving?
-> >>> Can you, please, provide a bit more details.
-> >>> 
-> >> 
-> >> IMHO such details are not needed. oom_group is being accessed
-> >> concurrently and one of them can be a write access. At least
-> >> READ_ONCE/WRITE_ONCE is needed here.
-> > 
-> > Needed for what?
-> > 
-> > I mean it’s obviously not a big deal to put READ_ONCE()/WRITE_ONCE() here, but I struggle to imagine a scenario when it will make any difference. IMHO it’s easier to justify a proper atomic operation here, even if it’s most likely an overkill.
-> > 
-> > My question is very simple: the commit log mentions “… to avoid concurrency problems”, so I wonder what problems are these.
-> 
-> I think there is no difference in the assembly code between them in most
-> cases. The only intention that I can think of is to avoid the potential
-> complaint (data race) emitted by KCSAN.
+> Yeah, so, what I'm trying to say is that that might be the source of the
+> problem. Is the current page ownership attribution correct 
 
-+1
+It should be correct.
 
-And it might be a totally good reason for this change, let's just make it clear,
-instead of pretending to fix non-existing concurrency problems.
+This mechanism is driven by pin_user_page(), (as it is the only API
+that can actually create a pin) so the cgroup owner of the page is
+broadly related to the "owner" of the VMA's inode.
 
-Thanks!
+The owner of the pin is the caller of pin_user_page(), which is
+initated by some FD/proces that is not necessarily related to the
+VMA's inode.
+
+Eg concretely, something like io_uring will do something like:
+  buffer = mmap()     <- Charge memcg for the pages
+  fd = io_uring_setup(..)
+  io_uring_register(fd,xx,buffer,..);   <- Charge the pincg for the pin
+
+If mmap is a private anonymous VMA created by the same process then it
+is likely the pages will have the same cgroup as io_uring_register and
+the FD.
+
+Otherwise the page cgroup is unconstrained. MAP_SHARED mappings will
+have the page cgroup point at whatever cgroup was first to allocate
+the page for the VMA's inode.
+
+AFAIK there are few real use cases to establish a pin on MAP_SHARED
+mappings outside your cgroup. However, it is possible, the APIs allow
+it, and for security sandbox purposes we can't allow a process inside
+a cgroup to triger a charge on a different cgroup. That breaks the
+sandbox goal.
+
+If memcg could support multiple owners then it would be logical that
+the pinner would be one of the memcg owners.
+
+> for whatever reason is determining the pinning ownership or should the page
+> ownership be attributed the same way too? If they indeed need to differ,
+> that probably would need pretty strong justifications.
+
+It is inherent to how pin_user_pages() works. It is an API that
+establishs pins on existing pages. There is nothing about it that says
+who the page's memcg owner is.
+
+I don't think we can do anything about this without breaking things.
+
+Jason
