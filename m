@@ -1,45 +1,86 @@
-From: David Laight <David.Laight@ACULAB.COM>
-Subject: RE: [PATCH] mm: change memcg->oom_group access with atomic operations
-Date: Wed, 22 Feb 2023 09:01:05 +0000
-Message-ID: <e7f5f9686a5d4872a2e530550228718f@AcuMS.aculab.com>
-References: <20230220230624.lkobqeagycx7bi7p@google.com>
- <6563189C-7765-4FFA-A8F2-A5CC4860A1EF@linux.dev>
- <CALvZod55K5zbbVYptq8ud=nKVyU1xceGVf6UcambBZ3BA2TZqA@mail.gmail.com>
- <Y/TMYa8DrocppXRu@casper.infradead.org>
+From: Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
+Subject: Re: [PATCH v10 8/9] sched/fair: Add latency list
+Date: Wed, 22 Feb 2023 10:49:59 +0100
+Message-ID: <Y/XlR+wLtn54CkE4@hirez.programming.kicks-ass.net>
+References: <20230113141234.260128-1-vincent.guittot@linaro.org>
+ <20230113141234.260128-9-vincent.guittot@linaro.org>
 Mime-Version: 1.0
-Content-Transfer-Encoding: base64
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <Y/TMYa8DrocppXRu@casper.infradead.org>
-Content-Language: en-US
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=desiato.20200630; h=In-Reply-To:Content-Type:MIME-Version:
+        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=CWnrS8yusi1BbXO3lj0HE+nO+dxFdr1sf7powIMllnY=; b=cAGdOrQ9sFBf37tCEgl6JuUGL3
+        iK9sm/2HKSHxtzRUn8qnaECcfw8/wBTVlfDYtvVYXzhZLQLbDWglTmNSS/9RsLSBo+Ol/LMcHlAKj
+        lSdAvSwVnmEJFv7b9SOayYsW7JkQsyuZODB38BOwRSbdM4HiHHO7QbkXARPLiixd2uAaeGRUSlk8X
+        aXNfLIJfaa1H4u0VP813dp4RR+45ADixf8fthhiG4KfGONHheHKj207fiOv6VmNHPkRMv4ALJPzWm
+        bI8h92yMiDD37+FPSKbRGhQHlvCZ+INjWW58m1dHCkWQdthArbbYa8E9Jr33A0uqZvvFd6P7OzFIb
+        GQqF0KZQ==;
+Content-Disposition: inline
+In-Reply-To: <20230113141234.260128-9-vincent.guittot-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: 'Matthew Wilcox' <willy@infradead.org>, Shakeel Butt <shakeelb@google.com>
-Cc: Roman Gushchin <roman.gushchin@linux.dev>, Yue Zhao <findns94@gmail.com>, "linux-mm@kvack.org" <linux-mm@kvack.org>, "akpm@linux-foundation.org" <akpm@linux-foundation.org>, "hannes@cmpxchg.org" <hannes@cmpxchg.org>, "mhocko@kernel.org" <mhocko@kernel.org>, "muchun.song@linux.dev" <muchun.song@linux.dev>, "cgroups@vger.kernel.org" <cgroups@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Content-Transfer-Encoding: 7bit
+To: Vincent Guittot <vincent.guittot-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>
+Cc: mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, juri.lelli-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, dietmar.eggemann-5wv7dgnIgG8@public.gmane.org, rostedt-nx8X9YLhiw1AfugRpC6u6w@public.gmane.org, bsegall-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, mgorman-l3A5Bk7waGM@public.gmane.org, bristot-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, vschneid-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, parth-tEXmvtCZX7AybS5Ee8rs3A@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, qyousef-wp2msK0BRk8tq7phqP6ubQ@public.gmane.org, chris.hyser-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org, patrick.bellasi-X6neQFFVdzGsTnJN9+BGXg@public.gmane.org, David.Laight-JxhZ9S5GRejQT0dZR+AlfA@public.gmane.org, pjt-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, pavel-+ZI9xUNit7I@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, qperret-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, tim.c.chen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org, joshdon-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, timj-mXXj517/zsQ@public.gmane.org, kprateek.nayak-5C7GfCeVMHo@public.gmane.org, yu.c.chen-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org, youssefesmat-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org, joel-QYYGw3jwrUn5owFQY34kdNi2O/JbrIOy@public.gmane.org
 
-RnJvbTogTWF0dGhldyBXaWxjb3gNCj4gU2VudDogMjEgRmVicnVhcnkgMjAyMyAxMzo1MQ0KLi4u
-DQo+ID4gRm9yIHRoaXMgcGFydGljdWxhciBjYXNlLCBkb2N1bWVudGluZyBzdWNoIGFuIGFjY2Vz
-cy4gVGhvdWdoIEkgZG9uJ3QNCj4gPiB0aGluayB0aGVyZSBhcmUgYW55IGFyY2hpdGVjdHVyZXMg
-d2hpY2ggbWF5IHRlYXIgYSBvbmUgYnl0ZSByZWFkL3dyaXRlDQo+ID4gYW5kIG1lcmdpbmcvcmVm
-ZXRjaGluZyBpcyBub3QgYW4gaXNzdWUgZm9yIHRoaXMuDQo+IA0KPiBXb3VsZG4ndCBhIGNvbXBp
-bGVyIGJlIHdpdGhpbiBpdHMgcmlnaHRzIHRvIGltcGxlbWVudCBhIG9uZSBieXRlIHN0b3JlIGFz
-Og0KPiANCj4gCWxvYWQtd29yZA0KPiAJbW9kaWZ5LWJ5dGUtaW4td29yZA0KPiAJc3RvcmUtd29y
-ZA0KPiANCj4gYW5kIGlmIHRoaXMgaXMgYSBsb2NrbGVzcyBzdG9yZSB0byBhIHdvcmQgd2hpY2gg
-aGFzIGFuIGFkamFjZW50IGJ5dGUgYWxzbw0KPiBiZWluZyBtb2RpZmllZCBieSBhbm90aGVyIENQ
-VSwgb25lIG9mIHRob3NlIENQVXMgY2FuIGxvc2UgaXRzIHN0b3JlPw0KPiBBbmQgV1JJVEVfT05D
-RSB3b3VsZCBwcmV2ZW50IHRoZSBjb21waWxlciBmcm9tIGltcGxlbWVudGluZyB0aGUgc3RvcmUN
-Cj4gaW4gdGhhdCB3YXkuDQoNClNvbWUgYWxwaGEgY3B1IGNvdWxkbid0IGRvIGJ5dGUgbWVtb3J5
-IGFjY2Vzc2VzIC0gc28gYWx3YXlzDQpkaWQgMzJiaXQgcmVhZC1tb2RpZnktd3JpdGUuIEJ1dCBM
-aW51eCBkb2Vzbid0IHN1cHBvcnQgdGhvc2UNCm9uZXMgYW55IG1vcmUuDQoNCk9uIGFybSAxNmJp
-dCBzdHJ1Y3R1cmUgbWVtYmVycyBjYW4gYmUgYWNjZXNzZWQgd2l0aCAzMmJpdA0KaW5zdHJ1Y3Rp
-b25zIGJlY2F1c2UgdGhlIDE2Yml0IG9uZXMgaGF2ZSBhIHNtYWxsZXIgb2Zmc2V0Lg0KDQpPbiB4
-ODYgdGhlIGJpdCBvcGVyYXRpb25zIG1pZ2h0IGFjY2VzcyB0aGUgKHBvc3NpYmx5IG1pc2FsaWdu
-ZWQpDQozMmJpdCB3b3JkIGNvbnRhaW5pbmcgdGhlIHJlcXVpcmVkIGJpdCAtIGJ1dCB0aGV5IGFy
-ZSBsb2NrZWQuDQoNCklTVFIgYSBwcm9ibGVtIHdoZXJlIGdjYyB3YXMgdXNpbmcgd2lkZXIgaW5z
-dHJ1Y3Rpb25zIGFuZA0KZG9pbmcgYSBSTVcgb24gYW4gYWRqYWNlbnQgdm9sYXRpbGUgZmllbGQu
-DQoNCkkgcmVhbGx5IGNhbid0IHJlbWVtYmVyIHRoZSBqdXN0aWZpY2F0aW9uIGZvciBub3QgbWFy
-a2luZw0KZmllbGRzIHRoYXQgaGF2ZSB1bmxvY2tlZCBhY2Nlc3NlcyAndm9sYXRpbGUnIGluc3Rl
-YWQgb2YNCnJlcXVpcmluZyBhbGwgdGhlIGFjY2Vzc2VzIGJlIGRvbmUgYXMgZXhwbGljaXQgdm9s
-YXRpbGUgb25lcy4NCg0KCURhdmlkDQoNCi0NClJlZ2lzdGVyZWQgQWRkcmVzcyBMYWtlc2lkZSwg
-QnJhbWxleSBSb2FkLCBNb3VudCBGYXJtLCBNaWx0b24gS2V5bmVzLCBNSzEgMVBULCBVSw0KUmVn
-aXN0cmF0aW9uIE5vOiAxMzk3Mzg2IChXYWxlcykNCg==
+On Fri, Jan 13, 2023 at 03:12:33PM +0100, Vincent Guittot wrote:
 
+> +static void __enqueue_latency(struct cfs_rq *cfs_rq, struct sched_entity *se, int flags)
+> +{
+> +
+> +	/* Only latency sensitive entity can be added to the list */
+> +	if (se->latency_offset >= 0)
+> +		return;
+> +
+> +	if (!RB_EMPTY_NODE(&se->latency_node))
+> +		return;
+> +
+> +	/*
+> +	 * An execution time less than sysctl_sched_min_granularity means that
+> +	 * the entity has been preempted by a higher sched class or an entity
+> +	 * with higher latency constraint.
+> +	 * Put it back in the list so it gets a chance to run 1st during the
+> +	 * next slice.
+> +	 */
+> +	if (!(flags & ENQUEUE_WAKEUP)) {
+> +		u64 delta_exec = se->sum_exec_runtime - se->prev_sum_exec_runtime;
+> +
+> +		if (delta_exec >= sysctl_sched_min_granularity)
+> +			return;
+> +	}
+
+I'm not a big fan of this dynamic enqueueing condition; it makes it
+rather hard to interpret the below addition to pick_next_entity().
+
+Let me think about this more... at the very least the comment with
+__pick_first_latency() use below needs to be expanded upon if we keep it
+like so.
+
+> +
+> +	rb_add_cached(&se->latency_node, &cfs_rq->latency_timeline, __latency_less);
+> +}
+
+> @@ -4966,7 +5040,7 @@ static struct sched_entity *
+>  pick_next_entity(struct cfs_rq *cfs_rq, struct sched_entity *curr)
+>  {
+>  	struct sched_entity *left = __pick_first_entity(cfs_rq);
+> -	struct sched_entity *se;
+> +	struct sched_entity *latency, *se;
+>  
+>  	/*
+>  	 * If curr is set we have to see if its left of the leftmost entity
+> @@ -5008,6 +5082,12 @@ pick_next_entity(struct cfs_rq *cfs_rq, struct sched_entity *curr)
+>  		se = cfs_rq->last;
+>  	}
+>  
+> +	/* Check for latency sensitive entity waiting for running */
+> +	latency = __pick_first_latency(cfs_rq);
+> +	if (latency && (latency != se) &&
+> +	    wakeup_preempt_entity(latency, se) < 1)
+> +		se = latency;
+
+I'm not quite sure why this condition isn't sufficient on it's own.
+After all, if a task does a 'spurious' nanosleep it can get around the
+'restriction' in __enqueue_latency() without any great penalty to it's
+actual bandwidth consumption.
