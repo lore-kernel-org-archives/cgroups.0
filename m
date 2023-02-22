@@ -1,104 +1,45 @@
-From: Bagas Sanjaya <bagasdotme-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: Re: [PATCH v2] blk-ioprio: Introduce promote-to-rt policy
-Date: Wed, 22 Feb 2023 14:38:01 +0700
-Message-ID: <5ff2b68a-a8fb-7901-2c38-1056a2c59f70@gmail.com>
-References: <20230220135428.2632906-1-houtao@huaweicloud.com>
+From: David Laight <David.Laight@ACULAB.COM>
+Subject: RE: [PATCH] mm: change memcg->oom_group access with atomic operations
+Date: Wed, 22 Feb 2023 09:01:05 +0000
+Message-ID: <e7f5f9686a5d4872a2e530550228718f@AcuMS.aculab.com>
+References: <20230220230624.lkobqeagycx7bi7p@google.com>
+ <6563189C-7765-4FFA-A8F2-A5CC4860A1EF@linux.dev>
+ <CALvZod55K5zbbVYptq8ud=nKVyU1xceGVf6UcambBZ3BA2TZqA@mail.gmail.com>
+ <Y/TMYa8DrocppXRu@casper.infradead.org>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=tQnhk4w+A1CZuSiFNzZYnpV69X8Dsuspy9qsHPKjTI0=;
-        b=kgMH6/tfuXU3Gt2XMp21OuwvVA7LLi2oGBFlBP4ahaNQCsd817zZxxjh4mmlcyGvAj
-         74AoHp4DwwrMqH84r7BaW1B5YjzjPwgl5Lqc5kp3BY+TJMmpy22BB1GiBDCLUoW0DLaD
-         lH0rIPkmqTCJ8UVbVqQrNVrQvnT9soVkZ9Wol5REsAUZesfvlxpnMO/cY1oAAGHLRkTS
-         6ixharSxG0r0hXm7NVnsOZLiF+2X/nH7PYpG+RemZ7+HrHLZIwvVxop0E1tSlEDDa8UI
-         cGCbTsjy4lmO8cPMpSI3iN+CTPnPugV5b2m03N3L/ujetT9wDtOE6OTtlhDG5NoGtav6
-         yZKw==
+Content-Transfer-Encoding: base64
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <Y/TMYa8DrocppXRu@casper.infradead.org>
 Content-Language: en-US
-In-Reply-To: <20230220135428.2632906-1-houtao-XF6JlduFytWkHkcT6e4Xnw@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Hou Tao <houtao-XF6JlduFytWkHkcT6e4Xnw@public.gmane.org>, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-Cc: Bart Van Assche <bvanassche-HInyCGIudOg@public.gmane.org>, Jan Kara <jack-AlSwsSmVLrQ@public.gmane.org>, Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Jonathan Corbet <corbet-T1hC0tSOHrs@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, houtao1-hv44wF8Li93QT0dZR+AlfA@public.gmane.org
+To: 'Matthew Wilcox' <willy@infradead.org>, Shakeel Butt <shakeelb@google.com>
+Cc: Roman Gushchin <roman.gushchin@linux.dev>, Yue Zhao <findns94@gmail.com>, "linux-mm@kvack.org" <linux-mm@kvack.org>, "akpm@linux-foundation.org" <akpm@linux-foundation.org>, "hannes@cmpxchg.org" <hannes@cmpxchg.org>, "mhocko@kernel.org" <mhocko@kernel.org>, "muchun.song@linux.dev" <muchun.song@linux.dev>, "cgroups@vger.kernel.org" <cgroups@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 
-On 2/20/23 20:54, Hou Tao wrote:
-> diff --git a/Documentation/admin-guide/cgroup-v2.rst b/Documentation/admin-guide/cgroup-v2.rst
-> index 74cec76be9f2..ccfb9fdfbc16 100644
-> --- a/Documentation/admin-guide/cgroup-v2.rst
-> +++ b/Documentation/admin-guide/cgroup-v2.rst
-> @@ -2021,31 +2021,33 @@ that attribute:
->    no-change
->  	Do not modify the I/O priority class.
->  
-> -  none-to-rt
-> -	For requests that do not have an I/O priority class (NONE),
-> -	change the I/O priority class into RT. Do not modify
-> -	the I/O priority class of other requests.
-> +  promote-to-rt
-> +	For requests that have a no-RT I/O priority class, change it into RT.
-"non-RT" maybe? Or the original wording is better?
-> +	Also change the priority level of these requests to 4. Do not modify
-> +	the I/O priority of requests that have priority class RT.>  
->    restrict-to-be
->  	For requests that do not have an I/O priority class or that have I/O
-> -	priority class RT, change it into BE. Do not modify the I/O priority
-> -	class of requests that have priority class IDLE.
-> +	priority class RT, change it into BE. Also change the priority level
-> +	of these requests to 0. Do not modify the I/O priority class of
-> +	requests that have priority class IDLE.
->  
->    idle
->  	Change the I/O priority class of all requests into IDLE, the lowest
->  	I/O priority class.
->  
-> +  none-to-rt
-> +	Deprecated. Just an alias for promote-to-rt.
-> +
->  The following numerical values are associated with the I/O priority policies:
->  
-> -+-------------+---+
-> -| no-change   | 0 |
-> -+-------------+---+
-> -| none-to-rt  | 1 |
-> -+-------------+---+
-> -| rt-to-be    | 2 |
-> -+-------------+---+
-> -| all-to-idle | 3 |
-> -+-------------+---+
-> ++----------------+---+
-> +| no-change      | 0 |
-> ++----------------+---+
-> +| rt-to-be       | 2 |
-> ++----------------+---+
-> +| all-to-idle    | 3 |
-> ++----------------+---+
->  
->  The numerical value that corresponds to each I/O priority class is as follows:
->  
-> @@ -2061,9 +2063,13 @@ The numerical value that corresponds to each I/O priority class is as follows:
->  
->  The algorithm to set the I/O priority class for a request is as follows:
->  
-> -- Translate the I/O priority class policy into a number.
-> -- Change the request I/O priority class into the maximum of the I/O priority
-> -  class policy number and the numerical I/O priority class.
-> +- If I/O priority class policy is promote-to-rt, change the request I/O
-> +  priority class to IOPRIO_CLASS_RT and change the request I/O priority
-> +  level to 4.
-> +- If I/O priorityt class is not promote-to-rt, translate the I/O priority
-> +  class policy into a number, then change the request I/O priority class
-> +  into the maximum of the I/O priority class policy number and the numerical
-> +  I/O priority class.
->  
->  PID
->  ---
-
-The rest is LGTM.
-
--- 
-An old man doll... just what I always wanted! - Clara
+RnJvbTogTWF0dGhldyBXaWxjb3gNCj4gU2VudDogMjEgRmVicnVhcnkgMjAyMyAxMzo1MQ0KLi4u
+DQo+ID4gRm9yIHRoaXMgcGFydGljdWxhciBjYXNlLCBkb2N1bWVudGluZyBzdWNoIGFuIGFjY2Vz
+cy4gVGhvdWdoIEkgZG9uJ3QNCj4gPiB0aGluayB0aGVyZSBhcmUgYW55IGFyY2hpdGVjdHVyZXMg
+d2hpY2ggbWF5IHRlYXIgYSBvbmUgYnl0ZSByZWFkL3dyaXRlDQo+ID4gYW5kIG1lcmdpbmcvcmVm
+ZXRjaGluZyBpcyBub3QgYW4gaXNzdWUgZm9yIHRoaXMuDQo+IA0KPiBXb3VsZG4ndCBhIGNvbXBp
+bGVyIGJlIHdpdGhpbiBpdHMgcmlnaHRzIHRvIGltcGxlbWVudCBhIG9uZSBieXRlIHN0b3JlIGFz
+Og0KPiANCj4gCWxvYWQtd29yZA0KPiAJbW9kaWZ5LWJ5dGUtaW4td29yZA0KPiAJc3RvcmUtd29y
+ZA0KPiANCj4gYW5kIGlmIHRoaXMgaXMgYSBsb2NrbGVzcyBzdG9yZSB0byBhIHdvcmQgd2hpY2gg
+aGFzIGFuIGFkamFjZW50IGJ5dGUgYWxzbw0KPiBiZWluZyBtb2RpZmllZCBieSBhbm90aGVyIENQ
+VSwgb25lIG9mIHRob3NlIENQVXMgY2FuIGxvc2UgaXRzIHN0b3JlPw0KPiBBbmQgV1JJVEVfT05D
+RSB3b3VsZCBwcmV2ZW50IHRoZSBjb21waWxlciBmcm9tIGltcGxlbWVudGluZyB0aGUgc3RvcmUN
+Cj4gaW4gdGhhdCB3YXkuDQoNClNvbWUgYWxwaGEgY3B1IGNvdWxkbid0IGRvIGJ5dGUgbWVtb3J5
+IGFjY2Vzc2VzIC0gc28gYWx3YXlzDQpkaWQgMzJiaXQgcmVhZC1tb2RpZnktd3JpdGUuIEJ1dCBM
+aW51eCBkb2Vzbid0IHN1cHBvcnQgdGhvc2UNCm9uZXMgYW55IG1vcmUuDQoNCk9uIGFybSAxNmJp
+dCBzdHJ1Y3R1cmUgbWVtYmVycyBjYW4gYmUgYWNjZXNzZWQgd2l0aCAzMmJpdA0KaW5zdHJ1Y3Rp
+b25zIGJlY2F1c2UgdGhlIDE2Yml0IG9uZXMgaGF2ZSBhIHNtYWxsZXIgb2Zmc2V0Lg0KDQpPbiB4
+ODYgdGhlIGJpdCBvcGVyYXRpb25zIG1pZ2h0IGFjY2VzcyB0aGUgKHBvc3NpYmx5IG1pc2FsaWdu
+ZWQpDQozMmJpdCB3b3JkIGNvbnRhaW5pbmcgdGhlIHJlcXVpcmVkIGJpdCAtIGJ1dCB0aGV5IGFy
+ZSBsb2NrZWQuDQoNCklTVFIgYSBwcm9ibGVtIHdoZXJlIGdjYyB3YXMgdXNpbmcgd2lkZXIgaW5z
+dHJ1Y3Rpb25zIGFuZA0KZG9pbmcgYSBSTVcgb24gYW4gYWRqYWNlbnQgdm9sYXRpbGUgZmllbGQu
+DQoNCkkgcmVhbGx5IGNhbid0IHJlbWVtYmVyIHRoZSBqdXN0aWZpY2F0aW9uIGZvciBub3QgbWFy
+a2luZw0KZmllbGRzIHRoYXQgaGF2ZSB1bmxvY2tlZCBhY2Nlc3NlcyAndm9sYXRpbGUnIGluc3Rl
+YWQgb2YNCnJlcXVpcmluZyBhbGwgdGhlIGFjY2Vzc2VzIGJlIGRvbmUgYXMgZXhwbGljaXQgdm9s
+YXRpbGUgb25lcy4NCg0KCURhdmlkDQoNCi0NClJlZ2lzdGVyZWQgQWRkcmVzcyBMYWtlc2lkZSwg
+QnJhbWxleSBSb2FkLCBNb3VudCBGYXJtLCBNaWx0b24gS2V5bmVzLCBNSzEgMVBULCBVSw0KUmVn
+aXN0cmF0aW9uIE5vOiAxMzk3Mzg2IChXYWxlcykNCg==
 
