@@ -1,60 +1,36 @@
-From: Jason Gunthorpe <jgg-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH 14/19] mm: Introduce a cgroup for pinned memory
-Date: Thu, 23 Feb 2023 13:28:12 -0400
-Message-ID: <Y/eiLBo88pgr2IUm@nvidia.com>
-References: <Y/UEkNn0O65Pfi4e@nvidia.com>
- <Y/UIURDjR9pv+gzx@slm.duckdns.org>
- <Y/Ua6VcNe/DFh7X4@nvidia.com>
- <Y/UfS8TDIXhUlJ/I@slm.duckdns.org>
- <Y/UiQmuVwh2eqrfA@nvidia.com>
- <87o7pmnd0p.fsf@nvidia.com>
- <Y/YRJNwwvqp7nKKt@nvidia.com>
- <87k009nvnr.fsf@nvidia.com>
- <Y/bHNO7A8T3QQ5T+@nvidia.com>
- <CABdmKX18MY19bnsxN5W38Z9zmoaZx+S4+zzN_5XCYDBruwPrLg@mail.gmail.com>
+From: Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>
+Subject: Re: [PATCH] mm/memcontrol: add memory.peak in cgroup root
+Date: Thu, 23 Feb 2023 09:30:53 -0800
+Message-ID: <Y/eizTVo8LM70flh@P9FQF9L96D.corp.robot.car>
+References: <AM5PR0202MB25167BFBBE892630A2EE3B7DE1AB9@AM5PR0202MB2516.eurprd02.prod.outlook.com>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
- s=selector2;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=EKAwc/LgahAvTgYhXdUvHgORsVMsXkpCftdguy998aI=;
- b=ppKcvQhMyE+wTM8JZCjY9g/3iU21+KFmkyth0kNxOctyRwQoqg6epC3+FYpbG9cRH0MHYlesqB6oyMyvzyu45FQ3bZkjSgbMJaVYthTId+Xolp7s1ff3UJtpWvrQGHrgfa9CcoeBpOrwVADqxD8m1KWXecaum4T8b/UsFwmIMgEcfAHRyhIBzw9bDw+qg97CCjDYolBcm3Jzxtz8Jc20aG3DONNR65ZvAR5+D4BAfwXGfLHbumXRght1LTX/IvurZhdEB0/92kUTUC+n+LgZ34kmpEZuRxWyYigTrTw/2675DKm7uHvmFrUKC62aAl/1SENLCNhMxtEYA8WLQue5uQ==
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
+        t=1677173458;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=1WZIJ8pUmzgqf8s+eBJbOZDw0S7cY6i0ZgBo0K3FG/Q=;
+        b=pioTvFJu7T1+T4/dTxeZZqfGM2/TWjnxl4BbSskW/8iJMEnf3xGmnYpO2bJERJoSDtrpit
+        0eku3xR9czaZIWNvA8YRjTXPDh9dCUtqB9XDSEDs0pibvBl25q+K8xrv85ULglmXpU5SYL
+        spx63rP8+9iIRtqUhMP6lWjWqydHSU0=
 Content-Disposition: inline
-In-Reply-To: <CABdmKX18MY19bnsxN5W38Z9zmoaZx+S4+zzN_5XCYDBruwPrLg-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+In-Reply-To: <AM5PR0202MB25167BFBBE892630A2EE3B7DE1AB9-y8SMVMhlxwlZMxuguPlqCOmQVOPts17knBOFsp37pqbUKgpGm//BTAC/G2K4zDHf@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: "T.J. Mercier" <tjmercier-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Cc: Alistair Popple <apopple-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>, Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, jhubbard-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, surenb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, mkoutny-IBi9RG/b67k@public.gmane.org, daniel-/w4YWyX8dFk@public.gmane.org, "Daniel P . Berrange" <berrange-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Alex Williamson <alex.williamson-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+To: Matthew Chae <Matthew.Chae-VrBV9hrLPhE@public.gmane.org>
+Cc: Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny-IBi9RG/b67k@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, kernel <kernel-VrBV9hrLPhE@public.gmane.org>, Christopher Wong <Christopher.Wong-VrBV9hrLPhE@public.gmane.org>, Muchun Song <muchun.song-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, "cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org" <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, "linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 
-On Thu, Feb 23, 2023 at 09:18:23AM -0800, T.J. Mercier wrote:
-
-> > Solving that problem means figuring out when every cgroup stops using
-> > the memory - pinning or not. That seems to be very costly.
-> >
-> This is the current behavior of accounting for memfds, and I suspect
-> any kind of shared memory.
+On Thu, Feb 23, 2023 at 04:22:33PM +0000, Matthew Chae wrote:
+> Hi Michal,
 > 
-> If cgroup A creates a memfd, maps and faults in pages, shares the
-> memfd with cgroup B and then A unmaps and closes the memfd, then
-> cgroup A is still charged for the pages it faulted in.
+> First off, thank you for sharing your opinion.
+> I'd like to monitor the peak memory usage recorded of overall system or at least cgroup accounted memory through memory.peak.
+> But it looks like this is not relevant to what I wanted.
+> It might be good to have some proper way for checking the system's peak memory usage recorded.
 
-As we discussed, as long as the memory is swappable then eventually
-memory pressure on cgroup A will evict the memfd pages and then cgroup
-B will swap it in and be charged for it.
- 
-> FWIW this is also the behavior I was trying to use to attribute
-> dma-buffers to their original allocators. Whoever touches it first
-> gets charged as long as the memory is alive somewhere.
->
-> Can't we do the same thing for pins?
+I guess you might want to do the opposite: instead of tracking the peak usage,
+you can record the bottom of available free memory.
 
-If pins are tracked independently from memcg then definately not,
-a process in cgroup A should never be able to make a charge on cgroup
-B as a matter of security.
-
-If pins are part of the memcg then we can't always turn the pin
-request in to a NOP - the current cgroup always has to be charged for
-the memory. Otherwise what is the point from a security perspective?
-
-Jason
+Thanks!
