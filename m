@@ -1,96 +1,103 @@
-From: Hou Tao <houtao-XF6JlduFytWkHkcT6e4Xnw@public.gmane.org>
-Subject: Re: [PATCH v2] blk-ioprio: Introduce promote-to-rt policy
-Date: Thu, 23 Feb 2023 09:08:06 +0800
-Message-ID: <48349bb4-68f1-365a-0556-742546d6dd68@huaweicloud.com>
-References: <20230220135428.2632906-1-houtao@huaweicloud.com>
- <5ff2b68a-a8fb-7901-2c38-1056a2c59f70@gmail.com>
+From: Jason Gunthorpe <jgg-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH 14/19] mm: Introduce a cgroup for pinned memory
+Date: Wed, 22 Feb 2023 21:53:56 -0400
+Message-ID: <Y/bHNO7A8T3QQ5T+@nvidia.com>
+References: <Y/T+pw25oGmKqz1k@nvidia.com>
+ <Y/T/bkcYc9Krw4rE@slm.duckdns.org>
+ <Y/UEkNn0O65Pfi4e@nvidia.com>
+ <Y/UIURDjR9pv+gzx@slm.duckdns.org>
+ <Y/Ua6VcNe/DFh7X4@nvidia.com>
+ <Y/UfS8TDIXhUlJ/I@slm.duckdns.org>
+ <Y/UiQmuVwh2eqrfA@nvidia.com>
+ <87o7pmnd0p.fsf@nvidia.com>
+ <Y/YRJNwwvqp7nKKt@nvidia.com>
+ <87k009nvnr.fsf@nvidia.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <5ff2b68a-a8fb-7901-2c38-1056a2c59f70-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Content-Language: en-US
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
+ s=selector2;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=5VSvVJDLYm3I4TVhgPviimt37DwUtMl1cULco1UlQLk=;
+ b=bOpQo3Od3xaxzT3jCmjSOW/RN+6DFEuTM3Ci9nqjb1X/7uqP5NZ5Hk3wJqWoFefnFXgzPl1VaK5ywKXgi74Org5nDJctbCjKAT2ZEMV0ohWoPYHSHP2HA76wKJevWlrbwLprTkoX/4vkukRnGfmq1Z0cOH+ciYdwNSweQ1Fb9YZfsYiAgug4cocqZESYjt6pRzaid3w6/ETaSg8vWeMFW9HNf5MuXSLVQ9PZCHa4a3rG26s1QNlbbbr7n2cRvKQlP8azVXzJatOJqO4Uh3Wg6+CP4zCncGi4svAWH7Uo5XZULbu3c/SelWXoitcsLYaww056uk170umjF9b9cM+1lQ==
+Content-Disposition: inline
+In-Reply-To: <87k009nvnr.fsf-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Bagas Sanjaya <bagasdotme-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-Cc: Bart Van Assche <bvanassche-HInyCGIudOg@public.gmane.org>, Jan Kara <jack-AlSwsSmVLrQ@public.gmane.org>, Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Jonathan Corbet <corbet-T1hC0tSOHrs@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, houtao1-hv44wF8Li93QT0dZR+AlfA@public.gmane.org
+Content-Transfer-Encoding: 7bit
+To: Alistair Popple <apopple-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>
+Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>, Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, jhubbard-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org, tjmercier-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, surenb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, mkoutny-IBi9RG/b67k@public.gmane.org, daniel-/w4YWyX8dFk@public.gmane.org, "Daniel P . Berrange" <berrange-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Alex Williamson <alex.williamson-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
 
-Hi,
+On Thu, Feb 23, 2023 at 09:59:35AM +1100, Alistair Popple wrote:
+> 
+> Jason Gunthorpe <jgg-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org> writes:
+> 
+> > On Wed, Feb 22, 2023 at 10:38:25PM +1100, Alistair Popple wrote:
+> >> When a driver unpins a page we scan the pinners list and assign
+> >> ownership to the next driver pinning the page by updating memcg_data and
+> >> removing the vm_account from the list.
+> >
+> > I don't see how this works with just the data structure you outlined??
+> > Every unique page needs its own list_head in the vm_account, it is
+> > doable just incredibly costly.
+> 
+> The idea was every driver already needs to allocate a pages array to
+> pass to pin_user_pages(), and by necessity drivers have to keep a
+> reference to the contents of that in one form or another. So
+> conceptually the equivalent of:
+> 
+> struct vm_account {
+>        struct list_head possible_pinners;
+>        struct mem_cgroup *memcg;
+>        struct pages **pages;
+>        [...]
+> };
+> 
+> Unpinnig involves finding a new owner by traversing the list of
+> page->memcg_data->possible_pinners and iterating over *pages[] to figure
+> out if that vm_account actually has this page pinned or not and could
+> own it.
 
-On 2/22/2023 3:38 PM, Bagas Sanjaya wrote:
-> On 2/20/23 20:54, Hou Tao wrote:
->> diff --git a/Documentation/admin-guide/cgroup-v2.rst b/Documentation/admin-guide/cgroup-v2.rst
->> index 74cec76be9f2..ccfb9fdfbc16 100644
->> --- a/Documentation/admin-guide/cgroup-v2.rst
->> +++ b/Documentation/admin-guide/cgroup-v2.rst
->> @@ -2021,31 +2021,33 @@ that attribute:
->>    no-change
->>  	Do not modify the I/O priority class.
->>  
->> -  none-to-rt
->> -	For requests that do not have an I/O priority class (NONE),
->> -	change the I/O priority class into RT. Do not modify
->> -	the I/O priority class of other requests.
->> +  promote-to-rt
->> +	For requests that have a no-RT I/O priority class, change it into RT.
-> "non-RT" maybe? Or the original wording is better?
-Because promote-to-rt doesn't work like none-to-rt, so using the original word
-is incorrect. Will fix it to non-RT in v3.
->> +	Also change the priority level of these requests to 4. Do not modify
->> +	the I/O priority of requests that have priority class RT.>  
->>    restrict-to-be
->>  	For requests that do not have an I/O priority class or that have I/O
->> -	priority class RT, change it into BE. Do not modify the I/O priority
->> -	class of requests that have priority class IDLE.
->> +	priority class RT, change it into BE. Also change the priority level
->> +	of these requests to 0. Do not modify the I/O priority class of
->> +	requests that have priority class IDLE.
->>  
->>    idle
->>  	Change the I/O priority class of all requests into IDLE, the lowest
->>  	I/O priority class.
->>  
->> +  none-to-rt
->> +	Deprecated. Just an alias for promote-to-rt.
->> +
->>  The following numerical values are associated with the I/O priority policies:
->>  
->> -+-------------+---+
->> -| no-change   | 0 |
->> -+-------------+---+
->> -| none-to-rt  | 1 |
->> -+-------------+---+
->> -| rt-to-be    | 2 |
->> -+-------------+---+
->> -| all-to-idle | 3 |
->> -+-------------+---+
->> ++----------------+---+
->> +| no-change      | 0 |
->> ++----------------+---+
->> +| rt-to-be       | 2 |
->> ++----------------+---+
->> +| all-to-idle    | 3 |
->> ++----------------+---+
->>  
->>  The numerical value that corresponds to each I/O priority class is as follows:
->>  
->> @@ -2061,9 +2063,13 @@ The numerical value that corresponds to each I/O priority class is as follows:
->>  
->>  The algorithm to set the I/O priority class for a request is as follows:
->>  
->> -- Translate the I/O priority class policy into a number.
->> -- Change the request I/O priority class into the maximum of the I/O priority
->> -  class policy number and the numerical I/O priority class.
->> +- If I/O priority class policy is promote-to-rt, change the request I/O
->> +  priority class to IOPRIO_CLASS_RT and change the request I/O priority
->> +  level to 4.
->> +- If I/O priorityt class is not promote-to-rt, translate the I/O priority
->> +  class policy into a number, then change the request I/O priority class
->> +  into the maximum of the I/O priority class policy number and the numerical
->> +  I/O priority class.
->>  
->>  PID
->>  ---
-> The rest is LGTM.
-Thanks for you review.
->
+Oh, you are focusing on Tejun's DOS scenario. 
 
+The DOS problem is to prevent a pin users in cgroup A from keeping
+memory charged to cgroup B that it isn't using any more.
+
+cgroup B doesn't need to be pinning the memory, it could just be
+normal VMAs and "isn't using anymore" means it has unmapped all the
+VMAs.
+
+Solving that problem means figuring out when every cgroup stops using
+the memory - pinning or not. That seems to be very costly.
+
+AFAIK this problem also already exists today as the memcg of a page
+doesn't change while it is pinned. So maybe we don't need to address
+it.
+
+Arguably the pins are not the problem. If we want to treat the pin
+like allocation then we simply charge the non-owning memcg's for the
+pin as though it was an allocation. Eg go over every page and if the
+owning memcg is not the current memcg then charge the current memcg
+for an allocation of the MAP_SHARED memory. Undoing this is trivial
+enoug.
+
+This doesn't fix the DOS problem but it does sort of harmonize the pin
+accounting with the memcg by multi-accounting every pin of a
+MAP_SHARED page.
+
+The other drawback is that this isn't the same thing as the current
+rlimit. The rlimit is largely restricting the creation of unmovable
+memory.
+
+Though, AFAICT memcg seems to bundle unmovable memory (eg GFP_KERNEL)
+along with movable user pages so it would be self-consistent.
+
+I'm unclear if this is OK for libvirt..
+
+> Agree this is costly though. And I don't think all drivers keep the
+> array around so "iterating over *pages[]" may need to be a callback.
+
+I think searching lists of pages is not reasonable. Things like VFIO &
+KVM use cases effectively pin 90% of all system memory, that is
+potentially TB of page lists that might need linear searching!
+
+Jason
