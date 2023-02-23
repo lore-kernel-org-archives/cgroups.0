@@ -1,67 +1,202 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH 14/19] mm: Introduce a cgroup for pinned memory
-Date: Thu, 23 Feb 2023 08:22:09 -1000
-Message-ID: <Y/eu0cUDGe5JNOlq@slm.duckdns.org>
-References: <87o7pmnd0p.fsf@nvidia.com>
- <Y/YRJNwwvqp7nKKt@nvidia.com>
- <87k009nvnr.fsf@nvidia.com>
- <Y/bHNO7A8T3QQ5T+@nvidia.com>
- <CABdmKX18MY19bnsxN5W38Z9zmoaZx+S4+zzN_5XCYDBruwPrLg@mail.gmail.com>
- <Y/eiLBo88pgr2IUm@nvidia.com>
- <CAJD7tkadBRP22qP63-SjKSch1im9sHLoMzc6c2h10+ggbuxqMg@mail.gmail.com>
- <Y/esMBOyTaJnv5CW@nvidia.com>
- <Y/etNfwxHv8XO3iC@slm.duckdns.org>
- <Y/etrtvyaiwRIo6f@nvidia.com>
+From: Vincent Guittot <vincent.guittot@linaro.org>
+Subject: [PATCH v11 0/8] Add latency priority for CFS class
+Date: Thu, 23 Feb 2023 20:10:33 +0100
+Message-ID: <20230223191041.577305-1-vincent.guittot@linaro.org>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-doc-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:sender:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=gjT5RDIYjClMZUhiJmsiPwT8mIJGRNa0EFpaJl2jelA=;
-        b=Ukme3+K3HjLvPsdqhtKKYkHuMO/N9SoQ9PPYVv2MsICMkI03J1ZmZHTePDjQX4X4Kc
-         Uax+bJBaRGbYQoCM3aJd7NMn7Y7QqCtV/yX0vanHn1J3d4Ff3aVE8drM2eUlpNn7U9iJ
-         DJxVQCmM16QHOSfImPZ3Rwld+i7syDGG150dbv4GP3d3+MlRdiuXt5b0BcZl8aMeoZeJ
-         jmJXKahSpMaFrYBd7cL9/4ePB3Rrao+hXxN0q5+By6tXEfiiKJQF09rsrfY3lMDqr/qI
-         mhYNXIi9VZWAnsuc3egKApOjI1h0v4+MvutaS6kwOO1nD7DAW9z7MaD4bRMY1Gk0duOj
-         JspQ==
-Sender: Tejun Heo <htejun-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <Y/etrtvyaiwRIo6f-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>
+        d=linaro.org; s=google;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=amjUgTYAx/u1lKfEtCZ9rPPfk76z53NvC+c6k/7gQs4=;
+        b=tT1fIN/hcdPpFrjFxNHYZHXBdIEvFA33DXVkevY0tA97V/uC1S3qosuiDnwxKbGNDF
+         wwzRsHNSY2Qq0gh9ayNajj5z5N9NpkjG6qfgXi9WAVRk51gfRNk6NrJ4+BrRTOlRVjsG
+         GO/QHEOdaVi7Rlk8ajJrtDPdZ0bhQSD4AiQh5b0VT1CzATtNfvbUw0qW6g6aXM6bJO2k
+         PMY4kbcY65TOEcxUn6DIBybyZEAqGJxZ3AhBzVpi16IOBZ6FxWKOTFfXfmLGeuSfdsPy
+         s5P2++5nL6FLBSVnLphy60EJ+THKF/ApOB5ibLn36IS6e9i1DKayuG2ZaTynhF9zRJdm
+         jL7A==
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Jason Gunthorpe <jgg-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>
-Cc: Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, "T.J. Mercier" <tjmercier-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Alistair Popple <apopple-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>, Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, jhubbard-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, surenb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, mkoutny-IBi9RG/b67k@public.gmane.org, daniel-/w4YWyX8dFk@public.gmane.org, "Daniel P . Berrange" <berrange-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Alex Williamson <alex.williamson-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+To: mingo@redhat.com, peterz@infradead.org, juri.lelli@redhat.com, dietmar.eggemann@arm.com, rostedt@goodmis.org, bsegall@google.com, mgorman@suse.de, bristot@redhat.com, vschneid@redhat.com, linux-kernel@vger.kernel.org, parth@linux.ibm.com, lizefan.x@bytedance.com, hannes@cmpxchg.org, cgroups@vger.kernel.org, corbet@lwn.net, linux-doc@vger.kernel.org
+Cc: tj@kernel.org, qyousef@layalina.io, chris.hyser@oracle.com, patrick.bellasi@matbug.net, David.Laight@aculab.com, pjt@google.com, pavel@ucw.cz, qperret@google.com, tim.c.chen@linux.intel.com, joshdon@google.com, timj@gnu.org, kprateek.nayak@amd.com, yu.c.chen@intel.com, youssefesmat@chromium.org, joel@joelfernandes.org, Vincent Guittot <vincent.guittot@linaro.org>
 
-On Thu, Feb 23, 2023 at 02:17:18PM -0400, Jason Gunthorpe wrote:
-> On Thu, Feb 23, 2023 at 08:15:17AM -1000, Tejun Heo wrote:
-> > On Thu, Feb 23, 2023 at 02:10:56PM -0400, Jason Gunthorpe wrote:
-> > > > I am not familiar with memfd, but based on
-> > > > mem_cgroup_swapin_charge_folio() it seems like if cgroup B swapped in
-> > > > the pages they will remain charged to cgroup A, unless cgroup A is
-> > > > removed/offlined. Am I missing something?
-> > > 
-> > > Ah, I don't know, Tejun said:
-> > > 
-> > > "but it can converge when page usage transfers across cgroups
-> > > if needed."
-> > > 
-> > > Which I assumed was swap related but I don't know how convergence
-> > > works.
-> > 
-> > That'd work for pagecache. For swap-backed, I think Yosry is right. Is
-> > MAP_SHARED | MAP_ANONYMOUS a concern? Such mappings can only be shared
-> > through forking, so it's not a common thing to be shared across different
-> > resource domains.
-> 
-> Isn't memfd also in the same boat?
+This patchset restarts the work about adding a latency priority to describe
+the latency tolerance of cfs tasks.
 
-I see. Yeah, that's looks like named shared anon. The first one
-instantiating a page would always be the owner.
+Patch [1] is a new one that has been added with v6. It fixes an
+unfairness for low prio tasks because of wakeup_gran() being bigger
+than the maximum vruntime credit that a waking task can keep after
+sleeping.
 
-Thanks.
+The patches [2-4] have been done by Parth:
+https://lore.kernel.org/lkml/20200228090755.22829-1-parth@linux.ibm.com/
+
+I have just rebased and moved the set of latency priority outside the
+priority update. I have removed the reviewed tag because the patches
+are 2 years old.
+
+This aims to be a generic interface and the following patches is one use
+of it to improve the scheduling latency of cfs tasks.
+
+Patch [5] uses latency nice priority to define a latency offset
+and then decide if a cfs task can or should preempt the current
+running task. The patch gives some tests results with cyclictests and
+hackbench to highlight the benefit of latency priority for short
+interactive task or long intensive tasks.
+
+Patch [6] adds the support of latency nice priority to task group by
+adding a cpu.latency.nice field. The range is [-20:19] as for setting task
+latency priority.
+
+Patch [7] makes sched_core taking into account the latency offset.
+
+Patch [8] adds a rb tree to cover some corner cases where the latency
+sensitive task (priority < 0) is preempted by high priority task (RT/DL)
+or fails to preempt them. This patch ensures that tasks will have at least
+a slice of sched_min_granularity in priority at wakeup.
+
+I have also backported the patchset on a dragonboard RB3 with an android
+mainline kernel based on v5.18 for a quick test. I have used the
+TouchLatency app which is part of AOSP and described to be a very good
+test to highlight jitter and jank frame sources of a system [1].
+In addition to the app, I have added some short running tasks waking-up
+regularly (to use the 8 cpus for 4 ms every 37777us) to stress the system
+without overloading it (and disabling EAS). The 1st results shows that the
+patchset helps to reduce the missed deadline frames from 5% to less than
+0.1% when the cpu.latency.nice of task group are set. I haven't rerun the
+test with latest version.
+
+I have also tested the patchset with the modified version of the alsa
+latency test that has been shared by Tim. The test quickly xruns with
+default latency nice priority 0 but is able to run without underuns with
+a latency -20 and hackbench running simultaneously.
+
+While preparing the version 8, I have evaluated the benefit of using an
+augmented rbtree instead of adding a rbtree for latency sensitive entities,
+which was a relevant suggestion done by PeterZ. Although the augmented
+rbtree enables to sort additional information in the tree with a limited
+overhead, it has more impact on legacy use cases (latency_nice >= 0)
+because the augmented callbacks are always called to maintain this
+additional information even when there is no sensitive tasks. In such
+cases, the dedicated rbtree remains empty and the overhead is reduced to
+loading a cached null node pointer. Nevertheless, we might want to
+reconsider the augmented rbtree once the use of negative latency_nice will
+be more widlely deployed. At now, the different tests that I have done,
+have not shown improvements with augmented rbtree.
+
+Below are some hackbench results (from v10):
+        2 rbtrees               augmented rbtree        augmented rbtree	
+                                sorted by vruntime      sorted by wakeup_vruntime
+sched	pipe	
+avg     26311,000               25976,667               25839,556
+stdev   0,15 %                  0,28 %                  0,24 %
+vs tip  0,50 %                  -0,78 %                 -1,31 %
+hackbench	1 group	
+avg     1,315                   1,344                   1,359
+stdev   0,88 %                  1,55 %                  1,82 %
+vs tip  -0,47 %                 -2,68 %                 -3,87 %
+hackbench	4 groups
+avg     1,339                   1,365                   1,367
+stdev   2,39 %                  2,26 %                  3,58 %
+vs tip  -0,08 %                 -2,01 %                 -2,22 %
+hackbench	8 groups
+avg     1,233                   1,286                   1,301
+stdev   0,74 %                  1,09 %                  1,52 %
+vs tip  0,29 %                  -4,05 %                 -5,27 %
+hackbench	16 groups	
+avg     1,268                   1,313                   1,319
+stdev   0,85 %                  1,60 %                  0,68 %
+vs tip  -0,02 %                 -3,56 %                 -4,01 %
+
+[1] https://source.android.com/docs/core/debug/eval_perf#touchlatency
+
+Change since v10:
+- remove sched_latency_to_weight array and use a calc_latency_offset() instead
+- save latency_prio instead for task group instead of latency offset
+- enqueue back an entity when changing the latency nice prio fo a task group
+
+Change since v9:
+- Rebase
+- add tags
+
+Change since v8:
+- Rename get_sched_latency by get_sleep_latency
+- move latency nice defines in sched/prio.h and fix latency_prio init value
+- Fix typo and comments
+
+Change since v7:
+- Replaced se->on_latency by using RB_CLEAR_NODE() and RB_EMPTY_NODE()
+- Clarify the limit behavior fo the cgroup cpu.latenyc_nice
+
+Change since v6:
+- Fix compilation error for !CONFIG_SCHED_DEBUG
+
+Change since v5:
+- Add patch 1 to fix unfairness for low prio task. This has been
+  discovered while studying Youssef's tests results with latency nice
+  which were hitting the same problem.
+- Fixed latency_offset computation to take into account
+  GENTLE_FAIR_SLEEPERS. This has diseappeared with v2and has been raised
+  by Youssef's tests.
+- Reworked and optimized how latency_offset in used to check for
+  preempting current task at wakeup and tick. This cover more cases too.
+- Add patch 9 to remove check_preempt_from_others() which is not needed
+  anymore with the rb tree.
+
+Change since v4:
+- Removed permission checks to set latency priority. This enables user
+  without elevated privilege like audio application to set their latency
+  priority as requested by Tim.
+- Removed cpu.latency and replaced it by cpu.latency.nice so we keep a
+  generic interface not tied to latency_offset which can be used to
+  implement other latency features.
+- Added an entry in Documentation/admin-guide/cgroup-v2.rst to describe
+  cpu.latency.nice.
+- Fix some typos.
+
+Change since v3:
+- Fix 2 compilation warnings raised by kernel test robot <lkp@intel.com>
+
+Change since v2:
+- Set a latency_offset field instead of saving a weight and computing it
+  on the fly.
+- Make latency_offset available for task group: cpu.latency
+- Fix some corner cases to make latency sensitive tasks schedule first and
+  add a rb tree for latency sensitive task.
+
+Change since v1:
+- fix typo
+- move some codes in the right patch to make bisect happy
+- simplify and fixed how the weight is computed
+- added support of sched core patch 7
+
+Parth Shah (3):
+  sched: Introduce latency-nice as a per-task attribute
+  sched/core: Propagate parent task's latency requirements to the child
+    task
+  sched: Allow sched_{get,set}attr to change latency_nice of the task
+
+Vincent Guittot (5):
+  sched/fair: fix unfairness at wakeup
+  sched/fair: Take into account latency priority at wakeup
+  sched/fair: Add sched group latency support
+  sched/core: Support latency priority with sched core
+  sched/fair: Add latency list
+
+ Documentation/admin-guide/cgroup-v2.rst |  10 ++
+ include/linux/sched.h                   |   4 +
+ include/linux/sched/prio.h              |  27 +++
+ include/uapi/linux/sched.h              |   4 +-
+ include/uapi/linux/sched/types.h        |  19 ++
+ init/init_task.c                        |   1 +
+ kernel/sched/core.c                     |  65 +++++++
+ kernel/sched/debug.c                    |   1 +
+ kernel/sched/fair.c                     | 221 ++++++++++++++++++++----
+ kernel/sched/sched.h                    |  50 +++++-
+ tools/include/uapi/linux/sched.h        |   4 +-
+ 11 files changed, 370 insertions(+), 36 deletions(-)
 
 -- 
-tejun
+2.34.1
+
