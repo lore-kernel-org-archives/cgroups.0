@@ -1,151 +1,185 @@
-From: Daniel =?utf-8?B?UC4gQmVycmFuZ8Op?= <berrange@redhat.com>
-Subject: Re: [PATCH 14/19] mm: Introduce a cgroup for pinned memory
-Date: Thu, 23 Feb 2023 09:12:19 +0000
-Message-ID: <Y/ct88JBeQuSmCuj@redhat.com>
-References: <Y/T/bkcYc9Krw4rE@slm.duckdns.org>
- <Y/UEkNn0O65Pfi4e@nvidia.com>
- <Y/UIURDjR9pv+gzx@slm.duckdns.org>
- <Y/Ua6VcNe/DFh7X4@nvidia.com>
- <Y/UfS8TDIXhUlJ/I@slm.duckdns.org>
- <Y/UiQmuVwh2eqrfA@nvidia.com>
- <87o7pmnd0p.fsf@nvidia.com>
- <Y/YRJNwwvqp7nKKt@nvidia.com>
- <87k009nvnr.fsf@nvidia.com>
- <Y/bHNO7A8T3QQ5T+@nvidia.com>
-Reply-To: Daniel =?utf-8?B?UC4gQmVycmFuZ8Op?= <berrange@redhat.com>
+From: Hou Tao <houtao@huaweicloud.com>
+Subject: [PATCH v3] blk-ioprio: Introduce promote-to-rt policy
+Date: Thu, 23 Feb 2023 21:51:54 +0800
+Message-ID: <20230223135154.3749088-1-houtao@huaweicloud.com>
 Mime-Version: 1.0
-Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1677143552;
-        h=from:from:reply-to:reply-to:subject:subject:date:date:
-         message-id:message-id:to:to:cc:cc:mime-version:mime-version:
-         content-type:content-type:in-reply-to:in-reply-to:  references:references;
-        bh=uwZaYUWCxFZTg3f1dH6MjHYdgF0IHgLHUPN7A+BCwIc=;
-        b=RVgx7kppoQw7kqwC9fpDWLYFerIVfpdGesscA/7+1q+mMCx3lNCEM+VrryJCRgTXu9qEmA
-        AdLzcw5t9zSQy/9Mz3U2c6to8ma7cscFl2FBwxNwoNFTL+uzPO268Evx0xHE9W3V8y832g
-        TZLNvvjxRmWxVQCEDsaldSPbaA3pDAU=
-Content-Disposition: inline
-In-Reply-To: <Y/bHNO7A8T3QQ5T+@nvidia.com>
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-doc-owner@vger.kernel.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Jason Gunthorpe <jgg@nvidia.com>
-Cc: Alistair Popple <apopple@nvidia.com>, Tejun Heo <tj@kernel.org>, Michal Hocko <mhocko@suse.com>, Yosry Ahmed <yosryahmed@google.com>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, jhubbard@nvidia.com, tjmercier@google.com, hannes@cmpxchg.org, surenb@google.com, mkoutny@suse.com, daniel@ffwll.ch, Alex Williamson <alex.williamson@redhat.com>, Zefan Li <lizefan.x@bytedance.com>, Andrew Morton <akpm@linux-foundation.org>
+To: linux-block@vger.kernel.org
+Cc: Bart Van Assche <bvanassche@acm.org>, Jan Kara <jack@suse.cz>, Bagas Sanjaya <bagasdotme@gmail.com>, Chaitanya Kulkarni <kch@nvidia.com>, Jens Axboe <axboe@kernel.dk>, cgroups@vger.kernel.org, Tejun Heo <tj@kernel.org>, Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, Jonathan Corbet <corbet@lwn.net>, linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org, houtao1@huawei.com
 
-On Wed, Feb 22, 2023 at 09:53:56PM -0400, Jason Gunthorpe wrote:
-> On Thu, Feb 23, 2023 at 09:59:35AM +1100, Alistair Popple wrote:
-> > 
-> > Jason Gunthorpe <jgg@nvidia.com> writes:
-> > 
-> > > On Wed, Feb 22, 2023 at 10:38:25PM +1100, Alistair Popple wrote:
-> > >> When a driver unpins a page we scan the pinners list and assign
-> > >> ownership to the next driver pinning the page by updating memcg_data and
-> > >> removing the vm_account from the list.
-> > >
-> > > I don't see how this works with just the data structure you outlined??
-> > > Every unique page needs its own list_head in the vm_account, it is
-> > > doable just incredibly costly.
-> > 
-> > The idea was every driver already needs to allocate a pages array to
-> > pass to pin_user_pages(), and by necessity drivers have to keep a
-> > reference to the contents of that in one form or another. So
-> > conceptually the equivalent of:
-> > 
-> > struct vm_account {
-> >        struct list_head possible_pinners;
-> >        struct mem_cgroup *memcg;
-> >        struct pages **pages;
-> >        [...]
-> > };
-> > 
-> > Unpinnig involves finding a new owner by traversing the list of
-> > page->memcg_data->possible_pinners and iterating over *pages[] to figure
-> > out if that vm_account actually has this page pinned or not and could
-> > own it.
-> 
-> Oh, you are focusing on Tejun's DOS scenario. 
-> 
-> The DOS problem is to prevent a pin users in cgroup A from keeping
-> memory charged to cgroup B that it isn't using any more.
-> 
-> cgroup B doesn't need to be pinning the memory, it could just be
-> normal VMAs and "isn't using anymore" means it has unmapped all the
-> VMAs.
-> 
-> Solving that problem means figuring out when every cgroup stops using
-> the memory - pinning or not. That seems to be very costly.
-> 
-> AFAIK this problem also already exists today as the memcg of a page
-> doesn't change while it is pinned. So maybe we don't need to address
-> it.
-> 
-> Arguably the pins are not the problem. If we want to treat the pin
-> like allocation then we simply charge the non-owning memcg's for the
-> pin as though it was an allocation. Eg go over every page and if the
-> owning memcg is not the current memcg then charge the current memcg
-> for an allocation of the MAP_SHARED memory. Undoing this is trivial
-> enoug.
-> 
-> This doesn't fix the DOS problem but it does sort of harmonize the pin
-> accounting with the memcg by multi-accounting every pin of a
-> MAP_SHARED page.
-> 
-> The other drawback is that this isn't the same thing as the current
-> rlimit. The rlimit is largely restricting the creation of unmovable
-> memory.
-> 
-> Though, AFAICT memcg seems to bundle unmovable memory (eg GFP_KERNEL)
-> along with movable user pages so it would be self-consistent.
-> 
-> I'm unclear if this is OK for libvirt..
+From: Hou Tao <houtao1@huawei.com>
 
-I'm not sure what exact scenario you're thinking of when talking
-about two distinct cgroups and its impact on libvirt. None the less
-here's a rough summary of libvirt's approach to cgroups and memory
+Since commit a78418e6a04c ("block: Always initialize bio IO priority on
+submit"), bio->bi_ioprio will never be IOPRIO_CLASS_NONE when calling
+blkcg_set_ioprio(), so there will be no way to promote the io-priority
+of one cgroup to IOPRIO_CLASS_RT, because bi_ioprio will always be
+greater than or equals to IOPRIO_CLASS_RT.
 
-On the libvirt side, we create 1 single cgroup per VM, in which lives
-at least the QEMU process, but possibly some additional per-VM helper
-processes (swtpm for TPM, sometimes slirp/passt for NIC, etc).
+It seems possible to call blkcg_set_ioprio() first then try to
+initialize bi_ioprio later in bio_set_ioprio(), but this doesn't work
+for bio in which bi_ioprio is already initialized (e.g., direct-io), so
+introduce a new promote-to-rt policy to promote the iopriority of bio to
+IOPRIO_CLASS_RT if the ioprio is not already RT.
 
-Potentially there are externally managed processes that are handling
-some resources on behalf of the VM. These might be a single centralized
-daemon handling work for many VMs, or might be per VM services. Either
-way, since they are externally managed, their setup and usage of cgroups
-is completely opaque to libvirt.
+For none-to-rt policy, although it doesn't work now, but considering
+that its purpose was also to override the io-priority to RT and allowing
+for a smoother transition, just keep it and treat it as an alias of
+the promote-to-rt policy.
 
-Libvirt is only concerned with the 1 cgroup per VM that it creates and
-manages. Its goal is to protect the host OS from a misbehaving guest
-OS/compromised QEMU.
+Signed-off-by: Hou Tao <houtao1@huawei.com>
+Acked-by: Tejun Heo <tj@kernel.org>
+Reviewed-by: Bart Van Assche <bvanassche@acm.org>
+Reviewed-by: Chaitanya Kulkarni <kch@nvidia.com>
+---
+v3:
+ * Use 'non-RT' instead of 'no-RT' in document (from Bagas)
+ * Remove repeated sentence in commit message
+ * Add Reviewed-by and Acked-by tags
+ 
+v2: https://lore.kernel.org/linux-block/20230220135428.2632906-1-houtao@huaweicloud.com
 
-The memory limits we can set on VMs are somewhat limited. In general
-we prefer to avoid setting any hard per-VM memory cap by default.
-QEMU's worst case memory usage is incredibly hard to predict, because
-of an incredibly broad range of possible configurations and opaque
-behaviour/usage from ELF libraries it uses. Every time anyone has
-tried hard memory caps, we've ended up with VMs being incorrectly
-killed because they genuinely wanted more memory than anticipated
-by the algorithm.
+ * Simplify the implementation of promote-to-rt (from Bart)
+ * Make none-to-rt to work again by treating it as an alias of
+   the promote-to-rt policy (from Bart & Jan)
+ * fix the style of new content in cgroup-v2.rst (from Bagas)
+ * set the default priority level to 4 instead of 0 for promote-to-rt
 
-To protect the host OS, I tend to suggest mgmt apps/admins set a
-hard memory limit acrosss all VMs in aggregate eg at /machine.slice,
-instead of per-VM. This aims to makes it possible to ensure that
-the host OS always has some memory reserved for its own system
-services, while allowing the individual VMs to battle it out
-between themselves.
+v1: https://lore.kernel.org/linux-block/20230201045227.2203123-1-houtao@huaweicloud.com
 
-We do still have to apply some tuning for VFIO, around what amount
-of memory it is allowed to lock, but that is not so bad as we just
-need to allow it to lock guest RAM which is known + an finite extra
-amount, so don't need to take account of all of QEMU's memory
-allocations in general. This is all still just in context of 1
-cgroup though, as least as far as libvirt is aware. Any other
-cgroups involved are opaque to libvirt, and not our concern as long
-as QEMU's cgroup is preventing QEMU's misbehaviour as configured.
+ Documentation/admin-guide/cgroup-v2.rst | 42 ++++++++++++++-----------
+ block/blk-ioprio.c                      | 23 ++++++++++++--
+ 2 files changed, 44 insertions(+), 21 deletions(-)
 
-With regards,
-Daniel
+diff --git a/Documentation/admin-guide/cgroup-v2.rst b/Documentation/admin-guide/cgroup-v2.rst
+index f67c0829350b..7544ce00e0cb 100644
+--- a/Documentation/admin-guide/cgroup-v2.rst
++++ b/Documentation/admin-guide/cgroup-v2.rst
+@@ -2024,31 +2024,33 @@ that attribute:
+   no-change
+ 	Do not modify the I/O priority class.
+ 
+-  none-to-rt
+-	For requests that do not have an I/O priority class (NONE),
+-	change the I/O priority class into RT. Do not modify
+-	the I/O priority class of other requests.
++  promote-to-rt
++	For requests that have a non-RT I/O priority class, change it into RT.
++	Also change the priority level of these requests to 4. Do not modify
++	the I/O priority of requests that have priority class RT.
+ 
+   restrict-to-be
+ 	For requests that do not have an I/O priority class or that have I/O
+-	priority class RT, change it into BE. Do not modify the I/O priority
+-	class of requests that have priority class IDLE.
++	priority class RT, change it into BE. Also change the priority level
++	of these requests to 0. Do not modify the I/O priority class of
++	requests that have priority class IDLE.
+ 
+   idle
+ 	Change the I/O priority class of all requests into IDLE, the lowest
+ 	I/O priority class.
+ 
++  none-to-rt
++	Deprecated. Just an alias for promote-to-rt.
++
+ The following numerical values are associated with the I/O priority policies:
+ 
+-+-------------+---+
+-| no-change   | 0 |
+-+-------------+---+
+-| none-to-rt  | 1 |
+-+-------------+---+
+-| rt-to-be    | 2 |
+-+-------------+---+
+-| all-to-idle | 3 |
+-+-------------+---+
+++----------------+---+
++| no-change      | 0 |
+++----------------+---+
++| rt-to-be       | 2 |
+++----------------+---+
++| all-to-idle    | 3 |
+++----------------+---+
+ 
+ The numerical value that corresponds to each I/O priority class is as follows:
+ 
+@@ -2064,9 +2066,13 @@ The numerical value that corresponds to each I/O priority class is as follows:
+ 
+ The algorithm to set the I/O priority class for a request is as follows:
+ 
+-- Translate the I/O priority class policy into a number.
+-- Change the request I/O priority class into the maximum of the I/O priority
+-  class policy number and the numerical I/O priority class.
++- If I/O priority class policy is promote-to-rt, change the request I/O
++  priority class to IOPRIO_CLASS_RT and change the request I/O priority
++  level to 4.
++- If I/O priorityt class is not promote-to-rt, translate the I/O priority
++  class policy into a number, then change the request I/O priority class
++  into the maximum of the I/O priority class policy number and the numerical
++  I/O priority class.
+ 
+ PID
+ ---
+diff --git a/block/blk-ioprio.c b/block/blk-ioprio.c
+index 055529b9b92b..4051fada01f1 100644
+--- a/block/blk-ioprio.c
++++ b/block/blk-ioprio.c
+@@ -23,25 +23,28 @@
+ /**
+  * enum prio_policy - I/O priority class policy.
+  * @POLICY_NO_CHANGE: (default) do not modify the I/O priority class.
+- * @POLICY_NONE_TO_RT: modify IOPRIO_CLASS_NONE into IOPRIO_CLASS_RT.
++ * @POLICY_PROMOTE_TO_RT: modify no-IOPRIO_CLASS_RT to IOPRIO_CLASS_RT.
+  * @POLICY_RESTRICT_TO_BE: modify IOPRIO_CLASS_NONE and IOPRIO_CLASS_RT into
+  *		IOPRIO_CLASS_BE.
+  * @POLICY_ALL_TO_IDLE: change the I/O priority class into IOPRIO_CLASS_IDLE.
++ * @POLICY_NONE_TO_RT: an alias for POLICY_PROMOTE_TO_RT.
+  *
+  * See also <linux/ioprio.h>.
+  */
+ enum prio_policy {
+ 	POLICY_NO_CHANGE	= 0,
+-	POLICY_NONE_TO_RT	= 1,
++	POLICY_PROMOTE_TO_RT	= 1,
+ 	POLICY_RESTRICT_TO_BE	= 2,
+ 	POLICY_ALL_TO_IDLE	= 3,
++	POLICY_NONE_TO_RT	= 4,
+ };
+ 
+ static const char *policy_name[] = {
+ 	[POLICY_NO_CHANGE]	= "no-change",
+-	[POLICY_NONE_TO_RT]	= "none-to-rt",
++	[POLICY_PROMOTE_TO_RT]	= "promote-to-rt",
+ 	[POLICY_RESTRICT_TO_BE]	= "restrict-to-be",
+ 	[POLICY_ALL_TO_IDLE]	= "idle",
++	[POLICY_NONE_TO_RT]	= "none-to-rt",
+ };
+ 
+ static struct blkcg_policy ioprio_policy;
+@@ -189,6 +192,20 @@ void blkcg_set_ioprio(struct bio *bio)
+ 	if (!blkcg || blkcg->prio_policy == POLICY_NO_CHANGE)
+ 		return;
+ 
++	if (blkcg->prio_policy == POLICY_PROMOTE_TO_RT ||
++	    blkcg->prio_policy == POLICY_NONE_TO_RT) {
++		/*
++		 * For RT threads, the default priority level is 4 because
++		 * task_nice is 0. By promoting non-RT io-priority to RT-class
++		 * and default level 4, those requests that are already
++		 * RT-class but need a higher io-priority can use ioprio_set()
++		 * to achieve this.
++		 */
++		if (IOPRIO_PRIO_CLASS(bio->bi_ioprio) != IOPRIO_CLASS_RT)
++			bio->bi_ioprio = IOPRIO_PRIO_VALUE(IOPRIO_CLASS_RT, 4);
++		return;
++	}
++
+ 	/*
+ 	 * Except for IOPRIO_CLASS_NONE, higher I/O priority numbers
+ 	 * correspond to a lower priority. Hence, the max_t() below selects
 -- 
-|: https://berrange.com      -o-    https://www.flickr.com/photos/dberrange :|
-|: https://libvirt.org         -o-            https://fstop138.berrange.com :|
-|: https://entangle-photo.org    -o-    https://www.instagram.com/dberrange :|
+2.29.2
 
