@@ -1,41 +1,53 @@
-From: Roman Gushchin <roman.gushchin@linux.dev>
+From: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
 Subject: Re: [PATCH] mm/memcontrol: add memory.peak in cgroup root
-Date: Thu, 23 Feb 2023 14:00:06 -0800
-Message-ID: <Y/fh5sQEcM9hPt4Z@P9FQF9L96D.corp.robot.car>
+Date: Fri, 24 Feb 2023 09:23:54 +0100
+Message-ID: <Y/h0GlmeSQ735DxK@dhcp22.suse.cz>
 References: <AM5PR0202MB25167BFBBE892630A2EE3B7DE1AB9@AM5PR0202MB2516.eurprd02.prod.outlook.com>
  <Y/eizTVo8LM70flh@P9FQF9L96D.corp.robot.car>
  <AM5PR0202MB2516BD45CFBC033F9EA3B0A4E1AB9@AM5PR0202MB2516.eurprd02.prod.outlook.com>
 Mime-Version: 1.0
-Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
-        t=1677189611;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
+        t=1677227035; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
          in-reply-to:in-reply-to:references:references;
-        bh=d26wBxNftgvIEigvlBues+H50f7ZSE9Q9ePe8CXNvAs=;
-        b=hy1GOCctAm2u9Q/WJ7L7i8MHDrWDIM/OZ/LaaCUIlYO4NsaGcXONCLopBdR4rwr7VnKtOG
-        kEU4fg/XS5dDhRvUcB3YGSEgEtiJmdnDYBkH7Kt/hwVXa+rSdfjo4GDKrlOZWuLKOz6aw2
-        R1thl8eJaTOT74Ik2v5yhyn4k7IbbkY=
+        bh=AL9X1+yNh4TnR5INv6zRDMmmyJRq44OTuNAoJX2NvEw=;
+        b=mr3Ky5jeFRjUgdY6dWt7rZesi83ypE+9L4yARacUWa/Kcq+CP9K7kdFUzIlaB3BC5pl3eX
+        r/zrBqwCYEAHmsSa3pPf6706wmMpxxT6ptA0LDGOzH6P0TWwiZO34r/4Ia3wb8ngm5oQSw
+        E/Ep32+6vsnuzjqeRYsGj2oEwkR8dsM=
 Content-Disposition: inline
-In-Reply-To: <AM5PR0202MB2516BD45CFBC033F9EA3B0A4E1AB9@AM5PR0202MB2516.eurprd02.prod.outlook.com>
+In-Reply-To: <AM5PR0202MB2516BD45CFBC033F9EA3B0A4E1AB9-y8SMVMhlxwlZMxuguPlqCOmQVOPts17knBOFsp37pqbUKgpGm//BTAC/G2K4zDHf@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Matthew Chae <Matthew.Chae@axis.com>
-Cc: Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny@suse.com>, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, Shakeel Butt <shakeelb@google.com>, Andrew Morton <akpm@linux-foundation.org>, kernel <kernel@axis.com>, Christopher Wong <Christopher.Wong@axis.com>, Muchun Song <muchun.song@linux.dev>, "cgroups@vger.kernel.org" <cgroups@vger.kernel.org>, "linux-mm@kvack.org" <linux-mm@kvack.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+To: Matthew Chae <Matthew.Chae-VrBV9hrLPhE@public.gmane.org>
+Cc: Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny-IBi9RG/b67k@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, kernel <kernel-VrBV9hrLPhE@public.gmane.org>, Christopher Wong <Christopher.Wong-VrBV9hrLPhE@public.gmane.org>, Muchun Song <muchun.song-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, "cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org" <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, "linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 
-On Thu, Feb 23, 2023 at 07:00:57PM +0000, Matthew Chae wrote:
+On Thu 23-02-23 19:00:57, Matthew Chae wrote:
 > Hi Roman,
 > 
 > I'd like to get the peak memory usage recorded overall time, rather than at a certain time.
-> Plus, I expect that the systematical way might have better performance compared to userspace sampling.
 
-I'm not necessarily saying to do this in userspace, you can try add a new system-wide counter
-(new /proc/vmstat entry). Obviously, it might be easier to do this in userspace.
-My point is to do it on system level rather than cgroup level and record a bottom of free
-memory rather than the peak of used memory.
+Sampling /proc/vmstat should have a minimal overhead and you will get
+not only a single value but also a break down to broad cathegory users
+(LRU, slab, page tables etc.). Unfortunatelly this doesn't cover all the
+users (e.g. direct users of the page allocator are not accounted to any
+specific counter) but it should give you a reasonable idea how is memory
+utilized. Specific metrics really depend on what you are interested in.
 
-> If I understand correctly, recording the bottom of available free memory might not be helpful for this.
-> Am I missing something?
+Another approach that might give you a different angle to the memory
+consumption is to watch PSI metrics. This will not tell you the peak
+memory usage but it will give you an useful cost model for the memory
+usage. Being low on free memory itself is not a bad thing, i.e. you are
+paying for the amount of memory so it would be rather sub-optimal to not
+use it whole, right? If the memory can be reclaimed easily (e.g. by
+reclaiming idle caches) then the overhead of a high memory utilization
+should be reasonably low so the overal price of the reclaim is worth it.
+On the other hand an over utilized system with a working set size larger
+than the available memory would spend a lot of time reclaiming so the
+performance would drop down.
 
-Why?
+All that being said the primary question is what is your usecase.
+-- 
+Michal Hocko
+SUSE Labs
