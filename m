@@ -1,7 +1,7 @@
 From: Vincent Guittot <vincent.guittot@linaro.org>
-Subject: [PATCH v12 2/8] sched: Introduce latency-nice as a per-task attribute
-Date: Fri, 24 Feb 2023 10:34:48 +0100
-Message-ID: <20230224093454.956298-3-vincent.guittot@linaro.org>
+Subject: [PATCH v12 3/8] sched/core: Propagate parent task's latency requirements to the child task
+Date: Fri, 24 Feb 2023 10:34:49 +0100
+Message-ID: <20230224093454.956298-4-vincent.guittot@linaro.org>
 References: <20230224093454.956298-1-vincent.guittot@linaro.org>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
@@ -11,13 +11,13 @@ DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=kiVS63wbAWm+QNHUVgj2Zht/JYfZt2Iaghb+UJPmGJA=;
-        b=QrTYP59UXLyEyZXXYAeeXw2AFfFauFp/C2n/IOyN3xqbAk8jjk7e20YwjW4/43PsBi
-         4QPrI/QTUmePR3SOLNczxnpoBs5aDDxAEopDH+YvwI2cwTf4AF65FfzRnZObTfbN+Hec
-         WFZO5EQCCOfR7bZFaP2tJLma9p8iRxA7DlUro5Z4PqHmwHBB+u2FhNfrug7WVn7wubU3
-         GzPZ6F/YVjhhCLmMkMui/c6pr2O5+yI85Yufy2TgrbyHe/rdl02i5nnCM0km4exhBi3P
-         cJhw7ozhoXe+F0JqtenV03G1YlpZGakYFvT8fC0bLeE7ExceapOsAmy4aB88jY7A/oFs
-         835g==
+        bh=Oe0Uu935GUv7Os5h4xnlj3hjmH+1d59YLoRXBZZGIAY=;
+        b=M/oQDDEh1x3rok6xB3rswBzsh2CRxoaZDID2byS65RkMGb0GDD3MqQmZH9MppTnquq
+         fTby+i2kplGA5hVWZsaxpw1fs5xuLjf142dgQ0zIhorxZwv1qQC743lB+ZBvxIB3XpgX
+         ejykMcqofVFzvaWswtOlR/1nyi3ch4k59aW9F2s1awuNUohXaJ6NmHbZ042zD6GD2Lwm
+         8ex+yj1V149qNPNyUdSrZ1rxeAVrMLA081+RP1BnvvM8je801xgRaPigur0shh0gwhxr
+         PCqmbsxGGIhXYM9IQZM/+ChhpzH7cxxHHVenlx5XW5jPf/1IM8YtzbrnZziibwY+MF2w
+         zS0g==
 In-Reply-To: <20230224093454.956298-1-vincent.guittot@linaro.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
@@ -26,80 +26,47 @@ Cc: qyousef@layalina.io, chris.hyser@oracle.com, patrick.bellasi@matbug.net, Dav
 
 From: Parth Shah <parth@linux.ibm.com>
 
-Latency-nice indicates the latency requirements of a task with respect
-to the other tasks in the system. The value of the attribute can be within
-the range of [-20, 19] both inclusive to be in-line with the values just
-like task nice values.
+Clone parent task's latency_nice attribute to the forked child task.
 
-latency_nice = -20 indicates the task to have the least latency as
-compared to the tasks having latency_nice = +19.
+Reset the latency_nice value to default value when the child task is
+set to sched_reset_on_fork.
 
-The latency_nice may affect only the CFS SCHED_CLASS by getting
-latency requirements from the userspace.
-
-Additionally, add debugging bits for newly added latency_nice attribute.
+Also, initialize init_task.latency_nice value with DEFAULT_LATENCY_NICE
+value
 
 Signed-off-by: Parth Shah <parth@linux.ibm.com>
-[rebase, move defines in sched/prio.h]
+[rebase]
 Signed-off-by: Vincent Guittot <vincent.guittot@linaro.org>
 Tested-by: K Prateek Nayak <kprateek.nayak@amd.com>
 ---
- include/linux/sched.h      |  1 +
- include/linux/sched/prio.h | 18 ++++++++++++++++++
- kernel/sched/debug.c       |  1 +
- 3 files changed, 20 insertions(+)
+ init/init_task.c    | 1 +
+ kernel/sched/core.c | 1 +
+ 2 files changed, 2 insertions(+)
 
-diff --git a/include/linux/sched.h b/include/linux/sched.h
-index 4df2b3e76b30..6c61bde49152 100644
---- a/include/linux/sched.h
-+++ b/include/linux/sched.h
-@@ -784,6 +784,7 @@ struct task_struct {
- 	int				static_prio;
- 	int				normal_prio;
- 	unsigned int			rt_priority;
-+	int				latency_nice;
+diff --git a/init/init_task.c b/init/init_task.c
+index ff6c4b9bfe6b..7dd71dd2d261 100644
+--- a/init/init_task.c
++++ b/init/init_task.c
+@@ -78,6 +78,7 @@ struct task_struct init_task
+ 	.prio		= MAX_PRIO - 20,
+ 	.static_prio	= MAX_PRIO - 20,
+ 	.normal_prio	= MAX_PRIO - 20,
++	.latency_nice	= DEFAULT_LATENCY_NICE,
+ 	.policy		= SCHED_NORMAL,
+ 	.cpus_ptr	= &init_task.cpus_mask,
+ 	.user_cpus_ptr	= NULL,
+diff --git a/kernel/sched/core.c b/kernel/sched/core.c
+index 4580fe3e1d0c..28b397f9698b 100644
+--- a/kernel/sched/core.c
++++ b/kernel/sched/core.c
+@@ -4681,6 +4681,7 @@ int sched_fork(unsigned long clone_flags, struct task_struct *p)
+ 		p->prio = p->normal_prio = p->static_prio;
+ 		set_load_weight(p, false);
  
- 	struct sched_entity		se;
- 	struct sched_rt_entity		rt;
-diff --git a/include/linux/sched/prio.h b/include/linux/sched/prio.h
-index ab83d85e1183..bfcd7f1d1e11 100644
---- a/include/linux/sched/prio.h
-+++ b/include/linux/sched/prio.h
-@@ -42,4 +42,22 @@ static inline long rlimit_to_nice(long prio)
- 	return (MAX_NICE - prio + 1);
- }
- 
-+/*
-+ * Latency nice is meant to provide scheduler hints about the relative
-+ * latency requirements of a task with respect to other tasks.
-+ * Thus a task with latency_nice == 19 can be hinted as the task with no
-+ * latency requirements, in contrast to the task with latency_nice == -20
-+ * which should be given priority in terms of lower latency.
-+ */
-+#define MAX_LATENCY_NICE	19
-+#define MIN_LATENCY_NICE	-20
-+
-+#define LATENCY_NICE_WIDTH	\
-+	(MAX_LATENCY_NICE - MIN_LATENCY_NICE + 1)
-+
-+/*
-+ * Default tasks should be treated as a task with latency_nice = 0.
-+ */
-+#define DEFAULT_LATENCY_NICE	0
-+
- #endif /* _LINUX_SCHED_PRIO_H */
-diff --git a/kernel/sched/debug.c b/kernel/sched/debug.c
-index 1637b65ba07a..68be7a3e42a3 100644
---- a/kernel/sched/debug.c
-+++ b/kernel/sched/debug.c
-@@ -1043,6 +1043,7 @@ void proc_sched_show_task(struct task_struct *p, struct pid_namespace *ns,
- #endif
- 	P(policy);
- 	P(prio);
-+	P(latency_nice);
- 	if (task_has_dl_policy(p)) {
- 		P(dl.runtime);
- 		P(dl.deadline);
++		p->latency_nice = DEFAULT_LATENCY_NICE;
+ 		/*
+ 		 * We don't need the reset flag anymore after the fork. It has
+ 		 * fulfilled its duty:
 -- 
 2.34.1
 
