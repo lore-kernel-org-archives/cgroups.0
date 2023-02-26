@@ -1,22 +1,22 @@
 From: Sasha Levin <sashal@kernel.org>
-Subject: [PATCH AUTOSEL 5.10 3/5] blk-iocost: fix divide by 0 error in calc_lcoefs()
-Date: Sat, 25 Feb 2023 22:44:06 -0500
-Message-ID: <20230226034408.774670-3-sashal@kernel.org>
-References: <20230226034408.774670-1-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.15 3/6] blk-iocost: fix divide by 0 error in calc_lcoefs()
+Date: Sat, 25 Feb 2023 22:43:55 -0500
+Message-ID: <20230226034359.773806-3-sashal@kernel.org>
+References: <20230226034359.773806-1-sashal@kernel.org>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-block-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1677383053;
-        bh=LE6Cuxh0N4Eej+KJKmepjRL+51JfrcQnW1JJGA9cAOk=;
+        s=k20201202; t=1677383044;
+        bh=nXU1mIcE80gCuXpTLG5b3uYjUUQu4yGjMNHvMqJDQyc=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=PM0CfhWT1wXNddcyFftkUKX74V3kaxax7cb5ZeGtCyCxwAZo27ZmSia3L6Ogj3SEV
-         bPv31BxBvVRzwlIGuvs7+/oBLsogrVJIDm43gnFM+qwiZBKMg8/YZCLEWfVGvmdJoN
-         95yYXAZRQDhv3mL82x5U6V0BTwYVGlf2uf4fSwo5X7RiRNsDigN17Dgh2Qk97miLLl
-         WwwHa5CU7qjymp7BpCuPvJLUAoq7Elf3Gdw//WA6rgNz1FpPEsovoREwk25mPXbELX
-         nZWy32sDIYfKlHvZr8y/X7OvxFiYA8xLu0Bzi2A3Ctqy8akLj4ky66SURfEyUo5SLZ
-         2XX6FnTq1qz9Q==
-In-Reply-To: <20230226034408.774670-1-sashal@kernel.org>
+        b=LGLVJjQjHJJRYqoX55ITpKdOqnF+zVdiSt8GSHaCwhO1eV4eyXZm6Shoze2WBzocW
+         G4Z9LtZ9+GFNxwFwBh30sV9nYiWb7CgRXlVsnFwkzUr8BLuIOuaWF68m7Rn3ZkQXDj
+         C8c+8eeZs9moAiJVyihSMDJ+P8z0g3xC7EJw5mMNEcdIrbTNa1/PR1BW1gzSDi/ztf
+         akFw3V4mm/BB9fdP6n5fH/QubIfJT+jlerW21kMDpizmfmHrziLHGtPxjWKXmxEaqQ
+         Y+JuXGi3tqjfmFfdiAquEc86U5KrwdW4NTXckjo59kbqUKO22KWq8Ecs/FUcM+K/D0
+         6Fh7qfhm/5+xA==
+In-Reply-To: <20230226034359.773806-1-sashal@kernel.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 To: linux-kernel@vger.kernel.org, stable@vger.kernel.org
@@ -63,10 +63,10 @@ Signed-off-by: Sasha Levin <sashal@kernel.org>
  1 file changed, 8 insertions(+), 3 deletions(-)
 
 diff --git a/block/blk-iocost.c b/block/blk-iocost.c
-index fb8f959a7f327..9255b642d6adb 100644
+index 069193dee95b0..bd7e9ffa5d401 100644
 --- a/block/blk-iocost.c
 +++ b/block/blk-iocost.c
-@@ -872,9 +872,14 @@ static void calc_lcoefs(u64 bps, u64 seqiops, u64 randiops,
+@@ -870,9 +870,14 @@ static void calc_lcoefs(u64 bps, u64 seqiops, u64 randiops,
  
  	*page = *seqio = *randio = 0;
  
