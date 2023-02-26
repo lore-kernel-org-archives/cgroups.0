@@ -1,28 +1,28 @@
-From: Sasha Levin <sashal-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: [PATCH AUTOSEL 6.1 08/21] blk-iocost: fix divide by 0 error in calc_lcoefs()
-Date: Sat, 25 Feb 2023 22:42:43 -0500
-Message-ID: <20230226034256.771769-8-sashal@kernel.org>
-References: <20230226034256.771769-1-sashal@kernel.org>
+From: Sasha Levin <sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.4 3/4] blk-iocost: fix divide by 0 error in calc_lcoefs()
+Date: Sat, 25 Feb 2023 22:44:15 -0500
+Message-ID: <20230226034417.775491-3-sashal@kernel.org>
+References: <20230226034417.775491-1-sashal@kernel.org>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1677382992;
-        bh=/KPj3m1KPxfGMtW8xapjQpJ0dfmXm9YDZiWr49pG+no=;
+        s=k20201202; t=1677383062;
+        bh=GxVYJUnmCRUAqOLvMaiUZ3VD+2YUyiq7J1N2SUZ9Mok=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=bMPZFALqkV6ZOdd6vlFbSfOv5okMdZ7SS49sB+FcoXVYn8VgLikORNC2yO79yWfuh
-         LAdHOQgW/gqJapk11eR+c0pWJoyZA1oZOGdxOdkRNSsep4D8+wu7FKKxVGxDVdiCMp
-         fVfLjRyeUSH+ggloBG29KNTEHcLKvjU5Id1MOAlrQ9XA0Ati2LDVGSwirfhByt/ej9
-         4g9q4MHKUSUjAHMsekx+Z0fXiMCsgHl35SmaxAHvi2z18l3DGfZ2kt31U9lYAT6a6g
-         k21i2ws6huTdCa5eboc0Y/TfOCM6YaW4hJ17k7MbAKLQLbnmZnjU0KzbQXV4VnRHmB
-         EfMdXsZHjN7RQ==
-In-Reply-To: <20230226034256.771769-1-sashal-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+        b=ulyCmlw5C/ym5ENxH+80O7hP4NZr7JPCaO7+n10I3s7u6i3f3CUpA82w45Q7sPjHz
+         1Ez+KgD9gMLhuJ8QG9N452dJffeLFL0dW7njm/pfZWFKztZRQDUghJXlswSQTf9PJP
+         9Qt5wKpFbnft7AHwTkyAybrktlerbtZEA4PpkQ2So3KbejkPL3TCETqDfIz4eLoEJC
+         fC2UUAJAqpQQEceEzO0Al8Y/o4feN4YJa/dvzqyuVlLR1g0iebSv8ZGKVRyuzZI3pV
+         JioCpetbfcorxSJblQPPZvN4gS/kQhw2vebY5SGTSl44VO7ehfEJNM7CMwYQvmptWP
+         O6+OA9E1+F1Gw==
+In-Reply-To: <20230226034417.775491-1-sashal@kernel.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, stable-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-Cc: Li Nan <linan122-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Yu Kuai <yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, Sasha Levin <sashal-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, josef-DigfWCa+lFGyeJad7bwFQA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: linux-kernel@vger.kernel.org, stable@vger.kernel.org
+Cc: Li Nan <linan122@huawei.com>, Yu Kuai <yukuai3@huawei.com>, Tejun Heo <tj@kernel.org>, Jens Axboe <axboe@kernel.dk>, Sasha Levin <sashal@kernel.org>, josef@toxicpanda.com, cgroups@vger.kernel.org, linux-block@vger.kernel.org
 
-From: Li Nan <linan122-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+From: Li Nan <linan122@huawei.com>
 
 [ Upstream commit 984af1e66b4126cf145153661cc24c213e2ec231 ]
 
@@ -52,21 +52,21 @@ ULLONG_MAX, it can cause divide by 0 error.
 
 Fix the problem by setting basecost
 
-Signed-off-by: Li Nan <linan122-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Signed-off-by: Yu Kuai <yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Acked-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Link: https://lore.kernel.org/r/20230117070806.3857142-5-yukuai1-XF6JlduFytWkHkcT6e4Xnw@public.gmane.org
-Signed-off-by: Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>
-Signed-off-by: Sasha Levin <sashal-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Signed-off-by: Li Nan <linan122@huawei.com>
+Signed-off-by: Yu Kuai <yukuai3@huawei.com>
+Acked-by: Tejun Heo <tj@kernel.org>
+Link: https://lore.kernel.org/r/20230117070806.3857142-5-yukuai1@huaweicloud.com
+Signed-off-by: Jens Axboe <axboe@kernel.dk>
+Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
  block/blk-iocost.c | 11 ++++++++---
  1 file changed, 8 insertions(+), 3 deletions(-)
 
 diff --git a/block/blk-iocost.c b/block/blk-iocost.c
-index 495396425bade..bfc33fa9a063c 100644
+index ef287c33d6d97..4fdc8858a69a9 100644
 --- a/block/blk-iocost.c
 +++ b/block/blk-iocost.c
-@@ -865,9 +865,14 @@ static void calc_lcoefs(u64 bps, u64 seqiops, u64 randiops,
+@@ -785,9 +785,14 @@ static void calc_lcoefs(u64 bps, u64 seqiops, u64 randiops,
  
  	*page = *seqio = *randio = 0;
  
