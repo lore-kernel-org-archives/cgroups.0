@@ -1,22 +1,22 @@
 From: Sasha Levin <sashal-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: [PATCH AUTOSEL 6.2 10/21] blk-cgroup: synchronize pd_free_fn() from blkg_free_workfn() and blkcg_deactivate_policy()
-Date: Sat, 25 Feb 2023 22:41:39 -0500
-Message-ID: <20230226034150.771411-10-sashal@kernel.org>
-References: <20230226034150.771411-1-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 6.1 10/21] blk-cgroup: synchronize pd_free_fn() from blkg_free_workfn() and blkcg_deactivate_policy()
+Date: Sat, 25 Feb 2023 22:42:45 -0500
+Message-ID: <20230226034256.771769-10-sashal@kernel.org>
+References: <20230226034256.771769-1-sashal@kernel.org>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1677382930;
-        bh=tSVmHe+q1jSYqzLQS2BDwqWvAH5AWErGPzQWPl/I29g=;
+        s=k20201202; t=1677382995;
+        bh=13YLkNN8arX1KfUTrzx4ohq91XIJWVVsVlw+6IDq2DY=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=HhCwCzeWgrgZs18LKNixxHlqsGv3iijSF3KwyORcz/XGT4b3+orz1E1Pov0MMo/oP
-         ZxMX0ua8s9ac8JOSiQEWzeIeqKEJPnO2iK7idJW8onvWS6JFMjNL4o4YyrQELtm/se
-         CKXA/gx1o/L9IQ5YxU21paqshY5Wl+9qjlERbG5XbyY3RsakSiFcJiIQ6iSo0EbpNT
-         NzkzxVTNJBrHbv2Lz34jfnVgkZdPBdy736eQ81fALUxHjci5KYKLTq1IvJbA4eblmv
-         HMtXRUAeHUgnCFCpbLjMnWqm5KdlPrQ9G6+iASpGKREuk8IiD43U9TkeuEVgW4t7l5
-         2OYVcwjFp+P6w==
-In-Reply-To: <20230226034150.771411-1-sashal-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+        b=eP8U8UfCt1ZmZpBiqGyKKvaVgqTenzDhZfr97XiHaUcOCtgBMTwAw9KqbDi1sIs3z
+         9Zs+kunfBsMzut80hzaewUqrV0EW4+cPsvXlsXcjeI/Ac9rJERtl+fafaiFCOccOAQ
+         KAW3HwipSFhzWaf6e1lISgkMKtzXNJEg6frJBqFtadq/n5JFxI7pSrHz8MjzuPCe7c
+         eaTiQH9rYHk0x+Zu0U09TjRlLLBeGTxVHNahtrro1YOupr6yqn62tIknQQ9262areS
+         qejxb6coK2D4potebDVYp9psbDPu4bqG8y1OAVsCI/HAHbALyJZ6dJ6m31T1tthDIu
+         Q/UkH0zuomyfw==
+In-Reply-To: <20230226034256.771769-1-sashal-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 To: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, stable-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
@@ -68,10 +68,10 @@ Signed-off-by: Sasha Levin <sashal-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
  2 files changed, 30 insertions(+), 6 deletions(-)
 
 diff --git a/block/blk-cgroup.c b/block/blk-cgroup.c
-index aa890e3e4e509..45881f8c79130 100644
+index 8d1b7757f1e4f..f8b21bead6552 100644
 --- a/block/blk-cgroup.c
 +++ b/block/blk-cgroup.c
-@@ -118,16 +118,32 @@ static void blkg_free_workfn(struct work_struct *work)
+@@ -87,16 +87,32 @@ static void blkg_free_workfn(struct work_struct *work)
  {
  	struct blkcg_gq *blkg = container_of(work, struct blkcg_gq,
  					     free_work);
@@ -106,7 +106,7 @@ index aa890e3e4e509..45881f8c79130 100644
  	free_percpu(blkg->iostat_cpu);
  	percpu_ref_exit(&blkg->refcnt);
  	kfree(blkg);
-@@ -458,9 +474,14 @@ static void blkg_destroy(struct blkcg_gq *blkg)
+@@ -425,9 +441,14 @@ static void blkg_destroy(struct blkcg_gq *blkg)
  	lockdep_assert_held(&blkg->q->queue_lock);
  	lockdep_assert_held(&blkcg->lock);
  
@@ -124,7 +124,7 @@ index aa890e3e4e509..45881f8c79130 100644
  
  	for (i = 0; i < BLKCG_MAX_POLS; i++) {
  		struct blkcg_policy *pol = blkcg_policy[i];
-@@ -472,7 +493,6 @@ static void blkg_destroy(struct blkcg_gq *blkg)
+@@ -439,7 +460,6 @@ static void blkg_destroy(struct blkcg_gq *blkg)
  	blkg->online = false;
  
  	radix_tree_delete(&blkcg->blkg_tree, blkg->q->id);
@@ -132,7 +132,7 @@ index aa890e3e4e509..45881f8c79130 100644
  	hlist_del_init_rcu(&blkg->blkcg_node);
  
  	/*
-@@ -1273,6 +1293,7 @@ int blkcg_init_disk(struct gendisk *disk)
+@@ -1226,6 +1246,7 @@ int blkcg_init_disk(struct gendisk *disk)
  	int ret;
  
  	INIT_LIST_HEAD(&q->blkg_list);
@@ -140,7 +140,7 @@ index aa890e3e4e509..45881f8c79130 100644
  
  	new_blkg = blkg_alloc(&blkcg_root, disk, GFP_KERNEL);
  	if (!new_blkg)
-@@ -1510,6 +1531,7 @@ void blkcg_deactivate_policy(struct request_queue *q,
+@@ -1463,6 +1484,7 @@ void blkcg_deactivate_policy(struct request_queue *q,
  	if (queue_is_mq(q))
  		blk_mq_freeze_queue(q);
  
@@ -148,7 +148,7 @@ index aa890e3e4e509..45881f8c79130 100644
  	spin_lock_irq(&q->queue_lock);
  
  	__clear_bit(pol->plid, q->blkcg_pols);
-@@ -1528,6 +1550,7 @@ void blkcg_deactivate_policy(struct request_queue *q,
+@@ -1481,6 +1503,7 @@ void blkcg_deactivate_policy(struct request_queue *q,
  	}
  
  	spin_unlock_irq(&q->queue_lock);
@@ -157,10 +157,10 @@ index aa890e3e4e509..45881f8c79130 100644
  	if (queue_is_mq(q))
  		blk_mq_unfreeze_queue(q);
 diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
-index 43d4e073b1115..10ee92db680c9 100644
+index 891f8cbcd0436..1680b6e1e5362 100644
 --- a/include/linux/blkdev.h
 +++ b/include/linux/blkdev.h
-@@ -484,6 +484,7 @@ struct request_queue {
+@@ -487,6 +487,7 @@ struct request_queue {
  	DECLARE_BITMAP		(blkcg_pols, BLKCG_MAX_POLS);
  	struct blkcg_gq		*root_blkg;
  	struct list_head	blkg_list;
