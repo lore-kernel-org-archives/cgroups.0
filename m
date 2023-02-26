@@ -1,80 +1,89 @@
-From: Michal =?utf-8?Q?Koutn=C3=BD?= <mkoutny-IBi9RG/b67k@public.gmane.org>
-Subject: Re: [PATCH v12 6/8] sched/fair: Add sched group latency support
-Date: Fri, 24 Feb 2023 20:29:19 +0100
-Message-ID: <20230224192919.d4fcde3dwh7betvm@blackpad>
-References: <20230224093454.956298-1-vincent.guittot@linaro.org>
- <20230224093454.956298-7-vincent.guittot@linaro.org>
+From: Sasha Levin <sashal-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: [PATCH AUTOSEL 6.2 08/21] blk-iocost: fix divide by 0 error in calc_lcoefs()
+Date: Sat, 25 Feb 2023 22:41:37 -0500
+Message-ID: <20230226034150.771411-8-sashal@kernel.org>
+References: <20230226034150.771411-1-sashal@kernel.org>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha512;
-        protocol="application/pgp-signature"; boundary="ach44qdpkbnxkdxs"
+Content-Transfer-Encoding: 8bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
-        t=1677266961; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=hnAMd8q05Oc+Az6aeyniIup+x2AJU5/PdX1pnOCHdJs=;
-        b=cU2tCFgRPQYdnsnpsRf1Poa8TL/3C6O/oI0EPZZp19/BGEaSu17O+F+NHq4lp5ZzRzaTFk
-        l9v2ieikO/5p3NfDdJjrp5yebQEsFutRZScsHqlaF6k22o+0Y2ViWpvl58eZRdowV/Lk7f
-        0aW3Ztv9IcFZWs9dVMz+WqQOZ93Du6A=
-Content-Disposition: inline
-In-Reply-To: <20230224093454.956298-7-vincent.guittot-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1677382927;
+        bh=WLuOMG/bVQNKvU7Hd47X8E8GsihxLPJ5GN0xQ8TUlW4=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=A6HaYCgARqZOOLOvYisiJvsLqOOP/N+iKtMjMTJtUnl26hyou2hlHcVh55ciDHzfd
+         q7AQ7KatSYCjTRyNLjayujZmlz8RHL4L7xGiKt7Z7dxBcveENalHIgfZWb5fTsFsaf
+         vAY5UJoYrJi2CUxP0cQEvYbo9PRo0uouJHCSN7I2IrphCoochrMTp2wLFzE8a1JsZ+
+         LSZO96QZ355teyTpQ/Tv8w/FFH1W8C6nSIqbGcasayObo5hLnUiJLZPpCkFSNdMe5l
+         cLuGxg1k2pkq3vDs0+08EfFx7O0r3//fFdNUPLut1YXT/mrrq7QDGgfp86zMQVi1iL
+         mOUdAvyGMfUPQ==
+In-Reply-To: <20230226034150.771411-1-sashal-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-To: Vincent Guittot <vincent.guittot-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>
-Cc: mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, juri.lelli-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, dietmar.eggemann-5wv7dgnIgG8@public.gmane.org, rostedt-nx8X9YLhiw1AfugRpC6u6w@public.gmane.org, bsegall-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, mgorman-l3A5Bk7waGM@public.gmane.org, bristot-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, vschneid-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, parth-tEXmvtCZX7AybS5Ee8rs3A@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, corbet-T1hC0tSOHrs@public.gmane.org, linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, qyousef-wp2msK0BRk8tq7phqP6ubQ@public.gmane.org, chris.hyser-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org, patrick.bellasi-X6neQFFVdzGsTnJN9+BGXg@public.gmane.org, David.Laight-JxhZ9S5GRejQT0dZR+AlfA@public.gmane.org, pjt-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, pavel-+ZI9xUNit7I@public.gmane.org, qperret-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, tim.c.chen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org, joshdon-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, timj-mXXj517/zsQ@public.gmane.org, kprateek.nayak-5C7GfCeVMHo@public.gmane.org, yu.c.chen-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org, youssefesmat-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org, joel-QYYGw3jwrUn5owFQY34kdNi2O/JbrIOy@public.gmane.org
+Content-Type: text/plain; charset="us-ascii"
+To: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, stable-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Cc: Li Nan <linan122-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Yu Kuai <yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, Sasha Levin <sashal-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, josef-DigfWCa+lFGyeJad7bwFQA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
+From: Li Nan <linan122-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 
---ach44qdpkbnxkdxs
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+[ Upstream commit 984af1e66b4126cf145153661cc24c213e2ec231 ]
 
-Hello Vincent.
+echo max of u64 to cost.model can cause divide by 0 error.
 
-On Fri, Feb 24, 2023 at 10:34:52AM +0100, Vincent Guittot <vincent.guittot-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org> wrote:
-> +  cpu.latency.nice
-> +	A read-write single value file which exists on non-root
-> +	cgroups.  The default is "0".
-> +
-> +	The nice value is in the range [-20, 19].
-> +
-> +	This interface file allows reading and setting latency using the
-> +	same values used by sched_setattr(2). The latency_nice of a group is
-> +	used to limit the impact of the latency_nice of a task outside the
-> +	group.
+  # echo 8:0 rbps=18446744073709551615 > /sys/fs/cgroup/io.cost.model
 
-IIUC, the latency priority is taken into account when deciding between
-entitites at the same level (as in pick_next_entity() or
-check_preempt_wake()/find_matchig_se()).
+  divide error: 0000 [#1] PREEMPT SMP
+  RIP: 0010:calc_lcoefs+0x4c/0xc0
+  Call Trace:
+   <TASK>
+   ioc_refresh_params+0x2b3/0x4f0
+   ioc_cost_model_write+0x3cb/0x4c0
+   ? _copy_from_iter+0x6d/0x6c0
+   ? kernfs_fop_write_iter+0xfc/0x270
+   cgroup_file_write+0xa0/0x200
+   kernfs_fop_write_iter+0x17d/0x270
+   vfs_write+0x414/0x620
+   ksys_write+0x73/0x160
+   __x64_sys_write+0x1e/0x30
+   do_syscall_64+0x35/0x80
+   entry_SYSCALL_64_after_hwframe+0x63/0xcd
 
-So this group attribute is relevant in context of siblings (i.e. like
-cpu.weight ~ bandwidth priority)?
+calc_lcoefs() uses the input value of cost.model in DIV_ROUND_UP_ULL,
+overflow would happen if bps plus IOC_PAGE_SIZE is greater than
+ULLONG_MAX, it can cause divide by 0 error.
 
-I'm thus confused when it's referred to as a limit (in vertical sense).
-You somewhat imply that in [1]:
+Fix the problem by setting basecost
 
-> Regarding the behavior, the rule remains the same that a sched_entity
-> attached to a cgroup will not get more (latency in this case) than
-> what has been set for the group entity.
+Signed-off-by: Li Nan <linan122-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Signed-off-by: Yu Kuai <yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Acked-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Link: https://lore.kernel.org/r/20230117070806.3857142-5-yukuai1-XF6JlduFytWkHkcT6e4Xnw@public.gmane.org
+Signed-off-by: Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>
+Signed-off-by: Sasha Levin <sashal-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+---
+ block/blk-iocost.c | 11 ++++++++---
+ 1 file changed, 8 insertions(+), 3 deletions(-)
 
-But I don't see where such a constraint would be implemented in the
-code. (My cursory understanding above tends to horizontal comparisons.)
+diff --git a/block/blk-iocost.c b/block/blk-iocost.c
+index 6955605629e4f..ec7219caea165 100644
+--- a/block/blk-iocost.c
++++ b/block/blk-iocost.c
+@@ -866,9 +866,14 @@ static void calc_lcoefs(u64 bps, u64 seqiops, u64 randiops,
+ 
+ 	*page = *seqio = *randio = 0;
+ 
+-	if (bps)
+-		*page = DIV64_U64_ROUND_UP(VTIME_PER_SEC,
+-					   DIV_ROUND_UP_ULL(bps, IOC_PAGE_SIZE));
++	if (bps) {
++		u64 bps_pages = DIV_ROUND_UP_ULL(bps, IOC_PAGE_SIZE);
++
++		if (bps_pages)
++			*page = DIV64_U64_ROUND_UP(VTIME_PER_SEC, bps_pages);
++		else
++			*page = 1;
++	}
+ 
+ 	if (seqiops) {
+ 		v = DIV64_U64_ROUND_UP(VTIME_PER_SEC, seqiops);
+-- 
+2.39.0
 
-Could you please hint me which is right?
-
-Thanks,
-Michal
-
-[1] https://lore.kernel.org/r/CAKfTPtDu=c-psGnHkoWSPRWoh1Z0VBBfsN++g+krv4B1SJmFjg-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org/
-
-
---ach44qdpkbnxkdxs
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-
-iHUEABYKAB0WIQTrXXag4J0QvXXBmkMkDQmsBEOquQUCY/kQDQAKCRAkDQmsBEOq
-ub3oAQDEfOX2TRBsjRsSXpo+vOEyZrjXeyDhQLhjWFuVBg+ULAD5ATvSCYRMEgA2
-2bDHVH5lA4uSr/kcxYKHNEp+qw6K5w8=
-=bajD
------END PGP SIGNATURE-----
-
---ach44qdpkbnxkdxs--
