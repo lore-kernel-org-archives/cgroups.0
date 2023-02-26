@@ -1,89 +1,52 @@
-From: Sasha Levin <sashal@kernel.org>
-Subject: [PATCH AUTOSEL 5.15 3/6] blk-iocost: fix divide by 0 error in calc_lcoefs()
-Date: Sat, 25 Feb 2023 22:43:55 -0500
-Message-ID: <20230226034359.773806-3-sashal@kernel.org>
-References: <20230226034359.773806-1-sashal@kernel.org>
+From: Breno Leitao <leitao@debian.org>
+Subject: Re: [PATCH] blk-iocost: initialize rqos before accessing it
+Date: Sun, 26 Feb 2023 07:59:48 +0000
+Message-ID: <3130cb3e-eaca-04c2-ad97-b32ffddad397@debian.org>
+References: <20230224160714.172884-1-leitao@debian.org>
+ <20230224185126.bxkreilofbp2t4on@blackpad>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: quoted-printable
 Return-path: <linux-block-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1677383044;
-        bh=nXU1mIcE80gCuXpTLG5b3uYjUUQu4yGjMNHvMqJDQyc=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=LGLVJjQjHJJRYqoX55ITpKdOqnF+zVdiSt8GSHaCwhO1eV4eyXZm6Shoze2WBzocW
-         G4Z9LtZ9+GFNxwFwBh30sV9nYiWb7CgRXlVsnFwkzUr8BLuIOuaWF68m7Rn3ZkQXDj
-         C8c+8eeZs9moAiJVyihSMDJ+P8z0g3xC7EJw5mMNEcdIrbTNa1/PR1BW1gzSDi/ztf
-         akFw3V4mm/BB9fdP6n5fH/QubIfJT+jlerW21kMDpizmfmHrziLHGtPxjWKXmxEaqQ
-         Y+JuXGi3tqjfmFfdiAquEc86U5KrwdW4NTXckjo59kbqUKO22KWq8Ecs/FUcM+K/D0
-         6Fh7qfhm/5+xA==
-In-Reply-To: <20230226034359.773806-1-sashal@kernel.org>
+Content-Language: en-US
+In-Reply-To: <20230224185126.bxkreilofbp2t4on@blackpad>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-To: linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc: Li Nan <linan122@huawei.com>, Yu Kuai <yukuai3@huawei.com>, Tejun Heo <tj@kernel.org>, Jens Axboe <axboe@kernel.dk>, Sasha Levin <sashal@kernel.org>, josef@toxicpanda.com, cgroups@vger.kernel.org, linux-block@vger.kernel.org
+Content-Type: text/plain; charset="iso-8859-1"; format="flowed"
+To: =?UTF-8?Q?Michal_Koutn=c3=bd?= <mkoutny@suse.com>
+Cc: axboe@kernel.dk, tj@kernel.org, josef@toxicpanda.com, cgroups@vger.kernel.org, linux-block@vger.kernel.org, aherrmann@suse.de, linux-kernel@vger.kernel.org, hch@lst.de, leit@fb.com
 
-From: Li Nan <linan122@huawei.com>
+Hello Michal,
 
-[ Upstream commit 984af1e66b4126cf145153661cc24c213e2ec231 ]
+On 2/24/23 18:51, Michal Koutn=C3=BD wrote:
+>> 	blk_iocost_init (include/asm-generic/qspinlock.h:128
+>> 			 include/linux/spinlock.h:203
+>> 			 include/linux/spinlock_api_smp.h:158
+>> 			 include/linux/spinlock.h:400
+>> 			 block/blk-iocost.c:2884)
+>> 	ioc_qos_write (block/blk-iocost.c:3198)
+>> 	? kretprobe_perf_func (kernel/trace/trace_kprobe.c:1566)
+>> 	? kernfs_fop_write_iter (include/linux/slab.h:584 fs/kernfs/file.c:311)
+>> 	? __kmem_cache_alloc_node (mm/slab.h:? mm/slub.c:3452 mm/slub.c:3491)
+>> 	? _copy_from_iter (arch/x86/include/asm/uaccess_64.h:46
+>> 			   arch/x86/include/asm/uaccess_64.h:52
+>> 			   lib/iov_iter.c:183 lib/iov_iter.c:628)
+>> 	? kretprobe_dispatcher (kernel/trace/trace_kprobe.c:1693)
+>> 	cgroup_file_write (kernel/cgroup/cgroup.c:4061)
+>> 	kernfs_fop_write_iter (fs/kernfs/file.c:334)
+>> 	vfs_write (include/linux/fs.h:1849 fs/read_write.c:491
+>> 		   fs/read_write.c:584)
+>> 	ksys_write (fs/read_write.c:637)
+>> 	do_syscall_64 (arch/x86/entry/common.c:50 arch/x86/entry/common.c:80)
+>> 	entry_SYSCALL_64_after_hwframe (arch/x86/entry/entry_64.S:120)
+>=20
+> BTW, out of curiosity what tool did you use to list stack with line
+> numbers?
 
-echo max of u64 to cost.model can cause divide by 0 error.
+I use the decode_stacktrace.sh from kernel's scripts directory. You=20
+basically
+pipe the stack to it, and call it passing the vmlinux file. It is=20
+incredible handy.
 
-  # echo 8:0 rbps=18446744073709551615 > /sys/fs/cgroup/io.cost.model
+https://elixir.bootlin.com/linux/latest/source/scripts/decode_stacktrace.sh
 
-  divide error: 0000 [#1] PREEMPT SMP
-  RIP: 0010:calc_lcoefs+0x4c/0xc0
-  Call Trace:
-   <TASK>
-   ioc_refresh_params+0x2b3/0x4f0
-   ioc_cost_model_write+0x3cb/0x4c0
-   ? _copy_from_iter+0x6d/0x6c0
-   ? kernfs_fop_write_iter+0xfc/0x270
-   cgroup_file_write+0xa0/0x200
-   kernfs_fop_write_iter+0x17d/0x270
-   vfs_write+0x414/0x620
-   ksys_write+0x73/0x160
-   __x64_sys_write+0x1e/0x30
-   do_syscall_64+0x35/0x80
-   entry_SYSCALL_64_after_hwframe+0x63/0xcd
-
-calc_lcoefs() uses the input value of cost.model in DIV_ROUND_UP_ULL,
-overflow would happen if bps plus IOC_PAGE_SIZE is greater than
-ULLONG_MAX, it can cause divide by 0 error.
-
-Fix the problem by setting basecost
-
-Signed-off-by: Li Nan <linan122@huawei.com>
-Signed-off-by: Yu Kuai <yukuai3@huawei.com>
-Acked-by: Tejun Heo <tj@kernel.org>
-Link: https://lore.kernel.org/r/20230117070806.3857142-5-yukuai1@huaweicloud.com
-Signed-off-by: Jens Axboe <axboe@kernel.dk>
-Signed-off-by: Sasha Levin <sashal@kernel.org>
----
- block/blk-iocost.c | 11 ++++++++---
- 1 file changed, 8 insertions(+), 3 deletions(-)
-
-diff --git a/block/blk-iocost.c b/block/blk-iocost.c
-index 069193dee95b0..bd7e9ffa5d401 100644
---- a/block/blk-iocost.c
-+++ b/block/blk-iocost.c
-@@ -870,9 +870,14 @@ static void calc_lcoefs(u64 bps, u64 seqiops, u64 randiops,
- 
- 	*page = *seqio = *randio = 0;
- 
--	if (bps)
--		*page = DIV64_U64_ROUND_UP(VTIME_PER_SEC,
--					   DIV_ROUND_UP_ULL(bps, IOC_PAGE_SIZE));
-+	if (bps) {
-+		u64 bps_pages = DIV_ROUND_UP_ULL(bps, IOC_PAGE_SIZE);
-+
-+		if (bps_pages)
-+			*page = DIV64_U64_ROUND_UP(VTIME_PER_SEC, bps_pages);
-+		else
-+			*page = 1;
-+	}
- 
- 	if (seqiops) {
- 		v = DIV64_U64_ROUND_UP(VTIME_PER_SEC, seqiops);
--- 
-2.39.0
-
+Thanks for the review,
+Breno
