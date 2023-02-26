@@ -1,52 +1,77 @@
-From: Breno Leitao <leitao@debian.org>
-Subject: Re: [PATCH] blk-iocost: initialize rqos before accessing it
-Date: Sun, 26 Feb 2023 07:59:48 +0000
-Message-ID: <3130cb3e-eaca-04c2-ad97-b32ffddad397@debian.org>
-References: <20230224160714.172884-1-leitao@debian.org>
- <20230224185126.bxkreilofbp2t4on@blackpad>
+From: Ivan Orlov <ivan.orlov0322-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Subject: [PATCH] selftests: cgroup: Add 'malloc' failures checks in test_memcontrol
+Date: Sun, 26 Feb 2023 16:16:33 +0300
+Message-ID: <20230226131634.34366-1-ivan.orlov0322@gmail.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-Return-path: <linux-block-owner@vger.kernel.org>
-Content-Language: en-US
-In-Reply-To: <20230224185126.bxkreilofbp2t4on@blackpad>
+Content-Transfer-Encoding: 8bit
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112; t=1677417420;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=4MQkzTFY7oFLk7HS5mTlDP6H3MWtlVl305nioGoqUIs=;
+        b=Cw96/L1RHzMm7Iwoev/iq9NQQD4j4GnUH9LI9hf0FsI7wpXOyF7SPk8t4sj26swyzx
+         NoiuVoyttuLYzz6AkKaKAxzFsgN9YUejX+v/ekVf8Lt3h7MJYwNVH1SqG2XSo8NYCdlg
+         OtUI1WZf2hD8ndAhpOM+BAOjCp10hXvhXrVmiwWsI7LnC3kwhrcVfsTa/u9vbkTGukNL
+         Htl/vGkWLNa/aPzZOaw1WBlsiOeVy5wJ9T0+Tr+uWMisrEBBZ5Wqwfr6tsnjga9Los6O
+         x4PJoNWIOeFMjvXEP+/GvphKdLQcqlNsifDVayI5uePvFO70xyMmJC2L/mb0Wagx6bHh
+         vIBw==
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="iso-8859-1"; format="flowed"
-To: =?UTF-8?Q?Michal_Koutn=c3=bd?= <mkoutny@suse.com>
-Cc: axboe@kernel.dk, tj@kernel.org, josef@toxicpanda.com, cgroups@vger.kernel.org, linux-block@vger.kernel.org, aherrmann@suse.de, linux-kernel@vger.kernel.org, hch@lst.de, leit@fb.com
+Content-Type: text/plain; charset="us-ascii"
+To: hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org, shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, muchun.song-fxUVXftIFDnyG1zEObXtfA@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org, shuah-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org
+Cc: Ivan Orlov <ivan.orlov0322-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kselftest-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, skhan-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org
 
-Hello Michal,
+There are several 'malloc' calls in test_memcontrol, which can be
+unsuccessful. This patch will add 'malloc' failures checking to
+give more details about test's fail reasons and avoid possible
+undefined behavior during the future null dereference (like the
+one in alloc_anon_50M_check_swap function).
 
-On 2/24/23 18:51, Michal Koutn=C3=BD wrote:
->> 	blk_iocost_init (include/asm-generic/qspinlock.h:128
->> 			 include/linux/spinlock.h:203
->> 			 include/linux/spinlock_api_smp.h:158
->> 			 include/linux/spinlock.h:400
->> 			 block/blk-iocost.c:2884)
->> 	ioc_qos_write (block/blk-iocost.c:3198)
->> 	? kretprobe_perf_func (kernel/trace/trace_kprobe.c:1566)
->> 	? kernfs_fop_write_iter (include/linux/slab.h:584 fs/kernfs/file.c:311)
->> 	? __kmem_cache_alloc_node (mm/slab.h:? mm/slub.c:3452 mm/slub.c:3491)
->> 	? _copy_from_iter (arch/x86/include/asm/uaccess_64.h:46
->> 			   arch/x86/include/asm/uaccess_64.h:52
->> 			   lib/iov_iter.c:183 lib/iov_iter.c:628)
->> 	? kretprobe_dispatcher (kernel/trace/trace_kprobe.c:1693)
->> 	cgroup_file_write (kernel/cgroup/cgroup.c:4061)
->> 	kernfs_fop_write_iter (fs/kernfs/file.c:334)
->> 	vfs_write (include/linux/fs.h:1849 fs/read_write.c:491
->> 		   fs/read_write.c:584)
->> 	ksys_write (fs/read_write.c:637)
->> 	do_syscall_64 (arch/x86/entry/common.c:50 arch/x86/entry/common.c:80)
->> 	entry_SYSCALL_64_after_hwframe (arch/x86/entry/entry_64.S:120)
->=20
-> BTW, out of curiosity what tool did you use to list stack with line
-> numbers?
+Signed-off-by: Ivan Orlov <ivan.orlov0322-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+---
+ tools/testing/selftests/cgroup/test_memcontrol.c | 15 +++++++++++++++
+ 1 file changed, 15 insertions(+)
 
-I use the decode_stacktrace.sh from kernel's scripts directory. You=20
-basically
-pipe the stack to it, and call it passing the vmlinux file. It is=20
-incredible handy.
+diff --git a/tools/testing/selftests/cgroup/test_memcontrol.c b/tools/testing/selftests/cgroup/test_memcontrol.c
+index 1e616a8c6a9c..f4f7c0aef702 100644
+--- a/tools/testing/selftests/cgroup/test_memcontrol.c
++++ b/tools/testing/selftests/cgroup/test_memcontrol.c
+@@ -98,6 +98,11 @@ static int alloc_anon_50M_check(const char *cgroup, void *arg)
+ 	int ret = -1;
+ 
+ 	buf = malloc(size);
++	if (buf == NULL) {
++		fprintf(stderr, "malloc() failed\n");
++		return -1;
++	}
++
+ 	for (ptr = buf; ptr < buf + size; ptr += PAGE_SIZE)
+ 		*ptr = 0;
+ 
+@@ -211,6 +216,11 @@ static int alloc_anon_noexit(const char *cgroup, void *arg)
+ 	char *buf, *ptr;
+ 
+ 	buf = malloc(size);
++	if (buf == NULL) {
++		fprintf(stderr, "malloc() failed\n");
++		return -1;
++	}
++
+ 	for (ptr = buf; ptr < buf + size; ptr += PAGE_SIZE)
+ 		*ptr = 0;
+ 
+@@ -778,6 +788,11 @@ static int alloc_anon_50M_check_swap(const char *cgroup, void *arg)
+ 	int ret = -1;
+ 
+ 	buf = malloc(size);
++	if (buf == NULL) {
++		fprintf(stderr, "malloc() failed\n");
++		return -1;
++	}
++
+ 	for (ptr = buf; ptr < buf + size; ptr += PAGE_SIZE)
+ 		*ptr = 0;
+ 
+-- 
+2.34.1
 
-https://elixir.bootlin.com/linux/latest/source/scripts/decode_stacktrace.sh
-
-Thanks for the review,
-Breno
