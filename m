@@ -1,48 +1,72 @@
-From: Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>
+From: Jens Axboe <axboe@kernel.dk>
 Subject: Re: [PATCH] blk-iocost: initialize rqos before accessing it
-Date: Sun, 26 Feb 2023 13:18:12 -0700
-Message-ID: <167744269225.13527.9868779562423182386.b4-ty@kernel.dk>
+Date: Sun, 26 Feb 2023 13:18:36 -0700
+Message-ID: <99297e45-e5d7-e582-ed66-4080baf5c884@kernel.dk>
 References: <20230224160714.172884-1-leitao@debian.org>
+ <Y/uPFT7w+XQ9l0XE@slm.duckdns.org>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Transfer-Encoding: quoted-printable
+Return-path: <linux-block-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=kernel-dk.20210112.gappssmtp.com; s=20210112;
-        h=content-transfer-encoding:mime-version:date:message-id:subject
-         :references:in-reply-to:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=TycbyvH4hoRUp82zuYMHneygBALggpe+yy/y2XkSW+k=;
-        b=y7EMRhNnxrODvQIIQapGaXGGVUFVhimKVzRv3nzmTFNHrmZ/lCtDOdtAjhWEZWsGhO
-         T9Mtom41ApCTh3kgxshWwaBncqlr1K3XGOkKuRZPVdsvWg1mM7zS80ZSGXtrJ22QLHnV
-         i6vLBHuw0kX5aQJHrmCGwX/E3hJ/C/Rdjp/sKyIGM+P/vo+PYVyw945FDDnrpEf97VzV
-         XzvySTN/wr3T4mwbcMHh83umRapfM3vikuVKPg2yr0jFvrVe6qbp82tE3u5aTRB8nL+i
-         FwjpEvpZaIQa0iZBzNvutcgexlftNlVzbLaTr7Mi97JEFtW2CWLY3hsOGSNxnxpQ4J+a
-         127g==
-In-Reply-To: <20230224160714.172884-1-leitao-8fiUuRrzOP0dnm+yROfE0A@public.gmane.org>
+        d=kernel-dk.20210112.gappssmtp.com; s=20210112; t=1677442718;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=WfnsNCyMqf3Mvd4sjmsuEBgREKEXaVYDac63SQuhJJw=;
+        b=xeercA6ozu6jEy9thlUQk8vkH/YTR96f0IViO1Dd3uXuyyLB5NfTBmcFVhKTngRvRA
+         2f49+/lo4TiAE5KvzX4q24Kev36C8ojQTFOy3X0UVnx5eQmylfgENGtw+ncKQkT0ZdyE
+         6hZjQ446RbHXB1Hmyepo7E4f0NwGfkaEqriZeqSCXeU0TIvRyTeXRyUHyyccIRd8GmgE
+         ji0ET9Rqclso4EgTnJTLDQbWOXCxCau7rIEHHSrvWAMjZYSZ1wMH12bhIn50gjdy4SLF
+         hUV2keahta5WiQtrQ/UQbOi5RWdMIdZGA4HFHXeVYq1MtXOR8ZKdWS7X3UekCO5qKh3h
+         cw7w==
+Content-Language: en-US
+In-Reply-To: <Y/uPFT7w+XQ9l0XE@slm.duckdns.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-To: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, josef-DigfWCa+lFGyeJad7bwFQA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Breno Leitao <leitao-8fiUuRrzOP0dnm+yROfE0A@public.gmane.org>
-Cc: aherrmann-l3A5Bk7waGM@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, hch-jcswGhMUV9g@public.gmane.org, leit-b10kYP2dOMg@public.gmane.org
+Content-Type: text/plain; charset="windows-1252"
+To: Tejun Heo <tj@kernel.org>, Breno Leitao <leitao@debian.org>
+Cc: josef@toxicpanda.com, cgroups@vger.kernel.org, linux-block@vger.kernel.org, aherrmann@suse.de, linux-kernel@vger.kernel.org, hch@lst.de, leit@fb.com
 
+On 2/26/23 9:55=E2=80=AFAM, Tejun Heo wrote:
+> Hello, Breno.
+>=20
+> On Fri, Feb 24, 2023 at 08:07:14AM -0800, Breno Leitao wrote:
+>> diff --git a/block/blk-iocost.c b/block/blk-iocost.c
+>> index ff534e9d92dc..6cced8a76e9c 100644
+>> --- a/block/blk-iocost.c
+>> +++ b/block/blk-iocost.c
+>> @@ -2878,11 +2878,6 @@ static int blk_iocost_init(struct gendisk *disk)
+>>  	atomic64_set(&ioc->cur_period, 0);
+>>  	atomic_set(&ioc->hweight_gen, 0);
+>> =20
+>> -	spin_lock_irq(&ioc->lock);
+>> -	ioc->autop_idx =3D AUTOP_INVALID;
+>> -	ioc_refresh_params(ioc, true);
+>> -	spin_unlock_irq(&ioc->lock);
+>> -
+>>  	/*
+>>  	 * rqos must be added before activation to allow ioc_pd_init() to
+>>  	 * lookup the ioc from q. This means that the rqos methods may get
+>> @@ -2893,6 +2888,11 @@ static int blk_iocost_init(struct gendisk *disk)
+>>  	if (ret)
+>>  		goto err_free_ioc;
+>> =20
+>> +	spin_lock_irq(&ioc->lock);
+>> +	ioc->autop_idx =3D AUTOP_INVALID;
+>> +	ioc_refresh_params(ioc, true);
+>> +	spin_unlock_irq(&ioc->lock);
+>> +
+>=20
+> I'm a bit worried about registering the rqos before ioc_refresh_params() =
+as
+> that initializes all the internal parameters and letting IOs flow through
+> without initializing them can lead to subtle issues. Can you please inste=
+ad
+> explicitly pass @q into ioc_refresh_params() (and explain why we need it
+> passed explicitly in the function comment)?
 
-On Fri, 24 Feb 2023 08:07:14 -0800, Breno Leitao wrote:
-> Current kernel (d2980d8d826554fa6981d621e569a453787472f8) crashes
-> when blk_iocost_init for `nvme1` disk.
-> 
-> 	BUG: kernel NULL pointer dereference, address: 0000000000000050
-> 	#PF: supervisor read access in kernel mode
-> 	#PF: error_code(0x0000) - not-present page
-> 
-> [...]
+Sorry missed this, I'll drop it for now.
 
-Applied, thanks!
-
-[1/1] blk-iocost: initialize rqos before accessing it
-      commit: efbb51a0aae5fcecda266ac254146e36fff41e16
-
-Best regards,
--- 
+--=20
 Jens Axboe
-
 
 
