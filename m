@@ -1,79 +1,89 @@
-From: Sasha Levin <sashal@kernel.org>
-Subject: [PATCH AUTOSEL 6.1 09/21] blk-cgroup: dropping parent refcount after pd_free_fn() is done
-Date: Sat, 25 Feb 2023 22:42:44 -0500
-Message-ID: <20230226034256.771769-9-sashal@kernel.org>
+From: Sasha Levin <sashal-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: [PATCH AUTOSEL 6.1 08/21] blk-iocost: fix divide by 0 error in calc_lcoefs()
+Date: Sat, 25 Feb 2023 22:42:43 -0500
+Message-ID: <20230226034256.771769-8-sashal@kernel.org>
 References: <20230226034256.771769-1-sashal@kernel.org>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Return-path: <linux-block-owner@vger.kernel.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1677382993;
-        bh=zdvOAvwFca4f73LDzTiibTcU1h56oLJ1662QZieik10=;
+        s=k20201202; t=1677382992;
+        bh=/KPj3m1KPxfGMtW8xapjQpJ0dfmXm9YDZiWr49pG+no=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=qAlV7kWe1ma3LvoVvDVslriO9lR8cSTLBDwinZNqkc3zCWSx8R/nkE5yjTkZ0bWAf
-         PnDS1w5hurTHRi67X5kpFgV0PxqRurK8GqtCL4sXffCxdJmUsC3Gx4L1hwegyHW85L
-         JFDu2/r27DYg8HDeCHbmJxp5N6I8b1Bbx9VPmjKhGwdYA8FeMSTzU6YFoPlzwoPpoT
-         r8LGkaacmqrpktD5UNd2BmzYjy7geHyPANlUMkASCCUH61tJdHU5eoQtEs7o6oDGgU
-         RoKqIKIAajWo98Y7A60yf8AGEH8eQVSseq5WViKsdBh7gxplXzu9QmCO9pZ4yCCTT3
-         EXUN9rwltmKyQ==
-In-Reply-To: <20230226034256.771769-1-sashal@kernel.org>
+        b=bMPZFALqkV6ZOdd6vlFbSfOv5okMdZ7SS49sB+FcoXVYn8VgLikORNC2yO79yWfuh
+         LAdHOQgW/gqJapk11eR+c0pWJoyZA1oZOGdxOdkRNSsep4D8+wu7FKKxVGxDVdiCMp
+         fVfLjRyeUSH+ggloBG29KNTEHcLKvjU5Id1MOAlrQ9XA0Ati2LDVGSwirfhByt/ej9
+         4g9q4MHKUSUjAHMsekx+Z0fXiMCsgHl35SmaxAHvi2z18l3DGfZ2kt31U9lYAT6a6g
+         k21i2ws6huTdCa5eboc0Y/TfOCM6YaW4hJ17k7MbAKLQLbnmZnjU0KzbQXV4VnRHmB
+         EfMdXsZHjN7RQ==
+In-Reply-To: <20230226034256.771769-1-sashal-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc: Yu Kuai <yukuai3@huawei.com>, Tejun Heo <tj@kernel.org>, Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>, Sasha Levin <sashal@kernel.org>, josef@toxicpanda.com, cgroups@vger.kernel.org, linux-block@vger.kernel.org
+To: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, stable-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Cc: Li Nan <linan122-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Yu Kuai <yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, Sasha Levin <sashal-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, josef-DigfWCa+lFGyeJad7bwFQA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-From: Yu Kuai <yukuai3@huawei.com>
+From: Li Nan <linan122-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 
-[ Upstream commit c7241babf0855d8a6180cd1743ff0ec34de40b4e ]
+[ Upstream commit 984af1e66b4126cf145153661cc24c213e2ec231 ]
 
-Some cgroup policies will access parent pd through child pd even
-after pd_offline_fn() is done. If pd_free_fn() for parent is called
-before child, then UAF can be triggered. Hence it's better to guarantee
-the order of pd_free_fn().
+echo max of u64 to cost.model can cause divide by 0 error.
 
-Currently refcount of parent blkg is dropped in __blkg_release(), which
-is before pd_free_fn() is called in blkg_free_work_fn() while
-blkg_free_work_fn() is called asynchronously.
+  # echo 8:0 rbps=18446744073709551615 > /sys/fs/cgroup/io.cost.model
 
-This patch make sure pd_free_fn() called from removing cgroup is ordered
-by delaying dropping parent refcount after calling pd_free_fn() for
-child.
+  divide error: 0000 [#1] PREEMPT SMP
+  RIP: 0010:calc_lcoefs+0x4c/0xc0
+  Call Trace:
+   <TASK>
+   ioc_refresh_params+0x2b3/0x4f0
+   ioc_cost_model_write+0x3cb/0x4c0
+   ? _copy_from_iter+0x6d/0x6c0
+   ? kernfs_fop_write_iter+0xfc/0x270
+   cgroup_file_write+0xa0/0x200
+   kernfs_fop_write_iter+0x17d/0x270
+   vfs_write+0x414/0x620
+   ksys_write+0x73/0x160
+   __x64_sys_write+0x1e/0x30
+   do_syscall_64+0x35/0x80
+   entry_SYSCALL_64_after_hwframe+0x63/0xcd
 
-BTW, pd_free_fn() will also be called from blkcg_deactivate_policy()
-from deleting device, and following patches will guarantee the order.
+calc_lcoefs() uses the input value of cost.model in DIV_ROUND_UP_ULL,
+overflow would happen if bps plus IOC_PAGE_SIZE is greater than
+ULLONG_MAX, it can cause divide by 0 error.
 
-Signed-off-by: Yu Kuai <yukuai3@huawei.com>
-Acked-by: Tejun Heo <tj@kernel.org>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
-Link: https://lore.kernel.org/r/20230119110350.2287325-2-yukuai1@huaweicloud.com
-Signed-off-by: Jens Axboe <axboe@kernel.dk>
-Signed-off-by: Sasha Levin <sashal@kernel.org>
+Fix the problem by setting basecost
+
+Signed-off-by: Li Nan <linan122-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Signed-off-by: Yu Kuai <yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Acked-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Link: https://lore.kernel.org/r/20230117070806.3857142-5-yukuai1-XF6JlduFytWkHkcT6e4Xnw@public.gmane.org
+Signed-off-by: Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>
+Signed-off-by: Sasha Levin <sashal-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 ---
- block/blk-cgroup.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ block/blk-iocost.c | 11 ++++++++---
+ 1 file changed, 8 insertions(+), 3 deletions(-)
 
-diff --git a/block/blk-cgroup.c b/block/blk-cgroup.c
-index 7c91d9195da8d..8d1b7757f1e4f 100644
---- a/block/blk-cgroup.c
-+++ b/block/blk-cgroup.c
-@@ -93,6 +93,8 @@ static void blkg_free_workfn(struct work_struct *work)
- 		if (blkg->pd[i])
- 			blkcg_policy[i]->pd_free_fn(blkg->pd[i]);
+diff --git a/block/blk-iocost.c b/block/blk-iocost.c
+index 495396425bade..bfc33fa9a063c 100644
+--- a/block/blk-iocost.c
++++ b/block/blk-iocost.c
+@@ -865,9 +865,14 @@ static void calc_lcoefs(u64 bps, u64 seqiops, u64 randiops,
  
-+	if (blkg->parent)
-+		blkg_put(blkg->parent);
- 	if (blkg->q)
- 		blk_put_queue(blkg->q);
- 	free_percpu(blkg->iostat_cpu);
-@@ -127,8 +129,6 @@ static void __blkg_release(struct rcu_head *rcu)
+ 	*page = *seqio = *randio = 0;
  
- 	/* release the blkcg and parent blkg refs this blkg has been holding */
- 	css_put(&blkg->blkcg->css);
--	if (blkg->parent)
--		blkg_put(blkg->parent);
- 	blkg_free(blkg);
- }
+-	if (bps)
+-		*page = DIV64_U64_ROUND_UP(VTIME_PER_SEC,
+-					   DIV_ROUND_UP_ULL(bps, IOC_PAGE_SIZE));
++	if (bps) {
++		u64 bps_pages = DIV_ROUND_UP_ULL(bps, IOC_PAGE_SIZE);
++
++		if (bps_pages)
++			*page = DIV64_U64_ROUND_UP(VTIME_PER_SEC, bps_pages);
++		else
++			*page = 1;
++	}
  
+ 	if (seqiops) {
+ 		v = DIV64_U64_ROUND_UP(VTIME_PER_SEC, seqiops);
 -- 
 2.39.0
 
