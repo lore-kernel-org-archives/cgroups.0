@@ -1,76 +1,98 @@
-From: Jan Kara <jack@suse.cz>
-Subject: Re: [PATCH v2] blk-ioprio: Introduce promote-to-rt policy
-Date: Mon, 27 Feb 2023 14:03:05 +0100
-Message-ID: <20230227130305.2idxwmz2kdnacolc@quack3>
-References: <20230220135428.2632906-1-houtao@huaweicloud.com>
+From: Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
+Subject: Re: [PATCH v10 8/9] sched/fair: Add latency list
+Date: Mon, 27 Feb 2023 14:29:27 +0100
+Message-ID: <Y/ywN3Sz33gHO3Vj@hirez.programming.kicks-ass.net>
+References: <20230113141234.260128-1-vincent.guittot@linaro.org>
+ <20230113141234.260128-9-vincent.guittot@linaro.org>
+ <Y/XlR+wLtn54CkE4@hirez.programming.kicks-ass.net>
+ <CAKfTPtBJD6So-0-S3sgFqTE1HVMypg_S23+uuH6BnGk5atxUKA@mail.gmail.com>
 Mime-Version: 1.0
-Return-path: <linux-doc-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
-        t=1677502985; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=B7AF3j/D3PPFmjhvHIOXz9dOZpP3jlwrUSkvsPwPPVw=;
-        b=R9cpBWOqSKYamPQ0smruJPhZi21kgSt1HeK8Vd6MYJuf4nRYXLqJpylLgAeW2clXo8eJoB
-        G3m8QZO209XhYy0EmxZBUTwNTakGpQ2vjzId9qXQDzU4w+9CKuYRq8xpHfYe6b0/fXwjOU
-        ySs2nBeLQ0mpUBF34MDCsfqUi8dO2rg=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
-        s=susede2_ed25519; t=1677502985;
-        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=B7AF3j/D3PPFmjhvHIOXz9dOZpP3jlwrUSkvsPwPPVw=;
-        b=I8LQCm2Z+35iE4ZfbLhlBJ+67ZQfu3wNTkoodTYnJfXfWH5uG/Pj4pp3CrV73TmGcqTX3t
-        1Uc6HAXePxCcTgCw==
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
+        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=AB/JJQoz7Q3YSgyTBOyspLv2ZEi2yhJlHwTRl8RgmcI=; b=IDrwwV6BUNud8U9fRntTASkSMH
+        ZjLWpC+aiFuWVnovyo1te3tMFRKO3ZyDIO3x0iNv1YskrQJfmFGjmxxDGeJlTozh5OBHwQyzynoqh
+        Y8JW086CTgeio8ueWCt8u4l9XYG7mOKI1mreVzU0qgCbUDhqU+qhJoT9TatgBw7x6MOXUwoa3M1ug
+        L5bVFP8oY5Gwl5WHdDLKHYhHl+pPD22GB6D0EeWABivGof/q9ZmfVRzEwEyAvCg0+Ku1qNiE3ziEB
+        VLQUqEGyheEFwIXLT9NatbYetmw4JO3CBOa3+qEDij/Bard6BM7EcWJYjLYZckNyAlaH0HMn5fWkZ
+        rJigvvyg==;
 Content-Disposition: inline
-In-Reply-To: <20230220135428.2632906-1-houtao@huaweicloud.com>
+In-Reply-To: <CAKfTPtBJD6So-0-S3sgFqTE1HVMypg_S23+uuH6BnGk5atxUKA-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Hou Tao <houtao@huaweicloud.com>
-Cc: linux-block@vger.kernel.org, Bart Van Assche <bvanassche@acm.org>, Jan Kara <jack@suse.cz>, Bagas Sanjaya <bagasdotme@gmail.com>, Jens Axboe <axboe@kernel.dk>, cgroups@vger.kernel.org, Tejun Heo <tj@kernel.org>, Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, Jonathan Corbet <corbet@lwn.net>, linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org, houtao1@huawei.com
+To: Vincent Guittot <vincent.guittot-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>
+Cc: mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, juri.lelli-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, dietmar.eggemann-5wv7dgnIgG8@public.gmane.org, rostedt-nx8X9YLhiw1AfugRpC6u6w@public.gmane.org, bsegall-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, mgorman-l3A5Bk7waGM@public.gmane.org, bristot-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, vschneid-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, parth-tEXmvtCZX7AybS5Ee8rs3A@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, qyousef-wp2msK0BRk8tq7phqP6ubQ@public.gmane.org, chris.hyser-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org, patrick.bellasi-X6neQFFVdzGsTnJN9+BGXg@public.gmane.org, David.Laight-JxhZ9S5GRejQT0dZR+AlfA@public.gmane.org, pjt-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, pavel-+ZI9xUNit7I@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, qperret-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, tim.c.chen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org, joshdon-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, timj-mXXj517/zsQ@public.gmane.org, kprateek.nayak-5C7GfCeVMHo@public.gmane.org, yu.c.chen-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org, youssefesmat-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org, joel-QYYGw3jwrUn5owFQY34kdNi2O/JbrIOy@public.gmane.org
 
-On Mon 20-02-23 21:54:28, Hou Tao wrote:
-> From: Hou Tao <houtao1@huawei.com>
-> 
-> Since commit a78418e6a04c ("block: Always initialize bio IO priority on
-> submit"), bio->bi_ioprio will never be IOPRIO_CLASS_NONE when calling
-> blkcg_set_ioprio(), so there will be no way to promote the io-priority
-> of one cgroup to IOPRIO_CLASS_RT, because bi_ioprio will always be
-> greater than or equals to IOPRIO_CLASS_RT.
-> 
-> It seems possible to call blkcg_set_ioprio() first then try to
-> initialize bi_ioprio later in bio_set_ioprio(), but this doesn't work
-> for bio in which bi_ioprio is already initialized (e.g., direct-io), so
-> introduce a new ioprio policy to promote the iopriority of bio to
-> IOPRIO_CLASS_RT if the ioprio is not already RT.
-> 
-> So introduce a new promote-to-rt policy to achieve this. For none-to-rt
-> policy, although it doesn't work now, but considering that its purpose
-> was also to override the io-priority to RT and allow for a smoother
-> transition, just keep it and treat it as an alias of the promote-to-rt
-> policy.
-> 
-> Signed-off-by: Hou Tao <houtao1@huawei.com>
+On Wed, Feb 22, 2023 at 12:16:29PM +0100, Vincent Guittot wrote:
+> On Wed, 22 Feb 2023 at 10:50, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org> wrote:
+> >
+> > On Fri, Jan 13, 2023 at 03:12:33PM +0100, Vincent Guittot wrote:
+> >
+> > > +static void __enqueue_latency(struct cfs_rq *cfs_rq, struct sched_entity *se, int flags)
+> > > +{
+> > > +
+> > > +     /* Only latency sensitive entity can be added to the list */
+> > > +     if (se->latency_offset >= 0)
+> > > +             return;
+> > > +
+> > > +     if (!RB_EMPTY_NODE(&se->latency_node))
+> > > +             return;
+> > > +
+> > > +     /*
+> > > +      * An execution time less than sysctl_sched_min_granularity means that
+> > > +      * the entity has been preempted by a higher sched class or an entity
+> > > +      * with higher latency constraint.
+> > > +      * Put it back in the list so it gets a chance to run 1st during the
+> > > +      * next slice.
+> > > +      */
+> > > +     if (!(flags & ENQUEUE_WAKEUP)) {
+> > > +             u64 delta_exec = se->sum_exec_runtime - se->prev_sum_exec_runtime;
+> > > +
+> > > +             if (delta_exec >= sysctl_sched_min_granularity)
+> > > +                     return;
+> > > +     }
+> >
+> > I'm not a big fan of this dynamic enqueueing condition; it makes it
+> > rather hard to interpret the below addition to pick_next_entity().
+> >
+> > Let me think about this more... at the very least the comment with
+> > __pick_first_latency() use below needs to be expanded upon if we keep it
+> > like so.
+>
+> Only the waking tasks should be added in the latency rb tree so they
 
-Looks good to me. Feel free to add:
+But that's what I'm saying, you can game this by doing super short
+sleeps every min_gran.
 
-Reviewed-by: Jan Kara <jack@suse.cz>
+> can be selected to run 1st (as long as they don't use too much
+> runtime). But task A can wake up, preempts current task B thanks to
+> its latency nice , starts to run few usecs but then is immediately
+> preempted by a RT task C as an example. In this case, we consider that
+> the task A didn't get a chance to run after its wakeup and we put it
+> back to the latency rb tree just as if task A has just woken up but
+> didn't preempted the new current task C.
 
-Just one question regarding doc below:
+So ideally, and this is where I'm very slow with thinking, that
+wakeup_preempt_entity() condition here:
 
-> ++----------------+---+
-> +| no-change      | 0 |
-> ++----------------+---+
-> +| rt-to-be       | 2 |
-> ++----------------+---+
-> +| all-to-idle    | 3 |
-> ++----------------+---+
+> > > @@ -5008,6 +5082,12 @@ pick_next_entity(struct cfs_rq *cfs_rq, struct sched_entity *curr)
+> > >               se = cfs_rq->last;
+> > >       }
+> > >
+> > > +     /* Check for latency sensitive entity waiting for running */
+> > > +     latency = __pick_first_latency(cfs_rq);
+> > > +     if (latency && (latency != se) &&
+> > > +         wakeup_preempt_entity(latency, se) < 1)
+> > > +             se = latency;
 
-Shouldn't there be preempt-to-rt somewhere in this table as well? Or why
-this this in the doc at all? I'd consider the numbers to be kernel internal
-thing?
+should be sufficient to provide fair bandwidth usage. The EEVDF paper
+achieves this by selecting the leftmost elegible task, where elegibility
+is dependent on negative lag. Only those tasks that are behind the pack
+are allowed runtime.
 
-								Honza
--- 
-Jan Kara <jack@suse.com>
-SUSE Labs, CR
+Now clearly our min_vruntime is unsuited for that exact scheme, but iirc
+wake_preempt_entity() does not allow for starvation, so we should be
+good, even without that weird condition in __enqueue_latency(), hmm?
