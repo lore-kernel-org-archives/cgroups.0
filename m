@@ -1,80 +1,150 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH v3] blk-iocost: Pass gendisk to ioc_refresh_params
-Date: Mon, 27 Feb 2023 08:27:19 -1000
-Message-ID: <Y/z2B+153X0PYpjO@slm.duckdns.org>
-References: <20230227151252.1411499-1-leitao@debian.org>
+From: Qais Yousef <qyousef-wp2msK0BRk8tq7phqP6ubQ@public.gmane.org>
+Subject: Re: [PATCH v3] sched: cpuset: Don't rebuild root domains on
+ suspend-resume
+Date: Mon, 27 Feb 2023 20:57:25 +0000
+Message-ID: <20230227205725.dipvh3i7dvyrv4tv@airbuntu>
+References: <20230206221428.2125324-1-qyousef@layalina.io>
+ <20230223153859.37tqoqk33oc6tv7o@airbuntu>
+ <5f087dd8-3e39-ce83-fe24-afa5179c05d9@arm.com>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
+        d=layalina-io.20210112.gappssmtp.com; s=20210112;
         h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:sender:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=mGr1oL/pZpPll19+c3ioRmhLkSsTJHby1AuhBJm//pc=;
-        b=AXLk46Xo38NfyHxtx8zulMsDJlEFXxboaZ7CcFKXsR8lysmnKJevshrI8i8WK3fJTF
-         uWR4w1WfELt0Mq+azcWdHPKbNrLZ4SbbMF+Dkc5RflxcjT1jViFzgFaN1/07tFwvLGFX
-         NcxpDm+af0Io/ke056P3+ooazUZqZtyEcVpRp3fNMnNcS71FCcdqPYfKgzryOUsxSAj1
-         7fUCo5vF3vh8qRZlYEh/4zoRmerPgXNLa9QB4SRDNimzCG6/nMmNK209HnPte1nf7Wu5
-         VnR2Yv9PRATCOS9AS8FmpBZfQeJ7dumwjV4T5CKMSSKlVeffBA9uLpS0wEJocpilftqF
-         uOYQ==
-Sender: Tejun Heo <htejun-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=mIN6ww9oLAv0WN7ho6gwiiph4rXuoFMoHbwtuWGbIHU=;
+        b=Bs3g5spl/LV0O4iixDMwb4HTPJIpTc4sSBY9TtNyJL/a3/Nrx2kG5iGhiEX08R9jBR
+         gCcRIOqtI3O6Y3suKyaQJfD7NVzanN4Vj5SFZOL854LgBBdVnnQwJcG3WpU3k89X744Y
+         IiZlrJdvjiVqN0gYOioxEghDHwwp+0DdIOlpwzB18fM00B8mVRsockbPsOkP4mfo2eNp
+         ZRz3sxf5CAG7g9y+dy7ZEieNW7LQY3+UX3vy1Pxh6mNeA1dNKYnhLC+/CDdKre9YRDhb
+         Gnczi0b8tPU04O1L0L2Sg6YmZo8O6b05iyzA19wLaeNrkoSaWVYPq8TySqXIzDw7bHRu
+         qS0w==
 Content-Disposition: inline
-In-Reply-To: <20230227151252.1411499-1-leitao-8fiUuRrzOP0dnm+yROfE0A@public.gmane.org>
+In-Reply-To: <5f087dd8-3e39-ce83-fe24-afa5179c05d9-5wv7dgnIgG8@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Breno Leitao <leitao-8fiUuRrzOP0dnm+yROfE0A@public.gmane.org>
-Cc: axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, hch-jcswGhMUV9g@public.gmane.org, josef-DigfWCa+lFGyeJad7bwFQA@public.gmane.org, aherrmann-l3A5Bk7waGM@public.gmane.org, mkoutny-IBi9RG/b67k@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, leit-b10kYP2dOMg@public.gmane.org
+To: Dietmar Eggemann <dietmar.eggemann-5wv7dgnIgG8@public.gmane.org>, Juri Lelli <juri.lelli-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Cc: Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Ingo Molnar <mingo-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Juri Lelli <juri.lelli-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Steven Rostedt <rostedt-nx8X9YLhiw1AfugRpC6u6w@public.gmane.org>, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, luca.abeni-5rdYK369eBLQB0XuIGIEkQ@public.gmane.org, claudio-YOzL5CV4y4YG1A2ADO40+w@public.gmane.org, tommaso.cucinotta-5rdYK369eBLQB0XuIGIEkQ@public.gmane.org, bristot-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, mathieu.poirier-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Vincent Guittot <vincent.guittot-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, Wei Wang <wvw-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Rick Yiu <rickyiu-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Quentin Perret <qperret-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Heiko Carstens <hca-tEXmvtCZX7AybS5Ee8rs3A@public.gmane.org>, Vasily Gorbik <gor-tEXmvtCZX7AybS5Ee8rs3A@public.gmane.org>, Alexander Gordeev <agordeev-tEXmvtCZX7AybS5Ee8rs3A@public.gmane.org>, Sudeep Holla <sudeep.holla-5wv7dgnIgG8@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, linux-s390-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, x86-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org
 
-Hello,
+On 02/24/23 16:14, Dietmar Eggemann wrote:
+> On 23/02/2023 16:38, Qais Yousef wrote:
+> 
+> IMHO the patch title is misleading since what you want to avoid in
+> certain cases is that the RD DL accounting is updated.
 
-A couple minor nitpicks:
+The code calls it rebuild_root_domain() ..
 
-Can you please add a short comment here too saying that @ioc->rqos.disk
-isn't initialized yet when this function is called from the init path?
+> 
+> > On 02/06/23 22:14, Qais Yousef wrote:
+> >> Commit f9a25f776d78 ("cpusets: Rebuild root domain deadline accounting information")
 
-> +static int ioc_autop_idx(struct ioc *ioc, struct gendisk *disk)
->  {
->  	int idx = ioc->autop_idx;
->  	const struct ioc_params *p = &autop[idx];
-> @@ -808,11 +808,11 @@ static int ioc_autop_idx(struct ioc *ioc)
->  	u64 now_ns;
->  
->  	/* rotational? */
-> -	if (!blk_queue_nonrot(ioc->rqos.disk->queue))
-> +	if (!blk_queue_nonrot(disk->queue))
->  		return AUTOP_HDD;
->  
->  	/* handle SATA SSDs w/ broken NCQ */
-> -	if (blk_queue_depth(ioc->rqos.disk->queue) == 1)
-> +	if (blk_queue_depth(disk->queue) == 1)
->  		return AUTOP_SSD_QD1;
->  
->  	/* use one of the normal ssd sets */
-> @@ -901,14 +901,19 @@ static void ioc_refresh_lcoefs(struct ioc *ioc)
->  		    &c[LCOEF_WPAGE], &c[LCOEF_WSEQIO], &c[LCOEF_WRANDIO]);
->  }
->  
-> -static bool ioc_refresh_params(struct ioc *ioc, bool force)
-> +/*
-> + * struct gendisk is required as an argument because ioc->rqos.disk
-> + * might not be properly initialized
-> + */
+.. and so is the original patch title.
 
-Here too, let's explicitly say when it's not initialized.
+I think I have enough explanation in the commit message and renamed the
+function name to be more descriptive too.
 
-> +static bool _ioc_refresh_params(struct ioc *ioc, bool force,
-> +				struct gendisk *disk)
+> >> enabled rebuilding root domain on cpuset and hotplug operations to
+> >> correct deadline accounting.
+> >>
+> >> Rebuilding root domain is a slow operation and we see 10+ of ms delays
+> >> on suspend-resume because of that (worst case captures 20ms which
+> >> happens often).
+> >>
+> >> Since nothing is expected to change on suspend-resume operation; skip
+> >> rebuilding the root domains to regain the some of the time lost.
+> >>
+> >> Achieve this by refactoring the code to pass whether dl accoutning needs
+> >> an update to rebuild_sched_domains(). And while at it, rename
+> >> rebuild_root_domains() to update_dl_rd_accounting() which I believe is
+> >> a more representative name since we are not really rebuilding the root
+> >> domains, but rather updating dl accounting at the root domain.
+> >>
+> >> Some users of rebuild_sched_domains() will skip dl accounting update
+> >> now:
+> >>
+> >> 	* Update sched domains when relaxing the domain level in cpuset
+> >> 	  which only impacts searching level in load balance
+> 
+> This one is cpuset related. (1)
+> 
+> >> 	* update sched domains when cpufreq governor changes and we need
+> >> 	  to create the perf domains
+> 
+> This one is drivers/base/arch_topology.c [arm/arm64/...] related. (2)
+> 
+> There are several levels of passing this `update_dl_accounting`
+> information through. I guess it looks like this:
+> 
+> 					update_dl_accounting
+> 
+> arm/arm64/riscv/parisc specific:
+> update_topology_flags_workfn()		true
+> rebuild_sched_domains_energy()		false (2)
+> 
+> cpuset_hotplug_workfn()                 cpus_updated ||
+>                          force_rebuild == CPUSET_FORCE_REBUILD_PRS_ERROR
+> 
+> ->rebuild_sched_domains(update_dl_accounting)
+> 
+>   update_cpumasks_hier()		true
+>   update_relax_domain_level()		false (1)
+>   update_flag()				true
+>   update_prstate()			true
+> 
+>   ->rebuild_sched_domains_locked(update_dl_accounting)
+> 
+>     ->partition_and_rebuild_sched_domains(..., update_dl_accounting)
+> 
+>         if (update_dl_accounting)
+>           update_dl_rd_accounting()
+> 
+> 
+> There is already a somehow hidden interface for `sd/rd rebuild`
+> 
+>   int __weak arch_update_cpu_topology(void)
+> 
+> which lets partition_sched_domains_locked() figure out whether sched
+> domains have to be rebuild..
+> 
+> But in your case it is more on the interface `cpuset/hotplug -> sd/rd
+> rebuild` and not only `arch -> `sd/rd rebuild``.
+> 
+> IMHO, it would be still nice to have only one way to tell `sd/rd
+> rebuild` what to do and what not to do during sd/rd/(pd) rebuild.
 
-Given that __ are about an order of magnitude more common in the kernel,
-would you mind renaming it to __ioc_refresh_params() or e.g.
-ioc_refresh_params_disk()?
+IIUC you're suggesting to introduce some new mechanism to detect if hotplug has
+lead to a cpu to disappear or not and use that instead? Are you saying I can
+use arch_update_cpu_topology() for that? Something like this?
 
-Please feel free to add
+	diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
+	index e5ddc8e11e5d..60c3dcf06f0d 100644
+	--- a/kernel/cgroup/cpuset.c
+	+++ b/kernel/cgroup/cpuset.c
+	@@ -1122,7 +1122,7 @@ partition_and_rebuild_sched_domains(int ndoms_new, cpumask_var_t doms_new[],
+	 {
+		mutex_lock(&sched_domains_mutex);
+		partition_sched_domains_locked(ndoms_new, doms_new, dattr_new);
+	-       if (update_dl_accounting)
+	+       if (arch_update_cpu_topology())
+			update_dl_rd_accounting();
+		mutex_unlock(&sched_domains_mutex);
+	 }
 
- Acked-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+I am not keen on this. arm64 seems to just read a value without a side effect.
+But x86 does reset this value so we can't read it twice in the same call tree
+and I'll have to extract it.
 
-Thanks.
+The better solution that was discussed before is to not iterate through every
+task in the system and let cpuset track when dl tasks are added to it and do
+smarter iteration. ATM even if there are no dl tasks in the system we'll
+blindly go through every task in the hierarchy to update nothing.
 
--- 
-tejun
+But I'll leave that to Juri to address if he wants. The original change has
+introduced a regression and people have noticed when phones cycle through
+suspend resume (screen unlock). Juri - could you please chip in on how you want
+to address this regression? In theory I should be just a reporter, but trying
+my best to help ;-)
+
+
+Cheers
