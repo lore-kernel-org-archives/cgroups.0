@@ -1,98 +1,87 @@
-From: Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
-Subject: Re: [PATCH v10 8/9] sched/fair: Add latency list
-Date: Mon, 27 Feb 2023 14:29:27 +0100
-Message-ID: <Y/ywN3Sz33gHO3Vj@hirez.programming.kicks-ass.net>
-References: <20230113141234.260128-1-vincent.guittot@linaro.org>
- <20230113141234.260128-9-vincent.guittot@linaro.org>
- <Y/XlR+wLtn54CkE4@hirez.programming.kicks-ass.net>
- <CAKfTPtBJD6So-0-S3sgFqTE1HVMypg_S23+uuH6BnGk5atxUKA@mail.gmail.com>
+From: Vincent Guittot <vincent.guittot@linaro.org>
+Subject: Re: [PATCH v12 6/8] sched/fair: Add sched group latency support
+Date: Mon, 27 Feb 2023 14:44:22 +0100
+Message-ID: <CAKfTPtBorwnjU2=nprBo7aAEjoz+7x5nRYUdajZc53cuVgHSBw@mail.gmail.com>
+References: <20230224093454.956298-1-vincent.guittot@linaro.org>
+ <20230224093454.956298-7-vincent.guittot@linaro.org> <20230224192919.d4fcde3dwh7betvm@blackpad>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
-        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=AB/JJQoz7Q3YSgyTBOyspLv2ZEi2yhJlHwTRl8RgmcI=; b=IDrwwV6BUNud8U9fRntTASkSMH
-        ZjLWpC+aiFuWVnovyo1te3tMFRKO3ZyDIO3x0iNv1YskrQJfmFGjmxxDGeJlTozh5OBHwQyzynoqh
-        Y8JW086CTgeio8ueWCt8u4l9XYG7mOKI1mreVzU0qgCbUDhqU+qhJoT9TatgBw7x6MOXUwoa3M1ug
-        L5bVFP8oY5Gwl5WHdDLKHYhHl+pPD22GB6D0EeWABivGof/q9ZmfVRzEwEyAvCg0+Ku1qNiE3ziEB
-        VLQUqEGyheEFwIXLT9NatbYetmw4JO3CBOa3+qEDij/Bard6BM7EcWJYjLYZckNyAlaH0HMn5fWkZ
-        rJigvvyg==;
-Content-Disposition: inline
-In-Reply-To: <CAKfTPtBJD6So-0-S3sgFqTE1HVMypg_S23+uuH6BnGk5atxUKA-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+Content-Transfer-Encoding: quoted-printable
+Return-path: <linux-doc-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=Z110NAjU0K09Me/E1RV39MMihHyn6kMCAJzzQuDRvLM=;
+        b=Bt25ZvB0N308yiyf/YLK6YTdoFkc2Qa+32onq9WBjhU/OTcfuk9JA3esrW4xhcahv+
+         7C8KuGS41htHANVW9KbDLzdQ7VxEyp3H2nDqK/0W7L4QdxuVfnOlUUnnGg1H5AyhtrIL
+         0bQufJpjUNdNJ85Y6SUmYAGRzWyphsj0y3VxG8sugulYIxbJpKsfcqYB4dTJAjoQ8y5u
+         m2HxHiO/mCzujS2P4vOwiStsfHE/T0oCBSpn/UJbPe2SSXoaXMb8SxIFFUUQNQ34E3Dz
+         8B24mQVHov6TeFvUwvAUAOPyjvje0N4cLw6nsmfh0L3ZXwJSAoXqIaGf0FwznVrWHUFv
+         f8zw==
+In-Reply-To: <20230224192919.d4fcde3dwh7betvm@blackpad>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Vincent Guittot <vincent.guittot-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>
-Cc: mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, juri.lelli-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, dietmar.eggemann-5wv7dgnIgG8@public.gmane.org, rostedt-nx8X9YLhiw1AfugRpC6u6w@public.gmane.org, bsegall-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, mgorman-l3A5Bk7waGM@public.gmane.org, bristot-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, vschneid-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, parth-tEXmvtCZX7AybS5Ee8rs3A@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, qyousef-wp2msK0BRk8tq7phqP6ubQ@public.gmane.org, chris.hyser-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org, patrick.bellasi-X6neQFFVdzGsTnJN9+BGXg@public.gmane.org, David.Laight-JxhZ9S5GRejQT0dZR+AlfA@public.gmane.org, pjt-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, pavel-+ZI9xUNit7I@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, qperret-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, tim.c.chen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org, joshdon-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, timj-mXXj517/zsQ@public.gmane.org, kprateek.nayak-5C7GfCeVMHo@public.gmane.org, yu.c.chen-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org, youssefesmat-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org, joel-QYYGw3jwrUn5owFQY34kdNi2O/JbrIOy@public.gmane.org
+Content-Type: text/plain; charset="macroman"
+To: =?UTF-8?Q?Michal_Koutn=C3=BD?= <mkoutny@suse.com>
+Cc: mingo@redhat.com, peterz@infradead.org, juri.lelli@redhat.com, dietmar.eggemann@arm.com, rostedt@goodmis.org, bsegall@google.com, mgorman@suse.de, bristot@redhat.com, vschneid@redhat.com, linux-kernel@vger.kernel.org, parth@linux.ibm.com, tj@kernel.org, lizefan.x@bytedance.com, hannes@cmpxchg.org, cgroups@vger.kernel.org, corbet@lwn.net, linux-doc@vger.kernel.org, qyousef@layalina.io, chris.hyser@oracle.com, patrick.bellasi@matbug.net, David.Laight@aculab.com, pjt@google.com, pavel@ucw.cz, qperret@google.com, tim.c.chen@linux.intel.com, joshdon@google.com, timj@gnu.org, kprateek.nayak@amd.com, yu.c.chen@intel.com, youssefesmat@chromium.org, joel@joelfernandes.org
 
-On Wed, Feb 22, 2023 at 12:16:29PM +0100, Vincent Guittot wrote:
-> On Wed, 22 Feb 2023 at 10:50, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org> wrote:
-> >
-> > On Fri, Jan 13, 2023 at 03:12:33PM +0100, Vincent Guittot wrote:
-> >
-> > > +static void __enqueue_latency(struct cfs_rq *cfs_rq, struct sched_entity *se, int flags)
-> > > +{
-> > > +
-> > > +     /* Only latency sensitive entity can be added to the list */
-> > > +     if (se->latency_offset >= 0)
-> > > +             return;
-> > > +
-> > > +     if (!RB_EMPTY_NODE(&se->latency_node))
-> > > +             return;
-> > > +
-> > > +     /*
-> > > +      * An execution time less than sysctl_sched_min_granularity means that
-> > > +      * the entity has been preempted by a higher sched class or an entity
-> > > +      * with higher latency constraint.
-> > > +      * Put it back in the list so it gets a chance to run 1st during the
-> > > +      * next slice.
-> > > +      */
-> > > +     if (!(flags & ENQUEUE_WAKEUP)) {
-> > > +             u64 delta_exec = se->sum_exec_runtime - se->prev_sum_exec_runtime;
-> > > +
-> > > +             if (delta_exec >= sysctl_sched_min_granularity)
-> > > +                     return;
-> > > +     }
-> >
-> > I'm not a big fan of this dynamic enqueueing condition; it makes it
-> > rather hard to interpret the below addition to pick_next_entity().
-> >
-> > Let me think about this more... at the very least the comment with
-> > __pick_first_latency() use below needs to be expanded upon if we keep it
-> > like so.
+On Fri, 24 Feb 2023 at 20:29, Michal Koutn=C3=BD <mkoutny@suse.com> wrote:
 >
-> Only the waking tasks should be added in the latency rb tree so they
+> Hello Vincent.
+>
+> On Fri, Feb 24, 2023 at 10:34:52AM +0100, Vincent Guittot <vincent.guitto=
+t@linaro.org> wrote:
+> > +  cpu.latency.nice
+> > +     A read-write single value file which exists on non-root
+> > +     cgroups.  The default is "0".
+> > +
+> > +     The nice value is in the range [-20, 19].
+> > +
+> > +     This interface file allows reading and setting latency using the
+> > +     same values used by sched_setattr(2). The latency_nice of a group=
+ is
+> > +     used to limit the impact of the latency_nice of a task outside th=
+e
+> > +     group.
+>
+> IIUC, the latency priority is taken into account when deciding between
+> entitites at the same level (as in pick_next_entity() or
+> check_preempt_wake()/find_matchig_se()).
+>
+> So this group attribute is relevant in context of siblings (i.e. like
+> cpu.weight ~ bandwidth priority)?
 
-But that's what I'm saying, you can game this by doing super short
-sleeps every min_gran.
+Yes
 
-> can be selected to run 1st (as long as they don't use too much
-> runtime). But task A can wake up, preempts current task B thanks to
-> its latency nice , starts to run few usecs but then is immediately
-> preempted by a RT task C as an example. In this case, we consider that
-> the task A didn't get a chance to run after its wakeup and we put it
-> back to the latency rb tree just as if task A has just woken up but
-> didn't preempted the new current task C.
+>
+> I'm thus confused when it's referred to as a limit (in vertical sense).
+> You somewhat imply that in [1]:
 
-So ideally, and this is where I'm very slow with thinking, that
-wakeup_preempt_entity() condition here:
+There were discussions about adding more features that could make use
+of the latency nice. This comment mainly wants to describe how this
+would behave in case that we need to compre entities/tasks not at the
+same level.
 
-> > > @@ -5008,6 +5082,12 @@ pick_next_entity(struct cfs_rq *cfs_rq, struct sched_entity *curr)
-> > >               se = cfs_rq->last;
-> > >       }
-> > >
-> > > +     /* Check for latency sensitive entity waiting for running */
-> > > +     latency = __pick_first_latency(cfs_rq);
-> > > +     if (latency && (latency != se) &&
-> > > +         wakeup_preempt_entity(latency, se) < 1)
-> > > +             se = latency;
+Regarding the current use of latency nice to set a latency offset, the
+problem doesn't appear because latency offset applies between entities
+at the same level as you mentioned above
 
-should be sufficient to provide fair bandwidth usage. The EEVDF paper
-achieves this by selecting the leftmost elegible task, where elegibility
-is dependent on negative lag. Only those tasks that are behind the pack
-are allowed runtime.
+>
+> > Regarding the behavior, the rule remains the same that a sched_entity
+> > attached to a cgroup will not get more (latency in this case) than
+> > what has been set for the group entity.
+>
+> But I don't see where such a constraint would be implemented in the
+> code. (My cursory understanding above tends to horizontal comparisons.)
+>
+> Could you please hint me which is right?
 
-Now clearly our min_vruntime is unsuited for that exact scheme, but iirc
-wake_preempt_entity() does not allow for starvation, so we should be
-good, even without that weird condition in __enqueue_latency(), hmm?
+Does  my explanation above make sense to you ?
+
+>
+> Thanks,
+> Michal
+>
+> [1] https://lore.kernel.org/r/CAKfTPtDu=3Dc-psGnHkoWSPRWoh1Z0VBBfsN++g+kr=
+v4B1SJmFjg@mail.gmail.com/
+>
