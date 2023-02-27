@@ -1,41 +1,66 @@
-From: Muchun Song <muchun.song@linux.dev>
-Subject: Re: [PATCH] selftests: cgroup: Add 'malloc' failures checks in
- test_memcontrol
-Date: Mon, 27 Feb 2023 15:11:54 +0800
-Message-ID: <8C12D50C-97D1-4969-9D02-290B1AB56C72@linux.dev>
-References: <20230226131634.34366-1-ivan.orlov0322@gmail.com>
+From: Haifeng Xu <haifeng.xu-LL2PKPoSiP3QT0dZR+AlfA@public.gmane.org>
+Subject: [PATCH] cpuset: Remove unused cpuset_node_allowed
+Date: Mon, 27 Feb 2023 08:07:19 +0000
+Message-ID: <20230227080719.20280-1-haifeng.xu@shopee.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
-        t=1677481955;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=/xXaaQom8mDHJA5re/wVR2Gr6jNo+6nCEO59AZkZGfY=;
-        b=YQ6T55nPIluDWjA7F/ABkTa/hvIEyIITBMl+BYge7MKBXtpPjKeaav/yH/nyegFcAdy1It
-        Njw5j2fbdlxlq/cXhYoUb6O0hC8CRlTkWhaaKQwD3Qldsn3IU74l56Dc42xKPH5siSALBo
-        2S931t/mSsJcW/99YGX8WnYZ4Mh+cPw=
-In-Reply-To: <20230226131634.34366-1-ivan.orlov0322@gmail.com>
+Content-Transfer-Encoding: 8bit
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=shopee.com; s=shopee.com;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=RJSGu/qfXmePZHGIW6fcFPW2ne2Dxi7qJibeVZWzM+Q=;
+        b=QNGQKjqgskthvc9hYlPhzydoFh1K9pgDgl2dh41qT5tbRbMMxjHn1D2MxBTQuj50bK
+         3z0EHLS3S4bI1u2wOe6EBLVr3bBANgoD1VOqw5PtZ39+4ZSzy8XkYErBr7qJO/uWJmSm
+         9mZVhFHJvNo4nhery5shj6UrSe4vH5wb98aoi8s8DDbCfwpQ6lN1bO+piDQ5M/Ew8MIM
+         JtUt1/BOqqyvMsXZ4m75fQofhjOy+u5v/KiS6CUcDtZ/VSIvRyzsJWC5rN1zCGBErOyx
+         cyqHbUKoavROyy5GB4z5T4HDF78yphOeOgD5xRpP2yCMw7lOsrMjGBXHM6BD4QkyJU+2
+         F3Uw==
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Ivan Orlov <ivan.orlov0322@gmail.com>
-Cc: Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, Roman Gushchin <roman.gushchin@linux.dev>, Shakeel Butt <shakeelb@google.com>, Tejun Heo <tj@kernel.org>, lizefan.x@bytedance.com, shuah@kernel.org, cgroups@vger.kernel.org, linux-mm@kvack.org, linux-kselftest@vger.kernel.org, linux-kernel@vger.kernel.org, skhan@linuxfoundation.org
+To: longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org
+Cc: lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Haifeng Xu <haifeng.xu-LL2PKPoSiP3QT0dZR+AlfA@public.gmane.org>
 
+Commit 002f290627c2 ("cpuset: use static key better and convert to new API")
+has used __cpuset_node_allowed instead of cpuset_node_allowed to check
+whether we can allocate on a memory node. Now this function isn't used by
+anyone, so we can remove it safely.
 
+Signed-off-by: Haifeng Xu <haifeng.xu-LL2PKPoSiP3QT0dZR+AlfA@public.gmane.org>
+---
+ include/linux/cpuset.h | 12 ------------
+ 1 file changed, 12 deletions(-)
 
-> On Feb 26, 2023, at 21:16, Ivan Orlov <ivan.orlov0322@gmail.com> wrote:
-> 
-> There are several 'malloc' calls in test_memcontrol, which can be
-> unsuccessful. This patch will add 'malloc' failures checking to
-> give more details about test's fail reasons and avoid possible
-> undefined behavior during the future null dereference (like the
-> one in alloc_anon_50M_check_swap function).
-> 
-> Signed-off-by: Ivan Orlov <ivan.orlov0322@gmail.com>
-
-Reviewed-by: Muchun Song <songmuchun@bytedance.com>
-
-Thanks.
+diff --git a/include/linux/cpuset.h b/include/linux/cpuset.h
+index d58e0476ee8e..7fad5afe3bba 100644
+--- a/include/linux/cpuset.h
++++ b/include/linux/cpuset.h
+@@ -82,13 +82,6 @@ int cpuset_nodemask_valid_mems_allowed(nodemask_t *nodemask);
+ 
+ extern bool __cpuset_node_allowed(int node, gfp_t gfp_mask);
+ 
+-static inline bool cpuset_node_allowed(int node, gfp_t gfp_mask)
+-{
+-	if (cpusets_enabled())
+-		return __cpuset_node_allowed(node, gfp_mask);
+-	return true;
+-}
+-
+ static inline bool __cpuset_zone_allowed(struct zone *z, gfp_t gfp_mask)
+ {
+ 	return __cpuset_node_allowed(zone_to_nid(z), gfp_mask);
+@@ -223,11 +216,6 @@ static inline int cpuset_nodemask_valid_mems_allowed(nodemask_t *nodemask)
+ 	return 1;
+ }
+ 
+-static inline bool cpuset_node_allowed(int node, gfp_t gfp_mask)
+-{
+-	return true;
+-}
+-
+ static inline bool __cpuset_zone_allowed(struct zone *z, gfp_t gfp_mask)
+ {
+ 	return true;
+-- 
+2.25.1
 
