@@ -1,66 +1,76 @@
-From: Haifeng Xu <haifeng.xu-LL2PKPoSiP3QT0dZR+AlfA@public.gmane.org>
-Subject: [PATCH] cpuset: Remove unused cpuset_node_allowed
-Date: Mon, 27 Feb 2023 08:07:19 +0000
-Message-ID: <20230227080719.20280-1-haifeng.xu@shopee.com>
+From: Jan Kara <jack@suse.cz>
+Subject: Re: [PATCH v2] blk-ioprio: Introduce promote-to-rt policy
+Date: Mon, 27 Feb 2023 14:03:05 +0100
+Message-ID: <20230227130305.2idxwmz2kdnacolc@quack3>
+References: <20230220135428.2632906-1-houtao@huaweicloud.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=shopee.com; s=shopee.com;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=RJSGu/qfXmePZHGIW6fcFPW2ne2Dxi7qJibeVZWzM+Q=;
-        b=QNGQKjqgskthvc9hYlPhzydoFh1K9pgDgl2dh41qT5tbRbMMxjHn1D2MxBTQuj50bK
-         3z0EHLS3S4bI1u2wOe6EBLVr3bBANgoD1VOqw5PtZ39+4ZSzy8XkYErBr7qJO/uWJmSm
-         9mZVhFHJvNo4nhery5shj6UrSe4vH5wb98aoi8s8DDbCfwpQ6lN1bO+piDQ5M/Ew8MIM
-         JtUt1/BOqqyvMsXZ4m75fQofhjOy+u5v/KiS6CUcDtZ/VSIvRyzsJWC5rN1zCGBErOyx
-         cyqHbUKoavROyy5GB4z5T4HDF78yphOeOgD5xRpP2yCMw7lOsrMjGBXHM6BD4QkyJU+2
-         F3Uw==
+Return-path: <linux-doc-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
+        t=1677502985; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=B7AF3j/D3PPFmjhvHIOXz9dOZpP3jlwrUSkvsPwPPVw=;
+        b=R9cpBWOqSKYamPQ0smruJPhZi21kgSt1HeK8Vd6MYJuf4nRYXLqJpylLgAeW2clXo8eJoB
+        G3m8QZO209XhYy0EmxZBUTwNTakGpQ2vjzId9qXQDzU4w+9CKuYRq8xpHfYe6b0/fXwjOU
+        ySs2nBeLQ0mpUBF34MDCsfqUi8dO2rg=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
+        s=susede2_ed25519; t=1677502985;
+        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=B7AF3j/D3PPFmjhvHIOXz9dOZpP3jlwrUSkvsPwPPVw=;
+        b=I8LQCm2Z+35iE4ZfbLhlBJ+67ZQfu3wNTkoodTYnJfXfWH5uG/Pj4pp3CrV73TmGcqTX3t
+        1Uc6HAXePxCcTgCw==
+Content-Disposition: inline
+In-Reply-To: <20230220135428.2632906-1-houtao@huaweicloud.com>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org
-Cc: lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Haifeng Xu <haifeng.xu-LL2PKPoSiP3QT0dZR+AlfA@public.gmane.org>
+Content-Transfer-Encoding: 7bit
+To: Hou Tao <houtao@huaweicloud.com>
+Cc: linux-block@vger.kernel.org, Bart Van Assche <bvanassche@acm.org>, Jan Kara <jack@suse.cz>, Bagas Sanjaya <bagasdotme@gmail.com>, Jens Axboe <axboe@kernel.dk>, cgroups@vger.kernel.org, Tejun Heo <tj@kernel.org>, Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, Jonathan Corbet <corbet@lwn.net>, linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org, houtao1@huawei.com
 
-Commit 002f290627c2 ("cpuset: use static key better and convert to new API")
-has used __cpuset_node_allowed instead of cpuset_node_allowed to check
-whether we can allocate on a memory node. Now this function isn't used by
-anyone, so we can remove it safely.
+On Mon 20-02-23 21:54:28, Hou Tao wrote:
+> From: Hou Tao <houtao1@huawei.com>
+> 
+> Since commit a78418e6a04c ("block: Always initialize bio IO priority on
+> submit"), bio->bi_ioprio will never be IOPRIO_CLASS_NONE when calling
+> blkcg_set_ioprio(), so there will be no way to promote the io-priority
+> of one cgroup to IOPRIO_CLASS_RT, because bi_ioprio will always be
+> greater than or equals to IOPRIO_CLASS_RT.
+> 
+> It seems possible to call blkcg_set_ioprio() first then try to
+> initialize bi_ioprio later in bio_set_ioprio(), but this doesn't work
+> for bio in which bi_ioprio is already initialized (e.g., direct-io), so
+> introduce a new ioprio policy to promote the iopriority of bio to
+> IOPRIO_CLASS_RT if the ioprio is not already RT.
+> 
+> So introduce a new promote-to-rt policy to achieve this. For none-to-rt
+> policy, although it doesn't work now, but considering that its purpose
+> was also to override the io-priority to RT and allow for a smoother
+> transition, just keep it and treat it as an alias of the promote-to-rt
+> policy.
+> 
+> Signed-off-by: Hou Tao <houtao1@huawei.com>
 
-Signed-off-by: Haifeng Xu <haifeng.xu-LL2PKPoSiP3QT0dZR+AlfA@public.gmane.org>
----
- include/linux/cpuset.h | 12 ------------
- 1 file changed, 12 deletions(-)
+Looks good to me. Feel free to add:
 
-diff --git a/include/linux/cpuset.h b/include/linux/cpuset.h
-index d58e0476ee8e..7fad5afe3bba 100644
---- a/include/linux/cpuset.h
-+++ b/include/linux/cpuset.h
-@@ -82,13 +82,6 @@ int cpuset_nodemask_valid_mems_allowed(nodemask_t *nodemask);
- 
- extern bool __cpuset_node_allowed(int node, gfp_t gfp_mask);
- 
--static inline bool cpuset_node_allowed(int node, gfp_t gfp_mask)
--{
--	if (cpusets_enabled())
--		return __cpuset_node_allowed(node, gfp_mask);
--	return true;
--}
--
- static inline bool __cpuset_zone_allowed(struct zone *z, gfp_t gfp_mask)
- {
- 	return __cpuset_node_allowed(zone_to_nid(z), gfp_mask);
-@@ -223,11 +216,6 @@ static inline int cpuset_nodemask_valid_mems_allowed(nodemask_t *nodemask)
- 	return 1;
- }
- 
--static inline bool cpuset_node_allowed(int node, gfp_t gfp_mask)
--{
--	return true;
--}
--
- static inline bool __cpuset_zone_allowed(struct zone *z, gfp_t gfp_mask)
- {
- 	return true;
+Reviewed-by: Jan Kara <jack@suse.cz>
+
+Just one question regarding doc below:
+
+> ++----------------+---+
+> +| no-change      | 0 |
+> ++----------------+---+
+> +| rt-to-be       | 2 |
+> ++----------------+---+
+> +| all-to-idle    | 3 |
+> ++----------------+---+
+
+Shouldn't there be preempt-to-rt somewhere in this table as well? Or why
+this this in the doc at all? I'd consider the numbers to be kernel internal
+thing?
+
+								Honza
 -- 
-2.25.1
-
+Jan Kara <jack@suse.com>
+SUSE Labs, CR
