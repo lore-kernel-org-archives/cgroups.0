@@ -1,87 +1,64 @@
-From: Vincent Guittot <vincent.guittot@linaro.org>
-Subject: Re: [PATCH v12 6/8] sched/fair: Add sched group latency support
-Date: Mon, 27 Feb 2023 14:44:22 +0100
-Message-ID: <CAKfTPtBorwnjU2=nprBo7aAEjoz+7x5nRYUdajZc53cuVgHSBw@mail.gmail.com>
-References: <20230224093454.956298-1-vincent.guittot@linaro.org>
- <20230224093454.956298-7-vincent.guittot@linaro.org> <20230224192919.d4fcde3dwh7betvm@blackpad>
+From: Hou Tao <houtao@huaweicloud.com>
+Subject: Re: [PATCH v2] blk-ioprio: Introduce promote-to-rt policy
+Date: Mon, 27 Feb 2023 21:56:25 +0800
+Message-ID: <05eafc4f-2d60-b7e6-1d5d-9a08709916e8@huaweicloud.com>
+References: <20230220135428.2632906-1-houtao@huaweicloud.com>
+ <20230227130305.2idxwmz2kdnacolc@quack3>
 Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-doc-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=Z110NAjU0K09Me/E1RV39MMihHyn6kMCAJzzQuDRvLM=;
-        b=Bt25ZvB0N308yiyf/YLK6YTdoFkc2Qa+32onq9WBjhU/OTcfuk9JA3esrW4xhcahv+
-         7C8KuGS41htHANVW9KbDLzdQ7VxEyp3H2nDqK/0W7L4QdxuVfnOlUUnnGg1H5AyhtrIL
-         0bQufJpjUNdNJ85Y6SUmYAGRzWyphsj0y3VxG8sugulYIxbJpKsfcqYB4dTJAjoQ8y5u
-         m2HxHiO/mCzujS2P4vOwiStsfHE/T0oCBSpn/UJbPe2SSXoaXMb8SxIFFUUQNQ34E3Dz
-         8B24mQVHov6TeFvUwvAUAOPyjvje0N4cLw6nsmfh0L3ZXwJSAoXqIaGf0FwznVrWHUFv
-         f8zw==
-In-Reply-To: <20230224192919.d4fcde3dwh7betvm@blackpad>
+In-Reply-To: <20230227130305.2idxwmz2kdnacolc@quack3>
+Content-Language: en-US
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="macroman"
-To: =?UTF-8?Q?Michal_Koutn=C3=BD?= <mkoutny@suse.com>
-Cc: mingo@redhat.com, peterz@infradead.org, juri.lelli@redhat.com, dietmar.eggemann@arm.com, rostedt@goodmis.org, bsegall@google.com, mgorman@suse.de, bristot@redhat.com, vschneid@redhat.com, linux-kernel@vger.kernel.org, parth@linux.ibm.com, tj@kernel.org, lizefan.x@bytedance.com, hannes@cmpxchg.org, cgroups@vger.kernel.org, corbet@lwn.net, linux-doc@vger.kernel.org, qyousef@layalina.io, chris.hyser@oracle.com, patrick.bellasi@matbug.net, David.Laight@aculab.com, pjt@google.com, pavel@ucw.cz, qperret@google.com, tim.c.chen@linux.intel.com, joshdon@google.com, timj@gnu.org, kprateek.nayak@amd.com, yu.c.chen@intel.com, youssefesmat@chromium.org, joel@joelfernandes.org
+Content-Type: text/plain; charset="us-ascii"
+To: Jan Kara <jack@suse.cz>
+Cc: linux-block@vger.kernel.org, Bart Van Assche <bvanassche@acm.org>, Bagas Sanjaya <bagasdotme@gmail.com>, Jens Axboe <axboe@kernel.dk>, cgroups@vger.kernel.org, Tejun Heo <tj@kernel.org>, Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, Jonathan Corbet <corbet@lwn.net>, linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org, houtao1@huawei.com
 
-On Fri, 24 Feb 2023 at 20:29, Michal Koutn=C3=BD <mkoutny@suse.com> wrote:
->
-> Hello Vincent.
->
-> On Fri, Feb 24, 2023 at 10:34:52AM +0100, Vincent Guittot <vincent.guitto=
-t@linaro.org> wrote:
-> > +  cpu.latency.nice
-> > +     A read-write single value file which exists on non-root
-> > +     cgroups.  The default is "0".
-> > +
-> > +     The nice value is in the range [-20, 19].
-> > +
-> > +     This interface file allows reading and setting latency using the
-> > +     same values used by sched_setattr(2). The latency_nice of a group=
- is
-> > +     used to limit the impact of the latency_nice of a task outside th=
-e
-> > +     group.
->
-> IIUC, the latency priority is taken into account when deciding between
-> entitites at the same level (as in pick_next_entity() or
-> check_preempt_wake()/find_matchig_se()).
->
-> So this group attribute is relevant in context of siblings (i.e. like
-> cpu.weight ~ bandwidth priority)?
+Hi
 
-Yes
+On 2/27/2023 9:03 PM, Jan Kara wrote:
+> On Mon 20-02-23 21:54:28, Hou Tao wrote:
+>> From: Hou Tao <houtao1@huawei.com>
+>>
+>> Since commit a78418e6a04c ("block: Always initialize bio IO priority on
+>> submit"), bio->bi_ioprio will never be IOPRIO_CLASS_NONE when calling
+>> blkcg_set_ioprio(), so there will be no way to promote the io-priority
+>> of one cgroup to IOPRIO_CLASS_RT, because bi_ioprio will always be
+>> greater than or equals to IOPRIO_CLASS_RT.
+>>
+>> It seems possible to call blkcg_set_ioprio() first then try to
+>> initialize bi_ioprio later in bio_set_ioprio(), but this doesn't work
+>> for bio in which bi_ioprio is already initialized (e.g., direct-io), so
+>> introduce a new ioprio policy to promote the iopriority of bio to
+>> IOPRIO_CLASS_RT if the ioprio is not already RT.
+>>
+>> So introduce a new promote-to-rt policy to achieve this. For none-to-rt
+>> policy, although it doesn't work now, but considering that its purpose
+>> was also to override the io-priority to RT and allow for a smoother
+>> transition, just keep it and treat it as an alias of the promote-to-rt
+>> policy.
+>>
+>> Signed-off-by: Hou Tao <houtao1@huawei.com>
+> Looks good to me. Feel free to add:
+>
+> Reviewed-by: Jan Kara <jack@suse.cz>
+Thanks for the review.
+>
+> Just one question regarding doc below:
+>
+>> ++----------------+---+
+>> +| no-change      | 0 |
+>> ++----------------+---+
+>> +| rt-to-be       | 2 |
+>> ++----------------+---+
+>> +| all-to-idle    | 3 |
+>> ++----------------+---+
+> Shouldn't there be preempt-to-rt somewhere in this table as well? Or why
+> this this in the doc at all? I'd consider the numbers to be kernel internal
+> thing?
+These numbers are used in the algorithm paragraph below to explain how the final
+ioprio is calculated. For prompt-to-rt policy, the algorithm is different and
+the number is unnecessary.
 
->
-> I'm thus confused when it's referred to as a limit (in vertical sense).
-> You somewhat imply that in [1]:
+> 								Honza
 
-There were discussions about adding more features that could make use
-of the latency nice. This comment mainly wants to describe how this
-would behave in case that we need to compre entities/tasks not at the
-same level.
-
-Regarding the current use of latency nice to set a latency offset, the
-problem doesn't appear because latency offset applies between entities
-at the same level as you mentioned above
-
->
-> > Regarding the behavior, the rule remains the same that a sched_entity
-> > attached to a cgroup will not get more (latency in this case) than
-> > what has been set for the group entity.
->
-> But I don't see where such a constraint would be implemented in the
-> code. (My cursory understanding above tends to horizontal comparisons.)
->
-> Could you please hint me which is right?
-
-Does  my explanation above make sense to you ?
-
->
-> Thanks,
-> Michal
->
-> [1] https://lore.kernel.org/r/CAKfTPtDu=3Dc-psGnHkoWSPRWoh1Z0VBBfsN++g+kr=
-v4B1SJmFjg@mail.gmail.com/
->
