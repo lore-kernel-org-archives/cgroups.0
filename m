@@ -1,150 +1,78 @@
-From: Qais Yousef <qyousef-wp2msK0BRk8tq7phqP6ubQ@public.gmane.org>
-Subject: Re: [PATCH v3] sched: cpuset: Don't rebuild root domains on
- suspend-resume
-Date: Mon, 27 Feb 2023 20:57:25 +0000
-Message-ID: <20230227205725.dipvh3i7dvyrv4tv@airbuntu>
-References: <20230206221428.2125324-1-qyousef@layalina.io>
- <20230223153859.37tqoqk33oc6tv7o@airbuntu>
- <5f087dd8-3e39-ce83-fe24-afa5179c05d9@arm.com>
+From: Haifeng Xu <haifeng.xu-LL2PKPoSiP3QT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH] cpuset: Remove unused cpuset_node_allowed
+Date: Tue, 28 Feb 2023 10:40:36 +0800
+Message-ID: <0222742e-3c31-b75d-6027-3b6da2be16be@shopee.com>
+References: <20230227080719.20280-1-haifeng.xu@shopee.com>
+ <9953284e-05da-56b0-047d-ecf18aa53892@redhat.com>
 Mime-Version: 1.0
+Content-Transfer-Encoding: 8bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=layalina-io.20210112.gappssmtp.com; s=20210112;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=mIN6ww9oLAv0WN7ho6gwiiph4rXuoFMoHbwtuWGbIHU=;
-        b=Bs3g5spl/LV0O4iixDMwb4HTPJIpTc4sSBY9TtNyJL/a3/Nrx2kG5iGhiEX08R9jBR
-         gCcRIOqtI3O6Y3suKyaQJfD7NVzanN4Vj5SFZOL854LgBBdVnnQwJcG3WpU3k89X744Y
-         IiZlrJdvjiVqN0gYOioxEghDHwwp+0DdIOlpwzB18fM00B8mVRsockbPsOkP4mfo2eNp
-         ZRz3sxf5CAG7g9y+dy7ZEieNW7LQY3+UX3vy1Pxh6mNeA1dNKYnhLC+/CDdKre9YRDhb
-         Gnczi0b8tPU04O1L0L2Sg6YmZo8O6b05iyzA19wLaeNrkoSaWVYPq8TySqXIzDw7bHRu
-         qS0w==
-Content-Disposition: inline
-In-Reply-To: <5f087dd8-3e39-ce83-fe24-afa5179c05d9-5wv7dgnIgG8@public.gmane.org>
+        d=shopee.com; s=shopee.com; t=1677552040;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to:subject
+         :user-agent:mime-version:date:message-id:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=Er0wiiBkQdwOG2u7UEGoJlR0ZlFwp2/vH39oGy8P/R4=;
+        b=fA1Z/s75eS1borChXO4aytMs1rkzmmjmTG6QPuJ5gcDH6TviWQRBJO1GQPBzY4aMWr
+         /3iPp/0VNobFzlclieU+mWKwo6RMUcnc8tHnNs4QwKxR2UFwHCu4ZpaJnJhkPleyugyI
+         YQvuqLOMCHgNtsgMNMBa0AJ5FnX6GVy6tNV2BjDRCxq441lmSNZeczQSR43GFIw7vt2j
+         zhbmbDSPOAgGUBw1TyLGShquqLWb06HdsePHMntFPOqkIj7NwBU4wTa8M5yb/eF+ZIYP
+         QI1pL3D/mealJ7pNbYXBeuXzW22XRiWSTCiyiHrHxmAzYimj93wqt8sOlSnoVtzodJwp
+         msRw==
+In-Reply-To: <9953284e-05da-56b0-047d-ecf18aa53892-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Dietmar Eggemann <dietmar.eggemann-5wv7dgnIgG8@public.gmane.org>, Juri Lelli <juri.lelli-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Cc: Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Ingo Molnar <mingo-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Juri Lelli <juri.lelli-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Steven Rostedt <rostedt-nx8X9YLhiw1AfugRpC6u6w@public.gmane.org>, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, luca.abeni-5rdYK369eBLQB0XuIGIEkQ@public.gmane.org, claudio-YOzL5CV4y4YG1A2ADO40+w@public.gmane.org, tommaso.cucinotta-5rdYK369eBLQB0XuIGIEkQ@public.gmane.org, bristot-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, mathieu.poirier-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Vincent Guittot <vincent.guittot-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, Wei Wang <wvw-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Rick Yiu <rickyiu-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Quentin Perret <qperret-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Heiko Carstens <hca-tEXmvtCZX7AybS5Ee8rs3A@public.gmane.org>, Vasily Gorbik <gor-tEXmvtCZX7AybS5Ee8rs3A@public.gmane.org>, Alexander Gordeev <agordeev-tEXmvtCZX7AybS5Ee8rs3A@public.gmane.org>, Sudeep Holla <sudeep.holla-5wv7dgnIgG8@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, linux-s390-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, x86-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org
-
-On 02/24/23 16:14, Dietmar Eggemann wrote:
-> On 23/02/2023 16:38, Qais Yousef wrote:
-> 
-> IMHO the patch title is misleading since what you want to avoid in
-> certain cases is that the RD DL accounting is updated.
-
-The code calls it rebuild_root_domain() ..
-
-> 
-> > On 02/06/23 22:14, Qais Yousef wrote:
-> >> Commit f9a25f776d78 ("cpusets: Rebuild root domain deadline accounting information")
-
-.. and so is the original patch title.
-
-I think I have enough explanation in the commit message and renamed the
-function name to be more descriptive too.
-
-> >> enabled rebuilding root domain on cpuset and hotplug operations to
-> >> correct deadline accounting.
-> >>
-> >> Rebuilding root domain is a slow operation and we see 10+ of ms delays
-> >> on suspend-resume because of that (worst case captures 20ms which
-> >> happens often).
-> >>
-> >> Since nothing is expected to change on suspend-resume operation; skip
-> >> rebuilding the root domains to regain the some of the time lost.
-> >>
-> >> Achieve this by refactoring the code to pass whether dl accoutning needs
-> >> an update to rebuild_sched_domains(). And while at it, rename
-> >> rebuild_root_domains() to update_dl_rd_accounting() which I believe is
-> >> a more representative name since we are not really rebuilding the root
-> >> domains, but rather updating dl accounting at the root domain.
-> >>
-> >> Some users of rebuild_sched_domains() will skip dl accounting update
-> >> now:
-> >>
-> >> 	* Update sched domains when relaxing the domain level in cpuset
-> >> 	  which only impacts searching level in load balance
-> 
-> This one is cpuset related. (1)
-> 
-> >> 	* update sched domains when cpufreq governor changes and we need
-> >> 	  to create the perf domains
-> 
-> This one is drivers/base/arch_topology.c [arm/arm64/...] related. (2)
-> 
-> There are several levels of passing this `update_dl_accounting`
-> information through. I guess it looks like this:
-> 
-> 					update_dl_accounting
-> 
-> arm/arm64/riscv/parisc specific:
-> update_topology_flags_workfn()		true
-> rebuild_sched_domains_energy()		false (2)
-> 
-> cpuset_hotplug_workfn()                 cpus_updated ||
->                          force_rebuild == CPUSET_FORCE_REBUILD_PRS_ERROR
-> 
-> ->rebuild_sched_domains(update_dl_accounting)
-> 
->   update_cpumasks_hier()		true
->   update_relax_domain_level()		false (1)
->   update_flag()				true
->   update_prstate()			true
-> 
->   ->rebuild_sched_domains_locked(update_dl_accounting)
-> 
->     ->partition_and_rebuild_sched_domains(..., update_dl_accounting)
-> 
->         if (update_dl_accounting)
->           update_dl_rd_accounting()
-> 
-> 
-> There is already a somehow hidden interface for `sd/rd rebuild`
-> 
->   int __weak arch_update_cpu_topology(void)
-> 
-> which lets partition_sched_domains_locked() figure out whether sched
-> domains have to be rebuild..
-> 
-> But in your case it is more on the interface `cpuset/hotplug -> sd/rd
-> rebuild` and not only `arch -> `sd/rd rebuild``.
-> 
-> IMHO, it would be still nice to have only one way to tell `sd/rd
-> rebuild` what to do and what not to do during sd/rd/(pd) rebuild.
-
-IIUC you're suggesting to introduce some new mechanism to detect if hotplug has
-lead to a cpu to disappear or not and use that instead? Are you saying I can
-use arch_update_cpu_topology() for that? Something like this?
-
-	diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
-	index e5ddc8e11e5d..60c3dcf06f0d 100644
-	--- a/kernel/cgroup/cpuset.c
-	+++ b/kernel/cgroup/cpuset.c
-	@@ -1122,7 +1122,7 @@ partition_and_rebuild_sched_domains(int ndoms_new, cpumask_var_t doms_new[],
-	 {
-		mutex_lock(&sched_domains_mutex);
-		partition_sched_domains_locked(ndoms_new, doms_new, dattr_new);
-	-       if (update_dl_accounting)
-	+       if (arch_update_cpu_topology())
-			update_dl_rd_accounting();
-		mutex_unlock(&sched_domains_mutex);
-	 }
-
-I am not keen on this. arm64 seems to just read a value without a side effect.
-But x86 does reset this value so we can't read it twice in the same call tree
-and I'll have to extract it.
-
-The better solution that was discussed before is to not iterate through every
-task in the system and let cpuset track when dl tasks are added to it and do
-smarter iteration. ATM even if there are no dl tasks in the system we'll
-blindly go through every task in the hierarchy to update nothing.
-
-But I'll leave that to Juri to address if he wants. The original change has
-introduced a regression and people have noticed when phones cycle through
-suspend resume (screen unlock). Juri - could you please chip in on how you want
-to address this regression? In theory I should be just a reporter, but trying
-my best to help ;-)
+Content-Type: text/plain; charset="utf-8"
+To: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Cc: lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
 
-Cheers
+
+On 2023/2/27 22:56, Waiman Long wrote:
+> On 2/27/23 03:07, Haifeng Xu wrote:
+>> Commit 002f290627c2 ("cpuset: use static key better and convert to new API")
+>> has used __cpuset_node_allowed instead of cpuset_node_allowed to check
+>> whether we can allocate on a memory node. Now this function isn't used by
+>> anyone, so we can remove it safely.
+>>
+>> Signed-off-by: Haifeng Xu <haifeng.xu-LL2PKPoSiP3QT0dZR+AlfA@public.gmane.org>
+>> ---
+>>   include/linux/cpuset.h | 12 ------------
+>>   1 file changed, 12 deletions(-)
+>>
+>> diff --git a/include/linux/cpuset.h b/include/linux/cpuset.h
+>> index d58e0476ee8e..7fad5afe3bba 100644
+>> --- a/include/linux/cpuset.h
+>> +++ b/include/linux/cpuset.h
+>> @@ -82,13 +82,6 @@ int cpuset_nodemask_valid_mems_allowed(nodemask_t *nodemask);
+>>     extern bool __cpuset_node_allowed(int node, gfp_t gfp_mask);
+>>   -static inline bool cpuset_node_allowed(int node, gfp_t gfp_mask)
+>> -{
+>> -    if (cpusets_enabled())
+>> -        return __cpuset_node_allowed(node, gfp_mask);
+>> -    return true;
+>> -}
+>> -
+>>   static inline bool __cpuset_zone_allowed(struct zone *z, gfp_t gfp_mask)
+>>   {
+>>       return __cpuset_node_allowed(zone_to_nid(z), gfp_mask);
+>> @@ -223,11 +216,6 @@ static inline int cpuset_nodemask_valid_mems_allowed(nodemask_t *nodemask)
+>>       return 1;
+>>   }
+>>   -static inline bool cpuset_node_allowed(int node, gfp_t gfp_mask)
+>> -{
+>> -    return true;
+>> -}
+>> -
+>>   static inline bool __cpuset_zone_allowed(struct zone *z, gfp_t gfp_mask)
+>>   {
+>>       return true;
+> 
+> The kernel convention is to add a "__" prefix to a function name if there is higher level helper without the "__" prefix that uses it. Since cpuset_node_allowed() is no longer used. We should just rename __cpuset_node_allowed() to cpuset_node_allowed() and get rid of the unused helper. A bit more code changes are needed for this, though.
+> 
+> Cheers,
+> Longman
+> 
+
+Maybe we can still use cpuset_node_allowed in __cpuset_zone_allowed? If so, less code need to be changed.
+
+Thanks.
