@@ -1,89 +1,127 @@
 From: Haifeng Xu <haifeng.xu-LL2PKPoSiP3QT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH] cpuset: Remove unused cpuset_node_allowed
-Date: Tue, 28 Feb 2023 11:13:33 +0800
-Message-ID: <802cb319-37d9-c5a7-46f3-73e729a27239@shopee.com>
-References: <20230227080719.20280-1-haifeng.xu@shopee.com>
- <9953284e-05da-56b0-047d-ecf18aa53892@redhat.com>
- <0222742e-3c31-b75d-6027-3b6da2be16be@shopee.com>
- <d6df5140-ed7c-2c12-8e5a-d5c3fbf30a47@redhat.com>
+Subject: [PATCH] cpuset: Clean up cpuset_node_allowed
+Date: Tue, 28 Feb 2023 08:35:37 +0000
+Message-ID: <20230228083537.102665-1-haifeng.xu@shopee.com>
+References: <9953284e-05da-56b0-047d-ecf18aa53892@redhat.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=shopee.com; s=shopee.com; t=1677554016;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to:subject
-         :user-agent:mime-version:date:message-id:from:to:cc:subject:date
+        d=shopee.com; s=shopee.com; t=1677573356;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=pOmm/Vo67LFh2DeLQEl+PyGHp2QpvdcC8yMg1+l9oPo=;
-        b=R1jqaA2eIonxb4RUDB15L7AxwldFeSpdbxSp05n/iPBlv6erUG5rKVF8HpSmd3yCsS
-         l+9VL9FZS65HaOxr9D0t8IMxGDUaNU7gYPtc7boarOzEUUHtVwR2iJp4uE0euYThZJHW
-         GBp99ckTO6UbgYy2kMGQltmQSAthhenH9IgYF8AjeN4voefOBtBHBQp073UJOib6EaOs
-         ap1RxkorRzhb9lM6Cl0YvI+WoVwLn7IyBP2aGaS9ClWMPnkdR4xoQRzWGuU9accbOcug
-         bFaBu5XYT8C+Fr49LBDla0PVjKcvZiJG33QTQTAgSUyLRJi0ZJlG2VpXKl3fd6ShNLly
-         dTPg==
-In-Reply-To: <d6df5140-ed7c-2c12-8e5a-d5c3fbf30a47-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+        bh=2m9p8ihrgSqCDLIO8jAiryGx9X7hvTIbRelvVFuou64=;
+        b=ACFBaQ8L7Rvd7Z7rTp6gb6TlTYlIHT8zfbAJbVa5AcagjWCt/hdH7FhHf0GD6crqoE
+         l5z9Qo4ohzq6CKtz8NFnvbWScdY6X71MaG5/p8csSeWuKhQY4BGzlPfQCFhr/iuoBXTe
+         KdMAxa3t8Pg1o9Rq+V/gS+Z8ztASY/N2CJd9YQyU6fyPt1fBeNsKL5D27po31Ulr26hV
+         MMNcia3bHxxOLR9mLr08+5z20nDuCRI4xROWT9en3Ph2q41ETXd794o60DBDnwsMplUj
+         89cgOw8VNBEQT9qPIZ8E1BwDKyIfJLJAnoo4hUQk4J1IT0VikSHe9VtfV7LFDOosZo8M
+         cc6w==
+In-Reply-To: <9953284e-05da-56b0-047d-ecf18aa53892-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="utf-8"
-To: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Cc: lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Type: text/plain; charset="us-ascii"
+To: longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org
+Cc: lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Haifeng Xu <haifeng.xu-LL2PKPoSiP3QT0dZR+AlfA@public.gmane.org>
 
+Commit 002f290627c2 ("cpuset: use static key better and convert to new API")
+has used __cpuset_node_allowed() instead of cpuset_node_allowed() to check
+whether we can allocate on a memory node. Now this function isn't used by
+anyone, so we can do the follow things to clean up it.
 
+1. remove unused codes
+2. rename __cpuset_node_allowed() to cpuset_node_allowed()
+3. update comments in mm/page_alloc.c
 
-On 2023/2/28 10:52, Waiman Long wrote:
-> On 2/27/23 21:40, Haifeng Xu wrote:
->>
->> On 2023/2/27 22:56, Waiman Long wrote:
->>> On 2/27/23 03:07, Haifeng Xu wrote:
->>>> Commit 002f290627c2 ("cpuset: use static key better and convert to new API")
->>>> has used __cpuset_node_allowed instead of cpuset_node_allowed to check
->>>> whether we can allocate on a memory node. Now this function isn't used by
->>>> anyone, so we can remove it safely.
->>>>
->>>> Signed-off-by: Haifeng Xu <haifeng.xu-LL2PKPoSiP3QT0dZR+AlfA@public.gmane.org>
->>>> ---
->>>>    include/linux/cpuset.h | 12 ------------
->>>>    1 file changed, 12 deletions(-)
->>>>
->>>> diff --git a/include/linux/cpuset.h b/include/linux/cpuset.h
->>>> index d58e0476ee8e..7fad5afe3bba 100644
->>>> --- a/include/linux/cpuset.h
->>>> +++ b/include/linux/cpuset.h
->>>> @@ -82,13 +82,6 @@ int cpuset_nodemask_valid_mems_allowed(nodemask_t *nodemask);
->>>>      extern bool __cpuset_node_allowed(int node, gfp_t gfp_mask);
->>>>    -static inline bool cpuset_node_allowed(int node, gfp_t gfp_mask)
->>>> -{
->>>> -    if (cpusets_enabled())
->>>> -        return __cpuset_node_allowed(node, gfp_mask);
->>>> -    return true;
->>>> -}
->>>> -
->>>>    static inline bool __cpuset_zone_allowed(struct zone *z, gfp_t gfp_mask)
->>>>    {
->>>>        return __cpuset_node_allowed(zone_to_nid(z), gfp_mask);
->>>> @@ -223,11 +216,6 @@ static inline int cpuset_nodemask_valid_mems_allowed(nodemask_t *nodemask)
->>>>        return 1;
->>>>    }
->>>>    -static inline bool cpuset_node_allowed(int node, gfp_t gfp_mask)
->>>> -{
->>>> -    return true;
->>>> -}
->>>> -
->>>>    static inline bool __cpuset_zone_allowed(struct zone *z, gfp_t gfp_mask)
->>>>    {
->>>>        return true;
->>> The kernel convention is to add a "__" prefix to a function name if there is higher level helper without the "__" prefix that uses it. Since cpuset_node_allowed() is no longer used. We should just rename __cpuset_node_allowed() to cpuset_node_allowed() and get rid of the unused helper. A bit more code changes are needed for this, though.
->>>
->>> Cheers,
->>> Longman
->>>
->> Maybe we can still use cpuset_node_allowed in __cpuset_zone_allowed? If so, less code need to be changed.
->>
-> mm/page_alloc.c has 2 references to __cpuset_node_allowed() in their comments. These references should also be updated as well. That is why I said a bit more code needs to be touched.
-> 
-> Cheers,
-> Longman
-> 
+Suggested-by: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Signed-off-by: Haifeng Xu <haifeng.xu-LL2PKPoSiP3QT0dZR+AlfA@public.gmane.org>
+---
+ include/linux/cpuset.h | 16 ++--------------
+ kernel/cgroup/cpuset.c |  4 ++--
+ mm/page_alloc.c        |  4 ++--
+ 3 files changed, 6 insertions(+), 18 deletions(-)
 
-Ok. I mean maybe we could keep cpuset_node_allowed() and use it in __cpuset_zone_allowed(). So we don't need rename __cpuset_node_allowed() or update releated comments.
+diff --git a/include/linux/cpuset.h b/include/linux/cpuset.h
+index d58e0476ee8e..980b76a1237e 100644
+--- a/include/linux/cpuset.h
++++ b/include/linux/cpuset.h
+@@ -80,18 +80,11 @@ extern nodemask_t cpuset_mems_allowed(struct task_struct *p);
+ void cpuset_init_current_mems_allowed(void);
+ int cpuset_nodemask_valid_mems_allowed(nodemask_t *nodemask);
+ 
+-extern bool __cpuset_node_allowed(int node, gfp_t gfp_mask);
+-
+-static inline bool cpuset_node_allowed(int node, gfp_t gfp_mask)
+-{
+-	if (cpusets_enabled())
+-		return __cpuset_node_allowed(node, gfp_mask);
+-	return true;
+-}
++extern bool cpuset_node_allowed(int node, gfp_t gfp_mask);
+ 
+ static inline bool __cpuset_zone_allowed(struct zone *z, gfp_t gfp_mask)
+ {
+-	return __cpuset_node_allowed(zone_to_nid(z), gfp_mask);
++	return cpuset_node_allowed(zone_to_nid(z), gfp_mask);
+ }
+ 
+ static inline bool cpuset_zone_allowed(struct zone *z, gfp_t gfp_mask)
+@@ -223,11 +216,6 @@ static inline int cpuset_nodemask_valid_mems_allowed(nodemask_t *nodemask)
+ 	return 1;
+ }
+ 
+-static inline bool cpuset_node_allowed(int node, gfp_t gfp_mask)
+-{
+-	return true;
+-}
+-
+ static inline bool __cpuset_zone_allowed(struct zone *z, gfp_t gfp_mask)
+ {
+ 	return true;
+diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
+index 636f1c682ac0..0241b07d6f21 100644
+--- a/kernel/cgroup/cpuset.c
++++ b/kernel/cgroup/cpuset.c
+@@ -3831,7 +3831,7 @@ static struct cpuset *nearest_hardwall_ancestor(struct cpuset *cs)
+ }
+ 
+ /*
+- * __cpuset_node_allowed - Can we allocate on a memory node?
++ * cpuset_node_allowed - Can we allocate on a memory node?
+  * @node: is this an allowed node?
+  * @gfp_mask: memory allocation flags
+  *
+@@ -3870,7 +3870,7 @@ static struct cpuset *nearest_hardwall_ancestor(struct cpuset *cs)
+  *	GFP_KERNEL   - any node in enclosing hardwalled cpuset ok
+  *	GFP_USER     - only nodes in current tasks mems allowed ok.
+  */
+-bool __cpuset_node_allowed(int node, gfp_t gfp_mask)
++bool cpuset_node_allowed(int node, gfp_t gfp_mask)
+ {
+ 	struct cpuset *cs;		/* current cpuset ancestors */
+ 	bool allowed;			/* is allocation in zone z allowed? */
+diff --git a/mm/page_alloc.c b/mm/page_alloc.c
+index 3bb3484563ed..0d170ae590d8 100644
+--- a/mm/page_alloc.c
++++ b/mm/page_alloc.c
+@@ -4175,7 +4175,7 @@ get_page_from_freelist(gfp_t gfp_mask, unsigned int order, int alloc_flags,
+ retry:
+ 	/*
+ 	 * Scan zonelist, looking for a zone with enough free.
+-	 * See also __cpuset_node_allowed() comment in kernel/cgroup/cpuset.c.
++	 * See also cpuset_node_allowed() comment in kernel/cgroup/cpuset.c.
+ 	 */
+ 	no_fallback = alloc_flags & ALLOC_NOFRAGMENT;
+ 	z = ac->preferred_zoneref;
+@@ -4843,7 +4843,7 @@ gfp_to_alloc_flags(gfp_t gfp_mask)
+ 			alloc_flags |= ALLOC_HARDER;
+ 		/*
+ 		 * Ignore cpuset mems for GFP_ATOMIC rather than fail, see the
+-		 * comment for __cpuset_node_allowed().
++		 * comment for cpuset_node_allowed().
+ 		 */
+ 		alloc_flags &= ~ALLOC_CPUSET;
+ 	} else if (unlikely(rt_task(current)) && in_task())
+-- 
+2.25.1
 
-Thanks.
