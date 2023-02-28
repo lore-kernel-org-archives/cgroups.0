@@ -1,64 +1,143 @@
-From: Vincent Guittot <vincent.guittot-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH v12 6/8] sched/fair: Add sched group latency support
-Date: Tue, 28 Feb 2023 10:09:47 +0100
-Message-ID: <CAKfTPtAq-fRhgXw21RxLhT_ZZQUoMSZgGc90R_qoqkUhu+ADDw@mail.gmail.com>
-References: <20230224093454.956298-1-vincent.guittot@linaro.org>
- <20230224093454.956298-7-vincent.guittot@linaro.org> <20230224192919.d4fcde3dwh7betvm@blackpad>
- <CAKfTPtBorwnjU2=nprBo7aAEjoz+7x5nRYUdajZc53cuVgHSBw@mail.gmail.com> <20230227144236.z6zbgsaohlz6sl7o@blackpad>
+From: Breno Leitao <leitao-8fiUuRrzOP0dnm+yROfE0A@public.gmane.org>
+Subject: [PATCH v4] blk-iocost: Pass gendisk to ioc_refresh_params
+Date: Tue, 28 Feb 2023 03:16:54 -0800
+Message-ID: <20230228111654.1778120-1-leitao@debian.org>
 Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 8bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=JD6LFUjaCV0Y3rxiGh/Ykg8y93935IDS5wJRL1FIbVk=;
-        b=V8ikxzfit8o1ERBDuVpWZBjCJo3dBKGAYbIiDxp9M9uCoraXVlmQhSEskvLmuayfg7
-         /A8wcV7Xoc0qpfJZtw6hgOyJsrSsEWnaY6cSn+3lyXcaR4wB89slxOmi+OPCGsjOAbrN
-         QxvsRE8/q4humpPg/XxOfc5HxA9dOoJSpNo/FKyyoHQPu6t3Yz3jXs7uSmB0txyiTz0e
-         PUi+8DPIYfsOf5AYgU8+ggxQauIYTdqvYTy8pEMolMHzGgRZoYlFxf5Gzjp17l6mhKxY
-         a/KI6B9hkhoCTAhTmYKOpgcqM7aPi8tZ5WYPp2xh0paNZczkU7SJWbRcVLCujWEUckUj
-         wDKQ==
-In-Reply-To: <20230227144236.z6zbgsaohlz6sl7o@blackpad>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="macroman"
-To: =?UTF-8?Q?Michal_Koutn=C3=BD?= <mkoutny-IBi9RG/b67k@public.gmane.org>
-Cc: mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, juri.lelli-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, dietmar.eggemann-5wv7dgnIgG8@public.gmane.org, rostedt-nx8X9YLhiw1AfugRpC6u6w@public.gmane.org, bsegall-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, mgorman-l3A5Bk7waGM@public.gmane.org, bristot-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, vschneid-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, parth-tEXmvtCZX7AybS5Ee8rs3A@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, corbet-T1hC0tSOHrs@public.gmane.org, linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, qyousef-wp2msK0BRk8tq7phqP6ubQ@public.gmane.org, chris.hyser-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org, patrick.bellasi-X6neQFFVdzGsTnJN9+BGXg@public.gmane.org, David.Laight-JxhZ9S5GRejQT0dZR+AlfA@public.gmane.org, pjt-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, pavel-+ZI9xUNit7I@public.gmane.org, qperret-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, tim.c.chen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org, joshdon-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, timj-mXXj517/zsQ@public.gmane.org, kprateek.nayak-5C7GfCeVMHo@public.gmane.org, yu.c.chen-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org, youssefesmat-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org, joel-QYYGw3jwrUn5owFQY34kdNi2O/JbrIOy@public.gmane.org
+Content-Type: text/plain; charset="us-ascii"
+To: axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, josef-DigfWCa+lFGyeJad7bwFQA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Cc: aherrmann-l3A5Bk7waGM@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, hch-jcswGhMUV9g@public.gmane.org, leit-b10kYP2dOMg@public.gmane.org
 
-On Mon, 27 Feb 2023 at 15:42, Michal Koutn=C3=BD <mkoutny-IBi9RG/b67k@public.gmane.org> wrote:
->
-> On Mon, Feb 27, 2023 at 02:44:22PM +0100, Vincent Guittot <vincent.guitto=
-t@linaro.org> wrote:
-> > Regarding the current use of latency nice to set a latency offset, the
-> > problem doesn't appear because latency offset applies between entities
-> > at the same level as you mentioned above
->
-> Splendid, it turned out that way (latency nice analogous to bandwidth
-> nice).
->
-> > Does  my explanation above make sense to you ?
->
-> Yes, thank you.
->
-> Thus, I'd like to propose avoiding the use of "limit" in this context and
-> stress the horizontal scope. For example:
->
-> > +     This interface file allows reading and setting latency using the
-> > +     same values used by sched_setattr(2). The latency_nice of a group=
- is
-> > +     used to limit the impact of the latency_nice of a task outside th=
-e
-> > +     group.
->
-> +     This interface file allows reading and setting latency using the
-> +     same values used by sched_setattr(2). The latency_nice of a group i=
-s
-> +     used to modify group members' latency with respect to sibling group=
-s.
+Current kernel (d2980d8d826554fa6981d621e569a453787472f8) crashes
+when blk_iocost_init for `nvme1` disk.
 
-That sounds reasonable to me.
+	BUG: kernel NULL pointer dereference, address: 0000000000000050
+	#PF: supervisor read access in kernel mode
+	#PF: error_code(0x0000) - not-present page
 
->
-> Regards,
-> Michal
+	blk_iocost_init (include/asm-generic/qspinlock.h:128
+			 include/linux/spinlock.h:203
+			 include/linux/spinlock_api_smp.h:158
+			 include/linux/spinlock.h:400
+			 block/blk-iocost.c:2884)
+	ioc_qos_write (block/blk-iocost.c:3198)
+	? kretprobe_perf_func (kernel/trace/trace_kprobe.c:1566)
+	? kernfs_fop_write_iter (include/linux/slab.h:584 fs/kernfs/file.c:311)
+	? __kmem_cache_alloc_node (mm/slab.h:? mm/slub.c:3452 mm/slub.c:3491)
+	? _copy_from_iter (arch/x86/include/asm/uaccess_64.h:46
+			   arch/x86/include/asm/uaccess_64.h:52
+			   lib/iov_iter.c:183 lib/iov_iter.c:628)
+	? kretprobe_dispatcher (kernel/trace/trace_kprobe.c:1693)
+	cgroup_file_write (kernel/cgroup/cgroup.c:4061)
+	kernfs_fop_write_iter (fs/kernfs/file.c:334)
+	vfs_write (include/linux/fs.h:1849 fs/read_write.c:491
+		   fs/read_write.c:584)
+	ksys_write (fs/read_write.c:637)
+	do_syscall_64 (arch/x86/entry/common.c:50 arch/x86/entry/common.c:80)
+	entry_SYSCALL_64_after_hwframe (arch/x86/entry/entry_64.S:120)
+
+This happens because ioc_refresh_params() is being called without
+a properly initialized ioc->rqos, which is happening later in the callee
+side.
+
+ioc_refresh_params() -> ioc_autop_idx() tries to access
+ioc->rqos.disk->queue but ioc->rqos.disk is NULL, causing the BUG above.
+
+Create function, called ioc_refresh_params_disk(), that is similar to
+ioc_refresh_params() but where the "struct gendisk" could be passed as
+an explicit argument. This function will be called when ioc->rqos.disk
+is not initialized.
+
+Fixes: ce57b558604e ("blk-rq-qos: make rq_qos_add and rq_qos_del more useful")
+
+Signed-off-by: Breno Leitao <leitao-8fiUuRrzOP0dnm+yROfE0A@public.gmane.org>
+Acked-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+---
+ block/blk-iocost.c | 26 ++++++++++++++++++++------
+ 1 file changed, 20 insertions(+), 6 deletions(-)
+
+---
+Changelog
+v1->v2: Pass the struct request_queue explictly to ioc_refresh_params()
+v2->v3: Use struct gendisk instead of struct request_queue
+v3->v4: Rename _ioc_refresh_params() to ioc_refresh_params_disk()
+
+diff --git a/block/blk-iocost.c b/block/blk-iocost.c
+index ff534e9d92dc..4442c7a85112 100644
+--- a/block/blk-iocost.c
++++ b/block/blk-iocost.c
+@@ -800,7 +800,11 @@ static void ioc_refresh_period_us(struct ioc *ioc)
+ 	ioc_refresh_margins(ioc);
+ }
+ 
+-static int ioc_autop_idx(struct ioc *ioc)
++/*
++ *  ioc->rqos.disk isn't initialized when this function is called from
++ *  the init path.
++ */
++static int ioc_autop_idx(struct ioc *ioc, struct gendisk *disk)
+ {
+ 	int idx = ioc->autop_idx;
+ 	const struct ioc_params *p = &autop[idx];
+@@ -808,11 +812,11 @@ static int ioc_autop_idx(struct ioc *ioc)
+ 	u64 now_ns;
+ 
+ 	/* rotational? */
+-	if (!blk_queue_nonrot(ioc->rqos.disk->queue))
++	if (!blk_queue_nonrot(disk->queue))
+ 		return AUTOP_HDD;
+ 
+ 	/* handle SATA SSDs w/ broken NCQ */
+-	if (blk_queue_depth(ioc->rqos.disk->queue) == 1)
++	if (blk_queue_depth(disk->queue) == 1)
+ 		return AUTOP_SSD_QD1;
+ 
+ 	/* use one of the normal ssd sets */
+@@ -901,14 +905,19 @@ static void ioc_refresh_lcoefs(struct ioc *ioc)
+ 		    &c[LCOEF_WPAGE], &c[LCOEF_WSEQIO], &c[LCOEF_WRANDIO]);
+ }
+ 
+-static bool ioc_refresh_params(struct ioc *ioc, bool force)
++/*
++ * struct gendisk is required as an argument because ioc->rqos.disk
++ * is not properly initialized when called from the init path.
++ */
++static bool ioc_refresh_params_disk(struct ioc *ioc, bool force,
++				    struct gendisk *disk)
+ {
+ 	const struct ioc_params *p;
+ 	int idx;
+ 
+ 	lockdep_assert_held(&ioc->lock);
+ 
+-	idx = ioc_autop_idx(ioc);
++	idx = ioc_autop_idx(ioc, disk);
+ 	p = &autop[idx];
+ 
+ 	if (idx == ioc->autop_idx && !force)
+@@ -939,6 +948,11 @@ static bool ioc_refresh_params(struct ioc *ioc, bool force)
+ 	return true;
+ }
+ 
++static bool ioc_refresh_params(struct ioc *ioc, bool force)
++{
++	return ioc_refresh_params_disk(ioc, force, ioc->rqos.disk);
++}
++
+ /*
+  * When an iocg accumulates too much vtime or gets deactivated, we throw away
+  * some vtime, which lowers the overall device utilization. As the exact amount
+@@ -2880,7 +2894,7 @@ static int blk_iocost_init(struct gendisk *disk)
+ 
+ 	spin_lock_irq(&ioc->lock);
+ 	ioc->autop_idx = AUTOP_INVALID;
+-	ioc_refresh_params(ioc, true);
++	ioc_refresh_params_disk(ioc, true, disk);
+ 	spin_unlock_irq(&ioc->lock);
+ 
+ 	/*
+-- 
+2.39.2
+
