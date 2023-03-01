@@ -1,66 +1,88 @@
-From: Qais Yousef <qyousef-wp2msK0BRk8tq7phqP6ubQ@public.gmane.org>
-Subject: Re: [PATCH v3] sched: cpuset: Don't rebuild root domains on
- suspend-resume
-Date: Wed, 1 Mar 2023 17:03:22 +0000
-Message-ID: <20230301170322.xthlso7jfkixlyex@airbuntu>
-References: <20230206221428.2125324-1-qyousef@layalina.io>
- <20230223153859.37tqoqk33oc6tv7o@airbuntu>
- <5f087dd8-3e39-ce83-fe24-afa5179c05d9@arm.com>
- <20230227205725.dipvh3i7dvyrv4tv@airbuntu>
- <5a1e58bf-7eb2-bd7a-7e19-7864428a2b83@arm.com>
- <20230228174627.vja5aejq27dsta2u@airbuntu>
- <Y/7/SLzvK8LfB29z@localhost.localdomain>
- <20230301122852.zgzreby42lh2zf6w@airbuntu>
- <Y/9gmDRlGOChIwpf@localhost.localdomain>
+From: Suren Baghdasaryan <surenb@google.com>
+Subject: Re: [PATCH 1/1] cgroup: limit cgroup psi file writes to processes
+ with CAP_SYS_RESOURCE
+Date: Wed, 1 Mar 2023 10:05:36 -0800
+Message-ID: <CAJuCfpERczW1YhEW0fN3p2zrdDj-Ec_pCONH6SQVEwTj0BHYMw@mail.gmail.com>
+References: <20230301014651.1370939-1-surenb@google.com> <Y/8fNrNm1B2h/MTb@dhcp22.suse.cz>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Transfer-Encoding: quoted-printable
+Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=layalina-io.20210112.gappssmtp.com; s=20210112;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=qUHKTRcQh3URDtHGlGaA089RX+46wq6JZY7f9xT1DBI=;
-        b=2O6UAvj6zfjZ/qTx+DC1jnzc4oofYRirSDiuT9o8rhJ/6BEiPA4+rcBx4atFEYGEIo
-         QVdj2yopC3IIfoL06yzTsC3ziAmJYMHVp28B/iZfCAryxbSMgsa3kgv/phahYvjdTBzb
-         Z/2osNzuFnLNlGTIvz/JMmEPzwLmZAOY13uQsvapEDGujowt6lWX6AE8hfelFeGUxisa
-         CJNyd0S6acdvftMLIIDqsimJ3mYWYm9fdb/HVEiQhLot1fGCgY3NO75b80K0cta4Mx61
-         J5BxMt3zLEk/F+OPrB+G6242679o0jxvLR4EnQao/I7ez0xvSyFY5dK4MelBSfYqGIyZ
-         x/vw==
-Content-Disposition: inline
-In-Reply-To: <Y/9gmDRlGOChIwpf-bi+AKbBUZKY6gyzm1THtWbp2dZbC/Bob@public.gmane.org>
+        d=google.com; s=20210112; t=1677693948;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=uX8jmiHZcgYXj8u2P74s/De46LZgaxk18Jsejs4CDXw=;
+        b=F4Tge1VkHhBLEu87APuX+c1FBFZuQ/236EIgqsa2CLAghV4MU4ktWNxdD4wbxYlLnG
+         8Jz5OVtY0G4gUHBsHAUXgUuH3ztxqwsOiC8zJryAUnVUICBu/WSrngNVUHUKqqlFwKRo
+         twWP+HY0so8JHoUhrK0FYhjLb3iJunbdtoZmQL+PZhLFN3CZWUPGY7tug8DPT0K0GRio
+         2y69fGAW3CjaTSWmBcVf90tdB5iHUOvM8g6UdSZK38pahBHs1bkhZI4YgUC/DBfZFEuR
+         6YZdJx6Ijq0D/SCoGQsB3SVT1Q2QZA67NO8fHXg9I5OE8119UaOTW6PvjnaS/XuMPdMa
+         4kxg==
+In-Reply-To: <Y/8fNrNm1B2h/MTb@dhcp22.suse.cz>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Juri Lelli <juri.lelli-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Cc: Dietmar Eggemann <dietmar.eggemann-5wv7dgnIgG8@public.gmane.org>, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Ingo Molnar <mingo-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Steven Rostedt <rostedt-nx8X9YLhiw1AfugRpC6u6w@public.gmane.org>, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, luca.abeni-5rdYK369eBLQB0XuIGIEkQ@public.gmane.org, claudio-YOzL5CV4y4YG1A2ADO40+w@public.gmane.org, tommaso.cucinotta-5rdYK369eBLQB0XuIGIEkQ@public.gmane.org, bristot-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, mathieu.poirier-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Vincent Guittot <vincent.guittot-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, Wei Wang <wvw-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Rick Yiu <rickyiu-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Quentin Perret <qperret-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Heiko Carstens <hca-tEXmvtCZX7AybS5Ee8rs3A@public.gmane.org>, Vasily Gorbik <gor-tEXmvtCZX7AybS5Ee8rs3A@public.gmane.org>, Alexander Gordeev <agordeev-tEXmvtCZX7AybS5Ee8rs3A@public.gmane.org>, Sudeep Holla <sudeep.holla-5wv7dgnIgG8@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, linux-s390-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, x86@kerne
+Content-Type: text/plain; charset="windows-1252"
+To: Michal Hocko <mhocko@suse.com>
+Cc: tj@kernel.org, hannes@cmpxchg.org, lizefan.x@bytedance.com, peterz@infradead.org, johunt@akamai.com, quic_sudaraja@quicinc.com, cgroups@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org
 
-On 03/01/23 15:26, Juri Lelli wrote:
-> On 01/03/23 12:28, Qais Yousef wrote:
-> > On 03/01/23 08:31, Juri Lelli wrote:
-> 
-> ...
-> 
-> > > Not ignoring you guys here, but it turns out I'm quite bogged down with
-> > > other stuff at the moment. :/ So, apologies and I'll try to get to this
-> > > asap. Thanks a lot for all your efforts and time reviewing so far!
-> > 
-> > Np, I can feel you :-)
-> 
-> Eh. :/
+On Wed, Mar 1, 2023 at 1:47=E2=80=AFAM Michal Hocko <mhocko@suse.com> wrote=
+:
+>
+> On Tue 28-02-23 17:46:51, Suren Baghdasaryan wrote:
+> > Currently /proc/pressure/* files can be written only by processes with
+> > CAP_SYS_RESOURCE capability to prevent any unauthorized user from
+> > creating psi triggers. However no such limitation is required for
+> > per-cgroup pressure files. Fix this inconsistency by requiring the same
+> > capability for writing per-cgroup psi files.
+> >
+> > Fixes: 6db12ee0456d ("psi: allow unprivileged users with CAP_SYS_RESOUR=
+CE to write psi files")
+>
+> Is this really a regression from this commit? 6db12ee0456d is changing
+> permissions of those files to be world writeable with the
+> CAP_SYS_RESOURCE requirement. Permissions of cgroup files is not changed
+> and the default mode is 644 (with root as an owner) so only privileged
+> processes are allowed without any delegation.
 
-I hope I did not offend. That was meant as no pressure, I understand.
+Agree, the Fixes line here is not valid. I will remove it.
 
-> 
-> BTW, do you have a repro script of some sort handy I might play with?
+>
+> I think you should instead construct this slightly differently. The
+> ultimate goal is to allow a reasonable delegation after all, no?
 
-Sorry no. You'll just need to suspend to ram. I had a simple patch to measure
-the time around the call and trace_printk'ed the result.
+Yes.
 
-I was working on a android phone which just suspends to ram if you turn the
-screen off and disconnect the usb.
+>
+> So keep your current patch and extend it by removing the min timeout
+> constrain and justify the change by the necessity of the granularity
+> tuning as reported by Sudarshan Rajagopala. If this causes any
+> regression then a revert would also return the min timeout constrain
+> back and we will have to think about a different approach.
 
-I think you can use rtcwake in normal desktop environment. Something like
+I think adding CAP_SYS_RESOURCE check is needed even if we keep the
+min timeout capped like today. Without it one could create multiple
+cgroups and add a trigger into each one, therefore creating an
+unlimited number of "psimon" kernel threads. At some point I expect
+them to affect system performance because even at high polling
+intervals they still consume some cpu resources. So, this change I
+think is needed regardless of the change to min polling period and I
+would suggest keeping them separate.
 
-	sudo rtcwake -u -s 5 -m mem
+>
+> The consistency with the global case is a valid point only partially
+> because different cgroups might have different owners which is not
+> usually the case for the global psi interface, right?
 
+Correct.
 
-Thanks!
+>
+> Makes sense?
+
+Yes but hopefully my argument about keeping this and min period
+patches separate is reasonable?
+Thanks,
+Suren.
+
+> --
+> Michal Hocko
+> SUSE Labs
