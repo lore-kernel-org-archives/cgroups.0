@@ -1,105 +1,387 @@
-From: Kalesh Singh <kaleshsingh-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH 1/1] psi: remove 500ms min window size limitation for triggers
-Date: Wed, 1 Mar 2023 13:00:43 -0800
-Message-ID: <CAC_TJvfZu7-3QWF6EyEphZusnk8gjM-w3bw3K26TBnoY221yeQ@mail.gmail.com>
-References: <20230301193403.1507484-1-surenb@google.com> <Y/+wlg5L8A1iebya@cmpxchg.org>
- <CAJuCfpHhA4XpoE96u5CPktDcSChUkQG_Ax58NzJOiOoF2K+3qQ@mail.gmail.com>
+From: Vincent Guittot <vincent.guittot@linaro.org>
+Subject: Re: [PATCH v12 5/8] sched/fair: Take into account latency priority at wakeup
+Date: Thu, 2 Mar 2023 08:43:15 +0100
+Message-ID: <CAKfTPtBAxYkntXR9jwH3HSBx00YoDUDXLEJ7h-90wqra4G5jSA@mail.gmail.com>
+References: <20230224093454.956298-1-vincent.guittot@linaro.org>
+ <20230224093454.956298-6-vincent.guittot@linaro.org> <cf16613d-b5e1-bdcf-ef3f-6763ba939f42@linux.vnet.ibm.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <linux-doc-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20210112; t=1677704454;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=P2kasoRjb1+wciE4LnUC2thgmhUmXODjqV4vRSm0GrQ=;
-        b=W7barMoQHh4OpBpyETO0/gkI5dClRC/69osO6LGoB7PZbyXAonsXRwPJeNy0OBf5UL
-         LXrKyhtV5pnGDcCIi4Piv/DxPPYhzjcQY6T6uNuSed9veKu1yjBJL4X+FkKb5bJYV9Yt
-         sE10hdpblg9K3wuqUwCurVvteg0oZ2CQ2bR4f73Gnt83eCIkCgy9LyANkDgWVMDqEBeJ
-         YZBj7K+xVkhICy6nS06wRn/bS8ni9axi1Ee9BCCArZ2aJbtEc/4KOm7qBrwJnCf7/X1M
-         WUrCsMG7Zvo1Tp+cjmRkFYImZEqA3rnUxBKoAy8NQeC6T/HaG9u5iIbM+jKerspIbLfZ
-         3YFw==
-In-Reply-To: <CAJuCfpHhA4XpoE96u5CPktDcSChUkQG_Ax58NzJOiOoF2K+3qQ-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+        d=linaro.org; s=google;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:from:to:cc:subject:date:message-id:reply-to;
+        bh=64SSbXRp/YLmSHI0JrDoo+9XuvG3Mhb2Dw2MwawYdis=;
+        b=eT7opkpxHavKKVJDADeHezyk3UFseFgXZ+IT5LKIXj1CwleLkzUyviCT+xNC53Uz8C
+         BAN3UeD3LeEtuwf/9TGfAXX7RhcuyJISiUupcp84dJv87dyHCysURmi1X+hT64sRfF1o
+         I3ypVBkolBBpvr4KCFW/CxJAwy8X7fWA9UFWRe/Bv+514NU2HQzZrzSxY4jNpzPIy0r7
+         nqzkHJHty6IPeLjIatFT+gJ/9bU79WPCQsNkvGPE8fMqo8WG0OFJPh73eudR4ADYQ7wJ
+         JBkpkf+x7e0SbA3WrJ0x3wSJjTfm4SzfRkaAF5QZDb4gDmTF/Mpfpbqd0sudidsXtH3n
+         oLuQ==
+In-Reply-To: <cf16613d-b5e1-bdcf-ef3f-6763ba939f42@linux.vnet.ibm.com>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="utf-8"
-To: Suren Baghdasaryan <surenb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org, peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, johunt-JqFfY2XvxFXQT0dZR+AlfA@public.gmane.org, mhocko-IBi9RG/b67k@public.gmane.org, keescook-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org, quic_sudaraja-jfJNa2p1gH1BDgjK7y7TUQ@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: shrikanth hegde <sshegde@linux.vnet.ibm.com>
+Cc: qyousef@layalina.io, chris.hyser@oracle.com, patrick.bellasi@matbug.net, David.Laight@aculab.com, pjt@google.com, pavel@ucw.cz, qperret@google.com, tim.c.chen@linux.intel.com, joshdon@google.com, timj@gnu.org, kprateek.nayak@amd.com, yu.c.chen@intel.com, youssefesmat@chromium.org, joel@joelfernandes.org, mingo@redhat.com, peterz@infradead.org, juri.lelli@redhat.com, dietmar.eggemann@arm.com, rostedt@goodmis.org, bsegall@google.com, mgorman@suse.de, bristot@redhat.com, vschneid@redhat.com, linux-kernel@vger.kernel.org, parth@linux.ibm.com, tj@kernel.org, lizefan.x@bytedance.com, hannes@cmpxchg.org, cgroups@vger.kernel.org, corbet@lwn.net, linux-doc@vger.kernel.org
 
-On Wed, Mar 1, 2023 at 12:48=E2=80=AFPM Suren Baghdasaryan <surenb@google.c=
-om> wrote:
+On Wed, 1 Mar 2023 at 20:29, shrikanth hegde <sshegde@linux.vnet.ibm.com> wrote:
 >
-> On Wed, Mar 1, 2023 at 12:07=E2=80=AFPM Johannes Weiner <hannes@cmpxchg.o=
-rg> wrote:
-> >
-> > On Wed, Mar 01, 2023 at 11:34:03AM -0800, Suren Baghdasaryan wrote:
-> > > Current 500ms min window size for psi triggers limits polling interva=
-l
-> > > to 50ms to prevent polling threads from using too much cpu bandwidth =
-by
-> > > polling too frequently. However the number of cgroups with triggers i=
-s
-> > > unlimited, so this protection can be defeated by creating multiple
-> > > cgroups with psi triggers (triggers in each cgroup are served by a si=
-ngle
-> > > "psimon" kernel thread).
-> > > Instead of limiting min polling period, which also limits the latency=
- of
-> > > psi events, it's better to limit psi trigger creation to authorized u=
-sers
-> > > only, like we do for system-wide psi triggers (/proc/pressure/* files=
- can
-> > > be written only by processes with CAP_SYS_RESOURCE capability). This =
-also
-> > > makes access rules for cgroup psi files consistent with system-wide o=
-nes.
-> > > Add a CAP_SYS_RESOURCE capability check for cgroup psi file writers a=
-nd
-> > > remove the psi window min size limitation.
-> > >
-> > > Suggested-by: Sudarshan Rajagopalan <quic_sudaraja-jfJNa2p1gH1BDgjK7y7TUQ@public.gmane.org>
-> > > Link: https://lore.kernel.org/all/cover.1676067791.git.quic_sudaraja@=
-quicinc.com/
-> > > Signed-off-by: Suren Baghdasaryan <surenb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-> > > ---
-> > >  kernel/cgroup/cgroup.c | 10 ++++++++++
-> > >  kernel/sched/psi.c     |  4 +---
-> > >  2 files changed, 11 insertions(+), 3 deletions(-)
-> > >
-> > > diff --git a/kernel/cgroup/cgroup.c b/kernel/cgroup/cgroup.c
-> > > index 935e8121b21e..b600a6baaeca 100644
-> > > --- a/kernel/cgroup/cgroup.c
-> > > +++ b/kernel/cgroup/cgroup.c
-> > > @@ -3867,6 +3867,12 @@ static __poll_t cgroup_pressure_poll(struct ke=
-rnfs_open_file *of,
-> > >       return psi_trigger_poll(&ctx->psi.trigger, of->file, pt);
-> > >  }
-> > >
-> > > +static int cgroup_pressure_open(struct kernfs_open_file *of)
-> > > +{
-> > > +     return (of->file->f_mode & FMODE_WRITE && !capable(CAP_SYS_RESO=
-URCE)) ?
-> > > +             -EPERM : 0;
-> > > +}
-> >
-> > I agree with the change, but it's a bit unfortunate that this check is
-> > duplicated between system and cgroup.
-> >
-> > What do you think about psi_trigger_create() taking the file and
-> > checking FMODE_WRITE and CAP_SYS_RESOURCE against file->f_cred?
 >
-> That's definitely doable and we don't even need to pass file to
-> psi_trigger_create() since it's called only when we write to the file.
-> However by moving the capability check into psi_trigger_create() we
-> also postpone the check until write() instead of failing early in
-> open(). I always assumed failing early is preferable but if
-> consolidating the code here makes more sense then I can make the
-> switch. Please let me know if you still prefer to move the check.
 >
+> On 2/24/23 3:04 PM, Vincent Guittot wrote:
+> > Take into account the latency priority of a thread when deciding to
+> > preempt the current running thread. We don't want to provide more CPU
+> > bandwidth to a thread but reorder the scheduling to run latency sensitive
+> > task first whenever possible.
+> >
+> > As long as a thread didn't use its bandwidth, it will be able to preempt
+> > the current thread.
+> >
+> > At the opposite, a thread with a low latency priority will preempt current
+> > thread at wakeup only to keep fair CPU bandwidth sharing. Otherwise it will
+> > wait for the tick to get its sched slice.
+> >
+> >                                    curr vruntime
+> >                                        |
+> >                       sysctl_sched_wakeup_granularity
+> >                                    <-->
+> > ----------------------------------|----|-----------------------|---------------
+> >                                   |    |<--------------------->
+> >                                   |    .  sysctl_sched_latency
+> >                                   |    .
+> > default/current latency entity    |    .
+> >                                   |    .
+> > 1111111111111111111111111111111111|0000|-1-1-1-1-1-1-1-1-1-1-1-1-1-1-1-1-1-1-1-
+> > se preempts curr at wakeup ------>|<- se doesn't preempt curr -----------------
+> >                                   |    .
+> >                                   |    .
+> >                                   |    .
+> > low latency entity                |    .
+> >                                    ---------------------->|
+> >                                % of sysctl_sched_latency  |
+> > 1111111111111111111111111111111111111111111111111111111111|0000|-1-1-1-1-1-1-1-
+> > preempt ------------------------------------------------->|<- do not preempt --
+> >                                   |    .
+> >                                   |    .
+> >                                   |    .
+> > high latency entity               |    .
+> >          |<-----------------------|----.
+> >          | % of sysctl_sched_latency   .
+> > 111111111|0000|-1-1-1-1-1-1-1-1-1-1-1-1-1-1-1-1-1-1-1-1-1-1-1-1-1-1-1-1-1-1-1-1
+> > preempt->|<- se doesn't preempt curr ------------------------------------------
+> >
+> > Tests results of nice latency impact on heavy load like hackbench:
+> >
+> > hackbench -l (2560 / group) -g group
+> > group        latency 0             latency 19
+> > 1            1.378(+/-  1%)      1.337(+/- 1%) + 3%
+> > 4            1.393(+/-  3%)      1.312(+/- 3%) + 6%
+> > 8            1.308(+/-  2%)      1.279(+/- 1%) + 2%
+> > 16           1.347(+/-  1%)      1.317(+/- 1%) + 2%
+> >
+> > hackbench -p -l (2560 / group) -g group
+> > group
+> > 1            1.836(+/- 17%)      1.148(+/- 5%) +37%
+> > 4            1.586(+/-  6%)      1.109(+/- 8%) +30%
+> > 8            1.209(+/-  4%)      0.780(+/- 4%) +35%
+> > 16           0.805(+/-  5%)      0.728(+/- 4%) +10%
+> >
+> > By deacreasing the latency prio, we reduce the number of preemption at
+> > wakeup and help hackbench making progress.
+> >
+> > Test results of nice latency impact on short live load like cyclictest
+> > while competing with heavy load like hackbench:
+> >
+> > hackbench -l 10000 -g $group &
+> > cyclictest --policy other -D 5 -q -n
+> >         latency 0           latency -20
+> > group   min  avg    max     min  avg    max
+> > 0       16    19     29      17   18     29
+> > 1       43   299   7359      63   84   3422
+> > 4       56   449  14806      45   83    284
+> > 8       63   820  51123      63   83    283
+> > 16      64  1326  70684      41  157  26852
+> >
+> > group = 0 means that hackbench is not running.
+> >
+> > The avg is significantly improved with nice latency -20 especially with
+> > large number of groups but min and max remain quite similar. If we add the
+> > histogram parameter to get details of latency, we have :
+> >
+> > hackbench -l 10000 -g 16 &
+> > cyclictest --policy other -D 5 -q -n  -H 20000 --histfile data.txt
+> >               latency 0    latency -20
+> > Min Latencies:    64           62
+> > Avg Latencies:  1170          107
+> > Max Latencies: 88069        10417
+> > 50% latencies:   122           86
+> > 75% latencies:   614           91
+> > 85% latencies:   961           94
+> > 90% latencies:  1225           97
+> > 95% latencies:  6120          102
+> > 99% latencies: 18328          159
+> >
+> > With percentile details, we see the benefit of nice latency -20 as
+> > only 1% of the latencies are above 159us whereas the default latency
+> > has got 15% around ~1ms or above and 5% over the 6ms.
+> >
+> > Signed-off-by: Vincent Guittot <vincent.guittot@linaro.org>
+> > Tested-by: K Prateek Nayak <kprateek.nayak@amd.com>
+> > ---
+> >  include/linux/sched.h      |  4 +++-
+> >  include/linux/sched/prio.h |  9 +++++++++
+> >  init/init_task.c           |  2 +-
+> >  kernel/sched/core.c        | 19 ++++++++++++++-----
+> >  kernel/sched/debug.c       |  2 +-
+> >  kernel/sched/fair.c        | 32 +++++++++++++++++++++++++++-----
+> >  kernel/sched/sched.h       | 11 +++++++++++
+> >  7 files changed, 66 insertions(+), 13 deletions(-)
+> >
+> > diff --git a/include/linux/sched.h b/include/linux/sched.h
+> > index 6c61bde49152..38decae3e156 100644
+> > --- a/include/linux/sched.h
+> > +++ b/include/linux/sched.h
+> > @@ -568,6 +568,8 @@ struct sched_entity {
+> >       /* cached value of my_q->h_nr_running */
+> >       unsigned long                   runnable_weight;
+> >  #endif
+> > +     /* preemption offset in ns */
+> > +     long                            latency_offset;
+> >
+> >  #ifdef CONFIG_SMP
+> >       /*
+> > @@ -784,7 +786,7 @@ struct task_struct {
+> >       int                             static_prio;
+> >       int                             normal_prio;
+> >       unsigned int                    rt_priority;
+> > -     int                             latency_nice;
+> > +     int                             latency_prio;
+> >
+> >       struct sched_entity             se;
+> >       struct sched_rt_entity          rt;
+> > diff --git a/include/linux/sched/prio.h b/include/linux/sched/prio.h
+> > index bfcd7f1d1e11..be79503d86af 100644
+> > --- a/include/linux/sched/prio.h
+> > +++ b/include/linux/sched/prio.h
+> > @@ -59,5 +59,14 @@ static inline long rlimit_to_nice(long prio)
+> >   * Default tasks should be treated as a task with latency_nice = 0.
+> >   */
+> >  #define DEFAULT_LATENCY_NICE 0
+> > +#define DEFAULT_LATENCY_PRIO (DEFAULT_LATENCY_NICE + LATENCY_NICE_WIDTH/2)
+> > +
+> > +/*
+> > + * Convert user-nice values [ -20 ... 0 ... 19 ]
+> > + * to static latency [ 0..39 ],
+> > + * and back.
+> > + */
+> > +#define NICE_TO_LATENCY(nice)        ((nice) + DEFAULT_LATENCY_PRIO)
+> > +#define LATENCY_TO_NICE(prio)        ((prio) - DEFAULT_LATENCY_PRIO)
+> >
+> >  #endif /* _LINUX_SCHED_PRIO_H */
+> > diff --git a/init/init_task.c b/init/init_task.c
+> > index 7dd71dd2d261..071deff8dbd1 100644
+> > --- a/init/init_task.c
+> > +++ b/init/init_task.c
+> > @@ -78,7 +78,7 @@ struct task_struct init_task
+> >       .prio           = MAX_PRIO - 20,
+> >       .static_prio    = MAX_PRIO - 20,
+> >       .normal_prio    = MAX_PRIO - 20,
+> > -     .latency_nice   = DEFAULT_LATENCY_NICE,
+> > +     .latency_prio   = DEFAULT_LATENCY_PRIO,
+> >       .policy         = SCHED_NORMAL,
+> >       .cpus_ptr       = &init_task.cpus_mask,
+> >       .user_cpus_ptr  = NULL,
+> > diff --git a/kernel/sched/core.c b/kernel/sched/core.c
+> > index d327614c70b0..d5b7e237d79b 100644
+> > --- a/kernel/sched/core.c
+> > +++ b/kernel/sched/core.c
+> > @@ -1285,6 +1285,11 @@ static void set_load_weight(struct task_struct *p, bool update_load)
+> >       }
+> >  }
+> >
+> > +static void set_latency_offset(struct task_struct *p)
+> > +{
+> > +     p->se.latency_offset = calc_latency_offset(p->latency_prio);
+> > +}
+> > +
+> >  #ifdef CONFIG_UCLAMP_TASK
+> >  /*
+> >   * Serializes updates of utilization clamp values
+> > @@ -4681,7 +4686,9 @@ int sched_fork(unsigned long clone_flags, struct task_struct *p)
+> >               p->prio = p->normal_prio = p->static_prio;
+> >               set_load_weight(p, false);
+> >
+> > -             p->latency_nice = DEFAULT_LATENCY_NICE;
+> > +             p->latency_prio = NICE_TO_LATENCY(0);
+> > +             set_latency_offset(p);
+> > +
+> >               /*
+> >                * We don't need the reset flag anymore after the fork. It has
+> >                * fulfilled its duty:
+> > @@ -7449,8 +7456,10 @@ static void __setscheduler_params(struct task_struct *p,
+> >  static void __setscheduler_latency(struct task_struct *p,
+> >               const struct sched_attr *attr)
+> >  {
+> > -     if (attr->sched_flags & SCHED_FLAG_LATENCY_NICE)
+> > -             p->latency_nice = attr->sched_latency_nice;
+> > +     if (attr->sched_flags & SCHED_FLAG_LATENCY_NICE) {
+> > +             p->latency_prio = NICE_TO_LATENCY(attr->sched_latency_nice);
+> > +             set_latency_offset(p);
+> > +     }
+> >  }
+> >
+> >  /*
+> > @@ -7635,7 +7644,7 @@ static int __sched_setscheduler(struct task_struct *p,
+> >               if (attr->sched_flags & SCHED_FLAG_UTIL_CLAMP)
+> >                       goto change;
+> >               if (attr->sched_flags & SCHED_FLAG_LATENCY_NICE &&
+> > -                 attr->sched_latency_nice != p->latency_nice)
+> > +                 attr->sched_latency_nice != LATENCY_TO_NICE(p->latency_prio))
+> >                       goto change;
+> >
+> >               p->sched_reset_on_fork = reset_on_fork;
+> > @@ -8176,7 +8185,7 @@ SYSCALL_DEFINE4(sched_getattr, pid_t, pid, struct sched_attr __user *, uattr,
+> >       get_params(p, &kattr);
+> >       kattr.sched_flags &= SCHED_FLAG_ALL;
+> >
+> > -     kattr.sched_latency_nice = p->latency_nice;
+> > +     kattr.sched_latency_nice = LATENCY_TO_NICE(p->latency_prio);
+> >
+> >  #ifdef CONFIG_UCLAMP_TASK
+> >       /*
+> > diff --git a/kernel/sched/debug.c b/kernel/sched/debug.c
+> > index 68be7a3e42a3..b3922184af91 100644
+> > --- a/kernel/sched/debug.c
+> > +++ b/kernel/sched/debug.c
+> > @@ -1043,7 +1043,7 @@ void proc_sched_show_task(struct task_struct *p, struct pid_namespace *ns,
+> >  #endif
+> >       P(policy);
+> >       P(prio);
+> > -     P(latency_nice);
+> > +     P(latency_prio);
+>
+> /proc/<pid>/sched  should update if the latency values are updated
+> for the cgroup right? That doesn't seem to happen.
 
-I always assumed the convention is to check the credentials on open()
-per Linus comment here:
+No It's not. The cgroup latency_nice value applies the the
+sched_entity of the group in which the task are scheduled
 
-https://lore.kernel.org/r/CAHk-=3DwhDkekE8n2LdPiKHeTdRnV--ys0V0nPZ76oPaE0fn=
--d+g-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org/#t
-
---Kalesh
+>
+> #cd /sys/fs/cgroup/cpu
+> # echo -20 >  task1/cpu.latency.nice
+> # cat task1/cgroup.procs
+> 1897
+> 1998
+> 1999
+> # cat /proc/1999/sched | grep latency
+> latency_prio                                 :                   20
+> # echo 0 >  task1/cpu.latency.nice
+> # cat /proc/1999/sched | grep latency
+> latency_prio                                 :                   20
+> # echo 19 >  task1/cpu.latency.nice
+> # cat /proc/1999/sched | grep latency
+> latency_prio                                 :                   20
+>
+>
+> >       if (task_has_dl_policy(p)) {
+> >               P(dl.runtime);
+> >               P(dl.deadline);
+> > diff --git a/kernel/sched/fair.c b/kernel/sched/fair.c
+> > index 81bef11eb660..414b6243208b 100644
+> > --- a/kernel/sched/fair.c
+> > +++ b/kernel/sched/fair.c
+> > @@ -4877,6 +4877,8 @@ dequeue_entity(struct cfs_rq *cfs_rq, struct sched_entity *se, int flags)
+> >               update_idle_cfs_rq_clock_pelt(cfs_rq);
+> >  }
+> >
+> > +static long wakeup_latency_gran(struct sched_entity *curr, struct sched_entity *se);
+> > +
+> >  /*
+> >   * Preempt the current task with a newly woken task if needed:
+> >   */
+> > @@ -4885,7 +4887,7 @@ check_preempt_tick(struct cfs_rq *cfs_rq, struct sched_entity *curr)
+> >  {
+> >       unsigned long ideal_runtime, delta_exec;
+> >       struct sched_entity *se;
+> > -     s64 delta;
+> > +     s64 delta, offset;
+> >
+> >       /*
+> >        * When many tasks blow up the sched_period; it is possible that
+> > @@ -4916,10 +4918,12 @@ check_preempt_tick(struct cfs_rq *cfs_rq, struct sched_entity *curr)
+> >       se = __pick_first_entity(cfs_rq);
+> >       delta = curr->vruntime - se->vruntime;
+> >
+> > -     if (delta < 0)
+> > +     offset = wakeup_latency_gran(curr, se);
+> > +     if (delta < offset)
+> >               return;
+> >
+> > -     if (delta > ideal_runtime)
+> > +     if ((delta > ideal_runtime) ||
+> > +         (delta > get_latency_max()))
+> >               resched_curr(rq_of(cfs_rq));
+> >  }
+> >
+> > @@ -7662,6 +7666,23 @@ balance_fair(struct rq *rq, struct task_struct *prev, struct rq_flags *rf)
+> >  }
+> >  #endif /* CONFIG_SMP */
+> >
+> > +static long wakeup_latency_gran(struct sched_entity *curr, struct sched_entity *se)
+> > +{
+> > +     long latency_offset = se->latency_offset;
+> > +
+> > +     /*
+> > +      * A negative latency offset means that the sched_entity has latency
+> > +      * requirement that needs to be evaluated versus other entity.
+> > +      * Otherwise, use the latency weight to evaluate how much scheduling
+> > +      * delay is acceptable by se.
+> > +      */
+> > +     if ((latency_offset < 0) || (curr->latency_offset < 0))
+> > +             latency_offset -= curr->latency_offset;
+> > +     latency_offset = min_t(long, latency_offset, get_latency_max());
+> > +
+> > +     return latency_offset;
+> > +}
+> > +
+> >  static unsigned long wakeup_gran(struct sched_entity *se)
+> >  {
+> >       unsigned long gran = sysctl_sched_wakeup_granularity;
+> > @@ -7700,11 +7721,12 @@ static int
+> >  wakeup_preempt_entity(struct sched_entity *curr, struct sched_entity *se)
+> >  {
+> >       s64 gran, vdiff = curr->vruntime - se->vruntime;
+> > +     s64 offset = wakeup_latency_gran(curr, se);
+> >
+> > -     if (vdiff <= 0)
+> > +     if (vdiff < offset)
+> >               return -1;
+> >
+> > -     gran = wakeup_gran(se);
+> > +     gran = offset + wakeup_gran(se);
+> >
+> >       /*
+> >        * At wake up, the vruntime of a task is capped to not be older than
+> > diff --git a/kernel/sched/sched.h b/kernel/sched/sched.h
+> > index 51ba0af7fb27..3f42f86105d4 100644
+> > --- a/kernel/sched/sched.h
+> > +++ b/kernel/sched/sched.h
+> > @@ -2494,6 +2494,17 @@ static inline unsigned long get_sleep_latency(bool idle)
+> >       return thresh;
+> >  }
+> >
+> > +/*
+> > + * Calculate the latency offset for a priority level.
+> > + * We use a linear mapping of the priority in the range:
+> > + *     [-sysctl_sched_latency:sysctl_sched_latency]
+> > + */
+> > +static inline long calc_latency_offset(int prio)
+> > +{
+> > +     return (long)get_sleep_latency(false) * LATENCY_TO_NICE(prio) /
+> > +                     (LATENCY_NICE_WIDTH/2);
+> > +}
+> > +
+> >  static inline unsigned long get_latency_max(void)
+> >  {
+> >       unsigned long thresh = get_sleep_latency(false);
+>
