@@ -1,163 +1,555 @@
-From: Cai Xinchen <caixinchen1@huawei.com>
-Subject: [PATCH 4.19 2/3] cgroup: Fix threadgroup_rwsem <-> cpus_read_lock() deadlock
-Date: Fri, 3 Mar 2023 04:50:49 +0000
-Message-ID: <20230303045050.139985-3-caixinchen1@huawei.com>
-References: <20230303045050.139985-1-caixinchen1@huawei.com>
+From: Kamalesh Babulal <kamalesh.babulal-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
+Subject: [PATCH] cgroup: bpf: use cgroup_lock()/cgroup_unlock() wrappers
+Date: Fri,  3 Mar 2023 15:23:10 +0530
+Message-ID: <20230303095310.238553-1-kamalesh.babulal@oracle.com>
 Mime-Version: 1.0
-Return-path: <stable-owner@vger.kernel.org>
-In-Reply-To: <20230303045050.139985-1-caixinchen1@huawei.com>
+Content-Transfer-Encoding: 8bit
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
+ subject : date : message-id : content-transfer-encoding : content-type :
+ mime-version; s=corp-2022-7-12;
+ bh=j4QrVGlUy6GZXwvXk8mnEiaktchXZHN8ttjjIUPSIos=;
+ b=sO7mtWmSZ415HB6EFbeF0sK3s8K2nAFfaLeJW4iu6zjamy/qc0EjZPMSyGlZUx6XN9k5
+ 6XllNK/1ItuMBD95AEPIzDhVjB4XfXID/PrCupdp6jG+59ejC7+/MCsg0iwWAYRk0JHQ
+ WDHha1Em4FxaorITqtS1d0AWbv8mOjr8x1ZaVhnUzL1rJHG18SrOjGCLWVV3lbwRLSed
+ RKpbQ7gdx0JK12LMjLNSvxP6rds4ONahlXuzVLiVEbrYbFys0uASUf7EEfHpeXNkWmOX
+ NcqDSGwcXmPnQbbI97v2Zj4mYnsoVpwTMSEo5sg5bZCgQezroRmfTTc5such4g9YbGtA Yg== 
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+ d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=j4QrVGlUy6GZXwvXk8mnEiaktchXZHN8ttjjIUPSIos=;
+ b=oNS4JQ3vdtR8iZkPBYeOShx1zEPWL12lFLIfUQoAQEr4lhMc0iTpCaPFKonNiUyej2c/e6eM0zAVEdIxcQkZHMzrgew1YLNa80XSUXbmFBVwfEBegnNQT/K27CYcTiegLUzpUctcd9TKsp3hTus8kcYBIda6o4xtDRVO0VRSd1E=
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: longman@redhat.com, lizefan.x@bytedance.com, tj@kernel.org, hannes@cmpxchg.org, gregkh@linuxfoundation.org, sashal@kernel.org
-Cc: mkoutny@suse.com, zhangqiao22@huawei.com, juri.lelli@redhat.com, penguin-kernel@I-love.SAKURA.ne.jp, stable@vger.kernel.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Christian Brauner <brauner-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Martin KaFai Lau <martin.lau-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>
+Cc: Tom Hromatka <tom.hromatka-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, bpf-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-From: Tejun Heo <tj@kernel.org>
+Replace mutex_[un]lock() with cgroup_[un]lock() wrappers to stay
+consistent across cgroup core and other subsystem code, while
+operating on the cgroup_mutex.
 
-commit 4f7e7236435ca0abe005c674ebd6892c6e83aeb3 upstream.
-
-Bringing up a CPU may involve creating and destroying tasks which requires
-read-locking threadgroup_rwsem, so threadgroup_rwsem nests inside
-cpus_read_lock(). However, cpuset's ->attach(), which may be called with
-thredagroup_rwsem write-locked, also wants to disable CPU hotplug and
-acquires cpus_read_lock(), leading to a deadlock.
-
-Fix it by guaranteeing that ->attach() is always called with CPU hotplug
-disabled and removing cpus_read_lock() call from cpuset_attach().
-
-Signed-off-by: Tejun Heo <tj@kernel.org>
-Reviewed-and-tested-by: Imran Khan <imran.f.khan@oracle.com>
-Reported-and-tested-by: Xuewen Yan <xuewen.yan@unisoc.com>
-Fixes: 05c7b7a92cc8 ("cgroup/cpuset: Fix a race between cpuset_attach() and cpu hotplug")
-Cc: stable@vger.kernel.org # v5.17+
-Signed-off-by: Cai Xinchen <caixinchen1@huawei.com>
+Signed-off-by: Kamalesh Babulal <kamalesh.babulal-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
 ---
- kernel/cgroup/cgroup.c | 49 +++++++++++++++++++++++++++++++++++++-----
- kernel/cgroup/cpuset.c |  7 +-----
- 2 files changed, 45 insertions(+), 11 deletions(-)
+ kernel/bpf/cgroup.c        | 38 ++++++++++++------------
+ kernel/bpf/cgroup_iter.c   |  4 +--
+ kernel/bpf/local_storage.c |  4 +--
+ kernel/cgroup/cgroup-v1.c  | 16 +++++-----
+ kernel/cgroup/cgroup.c     | 60 +++++++++++++++++++-------------------
+ 5 files changed, 61 insertions(+), 61 deletions(-)
 
-diff --git a/kernel/cgroup/cgroup.c b/kernel/cgroup/cgroup.c
-index a892a99eb4bf..de4c490f9193 100644
---- a/kernel/cgroup/cgroup.c
-+++ b/kernel/cgroup/cgroup.c
-@@ -2209,6 +2209,45 @@ int task_cgroup_path(struct task_struct *task, char *buf, size_t buflen)
+diff --git a/kernel/bpf/cgroup.c b/kernel/bpf/cgroup.c
+index bf2fdb33fb31..3458701dcb28 100644
+--- a/kernel/bpf/cgroup.c
++++ b/kernel/bpf/cgroup.c
+@@ -173,11 +173,11 @@ void bpf_cgroup_atype_put(int cgroup_atype)
+ {
+ 	int i = cgroup_atype - CGROUP_LSM_START;
+ 
+-	mutex_lock(&cgroup_mutex);
++	cgroup_lock();
+ 	if (--cgroup_lsm_atype[i].refcnt <= 0)
+ 		cgroup_lsm_atype[i].attach_btf_id = 0;
+ 	WARN_ON_ONCE(cgroup_lsm_atype[i].refcnt < 0);
+-	mutex_unlock(&cgroup_mutex);
++	cgroup_unlock();
  }
- EXPORT_SYMBOL_GPL(task_cgroup_path);
+ #else
+ static enum cgroup_bpf_attach_type
+@@ -282,7 +282,7 @@ static void cgroup_bpf_release(struct work_struct *work)
  
-+/**
-+ * cgroup_attach_lock - Lock for ->attach()
-+ * @lock_threadgroup: whether to down_write cgroup_threadgroup_rwsem
-+ *
-+ * cgroup migration sometimes needs to stabilize threadgroups against forks and
-+ * exits by write-locking cgroup_threadgroup_rwsem. However, some ->attach()
-+ * implementations (e.g. cpuset), also need to disable CPU hotplug.
-+ * Unfortunately, letting ->attach() operations acquire cpus_read_lock() can
-+ * lead to deadlocks.
-+ *
-+ * Bringing up a CPU may involve creating and destroying tasks which requires
-+ * read-locking threadgroup_rwsem, so threadgroup_rwsem nests inside
-+ * cpus_read_lock(). If we call an ->attach() which acquires the cpus lock while
-+ * write-locking threadgroup_rwsem, the locking order is reversed and we end up
-+ * waiting for an on-going CPU hotplug operation which in turn is waiting for
-+ * the threadgroup_rwsem to be released to create new tasks. For more details:
-+ *
-+ *   http://lkml.kernel.org/r/20220711174629.uehfmqegcwn2lqzu@wubuntu
-+ *
-+ * Resolve the situation by always acquiring cpus_read_lock() before optionally
-+ * write-locking cgroup_threadgroup_rwsem. This allows ->attach() to assume that
-+ * CPU hotplug is disabled on entry.
-+ */
-+static void cgroup_attach_lock(void)
-+{
-+	get_online_cpus();
-+	percpu_down_write(&cgroup_threadgroup_rwsem);
-+}
-+
-+/**
-+ * cgroup_attach_unlock - Undo cgroup_attach_lock()
-+ * @lock_threadgroup: whether to up_write cgroup_threadgroup_rwsem
-+ */
-+static void cgroup_attach_unlock(void)
-+{
-+	percpu_up_write(&cgroup_threadgroup_rwsem);
-+	put_online_cpus();
-+}
-+
- /**
-  * cgroup_migrate_add_task - add a migration target task to a migration context
-  * @task: target task
-@@ -2694,7 +2733,7 @@ struct task_struct *cgroup_procs_write_start(char *buf, bool threadgroup)
- 	if (kstrtoint(strstrip(buf), 0, &pid) || pid < 0)
- 		return ERR_PTR(-EINVAL);
+ 	unsigned int atype;
  
--	percpu_down_write(&cgroup_threadgroup_rwsem);
-+	cgroup_attach_lock();
+-	mutex_lock(&cgroup_mutex);
++	cgroup_lock();
  
- 	rcu_read_lock();
- 	if (pid) {
-@@ -2725,7 +2764,7 @@ struct task_struct *cgroup_procs_write_start(char *buf, bool threadgroup)
- 	goto out_unlock_rcu;
+ 	for (atype = 0; atype < ARRAY_SIZE(cgrp->bpf.progs); atype++) {
+ 		struct hlist_head *progs = &cgrp->bpf.progs[atype];
+@@ -315,7 +315,7 @@ static void cgroup_bpf_release(struct work_struct *work)
+ 		bpf_cgroup_storage_free(storage);
+ 	}
  
- out_unlock_threadgroup:
--	percpu_up_write(&cgroup_threadgroup_rwsem);
-+	cgroup_attach_unlock();
- out_unlock_rcu:
- 	rcu_read_unlock();
- 	return tsk;
-@@ -2740,7 +2779,7 @@ void cgroup_procs_write_finish(struct task_struct *task)
- 	/* release reference from cgroup_procs_write_start() */
- 	put_task_struct(task);
+-	mutex_unlock(&cgroup_mutex);
++	cgroup_unlock();
  
--	percpu_up_write(&cgroup_threadgroup_rwsem);
-+	cgroup_attach_unlock();
- 	for_each_subsys(ss, ssid)
- 		if (ss->post_attach)
- 			ss->post_attach();
-@@ -2799,7 +2838,7 @@ static int cgroup_update_dfl_csses(struct cgroup *cgrp)
+ 	for (p = cgroup_parent(cgrp); p; p = cgroup_parent(p))
+ 		cgroup_bpf_put(p);
+@@ -729,9 +729,9 @@ static int cgroup_bpf_attach(struct cgroup *cgrp,
+ {
+ 	int ret;
  
- 	lockdep_assert_held(&cgroup_mutex);
- 
--	percpu_down_write(&cgroup_threadgroup_rwsem);
-+	cgroup_attach_lock();
- 
- 	/* look up all csses currently attached to @cgrp's subtree */
- 	spin_lock_irq(&css_set_lock);
-@@ -2830,7 +2869,7 @@ static int cgroup_update_dfl_csses(struct cgroup *cgrp)
- 	ret = cgroup_migrate_execute(&mgctx);
- out_finish:
- 	cgroup_migrate_finish(&mgctx);
--	percpu_up_write(&cgroup_threadgroup_rwsem);
-+	cgroup_attach_unlock();
+-	mutex_lock(&cgroup_mutex);
++	cgroup_lock();
+ 	ret = __cgroup_bpf_attach(cgrp, prog, replace_prog, link, type, flags);
+-	mutex_unlock(&cgroup_mutex);
++	cgroup_unlock();
  	return ret;
  }
  
-diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
-index 2ee0e7a06dd9..c6d412cebc43 100644
---- a/kernel/cgroup/cpuset.c
-+++ b/kernel/cgroup/cpuset.c
-@@ -1528,13 +1528,9 @@ static void cpuset_attach(struct cgroup_taskset *tset)
- 	cgroup_taskset_first(tset, &css);
- 	cs = css_cs(css);
+@@ -831,7 +831,7 @@ static int cgroup_bpf_replace(struct bpf_link *link, struct bpf_prog *new_prog,
  
-+	lockdep_assert_cpus_held();     /* see cgroup_attach_lock() */
- 	mutex_lock(&cpuset_mutex);
+ 	cg_link = container_of(link, struct bpf_cgroup_link, link);
  
--	/*
--	 * It should hold cpus lock because a cpu offline event can
--	 * cause set_cpus_allowed_ptr() failed.
--	 */
--	get_online_cpus();
- 	/* prepare for attach */
- 	if (cs == &top_cpuset)
- 		cpumask_copy(cpus_attach, cpu_possible_mask);
-@@ -1553,7 +1549,6 @@ static void cpuset_attach(struct cgroup_taskset *tset)
- 		cpuset_change_task_nodemask(task, &cpuset_attach_nodemask_to);
- 		cpuset_update_task_spread_flag(cs, task);
+-	mutex_lock(&cgroup_mutex);
++	cgroup_lock();
+ 	/* link might have been auto-released by dying cgroup, so fail */
+ 	if (!cg_link->cgroup) {
+ 		ret = -ENOLINK;
+@@ -843,7 +843,7 @@ static int cgroup_bpf_replace(struct bpf_link *link, struct bpf_prog *new_prog,
  	}
--       put_online_cpus();
+ 	ret = __cgroup_bpf_replace(cg_link->cgroup, cg_link, new_prog);
+ out_unlock:
+-	mutex_unlock(&cgroup_mutex);
++	cgroup_unlock();
+ 	return ret;
+ }
+ 
+@@ -1009,9 +1009,9 @@ static int cgroup_bpf_detach(struct cgroup *cgrp, struct bpf_prog *prog,
+ {
+ 	int ret;
+ 
+-	mutex_lock(&cgroup_mutex);
++	cgroup_lock();
+ 	ret = __cgroup_bpf_detach(cgrp, prog, NULL, type);
+-	mutex_unlock(&cgroup_mutex);
++	cgroup_unlock();
+ 	return ret;
+ }
+ 
+@@ -1120,9 +1120,9 @@ static int cgroup_bpf_query(struct cgroup *cgrp, const union bpf_attr *attr,
+ {
+ 	int ret;
+ 
+-	mutex_lock(&cgroup_mutex);
++	cgroup_lock();
+ 	ret = __cgroup_bpf_query(cgrp, attr, uattr);
+-	mutex_unlock(&cgroup_mutex);
++	cgroup_unlock();
+ 	return ret;
+ }
+ 
+@@ -1189,11 +1189,11 @@ static void bpf_cgroup_link_release(struct bpf_link *link)
+ 	if (!cg_link->cgroup)
+ 		return;
+ 
+-	mutex_lock(&cgroup_mutex);
++	cgroup_lock();
+ 
+ 	/* re-check cgroup under lock again */
+ 	if (!cg_link->cgroup) {
+-		mutex_unlock(&cgroup_mutex);
++		cgroup_unlock();
+ 		return;
+ 	}
+ 
+@@ -1205,7 +1205,7 @@ static void bpf_cgroup_link_release(struct bpf_link *link)
+ 	cg = cg_link->cgroup;
+ 	cg_link->cgroup = NULL;
+ 
+-	mutex_unlock(&cgroup_mutex);
++	cgroup_unlock();
+ 
+ 	cgroup_put(cg);
+ }
+@@ -1232,10 +1232,10 @@ static void bpf_cgroup_link_show_fdinfo(const struct bpf_link *link,
+ 		container_of(link, struct bpf_cgroup_link, link);
+ 	u64 cg_id = 0;
+ 
+-	mutex_lock(&cgroup_mutex);
++	cgroup_lock();
+ 	if (cg_link->cgroup)
+ 		cg_id = cgroup_id(cg_link->cgroup);
+-	mutex_unlock(&cgroup_mutex);
++	cgroup_unlock();
+ 
+ 	seq_printf(seq,
+ 		   "cgroup_id:\t%llu\n"
+@@ -1251,10 +1251,10 @@ static int bpf_cgroup_link_fill_link_info(const struct bpf_link *link,
+ 		container_of(link, struct bpf_cgroup_link, link);
+ 	u64 cg_id = 0;
+ 
+-	mutex_lock(&cgroup_mutex);
++	cgroup_lock();
+ 	if (cg_link->cgroup)
+ 		cg_id = cgroup_id(cg_link->cgroup);
+-	mutex_unlock(&cgroup_mutex);
++	cgroup_unlock();
+ 
+ 	info->cgroup.cgroup_id = cg_id;
+ 	info->cgroup.attach_type = cg_link->type;
+diff --git a/kernel/bpf/cgroup_iter.c b/kernel/bpf/cgroup_iter.c
+index 06989d278846..810378f04fbc 100644
+--- a/kernel/bpf/cgroup_iter.c
++++ b/kernel/bpf/cgroup_iter.c
+@@ -58,7 +58,7 @@ static void *cgroup_iter_seq_start(struct seq_file *seq, loff_t *pos)
+ {
+ 	struct cgroup_iter_priv *p = seq->private;
+ 
+-	mutex_lock(&cgroup_mutex);
++	cgroup_lock();
+ 
+ 	/* cgroup_iter doesn't support read across multiple sessions. */
+ 	if (*pos > 0) {
+@@ -89,7 +89,7 @@ static void cgroup_iter_seq_stop(struct seq_file *seq, void *v)
+ {
+ 	struct cgroup_iter_priv *p = seq->private;
+ 
+-	mutex_unlock(&cgroup_mutex);
++	cgroup_unlock();
+ 
+ 	/* pass NULL to the prog for post-processing */
+ 	if (!v) {
+diff --git a/kernel/bpf/local_storage.c b/kernel/bpf/local_storage.c
+index e90d9f63edc5..9bceefee14d5 100644
+--- a/kernel/bpf/local_storage.c
++++ b/kernel/bpf/local_storage.c
+@@ -333,14 +333,14 @@ static void cgroup_storage_map_free(struct bpf_map *_map)
+ 	struct list_head *storages = &map->list;
+ 	struct bpf_cgroup_storage *storage, *stmp;
+ 
+-	mutex_lock(&cgroup_mutex);
++	cgroup_lock();
+ 
+ 	list_for_each_entry_safe(storage, stmp, storages, list_map) {
+ 		bpf_cgroup_storage_unlink(storage);
+ 		bpf_cgroup_storage_free(storage);
+ 	}
+ 
+-	mutex_unlock(&cgroup_mutex);
++	cgroup_unlock();
+ 
+ 	WARN_ON(!RB_EMPTY_ROOT(&map->root));
+ 	WARN_ON(!list_empty(&map->list));
+diff --git a/kernel/cgroup/cgroup-v1.c b/kernel/cgroup/cgroup-v1.c
+index 52bb5a74a23b..aeef06c465ef 100644
+--- a/kernel/cgroup/cgroup-v1.c
++++ b/kernel/cgroup/cgroup-v1.c
+@@ -58,7 +58,7 @@ int cgroup_attach_task_all(struct task_struct *from, struct task_struct *tsk)
+ 	struct cgroup_root *root;
+ 	int retval = 0;
+ 
+-	mutex_lock(&cgroup_mutex);
++	cgroup_lock();
+ 	cgroup_attach_lock(true);
+ 	for_each_root(root) {
+ 		struct cgroup *from_cgrp;
+@@ -72,7 +72,7 @@ int cgroup_attach_task_all(struct task_struct *from, struct task_struct *tsk)
+ 			break;
+ 	}
+ 	cgroup_attach_unlock(true);
+-	mutex_unlock(&cgroup_mutex);
++	cgroup_unlock();
+ 
+ 	return retval;
+ }
+@@ -106,7 +106,7 @@ int cgroup_transfer_tasks(struct cgroup *to, struct cgroup *from)
+ 	if (ret)
+ 		return ret;
+ 
+-	mutex_lock(&cgroup_mutex);
++	cgroup_lock();
+ 
+ 	percpu_down_write(&cgroup_threadgroup_rwsem);
+ 
+@@ -145,7 +145,7 @@ int cgroup_transfer_tasks(struct cgroup *to, struct cgroup *from)
+ out_err:
+ 	cgroup_migrate_finish(&mgctx);
+ 	percpu_up_write(&cgroup_threadgroup_rwsem);
+-	mutex_unlock(&cgroup_mutex);
++	cgroup_unlock();
+ 	return ret;
+ }
+ 
+@@ -847,13 +847,13 @@ static int cgroup1_rename(struct kernfs_node *kn, struct kernfs_node *new_parent
+ 	kernfs_break_active_protection(new_parent);
+ 	kernfs_break_active_protection(kn);
+ 
+-	mutex_lock(&cgroup_mutex);
++	cgroup_lock();
+ 
+ 	ret = kernfs_rename(kn, new_parent, new_name_str);
+ 	if (!ret)
+ 		TRACE_CGROUP_PATH(rename, cgrp);
+ 
+-	mutex_unlock(&cgroup_mutex);
++	cgroup_unlock();
+ 
+ 	kernfs_unbreak_active_protection(kn);
+ 	kernfs_unbreak_active_protection(new_parent);
+@@ -1119,7 +1119,7 @@ int cgroup1_reconfigure(struct fs_context *fc)
+ 	trace_cgroup_remount(root);
+ 
+  out_unlock:
+-	mutex_unlock(&cgroup_mutex);
++	cgroup_unlock();
+ 	return ret;
+ }
+ 
+@@ -1246,7 +1246,7 @@ int cgroup1_get_tree(struct fs_context *fc)
+ 	if (!ret && !percpu_ref_tryget_live(&ctx->root->cgrp.self.refcnt))
+ 		ret = 1;	/* restart */
+ 
+-	mutex_unlock(&cgroup_mutex);
++	cgroup_unlock();
+ 
+ 	if (!ret)
+ 		ret = cgroup_do_get_tree(fc);
+diff --git a/kernel/cgroup/cgroup.c b/kernel/cgroup/cgroup.c
+index 935e8121b21e..83ea13f2ccb1 100644
+--- a/kernel/cgroup/cgroup.c
++++ b/kernel/cgroup/cgroup.c
+@@ -1391,7 +1391,7 @@ static void cgroup_destroy_root(struct cgroup_root *root)
+ 	cgroup_favor_dynmods(root, false);
+ 	cgroup_exit_root_id(root);
+ 
+-	mutex_unlock(&cgroup_mutex);
++	cgroup_unlock();
+ 
+ 	cgroup_rstat_exit(cgrp);
+ 	kernfs_destroy_root(root->kf_root);
+@@ -1625,7 +1625,7 @@ void cgroup_kn_unlock(struct kernfs_node *kn)
+ 	else
+ 		cgrp = kn->parent->priv;
+ 
+-	mutex_unlock(&cgroup_mutex);
++	cgroup_unlock();
+ 
+ 	kernfs_unbreak_active_protection(kn);
+ 	cgroup_put(cgrp);
+@@ -1670,7 +1670,7 @@ struct cgroup *cgroup_kn_lock_live(struct kernfs_node *kn, bool drain_offline)
+ 	if (drain_offline)
+ 		cgroup_lock_and_drain_offline(cgrp);
+ 	else
+-		mutex_lock(&cgroup_mutex);
++		cgroup_lock();
+ 
+ 	if (!cgroup_is_dead(cgrp))
+ 		return cgrp;
+@@ -2167,13 +2167,13 @@ int cgroup_do_get_tree(struct fs_context *fc)
+ 		struct super_block *sb = fc->root->d_sb;
+ 		struct cgroup *cgrp;
+ 
+-		mutex_lock(&cgroup_mutex);
++		cgroup_lock();
+ 		spin_lock_irq(&css_set_lock);
+ 
+ 		cgrp = cset_cgroup_from_root(ctx->ns->root_cset, ctx->root);
+ 
+ 		spin_unlock_irq(&css_set_lock);
+-		mutex_unlock(&cgroup_mutex);
++		cgroup_unlock();
+ 
+ 		nsdentry = kernfs_node_dentry(cgrp->kn, sb);
+ 		dput(fc->root);
+@@ -2356,13 +2356,13 @@ int cgroup_path_ns(struct cgroup *cgrp, char *buf, size_t buflen,
+ {
+ 	int ret;
+ 
+-	mutex_lock(&cgroup_mutex);
++	cgroup_lock();
+ 	spin_lock_irq(&css_set_lock);
+ 
+ 	ret = cgroup_path_ns_locked(cgrp, buf, buflen, ns);
+ 
+ 	spin_unlock_irq(&css_set_lock);
+-	mutex_unlock(&cgroup_mutex);
++	cgroup_unlock();
+ 
+ 	return ret;
+ }
+@@ -2388,7 +2388,7 @@ int task_cgroup_path(struct task_struct *task, char *buf, size_t buflen)
+ 	int hierarchy_id = 1;
+ 	int ret;
+ 
+-	mutex_lock(&cgroup_mutex);
++	cgroup_lock();
+ 	spin_lock_irq(&css_set_lock);
+ 
+ 	root = idr_get_next(&cgroup_hierarchy_idr, &hierarchy_id);
+@@ -2402,7 +2402,7 @@ int task_cgroup_path(struct task_struct *task, char *buf, size_t buflen)
+ 	}
+ 
+ 	spin_unlock_irq(&css_set_lock);
+-	mutex_unlock(&cgroup_mutex);
++	cgroup_unlock();
+ 	return ret;
+ }
+ EXPORT_SYMBOL_GPL(task_cgroup_path);
+@@ -3111,7 +3111,7 @@ void cgroup_lock_and_drain_offline(struct cgroup *cgrp)
+ 	int ssid;
+ 
+ restart:
+-	mutex_lock(&cgroup_mutex);
++	cgroup_lock();
+ 
+ 	cgroup_for_each_live_descendant_post(dsct, d_css, cgrp) {
+ 		for_each_subsys(ss, ssid) {
+@@ -3125,7 +3125,7 @@ void cgroup_lock_and_drain_offline(struct cgroup *cgrp)
+ 			prepare_to_wait(&dsct->offline_waitq, &wait,
+ 					TASK_UNINTERRUPTIBLE);
+ 
+-			mutex_unlock(&cgroup_mutex);
++			cgroup_unlock();
+ 			schedule();
+ 			finish_wait(&dsct->offline_waitq, &wait);
+ 
+@@ -4374,9 +4374,9 @@ int cgroup_rm_cftypes(struct cftype *cfts)
+ 	if (!(cfts[0].flags & __CFTYPE_ADDED))
+ 		return -ENOENT;
+ 
+-	mutex_lock(&cgroup_mutex);
++	cgroup_lock();
+ 	ret = cgroup_rm_cftypes_locked(cfts);
+-	mutex_unlock(&cgroup_mutex);
++	cgroup_unlock();
+ 	return ret;
+ }
+ 
+@@ -4408,14 +4408,14 @@ static int cgroup_add_cftypes(struct cgroup_subsys *ss, struct cftype *cfts)
+ 	if (ret)
+ 		return ret;
+ 
+-	mutex_lock(&cgroup_mutex);
++	cgroup_lock();
+ 
+ 	list_add_tail(&cfts->node, &ss->cfts);
+ 	ret = cgroup_apply_cftypes(cfts, true);
+ 	if (ret)
+ 		cgroup_rm_cftypes_locked(cfts);
+ 
+-	mutex_unlock(&cgroup_mutex);
++	cgroup_unlock();
+ 	return ret;
+ }
+ 
+@@ -5385,7 +5385,7 @@ static void css_release_work_fn(struct work_struct *work)
+ 	struct cgroup_subsys *ss = css->ss;
+ 	struct cgroup *cgrp = css->cgroup;
+ 
+-	mutex_lock(&cgroup_mutex);
++	cgroup_lock();
+ 
+ 	css->flags |= CSS_RELEASED;
+ 	list_del_rcu(&css->sibling);
+@@ -5426,7 +5426,7 @@ static void css_release_work_fn(struct work_struct *work)
+ 					 NULL);
+ 	}
+ 
+-	mutex_unlock(&cgroup_mutex);
++	cgroup_unlock();
+ 
+ 	INIT_RCU_WORK(&css->destroy_rwork, css_free_rwork_fn);
+ 	queue_rcu_work(cgroup_destroy_wq, &css->destroy_rwork);
+@@ -5774,7 +5774,7 @@ static void css_killed_work_fn(struct work_struct *work)
+ 	struct cgroup_subsys_state *css =
+ 		container_of(work, struct cgroup_subsys_state, destroy_work);
+ 
+-	mutex_lock(&cgroup_mutex);
++	cgroup_lock();
+ 
+ 	do {
+ 		offline_css(css);
+@@ -5783,7 +5783,7 @@ static void css_killed_work_fn(struct work_struct *work)
+ 		css = css->parent;
+ 	} while (css && atomic_dec_and_test(&css->online_cnt));
+ 
+-	mutex_unlock(&cgroup_mutex);
++	cgroup_unlock();
+ }
+ 
+ /* css kill confirmation processing requires process context, bounce */
+@@ -5967,7 +5967,7 @@ static void __init cgroup_init_subsys(struct cgroup_subsys *ss, bool early)
+ 
+ 	pr_debug("Initializing cgroup subsys %s\n", ss->name);
+ 
+-	mutex_lock(&cgroup_mutex);
++	cgroup_lock();
+ 
+ 	idr_init(&ss->css_idr);
+ 	INIT_LIST_HEAD(&ss->cfts);
+@@ -6011,7 +6011,7 @@ static void __init cgroup_init_subsys(struct cgroup_subsys *ss, bool early)
+ 
+ 	BUG_ON(online_css(css));
+ 
+-	mutex_unlock(&cgroup_mutex);
++	cgroup_unlock();
+ }
+ 
+ /**
+@@ -6071,7 +6071,7 @@ int __init cgroup_init(void)
+ 
+ 	get_user_ns(init_cgroup_ns.user_ns);
+ 
+-	mutex_lock(&cgroup_mutex);
++	cgroup_lock();
  
  	/*
- 	 * Change mm for all threadgroup leaders. This is expensive and may
+ 	 * Add init_css_set to the hash table so that dfl_root can link to
+@@ -6082,7 +6082,7 @@ int __init cgroup_init(void)
+ 
+ 	BUG_ON(cgroup_setup_root(&cgrp_dfl_root, 0));
+ 
+-	mutex_unlock(&cgroup_mutex);
++	cgroup_unlock();
+ 
+ 	for_each_subsys(ss, ssid) {
+ 		if (ss->early_init) {
+@@ -6134,9 +6134,9 @@ int __init cgroup_init(void)
+ 		if (ss->bind)
+ 			ss->bind(init_css_set.subsys[ssid]);
+ 
+-		mutex_lock(&cgroup_mutex);
++		cgroup_lock();
+ 		css_populate_dir(init_css_set.subsys[ssid]);
+-		mutex_unlock(&cgroup_mutex);
++		cgroup_unlock();
+ 	}
+ 
+ 	/* init_css_set.subsys[] has been updated, re-hash */
+@@ -6241,7 +6241,7 @@ int proc_cgroup_show(struct seq_file *m, struct pid_namespace *ns,
+ 	if (!buf)
+ 		goto out;
+ 
+-	mutex_lock(&cgroup_mutex);
++	cgroup_lock();
+ 	spin_lock_irq(&css_set_lock);
+ 
+ 	for_each_root(root) {
+@@ -6296,7 +6296,7 @@ int proc_cgroup_show(struct seq_file *m, struct pid_namespace *ns,
+ 	retval = 0;
+ out_unlock:
+ 	spin_unlock_irq(&css_set_lock);
+-	mutex_unlock(&cgroup_mutex);
++	cgroup_unlock();
+ 	kfree(buf);
+ out:
+ 	return retval;
+@@ -6380,7 +6380,7 @@ static int cgroup_css_set_fork(struct kernel_clone_args *kargs)
+ 	struct file *f;
+ 
+ 	if (kargs->flags & CLONE_INTO_CGROUP)
+-		mutex_lock(&cgroup_mutex);
++		cgroup_lock();
+ 
+ 	cgroup_threadgroup_change_begin(current);
+ 
+@@ -6455,7 +6455,7 @@ static int cgroup_css_set_fork(struct kernel_clone_args *kargs)
+ 
+ err:
+ 	cgroup_threadgroup_change_end(current);
+-	mutex_unlock(&cgroup_mutex);
++	cgroup_unlock();
+ 	if (f)
+ 		fput(f);
+ 	if (dst_cgrp)
+@@ -6482,7 +6482,7 @@ static void cgroup_css_set_put_fork(struct kernel_clone_args *kargs)
+ 		struct cgroup *cgrp = kargs->cgrp;
+ 		struct css_set *cset = kargs->cset;
+ 
+-		mutex_unlock(&cgroup_mutex);
++		cgroup_unlock();
+ 
+ 		if (cset) {
+ 			put_css_set(cset);
 -- 
-2.17.1
+2.34.3
 
