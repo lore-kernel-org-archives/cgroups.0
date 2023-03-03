@@ -1,65 +1,205 @@
-From: Cai Xinchen <caixinchen1@huawei.com>
-Subject: [PATCH 4.19 3/3] cgroup: Add missing cpus_read_lock() to cgroup_attach_task_all()
-Date: Fri, 3 Mar 2023 04:50:50 +0000
-Message-ID: <20230303045050.139985-4-caixinchen1@huawei.com>
+From: Cai Xinchen <caixinchen1-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Subject: [PATCH 4.19 1/3] cgroup/cpuset: Change cpuset_rwsem and hotplug lock order
+Date: Fri, 3 Mar 2023 04:50:48 +0000
+Message-ID: <20230303045050.139985-2-caixinchen1@huawei.com>
 References: <20230303045050.139985-1-caixinchen1@huawei.com>
 Mime-Version: 1.0
-Return-path: <stable-owner@vger.kernel.org>
-In-Reply-To: <20230303045050.139985-1-caixinchen1@huawei.com>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <20230303045050.139985-1-caixinchen1-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: longman@redhat.com, lizefan.x@bytedance.com, tj@kernel.org, hannes@cmpxchg.org, gregkh@linuxfoundation.org, sashal@kernel.org
-Cc: mkoutny@suse.com, zhangqiao22@huawei.com, juri.lelli@redhat.com, penguin-kernel@I-love.SAKURA.ne.jp, stable@vger.kernel.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
+To: longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org, sashal-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org
+Cc: mkoutny-IBi9RG/b67k@public.gmane.org, zhangqiao22-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, juri.lelli-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, penguin-kernel-JPay3/Yim36HaxMnTkn67Xf5DAMn2ifp@public.gmane.org, stable-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-From: Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>
+From: Juri Lelli <juri.lelli-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 
-commit 43626dade36fa74d3329046f4ae2d7fdefe401c6 upstream.
+commit d74b27d63a8bebe2fe634944e4ebdc7b10db7a39 upstream.
 
-syzbot is hitting percpu_rwsem_assert_held(&cpu_hotplug_lock) warning at
-cpuset_attach() [1], for commit 4f7e7236435ca0ab ("cgroup: Fix
-threadgroup_rwsem <-> cpus_read_lock() deadlock") missed that
-cpuset_attach() is also called from cgroup_attach_task_all().
-Add cpus_read_lock() like what cgroup_procs_write_start() does.
+commit 1243dc518c9da ("cgroup/cpuset: Convert cpuset_mutex to
+percpu_rwsem") is performance patch which is not backport. So
+convert percpu_rwsem to cpuset_mutex.
 
-Link: https://syzkaller.appspot.com/bug?extid=29d3a3b4d86c8136ad9e [1]
-Reported-by: syzbot <syzbot+29d3a3b4d86c8136ad9e@syzkaller.appspotmail.com>
-Signed-off-by: Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>
-Fixes: 4f7e7236435ca0ab ("cgroup: Fix threadgroup_rwsem <-> cpus_read_lock() deadlock")
-Signed-off-by: Tejun Heo <tj@kernel.org>
-Signed-off-by: Cai Xinchen <caixinchen1@huawei.com>
+original commit message:
+
+cpuset_rwsem is going to be acquired from sched_setscheduler() with a
+following patch. There are however paths (e.g., spawn_ksoftirqd) in
+which sched_scheduler() is eventually called while holding hotplug lock;
+this creates a dependecy between hotplug lock (to be always acquired
+first) and cpuset_rwsem (to be always acquired after hotplug lock).
+
+Fix paths which currently take the two locks in the wrong order (after
+a following patch is applied).
+
+Tested-by: Dietmar Eggemann <dietmar.eggemann-5wv7dgnIgG8@public.gmane.org>
+Signed-off-by: Juri Lelli <juri.lelli-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Signed-off-by: Peter Zijlstra (Intel) <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
+Cc: Linus Torvalds <torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+Cc: Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
+Cc: Thomas Gleixner <tglx-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>
+Cc: bristot-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org
+Cc: claudio-YOzL5CV4y4YG1A2ADO40+w@public.gmane.org
+Cc: lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org
+Cc: longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org
+Cc: luca.abeni-5rdYK369eBLQB0XuIGIEkQ@public.gmane.org
+Cc: mathieu.poirier-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org
+Cc: rostedt-nx8X9YLhiw1AfugRpC6u6w@public.gmane.org
+Cc: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org
+Cc: tommaso.cucinotta-5rdYK369eBLQB0XuIGIEkQ@public.gmane.org
+Link: https://lkml.kernel.org/r/20190719140000.31694-7-juri.lelli-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org
+Signed-off-by: Ingo Molnar <mingo-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Signed-off-by: Cai Xinchen <caixinchen1-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 ---
- kernel/cgroup/cgroup-v1.c | 3 +++
- 1 file changed, 3 insertions(+)
+ include/linux/cpuset.h |  8 ++++----
+ kernel/cgroup/cpuset.c | 18 ++++++++++++++----
+ 2 files changed, 18 insertions(+), 8 deletions(-)
 
-diff --git a/kernel/cgroup/cgroup-v1.c b/kernel/cgroup/cgroup-v1.c
-index 61644976225a..c0ebb70808b6 100644
---- a/kernel/cgroup/cgroup-v1.c
-+++ b/kernel/cgroup/cgroup-v1.c
-@@ -13,6 +13,7 @@
- #include <linux/delayacct.h>
- #include <linux/pid_namespace.h>
- #include <linux/cgroupstats.h>
-+#include <linux/cpu.h>
+diff --git a/include/linux/cpuset.h b/include/linux/cpuset.h
+index 934633a05d20..7f1478c26a33 100644
+--- a/include/linux/cpuset.h
++++ b/include/linux/cpuset.h
+@@ -40,14 +40,14 @@ static inline bool cpusets_enabled(void)
  
- #include <trace/events/cgroup.h>
+ static inline void cpuset_inc(void)
+ {
+-	static_branch_inc(&cpusets_pre_enable_key);
+-	static_branch_inc(&cpusets_enabled_key);
++	static_branch_inc_cpuslocked(&cpusets_pre_enable_key);
++	static_branch_inc_cpuslocked(&cpusets_enabled_key);
+ }
  
-@@ -55,6 +56,7 @@ int cgroup_attach_task_all(struct task_struct *from, struct task_struct *tsk)
+ static inline void cpuset_dec(void)
+ {
+-	static_branch_dec(&cpusets_enabled_key);
+-	static_branch_dec(&cpusets_pre_enable_key);
++	static_branch_dec_cpuslocked(&cpusets_enabled_key);
++	static_branch_dec_cpuslocked(&cpusets_pre_enable_key);
+ }
+ 
+ extern int cpuset_init(void);
+diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
+index dcd5755b1fe2..2ee0e7a06dd9 100644
+--- a/kernel/cgroup/cpuset.c
++++ b/kernel/cgroup/cpuset.c
+@@ -830,8 +830,8 @@ static void rebuild_sched_domains_locked(void)
+ 	cpumask_var_t *doms;
+ 	int ndoms;
+ 
++	lockdep_assert_cpus_held();
+ 	lockdep_assert_held(&cpuset_mutex);
+-	get_online_cpus();
+ 
+ 	/*
+ 	 * We have raced with CPU hotplug. Don't do anything to avoid
+@@ -839,15 +839,13 @@ static void rebuild_sched_domains_locked(void)
+ 	 * Anyways, hotplug work item will rebuild sched domains.
+ 	 */
+ 	if (!cpumask_equal(top_cpuset.effective_cpus, cpu_active_mask))
+-		goto out;
++		return;
+ 
+ 	/* Generate domain masks and attrs */
+ 	ndoms = generate_sched_domains(&doms, &attr);
+ 
+ 	/* Have scheduler rebuild the domains */
+ 	partition_sched_domains(ndoms, doms, attr);
+-out:
+-	put_online_cpus();
+ }
+ #else /* !CONFIG_SMP */
+ static void rebuild_sched_domains_locked(void)
+@@ -857,9 +855,11 @@ static void rebuild_sched_domains_locked(void)
+ 
+ void rebuild_sched_domains(void)
+ {
++	get_online_cpus();
+ 	mutex_lock(&cpuset_mutex);
+ 	rebuild_sched_domains_locked();
+ 	mutex_unlock(&cpuset_mutex);
++	put_online_cpus();
+ }
+ 
+ /**
+@@ -1617,6 +1617,7 @@ static int cpuset_write_u64(struct cgroup_subsys_state *css, struct cftype *cft,
+ 	cpuset_filetype_t type = cft->private;
  	int retval = 0;
  
- 	mutex_lock(&cgroup_mutex);
 +	get_online_cpus();
- 	percpu_down_write(&cgroup_threadgroup_rwsem);
- 	for_each_root(root) {
- 		struct cgroup *from_cgrp;
-@@ -71,6 +73,7 @@ int cgroup_attach_task_all(struct task_struct *from, struct task_struct *tsk)
- 			break;
+ 	mutex_lock(&cpuset_mutex);
+ 	if (!is_cpuset_online(cs)) {
+ 		retval = -ENODEV;
+@@ -1654,6 +1655,7 @@ static int cpuset_write_u64(struct cgroup_subsys_state *css, struct cftype *cft,
  	}
- 	percpu_up_write(&cgroup_threadgroup_rwsem);
+ out_unlock:
+ 	mutex_unlock(&cpuset_mutex);
 +	put_online_cpus();
- 	mutex_unlock(&cgroup_mutex);
- 
  	return retval;
+ }
+ 
+@@ -1664,6 +1666,7 @@ static int cpuset_write_s64(struct cgroup_subsys_state *css, struct cftype *cft,
+ 	cpuset_filetype_t type = cft->private;
+ 	int retval = -ENODEV;
+ 
++	get_online_cpus();
+ 	mutex_lock(&cpuset_mutex);
+ 	if (!is_cpuset_online(cs))
+ 		goto out_unlock;
+@@ -1678,6 +1681,7 @@ static int cpuset_write_s64(struct cgroup_subsys_state *css, struct cftype *cft,
+ 	}
+ out_unlock:
+ 	mutex_unlock(&cpuset_mutex);
++	put_online_cpus();
+ 	return retval;
+ }
+ 
+@@ -1716,6 +1720,7 @@ static ssize_t cpuset_write_resmask(struct kernfs_open_file *of,
+ 	kernfs_break_active_protection(of->kn);
+ 	flush_work(&cpuset_hotplug_work);
+ 
++	get_online_cpus();
+ 	mutex_lock(&cpuset_mutex);
+ 	if (!is_cpuset_online(cs))
+ 		goto out_unlock;
+@@ -1741,6 +1746,7 @@ static ssize_t cpuset_write_resmask(struct kernfs_open_file *of,
+ 	free_trial_cpuset(trialcs);
+ out_unlock:
+ 	mutex_unlock(&cpuset_mutex);
++	put_online_cpus();
+ 	kernfs_unbreak_active_protection(of->kn);
+ 	css_put(&cs->css);
+ 	flush_workqueue(cpuset_migrate_mm_wq);
+@@ -1985,6 +1991,7 @@ static int cpuset_css_online(struct cgroup_subsys_state *css)
+ 	if (!parent)
+ 		return 0;
+ 
++	get_online_cpus();
+ 	mutex_lock(&cpuset_mutex);
+ 
+ 	set_bit(CS_ONLINE, &cs->flags);
+@@ -2035,6 +2042,7 @@ static int cpuset_css_online(struct cgroup_subsys_state *css)
+ 	spin_unlock_irq(&callback_lock);
+ out_unlock:
+ 	mutex_unlock(&cpuset_mutex);
++	put_online_cpus();
+ 	return 0;
+ }
+ 
+@@ -2048,6 +2056,7 @@ static void cpuset_css_offline(struct cgroup_subsys_state *css)
+ {
+ 	struct cpuset *cs = css_cs(css);
+ 
++	get_online_cpus();
+ 	mutex_lock(&cpuset_mutex);
+ 
+ 	if (is_sched_load_balance(cs))
+@@ -2057,6 +2066,7 @@ static void cpuset_css_offline(struct cgroup_subsys_state *css)
+ 	clear_bit(CS_ONLINE, &cs->flags);
+ 
+ 	mutex_unlock(&cpuset_mutex);
++	put_online_cpus();
+ }
+ 
+ static void cpuset_css_free(struct cgroup_subsys_state *css)
 -- 
 2.17.1
 
