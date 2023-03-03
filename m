@@ -1,49 +1,65 @@
-From: Cai Xinchen <caixinchen1-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Subject: [PATCH 4.19 0/3] Backport patches to fix threadgroup_rwsem <-> cpus_read_lock() deadlock
-Date: Fri, 3 Mar 2023 04:50:47 +0000
-Message-ID: <20230303045050.139985-1-caixinchen1@huawei.com>
+From: Cai Xinchen <caixinchen1@huawei.com>
+Subject: [PATCH 4.19 3/3] cgroup: Add missing cpus_read_lock() to cgroup_attach_task_all()
+Date: Fri, 3 Mar 2023 04:50:50 +0000
+Message-ID: <20230303045050.139985-4-caixinchen1@huawei.com>
+References: <20230303045050.139985-1-caixinchen1@huawei.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <stable-owner@vger.kernel.org>
+In-Reply-To: <20230303045050.139985-1-caixinchen1@huawei.com>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org, sashal-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org
-Cc: mkoutny-IBi9RG/b67k@public.gmane.org, zhangqiao22-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, juri.lelli-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, penguin-kernel-JPay3/Yim36HaxMnTkn67Xf5DAMn2ifp@public.gmane.org, stable-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: longman@redhat.com, lizefan.x@bytedance.com, tj@kernel.org, hannes@cmpxchg.org, gregkh@linuxfoundation.org, sashal@kernel.org
+Cc: mkoutny@suse.com, zhangqiao22@huawei.com, juri.lelli@redhat.com, penguin-kernel@I-love.SAKURA.ne.jp, stable@vger.kernel.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
 
-We have a deadlock problem which can be solved by commit 4f7e7236435ca
-("cgroup: Fix threadgroup_rwsem <-> cpus_read_lock() deadlock").
-However, it makes lock order of cpus_read_lock and cpuset_mutex
-wrong in v4.19. The call sequence is as follows:
-cgroup_procs_write()
-        cgroup_procs_write_start()
-                get_online_cpus(); // cpus_read_lock()
-                percpu_down_write(&cgroup_threadgroup_rwsem)
-        cgroup_attach_task
-                cgroup_migrate
-                        cgroup_migrate_execute
-                                ss->attach (cpust_attach)
-                                        mutex_lock(&cpuset_mutex)
+From: Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>
 
-it seems hard to make cpus_read_lock is locked before
-cgroup_threadgroup_rwsem and cpuset_mutex is locked before
-cpus_read_lock unless backport the commit d74b27d63a8beb
-("cgroup/cpuset: Change cpuset_rwsem and hotplug lock order")
+commit 43626dade36fa74d3329046f4ae2d7fdefe401c6 upstream.
 
-Juri Lelli (1):
-  cgroup/cpuset: Change cpuset_rwsem and hotplug lock order
+syzbot is hitting percpu_rwsem_assert_held(&cpu_hotplug_lock) warning at
+cpuset_attach() [1], for commit 4f7e7236435ca0ab ("cgroup: Fix
+threadgroup_rwsem <-> cpus_read_lock() deadlock") missed that
+cpuset_attach() is also called from cgroup_attach_task_all().
+Add cpus_read_lock() like what cgroup_procs_write_start() does.
 
-Tejun Heo (1):
-  cgroup: Fix threadgroup_rwsem <-> cpus_read_lock() deadlock
+Link: https://syzkaller.appspot.com/bug?extid=29d3a3b4d86c8136ad9e [1]
+Reported-by: syzbot <syzbot+29d3a3b4d86c8136ad9e@syzkaller.appspotmail.com>
+Signed-off-by: Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>
+Fixes: 4f7e7236435ca0ab ("cgroup: Fix threadgroup_rwsem <-> cpus_read_lock() deadlock")
+Signed-off-by: Tejun Heo <tj@kernel.org>
+Signed-off-by: Cai Xinchen <caixinchen1@huawei.com>
+---
+ kernel/cgroup/cgroup-v1.c | 3 +++
+ 1 file changed, 3 insertions(+)
 
-Tetsuo Handa (1):
-  cgroup: Add missing cpus_read_lock() to cgroup_attach_task_all()
-
- include/linux/cpuset.h    |  8 +++----
- kernel/cgroup/cgroup-v1.c |  3 +++
- kernel/cgroup/cgroup.c    | 49 +++++++++++++++++++++++++++++++++++----
- kernel/cgroup/cpuset.c    | 25 ++++++++++++--------
- 4 files changed, 66 insertions(+), 19 deletions(-)
-
+diff --git a/kernel/cgroup/cgroup-v1.c b/kernel/cgroup/cgroup-v1.c
+index 61644976225a..c0ebb70808b6 100644
+--- a/kernel/cgroup/cgroup-v1.c
++++ b/kernel/cgroup/cgroup-v1.c
+@@ -13,6 +13,7 @@
+ #include <linux/delayacct.h>
+ #include <linux/pid_namespace.h>
+ #include <linux/cgroupstats.h>
++#include <linux/cpu.h>
+ 
+ #include <trace/events/cgroup.h>
+ 
+@@ -55,6 +56,7 @@ int cgroup_attach_task_all(struct task_struct *from, struct task_struct *tsk)
+ 	int retval = 0;
+ 
+ 	mutex_lock(&cgroup_mutex);
++	get_online_cpus();
+ 	percpu_down_write(&cgroup_threadgroup_rwsem);
+ 	for_each_root(root) {
+ 		struct cgroup *from_cgrp;
+@@ -71,6 +73,7 @@ int cgroup_attach_task_all(struct task_struct *from, struct task_struct *tsk)
+ 			break;
+ 	}
+ 	percpu_up_write(&cgroup_threadgroup_rwsem);
++	put_online_cpus();
+ 	mutex_unlock(&cgroup_mutex);
+ 
+ 	return retval;
 -- 
 2.17.1
 
