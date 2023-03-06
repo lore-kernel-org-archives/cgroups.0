@@ -1,87 +1,65 @@
-From: Yue Zhao <findns94@gmail.com>
-Subject: [PATCH v2, 2/4] mm, memcg: Prevent memory.swappiness load/store tearing
-Date: Mon,  6 Mar 2023 23:41:36 +0800
-Message-ID: <20230306154138.3775-3-findns94@gmail.com>
+From: Yue Zhao <findns94-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Subject: [PATCH v2, 3/4] mm, memcg: Prevent memory.oom_control load/store tearing
+Date: Mon,  6 Mar 2023 23:41:37 +0800
+Message-ID: <20230306154138.3775-4-findns94@gmail.com>
 References: <20230306154138.3775-1-findns94@gmail.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112; t=1678117333;
+        d=gmail.com; s=20210112; t=1678117337;
         h=references:in-reply-to:message-id:date:subject:cc:to:from:from:to
          :cc:subject:date:message-id:reply-to;
-        bh=0NtQyJ6eQBb0wGTDfYWZm4PPrLnDXxCUuuQDDh4+5sU=;
-        b=p6QOaLsOhtyQJzkmQb72krbjZZTYJqL3+85RbgaTSEfMrdL/bMTMGHgczRpwUo3QWG
-         7+j2vCkJDM9ruYYy+Nfu3XvmdOG8slzKlROb03WCQdG8DDGqhGgQqvRJOhNL8pFLrmmI
-         +ev1QP60Jnuv1fKaWdyuD+HazZp1e/27BIpKObz53uW92JMY5YhWsqHKGt3WSE57mUEs
-         ZQphWrShLIPoNvsh0QjWJrUKOdv6ocOuNswcj7aP8e+ueiH02tCrQaqF0bqLiihZWKWv
-         DyqCYh0Me+WO8Ftqx1ReuWcYmdt/cO7hbA9z9IsmPYdp0El45dD6vMPePBkHn1+jhLNx
-         pejg==
-In-Reply-To: <20230306154138.3775-1-findns94@gmail.com>
+        bh=Pu8gC0LE8S+gTMZ95T5G8zWPtdy0mtS5OOYges0wR78=;
+        b=SktXouP2u6iR+PuI3ihPB0oXgFl+wFxiiVq1JIZ3tE+tE4sOmr1Lbs5jbm66PznnlR
+         kovLcAf/bc063xYce2U2FcEy7NfMkuYO8JoFH7K31GVBQBb6xAM2vzsJSlhVeunCYvRD
+         8EdtfAd7SDVWsB9Tp4JRbo732vcFHfMtgysX4rMVavgWY5Mox+K5fKlvGPputGgXIgaG
+         DM57pLuWYHI3SwiTgJOzdvKFOO3gi8g3VBC8aMOstDyDvaevAbq4cFxgSKqswnbda0b0
+         nuxqThgomDx5Q1b2CAAy4IcQSGnfRE/6ejxbCiihoVF8U3zSeZ8nwbRo1HagXKSqXp0x
+         kHVg==
+In-Reply-To: <20230306154138.3775-1-findns94-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: akpm@linux-foundation.org
-Cc: roman.gushchin@linux.dev, hannes@cmpxchg.org, mhocko@kernel.org, shakeelb@google.com, muchun.song@linux.dev, willy@infradead.org, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, tangyeechou@gmail.com, Yue Zhao <findns94@gmail.com>
+To: akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org
+Cc: roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, muchun.song-fxUVXftIFDnyG1zEObXtfA@public.gmane.org, willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, tangyeechou-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, Yue Zhao <findns94-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 
-The knob for cgroup v1 memory controller: memory.swappiness
+The knob for cgroup v1 memory controller: memory.oom_control
 is not protected by any locking so it can be modified while it is used.
 This is not an actual problem because races are unlikely.
 But it is better to use READ_ONCE/WRITE_ONCE to prevent compiler from
 doing anything funky.
 
-The access of memcg->swappiness and vm_swappiness is lockless,
-so both of them can be concurrently set at the same time
-as we are trying to read them. 
+The access of memcg->oom_kill_disable is lockless,
+so it can be concurrently set at the same time as we are
+trying to read it.
 
-Signed-off-by: Yue Zhao <findns94@gmail.com>
+Signed-off-by: Yue Zhao <findns94-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 ---
- include/linux/swap.h | 8 ++++----
- mm/memcontrol.c      | 4 ++--
- 2 files changed, 6 insertions(+), 6 deletions(-)
+ mm/memcontrol.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/include/linux/swap.h b/include/linux/swap.h
-index 209a425739a9..3f3fe43d1766 100644
---- a/include/linux/swap.h
-+++ b/include/linux/swap.h
-@@ -620,18 +620,18 @@ static inline int mem_cgroup_swappiness(struct mem_cgroup *memcg)
- {
- 	/* Cgroup2 doesn't have per-cgroup swappiness */
- 	if (cgroup_subsys_on_dfl(memory_cgrp_subsys))
--		return vm_swappiness;
-+		return READ_ONCE(vm_swappiness);
- 
- 	/* root ? */
- 	if (mem_cgroup_disabled() || mem_cgroup_is_root(memcg))
--		return vm_swappiness;
-+		return READ_ONCE(vm_swappiness);
- 
--	return memcg->swappiness;
-+	return READ_ONCE(memcg->swappiness);
- }
- #else
- static inline int mem_cgroup_swappiness(struct mem_cgroup *mem)
- {
--	return vm_swappiness;
-+	return READ_ONCE(vm_swappiness);
- }
- #endif
- 
 diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index 06821e5f7604..dca895c66a9b 100644
+index dca895c66a9b..26605b2f51b1 100644
 --- a/mm/memcontrol.c
 +++ b/mm/memcontrol.c
-@@ -4179,9 +4179,9 @@ static int mem_cgroup_swappiness_write(struct cgroup_subsys_state *css,
+@@ -4515,7 +4515,7 @@ static int mem_cgroup_oom_control_read(struct seq_file *sf, void *v)
+ {
+ 	struct mem_cgroup *memcg = mem_cgroup_from_seq(sf);
+ 
+-	seq_printf(sf, "oom_kill_disable %d\n", memcg->oom_kill_disable);
++	seq_printf(sf, "oom_kill_disable %d\n", READ_ONCE(memcg->oom_kill_disable));
+ 	seq_printf(sf, "under_oom %d\n", (bool)memcg->under_oom);
+ 	seq_printf(sf, "oom_kill %lu\n",
+ 		   atomic_long_read(&memcg->memory_events[MEMCG_OOM_KILL]));
+@@ -4531,7 +4531,7 @@ static int mem_cgroup_oom_control_write(struct cgroup_subsys_state *css,
+ 	if (mem_cgroup_is_root(memcg) || !((val == 0) || (val == 1)))
  		return -EINVAL;
  
- 	if (!mem_cgroup_is_root(memcg))
--		memcg->swappiness = val;
-+		WRITE_ONCE(memcg->swappiness, val);
- 	else
--		vm_swappiness = val;
-+		WRITE_ONCE(vm_swappiness, val);
+-	memcg->oom_kill_disable = val;
++	WRITE_ONCE(memcg->oom_kill_disable, val);
+ 	if (!val)
+ 		memcg_oom_recover(memcg);
  
- 	return 0;
- }
 -- 
 2.17.1
 
