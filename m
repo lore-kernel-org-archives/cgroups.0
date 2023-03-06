@@ -1,119 +1,95 @@
-From: syzbot <syzbot+3aa7a6b7eb0d5536abaf@syzkaller.appspotmail.com>
-Subject: [syzbot] [hfs?] kernel BUG in __block_write_full_page
-Date: Mon, 06 Mar 2023 09:44:37 -0800
-Message-ID: <0000000000004d661705f63ed958@google.com>
+From: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
+Subject: Re: [PATCH v2, 2/4] mm, memcg: Prevent memory.swappiness load/store
+ tearing
+Date: Mon, 6 Mar 2023 18:50:15 +0100
+Message-ID: <ZAYn19jFPO9KR2Si@dhcp22.suse.cz>
+References: <20230306154138.3775-1-findns94@gmail.com>
+ <20230306154138.3775-3-findns94@gmail.com>
 Mime-Version: 1.0
-Return-path: <linux-fsdevel-owner@vger.kernel.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
+        t=1678125016; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=w38yPDPoNW7meWXht3zLss0FQ6ef9zy/ciQDyUVGN8Q=;
+        b=bvUIaVCPQdKJVm5AsdMuBwe3iqky2mqSyazjiFZKsfUjRKx3lcIfadlu/zbSPmqq25EUXQ
+        rEOgyXUrfZPMgNfc5n+XOlJnyT5TUnZDngf0I6qEiec/hMnlgm8vpOBzTkTH3I3jncpx9q
+        wlXWHFKSDWz9XoyG9bxJqkkRC9LjseE=
+Content-Disposition: inline
+In-Reply-To: <20230306154138.3775-3-findns94-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: akpm@linux-foundation.org, bpf@vger.kernel.org, cgroups@vger.kernel.org, hannes@cmpxchg.org, keescook@chromium.org, linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org, martin.petersen@oracle.com, mcgrof@kernel.org, mhocko@kernel.org, njavali@marvell.com, roman.gushchin@linux.dev, shakeelb@google.com, songmuchun@bytedance.com, syzkaller-bugs@googlegroups.com, yzaikin@google.com
+To: Yue Zhao <findns94-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Cc: akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, muchun.song-fxUVXftIFDnyG1zEObXtfA@public.gmane.org, willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, tangyeechou-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org
 
-Hello,
+On Mon 06-03-23 23:41:36, Yue Zhao wrote:
+> The knob for cgroup v1 memory controller: memory.swappiness
+> is not protected by any locking so it can be modified while it is used.
+> This is not an actual problem because races are unlikely.
+> But it is better to use READ_ONCE/WRITE_ONCE to prevent compiler from
+> doing anything funky.
+> 
+> The access of memcg->swappiness and vm_swappiness is lockless,
+> so both of them can be concurrently set at the same time
+> as we are trying to read them. 
+> 
+> Signed-off-by: Yue Zhao <findns94-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 
-syzbot found the following issue on:
+Acked-by: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
+Thanks!
 
-HEAD commit:    b01fe98d34f3 Merge tag 'i2c-for-6.3-rc1-part2' of git://gi..
-git tree:       upstream
-console output: https://syzkaller.appspot.com/x/log.txt?x=16d58468c80000
-kernel config:  https://syzkaller.appspot.com/x/.config?x=dc0f7cfe5b32efe2
-dashboard link: https://syzkaller.appspot.com/bug?extid=3aa7a6b7eb0d5536abaf
-compiler:       Debian clang version 15.0.7, GNU ld (GNU Binutils for Debian) 2.35.2
-syz repro:      https://syzkaller.appspot.com/x/repro.syz?x=12a80092c80000
-C reproducer:   https://syzkaller.appspot.com/x/repro.c?x=17c4f138c80000
+> ---
+>  include/linux/swap.h | 8 ++++----
+>  mm/memcontrol.c      | 4 ++--
+>  2 files changed, 6 insertions(+), 6 deletions(-)
+> 
+> diff --git a/include/linux/swap.h b/include/linux/swap.h
+> index 209a425739a9..3f3fe43d1766 100644
+> --- a/include/linux/swap.h
+> +++ b/include/linux/swap.h
+> @@ -620,18 +620,18 @@ static inline int mem_cgroup_swappiness(struct mem_cgroup *memcg)
+>  {
+>  	/* Cgroup2 doesn't have per-cgroup swappiness */
+>  	if (cgroup_subsys_on_dfl(memory_cgrp_subsys))
+> -		return vm_swappiness;
+> +		return READ_ONCE(vm_swappiness);
+>  
+>  	/* root ? */
+>  	if (mem_cgroup_disabled() || mem_cgroup_is_root(memcg))
+> -		return vm_swappiness;
+> +		return READ_ONCE(vm_swappiness);
+>  
+> -	return memcg->swappiness;
+> +	return READ_ONCE(memcg->swappiness);
+>  }
+>  #else
+>  static inline int mem_cgroup_swappiness(struct mem_cgroup *mem)
+>  {
+> -	return vm_swappiness;
+> +	return READ_ONCE(vm_swappiness);
+>  }
+>  #endif
+>  
+> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+> index 06821e5f7604..dca895c66a9b 100644
+> --- a/mm/memcontrol.c
+> +++ b/mm/memcontrol.c
+> @@ -4179,9 +4179,9 @@ static int mem_cgroup_swappiness_write(struct cgroup_subsys_state *css,
+>  		return -EINVAL;
+>  
+>  	if (!mem_cgroup_is_root(memcg))
+> -		memcg->swappiness = val;
+> +		WRITE_ONCE(memcg->swappiness, val);
+>  	else
+> -		vm_swappiness = val;
+> +		WRITE_ONCE(vm_swappiness, val);
+>  
+>  	return 0;
+>  }
+> -- 
+> 2.17.1
 
-Downloadable assets:
-disk image: https://storage.googleapis.com/syzbot-assets/a1d37240ef5e/disk-b01fe98d.raw.xz
-vmlinux: https://storage.googleapis.com/syzbot-assets/3727e84b1762/vmlinux-b01fe98d.xz
-kernel image: https://storage.googleapis.com/syzbot-assets/0d45494f57a4/bzImage-b01fe98d.xz
-mounted in repro: https://storage.googleapis.com/syzbot-assets/ff4c7574ee40/mount_0.gz
-
-The issue was bisected to:
-
-commit 4dc48a107a146cade61097958ff2366c13da1f60
-Author: Nilesh Javali <njavali@marvell.com>
-Date:   Tue Jun 7 04:46:27 2022 +0000
-
-    scsi: qla2xxx: Update version to 10.02.07.500-k
-
-bisection log:  https://syzkaller.appspot.com/x/bisect.txt?x=13eb900ac80000
-final oops:     https://syzkaller.appspot.com/x/report.txt?x=101b900ac80000
-console output: https://syzkaller.appspot.com/x/log.txt?x=17eb900ac80000
-
-IMPORTANT: if you fix the issue, please add the following tag to the commit:
-Reported-by: syzbot+3aa7a6b7eb0d5536abaf@syzkaller.appspotmail.com
-Fixes: 4dc48a107a14 ("scsi: qla2xxx: Update version to 10.02.07.500-k")
-
-------------[ cut here ]------------
-kernel BUG at fs/buffer.c:1829!
-invalid opcode: 0000 [#1] PREEMPT SMP KASAN
-CPU: 1 PID: 9252 Comm: syz-executor382 Not tainted 6.2.0-syzkaller-13534-gb01fe98d34f3 #0
-Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 03/02/2023
-RIP: 0010:__block_write_full_page+0xfb2/0x16a0 fs/buffer.c:1829
-Code: 02 e9 16 f2 ff ff e8 6d 60 89 ff 48 8b 3c 24 e8 b4 32 00 00 48 89 c7 48 c7 c6 20 96 17 8b e8 05 6a c8 ff 0f 0b e8 4e 60 89 ff <0f> 0b f3 0f 1e fa 48 8b 2c 24 48 89 ee 48 81 e6 ff 0f 00 00 31 ff
-RSP: 0018:ffffc9000bde6ff0 EFLAGS: 00010293
-RAX: ffffffff82035c92 RBX: 00fff0000000a02f RCX: ffff888026c03a80
-RDX: 0000000000000000 RSI: 0000000000008000 RDI: 0000000000000000
-RBP: 0000000000008000 R08: ffffffff820354d8 R09: fffff9400007d819
-R10: 0000000000000000 R11: dffffc0000000001 R12: 0000000000000000
-R13: 1ffff11002d73d01 R14: dffffc0000000000 R15: ffffea00003ec0c0
-FS:  00007fe61c1db700(0000) GS:ffff8880b9900000(0000) knlGS:0000000000000000
-CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-CR2: 0000000000000000 CR3: 000000002af1e000 CR4: 00000000003506e0
-DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
-DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
-Call Trace:
- <TASK>
- writeout mm/migrate.c:907 [inline]
- fallback_migrate_folio mm/migrate.c:931 [inline]
- move_to_new_folio+0x7a1/0x14d0 mm/migrate.c:981
- migrate_folio_move mm/migrate.c:1295 [inline]
- migrate_pages_batch mm/migrate.c:1827 [inline]
- migrate_pages+0x4c0b/0x6670 mm/migrate.c:1979
- compact_zone+0x2bc9/0x45a0 mm/compaction.c:2420
- compact_node+0x216/0x420 mm/compaction.c:2717
- compact_nodes mm/compaction.c:2730 [inline]
- sysctl_compaction_handler+0xab/0x150 mm/compaction.c:2774
- proc_sys_call_handler+0x545/0x8a0 fs/proc/proc_sysctl.c:604
- do_iter_write+0x6ea/0xc50 fs/read_write.c:861
- vfs_writev fs/read_write.c:934 [inline]
- do_writev+0x27f/0x470 fs/read_write.c:977
- do_syscall_x64 arch/x86/entry/common.c:50 [inline]
- do_syscall_64+0x41/0xc0 arch/x86/entry/common.c:80
- entry_SYSCALL_64_after_hwframe+0x63/0xcd
-RIP: 0033:0x7fe61c22f659
-Code: 28 00 00 00 75 05 48 83 c4 28 c3 e8 71 15 00 00 90 48 89 f8 48 89 f7 48 89 d6 48 89 ca 4d 89 c2 4d 89 c8 4c 8b 4c 24 08 0f 05 <48> 3d 01 f0 ff ff 73 01 c3 48 c7 c1 b8 ff ff ff f7 d8 64 89 01 48
-RSP: 002b:00007fe61c1db2f8 EFLAGS: 00000246 ORIG_RAX: 0000000000000014
-RAX: ffffffffffffffda RBX: 00007fe61c2b47a0 RCX: 00007fe61c22f659
-RDX: 0000000000000001 RSI: 0000000020000240 RDI: 0000000000000004
-RBP: 00007fe61c281700 R08: 0000000000000000 R09: 0000000000000000
-R10: 0000000000000000 R11: 0000000000000246 R12: 00007fe61c2810e0
-R13: 0073756c70736668 R14: 6d656d5f74636170 R15: 00007fe61c2b47a8
- </TASK>
-Modules linked in:
----[ end trace 0000000000000000 ]---
-RIP: 0010:__block_write_full_page+0xfb2/0x16a0 fs/buffer.c:1829
-Code: 02 e9 16 f2 ff ff e8 6d 60 89 ff 48 8b 3c 24 e8 b4 32 00 00 48 89 c7 48 c7 c6 20 96 17 8b e8 05 6a c8 ff 0f 0b e8 4e 60 89 ff <0f> 0b f3 0f 1e fa 48 8b 2c 24 48 89 ee 48 81 e6 ff 0f 00 00 31 ff
-RSP: 0018:ffffc9000bde6ff0 EFLAGS: 00010293
-RAX: ffffffff82035c92 RBX: 00fff0000000a02f RCX: ffff888026c03a80
-RDX: 0000000000000000 RSI: 0000000000008000 RDI: 0000000000000000
-RBP: 0000000000008000 R08: ffffffff820354d8 R09: fffff9400007d819
-R10: 0000000000000000 R11: dffffc0000000001 R12: 0000000000000000
-R13: 1ffff11002d73d01 R14: dffffc0000000000 R15: ffffea00003ec0c0
-FS:  00007fe61c1db700(0000) GS:ffff8880b9900000(0000) knlGS:0000000000000000
-CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-CR2: 00007ffd2061aeb8 CR3: 000000002af1e000 CR4: 00000000003506e0
-DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
-DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
-
-
----
-This report is generated by a bot. It may contain errors.
-See https://goo.gl/tpsmEJ for more information about syzbot.
-syzbot engineers can be reached at syzkaller@googlegroups.com.
-
-syzbot will keep track of this issue. See:
-https://goo.gl/tpsmEJ#status for how to communicate with syzbot.
-For information about bisection process see: https://goo.gl/tpsmEJ#bisection
-syzbot can test patches for this issue, for details see:
-https://goo.gl/tpsmEJ#testing-patches
+-- 
+Michal Hocko
+SUSE Labs
