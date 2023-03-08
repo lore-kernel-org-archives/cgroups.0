@@ -1,84 +1,64 @@
-From: Yue Zhao <findns94-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: [PATCH v3, 4/4] mm, memcg: Prevent memory.soft_limit_in_bytes load/store tearing
-Date: Thu,  9 Mar 2023 00:25:55 +0800
-Message-ID: <20230308162555.14195-5-findns94@gmail.com>
+From: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
+Subject: Re: [PATCH v3, 0/4] mm, memcg: cgroup v1 and v2 tunable load/store
+ tearing fixes
+Date: Wed, 8 Mar 2023 18:40:09 +0100
+Message-ID: <ZAjIeTBKteZaYEEb@dhcp22.suse.cz>
 References: <20230308162555.14195-1-findns94@gmail.com>
+Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112; t=1678292788;
-        h=references:in-reply-to:message-id:date:subject:cc:to:from:from:to
-         :cc:subject:date:message-id:reply-to;
-        bh=z+4uYXTHdSZJGlTQ4yJuaUKIcEogMIg606wt+PsHQ10=;
-        b=kswqtEU7Xj6n7CisW2qiImBeQaeJAQosHCyMQLF85hJ3RIz6SE9Rt2WZbQXfYtQarS
-         w1QOwuboYFZVWg3MH8bUqqwclcgHc3MmuZZUsydleg5jg4zMt4wgbQMRkOBzw3Zucdt8
-         bDfH1puKOJ2+Jws7pHS692luihVb02mlaXjFcfe/mkc0SVVtNkvvaMGjhmgRWz60Hrhj
-         hsoZyvjuIAA64kBJePxrgKD3g/6sRoG8j42SBuX/XEEqcwDNrw4HvoAAvVN3G64Ld9aT
-         Efv9BEBWmzR2cSAbKApAMZDiqB5AIM5zyFGrDWK2hfiWrdLkaCvW3wS224bS2oq9JkyC
-         BQvA==
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
+        t=1678297210; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=D9P/n6kZ5Q42EKXa8PVA9CYX9cXV/BCKYA1HMGowUvU=;
+        b=TajgrPEobbOD2m/LLJL6XBEDwW6tdq+0QP5iqSO+RuA2fAwvLYQ7gx7qQdHzR8kp+Li8gW
+        9TRsofHeCFFXiAmfGUiiyg/rm2bGogkP8mMs3B16HmVTvTDdZsbBy1NHcS+9xV4bZTXuNT
+        3moocNhZ6CmjPjO+4b2T7MJmH2Cla04=
+Content-Disposition: inline
 In-Reply-To: <20230308162555.14195-1-findns94-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org
-Cc: roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, muchun.song-fxUVXftIFDnyG1zEObXtfA@public.gmane.org, willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, tangyeechou-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, Yue Zhao <findns94-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+To: Yue Zhao <findns94-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Cc: akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, muchun.song-fxUVXftIFDnyG1zEObXtfA@public.gmane.org, willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, tangyeechou-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org
 
-The knob for cgroup v1 memory controller: memory.soft_limit_in_bytes
-is not protected by any locking so it can be modified while it is used.
-This is not an actual problem because races are unlikely.
-But it is better to use [READ|WRITE]_ONCE to prevent compiler from
-doing anything funky.
+On Thu 09-03-23 00:25:51, Yue Zhao wrote:
+> This patch series helps to prevent load/store tearing in
+> several cgroup knobs.
+> 
+> As kindly pointed out by Michal Hocko, we should add 
+> [WRITE|READ]_ONCE for all occurrences of memcg->oom_kill_disable,
+> memcg->swappiness and memcg->soft_limit.
+> 
+> v3:
+> - Add [WRITE|READ]_ONCE for all occurrences of
+> memcg->oom_kill_disable, memcg->swappiness and memcg->soft_limit
+> v2:
+> - Rephrase changelog
+> - Add [WRITE|READ]_ONCE for memcg->oom_kill_disable,
+>  memcg->swappiness, vm_swappiness and memcg->soft_limit
+> v1:
+> - Add [WRITE|READ]_ONCE for memcg->oom_group
+> 
+> Past patches:
+> V2: https://lore.kernel.org/linux-mm/20230306154138.3775-1-findns94-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org/
+> V1: https://lore.kernel.org/linux-mm/20230220151638.1371-1-findns94-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org/
+> 
+> Yue Zhao (4):
+>   mm, memcg: Prevent memory.oom.group load/store tearing
+>   mm, memcg: Prevent memory.swappiness load/store tearing
+>   mm, memcg: Prevent memory.oom_control load/store tearing
+>   mm, memcg: Prevent memory.soft_limit_in_bytes load/store tearing
+> 
+>  include/linux/swap.h |  8 ++++----
+>  mm/memcontrol.c      | 30 +++++++++++++++---------------
+>  2 files changed, 19 insertions(+), 19 deletions(-)
 
-The access of memcg->soft_limit is lockless,
-so it can be concurrently set at the same time as we are
-trying to read it. All occurrences of memcg->soft_limit
-are updated with [READ|WRITE]_ONCE.
+Acked-by: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
 
-Signed-off-by: Yue Zhao <findns94-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
----
- mm/memcontrol.c | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+Btw. you could have preserved acks for patches you haven't changed from
+the previous version.
 
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index 5b7062d0f5e0..13ec89c45389 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -3728,7 +3728,7 @@ static u64 mem_cgroup_read_u64(struct cgroup_subsys_state *css,
- 	case RES_FAILCNT:
- 		return counter->failcnt;
- 	case RES_SOFT_LIMIT:
--		return (u64)memcg->soft_limit * PAGE_SIZE;
-+		return (u64)READ_ONCE(memcg->soft_limit) * PAGE_SIZE;
- 	default:
- 		BUG();
- 	}
-@@ -3870,7 +3870,7 @@ static ssize_t mem_cgroup_write(struct kernfs_open_file *of,
- 		if (IS_ENABLED(CONFIG_PREEMPT_RT)) {
- 			ret = -EOPNOTSUPP;
- 		} else {
--			memcg->soft_limit = nr_pages;
-+			WRITE_ONCE(memcg->soft_limit, nr_pages);
- 			ret = 0;
- 		}
- 		break;
-@@ -5347,7 +5347,7 @@ mem_cgroup_css_alloc(struct cgroup_subsys_state *parent_css)
- 		return ERR_CAST(memcg);
- 
- 	page_counter_set_high(&memcg->memory, PAGE_COUNTER_MAX);
--	memcg->soft_limit = PAGE_COUNTER_MAX;
-+	WRITE_ONCE(memcg->soft_limit, PAGE_COUNTER_MAX);
- #if defined(CONFIG_MEMCG_KMEM) && defined(CONFIG_ZSWAP)
- 	memcg->zswap_max = PAGE_COUNTER_MAX;
- #endif
-@@ -5502,7 +5502,7 @@ static void mem_cgroup_css_reset(struct cgroup_subsys_state *css)
- 	page_counter_set_min(&memcg->memory, 0);
- 	page_counter_set_low(&memcg->memory, 0);
- 	page_counter_set_high(&memcg->memory, PAGE_COUNTER_MAX);
--	memcg->soft_limit = PAGE_COUNTER_MAX;
-+	WRITE_ONCE(memcg->soft_limit, PAGE_COUNTER_MAX);
- 	page_counter_set_high(&memcg->swap, PAGE_COUNTER_MAX);
- 	memcg_wb_domain_size_changed(memcg);
- }
 -- 
-2.17.1
-
+Michal Hocko
+SUSE Labs
