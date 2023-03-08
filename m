@@ -1,95 +1,88 @@
-From: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Subject: Re: Unexpected EINVAL when enabling cpuset in subtree_control when
- io_uring threads are running
-Date: Wed, 8 Mar 2023 09:44:50 -0500
-Message-ID: <377ee062-c899-b0c2-969e-268c8cfce87c@redhat.com>
-References: <CA+wXwBQwgxB3_UphSny-yAP5b26meeOu1W4TwYVcD_+5gOhvPw@mail.gmail.com>
- <c069bcff-8229-4284-b973-e427ccf20b64@redhat.com>
- <074823f4-993c-8caf-bd93-70589c4aae42@kernel.dk>
+From: Martin Zhao <findns94-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Subject: Re: [PATCH v2, 3/4] mm, memcg: Prevent memory.oom_control load/store tearing
+Date: Wed, 8 Mar 2023 22:51:54 +0800
+Message-ID: <CADfL_jA3fa6HrGLRp25avQm+yamxqUZhK6BLjnjANbaJF7tsBw@mail.gmail.com>
+References: <20230306154138.3775-1-findns94@gmail.com> <20230306154138.3775-4-findns94@gmail.com>
+ <ZAYoi8ZwwbXT9j7f@dhcp22.suse.cz>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: quoted-printable
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1678286696;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=rh/7jxsAjlNSCe5Vflj31Md50O7qavIBLm45Q9D7gLI=;
-        b=RFjlcroFBw3qm/yaH2KCXiMNGgcdWSICzYUUhB/VvXxpLFaFomGW8ilWjwem76VjnJupX6
-        knGbu4TDcKDnXpfk6tlDh8RlCuNd4tmUUSAfwfE0OEEqKjq1v2ZjcdmOh0J3MSkB88kjYp
-        6oboLhGqUL+riDCg64KIqNKL4T70oDs=
-Content-Language: en-US
-In-Reply-To: <074823f4-993c-8caf-bd93-70589c4aae42-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112; t=1678287131;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=X8ujCnIiLc25U33obQkBP96azILctHn33HsXwDllrlM=;
+        b=jGq4oQeB034ih7zR9Oq4NHEbQaUS4y3CrcWO9b1gcnXV4g0VesuI0xctNraDdUHl2E
+         3tOJwJZvOGSztbaLqfmESuiFNIUikm8Vcsx0ethzNmjJUPVJ2OrFpEGWqURGdeEKDRTo
+         rb+/aTGVAMdg0ZDEtw1UWFTtHK/rKctFpEPO9bozyv3PfJDJqaPgbqPjqrEvtxx/kHOU
+         GFrJrmE9hvUfkIoMDEJCYNRmOXbzo79Q+VBXToKup1ZrWc498ZVxAhiCe6X5lFIQhLsj
+         EKRBwbSBtH6D/R4xZOBdsbJ+UUFJeK23QizXKofEJ4rxBeNUF5QKyDeXTf0McMFTTb/T
+         ZJiA==
+In-Reply-To: <ZAYoi8ZwwbXT9j7f-2MMpYkNvuYDjFM9bn6wA6Q@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"; format="flowed"
-To: Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, Daniel Dao <dqminh-lDpJ742SOEtZroRs9YW3xA@public.gmane.org>
-Cc: io-uring-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, kernel-team <kernel-team-lDpJ742SOEtZroRs9YW3xA@public.gmane.org>
+Content-Type: text/plain; charset="windows-1252"
+To: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
+Cc: akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, muchun.song-fxUVXftIFDnyG1zEObXtfA@public.gmane.org, willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, tangyeechou-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org
 
-On 3/8/23 09:26, Jens Axboe wrote:
-> On 3/8/23 7:20?AM, Waiman Long wrote:
->> On 3/8/23 06:42, Daniel Dao wrote:
->>> Hi all,
->>>
->>> We encountered EINVAL when enabling cpuset in cgroupv2 when io_uring
->>> worker threads are running. Here are the steps to reproduce the failure
->>> on kernel 6.1.14:
->>>
->>> 1. Remove cpuset from subtree_control
->>>
->>>     > for d in $(find /sys/fs/cgroup/ -maxdepth 1 -type d); do echo
->>> '-cpuset' | sudo tee -a $d/cgroup.subtree_control; done
->>>     > cat /sys/fs/cgroup/cgroup.subtree_control
->>>     cpu io memory pids
->>>
->>> 2. Run any applications that utilize the uring worker thread pool. I used
->>>      https://github.com/cloudflare/cloudflare-blog/tree/master/2022-02-io_uring-worker-pool
->>>
->>>     > cargo run -- -a -w 2 -t 2
->>>
->>> 3. Enabling cpuset will return EINVAL
->>>
->>>     > echo '+cpuset' | sudo tee -a /sys/fs/cgroup/cgroup.subtree_control
->>>     +cpuset
->>>     tee: /sys/fs/cgroup/cgroup.subtree_control: Invalid argument
->>>
->>> We traced this down to task_can_attach that will return EINVAL when it
->>> encounters
->>> kthreads with PF_NO_SETAFFINITY, which io_uring worker threads have.
->>>
->>> This seems like an unexpected interaction when enabling cpuset for the subtrees
->>> that contain kthreads. We are currently considering a workaround to try to
->>> enable cpuset in root subtree_control before any io_uring applications
->>> can start,
->>> hence failure to enable cpuset is localized to only cgroup with
->>> io_uring kthreads.
->>> But this is cumbersome.
->>>
->>> Any suggestions would be very much appreciated.
->> Anytime you echo "+cpuset" to cgroup.subtree_control to enable cpuset,
->> the tasks within the child cgroups will do an implicit move from the
->> parent cpuset to the child cpusets. However, that move will fail if
->> any task has the PF_NO_SETAFFINITY flag set due to task_can_attach()
->> function which checks for this. One possible solution is for the
->> cpuset to ignore tasks with PF_NO_SETAFFINITY set for implicit move.
->> IOW, allowing the implicit move without touching it, but not explicit
->> one using cgroup.procs.
-> I was pondering this too as I was typing my reply, but at least for
-> io-wq, this report isn't the first to be puzzled or broken by the fact
-> that task threads might have PF_NO_SETAFFINITY set. So while it might be
-> worthwhile to for cpuset to ignore PF_NO_SETAFFINITY as a separate fix,
-> I think it's better to fix io-wq in general. Not sure we have other
-> cases where it's even possible to have PF_NO_SETAFFINITY set on
-> userspace threads?
+On Tue, Mar 7, 2023 at 1:53=E2=80=AFAM Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org> wrote=
+:
+>
+> On Mon 06-03-23 23:41:37, Yue Zhao wrote:
+> > The knob for cgroup v1 memory controller: memory.oom_control
+> > is not protected by any locking so it can be modified while it is used.
+> > This is not an actual problem because races are unlikely.
+> > But it is better to use READ_ONCE/WRITE_ONCE to prevent compiler from
+> > doing anything funky.
+> >
+> > The access of memcg->oom_kill_disable is lockless,
+> > so it can be concurrently set at the same time as we are
+> > trying to read it.
+> >
+> > Signed-off-by: Yue Zhao <findns94-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+> > ---
+> >  mm/memcontrol.c | 4 ++--
+> >  1 file changed, 2 insertions(+), 2 deletions(-)
+> >
+> > diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+> > index dca895c66a9b..26605b2f51b1 100644
+> > --- a/mm/memcontrol.c
+> > +++ b/mm/memcontrol.c
+> > @@ -4515,7 +4515,7 @@ static int mem_cgroup_oom_control_read(struct seq=
+_file *sf, void *v)
+> >  {
+> >       struct mem_cgroup *memcg =3D mem_cgroup_from_seq(sf);
+> >
+> > -     seq_printf(sf, "oom_kill_disable %d\n", memcg->oom_kill_disable);
+> > +     seq_printf(sf, "oom_kill_disable %d\n", READ_ONCE(memcg->oom_kill=
+_disable));
+> >       seq_printf(sf, "under_oom %d\n", (bool)memcg->under_oom);
+> >       seq_printf(sf, "oom_kill %lu\n",
+> >                  atomic_long_read(&memcg->memory_events[MEMCG_OOM_KILL]=
+));
+> > @@ -4531,7 +4531,7 @@ static int mem_cgroup_oom_control_write(struct cg=
+roup_subsys_state *css,
+> >       if (mem_cgroup_is_root(memcg) || !((val =3D=3D 0) || (val =3D=3D =
+1)))
+> >               return -EINVAL;
+> >
+> > -     memcg->oom_kill_disable =3D val;
+> > +     WRITE_ONCE(memcg->oom_kill_disable, val);
+> >       if (!val)
+> >               memcg_oom_recover(memcg);
+>
+> Any specific reasons you haven't covered other accesses
+> (mem_cgroup_css_alloc, mem_cgroup_oom, mem_cgroup_oom_synchronize)?
 
-Changing current cpuset behavior is an alternative solution. It is a 
-problem anytime a task (user or kthread) has PF_NO_SETAFFINITY set but 
-not in the root cgroup. Besides io_uring, I have no idea if there is 
-other use cases out there. It is just a change we may need to do in the 
-future if there are other similar cases. Since you are fixing it on the 
-io-wq side, it is not an urgent issue that needs to be addressed from 
-the cpuset side.
+Thanks for point this out, you are right, we should add
+[READ|WRITE]_ONCE for all used places.
+Let me create PATCH v3 later.
+Also for the memcg->soft_limit, I will update as well.
 
-Thanks,
-Longman
-
+> >
+> > --
+> > 2.17.1
+>
+> --
+> Michal Hocko
+> SUSE Labs
