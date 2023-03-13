@@ -1,74 +1,109 @@
-From: Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Subject: [PATCH] memcg: page_cgroup_ino() get memcg from compound_head(page)
-Date: Mon, 13 Mar 2023 08:34:52 +0000
-Message-ID: <20230313083452.1319968-1-yosryahmed@google.com>
+From: Dietmar Eggemann <dietmar.eggemann-5wv7dgnIgG8@public.gmane.org>
+Subject: Re: [PATCH v3] sched: cpuset: Don't rebuild root domains on
+ suspend-resume
+Date: Mon, 13 Mar 2023 13:37:48 +0100
+Message-ID: <e81ffc13-a89e-d43e-18d1-10d9e0161638@arm.com>
+References: <20230206221428.2125324-1-qyousef@layalina.io>
+ <20230223153859.37tqoqk33oc6tv7o@airbuntu>
+ <5f087dd8-3e39-ce83-fe24-afa5179c05d9@arm.com>
+ <20230227205725.dipvh3i7dvyrv4tv@airbuntu>
+ <5a1e58bf-7eb2-bd7a-7e19-7864428a2b83@arm.com>
+ <20230228174627.vja5aejq27dsta2u@airbuntu>
+ <Y/7/SLzvK8LfB29z@localhost.localdomain>
+ <20230301122852.zgzreby42lh2zf6w@airbuntu>
+ <Y/9gmDRlGOChIwpf@localhost.localdomain>
+ <20230301170322.xthlso7jfkixlyex@airbuntu>
+ <ZAhhGi55BkYkc3ss@localhost.localdomain>
 Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20210112; t=1678696495;
-        h=cc:to:from:subject:message-id:mime-version:date:from:to:cc:subject
-         :date:message-id:reply-to;
-        bh=zeDiTo83CJOPfROIycQGpKJpY/woSMBEn4wJ2l9Oc3A=;
-        b=VJLAMhtXlqTwGgXDKCTVn6HNH8J7Yb49JpBXa71bKEU+b8UV7Pfw4XnV3NJlgObfWR
-         dsMVPpiYzyL+5/bmZeKIlzocq5lZDLUEIdEzYQ+l+SjF9mGT9Pqh276648bG03w2Bf4L
-         zwYel8rQA26f0lY3rYcJALEiOuEu8HsNuNgUPyCu7rrMjImD34V9QNoVfiGc4Pn4ZgnY
-         BHyEoGPJcoEqbfOwQd0dGFuvXoVeikT40ffzVLYSDDPFqOOfwnu2rb9l7QedPR2tVVK9
-         JpY7HwxqXLi30xpw6Hyawjr8gHfVwVGmTu5K+o7/00SdSoYGb9i2i2o+s3cx6qjv9IAS
-         Xcfw==
+Content-Language: en-US
+In-Reply-To: <ZAhhGi55BkYkc3ss-bi+AKbBUZKY6gyzm1THtWbp2dZbC/Bob@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Muchun Song <muchun.song-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Naoya Horiguchi <naoya.horiguchi-YMj9X0ASwKA@public.gmane.org>, Miaohe Lin <linmiaohe-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Cc: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+To: Juri Lelli <juri.lelli-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Qais Yousef <qyousef-wp2msK0BRk8tq7phqP6ubQ@public.gmane.org>
+Cc: Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Ingo Molnar <mingo-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Steven Rostedt <rostedt-nx8X9YLhiw1AfugRpC6u6w@public.gmane.org>, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, luca.abeni-5rdYK369eBLQB0XuIGIEkQ@public.gmane.org, claudio-YOzL5CV4y4YG1A2ADO40+w@public.gmane.org, tommaso.cucinotta-5rdYK369eBLQB0XuIGIEkQ@public.gmane.org, bristot-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, mathieu.poirier-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Vincent Guittot <vincent.guittot-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, Wei Wang <wvw-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Rick Yiu <rickyiu-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Quentin Perret <qperret-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Heiko Carstens <hca-tEXmvtCZX7AybS5Ee8rs3A@public.gmane.org>, Vasily Gorbik <gor-tEXmvtCZX7AybS5Ee8rs3A@public.gmane.org>, Alexander Gordeev <agordeev-tEXmvtCZX7AybS5Ee8rs3A@public.gmane.org>, Sudeep Holla <sudeep.holla-5wv7dgnIgG8@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, linux-s390-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, x86-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org
 
-From: Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+On 08/03/2023 11:19, Juri Lelli wrote:
+> On 01/03/23 17:03, Qais Yousef wrote:
+>> On 03/01/23 15:26, Juri Lelli wrote:
+>>> On 01/03/23 12:28, Qais Yousef wrote:
+>>>> On 03/01/23 08:31, Juri Lelli wrote:
+>>>
+>>> ...
+>>>
+>>>>> Not ignoring you guys here, but it turns out I'm quite bogged down with
+>>>>> other stuff at the moment. :/ So, apologies and I'll try to get to this
+>>>>> asap. Thanks a lot for all your efforts and time reviewing so far!
+>>>>
+>>>> Np, I can feel you :-)
+>>>
+>>> Eh. :/
+>>
+>> I hope I did not offend. That was meant as no pressure, I understand.
+> 
+> No offence at all! I meant "we are all on the same boat it seems". :)
+> 
+>>> BTW, do you have a repro script of some sort handy I might play with?
+>>
+>> Sorry no. You'll just need to suspend to ram. I had a simple patch to measure
+>> the time around the call and trace_printk'ed the result.
+>>
+>> I was working on a android phone which just suspends to ram if you turn the
+>> screen off and disconnect the usb.
+> 
+> Looks like I could come up with the following
+> 
+> https://github.com/jlelli/linux.git deadline/rework-cpusets
+> https://github.com/jlelli/linux/tree/deadline/rework-cpusets
+> 
+> which I don't think it's at a point that I feel comfortable to propose
+> as an RFC (not even sure if it actually makes sense), but it survived my
+> very light testing.
+> 
+> Could you please take a look and, if it makes some sense in theory, give
+> it a try on your end?
 
-In a kernel with added WARN_ON_ONCE(PageTail) in page_memcg_check(), we
-observed a warning from page_cgroup_ino() when reading
-/proc/kpagecgroup. This warning was added to catch fragile reads of
-a page memcg. Make page_cgroup_ino() get memcg from compound_head(page):
-that gives it the correct memcg for each subpage of a compound page,
-so is the right fix.
+sched/cpuset: Keep track of SCHED_DEADLINE task in cpusets
 
-I dithered between the right fix and the safer "fix": it's unlikely but
-conceivable that some userspace has learnt that /proc/kpagecgroup gives
-no memcg on tail pages, and compensates for that in some (racy) way: so
-continuing to give no memcg on tails, without warning, might be safer.
+@@ -2474,6 +2494,11 @@ static int cpuset_can_attach(struct
+cgroup_taskset *tset)
+                        goto out_unlock;
+        }
 
-But hwpoison_filter_task(), the only other user of page_cgroup_ino(),
-persuaded me.  It looks as if it currently leaves out tail pages of the
-selected memcg, by mistake: whereas hwpoison_inject() uses compound_head()
-and expects the tails to be included.  So hwpoison testing coverage has
-probably been restricted by the wrong output from page_cgroup_ino() (if
-that memcg filter is used at all): in the short term, it might be safer
-not to enable wider coverage there, but long term we would regret that.
++       if (dl_task(task)) {
++               cs->deadline_tasks++;
++               cpuset_attach_old_cs->deadline_tasks--;
++       }
++
 
-Signed-off-by: Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Signed-off-by: Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
----
+This one looks odd. task is NULL here ?
 
-(Yosry: Alternatively, we could modify page_memcg_check() to do
- page_folio() like its sibling page_memcg(), as page_cgroup_ino() is the
- only remaining caller other than print_page_owner_memcg(); and it already
- excludes pages that have page->memcg_data = 0)
+If you move a DL task from one cpuset to another this happens now:
 
----
- mm/memcontrol.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+root@juno:~# ps2 | grep DLN
+   82    82 140      0   - DLN sugov:0
+   83    83 140      0   - DLN sugov:1
+ 1615  1616 140      0   - DLN thread0-0
+ 1615  1617 140      0   - DLN thread0-1
+ 1615  1618 140      0   - DLN thread0-2
+ 1615  1619 140      0   - DLN thread0-3
+ 1615  1620 140      0   - DLN thread0-4
+ 1615  1621 140      0   - DLN thread0-5
+ 1615  1622 140      0   - DLN thread0-6
+ 1615  1623 140      0   - DLN thread0-7
+ 1615  1624 140      0   - DLN thread0-8
+ 1615  1625 140      0   - DLN thread0-9
+ 1615  1626 140      0   - DLN thread0-10
+ 1615  1627 140      0   - DLN thread0-11 <--
 
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index 5abffe6f8389..e3a55295725e 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -395,7 +395,7 @@ ino_t page_cgroup_ino(struct page *page)
- 	unsigned long ino = 0;
- 
- 	rcu_read_lock();
--	memcg = page_memcg_check(page);
-+	memcg = page_memcg_check(compound_head(page));
- 
- 	while (memcg && !(memcg->css.flags & CSS_ONLINE))
- 		memcg = parent_mem_cgroup(memcg);
--- 
-2.40.0.rc1.284.g88254d51c5-goog
+root@juno:~# cd /sys/fs/cgroup/cpuset
+root@juno:~# mkdir cs1
+root@juno:~# echo 0 > cs1/cpuset.mems
+root@juno:~# echo 0,3-5 > cs1/cpuset.cpus
 
+root@juno:~# echo 1627 > cs1/tasks
+
+root@juno:~# [  154.968900] *** task=0000000000000000
+
+[...]
