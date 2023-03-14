@@ -1,79 +1,83 @@
-From: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH 2/5] cgroup/cpuset: Include offline CPUs when tasks'
- cpumasks in top_cpuset are updated
-Date: Tue, 14 Mar 2023 15:02:53 -0400
-Message-ID: <957bd5c2-1bae-de95-f119-483ef64dab60@redhat.com>
-References: <20230306200849.376804-1-longman@redhat.com>
- <20230306200849.376804-3-longman@redhat.com>
- <20230314173411.fqaxoa2tfifnj6i3@blackpad>
+From: Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH] memcg: page_cgroup_ino() get memcg from compound_head(page)
+Date: Tue, 14 Mar 2023 12:45:23 -0700
+Message-ID: <CAJD7tkbaDeRP6-WuRGuRdhnOSV26=G_jhqMnejHQFGiT8VZ0bw@mail.gmail.com>
+References: <20230313083452.1319968-1-yosryahmed@google.com>
+ <20230313124431.fe901d79bc8c7dc96582539c@linux-foundation.org>
+ <CAJD7tkZKhNRiWOrUOiHWuEQbOuDhjyHx0H01M1mQziM36viq9w@mail.gmail.com> <ZBBGGFi0U8r67S5E@dhcp22.suse.cz>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: quoted-printable
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1678820580;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=UyKkF4M/yJ9pQotECcNeo3lMpmEkLTF8MPG6ILIYAd0=;
-        b=ZSPLpLEuPfvGPpttX6+rdi3jkxESMz0kbKvUFTjC+lHzkx0R7+E8csjwTcsBWxRVUbbJKw
-        hOlV5Nl4ND4Ir/vI7rnn0kfvA7yLThL/rj0tMUG4SL2T87jU3efnB2H6K8dCMejV3ma3He
-        HAkzzOtkITAY/KW8wP/Wx+18B96Uos8=
-Content-Language: en-US
-In-Reply-To: <20230314173411.fqaxoa2tfifnj6i3@blackpad>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20210112; t=1678823160;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=+daTM6MAyn6TGH4bluRXORo6ZRCtPzEVsAVbOVoNzA8=;
+        b=iqwXKiXBy/QmLohV8HdYfz7gN2eG08oii+mneuEAyxsmZrR1k3jmF+kUW+T6HVqf/t
+         bsN0+OnhObLIyRQq59ne3Q84xTZcsUOKfu5bRL9L9FD2y/g0qFB2Upm8ivyj+VEnX80x
+         3uCifVPKxb6hLEhq1Xg9/pc3awcooXRyJyI8UQAS9sNvaNXB6BBcJvLk1YgEBgyutUo9
+         XDtCFlh8sjPUnCJCdgie4OqkORdNfqth0Qet3qysMs2GmtT2XdjUu5sLdVhJjJZP1y2n
+         9wR90TB+QxK3kC08InHtuwnES6bZI0AhCoIB6dWzCrx65fXI8OvbYSaS+Vq4cePFBaAR
+         VpVw==
+In-Reply-To: <ZBBGGFi0U8r67S5E-2MMpYkNvuYDjFM9bn6wA6Q@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="utf-8"; format="flowed"
-To: =?UTF-8?Q?Michal_Koutn=c3=bd?= <mkoutny-IBi9RG/b67k@public.gmane.org>
-Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Shuah Khan <shuah-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kselftest-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Will Deacon <will-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
+Content-Type: text/plain; charset="utf-8"
+To: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
+Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Muchun Song <muchun.song-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Naoya Horiguchi <naoya.horiguchi-YMj9X0ASwKA@public.gmane.org>, Miaohe Lin <linmiaohe-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On 3/14/23 13:34, Michal Koutný wrote:
-> Hello Waiman.
+On Tue, Mar 14, 2023 at 3:02=E2=80=AFAM Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org> wrot=
+e:
 >
-> On Mon, Mar 06, 2023 at 03:08:46PM -0500, Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org> wrote:
->> -		/*
->> -		 * Percpu kthreads in top_cpuset are ignored
->> -		 */
->> -		if (top_cs && (task->flags & PF_KTHREAD) &&
->> -		    kthread_is_per_cpu(task))
->> -			continue;
->> +		const struct cpumask *possible_mask = task_cpu_possible_mask(task);
->>   
->> -		cpumask_and(new_cpus, cs->effective_cpus,
->> -			    task_cpu_possible_mask(task));
->> +		if (top_cs) {
->> +			/*
->> +			 * Percpu kthreads in top_cpuset are ignored
->> +			 */
->> +			if ((task->flags & PF_KTHREAD) && kthread_is_per_cpu(task))
->> +				continue;
->> +			cpumask_andnot(new_cpus, possible_mask, cs->subparts_cpus);
->> +		} else {
->> +			cpumask_and(new_cpus, cs->effective_cpus, possible_mask);
->> +		}
-> I'm wrapping my head around this slightly.
-> 1) I'd suggest swapping args in of cpumask_and() to have possible_mask
->     consistently first.
-I don't quite understand what you meant by "swapping args". It is 
-effective new_cpus = cs->effective_cpus ∩ possible_mask. What is the 
-point of swapping cs->effective_cpus and possible_mask.
-> 2) Then I'm wondering whether two branches are truly different when
->     effective_cpus := cpus_allowed - subparts_cpus
->     top_cpuset.cpus_allowed == possible_mask        (1)
-effective_cpus may not be equal "cpus_allowed - subparts_cpus" if some 
-of the CPUs are offline as effective_cpus contains only online CPUs. 
-subparts_cpu can include offline cpus too. That is why I choose that 
-expression. I will add a comment to clarify that.
+> On Mon 13-03-23 14:08:53, Yosry Ahmed wrote:
+> > On Mon, Mar 13, 2023 at 12:44=E2=80=AFPM Andrew Morton
+> > <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org> wrote:
+> > >
+> > > On Mon, 13 Mar 2023 08:34:52 +0000 Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org=
+> wrote:
+> > >
+> > > > From: Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+> > > >
+> > > > In a kernel with added WARN_ON_ONCE(PageTail) in page_memcg_check()=
+, we
+> > > > observed a warning from page_cgroup_ino() when reading
+> > > > /proc/kpagecgroup.
+> > >
+> > > If this is the only known situation in which page_memcg_check() is
+> > > passed a tail page, why does page_memcg_check() have
+> > >
+> > >         if (PageTail(page))
+> > >                 return NULL;
+> > >
+> > > ?  Can we remove this to simplify, streamline and clarify?
+> >
+> > I guess it's a safety check so that we don't end up trying to cast a
+> > tail page to a folio. My opinion is to go one step further and change
+> > page_memcg_check() to do return the memcg of the head page, i.e:
+> >
+> > static inline struct mem_cgroup *page_memcg_check(struct page *page)
+> > {
+> >     return folio_memcg_check(page_folio(page));
+> > }
 >
-> IOW, can you see a difference in what affinities are set to eligible
-> top_cpuset tasks before and after this patch upon CPU hotplug?
-> (Hm, (1) holds only in v2. So is this a fix for v1 only?)
+> I would just stick with the existing code and put a comment that this
+> function shouldn't be used in any new code and the folio counterpart
+> should be used instead.
 
-This is due to the fact that cpu hotplug code currently doesn't update 
-the cpu affinity of tasks in the top cpuset. Tasks not in the top cpuset 
-can rely on the hotplug code to update the cpu affinity appropriately. 
-For the tasks in the top cpuset, we have to make sure that all the 
-offline CPUs are included.
+Would you mind explaining the rationale?
 
-Cheers,
-Longman
+If existing users are not passing in tail pages and we are telling new
+users not to use it, what's the point of leaving the PageTail() check?
 
+Is page owner doing the right thing by discounting pages with
+page->memcg_data =3D 0 in print_page_owner_memcg() ? Wouldn't this not
+show the memcg of tail pages?
+
+If page owner also needs a compound_head()/ page_folio() call before
+checking the page memcg, perhaps we should convert both call sites to
+page_memcg_check() to folio_memcg_check() and remove it now?
+
+>
+> --
+> Michal Hocko
+> SUSE Labs
