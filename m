@@ -1,124 +1,81 @@
-From: Michal =?utf-8?Q?Koutn=C3=BD?= <mkoutny-IBi9RG/b67k@public.gmane.org>
-Subject: Re: [PATCH 3/5] cgroup/cpuset: Find another usable CPU if none found
- in current cpuset
-Date: Tue, 14 Mar 2023 19:17:49 +0100
-Message-ID: <20230314181749.5b4k6selbgdhl3up@blackpad>
-References: <20230306200849.376804-1-longman@redhat.com>
- <20230306200849.376804-4-longman@redhat.com>
+From: Waiman Long <longman@redhat.com>
+Subject: Re: [PATCH] io_uring/io-wq: stop setting PF_NO_SETAFFINITY on io-wq
+ workers
+Date: Tue, 14 Mar 2023 14:17:22 -0400
+Message-ID: <05c48a47-cfb2-af73-6709-f622fd254f89@redhat.com>
+References: <0f0e791b-8eb8-fbb2-ea94-837645037fae@kernel.dk>
+ <CA+wXwBRGzfZB9tjKy5C2_pW1Z4yH2gNGxx79Fk-p3UsOWKGdqA@mail.gmail.com>
+ <20230314162559.pnyxdllzgw7jozgx@blackpad>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha512;
-        protocol="application/pgp-signature"; boundary="x5gbpgbolwjq6gqy"
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
-        t=1678817870; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
+Content-Transfer-Encoding: 8bit
+Return-path: <io-uring-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1678817847;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=XXfCDy+DyUAKygjyGfiKxYTGe5xfVMSMGVkxJXSrpIQ=;
-        b=AOXZcoKpV9w3YCIDuYgTfnHKfE5UBefnEL82dP016q0d+5tyZEeEleZkDzhvXWCbo70DAt
-        eFzGFvQRS2krlcD2kwG+1wW3CTSTOlta0N7cRRsLL6/nkTwtwmluvBdmwCRT6Li759RnvH
-        0HjdSgwnmIiOZoUPLfnAoNgQkjh6Sc0=
-Content-Disposition: inline
-In-Reply-To: <20230306200849.376804-4-longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+        bh=d/ZtBwgB7cTsUBrCI6syMahmMU7UxQQ3MRmKHMli2aQ=;
+        b=VqWC+wAwSXOoHwA0u0Yf260o+QNdz9PNF9+/v1BxK9rI8kl58naPgxAFbuplc9bBpYdoMw
+        m4Y84YVnp7a/DAIc22mfeLQOPVGYH9wnEb7a8m6EFF3IV0I1PlhlZ0mhN91lAnan4A5Arv
+        73SC0dLUqsFvhCl/Cv9ElqW8ebxYovI=
+Content-Language: en-US
+In-Reply-To: <20230314162559.pnyxdllzgw7jozgx@blackpad>
 List-ID: <cgroups.vger.kernel.org>
-To: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Shuah Khan <shuah-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kselftest-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Will Deacon <will-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
+Content-Type: text/plain; charset="utf-8"; format="flowed"
+To: =?UTF-8?Q?Michal_Koutn=c3=bd?= <mkoutny@suse.com>, Daniel Dao <dqminh@cloudflare.com>
+Cc: Jens Axboe <axboe@kernel.dk>, io-uring <io-uring@vger.kernel.org>, cgroups@vger.kernel.org
 
+On 3/14/23 12:25, Michal Koutný wrote:
+> Hello.
+>
+> On Tue, Mar 14, 2023 at 10:07:40AM +0000, Daniel Dao <dqminh@cloudflare.com> wrote:
+>> IMO this violated the principle of cpuset and can be confusing for end users.
+>> I think I prefer Waiman's suggestion of allowing an implicit move to cpuset
+>> when enabling cpuset with subtree_control but not explicit moves such as when
+>> setting cpuset.cpus or writing the pids into cgroup.procs. It's easier to reason
+>> about and make the failure mode more explicit.
+>>
+>> What do you think ?
+> I think cpuset should top IO worker's affinity (like sched_setaffinity(2)).
+> Thus:
+> - modifying cpuset.cpus	                update task's affinity, for sure
+> - implicit migration (enabling cpuset)  update task's affinity, effective nop
+Note that since commit 7fd4da9c158 ("cgroup/cpuset: Optimize 
+cpuset_attach() on v2") in v6.2, implicit migration (enabling cpuset) 
+will not affect the cpu affinity of the process.
+> - explicit migration (meh)              update task's affinity, ¯\_(ツ)_/¯
+>
+> My understanding of PF_NO_SETAFFINITY is that's for kernel threads that
+> do work that's functionally needed on a given CPU and thus they cannot
+> be migrated [1]. As said previously for io_uring workers, affinity is
+> for performance only.
+>
+> Hence, I'd also suggest on top of 01e68ce08a30 ("io_uring/io-wq: stop
+> setting PF_NO_SETAFFINITY on io-wq workers"):
+>
+> --- a/io_uring/sqpoll.c
+> +++ b/io_uring/sqpoll.c
+> @@ -233,7 +233,6 @@ static int io_sq_thread(void *data)
+>                  set_cpus_allowed_ptr(current, cpumask_of(sqd->sq_cpu));
+>          else
+>                  set_cpus_allowed_ptr(current, cpu_online_mask);
+> -       current->flags |= PF_NO_SETAFFINITY;
+>
+>          mutex_lock(&sqd->lock);
+>          while (1) {
+>
+> Afterall, io_uring_setup(2) already mentions:
+>> When cgroup setting cpuset.cpus changes (typically in container
+>> environment), the bounded cpu set may be changed as well.
 
---x5gbpgbolwjq6gqy
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Using sched_setaffiinity(2) can be another alternative. Starting from 
+v6.2, cpu affinity set by sched_affiinity(2) will be more or less 
+maintained and constrained by the current cpuset even if the cpu list is 
+being changed as long as there is overlap between the two. The 
+intersection between cpu affinity set by sched_setaffinity(2) and the 
+effective_cpus in cpuset will be the effective cpu affinity of the task.
 
-Hello.
+Cheers,
+Longman
 
-On Mon, Mar 06, 2023 at 03:08:47PM -0500, Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org> =
-wrote:
-> On a system with asymmetric CPUs, a restricted task is one that can run
-> only a selected subset of available CPUs.  When a CPU goes offline or
-> when "cpuset.cpus" is changed, it is possible that a restricted task
-> may not have any runnable CPUs left in the current cpuset even if there
-> is still some CPUs in effective_cpus. In this case, the restricted task
-> cannot be run at all.
->=20
-> There are several ways we may be able to handle this situation. Treating
-> it like empty effective_cpus is probably too disruptive and is unfair to
-> the normal tasks. So it is better to have some special handling for these
-> restricted tasks. One possibility is to move the restricted tasks up the
-> cpuset hierarchy, but it is tricky to do it right. Another solution is
-> to assign other usable CPUs to these tasks. This patch implements the
-> later alternative by finding one usable CPU by walking up the cpuset
-> hierarchy and printing an informational message to let the users know
-> that these restricted tasks are running in a cpuset with no usable CPU.
->=20
-> Signed-off-by: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-> ---
->  kernel/cgroup/cpuset.c | 56 +++++++++++++++++++++++++++++++++++++++++-
->  1 file changed, 55 insertions(+), 1 deletion(-)
->=20
-> diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
-> index bbf57dcb2f68..aa8225daf1d3 100644
-> --- a/kernel/cgroup/cpuset.c
-> +++ b/kernel/cgroup/cpuset.c
-> @@ -1202,6 +1202,38 @@ void rebuild_sched_domains(void)
->  	cpus_read_unlock();
->  }
-> =20
-> [...]
->  /**
->   * update_tasks_cpumask - Update the cpumasks of tasks in the cpuset.
->   * @cs: the cpuset in which each task's cpus_allowed mask needs to be ch=
-anged
-> @@ -1218,6 +1250,7 @@ static void update_tasks_cpumask(struct cpuset *cs,=
- struct cpumask *new_cpus)
->  	struct task_struct *task;
->  	bool top_cs =3D cs =3D=3D &top_cpuset;
-> =20
-> +	percpu_rwsem_assert_held(&cpuset_rwsem);
->  	css_task_iter_start(&cs->css, 0, &it);
->  	while ((task =3D css_task_iter_next(&it))) {
->  		const struct cpumask *possible_mask =3D task_cpu_possible_mask(task);
-> @@ -1232,7 +1265,28 @@ static void update_tasks_cpumask(struct cpuset *cs=
-, struct cpumask *new_cpus)
->  		} else {
->  			cpumask_and(new_cpus, cs->effective_cpus, possible_mask);
->  		}
-> -		set_cpus_allowed_ptr(task, new_cpus);
-> +		/*
-> +		 * On systems with assymetric CPUs, it is possible that
-> +		 * cpumask will become empty or set_cpus_allowed_ptr() will
-> +		 * return an error even if we still have CPUs in
-> +		 * effective_cpus. In this case, we find a usable CPU walking
-> +		 * up the cpuset hierarchy and use that for this particular
-> +		 * task with an informational message about the change in the
-> +		 * hope that the users will adjust "cpuset.cpus" accordingly.
-> +		 */
-> +		if (cpumask_empty(new_cpus) ||
-> +		    set_cpus_allowed_ptr(task, new_cpus)) {
-
-IIUC, cpumask_empty(new_cpus) here implies
-cpumask_empty(cs->effective_cpus) but that shouldn't happen (cs should
-inherit non-empty mask from an ancestor). Do I miss/forget anything?
-
-This thus covers the case when p->user_cpus_ptr is incompatible with
-hotplug or cpuset.cpus allowance and a different affinity must be
-chosen. But doesn't that mean that the task would run _out_ of
-cs->effective_cpus?
-I guess that's unavoidable on asymmetric CPU archs but not no SMPs.
-Shouldn't the solution distinguish between the two? (I.e. never run out
-of effective_cpus on SMP.)
-
-Thanks,
-Michal
-
---x5gbpgbolwjq6gqy
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-
-iHUEABYKAB0WIQTrXXag4J0QvXXBmkMkDQmsBEOquQUCZBC6SwAKCRAkDQmsBEOq
-ubsfAP9GRE14O3/kdwbAKhko41gp/hUwOisMncJ5TvIoeuwJLwEAizS5evBXx/k8
-/zPGsyq2q3URP/Rg/A3cwE1LOhlyEgo=
-=Tteu
------END PGP SIGNATURE-----
-
---x5gbpgbolwjq6gqy--
