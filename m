@@ -1,82 +1,124 @@
 From: Michal =?utf-8?Q?Koutn=C3=BD?= <mkoutny-IBi9RG/b67k@public.gmane.org>
-Subject: Re: [PATCH 2/5] cgroup/cpuset: Include offline CPUs when tasks'
- cpumasks in top_cpuset are updated
-Date: Tue, 14 Mar 2023 18:34:11 +0100
-Message-ID: <20230314173411.fqaxoa2tfifnj6i3@blackpad>
+Subject: Re: [PATCH 3/5] cgroup/cpuset: Find another usable CPU if none found
+ in current cpuset
+Date: Tue, 14 Mar 2023 19:17:49 +0100
+Message-ID: <20230314181749.5b4k6selbgdhl3up@blackpad>
 References: <20230306200849.376804-1-longman@redhat.com>
- <20230306200849.376804-3-longman@redhat.com>
+ <20230306200849.376804-4-longman@redhat.com>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=pgp-sha512;
-        protocol="application/pgp-signature"; boundary="3qe72pixdf4dmzhs"
+        protocol="application/pgp-signature"; boundary="x5gbpgbolwjq6gqy"
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
-        t=1678815253; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+        t=1678817870; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
          mime-version:mime-version:content-type:content-type:
          in-reply-to:in-reply-to:references:references;
-        bh=DupMteheALIYB1G+k5H2NhRA08uOKiRKtdEEzOCrJJQ=;
-        b=k0qqRYbdVDScAcQj0BLGPYfF2MNBj4I4FWvzeXohYfytIiiAVBtL/2rsaGxdMQHe0A9/zf
-        rjPH1AAdnOU8/n9XnRqmMXAJDTrNjxRPM1gSb6G5pxHmFuX38e4BZ3wDCrxeSxPb29mD1p
-        1pr7kbztFidXw/9STbEoEPDpUM8CwAw=
+        bh=XXfCDy+DyUAKygjyGfiKxYTGe5xfVMSMGVkxJXSrpIQ=;
+        b=AOXZcoKpV9w3YCIDuYgTfnHKfE5UBefnEL82dP016q0d+5tyZEeEleZkDzhvXWCbo70DAt
+        eFzGFvQRS2krlcD2kwG+1wW3CTSTOlta0N7cRRsLL6/nkTwtwmluvBdmwCRT6Li759RnvH
+        0HjdSgwnmIiOZoUPLfnAoNgQkjh6Sc0=
 Content-Disposition: inline
-In-Reply-To: <20230306200849.376804-3-longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+In-Reply-To: <20230306200849.376804-4-longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 To: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Shuah Khan <shuah-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kselftest-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Will Deacon <will-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
 
 
---3qe72pixdf4dmzhs
+--x5gbpgbolwjq6gqy
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
 Content-Transfer-Encoding: quoted-printable
 
-Hello Waiman.
+Hello.
 
-On Mon, Mar 06, 2023 at 03:08:46PM -0500, Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org> =
+On Mon, Mar 06, 2023 at 03:08:47PM -0500, Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org> =
 wrote:
-> -		/*
-> -		 * Percpu kthreads in top_cpuset are ignored
-> -		 */
-> -		if (top_cs && (task->flags & PF_KTHREAD) &&
-> -		    kthread_is_per_cpu(task))
-> -			continue;
-> +		const struct cpumask *possible_mask =3D task_cpu_possible_mask(task);
+> On a system with asymmetric CPUs, a restricted task is one that can run
+> only a selected subset of available CPUs.  When a CPU goes offline or
+> when "cpuset.cpus" is changed, it is possible that a restricted task
+> may not have any runnable CPUs left in the current cpuset even if there
+> is still some CPUs in effective_cpus. In this case, the restricted task
+> cannot be run at all.
+>=20
+> There are several ways we may be able to handle this situation. Treating
+> it like empty effective_cpus is probably too disruptive and is unfair to
+> the normal tasks. So it is better to have some special handling for these
+> restricted tasks. One possibility is to move the restricted tasks up the
+> cpuset hierarchy, but it is tricky to do it right. Another solution is
+> to assign other usable CPUs to these tasks. This patch implements the
+> later alternative by finding one usable CPU by walking up the cpuset
+> hierarchy and printing an informational message to let the users know
+> that these restricted tasks are running in a cpuset with no usable CPU.
+>=20
+> Signed-off-by: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+> ---
+>  kernel/cgroup/cpuset.c | 56 +++++++++++++++++++++++++++++++++++++++++-
+>  1 file changed, 55 insertions(+), 1 deletion(-)
+>=20
+> diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
+> index bbf57dcb2f68..aa8225daf1d3 100644
+> --- a/kernel/cgroup/cpuset.c
+> +++ b/kernel/cgroup/cpuset.c
+> @@ -1202,6 +1202,38 @@ void rebuild_sched_domains(void)
+>  	cpus_read_unlock();
+>  }
 > =20
-> -		cpumask_and(new_cpus, cs->effective_cpus,
-> -			    task_cpu_possible_mask(task));
-> +		if (top_cs) {
-> +			/*
-> +			 * Percpu kthreads in top_cpuset are ignored
-> +			 */
-> +			if ((task->flags & PF_KTHREAD) && kthread_is_per_cpu(task))
-> +				continue;
-> +			cpumask_andnot(new_cpus, possible_mask, cs->subparts_cpus);
-> +		} else {
-> +			cpumask_and(new_cpus, cs->effective_cpus, possible_mask);
-> +		}
+> [...]
+>  /**
+>   * update_tasks_cpumask - Update the cpumasks of tasks in the cpuset.
+>   * @cs: the cpuset in which each task's cpus_allowed mask needs to be ch=
+anged
+> @@ -1218,6 +1250,7 @@ static void update_tasks_cpumask(struct cpuset *cs,=
+ struct cpumask *new_cpus)
+>  	struct task_struct *task;
+>  	bool top_cs =3D cs =3D=3D &top_cpuset;
+> =20
+> +	percpu_rwsem_assert_held(&cpuset_rwsem);
+>  	css_task_iter_start(&cs->css, 0, &it);
+>  	while ((task =3D css_task_iter_next(&it))) {
+>  		const struct cpumask *possible_mask =3D task_cpu_possible_mask(task);
+> @@ -1232,7 +1265,28 @@ static void update_tasks_cpumask(struct cpuset *cs=
+, struct cpumask *new_cpus)
+>  		} else {
+>  			cpumask_and(new_cpus, cs->effective_cpus, possible_mask);
+>  		}
+> -		set_cpus_allowed_ptr(task, new_cpus);
+> +		/*
+> +		 * On systems with assymetric CPUs, it is possible that
+> +		 * cpumask will become empty or set_cpus_allowed_ptr() will
+> +		 * return an error even if we still have CPUs in
+> +		 * effective_cpus. In this case, we find a usable CPU walking
+> +		 * up the cpuset hierarchy and use that for this particular
+> +		 * task with an informational message about the change in the
+> +		 * hope that the users will adjust "cpuset.cpus" accordingly.
+> +		 */
+> +		if (cpumask_empty(new_cpus) ||
+> +		    set_cpus_allowed_ptr(task, new_cpus)) {
 
-I'm wrapping my head around this slightly.
-1) I'd suggest swapping args in of cpumask_and() to have possible_mask
-   consistently first.
-2) Then I'm wondering whether two branches are truly different when
-   effective_cpus :=3D cpus_allowed - subparts_cpus
-   top_cpuset.cpus_allowed =3D=3D possible_mask        (1)
+IIUC, cpumask_empty(new_cpus) here implies
+cpumask_empty(cs->effective_cpus) but that shouldn't happen (cs should
+inherit non-empty mask from an ancestor). Do I miss/forget anything?
 
-IOW, can you see a difference in what affinities are set to eligible
-top_cpuset tasks before and after this patch upon CPU hotplug?
-(Hm, (1) holds only in v2. So is this a fix for v1 only?)
+This thus covers the case when p->user_cpus_ptr is incompatible with
+hotplug or cpuset.cpus allowance and a different affinity must be
+chosen. But doesn't that mean that the task would run _out_ of
+cs->effective_cpus?
+I guess that's unavoidable on asymmetric CPU archs but not no SMPs.
+Shouldn't the solution distinguish between the two? (I.e. never run out
+of effective_cpus on SMP.)
 
 Thanks,
 Michal
 
---3qe72pixdf4dmzhs
+--x5gbpgbolwjq6gqy
 Content-Type: application/pgp-signature; name="signature.asc"
 
 -----BEGIN PGP SIGNATURE-----
 
-iHUEABYKAB0WIQTrXXag4J0QvXXBmkMkDQmsBEOquQUCZBCwEQAKCRAkDQmsBEOq
-ucEEAP9OI9c5kJhqB0QtHzHKrGbCZbzmTOwe7E5LB65IzTMi/wD/VLC97u3WoAMa
-Fjzw23hqzv+JPbXpH+rkk6P0gvPDFQw=
-=tWCP
+iHUEABYKAB0WIQTrXXag4J0QvXXBmkMkDQmsBEOquQUCZBC6SwAKCRAkDQmsBEOq
+ubsfAP9GRE14O3/kdwbAKhko41gp/hUwOisMncJ5TvIoeuwJLwEAizS5evBXx/k8
+/zPGsyq2q3URP/Rg/A3cwE1LOhlyEgo=
+=Tteu
 -----END PGP SIGNATURE-----
 
---3qe72pixdf4dmzhs--
+--x5gbpgbolwjq6gqy--
