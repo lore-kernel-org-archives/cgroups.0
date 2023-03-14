@@ -1,47 +1,39 @@
-From: Waiman Long <longman@redhat.com>
-Subject: Re: [PATCH 1/5] cgroup/cpuset: Skip task update if hotplug doesn't
- affect current cpuset
-Date: Tue, 14 Mar 2023 14:20:53 -0400
-Message-ID: <176a4cfd-2902-16a2-b9e7-cb66e1c5b49c@redhat.com>
-References: <20230306200849.376804-1-longman@redhat.com>
- <20230306200849.376804-2-longman@redhat.com>
- <20230314165030.beu2ywtvqa3p45ta@blackpad>
+From: =?UTF-8?q?Michal=20Koutn=C3=BD?= <mkoutny@suse.com>
+Subject: [PATCH] io_uring/sqpoll: Do not set PF_NO_SETAFFINITY on sqpoll threads
+Date: Tue, 14 Mar 2023 19:33:32 +0100
+Message-ID: <20230314183332.25834-1-mkoutny@suse.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: base64
 Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1678818062;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=mZu0RzwIJilde3oJZLOmJNiQa9ScwZN4JDJCiFaDOu0=;
-        b=fzjg0E2UfHFJbVqEnPqoPSzynwKZdmbEbuEz1e9/2QKr0AiA3zPKMpQ0uMUiaxuc997aoy
-        EgV5koipdUBTSYJ2Fd6LnCI6Cp9p7WByUAl6eIEuEJfD50pW1QkrrWdXf3V8LjUGbFeNKs
-        mV9eDzi/hFWj368GliV1UHBr+CBiYEQ=
-Content-Language: en-US
-In-Reply-To: <20230314165030.beu2ywtvqa3p45ta@blackpad>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
+        t=1678818814; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding;
+        bh=0qGPjCdAtXC+XqD66XjuAi/v8OGi5D90eB+FdMZqJF4=;
+        b=JdhULJXkXMyNdDlyilRH5mWTjuWX8W63xoL7ZQRJJGxCcOiqkiWRdleW8GnbHAm050pPe7
+        mCTMJyTgkDYeCfpDOE4fv8w5FYUT+1xIsBateWg6K3b8YfoBgXr2sTO/Clhq+v7NRWWGWV
+        8Aq2YbcMiefG9VpKpNOGaRKbfhHXzu8=
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="iso-8859-1"; format="flowed"
-To: =?UTF-8?Q?Michal_Koutn=c3=bd?= <mkoutny@suse.com>
-Cc: Tejun Heo <tj@kernel.org>, Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, Shuah Khan <shuah@kernel.org>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, linux-kselftest@vger.kernel.org, Will Deacon <will@kernel.org>, Peter Zijlstra <peterz@infradead.org>
+Content-Type: text/plain; charset="macroman"
+To: io-uring@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, Jens Axboe <axboe@kernel.dk>, Pavel Begunkov <asml.silence@gmail.com>, Daniel Dao <dqminh@cloudflare.com>, Waiman Long <longman@redhat.com>
 
-
-On 3/14/23 12:50, Michal Koutn=C3=BD wrote:
-> On Mon, Mar 06, 2023 at 03:08:45PM -0500, Waiman Long <longman@redhat.com=
-> wrote:
->> If a hotplug event doesn't affect the current cpuset, there is no point
->> to call hotplug_update_tasks() or hotplug_update_tasks_legacy(). So
->> just skip it.
-> This skips "insane" modification of cs->cpus_allowed in
-> hotplug_update_tasks_legacy() but assuming cs->cpus_allowed is kept in
-> sync with cs->effective_cpus on v1, it is OK to skip the update based
-> only on effective_cpus check.
-
-Yes, effective_cpus is equivalent to cpus_allowed in v1 unless you mount=20
-the cpuset with the cpuset_v2_mode flag which will behave more like v2=20
-where effective_cpus is still the key.
-
-Cheers,
-Longman
-
+VXNlcnMgbWF5IHNwZWNpZnkgYSBDUFUgd2hlcmUgdGhlIHNxcG9sbCB0aHJlYWQgd291bGQgcnVu
+LiBUaGlzIG1heQpjb25mbGljdCB3aXRoIGNwdXNldCBvcGVyYXRpb25zIGJlY2F1c2Ugb2Ygc3Ry
+aWN0IFBGX05PX1NFVEFGRklOSVRZCnJlcXVpcmVtZW50LiBUaGF0IGZsYWcgaXMgdW5uZWNlc3Nh
+cnkgZm9yIHBvbGxpbmcgImtlcm5lbCIgdGhyZWFkcywgc2VlCnRoZSByZWFzb25pbmcgaW4gY29t
+bWl0IDAxZTY4Y2UwOGEzMCAoImlvX3VyaW5nL2lvLXdxOiBzdG9wIHNldHRpbmcKUEZfTk9fU0VU
+QUZGSU5JVFkgb24gaW8td3Egd29ya2VycyIpLiBEcm9wIHRoZSBmbGFnIG9uIHBvbGwgdGhyZWFk
+cyB0b28uCgpGaXhlczogMDFlNjhjZTA4YTMwICgiaW9fdXJpbmcvaW8td3E6IHN0b3Agc2V0dGlu
+ZyBQRl9OT19TRVRBRkZJTklUWSBvbiBpby13cSB3b3JrZXJzIikKTGluazogaHR0cHM6Ly9sb3Jl
+Lmtlcm5lbC5vcmcvYWxsLzIwMjMwMzE0MTYyNTU5LnBueXhkbGx6Z3c3am96Z3hAYmxhY2twYWQv
+ClNpZ25lZC1vZmYtYnk6IE1pY2hhbCBLb3V0bsO9IDxta291dG55QHN1c2UuY29tPgotLS0KIGlv
+X3VyaW5nL3NxcG9sbC5jIHwgMSAtCiAxIGZpbGUgY2hhbmdlZCwgMSBkZWxldGlvbigtKQoKZGlm
+ZiAtLWdpdCBhL2lvX3VyaW5nL3NxcG9sbC5jIGIvaW9fdXJpbmcvc3Fwb2xsLmMKaW5kZXggMDEx
+OWQzZjFhNTU2Li45ZGI0YmMxZjUyMWEgMTAwNjQ0Ci0tLSBhL2lvX3VyaW5nL3NxcG9sbC5jCisr
+KyBiL2lvX3VyaW5nL3NxcG9sbC5jCkBAIC0yMzMsNyArMjMzLDYgQEAgc3RhdGljIGludCBpb19z
+cV90aHJlYWQodm9pZCAqZGF0YSkKIAkJc2V0X2NwdXNfYWxsb3dlZF9wdHIoY3VycmVudCwgY3B1
+bWFza19vZihzcWQtPnNxX2NwdSkpOwogCWVsc2UKIAkJc2V0X2NwdXNfYWxsb3dlZF9wdHIoY3Vy
+cmVudCwgY3B1X29ubGluZV9tYXNrKTsKLQljdXJyZW50LT5mbGFncyB8PSBQRl9OT19TRVRBRkZJ
+TklUWTsKIAogCW11dGV4X2xvY2soJnNxZC0+bG9jayk7CiAJd2hpbGUgKDEpIHsKLS0gCjIuMzku
+MgoK
