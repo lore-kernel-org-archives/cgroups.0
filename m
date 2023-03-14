@@ -1,68 +1,121 @@
-From: Daniel Dao <dqminh-lDpJ742SOEtZroRs9YW3xA@public.gmane.org>
-Subject: Re: [PATCH] io_uring/io-wq: stop setting PF_NO_SETAFFINITY on io-wq workers
-Date: Tue, 14 Mar 2023 10:07:40 +0000
-Message-ID: <CA+wXwBRGzfZB9tjKy5C2_pW1Z4yH2gNGxx79Fk-p3UsOWKGdqA@mail.gmail.com>
-References: <0f0e791b-8eb8-fbb2-ea94-837645037fae@kernel.dk>
+From: Dietmar Eggemann <dietmar.eggemann-5wv7dgnIgG8@public.gmane.org>
+Subject: Re: [PATCH v3] sched: cpuset: Don't rebuild root domains on
+ suspend-resume
+Date: Tue, 14 Mar 2023 12:41:36 +0100
+Message-ID: <f2eb03be-53dc-73db-ede9-99ecbb189782@arm.com>
+References: <20230228174627.vja5aejq27dsta2u@airbuntu>
+ <Y/7/SLzvK8LfB29z@localhost.localdomain>
+ <20230301122852.zgzreby42lh2zf6w@airbuntu>
+ <Y/9gmDRlGOChIwpf@localhost.localdomain>
+ <20230301170322.xthlso7jfkixlyex@airbuntu>
+ <ZAhhGi55BkYkc3ss@localhost.localdomain>
+ <CA+khW7hmE0tECG2qfKW1HN9yLVOLUn5Zzx4Rz-wHYDtSUPYotw@mail.gmail.com>
+ <ZAmCzJQZl7j/m2oN@localhost.localdomain>
+ <CA+khW7iAeTALH5b6upHXs1RotFBohVeZCcAp5H+r-=L05kqnww@mail.gmail.com>
+ <20230311185150.stvtcbdkoofgn3wd@airbuntu>
+ <ZA9RZ3VvGXKp+1L6@localhost.localdomain>
+ <7070da53-a5a7-6965-5604-abee3cae9d46@arm.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 8bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=cloudflare.com; s=google; t=1678788471;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=Ok3cioucmJfuqToGWB847OqBj7qCzxyQQ0EoG5bYZE4=;
-        b=R37fmEuO0gMfIx7lcApi2XBVNccL81RrFPvxi9zi6GkpXFewb3tSL2AJQCIlrc7PWa
-         Vbh6TX70ujrEhyBXTGjbJKDwjK2t/cpGPCyKWORm9vs2Y+t5HYGzsIJiWiUWjjXHah5i
-         T4ZotFNP5ZbdIju97rz4G3JZlCrQJG9hHV87s=
-In-Reply-To: <0f0e791b-8eb8-fbb2-ea94-837645037fae-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>
+Content-Language: en-US
+In-Reply-To: <7070da53-a5a7-6965-5604-abee3cae9d46-5wv7dgnIgG8@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="windows-1252"
-To: Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>
-Cc: io-uring <io-uring-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Type: text/plain; charset="utf-8"
+To: Juri Lelli <juri.lelli-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Qais Yousef <qyousef-wp2msK0BRk8tq7phqP6ubQ@public.gmane.org>
+Cc: Hao Luo <haoluo-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Ingo Molnar <mingo-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Steven Rostedt <rostedt-nx8X9YLhiw1AfugRpC6u6w@public.gmane.org>, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, luca.abeni-5rdYK369eBLQB0XuIGIEkQ@public.gmane.org, claudio-YOzL5CV4y4YG1A2ADO40+w@public.gmane.org, tommaso.cucinotta-5rdYK369eBLQB0XuIGIEkQ@public.gmane.org, bristot-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, mathieu.poirier-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Vincent Guittot <vincent.guittot-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, Wei Wang <wvw-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Rick Yiu <rickyiu-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Quentin Perret <qperret-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Heiko Carstens <hca-tEXmvtCZX7AybS5Ee8rs3A@public.gmane.org>, Vasily Gorbik <gor-tEXmvtCZX7AybS5Ee8rs3A@public.gmane.org>, Alexander Gordeev <agordeev-tEXmvtCZX7AybS5Ee8rs3A@public.gmane.org>, Sudeep Holla <sudeep.holla-5wv7dgnIgG8@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, linux-s390-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, x86-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org
 
-On Wed, Mar 8, 2023 at 2:27=E2=80=AFPM Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org> wrote:
->
-> Every now and then reports come in that are puzzled on why changing
-> affinity on the io-wq workers fails with EINVAL. This happens because the=
-y
-> set PF_NO_SETAFFINITY as part of their creation, as io-wq organizes
-> workers into groups based on what CPU they are running on.
->
-> However, this is purely an optimization and not a functional requirement.
-> We can allow setting affinity, and just lazily update our worker to wqe
-> mappings. If a given io-wq thread times out, it normally exits if there's
-> no more work to do. The exception is if it's the last worker available.
-> For the timeout case, check the affinity of the worker against group mask
-> and exit even if it's the last worker. New workers should be created with
-> the right mask and in the right location.
+On 13/03/2023 18:10, Dietmar Eggemann wrote:
+> On 13/03/2023 17:37, Juri Lelli wrote:
+>> On 11/03/23 18:51, Qais Yousef wrote:
+>>> On 03/09/23 14:23, Hao Luo wrote:
+>>>> On Wed, Mar 8, 2023 at 10:55 PM Juri Lelli <juri.lelli-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org> wrote:
+>>>>>
+>>>>> On 08/03/23 10:01, Hao Luo wrote:
+>>>>>> On Wed, Mar 8, 2023 at 2:20 AM Juri Lelli <juri.lelli-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org> wrote:
+>>>>>>>
+>>>>>>> On 01/03/23 17:03, Qais Yousef wrote:
+>>>>>>>> On 03/01/23 15:26, Juri Lelli wrote:
+> 
+> [...]
+> 
+>>> Yeah I am working on 5.10 too (this will need to be backported to 5.10 and 5.15
+>>> ultimately) and had the same crash because task is NULL.
+>>>
+>>> Fixed it this way which I think what you intended to do Juri? It moves the
+>>> check for dl_task(task) inside cgroup_taskset_for_each() loop.
+>>>
+>>> 	diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
+>>> 	index 83a8943467fb..06d6bb68d86b 100644
+>>> 	--- a/kernel/cgroup/cpuset.c
+>>> 	+++ b/kernel/cgroup/cpuset.c
+>>> 	@@ -2495,11 +2495,11 @@ static int cpuset_can_attach(struct cgroup_taskset *tset)
+>>> 			ret = security_task_setscheduler(task);
+>>> 			if (ret)
+>>> 				goto out_unlock;
+>>> 	-       }
+>>> 	 
+>>> 	-       if (dl_task(task)) {
+>>> 	-               cs->deadline_tasks++;
+>>> 	-               cpuset_attach_old_cs->deadline_tasks--;
+>>> 	+               if (dl_task(task)) {
+>>> 	+                       cs->deadline_tasks++;
+>>> 	+                       cpuset_attach_old_cs->deadline_tasks--;
+>>> 	+               }
+>>> 		}
+>>> 	 
+>>> 		/*
+>>
+>> Duh, indeed.
+>>
+>>> Like Hao I don't have any deadline tasks in the system. With the fix above
+>>> I don't notice the delay on suspend resume using your patches.
+>>
+>> OK, cool.
+>>
+>>> If you want any debug; please feel free to add them into your branch so I can
+>>> run with that and give you the log.
+>>
+>> Will need to find time to run some tests with DEADLINE tasks, yeah.
+>> Maybe Dietmar, since you reported as well the issue above with your
+>> testing, you could help with testing DEADLINE?
+> 
+> Ah, now I see! It's the same issue I saw. And it's not specifically
+> related to DL tasks. Any tasks which you move into a cpuset will trigger
+> this.
+> Yeah, can do some DL tests later on this fix.
 
-The patch resolved the bug around enabling cpuset for subtree_control for m=
-e.
-However, it also doesn't prevent user from setting cpuset value that
-is incompatible
-with iou threads. For example, on a 2-numa 4-cpu node, new iou-wrks are bou=
-nd to
-2-3 while we can set cpuset.cpus to 1-2 successfully. The end result
-is a mix of cpu
-distribution such as:
+This fix also works for my DL test.
 
-  pid 533's current affinity list: 1,2 # process
-  pid 720's current affinity list: 1,2 # iou-wrk-533
-  pid 5236's current affinity list: 2,3 # iou-wrk-533, running outside of c=
-puset
+root@juno:~# ps2 | grep DLN
+   83    83 140      0   - DLN sugov:0
+   84    84 140      0   - DLN sugov:1
+ 1601  1602 140      0   - DLN thread0-0
+ 1601  1603 140      0   - DLN thread0-1
+ 1601  1604 140      0   - DLN thread0-2
+ 1601  1605 140      0   - DLN thread0-3
+ 1601  1606 140      0   - DLN thread0-4
+ 1601  1607 140      0   - DLN thread0-5
+ 1601  1608 140      0   - DLN thread0-6
+ 1601  1609 140      0   - DLN thread0-7
+ 1601  1610 140      0   - DLN thread0-8
+ 1601  1611 140      0   - DLN thread0-9
+ 1601  1612 140      0   - DLN thread0-10
+ 1601  1613 140      0   - DLN thread0-11
 
+cgroupv1
 
-IMO this violated the principle of cpuset and can be confusing for end user=
-s.
-I think I prefer Waiman's suggestion of allowing an implicit move to cpuset
-when enabling cpuset with subtree_control but not explicit moves such as wh=
-en
-setting cpuset.cpus or writing the pids into cgroup.procs. It's easier to r=
-eason
-about and make the failure mode more explicit.
+root@juno:# cd /sys/fs/cgroup/cpuset
+root@juno:# mkdir cs1
+root@juno:# echo 0 > cs1/cpuset.mems
+root@juno:# echo 0,3-5 > cs1/cpuset.cpus
 
-What do you think ?
+root@juno:# cgclassify -g cpuset:cs1 1602 1603 1604 $$
 
-Cheers,
-Daniel.
+One remaining doubt: `cgclassify` will still move one task at a time so
+cpuset_can_attach() has to deal with one task per call. But
+cgroup_taskset_for_each() says that tset can contain multiple tasks. In
+this case we would have to think about only changing cs->deadline_tasks
+if all tasks can be moved.
+Don't know which test would trigger a tset with multiple tasks in
+cpuset_can_attach().
