@@ -1,149 +1,56 @@
-From: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [RFC PATCH 2/3] sched/cpuset: Keep track of SCHED_DEADLINE tasks
- in cpusets
-Date: Wed, 15 Mar 2023 11:46:48 -0400
-Message-ID: <7a3b31bf-4f6a-6525-9c6a-2bae44d7b0af@redhat.com>
-References: <20230315121812.206079-1-juri.lelli@redhat.com>
- <20230315121812.206079-3-juri.lelli@redhat.com>
+From: Will Deacon <will-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCH 0/5] cgroup/cpuset: Miscellaneous updates
+Date: Wed, 15 Mar 2023 16:24:36 +0000
+Message-ID: <20230315162436.GA19015@willie-the-truck>
+References: <20230306200849.376804-1-longman@redhat.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1678895218;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=G/Dxhyw2OvQGnfASfvPy6mJlOrvrV/O/zIhgC4SLY1o=;
-        b=CglkHgjcc216lL1T/A8uuxTZ7BZlsUPxBnCHiKRl7DBYXCdX0FAxlRXo9tLc02y6m/M8ln
-        OgyXyR4tgiGili/kQHt/Co5yHnfCnZKcWe3RZlUdhWwnS7aBa1Lh2iPY3zCcsztgLhrVFW
-        nii8oT9Ibfcu6NVjQaxsBcDfGkO71UU=
-Content-Language: en-US
-In-Reply-To: <20230315121812.206079-3-juri.lelli-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1678897482;
+        bh=rukzdJCI+tw+s5fqfJFihxS3X4oqBD7ma0Je+Y6QpCI=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=gvcMCkZvmy0xyYulnpAkGL249vbZumxIZ0gmXkUWaLHYTmhw1kp33kMRZlKUg5a76
+         X44pZeW2eTX0mHmn2iwhbcGHa12xNEnuJertqUlxQxRTC8LM1winp7ziDhrja4Xo4V
+         tKq84JCNasxgBzolzfo0cw+o2kc3rrFV4e+DJCpcevbiwn+vVedPEWX23oaWXkZKRY
+         HgX7o5nl4rEs19UhpWrPMaZ42A++sXm7JfDVxHr0gmBnc+Dr23ZzeZU3TK2ZueGYYq
+         lS07EIHkniiwkywE8VmoBG75ISitCjmfwdKKNkXh+iBKyxRazFcaGViCpbdGGXm6qr
+         gVeSv56EqsbrA==
+Content-Disposition: inline
+In-Reply-To: <20230306200849.376804-1-longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"; format="flowed"
-To: Juri Lelli <juri.lelli-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Ingo Molnar <mingo-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Qais Yousef <qyousef-wp2msK0BRk8tq7phqP6ubQ@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Hao Luo <haoluo-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Cc: Dietmar Eggemann <dietmar.eggemann-5wv7dgnIgG8@public.gmane.org>, Steven Rostedt <rostedt-nx8X9YLhiw1AfugRpC6u6w@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, luca.abeni-5rdYK369eBLQB0XuIGIEkQ@public.gmane.org, claudio-YOzL5CV4y4YG1A2ADO40+w@public.gmane.org, tommaso.cucinotta-5rdYK369eBLQB0XuIGIEkQ@public.gmane.org, bristot-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, mathieu.poirier-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Vincent Guittot <vincent.guittot-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, Wei Wang <wvw-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Rick Yiu <rickyiu-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Quentin Perret <qperret-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Heiko Carstens <hca-tEXmvtCZX7AybS5Ee8rs3A@public.gmane.org>, Vasily Gorbik <gor-tEXmvtCZX7AybS5Ee8rs3A@public.gmane.org>, Alexander Gordeev <agordeev-tEXmvtCZX7AybS5Ee8rs3A@public.gmane.org>, Sudeep Holla <sudeep.holla-5wv7dgnIgG8@public.gmane.org>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Shuah Khan <shuah-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kselftest-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
 
+Hi Waiman,
 
-On 3/15/23 08:18, Juri Lelli wrote:
-> Qais reported that iterating over all tasks when rebuilding root domains
-> for finding out which ones are DEADLINE and need their bandwidth
-> correctly restored on such root domains can be a costly operation (10+
-> ms delays on suspend-resume).
->
-> To fix the problem keep track of the number of DEADLINE tasks belonging
-> to each cpuset and then use this information (followup patch) to only
-> perform the above iteration if DEADLINE tasks are actually present in
-> the cpuset for which a corresponding root domain is being rebuilt.
->
-> Reported-by: Qais Yousef <qyousef-wp2msK0BRk8tq7phqP6ubQ@public.gmane.org>
-> Signed-off-by: Juri Lelli <juri.lelli-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-> ---
->   include/linux/cpuset.h |  4 ++++
->   kernel/cgroup/cgroup.c |  4 ++++
->   kernel/cgroup/cpuset.c | 25 +++++++++++++++++++++++++
->   kernel/sched/core.c    | 10 ++++++++++
->   4 files changed, 43 insertions(+)
->
-> diff --git a/include/linux/cpuset.h b/include/linux/cpuset.h
-> index 355f796c5f07..0348dba5680e 100644
-> --- a/include/linux/cpuset.h
-> +++ b/include/linux/cpuset.h
-> @@ -71,6 +71,8 @@ extern void cpuset_init_smp(void);
->   extern void cpuset_force_rebuild(void);
->   extern void cpuset_update_active_cpus(void);
->   extern void cpuset_wait_for_hotplug(void);
-> +extern void inc_dl_tasks_cs(struct task_struct *task);
-> +extern void dec_dl_tasks_cs(struct task_struct *task);
->   extern void cpuset_lock(void);
->   extern void cpuset_unlock(void);
->   extern void cpuset_cpus_allowed(struct task_struct *p, struct cpumask *mask);
-> @@ -196,6 +198,8 @@ static inline void cpuset_update_active_cpus(void)
->   
->   static inline void cpuset_wait_for_hotplug(void) { }
->   
-> +static inline void inc_dl_tasks_cs(struct task_struct *task) { }
-> +static inline void dec_dl_tasks_cs(struct task_struct *task) { }
->   static inline void cpuset_lock(void) { }
->   static inline void cpuset_unlock(void) { }
->   
-> diff --git a/kernel/cgroup/cgroup.c b/kernel/cgroup/cgroup.c
-> index c099cf3fa02d..357925e1e4af 100644
-> --- a/kernel/cgroup/cgroup.c
-> +++ b/kernel/cgroup/cgroup.c
-> @@ -57,6 +57,7 @@
->   #include <linux/file.h>
->   #include <linux/fs_parser.h>
->   #include <linux/sched/cputime.h>
-> +#include <linux/sched/deadline.h>
->   #include <linux/psi.h>
->   #include <net/sock.h>
->   
-> @@ -6673,6 +6674,9 @@ void cgroup_exit(struct task_struct *tsk)
->   	list_add_tail(&tsk->cg_list, &cset->dying_tasks);
->   	cset->nr_tasks--;
->   
-> +	if (dl_task(tsk))
-> +		dec_dl_tasks_cs(tsk);
-> +
->   	WARN_ON_ONCE(cgroup_task_frozen(tsk));
->   	if (unlikely(!(tsk->flags & PF_KTHREAD) &&
->   		     test_bit(CGRP_FREEZE, &task_dfl_cgroup(tsk)->flags)))
-> diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
-> index 8d82d66d432b..57bc60112618 100644
-> --- a/kernel/cgroup/cpuset.c
-> +++ b/kernel/cgroup/cpuset.c
-> @@ -193,6 +193,12 @@ struct cpuset {
->   	int use_parent_ecpus;
->   	int child_ecpus_count;
->   
-> +	/*
-> +	 * number of SCHED_DEADLINE tasks attached to this cpuset, so that we
-> +	 * know when to rebuild associated root domain bandwidth information.
-> +	 */
-> +	int nr_deadline_tasks;
-> +
->   	/* Invalid partition error code, not lock protected */
->   	enum prs_errcode prs_err;
->   
-> @@ -245,6 +251,20 @@ static inline struct cpuset *parent_cs(struct cpuset *cs)
->   	return css_cs(cs->css.parent);
->   }
->   
-> +void inc_dl_tasks_cs(struct task_struct *p)
-> +{
-> +	struct cpuset *cs = task_cs(p);
-> +
-> +	cs->nr_deadline_tasks++;
-> +}
-> +
-> +void dec_dl_tasks_cs(struct task_struct *p)
-> +{
-> +	struct cpuset *cs = task_cs(p);
-> +
-> +	cs->nr_deadline_tasks--;
-> +}
-> +
->   /* bits in struct cpuset flags field */
->   typedef enum {
->   	CS_ONLINE,
-> @@ -2472,6 +2492,11 @@ static int cpuset_can_attach(struct cgroup_taskset *tset)
->   		ret = security_task_setscheduler(task);
->   		if (ret)
->   			goto out_unlock;
-> +
-> +		if (dl_task(task)) {
-> +			cs->nr_deadline_tasks++;
-> +			cpuset_attach_old_cs->nr_deadline_tasks--;
-> +		}
->   	}
+On Mon, Mar 06, 2023 at 03:08:44PM -0500, Waiman Long wrote:
+> This patch series includes miscellaneous update to the cpuset and its
+> testing code.
+> 
+> Patch 2 is actually a follow-up of commit 3fb906e7fabb ("cgroup/cpuset:
+> Don't filter offline CPUs in cpuset_cpus_allowed() for top cpuset tasks").
+> 
+> Patches 3-4 are for handling corner cases when dealing with
+> task_cpu_possible_mask().
 
-Any one of the tasks in the cpuset can cause the test to fail and abort 
-the attachment. I would suggest that you keep a deadline task transfer 
-count in the loop and then update cs and cpouset_attach_old_cs only 
-after all the tasks have been iterated successfully.
+Thanks for cc'ing me on these. I ran my arm64 asymmetric tests and, fwiw,
+I get the same results as vanilla -rc2, so that's good.
+
+One behaviour that persists (and which I thought might be addressed by this
+series) is the following. Imagine a 4-CPU system with CPUs 0-1 being 64-bit
+only. If I configure a parent cpuset with 'cpuset.cpus' of "0-2" and a
+child cpuset with 'cpuset.cpus' of "0-1", then attaching a 32-bit task
+to the child cpuset will result in an affinity mask of 4. If I then change
+'cpuset.cpus' of the parent cpuset to "0-1,3", the affinity mask of the
+task remains at '4' whereas it might be nice to update it to '8', in-line
+with the new affinity mask of the parent cpuset.
+
+Anyway, I'm not complaining (this is certainly _not_ a regression), but
+I thought I'd highlight it in case you were aiming to address this with
+your changes.
 
 Cheers,
-Longman
 
+Will
