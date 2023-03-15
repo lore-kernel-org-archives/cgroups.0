@@ -1,103 +1,100 @@
-From: Michal =?utf-8?Q?Koutn=C3=BD?= <mkoutny-IBi9RG/b67k@public.gmane.org>
-Subject: Re: [PATCH 2/5] cgroup/cpuset: Include offline CPUs when tasks'
- cpumasks in top_cpuset are updated
-Date: Wed, 15 Mar 2023 11:06:18 +0100
-Message-ID: <20230315100618.6cypp4l3vjpg2p7r@blackpad>
-References: <20230306200849.376804-1-longman@redhat.com>
- <20230306200849.376804-3-longman@redhat.com>
- <20230314173411.fqaxoa2tfifnj6i3@blackpad>
- <957bd5c2-1bae-de95-f119-483ef64dab60@redhat.com>
+From: Matthew Wilcox <willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
+Subject: Re: [PATCH] memcg: page_cgroup_ino() get memcg from
+ compound_head(page)
+Date: Wed, 15 Mar 2023 12:19:19 +0000
+Message-ID: <ZBG3xzGd6j+uByyN@casper.infradead.org>
+References: <20230313083452.1319968-1-yosryahmed@google.com>
+ <20230313124431.fe901d79bc8c7dc96582539c@linux-foundation.org>
+ <CAJD7tkZKhNRiWOrUOiHWuEQbOuDhjyHx0H01M1mQziM36viq9w@mail.gmail.com>
+ <ZBFPh6j+4Khl1Je8@casper.infradead.org>
+ <CAJD7tkYFjRPq6ATj-d0P25FhDaMzKdXfqTa_hh7TZp_Xyt4v+w@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha512;
-        protocol="application/pgp-signature"; boundary="yqt7k42xoiztgvzs"
+Content-Transfer-Encoding: 8bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
-        t=1678874780; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=auNt55LvkWQ3/5jHUnJWSmBV3O1aurOSCvt2OfSASXw=;
-        b=EWusQoZrHm4R+Z8gOwf+VWiGLfTg/YPBBz4ukCor9snEInG4fAo11/bMdFC5EFIdKhzZ0Q
-        htin41SUiyeWwMG+mevKr1YFOTOb489CJxVl4D+YgVVzz03EGv+stcJD7fwwWXLjvNl6HV
-        VJ2dt74dBXEM23dSMQs4clS7lCkjrS4=
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Transfer-Encoding:
+        Content-Type:MIME-Version:References:Message-ID:Subject:Cc:To:From:Date:
+        Sender:Reply-To:Content-ID:Content-Description;
+        bh=YEHaS1jbcFt6XFTHtzvHwBBDGnKA7GP1NQZcvCyxIVc=; b=ibZv7O8AfRIpW1okpk0auST6ju
+        QGUQE09QAEhtE72dYe30m3Dx/TOe/gWHxKNlcCcZ9+EUAiQ2s+8VPtKAkZlSmetzcOHPSTNtoV5vA
+        ZyUgKojS86wmMbFQw0TSsvCFRTsuh9xBIQmKbJcHkSRfozwqbyLbIBPkV3NyIaHQM55O98xXphp1a
+        zWzRoqY9juw8uxfElduAWBKt7cU6+xxk17aQQeXoLIsR4ElNNMLqtkx9VbmHi8G67IY1jSHrSgg0Y
+        +mD2lwCmLX5Xms/qJDQg6vHlcKDWhlRph2sAKiurG5rDNTp7J4rUQRu4llhEaK6aiKd82vJa78t8T
+        Q550uQfA==;
 Content-Disposition: inline
-In-Reply-To: <957bd5c2-1bae-de95-f119-483ef64dab60-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+In-Reply-To: <CAJD7tkYFjRPq6ATj-d0P25FhDaMzKdXfqTa_hh7TZp_Xyt4v+w-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-To: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Shuah Khan <shuah-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kselftest-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Will Deacon <will-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
+Content-Type: text/plain; charset="utf-8"
+To: Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Muchun Song <muchun.song-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Naoya Horiguchi <naoya.horiguchi-YMj9X0ASwKA@public.gmane.org>, Miaohe Lin <linmiaohe-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
+On Wed, Mar 15, 2023 at 12:04:10AM -0700, Yosry Ahmed wrote:
+> On Tue, Mar 14, 2023 at 9:54 PM Matthew Wilcox <willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org> wrote:
+> >
+> > On Mon, Mar 13, 2023 at 02:08:53PM -0700, Yosry Ahmed wrote:
+> > > On Mon, Mar 13, 2023 at 12:44 PM Andrew Morton
+> > > <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org> wrote:
+> > > >
+> > > > On Mon, 13 Mar 2023 08:34:52 +0000 Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org> wrote:
+> > > >
+> > > > > From: Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+> > > > >
+> > > > > In a kernel with added WARN_ON_ONCE(PageTail) in page_memcg_check(), we
+> > > > > observed a warning from page_cgroup_ino() when reading
+> > > > > /proc/kpagecgroup.
+> > > >
+> > > > If this is the only known situation in which page_memcg_check() is
+> > > > passed a tail page, why does page_memcg_check() have
+> > > >
+> > > >         if (PageTail(page))
+> > > >                 return NULL;
+> > > >
+> > > > ?  Can we remove this to simplify, streamline and clarify?
+> > >
+> > > I guess it's a safety check so that we don't end up trying to cast a
+> > > tail page to a folio. My opinion is to go one step further and change
+> > > page_memcg_check() to do return the memcg of the head page, i.e:
+> > >
+> > > static inline struct mem_cgroup *page_memcg_check(struct page *page)
+> > > {
+> > >     return folio_memcg_check(page_folio(page));
+> > > }
+> >
+> > If you look at my commit becacb04fdd4, I was preserving the existing
+> > behaviour of page_memcg_check() when passed a tail page.  It would
+> > previously, rightly or wrongly, read the memcg_data from the tail page
+> > and get back NULL.
+> 
+> Right, I looked at that. I also looked at 1b7e4464d43a which added
+> folio_memcg() and changed page_memcg()'s behavior to use page_folio()
+> to retrieve the memcg from the head, which made me wonder why
+> different decisions were made for these 2 helpers.
+> 
+> Were the users of page_memcg() already passing in head pages only?
 
---yqt7k42xoiztgvzs
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+There were 18 months between those commits ... I'd learned to be
+more careful about maintaining the semantics instead of changing
+them to "what they should have been".
 
-On Tue, Mar 14, 2023 at 03:02:53PM -0400, Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org> =
-wrote:
-> > > +			cpumask_andnot(new_cpus, possible_mask, cs->subparts_cpus);
-> > > +		} else {
-> > > +			cpumask_and(new_cpus, cs->effective_cpus, possible_mask);
-> > > +		}
-> > I'm wrapping my head around this slightly.
-> > 1) I'd suggest swapping args in of cpumask_and() to have possible_mask
-> >     consistently first.
-> I don't quite understand what you meant by "swapping args". It is effecti=
-ve
-> new_cpus =3D cs->effective_cpus =E2=88=A9 possible_mask. What is the poin=
-t of swapping
-> cs->effective_cpus and possible_mask.
+> >
+> > I suspect that was not the intended behaviour, but I do not think this
+> > patch is the right fix; it simply papers over the problem and maybe
+> > creates a new one.  Callers of page_memcg_check() should be eliminated,
+> > precisely because of this ambiguity.  It's up to the people who understand
+> > each of the callers who need to make the decision to always convert the
+> > page that they have to a folio and ask about its memcg, or whether they
+> > want to preserve the existing behaviour of returning NULL for tail pages.
+> >
+> > So, I say NACK to this patch as it does not preserve existing behaviour,
+> > and does not advance our understanding of what we have wrought.
+> 
+> I am not sure which patch you are NACKing, the original patch from
+> Hugh (adding compound_head() to page_cgroup_ino()) or the suggested
+> alternative patch which changes page_memcg_check() to use
+> page_folio().
 
-No effect except better readability (possible_mask comes first in the
-other branch above too, left hand arg as the "base" that's modified).
+Both patches are NACKed.  page_memcg_check() needs to go away
+because it has the tail page ambiguity.  Both callers should be using
+folio_memcg_check() directly and resolving for themselves what the
+correct behaviour is when seeing a tail page.
 
-
-> > 2) Then I'm wondering whether two branches are truly different when
-> >     effective_cpus :=3D cpus_allowed - subparts_cpus
-> >     top_cpuset.cpus_allowed =3D=3D possible_mask        (1)
-> effective_cpus may not be equal "cpus_allowed - subparts_cpus" if some of
-> the CPUs are offline as effective_cpus contains only online CPUs.
-> subparts_cpu can include offline cpus too. That is why I choose that
-> expression. I will add a comment to clarify that.
-
-I see now that it returns offlined cpus to top cpuset's tasks.
-
-> >=20
-> > IOW, can you see a difference in what affinities are set to eligible
-> > top_cpuset tasks before and after this patch upon CPU hotplug?
-> > (Hm, (1) holds only in v2. So is this a fix for v1 only?)
->=20
-> This is due to the fact that cpu hotplug code currently doesn't update the
-> cpu affinity of tasks in the top cpuset. Tasks not in the top cpuset can
-> rely on the hotplug code to update the cpu affinity appropriately.
-
-Oh, I mistook this for hotplug changing behavior but it's actually for
-updating top_cpuset when its children becomes a partition root.
-
-	IIUC, top cpuset + hotplug has been treated specially because
-	hotplug must have taken care of affinity regardless of cpuset.
-	v1 allowed modification of top cpuset's mask (not sure if that
-	worked), v2 won't allow direct top cpuset's mask modificiation
-	but indirectly via partition root children.
-
-So this is a continuation for 3fb906e7fabb ("cgroup/cpuset: Don't filter
-offline CPUs in cpuset_cpus_allowed() for top cpuset tasks") to ensure
-hotplug offline/online cycle won't overwrite top_cpuset tasks'
-affinities (when partition change during offlined period).
-This looks correct in this regard then.
-(I wish it were simpler but that's for a different/broader top
-cpuset+hotplug approach.)
-
-Thanks,
-Michal
-
---yqt7k42xoiztgvzs
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-
-iHUEABYKAB0WIQTrXXag4J0QvXXBmkMkDQmsBEOquQUCZBGYmAAKCRAkDQmsBEOq
-uaWcAQDsTN8vvkQ0WHz1vK9CcBuE+hz0udNCFVljCdlcN7YaoQD/ReBCP2l0Ow8V
-Ka835fpnfysSJql4yq+mHpTDP+XMJAk=
-=JvSg
------END PGP SIGNATURE-----
-
---yqt7k42xoiztgvzs--
