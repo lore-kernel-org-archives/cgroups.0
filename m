@@ -1,49 +1,153 @@
-From: Jens Axboe <axboe@kernel.dk>
-Subject: Re: [PATCH] io_uring/sqpoll: Do not set PF_NO_SETAFFINITY on
- sqpoll threads
-Date: Wed, 15 Mar 2023 06:51:11 -0600
-Message-ID: <167888467141.25248.3419360093103116663.b4-ty@kernel.dk>
-References: <20230314183332.25834-1-mkoutny@suse.com>
+From: =?UTF-8?Q?Christian_K=c3=b6nig?= <christian.koenig@amd.com>
+Subject: Re: [RFC 01/10] drm: Track clients by tgid and not tid
+Date: Wed, 15 Mar 2023 14:19:16 +0100
+Message-ID: <4213d6df-08ef-dd9e-180b-944981f1427e@amd.com>
+References: <20230314141904.1210824-1-tvrtko.ursulin@linux.intel.com>
+ <20230314141904.1210824-2-tvrtko.ursulin@linux.intel.com>
+ <2d4c10c7-6406-7458-4f52-4260b415874e@amd.com>
+ <b3b63d6e-438e-1b5a-6d01-6164c2160f75@linux.intel.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-Return-path: <io-uring-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=kernel-dk.20210112.gappssmtp.com; s=20210112; t=1678884672; x=1681476672;
-        h=content-transfer-encoding:mime-version:date:message-id:subject
-         :references:in-reply-to:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=cZkbtoWja85fMLAbjXK98n41T/e7K5OhmawF7QD5eFY=;
-        b=bF+iZZkg40UqrsVEUQ/fdqKax2RZLHQVGPSVjvFW4QDzwVaPa6RrvqjDS5UEoX/wpi
-         o/VnZDCP288oppcit1QsMrBMIM4BVDfcEt4JgypAr/JIjyCqVFtah0iWYN2xhnPir9Cz
-         sKtw8Qf5K0UgbzktJxeq1B0bG4oqgGtU58K3kWkTBhhEGeq4grRGDga3ocWxvwnRxrvk
-         pEPQR0v2cxDvyz/HZqTEDr4AvjQj/BhyZm5M+ZDfps6IT1xaz1DeFBUAL1u5eivcP16q
-         /jGik346ZKOzg3ufG7iUiSaRLzNfgMZQi6VoehmHoPZ16b2RGSdLZjJA0Tu58Bo5IF3A
-         GP/A==
-In-Reply-To: <20230314183332.25834-1-mkoutny@suse.com>
-List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="iso-8859-1"
-To: io-uring@vger.kernel.org, =?utf-8?q?Michal_Koutn=C3=BD?= <mkoutny@suse.com>
-Cc: linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, Pavel Begunkov <asml.silence@gmail.com>, Daniel Dao <dqminh@cloudflare.com>, Waiman Long <longman@redhat.com>
+Content-Transfer-Encoding: 8bit
+Return-path: <intel-gfx-bounces@lists.freedesktop.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=amd.com; s=selector1; 
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=jisZkeZsvgO4eaA5IgvhCOBQ7zFs0BKboOmhofHbQQs=;
+ b=eqUGMazZFm9UPY4OVC8pMLzBFMnOStUPcV3q2XW/iT3Gxo/gi9Om4i+8It0tyKUI8CTOsApAlq+1dbbCt6WfudWlorm0W+W0A+LkGLa4KyGOwdO84EkOymnr5qcNac2mkXcmUFmgCby07Nf/rXFIse0TcWt4YsC+/MCqQ0YRz7A=
+Content-Language: en-US
+In-Reply-To: <b3b63d6e-438e-1b5a-6d01-6164c2160f75@linux.intel.com>
+List-Id: <cgroups.vger.kernel.org>
+List-Unsubscribe: <https://lists.freedesktop.org/mailman/options/intel-gfx>,
+ <mailto:intel-gfx-request@lists.freedesktop.org?subject=unsubscribe>
+List-Archive: <https://lists.freedesktop.org/archives/intel-gfx>
+List-Post: <mailto:intel-gfx@lists.freedesktop.org>
+List-Help: <mailto:intel-gfx-request@lists.freedesktop.org?subject=help>
+List-Subscribe: <https://lists.freedesktop.org/mailman/listinfo/intel-gfx>,
+ <mailto:intel-gfx-request@lists.freedesktop.org?subject=subscribe>
+Errors-To: intel-gfx-bounces@lists.freedesktop.org
+Sender: "Intel-gfx" <intel-gfx-bounces@lists.freedesktop.org>
+Content-Type: text/plain; charset="utf-8"; format="flowed"
+To: Tvrtko Ursulin <tvrtko.ursulin@linux.intel.com>, Intel-gfx@lists.freedesktop.org, dri-devel@lists.freedesktop.org
+Cc: Rob Clark <robdclark@chromium.org>, Kenny.Ho@amd.com, Daniel Vetter <daniel.vetter@ffwll.ch>, Johannes Weiner <hannes@cmpxchg.org>, linux-kernel@vger.kernel.org, =?UTF-8?Q?St=c3=a9phane_Marchesin?= <marcheu@chromium.org>, Alex Deucher <alexander.deucher@amd.com>, linux-graphics-maintainer@vmware.com, Zefan Li <lizefan.x@bytedance.com>, Dave Airlie <airlied@redhat.com>, Tejun Heo <tj@kernel.org>, cgroups@vger.kernel.org, "T . J . Mercier" <tjmercier@google.com>, Zack Rusin <zackr@vmware.com>
 
+Am 15.03.23 um 10:52 schrieb Tvrtko Ursulin:
+>
+> Hi,
+>
+> On 14/03/2023 15:33, Christian König wrote:
+>> Am 14.03.23 um 15:18 schrieb Tvrtko Ursulin:
+>>> From: Tvrtko Ursulin <tvrtko.ursulin@intel.com>
+>>>
+>>> Thread group id (aka pid from userspace point of view) is a more
+>>> interesting thing to show as an owner of a DRM fd, so track and show 
+>>> that
+>>> instead of the thread id.
+>>>
+>>> In the next patch we will make the owner updated post file descriptor
+>>> handover, which will also be tgid based to avoid ping-pong when 
+>>> multiple
+>>> threads access the fd.
+>>>
+>>> Signed-off-by: Tvrtko Ursulin <tvrtko.ursulin@intel.com>
+>>> Cc: Zack Rusin <zackr@vmware.com>
+>>> Cc: linux-graphics-maintainer@vmware.com
+>>> Cc: Alex Deucher <alexander.deucher@amd.com>
+>>> Cc: "Christian König" <christian.koenig@amd.com>
+>>> Reviewed-by: Zack Rusin <zackr@vmware.com>
+>>
+>> Reviewed-by: Christian König <christian.koenig@amd.com>
+>>
+>> Should we push the already reviewed cleanups like this one to 
+>> drm-misc-next? That makes sense even without the rest of the 
+>> functionality and reduce the amount of patches re-send.
+>
+> I don't have the commit rights so if you could do that I certainly 
+> would not mind, thanks!
 
-On Tue, 14 Mar 2023 19:33:32 +0100, Michal Koutn=C3=BD wrote:
-> Users may specify a CPU where the sqpoll thread would run. This may
-> conflict with cpuset operations because of strict PF_NO_SETAFFINITY
-> requirement. That flag is unnecessary for polling "kernel" threads, see
-> the reasoning in commit 01e68ce08a30 ("io_uring/io-wq: stop setting
-> PF_NO_SETAFFINITY on io-wq workers"). Drop the flag on poll threads too.
->=20
->=20
-> [...]
+I've just pushed this patch here to drm-misc-next. As soon as Daniel or 
+Dave gives his ok as well I'm going to also push the second one.
 
-Applied, thanks!
+Regards,
+Christian.
 
-[1/1] io_uring/sqpoll: Do not set PF_NO_SETAFFINITY on sqpoll threads
-      commit: a5fc1441af7719e93dc7a638a960befb694ade89
-
-Best regards,
---=20
-Jens Axboe
-
-
+>
+> Regards,
+>
+> Tvrtko
+>
+>>> ---
+>>>   drivers/gpu/drm/amd/amdgpu/amdgpu_gem.c | 2 +-
+>>>   drivers/gpu/drm/drm_debugfs.c           | 4 ++--
+>>>   drivers/gpu/drm/drm_file.c              | 2 +-
+>>>   drivers/gpu/drm/vmwgfx/vmwgfx_gem.c     | 2 +-
+>>>   4 files changed, 5 insertions(+), 5 deletions(-)
+>>>
+>>> diff --git a/drivers/gpu/drm/amd/amdgpu/amdgpu_gem.c 
+>>> b/drivers/gpu/drm/amd/amdgpu/amdgpu_gem.c
+>>> index d8e683688daa..863cb668e000 100644
+>>> --- a/drivers/gpu/drm/amd/amdgpu/amdgpu_gem.c
+>>> +++ b/drivers/gpu/drm/amd/amdgpu/amdgpu_gem.c
+>>> @@ -969,7 +969,7 @@ static int amdgpu_debugfs_gem_info_show(struct 
+>>> seq_file *m, void *unused)
+>>>            * Therefore, we need to protect this ->comm access using 
+>>> RCU.
+>>>            */
+>>>           rcu_read_lock();
+>>> -        task = pid_task(file->pid, PIDTYPE_PID);
+>>> +        task = pid_task(file->pid, PIDTYPE_TGID);
+>>>           seq_printf(m, "pid %8d command %s:\n", pid_nr(file->pid),
+>>>                  task ? task->comm : "<unknown>");
+>>>           rcu_read_unlock();
+>>> diff --git a/drivers/gpu/drm/drm_debugfs.c 
+>>> b/drivers/gpu/drm/drm_debugfs.c
+>>> index 4f643a490dc3..4855230ba2c6 100644
+>>> --- a/drivers/gpu/drm/drm_debugfs.c
+>>> +++ b/drivers/gpu/drm/drm_debugfs.c
+>>> @@ -80,7 +80,7 @@ static int drm_clients_info(struct seq_file *m, 
+>>> void *data)
+>>>       seq_printf(m,
+>>>              "%20s %5s %3s master a %5s %10s\n",
+>>>              "command",
+>>> -           "pid",
+>>> +           "tgid",
+>>>              "dev",
+>>>              "uid",
+>>>              "magic");
+>>> @@ -94,7 +94,7 @@ static int drm_clients_info(struct seq_file *m, 
+>>> void *data)
+>>>           bool is_current_master = drm_is_current_master(priv);
+>>>           rcu_read_lock(); /* locks pid_task()->comm */
+>>> -        task = pid_task(priv->pid, PIDTYPE_PID);
+>>> +        task = pid_task(priv->pid, PIDTYPE_TGID);
+>>>           uid = task ? __task_cred(task)->euid : GLOBAL_ROOT_UID;
+>>>           seq_printf(m, "%20s %5d %3d   %c    %c %5d %10u\n",
+>>>                  task ? task->comm : "<unknown>",
+>>> diff --git a/drivers/gpu/drm/drm_file.c b/drivers/gpu/drm/drm_file.c
+>>> index a51ff8cee049..c1018c470047 100644
+>>> --- a/drivers/gpu/drm/drm_file.c
+>>> +++ b/drivers/gpu/drm/drm_file.c
+>>> @@ -156,7 +156,7 @@ struct drm_file *drm_file_alloc(struct drm_minor 
+>>> *minor)
+>>>       if (!file)
+>>>           return ERR_PTR(-ENOMEM);
+>>> -    file->pid = get_pid(task_pid(current));
+>>> +    file->pid = get_pid(task_tgid(current));
+>>>       file->minor = minor;
+>>>       /* for compatibility root is always authenticated */
+>>> diff --git a/drivers/gpu/drm/vmwgfx/vmwgfx_gem.c 
+>>> b/drivers/gpu/drm/vmwgfx/vmwgfx_gem.c
+>>> index d6baf73a6458..c0da89e16e6f 100644
+>>> --- a/drivers/gpu/drm/vmwgfx/vmwgfx_gem.c
+>>> +++ b/drivers/gpu/drm/vmwgfx/vmwgfx_gem.c
+>>> @@ -241,7 +241,7 @@ static int vmw_debugfs_gem_info_show(struct 
+>>> seq_file *m, void *unused)
+>>>            * Therefore, we need to protect this ->comm access using 
+>>> RCU.
+>>>            */
+>>>           rcu_read_lock();
+>>> -        task = pid_task(file->pid, PIDTYPE_PID);
+>>> +        task = pid_task(file->pid, PIDTYPE_TGID);
+>>>           seq_printf(m, "pid %8d command %s:\n", pid_nr(file->pid),
+>>>                  task ? task->comm : "<unknown>");
+>>>           rcu_read_unlock();
+>>
 
