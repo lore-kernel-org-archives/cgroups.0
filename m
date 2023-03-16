@@ -1,65 +1,35 @@
-From: Greg KH <gregkh@linuxfoundation.org>
-Subject: Re: [PATCH 4.19 0/3] Backport patches to fix threadgroup_rwsem <->
- cpus_read_lock() deadlock
-Date: Thu, 16 Mar 2023 08:45:18 +0100
-Message-ID: <ZBLJDrkjFfLif6ZX@kroah.com>
-References: <20230303045050.139985-1-caixinchen1@huawei.com>
+From: Josh Don <joshdon-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH] cgroup: fix display of forceidle time at root
+Date: Thu, 16 Mar 2023 11:52:58 -0700
+Message-ID: <CABk29NuKPJAVFCJ=i2Qh4=UqPoj5aia01-mCiF3p8vebV3uPWg@mail.gmail.com>
+References: <20230315214029.899573-1-joshdon@google.com> <bfbdef64-1b8c-4168-2576-f6d4a112686b@redhat.com>
 Mime-Version: 1.0
-Return-path: <stable-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linuxfoundation.org;
-        s=korg; t=1678952721;
-        bh=qnYkMqHrmohbGAwgm0YEs+c1yNWF7ThMOQYvXw6RTbE=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=raFMI8NTOX6VCgopseeGn/RuMkgMBSUhY3hThiiz757ltlRHSFQFV182xmW+Uv9a7
-         fdgS15mf5GUNLYLhqdk42OYz8kZqRVVLH7CTVvtwam7QU6rEZ/Y59wgVvHYI39UTXj
-         ixsvmiIDP8YWf51JpwWEXqhlYoRwvqJ90J0YYW8Q=
-Content-Disposition: inline
-In-Reply-To: <20230303045050.139985-1-caixinchen1@huawei.com>
+Content-Transfer-Encoding: quoted-printable
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20210112; t=1678992790;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=h1W/YlEcuttY3U+vH0Zvi8N5CN0MRI21GzH8QWAyVcI=;
+        b=Lat+lKQfUS8qaHdbgQZoN+LZJ35jZBofHf93jeA469v8V8xyILhxZ+ts9CUZjkmXG4
+         BbOsppMk1ngvHvYqHcCR8mIv1Ai6oqZ0J82FEJaLC7Jw5+YnuB86WMQq76w5MdLh/hsV
+         xnUwyu2dXI2LCGJXqS424ufkp3xGGJAbtKYKOQmSQhDwW1JAqJt3Rpg+EzFHFkPZXFdH
+         cqVf30QcR/9JUr0XM1+OT4Z0QBBo7OV8m+HCyQGbdr/t+5TGOKhEooqc26/y6FP1R0pw
+         k7g9H+qG/GeBUhVNf9fAqrS8yCyfH/ZH7aVRbTPn2QIPARVF3t6WP7325CEJl5rRB9Ek
+         nGUA==
+In-Reply-To: <bfbdef64-1b8c-4168-2576-f6d4a112686b-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Cai Xinchen <caixinchen1@huawei.com>
-Cc: longman@redhat.com, lizefan.x@bytedance.com, tj@kernel.org, hannes@cmpxchg.org, sashal@kernel.org, mkoutny@suse.com, zhangqiao22@huawei.com, juri.lelli@redhat.com, penguin-kernel@i-love.sakura.ne.jp, stable@vger.kernel.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset="windows-1252"
+To: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Fri, Mar 03, 2023 at 04:50:47AM +0000, Cai Xinchen wrote:
-> We have a deadlock problem which can be solved by commit 4f7e7236435ca
-> ("cgroup: Fix threadgroup_rwsem <-> cpus_read_lock() deadlock").
-> However, it makes lock order of cpus_read_lock and cpuset_mutex
-> wrong in v4.19. The call sequence is as follows:
-> cgroup_procs_write()
->         cgroup_procs_write_start()
->                 get_online_cpus(); // cpus_read_lock()
->                 percpu_down_write(&cgroup_threadgroup_rwsem)
->         cgroup_attach_task
->                 cgroup_migrate
->                         cgroup_migrate_execute
->                                 ss->attach (cpust_attach)
->                                         mutex_lock(&cpuset_mutex)
-> 
-> it seems hard to make cpus_read_lock is locked before
-> cgroup_threadgroup_rwsem and cpuset_mutex is locked before
-> cpus_read_lock unless backport the commit d74b27d63a8beb
-> ("cgroup/cpuset: Change cpuset_rwsem and hotplug lock order")
-> 
-> Juri Lelli (1):
->   cgroup/cpuset: Change cpuset_rwsem and hotplug lock order
-> 
-> Tejun Heo (1):
->   cgroup: Fix threadgroup_rwsem <-> cpus_read_lock() deadlock
-> 
-> Tetsuo Handa (1):
->   cgroup: Add missing cpus_read_lock() to cgroup_attach_task_all()
-> 
->  include/linux/cpuset.h    |  8 +++----
->  kernel/cgroup/cgroup-v1.c |  3 +++
->  kernel/cgroup/cgroup.c    | 49 +++++++++++++++++++++++++++++++++++----
->  kernel/cgroup/cpuset.c    | 25 ++++++++++++--------
->  4 files changed, 66 insertions(+), 19 deletions(-)
+On Wed, Mar 15, 2023 at 7:19=E2=80=AFPM Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org> wr=
+ote:
+>
+> How about adding the following fixes tag?
+>
+> Fixes: 1fcf54deb767 ("sched/core: add forced idle accounting for cgroups"=
+)
 
-This series breaks the build on many architectures, so I will now have
-to go drop them from the 4.19.y queue.  Please fix up and resubmit if
-you wish to have them applied in the future.
-
-thanks,
-
-greg k-h
+SGTM, thanks Waiman!
