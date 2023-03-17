@@ -1,35 +1,72 @@
-From: Josh Don <joshdon-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH] cgroup: fix display of forceidle time at root
-Date: Thu, 16 Mar 2023 11:52:58 -0700
-Message-ID: <CABk29NuKPJAVFCJ=i2Qh4=UqPoj5aia01-mCiF3p8vebV3uPWg@mail.gmail.com>
-References: <20230315214029.899573-1-joshdon@google.com> <bfbdef64-1b8c-4168-2576-f6d4a112686b@redhat.com>
+From: Michal =?utf-8?Q?Koutn=C3=BD?= <mkoutny@suse.com>
+Subject: Re: [PATCH 3/5] cgroup/cpuset: Find another usable CPU if none found
+ in current cpuset
+Date: Fri, 17 Mar 2023 13:27:08 +0100
+Message-ID: <20230317122708.ax3m2d4zijkfdzjq@blackpad>
+References: <20230306200849.376804-1-longman@redhat.com>
+ <20230306200849.376804-4-longman@redhat.com>
+ <20230314181749.5b4k6selbgdhl3up@blackpad>
+ <58a1a878-fa0b-285d-3e43-2b5103d3c770@redhat.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20210112; t=1678992790;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=h1W/YlEcuttY3U+vH0Zvi8N5CN0MRI21GzH8QWAyVcI=;
-        b=Lat+lKQfUS8qaHdbgQZoN+LZJ35jZBofHf93jeA469v8V8xyILhxZ+ts9CUZjkmXG4
-         BbOsppMk1ngvHvYqHcCR8mIv1Ai6oqZ0J82FEJaLC7Jw5+YnuB86WMQq76w5MdLh/hsV
-         xnUwyu2dXI2LCGJXqS424ufkp3xGGJAbtKYKOQmSQhDwW1JAqJt3Rpg+EzFHFkPZXFdH
-         cqVf30QcR/9JUr0XM1+OT4Z0QBBo7OV8m+HCyQGbdr/t+5TGOKhEooqc26/y6FP1R0pw
-         k7g9H+qG/GeBUhVNf9fAqrS8yCyfH/ZH7aVRbTPn2QIPARVF3t6WP7325CEJl5rRB9Ek
-         nGUA==
-In-Reply-To: <bfbdef64-1b8c-4168-2576-f6d4a112686b-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Content-Type: multipart/signed; micalg=pgp-sha512;
+        protocol="application/pgp-signature"; boundary="wkiro4aaqlim764r"
+Return-path: <linux-kernel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
+        t=1679056030; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=NHGqTJTnUqNOxZp472cVknzLVo5SZVLbcDm4mbJepYE=;
+        b=rJdcWQzdyPd9a/cihTdjKLylB/F971V//4EK68lFcSi6+QeE07wyMRp1v6doKHg+S1kGH+
+        QzehHDeBxhchvhFxoFakWGODWsO7/LFV6j32hmil6vGLW1R2ShqimpkaxQO06BQr0oUgjT
+        X10Hf/7R/l8wZNHqXg3ME1xb63WNxHs=
+Content-Disposition: inline
+In-Reply-To: <58a1a878-fa0b-285d-3e43-2b5103d3c770@redhat.com>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="windows-1252"
-To: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Waiman Long <longman@redhat.com>
+Cc: Tejun Heo <tj@kernel.org>, Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, Shuah Khan <shuah@kernel.org>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, linux-kselftest@vger.kernel.org, Will Deacon <will@kernel.org>, Peter Zijlstra <peterz@infradead.org>
 
-On Wed, Mar 15, 2023 at 7:19=E2=80=AFPM Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org> wr=
-ote:
->
-> How about adding the following fixes tag?
->
-> Fixes: 1fcf54deb767 ("sched/core: add forced idle accounting for cgroups"=
-)
 
-SGTM, thanks Waiman!
+--wkiro4aaqlim764r
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
+
+On Tue, Mar 14, 2023 at 04:22:06PM -0400, Waiman Long <longman@redhat.com> =
+wrote:
+> Some arm64 systems can have asymmetric CPUs where certain tasks are only
+> runnable on a selected subset of CPUs.
+
+Ah, I'm catching up.
+
+> This information is not captured in the cpuset. As a result,
+> task_cpu_possible_mask() may return a mask that have no overlap with
+> effective_cpus causing new_cpus to become empty.
+
+I can see that historically, there was an approach of terminating
+unaccomodable tasks:
+   94f9c00f6460 ("arm64: Remove logic to kill 32-bit tasks on 64-bit-only c=
+ores")=20
+the removal of killing had been made possible with
+   df950811f4a8 ("arm64: Prevent offlining first CPU with 32-bit EL0 on mis=
+matched system").
+
+That gives two other alternatives to affinity modification:
+2) kill such tasks (not unlike OOM upon memory.max reduction),
+3) reject cpuset reduction (violates cgroup v2 delegation).
+
+What do you think about 2)?
+
+Michal
+
+--wkiro4aaqlim764r
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iHUEABYKAB0WIQTrXXag4J0QvXXBmkMkDQmsBEOquQUCZBRcmgAKCRAkDQmsBEOq
+ucYMAQDoDiiyg+tQDkv5bZDwLQd/3BXqchUmoOd8JRUt6N8NbAEA3Fmj3clZkURa
+n/kLtf6/Db3HtQYwAN0g7e9CJjWZPQE=
+=QJAy
+-----END PGP SIGNATURE-----
+
+--wkiro4aaqlim764r--
