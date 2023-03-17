@@ -1,123 +1,77 @@
-From: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Subject: [PATCH v2 4/4] cgroup/cpuset: Minor updates to test_cpuset_prs.sh
-Date: Fri, 17 Mar 2023 11:15:08 -0400
-Message-ID: <20230317151508.1225282-5-longman@redhat.com>
+From: Michal =?utf-8?Q?Koutn=C3=BD?= <mkoutny-IBi9RG/b67k@public.gmane.org>
+Subject: Re: [PATCH v2 3/4] cgroup/cpuset: Include offline CPUs when tasks'
+ cpumasks in top_cpuset are updated
+Date: Fri, 17 Mar 2023 19:01:57 +0100
+Message-ID: <20230317180157.uqlleobldg53pgj6@blackpad>
 References: <20230317151508.1225282-1-longman@redhat.com>
+ <20230317151508.1225282-4-longman@redhat.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: multipart/signed; micalg=pgp-sha512;
+        protocol="application/pgp-signature"; boundary="u3ht7kwhkaibaz3y"
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1679066135;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:
-         content-transfer-encoding:content-transfer-encoding:
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
+        t=1679076119; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
          in-reply-to:in-reply-to:references:references;
-        bh=XQ/fbLiMTxYvcy4Xv+isuWXHLsrugKjziame8MLcKpQ=;
-        b=EE30zdnXa4imFeCY54+AIDEPKPIha2s7E5PtIY15p+72PIByifqRo3MABdXSU24TnYaUQn
-        TalxLnA3JDX/f0jtecWlpS4lyu2wDjuod1C/DsvuuDYH2wgTv1q2vH1ZQLhImxe6PFfHQa
-        COR871feI6Bp+G77WCymWdt20CfL2UQ=
-In-Reply-To: <20230317151508.1225282-1-longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+        bh=WTRztahqz2rOmT22cd3MICikvHbnMvBL2SFE1d0xF/k=;
+        b=nHJ3DUisVXwoFt+d4sENGkALy6IoVXBFrRHQbK6f7gZyEBjikHruO6aebIRJmR7ThpqKl+
+        pVlmQw3G/NfjFekKSnlsuAthfqPaxn9NQzlPmp522sjb2U7MTDQFd/1N7brxvSGJsS3HeM
+        OVpvDR8tpZs0nM/1zxIzFbwTeng+ebQ=
+Content-Disposition: inline
+In-Reply-To: <20230317151508.1225282-4-longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Shuah Khan <shuah-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kselftest-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Will Deacon <will-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, =?UTF-8?q?Michal=20Koutn=C3=BD?= <mkoutny-IBi9RG/b67k@public.gmane.org>, Juri Lelli <juri.lelli-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+To: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Shuah Khan <shuah-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kselftest-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Will Deacon <will-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Juri Lelli <juri.lelli-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 
-This patch makes the following minor updates to the cpuset partition
-testing script test_cpuset_prs.sh.
 
- - Remove online_cpus function call as it will be called anyway on exit
-   in cleanup.
- - Make the enabling of sched/verbose debugfs flag conditional on the
-   "-v" verbose option and set DELAY_FACTOR to 2 in this case as cpuset
-   partition operations are likely to be slowed down by enabling that.
+--u3ht7kwhkaibaz3y
+Content-Type: text/plain; charset=iso-8859-1
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
----
- .../selftests/cgroup/test_cpuset_prs.sh       | 25 +++++++++++--------
- 1 file changed, 14 insertions(+), 11 deletions(-)
+Hello.
 
-diff --git a/tools/testing/selftests/cgroup/test_cpuset_prs.sh b/tools/testing/selftests/cgroup/test_cpuset_prs.sh
-index 75c100de90ff..2b5215cc599f 100755
---- a/tools/testing/selftests/cgroup/test_cpuset_prs.sh
-+++ b/tools/testing/selftests/cgroup/test_cpuset_prs.sh
-@@ -15,13 +15,6 @@ skip_test() {
- 
- [[ $(id -u) -eq 0 ]] || skip_test "Test must be run as root!"
- 
--# Set sched verbose flag, if available
--if [[ -d /sys/kernel/debug/sched ]]
--then
--	# Used to restore the original setting during cleanup
--	SCHED_DEBUG=$(cat /sys/kernel/debug/sched/verbose)
--	echo Y > /sys/kernel/debug/sched/verbose
--fi
- 
- # Get wait_inotify location
- WAIT_INOTIFY=$(cd $(dirname $0); pwd)/wait_inotify
-@@ -37,10 +30,14 @@ CPUS=$(lscpu | grep "^CPU(s):" | sed -e "s/.*:[[:space:]]*//")
- PROG=$1
- VERBOSE=
- DELAY_FACTOR=1
-+SCHED_DEBUG=
- while [[ "$1" = -* ]]
- do
- 	case "$1" in
- 		-v) VERBOSE=1
-+		    # Enable sched/verbose can slow thing down
-+		    [[ $DELAY_FACTOR -eq 1 ]] &&
-+			DELAY_FACTOR=2
- 		    break
- 		    ;;
- 		-d) DELAY_FACTOR=$2
-@@ -54,6 +51,14 @@ do
- 	shift
- done
- 
-+# Set sched verbose flag if available when "-v" option is specified
-+if [[ -n "$VERBOSE" && -d /sys/kernel/debug/sched ]]
-+then
-+	# Used to restore the original setting during cleanup
-+	SCHED_DEBUG=$(cat /sys/kernel/debug/sched/verbose)
-+	echo Y > /sys/kernel/debug/sched/verbose
-+fi
-+
- cd $CGROUP2
- echo +cpuset > cgroup.subtree_control
- [[ -d test ]] || mkdir test
-@@ -65,7 +70,8 @@ cleanup()
- 	rmdir A1/A2/A3 A1/A2 A1 B1 > /dev/null 2>&1
- 	cd ..
- 	rmdir test > /dev/null 2>&1
--	echo "$SCHED_DEBUG" > /sys/kernel/debug/sched/verbose
-+	[[ -n "$SCHED_DEBUG" ]] &&
-+		echo "$SCHED_DEBUG" > /sys/kernel/debug/sched/verbose
- }
- 
- # Pause in ms
-@@ -571,7 +577,6 @@ run_state_test()
- 			echo "Test $TEST[$I] failed result check!"
- 			eval echo \"\${$TEST[$I]}\"
- 			dump_states
--			online_cpus
- 			exit 1
- 		}
- 
-@@ -582,7 +587,6 @@ run_state_test()
- 				eval echo \"\${$TEST[$I]}\"
- 				echo
- 				dump_states
--				online_cpus
- 				exit 1
- 			}
- 		}
-@@ -594,7 +598,6 @@ run_state_test()
- 				eval echo \"\${$TEST[$I]}\"
- 				echo
- 				dump_states
--				online_cpus
- 				exit 1
- 			}
- 		}
--- 
-2.31.1
+On Fri, Mar 17, 2023 at 11:15:07AM -0400, Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org> =
+wrote:
+>   * Iterate through each task of @cs updating its cpus_allowed to the
+>   * effective cpuset's.  As this function is called with cpuset_rwsem hel=
+d,
+> - * cpuset membership stays stable.
+> + * cpuset membership stays stable. For top_cpuset, task_cpu_possible_mas=
+k()
+> + * is used instead of effective_cpus to make sure all offline CPUs are a=
+lso
+> + * included as hotplug code won't update cpumasks for tasks in top_cpuse=
+t.
+>   */
 
+On Wed, Mar 15, 2023 at 11:06:20AM +0100, Michal Koutn=FD <mkoutny-IBi9RG/b67k@public.gmane.org=
+> wrote:
+> I see now that it returns offlined cpus to top cpuset's tasks.
+
+I considered only the "base" set change cs->effective_cpus ->
+possible_mask. (Apologies for that mistake.)
+
+However, I now read the note about subparts_cpus
+
+>         * effective_cpus contains only onlined CPUs, but subparts_cpus
+>         * may have offlined ones.
+
+So if subpart_cpus keeps offlined CPUs, they will be subtracted from
+possible_mask and absent in the resulting new_cpus, i.e. undesirable for
+the tasks in that cpuset :-/
+
+Michal
+
+--u3ht7kwhkaibaz3y
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iHUEABYKAB0WIQTrXXag4J0QvXXBmkMkDQmsBEOquQUCZBSrEwAKCRAkDQmsBEOq
+ub2TAP9pF4P+p6q/Gyv+MLt5FYYDbFOYq0Pln5sL5iINLRsTkQEA2xdCNEw02ygM
+fePZM8YSHXzb3KeNhLsD2b3PaS9m+AY=
+=s2yK
+-----END PGP SIGNATURE-----
+
+--u3ht7kwhkaibaz3y--
