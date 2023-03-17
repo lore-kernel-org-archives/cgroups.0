@@ -1,85 +1,123 @@
-From: Waiman Long <longman@redhat.com>
-Subject: [PATCH v2 1/4] cgroup/cpuset: Fix partition root's cpuset.cpus update bug
-Date: Fri, 17 Mar 2023 11:15:05 -0400
-Message-ID: <20230317151508.1225282-2-longman@redhat.com>
+From: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Subject: [PATCH v2 4/4] cgroup/cpuset: Minor updates to test_cpuset_prs.sh
+Date: Fri, 17 Mar 2023 11:15:08 -0400
+Message-ID: <20230317151508.1225282-5-longman@redhat.com>
 References: <20230317151508.1225282-1-longman@redhat.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1679066133;
+        s=mimecast20190719; t=1679066135;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=yyPOMwQLISxSVk5Hax7mBc5lUymcLlOh64gwiaoZAvQ=;
-        b=N/RkptS5aI2xMFm9zDcpLDq6Q1+TBXYIKFRNCAcjfERZltj156vNlXDdWjStoDyEv0xm0i
-        4UhKCbqYO2KmsI+MrQeWj+t3YIR2eKKDzHb4i9HiGn1nGOke4kzoSdKwnOpirtfmjv6pfp
-        bhda/HJX2Gr/TCBLX//IJklwCUehJvY=
-In-Reply-To: <20230317151508.1225282-1-longman@redhat.com>
+        bh=XQ/fbLiMTxYvcy4Xv+isuWXHLsrugKjziame8MLcKpQ=;
+        b=EE30zdnXa4imFeCY54+AIDEPKPIha2s7E5PtIY15p+72PIByifqRo3MABdXSU24TnYaUQn
+        TalxLnA3JDX/f0jtecWlpS4lyu2wDjuod1C/DsvuuDYH2wgTv1q2vH1ZQLhImxe6PFfHQa
+        COR871feI6Bp+G77WCymWdt20CfL2UQ=
+In-Reply-To: <20230317151508.1225282-1-longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Tejun Heo <tj@kernel.org>, Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, Shuah Khan <shuah@kernel.org>
-Cc: cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, linux-kselftest@vger.kernel.org, Will Deacon <will@kernel.org>, Peter Zijlstra <peterz@infradead.org>, =?UTF-8?q?Michal=20Koutn=C3=BD?= <mkoutny@suse.com>, Juri Lelli <juri.lelli@redhat.com>, Waiman Long <longman@redhat.com>
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Shuah Khan <shuah-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kselftest-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Will Deacon <will-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, =?UTF-8?q?Michal=20Koutn=C3=BD?= <mkoutny-IBi9RG/b67k@public.gmane.org>, Juri Lelli <juri.lelli-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 
-It was found that commit 7a2127e66a00 ("cpuset: Call
-set_cpus_allowed_ptr() with appropriate mask for task") introduced a bug
-that corrupted "cpuset.cpus" of a partition root when it was updated.
+This patch makes the following minor updates to the cpuset partition
+testing script test_cpuset_prs.sh.
 
-It is because the tmp->new_cpus field of the passed tmp parameter
-of update_parent_subparts_cpumask() should not be used at all as
-it contains important cpumask data that should not be overwritten.
-Fix it by using tmp->addmask instead.
+ - Remove online_cpus function call as it will be called anyway on exit
+   in cleanup.
+ - Make the enabling of sched/verbose debugfs flag conditional on the
+   "-v" verbose option and set DELAY_FACTOR to 2 in this case as cpuset
+   partition operations are likely to be slowed down by enabling that.
 
-Also update update_cpumask() to make sure that trialcs->cpu_allowed
-will not be corrupted until it is no longer needed.
-
-Fixes: 7a2127e66a00 ("cpuset: Call set_cpus_allowed_ptr() with appropriate mask for task")
-Signed-off-by: Waiman Long <longman@redhat.com>
+Signed-off-by: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 ---
- kernel/cgroup/cpuset.c | 12 ++++++++++--
- 1 file changed, 10 insertions(+), 2 deletions(-)
+ .../selftests/cgroup/test_cpuset_prs.sh       | 25 +++++++++++--------
+ 1 file changed, 14 insertions(+), 11 deletions(-)
 
-diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
-index 636f1c682ac0..f310915d1257 100644
---- a/kernel/cgroup/cpuset.c
-+++ b/kernel/cgroup/cpuset.c
-@@ -1513,7 +1513,7 @@ static int update_parent_subparts_cpumask(struct cpuset *cs, int cmd,
- 	spin_unlock_irq(&callback_lock);
+diff --git a/tools/testing/selftests/cgroup/test_cpuset_prs.sh b/tools/testing/selftests/cgroup/test_cpuset_prs.sh
+index 75c100de90ff..2b5215cc599f 100755
+--- a/tools/testing/selftests/cgroup/test_cpuset_prs.sh
++++ b/tools/testing/selftests/cgroup/test_cpuset_prs.sh
+@@ -15,13 +15,6 @@ skip_test() {
  
- 	if (adding || deleting)
--		update_tasks_cpumask(parent, tmp->new_cpus);
-+		update_tasks_cpumask(parent, tmp->addmask);
+ [[ $(id -u) -eq 0 ]] || skip_test "Test must be run as root!"
  
- 	/*
- 	 * Set or clear CS_SCHED_LOAD_BALANCE when partcmd_update, if necessary.
-@@ -1770,10 +1770,13 @@ static int update_cpumask(struct cpuset *cs, struct cpuset *trialcs,
- 	/*
- 	 * Use the cpumasks in trialcs for tmpmasks when they are pointers
- 	 * to allocated cpumasks.
-+	 *
-+	 * Note that update_parent_subparts_cpumask() uses only addmask &
-+	 * delmask, but not new_cpus.
- 	 */
- 	tmp.addmask  = trialcs->subparts_cpus;
- 	tmp.delmask  = trialcs->effective_cpus;
--	tmp.new_cpus = trialcs->cpus_allowed;
-+	tmp.new_cpus = NULL;
- #endif
+-# Set sched verbose flag, if available
+-if [[ -d /sys/kernel/debug/sched ]]
+-then
+-	# Used to restore the original setting during cleanup
+-	SCHED_DEBUG=$(cat /sys/kernel/debug/sched/verbose)
+-	echo Y > /sys/kernel/debug/sched/verbose
+-fi
  
- 	retval = validate_change(cs, trialcs);
-@@ -1838,6 +1841,11 @@ static int update_cpumask(struct cpuset *cs, struct cpuset *trialcs,
- 	}
- 	spin_unlock_irq(&callback_lock);
+ # Get wait_inotify location
+ WAIT_INOTIFY=$(cd $(dirname $0); pwd)/wait_inotify
+@@ -37,10 +30,14 @@ CPUS=$(lscpu | grep "^CPU(s):" | sed -e "s/.*:[[:space:]]*//")
+ PROG=$1
+ VERBOSE=
+ DELAY_FACTOR=1
++SCHED_DEBUG=
+ while [[ "$1" = -* ]]
+ do
+ 	case "$1" in
+ 		-v) VERBOSE=1
++		    # Enable sched/verbose can slow thing down
++		    [[ $DELAY_FACTOR -eq 1 ]] &&
++			DELAY_FACTOR=2
+ 		    break
+ 		    ;;
+ 		-d) DELAY_FACTOR=$2
+@@ -54,6 +51,14 @@ do
+ 	shift
+ done
  
-+#ifdef CONFIG_CPUMASK_OFFSTACK
-+	/* Now trialcs->cpus_allowed is available */
-+	tmp.new_cpus = trialcs->cpus_allowed;
-+#endif
++# Set sched verbose flag if available when "-v" option is specified
++if [[ -n "$VERBOSE" && -d /sys/kernel/debug/sched ]]
++then
++	# Used to restore the original setting during cleanup
++	SCHED_DEBUG=$(cat /sys/kernel/debug/sched/verbose)
++	echo Y > /sys/kernel/debug/sched/verbose
++fi
 +
- 	/* effective_cpus will be updated here */
- 	update_cpumasks_hier(cs, &tmp, false);
+ cd $CGROUP2
+ echo +cpuset > cgroup.subtree_control
+ [[ -d test ]] || mkdir test
+@@ -65,7 +70,8 @@ cleanup()
+ 	rmdir A1/A2/A3 A1/A2 A1 B1 > /dev/null 2>&1
+ 	cd ..
+ 	rmdir test > /dev/null 2>&1
+-	echo "$SCHED_DEBUG" > /sys/kernel/debug/sched/verbose
++	[[ -n "$SCHED_DEBUG" ]] &&
++		echo "$SCHED_DEBUG" > /sys/kernel/debug/sched/verbose
+ }
  
+ # Pause in ms
+@@ -571,7 +577,6 @@ run_state_test()
+ 			echo "Test $TEST[$I] failed result check!"
+ 			eval echo \"\${$TEST[$I]}\"
+ 			dump_states
+-			online_cpus
+ 			exit 1
+ 		}
+ 
+@@ -582,7 +587,6 @@ run_state_test()
+ 				eval echo \"\${$TEST[$I]}\"
+ 				echo
+ 				dump_states
+-				online_cpus
+ 				exit 1
+ 			}
+ 		}
+@@ -594,7 +598,6 @@ run_state_test()
+ 				eval echo \"\${$TEST[$I]}\"
+ 				echo
+ 				dump_states
+-				online_cpus
+ 				exit 1
+ 			}
+ 		}
 -- 
 2.31.1
 
