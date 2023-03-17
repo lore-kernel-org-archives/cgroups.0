@@ -1,65 +1,61 @@
 From: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH 3/5] cgroup/cpuset: Find another usable CPU if none found
- in current cpuset
-Date: Fri, 17 Mar 2023 10:59:26 -0400
-Message-ID: <ca664da8-0f47-06b2-a94c-82b2f9a1c3aa@redhat.com>
-References: <20230306200849.376804-1-longman@redhat.com>
- <20230306200849.376804-4-longman@redhat.com>
- <20230314181749.5b4k6selbgdhl3up@blackpad>
- <58a1a878-fa0b-285d-3e43-2b5103d3c770@redhat.com>
- <20230317122708.ax3m2d4zijkfdzjq@blackpad>
+Subject: [PATCH v2 0/4] cgroup/cpuset: Miscellaneous updates
+Date: Fri, 17 Mar 2023 11:15:04 -0400
+Message-ID: <20230317151508.1225282-1-longman@redhat.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 8bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1679065171;
+        s=mimecast20190719; t=1679066134;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=4YPRVQy+Pd/j5om95dzW9EJX+zmYVWMbcmqZaHwhRU0=;
-        b=Ok0CnKCqWcsJfnL7/VQm9SoCtuTLNlATdzr2ekL976mb6aSaEToWt9VWS266RySk1Mocws
-        b5IQ+7Z+uu/kpzGv2sI7aavgm3e2e6mJx8lic6vRro74z++v+k5lWivoG8pL6kcSRus46D
-        vWdBPBJn3amAHFQ50nvU92inAT90e34=
-Content-Language: en-US
-In-Reply-To: <20230317122708.ax3m2d4zijkfdzjq@blackpad>
+         content-transfer-encoding:content-transfer-encoding;
+        bh=q7V46Q52rkSh11P7uwpvJlomEOhaWhBzxdnEpXedVNs=;
+        b=Su31C9U72/eD+9VorbmgT/gTe7VAKh2SprqW8q7KOSZEpkIvBvddj4BtDLTF8zwHHfPgz8
+        x8cUAXCO95VaWGHRfj0mTxszHZ0nyLwlZNyD6KgkSsY+se/ZralYSu8yoN74atiu0++ntf
+        UQ19bAkdEErXZmzrhQtv9LqQUtE/+Ak=
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="iso-8859-1"; format="flowed"
-To: =?UTF-8?Q?Michal_Koutn=c3=bd?= <mkoutny-IBi9RG/b67k@public.gmane.org>
-Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Shuah Khan <shuah-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kselftest-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Will Deacon <will-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
+Content-Type: text/plain; charset="us-ascii"
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Shuah Khan <shuah-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kselftest-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Will Deacon <will-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, =?UTF-8?q?Michal=20Koutn=C3=BD?= <mkoutny-IBi9RG/b67k@public.gmane.org>, Juri Lelli <juri.lelli-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 
-On 3/17/23 08:27, Michal Koutn=C3=BD wrote:
-> On Tue, Mar 14, 2023 at 04:22:06PM -0400, Waiman Long <longman-H+wXaHxf7a=
-LQT0dZR+AlfA@public.gmane.org> wrote:
->> Some arm64 systems can have asymmetric CPUs where certain tasks are only
->> runnable on a selected subset of CPUs.
-> Ah, I'm catching up.
->
->> This information is not captured in the cpuset. As a result,
->> task_cpu_possible_mask() may return a mask that have no overlap with
->> effective_cpus causing new_cpus to become empty.
-> I can see that historically, there was an approach of terminating
-> unaccomodable tasks:
->     94f9c00f6460 ("arm64: Remove logic to kill 32-bit tasks on 64-bit-onl=
-y cores")
-> the removal of killing had been made possible with
->     df950811f4a8 ("arm64: Prevent offlining first CPU with 32-bit EL0 on =
-mismatched system").
->
-> That gives two other alternatives to affinity modification:
-> 2) kill such tasks (not unlike OOM upon memory.max reduction),
-> 3) reject cpuset reduction (violates cgroup v2 delegation).
->
-> What do you think about 2)?
+ v2:
+  - Add a new patch 1 that fixes a bug introduced by recent v6.2 commit
+    7a2127e66a00 ("cpuset: Call set_cpus_allowed_ptr() with appropriate
+    mask for task").
+  - Make a small twist and additional comment to patch 2 ("cgroup/cpuset:
+    Skip task update if hotplug doesn't affect current cpuset") as
+    suggested by Michal.
+  - Remove v1 patches 3/4 for now for further discussion.
 
-Yes, killing it is one possible solution.
+This patch series includes miscellaneous update to the cpuset and its
+testing code.
 
-(3) doesn't work if the affinity change is due to hot cpu removal. So=20
-that leaves this patch or (2) as the only alternative. I would like to=20
-hear what Will and Tejun thinks about it.
+Patch 1 fixes a bug caused by commit 7a2127e66a00 ("cpuset: Call
+set_cpus_allowed_ptr() with appropriate mask for task") in the partition
+handling code. This fix was verified by running the test_cpuset_prs.sh
+test.
 
-I am going to remove this patch from the series for the time being.
+Patch 2 is for a hotplug optimization.
 
-Thanks,
-Longman
+Patch 3 is actually a follow-up of commit 3fb906e7fabb ("cgroup/cpuset:
+Don't filter offline CPUs in cpuset_cpus_allowed() for top cpuset tasks").
+
+Patch 4 reduces verbosity when running test_cpuset_prs.sh test script
+unless explicitly enabled with the -v option.
+
+Waiman Long (4):
+  cgroup/cpuset: Fix partition root's cpuset.cpus update bug
+  cgroup/cpuset: Skip task update if hotplug doesn't affect current
+    cpuset
+  cgroup/cpuset: Include offline CPUs when tasks' cpumasks in top_cpuset
+    are updated
+  cgroup/cpuset: Minor updates to test_cpuset_prs.sh
+
+ kernel/cgroup/cpuset.c                        | 38 +++++++++++++------
+ .../selftests/cgroup/test_cpuset_prs.sh       | 25 ++++++------
+ 2 files changed, 41 insertions(+), 22 deletions(-)
+
+-- 
+2.31.1
 
