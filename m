@@ -1,43 +1,73 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH] cgroup: fix display of forceidle time at root
-Date: Fri, 17 Mar 2023 12:20:34 -1000
-Message-ID: <ZBTnsp43Ntxl0Tns@slm.duckdns.org>
-References: <20230315214029.899573-1-joshdon@google.com>
+From: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH v3, 0/4] mm, memcg: cgroup v1 and v2 tunable load/store
+ tearing fixes
+Date: Fri, 17 Mar 2023 17:58:26 -0700
+Message-ID: <CALvZod4UjoYasn8Z4-e4NEdv9QRWiuJuJjm8+sH_xFdPTEWEoA@mail.gmail.com>
+References: <20230308162555.14195-1-findns94@gmail.com> <ZAjIeTBKteZaYEEb@dhcp22.suse.cz>
 Mime-Version: 1.0
+Content-Transfer-Encoding: quoted-printable
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112; t=1679091636;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:sender:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=86HCB7S150EkF3xf7sNbiXNVW2Gd/6ux0I4CN70WrJw=;
-        b=av/HdkRFs1UjV/iFhDAs7Ba1VDfC1Vt0wim9zm6HUxebjUmjjqT4gp+O8YpsvVUSkN
-         iSXCT7rt/BiHxAIs3EKCk+cM741/H7ghJUwVcl8t3t9pZ8YA8nIQWS+wA4gXokp4hHrQ
-         BKYp8sA+TCvvPqXE6+lbX4BaOULl914oS6zCmx0caJ5oDQmTl9lysUu4vEBb0Wwlgwbr
-         huMjjx+8y8ZPIL9kFOtcBX2sa+k7YZFhQBuQsEhEuYHEL/7QC6Y8w5pURAXKIqPco5Tz
-         UR7YpmofoMf9Hgy4vLsCQG5iJa6fQlNlE6M2Q0zbrsMxlglWw4roBJsokhH1GiFk5EWo
-         SBOA==
-Sender: Tejun Heo <htejun-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <20230315214029.899573-1-joshdon-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+        d=google.com; s=20210112; t=1679101117;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=qjzUh8wvEqOhjDa9bqpHAUbvJHT68H6FHaSidqfbom8=;
+        b=JVXYvxAJeUXHaKDbRodHwwtH7IQbXLRoiZr3q/I9SA2PCpkS1A7jED2SYMDkJTLBLv
+         LBkOeMxmB5abOcyMXF5T1ALdKfk1bSw5BQEvIilpvJs77fL+HDTEDX9+gKH3RtDieSKP
+         vbfLPrrOBKZOzx73nkbbXIjbsv8pRnYEwsIr+/yjETCCg+eYwK/QWp1+WAx+ALkV4MvY
+         /VivS/YbrC2rsHalrhTI922KgXxyVaQsQu7kjf3zjmGU6o512Et9PEi0irT3IVbpQEcV
+         Tu1TX0cyiKBZrpslrzTS6GopLi8jnKqRS6ssSqutjLuhZ4Hz7QuXjUdKltEvKgtRTueB
+         NIow==
+In-Reply-To: <ZAjIeTBKteZaYEEb-2MMpYkNvuYDjFM9bn6wA6Q@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Josh Don <joshdon-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Cc: Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Type: text/plain; charset="windows-1252"
+To: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
+Cc: Yue Zhao <findns94-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, muchun.song-fxUVXftIFDnyG1zEObXtfA@public.gmane.org, willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, tangyeechou-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org
 
-On Wed, Mar 15, 2023 at 02:40:29PM -0700, Josh Don wrote:
-> We need to reset forceidle_sum to 0 when reading from root, since the
-> bstat we accumulate into is stack allocated.
-> 
-> To make this more robust, just replace the existing cputime reset with a
-> memset of the overall bstat.
-> 
-> Signed-off-by: Josh Don <joshdon-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+On Wed, Mar 8, 2023 at 9:40=E2=80=AFAM Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org> wrote=
+:
+>
+> On Thu 09-03-23 00:25:51, Yue Zhao wrote:
+> > This patch series helps to prevent load/store tearing in
+> > several cgroup knobs.
+> >
+> > As kindly pointed out by Michal Hocko, we should add
+> > [WRITE|READ]_ONCE for all occurrences of memcg->oom_kill_disable,
+> > memcg->swappiness and memcg->soft_limit.
+> >
+> > v3:
+> > - Add [WRITE|READ]_ONCE for all occurrences of
+> > memcg->oom_kill_disable, memcg->swappiness and memcg->soft_limit
+> > v2:
+> > - Rephrase changelog
+> > - Add [WRITE|READ]_ONCE for memcg->oom_kill_disable,
+> >  memcg->swappiness, vm_swappiness and memcg->soft_limit
+> > v1:
+> > - Add [WRITE|READ]_ONCE for memcg->oom_group
+> >
+> > Past patches:
+> > V2: https://lore.kernel.org/linux-mm/20230306154138.3775-1-findns94@gma=
+il.com/
+> > V1: https://lore.kernel.org/linux-mm/20230220151638.1371-1-findns94@gma=
+il.com/
+> >
+> > Yue Zhao (4):
+> >   mm, memcg: Prevent memory.oom.group load/store tearing
+> >   mm, memcg: Prevent memory.swappiness load/store tearing
+> >   mm, memcg: Prevent memory.oom_control load/store tearing
+> >   mm, memcg: Prevent memory.soft_limit_in_bytes load/store tearing
+> >
+> >  include/linux/swap.h |  8 ++++----
+> >  mm/memcontrol.c      | 30 +++++++++++++++---------------
+> >  2 files changed, 19 insertions(+), 19 deletions(-)
+>
+> Acked-by: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
+>
+> Btw. you could have preserved acks for patches you haven't changed from
+> the previous version.
+>
 
-Applied to cgroup/for-6.3-fixes w/ Fixes tag added and stable cc'd.
+For whole series:
 
-Thanks.
-
--- 
-tejun
+Acked-by: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
