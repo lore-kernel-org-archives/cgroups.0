@@ -1,36 +1,36 @@
 From: kernel test robot <lkp-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
-Subject: [tj-cgroup:for-next] BUILD SUCCESS
- f7ac82ea4b457c02eeedf5bb9ceccc777448e1ce
-Date: Sat, 18 Mar 2023 19:16:32 +0800
-Message-ID: <64159d90.kQR7QpCqADvHV8dV%lkp@intel.com>
+Subject: [tj-cgroup:for-6.3-fixes] BUILD SUCCESS
+ fcdb1eda5302599045bb366e679cccb4216f3873
+Date: Sat, 18 Mar 2023 19:16:51 +0800
+Message-ID: <64159da3.oln5hYujAtZviVX2%lkp@intel.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1679138212; x=1710674212;
+  t=1679138264; x=1710674264;
   h=date:from:to:cc:subject:message-id:mime-version:
    content-transfer-encoding;
-  bh=cUbj+2cgp6WsawDeMfvruxC+NjJRfDYjZ1rqtBzhA5o=;
-  b=Ql5ciseyECeDcW9G+jztutAjxXMwfM7rtM/QWbVdlcBJvvDzImTw9xnf
-   b5jpXcO74P0JpaCSH8ccCEp7dgYwcmprjdPZsQrwITWvEI9AgR8yIc7+E
-   a/D8K00VYGAKSvX4w7cIylPq3OnIRKG4/yMVtCMHiFCxllPFZGroE+Y47
-   1cex14J/5hbc6zMD//lW5Ld589TnDrUJSgAkGVxxU3itVtAiKlfvYjYxG
-   Ibnz+GMLZOrvITcR4oL6JDbravJYuU6tPhGhi5buYyQkbSMKz7dVCsKM+
-   3uGryHoRhm1pgbPpjts0EiWEVHoJb9bzBAF7HhRdpT4wbGH8fpzLdMqB9
+  bh=1N7+RKWsa6sOqJntApG0I0tuGZ6JmxGuC5S+moVW86g=;
+  b=Rypcq+aWjC75qYjzSjvn90gYoUL7VP/uA4G+r+M6+Fdu5zaNd30V50yT
+   h1FB+0m+7NVlCvgFFVFaeey87/Dy/g1CYXuR5/RVopVhWcBsgZMJUlf8H
+   /4M6PRE8XxVeKD44mI4nKrOlkTMyRhJqXp4eZuafH26N+K++VYjfR5lNB
+   7KQA2y0gGic9g4ACinBt9IoiGZK3RE3uj3jg5eZ8in81lFA9NREqF5vny
+   DsZ5yf7N+L2vQ3s59cUsfW5kRZUIZFv2Xk64UAeQBYV1KE9oBLa3TngFf
+   dlLbPON/5mvFfDstOb5IMPwAR3JfkAqR5b2X06A6jt9RTYtg1jnhKmlMa
    A==;
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git for-next
-branch HEAD: f7ac82ea4b457c02eeedf5bb9ceccc777448e1ce  Merge branch 'for-6.3-fixes' into for-next
+tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git for-6.3-fixes
+branch HEAD: fcdb1eda5302599045bb366e679cccb4216f3873  cgroup: fix display of forceidle time at root
 
-elapsed time: 732m
+elapsed time: 733m
 
-configs tested: 305
-configs skipped: 30
+configs tested: 308
+configs skipped: 31
 
 The following configs have been built successfully.
 More configs may be tested in the coming days.
@@ -73,13 +73,13 @@ arm          buildonly-randconfig-r005-20230313   gcc
 arm                                 defconfig   gcc  
 arm                  randconfig-r004-20230313   clang
 arm                  randconfig-r006-20230313   clang
+arm                  randconfig-r016-20230313   gcc  
 arm                  randconfig-r024-20230313   gcc  
 arm                  randconfig-r025-20230313   gcc  
 arm                  randconfig-r026-20230313   gcc  
 arm                  randconfig-r035-20230312   gcc  
 arm                  randconfig-r046-20230312   clang
 arm                  randconfig-r046-20230313   gcc  
-arm                  randconfig-r046-20230318   clang
 arm                           stm32_defconfig   gcc  
 arm64                            allyesconfig   gcc  
 arm64        buildonly-randconfig-r004-20230313   gcc  
@@ -98,6 +98,7 @@ csky         buildonly-randconfig-r005-20230313   gcc
 csky                                defconfig   gcc  
 csky                 randconfig-r002-20230312   gcc  
 csky                 randconfig-r003-20230312   gcc  
+csky                 randconfig-r013-20230312   gcc  
 csky                 randconfig-r022-20230313   gcc  
 csky                 randconfig-r023-20230312   gcc  
 csky                 randconfig-r025-20230313   gcc  
@@ -109,10 +110,8 @@ hexagon              randconfig-r015-20230312   clang
 hexagon              randconfig-r016-20230313   clang
 hexagon              randconfig-r041-20230312   clang
 hexagon              randconfig-r041-20230313   clang
-hexagon              randconfig-r041-20230318   clang
 hexagon              randconfig-r045-20230312   clang
 hexagon              randconfig-r045-20230313   clang
-hexagon              randconfig-r045-20230318   clang
 i386                             allyesconfig   gcc  
 i386         buildonly-randconfig-r002-20230313   gcc  
 i386         buildonly-randconfig-r003-20230313   gcc  
@@ -212,6 +211,7 @@ openrisc     buildonly-randconfig-r003-20230312   gcc
 openrisc     buildonly-randconfig-r005-20230313   gcc  
 openrisc             randconfig-r012-20230313   gcc  
 openrisc             randconfig-r014-20230312   gcc  
+openrisc             randconfig-r014-20230313   gcc  
 openrisc             randconfig-r021-20230313   gcc  
 openrisc             randconfig-r032-20230312   gcc  
 openrisc             randconfig-r036-20230312   gcc  
@@ -220,6 +220,7 @@ parisc                              defconfig   gcc
 parisc               randconfig-r005-20230312   gcc  
 parisc               randconfig-r005-20230313   gcc  
 parisc               randconfig-r013-20230312   gcc  
+parisc               randconfig-r014-20230312   gcc  
 parisc               randconfig-r021-20230313   gcc  
 parisc               randconfig-r023-20230313   gcc  
 parisc               randconfig-r026-20230313   gcc  
@@ -273,6 +274,7 @@ sh           buildonly-randconfig-r002-20230313   gcc
 sh           buildonly-randconfig-r005-20230312   gcc  
 sh           buildonly-randconfig-r006-20230313   gcc  
 sh                   randconfig-r015-20230312   gcc  
+sh                   randconfig-r016-20230312   gcc  
 sh                   randconfig-r023-20230313   gcc  
 sh                   randconfig-r024-20230312   gcc  
 sh                   randconfig-r024-20230313   gcc  
@@ -281,6 +283,7 @@ sh                   sh7770_generic_defconfig   gcc
 sparc        buildonly-randconfig-r003-20230313   gcc  
 sparc                               defconfig   gcc  
 sparc                randconfig-r002-20230313   gcc  
+sparc                randconfig-r015-20230312   gcc  
 sparc                randconfig-r021-20230312   gcc  
 sparc                randconfig-r022-20230312   gcc  
 sparc                randconfig-r023-20230312   gcc  
