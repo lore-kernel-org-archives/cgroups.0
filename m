@@ -1,174 +1,57 @@
-From: Cai Xinchen <caixinchen1-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Subject: [PATCH 1/1] mm: memcontrol: fix vmstats_percpu state incorrect subtraction after reparent
-Date: Mon, 20 Mar 2023 03:06:48 +0000
-Message-ID: <20230320030648.50663-2-caixinchen1@huawei.com>
-References: <20230320030648.50663-1-caixinchen1@huawei.com>
+From: Michal =?utf-8?Q?Koutn=C3=BD?= <mkoutny-IBi9RG/b67k@public.gmane.org>
+Subject: Re: [PATCH v2 3/4] cgroup/cpuset: Include offline CPUs when tasks'
+ cpumasks in top_cpuset are updated
+Date: Mon, 20 Mar 2023 16:04:33 +0100
+Message-ID: <20230320150433.v3xcl7rqsxz4x6tg@blackpad>
+References: <20230317151508.1225282-1-longman@redhat.com>
+ <20230317151508.1225282-4-longman@redhat.com>
+ <20230317180157.uqlleobldg53pgj6@blackpad>
+ <11b5454b-42c7-fb0d-f071-c46712f76f3b@redhat.com>
 Mime-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha512;
+        protocol="application/pgp-signature"; boundary="g3azguixlje76xpd"
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <20230320030648.50663-1-caixinchen1-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
+        t=1679324675; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=hwWqYXOi2JWUeQesBva9impsRBcN0SMjROswWsfpc4s=;
+        b=r8Ym2XCbihrsxLtFN08w06AOIshHu11IbK2BZr6ABPHC7XQk0y0yK4mY8d81jkGe3H0/Cg
+        lsmCJu73Fn24TssqB10M9LUnvuQ3AtCZSk4r3zEmQlIbFacyS0/YKpuAR+VVVD9U66RiN7
+        G/cFWEmoCSMmZbkRpEUr1vD4mv0gFA0=
+Content-Disposition: inline
+In-Reply-To: <11b5454b-42c7-fb0d-f071-c46712f76f3b-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org, shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, duanxiongchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, mpenttil-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org
+To: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Shuah Khan <shuah-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kselftest-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Will Deacon <will-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Juri Lelli <juri.lelli-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 
-When memcg C is offllined, its pages are reparented to memcg P,
-so far P->vmstats (hierarchical) have those pages, and
-P->vmstats_percpu (non-hierarchical) don't. When those pages get
-uncharged, P->vmstats (hierachical) decreases, which is correct,
-but P->vmstats_percpu (non-hierarchical) also decreases, which
-is wrong, as those stats were never added to P->vmstats_percpu to
-begin with. If the reparented memory exceeds the original
-non-hierarchical memory in P, some arg such as cache which is shown
-in memory.stat will be zero (if x < 0, it shows 0)
 
-To solve this problem, after reparent memcg, we should use
-cgroup_rstat_updated to add cgrp to rstat updated tree, and then after
-css refcount == 0, cgroup_rstat_flush is called by css_release_work_fn
-and css->flags is set as CSS_RELEASED. We propagate state in
-vmstat_percpu of struct mem_cgroup to its parent if css->flags is
-CSS_RELEASED. We use reparent_state to record those state and
-reparent_tag to ensure propagate vmstats_percpu of dying memcg only
-once. When mem_cgroup_css_rstat_flush is called, we
-add reparent_state to parent_memcg->vmstats_percpu->state and
-memcg->vmstgats_percpu->state_prev in locked context. The delta
-between state and state_prev would not change. So some accumulative
- value of vmstats_percpu (such as cache in memory.stat) will be
-shown correctly. And this patch does not produce delta between state
-and state_prev in vmstats_percpu which will be added to vmstats.
+--g3azguixlje76xpd
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 
-Signed-off-by: Cai Xinchen <caixinchen1-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
----
- kernel/cgroup/cgroup.c |  5 +++++
- mm/memcontrol.c        | 43 +++++++++++++++++++++++++++++++++++++++++-
- 2 files changed, 47 insertions(+), 1 deletion(-)
+On Fri, Mar 17, 2023 at 02:05:32PM -0400, Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org> wrote:
+> A cpu will be in the subparts_cpus only if it has been given to the child
+> partition. So when it becomes online, it will become part of the scheduling
+> domain that child partition. Only the tasks in that child partition will get
+> their cpumasks updated to use it, not those in the top cpuset.
 
-diff --git a/kernel/cgroup/cgroup.c b/kernel/cgroup/cgroup.c
-index 935e8121b21e..11138ee09a61 100644
---- a/kernel/cgroup/cgroup.c
-+++ b/kernel/cgroup/cgroup.c
-@@ -5384,12 +5384,17 @@ static void css_release_work_fn(struct work_struct *work)
- 		container_of(work, struct cgroup_subsys_state, destroy_work);
- 	struct cgroup_subsys *ss = css->ss;
- 	struct cgroup *cgrp = css->cgroup;
-+	int cpu;
- 
- 	mutex_lock(&cgroup_mutex);
- 
- 	css->flags |= CSS_RELEASED;
- 	list_del_rcu(&css->sibling);
- 
-+	/* update all cgrp rstat because reparent rstat flush */
-+	for_each_possible_cpu(cpu)
-+		cgroup_rstat_updated(cgrp, cpu);
-+
- 	if (ss) {
- 		/* css release path */
- 		if (!list_empty(&css->rstat_css_node)) {
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index 77929d08c8c9..658d42dc9820 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -842,6 +842,9 @@ struct memcg_vmstats_percpu {
- 	/* Cgroup1: threshold notifications & softlimit tree updates */
- 	unsigned long		nr_page_events;
- 	unsigned long		targets[MEM_CGROUP_NTARGETS];
-+
-+	/* Tag for propagate vmstat_percpu, 1 for start, 0 for stop */
-+	long			reparent_tag;
- };
- 
- struct memcg_vmstats {
-@@ -852,6 +855,9 @@ struct memcg_vmstats {
- 	/* Pending child counts during tree propagation */
- 	long			state_pending[MEMCG_NR_STAT];
- 	unsigned long		events_pending[NR_MEMCG_EVENTS];
-+
-+	/* Propagate vmstat_percpu after reparent */
-+	long			reparent_state[MEMCG_NR_STAT];
- };
- 
- unsigned long memcg_page_state(struct mem_cgroup *memcg, int idx)
-@@ -5558,6 +5564,17 @@ static int mem_cgroup_css_online(struct cgroup_subsys_state *css)
- 	return -ENOMEM;
- }
- 
-+static void set_reparent_tag_for_vmstats(struct mem_cgroup *memcg)
-+{
-+	int cpu;
-+	struct memcg_vmstats_percpu *statc;
-+
-+	for_each_possible_cpu(cpu) {
-+		statc = per_cpu_ptr(memcg->vmstats_percpu, cpu);
-+		WRITE_ONCE(statc->reparent_tag, 1);
-+	}
-+}
-+
- static void mem_cgroup_css_offline(struct cgroup_subsys_state *css)
- {
- 	struct mem_cgroup *memcg = mem_cgroup_from_css(css);
-@@ -5579,6 +5596,7 @@ static void mem_cgroup_css_offline(struct cgroup_subsys_state *css)
- 	page_counter_set_low(&memcg->memory, 0);
- 
- 	memcg_reparent_objcgs(memcg);
-+	set_reparent_tag_for_vmstats(memcg);
- 	memcg_offline_kmem(memcg);
- 	reparent_shrinker_deferred(memcg);
- 	wb_memcg_offline(memcg);
-@@ -5653,8 +5671,9 @@ static void mem_cgroup_css_rstat_flush(struct cgroup_subsys_state *css, int cpu)
- 	struct mem_cgroup *memcg = mem_cgroup_from_css(css);
- 	struct mem_cgroup *parent = parent_mem_cgroup(memcg);
- 	struct memcg_vmstats_percpu *statc;
--	long delta, v;
-+	long delta, v, reparent_v;
- 	int i, nid;
-+	bool reparent = false;
- 
- 	statc = per_cpu_ptr(memcg->vmstats_percpu, cpu);
- 
-@@ -5668,6 +5687,10 @@ static void mem_cgroup_css_rstat_flush(struct cgroup_subsys_state *css, int cpu)
- 		if (delta)
- 			memcg->vmstats->state_pending[i] = 0;
- 
-+		reparent_v = memcg->vmstats->reparent_state[i];
-+		if (reparent_v)
-+			memcg->vmstats->reparent_state[i] = 0;
-+
- 		/* Add CPU changes on this level since the last flush */
- 		v = READ_ONCE(statc->state[i]);
- 		if (v != statc->state_prev[i]) {
-@@ -5675,6 +5698,21 @@ static void mem_cgroup_css_rstat_flush(struct cgroup_subsys_state *css, int cpu)
- 			statc->state_prev[i] = v;
- 		}
- 
-+		/* if reparent tag is set, this cgroup is offline and reparent.
-+		 * if css->flags & CSS_RELEASED, this cgroup will be released
-+		 * soon. We should propagate memcg's vmstats_percpu to its parent.
-+		 */
-+		if (READ_ONCE(statc->reparent_tag) &&
-+			css->flags & CSS_RELEASED && parent) {
-+			parent->vmstats->reparent_state[i] += v + reparent_v;
-+			reparent = true;
-+		} else if (reparent_v) {
-+			__this_cpu_add(memcg->vmstats_percpu->state[i],
-+				reparent_v);
-+			__this_cpu_add(memcg->vmstats_percpu->state_prev[i],
-+				reparent_v);
-+		}
-+
- 		if (!delta)
- 			continue;
- 
-@@ -5684,6 +5722,9 @@ static void mem_cgroup_css_rstat_flush(struct cgroup_subsys_state *css, int cpu)
- 			parent->vmstats->state_pending[i] += delta;
- 	}
- 
-+	if (reparent)
-+		WRITE_ONCE(statc->reparent_tag, 0);
-+
- 	for (i = 0; i < NR_MEMCG_EVENTS; i++) {
- 		delta = memcg->vmstats->events_pending[i];
- 		if (delta)
--- 
-2.17.1
+Right, it's actually the difference between offlining a CPU and giving it
+to a sub-partition (hence a removed child (or switched to member) before
+CPU onlining). It's clear to me now.
 
+Thanks,
+Michal
+
+--g3azguixlje76xpd
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iHUEABYKAB0WIQTrXXag4J0QvXXBmkMkDQmsBEOquQUCZBh1/wAKCRAkDQmsBEOq
+uX3wAQCFD+U7rIP4rxH0pPPjBiVpGL+85S7rzdSIW7hL/H4DaAD/VJF7JKo6+E01
+gtBEpTVziKoADESQUhA8DJ2KYUQIlw4=
+=n3My
+-----END PGP SIGNATURE-----
+
+--g3azguixlje76xpd--
