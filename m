@@ -1,96 +1,65 @@
-From: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH] cpuset: Clean up cpuset_node_allowed
-Date: Sat, 18 Mar 2023 17:30:46 -0400
-Message-ID: <2e71c2bf-9ee3-4ada-e9d9-acb6e422e9af@redhat.com>
-References: <9953284e-05da-56b0-047d-ecf18aa53892@redhat.com>
- <20230228083537.102665-1-haifeng.xu@shopee.com>
- <299c9c34-0c07-ae52-61d7-6332f35c6245@redhat.com>
+From: Cai Xinchen <caixinchen1@huawei.com>
+Subject: [PATCH v2 4.19 3/3] cgroup: Add missing cpus_read_lock() to cgroup_attach_task_all()
+Date: Mon, 20 Mar 2023 01:15:07 +0000
+Message-ID: <20230320011507.129441-4-caixinchen1@huawei.com>
+References: <20230320011507.129441-1-caixinchen1@huawei.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1679175050;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=KJ/cpwwTOsiNZoK2Zi5I+mzUQqbpVfRXw3dozXcgP1o=;
-        b=OKlNS5TrBXp+BEEsNJnsuUNoCs6fHy9NyPIm/gRoqhmnu2hi63A4zEr9QJRujp22B33hzK
-        ovxnbMTCA4OjaT5kNwX7W0dgcGge/avT6c1JrESFBRVfKyBJ3kj6P0YlE+wF5SOEIgS8jd
-        eXlBZKMvgzCdW9yX8shjvDGPjjDPcTk=
-Content-Language: en-US
-In-Reply-To: <299c9c34-0c07-ae52-61d7-6332f35c6245-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Return-path: <stable-owner@vger.kernel.org>
+In-Reply-To: <20230320011507.129441-1-caixinchen1@huawei.com>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="utf-8"; format="flowed"
-To: Haifeng Xu <haifeng.xu-LL2PKPoSiP3QT0dZR+AlfA@public.gmane.org>
-Cc: lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: longman@redhat.com, lizefan.x@bytedance.com, tj@kernel.org, hannes@cmpxchg.org, gregkh@linuxfoundation.org, sashal@kernel.org
+Cc: mkoutny@suse.com, zhangqiao22@huawei.com, juri.lelli@redhat.com, penguin-kernel@I-love.SAKURA.ne.jp, stable@vger.kernel.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On 3/17/23 21:35, Waiman Long wrote:
-> On 2/28/23 03:35, Haifeng Xu wrote:
->> Commit 002f290627c2 ("cpuset: use static key better and convert to 
->> new API")
->> has used __cpuset_node_allowed() instead of cpuset_node_allowed() to 
->> check
->> whether we can allocate on a memory node. Now this function isn't 
->> used by
->> anyone, so we can do the follow things to clean up it.
->>
->> 1. remove unused codes
->> 2. rename __cpuset_node_allowed() to cpuset_node_allowed()
->> 3. update comments in mm/page_alloc.c
->>
->> Suggested-by: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
->> Signed-off-by: Haifeng Xu <haifeng.xu-LL2PKPoSiP3QT0dZR+AlfA@public.gmane.org>
->> ---
->>   include/linux/cpuset.h | 16 ++--------------
->>   kernel/cgroup/cpuset.c |  4 ++--
->>   mm/page_alloc.c        |  4 ++--
->>   3 files changed, 6 insertions(+), 18 deletions(-)
->>
->> diff --git a/include/linux/cpuset.h b/include/linux/cpuset.h
->> index d58e0476ee8e..980b76a1237e 100644
->> --- a/include/linux/cpuset.h
->> +++ b/include/linux/cpuset.h
->> @@ -80,18 +80,11 @@ extern nodemask_t cpuset_mems_allowed(struct 
->> task_struct *p);
->>   void cpuset_init_current_mems_allowed(void);
->>   int cpuset_nodemask_valid_mems_allowed(nodemask_t *nodemask);
->>   -extern bool __cpuset_node_allowed(int node, gfp_t gfp_mask);
->> -
->> -static inline bool cpuset_node_allowed(int node, gfp_t gfp_mask)
->> -{
->> -    if (cpusets_enabled())
->> -        return __cpuset_node_allowed(node, gfp_mask);
->> -    return true;
->> -}
->> +extern bool cpuset_node_allowed(int node, gfp_t gfp_mask);
->>     static inline bool __cpuset_zone_allowed(struct zone *z, gfp_t 
->> gfp_mask)
->>   {
->> -    return __cpuset_node_allowed(zone_to_nid(z), gfp_mask);
->> +    return cpuset_node_allowed(zone_to_nid(z), gfp_mask);
->>   }
->>     static inline bool cpuset_zone_allowed(struct zone *z, gfp_t 
->> gfp_mask)
->> @@ -223,11 +216,6 @@ static inline int 
->> cpuset_nodemask_valid_mems_allowed(nodemask_t *nodemask)
->>       return 1;
->>   }
->>   -static inline bool cpuset_node_allowed(int node, gfp_t gfp_mask)
->> -{
->> -    return true;
->> -}
->> -
->
-> Sorry for the late reply as I apparently drop the ball.
->
-> You need to keep the above cpuset_node_allowed() inline function or 
-> you will get compilation error when compiling with a config without 
-> CONFIG_CPUSETS. Other than that, the other changes look good.
->
-It turns out that cpuset_node_allowed() isn't used anywhere except in 
-cpuset.h. So it should be OK to remove the alternate 
-cpuset_node_allowed() function.
+From: Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>
 
-Acked-by: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+commit 43626dade36fa74d3329046f4ae2d7fdefe401c6 upstream.
+
+syzbot is hitting percpu_rwsem_assert_held(&cpu_hotplug_lock) warning at
+cpuset_attach() [1], for commit 4f7e7236435ca0ab ("cgroup: Fix
+threadgroup_rwsem <-> cpus_read_lock() deadlock") missed that
+cpuset_attach() is also called from cgroup_attach_task_all().
+Add cpus_read_lock() like what cgroup_procs_write_start() does.
+
+Link: https://syzkaller.appspot.com/bug?extid=29d3a3b4d86c8136ad9e [1]
+Reported-by: syzbot <syzbot+29d3a3b4d86c8136ad9e@syzkaller.appspotmail.com>
+Signed-off-by: Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>
+Fixes: 4f7e7236435ca0ab ("cgroup: Fix threadgroup_rwsem <-> cpus_read_lock() deadlock")
+Signed-off-by: Tejun Heo <tj@kernel.org>
+Signed-off-by: Cai Xinchen <caixinchen1@huawei.com>
+---
+ kernel/cgroup/cgroup-v1.c | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/kernel/cgroup/cgroup-v1.c b/kernel/cgroup/cgroup-v1.c
+index 61644976225a..c0ebb70808b6 100644
+--- a/kernel/cgroup/cgroup-v1.c
++++ b/kernel/cgroup/cgroup-v1.c
+@@ -13,6 +13,7 @@
+ #include <linux/delayacct.h>
+ #include <linux/pid_namespace.h>
+ #include <linux/cgroupstats.h>
++#include <linux/cpu.h>
+ 
+ #include <trace/events/cgroup.h>
+ 
+@@ -55,6 +56,7 @@ int cgroup_attach_task_all(struct task_struct *from, struct task_struct *tsk)
+ 	int retval = 0;
+ 
+ 	mutex_lock(&cgroup_mutex);
++	get_online_cpus();
+ 	percpu_down_write(&cgroup_threadgroup_rwsem);
+ 	for_each_root(root) {
+ 		struct cgroup *from_cgrp;
+@@ -71,6 +73,7 @@ int cgroup_attach_task_all(struct task_struct *from, struct task_struct *tsk)
+ 			break;
+ 	}
+ 	percpu_up_write(&cgroup_threadgroup_rwsem);
++	put_online_cpus();
+ 	mutex_unlock(&cgroup_mutex);
+ 
+ 	return retval;
+-- 
+2.17.1
 
