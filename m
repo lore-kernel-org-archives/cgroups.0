@@ -1,64 +1,55 @@
-From: Johannes Weiner <hannes@cmpxchg.org>
-Subject: Re: [RFC PATCH 6/7] workingset: memcg: sleep when flushing stats in
- workingset_refault()
-Date: Thu, 23 Mar 2023 12:00:30 -0400
-Message-ID: <20230323160030.GD739026@cmpxchg.org>
+From: Yosry Ahmed <yosryahmed@google.com>
+Subject: Re: [RFC PATCH 4/7] memcg: sleep during flushing stats in safe contexts
+Date: Thu, 23 Mar 2023 09:01:12 -0700
+Message-ID: <CAJD7tkZ7Dz9myftc9bg7jhiaOYcn7qJ+V4sxZ_2kfnb+k=zhJQ@mail.gmail.com>
 References: <20230323040037.2389095-1-yosryahmed@google.com>
- <20230323040037.2389095-7-yosryahmed@google.com>
+ <20230323040037.2389095-5-yosryahmed@google.com> <20230323155613.GC739026@cmpxchg.org>
 Mime-Version: 1.0
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Transfer-Encoding: quoted-printable
+Return-path: <linux-block-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=cmpxchg-org.20210112.gappssmtp.com; s=20210112; t=1679587231;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=xQQYR3tgoTZGjn44UlqD2Q/Bi/7ZZ0L1D2F+tNyu+vY=;
-        b=JUSYGg90JZTT6Yd13pjG6DLnrb2PDfmyEiLktcz2+MNdTX1qhs8SEmuA54OaIlpPJb
-         DxtqFpASEbLE1v0MWbPxSyp5iJvz/cWT8oHdtMYHkFXPLcVCi5GYkPZurEN1bWPwQDzC
-         weuJE2NJS7RteJovT2yARUM6DjWrj4KVVFVUPsqLMqvDhc6sSQI6Mvr+an7mCsZje+Ma
-         HzcrGuLfySAPmUsyXVd3Jh0ih8mkd/t0KaiLpkyblfIp5tKl5BXeCDVIuYG91jK7wKEU
-         fOndc7BtP6DmMZ+/1A5temMFZBDYv1b7xByaHD0exVuhFbacP6Sn5JBtcOlh09PvP/Ah
-         bUrw==
-Content-Disposition: inline
-In-Reply-To: <20230323040037.2389095-7-yosryahmed@google.com>
+        d=google.com; s=20210112; t=1679587309;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=aTWMwAKhcBWTOZZjhXh8n/JlmrY7tCK7IC8lep3UpDs=;
+        b=MOKQDwxr/deUL4llWSGhblhVEo9WcWB8efRLUE2dc0/j/VRqv9bfW7mrppwQxxgW5/
+         tkBhmPc2q+ri9+Bv9s4HE1ypBchPI41TQJZklkyPM5Q6PZGpWEfKqozM+UTPGQQJE0dM
+         hJxqGnb+d2+KlRMAUvMO8LiGIBEeAtLWMEoXFNt8F4/jnSiPtWtQD6m19Wr8h/VOWnzd
+         8/xfKDTgIMwacD63eX1ewPzVWyQaygjPDTysXqZ5QUBHWAg+Pc4Q/l1gT3Kja+vh6XdT
+         ZKyu/0YKEgAds7xfT+9+aomHkoK1r0md0ZyzBUSwzUwg/Ha4/tOPzpEAi28hh7nmSQNC
+         hOsQ==
+In-Reply-To: <20230323155613.GC739026@cmpxchg.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Yosry Ahmed <yosryahmed@google.com>
+Content-Type: text/plain; charset="windows-1252"
+To: Johannes Weiner <hannes@cmpxchg.org>
 Cc: Tejun Heo <tj@kernel.org>, Josef Bacik <josef@toxicpanda.com>, Jens Axboe <axboe@kernel.dk>, Zefan Li <lizefan.x@bytedance.com>, Michal Hocko <mhocko@kernel.org>, Roman Gushchin <roman.gushchin@linux.dev>, Shakeel Butt <shakeelb@google.com>, Muchun Song <muchun.song@linux.dev>, Andrew Morton <akpm@linux-foundation.org>, Vasily Averin <vasily.averin@linux.dev>, cgroups@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org, bpf@vger.kernel.org
 
-On Thu, Mar 23, 2023 at 04:00:36AM +0000, Yosry Ahmed wrote:
-> In workingset_refault(), we call mem_cgroup_flush_stats_delayed() to
-> flush stats within an RCU read section and with sleeping disallowed.
-> Move the call to mem_cgroup_flush_stats_delayed() above the RCU read
-> section and allow sleeping to avoid unnecessarily performing a lot of
-> work without sleeping.
-> 
-> Signed-off-by: Yosry Ahmed <yosryahmed@google.com>
-> ---
-> 
-> A lot of code paths call into workingset_refault(), so I am not
-> generally sure at all whether it's okay to sleep in all contexts or not.
-> Feedback here would be very helpful.
-> 
-> ---
->  mm/workingset.c | 5 ++---
->  1 file changed, 2 insertions(+), 3 deletions(-)
-> 
-> diff --git a/mm/workingset.c b/mm/workingset.c
-> index 042eabbb43f6..410bc6684ea7 100644
-> --- a/mm/workingset.c
-> +++ b/mm/workingset.c
-> @@ -406,6 +406,8 @@ void workingset_refault(struct folio *folio, void *shadow)
->  	unpack_shadow(shadow, &memcgid, &pgdat, &eviction, &workingset);
->  	eviction <<= bucket_order;
->  
-> +	/* Flush stats (and potentially sleep) before holding RCU read lock */
-> +	mem_cgroup_flush_stats_delayed(true);
+On Thu, Mar 23, 2023 at 8:56=E2=80=AFAM Johannes Weiner <hannes@cmpxchg.org=
+> wrote:
+>
+> On Thu, Mar 23, 2023 at 04:00:34AM +0000, Yosry Ahmed wrote:
+> > @@ -644,26 +644,26 @@ static void __mem_cgroup_flush_stats(void)
+> >               return;
+> >
+> >       flush_next_time =3D jiffies_64 + 2*FLUSH_TIME;
+> > -     cgroup_rstat_flush(root_mem_cgroup->css.cgroup, false);
+> > +     cgroup_rstat_flush(root_mem_cgroup->css.cgroup, may_sleep);
+>
+> How is it safe to call this with may_sleep=3Dtrue when it's holding the
+> stats_flush_lock?
 
-Btw, it might be a good time to rename this while you're in the
-area. delayed suggests this is using a delayed_work, but this is
-actually sometimes flushing directly from the callsite.
+stats_flush_lock is always called with trylock, it is only used today
+so that we can skip flushing if another cpu is already doing a flush
+(which is not 100% correct as they may have not finished flushing yet,
+but that's orthogonal here). So I think it should be safe to sleep as
+no one can be blocked waiting for this spinlock.
 
-What it's doing is ratelimited calls. A better name would be:
+Perhaps it would be better semantically to replace the spinlock with
+an atomic test and set, instead of having a lock that can only be used
+with trylock?
 
-	mem_cgroup_flush_stats_ratelimited()
+>
+> >       atomic_set(&stats_flush_threshold, 0);
+> >       spin_unlock(&stats_flush_lock);
+> >  }
