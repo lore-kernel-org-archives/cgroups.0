@@ -1,84 +1,153 @@
-From: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH 3/5] cgroup/cpuset: Find another usable CPU if none found
- in current cpuset
-Date: Fri, 24 Mar 2023 10:42:09 -0400
-Message-ID: <c07afcbf-8473-b4e3-704e-c73695db95b6@redhat.com>
-References: <20230306200849.376804-1-longman@redhat.com>
- <20230306200849.376804-4-longman@redhat.com>
- <20230314181749.5b4k6selbgdhl3up@blackpad>
- <58a1a878-fa0b-285d-3e43-2b5103d3c770@redhat.com>
- <20230317122708.ax3m2d4zijkfdzjq@blackpad>
- <ca664da8-0f47-06b2-a94c-82b2f9a1c3aa@redhat.com>
- <20230324143247.GA27199@willie-the-truck>
+From: kernel test robot <lkp-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+Subject: [tj-cgroup:for-6.4] BUILD SUCCESS
+ 8e4645226b4931e96d55546a1fb3863aa50b5e62
+Date: Fri, 24 Mar 2023 22:48:12 +0800
+Message-ID: <641db82c.03IJjBacOHSEyxXp%lkp@intel.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1679668931;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=To5ecTC/X7saxKtjRIArD6KqaoPoVn1lZB9f4SzUO/k=;
-        b=gNbDuLXtNBSipPxLACH9xTrrjtXnjWWWMtIM/OYj0ajCQT/SzQR7TerSVbhNYmP0sVh5e5
-        BuBR1y1996Fj+kXuHzGf9ggCu5yCZOk+6kGSEStkzPM+/KzMx88J2LLx9RF4zwVH11Kh5G
-        fesFCx2t1imiBgwdPRjvrBXl9O4o7+U=
-Content-Language: en-US
-In-Reply-To: <20230324143247.GA27199@willie-the-truck>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1679669310; x=1711205310;
+  h=date:from:to:cc:subject:message-id:mime-version:
+   content-transfer-encoding;
+  bh=a6eCCa/VVVDh83HfQCMANv6kyf0VJD7JLhvtw8hm1cw=;
+  b=ZLC6r7QvXp5DgA3EmB6yhysCASI4bMOI0q0O3Su+XbinArzf2cG3/xnk
+   uptVzPUC5MbEGTzXG4WT97zSeyn2OjDSKMo9/z4ghIpv/pGLZvsnMQpCb
+   DNNMnqmB86UcgWS/iwquXBpPlwFMjusrpuCBaH2vwWKSI/XM8KPE0zlXJ
+   DLbDSyC/VtfwYGJNWDbsdpBzoDO2kUxtQVbT6EYnpA+PODJpq/oAohcKg
+   LyEO1ymYvynrlFHgwYGLodZxkLsQrty3Jr7owZJIUecRsrABScTlNIuIk
+   1ODqyfsPrx/WvwF3IEwrlpsw73m1hxMCWFe77dKPNnIpDJZiUtqHqiDan
+   Q==;
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="iso-8859-1"; format="flowed"
-To: Will Deacon <will-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: =?UTF-8?Q?Michal_Koutn=c3=bd?= <mkoutny-IBi9RG/b67k@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Shuah Khan <shuah-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kselftest-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
+Content-Type: text/plain; charset="us-ascii"
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On 3/24/23 10:32, Will Deacon wrote:
-> On Fri, Mar 17, 2023 at 10:59:26AM -0400, Waiman Long wrote:
->> On 3/17/23 08:27, Michal Koutn=C3=BD wrote:
->>> On Tue, Mar 14, 2023 at 04:22:06PM -0400, Waiman Long <longman-H+wXaHxf=
-7aLQT0dZR+AlfA@public.gmane.org> wrote:
->>>> Some arm64 systems can have asymmetric CPUs where certain tasks are on=
-ly
->>>> runnable on a selected subset of CPUs.
->>> Ah, I'm catching up.
->>>
->>>> This information is not captured in the cpuset. As a result,
->>>> task_cpu_possible_mask() may return a mask that have no overlap with
->>>> effective_cpus causing new_cpus to become empty.
->>> I can see that historically, there was an approach of terminating
->>> unaccomodable tasks:
->>>      94f9c00f6460 ("arm64: Remove logic to kill 32-bit tasks on 64-bit-=
-only cores")
->>> the removal of killing had been made possible with
->>>      df950811f4a8 ("arm64: Prevent offlining first CPU with 32-bit EL0 =
-on mismatched system").
->>>
->>> That gives two other alternatives to affinity modification:
->>> 2) kill such tasks (not unlike OOM upon memory.max reduction),
->>> 3) reject cpuset reduction (violates cgroup v2 delegation).
->>>
->>> What do you think about 2)?
->> Yes, killing it is one possible solution.
->>
->> (3) doesn't work if the affinity change is due to hot cpu removal. So th=
-at
->> leaves this patch or (2) as the only alternative. I would like to hear w=
-hat
->> Will and Tejun thinks about it.
-> The main constraint from the Android side (the lucky ecosystem where these
-> SoCs tend to show up) is that existing userspace (including 32-bit binari=
-es)
-> continues to function without modification. So approaches such as killing
-> tasks or rejecting system calls tend not to work as well, since you
-> inevitably get divergent behaviour leading to functional breakage rather
-> than e.g. performance anomalies.
->
-> Having said that, the behaviour we currently have in mainline seems to
-> be alright, so please don't go out of your way to accomodate these SoCs.
-> I'm mainly just concerned about introducing any regressions, which is why
-> I ran my tests on this series
+tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git for-6.4
+branch HEAD: 8e4645226b4931e96d55546a1fb3863aa50b5e62  cpuset: Clean up cpuset_node_allowed
 
-I agree that killing it may be too draconian. I am withholding this=20
-patch for now.
+elapsed time: 728m
 
-Thanks,
-Longman
+configs tested: 111
+configs skipped: 11
 
+The following configs have been built successfully.
+More configs may be tested in the coming days.
+
+tested configs:
+alpha                            allyesconfig   gcc  
+alpha                               defconfig   gcc  
+arc                              allyesconfig   gcc  
+arc                                 defconfig   gcc  
+arc                  randconfig-r005-20230322   gcc  
+arc                  randconfig-r021-20230322   gcc  
+arc                  randconfig-r043-20230322   gcc  
+arm                              allmodconfig   gcc  
+arm                              allyesconfig   gcc  
+arm                                 defconfig   gcc  
+arm                  randconfig-r021-20230322   clang
+arm                  randconfig-r023-20230322   clang
+arm                  randconfig-r034-20230322   gcc  
+arm                  randconfig-r046-20230322   clang
+arm64                            allyesconfig   gcc  
+arm64                               defconfig   gcc  
+arm64                randconfig-r022-20230322   gcc  
+arm64                randconfig-r023-20230322   gcc  
+csky                                defconfig   gcc  
+csky                 randconfig-r024-20230322   gcc  
+csky                 randconfig-r025-20230322   gcc  
+csky                 randconfig-r026-20230322   gcc  
+hexagon      buildonly-randconfig-r003-20230322   clang
+hexagon              randconfig-r006-20230322   clang
+hexagon              randconfig-r041-20230322   clang
+hexagon              randconfig-r045-20230322   clang
+i386                             allyesconfig   gcc  
+i386                              debian-10.3   gcc  
+i386                                defconfig   gcc  
+i386                          randconfig-a001   gcc  
+i386                          randconfig-a002   clang
+i386                          randconfig-a003   gcc  
+i386                          randconfig-a004   clang
+i386                          randconfig-a005   gcc  
+i386                          randconfig-a006   clang
+i386                          randconfig-a011   clang
+i386                          randconfig-a012   gcc  
+i386                          randconfig-a013   clang
+i386                          randconfig-a014   gcc  
+i386                          randconfig-a015   clang
+i386                          randconfig-a016   gcc  
+ia64                             allmodconfig   gcc  
+ia64                                defconfig   gcc  
+ia64                 randconfig-r025-20230322   gcc  
+loongarch                        allmodconfig   gcc  
+loongarch                         allnoconfig   gcc  
+loongarch    buildonly-randconfig-r001-20230322   gcc  
+loongarch                           defconfig   gcc  
+loongarch            randconfig-r032-20230322   gcc  
+m68k                             allmodconfig   gcc  
+m68k                                defconfig   gcc  
+m68k                 randconfig-r015-20230322   gcc  
+microblaze   buildonly-randconfig-r006-20230322   gcc  
+mips                             allmodconfig   gcc  
+mips                             allyesconfig   gcc  
+mips                      maltasmvp_defconfig   gcc  
+mips                 randconfig-r012-20230322   clang
+mips                 randconfig-r021-20230322   clang
+mips                 randconfig-r023-20230322   clang
+mips                 randconfig-r031-20230322   gcc  
+nios2        buildonly-randconfig-r004-20230322   gcc  
+nios2                               defconfig   gcc  
+nios2                randconfig-r036-20230322   gcc  
+openrisc                            defconfig   gcc  
+openrisc             randconfig-r001-20230322   gcc  
+openrisc             randconfig-r004-20230322   gcc  
+parisc                              defconfig   gcc  
+parisc               randconfig-r013-20230322   gcc  
+parisc               randconfig-r034-20230322   gcc  
+parisc64                            defconfig   gcc  
+powerpc                          allmodconfig   gcc  
+powerpc                           allnoconfig   gcc  
+powerpc              randconfig-r033-20230322   clang
+powerpc              randconfig-r035-20230322   clang
+riscv                            allmodconfig   gcc  
+riscv                             allnoconfig   gcc  
+riscv                               defconfig   gcc  
+riscv                randconfig-r022-20230322   gcc  
+riscv                randconfig-r036-20230322   clang
+riscv                randconfig-r042-20230322   gcc  
+riscv                          rv32_defconfig   gcc  
+s390                             allmodconfig   gcc  
+s390                             allyesconfig   gcc  
+s390                                defconfig   gcc  
+s390                 randconfig-r044-20230322   gcc  
+sh                               allmodconfig   gcc  
+sh                   randconfig-r016-20230322   gcc  
+sparc                               defconfig   gcc  
+sparc                randconfig-r014-20230322   gcc  
+sparc64              randconfig-r031-20230322   gcc  
+um                             i386_defconfig   gcc  
+um                           x86_64_defconfig   gcc  
+x86_64                            allnoconfig   gcc  
+x86_64                           allyesconfig   gcc  
+x86_64                              defconfig   gcc  
+x86_64                                  kexec   gcc  
+x86_64                        randconfig-a001   clang
+x86_64                        randconfig-a002   gcc  
+x86_64                        randconfig-a003   clang
+x86_64                        randconfig-a004   gcc  
+x86_64                        randconfig-a005   clang
+x86_64                        randconfig-a006   gcc  
+x86_64                        randconfig-a011   gcc  
+x86_64                        randconfig-a012   clang
+x86_64                        randconfig-a013   gcc  
+x86_64                        randconfig-a014   clang
+x86_64                        randconfig-a015   gcc  
+x86_64                        randconfig-a016   clang
+x86_64                               rhel-8.3   gcc  
+xtensa               randconfig-r002-20230322   gcc  
+xtensa               randconfig-r035-20230322   gcc  
+
+-- 
+0-DAY CI Kernel Test Service
+https://github.com/intel/lkp-tests
