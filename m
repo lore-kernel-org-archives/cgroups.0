@@ -1,94 +1,79 @@
-From: Waiman Long <longman@redhat.com>
-Subject: Re: [RFC PATCH 1/7] cgroup: rstat: only disable interrupts for the
- percpu lock
-Date: Fri, 24 Mar 2023 10:12:42 -0400
-Message-ID: <53582a07-81c6-35eb-10bf-7920b27483be@redhat.com>
-References: <20230323040037.2389095-1-yosryahmed@google.com>
- <20230323040037.2389095-2-yosryahmed@google.com>
- <ZBz/V5a7/6PZeM7S@slm.duckdns.org>
- <CAJD7tkYNZeEytm_Px9_73Y-AYJfHAxaoTmmnO71HW5hd1B5tPg@mail.gmail.com>
+From: Will Deacon <will-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCH 3/5] cgroup/cpuset: Find another usable CPU if none found
+ in current cpuset
+Date: Fri, 24 Mar 2023 14:32:50 +0000
+Message-ID: <20230324143247.GA27199@willie-the-truck>
+References: <20230306200849.376804-1-longman@redhat.com>
+ <20230306200849.376804-4-longman@redhat.com>
+ <20230314181749.5b4k6selbgdhl3up@blackpad>
+ <58a1a878-fa0b-285d-3e43-2b5103d3c770@redhat.com>
+ <20230317122708.ax3m2d4zijkfdzjq@blackpad>
+ <ca664da8-0f47-06b2-a94c-82b2f9a1c3aa@redhat.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: quoted-printable
-Return-path: <bpf-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1679667167;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=ADiIDdAPnjqVAbV/udpxZCAiMLd8rfZn004mVe2ENYg=;
-        b=G/cI7qNh8pMup3dqG0lDObOxhELU85vzmbBgCa8hpHnLijDcjA75Cf6NWNHpOU9Gu+BZpL
-        rwGCW6fyC8/Zl8Bpw3CJlBUHhuYXnJaNFVroylsJ+rtIH2HzExZIhe20jFJalJ0MYMUqe9
-        S2hkcmAT1bQzWQNiinYJGQ91mZS41pQ=
-Content-Language: en-US
-In-Reply-To: <CAJD7tkYNZeEytm_Px9_73Y-AYJfHAxaoTmmnO71HW5hd1B5tPg@mail.gmail.com>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1679668377;
+        bh=yxz8D2Zg0ZMCZt9HGM8J7hviWBLk56ggtJ1KZ+DkDGY=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=TW4X/v31+XvxigTPEeFIQrSpqf1C0wg34BEJL4Ewk0hehRrW2ZKZsQjnGXXStCEQp
+         5VkteDkPv+sdJn+wnCp00Q7ts0BXFvbvpUPoz/O9ozOkHdjO4LnSzaJvy2Lfehdi0r
+         o0bbmMBhVD3QDLkFyY4APnSyWtyO3ymDaEdHiB8QpljXQXoAKlvYNlSVeZg+pwPPZe
+         sPryW8AHtsYhf36NHIPB0QmnPAT7HBQXA41oQKclKF0ESgsa5b9KAsNfg7nYmJrsRX
+         ucNevYIcTADp3ZgDhRMyA4mplhSlroJWECB9XeRhBSBgNHFndzP4dipMvgK5XNtnz6
+         OfNZPsFUIN1Wg==
+Content-Disposition: inline
+In-Reply-To: <ca664da8-0f47-06b2-a94c-82b2f9a1c3aa-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="windows-1252"; format="flowed"
-To: Yosry Ahmed <yosryahmed@google.com>, Tejun Heo <tj@kernel.org>
-Cc: Josef Bacik <josef@toxicpanda.com>, Jens Axboe <axboe@kernel.dk>, Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, Roman Gushchin <roman.gushchin@linux.dev>, Shakeel Butt <shakeelb@google.com>, Muchun Song <muchun.song@linux.dev>, Andrew Morton <akpm@linux-foundation.org>, Vasily Averin <vasily.averin@linux.dev>, cgroups@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org, bpf@vger.kernel.org
+Content-Type: text/plain; charset="iso-8859-1"
+To: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Cc: Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny-IBi9RG/b67k@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Shuah Khan <shuah-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kselftest-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
 
-On 3/24/23 03:22, Yosry Ahmed wrote:
-> On Thu, Mar 23, 2023 at 6:39=E2=80=AFPM Tejun Heo <tj@kernel.org> wrote:
->> Hello,
->>
->> On Thu, Mar 23, 2023 at 04:00:31AM +0000, Yosry Ahmed wrote:
->>> Currently, when sleeping is not allowed during rstat flushing, we hold
->>> the global rstat lock with interrupts disabled throughout the entire
->>> flush operation. Flushing in an O(# cgroups * # cpus) operation, and
->>> having interrupts disabled throughout is dangerous.
->>>
->>> For some contexts, we may not want to sleep, but can be interrupted
->>> (e.g. while holding a spinlock or RCU read lock). As such, do not
->>> disable interrupts throughout rstat flushing, only when holding the
->>> percpu lock. This breaks down the O(# cgroups * # cpus) duration with
->>> interrupts disabled to a series of O(# cgroups) durations.
->>>
->>> Furthermore, if a cpu spinning waiting for the global rstat lock, it
->>> doesn't need to spin with interrupts disabled anymore.
->> I'm generally not a fan of big spin locks w/o irq protection. They too o=
-ften
->> become a source of unpredictable latency spikes. As you said, the global
->> rstat lock can be held for quite a while. Removing _irq makes irq latency
->> better on the CPU but on the other hand it makes a lot more likely that =
-the
->> lock is gonna be held even longer, possibly significantly so depending on
->> the configuration and workload which will in turn stall other CPUs waiti=
-ng
->> for the lock. Sure, irqs are being serviced quicker but if the cost is m=
-ore
->> and longer !irq context multi-cpu stalls, what's the point?
->>
->> I don't think there's anything which requires the global lock to be held
->> throughout the entire flushing sequence and irq needs to be disabled when
->> grabbing the percpu lock anyway, so why not just release the global lock=
- on
->> CPU boundaries instead? We don't really lose anything significant that w=
-ay.
->> The durations of irq disabled sections are still about the same as in the
->> currently proposed solution at O(# cgroups) and we avoid the risk of hol=
-ding
->> the global lock for too long unexpectedly from getting hit repeatedly by
->> irqs while holding the global lock.
-> Thanks for taking a look!
->
-> I think a problem with this approach is that we risk having to contend
-> for the global lock at every CPU boundary in atomic contexts. Right
-Isn't it the plan to just do a trylock in atomic contexts so that it=20
-won't get stuck spinning for the lock for an indeterminate amount of time?
-> now we contend for the global lock once, and once we have it we go
-> through all CPUs to flush, only having to contend with updates taking
-> the percpu locks at this point. If we unconditionally release &
-> reacquire the global lock at every CPU boundary then we may contend
-> for it much more frequently with concurrent flushers.
+On Fri, Mar 17, 2023 at 10:59:26AM -0400, Waiman Long wrote:
+> On 3/17/23 08:27, Michal Koutn=FD wrote:
+> > On Tue, Mar 14, 2023 at 04:22:06PM -0400, Waiman Long <longman-H+wXaHxf=
+7aLQT0dZR+AlfA@public.gmane.org> wrote:
+> > > Some arm64 systems can have asymmetric CPUs where certain tasks are o=
+nly
+> > > runnable on a selected subset of CPUs.
+> > Ah, I'm catching up.
+> >=20
+> > > This information is not captured in the cpuset. As a result,
+> > > task_cpu_possible_mask() may return a mask that have no overlap with
+> > > effective_cpus causing new_cpus to become empty.
+> > I can see that historically, there was an approach of terminating
+> > unaccomodable tasks:
+> >     94f9c00f6460 ("arm64: Remove logic to kill 32-bit tasks on 64-bit-o=
+nly cores")
+> > the removal of killing had been made possible with
+> >     df950811f4a8 ("arm64: Prevent offlining first CPU with 32-bit EL0 o=
+n mismatched system").
+> >=20
+> > That gives two other alternatives to affinity modification:
+> > 2) kill such tasks (not unlike OOM upon memory.max reduction),
+> > 3) reject cpuset reduction (violates cgroup v2 delegation).
+> >=20
+> > What do you think about 2)?
+>=20
+> Yes, killing it is one possible solution.
+>=20
+> (3) doesn't work if the affinity change is due to hot cpu removal. So that
+> leaves this patch or (2) as the only alternative. I would like to hear wh=
+at
+> Will and Tejun thinks about it.
 
-Note that with the use of qspinlock in all the major arches, the impact=20
-of thundering herds of lockers are much less serious than before. There=20
-are certainly some overhead in doing multiple lock acquires and=20
-releases, but that shouldn't been too excessive.
+The main constraint from the Android side (the lucky ecosystem where these
+SoCs tend to show up) is that existing userspace (including 32-bit binaries)
+continues to function without modification. So approaches such as killing
+tasks or rejecting system calls tend not to work as well, since you
+inevitably get divergent behaviour leading to functional breakage rather
+than e.g. performance anomalies.
 
-I am all in for reducing lock hold time as much as possible as it will=20
-improve the response time.
+Having said that, the behaviour we currently have in mainline seems to
+be alright, so please don't go out of your way to accomodate these SoCs.
+I'm mainly just concerned about introducing any regressions, which is why
+I ran my tests on this series
 
 Cheers,
-Longman
 
+Will
