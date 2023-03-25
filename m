@@ -1,122 +1,62 @@
-From: Lorenzo Stoakes <lstoakes-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: Re: [PATCH] selftests: cgroup: Fix exception handling in
- test_memcg_oom_group_score_events()
-Date: Sat, 25 Mar 2023 19:24:08 +0000
-Message-ID: <fffcd98a-bb73-41cd-8545-0f2c55dd38f9@lucifer.local>
-References: <f9303bdc-b1a7-be5e-56c6-dfa8232b8b55@web.de>
- <c383bdca-6f0d-4a75-e788-e1920faa0a62@web.de>
+From: Waiman Long <longman@redhat.com>
+Subject: Re: [PATCH 3/5] cgroup/cpuset: Find another usable CPU if none found
+ in current cpuset
+Date: Sat, 25 Mar 2023 18:08:18 -0400
+Message-ID: <17e804ea-64b5-97e1-d5fa-571157e15746@redhat.com>
+References: <20230306200849.376804-1-longman@redhat.com>
+ <20230306200849.376804-4-longman@redhat.com>
+ <20230314181749.5b4k6selbgdhl3up@blackpad>
+ <58a1a878-fa0b-285d-3e43-2b5103d3c770@redhat.com>
+ <20230317122708.ax3m2d4zijkfdzjq@blackpad>
+ <ca664da8-0f47-06b2-a94c-82b2f9a1c3aa@redhat.com>
+ <20230324143247.GA27199@willie-the-truck>
+ <20230324181936.5sf6xjc5a4vacuku@blackpad>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112; t=1679772250;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :mime-version:references:message-id:subject:cc:to:from:date:from:to
-         :cc:subject:date:message-id:reply-to;
-        bh=tcnVA78wkVzbPfXfOJ2LEcC0Y+HKxsbDQcgFdv0NWhs=;
-        b=Pocj9XuByR3+O92iq2mpvWIyQvZt/GKsOhuWboG4VjE1ElKkX0M4H1lkjCsl8CpzN7
-         S+ad7YC4Ka3kz9ZCYnsWJks1NnAiyglsLk+s6xRkdqAIUP00quC16G8Z9x34sQQnbVbh
-         jXBzC2ksIhiCRSVP/MOIxnJmAhqk8Q6+f/7JQGHIzgfUrQe7Yv8LsVLO1lYNvzya9RKz
-         U28nihqEM2vbM0F4Kt/8TRoNk0jFm74V7HhKDqzntjVTk83BhJ3v+NIHGkJYLjZJWVAS
-         mLB6Ocrk+OH0cPdE/HE/QAXFeE7sILEp4687gd04apIH9gcHkTvWB1FuHftWvYlbmvPv
-         vTSQ==
-Content-Disposition: inline
-In-Reply-To: <c383bdca-6f0d-4a75-e788-e1920faa0a62-S0/GAf8tV78@public.gmane.org>
+Content-Transfer-Encoding: quoted-printable
+Return-path: <linux-kernel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1679782103;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=gfpzCVb7RjReIdPdxbxCD31KhV4soJYjxsJSs2syVzk=;
+        b=XkXySQxTXOCDp/KTbZtXRLpcv7diNpNAJFLi21eYNbFD+OMSoW9GD9Cq83TCp17sSxz8Yu
+        t5YAmnpwg3YrEJtK5RnZkKS6HClShX2FYf9dpwbWIyBeey1igGYRh2fWqNcZztS/mZnUPH
+        3dtUyWILdrONrCOuHvdnEHPwlAs3xJ4=
+Content-Language: en-US
+In-Reply-To: <20230324181936.5sf6xjc5a4vacuku@blackpad>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="utf-8"
-To: Markus Elfring <Markus.Elfring-S0/GAf8tV78@public.gmane.org>
-Cc: kernel-janitors-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kselftest-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Jay Kamat <jgkamat-b10kYP2dOMg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Muchun Song <muchun.song-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Shuah Khan <shuah-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, cocci-MZpvjPyXg2s@public.gmane.org, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Type: text/plain; charset="iso-8859-1"; format="flowed"
+To: =?UTF-8?Q?Michal_Koutn=c3=bd?= <mkoutny@suse.com>, Will Deacon <will@kernel.org>
+Cc: Tejun Heo <tj@kernel.org>, Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, Shuah Khan <shuah@kernel.org>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, linux-kselftest@vger.kernel.org, Peter Zijlstra <peterz@infradead.org>
 
-On Sat, Mar 25, 2023 at 07:30:21PM +0100, Markus Elfring wrote:
-> Date: Sat, 25 Mar 2023 19:11:13 +0100
->
-> The label “cleanup” was used to jump to another pointer check despite of
-> the detail in the implementation of the function
-> “test_memcg_oom_group_score_events” that it was determined already
-> that a corresponding variable contained a null pointer.
 
-This is poorly writte and confusing. Something like 'avoid unnecessary null
-check/cg_destroy() invocation' would be far clearer.
+On 3/24/23 14:19, Michal Koutn=C3=BD wrote:
+> On Fri, Mar 24, 2023 at 02:32:50PM +0000, Will Deacon <will@kernel.org> w=
+rote:
+>> So approaches such as killing tasks or rejecting system calls tend not
+>> to work as well, since you inevitably get divergent behaviour leading
+>> to functional breakage rather than e.g. performance anomalies.
+> What about temporary performance drop from 100% to 0% aka freezing the
+> tasks for the duration of the mismatching affinity config?
 
->
-> 1. Thus return directly after a call of the function “cg_name” failed.
->
+That can be a lot of extra work to freeze it. I will prefer something=20
+simpler.
 
-This feels superfluious.
+Without this patch, I believe it will lead to a cpumask of 0 which will=20
+cause the scheduler to pick a fallback cpu. It looks like the fallback=20
+code may be able to pick up the right cpu or it may panic the system=20
+(less likely).
 
-> 2. Use an additional label.
-
-This also feels superfluious.
-
->
-> 3. Delete a questionable check.
-
-This seems superfluois and frankly, rude. It's not questionable, it's
-readable, you should try to avoid language like 'questionable' when the
-purpose of the check is obvious.
-
+Cheers,
+Longman
 >
 >
-> This issue was detected by using the Coccinelle software.
+>> Having said that, the behaviour we currently have in mainline seems to
+>> be alright, so please don't go out of your way to accomodate these SoCs.
+> I see. (Just wondering what you think about the fourth option above.)
 >
-> Fixes: a987785dcd6c8ae2915460582aebd6481c81eb67 ("Add tests for memory.oom.group")
+> Thanks,
+> Michal
 
-Fixes what in the what now? This is not a bug fix, it's a 'questionable'
-refactoring.
-
-> Signed-off-by: Markus Elfring <elfring-Rn4VEauK+AKRv+LV9MX5uipxlwaOVQ5f@public.gmane.org>
-> ---
->  tools/testing/selftests/cgroup/test_memcontrol.c | 9 ++++-----
->  1 file changed, 4 insertions(+), 5 deletions(-)
->
-> diff --git a/tools/testing/selftests/cgroup/test_memcontrol.c b/tools/testing/selftests/cgroup/test_memcontrol.c
-> index f4f7c0aef702..afcd1752413e 100644
-> --- a/tools/testing/selftests/cgroup/test_memcontrol.c
-> +++ b/tools/testing/selftests/cgroup/test_memcontrol.c
-> @@ -1242,12 +1242,11 @@ static int test_memcg_oom_group_score_events(const char *root)
->  	int safe_pid;
->
->  	memcg = cg_name(root, "memcg_test_0");
-> -
->  	if (!memcg)
-> -		goto cleanup;
-> +		return ret;
->
->  	if (cg_create(memcg))
-> -		goto cleanup;
-> +		goto free_cg;
->
->  	if (cg_write(memcg, "memory.max", "50M"))
->  		goto cleanup;
-> @@ -1275,8 +1274,8 @@ static int test_memcg_oom_group_score_events(const char *root)
->  	ret = KSFT_PASS;
->
->  cleanup:
-> -	if (memcg)
-> -		cg_destroy(memcg);
-> +	cg_destroy(memcg);
-> +free_cg:
->  	free(memcg);
->
->  	return ret;
-> --
-> 2.40.0
->
->
-
-I dislike this patch, it adds complexity for no discernible purpose and
-actively makes the code _less_ readable and in a self-test of all places (!)
-
-Not all pedantic Coccinelle results are actionable. Remember that it's
-humans who are reading the code.
-
-Your email client/scripting is still somehow broken, I couldn't get b4 to
-pull it correctly and it seems to have a duplicate message ID. You really
-need to take a look at that (git send-email should do this fine for
-example).
-
-Please try to filter the output of Coccinelle and instead of spamming
-thousands of pointless patches that add no value, try to choose those that
-do add value.
-
-My advice overall would be to just stop.
