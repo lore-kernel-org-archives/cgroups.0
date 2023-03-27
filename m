@@ -1,82 +1,64 @@
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 4/7] btrfs, mm: remove the punt_to_cgroup field in struct writeback_control
-Date: Mon, 27 Mar 2023 09:49:50 +0900
-Message-ID: <20230327004954.728797-5-hch@lst.de>
+Subject: [PATCH 6/7] block: async_bio_lock does not need to be bh-safe
+Date: Mon, 27 Mar 2023 09:49:52 +0900
+Message-ID: <20230327004954.728797-7-hch@lst.de>
 References: <20230327004954.728797-1-hch@lst.de>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Return-path: <linux-block-owner@vger.kernel.org>
+Return-path: <linux-btrfs-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
         MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender
         :Reply-To:Content-Type:Content-ID:Content-Description;
-        bh=5ZhM6Yw/R1sd+MpvSA0gat2A40x7C/0Xx6SF3r7hQHg=; b=1Vta+wtQ4nJq8eCftRdshEH7bm
-        7P0fxfEiDSEXzllKTLvvoAQNLnQo1MEAQyarGNLZo2HtgnVinDCvCYQFf2Yh9yuX+TEO7SSK29P3C
-        p6XtrJeZfxO0kxks9laeZlcoJDKZU547niU6M9QOE6RXY/DZOfmsA150H4cMzGmob0jx9twN7admS
-        hZ3/kdPhzkZJGqWNVQ9Q3U3rMAI2hVvYfaPCo8UiGzCxX+6RjujT7kMlXMEbV8afHehM/M7Jd8KL3
-        gKAe7kL7PuWrW2ksiX9BcRweU0M1XpbDbK3+K8NZn7dpsYtmhThUzCo15jExkbWx4F+KjOq6JhTZz
-        e2tVuKZw==;
+        bh=3WakPQXoeSMBHEPH563KK9+L13liempcHofus5A/Ot8=; b=d67K7+N6/KWpQYNy6k3CFhe2Uz
+        x7YOO4e3q6Uj2LARNCWckeWWq8m4w0y7ONVL6BflMm8kKUVCJNvxP4c/0xH9bi7Dq+MmDn/O13Jp7
+        xFaSm4piEIC2y4EopR0t3JPPNuVFw6d5kFHYPAGTvm/2WPZflNZ8long+I3pwekDv0asO9hcJYU2r
+        YqbBVNXFjLa5kB8Bmn58f0wr2Ukt8TLUPcYb1NdKy18+W7pwgSAnPI0H3UvOLaw9AArKowBGCqifx
+        ybk2dr85sWlDmBm6B+HUrdJ0AHopWItK+6Uex9r+lAdn6LuHZ4SJcKE1UjOwm9Mna5h0V6KC1scm9
+        6/iWzv+Q==;
 In-Reply-To: <20230327004954.728797-1-hch@lst.de>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 To: Josef Bacik <josef@toxicpanda.com>, Chris Mason <clm@fb.com>, David Sterba <dsterba@suse.com>
 Cc: Tejun Heo <tj@kernel.org>, Jens Axboe <axboe@kernel.dk>, cgroups@vger.kernel.org, linux-block@vger.kernel.org, linux-btrfs@vger.kernel.org
 
-punt_to_cgroup is only used by extent_write_locked_range, but that
-function also directly controls the bio flags for the actual submission.
-Remove th punt_to_cgroup field, and just set REQ_CGROUP_PUNT directly
-in extent_write_locked_range.
+async_bio_lock is only taken from bio submission and workqueue context,
+both are never in bottom halves.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/btrfs/extent_io.c      | 6 +++---
- include/linux/writeback.h | 5 -----
- 2 files changed, 3 insertions(+), 8 deletions(-)
+ block/blk-cgroup.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
-diff --git a/fs/btrfs/extent_io.c b/fs/btrfs/extent_io.c
-index 1221f699ffc596..f5702b1e2b86b0 100644
---- a/fs/btrfs/extent_io.c
-+++ b/fs/btrfs/extent_io.c
-@@ -2533,13 +2533,13 @@ int extent_write_locked_range(struct inode *inode, u64 start, u64 end)
- 		.sync_mode	= WB_SYNC_ALL,
- 		.range_start	= start,
- 		.range_end	= end + 1,
--		/* We're called from an async helper function */
--		.punt_to_cgroup	= 1,
- 		.no_cgroup_owner = 1,
- 	};
- 	struct btrfs_bio_ctrl bio_ctrl = {
- 		.wbc = &wbc_writepages,
--		.opf = REQ_OP_WRITE | wbc_to_write_flags(&wbc_writepages),
-+		/* We're called from an async helper function */
-+		.opf = REQ_OP_WRITE | REQ_CGROUP_PUNT |
-+			wbc_to_write_flags(&wbc_writepages),
- 		.extent_locked = 1,
- 	};
+diff --git a/block/blk-cgroup.c b/block/blk-cgroup.c
+index 9f5f3263c1781e..c524ecab440b8f 100644
+--- a/block/blk-cgroup.c
++++ b/block/blk-cgroup.c
+@@ -198,10 +198,10 @@ static void blkg_async_bio_workfn(struct work_struct *work)
+ 	bool need_plug = false;
  
-diff --git a/include/linux/writeback.h b/include/linux/writeback.h
-index 46020373e155be..fba937999fbfd3 100644
---- a/include/linux/writeback.h
-+++ b/include/linux/writeback.h
-@@ -70,8 +70,6 @@ struct writeback_control {
- 	 */
- 	unsigned no_cgroup_owner:1;
+ 	/* as long as there are pending bios, @blkg can't go away */
+-	spin_lock_bh(&blkg->async_bio_lock);
++	spin_lock(&blkg->async_bio_lock);
+ 	bio_list_merge(&bios, &blkg->async_bios);
+ 	bio_list_init(&blkg->async_bios);
+-	spin_unlock_bh(&blkg->async_bio_lock);
++	spin_unlock(&blkg->async_bio_lock);
  
--	unsigned punt_to_cgroup:1;	/* cgrp punting, see __REQ_CGROUP_PUNT */
--
- 	/* To enable batching of swap writes to non-block-device backends,
- 	 * "plug" can be set point to a 'struct swap_iocb *'.  When all swap
- 	 * writes have been submitted, if with swap_iocb is not NULL,
-@@ -97,9 +95,6 @@ static inline blk_opf_t wbc_to_write_flags(struct writeback_control *wbc)
- {
- 	blk_opf_t flags = 0;
+ 	/* start plug only when bio_list contains at least 2 bios */
+ 	if (bios.head && bios.head->bi_next) {
+@@ -1699,9 +1699,9 @@ void blkcg_punt_bio_submit(struct bio *bio)
+ 	struct blkcg_gq *blkg = bio->bi_blkg;
  
--	if (wbc->punt_to_cgroup)
--		flags = REQ_CGROUP_PUNT;
--
- 	if (wbc->sync_mode == WB_SYNC_ALL)
- 		flags |= REQ_SYNC;
- 	else if (wbc->for_kupdate || wbc->for_background)
+ 	if (blkg->parent) {
+-		spin_lock_bh(&blkg->async_bio_lock);
++		spin_lock(&blkg->async_bio_lock);
+ 		bio_list_add(&blkg->async_bios, bio);
+-		spin_unlock_bh(&blkg->async_bio_lock);
++		spin_unlock(&blkg->async_bio_lock);
+ 		queue_work(blkcg_punt_bio_wq, &blkg->async_bio_work);
+ 	} else {
+ 		/* never bounce for the root cgroup */
 -- 
 2.39.2
 
