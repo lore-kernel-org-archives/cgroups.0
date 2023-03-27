@@ -1,57 +1,110 @@
-From: Michal Hocko <mhocko@suse.com>
-Subject: Re: [RFC] memcg v1: provide read access to memory.pressure_level
-Date: Mon, 27 Mar 2023 22:40:37 +0200
-Message-ID: <ZCH/RVlh1M6DRXaU@dhcp22.suse.cz>
-References: <20230322142525.162469-1-flosch@nutanix.com>
- <20230324150350.fu7itbqqvtjmyf3s@blackpad>
- <6f4420d0-2f86-7294-01e1-6806ef7e4686@nutanix.com>
+From: Yosry Ahmed <yosryahmed@google.com>
+Subject: Re: [RFC PATCH 1/7] cgroup: rstat: only disable interrupts for the
+ percpu lock
+Date: Mon, 27 Mar 2023 16:23:13 -0700
+Message-ID: <CAJD7tkZrp=4zWvjE9_010TAG1T_crCbf9P64UzJABspgcrGPKg@mail.gmail.com>
+References: <20230323040037.2389095-1-yosryahmed@google.com>
+ <20230323040037.2389095-2-yosryahmed@google.com> <ZBz/V5a7/6PZeM7S@slm.duckdns.org>
+ <CAJD7tkYNZeEytm_Px9_73Y-AYJfHAxaoTmmnO71HW5hd1B5tPg@mail.gmail.com>
+ <ZB5UalkjGngcBDEJ@slm.duckdns.org> <CAJD7tkYhyMkD8SFf8b8L1W9QUrLOdw-HJ2NUbENjw5dgFnH3Aw@mail.gmail.com>
+ <CALvZod6rF0D21hcV7xnqD+oRkn=x5NLi5GOkPpyaPa859uDH+Q@mail.gmail.com>
+ <CAJD7tkY_ESpMYMw72bsATpp6tPphv8qS6VbfEUjpKZW6vUqQSQ@mail.gmail.com> <CALvZod41ecuCKmuFBNtAjoKJjQgWYzoe4_B8zRK37HYk-rYDkA@mail.gmail.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: quoted-printable
-Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
-        t=1679949637; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=IgIrKz0UNBCn4PDiHW0xzrI6MTRBYSXxkJu/zMHUvKg=;
-        b=aTyTas8xnndKQ+7rRpt7+uxegjLQTBesNPvbKnCfTN5qLbE6ycmNqY7poDyjI3gNMFpEEc
-        q9Tr3ZJm7OP//76yYW4qy6Urq56r/oM+X/rPvVywvwdlCrSja9e+wB0YDmj0DVFfr2QMqj
-        TEEofls4ExVM5wz3WIr2NkNvgkrZNJI=
-Content-Disposition: inline
-In-Reply-To: <6f4420d0-2f86-7294-01e1-6806ef7e4686@nutanix.com>
+Return-path: <bpf-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20210112; t=1679959430;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=2sthNEXRrhXPflNLlQaZ/R6XYUJ5sFT3zFaO3Oj8iQU=;
+        b=W+Tv96+pFUlhT5JOOrNtcy47rsqxINYX5Iydl2ZhOjD2ZICVF/srMD4pjGFArnDzTC
+         kPELiLr2qm8nbVs2H3GBDurYFGHHHR4YppJMTiQgYYWDafqzi7oz9Du7VQA6lba1jKXq
+         dwn2vZhC36MqALm/QJpx59PUuvFUdHNBjYQvAl4nTFdcu6Cb2GfBntbxfBbl6jFLwYkS
+         xFSElExlWZVdm5acLMkTXu9+vioAED99Ij0oJd6h+lwLDOoAZY3FueFbhm3i8L+Th0Ha
+         nQFF7w8Ehg6MPHtETaxtVvSE4I3f3hAepMquA1Zlg0t/TDXtMd7OTTczELyQE4Wsmo2Y
+         0q3g==
+In-Reply-To: <CALvZod41ecuCKmuFBNtAjoKJjQgWYzoe4_B8zRK37HYk-rYDkA@mail.gmail.com>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="iso-8859-1"
-To: Florian Schmidt <flosch@nutanix.com>
-Cc: Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny@suse.com>, Johannes Weiner <hannes@cmpxchg.org>, Roman Gushchin <roman.gushchin@linux.dev>, Shakeel Butt <shakeelb@google.com>, Muchun Song <muchun.song@linux.dev>, Andrew Morton <akpm@linux-foundation.org>, cgroups@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+To: Shakeel Butt <shakeelb@google.com>
+Cc: Tejun Heo <tj@kernel.org>, Josef Bacik <josef@toxicpanda.com>, Jens Axboe <axboe@kernel.dk>, Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, Roman Gushchin <roman.gushchin@linux.dev>, Muchun Song <muchun.song@linux.dev>, Andrew Morton <akpm@linux-foundation.org>, Vasily Averin <vasily.averin@linux.dev>, cgroups@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org, bpf@vger.kernel.org
 
-On Mon 27-03-23 14:59:37, Florian Schmidt wrote:
-> Hi Michal,
->=20
-> On 24/03/2023 15:03, Michal Koutn=FD wrote:
-> > On Wed, Mar 22, 2023 at 02:25:25PM +0000, Florian Schmidt <flosch@nutan=
-ix.com> wrote:
-[...]
-> > > (b) would you be interested to take this patch, or is it too niche a =
-fix
-> > >      for a legacy subsystem?
-> >=20
-> > I'd rather not extend this "unique way" with additionally unique dummy
-> > helpers.
->=20
-> I understand that this is all code that has no modern user any more, which
-> is why I tried to keep the fix as self-contained as possible.
-> Another option would be to have a special handler in cgroup_file_mode(), =
-but
-> that feels a lot klunkier to me, and leaks a v1-specific behaviour into t=
-he
-> shared cgroup code.
+On Fri, Mar 24, 2023 at 9:46=E2=80=AFPM Shakeel Butt <shakeelb@google.com> =
+wrote:
+>
+> On Fri, Mar 24, 2023 at 9:37=E2=80=AFPM Yosry Ahmed <yosryahmed@google.co=
+m> wrote:
+> >
+> > On Fri, Mar 24, 2023 at 9:31=E2=80=AFPM Shakeel Butt <shakeelb@google.c=
+om> wrote:
+> > >
+> > > On Fri, Mar 24, 2023 at 7:18=E2=80=AFPM Yosry Ahmed <yosryahmed@googl=
+e.com> wrote:
+> > > >
+> > > [...]
+> > > > Any ideas here are welcome!
+> > > >
+> > >
+> > > Let's move forward. It seems like we are not going to reach an
+> > > agreement on making cgroup_rstat_lock a non-irq lock. However there i=
+s
+> > > agreement on the memcg code of not flushing in irq context and the
+> > > cleanup Johannes has requested. Let's proceed with those for now. We
+> > > can come back to cgroup_rstat_lock later if we still see issues in
+> > > production.
+> >
+> > Even if we do not flush from irq context, we still flush from atomic
+> > contexts that will currently hold the lock with irqs disabled
+> > throughout the entire flush sequence. A primary purpose of this reason
+> > is to avoid that.
+> >
+> > We can either:
+> > (a) Proceed with the following approach of making cgroup_rstat_lock a
+> > non-irq lock.
+> > (b) Proceed with Tejun's suggestion of always releasing and
+> > reacquiring the lock at CPU boundaries, even for atomic flushes (if
+> > the spinlock needs a break ofc).
+> > (c) Something else.
+>
+> (d) keep the status quo regarding cgroup_rstat_lock
+> (e) decouple the discussion of cgroup_rstat_lock from the agreed
+> improvements. Send the patches for the agreed ones and continue
+> discussing cgroup_rstat_lock.
 
-Yes, this is effectivelly a deprecated interface but I do agree that we
-shouldn't really make life of users more complicated than necessary. If
-the simplest solution to address this is to provide an empty callback
-then be it. I am not sure but I do not think there are other cgroup
-interfaces to warrant a more generic solution.
 
---=20
-Michal Hocko
-SUSE Labs
+Ah, I lost sight of the fact that the rest of the patch series does
+not strictly depend on this patch. I will respin the rest of the patch
+series separately. Thanks, Shakeel.
+
+Meanwhile, it would be useful to reach an agreement here to stop
+acquiring the cgroup_rstat_lock for a long time with irq disabled in
+atomic contexts.
+
+Tejun, if having the lock be non-irq is a non-starter for you, I can
+send a patch that instead gives up the lock and reacquires it at every
+CPU boundary unconditionally -- or perhaps every N CPU boundaries to
+avoid excessively releasing and reacquiring the lock.
+
+Something like:
+
+static void cgroup_rstat_flush_locked(struct cgroup *cgrp, bool may_sleep)
+{
+    ...
+    for_each_possible_cpu(cpu) {
+        ...
+        /* Always yield the at CPU boundaries to enable irqs */
+        spin_unlock_irq(&cgroup_rstat_lock);
+
+        /* if @may_sleep, play nice and yield if necessary */
+        if (may_sleep)
+            cond_resched();
+
+        spin_lock_irq(&cgroup_rstat_lock);
+    }
+}
+
+If you have other ideas to avoid disabling irq's for the entire flush
+sequence I am also open to that.
+
+Thanks!
