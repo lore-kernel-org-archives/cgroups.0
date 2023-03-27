@@ -1,55 +1,75 @@
-From: David Vernet <void@manifault.com>
-Subject: Re: [PATCH] selftests: cgroup: Fix exception handling in
- test_memcg_oom_group_score_events()
-Date: Mon, 27 Mar 2023 04:13:27 -0500
-Message-ID: <20230327091327.GK363182@maniforge>
-References: <f9303bdc-b1a7-be5e-56c6-dfa8232b8b55@web.de>
- <c383bdca-6f0d-4a75-e788-e1920faa0a62@web.de>
- <fffcd98a-bb73-41cd-8545-0f2c55dd38f9@lucifer.local>
- <5b7921c9-ee5d-c372-b19b-2701bcf33148@web.de>
- <20230326213900.GJ363182@maniforge>
- <c46dbb48-259b-1de9-2364-9bfaf1061944@web.de>
+From: Florian Schmidt <flosch@nutanix.com>
+Subject: Re: [RFC] memcg v1: provide read access to memory.pressure_level
+Date: Mon, 27 Mar 2023 14:59:37 +0100
+Message-ID: <6f4420d0-2f86-7294-01e1-6806ef7e4686@nutanix.com>
+References: <20230322142525.162469-1-flosch@nutanix.com>
+ <20230324150350.fu7itbqqvtjmyf3s@blackpad>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Return-path: <kernel-janitors-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <c46dbb48-259b-1de9-2364-9bfaf1061944@web.de>
+Content-Transfer-Encoding: quoted-printable
+Return-path: <linux-kernel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=nutanix.com; h=message-id : date :
+ subject : to : cc : references : from : in-reply-to : content-type :
+ content-transfer-encoding : mime-version; s=proofpoint20171006;
+ bh=Y8oMA2Kh90fJuaqHhLVsPbnGur2i+yIZVcZrAVQRP/A=;
+ b=W4WeRm0IU4n37kzCd8POz3yWGzxUg7seVsLUW3V5IGq/j4nmbMPx1FZprJabu88hWENk
+ v8vCB9gQFVJgqqhijHeu8auEFybDh8OkTnmnkOmMhFhbv5Nir5aXw9Nlo6BmyxneZ2Io
+ NHVFh9tfCrOZUd3QF0zyvFcjDFg/1mIkOf5w+2S9VcWy9CbIHcTX5za9IswzbgGJw/Do
+ 8+Agdd9CokYXwCXHOdOFGKMdWA8euh7pZ1oypgvKJ+ABMP2rEc7zWp8OHaUMy936wp7S
+ Qbhh6SmvktOMkrc2uWuOLxaSa/DIMZx4eChDY5KAxz1WUr5fZDJ6bOgW9VXfGPv/Bitp nw== 
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=nutanix.com;
+ s=selector1;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=Y8oMA2Kh90fJuaqHhLVsPbnGur2i+yIZVcZrAVQRP/A=;
+ b=ejONGk/JR1bdBpcjQN9SClty6+JTvbF27IwWTmDZQ33r1ES1kH0jMg5fCPGrmBaaq412Yiiul1Tb7KK2YXWOI6YxVrX+F2oo5TIu6ZLrjB7PmbMG27zIWjLGUlPfErR+8JLdqP7LGmLRf/x0EWdGtFjOz57R7EFDD0tNDruk73cyx98BSkBGu1viNjw7j1Qc6ruUo0ik4VNuP2mLYE/kFw2jp9ruOuMnVXpzpbsTfuppSFt/y2dIcqUZtTe6xB8z8IzabqnSw96JxAGS8TQwIjRFlSmxyiCWn0oJ6e1Oce29VB4I3bshc5XIY8VlXhhQAf+FIcddss3/upr61MnmtA==
+Content-Language: en-US
+In-Reply-To: <20230324150350.fu7itbqqvtjmyf3s@blackpad>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="utf-8"
-To: Markus Elfring <Markus.Elfring@web.de>
-Cc: kernel-janitors@vger.kernel.org, linux-kselftest@vger.kernel.org, cgroups@vger.kernel.org, linux-mm@kvack.org, Jay Kamat <jgkamat@fb.com>, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, Muchun Song <muchun.song@linux.dev>, Roman Gushchin <roman.gushchin@linux.dev>, Shakeel Butt <shakeelb@google.com>, Shuah Khan <shuah@kernel.org>, Tejun Heo <tj@kernel.org>, Zefan Li <lizefan.x@bytedance.com>, Lorenzo Stoakes <lstoakes@gmail.com>, cocci@inria.fr, LKML <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset="iso-8859-1"; format="flowed"
+To: =?UTF-8?Q?Michal_Koutn=c3=bd?= <mkoutny@suse.com>
+Cc: Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, Roman Gushchin <roman.gushchin@linux.dev>, Shakeel Butt <shakeelb@google.com>, Muchun Song <muchun.song@linux.dev>, Andrew Morton <akpm@linux-foundation.org>, cgroups@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org
 
-On Mon, Mar 27, 2023 at 07:56:03AM +0200, Markus Elfring wrote:
-> >> 2. Can a cg_destroy() call ever work as expected if a cg_create() call failed?
-> >
-> > Perhaps next time you can answer your own question by spending 30
-> > seconds actually reading the code you're "fixing":
-> >
-> > int cg_destroy(const char *cgroup)
-> > {
-> …
-> >         ret = rmdir(cgroup);
-> …
-> >         if (ret && errno == ENOENT) <<< that case is explicitly handled here
-> >                 ret = 0;
-> >
-> >         return ret;
-> > }
-> 
-> Is it interesting somehow that a non-existing directory (which would occasionally
-> not be found) is tolerated so far?
-> https://elixir.bootlin.com/linux/v6.3-rc3/source/tools/testing/selftests/cgroup/cgroup_util.c#L285
-> 
-> Should such a function call be avoided because of a failed cg_create() call?
+Hi Michal,
 
-The point is that (a) you were wrong that this is fixing anything, and
-(b) this patch is functionally useless. Sure, we could move some goto's
-around and subjectively improve "something". Why?  What's the point?
-It's highly debatable that what you're doing is even an improvement, and
-I'm not interested in wasting time pontificating about the merits of a
-trivial "fix" for a test cleanup function that isn't even broken.
+On 24/03/2023 15:03, Michal Koutn=C3=BD wrote:
+> On Wed, Mar 22, 2023 at 02:25:25PM +0000, Florian Schmidt <flosch@nutanix=
+.com> wrote:
+>> cgroups v1 has a unique way of setting up memory pressure notifications:
+> ...
+>> There are several ways around this issue, but adding a dummy read
+>> handler seems like the least invasive to me. I'd be interested to hear:
+>> (a) do you think there is a less invasive way? Alternatively, we could
+>>      add a flag in cftype in include/linux/cgroup-defs.h, but that seems
+>>      more invasive for what is a legacy interface.
+>=20
+> You can (as privileged user) modify file perms in userspace first (e.g.
+> chmod o+r memory.pressure_level) and then it can used by non-privileged
+> users. (Or do LSM prevent you from that too?)
 
-Several people have already either advised or directly asked you to stop
-sending these patches. I'm not sure why you're choosing to ignore them,
-but I'll throw my hat in the ring regardless and do the same. Please
-stop sending these fake cleanup patches.
+That's true, we can work around this in userspace (though it means you=20
+need to give the process additional permissions, to change file=20
+permissions on top of just reading and writing).
+
+Though considering that the memcg_write_event_control() explicitly=20
+checks whether the caller has read permissions on pressure_level, it=20
+felt sensible to me that the file would be created with read permissions=20
+in the first place, just like all the other files are created with=20
+permissions that are suitable for their immediate use without having to=20
+manually change permissions. The current implementation feels=20
+inconsistent in that way.
+
+
+>> (b) would you be interested to take this patch, or is it too niche a fix
+>>      for a legacy subsystem?
+>=20
+> I'd rather not extend this "unique way" with additionally unique dummy
+> helpers.
+
+I understand that this is all code that has no modern user any more,=20
+which is why I tried to keep the fix as self-contained as possible.
+Another option would be to have a special handler in cgroup_file_mode(),=20
+but that feels a lot klunkier to me, and leaks a v1-specific behaviour=20
+into the shared cgroup code.
+
+
+Cheers,
+Florian
