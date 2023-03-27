@@ -1,47 +1,38 @@
-From: David Sterba <dsterba@suse.cz>
-Subject: Re: move bio cgroup punting into btrfs
-Date: Tue, 28 Mar 2023 01:18:37 +0200
-Message-ID: <20230327231837.GK10580@twin.jikos.cz>
+From: Jens Axboe <axboe@kernel.dk>
+Subject: Re: [PATCH 6/7] block: async_bio_lock does not need to be bh-safe
+Date: Mon, 27 Mar 2023 17:31:59 -0600
+Message-ID: <ed386649-90cb-8cfa-c2e4-95807cdb8810@kernel.dk>
 References: <20230327004954.728797-1-hch@lst.de>
-Reply-To: dsterba@suse.cz
+ <20230327004954.728797-7-hch@lst.de>
 Mime-Version: 1.0
-Return-path: <linux-btrfs-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
-        t=1679959491;
-        h=from:from:reply-to:reply-to:date:date:message-id:message-id:to:to:
-         cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=WdlRcu20z+c7BKlEbocvqiEmoAKTJAqHgdWdlNpOixc=;
-        b=zqEYwHVYk/1fekJ/HfRUW6geAiD0HQfgg52m7TfK+G+8OrzgnjABDvWweuIvPB3HIwq5sY
-        cGO343iBWZAsAFJMItu8X286rPBFSoMJcSW/BfYxJi7AZJTGtoKE3B19g2Mmz6hjxaVoMo
-        IZNCfEwjbZWTLPIy9HPuRi7zufKKpoE=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
-        s=susede2_ed25519; t=1679959491;
-        h=from:from:reply-to:reply-to:date:date:message-id:message-id:to:to:
-         cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=WdlRcu20z+c7BKlEbocvqiEmoAKTJAqHgdWdlNpOixc=;
-        b=K4g5C3QIXiicnrji11RJBHdEEg9C0358ty8j0k5lOA3D2CSdbOmpn+TgIo78Uwb6+4+1xr
-        DQ9aFhIMvev9AgBw==
-Content-Disposition: inline
-In-Reply-To: <20230327004954.728797-1-hch@lst.de>
+Content-Transfer-Encoding: quoted-printable
+Return-path: <linux-block-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=kernel-dk.20210112.gappssmtp.com; s=20210112; t=1679959921; x=1682551921;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=0fNEczN0672QN/RMb20IlcIW8cCEXe1UxR00CCFgmLY=;
+        b=IB9NkwSe9JOio9TPyh9zvgMoNWxTA3mqFueBcMJO1UPfRJhj2qD57M88v7SjQ6AWiK
+         K3vjEIV+oGgvpg6o9HUFmyw2Rk81bOFqwWniPAYee6AUVMGPOoQCynGz+Tq8yKtNTRr3
+         zOqejmEg9a73aDLAf72/ul/sdwaIFsHIzkYntQkBe3xvdwIJnOqjBo3/e6wXShA+pLcA
+         0NOGV6X3KdpR1OoaV6jClRrcYbd/LrenVZyEwDkTonaVBkvpO8HRy1PVSN9SwjzP/DOy
+         XFSN69DyQWMqu6H0h6IwrnlWEe2WMA89s4CtFYXsYWzXFVYIBRoOHctGsp7Lf1EXtrQ6
+         UbhQ==
+Content-Language: en-US
+In-Reply-To: <20230327004954.728797-7-hch@lst.de>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Christoph Hellwig <hch@lst.de>
-Cc: Josef Bacik <josef@toxicpanda.com>, Chris Mason <clm@fb.com>, David Sterba <dsterba@suse.com>, Tejun Heo <tj@kernel.org>, Jens Axboe <axboe@kernel.dk>, cgroups@vger.kernel.org, linux-block@vger.kernel.org, linux-btrfs@vger.kernel.org
+Content-Type: text/plain; charset="windows-1252"
+To: Christoph Hellwig <hch@lst.de>, Josef Bacik <josef@toxicpanda.com>, Chris Mason <clm@fb.com>, David Sterba <dsterba@suse.com>
+Cc: Tejun Heo <tj@kernel.org>, cgroups@vger.kernel.org, linux-block@vger.kernel.org, linux-btrfs@vger.kernel.org
 
-On Mon, Mar 27, 2023 at 09:49:46AM +0900, Christoph Hellwig wrote:
-> Hi all,
-> 
-> the current code to offload bio submission into a cgroup-specific helper
-> thread when sent from the btrfs internal helper threads is a bit ugly.
-> 
-> This series moves it into btrfs with minimal interference in the core
-> code.
+On 3/26/23 6:49=E2=80=AFPM, Christoph Hellwig wrote:
+> async_bio_lock is only taken from bio submission and workqueue context,
+> both are never in bottom halves.
 
-I can't speak for the cgroup side, but as btrfs is the only user of the
-REQ_CGROUP_PUNT flag pushing it down to the IO submission path makes
-sense. Code looks ok, it's a direct conversion.
+Reviewed-by: Jens Axboe <axboe@kernel.dk>
 
-When the mm/block changes get an Ack I can put it to btrfs for-next.
+--=20
+Jens Axboe
+
+
