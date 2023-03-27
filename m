@@ -1,52 +1,51 @@
-From: David Vernet <void-gq6j2QGBifHby3iVrkZq2A@public.gmane.org>
-Subject: Re: [PATCH] selftests: cgroup: Fix exception handling in
- test_memcg_oom_group_score_events()
-Date: Sun, 26 Mar 2023 16:39:00 -0500
-Message-ID: <20230326213900.GJ363182@maniforge>
-References: <f9303bdc-b1a7-be5e-56c6-dfa8232b8b55@web.de>
- <c383bdca-6f0d-4a75-e788-e1920faa0a62@web.de>
- <fffcd98a-bb73-41cd-8545-0f2c55dd38f9@lucifer.local>
- <5b7921c9-ee5d-c372-b19b-2701bcf33148@web.de>
+From: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
+Subject: move bio cgroup punting into btrfs
+Date: Mon, 27 Mar 2023 09:49:46 +0900
+Message-ID: <20230327004954.728797-1-hch@lst.de>
 Mime-Version: 1.0
+Content-Transfer-Encoding: 8bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <5b7921c9-ee5d-c372-b19b-2701bcf33148-S0/GAf8tV78@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
+        MIME-Version:Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:
+        Content-ID:Content-Description:In-Reply-To:References;
+        bh=J34aMK6n+O5EOaIOD1zXvzTxUfNPfAeP9gPFHmYCaGA=; b=4M3uK7D06M5LGjDiFkWczeT12G
+        Pr/zv02t1WWrUSI1ZtKKyr4dSQBLuK86287W6gGZfpKr49g/XufKv582wRFvV84PxJS/CZ2IbAL32
+        5mCxz4UXT6WQArvCuCArUftBki8/SVAx/KAi3kaGC+GAh0lEOvyTEVaSraNm2S5zaV29s/9QlpU2J
+        FzCW7xq/xIRFxXbxUvdR0YHhdVsF8MtMFdAEdQSEWYvt7tCvs5qrc5ZAueo2MJAM6D/9PWl8SsrdY
+        mL9PnLJs3vWh7Hl/gIwdSoBVonA7tYt1FU1XPWkCVgBFjvkZ4vussqUzn/iKmd/lFGI26P8pzmsl7
+        i13m7J7Q==;
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Markus Elfring <Markus.Elfring-S0/GAf8tV78@public.gmane.org>
-Cc: Lorenzo Stoakes <lstoakes-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, kernel-janitors-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kselftest-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Jay Kamat <jgkamat-b10kYP2dOMg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Muchun Song <muchun.song-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Shuah Khan <shuah-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, cocci-MZpvjPyXg2s@public.gmane.org, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+To: Josef Bacik <josef-DigfWCa+lFGyeJad7bwFQA@public.gmane.org>, Chris Mason <clm-b10kYP2dOMg@public.gmane.org>, David Sterba <dsterba-IBi9RG/b67k@public.gmane.org>
+Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-btrfs-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Sun, Mar 26, 2023 at 10:15:31AM +0200, Markus Elfring wrote:
+Hi all,
 
-[...]
+the current code to offload bio submission into a cgroup-specific helper
+thread when sent from the btrfs internal helper threads is a bit ugly.
 
-> >>
-> >> Fixes: a987785dcd6c8ae2915460582aebd6481c81eb67 ("Add tests for memory.oom.group")
-> >
-> > Fixes what in the what now?
-> 
-> 1. Check repetition (which can be undesirable)
-> 
-> 2. Can a cg_destroy() call ever work as expected if a cg_create() call failed?
+This series moves it into btrfs with minimal interference in the core
+code.
 
-Perhaps next time you can answer your own question by spending 30
-seconds actually reading the code you're "fixing":
+I also wonder if the better way to handle this in the long would be to
+to allow multiple writeback threads per device and cgroup, which should
+remove the need for both the btrfs submission helper workqueue and the
+per-cgroup threads.
 
-int cg_destroy(const char *cgroup)
-{
-        int ret;
-
-retry:
-        ret = rmdir(cgroup);
-        if (ret && errno == EBUSY) {
-                cg_killall(cgroup);
-                usleep(100);
-                goto retry;
-        }
-
-        if (ret && errno == ENOENT) <<< that case is explicitly handled here
-                ret = 0;
-
-        return ret;
-}
+Diffstat:
+ block/Kconfig             |    3 +
+ block/blk-cgroup.c        |   78 +++++++++++++++++++++++++---------------------
+ block/blk-cgroup.h        |   15 +-------
+ block/blk-core.c          |    3 -
+ fs/btrfs/Kconfig          |    1 
+ fs/btrfs/bio.c            |   12 ++++---
+ fs/btrfs/bio.h            |    3 +
+ fs/btrfs/compression.c    |    8 ----
+ fs/btrfs/compression.h    |    1 
+ fs/btrfs/extent_io.c      |    6 +--
+ fs/btrfs/inode.c          |   37 +++++++++++----------
+ include/linux/bio.h       |    5 ++
+ include/linux/blk_types.h |   18 ++--------
+ include/linux/writeback.h |    5 --
+ 14 files changed, 94 insertions(+), 101 deletions(-)
