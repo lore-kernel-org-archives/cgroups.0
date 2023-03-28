@@ -1,43 +1,45 @@
-From: Shakeel Butt <shakeelb@google.com>
-Subject: Re: [PATCH v1 3/9] memcg: do not flush stats in irq context
-Date: Tue, 28 Mar 2023 06:26:14 -0700
-Message-ID: <CALvZod6n64b80+ZPX13bBiJWagcMJBstAcLauQoiT=UMdx0QGw@mail.gmail.com>
-References: <20230328061638.203420-1-yosryahmed@google.com> <20230328061638.203420-4-yosryahmed@google.com>
+From: Will Deacon <will-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCH v2 0/4] cgroup/cpuset: Miscellaneous updates
+Date: Tue, 28 Mar 2023 14:40:01 +0100
+Message-ID: <20230328134000.GA1333@willie-the-truck>
+References: <20230317151508.1225282-1-longman@redhat.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-Return-path: <bpf-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20210112; t=1680009985;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=8bJymL0yBKvMYTD1Xc/qu3GglkLI9FvB8Lv/yuqvRQc=;
-        b=eZy1jM+Kd53ZIzWNbOqgWbWL45Dr+Nw9ANo2PWtQbmVaWtrjCdrDAwPWv3yK9p7pwn
-         NdX2H4aYwg5QRk1CBz5Q+PDjxvTvxqOymyHBX8fhYiwV1krbMVJo3/thEa0eeD2ncqtr
-         11MW+NX2xIo4RJWivNGz5B/TSrAzZmnzZLla0MAE4rR5mfGrSLcqNM08TimNues3s+u/
-         7Y5UuSgD0RzJHWmkNAiahoW2q/TpdkuXvww90IJ4ZT0HDPDLUtzwosiL6k1Ay9MagttR
-         Xll6pq0j7ma1HAlACEp1cDHFcxilfs9tVtLUSpSaT3tswN2NAz96yvtBv6Q2jzszETWW
-         11rA==
-In-Reply-To: <20230328061638.203420-4-yosryahmed@google.com>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1680010807;
+        bh=icUy13Xzx8zHFQYe+wcW2EESbKwQa3rKnpkk5O1qqOo=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=dnpLXIuxAYnWll/36a77A70//tWgi7UQv5dZoVH7VSv2/a9EAsI0GZIPnCgkhA060
+         VslmWbFGcWf79brWo36ELhrhE4YyMh5zn7QADHaduPRccfPGtc2gnmExolXu23WsLX
+         BGzcIr3YSBMUrjvDqgeyz7MYhzYeT/fh9xgr7KOr2hiZ2/rZAY3b148Sw+k6mDWbt+
+         19GUyK6xFRoVD0yvXTL2QRBWihNcViUPyY5kRqGUeNBin+6uiuKHKcmb7w40DPVFhS
+         hwBCh79JIrz2NcJEj/7c3A9x97h6lXiSofq63UTTdgyGiV5iUm9rA1aihu3tuGL1m3
+         0rCqqFWrsCoKA==
+Content-Disposition: inline
+In-Reply-To: <20230317151508.1225282-1-longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="windows-1252"
-To: Yosry Ahmed <yosryahmed@google.com>
-Cc: Tejun Heo <tj@kernel.org>, Josef Bacik <josef@toxicpanda.com>, Jens Axboe <axboe@kernel.dk>, Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, Roman Gushchin <roman.gushchin@linux.dev>, Muchun Song <muchun.song@linux.dev>, Andrew Morton <akpm@linux-foundation.org>, =?UTF-8?Q?Michal_Koutn=C3=BD?= <mkoutny@suse.com>, Vasily Averin <vasily.averin@linux.dev>, cgroups@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org, bpf@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Shuah Khan <shuah-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kselftest-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny-IBi9RG/b67k@public.gmane.org>, Juri Lelli <juri.lelli-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 
-On Mon, Mar 27, 2023 at 11:16=E2=80=AFPM Yosry Ahmed <yosryahmed@google.com=
-> wrote:
->
-> Currently, the only context in which we can invoke an rstat flush from
-> irq context is through mem_cgroup_usage() on the root memcg when called
-> from memcg_check_events(). An rstat flush is an expensive operation that
-> should not be done in irq context, so do not flush stats and use the
-> stale stats in this case.
->
-> Arguably, usage threshold events are not reliable on the root memcg
-> anyway since its usage is ill-defined.
->
-> Suggested-by: Johannes Weiner <hannes@cmpxchg.org>
-> Suggested-by: Shakeel Butt <shakeelb@google.com>
-> Signed-off-by: Yosry Ahmed <yosryahmed@google.com>
+Hi Waiman,
 
-Acked-by: Shakeel Butt <shakeelb@google.com>
+On Fri, Mar 17, 2023 at 11:15:04AM -0400, Waiman Long wrote:
+>  v2:
+>   - Add a new patch 1 that fixes a bug introduced by recent v6.2 commit
+>     7a2127e66a00 ("cpuset: Call set_cpus_allowed_ptr() with appropriate
+>     mask for task").
+>   - Make a small twist and additional comment to patch 2 ("cgroup/cpuset:
+>     Skip task update if hotplug doesn't affect current cpuset") as
+>     suggested by Michal.
+>   - Remove v1 patches 3/4 for now for further discussion.
+> 
+> This patch series includes miscellaneous update to the cpuset and its
+> testing code.
+
+FWIW, this series also passes my asymmetric 32-bit tests.
+
+Cheers,
+
+Will
