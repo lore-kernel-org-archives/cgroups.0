@@ -1,82 +1,89 @@
-From: Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Subject: [PATCH v2 0/9] memcg: make rstat flushing irq and sleep
-Date: Tue, 28 Mar 2023 22:16:35 +0000
-Message-ID: <20230328221644.803272-1-yosryahmed@google.com>
+From: Yosry Ahmed <yosryahmed@google.com>
+Subject: [PATCH v2 1/9] cgroup: rename cgroup_rstat_flush_"irqsafe" to "atomic"
+Date: Tue, 28 Mar 2023 22:16:36 +0000
+Message-ID: <20230328221644.803272-2-yosryahmed@google.com>
+References: <20230328221644.803272-1-yosryahmed@google.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20210112; t=1680041811;
-        h=cc:to:from:subject:message-id:mime-version:date:from:to:cc:subject
-         :date:message-id:reply-to;
-        bh=cwQWCEo9ePRYrBfd54RTGHI4ReD6zTB2CQA9ky8D7Xo=;
-        b=ckuVrFZpRMbKkYaT641zugwGgqS/ki1HcHRGVRwRjkqbpYmJn53n3BJxlm4PtefNMZ
-         V7Lx0t0VCx9xJbkbk0054d9U/+6MMsQejk2NSwnt5D35xCm5Hq5pZm5SJK5CIZfjCnht
-         V0pY409txNDdSi4+78Xf8fYrfgteKRSatE0Yv5rBDd+5j6WpeDHZJpDO5IiqBfLgwy3G
-         9G3wSwe0z1jWNeULV+cFUkJOWs1knwD7pW4WcXwfaanarWpk2Ozk+fACPDNx1NcCWRdH
-         tAvDGN/2QSuKylRwD/br3VcJA7SF9Tuz8RLoH1VBIr+l7Bie6Py+vND+8JOUEY43Ncvz
-         wX4Q==
+        d=google.com; s=20210112; t=1680041813;
+        h=cc:to:from:subject:message-id:references:mime-version:in-reply-to
+         :date:from:to:cc:subject:date:message-id:reply-to;
+        bh=ECd9n7cK9XN/T+IJ39MyPXAm65DzgHuyZCFnDGQgZIE=;
+        b=hC/hCzGf8kQKLtuU/Lq4g/PH8Bikoaov/kMCU55X6hS3y0cgLvVqN0Ui9SeHKqoI2Y
+         MLR9yv7Q6ZpTQchtNNsVDSGumEgnJDRGOrdjWF1vQ04Hu4VkyeJ+agrrQETPfZvxGuwE
+         fYcWpRh33+ZEKqsq/V4FxFGt/SOC7Xson0BSVI7SL+S7Djz8oPuCrC/TQcGQu540vmXS
+         GyCet5dMYq6C9cPRyqnOFXjOod08thOhwnsgDFjm//XeVxGxDJp0Yqlgz0MeTNLqnkrX
+         POTGQvY7O/HgL6iaisQLmX0ut7TKBC/YmOGLurxCyE9UYzyCbGnroCIDWbRRsYz1/a88
+         d5vA==
+In-Reply-To: <20230328221644.803272-1-yosryahmed@google.com>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Josef Bacik <josef-DigfWCa+lFGyeJad7bwFQA@public.gmane.org>, Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Muchun Song <muchun.song-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, =?UTF-8?q?Michal=20Koutn=C3=BD?= <mkoutny-IBi9RG/b67k@public.gmane.org>
-Cc: Vasily Averin <vasily.averin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, bpf-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+To: Tejun Heo <tj@kernel.org>, Josef Bacik <josef@toxicpanda.com>, Jens Axboe <axboe@kernel.dk>, Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, Roman Gushchin <roman.gushchin@linux.dev>, Shakeel Butt <shakeelb@google.com>, Muchun Song <muchun.song@linux.dev>, Andrew Morton <akpm@linux-foundation.org>, =?UTF-8?q?Michal=20Koutn=C3=BD?= <mkoutny@suse.com>
+Cc: Vasily Averin <vasily.averin@linux.dev>, cgroups@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org, bpf@vger.kernel.org, Yosry Ahmed <yosryahmed@google.com>
 
-Patches 1 and 2 are cleanups requested during reviews of prior versions
-of this series.
+cgroup_rstat_flush_irqsafe() can be a confusing name. It may read as
+"irqs are disabled throughout", which is what the current implementation
+does (currently under discussion [1]), but is not the intention. The
+intention is that this function is safe to call from atomic contexts.
+Name it as such.
 
-Patch 3 makes sure we never try to flush from within an irq context, and
-patch 4 adds a WARN_ON_ONCE() to make sure we catch any violations.
+Suggested-by: Johannes Weiner <hannes@cmpxchg.org>
+Signed-off-by: Yosry Ahmed <yosryahmed@google.com>
+Acked-by: Shakeel Butt <shakeelb@google.com>
+Acked-by: Johannes Weiner <hannes@cmpxchg.org>
+---
+ include/linux/cgroup.h | 2 +-
+ kernel/cgroup/rstat.c  | 4 ++--
+ mm/memcontrol.c        | 2 +-
+ 3 files changed, 4 insertions(+), 4 deletions(-)
 
-Patches 5 to 8 introduce separate variants of mem_cgroup_flush_stats()
-for atomic and non-atomic flushing, and make sure we only flush the
-stats atomically when necessary.
-
-Patch 9 is a slightly tangential optimization that limits the work done
-by rstat flushing in some scenarios.
-
-v1 -> v2:
-- Added more context in patch 4's commit log.
-- Added atomic_read() before atomic_xchg() in patch 5 to avoid
-  needlessly locking the cache line (Shakeel).
-- Refactored patch 6: added a common helper, do_flush_stats(), for
-  mem_cgroup_flush_stats{_atomic}() (Johannes).
-- Renamed mem_cgroup_flush_stats_ratelimited() to
-  mem_cgroup_flush_stats_atomic_ratelimited() in patch 6. It is restored
-  in patch 7, but this maintains consistency (Johannes).
-- Added line break to keep the lock section visually separated in patch
-  7 (Johannes).
-
-RFC -> v1:
-- Dropped patch 1 that attempted to make the global rstat lock a non-irq
-  lock, will follow up on that separetly (Shakeel).
-- Dropped stats_flush_lock entirely, replaced by an atomic (Johannes).
-- Renamed cgroup_rstat_flush_irqsafe() to cgroup_rstat_flush_atomic()
-  instead of removing it (Johannes).
-- Added a patch to rename mem_cgroup_flush_stats_delayed() to
-  mem_cgroup_flush_stats_ratelimited() (Johannes).
-- Separate APIs for flushing memcg stats in atomic and non-atomic
-  contexts instead of a boolean argument (Johannes).
-- Added patches 3 & 4 to make sure we never flush from irq context
-  (Shakeel & Johannes).
-
-Yosry Ahmed (9):
-  cgroup: rename cgroup_rstat_flush_"irqsafe" to "atomic"
-  memcg: rename mem_cgroup_flush_stats_"delayed" to "ratelimited"
-  memcg: do not flush stats in irq context
-  cgroup: rstat: add WARN_ON_ONCE() if flushing outside task context
-  memcg: replace stats_flush_lock with an atomic
-  memcg: sleep during flushing stats in safe contexts
-  workingset: memcg: sleep when flushing stats in workingset_refault()
-  vmscan: memcg: sleep when flushing stats during reclaim
-  memcg: do not modify rstat tree for zero updates
-
- include/linux/cgroup.h     |  2 +-
- include/linux/memcontrol.h |  9 ++++-
- kernel/cgroup/rstat.c      |  6 ++-
- mm/memcontrol.c            | 78 ++++++++++++++++++++++++++++++--------
- mm/workingset.c            |  5 ++-
- 5 files changed, 78 insertions(+), 22 deletions(-)
-
+diff --git a/include/linux/cgroup.h b/include/linux/cgroup.h
+index 3410aecffdb4..885f5395fcd0 100644
+--- a/include/linux/cgroup.h
++++ b/include/linux/cgroup.h
+@@ -692,7 +692,7 @@ static inline void cgroup_path_from_kernfs_id(u64 id, char *buf, size_t buflen)
+  */
+ void cgroup_rstat_updated(struct cgroup *cgrp, int cpu);
+ void cgroup_rstat_flush(struct cgroup *cgrp);
+-void cgroup_rstat_flush_irqsafe(struct cgroup *cgrp);
++void cgroup_rstat_flush_atomic(struct cgroup *cgrp);
+ void cgroup_rstat_flush_hold(struct cgroup *cgrp);
+ void cgroup_rstat_flush_release(void);
+ 
+diff --git a/kernel/cgroup/rstat.c b/kernel/cgroup/rstat.c
+index 831f1f472bb8..d3252b0416b6 100644
+--- a/kernel/cgroup/rstat.c
++++ b/kernel/cgroup/rstat.c
+@@ -241,12 +241,12 @@ __bpf_kfunc void cgroup_rstat_flush(struct cgroup *cgrp)
+ }
+ 
+ /**
+- * cgroup_rstat_flush_irqsafe - irqsafe version of cgroup_rstat_flush()
++ * cgroup_rstat_flush_atomic- atomic version of cgroup_rstat_flush()
+  * @cgrp: target cgroup
+  *
+  * This function can be called from any context.
+  */
+-void cgroup_rstat_flush_irqsafe(struct cgroup *cgrp)
++void cgroup_rstat_flush_atomic(struct cgroup *cgrp)
+ {
+ 	unsigned long flags;
+ 
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index 5abffe6f8389..0205e58ea430 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -642,7 +642,7 @@ static void __mem_cgroup_flush_stats(void)
+ 		return;
+ 
+ 	flush_next_time = jiffies_64 + 2*FLUSH_TIME;
+-	cgroup_rstat_flush_irqsafe(root_mem_cgroup->css.cgroup);
++	cgroup_rstat_flush_atomic(root_mem_cgroup->css.cgroup);
+ 	atomic_set(&stats_flush_threshold, 0);
+ 	spin_unlock_irqrestore(&stats_flush_lock, flag);
+ }
 -- 
 2.40.0.348.gf938b09366-goog
 
