@@ -1,90 +1,72 @@
-From: Jinke Han <hanjinke.666-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
-Subject: [PATCH] blk-throttle: Fix io statistics for cgroup v1
-Date: Tue, 28 Mar 2023 22:23:09 +0800
-Message-ID: <20230328142309.73413-1-hanjinke.666@bytedance.com>
+From: Chengming Zhou <zhouchengming-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
+Subject: [PATCH 1/4] block, bfq: remove BFQ_WEIGHT_LEGACY_DFL
+Date: Tue, 28 Mar 2023 22:56:58 +0800
+Message-ID: <20230328145701.33699-1-zhouchengming@bytedance.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=bytedance.com; s=google; t=1680013403;
+        d=bytedance.com; s=google; t=1680015477;
         h=content-transfer-encoding:mime-version:message-id:date:subject:cc
          :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=fbUthmvZJbP0uWypvRq6mwPD7H6UG/v/3UyHU90H3o0=;
-        b=NTg1JCEYXIL5mZ4LMW8DcsZJvrDf8IwNw9hp30j9TO7GBAGr0SEnuxFWhsFCWyvFD2
-         O8bQkmMtjNy8tLclBcd6RNNFBrbtlCs5oxp1OKNk02oxnYYHOFkNH8j/Q/xQ+YVNPwDP
-         ln+p36VFbYTbqUl1pKr0haZetqg2MamAFX+iM2arG8XIoKYEXwDDduY8YJCOEaEAzPcF
-         tPMHjJPM810hJNCv2O4ZNsByZFmSSIE/8vXL5oFEUfVjB7yXmRhgI+UeQlxMw1P1qnvP
-         fQT6rdeMMdTdB5xL5+pgB7wmQEhbrrZml75ao9Yh+IjqjDMfoEAv/5QPwCuNaEjh50+i
-         vAOA==
+        bh=JKgdRUirgIZoU7+JyVOh+FcbHYUvKjPRVe7MS66oIFw=;
+        b=U64rvy0fPv5B3bl2GVSa2WjftX+lfIuzgkjwaxrNFtIrB+XsboRO7PFXTQbk1mwVsV
+         FN6Pzz6qfjLHk9sbxl5SSLhjBVRJeg409SHrQXfxHdvwEiPn/EEBtMtQSkTVhJrXX42v
+         zjU4KHit5sr8z2482ceOgCcDuI79Gupf681GcQ14KPG4ueLDcRAusKZ97ntmP8YS2uA4
+         JvUfvKJk3+5iZsFxJVlL2WY/wtvmN4Q4LYfc3qAyAGDTViRjQgOtVSLAwaHGgty/KUQO
+         Zi+ohbIa49gVpGmlp7KYceNekMRIH31UNYsivdlNODxViXDeplMjIoqMXtx8YEK+2WYA
+         WIEQ==
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, josef-DigfWCa+lFGyeJad7bwFQA@public.gmane.org, axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Jinke Han <hanjinke.666-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
+To: paolo.valente-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org, axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, josef-DigfWCa+lFGyeJad7bwFQA@public.gmane.org
+Cc: linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Chengming Zhou <zhouchengming-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
 
-From: Jinke Han <hanjinke.666-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
+BFQ_WEIGHT_LEGACY_DFL is the same as CGROUP_WEIGHT_DFL, which means
+we don't need cpd_bind_fn() callback to update default weight when
+attached to a hierarchy.
 
-Now the io statistics of cgroup v1 are no longer accurate. Although
-in the long run it's best that rstat is a good implementation of
-cgroup v1 io statistics. But before that, we'd better fix this issue.
+This patch remove BFQ_WEIGHT_LEGACY_DFL and cpd_bind_fn().
 
-Signed-off-by: Jinke Han <hanjinke.666-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
+Signed-off-by: Chengming Zhou <zhouchengming-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
 ---
- block/blk-cgroup.c   | 3 +++
- block/blk-throttle.c | 6 ------
- block/blk-throttle.h | 9 +++++++++
- 3 files changed, 12 insertions(+), 6 deletions(-)
+ block/bfq-cgroup.c  | 4 +---
+ block/bfq-iosched.h | 1 -
+ 2 files changed, 1 insertion(+), 4 deletions(-)
 
-diff --git a/block/blk-cgroup.c b/block/blk-cgroup.c
-index bd50b55bdb61..677e4473e45e 100644
---- a/block/blk-cgroup.c
-+++ b/block/blk-cgroup.c
-@@ -2033,6 +2033,9 @@ void blk_cgroup_bio_start(struct bio *bio)
- 	struct blkg_iostat_set *bis;
- 	unsigned long flags;
+diff --git a/block/bfq-cgroup.c b/block/bfq-cgroup.c
+index 89ffb3aa992c..a2ab5dd58068 100644
+--- a/block/bfq-cgroup.c
++++ b/block/bfq-cgroup.c
+@@ -504,8 +504,7 @@ static void bfq_cpd_init(struct blkcg_policy_data *cpd)
+ {
+ 	struct bfq_group_data *d = cpd_to_bfqgd(cpd);
  
-+	if (!cgroup_subsys_on_dfl(io_cgrp_subsys))
-+		return;
-+
- 	/* Root-level stats are sourced from system-wide IO stats */
- 	if (!cgroup_parent(blkcg->css.cgroup))
- 		return;
-diff --git a/block/blk-throttle.c b/block/blk-throttle.c
-index 47e9d8be68f3..2be66e9430f7 100644
---- a/block/blk-throttle.c
-+++ b/block/blk-throttle.c
-@@ -2174,12 +2174,6 @@ bool __blk_throtl_bio(struct bio *bio)
+-	d->weight = cgroup_subsys_on_dfl(io_cgrp_subsys) ?
+-		CGROUP_WEIGHT_DFL : BFQ_WEIGHT_LEGACY_DFL;
++	d->weight = CGROUP_WEIGHT_DFL;
+ }
  
- 	rcu_read_lock();
+ static void bfq_cpd_free(struct blkcg_policy_data *cpd)
+@@ -1302,7 +1301,6 @@ struct blkcg_policy blkcg_policy_bfq = {
  
--	if (!cgroup_subsys_on_dfl(io_cgrp_subsys)) {
--		blkg_rwstat_add(&tg->stat_bytes, bio->bi_opf,
--				bio->bi_iter.bi_size);
--		blkg_rwstat_add(&tg->stat_ios, bio->bi_opf, 1);
--	}
--
- 	spin_lock_irq(&q->queue_lock);
+ 	.cpd_alloc_fn		= bfq_cpd_alloc,
+ 	.cpd_init_fn		= bfq_cpd_init,
+-	.cpd_bind_fn	        = bfq_cpd_init,
+ 	.cpd_free_fn		= bfq_cpd_free,
  
- 	throtl_update_latency_buckets(td);
-diff --git a/block/blk-throttle.h b/block/blk-throttle.h
-index ef4b7a4de987..d1ccbfe9f797 100644
---- a/block/blk-throttle.h
-+++ b/block/blk-throttle.h
-@@ -185,6 +185,15 @@ static inline bool blk_should_throtl(struct bio *bio)
- 	struct throtl_grp *tg = blkg_to_tg(bio->bi_blkg);
- 	int rw = bio_data_dir(bio);
+ 	.pd_alloc_fn		= bfq_pd_alloc,
+diff --git a/block/bfq-iosched.h b/block/bfq-iosched.h
+index 69aaee52285a..467e8cfc41a2 100644
+--- a/block/bfq-iosched.h
++++ b/block/bfq-iosched.h
+@@ -20,7 +20,6 @@
  
-+	if (!cgroup_subsys_on_dfl(io_cgrp_subsys)) {
-+		if (!bio_flagged(bio, BIO_CGROUP_ACCT)) {
-+			bio_set_flag(bio, BIO_CGROUP_ACCT);
-+			blkg_rwstat_add(&tg->stat_bytes, bio->bi_opf,
-+					bio->bi_iter.bi_size);
-+		}
-+		blkg_rwstat_add(&tg->stat_ios, bio->bi_opf, 1);
-+	}
-+
- 	/* iops limit is always counted */
- 	if (tg->has_rules_iops[rw])
- 		return true;
+ #define BFQ_DEFAULT_QUEUE_IOPRIO	4
+ 
+-#define BFQ_WEIGHT_LEGACY_DFL	100
+ #define BFQ_DEFAULT_GRP_IOPRIO	0
+ #define BFQ_DEFAULT_GRP_CLASS	IOPRIO_CLASS_BE
+ 
 -- 
-2.20.1
+2.39.2
 
