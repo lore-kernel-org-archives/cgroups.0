@@ -1,21 +1,21 @@
 From: Yosry Ahmed <yosryahmed@google.com>
-Subject: [PATCH v1 5/9] memcg: replace stats_flush_lock with an atomic
-Date: Tue, 28 Mar 2023 06:16:34 +0000
-Message-ID: <20230328061638.203420-6-yosryahmed@google.com>
+Subject: [PATCH v1 6/9] memcg: sleep during flushing stats in safe contexts
+Date: Tue, 28 Mar 2023 06:16:35 +0000
+Message-ID: <20230328061638.203420-7-yosryahmed@google.com>
 References: <20230328061638.203420-1-yosryahmed@google.com>
 Mime-Version: 1.0
 Return-path: <linux-block-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20210112; t=1679984211;
+        d=google.com; s=20210112; t=1679984213;
         h=cc:to:from:subject:message-id:references:mime-version:in-reply-to
          :date:from:to:cc:subject:date:message-id:reply-to;
-        bh=IdlOdGF0YCCYf+h2+Wx+Pr2285UVOLm52gCW9Jb/OEo=;
-        b=dxPzci0vIh1xyJxlLBjWkEhAjm9YbPSdsUTO5u3B5j0mjvT8KDBeosrn5UiPm3Ksna
-         ECFLKks3+i/JLwnVARkeiq9XCne6PDhOU+plEpcmqroZ0FIo5b3stpDp4azRz7RDEUXr
-         fg0RX+xHWkbr/97SE9yMggMcSWIL9SDqbA2byVm27sTtHVM/RcaUTUFVwNm3hT6OyTW8
-         KGm1B3oJJOu2mLGqIrSENlsxO5AJatCTwMfnNnO9IVILzvLEURQL9lNGe4Pge9n4mWvC
-         01ODxHoNCu+DMqEmep2UjWrEts9KjVkOV7sWpi8aLYcEgH/6hlGK54jM+qhbvTAI+Y6D
-         5qIg==
+        bh=9IOPAG+bqxWxKt0wdRgDKHhdCXWwpmJ9UigZO44sKyE=;
+        b=ntB4QsMVT8Fqv0//N2SyNJC8TO+SF5Nd//5MMCXPuMIlVWZztrbNiDvPnYTm36PsVJ
+         0K9UDAdVpl/jKPNVqGESnlXBby6gGh6KP9olFVGSWL7LZjX9hTDyTd2rcdVRYaALTq3d
+         Svdw5D9xcS6f+R64pTOq4hP3DTwLDxc7s6WmPqIXIzObjUGQ7BCksYYcDbsn8CMNCe4l
+         XYGLULvlYDvGRGQwaFkUUkpNiN3oSuW1tCmNSMxILm7ttbjB9+T2xkgSS2wr2ydIjDg8
+         ulb0ThWq/NbS6X5lqaGmn6zu6IKbfwWSX3vLp0eLAeAr3Ue3Dif4Fen7adboVvdM5kPM
+         ZMpA==
 In-Reply-To: <20230328061638.203420-1-yosryahmed@google.com>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
@@ -23,100 +23,169 @@ Content-Transfer-Encoding: 7bit
 To: Tejun Heo <tj@kernel.org>, Josef Bacik <josef@toxicpanda.com>, Jens Axboe <axboe@kernel.dk>, Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, Roman Gushchin <roman.gushchin@linux.dev>, Shakeel Butt <shakeelb@google.com>, Muchun Song <muchun.song@linux.dev>, Andrew Morton <akpm@linux-foundation.org>, =?UTF-8?q?Michal=20Koutn=C3=BD?= <mkoutny@suse.com>
 Cc: Vasily Averin <vasily.averin@linux.dev>, cgroups@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org, bpf@vger.kernel.org, Yosry Ahmed <yosryahmed@google.com>
 
-As Johannes notes in [1], stats_flush_lock is currently used to:
-(a) Protect updated to stats_flush_threshold.
-(b) Protect updates to flush_next_time.
-(c) Serializes calls to cgroup_rstat_flush() based on those ratelimits.
+Currently, all contexts that flush memcg stats do so with sleeping not
+allowed. Some of these contexts are perfectly safe to sleep in, such as
+reading cgroup files from userspace or the background periodic flusher.
 
-However:
+Refactor the code to make mem_cgroup_flush_stats() non-atomic (aka
+sleepable), and provide a separate atomic version. The atomic version is
+used in reclaim, refault, writeback, and in mem_cgroup_usage(). All
+other code paths are left to use the non-atomic version. This includes
+callbacks for userspace reads and the periodic flusher.
 
-1. stats_flush_threshold is already an atomic
-
-2. flush_next_time is not atomic. The writer is locked, but the reader
-   is lockless. If the reader races with a flush, you could see this:
-
-                                        if (time_after(jiffies, flush_next_time))
-        spin_trylock()
-        flush_next_time = now + delay
-        flush()
-        spin_unlock()
-                                        spin_trylock()
-                                        flush_next_time = now + delay
-                                        flush()
-                                        spin_unlock()
-
-   which means we already can get flushes at a higher frequency than
-   FLUSH_TIME during races. But it isn't really a problem.
-
-   The reader could also see garbled partial updates, so it needs at
-   least READ_ONCE and WRITE_ONCE protection.
-
-3. Serializing cgroup_rstat_flush() calls against the ratelimit
-   factors is currently broken because of the race in 2. But the race
-   is actually harmless, all we might get is the occasional earlier
-   flush. If there is no delta, the flush won't do much. And if there
-   is, the flush is justified.
-
-So the lock can be removed all together. However, the lock also served
-the purpose of preventing a thundering herd problem for concurrent
-flushers, see [2]. Use an atomic instead to serve the purpose of
-unifying concurrent flushers.
-
-[1]https://lore.kernel.org/lkml/20230323172732.GE739026@cmpxchg.org/
-[2]https://lore.kernel.org/lkml/20210716212137.1391164-2-shakeelb@google.com/
+Since refault is the only caller of mem_cgroup_flush_stats_ratelimited(),
+this function is changed to call the atomic version of
+mem_cgroup_flush_stats(). Reclaim and refault code paths are modified
+to do non-atomic flushing in separate later patches -- so
+mem_cgroup_flush_stats_ratelimited() will eventually become non-atomic.
 
 Signed-off-by: Yosry Ahmed <yosryahmed@google.com>
 ---
- mm/memcontrol.c | 17 ++++++++++-------
- 1 file changed, 10 insertions(+), 7 deletions(-)
+ include/linux/memcontrol.h |  5 ++++
+ mm/memcontrol.c            | 58 ++++++++++++++++++++++++++++++++------
+ mm/vmscan.c                |  2 +-
+ 3 files changed, 55 insertions(+), 10 deletions(-)
 
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index ff39f78f962e..64ff33e02c96 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -585,8 +585,8 @@ mem_cgroup_largest_soft_limit_node(struct mem_cgroup_tree_per_node *mctz)
-  */
- static void flush_memcg_stats_dwork(struct work_struct *w);
- static DECLARE_DEFERRABLE_WORK(stats_flush_dwork, flush_memcg_stats_dwork);
--static DEFINE_SPINLOCK(stats_flush_lock);
- static DEFINE_PER_CPU(unsigned int, stats_updates);
-+static atomic_t stats_flush_ongoing = ATOMIC_INIT(0);
- static atomic_t stats_flush_threshold = ATOMIC_INIT(0);
- static u64 flush_next_time;
- 
-@@ -636,15 +636,18 @@ static inline void memcg_rstat_updated(struct mem_cgroup *memcg, int val)
- 
- static void __mem_cgroup_flush_stats(void)
- {
--	unsigned long flag;
--
--	if (!spin_trylock_irqsave(&stats_flush_lock, flag))
-+	/*
-+	 * We always flush the entire tree, so concurrent flushers can just
-+	 * skip. This avoids a thundering herd problem on the rstat global lock
-+	 * from memcg flushers (e.g. reclaim, refault, etc).
-+	 */
-+	if (atomic_xchg(&stats_flush_ongoing, 1))
- 		return;
- 
--	flush_next_time = jiffies_64 + 2*FLUSH_TIME;
-+	WRITE_ONCE(flush_next_time, jiffies_64 + 2*FLUSH_TIME);
- 	cgroup_rstat_flush_atomic(root_mem_cgroup->css.cgroup);
- 	atomic_set(&stats_flush_threshold, 0);
--	spin_unlock_irqrestore(&stats_flush_lock, flag);
-+	atomic_set(&stats_flush_ongoing, 0);
+diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
+index ac3f3b3a45e2..a4bc3910a2eb 100644
+--- a/include/linux/memcontrol.h
++++ b/include/linux/memcontrol.h
+@@ -1037,6 +1037,7 @@ static inline unsigned long lruvec_page_state_local(struct lruvec *lruvec,
  }
  
- void mem_cgroup_flush_stats(void)
-@@ -655,7 +658,7 @@ void mem_cgroup_flush_stats(void)
+ void mem_cgroup_flush_stats(void);
++void mem_cgroup_flush_stats_atomic(void);
+ void mem_cgroup_flush_stats_ratelimited(void);
+ 
+ void __mod_memcg_lruvec_state(struct lruvec *lruvec, enum node_stat_item idx,
+@@ -1535,6 +1536,10 @@ static inline void mem_cgroup_flush_stats(void)
+ {
+ }
+ 
++static inline void mem_cgroup_flush_stats_atomic(void)
++{
++}
++
+ static inline void mem_cgroup_flush_stats_ratelimited(void)
+ {
+ }
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index 64ff33e02c96..57e8cbf701f3 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -634,7 +634,7 @@ static inline void memcg_rstat_updated(struct mem_cgroup *memcg, int val)
+ 	}
+ }
+ 
+-static void __mem_cgroup_flush_stats(void)
++static bool mem_cgroup_pre_stats_flush(void)
+ {
+ 	/*
+ 	 * We always flush the entire tree, so concurrent flushers can just
+@@ -642,24 +642,57 @@ static void __mem_cgroup_flush_stats(void)
+ 	 * from memcg flushers (e.g. reclaim, refault, etc).
+ 	 */
+ 	if (atomic_xchg(&stats_flush_ongoing, 1))
+-		return;
++		return false;
+ 
+ 	WRITE_ONCE(flush_next_time, jiffies_64 + 2*FLUSH_TIME);
+-	cgroup_rstat_flush_atomic(root_mem_cgroup->css.cgroup);
++	return true;
++}
++
++static void mem_cgroup_post_stats_flush(void)
++{
+ 	atomic_set(&stats_flush_threshold, 0);
+ 	atomic_set(&stats_flush_ongoing, 0);
+ }
+ 
+-void mem_cgroup_flush_stats(void)
++static bool mem_cgroup_should_flush_stats(void)
+ {
+-	if (atomic_read(&stats_flush_threshold) > num_online_cpus())
+-		__mem_cgroup_flush_stats();
++	return atomic_read(&stats_flush_threshold) > num_online_cpus();
++}
++
++/* atomic functions, safe to call from any context */
++static void __mem_cgroup_flush_stats_atomic(void)
++{
++	if (mem_cgroup_pre_stats_flush()) {
++		cgroup_rstat_flush_atomic(root_mem_cgroup->css.cgroup);
++		mem_cgroup_post_stats_flush();
++	}
++}
++
++void mem_cgroup_flush_stats_atomic(void)
++{
++	if (mem_cgroup_should_flush_stats())
++		__mem_cgroup_flush_stats_atomic();
+ }
  
  void mem_cgroup_flush_stats_ratelimited(void)
  {
--	if (time_after64(jiffies_64, flush_next_time))
-+	if (time_after64(jiffies_64, READ_ONCE(flush_next_time)))
- 		mem_cgroup_flush_stats();
+ 	if (time_after64(jiffies_64, READ_ONCE(flush_next_time)))
+-		mem_cgroup_flush_stats();
++		mem_cgroup_flush_stats_atomic();
++}
++
++/* non-atomic functions, only safe from sleepable contexts */
++static void __mem_cgroup_flush_stats(void)
++{
++	if (mem_cgroup_pre_stats_flush()) {
++		cgroup_rstat_flush(root_mem_cgroup->css.cgroup);
++		mem_cgroup_post_stats_flush();
++	}
++}
++
++void mem_cgroup_flush_stats(void)
++{
++	if (mem_cgroup_should_flush_stats())
++		__mem_cgroup_flush_stats();
  }
  
+ static void flush_memcg_stats_dwork(struct work_struct *w)
+@@ -3684,9 +3717,12 @@ static unsigned long mem_cgroup_usage(struct mem_cgroup *memcg, bool swap)
+ 		 * done from irq context; use stale stats in this case.
+ 		 * Arguably, usage threshold events are not reliable on the root
+ 		 * memcg anyway since its usage is ill-defined.
++		 *
++		 * Additionally, other call paths through memcg_check_events()
++		 * disable irqs, so make sure we are flushing stats atomically.
+ 		 */
+ 		if (in_task())
+-			mem_cgroup_flush_stats();
++			mem_cgroup_flush_stats_atomic();
+ 		val = memcg_page_state(memcg, NR_FILE_PAGES) +
+ 			memcg_page_state(memcg, NR_ANON_MAPPED);
+ 		if (swap)
+@@ -4609,7 +4645,11 @@ void mem_cgroup_wb_stats(struct bdi_writeback *wb, unsigned long *pfilepages,
+ 	struct mem_cgroup *memcg = mem_cgroup_from_css(wb->memcg_css);
+ 	struct mem_cgroup *parent;
+ 
+-	mem_cgroup_flush_stats();
++	/*
++	 * wb_writeback() takes a spinlock and calls
++	 * wb_over_bg_thresh()->mem_cgroup_wb_stats(). Do not sleep.
++	 */
++	mem_cgroup_flush_stats_atomic();
+ 
+ 	*pdirty = memcg_page_state(memcg, NR_FILE_DIRTY);
+ 	*pwriteback = memcg_page_state(memcg, NR_WRITEBACK);
+diff --git a/mm/vmscan.c b/mm/vmscan.c
+index 9c1c5e8b24b8..a9511ccb936f 100644
+--- a/mm/vmscan.c
++++ b/mm/vmscan.c
+@@ -2845,7 +2845,7 @@ static void prepare_scan_count(pg_data_t *pgdat, struct scan_control *sc)
+ 	 * Flush the memory cgroup stats, so that we read accurate per-memcg
+ 	 * lruvec stats for heuristics.
+ 	 */
+-	mem_cgroup_flush_stats();
++	mem_cgroup_flush_stats_atomic();
+ 
+ 	/*
+ 	 * Determine the scan balance between anon and file LRUs.
 -- 
 2.40.0.348.gf938b09366-goog
 
