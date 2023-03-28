@@ -1,48 +1,44 @@
-From: Christian Brauner <brauner-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: CLONE_INTO_CGROUP probably needs to call controller attach
- handlers
-Date: Tue, 28 Mar 2023 17:41:56 +0200
-Message-ID: <20230328154156.kcm4nha2jeej74rr@wittgenstein>
-References: <20230328153943.op62j3sw7qaixdsq@wittgenstein>
+From: Shuah Khan <skhan-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>
+Subject: Re: [PATCH] selftests: cgroup: Add 'malloc' failures checks in
+ test_memcontrol
+Date: Tue, 28 Mar 2023 10:56:02 -0600
+Message-ID: <e2d86dd7-16c0-3d08-a906-3c81c0905187@linuxfoundation.org>
+References: <20230226131634.34366-1-ivan.orlov0322@gmail.com>
+ <Y/zzVWJ5PHs5My6x@P9FQF9L96D>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1680018121;
-        bh=bjTXX9yzs6ldEzyQm2t7OD6dEAou4tttEBMCj7d1qu4=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=CaGmLRhSoe2tN/e+4Xm68kM9m9ONdejVT4hYPdtwJZHav25P4Glr1fKvju+8rHoTv
-         Ks5VTIw++WHNYpnfjS2KGT3wsn7Pt371wkiy90PmbIxs6rCKUd2H3c/elL02bnMM04
-         1lewV3w1Xo3Jz6Ybp3Byh2sBZTzShbe/Ny1G7i6cE5JQtAwtpNwmvbtPOykFU8a5OE
-         Gj7RPr4ej+xgNjTg4WuC34Dm+J/SjFesBsV+4mUTUDN1SqPlv4JALXnUNl/eIS2krJ
-         VI/KOhHK7DDkgCCpbSeduub2XAMT1m2XqcVlmwyWY39xkBNOb/mUStiuN9rjiWCaO1
-         iP0X5N+yIKT5A==
-Content-Disposition: inline
-In-Reply-To: <20230328153943.op62j3sw7qaixdsq@wittgenstein>
-List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Cc: Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, gscrivan-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linuxfoundation.org; s=google; t=1680022563; x=1682614563;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=LQykbIASwaSOYckFPBEJVXD9EFhn71W8gTG9pE8tJ28=;
+        b=QWR06jmFMbM35tLVtFQq3O9myToaGC9er1DxfnCBHTEDHmxan8RTCzSppq9DWOPTZT
+         HLuhb+yzXciKn+JYUvugYFEeOkuB+PWz65UHJQPVZ7MpMwXCZdxsXsCAMQTl5bEBYmua
+         Ctg48hqn1V/ZTGzdIf6s3Svpb5HEk3k8j+6B8=
+Content-Language: en-US
+In-Reply-To: <Y/zzVWJ5PHs5My6x@P9FQF9L96D>
+List-ID: <cgroups.vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"; format="flowed"
+To: Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Ivan Orlov <ivan.orlov0322-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Cc: hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, muchun.song-fxUVXftIFDnyG1zEObXtfA@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org, shuah-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kselftest-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Shuah Khan <skhan-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>
 
-On Tue, Mar 28, 2023 at 05:39:52PM +0200, Christian Brauner wrote:
-> Hey,
+On 2/27/23 11:15, Roman Gushchin wrote:
+> On Sun, Feb 26, 2023 at 04:16:33PM +0300, Ivan Orlov wrote:
+>> There are several 'malloc' calls in test_memcontrol, which can be
+>> unsuccessful. This patch will add 'malloc' failures checking to
+>> give more details about test's fail reasons and avoid possible
+>> undefined behavior during the future null dereference (like the
+>> one in alloc_anon_50M_check_swap function).
+>>
+>> Signed-off-by: Ivan Orlov <ivan.orlov0322-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 > 
-> Giuseppe reported that the the affinity mask isn't updated when a
-> process is spawned directly into the target cgroup via
-> CLONE_INTO_CGROUP. However, migrating a process will cause the affinity
-> mask to be updated (see the repro at [1].
+> Acked-by: Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>
 > 
-> I took a quick look and the issue seems to be that we don't call the
-> various attach handlers during CLONE_INTO_CGROUP whereas we do for
-> migration. So the solution seems to roughly be that we need to call the
-> various attach handlers during CLONE_INTO_CGROUP as well when the
-> parent's cgroups is different from the child cgroup. I think we need to
-> call all of them, can, cancel and attach.
-> 
-> The plumbing here might be a bit intricate since the arguments that the
-> fork handlers take are different from the attach handlers.
+> Thanks!
 
-But note, as Johannes already pointed out somewhere else, that there's
-probably a lot of code that doesn't apply to the CLONE_INTO_CGROUP case
-so it might also make sense to just move the missing pieces into the
-fork handlers.
+Thank you all. Applied to linux-kselftest next for Linux 6.4-rc1
+
+thanks,
+-- Shuah
