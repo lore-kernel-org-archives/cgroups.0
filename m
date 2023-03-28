@@ -1,51 +1,105 @@
-From: Chengming Zhou <zhouchengming-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
-Subject: [PATCH 4/4] blk-cgroup: change BLKCG_MAX_POLS back to 5
-Date: Tue, 28 Mar 2023 22:57:01 +0800
-Message-ID: <20230328145701.33699-4-zhouchengming@bytedance.com>
+From: Chengming Zhou <zhouchengming@bytedance.com>
+Subject: [PATCH 3/4] blk-cgroup: delete cpd_init_fn of blkcg_policy
+Date: Tue, 28 Mar 2023 22:57:00 +0800
+Message-ID: <20230328145701.33699-3-zhouchengming@bytedance.com>
 References: <20230328145701.33699-1-zhouchengming@bytedance.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=bytedance.com; s=google; t=1680015486;
+        d=bytedance.com; s=google; t=1680015483;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=Bq/FNHJyM6VL3GySeYH7whuNpSDOXfegBXORfrv0Wd0=;
-        b=gjeUX9N/SZSVreSCgBBOw1Qw3SvaO9BulRKZFa9FyzIBnTyw04c02sekVQEgIM9rIX
-         GBYeifm4ppvE4m2nrikaPAj3YSUKwne5xcZwXa1x08/SUo8pKH0jL/9uaE0YzjjJKWH5
-         +IQ6UpCaQ0skcosDMsJ6DB9E/8AOPxqejhYko3LGCE/xwRl9jjGZFBWSzf7CHMnJW7Sn
-         5ZvdrLMWzlSBrb1U6z1yXAtrL6G20+j5YfRsafiry3WpHRYLRKQnP/LZ1oBdlo9O0Xhm
-         +eJLgX+JpPVZA045FloYbVpJecxawrYj1IP83C+8SMNjRfLs8X67VdNeK+gbWJkd6eu3
-         qngQ==
-In-Reply-To: <20230328145701.33699-1-zhouchengming-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
+        bh=Mm/+XJd0CmSVOsRZU0I051KkHVVy+39u+QNn8QsY058=;
+        b=fqsNROW7MlA7x+v0YHDdg4JhU7jwlfO1TCakjmUK3J9KKV0mFXMNSTE9zJpQj1xSdd
+         A82TwPEgdicnTzo9CRmvXR0r8qWY1M/uWXSX9dxQoILcXAJStZ+h3JSF4VUtwCr86Hyi
+         BDSiAKBx8hSmU15k3IbAGLOkYIJnK7R+Sa0BlyNaCBmQcsE9RDjA+GGzDES9fnbjmA7g
+         /ejsEIC9/29W9I5ko239PgsYUwJzvwvKN0PnCx+3LfB6DRRWUmxNE4SwkNgIKk/BMH3S
+         5wsNnNwDJBZ5iV/UfhSToIVdR9g6Ii9Rq/wp4yCwlG/Hmx4peGubSueZTgBzzNdbrONG
+         STtg==
+In-Reply-To: <20230328145701.33699-1-zhouchengming@bytedance.com>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: paolo.valente-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org, axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, josef-DigfWCa+lFGyeJad7bwFQA@public.gmane.org
-Cc: linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Chengming Zhou <zhouchengming-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
+To: paolo.valente@linaro.org, axboe@kernel.dk, tj@kernel.org, josef@toxicpanda.com
+Cc: linux-block@vger.kernel.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, Chengming Zhou <zhouchengming@bytedance.com>
 
-BLKCG_MAX_POLS is changed from 5 to 6 when mq-deadline-cgroup introduced,
-then commit 0f7839955114 ("Revert "block/mq-deadline: Add cgroup support"")
-reverted it. So change BLKCG_MAX_POLS back to 5.
+blkcg_policy cpd_init_fn() is used to just initialize some default
+fields of policy data, which is enough to do in cpd_alloc_fn().
 
-Signed-off-by: Chengming Zhou <zhouchengming-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
+This patch delete the only user bfq_cpd_init(), and remove cpd_init_fn
+from blkcg_policy.
+
+Signed-off-by: Chengming Zhou <zhouchengming@bytedance.com>
 ---
- include/linux/blkdev.h | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ block/bfq-cgroup.c | 10 ++--------
+ block/blk-cgroup.c |  4 ----
+ block/blk-cgroup.h |  1 -
+ 3 files changed, 2 insertions(+), 13 deletions(-)
 
-diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
-index 941304f17492..398f288bcf30 100644
---- a/include/linux/blkdev.h
-+++ b/include/linux/blkdev.h
-@@ -54,7 +54,7 @@ extern struct class block_class;
-  * Maximum number of blkcg policies allowed to be registered concurrently.
-  * Defined here to simplify include dependency.
-  */
--#define BLKCG_MAX_POLS		6
-+#define BLKCG_MAX_POLS		5
+diff --git a/block/bfq-cgroup.c b/block/bfq-cgroup.c
+index a2ab5dd58068..74f7d051665b 100644
+--- a/block/bfq-cgroup.c
++++ b/block/bfq-cgroup.c
+@@ -497,14 +497,9 @@ static struct blkcg_policy_data *bfq_cpd_alloc(gfp_t gfp)
+ 	bgd = kzalloc(sizeof(*bgd), gfp);
+ 	if (!bgd)
+ 		return NULL;
+-	return &bgd->pd;
+-}
  
- #define DISK_MAX_PARTS			256
- #define DISK_NAME_LEN			32
+-static void bfq_cpd_init(struct blkcg_policy_data *cpd)
+-{
+-	struct bfq_group_data *d = cpd_to_bfqgd(cpd);
+-
+-	d->weight = CGROUP_WEIGHT_DFL;
++	bgd->weight = CGROUP_WEIGHT_DFL;
++	return &bgd->pd;
+ }
+ 
+ static void bfq_cpd_free(struct blkcg_policy_data *cpd)
+@@ -1300,7 +1295,6 @@ struct blkcg_policy blkcg_policy_bfq = {
+ 	.legacy_cftypes		= bfq_blkcg_legacy_files,
+ 
+ 	.cpd_alloc_fn		= bfq_cpd_alloc,
+-	.cpd_init_fn		= bfq_cpd_init,
+ 	.cpd_free_fn		= bfq_cpd_free,
+ 
+ 	.pd_alloc_fn		= bfq_pd_alloc,
+diff --git a/block/blk-cgroup.c b/block/blk-cgroup.c
+index 68b797b3f114..18331cb92914 100644
+--- a/block/blk-cgroup.c
++++ b/block/blk-cgroup.c
+@@ -1249,8 +1249,6 @@ blkcg_css_alloc(struct cgroup_subsys_state *parent_css)
+ 		blkcg->cpd[i] = cpd;
+ 		cpd->blkcg = blkcg;
+ 		cpd->plid = i;
+-		if (pol->cpd_init_fn)
+-			pol->cpd_init_fn(cpd);
+ 	}
+ 
+ 	spin_lock_init(&blkcg->lock);
+@@ -1605,8 +1603,6 @@ int blkcg_policy_register(struct blkcg_policy *pol)
+ 			blkcg->cpd[pol->plid] = cpd;
+ 			cpd->blkcg = blkcg;
+ 			cpd->plid = pol->plid;
+-			if (pol->cpd_init_fn)
+-				pol->cpd_init_fn(cpd);
+ 		}
+ 	}
+ 
+diff --git a/block/blk-cgroup.h b/block/blk-cgroup.h
+index 26ce62663e27..2c6788658544 100644
+--- a/block/blk-cgroup.h
++++ b/block/blk-cgroup.h
+@@ -173,7 +173,6 @@ struct blkcg_policy {
+ 
+ 	/* operations */
+ 	blkcg_pol_alloc_cpd_fn		*cpd_alloc_fn;
+-	blkcg_pol_init_cpd_fn		*cpd_init_fn;
+ 	blkcg_pol_free_cpd_fn		*cpd_free_fn;
+ 
+ 	blkcg_pol_alloc_pd_fn		*pd_alloc_fn;
 -- 
 2.39.2
 
