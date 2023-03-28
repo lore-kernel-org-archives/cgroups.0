@@ -1,83 +1,48 @@
-From: Yosry Ahmed <yosryahmed@google.com>
-Subject: Re: [PATCH v1 5/9] memcg: replace stats_flush_lock with an atomic
-Date: Tue, 28 Mar 2023 12:42:30 -0700
-Message-ID: <CAJD7tkYbZKikn8VEzuuCL9pPiD_PX1gXdK7r9v8q-skKPBYf2w@mail.gmail.com>
-References: <20230328061638.203420-1-yosryahmed@google.com>
- <20230328061638.203420-6-yosryahmed@google.com> <20230328141523.txyhl7wt7wtvssea@google.com>
- <CAJD7tkYo=CeXJPUi_KxjzC0QCxC2qd_J2_FQi_aXh7svD8u60A@mail.gmail.com>
- <CALvZod4Gsngc6MjXdk4s5+ePVjsgcVppdRmsQovN6gSrxzdbfA@mail.gmail.com> <CAJD7tkb_YA3fvo3LgCzR+X-b-r-AmAR68hNR=xT7B6TJfBa54A@mail.gmail.com>
+From: Chris Mason <clm@meta.com>
+Subject: Re: move bio cgroup punting into btrfs
+Date: Tue, 28 Mar 2023 17:18:43 -0400
+Message-ID: <512eaacf-3ff6-f4f9-c856-a0e03c027501@meta.com>
+References: <20230327004954.728797-1-hch@lst.de>
 Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-Return-path: <linux-block-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20210112; t=1680032586;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=nqIPDr+ZqfoCi8eQc3DTNr+ThF98a/RBvzrvNFqWYDM=;
-        b=TIEXaRQDBAZ6mBWE2R4TELhNaijNMDedZH3kg6n0ljtndAxJLXXqyFQwcErH6B46Lz
-         U9BN+2qoq3bDs+Ypbo1k5NzI/RQIygK7ia03C7cfrRO0ByWfBXsdRCT0alHvfQTfmvRe
-         qv9IocyC7Cjb3idOoIKKeNX5YVur0irro0khGXutbTnhV67ua5rmPZ8USHumeZuOnxd8
-         bw+LUtnZMfNIRTh+++D2tITNO4f5XHgKLCv401nXpXS49KzLZKP/0ycEI4wvThEYgq34
-         SdVY6fUmkfV2iCF/Uacl+jKfcVLSr1puNKsWanMsSlWfcXyo+ZpeNqbzs0La62nvhfVM
-         xa2w==
-In-Reply-To: <CAJD7tkb_YA3fvo3LgCzR+X-b-r-AmAR68hNR=xT7B6TJfBa54A@mail.gmail.com>
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-btrfs-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=meta.com; h=message-id : date :
+ subject : to : cc : references : from : in-reply-to : content-type :
+ content-transfer-encoding : mime-version; s=s2048-2021-q4;
+ bh=EhPMp2qp9jjI1AQyh9X+OKpkYZAtozxBNWxVoOqwgbc=;
+ b=PBolmj2cXkQHAty+kcK87WJQCfcWhmW4CZwtw9t0qS5TBF2uI/7UgBWQ22Ulocp5ONl/
+ rRHHXgurzyS0ypvs9evEzcO05Pa4nGY5iCdz08936Q6EK9nrub+HgAEzi9NLoY3kbUzr
+ I2qhbSH3heZoduVb70hGQqzuHYOlyoVN0TTmRcdeP7ekfy41zPO3/ChoQ++HNhnY3wdt
+ g1raueq9nP9wBjJNeXn1k/LJPSR/ohwwLDw3g2wwLs3r/83k6WePHM0BgSzPkQbyfFXR
+ 75e6c8jmvyGPOjDQN3eaOdEKVpp/bA1TInnKovEqOnfw7ZrOQ6oHHTiExAhoTFjHudtG aQ== 
+Content-Language: en-US
+In-Reply-To: <20230327004954.728797-1-hch@lst.de>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="utf-8"
-To: Shakeel Butt <shakeelb@google.com>
-Cc: Tejun Heo <tj@kernel.org>, Josef Bacik <josef@toxicpanda.com>, Jens Axboe <axboe@kernel.dk>, Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, Roman Gushchin <roman.gushchin@linux.dev>, Muchun Song <muchun.song@linux.dev>, Andrew Morton <akpm@linux-foundation.org>, =?UTF-8?Q?Michal_Koutn=C3=BD?= <mkoutny@suse.com>, Vasily Averin <vasily.averin@linux.dev>, cgroups@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org, bpf@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+To: Christoph Hellwig <hch@lst.de>, Josef Bacik <josef@toxicpanda.com>, Chris Mason <clm@fb.com>, David Sterba <dsterba@suse.com>
+Cc: Tejun Heo <tj@kernel.org>, Jens Axboe <axboe@kernel.dk>, cgroups@vger.kernel.org, linux-block@vger.kernel.org, linux-btrfs@vger.kernel.org
 
-On Tue, Mar 28, 2023 at 12:34=E2=80=AFPM Yosry Ahmed <yosryahmed@google.com=
-> wrote:
->
-> On Tue, Mar 28, 2023 at 12:28=E2=80=AFPM Shakeel Butt <shakeelb@google.co=
-m> wrote:
-> >
-> > On Tue, Mar 28, 2023 at 11:53=E2=80=AFAM Yosry Ahmed <yosryahmed@google=
-.com> wrote:
-> > >
-> > [...]
-> > > > > +     if (atomic_xchg(&stats_flush_ongoing, 1))
-> > > >
-> > > > Have you profiled this? I wonder if we should replace the above wit=
-h
-> > > >
-> > > >         if (atomic_read(&stats_flush_ongoing) || atomic_xchg(&stats=
-_flush_ongoing, 1))
-> > >
-> > > I profiled the entire series with perf and I haven't noticed a notabl=
-e
-> > > difference between before and after the patch series -- but maybe som=
-e
-> > > specific access patterns cause a regression, not sure.
-> > >
-> > > Does an atomic_cmpxchg() satisfy the same purpose? it's easier to rea=
-d
-> > > / more concise I guess.
-> > >
-> > > Something like
-> > >
-> > >     if (atomic_cmpxchg(&stats_flush_ongoing, 0, 1))
-> > >
-> > > WDYT?
-> > >
-> >
-> > No, I don't think cmpxchg will be any different from xchg(). On x86,
-> > the cmpxchg will always write to stats_flush_ongoing and depending on
-> > the comparison result, it will either be 0 or 1 here.
-> >
-> > If you see the implementation of queued_spin_trylock(), it does the
-> > same as well.
->
-> Interesting. I thought cmpxchg by definition will compare first and
-> only do the write if stats_flush_ongoing =3D=3D 0 in this case.
->
-> I thought queued_spin_trylock() was doing an atomic_read() first to
-> avoid the LOCK instruction unnecessarily the lock is held by someone
-> else.
+On 3/26/23 8:49 PM, Christoph Hellwig wrote:
+> Hi all,
+> 
+> the current code to offload bio submission into a cgroup-specific helper
+> thread when sent from the btrfs internal helper threads is a bit ugly.
+> 
+> This series moves it into btrfs with minimal interference in the core
+> code.
+> 
+> I also wonder if the better way to handle this in the long would be to
+> to allow multiple writeback threads per device and cgroup, which should
+> remove the need for both the btrfs submission helper workqueue and the
+> per-cgroup threads.
 
-Anyway, perhaps it's better to follow what queued_spin_trylock() is
-doing, even if only to avoid locking the cache line unnecessarily.
+We tried a few different ways to solve this internally, and I'm not
+against folding it back into btrfs but I'm kinda surprised that nobody
+else needs it?
 
-(Although now that I think about it, I wonder why atomic_cmpxchg
-doesn't do this by default, food for thought)
+Is btrfs really the only place using worker threads to submit IO, or are
+we just the only ones looking for the priority inversions w/resource
+control in place?
+
+-chris
+
