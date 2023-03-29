@@ -1,40 +1,43 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH] blk-throttle: Fix io statistics for cgroup v1
-Date: Wed, 29 Mar 2023 08:54:32 -1000
-Message-ID: <ZCSJaBO8i5jQFC10@slm.duckdns.org>
-References: <20230328142309.73413-1-hanjinke.666@bytedance.com>
+Subject: Re: [PATCH 1/4] block, bfq: remove BFQ_WEIGHT_LEGACY_DFL
+Date: Wed, 29 Mar 2023 08:59:22 -1000
+Message-ID: <ZCSKirFH8f1JdQS2@slm.duckdns.org>
+References: <20230328145701.33699-1-zhouchengming@bytedance.com>
 Mime-Version: 1.0
 Return-path: <linux-block-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112; t=1680116074;
+        d=gmail.com; s=20210112; t=1680116364;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:sender:from:to:cc:subject:date:message-id
          :reply-to;
-        bh=SvJI0H5Hc+fTAdKMTbT6mE44kRVz6oz6/kFJz7w8sLA=;
-        b=YC5lVgwC4h2kPani96r3mkA6vwoBzUZ2d7vme5A2e7AJauPWYlwhzZTESImrRROqVc
-         g4z4UkSqsrJZMiMHOfSIT0w7fc7g+oPawMX4cbot2bSCdbhHVelHRMeh1ZpmISpBcaYc
-         1tdnnlkV0KxDHcgqQ8KnAECDBJo7YxjufIdr8syQtaPFlwzlY6EZzekoxmqlGnw8+BHn
-         p0xiVxUtS14PDNIAv9QLz4EPr/stF6xAJZ3q+TUEL8W90LyewZTGMjOgiYyqSY/73Iea
-         yGZ7v4T0swwe8GmcCLb8yb5uXhB3q1tX0vOD9hMQUot3FQKbNE4cA3HbNrKoX2pedSry
-         6okw==
+        bh=zJfV/EDnHa0A2JJ1AesjXORYSgBsKU2wVwRQ4vy/4iQ=;
+        b=FKaRnypaQDkZ4l8caHAGiLzNJrsI9T/qkI3o1WjciLQxnvIT5nqZmeoU2y2X2UJ50o
+         o+9veybnwPzpDwC216zieg0Z51t/l+P4o9agFbIL60MDJ4DWn9H6WsqPjGA7LGnzRYNH
+         t5B848SJZVl3dwJN0TDEIayEToErYSLiDNzBG1cBuA3RKKEjmh+tpz/TiIsmi5wkKebT
+         KKevTWRdYDjlS3joQpYK3peN4xY1PsjJ8nZ4DRuvuaJUr4Z3Fk6ySh0SM9O9NDV2mX8Q
+         12bwDpgiCXja6r+jdbrtZkTCWor73mD1+S1C/pRB8grwYrSRvvLKDlyn/t3OJJ36OzN5
+         /nQg==
 Sender: Tejun Heo <htejun@gmail.com>
 Content-Disposition: inline
-In-Reply-To: <20230328142309.73413-1-hanjinke.666@bytedance.com>
+In-Reply-To: <20230328145701.33699-1-zhouchengming@bytedance.com>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Jinke Han <hanjinke.666@bytedance.com>
-Cc: josef@toxicpanda.com, axboe@kernel.dk, cgroups@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Chengming Zhou <zhouchengming@bytedance.com>
+Cc: paolo.valente@linaro.org, axboe@kernel.dk, josef@toxicpanda.com, linux-block@vger.kernel.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Tue, Mar 28, 2023 at 10:23:09PM +0800, Jinke Han wrote:
-> From: Jinke Han <hanjinke.666@bytedance.com>
+On Tue, Mar 28, 2023 at 10:56:58PM +0800, Chengming Zhou wrote:
+> BFQ_WEIGHT_LEGACY_DFL is the same as CGROUP_WEIGHT_DFL, which means
+> we don't need cpd_bind_fn() callback to update default weight when
+> attached to a hierarchy.
 > 
-> Now the io statistics of cgroup v1 are no longer accurate. Although
-> in the long run it's best that rstat is a good implementation of
-> cgroup v1 io statistics. But before that, we'd better fix this issue.
+> This patch remove BFQ_WEIGHT_LEGACY_DFL and cpd_bind_fn().
+> 
+> Signed-off-by: Chengming Zhou <zhouchengming@bytedance.com>
 
-Can you please expand on how the stats are wrong on v1 and how the patch
-fixes it?
+For 1-3,
+
+Acked-by: Tejun Heo <tj@kernel.org>
 
 Thanks.
 
