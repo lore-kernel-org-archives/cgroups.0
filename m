@@ -1,7 +1,7 @@
 From: Zi Yan <zi.yan-vRdzynncJC4@public.gmane.org>
-Subject: [PATCH v2 1/7] mm/memcg: use order instead of nr in split_page_memcg()
-Date: Tue, 28 Mar 2023 21:17:06 -0400
-Message-ID: <20230329011712.3242298-2-zi.yan@sent.com>
+Subject: [PATCH v2 4/7] mm: page_owner: add support for splitting to any order in split page_owner.
+Date: Tue, 28 Mar 2023 21:17:09 -0400
+Message-ID: <20230329011712.3242298-5-zi.yan@sent.com>
 References: <20230329011712.3242298-1-zi.yan@sent.com>
 Reply-To: Zi Yan <ziy-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>
 Mime-Version: 1.0
@@ -11,26 +11,26 @@ DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=sent.com; h=cc
         :cc:content-transfer-encoding:content-type:date:date:from:from
         :in-reply-to:in-reply-to:message-id:mime-version:references
         :reply-to:reply-to:sender:subject:subject:to:to; s=fm2; t=
-        1680052655; x=1680139055; bh=Yr+uFjBJL/0qCDkJMJuMYA8+4U49oyS8kQR
-        IZ4QnQ48=; b=c2vliS6JhQxy5/eS0afSs1yoR0oEYtCAkHHfJ2NY2HoMe7XHOOO
-        CpMt1njwoyf3knkBXLIr/09frjWyWNQ6HWyDMuDMqDAsjwx4bN64V4Z1J5laPlco
-        Q+70dNV/AvOttP16sojJ1qlpXAxPTYlsQ0mC1fdyenzk4Zcf7sRdZ/gKgFDqw6Si
-        +6e6b+PpALSBM7Dc5XfhMCKS8eIeNEY/v1JZvJM9wjf+mxXnQbldnkPhHeZx6IYq
-        wepPh+YKS1q6698TPsrzZRfUE9eF1inQwUrBZT6wI+fT84QDqizyidBrXPiNaeqN
-        VLi8wAzUPIOSdjrZ9ZYc0RPUjkhHqg2J6Iw==
+        1680052657; x=1680139057; bh=aUMOD1VSwlpi8SU9QPM0FjnDI83YsOvX8fZ
+        YLAjytoI=; b=iU4MYKvhUukywGLlEKLDX1/HMUmgD5WUDx2430lFmQsZIhey7CK
+        7JjS1kU6XkWTAoOQySY0cHobbSepGAIj7sJqRg0shuxUR+44r6AfYijMOePSVmDu
+        DQqtqV9U1nPHSYreR1ohCXfx08+8zUUk4VkO1guvg3/16I712KrD7IxqENlmJuVB
+        3Pw+iNLUhjVEidWtwAgnY+6k+6wY64IS5cwhi2KETMbEoNs+LqE/YC61mXtbosuX
+        mQbcG4K6YMloRXpM7MhLr2L6Nrnv6Zw4H9P3zuS9xfKFh4NA0gFxIozLf4/Q0LM8
+        anDlvpywXGYBrDSdsc7hdaMA9hqFSWYEG6Q==
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
         messagingengine.com; h=cc:cc:content-transfer-encoding
         :content-type:date:date:feedback-id:feedback-id:from:from
         :in-reply-to:in-reply-to:message-id:mime-version:references
         :reply-to:reply-to:sender:subject:subject:to:to:x-me-proxy
         :x-me-proxy:x-me-sender:x-me-sender:x-sasl-enc; s=fm2; t=
-        1680052655; x=1680139055; bh=Yr+uFjBJL/0qCDkJMJuMYA8+4U49oyS8kQR
-        IZ4QnQ48=; b=mKrpjOke7X6OEH7MkeQZ+uLgHdMAhITBjBpB7pRv9Ae+UiAhZ8X
-        bOlmsLDdOJtdChgpQ7DlpAZoC0KEfS45ibzrvGH3CCbA2Hq3Bs7hBFwcAKuKOoh5
-        y1hy12LARUXJ8yaaWC2CsIo79wufNnEBnWtYlLU5n3t87xuexEQ0JBGdWQWAo3EE
-        V74ZQPgyulK1CJ8ZreNYH+SXNPkH9vccUk7fIoGTfN9YJruBbJLUGP1qRbbM7Tek
-        U0YPeaz6CfQDmeAi/6BiXzHV9FYbJHa2bHHju+IWJ8h7lLbAPfe1QacehYnuL6EE
-        q6S3li6xjFrlFPgAhZM1YtRNhgS6YUoyWtQ==
+        1680052657; x=1680139057; bh=aUMOD1VSwlpi8SU9QPM0FjnDI83YsOvX8fZ
+        YLAjytoI=; b=Hg04jMI5y3sqbJL6KV0puzCcXMJARxNuBYPS6DXyJRqHRSi38BA
+        RIQXYJy5djVGBfx+pbu9ZoFt0zLAoA9tr2R8JLVaa6ByVUbM/0MxNAIvTNTopG4U
+        IqpDwFiiNQ5HcqX4arm4qukeaMS0uz8t8qgz7+eoyz2hBNELSlD3LZTsLBD1/y9O
+        P/86PYDBX42C6WQrws1vMnWuHR9JLtUqpmQbLw162AINMkLSCCk2fCzAqV0L6m8u
+        5SBW+pJxXniU5RcZzhgXL0DvAv8g4gQ946LkSzyZXUx+fDXd9CwKHpFPqnw7WsM9
+        fC2COPUF0IOLnOu/YPq9aI6zMJ6JNNsuRMw==
 In-Reply-To: <20230329011712.3242298-1-zi.yan-vRdzynncJC4@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
@@ -39,101 +39,132 @@ Cc: Zi Yan <ziy-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>, "Kirill A . Shutemov" 
 
 From: Zi Yan <ziy-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>
 
-We do not have non power of two pages, using nr is error prone if nr
-is not power-of-two. Use page order instead.
+It adds a new_order parameter to set new page order in page owner.
+It prepares for upcoming changes to support split huge page to any
+lower order.
 
 Signed-off-by: Zi Yan <ziy-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>
 ---
- include/linux/memcontrol.h | 4 ++--
- mm/huge_memory.c           | 3 ++-
- mm/memcontrol.c            | 3 ++-
- mm/page_alloc.c            | 4 ++--
- 4 files changed, 8 insertions(+), 6 deletions(-)
+ include/linux/page_owner.h | 10 +++++-----
+ mm/huge_memory.c           |  2 +-
+ mm/page_alloc.c            |  4 ++--
+ mm/page_owner.c            | 11 ++++++-----
+ 4 files changed, 14 insertions(+), 13 deletions(-)
 
-diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
-index aa69ea98e2d8..e06a61ea4fc1 100644
---- a/include/linux/memcontrol.h
-+++ b/include/linux/memcontrol.h
-@@ -1151,7 +1151,7 @@ static inline void memcg_memory_event_mm(struct mm_st=
-ruct *mm,
- 	rcu_read_unlock();
+diff --git a/include/linux/page_owner.h b/include/linux/page_owner.h
+index d7878523adfc..a784ba69f67f 100644
+--- a/include/linux/page_owner.h
++++ b/include/linux/page_owner.h
+@@ -11,7 +11,7 @@ extern struct page_ext_operations page_owner_ops;
+ extern void __reset_page_owner(struct page *page, unsigned short order);
+ extern void __set_page_owner(struct page *page,
+ 			unsigned short order, gfp_t gfp_mask);
+-extern void __split_page_owner(struct page *page, int order);
++extern void __split_page_owner(struct page *page, int old_order, int new_o=
+rder);
+ extern void __folio_copy_owner(struct folio *newfolio, struct folio *old);
+ extern void __set_page_owner_migrate_reason(struct page *page, int reason);
+ extern void __dump_page_owner(const struct page *page);
+@@ -31,10 +31,10 @@ static inline void set_page_owner(struct page *page,
+ 		__set_page_owner(page, order, gfp_mask);
  }
 =20
--void split_page_memcg(struct page *head, unsigned int nr);
-+void split_page_memcg(struct page *head, int order);
-=20
- unsigned long mem_cgroup_soft_limit_reclaim(pg_data_t *pgdat, int order,
- 						gfp_t gfp_mask,
-@@ -1588,7 +1588,7 @@ void count_memcg_event_mm(struct mm_struct *mm, enum =
-vm_event_item idx)
+-static inline void split_page_owner(struct page *page, int order)
++static inline void split_page_owner(struct page *page, int old_order, int =
+new_order)
+ {
+ 	if (static_branch_unlikely(&page_owner_inited))
+-		__split_page_owner(page, order);
++		__split_page_owner(page, old_order, new_order);
+ }
+ static inline void folio_copy_owner(struct folio *newfolio, struct folio *=
+old)
+ {
+@@ -56,11 +56,11 @@ static inline void reset_page_owner(struct page *page, =
+unsigned short order)
  {
  }
-=20
--static inline void split_page_memcg(struct page *head, unsigned int nr)
-+static inline void split_page_memcg(struct page *head, int order)
+ static inline void set_page_owner(struct page *page,
+-			unsigned int order, gfp_t gfp_mask)
++			unsigned short order, gfp_t gfp_mask)
  {
  }
-=20
+ static inline void split_page_owner(struct page *page,
+-			int order)
++			int old_order, int new_order)
+ {
+ }
+ static inline void folio_copy_owner(struct folio *newfolio, struct folio *=
+folio)
 diff --git a/mm/huge_memory.c b/mm/huge_memory.c
-index 81a5689806af..3bb003eb80a3 100644
+index 106cde74d933..f8a8a72b207d 100644
 --- a/mm/huge_memory.c
 +++ b/mm/huge_memory.c
-@@ -2512,10 +2512,11 @@ static void __split_huge_page(struct page *page, st=
-ruct list_head *list,
- 	struct address_space *swap_cache =3D NULL;
- 	unsigned long offset =3D 0;
- 	unsigned int nr =3D thp_nr_pages(head);
-+	int order =3D folio_order(folio);
- 	int i;
+@@ -2557,7 +2557,7 @@ static void __split_huge_page(struct page *page, stru=
+ct list_head *list,
+ 	unlock_page_lruvec(lruvec);
+ 	/* Caller disabled irqs, so they are still disabled here */
 =20
- 	/* complete memcg works before add pages to LRU */
--	split_page_memcg(head, nr);
-+	split_page_memcg(head, order);
+-	split_page_owner(head, order);
++	split_page_owner(head, order, 0);
 =20
- 	if (PageAnon(head) && PageSwapCache(head)) {
- 		swp_entry_t entry =3D { .val =3D page_private(head) };
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index 681e7528a714..cab2828e188d 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -3414,11 +3414,12 @@ void obj_cgroup_uncharge(struct obj_cgroup *objcg, =
-size_t size)
- /*
-  * Because page_memcg(head) is not set on tails, set it now.
-  */
--void split_page_memcg(struct page *head, unsigned int nr)
-+void split_page_memcg(struct page *head, int order)
- {
- 	struct folio *folio =3D page_folio(head);
- 	struct mem_cgroup *memcg =3D folio_memcg(folio);
- 	int i;
-+	unsigned int nr =3D 1 << order;
-=20
- 	if (mem_cgroup_disabled() || !memcg)
- 		return;
+ 	/* See comment in __split_huge_page_tail() */
+ 	if (PageAnon(head)) {
 diff --git a/mm/page_alloc.c b/mm/page_alloc.c
-index 0767dd6bc5ba..d84b121d1e03 100644
+index ef559795525b..4845ff6c4223 100644
 --- a/mm/page_alloc.c
 +++ b/mm/page_alloc.c
-@@ -2781,7 +2781,7 @@ void split_page(struct page *page, unsigned int order)
+@@ -2780,7 +2780,7 @@ void split_page(struct page *page, unsigned int order)
+=20
  	for (i =3D 1; i < (1 << order); i++)
  		set_page_refcounted(page + i);
- 	split_page_owner(page, 1 << order);
--	split_page_memcg(page, 1 << order);
-+	split_page_memcg(page, order);
+-	split_page_owner(page, order);
++	split_page_owner(page, order, 0);
+ 	split_page_memcg(page, order, 0);
  }
  EXPORT_SYMBOL_GPL(split_page);
-=20
-@@ -4997,7 +4997,7 @@ static void *make_alloc_exact(unsigned long addr, uns=
+@@ -4996,7 +4996,7 @@ static void *make_alloc_exact(unsigned long addr, uns=
 igned int order,
+ 		struct page *page =3D virt_to_page((void *)addr);
  		struct page *last =3D page + nr;
 =20
- 		split_page_owner(page, 1 << order);
--		split_page_memcg(page, 1 << order);
-+		split_page_memcg(page, order);
+-		split_page_owner(page, order);
++		split_page_owner(page, order, 0);
+ 		split_page_memcg(page, order, 0);
  		while (page < --last)
  			set_page_refcounted(last);
+diff --git a/mm/page_owner.c b/mm/page_owner.c
+index 64233b5b09d5..347861fe9c50 100644
+--- a/mm/page_owner.c
++++ b/mm/page_owner.c
+@@ -211,20 +211,21 @@ void __set_page_owner_migrate_reason(struct page *pag=
+e, int reason)
+ 	page_ext_put(page_ext);
+ }
 =20
+-void __split_page_owner(struct page *page, int order)
++void __split_page_owner(struct page *page, int old_order, int new_order)
+ {
+ 	int i;
+ 	struct page_ext *page_ext =3D page_ext_get(page);
+ 	struct page_owner *page_owner;
+-	unsigned int nr =3D 1 << order;
++	unsigned int old_nr =3D 1 << old_order;
++	unsigned int new_nr =3D 1 << new_order;
+=20
+ 	if (unlikely(!page_ext))
+ 		return;
+=20
+-	for (i =3D 0; i < nr; i++) {
++	for (i =3D 0; i < old_nr; i +=3D new_nr) {
++		page_ext =3D lookup_page_ext(page + i);
+ 		page_owner =3D get_page_owner(page_ext);
+-		page_owner->order =3D 0;
+-		page_ext =3D page_ext_next(page_ext);
++		page_owner->order =3D new_order;
+ 	}
+ 	page_ext_put(page_ext);
+ }
 --=20
 2.39.2
 
