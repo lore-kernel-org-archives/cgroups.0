@@ -1,100 +1,58 @@
-From: kernel test robot <lkp@intel.com>
-Subject: Re: [PATCH v2 4/7] mm: page_owner: add support for splitting to any
- order in split page_owner.
-Date: Thu, 30 Mar 2023 00:11:57 +0800
-Message-ID: <202303300056.N12iGUqy-lkp@intel.com>
-References: <20230329011712.3242298-5-zi.yan@sent.com>
+From: Dietmar Eggemann <dietmar.eggemann-5wv7dgnIgG8@public.gmane.org>
+Subject: Re: [PATCH 5/6] cgroup/cpuset: Free DL BW in case can_attach() fails
+Date: Wed, 29 Mar 2023 18:39:23 +0200
+Message-ID: <cdede77a-5dc5-8933-a444-a2046b074b12@arm.com>
+References: <20230329125558.255239-1-juri.lelli@redhat.com>
+ <20230329125558.255239-6-juri.lelli@redhat.com>
+ <f8dfc30b-5079-2f44-7ab1-42ac25bd48b7@redhat.com>
+ <f8baea06-eeda-439a-3699-1cad7cde659e@redhat.com>
 Mime-Version: 1.0
-Return-path: <linux-fsdevel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1680106409; x=1711642409;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:in-reply-to;
-  bh=Hps5jsYWZuWMPz8GSp0n187O/lBhXc5uhNP4MtLz8+s=;
-  b=lvzNv4cTwi9VAQB9w6MSNEWUDichAPg73M5vZb7dYgo0n/7FybQyHb5Z
-   fcjrRO5CDu8QWLslbgs6b76AvSXcn96NJuDuAyF58K2JNyD4BuuN89m8Y
-   TO6pCLQNewMlgDZPxRhL0ykqpiL/77cVhD/K5ecBFzH9byGjyvu0Is5Y6
-   OX/XFJ3Sp4K+GKbikfdWWsR05RKiVTBC7ifI7nzITZveMwnKMbZdb6MIh
-   RLoDR5JYVQ/b1Unzt5pr2oCOhuWtQmmd0yGHihojkc4QXlc7XR7o9/hej
-   SvQi3DzANVkQgbDcGLIaI40SfzzNr3XZSs48aoQOWrtJdEqIS/BY/e7Ld
-   w==;
-Content-Disposition: inline
-In-Reply-To: <20230329011712.3242298-5-zi.yan@sent.com>
+Content-Transfer-Encoding: 8bit
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Language: en-US
+In-Reply-To: <f8baea06-eeda-439a-3699-1cad7cde659e-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Zi Yan <zi.yan@sent.com>, "Matthew Wilcox (Oracle)" <willy@infradead.org>, Yang Shi <shy828301@gmail.com>, Yu Zhao <yuzhao@google.com>, linux-mm@kvack.org
-Cc: llvm@lists.linux.dev, oe-kbuild-all@lists.linux.dev, Zi Yan <ziy@nvidia.com>, "Kirill A . Shutemov" <kirill.shutemov@linux.intel.com>, Ryan Roberts <ryan.roberts@arm.com>, Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny@suse.com>, Roman Gushchin <roman.gushchin@linux.dev>, Zach O'Keefe <zokeefe@google.com>, Andrew Morton <akpm@linux-foundation.org>, Linux Memory Management List <linux-mm@kvack.org>, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-kselftest@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+To: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Juri Lelli <juri.lelli-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Ingo Molnar <mingo-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Qais Yousef <qyousef-wp2msK0BRk8tq7phqP6ubQ@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Hao Luo <haoluo-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Cc: Steven Rostedt <rostedt-nx8X9YLhiw1AfugRpC6u6w@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, luca.abeni-5rdYK369eBLQB0XuIGIEkQ@public.gmane.org, claudio-YOzL5CV4y4YG1A2ADO40+w@public.gmane.org, tommaso.cucinotta-5rdYK369eBLQB0XuIGIEkQ@public.gmane.org, bristot-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, mathieu.poirier-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Vincent Guittot <vincent.guittot-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, Wei Wang <wvw-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Rick Yiu <rickyiu-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Quentin Perret <qperret-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Heiko Carstens <hca-tEXmvtCZX7AybS5Ee8rs3A@public.gmane.org>, Vasily Gorbik <gor-tEXmvtCZX7AybS5Ee8rs3A@public.gmane.org>, Alexander Gordeev <agordeev-tEXmvtCZX7AybS5Ee8rs3A@public.gmane.org>, Sudeep Holla <sudeep.holla-5wv7dgnIgG8@public.gmane.org>
 
-Hi Zi,
+On 29/03/2023 16:31, Waiman Long wrote:
+> On 3/29/23 10:25, Waiman Long wrote:
+>>
+>> On 3/29/23 08:55, Juri Lelli wrote:
+>>> From: Dietmar Eggemann <dietmar.eggemann-5wv7dgnIgG8@public.gmane.org>
 
-Thank you for the patch! Yet something to improve:
+[...]
 
-[auto build test ERROR on akpm-mm/mm-everything]
-[also build test ERROR on linus/master v6.3-rc4 next-20230329]
-[If your patch is applied to the wrong git tree, kindly drop us a note.
-And when submitting patch, we suggest to use '--base' as documented in
-https://git-scm.com/docs/git-format-patch#_base_tree_information]
+>>> @@ -2518,11 +2547,21 @@ static int cpuset_can_attach(struct
+>>> cgroup_taskset *tset)
+>>>   static void cpuset_cancel_attach(struct cgroup_taskset *tset)
+>>>   {
+>>>       struct cgroup_subsys_state *css;
+>>> +    struct cpuset *cs;
+>>>         cgroup_taskset_first(tset, &css);
+>>> +    cs = css_cs(css);
+>>>         mutex_lock(&cpuset_mutex);
+>>> -    css_cs(css)->attach_in_progress--;
+>>> +    cs->attach_in_progress--;
+>>> +
+>>> +    if (cs->nr_migrate_dl_tasks) {
+>>> +        int cpu = cpumask_any(cs->effective_cpus);
+>>> +
+>>> +        dl_bw_free(cpu, cs->sum_migrate_dl_bw);
+>>> +        reset_migrate_dl_data(cs);
+>>> +    }
+>>> +
+> 
+> Another nit that I have is that you may have to record also the cpu
+> where the DL bandwidth is allocated in cpuset_can_attach() and free the
+> bandwidth back into that cpu or there can be an underflow if another cpu
+> is chosen.
 
-url:    https://github.com/intel-lab-lkp/linux/commits/Zi-Yan/mm-memcg-use-order-instead-of-nr-in-split_page_memcg/20230329-091809
-base:   https://git.kernel.org/pub/scm/linux/kernel/git/akpm/mm.git mm-everything
-patch link:    https://lore.kernel.org/r/20230329011712.3242298-5-zi.yan%40sent.com
-patch subject: [PATCH v2 4/7] mm: page_owner: add support for splitting to any order in split page_owner.
-config: riscv-buildonly-randconfig-r006-20230329 (https://download.01.org/0day-ci/archive/20230330/202303300056.N12iGUqy-lkp@intel.com/config)
-compiler: clang version 17.0.0 (https://github.com/llvm/llvm-project 67409911353323ca5edf2049ef0df54132fa1ca7)
-reproduce (this is a W=1 build):
-        wget https://raw.githubusercontent.com/intel/lkp-tests/master/sbin/make.cross -O ~/bin/make.cross
-        chmod +x ~/bin/make.cross
-        # install riscv cross compiling tool for clang build
-        # apt-get install binutils-riscv64-linux-gnu
-        # https://github.com/intel-lab-lkp/linux/commit/6d1831c0e01a1a742e026454fe6e5643e08c5985
-        git remote add linux-review https://github.com/intel-lab-lkp/linux
-        git fetch --no-tags linux-review Zi-Yan/mm-memcg-use-order-instead-of-nr-in-split_page_memcg/20230329-091809
-        git checkout 6d1831c0e01a1a742e026454fe6e5643e08c5985
-        # save the config file
-        mkdir build_dir && cp config build_dir/.config
-        COMPILER_INSTALL_PATH=$HOME/0day COMPILER=clang make.cross W=1 O=build_dir ARCH=riscv olddefconfig
-        COMPILER_INSTALL_PATH=$HOME/0day COMPILER=clang make.cross W=1 O=build_dir ARCH=riscv SHELL=/bin/bash
+Many thanks for the review!
 
-If you fix the issue, kindly add following tag where applicable
-| Reported-by: kernel test robot <lkp@intel.com>
-| Link: https://lore.kernel.org/oe-kbuild-all/202303300056.N12iGUqy-lkp@intel.com/
-
-All errors (new ones prefixed by >>):
-
->> mm/page_owner.c:226:14: error: call to undeclared function 'lookup_page_ext'; ISO C99 and later do not support implicit function declarations [-Wimplicit-function-declaration]
-                   page_ext = lookup_page_ext(page + i);
-                              ^
->> mm/page_owner.c:226:12: error: incompatible integer to pointer conversion assigning to 'struct page_ext *' from 'int' [-Wint-conversion]
-                   page_ext = lookup_page_ext(page + i);
-                            ^ ~~~~~~~~~~~~~~~~~~~~~~~~~
-   2 errors generated.
+But isn't the DL BW control `struct dl_bw` per `struct root_domain`
+which is per exclusive cpuset. So as long cpu is from
+`cs->effective_cpus` shouldn't this be fine?
 
 
-vim +/lookup_page_ext +226 mm/page_owner.c
-
-   213	
-   214	void __split_page_owner(struct page *page, int old_order, int new_order)
-   215	{
-   216		int i;
-   217		struct page_ext *page_ext = page_ext_get(page);
-   218		struct page_owner *page_owner;
-   219		unsigned int old_nr = 1 << old_order;
-   220		unsigned int new_nr = 1 << new_order;
-   221	
-   222		if (unlikely(!page_ext))
-   223			return;
-   224	
-   225		for (i = 0; i < old_nr; i += new_nr) {
- > 226			page_ext = lookup_page_ext(page + i);
-   227			page_owner = get_page_owner(page_ext);
-   228			page_owner->order = new_order;
-   229		}
-   230		page_ext_put(page_ext);
-   231	}
-   232	
-
--- 
-0-DAY CI Kernel Test Service
-https://github.com/intel/lkp-tests
