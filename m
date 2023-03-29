@@ -1,89 +1,97 @@
-From: Christian Brauner <brauner@kernel.org>
-Subject: Re: CLONE_INTO_CGROUP probably needs to call controller attach
- handlers
-Date: Wed, 29 Mar 2023 09:19:26 +0200
-Message-ID: <20230329-unripe-imminent-655bed17aad2@brauner>
-References: <20230328153943.op62j3sw7qaixdsq@wittgenstein>
- <c3d9cf24-1c3a-cda4-5063-6b7d27e9116f@redhat.com>
- <5937b51b-164a-b6b3-532d-43b46f2d49a2@redhat.com>
+From: kernel test robot <lkp@intel.com>
+Subject: Re: [PATCH v2 4/7] mm: page_owner: add support for splitting to any
+ order in split page_owner.
+Date: Wed, 29 Mar 2023 17:58:44 +0800
+Message-ID: <202303291732.7OqWI96E-lkp@intel.com>
+References: <20230329011712.3242298-5-zi.yan@sent.com>
 Mime-Version: 1.0
-Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1680074371;
-        bh=DJrGjjYVJpklJpi1Yq8f2deLg7xBT/QYXB70zUacqlk=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=Wjl7AZtgidfWsFBwLpkWu6wrTOCYLeiIt/T9ZtM1cHbhm9JBWbILWp+3B0DMqyTAm
-         ZwRHtvM8wy1Wvxx5PdJScuqKzz5BTDDBZ6kC1r1zwo6Rjoy+q2g45h2PVQcU9XoK7c
-         wSNoFuQ2GqjoNIWUhFdCC6H60l9Y+6yZk5Zqf/mZS7Z8aTJoH0uIgz+eCiLD9jlzIO
-         rkuw851jOE6lFcY4HW2xdSjvLlbb9N4DedrBXMwFvir1l+n8LcB/ZDs61qtbq0XmX6
-         /mik1o1PMtNarwUWCvkq0xce+PFK4BErlxMGigSUCUYTeTLnno3D9iMVR9T3QsLqyC
-         6lk1dTHj9Th0w==
+Return-path: <linux-fsdevel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1680083936; x=1711619936;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:in-reply-to;
+  bh=L329AyF3OgVN9WsY0kOL7oj+CaQXmNshjdDst3A4NC8=;
+  b=LPiiCvEDsDa7Ajl75aAYPrUy51vTISx0HxCwD2fI3hY3eAVmlU4tlP1F
+   IkGHrVUCzKmt1veMHLlgTc2U9Bqnn6FNAchYSNfsLBiXOrdgyQ1nvkcvT
+   b54bOhHz0jJFvvEbB3plSI0BVW8kf4SaiUuMbpYdEYsPyNs/fOccTY8hh
+   kYOLa/M+Sls/8CM79iDeVZwo1op2pbCOqJfGayCgmSX1MerbPCw8r4pM+
+   gR0fweeZ08idY+anbGOXcGZWQloRjeBKWK2ez/JfqT64+Zx4BEMLN2Dl+
+   mouxUJxRbqDSlbEDJ3T5boY2q6sbBR5rxXbR2qm7bhEsjTkevtEkfvsvF
+   Q==;
 Content-Disposition: inline
-In-Reply-To: <5937b51b-164a-b6b3-532d-43b46f2d49a2@redhat.com>
+In-Reply-To: <20230329011712.3242298-5-zi.yan@sent.com>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Waiman Long <longman@redhat.com>
-Cc: Tejun Heo <tj@kernel.org>, Johannes Weiner <hannes@cmpxchg.org>, Zefan Li <lizefan.x@bytedance.com>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, gscrivan@redhat.com
+To: Zi Yan <zi.yan@sent.com>, "Matthew Wilcox (Oracle)" <willy@infradead.org>, Yang Shi <shy828301@gmail.com>, Yu Zhao <yuzhao@google.com>, linux-mm@kvack.org
+Cc: oe-kbuild-all@lists.linux.dev, Zi Yan <ziy@nvidia.com>, "Kirill A . Shutemov" <kirill.shutemov@linux.intel.com>, Ryan Roberts <ryan.roberts@arm.com>, Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny@suse.com>, Roman Gushchin <roman.gushchin@linux.dev>, Zach O'Keefe <zokeefe@google.com>, Andrew Morton <akpm@linux-foundation.org>, Linux Memory Management List <linux-mm@kvack.org>, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-kselftest@vger.kernel.org
 
-On Tue, Mar 28, 2023 at 10:48:49PM -0400, Waiman Long wrote:
-> On 3/28/23 21:30, Waiman Long wrote:
-> > On 3/28/23 11:39, Christian Brauner wrote:
-> > > Hey,
-> > > 
-> > > Giuseppe reported that the the affinity mask isn't updated when a
-> > > process is spawned directly into the target cgroup via
-> > > CLONE_INTO_CGROUP. However, migrating a process will cause the affinity
-> > > mask to be updated (see the repro at [1].
-> > > 
-> > > I took a quick look and the issue seems to be that we don't call the
-> > > various attach handlers during CLONE_INTO_CGROUP whereas we do for
-> > > migration. So the solution seems to roughly be that we need to call the
-> > > various attach handlers during CLONE_INTO_CGROUP as well when the
-> > > parent's cgroups is different from the child cgroup. I think we need to
-> > > call all of them, can, cancel and attach.
-> > > 
-> > > The plumbing here might be a bit intricate since the arguments that the
-> > > fork handlers take are different from the attach handlers.
-> > > 
-> > > Christian
-> > > 
-> > > [1]: https://paste.centos.org/view/f434fa1a
-> > > 
-> > I saw that the current cgroup code already have the can_fork, fork and
-> > cancel_fork callbacks. Unfortunately such callbacks are not defined for
-> > cpuset yet. That is why the cpu affinity isn't correctly updated. I can
-> > post a patch to add those callback functions to cpuset which should then
-> > able to correctly address this issue.
-> 
-> Looking further into this issue, I am thinking that forking into a cgroup
-> should be equivalent to write the child pid into the "cgroup.threads" file
-> of the target cgroup. By taking this route, all the existing can_attach,
-> attach and cancel_attach methods can be used. I believe the original fork
-> method is for the limited use case of forking into the same cgroup. So right
-> now, only the pids controller has the fork methods. Otherwise, we will have
-> to modify a number of different controllers to add the necessary fork
-> methods. They will be somewhat similar to the existing attach methods and so
-> it will be a lot of duplication. What do you think about this idea?
+Hi Zi,
 
-The overall plan sounds good to me. I have one comment and question
-about making this equivalent to a write of the child pid into the
-cgroup.threads file.
+Thank you for the patch! Yet something to improve:
 
-The paragraph above seems to imply that CLONE_INTO_CGROUP currently
-isn't equivalent to a write to cgroup.threads. But it's not that
-straightforward. CLONE_INTO_CGROUP needs to handle both threads and
-threadgroups aka being or-ed with CLONE_THREAD or not. It does that in
-cgroup_css_set_fork() when calling
-cgroup_attach_permissions([...] !(kargs->flags & CLONE_THREAD), [...]).
+[auto build test ERROR on akpm-mm/mm-everything]
+[also build test ERROR on linus/master v6.3-rc4 next-20230329]
+[If your patch is applied to the wrong git tree, kindly drop us a note.
+And when submitting patch, we suggest to use '--base' as documented in
+https://git-scm.com/docs/git-format-patch#_base_tree_information]
 
-What it's missing is calling the relevant handlers that would be
-executed in the migration path. They might be different between the
-CLONE_THREAD and !CLONE_THREAD case. But the crux remains that
-CLONE_INTO_CGROUP needs to handle both cases.
+url:    https://github.com/intel-lab-lkp/linux/commits/Zi-Yan/mm-memcg-use-order-instead-of-nr-in-split_page_memcg/20230329-091809
+base:   https://git.kernel.org/pub/scm/linux/kernel/git/akpm/mm.git mm-everything
+patch link:    https://lore.kernel.org/r/20230329011712.3242298-5-zi.yan%40sent.com
+patch subject: [PATCH v2 4/7] mm: page_owner: add support for splitting to any order in split page_owner.
+config: i386-randconfig-m021 (https://download.01.org/0day-ci/archive/20230329/202303291732.7OqWI96E-lkp@intel.com/config)
+compiler: gcc-11 (Debian 11.3.0-8) 11.3.0
+reproduce (this is a W=1 build):
+        # https://github.com/intel-lab-lkp/linux/commit/6d1831c0e01a1a742e026454fe6e5643e08c5985
+        git remote add linux-review https://github.com/intel-lab-lkp/linux
+        git fetch --no-tags linux-review Zi-Yan/mm-memcg-use-order-instead-of-nr-in-split_page_memcg/20230329-091809
+        git checkout 6d1831c0e01a1a742e026454fe6e5643e08c5985
+        # save the config file
+        mkdir build_dir && cp config build_dir/.config
+        make W=1 O=build_dir ARCH=i386 olddefconfig
+        make W=1 O=build_dir ARCH=i386 SHELL=/bin/bash
 
-So afaict, what you're proposing is equivalent to what I sketched in the
-initial mail? Or is there something else you mean by making this
-equivalent to cgroup.threads that goes beyond adding the missing
-handlers? Just trying to make sure we're not accidently changing
-semantics.
+If you fix the issue, kindly add following tag where applicable
+| Reported-by: kernel test robot <lkp@intel.com>
+| Link: https://lore.kernel.org/oe-kbuild-all/202303291732.7OqWI96E-lkp@intel.com/
+
+All errors (new ones prefixed by >>):
+
+   mm/page_owner.c: In function '__split_page_owner':
+>> mm/page_owner.c:226:28: error: implicit declaration of function 'lookup_page_ext' [-Werror=implicit-function-declaration]
+     226 |                 page_ext = lookup_page_ext(page + i);
+         |                            ^~~~~~~~~~~~~~~
+   mm/page_owner.c:226:26: warning: assignment to 'struct page_ext *' from 'int' makes pointer from integer without a cast [-Wint-conversion]
+     226 |                 page_ext = lookup_page_ext(page + i);
+         |                          ^
+   cc1: some warnings being treated as errors
+
+
+vim +/lookup_page_ext +226 mm/page_owner.c
+
+   213	
+   214	void __split_page_owner(struct page *page, int old_order, int new_order)
+   215	{
+   216		int i;
+   217		struct page_ext *page_ext = page_ext_get(page);
+   218		struct page_owner *page_owner;
+   219		unsigned int old_nr = 1 << old_order;
+   220		unsigned int new_nr = 1 << new_order;
+   221	
+   222		if (unlikely(!page_ext))
+   223			return;
+   224	
+   225		for (i = 0; i < old_nr; i += new_nr) {
+ > 226			page_ext = lookup_page_ext(page + i);
+   227			page_owner = get_page_owner(page_ext);
+   228			page_owner->order = new_order;
+   229		}
+   230		page_ext_put(page_ext);
+   231	}
+   232	
+
+-- 
+0-DAY CI Kernel Test Service
+https://github.com/intel/lkp-tests
