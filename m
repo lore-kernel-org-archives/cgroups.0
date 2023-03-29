@@ -1,465 +1,148 @@
-From: Zi Yan <zi.yan-vRdzynncJC4@public.gmane.org>
-Subject: [PATCH v2 7/7] mm: huge_memory: enable debugfs to split huge pages to any order.
-Date: Tue, 28 Mar 2023 21:17:12 -0400
-Message-ID: <20230329011712.3242298-8-zi.yan@sent.com>
+From: Zi Yan <zi.yan@sent.com>
+Subject: [PATCH v2 2/7] mm/page_owner: use order instead of nr in split_page_owner()
+Date: Tue, 28 Mar 2023 21:17:07 -0400
+Message-ID: <20230329011712.3242298-3-zi.yan@sent.com>
 References: <20230329011712.3242298-1-zi.yan@sent.com>
-Reply-To: Zi Yan <ziy-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>
+Reply-To: Zi Yan <ziy@nvidia.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: quoted-printable
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <linux-fsdevel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=sent.com; h=cc
         :cc:content-transfer-encoding:content-type:date:date:from:from
         :in-reply-to:in-reply-to:message-id:mime-version:references
         :reply-to:reply-to:sender:subject:subject:to:to; s=fm2; t=
-        1680052659; x=1680139059; bh=BxqGc0evZec652+iCiid1CZrCHeD4aKdhQK
-        P2Da/cdE=; b=WLPo7fI0z9NuknUbDxKzkiZcoueiJ0DMONyqrTBCIctzyn2PZE4
-        C63FkhOUBLOMKZZGlMX8U/Wcpwyn9rDM2gIrH/Zx9fZSqAY9YivFElDw0/M/OMBU
-        WkSUDvCL12p8WYbfb9oCoTxV8j5UTAd2cTGpDQOBaHTYIU7tcIkFj9Oa9S1QcFcn
-        l6yqxkTcT/brSQuaJdpdxRQ+52HanqxvlJkz8qQSK/mnJkYeizdyeYqrb2wCotOI
-        JvG0e1HjbplbsdjmVZQIRwj0O+HxPnvHtQL/+h+w3RsZYEBWhov3wXQcrFrF00Xl
-        YXF1aQEsSQoCQAn434g4CwueoSyIsAGmTzg==
+        1680052656; x=1680139056; bh=0+1ccQx8AuLgSqfkQ9qAEQMi/lCcYIby1X8
+        SrOj7vms=; b=qzeTA3YGawR5Npj6RnXbK8iNDVcqZsg+UaqOP3JpEgiuEGN7QGF
+        S69PaEPBeYscqfIWj2k4hLG+ymAsE0dwAxOw9Mza3YioK2zpdTZPT/r2AeRGBrdo
+        1kBpkqNu++ropyPnhe2HIfyWbWiwMHPlYLNBet2L/wkgh1mwWIm9fYWmjOoKEYb/
+        R5HklkL4YnDOoadWQ0RCvCfXoYdUQ4CTzUZoasZ7d0dVelrKN7DB5q6UbvJ5u4+S
+        7JAgW2cQwRKU0s5fwm2Q4qr10Q28th89fRrxP98gPycYNleqFSa1ISKGkhues90S
+        vsSnHxW26wSUxLaGZiDGCsNfikWsw5KMuHg==
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
         messagingengine.com; h=cc:cc:content-transfer-encoding
         :content-type:date:date:feedback-id:feedback-id:from:from
         :in-reply-to:in-reply-to:message-id:mime-version:references
         :reply-to:reply-to:sender:subject:subject:to:to:x-me-proxy
         :x-me-proxy:x-me-sender:x-me-sender:x-sasl-enc; s=fm2; t=
-        1680052659; x=1680139059; bh=BxqGc0evZec652+iCiid1CZrCHeD4aKdhQK
-        P2Da/cdE=; b=KjgraFA3pUHek1i5HwjjNMt0bKZi7Mlgtm1I8nt/SmiRLfwtIEH
-        o0KKM3WEc53CcB39sq7h/B4ZY447nyikhA65HgU0nmB5kMgHoiemfFb+MQ3PYppE
-        tb2IUNCVEz477UksEOHPnXBOUabJr6fLunpKycJMMk3O06l+WLBB7DJ0U2NaJWh/
-        ZlarVVl909onmO11QKfuoriFSPsmxuhGKbr7WzF31IHIJvUlgwNak2Wms3MhbKhs
-        WZj5kts2CfnRIXTiqYUNBrI2qZ+7ukRemXvCRisq+6lGDL0RNbMtCf/e6wdW2hBv
-        iuneQU4pEwOi5DyiD6TRjhHeG8v6YYzPZ5g==
-In-Reply-To: <20230329011712.3242298-1-zi.yan-vRdzynncJC4@public.gmane.org>
+        1680052656; x=1680139056; bh=0+1ccQx8AuLgSqfkQ9qAEQMi/lCcYIby1X8
+        SrOj7vms=; b=DfFURRi2cTfE0c9CmH4Sa/MZGtlmXfs/BdaDyy+0eKhfQMKK4k+
+        Gqd5fJX509/FMF+LPHtOz8swWthx3cUvAHignbSHc4aeSsex4j+Z3P/eQAWUW+Jx
+        htj2L5OCj7uH5EJwuWelYeGJ59GxkDmSEE9elQKbFKRKNY10zTGdfoGglR003vEE
+        wiVn2Z0zSuWAvFtDel78cHeL37FRh2Cl24gnf89YBaw5sOhQ/PUOuBsUM7FKXiW5
+        ix/cZUkPRlXTDClXD2ElcTYYZS+wJDiNrnmW7Eaozo8zOHChG03i91bX4sVekajN
+        neLxtXdWBtuUWOJQz4vPDJWc01xryJx5MfA==
+In-Reply-To: <20230329011712.3242298-1-zi.yan@sent.com>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: "Matthew Wilcox (Oracle)" <willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Yang Shi <shy828301-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Yu Zhao <yuzhao-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
-Cc: Zi Yan <ziy-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>, "Kirill A . Shutemov" <kirill.shutemov-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, Ryan Roberts <ryan.roberts-5wv7dgnIgG8@public.gmane.org>, =?UTF-8?q?Michal=20Koutn=C3=BD?= <mkoutny-IBi9RG/b67k@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Zach O'Keefe <zokeefe-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kselftest-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: "Matthew Wilcox (Oracle)" <willy@infradead.org>, Yang Shi <shy828301@gmail.com>, Yu Zhao <yuzhao@google.com>, linux-mm@kvack.org
+Cc: Zi Yan <ziy@nvidia.com>, "Kirill A . Shutemov" <kirill.shutemov@linux.intel.com>, Ryan Roberts <ryan.roberts@arm.com>, =?UTF-8?q?Michal=20Koutn=C3=BD?= <mkoutny@suse.com>, Roman Gushchin <roman.gushchin@linux.dev>, Zach O'Keefe <zokeefe@google.com>, Andrew Morton <akpm@linux-foundation.org>, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-kselftest@vger.kernel.org
 
-From: Zi Yan <ziy-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>
+From: Zi Yan <ziy@nvidia.com>
 
-It is used to test split_huge_page_to_list_to_order for pagecache THPs.
-Also add test cases for split_huge_page_to_list_to_order via both
-debugfs, truncating a file, and punching holes in a file.
+We do not have non power of two pages, using nr is error prone if nr
+is not power-of-two. Use page order instead.
 
-Signed-off-by: Zi Yan <ziy-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>
+Signed-off-by: Zi Yan <ziy@nvidia.com>
 ---
- mm/huge_memory.c                              |  34 ++-
- .../selftests/mm/split_huge_page_test.c       | 225 +++++++++++++++++-
- 2 files changed, 242 insertions(+), 17 deletions(-)
+ include/linux/page_owner.h | 8 ++++----
+ mm/huge_memory.c           | 2 +-
+ mm/page_alloc.c            | 4 ++--
+ mm/page_owner.c            | 3 ++-
+ 4 files changed, 9 insertions(+), 8 deletions(-)
 
+diff --git a/include/linux/page_owner.h b/include/linux/page_owner.h
+index 119a0c9d2a8b..d7878523adfc 100644
+--- a/include/linux/page_owner.h
++++ b/include/linux/page_owner.h
+@@ -11,7 +11,7 @@ extern struct page_ext_operations page_owner_ops;
+ extern void __reset_page_owner(struct page *page, unsigned short order);
+ extern void __set_page_owner(struct page *page,
+ 			unsigned short order, gfp_t gfp_mask);
+-extern void __split_page_owner(struct page *page, unsigned int nr);
++extern void __split_page_owner(struct page *page, int order);
+ extern void __folio_copy_owner(struct folio *newfolio, struct folio *old);
+ extern void __set_page_owner_migrate_reason(struct page *page, int reason);
+ extern void __dump_page_owner(const struct page *page);
+@@ -31,10 +31,10 @@ static inline void set_page_owner(struct page *page,
+ 		__set_page_owner(page, order, gfp_mask);
+ }
+=20
+-static inline void split_page_owner(struct page *page, unsigned int nr)
++static inline void split_page_owner(struct page *page, int order)
+ {
+ 	if (static_branch_unlikely(&page_owner_inited))
+-		__split_page_owner(page, nr);
++		__split_page_owner(page, order);
+ }
+ static inline void folio_copy_owner(struct folio *newfolio, struct folio *=
+old)
+ {
+@@ -60,7 +60,7 @@ static inline void set_page_owner(struct page *page,
+ {
+ }
+ static inline void split_page_owner(struct page *page,
+-			unsigned short order)
++			int order)
+ {
+ }
+ static inline void folio_copy_owner(struct folio *newfolio, struct folio *=
+folio)
 diff --git a/mm/huge_memory.c b/mm/huge_memory.c
-index 619d25278340..ad5b29558a51 100644
+index 3bb003eb80a3..a21921c90b21 100644
 --- a/mm/huge_memory.c
 +++ b/mm/huge_memory.c
-@@ -3023,7 +3023,7 @@ static inline bool vma_not_suitable_for_thp_split(str=
-uct vm_area_struct *vma)
+@@ -2557,7 +2557,7 @@ static void __split_huge_page(struct page *page, stru=
+ct list_head *list,
+ 	unlock_page_lruvec(lruvec);
+ 	/* Caller disabled irqs, so they are still disabled here */
+=20
+-	split_page_owner(head, nr);
++	split_page_owner(head, order);
+=20
+ 	/* See comment in __split_huge_page_tail() */
+ 	if (PageAnon(head)) {
+diff --git a/mm/page_alloc.c b/mm/page_alloc.c
+index d84b121d1e03..d537828bc4be 100644
+--- a/mm/page_alloc.c
++++ b/mm/page_alloc.c
+@@ -2780,7 +2780,7 @@ void split_page(struct page *page, unsigned int order)
+=20
+ 	for (i =3D 1; i < (1 << order); i++)
+ 		set_page_refcounted(page + i);
+-	split_page_owner(page, 1 << order);
++	split_page_owner(page, order);
+ 	split_page_memcg(page, order);
+ }
+ EXPORT_SYMBOL_GPL(split_page);
+@@ -4996,7 +4996,7 @@ static void *make_alloc_exact(unsigned long addr, uns=
+igned int order,
+ 		struct page *page =3D virt_to_page((void *)addr);
+ 		struct page *last =3D page + nr;
+=20
+-		split_page_owner(page, 1 << order);
++		split_page_owner(page, order);
+ 		split_page_memcg(page, order);
+ 		while (page < --last)
+ 			set_page_refcounted(last);
+diff --git a/mm/page_owner.c b/mm/page_owner.c
+index 31169b3e7f06..64233b5b09d5 100644
+--- a/mm/page_owner.c
++++ b/mm/page_owner.c
+@@ -211,11 +211,12 @@ void __set_page_owner_migrate_reason(struct page *pag=
+e, int reason)
+ 	page_ext_put(page_ext);
  }
 =20
- static int split_huge_pages_pid(int pid, unsigned long vaddr_start,
--				unsigned long vaddr_end)
-+				unsigned long vaddr_end, unsigned int new_order)
+-void __split_page_owner(struct page *page, unsigned int nr)
++void __split_page_owner(struct page *page, int order)
  {
- 	int ret =3D 0;
- 	struct task_struct *task;
-@@ -3085,13 +3085,19 @@ static int split_huge_pages_pid(int pid, unsigned l=
-ong vaddr_start,
- 			goto next;
+ 	int i;
+ 	struct page_ext *page_ext =3D page_ext_get(page);
+ 	struct page_owner *page_owner;
++	unsigned int nr =3D 1 << order;
 =20
- 		total++;
--		if (!can_split_folio(page_folio(page), NULL))
-+		/*
-+		 * For folios with private, split_huge_page_to_list_to_order()
-+		 * will try to drop it before split and then check if the folio
-+		 * can be split or not. So skip the check here.
-+		 */
-+		if (!folio_test_private(page_folio(page)) &&
-+		    !can_split_folio(page_folio(page), NULL))
- 			goto next;
-=20
- 		if (!trylock_page(page))
- 			goto next;
-=20
--		if (!split_huge_page(page))
-+		if (!split_huge_page_to_list_to_order(page, NULL, new_order))
- 			split++;
-=20
- 		unlock_page(page);
-@@ -3109,7 +3115,7 @@ static int split_huge_pages_pid(int pid, unsigned lon=
-g vaddr_start,
- }
-=20
- static int split_huge_pages_in_file(const char *file_path, pgoff_t off_sta=
-rt,
--				pgoff_t off_end)
-+				pgoff_t off_end, unsigned int new_order)
- {
- 	struct filename *file;
- 	struct file *candidate;
-@@ -3148,7 +3154,7 @@ static int split_huge_pages_in_file(const char *file_=
-path, pgoff_t off_start,
- 		if (!folio_trylock(folio))
- 			goto next;
-=20
--		if (!split_folio(folio))
-+		if (!split_huge_page_to_list_to_order(&folio->page, NULL, new_order))
- 			split++;
-=20
- 		folio_unlock(folio);
-@@ -3173,10 +3179,14 @@ static ssize_t split_huge_pages_write(struct file *=
-file, const char __user *buf,
- {
- 	static DEFINE_MUTEX(split_debug_mutex);
- 	ssize_t ret;
--	/* hold pid, start_vaddr, end_vaddr or file_path, off_start, off_end */
-+	/*
-+	 * hold pid, start_vaddr, end_vaddr, new_order or
-+	 * file_path, off_start, off_end, new_order
-+	 */
- 	char input_buf[MAX_INPUT_BUF_SZ];
- 	int pid;
- 	unsigned long vaddr_start, vaddr_end;
-+	unsigned int new_order =3D 0;
-=20
- 	ret =3D mutex_lock_interruptible(&split_debug_mutex);
- 	if (ret)
-@@ -3205,29 +3215,29 @@ static ssize_t split_huge_pages_write(struct file *=
-file, const char __user *buf,
- 			goto out;
- 		}
-=20
--		ret =3D sscanf(buf, "0x%lx,0x%lx", &off_start, &off_end);
--		if (ret !=3D 2) {
-+		ret =3D sscanf(buf, "0x%lx,0x%lx,%d", &off_start, &off_end, &new_order);
-+		if (ret !=3D 2 && ret !=3D 3) {
- 			ret =3D -EINVAL;
- 			goto out;
- 		}
--		ret =3D split_huge_pages_in_file(file_path, off_start, off_end);
-+		ret =3D split_huge_pages_in_file(file_path, off_start, off_end, new_orde=
-r);
- 		if (!ret)
- 			ret =3D input_len;
-=20
- 		goto out;
- 	}
-=20
--	ret =3D sscanf(input_buf, "%d,0x%lx,0x%lx", &pid, &vaddr_start, &vaddr_en=
-d);
-+	ret =3D sscanf(input_buf, "%d,0x%lx,0x%lx,%d", &pid, &vaddr_start, &vaddr=
-_end, &new_order);
- 	if (ret =3D=3D 1 && pid =3D=3D 1) {
- 		split_huge_pages_all();
- 		ret =3D strlen(input_buf);
- 		goto out;
--	} else if (ret !=3D 3) {
-+	} else if (ret !=3D 3 && ret !=3D 4) {
- 		ret =3D -EINVAL;
- 		goto out;
- 	}
-=20
--	ret =3D split_huge_pages_pid(pid, vaddr_start, vaddr_end);
-+	ret =3D split_huge_pages_pid(pid, vaddr_start, vaddr_end, new_order);
- 	if (!ret)
- 		ret =3D strlen(input_buf);
- out:
-diff --git a/tools/testing/selftests/mm/split_huge_page_test.c b/tools/test=
-ing/selftests/mm/split_huge_page_test.c
-index b8558c7f1a39..cbb5e6893cbf 100644
---- a/tools/testing/selftests/mm/split_huge_page_test.c
-+++ b/tools/testing/selftests/mm/split_huge_page_test.c
-@@ -16,6 +16,7 @@
- #include <sys/mount.h>
- #include <malloc.h>
- #include <stdbool.h>
-+#include <time.h>
- #include "vm_util.h"
-=20
- uint64_t pagesize;
-@@ -23,10 +24,12 @@ unsigned int pageshift;
- uint64_t pmd_pagesize;
-=20
- #define SPLIT_DEBUGFS "/sys/kernel/debug/split_huge_pages"
-+#define SMAP_PATH "/proc/self/smaps"
-+#define THP_FS_PATH "/mnt/thp_fs"
- #define INPUT_MAX 80
-=20
--#define PID_FMT "%d,0x%lx,0x%lx"
--#define PATH_FMT "%s,0x%lx,0x%lx"
-+#define PID_FMT "%d,0x%lx,0x%lx,%d"
-+#define PATH_FMT "%s,0x%lx,0x%lx,%d"
-=20
- #define PFN_MASK     ((1UL<<55)-1)
- #define KPF_THP      (1UL<<22)
-@@ -113,7 +116,7 @@ void split_pmd_thp(void)
-=20
- 	/* split all THPs */
- 	write_debugfs(PID_FMT, getpid(), (uint64_t)one_page,
--		(uint64_t)one_page + len);
-+		(uint64_t)one_page + len, 0);
-=20
- 	for (i =3D 0; i < len; i++)
- 		if (one_page[i] !=3D (char)i) {
-@@ -203,7 +206,7 @@ void split_pte_mapped_thp(void)
-=20
- 	/* split all remapped THPs */
- 	write_debugfs(PID_FMT, getpid(), (uint64_t)pte_mapped,
--		      (uint64_t)pte_mapped + pagesize * 4);
-+		      (uint64_t)pte_mapped + pagesize * 4, 0);
-=20
- 	/* smap does not show THPs after mremap, use kpageflags instead */
- 	thp_size =3D 0;
-@@ -269,7 +272,7 @@ void split_file_backed_thp(void)
- 	}
-=20
- 	/* split the file-backed THP */
--	write_debugfs(PATH_FMT, testfile, pgoff_start, pgoff_end);
-+	write_debugfs(PATH_FMT, testfile, pgoff_start, pgoff_end, 0);
-=20
- 	status =3D unlink(testfile);
- 	if (status)
-@@ -290,20 +293,232 @@ void split_file_backed_thp(void)
- 	printf("file-backed THP split test done, please check dmesg for more info=
-rmation\n");
- }
-=20
-+void create_pagecache_thp_and_fd(const char *testfile, size_t fd_size, int=
- *fd, char **addr)
-+{
-+	size_t i;
-+	int dummy;
-+
-+	srand(time(NULL));
-+
-+	*fd =3D open(testfile, O_CREAT | O_RDWR, 0664);
-+	if (*fd =3D=3D -1) {
-+		perror("Failed to create a file at "THP_FS_PATH);
-+		exit(EXIT_FAILURE);
-+	}
-+
-+	for (i =3D 0; i < fd_size; i++) {
-+		unsigned char byte =3D (unsigned char)i;
-+
-+		write(*fd, &byte, sizeof(byte));
-+	}
-+	close(*fd);
-+	sync();
-+	*fd =3D open("/proc/sys/vm/drop_caches", O_WRONLY);
-+	if (*fd =3D=3D -1) {
-+		perror("open drop_caches");
-+		goto err_out_unlink;
-+	}
-+	if (write(*fd, "3", 1) !=3D 1) {
-+		perror("write to drop_caches");
-+		goto err_out_unlink;
-+	}
-+	close(*fd);
-+
-+	*fd =3D open(testfile, O_RDWR);
-+	if (*fd =3D=3D -1) {
-+		perror("Failed to open a file at "THP_FS_PATH);
-+		goto err_out_unlink;
-+	}
-+
-+	*addr =3D mmap(NULL, fd_size, PROT_READ|PROT_WRITE, MAP_SHARED, *fd, 0);
-+	if (*addr =3D=3D (char *)-1) {
-+		perror("cannot mmap");
-+		goto err_out_close;
-+	}
-+	madvise(*addr, fd_size, MADV_HUGEPAGE);
-+
-+	for (size_t i =3D 0; i < fd_size; i++)
-+		dummy +=3D *(*addr + i);
-+
-+	if (!check_huge_file(*addr, fd_size / pmd_pagesize, pmd_pagesize)) {
-+		printf("No pagecache THP generated, please mount a filesystem supporting=
- pagecache THP at "THP_FS_PATH"\n");
-+		goto err_out_close;
-+	}
-+	return;
-+err_out_close:
-+	close(*fd);
-+err_out_unlink:
-+	unlink(testfile);
-+	exit(EXIT_FAILURE);
-+}
-+
-+void split_thp_in_pagecache_to_order(size_t fd_size, int order)
-+{
-+	int fd;
-+	char *addr;
-+	size_t i;
-+	const char testfile[] =3D THP_FS_PATH "/test";
-+	int err =3D 0;
-+
-+	create_pagecache_thp_and_fd(testfile, fd_size, &fd, &addr);
-+
-+	printf("split %ld kB PMD-mapped pagecache page to order %d ... ", fd_size=
- >> 10, order);
-+	write_debugfs(PID_FMT, getpid(), (uint64_t)addr, (uint64_t)addr + fd_size=
-, order);
-+
-+	for (i =3D 0; i < fd_size; i++)
-+		if (*(addr + i) !=3D (char)i) {
-+			printf("%lu byte corrupted in the file\n", i);
-+			err =3D EXIT_FAILURE;
-+			goto out;
-+		}
-+
-+	if (!check_huge_file(addr, 0, pmd_pagesize)) {
-+		printf("Still FilePmdMapped not split\n");
-+		err =3D EXIT_FAILURE;
-+		goto out;
-+	}
-+
-+	printf("done\n");
-+out:
-+	close(fd);
-+	unlink(testfile);
-+	if (err)
-+		exit(err);
-+}
-+
-+void truncate_thp_in_pagecache_to_order(size_t fd_size, int order)
-+{
-+	int fd;
-+	char *addr;
-+	size_t i;
-+	const char testfile[] =3D THP_FS_PATH "/test";
-+	int err =3D 0;
-+
-+	create_pagecache_thp_and_fd(testfile, fd_size, &fd, &addr);
-+
-+	printf("truncate %ld kB PMD-mapped pagecache page to size %lu kB ... ",
-+		fd_size >> 10, 4UL << order);
-+	ftruncate(fd, pagesize << order);
-+
-+	for (i =3D 0; i < (pagesize << order); i++)
-+		if (*(addr + i) !=3D (char)i) {
-+			printf("%lu byte corrupted in the file\n", i);
-+			err =3D EXIT_FAILURE;
-+			goto out;
-+		}
-+
-+	if (!check_huge_file(addr, 0, pmd_pagesize)) {
-+		printf("Still FilePmdMapped not split after truncate\n");
-+		err =3D EXIT_FAILURE;
-+		goto out;
-+	}
-+
-+	printf("done\n");
-+out:
-+	close(fd);
-+	unlink(testfile);
-+	if (err)
-+		exit(err);
-+}
-+
-+void punch_hole_in_pagecache_thp(size_t fd_size, off_t offset[], off_t len=
-[],
-+			int n, int num_left_thps)
-+{
-+	int fd, j;
-+	char *addr;
-+	size_t i;
-+	const char testfile[] =3D THP_FS_PATH "/test";
-+	int err =3D 0;
-+
-+	create_pagecache_thp_and_fd(testfile, fd_size, &fd, &addr);
-+
-+	for (j =3D 0; j < n; j++) {
-+		printf("punch a hole to %ld kB PMD-mapped pagecache page at addr: %lx, o=
-ffset %ld, and len %ld ...\n",
-+			fd_size >> 10, (unsigned long)addr, offset[j], len[j]);
-+		fallocate(fd, FALLOC_FL_PUNCH_HOLE|FALLOC_FL_KEEP_SIZE, offset[j], len[j=
-]);
-+	}
-+
-+	for (i =3D 0; i < fd_size; i++) {
-+		int in_hole =3D 0;
-+
-+		for (j =3D 0; j < n; j++)
-+			if (i >=3D offset[j] && i < (offset[j] + len[j])) {
-+				in_hole =3D 1;
-+				break;
-+			}
-+
-+		if (in_hole) {
-+			if (*(addr + i)) {
-+				printf("%lu byte non-zero after punch\n", i);
-+				err =3D EXIT_FAILURE;
-+				goto out;
-+			}
-+			continue;
-+		}
-+		if (*(addr + i) !=3D (char)i) {
-+			printf("%lu byte corrupted in the file\n", i);
-+			err =3D EXIT_FAILURE;
-+			goto out;
-+		}
-+	}
-+
-+	if (!check_huge_file(addr, num_left_thps, pmd_pagesize)) {
-+		printf("Still FilePmdMapped not split after punch\n");
-+		goto out;
-+	}
-+	printf("done\n");
-+out:
-+	close(fd);
-+	unlink(testfile);
-+	if (err)
-+		exit(err);
-+}
-+
- int main(int argc, char **argv)
- {
-+	int i;
-+	size_t fd_size;
-+	off_t offset[2], len[2];
-+
- 	if (geteuid() !=3D 0) {
- 		printf("Please run the benchmark as root\n");
- 		exit(EXIT_FAILURE);
- 	}
-=20
-+	setbuf(stdout, NULL);
-+
- 	pagesize =3D getpagesize();
- 	pageshift =3D ffs(pagesize) - 1;
- 	pmd_pagesize =3D read_pmd_pagesize();
-+	fd_size =3D 2 * pmd_pagesize;
-=20
- 	split_pmd_thp();
- 	split_pte_mapped_thp();
- 	split_file_backed_thp();
-=20
-+	for (i =3D 8; i >=3D 0; i--)
-+		if (i !=3D 1)
-+			split_thp_in_pagecache_to_order(fd_size, i);
-+
-+	/*
-+	 * for i is 1, truncate code in the kernel should create order-0 pages
-+	 * instead of order-1 THPs, since order-1 THP is not supported. No error
-+	 * is expected.
-+	 */
-+	for (i =3D 8; i >=3D 0; i--)
-+		truncate_thp_in_pagecache_to_order(fd_size, i);
-+
-+	offset[0] =3D 123;
-+	offset[1] =3D 4 * pagesize;
-+	len[0] =3D 200 * pagesize;
-+	len[1] =3D 16 * pagesize;
-+	punch_hole_in_pagecache_thp(fd_size, offset, len, 2, 1);
-+
-+	offset[0] =3D 259 * pagesize + pagesize / 2;
-+	offset[1] =3D 33 * pagesize;
-+	len[0] =3D 129 * pagesize;
-+	len[1] =3D 16 * pagesize;
-+	punch_hole_in_pagecache_thp(fd_size, offset, len, 2, 1);
-+
- 	return 0;
- }
+ 	if (unlikely(!page_ext))
+ 		return;
 --=20
 2.39.2
 
