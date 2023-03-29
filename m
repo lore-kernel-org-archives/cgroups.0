@@ -1,98 +1,81 @@
-From: Waiman Long <longman@redhat.com>
-Subject: Re: CLONE_INTO_CGROUP probably needs to call controller attach
- handlers
-Date: Wed, 29 Mar 2023 13:43:32 -0400
-Message-ID: <47d478a9-9730-eda8-e4dd-c848f01c0834@redhat.com>
-References: <20230328153943.op62j3sw7qaixdsq@wittgenstein>
- <c3d9cf24-1c3a-cda4-5063-6b7d27e9116f@redhat.com>
- <5937b51b-164a-b6b3-532d-43b46f2d49a2@redhat.com>
- <ZCRQsAoe1lN1qCiB@cmpxchg.org>
+From: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH 5/6] cgroup/cpuset: Free DL BW in case can_attach() fails
+Date: Wed, 29 Mar 2023 14:09:42 -0400
+Message-ID: <b7ad39b1-c615-3ebc-6980-d9db0f2ab0a0@redhat.com>
+References: <20230329125558.255239-1-juri.lelli@redhat.com>
+ <20230329125558.255239-6-juri.lelli@redhat.com>
+ <f8dfc30b-5079-2f44-7ab1-42ac25bd48b7@redhat.com>
+ <f8baea06-eeda-439a-3699-1cad7cde659e@redhat.com>
+ <cdede77a-5dc5-8933-a444-a2046b074b12@arm.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Transfer-Encoding: 8bit
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1680111817;
+        s=mimecast20190719; t=1680113390;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=dNiOEETt5ceepAWfcz8ECfQ8OGyjPyRpc2CWu+K0Sd4=;
-        b=PZpbwvFH9veQkgEXtvQ5HCjuinul9iQJCR2THwyNT2lg7RFDnfBY91xdn8AC3cNHSP+jzr
-        AO8D8zlEpSY7WSCeO5HT66miJX6gnOGxABO+MwBTgHn5+t4Gf6kPmfCJslCreYdzbw6JxB
-        Sr5p770cv2iXHRKWDMqvZGcrb2Ankmc=
+        bh=H8vliQ1ONvrTK4LTfw9x6DXO/qnrs4SgkkW8WifHRpE=;
+        b=JFWWNQyhZ3sft7xKrxptJ749a5TkK8nN03SdEkpwnDnJVlld5avqyWoq+29NMkk/GNNXbt
+        Fkhfp+6FvvekkoIUc29yU5fg+Ex18MIgd2MRpJj94+156DU8IkrFBlbcOJlBdHNYSZELGX
+        /JdDX2n9Jfsw+3KWYBkH9ZoAt5a+v2Y=
 Content-Language: en-US
-In-Reply-To: <ZCRQsAoe1lN1qCiB@cmpxchg.org>
+In-Reply-To: <cdede77a-5dc5-8933-a444-a2046b074b12-5wv7dgnIgG8@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"; format="flowed"
-To: Johannes Weiner <hannes@cmpxchg.org>
-Cc: Christian Brauner <brauner@kernel.org>, Tejun Heo <tj@kernel.org>, Zefan Li <lizefan.x@bytedance.com>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, gscrivan@redhat.com
+Content-Type: text/plain; charset="utf-8"; format="flowed"
+To: Dietmar Eggemann <dietmar.eggemann-5wv7dgnIgG8@public.gmane.org>, Juri Lelli <juri.lelli-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Ingo Molnar <mingo-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Qais Yousef <qyousef-wp2msK0BRk8tq7phqP6ubQ@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Hao Luo <haoluo-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Cc: Steven Rostedt <rostedt-nx8X9YLhiw1AfugRpC6u6w@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, luca.abeni-5rdYK369eBLQB0XuIGIEkQ@public.gmane.org, claudio-YOzL5CV4y4YG1A2ADO40+w@public.gmane.org, tommaso.cucinotta-5rdYK369eBLQB0XuIGIEkQ@public.gmane.org, bristot-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, mathieu.poirier-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Vincent Guittot <vincent.guittot-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, Wei Wang <wvw-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Rick Yiu <rickyiu-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Quentin Perret <qperret-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Heiko Carstens <hca-tEXmvtCZX7AybS5Ee8rs3A@public.gmane.org>, Vasily Gorbik <gor-tEXmvtCZX7AybS5Ee8rs3A@public.gmane.org>, Alexander Gordeev <agordeev-tEXmvtCZX7AybS5Ee8rs3A@public.gmane.org>, Sudeep Holla <sudeep.holla-5wv7dgnIgG8@public.gmane.org>
 
-On 3/29/23 10:52, Johannes Weiner wrote:
-> On Tue, Mar 28, 2023 at 10:48:49PM -0400, Waiman Long wrote:
->> On 3/28/23 21:30, Waiman Long wrote:
->>> On 3/28/23 11:39, Christian Brauner wrote:
->>>> Hey,
->>>>
->>>> Giuseppe reported that the the affinity mask isn't updated when a
->>>> process is spawned directly into the target cgroup via
->>>> CLONE_INTO_CGROUP. However, migrating a process will cause the affinity
->>>> mask to be updated (see the repro at [1].
->>>>
->>>> I took a quick look and the issue seems to be that we don't call the
->>>> various attach handlers during CLONE_INTO_CGROUP whereas we do for
->>>> migration. So the solution seems to roughly be that we need to call the
->>>> various attach handlers during CLONE_INTO_CGROUP as well when the
->>>> parent's cgroups is different from the child cgroup. I think we need to
->>>> call all of them, can, cancel and attach.
->>>>
->>>> The plumbing here might be a bit intricate since the arguments that the
->>>> fork handlers take are different from the attach handlers.
->>>>
->>>> Christian
->>>>
->>>> [1]: https://paste.centos.org/view/f434fa1a
->>>>
->>> I saw that the current cgroup code already have the can_fork, fork and
->>> cancel_fork callbacks. Unfortunately such callbacks are not defined for
->>> cpuset yet. That is why the cpu affinity isn't correctly updated. I can
->>> post a patch to add those callback functions to cpuset which should then
->>> able to correctly address this issue.
->> Looking further into this issue, I am thinking that forking into a cgroup
->> should be equivalent to write the child pid into the "cgroup.threads" file
->> of the target cgroup. By taking this route, all the existing can_attach,
->> attach and cancel_attach methods can be used. I believe the original fork
->> method is for the limited use case of forking into the same cgroup. So right
->> now, only the pids controller has the fork methods. Otherwise, we will have
->> to modify a number of different controllers to add the necessary fork
->> methods. They will be somewhat similar to the existing attach methods and so
->> it will be a lot of duplication. What do you think about this idea?
-> That's what I thought at first too, but then I had some doubts.
+On 3/29/23 12:39, Dietmar Eggemann wrote:
+> On 29/03/2023 16:31, Waiman Long wrote:
+>> On 3/29/23 10:25, Waiman Long wrote:
+>>> On 3/29/23 08:55, Juri Lelli wrote:
+>>>> From: Dietmar Eggemann <dietmar.eggemann-5wv7dgnIgG8@public.gmane.org>
+> [...]
 >
-> The callback is called 'attach', but it's historically implemented
-> when moving an established task between two cgroups. Many controllers
-> use it to move state between groups (memcg, pids, cpuset). So in
-> practice it isn't the natural fit that its name would suggest, and it
-> would require reworking those controllers to handle both scenarios:
-> moving tasks between groups, and new tasks attaching to a cgroup.
+>>>> @@ -2518,11 +2547,21 @@ static int cpuset_can_attach(struct
+>>>> cgroup_taskset *tset)
+>>>>    static void cpuset_cancel_attach(struct cgroup_taskset *tset)
+>>>>    {
+>>>>        struct cgroup_subsys_state *css;
+>>>> +    struct cpuset *cs;
+>>>>          cgroup_taskset_first(tset, &css);
+>>>> +    cs = css_cs(css);
+>>>>          mutex_lock(&cpuset_mutex);
+>>>> -    css_cs(css)->attach_in_progress--;
+>>>> +    cs->attach_in_progress--;
+>>>> +
+>>>> +    if (cs->nr_migrate_dl_tasks) {
+>>>> +        int cpu = cpumask_any(cs->effective_cpus);
+>>>> +
+>>>> +        dl_bw_free(cpu, cs->sum_migrate_dl_bw);
+>>>> +        reset_migrate_dl_data(cs);
+>>>> +    }
+>>>> +
+>> Another nit that I have is that you may have to record also the cpu
+>> where the DL bandwidth is allocated in cpuset_can_attach() and free the
+>> bandwidth back into that cpu or there can be an underflow if another cpu
+>> is chosen.
+> Many thanks for the review!
 >
-> Now I'm thinking it probably makes more sense to keep using attach for
-> moving between groups, and fork for being born into a cgroup. That's
-> what the pid controller does, and it handles CLONE_INTO_CGROUP fine.
->
-> There is naturally some overlap between the two operations. But it
-> seems cleaner to me to use common helpers for that, as opposed to
-> having both attach and fork callbacks handling forks.
+> But isn't the DL BW control `struct dl_bw` per `struct root_domain`
+> which is per exclusive cpuset. So as long cpu is from
+> `cs->effective_cpus` shouldn't this be fine?
 
-I was thinking along the line of using common helpers for doing fork and 
-attach. However, the expected method function prototypes are quite 
-different. For example,
+Sorry for my ignorance on how the deadline bandwidth operation work. I 
+check the bandwidth code and find that we are storing the bandwidth 
+information in the root domain, not on the cpu. That shouldn't be a 
+concern then.
 
-int (*can_attach)(struct cgroup_taskset *tset);
-int (*can_fork)(struct task_struct *task, css_set *cset);
+However, I still have some question on how that works when dealing with 
+cpuset. First of all, not all the CPUs in a given root domains are in 
+the cpuset. So there may be enough bandwidth on the root domain, but it 
+doesn't mean there will be enough bandwidth in the set of CPUs in a 
+particular cpuset. Secondly, how do you deal with isolated CPUs that do 
+not have a corresponding root domain? It is now possible to create a 
+cpuset with isolated CPUs.
 
-We need to make them more similar before we can use common helpers. I 
-can take a look at that.
-
-Thanks,
+Cheers,
 Longman
 
