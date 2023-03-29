@@ -1,99 +1,45 @@
-From: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Subject: [PATCH 6/7] cgroup/cpuset: Protect DL BW data against parallel cpuset_attach()
-Date: Wed, 29 Mar 2023 12:02:40 -0400
-Message-ID: <20230329160240.2093277-1-longman@redhat.com>
+From: Waiman Long <longman@redhat.com>
+Subject: Re: [PATCH 6/7] cgroup/cpuset: Protect DL BW data against parallel
+ cpuset_attach()
+Date: Wed, 29 Mar 2023 12:05:20 -0400
+Message-ID: <0eae9e7c-8bfc-6e89-c4ad-e1cd40ec03b5@redhat.com>
 References: <20230329125558.255239-1-juri.lelli@redhat.com>
+ <20230329160240.2093277-1-longman@redhat.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1680105799;
+        s=mimecast20190719; t=1680105928;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=GdNce1OaiYHGRSBqnplg9LW3FvXe3v9Sj0lSo9jGEts=;
-        b=LaCUro5cRA6G3MUtFUR5AYPSMlfAEdAaNTj70cwi2WK/9dS3VxVLZX0c4SBRFftbyJYAXx
-        jDF7dxd7jDp72uIUJ/wrQkRYMLhagoAZShzp4kx1iSbprT1RDLVlPoy1Y1lgIRTZ5UjkpN
-        b6Mi/ykaOOSC9rHIfHzfGMm0XHF76g4=
-In-Reply-To: <20230329125558.255239-1-juri.lelli-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+        bh=BK4E10sij+UjBr4h6hMh56nRJwsX+E/yiWATUoPCWNU=;
+        b=A1Z6QAD8mwzAEuiqGjwBXcJt8T04RhYf9xMsoFjxa+MzOOW8peDIivymCBWgZEoaOJcn5Z
+        pZYFEqDcPQoAlBqfHLa5VICq3Xu47kDfo8TKcSxUuU2OYCjfJdtwBVBmo3Zp0PRXsk9h9P
+        nsMnS89Toz/40Jz6CmRKuIycXBikYPA=
+Content-Language: en-US
+In-Reply-To: <20230329160240.2093277-1-longman@redhat.com>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-To: Juri Lelli <juri.lelli-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Ingo Molnar <mingo-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Qais Yousef <qyousef-wp2msK0BRk8tq7phqP6ubQ@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Hao Luo <haoluo-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Dietmar Eggemann <dietmar.eggemann-5wv7dgnIgG8@public.gmane.org>, Steven Rostedt <rostedt-nx8X9YLhiw1AfugRpC6u6w@public.gmane.org>, luca.abeni-5rdYK369eBLQB0XuIGIEkQ@public.gmane.org, claudio-YOzL5CV4y4YG1A2ADO40+w@public.gmane.org, tommaso.cucinotta-5rdYK369eBLQB0XuIGIEkQ@public.gmane.org, bristot-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, mathieu.poirier-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org, Vincent Guittot <vincent.guittot-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, Wei Wang <wvw-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Rick Yiu <rickyiu-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Quentin Perret <qperret-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Heiko Carstens <hca-tEXmvtCZX7AybS5Ee8rs3A@public.gmane.org>, Vasily Gorbik <gor-tEXmvtCZX7AybS5Ee8rs3A@public.gmane.org>, Alexander Gordeev <agordeev-tEXmvtCZX7AybS5Ee8rs3A@public.gmane.org>, Sudeep Holla <sudeep.holla-5wv7dgnIgG8@public.gmane.org>, Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Content-Type: text/plain; charset="us-ascii"; format="flowed"
+To: Juri Lelli <juri.lelli@redhat.com>, Peter Zijlstra <peterz@infradead.org>, Ingo Molnar <mingo@kernel.org>, Qais Yousef <qyousef@layalina.io>, Tejun Heo <tj@kernel.org>, Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, Hao Luo <haoluo@google.com>
+Cc: linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, Dietmar Eggemann <dietmar.eggemann@arm.com>, Steven Rostedt <rostedt@goodmis.org>, luca.abeni@santannapisa.it, claudio@evidence.eu.com, tommaso.cucinotta@santannapisa.it, bristot@redhat.com, mathieu.poirier@linaro.org, Vincent Guittot <vincent.guittot@linaro.org>, Wei Wang <wvw@google.com>, Rick Yiu <rickyiu@google.com>, Quentin Perret <qperret@google.com>, Heiko Carstens <hca@linux.ibm.com>, Vasily Gorbik <gor@linux.ibm.com>, Alexander Gordeev <agordeev@linux.ibm.com>, Sudeep Holla <sudeep.holla@arm.com>
 
-It is possible to have parallel attach operations to the same cpuset in
-progress. To avoid possible corruption of single set of DL BW data in
-the cpuset structure, we have to disallow parallel attach operations if
-DL tasks are present. Attach operations can still proceed in parallel
-as long as no DL tasks are involved.
+On 3/29/23 12:02, Waiman Long wrote:
+> It is possible to have parallel attach operations to the same cpuset in
+> progress. To avoid possible corruption of single set of DL BW data in
+> the cpuset structure, we have to disallow parallel attach operations if
+> DL tasks are present. Attach operations can still proceed in parallel
+> as long as no DL tasks are involved.
+>
+> This patch also stores the CPU where DL BW is allocated and free that BW
+> back to the same CPU in case cpuset_can_attach() is called.
+>
+> Signed-off-by: Waiman Long <longman@redhat.com>
 
-This patch also stores the CPU where DL BW is allocated and free that BW
-back to the same CPU in case cpuset_can_attach() is called.
+Juri, this patch is an addendum to your series to address the issues 
+that I found from the cpuset point of view.
 
-Signed-off-by: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
----
- kernel/cgroup/cpuset.c | 19 ++++++++++++++++---
- 1 file changed, 16 insertions(+), 3 deletions(-)
-
-diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
-index 05c0a1255218..555a6b1a2b76 100644
---- a/kernel/cgroup/cpuset.c
-+++ b/kernel/cgroup/cpuset.c
-@@ -199,6 +199,7 @@ struct cpuset {
- 	 */
- 	int nr_deadline_tasks;
- 	int nr_migrate_dl_tasks;
-+	int dl_bw_cpu;
- 	u64 sum_migrate_dl_bw;
- 
- 	/* Invalid partition error code, not lock protected */
-@@ -2502,6 +2503,16 @@ static int cpuset_can_attach(struct cgroup_taskset *tset)
- 	if (cpumask_empty(cs->effective_cpus))
- 		goto out_unlock;
- 
-+	/*
-+	 * If there is another parallel attach operations in progress for
-+	 * the same cpuset, the single set of DL data there may get
-+	 * incorrectly overwritten. So parallel operations are not allowed
-+	 * if DL tasks are present.
-+	 */
-+	ret = -EBUSY;
-+	if (cs->nr_migrate_dl_tasks)
-+		goto out_unlock;
-+
- 	cgroup_taskset_for_each(task, css, tset) {
- 		ret = task_can_attach(task);
- 		if (ret)
-@@ -2511,6 +2522,9 @@ static int cpuset_can_attach(struct cgroup_taskset *tset)
- 			goto out_unlock;
- 
- 		if (dl_task(task)) {
-+			if (cs->attach_in_progress)
-+				goto out_unlock;
-+
- 			cs->nr_migrate_dl_tasks++;
- 			cs->sum_migrate_dl_bw += task->dl.dl_bw;
- 		}
-@@ -2533,6 +2547,7 @@ static int cpuset_can_attach(struct cgroup_taskset *tset)
- 			reset_migrate_dl_data(cs);
- 			goto out_unlock;
- 		}
-+		cs->dl_bw_cpu = cpu;
- 	}
- 
- out_succes:
-@@ -2559,9 +2574,7 @@ static void cpuset_cancel_attach(struct cgroup_taskset *tset)
- 	cs->attach_in_progress--;
- 
- 	if (cs->nr_migrate_dl_tasks) {
--		int cpu = cpumask_any(cs->effective_cpus);
--
--		dl_bw_free(cpu, cs->sum_migrate_dl_bw);
-+		dl_bw_free(cs->dl_bw_cpu, cs->sum_migrate_dl_bw);
- 		reset_migrate_dl_data(cs);
- 	}
- 
--- 
-2.31.1
+Cheers,
+Longman
 
