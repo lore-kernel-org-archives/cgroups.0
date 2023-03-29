@@ -1,98 +1,85 @@
-From: kernel test robot <lkp-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
-Subject: Re: [PATCH v2 4/7] mm: page_owner: add support for splitting to any
- order in split page_owner.
-Date: Wed, 29 Mar 2023 22:48:41 +0800
-Message-ID: <202303292237.pg39cTKv-lkp@intel.com>
-References: <20230329011712.3242298-5-zi.yan@sent.com>
+From: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Subject: Re: CLONE_INTO_CGROUP probably needs to call controller attach
+ handlers
+Date: Wed, 29 Mar 2023 10:52:32 -0400
+Message-ID: <ZCRQsAoe1lN1qCiB@cmpxchg.org>
+References: <20230328153943.op62j3sw7qaixdsq@wittgenstein>
+ <c3d9cf24-1c3a-cda4-5063-6b7d27e9116f@redhat.com>
+ <5937b51b-164a-b6b3-532d-43b46f2d49a2@redhat.com>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1680101340; x=1711637340;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:in-reply-to;
-  bh=/JwzapEZeOEBEAVO2IFsUIdXBxnyulcntsu8vKQEY0I=;
-  b=PEpHPACXgoLWWEev4d5mOiNasffK/Sbxm0fkkYdUCIWJGsCmqSNSpLy0
-   v3T8EX+qtf1OT7SRX64ApqV1IfPXNdV2RubOpNl/+630gLg8zr4DpHawX
-   A/O2RKxPUNgv8oTLH/SAhXgPRC/DiYoOL60Lt/s2eeLB6nGIWs7/HQeu+
-   eFXXneNpDuk6tTPVb+S6jxgvVGxat73KE/QW54CoLhTAi9Jmmy9Qz5z63
-   YX3KzQk6abDVyuy7WRvti99rZ0WAAnmZFNQnz17KNeMHygcacE9cpniDt
-   JOZRi6+iPrZ43rjdtcM/pDNlEVLL1/InbCvbZNu34nMbOf3TyG6OEedC1
-   w==;
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=cmpxchg-org.20210112.gappssmtp.com; s=20210112; t=1680101553;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=l8Mqvm0nKUvf+W++zPjp5WnzzCK3tCnipop5FneNhZo=;
+        b=IZrsd/EeSRA/8xG07wwhIk5QDqYCo2hkZ6V6YXWiKJhFkN+veTM2lYH2srjQ1t4Pqu
+         guBPE8IQadmmW9YGskAXG0ekZqD94jF6lVL/45fHa6gpNpsKFR2i4IzXwJd2BE4VvlTS
+         FfgMgdPow39X+yuC3ylw/5eO//h7xOjuAjcH9IkPFfJt1ml0dX7ZPB0k6tEtb8acPCBH
+         N4BRh30oaIdgMHXnJj9GWFYjOejU8fHSlyIBo+3I2qT6I6tXtuqDnuK2x2Mw+/Y8W9zX
+         K3enTh942dzMf729kx41+mDbAzjZ9X8sEfvvXdKbH7IPwNJZzQUn7pdF8e3az0LRXPaY
+         sOaw==
 Content-Disposition: inline
-In-Reply-To: <20230329011712.3242298-5-zi.yan-vRdzynncJC4@public.gmane.org>
+In-Reply-To: <5937b51b-164a-b6b3-532d-43b46f2d49a2-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Zi Yan <zi.yan-vRdzynncJC4@public.gmane.org>, "Matthew Wilcox (Oracle)" <willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Yang Shi <shy828301-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Yu Zhao <yuzhao-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
-Cc: llvm-cunTk1MwBs/YUNznpcFYbw@public.gmane.org, oe-kbuild-all-cunTk1MwBs/YUNznpcFYbw@public.gmane.org, Zi Yan <ziy-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>, "Kirill A . Shutemov" <kirill.shutemov-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, Ryan Roberts <ryan.roberts-5wv7dgnIgG8@public.gmane.org>, Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny-IBi9RG/b67k@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Zach O'Keefe <zokeefe-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Linux Memory Management List <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kselftest-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Cc: Christian Brauner <brauner-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, gscrivan-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org
 
-Hi Zi,
+On Tue, Mar 28, 2023 at 10:48:49PM -0400, Waiman Long wrote:
+> On 3/28/23 21:30, Waiman Long wrote:
+> > On 3/28/23 11:39, Christian Brauner wrote:
+> > > Hey,
+> > > 
+> > > Giuseppe reported that the the affinity mask isn't updated when a
+> > > process is spawned directly into the target cgroup via
+> > > CLONE_INTO_CGROUP. However, migrating a process will cause the affinity
+> > > mask to be updated (see the repro at [1].
+> > > 
+> > > I took a quick look and the issue seems to be that we don't call the
+> > > various attach handlers during CLONE_INTO_CGROUP whereas we do for
+> > > migration. So the solution seems to roughly be that we need to call the
+> > > various attach handlers during CLONE_INTO_CGROUP as well when the
+> > > parent's cgroups is different from the child cgroup. I think we need to
+> > > call all of them, can, cancel and attach.
+> > > 
+> > > The plumbing here might be a bit intricate since the arguments that the
+> > > fork handlers take are different from the attach handlers.
+> > > 
+> > > Christian
+> > > 
+> > > [1]: https://paste.centos.org/view/f434fa1a
+> > > 
+> > I saw that the current cgroup code already have the can_fork, fork and
+> > cancel_fork callbacks. Unfortunately such callbacks are not defined for
+> > cpuset yet. That is why the cpu affinity isn't correctly updated. I can
+> > post a patch to add those callback functions to cpuset which should then
+> > able to correctly address this issue.
+> 
+> Looking further into this issue, I am thinking that forking into a cgroup
+> should be equivalent to write the child pid into the "cgroup.threads" file
+> of the target cgroup. By taking this route, all the existing can_attach,
+> attach and cancel_attach methods can be used. I believe the original fork
+> method is for the limited use case of forking into the same cgroup. So right
+> now, only the pids controller has the fork methods. Otherwise, we will have
+> to modify a number of different controllers to add the necessary fork
+> methods. They will be somewhat similar to the existing attach methods and so
+> it will be a lot of duplication. What do you think about this idea?
 
-Thank you for the patch! Yet something to improve:
+That's what I thought at first too, but then I had some doubts.
 
-[auto build test ERROR on akpm-mm/mm-everything]
-[also build test ERROR on linus/master v6.3-rc4 next-20230329]
-[If your patch is applied to the wrong git tree, kindly drop us a note.
-And when submitting patch, we suggest to use '--base' as documented in
-https://git-scm.com/docs/git-format-patch#_base_tree_information]
+The callback is called 'attach', but it's historically implemented
+when moving an established task between two cgroups. Many controllers
+use it to move state between groups (memcg, pids, cpuset). So in
+practice it isn't the natural fit that its name would suggest, and it
+would require reworking those controllers to handle both scenarios:
+moving tasks between groups, and new tasks attaching to a cgroup.
 
-url:    https://github.com/intel-lab-lkp/linux/commits/Zi-Yan/mm-memcg-use-order-instead-of-nr-in-split_page_memcg/20230329-091809
-base:   https://git.kernel.org/pub/scm/linux/kernel/git/akpm/mm.git mm-everything
-patch link:    https://lore.kernel.org/r/20230329011712.3242298-5-zi.yan%40sent.com
-patch subject: [PATCH v2 4/7] mm: page_owner: add support for splitting to any order in split page_owner.
-config: x86_64-randconfig-a016 (https://download.01.org/0day-ci/archive/20230329/202303292237.pg39cTKv-lkp-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org/config)
-compiler: clang version 14.0.6 (https://github.com/llvm/llvm-project f28c006a5895fc0e329fe15fead81e37457cb1d1)
-reproduce (this is a W=1 build):
-        wget https://raw.githubusercontent.com/intel/lkp-tests/master/sbin/make.cross -O ~/bin/make.cross
-        chmod +x ~/bin/make.cross
-        # https://github.com/intel-lab-lkp/linux/commit/6d1831c0e01a1a742e026454fe6e5643e08c5985
-        git remote add linux-review https://github.com/intel-lab-lkp/linux
-        git fetch --no-tags linux-review Zi-Yan/mm-memcg-use-order-instead-of-nr-in-split_page_memcg/20230329-091809
-        git checkout 6d1831c0e01a1a742e026454fe6e5643e08c5985
-        # save the config file
-        mkdir build_dir && cp config build_dir/.config
-        COMPILER_INSTALL_PATH=$HOME/0day COMPILER=clang make.cross W=1 O=build_dir ARCH=x86_64 olddefconfig
-        COMPILER_INSTALL_PATH=$HOME/0day COMPILER=clang make.cross W=1 O=build_dir ARCH=x86_64 SHELL=/bin/bash
+Now I'm thinking it probably makes more sense to keep using attach for
+moving between groups, and fork for being born into a cgroup. That's
+what the pid controller does, and it handles CLONE_INTO_CGROUP fine.
 
-If you fix the issue, kindly add following tag where applicable
-| Reported-by: kernel test robot <lkp-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
-| Link: https://lore.kernel.org/oe-kbuild-all/202303292237.pg39cTKv-lkp-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org/
-
-All error/warnings (new ones prefixed by >>):
-
->> mm/page_owner.c:226:14: error: implicit declaration of function 'lookup_page_ext' is invalid in C99 [-Werror,-Wimplicit-function-declaration]
-                   page_ext = lookup_page_ext(page + i);
-                              ^
->> mm/page_owner.c:226:12: warning: incompatible integer to pointer conversion assigning to 'struct page_ext *' from 'int' [-Wint-conversion]
-                   page_ext = lookup_page_ext(page + i);
-                            ^ ~~~~~~~~~~~~~~~~~~~~~~~~~
-   1 warning and 1 error generated.
-
-
-vim +/lookup_page_ext +226 mm/page_owner.c
-
-   213	
-   214	void __split_page_owner(struct page *page, int old_order, int new_order)
-   215	{
-   216		int i;
-   217		struct page_ext *page_ext = page_ext_get(page);
-   218		struct page_owner *page_owner;
-   219		unsigned int old_nr = 1 << old_order;
-   220		unsigned int new_nr = 1 << new_order;
-   221	
-   222		if (unlikely(!page_ext))
-   223			return;
-   224	
-   225		for (i = 0; i < old_nr; i += new_nr) {
- > 226			page_ext = lookup_page_ext(page + i);
-   227			page_owner = get_page_owner(page_ext);
-   228			page_owner->order = new_order;
-   229		}
-   230		page_ext_put(page_ext);
-   231	}
-   232	
-
--- 
-0-DAY CI Kernel Test Service
-https://github.com/intel/lkp-tests
+There is naturally some overlap between the two operations. But it
+seems cleaner to me to use common helpers for that, as opposed to
+having both attach and fork callbacks handling forks.
