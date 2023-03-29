@@ -1,81 +1,52 @@
-From: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH 5/6] cgroup/cpuset: Free DL BW in case can_attach() fails
-Date: Wed, 29 Mar 2023 14:09:42 -0400
-Message-ID: <b7ad39b1-c615-3ebc-6980-d9db0f2ab0a0@redhat.com>
-References: <20230329125558.255239-1-juri.lelli@redhat.com>
- <20230329125558.255239-6-juri.lelli@redhat.com>
- <f8dfc30b-5079-2f44-7ab1-42ac25bd48b7@redhat.com>
- <f8baea06-eeda-439a-3699-1cad7cde659e@redhat.com>
- <cdede77a-5dc5-8933-a444-a2046b074b12@arm.com>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCH v2 1/4] cgroup/cpuset: Fix partition root's cpuset.cpus
+ update bug
+Date: Wed, 29 Mar 2023 08:37:48 -1000
+Message-ID: <ZCSFfMeKRNERIBu6@slm.duckdns.org>
+References: <20230317151508.1225282-1-longman@redhat.com>
+ <20230317151508.1225282-2-longman@redhat.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1680113390;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=H8vliQ1ONvrTK4LTfw9x6DXO/qnrs4SgkkW8WifHRpE=;
-        b=JFWWNQyhZ3sft7xKrxptJ749a5TkK8nN03SdEkpwnDnJVlld5avqyWoq+29NMkk/GNNXbt
-        Fkhfp+6FvvekkoIUc29yU5fg+Ex18MIgd2MRpJj94+156DU8IkrFBlbcOJlBdHNYSZELGX
-        /JdDX2n9Jfsw+3KWYBkH9ZoAt5a+v2Y=
-Content-Language: en-US
-In-Reply-To: <cdede77a-5dc5-8933-a444-a2046b074b12-5wv7dgnIgG8@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112; t=1680115070;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:sender:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=uzLVbqgNBGN+xgE2Mcn5+0Hj/oLlv/psLQjcDCgpQr8=;
+        b=kI+OaINANyKsiK+EWK5+yOqs4+8ljyMo3j6zqxxM9CNCGiuVso5j4vGdrojGjNs0yY
+         0bWcLXqZlHNd5KEaFaq42TZPydl8CX+VZaczevLdxTDrOS+bRtk1uU3ldZcJ5GOoafYt
+         EfJ3UBHdLiykj7ApCxebT76Fae/+kGPt8b03FuNjlP2cQ+kDqjpxVP30APPgIeDDwUAK
+         JUwZpewbV42SJXpI7IZJO7GrUs0qCUeGrPItHGrUZVp9xHlP0F0DVVVfimp2uH4A+9XJ
+         cvYw6G7wBHW7jwMokNIetOkS2+pSnTcBC41bJiINKqOlqkpoX06t8GHNFjgmTOmqgrdj
+         y52A==
+Sender: Tejun Heo <htejun-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <20230317151508.1225282-2-longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="utf-8"; format="flowed"
-To: Dietmar Eggemann <dietmar.eggemann-5wv7dgnIgG8@public.gmane.org>, Juri Lelli <juri.lelli-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Ingo Molnar <mingo-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Qais Yousef <qyousef-wp2msK0BRk8tq7phqP6ubQ@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Hao Luo <haoluo-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Cc: Steven Rostedt <rostedt-nx8X9YLhiw1AfugRpC6u6w@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, luca.abeni-5rdYK369eBLQB0XuIGIEkQ@public.gmane.org, claudio-YOzL5CV4y4YG1A2ADO40+w@public.gmane.org, tommaso.cucinotta-5rdYK369eBLQB0XuIGIEkQ@public.gmane.org, bristot-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, mathieu.poirier-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Vincent Guittot <vincent.guittot-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, Wei Wang <wvw-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Rick Yiu <rickyiu-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Quentin Perret <qperret-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Heiko Carstens <hca-tEXmvtCZX7AybS5Ee8rs3A@public.gmane.org>, Vasily Gorbik <gor-tEXmvtCZX7AybS5Ee8rs3A@public.gmane.org>, Alexander Gordeev <agordeev-tEXmvtCZX7AybS5Ee8rs3A@public.gmane.org>, Sudeep Holla <sudeep.holla-5wv7dgnIgG8@public.gmane.org>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Cc: Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Shuah Khan <shuah-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kselftest-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Will Deacon <will-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny-IBi9RG/b67k@public.gmane.org>, Juri Lelli <juri.lelli-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 
-On 3/29/23 12:39, Dietmar Eggemann wrote:
-> On 29/03/2023 16:31, Waiman Long wrote:
->> On 3/29/23 10:25, Waiman Long wrote:
->>> On 3/29/23 08:55, Juri Lelli wrote:
->>>> From: Dietmar Eggemann <dietmar.eggemann-5wv7dgnIgG8@public.gmane.org>
-> [...]
->
->>>> @@ -2518,11 +2547,21 @@ static int cpuset_can_attach(struct
->>>> cgroup_taskset *tset)
->>>>    static void cpuset_cancel_attach(struct cgroup_taskset *tset)
->>>>    {
->>>>        struct cgroup_subsys_state *css;
->>>> +    struct cpuset *cs;
->>>>          cgroup_taskset_first(tset, &css);
->>>> +    cs = css_cs(css);
->>>>          mutex_lock(&cpuset_mutex);
->>>> -    css_cs(css)->attach_in_progress--;
->>>> +    cs->attach_in_progress--;
->>>> +
->>>> +    if (cs->nr_migrate_dl_tasks) {
->>>> +        int cpu = cpumask_any(cs->effective_cpus);
->>>> +
->>>> +        dl_bw_free(cpu, cs->sum_migrate_dl_bw);
->>>> +        reset_migrate_dl_data(cs);
->>>> +    }
->>>> +
->> Another nit that I have is that you may have to record also the cpu
->> where the DL bandwidth is allocated in cpuset_can_attach() and free the
->> bandwidth back into that cpu or there can be an underflow if another cpu
->> is chosen.
-> Many thanks for the review!
->
-> But isn't the DL BW control `struct dl_bw` per `struct root_domain`
-> which is per exclusive cpuset. So as long cpu is from
-> `cs->effective_cpus` shouldn't this be fine?
+On Fri, Mar 17, 2023 at 11:15:05AM -0400, Waiman Long wrote:
+> It was found that commit 7a2127e66a00 ("cpuset: Call
+> set_cpus_allowed_ptr() with appropriate mask for task") introduced a bug
+> that corrupted "cpuset.cpus" of a partition root when it was updated.
+> 
+> It is because the tmp->new_cpus field of the passed tmp parameter
+> of update_parent_subparts_cpumask() should not be used at all as
+> it contains important cpumask data that should not be overwritten.
+> Fix it by using tmp->addmask instead.
+> 
+> Also update update_cpumask() to make sure that trialcs->cpu_allowed
+> will not be corrupted until it is no longer needed.
+> 
+> Fixes: 7a2127e66a00 ("cpuset: Call set_cpus_allowed_ptr() with appropriate mask for task")
+> Signed-off-by: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 
-Sorry for my ignorance on how the deadline bandwidth operation work. I 
-check the bandwidth code and find that we are storing the bandwidth 
-information in the root domain, not on the cpu. That shouldn't be a 
-concern then.
+Applied to cgroup/for-6.3-fixes w/ stable cc'd.
 
-However, I still have some question on how that works when dealing with 
-cpuset. First of all, not all the CPUs in a given root domains are in 
-the cpuset. So there may be enough bandwidth on the root domain, but it 
-doesn't mean there will be enough bandwidth in the set of CPUs in a 
-particular cpuset. Secondly, how do you deal with isolated CPUs that do 
-not have a corresponding root domain? It is now possible to create a 
-cpuset with isolated CPUs.
+Thanks.
 
-Cheers,
-Longman
-
+-- 
+tejun
