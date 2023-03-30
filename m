@@ -1,96 +1,59 @@
 From: Yosry Ahmed <yosryahmed@google.com>
-Subject: Re: [PATCH v2 8/9] vmscan: memcg: sleep when flushing stats during reclaim
-Date: Thu, 30 Mar 2023 00:54:49 -0700
-Message-ID: <CAJD7tkaCK6e3a-T_5z3Ea3OFwiJjHoUfrEPGDW-wqduOr-5pVg@mail.gmail.com>
+Subject: Re: [PATCH v2 7/9] workingset: memcg: sleep when flushing stats in workingset_refault()
+Date: Thu, 30 Mar 2023 00:55:17 -0700
+Message-ID: <CAJD7tkZfexGoyZx0ormVzp_KkYmOczxBPfFaffKqd_TD4gvGCg@mail.gmail.com>
 References: <20230328221644.803272-1-yosryahmed@google.com>
- <20230328221644.803272-9-yosryahmed@google.com> <ZCU9ByZybEi5G5sl@dhcp22.suse.cz>
- <CAJD7tkZODvLZOfGaO3gjC2udKNg_G0mA2CT57djjJXrrHNEbbg@mail.gmail.com> <ZCU/zzgWSZb/ux6J@dhcp22.suse.cz>
+ <20230328221644.803272-8-yosryahmed@google.com> <ZCU8tjqzg8cDbobQ@dhcp22.suse.cz>
+ <CAJD7tkZLBs=A8m5u=9jGtMeD0ptOgtCTYUoh2r4Ex+fCkvwAXg@mail.gmail.com> <ZCU/SMr5gC9C0U+R@dhcp22.suse.cz>
 Mime-Version: 1.0
 Content-Transfer-Encoding: quoted-printable
-Return-path: <linux-block-owner@vger.kernel.org>
+Return-path: <bpf-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20210112; t=1680162926;
+        d=google.com; s=20210112; t=1680162954;
         h=content-transfer-encoding:cc:to:subject:message-id:date:from
          :in-reply-to:references:mime-version:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=h5tWbYU5Ovnx4S3KN05HeMF9MQhwKdT4wgU3e8coEAg=;
-        b=CKaS6HBjsJ/8/OyRJWU/IIHaTdpRU7TNj95drpPAb7CtZThIyxrmIWaKZBQn/DOv1x
-         emhAGX3xKn00R3oNM398Sr3mFprCDzivxLy/znSI9eeZ/pw66A9v0YN2EzQHfVXPhVjT
-         kr1ryivtAD/0r4jpzHjJcrTKWfcPbeOSknV8seiKFhrH5h5lOG/fO0KWYH8a0bsfaa6/
-         abESZ4KxjVvzKKoqo8bXx7oOROI+V6YSOSpV0NkUGo8ySqAW2y434yfj/hHDPQ5dk0/W
-         XFpZ/ourVOgMxr/4/82xPsTUlLwmkDP5dfTF9DFoz5VWWBMKyueXFRzWysnxkVKprxJs
-         wttQ==
-In-Reply-To: <ZCU/zzgWSZb/ux6J@dhcp22.suse.cz>
+        bh=anbj3k8bVreIFvoy5ezWKZvlLhuV6pERZy1Bnx+kNns=;
+        b=ZD9aj6n0GX26RjIgVcV8XWHXeXxhiTySnXtfLlIh2Y4ULsYer620/o/Gxai5NDEyx0
+         U9cLhrKkIyrcXCb9H0C1LsSrI3aYqgf3GO6P4vMGibxu+NJs5rV7tQbNe7/BuzZ9ngD4
+         QlTJGq/55WJCvX0baHxwlbOU546xXFXX3rhwhxfTlPe1DtgL+SZFj+3v/M/zynT9IjDn
+         ZyadAB66teMDMbs9xKwieRC4GEnlOFheMYpz1xGF7yvvoKjAofsoTZMoVDKAnSS6/+pv
+         n2YA0BsqSmXP4EqjlRt/DgekBF6qWk4ejPD+mZWis8RRK9kN76WGkT00+z0dkPShQagp
+         7beQ==
+In-Reply-To: <ZCU/SMr5gC9C0U+R@dhcp22.suse.cz>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="utf-8"
 To: Michal Hocko <mhocko@suse.com>
 Cc: Tejun Heo <tj@kernel.org>, Josef Bacik <josef@toxicpanda.com>, Jens Axboe <axboe@kernel.dk>, Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, Roman Gushchin <roman.gushchin@linux.dev>, Shakeel Butt <shakeelb@google.com>, Muchun Song <muchun.song@linux.dev>, Andrew Morton <akpm@linux-foundation.org>, =?UTF-8?Q?Michal_Koutn=C3=BD?= <mkoutny@suse.com>, Vasily Averin <vasily.averin@linux.dev>, cgroups@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org, bpf@vger.kernel.org
 
-On Thu, Mar 30, 2023 at 12:52=E2=80=AFAM Michal Hocko <mhocko@suse.com> wro=
+On Thu, Mar 30, 2023 at 12:50=E2=80=AFAM Michal Hocko <mhocko@suse.com> wro=
 te:
 >
-> On Thu 30-03-23 00:44:10, Yosry Ahmed wrote:
-> > On Thu, Mar 30, 2023 at 12:40=E2=80=AFAM Michal Hocko <mhocko@suse.com>=
+> On Thu 30-03-23 00:42:36, Yosry Ahmed wrote:
+> > On Thu, Mar 30, 2023 at 12:39=E2=80=AFAM Michal Hocko <mhocko@suse.com>=
  wrote:
 > > >
-> > > On Tue 28-03-23 22:16:43, Yosry Ahmed wrote:
-> > > > Memory reclaim is a sleepable context. Allow sleeping when flushing
-> > > > memcg stats to avoid unnecessarily performing a lot of work without
-> > > > sleeping. This can slow down reclaim code if flushing stats is taki=
-ng
-> > > > too long, but there is already multiple cond_resched()'s in reclaim
-> > > > code.
+> > > On Tue 28-03-23 22:16:42, Yosry Ahmed wrote:
+> > > > In workingset_refault(), we call
+> > > > mem_cgroup_flush_stats_atomic_ratelimited() to flush stats within a=
+n
+> > > > RCU read section and with sleeping disallowed. Move the call above
+> > > > the RCU read section and allow sleeping to avoid unnecessarily
+> > > > performing a lot of work without sleeping.
 > > >
-> > > Why is this preferred? Memory reclaim is surely a slow path but what =
-is
-> > > the advantage of calling mem_cgroup_flush_stats here?
+> > > Could you say few words why the flushing is done before counters are
+> > > updated rather than after (the RCU section)?
 > >
-> > The purpose of this series is to limit calls to atomic flushing as
-> > much as possible, as flushing can become really expensive on systems
-> > with high cpu counts and a lot of cgroups, and performing such an
-> > expensive operation atomically causes problems -- so we'd rather avoid
-> > doing it atomically where possible.
+> > It's not about the counters that are updated, it's about the counters
+> > that we read. Stats readers do a flush first to read accurate stats.
+> > We flush before a read, not after an update.
 >
-> Please add that to the changelog. While the intention might be obvious
-> now (although cover is not explicit about it either) it can cause some
-> head scratching in the future when somebody looks at this commit without
-> a broader context (e.g. previous ML discussions).
+> Right you are, my bad I have misread the intention here.
 >
-> with that
 > Acked-by: Michal Hocko <mhocko@suse.com>
 
-Thanks, will do for the respin.
+Thanks!
 
-> Thanks
->
-> > > > Signed-off-by: Yosry Ahmed <yosryahmed@google.com>
-> > > > Acked-by: Shakeel Butt <shakeelb@google.com>
-> > > > Acked-by: Johannes Weiner <hannes@cmpxchg.org>
-> > > > ---
-> > > >  mm/vmscan.c | 2 +-
-> > > >  1 file changed, 1 insertion(+), 1 deletion(-)
-> > > >
-> > > > diff --git a/mm/vmscan.c b/mm/vmscan.c
-> > > > index a9511ccb936f..9c1c5e8b24b8 100644
-> > > > --- a/mm/vmscan.c
-> > > > +++ b/mm/vmscan.c
-> > > > @@ -2845,7 +2845,7 @@ static void prepare_scan_count(pg_data_t *pgd=
-at, struct scan_control *sc)
-> > > >        * Flush the memory cgroup stats, so that we read accurate pe=
-r-memcg
-> > > >        * lruvec stats for heuristics.
-> > > >        */
-> > > > -     mem_cgroup_flush_stats_atomic();
-> > > > +     mem_cgroup_flush_stats();
-> > > >
-> > > >       /*
-> > > >        * Determine the scan balance between anon and file LRUs.
-> > > > --
-> > > > 2.40.0.348.gf938b09366-goog
-> > >
-> > > --
-> > > Michal Hocko
-> > > SUSE Labs
 >
 > --
 > Michal Hocko
