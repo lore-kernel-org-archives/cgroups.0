@@ -1,129 +1,248 @@
-From: Yosry Ahmed <yosryahmed@google.com>
-Subject: Re: [PATCH v2 4/9] cgroup: rstat: add WARN_ON_ONCE() if flushing
- outside task context
-Date: Thu, 30 Mar 2023 00:13:16 -0700
-Message-ID: <CAJD7tka0CmRvcvB0k8DZuid1vC9OK_mFriHHbXNTUkVE7OjaTA@mail.gmail.com>
-References: <20230328221644.803272-1-yosryahmed@google.com>
- <20230328221644.803272-5-yosryahmed@google.com> <ZCQfZJFufkJ10o01@dhcp22.suse.cz>
- <CAJD7tkb-UpKm2QbjYzB=B=oGk6Hyj9cbUviZUPC+7VsvBecH7g@mail.gmail.com>
- <20230329192059.2nlme5ubshzdbpg6@google.com> <ZCU1Bp+5bKNJzWIu@dhcp22.suse.cz>
+From: kernel test robot <lkp-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+Subject: [tj-cgroup:for-6.4] BUILD SUCCESS
+ 1bf33285d98536da6b015627341e4f789fee067e
+Date: Thu, 30 Mar 2023 15:23:32 +0800
+Message-ID: <642538f4.C9gtvGJ/Fc/WCkqC%lkp@intel.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-Return-path: <bpf-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20210112; t=1680160433;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=rIO+xjpPvxFE7p3Fg529YdgqYE0es+Za65fM8K1qjgQ=;
-        b=UvXOXvaKg5W3pOiKg4eDH9lHl4Zdbajrfr9yCdPGB59p3EbanzUW5AbZ60M0Fo1jLj
-         xgrtU13pG+2HRUXSZV1YHQUF6aAPx8bmMFTsyT+tMN4I6uSd3iTp4e0p5o0dlpChmR1N
-         kgpM/rCb2oFLWV87Mo4Q+i3t95OakU3lMRj4YQ1nysYmA+Tpl5yBca0fvDqMPohFxbDB
-         Y7+D8BKyWgRNceAUWpnfWnDi7HIUgkBAG3eDp8W+4bCHX6Cc8wGgEGVLJTMMQ7fZWTfd
-         8/Oa9xlswq0vuQl+sJims+8vhoieSnu1v+Z91iZH9bXW/MlL8LF9mWWEI22UEcU5KFZ+
-         xqbQ==
-In-Reply-To: <ZCU1Bp+5bKNJzWIu@dhcp22.suse.cz>
+Content-Transfer-Encoding: 7bit
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1680161019; x=1711697019;
+  h=date:from:to:cc:subject:message-id:mime-version:
+   content-transfer-encoding;
+  bh=JeOnVJIFdSeUD3sDSNJpbac8JC/yWe8ezu/XalkayH8=;
+  b=hW7gvLTqpIH4YsbSrNqAblSvm4MPLDZJtlo0I/s8qYMqomcgEY8zeK0j
+   pjlUO+DOLiyP9OfwQnWjCXR9jp3MhtyRRuSEoBtkdS0KxRM1/EmGNU1xW
+   cDkjxCDWC8/5qZWU+GvfB6JCUQNrj+URVCXCv5yRz706H3WmowLy6A6eD
+   EqZxDYg2HsqiA0PxDhT7fbU7vo6hmQsLjhQ8V8+nDF6wiJ4Zi0PV+k7gh
+   MnJt3DlH05KThfrD5jFP6zo0XbkKxyiZsqGWykzjq17lnzmGr4szbe9Ww
+   UFIcn0S6/SAmCgbZOvqAKwWmDxmuWZe2KFx+ovd9laCyUN75pOFM4LKpp
+   A==;
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="utf-8"
-To: Michal Hocko <mhocko@suse.com>
-Cc: Shakeel Butt <shakeelb@google.com>, Tejun Heo <tj@kernel.org>, Josef Bacik <josef@toxicpanda.com>, Jens Axboe <axboe@kernel.dk>, Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, Roman Gushchin <roman.gushchin@linux.dev>, Muchun Song <muchun.song@linux.dev>, Andrew Morton <akpm@linux-foundation.org>, =?UTF-8?Q?Michal_Koutn=C3=BD?= <mkoutny@suse.com>, Vasily Averin <vasily.averin@linux.dev>, cgroups@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org, bpf@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Thu, Mar 30, 2023 at 12:06=E2=80=AFAM Michal Hocko <mhocko@suse.com> wro=
-te:
->
-> On Wed 29-03-23 19:20:59, Shakeel Butt wrote:
-> > On Wed, Mar 29, 2023 at 11:41:39AM -0700, Yosry Ahmed wrote:
-> > > On Wed, Mar 29, 2023 at 4:22=E2=80=AFAM Michal Hocko <mhocko@suse.com=
-> wrote:
-> > > >
-> > > > On Tue 28-03-23 22:16:39, Yosry Ahmed wrote:
-> > > > > rstat flushing is too expensive to perform in irq context.
-> > > > > The previous patch removed the only context that may invoke an rs=
-tat
-> > > > > flush from irq context, add a WARN_ON_ONCE() to detect future
-> > > > > violations, or those that we are not aware of.
-> > > > >
-> > > > > Ideally, we wouldn't flush with irqs disabled either, but we have=
- one
-> > > > > context today that does so in mem_cgroup_usage(). Forbid callers =
-from
-> > > > > irq context for now, and hopefully we can also forbid callers wit=
-h irqs
-> > > > > disabled in the future when we can get rid of this callsite.
-> > > >
-> > > > I am sorry to be late to the discussion. I wanted to follow up on
-> > > > Johannes reply in the previous version but you are too fast ;)
-> > > >
-> > > > I do agree that this looks rather arbitrary. You do not explain how=
- the
-> > > > warning actually helps. Is the intention to be really verbose to th=
-e
-> > > > kernel log when somebody uses this interface from the IRQ context a=
-nd
-> > > > get bug reports? What about configurations with panic on warn? Do w=
-e
-> > > > really want to crash their systems for something like that?
-> > >
-> > > Thanks for taking a look, Michal!
-> > >
-> > > The ultimate goal is not to flush in irq context or with irqs
-> > > disabled, as in some cases it causes irqs to be disabled for a long
-> > > time, as flushing is an expensive operation. The previous patch in th=
-e
-> > > series should have removed the only context that flushes in irq
-> > > context, and the purpose of the WARN_ON_ONCE() is to catch future use=
-s
-> > > or uses that we might have missed.
-> > >
-> > > There is still one code path that flushes with irqs disabled (also
-> > > mem_cgroup_usage()), and we cannot remove this just yet; we need to
-> > > deprecate usage threshold events for root to do that. So we cannot
-> > > enforce not flushing with irqs disabled yet.
-> > >
-> > > So basically the patch is trying to enforce what we have now, not
-> > > flushing in irq context, and hopefully at some point we will also be
-> > > able to enforce not flushing with irqs disabled.
-> > >
-> > > If WARN_ON_ONCE() is the wrong tool for this, please let me know.
-> > >
-> >
-> > If I understand Michal's concern, the question is should be start with
-> > pr_warn_once() instead of WARN_ON_ONCE() and I think yes we should star=
-t
-> > with pr_warn_once().
->
-> Yes, I do not really like the WARN_ON here. It is an overkill. pr_warn
-> would much less intrusive but potentially incomplete because you won't
-> know who that offender is. So if you really care about those then you
-> would need to call dump_stack as well.
->
-> So the real question is. Do we really care so deeply? After all somebody
-> might be calling this from within a spin lock or irq disabled section
-> resulting in a similar situation without noticing.
+tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git for-6.4
+branch HEAD: 1bf33285d98536da6b015627341e4f789fee067e  cgroup/cpuset: Minor updates to test_cpuset_prs.sh
 
-There are discussions in [1] about making atomic rstat flush not
-disable irqs throughout the process, so in that case it would only
-result in a similar situation if the caller has irq disabled. The only
-caller that might have irq disabled is the same caller that might be
-in irq context before this series: mem_cgroup_usage().
+elapsed time: 728m
 
-On that note, and while I have your attention, I was wondering if we
-can eliminate the flush call completely from mem_cgroup_usage(), and
-read the global stats counters for root memcg instead of the root
-counters. There might be subtle differences, but the root memcg usage
-isn't super accurate now anyway (e.g. it doesn't include kernel
-memory).
+configs tested: 206
+configs skipped: 17
 
-With that removed, no callers to rstat flushing would be from irq
-context or have irqs disabled. There will only be one atomic flusher
-(mem_cgroup_wb_stats()), and we can proceed with [1] if it causes a
-problem.
+The following configs have been built successfully.
+More configs may be tested in the coming days.
 
-What do you think?
+tested configs:
+alpha                            allyesconfig   gcc  
+alpha        buildonly-randconfig-r002-20230329   gcc  
+alpha                               defconfig   gcc  
+alpha                randconfig-r003-20230329   gcc  
+alpha                randconfig-r005-20230329   gcc  
+alpha                randconfig-r015-20230329   gcc  
+alpha                randconfig-r023-20230329   gcc  
+alpha                randconfig-r036-20230329   gcc  
+arc                              allyesconfig   gcc  
+arc          buildonly-randconfig-r003-20230329   gcc  
+arc                                 defconfig   gcc  
+arc                  randconfig-r025-20230329   gcc  
+arc                  randconfig-r033-20230329   gcc  
+arc                  randconfig-r043-20230329   gcc  
+arm                              allmodconfig   gcc  
+arm                              allyesconfig   gcc  
+arm          buildonly-randconfig-r006-20230329   gcc  
+arm                                 defconfig   gcc  
+arm                      jornada720_defconfig   gcc  
+arm                  randconfig-r023-20230329   gcc  
+arm                  randconfig-r046-20230329   gcc  
+arm64                            allyesconfig   gcc  
+arm64                               defconfig   gcc  
+arm64                randconfig-r001-20230329   gcc  
+arm64                randconfig-r003-20230329   gcc  
+arm64                randconfig-r006-20230329   gcc  
+arm64                randconfig-r014-20230329   clang
+arm64                randconfig-r025-20230329   clang
+csky         buildonly-randconfig-r006-20230329   gcc  
+csky                                defconfig   gcc  
+csky                 randconfig-r003-20230329   gcc  
+csky                 randconfig-r004-20230329   gcc  
+csky                 randconfig-r011-20230329   gcc  
+csky                 randconfig-r026-20230330   gcc  
+csky                 randconfig-r031-20230329   gcc  
+csky                 randconfig-r034-20230329   gcc  
+hexagon              randconfig-r016-20230329   clang
+hexagon              randconfig-r034-20230329   clang
+hexagon              randconfig-r041-20230329   clang
+hexagon              randconfig-r045-20230329   clang
+i386                             allyesconfig   gcc  
+i386                              debian-10.3   gcc  
+i386                                defconfig   gcc  
+i386                          randconfig-a001   gcc  
+i386                          randconfig-a002   clang
+i386                          randconfig-a003   gcc  
+i386                          randconfig-a004   clang
+i386                          randconfig-a005   gcc  
+i386                          randconfig-a006   clang
+i386                          randconfig-a011   clang
+i386                          randconfig-a012   gcc  
+i386                          randconfig-a013   clang
+i386                          randconfig-a014   gcc  
+i386                          randconfig-a015   clang
+i386                          randconfig-a016   gcc  
+ia64                             allmodconfig   gcc  
+ia64         buildonly-randconfig-r001-20230329   gcc  
+ia64         buildonly-randconfig-r003-20230329   gcc  
+ia64         buildonly-randconfig-r005-20230329   gcc  
+ia64                                defconfig   gcc  
+ia64                 randconfig-r002-20230329   gcc  
+ia64                 randconfig-r005-20230329   gcc  
+ia64                 randconfig-r006-20230329   gcc  
+ia64                 randconfig-r012-20230329   gcc  
+ia64                 randconfig-r023-20230329   gcc  
+ia64                 randconfig-r025-20230329   gcc  
+ia64                 randconfig-r026-20230329   gcc  
+ia64                 randconfig-r033-20230329   gcc  
+ia64                 randconfig-r036-20230329   gcc  
+loongarch                        allmodconfig   gcc  
+loongarch                         allnoconfig   gcc  
+loongarch    buildonly-randconfig-r004-20230329   gcc  
+loongarch    buildonly-randconfig-r006-20230329   gcc  
+loongarch                           defconfig   gcc  
+loongarch            randconfig-r002-20230329   gcc  
+loongarch            randconfig-r004-20230329   gcc  
+loongarch            randconfig-r006-20230329   gcc  
+loongarch            randconfig-r013-20230329   gcc  
+loongarch            randconfig-r015-20230329   gcc  
+loongarch            randconfig-r021-20230329   gcc  
+loongarch            randconfig-r036-20230329   gcc  
+m68k                             allmodconfig   gcc  
+m68k         buildonly-randconfig-r002-20230329   gcc  
+m68k                                defconfig   gcc  
+m68k                 randconfig-r013-20230329   gcc  
+m68k                 randconfig-r014-20230329   gcc  
+m68k                 randconfig-r022-20230329   gcc  
+m68k                 randconfig-r035-20230329   gcc  
+microblaze   buildonly-randconfig-r001-20230329   gcc  
+microblaze           randconfig-r012-20230329   gcc  
+microblaze           randconfig-r016-20230329   gcc  
+microblaze           randconfig-r024-20230329   gcc  
+microblaze           randconfig-r032-20230329   gcc  
+microblaze           randconfig-r035-20230329   gcc  
+mips                             allmodconfig   gcc  
+mips                             allyesconfig   gcc  
+mips                 randconfig-r001-20230329   clang
+mips                 randconfig-r002-20230329   clang
+mips                 randconfig-r012-20230329   gcc  
+mips                 randconfig-r021-20230329   gcc  
+mips                 randconfig-r021-20230330   gcc  
+mips                 randconfig-r025-20230329   gcc  
+nios2        buildonly-randconfig-r001-20230329   gcc  
+nios2        buildonly-randconfig-r003-20230329   gcc  
+nios2        buildonly-randconfig-r004-20230329   gcc  
+nios2                               defconfig   gcc  
+nios2                randconfig-r011-20230329   gcc  
+nios2                randconfig-r025-20230329   gcc  
+nios2                randconfig-r033-20230329   gcc  
+openrisc     buildonly-randconfig-r002-20230329   gcc  
+openrisc     buildonly-randconfig-r004-20230329   gcc  
+openrisc             randconfig-r004-20230329   gcc  
+openrisc             randconfig-r006-20230329   gcc  
+openrisc             randconfig-r015-20230329   gcc  
+openrisc             randconfig-r021-20230329   gcc  
+openrisc             randconfig-r026-20230329   gcc  
+openrisc             randconfig-r036-20230329   gcc  
+parisc       buildonly-randconfig-r005-20230329   gcc  
+parisc                              defconfig   gcc  
+parisc               randconfig-r004-20230329   gcc  
+parisc               randconfig-r011-20230329   gcc  
+parisc               randconfig-r022-20230329   gcc  
+parisc               randconfig-r022-20230330   gcc  
+parisc               randconfig-r023-20230330   gcc  
+parisc               randconfig-r032-20230329   gcc  
+parisc64                            defconfig   gcc  
+powerpc                          allmodconfig   gcc  
+powerpc                           allnoconfig   gcc  
+powerpc                      arches_defconfig   gcc  
+powerpc                 mpc834x_itx_defconfig   gcc  
+powerpc                 mpc8540_ads_defconfig   gcc  
+powerpc              randconfig-r003-20230329   gcc  
+powerpc              randconfig-r024-20230329   clang
+powerpc              randconfig-r026-20230329   clang
+powerpc              randconfig-r032-20230329   gcc  
+powerpc              randconfig-r034-20230329   gcc  
+powerpc                     tqm8555_defconfig   gcc  
+riscv                            allmodconfig   gcc  
+riscv                             allnoconfig   gcc  
+riscv        buildonly-randconfig-r006-20230329   clang
+riscv                               defconfig   gcc  
+riscv                randconfig-r005-20230329   gcc  
+riscv                randconfig-r006-20230329   gcc  
+riscv                randconfig-r022-20230329   clang
+riscv                randconfig-r031-20230329   gcc  
+riscv                randconfig-r032-20230329   gcc  
+riscv                randconfig-r035-20230329   gcc  
+riscv                randconfig-r042-20230329   clang
+riscv                          rv32_defconfig   gcc  
+s390                             allmodconfig   gcc  
+s390                             allyesconfig   gcc  
+s390         buildonly-randconfig-r003-20230329   clang
+s390                                defconfig   gcc  
+s390                 randconfig-r002-20230329   gcc  
+s390                 randconfig-r014-20230329   clang
+s390                 randconfig-r022-20230329   clang
+s390                 randconfig-r023-20230329   clang
+s390                 randconfig-r035-20230329   gcc  
+s390                 randconfig-r044-20230329   clang
+sh                               allmodconfig   gcc  
+sh           buildonly-randconfig-r005-20230329   gcc  
+sh                        dreamcast_defconfig   gcc  
+sh                         ecovec24_defconfig   gcc  
+sh                            migor_defconfig   gcc  
+sh                   randconfig-r005-20230329   gcc  
+sh                   randconfig-r015-20230329   gcc  
+sh                   randconfig-r022-20230329   gcc  
+sh                   randconfig-r023-20230329   gcc  
+sparc        buildonly-randconfig-r003-20230329   gcc  
+sparc                               defconfig   gcc  
+sparc                randconfig-r005-20230329   gcc  
+sparc                randconfig-r013-20230329   gcc  
+sparc                randconfig-r022-20230329   gcc  
+sparc                randconfig-r024-20230330   gcc  
+sparc                randconfig-r031-20230329   gcc  
+sparc64      buildonly-randconfig-r005-20230329   gcc  
+sparc64      buildonly-randconfig-r006-20230329   gcc  
+sparc64              randconfig-r003-20230329   gcc  
+sparc64              randconfig-r024-20230329   gcc  
+sparc64              randconfig-r031-20230329   gcc  
+sparc64              randconfig-r034-20230329   gcc  
+um                             i386_defconfig   gcc  
+um                           x86_64_defconfig   gcc  
+x86_64                            allnoconfig   gcc  
+x86_64                           allyesconfig   gcc  
+x86_64                              defconfig   gcc  
+x86_64                                  kexec   gcc  
+x86_64                        randconfig-a001   clang
+x86_64                        randconfig-a002   gcc  
+x86_64                        randconfig-a003   clang
+x86_64                        randconfig-a004   gcc  
+x86_64                        randconfig-a005   clang
+x86_64                        randconfig-a006   gcc  
+x86_64                        randconfig-a011   gcc  
+x86_64                        randconfig-a012   clang
+x86_64                        randconfig-a013   gcc  
+x86_64                        randconfig-a014   clang
+x86_64                        randconfig-a015   gcc  
+x86_64                        randconfig-a016   clang
+x86_64                               rhel-8.3   gcc  
+xtensa       buildonly-randconfig-r004-20230329   gcc  
+xtensa               randconfig-r024-20230329   gcc  
+xtensa               randconfig-r026-20230329   gcc  
+xtensa               randconfig-r031-20230329   gcc  
+xtensa               randconfig-r032-20230329   gcc  
+xtensa               randconfig-r033-20230329   gcc  
 
-[1] https://lore.kernel.org/lkml/CAJD7tkZrp=3D4zWvjE9_010TAG1T_crCbf9P64UzJ=
-ABspgcrGPKg@mail.gmail.com/
-
-> --
-> Michal Hocko
-> SUSE Labs
+-- 
+0-DAY CI Kernel Test Service
+https://github.com/intel/lkp-tests
