@@ -1,114 +1,35 @@
-From: Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [RFC PATCH 1/7] cgroup: rstat: only disable interrupts for the
- percpu lock
-Date: Wed, 29 Mar 2023 13:38:48 -0700 (PDT)
-Message-ID: <98cb3ce-7ed9-3d17-9015-ef7193d6627@google.com>
-References: <ZBz/V5a7/6PZeM7S@slm.duckdns.org> <CAJD7tkYNZeEytm_Px9_73Y-AYJfHAxaoTmmnO71HW5hd1B5tPg@mail.gmail.com> <ZB5UalkjGngcBDEJ@slm.duckdns.org> <CAJD7tkYhyMkD8SFf8b8L1W9QUrLOdw-HJ2NUbENjw5dgFnH3Aw@mail.gmail.com> <CALvZod6rF0D21hcV7xnqD+oRkn=x5NLi5GOkPpyaPa859uDH+Q@mail.gmail.com>
- <CAJD7tkY_ESpMYMw72bsATpp6tPphv8qS6VbfEUjpKZW6vUqQSQ@mail.gmail.com> <CALvZod41ecuCKmuFBNtAjoKJjQgWYzoe4_B8zRK37HYk-rYDkA@mail.gmail.com> <CAJD7tkZrp=4zWvjE9_010TAG1T_crCbf9P64UzJABspgcrGPKg@mail.gmail.com> <ZCSJDpPPOVvBYfOy@slm.duckdns.org>
- <f9b6410-ee17-635f-a35d-559fa0191dc3@google.com> <ZCSY8l/jVwszF6iA@slm.duckdns.org>
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: move bio cgroup punting into btrfs
+Date: Thu, 30 Mar 2023 02:15:52 +0200
+Message-ID: <20230330001552.GA2381@lst.de>
+References: <20230327004954.728797-1-hch@lst.de> <512eaacf-3ff6-f4f9-c856-a0e03c027501@meta.com> <20230328233448.GA5486@lst.de> <ZCSOgoe84BhiUZcn@slm.duckdns.org>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20210112; t=1680122338;
-        h=mime-version:references:message-id:in-reply-to:subject:cc:to:from
-         :date:from:to:cc:subject:date:message-id:reply-to;
-        bh=roQ4I8SfNlurAVA2gUW8YNCdvD/U9UP1h39JPEDCNrw=;
-        b=NU/yfcrc8ryHQhIAObFNbURZYYwBhWTiQcib7OVvY/80Set4ojSk/egyVrcxg9WBQ1
-         8yqI244zT3XrggWqoMHveuVVPk8Z2LeSgnN6ROSj4fKFcZHCArk6iGNr7q9j5X17Ny23
-         gmo9mEp/to3tEwTte/8Z7bDTyJtCMtNYFbADW39rzX3kLuRLCJcFYk0CzDahs3JND0r7
-         f96lCJylAr51Qw4wmj36DwO90YcGV7yvS8D1S6nqpocow0tu6wu3TqawKx9gnwEmZBip
-         jOPhjsfHq3YLAiBGrnnBXaxJLVQ+N5Er/HmS5eE2sSr/k3DgDVkRF8MlpE+6XIDw6pC4
-         ZMew==
-In-Reply-To: <ZCSY8l/jVwszF6iA-NiLfg/pYEd1N0TnZuCh8vA@public.gmane.org>
+Return-path: <linux-btrfs-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <ZCSOgoe84BhiUZcn@slm.duckdns.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Josef Bacik <josef-DigfWCa+lFGyeJad7bwFQA@public.gmane.org>, Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Muchun Song <muchun.song-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Vasily Averin <vasily.averin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, bpf-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Tejun Heo <tj@kernel.org>
+Cc: Christoph Hellwig <hch@lst.de>, Chris Mason <clm@meta.com>, Josef Bacik <josef@toxicpanda.com>, Chris Mason <clm@fb.com>, David Sterba <dsterba@suse.com>, Jens Axboe <axboe@kernel.dk>, cgroups@vger.kernel.org, linux-block@vger.kernel.org, linux-btrfs@vger.kernel.org
 
-On Wed, 29 Mar 2023, Tejun Heo wrote:
+On Wed, Mar 29, 2023 at 09:16:18AM -1000, Tejun Heo wrote:
+> We didn't really look deep into adding the support but Chris mentioned that
+> raid5/6 are likely to need something similar. Maybe this is because my grasp
+> of filesytsems is pretty weak but the pattern doesn't seem unreasonable to
+> me. There's some work to be done by a shread kthread and that sometimes can
+> fork out IOs which belong to specific cgroups.
 
-> Hello, Hugh. How have you been?
-> 
-> On Wed, Mar 29, 2023 at 12:22:24PM -0700, Hugh Dickins wrote:
-> > Hi Tejun,
-> > Butting in here, I'm fascinated.  This is certainly not my area, I know
-> > nothing about rstat, but this is the first time I ever heard someone
-> > arguing for more disabling of interrupts rather than less.
-> > 
-> > An interrupt coming in while holding a contended resource can certainly
-> > add to latencies, that I accept of course.  But until now, I thought it
-> > was agreed best practice to disable irqs only regretfully, when strictly
-> > necessary.
-> > 
-> > If that has changed, I for one want to know about it.  How should we
-> > now judge which spinlocks should disable interrupts and which should not?
-> > Page table locks are currently my main interest - should those be changed?
-> 
-> For rstat, it's a simple case because the global lock here wraps around
-> per-cpu locks which have to be irq-safe, so the only difference we get
-> between making the global irq-unsafe and keeping it so but releasing
-> inbetween is:
-> 
->  Global lock held: G
->  IRQ disabled: I
->  Percpu lock held: P
->  
-> 1. IRQ unsafe
-> 
->  GGGGGGGGGGGGGGG~~GGGGG
->  IIII IIII IIII ~~ IIII
->  PPPP PPPP PPPP ~~ PPPP
-> 
-> 2. IRQ safe released inbetween cpus
-> 
->  GGGG GGGG GGGG ~~ GGGG
->  IIII IIII IIII ~~ IIII
->  PPPP PPPP PPPP ~~ PPPP
-> 
-> #2 seems like the obvious thing to do here given how the lock is used and
-> each P section may take a bit of time.
+Well, in a cgroup aware writeback path we'd always be off much better
+to just do the work from a cgroup specific thread instead of bouncing
+it around.
 
-Many thanks for the detailed response.  I'll leave it to the rstat folks,
-to agree or disagree with your analysis there.
+> At least in the IO control and direct issue path, punting to just one thread
+> hasn't been a practical problem given that when the issuing thread needs to
+> be blocked, either the whole device or the cgroup needs to be throttled
+> anyway.
 
-> 
-> So, in the rstat case, the choice is, at least to me, obvious, but even for
-> more generic cases where the bulk of actual work isn't done w/ irq disabled,
-> I don't think the picture is as simple as "use the least protected variant
-> possible" anymore because the underlying hardware changed.
-> 
-> For an SMP kernel running on an UP system, "the least protected variant" is
-> the obvious choice to make because you don't lose anything by holding a
-> spinlock longer than necessary. However, as you increase the number of CPUs,
-> there rises a tradeoff between local irq servicing latency and global lock
-> contention.
-> 
-> Imagine a, say, 128 cpu system with a few cores servicing relatively high
-> frequency interrupts. Let's say there's a mildly hot lock. Usually, it shows
-> up in the system profile but only just. Let's say something happens and the
-> irq rate on those cores went up for some reason to the point where it
-> becomes a rather common occurrence when the lock is held on one of those
-> cpus, irqs are likely to intervene lengthening how long the lock is held,
-> sometimes, signficantly. Now because the lock is on average held for much
-> longer, it become a lot hotter as more CPUs would stall on it and depending
-> on luck or lack thereof these stalls can span many CPUs on the system for
-> quite a while. This is actually something we saw in production.
-> 
-> So, in general, there's a trade off between local irq service latency and
-> inducing global lock contention when using unprotected locks. With more and
-> more CPUs, the balance keeps shifting. The balance still very much depends
-> on the specifics of a given lock but yeah I think it's something we need to
-> be a lot more careful about now.
-
-And this looks a very plausible argument to me: I'll let it sink in.
-
-But I hadn't heard that the RT folks were clamouring for more irq disabling:
-perhaps they partition their machines with more care, and are not devotees
-of high CPU counts.
-
-What I hope is that others will chime in one way or the other -
-it does sound as if a reappraisal of the balances is overdue.
-
-Thanks,
-Hugh (disabling interrupts for as long as he can)
+I don't think it is a problem per see.  But it is: a) inefficient and
+b) complex in terms of code.  So why bounce around between 2, or in case
+of writeback 3 threads for a single I/O, instead of making sure your
+offload threads are simplify cgroup specific to start with?
