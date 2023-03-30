@@ -1,61 +1,47 @@
-From: Michal Hocko <mhocko@suse.com>
-Subject: Re: [PATCH v2 8/9] vmscan: memcg: sleep when flushing stats during
- reclaim
-Date: Thu, 30 Mar 2023 09:40:55 +0200
-Message-ID: <ZCU9ByZybEi5G5sl@dhcp22.suse.cz>
+From: Yosry Ahmed <yosryahmed@google.com>
+Subject: Re: [PATCH v2 7/9] workingset: memcg: sleep when flushing stats in workingset_refault()
+Date: Thu, 30 Mar 2023 00:42:36 -0700
+Message-ID: <CAJD7tkZLBs=A8m5u=9jGtMeD0ptOgtCTYUoh2r4Ex+fCkvwAXg@mail.gmail.com>
 References: <20230328221644.803272-1-yosryahmed@google.com>
- <20230328221644.803272-9-yosryahmed@google.com>
+ <20230328221644.803272-8-yosryahmed@google.com> <ZCU8tjqzg8cDbobQ@dhcp22.suse.cz>
 Mime-Version: 1.0
+Content-Transfer-Encoding: quoted-printable
 Return-path: <linux-block-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
-        t=1680162056; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=BKxsqFuPBiJOzp/911MeVFEqQ254isRtT/UBAD5emFQ=;
-        b=sTAn42JSwbAgamjaUYbp6+y54yG/0D5tCvLe1EAk35Y48Mnk7UsdkmVOu2kuNympONNMUv
-        XI4XZBzDBYJE2KgYltVPWCpNfPg3NcQMmw8eox7urLMBPMd205E8khnA3qaf66WIhHGAdW
-        az9nTYr3M/QZeuiGHvSRPVIWHVOsqSk=
-Content-Disposition: inline
-In-Reply-To: <20230328221644.803272-9-yosryahmed@google.com>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20210112; t=1680162192;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=+Qxb+z0M56kXGKsGqUzmde7aSXJSNER5bkDSqRNFsW8=;
+        b=UJBukVFEt5dB7HsMZhm8rpG6GkSrR6oamn4AyWhd8ZQPOX1GhBV/ZV16dR83JU1y/X
+         N30JaFrz+2vGq5ca63TxcCERgT6qek7mqtmN81N5//AscM6N8cflImnSD/ZahG+4q0Xn
+         9qp/XyM4ZMQRj7L0H7/4AehjvjsguULR7WeiMPvo+WNkpMojlq5AXSO5o21krpYdZ7B3
+         PB9AZFZMuLkAAEJQVYvz3QY9bGxfNFE34InRWkd4v45XrEk3Mww05p5yDkBJhramLr+a
+         T7lX9urUThW1psrr/JFE2xLVVKoi0OfuM7xGQ2KkdeGHTHhVMnrIjKr3CZ5s/MVVlIAH
+         QpSA==
+In-Reply-To: <ZCU8tjqzg8cDbobQ@dhcp22.suse.cz>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Yosry Ahmed <yosryahmed@google.com>
-Cc: Tejun Heo <tj@kernel.org>, Josef Bacik <josef@toxicpanda.com>, Jens Axboe <axboe@kernel.dk>, Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, Roman Gushchin <roman.gushchin@linux.dev>, Shakeel Butt <shakeelb@google.com>, Muchun Song <muchun.song@linux.dev>, Andrew Morton <akpm@linux-foundation.org>, Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny@suse.com>, Vasily Averin <vasily.averin@linux.dev>, cgroups@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org, bpf@vger.kernel.org
+Content-Type: text/plain; charset="windows-1252"
+To: Michal Hocko <mhocko@suse.com>
+Cc: Tejun Heo <tj@kernel.org>, Josef Bacik <josef@toxicpanda.com>, Jens Axboe <axboe@kernel.dk>, Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, Roman Gushchin <roman.gushchin@linux.dev>, Shakeel Butt <shakeelb@google.com>, Muchun Song <muchun.song@linux.dev>, Andrew Morton <akpm@linux-foundation.org>, =?UTF-8?Q?Michal_Koutn=C3=BD?= <mkoutny@suse.com>, Vasily Averin <vasily.averin@linux.dev>, cgroups@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org, bpf@vger.kernel.org
 
-On Tue 28-03-23 22:16:43, Yosry Ahmed wrote:
-> Memory reclaim is a sleepable context. Allow sleeping when flushing
-> memcg stats to avoid unnecessarily performing a lot of work without
-> sleeping. This can slow down reclaim code if flushing stats is taking
-> too long, but there is already multiple cond_resched()'s in reclaim
-> code.
+On Thu, Mar 30, 2023 at 12:39=E2=80=AFAM Michal Hocko <mhocko@suse.com> wro=
+te:
+>
+> On Tue 28-03-23 22:16:42, Yosry Ahmed wrote:
+> > In workingset_refault(), we call
+> > mem_cgroup_flush_stats_atomic_ratelimited() to flush stats within an
+> > RCU read section and with sleeping disallowed. Move the call above
+> > the RCU read section and allow sleeping to avoid unnecessarily
+> > performing a lot of work without sleeping.
+>
+> Could you say few words why the flushing is done before counters are
+> updated rather than after (the RCU section)?
 
-Why is this preferred? Memory reclaim is surely a slow path but what is
-the advantage of calling mem_cgroup_flush_stats here?
+It's not about the counters that are updated, it's about the counters
+that we read. Stats readers do a flush first to read accurate stats.
+We flush before a read, not after an update.
 
-> Signed-off-by: Yosry Ahmed <yosryahmed@google.com>
-> Acked-by: Shakeel Butt <shakeelb@google.com>
-> Acked-by: Johannes Weiner <hannes@cmpxchg.org>
-> ---
->  mm/vmscan.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/mm/vmscan.c b/mm/vmscan.c
-> index a9511ccb936f..9c1c5e8b24b8 100644
-> --- a/mm/vmscan.c
-> +++ b/mm/vmscan.c
-> @@ -2845,7 +2845,7 @@ static void prepare_scan_count(pg_data_t *pgdat, struct scan_control *sc)
->  	 * Flush the memory cgroup stats, so that we read accurate per-memcg
->  	 * lruvec stats for heuristics.
->  	 */
-> -	mem_cgroup_flush_stats_atomic();
-> +	mem_cgroup_flush_stats();
->  
->  	/*
->  	 * Determine the scan balance between anon and file LRUs.
-> -- 
-> 2.40.0.348.gf938b09366-goog
-
--- 
-Michal Hocko
-SUSE Labs
+> --
+> Michal Hocko
+> SUSE Labs
