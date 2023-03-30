@@ -1,81 +1,92 @@
-From: Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH v2 4/9] cgroup: rstat: add WARN_ON_ONCE() if flushing
- outside task context
-Date: Thu, 30 Mar 2023 01:53:38 -0700
-Message-ID: <CAJD7tkYEOVRcXs-Ag3mWn69EwE4rjFt9j5MAcTGCNE8BuhTd+A@mail.gmail.com>
-References: <20230328221644.803272-5-yosryahmed@google.com>
- <ZCQfZJFufkJ10o01@dhcp22.suse.cz> <CAJD7tkb-UpKm2QbjYzB=B=oGk6Hyj9cbUviZUPC+7VsvBecH7g@mail.gmail.com>
- <20230329192059.2nlme5ubshzdbpg6@google.com> <ZCU1Bp+5bKNJzWIu@dhcp22.suse.cz>
- <CAJD7tka0CmRvcvB0k8DZuid1vC9OK_mFriHHbXNTUkVE7OjaTA@mail.gmail.com>
- <ZCU+8lSi+e4WgT3F@dhcp22.suse.cz> <CAJD7tkaKd9Bcb2-e83Q-kzF7G+crr1U+7uqUPBARXWq-LpyKvw@mail.gmail.com>
- <ZCVFA78lDj2/Uy0C@dhcp22.suse.cz> <CAJD7tkbjmBaXghQ+14Hy28r2LoWSim+LEjOPxaamYeA_kr2uVw@mail.gmail.com>
- <ZCVKqN2nDkkQFvO0@dhcp22.suse.cz>
+From: Dietmar Eggemann <dietmar.eggemann-5wv7dgnIgG8@public.gmane.org>
+Subject: Re: [PATCH 6/7] cgroup/cpuset: Protect DL BW data against parallel
+ cpuset_attach()
+Date: Thu, 30 Mar 2023 15:34:02 +0200
+Message-ID: <67eeb47c-ae23-1389-bb52-f9cfb3206741@arm.com>
+References: <20230329125558.255239-1-juri.lelli@redhat.com>
+ <20230329160240.2093277-1-longman@redhat.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20210112; t=1680166455;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=oX0gvaOyZOPHIQS/lmv/Ti0/aOErAsGb3zG7Z5OZO2o=;
-        b=WXf5DP/SnSUFzsV29yQgNbT+UqQSF6+RPsReWZbLSzwsLGnGrCZ7mGJ+Kg/l3LT/Sa
-         YlwaRxHHQ4V8lQ2ngT1wVPQMpGUNmakTZ5x8ceTg9l7uyxQYfBn3BhwcdUe8BUgFVqDb
-         bVOJOTc+pwvM4OZmgIb2vZRKpL47bO6euuKgv9L3ClENMySR3LjJxL78id+QyVP+9Fvz
-         FdJKYDAKkbtWpALArnt1W7TxIvNZmYl4ltnlCbMCIDvEu2F6DuajYEYUnNpe7RwlEMuh
-         u94GrNUK8lYFRnnkcYCsxCIMmfShfaZNaHwS6ESlMLL2PYDi7KIj59BTIU269tYBDwan
-         IPnA==
-In-Reply-To: <ZCVKqN2nDkkQFvO0-2MMpYkNvuYDjFM9bn6wA6Q@public.gmane.org>
+Content-Language: en-US
+In-Reply-To: <20230329160240.2093277-1-longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="utf-8"
-To: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
-Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Josef Bacik <josef-DigfWCa+lFGyeJad7bwFQA@public.gmane.org>, Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Muchun Song <muchun.song-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, =?UTF-8?Q?Michal_Koutn=C3=BD?= <mkoutny-IBi9RG/b67k@public.gmane.org>, Vasily Averin <vasily.averin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, bpf-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Type: text/plain; charset="us-ascii"
+To: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Juri Lelli <juri.lelli-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Ingo Molnar <mingo-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Qais Yousef <qyousef-wp2msK0BRk8tq7phqP6ubQ@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Hao Luo <haoluo-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Steven Rostedt <rostedt-nx8X9YLhiw1AfugRpC6u6w@public.gmane.org>, luca.abeni-5rdYK369eBLQB0XuIGIEkQ@public.gmane.org, claudio-YOzL5CV4y4YG1A2ADO40+w@public.gmane.org, tommaso.cucinotta-5rdYK369eBLQB0XuIGIEkQ@public.gmane.org, bristot-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, mathieu.poirier-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org, Vincent Guittot <vincent.guittot-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, Wei Wang <wvw-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Rick Yiu <rickyiu-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Quentin Perret <qperret-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Heiko Carstens <hca-tEXmvtCZX7AybS5Ee8rs3A@public.gmane.org>, Vasily Gorbik <gor-tEXmvtCZX7AybS5Ee8rs3A@public.gmane.org>, Alexander Gordeev <agordeev-tEXmvtCZX7AybS5Ee8rs3A@public.gmane.org>, Sudeep Holla <sudeep.holla-5wv7dgnIgG8@public.gmane.org>
 
-On Thu, Mar 30, 2023 at 1:39=E2=80=AFAM Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org> wrot=
-e:
->
-> On Thu 30-03-23 01:19:29, Yosry Ahmed wrote:
-> > On Thu, Mar 30, 2023 at 1:15=E2=80=AFAM Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org> =
-wrote:
-> > >
-> > > On Thu 30-03-23 01:06:26, Yosry Ahmed wrote:
-> > > [...]
-> > > > If we achieve that, do you think it makes sense to add
-> > > > WARN_ON_ONCE(irqs_disabled()) instead to prevent future users from
-> > > > flushing while disabling irqs or in irq context?
-> > >
-> > > WARN_ON (similar to BUG_ON) will not prevent anybody from doing bad
-> > > things. We already have means to shout about sleepable code being
-> > > invoked from an atomic context and there is no reason to duplicate th=
-at.
-> > > As I've said earlier WARN_ON might panic the system in some
-> > > configurations (and yes they are used also in production systems - do
-> > > not ask me why...). So please be careful about that and use that only
-> > > when something really bad (yet recoverable) is going on.
-> >
-> > Thanks for the information (I was about to ask why about production
-> > systems, but okay..). I will avoid WARN_ON completely. For the
-> > purposes of this series I will drop this patch anyway.
->
-> Thanks! People do strange things sometimes...
->
-> > Any idea how to shout about "hey this may take too long, why are you
-> > doing it with irqs disabled?!"?
->
-> Well we have a hard lockup detector. It hits at a much higher stall by
-> default but if you care about IRQ latencies in general then you likely
-> want to lower. Another thing would be IRQ tracing. In any case this code
-> path shouldn't be any special. Sure it can take long on large systems
-> but I bet there are more of those.
+On 29/03/2023 18:02, Waiman Long wrote:
+> It is possible to have parallel attach operations to the same cpuset in
+> progress. To avoid possible corruption of single set of DL BW data in
+> the cpuset structure, we have to disallow parallel attach operations if
+> DL tasks are present. Attach operations can still proceed in parallel
+> as long as no DL tasks are involved.
+> 
+> This patch also stores the CPU where DL BW is allocated and free that BW
+> back to the same CPU in case cpuset_can_attach() is called.
+> 
+> Signed-off-by: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+> ---
+>  kernel/cgroup/cpuset.c | 19 ++++++++++++++++---
+>  1 file changed, 16 insertions(+), 3 deletions(-)
+> 
+> diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
+> index 05c0a1255218..555a6b1a2b76 100644
+> --- a/kernel/cgroup/cpuset.c
+> +++ b/kernel/cgroup/cpuset.c
+> @@ -199,6 +199,7 @@ struct cpuset {
+>  	 */
+>  	int nr_deadline_tasks;
+>  	int nr_migrate_dl_tasks;
+> +	int dl_bw_cpu;
 
-We did see hard lockups in extreme cases, and we do have setups with
-"nmi_watchdog=3Dpanic" that will panic when this happens, so we would
-rather catch the code paths that can lead to that before it actually
-happens.
+Like I mentioned in
+https://lkml.kernel.org/r/cdede77a-5dc5-8933-a444-a2046b074b12-5wv7dgnIgG8@public.gmane.org
+IMHO any CPU of the cpuset is fine since exclusive cpuset and related
+root_domain (as the container for DL BW accounting data) are congruent
+in terms of cpumask.
 
-Maybe we can add a primitive like might_sleep() for this, just food for tho=
-ught.
+>  	u64 sum_migrate_dl_bw;
+>  
+>  	/* Invalid partition error code, not lock protected */
+> @@ -2502,6 +2503,16 @@ static int cpuset_can_attach(struct cgroup_taskset *tset)
+>  	if (cpumask_empty(cs->effective_cpus))
+>  		goto out_unlock;
+>  
+> +	/*
+> +	 * If there is another parallel attach operations in progress for
+> +	 * the same cpuset, the single set of DL data there may get
+> +	 * incorrectly overwritten. So parallel operations are not allowed
+> +	 * if DL tasks are present.
+> +	 */
+> +	ret = -EBUSY;
+> +	if (cs->nr_migrate_dl_tasks)
+> +		goto out_unlock;
 
-> --
-> Michal Hocko
-> SUSE Labs
+(1)
+
+>  	cgroup_taskset_for_each(task, css, tset) {
+>  		ret = task_can_attach(task);
+>  		if (ret)
+> @@ -2511,6 +2522,9 @@ static int cpuset_can_attach(struct cgroup_taskset *tset)
+>  			goto out_unlock;
+>  
+>  		if (dl_task(task)) {
+> +			if (cs->attach_in_progress)
+> +				goto out_unlock;
+
+(2)
+
+Just to check if I get this right, 2 bail-out conditions are necessary
+because:
+
+(1) is to prevent any new cs attach if there is already a DL cs attach
+and (2) is to prevent a new DL cs attach if there is already a non-DL cs
+attach.
+
+>  			cs->nr_migrate_dl_tasks++;
+>  			cs->sum_migrate_dl_bw += task->dl.dl_bw;
+>  		}
+
+[...]
+
