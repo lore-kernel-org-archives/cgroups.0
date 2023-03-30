@@ -1,74 +1,203 @@
-From: Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Subject: [PATCH v3 3/8] memcg: do not flush stats in irq context
-Date: Thu, 30 Mar 2023 19:17:56 +0000
-Message-ID: <20230330191801.1967435-4-yosryahmed@google.com>
+From: Yosry Ahmed <yosryahmed@google.com>
+Subject: [PATCH v3 5/8] memcg: sleep during flushing stats in safe contexts
+Date: Thu, 30 Mar 2023 19:17:58 +0000
+Message-ID: <20230330191801.1967435-6-yosryahmed@google.com>
 References: <20230330191801.1967435-1-yosryahmed@google.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <linux-block-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20210112; t=1680203889;
+        d=google.com; s=20210112; t=1680203893;
         h=cc:to:from:subject:message-id:references:mime-version:in-reply-to
          :date:from:to:cc:subject:date:message-id:reply-to;
-        bh=aVus0GFA9nzxOZ5lNIH1Nx8kHcLEa/aLkX98gl9HKOI=;
-        b=Rb2fsB8aWLuAh/6UfhLacuvSldBOfVahXww4db+vgAZH6d8hHK5iS/Pb3yBuHu8zXu
-         8OHs3K+JgNd5BWKL8HmUqSNmeBMWOUfM93BgScQIJGiFyUTuS/OhqqsgB8B/zESgECWW
-         id0La031n/vRfUHiqMH5ptV4ZUHLtuC1awDopegwUjfP8gYPSzkD9GboR6Sv+BT5F0il
-         4cP0p/kpaTUv9ECKBi7X6nDyHboM9b8Z+lLZ6iyDmkLsMIt+cWstg1DQo4e/ZnrIN56I
-         iRBi8QgWvfbGxJTMXxv2zZuY7CwzGwzqEOEYe4XvyV9MRzo4MibTgBPKLkzWKa272DY9
-         IgGw==
-In-Reply-To: <20230330191801.1967435-1-yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+        bh=4K13XuzFhLt0ZIgNSFirN/NTpinGGuhSsjDOtu88ZFQ=;
+        b=nHw0e79hZFaw3nf4LyIXmmhTYfA1FbBbf2dimkl5At5Psg3CjvNgu6oG6xad78uoN/
+         S2j2UYV8EipalJrwt2zNvbI6g73PyAp4x9X0MELejGCTtg493QkbzRVplqF8mo+gd+ZT
+         v2g6y/Uq/dc/IcDqjVuG6qTAXC3lltOSedgQENPqcdYx34VNoyr/anJbPmkUtw6k7KGZ
+         kbHnvz3Vd5/Dm/bxM/NXhZiy/XES3eJpoxargQYJd3pDWMStv8K0/vXl6hkWv2MnHLzC
+         WyPbqSXfAwOToFWCyu1C3jP4ndGUE9RCrti/toBLaYuvsaopTHlhvDYChxTi2n0kxppd
+         O1Nw==
+In-Reply-To: <20230330191801.1967435-1-yosryahmed@google.com>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Josef Bacik <josef-DigfWCa+lFGyeJad7bwFQA@public.gmane.org>, Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Muchun Song <muchun.song-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, =?UTF-8?q?Michal=20Koutn=C3=BD?= <mkoutny-IBi9RG/b67k@public.gmane.org>
-Cc: Vasily Averin <vasily.averin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, bpf-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
+To: Tejun Heo <tj@kernel.org>, Josef Bacik <josef@toxicpanda.com>, Jens Axboe <axboe@kernel.dk>, Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, Roman Gushchin <roman.gushchin@linux.dev>, Shakeel Butt <shakeelb@google.com>, Muchun Song <muchun.song@linux.dev>, Andrew Morton <akpm@linux-foundation.org>, =?UTF-8?q?Michal=20Koutn=C3=BD?= <mkoutny@suse.com>
+Cc: Vasily Averin <vasily.averin@linux.dev>, cgroups@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org, bpf@vger.kernel.org, Yosry Ahmed <yosryahmed@google.com>, Michal Hocko <mhocko@suse.com>
 
-Currently, the only context in which we can invoke an rstat flush from
-irq context is through mem_cgroup_usage() on the root memcg when called
-from memcg_check_events(). An rstat flush is an expensive operation that
-should not be done in irq context, so do not flush stats and use the
-stale stats in this case.
+Currently, all contexts that flush memcg stats do so with sleeping not
+allowed. Some of these contexts are perfectly safe to sleep in, such as
+reading cgroup files from userspace or the background periodic flusher.
+Flushing is an expensive operation that scales with the number of cpus
+and the number of cgroups in the system, so avoid doing it atomically
+where possible.
 
-Arguably, usage threshold events are not reliable on the root memcg
-anyway since its usage is ill-defined.
+Refactor the code to make mem_cgroup_flush_stats() non-atomic (aka
+sleepable), and provide a separate atomic version. The atomic version is
+used in reclaim, refault, writeback, and in mem_cgroup_usage(). All
+other code paths are left to use the non-atomic version. This includes
+callbacks for userspace reads and the periodic flusher.
 
-Suggested-by: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Suggested-by: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Signed-off-by: Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Acked-by: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Acked-by: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Acked-by: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
+Since refault is the only caller of mem_cgroup_flush_stats_ratelimited(),
+change it to mem_cgroup_flush_stats_atomic_ratelimited(). Reclaim and
+refault code paths are modified to do non-atomic flushing in separate
+later patches -- so it will eventually be changed back to
+mem_cgroup_flush_stats_ratelimited().
+
+Signed-off-by: Yosry Ahmed <yosryahmed@google.com>
+Acked-by: Shakeel Butt <shakeelb@google.com>
+Acked-by: Michal Hocko <mhocko@suse.com>
 ---
- mm/memcontrol.c | 16 +++++++++++++++-
- 1 file changed, 15 insertions(+), 1 deletion(-)
+ include/linux/memcontrol.h |  9 ++++++--
+ mm/memcontrol.c            | 45 ++++++++++++++++++++++++++++++--------
+ mm/vmscan.c                |  2 +-
+ mm/workingset.c            |  2 +-
+ 4 files changed, 45 insertions(+), 13 deletions(-)
 
+diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
+index ac3f3b3a45e2..b424ba3ebd09 100644
+--- a/include/linux/memcontrol.h
++++ b/include/linux/memcontrol.h
+@@ -1037,7 +1037,8 @@ static inline unsigned long lruvec_page_state_local(struct lruvec *lruvec,
+ }
+ 
+ void mem_cgroup_flush_stats(void);
+-void mem_cgroup_flush_stats_ratelimited(void);
++void mem_cgroup_flush_stats_atomic(void);
++void mem_cgroup_flush_stats_atomic_ratelimited(void);
+ 
+ void __mod_memcg_lruvec_state(struct lruvec *lruvec, enum node_stat_item idx,
+ 			      int val);
+@@ -1535,7 +1536,11 @@ static inline void mem_cgroup_flush_stats(void)
+ {
+ }
+ 
+-static inline void mem_cgroup_flush_stats_ratelimited(void)
++static inline void mem_cgroup_flush_stats_atomic(void)
++{
++}
++
++static inline void mem_cgroup_flush_stats_atomic_ratelimited(void)
+ {
+ }
+ 
 diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index c3b6aae78901..ff39f78f962e 100644
+index 65750f8b8259..a2ce3aa10d94 100644
 --- a/mm/memcontrol.c
 +++ b/mm/memcontrol.c
-@@ -3669,7 +3669,21 @@ static unsigned long mem_cgroup_usage(struct mem_cgroup *memcg, bool swap)
- 	unsigned long val;
+@@ -634,7 +634,7 @@ static inline void memcg_rstat_updated(struct mem_cgroup *memcg, int val)
+ 	}
+ }
  
- 	if (mem_cgroup_is_root(memcg)) {
+-static void __mem_cgroup_flush_stats(void)
++static void do_flush_stats(bool atomic)
+ {
+ 	/*
+ 	 * We always flush the entire tree, so concurrent flushers can just
+@@ -646,26 +646,46 @@ static void __mem_cgroup_flush_stats(void)
+ 		return;
+ 
+ 	WRITE_ONCE(flush_next_time, jiffies_64 + 2*FLUSH_TIME);
+-	cgroup_rstat_flush_atomic(root_mem_cgroup->css.cgroup);
++
++	if (atomic)
++		cgroup_rstat_flush_atomic(root_mem_cgroup->css.cgroup);
++	else
++		cgroup_rstat_flush(root_mem_cgroup->css.cgroup);
++
+ 	atomic_set(&stats_flush_threshold, 0);
+ 	atomic_set(&stats_flush_ongoing, 0);
+ }
+ 
++static bool should_flush_stats(void)
++{
++	return atomic_read(&stats_flush_threshold) > num_online_cpus();
++}
++
+ void mem_cgroup_flush_stats(void)
+ {
+-	if (atomic_read(&stats_flush_threshold) > num_online_cpus())
+-		__mem_cgroup_flush_stats();
++	if (should_flush_stats())
++		do_flush_stats(false);
+ }
+ 
+-void mem_cgroup_flush_stats_ratelimited(void)
++void mem_cgroup_flush_stats_atomic(void)
++{
++	if (should_flush_stats())
++		do_flush_stats(true);
++}
++
++void mem_cgroup_flush_stats_atomic_ratelimited(void)
+ {
+ 	if (time_after64(jiffies_64, READ_ONCE(flush_next_time)))
 -		mem_cgroup_flush_stats();
-+		/*
-+		 * We can reach here from irq context through:
-+		 * uncharge_batch()
-+		 * |--memcg_check_events()
-+		 *    |--mem_cgroup_threshold()
-+		 *       |--__mem_cgroup_threshold()
-+		 *          |--mem_cgroup_usage
++		mem_cgroup_flush_stats_atomic();
+ }
+ 
+ static void flush_memcg_stats_dwork(struct work_struct *w)
+ {
+-	__mem_cgroup_flush_stats();
++	/*
++	 * Always flush here so that flushing in latency-sensitive paths is
++	 * as cheap as possible.
++	 */
++	do_flush_stats(false);
+ 	queue_delayed_work(system_unbound_wq, &stats_flush_dwork, FLUSH_TIME);
+ }
+ 
+@@ -3685,9 +3705,12 @@ static unsigned long mem_cgroup_usage(struct mem_cgroup *memcg, bool swap)
+ 		 * done from irq context; use stale stats in this case.
+ 		 * Arguably, usage threshold events are not reliable on the root
+ 		 * memcg anyway since its usage is ill-defined.
 +		 *
-+		 * rstat flushing is an expensive operation that should not be
-+		 * done from irq context; use stale stats in this case.
-+		 * Arguably, usage threshold events are not reliable on the root
-+		 * memcg anyway since its usage is ill-defined.
-+		 */
-+		if (in_task())
-+			mem_cgroup_flush_stats();
++		 * Additionally, other call paths through memcg_check_events()
++		 * disable irqs, so make sure we are flushing stats atomically.
+ 		 */
+ 		if (in_task())
+-			mem_cgroup_flush_stats();
++			mem_cgroup_flush_stats_atomic();
  		val = memcg_page_state(memcg, NR_FILE_PAGES) +
  			memcg_page_state(memcg, NR_ANON_MAPPED);
  		if (swap)
+@@ -4610,7 +4633,11 @@ void mem_cgroup_wb_stats(struct bdi_writeback *wb, unsigned long *pfilepages,
+ 	struct mem_cgroup *memcg = mem_cgroup_from_css(wb->memcg_css);
+ 	struct mem_cgroup *parent;
+ 
+-	mem_cgroup_flush_stats();
++	/*
++	 * wb_writeback() takes a spinlock and calls
++	 * wb_over_bg_thresh()->mem_cgroup_wb_stats(). Do not sleep.
++	 */
++	mem_cgroup_flush_stats_atomic();
+ 
+ 	*pdirty = memcg_page_state(memcg, NR_FILE_DIRTY);
+ 	*pwriteback = memcg_page_state(memcg, NR_WRITEBACK);
+diff --git a/mm/vmscan.c b/mm/vmscan.c
+index 9c1c5e8b24b8..a9511ccb936f 100644
+--- a/mm/vmscan.c
++++ b/mm/vmscan.c
+@@ -2845,7 +2845,7 @@ static void prepare_scan_count(pg_data_t *pgdat, struct scan_control *sc)
+ 	 * Flush the memory cgroup stats, so that we read accurate per-memcg
+ 	 * lruvec stats for heuristics.
+ 	 */
+-	mem_cgroup_flush_stats();
++	mem_cgroup_flush_stats_atomic();
+ 
+ 	/*
+ 	 * Determine the scan balance between anon and file LRUs.
+diff --git a/mm/workingset.c b/mm/workingset.c
+index af862c6738c3..dab0c362b9e3 100644
+--- a/mm/workingset.c
++++ b/mm/workingset.c
+@@ -462,7 +462,7 @@ void workingset_refault(struct folio *folio, void *shadow)
+ 
+ 	mod_lruvec_state(lruvec, WORKINGSET_REFAULT_BASE + file, nr);
+ 
+-	mem_cgroup_flush_stats_ratelimited();
++	mem_cgroup_flush_stats_atomic_ratelimited();
+ 	/*
+ 	 * Compare the distance to the existing workingset size. We
+ 	 * don't activate pages that couldn't stay resident even if
 -- 
 2.40.0.348.gf938b09366-goog
 
