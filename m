@@ -1,8 +1,8 @@
 From: kernel test robot <lkp-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
-Subject: [tj-cgroup:for-6.4] BUILD SUCCESS
- 1bf33285d98536da6b015627341e4f789fee067e
-Date: Thu, 30 Mar 2023 15:23:32 +0800
-Message-ID: <642538f4.C9gtvGJ/Fc/WCkqC%lkp@intel.com>
+Subject: [tj-cgroup:for-6.3-fixes] BUILD SUCCESS
+ 292fd843de26c551856e66faf134512c52dd78b4
+Date: Thu, 30 Mar 2023 15:23:22 +0800
+Message-ID: <642538ea.eQRgnEJvuFauIxo+%lkp@intel.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
@@ -11,26 +11,26 @@ DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   t=1680161019; x=1711697019;
   h=date:from:to:cc:subject:message-id:mime-version:
    content-transfer-encoding;
-  bh=JeOnVJIFdSeUD3sDSNJpbac8JC/yWe8ezu/XalkayH8=;
-  b=hW7gvLTqpIH4YsbSrNqAblSvm4MPLDZJtlo0I/s8qYMqomcgEY8zeK0j
-   pjlUO+DOLiyP9OfwQnWjCXR9jp3MhtyRRuSEoBtkdS0KxRM1/EmGNU1xW
-   cDkjxCDWC8/5qZWU+GvfB6JCUQNrj+URVCXCv5yRz706H3WmowLy6A6eD
-   EqZxDYg2HsqiA0PxDhT7fbU7vo6hmQsLjhQ8V8+nDF6wiJ4Zi0PV+k7gh
-   MnJt3DlH05KThfrD5jFP6zo0XbkKxyiZsqGWykzjq17lnzmGr4szbe9Ww
-   UFIcn0S6/SAmCgbZOvqAKwWmDxmuWZe2KFx+ovd9laCyUN75pOFM4LKpp
-   A==;
+  bh=14jRRMvHxc1khqC+Dd8/GzGfX4mSfmR8Vy+aWy4bhfg=;
+  b=MC5hLbuRmWKkurEShkTCXzJZV2Z3VhT/5Ra9OqMIQDWDGYYIcMLnBeWL
+   PSjoz4jomrrRx2onl4wyTHtUh92Vx4Uea6D0IJtRzePQtj/GN4M01E1Xe
+   vd14n6mO9RMdTJbcmIoZXy2T0jZuHH8JP31d/wBGJFCSSpA9f2KJ1QzzI
+   IzdCVudTbSVp1Qvdr/1Q/K5m994EkWDUW4kd65JqToK1+eY9xbuiAD+vN
+   CAkbXbAf/FmA7lyqw+IJ9NLU9hrr17etG4RzcrfSYYhvSRLu5DAfV6v+W
+   lsbDmfOkbSqQUo84njsafc6aXG/t4h+kBeiS4FgNUsZktyuPzEuTvhLdN
+   w==;
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git for-6.4
-branch HEAD: 1bf33285d98536da6b015627341e4f789fee067e  cgroup/cpuset: Minor updates to test_cpuset_prs.sh
+tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git for-6.3-fixes
+branch HEAD: 292fd843de26c551856e66faf134512c52dd78b4  cgroup/cpuset: Fix partition root's cpuset.cpus update bug
 
 elapsed time: 728m
 
-configs tested: 206
-configs skipped: 17
+configs tested: 267
+configs skipped: 23
 
 The following configs have been built successfully.
 More configs may be tested in the coming days.
@@ -38,136 +38,184 @@ More configs may be tested in the coming days.
 tested configs:
 alpha                            allyesconfig   gcc  
 alpha        buildonly-randconfig-r002-20230329   gcc  
+alpha        buildonly-randconfig-r004-20230330   gcc  
 alpha                               defconfig   gcc  
-alpha                randconfig-r003-20230329   gcc  
-alpha                randconfig-r005-20230329   gcc  
+alpha                randconfig-r004-20230329   gcc  
+alpha                randconfig-r012-20230329   gcc  
 alpha                randconfig-r015-20230329   gcc  
 alpha                randconfig-r023-20230329   gcc  
-alpha                randconfig-r036-20230329   gcc  
+alpha                randconfig-r026-20230329   gcc  
 arc                              allyesconfig   gcc  
 arc          buildonly-randconfig-r003-20230329   gcc  
+arc          buildonly-randconfig-r005-20230329   gcc  
 arc                                 defconfig   gcc  
+arc                 nsimosci_hs_smp_defconfig   gcc  
+arc                  randconfig-r005-20230329   gcc  
+arc                  randconfig-r013-20230329   gcc  
+arc                  randconfig-r016-20230329   gcc  
 arc                  randconfig-r025-20230329   gcc  
 arc                  randconfig-r033-20230329   gcc  
+arc                  randconfig-r034-20230329   gcc  
 arc                  randconfig-r043-20230329   gcc  
 arm                              allmodconfig   gcc  
 arm                              allyesconfig   gcc  
+arm                         axm55xx_defconfig   gcc  
+arm          buildonly-randconfig-r003-20230329   gcc  
 arm          buildonly-randconfig-r006-20230329   gcc  
 arm                                 defconfig   gcc  
+arm                            hisi_defconfig   gcc  
 arm                      jornada720_defconfig   gcc  
+arm                         lpc18xx_defconfig   gcc  
+arm                        multi_v5_defconfig   clang
+arm                             mxs_defconfig   clang
+arm                             pxa_defconfig   gcc  
+arm                  randconfig-r013-20230329   gcc  
+arm                  randconfig-r021-20230329   gcc  
 arm                  randconfig-r023-20230329   gcc  
+arm                  randconfig-r025-20230329   gcc  
 arm                  randconfig-r046-20230329   gcc  
+arm                        realview_defconfig   gcc  
 arm64                            allyesconfig   gcc  
+arm64        buildonly-randconfig-r001-20230329   gcc  
+arm64        buildonly-randconfig-r002-20230329   gcc  
+arm64        buildonly-randconfig-r005-20230329   gcc  
 arm64                               defconfig   gcc  
 arm64                randconfig-r001-20230329   gcc  
 arm64                randconfig-r003-20230329   gcc  
-arm64                randconfig-r006-20230329   gcc  
-arm64                randconfig-r014-20230329   clang
+arm64                randconfig-r013-20230329   clang
 arm64                randconfig-r025-20230329   clang
-csky         buildonly-randconfig-r006-20230329   gcc  
+arm64                randconfig-r026-20230329   clang
+arm64                randconfig-r032-20230329   gcc  
+arm64                randconfig-r035-20230329   gcc  
+arm64                randconfig-r036-20230329   gcc  
 csky                                defconfig   gcc  
 csky                 randconfig-r003-20230329   gcc  
 csky                 randconfig-r004-20230329   gcc  
 csky                 randconfig-r011-20230329   gcc  
+csky                 randconfig-r026-20230329   gcc  
 csky                 randconfig-r026-20230330   gcc  
 csky                 randconfig-r031-20230329   gcc  
 csky                 randconfig-r034-20230329   gcc  
 hexagon              randconfig-r016-20230329   clang
-hexagon              randconfig-r034-20230329   clang
+hexagon              randconfig-r033-20230329   clang
 hexagon              randconfig-r041-20230329   clang
 hexagon              randconfig-r045-20230329   clang
+i386                              allnoconfig   clang
 i386                             allyesconfig   gcc  
 i386                              debian-10.3   gcc  
 i386                                defconfig   gcc  
-i386                          randconfig-a001   gcc  
 i386                          randconfig-a002   clang
-i386                          randconfig-a003   gcc  
 i386                          randconfig-a004   clang
-i386                          randconfig-a005   gcc  
 i386                          randconfig-a006   clang
-i386                          randconfig-a011   clang
 i386                          randconfig-a012   gcc  
-i386                          randconfig-a013   clang
 i386                          randconfig-a014   gcc  
-i386                          randconfig-a015   clang
 i386                          randconfig-a016   gcc  
+i386                          randconfig-c001   gcc  
 ia64                             allmodconfig   gcc  
-ia64         buildonly-randconfig-r001-20230329   gcc  
 ia64         buildonly-randconfig-r003-20230329   gcc  
 ia64         buildonly-randconfig-r005-20230329   gcc  
+ia64         buildonly-randconfig-r005-20230330   gcc  
 ia64                                defconfig   gcc  
 ia64                 randconfig-r002-20230329   gcc  
 ia64                 randconfig-r005-20230329   gcc  
 ia64                 randconfig-r006-20230329   gcc  
-ia64                 randconfig-r012-20230329   gcc  
+ia64                 randconfig-r015-20230329   gcc  
 ia64                 randconfig-r023-20230329   gcc  
 ia64                 randconfig-r025-20230329   gcc  
 ia64                 randconfig-r026-20230329   gcc  
 ia64                 randconfig-r033-20230329   gcc  
 ia64                 randconfig-r036-20230329   gcc  
+ia64                            zx1_defconfig   gcc  
 loongarch                        allmodconfig   gcc  
 loongarch                         allnoconfig   gcc  
 loongarch    buildonly-randconfig-r004-20230329   gcc  
 loongarch    buildonly-randconfig-r006-20230329   gcc  
 loongarch                           defconfig   gcc  
+loongarch                 loongson3_defconfig   gcc  
 loongarch            randconfig-r002-20230329   gcc  
 loongarch            randconfig-r004-20230329   gcc  
 loongarch            randconfig-r006-20230329   gcc  
 loongarch            randconfig-r013-20230329   gcc  
 loongarch            randconfig-r015-20230329   gcc  
 loongarch            randconfig-r021-20230329   gcc  
+loongarch            randconfig-r022-20230329   gcc  
+loongarch            randconfig-r023-20230329   gcc  
 loongarch            randconfig-r036-20230329   gcc  
 m68k                             allmodconfig   gcc  
+m68k                          amiga_defconfig   gcc  
 m68k         buildonly-randconfig-r002-20230329   gcc  
+m68k         buildonly-randconfig-r002-20230330   gcc  
+m68k         buildonly-randconfig-r004-20230329   gcc  
+m68k         buildonly-randconfig-r006-20230329   gcc  
 m68k                                defconfig   gcc  
-m68k                 randconfig-r013-20230329   gcc  
+m68k                 randconfig-r004-20230329   gcc  
 m68k                 randconfig-r014-20230329   gcc  
+m68k                 randconfig-r015-20230329   gcc  
 m68k                 randconfig-r022-20230329   gcc  
-m68k                 randconfig-r035-20230329   gcc  
+m68k                 randconfig-r025-20230329   gcc  
+m68k                 randconfig-r031-20230329   gcc  
 microblaze   buildonly-randconfig-r001-20230329   gcc  
-microblaze           randconfig-r012-20230329   gcc  
+microblaze   buildonly-randconfig-r002-20230329   gcc  
+microblaze   buildonly-randconfig-r005-20230329   gcc  
+microblaze   buildonly-randconfig-r006-20230329   gcc  
 microblaze           randconfig-r016-20230329   gcc  
 microblaze           randconfig-r024-20230329   gcc  
 microblaze           randconfig-r032-20230329   gcc  
-microblaze           randconfig-r035-20230329   gcc  
 mips                             allmodconfig   gcc  
 mips                             allyesconfig   gcc  
+mips                      bmips_stb_defconfig   clang
+mips                           ip32_defconfig   gcc  
+mips                      loongson3_defconfig   gcc  
+mips                    maltaup_xpa_defconfig   gcc  
 mips                 randconfig-r001-20230329   clang
-mips                 randconfig-r002-20230329   clang
 mips                 randconfig-r012-20230329   gcc  
+mips                 randconfig-r015-20230329   gcc  
 mips                 randconfig-r021-20230329   gcc  
 mips                 randconfig-r021-20230330   gcc  
 mips                 randconfig-r025-20230329   gcc  
-nios2        buildonly-randconfig-r001-20230329   gcc  
 nios2        buildonly-randconfig-r003-20230329   gcc  
 nios2        buildonly-randconfig-r004-20230329   gcc  
 nios2                               defconfig   gcc  
+nios2                randconfig-r006-20230329   gcc  
 nios2                randconfig-r011-20230329   gcc  
+nios2                randconfig-r012-20230329   gcc  
+nios2                randconfig-r016-20230329   gcc  
+nios2                randconfig-r024-20230329   gcc  
 nios2                randconfig-r025-20230329   gcc  
+nios2                randconfig-r031-20230329   gcc  
 nios2                randconfig-r033-20230329   gcc  
+nios2                randconfig-r035-20230329   gcc  
 openrisc     buildonly-randconfig-r002-20230329   gcc  
-openrisc     buildonly-randconfig-r004-20230329   gcc  
-openrisc             randconfig-r004-20230329   gcc  
 openrisc             randconfig-r006-20230329   gcc  
-openrisc             randconfig-r015-20230329   gcc  
 openrisc             randconfig-r021-20230329   gcc  
 openrisc             randconfig-r026-20230329   gcc  
+openrisc             randconfig-r032-20230329   gcc  
+openrisc             randconfig-r034-20230329   gcc  
 openrisc             randconfig-r036-20230329   gcc  
-parisc       buildonly-randconfig-r005-20230329   gcc  
+parisc       buildonly-randconfig-r006-20230329   gcc  
 parisc                              defconfig   gcc  
 parisc               randconfig-r004-20230329   gcc  
-parisc               randconfig-r011-20230329   gcc  
+parisc               randconfig-r006-20230329   gcc  
 parisc               randconfig-r022-20230329   gcc  
 parisc               randconfig-r022-20230330   gcc  
 parisc               randconfig-r023-20230330   gcc  
+parisc               randconfig-r024-20230329   gcc  
 parisc               randconfig-r032-20230329   gcc  
 parisc64                            defconfig   gcc  
 powerpc                          allmodconfig   gcc  
 powerpc                           allnoconfig   gcc  
+powerpc                          allyesconfig   clang
 powerpc                      arches_defconfig   gcc  
+powerpc                      chrp32_defconfig   gcc  
+powerpc                       ebony_defconfig   clang
+powerpc                       holly_defconfig   gcc  
 powerpc                 mpc834x_itx_defconfig   gcc  
 powerpc                 mpc8540_ads_defconfig   gcc  
+powerpc                      pcm030_defconfig   gcc  
+powerpc                      ppc64e_defconfig   clang
+powerpc                     rainier_defconfig   gcc  
 powerpc              randconfig-r003-20230329   gcc  
+powerpc              randconfig-r011-20230329   clang
 powerpc              randconfig-r024-20230329   clang
 powerpc              randconfig-r026-20230329   clang
 powerpc              randconfig-r032-20230329   gcc  
@@ -175,7 +223,6 @@ powerpc              randconfig-r034-20230329   gcc
 powerpc                     tqm8555_defconfig   gcc  
 riscv                            allmodconfig   gcc  
 riscv                             allnoconfig   gcc  
-riscv        buildonly-randconfig-r006-20230329   clang
 riscv                               defconfig   gcc  
 riscv                randconfig-r005-20230329   gcc  
 riscv                randconfig-r006-20230329   gcc  
@@ -187,39 +234,47 @@ riscv                randconfig-r042-20230329   clang
 riscv                          rv32_defconfig   gcc  
 s390                             allmodconfig   gcc  
 s390                             allyesconfig   gcc  
+s390         buildonly-randconfig-r002-20230329   clang
 s390         buildonly-randconfig-r003-20230329   clang
+s390                          debug_defconfig   gcc  
 s390                                defconfig   gcc  
 s390                 randconfig-r002-20230329   gcc  
+s390                 randconfig-r005-20230329   gcc  
 s390                 randconfig-r014-20230329   clang
 s390                 randconfig-r022-20230329   clang
 s390                 randconfig-r023-20230329   clang
 s390                 randconfig-r035-20230329   gcc  
 s390                 randconfig-r044-20230329   clang
 sh                               allmodconfig   gcc  
-sh           buildonly-randconfig-r005-20230329   gcc  
 sh                        dreamcast_defconfig   gcc  
 sh                         ecovec24_defconfig   gcc  
+sh                         microdev_defconfig   gcc  
 sh                            migor_defconfig   gcc  
 sh                   randconfig-r005-20230329   gcc  
-sh                   randconfig-r015-20230329   gcc  
 sh                   randconfig-r022-20230329   gcc  
 sh                   randconfig-r023-20230329   gcc  
+sh                          rsk7264_defconfig   gcc  
+sparc                            alldefconfig   gcc  
+sparc                             allnoconfig   gcc  
+sparc        buildonly-randconfig-r001-20230329   gcc  
 sparc        buildonly-randconfig-r003-20230329   gcc  
 sparc                               defconfig   gcc  
 sparc                randconfig-r005-20230329   gcc  
-sparc                randconfig-r013-20230329   gcc  
 sparc                randconfig-r022-20230329   gcc  
 sparc                randconfig-r024-20230330   gcc  
-sparc                randconfig-r031-20230329   gcc  
+sparc64      buildonly-randconfig-r003-20230329   gcc  
 sparc64      buildonly-randconfig-r005-20230329   gcc  
 sparc64      buildonly-randconfig-r006-20230329   gcc  
 sparc64              randconfig-r003-20230329   gcc  
+sparc64              randconfig-r013-20230329   gcc  
 sparc64              randconfig-r024-20230329   gcc  
 sparc64              randconfig-r031-20230329   gcc  
+sparc64              randconfig-r033-20230329   gcc  
 sparc64              randconfig-r034-20230329   gcc  
 um                             i386_defconfig   gcc  
 um                           x86_64_defconfig   gcc  
 x86_64                            allnoconfig   gcc  
+x86_64                           allyesconfig   clang
 x86_64                           allyesconfig   gcc  
 x86_64                              defconfig   gcc  
 x86_64                                  kexec   gcc  
@@ -235,12 +290,19 @@ x86_64                        randconfig-a013   gcc
 x86_64                        randconfig-a014   clang
 x86_64                        randconfig-a015   gcc  
 x86_64                        randconfig-a016   clang
+x86_64                        randconfig-k001   clang
 x86_64                               rhel-8.3   gcc  
+xtensa       buildonly-randconfig-r001-20230329   gcc  
+xtensa       buildonly-randconfig-r003-20230329   gcc  
+xtensa       buildonly-randconfig-r003-20230330   gcc  
 xtensa       buildonly-randconfig-r004-20230329   gcc  
+xtensa       buildonly-randconfig-r006-20230330   gcc  
+xtensa               randconfig-r002-20230329   gcc  
+xtensa               randconfig-r012-20230329   gcc  
+xtensa               randconfig-r021-20230329   gcc  
 xtensa               randconfig-r024-20230329   gcc  
 xtensa               randconfig-r026-20230329   gcc  
 xtensa               randconfig-r031-20230329   gcc  
-xtensa               randconfig-r032-20230329   gcc  
 xtensa               randconfig-r033-20230329   gcc  
 
 -- 
