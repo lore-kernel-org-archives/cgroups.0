@@ -1,52 +1,88 @@
-From: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
-Subject: Re: [PATCH v2 7/9] workingset: memcg: sleep when flushing stats in
- workingset_refault()
-Date: Thu, 30 Mar 2023 09:50:32 +0200
-Message-ID: <ZCU/SMr5gC9C0U+R@dhcp22.suse.cz>
+From: Michal Hocko <mhocko@suse.com>
+Subject: Re: [PATCH v2 8/9] vmscan: memcg: sleep when flushing stats during
+ reclaim
+Date: Thu, 30 Mar 2023 09:52:47 +0200
+Message-ID: <ZCU/zzgWSZb/ux6J@dhcp22.suse.cz>
 References: <20230328221644.803272-1-yosryahmed@google.com>
- <20230328221644.803272-8-yosryahmed@google.com>
- <ZCU8tjqzg8cDbobQ@dhcp22.suse.cz>
- <CAJD7tkZLBs=A8m5u=9jGtMeD0ptOgtCTYUoh2r4Ex+fCkvwAXg@mail.gmail.com>
+ <20230328221644.803272-9-yosryahmed@google.com>
+ <ZCU9ByZybEi5G5sl@dhcp22.suse.cz>
+ <CAJD7tkZODvLZOfGaO3gjC2udKNg_G0mA2CT57djjJXrrHNEbbg@mail.gmail.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: quoted-printable
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <bpf-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
-        t=1680162633; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+        t=1680162768; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
          mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=oGBp2CerBGhZkbj2lQ/nRIhr24DsF/TKy5SuxGUse2s=;
-        b=b3sVl6y3RurKw8ub7GVYytEfZjv5e7tMzMkxjEqStKlRW0eN196yPTxmsd1WQnppK3lR2a
-        3NkEc1GikBqDkQ15fxo+RIJ32ywlsW/Ov47iO6zepuLhLcfl+ULGBtWgO2G+gx33rfB5vD
-        g8jsOgtw5SluPqSGCIX1kHrMPP4REtI=
+        bh=dh199jsuIkw67icwSCJmEAMOM1galF76gLuMPyO52BY=;
+        b=mcaDKMiPqsMKSTSx2WP2qVHm5miTytkBZzWk5JU3bD7xHGqkrdBk9x1NvJOXI7BFXxeSZL
+        ro/YJTfRWvZXZHW1a18Rmf7nhQRTSL8u01c1CTU8nlltVrDzsS+LWiOA0FVCVTMKGfaAxS
+        ZEPEb0eUcZtK+ygv3nBfEKPB/BAeTAM=
 Content-Disposition: inline
-In-Reply-To: <CAJD7tkZLBs=A8m5u=9jGtMeD0ptOgtCTYUoh2r4Ex+fCkvwAXg-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+In-Reply-To: <CAJD7tkZODvLZOfGaO3gjC2udKNg_G0mA2CT57djjJXrrHNEbbg@mail.gmail.com>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="windows-1252"
-To: Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Josef Bacik <josef-DigfWCa+lFGyeJad7bwFQA@public.gmane.org>, Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Muchun Song <muchun.song-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny-IBi9RG/b67k@public.gmane.org>, Vasily Averin <vasily.averin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, bpf-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Yosry Ahmed <yosryahmed@google.com>
+Cc: Tejun Heo <tj@kernel.org>, Josef Bacik <josef@toxicpanda.com>, Jens Axboe <axboe@kernel.dk>, Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, Roman Gushchin <roman.gushchin@linux.dev>, Shakeel Butt <shakeelb@google.com>, Muchun Song <muchun.song@linux.dev>, Andrew Morton <akpm@linux-foundation.org>, Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny@suse.com>, Vasily Averin <vasily.averin@linux.dev>, cgroups@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org, bpf@vger.kernel.org
 
-On Thu 30-03-23 00:42:36, Yosry Ahmed wrote:
-> On Thu, Mar 30, 2023 at 12:39=E2=80=AFAM Michal Hocko <mhocko-IBi9RG/b67k=
-@public.gmane.org> wrote:
+On Thu 30-03-23 00:44:10, Yosry Ahmed wrote:
+> On Thu, Mar 30, 2023 at 12:40=E2=80=AFAM Michal Hocko <mhocko@suse.com> w=
+rote:
 > >
-> > On Tue 28-03-23 22:16:42, Yosry Ahmed wrote:
-> > > In workingset_refault(), we call
-> > > mem_cgroup_flush_stats_atomic_ratelimited() to flush stats within an
-> > > RCU read section and with sleeping disallowed. Move the call above
-> > > the RCU read section and allow sleeping to avoid unnecessarily
-> > > performing a lot of work without sleeping.
+> > On Tue 28-03-23 22:16:43, Yosry Ahmed wrote:
+> > > Memory reclaim is a sleepable context. Allow sleeping when flushing
+> > > memcg stats to avoid unnecessarily performing a lot of work without
+> > > sleeping. This can slow down reclaim code if flushing stats is taking
+> > > too long, but there is already multiple cond_resched()'s in reclaim
+> > > code.
 > >
-> > Could you say few words why the flushing is done before counters are
-> > updated rather than after (the RCU section)?
+> > Why is this preferred? Memory reclaim is surely a slow path but what is
+> > the advantage of calling mem_cgroup_flush_stats here?
 >=20
-> It's not about the counters that are updated, it's about the counters
-> that we read. Stats readers do a flush first to read accurate stats.
-> We flush before a read, not after an update.
+> The purpose of this series is to limit calls to atomic flushing as
+> much as possible, as flushing can become really expensive on systems
+> with high cpu counts and a lot of cgroups, and performing such an
+> expensive operation atomically causes problems -- so we'd rather avoid
+> doing it atomically where possible.
 
-Right you are, my bad I have misread the intention here.
+Please add that to the changelog. While the intention might be obvious
+now (although cover is not explicit about it either) it can cause some
+head scratching in the future when somebody looks at this commit without
+a broader context (e.g. previous ML discussions).
 
-Acked-by: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
+with that
+Acked-by: Michal Hocko <mhocko@suse.com>
+Thanks
+
+> > > Signed-off-by: Yosry Ahmed <yosryahmed@google.com>
+> > > Acked-by: Shakeel Butt <shakeelb@google.com>
+> > > Acked-by: Johannes Weiner <hannes@cmpxchg.org>
+> > > ---
+> > >  mm/vmscan.c | 2 +-
+> > >  1 file changed, 1 insertion(+), 1 deletion(-)
+> > >
+> > > diff --git a/mm/vmscan.c b/mm/vmscan.c
+> > > index a9511ccb936f..9c1c5e8b24b8 100644
+> > > --- a/mm/vmscan.c
+> > > +++ b/mm/vmscan.c
+> > > @@ -2845,7 +2845,7 @@ static void prepare_scan_count(pg_data_t *pgdat=
+, struct scan_control *sc)
+> > >        * Flush the memory cgroup stats, so that we read accurate per-=
+memcg
+> > >        * lruvec stats for heuristics.
+> > >        */
+> > > -     mem_cgroup_flush_stats_atomic();
+> > > +     mem_cgroup_flush_stats();
+> > >
+> > >       /*
+> > >        * Determine the scan balance between anon and file LRUs.
+> > > --
+> > > 2.40.0.348.gf938b09366-goog
+> >
+> > --
+> > Michal Hocko
+> > SUSE Labs
 
 --=20
 Michal Hocko
