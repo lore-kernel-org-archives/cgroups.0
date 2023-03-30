@@ -1,53 +1,63 @@
-From: Johannes Weiner <hannes@cmpxchg.org>
-Subject: Re: [PATCH v3 5/8] memcg: sleep during flushing stats in safe
- contexts
-Date: Thu, 30 Mar 2023 15:30:13 -0400
-Message-ID: <ZCXjRYASA+Cjomlx@cmpxchg.org>
-References: <20230330191801.1967435-1-yosryahmed@google.com>
- <20230330191801.1967435-6-yosryahmed@google.com>
+From: Shaun Tancheff <shaun.tancheff-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Subject: [PATCH] memcg: Set memory min, low, high values along with max
+Date: Fri, 31 Mar 2023 03:22:32 +0700
+Message-ID: <20230330202232.355471-1-shaun.tancheff@gmail.com>
 Mime-Version: 1.0
-Return-path: <bpf-owner@vger.kernel.org>
+Content-Transfer-Encoding: 8bit
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=cmpxchg-org.20210112.gappssmtp.com; s=20210112; t=1680204618;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=Khpw7ou3XcOkEyyu20b7pCpZUxpOS3o1zWL8rB8cIWg=;
-        b=EBZ5RSwu7qAxwJOxXP+VV5tCHAvd597imHWQHEOpyHjV99Yma2yYj2+GVrBE3CvEYu
-         j8GOYLIo/8V6p01dDFwWDz0SuE7pJ9ps3e/uuV/vrp+Efny6FMlE8BM6+lrA9yui5XXy
-         BP6sOtWFiXcCali8wq+wJ3ZeGb16MFGin5/zucLqAsEfB6IkgmUZYUNLVZS0o4LTsQYV
-         p4WDiyCZ5dD1Xl6y5Lz0GhJWbb1bQHZ85QIJV0Hj8hcm7nUsFbYsfBttw01lkBWhwMDp
-         adaoaJrHF1Tqpn0MyPd0QZKQohCtbf0gRnsrAsPTFufImEuTtaA7mENwlPt7Do/NeuEl
-         4V8A==
-Content-Disposition: inline
-In-Reply-To: <20230330191801.1967435-6-yosryahmed@google.com>
+        d=gmail.com; s=20210112; t=1680207770;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=OBkq6KxCtXfKvlem/Zb/2GDPHcnhhSsCCkCs5rwvqhw=;
+        b=Ze1fJTTrAjpXdOhtpMZb/pWrc+OxYU0E2dF3+BqmPVjzlrkpBGMbVVwlILNlZ/qbnv
+         mjaMFzag7RBRmgw0vQCsufH1JIGiRw7v2iYCClFpCDlDLUrU4Gswed1vjjTf2551B2t1
+         y1KP+9T+SgP7GxAskck2N2B38gAgeP1h8RqHlYUanT4Tw9NI9VV37kqbYbk8tYCZyIDs
+         wsJyTGiTuvI7HhK6m3Frln7sAMRGFQy5OYDvRxyd+y6Pt5PZs+MaAH06PlqCym4ehpQF
+         eb2c6pzclizqej8lG5CHoN5ppB5BHUhjjXI3SqPMD1NHXZxMgzz3d4SwNuVISbEIS9K6
+         2xMw==
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Yosry Ahmed <yosryahmed@google.com>
-Cc: Tejun Heo <tj@kernel.org>, Josef Bacik <josef@toxicpanda.com>, Jens Axboe <axboe@kernel.dk>, Zefan Li <lizefan.x@bytedance.com>, Michal Hocko <mhocko@kernel.org>, Roman Gushchin <roman.gushchin@linux.dev>, Shakeel Butt <shakeelb@google.com>, Muchun Song <muchun.song@linux.dev>, Andrew Morton <akpm@linux-foundation.org>, Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny@suse.com>, Vasily Averin <vasily.averin@linux.dev>, cgroups@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org, bpf@vger.kernel.org, Michal Hocko <mhocko@suse.com>
+To: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Cc: Shaun Tancheff <shaun-3FiXFqZnWiVWk0Htik3J/w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, "stable @ vger . kernel . org . Shaun Tancheff" <shaun.tancheff-ZPxbGqLxI0U@public.gmane.org>
 
-On Thu, Mar 30, 2023 at 07:17:58PM +0000, Yosry Ahmed wrote:
-> Currently, all contexts that flush memcg stats do so with sleeping not
-> allowed. Some of these contexts are perfectly safe to sleep in, such as
-> reading cgroup files from userspace or the background periodic flusher.
-> Flushing is an expensive operation that scales with the number of cpus
-> and the number of cgroups in the system, so avoid doing it atomically
-> where possible.
-> 
-> Refactor the code to make mem_cgroup_flush_stats() non-atomic (aka
-> sleepable), and provide a separate atomic version. The atomic version is
-> used in reclaim, refault, writeback, and in mem_cgroup_usage(). All
-> other code paths are left to use the non-atomic version. This includes
-> callbacks for userspace reads and the periodic flusher.
-> 
-> Since refault is the only caller of mem_cgroup_flush_stats_ratelimited(),
-> change it to mem_cgroup_flush_stats_atomic_ratelimited(). Reclaim and
-> refault code paths are modified to do non-atomic flushing in separate
-> later patches -- so it will eventually be changed back to
-> mem_cgroup_flush_stats_ratelimited().
-> 
-> Signed-off-by: Yosry Ahmed <yosryahmed@google.com>
-> Acked-by: Shakeel Butt <shakeelb@google.com>
-> Acked-by: Michal Hocko <mhocko@suse.com>
+From: Shaun Tancheff <shaun-3FiXFqZnWiVWk0Htik3J/w@public.gmane.org>
 
-Acked-by: Johannes Weiner <hannes@cmpxchg.org>
+memcg-v1 does not expose memory min, low, and high.
+
+These values should to be set to reasonable non-zero values
+when max is set.
+
+This patch sets them to 10%, 20% and 80% respective to max.
+
+This fixes an issue with memory pressure with file systems
+do an unbounded high rate of I/O hitting oom.
+
+Signed-off-by: Shaun Tancheff <shaun.tancheff-ZPxbGqLxI0U@public.gmane.org>
+---
+ mm/memcontrol.c | 9 +++++++++
+ 1 file changed, 9 insertions(+)
+
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index 2eee092f8f11..0f5918d9dd2a 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -3491,6 +3491,15 @@ static int mem_cgroup_resize_max(struct mem_cgroup *memcg,
+ 		if (max > counter->max)
+ 			enlarge = true;
+ 		ret = page_counter_set_max(counter, max);
++		if (!ret && !memsw) {
++			unsigned long min = (max / 10) + 1;
++			unsigned long low = min * 2;
++			unsigned long high = max - low;
++
++			page_counter_set_min(counter, min);
++			page_counter_set_low(counter, low);
++			page_counter_set_high(counter, high);
++		}
+ 		mutex_unlock(&memcg_max_mutex);
+ 
+ 		if (!ret)
+-- 
+2.34.1
+
