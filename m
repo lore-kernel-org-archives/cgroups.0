@@ -1,63 +1,85 @@
-From: Shaun Tancheff <shaun.tancheff-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: [PATCH] memcg: Set memory min, low, high values along with max
-Date: Fri, 31 Mar 2023 03:22:32 +0700
-Message-ID: <20230330202232.355471-1-shaun.tancheff@gmail.com>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [External] Re: [PATCH] blk-throttle: Fix io statistics for
+ cgroup v1
+Date: Thu, 30 Mar 2023 15:44:50 -1000
+Message-ID: <ZCY7EoAUqfB0ac8S@slm.duckdns.org>
+References: <20230328142309.73413-1-hanjinke.666@bytedance.com>
+ <ZCSJaBO8i5jQFC10@slm.duckdns.org>
+ <1a858cce-4d87-5e0a-9274-52cffde7dea6@bytedance.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112; t=1680207770;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=OBkq6KxCtXfKvlem/Zb/2GDPHcnhhSsCCkCs5rwvqhw=;
-        b=Ze1fJTTrAjpXdOhtpMZb/pWrc+OxYU0E2dF3+BqmPVjzlrkpBGMbVVwlILNlZ/qbnv
-         mjaMFzag7RBRmgw0vQCsufH1JIGiRw7v2iYCClFpCDlDLUrU4Gswed1vjjTf2551B2t1
-         y1KP+9T+SgP7GxAskck2N2B38gAgeP1h8RqHlYUanT4Tw9NI9VV37kqbYbk8tYCZyIDs
-         wsJyTGiTuvI7HhK6m3Frln7sAMRGFQy5OYDvRxyd+y6Pt5PZs+MaAH06PlqCym4ehpQF
-         eb2c6pzclizqej8lG5CHoN5ppB5BHUhjjXI3SqPMD1NHXZxMgzz3d4SwNuVISbEIS9K6
-         2xMw==
+        d=gmail.com; s=20210112; t=1680227093; x=1682819093;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :mime-version:references:message-id:subject:cc:to:from:date:sender
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=CS9Le6nsC17jU584Wp0Pdq9lmWcMPhHg9k+f1qFG9Ls=;
+        b=jliIbNZkvX0tLViuNo+i79Ttgxeb9fED2/7a/M//MeXVK85etYsThHW7fGC1feC4vZ
+         Go+yEPuxYOcaF5VBV6Ke0tTmio5hHs8DCIabQRCHVjtKLke5fe30pR1/67w3ny6t7cSe
+         u5NPsdvN0XRvl04Wkq4Lma/qrhChh42F/OMxsGqMzgLezbHZJCHUBiU2Ku2KyqSTMMS4
+         pnrGO76PL/yll+KWOG03l2uV3VYf8UD2PiWykpevBE6UMc/CV3anaSXdGkeAc4P7GG5M
+         8D6jVFrnzJzuOXa/B3czUIVd0rUcMg/cUlELD955vSSCykHv6Nix3W7/9YD4sqGoodz3
+         bZLA==
+Sender: Tejun Heo <htejun-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <1a858cce-4d87-5e0a-9274-52cffde7dea6-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-To: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Cc: Shaun Tancheff <shaun-3FiXFqZnWiVWk0Htik3J/w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, "stable @ vger . kernel . org . Shaun Tancheff" <shaun.tancheff-ZPxbGqLxI0U@public.gmane.org>
+Content-Type: text/plain; charset="utf-8"
+To: hanjinke <hanjinke.666-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
+Cc: josef-DigfWCa+lFGyeJad7bwFQA@public.gmane.org, axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-From: Shaun Tancheff <shaun-3FiXFqZnWiVWk0Htik3J/w@public.gmane.org>
+Hello,
 
-memcg-v1 does not expose memory min, low, and high.
+On Thu, Mar 30, 2023 at 11:44:04AM +0800, hanjinke wrote:
+> 在 2023/3/30 上午2:54, Tejun Heo 写道:
+> > On Tue, Mar 28, 2023 at 10:23:09PM +0800, Jinke Han wrote:
+> > > From: Jinke Han <hanjinke.666-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
+> > > 
+> > > Now the io statistics of cgroup v1 are no longer accurate. Although
+> > > in the long run it's best that rstat is a good implementation of
+> > > cgroup v1 io statistics. But before that, we'd better fix this issue.
+> > 
+> > Can you please expand on how the stats are wrong on v1 and how the patch
+> > fixes it?
+> > 
+> > Thanks.
+> > 
+> Now blkio.throttle.io_serviced and blkio.throttle.io_serviced become the
 
-These values should to be set to reasonable non-zero values
-when max is set.
+"now" might be a bit too vague. Can you point to the commit which made the
+change?
 
-This patch sets them to 10%, 20% and 80% respective to max.
+> only stable io stats interface of cgroup v1, and these statistics are done
+> in the blk-throttle code. But the current code only counts the bios that are
 
-This fixes an issue with memory pressure with file systems
-do an unbounded high rate of I/O hitting oom.
+Ah, okay, so the stats are now updated by blk-throtl itself but
 
-Signed-off-by: Shaun Tancheff <shaun.tancheff-ZPxbGqLxI0U@public.gmane.org>
----
- mm/memcontrol.c | 9 +++++++++
- 1 file changed, 9 insertions(+)
+> actually throttled. When the user does not add the throttle limit, the io
+> stats for cgroup v1 has nothing. I fix it according to the statistical
+> method of v2, and made it count all ios accurately.
 
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index 2eee092f8f11..0f5918d9dd2a 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -3491,6 +3491,15 @@ static int mem_cgroup_resize_max(struct mem_cgroup *memcg,
- 		if (max > counter->max)
- 			enlarge = true;
- 		ret = page_counter_set_max(counter, max);
-+		if (!ret && !memsw) {
-+			unsigned long min = (max / 10) + 1;
-+			unsigned long low = min * 2;
-+			unsigned long high = max - low;
+updated only when limits are configured which can be confusing. Makes sense
+to me. Can you please update the patch description accordingly?
+
+Also, the following change:
+
+@@ -2033,6 +2033,9 @@ void blk_cgroup_bio_start(struct bio *bio)
+        struct blkg_iostat_set *bis;
+        unsigned long flags;
+
++       if (!cgroup_subsys_on_dfl(io_cgrp_subsys))
++               return;
 +
-+			page_counter_set_min(counter, min);
-+			page_counter_set_low(counter, low);
-+			page_counter_set_high(counter, high);
-+		}
- 		mutex_unlock(&memcg_max_mutex);
- 
- 		if (!ret)
--- 
-2.34.1
+        /* Root-level stats are sourced from system-wide IO stats */
+        if (!cgroup_parent(blkcg->css.cgroup))
+                return;
 
+seems incomplete as there's an additional
+cgroup_subsys_on_dfl(io_cgrp_subsys) test in the function. We probably wanna
+remove that?
+
+Thanks.
+
+-- 
+tejun
