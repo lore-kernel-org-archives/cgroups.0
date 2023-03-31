@@ -1,89 +1,85 @@
-From: hanjinke <hanjinke.666@bytedance.com>
-Subject: Re: [External] Re: [PATCH] blk-throttle: Fix io statistics for cgroup
- v1
-Date: Fri, 31 Mar 2023 11:00:33 +0800
-Message-ID: <6128380c-b148-cb7e-44d5-0bd7d05a2942@bytedance.com>
-References: <20230328142309.73413-1-hanjinke.666@bytedance.com>
- <ZCSJaBO8i5jQFC10@slm.duckdns.org>
- <1a858cce-4d87-5e0a-9274-52cffde7dea6@bytedance.com>
- <ZCY7EoAUqfB0ac8S@slm.duckdns.org>
+From: Michal Hocko <mhocko@suse.com>
+Subject: Re: [PATCH] memcg: Set memory min, low, high values along with max
+Date: Fri, 31 Mar 2023 10:40:39 +0200
+Message-ID: <ZCach73AHtwcdbbq@dhcp22.suse.cz>
+References: <20230330202232.355471-1-shaun.tancheff@gmail.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=bytedance.com; s=google; t=1680231639;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to:subject
-         :user-agent:mime-version:date:message-id:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=AMrP2Zp/EKlqbziL+FgCOqPjH/auJOar/Bw7xvN0IJw=;
-        b=gFLNd4ejWBxSDzU4aEgXUTu5XK7W5N8DYIf8y981jAiIl1PPhf0gQNwn/L7fY8o8Md
-         GzCyVbfJEEy/JWxGYXiht+V4N/+fmTClBVFIuAb6szfd5tNfLkYBw1YNTx2czLm2sI/4
-         LcWKYMZvb5xYSRjGmgeCQ85FAdWUc+Df9EGS63HjvDKh3crs1/lOjOR7uTf5jUjUrq5k
-         cPnJx6PMlORh0s/D/pBuw61Y2/NN+GOsJ2tQ5p/TrXz7Y/mQIXZHi8xi5J/D+mhr1SvN
-         iFKRECz2VC/NXpimQsG6Sf6YMmLfu9tL7zZkXzQAYPPhdz5i+P15KxHZ50QexXZjWeLk
-         DgYQ==
-In-Reply-To: <ZCY7EoAUqfB0ac8S@slm.duckdns.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
+        t=1680252040; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=foIa7jbtP7Rg9nUkM8izU/GS17m8DG7SvLf2kEzCXj4=;
+        b=Ofh1tn/+4BxdgIFwxB+zPWOZ1FDU2BYSj6+gQsUMQtDMZRfXKJmcZzd1vUQKh9wFhQi62I
+        ihIfOQR90PRlYQM+h2JI9jtMu3KzF5yKXe3VJgsEmoy/XJykJlD/8dQQOO5fQFT7ggJ9cf
+        ngQPw1yQGuTFD3kCdBfMpNwRjIzIIvM=
+Content-Disposition: inline
+In-Reply-To: <20230330202232.355471-1-shaun.tancheff@gmail.com>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="utf-8"; format="flowed"
-To: Tejun Heo <tj@kernel.org>
-Cc: josef@toxicpanda.com, axboe@kernel.dk, cgroups@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Shaun Tancheff <shaun.tancheff@gmail.com>
+Cc: Johannes Weiner <hannes@cmpxchg.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, Shaun Tancheff <shaun@tancheff.com>, Andrew Morton <akpm@linux-foundation.org>, cgroups@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org, "stable @ vger . kernel . org . Shaun Tancheff" <shaun.tancheff@hpe.com>
 
+On Fri 31-03-23 03:22:32, Shaun Tancheff wrote:
+> From: Shaun Tancheff <shaun@tancheff.com>
+> 
+> memcg-v1 does not expose memory min, low, and high.
+> 
+> These values should to be set to reasonable non-zero values
+> when max is set.
+> 
+> This patch sets them to 10%, 20% and 80% respective to max.
+> 
+> This fixes an issue with memory pressure with file systems
+> do an unbounded high rate of I/O hitting oom.
 
+Cgroup v1 has some inherent issues with the dirty data throttling and
+that is a well known problem. Especially when those FS allocations are
+GFP_NOFS where we cannot throttle direct in the memory reclaim path (see
+shrink_folio_list). There are some hacks^Wworkarounds to help out, e.g.
+81a70c21d917 ("mm/cgroup/reclaim: fix dirty pages throttling on cgroup
+v1") but the issue is inherent to how v1 operates so nothing will work
+100%. A more appropriate way forward is to use v2 instead.
 
-在 2023/3/31 上午9:44, Tejun Heo 写道:
-> Hello,
+But maybe you are hitting a different problem so please tell us more.
+
+> Signed-off-by: Shaun Tancheff <shaun.tancheff@hpe.com>
+
+min, low and high are v2 concepts and v1 cannot/won't really use them.
+Besides that hard coded policies do not belong to the kernel. So no to
+this patch. We definitely want to hear more about the underlying problem
+and see what we can do about that.
+
+Nacked-by: Michal Hocko <mhocko@suse.com>
+
+> ---
+>  mm/memcontrol.c | 9 +++++++++
+>  1 file changed, 9 insertions(+)
 > 
-> On Thu, Mar 30, 2023 at 11:44:04AM +0800, hanjinke wrote:
->> 在 2023/3/30 上午2:54, Tejun Heo 写道:
->>> On Tue, Mar 28, 2023 at 10:23:09PM +0800, Jinke Han wrote:
->>>> From: Jinke Han <hanjinke.666@bytedance.com>
->>>>
->>>> Now the io statistics of cgroup v1 are no longer accurate. Although
->>>> in the long run it's best that rstat is a good implementation of
->>>> cgroup v1 io statistics. But before that, we'd better fix this issue.
->>>
->>> Can you please expand on how the stats are wrong on v1 and how the patch
->>> fixes it?
->>>
->>> Thanks.
->>>
->> Now blkio.throttle.io_serviced and blkio.throttle.io_serviced become the
-> 
-> "now" might be a bit too vague. Can you point to the commit which made the
-> change?
-> 
->> only stable io stats interface of cgroup v1, and these statistics are done
->> in the blk-throttle code. But the current code only counts the bios that are
-> 
-> Ah, okay, so the stats are now updated by blk-throtl itself but
-> 
->> actually throttled. When the user does not add the throttle limit, the io
->> stats for cgroup v1 has nothing. I fix it according to the statistical
->> method of v2, and made it count all ios accurately.
-> 
-> updated only when limits are configured which can be confusing. Makes sense
-> to me. Can you please update the patch description accordingly?
-> 
-> Also, the following change:
-> 
-> @@ -2033,6 +2033,9 @@ void blk_cgroup_bio_start(struct bio *bio)
->          struct blkg_iostat_set *bis;
->          unsigned long flags;
-> 
-> +       if (!cgroup_subsys_on_dfl(io_cgrp_subsys))
-> +               return;
+> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+> index 2eee092f8f11..0f5918d9dd2a 100644
+> --- a/mm/memcontrol.c
+> +++ b/mm/memcontrol.c
+> @@ -3491,6 +3491,15 @@ static int mem_cgroup_resize_max(struct mem_cgroup *memcg,
+>  		if (max > counter->max)
+>  			enlarge = true;
+>  		ret = page_counter_set_max(counter, max);
+> +		if (!ret && !memsw) {
+> +			unsigned long min = (max / 10) + 1;
+> +			unsigned long low = min * 2;
+> +			unsigned long high = max - low;
 > +
->          /* Root-level stats are sourced from system-wide IO stats */
->          if (!cgroup_parent(blkcg->css.cgroup))
->                  return;
-> 
-> seems incomplete as there's an additional
-> cgroup_subsys_on_dfl(io_cgrp_subsys) test in the function. We probably wanna
-> remove that?
-> 
-> Thanks.
-> 
+> +			page_counter_set_min(counter, min);
+> +			page_counter_set_low(counter, low);
+> +			page_counter_set_high(counter, high);
+> +		}
+>  		mutex_unlock(&memcg_max_mutex);
+>  
+>  		if (!ret)
+> -- 
+> 2.34.1
 
-okay, according to your suggestion, I will send a v2.
-
-Thanks
+-- 
+Michal Hocko
+SUSE Labs
