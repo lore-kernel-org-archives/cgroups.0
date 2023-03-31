@@ -1,83 +1,62 @@
 From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [External] Re: [PATCH] blk-throttle: Fix io statistics for
- cgroup v1
-Date: Thu, 30 Mar 2023 15:44:50 -1000
-Message-ID: <ZCY7EoAUqfB0ac8S@slm.duckdns.org>
-References: <20230328142309.73413-1-hanjinke.666@bytedance.com>
- <ZCSJaBO8i5jQFC10@slm.duckdns.org>
- <1a858cce-4d87-5e0a-9274-52cffde7dea6@bytedance.com>
+Subject: Re: [RFC PATCH 1/7] cgroup: rstat: only disable interrupts for the
+ percpu lock
+Date: Thu, 30 Mar 2023 15:51:35 -1000
+Message-ID: <ZCY8p/i6DR2tXPLP@slm.duckdns.org>
+References: <ZB5UalkjGngcBDEJ@slm.duckdns.org>
+ <CAJD7tkYhyMkD8SFf8b8L1W9QUrLOdw-HJ2NUbENjw5dgFnH3Aw@mail.gmail.com>
+ <CALvZod6rF0D21hcV7xnqD+oRkn=x5NLi5GOkPpyaPa859uDH+Q@mail.gmail.com>
+ <CAJD7tkY_ESpMYMw72bsATpp6tPphv8qS6VbfEUjpKZW6vUqQSQ@mail.gmail.com>
+ <CALvZod41ecuCKmuFBNtAjoKJjQgWYzoe4_B8zRK37HYk-rYDkA@mail.gmail.com>
+ <CAJD7tkZrp=4zWvjE9_010TAG1T_crCbf9P64UzJABspgcrGPKg@mail.gmail.com>
+ <ZCSJDpPPOVvBYfOy@slm.duckdns.org>
+ <f9b6410-ee17-635f-a35d-559fa0191dc3@google.com>
+ <ZCSY8l/jVwszF6iA@slm.duckdns.org>
+ <98cb3ce-7ed9-3d17-9015-ef7193d6627@google.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112; t=1680227093; x=1682819093;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :mime-version:references:message-id:subject:cc:to:from:date:sender
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=CS9Le6nsC17jU584Wp0Pdq9lmWcMPhHg9k+f1qFG9Ls=;
-        b=jliIbNZkvX0tLViuNo+i79Ttgxeb9fED2/7a/M//MeXVK85etYsThHW7fGC1feC4vZ
-         Go+yEPuxYOcaF5VBV6Ke0tTmio5hHs8DCIabQRCHVjtKLke5fe30pR1/67w3ny6t7cSe
-         u5NPsdvN0XRvl04Wkq4Lma/qrhChh42F/OMxsGqMzgLezbHZJCHUBiU2Ku2KyqSTMMS4
-         pnrGO76PL/yll+KWOG03l2uV3VYf8UD2PiWykpevBE6UMc/CV3anaSXdGkeAc4P7GG5M
-         8D6jVFrnzJzuOXa/B3czUIVd0rUcMg/cUlELD955vSSCykHv6Nix3W7/9YD4sqGoodz3
-         bZLA==
+        d=gmail.com; s=20210112; t=1680227498; x=1682819498;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:sender:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=6XM31ZrRumkictGFOXR0ExRhhRTlkDKTwiG7dCR1Fgc=;
+        b=JBYKiS094xTcv4zZS7qtqmMLeJJI3CBby4kLAUuMziXHD4GQX8kl0rVXktvDBOeoyg
+         kE039cqtRpT4ykTduffb4U40BvtNgW7zV0FAZz2WV0BqlSt5QYJpN8xupFHalEgYBWe2
+         Mcsh414OYAuBY4FJEwUvve3aBfy2EszbwJEObj//xKUmnHYc/UwK6WW03t6iLjufAyn2
+         ssTRNhrXIek059u92KiSZc+dkINIxwv0V3n+b0U3qPZgOYecnTJr8KDPd568UBe+Om+Y
+         JRzenMRK0Ov48J93rRexsFGKtXgwJ4lg877M0D9vxz9Zn9cUrB6aoYizchAGUP6OU+k8
+         mySQ==
 Sender: Tejun Heo <htejun-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 Content-Disposition: inline
-In-Reply-To: <1a858cce-4d87-5e0a-9274-52cffde7dea6-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
+In-Reply-To: <98cb3ce-7ed9-3d17-9015-ef7193d6627-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="utf-8"
-To: hanjinke <hanjinke.666-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
-Cc: josef-DigfWCa+lFGyeJad7bwFQA@public.gmane.org, axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Cc: Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Josef Bacik <josef-DigfWCa+lFGyeJad7bwFQA@public.gmane.org>, Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Muchun Song <muchun.song-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Vasily Averin <vasily.averin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, bpf-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-Hello,
+Hello, Hugh.
 
-On Thu, Mar 30, 2023 at 11:44:04AM +0800, hanjinke wrote:
-> 在 2023/3/30 上午2:54, Tejun Heo 写道:
-> > On Tue, Mar 28, 2023 at 10:23:09PM +0800, Jinke Han wrote:
-> > > From: Jinke Han <hanjinke.666-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
-> > > 
-> > > Now the io statistics of cgroup v1 are no longer accurate. Although
-> > > in the long run it's best that rstat is a good implementation of
-> > > cgroup v1 io statistics. But before that, we'd better fix this issue.
-> > 
-> > Can you please expand on how the stats are wrong on v1 and how the patch
-> > fixes it?
-> > 
-> > Thanks.
-> > 
-> Now blkio.throttle.io_serviced and blkio.throttle.io_serviced become the
+On Wed, Mar 29, 2023 at 01:38:48PM -0700, Hugh Dickins wrote:
+> > So, in general, there's a trade off between local irq service latency and
+> > inducing global lock contention when using unprotected locks. With more and
+> > more CPUs, the balance keeps shifting. The balance still very much depends
+> > on the specifics of a given lock but yeah I think it's something we need to
+> > be a lot more careful about now.
+> 
+> And this looks a very plausible argument to me: I'll let it sink in.
 
-"now" might be a bit too vague. Can you point to the commit which made the
-change?
+Another somewhat relevant change is that flipping irq on/off used to be
+relatively expensive on older x86 cpus. I forget all details about when and
+how much but they should be a lot cheaper now. No idea about !x86 cpus tho.
 
-> only stable io stats interface of cgroup v1, and these statistics are done
-> in the blk-throttle code. But the current code only counts the bios that are
+> But I hadn't heard that the RT folks were clamouring for more irq disabling:
+> perhaps they partition their machines with more care, and are not devotees
+> of high CPU counts.
 
-Ah, okay, so the stats are now updated by blk-throtl itself but
-
-> actually throttled. When the user does not add the throttle limit, the io
-> stats for cgroup v1 has nothing. I fix it according to the statistical
-> method of v2, and made it count all ios accurately.
-
-updated only when limits are configured which can be confusing. Makes sense
-to me. Can you please update the patch description accordingly?
-
-Also, the following change:
-
-@@ -2033,6 +2033,9 @@ void blk_cgroup_bio_start(struct bio *bio)
-        struct blkg_iostat_set *bis;
-        unsigned long flags;
-
-+       if (!cgroup_subsys_on_dfl(io_cgrp_subsys))
-+               return;
-+
-        /* Root-level stats are sourced from system-wide IO stats */
-        if (!cgroup_parent(blkcg->css.cgroup))
-                return;
-
-seems incomplete as there's an additional
-cgroup_subsys_on_dfl(io_cgrp_subsys) test in the function. We probably wanna
-remove that?
+I think RT folks care a lot more about raw IRQ disables. These shouldn't
+actually disable IRQs on RT kernels.
 
 Thanks.
 
