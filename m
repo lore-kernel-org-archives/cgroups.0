@@ -1,50 +1,51 @@
-From: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Subject: [PATCH 2/3] cgroup/cpuset: Make cpuset_attach_task() skip subpartitions CPUs for top_cpuset
-Date: Fri, 31 Mar 2023 10:50:44 -0400
-Message-ID: <20230331145045.2251683-3-longman@redhat.com>
-References: <20230331145045.2251683-1-longman@redhat.com>
+From: David Sterba <dsterba-AlSwsSmVLrQ@public.gmane.org>
+Subject: Re: move bio cgroup punting into btrfs
+Date: Fri, 31 Mar 2023 19:25:35 +0200
+Message-ID: <20230331172535.GX10580@twin.jikos.cz>
+References: <20230327004954.728797-1-hch@lst.de>
+ <20230327231837.GK10580@twin.jikos.cz>
+Reply-To: dsterba-AlSwsSmVLrQ@public.gmane.org
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1680274283;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:
-         content-transfer-encoding:content-transfer-encoding:
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
+        t=1680283911;
+        h=from:from:reply-to:reply-to:date:date:message-id:message-id:to:to:
+         cc:cc:mime-version:mime-version:content-type:content-type:
          in-reply-to:in-reply-to:references:references;
-        bh=+9i7sLun1jgv9svlyB9jcs4mFG0+IKoU4iPpMJ0u9ZQ=;
-        b=LvrIXz6WGo4R2W2uI9IDoagN0uhNYZ+lsQGhOM1ptyhgMmSYRSzD/Qwq23rkkRRd27wkUn
-        FgK3h8NE1D97TuTJ6TR6KdXJ/sJNHTHUnm5mSJbgEl/S1/Zm1oy+G16G4kXf5GaaE6KCAQ
-        QSn11VCRyL9daNrOeW7ZR5jsSeVdQlg=
-In-Reply-To: <20230331145045.2251683-1-longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+        bh=8HVcYQ1lSsLr0GGFaE6/gSgA/f1Cg/CbSrd2aXGyFRA=;
+        b=Ow3RWOlzRUBW8wpoNPTzbrksZDXeObeFutiyKa61eSyCNTORcP19dQ5lrR2RihL5DMkd74
+        dAMq0btppv6NADshsmtDxHlMX+OvtghonwIMIRKf392Vc5WT9a9bc2BBCLerwazmIBCW8j
+        hwPqGF2X6m+F85ySt16qtmkhVhJK0jM=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
+        s=susede2_ed25519; t=1680283911;
+        h=from:from:reply-to:reply-to:date:date:message-id:message-id:to:to:
+         cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=8HVcYQ1lSsLr0GGFaE6/gSgA/f1Cg/CbSrd2aXGyFRA=;
+        b=82hiKoK+DdfxxJKLniClLSsiWpAoAys8G8yDDzVcJ2WorrPaC1AIl3h3Xl0YsV0ez53bEn
+        2RTkg7CB4mvF8yBQ==
+Content-Disposition: inline
+In-Reply-To: <20230327231837.GK10580-1ReQVI26iDCaZKY3DrU6dA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Christian Brauner <brauner-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Juri Lelli <juri.lelli-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Dietmar Eggemann <dietmar.eggemann-5wv7dgnIgG8@public.gmane.org>, gscrivan-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Content-Transfer-Encoding: 7bit
+To: David Sterba <dsterba-AlSwsSmVLrQ@public.gmane.org>
+Cc: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>, Josef Bacik <josef-DigfWCa+lFGyeJad7bwFQA@public.gmane.org>, Chris Mason <clm-b10kYP2dOMg@public.gmane.org>, David Sterba <dsterba-IBi9RG/b67k@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-btrfs-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-It is found that attaching a task to the top_cpuset does not currently
-ignore CPUs allocated to subpartitions in cpuset_attach_task(). So the
-code is changed to fix that.
+On Tue, Mar 28, 2023 at 01:18:37AM +0200, David Sterba wrote:
+> On Mon, Mar 27, 2023 at 09:49:46AM +0900, Christoph Hellwig wrote:
+> > Hi all,
+> > 
+> > the current code to offload bio submission into a cgroup-specific helper
+> > thread when sent from the btrfs internal helper threads is a bit ugly.
+> > 
+> > This series moves it into btrfs with minimal interference in the core
+> > code.
+> 
+> I can't speak for the cgroup side, but as btrfs is the only user of the
+> REQ_CGROUP_PUNT flag pushing it down to the IO submission path makes
+> sense. Code looks ok, it's a direct conversion.
+> 
+> When the mm/block changes get an Ack I can put it to btrfs for-next.
 
-Signed-off-by: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
----
- kernel/cgroup/cpuset.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
-
-diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
-index f6d5614982d7..2367de611c42 100644
---- a/kernel/cgroup/cpuset.c
-+++ b/kernel/cgroup/cpuset.c
-@@ -2530,7 +2530,8 @@ static void cpuset_attach_task(struct cpuset *cs, struct task_struct *task)
- 	if (cs != &top_cpuset)
- 		guarantee_online_cpus(task, cpus_attach);
- 	else
--		cpumask_copy(cpus_attach, task_cpu_possible_mask(task));
-+		cpumask_andnot(cpus_attach, task_cpu_possible_mask(task),
-+			       cs->subparts_cpus);
- 	/*
- 	 * can_attach beforehand should guarantee that this doesn't
- 	 * fail.  TODO: have a better way to handle failure here
--- 
-2.31.1
-
+Patchset added to for-next.
