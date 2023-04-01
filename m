@@ -1,77 +1,105 @@
-From: Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Subject: Re: freezer cgroups: Forcing frozen memory to swap
-Date: Fri, 31 Mar 2023 12:25:49 -0700
-Message-ID: <CAJD7tkZ+ZkQX01MHDGd0mT7=qt82VfJ_AAXA2xy1w35Drws-0g@mail.gmail.com>
-References: <CAEeXeQLTQjt6O4C-_3dE63gPEgXU9qtdM2+XDxYemV9bsfq_pg@mail.gmail.com>
+From: Jinke Han <hanjinke.666-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
+Subject: [PATCH v2] blk-throttle: Fix io statistics for cgroup v1
+Date: Sat,  1 Apr 2023 17:47:08 +0800
+Message-ID: <20230401094708.77631-1-hanjinke.666@bytedance.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 8bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20210112; t=1680290786;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=iu7s9DYyfZiIezMIZDBeMPsNtoiOPCl5mln2vnX6FPU=;
-        b=Jh1exDm2YeiM89cAzqqWvMxVLriZxCQArLnH4Mf6OVhEcGsrWa67g4r4iY9GxBqbL4
-         OwiVm/ocExjWSMEDP9eTxqD46U6I3d7SVjjjUi82zkGcqJI5cy9NeZDc2aVMrm+tu9D4
-         2ihR1w8LzwPVi8V2GpLFeCJCC1+5Wib5Jjnd3W7a3/qpPLT61HDDmpxc1WBzkXj7GdjS
-         c1V7ynE2tVtUYK2imikTkrZvZSfAfE1k58a/h1So+lVWALmAznug58niAX2/RU1yHRnX
-         6j8J+n3+dwdR/5N3u5VPOS2w5wXbjINi/VhPfdgtNb3Syg0XszV+79drAnURLA3puqU3
-         ithQ==
-In-Reply-To: <CAEeXeQLTQjt6O4C-_3dE63gPEgXU9qtdM2+XDxYemV9bsfq_pg-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+        d=bytedance.com; s=google; t=1680342442;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=hiK4KO4kZbl8xYSoAWQs5Xyf4Snj7jNQFcEtAQejez8=;
+        b=V+zhxA472E3zjzApz3J/B0H+TF2UZuO9A3fqlLhaAsX+s8ZPpc6Y5xCXMt+ODvpYia
+         prVRA6DUvQ0U8QdnsdMSDgxnevfp/Htz8mOqyOLtb/ctA/aKl7nZX5U1yZOEb8m1jhIS
+         h2XiY2mp3+D5wLLfJJ9IWb9ftDxnGzA9PjwjTDB58mMn4WjQlAP9ATXwjr0EZF6KVmMo
+         CseN0wvqz9Cb3qySGD9rkACfMDQ7Lmknsc0B9/T5z24lpA8DEXa9OyJu1KaNRtkaErtR
+         WU2DKk+Q55OX8+3ozYk2myGGhObt9Vsrf3CqSyvenh4P2tCxjdTR8vfI+su5veg4D4Ys
+         1rwg==
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="windows-1252"
-To: Tyler Rider <tylerjrider-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Type: text/plain; charset="us-ascii"
+To: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, josef-DigfWCa+lFGyeJad7bwFQA@public.gmane.org, axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Jinke Han <hanjinke.666-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
 
-On Fri, Mar 31, 2023 at 11:49=E2=80=AFAM Tyler Rider <tylerjrider-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org=
-> wrote:
->
-> Hi all,
->
-> I've been trying to search for some mechanism(s) to reclaim resident
-> memory of some frozen applications on a small embedded device. The
-> typical use case is to bring up an app and once backgrounded/dismissed
-> the idea is to freeze/thaw for faster resume/restart times.
->
-> The issue is that after starting/pausing several of these applications
-> (and subsequently freezing) memory begins dropping, and memory
-> thrashing begins. (I can stop the apps of course, but then that leads
-> to longer load times).
->
-> I've already got memory constraint issues, which led to adding a swap
-> partition. I've tried bumping the memory.swapiness to 100 within a
-> memory cgroup, and waiting a few seconds for kswapd to kick in before
-> freezing but since the app is running it only puts a handful of pages
-> into swap.
->
-> Some projects exist (crypopid(2) / CRIU) for dumping the process state
-> in userspace, but unless I'm missing something, I'd imagine there must
-> be some existing kernel mechanism (seems like a useful feature for
-> small memory constrained devices) within the freezer/memory cgroups
-> that can force all pages of the frozen process to a swap partition,
-> and restore on thaw.
->
-> Does this sort of  cgroup-level S4 (hibernate-to-disk) exist or even
-> just a mechanism to force a frozen process's pages to swap?
+From: Jinke Han <hanjinke.666-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
 
-In memory cgroups there is a memory.reclaim interface, where you can
-request the kernel to reclaim X amount of memory from the cgroup. A
-few things to keep in mind:
+After commit f382fb0bcef4 ("block: remove legacy IO schedulers"),
+blkio.throttle.io_serviced and blkio.throttle.io_service_bytes become
+the only stable io stats interface of cgroup v1, and these statistics
+are done in the blk-throttle code. But the current code only counts the
+bios that are actually throttled. When the user does not add the throttle
+limit, the io stats for cgroup v1 has nothing. I fix it according to the
+statistical method of v2, and made it count all ios accurately.
 
-* This is per-cgroup, not per-process.
+Fixes: a7b36ee6ba29 ("block: move blk-throtl fast path inline")
+Signed-off-by: Jinke Han <hanjinke.666-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
+---
+ block/blk-cgroup.c   | 6 ++++--
+ block/blk-throttle.c | 6 ------
+ block/blk-throttle.h | 9 +++++++++
+ 3 files changed, 13 insertions(+), 8 deletions(-)
 
-* This is irrelevant to freezing.
+diff --git a/block/blk-cgroup.c b/block/blk-cgroup.c
+index bd50b55bdb61..33263d0d0e0f 100644
+--- a/block/blk-cgroup.c
++++ b/block/blk-cgroup.c
+@@ -2033,6 +2033,9 @@ void blk_cgroup_bio_start(struct bio *bio)
+ 	struct blkg_iostat_set *bis;
+ 	unsigned long flags;
+ 
++	if (!cgroup_subsys_on_dfl(io_cgrp_subsys))
++		return;
++
+ 	/* Root-level stats are sourced from system-wide IO stats */
+ 	if (!cgroup_parent(blkcg->css.cgroup))
+ 		return;
+@@ -2064,8 +2067,7 @@ void blk_cgroup_bio_start(struct bio *bio)
+ 	}
+ 
+ 	u64_stats_update_end_irqrestore(&bis->sync, flags);
+-	if (cgroup_subsys_on_dfl(io_cgrp_subsys))
+-		cgroup_rstat_updated(blkcg->css.cgroup, cpu);
++	cgroup_rstat_updated(blkcg->css.cgroup, cpu);
+ 	put_cpu();
+ }
+ 
+diff --git a/block/blk-throttle.c b/block/blk-throttle.c
+index 47e9d8be68f3..2be66e9430f7 100644
+--- a/block/blk-throttle.c
++++ b/block/blk-throttle.c
+@@ -2174,12 +2174,6 @@ bool __blk_throtl_bio(struct bio *bio)
+ 
+ 	rcu_read_lock();
+ 
+-	if (!cgroup_subsys_on_dfl(io_cgrp_subsys)) {
+-		blkg_rwstat_add(&tg->stat_bytes, bio->bi_opf,
+-				bio->bi_iter.bi_size);
+-		blkg_rwstat_add(&tg->stat_ios, bio->bi_opf, 1);
+-	}
+-
+ 	spin_lock_irq(&q->queue_lock);
+ 
+ 	throtl_update_latency_buckets(td);
+diff --git a/block/blk-throttle.h b/block/blk-throttle.h
+index ef4b7a4de987..d1ccbfe9f797 100644
+--- a/block/blk-throttle.h
++++ b/block/blk-throttle.h
+@@ -185,6 +185,15 @@ static inline bool blk_should_throtl(struct bio *bio)
+ 	struct throtl_grp *tg = blkg_to_tg(bio->bi_blkg);
+ 	int rw = bio_data_dir(bio);
+ 
++	if (!cgroup_subsys_on_dfl(io_cgrp_subsys)) {
++		if (!bio_flagged(bio, BIO_CGROUP_ACCT)) {
++			bio_set_flag(bio, BIO_CGROUP_ACCT);
++			blkg_rwstat_add(&tg->stat_bytes, bio->bi_opf,
++					bio->bi_iter.bi_size);
++		}
++		blkg_rwstat_add(&tg->stat_ios, bio->bi_opf, 1);
++	}
++
+ 	/* iops limit is always counted */
+ 	if (tg->has_rules_iops[rw])
+ 		return true;
+-- 
+2.20.1
 
-* This will try to reclaim all types of memory, not just swapbacked
-(anon & tmpfs memory). So it may writeback file pages charged to the
-cgroup, or shrink slabs.
-
-* I am not aware of a mechanism to fault back in all the memory mapped
-by processes in a cgroup to restore the pages. Perhaps you can use
-MADV to do this per-process, or just let processes fault their memory
-back in on-demand.
-
->
-> Thanks,
-> Tyler
