@@ -1,124 +1,69 @@
-From: Anand Krishnamoorthi <anakrish-0li6OtcxBFHby3iVrkZq2A@public.gmane.org>
-Subject: Re: [EXTERNAL] [PATCH v2 00/18]  Add Cgroup support for SGX EPC
- memory
-Date: Mon, 3 Apr 2023 21:26:35 +0000
-Message-ID: <DM6PR21MB11778ABA54CD33A5822D5B24C4929@DM6PR21MB1177.namprd21.prod.outlook.com>
-References: <20221202183655.3767674-1-kristen@linux.intel.com>
+From: Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Subject: [PATCH mm-unstable RFC 0/5] cgroup: eliminate atomic rstat
+Date: Mon,  3 Apr 2023 22:03:32 +0000
+Message-ID: <20230403220337.443510-1-yosryahmed@google.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=selector2;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=gpDm2UMhLYE21j3CnCQkaJQgKP4U2zgaLFOXtrgPKbg=;
- b=PIjqasJ45USSFg9BeODqeh0nBfxkVSKZC4s9HALsRxAQcRXm1ogMhuaI44c1VDRnG/5db5+aHFijY5aXnughCkLXLrBKF2iytYnOY9d6SzwnZjsSTPxMPd8HpBUAy9Ums5feMj1RuSL8r5q1cRjRdb3TbzuG7+ybDQDOC0gfqVQ=
-In-Reply-To: <20221202183655.3767674-1-kristen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
-Content-Language: en-US
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20210112; t=1680559419;
+        h=cc:to:from:subject:message-id:mime-version:date:from:to:cc:subject
+         :date:message-id:reply-to;
+        bh=Oudpa17NQV9icHAF4JVW0zNdSUdsNavz+h9FQ4FdLBA=;
+        b=gmD3EzUX38OVjaGFgrpka4qXeIu+V1DoGMvDe0eWXeLuVA1CJdcNcSnyr+n+EpIa7P
+         3MzjOnSmoFXG3JxX7Cs0Wn8GkvgBkLa16nyiWlhViz9Kto3HXhbMSTrrqLF92l4pjOwM
+         Bl/A9PadEA4W2+qgRGAzaoQf4/LsxKQq3zYjYpbh+vXPlDzaJ4S4K1nV++HobeWezLIl
+         5VMhWDSPBl0YL4XGy/N1tyENDpHWNaUPOK4Xcs933WjQ4R2VnAzEP/q0VSAq3rp+G1sc
+         XYLTFN0b46pCsuwvdg0Q0NbrDy9LoUkmRlggmmc6W32L6LZuB1HPkybaEDU5BBFcgTTW
+         Tt7w==
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Kristen Carlson Accardi <kristen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, "jarkko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org" <jarkko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, "dave.hansen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org" <dave.hansen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, "tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org" <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, "linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-sgx-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-sgx-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "Bo Zhang (ACC)" <zhanb-0li6OtcxBFHby3iVrkZq2A@public.gmane.org>
-Cc: "zhiquan1.li-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org" <zhiquan1.li-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+Content-Transfer-Encoding: 7bit
+To: Alexander Viro <viro-RmSDqhL/yNMiFSDQTTA3OLVCufUGDwFn@public.gmane.org>, Christian Brauner <brauner-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+Cc: linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 
-Adding Bo Zhang to thread.
+A previous patch series ([1] currently in mm-unstable) changed most
+atomic rstat flushing contexts to become non-atomic. This was done to
+avoid an expensive operation that scales with # cgroups and # cpus to
+happen with irqs disabled and scheduling not permitted. There were two
+remaining atomic flushing contexts after that series. This series tries
+to eliminate them as well, eliminating atomic rstat flushing completely.
 
--Anand
+The two remaining atomic flushing contexts are:
+(a) wb_over_bg_thresh()->mem_cgroup_wb_stats()
+(b) mem_cgroup_threshold()->mem_cgroup_usage()
 
+For (a), flushing needs to be atomic as wb_writeback() calls
+wb_over_bg_thresh() with a spinlock held. However, it seems like the
+call to wb_over_bg_thresh() doesn't need to be protected by that
+spinlock, so this series proposes a refactoring that moves the call
+outside the lock criticial section and makes the stats flushing
+in mem_cgroup_wb_stats() non-atomic.
 
-From: Kristen Carlson Accardi <kristen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
-Sent: Friday, December 2, 2022 10:36 AM
-To: jarkko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org <jarkko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>; dave.hansen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org <dav=
-e.hansen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>; tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>; linux-kernel@vger=
-.kernel.org <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>; linux-sgx-u79uwXL29TY76Z2rM5mHXA@public.gmane.org <linu=
-x-sgx-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>; cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Cc: zhiquan1.li-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org <zhiquan1.li-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
-Subject: [EXTERNAL] [PATCH v2 00/18] Add Cgroup support for SGX EPC memory
+For (b), flushing needs to be atomic as mem_cgroup_threshold() is called
+with irqs disabled. We only flush the stats when calculating the root
+usage, as it is approximated as the sum of some memcg stats (file, anon,
+and optionally swap) instead of the conventional page counter. This
+series proposes changing this calculation to use the global stats
+instead, eliminating the need for a memcg stat flush.
 
-Utilize the Miscellaneous cgroup controller to regulate the distribution
-of SGX EPC memory, which is a subset of system RAM that is used to provide
-SGX-enabled applications with protected memory, and is otherwise inaccessib=
-le.
+After these 2 contexts are eliminated, we no longer need
+mem_cgroup_flush_stats_atomic() or cgroup_rstat_flush_atomic(). We can
+remove them and simplify the code.
 
-SGX EPC memory allocations are separate from normal RAM allocations,
-and is managed solely by the SGX subsystem. The existing cgroup memory
-controller cannot be used to limit or account for SGX EPC memory.
+Yosry Ahmed (5):
+  writeback: move wb_over_bg_thresh() call outside lock section
+  memcg: flush stats non-atomically in mem_cgroup_wb_stats()
+  memcg: calculate root usage from global state
+  memcg: remove mem_cgroup_flush_stats_atomic()
+  cgroup: remove cgroup_rstat_flush_atomic()
 
-This patchset implements the support for sgx_epc memory within the
-misc cgroup controller, and then utilizes the misc cgroup controller
-to provide support for setting the total system capacity, max limit
-per cgroup, and events.
+ fs/fs-writeback.c          | 16 +++++++----
+ include/linux/cgroup.h     |  1 -
+ include/linux/memcontrol.h |  5 ----
+ kernel/cgroup/rstat.c      | 26 ++++--------------
+ mm/memcontrol.c            | 54 ++++++++------------------------------
+ 5 files changed, 27 insertions(+), 75 deletions(-)
 
-This work was originally authored by Sean Christopherson a few years ago,
-and was modified to work with more recent kernels, and to utilize the
-misc cgroup controller rather than a custom controller. It is currently
-based on top of the MCA patches.
+-- 
+2.40.0.348.gf938b09366-goog
 
-Here's the MCA patchset for reference.
-https://lore.kernel.org/linux-sgx/2d52c8c4-8ed0-6df2-2911-da5b9fcc9ae4@inte=
-l.com/T/#t
-
-The patchset adds support for multiple LRUs to track both reclaimable
-EPC pages (i.e. pages the reclaimer knows about), as well as unreclaimable
-EPC pages (i.e. pages which the reclaimer isn't aware of, such as va pages)=
-.
-These pages are assigned to an LRU, as well as an enclave, so that an
-enclave's full EPC usage can be tracked, and limited to a max value. During
-OOM events, an enclave can be have its memory zapped, and all the EPC pages
-not tracked by the reclaimer can be freed.
-
-I appreciate your comments and feedback.
-
-Changelog:
-
-v2:
- * rename struct sgx_epc_lru to sgx_epc_lru_lists to be more clear
-   that this struct contains 2 lists.
- * use inline functions rather than macros for sgx_epc_page_list*
-   wrappers.
- * Remove flags macros and open code all flags.
- * Improve the commit message for RECLAIM_IN_PROGRESS patch to make
-   it more clear what the patch does.
- * remove notifier_block from misc cgroup changes and use a set
-   of ops for callbacks instead.
- * rename root_misc to misc_cg_root and parent_misc to misc_cg_parent
- * consolidate misc cgroup changes to 2 patches and remove most of
-   the previous helper functions.
-
-Kristen Carlson Accardi (7):
-  x86/sgx: Add 'struct sgx_epc_lru_lists' to encapsulate lru list(s)
-  x86/sgx: Use sgx_epc_lru_lists for existing active page list
-  x86/sgx: Track epc pages on reclaimable or unreclaimable lists
-  cgroup/misc: Add per resource callbacks for css events
-  cgroup/misc: Prepare for SGX usage
-  x86/sgx: Add support for misc cgroup controller
-  Docs/x86/sgx: Add description for cgroup support
-
-Sean Christopherson (11):
-  x86/sgx: Call cond_resched() at the end of sgx_reclaim_pages()
-  x86/sgx: Store struct sgx_encl when allocating new VA pages
-  x86/sgx: Introduce RECLAIM_IN_PROGRESS flag for EPC pages
-  x86/sgx: Use a list to track to-be-reclaimed pages during reclaim
-  x86/sgx: Allow reclaiming up to 32 pages, but scan 16 by default
-  x86/sgx: Return the number of EPC pages that were successfully
-    reclaimed
-  x86/sgx: Add option to ignore age of page during EPC reclaim
-  x86/sgx: Prepare for multiple LRUs
-  x86/sgx: Expose sgx_reclaim_pages() for use by EPC cgroup
-  x86/sgx: Add helper to grab pages from an arbitrary EPC LRU
-  x86/sgx: Add EPC OOM path to forcefully reclaim EPC
-
- Documentation/x86/sgx.rst            |  77 ++++
- arch/x86/Kconfig                     |  13 +
- arch/x86/kernel/cpu/sgx/Makefile     |   1 +
- arch/x86/kernel/cpu/sgx/encl.c       |  90 ++++-
- arch/x86/kernel/cpu/sgx/encl.h       |   4 +-
- arch/x86/kernel/cpu/sgx/epc_cgroup.c | 539 +++++++++++++++++++++++++++
- arch/x86/kernel/cpu/sgx/epc_cgroup.h |  59 +++
- arch/x86/kernel/cpu/sgx/ioctl.c      |  14 +-
- arch/x86/kernel/cpu/sgx/main.c       | 412 ++++++++++++++++----
- arch/x86/kernel/cpu/sgx/sgx.h        | 122 +++++-
- arch/x86/kernel/cpu/sgx/virt.c       |  28 +-
- include/linux/misc_cgroup.h          |  35 ++
- kernel/cgroup/misc.c                 |  76 +++-
- 13 files changed, 1341 insertions(+), 129 deletions(-)
- create mode 100644 arch/x86/kernel/cpu/sgx/epc_cgroup.c
- create mode 100644 arch/x86/kernel/cpu/sgx/epc_cgroup.h
