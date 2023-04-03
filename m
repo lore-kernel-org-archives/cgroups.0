@@ -1,7 +1,7 @@
 From: Zi Yan <zi.yan@sent.com>
-Subject: [PATCH v3 2/7] mm/page_owner: use order instead of nr in split_page_owner()
-Date: Mon,  3 Apr 2023 16:18:34 -0400
-Message-ID: <20230403201839.4097845-3-zi.yan@sent.com>
+Subject: [PATCH v3 6/7] mm: truncate: split huge page cache page to a non-zero order if possible.
+Date: Mon,  3 Apr 2023 16:18:38 -0400
+Message-ID: <20230403201839.4097845-7-zi.yan@sent.com>
 References: <20230403201839.4097845-1-zi.yan@sent.com>
 Reply-To: Zi Yan <ziy@nvidia.com>
 Mime-Version: 1.0
@@ -11,26 +11,26 @@ DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=sent.com; h=cc
         :cc:content-transfer-encoding:content-type:date:date:from:from
         :in-reply-to:in-reply-to:message-id:mime-version:references
         :reply-to:reply-to:sender:subject:subject:to:to; s=fm2; t=
-        1680553144; x=1680639544; bh=0+1ccQx8AuLgSqfkQ9qAEQMi/lCcYIby1X8
-        SrOj7vms=; b=KUwl7e1aBsGFQzG5D0syDzxeWbJ3GF3fvksO8O/36dURW8FqYMv
-        SZmNQeib2JGKzildDgbeERIuwZu+26p3d5QGEMmQLqnbTgdbRtGECgXXZ4R1y4f7
-        G5LavpoRwEp5Me3Ov0l6eM6zMpcRj5OTFUUuG1A5NHmVuQTS5Vh3PMSSsYLusCMa
-        9xLD7t4TNL+IZBKoI7BB+cqubyRv/opGyrQyeYTx2n5SDve5SCbWTHgi1ATf5h5E
-        LFRzjk+tkSmVdnujGmCNvrqKW/XYpCWCWWMTFXZe9Py4pgqZ97R8zFuxL0GF5AxG
-        gQVRC/CejfgmQW8A1yjsYXroTbXvrNSnHqQ==
+        1680553147; x=1680639547; bh=n0I3rKbVmW11Ko5MdyrWnLEXy5CTcBBnWUT
+        tQZPt4TU=; b=CknXjAfEg+BlpRI36eBMzyBQgGufPONGhPvWy7s+gy/bhNUeDoy
+        XrZZS36kGlcl7YvPRJZxh2QYUhLMrXCglMzsbdi6caUVkB32GPU136oGWOw9D7FN
+        a8wMhxHbFNmlt1qrJ4P/OxqrHkHDhHurwSRTuukUPsm7F/OfAzu7PwJdwNe7hY1d
+        dOGCKNRadN2+ZLi0jXCvtfukxAs0chGy99+JG1ewv3jNM2OLkjwCNlw0I19tiNiQ
+        FnGOZayjMtLBHucHfEbFGOi/9g1Wg+PAq0cU0Ne/rfk5Pt2zZn8rEnuff6x7Lwtq
+        wL12JuQLFZHNFUdi0ohPgNaCwuQhZRPtcow==
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
         messagingengine.com; h=cc:cc:content-transfer-encoding
         :content-type:date:date:feedback-id:feedback-id:from:from
         :in-reply-to:in-reply-to:message-id:mime-version:references
         :reply-to:reply-to:sender:subject:subject:to:to:x-me-proxy
         :x-me-proxy:x-me-sender:x-me-sender:x-sasl-enc; s=fm2; t=
-        1680553144; x=1680639544; bh=0+1ccQx8AuLgSqfkQ9qAEQMi/lCcYIby1X8
-        SrOj7vms=; b=H1/eBrevt0g1ytaLRjDooVqSD9DjKANjiNur8QMCYBINWoRKxAM
-        wav5DMHaX3kn6pl8Xh3A9XcfMNeATpKNRSU4Llq+Fm1pC+f0IT2AMLvBUO3/jkYD
-        KcILNwTsTu0YBLszjyQhHNAb8XNM0C0vWoAdo6PBjz+PT1qwwJlzRAkN9LeiRtaC
-        fKd5PlLQI14MgXjnnRGBUiRWTKUgaGGd7k/3QwPxo5fZcDb/fBEy7Cuz6lcSrRg2
-        Ac3xfSiB5kDm6eQrFul6iQyFkISdftmQfbhidUFwBtoLvV0pdTvnq3BaDJdMhhyk
-        dTqdvWK7XYpUy7rnUlvCLDgjwlyVC/tT3CQ==
+        1680553147; x=1680639547; bh=n0I3rKbVmW11Ko5MdyrWnLEXy5CTcBBnWUT
+        tQZPt4TU=; b=hNICcSGN1EXXDV3uYu5QpP5/qwn5lAAgv19FTzFTRbX5N0FlNAD
+        +5Ly6h8+eRZyyrSEBPSN01hlDZia4jeE8G0YMvkRUcpZK9YRyKP43ep+HjxUeE20
+        azKRsRgrYvZ0GHFOvtBFsAnC1eAK617AZaxsoAL4N0/2EGRvbUPQr0Hgug9brVGx
+        wq1vCYXFWpRBjdnVF9SmQ0OIxtvSSxi76UNt/wFGEF57YmmJAUg0kBVUaVJRBARw
+        Peey3G6reNzAV18EFN4QhsoRg4Ow1+bNDTN5r17diEi2jc8HfCGGMbSUEL0f0Ikv
+        GUwL+HnFRkobihhK9fbtiKJ902159F8YvgA==
 In-Reply-To: <20230403201839.4097845-1-zi.yan@sent.com>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
@@ -39,110 +39,81 @@ Cc: Zi Yan <ziy@nvidia.com>, "Kirill A . Shutemov" <kirill.shutemov@linux.intel.
 
 From: Zi Yan <ziy@nvidia.com>
 
-We do not have non power of two pages, using nr is error prone if nr
-is not power-of-two. Use page order instead.
+To minimize the number of pages after a huge page truncation, we do not
+need to split it all the way down to order-0. The huge page has at most
+three parts, the part before offset, the part to be truncated, the part
+remaining at the end. Find the greatest common divisor of them to
+calculate the new page order from it, so we can split the huge
+page to this order and keep the remaining pages as large and as few as
+possible.
 
 Signed-off-by: Zi Yan <ziy@nvidia.com>
 ---
- include/linux/page_owner.h | 8 ++++----
- mm/huge_memory.c           | 2 +-
- mm/page_alloc.c            | 4 ++--
- mm/page_owner.c            | 3 ++-
- 4 files changed, 9 insertions(+), 8 deletions(-)
+ mm/truncate.c | 21 +++++++++++++++++++--
+ 1 file changed, 19 insertions(+), 2 deletions(-)
 
-diff --git a/include/linux/page_owner.h b/include/linux/page_owner.h
-index 119a0c9d2a8b..d7878523adfc 100644
---- a/include/linux/page_owner.h
-+++ b/include/linux/page_owner.h
-@@ -11,7 +11,7 @@ extern struct page_ext_operations page_owner_ops;
- extern void __reset_page_owner(struct page *page, unsigned short order);
- extern void __set_page_owner(struct page *page,
- 			unsigned short order, gfp_t gfp_mask);
--extern void __split_page_owner(struct page *page, unsigned int nr);
-+extern void __split_page_owner(struct page *page, int order);
- extern void __folio_copy_owner(struct folio *newfolio, struct folio *old);
- extern void __set_page_owner_migrate_reason(struct page *page, int reason);
- extern void __dump_page_owner(const struct page *page);
-@@ -31,10 +31,10 @@ static inline void set_page_owner(struct page *page,
- 		__set_page_owner(page, order, gfp_mask);
- }
+diff --git a/mm/truncate.c b/mm/truncate.c
+index 86de31ed4d32..817efd5e94b4 100644
+--- a/mm/truncate.c
++++ b/mm/truncate.c
+@@ -22,6 +22,7 @@
+ #include <linux/buffer_head.h>	/* grr. try_to_release_page */
+ #include <linux/shmem_fs.h>
+ #include <linux/rmap.h>
++#include <linux/gcd.h>
+ #include "internal.h"
 =20
--static inline void split_page_owner(struct page *page, unsigned int nr)
-+static inline void split_page_owner(struct page *page, int order)
+ /*
+@@ -211,7 +212,8 @@ int truncate_inode_folio(struct address_space *mapping,=
+ struct folio *folio)
+ bool truncate_inode_partial_folio(struct folio *folio, loff_t start, loff_=
+t end)
  {
- 	if (static_branch_unlikely(&page_owner_inited))
--		__split_page_owner(page, nr);
-+		__split_page_owner(page, order);
- }
- static inline void folio_copy_owner(struct folio *newfolio, struct folio *=
-old)
- {
-@@ -60,7 +60,7 @@ static inline void set_page_owner(struct page *page,
- {
- }
- static inline void split_page_owner(struct page *page,
--			unsigned short order)
-+			int order)
- {
- }
- static inline void folio_copy_owner(struct folio *newfolio, struct folio *=
-folio)
-diff --git a/mm/huge_memory.c b/mm/huge_memory.c
-index 3bb003eb80a3..a21921c90b21 100644
---- a/mm/huge_memory.c
-+++ b/mm/huge_memory.c
-@@ -2557,7 +2557,7 @@ static void __split_huge_page(struct page *page, stru=
-ct list_head *list,
- 	unlock_page_lruvec(lruvec);
- 	/* Caller disabled irqs, so they are still disabled here */
+ 	loff_t pos =3D folio_pos(folio);
+-	unsigned int offset, length;
++	unsigned int offset, length, remaining;
++	unsigned int new_order =3D folio_order(folio);
 =20
--	split_page_owner(head, nr);
-+	split_page_owner(head, order);
+ 	if (pos < start)
+ 		offset =3D start - pos;
+@@ -222,6 +224,7 @@ bool truncate_inode_partial_folio(struct folio *folio, =
+loff_t start, loff_t end)
+ 		length =3D length - offset;
+ 	else
+ 		length =3D end + 1 - pos - offset;
++	remaining =3D folio_size(folio) - offset - length;
 =20
- 	/* See comment in __split_huge_page_tail() */
- 	if (PageAnon(head)) {
-diff --git a/mm/page_alloc.c b/mm/page_alloc.c
-index d84b121d1e03..d537828bc4be 100644
---- a/mm/page_alloc.c
-+++ b/mm/page_alloc.c
-@@ -2780,7 +2780,7 @@ void split_page(struct page *page, unsigned int order)
+ 	folio_wait_writeback(folio);
+ 	if (length =3D=3D folio_size(folio)) {
+@@ -236,11 +239,25 @@ bool truncate_inode_partial_folio(struct folio *folio=
+, loff_t start, loff_t end)
+ 	 */
+ 	folio_zero_range(folio, offset, length);
 =20
- 	for (i =3D 1; i < (1 << order); i++)
- 		set_page_refcounted(page + i);
--	split_page_owner(page, 1 << order);
-+	split_page_owner(page, order);
- 	split_page_memcg(page, order);
- }
- EXPORT_SYMBOL_GPL(split_page);
-@@ -4996,7 +4996,7 @@ static void *make_alloc_exact(unsigned long addr, uns=
-igned int order,
- 		struct page *page =3D virt_to_page((void *)addr);
- 		struct page *last =3D page + nr;
-=20
--		split_page_owner(page, 1 << order);
-+		split_page_owner(page, order);
- 		split_page_memcg(page, order);
- 		while (page < --last)
- 			set_page_refcounted(last);
-diff --git a/mm/page_owner.c b/mm/page_owner.c
-index 31169b3e7f06..64233b5b09d5 100644
---- a/mm/page_owner.c
-+++ b/mm/page_owner.c
-@@ -211,11 +211,12 @@ void __set_page_owner_migrate_reason(struct page *pag=
-e, int reason)
- 	page_ext_put(page_ext);
- }
-=20
--void __split_page_owner(struct page *page, unsigned int nr)
-+void __split_page_owner(struct page *page, int order)
- {
- 	int i;
- 	struct page_ext *page_ext =3D page_ext_get(page);
- 	struct page_owner *page_owner;
-+	unsigned int nr =3D 1 << order;
-=20
- 	if (unlikely(!page_ext))
- 		return;
++	/*
++	 * Use the greatest common divisor of offset, length, and remaining
++	 * as the smallest page size and compute the new order from it. So we
++	 * can truncate a subpage as large as possible. Round up gcd to
++	 * PAGE_SIZE, otherwise ilog2 can give -1 when gcd/PAGE_SIZE is 0.
++	 */
++	new_order =3D ilog2(round_up(gcd(gcd(offset, length), remaining),
++				   PAGE_SIZE) / PAGE_SIZE);
++
++	/* order-1 THP not supported, downgrade to order-0 */
++	if (new_order =3D=3D 1)
++		new_order =3D 0;
++
++
+ 	if (folio_has_private(folio))
+ 		folio_invalidate(folio, offset, length);
+ 	if (!folio_test_large(folio))
+ 		return true;
+-	if (split_folio(folio) =3D=3D 0)
++	if (split_huge_page_to_list_to_order(&folio->page, NULL, new_order) =3D=
+=3D 0)
+ 		return true;
+ 	if (folio_test_dirty(folio))
+ 		return false;
 --=20
 2.39.2
 
