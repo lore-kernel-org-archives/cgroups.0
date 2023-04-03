@@ -1,64 +1,124 @@
-From: Yosry Ahmed <yosryahmed@google.com>
-Subject: Re: [PATCH v2 4/9] cgroup: rstat: add WARN_ON_ONCE() if flushing
- outside task context
-Date: Mon, 3 Apr 2023 13:39:29 -0700
-Message-ID: <CAJD7tkZF+rCNW4pctjOfAetoAQRq7-exV-j-nRc_xYMkMBGY_A@mail.gmail.com>
-References: <ZCU1Bp+5bKNJzWIu@dhcp22.suse.cz> <CAJD7tka0CmRvcvB0k8DZuid1vC9OK_mFriHHbXNTUkVE7OjaTA@mail.gmail.com>
- <ZCU+8lSi+e4WgT3F@dhcp22.suse.cz> <CAJD7tkaKd9Bcb2-e83Q-kzF7G+crr1U+7uqUPBARXWq-LpyKvw@mail.gmail.com>
- <ZCVFA78lDj2/Uy0C@dhcp22.suse.cz> <CAJD7tkbjmBaXghQ+14Hy28r2LoWSim+LEjOPxaamYeA_kr2uVw@mail.gmail.com>
- <ZCVKqN2nDkkQFvO0@dhcp22.suse.cz> <CAJD7tkYEOVRcXs-Ag3mWn69EwE4rjFt9j5MAcTGCNE8BuhTd+A@mail.gmail.com>
- <ZCa9sixp3GJcjf8Y@dhcp22.suse.cz> <CAJD7tka-2vNn25=NdrKQoMf4ntdbWtojY0k4eAa-c9D+v7J=HQ@mail.gmail.com>
- <ZCqQfuprGreGYwFA@dhcp22.suse.cz>
+From: Anand Krishnamoorthi <anakrish-0li6OtcxBFHby3iVrkZq2A@public.gmane.org>
+Subject: Re: [EXTERNAL] [PATCH v2 00/18]  Add Cgroup support for SGX EPC
+ memory
+Date: Mon, 3 Apr 2023 21:26:35 +0000
+Message-ID: <DM6PR21MB11778ABA54CD33A5822D5B24C4929@DM6PR21MB1177.namprd21.prod.outlook.com>
+References: <20221202183655.3767674-1-kristen@linux.intel.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: quoted-printable
-Return-path: <linux-block-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20210112; t=1680554406;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=98lpmjVP03rasH0aUw5Or4NqpKX/eDyfmYvak2z+XQY=;
-        b=aOrySHi+L5aBtQhD9CMl2wIUewhWyIyQQXGmhw67rG4aYB/0VxtLJJdx4JKcjr4/Su
-         CKHv3ZrfEko2du/9DiJPnmJgfyM9NzFrN9wGLJLRnVWtCv6yd58ea0gAc1LIGcNps8aF
-         iQTbr3AocnQwqVN0vRpZPBqysYDShbz/ZYTddqaS5BtXq0sVascssl+jkJwncPNANTjk
-         LRdvan3ZAUekClGuJ3S02i2YGWuAiDNHkJMii0Y/083m5jLXpgQg8MobYoyssOoaX1B9
-         uxV+Z9IvmlmsJ8Y4QsY7pkdlMNW7ukQiPmVap2uSl7WIEp0ptj20puF/FpeYyuTT9zI9
-         0ZgQ==
-In-Reply-To: <ZCqQfuprGreGYwFA@dhcp22.suse.cz>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=selector2;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=gpDm2UMhLYE21j3CnCQkaJQgKP4U2zgaLFOXtrgPKbg=;
+ b=PIjqasJ45USSFg9BeODqeh0nBfxkVSKZC4s9HALsRxAQcRXm1ogMhuaI44c1VDRnG/5db5+aHFijY5aXnughCkLXLrBKF2iytYnOY9d6SzwnZjsSTPxMPd8HpBUAy9Ums5feMj1RuSL8r5q1cRjRdb3TbzuG7+ybDQDOC0gfqVQ=
+In-Reply-To: <20221202183655.3767674-1-kristen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
+Content-Language: en-US
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="utf-8"
-To: Michal Hocko <mhocko@suse.com>
-Cc: Johannes Weiner <hannes@cmpxchg.org>, Shakeel Butt <shakeelb@google.com>, Tejun Heo <tj@kernel.org>, Josef Bacik <josef@toxicpanda.com>, Jens Axboe <axboe@kernel.dk>, Zefan Li <lizefan.x@bytedance.com>, Roman Gushchin <roman.gushchin@linux.dev>, Muchun Song <muchun.song@linux.dev>, Andrew Morton <akpm@linux-foundation.org>, =?UTF-8?Q?Michal_Koutn=C3=BD?= <mkoutny@suse.com>, Vasily Averin <vasily.averin@linux.dev>, cgroups@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org, bpf@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+To: Kristen Carlson Accardi <kristen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, "jarkko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org" <jarkko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, "dave.hansen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org" <dave.hansen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, "tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org" <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, "linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-sgx-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-sgx-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "Bo Zhang (ACC)" <zhanb-0li6OtcxBFHby3iVrkZq2A@public.gmane.org>
+Cc: "zhiquan1.li-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org" <zhiquan1.li-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
 
-On Mon, Apr 3, 2023 at 1:38=E2=80=AFAM Michal Hocko <mhocko@suse.com> wrote=
-:
->
-> On Fri 31-03-23 12:03:47, Yosry Ahmed wrote:
-> > On Fri, Mar 31, 2023 at 4:02=E2=80=AFAM Michal Hocko <mhocko@suse.com> =
-wrote:
-> > >
-> > > On Thu 30-03-23 01:53:38, Yosry Ahmed wrote:
-> > > [...]
-> > > > Maybe we can add a primitive like might_sleep() for this, just food=
- for thought.
-> > >
-> > > I do not think it is the correct to abuse might_sleep if the function
-> > > itself doesn't sleep. If it does might_sleep is already involved.
-> >
-> > Oh, sorry if I wasn't clear, I did not mean to reuse might_sleep() --
-> > I meant introducing a new similar debug primitive that shouts if irqs
-> > are disabled.
->
-> This is circling back to original concerns about arbitrary decision to
-> care about IRQs. Is this really any different from spin locks or preempt
-> disabled critical sections preventing any scheduling and potentially
-> triggereing soft lockups?
+Adding Bo Zhang to thread.
 
-Not really, I am sure there are other code paths that may cause
-similar problems. At least we can start annotating them so that we
-don't regress them (e.g. by introducing a caller that disables irqs --
-converting them into hard lockups).
+-Anand
 
-> --
-> Michal Hocko
-> SUSE Labs
+
+From: Kristen Carlson Accardi <kristen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
+Sent: Friday, December 2, 2022 10:36 AM
+To: jarkko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org <jarkko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>; dave.hansen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org <dav=
+e.hansen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>; tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>; linux-kernel@vger=
+.kernel.org <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>; linux-sgx-u79uwXL29TY76Z2rM5mHXA@public.gmane.org <linu=
+x-sgx-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>; cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Cc: zhiquan1.li-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org <zhiquan1.li-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+Subject: [EXTERNAL] [PATCH v2 00/18] Add Cgroup support for SGX EPC memory
+
+Utilize the Miscellaneous cgroup controller to regulate the distribution
+of SGX EPC memory, which is a subset of system RAM that is used to provide
+SGX-enabled applications with protected memory, and is otherwise inaccessib=
+le.
+
+SGX EPC memory allocations are separate from normal RAM allocations,
+and is managed solely by the SGX subsystem. The existing cgroup memory
+controller cannot be used to limit or account for SGX EPC memory.
+
+This patchset implements the support for sgx_epc memory within the
+misc cgroup controller, and then utilizes the misc cgroup controller
+to provide support for setting the total system capacity, max limit
+per cgroup, and events.
+
+This work was originally authored by Sean Christopherson a few years ago,
+and was modified to work with more recent kernels, and to utilize the
+misc cgroup controller rather than a custom controller. It is currently
+based on top of the MCA patches.
+
+Here's the MCA patchset for reference.
+https://lore.kernel.org/linux-sgx/2d52c8c4-8ed0-6df2-2911-da5b9fcc9ae4@inte=
+l.com/T/#t
+
+The patchset adds support for multiple LRUs to track both reclaimable
+EPC pages (i.e. pages the reclaimer knows about), as well as unreclaimable
+EPC pages (i.e. pages which the reclaimer isn't aware of, such as va pages)=
+.
+These pages are assigned to an LRU, as well as an enclave, so that an
+enclave's full EPC usage can be tracked, and limited to a max value. During
+OOM events, an enclave can be have its memory zapped, and all the EPC pages
+not tracked by the reclaimer can be freed.
+
+I appreciate your comments and feedback.
+
+Changelog:
+
+v2:
+ * rename struct sgx_epc_lru to sgx_epc_lru_lists to be more clear
+   that this struct contains 2 lists.
+ * use inline functions rather than macros for sgx_epc_page_list*
+   wrappers.
+ * Remove flags macros and open code all flags.
+ * Improve the commit message for RECLAIM_IN_PROGRESS patch to make
+   it more clear what the patch does.
+ * remove notifier_block from misc cgroup changes and use a set
+   of ops for callbacks instead.
+ * rename root_misc to misc_cg_root and parent_misc to misc_cg_parent
+ * consolidate misc cgroup changes to 2 patches and remove most of
+   the previous helper functions.
+
+Kristen Carlson Accardi (7):
+  x86/sgx: Add 'struct sgx_epc_lru_lists' to encapsulate lru list(s)
+  x86/sgx: Use sgx_epc_lru_lists for existing active page list
+  x86/sgx: Track epc pages on reclaimable or unreclaimable lists
+  cgroup/misc: Add per resource callbacks for css events
+  cgroup/misc: Prepare for SGX usage
+  x86/sgx: Add support for misc cgroup controller
+  Docs/x86/sgx: Add description for cgroup support
+
+Sean Christopherson (11):
+  x86/sgx: Call cond_resched() at the end of sgx_reclaim_pages()
+  x86/sgx: Store struct sgx_encl when allocating new VA pages
+  x86/sgx: Introduce RECLAIM_IN_PROGRESS flag for EPC pages
+  x86/sgx: Use a list to track to-be-reclaimed pages during reclaim
+  x86/sgx: Allow reclaiming up to 32 pages, but scan 16 by default
+  x86/sgx: Return the number of EPC pages that were successfully
+    reclaimed
+  x86/sgx: Add option to ignore age of page during EPC reclaim
+  x86/sgx: Prepare for multiple LRUs
+  x86/sgx: Expose sgx_reclaim_pages() for use by EPC cgroup
+  x86/sgx: Add helper to grab pages from an arbitrary EPC LRU
+  x86/sgx: Add EPC OOM path to forcefully reclaim EPC
+
+ Documentation/x86/sgx.rst            |  77 ++++
+ arch/x86/Kconfig                     |  13 +
+ arch/x86/kernel/cpu/sgx/Makefile     |   1 +
+ arch/x86/kernel/cpu/sgx/encl.c       |  90 ++++-
+ arch/x86/kernel/cpu/sgx/encl.h       |   4 +-
+ arch/x86/kernel/cpu/sgx/epc_cgroup.c | 539 +++++++++++++++++++++++++++
+ arch/x86/kernel/cpu/sgx/epc_cgroup.h |  59 +++
+ arch/x86/kernel/cpu/sgx/ioctl.c      |  14 +-
+ arch/x86/kernel/cpu/sgx/main.c       | 412 ++++++++++++++++----
+ arch/x86/kernel/cpu/sgx/sgx.h        | 122 +++++-
+ arch/x86/kernel/cpu/sgx/virt.c       |  28 +-
+ include/linux/misc_cgroup.h          |  35 ++
+ kernel/cgroup/misc.c                 |  76 +++-
+ 13 files changed, 1341 insertions(+), 129 deletions(-)
+ create mode 100644 arch/x86/kernel/cpu/sgx/epc_cgroup.c
+ create mode 100644 arch/x86/kernel/cpu/sgx/epc_cgroup.h
