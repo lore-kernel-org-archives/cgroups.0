@@ -1,77 +1,90 @@
-From: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH 3/3] cgroup/cpuset: Allow only one active attach operation
- per cpuset
-Date: Mon, 3 Apr 2023 13:41:33 -0400
-Message-ID: <24b67530-62ce-4f9c-7b74-d41d2ccc710e@redhat.com>
-References: <20230331145045.2251683-1-longman@redhat.com>
- <20230331145045.2251683-4-longman@redhat.com>
- <20230403164736.lpjdpzxxnjlpxrqv@blackpad>
+From: hanjinke <hanjinke.666@bytedance.com>
+Subject: Re: [External] Re: [PATCH v2] blk-throttle: Fix io statistics for
+ cgroup v1
+Date: Tue, 4 Apr 2023 01:56:51 +0800
+Message-ID: <cb69bf15-6288-e5d9-08c9-cf64187ddd03@bytedance.com>
+References: <20230401094708.77631-1-hanjinke.666@bytedance.com>
+ <20230403153021.z4smxxnxbgdcgcey@blackpad>
 Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1680543700;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=du5ube66GFFv6eiC7GgKY4F8MRZGEnQkABRtMIiA1tM=;
-        b=J6cASXk5i9MHrtpZDY8dEZvmUQKNuPizeI6WliI719tDfaYDiQEb6IJyq3fn1lH3ATkSzJ
-        P3lNcBzS5+aERcfFSpAisMZ2HjCQ16slHA4jaRYYu4l2E1TOcaw1hCQ0iu2zMRy3zGOHXB
-        taKagSrR63RGIUIJAGRbr70nEqz9w2c=
-Content-Language: en-US
-In-Reply-To: <20230403164736.lpjdpzxxnjlpxrqv@blackpad>
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=bytedance.com; s=google; t=1680544617;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to:subject
+         :user-agent:mime-version:date:message-id:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=zvbXO2zEiAAtifGVfeUKcNOUgXd8fePbZNqY6UemQus=;
+        b=NeE9Wk2utSK19PXZCOaD49MN9bJsYQQCqJkMm5dFlVhQ4vvtd39tS83Ayte5UqNH/E
+         hQkOpBGdzyonrza8zrN6BS+EBfh4tDDmQtDTvheNR37l0XGyERQg2SZKou3blg+q+vcY
+         tIadtzWN0DsbYZ8vj716opgE5Ajw9eL2oXL5tJJCei7uAhysaZE4CZl/Nsrw3ykGoQya
+         9EsCld/FHm1EPhsBWCFAjQRGc0NuV3z7k97Jj1l/TipicMXFBzU72JXBXv5uGzIm7GB5
+         Fkr5tmml+hyc8WL47nSRDq4+7FNjAiiTAqenK0YtEagBNuL2pcirKdcqTqU4XSxq417Y
+         lOnQ==
+In-Reply-To: <20230403153021.z4smxxnxbgdcgcey@blackpad>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="iso-8859-1"; format="flowed"
-To: =?UTF-8?Q?Michal_Koutn=c3=bd?= <mkoutny-IBi9RG/b67k@public.gmane.org>
-Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Christian Brauner <brauner-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Juri Lelli <juri.lelli-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Dietmar Eggemann <dietmar.eggemann-5wv7dgnIgG8@public.gmane.org>, gscrivan-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org
+Content-Type: text/plain; charset="utf-8"; format="flowed"
+To: =?UTF-8?Q?Michal_Koutn=c3=bd?= <mkoutny@suse.com>
+Cc: tj@kernel.org, josef@toxicpanda.com, axboe@kernel.dk, cgroups@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org
 
 
-On 4/3/23 12:47, Michal Koutn=C3=BD wrote:
-> On Fri, Mar 31, 2023 at 10:50:45AM -0400, Waiman Long <longman-H+wXaHxf7a=
-LQT0dZR+AlfA@public.gmane.org> wrote:
->> The current cpuset code uses the global cpuset_attach_old_cs variable
->> to store the old cpuset value between consecutive cpuset_can_attach()
->> and cpuset_attach() calls. Since a caller of cpuset_can_attach() may
->> not need to hold the global cgroup_threadgroup_rwsem, parallel cpuset
->> attach operations are possible.
-> Do I understand correctly this consequence of the cpuset_attach_task()
-> on the clone path?
-> In that particular case (with CLONE_INTO_CGROUP) cgroup_mutex is taken,
-> so the access the the old_cs variable should still be synchronized with
-> regular migrations that are also under cgroup_mutex.
 
-This patch is actually not related to the CLONE_INTO_GROUP problem in=20
-patch 1. It is a generic problem when multiple users are moving threads=20
-into cgroup.threads of the same or different cpusets simultaneously.
+在 2023/4/3 下午11:30, Michal Koutný 写道:
+> On Sat, Apr 01, 2023 at 05:47:08PM +0800, Jinke Han <hanjinke.666@bytedance.com> wrote:
+>> From: Jinke Han <hanjinke.666@bytedance.com>
+>>
+>> After commit f382fb0bcef4 ("block: remove legacy IO schedulers"),
+>> blkio.throttle.io_serviced and blkio.throttle.io_service_bytes become
+>> the only stable io stats interface of cgroup v1,
+> 
+> There is also blkio.bfq.{io_serviced,io_service_bytes} couple, so it's
+> not the only. Or do you mean stable in terms of used IO scheduler?
+> 
 
+Oh, the stable here means that it always exists, and when the bfq 
+scheduler is not used, the bfq interface may not exist.
 
->> When there are concurrent cpuset attach operations in progress,
->> cpuset_attach() may fetch the wrong value from cpuset_attach_old_cs
->> causing incorrect result.  To avoid this problem while still allowing
->> certain level of parallelism, drop cpuset_attach_old_cs and use a
->> per-cpuset attach_old_cs value. Also restrict to at most one active
->> attach operation per cpuset to avoid corrupting the value of the
->> per-cpuset attach_old_cs value.
-> Secondly, semantically wouldn't a `void *ss_priv[CGROUP_SUBSYS_COUNT]`
-> in struct cgroup_taskset make it simpler wrt the exclusivity guarantees?
+>> and these statistics are done in the blk-throttle code. But the
+>> current code only counts the bios that are actually throttled. When
+>> the user does not add the throttle limit,
+> 
+> ... "or the limit doesn't kick in"
+> 
 
-I guess we can put the old_cs value into cgroup_taskset. Since the=20
-related attach_in_progress value is in cpuset, so I put the old_cs there=20
-too.
+Agree.
 
+>> the io stats for cgroup v1 has nothing.
+> 
+> 
+>> I fix it according to the statistical method of v2, and made it count
+>> all ios accurately.
+> 
+> s/all ios/all bios and split ios/
+> 
+> (IIUC you fix two things)
+> 
+>> Fixes: a7b36ee6ba29 ("block: move blk-throtl fast path inline")
+> 
+> Good catch.
+> 
+> Does it also undo the performance gain from that commit? (Or rather,
+> have you observed effect of your patch on v2-only performance?)
+> 
 
-> Thirdly, if my initial assumptino is right -- I'd suggest ordering this
-> before the patch `cgroup/cpuset: Make cpuset_fork() handle
-> CLONE_INTO_CGROUP properly` to spare backporters possible troubles if
-> this is would be a fixup to that.
+Under v1, this statistical overhead is unavoidable. Under v2, the static 
+key is friendly to judging branches, so I think the performance 
+difference before and after the patch is negligible.
 
-I don't believe this patch has a dependency on patch 1.
+>> Signed-off-by: Jinke Han <hanjinke.666@bytedance.com>
+>> ---
+>>   block/blk-cgroup.c   | 6 ++++--
+>>   block/blk-throttle.c | 6 ------
+>>   block/blk-throttle.h | 9 +++++++++
+>>   3 files changed, 13 insertions(+), 8 deletions(-)
+> 
+> The code looks correct.
+> 
+> Thanks,
+> Michal
 
-I had thought about adding a fixes tag so it will be backported to=20
-stable. However, this problem should be rare. Let's see what others=20
-think about it.
-
-Cheers,
-Longman
+Thanks.
 
