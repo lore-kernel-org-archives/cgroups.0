@@ -1,69 +1,104 @@
 From: Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Subject: [PATCH mm-unstable RFC 0/5] cgroup: eliminate atomic rstat
-Date: Mon,  3 Apr 2023 22:03:32 +0000
-Message-ID: <20230403220337.443510-1-yosryahmed@google.com>
+Subject: [PATCH mm-unstable RFC 1/5] writeback: move wb_over_bg_thresh() call
+ outside lock section
+Date: Mon,  3 Apr 2023 22:03:33 +0000
+Message-ID: <20230403220337.443510-2-yosryahmed@google.com>
+References: <20230403220337.443510-1-yosryahmed@google.com>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20210112; t=1680559419;
-        h=cc:to:from:subject:message-id:mime-version:date:from:to:cc:subject
-         :date:message-id:reply-to;
-        bh=Oudpa17NQV9icHAF4JVW0zNdSUdsNavz+h9FQ4FdLBA=;
-        b=gmD3EzUX38OVjaGFgrpka4qXeIu+V1DoGMvDe0eWXeLuVA1CJdcNcSnyr+n+EpIa7P
-         3MzjOnSmoFXG3JxX7Cs0Wn8GkvgBkLa16nyiWlhViz9Kto3HXhbMSTrrqLF92l4pjOwM
-         Bl/A9PadEA4W2+qgRGAzaoQf4/LsxKQq3zYjYpbh+vXPlDzaJ4S4K1nV++HobeWezLIl
-         5VMhWDSPBl0YL4XGy/N1tyENDpHWNaUPOK4Xcs933WjQ4R2VnAzEP/q0VSAq3rp+G1sc
-         XYLTFN0b46pCsuwvdg0Q0NbrDy9LoUkmRlggmmc6W32L6LZuB1HPkybaEDU5BBFcgTTW
-         Tt7w==
+        d=google.com; s=20210112; t=1680559421;
+        h=cc:to:from:subject:message-id:references:mime-version:in-reply-to
+         :date:from:to:cc:subject:date:message-id:reply-to;
+        bh=kId3QKjERA5KglVeO1VKvGvv5azlGeISt3c2gJrYgyo=;
+        b=W/ze/sAlU7O+7GhoVMA+gO+b3zK1GLSBb2wxG7cqOl+9vjmm6QdV40GnYhvFBAr6we
+         6QpU1r1iDXHFCTCDI3KvZCA5Fdx66xMvZLtqAf+RggvSzScbqU6Qb+D3U4BXwhb/OMA1
+         mj7EUoKa/2hKudyISX9IDUT5QtGjglqN6doUhxmfcL1+w5LR9gcm9RCdAs4iQ3yY+fKw
+         8EP2M2Ss5aeWYRlPCW8BW8qsios85nr5jm7RooCKJYkRU/xUY3Tcdg08l4PT4At3QjPp
+         8RJrh+/qwzB7v9VlZ60Az/txlakHCjAKDKadt2/B61f8k1qeYBs4X+ujruMC4SFwxMjN
+         IvmA==
+In-Reply-To: <20230403220337.443510-1-yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: Alexander Viro <viro-RmSDqhL/yNMiFSDQTTA3OLVCufUGDwFn@public.gmane.org>, Christian Brauner <brauner-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
 Cc: linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 
-A previous patch series ([1] currently in mm-unstable) changed most
-atomic rstat flushing contexts to become non-atomic. This was done to
-avoid an expensive operation that scales with # cgroups and # cpus to
-happen with irqs disabled and scheduling not permitted. There were two
-remaining atomic flushing contexts after that series. This series tries
-to eliminate them as well, eliminating atomic rstat flushing completely.
+wb_over_bg_thresh() calls mem_cgroup_wb_stats() which invokes an rstat
+flush, which can be expensive on large systems. Currently,
+wb_writeback() calls wb_over_bg_thresh() within a lock section, so we
+have to make the rstat flush atomically. On systems with a lot of
+cpus/cgroups, this can cause us to disable irqs for a long time,
+potentially causing problems.
 
-The two remaining atomic flushing contexts are:
-(a) wb_over_bg_thresh()->mem_cgroup_wb_stats()
-(b) mem_cgroup_threshold()->mem_cgroup_usage()
+Move the call to wb_over_bg_thresh() outside the lock section in
+preparation to make the rstat flush in mem_cgroup_wb_stats() non-atomic.
+The list_empty(&wb->work_list) should be okay outside the lock section
+of wb->list_lock as it is protected by a separate lock (wb->work_lock),
+and wb_over_bg_thresh() doesn't seem like it is modifying any of the b_*
+lists the wb->list_lock is protecting. Also, the loop seems to be
+already releasing and reacquring the lock, so this refactoring looks
+safe.
 
-For (a), flushing needs to be atomic as wb_writeback() calls
-wb_over_bg_thresh() with a spinlock held. However, it seems like the
-call to wb_over_bg_thresh() doesn't need to be protected by that
-spinlock, so this series proposes a refactoring that moves the call
-outside the lock criticial section and makes the stats flushing
-in mem_cgroup_wb_stats() non-atomic.
+Signed-off-by: Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+---
+ fs/fs-writeback.c | 16 +++++++++++-----
+ 1 file changed, 11 insertions(+), 5 deletions(-)
 
-For (b), flushing needs to be atomic as mem_cgroup_threshold() is called
-with irqs disabled. We only flush the stats when calculating the root
-usage, as it is approximated as the sum of some memcg stats (file, anon,
-and optionally swap) instead of the conventional page counter. This
-series proposes changing this calculation to use the global stats
-instead, eliminating the need for a memcg stat flush.
-
-After these 2 contexts are eliminated, we no longer need
-mem_cgroup_flush_stats_atomic() or cgroup_rstat_flush_atomic(). We can
-remove them and simplify the code.
-
-Yosry Ahmed (5):
-  writeback: move wb_over_bg_thresh() call outside lock section
-  memcg: flush stats non-atomically in mem_cgroup_wb_stats()
-  memcg: calculate root usage from global state
-  memcg: remove mem_cgroup_flush_stats_atomic()
-  cgroup: remove cgroup_rstat_flush_atomic()
-
- fs/fs-writeback.c          | 16 +++++++----
- include/linux/cgroup.h     |  1 -
- include/linux/memcontrol.h |  5 ----
- kernel/cgroup/rstat.c      | 26 ++++--------------
- mm/memcontrol.c            | 54 ++++++++------------------------------
- 5 files changed, 27 insertions(+), 75 deletions(-)
-
+diff --git a/fs/fs-writeback.c b/fs/fs-writeback.c
+index 195dc23e0d831..012357bc8daa3 100644
+--- a/fs/fs-writeback.c
++++ b/fs/fs-writeback.c
+@@ -2021,7 +2021,6 @@ static long wb_writeback(struct bdi_writeback *wb,
+ 	struct blk_plug plug;
+ 
+ 	blk_start_plug(&plug);
+-	spin_lock(&wb->list_lock);
+ 	for (;;) {
+ 		/*
+ 		 * Stop writeback when nr_pages has been consumed
+@@ -2046,6 +2045,9 @@ static long wb_writeback(struct bdi_writeback *wb,
+ 		if (work->for_background && !wb_over_bg_thresh(wb))
+ 			break;
+ 
++
++		spin_lock(&wb->list_lock);
++
+ 		/*
+ 		 * Kupdate and background works are special and we want to
+ 		 * include all inodes that need writing. Livelock avoidance is
+@@ -2075,13 +2077,19 @@ static long wb_writeback(struct bdi_writeback *wb,
+ 		 * mean the overall work is done. So we keep looping as long
+ 		 * as made some progress on cleaning pages or inodes.
+ 		 */
+-		if (progress)
++		if (progress) {
++			spin_unlock(&wb->list_lock);
+ 			continue;
++		}
++
+ 		/*
+ 		 * No more inodes for IO, bail
+ 		 */
+-		if (list_empty(&wb->b_more_io))
++		if (list_empty(&wb->b_more_io)) {
++			spin_unlock(&wb->list_lock);
+ 			break;
++		}
++
+ 		/*
+ 		 * Nothing written. Wait for some inode to
+ 		 * become available for writeback. Otherwise
+@@ -2093,9 +2101,7 @@ static long wb_writeback(struct bdi_writeback *wb,
+ 		spin_unlock(&wb->list_lock);
+ 		/* This function drops i_lock... */
+ 		inode_sleep_on_writeback(inode);
+-		spin_lock(&wb->list_lock);
+ 	}
+-	spin_unlock(&wb->list_lock);
+ 	blk_finish_plug(&plug);
+ 
+ 	return nr_pages - work->nr_pages;
 -- 
 2.40.0.348.gf938b09366-goog
 
