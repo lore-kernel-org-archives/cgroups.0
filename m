@@ -1,105 +1,57 @@
-From: Jinke Han <hanjinke.666-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
-Subject: [PATCH v2] blk-throttle: Fix io statistics for cgroup v1
-Date: Sat,  1 Apr 2023 17:47:08 +0800
-Message-ID: <20230401094708.77631-1-hanjinke.666@bytedance.com>
+From: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
+Subject: Re: [PATCH v2 4/9] cgroup: rstat: add WARN_ON_ONCE() if flushing
+ outside task context
+Date: Mon, 3 Apr 2023 10:38:22 +0200
+Message-ID: <ZCqQfuprGreGYwFA@dhcp22.suse.cz>
+References: <ZCU1Bp+5bKNJzWIu@dhcp22.suse.cz>
+ <CAJD7tka0CmRvcvB0k8DZuid1vC9OK_mFriHHbXNTUkVE7OjaTA@mail.gmail.com>
+ <ZCU+8lSi+e4WgT3F@dhcp22.suse.cz>
+ <CAJD7tkaKd9Bcb2-e83Q-kzF7G+crr1U+7uqUPBARXWq-LpyKvw@mail.gmail.com>
+ <ZCVFA78lDj2/Uy0C@dhcp22.suse.cz>
+ <CAJD7tkbjmBaXghQ+14Hy28r2LoWSim+LEjOPxaamYeA_kr2uVw@mail.gmail.com>
+ <ZCVKqN2nDkkQFvO0@dhcp22.suse.cz>
+ <CAJD7tkYEOVRcXs-Ag3mWn69EwE4rjFt9j5MAcTGCNE8BuhTd+A@mail.gmail.com>
+ <ZCa9sixp3GJcjf8Y@dhcp22.suse.cz>
+ <CAJD7tka-2vNn25=NdrKQoMf4ntdbWtojY0k4eAa-c9D+v7J=HQ@mail.gmail.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: quoted-printable
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=bytedance.com; s=google; t=1680342442;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=hiK4KO4kZbl8xYSoAWQs5Xyf4Snj7jNQFcEtAQejez8=;
-        b=V+zhxA472E3zjzApz3J/B0H+TF2UZuO9A3fqlLhaAsX+s8ZPpc6Y5xCXMt+ODvpYia
-         prVRA6DUvQ0U8QdnsdMSDgxnevfp/Htz8mOqyOLtb/ctA/aKl7nZX5U1yZOEb8m1jhIS
-         h2XiY2mp3+D5wLLfJJ9IWb9ftDxnGzA9PjwjTDB58mMn4WjQlAP9ATXwjr0EZF6KVmMo
-         CseN0wvqz9Cb3qySGD9rkACfMDQ7Lmknsc0B9/T5z24lpA8DEXa9OyJu1KaNRtkaErtR
-         WU2DKk+Q55OX8+3ozYk2myGGhObt9Vsrf3CqSyvenh4P2tCxjdTR8vfI+su5veg4D4Ys
-         1rwg==
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
+        t=1680511103; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=ZnIw06JprC7dy+OnhMRvOYKEzAkA2puzGDnOPlmZGCQ=;
+        b=LDAThqfAUeP8YfeXSMx0SCHxnohK7Gj/nCpVhVUNjqwdqETlqzrvBDKy6zQjJyHIXkNUrb
+        W6q2FQW0lYcUVVPC3UdRINlfnj6L5qLDp56/Q/IMjloPT68YokJAyiWkMM1I2SWlg8W3Ab
+        mdMS9LC6dZdFbLNpceTPxyFhjNTS7Bo=
+Content-Disposition: inline
+In-Reply-To: <CAJD7tka-2vNn25=NdrKQoMf4ntdbWtojY0k4eAa-c9D+v7J=HQ-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-To: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, josef-DigfWCa+lFGyeJad7bwFQA@public.gmane.org, axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Jinke Han <hanjinke.666-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
+Content-Type: text/plain; charset="windows-1252"
+To: Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Josef Bacik <josef-DigfWCa+lFGyeJad7bwFQA@public.gmane.org>, Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Muchun Song <muchun.song-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny-IBi9RG/b67k@public.gmane.org>, Vasily Averin <vasily.averin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, bpf-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-From: Jinke Han <hanjinke.666-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
+On Fri 31-03-23 12:03:47, Yosry Ahmed wrote:
+> On Fri, Mar 31, 2023 at 4:02=E2=80=AFAM Michal Hocko <mhocko-IBi9RG/b67k@=
+public.gmane.org> wrote:
+> >
+> > On Thu 30-03-23 01:53:38, Yosry Ahmed wrote:
+> > [...]
+> > > Maybe we can add a primitive like might_sleep() for this, just food f=
+or thought.
+> >
+> > I do not think it is the correct to abuse might_sleep if the function
+> > itself doesn't sleep. If it does might_sleep is already involved.
+>=20
+> Oh, sorry if I wasn't clear, I did not mean to reuse might_sleep() --
+> I meant introducing a new similar debug primitive that shouts if irqs
+> are disabled.
 
-After commit f382fb0bcef4 ("block: remove legacy IO schedulers"),
-blkio.throttle.io_serviced and blkio.throttle.io_service_bytes become
-the only stable io stats interface of cgroup v1, and these statistics
-are done in the blk-throttle code. But the current code only counts the
-bios that are actually throttled. When the user does not add the throttle
-limit, the io stats for cgroup v1 has nothing. I fix it according to the
-statistical method of v2, and made it count all ios accurately.
-
-Fixes: a7b36ee6ba29 ("block: move blk-throtl fast path inline")
-Signed-off-by: Jinke Han <hanjinke.666-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
----
- block/blk-cgroup.c   | 6 ++++--
- block/blk-throttle.c | 6 ------
- block/blk-throttle.h | 9 +++++++++
- 3 files changed, 13 insertions(+), 8 deletions(-)
-
-diff --git a/block/blk-cgroup.c b/block/blk-cgroup.c
-index bd50b55bdb61..33263d0d0e0f 100644
---- a/block/blk-cgroup.c
-+++ b/block/blk-cgroup.c
-@@ -2033,6 +2033,9 @@ void blk_cgroup_bio_start(struct bio *bio)
- 	struct blkg_iostat_set *bis;
- 	unsigned long flags;
- 
-+	if (!cgroup_subsys_on_dfl(io_cgrp_subsys))
-+		return;
-+
- 	/* Root-level stats are sourced from system-wide IO stats */
- 	if (!cgroup_parent(blkcg->css.cgroup))
- 		return;
-@@ -2064,8 +2067,7 @@ void blk_cgroup_bio_start(struct bio *bio)
- 	}
- 
- 	u64_stats_update_end_irqrestore(&bis->sync, flags);
--	if (cgroup_subsys_on_dfl(io_cgrp_subsys))
--		cgroup_rstat_updated(blkcg->css.cgroup, cpu);
-+	cgroup_rstat_updated(blkcg->css.cgroup, cpu);
- 	put_cpu();
- }
- 
-diff --git a/block/blk-throttle.c b/block/blk-throttle.c
-index 47e9d8be68f3..2be66e9430f7 100644
---- a/block/blk-throttle.c
-+++ b/block/blk-throttle.c
-@@ -2174,12 +2174,6 @@ bool __blk_throtl_bio(struct bio *bio)
- 
- 	rcu_read_lock();
- 
--	if (!cgroup_subsys_on_dfl(io_cgrp_subsys)) {
--		blkg_rwstat_add(&tg->stat_bytes, bio->bi_opf,
--				bio->bi_iter.bi_size);
--		blkg_rwstat_add(&tg->stat_ios, bio->bi_opf, 1);
--	}
--
- 	spin_lock_irq(&q->queue_lock);
- 
- 	throtl_update_latency_buckets(td);
-diff --git a/block/blk-throttle.h b/block/blk-throttle.h
-index ef4b7a4de987..d1ccbfe9f797 100644
---- a/block/blk-throttle.h
-+++ b/block/blk-throttle.h
-@@ -185,6 +185,15 @@ static inline bool blk_should_throtl(struct bio *bio)
- 	struct throtl_grp *tg = blkg_to_tg(bio->bi_blkg);
- 	int rw = bio_data_dir(bio);
- 
-+	if (!cgroup_subsys_on_dfl(io_cgrp_subsys)) {
-+		if (!bio_flagged(bio, BIO_CGROUP_ACCT)) {
-+			bio_set_flag(bio, BIO_CGROUP_ACCT);
-+			blkg_rwstat_add(&tg->stat_bytes, bio->bi_opf,
-+					bio->bi_iter.bi_size);
-+		}
-+		blkg_rwstat_add(&tg->stat_ios, bio->bi_opf, 1);
-+	}
-+
- 	/* iops limit is always counted */
- 	if (tg->has_rules_iops[rw])
- 		return true;
--- 
-2.20.1
-
+This is circling back to original concerns about arbitrary decision to
+care about IRQs. Is this really any different from spin locks or preempt
+disabled critical sections preventing any scheduling and potentially
+triggereing soft lockups?
+--=20
+Michal Hocko
+SUSE Labs
