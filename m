@@ -1,465 +1,64 @@
-From: Zi Yan <zi.yan-vRdzynncJC4@public.gmane.org>
-Subject: [PATCH v3 7/7] mm: huge_memory: enable debugfs to split huge pages to any order.
-Date: Mon,  3 Apr 2023 16:18:39 -0400
-Message-ID: <20230403201839.4097845-8-zi.yan@sent.com>
-References: <20230403201839.4097845-1-zi.yan@sent.com>
-Reply-To: Zi Yan <ziy-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>
+From: Yosry Ahmed <yosryahmed@google.com>
+Subject: Re: [PATCH v2 4/9] cgroup: rstat: add WARN_ON_ONCE() if flushing
+ outside task context
+Date: Mon, 3 Apr 2023 13:39:29 -0700
+Message-ID: <CAJD7tkZF+rCNW4pctjOfAetoAQRq7-exV-j-nRc_xYMkMBGY_A@mail.gmail.com>
+References: <ZCU1Bp+5bKNJzWIu@dhcp22.suse.cz> <CAJD7tka0CmRvcvB0k8DZuid1vC9OK_mFriHHbXNTUkVE7OjaTA@mail.gmail.com>
+ <ZCU+8lSi+e4WgT3F@dhcp22.suse.cz> <CAJD7tkaKd9Bcb2-e83Q-kzF7G+crr1U+7uqUPBARXWq-LpyKvw@mail.gmail.com>
+ <ZCVFA78lDj2/Uy0C@dhcp22.suse.cz> <CAJD7tkbjmBaXghQ+14Hy28r2LoWSim+LEjOPxaamYeA_kr2uVw@mail.gmail.com>
+ <ZCVKqN2nDkkQFvO0@dhcp22.suse.cz> <CAJD7tkYEOVRcXs-Ag3mWn69EwE4rjFt9j5MAcTGCNE8BuhTd+A@mail.gmail.com>
+ <ZCa9sixp3GJcjf8Y@dhcp22.suse.cz> <CAJD7tka-2vNn25=NdrKQoMf4ntdbWtojY0k4eAa-c9D+v7J=HQ@mail.gmail.com>
+ <ZCqQfuprGreGYwFA@dhcp22.suse.cz>
 Mime-Version: 1.0
 Content-Transfer-Encoding: quoted-printable
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=sent.com; h=cc
-        :cc:content-transfer-encoding:content-type:date:date:from:from
-        :in-reply-to:in-reply-to:message-id:mime-version:references
-        :reply-to:reply-to:sender:subject:subject:to:to; s=fm2; t=
-        1680553148; x=1680639548; bh=BxqGc0evZec652+iCiid1CZrCHeD4aKdhQK
-        P2Da/cdE=; b=ksLbbax5Uv7LmBwo9gDNM14bjc1Lft9lnuZya29aXZtsrl/HFsK
-        WyyR/1KNaTAaxUX8BIiqr+RMitpjRu0W0pjMYihpDC4zMHKX4YXaxfmQkX2QccTQ
-        qD1fWDOrtSVYl2tmjeAaLhdfA8RiQPN5IqT27aw2xCsb+2kiaiW6GWQRDg4grlrs
-        MnXEQbKzo215lLNwQgH4IxkVdOeWJ+grbZH8xX0JScSAZzajmH/Qfh/xDm6G/6fa
-        XXG6NqjOTghReZ9C/iHBbWOhkJAWhoPiRTbz7tGnnPhlyTDLqeCrNj9SS5L1kdNZ
-        PB0yaNC06/d2tmwMyX3WUKrxqCTjuecieVw==
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
-        messagingengine.com; h=cc:cc:content-transfer-encoding
-        :content-type:date:date:feedback-id:feedback-id:from:from
-        :in-reply-to:in-reply-to:message-id:mime-version:references
-        :reply-to:reply-to:sender:subject:subject:to:to:x-me-proxy
-        :x-me-proxy:x-me-sender:x-me-sender:x-sasl-enc; s=fm2; t=
-        1680553148; x=1680639548; bh=BxqGc0evZec652+iCiid1CZrCHeD4aKdhQK
-        P2Da/cdE=; b=gE5fJx9StrHBvykREsXrYV2Yh01h/9SXNya+QwGlgSEk3JzXEGc
-        4R8d8GudaLb4foyGX+8RhaWK/Z/A6X09D7UCB0wYTO4zCgc66UZyEu6tqSH9/aw7
-        OJFwDjFAl7PUvvowlk4u4MmXZ5SgSdMUr1C6AhwBG5wfC09kxSy/WaLI/lb08OZH
-        a3Vo75uBMzhZbqYGT3/idPWT5QqfqvWZ3eAgq3kjopBenNPVPY9cgd+IiyAZukzY
-        f3AEe1/kpwA97UwSEl7FlJxxlnuD8SgXXQiPP72GcNMgWmwlAkIIxe6bd0e5U5w0
-        SUWy/EzObDuhBZ1caAxdLbuIekuJkSt196w==
-In-Reply-To: <20230403201839.4097845-1-zi.yan-vRdzynncJC4@public.gmane.org>
+Return-path: <linux-block-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20210112; t=1680554406;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=98lpmjVP03rasH0aUw5Or4NqpKX/eDyfmYvak2z+XQY=;
+        b=aOrySHi+L5aBtQhD9CMl2wIUewhWyIyQQXGmhw67rG4aYB/0VxtLJJdx4JKcjr4/Su
+         CKHv3ZrfEko2du/9DiJPnmJgfyM9NzFrN9wGLJLRnVWtCv6yd58ea0gAc1LIGcNps8aF
+         iQTbr3AocnQwqVN0vRpZPBqysYDShbz/ZYTddqaS5BtXq0sVascssl+jkJwncPNANTjk
+         LRdvan3ZAUekClGuJ3S02i2YGWuAiDNHkJMii0Y/083m5jLXpgQg8MobYoyssOoaX1B9
+         uxV+Z9IvmlmsJ8Y4QsY7pkdlMNW7ukQiPmVap2uSl7WIEp0ptj20puF/FpeYyuTT9zI9
+         0ZgQ==
+In-Reply-To: <ZCqQfuprGreGYwFA@dhcp22.suse.cz>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-To: "Matthew Wilcox (Oracle)" <willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Yang Shi <shy828301-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Yu Zhao <yuzhao-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
-Cc: Zi Yan <ziy-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>, "Kirill A . Shutemov" <kirill.shutemov-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, Ryan Roberts <ryan.roberts-5wv7dgnIgG8@public.gmane.org>, =?UTF-8?q?Michal=20Koutn=C3=BD?= <mkoutny-IBi9RG/b67k@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Zach O'Keefe <zokeefe-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kselftest-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Type: text/plain; charset="utf-8"
+To: Michal Hocko <mhocko@suse.com>
+Cc: Johannes Weiner <hannes@cmpxchg.org>, Shakeel Butt <shakeelb@google.com>, Tejun Heo <tj@kernel.org>, Josef Bacik <josef@toxicpanda.com>, Jens Axboe <axboe@kernel.dk>, Zefan Li <lizefan.x@bytedance.com>, Roman Gushchin <roman.gushchin@linux.dev>, Muchun Song <muchun.song@linux.dev>, Andrew Morton <akpm@linux-foundation.org>, =?UTF-8?Q?Michal_Koutn=C3=BD?= <mkoutny@suse.com>, Vasily Averin <vasily.averin@linux.dev>, cgroups@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org, bpf@vger.kernel.org
 
-From: Zi Yan <ziy-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>
+On Mon, Apr 3, 2023 at 1:38=E2=80=AFAM Michal Hocko <mhocko@suse.com> wrote=
+:
+>
+> On Fri 31-03-23 12:03:47, Yosry Ahmed wrote:
+> > On Fri, Mar 31, 2023 at 4:02=E2=80=AFAM Michal Hocko <mhocko@suse.com> =
+wrote:
+> > >
+> > > On Thu 30-03-23 01:53:38, Yosry Ahmed wrote:
+> > > [...]
+> > > > Maybe we can add a primitive like might_sleep() for this, just food=
+ for thought.
+> > >
+> > > I do not think it is the correct to abuse might_sleep if the function
+> > > itself doesn't sleep. If it does might_sleep is already involved.
+> >
+> > Oh, sorry if I wasn't clear, I did not mean to reuse might_sleep() --
+> > I meant introducing a new similar debug primitive that shouts if irqs
+> > are disabled.
+>
+> This is circling back to original concerns about arbitrary decision to
+> care about IRQs. Is this really any different from spin locks or preempt
+> disabled critical sections preventing any scheduling and potentially
+> triggereing soft lockups?
 
-It is used to test split_huge_page_to_list_to_order for pagecache THPs.
-Also add test cases for split_huge_page_to_list_to_order via both
-debugfs, truncating a file, and punching holes in a file.
+Not really, I am sure there are other code paths that may cause
+similar problems. At least we can start annotating them so that we
+don't regress them (e.g. by introducing a caller that disables irqs --
+converting them into hard lockups).
 
-Signed-off-by: Zi Yan <ziy-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>
----
- mm/huge_memory.c                              |  34 ++-
- .../selftests/mm/split_huge_page_test.c       | 225 +++++++++++++++++-
- 2 files changed, 242 insertions(+), 17 deletions(-)
-
-diff --git a/mm/huge_memory.c b/mm/huge_memory.c
-index 619d25278340..ad5b29558a51 100644
---- a/mm/huge_memory.c
-+++ b/mm/huge_memory.c
-@@ -3023,7 +3023,7 @@ static inline bool vma_not_suitable_for_thp_split(str=
-uct vm_area_struct *vma)
- }
-=20
- static int split_huge_pages_pid(int pid, unsigned long vaddr_start,
--				unsigned long vaddr_end)
-+				unsigned long vaddr_end, unsigned int new_order)
- {
- 	int ret =3D 0;
- 	struct task_struct *task;
-@@ -3085,13 +3085,19 @@ static int split_huge_pages_pid(int pid, unsigned l=
-ong vaddr_start,
- 			goto next;
-=20
- 		total++;
--		if (!can_split_folio(page_folio(page), NULL))
-+		/*
-+		 * For folios with private, split_huge_page_to_list_to_order()
-+		 * will try to drop it before split and then check if the folio
-+		 * can be split or not. So skip the check here.
-+		 */
-+		if (!folio_test_private(page_folio(page)) &&
-+		    !can_split_folio(page_folio(page), NULL))
- 			goto next;
-=20
- 		if (!trylock_page(page))
- 			goto next;
-=20
--		if (!split_huge_page(page))
-+		if (!split_huge_page_to_list_to_order(page, NULL, new_order))
- 			split++;
-=20
- 		unlock_page(page);
-@@ -3109,7 +3115,7 @@ static int split_huge_pages_pid(int pid, unsigned lon=
-g vaddr_start,
- }
-=20
- static int split_huge_pages_in_file(const char *file_path, pgoff_t off_sta=
-rt,
--				pgoff_t off_end)
-+				pgoff_t off_end, unsigned int new_order)
- {
- 	struct filename *file;
- 	struct file *candidate;
-@@ -3148,7 +3154,7 @@ static int split_huge_pages_in_file(const char *file_=
-path, pgoff_t off_start,
- 		if (!folio_trylock(folio))
- 			goto next;
-=20
--		if (!split_folio(folio))
-+		if (!split_huge_page_to_list_to_order(&folio->page, NULL, new_order))
- 			split++;
-=20
- 		folio_unlock(folio);
-@@ -3173,10 +3179,14 @@ static ssize_t split_huge_pages_write(struct file *=
-file, const char __user *buf,
- {
- 	static DEFINE_MUTEX(split_debug_mutex);
- 	ssize_t ret;
--	/* hold pid, start_vaddr, end_vaddr or file_path, off_start, off_end */
-+	/*
-+	 * hold pid, start_vaddr, end_vaddr, new_order or
-+	 * file_path, off_start, off_end, new_order
-+	 */
- 	char input_buf[MAX_INPUT_BUF_SZ];
- 	int pid;
- 	unsigned long vaddr_start, vaddr_end;
-+	unsigned int new_order =3D 0;
-=20
- 	ret =3D mutex_lock_interruptible(&split_debug_mutex);
- 	if (ret)
-@@ -3205,29 +3215,29 @@ static ssize_t split_huge_pages_write(struct file *=
-file, const char __user *buf,
- 			goto out;
- 		}
-=20
--		ret =3D sscanf(buf, "0x%lx,0x%lx", &off_start, &off_end);
--		if (ret !=3D 2) {
-+		ret =3D sscanf(buf, "0x%lx,0x%lx,%d", &off_start, &off_end, &new_order);
-+		if (ret !=3D 2 && ret !=3D 3) {
- 			ret =3D -EINVAL;
- 			goto out;
- 		}
--		ret =3D split_huge_pages_in_file(file_path, off_start, off_end);
-+		ret =3D split_huge_pages_in_file(file_path, off_start, off_end, new_orde=
-r);
- 		if (!ret)
- 			ret =3D input_len;
-=20
- 		goto out;
- 	}
-=20
--	ret =3D sscanf(input_buf, "%d,0x%lx,0x%lx", &pid, &vaddr_start, &vaddr_en=
-d);
-+	ret =3D sscanf(input_buf, "%d,0x%lx,0x%lx,%d", &pid, &vaddr_start, &vaddr=
-_end, &new_order);
- 	if (ret =3D=3D 1 && pid =3D=3D 1) {
- 		split_huge_pages_all();
- 		ret =3D strlen(input_buf);
- 		goto out;
--	} else if (ret !=3D 3) {
-+	} else if (ret !=3D 3 && ret !=3D 4) {
- 		ret =3D -EINVAL;
- 		goto out;
- 	}
-=20
--	ret =3D split_huge_pages_pid(pid, vaddr_start, vaddr_end);
-+	ret =3D split_huge_pages_pid(pid, vaddr_start, vaddr_end, new_order);
- 	if (!ret)
- 		ret =3D strlen(input_buf);
- out:
-diff --git a/tools/testing/selftests/mm/split_huge_page_test.c b/tools/test=
-ing/selftests/mm/split_huge_page_test.c
-index b8558c7f1a39..cbb5e6893cbf 100644
---- a/tools/testing/selftests/mm/split_huge_page_test.c
-+++ b/tools/testing/selftests/mm/split_huge_page_test.c
-@@ -16,6 +16,7 @@
- #include <sys/mount.h>
- #include <malloc.h>
- #include <stdbool.h>
-+#include <time.h>
- #include "vm_util.h"
-=20
- uint64_t pagesize;
-@@ -23,10 +24,12 @@ unsigned int pageshift;
- uint64_t pmd_pagesize;
-=20
- #define SPLIT_DEBUGFS "/sys/kernel/debug/split_huge_pages"
-+#define SMAP_PATH "/proc/self/smaps"
-+#define THP_FS_PATH "/mnt/thp_fs"
- #define INPUT_MAX 80
-=20
--#define PID_FMT "%d,0x%lx,0x%lx"
--#define PATH_FMT "%s,0x%lx,0x%lx"
-+#define PID_FMT "%d,0x%lx,0x%lx,%d"
-+#define PATH_FMT "%s,0x%lx,0x%lx,%d"
-=20
- #define PFN_MASK     ((1UL<<55)-1)
- #define KPF_THP      (1UL<<22)
-@@ -113,7 +116,7 @@ void split_pmd_thp(void)
-=20
- 	/* split all THPs */
- 	write_debugfs(PID_FMT, getpid(), (uint64_t)one_page,
--		(uint64_t)one_page + len);
-+		(uint64_t)one_page + len, 0);
-=20
- 	for (i =3D 0; i < len; i++)
- 		if (one_page[i] !=3D (char)i) {
-@@ -203,7 +206,7 @@ void split_pte_mapped_thp(void)
-=20
- 	/* split all remapped THPs */
- 	write_debugfs(PID_FMT, getpid(), (uint64_t)pte_mapped,
--		      (uint64_t)pte_mapped + pagesize * 4);
-+		      (uint64_t)pte_mapped + pagesize * 4, 0);
-=20
- 	/* smap does not show THPs after mremap, use kpageflags instead */
- 	thp_size =3D 0;
-@@ -269,7 +272,7 @@ void split_file_backed_thp(void)
- 	}
-=20
- 	/* split the file-backed THP */
--	write_debugfs(PATH_FMT, testfile, pgoff_start, pgoff_end);
-+	write_debugfs(PATH_FMT, testfile, pgoff_start, pgoff_end, 0);
-=20
- 	status =3D unlink(testfile);
- 	if (status)
-@@ -290,20 +293,232 @@ void split_file_backed_thp(void)
- 	printf("file-backed THP split test done, please check dmesg for more info=
-rmation\n");
- }
-=20
-+void create_pagecache_thp_and_fd(const char *testfile, size_t fd_size, int=
- *fd, char **addr)
-+{
-+	size_t i;
-+	int dummy;
-+
-+	srand(time(NULL));
-+
-+	*fd =3D open(testfile, O_CREAT | O_RDWR, 0664);
-+	if (*fd =3D=3D -1) {
-+		perror("Failed to create a file at "THP_FS_PATH);
-+		exit(EXIT_FAILURE);
-+	}
-+
-+	for (i =3D 0; i < fd_size; i++) {
-+		unsigned char byte =3D (unsigned char)i;
-+
-+		write(*fd, &byte, sizeof(byte));
-+	}
-+	close(*fd);
-+	sync();
-+	*fd =3D open("/proc/sys/vm/drop_caches", O_WRONLY);
-+	if (*fd =3D=3D -1) {
-+		perror("open drop_caches");
-+		goto err_out_unlink;
-+	}
-+	if (write(*fd, "3", 1) !=3D 1) {
-+		perror("write to drop_caches");
-+		goto err_out_unlink;
-+	}
-+	close(*fd);
-+
-+	*fd =3D open(testfile, O_RDWR);
-+	if (*fd =3D=3D -1) {
-+		perror("Failed to open a file at "THP_FS_PATH);
-+		goto err_out_unlink;
-+	}
-+
-+	*addr =3D mmap(NULL, fd_size, PROT_READ|PROT_WRITE, MAP_SHARED, *fd, 0);
-+	if (*addr =3D=3D (char *)-1) {
-+		perror("cannot mmap");
-+		goto err_out_close;
-+	}
-+	madvise(*addr, fd_size, MADV_HUGEPAGE);
-+
-+	for (size_t i =3D 0; i < fd_size; i++)
-+		dummy +=3D *(*addr + i);
-+
-+	if (!check_huge_file(*addr, fd_size / pmd_pagesize, pmd_pagesize)) {
-+		printf("No pagecache THP generated, please mount a filesystem supporting=
- pagecache THP at "THP_FS_PATH"\n");
-+		goto err_out_close;
-+	}
-+	return;
-+err_out_close:
-+	close(*fd);
-+err_out_unlink:
-+	unlink(testfile);
-+	exit(EXIT_FAILURE);
-+}
-+
-+void split_thp_in_pagecache_to_order(size_t fd_size, int order)
-+{
-+	int fd;
-+	char *addr;
-+	size_t i;
-+	const char testfile[] =3D THP_FS_PATH "/test";
-+	int err =3D 0;
-+
-+	create_pagecache_thp_and_fd(testfile, fd_size, &fd, &addr);
-+
-+	printf("split %ld kB PMD-mapped pagecache page to order %d ... ", fd_size=
- >> 10, order);
-+	write_debugfs(PID_FMT, getpid(), (uint64_t)addr, (uint64_t)addr + fd_size=
-, order);
-+
-+	for (i =3D 0; i < fd_size; i++)
-+		if (*(addr + i) !=3D (char)i) {
-+			printf("%lu byte corrupted in the file\n", i);
-+			err =3D EXIT_FAILURE;
-+			goto out;
-+		}
-+
-+	if (!check_huge_file(addr, 0, pmd_pagesize)) {
-+		printf("Still FilePmdMapped not split\n");
-+		err =3D EXIT_FAILURE;
-+		goto out;
-+	}
-+
-+	printf("done\n");
-+out:
-+	close(fd);
-+	unlink(testfile);
-+	if (err)
-+		exit(err);
-+}
-+
-+void truncate_thp_in_pagecache_to_order(size_t fd_size, int order)
-+{
-+	int fd;
-+	char *addr;
-+	size_t i;
-+	const char testfile[] =3D THP_FS_PATH "/test";
-+	int err =3D 0;
-+
-+	create_pagecache_thp_and_fd(testfile, fd_size, &fd, &addr);
-+
-+	printf("truncate %ld kB PMD-mapped pagecache page to size %lu kB ... ",
-+		fd_size >> 10, 4UL << order);
-+	ftruncate(fd, pagesize << order);
-+
-+	for (i =3D 0; i < (pagesize << order); i++)
-+		if (*(addr + i) !=3D (char)i) {
-+			printf("%lu byte corrupted in the file\n", i);
-+			err =3D EXIT_FAILURE;
-+			goto out;
-+		}
-+
-+	if (!check_huge_file(addr, 0, pmd_pagesize)) {
-+		printf("Still FilePmdMapped not split after truncate\n");
-+		err =3D EXIT_FAILURE;
-+		goto out;
-+	}
-+
-+	printf("done\n");
-+out:
-+	close(fd);
-+	unlink(testfile);
-+	if (err)
-+		exit(err);
-+}
-+
-+void punch_hole_in_pagecache_thp(size_t fd_size, off_t offset[], off_t len=
-[],
-+			int n, int num_left_thps)
-+{
-+	int fd, j;
-+	char *addr;
-+	size_t i;
-+	const char testfile[] =3D THP_FS_PATH "/test";
-+	int err =3D 0;
-+
-+	create_pagecache_thp_and_fd(testfile, fd_size, &fd, &addr);
-+
-+	for (j =3D 0; j < n; j++) {
-+		printf("punch a hole to %ld kB PMD-mapped pagecache page at addr: %lx, o=
-ffset %ld, and len %ld ...\n",
-+			fd_size >> 10, (unsigned long)addr, offset[j], len[j]);
-+		fallocate(fd, FALLOC_FL_PUNCH_HOLE|FALLOC_FL_KEEP_SIZE, offset[j], len[j=
-]);
-+	}
-+
-+	for (i =3D 0; i < fd_size; i++) {
-+		int in_hole =3D 0;
-+
-+		for (j =3D 0; j < n; j++)
-+			if (i >=3D offset[j] && i < (offset[j] + len[j])) {
-+				in_hole =3D 1;
-+				break;
-+			}
-+
-+		if (in_hole) {
-+			if (*(addr + i)) {
-+				printf("%lu byte non-zero after punch\n", i);
-+				err =3D EXIT_FAILURE;
-+				goto out;
-+			}
-+			continue;
-+		}
-+		if (*(addr + i) !=3D (char)i) {
-+			printf("%lu byte corrupted in the file\n", i);
-+			err =3D EXIT_FAILURE;
-+			goto out;
-+		}
-+	}
-+
-+	if (!check_huge_file(addr, num_left_thps, pmd_pagesize)) {
-+		printf("Still FilePmdMapped not split after punch\n");
-+		goto out;
-+	}
-+	printf("done\n");
-+out:
-+	close(fd);
-+	unlink(testfile);
-+	if (err)
-+		exit(err);
-+}
-+
- int main(int argc, char **argv)
- {
-+	int i;
-+	size_t fd_size;
-+	off_t offset[2], len[2];
-+
- 	if (geteuid() !=3D 0) {
- 		printf("Please run the benchmark as root\n");
- 		exit(EXIT_FAILURE);
- 	}
-=20
-+	setbuf(stdout, NULL);
-+
- 	pagesize =3D getpagesize();
- 	pageshift =3D ffs(pagesize) - 1;
- 	pmd_pagesize =3D read_pmd_pagesize();
-+	fd_size =3D 2 * pmd_pagesize;
-=20
- 	split_pmd_thp();
- 	split_pte_mapped_thp();
- 	split_file_backed_thp();
-=20
-+	for (i =3D 8; i >=3D 0; i--)
-+		if (i !=3D 1)
-+			split_thp_in_pagecache_to_order(fd_size, i);
-+
-+	/*
-+	 * for i is 1, truncate code in the kernel should create order-0 pages
-+	 * instead of order-1 THPs, since order-1 THP is not supported. No error
-+	 * is expected.
-+	 */
-+	for (i =3D 8; i >=3D 0; i--)
-+		truncate_thp_in_pagecache_to_order(fd_size, i);
-+
-+	offset[0] =3D 123;
-+	offset[1] =3D 4 * pagesize;
-+	len[0] =3D 200 * pagesize;
-+	len[1] =3D 16 * pagesize;
-+	punch_hole_in_pagecache_thp(fd_size, offset, len, 2, 1);
-+
-+	offset[0] =3D 259 * pagesize + pagesize / 2;
-+	offset[1] =3D 33 * pagesize;
-+	len[0] =3D 129 * pagesize;
-+	len[1] =3D 16 * pagesize;
-+	punch_hole_in_pagecache_thp(fd_size, offset, len, 2, 1);
-+
- 	return 0;
- }
---=20
-2.39.2
-
+> --
+> Michal Hocko
+> SUSE Labs
