@@ -1,80 +1,43 @@
-From: Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH mm-unstable RFC 0/5] cgroup: eliminate atomic rstat
-Date: Mon, 3 Apr 2023 15:04:55 -0700
-Message-ID: <CAJD7tkZ5vh5ssDux1LStX9ZivmGmXsFyxfADGJD5AXDaMnGWRQ@mail.gmail.com>
-References: <20230403220337.443510-1-yosryahmed@google.com>
+From: Florian Schmidt <flosch-8cO4VLV/4DJBDgjK7y7TUQ@public.gmane.org>
+Subject: Re: [RFC] memcg v1: provide read access to memory.pressure_level
+Date: Tue, 4 Apr 2023 09:44:47 +0100
+Message-ID: <63942948-a41f-c4c0-dac3-b71adb38496f@nutanix.com>
+References: <20230322142525.162469-1-flosch@nutanix.com>
+ <20230324150350.fu7itbqqvtjmyf3s@blackpad>
+ <6f4420d0-2f86-7294-01e1-6806ef7e4686@nutanix.com>
+ <ZCH/RVlh1M6DRXaU@dhcp22.suse.cz>
 Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20210112; t=1680559532;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=S+Pu9YVys7d4kSNF1Q1j+VStoW6Udcnhp1204T10rf0=;
-        b=MQc0fA7+oJ5pXhxxZImDXr5z6gNisXy6E+KS8J35TPw72G5kFBVbjh7kwQJ1pYpeKX
-         ALIeHYtsuFVit4ojWHQg4PjXvHbvMvILW8/w0oxNN8pueWh6LStay5FVuUqUuGorC5Z6
-         RS8g+Zsr99eX3NBfJHoshcrdMnlMJYyd2SsO+3bQTJdgfu4m5arn5ecYYnb97xK+LXBC
-         ZBJkG0iOD7lxiLAB3PLydCsDk4EOZuHuZMpkwrwcF37r2t4CxP/ou8MAuJaMyMotyi7g
-         GsK+x/49ejSIp1u7NJ8dsNOj8sud5LRpXF2CDd8KqUSH5kNjZsROpa5HzOhGwnXl/bTF
-         B/Yw==
-In-Reply-To: <20230403220337.443510-1-yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=nutanix.com; h=message-id : date :
+ subject : to : cc : references : from : in-reply-to : content-type :
+ content-transfer-encoding : mime-version; s=proofpoint20171006;
+ bh=CwBd8VIVqig1KSETexcoP8hRMLyRRDRlZpfgmLHt3x4=;
+ b=XNhEVMGk+X/Fum0Lijq/qlsAtJjnsWZpIzLlKiAsvKUNJNqkBgQCFOWXeW6ourXDbzyq
+ /5jco6EojlE/FPntsEH0aqBZ22VtcOSIQE/38cyUZlBgAX2pK9an44RExlwX4dTKN2hd
+ V4FP+1Ps8jjqLRoLtZsvGRdmbZt12PtD0lgjhC8Hr2haSK31fmlUELrMshdHdvNRQENX
+ k/ZlpZElSoyCCivnqAal9slBW1IE9i3NPC9j425LsGKqaxS3M53J3T1BIYhHVGL3eL8/
+ 3+jTX23EXaxiFq5cs/ln1Pi+v74/FLgPwBx4NDPmXOUVcrfeATUdEhvCfsOHePEHvqFa ug== 
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=nutanix.com;
+ s=selector1;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=CwBd8VIVqig1KSETexcoP8hRMLyRRDRlZpfgmLHt3x4=;
+ b=oOBqJBgQsai65YnlwhuU4zUOD1/QRBxTrf03XXBlaS3potkcs7t8f2cp/YOrXJZYVyT6k3ztW4L2RxRiOjQSoEvO+Co3ArxtVOXKkI9Pj4zkgPNdvSPaz3t0U/Ev2DVbgaloKVlqrq6hiAiu8uuqN8KZ1FT+A7wDT5k20KkMkQbvmErfR1DWhZE1iDSHp0oQLlHVNlfr6G+sTRq52CHHbsOx7BlJ/T1IiPNKnzwLWWEaUIcyMYFfNGFvqzNCDdF9dz3k7h4L5WOTBxdWOk0S4PKpzdcxeGNPnkN/sZgCVwH/8k1Q1TWhnqg+vhR4+tlnUKCfq2pVpNg8col72i1AWA==
+Content-Language: en-US
+In-Reply-To: <ZCH/RVlh1M6DRXaU-2MMpYkNvuYDjFM9bn6wA6Q@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="windows-1252"
-To: Alexander Viro <viro-RmSDqhL/yNMiFSDQTTA3OLVCufUGDwFn@public.gmane.org>, Christian Brauner <brauner-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
-Cc: linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
+Content-Type: text/plain; charset="us-ascii"; format="flowed"
+To: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
+Cc: =?UTF-8?Q?Michal_Koutn=c3=bd?= <mkoutny-IBi9RG/b67k@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Muchun Song <muchun.song-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Mon, Apr 3, 2023 at 3:03=E2=80=AFPM Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org> =
-wrote:
->
-> A previous patch series ([1] currently in mm-unstable) changed most
+Hi all,
 
-.. and I naturally forgot to link this:
-[1] https://lore.kernel.org/linux-mm/20230330191801.1967435-1-yosryahmed@go=
-ogle.com/
+to summarise, I've heard generally positive feedback from Michal H and 
+some more reserved, but not fundamentally opposed feedback from Michal 
+K. Thanks to both of you.
 
-> atomic rstat flushing contexts to become non-atomic. This was done to
-> avoid an expensive operation that scales with # cgroups and # cpus to
-> happen with irqs disabled and scheduling not permitted. There were two
-> remaining atomic flushing contexts after that series. This series tries
-> to eliminate them as well, eliminating atomic rstat flushing completely.
->
-> The two remaining atomic flushing contexts are:
-> (a) wb_over_bg_thresh()->mem_cgroup_wb_stats()
-> (b) mem_cgroup_threshold()->mem_cgroup_usage()
->
-> For (a), flushing needs to be atomic as wb_writeback() calls
-> wb_over_bg_thresh() with a spinlock held. However, it seems like the
-> call to wb_over_bg_thresh() doesn't need to be protected by that
-> spinlock, so this series proposes a refactoring that moves the call
-> outside the lock criticial section and makes the stats flushing
-> in mem_cgroup_wb_stats() non-atomic.
->
-> For (b), flushing needs to be atomic as mem_cgroup_threshold() is called
-> with irqs disabled. We only flush the stats when calculating the root
-> usage, as it is approximated as the sum of some memcg stats (file, anon,
-> and optionally swap) instead of the conventional page counter. This
-> series proposes changing this calculation to use the global stats
-> instead, eliminating the need for a memcg stat flush.
->
-> After these 2 contexts are eliminated, we no longer need
-> mem_cgroup_flush_stats_atomic() or cgroup_rstat_flush_atomic(). We can
-> remove them and simplify the code.
->
-> Yosry Ahmed (5):
->   writeback: move wb_over_bg_thresh() call outside lock section
->   memcg: flush stats non-atomically in mem_cgroup_wb_stats()
->   memcg: calculate root usage from global state
->   memcg: remove mem_cgroup_flush_stats_atomic()
->   cgroup: remove cgroup_rstat_flush_atomic()
->
->  fs/fs-writeback.c          | 16 +++++++----
->  include/linux/cgroup.h     |  1 -
->  include/linux/memcontrol.h |  5 ----
->  kernel/cgroup/rstat.c      | 26 ++++--------------
->  mm/memcontrol.c            | 54 ++++++++------------------------------
->  5 files changed, 27 insertions(+), 75 deletions(-)
->
-> --
-> 2.40.0.348.gf938b09366-goog
->
+Since there's been no other feedback for the last few days, I'll raise a 
+proper patch, and any potential further discussion can then be done on that.
+
+Cheers,
+Florian
