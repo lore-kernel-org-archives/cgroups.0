@@ -1,47 +1,64 @@
-From: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH 2/6] sched/cpuset: Bring back cpuset_mutex
-Date: Tue, 4 Apr 2023 13:31:51 -0400
-Message-ID: <fa585497-5c6d-f0ed-bdda-c71a81d315ad@redhat.com>
-References: <20230329125558.255239-1-juri.lelli@redhat.com>
- <20230329125558.255239-3-juri.lelli@redhat.com>
+From: Yosry Ahmed <yosryahmed@google.com>
+Subject: Re: [PATCH v3 6/8] workingset: memcg: sleep when flushing stats in workingset_refault()
+Date: Tue, 4 Apr 2023 11:09:02 -0700
+Message-ID: <CAJD7tkb-0rXL9V2TX-Ax-3OkwJPYx_GaOT4D=VCA60riit+dOw@mail.gmail.com>
+References: <20230330191801.1967435-1-yosryahmed@google.com>
+ <20230330191801.1967435-7-yosryahmed@google.com> <20230404165305.ffs7uscqpndnfytn@blackpad>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1680629519;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=V+vrMacm8K2usa1pALZTH2tABjT2c2JpiiWSHS5nyhs=;
-        b=DbQdzu42OJJZmcFOsAA6PHSpRxoVM0I1ztHE2bhalS5wc8XK3TWv97x2iGaLawEHeOO4Tm
-        YJGCWCAVd3hPQH09nHtfwNEHZSO9ITQbgVR8sen/l3MF1gzYhnmGUSrzW7wo9xmNIfpxTL
-        sstBD+kmBl08P5KgVDVDK3WYhtiOaVc=
-Content-Language: en-US
-In-Reply-To: <20230329125558.255239-3-juri.lelli-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Content-Transfer-Encoding: quoted-printable
+Return-path: <linux-block-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20210112; t=1680631779;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=B52t2fmF0ydFLoktH3nuFhcnoqrXavrVtQZskikW6K4=;
+        b=ZUkn+vMmRDV0gsBTGXHogd0b1TEWeQRRSmXdQcA8YCbW4EuVBBVzWtXP1bseb8UKG4
+         HJDAAsbeXjYwlGTq1GOQHa4KVIiS7AVj1arrMSDEu8cZLrnSvtzL29WGP876gNKX0FLM
+         R8P9SFqsaEyYhbbck6gl7U+wfPr72XBPHHa+ziXeunDyh9RAQFmIOPxn/sLtUCoxKW8a
+         J1BdHwp4szCI6HacbQjAk3Y454DHt3ONjUeVbcPTrpQt9VyfkRUyBrcc8jVO1AZ2tR4e
+         1vv98LykBrkR7LWxMPMMrceWD1fqi3G5sA/UdA1GtjX6t0I617WwA0FZIzFiWLDPe/6/
+         +B7g==
+In-Reply-To: <20230404165305.ffs7uscqpndnfytn@blackpad>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"; format="flowed"
-To: Juri Lelli <juri.lelli-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Ingo Molnar <mingo-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Qais Yousef <qyousef-wp2msK0BRk8tq7phqP6ubQ@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Hao Luo <haoluo-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Cc: Dietmar Eggemann <dietmar.eggemann-5wv7dgnIgG8@public.gmane.org>, Steven Rostedt <rostedt-nx8X9YLhiw1AfugRpC6u6w@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, luca.abeni-5rdYK369eBLQB0XuIGIEkQ@public.gmane.org, claudio-YOzL5CV4y4YG1A2ADO40+w@public.gmane.org, tommaso.cucinotta-5rdYK369eBLQB0XuIGIEkQ@public.gmane.org, bristot-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, mathieu.poirier-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Vincent Guittot <vincent.guittot-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, Wei Wang <wvw-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Rick Yiu <rickyiu-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Quentin Perret <qperret-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Heiko Carstens <hca-tEXmvtCZX7AybS5Ee8rs3A@public.gmane.org>, Vasily Gorbik <gor-tEXmvtCZX7AybS5Ee8rs3A@public.gmane.org>, Alexander Gordeev <agordeev-tEXmvtCZX7AybS5Ee8rs3A@public.gmane.org>, Sudeep Holla <sudeep.holla-5wv7dgnIgG8@public.gmane.org>
+Content-Type: text/plain; charset="utf-8"
+To: =?UTF-8?Q?Michal_Koutn=C3=BD?= <mkoutny@suse.com>
+Cc: Tejun Heo <tj@kernel.org>, Josef Bacik <josef@toxicpanda.com>, Jens Axboe <axboe@kernel.dk>, Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, Roman Gushchin <roman.gushchin@linux.dev>, Shakeel Butt <shakeelb@google.com>, Muchun Song <muchun.song@linux.dev>, Andrew Morton <akpm@linux-foundation.org>, Vasily Averin <vasily.averin@linux.dev>, cgroups@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org, bpf@vger.kernel.org, Michal Hocko <mhocko@suse.com>
 
-On 3/29/23 08:55, Juri Lelli wrote:
-> Turns out percpu_cpuset_rwsem - commit 1243dc518c9d ("cgroup/cpuset:
-> Convert cpuset_mutex to percpu_rwsem") - wasn't such a brilliant idea,
-> as it has been reported to cause slowdowns in workloads that need to
-> change cpuset configuration frequently and it is also not implementing
-> priority inheritance (which causes troubles with realtime workloads).
+On Tue, Apr 4, 2023 at 9:53=E2=80=AFAM Michal Koutn=C3=BD <mkoutny@suse.com=
+> wrote:
 >
-> Convert percpu_cpuset_rwsem back to regular cpuset_mutex. Also grab it
-> only for SCHED_DEADLINE tasks (other policies don't care about stable
-> cpusets anyway).
+> On Thu, Mar 30, 2023 at 07:17:59PM +0000, Yosry Ahmed <yosryahmed@google.=
+com> wrote:
+> > In workingset_refault(), we call
+> > mem_cgroup_flush_stats_atomic_ratelimited() to read accurate stats
+> > within an RCU read section and with sleeping disallowed. Move the
+> > call above the RCU read section to make it non-atomic.
+> >
+> > Flushing is an expensive operation that scales with the number of cpus
+> > and the number of cgroups in the system, so avoid doing it atomically
+> > where possible.
 >
-> Signed-off-by: Juri Lelli <juri.lelli-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+> I understand why one does not process the whole flushing load in one go
+> in general.
+> However, I remember there were reports of workingset_refault() being
+> sensitive to latencies (hence the ratelimited call was created).
+>
+> Is there any consideration on impact of this here?
+> (Or are there other cond_resched() precendents on this path? Should it
+> be mentioned like in the vmscan (7/8) commit?)
 
-I am thinking that maybe we should switch the percpu rwsem to a regular 
-rwsem as there are cases where a read lock is sufficient. This will also 
-avoid the potential PREEMPT_RT problem with PI and reduce the time it 
-needs to take a write lock.
+IIUC there are multiple places where we can sleep in this path, we can
+sleep waiting for a page to be read from disk, we can sleep during
+allocating the page to read into, and IIUC the allocations on the
+fault path can even run into reclaim, going into the vmscan code. So
+there are precedents, but I am not sure if that's enough argument.
 
-Cheers,
-Longman
+I did some light performance testing and I did not notice any
+regressions (i.e concurrent processes faulting memory with a lot of
+cgroups/cpus), but this change is done intentionally in a separate
+patch so that it's easy to revert if regressions are reported.
 
+>
+> Thanks,
+> Michal
