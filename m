@@ -1,164 +1,53 @@
-From: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
-Subject: Re: [PATCH v2] mm: oom: introduce cpuset oom
-Date: Tue, 4 Apr 2023 16:31:13 +0200
-Message-ID: <ZCw0sR6IqYa5Es7Q@dhcp22.suse.cz>
-References: <20230404115509.14299-1-ligang.bdlg@bytedance.com>
+From: Johannes Weiner <hannes@cmpxchg.org>
+Subject: Re: [PATCH v3 5/8] memcg: sleep during flushing stats in safe
+ contexts
+Date: Tue, 4 Apr 2023 11:09:24 -0400
+Message-ID: <20230404150924.GA11156@cmpxchg.org>
+References: <20230330191801.1967435-1-yosryahmed@google.com>
+ <20230330191801.1967435-6-yosryahmed@google.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
-        t=1680618674; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=5lkgsKF9buBugrMdUK7Gx/f9nw3TdJxXdyQ3Vtpni/8=;
-        b=oECM6QZI2l8k0Cat0iLrKabTx6UDrsw0FHGLSivUEm2Ls1/617xgC/Eq5yO2MvFOli/73k
-        xtjo/a2U0oUtad7J7+f9f2kjSvGkafMfx5quyNT1/oXjy4xYgxHYrB/0/RiXdxAv//Y9ML
-        H+C7NRgGqLlGen8n7jeAiJcpuvEdlOY=
+Return-path: <bpf-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=cmpxchg-org.20210112.gappssmtp.com; s=20210112; t=1680620966;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=Khpw7ou3XcOkEyyu20b7pCpZUxpOS3o1zWL8rB8cIWg=;
+        b=E9HaZa+M8ODN9+y6nc9TMvZoWv3nEIIFh+FqI+q5iZAhq8VS7JMkQ0hLhz6wt77oVA
+         Sq+WdbDqyjPlbJwfD2OUSgZQeboG04fvauXZxZIH/WIQxY8E6gdKJcdnE3H+wkrExBLE
+         YAWFWGAMu6z7G9Cf0/oSmc7Wo6o4XBRAYbQoweEE732zv/bS89aVmY6sEhlvqDjYVGob
+         1PMZBzk74rgVHntldzIxK3wUMyTxmvcK7DFlocLDK+a3NT02oEm8gm75iJ1X5LGEZYLD
+         MeElj/ZJiMpZXbDV3PEKeTbdQtwCbRz/lkjROzo72Z4/k1Ds6aMF8oawb+YS+DecRvWZ
+         rFBw==
 Content-Disposition: inline
-In-Reply-To: <20230404115509.14299-1-ligang.bdlg-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
+In-Reply-To: <20230330191801.1967435-6-yosryahmed@google.com>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Gang Li <ligang.bdlg-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
-Cc: rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Yosry Ahmed <yosryahmed@google.com>
+Cc: Tejun Heo <tj@kernel.org>, Josef Bacik <josef@toxicpanda.com>, Jens Axboe <axboe@kernel.dk>, Zefan Li <lizefan.x@bytedance.com>, Michal Hocko <mhocko@kernel.org>, Roman Gushchin <roman.gushchin@linux.dev>, Shakeel Butt <shakeelb@google.com>, Muchun Song <muchun.song@linux.dev>, Andrew Morton <akpm@linux-foundation.org>, Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny@suse.com>, Vasily Averin <vasily.averin@linux.dev>, cgroups@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org, bpf@vger.kernel.org, Michal Hocko <mhocko@suse.com>
 
-[CC cpuset people]
-
-On Tue 04-04-23 19:55:09, Gang Li wrote:
-> When a process in cpuset triggers oom, it may kill a completely
-> irrelevant process on another numa node, which will not release any
-> memory for this cpuset.
+On Thu, Mar 30, 2023 at 07:17:58PM +0000, Yosry Ahmed wrote:
+> Currently, all contexts that flush memcg stats do so with sleeping not
+> allowed. Some of these contexts are perfectly safe to sleep in, such as
+> reading cgroup files from userspace or the background periodic flusher.
+> Flushing is an expensive operation that scales with the number of cpus
+> and the number of cgroups in the system, so avoid doing it atomically
+> where possible.
 > 
-> It seems that `CONSTRAINT_CPUSET` is not really doing much these
-> days. Using CONSTRAINT_CPUSET, we can easily achieve node aware oom
-> by selecting victim from all cpusets with the same mems_allowed as
-> the current cpuset.
-
-This should go into more details about the usecase, testing and ideally
-also spend couple of words about how CONSTRAINT_CPUSET is actually
-implemented because this is not really immediately obvious. An example
-of before/after behavior would have been really nice as well.
-
-You should also go into much more details about how oom victims are
-actually evaluated.
-
-> Suggested-by: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
-> Signed-off-by: Gang Li <ligang.bdlg-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
-> ---
-> Changes in v2:
-> - Select victim from all cpusets with the same mems_allowed as the current cpuset.
->   (David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>)
+> Refactor the code to make mem_cgroup_flush_stats() non-atomic (aka
+> sleepable), and provide a separate atomic version. The atomic version is
+> used in reclaim, refault, writeback, and in mem_cgroup_usage(). All
+> other code paths are left to use the non-atomic version. This includes
+> callbacks for userspace reads and the periodic flusher.
 > 
-> v1:
-> - https://lore.kernel.org/all/20220921064710.89663-1-ligang.bdlg-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org/
+> Since refault is the only caller of mem_cgroup_flush_stats_ratelimited(),
+> change it to mem_cgroup_flush_stats_atomic_ratelimited(). Reclaim and
+> refault code paths are modified to do non-atomic flushing in separate
+> later patches -- so it will eventually be changed back to
+> mem_cgroup_flush_stats_ratelimited().
 > 
-> ---
->  include/linux/cpuset.h |  6 ++++++
->  kernel/cgroup/cpuset.c | 28 ++++++++++++++++++++++++++++
->  mm/oom_kill.c          |  4 ++++
->  3 files changed, 38 insertions(+)
+> Signed-off-by: Yosry Ahmed <yosryahmed@google.com>
+> Acked-by: Shakeel Butt <shakeelb@google.com>
+> Acked-by: Michal Hocko <mhocko@suse.com>
 
-As this is a userspace visible change it should also be documented
-somewhere  in Documentation.
-
-I am not really familiar with cpusets internals so I cannot really judge
-cpuset_cgroup_scan_tasks implementation.
-
-The oom report should be explicit about this being CPUSET specific oom
-handling so unexpected behavior could be nailed down to this change so I
-do not see a major concern from the oom POV. Nevertheless it would be
-still good to consider whether this should be an opt-in behavior. I
-personally do not see a major problem because most cpuset deployments I
-have seen tend to be well partitioned so the new behavior makes more
-sense. 
-
-> diff --git a/include/linux/cpuset.h b/include/linux/cpuset.h
-> index 980b76a1237e..fc244141bd52 100644
-> --- a/include/linux/cpuset.h
-> +++ b/include/linux/cpuset.h
-> @@ -171,6 +171,8 @@ static inline void set_mems_allowed(nodemask_t nodemask)
->  	task_unlock(current);
->  }
->  
-> +int cpuset_cgroup_scan_tasks(int (*fn)(struct task_struct *, void *), void *arg);
-> +
->  #else /* !CONFIG_CPUSETS */
->  
->  static inline bool cpusets_enabled(void) { return false; }
-> @@ -287,6 +289,10 @@ static inline bool read_mems_allowed_retry(unsigned int seq)
->  	return false;
->  }
->  
-> +static inline int cpuset_cgroup_scan_tasks(int (*fn)(struct task_struct *, void *), void *arg)
-> +{
-> +	return 0;
-> +}
->  #endif /* !CONFIG_CPUSETS */
->  
->  #endif /* _LINUX_CPUSET_H */
-> diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
-> index bc4dcfd7bee5..b009c98ca19e 100644
-> --- a/kernel/cgroup/cpuset.c
-> +++ b/kernel/cgroup/cpuset.c
-> @@ -4013,6 +4013,34 @@ void cpuset_print_current_mems_allowed(void)
->  	rcu_read_unlock();
->  }
->  
-> +int cpuset_cgroup_scan_tasks(int (*fn)(struct task_struct *, void *), void *arg)
-> +{
-> +	int ret = 0;
-> +	struct css_task_iter it;
-> +	struct task_struct *task;
-> +	struct cpuset *cs;
-> +	struct cgroup_subsys_state *pos_css;
-> +
-> +	/*
-> +	 * Situation gets complex with overlapping nodemasks in different cpusets.
-> +	 * TODO: Maybe we should calculate the "distance" between different mems_allowed.
-> +	 *
-> +	 * But for now, let's make it simple. Just iterate through all cpusets
-> +	 * with the same mems_allowed as the current cpuset.
-> +	 */
-> +	rcu_read_lock();
-> +	cpuset_for_each_descendant_pre(cs, pos_css, &top_cpuset) {
-> +		if (nodes_equal(cs->mems_allowed, task_cs(current)->mems_allowed)) {
-> +			css_task_iter_start(&(cs->css), CSS_TASK_ITER_PROCS, &it);
-> +			while (!ret && (task = css_task_iter_next(&it)))
-> +				ret = fn(task, arg);
-> +			css_task_iter_end(&it);
-> +		}
-> +	}
-> +	rcu_read_unlock();
-> +	return ret;
-> +}
-> +
->  /*
->   * Collection of memory_pressure is suppressed unless
->   * this flag is enabled by writing "1" to the special
-> diff --git a/mm/oom_kill.c b/mm/oom_kill.c
-> index 044e1eed720e..205982a69b30 100644
-> --- a/mm/oom_kill.c
-> +++ b/mm/oom_kill.c
-> @@ -367,6 +367,8 @@ static void select_bad_process(struct oom_control *oc)
->  
->  	if (is_memcg_oom(oc))
->  		mem_cgroup_scan_tasks(oc->memcg, oom_evaluate_task, oc);
-> +	else if (oc->constraint == CONSTRAINT_CPUSET)
-> +		cpuset_cgroup_scan_tasks(oom_evaluate_task, oc);
->  	else {
->  		struct task_struct *p;
->  
-> @@ -427,6 +429,8 @@ static void dump_tasks(struct oom_control *oc)
->  
->  	if (is_memcg_oom(oc))
->  		mem_cgroup_scan_tasks(oc->memcg, dump_task, oc);
-> +	else if (oc->constraint == CONSTRAINT_CPUSET)
-> +		cpuset_cgroup_scan_tasks(dump_task, oc);
->  	else {
->  		struct task_struct *p;
->  
-> -- 
-> 2.20.1
-
--- 
-Michal Hocko
-SUSE Labs
+Acked-by: Johannes Weiner <hannes@cmpxchg.org>
