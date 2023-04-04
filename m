@@ -1,62 +1,47 @@
-From: Michal =?utf-8?Q?Koutn=C3=BD?= <mkoutny@suse.com>
-Subject: Re: [PATCH v3 4/8] memcg: replace stats_flush_lock with an atomic
-Date: Tue, 4 Apr 2023 19:32:09 +0200
-Message-ID: <20230404173209.fuw2wdbhbzdgszc6@blackpad>
-References: <20230330191801.1967435-1-yosryahmed@google.com>
- <20230330191801.1967435-5-yosryahmed@google.com>
- <20230404165258.ie6ttxobbmgn62hs@blackpad>
- <CALvZod5Y+quOS1XQvVBTvv7FRs3455j_79f0GoR+FqCFzbwkuA@mail.gmail.com>
- <CALvZod7Ao-VmB4as+VHsR+awW1jmOA18uVM7qk21mVsXTOYC2A@mail.gmail.com>
+From: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH 2/6] sched/cpuset: Bring back cpuset_mutex
+Date: Tue, 4 Apr 2023 13:31:51 -0400
+Message-ID: <fa585497-5c6d-f0ed-bdda-c71a81d315ad@redhat.com>
+References: <20230329125558.255239-1-juri.lelli@redhat.com>
+ <20230329125558.255239-3-juri.lelli@redhat.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha512;
-        protocol="application/pgp-signature"; boundary="tp4kmk7uybolwv2d"
-Return-path: <bpf-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
-        t=1680629531; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
+Content-Transfer-Encoding: 7bit
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1680629519;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=ZDEd2ByE3RJ/GX+wDkyEgy/kSR273UEz9enEYcMy1b8=;
-        b=Rh0Y4PUmouQ4RsBeXmVM0zyk9aO9dNgz5lgJqiRROymxTIcq8mepaxm62rz47eD78YSCc8
-        N+f4YDtLQYOmbbnkmJLBZP1k25oDPW/cmNAkStneuDO2Rlp100x2xAs4rxoMS5ADGQHO/1
-        ESZfTdSKMrdNwWs8pTyYiI7mPWHJeys=
-Content-Disposition: inline
-In-Reply-To: <CALvZod7Ao-VmB4as+VHsR+awW1jmOA18uVM7qk21mVsXTOYC2A@mail.gmail.com>
+        bh=V+vrMacm8K2usa1pALZTH2tABjT2c2JpiiWSHS5nyhs=;
+        b=DbQdzu42OJJZmcFOsAA6PHSpRxoVM0I1ztHE2bhalS5wc8XK3TWv97x2iGaLawEHeOO4Tm
+        YJGCWCAVd3hPQH09nHtfwNEHZSO9ITQbgVR8sen/l3MF1gzYhnmGUSrzW7wo9xmNIfpxTL
+        sstBD+kmBl08P5KgVDVDK3WYhtiOaVc=
+Content-Language: en-US
+In-Reply-To: <20230329125558.255239-3-juri.lelli-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-To: Shakeel Butt <shakeelb@google.com>
-Cc: Yosry Ahmed <yosryahmed@google.com>, Tejun Heo <tj@kernel.org>, Josef Bacik <josef@toxicpanda.com>, Jens Axboe <axboe@kernel.dk>, Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, Roman Gushchin <roman.gushchin@linux.dev>, Muchun Song <muchun.song@linux.dev>, Andrew Morton <akpm@linux-foundation.org>, Vasily Averin <vasily.averin@linux.dev>, cgroups@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org, bpf@vger.kernel.org, Michal Hocko <mhocko@suse.com>
+Content-Type: text/plain; charset="us-ascii"; format="flowed"
+To: Juri Lelli <juri.lelli-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Ingo Molnar <mingo-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Qais Yousef <qyousef-wp2msK0BRk8tq7phqP6ubQ@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Hao Luo <haoluo-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Cc: Dietmar Eggemann <dietmar.eggemann-5wv7dgnIgG8@public.gmane.org>, Steven Rostedt <rostedt-nx8X9YLhiw1AfugRpC6u6w@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, luca.abeni-5rdYK369eBLQB0XuIGIEkQ@public.gmane.org, claudio-YOzL5CV4y4YG1A2ADO40+w@public.gmane.org, tommaso.cucinotta-5rdYK369eBLQB0XuIGIEkQ@public.gmane.org, bristot-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, mathieu.poirier-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Vincent Guittot <vincent.guittot-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, Wei Wang <wvw-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Rick Yiu <rickyiu-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Quentin Perret <qperret-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Heiko Carstens <hca-tEXmvtCZX7AybS5Ee8rs3A@public.gmane.org>, Vasily Gorbik <gor-tEXmvtCZX7AybS5Ee8rs3A@public.gmane.org>, Alexander Gordeev <agordeev-tEXmvtCZX7AybS5Ee8rs3A@public.gmane.org>, Sudeep Holla <sudeep.holla-5wv7dgnIgG8@public.gmane.org>
 
+On 3/29/23 08:55, Juri Lelli wrote:
+> Turns out percpu_cpuset_rwsem - commit 1243dc518c9d ("cgroup/cpuset:
+> Convert cpuset_mutex to percpu_rwsem") - wasn't such a brilliant idea,
+> as it has been reported to cause slowdowns in workloads that need to
+> change cpuset configuration frequently and it is also not implementing
+> priority inheritance (which causes troubles with realtime workloads).
+>
+> Convert percpu_cpuset_rwsem back to regular cpuset_mutex. Also grab it
+> only for SCHED_DEADLINE tasks (other policies don't care about stable
+> cpusets anyway).
+>
+> Signed-off-by: Juri Lelli <juri.lelli-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 
---tp4kmk7uybolwv2d
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+I am thinking that maybe we should switch the percpu rwsem to a regular 
+rwsem as there are cases where a read lock is sufficient. This will also 
+avoid the potential PREEMPT_RT problem with PI and reduce the time it 
+needs to take a write lock.
 
-On Tue, Apr 04, 2023 at 10:21:33AM -0700, Shakeel Butt <shakeelb@google.com> wrote:
-> > Yes indeed it is. Basically we want to avoid unconditional cache
-> > dirtying. This pattern is also used at other places in the kernel like
-> > qspinlock.
+Cheers,
+Longman
 
-Thanks for confirmation.
-
-(I remembered the commit 873f64b791a2 ("mm/memcontrol.c: remove the
-redundant updating of stats_flush_threshold"). But was slightly confused
-why would it be open-coded every time.)
-
-> Oh also take a look at
-> https://lore.kernel.org/all/20230404052228.15788-1-feng.tang@intel.com/
-
-Thanks for the link.
-
-Michal
-
---tp4kmk7uybolwv2d
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-
-iHUEABYKAB0WIQTrXXag4J0QvXXBmkMkDQmsBEOquQUCZCxfFAAKCRAkDQmsBEOq
-ubDdAP9UYeeNxfHY8xeftxD/DsD9BcOlaSaQPTOhztUjOJOmEwD+PjYu9+lFlKNJ
-In8lwXw/ZwMTHOjEVMnHwxc+TNnpwQk=
-=LYWU
------END PGP SIGNATURE-----
-
---tp4kmk7uybolwv2d--
