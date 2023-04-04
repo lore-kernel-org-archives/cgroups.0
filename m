@@ -1,53 +1,68 @@
-From: Johannes Weiner <hannes@cmpxchg.org>
-Subject: Re: [PATCH v3 5/8] memcg: sleep during flushing stats in safe
- contexts
-Date: Tue, 4 Apr 2023 11:09:24 -0400
-Message-ID: <20230404150924.GA11156@cmpxchg.org>
+From: Michal =?utf-8?Q?Koutn=C3=BD?= <mkoutny-IBi9RG/b67k@public.gmane.org>
+Subject: Re: [PATCH v3 4/8] memcg: replace stats_flush_lock with an atomic
+Date: Tue, 4 Apr 2023 18:52:58 +0200
+Message-ID: <20230404165258.ie6ttxobbmgn62hs@blackpad>
 References: <20230330191801.1967435-1-yosryahmed@google.com>
- <20230330191801.1967435-6-yosryahmed@google.com>
+ <20230330191801.1967435-5-yosryahmed@google.com>
 Mime-Version: 1.0
-Return-path: <bpf-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=cmpxchg-org.20210112.gappssmtp.com; s=20210112; t=1680620966;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=Khpw7ou3XcOkEyyu20b7pCpZUxpOS3o1zWL8rB8cIWg=;
-        b=E9HaZa+M8ODN9+y6nc9TMvZoWv3nEIIFh+FqI+q5iZAhq8VS7JMkQ0hLhz6wt77oVA
-         Sq+WdbDqyjPlbJwfD2OUSgZQeboG04fvauXZxZIH/WIQxY8E6gdKJcdnE3H+wkrExBLE
-         YAWFWGAMu6z7G9Cf0/oSmc7Wo6o4XBRAYbQoweEE732zv/bS89aVmY6sEhlvqDjYVGob
-         1PMZBzk74rgVHntldzIxK3wUMyTxmvcK7DFlocLDK+a3NT02oEm8gm75iJ1X5LGEZYLD
-         MeElj/ZJiMpZXbDV3PEKeTbdQtwCbRz/lkjROzo72Z4/k1Ds6aMF8oawb+YS+DecRvWZ
-         rFBw==
+Content-Type: multipart/signed; micalg=pgp-sha512;
+        protocol="application/pgp-signature"; boundary="pchdddtux2qbf53z"
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
+        t=1680627180; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=J++lSR0qBN+0TGvxu6lzekTohutLNFEkeNAdPcqtrMc=;
+        b=qOluMdxPHhvtFQLCFpQe1/5GzQwfB/aZnibvtGxy2cJj/GyfWJ5wH4U5vkOgOM4tLtt1Nu
+        Zvy2ZDtEOpyTBqcaT3xmplxiRScoHOSM7b0DIGYzfo+dy8TIFtXcIJ/kmtMwDURxu6+1hO
+        2swLdLqT2gFMWpUe1QczgdY8wOiZM5Q=
 Content-Disposition: inline
-In-Reply-To: <20230330191801.1967435-6-yosryahmed@google.com>
+In-Reply-To: <20230330191801.1967435-5-yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Yosry Ahmed <yosryahmed@google.com>
-Cc: Tejun Heo <tj@kernel.org>, Josef Bacik <josef@toxicpanda.com>, Jens Axboe <axboe@kernel.dk>, Zefan Li <lizefan.x@bytedance.com>, Michal Hocko <mhocko@kernel.org>, Roman Gushchin <roman.gushchin@linux.dev>, Shakeel Butt <shakeelb@google.com>, Muchun Song <muchun.song@linux.dev>, Andrew Morton <akpm@linux-foundation.org>, Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny@suse.com>, Vasily Averin <vasily.averin@linux.dev>, cgroups@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org, bpf@vger.kernel.org, Michal Hocko <mhocko@suse.com>
+To: Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Josef Bacik <josef-DigfWCa+lFGyeJad7bwFQA@public.gmane.org>, Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Muchun Song <muchun.song-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Vasily Averin <vasily.averin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, bpf-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
 
-On Thu, Mar 30, 2023 at 07:17:58PM +0000, Yosry Ahmed wrote:
-> Currently, all contexts that flush memcg stats do so with sleeping not
-> allowed. Some of these contexts are perfectly safe to sleep in, such as
-> reading cgroup files from userspace or the background periodic flusher.
-> Flushing is an expensive operation that scales with the number of cpus
-> and the number of cgroups in the system, so avoid doing it atomically
-> where possible.
-> 
-> Refactor the code to make mem_cgroup_flush_stats() non-atomic (aka
-> sleepable), and provide a separate atomic version. The atomic version is
-> used in reclaim, refault, writeback, and in mem_cgroup_usage(). All
-> other code paths are left to use the non-atomic version. This includes
-> callbacks for userspace reads and the periodic flusher.
-> 
-> Since refault is the only caller of mem_cgroup_flush_stats_ratelimited(),
-> change it to mem_cgroup_flush_stats_atomic_ratelimited(). Reclaim and
-> refault code paths are modified to do non-atomic flushing in separate
-> later patches -- so it will eventually be changed back to
-> mem_cgroup_flush_stats_ratelimited().
-> 
-> Signed-off-by: Yosry Ahmed <yosryahmed@google.com>
-> Acked-by: Shakeel Butt <shakeelb@google.com>
-> Acked-by: Michal Hocko <mhocko@suse.com>
 
-Acked-by: Johannes Weiner <hannes@cmpxchg.org>
+--pchdddtux2qbf53z
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+
+Hello.
+
+On Thu, Mar 30, 2023 at 07:17:57PM +0000, Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org> wrote:
+>  static void __mem_cgroup_flush_stats(void)
+>  {
+> -	unsigned long flag;
+> -
+> -	if (!spin_trylock_irqsave(&stats_flush_lock, flag))
+> +	/*
+> +	 * We always flush the entire tree, so concurrent flushers can just
+> +	 * skip. This avoids a thundering herd problem on the rstat global lock
+> +	 * from memcg flushers (e.g. reclaim, refault, etc).
+> +	 */
+> +	if (atomic_read(&stats_flush_ongoing) ||
+> +	    atomic_xchg(&stats_flush_ongoing, 1))
+>  		return;
+
+I'm curious about why this instead of
+
+	if (atomic_xchg(&stats_flush_ongoing, 1))
+		return;
+
+Is that some microarchitectural cleverness?
+
+Thanks,
+Michal
+
+--pchdddtux2qbf53z
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iHUEABYKAB0WIQTrXXag4J0QvXXBmkMkDQmsBEOquQUCZCxV6AAKCRAkDQmsBEOq
+ucctAP0QF3CXk51W8Pmcc0e8ZfVGikqKVH42APSyMXgCLEw4twD/ajlglQ+6Jt7N
+Lf+TNXVTCA0s8f9NI8huIwxn6NR+XQc=
+=Q0r7
+-----END PGP SIGNATURE-----
+
+--pchdddtux2qbf53z--
