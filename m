@@ -1,49 +1,62 @@
-From: Michal =?utf-8?Q?Koutn=C3=BD?= <mkoutny@suse.com>
-Subject: Re: [PATCH v3 8/8] memcg: do not modify rstat tree for zero updates
-Date: Tue, 4 Apr 2023 18:53:14 +0200
-Message-ID: <20230404165314.swb7bide2mkjap3p@blackpad>
-References: <20230330191801.1967435-1-yosryahmed@google.com>
- <20230330191801.1967435-9-yosryahmed@google.com>
+From: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Subject: [PATCH v2 1/4] cgroup/cpuset: Wake up cpuset_attach_wq tasks in cpuset_cancel_attach()
+Date: Tue,  4 Apr 2023 13:05:43 -0400
+Message-ID: <20230404170546.2585050-2-longman@redhat.com>
+References: <20230404170546.2585050-1-longman@redhat.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha512;
-        protocol="application/pgp-signature"; boundary="v5h2bvm4dmip3h3q"
-Return-path: <linux-block-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
-        t=1680627195; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
+Content-Transfer-Encoding: 8bit
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1680627981;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:
+         content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=HsMVP1Gx6bqzvFmi3XkM83yTiX2CMmFn0tLAqTXnpkI=;
-        b=btRPMMcl2b2uFZz5YK+tZE32E88Ja+m/EkIvXmlf/VcbcyPt8UXBCI+1HfaQcy83X/zun0
-        q8RT3lcBoIJDjqhQN0pXO17r2yZOR2oRKUkxYGi1adL3BezoX5ydpiXRqzkCA18uWnHeQF
-        XP2lmbvyGFA9b3jQoIJi4gEXoZ7IQ7M=
-Content-Disposition: inline
-In-Reply-To: <20230330191801.1967435-9-yosryahmed@google.com>
+        bh=k8j2HkuWn0j0Z7PhnLLGKz76k+59+HcmFbNhPcenFyw=;
+        b=f1dxsfC3FWlFy3tKVjyILA69Aw+t08YMLykOxKfVMdrowLCNXwIgKT3wuUlm3JPmdpkZa7
+        BK9hZL9ZfjYZ5VbEq9VyM8cfqWE7FK2QKYku714JyhdNtWS5vzKA+iDyaZA7jDy5sKIwbb
+        rSGKCTjyPb/nq7mc7M//jFzrFgL9+oI=
+In-Reply-To: <20230404170546.2585050-1-longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-To: Yosry Ahmed <yosryahmed@google.com>
-Cc: Tejun Heo <tj@kernel.org>, Josef Bacik <josef@toxicpanda.com>, Jens Axboe <axboe@kernel.dk>, Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, Roman Gushchin <roman.gushchin@linux.dev>, Shakeel Butt <shakeelb@google.com>, Muchun Song <muchun.song@linux.dev>, Andrew Morton <akpm@linux-foundation.org>, Vasily Averin <vasily.averin@linux.dev>, cgroups@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org, bpf@vger.kernel.org, Michal Hocko <mhocko@suse.com>
+Content-Type: text/plain; charset="us-ascii"
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Christian Brauner <brauner-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Juri Lelli <juri.lelli-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Dietmar Eggemann <dietmar.eggemann-5wv7dgnIgG8@public.gmane.org>, =?UTF-8?q?Michal=20Koutn=C3=BD?= <mkoutny-IBi9RG/b67k@public.gmane.org>, gscrivan-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 
+After a successful cpuset_can_attach() call which increments the
+attach_in_progress flag, either cpuset_cancel_attach() or cpuset_attach()
+will be called later. In cpuset_attach(), tasks in cpuset_attach_wq,
+if present, will be woken up at the end. That is not the case in
+cpuset_cancel_attach(). So missed wakeup is possible if the attach
+operation is somehow cancelled. Fix that by doing the wakeup in
+cpuset_cancel_attach() as well.
 
---v5h2bvm4dmip3h3q
-Content-Type: text/plain; charset=iso-8859-1
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Fixes: e44193d39e8d ("cpuset: let hotplug propagation work wait for task attaching")
+Signed-off-by: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+---
+ kernel/cgroup/cpuset.c | 6 +++++-
+ 1 file changed, 5 insertions(+), 1 deletion(-)
 
-On Thu, Mar 30, 2023 at 07:18:01PM +0000, Yosry Ahmed <yosryahmed@google.co=
-m> wrote:
->  mm/memcontrol.c | 3 +++
->  1 file changed, 3 insertions(+)
+diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
+index bc4dcfd7bee5..066689a7dcc3 100644
+--- a/kernel/cgroup/cpuset.c
++++ b/kernel/cgroup/cpuset.c
+@@ -2507,11 +2507,15 @@ static int cpuset_can_attach(struct cgroup_taskset *tset)
+ static void cpuset_cancel_attach(struct cgroup_taskset *tset)
+ {
+ 	struct cgroup_subsys_state *css;
++	struct cpuset *cs;
+ 
+ 	cgroup_taskset_first(tset, &css);
++	cs = css_cs(css);
+ 
+ 	percpu_down_write(&cpuset_rwsem);
+-	css_cs(css)->attach_in_progress--;
++	cs->attach_in_progress--;
++	if (!cs->attach_in_progress)
++		wake_up(&cpuset_attach_wq);
+ 	percpu_up_write(&cpuset_rwsem);
+ }
+ 
+-- 
+2.31.1
 
-Reviewed-by: Michal Koutn=FD <mkoutny@suse.com>
-
---v5h2bvm4dmip3h3q
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-
-iHUEABYKAB0WIQTrXXag4J0QvXXBmkMkDQmsBEOquQUCZCxV9QAKCRAkDQmsBEOq
-uYK9AP0WJYtFSeSrHica60KBnkpC0zuL6ZB9oq/HdqUH8N7N9gEAxT/BKJqjFEX1
-f8Ij/Sc8okkrXt+NvEbGkgBVVJnCNAA=
-=86rE
------END PGP SIGNATURE-----
-
---v5h2bvm4dmip3h3q--
