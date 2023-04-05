@@ -1,149 +1,112 @@
-From: Mukesh Ojha <quic_mojha-jfJNa2p1gH1BDgjK7y7TUQ@public.gmane.org>
-Subject: Re: [PATCH] cgroup,freezer: hold cpu_hotplug_lock before
- freezer_mutex
-Date: Wed, 5 Apr 2023 19:27:51 +0530
-Message-ID: <f7ffb989-cae4-c708-51d9-25aca0822aa4@quicinc.com>
-References: <00000000000009483d05ec7a6b93@google.com>
- <695b8d1c-6b7a-91b1-6941-c459cab038b0@I-love.SAKURA.ne.jp>
+From: Greg KH <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>
+Subject: Re: [PATCH] memcg-v1: Enable setting memory min, low, high
+Date: Wed, 5 Apr 2023 16:21:31 +0200
+Message-ID: <2023040500-drinking-obvious-bd85@gregkh>
+References: <20230405110107.127156-1-shaun.tancheff@gmail.com>
+ <2023040529-commodore-humongous-47c3@gregkh>
+ <CAJ48U8X28dhTWouqeT83Uqys__qf2+z-6NcdC1SbOr_xOzjgWg@mail.gmail.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: quoted-printable
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=message-id : date :
- mime-version : subject : to : cc : references : from : in-reply-to :
- content-type : content-transfer-encoding; s=qcppdkim1;
- bh=fD0dMCOCx7i40ZidMOGq2NKWQVPbl6GsrCKyMB4DxUA=;
- b=P/emUiIL6ZYxQEE4Fi8t0E4oZ6P118SH02ihR933Rqm2YMdLi1GtKz6ToLZi5DrIx+Ch
- LJAdZL5YigsDmdA45aG33GPS0V8MCL30DF2Bbx+5wazYSswsVtU54+Yn/I2b2Cg5ckux
- QH0vjLbvmVCskBNh/1ZqpwjFTgUzvMXWOcE/T//oUrP1N3qe9WP2UWsAVNlfgp5l09og
- 9wf5eyDM8GnG/GiUcQOzwC4LSkZ20KWbbVU8UFYX/5mGOpRFACLp3US1UavWLakRD3Rh
- PoX5R9XpDl2TC2KfeJOluaAhu7dKz03rCJ3IL/HLCKZ5wNahRvEt3Cxhka5iw8ozYeNl mQ== 
-Content-Language: en-US
-In-Reply-To: <695b8d1c-6b7a-91b1-6941-c459cab038b0-JPay3/Yim36HaxMnTkn67Xf5DAMn2ifp@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linuxfoundation.org;
+        s=korg; t=1680704494;
+        bh=eyBjOtC7CJFOS5X6Sp9ly9THlOS5XlccxmCOFpUhOl4=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=bkToI3kjLCFkg/Q9XiT8E06SrfvrJtgXoZM39QA51VeWtLgANnUBE7hJ/ogxNxeOI
+         ydJTjh3bdKT69RKz8iF1i+7JV4C9BaVRxmH+dqVKXlurRTsJCPinJ1tXHUEDS8Ui6G
+         Qymz+m9pc6XZp6tnGjnOumjKfK6rAeR//gpPltw8=
+Content-Disposition: inline
+In-Reply-To: <CAJ48U8X28dhTWouqeT83Uqys__qf2+z-6NcdC1SbOr_xOzjgWg-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"; format="flowed"
-To: Tetsuo Handa <penguin-kernel-JPay3/Yim36HaxMnTkn67Xf5DAMn2ifp@public.gmane.org>, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Ingo Molnar <mingo-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, "Rafael J. Wysocki" <rafael.j.wysocki-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Cc: Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, syzbot <syzbot+c39682e86c9d84152f93-Pl5Pbv+GP7P466ipTTIvnc23WoclnBCfAL8bYrjMMd8@public.gmane.org>, syzkaller-bugs <syzkaller-bugs-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>, Hillf Danton <hdanton-k+cT0dCbe1g@public.gmane.org>
+Content-Type: text/plain; charset="windows-1252"
+To: Shaun Tancheff <shaun.tancheff-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Shaun Tancheff <shaun.tancheff-ZPxbGqLxI0U@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
+On Wed, Apr 05, 2023 at 08:54:07PM +0700, Shaun Tancheff wrote:
+> On Wed, Apr 5, 2023 at 6:23=E2=80=AFPM Greg KH <gregkh-hQyY1W1yCW8ekmWlsb=
+khG0B+6BGkLq7r@public.gmane.org> wrote:
+>=20
+> > On Wed, Apr 05, 2023 at 06:01:07PM +0700, Shaun Tancheff wrote:
+> > > From: Shaun Tancheff <shaun.tancheff-ZPxbGqLxI0U@public.gmane.org>
+> > >
+> > > For users that are unable to update to memcg-v2 this
+> > > provides a method where memcg-v1 can more effectively
+> > > apply enough memory pressure to effectively throttle
+> > > filesystem I/O or otherwise minimize being memcg oom
+> > > killed at the expense of reduced performance.
+> > >
+> > > This patch extends the memcg-v1 legacy sysfs entries
+> > > with:
+> > >     limit_in_bytes.min, limit_in_bytes.low and
+> > >     limit_in_bytes.high
+> > > Since old software will need to be updated to take
+> > > advantage of the new files a secondary method
+> > > of setting min, low and high based on a percentage
+> > > of the limit is also provided. The percentages
+> > > are determined by module parameters.
+> > >
+> > > The available module parameters can be set at
+> > > kernel boot time, for example:
+> > >    memcontrol.memcg_min=3D10
+> > >    memcontrol.memcg_low=3D30
+> > >    memcontrol.memcg_high=3D80
+> > >
+> > > Would set min to 10%, low to 30% and high to 80% of
+> > > the value written to:
+> > >   /sys/fs/cgroup/memory/<grp>/memory.limit_in_bytes
+> > >
+> > > Signed-off-by: Shaun Tancheff <shaun.tancheff-ZPxbGqLxI0U@public.gman=
+e.org>
+> > > ---
+> > > v0: Initial hard coded limits by percent.
+> > > v1: Added sysfs access and module parameters for percent values to en=
+able
+> > > v2: Fix 32-bit, remove need for missing __udivdi3
+> > >  mm/memcontrol.c | 83 +++++++++++++++++++++++++++++++++++++++++++++++=
++-
+> > >  1 file changed, 82 insertions(+), 1 deletion(-)
+> > >
+> > > diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+> > > index 2eee092f8f11..3cf8386f4f45 100644
+> > > --- a/mm/memcontrol.c
+> > > +++ b/mm/memcontrol.c
+> > > @@ -73,6 +73,18 @@
+> > >
+> > >  #include <trace/events/vmscan.h>
+> > >
+> > > +static unsigned int memcg_v1_min_default_percent;
+> > > +module_param_named(memcg_min, memcg_v1_min_default_percent, uint, 06=
+00);
+> > > +MODULE_PARM_DESC(memcg_min, "memcg v1 min default percent");
+> > > +
+> > > +static unsigned int memcg_v1_low_default_percent;
+> > > +module_param_named(memcg_low, memcg_v1_low_default_percent, uint, 06=
+00);
+> > > +MODULE_PARM_DESC(memcg_low, "memcg v1 low default percent");
+> > > +
+> > > +static unsigned int memcg_v1_high_default_percent;
+> > > +module_param_named(memcg_high, memcg_v1_high_default_percent, uint,
+> > 0600);
+> > > +MODULE_PARM_DESC(memcg_high, "memcg v1 high default percent");
+> >
+> > This is not the 1990's, why are you using module parameters for this?
+> >
+> And this isn't a module, so why use module options, how are you supposed
+> > to set them?
+> >
+> Ah .. guess I'm a bit out of date.
+> The can be set either on the kernel command line or through sysfs,
+> nominally
+>   /sys/module/memcontrol/parameters/memcg_high
+>   /sys/module/memcontrol/parameters/memcg_low
+>   /sys/module/memcontrol/parameters/memcg_min
 
+But again, memcontrol is not a module, right?
 
-On 4/5/2023 6:45 PM, Tetsuo Handa wrote:
-> syzbot is reporting circular locking dependency between cpu_hotplug_lock
-> and freezer_mutex, for commit f5d39b020809 ("freezer,sched: Rewrite core
-> freezer logic") replaced atomic_inc() in freezer_apply_state() with
-> static_branch_inc() which holds cpu_hotplug_lock.
-> 
-> cpu_hotplug_lock => cgroup_threadgroup_rwsem => freezer_mutex
-> 
->    cgroup_file_write() {
->      cgroup_procs_write() {
->        __cgroup_procs_write() {
->          cgroup_procs_write_start() {
->            cgroup_attach_lock() {
->              cpus_read_lock() {
->                percpu_down_read(&cpu_hotplug_lock);
->              }
->              percpu_down_write(&cgroup_threadgroup_rwsem);
->            }
->          }
->          cgroup_attach_task() {
->            cgroup_migrate() {
->              cgroup_migrate_execute() {
->                freezer_attach() {
->                  mutex_lock(&freezer_mutex);
->                  (...snipped...)
->                }
->              }
->            }
->          }
->          (...snipped...)
->        }
->      }
->    }
-> 
-> freezer_mutex => cpu_hotplug_lock
-> 
->    cgroup_file_write() {
->      freezer_write() {
->        freezer_change_state() {
->          mutex_lock(&freezer_mutex);
->          freezer_apply_state() {
->            static_branch_inc(&freezer_active) {
->              static_key_slow_inc() {
->                cpus_read_lock();
->                static_key_slow_inc_cpuslocked();
->                cpus_read_unlock();
->              }
->            }
->          }
->          mutex_unlock(&freezer_mutex);
->        }
->      }
->    }
-> 
-> Swap locking order by moving cpus_read_lock() in freezer_apply_state()
-> to before mutex_lock(&freezer_mutex) in freezer_change_state().
-> 
-> Reported-by: syzbot <syzbot+c39682e86c9d84152f93-Pl5Pbv+GP7P466ipTTIvnc23WoclnBCfAL8bYrjMMd8@public.gmane.org>
-> Link: https://syzkaller.appspot.com/bug?extid=c39682e86c9d84152f93
-> Suggested-by: Hillf Danton <hdanton-k+cT0dCbe1g@public.gmane.org>
-> Fixes: f5d39b020809 ("freezer,sched: Rewrite core freezer logic")
-> Signed-off-by: Tetsuo Handa <penguin-kernel-JPay3/Yim36HaxMnTkn67Xf5DAMn2ifp@public.gmane.org>
-> ---
->   kernel/cgroup/legacy_freezer.c | 7 +++++--
->   1 file changed, 5 insertions(+), 2 deletions(-)
-> 
-> diff --git a/kernel/cgroup/legacy_freezer.c b/kernel/cgroup/legacy_freezer.c
-> index 1b6b21851e9d..936473203a6b 100644
-> --- a/kernel/cgroup/legacy_freezer.c
-> +++ b/kernel/cgroup/legacy_freezer.c
-> @@ -22,6 +22,7 @@
->   #include <linux/freezer.h>
->   #include <linux/seq_file.h>
->   #include <linux/mutex.h>
-> +#include <linux/cpu.h>
->   
->   /*
->    * A cgroup is freezing if any FREEZING flags are set.  FREEZING_SELF is
-> @@ -350,7 +351,7 @@ static void freezer_apply_state(struct freezer *freezer, bool freeze,
->   
->   	if (freeze) {
->   		if (!(freezer->state & CGROUP_FREEZING))
-> -			static_branch_inc(&freezer_active);
-> +			static_branch_inc_cpuslocked(&freezer_active);
->   		freezer->state |= state;
->   		freeze_cgroup(freezer);
->   	} else {
-> @@ -361,7 +362,7 @@ static void freezer_apply_state(struct freezer *freezer, bool freeze,
->   		if (!(freezer->state & CGROUP_FREEZING)) {
->   			freezer->state &= ~CGROUP_FROZEN;
->   			if (was_freezing)
-> -				static_branch_dec(&freezer_active);
-> +				static_branch_dec_cpuslocked(&freezer_active);
->   			unfreeze_cgroup(freezer);
->   		}
->   	}
-> @@ -379,6 +380,7 @@ static void freezer_change_state(struct freezer *freezer, bool freeze)
->   {
->   	struct cgroup_subsys_state *pos;
->   
-> +	cpus_read_lock();
->   	/*
->   	 * Update all its descendants in pre-order traversal.  Each
->   	 * descendant will try to inherit its parent's FREEZING state as
-> @@ -407,6 +409,7 @@ static void freezer_change_state(struct freezer *freezer, bool freeze)
->   	}
->   	rcu_read_unlock();
->   	mutex_unlock(&freezer_mutex);
-> +	cpus_read_unlock();
->   }
->   
->   static ssize_t freezer_write(struct kernfs_open_file *of,
+> I will look at making these sysctl values instead.
 
-This was reported here as well
+Yeah, just stick with that please.
 
-https://lore.kernel.org/lkml/90147a2b-982e-ae57-9b7c-062bee0fab07-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org/
+thanks,
 
-Reviewed-by: Mukesh Ojha <quic_mojha-jfJNa2p1gH1BDgjK7y7TUQ@public.gmane.org>
-
---Mukesh
-
+greg k-h
