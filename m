@@ -1,179 +1,49 @@
-From: Waiman Long <longman@redhat.com>
-Subject: [PATCH v3 3/4] cgroup/cpuset: Add cpuset_can_fork() and cpuset_cancel_fork() methods
-Date: Thu,  6 Apr 2023 10:04:03 -0400
-Message-ID: <20230406140404.2718574-4-longman@redhat.com>
+From: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Subject: [PATCH v3 1/4] cgroup/cpuset: Wake up cpuset_attach_wq tasks in cpuset_cancel_attach()
+Date: Thu,  6 Apr 2023 10:04:01 -0400
+Message-ID: <20230406140404.2718574-2-longman@redhat.com>
 References: <20230406140404.2718574-1-longman@redhat.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Transfer-Encoding: base64
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1680789862;
+        s=mimecast20190719; t=1680789864;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=8dMo/PkUQpVPvNP5N/JYP8JDoaJqZJ0p/4b3QAb5N/o=;
-        b=b6g/JqcqGa8o8vb/qS0CtKgMMA2EIamS4n9fIyve1al/1aaUyo50ehK0LGj7xSrpY24cUY
-        PQojA/Qu+51/RFwcAWNaAxCh8rMxszTrLDnWpeKh+KQaBycpUO7j9kNYsssch3oHgkk0Jn
-        WhhEbpQ9zLaqIPtJT8UcgS3Z0cCSIHA=
-In-Reply-To: <20230406140404.2718574-1-longman@redhat.com>
+        bh=8knbqgpwDwW2izpddcqO89y+h297sf846uyalSPG3Do=;
+        b=P7rO2+rYxti3CmGtH8F6vpsHKGR/SZiabKfvZbWEuRL9NuIdhvI9jsY3GRLslK42H50GKo
+        dQXjMR8y6D7+DZ6q/nefdvgO5cI3o0nZT70e7g4oe9mdDm5eKf3xCsl1VZoHeAW4UHM13c
+        e3m9UdjV0Efdqc/tpsOueM38rde6TWA=
+In-Reply-To: <20230406140404.2718574-1-longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-To: Tejun Heo <tj@kernel.org>, Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, Christian Brauner <brauner@kernel.org>
-Cc: cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, Juri Lelli <juri.lelli@redhat.com>, Dietmar Eggemann <dietmar.eggemann@arm.com>, =?UTF-8?q?Michal=20Koutn=C3=BD?= <mkoutny@suse.com>, gscrivan@redhat.com, Waiman Long <longman@redhat.com>
+Content-Type: text/plain; charset="macroman"
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Christian Brauner <brauner-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Juri Lelli <juri.lelli-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Dietmar Eggemann <dietmar.eggemann-5wv7dgnIgG8@public.gmane.org>, =?UTF-8?q?Michal=20Koutn=C3=BD?= <mkoutny-IBi9RG/b67k@public.gmane.org>, gscrivan-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 
-In the case of CLONE_INTO_CGROUP, not all cpusets are ready to accept
-new tasks. It is too late to check that in cpuset_fork(). So we need
-to add the cpuset_can_fork() and cpuset_cancel_fork() methods to
-pre-check it before we can allow attachment to a different cpuset.
-
-We also need to set the attach_in_progress flag to alert other code
-that a new task is going to be added to the cpuset.
-
-Fixes: ef2c41cf38a7 ("clone3: allow spawning processes into cgroups")
-Signed-off-by: Waiman Long <longman@redhat.com>
----
- kernel/cgroup/cpuset.c | 92 +++++++++++++++++++++++++++++++++++++-----
- 1 file changed, 81 insertions(+), 11 deletions(-)
-
-diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
-index e954d5abb784..a331e11e3d20 100644
---- a/kernel/cgroup/cpuset.c
-+++ b/kernel/cgroup/cpuset.c
-@@ -2458,6 +2458,20 @@ static int fmeter_getrate(struct fmeter *fmp)
- 
- static struct cpuset *cpuset_attach_old_cs;
- 
-+/*
-+ * Check to see if a cpuset can accept a new task
-+ * For v1, cpus_allowed and mems_allowed can't be empty.
-+ * For v2, effective_cpus can't be empty.
-+ * Note that in v1, effective_cpus = cpus_allowed.
-+ */
-+static int cpuset_can_attach_check(struct cpuset *cs)
-+{
-+	if (cpumask_empty(cs->effective_cpus) ||
-+	   (!is_in_v2_mode() && nodes_empty(cs->mems_allowed)))
-+		return -ENOSPC;
-+	return 0;
-+}
-+
- /* Called by cgroups to determine if a cpuset is usable; cpuset_rwsem held */
- static int cpuset_can_attach(struct cgroup_taskset *tset)
- {
-@@ -2472,16 +2486,9 @@ static int cpuset_can_attach(struct cgroup_taskset *tset)
- 
- 	percpu_down_write(&cpuset_rwsem);
- 
--	/* allow moving tasks into an empty cpuset if on default hierarchy */
--	ret = -ENOSPC;
--	if (!is_in_v2_mode() &&
--	    (cpumask_empty(cs->cpus_allowed) || nodes_empty(cs->mems_allowed)))
--		goto out_unlock;
--
--	/*
--	 * Task cannot be moved to a cpuset with empty effective cpus.
--	 */
--	if (cpumask_empty(cs->effective_cpus))
-+	/* Check to see if task is allowed in the cpuset */
-+	ret = cpuset_can_attach_check(cs);
-+	if (ret)
- 		goto out_unlock;
- 
- 	cgroup_taskset_for_each(task, css, tset) {
-@@ -2498,7 +2505,6 @@ static int cpuset_can_attach(struct cgroup_taskset *tset)
- 	 * changes which zero cpus/mems_allowed.
- 	 */
- 	cs->attach_in_progress++;
--	ret = 0;
- out_unlock:
- 	percpu_up_write(&cpuset_rwsem);
- 	return ret;
-@@ -3269,6 +3275,63 @@ static void cpuset_bind(struct cgroup_subsys_state *root_css)
- 	percpu_up_write(&cpuset_rwsem);
- }
- 
-+/*
-+ * In case the child is cloned into a cpuset different from its parent,
-+ * additional checks are done to see if the move is allowed.
-+ */
-+static int cpuset_can_fork(struct task_struct *task, struct css_set *cset)
-+{
-+	struct cpuset *cs = css_cs(cset->subsys[cpuset_cgrp_id]);
-+	bool same_cs;
-+	int ret;
-+
-+	rcu_read_lock();
-+	same_cs = (cs == task_cs(current));
-+	rcu_read_unlock();
-+
-+	if (same_cs)
-+		return 0;
-+
-+	lockdep_assert_held(&cgroup_mutex);
-+	percpu_down_write(&cpuset_rwsem);
-+
-+	/* Check to see if task is allowed in the cpuset */
-+	ret = cpuset_can_attach_check(cs);
-+	if (ret)
-+		goto out_unlock;
-+
-+	ret = task_can_attach(task, cs->effective_cpus);
-+	if (ret)
-+		goto out_unlock;
-+
-+	ret = security_task_setscheduler(task);
-+	if (ret)
-+		goto out_unlock;
-+
-+	/*
-+	 * Mark attach is in progress.  This makes validate_change() fail
-+	 * changes which zero cpus/mems_allowed.
-+	 */
-+	cs->attach_in_progress++;
-+out_unlock:
-+	percpu_up_write(&cpuset_rwsem);
-+	return ret;
-+}
-+
-+static void cpuset_cancel_fork(struct task_struct *task, struct css_set *cset)
-+{
-+	struct cpuset *cs = css_cs(cset->subsys[cpuset_cgrp_id]);
-+
-+	if (cs == task_cs(current))
-+		return;
-+
-+	percpu_down_write(&cpuset_rwsem);
-+	cs->attach_in_progress--;
-+	if (!cs->attach_in_progress)
-+		wake_up(&cpuset_attach_wq);
-+	percpu_up_write(&cpuset_rwsem);
-+}
-+
- /*
-  * Make sure the new task conform to the current state of its parent,
-  * which could have been changed by cpuset just after it inherits the
-@@ -3297,6 +3360,11 @@ static void cpuset_fork(struct task_struct *task)
- 	percpu_down_write(&cpuset_rwsem);
- 	guarantee_online_mems(cs, &cpuset_attach_nodemask_to);
- 	cpuset_attach_task(cs, task);
-+
-+	cs->attach_in_progress--;
-+	if (!cs->attach_in_progress)
-+		wake_up(&cpuset_attach_wq);
-+
- 	percpu_up_write(&cpuset_rwsem);
- }
- 
-@@ -3310,6 +3378,8 @@ struct cgroup_subsys cpuset_cgrp_subsys = {
- 	.attach		= cpuset_attach,
- 	.post_attach	= cpuset_post_attach,
- 	.bind		= cpuset_bind,
-+	.can_fork	= cpuset_can_fork,
-+	.cancel_fork	= cpuset_cancel_fork,
- 	.fork		= cpuset_fork,
- 	.legacy_cftypes	= legacy_files,
- 	.dfl_cftypes	= dfl_files,
--- 
-2.31.1
-
+QWZ0ZXIgYSBzdWNjZXNzZnVsIGNwdXNldF9jYW5fYXR0YWNoKCkgY2FsbCB3aGljaCBpbmNyZW1l
+bnRzIHRoZQphdHRhY2hfaW5fcHJvZ3Jlc3MgZmxhZywgZWl0aGVyIGNwdXNldF9jYW5jZWxfYXR0
+YWNoKCkgb3IgY3B1c2V0X2F0dGFjaCgpCndpbGwgYmUgY2FsbGVkIGxhdGVyLiBJbiBjcHVzZXRf
+YXR0YWNoKCksIHRhc2tzIGluIGNwdXNldF9hdHRhY2hfd3EsCmlmIHByZXNlbnQsIHdpbGwgYmUg
+d29rZW4gdXAgYXQgdGhlIGVuZC4gVGhhdCBpcyBub3QgdGhlIGNhc2UgaW4KY3B1c2V0X2NhbmNl
+bF9hdHRhY2goKS4gU28gbWlzc2VkIHdha2V1cCBpcyBwb3NzaWJsZSBpZiB0aGUgYXR0YWNoCm9w
+ZXJhdGlvbiBpcyBzb21laG93IGNhbmNlbGxlZC4gRml4IHRoYXQgYnkgZG9pbmcgdGhlIHdha2V1
+cCBpbgpjcHVzZXRfY2FuY2VsX2F0dGFjaCgpIGFzIHdlbGwuCgpGaXhlczogZTQ0MTkzZDM5ZThk
+ICgiY3B1c2V0OiBsZXQgaG90cGx1ZyBwcm9wYWdhdGlvbiB3b3JrIHdhaXQgZm9yIHRhc2sgYXR0
+YWNoaW5nIikKU2lnbmVkLW9mZi1ieTogV2FpbWFuIExvbmcgPGxvbmdtYW4tSCt3WGFIeGY3YUxR
+VDBkWlIrQWxmQUBwdWJsaWMuZ21hbmUub3JnPgpSZXZpZXdlZC1ieTogTWljaGFsIEtvdXRuw70g
+PG1rb3V0bnktSUJpOVJHL2I2N2tAcHVibGljLmdtYW5lLm9yZz4KLS0tCiBrZXJuZWwvY2dyb3Vw
+L2NwdXNldC5jIHwgNiArKysrKy0KIDEgZmlsZSBjaGFuZ2VkLCA1IGluc2VydGlvbnMoKyksIDEg
+ZGVsZXRpb24oLSkKCmRpZmYgLS1naXQgYS9rZXJuZWwvY2dyb3VwL2NwdXNldC5jIGIva2VybmVs
+L2Nncm91cC9jcHVzZXQuYwppbmRleCBiYzRkY2ZkN2JlZTUuLjA2NjY4OWE3ZGNjMyAxMDA2NDQK
+LS0tIGEva2VybmVsL2Nncm91cC9jcHVzZXQuYworKysgYi9rZXJuZWwvY2dyb3VwL2NwdXNldC5j
+CkBAIC0yNTA3LDExICsyNTA3LDE1IEBAIHN0YXRpYyBpbnQgY3B1c2V0X2Nhbl9hdHRhY2goc3Ry
+dWN0IGNncm91cF90YXNrc2V0ICp0c2V0KQogc3RhdGljIHZvaWQgY3B1c2V0X2NhbmNlbF9hdHRh
+Y2goc3RydWN0IGNncm91cF90YXNrc2V0ICp0c2V0KQogewogCXN0cnVjdCBjZ3JvdXBfc3Vic3lz
+X3N0YXRlICpjc3M7CisJc3RydWN0IGNwdXNldCAqY3M7CiAKIAljZ3JvdXBfdGFza3NldF9maXJz
+dCh0c2V0LCAmY3NzKTsKKwljcyA9IGNzc19jcyhjc3MpOwogCiAJcGVyY3B1X2Rvd25fd3JpdGUo
+JmNwdXNldF9yd3NlbSk7Ci0JY3NzX2NzKGNzcyktPmF0dGFjaF9pbl9wcm9ncmVzcy0tOworCWNz
+LT5hdHRhY2hfaW5fcHJvZ3Jlc3MtLTsKKwlpZiAoIWNzLT5hdHRhY2hfaW5fcHJvZ3Jlc3MpCisJ
+CXdha2VfdXAoJmNwdXNldF9hdHRhY2hfd3EpOwogCXBlcmNwdV91cF93cml0ZSgmY3B1c2V0X3J3
+c2VtKTsKIH0KIAotLSAKMi4zMS4xCgo=
