@@ -1,52 +1,42 @@
-From: Gang Li <ligang.bdlg@bytedance.com>
-Subject: Re: Re: [PATCH v2] mm: oom: introduce cpuset oom
-Date: Thu, 6 Apr 2023 21:02:17 +0800
-Message-ID: <cc77d706-7baf-951b-13a5-3470c2b1bba9@bytedance.com>
-References: <20230404115509.14299-1-ligang.bdlg@bytedance.com>
- <ZCw0sR6IqYa5Es7Q@dhcp22.suse.cz>
- <342c1967-8a68-275c-042e-765d5993157c@redhat.com>
+From: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Subject: [PATCH v3 4/4] cgroup/cpuset: Make cpuset_attach_task() skip subpartitions CPUs for top_cpuset
+Date: Thu,  6 Apr 2023 10:04:04 -0400
+Message-ID: <20230406140404.2718574-5-longman@redhat.com>
+References: <20230406140404.2718574-1-longman@redhat.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=bytedance.com; s=google; t=1680786142;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=IfVjKlL+j9HlDI7Ywy3orPIREWTrRC6HkOIMTjgyE5A=;
-        b=Qq/l6ip9dMiziIBWzW4ToFmAn29Ri9O4CLmtTYSR9Rz/boVf5FqBfGnqMOcOXdl871
-         OQ7dEnKcBtY3M2meImEZvKvOfNu5wgcXc0gK7l8UePg0fbk2zzDD2tLyswobRChXf9sz
-         A/8E0beNTT2d+D33WGr5dnvPoI3tTfvpEQKVKB7+wLndb6fqivDB9ogculITxgCfgcka
-         VQAp/K5HfnUnuB57LNJBCVU6rDivf48a099xNNbdkQD9gvaSg+HM5hld30/hI+eeqo/y
-         wGBxYExdN2uDvwnfyGVIYgKegzvoh1HRUajMaxoFVUSPb/bCVCJjcd8BHWltUMtqfOF6
-         H+XQ==
-Content-Language: en-US
-In-Reply-To: <342c1967-8a68-275c-042e-765d5993157c@redhat.com>
+Content-Transfer-Encoding: base64
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1680789864;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=Y3klBPS5f5pxKDuGhP3oupQdkk1kbCRTfG9zpyKuKHs=;
+        b=b1rcFWQ29c/S8lSPMz5xdzMDCYeHfEYaeKPecS+9p1fLdcojvCz2t1yZYtMyZN9n9QFlLe
+        gARXLMNHZNbdX+GRzMza9/Ye5zwv6jrgbIztG5KxxNye5nFvfk83Eg5ymjNKJN5u9cCPnN
+        JL5apzx5VrmTYdFbPFg4goG69cM+P+M=
+In-Reply-To: <20230406140404.2718574-1-longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"; format="flowed"
-To: Waiman Long <longman@redhat.com>
-Cc: rientjes@google.com, linux-kernel@vger.kernel.org, Zefan Li <lizefan.x@bytedance.com>, cgroups@vger.kernel.org
+Content-Type: text/plain; charset="macroman"
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Christian Brauner <brauner-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Juri Lelli <juri.lelli-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Dietmar Eggemann <dietmar.eggemann-5wv7dgnIgG8@public.gmane.org>, =?UTF-8?q?Michal=20Koutn=C3=BD?= <mkoutny-IBi9RG/b67k@public.gmane.org>, gscrivan-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 
-On 2023/4/5 01:24, Waiman Long wrote:
-> 
-> You will also need to take cpuset_rwsem to make sure that cpusets are 
-> stable. BTW, the cpuset_cgroup_scan_tasks() name is kind of redundant. I 
-> will suggest you just name it as cpuset_scan_tasks(). Please also add a 
-
-mem cgroup oom use `mem_cgroup_scan_tasks`.
-How about keep `cpuset_cgroup_scan_tasks` for naming consistency?
-
-```
-static void select_bad_process(struct oom_control *oc)
-{
-	oc->chosen_points = LONG_MIN;
-
-	if (is_memcg_oom(oc))
-		mem_cgroup_scan_tasks(oc->memcg, oom_evaluate_task, oc);
-	else if (oc->constraint == CONSTRAINT_CPUSET)
-		cpuset_cgroup_scan_tasks(oom_evaluate_task, oc);
-	else {
-		...
-	}
-}
-```
+SXQgaXMgZm91bmQgdGhhdCBhdHRhY2hpbmcgYSB0YXNrIHRvIHRoZSB0b3BfY3B1c2V0IGRvZXMg
+bm90IGN1cnJlbnRseQppZ25vcmUgQ1BVcyBhbGxvY2F0ZWQgdG8gc3VicGFydGl0aW9ucyBpbiBj
+cHVzZXRfYXR0YWNoX3Rhc2soKS4gU28gdGhlCmNvZGUgaXMgY2hhbmdlZCB0byBmaXggdGhhdC4K
+ClNpZ25lZC1vZmYtYnk6IFdhaW1hbiBMb25nIDxsb25nbWFuLUgrd1hhSHhmN2FMUVQwZFpSK0Fs
+ZkFAcHVibGljLmdtYW5lLm9yZz4KUmV2aWV3ZWQtYnk6IE1pY2hhbCBLb3V0bsO9IDxta291dG55
+LUlCaTlSRy9iNjdrQHB1YmxpYy5nbWFuZS5vcmc+Ci0tLQoga2VybmVsL2Nncm91cC9jcHVzZXQu
+YyB8IDMgKystCiAxIGZpbGUgY2hhbmdlZCwgMiBpbnNlcnRpb25zKCspLCAxIGRlbGV0aW9uKC0p
+CgpkaWZmIC0tZ2l0IGEva2VybmVsL2Nncm91cC9jcHVzZXQuYyBiL2tlcm5lbC9jZ3JvdXAvY3B1
+c2V0LmMKaW5kZXggYTMzMWUxMWUzZDIwLi44ZmQ5MGY3YmRlYjAgMTAwNjQ0Ci0tLSBhL2tlcm5l
+bC9jZ3JvdXAvY3B1c2V0LmMKKysrIGIva2VybmVsL2Nncm91cC9jcHVzZXQuYwpAQCAtMjU0MCw3
+ICsyNTQwLDggQEAgc3RhdGljIHZvaWQgY3B1c2V0X2F0dGFjaF90YXNrKHN0cnVjdCBjcHVzZXQg
+KmNzLCBzdHJ1Y3QgdGFza19zdHJ1Y3QgKnRhc2spCiAJaWYgKGNzICE9ICZ0b3BfY3B1c2V0KQog
+CQlndWFyYW50ZWVfb25saW5lX2NwdXModGFzaywgY3B1c19hdHRhY2gpOwogCWVsc2UKLQkJY3B1
+bWFza19jb3B5KGNwdXNfYXR0YWNoLCB0YXNrX2NwdV9wb3NzaWJsZV9tYXNrKHRhc2spKTsKKwkJ
+Y3B1bWFza19hbmRub3QoY3B1c19hdHRhY2gsIHRhc2tfY3B1X3Bvc3NpYmxlX21hc2sodGFzayks
+CisJCQkgICAgICAgY3MtPnN1YnBhcnRzX2NwdXMpOwogCS8qCiAJICogY2FuX2F0dGFjaCBiZWZv
+cmVoYW5kIHNob3VsZCBndWFyYW50ZWUgdGhhdCB0aGlzIGRvZXNuJ3QKIAkgKiBmYWlsLiAgVE9E
+TzogaGF2ZSBhIGJldHRlciB3YXkgdG8gaGFuZGxlIGZhaWx1cmUgaGVyZQotLSAKMi4zMS4xCgo=
