@@ -1,79 +1,41 @@
-From: Tim Chen <tim.c.chen@linux.intel.com>
+From: Tim Chen <tim.c.chen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
 Subject: Re: [PATCH mm-unstable RFC 0/5] cgroup: eliminate atomic rstat
-Date: Thu, 06 Apr 2023 11:23:47 -0700
-Message-ID: <f26eed88dddcf6c8d2a127f4cdc6aaf740bbfb7d.camel@linux.intel.com>
+Date: Thu, 06 Apr 2023 11:26:02 -0700
+Message-ID: <83b2cb8017b945b2b3d3c9e65a3ba94a510ac20f.camel@linux.intel.com>
 References: <20230403220337.443510-1-yosryahmed@google.com>
+         <CAJD7tkZ5vh5ssDux1LStX9ZivmGmXsFyxfADGJD5AXDaMnGWRQ@mail.gmail.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: quoted-printable
-Return-path: <linux-fsdevel-owner@vger.kernel.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1680805434; x=1712341434;
+  t=1680805563; x=1712341563;
   h=message-id:subject:from:to:cc:date:in-reply-to:
    references:content-transfer-encoding:mime-version;
-  bh=rQafWPpN6SSrt4t7Qo2/D4943r4B6SApT9bspraHldI=;
-  b=QpKcGCkv+JlVQ1ubcyv674/0Gjslv/fONM35uyG10HTvI7M79ww71R37
-   +zdU04qNKFuZod5GGAr63QHRwFV9Zp8S2n2ugiN1ro5XHG8Vcz6rh2NvF
-   GWtqt+UL6MfHl5EDQ1c2OaBojEz/jAVMvhylf+aGjad9jfw/9BzPnKhu/
-   uxZmN8PNq9d1/RQmARdPz1ZIR3d14cDe9Rspv1/dot87zjOvX9xIWCaFL
-   vd2/RJ5AlGq2Mih4NWO33hxzoDmgQcfyirOisOJON/e8mzMChSZUzEKwo
-   8uu/Z68HCX8CUqxUSNLMVsc6FmsYd1kfJ3pnmayQ83wkHMsFqGCqN1xyj
-   w==;
-In-Reply-To: <20230403220337.443510-1-yosryahmed@google.com>
+  bh=71j8wA/jyuLPVIohqa23wmw7xUhIc2C3rcA0pSOT7kQ=;
+  b=SwLzY0vIgdnUNoYOiwBiqZYCm7dTXGe9Iodg3/63HWpZmAiYk2brQJDv
+   X2fYKsEyXsEUlvaU6hIniOeTXqbP5Y9rwdyqJeSNhUtnLU3Z7OJsyFw8D
+   jz63OtW0dH8joET+smqIiunQCB3i97Z1UW9+iYXy5lQngL6+4iTY4jsat
+   vdAr2yGTDJ1fO8NCaB131xbxzL2io/p3sgEzGOWtxfVXaDgDx7AQ5xiYp
+   XdEFB2pwfEBSQgKZ4EnmG6j0Jy6kvuqPhwEjs1wgwUrKb5A86SRrkuQ/j
+   gPHcnpFR7xBeVM19OvJTiv/RZy4JkUM8h2BGu3LZyUbLxocUrDgBpi6zJ
+   Q==;
+In-Reply-To: <CAJD7tkZ5vh5ssDux1LStX9ZivmGmXsFyxfADGJD5AXDaMnGWRQ-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-To: Yosry Ahmed <yosryahmed@google.com>, Alexander Viro <viro@zeniv.linux.org.uk>, Christian Brauner <brauner@kernel.org>, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, Roman Gushchin <roman.gushchin@linux.dev>, Shakeel Butt <shakeelb@google.com>, Muchun Song <songmuchun@bytedance.com>, Andrew Morton <akpm@linux-foundation.org>
-Cc: linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, linux-mm@kvack.org
+Content-Type: text/plain; charset="windows-1252"
+To: Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Alexander Viro <viro-RmSDqhL/yNMiFSDQTTA3OLVCufUGDwFn@public.gmane.org>, Christian Brauner <brauner-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+Cc: linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
 
-On Mon, 2023-04-03 at 22:03 +0000, Yosry Ahmed wrote:
-> A previous patch series ([1] currently in mm-unstable) changed most
+On Mon, 2023-04-03 at 15:04 -0700, Yosry Ahmed wrote:
+> On Mon, Apr 3, 2023 at 3:03=E2=80=AFPM Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org=
+> wrote:
+> >=20
+> > A previous patch series ([1] currently in mm-unstable) changed most
+>=20
+> .. and I naturally forgot to link this:
+> [1] https://lore.kernel.org/linux-mm/20230330191801.1967435-1-yosryahmed@=
+google.com/
 
-Can you include the link to [1]?
-
-Thanks.
+Thanks. Saw this after I sent my request for link.
 
 Tim
-
-> atomic rstat flushing contexts to become non-atomic. This was done to
-> avoid an expensive operation that scales with # cgroups and # cpus to
-> happen with irqs disabled and scheduling not permitted. There were two
-> remaining atomic flushing contexts after that series. This series tries
-> to eliminate them as well, eliminating atomic rstat flushing completely.
->=20
-> The two remaining atomic flushing contexts are:
-> (a) wb_over_bg_thresh()->mem_cgroup_wb_stats()
-> (b) mem_cgroup_threshold()->mem_cgroup_usage()
->=20
-> For (a), flushing needs to be atomic as wb_writeback() calls
-> wb_over_bg_thresh() with a spinlock held. However, it seems like the
-> call to wb_over_bg_thresh() doesn't need to be protected by that
-> spinlock, so this series proposes a refactoring that moves the call
-> outside the lock criticial section and makes the stats flushing
-> in mem_cgroup_wb_stats() non-atomic.
->=20
-> For (b), flushing needs to be atomic as mem_cgroup_threshold() is called
-> with irqs disabled. We only flush the stats when calculating the root
-> usage, as it is approximated as the sum of some memcg stats (file, anon,
-> and optionally swap) instead of the conventional page counter. This
-> series proposes changing this calculation to use the global stats
-> instead, eliminating the need for a memcg stat flush.
->=20
-> After these 2 contexts are eliminated, we no longer need
-> mem_cgroup_flush_stats_atomic() or cgroup_rstat_flush_atomic(). We can
-> remove them and simplify the code.
->=20
-> Yosry Ahmed (5):
->   writeback: move wb_over_bg_thresh() call outside lock section
->   memcg: flush stats non-atomically in mem_cgroup_wb_stats()
->   memcg: calculate root usage from global state
->   memcg: remove mem_cgroup_flush_stats_atomic()
->   cgroup: remove cgroup_rstat_flush_atomic()
->=20
->  fs/fs-writeback.c          | 16 +++++++----
->  include/linux/cgroup.h     |  1 -
->  include/linux/memcontrol.h |  5 ----
->  kernel/cgroup/rstat.c      | 26 ++++--------------
->  mm/memcontrol.c            | 54 ++++++++------------------------------
->  5 files changed, 27 insertions(+), 75 deletions(-)
->=20
-
