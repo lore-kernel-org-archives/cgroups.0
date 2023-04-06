@@ -1,49 +1,79 @@
-From: Waiman Long <longman@redhat.com>
-Subject: Re: [PATCH v2] mm: oom: introduce cpuset oom
-Date: Thu, 6 Apr 2023 11:53:27 -0400
-Message-ID: <36b96b9c-d08a-e97c-05ff-152d671880e6@redhat.com>
-References: <20230404115509.14299-1-ligang.bdlg@bytedance.com>
- <ZCw0sR6IqYa5Es7Q@dhcp22.suse.cz>
- <342c1967-8a68-275c-042e-765d5993157c@redhat.com>
- <cc77d706-7baf-951b-13a5-3470c2b1bba9@bytedance.com>
+From: Tim Chen <tim.c.chen@linux.intel.com>
+Subject: Re: [PATCH mm-unstable RFC 0/5] cgroup: eliminate atomic rstat
+Date: Thu, 06 Apr 2023 11:23:47 -0700
+Message-ID: <f26eed88dddcf6c8d2a127f4cdc6aaf740bbfb7d.camel@linux.intel.com>
+References: <20230403220337.443510-1-yosryahmed@google.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: quoted-printable
-Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1680796414;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=DfBJz2JCY2tXUX/6IQuIUiWHj7GX2hI633TNpoPdRVg=;
-        b=C3x8Bvz6t59Z3OT3pV0GgaWxB8X/rpHD63tVFjCsHEMWuh3l7krH2ZzNw2bM9jKskDz+Xu
-        Ca0NjNtmHiXOZeqo5AeTd2eUa+COMTL1bWLTYmxcKS+/rmKdWbFtGhvVgQImTYiZzhQgu2
-        j3mXTSVmOe0ss5K641fR4tIBZiXuUp8=
-Content-Language: en-US
-In-Reply-To: <cc77d706-7baf-951b-13a5-3470c2b1bba9@bytedance.com>
+Return-path: <linux-fsdevel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1680805434; x=1712341434;
+  h=message-id:subject:from:to:cc:date:in-reply-to:
+   references:content-transfer-encoding:mime-version;
+  bh=rQafWPpN6SSrt4t7Qo2/D4943r4B6SApT9bspraHldI=;
+  b=QpKcGCkv+JlVQ1ubcyv674/0Gjslv/fONM35uyG10HTvI7M79ww71R37
+   +zdU04qNKFuZod5GGAr63QHRwFV9Zp8S2n2ugiN1ro5XHG8Vcz6rh2NvF
+   GWtqt+UL6MfHl5EDQ1c2OaBojEz/jAVMvhylf+aGjad9jfw/9BzPnKhu/
+   uxZmN8PNq9d1/RQmARdPz1ZIR3d14cDe9Rspv1/dot87zjOvX9xIWCaFL
+   vd2/RJ5AlGq2Mih4NWO33hxzoDmgQcfyirOisOJON/e8mzMChSZUzEKwo
+   8uu/Z68HCX8CUqxUSNLMVsc6FmsYd1kfJ3pnmayQ83wkHMsFqGCqN1xyj
+   w==;
+In-Reply-To: <20230403220337.443510-1-yosryahmed@google.com>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="iso-8859-1"; format="flowed"
-To: Gang Li <ligang.bdlg@bytedance.com>
-Cc: rientjes@google.com, linux-kernel@vger.kernel.org, Zefan Li <lizefan.x@bytedance.com>, cgroups@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+To: Yosry Ahmed <yosryahmed@google.com>, Alexander Viro <viro@zeniv.linux.org.uk>, Christian Brauner <brauner@kernel.org>, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, Roman Gushchin <roman.gushchin@linux.dev>, Shakeel Butt <shakeelb@google.com>, Muchun Song <songmuchun@bytedance.com>, Andrew Morton <akpm@linux-foundation.org>
+Cc: linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, linux-mm@kvack.org
 
+On Mon, 2023-04-03 at 22:03 +0000, Yosry Ahmed wrote:
+> A previous patch series ([1] currently in mm-unstable) changed most
 
-On 4/6/23 09:02, Gang Li wrote:
-> On 2023/4/5 01:24, Waiman Long wrote:
->>
->> You will also need to take cpuset_rwsem to make sure that cpusets are=20
->> stable. BTW, the cpuset_cgroup_scan_tasks() name is kind of=20
->> redundant. I will suggest you just name it as cpuset_scan_tasks().=20
->> Please also add a=20
->
-> mem cgroup oom use `mem_cgroup_scan_tasks`.
-> How about keep `cpuset_cgroup_scan_tasks` for naming consistency?
+Can you include the link to [1]?
 
-The "memory cgroup" term is used to identify the code related to memory=20
-cgroup controller. Cpuset, on the other hand, is a well known cgroup=20
-controller. Cpuset cgroup is not a term that people will normally use.=C2=
-=A0=20
-That is why this name is awkward.
+Thanks.
 
-Cheers,
-Longman
+Tim
+
+> atomic rstat flushing contexts to become non-atomic. This was done to
+> avoid an expensive operation that scales with # cgroups and # cpus to
+> happen with irqs disabled and scheduling not permitted. There were two
+> remaining atomic flushing contexts after that series. This series tries
+> to eliminate them as well, eliminating atomic rstat flushing completely.
+>=20
+> The two remaining atomic flushing contexts are:
+> (a) wb_over_bg_thresh()->mem_cgroup_wb_stats()
+> (b) mem_cgroup_threshold()->mem_cgroup_usage()
+>=20
+> For (a), flushing needs to be atomic as wb_writeback() calls
+> wb_over_bg_thresh() with a spinlock held. However, it seems like the
+> call to wb_over_bg_thresh() doesn't need to be protected by that
+> spinlock, so this series proposes a refactoring that moves the call
+> outside the lock criticial section and makes the stats flushing
+> in mem_cgroup_wb_stats() non-atomic.
+>=20
+> For (b), flushing needs to be atomic as mem_cgroup_threshold() is called
+> with irqs disabled. We only flush the stats when calculating the root
+> usage, as it is approximated as the sum of some memcg stats (file, anon,
+> and optionally swap) instead of the conventional page counter. This
+> series proposes changing this calculation to use the global stats
+> instead, eliminating the need for a memcg stat flush.
+>=20
+> After these 2 contexts are eliminated, we no longer need
+> mem_cgroup_flush_stats_atomic() or cgroup_rstat_flush_atomic(). We can
+> remove them and simplify the code.
+>=20
+> Yosry Ahmed (5):
+>   writeback: move wb_over_bg_thresh() call outside lock section
+>   memcg: flush stats non-atomically in mem_cgroup_wb_stats()
+>   memcg: calculate root usage from global state
+>   memcg: remove mem_cgroup_flush_stats_atomic()
+>   cgroup: remove cgroup_rstat_flush_atomic()
+>=20
+>  fs/fs-writeback.c          | 16 +++++++----
+>  include/linux/cgroup.h     |  1 -
+>  include/linux/memcontrol.h |  5 ----
+>  kernel/cgroup/rstat.c      | 26 ++++--------------
+>  mm/memcontrol.c            | 54 ++++++++------------------------------
+>  5 files changed, 27 insertions(+), 75 deletions(-)
+>=20
 
