@@ -1,55 +1,99 @@
-From: Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>
-Subject: Re: [PATCH v2 0/3] blk-cgroup: some cleanup
-Date: Thu, 06 Apr 2023 16:17:59 -0600
-Message-ID: <168081947971.7640.13634484209341526558.b4-ty@kernel.dk>
-References: <20230406145050.49914-1-zhouchengming@bytedance.com>
+From: Waiman Long <longman@redhat.com>
+Subject: Re: [PATCH 3/3] cgroup/cpuset: Allow only one active attach operation
+ per cpuset
+Date: Fri, 7 Apr 2023 11:30:14 -0400
+Message-ID: <89853ab9-7759-11bf-f751-28ce81a4f02e@redhat.com>
+References: <20230331145045.2251683-1-longman@redhat.com>
+ <20230331145045.2251683-4-longman@redhat.com>
+ <20230406-haselnuss-baumhaus-83dc05f869df@brauner>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=kernel-dk.20210112.gappssmtp.com; s=20210112; t=1680819481; x=1683411481;
-        h=content-transfer-encoding:mime-version:date:message-id:subject
-         :references:in-reply-to:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=FR0qElr6GKo/8lkQEKKCuizg5Rqf+FVH+Y9MEeaocBc=;
-        b=CTDk8fXkSi/2fH0SOj+GXvVRH5S6QA5imppnrt/gwouT5W76pTHwZ2OV1K8esejpns
-         TffeSpkqOtZP2Z5mZjGsLyzV6VoFwUpYdcj7qS98MYnvtbxy6HSg0PTolPQxsigIO8eg
-         4CAnHnFzMsEINxDQzCJkexnixAiUsTiW0MvKIj6J5+E1a/czSnpoHP6c8DrlW0oyqZVH
-         sjoh6AP2ScqUNr7aPoSMs1qwcOQ/juvCZ3A3EwZTWdQ6XRZNAp1p+ymIA04jqyqzCN+H
-         amOl6FTl3SqAE4B2kVVMWWZvtJkvPrRhiumf7BeCGBT8MjB00nQVz5d8Ri1wF0740flP
-         8Zhg==
-In-Reply-To: <20230406145050.49914-1-zhouchengming-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1680881420;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=5eE8zuLKcMzLpL2FtuAWtdIO+Pdjkebtgu24Aa6llV4=;
+        b=iK2cqat/1HxdjEPmCY/4Iz8jN3u9tMlB34biFOIjmeYkhesgel5aDWszvfvh7FAaW1kgFi
+        OMem8TpMlRtk1EsfikgTIiCS944ZxkM2MGqlMFHS0hb5o5cct7hLKrZbB1wvvqG+KIz+1x
+        Rro8E4+bpVsH8GOcLhhBqQz2IRjKRIA=
+Content-Language: en-US
+In-Reply-To: <20230406-haselnuss-baumhaus-83dc05f869df@brauner>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-To: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, Chengming Zhou <zhouchengming-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
-Cc: paolo.valente-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org, josef-DigfWCa+lFGyeJad7bwFQA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Type: text/plain; charset="us-ascii"; format="flowed"
+To: Christian Brauner <brauner@kernel.org>
+Cc: Tejun Heo <tj@kernel.org>, Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, Juri Lelli <juri.lelli@redhat.com>, Dietmar Eggemann <dietmar.eggemann@arm.com>, gscrivan@redhat.com
 
+On 4/6/23 05:44, Christian Brauner wrote:
+> On Fri, Mar 31, 2023 at 10:50:45AM -0400, Waiman Long wrote:
+>> The current cpuset code uses the global cpuset_attach_old_cs variable
+>> to store the old cpuset value between consecutive cpuset_can_attach()
+>> and cpuset_attach() calls. Since a caller of cpuset_can_attach() may
+>> not need to hold the global cgroup_threadgroup_rwsem, parallel cpuset
+>> attach operations are possible.
+>>
+>> When there are concurrent cpuset attach operations in progress,
+>> cpuset_attach() may fetch the wrong value from cpuset_attach_old_cs
+>> causing incorrect result.  To avoid this problem while still allowing
+>> certain level of parallelism, drop cpuset_attach_old_cs and use a
+>> per-cpuset attach_old_cs value. Also restrict to at most one active
+>> attach operation per cpuset to avoid corrupting the value of the
+>> per-cpuset attach_old_cs value.
+>>
+>> Signed-off-by: Waiman Long <longman@redhat.com>
+>> ---
+>>   kernel/cgroup/cpuset.c | 19 ++++++++++++++-----
+>>   1 file changed, 14 insertions(+), 5 deletions(-)
+>>
+>> diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
+>> index 2367de611c42..3f925c261513 100644
+>> --- a/kernel/cgroup/cpuset.c
+>> +++ b/kernel/cgroup/cpuset.c
+>> @@ -198,6 +198,8 @@ struct cpuset {
+>>   
+>>   	/* Handle for cpuset.cpus.partition */
+>>   	struct cgroup_file partition_file;
+>> +
+>> +	struct cpuset *attach_old_cs;
+>>   };
+>>   
+>>   /*
+>> @@ -2456,22 +2458,27 @@ static int fmeter_getrate(struct fmeter *fmp)
+>>   	return val;
+>>   }
+>>   
+>> -static struct cpuset *cpuset_attach_old_cs;
+>> -
+>>   /* Called by cgroups to determine if a cpuset is usable; cpuset_rwsem held */
+>>   static int cpuset_can_attach(struct cgroup_taskset *tset)
+>>   {
+>>   	struct cgroup_subsys_state *css;
+>> -	struct cpuset *cs;
+>> +	struct cpuset *cs, *oldcs;
+>>   	struct task_struct *task;
+>>   	int ret;
+>>   
+>>   	/* used later by cpuset_attach() */
+>> -	cpuset_attach_old_cs = task_cs(cgroup_taskset_first(tset, &css));
+>> +	oldcs = task_cs(cgroup_taskset_first(tset, &css));
+>>   	cs = css_cs(css);
+>>   
+>>   	percpu_down_write(&cpuset_rwsem);
+>>   
+>> +	/*
+>> +	 * Only one cpuset attach operation is allowed for each cpuset.
+>> +	 */
+>> +	ret = -EBUSY;
+>> +	if (cs->attach_in_progress)
+>> +		goto out_unlock;
+> That'll mean CLONE_INTO_CGROUP becomes even more interestig because it
+> isn't subject to this restriction in contrast to fork()+migrate, right?
 
-On Thu, 06 Apr 2023 22:50:47 +0800, Chengming Zhou wrote:
-> These are some cleanup patches of blk-cgroup. Thanks for review.
-> 
-> v2:
->  - Add Acked tags from Tejun.
-> 
-> Chengming Zhou (3):
->   block, bfq: remove BFQ_WEIGHT_LEGACY_DFL
->   blk-cgroup: delete cpd_bind_fn of blkcg_policy
->   blk-cgroup: delete cpd_init_fn of blkcg_policy
-> 
-> [...]
+This patch is not related to the CLONE_INTO_CGROUP. In fact, I have 
+dropped that in latter version.
 
-Applied, thanks!
-
-[1/3] block, bfq: remove BFQ_WEIGHT_LEGACY_DFL
-      commit: e9f2f3f590289681c71d0137d4e5e88421f934c6
-[2/3] blk-cgroup: delete cpd_bind_fn of blkcg_policy
-      commit: d1023165eef83dace7cc6299af904f26272baaca
-[3/3] blk-cgroup: delete cpd_init_fn of blkcg_policy
-      commit: 650e2cb50f3fc45d0585ed8609db9519f6c9bcd8
-
-Best regards,
--- 
-Jens Axboe
-
-
+Cheers,
+Longman
 
