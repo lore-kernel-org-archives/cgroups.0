@@ -1,95 +1,94 @@
-From: Chengming Zhou <zhouchengming@bytedance.com>
-Subject: Re: [External] Re: [PATCH v2 0/3] blk-cgroup: some cleanup
-Date: Sat, 8 Apr 2023 22:31:20 +0800
-Message-ID: <c36f5f02-90e1-fef0-481e-828ced303a8a@bytedance.com>
-References: <20230406145050.49914-1-zhouchengming@bytedance.com>
- <cab869b1-1cba-5698-55eb-a93d0596c869@acm.org>
- <1a64eaea-50ea-f273-b0a1-a6eb8483beac@bytedance.com>
+From: Christian Brauner <brauner-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCH 3/3] cgroup/cpuset: Allow only one active attach
+ operation per cpuset
+Date: Sun, 9 Apr 2023 13:46:32 +0200
+Message-ID: <20230409-schlichten-kurskorrektur-92fba0be203b@brauner>
+References: <20230331145045.2251683-1-longman@redhat.com>
+ <20230331145045.2251683-4-longman@redhat.com>
+ <20230406-haselnuss-baumhaus-83dc05f869df@brauner>
+ <89853ab9-7759-11bf-f751-28ce81a4f02e@redhat.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=bytedance.com; s=google; t=1680964287;
-        h=content-transfer-encoding:in-reply-to:references:cc:to:from
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=S/+TATq1pEgWC5XiTeJPsNxYfIUZee5yuk6ERjQ9uh0=;
-        b=RV/DzU4v1M18hV8JoR6WqBlV7Q/Qe3lm4A+EgpOUtUNKLAQ5BSmMwR9vNVk8jGPw8m
-         Vvax3yNYv+SOYHZV85aabqs42NfBonLDMgxPdXwliVL6x8Q7wp/r8ZBHgbhBJ++grwKN
-         ZIXrTMPyXBVW5b5a48s9bQGKwjF+iUYqXjygvgkkWDWw5c1ocDnzg6ohHXRecHSynC1O
-         wdvdQ1sN42QJZxCoj+pYG+AI3eJO2ui7CbsUby50Til5swcoNTB2mbya/R6/VFyvdS0w
-         nrPHkx4ajNhPmFDTHpAz0FRmJuAvLOx45u1qtIm48jUJ8JLx4aquOzNPaSTXNk5Ucu8Q
-         U5hQ==
-Content-Language: en-US
-In-Reply-To: <1a64eaea-50ea-f273-b0a1-a6eb8483beac@bytedance.com>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1681040798;
+        bh=ZKGUdFQ2ptjp7rKBJrvvy/XJ3ix6FhOKmthTJumjqEg=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=SIHs+3TffBDZ3/LlcpRcWZbMrIwyyFCbkDmy5TgwAqbdENgxtKliFP+GEkRcLL9d5
+         hVVlLkTEJ8TT7176+Y7kgqb3ZyWYBv95DIb2H9RwG7ozXRU6RnS3cPdBBnwNvZV6nt
+         m1h01aQDsERaq6xLwc8oJdNmSHNFEt3jinyAv23zdkf0Fxd8BjZ9cccRUl28hwVV1T
+         G8fhTLDXyWV/XBY+Zs5risErj4sk6Bh/PocWM4T6OMenTtgRrzYN7sSckGND38QkW8
+         liX/vt7VTcz7cl86JPOnycF61c4rtqc8nV8ORoj1hLLM1kljCCZDnT0hH1RKcYbw52
+         Jwx+rgQFJH4AQ==
+Content-Disposition: inline
+In-Reply-To: <89853ab9-7759-11bf-f751-28ce81a4f02e-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="utf-8"
-To: Bart Van Assche <bvanassche@acm.org>
-Cc: axboe@kernel.dk, tj@kernel.org, paolo.valente@linaro.org, josef@toxicpanda.com, linux-block@vger.kernel.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Juri Lelli <juri.lelli-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Dietmar Eggemann <dietmar.eggemann-5wv7dgnIgG8@public.gmane.org>, gscrivan-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org
 
-On 2023/4/8 11:37, Chengming Zhou wrote:
-> On 2023/4/8 02:41, Bart Van Assche wrote:
->> On 4/6/23 07:50, Chengming Zhou wrote:
->>> These are some cleanup patches of blk-cgroup. Thanks for review.
->>
->> With these patches applied, my kernel test VM crashes during boot. The following crash disappears if I revert these patches:
+On Fri, Apr 07, 2023 at 11:30:14AM -0400, Waiman Long wrote:
+> On 4/6/23 05:44, Christian Brauner wrote:
+> > On Fri, Mar 31, 2023 at 10:50:45AM -0400, Waiman Long wrote:
+> > > The current cpuset code uses the global cpuset_attach_old_cs variable
+> > > to store the old cpuset value between consecutive cpuset_can_attach()
+> > > and cpuset_attach() calls. Since a caller of cpuset_can_attach() may
+> > > not need to hold the global cgroup_threadgroup_rwsem, parallel cpuset
+> > > attach operations are possible.
+> > > 
+> > > When there are concurrent cpuset attach operations in progress,
+> > > cpuset_attach() may fetch the wrong value from cpuset_attach_old_cs
+> > > causing incorrect result.  To avoid this problem while still allowing
+> > > certain level of parallelism, drop cpuset_attach_old_cs and use a
+> > > per-cpuset attach_old_cs value. Also restrict to at most one active
+> > > attach operation per cpuset to avoid corrupting the value of the
+> > > per-cpuset attach_old_cs value.
+> > > 
+> > > Signed-off-by: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+> > > ---
+> > >   kernel/cgroup/cpuset.c | 19 ++++++++++++++-----
+> > >   1 file changed, 14 insertions(+), 5 deletions(-)
+> > > 
+> > > diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
+> > > index 2367de611c42..3f925c261513 100644
+> > > --- a/kernel/cgroup/cpuset.c
+> > > +++ b/kernel/cgroup/cpuset.c
+> > > @@ -198,6 +198,8 @@ struct cpuset {
+> > >   	/* Handle for cpuset.cpus.partition */
+> > >   	struct cgroup_file partition_file;
+> > > +
+> > > +	struct cpuset *attach_old_cs;
+> > >   };
+> > >   /*
+> > > @@ -2456,22 +2458,27 @@ static int fmeter_getrate(struct fmeter *fmp)
+> > >   	return val;
+> > >   }
+> > > -static struct cpuset *cpuset_attach_old_cs;
+> > > -
+> > >   /* Called by cgroups to determine if a cpuset is usable; cpuset_rwsem held */
+> > >   static int cpuset_can_attach(struct cgroup_taskset *tset)
+> > >   {
+> > >   	struct cgroup_subsys_state *css;
+> > > -	struct cpuset *cs;
+> > > +	struct cpuset *cs, *oldcs;
+> > >   	struct task_struct *task;
+> > >   	int ret;
+> > >   	/* used later by cpuset_attach() */
+> > > -	cpuset_attach_old_cs = task_cs(cgroup_taskset_first(tset, &css));
+> > > +	oldcs = task_cs(cgroup_taskset_first(tset, &css));
+> > >   	cs = css_cs(css);
+> > >   	percpu_down_write(&cpuset_rwsem);
+> > > +	/*
+> > > +	 * Only one cpuset attach operation is allowed for each cpuset.
+> > > +	 */
+> > > +	ret = -EBUSY;
+> > > +	if (cs->attach_in_progress)
+> > > +		goto out_unlock;
+> > That'll mean CLONE_INTO_CGROUP becomes even more interestig because it
+> > isn't subject to this restriction in contrast to fork()+migrate, right?
 > 
-> Thanks for the report.
-> I will try to reproduce it first and look into this today.
+> This patch is not related to the CLONE_INTO_CGROUP. In fact, I have dropped
 
-Hi Bart,
-
-I tried a few times to reproduce it, but still can't for now. Do you mind to share more details?
-
-I don't know how to specify bfq as the default scheduler for the device, since "elevator="
-is not working anymore. Do you use something like sysfsutils to set sysfs config during boot?
-
-So I just boot the qemu VM, set bfq as the scheduler for the root device, run "blkid", but no bug shows.
-
-Then I use sysfsutils to set bfq as the default scheduler during reboot, the VM still no bug shows.
-
-I will continue to look into this issue and review related code.
-
-BTW, my codebase is e134c93f788f ("Add linux-next specific files for 20230406") with these three patches applied.
-
-Thanks.
-
-> 
->>
->> BUG: KASAN: null-ptr-deref in bio_associate_blkg_from_css+0x83/0x240
->> Read of size 8 at addr 0000000000000518 by task blkid/5885
->> Hardware name: QEMU Standard PC (Q35 + ICH9, 2009), BIOS 1.16.0-debian-1.16.0-5 04/01/2014
->> Call Trace:
->>  dump_stack_lvl+0x4a/0x80
->>  print_report+0x21e/0x260
->>  kasan_report+0xc2/0xf0
->>  __asan_load8+0x69/0x90
->>  bio_associate_blkg_from_css+0x83/0x240
->>  bfq_bio_bfqg+0xce/0x120 [bfq]
->>  bfq_bic_update_cgroup+0x2f/0x3c0 [bfq]
->>  bfq_init_rq+0x1e8/0xb10 [bfq]
->>  bfq_insert_request.isra.0+0xa3/0x420 [bfq]
->>  bfq_insert_requests+0xca/0xf0 [bfq]
->>  blk_mq_dispatch_rq_list+0x4c0/0xb00
->>  __blk_mq_sched_dispatch_requests+0x15e/0x200
->>  blk_mq_sched_dispatch_requests+0x8b/0xc0
->>  __blk_mq_run_hw_queue+0x3ff/0x500
->>  __blk_mq_delay_run_hw_queue+0x23a/0x300
->>  blk_mq_run_hw_queue+0x14e/0x350
->>  blk_mq_sched_insert_request+0x181/0x1f0
->>  blk_execute_rq+0xf4/0x300
->>  scsi_execute_cmd+0x23e/0x350
->>  sr_do_ioctl+0x173/0x3d0 [sr_mod]
->>  sr_packet+0x60/0x90 [sr_mod]
->>  cdrom_get_track_info.constprop.0+0x125/0x170 [cdrom]
->>  cdrom_get_last_written+0x1d4/0x2d0 [cdrom]
->>  mmc_ioctl_cdrom_last_written+0x85/0x120 [cdrom]
->>  mmc_ioctl+0x10b/0x1d0 [cdrom]
->>  cdrom_ioctl+0xa66/0x1270 [cdrom]
->>  sr_block_ioctl+0xee/0x130 [sr_mod]
->>  blkdev_ioctl+0x1bb/0x3f0
->>  __x64_sys_ioctl+0xc7/0xe0
->>  do_syscall_64+0x34/0x80
->>  entry_SYSCALL_64_after_hwframe+0x46/0xb0
->>
->> Bart.
+I know that. My point had been that this patch introduced a new
+restriction affecting parallelism in the migration path while the
+CLONE_INTO_CGROUP path remained unaffected.
