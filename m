@@ -1,258 +1,81 @@
-From: Gang Li <ligang.bdlg@bytedance.com>
-Subject: [PATCH v4] mm: oom: introduce cpuset oom
-Date: Tue, 11 Apr 2023 14:58:15 +0800
-Message-ID: <20230411065816.9798-1-ligang.bdlg@bytedance.com>
+From: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
+Subject: Re: [PATCH] memcg: Default value setting in memcg-v1
+Date: Tue, 11 Apr 2023 11:10:25 +0200
+Message-ID: <ZDUkAWT59seiD8+8@dhcp22.suse.cz>
+References: <20230406091450.167779-1-shaun.tancheff@gmail.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=bytedance.com; s=google; t=1681196304;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=ncPE3HgOzt6ii2dxf/TVQgxDoOPzo9kXvSGxZ1YSrno=;
-        b=U9X1HyoD7KFf5kQSoltVmCTUwDifCKSDJ0Mq0NJRRY5a7vfRwuuqxOqiKAry3M/XOW
-         zOFfNH7gfx1o120mDIzdrqkDD+wElOfP+3vKuPp2AEiHAMcgpxbi2Epvj8KiZSK0qfpP
-         9otCPc1QlqpuWD6tyIqym2Jg+0lo99z1DJK6Q8nYpDJ+XFPgosQ7QCEjkZ6HwYUJsC+O
-         Xx37gfiRuOJmqVjUYVESzD+eOkJu1JTR0/U7CGTzOodJk0NOSKPY3jHb345oz6p6fOxn
-         ckQlGs173omtz27f+C2EodDi3+krjrO1E9XxZlbA5pOCZtCJMimr7NPIqcgOH7rghnh7
-         uE+g==
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
+        t=1681204226; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=J8OA3wgt+Z7nlPBRmZK8bnpZsdI2d7MNXaYAdmJPsgA=;
+        b=F/GtwlKhIk6gdskzQIDdvelDeOaGATFGEdUdGAJRZ0+M/AzoL/mXWsiWKdBP7p6hsmGO59
+        4HVw0kozzIL26HT6VfwUn7KEKjYxTMUGEEG0uWx0ZnCjvBrslPgt8pu3NYTmEkEhr3XplX
+        znbWPl/iaqrIVPxft/0avEwyyDPAoZs=
+Content-Disposition: inline
+In-Reply-To: <20230406091450.167779-1-shaun.tancheff-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Waiman Long <longman@redhat.com>, Michal Hocko <mhocko@suse.com>
-Cc: Gang Li <ligang.bdlg@bytedance.com>, cgroups@vger.kernel.org, linux-mm@kvack.org, rientjes@google.com, Zefan Li <lizefan.x@bytedance.com>, linux-kernel@vger.kernel.org
+Content-Transfer-Encoding: 7bit
+To: Shaun Tancheff <shaun.tancheff-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Shaun Tancheff <shaun.tancheff-ZPxbGqLxI0U@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-Cpusets constrain the CPU and Memory placement of tasks.
-`CONSTRAINT_CPUSET` type in oom  has existed for a long time, but
-has never been utilized.
+On Thu 06-04-23 16:14:50, Shaun Tancheff wrote:
+> From: Shaun Tancheff <shaun.tancheff-ZPxbGqLxI0U@public.gmane.org>
+> 
+> Setting min, low and high values with memcg-v1
+> provides bennefits for  users that are unable to update
+> to memcg-v2.
 
-When a process in cpuset which constrain memory placement triggers
-oom, it may kill a completely irrelevant process on other numa nodes,
-which will not release any memory for this cpuset.
+min, low and high limits are cgroup v2 concepts which are not a fit for
+v1 implementation. The primary reason why v2 interface has been created
+was that existing v1 interfaces and internal constrains (most
+notably soft limit and tasks in inter nodes for memcg) were not
+reformable. It is really hard to define a proper semantic for memory
+protection when inter node tasks can compete with hierarchy beneath.
 
-We can easily achieve node aware oom by using `CONSTRAINT_CPUSET` and
-selecting victim from cpusets with the same mems_allowed as the
-current one.
+> Setting min, low and high can be set in memcg-v1
+> to apply enough memory pressure to effective throttle
+> filesystem I/O without hitting memcg oom.
 
-Example:
+This is not a proper way to achieve that. As I've already state in the
+previous submission of a similar patch
+(20230330202232.355471-1-shaun.tancheff-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org), cgroup v1 dirty data
+throttling has some downsides because it cannot effectively throttle
+GFP_NOFS allocations. One way around that is to reduce the dirty data
+limit to prevent from over dirty memcg LRUs. I would recommend to move
+forward to cgroup v2 though.
 
-Create two processes named mem_on_node0 and mem_on_node1 constrained
-by cpusets respectively. These two processes alloc memory on their
-own node. Now node0 has run out of memory, OOM will be invokled by
-mem_on_node0.
+> This can be enabled by setting the sysctl values:
+>   vm.memcg_v1_min_default
+>   vm.memcg_v1_low_default
+>   vm.memcg_v1_high_default
+>
+> When a memory control group is newly crated the
+> min, low and high values are set to percent of the
+> maximum based on the min, low and high default
+> values respectively.
 
-Before this patch:
-
-Since `CONSTRAINT_CPUSET` do nothing, the victim will be selected from
-the entire system. Therefore, the OOM is highly likely to kill
-mem_on_node1, which will not free any memory for mem_on_node0. This
-is a useless kill.
-
-```
-[ 2786.519080] mem_on_node0 invoked oom-killer
-[ 2786.885738] [  pid  ]   uid  tgid total_vm      rss pgtables_bytes swapents oom_score_adj name
-[ 2787.181724] [  13432]     0 13432   787016   786745  6344704        0             0 mem_on_node1
-[ 2787.189115] [  13457]     0 13457   787002   785504  6340608        0             0 mem_on_node0
-[ 2787.216534] oom-kill:constraint=CONSTRAINT_CPUSET,nodemask=(null),cpuset=test,mems_allowed=0
-[ 2787.229991] Out of memory: Killed process 13432 (mem_on_node1)
-```
-
-After this patch:
-
-The victim will be selected only in all cpusets that have the same
-mems_allowed as the cpuset that invoked oom. This will prevent
-useless kill and protect innocent victims.
-
-```
-[  395.922444] mem_on_node0 invoked oom-killer
-[  396.239777] [  pid  ]   uid  tgid total_vm      rss pgtables_bytes swapents oom_score_adj name
-[  396.246128] [   2614]     0  2614  1311294  1144192  9224192        0             0 mem_on_node0
-[  396.252655] oom-kill:constraint=CONSTRAINT_CPUSET,nodemask=(null),cpuset=test,mems_allowed=0
-[  396.264068] Out of memory: Killed process 2614 (mem_on_node0)
-```
-
-Suggested-by: Michal Hocko <mhocko@suse.com>
-Cc: <cgroups@vger.kernel.org>
-Cc: <linux-mm@kvack.org>
-Cc: <rientjes@google.com>
-Cc: Waiman Long <longman@redhat.com>
-Cc: Zefan Li <lizefan.x@bytedance.com>
-Signed-off-by: Gang Li <ligang.bdlg@bytedance.com>
----
-Changes in v4:
-- Modify comments and documentation.
-
-Changes in v3:
-- https://lore.kernel.org/all/20230410025056.22103-1-ligang.bdlg@bytedance.com/
-- Provide more details about the use case, testing, implementation.
-- Document the userspace visible change in Documentation.
-- Rename cpuset_cgroup_scan_tasks() to cpuset_scan_tasks() and add
-  a doctext comment about its purpose and how it should be used.
-- Take cpuset_rwsem to ensure that cpusets are stable.
-
-Changes in v2:
-- https://lore.kernel.org/all/20230404115509.14299-1-ligang.bdlg@bytedance.com/
-- Select victim from all cpusets with the same mems_allowed as the current cpuset.
-
-v1:
-- https://lore.kernel.org/all/20220921064710.89663-1-ligang.bdlg@bytedance.com/
-- Introduce cpuset oom.
----
- .../admin-guide/cgroup-v1/cpusets.rst         | 16 ++++++-
- Documentation/admin-guide/cgroup-v2.rst       |  4 ++
- include/linux/cpuset.h                        |  6 +++
- kernel/cgroup/cpuset.c                        | 43 +++++++++++++++++++
- mm/oom_kill.c                                 |  4 ++
- 5 files changed, 71 insertions(+), 2 deletions(-)
-
-diff --git a/Documentation/admin-guide/cgroup-v1/cpusets.rst b/Documentation/admin-guide/cgroup-v1/cpusets.rst
-index 5d844ed4df69..51ffdc0eb167 100644
---- a/Documentation/admin-guide/cgroup-v1/cpusets.rst
-+++ b/Documentation/admin-guide/cgroup-v1/cpusets.rst
-@@ -25,7 +25,8 @@ Written by Simon.Derr@bull.net
-      1.6 What is memory spread ?
-      1.7 What is sched_load_balance ?
-      1.8 What is sched_relax_domain_level ?
--     1.9 How do I use cpusets ?
-+     1.9 What is cpuset oom ?
-+     1.10 How do I use cpusets ?
-    2. Usage Examples and Syntax
-      2.1 Basic Usage
-      2.2 Adding/removing cpus
-@@ -607,8 +608,19 @@ If your situation is:
-  - The latency is required even it sacrifices cache hit rate etc.
-    then increasing 'sched_relax_domain_level' would benefit you.
+This also looks like an anti-pattern in the cgroup world. For two
+reasons. First of all min, low (reclaim protection) is hierarchical and
+global default value makes a very little sense for anything than flat
+hierarchies and even then it makes it really easy to misconfigure system
+too easily.
+Also percentage is a very suboptimal interface in general as the
+granularity is just too coarse for anything than small limits.
  
-+1.9 What is cpuset oom ?
-+--------------------------
-+If there is no available memory to allocate on the nodes specified by
-+cpuset.mems, then an OOM (Out-Of-Memory) will be invoked.
-+
-+Since the victim selection is a heuristic algorithm, we cannot select
-+the "perfect" victim. Therefore, currently, the victim will be selected
-+from all the cpusets that have the same mems_allowed as the cpuset
-+which invoked OOM.
-+
-+Cpuset oom works in both cgroup v1 and v2.
- 
--1.9 How do I use cpusets ?
-+1.10 How do I use cpusets ?
- --------------------------
- 
- In order to minimize the impact of cpusets on critical kernel
-diff --git a/Documentation/admin-guide/cgroup-v2.rst b/Documentation/admin-guide/cgroup-v2.rst
-index f67c0829350b..594aa71cf441 100644
---- a/Documentation/admin-guide/cgroup-v2.rst
-+++ b/Documentation/admin-guide/cgroup-v2.rst
-@@ -2199,6 +2199,10 @@ Cpuset Interface Files
- 	a need to change "cpuset.mems" with active tasks, it shouldn't
- 	be done frequently.
- 
-+	When a process invokes oom due to the constraint of cpuset.mems,
-+	the victim will be selected from cpusets with the same
-+	mems_allowed as the current one.
-+
-   cpuset.mems.effective
- 	A read-only multiple values file which exists on all
- 	cpuset-enabled cgroups.
-diff --git a/include/linux/cpuset.h b/include/linux/cpuset.h
-index 980b76a1237e..75465bf58f74 100644
---- a/include/linux/cpuset.h
-+++ b/include/linux/cpuset.h
-@@ -171,6 +171,8 @@ static inline void set_mems_allowed(nodemask_t nodemask)
- 	task_unlock(current);
- }
- 
-+int cpuset_scan_tasks(int (*fn)(struct task_struct *, void *), void *arg);
-+
- #else /* !CONFIG_CPUSETS */
- 
- static inline bool cpusets_enabled(void) { return false; }
-@@ -287,6 +289,10 @@ static inline bool read_mems_allowed_retry(unsigned int seq)
- 	return false;
- }
- 
-+static inline int cpuset_scan_tasks(int (*fn)(struct task_struct *, void *), void *arg)
-+{
-+	return 0;
-+}
- #endif /* !CONFIG_CPUSETS */
- 
- #endif /* _LINUX_CPUSET_H */
-diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
-index bc4dcfd7bee5..cb6b49245e18 100644
---- a/kernel/cgroup/cpuset.c
-+++ b/kernel/cgroup/cpuset.c
-@@ -4013,6 +4013,49 @@ void cpuset_print_current_mems_allowed(void)
- 	rcu_read_unlock();
- }
- 
-+/**
-+ * cpuset_scan_tasks - specify the oom scan range
-+ * @fn: callback function to select oom victim
-+ * @arg: argument for callback function, usually a pointer to struct oom_control
-+ *
-+ * Description: This function is used to specify the oom scan range. Return 0 if
-+ * no task is selected, otherwise return 1. The selected task will be stored in
-+ * arg->chosen. This function can only be called in cpuset oom context.
-+ *
-+ * The selection algorithm is heuristic, therefore requires constant iteration
-+ * based on user feedback. Currently, we just iterate through all cpusets with
-+ * the same mems_allowed as the current cpuset.
-+ */
-+int cpuset_scan_tasks(int (*fn)(struct task_struct *, void *), void *arg)
-+{
-+	int ret = 0;
-+	struct css_task_iter it;
-+	struct task_struct *task;
-+	struct cpuset *cs;
-+	struct cgroup_subsys_state *pos_css;
-+
-+	/*
-+	 * Situation gets complex with overlapping nodemasks in different cpusets.
-+	 * TODO: Maybe we should calculate the "distance" between different mems_allowed.
-+	 *
-+	 * But for now, let's make it simple. Just iterate through all cpusets
-+	 * with the same mems_allowed as the current cpuset.
-+	 */
-+	cpuset_read_lock();
-+	rcu_read_lock();
-+	cpuset_for_each_descendant_pre(cs, pos_css, &top_cpuset) {
-+		if (nodes_equal(cs->mems_allowed, task_cs(current)->mems_allowed)) {
-+			css_task_iter_start(&(cs->css), CSS_TASK_ITER_PROCS, &it);
-+			while (!ret && (task = css_task_iter_next(&it)))
-+				ret = fn(task, arg);
-+			css_task_iter_end(&it);
-+		}
-+	}
-+	rcu_read_unlock();
-+	cpuset_read_unlock();
-+	return ret;
-+}
-+
- /*
-  * Collection of memory_pressure is suppressed unless
-  * this flag is enabled by writing "1" to the special
-diff --git a/mm/oom_kill.c b/mm/oom_kill.c
-index 044e1eed720e..228257788d9e 100644
---- a/mm/oom_kill.c
-+++ b/mm/oom_kill.c
-@@ -367,6 +367,8 @@ static void select_bad_process(struct oom_control *oc)
- 
- 	if (is_memcg_oom(oc))
- 		mem_cgroup_scan_tasks(oc->memcg, oom_evaluate_task, oc);
-+	else if (oc->constraint == CONSTRAINT_CPUSET)
-+		cpuset_scan_tasks(oom_evaluate_task, oc);
- 	else {
- 		struct task_struct *p;
- 
-@@ -427,6 +429,8 @@ static void dump_tasks(struct oom_control *oc)
- 
- 	if (is_memcg_oom(oc))
- 		mem_cgroup_scan_tasks(oc->memcg, dump_task, oc);
-+	else if (oc->constraint == CONSTRAINT_CPUSET)
-+		cpuset_scan_tasks(dump_task, oc);
- 	else {
- 		struct task_struct *p;
- 
+> This resolves an issue with memory pressure when users
+> initiate unbounded I/O on various file systems such as
+> ext4, XFS and NFS.
+
+Filesystems should still be controllable by dirty limits. This might
+lead to a suboptimal IO throughput but this might be a better workaround
+if you cannot afford to move to cgroup v2. V1 interface is considered
+legacy and support is limited. New features are only added if there
+absolutely is not other way around to keep legacy applications running.
+
+HTH
 -- 
-2.20.1
+Michal Hocko
+SUSE Labs
