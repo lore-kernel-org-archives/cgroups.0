@@ -1,107 +1,126 @@
 From: Waiman Long <longman@redhat.com>
-Subject: [PATCH v4 3/5] cgroup/cpuset: Add cpuset_can_fork() and cpuset_cancel_fork() methods
-Date: Tue, 11 Apr 2023 09:35:59 -0400
-Message-ID: <20230411133601.2969636-4-longman@redhat.com>
+Subject: [PATCH v4 5/5] cgroup/cpuset: Optimize out unneeded cpuset_can_fork/cpuset_cancel_fork calls
+Date: Tue, 11 Apr 2023 09:36:01 -0400
+Message-ID: <20230411133601.2969636-6-longman@redhat.com>
 References: <20230411133601.2969636-1-longman@redhat.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: base64
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1681220183;
+        s=mimecast20190719; t=1681220184;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         to:to:cc:cc:mime-version:mime-version:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=DGStpea+VS32btfmnxUOKPtTpHs1gG9V6kkk3RmSq8M=;
-        b=AFwFw33umj77hlJegvUS0oatyLZ+4rpKxNG9NAzTFRV+aPEprOIqWajwNf4FbDXjSkof8e
-        TOxJCLUtusO0bcfXj5XI798S4N9FsEpnsv8s/BQe2GWEUYMPwxzoWufqvCzR34u4ejer47
-        BCBFf2T90rVcrPHUaDWoUC0ovsPOoJc=
+        bh=xK1NCjqBm+Noko8JAoUQYHl2QqweOko54B+7fb/aUQk=;
+        b=Qpxux3t/jAPWs4Z4I5FiIbMArm5L0WPre2d47TWcyiXHkFnejqb5LqvnKltjcbhs0uwdMD
+        rkC6z7U/OvaiBaJtPLoCx+wmwKCjk2G6wmSXhMosESarQ7LtqFLh9W1099VBSlV9CaLGeR
+        3TbgpsAG2qfqvpBZxwakK9GGt9NqOxs=
 In-Reply-To: <20230411133601.2969636-1-longman@redhat.com>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="macroman"
+Content-Type: text/plain; charset="us-ascii"
 To: Tejun Heo <tj@kernel.org>, Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, Christian Brauner <brauner@kernel.org>
 Cc: cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, Juri Lelli <juri.lelli@redhat.com>, Dietmar Eggemann <dietmar.eggemann@arm.com>, =?UTF-8?q?Michal=20Koutn=C3=BD?= <mkoutny@suse.com>, Giuseppe Scrivano <gscrivan@redhat.com>, Waiman Long <longman@redhat.com>
 
-SW4gdGhlIGNhc2Ugb2YgQ0xPTkVfSU5UT19DR1JPVVAsIG5vdCBhbGwgY3B1c2V0cyBhcmUgcmVh
-ZHkgdG8gYWNjZXB0Cm5ldyB0YXNrcy4gSXQgaXMgdG9vIGxhdGUgdG8gY2hlY2sgdGhhdCBpbiBj
-cHVzZXRfZm9yaygpLiBTbyB3ZSBuZWVkCnRvIGFkZCB0aGUgY3B1c2V0X2Nhbl9mb3JrKCkgYW5k
-IGNwdXNldF9jYW5jZWxfZm9yaygpIG1ldGhvZHMgdG8KcHJlLWNoZWNrIGl0IGJlZm9yZSB3ZSBj
-YW4gYWxsb3cgYXR0YWNobWVudCB0byBhIGRpZmZlcmVudCBjcHVzZXQuCgpXZSBhbHNvIG5lZWQg
-dG8gc2V0IHRoZSBhdHRhY2hfaW5fcHJvZ3Jlc3MgZmxhZyB0byBhbGVydCBvdGhlciBjb2RlCnRo
-YXQgYSBuZXcgdGFzayBpcyBnb2luZyB0byBiZSBhZGRlZCB0byB0aGUgY3B1c2V0LgoKRml4ZXM6
-IGVmMmM0MWNmMzhhNyAoImNsb25lMzogYWxsb3cgc3Bhd25pbmcgcHJvY2Vzc2VzIGludG8gY2dy
-b3VwcyIpClN1Z2dlc3RlZC1ieTogTWljaGFsIEtvdXRuw70gPG1rb3V0bnlAc3VzZS5jb20+ClNp
-Z25lZC1vZmYtYnk6IFdhaW1hbiBMb25nIDxsb25nbWFuQHJlZGhhdC5jb20+Ci0tLQoga2VybmVs
-L2Nncm91cC9jcHVzZXQuYyB8IDk3ICsrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysr
-KystLS0tLQogMSBmaWxlIGNoYW5nZWQsIDg2IGluc2VydGlvbnMoKyksIDExIGRlbGV0aW9ucygt
-KQoKZGlmZiAtLWdpdCBhL2tlcm5lbC9jZ3JvdXAvY3B1c2V0LmMgYi9rZXJuZWwvY2dyb3VwL2Nw
-dXNldC5jCmluZGV4IGU5NTRkNWFiYjc4NC4uMTMyY2RhZTRmMDNjIDEwMDY0NAotLS0gYS9rZXJu
-ZWwvY2dyb3VwL2NwdXNldC5jCisrKyBiL2tlcm5lbC9jZ3JvdXAvY3B1c2V0LmMKQEAgLTI0NTgs
-NiArMjQ1OCwyMCBAQCBzdGF0aWMgaW50IGZtZXRlcl9nZXRyYXRlKHN0cnVjdCBmbWV0ZXIgKmZt
-cCkKIAogc3RhdGljIHN0cnVjdCBjcHVzZXQgKmNwdXNldF9hdHRhY2hfb2xkX2NzOwogCisvKgor
-ICogQ2hlY2sgdG8gc2VlIGlmIGEgY3B1c2V0IGNhbiBhY2NlcHQgYSBuZXcgdGFzaworICogRm9y
-IHYxLCBjcHVzX2FsbG93ZWQgYW5kIG1lbXNfYWxsb3dlZCBjYW4ndCBiZSBlbXB0eS4KKyAqIEZv
-ciB2MiwgZWZmZWN0aXZlX2NwdXMgY2FuJ3QgYmUgZW1wdHkuCisgKiBOb3RlIHRoYXQgaW4gdjEs
-IGVmZmVjdGl2ZV9jcHVzID0gY3B1c19hbGxvd2VkLgorICovCitzdGF0aWMgaW50IGNwdXNldF9j
-YW5fYXR0YWNoX2NoZWNrKHN0cnVjdCBjcHVzZXQgKmNzKQoreworCWlmIChjcHVtYXNrX2VtcHR5
-KGNzLT5lZmZlY3RpdmVfY3B1cykgfHwKKwkgICAoIWlzX2luX3YyX21vZGUoKSAmJiBub2Rlc19l
-bXB0eShjcy0+bWVtc19hbGxvd2VkKSkpCisJCXJldHVybiAtRU5PU1BDOworCXJldHVybiAwOwor
-fQorCiAvKiBDYWxsZWQgYnkgY2dyb3VwcyB0byBkZXRlcm1pbmUgaWYgYSBjcHVzZXQgaXMgdXNh
-YmxlOyBjcHVzZXRfcndzZW0gaGVsZCAqLwogc3RhdGljIGludCBjcHVzZXRfY2FuX2F0dGFjaChz
-dHJ1Y3QgY2dyb3VwX3Rhc2tzZXQgKnRzZXQpCiB7CkBAIC0yNDcyLDE2ICsyNDg2LDkgQEAgc3Rh
-dGljIGludCBjcHVzZXRfY2FuX2F0dGFjaChzdHJ1Y3QgY2dyb3VwX3Rhc2tzZXQgKnRzZXQpCiAK
-IAlwZXJjcHVfZG93bl93cml0ZSgmY3B1c2V0X3J3c2VtKTsKIAotCS8qIGFsbG93IG1vdmluZyB0
-YXNrcyBpbnRvIGFuIGVtcHR5IGNwdXNldCBpZiBvbiBkZWZhdWx0IGhpZXJhcmNoeSAqLwotCXJl
-dCA9IC1FTk9TUEM7Ci0JaWYgKCFpc19pbl92Ml9tb2RlKCkgJiYKLQkgICAgKGNwdW1hc2tfZW1w
-dHkoY3MtPmNwdXNfYWxsb3dlZCkgfHwgbm9kZXNfZW1wdHkoY3MtPm1lbXNfYWxsb3dlZCkpKQot
-CQlnb3RvIG91dF91bmxvY2s7Ci0KLQkvKgotCSAqIFRhc2sgY2Fubm90IGJlIG1vdmVkIHRvIGEg
-Y3B1c2V0IHdpdGggZW1wdHkgZWZmZWN0aXZlIGNwdXMuCi0JICovCi0JaWYgKGNwdW1hc2tfZW1w
-dHkoY3MtPmVmZmVjdGl2ZV9jcHVzKSkKKwkvKiBDaGVjayB0byBzZWUgaWYgdGFzayBpcyBhbGxv
-d2VkIGluIHRoZSBjcHVzZXQgKi8KKwlyZXQgPSBjcHVzZXRfY2FuX2F0dGFjaF9jaGVjayhjcyk7
-CisJaWYgKHJldCkKIAkJZ290byBvdXRfdW5sb2NrOwogCiAJY2dyb3VwX3Rhc2tzZXRfZm9yX2Vh
-Y2godGFzaywgY3NzLCB0c2V0KSB7CkBAIC0yNDk4LDcgKzI1MDUsNiBAQCBzdGF0aWMgaW50IGNw
-dXNldF9jYW5fYXR0YWNoKHN0cnVjdCBjZ3JvdXBfdGFza3NldCAqdHNldCkKIAkgKiBjaGFuZ2Vz
-IHdoaWNoIHplcm8gY3B1cy9tZW1zX2FsbG93ZWQuCiAJICovCiAJY3MtPmF0dGFjaF9pbl9wcm9n
-cmVzcysrOwotCXJldCA9IDA7CiBvdXRfdW5sb2NrOgogCXBlcmNwdV91cF93cml0ZSgmY3B1c2V0
-X3J3c2VtKTsKIAlyZXR1cm4gcmV0OwpAQCAtMzI2OSw2ICszMjc1LDY4IEBAIHN0YXRpYyB2b2lk
-IGNwdXNldF9iaW5kKHN0cnVjdCBjZ3JvdXBfc3Vic3lzX3N0YXRlICpyb290X2NzcykKIAlwZXJj
-cHVfdXBfd3JpdGUoJmNwdXNldF9yd3NlbSk7CiB9CiAKKy8qCisgKiBJbiBjYXNlIHRoZSBjaGls
-ZCBpcyBjbG9uZWQgaW50byBhIGNwdXNldCBkaWZmZXJlbnQgZnJvbSBpdHMgcGFyZW50LAorICog
-YWRkaXRpb25hbCBjaGVja3MgYXJlIGRvbmUgdG8gc2VlIGlmIHRoZSBtb3ZlIGlzIGFsbG93ZWQu
-CisgKi8KK3N0YXRpYyBpbnQgY3B1c2V0X2Nhbl9mb3JrKHN0cnVjdCB0YXNrX3N0cnVjdCAqdGFz
-aywgc3RydWN0IGNzc19zZXQgKmNzZXQpCit7CisJc3RydWN0IGNwdXNldCAqY3MgPSBjc3NfY3Mo
-Y3NldC0+c3Vic3lzW2NwdXNldF9jZ3JwX2lkXSk7CisJYm9vbCBzYW1lX2NzOworCWludCByZXQ7
-CisKKwlyY3VfcmVhZF9sb2NrKCk7CisJc2FtZV9jcyA9IChjcyA9PSB0YXNrX2NzKGN1cnJlbnQp
-KTsKKwlyY3VfcmVhZF91bmxvY2soKTsKKworCWlmIChzYW1lX2NzKQorCQlyZXR1cm4gMDsKKwor
-CWxvY2tkZXBfYXNzZXJ0X2hlbGQoJmNncm91cF9tdXRleCk7CisJcGVyY3B1X2Rvd25fd3JpdGUo
-JmNwdXNldF9yd3NlbSk7CisKKwkvKiBDaGVjayB0byBzZWUgaWYgdGFzayBpcyBhbGxvd2VkIGlu
-IHRoZSBjcHVzZXQgKi8KKwlyZXQgPSBjcHVzZXRfY2FuX2F0dGFjaF9jaGVjayhjcyk7CisJaWYg
-KHJldCkKKwkJZ290byBvdXRfdW5sb2NrOworCisJcmV0ID0gdGFza19jYW5fYXR0YWNoKHRhc2ss
-IGNzLT5lZmZlY3RpdmVfY3B1cyk7CisJaWYgKHJldCkKKwkJZ290byBvdXRfdW5sb2NrOworCisJ
-cmV0ID0gc2VjdXJpdHlfdGFza19zZXRzY2hlZHVsZXIodGFzayk7CisJaWYgKHJldCkKKwkJZ290
-byBvdXRfdW5sb2NrOworCisJLyoKKwkgKiBNYXJrIGF0dGFjaCBpcyBpbiBwcm9ncmVzcy4gIFRo
-aXMgbWFrZXMgdmFsaWRhdGVfY2hhbmdlKCkgZmFpbAorCSAqIGNoYW5nZXMgd2hpY2ggemVybyBj
-cHVzL21lbXNfYWxsb3dlZC4KKwkgKi8KKwljcy0+YXR0YWNoX2luX3Byb2dyZXNzKys7CitvdXRf
-dW5sb2NrOgorCXBlcmNwdV91cF93cml0ZSgmY3B1c2V0X3J3c2VtKTsKKwlyZXR1cm4gcmV0Owor
-fQorCitzdGF0aWMgdm9pZCBjcHVzZXRfY2FuY2VsX2Zvcmsoc3RydWN0IHRhc2tfc3RydWN0ICp0
-YXNrLCBzdHJ1Y3QgY3NzX3NldCAqY3NldCkKK3sKKwlzdHJ1Y3QgY3B1c2V0ICpjcyA9IGNzc19j
-cyhjc2V0LT5zdWJzeXNbY3B1c2V0X2NncnBfaWRdKTsKKwlib29sIHNhbWVfY3M7CisKKwlyY3Vf
-cmVhZF9sb2NrKCk7CisJc2FtZV9jcyA9IChjcyA9PSB0YXNrX2NzKGN1cnJlbnQpKTsKKwlyY3Vf
-cmVhZF91bmxvY2soKTsKKworCWlmIChzYW1lX2NzKQorCQlyZXR1cm47CisKKwlwZXJjcHVfZG93
-bl93cml0ZSgmY3B1c2V0X3J3c2VtKTsKKwljcy0+YXR0YWNoX2luX3Byb2dyZXNzLS07CisJaWYg
-KCFjcy0+YXR0YWNoX2luX3Byb2dyZXNzKQorCQl3YWtlX3VwKCZjcHVzZXRfYXR0YWNoX3dxKTsK
-KwlwZXJjcHVfdXBfd3JpdGUoJmNwdXNldF9yd3NlbSk7Cit9CisKIC8qCiAgKiBNYWtlIHN1cmUg
-dGhlIG5ldyB0YXNrIGNvbmZvcm0gdG8gdGhlIGN1cnJlbnQgc3RhdGUgb2YgaXRzIHBhcmVudCwK
-ICAqIHdoaWNoIGNvdWxkIGhhdmUgYmVlbiBjaGFuZ2VkIGJ5IGNwdXNldCBqdXN0IGFmdGVyIGl0
-IGluaGVyaXRzIHRoZQpAQCAtMzI5Nyw2ICszMzY1LDExIEBAIHN0YXRpYyB2b2lkIGNwdXNldF9m
-b3JrKHN0cnVjdCB0YXNrX3N0cnVjdCAqdGFzaykKIAlwZXJjcHVfZG93bl93cml0ZSgmY3B1c2V0
-X3J3c2VtKTsKIAlndWFyYW50ZWVfb25saW5lX21lbXMoY3MsICZjcHVzZXRfYXR0YWNoX25vZGVt
-YXNrX3RvKTsKIAljcHVzZXRfYXR0YWNoX3Rhc2soY3MsIHRhc2spOworCisJY3MtPmF0dGFjaF9p
-bl9wcm9ncmVzcy0tOworCWlmICghY3MtPmF0dGFjaF9pbl9wcm9ncmVzcykKKwkJd2FrZV91cCgm
-Y3B1c2V0X2F0dGFjaF93cSk7CisKIAlwZXJjcHVfdXBfd3JpdGUoJmNwdXNldF9yd3NlbSk7CiB9
-CiAKQEAgLTMzMTAsNiArMzM4Myw4IEBAIHN0cnVjdCBjZ3JvdXBfc3Vic3lzIGNwdXNldF9jZ3Jw
-X3N1YnN5cyA9IHsKIAkuYXR0YWNoCQk9IGNwdXNldF9hdHRhY2gsCiAJLnBvc3RfYXR0YWNoCT0g
-Y3B1c2V0X3Bvc3RfYXR0YWNoLAogCS5iaW5kCQk9IGNwdXNldF9iaW5kLAorCS5jYW5fZm9yawk9
-IGNwdXNldF9jYW5fZm9yaywKKwkuY2FuY2VsX2ZvcmsJPSBjcHVzZXRfY2FuY2VsX2ZvcmssCiAJ
-LmZvcmsJCT0gY3B1c2V0X2ZvcmssCiAJLmxlZ2FjeV9jZnR5cGVzCT0gbGVnYWN5X2ZpbGVzLAog
-CS5kZmxfY2Z0eXBlcwk9IGRmbF9maWxlcywKLS0gCjIuMzEuMQoK
+The newly introduced cpuset_can_fork() and cpuset_cancel_fork() calls
+are only needed when the CLONE_INTO_CGROUP flag is set which is not
+likely. Adding an extra cpuset_can_fork() call does introduce a bit
+of performance overhead in the fork/clone fastpath. To reduce this
+performance overhead, introduce a new clone_into_cgroup_can_fork flag
+into the cgroup_subsys structure. This flag, when set, will call the
+can_fork and cancel_fork methods only if the CLONE_INTO_CGROUP flag
+is set.
+
+The cpuset code is now modified to set this flag. The same cpuset
+checking code in cpuset_can_fork() and cpuset_cancel_fork() will have
+to stay as the cgroups can be different, but the cpusets may still be
+the same. So the same check must be present in both cpuset_fork() and
+cpuset_can_fork() to make sure that attach_in_progress is correctly set.
+
+Signed-off-by: Waiman Long <longman@redhat.com>
+---
+ include/linux/cgroup-defs.h |  6 ++++++
+ kernel/cgroup/cgroup.c      | 23 ++++++++++++++++++-----
+ kernel/cgroup/cpuset.c      |  1 +
+ 3 files changed, 25 insertions(+), 5 deletions(-)
+
+diff --git a/include/linux/cgroup-defs.h b/include/linux/cgroup-defs.h
+index 8a0d5466c7be..0087a47d80a2 100644
+--- a/include/linux/cgroup-defs.h
++++ b/include/linux/cgroup-defs.h
+@@ -701,6 +701,12 @@ struct cgroup_subsys {
+ 	 */
+ 	bool threaded:1;
+ 
++	/*
++	 * If %true, the controller will call can_fork and cancel_fork
++	 * methods only if CLONE_INTO_CGROUP flag is set.
++	 */
++	bool clone_into_cgroup_can_fork:1;
++
+ 	/* the following two fields are initialized automatically during boot */
+ 	int id;
+ 	const char *name;
+diff --git a/kernel/cgroup/cgroup.c b/kernel/cgroup/cgroup.c
+index 83ea13f2ccb1..23701e959ef5 100644
+--- a/kernel/cgroup/cgroup.c
++++ b/kernel/cgroup/cgroup.c
+@@ -6517,6 +6517,10 @@ int cgroup_can_fork(struct task_struct *child, struct kernel_clone_args *kargs)
+ 		return ret;
+ 
+ 	do_each_subsys_mask(ss, i, have_canfork_callback) {
++		if (ss->clone_into_cgroup_can_fork &&
++		   !(kargs->flags & CLONE_INTO_CGROUP))
++			continue;
++
+ 		ret = ss->can_fork(child, kargs->cset);
+ 		if (ret)
+ 			goto out_revert;
+@@ -6528,8 +6532,12 @@ int cgroup_can_fork(struct task_struct *child, struct kernel_clone_args *kargs)
+ 	for_each_subsys(ss, j) {
+ 		if (j >= i)
+ 			break;
+-		if (ss->cancel_fork)
+-			ss->cancel_fork(child, kargs->cset);
++		if (!ss->cancel_fork ||
++		   (ss->clone_into_cgroup_can_fork &&
++		   !(kargs->flags & CLONE_INTO_CGROUP)))
++			continue;
++
++		ss->cancel_fork(child, kargs->cset);
+ 	}
+ 
+ 	cgroup_css_set_put_fork(kargs);
+@@ -6552,9 +6560,14 @@ void cgroup_cancel_fork(struct task_struct *child,
+ 	struct cgroup_subsys *ss;
+ 	int i;
+ 
+-	for_each_subsys(ss, i)
+-		if (ss->cancel_fork)
+-			ss->cancel_fork(child, kargs->cset);
++	for_each_subsys(ss, i) {
++		if (!ss->cancel_fork ||
++		   (ss->clone_into_cgroup_can_fork &&
++		   !(kargs->flags & CLONE_INTO_CGROUP)))
++			continue;
++
++		ss->cancel_fork(child, kargs->cset);
++	}
+ 
+ 	cgroup_css_set_put_fork(kargs);
+ }
+diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
+index e4ca2dd2b764..937ef4d60cd4 100644
+--- a/kernel/cgroup/cpuset.c
++++ b/kernel/cgroup/cpuset.c
+@@ -3391,6 +3391,7 @@ struct cgroup_subsys cpuset_cgrp_subsys = {
+ 	.dfl_cftypes	= dfl_files,
+ 	.early_init	= true,
+ 	.threaded	= true,
++	.clone_into_cgroup_can_fork = true,
+ };
+ 
+ /**
+-- 
+2.31.1
+
