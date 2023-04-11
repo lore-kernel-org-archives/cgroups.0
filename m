@@ -1,67 +1,258 @@
-From: Bart Van Assche <bvanassche-HInyCGIudOg@public.gmane.org>
-Subject: Re: [PATCH v2 0/3] blk-cgroup: some cleanup
-Date: Mon, 10 Apr 2023 15:20:06 -0700
-Message-ID: <783e293e-8e4e-7856-f492-395da2f5d376@acm.org>
-References: <20230406145050.49914-1-zhouchengming@bytedance.com>
- <cab869b1-1cba-5698-55eb-a93d0596c869@acm.org>
- <d23a6891-96f0-2ee0-70c7-869123d85362@huaweicloud.com>
- <8651fa1f-7f50-03c6-cd85-e61aa44d4927@acm.org>
+From: Gang Li <ligang.bdlg@bytedance.com>
+Subject: [PATCH v4] mm: oom: introduce cpuset oom
+Date: Tue, 11 Apr 2023 14:58:15 +0800
+Message-ID: <20230411065816.9798-1-ligang.bdlg@bytedance.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Content-Language: en-US
-In-Reply-To: <8651fa1f-7f50-03c6-cd85-e61aa44d4927-HInyCGIudOg@public.gmane.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=bytedance.com; s=google; t=1681196304;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=ncPE3HgOzt6ii2dxf/TVQgxDoOPzo9kXvSGxZ1YSrno=;
+        b=U9X1HyoD7KFf5kQSoltVmCTUwDifCKSDJ0Mq0NJRRY5a7vfRwuuqxOqiKAry3M/XOW
+         zOFfNH7gfx1o120mDIzdrqkDD+wElOfP+3vKuPp2AEiHAMcgpxbi2Epvj8KiZSK0qfpP
+         9otCPc1QlqpuWD6tyIqym2Jg+0lo99z1DJK6Q8nYpDJ+XFPgosQ7QCEjkZ6HwYUJsC+O
+         Xx37gfiRuOJmqVjUYVESzD+eOkJu1JTR0/U7CGTzOodJk0NOSKPY3jHb345oz6p6fOxn
+         ckQlGs173omtz27f+C2EodDi3+krjrO1E9XxZlbA5pOCZtCJMimr7NPIqcgOH7rghnh7
+         uE+g==
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="utf-8"; format="flowed"
-To: Yu Kuai <yukuai1-XF6JlduFytWkHkcT6e4Xnw@public.gmane.org>, Chengming Zhou <zhouchengming-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org
-Cc: paolo.valente-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org, josef-DigfWCa+lFGyeJad7bwFQA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, "yukuai (C)" <yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Content-Type: text/plain; charset="us-ascii"
+To: Waiman Long <longman@redhat.com>, Michal Hocko <mhocko@suse.com>
+Cc: Gang Li <ligang.bdlg@bytedance.com>, cgroups@vger.kernel.org, linux-mm@kvack.org, rientjes@google.com, Zefan Li <lizefan.x@bytedance.com>, linux-kernel@vger.kernel.org
 
-On 4/10/23 11:47, Bart Van Assche wrote:
-> On 4/9/23 18:57, Yu Kuai wrote:
->> Hi, Bart
->>
->> 在 2023/04/08 2:41, Bart Van Assche 写道:
->>> On 4/6/23 07:50, Chengming Zhou wrote:
->>>> These are some cleanup patches of blk-cgroup. Thanks for review.
->>>
->>> With these patches applied, my kernel test VM crashes during boot. 
->>> The following crash disappears if I revert these patches:
->>>
->>> BUG: KASAN: null-ptr-deref in bio_associate_blkg_from_css+0x83/0x240
->>> Read of size 8 at addr 0000000000000518 by task blkid/5885
->>> Hardware name: QEMU Standard PC (Q35 + ICH9, 2009), BIOS 
->>> 1.16.0-debian-1.16.0-5 04/01/2014
->>> Call Trace:
->>>   dump_stack_lvl+0x4a/0x80
->>>   print_report+0x21e/0x260
->>>   kasan_report+0xc2/0xf0
->>>   __asan_load8+0x69/0x90
->>>   bio_associate_blkg_from_css+0x83/0x240
->>>   bfq_bio_bfqg+0xce/0x120 [bfq]
->>>   bfq_bic_update_cgroup+0x2f/0x3c0 [bfq]
->>>   bfq_init_rq+0x1e8/0xb10 [bfq]
->>>   bfq_insert_request.isra.0+0xa3/0x420 [bfq]
->>>   bfq_insert_requests+0xca/0xf0 [bfq]
->>>   blk_mq_dispatch_rq_list+0x4c0/0xb00
->>
->> I found this call trace quite weird, I can't figure out how
->> bfq_insert_requests can be called from blk_mq_dispatch_rq_list,
->> can you show the add2line result?
-> 
-> Hi Kuai,
-> 
-> Thanks for having taken a look. I ran my tests with this patch series on 
-> top of Jens' for-next branch: "[PATCH v2 00/12] Submit zoned writes in 
-> order" 
-> (https://lore.kernel.org/linux-block/20230407235822.1672286-1-bvanassche-HInyCGIudOg@public.gmane.org/T/#m4c8c7ca5a5627510dc1709847b11589e8791b6b6). I will take a closer look and see which of these two patch series needs to be adjusted.
+Cpusets constrain the CPU and Memory placement of tasks.
+`CONSTRAINT_CPUSET` type in oom  has existed for a long time, but
+has never been utilized.
 
-(replying to my own e-mail)
+When a process in cpuset which constrain memory placement triggers
+oom, it may kill a completely irrelevant process on other numa nodes,
+which will not release any memory for this cpuset.
 
-I think I found the root cause: bio->bi_bdev is NULL for pass-through 
-requests and BFQ doesn't like it that bio->bi_bdev is NULL. I will make 
-sure that pass-through requests are not submitted to any I/O scheduler.
+We can easily achieve node aware oom by using `CONSTRAINT_CPUSET` and
+selecting victim from cpusets with the same mems_allowed as the
+current one.
 
-Thanks,
+Example:
 
-Bart.
+Create two processes named mem_on_node0 and mem_on_node1 constrained
+by cpusets respectively. These two processes alloc memory on their
+own node. Now node0 has run out of memory, OOM will be invokled by
+mem_on_node0.
 
+Before this patch:
+
+Since `CONSTRAINT_CPUSET` do nothing, the victim will be selected from
+the entire system. Therefore, the OOM is highly likely to kill
+mem_on_node1, which will not free any memory for mem_on_node0. This
+is a useless kill.
+
+```
+[ 2786.519080] mem_on_node0 invoked oom-killer
+[ 2786.885738] [  pid  ]   uid  tgid total_vm      rss pgtables_bytes swapents oom_score_adj name
+[ 2787.181724] [  13432]     0 13432   787016   786745  6344704        0             0 mem_on_node1
+[ 2787.189115] [  13457]     0 13457   787002   785504  6340608        0             0 mem_on_node0
+[ 2787.216534] oom-kill:constraint=CONSTRAINT_CPUSET,nodemask=(null),cpuset=test,mems_allowed=0
+[ 2787.229991] Out of memory: Killed process 13432 (mem_on_node1)
+```
+
+After this patch:
+
+The victim will be selected only in all cpusets that have the same
+mems_allowed as the cpuset that invoked oom. This will prevent
+useless kill and protect innocent victims.
+
+```
+[  395.922444] mem_on_node0 invoked oom-killer
+[  396.239777] [  pid  ]   uid  tgid total_vm      rss pgtables_bytes swapents oom_score_adj name
+[  396.246128] [   2614]     0  2614  1311294  1144192  9224192        0             0 mem_on_node0
+[  396.252655] oom-kill:constraint=CONSTRAINT_CPUSET,nodemask=(null),cpuset=test,mems_allowed=0
+[  396.264068] Out of memory: Killed process 2614 (mem_on_node0)
+```
+
+Suggested-by: Michal Hocko <mhocko@suse.com>
+Cc: <cgroups@vger.kernel.org>
+Cc: <linux-mm@kvack.org>
+Cc: <rientjes@google.com>
+Cc: Waiman Long <longman@redhat.com>
+Cc: Zefan Li <lizefan.x@bytedance.com>
+Signed-off-by: Gang Li <ligang.bdlg@bytedance.com>
+---
+Changes in v4:
+- Modify comments and documentation.
+
+Changes in v3:
+- https://lore.kernel.org/all/20230410025056.22103-1-ligang.bdlg@bytedance.com/
+- Provide more details about the use case, testing, implementation.
+- Document the userspace visible change in Documentation.
+- Rename cpuset_cgroup_scan_tasks() to cpuset_scan_tasks() and add
+  a doctext comment about its purpose and how it should be used.
+- Take cpuset_rwsem to ensure that cpusets are stable.
+
+Changes in v2:
+- https://lore.kernel.org/all/20230404115509.14299-1-ligang.bdlg@bytedance.com/
+- Select victim from all cpusets with the same mems_allowed as the current cpuset.
+
+v1:
+- https://lore.kernel.org/all/20220921064710.89663-1-ligang.bdlg@bytedance.com/
+- Introduce cpuset oom.
+---
+ .../admin-guide/cgroup-v1/cpusets.rst         | 16 ++++++-
+ Documentation/admin-guide/cgroup-v2.rst       |  4 ++
+ include/linux/cpuset.h                        |  6 +++
+ kernel/cgroup/cpuset.c                        | 43 +++++++++++++++++++
+ mm/oom_kill.c                                 |  4 ++
+ 5 files changed, 71 insertions(+), 2 deletions(-)
+
+diff --git a/Documentation/admin-guide/cgroup-v1/cpusets.rst b/Documentation/admin-guide/cgroup-v1/cpusets.rst
+index 5d844ed4df69..51ffdc0eb167 100644
+--- a/Documentation/admin-guide/cgroup-v1/cpusets.rst
++++ b/Documentation/admin-guide/cgroup-v1/cpusets.rst
+@@ -25,7 +25,8 @@ Written by Simon.Derr@bull.net
+      1.6 What is memory spread ?
+      1.7 What is sched_load_balance ?
+      1.8 What is sched_relax_domain_level ?
+-     1.9 How do I use cpusets ?
++     1.9 What is cpuset oom ?
++     1.10 How do I use cpusets ?
+    2. Usage Examples and Syntax
+      2.1 Basic Usage
+      2.2 Adding/removing cpus
+@@ -607,8 +608,19 @@ If your situation is:
+  - The latency is required even it sacrifices cache hit rate etc.
+    then increasing 'sched_relax_domain_level' would benefit you.
+ 
++1.9 What is cpuset oom ?
++--------------------------
++If there is no available memory to allocate on the nodes specified by
++cpuset.mems, then an OOM (Out-Of-Memory) will be invoked.
++
++Since the victim selection is a heuristic algorithm, we cannot select
++the "perfect" victim. Therefore, currently, the victim will be selected
++from all the cpusets that have the same mems_allowed as the cpuset
++which invoked OOM.
++
++Cpuset oom works in both cgroup v1 and v2.
+ 
+-1.9 How do I use cpusets ?
++1.10 How do I use cpusets ?
+ --------------------------
+ 
+ In order to minimize the impact of cpusets on critical kernel
+diff --git a/Documentation/admin-guide/cgroup-v2.rst b/Documentation/admin-guide/cgroup-v2.rst
+index f67c0829350b..594aa71cf441 100644
+--- a/Documentation/admin-guide/cgroup-v2.rst
++++ b/Documentation/admin-guide/cgroup-v2.rst
+@@ -2199,6 +2199,10 @@ Cpuset Interface Files
+ 	a need to change "cpuset.mems" with active tasks, it shouldn't
+ 	be done frequently.
+ 
++	When a process invokes oom due to the constraint of cpuset.mems,
++	the victim will be selected from cpusets with the same
++	mems_allowed as the current one.
++
+   cpuset.mems.effective
+ 	A read-only multiple values file which exists on all
+ 	cpuset-enabled cgroups.
+diff --git a/include/linux/cpuset.h b/include/linux/cpuset.h
+index 980b76a1237e..75465bf58f74 100644
+--- a/include/linux/cpuset.h
++++ b/include/linux/cpuset.h
+@@ -171,6 +171,8 @@ static inline void set_mems_allowed(nodemask_t nodemask)
+ 	task_unlock(current);
+ }
+ 
++int cpuset_scan_tasks(int (*fn)(struct task_struct *, void *), void *arg);
++
+ #else /* !CONFIG_CPUSETS */
+ 
+ static inline bool cpusets_enabled(void) { return false; }
+@@ -287,6 +289,10 @@ static inline bool read_mems_allowed_retry(unsigned int seq)
+ 	return false;
+ }
+ 
++static inline int cpuset_scan_tasks(int (*fn)(struct task_struct *, void *), void *arg)
++{
++	return 0;
++}
+ #endif /* !CONFIG_CPUSETS */
+ 
+ #endif /* _LINUX_CPUSET_H */
+diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
+index bc4dcfd7bee5..cb6b49245e18 100644
+--- a/kernel/cgroup/cpuset.c
++++ b/kernel/cgroup/cpuset.c
+@@ -4013,6 +4013,49 @@ void cpuset_print_current_mems_allowed(void)
+ 	rcu_read_unlock();
+ }
+ 
++/**
++ * cpuset_scan_tasks - specify the oom scan range
++ * @fn: callback function to select oom victim
++ * @arg: argument for callback function, usually a pointer to struct oom_control
++ *
++ * Description: This function is used to specify the oom scan range. Return 0 if
++ * no task is selected, otherwise return 1. The selected task will be stored in
++ * arg->chosen. This function can only be called in cpuset oom context.
++ *
++ * The selection algorithm is heuristic, therefore requires constant iteration
++ * based on user feedback. Currently, we just iterate through all cpusets with
++ * the same mems_allowed as the current cpuset.
++ */
++int cpuset_scan_tasks(int (*fn)(struct task_struct *, void *), void *arg)
++{
++	int ret = 0;
++	struct css_task_iter it;
++	struct task_struct *task;
++	struct cpuset *cs;
++	struct cgroup_subsys_state *pos_css;
++
++	/*
++	 * Situation gets complex with overlapping nodemasks in different cpusets.
++	 * TODO: Maybe we should calculate the "distance" between different mems_allowed.
++	 *
++	 * But for now, let's make it simple. Just iterate through all cpusets
++	 * with the same mems_allowed as the current cpuset.
++	 */
++	cpuset_read_lock();
++	rcu_read_lock();
++	cpuset_for_each_descendant_pre(cs, pos_css, &top_cpuset) {
++		if (nodes_equal(cs->mems_allowed, task_cs(current)->mems_allowed)) {
++			css_task_iter_start(&(cs->css), CSS_TASK_ITER_PROCS, &it);
++			while (!ret && (task = css_task_iter_next(&it)))
++				ret = fn(task, arg);
++			css_task_iter_end(&it);
++		}
++	}
++	rcu_read_unlock();
++	cpuset_read_unlock();
++	return ret;
++}
++
+ /*
+  * Collection of memory_pressure is suppressed unless
+  * this flag is enabled by writing "1" to the special
+diff --git a/mm/oom_kill.c b/mm/oom_kill.c
+index 044e1eed720e..228257788d9e 100644
+--- a/mm/oom_kill.c
++++ b/mm/oom_kill.c
+@@ -367,6 +367,8 @@ static void select_bad_process(struct oom_control *oc)
+ 
+ 	if (is_memcg_oom(oc))
+ 		mem_cgroup_scan_tasks(oc->memcg, oom_evaluate_task, oc);
++	else if (oc->constraint == CONSTRAINT_CPUSET)
++		cpuset_scan_tasks(oom_evaluate_task, oc);
+ 	else {
+ 		struct task_struct *p;
+ 
+@@ -427,6 +429,8 @@ static void dump_tasks(struct oom_control *oc)
+ 
+ 	if (is_memcg_oom(oc))
+ 		mem_cgroup_scan_tasks(oc->memcg, dump_task, oc);
++	else if (oc->constraint == CONSTRAINT_CPUSET)
++		cpuset_scan_tasks(dump_task, oc);
+ 	else {
+ 		struct task_struct *p;
+ 
+-- 
+2.20.1
