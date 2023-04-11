@@ -1,82 +1,58 @@
-From: Gang Li <ligang.bdlg@bytedance.com>
-Subject: Re: Re: Re: [PATCH v4] mm: oom: introduce cpuset oom
-Date: Tue, 11 Apr 2023 21:17:27 +0800
-Message-ID: <e6ff9768-f41d-553c-e858-1b244a461526@bytedance.com>
-References: <20230411065816.9798-1-ligang.bdlg@bytedance.com>
- <3myr57cw3qepul7igpifypxx4xd2buo2y453xlqhdw4xgjokc4@vi3odjfo3ahc>
- <aa3382b4-4046-988f-42ea-8812dba7882b@bytedance.com>
- <ZDVcwuiu3rWEFiTE@dhcp22.suse.cz>
+From: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Subject: [PATCH v4 0/5] cgroup/cpuset: Fix CLONE_INTO_CGROUP problem & other issues
+Date: Tue, 11 Apr 2023 09:35:56 -0400
+Message-ID: <20230411133601.2969636-1-longman@redhat.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=bytedance.com; s=google; t=1681219053;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=NYzMqMQLWwJeC6OGUwmJWcqketmIRYbxIgkEUyuEFt4=;
-        b=P1erKL2EU4UpxT3LNTe4A5/bZ8blCn0k9bzNo/S562ki4ed2xT7q7WtfsuY1bJt4rs
-         X+hWnFXwZSOGMWe53hmqw4kufYfrMOQrJ0Bd8zld2rnQv0a9JIyOX9mii3aPzX3mAX2F
-         HcLbqqUFZmx74vhjdKoyBNgwTuz838ddshZe2qotABo4tHJH1B8sqN/fq/b5Mb6M+u5u
-         0LvNHchxcevPWHmxTzgk6xauQkC0R9cI6ZyJt+Zv9rVp0N8TZcaFBeNGTWHEKo6msBkI
-         KERk1aC60cvZl3R3KieEsJZKgCwW9UoBCNMScvmIPUmywUUl2gVLQ4aiVpld2gEuyqcr
-         jFfQ==
-Content-Language: en-US
-In-Reply-To: <ZDVcwuiu3rWEFiTE@dhcp22.suse.cz>
+Content-Transfer-Encoding: 8bit
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1681220182;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding;
+        bh=0AGalK6TkETefuR8vqn2ZgXGP9Ke/hGkmxhOP0sbpu8=;
+        b=GCaV4vKC7lpUtrB+yF7L2tJ9iJ4YXq71L06EhqtFwXbJrqXMiEyYd+SOEw0s3KdpuvP8IX
+        nade9prE8hWDc/Bf/XOA5rLqtE07ieQ9kYHG8Hrl6ZCt9xP5ut6kPRQaMqyzld0/BdxHhY
+        FbgHCI0hf1GS/v2r6nXaP6NlnO8zKG4=
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="iso-8859-1"; format="flowed"
-To: Michal Hocko <mhocko@suse.com>
-Cc: =?UTF-8?Q?Michal_Koutn=c3=bd?= <mkoutny@suse.com>, Waiman Long <longman@redhat.com>, cgroups@vger.kernel.org, linux-mm@kvack.org, rientjes@google.com, Zefan Li <lizefan.x@bytedance.com>, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Christian Brauner <brauner-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Juri Lelli <juri.lelli-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Dietmar Eggemann <dietmar.eggemann-5wv7dgnIgG8@public.gmane.org>, =?UTF-8?q?Michal=20Koutn=C3=BD?= <mkoutny-IBi9RG/b67k@public.gmane.org>, Giuseppe Scrivano <gscrivan-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 
+ v4:
+  - Add missing rcu_read_lock/unlock to cpuset_cancel_fork() in patch 3.
+  - Add patch 5 to reduce performance impact for the
+    non-CLONE_INTO_CGROUP case.
 
+ v3:
+  - Update patches 2 & 3 to put task_cs() call under rcu_read_lock().
 
-On 2023/4/11 21:12, Michal Hocko wrote:
-> On Tue 11-04-23 21:04:18, Gang Li wrote:
->>
->>
->> On 2023/4/11 20:23, Michal Koutn=C3=BD wrote:
->>> Hello.
->>>
->>> On Tue, Apr 11, 2023 at 02:58:15PM +0800, Gang Li <ligang.bdlg@bytedanc=
-e.com> wrote:
->>>> +	cpuset_for_each_descendant_pre(cs, pos_css, &top_cpuset) {
->>>> +		if (nodes_equal(cs->mems_allowed, task_cs(current)->mems_allowed)) {
->>>> +			css_task_iter_start(&(cs->css), CSS_TASK_ITER_PROCS, &it);
->>>> +			while (!ret && (task =3D css_task_iter_next(&it)))
->>>> +				ret =3D fn(task, arg);
->>>> +			css_task_iter_end(&it);
->>>> +		}
->>>> +	}
->>>> +	rcu_read_unlock();
->>>> +	cpuset_read_unlock();
->>>> +	return ret;
->>>> +}
->>>
->>> I see this traverses all cpusets without the hierarchy actually
->>> mattering that much. Wouldn't the CONSTRAINT_CPUSET better achieved by
->>> globally (or per-memcg) scanning all processes and filtering with:
->>
->> Oh I see, you mean scanning all processes in all cpusets and scanning
->> all processes globally are equivalent.
->=20
-> Why cannot you simple select a process from the cpuset the allocating
-> process belongs to? I thought the whole idea was to handle well
-> partitioned workloads.
->
+ v2:
+  - Drop v1 patch 3
+  - Add a new patch to fix an issue in cpuset_cancel_attach() and
+    another patch to add cpuset_can_fork() and cpuset_cacnel_fork()
+    methods.
 
-Yes I can :) It's much easier.
+The first patch in this series fixes a problem in
+cpuset_cancel_attach(). Patches 2 and 3 fixes the CLONE_INTO_CGROUP
+problem in cpuset. Patch 4 is a minor fix. The last patch is a
+performance optimization patch for the non-CLONE_INTO_CGROUP case.
 
->>> 	nodes_intersect(current->mems_allowed, p->mems_allowed
->>
->> Perhaps it would be better to use nodes_equal first, and if no suitable
->> victim is found, then downgrade to nodes_intersect?
->=20
-> How can this happen?
->=20
->> NUMA balancing mechanism tends to keep memory on the same NUMA node, and
->> if the selected victim's memory happens to be on a node that does not
->> intersect with the current process's node, we still won't be able to
->> free up any memory.
->=20
-> AFAIR NUMA balancing doesn't touch processes with memory policies.
+Waiman Long (5):
+  cgroup/cpuset: Wake up cpuset_attach_wq tasks in
+    cpuset_cancel_attach()
+  cgroup/cpuset: Make cpuset_fork() handle CLONE_INTO_CGROUP properly
+  cgroup/cpuset: Add cpuset_can_fork() and cpuset_cancel_fork() methods
+  cgroup/cpuset: Make cpuset_attach_task() skip subpartitions CPUs for
+    top_cpuset
+  cgroup/cpuset: Optimize out unneeded
+    cpuset_can_fork/cpuset_cancel_fork calls
+
+ include/linux/cgroup-defs.h |   6 ++
+ kernel/cgroup/cgroup.c      |  23 +++--
+ kernel/cgroup/cpuset.c      | 167 +++++++++++++++++++++++++++++-------
+ 3 files changed, 159 insertions(+), 37 deletions(-)
+
+-- 
+2.31.1
 
