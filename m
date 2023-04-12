@@ -1,54 +1,46 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH 1/2] blk-stat: fix QUEUE_FLAG_STATS clear
-Date: Wed, 12 Apr 2023 07:12:53 -1000
-Message-ID: <ZDbmlYIrRpkWRZla@slm.duckdns.org>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCH 2/2] blk-throttle: only enable blk-stat when
+ BLK_DEV_THROTTLING_LOW
+Date: Wed, 12 Apr 2023 07:14:52 -1000
+Message-ID: <ZDbnDGtoY3q_ow-R@slm.duckdns.org>
 References: <20230412160754.1981705-1-chengming.zhou@linux.dev>
+ <20230412160754.1981705-2-chengming.zhou@linux.dev>
 Mime-Version: 1.0
-Return-path: <linux-block-owner@vger.kernel.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20221208; t=1681319575; x=1683911575;
+        d=gmail.com; s=20221208; t=1681319694; x=1683911694;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:sender:from:to:cc:subject:date:message-id
          :reply-to;
-        bh=dSVn8k9Iy2lv6cYKmPXJRFy7/1j4dCRyeMR+P+kHP9s=;
-        b=Vm0yTlaxfj0mkM1OMk6w702fv0lCHyPPKK1wFDHLEBg8wEDgQKYaM7uQwJ/2HxKZly
-         pnBYN17K6zKbuOn64ERSrTiD33ydFcCQVN+GSvQURR6Nzyx+9zvl6qFr3iLe0MhziFjt
-         SvcivMdT1Ei+O77Gw6Ccr+e/G2ZC5ZnwWuwLgZ3a1rhpxRwG6Z9oFGhgJ2+03KKQEQYL
-         UH1XNv23JqW6eWhbS+ozo1swoyo/+vyvqCaEjI0XgvZoPfbrVrGfVyX+OBnZLhEpmTjd
-         E/YGui7kLu8X1l35IMFhGSs3LYfIQZYjv5DeLUUM6WMHkdSt5LD1fmzXHTYxVNZ1NM1E
-         0Xfw==
-Sender: Tejun Heo <htejun@gmail.com>
+        bh=N0VRajwDCS1Rg/Spw2tnj0AXocI1N336v8O1yep9+DQ=;
+        b=XJVCAGJvep9wSQoZc+nwUbfW82+Of3wXWE/YDZ5k0WnQWWtRGPvsWU0H12x3yS5WtG
+         QGdKQe78HYFpYAlup1V8VDN/C/EESxfacz/ioZawPOwehU9KWuxpOjpbglXradyFQ8WB
+         mGwncSrB8+h2DUjD0Kp/61qCFlso9DW858E4XFAYV80UB/2lez035y2GRlhqU0M56l+D
+         YWKJYvgpYwwUQSqYiV8DFfXOeRHehET1hiNu79Rk6o9vvr16Sfy6pA91D6uveMcFulQs
+         TdqScjNKaV7gS67hcMlK3bHH+iQAhYjg2AotxU3ZYiwJuCFkKHWs2RT31Pj4JN28H7/S
+         an2g==
+Sender: Tejun Heo <htejun-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 Content-Disposition: inline
-In-Reply-To: <20230412160754.1981705-1-chengming.zhou@linux.dev>
+In-Reply-To: <20230412160754.1981705-2-chengming.zhou-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: chengming.zhou@linux.dev
-Cc: axboe@kernel.dk, josef@toxicpanda.com, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, Chengming Zhou <zhouchengming@bytedance.com>
+To: chengming.zhou-fxUVXftIFDnyG1zEObXtfA@public.gmane.org
+Cc: axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, josef-DigfWCa+lFGyeJad7bwFQA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Chengming Zhou <zhouchengming-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
 
-On Thu, Apr 13, 2023 at 12:07:53AM +0800, chengming.zhou@linux.dev wrote:
-> From: Chengming Zhou <zhouchengming@bytedance.com>
+On Thu, Apr 13, 2023 at 12:07:54AM +0800, chengming.zhou-fxUVXftIFDnyG1zEObXtfA@public.gmane.org wrote:
+> From: Chengming Zhou <zhouchengming-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
 > 
-> We need to set QUEUE_FLAG_STATS for two cases:
-> 1. blk_stat_enable_accounting()
-> 2. blk_stat_add_callback()
+> blk_throtl_register() will unconditionally enable blk-stat for gendisk
+> when register, even when we have no BLK_DEV_THROTTLING_LOW config.
 > 
-> So we should clear it only when ((q->stats->accounting == 0) &&
-> list_empty(&q->stats->callbacks)).
+> Since the kernel always has only BLK_DEV_THROTTLING config and the
+> BLK_DEV_THROTTLING_LOW config is still in EXPERIMENTAL state, we can
+> just skip blk-stat when !BLK_DEV_THROTTLING_LOW.
 > 
-> blk_stat_disable_accounting() only check if q->stats->accounting
-> is 0 before clear the flag, this patch fix it.
-> 
-> Also add list_empty(&q->stats->callbacks)) check when enable, or
-> the flag is already set.
-> 
-> Signed-off-by: Chengming Zhou <zhouchengming@bytedance.com>
+> Signed-off-by: Chengming Zhou <zhouchengming-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
 
-Acked-by: Tejun Heo <tj@kernel.org>
-
-It'd be useful to explicitly illustrate the buggy behavior in the
-description (e.g. if you do X, Y and then Z, then X incorrectly loses
-accounting). Can you also please add the appropriate stable cc?
+Acked-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 
 Thanks.
 
