@@ -1,64 +1,54 @@
-From: Waiman Long <longman@redhat.com>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 Subject: Re: [RFC PATCH 0/5] cgroup/cpuset: A new "isolcpus" paritition
-Date: Wed, 12 Apr 2023 20:26:03 -0400
-Message-ID: <cd4c3f92-4a01-e636-7390-8c6a3d0cfe6c@redhat.com>
+Date: Wed, 12 Apr 2023 14:33:15 -1000
+Message-ID: <ZDdNy2NAfj2_1CbW@slm.duckdns.org>
 References: <20230412153758.3088111-1-longman@redhat.com>
  <ZDcGVebCpyktxyWh@slm.duckdns.org>
  <1ce6a073-e573-0c32-c3d8-f67f3d389a28@redhat.com>
  <ZDcS_yVCgh6g1LoM@slm.duckdns.org>
  <e38f72aa-9705-cf0c-a565-fb790f16c53e@redhat.com>
  <ZDdG1K0kTETZMTCu@slm.duckdns.org>
+ <cd4c3f92-4a01-e636-7390-8c6a3d0cfe6c@redhat.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: quoted-printable
-Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1681345565;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=haXTThtMgpsseSV6p+uwEaprdsyUVtg4Cg56AUYX6Mw=;
-        b=atY2hVPcYAmNrssV1TOHzKcBSBD5RX/xyhdodRoEyHsMVL+qe5ytCyE4Qk7rCdKrEmeEfB
-        rCXEXPjnn4hE1il+To8Zm5jkDNJjbfV/rnH5yYeAgTkZVtwEN049ful64Xw6qNK9eZ7uJx
-        FVXiUq7mTMLSU2vKsWzXZdBhtX6wQMA=
-Content-Language: en-US
-In-Reply-To: <ZDdG1K0kTETZMTCu@slm.duckdns.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20221208; t=1681345997; x=1683937997;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :mime-version:references:message-id:subject:cc:to:from:date:sender
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=qeVTMtCux2BOeObz5+AKrGQQdxp1bdVbjpePeClNJpo=;
+        b=k3ksXRI5boYH1PJ4aL51Taqw6hvtAg0KYVtZ5LSutd4bs+Ama7qpxAoSze4A7L0gpl
+         omUHyPRglIG6cycY06ZvINus+/9GsBNP02RktCm3rfaO9kZcr+52IgMeegbeUlkP6Ol4
+         GnazoLBbvVbzAzWqgpBN14eYhnsrg7iPxKjt972IuYhn1qhpJuaINoJQTyp5UolqC3Qb
+         60fnP8jse8Wk56KwrYncNxP9bcPeNiolIjfeD2lH5R8FbbY8XfaJxoGRREv/tqGaTITD
+         B5HenCw6mN5oXFjVd5BO0bvN9qPsuUcLTfEZmg9nlwkiEdsQg7Qa5l55m36Z+aDmNu5C
+         705g==
+Sender: Tejun Heo <htejun-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <cd4c3f92-4a01-e636-7390-8c6a3d0cfe6c-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="iso-8859-1"; format="flowed"
-To: Tejun Heo <tj@kernel.org>
-Cc: Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, Jonathan Corbet <corbet@lwn.net>, Shuah Khan <shuah@kernel.org>, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kselftest@vger.kernel.org, Juri Lelli <juri.lelli@redhat.com>, Valentin Schneider <vschneid@redhat.com>, Frederic Weisbecker <frederic@kernel.org>
+Content-Type: text/plain; charset="iso-8859-1"
+To: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Cc: Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Jonathan Corbet <corbet-T1hC0tSOHrs@public.gmane.org>, Shuah Khan <shuah-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kselftest-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Juri Lelli <juri.lelli-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Valentin Schneider <vschneid-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Frederic Weisbecker <frederic-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 
+Hello,
 
-On 4/12/23 20:03, Tejun Heo wrote:
-> Hello,
->
-> On Wed, Apr 12, 2023 at 04:33:29PM -0400, Waiman Long wrote:
->> I think we can. You mean having a new "cpuset.cpus.isolated" cgroupfs fi=
-le.
->> So there will be one in the root cgroup that defines all the isolated CP=
-Us
->> one can have. It is then distributed down the hierarchy and can be claim=
-ed
->> only if a cgroup becomes an "isolated" partition. There will be a slight
-> Yeah, that seems a lot more congruent with the typical pattern.
->
->> change in the semantics of an "isolated" partition, but I doubt there wi=
-ll
->> be much users out there.
-> I haven't thought through it too hard but what prevents staying compatible
-> with the current behavior?
+On Wed, Apr 12, 2023 at 08:26:03PM -0400, Waiman Long wrote:
+> =A0 If the "cpuset.cpus.isolated" isn't set, the existing rules applies. =
+If it
+> is set, the new rule will be used.
+>=20
+> Does that look reasonable to you?
 
-It is possible to stay compatible with existing behavior. It is just=20
-that a break from existing behavior will make the solution more clean.
+Sounds a bit contrived. Does it need to be something defined in the root
+cgroup? The only thing that's needed is that a cgroup needs to claim CPUs
+exclusively without using them, right? Let's say we add a new interface
+file, say, cpuset.cpus.reserve which is always exclusive and can be consumed
+by children whichever way they want, wouldn't that be sufficient? Then,
+there would be nothing to describe in the root cgroup.
 
-So the new behavior will be:
+Thanks.
 
- =C2=A0 If the "cpuset.cpus.isolated" isn't set, the existing rules applies=
-.=20
-If it is set, the new rule will be used.
-
-Does that look reasonable to you?
-
-Cheers,
-Longman
-
+--=20
+tejun
