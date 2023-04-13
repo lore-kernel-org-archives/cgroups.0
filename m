@@ -1,55 +1,82 @@
-From: Michael Honaker <mchonaker-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: cgroup: Clarification around usage_in_bytes and its relation to the
- page counter
-Date: Wed, 12 Apr 2023 21:22:07 -0400
-Message-ID: <CAAKLMZ1fM1d4Drw0D2AkEwAG9iFOyT9qboy1REWtwS6Q00BA6Q@mail.gmail.com>
+From: Waiman Long <longman@redhat.com>
+Subject: Re: [RFC PATCH 0/5] cgroup/cpuset: A new "isolcpus" paritition
+Date: Wed, 12 Apr 2023 21:55:46 -0400
+Message-ID: <9862da55-5f41-24c3-f3bb-4045ccf24b2e@redhat.com>
+References: <20230412153758.3088111-1-longman@redhat.com>
+ <ZDcGVebCpyktxyWh@slm.duckdns.org>
+ <1ce6a073-e573-0c32-c3d8-f67f3d389a28@redhat.com>
+ <ZDcS_yVCgh6g1LoM@slm.duckdns.org>
+ <e38f72aa-9705-cf0c-a565-fb790f16c53e@redhat.com>
+ <ZDdG1K0kTETZMTCu@slm.duckdns.org>
+ <cd4c3f92-4a01-e636-7390-8c6a3d0cfe6c@redhat.com>
+ <ZDdNy2NAfj2_1CbW@slm.duckdns.org>
+ <1b8d9128-d076-7d37-767d-11d6af314662@redhat.com>
+ <ZDdYOI9LB87ra2t_@slm.duckdns.org>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20221208; t=1681348939; x=1683940939;
-        h=to:subject:message-id:date:from:mime-version:from:to:cc:subject
-         :date:message-id:reply-to;
-        bh=yuLz9iUc1y0EzGD8AvN7Y9hf2MbqyBOWJrZZ7t76bGM=;
-        b=Qm1WsHGG7Yawgtzf4UmTBwdzPBribr4bXLa944+d8dBqQyTYUQfDHQZajmMCidQnYP
-         xxG5hyrsJ2DK2CdZYveJeig/i6zy/sZrjcBmabkbeSIMyEFp++itkqfydZVNXe1Xwalf
-         GwmnvJaELevvy9wCBHSGrGpeZy3su2Ctk+vz0EeQ1emZnnqtL8VPrGgjv+EOD4tVAZKw
-         K6KcRffpQddB4a3aHCnM2MLlY4SMpNcrxIF6I/VByUKw7OBIzoCx18lRrzYobBBdisIz
-         9efZAtqGXAEit6kb/SQ9r3xk8M9yDb40noKlzK+qv9CqBfC3IYeinDiA16mzgJPo4cEZ
-         MlAA==
-List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <linux-doc-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1681350951;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=QUAJoa4WsPFgOaywimIxgJmb0m1Gj0LU/rbMc/oiFgM=;
+        b=WU229dn6x1HEQ+Cy6vOF9aqrodquqVtFR7dG0QYtHGlK2nmpoK0FjHDoBR2BKVDPu3tfwT
+        +PspGC8+YEFsx6cNb1shDKuQ/QvVIbvldty1C9KXoGz5V1UW5uWan1yFCKtpOCRYijmr8E
+        0yHNvRbOXXt815Wu6ibutrs4McY/pGk=
+Content-Language: en-US
+In-Reply-To: <ZDdYOI9LB87ra2t_@slm.duckdns.org>
+List-ID: <cgroups.vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"; format="flowed"
+To: Tejun Heo <tj@kernel.org>
+Cc: Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, Jonathan Corbet <corbet@lwn.net>, Shuah Khan <shuah@kernel.org>, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kselftest@vger.kernel.org, Juri Lelli <juri.lelli@redhat.com>, Valentin Schneider <vschneid@redhat.com>, Frederic Weisbecker <frederic@kernel.org>
 
-Hello,
+On 4/12/23 21:17, Tejun Heo wrote:
+> Hello, Waiman.
+>
+> On Wed, Apr 12, 2023 at 08:55:55PM -0400, Waiman Long wrote:
+>>> Sounds a bit contrived. Does it need to be something defined in the root
+>>> cgroup?
+>> Yes, because we need to take away the isolated CPUs from the effective cpus
+>> of the root cgroup. So it needs to start from the root. That is also why we
+>> have the partition rule that the parent of a partition has to be a partition
+>> root itself. With the new scheme, we don't need a special cgroup to hold the
+> I'm following. The root is already a partition root and the cgroupfs control
+> knobs are owned by the parent, so the root cgroup would own the first level
+> cgroups' cpuset.cpus.reserve knobs. If the root cgroup wants to assign some
+> CPUs exclusively to a first level cgroup, it can then set that cgroup's
+> reserve knob accordingly (or maybe the better name is
+> cpuset.cpus.exclusive), which will take those CPUs out of the root cgroup's
+> partition and give them to the first level cgroup. The first level cgroup
+> then is free to do whatever with those CPUs that now belong exclusively to
+> the cgroup subtree.
 
-This is my first posting to the LKML, so please let me know if this
-should be asked
-elsewhere or if there is anything else wrong with my email. I'd like
-to confirm my understanding on an issue
-I've been encountering.
+I am OK with the cpuset.cpus.reserve name, but not that much with the 
+cpuset.cpus.exclusive name as it can get confused with cgroup v1's 
+cpuset.cpu_exclusive. Of course, I prefer the cpuset.cpus.isolated name 
+a bit more. Once an isolated CPU gets used in an isolated partition, it 
+is exclusive and it can't be used in another isolated partition.
 
-I have been trying to get an accurate measurement of memory usage of a
-non-root cgroup, specifically a Kubernetes container, and noticed some
-inconsistencies when comparing the
-value of `memory.usage_in_bytes` with the information in
-`memory.stat`. After further investigation of
-the cgroup docs (/admin-guide/cgroups/memory.rst#usage_in_bytes) and
-an old LMKL thread ("real meaning
-of memory.usage_in_bytes"), I came to the understanding that
-`usage_in_bytes` actually shows the value
-of the resource counter which is an overestimation due to the counter
-being split into per-cpu chunks
-for caching, and that the real usage can be calculated from RSS+Cache
-gathered from `memory.stat`.
-I've created cadvisor issue #3286
-(https://github.com/google/cadvisor/issues/3286) which goes into
-greater detail on my investigation with examples.
+Since we will allow users to set cpuset.cpus.reserve to whatever value 
+they want. The distribution of isolated CPUs is only valid if the cpus 
+are present in its parent's cpuset.cpus.reserve and all the way up to 
+the root. It is a bit expensive, but it should be a relatively rare 
+operation.
 
-Is the above understanding still correct with the new page counters?
-If so, could any memory
-allocations be reflected in `usage_in_bytes` but not in `stat` for
-child cgroups? I want to ensure I'm not
-missing anything by only monitoring the `stat` file.
+>
+>> isolated CPUs. The new root cgroup file will be enough to inform the system
+>> what CPUs will have to be isolated.
+>>
+>> My current thinking is that the root's "cpuset.cpus.isolated" will start
+>> with whatever have been set in the "isolcpus" or "nohz_full" boot command
+>> line and can be extended from there but not shrank below that as there can
+>> be additional isolation attributes with those isolated CPUs.
+> I'm not sure we wanna tie with those automatically. I think it'd be
+> confusing than helpful.
 
-Thank you for any clarification or corrections.
+Yes, I am fine with taking this off for now.
+
+Cheers,
+Longman
+
