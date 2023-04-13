@@ -1,82 +1,89 @@
-From: Chengming Zhou <chengming.zhou@linux.dev>
-Subject: Re: [PATCH 1/2] blk-stat: fix QUEUE_FLAG_STATS clear
-Date: Thu, 13 Apr 2023 11:23:21 +0800
-Message-ID: <2c5d4e9b-ec7d-dbfc-7e95-e75b66b68d3c@linux.dev>
-References: <20230412160754.1981705-1-chengming.zhou@linux.dev>
- <ZDbmlYIrRpkWRZla@slm.duckdns.org>
+From: chengming.zhou@linux.dev
+Subject: [PATCH v2 1/2] blk-stat: fix QUEUE_FLAG_STATS clear
+Date: Thu, 13 Apr 2023 14:28:04 +0800
+Message-ID: <20230413062805.2081970-1-chengming.zhou@linux.dev>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-block-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
-        t=1681356237;
+        t=1681367316;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=SZZA5T91TnAzL69LK031bioqqsWD859qJR93vJBrvfE=;
-        b=Fu7DtGRKCCChMSJx7TqN/FEyNOi14o8+joZ1seqjSZVe2hGT5OtJ+o9uXSBXWpzlZTNcij
-        jI6GZAFr7dXw11Dq3ayXX9WnqPXFqb5zxhbbcXXbNMgApmabNiRidO2XjEbnqSRZ8HnAq7
-        2DqudkmbITa57FLXnmUaOOiPhfdYVps=
-Content-Language: en-US
-In-Reply-To: <ZDbmlYIrRpkWRZla@slm.duckdns.org>
+         to:to:cc:cc:mime-version:mime-version:
+         content-transfer-encoding:content-transfer-encoding;
+        bh=egK6cQcoNaTUC/dkRvlJHjCoro533vXXKI06JsMHHhk=;
+        b=OLgzKgqo5RxBuxyyghem3Zr+nBfFIoz4x9MKZJJi9MVi/e3ETG7sXqdslYi9DYw1I1X1nH
+        vIKa37IM3boWd8Vmt0udwAuuErkdq+EvP+gwE3dG//cSdwtDfTWQEFrVepocn8VC0wAGXk
+        OdeaTC1QfLAE/f+X4ExEbHVfkF7qUsc=
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Tejun Heo <tj@kernel.org>
-Cc: axboe@kernel.dk, josef@toxicpanda.com, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, Chengming Zhou <zhouchengming@bytedance.com>
+To: axboe@kernel.dk, tj@kernel.org
+Cc: josef@toxicpanda.com, osandov@fb.com, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, Chengming Zhou <zhouchengming@bytedance.com>, stable@vger.kernel.org
 
-On 2023/4/13 01:12, Tejun Heo wrote:
-> On Thu, Apr 13, 2023 at 12:07:53AM +0800, chengming.zhou@linux.dev wrote:
->> From: Chengming Zhou <zhouchengming@bytedance.com>
->>
->> We need to set QUEUE_FLAG_STATS for two cases:
->> 1. blk_stat_enable_accounting()
->> 2. blk_stat_add_callback()
->>
->> So we should clear it only when ((q->stats->accounting == 0) &&
->> list_empty(&q->stats->callbacks)).
->>
->> blk_stat_disable_accounting() only check if q->stats->accounting
->> is 0 before clear the flag, this patch fix it.
->>
->> Also add list_empty(&q->stats->callbacks)) check when enable, or
->> the flag is already set.
->>
->> Signed-off-by: Chengming Zhou <zhouchengming@bytedance.com>
-> 
-> Acked-by: Tejun Heo <tj@kernel.org>
-> 
-> It'd be useful to explicitly illustrate the buggy behavior in the
-> description (e.g. if you do X, Y and then Z, then X incorrectly loses
+From: Chengming Zhou <zhouchengming@bytedance.com>
 
-Yes, I will add below buggy behavior in the next version:
+We need to set QUEUE_FLAG_STATS for two cases:
+1. blk_stat_enable_accounting()
+2. blk_stat_add_callback()
 
-This bug can be reproduced as below on kernel without BLK_DEV_THROTTLING
-(since it will unconditionally enable accounting, see the second patch).
+So we should clear it only when ((q->stats->accounting == 0) &&
+list_empty(&q->stats->callbacks)).
 
-# cat /sys/block/sr0/queue/scheduler
-none mq-deadline [bfq]
+blk_stat_disable_accounting() only check if q->stats->accounting
+is 0 before clear the flag, this patch fix it.
 
-# cat /sys/kernel/debug/block/sr0/state
-SAME_COMP|IO_STAT|INIT_DONE|STATS|REGISTERED|NOWAIT|30
+Also add list_empty(&q->stats->callbacks)) check when enable, or
+the flag is already set.
 
-# echo none > /sys/block/sr0/queue/scheduler
+The bug can be reproduced on kernel without BLK_DEV_THROTTLING
+(since it unconditionally enable accounting, see the next patch).
 
-# cat /sys/kernel/debug/block/sr0/state
-SAME_COMP|IO_STAT|INIT_DONE|REGISTERED|NOWAIT
+  # cat /sys/block/sr0/queue/scheduler
+  none mq-deadline [bfq]
 
-# cat /sys/block/sr0/queue/wbt_lat_usec
-75000
+  # cat /sys/kernel/debug/block/sr0/state
+  SAME_COMP|IO_STAT|INIT_DONE|STATS|REGISTERED|NOWAIT|30
 
-We can see that after changing elevator from "bfq" to "none", "STATS" flag
-is lost even though WBT callback still need it.
+  # echo none > /sys/block/sr0/queue/scheduler
 
+  # cat /sys/kernel/debug/block/sr0/state
+  SAME_COMP|IO_STAT|INIT_DONE|REGISTERED|NOWAIT
 
-> accounting). Can you also please add the appropriate stable cc?
+  # cat /sys/block/sr0/queue/wbt_lat_usec
+  75000
 
-Ok, will do.
+We can see that after changing elevator from "bfq" to "none",
+"STATS" flag is lost even though WBT callback still need it.
 
-Thanks.
+Fixes: 68497092bde9 ("block: make queue stat accounting a reference")
+Cc: <stable@vger.kernel.org> # v5.17+
+Signed-off-by: Chengming Zhou <zhouchengming@bytedance.com>
+Acked-by: Tejun Heo <tj@kernel.org>
+---
+ block/blk-stat.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-> 
-> Thanks.
-> 
+diff --git a/block/blk-stat.c b/block/blk-stat.c
+index 74a1a8c32d86..bc7e0ed81642 100644
+--- a/block/blk-stat.c
++++ b/block/blk-stat.c
+@@ -190,7 +190,7 @@ void blk_stat_disable_accounting(struct request_queue *q)
+ 	unsigned long flags;
+ 
+ 	spin_lock_irqsave(&q->stats->lock, flags);
+-	if (!--q->stats->accounting)
++	if (!--q->stats->accounting && list_empty(&q->stats->callbacks))
+ 		blk_queue_flag_clear(QUEUE_FLAG_STATS, q);
+ 	spin_unlock_irqrestore(&q->stats->lock, flags);
+ }
+@@ -201,7 +201,7 @@ void blk_stat_enable_accounting(struct request_queue *q)
+ 	unsigned long flags;
+ 
+ 	spin_lock_irqsave(&q->stats->lock, flags);
+-	if (!q->stats->accounting++)
++	if (!q->stats->accounting++ && list_empty(&q->stats->callbacks))
+ 		blk_queue_flag_set(QUEUE_FLAG_STATS, q);
+ 	spin_unlock_irqrestore(&q->stats->lock, flags);
+ }
+-- 
+2.39.2
+
