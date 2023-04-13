@@ -1,7 +1,7 @@
-From: Waiman Long <longman@redhat.com>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 Subject: Re: [RFC PATCH 0/5] cgroup/cpuset: A new "isolcpus" paritition
-Date: Wed, 12 Apr 2023 20:55:55 -0400
-Message-ID: <1b8d9128-d076-7d37-767d-11d6af314662@redhat.com>
+Date: Wed, 12 Apr 2023 15:17:44 -1000
+Message-ID: <ZDdYOI9LB87ra2t_@slm.duckdns.org>
 References: <20230412153758.3088111-1-longman@redhat.com>
  <ZDcGVebCpyktxyWh@slm.duckdns.org>
  <1ce6a073-e573-0c32-c3d8-f67f3d389a28@redhat.com>
@@ -10,61 +10,63 @@ References: <20230412153758.3088111-1-longman@redhat.com>
  <ZDdG1K0kTETZMTCu@slm.duckdns.org>
  <cd4c3f92-4a01-e636-7390-8c6a3d0cfe6c@redhat.com>
  <ZDdNy2NAfj2_1CbW@slm.duckdns.org>
+ <1b8d9128-d076-7d37-767d-11d6af314662@redhat.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-Return-path: <linux-doc-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1681347360;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=hRJHLQRX436psVY4dEg5oBAGIW2fFsn/wgOTxNFdgEo=;
-        b=NgRsBlDxw6tHXbbdP5ueghd1h7Ed8t62lD6HFOmt6YPDljhjkYbMRRbb7CY4a/O+/vovTY
-        vPcbruKUG2ekiceAcHOFuVt3XMQbmofo0rgTigRa/B3oe8PdL+B8B2ffENFNUYY4YHFu7A
-        FhkdfqmSJ9UZfOV9eocIs43XgvGq6rw=
-Content-Language: en-US
-In-Reply-To: <ZDdNy2NAfj2_1CbW@slm.duckdns.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20221208; t=1681348667; x=1683940667;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:sender:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=aicWCnIBboKYj1UbmrIfysKq+w2Fw/6QRrG0gA3j6sY=;
+        b=gYjjpD3JLH90EnGPJ9RcpcnDr0n4+5DTGSITYkHo/YynUUF6qZzpx0oGXdeF8F7Xjg
+         AfXieG0P88XI6Nzkz1BFcevqb5GLWXPeccE5IJJamDBYFjnkb7Axu61u/6VjRPGr4EPZ
+         SpaOxhK7cWQeH9785nGjVxI3aDbmLIPcUpoGn6/YUyrNDAxcPayfy632I/kFjQlNGZ9h
+         wQ884KystVfhyecLHxVtIzMtMN6TwQ/C3+wN5tyZTC9lEbWTt3mZCbzrt1ix7k9RQlaI
+         em+DSJHooOoW+JhPsh1zOeS/ubqfeFOiyJp3P+gqlAPWLyl8zClupd7ddpGci462z9Dy
+         Uz6w==
+Sender: Tejun Heo <htejun-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <1b8d9128-d076-7d37-767d-11d6af314662-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="iso-8859-1"; format="flowed"
-To: Tejun Heo <tj@kernel.org>
-Cc: Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, Jonathan Corbet <corbet@lwn.net>, Shuah Khan <shuah@kernel.org>, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kselftest@vger.kernel.org, Juri Lelli <juri.lelli@redhat.com>, Valentin Schneider <vschneid@redhat.com>, Frederic Weisbecker <frederic@kernel.org>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Cc: Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Jonathan Corbet <corbet-T1hC0tSOHrs@public.gmane.org>, Shuah Khan <shuah-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kselftest-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Juri Lelli <juri.lelli-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Valentin Schneider <vschneid-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Frederic Weisbecker <frederic-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 
+Hello, Waiman.
 
-On 4/12/23 20:33, Tejun Heo wrote:
-> Hello,
->
-> On Wed, Apr 12, 2023 at 08:26:03PM -0400, Waiman Long wrote:
->>  =C2=A0 If the "cpuset.cpus.isolated" isn't set, the existing rules appl=
-ies. If it
->> is set, the new rule will be used.
->>
->> Does that look reasonable to you?
-> Sounds a bit contrived. Does it need to be something defined in the root
-> cgroup?
+On Wed, Apr 12, 2023 at 08:55:55PM -0400, Waiman Long wrote:
+> > Sounds a bit contrived. Does it need to be something defined in the root
+> > cgroup?
+> 
+> Yes, because we need to take away the isolated CPUs from the effective cpus
+> of the root cgroup. So it needs to start from the root. That is also why we
+> have the partition rule that the parent of a partition has to be a partition
+> root itself. With the new scheme, we don't need a special cgroup to hold the
 
-Yes, because we need to take away the isolated CPUs from the effective=20
-cpus of the root cgroup. So it needs to start from the root. That is=20
-also why we have the partition rule that the parent of a partition has=20
-to be a partition root itself. With the new scheme, we don't need a=20
-special cgroup to hold the isolated CPUs. The new root cgroup file will=20
-be enough to inform the system what CPUs will have to be isolated.
+I'm following. The root is already a partition root and the cgroupfs control
+knobs are owned by the parent, so the root cgroup would own the first level
+cgroups' cpuset.cpus.reserve knobs. If the root cgroup wants to assign some
+CPUs exclusively to a first level cgroup, it can then set that cgroup's
+reserve knob accordingly (or maybe the better name is
+cpuset.cpus.exclusive), which will take those CPUs out of the root cgroup's
+partition and give them to the first level cgroup. The first level cgroup
+then is free to do whatever with those CPUs that now belong exclusively to
+the cgroup subtree.
 
-My current thinking is that the root's "cpuset.cpus.isolated" will start=20
-with whatever have been set in the "isolcpus" or "nohz_full" boot=20
-command line and can be extended from there but not shrank below that as=20
-there can be additional isolation attributes with those isolated CPUs.
+> isolated CPUs. The new root cgroup file will be enough to inform the system
+> what CPUs will have to be isolated.
+> 
+> My current thinking is that the root's "cpuset.cpus.isolated" will start
+> with whatever have been set in the "isolcpus" or "nohz_full" boot command
+> line and can be extended from there but not shrank below that as there can
+> be additional isolation attributes with those isolated CPUs.
 
-Cheers,
-Longman
+I'm not sure we wanna tie with those automatically. I think it'd be
+confusing than helpful.
 
-> The only thing that's needed is that a cgroup needs to claim CPUs
-> exclusively without using them, right? Let's say we add a new interface
-> file, say, cpuset.cpus.reserve which is always exclusive and can be consu=
-med
-> by children whichever way they want, wouldn't that be sufficient? Then,
-> there would be nothing to describe in the root cgroup.
->
-> Thanks.
->
+Thanks.
 
+-- 
+tejun
