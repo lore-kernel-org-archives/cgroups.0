@@ -1,218 +1,85 @@
-From: Zi Yan <ziy@nvidia.com>
-Subject: Re: [PATCH v3 6/7] mm: truncate: split huge page cache page to a
- non-zero order if possible.
-Date: Mon, 17 Apr 2023 11:20:31 -0400
-Message-ID: <0AC0520E-1BD2-497E-A7ED-05394400BFC9@nvidia.com>
+From: Zi Yan <ziy-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH v3 0/7] Split a folio to any lower order folios
+Date: Mon, 17 Apr 2023 15:26:58 -0400
+Message-ID: <8B784026-7C90-427D-91E2-2D551FA576D7@nvidia.com>
 References: <20230403201839.4097845-1-zi.yan@sent.com>
- <20230403201839.4097845-7-zi.yan@sent.com>
- <9dd96da-efa2-5123-20d4-4992136ef3ad@google.com>
+ <20230404144727.e613116684dbd65a4b4745c1@linux-foundation.org>
+ <49ee481e-452f-61c7-2da5-28de2cf3de2@google.com>
+ <b37d1876-0a74-aa52-7911-e6f78280caaa@redhat.com>
 Mime-Version: 1.0
 Content-Type: multipart/signed;
- boundary="=_MailMate_2F2466C6-2327-4132-B79B-A943398CFB0E_=";
+ boundary="=_MailMate_6604F9BF-E972-4832-8F42-69193B2F72F2_=";
  micalg=pgp-sha512; protocol="application/pgp-signature"
-Return-path: <linux-fsdevel-owner@vger.kernel.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
  s=selector2;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=7efQR0ImsGvZWg1L4YVf+xYfL28MtoAmV611fey20v0=;
- b=TPnV8L9cM++HWhUKVSVdzEETQdShosjHLSjOTEN/Cqhf17SJqALKRuA/cTu6d8Sd3VKjyCkU3jF9iMoMbSqMtgrSMgyKguMCAqw8Z2r5REFKPZS590OoFOBJmXf/cp3LrVnQrWv2gPwcH1OfhMdyoDahmRwTzT45704NeYvQg2sA+JD93qbVt6d3WWET58B9+9xRbj7LSN5EuhyfGykX5q//Firo+vYO5JnaMW4/+wxJ4VehrsxAWDCzAGBQTkUdTqbCdFk0p+/TfRV9iQBVkDK//wcHx91MRv23XPqtTa455/FOX5N23DSWZ5Fb1yszfilt4yrbZE4J70tNJtE2EA==
-In-Reply-To: <9dd96da-efa2-5123-20d4-4992136ef3ad@google.com>
+ bh=N8hM0uY7iViOju5/VTvhwFko9AWPOITOTUCQTTPzuug=;
+ b=DUE1V4GegSFA4ojJchXfwWO5OedQje25KsXcuoUVU5MFSHTM7bBornI96vvjgD09pxqRjEAFxID989NmD3rIxtnNY+2pA4lJuA2oeR5x5QEjsgRl3R7llVDmmHdKMMfnfr/SyV62Dxuhz1FLqsQAdo7ZrbMn5sCgC9nbSIFV+Lry3oHNXa6dTu/60Y3eIx5u0bacbPz06FaN0usPl3Fasnenc5cicQ6vCDV9DpK+nPMYik504vxgwExuS7oD0/Bx6NgnW0pUiqdozMhSJ8PWZ5sU7snS3grS/1RLcJdr5XN6LUidpXLzv0jl7zuURcwZ9a4psZyZFBaqTYrLb/eo8w==
+In-Reply-To: <b37d1876-0a74-aa52-7911-e6f78280caaa-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-To: Hugh Dickins <hughd@google.com>
-Cc: "Matthew Wilcox (Oracle)" <willy@infradead.org>, Yang Shi <shy828301@gmail.com>, Yu Zhao <yuzhao@google.com>, linux-mm@kvack.org, "Kirill A . Shutemov" <kirill.shutemov@linux.intel.com>, Ryan Roberts <ryan.roberts@arm.com>, =?utf-8?q?Michal_Koutn=C3=BD?= <mkoutny@suse.com>, Roman Gushchin <roman.gushchin@linux.dev>, Zach O'Keefe <zokeefe@google.com>, Andrew Morton <akpm@linux-foundation.org>, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-kselftest@vger.kernel.org
+To: David Hildenbrand <david-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Cc: Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, "Matthew Wilcox (Oracle)" <willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Yang Shi <shy828301-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Yu Zhao <yuzhao-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, "Kirill A . Shutemov" <kirill.shutemov-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, Ryan Roberts <ryan.roberts-5wv7dgnIgG8@public.gmane.org>, =?utf-8?q?Michal_Koutn=C3=BD?= <mkoutny-IBi9RG/b67k@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Zach O'Keefe <zokeefe-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kselftest-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
---=_MailMate_2F2466C6-2327-4132-B79B-A943398CFB0E_=
+--=_MailMate_6604F9BF-E972-4832-8F42-69193B2F72F2_=
 Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
 
-On 16 Apr 2023, at 15:44, Hugh Dickins wrote:
+On 17 Apr 2023, at 10:20, David Hildenbrand wrote:
 
-> On Mon, 3 Apr 2023, Zi Yan wrote:
->
->> From: Zi Yan <ziy@nvidia.com>
+> On 16.04.23 20:11, Hugh Dickins wrote:
+>> On Tue, 4 Apr 2023, Andrew Morton wrote:
+>>> On Mon,  3 Apr 2023 16:18:32 -0400 Zi Yan <zi.yan-vRdzynncJC4@public.gmane.org> wrote:
+>>>
+>>>> File folio supports any order and people would like to support flexi=
+ble orders
+>>>> for anonymous folio[1] too. Currently, split_huge_page() only splits=
+ a huge
+>>>> page to order-0 pages, but splitting to orders higher than 0 is also=
+ useful.
+>>>> This patchset adds support for splitting a huge page to any lower or=
+der pages
+>>>> and uses it during file folio truncate operations.
+>>>
+>>> This series (and its v1 & v2) don't appear to have much in the way of=
+
+>>> detailed review.  As it's at v3 and has been fairly stable I'll queue=
+
+>>> it up for some testing now, but I do ask that some reviewers go throu=
+gh
+>>> it please.
 >>
->> To minimize the number of pages after a huge page truncation, we do no=
-t
->> need to split it all the way down to order-0. The huge page has at mos=
-t
->> three parts, the part before offset, the part to be truncated, the par=
-t
->> remaining at the end. Find the greatest common divisor of them to
->> calculate the new page order from it, so we can split the huge
->> page to this order and keep the remaining pages as large and as few as=
-
->> possible.
+>> Andrew, please don't let this series drift into 6.4-rc1.
 >>
->> Signed-off-by: Zi Yan <ziy@nvidia.com>
->> ---
->>  mm/truncate.c | 21 +++++++++++++++++++--
->>  1 file changed, 19 insertions(+), 2 deletions(-)
+>> I've seen a bug or two (I'll point out in response to those patches),
+>> but overall I don't see what the justification for the series is: done=
+
+>> because it could be done, it seems to me, but liable to add surprises.=
+
 >>
->> diff --git a/mm/truncate.c b/mm/truncate.c
->> index 86de31ed4d32..817efd5e94b4 100644
->> --- a/mm/truncate.c
->> +++ b/mm/truncate.c
->> @@ -22,6 +22,7 @@
->>  #include <linux/buffer_head.h>	/* grr. try_to_release_page */
->>  #include <linux/shmem_fs.h>
->>  #include <linux/rmap.h>
->> +#include <linux/gcd.h>
+>> The cover letter says "splitting to orders higher than 0 is also usefu=
+l",
+>> but it's not clear why; and the infrastructure provided seems unsuited=
+
+>> to the one use provided - I'll say more on that truncation patch.
 >
-> Really?
->
->>  #include "internal.h"
->>
->>  /*
->> @@ -211,7 +212,8 @@ int truncate_inode_folio(struct address_space *map=
-ping, struct folio *folio)
->>  bool truncate_inode_partial_folio(struct folio *folio, loff_t start, =
-loff_t end)
->>  {
->>  	loff_t pos =3D folio_pos(folio);
->> -	unsigned int offset, length;
->> +	unsigned int offset, length, remaining;
->> +	unsigned int new_order =3D folio_order(folio);
->>
->>  	if (pos < start)
->>  		offset =3D start - pos;
->> @@ -222,6 +224,7 @@ bool truncate_inode_partial_folio(struct folio *fo=
-lio, loff_t start, loff_t end)
->>  		length =3D length - offset;
->>  	else
->>  		length =3D end + 1 - pos - offset;
->> +	remaining =3D folio_size(folio) - offset - length;
->>
->>  	folio_wait_writeback(folio);
->>  	if (length =3D=3D folio_size(folio)) {
->> @@ -236,11 +239,25 @@ bool truncate_inode_partial_folio(struct folio *=
-folio, loff_t start, loff_t end)
->>  	 */
->>  	folio_zero_range(folio, offset, length);
->>
->> +	/*
->> +	 * Use the greatest common divisor of offset, length, and remaining
->> +	 * as the smallest page size and compute the new order from it. So w=
-e
->> +	 * can truncate a subpage as large as possible. Round up gcd to
->> +	 * PAGE_SIZE, otherwise ilog2 can give -1 when gcd/PAGE_SIZE is 0.
->> +	 */
->> +	new_order =3D ilog2(round_up(gcd(gcd(offset, length), remaining),
->> +				   PAGE_SIZE) / PAGE_SIZE);
->
-> Gosh.  In mm/readahead.c I can see "order =3D __ffs(index)",
-> and I think something along those lines would be more appropriate here.=
+> I agree. Maybe this patch set is something we want to have in the futur=
+e once actual consumers that can benefit are in place, such that we can s=
+how actual performance numbers with/without.
+
+Ryan is working on large folio for anonymous pages and has shown promisin=
+g performance
+results[1]. This patchset would avoid getting base pages during split if =
+possible.
 
 >
-> But, if there's any value at all to choosing intermediate orders here i=
-n
-> truncation, I don't think choosing a single order is the right approach=
- -
-> more easily implemented, yes, but is it worth doing?
->
-> What you'd actually want (if anything) is to choose the largest orders
-> possible, with smaller and smaller orders filling in the rest (I expect=
+> Until then, "365 insertions(+), 68 deletions(-)" certainly needs some r=
+easonable motivation.
 
-> there's a technical name for this, but I don't remember - bin packing
-> is something else, I think).
->
-> As this code stands, truncate a 2M huge page at 1M and you get two 1M
-> pieces (one then discarded) - nice; but truncate it at 1M+1 and you get=
+Come on. 225 out of 365 insertions are self tests code. We need motivatio=
+n to add
+testing code?
 
-> lots of order 2 (forced up from 1) pieces.  Seems weird, and not worth
-> the effort.
-
-The approach I am adding here is the simplest way of splitting a folio
-and trying to get >0 order folios after the split.
-
-Yes, I agree that using "__ffs(index)" can create more >0 order folios, b=
-ut
-it comes with either more runtime overheads or more code changes. Like
-your "1MB + 1" page split example, using "__ffs(index)", ideally, you wil=
-l
-split 2MB into 2 1MBs, then 1MB into 2 512KBs, ..., 8KB into 2 4KBs and
-at the end of the day, we will have 1MB, 512KB, ..., 8KB each and two 2 4=
-KBs,
-maximizing the number of >0 order folios. But what is the cost?
-
-1. To minimizing code changes, we then need to call
-split_huge_page_to_list_to_order() 9 times from new_order=3D8 to new_orde=
-r=3D0.
-Since each split needs to unmap and remap the target folio, we shall see
-9 TLB shutdowns. I am not sure it is worth the cost.
-
-2. To get rid of the unmap and remap overheads, we probably can unmap
-the folio, then do all the 9 splits, then remap all the split pages. But
-this would make split_huge_page() a lot more complicated and I am not sur=
-e
-a good way of passing split order information and the corresponding
-to-be-split subpages. Do we need a dynamic list to store them, making
-new memory allocations a prerequisite of split_huge_page()? Maybe we can
-encode in the split information in two ints? In the first one,
-each bit tells which order to split the page (like order=3D__ffs(index))
-and in the second one, each bit tells which subpage to split next (0 mean=
-s
-the left subpage, 1 means the right subpage). So your "1MB + 1" page spli=
-t
-will be encoded as 0b111111111 (first int), 0b1000000 (second int and
-it has 1 fewer bit, since first split does not need to know which subpage=
-
-to split).
-
-What do you think? If you have a better idea, I am all ears. And if you
-are willing to help me review the more complicated code changes, I am
-more than happy to implement it in the next version. :)
-
-Thank you for your comments. They are very helpful!
-
->
-> Hugh
->
->> +
->> +	/* order-1 THP not supported, downgrade to order-0 */
->> +	if (new_order =3D=3D 1)
->> +		new_order =3D 0;
->> +
->> +
->>  	if (folio_has_private(folio))
->>  		folio_invalidate(folio, offset, length);
->>  	if (!folio_test_large(folio))
->>  		return true;
->> -	if (split_folio(folio) =3D=3D 0)
->> +	if (split_huge_page_to_list_to_order(&folio->page, NULL, new_order) =
-=3D=3D 0)
->>  		return true;
->>  	if (folio_test_dirty(folio))
->>  		return false;
->> -- =
-
->> 2.39.2
-
-
---
-Best Regards,
-Yan, Zi
-
---=_MailMate_2F2466C6-2327-4132-B79B-A943398CFB0E_=
-Content-Description: OpenPGP digital signature
-Content-Disposition: attachment; filename=signature.asc
-Content-Type: application/pgp-signature; name=signature.asc
-
------BEGIN PGP SIGNATURE-----
-
-iQJDBAEBCgAtFiEE6rR4j8RuQ2XmaZol4n+egRQHKFQFAmQ9Y78PHHppeUBudmlk
-aWEuY29tAAoJEOJ/noEUByhUltQP/iHzaohQhNHX3dFij8oFo03N5i6YzNvIyDOR
-iRse4krUQpMRSzHiaowDE+OC4cNDXfhKBiVFjxTn/LjTLX2ZAy0v6zjvGykkvP1k
-OzT7aBjGUzPzH7HrUM+PnxyPSO3S4ipTpMIEidv/mXplOSI34YQjmh5SWQCiJfXk
-fuUPnnrY81hicDhY9Sz63pM/Ne7ryngXvCnGQYxY6SZnie4odCGpT+Pmyv/igmxG
-OtxkKgTtb/nSI6ZEFestcReUG1+ckLxSECRx/OHb3KKlxz3XnGIBwXFJ1S19R5xr
-MzX9/nc0xqWRMAvpmhKhrtEFZ8P5dPNGG2uSPo1DMz9hP3lSp3Q+xjez6bVsgxig
-2zEtzLX0fCDIW2VG8cbVHNlpo8NLGJpAkqpVMWpvFs6jIlHF1xTgC1Zg3FPBBX5b
-+X/c50H6MRGTosl7bR6uI2d8uGSs2pXYu8t1cgnllOej6We1/I7DtGHFi/ncdBP1
-1FihjzkR1911bmlOTzP/aiTopRH8yziQdnNCECDBku3HSyUIQ0nDE9cQt2RGbGiY
-TrjM1+zBMgO7ZXXES8kepDl2Ly1W8QFU08GSJ/RdTQ05eDxL5zkW8H4mQh6v5RSY
-ZeD5gYdbA/1LWupJ5F/u4K3Ugxg5Y+SLuq9xY7gSKLhwBjHAj3NS3v+GjaTJ/b14
-sFRISmzO
-=hjyY
------END PGP SIGNATURE-----
-
---=_MailMate_2F2466C6-2327-4132-B79B-A943398CFB0E_=--
+[1] https://lore.kernel.org/linux-mm/20230414130303.2345383-1-ryan.robert=
+s@arm.com/
+--=_MailMate_6604F9BF-E972-4832-8F42-69193B2F72F2_=--
