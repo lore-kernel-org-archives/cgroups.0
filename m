@@ -1,77 +1,64 @@
-From: Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH mm-unstable RFC 0/5] cgroup: eliminate atomic rstat
-Date: Mon, 17 Apr 2023 04:54:52 -0700
-Message-ID: <CAJD7tkZjoWMXFSgBwAtXao35f3Gmmp9cEordvFAPX_EegC_o1A@mail.gmail.com>
-References: <20230403220337.443510-1-yosryahmed@google.com>
+From: David Hildenbrand <david@redhat.com>
+Subject: Re: [PATCH v3 0/7] Split a folio to any lower order folios
+Date: Mon, 17 Apr 2023 16:20:52 +0200
+Message-ID: <b37d1876-0a74-aa52-7911-e6f78280caaa@redhat.com>
+References: <20230403201839.4097845-1-zi.yan@sent.com>
+ <20230404144727.e613116684dbd65a4b4745c1@linux-foundation.org>
+ <49ee481e-452f-61c7-2da5-28de2cf3de2@google.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20221208; t=1681732535; x=1684324535;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=hAfhUM23NLqVvA/6Hxfd6Xgc8oePCVqguK6TK2m4xx0=;
-        b=YOBGao3Gh4rsypVOuHoE1ytvu3v+zzuIisiDjA+pAPLUyn2lc4W2y580wM0QGqDuBK
-         t2E4fbgVIhzJkdNrXON9Fk4ppV/G0uJJY87Mggs8FmMDwvTtrBjmQayh9K/oWmrRXfDT
-         w3OPKIPguHHmcs76WPPVys//oHx3UrhionPHUQHviOENI+JaZF1M/wpgoGXe0OqwfSVJ
-         amMjGmlYHvk2HrrkdEj7F2j2V2hoSumB9UuA9pw4ITvpp7IPm19MV3XM8v0gk3ZoHHlA
-         4y71YZlBrpzkXhBU69R8xFtV1gn1I/z2Ufb4CZ7Dh1rW6T7kjFc6InE6Cpgq/99EkcVp
-         jAwg==
-In-Reply-To: <20230403220337.443510-1-yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-fsdevel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1681741257;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=hXXWTVEI1mMsVSpGycpPWe1J+aRrdeZCdqy7/mR/vH0=;
+        b=Mbe9gMqv3KDIjrZYVgpGaok4s3fIhIVlR8W8qEkToGyFMP2DDwIU+vDkJBhAn0gn0jZJuZ
+        lLtoPIRqbCFjGKpAhZjbjoEhqeffP/gLfx/CkdnsI6ZIC49TaIndxSMrDea4hGz4FiuoED
+        f7wHMGfKJIBTn6kq4X9+1kEyyDa2R3c=
+Content-Language: en-US
+In-Reply-To: <49ee481e-452f-61c7-2da5-28de2cf3de2@google.com>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="windows-1252"
-To: Alexander Viro <viro-RmSDqhL/yNMiFSDQTTA3OLVCufUGDwFn@public.gmane.org>, Christian Brauner <brauner-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
-Cc: linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
+Content-Type: text/plain; charset="us-ascii"; format="flowed"
+To: Hugh Dickins <hughd@google.com>, Andrew Morton <akpm@linux-foundation.org>
+Cc: Zi Yan <ziy@nvidia.com>, Zi Yan <zi.yan@sent.com>, "Matthew Wilcox (Oracle)" <willy@infradead.org>, Yang Shi <shy828301@gmail.com>, Yu Zhao <yuzhao@google.com>, linux-mm@kvack.org, "Kirill A . Shutemov" <kirill.shutemov@linux.intel.com>, Ryan Roberts <ryan.roberts@arm.com>, =?UTF-8?Q?Michal_Koutn=c3=bd?= <mkoutny@suse.com>, Roman Gushchin <roman.gushchin@linux.dev>, Zach O'Keefe <zokeefe@google.com>, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-kselftest@vger.kernel.org
 
-On Mon, Apr 3, 2023 at 3:03=E2=80=AFPM Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org> =
-wrote:
->
-> A previous patch series ([1] currently in mm-unstable) changed most
-> atomic rstat flushing contexts to become non-atomic. This was done to
-> avoid an expensive operation that scales with # cgroups and # cpus to
-> happen with irqs disabled and scheduling not permitted. There were two
-> remaining atomic flushing contexts after that series. This series tries
-> to eliminate them as well, eliminating atomic rstat flushing completely.
->
-> The two remaining atomic flushing contexts are:
-> (a) wb_over_bg_thresh()->mem_cgroup_wb_stats()
-> (b) mem_cgroup_threshold()->mem_cgroup_usage()
->
-> For (a), flushing needs to be atomic as wb_writeback() calls
-> wb_over_bg_thresh() with a spinlock held. However, it seems like the
-> call to wb_over_bg_thresh() doesn't need to be protected by that
-> spinlock, so this series proposes a refactoring that moves the call
-> outside the lock criticial section and makes the stats flushing
-> in mem_cgroup_wb_stats() non-atomic.
->
-> For (b), flushing needs to be atomic as mem_cgroup_threshold() is called
-> with irqs disabled. We only flush the stats when calculating the root
-> usage, as it is approximated as the sum of some memcg stats (file, anon,
-> and optionally swap) instead of the conventional page counter. This
-> series proposes changing this calculation to use the global stats
-> instead, eliminating the need for a memcg stat flush.
->
-> After these 2 contexts are eliminated, we no longer need
-> mem_cgroup_flush_stats_atomic() or cgroup_rstat_flush_atomic(). We can
-> remove them and simplify the code.
->
-> Yosry Ahmed (5):
->   writeback: move wb_over_bg_thresh() call outside lock section
->   memcg: flush stats non-atomically in mem_cgroup_wb_stats()
->   memcg: calculate root usage from global state
->   memcg: remove mem_cgroup_flush_stats_atomic()
->   cgroup: remove cgroup_rstat_flush_atomic()
->
->  fs/fs-writeback.c          | 16 +++++++----
->  include/linux/cgroup.h     |  1 -
->  include/linux/memcontrol.h |  5 ----
->  kernel/cgroup/rstat.c      | 26 ++++--------------
->  mm/memcontrol.c            | 54 ++++++++------------------------------
->  5 files changed, 27 insertions(+), 75 deletions(-)
->
-> --
-> 2.40.0.348.gf938b09366-goog
->
+On 16.04.23 20:11, Hugh Dickins wrote:
+> On Tue, 4 Apr 2023, Andrew Morton wrote:
+>> On Mon,  3 Apr 2023 16:18:32 -0400 Zi Yan <zi.yan@sent.com> wrote:
+>>
+>>> File folio supports any order and people would like to support flexible orders
+>>> for anonymous folio[1] too. Currently, split_huge_page() only splits a huge
+>>> page to order-0 pages, but splitting to orders higher than 0 is also useful.
+>>> This patchset adds support for splitting a huge page to any lower order pages
+>>> and uses it during file folio truncate operations.
+>>
+>> This series (and its v1 & v2) don't appear to have much in the way of
+>> detailed review.  As it's at v3 and has been fairly stable I'll queue
+>> it up for some testing now, but I do ask that some reviewers go through
+>> it please.
+> 
+> Andrew, please don't let this series drift into 6.4-rc1.
+> 
+> I've seen a bug or two (I'll point out in response to those patches),
+> but overall I don't see what the justification for the series is: done
+> because it could be done, it seems to me, but liable to add surprises.
+> 
+> The cover letter says "splitting to orders higher than 0 is also useful",
+> but it's not clear why; and the infrastructure provided seems unsuited
+> to the one use provided - I'll say more on that truncation patch.
 
-Any thoughts on this series, anyone? :)
+I agree. Maybe this patch set is something we want to have in the future 
+once actual consumers that can benefit are in place, such that we can 
+show actual performance numbers with/without.
+
+Until then, "365 insertions(+), 68 deletions(-)" certainly needs some 
+reasonable motivation.
+
+-- 
+Thanks,
+
+David / dhildenb
+
