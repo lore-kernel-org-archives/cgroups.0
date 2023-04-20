@@ -1,75 +1,117 @@
-From: Juri Lelli <juri.lelli-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH 0/6] sched/deadline: cpuset: Rework DEADLINE bandwidth
- restoration
-Date: Thu, 20 Apr 2023 16:15:33 +0200
-Message-ID: <ZEFJBXrXWXKH0xlc@localhost.localdomain>
-References: <20230329125558.255239-1-juri.lelli@redhat.com>
- <20230418141127.zbvsf7lwk27zvipt@airbuntu>
- <eda74c03-bde2-bb51-2b0d-df2097215696@redhat.com>
+From: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH mm-unstable RFC 1/5] writeback: move wb_over_bg_thresh()
+ call outside lock section
+Date: Thu, 20 Apr 2023 11:53:21 -0700
+Message-ID: <CALvZod5h5G9YNu8d9fAOL5eXie5iM3urw9QgD=vucBdCMAQnxA@mail.gmail.com>
+References: <20230403220337.443510-1-yosryahmed@google.com> <20230403220337.443510-2-yosryahmed@google.com>
 Mime-Version: 1.0
+Content-Transfer-Encoding: quoted-printable
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1682000139;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=AM2iS5p+M5vdfcO5gATf9U1kgTLr8hfoHFhkOm5c9I4=;
-        b=YWRtaXy/S+NnBFUZ3aDITa4WIf8ttwZWTKMsJjgj4Jk9t8Z8YmaR+UdOTO1ErbyeQM1kCt
-        nudSlN5y2Qpiv8jzlaCLZ9CKAwiqbGtzw9X8lB/XP60kOIz82bvCx8HURqDOcZxjNFLhZT
-        rF9cAF2KEMXL13P8OKy9o4W2rfwpo44=
-Content-Disposition: inline
-In-Reply-To: <eda74c03-bde2-bb51-2b0d-df2097215696-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20221208; t=1682016812; x=1684608812;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=4sYlJSAfMy5ZKFxBnqgIBVbqBgUxlBgjbZy6mx61ZB0=;
+        b=wPs26Moc03UYXJfZwMIlURgsn2RCjMAbb7a+Kr6qiZim9sSPBSM+ZdRg4TYPr4vYxC
+         QmCGtQFf+XPuri/obaV1duh6RAYA1qF/ZHAWZew0TZE7gE7UZb675H1CuZBgHJZA9Ze3
+         JQDW57Ph2p1gegrBk5yb+/Cugi0waHR4zf/tF/KJuRI6aDUUzOySpS2PNB/mXKSyqIaj
+         D6omDunMmwh7KE2tnbKxW3RSmLqgYQtibyeHI+ZrrYfdfCGk4cwgkrE06btrC9PAEVdR
+         Ph0y7LUZGeuxMPJOCKnLmZqnjGOPUXbAkl8GvlEHQuAkYggnt45ueFJhkm469/iP9wO1
+         wwEA==
+In-Reply-To: <20230403220337.443510-2-yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Cc: Qais Yousef <qyousef-wp2msK0BRk8tq7phqP6ubQ@public.gmane.org>, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Ingo Molnar <mingo-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Hao Luo <haoluo-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Dietmar Eggemann <dietmar.eggemann-5wv7dgnIgG8@public.gmane.org>, Steven Rostedt <rostedt-nx8X9YLhiw1AfugRpC6u6w@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, luca.abeni-5rdYK369eBLQB0XuIGIEkQ@public.gmane.org, claudio-YOzL5CV4y4YG1A2ADO40+w@public.gmane.org, tommaso.cucinotta-5rdYK369eBLQB0XuIGIEkQ@public.gmane.org, bristot-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, mathieu.poirier-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Vincent Guittot <vincent.guittot-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, Wei Wang <wvw-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Rick Yiu <rickyiu-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Quentin Perret <qperret-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Heiko Carstens <hca-tEXmvtCZX7AybS5Ee8rs3A@public.gmane.org>, Vasily Gorbik <gor-tEXmvtCZX7AybS5Ee8rs3A@public.gmane.org>, Alexander Gordeev <agordeev-tEXmvtCZX7BfmgfxC/sS/w@public.gmane.org>
+Content-Type: text/plain; charset="windows-1252"
+To: Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Jan Kara <jack-AlSwsSmVLrQ@public.gmane.org>, Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>
+Cc: Alexander Viro <viro-RmSDqhL/yNMiFSDQTTA3OLVCufUGDwFn@public.gmane.org>, Christian Brauner <brauner-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
 
-On 18/04/23 10:31, Waiman Long wrote:
-> On 4/18/23 10:11, Qais Yousef wrote:
-> > On 03/29/23 14:55, Juri Lelli wrote:
-> > > Qais reported [1] that iterating over all tasks when rebuilding root
-> > > domains for finding out which ones are DEADLINE and need their bandwidth
-> > > correctly restored on such root domains can be a costly operation (10+
-> > > ms delays on suspend-resume). He proposed we skip rebuilding root
-> > > domains for certain operations, but that approach seemed arch specific
-> > > and possibly prone to errors, as paths that ultimately trigger a rebuild
-> > > might be quite convoluted (thanks Qais for spending time on this!).
-> > > 
-> > > To fix the problem
-> > > 
-> > >   01/06 - Rename functions deadline with DEADLINE accounting (cleanup
-> > >           suggested by Qais) - no functional change
-> > >   02/06 - Bring back cpuset_mutex (so that we have write access to cpusets
-> > >           from scheduler operations - and we also fix some problems
-> > >           associated to percpu_cpuset_rwsem)
-> > >   03/06 - Keep track of the number of DEADLINE tasks belonging to each cpuset
-> > >   04/06 - Create DL BW alloc, free & check overflow interface for bulk
-> > >           bandwidth allocation/removal - no functional change
-> > >   05/06 - Fix bandwidth allocation handling for cgroup operation
-> > >           involving multiple tasks
-> > >   06/06 - Use this information to only perform the costly iteration if
-> > >           DEADLINE tasks are actually present in the cpuset for which a
-> > >           corresponding root domain is being rebuilt
-> > > 
-> > > With respect to the RFC posting [2]
-> > > 
-> > >   1 - rename DEADLINE bandwidth accounting functions - Qais
-> > >   2 - call inc/dec_dl_tasks_cs from switched_{to,from}_dl - Qais
-> > >   3 - fix DEADLINE bandwidth allocation with multiple tasks - Waiman,
-> > >       contributed by Dietmar
-> > > 
-> > > This set is also available from
-> > > 
-> > > https://github.com/jlelli/linux.git deadline/rework-cpusets
-> > Is this just waiting to be picked up or still there's something to be addressed
-> > still?
-> 
-> There are some changes to cpuset code recently and so I believe that this
-> patch series may need to be refreshed to reconcile the changes.
++Jens & Jan
 
-Yeah, will soon take a look.
+The patch looks good but it would be nice to pass this patch through
+the eyes of experts of this area.
 
-Thanks!
-Juri
-
+On Mon, Apr 3, 2023 at 3:03=E2=80=AFPM Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org> =
+wrote:
+>
+> wb_over_bg_thresh() calls mem_cgroup_wb_stats() which invokes an rstat
+> flush, which can be expensive on large systems. Currently,
+> wb_writeback() calls wb_over_bg_thresh() within a lock section, so we
+> have to make the rstat flush atomically. On systems with a lot of
+> cpus/cgroups, this can cause us to disable irqs for a long time,
+> potentially causing problems.
+>
+> Move the call to wb_over_bg_thresh() outside the lock section in
+> preparation to make the rstat flush in mem_cgroup_wb_stats() non-atomic.
+> The list_empty(&wb->work_list) should be okay outside the lock section
+> of wb->list_lock as it is protected by a separate lock (wb->work_lock),
+> and wb_over_bg_thresh() doesn't seem like it is modifying any of the b_*
+> lists the wb->list_lock is protecting. Also, the loop seems to be
+> already releasing and reacquring the lock, so this refactoring looks
+> safe.
+>
+> Signed-off-by: Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+> ---
+>  fs/fs-writeback.c | 16 +++++++++++-----
+>  1 file changed, 11 insertions(+), 5 deletions(-)
+>
+> diff --git a/fs/fs-writeback.c b/fs/fs-writeback.c
+> index 195dc23e0d831..012357bc8daa3 100644
+> --- a/fs/fs-writeback.c
+> +++ b/fs/fs-writeback.c
+> @@ -2021,7 +2021,6 @@ static long wb_writeback(struct bdi_writeback *wb,
+>         struct blk_plug plug;
+>
+>         blk_start_plug(&plug);
+> -       spin_lock(&wb->list_lock);
+>         for (;;) {
+>                 /*
+>                  * Stop writeback when nr_pages has been consumed
+> @@ -2046,6 +2045,9 @@ static long wb_writeback(struct bdi_writeback *wb,
+>                 if (work->for_background && !wb_over_bg_thresh(wb))
+>                         break;
+>
+> +
+> +               spin_lock(&wb->list_lock);
+> +
+>                 /*
+>                  * Kupdate and background works are special and we want t=
+o
+>                  * include all inodes that need writing. Livelock avoidan=
+ce is
+> @@ -2075,13 +2077,19 @@ static long wb_writeback(struct bdi_writeback *wb=
+,
+>                  * mean the overall work is done. So we keep looping as l=
+ong
+>                  * as made some progress on cleaning pages or inodes.
+>                  */
+> -               if (progress)
+> +               if (progress) {
+> +                       spin_unlock(&wb->list_lock);
+>                         continue;
+> +               }
+> +
+>                 /*
+>                  * No more inodes for IO, bail
+>                  */
+> -               if (list_empty(&wb->b_more_io))
+> +               if (list_empty(&wb->b_more_io)) {
+> +                       spin_unlock(&wb->list_lock);
+>                         break;
+> +               }
+> +
+>                 /*
+>                  * Nothing written. Wait for some inode to
+>                  * become available for writeback. Otherwise
+> @@ -2093,9 +2101,7 @@ static long wb_writeback(struct bdi_writeback *wb,
+>                 spin_unlock(&wb->list_lock);
+>                 /* This function drops i_lock... */
+>                 inode_sleep_on_writeback(inode);
+> -               spin_lock(&wb->list_lock);
+>         }
+> -       spin_unlock(&wb->list_lock);
+>         blk_finish_plug(&plug);
+>
+>         return nr_pages - work->nr_pages;
+> --
+> 2.40.0.348.gf938b09366-goog
+>
