@@ -1,130 +1,131 @@
-From: Dmitry Vyukov <dvyukov-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [syzbot] [cgroups?] [mm?] KCSAN: data-race in drain_all_stock /
- drain_obj_stock (4)
-Date: Fri, 21 Apr 2023 16:38:45 +0200
-Message-ID: <CACT4Y+ZfucZhM60YPphWiCLJr6+SGFhT+jjm8k1P-a_8Kkxsjg@mail.gmail.com>
-References: <00000000000058b63f05f9d98811@google.com>
+From: Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH mm-unstable RFC 1/5] writeback: move wb_over_bg_thresh()
+ call outside lock section
+Date: Fri, 21 Apr 2023 10:21:36 -0700
+Message-ID: <CAJD7tkYUJd+HERVKDhqKimWdXUKoBvutvKJHJDJVMOTJBV9aKA@mail.gmail.com>
+References: <20230403220337.443510-1-yosryahmed@google.com>
+ <20230403220337.443510-2-yosryahmed@google.com> <20230421085341.b2zvzeuc745bs6sa@quack3>
 Mime-Version: 1.0
+Content-Transfer-Encoding: quoted-printable
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20221208; t=1682087938; x=1684679938;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:from:to:cc:subject:date:message-id:reply-to;
-        bh=uE8L66mYi61Gg000YX9CaB4PguSbhnlIM05Rg2iq/GU=;
-        b=g3rmUy97ewR5Qob/EIc0qirnHyGan7c3n7pweFBrjd4IKEX1NVaHijC/5eHO4MNEDW
-         Ff3BUAQNyy0m/fGS9YWwhDtiFnB5bLlPAjjH6fTEFwOvUJbkRqH9u3P763jj6of+sfJV
-         eh1paFZ6ywkGWJqWKXSSu3i6LkZ0rb1dLjXid+GjA3s3hyJwVUlPonXyw6Cz30d88pjH
-         TLOU/sY30TqTHGlXm0/qbIZsfLkAThaztVPBD3OR4nmNuVPX6xNzmzb7bGHzouRJKy77
-         iQTEbiCwwv2DBX8+uESfd1BeUMHZ/N3avr3F3IScinfFcGzEoNS/DlIRNt1JSYsaTWTy
-         mWzw==
-In-Reply-To: <00000000000058b63f05f9d98811-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+        d=google.com; s=20221208; t=1682097734; x=1684689734;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=BfR9lcqvLbO+sXRYYQ4Al5uQ4a/w4jqcaiHNX0XG2d8=;
+        b=M7kgruF3UfRfDWNCLtS06HOrbY/My1F5qsoj3AdCxeDtL9AnMCKstRKn/+mzyTSJXD
+         nUELrf0ki/bVD0Bf6VaQ/BPcAyOipMfOJft9lnwibEAhqePhPxl+6N2xFt8K2aLmxT4d
+         eI7byFtpOOMmoO8AzyO787vo6Mv+NG+LT4/rW6D9JlgChyif1F0ltmnqqBIp/0Lsuu0m
+         IO2ZCJHgpTWXkJgsbgBAHGD8t9exscbi9IJH23YwGaJndjTrVI5DhTELy21qO5sIXB3J
+         AiAoU6sruhfjdjNyk8Fg+wuorOokt2S7FMxMvRhCaYZ/12NWLYAdQflE/0HQdBDR8ffd
+         FQfw==
+In-Reply-To: <20230421085341.b2zvzeuc745bs6sa@quack3>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: syzbot <syzbot+774c29891415ab0fd29d-Pl5Pbv+GP7P466ipTTIvnc23WoclnBCfAL8bYrjMMd8@public.gmane.org>
-Cc: akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, bpf-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, muchun.song-fxUVXftIFDnyG1zEObXtfA@public.gmane.org, roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org, shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, syzkaller-bugs-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
+Content-Type: text/plain; charset="windows-1252"
+To: Jan Kara <jack-AlSwsSmVLrQ@public.gmane.org>
+Cc: Alexander Viro <viro-RmSDqhL/yNMiFSDQTTA3OLVCufUGDwFn@public.gmane.org>, Christian Brauner <brauner-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
 
-On Fri, 21 Apr 2023 at 16:33, syzbot
-<syzbot+774c29891415ab0fd29d-Pl5Pbv+GP7P466ipTTIvnc23WoclnBCfAL8bYrjMMd8@public.gmane.org> wrote:
+On Fri, Apr 21, 2023 at 1:53=E2=80=AFAM Jan Kara <jack-AlSwsSmVLrQ@public.gmane.org> wrote:
 >
-> Hello,
+> On Mon 03-04-23 22:03:33, Yosry Ahmed wrote:
+> > wb_over_bg_thresh() calls mem_cgroup_wb_stats() which invokes an rstat
+> > flush, which can be expensive on large systems. Currently,
+> > wb_writeback() calls wb_over_bg_thresh() within a lock section, so we
+> > have to make the rstat flush atomically. On systems with a lot of
+> > cpus/cgroups, this can cause us to disable irqs for a long time,
+> > potentially causing problems.
+> >
+> > Move the call to wb_over_bg_thresh() outside the lock section in
+> > preparation to make the rstat flush in mem_cgroup_wb_stats() non-atomic=
+.
+> > The list_empty(&wb->work_list) should be okay outside the lock section
+> > of wb->list_lock as it is protected by a separate lock (wb->work_lock),
+> > and wb_over_bg_thresh() doesn't seem like it is modifying any of the b_=
+*
+> > lists the wb->list_lock is protecting. Also, the loop seems to be
+> > already releasing and reacquring the lock, so this refactoring looks
+> > safe.
+> >
+> > Signed-off-by: Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 >
-> syzbot found the following issue on:
+> The patch looks good to me. Nice find. Feel free to add:
 >
-> HEAD commit:    534293368afa Merge tag 'kbuild-fixes-v6.3' of git://git.ke..
-> git tree:       upstream
-> console output: https://syzkaller.appspot.com/x/log.txt?x=11a0c26ec80000
-> kernel config:  https://syzkaller.appspot.com/x/.config?x=85fa20c996a2e46d
-> dashboard link: https://syzkaller.appspot.com/bug?extid=774c29891415ab0fd29d
-> compiler:       Debian clang version 15.0.7, GNU ld (GNU Binutils for Debian) 2.35.2
->
-> Unfortunately, I don't have any reproducer for this issue yet.
->
-> Downloadable assets:
-> disk image: https://storage.googleapis.com/syzbot-assets/ec0e584af797/disk-53429336.raw.xz
-> vmlinux: https://storage.googleapis.com/syzbot-assets/423a67f52f94/vmlinux-53429336.xz
-> kernel image: https://storage.googleapis.com/syzbot-assets/8409b9716faa/bzImage-53429336.xz
->
-> IMPORTANT: if you fix the issue, please add the following tag to the commit:
-> Reported-by: syzbot+774c29891415ab0fd29d-Pl5Pbv+GP7P466ipTTIvnc23WoclnBCfAL8bYrjMMd8@public.gmane.org
+> Reviewed-by: Jan Kara <jack-AlSwsSmVLrQ@public.gmane.org>
 
-Here this:
+Thanks for taking a look!
 
-stock->cached_objcg = NULL;
-
-runs concurrently with:
-
-if (stock->cached_objcg) {
-    memcg = obj_cgroup_memcg(stock->cached_objcg);
-
-If I am reading this correctly, this can cause a NULL deref, if
-cached_objcg is reset between the check and the use.
-
-
-
-> ==================================================================
-> BUG: KCSAN: data-race in drain_all_stock / drain_obj_stock
 >
-> write to 0xffff888237c2a2f8 of 8 bytes by task 19625 on cpu 0:
->  drain_obj_stock+0x408/0x4e0 mm/memcontrol.c:3306
->  refill_obj_stock+0x9c/0x1e0 mm/memcontrol.c:3340
->  obj_cgroup_uncharge+0xe/0x10 mm/memcontrol.c:3408
->  memcg_slab_free_hook mm/slab.h:587 [inline]
->  __cache_free mm/slab.c:3373 [inline]
->  __do_kmem_cache_free mm/slab.c:3577 [inline]
->  kmem_cache_free+0x105/0x280 mm/slab.c:3602
->  __d_free fs/dcache.c:298 [inline]
->  dentry_free fs/dcache.c:375 [inline]
->  __dentry_kill+0x422/0x4a0 fs/dcache.c:621
->  dentry_kill+0x8d/0x1e0
->  dput+0x118/0x1f0 fs/dcache.c:913
->  __fput+0x3bf/0x570 fs/file_table.c:329
->  ____fput+0x15/0x20 fs/file_table.c:349
->  task_work_run+0x123/0x160 kernel/task_work.c:179
->  resume_user_mode_work include/linux/resume_user_mode.h:49 [inline]
->  exit_to_user_mode_loop+0xcf/0xe0 kernel/entry/common.c:171
->  exit_to_user_mode_prepare+0x6a/0xa0 kernel/entry/common.c:203
->  __syscall_exit_to_user_mode_work kernel/entry/common.c:285 [inline]
->  syscall_exit_to_user_mode+0x26/0x140 kernel/entry/common.c:296
->  do_syscall_64+0x4d/0xc0 arch/x86/entry/common.c:86
->  entry_SYSCALL_64_after_hwframe+0x63/0xcd
+>                                                                 Honza
 >
-> read to 0xffff888237c2a2f8 of 8 bytes by task 19632 on cpu 1:
->  obj_stock_flush_required mm/memcontrol.c:3319 [inline]
->  drain_all_stock+0x174/0x2a0 mm/memcontrol.c:2361
->  try_charge_memcg+0x6d0/0xd10 mm/memcontrol.c:2703
->  try_charge mm/memcontrol.c:2837 [inline]
->  mem_cgroup_charge_skmem+0x51/0x140 mm/memcontrol.c:7290
->  sock_reserve_memory+0xb1/0x390 net/core/sock.c:1025
->  sk_setsockopt+0x800/0x1e70 net/core/sock.c:1525
->  udp_lib_setsockopt+0x99/0x6c0 net/ipv4/udp.c:2692
->  udp_setsockopt+0x73/0xa0 net/ipv4/udp.c:2817
->  sock_common_setsockopt+0x61/0x70 net/core/sock.c:3668
->  __sys_setsockopt+0x1c3/0x230 net/socket.c:2271
->  __do_sys_setsockopt net/socket.c:2282 [inline]
->  __se_sys_setsockopt net/socket.c:2279 [inline]
->  __x64_sys_setsockopt+0x66/0x80 net/socket.c:2279
->  do_syscall_x64 arch/x86/entry/common.c:50 [inline]
->  do_syscall_64+0x41/0xc0 arch/x86/entry/common.c:80
->  entry_SYSCALL_64_after_hwframe+0x63/0xcd
->
-> value changed: 0xffff8881382d52c0 -> 0xffff888138893740
->
-> Reported by Kernel Concurrency Sanitizer on:
-> CPU: 1 PID: 19632 Comm: syz-executor.0 Not tainted 6.3.0-rc2-syzkaller-00387-g534293368afa #0
-> Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 03/02/2023
-> ==================================================================
->
->
-> ---
-> This report is generated by a bot. It may contain errors.
-> See https://goo.gl/tpsmEJ for more information about syzbot.
-> syzbot engineers can be reached at syzkaller-/JYPxA39Uh5TLH3MbocFF+G/Ez6ZCGd0@public.gmane.org
->
-> syzbot will keep track of this issue. See:
-> https://goo.gl/tpsmEJ#status for how to communicate with syzbot.
->
+> > ---
+> >  fs/fs-writeback.c | 16 +++++++++++-----
+> >  1 file changed, 11 insertions(+), 5 deletions(-)
+> >
+> > diff --git a/fs/fs-writeback.c b/fs/fs-writeback.c
+> > index 195dc23e0d831..012357bc8daa3 100644
+> > --- a/fs/fs-writeback.c
+> > +++ b/fs/fs-writeback.c
+> > @@ -2021,7 +2021,6 @@ static long wb_writeback(struct bdi_writeback *wb=
+,
+> >       struct blk_plug plug;
+> >
+> >       blk_start_plug(&plug);
+> > -     spin_lock(&wb->list_lock);
+> >       for (;;) {
+> >               /*
+> >                * Stop writeback when nr_pages has been consumed
+> > @@ -2046,6 +2045,9 @@ static long wb_writeback(struct bdi_writeback *wb=
+,
+> >               if (work->for_background && !wb_over_bg_thresh(wb))
+> >                       break;
+> >
+> > +
+> > +             spin_lock(&wb->list_lock);
+> > +
+> >               /*
+> >                * Kupdate and background works are special and we want t=
+o
+> >                * include all inodes that need writing. Livelock avoidan=
+ce is
+> > @@ -2075,13 +2077,19 @@ static long wb_writeback(struct bdi_writeback *=
+wb,
+> >                * mean the overall work is done. So we keep looping as l=
+ong
+> >                * as made some progress on cleaning pages or inodes.
+> >                */
+> > -             if (progress)
+> > +             if (progress) {
+> > +                     spin_unlock(&wb->list_lock);
+> >                       continue;
+> > +             }
+> > +
+> >               /*
+> >                * No more inodes for IO, bail
+> >                */
+> > -             if (list_empty(&wb->b_more_io))
+> > +             if (list_empty(&wb->b_more_io)) {
+> > +                     spin_unlock(&wb->list_lock);
+> >                       break;
+> > +             }
+> > +
+> >               /*
+> >                * Nothing written. Wait for some inode to
+> >                * become available for writeback. Otherwise
+> > @@ -2093,9 +2101,7 @@ static long wb_writeback(struct bdi_writeback *wb=
+,
+> >               spin_unlock(&wb->list_lock);
+> >               /* This function drops i_lock... */
+> >               inode_sleep_on_writeback(inode);
+> > -             spin_lock(&wb->list_lock);
+> >       }
+> > -     spin_unlock(&wb->list_lock);
+> >       blk_finish_plug(&plug);
+> >
+> >       return nr_pages - work->nr_pages;
+> > --
+> > 2.40.0.348.gf938b09366-goog
+> >
 > --
-> You received this message because you are subscribed to the Google Groups "syzkaller-bugs" group.
-> To unsubscribe from this group and stop receiving emails from it, send an email to syzkaller-bugs+unsubscribe-/JYPxA39Uh5TLH3MbocFF+G/Ez6ZCGd0@public.gmane.org
-> To view this discussion on the web visit https://groups.google.com/d/msgid/syzkaller-bugs/00000000000058b63f05f9d98811%40google.com.
+> Jan Kara <jack-IBi9RG/b67k@public.gmane.org>
+> SUSE Labs, CR
