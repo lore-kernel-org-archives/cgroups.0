@@ -1,106 +1,117 @@
-From: Yosry Ahmed <yosryahmed@google.com>
-Subject: [PATCH v5 1/5] writeback: move wb_over_bg_thresh() call outside lock section
-Date: Fri, 21 Apr 2023 17:40:16 +0000
-Message-ID: <20230421174020.2994750-2-yosryahmed@google.com>
+From: Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Subject: [PATCH v5 4/5] memcg: remove mem_cgroup_flush_stats_atomic()
+Date: Fri, 21 Apr 2023 17:40:19 +0000
+Message-ID: <20230421174020.2994750-5-yosryahmed@google.com>
 References: <20230421174020.2994750-1-yosryahmed@google.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-Return-path: <linux-fsdevel-owner@vger.kernel.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20221208; t=1682098824; x=1684690824;
-        h=content-transfer-encoding:cc:to:from:subject:message-id:references
-         :mime-version:in-reply-to:date:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=abvwWBWOn0vLHIokwPNC/tHyu1Fa1R/g8ZqTWIaeK3o=;
-        b=XiTBjh0uy9kBhESmjZrsmo27Fd2heaOUEeGy+wI7JgY+55BFi83KpJfUElFkBAdtm2
-         /9Y+dOWIDQQOwVTZr/9l2zpPw4NhLuSad5LwurXNF9rM5PxMETajnAk6IdSR9itjleO5
-         5RCZOU6uWoQn/XlBfG6L6Ut73QqfPkSzpxRKMZq9c5dNC03EQysfXGAmQsX7vQIaMlXI
-         wrYrPEcgEz4/6R89vEXhItTLbmEid9U911aGVkkoSTQdm4KxH3ssyAravljY6M6dDyLy
-         P40RfGznmXP1ykBLl7M1nQBK+thu7rJX9Fwoe+MatBRuu3PDwmPEoG+B+msi8iGqptyL
-         Fwng==
-In-Reply-To: <20230421174020.2994750-1-yosryahmed@google.com>
+        d=google.com; s=20221208; t=1682098830; x=1684690830;
+        h=cc:to:from:subject:message-id:references:mime-version:in-reply-to
+         :date:from:to:cc:subject:date:message-id:reply-to;
+        bh=2xVbU1EXT3F/5uSzRhbvwRdAhlPEIhLbnGkOO/O2kc0=;
+        b=VsD7UvvlQQthDrDrmrxfA+6j9bxs+fBOtiWfjPuVqKRncTMVYwHyMK7lQKw4z7d6OO
+         8f3IhH6XmGqVDVmFY8Cyv6LrhOYmMlAEwO97OjVKp4EfQ7GvmXRUQBA2elyZi2HdAWT8
+         tC3JhABpjBI1uwry+YoMsz8jQ+5FjhTBlcxyLfQuh9MawFFcJmVXlkCxxE83KRAGfIRN
+         izUhapvRy65QRBOUgMasmNbiSkr8HJo7bR2eGmnfXoyNgGu2rdwIe+txD2JLoEKv7Tja
+         ItjbWxT/dXoPWnPJUuXxJqFt3IyOH6lsotFnhAXC0TTQySKSNCNtSjYyYHqymn6WRMKQ
+         FgWg==
+In-Reply-To: <20230421174020.2994750-1-yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="macroman"
-To: Alexander Viro <viro@zeniv.linux.org.uk>, Christian Brauner <brauner@kernel.org>, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, Roman Gushchin <roman.gushchin@linux.dev>, Shakeel Butt <shakeelb@google.com>, Muchun Song <songmuchun@bytedance.com>, Andrew Morton <akpm@linux-foundation.org>, Tejun Heo <tj@kernel.org>
-Cc: Jan Kara <jack@suse.cz>, Jens Axboe <axboe@kernel.dk>, =?UTF-8?q?Michal=20Koutn=C3=BD?= <mkoutny@suse.com>, linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, linux-mm@kvack.org, Yosry Ahmed <yosryahmed@google.com>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Alexander Viro <viro-RmSDqhL/yNMiFSDQTTA3OLVCufUGDwFn@public.gmane.org>, Christian Brauner <brauner-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: Jan Kara <jack-AlSwsSmVLrQ@public.gmane.org>, Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, =?UTF-8?q?Michal=20Koutn=C3=BD?= <mkoutny-IBi9RG/b67k@public.gmane.org>, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 
-wb_over_bg_thresh() calls mem_cgroup_wb_stats() which invokes an rstat
-flush, which can be expensive on large systems. Currently,
-wb_writeback() calls wb_over_bg_thresh() within a lock section, so we
-have to do the rstat flush atomically. On systems with a lot of
-cpus and/or cgroups, this can cause us to disable irqs for a long time,
-potentially causing problems.
+Previous patches removed all callers of mem_cgroup_flush_stats_atomic().
+Remove the function and simplify the code.
 
-Move the call to wb_over_bg_thresh() outside the lock section in
-preparation to make the rstat flush in mem_cgroup_wb_stats() non-atomic.
-The list_empty(&wb->work_list) check should be okay outside the lock
-section of wb->list_lock as it is protected by a separate lock
-(wb->work_lock), and wb_over_bg_thresh() doesn't seem like it is
-modifying any of wb->b_* lists the wb->list_lock is protecting.
-Also, the loop seems to be already releasing and reacquring the
-lock, so this refactoring looks safe.
-
-Signed-off-by: Yosry Ahmed <yosryahmed@google.com>
-Reviewed-by: Michal Koutn=C3=BD <mkoutny@suse.com>
-Reviewed-by: Jan Kara <jack@suse.cz>
+Signed-off-by: Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Acked-by: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 ---
- fs/fs-writeback.c | 16 +++++++++++-----
- 1 file changed, 11 insertions(+), 5 deletions(-)
+ include/linux/memcontrol.h |  5 -----
+ mm/memcontrol.c            | 24 +++++-------------------
+ 2 files changed, 5 insertions(+), 24 deletions(-)
 
-diff --git a/fs/fs-writeback.c b/fs/fs-writeback.c
-index 1db3e3c24b43..11aa1652fb84 100644
---- a/fs/fs-writeback.c
-+++ b/fs/fs-writeback.c
-@@ -2024,7 +2024,6 @@ static long wb_writeback(struct bdi_writeback *wb,
- 	struct blk_plug plug;
-=20
- 	blk_start_plug(&plug);
--	spin_lock(&wb->list_lock);
- 	for (;;) {
- 		/*
- 		 * Stop writeback when nr_pages has been consumed
-@@ -2049,6 +2048,9 @@ static long wb_writeback(struct bdi_writeback *wb,
- 		if (work->for_background && !wb_over_bg_thresh(wb))
- 			break;
-=20
-+
-+		spin_lock(&wb->list_lock);
-+
- 		/*
- 		 * Kupdate and background works are special and we want to
- 		 * include all inodes that need writing. Livelock avoidance is
-@@ -2078,13 +2080,19 @@ static long wb_writeback(struct bdi_writeback *wb,
- 		 * mean the overall work is done. So we keep looping as long
- 		 * as made some progress on cleaning pages or inodes.
- 		 */
--		if (progress)
-+		if (progress) {
-+			spin_unlock(&wb->list_lock);
- 			continue;
-+		}
-+
- 		/*
- 		 * No more inodes for IO, bail
- 		 */
--		if (list_empty(&wb->b_more_io))
-+		if (list_empty(&wb->b_more_io)) {
-+			spin_unlock(&wb->list_lock);
- 			break;
-+		}
-+
- 		/*
- 		 * Nothing written. Wait for some inode to
- 		 * become available for writeback. Otherwise
-@@ -2096,9 +2104,7 @@ static long wb_writeback(struct bdi_writeback *wb,
- 		spin_unlock(&wb->list_lock);
- 		/* This function drops i_lock... */
- 		inode_sleep_on_writeback(inode);
--		spin_lock(&wb->list_lock);
+diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
+index 222d7370134c..00a88cf947e1 100644
+--- a/include/linux/memcontrol.h
++++ b/include/linux/memcontrol.h
+@@ -1038,7 +1038,6 @@ static inline unsigned long lruvec_page_state_local(struct lruvec *lruvec,
+ }
+ 
+ void mem_cgroup_flush_stats(void);
+-void mem_cgroup_flush_stats_atomic(void);
+ void mem_cgroup_flush_stats_ratelimited(void);
+ 
+ void __mod_memcg_lruvec_state(struct lruvec *lruvec, enum node_stat_item idx,
+@@ -1537,10 +1536,6 @@ static inline void mem_cgroup_flush_stats(void)
+ {
+ }
+ 
+-static inline void mem_cgroup_flush_stats_atomic(void)
+-{
+-}
+-
+ static inline void mem_cgroup_flush_stats_ratelimited(void)
+ {
+ }
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index cb78bba5b4a4..eadfe371a8f2 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -639,7 +639,7 @@ static inline void memcg_rstat_updated(struct mem_cgroup *memcg, int val)
  	}
--	spin_unlock(&wb->list_lock);
- 	blk_finish_plug(&plug);
-=20
- 	return nr_pages - work->nr_pages;
---=20
+ }
+ 
+-static void do_flush_stats(bool atomic)
++static void do_flush_stats(void)
+ {
+ 	/*
+ 	 * We always flush the entire tree, so concurrent flushers can just
+@@ -652,30 +652,16 @@ static void do_flush_stats(bool atomic)
+ 
+ 	WRITE_ONCE(flush_next_time, jiffies_64 + 2*FLUSH_TIME);
+ 
+-	if (atomic)
+-		cgroup_rstat_flush_atomic(root_mem_cgroup->css.cgroup);
+-	else
+-		cgroup_rstat_flush(root_mem_cgroup->css.cgroup);
++	cgroup_rstat_flush(root_mem_cgroup->css.cgroup);
+ 
+ 	atomic_set(&stats_flush_threshold, 0);
+ 	atomic_set(&stats_flush_ongoing, 0);
+ }
+ 
+-static bool should_flush_stats(void)
+-{
+-	return atomic_read(&stats_flush_threshold) > num_online_cpus();
+-}
+-
+ void mem_cgroup_flush_stats(void)
+ {
+-	if (should_flush_stats())
+-		do_flush_stats(false);
+-}
+-
+-void mem_cgroup_flush_stats_atomic(void)
+-{
+-	if (should_flush_stats())
+-		do_flush_stats(true);
++	if (atomic_read(&stats_flush_threshold) > num_online_cpus())
++		do_flush_stats();
+ }
+ 
+ void mem_cgroup_flush_stats_ratelimited(void)
+@@ -690,7 +676,7 @@ static void flush_memcg_stats_dwork(struct work_struct *w)
+ 	 * Always flush here so that flushing in latency-sensitive paths is
+ 	 * as cheap as possible.
+ 	 */
+-	do_flush_stats(false);
++	do_flush_stats();
+ 	queue_delayed_work(system_unbound_wq, &stats_flush_dwork, FLUSH_TIME);
+ }
+ 
+-- 
 2.40.0.634.g4ca3ef3211-goog
 
