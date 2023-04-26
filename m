@@ -1,56 +1,30 @@
-From: Waiman Long <longman@redhat.com>
-Subject: Re: [PATCH 2/6] sched/cpuset: Bring back cpuset_mutex
-Date: Wed, 26 Apr 2023 10:05:49 -0400
-Message-ID: <d53a8af3-46e7-fe6e-5cdd-0421796f80d2@redhat.com>
-References: <20230329125558.255239-1-juri.lelli@redhat.com>
- <20230329125558.255239-3-juri.lelli@redhat.com>
- <fa585497-5c6d-f0ed-bdda-c71a81d315ad@redhat.com>
- <ZEkRq9iGkYP/8T5w@localhost.localdomain>
+From: Steven Rostedt <rostedt-nx8X9YLhiw1AfugRpC6u6w@public.gmane.org>
+Subject: Re: [PATCH 0/2] memcg: OOM log improvements
+Date: Wed, 26 Apr 2023 10:19:22 -0400
+Message-ID: <20230426101922.49a66ee6@gandalf.local.home>
+References: <20230426133919.1342942-1-yosryahmed@google.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1682518432;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=Rf30qPmkXFyg0eo0/oPK9xXJTsxFmQ7zB528P1kEZb8=;
-        b=Rbzn3I7M0p9mLq/wL93Ea/yQphwMjqY5+XjdqPEwXvaQla6N17LyhMZC6dPdGbd09YORV7
-        uvwOatKSakbSsvg3lgt11fPBM5xduzDB03K/1TOaN9LFOHREmGceKb2kKORajsIecfO1fp
-        xUhEEwXiOsRGj30wqjBHr8YtNliHyXw=
-Content-Language: en-US
-In-Reply-To: <ZEkRq9iGkYP/8T5w@localhost.localdomain>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <20230426133919.1342942-1-yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"; format="flowed"
-To: Juri Lelli <juri.lelli@redhat.com>
-Cc: Peter Zijlstra <peterz@infradead.org>, Ingo Molnar <mingo@kernel.org>, Qais Yousef <qyousef@layalina.io>, Tejun Heo <tj@kernel.org>, Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, Hao Luo <haoluo@google.com>, Dietmar Eggemann <dietmar.eggemann@arm.com>, Steven Rostedt <rostedt@goodmis.org>, linux-kernel@vger.kernel.org, luca.abeni@santannapisa.it, claudio@evidence.eu.com, tommaso.cucinotta@santannapisa.it, bristot@redhat.com, mathieu.poirier@linaro.org, cgroups@vger.kernel.org, Vincent Guittot <vincent.guittot@linaro.org>, Wei Wang <wvw@google.com>, Rick Yiu <rickyiu@google.com>, Quentin Perret <qperret@google.com>, Heiko Carstens <hca@linux.ibm.com>, Vasily Gorbik <gor@linux.ibm.com>, Alexander Gordeev <agordeev@linux.ibm.>
+Content-Type: text/plain; charset="us-ascii"
+To: Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Muchun Song <muchun.song-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Sergey Senozhatsky <senozhatsky-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>, Petr Mladek <pmladek-IBi9RG/b67k@public.gmane.org>, Chris Li <chrisl-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On 4/26/23 07:57, Juri Lelli wrote:
-> On 04/04/23 13:31, Waiman Long wrote:
->> On 3/29/23 08:55, Juri Lelli wrote:
->>> Turns out percpu_cpuset_rwsem - commit 1243dc518c9d ("cgroup/cpuset:
->>> Convert cpuset_mutex to percpu_rwsem") - wasn't such a brilliant idea,
->>> as it has been reported to cause slowdowns in workloads that need to
->>> change cpuset configuration frequently and it is also not implementing
->>> priority inheritance (which causes troubles with realtime workloads).
->>>
->>> Convert percpu_cpuset_rwsem back to regular cpuset_mutex. Also grab it
->>> only for SCHED_DEADLINE tasks (other policies don't care about stable
->>> cpusets anyway).
->>>
->>> Signed-off-by: Juri Lelli <juri.lelli@redhat.com>
->> I am thinking that maybe we should switch the percpu rwsem to a regular
->> rwsem as there are cases where a read lock is sufficient. This will also
->> avoid the potential PREEMPT_RT problem with PI and reduce the time it needs
->> to take a write lock.
-> I'm not a big fan of rwsems for reasons like
-> https://lore.kernel.org/lkml/20230321161140.HMcQEhHb@linutronix.de/, so
-> I'd vote for a standard mutex unless we have a strong argument and/or
-> numbers.
+On Wed, 26 Apr 2023 13:39:17 +0000
+Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org> wrote:
 
-That is fine for me too.
+> The series uses seq_buf_do_printk() which was only recently introduced
+> [1]. It did not land in Linus's tree yet, but ideally it will land this
+> merge window. I thought I would share the patches meanwhile for
+> feedback.
+> 
+> [1]https://lore.kernel.org/lkml/20230415100110.1419872-1-senozhatsky-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org/
 
-Cheers,
-Longman
+FYI, it's running through my tests right now (with several other patches).
 
+If everything passes, I'll let it sit in linux-next for a day or two than
+push to Linus at the end of the week.
+
+-- Steve
