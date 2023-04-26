@@ -1,55 +1,156 @@
-From: Daniel Bristot de Oliveira <bristot@redhat.com>
-Subject: Re: [PATCH 2/6] sched/cpuset: Bring back cpuset_mutex
-Date: Wed, 26 Apr 2023 16:31:09 +0200
-Message-ID: <10fdfdd8-06bc-0f35-0fea-e604aa5c103a@redhat.com>
-References: <20230329125558.255239-1-juri.lelli@redhat.com>
- <20230329125558.255239-3-juri.lelli@redhat.com>
- <fa585497-5c6d-f0ed-bdda-c71a81d315ad@redhat.com>
- <ZEkRq9iGkYP/8T5w@localhost.localdomain>
+From: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
+Subject: Re: [PATCH 1/2] memcg: use seq_buf_do_printk() with
+ mem_cgroup_print_oom_meminfo()
+Date: Wed, 26 Apr 2023 17:24:12 +0200
+Message-ID: <ZElCHJrkOVsy79KY@dhcp22.suse.cz>
+References: <20230426133919.1342942-1-yosryahmed@google.com>
+ <20230426133919.1342942-2-yosryahmed@google.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1682519474;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
+        t=1682522653; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
          in-reply-to:in-reply-to:references:references;
-        bh=x0YRJ7TlPoY9IYDWRjmvki/mO0TL+b3mD3tzGtLzoUc=;
-        b=FGGwXsJdjZL6AC3t2yAOiFXB86dk4ifPNSwMF4LokYKW35ZK7v3jIX5crX5IwVpWhr/Agv
-        CA1u0RV50rXUT4aarKAAtc7zkLVuBGlNVNoBD1msuXWfax6aMq6vkTZ8ZPWPBt8gTvd07p
-        cQUbj62HcUYiy/ixIhUWGwfY2Kl4kIs=
-Content-Language: en-US
-In-Reply-To: <ZEkRq9iGkYP/8T5w@localhost.localdomain>
+        bh=XvGm7kLitfuqoiLnLSTpWZlMY3cBw22b/188zgDmwA8=;
+        b=Pd4YtmolqPoR6ZSAHJNpty0UCbzLQwQxg9Ydv6LcHpoL9/cvpoKWvrleT/+ErcdBH5dVgC
+        pS4zhHmivMoRy2sv/Js8QBbWw+EZ62GqDLvrb4W7w8ZogGry78NoJledWSn9xjV4ywQ0pZ
+        GpNzWr00UCLo4GKOVLYLFhHROP+p5LY=
+Content-Disposition: inline
+In-Reply-To: <20230426133919.1342942-2-yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Juri Lelli <juri.lelli@redhat.com>, Waiman Long <longman@redhat.com>
-Cc: Peter Zijlstra <peterz@infradead.org>, Ingo Molnar <mingo@kernel.org>, Qais Yousef <qyousef@layalina.io>, Tejun Heo <tj@kernel.org>, Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, Hao Luo <haoluo@google.com>, Dietmar Eggemann <dietmar.eggemann@arm.com>, Steven Rostedt <rostedt@goodmis.org>, linux-kernel@vger.kernel.org, luca.abeni@santannapisa.it, claudio@evidence.eu.com, tommaso.cucinotta@santannapisa.it, mathieu.poirier@linaro.org, cgroups@vger.kernel.org, Vincent Guittot <vincent.guittot@linaro.org>, Wei Wang <wvw@google.com>, Rick Yiu <rickyiu@google.com>, Quentin Perret <qperret@google.com>, Heiko Carstens <hca@linux.ibm.com>, Vasily Gorbik <gor@linux.ibm.com>, Alexander Gordeev <agordeev@linux.ibm.com>, Sudeep Holla <>
+Content-Transfer-Encoding: 7bit
+To: Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Muchun Song <muchun.song-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Sergey Senozhatsky <senozhatsky-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>, Steven Rostedt <rostedt-nx8X9YLhiw1AfugRpC6u6w@public.gmane.org>, Petr Mladek <pmladek-IBi9RG/b67k@public.gmane.org>, Chris Li <chrisl-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On 4/26/23 13:57, Juri Lelli wrote:
-> On 04/04/23 13:31, Waiman Long wrote:
->> On 3/29/23 08:55, Juri Lelli wrote:
->>> Turns out percpu_cpuset_rwsem - commit 1243dc518c9d ("cgroup/cpuset:
->>> Convert cpuset_mutex to percpu_rwsem") - wasn't such a brilliant idea,
->>> as it has been reported to cause slowdowns in workloads that need to
->>> change cpuset configuration frequently and it is also not implementing
->>> priority inheritance (which causes troubles with realtime workloads).
->>>
->>> Convert percpu_cpuset_rwsem back to regular cpuset_mutex. Also grab it
->>> only for SCHED_DEADLINE tasks (other policies don't care about stable
->>> cpusets anyway).
->>>
->>> Signed-off-by: Juri Lelli <juri.lelli@redhat.com>
->> I am thinking that maybe we should switch the percpu rwsem to a regular
->> rwsem as there are cases where a read lock is sufficient. This will also
->> avoid the potential PREEMPT_RT problem with PI and reduce the time it needs
->> to take a write lock.
-> I'm not a big fan of rwsems for reasons like
-> https://lore.kernel.org/lkml/20230321161140.HMcQEhHb@linutronix.de/, so
-> I'd vote for a standard mutex unless we have a strong argument and/or
-> numbers.
+On Wed 26-04-23 13:39:18, Yosry Ahmed wrote:
+> Currently, we format all the memcg stats into a buffer in
+> mem_cgroup_print_oom_meminfo() and use pr_info() to dump it to the logs.
+> However, this buffer is large in size. Although it is currently working
+> as intended, ther is a dependency between the memcg stats buffer and the
+> printk record size limit.
+> 
+> If we add more stats in the future and the buffer becomes larger than
+> the printk record size limit, or if the prink record size limit is
+> reduced, the logs may be truncated.
+> 
+> It is safer to use seq_buf_do_printk(), which will automatically break
+> up the buffer at line breaks and issue small printk() calls.
+> 
+> Refactor the code to move the seq_buf from memory_stat_format() to its
+> callers, and use seq_buf_do_printk() to print the seq_buf in
+> mem_cgroup_print_oom_meminfo().
+> 
+> Signed-off-by: Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 
-+1
+No objection from me but is it possible that more printk calls (one per
+line with this change correct?) would add a contention on the printk
+path?
 
--- Daniel
+Acked-by: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
 
+> ---
+>  mm/memcontrol.c | 27 ++++++++++++++-------------
+>  1 file changed, 14 insertions(+), 13 deletions(-)
+> 
+> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+> index 5abffe6f8389..5922940f92c9 100644
+> --- a/mm/memcontrol.c
+> +++ b/mm/memcontrol.c
+> @@ -1551,13 +1551,10 @@ static inline unsigned long memcg_page_state_output(struct mem_cgroup *memcg,
+>  	return memcg_page_state(memcg, item) * memcg_page_state_unit(item);
+>  }
+>  
+> -static void memory_stat_format(struct mem_cgroup *memcg, char *buf, int bufsize)
+> +static void memory_stat_format(struct mem_cgroup *memcg, struct seq_buf *s)
+>  {
+> -	struct seq_buf s;
+>  	int i;
+>  
+> -	seq_buf_init(&s, buf, bufsize);
+> -
+>  	/*
+>  	 * Provide statistics on the state of the memory subsystem as
+>  	 * well as cumulative event counters that show past behavior.
+> @@ -1574,21 +1571,21 @@ static void memory_stat_format(struct mem_cgroup *memcg, char *buf, int bufsize)
+>  		u64 size;
+>  
+>  		size = memcg_page_state_output(memcg, memory_stats[i].idx);
+> -		seq_buf_printf(&s, "%s %llu\n", memory_stats[i].name, size);
+> +		seq_buf_printf(s, "%s %llu\n", memory_stats[i].name, size);
+>  
+>  		if (unlikely(memory_stats[i].idx == NR_SLAB_UNRECLAIMABLE_B)) {
+>  			size += memcg_page_state_output(memcg,
+>  							NR_SLAB_RECLAIMABLE_B);
+> -			seq_buf_printf(&s, "slab %llu\n", size);
+> +			seq_buf_printf(s, "slab %llu\n", size);
+>  		}
+>  	}
+>  
+>  	/* Accumulated memory events */
+> -	seq_buf_printf(&s, "pgscan %lu\n",
+> +	seq_buf_printf(s, "pgscan %lu\n",
+>  		       memcg_events(memcg, PGSCAN_KSWAPD) +
+>  		       memcg_events(memcg, PGSCAN_DIRECT) +
+>  		       memcg_events(memcg, PGSCAN_KHUGEPAGED));
+> -	seq_buf_printf(&s, "pgsteal %lu\n",
+> +	seq_buf_printf(s, "pgsteal %lu\n",
+>  		       memcg_events(memcg, PGSTEAL_KSWAPD) +
+>  		       memcg_events(memcg, PGSTEAL_DIRECT) +
+>  		       memcg_events(memcg, PGSTEAL_KHUGEPAGED));
+> @@ -1598,13 +1595,13 @@ static void memory_stat_format(struct mem_cgroup *memcg, char *buf, int bufsize)
+>  		    memcg_vm_event_stat[i] == PGPGOUT)
+>  			continue;
+>  
+> -		seq_buf_printf(&s, "%s %lu\n",
+> +		seq_buf_printf(s, "%s %lu\n",
+>  			       vm_event_name(memcg_vm_event_stat[i]),
+>  			       memcg_events(memcg, memcg_vm_event_stat[i]));
+>  	}
+>  
+>  	/* The above should easily fit into one page */
+> -	WARN_ON_ONCE(seq_buf_has_overflowed(&s));
+> +	WARN_ON_ONCE(seq_buf_has_overflowed(s));
+>  }
+>  
+>  #define K(x) ((x) << (PAGE_SHIFT-10))
+> @@ -1642,6 +1639,7 @@ void mem_cgroup_print_oom_meminfo(struct mem_cgroup *memcg)
+>  {
+>  	/* Use static buffer, for the caller is holding oom_lock. */
+>  	static char buf[PAGE_SIZE];
+> +	struct seq_buf s;
+>  
+>  	lockdep_assert_held(&oom_lock);
+>  
+> @@ -1664,8 +1662,9 @@ void mem_cgroup_print_oom_meminfo(struct mem_cgroup *memcg)
+>  	pr_info("Memory cgroup stats for ");
+>  	pr_cont_cgroup_path(memcg->css.cgroup);
+>  	pr_cont(":");
+> -	memory_stat_format(memcg, buf, sizeof(buf));
+> -	pr_info("%s", buf);
+> +	seq_buf_init(&s, buf, sizeof(buf));
+> +	memory_stat_format(memcg, &s);
+> +	seq_buf_do_printk(&s, KERN_INFO);
+>  }
+>  
+>  /*
+> @@ -6573,10 +6572,12 @@ static int memory_stat_show(struct seq_file *m, void *v)
+>  {
+>  	struct mem_cgroup *memcg = mem_cgroup_from_seq(m);
+>  	char *buf = kmalloc(PAGE_SIZE, GFP_KERNEL);
+> +	struct seq_buf s;
+>  
+>  	if (!buf)
+>  		return -ENOMEM;
+> -	memory_stat_format(memcg, buf, PAGE_SIZE);
+> +	seq_buf_init(&s, buf, PAGE_SIZE);
+> +	memory_stat_format(memcg, &s);
+>  	seq_puts(m, buf);
+>  	kfree(buf);
+>  	return 0;
+> -- 
+> 2.40.1.495.gc816e09b53d-goog
+
+-- 
+Michal Hocko
+SUSE Labs
