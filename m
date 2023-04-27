@@ -1,58 +1,100 @@
-From: Xuewen Yan <xuewen.yan94-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: Re: [PATCH 2/6] sched/cpuset: Bring back cpuset_mutex
-Date: Thu, 27 Apr 2023 19:50:44 +0800
-Message-ID: <CAB8ipk9rFjgkyXu50a5CSkfNMuRi7GU_Tq8j++kxNLoy3pminA@mail.gmail.com>
-References: <20230329125558.255239-1-juri.lelli@redhat.com>
- <20230329125558.255239-3-juri.lelli@redhat.com> <fa585497-5c6d-f0ed-bdda-c71a81d315ad@redhat.com>
- <ZEkRq9iGkYP/8T5w@localhost.localdomain> <d53a8af3-46e7-fe6e-5cdd-0421796f80d2@redhat.com>
- <CAB8ipk-ns=d+jNkKi1sjkSQmQidziCj34COkHZt6ZkRiG47HHA@mail.gmail.com> <ZEoN1wq47uhE201p@localhost.localdomain>
+From: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
+Subject: Re: [PATCH 2/2] memcg: dump memory.stat during cgroup OOM for v1
+Date: Thu, 27 Apr 2023 16:06:50 +0200
+Message-ID: <ZEqBesAJFfLZI65/@dhcp22.suse.cz>
+References: <20230426133919.1342942-1-yosryahmed@google.com>
+ <20230426133919.1342942-3-yosryahmed@google.com>
+ <ZElC127xlU2NtlqF@dhcp22.suse.cz>
+ <CAJD7tkZ1cODXRuVQ3fWL0s=VsyKZqDPPNqFZec_COAXm0XfXWA@mail.gmail.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: quoted-printable
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20221208; t=1682596256; x=1685188256;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=fonqjuy+bDhRZIhhRO5lqR2a/06nt8nM5D2aI3NyvLA=;
-        b=IUIXxrOQMkMXZ0RV9QR1E/6+m8OiZGGeuWSwgCohfOhbgOSMHZ+ZU7NSD8jsjw7nkU
-         LlY+9F6bg7XSsPNaY74LBnVP/FxNK4leHiteprPDNK6GxhuUNMRR9dubE8+tRaYU33df
-         Lh8OJiGn83lWz9pXAt+K2QfVeXfCzwt5EJ1djxMg1Fld+SL7YpKR7yrkyP/gHAuWD7Ca
-         K8uUPaov9RO6zaHO23XaM7W3llp38Ko/nJDjqHrdBsp7BPrTH3yi65xPH61pcGEpVwhf
-         Mj5pcp0WnxywbTzmV8c+aE3OE/uA/kegWr0h+ZzTPq3aHzpqL2EwXhvEQdDzZE64NwFR
-         vjTA==
-In-Reply-To: <ZEoN1wq47uhE201p-bi+AKbBUZKY6gyzm1THtWbp2dZbC/Bob@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
+        t=1682604411; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=FSSPWlR+fmRaVisUOZECUtbamoubJx2aUQz5oMIT4bY=;
+        b=hKsbcFXhcnHul4v4HNQG3MzF3hq7i1IWsZlGNpji0BcJbTTrTel8B1It9NdUZ03HwIfZuy
+        0abcxObKmsKVLCZiUHzjViteSgmqRQ50fjmCojQynd3A1ABQ4xVmJ+CiM4H2lEhizMKgfp
+        IU2sZ/WkV5Q9E3dTGvzCyHzglVpEcck=
+Content-Disposition: inline
+In-Reply-To: <CAJD7tkZ1cODXRuVQ3fWL0s=VsyKZqDPPNqFZec_COAXm0XfXWA-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="windows-1252"
-To: Juri Lelli <juri.lelli-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Cc: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Ingo Molnar <mingo-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Qais Yousef <qyousef-wp2msK0BRk8tq7phqP6ubQ@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Hao Luo <haoluo-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Dietmar Eggemann <dietmar.eggemann-5wv7dgnIgG8@public.gmane.org>, Steven Rostedt <rostedt-nx8X9YLhiw1AfugRpC6u6w@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, luca.abeni-5rdYK369eBLQB0XuIGIEkQ@public.gmane.org, claudio-YOzL5CV4y4YG1A2ADO40+w@public.gmane.org, tommaso.cucinotta-5rdYK369eBLQB0XuIGIEkQ@public.gmane.org, bristot-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, mathieu.poirier-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Vincent Guittot <vincent.guittot-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, Wei Wang <wvw-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Rick Yiu <rickyiu-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Quentin Perret <qperret-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Heiko Carstens <hca-tEXmvtCZX7AybS5Ee8rs3A@public.gmane.org>, Vasily Gorbik <gor-tEXmvtCZX7AybS5Ee8rs3A@public.gmane.org>
+To: Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Muchun Song <muchun.song-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Sergey Senozhatsky <senozhatsky-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>, Steven Rostedt <rostedt-nx8X9YLhiw1AfugRpC6u6w@public.gmane.org>, Petr Mladek <pmladek-IBi9RG/b67k@public.gmane.org>, Chris Li <chrisl-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Thu, Apr 27, 2023 at 1:53=E2=80=AFPM Juri Lelli <juri.lelli-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org> =
-wrote:
->
-> Hi,
->
-> On 27/04/23 10:58, Xuewen Yan wrote:
-> > HI Juri,
+On Thu 27-04-23 02:21:30, Yosry Ahmed wrote:
+> On Wed, Apr 26, 2023 at 8:27=E2=80=AFAM Michal Hocko <mhocko-IBi9RG/b67k@=
+public.gmane.org> wrote:
 > >
-> > Would this patch be merged tobe stable-rc? In kernel5.15, we also find
-> > that the rwsem would be blocked for a long  time, when we change the
-> > task's cpuset cgroup.
-> > And when we revert to the mutex, the delay would disappear.
->
-> Honestly, I'm not sure. This change is mostly improving performance, but
-> it is also true that it's fixing some priority inheritance corner cases.
-> So, I'm not sure it qualifies for stable, but it would be probably good t=
-o
-> have it there.
->
-Dear Juri,
+> > On Wed 26-04-23 13:39:19, Yosry Ahmed wrote:
+> > > Commit c8713d0b2312 ("mm: memcontrol: dump memory.stat during cgroup
+> > > OOM") made sure we dump all the stats in memory.stat during a cgroup
+> > > OOM, but it also introduced a slight behavioral change. The code used=
+ to
+> > > print the non-hierarchical v1 cgroup stats for the entire cgroup
+> > > subtree, not it only prints the v2 cgroup stats for the cgroup under
+> > > OOM.
+> > >
+> > > Although v2 stats are a superset of v1 stats, some of them have
+> > > different naming. We also lost the non-hierarchical stats for the cgr=
+oup
+> > > under OOM in v1.
+> >
+> > Why is that a problem worth solving? It would be also nice to add an
+> > example of the oom report before and after the patch.
+> > --
+> > Michal Hocko
+> > SUSE Labs
+>=20
+> Thanks for taking a look!
+>=20
+> The problem is that when upgrading to a kernel that contains
+> c8713d0b2312 on cgroup v1, the OOM logs suddenly change. The stats
+> names become different, a couple of stats are gone, and the
+> non-hierarchical stats disappear.
+>=20
+> The non-hierarchical stats are important to identify if a memcg OOM'd
+> because of the memory consumption of its own processes or its
+> descendants. In the example below, I created a parent memcg "a", and a
+> child memcg "b". A process in "a" itself ("tail" in this case) is
+> hogging memory and causing an OOM, not the processes in the child "b"
+> (the "sleep" processes). With non-hierarchical stats, it's clear that
+> this is the case.
 
-Thanks for the reply! We will test more in kernel5.15.
+Is this difference really important from the OOM POV. There is no group
+oom semantic in v1 and so it always boils down to a specific process
+that gets selected. Which memcg it is sitting in shouldn't matter all
+that much. Or does it really matter?
 
-Thanks!
-BR
+> Also, it is generally nice to keep things consistent as much as
+> possible. The sudden change of the OOM log with the kernel upgrade is
+> confusing, especially that the memcg stats in the OOM logs in cgroup
+> v1 now look different from the stats in memory.stat.
 
-> Thanks,
-> Juri
->
+Generally speaking oom report is not carved into stone. While we
+shouldn't make changes just nilly willy it might change for
+implementation specific reasons.
+
+In this particular case I would agree that the new output is more
+confusing than helpful. Just look at=20
+> [   88.339505] pgscan 0
+> [   88.339505] pgsteal 0
+> [   88.339506] pgscan_kswapd 0
+> [   88.339506] pgscan_direct 0
+> [   88.339507] pgscan_khugepaged 0
+> [   88.339507] pgsteal_kswapd 0
+> [   88.339508] pgsteal_direct 0
+> [   88.339508] pgsteal_khugepaged 0
+
+These stats are actively misleading because it would suggest there was
+no memory reclaim done before oom was hit and that would imply a
+potentially premature OOM killer invocation (thus a bug). There are
+likely other stats which are not tracked in v1 yet they are reported
+that might add to the confusion. I believe this would be a sound
+justification to get back to the original reporting.
+--=20
+Michal Hocko
+SUSE Labs
