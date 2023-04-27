@@ -1,144 +1,47 @@
-From: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [LSF/MM/BPF TOPIC] Reducing zombie memcgs
-Date: Wed, 26 Apr 2023 16:15:47 -0400
-Message-ID: <8ad74529-890a-8300-c2ad-ddaa679b9c87@redhat.com>
-References: <CABdmKX2M6koq4Q0Cmp_-=wbP0Qa190HdEGGaHfxNS05gAkUtPA@mail.gmail.com>
- <CAJD7tkZw9uVPe5KH2xrihsv5nDmExJmkmsUPYP6Npvv6Q0NcVw@mail.gmail.com>
- <CAJD7tkb56gR0X5v3VHfmk3az3bOz=wF2jhEi+7Eek0J8XXBeWQ@mail.gmail.com>
- <27e15be8-d0eb-ed32-a0ec-5ec9b59f1f27@redhat.com>
- <CAJD7tkb1W0bP3AU9KepOYPx-AD-fMKSfUhj_Cmth63RS9umMsg@mail.gmail.com>
+From: Sergey Senozhatsky <senozhatsky-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>
+Subject: Re: [PATCH 1/2] memcg: use seq_buf_do_printk() with
+ mem_cgroup_print_oom_meminfo()
+Date: Thu, 27 Apr 2023 09:45:25 +0900
+Message-ID: <20230427004525.GE1496740@google.com>
+References: <20230426133919.1342942-1-yosryahmed@google.com>
+ <20230426133919.1342942-2-yosryahmed@google.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1682540153;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=9L7Q3TbkejCawHPfrk62/EEaFRYMLFfTS6p9ROANUHw=;
-        b=Db1YPV7grqh4DJfkg5i3dbD6/c4kdQaTO2gBdD9D+NFWycFYu1Gsc5DTCnF6EjIOkxu0ZM
-        temJfb3FYRq+ZikrR9WlB1PLjIRPFvXZK78dADeeJugeH5P/dI0Bum0ZghhlPCvzsIKaAj
-        rwGzkXFGRbgFAM1GR/JjyviUtgq5wDg=
-Content-Language: en-US
-In-Reply-To: <CAJD7tkb1W0bP3AU9KepOYPx-AD-fMKSfUhj_Cmth63RS9umMsg-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=chromium.org; s=google; t=1682556331; x=1685148331;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=Ts741rvt3EAjVFILrn+Ylxxz4plnfZzZiWZWR2pi4+E=;
+        b=X0/KEcMUWIF64/6JcKv0zgFw7E6ZmkGDYstg9d2n+0xZVW4F88EUh6zA77/6TpQGMs
+         m7hDdPloutxu/VAItlE5Szi5wAHQKb7SB5rObMOVrSOz8+O7W9C9QnrjhvFlAb7P5jaN
+         aU7b4Qu8CWA8HSx3LJzqmehasjFzH3h3W+3P0=
+Content-Disposition: inline
+In-Reply-To: <20230426133919.1342942-2-yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="utf-8"; format="flowed"
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 To: Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Cc: "T.J. Mercier" <tjmercier-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, lsf-pc-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Muchun Song <muchun.song-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Alistair Popple <apopple-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>, Jason Gunthorpe <jgg-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>, Kalesh Singh <kaleshsingh-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Yu Zhao <yuzhao-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Matthew Wilcox <willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Muchun Song <muchun.song-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Sergey Senozhatsky <senozhatsky-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>, Steven Rostedt <rostedt-nx8X9YLhiw1AfugRpC6u6w@public.gmane.org>, Petr Mladek <pmladek-IBi9RG/b67k@public.gmane.org>, Chris Li <chrisl-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On 4/25/23 14:53, Yosry Ahmed wrote:
-> On Tue, Apr 25, 2023 at 11:42 AM Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org> wrote:
->> On 4/25/23 07:36, Yosry Ahmed wrote:
->>>    +David Rientjes +Greg Thelen +Matthew Wilcox
->>>
->>> On Tue, Apr 11, 2023 at 4:48 PM Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org> wrote:
->>>> On Tue, Apr 11, 2023 at 4:36 PM T.J. Mercier <tjmercier-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org> wrote:
->>>>> When a memcg is removed by userspace it gets offlined by the kernel.
->>>>> Offline memcgs are hidden from user space, but they still live in the
->>>>> kernel until their reference count drops to 0. New allocations cannot
->>>>> be charged to offline memcgs, but existing allocations charged to
->>>>> offline memcgs remain charged, and hold a reference to the memcg.
->>>>>
->>>>> As such, an offline memcg can remain in the kernel indefinitely,
->>>>> becoming a zombie memcg. The accumulation of a large number of zombie
->>>>> memcgs lead to increased system overhead (mainly percpu data in struct
->>>>> mem_cgroup). It also causes some kernel operations that scale with the
->>>>> number of memcgs to become less efficient (e.g. reclaim).
->>>>>
->>>>> There are currently out-of-tree solutions which attempt to
->>>>> periodically clean up zombie memcgs by reclaiming from them. However
->>>>> that is not effective for non-reclaimable memory, which it would be
->>>>> better to reparent or recharge to an online cgroup. There are also
->>>>> proposed changes that would benefit from recharging for shared
->>>>> resources like pinned pages, or DMA buffer pages.
->>>> I am very interested in attending this discussion, it's something that
->>>> I have been actively looking into -- specifically recharging pages of
->>>> offlined memcgs.
->>>>
->>>>> Suggested attendees:
->>>>> Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
->>>>> Yu Zhao <yuzhao-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
->>>>> T.J. Mercier <tjmercier-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
->>>>> Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
->>>>> Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
->>>>> Muchun Song <muchun.song-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>
->>>>> Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
->>>>> Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>
->>>>> Alistair Popple <apopple-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>
->>>>> Jason Gunthorpe <jgg-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>
->>>>> Kalesh Singh <kaleshsingh-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
->>> I was hoping I would bring a more complete idea to this thread, but
->>> here is what I have so far.
->>>
->>> The idea is to recharge the memory charged to memcgs when they are
->>> offlined. I like to think of the options we have to deal with memory
->>> charged to offline memcgs as a toolkit. This toolkit includes:
->>>
->>> (a) Evict memory.
->>>
->>> This is the simplest option, just evict the memory.
->>>
->>> For file-backed pages, this writes them back to their backing files,
->>> uncharging and freeing the page. The next access will read the page
->>> again and the faulting process’s memcg will be charged.
->>>
->>> For swap-backed pages (anon/shmem), this swaps them out. Swapping out
->>> a page charged to an offline memcg uncharges the page and charges the
->>> swap to its parent. The next access will swap in the page and the
->>> parent will be charged. This is effectively deferred recharging to the
->>> parent.
->>>
->>> Pros:
->>> - Simple.
->>>
->>> Cons:
->>> - Behavior is different for file-backed vs. swap-backed pages, for
->>> swap-backed pages, the memory is recharged to the parent (aka
->>> reparented), not charged to the "rightful" user.
->>> - Next access will incur higher latency, especially if the pages are active.
->>>
->>> (b) Direct recharge to the parent
->>>
->>> This can be done for any page and should be simple as the pages are
->>> already hierarchically charged to the parent.
->>>
->>> Pros:
->>> - Simple.
->>>
->>> Cons:
->>> - If a different memcg is using the memory, it will keep taxing the
->>> parent indefinitely. Same not the "rightful" user argument.
->> Muchun had actually posted patch to do this last year. See
->>
->> https://lore.kernel.org/all/20220621125658.64935-10-songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org/T/#me9dbbce85e2f3c4e5f34b97dbbdb5f79d77ce147
->>
->> I am wondering if he is going to post an updated version of that or not.
->> Anyway, I am looking forward to learn about the result of this
->> discussion even thought I am not a conference invitee.
-> There are a couple of problems that were brought up back then, mainly
-> that memory will be reparented to the root memcg eventually,
-> practically escaping accounting. Shared resources may end up being
-> eventually unaccounted. Ideally, we can come up with a scheme where
-> the memory is charged to the real user, instead of just to the parent.
->
-> Consider the case where processes in memcg A and B are both using
-> memory that is charged to memcg A. If memcg A goes offline, and we
-> reparent the memory, memcg B keeps using the memory for free, taxing
-> A's parent, or the entire system if that's root.
->
-> Also, if there is a kernel bug and a page is being pinned
-> unnecessarily, those pages will never be reclaimed and will stick
-> around and eventually be reparented to the root memcg. If being
-> reparented to the root memcg is a legitimate action, you can't simply
-> tell apart if pages are sticking around just because they are being
-> used by someone or if there is a kernel bug.
+On (23/04/26 13:39), Yosry Ahmed wrote:
+> Currently, we format all the memcg stats into a buffer in
+> mem_cgroup_print_oom_meminfo() and use pr_info() to dump it to the logs.
+> However, this buffer is large in size. Although it is currently working
+> as intended, ther is a dependency between the memcg stats buffer and the
+> printk record size limit.
+> 
+> If we add more stats in the future and the buffer becomes larger than
+> the printk record size limit, or if the prink record size limit is
+> reduced, the logs may be truncated.
+> 
+> It is safer to use seq_buf_do_printk(), which will automatically break
+> up the buffer at line breaks and issue small printk() calls.
+> 
+> Refactor the code to move the seq_buf from memory_stat_format() to its
+> callers, and use seq_buf_do_printk() to print the seq_buf in
+> mem_cgroup_print_oom_meminfo().
+> 
+> Signed-off-by: Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 
-This is certainly a valid concern. We are currently doing reparenting 
-for slab objects. However physical pages have a higher probability of 
-being shared by different tasks. I do hope that we can come to agreement 
-soon on how best to address this issue.
-
-Thanks,
-Longman
-
+FWIW,
+Reviewed-by: Sergey Senozhatsky <senozhatsky-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>
