@@ -1,190 +1,106 @@
-From: Hou Tao <houtao@huaweicloud.com>
-Subject: [PATCH v4] blk-ioprio: Introduce promote-to-rt policy
-Date: Fri, 28 Apr 2023 15:44:04 +0800
-Message-ID: <20230428074404.280532-1-houtao@huaweicloud.com>
+From: Bagas Sanjaya <bagasdotme@gmail.com>
+Subject: Re: [PATCH v4] blk-ioprio: Introduce promote-to-rt policy
+Date: Fri, 28 Apr 2023 14:36:13 +0700
+Message-ID: <ab90dcf6-5861-48dc-f261-d6851e150863@gmail.com>
+References: <20230428074404.280532-1-houtao@huaweicloud.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-block-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20221208; t=1682667379; x=1685259379;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=r4T9X6ORTgiJIhVcjeFoQF4kfGQPAh+aPhJ9TCOLtx4=;
+        b=gTkMq43ck648y6RXcRGmriNhxjIOInPfKt5o9jPe9LMJ3iz00MefD9rJqTbBvvgyoE
+         n+YGdtHh9a37pUY7eFw4CB/nD1D3437E2uZD/SRcEaKHSghT3u7OufYEJmPsnIlmBVHb
+         p6VDeiJIpWJ6f37+X2fopxRBcna17GK/b+ymsPcLVyv7yZ2cAfOmnC6VHLvfZ/6XebZY
+         hQ0zkF8NMjv+pmrpO6wx+qAS/A0tvdSo8SrZMcOiZxZaF6FGxDBXxzSUfBBxfN4MvuHC
+         D5KmyFkVJHu07yYZwCnG36VzBr4mK+BQogBKOP8A4lm3amFn6dwayw9KhWFDrGn5SUh5
+         x3QA==
+Content-Language: en-US
+In-Reply-To: <20230428074404.280532-1-houtao@huaweicloud.com>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: linux-block@vger.kernel.org, Jens Axboe <axboe@kernel.dk>
-Cc: Bart Van Assche <bvanassche@acm.org>, Jan Kara <jack@suse.cz>, Bagas Sanjaya <bagasdotme@gmail.com>, Chaitanya Kulkarni <kch@nvidia.com>, cgroups@vger.kernel.org, Tejun Heo <tj@kernel.org>, Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, Jonathan Corbet <corbet@lwn.net>, linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org, houtao1@huawei.com
+To: Hou Tao <houtao@huaweicloud.com>, linux-block@vger.kernel.org, Jens Axboe <axboe@kernel.dk>
+Cc: Bart Van Assche <bvanassche@acm.org>, Jan Kara <jack@suse.cz>, Chaitanya Kulkarni <kch@nvidia.com>, cgroups@vger.kernel.org, Tejun Heo <tj@kernel.org>, Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, Jonathan Corbet <corbet@lwn.net>, linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org, houtao1@huawei.com
 
-From: Hou Tao <houtao1@huawei.com>
+On 4/28/23 14:44, Hou Tao wrote:
+> diff --git a/Documentation/admin-guide/cgroup-v2.rst b/Documentation/admin-guide/cgroup-v2.rst
+> index f67c0829350b..7544ce00e0cb 100644
+> --- a/Documentation/admin-guide/cgroup-v2.rst
+> +++ b/Documentation/admin-guide/cgroup-v2.rst
+> @@ -2024,31 +2024,33 @@ that attribute:
+>    no-change
+>  	Do not modify the I/O priority class.
+>  
+> -  none-to-rt
+> -	For requests that do not have an I/O priority class (NONE),
+> -	change the I/O priority class into RT. Do not modify
+> -	the I/O priority class of other requests.
+> +  promote-to-rt
+> +	For requests that have a non-RT I/O priority class, change it into RT.
+> +	Also change the priority level of these requests to 4. Do not modify
+> +	the I/O priority of requests that have priority class RT.
+>  
+>    restrict-to-be
+>  	For requests that do not have an I/O priority class or that have I/O
+> -	priority class RT, change it into BE. Do not modify the I/O priority
+> -	class of requests that have priority class IDLE.
+> +	priority class RT, change it into BE. Also change the priority level
+> +	of these requests to 0. Do not modify the I/O priority class of
+> +	requests that have priority class IDLE.
+>  
+>    idle
+>  	Change the I/O priority class of all requests into IDLE, the lowest
+>  	I/O priority class.
+>  
+> +  none-to-rt
+> +	Deprecated. Just an alias for promote-to-rt.
+> +
+>  The following numerical values are associated with the I/O priority policies:
+>  
+> -+-------------+---+
+> -| no-change   | 0 |
+> -+-------------+---+
+> -| none-to-rt  | 1 |
+> -+-------------+---+
+> -| rt-to-be    | 2 |
+> -+-------------+---+
+> -| all-to-idle | 3 |
+> -+-------------+---+
+> ++----------------+---+
+> +| no-change      | 0 |
+> ++----------------+---+
+> +| rt-to-be       | 2 |
+> ++----------------+---+
+> +| all-to-idle    | 3 |
+> ++----------------+---+
+>  
+>  The numerical value that corresponds to each I/O priority class is as follows:
+>  
+> @@ -2064,9 +2066,13 @@ The numerical value that corresponds to each I/O priority class is as follows:
+>  
+>  The algorithm to set the I/O priority class for a request is as follows:
+>  
+> -- Translate the I/O priority class policy into a number.
+> -- Change the request I/O priority class into the maximum of the I/O priority
+> -  class policy number and the numerical I/O priority class.
+> +- If I/O priority class policy is promote-to-rt, change the request I/O
+> +  priority class to IOPRIO_CLASS_RT and change the request I/O priority
+> +  level to 4.
+> +- If I/O priorityt class is not promote-to-rt, translate the I/O priority
+> +  class policy into a number, then change the request I/O priority class
+> +  into the maximum of the I/O priority class policy number and the numerical
+> +  I/O priority class.
+>  
+>  PID
+>  ---
 
-Since commit a78418e6a04c ("block: Always initialize bio IO priority on
-submit"), bio->bi_ioprio will never be IOPRIO_CLASS_NONE when calling
-blkcg_set_ioprio(), so there will be no way to promote the io-priority
-of one cgroup to IOPRIO_CLASS_RT, because bi_ioprio will always be
-greater than or equals to IOPRIO_CLASS_RT.
+The doc LGTM, thanks!
 
-It seems possible to call blkcg_set_ioprio() first then try to
-initialize bi_ioprio later in bio_set_ioprio(), but this doesn't work
-for bio in which bi_ioprio is already initialized (e.g., direct-io), so
-introduce a new promote-to-rt policy to promote the iopriority of bio to
-IOPRIO_CLASS_RT if the ioprio is not already RT.
+Reviewed-by: Bagas Sanjaya <bagasdotme@gmail.com>
 
-For none-to-rt policy, although it doesn't work now, but considering
-that its purpose was also to override the io-priority to RT and allowing
-for a smoother transition, just keep it and treat it as an alias of
-the promote-to-rt policy.
-
-Acked-by: Tejun Heo <tj@kernel.org>
-Reviewed-by: Bart Van Assche <bvanassche@acm.org>
-Reviewed-by: Chaitanya Kulkarni <kch@nvidia.com>
-Reviewed-by: Jan Kara <jack@suse.cz>
-Signed-off-by: Hou Tao <houtao1@huawei.com>
----
-v4:
- * rebased on 33afd4b76393
- * Add Reviewed-by from Jan Kara
-
-v3: https://lore.kernel.org/linux-block/20230223135154.3749088-1-houtao@huaweicloud.com
- * Use 'non-RT' instead of 'no-RT' in document (from Bagas)
- * Remove repeated sentence in commit message
- * Add Reviewed-by and Acked-by tags
- 
-v2: https://lore.kernel.org/linux-block/20230220135428.2632906-1-houtao@huaweicloud.com
-
- * Simplify the implementation of promote-to-rt (from Bart)
- * Make none-to-rt to work again by treating it as an alias of
-   the promote-to-rt policy (from Bart & Jan)
- * fix the style of new content in cgroup-v2.rst (from Bagas)
- * set the default priority level to 4 instead of 0 for promote-to-rt
-
-v1: https://lore.kernel.org/linux-block/20230201045227.2203123-1-houtao@huaweicloud.com
-
- Documentation/admin-guide/cgroup-v2.rst | 42 ++++++++++++++-----------
- block/blk-ioprio.c                      | 23 ++++++++++++--
- 2 files changed, 44 insertions(+), 21 deletions(-)
-
-diff --git a/Documentation/admin-guide/cgroup-v2.rst b/Documentation/admin-guide/cgroup-v2.rst
-index f67c0829350b..7544ce00e0cb 100644
---- a/Documentation/admin-guide/cgroup-v2.rst
-+++ b/Documentation/admin-guide/cgroup-v2.rst
-@@ -2024,31 +2024,33 @@ that attribute:
-   no-change
- 	Do not modify the I/O priority class.
- 
--  none-to-rt
--	For requests that do not have an I/O priority class (NONE),
--	change the I/O priority class into RT. Do not modify
--	the I/O priority class of other requests.
-+  promote-to-rt
-+	For requests that have a non-RT I/O priority class, change it into RT.
-+	Also change the priority level of these requests to 4. Do not modify
-+	the I/O priority of requests that have priority class RT.
- 
-   restrict-to-be
- 	For requests that do not have an I/O priority class or that have I/O
--	priority class RT, change it into BE. Do not modify the I/O priority
--	class of requests that have priority class IDLE.
-+	priority class RT, change it into BE. Also change the priority level
-+	of these requests to 0. Do not modify the I/O priority class of
-+	requests that have priority class IDLE.
- 
-   idle
- 	Change the I/O priority class of all requests into IDLE, the lowest
- 	I/O priority class.
- 
-+  none-to-rt
-+	Deprecated. Just an alias for promote-to-rt.
-+
- The following numerical values are associated with the I/O priority policies:
- 
--+-------------+---+
--| no-change   | 0 |
--+-------------+---+
--| none-to-rt  | 1 |
--+-------------+---+
--| rt-to-be    | 2 |
--+-------------+---+
--| all-to-idle | 3 |
--+-------------+---+
-++----------------+---+
-+| no-change      | 0 |
-++----------------+---+
-+| rt-to-be       | 2 |
-++----------------+---+
-+| all-to-idle    | 3 |
-++----------------+---+
- 
- The numerical value that corresponds to each I/O priority class is as follows:
- 
-@@ -2064,9 +2066,13 @@ The numerical value that corresponds to each I/O priority class is as follows:
- 
- The algorithm to set the I/O priority class for a request is as follows:
- 
--- Translate the I/O priority class policy into a number.
--- Change the request I/O priority class into the maximum of the I/O priority
--  class policy number and the numerical I/O priority class.
-+- If I/O priority class policy is promote-to-rt, change the request I/O
-+  priority class to IOPRIO_CLASS_RT and change the request I/O priority
-+  level to 4.
-+- If I/O priorityt class is not promote-to-rt, translate the I/O priority
-+  class policy into a number, then change the request I/O priority class
-+  into the maximum of the I/O priority class policy number and the numerical
-+  I/O priority class.
- 
- PID
- ---
-diff --git a/block/blk-ioprio.c b/block/blk-ioprio.c
-index 055529b9b92b..4051fada01f1 100644
---- a/block/blk-ioprio.c
-+++ b/block/blk-ioprio.c
-@@ -23,25 +23,28 @@
- /**
-  * enum prio_policy - I/O priority class policy.
-  * @POLICY_NO_CHANGE: (default) do not modify the I/O priority class.
-- * @POLICY_NONE_TO_RT: modify IOPRIO_CLASS_NONE into IOPRIO_CLASS_RT.
-+ * @POLICY_PROMOTE_TO_RT: modify no-IOPRIO_CLASS_RT to IOPRIO_CLASS_RT.
-  * @POLICY_RESTRICT_TO_BE: modify IOPRIO_CLASS_NONE and IOPRIO_CLASS_RT into
-  *		IOPRIO_CLASS_BE.
-  * @POLICY_ALL_TO_IDLE: change the I/O priority class into IOPRIO_CLASS_IDLE.
-+ * @POLICY_NONE_TO_RT: an alias for POLICY_PROMOTE_TO_RT.
-  *
-  * See also <linux/ioprio.h>.
-  */
- enum prio_policy {
- 	POLICY_NO_CHANGE	= 0,
--	POLICY_NONE_TO_RT	= 1,
-+	POLICY_PROMOTE_TO_RT	= 1,
- 	POLICY_RESTRICT_TO_BE	= 2,
- 	POLICY_ALL_TO_IDLE	= 3,
-+	POLICY_NONE_TO_RT	= 4,
- };
- 
- static const char *policy_name[] = {
- 	[POLICY_NO_CHANGE]	= "no-change",
--	[POLICY_NONE_TO_RT]	= "none-to-rt",
-+	[POLICY_PROMOTE_TO_RT]	= "promote-to-rt",
- 	[POLICY_RESTRICT_TO_BE]	= "restrict-to-be",
- 	[POLICY_ALL_TO_IDLE]	= "idle",
-+	[POLICY_NONE_TO_RT]	= "none-to-rt",
- };
- 
- static struct blkcg_policy ioprio_policy;
-@@ -189,6 +192,20 @@ void blkcg_set_ioprio(struct bio *bio)
- 	if (!blkcg || blkcg->prio_policy == POLICY_NO_CHANGE)
- 		return;
- 
-+	if (blkcg->prio_policy == POLICY_PROMOTE_TO_RT ||
-+	    blkcg->prio_policy == POLICY_NONE_TO_RT) {
-+		/*
-+		 * For RT threads, the default priority level is 4 because
-+		 * task_nice is 0. By promoting non-RT io-priority to RT-class
-+		 * and default level 4, those requests that are already
-+		 * RT-class but need a higher io-priority can use ioprio_set()
-+		 * to achieve this.
-+		 */
-+		if (IOPRIO_PRIO_CLASS(bio->bi_ioprio) != IOPRIO_CLASS_RT)
-+			bio->bi_ioprio = IOPRIO_PRIO_VALUE(IOPRIO_CLASS_RT, 4);
-+		return;
-+	}
-+
- 	/*
- 	 * Except for IOPRIO_CLASS_NONE, higher I/O priority numbers
- 	 * correspond to a lower priority. Hence, the max_t() below selects
 -- 
-2.29.2
+An old man doll... just what I always wanted! - Clara
 
