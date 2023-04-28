@@ -1,50 +1,149 @@
-From: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
-Subject: Re: [PATCH 2/2] memcg: dump memory.stat during cgroup OOM for v1
-Date: Fri, 28 Apr 2023 11:44:11 +0200
-Message-ID: <ZEuVaxSUo7WxLn3K@dhcp22.suse.cz>
-References: <20230426133919.1342942-1-yosryahmed@google.com>
- <20230426133919.1342942-3-yosryahmed@google.com>
- <ZElC127xlU2NtlqF@dhcp22.suse.cz>
- <CAJD7tkZ1cODXRuVQ3fWL0s=VsyKZqDPPNqFZec_COAXm0XfXWA@mail.gmail.com>
- <ZEqBesAJFfLZI65/@dhcp22.suse.cz>
- <CAJD7tkac7VKV6Ob8qQWzhm8Ayyk3xB0YCY6edL-TxpXV3aCzXA@mail.gmail.com>
-Mime-Version: 1.0
+From: kernel test robot <lkp-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+Subject: [tj-cgroup:test-merge-for-6.4] BUILD SUCCESS
+ 08dcf7efef21aece7597a08886b7a505751624a2
+Date: Fri, 28 Apr 2023 17:53:20 +0800
+Message-ID: <20230428095320.o3w0j%lkp@intel.com>
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
-        t=1682675051; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=fiJTpK/XRgtTp6ZTdBZkBeDGODxz+KV44UNCy4wvN4k=;
-        b=AGa/xCEjEb3qK0MkSqbET4JkZvo2UGTc8z/NuldzPCjYt42vE3dxHHEbB6d5sy76QyDlKB
-        JZvN9n3qMA7C3W9yiQNLWfKs3iEzV/H7hFRrViMiISFVM6/YwbFIvopZPQ3WQxIfW9qSHl
-        k/+k/CJqK0lRhf7+++JDZcpd7axXQv0=
-Content-Disposition: inline
-In-Reply-To: <CAJD7tkac7VKV6Ob8qQWzhm8Ayyk3xB0YCY6edL-TxpXV3aCzXA-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1682675674; x=1714211674;
+  h=date:from:to:cc:subject:message-id;
+  bh=v+LWjjC1KkaR3x2n/fvHDnIco+OpPk7tXvpeUOA/yOo=;
+  b=P9VS3bFKr8+aXdXRxfaAUfvSbyHxsKZCbY6k125CaRZWHt2lDW61LGwL
+   zdOUpALH18/kWlrTufHh5KyBeW67/YlESaTHErYQmVsWz/pOkt0inGQ+a
+   8KeIjdIfzSWD2brYy7tdiYYCIdz3kDXBMzRSwuQDWeCr24FjDzvF6w13n
+   rNlzkvo9g/it6JTt7C+GBZtTTeU+/i/ECtUdJMphN3YXk1VzNQwJk0e/z
+   H7xwSbKL2AqZQsrH8ADl1QnXj+xxGX3wBfulxo63P2mwAaFRGJiW0Foc7
+   k9N4Fx1jRsXliSWDrYam5/hcPr7cqFiT/lOBHS0z2ytx03+Cns2MfwkK8
+   Q==;
 List-ID: <cgroups.vger.kernel.org>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Muchun Song <muchun.song-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Sergey Senozhatsky <senozhatsky-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>, Steven Rostedt <rostedt-nx8X9YLhiw1AfugRpC6u6w@public.gmane.org>, Petr Mladek <pmladek-IBi9RG/b67k@public.gmane.org>, Chris Li <chrisl-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Thu 27-04-23 15:12:46, Yosry Ahmed wrote:
-[...]
-> However, I still think this change is valuable. Like you mentioned,
-> the OOM log is not set in stone, but we shouldn't just change it for
-> no reason. In this case, for cgroup v1 users, the OOM log changed for
-> no reason beyond a side effect of another patch. Upon upgrading our
-> kernel we noticed the behavior change. This patch restores the old
-> behavior without any cost really, and it makes the code a tiny bit
-> more consistent.
+tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git test-merge-for-6.4
+branch HEAD: 08dcf7efef21aece7597a08886b7a505751624a2  Merge branch 'for-6.4' into test-merge-for-6.4
 
-Fair enough. Just make sure you go into more details about why this is
-causing problems/inconveniences. I am slightly worried this might cause
-problems to other people who would like to have the same report for both
-v1 and v2 so we should at least have some solid argumetns to revert
-rather than "it used has changed and we liked it more that way".
+elapsed time: 720m
 
-I personally do not care all that much. It kinda sucks to dump counters
-that are not tracked or fully tracked in v1 because that can mislead
-people and that would be a bigger problem from my POV.
+configs tested: 108
+configs skipped: 6
+
+The following configs have been built successfully.
+More configs may be tested in the coming days.
+
+tested configs:
+alpha                            allyesconfig   gcc  
+alpha        buildonly-randconfig-r005-20230427   gcc  
+alpha                               defconfig   gcc  
+arc                              allyesconfig   gcc  
+arc                                 defconfig   gcc  
+arc                  randconfig-r043-20230428   gcc  
+arm                              allmodconfig   gcc  
+arm                              allyesconfig   gcc  
+arm          buildonly-randconfig-r001-20230427   gcc  
+arm                                 defconfig   gcc  
+arm                      footbridge_defconfig   gcc  
+arm                  randconfig-r014-20230427   gcc  
+arm                  randconfig-r046-20230428   clang
+arm64                            allyesconfig   gcc  
+arm64                               defconfig   gcc  
+arm64                randconfig-r005-20230427   gcc  
+arm64                randconfig-r015-20230427   clang
+csky                                defconfig   gcc  
+csky                 randconfig-r001-20230427   gcc  
+csky                 randconfig-r022-20230427   gcc  
+hexagon      buildonly-randconfig-r004-20230427   clang
+hexagon              randconfig-r041-20230428   clang
+hexagon              randconfig-r045-20230428   clang
+i386                             allyesconfig   gcc  
+i386                              debian-10.3   gcc  
+i386                                defconfig   gcc  
+i386                          randconfig-a001   gcc  
+i386                          randconfig-a002   clang
+i386                          randconfig-a003   gcc  
+i386                          randconfig-a004   clang
+i386                          randconfig-a005   gcc  
+i386                          randconfig-a006   clang
+i386                          randconfig-a011   clang
+i386                          randconfig-a012   gcc  
+i386                          randconfig-a013   clang
+i386                          randconfig-a014   gcc  
+i386                          randconfig-a015   clang
+i386                          randconfig-a016   gcc  
+ia64                             allmodconfig   gcc  
+ia64                                defconfig   gcc  
+ia64                 randconfig-r021-20230427   gcc  
+loongarch                        allmodconfig   gcc  
+loongarch                         allnoconfig   gcc  
+loongarch                           defconfig   gcc  
+loongarch            randconfig-r035-20230427   gcc  
+m68k                             allmodconfig   gcc  
+m68k         buildonly-randconfig-r006-20230427   gcc  
+m68k                                defconfig   gcc  
+m68k                            q40_defconfig   gcc  
+m68k                 randconfig-r004-20230427   gcc  
+m68k                 randconfig-r012-20230427   gcc  
+microblaze           randconfig-r024-20230427   gcc  
+mips                             allmodconfig   gcc  
+mips                             allyesconfig   gcc  
+mips                 randconfig-r032-20230427   clang
+nios2                               defconfig   gcc  
+nios2                randconfig-r013-20230427   gcc  
+nios2                randconfig-r016-20230427   gcc  
+openrisc     buildonly-randconfig-r002-20230427   gcc  
+openrisc             randconfig-r006-20230427   gcc  
+openrisc             randconfig-r033-20230427   gcc  
+parisc                              defconfig   gcc  
+parisc64                            defconfig   gcc  
+powerpc                          allmodconfig   gcc  
+powerpc                           allnoconfig   gcc  
+powerpc                    amigaone_defconfig   gcc  
+powerpc              randconfig-r002-20230427   gcc  
+powerpc                      walnut_defconfig   clang
+riscv                            allmodconfig   gcc  
+riscv                             allnoconfig   gcc  
+riscv                               defconfig   gcc  
+riscv                randconfig-r011-20230427   clang
+riscv                randconfig-r042-20230428   gcc  
+riscv                          rv32_defconfig   gcc  
+s390                             allmodconfig   gcc  
+s390                             allyesconfig   gcc  
+s390                                defconfig   gcc  
+s390                 randconfig-r025-20230427   clang
+s390                 randconfig-r044-20230428   gcc  
+sh                               allmodconfig   gcc  
+sh                ecovec24-romimage_defconfig   gcc  
+sh                         microdev_defconfig   gcc  
+sh                            titan_defconfig   gcc  
+sparc        buildonly-randconfig-r003-20230427   gcc  
+sparc                               defconfig   gcc  
+sparc                randconfig-r036-20230427   gcc  
+sparc64              randconfig-r026-20230427   gcc  
+um                             i386_defconfig   gcc  
+um                           x86_64_defconfig   gcc  
+x86_64                            allnoconfig   gcc  
+x86_64                           allyesconfig   gcc  
+x86_64                              defconfig   gcc  
+x86_64                                  kexec   gcc  
+x86_64                        randconfig-a001   clang
+x86_64                        randconfig-a002   gcc  
+x86_64                        randconfig-a003   clang
+x86_64                        randconfig-a004   gcc  
+x86_64                        randconfig-a005   clang
+x86_64                        randconfig-a006   gcc  
+x86_64                        randconfig-a011   gcc  
+x86_64                        randconfig-a012   clang
+x86_64                        randconfig-a013   gcc  
+x86_64                        randconfig-a014   clang
+x86_64                        randconfig-a015   gcc  
+x86_64                        randconfig-a016   clang
+x86_64                               rhel-8.3   gcc  
+xtensa                  nommu_kc705_defconfig   gcc  
+xtensa               randconfig-r031-20230427   gcc  
+
 -- 
-Michal Hocko
-SUSE Labs
+0-DAY CI Kernel Test Service
+https://github.com/intel/lkp-tests
