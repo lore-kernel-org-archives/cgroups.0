@@ -1,140 +1,190 @@
-From: Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH 2/2] memcg: dump memory.stat during cgroup OOM for v1
-Date: Thu, 27 Apr 2023 15:12:46 -0700
-Message-ID: <CAJD7tkac7VKV6Ob8qQWzhm8Ayyk3xB0YCY6edL-TxpXV3aCzXA@mail.gmail.com>
-References: <20230426133919.1342942-1-yosryahmed@google.com>
- <20230426133919.1342942-3-yosryahmed@google.com> <ZElC127xlU2NtlqF@dhcp22.suse.cz>
- <CAJD7tkZ1cODXRuVQ3fWL0s=VsyKZqDPPNqFZec_COAXm0XfXWA@mail.gmail.com> <ZEqBesAJFfLZI65/@dhcp22.suse.cz>
+From: Hou Tao <houtao@huaweicloud.com>
+Subject: [PATCH v4] blk-ioprio: Introduce promote-to-rt policy
+Date: Fri, 28 Apr 2023 15:44:04 +0800
+Message-ID: <20230428074404.280532-1-houtao@huaweicloud.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20221208; t=1682633603; x=1685225603;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=kgWZRPwaHBehs1AT1+EN1sm+gG/yK/cc9a/rK9nqc80=;
-        b=TImfCv3uzAlaFIlONsUxs6zUYHviKGih0Ap26skG6pLvncBEDe1jEd+HM2+EYAuzzx
-         ck6w3374QXKX1EOzf80afrzhU7Lg0y7s1+gPIGWI5YYLuVPHjnVTsDgKdTMXDtCoUwbn
-         j5rB1ExQCHG3JTfgRXwq4XU+3J5LGv985H4gdDzQ5Ykk29usV26mnKtjFpQ3hmpN+jFo
-         mdWnhRGw5r0FmXmRCPy484L017Uqf6QMqxBuuyYEEeUlrMeoePnV9CQBBaIh7j/cB3iP
-         SmieYUpfNc1oxcCg97YzwuZrXWaTpe1Pma3RHiMaOq7xo2Le6jRZbFpC1EQybkCONi+Z
-         kuLw==
-In-Reply-To: <ZEqBesAJFfLZI65/@dhcp22.suse.cz>
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-block-owner@vger.kernel.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="utf-8"
-To: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
-Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Muchun Song <muchun.song-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Sergey Senozhatsky <senozhatsky-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>, Steven Rostedt <rostedt-nx8X9YLhiw1AfugRpC6u6w@public.gmane.org>, Petr Mladek <pmladek-IBi9RG/b67k@public.gmane.org>, Chris Li <chrisl-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Type: text/plain; charset="us-ascii"
+To: linux-block@vger.kernel.org, Jens Axboe <axboe@kernel.dk>
+Cc: Bart Van Assche <bvanassche@acm.org>, Jan Kara <jack@suse.cz>, Bagas Sanjaya <bagasdotme@gmail.com>, Chaitanya Kulkarni <kch@nvidia.com>, cgroups@vger.kernel.org, Tejun Heo <tj@kernel.org>, Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, Jonathan Corbet <corbet@lwn.net>, linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org, houtao1@huawei.com
 
-On Thu, Apr 27, 2023 at 7:06=E2=80=AFAM Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org> wrot=
-e:
->
-> On Thu 27-04-23 02:21:30, Yosry Ahmed wrote:
-> > On Wed, Apr 26, 2023 at 8:27=E2=80=AFAM Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org> =
-wrote:
-> > >
-> > > On Wed 26-04-23 13:39:19, Yosry Ahmed wrote:
-> > > > Commit c8713d0b2312 ("mm: memcontrol: dump memory.stat during cgrou=
-p
-> > > > OOM") made sure we dump all the stats in memory.stat during a cgrou=
-p
-> > > > OOM, but it also introduced a slight behavioral change. The code us=
-ed to
-> > > > print the non-hierarchical v1 cgroup stats for the entire cgroup
-> > > > subtree, not it only prints the v2 cgroup stats for the cgroup unde=
-r
-> > > > OOM.
-> > > >
-> > > > Although v2 stats are a superset of v1 stats, some of them have
-> > > > different naming. We also lost the non-hierarchical stats for the c=
-group
-> > > > under OOM in v1.
-> > >
-> > > Why is that a problem worth solving? It would be also nice to add an
-> > > example of the oom report before and after the patch.
-> > > --
-> > > Michal Hocko
-> > > SUSE Labs
-> >
-> > Thanks for taking a look!
-> >
-> > The problem is that when upgrading to a kernel that contains
-> > c8713d0b2312 on cgroup v1, the OOM logs suddenly change. The stats
-> > names become different, a couple of stats are gone, and the
-> > non-hierarchical stats disappear.
-> >
-> > The non-hierarchical stats are important to identify if a memcg OOM'd
-> > because of the memory consumption of its own processes or its
-> > descendants. In the example below, I created a parent memcg "a", and a
-> > child memcg "b". A process in "a" itself ("tail" in this case) is
-> > hogging memory and causing an OOM, not the processes in the child "b"
-> > (the "sleep" processes). With non-hierarchical stats, it's clear that
-> > this is the case.
->
-> Is this difference really important from the OOM POV. There is no group
-> oom semantic in v1 and so it always boils down to a specific process
-> that gets selected. Which memcg it is sitting in shouldn't matter all
-> that much. Or does it really matter?
+From: Hou Tao <houtao1@huawei.com>
 
-It is useful information that we already have and used to dump. It's
-not really about which memcg the victim lived in, but which memcg is
-not behaving as expected causing an OOM. If you have processes running
-in the OOMing memcg itself as well as its descendants, then it's nice
-to get an idea of which memcg's usage is not as expected.
+Since commit a78418e6a04c ("block: Always initialize bio IO priority on
+submit"), bio->bi_ioprio will never be IOPRIO_CLASS_NONE when calling
+blkcg_set_ioprio(), so there will be no way to promote the io-priority
+of one cgroup to IOPRIO_CLASS_RT, because bi_ioprio will always be
+greater than or equals to IOPRIO_CLASS_RT.
 
->
-> > Also, it is generally nice to keep things consistent as much as
-> > possible. The sudden change of the OOM log with the kernel upgrade is
-> > confusing, especially that the memcg stats in the OOM logs in cgroup
-> > v1 now look different from the stats in memory.stat.
->
-> Generally speaking oom report is not carved into stone. While we
-> shouldn't make changes just nilly willy it might change for
-> implementation specific reasons.
+It seems possible to call blkcg_set_ioprio() first then try to
+initialize bi_ioprio later in bio_set_ioprio(), but this doesn't work
+for bio in which bi_ioprio is already initialized (e.g., direct-io), so
+introduce a new promote-to-rt policy to promote the iopriority of bio to
+IOPRIO_CLASS_RT if the ioprio is not already RT.
 
-Agreed, but for this case there is really no reason to change the
-behavior, and imo making restoring the behavior makes the code cleaner
-/ more consistent.
+For none-to-rt policy, although it doesn't work now, but considering
+that its purpose was also to override the io-priority to RT and allowing
+for a smoother transition, just keep it and treat it as an alias of
+the promote-to-rt policy.
 
->
-> In this particular case I would agree that the new output is more
-> confusing than helpful. Just look at
-> > [   88.339505] pgscan 0
-> > [   88.339505] pgsteal 0
-> > [   88.339506] pgscan_kswapd 0
-> > [   88.339506] pgscan_direct 0
-> > [   88.339507] pgscan_khugepaged 0
-> > [   88.339507] pgsteal_kswapd 0
-> > [   88.339508] pgsteal_direct 0
-> > [   88.339508] pgsteal_khugepaged 0
->
-> These stats are actively misleading because it would suggest there was
-> no memory reclaim done before oom was hit and that would imply a
-> potentially premature OOM killer invocation (thus a bug). There are
-> likely other stats which are not tracked in v1 yet they are reported
-> that might add to the confusion. I believe this would be a sound
-> justification to get back to the original reporting.
+Acked-by: Tejun Heo <tj@kernel.org>
+Reviewed-by: Bart Van Assche <bvanassche@acm.org>
+Reviewed-by: Chaitanya Kulkarni <kch@nvidia.com>
+Reviewed-by: Jan Kara <jack@suse.cz>
+Signed-off-by: Hou Tao <houtao1@huawei.com>
+---
+v4:
+ * rebased on 33afd4b76393
+ * Add Reviewed-by from Jan Kara
 
-I don't think the collection of these stats is v2-specific, I was just
-testing in a VM without swap, and the process had 100% anonymous
-memory. Testing with swap gives sane stats:
-[   68.851724] pgscan 248801
-[   68.851725] pgsteal 123081
-[   68.851725] pgscan_kswapd 0
-[   68.851726] pgscan_direct 248801
-[   68.851727] pgscan_khugepaged 0
-[   68.851727] pgsteal_kswapd 0
-[   68.851728] pgsteal_direct 123081
-[   68.851728] pgsteal_khugepaged 0
+v3: https://lore.kernel.org/linux-block/20230223135154.3749088-1-houtao@huaweicloud.com
+ * Use 'non-RT' instead of 'no-RT' in document (from Bagas)
+ * Remove repeated sentence in commit message
+ * Add Reviewed-by and Acked-by tags
+ 
+v2: https://lore.kernel.org/linux-block/20230220135428.2632906-1-houtao@huaweicloud.com
 
-However, I still think this change is valuable. Like you mentioned,
-the OOM log is not set in stone, but we shouldn't just change it for
-no reason. In this case, for cgroup v1 users, the OOM log changed for
-no reason beyond a side effect of another patch. Upon upgrading our
-kernel we noticed the behavior change. This patch restores the old
-behavior without any cost really, and it makes the code a tiny bit
-more consistent.
+ * Simplify the implementation of promote-to-rt (from Bart)
+ * Make none-to-rt to work again by treating it as an alias of
+   the promote-to-rt policy (from Bart & Jan)
+ * fix the style of new content in cgroup-v2.rst (from Bagas)
+ * set the default priority level to 4 instead of 0 for promote-to-rt
 
-> --
-> Michal Hocko
-> SUSE Labs
+v1: https://lore.kernel.org/linux-block/20230201045227.2203123-1-houtao@huaweicloud.com
+
+ Documentation/admin-guide/cgroup-v2.rst | 42 ++++++++++++++-----------
+ block/blk-ioprio.c                      | 23 ++++++++++++--
+ 2 files changed, 44 insertions(+), 21 deletions(-)
+
+diff --git a/Documentation/admin-guide/cgroup-v2.rst b/Documentation/admin-guide/cgroup-v2.rst
+index f67c0829350b..7544ce00e0cb 100644
+--- a/Documentation/admin-guide/cgroup-v2.rst
++++ b/Documentation/admin-guide/cgroup-v2.rst
+@@ -2024,31 +2024,33 @@ that attribute:
+   no-change
+ 	Do not modify the I/O priority class.
+ 
+-  none-to-rt
+-	For requests that do not have an I/O priority class (NONE),
+-	change the I/O priority class into RT. Do not modify
+-	the I/O priority class of other requests.
++  promote-to-rt
++	For requests that have a non-RT I/O priority class, change it into RT.
++	Also change the priority level of these requests to 4. Do not modify
++	the I/O priority of requests that have priority class RT.
+ 
+   restrict-to-be
+ 	For requests that do not have an I/O priority class or that have I/O
+-	priority class RT, change it into BE. Do not modify the I/O priority
+-	class of requests that have priority class IDLE.
++	priority class RT, change it into BE. Also change the priority level
++	of these requests to 0. Do not modify the I/O priority class of
++	requests that have priority class IDLE.
+ 
+   idle
+ 	Change the I/O priority class of all requests into IDLE, the lowest
+ 	I/O priority class.
+ 
++  none-to-rt
++	Deprecated. Just an alias for promote-to-rt.
++
+ The following numerical values are associated with the I/O priority policies:
+ 
+-+-------------+---+
+-| no-change   | 0 |
+-+-------------+---+
+-| none-to-rt  | 1 |
+-+-------------+---+
+-| rt-to-be    | 2 |
+-+-------------+---+
+-| all-to-idle | 3 |
+-+-------------+---+
+++----------------+---+
++| no-change      | 0 |
+++----------------+---+
++| rt-to-be       | 2 |
+++----------------+---+
++| all-to-idle    | 3 |
+++----------------+---+
+ 
+ The numerical value that corresponds to each I/O priority class is as follows:
+ 
+@@ -2064,9 +2066,13 @@ The numerical value that corresponds to each I/O priority class is as follows:
+ 
+ The algorithm to set the I/O priority class for a request is as follows:
+ 
+-- Translate the I/O priority class policy into a number.
+-- Change the request I/O priority class into the maximum of the I/O priority
+-  class policy number and the numerical I/O priority class.
++- If I/O priority class policy is promote-to-rt, change the request I/O
++  priority class to IOPRIO_CLASS_RT and change the request I/O priority
++  level to 4.
++- If I/O priorityt class is not promote-to-rt, translate the I/O priority
++  class policy into a number, then change the request I/O priority class
++  into the maximum of the I/O priority class policy number and the numerical
++  I/O priority class.
+ 
+ PID
+ ---
+diff --git a/block/blk-ioprio.c b/block/blk-ioprio.c
+index 055529b9b92b..4051fada01f1 100644
+--- a/block/blk-ioprio.c
++++ b/block/blk-ioprio.c
+@@ -23,25 +23,28 @@
+ /**
+  * enum prio_policy - I/O priority class policy.
+  * @POLICY_NO_CHANGE: (default) do not modify the I/O priority class.
+- * @POLICY_NONE_TO_RT: modify IOPRIO_CLASS_NONE into IOPRIO_CLASS_RT.
++ * @POLICY_PROMOTE_TO_RT: modify no-IOPRIO_CLASS_RT to IOPRIO_CLASS_RT.
+  * @POLICY_RESTRICT_TO_BE: modify IOPRIO_CLASS_NONE and IOPRIO_CLASS_RT into
+  *		IOPRIO_CLASS_BE.
+  * @POLICY_ALL_TO_IDLE: change the I/O priority class into IOPRIO_CLASS_IDLE.
++ * @POLICY_NONE_TO_RT: an alias for POLICY_PROMOTE_TO_RT.
+  *
+  * See also <linux/ioprio.h>.
+  */
+ enum prio_policy {
+ 	POLICY_NO_CHANGE	= 0,
+-	POLICY_NONE_TO_RT	= 1,
++	POLICY_PROMOTE_TO_RT	= 1,
+ 	POLICY_RESTRICT_TO_BE	= 2,
+ 	POLICY_ALL_TO_IDLE	= 3,
++	POLICY_NONE_TO_RT	= 4,
+ };
+ 
+ static const char *policy_name[] = {
+ 	[POLICY_NO_CHANGE]	= "no-change",
+-	[POLICY_NONE_TO_RT]	= "none-to-rt",
++	[POLICY_PROMOTE_TO_RT]	= "promote-to-rt",
+ 	[POLICY_RESTRICT_TO_BE]	= "restrict-to-be",
+ 	[POLICY_ALL_TO_IDLE]	= "idle",
++	[POLICY_NONE_TO_RT]	= "none-to-rt",
+ };
+ 
+ static struct blkcg_policy ioprio_policy;
+@@ -189,6 +192,20 @@ void blkcg_set_ioprio(struct bio *bio)
+ 	if (!blkcg || blkcg->prio_policy == POLICY_NO_CHANGE)
+ 		return;
+ 
++	if (blkcg->prio_policy == POLICY_PROMOTE_TO_RT ||
++	    blkcg->prio_policy == POLICY_NONE_TO_RT) {
++		/*
++		 * For RT threads, the default priority level is 4 because
++		 * task_nice is 0. By promoting non-RT io-priority to RT-class
++		 * and default level 4, those requests that are already
++		 * RT-class but need a higher io-priority can use ioprio_set()
++		 * to achieve this.
++		 */
++		if (IOPRIO_PRIO_CLASS(bio->bi_ioprio) != IOPRIO_CLASS_RT)
++			bio->bi_ioprio = IOPRIO_PRIO_VALUE(IOPRIO_CLASS_RT, 4);
++		return;
++	}
++
+ 	/*
+ 	 * Except for IOPRIO_CLASS_NONE, higher I/O priority numbers
+ 	 * correspond to a lower priority. Hence, the max_t() below selects
+-- 
+2.29.2
+
