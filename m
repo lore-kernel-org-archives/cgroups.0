@@ -1,313 +1,638 @@
-From: Suren Baghdasaryan <surenb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Subject: [PATCH 07/40] Lazy percpu counters
-Date: Mon,  1 May 2023 09:54:17 -0700
-Message-ID: <20230501165450.15352-8-surenb@google.com>
+From: Suren Baghdasaryan <surenb@google.com>
+Subject: [PATCH 08/40] mm: introduce slabobj_ext to support slab object extensions
+Date: Mon,  1 May 2023 09:54:18 -0700
+Message-ID: <20230501165450.15352-9-surenb@google.com>
 References: <20230501165450.15352-1-surenb@google.com>
 Mime-Version: 1.0
-Return-path: <linux-modules-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <linux-doc-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20221208; t=1682960124; x=1685552124;
+        d=google.com; s=20221208; t=1682960126; x=1685552126;
         h=cc:to:from:subject:message-id:references:mime-version:in-reply-to
          :date:from:to:cc:subject:date:message-id:reply-to;
-        bh=O9K7OqGn67XevhyLqxW8/t3YPJ+QYtYh9lmzl+bkJrg=;
-        b=uyQWn2HtrGHHQPYjCaEXS71WFvIKKSc7//EwH6w5zT7RuLTJsJvg4Siy51jlaOTMsf
-         DmzxgGzQqK6buMAxRdIZF5co25tsVldyDbaF7rOabJEbLpi4XheA+l5VWP2IJDBlEIui
-         J3jFl+rVymLiKhaaXfPqFSO8pBqa31LbX5CWrS5Wner2pA7Sqr1hkvfcI6t4MxiQZt9K
-         qhkEpMVbiHPNZp9IQ6O2D9+a8gKMVQ/1Gtf9GajnR6izUu8XnftHHBs+v4IcA0SDdYNk
-         NO/g09kaGZENLPill52iLrjrZMs4uUM92aRcipfW+xL+/5JdYb7kKitjTzDH4s2JKlli
-         slTg==
-In-Reply-To: <20230501165450.15352-1-surenb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+        bh=EpAPHCELRqlGyXafm3HOq1DjysfSUkIp0lW71FhLJ+Q=;
+        b=KndAV4afZjE7urj1LZ7Rf/o633ajiD8s+Zgf2L1Mk9XX6B/9PMd2nEUVnlftP7GrKt
+         bWCCrfLe4oDbYF4trh5h6CFhIJwiPA+kfT/a0Y4OXyPznsVC8TV+5wilPJneaIud8ycS
+         FrIUNz8/SFFMagOyadbcqEA0OzG1GIoTXbpA5wGATZUND86MP2J0BOIMLXyxPVqWZ9Wl
+         hyCmq22BBXz06DX2ppJBr0xZldtvTeIUTTqyjK3oZrVhnhKWEQyYLcpCxTL3wMg/+F+S
+         6FiOvawPLieCpVMV7STZbWNFOnrCi/8x9VUaf5jjtzPaRTlRCN5z85N54yndm8M1FUN8
+         3eIA==
+In-Reply-To: <20230501165450.15352-1-surenb@google.com>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org
-Cc: kent.overstreet-fxUVXftIFDnyG1zEObXtfA@public.gmane.org, mhocko-IBi9RG/b67k@public.gmane.org, vbabka-AlSwsSmVLrQ@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org, mgorman-l3A5Bk7waGM@public.gmane.org, dave-h16yJtLeMjHk1uMJSBkQmQ@public.gmane.org, willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, liam.howlett-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org, corbet-T1hC0tSOHrs@public.gmane.org, void-gq6j2QGBifHby3iVrkZq2A@public.gmane.org, peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, juri.lelli-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, ldufour-tEXmvtCZX7AybS5Ee8rs3A@public.gmane.org, catalin.marinas-5wv7dgnIgG8@public.gmane.org, will-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, arnd-r2nGTMty4D4@public.gmane.org, tglx-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org, mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, dave.hansen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org, x86-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, peterx-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, david-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, mcgrof-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, masahiroy-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, nathan-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, dennis-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, muchun.song-fxUVXftIFDnyG1zEObXtfA@public.gmane.org, rppt-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, paulmck-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, pasha.tatashin-2EmBfe737+LQT0dZR+AlfA@public.gmane.org, yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, yuzhao-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, dhowells-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, andreyknvl-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, keescook-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org
+To: akpm@linux-foundation.org
+Cc: kent.overstreet@linux.dev, mhocko@suse.com, vbabka@suse.cz, hannes@cmpxchg.org, roman.gushchin@linux.dev, mgorman@suse.de, dave@stgolabs.net, willy@infradead.org, liam.howlett@oracle.com, corbet@lwn.net, void@manifault.com, peterz@infradead.org, juri.lelli@redhat.com, ldufour@linux.ibm.com, catalin.marinas@arm.com, will@kernel.org, arnd@arndb.de, tglx@linutronix.de, mingo@redhat.com, dave.hansen@linux.intel.com, x86@kernel.org, peterx@redhat.com, david@redhat.com, axboe@kernel.dk, mcgrof@kernel.org, masahiroy@kernel.org, nathan@kernel.org, dennis@kernel.org, tj@kernel.org, muchun.song@linux.dev, rppt@kernel.org, paulmck@kernel.org, pasha.tatashin@soleen.com, yosryahmed@google.com, yuzhao@google.com, dhowells@redhat.com, hughd@google.com, andreyknvl@gmail.com, keescook@chromium.org
 
-From: Kent Overstreet <kent.overstreet-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>
+Currently slab pages can store only vectors of obj_cgroup pointers in
+page->memcg_data. Introduce slabobj_ext structure to allow more data
+to be stored for each slab object. Wrap obj_cgroup into slabobj_ext
+to support current functionality while allowing to extend slabobj_ext
+in the future.
 
-This patch adds lib/lazy-percpu-counter.c, which implements counters
-that start out as atomics, but lazily switch to percpu mode if the
-update rate crosses some threshold (arbitrarily set at 256 per second).
-
-Signed-off-by: Kent Overstreet <kent.overstreet-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>
-Signed-off-by: Suren Baghdasaryan <surenb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Signed-off-by: Suren Baghdasaryan <surenb@google.com>
 ---
- include/linux/lazy-percpu-counter.h | 102 ++++++++++++++++++++++
- lib/Kconfig                         |   3 +
- lib/Makefile                        |   2 +
- lib/lazy-percpu-counter.c           | 127 ++++++++++++++++++++++++++++
- 4 files changed, 234 insertions(+)
- create mode 100644 include/linux/lazy-percpu-counter.h
- create mode 100644 lib/lazy-percpu-counter.c
+ include/linux/memcontrol.h |  20 +++--
+ include/linux/mm_types.h   |   4 +-
+ init/Kconfig               |   4 +
+ mm/kfence/core.c           |  14 ++--
+ mm/kfence/kfence.h         |   4 +-
+ mm/memcontrol.c            |  56 ++------------
+ mm/page_owner.c            |   2 +-
+ mm/slab.h                  | 148 +++++++++++++++++++++++++------------
+ mm/slab_common.c           |  47 ++++++++++++
+ 9 files changed, 185 insertions(+), 114 deletions(-)
 
-diff --git a/include/linux/lazy-percpu-counter.h b/include/linux/lazy-percpu-counter.h
-new file mode 100644
-index 000000000000..45ca9e2ce58b
---- /dev/null
-+++ b/include/linux/lazy-percpu-counter.h
-@@ -0,0 +1,102 @@
-+/* SPDX-License-Identifier: GPL-2.0 */
-+/*
-+ * Lazy percpu counters:
-+ * (C) 2022 Kent Overstreet
-+ *
-+ * Lazy percpu counters start out in atomic mode, then switch to percpu mode if
-+ * the update rate crosses some threshold.
-+ *
-+ * This means we don't have to decide between low memory overhead atomic
-+ * counters and higher performance percpu counters - we can have our cake and
-+ * eat it, too!
-+ *
-+ * Internally we use an atomic64_t, where the low bit indicates whether we're in
-+ * percpu mode, and the high 8 bits are a secondary counter that's incremented
-+ * when the counter is modified - meaning 55 bits of precision are available for
-+ * the counter itself.
-+ */
-+
-+#ifndef _LINUX_LAZY_PERCPU_COUNTER_H
-+#define _LINUX_LAZY_PERCPU_COUNTER_H
-+
-+#include <linux/atomic.h>
-+#include <asm/percpu.h>
-+
-+struct lazy_percpu_counter {
-+	atomic64_t			v;
-+	unsigned long			last_wrap;
-+};
-+
-+void lazy_percpu_counter_exit(struct lazy_percpu_counter *c);
-+void lazy_percpu_counter_add_slowpath(struct lazy_percpu_counter *c, s64 i);
-+void lazy_percpu_counter_add_slowpath_noupgrade(struct lazy_percpu_counter *c, s64 i);
-+s64 lazy_percpu_counter_read(struct lazy_percpu_counter *c);
-+
-+/*
-+ * We use the high bits of the atomic counter for a secondary counter, which is
-+ * incremented every time the counter is touched. When the secondary counter
-+ * wraps, we check the time the counter last wrapped, and if it was recent
-+ * enough that means the update frequency has crossed our threshold and we
-+ * switch to percpu mode:
-+ */
-+#define COUNTER_MOD_BITS		8
-+#define COUNTER_MOD_MASK		~(~0ULL >> COUNTER_MOD_BITS)
-+#define COUNTER_MOD_BITS_START		(64 - COUNTER_MOD_BITS)
-+
-+/*
-+ * We use the low bit of the counter to indicate whether we're in atomic mode
-+ * (low bit clear), or percpu mode (low bit set, counter is a pointer to actual
-+ * percpu counters:
-+ */
-+#define COUNTER_IS_PCPU_BIT		1
-+
-+static inline u64 __percpu *lazy_percpu_counter_is_pcpu(u64 v)
-+{
-+	if (!(v & COUNTER_IS_PCPU_BIT))
-+		return NULL;
-+
-+	v ^= COUNTER_IS_PCPU_BIT;
-+	return (u64 __percpu *)(unsigned long)v;
-+}
-+
-+/**
-+ * lazy_percpu_counter_add: Add a value to a lazy_percpu_counter
-+ *
-+ * @c: counter to modify
-+ * @i: value to add
-+ */
-+static inline void lazy_percpu_counter_add(struct lazy_percpu_counter *c, s64 i)
-+{
-+	u64 v = atomic64_read(&c->v);
-+	u64 __percpu *pcpu_v = lazy_percpu_counter_is_pcpu(v);
-+
-+	if (likely(pcpu_v))
-+		this_cpu_add(*pcpu_v, i);
-+	else
-+		lazy_percpu_counter_add_slowpath(c, i);
-+}
-+
-+/**
-+ * lazy_percpu_counter_add_noupgrade: Add a value to a lazy_percpu_counter,
-+ * without upgrading to percpu mode
-+ *
-+ * @c: counter to modify
-+ * @i: value to add
-+ */
-+static inline void lazy_percpu_counter_add_noupgrade(struct lazy_percpu_counter *c, s64 i)
-+{
-+	u64 v = atomic64_read(&c->v);
-+	u64 __percpu *pcpu_v = lazy_percpu_counter_is_pcpu(v);
-+
-+	if (likely(pcpu_v))
-+		this_cpu_add(*pcpu_v, i);
-+	else
-+		lazy_percpu_counter_add_slowpath_noupgrade(c, i);
-+}
-+
-+static inline void lazy_percpu_counter_sub(struct lazy_percpu_counter *c, s64 i)
-+{
-+	lazy_percpu_counter_add(c, -i);
-+}
-+
-+#endif /* _LINUX_LAZY_PERCPU_COUNTER_H */
-diff --git a/lib/Kconfig b/lib/Kconfig
-index 5c2da561c516..7380292a8fcd 100644
---- a/lib/Kconfig
-+++ b/lib/Kconfig
-@@ -505,6 +505,9 @@ config ASSOCIATIVE_ARRAY
+diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
+index 222d7370134c..b9fd9732a52b 100644
+--- a/include/linux/memcontrol.h
++++ b/include/linux/memcontrol.h
+@@ -339,8 +339,8 @@ struct mem_cgroup {
+ extern struct mem_cgroup *root_mem_cgroup;
  
- 	  for more information.
+ enum page_memcg_data_flags {
+-	/* page->memcg_data is a pointer to an objcgs vector */
+-	MEMCG_DATA_OBJCGS = (1UL << 0),
++	/* page->memcg_data is a pointer to an slabobj_ext vector */
++	MEMCG_DATA_OBJEXTS = (1UL << 0),
+ 	/* page has been accounted as a non-slab kernel page */
+ 	MEMCG_DATA_KMEM = (1UL << 1),
+ 	/* the next bit after the last actual flag */
+@@ -378,7 +378,7 @@ static inline struct mem_cgroup *__folio_memcg(struct folio *folio)
+ 	unsigned long memcg_data = folio->memcg_data;
  
-+config LAZY_PERCPU_COUNTER
+ 	VM_BUG_ON_FOLIO(folio_test_slab(folio), folio);
+-	VM_BUG_ON_FOLIO(memcg_data & MEMCG_DATA_OBJCGS, folio);
++	VM_BUG_ON_FOLIO(memcg_data & MEMCG_DATA_OBJEXTS, folio);
+ 	VM_BUG_ON_FOLIO(memcg_data & MEMCG_DATA_KMEM, folio);
+ 
+ 	return (struct mem_cgroup *)(memcg_data & ~MEMCG_DATA_FLAGS_MASK);
+@@ -399,7 +399,7 @@ static inline struct obj_cgroup *__folio_objcg(struct folio *folio)
+ 	unsigned long memcg_data = folio->memcg_data;
+ 
+ 	VM_BUG_ON_FOLIO(folio_test_slab(folio), folio);
+-	VM_BUG_ON_FOLIO(memcg_data & MEMCG_DATA_OBJCGS, folio);
++	VM_BUG_ON_FOLIO(memcg_data & MEMCG_DATA_OBJEXTS, folio);
+ 	VM_BUG_ON_FOLIO(!(memcg_data & MEMCG_DATA_KMEM), folio);
+ 
+ 	return (struct obj_cgroup *)(memcg_data & ~MEMCG_DATA_FLAGS_MASK);
+@@ -496,7 +496,7 @@ static inline struct mem_cgroup *folio_memcg_check(struct folio *folio)
+ 	 */
+ 	unsigned long memcg_data = READ_ONCE(folio->memcg_data);
+ 
+-	if (memcg_data & MEMCG_DATA_OBJCGS)
++	if (memcg_data & MEMCG_DATA_OBJEXTS)
+ 		return NULL;
+ 
+ 	if (memcg_data & MEMCG_DATA_KMEM) {
+@@ -542,7 +542,7 @@ static inline struct mem_cgroup *get_mem_cgroup_from_objcg(struct obj_cgroup *ob
+ static inline bool folio_memcg_kmem(struct folio *folio)
+ {
+ 	VM_BUG_ON_PGFLAGS(PageTail(&folio->page), &folio->page);
+-	VM_BUG_ON_FOLIO(folio->memcg_data & MEMCG_DATA_OBJCGS, folio);
++	VM_BUG_ON_FOLIO(folio->memcg_data & MEMCG_DATA_OBJEXTS, folio);
+ 	return folio->memcg_data & MEMCG_DATA_KMEM;
+ }
+ 
+@@ -1606,6 +1606,14 @@ unsigned long mem_cgroup_soft_limit_reclaim(pg_data_t *pgdat, int order,
+ }
+ #endif /* CONFIG_MEMCG */
+ 
++/*
++ * Extended information for slab objects stored as an array in page->memcg_data
++ * if MEMCG_DATA_OBJEXTS is set.
++ */
++struct slabobj_ext {
++	struct obj_cgroup *objcg;
++} __aligned(8);
++
+ static inline void __inc_lruvec_kmem_state(void *p, enum node_stat_item idx)
+ {
+ 	__mod_lruvec_kmem_state(p, idx, 1);
+diff --git a/include/linux/mm_types.h b/include/linux/mm_types.h
+index 306a3d1a0fa6..e79303e1e30c 100644
+--- a/include/linux/mm_types.h
++++ b/include/linux/mm_types.h
+@@ -194,7 +194,7 @@ struct page {
+ 	/* Usage count. *DO NOT USE DIRECTLY*. See page_ref.h */
+ 	atomic_t _refcount;
+ 
+-#ifdef CONFIG_MEMCG
++#ifdef CONFIG_SLAB_OBJ_EXT
+ 	unsigned long memcg_data;
+ #endif
+ 
+@@ -320,7 +320,7 @@ struct folio {
+ 			void *private;
+ 			atomic_t _mapcount;
+ 			atomic_t _refcount;
+-#ifdef CONFIG_MEMCG
++#ifdef CONFIG_SLAB_OBJ_EXT
+ 			unsigned long memcg_data;
+ #endif
+ 	/* private: the union with struct page is transitional */
+diff --git a/init/Kconfig b/init/Kconfig
+index 32c24950c4ce..44267919a2a2 100644
+--- a/init/Kconfig
++++ b/init/Kconfig
+@@ -936,10 +936,14 @@ config CGROUP_FAVOR_DYNMODS
+ 
+           Say N if unsure.
+ 
++config SLAB_OBJ_EXT
 +	bool
 +
- config HAS_IOMEM
- 	bool
- 	depends on !NO_IOMEM
-diff --git a/lib/Makefile b/lib/Makefile
-index 876fcdeae34e..293a0858a3f8 100644
---- a/lib/Makefile
-+++ b/lib/Makefile
-@@ -164,6 +164,8 @@ obj-$(CONFIG_DEBUG_PREEMPT) += smp_processor_id.o
- obj-$(CONFIG_DEBUG_LIST) += list_debug.o
- obj-$(CONFIG_DEBUG_OBJECTS) += debugobjects.o
+ config MEMCG
+ 	bool "Memory controller"
+ 	select PAGE_COUNTER
+ 	select EVENTFD
++	select SLAB_OBJ_EXT
+ 	help
+ 	  Provides control over the memory footprint of tasks in a cgroup.
  
-+obj-$(CONFIG_LAZY_PERCPU_COUNTER) += lazy-percpu-counter.o
+diff --git a/mm/kfence/core.c b/mm/kfence/core.c
+index dad3c0eb70a0..aea6fa145080 100644
+--- a/mm/kfence/core.c
++++ b/mm/kfence/core.c
+@@ -590,9 +590,9 @@ static unsigned long kfence_init_pool(void)
+ 			continue;
+ 
+ 		__folio_set_slab(slab_folio(slab));
+-#ifdef CONFIG_MEMCG
+-		slab->memcg_data = (unsigned long)&kfence_metadata[i / 2 - 1].objcg |
+-				   MEMCG_DATA_OBJCGS;
++#ifdef CONFIG_MEMCG_KMEM
++		slab->obj_exts = (unsigned long)&kfence_metadata[i / 2 - 1].obj_exts |
++				 MEMCG_DATA_OBJEXTS;
+ #endif
+ 	}
+ 
+@@ -634,8 +634,8 @@ static unsigned long kfence_init_pool(void)
+ 
+ 		if (!i || (i % 2))
+ 			continue;
+-#ifdef CONFIG_MEMCG
+-		slab->memcg_data = 0;
++#ifdef CONFIG_MEMCG_KMEM
++		slab->obj_exts = 0;
+ #endif
+ 		__folio_clear_slab(slab_folio(slab));
+ 	}
+@@ -1093,8 +1093,8 @@ void __kfence_free(void *addr)
+ {
+ 	struct kfence_metadata *meta = addr_to_metadata((unsigned long)addr);
+ 
+-#ifdef CONFIG_MEMCG
+-	KFENCE_WARN_ON(meta->objcg);
++#ifdef CONFIG_MEMCG_KMEM
++	KFENCE_WARN_ON(meta->obj_exts.objcg);
+ #endif
+ 	/*
+ 	 * If the objects of the cache are SLAB_TYPESAFE_BY_RCU, defer freeing
+diff --git a/mm/kfence/kfence.h b/mm/kfence/kfence.h
+index 2aafc46a4aaf..8e0d76c4ea2a 100644
+--- a/mm/kfence/kfence.h
++++ b/mm/kfence/kfence.h
+@@ -97,8 +97,8 @@ struct kfence_metadata {
+ 	struct kfence_track free_track;
+ 	/* For updating alloc_covered on frees. */
+ 	u32 alloc_stack_hash;
+-#ifdef CONFIG_MEMCG
+-	struct obj_cgroup *objcg;
++#ifdef CONFIG_MEMCG_KMEM
++	struct slabobj_ext obj_exts;
+ #endif
+ };
+ 
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index 4b27e245a055..f2a7fe718117 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -2892,13 +2892,6 @@ static void commit_charge(struct folio *folio, struct mem_cgroup *memcg)
+ }
+ 
+ #ifdef CONFIG_MEMCG_KMEM
+-/*
+- * The allocated objcg pointers array is not accounted directly.
+- * Moreover, it should not come from DMA buffer and is not readily
+- * reclaimable. So those GFP bits should be masked off.
+- */
+-#define OBJCGS_CLEAR_MASK	(__GFP_DMA | __GFP_RECLAIMABLE | __GFP_ACCOUNT)
+-
+ /*
+  * mod_objcg_mlstate() may be called with irq enabled, so
+  * mod_memcg_lruvec_state() should be used.
+@@ -2917,62 +2910,27 @@ static inline void mod_objcg_mlstate(struct obj_cgroup *objcg,
+ 	rcu_read_unlock();
+ }
+ 
+-int memcg_alloc_slab_cgroups(struct slab *slab, struct kmem_cache *s,
+-				 gfp_t gfp, bool new_slab)
+-{
+-	unsigned int objects = objs_per_slab(s, slab);
+-	unsigned long memcg_data;
+-	void *vec;
+-
+-	gfp &= ~OBJCGS_CLEAR_MASK;
+-	vec = kcalloc_node(objects, sizeof(struct obj_cgroup *), gfp,
+-			   slab_nid(slab));
+-	if (!vec)
+-		return -ENOMEM;
+-
+-	memcg_data = (unsigned long) vec | MEMCG_DATA_OBJCGS;
+-	if (new_slab) {
+-		/*
+-		 * If the slab is brand new and nobody can yet access its
+-		 * memcg_data, no synchronization is required and memcg_data can
+-		 * be simply assigned.
+-		 */
+-		slab->memcg_data = memcg_data;
+-	} else if (cmpxchg(&slab->memcg_data, 0, memcg_data)) {
+-		/*
+-		 * If the slab is already in use, somebody can allocate and
+-		 * assign obj_cgroups in parallel. In this case the existing
+-		 * objcg vector should be reused.
+-		 */
+-		kfree(vec);
+-		return 0;
+-	}
+-
+-	kmemleak_not_leak(vec);
+-	return 0;
+-}
+-
+ static __always_inline
+ struct mem_cgroup *mem_cgroup_from_obj_folio(struct folio *folio, void *p)
+ {
+ 	/*
+ 	 * Slab objects are accounted individually, not per-page.
+ 	 * Memcg membership data for each individual object is saved in
+-	 * slab->memcg_data.
++	 * slab->obj_exts.
+ 	 */
+ 	if (folio_test_slab(folio)) {
+-		struct obj_cgroup **objcgs;
++		struct slabobj_ext *obj_exts;
+ 		struct slab *slab;
+ 		unsigned int off;
+ 
+ 		slab = folio_slab(folio);
+-		objcgs = slab_objcgs(slab);
+-		if (!objcgs)
++		obj_exts = slab_obj_exts(slab);
++		if (!obj_exts)
+ 			return NULL;
+ 
+ 		off = obj_to_index(slab->slab_cache, slab, p);
+-		if (objcgs[off])
+-			return obj_cgroup_memcg(objcgs[off]);
++		if (obj_exts[off].objcg)
++			return obj_cgroup_memcg(obj_exts[off].objcg);
+ 
+ 		return NULL;
+ 	}
+@@ -2980,7 +2938,7 @@ struct mem_cgroup *mem_cgroup_from_obj_folio(struct folio *folio, void *p)
+ 	/*
+ 	 * folio_memcg_check() is used here, because in theory we can encounter
+ 	 * a folio where the slab flag has been cleared already, but
+-	 * slab->memcg_data has not been freed yet
++	 * slab->obj_exts has not been freed yet
+ 	 * folio_memcg_check() will guarantee that a proper memory
+ 	 * cgroup pointer or NULL will be returned.
+ 	 */
+diff --git a/mm/page_owner.c b/mm/page_owner.c
+index 31169b3e7f06..8b6086c666e6 100644
+--- a/mm/page_owner.c
++++ b/mm/page_owner.c
+@@ -372,7 +372,7 @@ static inline int print_page_owner_memcg(char *kbuf, size_t count, int ret,
+ 	if (!memcg_data)
+ 		goto out_unlock;
+ 
+-	if (memcg_data & MEMCG_DATA_OBJCGS)
++	if (memcg_data & MEMCG_DATA_OBJEXTS)
+ 		ret += scnprintf(kbuf + ret, count - ret,
+ 				"Slab cache page\n");
+ 
+diff --git a/mm/slab.h b/mm/slab.h
+index f01ac256a8f5..25d14b3a7280 100644
+--- a/mm/slab.h
++++ b/mm/slab.h
+@@ -57,8 +57,8 @@ struct slab {
+ #endif
+ 
+ 	atomic_t __page_refcount;
+-#ifdef CONFIG_MEMCG
+-	unsigned long memcg_data;
++#ifdef CONFIG_SLAB_OBJ_EXT
++	unsigned long obj_exts;
+ #endif
+ };
+ 
+@@ -67,8 +67,8 @@ struct slab {
+ SLAB_MATCH(flags, __page_flags);
+ SLAB_MATCH(compound_head, slab_cache);	/* Ensure bit 0 is clear */
+ SLAB_MATCH(_refcount, __page_refcount);
+-#ifdef CONFIG_MEMCG
+-SLAB_MATCH(memcg_data, memcg_data);
++#ifdef CONFIG_SLAB_OBJ_EXT
++SLAB_MATCH(memcg_data, obj_exts);
+ #endif
+ #undef SLAB_MATCH
+ static_assert(sizeof(struct slab) <= sizeof(struct page));
+@@ -390,36 +390,106 @@ static inline bool kmem_cache_debug_flags(struct kmem_cache *s, slab_flags_t fla
+ 	return false;
+ }
+ 
+-#ifdef CONFIG_MEMCG_KMEM
++#ifdef CONFIG_SLAB_OBJ_EXT
 +
- obj-$(CONFIG_BITREVERSE) += bitrev.o
- obj-$(CONFIG_LINEAR_RANGES) += linear_ranges.o
- obj-$(CONFIG_PACKING)	+= packing.o
-diff --git a/lib/lazy-percpu-counter.c b/lib/lazy-percpu-counter.c
-new file mode 100644
-index 000000000000..4f4e32c2dc09
---- /dev/null
-+++ b/lib/lazy-percpu-counter.c
-@@ -0,0 +1,127 @@
-+// SPDX-License-Identifier: GPL-2.0-only
-+
-+#include <linux/atomic.h>
-+#include <linux/gfp.h>
-+#include <linux/jiffies.h>
-+#include <linux/lazy-percpu-counter.h>
-+#include <linux/percpu.h>
-+
-+static inline s64 lazy_percpu_counter_atomic_val(s64 v)
+ /*
+- * slab_objcgs - get the object cgroups vector associated with a slab
++ * slab_obj_exts - get the pointer to the slab object extension vector
++ * associated with a slab.
+  * @slab: a pointer to the slab struct
+  *
+- * Returns a pointer to the object cgroups vector associated with the slab,
++ * Returns a pointer to the object extension vector associated with the slab,
+  * or NULL if no such vector has been associated yet.
+  */
+-static inline struct obj_cgroup **slab_objcgs(struct slab *slab)
++static inline struct slabobj_ext *slab_obj_exts(struct slab *slab)
+ {
+-	unsigned long memcg_data = READ_ONCE(slab->memcg_data);
++	unsigned long obj_exts = READ_ONCE(slab->obj_exts);
+ 
+-	VM_BUG_ON_PAGE(memcg_data && !(memcg_data & MEMCG_DATA_OBJCGS),
++#ifdef CONFIG_MEMCG
++	VM_BUG_ON_PAGE(obj_exts && !(obj_exts & MEMCG_DATA_OBJEXTS),
+ 							slab_page(slab));
+-	VM_BUG_ON_PAGE(memcg_data & MEMCG_DATA_KMEM, slab_page(slab));
++	VM_BUG_ON_PAGE(obj_exts & MEMCG_DATA_KMEM, slab_page(slab));
+ 
+-	return (struct obj_cgroup **)(memcg_data & ~MEMCG_DATA_FLAGS_MASK);
++	return (struct slabobj_ext *)(obj_exts & ~MEMCG_DATA_FLAGS_MASK);
++#else
++	return (struct slabobj_ext *)obj_exts;
++#endif
+ }
+ 
+-int memcg_alloc_slab_cgroups(struct slab *slab, struct kmem_cache *s,
+-				 gfp_t gfp, bool new_slab);
+-void mod_objcg_state(struct obj_cgroup *objcg, struct pglist_data *pgdat,
+-		     enum node_stat_item idx, int nr);
++int alloc_slab_obj_exts(struct slab *slab, struct kmem_cache *s,
++			gfp_t gfp, bool new_slab);
+ 
+-static inline void memcg_free_slab_cgroups(struct slab *slab)
++static inline bool need_slab_obj_ext(void)
+ {
+-	kfree(slab_objcgs(slab));
+-	slab->memcg_data = 0;
++	/*
++	 * CONFIG_MEMCG_KMEM creates vector of obj_cgroup objects conditionally
++	 * inside memcg_slab_post_alloc_hook. No other users for now.
++	 */
++	return false;
+ }
+ 
++static inline void free_slab_obj_exts(struct slab *slab)
 +{
-+	/* Ensure output is sign extended properly: */
-+	return (v << COUNTER_MOD_BITS) >>
-+		(COUNTER_MOD_BITS + COUNTER_IS_PCPU_BIT);
-+}
++	struct slabobj_ext *obj_exts;
 +
-+static void lazy_percpu_counter_switch_to_pcpu(struct lazy_percpu_counter *c)
-+{
-+	u64 __percpu *pcpu_v = alloc_percpu_gfp(u64, GFP_ATOMIC|__GFP_NOWARN);
-+	u64 old, new, v;
-+
-+	if (!pcpu_v)
++	obj_exts = slab_obj_exts(slab);
++	if (!obj_exts)
 +		return;
 +
-+	preempt_disable();
-+	v = atomic64_read(&c->v);
-+	do {
-+		if (lazy_percpu_counter_is_pcpu(v)) {
-+			free_percpu(pcpu_v);
-+			return;
-+		}
-+
-+		old = v;
-+		new = (unsigned long)pcpu_v | 1;
-+
-+		*this_cpu_ptr(pcpu_v) = lazy_percpu_counter_atomic_val(v);
-+	} while ((v = atomic64_cmpxchg(&c->v, old, new)) != old);
-+	preempt_enable();
++	kfree(obj_exts);
++	slab->obj_exts = 0;
 +}
 +
-+/**
-+ * lazy_percpu_counter_exit: Free resources associated with a
-+ * lazy_percpu_counter
-+ *
-+ * @c: counter to exit
-+ */
-+void lazy_percpu_counter_exit(struct lazy_percpu_counter *c)
++static inline struct slabobj_ext *
++prepare_slab_obj_exts_hook(struct kmem_cache *s, gfp_t flags, void *p)
 +{
-+	free_percpu(lazy_percpu_counter_is_pcpu(atomic64_read(&c->v)));
++	struct slab *slab;
++
++	if (!p)
++		return NULL;
++
++	if (!need_slab_obj_ext())
++		return NULL;
++
++	slab = virt_to_slab(p);
++	if (!slab_obj_exts(slab) &&
++	    WARN(alloc_slab_obj_exts(slab, s, flags, false),
++		 "%s, %s: Failed to create slab extension vector!\n",
++		 __func__, s->name))
++		return NULL;
++
++	return slab_obj_exts(slab) + obj_to_index(s, slab, p);
 +}
-+EXPORT_SYMBOL_GPL(lazy_percpu_counter_exit);
 +
-+/**
-+ * lazy_percpu_counter_read: Read current value of a lazy_percpu_counter
-+ *
-+ * @c: counter to read
-+ */
-+s64 lazy_percpu_counter_read(struct lazy_percpu_counter *c)
++#else /* CONFIG_SLAB_OBJ_EXT */
++
++static inline struct slabobj_ext *slab_obj_exts(struct slab *slab)
 +{
-+	s64 v = atomic64_read(&c->v);
-+	u64 __percpu *pcpu_v = lazy_percpu_counter_is_pcpu(v);
++	return NULL;
++}
 +
-+	if (pcpu_v) {
-+		int cpu;
++static inline int alloc_slab_obj_exts(struct slab *slab,
++				      struct kmem_cache *s, gfp_t gfp,
++				      bool new_slab)
++{
++	return 0;
++}
 +
-+		v = 0;
-+		for_each_possible_cpu(cpu)
-+			v += *per_cpu_ptr(pcpu_v, cpu);
-+	} else {
-+		v = lazy_percpu_counter_atomic_val(v);
++static inline void free_slab_obj_exts(struct slab *slab)
++{
++}
++
++static inline struct slabobj_ext *
++prepare_slab_obj_exts_hook(struct kmem_cache *s, gfp_t flags, void *p)
++{
++	return NULL;
++}
++
++#endif /* CONFIG_SLAB_OBJ_EXT */
++
++#ifdef CONFIG_MEMCG_KMEM
++void mod_objcg_state(struct obj_cgroup *objcg, struct pglist_data *pgdat,
++		     enum node_stat_item idx, int nr);
++
+ static inline size_t obj_full_size(struct kmem_cache *s)
+ {
+ 	/*
+@@ -487,16 +557,15 @@ static inline void memcg_slab_post_alloc_hook(struct kmem_cache *s,
+ 		if (likely(p[i])) {
+ 			slab = virt_to_slab(p[i]);
+ 
+-			if (!slab_objcgs(slab) &&
+-			    memcg_alloc_slab_cgroups(slab, s, flags,
+-							 false)) {
++			if (!slab_obj_exts(slab) &&
++			    alloc_slab_obj_exts(slab, s, flags, false)) {
+ 				obj_cgroup_uncharge(objcg, obj_full_size(s));
+ 				continue;
+ 			}
+ 
+ 			off = obj_to_index(s, slab, p[i]);
+ 			obj_cgroup_get(objcg);
+-			slab_objcgs(slab)[off] = objcg;
++			slab_obj_exts(slab)[off].objcg = objcg;
+ 			mod_objcg_state(objcg, slab_pgdat(slab),
+ 					cache_vmstat_idx(s), obj_full_size(s));
+ 		} else {
+@@ -509,14 +578,14 @@ static inline void memcg_slab_post_alloc_hook(struct kmem_cache *s,
+ static inline void memcg_slab_free_hook(struct kmem_cache *s, struct slab *slab,
+ 					void **p, int objects)
+ {
+-	struct obj_cgroup **objcgs;
++	struct slabobj_ext *obj_exts;
+ 	int i;
+ 
+ 	if (!memcg_kmem_online())
+ 		return;
+ 
+-	objcgs = slab_objcgs(slab);
+-	if (!objcgs)
++	obj_exts = slab_obj_exts(slab);
++	if (!obj_exts)
+ 		return;
+ 
+ 	for (i = 0; i < objects; i++) {
+@@ -524,11 +593,11 @@ static inline void memcg_slab_free_hook(struct kmem_cache *s, struct slab *slab,
+ 		unsigned int off;
+ 
+ 		off = obj_to_index(s, slab, p[i]);
+-		objcg = objcgs[off];
++		objcg = obj_exts[off].objcg;
+ 		if (!objcg)
+ 			continue;
+ 
+-		objcgs[off] = NULL;
++		obj_exts[off].objcg = NULL;
+ 		obj_cgroup_uncharge(objcg, obj_full_size(s));
+ 		mod_objcg_state(objcg, slab_pgdat(slab), cache_vmstat_idx(s),
+ 				-obj_full_size(s));
+@@ -537,27 +606,11 @@ static inline void memcg_slab_free_hook(struct kmem_cache *s, struct slab *slab,
+ }
+ 
+ #else /* CONFIG_MEMCG_KMEM */
+-static inline struct obj_cgroup **slab_objcgs(struct slab *slab)
+-{
+-	return NULL;
+-}
+-
+ static inline struct mem_cgroup *memcg_from_slab_obj(void *ptr)
+ {
+ 	return NULL;
+ }
+ 
+-static inline int memcg_alloc_slab_cgroups(struct slab *slab,
+-					       struct kmem_cache *s, gfp_t gfp,
+-					       bool new_slab)
+-{
+-	return 0;
+-}
+-
+-static inline void memcg_free_slab_cgroups(struct slab *slab)
+-{
+-}
+-
+ static inline bool memcg_slab_pre_alloc_hook(struct kmem_cache *s,
+ 					     struct list_lru *lru,
+ 					     struct obj_cgroup **objcgp,
+@@ -594,7 +647,7 @@ static __always_inline void account_slab(struct slab *slab, int order,
+ 					 struct kmem_cache *s, gfp_t gfp)
+ {
+ 	if (memcg_kmem_online() && (s->flags & SLAB_ACCOUNT))
+-		memcg_alloc_slab_cgroups(slab, s, gfp, true);
++		alloc_slab_obj_exts(slab, s, gfp, true);
+ 
+ 	mod_node_page_state(slab_pgdat(slab), cache_vmstat_idx(s),
+ 			    PAGE_SIZE << order);
+@@ -603,8 +656,7 @@ static __always_inline void account_slab(struct slab *slab, int order,
+ static __always_inline void unaccount_slab(struct slab *slab, int order,
+ 					   struct kmem_cache *s)
+ {
+-	if (memcg_kmem_online())
+-		memcg_free_slab_cgroups(slab);
++	free_slab_obj_exts(slab);
+ 
+ 	mod_node_page_state(slab_pgdat(slab), cache_vmstat_idx(s),
+ 			    -(PAGE_SIZE << order));
+@@ -684,6 +736,7 @@ static inline void slab_post_alloc_hook(struct kmem_cache *s,
+ 					unsigned int orig_size)
+ {
+ 	unsigned int zero_size = s->object_size;
++	struct slabobj_ext *obj_exts;
+ 	size_t i;
+ 
+ 	flags &= gfp_allowed_mask;
+@@ -714,6 +767,7 @@ static inline void slab_post_alloc_hook(struct kmem_cache *s,
+ 		kmemleak_alloc_recursive(p[i], s->object_size, 1,
+ 					 s->flags, flags);
+ 		kmsan_slab_alloc(s, p[i], flags);
++		obj_exts = prepare_slab_obj_exts_hook(s, flags, p[i]);
+ 	}
+ 
+ 	memcg_slab_post_alloc_hook(s, objcg, flags, size, p);
+diff --git a/mm/slab_common.c b/mm/slab_common.c
+index 607249785c07..f11cc072b01e 100644
+--- a/mm/slab_common.c
++++ b/mm/slab_common.c
+@@ -204,6 +204,53 @@ struct kmem_cache *find_mergeable(unsigned int size, unsigned int align,
+ 	return NULL;
+ }
+ 
++#ifdef CONFIG_SLAB_OBJ_EXT
++/*
++ * The allocated objcg pointers array is not accounted directly.
++ * Moreover, it should not come from DMA buffer and is not readily
++ * reclaimable. So those GFP bits should be masked off.
++ */
++#define OBJCGS_CLEAR_MASK	(__GFP_DMA | __GFP_RECLAIMABLE | __GFP_ACCOUNT)
++
++int alloc_slab_obj_exts(struct slab *slab, struct kmem_cache *s,
++			gfp_t gfp, bool new_slab)
++{
++	unsigned int objects = objs_per_slab(s, slab);
++	unsigned long obj_exts;
++	void *vec;
++
++	gfp &= ~OBJCGS_CLEAR_MASK;
++	vec = kcalloc_node(objects, sizeof(struct slabobj_ext), gfp,
++			   slab_nid(slab));
++	if (!vec)
++		return -ENOMEM;
++
++	obj_exts = (unsigned long)vec;
++#ifdef CONFIG_MEMCG
++	obj_exts |= MEMCG_DATA_OBJEXTS;
++#endif
++	if (new_slab) {
++		/*
++		 * If the slab is brand new and nobody can yet access its
++		 * obj_exts, no synchronization is required and obj_exts can
++		 * be simply assigned.
++		 */
++		slab->obj_exts = obj_exts;
++	} else if (cmpxchg(&slab->obj_exts, 0, obj_exts)) {
++		/*
++		 * If the slab is already in use, somebody can allocate and
++		 * assign slabobj_exts in parallel. In this case the existing
++		 * objcg vector should be reused.
++		 */
++		kfree(vec);
++		return 0;
 +	}
 +
-+	return v;
++	kmemleak_not_leak(vec);
++	return 0;
 +}
-+EXPORT_SYMBOL_GPL(lazy_percpu_counter_read);
++#endif /* CONFIG_SLAB_OBJ_EXT */
 +
-+void lazy_percpu_counter_add_slowpath(struct lazy_percpu_counter *c, s64 i)
-+{
-+	u64 atomic_i;
-+	u64 old, v = atomic64_read(&c->v);
-+	u64 __percpu *pcpu_v;
-+
-+	atomic_i  = i << COUNTER_IS_PCPU_BIT;
-+	atomic_i &= ~COUNTER_MOD_MASK;
-+	atomic_i |= 1ULL << COUNTER_MOD_BITS_START;
-+
-+	do {
-+		pcpu_v = lazy_percpu_counter_is_pcpu(v);
-+		if (pcpu_v) {
-+			this_cpu_add(*pcpu_v, i);
-+			return;
-+		}
-+
-+		old = v;
-+	} while ((v = atomic64_cmpxchg(&c->v, old, old + atomic_i)) != old);
-+
-+	if (unlikely(!(v & COUNTER_MOD_MASK))) {
-+		unsigned long now = jiffies;
-+
-+		if (c->last_wrap &&
-+		    unlikely(time_after(c->last_wrap + HZ, now)))
-+			lazy_percpu_counter_switch_to_pcpu(c);
-+		else
-+			c->last_wrap = now;
-+	}
-+}
-+EXPORT_SYMBOL(lazy_percpu_counter_add_slowpath);
-+
-+void lazy_percpu_counter_add_slowpath_noupgrade(struct lazy_percpu_counter *c, s64 i)
-+{
-+	u64 atomic_i;
-+	u64 old, v = atomic64_read(&c->v);
-+	u64 __percpu *pcpu_v;
-+
-+	atomic_i  = i << COUNTER_IS_PCPU_BIT;
-+	atomic_i &= ~COUNTER_MOD_MASK;
-+
-+	do {
-+		pcpu_v = lazy_percpu_counter_is_pcpu(v);
-+		if (pcpu_v) {
-+			this_cpu_add(*pcpu_v, i);
-+			return;
-+		}
-+
-+		old = v;
-+	} while ((v = atomic64_cmpxchg(&c->v, old, old + atomic_i)) != old);
-+}
-+EXPORT_SYMBOL(lazy_percpu_counter_add_slowpath_noupgrade);
+ static struct kmem_cache *create_cache(const char *name,
+ 		unsigned int object_size, unsigned int align,
+ 		slab_flags_t flags, unsigned int useroffset,
 -- 
 2.40.1.495.gc816e09b53d-goog
 
