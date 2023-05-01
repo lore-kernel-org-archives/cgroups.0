@@ -1,219 +1,84 @@
-From: Suren Baghdasaryan <surenb@google.com>
-Subject: [PATCH 16/40] lib: code tagging query helper functions
-Date: Mon,  1 May 2023 09:54:26 -0700
-Message-ID: <20230501165450.15352-17-surenb@google.com>
+From: Suren Baghdasaryan <surenb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Subject: [PATCH 23/40] lib: add codetag reference into slabobj_ext
+Date: Mon,  1 May 2023 09:54:33 -0700
+Message-ID: <20230501165450.15352-24-surenb@google.com>
 References: <20230501165450.15352-1-surenb@google.com>
 Mime-Version: 1.0
-Return-path: <linux-arch-owner@vger.kernel.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20221208; t=1682960145; x=1685552145;
+        d=google.com; s=20221208; t=1682960160; x=1685552160;
         h=cc:to:from:subject:message-id:references:mime-version:in-reply-to
          :date:from:to:cc:subject:date:message-id:reply-to;
-        bh=cfU8v4uljuDyceCulpsszZZ0MEofJFrAynDM4I2qv80=;
-        b=7DF+QMYAAMLutPK+67W4THAVtEPwoqDsbe/74l1tBpyC07tcRQ6NcM5IV8D6bbGSDO
-         mAKOZqw8S8PkrBoJSwJTCQQPpA7SwA7cyZxlWbMDiokIgQwGSl9egB8QrEXUBH/T64s1
-         zNCYsAsh3eGpCoX4dQnQUqKiZzSauwZNQoR9XmoXX99k0D1LyT9NYpubJVC6Qn7rUrDx
-         j9q+sgeZA/RMhwqSDAOuZPyoK6vZlZ73Jq2IAunuj8KRGdDA/IrEELOEoHnv6XAiPWlM
-         lMDNSxrkbvL1rl0oDCkvCwbUBvti8udh5vGgrmSEH3MVGbNpRYhf9xH2dPTrsqzR9Dja
-         mOjQ==
-In-Reply-To: <20230501165450.15352-1-surenb@google.com>
+        bh=3JQAU/dBFDp2j3prOKpx9pu61B2aRzHMn5ijo1mj0wk=;
+        b=Nr4QXyj/etzJlAh8i4e3XnDFrHrok+4KAhChzrGdGYpNpzqnTzNz+b7TDzIFPvjVWJ
+         9m6bX+drGU9A6fH4AYp0HUvbrb0fCoSPBmCg7BeIb7knPz8EfEfG9cPbzcBJ5VX+RXOe
+         xKxhA1OiVlh84AEwzHBh+cMUHvzUPF37NpWH9RACZgYBnn9nhrwQ+ZtD6LOD5aF3vQAg
+         h9QGbAMavYpJls9fxf3kDm4J6+Qn0mT0BuRWWAvY6omxOHY3anv02SbqbukFuexGdvmI
+         uLtak6s/1IGom0RtuY8qFrrhQXG4Ym0F7I61Qiqk5+0EJAXYPW/dDKZJd/GArGchifG6
+         ytrA==
+In-Reply-To: <20230501165450.15352-1-surenb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: akpm@linux-foundation.org
-Cc: kent.overstreet@linux.dev, mhocko@suse.com, vbabka@suse.cz, hannes@cmpxchg.org, roman.gushchin@linux.dev, mgorman@suse.de, dave@stgolabs.net, willy@infradead.org, liam.howlett@oracle.com, corbet@lwn.net, void@manifault.com, peterz@infradead.org, juri.lelli@redhat.com, ldufour@linux.ibm.com, catalin.marinas@arm.com, will@kernel.org, arnd@arndb.de, tglx@linutronix.de, mingo@redhat.com, dave.hansen@linux.intel.com, x86@kernel.org, peterx@redhat.com, david@redhat.com, axboe@kernel.dk, mcgrof@kernel.org, masahiroy@kernel.org, nathan@kernel.org, dennis@kernel.org, tj@kernel.org, muchun.song@linux.dev, rppt@kernel.org, paulmck@kernel.org, pasha.tatashin@soleen.com, yosryahmed@google.com, yuzhao@google.com, dhowells@redhat.com, hughd@google.com, andreyknvl@gmail.com, keescook@chromium.org
+To: akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org
+Cc: kent.overstreet-fxUVXftIFDnyG1zEObXtfA@public.gmane.org, mhocko-IBi9RG/b67k@public.gmane.org, vbabka-AlSwsSmVLrQ@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org, mgorman-l3A5Bk7waGM@public.gmane.org, dave-h16yJtLeMjHk1uMJSBkQmQ@public.gmane.org, willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, liam.howlett-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org, corbet-T1hC0tSOHrs@public.gmane.org, void-gq6j2QGBifHby3iVrkZq2A@public.gmane.org, peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, juri.lelli-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, ldufour-tEXmvtCZX7AybS5Ee8rs3A@public.gmane.org, catalin.marinas-5wv7dgnIgG8@public.gmane.org, will-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, arnd-r2nGTMty4D4@public.gmane.org, tglx-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org, mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, dave.hansen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org, x86-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, peterx-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, david-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, mcgrof-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, masahiroy-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, nathan-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, dennis-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, muchun.song-fxUVXftIFDnyG1zEObXtfA@public.gmane.org, rppt-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, paulmck-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, pasha.tatashin-2EmBfe737+LQT0dZR+AlfA@public.gmane.org, yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, yuzhao-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, dhowells-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, andreyknvl-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, keescook-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org
 
-From: Kent Overstreet <kent.overstreet@linux.dev>
+To store code tag for every slab object, a codetag reference is embedded
+into slabobj_ext when CONFIG_MEM_ALLOC_PROFILING=y.
 
-Provide codetag_query_parse() to parse codetag queries and
-codetag_matches_query() to check if the query affects a given codetag.
-
-Signed-off-by: Kent Overstreet <kent.overstreet@linux.dev>
-Signed-off-by: Suren Baghdasaryan <surenb@google.com>
+Signed-off-by: Suren Baghdasaryan <surenb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Co-developed-by: Kent Overstreet <kent.overstreet-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>
+Signed-off-by: Kent Overstreet <kent.overstreet-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>
 ---
- include/linux/codetag.h |  27 ++++++++
- lib/codetag.c           | 135 ++++++++++++++++++++++++++++++++++++++++
- 2 files changed, 162 insertions(+)
+ include/linux/memcontrol.h | 5 +++++
+ lib/Kconfig.debug          | 1 +
+ mm/slab.h                  | 4 ++++
+ 3 files changed, 10 insertions(+)
 
-diff --git a/include/linux/codetag.h b/include/linux/codetag.h
-index d98e4c8e86f0..87207f199ac9 100644
---- a/include/linux/codetag.h
-+++ b/include/linux/codetag.h
-@@ -80,4 +80,31 @@ static inline void codetag_load_module(struct module *mod) {}
- static inline bool codetag_unload_module(struct module *mod) { return true; }
- #endif
+diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
+index 5e2da63c525f..c7f21b15b540 100644
+--- a/include/linux/memcontrol.h
++++ b/include/linux/memcontrol.h
+@@ -1626,7 +1626,12 @@ unsigned long mem_cgroup_soft_limit_reclaim(pg_data_t *pgdat, int order,
+  * if MEMCG_DATA_OBJEXTS is set.
+  */
+ struct slabobj_ext {
++#ifdef CONFIG_MEMCG_KMEM
+ 	struct obj_cgroup *objcg;
++#endif
++#ifdef CONFIG_MEM_ALLOC_PROFILING
++	union codetag_ref ref;
++#endif
+ } __aligned(8);
  
-+/* Codetag query parsing */
-+
-+struct codetag_query {
-+	const char	*filename;
-+	const char	*module;
-+	const char	*function;
-+	const char	*class;
-+	unsigned int	first_line, last_line;
-+	unsigned int	first_index, last_index;
-+	unsigned int	cur_index;
-+
-+	bool		match_line:1;
-+	bool		match_index:1;
-+
-+	unsigned int	set_enabled:1;
-+	unsigned int	enabled:2;
-+
-+	unsigned int	set_frequency:1;
-+	unsigned int	frequency;
-+};
-+
-+char *codetag_query_parse(struct codetag_query *q, char *buf);
-+bool codetag_matches_query(struct codetag_query *q,
-+			   const struct codetag *ct,
-+			   const struct codetag_module *mod,
-+			   const char *class);
-+
- #endif /* _LINUX_CODETAG_H */
-diff --git a/lib/codetag.c b/lib/codetag.c
-index 0ad4ea66c769..84f90f3b922c 100644
---- a/lib/codetag.c
-+++ b/lib/codetag.c
-@@ -256,3 +256,138 @@ bool codetag_unload_module(struct module *mod)
+ static inline void __inc_lruvec_kmem_state(void *p, enum node_stat_item idx)
+diff --git a/lib/Kconfig.debug b/lib/Kconfig.debug
+index d3aa5ee0bf0d..4157c2251b07 100644
+--- a/lib/Kconfig.debug
++++ b/lib/Kconfig.debug
+@@ -968,6 +968,7 @@ config MEM_ALLOC_PROFILING
+ 	select CODE_TAGGING
+ 	select LAZY_PERCPU_COUNTER
+ 	select PAGE_EXTENSION
++	select SLAB_OBJ_EXT
+ 	help
+ 	  Track allocation source code and record total allocation size
+ 	  initiated at that code location. The mechanism can be used to track
+diff --git a/mm/slab.h b/mm/slab.h
+index bec202bdcfb8..f953e7c81e98 100644
+--- a/mm/slab.h
++++ b/mm/slab.h
+@@ -418,6 +418,10 @@ int alloc_slab_obj_exts(struct slab *slab, struct kmem_cache *s,
  
- 	return unload_ok;
- }
-+
-+/* Codetag query parsing */
-+
-+#define CODETAG_QUERY_TOKENS()	\
-+	x(func)			\
-+	x(file)			\
-+	x(line)			\
-+	x(module)		\
-+	x(class)		\
-+	x(index)
-+
-+enum tokens {
-+#define x(name)		TOK_##name,
-+	CODETAG_QUERY_TOKENS()
-+#undef x
-+};
-+
-+static const char * const token_strs[] = {
-+#define x(name)		#name,
-+	CODETAG_QUERY_TOKENS()
-+#undef x
-+	NULL
-+};
-+
-+static int parse_range(char *str, unsigned int *first, unsigned int *last)
-+{
-+	char *first_str = str;
-+	char *last_str = strchr(first_str, '-');
-+
-+	if (last_str)
-+		*last_str++ = '\0';
-+
-+	if (kstrtouint(first_str, 10, first))
-+		return -EINVAL;
-+
-+	if (!last_str)
-+		*last = *first;
-+	else if (kstrtouint(last_str, 10, last))
-+		return -EINVAL;
-+
-+	return 0;
-+}
-+
-+char *codetag_query_parse(struct codetag_query *q, char *buf)
-+{
-+	while (1) {
-+		char *p = buf;
-+		char *str1 = strsep_no_empty(&p, " \t\r\n");
-+		char *str2 = strsep_no_empty(&p, " \t\r\n");
-+		int ret, token;
-+
-+		if (!str1 || !str2)
-+			break;
-+
-+		token = match_string(token_strs, ARRAY_SIZE(token_strs), str1);
-+		if (token < 0)
-+			break;
-+
-+		switch (token) {
-+		case TOK_func:
-+			q->function = str2;
-+			break;
-+		case TOK_file:
-+			q->filename = str2;
-+			break;
-+		case TOK_line:
-+			ret = parse_range(str2, &q->first_line, &q->last_line);
-+			if (ret)
-+				return ERR_PTR(ret);
-+			q->match_line = true;
-+			break;
-+		case TOK_module:
-+			q->module = str2;
-+			break;
-+		case TOK_class:
-+			q->class = str2;
-+			break;
-+		case TOK_index:
-+			ret = parse_range(str2, &q->first_index, &q->last_index);
-+			if (ret)
-+				return ERR_PTR(ret);
-+			q->match_index = true;
-+			break;
-+		}
-+
-+		buf = p;
-+	}
-+
-+	return buf;
-+}
-+
-+bool codetag_matches_query(struct codetag_query *q,
-+			   const struct codetag *ct,
-+			   const struct codetag_module *mod,
-+			   const char *class)
-+{
-+	size_t classlen = q->class ? strlen(q->class) : 0;
-+
-+	if (q->module &&
-+	    (!mod->mod ||
-+	     strcmp(q->module, ct->modname)))
-+		return false;
-+
-+	if (q->filename &&
-+	    strcmp(q->filename, ct->filename) &&
-+	    strcmp(q->filename, kbasename(ct->filename)))
-+		return false;
-+
-+	if (q->function &&
-+	    strcmp(q->function, ct->function))
-+		return false;
-+
-+	/* match against the line number range */
-+	if (q->match_line &&
-+	    (ct->lineno < q->first_line ||
-+	     ct->lineno > q->last_line))
-+		return false;
-+
-+	/* match against the class */
-+	if (classlen &&
-+	    (strncmp(q->class, class, classlen) ||
-+	     (class[classlen] && class[classlen] != ':')))
-+		return false;
-+
-+	/* match against the fault index */
-+	if (q->match_index &&
-+	    (q->cur_index < q->first_index ||
-+	     q->cur_index > q->last_index)) {
-+		q->cur_index++;
-+		return false;
-+	}
-+
-+	q->cur_index++;
-+	return true;
-+}
+ static inline bool need_slab_obj_ext(void)
+ {
++#ifdef CONFIG_MEM_ALLOC_PROFILING
++	if (mem_alloc_profiling_enabled())
++		return true;
++#endif
+ 	/*
+ 	 * CONFIG_MEMCG_KMEM creates vector of obj_cgroup objects conditionally
+ 	 * inside memcg_slab_post_alloc_hook. No other users for now.
 -- 
 2.40.1.495.gc816e09b53d-goog
 
