@@ -1,66 +1,126 @@
-From: Suren Baghdasaryan <surenb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Subject: [PATCH 21/40] mm/page_ext: enable early_page_ext when CONFIG_MEM_ALLOC_PROFILING_DEBUG=y
-Date: Mon,  1 May 2023 09:54:31 -0700
-Message-ID: <20230501165450.15352-22-surenb@google.com>
+From: Suren Baghdasaryan <surenb@google.com>
+Subject: [PATCH 22/40] mm: create new codetag references during page splitting
+Date: Mon,  1 May 2023 09:54:32 -0700
+Message-ID: <20230501165450.15352-23-surenb@google.com>
 References: <20230501165450.15352-1-surenb@google.com>
 Mime-Version: 1.0
-Return-path: <linux-modules-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <linux-arch-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20221208; t=1682960156; x=1685552156;
+        d=google.com; s=20221208; t=1682960158; x=1685552158;
         h=cc:to:from:subject:message-id:references:mime-version:in-reply-to
          :date:from:to:cc:subject:date:message-id:reply-to;
-        bh=ia0f0ycGZD+jM5YS+jW1bQxvUpAwQcUQoxrBuJXYMcE=;
-        b=5JJhV76m95/YBoZ/xZu42cKOJXhgJORCHh7GQ1vgchybA9Jz2W8JB87J32lzEHqVAD
-         5MpwShEQTLsgetTJKB81Ya9oYfauOk73A+wkcp3YnAqkuYR2uGLglMtljDk1oXUFeXUF
-         eg/dqf1WTTeod1mNhPnzcjxqEJmrvwX1WQABkeXqhDWaPCFp/KOIQdT6Kd/lNmNqK8uA
-         jO52yQ6iu7pCgMF+oglZnvEtlqmI75FROfYcJYL0lGgLhZXRGGNj8gM5KHULwpV7DXj0
-         IQGmZzm/JuCCa0BNo8vc+UrvY2fi7yQcbqUa8T0x4PnakvTfaxlxsiA9vMtpl/EDSZYr
-         7ZHg==
-In-Reply-To: <20230501165450.15352-1-surenb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+        bh=+1Ptlsu3HrvWcynZoOK0ZqIIaOTUmOtwKZY5J1VaLvs=;
+        b=7gQ7i/dAC1G0h1XxKulN+zlGUyuRlgFLhf3t4U3ldYpJ9ZDjgqW3Y7teulwLUtCfTD
+         /VnlwalgQGiFZbmlj07JbUX6Sp54fAN7SxMoxkItZT8pyryAeS9XmoLet1E+NORYJiar
+         iYyZW8dCc0lMzuXcFL3U4QE+FrlZuAGGckHXyur/pD6//ulYUoFzkf8zDD0aROPp40k/
+         xmTrCxx3e3E9BLeb2nij/r9kqOJAFZfyDKOq1UGUdyyy0zgGTjg9yGYmpyEbnJHJf0ZV
+         W5qYg5oFjenWEcOuTpD8cYePEcPbJSlpmAYb7YzYWjMWXvtbqAw/EQzvEU6N9zSkiTXv
+         C/RA==
+In-Reply-To: <20230501165450.15352-1-surenb@google.com>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org
-Cc: kent.overstreet-fxUVXftIFDnyG1zEObXtfA@public.gmane.org, mhocko-IBi9RG/b67k@public.gmane.org, vbabka-AlSwsSmVLrQ@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org, mgorman-l3A5Bk7waGM@public.gmane.org, dave-h16yJtLeMjHk1uMJSBkQmQ@public.gmane.org, willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, liam.howlett-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org, corbet-T1hC0tSOHrs@public.gmane.org, void-gq6j2QGBifHby3iVrkZq2A@public.gmane.org, peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, juri.lelli-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, ldufour-tEXmvtCZX7AybS5Ee8rs3A@public.gmane.org, catalin.marinas-5wv7dgnIgG8@public.gmane.org, will-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, arnd-r2nGTMty4D4@public.gmane.org, tglx-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org, mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, dave.hansen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org, x86-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, peterx-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, david-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, mcgrof-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, masahiroy-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, nathan-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, dennis-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, muchun.song-fxUVXftIFDnyG1zEObXtfA@public.gmane.org, rppt-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, paulmck-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, pasha.tatashin-2EmBfe737+LQT0dZR+AlfA@public.gmane.org, yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, yuzhao-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, dhowells-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, andreyknvl-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, keescook-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org
+To: akpm@linux-foundation.org
+Cc: kent.overstreet@linux.dev, mhocko@suse.com, vbabka@suse.cz, hannes@cmpxchg.org, roman.gushchin@linux.dev, mgorman@suse.de, dave@stgolabs.net, willy@infradead.org, liam.howlett@oracle.com, corbet@lwn.net, void@manifault.com, peterz@infradead.org, juri.lelli@redhat.com, ldufour@linux.ibm.com, catalin.marinas@arm.com, will@kernel.org, arnd@arndb.de, tglx@linutronix.de, mingo@redhat.com, dave.hansen@linux.intel.com, x86@kernel.org, peterx@redhat.com, david@redhat.com, axboe@kernel.dk, mcgrof@kernel.org, masahiroy@kernel.org, nathan@kernel.org, dennis@kernel.org, tj@kernel.org, muchun.song@linux.dev, rppt@kernel.org, paulmck@kernel.org, pasha.tatashin@soleen.com, yosryahmed@google.com, yuzhao@google.com, dhowells@redhat.com, hughd@google.com, andreyknvl@gmail.com, keescook@chromium.org
 
-For all page allocations to be tagged, page_ext has to be initialized
-before the first page allocation. Early tasks allocate their stacks
-using page allocator before alloc_node_page_ext() initializes page_ext
-area, unless early_page_ext is enabled. Therefore these allocations will
-generate a warning when CONFIG_MEM_ALLOC_PROFILING_DEBUG is enabled.
-Enable early_page_ext whenever CONFIG_MEM_ALLOC_PROFILING_DEBUG=y to
-ensure page_ext initialization prior to any page allocation. This will
-have all the negative effects associated with early_page_ext, such as
-possible longer boot time, therefore we enable it only when debugging
-with CONFIG_MEM_ALLOC_PROFILING_DEBUG enabled and not universally for
-CONFIG_MEM_ALLOC_PROFILING.
+When a high-order page is split into smaller ones, each newly split
+page should get its codetag. The original codetag is reused for these
+pages but it's recorded as 0-byte allocation because original codetag
+already accounts for the original high-order allocated page.
 
-Signed-off-by: Suren Baghdasaryan <surenb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Signed-off-by: Suren Baghdasaryan <surenb@google.com>
 ---
- mm/page_ext.c | 9 +++++++++
- 1 file changed, 9 insertions(+)
+ include/linux/pgalloc_tag.h | 30 ++++++++++++++++++++++++++++++
+ mm/huge_memory.c            |  2 ++
+ mm/page_alloc.c             |  2 ++
+ 3 files changed, 34 insertions(+)
 
-diff --git a/mm/page_ext.c b/mm/page_ext.c
-index eaf054ec276c..55ba797f8881 100644
---- a/mm/page_ext.c
-+++ b/mm/page_ext.c
-@@ -96,7 +96,16 @@ unsigned long page_ext_size;
- static unsigned long total_usage;
- struct page_ext *lookup_page_ext(const struct page *page);
+diff --git a/include/linux/pgalloc_tag.h b/include/linux/pgalloc_tag.h
+index 567327c1c46f..0cbba13869b5 100644
+--- a/include/linux/pgalloc_tag.h
++++ b/include/linux/pgalloc_tag.h
+@@ -52,11 +52,41 @@ static inline void pgalloc_tag_dec(struct page *page, unsigned int order)
+ 	}
+ }
  
-+#ifdef CONFIG_MEM_ALLOC_PROFILING_DEBUG
-+/*
-+ * To ensure correct allocation tagging for pages, page_ext should be available
-+ * before the first page allocation. Otherwise early task stacks will be
-+ * allocated before page_ext initialization and missing tags will be flagged.
-+ */
-+bool early_page_ext __meminitdata = true;
-+#else
- bool early_page_ext __meminitdata;
-+#endif
- static int __init setup_early_page_ext(char *str)
- {
- 	early_page_ext = true;
++static inline void pgalloc_tag_split(struct page *page, unsigned int nr)
++{
++	int i;
++	struct page_ext *page_ext;
++	union codetag_ref *ref;
++	struct alloc_tag *tag;
++
++	if (!mem_alloc_profiling_enabled())
++		return;
++
++	page_ext = page_ext_get(page);
++	if (unlikely(!page_ext))
++		return;
++
++	ref = codetag_ref_from_page_ext(page_ext);
++	if (!ref->ct)
++		goto out;
++
++	tag = ct_to_alloc_tag(ref->ct);
++	page_ext = page_ext_next(page_ext);
++	for (i = 1; i < nr; i++) {
++		/* New reference with 0 bytes accounted */
++		alloc_tag_add(codetag_ref_from_page_ext(page_ext), tag, 0);
++		page_ext = page_ext_next(page_ext);
++	}
++out:
++	page_ext_put(page_ext);
++}
++
+ #else /* CONFIG_MEM_ALLOC_PROFILING */
+ 
+ static inline union codetag_ref *get_page_tag_ref(struct page *page) { return NULL; }
+ static inline void put_page_tag_ref(union codetag_ref *ref) {}
+ #define pgalloc_tag_dec(__page, __size)		do {} while (0)
++static inline void pgalloc_tag_split(struct page *page, unsigned int nr) {}
+ 
+ #endif /* CONFIG_MEM_ALLOC_PROFILING */
+ 
+diff --git a/mm/huge_memory.c b/mm/huge_memory.c
+index 624671aaa60d..221cce0052a2 100644
+--- a/mm/huge_memory.c
++++ b/mm/huge_memory.c
+@@ -37,6 +37,7 @@
+ #include <linux/page_owner.h>
+ #include <linux/sched/sysctl.h>
+ #include <linux/memory-tiers.h>
++#include <linux/pgalloc_tag.h>
+ 
+ #include <asm/tlb.h>
+ #include <asm/pgalloc.h>
+@@ -2557,6 +2558,7 @@ static void __split_huge_page(struct page *page, struct list_head *list,
+ 	/* Caller disabled irqs, so they are still disabled here */
+ 
+ 	split_page_owner(head, nr);
++	pgalloc_tag_split(head, nr);
+ 
+ 	/* See comment in __split_huge_page_tail() */
+ 	if (PageAnon(head)) {
+diff --git a/mm/page_alloc.c b/mm/page_alloc.c
+index edd35500f7f6..8cf5a835af7f 100644
+--- a/mm/page_alloc.c
++++ b/mm/page_alloc.c
+@@ -2796,6 +2796,7 @@ void split_page(struct page *page, unsigned int order)
+ 	for (i = 1; i < (1 << order); i++)
+ 		set_page_refcounted(page + i);
+ 	split_page_owner(page, 1 << order);
++	pgalloc_tag_split(page, 1 << order);
+ 	split_page_memcg(page, 1 << order);
+ }
+ EXPORT_SYMBOL_GPL(split_page);
+@@ -5012,6 +5013,7 @@ static void *make_alloc_exact(unsigned long addr, unsigned int order,
+ 		struct page *last = page + nr;
+ 
+ 		split_page_owner(page, 1 << order);
++		pgalloc_tag_split(page, 1 << order);
+ 		split_page_memcg(page, 1 << order);
+ 		while (page < --last)
+ 			set_page_refcounted(last);
 -- 
 2.40.1.495.gc816e09b53d-goog
 
