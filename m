@@ -1,644 +1,829 @@
-From: Suren Baghdasaryan <surenb@google.com>
-Subject: [PATCH 25/40] mm/slab: enable slab allocation tagging for kmalloc and friends
-Date: Mon,  1 May 2023 09:54:35 -0700
-Message-ID: <20230501165450.15352-26-surenb@google.com>
+From: Suren Baghdasaryan <surenb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Subject: [PATCH 20/40] mm: enable page allocation tagging
+Date: Mon,  1 May 2023 09:54:30 -0700
+Message-ID: <20230501165450.15352-21-surenb@google.com>
 References: <20230501165450.15352-1-surenb@google.com>
 Mime-Version: 1.0
-Return-path: <linux-fsdevel-owner@vger.kernel.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20221208; t=1682960165; x=1685552165;
+        d=google.com; s=20221208; t=1682960154; x=1685552154;
         h=cc:to:from:subject:message-id:references:mime-version:in-reply-to
          :date:from:to:cc:subject:date:message-id:reply-to;
-        bh=AlFKqZpStCoPEOrrPZX1wMSDo35mmKSmNx34G8mCjEo=;
-        b=Hn84O/FjnBQjw81g0VTyh/uHBdrl6I0At7mqU8YKI29J+zwV878Ud7aKtkVFupHujF
-         +P33CHtldPo27h+zuVFhAddAj0A5Kkpw2KfEVH9tijZGDu22S6vwmzU89PxAqJvFSAZJ
-         pngWOgRWLpGBUXF1EyiUqARF3hZwzVXrTynm7hdSHxdP6sPu2MVmUUTk1QEPnZ21ugxP
-         cu7FraBIH82U3o2syZEGdLdo8n9cfMJuxKna3vatgjXqF9IMgQ4o3Y8inTxtaKJYGM5W
-         EpQqsvgJxtK8rynO0iG4tmpcH/aAdCa/3MR3/1NiEMIlFA2NSYb16Me/KIyQUmkmPrNV
-         5otA==
-In-Reply-To: <20230501165450.15352-1-surenb@google.com>
+        bh=Mri2z+LvwzIobpEl78ZbT4L3ds7H/B8V3mrszruJwqU=;
+        b=t3klBo0fosZzY+6Mn34UkeRIZ8VlBk56iQvcqMHnlZoMdspE+7NdZvE4k2vyn3ecSC
+         wFY0JV6O1SpEH2hrWnI2ZwvcFG9UuRrWrZ6FC4svxPT3iRFpboq1m9ULo8cCPr6ZaPHa
+         Y3x/6J6egKUSo5bKdDK02WHSlKy43vJBZZpKM6scw7eAqstx/nyrECEQlmlwNzLP6+c1
+         x6typBX0rqpw1oi/w9vTNxPJlYF7ooBhaib/snmI2nYMcyeE2e2JEAGsaa+GQO7ffHeg
+         n1W4cCFYszTARUhVglWM9nb/Nb2Udwpan9HFpZ/k9Jx52FO/vN20r/r10gSwNfC0onxH
+         nPNA==
+In-Reply-To: <20230501165450.15352-1-surenb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: akpm@linux-foundation.org
-Cc: kent.overstreet@linux.dev, mhocko@suse.com, vbabka@suse.cz, hannes@cmpxchg.org, roman.gushchin@linux.dev, mgorman@suse.de, dave@stgolabs.net, willy@infradead.org, liam.howlett@oracle.com, corbet@lwn.net, void@manifault.com, peterz@infradead.org, juri.lelli@redhat.com, ldufour@linux.ibm.com, catalin.marinas@arm.com, will@kernel.org, arnd@arndb.de, tglx@linutronix.de, mingo@redhat.com, dave.hansen@linux.intel.com, x86@kernel.org, peterx@redhat.com, david@redhat.com, axboe@kernel.dk, mcgrof@kernel.org, masahiroy@kernel.org, nathan@kernel.org, dennis@kernel.org, tj@kernel.org, muchun.song@linux.dev, rppt@kernel.org, paulmck@kernel.org, pasha.tatashin@soleen.com, yosryahmed@google.com, yuzhao@google.com, dhowells@redhat.com, hughd@google.com, andreyknvl@gmail.com, keescook@chromium.org
+To: akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org
+Cc: kent.overstreet-fxUVXftIFDnyG1zEObXtfA@public.gmane.org, mhocko-IBi9RG/b67k@public.gmane.org, vbabka-AlSwsSmVLrQ@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org, mgorman-l3A5Bk7waGM@public.gmane.org, dave-h16yJtLeMjHk1uMJSBkQmQ@public.gmane.org, willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, liam.howlett-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org, corbet-T1hC0tSOHrs@public.gmane.org, void-gq6j2QGBifHby3iVrkZq2A@public.gmane.org, peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, juri.lelli-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, ldufour-tEXmvtCZX7AybS5Ee8rs3A@public.gmane.org, catalin.marinas-5wv7dgnIgG8@public.gmane.org, will-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, arnd-r2nGTMty4D4@public.gmane.org, tglx-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org, mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, dave.hansen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org, x86-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, peterx-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, david-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, mcgrof-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, masahiroy-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, nathan-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, dennis-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, muchun.song-fxUVXftIFDnyG1zEObXtfA@public.gmane.org, rppt-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, paulmck-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, pasha.tatashin-2EmBfe737+LQT0dZR+AlfA@public.gmane.org, yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, yuzhao-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, dhowells-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, andreyknvl-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, keescook-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org
 
-Redefine kmalloc, krealloc, kzalloc, kcalloc, etc. to record allocations
-and deallocations done by these functions.
+Redefine page allocators to record allocation tags upon their invocation.
+Instrument post_alloc_hook and free_pages_prepare to modify current
+allocation tag.
 
-Signed-off-by: Suren Baghdasaryan <surenb@google.com>
-Co-developed-by: Kent Overstreet <kent.overstreet@linux.dev>
-Signed-off-by: Kent Overstreet <kent.overstreet@linux.dev>
+Signed-off-by: Suren Baghdasaryan <surenb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 ---
- include/linux/slab.h | 175 ++++++++++++++++++++++---------------------
- mm/slab.c            |  16 ++--
- mm/slab_common.c     |  22 +++---
- mm/slub.c            |  17 +++--
- mm/util.c            |  10 +--
- 5 files changed, 124 insertions(+), 116 deletions(-)
+ include/linux/alloc_tag.h   |  11 ++++
+ include/linux/gfp.h         | 123 +++++++++++++++++++++++++-----------
+ include/linux/page_ext.h    |   1 -
+ include/linux/pagemap.h     |   9 ++-
+ include/linux/pgalloc_tag.h |  38 +++++++++--
+ mm/compaction.c             |   9 ++-
+ mm/filemap.c                |   6 +-
+ mm/mempolicy.c              |  30 ++++-----
+ mm/mm_init.c                |   1 +
+ mm/page_alloc.c             |  73 ++++++++++++---------
+ 10 files changed, 208 insertions(+), 93 deletions(-)
 
-diff --git a/include/linux/slab.h b/include/linux/slab.h
-index 99a146f3cedf..43c922524081 100644
---- a/include/linux/slab.h
-+++ b/include/linux/slab.h
-@@ -213,7 +213,10 @@ int kmem_cache_shrink(struct kmem_cache *s);
- /*
-  * Common kmalloc functions provided by all allocators
-  */
--void * __must_check krealloc(const void *objp, size_t new_size, gfp_t flags) __realloc_size(2);
-+void * __must_check _krealloc(const void *objp, size_t new_size, gfp_t flags) __realloc_size(2);
-+#define krealloc(_p, _size, _flags)					\
-+	alloc_hooks(_krealloc(_p, _size, _flags), void*, NULL)
-+
- void kfree(const void *objp);
- void kfree_sensitive(const void *objp);
- size_t __ksize(const void *objp);
-@@ -451,6 +454,8 @@ static __always_inline unsigned int __kmalloc_index(size_t size,
- static_assert(PAGE_SHIFT <= 20);
- #define kmalloc_index(s) __kmalloc_index(s, true)
+diff --git a/include/linux/alloc_tag.h b/include/linux/alloc_tag.h
+index d913f8d9a7d8..07922d81b641 100644
+--- a/include/linux/alloc_tag.h
++++ b/include/linux/alloc_tag.h
+@@ -102,4 +102,15 @@ static inline void alloc_tag_add(union codetag_ref *ref, struct alloc_tag *tag,
  
-+#include <linux/alloc_tag.h>
-+
- void *__kmalloc(size_t size, gfp_t flags) __assume_kmalloc_alignment __alloc_size(1);
+ #endif
  
- /**
-@@ -463,9 +468,15 @@ void *__kmalloc(size_t size, gfp_t flags) __assume_kmalloc_alignment __alloc_siz
-  *
-  * Return: pointer to the new object or %NULL in case of error
-  */
--void *kmem_cache_alloc(struct kmem_cache *cachep, gfp_t flags) __assume_slab_alignment __malloc;
--void *kmem_cache_alloc_lru(struct kmem_cache *s, struct list_lru *lru,
--			   gfp_t gfpflags) __assume_slab_alignment __malloc;
-+void *_kmem_cache_alloc(struct kmem_cache *cachep, gfp_t flags) __assume_slab_alignment __malloc;
-+#define kmem_cache_alloc(_s, _flags)				\
-+	alloc_hooks(_kmem_cache_alloc(_s, _flags), void*, NULL)
-+
-+void *_kmem_cache_alloc_lru(struct kmem_cache *s, struct list_lru *lru,
-+			    gfp_t gfpflags) __assume_slab_alignment __malloc;
-+#define kmem_cache_alloc_lru(_s, _lru, _flags)			\
-+	alloc_hooks(_kmem_cache_alloc_lru(_s, _lru, _flags), void*, NULL)
-+
- void kmem_cache_free(struct kmem_cache *s, void *objp);
- 
- /*
-@@ -476,7 +487,9 @@ void kmem_cache_free(struct kmem_cache *s, void *objp);
-  * Note that interrupts must be enabled when calling these functions.
-  */
- void kmem_cache_free_bulk(struct kmem_cache *s, size_t size, void **p);
--int kmem_cache_alloc_bulk(struct kmem_cache *s, gfp_t flags, size_t size, void **p);
-+int _kmem_cache_alloc_bulk(struct kmem_cache *s, gfp_t flags, size_t size, void **p);
-+#define kmem_cache_alloc_bulk(_s, _flags, _size, _p)		\
-+	alloc_hooks(_kmem_cache_alloc_bulk(_s, _flags, _size, _p), int, 0)
- 
- static __always_inline void kfree_bulk(size_t size, void **p)
- {
-@@ -485,20 +498,32 @@ static __always_inline void kfree_bulk(size_t size, void **p)
- 
- void *__kmalloc_node(size_t size, gfp_t flags, int node) __assume_kmalloc_alignment
- 							 __alloc_size(1);
--void *kmem_cache_alloc_node(struct kmem_cache *s, gfp_t flags, int node) __assume_slab_alignment
--									 __malloc;
-+void *_kmem_cache_alloc_node(struct kmem_cache *s, gfp_t flags, int node) __assume_slab_alignment
-+									  __malloc;
-+#define kmem_cache_alloc_node(_s, _flags, _node)		\
-+	alloc_hooks(_kmem_cache_alloc_node(_s, _flags, _node), void*, NULL)
- 
--void *kmalloc_trace(struct kmem_cache *s, gfp_t flags, size_t size)
-+void *_kmalloc_trace(struct kmem_cache *s, gfp_t flags, size_t size)
- 		    __assume_kmalloc_alignment __alloc_size(3);
- 
--void *kmalloc_node_trace(struct kmem_cache *s, gfp_t gfpflags,
-+void *_kmalloc_node_trace(struct kmem_cache *s, gfp_t gfpflags,
- 			 int node, size_t size) __assume_kmalloc_alignment
- 						__alloc_size(4);
--void *kmalloc_large(size_t size, gfp_t flags) __assume_page_alignment
-+#define kmalloc_trace(_s, _flags, _size)		\
-+	alloc_hooks(_kmalloc_trace(_s, _flags, _size), void*, NULL)
-+
-+#define kmalloc_node_trace(_s, _gfpflags, _node, _size)	\
-+	alloc_hooks(_kmalloc_node_trace(_s, _gfpflags, _node, _size), void*, NULL)
-+
-+void *_kmalloc_large(size_t size, gfp_t flags) __assume_page_alignment
- 					      __alloc_size(1);
-+#define kmalloc_large(_size, _flags)			\
-+	alloc_hooks(_kmalloc_large(_size, _flags), void*, NULL)
- 
--void *kmalloc_large_node(size_t size, gfp_t flags, int node) __assume_page_alignment
-+void *_kmalloc_large_node(size_t size, gfp_t flags, int node) __assume_page_alignment
- 							     __alloc_size(1);
-+#define kmalloc_large_node(_size, _flags, _node)	\
-+	alloc_hooks(_kmalloc_large_node(_size, _flags, _node), void*, NULL)
- 
- /**
-  * kmalloc - allocate kernel memory
-@@ -554,37 +579,40 @@ void *kmalloc_large_node(size_t size, gfp_t flags, int node) __assume_page_align
-  *	Try really hard to succeed the allocation but fail
-  *	eventually.
-  */
--static __always_inline __alloc_size(1) void *kmalloc(size_t size, gfp_t flags)
-+static __always_inline __alloc_size(1) void *_kmalloc(size_t size, gfp_t flags)
- {
- 	if (__builtin_constant_p(size) && size) {
- 		unsigned int index;
- 
- 		if (size > KMALLOC_MAX_CACHE_SIZE)
--			return kmalloc_large(size, flags);
-+			return _kmalloc_large(size, flags);
- 
- 		index = kmalloc_index(size);
--		return kmalloc_trace(
-+		return _kmalloc_trace(
- 				kmalloc_caches[kmalloc_type(flags)][index],
- 				flags, size);
- 	}
- 	return __kmalloc(size, flags);
- }
-+#define kmalloc(_size, _flags)  alloc_hooks(_kmalloc(_size, _flags), void*, NULL)
- 
--static __always_inline __alloc_size(1) void *kmalloc_node(size_t size, gfp_t flags, int node)
-+static __always_inline __alloc_size(1) void *_kmalloc_node(size_t size, gfp_t flags, int node)
- {
- 	if (__builtin_constant_p(size) && size) {
- 		unsigned int index;
- 
- 		if (size > KMALLOC_MAX_CACHE_SIZE)
--			return kmalloc_large_node(size, flags, node);
-+			return _kmalloc_large_node(size, flags, node);
- 
- 		index = kmalloc_index(size);
--		return kmalloc_node_trace(
-+		return _kmalloc_node_trace(
- 				kmalloc_caches[kmalloc_type(flags)][index],
- 				flags, node, size);
- 	}
- 	return __kmalloc_node(size, flags, node);
- }
-+#define kmalloc_node(_size, _flags, _node)		\
-+	alloc_hooks(_kmalloc_node(_size, _flags, _node), void*, NULL)
- 
- /**
-  * kmalloc_array - allocate memory for an array.
-@@ -592,16 +620,18 @@ static __always_inline __alloc_size(1) void *kmalloc_node(size_t size, gfp_t fla
-  * @size: element size.
-  * @flags: the type of memory to allocate (see kmalloc).
-  */
--static inline __alloc_size(1, 2) void *kmalloc_array(size_t n, size_t size, gfp_t flags)
-+static inline __alloc_size(1, 2) void *_kmalloc_array(size_t n, size_t size, gfp_t flags)
- {
- 	size_t bytes;
- 
- 	if (unlikely(check_mul_overflow(n, size, &bytes)))
- 		return NULL;
- 	if (__builtin_constant_p(n) && __builtin_constant_p(size))
--		return kmalloc(bytes, flags);
--	return __kmalloc(bytes, flags);
-+		return _kmalloc(bytes, flags);
-+	return _kmalloc(bytes, flags);
- }
-+#define kmalloc_array(_n, _size, _flags)		\
-+	alloc_hooks(_kmalloc_array(_n, _size, _flags), void*, NULL)
- 
- /**
-  * krealloc_array - reallocate memory for an array.
-@@ -610,18 +640,20 @@ static inline __alloc_size(1, 2) void *kmalloc_array(size_t n, size_t size, gfp_
-  * @new_size: new size of a single member of the array
-  * @flags: the type of memory to allocate (see kmalloc)
-  */
--static inline __realloc_size(2, 3) void * __must_check krealloc_array(void *p,
--								      size_t new_n,
--								      size_t new_size,
--								      gfp_t flags)
-+static inline __realloc_size(2, 3) void * __must_check _krealloc_array(void *p,
-+								       size_t new_n,
-+								       size_t new_size,
-+								       gfp_t flags)
- {
- 	size_t bytes;
- 
- 	if (unlikely(check_mul_overflow(new_n, new_size, &bytes)))
- 		return NULL;
- 
--	return krealloc(p, bytes, flags);
-+	return _krealloc(p, bytes, flags);
- }
-+#define krealloc_array(_p, _n, _size, _flags)		\
-+	alloc_hooks(_krealloc_array(_p, _n, _size, _flags), void*, NULL)
- 
- /**
-  * kcalloc - allocate memory for an array. The memory is set to zero.
-@@ -629,16 +661,14 @@ static inline __realloc_size(2, 3) void * __must_check krealloc_array(void *p,
-  * @size: element size.
-  * @flags: the type of memory to allocate (see kmalloc).
-  */
--static inline __alloc_size(1, 2) void *kcalloc(size_t n, size_t size, gfp_t flags)
--{
--	return kmalloc_array(n, size, flags | __GFP_ZERO);
--}
-+#define kcalloc(_n, _size, _flags)			\
-+	kmalloc_array(_n, _size, (_flags) | __GFP_ZERO)
- 
- void *__kmalloc_node_track_caller(size_t size, gfp_t flags, int node,
- 				  unsigned long caller) __alloc_size(1);
- #define kmalloc_node_track_caller(size, flags, node) \
--	__kmalloc_node_track_caller(size, flags, node, \
--				    _RET_IP_)
-+	alloc_hooks(__kmalloc_node_track_caller(size, flags, node, \
-+				    _RET_IP_), void*, NULL)
- 
- /*
-  * kmalloc_track_caller is a special version of kmalloc that records the
-@@ -648,11 +678,10 @@ void *__kmalloc_node_track_caller(size_t size, gfp_t flags, int node,
-  * allocator where we care about the real place the memory allocation
-  * request comes from.
-  */
--#define kmalloc_track_caller(size, flags) \
--	__kmalloc_node_track_caller(size, flags, \
--				    NUMA_NO_NODE, _RET_IP_)
-+#define kmalloc_track_caller(size, flags)		\
-+	kmalloc_node_track_caller(size, flags, NUMA_NO_NODE)
- 
--static inline __alloc_size(1, 2) void *kmalloc_array_node(size_t n, size_t size, gfp_t flags,
-+static inline __alloc_size(1, 2) void *_kmalloc_array_node(size_t n, size_t size, gfp_t flags,
- 							  int node)
- {
- 	size_t bytes;
-@@ -660,75 +689,53 @@ static inline __alloc_size(1, 2) void *kmalloc_array_node(size_t n, size_t size,
- 	if (unlikely(check_mul_overflow(n, size, &bytes)))
- 		return NULL;
- 	if (__builtin_constant_p(n) && __builtin_constant_p(size))
--		return kmalloc_node(bytes, flags, node);
-+		return _kmalloc_node(bytes, flags, node);
- 	return __kmalloc_node(bytes, flags, node);
- }
-+#define kmalloc_array_node(_n, _size, _flags, _node)	\
-+	alloc_hooks(_kmalloc_array_node(_n, _size, _flags, _node), void*, NULL)
- 
--static inline __alloc_size(1, 2) void *kcalloc_node(size_t n, size_t size, gfp_t flags, int node)
--{
--	return kmalloc_array_node(n, size, flags | __GFP_ZERO, node);
--}
-+#define kcalloc_node(_n, _size, _flags, _node)		\
-+	kmalloc_array_node(_n, _size, (_flags) | __GFP_ZERO, _node)
- 
- /*
-  * Shortcuts
-  */
--static inline void *kmem_cache_zalloc(struct kmem_cache *k, gfp_t flags)
--{
--	return kmem_cache_alloc(k, flags | __GFP_ZERO);
--}
-+#define kmem_cache_zalloc(_k, _flags)			\
-+	kmem_cache_alloc(_k, (_flags)|__GFP_ZERO)
- 
- /**
-  * kzalloc - allocate memory. The memory is set to zero.
-  * @size: how many bytes of memory are required.
-  * @flags: the type of memory to allocate (see kmalloc).
-  */
--static inline __alloc_size(1) void *kzalloc(size_t size, gfp_t flags)
--{
--	return kmalloc(size, flags | __GFP_ZERO);
--}
--
--/**
-- * kzalloc_node - allocate zeroed memory from a particular memory node.
-- * @size: how many bytes of memory are required.
-- * @flags: the type of memory to allocate (see kmalloc).
-- * @node: memory node from which to allocate
-- */
--static inline __alloc_size(1) void *kzalloc_node(size_t size, gfp_t flags, int node)
--{
--	return kmalloc_node(size, flags | __GFP_ZERO, node);
--}
-+#define kzalloc(_size, _flags)			kmalloc(_size, (_flags)|__GFP_ZERO)
-+#define kzalloc_node(_size, _flags, _node)	kmalloc_node(_size, (_flags)|__GFP_ZERO, _node)
- 
--extern void *kvmalloc_node(size_t size, gfp_t flags, int node) __alloc_size(1);
--static inline __alloc_size(1) void *kvmalloc(size_t size, gfp_t flags)
--{
--	return kvmalloc_node(size, flags, NUMA_NO_NODE);
--}
--static inline __alloc_size(1) void *kvzalloc_node(size_t size, gfp_t flags, int node)
--{
--	return kvmalloc_node(size, flags | __GFP_ZERO, node);
--}
--static inline __alloc_size(1) void *kvzalloc(size_t size, gfp_t flags)
--{
--	return kvmalloc(size, flags | __GFP_ZERO);
--}
-+extern void *_kvmalloc_node(size_t size, gfp_t flags, int node) __alloc_size(1);
-+#define kvmalloc_node(_size, _flags, _node)              \
-+	alloc_hooks(_kvmalloc_node(_size, _flags, _node), void*, NULL)
- 
--static inline __alloc_size(1, 2) void *kvmalloc_array(size_t n, size_t size, gfp_t flags)
--{
--	size_t bytes;
-+#define kvmalloc(_size, _flags)			kvmalloc_node(_size, _flags, NUMA_NO_NODE)
-+#define kvzalloc(_size, _flags)			kvmalloc(_size, _flags|__GFP_ZERO)
- 
--	if (unlikely(check_mul_overflow(n, size, &bytes)))
--		return NULL;
-+#define kvzalloc_node(_size, _flags, _node)	kvmalloc_node(_size, _flags|__GFP_ZERO, _node)
- 
--	return kvmalloc(bytes, flags);
--}
-+#define kvmalloc_array(_n, _size, _flags)						\
-+({											\
-+	size_t _bytes;									\
-+											\
-+	!check_mul_overflow(_n, _size, &_bytes) ? kvmalloc(_bytes, _flags) : NULL;	\
++#define alloc_hooks(_do_alloc, _res_type, _err)			\
++({									\
++	_res_type _res;							\
++	DEFINE_ALLOC_TAG(_alloc_tag, _old);				\
++									\
++	_res = _do_alloc;						\
++	alloc_tag_restore(&_alloc_tag, _old);				\
++	_res;								\
 +})
++
++
+ #endif /* _LINUX_ALLOC_TAG_H */
+diff --git a/include/linux/gfp.h b/include/linux/gfp.h
+index ed8cb537c6a7..0cb4a515109a 100644
+--- a/include/linux/gfp.h
++++ b/include/linux/gfp.h
+@@ -6,6 +6,8 @@
  
--static inline __alloc_size(1, 2) void *kvcalloc(size_t n, size_t size, gfp_t flags)
+ #include <linux/mmzone.h>
+ #include <linux/topology.h>
++#include <linux/alloc_tag.h>
++#include <linux/sched.h>
+ 
+ struct vm_area_struct;
+ 
+@@ -174,42 +176,57 @@ static inline void arch_free_page(struct page *page, int order) { }
+ static inline void arch_alloc_page(struct page *page, int order) { }
+ #endif
+ 
+-struct page *__alloc_pages(gfp_t gfp, unsigned int order, int preferred_nid,
++struct page *_alloc_pages2(gfp_t gfp, unsigned int order, int preferred_nid,
+ 		nodemask_t *nodemask);
+-struct folio *__folio_alloc(gfp_t gfp, unsigned int order, int preferred_nid,
++#define __alloc_pages(_gfp, _order, _preferred_nid, _nodemask) \
++		alloc_hooks(_alloc_pages2(_gfp, _order, _preferred_nid, \
++					    _nodemask), struct page *, NULL)
++
++struct folio *_folio_alloc2(gfp_t gfp, unsigned int order, int preferred_nid,
+ 		nodemask_t *nodemask);
++#define __folio_alloc(_gfp, _order, _preferred_nid, _nodemask) \
++		alloc_hooks(_folio_alloc2(_gfp, _order, _preferred_nid, \
++					    _nodemask), struct folio *, NULL)
+ 
+-unsigned long __alloc_pages_bulk(gfp_t gfp, int preferred_nid,
++unsigned long _alloc_pages_bulk(gfp_t gfp, int preferred_nid,
+ 				nodemask_t *nodemask, int nr_pages,
+ 				struct list_head *page_list,
+ 				struct page **page_array);
+-
+-unsigned long alloc_pages_bulk_array_mempolicy(gfp_t gfp,
++#define __alloc_pages_bulk(_gfp, _preferred_nid, _nodemask, _nr_pages, \
++			   _page_list, _page_array) \
++		alloc_hooks(_alloc_pages_bulk(_gfp, _preferred_nid, \
++						_nodemask, _nr_pages, \
++						_page_list, _page_array), \
++						unsigned long, 0)
++
++unsigned long _alloc_pages_bulk_array_mempolicy(gfp_t gfp,
+ 				unsigned long nr_pages,
+ 				struct page **page_array);
++#define  alloc_pages_bulk_array_mempolicy(_gfp, _nr_pages, _page_array) \
++		alloc_hooks(_alloc_pages_bulk_array_mempolicy(_gfp, \
++					_nr_pages, _page_array), \
++					unsigned long, 0)
+ 
+ /* Bulk allocate order-0 pages */
+-static inline unsigned long
+-alloc_pages_bulk_list(gfp_t gfp, unsigned long nr_pages, struct list_head *list)
 -{
--	return kvmalloc_array(n, size, flags | __GFP_ZERO);
+-	return __alloc_pages_bulk(gfp, numa_mem_id(), NULL, nr_pages, list, NULL);
 -}
-+#define kvcalloc(_n, _size, _flags)		kvmalloc_array(_n, _size, _flags|__GFP_ZERO)
++#define alloc_pages_bulk_list(_gfp, _nr_pages, _list)				\
++	__alloc_pages_bulk(_gfp, numa_mem_id(), NULL, _nr_pages, _list, NULL)
  
--extern void *kvrealloc(const void *p, size_t oldsize, size_t newsize, gfp_t flags)
-+extern void *_kvrealloc(const void *p, size_t oldsize, size_t newsize, gfp_t flags)
- 		      __realloc_size(3);
+-static inline unsigned long
+-alloc_pages_bulk_array(gfp_t gfp, unsigned long nr_pages, struct page **page_array)
+-{
+-	return __alloc_pages_bulk(gfp, numa_mem_id(), NULL, nr_pages, NULL, page_array);
+-}
++#define alloc_pages_bulk_array(_gfp, _nr_pages, _page_array)			\
++	__alloc_pages_bulk(_gfp, numa_mem_id(), NULL, _nr_pages, NULL, _page_array)
+ 
+ static inline unsigned long
+-alloc_pages_bulk_array_node(gfp_t gfp, int nid, unsigned long nr_pages, struct page **page_array)
++_alloc_pages_bulk_array_node(gfp_t gfp, int nid, unsigned long nr_pages, struct page **page_array)
+ {
+ 	if (nid == NUMA_NO_NODE)
+ 		nid = numa_mem_id();
+ 
+-	return __alloc_pages_bulk(gfp, nid, NULL, nr_pages, NULL, page_array);
++	return _alloc_pages_bulk(gfp, nid, NULL, nr_pages, NULL, page_array);
+ }
+ 
++#define alloc_pages_bulk_array_node(_gfp, _nid, _nr_pages, _page_array) \
++	alloc_hooks(_alloc_pages_bulk_array_node(_gfp, _nid, _nr_pages, _page_array), \
++		    unsigned long, 0)
 +
-+#define kvrealloc(_p, _oldsize, _newsize, _flags)					\
-+	alloc_hooks(_kvrealloc(_p, _oldsize, _newsize, _flags), void*, NULL)
+ static inline void warn_if_node_offline(int this_node, gfp_t gfp_mask)
+ {
+ 	gfp_t warn_gfp = gfp_mask & (__GFP_THISNODE|__GFP_NOWARN);
+@@ -229,21 +246,25 @@ static inline void warn_if_node_offline(int this_node, gfp_t gfp_mask)
+  * online. For more general interface, see alloc_pages_node().
+  */
+ static inline struct page *
+-__alloc_pages_node(int nid, gfp_t gfp_mask, unsigned int order)
++_alloc_pages_node2(int nid, gfp_t gfp_mask, unsigned int order)
+ {
+ 	VM_BUG_ON(nid < 0 || nid >= MAX_NUMNODES);
+ 	warn_if_node_offline(nid, gfp_mask);
+ 
+-	return __alloc_pages(gfp_mask, order, nid, NULL);
++	return _alloc_pages2(gfp_mask, order, nid, NULL);
+ }
+ 
++#define  __alloc_pages_node(_nid, _gfp_mask, _order) \
++		alloc_hooks(_alloc_pages_node2(_nid, _gfp_mask, _order), \
++					struct page *, NULL)
 +
- extern void kvfree(const void *addr);
- extern void kvfree_sensitive(const void *addr, size_t len);
- 
-diff --git a/mm/slab.c b/mm/slab.c
-index 026f0c08708a..e08bd3496f56 100644
---- a/mm/slab.c
-+++ b/mm/slab.c
-@@ -3448,18 +3448,18 @@ void *__kmem_cache_alloc_lru(struct kmem_cache *cachep, struct list_lru *lru,
- 	return ret;
- }
- 
--void *kmem_cache_alloc(struct kmem_cache *cachep, gfp_t flags)
-+void *_kmem_cache_alloc(struct kmem_cache *cachep, gfp_t flags)
+ static inline
+ struct folio *__folio_alloc_node(gfp_t gfp, unsigned int order, int nid)
  {
- 	return __kmem_cache_alloc_lru(cachep, NULL, flags);
+ 	VM_BUG_ON(nid < 0 || nid >= MAX_NUMNODES);
+ 	warn_if_node_offline(nid, gfp);
+ 
+-	return __folio_alloc(gfp, order, nid, NULL);
++	return _folio_alloc2(gfp, order, nid, NULL);
  }
--EXPORT_SYMBOL(kmem_cache_alloc);
-+EXPORT_SYMBOL(_kmem_cache_alloc);
- 
--void *kmem_cache_alloc_lru(struct kmem_cache *cachep, struct list_lru *lru,
-+void *_kmem_cache_alloc_lru(struct kmem_cache *cachep, struct list_lru *lru,
- 			   gfp_t flags)
- {
- 	return __kmem_cache_alloc_lru(cachep, lru, flags);
- }
--EXPORT_SYMBOL(kmem_cache_alloc_lru);
-+EXPORT_SYMBOL(_kmem_cache_alloc_lru);
- 
- static __always_inline void
- cache_alloc_debugcheck_after_bulk(struct kmem_cache *s, gfp_t flags,
-@@ -3471,7 +3471,7 @@ cache_alloc_debugcheck_after_bulk(struct kmem_cache *s, gfp_t flags,
- 		p[i] = cache_alloc_debugcheck_after(s, flags, p[i], caller);
- }
- 
--int kmem_cache_alloc_bulk(struct kmem_cache *s, gfp_t flags, size_t size,
-+int _kmem_cache_alloc_bulk(struct kmem_cache *s, gfp_t flags, size_t size,
- 			  void **p)
- {
- 	struct obj_cgroup *objcg = NULL;
-@@ -3510,7 +3510,7 @@ int kmem_cache_alloc_bulk(struct kmem_cache *s, gfp_t flags, size_t size,
- 	kmem_cache_free_bulk(s, i, p);
- 	return 0;
- }
--EXPORT_SYMBOL(kmem_cache_alloc_bulk);
-+EXPORT_SYMBOL(_kmem_cache_alloc_bulk);
- 
- /**
-  * kmem_cache_alloc_node - Allocate an object on the specified node
-@@ -3525,7 +3525,7 @@ EXPORT_SYMBOL(kmem_cache_alloc_bulk);
-  *
-  * Return: pointer to the new object or %NULL in case of error
-  */
--void *kmem_cache_alloc_node(struct kmem_cache *cachep, gfp_t flags, int nodeid)
-+void *_kmem_cache_alloc_node(struct kmem_cache *cachep, gfp_t flags, int nodeid)
- {
- 	void *ret = slab_alloc_node(cachep, NULL, flags, nodeid, cachep->object_size, _RET_IP_);
- 
-@@ -3533,7 +3533,7 @@ void *kmem_cache_alloc_node(struct kmem_cache *cachep, gfp_t flags, int nodeid)
- 
- 	return ret;
- }
--EXPORT_SYMBOL(kmem_cache_alloc_node);
-+EXPORT_SYMBOL(_kmem_cache_alloc_node);
- 
- void *__kmem_cache_alloc_node(struct kmem_cache *cachep, gfp_t flags,
- 			     int nodeid, size_t orig_size,
-diff --git a/mm/slab_common.c b/mm/slab_common.c
-index 42777d66d0e3..a05333bbb7f1 100644
---- a/mm/slab_common.c
-+++ b/mm/slab_common.c
-@@ -1101,7 +1101,7 @@ size_t __ksize(const void *object)
- 	return slab_ksize(folio_slab(folio)->slab_cache);
- }
- 
--void *kmalloc_trace(struct kmem_cache *s, gfp_t gfpflags, size_t size)
-+void *_kmalloc_trace(struct kmem_cache *s, gfp_t gfpflags, size_t size)
- {
- 	void *ret = __kmem_cache_alloc_node(s, gfpflags, NUMA_NO_NODE,
- 					    size, _RET_IP_);
-@@ -1111,9 +1111,9 @@ void *kmalloc_trace(struct kmem_cache *s, gfp_t gfpflags, size_t size)
- 	ret = kasan_kmalloc(s, ret, size, gfpflags);
- 	return ret;
- }
--EXPORT_SYMBOL(kmalloc_trace);
-+EXPORT_SYMBOL(_kmalloc_trace);
- 
--void *kmalloc_node_trace(struct kmem_cache *s, gfp_t gfpflags,
-+void *_kmalloc_node_trace(struct kmem_cache *s, gfp_t gfpflags,
- 			 int node, size_t size)
- {
- 	void *ret = __kmem_cache_alloc_node(s, gfpflags, node, size, _RET_IP_);
-@@ -1123,7 +1123,7 @@ void *kmalloc_node_trace(struct kmem_cache *s, gfp_t gfpflags,
- 	ret = kasan_kmalloc(s, ret, size, gfpflags);
- 	return ret;
- }
--EXPORT_SYMBOL(kmalloc_node_trace);
-+EXPORT_SYMBOL(_kmalloc_node_trace);
- 
- gfp_t kmalloc_fix_flags(gfp_t flags)
- {
-@@ -1168,7 +1168,7 @@ static void *__kmalloc_large_node(size_t size, gfp_t flags, int node)
- 	return ptr;
- }
- 
--void *kmalloc_large(size_t size, gfp_t flags)
-+void *_kmalloc_large(size_t size, gfp_t flags)
- {
- 	void *ret = __kmalloc_large_node(size, flags, NUMA_NO_NODE);
- 
-@@ -1176,9 +1176,9 @@ void *kmalloc_large(size_t size, gfp_t flags)
- 		      flags, NUMA_NO_NODE);
- 	return ret;
- }
--EXPORT_SYMBOL(kmalloc_large);
-+EXPORT_SYMBOL(_kmalloc_large);
- 
--void *kmalloc_large_node(size_t size, gfp_t flags, int node)
-+void *_kmalloc_large_node(size_t size, gfp_t flags, int node)
- {
- 	void *ret = __kmalloc_large_node(size, flags, node);
- 
-@@ -1186,7 +1186,7 @@ void *kmalloc_large_node(size_t size, gfp_t flags, int node)
- 		      flags, node);
- 	return ret;
- }
--EXPORT_SYMBOL(kmalloc_large_node);
-+EXPORT_SYMBOL(_kmalloc_large_node);
- 
- #ifdef CONFIG_SLAB_FREELIST_RANDOM
- /* Randomize a generic freelist */
-@@ -1405,7 +1405,7 @@ __do_krealloc(const void *p, size_t new_size, gfp_t flags)
- 		return (void *)p;
- 	}
- 
--	ret = kmalloc_track_caller(new_size, flags);
-+	ret = __kmalloc_node_track_caller(new_size, flags, NUMA_NO_NODE, _RET_IP_);
- 	if (ret && p) {
- 		/* Disable KASAN checks as the object's redzone is accessed. */
- 		kasan_disable_current();
-@@ -1429,7 +1429,7 @@ __do_krealloc(const void *p, size_t new_size, gfp_t flags)
-  *
-  * Return: pointer to the allocated memory or %NULL in case of error
-  */
--void *krealloc(const void *p, size_t new_size, gfp_t flags)
-+void *_krealloc(const void *p, size_t new_size, gfp_t flags)
- {
- 	void *ret;
- 
-@@ -1444,7 +1444,7 @@ void *krealloc(const void *p, size_t new_size, gfp_t flags)
- 
- 	return ret;
- }
--EXPORT_SYMBOL(krealloc);
-+EXPORT_SYMBOL(_krealloc);
- 
- /**
-  * kfree_sensitive - Clear sensitive information in memory before freeing
-diff --git a/mm/slub.c b/mm/slub.c
-index 507b71372ee4..8f57fd086f69 100644
---- a/mm/slub.c
-+++ b/mm/slub.c
-@@ -3470,18 +3470,18 @@ void *__kmem_cache_alloc_lru(struct kmem_cache *s, struct list_lru *lru,
- 	return ret;
- }
- 
--void *kmem_cache_alloc(struct kmem_cache *s, gfp_t gfpflags)
-+void *_kmem_cache_alloc(struct kmem_cache *s, gfp_t gfpflags)
- {
- 	return __kmem_cache_alloc_lru(s, NULL, gfpflags);
- }
--EXPORT_SYMBOL(kmem_cache_alloc);
-+EXPORT_SYMBOL(_kmem_cache_alloc);
- 
--void *kmem_cache_alloc_lru(struct kmem_cache *s, struct list_lru *lru,
-+void *_kmem_cache_alloc_lru(struct kmem_cache *s, struct list_lru *lru,
- 			   gfp_t gfpflags)
- {
- 	return __kmem_cache_alloc_lru(s, lru, gfpflags);
- }
--EXPORT_SYMBOL(kmem_cache_alloc_lru);
-+EXPORT_SYMBOL(_kmem_cache_alloc_lru);
- 
- void *__kmem_cache_alloc_node(struct kmem_cache *s, gfp_t gfpflags,
- 			      int node, size_t orig_size,
-@@ -3491,7 +3491,7 @@ void *__kmem_cache_alloc_node(struct kmem_cache *s, gfp_t gfpflags,
- 			       caller, orig_size);
- }
- 
--void *kmem_cache_alloc_node(struct kmem_cache *s, gfp_t gfpflags, int node)
-+void *_kmem_cache_alloc_node(struct kmem_cache *s, gfp_t gfpflags, int node)
- {
- 	void *ret = slab_alloc_node(s, NULL, gfpflags, node, _RET_IP_, s->object_size);
- 
-@@ -3499,7 +3499,7 @@ void *kmem_cache_alloc_node(struct kmem_cache *s, gfp_t gfpflags, int node)
- 
- 	return ret;
- }
--EXPORT_SYMBOL(kmem_cache_alloc_node);
-+EXPORT_SYMBOL(_kmem_cache_alloc_node);
- 
- static noinline void free_to_partial_list(
- 	struct kmem_cache *s, struct slab *slab,
-@@ -3779,6 +3779,7 @@ static __fastpath_inline void slab_free(struct kmem_cache *s, struct slab *slab,
- 				      unsigned long addr)
- {
- 	memcg_slab_free_hook(s, slab, p, cnt);
-+	alloc_tagging_slab_free_hook(s, slab, p, cnt);
- 	/*
- 	 * With KASAN enabled slab_free_freelist_hook modifies the freelist
- 	 * to remove objects, whose reuse must be delayed.
-@@ -4009,7 +4010,7 @@ static int __kmem_cache_alloc_bulk(struct kmem_cache *s, gfp_t flags,
- #endif /* CONFIG_SLUB_TINY */
- 
- /* Note that interrupts must be enabled when calling this function. */
--int kmem_cache_alloc_bulk(struct kmem_cache *s, gfp_t flags, size_t size,
-+int _kmem_cache_alloc_bulk(struct kmem_cache *s, gfp_t flags, size_t size,
- 			  void **p)
- {
- 	int i;
-@@ -4034,7 +4035,7 @@ int kmem_cache_alloc_bulk(struct kmem_cache *s, gfp_t flags, size_t size,
- 			slab_want_init_on_alloc(flags, s), s->object_size);
- 	return i;
- }
--EXPORT_SYMBOL(kmem_cache_alloc_bulk);
-+EXPORT_SYMBOL(_kmem_cache_alloc_bulk);
- 
  
  /*
-diff --git a/mm/util.c b/mm/util.c
-index dd12b9531ac4..e9077d1af676 100644
---- a/mm/util.c
-+++ b/mm/util.c
-@@ -579,7 +579,7 @@ EXPORT_SYMBOL(vm_mmap);
-  *
-  * Return: pointer to the allocated memory of %NULL in case of failure
+@@ -251,32 +272,45 @@ struct folio *__folio_alloc_node(gfp_t gfp, unsigned int order, int nid)
+  * prefer the current CPU's closest node. Otherwise node must be valid and
+  * online.
   */
--void *kvmalloc_node(size_t size, gfp_t flags, int node)
-+void *_kvmalloc_node(size_t size, gfp_t flags, int node)
+-static inline struct page *alloc_pages_node(int nid, gfp_t gfp_mask,
++static inline struct page *_alloc_pages_node(int nid, gfp_t gfp_mask,
+ 						unsigned int order)
  {
- 	gfp_t kmalloc_flags = flags;
- 	void *ret;
-@@ -601,7 +601,7 @@ void *kvmalloc_node(size_t size, gfp_t flags, int node)
- 		kmalloc_flags &= ~__GFP_NOFAIL;
+ 	if (nid == NUMA_NO_NODE)
+ 		nid = numa_mem_id();
+ 
+-	return __alloc_pages_node(nid, gfp_mask, order);
++	return _alloc_pages_node2(nid, gfp_mask, order);
+ }
+ 
++#define  alloc_pages_node(_nid, _gfp_mask, _order) \
++		alloc_hooks(_alloc_pages_node(_nid, _gfp_mask, _order), \
++					struct page *, NULL)
++
+ #ifdef CONFIG_NUMA
+-struct page *alloc_pages(gfp_t gfp, unsigned int order);
+-struct folio *folio_alloc(gfp_t gfp, unsigned order);
+-struct folio *vma_alloc_folio(gfp_t gfp, int order, struct vm_area_struct *vma,
++struct page *_alloc_pages(gfp_t gfp, unsigned int order);
++struct folio *_folio_alloc(gfp_t gfp, unsigned int order);
++struct folio *_vma_alloc_folio(gfp_t gfp, int order, struct vm_area_struct *vma,
+ 		unsigned long addr, bool hugepage);
+ #else
+-static inline struct page *alloc_pages(gfp_t gfp_mask, unsigned int order)
++static inline struct page *_alloc_pages(gfp_t gfp_mask, unsigned int order)
+ {
+-	return alloc_pages_node(numa_node_id(), gfp_mask, order);
++	return _alloc_pages_node(numa_node_id(), gfp_mask, order);
+ }
+-static inline struct folio *folio_alloc(gfp_t gfp, unsigned int order)
++static inline struct folio *_folio_alloc(gfp_t gfp, unsigned int order)
+ {
+ 	return __folio_alloc_node(gfp, order, numa_node_id());
+ }
+-#define vma_alloc_folio(gfp, order, vma, addr, hugepage)		\
+-	folio_alloc(gfp, order)
++#define _vma_alloc_folio(gfp, order, vma, addr, hugepage)		\
++	_folio_alloc(gfp, order)
+ #endif
++
++#define alloc_pages(_gfp, _order) \
++		alloc_hooks(_alloc_pages(_gfp, _order), struct page *, NULL)
++#define folio_alloc(_gfp, _order) \
++		alloc_hooks(_folio_alloc(_gfp, _order), struct folio *, NULL)
++#define vma_alloc_folio(_gfp, _order, _vma, _addr, _hugepage)		\
++		alloc_hooks(_vma_alloc_folio(_gfp, _order, _vma, _addr, \
++				_hugepage), struct folio *, NULL)
++
+ #define alloc_page(gfp_mask) alloc_pages(gfp_mask, 0)
+ static inline struct page *alloc_page_vma(gfp_t gfp,
+ 		struct vm_area_struct *vma, unsigned long addr)
+@@ -286,12 +320,21 @@ static inline struct page *alloc_page_vma(gfp_t gfp,
+ 	return &folio->page;
+ }
+ 
+-extern unsigned long __get_free_pages(gfp_t gfp_mask, unsigned int order);
+-extern unsigned long get_zeroed_page(gfp_t gfp_mask);
++extern unsigned long _get_free_pages(gfp_t gfp_mask, unsigned int order);
++#define __get_free_pages(_gfp_mask, _order) \
++		alloc_hooks(_get_free_pages(_gfp_mask, _order), unsigned long, 0)
++extern unsigned long _get_zeroed_page(gfp_t gfp_mask);
++#define get_zeroed_page(_gfp_mask) \
++		alloc_hooks(_get_zeroed_page(_gfp_mask), unsigned long, 0)
+ 
+-void *alloc_pages_exact(size_t size, gfp_t gfp_mask) __alloc_size(1);
++void *_alloc_pages_exact(size_t size, gfp_t gfp_mask) __alloc_size(1);
++#define alloc_pages_exact(_size, _gfp_mask) \
++		alloc_hooks(_alloc_pages_exact(_size, _gfp_mask), void *, NULL)
+ void free_pages_exact(void *virt, size_t size);
+-__meminit void *alloc_pages_exact_nid(int nid, size_t size, gfp_t gfp_mask) __alloc_size(2);
++
++__meminit void *_alloc_pages_exact_nid(int nid, size_t size, gfp_t gfp_mask) __alloc_size(2);
++#define alloc_pages_exact_nid(_nid, _size, _gfp_mask) \
++		alloc_hooks(_alloc_pages_exact_nid(_nid, _size, _gfp_mask), void *, NULL)
+ 
+ #define __get_free_page(gfp_mask) \
+ 		__get_free_pages((gfp_mask), 0)
+@@ -354,10 +397,16 @@ static inline bool pm_suspended_storage(void)
+ 
+ #ifdef CONFIG_CONTIG_ALLOC
+ /* The below functions must be run on a range from a single zone. */
+-extern int alloc_contig_range(unsigned long start, unsigned long end,
++extern int _alloc_contig_range(unsigned long start, unsigned long end,
+ 			      unsigned migratetype, gfp_t gfp_mask);
+-extern struct page *alloc_contig_pages(unsigned long nr_pages, gfp_t gfp_mask,
+-				       int nid, nodemask_t *nodemask);
++#define alloc_contig_range(_start, _end, _migratetype, _gfp_mask) \
++		alloc_hooks(_alloc_contig_range(_start, _end, _migratetype, \
++						 _gfp_mask), int, -ENOMEM)
++extern struct page *_alloc_contig_pages(unsigned long nr_pages, gfp_t gfp_mask,
++					int nid, nodemask_t *nodemask);
++#define alloc_contig_pages(_nr_pages, _gfp_mask, _nid, _nodemask) \
++		alloc_hooks(_alloc_contig_pages(_nr_pages, _gfp_mask, _nid, \
++						  _nodemask), struct page *, NULL)
+ #endif
+ void free_contig_range(unsigned long pfn, unsigned long nr_pages);
+ 
+diff --git a/include/linux/page_ext.h b/include/linux/page_ext.h
+index 67314f648aeb..cff15ee5440e 100644
+--- a/include/linux/page_ext.h
++++ b/include/linux/page_ext.h
+@@ -4,7 +4,6 @@
+ 
+ #include <linux/types.h>
+ #include <linux/stacktrace.h>
+-#include <linux/stackdepot.h>
+ 
+ struct pglist_data;
+ 
+diff --git a/include/linux/pagemap.h b/include/linux/pagemap.h
+index a56308a9d1a4..b2efafa001f8 100644
+--- a/include/linux/pagemap.h
++++ b/include/linux/pagemap.h
+@@ -467,14 +467,17 @@ static inline void *detach_page_private(struct page *page)
+ }
+ 
+ #ifdef CONFIG_NUMA
+-struct folio *filemap_alloc_folio(gfp_t gfp, unsigned int order);
++struct folio *_filemap_alloc_folio(gfp_t gfp, unsigned int order);
+ #else
+-static inline struct folio *filemap_alloc_folio(gfp_t gfp, unsigned int order)
++static inline struct folio *_filemap_alloc_folio(gfp_t gfp, unsigned int order)
+ {
+-	return folio_alloc(gfp, order);
++	return _folio_alloc(gfp, order);
+ }
+ #endif
+ 
++#define filemap_alloc_folio(_gfp, _order) \
++	alloc_hooks(_filemap_alloc_folio(_gfp, _order), struct folio *, NULL)
++
+ static inline struct page *__page_cache_alloc(gfp_t gfp)
+ {
+ 	return &filemap_alloc_folio(gfp, 0)->page;
+diff --git a/include/linux/pgalloc_tag.h b/include/linux/pgalloc_tag.h
+index f8c7b6ef9c75..567327c1c46f 100644
+--- a/include/linux/pgalloc_tag.h
++++ b/include/linux/pgalloc_tag.h
+@@ -6,28 +6,58 @@
+ #define _LINUX_PGALLOC_TAG_H
+ 
+ #include <linux/alloc_tag.h>
++
++#ifdef CONFIG_MEM_ALLOC_PROFILING
++
+ #include <linux/page_ext.h>
+ 
+ extern struct page_ext_operations page_alloc_tagging_ops;
+-struct page_ext *lookup_page_ext(const struct page *page);
++extern struct page_ext *page_ext_get(struct page *page);
++extern void page_ext_put(struct page_ext *page_ext);
++
++static inline union codetag_ref *codetag_ref_from_page_ext(struct page_ext *page_ext)
++{
++	return (void *)page_ext + page_alloc_tagging_ops.offset;
++}
++
++static inline struct page_ext *page_ext_from_codetag_ref(union codetag_ref *ref)
++{
++	return (void *)ref - page_alloc_tagging_ops.offset;
++}
+ 
+ static inline union codetag_ref *get_page_tag_ref(struct page *page)
+ {
+ 	if (page && mem_alloc_profiling_enabled()) {
+-		struct page_ext *page_ext = lookup_page_ext(page);
++		struct page_ext *page_ext = page_ext_get(page);
+ 
+ 		if (page_ext)
+-			return (void *)page_ext + page_alloc_tagging_ops.offset;
++			return codetag_ref_from_page_ext(page_ext);
+ 	}
+ 	return NULL;
+ }
+ 
++static inline void put_page_tag_ref(union codetag_ref *ref)
++{
++	if (ref)
++		page_ext_put(page_ext_from_codetag_ref(ref));
++}
++
+ static inline void pgalloc_tag_dec(struct page *page, unsigned int order)
+ {
+ 	union codetag_ref *ref = get_page_tag_ref(page);
+ 
+-	if (ref)
++	if (ref) {
+ 		alloc_tag_sub(ref, PAGE_SIZE << order);
++		put_page_tag_ref(ref);
++	}
+ }
+ 
++#else /* CONFIG_MEM_ALLOC_PROFILING */
++
++static inline union codetag_ref *get_page_tag_ref(struct page *page) { return NULL; }
++static inline void put_page_tag_ref(union codetag_ref *ref) {}
++#define pgalloc_tag_dec(__page, __size)		do {} while (0)
++
++#endif /* CONFIG_MEM_ALLOC_PROFILING */
++
+ #endif /* _LINUX_PGALLOC_TAG_H */
+diff --git a/mm/compaction.c b/mm/compaction.c
+index c8bcdea15f5f..32707fb62495 100644
+--- a/mm/compaction.c
++++ b/mm/compaction.c
+@@ -1684,7 +1684,7 @@ static void isolate_freepages(struct compact_control *cc)
+  * This is a migrate-callback that "allocates" freepages by taking pages
+  * from the isolated freelists in the block we are migrating to.
+  */
+-static struct page *compaction_alloc(struct page *migratepage,
++static struct page *_compaction_alloc(struct page *migratepage,
+ 					unsigned long data)
+ {
+ 	struct compact_control *cc = (struct compact_control *)data;
+@@ -1704,6 +1704,13 @@ static struct page *compaction_alloc(struct page *migratepage,
+ 	return freepage;
+ }
+ 
++static struct page *compaction_alloc(struct page *migratepage,
++				     unsigned long data)
++{
++	return alloc_hooks(_compaction_alloc(migratepage, data),
++			   struct page *, NULL);
++}
++
+ /*
+  * This is a migrate-callback that "frees" freepages back to the isolated
+  * freelist.  All pages on the freelist are from the same zone, so there is no
+diff --git a/mm/filemap.c b/mm/filemap.c
+index a34abfe8c654..f0f8b782d172 100644
+--- a/mm/filemap.c
++++ b/mm/filemap.c
+@@ -958,7 +958,7 @@ int filemap_add_folio(struct address_space *mapping, struct folio *folio,
+ EXPORT_SYMBOL_GPL(filemap_add_folio);
+ 
+ #ifdef CONFIG_NUMA
+-struct folio *filemap_alloc_folio(gfp_t gfp, unsigned int order)
++struct folio *_filemap_alloc_folio(gfp_t gfp, unsigned int order)
+ {
+ 	int n;
+ 	struct folio *folio;
+@@ -973,9 +973,9 @@ struct folio *filemap_alloc_folio(gfp_t gfp, unsigned int order)
+ 
+ 		return folio;
+ 	}
+-	return folio_alloc(gfp, order);
++	return _folio_alloc(gfp, order);
+ }
+-EXPORT_SYMBOL(filemap_alloc_folio);
++EXPORT_SYMBOL(_filemap_alloc_folio);
+ #endif
+ 
+ /*
+diff --git a/mm/mempolicy.c b/mm/mempolicy.c
+index 2068b594dc88..80cd33811641 100644
+--- a/mm/mempolicy.c
++++ b/mm/mempolicy.c
+@@ -2141,7 +2141,7 @@ static struct page *alloc_pages_preferred_many(gfp_t gfp, unsigned int order,
+ }
+ 
+ /**
+- * vma_alloc_folio - Allocate a folio for a VMA.
++ * _vma_alloc_folio - Allocate a folio for a VMA.
+  * @gfp: GFP flags.
+  * @order: Order of the folio.
+  * @vma: Pointer to VMA or NULL if not available.
+@@ -2155,7 +2155,7 @@ static struct page *alloc_pages_preferred_many(gfp_t gfp, unsigned int order,
+  *
+  * Return: The folio on success or NULL if allocation fails.
+  */
+-struct folio *vma_alloc_folio(gfp_t gfp, int order, struct vm_area_struct *vma,
++struct folio *_vma_alloc_folio(gfp_t gfp, int order, struct vm_area_struct *vma,
+ 		unsigned long addr, bool hugepage)
+ {
+ 	struct mempolicy *pol;
+@@ -2240,10 +2240,10 @@ struct folio *vma_alloc_folio(gfp_t gfp, int order, struct vm_area_struct *vma,
+ out:
+ 	return folio;
+ }
+-EXPORT_SYMBOL(vma_alloc_folio);
++EXPORT_SYMBOL(_vma_alloc_folio);
+ 
+ /**
+- * alloc_pages - Allocate pages.
++ * _alloc_pages - Allocate pages.
+  * @gfp: GFP flags.
+  * @order: Power of two of number of pages to allocate.
+  *
+@@ -2256,7 +2256,7 @@ EXPORT_SYMBOL(vma_alloc_folio);
+  * flags are used.
+  * Return: The page on success or NULL if allocation fails.
+  */
+-struct page *alloc_pages(gfp_t gfp, unsigned order)
++struct page *_alloc_pages(gfp_t gfp, unsigned int order)
+ {
+ 	struct mempolicy *pol = &default_policy;
+ 	struct page *page;
+@@ -2274,15 +2274,15 @@ struct page *alloc_pages(gfp_t gfp, unsigned order)
+ 		page = alloc_pages_preferred_many(gfp, order,
+ 				  policy_node(gfp, pol, numa_node_id()), pol);
+ 	else
+-		page = __alloc_pages(gfp, order,
++		page = _alloc_pages2(gfp, order,
+ 				policy_node(gfp, pol, numa_node_id()),
+ 				policy_nodemask(gfp, pol));
+ 
+ 	return page;
+ }
+-EXPORT_SYMBOL(alloc_pages);
++EXPORT_SYMBOL(_alloc_pages);
+ 
+-struct folio *folio_alloc(gfp_t gfp, unsigned order)
++struct folio *_folio_alloc(gfp_t gfp, unsigned int order)
+ {
+ 	struct page *page = alloc_pages(gfp | __GFP_COMP, order);
+ 
+@@ -2290,7 +2290,7 @@ struct folio *folio_alloc(gfp_t gfp, unsigned order)
+ 		prep_transhuge_page(page);
+ 	return (struct folio *)page;
+ }
+-EXPORT_SYMBOL(folio_alloc);
++EXPORT_SYMBOL(_folio_alloc);
+ 
+ static unsigned long alloc_pages_bulk_array_interleave(gfp_t gfp,
+ 		struct mempolicy *pol, unsigned long nr_pages,
+@@ -2309,13 +2309,13 @@ static unsigned long alloc_pages_bulk_array_interleave(gfp_t gfp,
+ 
+ 	for (i = 0; i < nodes; i++) {
+ 		if (delta) {
+-			nr_allocated = __alloc_pages_bulk(gfp,
++			nr_allocated = _alloc_pages_bulk(gfp,
+ 					interleave_nodes(pol), NULL,
+ 					nr_pages_per_node + 1, NULL,
+ 					page_array);
+ 			delta--;
+ 		} else {
+-			nr_allocated = __alloc_pages_bulk(gfp,
++			nr_allocated = _alloc_pages_bulk(gfp,
+ 					interleave_nodes(pol), NULL,
+ 					nr_pages_per_node, NULL, page_array);
+ 		}
+@@ -2337,11 +2337,11 @@ static unsigned long alloc_pages_bulk_array_preferred_many(gfp_t gfp, int nid,
+ 	preferred_gfp = gfp | __GFP_NOWARN;
+ 	preferred_gfp &= ~(__GFP_DIRECT_RECLAIM | __GFP_NOFAIL);
+ 
+-	nr_allocated  = __alloc_pages_bulk(preferred_gfp, nid, &pol->nodes,
++	nr_allocated  = _alloc_pages_bulk(preferred_gfp, nid, &pol->nodes,
+ 					   nr_pages, NULL, page_array);
+ 
+ 	if (nr_allocated < nr_pages)
+-		nr_allocated += __alloc_pages_bulk(gfp, numa_node_id(), NULL,
++		nr_allocated += _alloc_pages_bulk(gfp, numa_node_id(), NULL,
+ 				nr_pages - nr_allocated, NULL,
+ 				page_array + nr_allocated);
+ 	return nr_allocated;
+@@ -2353,7 +2353,7 @@ static unsigned long alloc_pages_bulk_array_preferred_many(gfp_t gfp, int nid,
+  * It can accelerate memory allocation especially interleaving
+  * allocate memory.
+  */
+-unsigned long alloc_pages_bulk_array_mempolicy(gfp_t gfp,
++unsigned long _alloc_pages_bulk_array_mempolicy(gfp_t gfp,
+ 		unsigned long nr_pages, struct page **page_array)
+ {
+ 	struct mempolicy *pol = &default_policy;
+@@ -2369,7 +2369,7 @@ unsigned long alloc_pages_bulk_array_mempolicy(gfp_t gfp,
+ 		return alloc_pages_bulk_array_preferred_many(gfp,
+ 				numa_node_id(), pol, nr_pages, page_array);
+ 
+-	return __alloc_pages_bulk(gfp, policy_node(gfp, pol, numa_node_id()),
++	return _alloc_pages_bulk(gfp, policy_node(gfp, pol, numa_node_id()),
+ 				  policy_nodemask(gfp, pol), nr_pages, NULL,
+ 				  page_array);
+ }
+diff --git a/mm/mm_init.c b/mm/mm_init.c
+index 7f7f9c677854..42135fad4d8a 100644
+--- a/mm/mm_init.c
++++ b/mm/mm_init.c
+@@ -24,6 +24,7 @@
+ #include <linux/page_ext.h>
+ #include <linux/pti.h>
+ #include <linux/pgtable.h>
++#include <linux/stackdepot.h>
+ #include <linux/swap.h>
+ #include <linux/cma.h>
+ #include "internal.h"
+diff --git a/mm/page_alloc.c b/mm/page_alloc.c
+index 9de2a18519a1..edd35500f7f6 100644
+--- a/mm/page_alloc.c
++++ b/mm/page_alloc.c
+@@ -74,6 +74,7 @@
+ #include <linux/psi.h>
+ #include <linux/khugepaged.h>
+ #include <linux/delayacct.h>
++#include <linux/pgalloc_tag.h>
+ #include <asm/sections.h>
+ #include <asm/tlbflush.h>
+ #include <asm/div64.h>
+@@ -657,6 +658,7 @@ static inline bool pcp_allowed_order(unsigned int order)
+ 
+ static inline void free_the_page(struct page *page, unsigned int order)
+ {
++
+ 	if (pcp_allowed_order(order))		/* Via pcp? */
+ 		free_unref_page(page, order);
+ 	else
+@@ -1259,6 +1261,7 @@ static __always_inline bool free_pages_prepare(struct page *page,
+ 			__memcg_kmem_uncharge_page(page, order);
+ 		reset_page_owner(page, order);
+ 		page_table_check_free(page, order);
++		pgalloc_tag_dec(page, order);
+ 		return false;
  	}
  
--	ret = kmalloc_node(size, kmalloc_flags, node);
-+	ret = _kmalloc_node(size, kmalloc_flags, node);
+@@ -1301,6 +1304,7 @@ static __always_inline bool free_pages_prepare(struct page *page,
+ 	page->flags &= ~PAGE_FLAGS_CHECK_AT_PREP;
+ 	reset_page_owner(page, order);
+ 	page_table_check_free(page, order);
++	pgalloc_tag_dec(page, order);
  
- 	/*
- 	 * It doesn't really make sense to fallback to vmalloc for sub page
-@@ -630,7 +630,7 @@ void *kvmalloc_node(size_t size, gfp_t flags, int node)
- 			flags, PAGE_KERNEL, VM_ALLOW_HUGE_VMAP,
- 			node, __builtin_return_address(0));
+ 	if (!PageHighMem(page)) {
+ 		debug_check_no_locks_freed(page_address(page),
+@@ -1669,6 +1673,9 @@ inline void post_alloc_hook(struct page *page, unsigned int order,
+ 	bool init = !want_init_on_free() && want_init_on_alloc(gfp_flags) &&
+ 			!should_skip_init(gfp_flags);
+ 	bool zero_tags = init && (gfp_flags & __GFP_ZEROTAGS);
++#ifdef CONFIG_MEM_ALLOC_PROFILING
++	union codetag_ref *ref;
++#endif
+ 	int i;
+ 
+ 	set_page_private(page, 0);
+@@ -1721,6 +1728,14 @@ inline void post_alloc_hook(struct page *page, unsigned int order,
+ 
+ 	set_page_owner(page, order, gfp_flags);
+ 	page_table_check_alloc(page, order);
++
++#ifdef CONFIG_MEM_ALLOC_PROFILING
++	ref = get_page_tag_ref(page);
++	if (ref) {
++		alloc_tag_add(ref, current->alloc_tag, PAGE_SIZE << order);
++		put_page_tag_ref(ref);
++	}
++#endif
  }
--EXPORT_SYMBOL(kvmalloc_node);
-+EXPORT_SYMBOL(_kvmalloc_node);
  
- /**
-  * kvfree() - Free memory.
-@@ -669,7 +669,7 @@ void kvfree_sensitive(const void *addr, size_t len)
+ static void prep_new_page(struct page *page, unsigned int order, gfp_t gfp_flags,
+@@ -4568,7 +4583,7 @@ static inline bool prepare_alloc_pages(gfp_t gfp_mask, unsigned int order,
+  *
+  * Returns the number of pages on the list or array.
+  */
+-unsigned long __alloc_pages_bulk(gfp_t gfp, int preferred_nid,
++unsigned long _alloc_pages_bulk(gfp_t gfp, int preferred_nid,
+ 			nodemask_t *nodemask, int nr_pages,
+ 			struct list_head *page_list,
+ 			struct page **page_array)
+@@ -4704,7 +4719,7 @@ unsigned long __alloc_pages_bulk(gfp_t gfp, int preferred_nid,
+ 	pcp_trylock_finish(UP_flags);
+ 
+ failed:
+-	page = __alloc_pages(gfp, 0, preferred_nid, nodemask);
++	page = _alloc_pages2(gfp, 0, preferred_nid, nodemask);
+ 	if (page) {
+ 		if (page_list)
+ 			list_add(&page->lru, page_list);
+@@ -4715,12 +4730,12 @@ unsigned long __alloc_pages_bulk(gfp_t gfp, int preferred_nid,
+ 
+ 	goto out;
  }
- EXPORT_SYMBOL(kvfree_sensitive);
+-EXPORT_SYMBOL_GPL(__alloc_pages_bulk);
++EXPORT_SYMBOL_GPL(_alloc_pages_bulk);
  
--void *kvrealloc(const void *p, size_t oldsize, size_t newsize, gfp_t flags)
-+void *_kvrealloc(const void *p, size_t oldsize, size_t newsize, gfp_t flags)
+ /*
+  * This is the 'heart' of the zoned buddy allocator.
+  */
+-struct page *__alloc_pages(gfp_t gfp, unsigned int order, int preferred_nid,
++struct page *_alloc_pages2(gfp_t gfp, unsigned int order, int preferred_nid,
+ 							nodemask_t *nodemask)
  {
- 	void *newp;
+ 	struct page *page;
+@@ -4783,41 +4798,41 @@ struct page *__alloc_pages(gfp_t gfp, unsigned int order, int preferred_nid,
  
-@@ -682,7 +682,7 @@ void *kvrealloc(const void *p, size_t oldsize, size_t newsize, gfp_t flags)
- 	kvfree(p);
- 	return newp;
+ 	return page;
  }
--EXPORT_SYMBOL(kvrealloc);
-+EXPORT_SYMBOL(_kvrealloc);
+-EXPORT_SYMBOL(__alloc_pages);
++EXPORT_SYMBOL(_alloc_pages2);
+ 
+-struct folio *__folio_alloc(gfp_t gfp, unsigned int order, int preferred_nid,
++struct folio *_folio_alloc2(gfp_t gfp, unsigned int order, int preferred_nid,
+ 		nodemask_t *nodemask)
+ {
+-	struct page *page = __alloc_pages(gfp | __GFP_COMP, order,
++	struct page *page = _alloc_pages2(gfp | __GFP_COMP, order,
+ 			preferred_nid, nodemask);
+ 
+ 	if (page && order > 1)
+ 		prep_transhuge_page(page);
+ 	return (struct folio *)page;
+ }
+-EXPORT_SYMBOL(__folio_alloc);
++EXPORT_SYMBOL(_folio_alloc2);
+ 
+ /*
+  * Common helper functions. Never use with __GFP_HIGHMEM because the returned
+  * address cannot represent highmem pages. Use alloc_pages and then kmap if
+  * you need to access high mem.
+  */
+-unsigned long __get_free_pages(gfp_t gfp_mask, unsigned int order)
++unsigned long _get_free_pages(gfp_t gfp_mask, unsigned int order)
+ {
+ 	struct page *page;
+ 
+-	page = alloc_pages(gfp_mask & ~__GFP_HIGHMEM, order);
++	page = _alloc_pages(gfp_mask & ~__GFP_HIGHMEM, order);
+ 	if (!page)
+ 		return 0;
+ 	return (unsigned long) page_address(page);
+ }
+-EXPORT_SYMBOL(__get_free_pages);
++EXPORT_SYMBOL(_get_free_pages);
+ 
+-unsigned long get_zeroed_page(gfp_t gfp_mask)
++unsigned long _get_zeroed_page(gfp_t gfp_mask)
+ {
+-	return __get_free_page(gfp_mask | __GFP_ZERO);
++	return _get_free_pages(gfp_mask | __GFP_ZERO, 0);
+ }
+-EXPORT_SYMBOL(get_zeroed_page);
++EXPORT_SYMBOL(_get_zeroed_page);
  
  /**
-  * __vmalloc_array - allocate memory for a virtually contiguous array.
+  * __free_pages - Free pages allocated with alloc_pages().
+@@ -5009,7 +5024,7 @@ static void *make_alloc_exact(unsigned long addr, unsigned int order,
+ }
+ 
+ /**
+- * alloc_pages_exact - allocate an exact number physically-contiguous pages.
++ * _alloc_pages_exact - allocate an exact number physically-contiguous pages.
+  * @size: the number of bytes to allocate
+  * @gfp_mask: GFP flags for the allocation, must not contain __GFP_COMP
+  *
+@@ -5023,7 +5038,7 @@ static void *make_alloc_exact(unsigned long addr, unsigned int order,
+  *
+  * Return: pointer to the allocated area or %NULL in case of error.
+  */
+-void *alloc_pages_exact(size_t size, gfp_t gfp_mask)
++void *_alloc_pages_exact(size_t size, gfp_t gfp_mask)
+ {
+ 	unsigned int order = get_order(size);
+ 	unsigned long addr;
+@@ -5031,13 +5046,13 @@ void *alloc_pages_exact(size_t size, gfp_t gfp_mask)
+ 	if (WARN_ON_ONCE(gfp_mask & (__GFP_COMP | __GFP_HIGHMEM)))
+ 		gfp_mask &= ~(__GFP_COMP | __GFP_HIGHMEM);
+ 
+-	addr = __get_free_pages(gfp_mask, order);
++	addr = _get_free_pages(gfp_mask, order);
+ 	return make_alloc_exact(addr, order, size);
+ }
+-EXPORT_SYMBOL(alloc_pages_exact);
++EXPORT_SYMBOL(_alloc_pages_exact);
+ 
+ /**
+- * alloc_pages_exact_nid - allocate an exact number of physically-contiguous
++ * _alloc_pages_exact_nid - allocate an exact number of physically-contiguous
+  *			   pages on a node.
+  * @nid: the preferred node ID where memory should be allocated
+  * @size: the number of bytes to allocate
+@@ -5048,7 +5063,7 @@ EXPORT_SYMBOL(alloc_pages_exact);
+  *
+  * Return: pointer to the allocated area or %NULL in case of error.
+  */
+-void * __meminit alloc_pages_exact_nid(int nid, size_t size, gfp_t gfp_mask)
++void * __meminit _alloc_pages_exact_nid(int nid, size_t size, gfp_t gfp_mask)
+ {
+ 	unsigned int order = get_order(size);
+ 	struct page *p;
+@@ -5056,7 +5071,7 @@ void * __meminit alloc_pages_exact_nid(int nid, size_t size, gfp_t gfp_mask)
+ 	if (WARN_ON_ONCE(gfp_mask & (__GFP_COMP | __GFP_HIGHMEM)))
+ 		gfp_mask &= ~(__GFP_COMP | __GFP_HIGHMEM);
+ 
+-	p = alloc_pages_node(nid, gfp_mask, order);
++	p = _alloc_pages_node(nid, gfp_mask, order);
+ 	if (!p)
+ 		return NULL;
+ 	return make_alloc_exact((unsigned long)page_address(p), order, size);
+@@ -6729,7 +6744,7 @@ int __alloc_contig_migrate_range(struct compact_control *cc,
+ }
+ 
+ /**
+- * alloc_contig_range() -- tries to allocate given range of pages
++ * _alloc_contig_range() -- tries to allocate given range of pages
+  * @start:	start PFN to allocate
+  * @end:	one-past-the-last PFN to allocate
+  * @migratetype:	migratetype of the underlying pageblocks (either
+@@ -6749,7 +6764,7 @@ int __alloc_contig_migrate_range(struct compact_control *cc,
+  * pages which PFN is in [start, end) are allocated for the caller and
+  * need to be freed with free_contig_range().
+  */
+-int alloc_contig_range(unsigned long start, unsigned long end,
++int _alloc_contig_range(unsigned long start, unsigned long end,
+ 		       unsigned migratetype, gfp_t gfp_mask)
+ {
+ 	unsigned long outer_start, outer_end;
+@@ -6873,15 +6888,15 @@ int alloc_contig_range(unsigned long start, unsigned long end,
+ 	undo_isolate_page_range(start, end, migratetype);
+ 	return ret;
+ }
+-EXPORT_SYMBOL(alloc_contig_range);
++EXPORT_SYMBOL(_alloc_contig_range);
+ 
+ static int __alloc_contig_pages(unsigned long start_pfn,
+ 				unsigned long nr_pages, gfp_t gfp_mask)
+ {
+ 	unsigned long end_pfn = start_pfn + nr_pages;
+ 
+-	return alloc_contig_range(start_pfn, end_pfn, MIGRATE_MOVABLE,
+-				  gfp_mask);
++	return _alloc_contig_range(start_pfn, end_pfn, MIGRATE_MOVABLE,
++				   gfp_mask);
+ }
+ 
+ static bool pfn_range_valid_contig(struct zone *z, unsigned long start_pfn,
+@@ -6916,7 +6931,7 @@ static bool zone_spans_last_pfn(const struct zone *zone,
+ }
+ 
+ /**
+- * alloc_contig_pages() -- tries to find and allocate contiguous range of pages
++ * _alloc_contig_pages() -- tries to find and allocate contiguous range of pages
+  * @nr_pages:	Number of contiguous pages to allocate
+  * @gfp_mask:	GFP mask to limit search and used during compaction
+  * @nid:	Target node
+@@ -6936,8 +6951,8 @@ static bool zone_spans_last_pfn(const struct zone *zone,
+  *
+  * Return: pointer to contiguous pages on success, or NULL if not successful.
+  */
+-struct page *alloc_contig_pages(unsigned long nr_pages, gfp_t gfp_mask,
+-				int nid, nodemask_t *nodemask)
++struct page *_alloc_contig_pages(unsigned long nr_pages, gfp_t gfp_mask,
++				 int nid, nodemask_t *nodemask)
+ {
+ 	unsigned long ret, pfn, flags;
+ 	struct zonelist *zonelist;
 -- 
 2.40.1.495.gc816e09b53d-goog
 
