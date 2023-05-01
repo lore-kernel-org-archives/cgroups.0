@@ -1,235 +1,262 @@
-From: Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>
-Subject: Re: [LSF/MM/BPF TOPIC] Reducing zombie memcgs
-Date: Mon, 1 May 2023 09:38:17 -0700
-Message-ID: <ZE/q+ZFWLEa6C6rq@P9FQF9L96D>
-References: <CABdmKX2M6koq4Q0Cmp_-=wbP0Qa190HdEGGaHfxNS05gAkUtPA@mail.gmail.com>
- <CAJD7tkZw9uVPe5KH2xrihsv5nDmExJmkmsUPYP6Npvv6Q0NcVw@mail.gmail.com>
- <CAJD7tkb56gR0X5v3VHfmk3az3bOz=wF2jhEi+7Eek0J8XXBeWQ@mail.gmail.com>
+From: Suren Baghdasaryan <surenb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Subject: [PATCH 00/40] Memory allocation profiling
+Date: Mon,  1 May 2023 09:54:10 -0700
+Message-ID: <20230501165450.15352-1-surenb@google.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
-        t=1682959104;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=frTPzV4iOiZmCIcq4YO0YBWe928Qg6lFX+1jFsedIxE=;
-        b=GCFQWunLE/5T7i7hyR1Clr+xJL6k1eMABapgWo0+NCQyYSYIrRPq5aGvGQouS97PXFIPzN
-        hWw/lF+ZcOkUBLoIw519298fzac3kZGbmQdhavrtu1q6XAtlfee0+lr2B8yKRtEEfSxRyy
-        xEHKv/X8LGcW7LB14h+byrnBYG0TsBM=
-Content-Disposition: inline
-In-Reply-To: <CAJD7tkb56gR0X5v3VHfmk3az3bOz=wF2jhEi+7Eek0J8XXBeWQ-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20221208; t=1682960107; x=1685552107;
+        h=cc:to:from:subject:message-id:mime-version:date:from:to:cc:subject
+         :date:message-id:reply-to;
+        bh=rhc7v9a1uLQqVXD+LsRhZoVqkW3m5tSXn3Qy4JSVLy4=;
+        b=IEVlqTozWZGbWgkZmckzilH6j94QhJZoZIuPp60mSUj0QVW0m+a9iMmfCAF4iEpfZD
+         fEVgO/+vOkTtFhBvoHwlDMAL3hxDH/zLipyU3ktDF8+bB/itGjow8f+dbDn1CDMFDOyk
+         cTiZv7/V3hTMTCajMzvTdbVUzBNML97dt0BYpiR6UOH9nLt1/l6QL7QOhPtZ51dB47eW
+         B6R13UEA02ZiLSfNlDL/QxOcvfA6sC1wmjwPXFvrSUoT7FHGOeimYmfVTl3MVQzN5BdG
+         VU1/9ubcznfSn4RmyJ2/Vw+B4mgfyn6L75+s8Kx83oYGWWn0RADQAOUF0mZI8SYEht0a
+         Cq7g==
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="utf-8"
-To: Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Cc: "T.J. Mercier" <tjmercier-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, lsf-pc-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Muchun Song <muchun.song-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Alistair Popple <apopple-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>, Jason Gunthorpe <jgg-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>, Kalesh Singh <kaleshsingh-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Yu Zhao <yuzhao-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Matthew Wilcox <willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org
+Cc: kent.overstreet-fxUVXftIFDnyG1zEObXtfA@public.gmane.org, mhocko-IBi9RG/b67k@public.gmane.org, vbabka-AlSwsSmVLrQ@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org, mgorman-l3A5Bk7waGM@public.gmane.org, dave-h16yJtLeMjHk1uMJSBkQmQ@public.gmane.org, willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, liam.howlett-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org, corbet-T1hC0tSOHrs@public.gmane.org, void-gq6j2QGBifHby3iVrkZq2A@public.gmane.org, peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, juri.lelli-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, ldufour-tEXmvtCZX7AybS5Ee8rs3A@public.gmane.org, catalin.marinas-5wv7dgnIgG8@public.gmane.org, will-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, arnd-r2nGTMty4D4@public.gmane.org, tglx-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org, mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, dave.hansen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org, x86-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, peterx-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, david-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, mcgrof-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, masahiroy-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, nathan-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, dennis-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, muchun.song-fxUVXftIFDnyG1zEObXtfA@public.gmane.org, rppt-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, paulmck-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, pasha.tatashin-2EmBfe737+LQT0dZR+AlfA@public.gmane.org, yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, yuzhao-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, dhowells-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, andreyknvl-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, keescook-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org
 
-On Tue, Apr 25, 2023 at 04:36:53AM -0700, Yosry Ahmed wrote:
->  +David Rientjes +Greg Thelen +Matthew Wilcox
+Memory allocation profiling infrastructure provides a low overhead
+mechanism to make all kernel allocations in the system visible. It can be
+used to monitor memory usage, track memory hotspots, detect memory leaks,
+identify memory regressions.
 
-Hi Yosry!
+To keep the overhead to the minimum, we record only allocation sizes for
+every allocation in the codebase. With that information, if users are
+interested in more detailed context for a specific allocation, they can
+enable in-depth context tracking, which includes capturing the pid, tgid,
+task name, allocation size, timestamp and call stack for every allocation
+at the specified code location.
 
-Sorry for being late to the party, I was offline for a week.
+The data is exposed to the user space via a read-only debugfs file called
+allocations. Usage example:
 
-> 
-> On Tue, Apr 11, 2023 at 4:48 PM Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org> wrote:
-> >
-> > On Tue, Apr 11, 2023 at 4:36 PM T.J. Mercier <tjmercier-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org> wrote:
-> > >
-> > > When a memcg is removed by userspace it gets offlined by the kernel.
-> > > Offline memcgs are hidden from user space, but they still live in the
-> > > kernel until their reference count drops to 0. New allocations cannot
-> > > be charged to offline memcgs, but existing allocations charged to
-> > > offline memcgs remain charged, and hold a reference to the memcg.
-> > >
-> > > As such, an offline memcg can remain in the kernel indefinitely,
-> > > becoming a zombie memcg. The accumulation of a large number of zombie
-> > > memcgs lead to increased system overhead (mainly percpu data in struct
-> > > mem_cgroup). It also causes some kernel operations that scale with the
-> > > number of memcgs to become less efficient (e.g. reclaim).
+$ sort -hr /sys/kernel/debug/allocations|head
+  153MiB     8599 mm/slub.c:1826 module:slub func:alloc_slab_page
+ 6.08MiB      49 mm/slab_common.c:950 module:slab_common func:_kmalloc_order
+ 5.09MiB     6335 mm/memcontrol.c:2814 module:memcontrol func:alloc_slab_obj_exts
+ 4.54MiB      78 mm/page_alloc.c:5777 module:page_alloc func:alloc_pages_exact
+ 1.32MiB      338 include/asm-generic/pgalloc.h:63 module:pgtable func:__pte_alloc_one
+ 1.16MiB      603 fs/xfs/xfs_log_priv.h:700 module:xfs func:xlog_kvmalloc
+ 1.00MiB      256 mm/swap_cgroup.c:48 module:swap_cgroup func:swap_cgroup_prepare
+  734KiB     5380 fs/xfs/kmem.c:20 module:xfs func:kmem_alloc
+  640KiB      160 kernel/rcu/tree.c:3184 module:tree func:fill_page_cache_func
+  640KiB      160 drivers/char/virtio_console.c:452 module:virtio_console func:alloc_buf
 
-The problem is even more fundamental:
-1) offline memcgs are (almost) fully functional memcgs from the kernel's point
-   of view,
-2) if memcg A allocates some memory, goes offline and now memcg B is using this
-   memory, the memory is effectively shared between memcgs A and B,
-3) sharing memory was never really supported by memcgs.
+For allocation context capture, a new debugfs file called allocations.ctx
+is used to select which code location should capture allocation context
+and to read captured context information. Usage example:
 
-If memory is shared between memcgs, most memcg functionality is broken aside
-from a case when memcgs are working in a very predictable and coordinated way.
-But generally all counters and stats become racy (whoever allocated it first,
-pays the full price, other get it for free), and memory limits and protections
-are based on the same counters.
+$ cd /sys/kernel/debug/
+$ echo "file include/asm-generic/pgalloc.h line 63 enable" > allocations.ctx
+$ cat allocations.ctx
+  920KiB      230 include/asm-generic/pgalloc.h:63 module:pgtable func:__pte_alloc_one
+    size: 4096
+    pid: 1474
+    tgid: 1474
+    comm: bash
+    ts: 175332940994
+    call stack:
+         pte_alloc_one+0xfe/0x130
+         __pte_alloc+0x22/0xb0
+         copy_page_range+0x842/0x1640
+         dup_mm+0x42d/0x580
+         copy_process+0xfb1/0x1ac0
+         kernel_clone+0x92/0x3e0
+         __do_sys_clone+0x66/0x90
+         do_syscall_64+0x38/0x90
+         entry_SYSCALL_64_after_hwframe+0x63/0xcd
+...
 
-Depending on % memory shared, the rate at which memcg are created and destroyed,
-memory pressure and other workload-depending factors the problem can be
-significant or not.
+Implementation utilizes a more generic concept of code tagging, introduced
+as part of this patchset. Code tag is a structure identifying a specific
+location in the source code which is generated at compile time and can be
+embedded in an application-specific structure. A number of applications
+for code tagging have been presented in the original RFC [1].
+Code tagging uses the old trick of "define a special elf section for
+objects of a given type so that we can iterate over them at runtime" and
+creates a proper library for it. 
 
-One way to tackle this problem is to stop using memcgs as wrappers for
-individual processes or workloads and use them more as performance classes.
-This means more statically and with less memory sharing.
-However I admit it's the opposite direction to where all went for the
-last decade or so.
+To profile memory allocations, we instrument page, slab and percpu
+allocators to record total memory allocated in the associated code tag at
+every allocation in the codebase. Every time an allocation is performed by
+an instrumented allocator, the code tag at that location increments its
+counter by allocation size. Every time the memory is freed the counter is
+decremented. To decrement the counter upon freeing, allocated object needs
+a reference to its code tag. Page allocators use page_ext to record this
+reference while slab allocators use memcg_data (renamed into more generic
+slabobj_ext) of the slab page.
 
-> > >
-> > > There are currently out-of-tree solutions which attempt to
-> > > periodically clean up zombie memcgs by reclaiming from them. However
-> > > that is not effective for non-reclaimable memory, which it would be
-> > > better to reparent or recharge to an online cgroup. There are also
-> > > proposed changes that would benefit from recharging for shared
-> > > resources like pinned pages, or DMA buffer pages.
-> >
-> > I am very interested in attending this discussion, it's something that
-> > I have been actively looking into -- specifically recharging pages of
-> > offlined memcgs.
-> >
-> > >
-> > > Suggested attendees:
-> > > Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-> > > Yu Zhao <yuzhao-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-> > > T.J. Mercier <tjmercier-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-> > > Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-> > > Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-> > > Muchun Song <muchun.song-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>
-> > > Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-> > > Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>
-> > > Alistair Popple <apopple-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>
-> > > Jason Gunthorpe <jgg-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>
-> > > Kalesh Singh <kaleshsingh-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-> 
-> I was hoping I would bring a more complete idea to this thread, but
-> here is what I have so far.
-> 
-> The idea is to recharge the memory charged to memcgs when they are
-> offlined. I like to think of the options we have to deal with memory
-> charged to offline memcgs as a toolkit. This toolkit includes:
-> 
-> (a) Evict memory.
-> 
-> This is the simplest option, just evict the memory.
-> 
-> For file-backed pages, this writes them back to their backing files,
-> uncharging and freeing the page. The next access will read the page
-> again and the faulting process’s memcg will be charged.
-> 
-> For swap-backed pages (anon/shmem), this swaps them out. Swapping out
-> a page charged to an offline memcg uncharges the page and charges the
-> swap to its parent. The next access will swap in the page and the
-> parent will be charged. This is effectively deferred recharging to the
-> parent.
-> 
-> Pros:
-> - Simple.
-> 
-> Cons:
-> - Behavior is different for file-backed vs. swap-backed pages, for
-> swap-backed pages, the memory is recharged to the parent (aka
-> reparented), not charged to the "rightful" user.
-> - Next access will incur higher latency, especially if the pages are active.
+Module allocations are accounted the same way as other kernel allocations.
+Module loading and unloading is supported. If a module is unloaded while
+one or more of its allocations is still not freed (rather rare condition),
+its data section will be kept in memory to allow later code tag
+referencing when the allocation is freed later on.
 
-Generally I think it's a good solution iff there is not much of memory sharing
-with other memcgs. But in practice there is a high chance that some very hot
-pages (e.g. shlib pages shared by pretty much everyone) will get evicted.
+As part of this series we introduce several kernel configs:
+CODE_TAGGING - to enable code tagging framework
+CONFIG_MEM_ALLOC_PROFILING - to enable memory allocation profiling
+CONFIG_MEM_ALLOC_PROFILING_DEBUG - to enable memory allocation profiling
+validation
+Note: CONFIG_MEM_ALLOC_PROFILING enables CONFIG_PAGE_EXTENSION to store
+code tag reference in the page_ext object. 
 
-> 
-> (b) Direct recharge to the parent
-> 
-> This can be done for any page and should be simple as the pages are
-> already hierarchically charged to the parent.
-> 
-> Pros:
-> - Simple.
-> 
-> Cons:
-> - If a different memcg is using the memory, it will keep taxing the
-> parent indefinitely. Same not the "rightful" user argument.
+nomem_profiling kernel command-line parameter is also provided to disable
+the functionality and avoid the performance overhead.
+Performance overhead:
+To evaluate performance we implemented an in-kernel test executing
+multiple get_free_page/free_page and kmalloc/kfree calls with allocation
+sizes growing from 8 to 240 bytes with CPU frequency set to max and CPU
+affinity set to a specific CPU to minimize the noise. Below is performance
+comparison between the baseline kernel, profiling when enabled, profiling
+when disabled (nomem_profiling=y) and (for comparison purposes) baseline
+with CONFIG_MEMCG_KMEM enabled and allocations using __GFP_ACCOUNT:
 
-It worked for slabs and other kmem objects to reduce the severity of the memcg
-zombie clogging. Muchun posted patches for lru pages. I believe it's a decent
-way to solve the zombie problem, but it doesn't solve any issues with the memory
-sharing.
+			kmalloc			pgalloc
+Baseline (6.3-rc7)	9.200s			31.050s
+profiling disabled	9.800 (+6.52%)		32.600 (+4.99%)
+profiling enabled	12.500 (+35.87%)	39.010 (+25.60%)
+memcg_kmem enabled	41.400 (+350.00%)	70.600 (+127.38%)
 
-> 
-> (c) Direct recharge to the mapper
-> 
-> This can be done for any mapped page by walking the rmap and
-> identifying the memcg of the process(es) mapping the page.
-> 
-> Pros:
-> - Memory is recharged to the “rightful” user.
-> 
-> Cons:
-> - More complicated, the “rightful” user’s memcg might run into an OOM
-> situation – which in this case will be unpredictable and hard to
-> correlate with an allocation.
-> 
-> (d) Deferred recharging
-> 
-> This is a mixture of (b) & (c) above. It is a two-step process. We
-> first recharge the memory to the parent, which should be simple and
-> reliable. Then, we mark the pages so that the next time they are
-> accessed or mapped we recharge them to the "rightful" user.
-> 
-> For mapped pages, we can use the numa balancing approach of protecting
-> the mapping (while the vma is still accessible), and then in the fault
-> path recharge the page. This is better than eviction because the fault
-> on the next access is minor, and better than direct recharging to the
-> mapping in the sense that the charge is correlated with an
-> allocation/mapping. Of course, it is more complicated, we have to
-> handle different protection interactions (e.g. what if the page is
-> already protected?). Another disadvantage is that the recharging
-> happens in the context of a page fault, rather than asynchronously in
-> the case of directly recharging to the mapper. Page faults are more
-> latency sensitive, although this shouldn't be a common path.
-> 
-> For unmapped pages, I am struggling to find a way that is simple
-> enough to recharge the memory on the next access. My first intuition
-> was to add a hook to folio_mark_accessed(), but I was quickly told
-> that this is not invoked in all access paths to unmapped pages (e.g.
-> writes through fds). We can also add a hook to folio_mark_dirty() to
-> add more coverage, but it seems like this path is fragile, and it
-> would be ideal if there is a shared well-defined common path (or
-> paths) for all accesses to unmapped pages. I would imagine if such a
-> path exists or can be forged it would probably be in the page cache
-> code somewhere.
+[1] https://lore.kernel.org/all/20220830214919.53220-1-surenb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org/
 
-The problem is that we'd need to add hooks and checks into many hot paths,
-so the performance penalty will be likely severe.
-But of course hard to tell without actual patches.
-> 
-> For both cases, if a new mapping is created, we can do recharging there.
-> 
-> Pros:
-> - Memory is recharged to the “rightful” user, eventually.
-> - The charge is predictable and correlates to a user's access.
-> - Less overhead on next access than eviction.
-> 
-> Cons:
-> - The memory will remain charged to the parent until the next access
-> happens, if it ever happens.
-> - Worse overhead on next access than directly recharging to the mapper.
-> 
-> With this (incompletely defined) toolkit, a recharging algorithm can
-> look like this (as a rough example):
-> 
-> - If the page is file-backed:
->   - Unmapped? evict (a).
->   - Mapped? recharge to the mapper -- direct (c) or deferred (d).
-> - If the page is swap-backed:
->   - Unmapped? deferred recharge to the next accessor (d).
->   - Mapped? recharge to the mapper -- direct (c) or deferred (d).
-> 
-> There are, of course, open questions:
-> 1) How do we do deferred recharging for unmapped pages? Is deferred
-> recharging even a reliable option to begin with? What if the pages are
-> never accessed again?
+Kent Overstreet (15):
+  lib/string_helpers: Drop space in string_get_size's output
+  scripts/kallysms: Always include __start and __stop symbols
+  fs: Convert alloc_inode_sb() to a macro
+  nodemask: Split out include/linux/nodemask_types.h
+  prandom: Remove unused include
+  lib/string.c: strsep_no_empty()
+  Lazy percpu counters
+  lib: code tagging query helper functions
+  mm/slub: Mark slab_free_freelist_hook() __always_inline
+  mempool: Hook up to memory allocation profiling
+  timekeeping: Fix a circular include dependency
+  mm: percpu: Introduce pcpuobj_ext
+  mm: percpu: Add codetag reference into pcpuobj_ext
+  arm64: Fix circular header dependency
+  MAINTAINERS: Add entries for code tagging and memory allocation
+    profiling
 
-I believe the real question is how to handle memory shared between memcgs.
-Dealing with offline memcgs is just a specific case of this problem.
-> 
-> Again, I was hoping to come up with a more concrete proposal, but as
-> LSF/MM/BPF is approaching, I wanted to share my thoughts on the
-> mailing list looking for any feedback.
+Suren Baghdasaryan (25):
+  mm: introduce slabobj_ext to support slab object extensions
+  mm: introduce __GFP_NO_OBJ_EXT flag to selectively prevent slabobj_ext
+    creation
+  mm/slab: introduce SLAB_NO_OBJ_EXT to avoid obj_ext creation
+  mm: prevent slabobj_ext allocations for slabobj_ext and kmem_cache
+    objects
+  slab: objext: introduce objext_flags as extension to
+    page_memcg_data_flags
+  lib: code tagging framework
+  lib: code tagging module support
+  lib: prevent module unloading if memory is not freed
+  lib: add allocation tagging support for memory allocation profiling
+  lib: introduce support for page allocation tagging
+  change alloc_pages name in dma_map_ops to avoid name conflicts
+  mm: enable page allocation tagging
+  mm/page_ext: enable early_page_ext when
+    CONFIG_MEM_ALLOC_PROFILING_DEBUG=y
+  mm: create new codetag references during page splitting
+  lib: add codetag reference into slabobj_ext
+  mm/slab: add allocation accounting into slab allocation and free paths
+  mm/slab: enable slab allocation tagging for kmalloc and friends
+  mm: percpu: enable per-cpu allocation tagging
+  move stack capture functionality into a separate function for reuse
+  lib: code tagging context capture support
+  lib: implement context capture support for tagged allocations
+  lib: add memory allocations report in show_mem()
+  codetag: debug: skip objext checking when it's for objext itself
+  codetag: debug: mark codetags for reserved pages as empty
+  codetag: debug: introduce OBJEXTS_ALLOC_FAIL to mark failed slab_ext
+    allocations
 
-Thank you for bringing it in!
+ .../admin-guide/kernel-parameters.txt         |   2 +
+ MAINTAINERS                                   |  22 +
+ arch/arm64/include/asm/spectre.h              |   4 +-
+ arch/x86/kernel/amd_gart_64.c                 |   2 +-
+ drivers/iommu/dma-iommu.c                     |   2 +-
+ drivers/xen/grant-dma-ops.c                   |   2 +-
+ drivers/xen/swiotlb-xen.c                     |   2 +-
+ include/asm-generic/codetag.lds.h             |  14 +
+ include/asm-generic/vmlinux.lds.h             |   3 +
+ include/linux/alloc_tag.h                     | 161 ++++++
+ include/linux/codetag.h                       | 159 ++++++
+ include/linux/codetag_ctx.h                   |  48 ++
+ include/linux/dma-map-ops.h                   |   2 +-
+ include/linux/fs.h                            |   6 +-
+ include/linux/gfp.h                           | 123 ++--
+ include/linux/gfp_types.h                     |  12 +-
+ include/linux/hrtimer.h                       |   2 +-
+ include/linux/lazy-percpu-counter.h           | 102 ++++
+ include/linux/memcontrol.h                    |  56 +-
+ include/linux/mempool.h                       |  73 ++-
+ include/linux/mm.h                            |   8 +
+ include/linux/mm_types.h                      |   4 +-
+ include/linux/nodemask.h                      |   2 +-
+ include/linux/nodemask_types.h                |   9 +
+ include/linux/page_ext.h                      |   1 -
+ include/linux/pagemap.h                       |   9 +-
+ include/linux/percpu.h                        |  19 +-
+ include/linux/pgalloc_tag.h                   |  95 ++++
+ include/linux/prandom.h                       |   1 -
+ include/linux/sched.h                         |  32 +-
+ include/linux/slab.h                          | 182 +++---
+ include/linux/slab_def.h                      |   2 +-
+ include/linux/slub_def.h                      |   4 +-
+ include/linux/stackdepot.h                    |  16 +
+ include/linux/string.h                        |   1 +
+ include/linux/time_namespace.h                |   2 +
+ init/Kconfig                                  |   4 +
+ kernel/dma/mapping.c                          |   4 +-
+ kernel/module/main.c                          |  25 +-
+ lib/Kconfig                                   |   3 +
+ lib/Kconfig.debug                             |  26 +
+ lib/Makefile                                  |   5 +
+ lib/alloc_tag.c                               | 464 +++++++++++++++
+ lib/codetag.c                                 | 529 ++++++++++++++++++
+ lib/lazy-percpu-counter.c                     | 127 +++++
+ lib/show_mem.c                                |  15 +
+ lib/stackdepot.c                              |  68 +++
+ lib/string.c                                  |  19 +
+ lib/string_helpers.c                          |   3 +-
+ mm/compaction.c                               |   9 +-
+ mm/filemap.c                                  |   6 +-
+ mm/huge_memory.c                              |   2 +
+ mm/kfence/core.c                              |  14 +-
+ mm/kfence/kfence.h                            |   4 +-
+ mm/memcontrol.c                               |  56 +-
+ mm/mempolicy.c                                |  30 +-
+ mm/mempool.c                                  |  28 +-
+ mm/mm_init.c                                  |   1 +
+ mm/page_alloc.c                               |  75 ++-
+ mm/page_ext.c                                 |  21 +-
+ mm/page_owner.c                               |  54 +-
+ mm/percpu-internal.h                          |  26 +-
+ mm/percpu.c                                   | 122 ++--
+ mm/slab.c                                     |  22 +-
+ mm/slab.h                                     | 224 ++++++--
+ mm/slab_common.c                              |  95 +++-
+ mm/slub.c                                     |  24 +-
+ mm/util.c                                     |  10 +-
+ scripts/kallsyms.c                            |  13 +
+ scripts/module.lds.S                          |   7 +
+ 70 files changed, 2765 insertions(+), 554 deletions(-)
+ create mode 100644 include/asm-generic/codetag.lds.h
+ create mode 100644 include/linux/alloc_tag.h
+ create mode 100644 include/linux/codetag.h
+ create mode 100644 include/linux/codetag_ctx.h
+ create mode 100644 include/linux/lazy-percpu-counter.h
+ create mode 100644 include/linux/nodemask_types.h
+ create mode 100644 include/linux/pgalloc_tag.h
+ create mode 100644 lib/alloc_tag.c
+ create mode 100644 lib/codetag.c
+ create mode 100644 lib/lazy-percpu-counter.c
+
+-- 
+2.40.1.495.gc816e09b53d-goog
+
