@@ -1,54 +1,260 @@
-From: Suren Baghdasaryan <surenb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Subject: [PATCH 32/40] arm64: Fix circular header dependency
-Date: Mon,  1 May 2023 09:54:42 -0700
-Message-ID: <20230501165450.15352-33-surenb@google.com>
+From: Suren Baghdasaryan <surenb@google.com>
+Subject: [PATCH 27/40] mempool: Hook up to memory allocation profiling
+Date: Mon,  1 May 2023 09:54:37 -0700
+Message-ID: <20230501165450.15352-28-surenb@google.com>
 References: <20230501165450.15352-1-surenb@google.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <linux-arch-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20221208; t=1682960181; x=1685552181;
+        d=google.com; s=20221208; t=1682960170; x=1685552170;
         h=cc:to:from:subject:message-id:references:mime-version:in-reply-to
          :date:from:to:cc:subject:date:message-id:reply-to;
-        bh=jY4Why07vSNVPpYg+gbjry+wnVwWuxvaUCerSTimV/s=;
-        b=Aq78soAaAyMief+cDBMeso8QgziJr1UcaoZbGj9scpfWVuA1jJXbc7+tVVMa5n+pXD
-         zJNNMs5P7WUHVBw683ECTpg5npVx6QBf0bUN7DdPu6j/C+MRzKsa8URcyNS8bC7atQCY
-         9SigXecTat+KM4eyT+hIxO14+/p9qQaXDCEC1rzj2GobJRxENTqWjSQsycHoHxjax/gY
-         eWPPPBE6ZeI91QsbK/YSznn2yYLzHfxgEG9YEj/uwkJeJF6xe27cleLqDewTpXr/rX+O
-         cI/7bSXViuC98rFsCexDBf6uZdpJdij1JBRms+fpyJvFKEAl56eecSWlzCcPWSAQrlLn
-         rFyQ==
-In-Reply-To: <20230501165450.15352-1-surenb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+        bh=sqvz5oeuoJjzyL5d6pTK46j/h0psspf4+63tRdELHAU=;
+        b=WvFBiHp4GUaavo4X5tfWgjPPIzI4jGTUdYosSfeYytpBQUHvpJznwgCxcgtRl4137n
+         /lBXJJHc248hdfGU59NQ6YgyXWglquQNEf83f6NZrWhqBExIs3wpePGzi3G6GXt6Q4EK
+         YNi+IUVCZ2K+oon9eJeUuOHyA0Dti1Ev+im7AvpjkpEZ+nJa/TIMCcKnkDRhn07rC5v5
+         U+jUUTR0hv29E56yn3HNUOsZcTbbcZMOOzG+OmYRSipaveAVFeX44ceC3CgOIteuddHZ
+         pJc9MAEnRvahuFY90dt+kNg7+emyX/nC+hRarTb4+wBTNE2Gp4VjzhmNP/RRS0EOHEJ7
+         5wQg==
+In-Reply-To: <20230501165450.15352-1-surenb@google.com>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org
-Cc: kent.overstreet-fxUVXftIFDnyG1zEObXtfA@public.gmane.org, mhocko-IBi9RG/b67k@public.gmane.org, vbabka-AlSwsSmVLrQ@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org, mgorman-l3A5Bk7waGM@public.gmane.org, dave-h16yJtLeMjHk1uMJSBkQmQ@public.gmane.org, willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, liam.howlett-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org, corbet-T1hC0tSOHrs@public.gmane.org, void-gq6j2QGBifHby3iVrkZq2A@public.gmane.org, peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, juri.lelli-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, ldufour-tEXmvtCZX7AybS5Ee8rs3A@public.gmane.org, catalin.marinas-5wv7dgnIgG8@public.gmane.org, will-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, arnd-r2nGTMty4D4@public.gmane.org, tglx-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org, mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, dave.hansen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org, x86-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, peterx-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, david-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, mcgrof-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, masahiroy-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, nathan-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, dennis-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, muchun.song-fxUVXftIFDnyG1zEObXtfA@public.gmane.org, rppt-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, paulmck-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, pasha.tatashin-2EmBfe737+LQT0dZR+AlfA@public.gmane.org, yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, yuzhao-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, dhowells-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, andreyknvl-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, keescook-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org
+To: akpm@linux-foundation.org
+Cc: kent.overstreet@linux.dev, mhocko@suse.com, vbabka@suse.cz, hannes@cmpxchg.org, roman.gushchin@linux.dev, mgorman@suse.de, dave@stgolabs.net, willy@infradead.org, liam.howlett@oracle.com, corbet@lwn.net, void@manifault.com, peterz@infradead.org, juri.lelli@redhat.com, ldufour@linux.ibm.com, catalin.marinas@arm.com, will@kernel.org, arnd@arndb.de, tglx@linutronix.de, mingo@redhat.com, dave.hansen@linux.intel.com, x86@kernel.org, peterx@redhat.com, david@redhat.com, axboe@kernel.dk, mcgrof@kernel.org, masahiroy@kernel.org, nathan@kernel.org, dennis@kernel.org, tj@kernel.org, muchun.song@linux.dev, rppt@kernel.org, paulmck@kernel.org, pasha.tatashin@soleen.com, yosryahmed@google.com, yuzhao@google.com, dhowells@redhat.com, hughd@google.com, andreyknvl@gmail.com, keescook@chromium.org
 
-From: Kent Overstreet <kent.overstreet-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>
+From: Kent Overstreet <kent.overstreet@linux.dev>
 
-Replace linux/percpu.h include with asm/percpu.h to avoid circular
-dependency.
+This adds hooks to mempools for correctly annotating mempool-backed
+allocations at the correct source line, so they show up correctly in
+/sys/kernel/debug/allocations.
 
-Signed-off-by: Kent Overstreet <kent.overstreet-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>
-Signed-off-by: Suren Baghdasaryan <surenb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Various inline functions are converted to wrappers so that we can invoke
+alloc_hooks() in fewer places.
+
+Signed-off-by: Kent Overstreet <kent.overstreet@linux.dev>
+Signed-off-by: Suren Baghdasaryan <surenb@google.com>
 ---
- arch/arm64/include/asm/spectre.h | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ include/linux/mempool.h | 73 ++++++++++++++++++++---------------------
+ mm/mempool.c            | 28 ++++++----------
+ 2 files changed, 45 insertions(+), 56 deletions(-)
 
-diff --git a/arch/arm64/include/asm/spectre.h b/arch/arm64/include/asm/spectre.h
-index db7b371b367c..31823d9715ab 100644
---- a/arch/arm64/include/asm/spectre.h
-+++ b/arch/arm64/include/asm/spectre.h
-@@ -13,8 +13,8 @@
- #define __BP_HARDEN_HYP_VECS_SZ	((BP_HARDEN_EL2_SLOTS - 1) * SZ_2K)
+diff --git a/include/linux/mempool.h b/include/linux/mempool.h
+index 4aae6c06c5f2..aa6e886b01d7 100644
+--- a/include/linux/mempool.h
++++ b/include/linux/mempool.h
+@@ -5,6 +5,8 @@
+ #ifndef _LINUX_MEMPOOL_H
+ #define _LINUX_MEMPOOL_H
  
- #ifndef __ASSEMBLY__
++#include <linux/sched.h>
++#include <linux/alloc_tag.h>
+ #include <linux/wait.h>
+ #include <linux/compiler.h>
+ 
+@@ -39,18 +41,32 @@ void mempool_exit(mempool_t *pool);
+ int mempool_init_node(mempool_t *pool, int min_nr, mempool_alloc_t *alloc_fn,
+ 		      mempool_free_t *free_fn, void *pool_data,
+ 		      gfp_t gfp_mask, int node_id);
+-int mempool_init(mempool_t *pool, int min_nr, mempool_alloc_t *alloc_fn,
++
++int _mempool_init(mempool_t *pool, int min_nr, mempool_alloc_t *alloc_fn,
+ 		 mempool_free_t *free_fn, void *pool_data);
++#define mempool_init(...)			\
++	alloc_hooks(_mempool_init(__VA_ARGS__), int, -ENOMEM)
+ 
+ extern mempool_t *mempool_create(int min_nr, mempool_alloc_t *alloc_fn,
+ 			mempool_free_t *free_fn, void *pool_data);
+-extern mempool_t *mempool_create_node(int min_nr, mempool_alloc_t *alloc_fn,
++
++extern mempool_t *_mempool_create_node(int min_nr, mempool_alloc_t *alloc_fn,
+ 			mempool_free_t *free_fn, void *pool_data,
+ 			gfp_t gfp_mask, int nid);
++#define mempool_create_node(...)			\
++	alloc_hooks(_mempool_create_node(__VA_ARGS__), mempool_t *, NULL)
++
++#define mempool_create(_min_nr, _alloc_fn, _free_fn, _pool_data)	\
++	mempool_create_node(_min_nr, _alloc_fn, _free_fn, _pool_data,	\
++			    GFP_KERNEL, NUMA_NO_NODE)
+ 
+ extern int mempool_resize(mempool_t *pool, int new_min_nr);
+ extern void mempool_destroy(mempool_t *pool);
+-extern void *mempool_alloc(mempool_t *pool, gfp_t gfp_mask) __malloc;
++
++extern void *_mempool_alloc(mempool_t *pool, gfp_t gfp_mask) __malloc;
++#define mempool_alloc(_pool, _gfp)			\
++	alloc_hooks(_mempool_alloc((_pool), (_gfp)), void *, NULL)
++
+ extern void mempool_free(void *element, mempool_t *pool);
+ 
+ /*
+@@ -61,19 +77,10 @@ extern void mempool_free(void *element, mempool_t *pool);
+ void *mempool_alloc_slab(gfp_t gfp_mask, void *pool_data);
+ void mempool_free_slab(void *element, void *pool_data);
+ 
+-static inline int
+-mempool_init_slab_pool(mempool_t *pool, int min_nr, struct kmem_cache *kc)
+-{
+-	return mempool_init(pool, min_nr, mempool_alloc_slab,
+-			    mempool_free_slab, (void *) kc);
+-}
 -
--#include <linux/percpu.h>
-+#include <linux/smp.h>
-+#include <asm/percpu.h>
+-static inline mempool_t *
+-mempool_create_slab_pool(int min_nr, struct kmem_cache *kc)
+-{
+-	return mempool_create(min_nr, mempool_alloc_slab, mempool_free_slab,
+-			      (void *) kc);
+-}
++#define mempool_init_slab_pool(_pool, _min_nr, _kc)			\
++	mempool_init(_pool, (_min_nr), mempool_alloc_slab, mempool_free_slab, (void *)(_kc))
++#define mempool_create_slab_pool(_min_nr, _kc)			\
++	mempool_create((_min_nr), mempool_alloc_slab, mempool_free_slab, (void *)(_kc))
  
- #include <asm/cpufeature.h>
- #include <asm/virt.h>
+ /*
+  * a mempool_alloc_t and a mempool_free_t to kmalloc and kfree the
+@@ -82,17 +89,12 @@ mempool_create_slab_pool(int min_nr, struct kmem_cache *kc)
+ void *mempool_kmalloc(gfp_t gfp_mask, void *pool_data);
+ void mempool_kfree(void *element, void *pool_data);
+ 
+-static inline int mempool_init_kmalloc_pool(mempool_t *pool, int min_nr, size_t size)
+-{
+-	return mempool_init(pool, min_nr, mempool_kmalloc,
+-			    mempool_kfree, (void *) size);
+-}
+-
+-static inline mempool_t *mempool_create_kmalloc_pool(int min_nr, size_t size)
+-{
+-	return mempool_create(min_nr, mempool_kmalloc, mempool_kfree,
+-			      (void *) size);
+-}
++#define mempool_init_kmalloc_pool(_pool, _min_nr, _size)		\
++	mempool_init(_pool, (_min_nr), mempool_kmalloc, mempool_kfree,	\
++		     (void *)(unsigned long)(_size))
++#define mempool_create_kmalloc_pool(_min_nr, _size)			\
++	mempool_create((_min_nr), mempool_kmalloc, mempool_kfree,	\
++		       (void *)(unsigned long)(_size))
+ 
+ /*
+  * A mempool_alloc_t and mempool_free_t for a simple page allocator that
+@@ -101,16 +103,11 @@ static inline mempool_t *mempool_create_kmalloc_pool(int min_nr, size_t size)
+ void *mempool_alloc_pages(gfp_t gfp_mask, void *pool_data);
+ void mempool_free_pages(void *element, void *pool_data);
+ 
+-static inline int mempool_init_page_pool(mempool_t *pool, int min_nr, int order)
+-{
+-	return mempool_init(pool, min_nr, mempool_alloc_pages,
+-			    mempool_free_pages, (void *)(long)order);
+-}
+-
+-static inline mempool_t *mempool_create_page_pool(int min_nr, int order)
+-{
+-	return mempool_create(min_nr, mempool_alloc_pages, mempool_free_pages,
+-			      (void *)(long)order);
+-}
++#define mempool_init_page_pool(_pool, _min_nr, _order)			\
++	mempool_init(_pool, (_min_nr), mempool_alloc_pages,		\
++		     mempool_free_pages, (void *)(long)(_order))
++#define mempool_create_page_pool(_min_nr, _order)			\
++	mempool_create((_min_nr), mempool_alloc_pages,			\
++		       mempool_free_pages, (void *)(long)(_order))
+ 
+ #endif /* _LINUX_MEMPOOL_H */
+diff --git a/mm/mempool.c b/mm/mempool.c
+index 734bcf5afbb7..4fc90735853c 100644
+--- a/mm/mempool.c
++++ b/mm/mempool.c
+@@ -230,17 +230,17 @@ EXPORT_SYMBOL(mempool_init_node);
+  *
+  * Return: %0 on success, negative error code otherwise.
+  */
+-int mempool_init(mempool_t *pool, int min_nr, mempool_alloc_t *alloc_fn,
++int _mempool_init(mempool_t *pool, int min_nr, mempool_alloc_t *alloc_fn,
+ 		 mempool_free_t *free_fn, void *pool_data)
+ {
+ 	return mempool_init_node(pool, min_nr, alloc_fn, free_fn,
+ 				 pool_data, GFP_KERNEL, NUMA_NO_NODE);
+ 
+ }
+-EXPORT_SYMBOL(mempool_init);
++EXPORT_SYMBOL(_mempool_init);
+ 
+ /**
+- * mempool_create - create a memory pool
++ * mempool_create_node - create a memory pool
+  * @min_nr:    the minimum number of elements guaranteed to be
+  *             allocated for this pool.
+  * @alloc_fn:  user-defined element-allocation function.
+@@ -255,15 +255,7 @@ EXPORT_SYMBOL(mempool_init);
+  *
+  * Return: pointer to the created memory pool object or %NULL on error.
+  */
+-mempool_t *mempool_create(int min_nr, mempool_alloc_t *alloc_fn,
+-				mempool_free_t *free_fn, void *pool_data)
+-{
+-	return mempool_create_node(min_nr, alloc_fn, free_fn, pool_data,
+-				   GFP_KERNEL, NUMA_NO_NODE);
+-}
+-EXPORT_SYMBOL(mempool_create);
+-
+-mempool_t *mempool_create_node(int min_nr, mempool_alloc_t *alloc_fn,
++mempool_t *_mempool_create_node(int min_nr, mempool_alloc_t *alloc_fn,
+ 			       mempool_free_t *free_fn, void *pool_data,
+ 			       gfp_t gfp_mask, int node_id)
+ {
+@@ -281,7 +273,7 @@ mempool_t *mempool_create_node(int min_nr, mempool_alloc_t *alloc_fn,
+ 
+ 	return pool;
+ }
+-EXPORT_SYMBOL(mempool_create_node);
++EXPORT_SYMBOL(_mempool_create_node);
+ 
+ /**
+  * mempool_resize - resize an existing memory pool
+@@ -377,7 +369,7 @@ EXPORT_SYMBOL(mempool_resize);
+  *
+  * Return: pointer to the allocated element or %NULL on error.
+  */
+-void *mempool_alloc(mempool_t *pool, gfp_t gfp_mask)
++void *_mempool_alloc(mempool_t *pool, gfp_t gfp_mask)
+ {
+ 	void *element;
+ 	unsigned long flags;
+@@ -444,7 +436,7 @@ void *mempool_alloc(mempool_t *pool, gfp_t gfp_mask)
+ 	finish_wait(&pool->wait, &wait);
+ 	goto repeat_alloc;
+ }
+-EXPORT_SYMBOL(mempool_alloc);
++EXPORT_SYMBOL(_mempool_alloc);
+ 
+ /**
+  * mempool_free - return an element to the pool.
+@@ -515,7 +507,7 @@ void *mempool_alloc_slab(gfp_t gfp_mask, void *pool_data)
+ {
+ 	struct kmem_cache *mem = pool_data;
+ 	VM_BUG_ON(mem->ctor);
+-	return kmem_cache_alloc(mem, gfp_mask);
++	return _kmem_cache_alloc(mem, gfp_mask);
+ }
+ EXPORT_SYMBOL(mempool_alloc_slab);
+ 
+@@ -533,7 +525,7 @@ EXPORT_SYMBOL(mempool_free_slab);
+ void *mempool_kmalloc(gfp_t gfp_mask, void *pool_data)
+ {
+ 	size_t size = (size_t)pool_data;
+-	return kmalloc(size, gfp_mask);
++	return _kmalloc(size, gfp_mask);
+ }
+ EXPORT_SYMBOL(mempool_kmalloc);
+ 
+@@ -550,7 +542,7 @@ EXPORT_SYMBOL(mempool_kfree);
+ void *mempool_alloc_pages(gfp_t gfp_mask, void *pool_data)
+ {
+ 	int order = (int)(long)pool_data;
+-	return alloc_pages(gfp_mask, order);
++	return _alloc_pages(gfp_mask, order);
+ }
+ EXPORT_SYMBOL(mempool_alloc_pages);
+ 
 -- 
 2.40.1.495.gc816e09b53d-goog
 
