@@ -1,22 +1,21 @@
 From: Suren Baghdasaryan <surenb@google.com>
-Subject: [PATCH 24/40] mm/slab: add allocation accounting into slab allocation
- and free paths
-Date: Mon,  1 May 2023 09:54:34 -0700
-Message-ID: <20230501165450.15352-25-surenb@google.com>
+Subject: [PATCH 26/40] mm/slub: Mark slab_free_freelist_hook() __always_inline
+Date: Mon,  1 May 2023 09:54:36 -0700
+Message-ID: <20230501165450.15352-27-surenb@google.com>
 References: <20230501165450.15352-1-surenb@google.com>
 Mime-Version: 1.0
 Return-path: <linux-arch-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20221208; t=1682960163; x=1685552163;
+        d=google.com; s=20221208; t=1682960167; x=1685552167;
         h=cc:to:from:subject:message-id:references:mime-version:in-reply-to
          :date:from:to:cc:subject:date:message-id:reply-to;
-        bh=UqN7FeV7aPqCmKItkyIx4xBxa3o94vtL5Phvca7QUfw=;
-        b=E3/DZ7A2w5/KA0SPoOgDZl8cJAWCaY3BGBFQeSc/qzjQe0fM9xmbbTDocgwuOOp3LT
-         GK3YJqraePyIrgvlz0C1S6Wec6V4sz3+3alNU4R6cNfgWKAm/KHB5K1fHdSBD6UsYReW
-         OypIaQzRticsOqfq5jwU1kZdYTvr7RLYZbcqb3Ite92bHmcVQajevDqoiuCCwS030v+p
-         Be3SQphLsWQFuGhQq8i0kXYiixrDLOjgisXe2ZSgniNRK9cfGXtFSqdN+Kd8F5/lQa7E
-         /p5ZymC5neHH+BhUfAayBM2rdDwZ8KZfkYIvJtL+L0Ri9FOGTCuyj9nVUWNgD0tlqnQZ
-         Ay6A==
+        bh=YfoToyHVT1LJlGJVQ6MuRV3hbhaLXh5d5qfc4HkIPik=;
+        b=Db2dTvDWbMM6MtFyLXOOyG+p1K651ww8uL+kJDohPMMG6EWYrhfJFGluhHEW0wqXl5
+         UKPrByNQ1Z4QXnisfDyfKX7dbeY+3mxaMGuFVRBjDUr3JiqQISt6WeUr2I6JPah8BGyR
+         FjdvJFEuIXgNlkkoVLLQxMPMSKPuyrjPesVcRR9te3ugJsI7tT+EXrko3AZ8ov2CcY8R
+         JR28aghvPN6+RkIPURXyrGkWco+xEzOLoyotOADRZq9o/XJ68RcgnDEgHpMVXMMei422
+         +DGh+VKx3LXxPBgO4eeggvJc6/61DcK7Fvg52O8gRCKPK/nk5YYM+Q4LDqT5D1RFb4LF
+         rBwA==
 In-Reply-To: <20230501165450.15352-1-surenb@google.com>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
@@ -24,122 +23,29 @@ Content-Transfer-Encoding: 7bit
 To: akpm@linux-foundation.org
 Cc: kent.overstreet@linux.dev, mhocko@suse.com, vbabka@suse.cz, hannes@cmpxchg.org, roman.gushchin@linux.dev, mgorman@suse.de, dave@stgolabs.net, willy@infradead.org, liam.howlett@oracle.com, corbet@lwn.net, void@manifault.com, peterz@infradead.org, juri.lelli@redhat.com, ldufour@linux.ibm.com, catalin.marinas@arm.com, will@kernel.org, arnd@arndb.de, tglx@linutronix.de, mingo@redhat.com, dave.hansen@linux.intel.com, x86@kernel.org, peterx@redhat.com, david@redhat.com, axboe@kernel.dk, mcgrof@kernel.org, masahiroy@kernel.org, nathan@kernel.org, dennis@kernel.org, tj@kernel.org, muchun.song@linux.dev, rppt@kernel.org, paulmck@kernel.org, pasha.tatashin@soleen.com, yosryahmed@google.com, yuzhao@google.com, dhowells@redhat.com, hughd@google.com, andreyknvl@gmail.com, keescook@chromium.org
 
-Account slab allocations using codetag reference embedded into slabobj_ext.
+From: Kent Overstreet <kent.overstreet@linux.dev>
 
-Signed-off-by: Suren Baghdasaryan <surenb@google.com>
-Co-developed-by: Kent Overstreet <kent.overstreet@linux.dev>
+It seems we need to be more forceful with the compiler on this one.
+
 Signed-off-by: Kent Overstreet <kent.overstreet@linux.dev>
+Signed-off-by: Suren Baghdasaryan <surenb@google.com>
 ---
- include/linux/slab_def.h |  2 +-
- include/linux/slub_def.h |  4 ++--
- mm/slab.c                |  4 +++-
- mm/slab.h                | 35 +++++++++++++++++++++++++++++++++++
- 4 files changed, 41 insertions(+), 4 deletions(-)
+ mm/slub.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/include/linux/slab_def.h b/include/linux/slab_def.h
-index a61e7d55d0d3..23f14dcb8d5b 100644
---- a/include/linux/slab_def.h
-+++ b/include/linux/slab_def.h
-@@ -107,7 +107,7 @@ static inline void *nearest_obj(struct kmem_cache *cache, const struct slab *sla
-  *   reciprocal_divide(offset, cache->reciprocal_buffer_size)
-  */
- static inline unsigned int obj_to_index(const struct kmem_cache *cache,
--					const struct slab *slab, void *obj)
-+					const struct slab *slab, const void *obj)
- {
- 	u32 offset = (obj - slab->s_mem);
- 	return reciprocal_divide(offset, cache->reciprocal_buffer_size);
-diff --git a/include/linux/slub_def.h b/include/linux/slub_def.h
-index f6df03f934e5..e8be5b368857 100644
---- a/include/linux/slub_def.h
-+++ b/include/linux/slub_def.h
-@@ -176,14 +176,14 @@ static inline void *nearest_obj(struct kmem_cache *cache, const struct slab *sla
- 
- /* Determine object index from a given position */
- static inline unsigned int __obj_to_index(const struct kmem_cache *cache,
--					  void *addr, void *obj)
-+					  void *addr, const void *obj)
- {
- 	return reciprocal_divide(kasan_reset_tag(obj) - addr,
- 				 cache->reciprocal_size);
+diff --git a/mm/slub.c b/mm/slub.c
+index 8f57fd086f69..9dd57b3384a1 100644
+--- a/mm/slub.c
++++ b/mm/slub.c
+@@ -1781,7 +1781,7 @@ static __always_inline bool slab_free_hook(struct kmem_cache *s,
+ 	return kasan_slab_free(s, x, init);
  }
  
- static inline unsigned int obj_to_index(const struct kmem_cache *cache,
--					const struct slab *slab, void *obj)
-+					const struct slab *slab, const void *obj)
+-static inline bool slab_free_freelist_hook(struct kmem_cache *s,
++static __always_inline bool slab_free_freelist_hook(struct kmem_cache *s,
+ 					   void **head, void **tail,
+ 					   int *cnt)
  {
- 	if (is_kfence_address(obj))
- 		return 0;
-diff --git a/mm/slab.c b/mm/slab.c
-index ccc76f7455e9..026f0c08708a 100644
---- a/mm/slab.c
-+++ b/mm/slab.c
-@@ -3367,9 +3367,11 @@ static void cache_flusharray(struct kmem_cache *cachep, struct array_cache *ac)
- static __always_inline void __cache_free(struct kmem_cache *cachep, void *objp,
- 					 unsigned long caller)
- {
-+	struct slab *slab = virt_to_slab(objp);
- 	bool init;
- 
--	memcg_slab_free_hook(cachep, virt_to_slab(objp), &objp, 1);
-+	memcg_slab_free_hook(cachep, slab, &objp, 1);
-+	alloc_tagging_slab_free_hook(cachep, slab, &objp, 1);
- 
- 	if (is_kfence_address(objp)) {
- 		kmemleak_free_recursive(objp, cachep->flags);
-diff --git a/mm/slab.h b/mm/slab.h
-index f953e7c81e98..f9442d3a10b2 100644
---- a/mm/slab.h
-+++ b/mm/slab.h
-@@ -494,6 +494,35 @@ prepare_slab_obj_exts_hook(struct kmem_cache *s, gfp_t flags, void *p)
- 
- #endif /* CONFIG_SLAB_OBJ_EXT */
- 
-+#ifdef CONFIG_MEM_ALLOC_PROFILING
-+
-+static inline void alloc_tagging_slab_free_hook(struct kmem_cache *s, struct slab *slab,
-+					void **p, int objects)
-+{
-+	struct slabobj_ext *obj_exts;
-+	int i;
-+
-+	if (!mem_alloc_profiling_enabled())
-+		return;
-+
-+	obj_exts = slab_obj_exts(slab);
-+	if (!obj_exts)
-+		return;
-+
-+	for (i = 0; i < objects; i++) {
-+		unsigned int off = obj_to_index(s, slab, p[i]);
-+
-+		alloc_tag_sub(&obj_exts[off].ref, s->size);
-+	}
-+}
-+
-+#else
-+
-+static inline void alloc_tagging_slab_free_hook(struct kmem_cache *s, struct slab *slab,
-+					void **p, int objects) {}
-+
-+#endif /* CONFIG_MEM_ALLOC_PROFILING */
-+
- #ifdef CONFIG_MEMCG_KMEM
- void mod_objcg_state(struct obj_cgroup *objcg, struct pglist_data *pgdat,
- 		     enum node_stat_item idx, int nr);
-@@ -776,6 +805,12 @@ static inline void slab_post_alloc_hook(struct kmem_cache *s,
- 					 s->flags, flags);
- 		kmsan_slab_alloc(s, p[i], flags);
- 		obj_exts = prepare_slab_obj_exts_hook(s, flags, p[i]);
-+
-+#ifdef CONFIG_MEM_ALLOC_PROFILING
-+		/* obj_exts can be allocated for other reasons */
-+		if (likely(obj_exts) && mem_alloc_profiling_enabled())
-+			alloc_tag_add(&obj_exts->ref, current->alloc_tag, s->size);
-+#endif
- 	}
- 
- 	memcg_slab_post_alloc_hook(s, objcg, flags, size, p);
 -- 
 2.40.1.495.gc816e09b53d-goog
 
