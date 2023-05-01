@@ -1,86 +1,44 @@
-From: Roman Gushchin <roman.gushchin@linux.dev>
-Subject: Re: [PATCH 00/40] Memory allocation profiling
-Date: Mon, 1 May 2023 11:14:45 -0700
-Message-ID: <ZFABlUB/RZM6lUyl@P9FQF9L96D>
+From: Davidlohr Bueso <dave-h16yJtLeMjHk1uMJSBkQmQ@public.gmane.org>
+Subject: Re: [PATCH 01/40] lib/string_helpers: Drop space in
+ string_get_size's output
+Date: Mon, 1 May 2023 11:13:15 -0700
+Message-ID: <ouuidemyregstrijempvhv357ggp4tgnv6cijhasnungsovokm@jkgvyuyw2fti>
 References: <20230501165450.15352-1-surenb@google.com>
- <ZE/7FZbd31qIzrOc@P9FQF9L96D>
- <CAJuCfpHU3ZMsNuqi1gSxzAWKr2D3VkiaTY0BEUQgM-QHNxRtSg@mail.gmail.com>
+ <20230501165450.15352-2-surenb@google.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-Return-path: <linux-arch-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
-        t=1682964902;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=b6T2XIeT8518y54zvjorB3kR8+9w+3ujz9aAR//CBsM=;
-        b=mSi6IKlT1RXSlUBLoPvq7jMrN2IDhBeePAQolSvVEaweLRyurIvLVwuABJN9Jpfic1Yvl3
-        LVunGzZxNirFmh6ufKgjfRW52yn83tu+sfI5PXb6yM4xtBHMfTQkPxdaHjp58szJhD01u8
-        vJeI+Y6gcJWP3T42UbTxsYN31rZoJ38=
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=stgolabs.net;
+        s=dreamhost; t=1682966731;
+        bh=cQvIokD2K+NzYNjjiFicwOdl/ld8t+K11AzJBztMv5w=;
+        h=Date:From:To:Cc:Subject:Content-Type;
+        b=M4zg8dWD7JrhTAPu66mAaTSowPpbRrHZy5vX69tq81nfwkxu5ABcZTvdEitOi/pao
+         /F7Zvy8qWg1uHLSHLIy71BfECCRDVEwVkTwGKV4enAwitbWyAX7zQqIxmgy5Ekd/3X
+         eBwxyFJiNCc7dhGh2bz9gA9ZTYm8wnwYJYcxvjmWmZlG9vFDjd6eLcRSIDYUNogSq+
+         oVjfYOIiAkLFcvJXiR+WaIO0m3OLgmSHgWG9uIJmSrQfiv/1IAVWlVBaPb3a4MC4bW
+         0zy1Hp6lJ5g/95zoBLuM69MBh/dir7fkKAaiZvBE5LBTcfUuT5xk1lKoWeUIQ/grrx
+         vT+3O4+ucwzGA==
 Content-Disposition: inline
-In-Reply-To: <CAJuCfpHU3ZMsNuqi1gSxzAWKr2D3VkiaTY0BEUQgM-QHNxRtSg@mail.gmail.com>
+In-Reply-To: <20230501165450.15352-2-surenb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="windows-1252"
-To: Suren Baghdasaryan <surenb@google.com>
-Cc: akpm@linux-foundation.org, kent.overstreet@linux.dev, mhocko@suse.com, vbabka@suse.cz, hannes@cmpxchg.org, mgorman@suse.de, dave@stgolabs.net, willy@infradead.org, liam.howlett@oracle.com, corbet@lwn.net, void@manifault.com, peterz@infradead.org, juri.lelli@redhat.com, ldufour@linux.ibm.com, catalin.marinas@arm.com, will@kernel.org, arnd@arndb.de, tglx@linutronix.de, mingo@redhat.com, dave.hansen@linux.intel.com, x86@kernel.org, peterx@redhat.com, david@redhat.com, axboe@kernel.dk, mcgrof@kernel.org, masahiroy@kernel.org, nathan@kernel.org, dennis@kernel.org, tj@kernel.org, muchun.song@linux.dev, rppt@kernel.org, paulmck@kernel.org, pasha.tatashin@soleen.com, yosryahmed@google.com, yuzhao@google.com, dhowells@redhat.com, hughd@google.com, andreyknvl@gmail.com, keescook@chromium.org
+Content-Type: text/plain; charset="us-ascii"; format="flowed"
+Content-Transfer-Encoding: 7bit
+To: Suren Baghdasaryan <surenb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Cc: akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, kent.overstreet-fxUVXftIFDnyG1zEObXtfA@public.gmane.org, mhocko-IBi9RG/b67k@public.gmane.org, vbabka-AlSwsSmVLrQ@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org, mgorman-l3A5Bk7waGM@public.gmane.org, willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, liam.howlett-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org, corbet-T1hC0tSOHrs@public.gmane.org, void-gq6j2QGBifHby3iVrkZq2A@public.gmane.org, peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, juri.lelli-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, ldufour-tEXmvtCZX7AybS5Ee8rs3A@public.gmane.org, catalin.marinas-5wv7dgnIgG8@public.gmane.org, will-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, arnd-r2nGTMty4D4@public.gmane.org, tglx-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org, mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, dave.hansen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org, x86-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, peterx-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, david-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, mcgrof-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, masahiroy-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, nathan-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, dennis-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, muchun.song-fxUVXftIFDnyG1zEObXtfA@public.gmane.org, rppt-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, paulmck-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, pasha.tatashin-2EmBfe737+LQT0dZR+AlfA@public.gmane.org, yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, yuzhao-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, dhowells-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, andreyknvl-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, keescook@chrom
 
-On Mon, May 01, 2023 at 11:08:05AM -0700, Suren Baghdasaryan wrote:
-> On Mon, May 1, 2023 at 10:47=E2=80=AFAM Roman Gushchin <roman.gushchin@li=
-nux.dev> wrote:
-> >
-> > On Mon, May 01, 2023 at 09:54:10AM -0700, Suren Baghdasaryan wrote:
-> > > Performance overhead:
-> > > To evaluate performance we implemented an in-kernel test executing
-> > > multiple get_free_page/free_page and kmalloc/kfree calls with allocat=
-ion
-> > > sizes growing from 8 to 240 bytes with CPU frequency set to max and C=
-PU
-> > > affinity set to a specific CPU to minimize the noise. Below is perfor=
-mance
-> > > comparison between the baseline kernel, profiling when enabled, profi=
-ling
-> > > when disabled (nomem_profiling=3Dy) and (for comparison purposes) bas=
-eline
-> > > with CONFIG_MEMCG_KMEM enabled and allocations using __GFP_ACCOUNT:
-> > >
-> > >                       kmalloc                 pgalloc
-> > > Baseline (6.3-rc7)    9.200s                  31.050s
-> > > profiling disabled    9.800 (+6.52%)          32.600 (+4.99%)
-> > > profiling enabled     12.500 (+35.87%)        39.010 (+25.60%)
-> > > memcg_kmem enabled    41.400 (+350.00%)       70.600 (+127.38%)
-> >
-> > Hm, this makes me think we have a regression with memcg_kmem in one of
-> > the recent releases. When I measured it a couple of years ago, the over=
-head
-> > was definitely within 100%.
-> >
-> > Do you understand what makes the your profiling drastically faster than=
- kmem?
->=20
-> I haven't profiled or looked into kmem overhead closely but I can do
-> that. I just wanted to see how the overhead compares with the existing
-> accounting mechanisms.
+On Mon, 01 May 2023, Suren Baghdasaryan wrote:
 
-It's a good idea and I generally think that +25-35% for kmalloc/pgalloc
-should be ok for the production use, which is great!
-In the reality, most workloads are not that sensitive to the speed of
-memory allocation.
+>From: Kent Overstreet <kent.overstreet-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>
+>
+>Previously, string_get_size() outputted a space between the number and
+>the units, i.e.
+>  9.88 MiB
+>
+>This changes it to
+>  9.88MiB
+>
+>which allows it to be parsed correctly by the 'sort -h' command.
 
->=20
-> For kmalloc, the overhead is low because after we create the vector of
-> slab_ext objects (which is the same as what memcg_kmem does), memory
-> profiling just increments a lazy counter (which in many cases would be
-> a per-cpu counter).
+Wouldn't this break users that already parse it the current way?
 
-So does kmem (this is why I'm somewhat surprised by the difference).
-
-> memcg_kmem operates on cgroup hierarchy with
-> additional overhead associated with that. I'm guessing that's the
-> reason for the big difference between these mechanisms but, I didn't
-> look into the details to understand memcg_kmem performance.
-
-I suspect recent rt-related changes and also the wide usage of
-rcu primitives in the kmem code. I'll try to look closer as well.
-
-Thanks!
+Thanks,
+Davidlohr
