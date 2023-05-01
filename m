@@ -1,58 +1,93 @@
-From: Suren Baghdasaryan <surenb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Subject: [PATCH 03/40] fs: Convert alloc_inode_sb() to a macro
-Date: Mon,  1 May 2023 09:54:13 -0700
-Message-ID: <20230501165450.15352-4-surenb@google.com>
+From: Suren Baghdasaryan <surenb@google.com>
+Subject: [PATCH 04/40] nodemask: Split out include/linux/nodemask_types.h
+Date: Mon,  1 May 2023 09:54:14 -0700
+Message-ID: <20230501165450.15352-5-surenb@google.com>
 References: <20230501165450.15352-1-surenb@google.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <linux-arch-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20221208; t=1682960114; x=1685552114;
+        d=google.com; s=20221208; t=1682960117; x=1685552117;
         h=cc:to:from:subject:message-id:references:mime-version:in-reply-to
          :date:from:to:cc:subject:date:message-id:reply-to;
-        bh=bGdFaZ9yLSvpkzL04e/VHNU0a1vWusSmGZaxEHf2wm8=;
-        b=kNURb9oRoWKMv7g0yo2L8rW1EcO17+d5GcAx/UcGQY6Nq04eWDbD4SbdCNOLXgOYzq
-         iIefzjvXI4Snk9VN4a44AHM12D0iuNdtL0q3JhvnQXzZtf429k8SdHQyNq1DhIH3u3D/
-         vgRvJtIdIGprvSKRamhSV8bn0NWTicrhYnvBvcVO6D5qUdO+wBWr5u0wD0Nu7LbQQb+M
-         IIs2pzxiZlPELIg9+H7fv7z/PKPu/SB3zB+CWnrv1/57UJqzRl/3C3lgPuiSCXQkCpOG
-         4JQ2sAFEorBhte2EmAzube4SlGlrch2L/NYmCg7/2eMQe55a1P+zlu78IrB4haHDMTMn
-         h3Fg==
-In-Reply-To: <20230501165450.15352-1-surenb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+        bh=MvglFAc23/TKNtr0bbBz1MPaCPYCHObzjBdGSdfY+dE=;
+        b=yKDBPh22/4OVp0gpJ5U5nHWMn8h04FMW1WN9f98nVkyHZSwAOs9UEKf2haMvXBbR8k
+         I5P7Dha4Pldrj64han5IvUTFfOCUHNGUrIJIAXAHFHlzCILjwJdK3NkqJaf+mFjOWY9Y
+         anqwu1P80ScHesP8cB9KZprrz91t4RxUXEXNi1EU3gVLZoQD/8xloHC2gL9j3TfYF6sZ
+         YkdPXTXoXUqQoMaiXzOvgnurLH12U1odpmtI/6y+T+w0FuxiB/jPfmQMFC3YfiI9xt9g
+         5K5Lvs6m9I2be6QJ0QLu+uaPSHjNUlPR4Y/We8WulcHXa/trNfBWstA095DBG1XNwXOI
+         RnBQ==
+In-Reply-To: <20230501165450.15352-1-surenb@google.com>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org
-Cc: kent.overstreet-fxUVXftIFDnyG1zEObXtfA@public.gmane.org, mhocko-IBi9RG/b67k@public.gmane.org, vbabka-AlSwsSmVLrQ@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org, mgorman-l3A5Bk7waGM@public.gmane.org, dave-h16yJtLeMjHk1uMJSBkQmQ@public.gmane.org, willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, liam.howlett-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org, corbet-T1hC0tSOHrs@public.gmane.org, void-gq6j2QGBifHby3iVrkZq2A@public.gmane.org, peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, juri.lelli-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, ldufour-tEXmvtCZX7AybS5Ee8rs3A@public.gmane.org, catalin.marinas-5wv7dgnIgG8@public.gmane.org, will-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, arnd-r2nGTMty4D4@public.gmane.org, tglx-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org, mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, dave.hansen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org, x86-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, peterx-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, david-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, mcgrof-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, masahiroy-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, nathan-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, dennis-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, muchun.song-fxUVXftIFDnyG1zEObXtfA@public.gmane.org, rppt-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, paulmck-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, pasha.tatashin-2EmBfe737+LQT0dZR+AlfA@public.gmane.org, yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, yuzhao-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, dhowells-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, andreyknvl-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, keescook-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org
+To: akpm@linux-foundation.org
+Cc: kent.overstreet@linux.dev, mhocko@suse.com, vbabka@suse.cz, hannes@cmpxchg.org, roman.gushchin@linux.dev, mgorman@suse.de, dave@stgolabs.net, willy@infradead.org, liam.howlett@oracle.com, corbet@lwn.net, void@manifault.com, peterz@infradead.org, juri.lelli@redhat.com, ldufour@linux.ibm.com, catalin.marinas@arm.com, will@kernel.org, arnd@arndb.de, tglx@linutronix.de, mingo@redhat.com, dave.hansen@linux.intel.com, x86@kernel.org, peterx@redhat.com, david@redhat.com, axboe@kernel.dk, mcgrof@kernel.org, masahiroy@kernel.org, nathan@kernel.org, dennis@kernel.org, tj@kernel.org, muchun.song@linux.dev, rppt@kernel.org, paulmck@kernel.org, pasha.tatashin@soleen.com, yosryahmed@google.com, yuzhao@google.com, dhowells@redhat.com, hughd@google.com, andreyknvl@gmail.com, keescook@chromium.org
 
-From: Kent Overstreet <kent.overstreet-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>
+From: Kent Overstreet <kent.overstreet@linux.dev>
 
-We're introducing alloc tagging, which tracks memory allocations by
-callsite. Converting alloc_inode_sb() to a macro means allocations will
-be tracked by its caller, which is a bit more useful.
+sched.h, which defines task_struct, needs nodemask_t - but sched.h is a
+frequently used header and ideally shouldn't be pulling in any more code
+that it needs to.
 
-Signed-off-by: Kent Overstreet <kent.overstreet-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>
-Signed-off-by: Suren Baghdasaryan <surenb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Cc: Alexander Viro <viro-RmSDqhL/yNMiFSDQTTA3OLVCufUGDwFn@public.gmane.org>
+This splits out nodemask_types.h which has the definition sched.h needs,
+which will avoid a circular header dependency in the alloc tagging patch
+series, and as a bonus should speed up kernel build times.
+
+Signed-off-by: Kent Overstreet <kent.overstreet@linux.dev>
+Signed-off-by: Suren Baghdasaryan <surenb@google.com>
+Cc: Ingo Molnar <mingo@redhat.com>
+Cc: Peter Zijlstra <peterz@infradead.org>
 ---
- include/linux/fs.h | 6 +-----
- 1 file changed, 1 insertion(+), 5 deletions(-)
+ include/linux/nodemask.h       | 2 +-
+ include/linux/nodemask_types.h | 9 +++++++++
+ include/linux/sched.h          | 2 +-
+ 3 files changed, 11 insertions(+), 2 deletions(-)
+ create mode 100644 include/linux/nodemask_types.h
 
-diff --git a/include/linux/fs.h b/include/linux/fs.h
-index 21a981680856..4905ce14db0b 100644
---- a/include/linux/fs.h
-+++ b/include/linux/fs.h
-@@ -2699,11 +2699,7 @@ int setattr_should_drop_sgid(struct mnt_idmap *idmap,
-  * This must be used for allocating filesystems specific inodes to set
-  * up the inode reclaim context correctly.
-  */
--static inline void *
--alloc_inode_sb(struct super_block *sb, struct kmem_cache *cache, gfp_t gfp)
--{
--	return kmem_cache_alloc_lru(cache, &sb->s_inode_lru, gfp);
--}
-+#define alloc_inode_sb(_sb, _cache, _gfp) kmem_cache_alloc_lru(_cache, &_sb->s_inode_lru, _gfp)
+diff --git a/include/linux/nodemask.h b/include/linux/nodemask.h
+index bb0ee80526b2..fda37b6df274 100644
+--- a/include/linux/nodemask.h
++++ b/include/linux/nodemask.h
+@@ -93,10 +93,10 @@
+ #include <linux/threads.h>
+ #include <linux/bitmap.h>
+ #include <linux/minmax.h>
++#include <linux/nodemask_types.h>
+ #include <linux/numa.h>
+ #include <linux/random.h>
  
- extern void __insert_inode_hash(struct inode *, unsigned long hashval);
- static inline void insert_inode_hash(struct inode *inode)
+-typedef struct { DECLARE_BITMAP(bits, MAX_NUMNODES); } nodemask_t;
+ extern nodemask_t _unused_nodemask_arg_;
+ 
+ /**
+diff --git a/include/linux/nodemask_types.h b/include/linux/nodemask_types.h
+new file mode 100644
+index 000000000000..84c2f47c4237
+--- /dev/null
++++ b/include/linux/nodemask_types.h
+@@ -0,0 +1,9 @@
++/* SPDX-License-Identifier: GPL-2.0 */
++#ifndef __LINUX_NODEMASK_TYPES_H
++#define __LINUX_NODEMASK_TYPES_H
++
++#include <linux/numa.h>
++
++typedef struct { DECLARE_BITMAP(bits, MAX_NUMNODES); } nodemask_t;
++
++#endif /* __LINUX_NODEMASK_TYPES_H */
+diff --git a/include/linux/sched.h b/include/linux/sched.h
+index eed5d65b8d1f..35e7efdea2d9 100644
+--- a/include/linux/sched.h
++++ b/include/linux/sched.h
+@@ -20,7 +20,7 @@
+ #include <linux/hrtimer.h>
+ #include <linux/irqflags.h>
+ #include <linux/seccomp.h>
+-#include <linux/nodemask.h>
++#include <linux/nodemask_types.h>
+ #include <linux/rcupdate.h>
+ #include <linux/refcount.h>
+ #include <linux/resource.h>
 -- 
 2.40.1.495.gc816e09b53d-goog
 
