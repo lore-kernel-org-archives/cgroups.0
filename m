@@ -1,21 +1,22 @@
 From: Suren Baghdasaryan <surenb@google.com>
-Subject: [PATCH 22/40] mm: create new codetag references during page splitting
-Date: Mon,  1 May 2023 09:54:32 -0700
-Message-ID: <20230501165450.15352-23-surenb@google.com>
+Subject: [PATCH 24/40] mm/slab: add allocation accounting into slab allocation
+ and free paths
+Date: Mon,  1 May 2023 09:54:34 -0700
+Message-ID: <20230501165450.15352-25-surenb@google.com>
 References: <20230501165450.15352-1-surenb@google.com>
 Mime-Version: 1.0
 Return-path: <linux-arch-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20221208; t=1682960158; x=1685552158;
+        d=google.com; s=20221208; t=1682960163; x=1685552163;
         h=cc:to:from:subject:message-id:references:mime-version:in-reply-to
          :date:from:to:cc:subject:date:message-id:reply-to;
-        bh=+1Ptlsu3HrvWcynZoOK0ZqIIaOTUmOtwKZY5J1VaLvs=;
-        b=7gQ7i/dAC1G0h1XxKulN+zlGUyuRlgFLhf3t4U3ldYpJ9ZDjgqW3Y7teulwLUtCfTD
-         /VnlwalgQGiFZbmlj07JbUX6Sp54fAN7SxMoxkItZT8pyryAeS9XmoLet1E+NORYJiar
-         iYyZW8dCc0lMzuXcFL3U4QE+FrlZuAGGckHXyur/pD6//ulYUoFzkf8zDD0aROPp40k/
-         xmTrCxx3e3E9BLeb2nij/r9kqOJAFZfyDKOq1UGUdyyy0zgGTjg9yGYmpyEbnJHJf0ZV
-         W5qYg5oFjenWEcOuTpD8cYePEcPbJSlpmAYb7YzYWjMWXvtbqAw/EQzvEU6N9zSkiTXv
-         C/RA==
+        bh=UqN7FeV7aPqCmKItkyIx4xBxa3o94vtL5Phvca7QUfw=;
+        b=E3/DZ7A2w5/KA0SPoOgDZl8cJAWCaY3BGBFQeSc/qzjQe0fM9xmbbTDocgwuOOp3LT
+         GK3YJqraePyIrgvlz0C1S6Wec6V4sz3+3alNU4R6cNfgWKAm/KHB5K1fHdSBD6UsYReW
+         OypIaQzRticsOqfq5jwU1kZdYTvr7RLYZbcqb3Ite92bHmcVQajevDqoiuCCwS030v+p
+         Be3SQphLsWQFuGhQq8i0kXYiixrDLOjgisXe2ZSgniNRK9cfGXtFSqdN+Kd8F5/lQa7E
+         /p5ZymC5neHH+BhUfAayBM2rdDwZ8KZfkYIvJtL+L0Ri9FOGTCuyj9nVUWNgD0tlqnQZ
+         Ay6A==
 In-Reply-To: <20230501165450.15352-1-surenb@google.com>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
@@ -23,104 +24,122 @@ Content-Transfer-Encoding: 7bit
 To: akpm@linux-foundation.org
 Cc: kent.overstreet@linux.dev, mhocko@suse.com, vbabka@suse.cz, hannes@cmpxchg.org, roman.gushchin@linux.dev, mgorman@suse.de, dave@stgolabs.net, willy@infradead.org, liam.howlett@oracle.com, corbet@lwn.net, void@manifault.com, peterz@infradead.org, juri.lelli@redhat.com, ldufour@linux.ibm.com, catalin.marinas@arm.com, will@kernel.org, arnd@arndb.de, tglx@linutronix.de, mingo@redhat.com, dave.hansen@linux.intel.com, x86@kernel.org, peterx@redhat.com, david@redhat.com, axboe@kernel.dk, mcgrof@kernel.org, masahiroy@kernel.org, nathan@kernel.org, dennis@kernel.org, tj@kernel.org, muchun.song@linux.dev, rppt@kernel.org, paulmck@kernel.org, pasha.tatashin@soleen.com, yosryahmed@google.com, yuzhao@google.com, dhowells@redhat.com, hughd@google.com, andreyknvl@gmail.com, keescook@chromium.org
 
-When a high-order page is split into smaller ones, each newly split
-page should get its codetag. The original codetag is reused for these
-pages but it's recorded as 0-byte allocation because original codetag
-already accounts for the original high-order allocated page.
+Account slab allocations using codetag reference embedded into slabobj_ext.
 
 Signed-off-by: Suren Baghdasaryan <surenb@google.com>
+Co-developed-by: Kent Overstreet <kent.overstreet@linux.dev>
+Signed-off-by: Kent Overstreet <kent.overstreet@linux.dev>
 ---
- include/linux/pgalloc_tag.h | 30 ++++++++++++++++++++++++++++++
- mm/huge_memory.c            |  2 ++
- mm/page_alloc.c             |  2 ++
- 3 files changed, 34 insertions(+)
+ include/linux/slab_def.h |  2 +-
+ include/linux/slub_def.h |  4 ++--
+ mm/slab.c                |  4 +++-
+ mm/slab.h                | 35 +++++++++++++++++++++++++++++++++++
+ 4 files changed, 41 insertions(+), 4 deletions(-)
 
-diff --git a/include/linux/pgalloc_tag.h b/include/linux/pgalloc_tag.h
-index 567327c1c46f..0cbba13869b5 100644
---- a/include/linux/pgalloc_tag.h
-+++ b/include/linux/pgalloc_tag.h
-@@ -52,11 +52,41 @@ static inline void pgalloc_tag_dec(struct page *page, unsigned int order)
- 	}
+diff --git a/include/linux/slab_def.h b/include/linux/slab_def.h
+index a61e7d55d0d3..23f14dcb8d5b 100644
+--- a/include/linux/slab_def.h
++++ b/include/linux/slab_def.h
+@@ -107,7 +107,7 @@ static inline void *nearest_obj(struct kmem_cache *cache, const struct slab *sla
+  *   reciprocal_divide(offset, cache->reciprocal_buffer_size)
+  */
+ static inline unsigned int obj_to_index(const struct kmem_cache *cache,
+-					const struct slab *slab, void *obj)
++					const struct slab *slab, const void *obj)
+ {
+ 	u32 offset = (obj - slab->s_mem);
+ 	return reciprocal_divide(offset, cache->reciprocal_buffer_size);
+diff --git a/include/linux/slub_def.h b/include/linux/slub_def.h
+index f6df03f934e5..e8be5b368857 100644
+--- a/include/linux/slub_def.h
++++ b/include/linux/slub_def.h
+@@ -176,14 +176,14 @@ static inline void *nearest_obj(struct kmem_cache *cache, const struct slab *sla
+ 
+ /* Determine object index from a given position */
+ static inline unsigned int __obj_to_index(const struct kmem_cache *cache,
+-					  void *addr, void *obj)
++					  void *addr, const void *obj)
+ {
+ 	return reciprocal_divide(kasan_reset_tag(obj) - addr,
+ 				 cache->reciprocal_size);
  }
  
-+static inline void pgalloc_tag_split(struct page *page, unsigned int nr)
+ static inline unsigned int obj_to_index(const struct kmem_cache *cache,
+-					const struct slab *slab, void *obj)
++					const struct slab *slab, const void *obj)
+ {
+ 	if (is_kfence_address(obj))
+ 		return 0;
+diff --git a/mm/slab.c b/mm/slab.c
+index ccc76f7455e9..026f0c08708a 100644
+--- a/mm/slab.c
++++ b/mm/slab.c
+@@ -3367,9 +3367,11 @@ static void cache_flusharray(struct kmem_cache *cachep, struct array_cache *ac)
+ static __always_inline void __cache_free(struct kmem_cache *cachep, void *objp,
+ 					 unsigned long caller)
+ {
++	struct slab *slab = virt_to_slab(objp);
+ 	bool init;
+ 
+-	memcg_slab_free_hook(cachep, virt_to_slab(objp), &objp, 1);
++	memcg_slab_free_hook(cachep, slab, &objp, 1);
++	alloc_tagging_slab_free_hook(cachep, slab, &objp, 1);
+ 
+ 	if (is_kfence_address(objp)) {
+ 		kmemleak_free_recursive(objp, cachep->flags);
+diff --git a/mm/slab.h b/mm/slab.h
+index f953e7c81e98..f9442d3a10b2 100644
+--- a/mm/slab.h
++++ b/mm/slab.h
+@@ -494,6 +494,35 @@ prepare_slab_obj_exts_hook(struct kmem_cache *s, gfp_t flags, void *p)
+ 
+ #endif /* CONFIG_SLAB_OBJ_EXT */
+ 
++#ifdef CONFIG_MEM_ALLOC_PROFILING
++
++static inline void alloc_tagging_slab_free_hook(struct kmem_cache *s, struct slab *slab,
++					void **p, int objects)
 +{
++	struct slabobj_ext *obj_exts;
 +	int i;
-+	struct page_ext *page_ext;
-+	union codetag_ref *ref;
-+	struct alloc_tag *tag;
 +
 +	if (!mem_alloc_profiling_enabled())
 +		return;
 +
-+	page_ext = page_ext_get(page);
-+	if (unlikely(!page_ext))
++	obj_exts = slab_obj_exts(slab);
++	if (!obj_exts)
 +		return;
 +
-+	ref = codetag_ref_from_page_ext(page_ext);
-+	if (!ref->ct)
-+		goto out;
++	for (i = 0; i < objects; i++) {
++		unsigned int off = obj_to_index(s, slab, p[i]);
 +
-+	tag = ct_to_alloc_tag(ref->ct);
-+	page_ext = page_ext_next(page_ext);
-+	for (i = 1; i < nr; i++) {
-+		/* New reference with 0 bytes accounted */
-+		alloc_tag_add(codetag_ref_from_page_ext(page_ext), tag, 0);
-+		page_ext = page_ext_next(page_ext);
++		alloc_tag_sub(&obj_exts[off].ref, s->size);
 +	}
-+out:
-+	page_ext_put(page_ext);
 +}
 +
- #else /* CONFIG_MEM_ALLOC_PROFILING */
++#else
++
++static inline void alloc_tagging_slab_free_hook(struct kmem_cache *s, struct slab *slab,
++					void **p, int objects) {}
++
++#endif /* CONFIG_MEM_ALLOC_PROFILING */
++
+ #ifdef CONFIG_MEMCG_KMEM
+ void mod_objcg_state(struct obj_cgroup *objcg, struct pglist_data *pgdat,
+ 		     enum node_stat_item idx, int nr);
+@@ -776,6 +805,12 @@ static inline void slab_post_alloc_hook(struct kmem_cache *s,
+ 					 s->flags, flags);
+ 		kmsan_slab_alloc(s, p[i], flags);
+ 		obj_exts = prepare_slab_obj_exts_hook(s, flags, p[i]);
++
++#ifdef CONFIG_MEM_ALLOC_PROFILING
++		/* obj_exts can be allocated for other reasons */
++		if (likely(obj_exts) && mem_alloc_profiling_enabled())
++			alloc_tag_add(&obj_exts->ref, current->alloc_tag, s->size);
++#endif
+ 	}
  
- static inline union codetag_ref *get_page_tag_ref(struct page *page) { return NULL; }
- static inline void put_page_tag_ref(union codetag_ref *ref) {}
- #define pgalloc_tag_dec(__page, __size)		do {} while (0)
-+static inline void pgalloc_tag_split(struct page *page, unsigned int nr) {}
- 
- #endif /* CONFIG_MEM_ALLOC_PROFILING */
- 
-diff --git a/mm/huge_memory.c b/mm/huge_memory.c
-index 624671aaa60d..221cce0052a2 100644
---- a/mm/huge_memory.c
-+++ b/mm/huge_memory.c
-@@ -37,6 +37,7 @@
- #include <linux/page_owner.h>
- #include <linux/sched/sysctl.h>
- #include <linux/memory-tiers.h>
-+#include <linux/pgalloc_tag.h>
- 
- #include <asm/tlb.h>
- #include <asm/pgalloc.h>
-@@ -2557,6 +2558,7 @@ static void __split_huge_page(struct page *page, struct list_head *list,
- 	/* Caller disabled irqs, so they are still disabled here */
- 
- 	split_page_owner(head, nr);
-+	pgalloc_tag_split(head, nr);
- 
- 	/* See comment in __split_huge_page_tail() */
- 	if (PageAnon(head)) {
-diff --git a/mm/page_alloc.c b/mm/page_alloc.c
-index edd35500f7f6..8cf5a835af7f 100644
---- a/mm/page_alloc.c
-+++ b/mm/page_alloc.c
-@@ -2796,6 +2796,7 @@ void split_page(struct page *page, unsigned int order)
- 	for (i = 1; i < (1 << order); i++)
- 		set_page_refcounted(page + i);
- 	split_page_owner(page, 1 << order);
-+	pgalloc_tag_split(page, 1 << order);
- 	split_page_memcg(page, 1 << order);
- }
- EXPORT_SYMBOL_GPL(split_page);
-@@ -5012,6 +5013,7 @@ static void *make_alloc_exact(unsigned long addr, unsigned int order,
- 		struct page *last = page + nr;
- 
- 		split_page_owner(page, 1 << order);
-+		pgalloc_tag_split(page, 1 << order);
- 		split_page_memcg(page, 1 << order);
- 		while (page < --last)
- 			set_page_refcounted(last);
+ 	memcg_slab_post_alloc_hook(s, objcg, flags, size, p);
 -- 
 2.40.1.495.gc816e09b53d-goog
 
