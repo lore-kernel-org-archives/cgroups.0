@@ -1,34 +1,48 @@
-From: =?UTF-8?q?Michal=20Koutn=C3=BD?= <mkoutny-IBi9RG/b67k@public.gmane.org>
-Subject: [RFC PATCH 0/3] Rework locking when rendering mountinfo cgroup paths
-Date: Tue,  2 May 2023 15:38:44 +0200
-Message-ID: <20230502133847.14570-1-mkoutny@suse.com>
+From: Andy Shevchenko <andy.shevchenko@gmail.com>
+Subject: Re: [PATCH 01/40] lib/string_helpers: Drop space in string_get_size's output
+Date: Tue, 2 May 2023 18:19:27 +0300
+Message-ID: <CAHp75VdvRshCthpFOjtmajVgCS_8YoJBGbLVukPwU+t79Jgmww@mail.gmail.com>
+References: <20230501165450.15352-1-surenb@google.com> <20230501165450.15352-2-surenb@google.com>
+ <ouuidemyregstrijempvhv357ggp4tgnv6cijhasnungsovokm@jkgvyuyw2fti>
+ <ZFAUj+Q+hP7cWs4w@moria.home.lan> <b6b472b65b76e95bb4c7fc7eac1ee296fdbb64fd.camel@HansenPartnership.com>
+ <ZFCA2FF+9MI8LI5i@moria.home.lan> <CAHp75VdK2bgU8P+-np7ScVWTEpLrz+muG-R15SXm=ETXnjaiZg@mail.gmail.com>
+ <ZFCsAZFMhPWIQIpk@moria.home.lan>
 Mime-Version: 1.0
-Content-Transfer-Encoding: base64
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
-        t=1683034729; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding;
-        bh=crvNNZKHkX0qSv+47z6gi2siVKpNnXpyMa5UXHMzqQg=;
-        b=PgbCIBlRsSh3JTLYfKjClKjprcbn9dDOrwzSI48oqzC8Za6rSjZhTcRjbJjhx3G3GcUMkH
-        GDsVgc3VXNyAOEWuPPYC5uPNP2NyBoVzTWJS+KMhzu7OfTRSmbGsT1gF66FpRWV4RR5iLx
-        0F70pNiNbLtU19jYvzEwRru7w+Zqp9U=
+Content-Transfer-Encoding: quoted-printable
+Return-path: <linux-doc-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20221208; t=1683040803; x=1685632803;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=2UFtU6oUaOr0vAs1hqgYmpK0GvH9Lqd4XIp3l76+ytw=;
+        b=fQDTcAPBcFMm48S9mQhBubJHQt6Rf9v6Z4dCuVwj56NHh0dP3ICDHdXuGTZQ7fhY6f
+         NVwsf2cgqzJ2oTH5E3+K89qprKrCbOGTByhEvyoyI4jzL38CLohj4Pemx6+zekp7fjIC
+         C0wfN5ZD3wmwhLkep7s0ZqbRXr8rVSrCyB0q6Z4CQD4ucuL/biAEe5lz0MuYDAeeY6uB
+         gtH3nfcpQt9FqSzoPBxOU/XU4QDMDDdYIjdcF09D6jE8LNvs6UBNJcq1K4MKCbG+pFI5
+         zN03kdFjS2HNT9cI3ETBPM+TTHt6uAO2dPGj9O13t7gNwcK/SiD5lyjyY8em9DO5HFop
+         7wkA==
+In-Reply-To: <ZFCsAZFMhPWIQIpk@moria.home.lan>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="macroman"
-To: linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-Cc: Alexander Viro <viro-RmSDqhL/yNMiFSDQTTA3OLVCufUGDwFn@public.gmane.org>, Christian Brauner <brauner-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Dave Chinner <dchinner-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Rik van Riel <riel-ebMLmSuQjDVBDgjK7y7TUQ@public.gmane.org>, Jiri Wiesner <jwiesner-l3A5Bk7waGM@public.gmane.org>
+Content-Type: text/plain; charset="windows-1252"
+To: Kent Overstreet <kent.overstreet@linux.dev>
+Cc: James Bottomley <James.Bottomley@hansenpartnership.com>, Suren Baghdasaryan <surenb@google.com>, akpm@linux-foundation.org, mhocko@suse.com, vbabka@suse.cz, hannes@cmpxchg.org, roman.gushchin@linux.dev, mgorman@suse.de, willy@infradead.org, liam.howlett@oracle.com, corbet@lwn.net, void@manifault.com, peterz@infradead.org, juri.lelli@redhat.com, ldufour@linux.ibm.com, catalin.marinas@arm.com, will@kernel.org, arnd@arndb.de, tglx@linutronix.de, mingo@redhat.com, dave.hansen@linux.intel.com, x86@kernel.org, peterx@redhat.com, david@redhat.com, axboe@kernel.dk, mcgrof@kernel.org, masahiroy@kernel.org, nathan@kernel.org, dennis@kernel.org, tj@kernel.org, muchun.song@linux.dev, rppt@kernel.org, paulmck@kernel.org, pasha.tatashin@soleen.com, yosryahmed@google.com, yuzhao@google.com, dhowe
 
-SWRlYSBmb3IgdGhlc2UgbW9kaWZpY2F0aW9uIGNhbWUgdXAgd2hlbiBjc3Nfc2V0X2xvY2sgc2Vl
-bWVkIHVubmVlZGVkIGluCmNncm91cF9zaG93X3BhdGguCkl0J3MgYSBkZWxpY2F0ZSBjaGFuZ2Us
-IHNvIHRoZSBkZWNpZGluZyBmYWN0b3Igd2FzIHdoZW4gY2dyb3VwX3Nob3dfcGF0aCBwb3BwZWQK
-dXAgYWxzbyBpbiBzb21lIHByb2ZpbGVzIG9mIGZyZXF1ZW50IG1vdW50aW5mbyByZWFkZXJzLgpU
-aGUgaWRlYSBpcyB0byB0cmFkZSB0aGUgZXhjbHVzaXZlIGNzc19zZXRfbG9jayBmb3IgdGhlIHNo
-YXJlZApuYW1lc3BhY2Vfc2VtIHdoZW4gcmVuZGVyaW5nIGNncm91cCBwYXRocy4gRGV0YWlscyBh
-cmUgZGVzY3JpYmVkIG1vcmUgaW4KaW5kaXZpZHVhbCBjb21taXRzLgoKTWljaGFsIEtvdXRuw70g
-KDMpOgogIGNncm91cDogRHJvcCB1bnVzZWQgZnVuY3Rpb24gZm9yIGNncm91cF9wYXRoCiAgY2dy
-b3VwOiBSZWx5IG9uIG5hbWVzcGFjZV9zZW0gaW4gY3VycmVudF9jZ25zX2Nncm91cF9mcm9tX3Jv
-b3QKICAgIGV4cGxpY2l0bHkKICBjZ3JvdXA6IERvIG5vdCB0YWtlIGNzc19zZXRfbG9jayBpbiBj
-Z3JvdXBfc2hvd19wYXRoCgogZnMvbmFtZXNwYWNlLmMgICAgICAgICB8ICA1ICsrKy0KIGluY2x1
-ZGUvbGludXgvbW91bnQuaCAgfCAgNCArKysKIGtlcm5lbC9jZ3JvdXAvY2dyb3VwLmMgfCA1OCAr
-KysrKysrKy0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0KIDMgZmlsZXMgY2hhbmdl
-ZCwgMTggaW5zZXJ0aW9ucygrKSwgNDkgZGVsZXRpb25zKC0pCgotLSAKMi40MC4xCgo=
+On Tue, May 2, 2023 at 9:22=E2=80=AFAM Kent Overstreet
+<kent.overstreet@linux.dev> wrote:
+> On Tue, May 02, 2023 at 08:33:57AM +0300, Andy Shevchenko wrote:
+> > Actually instead of producing zillions of variants, do a %p extension
+> > to the printf() and that's it. We have, for example, %pt with T and
+> > with space to follow users that want one or the other variant. Same
+> > can be done with string_get_size().
+>
+> God no.
+
+Any elaboration what's wrong with that?
+
+God no for zillion APIs for almost the same. Today you want space,
+tomorrow some other (special) delimiter.
+
+--=20
+With Best Regards,
+Andy Shevchenko
