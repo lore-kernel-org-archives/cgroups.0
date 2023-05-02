@@ -1,80 +1,91 @@
-From: Jani Nikula <jani.nikula@linux.intel.com>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
 Subject: Re: [PATCH 01/40] lib/string_helpers: Drop space in
  string_get_size's output
-Date: Tue, 02 May 2023 10:55:47 +0300
-Message-ID: <877ctr2mm4.fsf@intel.com>
+Date: Tue, 02 May 2023 07:42:59 -0400
+Message-ID: <2f5ebe8a9ce8471906a85ef092c1e50cfd7ddecd.camel@HansenPartnership.com>
 References: <20230501165450.15352-1-surenb@google.com>
- <20230501165450.15352-2-surenb@google.com>
+         <20230501165450.15352-2-surenb@google.com>
+         <ouuidemyregstrijempvhv357ggp4tgnv6cijhasnungsovokm@jkgvyuyw2fti>
+         <ZFAUj+Q+hP7cWs4w@moria.home.lan>
+         <b6b472b65b76e95bb4c7fc7eac1ee296fdbb64fd.camel@HansenPartnership.com>
+         <ZFCA2FF+9MI8LI5i@moria.home.lan>
 Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-Return-path: <linux-arch-owner@vger.kernel.org>
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-doc-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1683014170; x=1714550170;
-  h=from:to:cc:subject:in-reply-to:references:date:
-   message-id:mime-version:content-transfer-encoding;
-  bh=nrkr4HYmMNERiR03z1fTM4+8ZBGmodVVyRAkn4iTZe4=;
-  b=iA1CKD9QN/r5BedDyY96UN8tEqmADQ8p/7gWi0GV/hZg/dWYsvbDKHMq
-   33vb2IpxrE1rAveWR9F7Z1IYquO5t65yUi9FLPwi9LRq3f06Sosy/sqoR
-   a6+HAEYb/2sJC5u5rv4iUAuURiqvgxGYB4nMevSeNFn6gUsl6pxIZMVBF
-   M1jkSVzwLlGtyBRb3TUyT9qHHp32yL9v+hHMAyERpTAN5q+0q8yDFxBHk
-   Xo/es4qt5ZESY7ksYC9Z8pqSYfuuSxyWRlPzg7MjeRsEKnFGtDdb3ZGzd
-   7rT9sPR44NwgT5PZGYcjIMbeQOX06tmfleBeXBPDeTc99TD6PKVof79XY
-   Q==;
-In-Reply-To: <20230501165450.15352-2-surenb@google.com>
+        d=hansenpartnership.com; s=20151216; t=1683027787;
+        bh=VIXlwaAodrWp8Vhxz+WDa3KoUpXUVVhKJac+yTw3JPY=;
+        h=Message-ID:Subject:From:To:Date:In-Reply-To:References:From;
+        b=Jhl+sztrOwEDjtwmne5HQU6aXLKSFxkGsV+GqvMXCULQnVptmMOy46lcJn8TJD2nV
+         Cz4FiICRD0fpyV2EVDrJ/+oCA0F64UjfFbcIL0QFb5f/iutLKwDLAAC08nsVf2C0sW
+         PW2yXp5dIH6OPPlm4jB3q1u314n26v1FRt3YM0EM=
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+        d=hansenpartnership.com; s=20151216; t=1683027787;
+        bh=VIXlwaAodrWp8Vhxz+WDa3KoUpXUVVhKJac+yTw3JPY=;
+        h=Message-ID:Subject:From:To:Date:In-Reply-To:References:From;
+        b=Jhl+sztrOwEDjtwmne5HQU6aXLKSFxkGsV+GqvMXCULQnVptmMOy46lcJn8TJD2nV
+         Cz4FiICRD0fpyV2EVDrJ/+oCA0F64UjfFbcIL0QFb5f/iutLKwDLAAC08nsVf2C0sW
+         PW2yXp5dIH6OPPlm4jB3q1u314n26v1FRt3YM0EM=
+In-Reply-To: <ZFCA2FF+9MI8LI5i@moria.home.lan>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="macroman"
-To: Suren Baghdasaryan <surenb@google.com>, akpm@linux-foundation.org
-Cc: kent.overstreet@linux.dev, mhocko@suse.com, vbabka@suse.cz, hannes@cmpxchg.org, roman.gushchin@linux.dev, mgorman@suse.de, dave@stgolabs.net, willy@infradead.org, liam.howlett@oracle.com, corbet@lwn.net, void@manifault.com, peterz@infradead.org, juri.lelli@redhat.com, ldufour@linux.ibm.com, catalin.marinas@arm.com, will@kernel.org, arnd@arndb.de, tglx@linutronix.de, mingo@redhat.com, dave.hansen@linux.intel.com, x86@kernel.org, peterx@redhat.com, david@redhat.com, axboe@kernel.dk, mcgrof@kernel.org, masahiroy@kernel.org, nathan@kernel.org, dennis@kernel.org, tj@kernel.org, muchun.song@linux.dev, rppt@kernel.org, paulmck@kernel.org, pasha.tatashin@soleen.com, yosryahmed@google.com, yuzhao@google.com, dhowells@redhat.com, hughd@google.com, andreyknvl@gmail.com, keescook@chromium.org
+Content-Type: text/plain; charset="utf-8"
+To: Kent Overstreet <kent.overstreet@linux.dev>
+Cc: Suren Baghdasaryan <surenb@google.com>, akpm@linux-foundation.org, mhocko@suse.com, vbabka@suse.cz, hannes@cmpxchg.org, roman.gushchin@linux.dev, mgorman@suse.de, willy@infradead.org, liam.howlett@oracle.com, corbet@lwn.net, void@manifault.com, peterz@infradead.org, juri.lelli@redhat.com, ldufour@linux.ibm.com, catalin.marinas@arm.com, will@kernel.org, arnd@arndb.de, tglx@linutronix.de, mingo@redhat.com, dave.hansen@linux.intel.com, x86@kernel.org, peterx@redhat.com, david@redhat.com, axboe@kernel.dk, mcgrof@kernel.org, masahiroy@kernel.org, nathan@kernel.org, dennis@kernel.org, tj@kernel.org, muchun.song@linux.dev, rppt@kernel.org, paulmck@kernel.org, pasha.tatashin@soleen.com, yosryahmed@google.com, yuzhao@google.com, dhowells@redhat.com, hughd@google.com, andreyknvl@gmail.com, k
 
-On Mon, 01 May 2023, Suren Baghdasaryan <surenb@google.com> wrote:
-> From: Kent Overstreet <kent.overstreet@linux.dev>
->
-> Previously, string_get_size() outputted a space between the number and
-> the units, i.e.
->   9.88 MiB
->
-> This changes it to
->   9.88MiB
->
-> which allows it to be parsed correctly by the 'sort -h' command.
+On Mon, 2023-05-01 at 23:17 -0400, Kent Overstreet wrote:
+> On Mon, May 01, 2023 at 10:22:18PM -0400, James Bottomley wrote:
+> > It is not used just for debug.  It's used all over the kernel for
+> > printing out device sizes.  The output mostly goes to the kernel
+> > print buffer, so it's anyone's guess as to what, if any, tools are
+> > parsing it, but the concern about breaking log parsers seems to be
+> > a valid one.
+> 
+> Ok, there is sd_print_capacity() - but who in their right mind would
+> be trying to scrape device sizes, in human readable units,
 
-The former is easier for humans to parse, and that should be
-preferred. 'sort -h' is supposed to compare "human readable numbers", so
-arguably sort does not do its job here.
+If you bother to google "kernel log parser", you'll discover it's quite
+an active area which supports a load of company business models.
 
-BR,
-Jani.
+>  from log messages when it's available in sysfs/procfs (actually, is
+> it in sysfs? if not, that's an oversight) in more reasonable units?
 
->
-> Signed-off-by: Kent Overstreet <kent.overstreet@linux.dev>
-> Signed-off-by: Suren Baghdasaryan <surenb@google.com>
-> Cc: Andy Shevchenko <andy@kernel.org>
-> Cc: Michael Ellerman <mpe@ellerman.id.au>
-> Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-> Cc: Paul Mackerras <paulus@samba.org>
-> Cc: "Michael S. Tsirkin" <mst@redhat.com>
-> Cc: Jason Wang <jasowang@redhat.com>
-> Cc: "Noralf Tr=C3=B8nnes" <noralf@tronnes.org>
-> Cc: Jens Axboe <axboe@kernel.dk>
-> ---
->  lib/string_helpers.c | 3 +--
->  1 file changed, 1 insertion(+), 2 deletions(-)
->
-> diff --git a/lib/string_helpers.c b/lib/string_helpers.c
-> index 230020a2e076..593b29fece32 100644
-> --- a/lib/string_helpers.c
-> +++ b/lib/string_helpers.c
-> @@ -126,8 +126,7 @@ void string_get_size(u64 size, u64 blk_size, const en=
-um string_size_units units,
->  	else
->  		unit =3D units_str[units][i];
->=20=20
-> -	snprintf(buf, len, "%u%s %s", (u32)size,
-> -		 tmp, unit);
-> +	snprintf(buf, len, "%u%s%s", (u32)size, tmp, unit);
->  }
->  EXPORT_SYMBOL(string_get_size);
+It's not in sysfs, no.  As aren't a lot of things, which is why log
+parsing for system monitoring is big business.
 
---=20
-Jani Nikula, Intel Open Source Graphics Center
+> Correct me if I'm wrong, but I've yet to hear about kernel log
+> messages being consider a stable interface, and this seems a bit out
+> there.
+
+It might not be listed as stable, but when it's known there's a large
+ecosystem out there consuming it we shouldn't break it just because you
+feel like it.  You should have a good reason and the break should be
+unavoidable.  I wanted my output in a particular form so I thought I'd
+change everyone else's output as well isn't a good reason and it only
+costs a couple of lines to avoid.
+
+> But, you did write the code :)
+> 
+> > > If someone raises a specific objection we'll do something
+> > > different, otherwise I think standardizing on what userspace
+> > > tooling already parses is a good idea.
+> > 
+> > If you want to omit the space, why not simply add your own
+> > variant?  A string_get_size_nospace() which would use most of the
+> > body of this one as a helper function but give its own snprintf
+> > format string at the end.  It's only a couple of lines longer as a
+> > patch and has the bonus that it definitely wouldn't break anything
+> > by altering an existing output.
+> 
+> I'm happy to do that - I just wanted to post this version first to
+> see if we can avoid the fragmentation and do a bit of standardizing
+> with how everything else seems to do that.
+
+What fragmentation?  To do this properly you move the whole of the
+current function to a helper which takes a format sting, say with a
+double underscore prefix, then the existing function and what you want
+become one line additions calling the helper with their specific format
+string.  There's no fragmentation of the base function at all.
+
+James
+
+
