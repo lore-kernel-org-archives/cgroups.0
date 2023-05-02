@@ -1,45 +1,132 @@
-From: Thomas Gleixner <tglx-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>
-Subject: Re: [PATCH 28/40] timekeeping: Fix a circular include dependency
-Date: Tue, 02 May 2023 17:50:39 +0200
-Message-ID: <87sfce4trk.ffs@tglx>
+From: Petr =?UTF-8?B?VGVzYcWZw61r?= <petr@tesarici.cz>
+Subject: Re: [PATCH 19/40] change alloc_pages name in dma_map_ops to avoid
+ name conflicts
+Date: Tue, 2 May 2023 17:50:52 +0200
+Message-ID: <20230502175052.43814202@meshulam.tesarici.cz>
 References: <20230501165450.15352-1-surenb@google.com>
- <20230501165450.15352-29-surenb@google.com>
+        <20230501165450.15352-20-surenb@google.com>
 Mime-Version: 1.0
-Return-path: <linux-modules-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020; t=1683042640;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=wZImvKcn9w5NAAzZW4fltpVUcvOYAB8X7GMAppUmOCM=;
-        b=Rg36uIn8HqQozHE5vCsIPmEh3+AKn8L/7mv0O+pIdezEvZYANTd8V4nXCmyt4xNIpJtbzz
-        vp5LlYfmVMY6J2aaFI0emPF10CJrdqRyePOtdaqVRUpJ6x7WMyw6YImGz1rh35Q7ntYsts
-        VxFcZ5qcn8lCImyR0dvWAiq1WVirQQR6z6zLur8HfIWFzomdUKBIblZed9MGVhU9x2/J8a
-        TXGag7CJDamjpDxiPPgFlEf/7PmwP9mXDgWSG2GxgYvbMpt42zIMQ+WrSi6+Do+CEfK8VI
-        cAyWUPURMmsKM4zLL7iTdAZpt32TC0jVgu0CVGxApXC30zcp+k511wT6VGIMEw==
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020e; t=1683042640;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=wZImvKcn9w5NAAzZW4fltpVUcvOYAB8X7GMAppUmOCM=;
-        b=jGVgjOBDtcwcveZg1C1OmELpfcEfP+gY1s7aMPQ6Q+XcAxO84Fib8uN7aOVmPEPoz9qHUW
-        gKPfyJOAEnP069BQ==
-In-Reply-To: <20230501165450.15352-29-surenb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-doc-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=tesarici.cz; s=mail;
+        t=1683042654; bh=hI16GBufNUpeUYJO29ecGF2T3JkuXMUYlbwpXV7Ce1A=;
+        h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
+        b=hpCWoQk88LVg7fXQ3b+AVQsGAsNQ2r+jjHVNUux6ck4Irf+Zj3OBmb0DG1d5v80F0
+         H420pD744+RdF+aqEdiS68mSamSjXCAac39xdL3B+FvtX/WoIjl1A+4HDlAkK0N9kT
+         mgK+Oxs8dDzSdANM3/+MPo85nVNVR2H1c67YErvgyCXqxtW7tSUu+bkad7zPR3QpxA
+         n0bhf3NB/o5NPE3CdKxABZz7x+zVnT0Mi1h5m9uwvaWhdePztbtaxp26PRxzfnSb8i
+         5xS2IiqM6Gct4RDJVy63qv2EAMd/B7f/45wGQwNmpSiRlxOgkkTyofl87KFSXWR0xt
+         u7HQUTKsfNbvg==
+In-Reply-To: <20230501165450.15352-20-surenb@google.com>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Suren Baghdasaryan <surenb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org
-Cc: kent.overstreet-fxUVXftIFDnyG1zEObXtfA@public.gmane.org, mhocko-IBi9RG/b67k@public.gmane.org, vbabka-AlSwsSmVLrQ@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org, mgorman-l3A5Bk7waGM@public.gmane.org, dave-h16yJtLeMjHk1uMJSBkQmQ@public.gmane.org, willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, liam.howlett-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org, corbet-T1hC0tSOHrs@public.gmane.org, void-gq6j2QGBifHby3iVrkZq2A@public.gmane.org, peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, juri.lelli-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, ldufour-tEXmvtCZX7AybS5Ee8rs3A@public.gmane.org, catalin.marinas-5wv7dgnIgG8@public.gmane.org, will-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, arnd-r2nGTMty4D4@public.gmane.org, mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, dave.hansen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org, x86-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, peterx-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, david-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, mcgrof-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, masahiroy-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, nathan-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, dennis-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, muchun.song-fxUVXftIFDnyG1zEObXtfA@public.gmane.org, rppt-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, paulmck-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, pasha.tatashin-2EmBfe737+LQT0dZR+AlfA@public.gmane.org, yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, yuzhao-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, dhowells-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, andreyknvl-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, keescook-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org, ndesaulniers@google
+To: Suren Baghdasaryan <surenb@google.com>
+Cc: akpm@linux-foundation.org, kent.overstreet@linux.dev, mhocko@suse.com, vbabka@suse.cz, hannes@cmpxchg.org, roman.gushchin@linux.dev, mgorman@suse.de, dave@stgolabs.net, willy@infradead.org, liam.howlett@oracle.com, corbet@lwn.net, void@manifault.com, peterz@infradead.org, juri.lelli@redhat.com, ldufour@linux.ibm.com, catalin.marinas@arm.com, will@kernel.org, arnd@arndb.de, tglx@linutronix.de, mingo@redhat.com, dave.hansen@linux.intel.com, x86@kernel.org, peterx@redhat.com, david@redhat.com, axboe@kernel.dk, mcgrof@kernel.org, masahiroy@kernel.org, nathan@kernel.org, dennis@kernel.org, tj@kernel.org, muchun.song@linux.dev, rppt@kernel.org, paulmck@kernel.org, pasha.tatashin@soleen.com, yosryahmed@google.com, yuzhao@google.com, dhowells@redhat.com, hughd@google.com, andreyknvl@gmail.
 
-On Mon, May 01 2023 at 09:54, Suren Baghdasaryan wrote:
-> From: Kent Overstreet <kent.overstreet-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>
->
-> This avoids a circular header dependency in an upcoming patch by only
-> making hrtimer.h depend on percpu-defs.h
->
-> Signed-off-by: Kent Overstreet <kent.overstreet-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>
-> Signed-off-by: Suren Baghdasaryan <surenb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-> Cc: Thomas Gleixner <tglx-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>
+On Mon,  1 May 2023 09:54:29 -0700
+Suren Baghdasaryan <surenb@google.com> wrote:
 
-Reviewed-by: Thomas Gleixner <tglx-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>
+> After redefining alloc_pages, all uses of that name are being replaced.
+> Change the conflicting names to prevent preprocessor from replacing them
+> when it's not intended.
+> 
+> Signed-off-by: Suren Baghdasaryan <surenb@google.com>
+> ---
+>  arch/x86/kernel/amd_gart_64.c | 2 +-
+>  drivers/iommu/dma-iommu.c     | 2 +-
+>  drivers/xen/grant-dma-ops.c   | 2 +-
+>  drivers/xen/swiotlb-xen.c     | 2 +-
+>  include/linux/dma-map-ops.h   | 2 +-
+>  kernel/dma/mapping.c          | 4 ++--
+>  6 files changed, 7 insertions(+), 7 deletions(-)
+> 
+> diff --git a/arch/x86/kernel/amd_gart_64.c b/arch/x86/kernel/amd_gart_64.c
+> index 56a917df410d..842a0ec5eaa9 100644
+> --- a/arch/x86/kernel/amd_gart_64.c
+> +++ b/arch/x86/kernel/amd_gart_64.c
+> @@ -676,7 +676,7 @@ static const struct dma_map_ops gart_dma_ops = {
+>  	.get_sgtable			= dma_common_get_sgtable,
+>  	.dma_supported			= dma_direct_supported,
+>  	.get_required_mask		= dma_direct_get_required_mask,
+> -	.alloc_pages			= dma_direct_alloc_pages,
+> +	.alloc_pages_op			= dma_direct_alloc_pages,
+>  	.free_pages			= dma_direct_free_pages,
+>  };
+>  
+> diff --git a/drivers/iommu/dma-iommu.c b/drivers/iommu/dma-iommu.c
+> index 7a9f0b0bddbd..76a9d5ca4eee 100644
+> --- a/drivers/iommu/dma-iommu.c
+> +++ b/drivers/iommu/dma-iommu.c
+> @@ -1556,7 +1556,7 @@ static const struct dma_map_ops iommu_dma_ops = {
+>  	.flags			= DMA_F_PCI_P2PDMA_SUPPORTED,
+>  	.alloc			= iommu_dma_alloc,
+>  	.free			= iommu_dma_free,
+> -	.alloc_pages		= dma_common_alloc_pages,
+> +	.alloc_pages_op		= dma_common_alloc_pages,
+>  	.free_pages		= dma_common_free_pages,
+>  	.alloc_noncontiguous	= iommu_dma_alloc_noncontiguous,
+>  	.free_noncontiguous	= iommu_dma_free_noncontiguous,
+> diff --git a/drivers/xen/grant-dma-ops.c b/drivers/xen/grant-dma-ops.c
+> index 9784a77fa3c9..6c7d984f164d 100644
+> --- a/drivers/xen/grant-dma-ops.c
+> +++ b/drivers/xen/grant-dma-ops.c
+> @@ -282,7 +282,7 @@ static int xen_grant_dma_supported(struct device *dev, u64 mask)
+>  static const struct dma_map_ops xen_grant_dma_ops = {
+>  	.alloc = xen_grant_dma_alloc,
+>  	.free = xen_grant_dma_free,
+> -	.alloc_pages = xen_grant_dma_alloc_pages,
+> +	.alloc_pages_op = xen_grant_dma_alloc_pages,
+>  	.free_pages = xen_grant_dma_free_pages,
+>  	.mmap = dma_common_mmap,
+>  	.get_sgtable = dma_common_get_sgtable,
+> diff --git a/drivers/xen/swiotlb-xen.c b/drivers/xen/swiotlb-xen.c
+> index 67aa74d20162..5ab2616153f0 100644
+> --- a/drivers/xen/swiotlb-xen.c
+> +++ b/drivers/xen/swiotlb-xen.c
+> @@ -403,6 +403,6 @@ const struct dma_map_ops xen_swiotlb_dma_ops = {
+>  	.dma_supported = xen_swiotlb_dma_supported,
+>  	.mmap = dma_common_mmap,
+>  	.get_sgtable = dma_common_get_sgtable,
+> -	.alloc_pages = dma_common_alloc_pages,
+> +	.alloc_pages_op = dma_common_alloc_pages,
+>  	.free_pages = dma_common_free_pages,
+>  };
+> diff --git a/include/linux/dma-map-ops.h b/include/linux/dma-map-ops.h
+> index 31f114f486c4..d741940dcb3b 100644
+> --- a/include/linux/dma-map-ops.h
+> +++ b/include/linux/dma-map-ops.h
+> @@ -27,7 +27,7 @@ struct dma_map_ops {
+>  			unsigned long attrs);
+>  	void (*free)(struct device *dev, size_t size, void *vaddr,
+>  			dma_addr_t dma_handle, unsigned long attrs);
+> -	struct page *(*alloc_pages)(struct device *dev, size_t size,
+> +	struct page *(*alloc_pages_op)(struct device *dev, size_t size,
+>  			dma_addr_t *dma_handle, enum dma_data_direction dir,
+>  			gfp_t gfp);
+>  	void (*free_pages)(struct device *dev, size_t size, struct page *vaddr,
+> diff --git a/kernel/dma/mapping.c b/kernel/dma/mapping.c
+> index 9a4db5cce600..fc42930af14b 100644
+> --- a/kernel/dma/mapping.c
+> +++ b/kernel/dma/mapping.c
+> @@ -570,9 +570,9 @@ static struct page *__dma_alloc_pages(struct device *dev, size_t size,
+>  	size = PAGE_ALIGN(size);
+>  	if (dma_alloc_direct(dev, ops))
+>  		return dma_direct_alloc_pages(dev, size, dma_handle, dir, gfp);
+> -	if (!ops->alloc_pages)
+> +	if (!ops->alloc_pages_op)
+>  		return NULL;
+> -	return ops->alloc_pages(dev, size, dma_handle, dir, gfp);
+> +	return ops->alloc_pages_op(dev, size, dma_handle, dir, gfp);
+>  }
+>  
+>  struct page *dma_alloc_pages(struct device *dev, size_t size,
+
+I'm not impressed. This patch increases churn for code which does not
+(directly) benefit from the change, and that for limitations in your
+tooling?
+
+Why not just rename the conflicting uses in your local tree, but then
+remove the rename from the final patch series?
+
+Just my two cents,
+Petr T
