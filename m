@@ -1,72 +1,34 @@
-From: =?UTF-8?q?Michal=20Koutn=C3=BD?= <mkoutny@suse.com>
-Subject: [RFC PATCH 2/3] cgroup: Rely on namespace_sem in current_cgns_cgroup_from_root explicitly
-Date: Tue,  2 May 2023 15:38:46 +0200
-Message-ID: <20230502133847.14570-3-mkoutny@suse.com>
-References: <20230502133847.14570-1-mkoutny@suse.com>
+From: =?UTF-8?q?Michal=20Koutn=C3=BD?= <mkoutny-IBi9RG/b67k@public.gmane.org>
+Subject: [RFC PATCH 0/3] Rework locking when rendering mountinfo cgroup paths
+Date: Tue,  2 May 2023 15:38:44 +0200
+Message-ID: <20230502133847.14570-1-mkoutny@suse.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: base64
-Return-path: <linux-fsdevel-owner@vger.kernel.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
-        t=1683034730; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+        t=1683034729; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
          mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=I/j4j9VxXGy/bDa3ZnK1aishpl8LLc1RBAztW/6LzNg=;
-        b=TcCfrFzTb2GRwJYnmkZtx/AUQ6ImGap2e8r4FxC9peMvwWganei9xc2rzw0XO7CkKJvoqD
-        Kb7qic6qmYoUyjZu9jtT+UfyJjpew6bT/ifb+NBAP2VrlT1UNFXqAonzY3WLwYc7RUwYE4
-        tGeCU80e/++C4sgH6PfoViUwgJkFhnU=
-In-Reply-To: <20230502133847.14570-1-mkoutny@suse.com>
+         content-transfer-encoding:content-transfer-encoding;
+        bh=crvNNZKHkX0qSv+47z6gi2siVKpNnXpyMa5UXHMzqQg=;
+        b=PgbCIBlRsSh3JTLYfKjClKjprcbn9dDOrwzSI48oqzC8Za6rSjZhTcRjbJjhx3G3GcUMkH
+        GDsVgc3VXNyAOEWuPPYC5uPNP2NyBoVzTWJS+KMhzu7OfTRSmbGsT1gF66FpRWV4RR5iLx
+        0F70pNiNbLtU19jYvzEwRru7w+Zqp9U=
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="macroman"
-To: linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org
-Cc: Alexander Viro <viro@zeniv.linux.org.uk>, Christian Brauner <brauner@kernel.org>, Tejun Heo <tj@kernel.org>, Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, Dave Chinner <dchinner@redhat.com>, Rik van Riel <riel@surriel.com>, Jiri Wiesner <jwiesner@suse.de>
+To: linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Cc: Alexander Viro <viro-RmSDqhL/yNMiFSDQTTA3OLVCufUGDwFn@public.gmane.org>, Christian Brauner <brauner-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Dave Chinner <dchinner-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Rik van Riel <riel-ebMLmSuQjDVBDgjK7y7TUQ@public.gmane.org>, Jiri Wiesner <jwiesner-l3A5Bk7waGM@public.gmane.org>
 
-VGhlIGZ1bmN0aW9uIGN1cnJlbnRfY2duc19jZ3JvdXBfZnJvbV9yb290KCkgZXhwZWN0cyBhIHN0
-YWJsZQpjZ3JvdXBfcm9vdCwgd2hpY2ggaXMgY3VycmVudGx5IGVuc3VyZWQgd2l0aCBSQ1UgcmVh
-ZCBzaWRlIHBhaXJlZCB3aXRoCmNncm91cF9kZXN0cm95X3Jvb3QoKSBjYWxsZWQgYWZ0ZXIgUkNV
-IHBlcmlvZC4KClRoZSBwYXJ0aWN1bGFyIGN1cnJlbnRfY2duc19jZ3JvdXBfZnJvbV9yb290KCkg
-aXMgY2FsbGVkIGZyb20gVkZTIGNvZGUKYW5kIGNncm91cF9yb290IHN0YWJpbGl0eSBjYW4gYmUg
-YWxzbyBlbnN1cmVkIGJ5IG5hbWVzcGFjZV9zZW0uIE1hcmsgaXQKZXhwbGljaXRseSBhcyBhIHBy
-ZXBhcmF0aW9uIGZvciBmdXJ0aGVyIHJld29yay4KClNpZ25lZC1vZmYtYnk6IE1pY2hhbCBLb3V0
-bsO9IDxta291dG55QHN1c2UuY29tPgotLS0KIGZzL25hbWVzcGFjZS5jICAgICAgICAgfCA1ICsr
-KystCiBpbmNsdWRlL2xpbnV4L21vdW50LmggIHwgNCArKysrCiBrZXJuZWwvY2dyb3VwL2Nncm91
-cC5jIHwgNyArKystLS0tCiAzIGZpbGVzIGNoYW5nZWQsIDExIGluc2VydGlvbnMoKyksIDUgZGVs
-ZXRpb25zKC0pCgpkaWZmIC0tZ2l0IGEvZnMvbmFtZXNwYWNlLmMgYi9mcy9uYW1lc3BhY2UuYwpp
-bmRleCA1NDg0N2RiNWI4MTkuLjBkMjMzMzgzMjA2NCAxMDA2NDQKLS0tIGEvZnMvbmFtZXNwYWNl
-LmMKKysrIGIvZnMvbmFtZXNwYWNlLmMKQEAgLTcxLDcgKzcxLDEwIEBAIHN0YXRpYyBERUZJTkVf
-SURBKG1udF9ncm91cF9pZGEpOwogc3RhdGljIHN0cnVjdCBobGlzdF9oZWFkICptb3VudF9oYXNo
-dGFibGUgX19yZWFkX21vc3RseTsKIHN0YXRpYyBzdHJ1Y3QgaGxpc3RfaGVhZCAqbW91bnRwb2lu
-dF9oYXNodGFibGUgX19yZWFkX21vc3RseTsKIHN0YXRpYyBzdHJ1Y3Qga21lbV9jYWNoZSAqbW50
-X2NhY2hlIF9fcmVhZF9tb3N0bHk7Ci1zdGF0aWMgREVDTEFSRV9SV1NFTShuYW1lc3BhY2Vfc2Vt
-KTsKK0RFQ0xBUkVfUldTRU0obmFtZXNwYWNlX3NlbSk7CisjaWZkZWYgQ09ORklHX0xPQ0tERVAK
-K0VYUE9SVF9TWU1CT0xfR1BMKG5hbWVzcGFjZV9zZW0pOworI2VuZGlmCiBzdGF0aWMgSExJU1Rf
-SEVBRCh1bm1vdW50ZWQpOwkvKiBwcm90ZWN0ZWQgYnkgbmFtZXNwYWNlX3NlbSAqLwogc3RhdGlj
-IExJU1RfSEVBRChleF9tb3VudHBvaW50cyk7IC8qIHByb3RlY3RlZCBieSBuYW1lc3BhY2Vfc2Vt
-ICovCiAKZGlmZiAtLWdpdCBhL2luY2x1ZGUvbGludXgvbW91bnQuaCBiL2luY2x1ZGUvbGludXgv
-bW91bnQuaAppbmRleCAxZWEzMjZjMzY4ZjcuLjYyNzc0MzVmNjc0OCAxMDA2NDQKLS0tIGEvaW5j
-bHVkZS9saW51eC9tb3VudC5oCisrKyBiL2luY2x1ZGUvbGludXgvbW91bnQuaApAQCAtODAsNiAr
-ODAsMTAgQEAgc3RhdGljIGlubGluZSBzdHJ1Y3QgbW50X2lkbWFwICptbnRfaWRtYXAoY29uc3Qg
-c3RydWN0IHZmc21vdW50ICptbnQpCiAJcmV0dXJuIHNtcF9sb2FkX2FjcXVpcmUoJm1udC0+bW50
-X2lkbWFwKTsKIH0KIAorI2lmZGVmIENPTkZJR19MT0NLREVQCitleHRlcm4gc3RydWN0IHJ3X3Nl
-bWFwaG9yZSBuYW1lc3BhY2Vfc2VtOworI2VuZGlmCisKIGV4dGVybiBpbnQgbW50X3dhbnRfd3Jp
-dGUoc3RydWN0IHZmc21vdW50ICptbnQpOwogZXh0ZXJuIGludCBtbnRfd2FudF93cml0ZV9maWxl
-KHN0cnVjdCBmaWxlICpmaWxlKTsKIGV4dGVybiB2b2lkIG1udF9kcm9wX3dyaXRlKHN0cnVjdCB2
-ZnNtb3VudCAqbW50KTsKZGlmZiAtLWdpdCBhL2tlcm5lbC9jZ3JvdXAvY2dyb3VwLmMgYi9rZXJu
-ZWwvY2dyb3VwL2Nncm91cC5jCmluZGV4IDU1ZTVmMDExMGUzYi4uMzJkNjkzYTc5N2I5IDEwMDY0
-NAotLS0gYS9rZXJuZWwvY2dyb3VwL2Nncm91cC5jCisrKyBiL2tlcm5lbC9jZ3JvdXAvY2dyb3Vw
-LmMKQEAgLTE0NDAsMTMgKzE0NDAsMTIgQEAgY3VycmVudF9jZ25zX2Nncm91cF9mcm9tX3Jvb3Qo
-c3RydWN0IGNncm91cF9yb290ICpyb290KQogCiAJbG9ja2RlcF9hc3NlcnRfaGVsZCgmY3NzX3Nl
-dF9sb2NrKTsKIAotCXJjdV9yZWFkX2xvY2soKTsKKwkvKiBuYW1lc3BhY2Vfc2VtIGVuc3VyZXMg
-YHJvb3RgIHN0YWJpbGl0eSBvbiB1bm1vdW50ICovCisJbG9ja2RlcF9hc3NlcnQobG9ja2RlcF9p
-c19oZWxkX3R5cGUoJm5hbWVzcGFjZV9zZW0sIC0xKSk7CiAKIAljc2V0ID0gY3VycmVudC0+bnNw
-cm94eS0+Y2dyb3VwX25zLT5yb290X2NzZXQ7CiAJcmVzID0gX19jc2V0X2Nncm91cF9mcm9tX3Jv
-b3QoY3NldCwgcm9vdCk7CiAKLQlyY3VfcmVhZF91bmxvY2soKTsKLQogCXJldHVybiByZXM7CiB9
-CiAKQEAgLTE0NTQsNyArMTQ1Myw3IEBAIGN1cnJlbnRfY2duc19jZ3JvdXBfZnJvbV9yb290KHN0
-cnVjdCBjZ3JvdXBfcm9vdCAqcm9vdCkKICAqIExvb2sgdXAgY2dyb3VwIGFzc29jaWF0ZWQgd2l0
-aCBjdXJyZW50IHRhc2sncyBjZ3JvdXAgbmFtZXNwYWNlIG9uIHRoZSBkZWZhdWx0CiAgKiBoaWVy
-YXJjaHkuCiAgKgotICogVW5saWtlIGN1cnJlbnRfY2duc19jZ3JvdXBfZnJvbV9yb290KCksIHRo
-aXMgZG9lc24ndCBuZWVkIGxvY2tzOgorICogUmVsYXhlZCBsb2NraW5nIHJlcXVpcmVtZW50czoK
-ICAqIC0gSW50ZXJuYWwgcmN1X3JlYWRfbG9jayBpcyB1bm5lY2Vzc2FyeSBiZWNhdXNlIHdlIGRv
-bid0IGRlcmVmZXJlbmNlIGFueSByY3UKICAqICAgcG9pbnRlcnMuCiAgKiAtIGNzc19zZXRfbG9j
-ayBpcyBub3QgbmVlZGVkIGJlY2F1c2Ugd2UganVzdCByZWFkIGNzZXQtPmRmbF9jZ3JwLgotLSAK
-Mi40MC4xCgo=
+SWRlYSBmb3IgdGhlc2UgbW9kaWZpY2F0aW9uIGNhbWUgdXAgd2hlbiBjc3Nfc2V0X2xvY2sgc2Vl
+bWVkIHVubmVlZGVkIGluCmNncm91cF9zaG93X3BhdGguCkl0J3MgYSBkZWxpY2F0ZSBjaGFuZ2Us
+IHNvIHRoZSBkZWNpZGluZyBmYWN0b3Igd2FzIHdoZW4gY2dyb3VwX3Nob3dfcGF0aCBwb3BwZWQK
+dXAgYWxzbyBpbiBzb21lIHByb2ZpbGVzIG9mIGZyZXF1ZW50IG1vdW50aW5mbyByZWFkZXJzLgpU
+aGUgaWRlYSBpcyB0byB0cmFkZSB0aGUgZXhjbHVzaXZlIGNzc19zZXRfbG9jayBmb3IgdGhlIHNo
+YXJlZApuYW1lc3BhY2Vfc2VtIHdoZW4gcmVuZGVyaW5nIGNncm91cCBwYXRocy4gRGV0YWlscyBh
+cmUgZGVzY3JpYmVkIG1vcmUgaW4KaW5kaXZpZHVhbCBjb21taXRzLgoKTWljaGFsIEtvdXRuw70g
+KDMpOgogIGNncm91cDogRHJvcCB1bnVzZWQgZnVuY3Rpb24gZm9yIGNncm91cF9wYXRoCiAgY2dy
+b3VwOiBSZWx5IG9uIG5hbWVzcGFjZV9zZW0gaW4gY3VycmVudF9jZ25zX2Nncm91cF9mcm9tX3Jv
+b3QKICAgIGV4cGxpY2l0bHkKICBjZ3JvdXA6IERvIG5vdCB0YWtlIGNzc19zZXRfbG9jayBpbiBj
+Z3JvdXBfc2hvd19wYXRoCgogZnMvbmFtZXNwYWNlLmMgICAgICAgICB8ICA1ICsrKy0KIGluY2x1
+ZGUvbGludXgvbW91bnQuaCAgfCAgNCArKysKIGtlcm5lbC9jZ3JvdXAvY2dyb3VwLmMgfCA1OCAr
+KysrKysrKy0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0KIDMgZmlsZXMgY2hhbmdl
+ZCwgMTggaW5zZXJ0aW9ucygrKSwgNDkgZGVsZXRpb25zKC0pCgotLSAKMi40MC4xCgo=
