@@ -1,132 +1,156 @@
-From: Petr =?UTF-8?B?VGVzYcWZw61r?= <petr@tesarici.cz>
-Subject: Re: [PATCH 19/40] change alloc_pages name in dma_map_ops to avoid
- name conflicts
-Date: Tue, 2 May 2023 17:50:52 +0200
-Message-ID: <20230502175052.43814202@meshulam.tesarici.cz>
-References: <20230501165450.15352-1-surenb@google.com>
-        <20230501165450.15352-20-surenb@google.com>
+From: Suren Baghdasaryan <surenb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH v2 1/1] psi: remove 500ms min window size limitation for triggers
+Date: Tue, 2 May 2023 10:20:34 -0700
+Message-ID: <CAJuCfpE_aB6KQZj6A0NTCcv09bJ26L1hECDho3M2OyiNoMfFEA@mail.gmail.com>
+References: <20230303011346.3342233-1-surenb@google.com> <CAJuCfpHcgu5Cti0t+U=S1C5-0ZgebhxzrOnhDiSu5qCyuq5_Wg@mail.gmail.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-doc-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=tesarici.cz; s=mail;
-        t=1683042654; bh=hI16GBufNUpeUYJO29ecGF2T3JkuXMUYlbwpXV7Ce1A=;
-        h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
-        b=hpCWoQk88LVg7fXQ3b+AVQsGAsNQ2r+jjHVNUux6ck4Irf+Zj3OBmb0DG1d5v80F0
-         H420pD744+RdF+aqEdiS68mSamSjXCAac39xdL3B+FvtX/WoIjl1A+4HDlAkK0N9kT
-         mgK+Oxs8dDzSdANM3/+MPo85nVNVR2H1c67YErvgyCXqxtW7tSUu+bkad7zPR3QpxA
-         n0bhf3NB/o5NPE3CdKxABZz7x+zVnT0Mi1h5m9uwvaWhdePztbtaxp26PRxzfnSb8i
-         5xS2IiqM6Gct4RDJVy63qv2EAMd/B7f/45wGQwNmpSiRlxOgkkTyofl87KFSXWR0xt
-         u7HQUTKsfNbvg==
-In-Reply-To: <20230501165450.15352-20-surenb@google.com>
+Content-Transfer-Encoding: quoted-printable
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20221208; t=1683048045; x=1685640045;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=5xwUxHSl9WxBYX8EA+OtIHBIGktuHw8bbETo8ZwlLgw=;
+        b=2Th2r05beLRKstRqgsFh8Vvg1TDSxZlv1zBS1P+U7o2IGwmzxIbw+dVnbN+6CP+eYb
+         kEPmHx6Id+yViOJXDLtz4UZVDk3x5xmfFi2N7fMwYvlkKLj5fLlcp5Mnfyb+b3EPqkns
+         Uhh2iOk/MQe9cKXIWLoGyVV9YcVl8TgcWQiUKdPE9cb+Nu6pYR8TcloSpLW9gf5gmiWZ
+         jNEZgN6SDuvFgiPsaFU6LVXtIAdXZLz1YLXxroRnh4W2hSFXbkBUFRIPyXo9gu5eyQfr
+         kVLstlwzW3hWXZprM5Y2i9aKruqaIm/ZGYyw0jpLqwtrFBFD9kBYAIaKBuOrKINO+IB+
+         MMOQ==
+In-Reply-To: <CAJuCfpHcgu5Cti0t+U=S1C5-0ZgebhxzrOnhDiSu5qCyuq5_Wg-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-To: Suren Baghdasaryan <surenb@google.com>
-Cc: akpm@linux-foundation.org, kent.overstreet@linux.dev, mhocko@suse.com, vbabka@suse.cz, hannes@cmpxchg.org, roman.gushchin@linux.dev, mgorman@suse.de, dave@stgolabs.net, willy@infradead.org, liam.howlett@oracle.com, corbet@lwn.net, void@manifault.com, peterz@infradead.org, juri.lelli@redhat.com, ldufour@linux.ibm.com, catalin.marinas@arm.com, will@kernel.org, arnd@arndb.de, tglx@linutronix.de, mingo@redhat.com, dave.hansen@linux.intel.com, x86@kernel.org, peterx@redhat.com, david@redhat.com, axboe@kernel.dk, mcgrof@kernel.org, masahiroy@kernel.org, nathan@kernel.org, dennis@kernel.org, tj@kernel.org, muchun.song@linux.dev, rppt@kernel.org, paulmck@kernel.org, pasha.tatashin@soleen.com, yosryahmed@google.com, yuzhao@google.com, dhowells@redhat.com, hughd@google.com, andreyknvl@gmail.
+Content-Type: text/plain; charset="utf-8"
+To: peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org
+Cc: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org, johunt-JqFfY2XvxFXQT0dZR+AlfA@public.gmane.org, mhocko-IBi9RG/b67k@public.gmane.org, keescook-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org, quic_sudaraja-jfJNa2p1gH1BDgjK7y7TUQ@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Mon,  1 May 2023 09:54:29 -0700
-Suren Baghdasaryan <surenb@google.com> wrote:
+On Thu, Mar 2, 2023 at 5:16=E2=80=AFPM Suren Baghdasaryan <surenb-hpIqsD4AKldhl2p70BpVqQ@public.gmane.org=
+m> wrote:
+>
+> On Thu, Mar 2, 2023 at 5:13=E2=80=AFPM Suren Baghdasaryan <surenb@google.=
+com> wrote:
+> >
+> > Current 500ms min window size for psi triggers limits polling interval
+> > to 50ms to prevent polling threads from using too much cpu bandwidth by
+> > polling too frequently. However the number of cgroups with triggers is
+> > unlimited, so this protection can be defeated by creating multiple
+> > cgroups with psi triggers (triggers in each cgroup are served by a sing=
+le
+> > "psimon" kernel thread).
+> > Instead of limiting min polling period, which also limits the latency o=
+f
+> > psi events, it's better to limit psi trigger creation to authorized use=
+rs
+> > only, like we do for system-wide psi triggers (/proc/pressure/* files c=
+an
+> > be written only by processes with CAP_SYS_RESOURCE capability). This al=
+so
+> > makes access rules for cgroup psi files consistent with system-wide one=
+s.
+> > Add a CAP_SYS_RESOURCE capability check for cgroup psi file writers and
+> > remove the psi window min size limitation.
+> >
+> > Suggested-by: Sudarshan Rajagopalan <quic_sudaraja-jfJNa2p1gH1BDgjK7y7TUQ@public.gmane.org>
+> > Link: https://lore.kernel.org/all/cover.1676067791.git.quic_sudaraja@qu=
+icinc.com/
+> > Signed-off-by: Suren Baghdasaryan <surenb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+> > Acked-by: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
+> > Acked-by: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+>
+> Forgot to change the --to field from Tejun to PeterZ.
+> Peter, just to clarify, this change is targeted for inclusion in your tre=
+e.
 
-> After redefining alloc_pages, all uses of that name are being replaced.
-> Change the conflicting names to prevent preprocessor from replacing them
-> when it's not intended.
-> 
-> Signed-off-by: Suren Baghdasaryan <surenb@google.com>
-> ---
->  arch/x86/kernel/amd_gart_64.c | 2 +-
->  drivers/iommu/dma-iommu.c     | 2 +-
->  drivers/xen/grant-dma-ops.c   | 2 +-
->  drivers/xen/swiotlb-xen.c     | 2 +-
->  include/linux/dma-map-ops.h   | 2 +-
->  kernel/dma/mapping.c          | 4 ++--
->  6 files changed, 7 insertions(+), 7 deletions(-)
-> 
-> diff --git a/arch/x86/kernel/amd_gart_64.c b/arch/x86/kernel/amd_gart_64.c
-> index 56a917df410d..842a0ec5eaa9 100644
-> --- a/arch/x86/kernel/amd_gart_64.c
-> +++ b/arch/x86/kernel/amd_gart_64.c
-> @@ -676,7 +676,7 @@ static const struct dma_map_ops gart_dma_ops = {
->  	.get_sgtable			= dma_common_get_sgtable,
->  	.dma_supported			= dma_direct_supported,
->  	.get_required_mask		= dma_direct_get_required_mask,
-> -	.alloc_pages			= dma_direct_alloc_pages,
-> +	.alloc_pages_op			= dma_direct_alloc_pages,
->  	.free_pages			= dma_direct_free_pages,
->  };
->  
-> diff --git a/drivers/iommu/dma-iommu.c b/drivers/iommu/dma-iommu.c
-> index 7a9f0b0bddbd..76a9d5ca4eee 100644
-> --- a/drivers/iommu/dma-iommu.c
-> +++ b/drivers/iommu/dma-iommu.c
-> @@ -1556,7 +1556,7 @@ static const struct dma_map_ops iommu_dma_ops = {
->  	.flags			= DMA_F_PCI_P2PDMA_SUPPORTED,
->  	.alloc			= iommu_dma_alloc,
->  	.free			= iommu_dma_free,
-> -	.alloc_pages		= dma_common_alloc_pages,
-> +	.alloc_pages_op		= dma_common_alloc_pages,
->  	.free_pages		= dma_common_free_pages,
->  	.alloc_noncontiguous	= iommu_dma_alloc_noncontiguous,
->  	.free_noncontiguous	= iommu_dma_free_noncontiguous,
-> diff --git a/drivers/xen/grant-dma-ops.c b/drivers/xen/grant-dma-ops.c
-> index 9784a77fa3c9..6c7d984f164d 100644
-> --- a/drivers/xen/grant-dma-ops.c
-> +++ b/drivers/xen/grant-dma-ops.c
-> @@ -282,7 +282,7 @@ static int xen_grant_dma_supported(struct device *dev, u64 mask)
->  static const struct dma_map_ops xen_grant_dma_ops = {
->  	.alloc = xen_grant_dma_alloc,
->  	.free = xen_grant_dma_free,
-> -	.alloc_pages = xen_grant_dma_alloc_pages,
-> +	.alloc_pages_op = xen_grant_dma_alloc_pages,
->  	.free_pages = xen_grant_dma_free_pages,
->  	.mmap = dma_common_mmap,
->  	.get_sgtable = dma_common_get_sgtable,
-> diff --git a/drivers/xen/swiotlb-xen.c b/drivers/xen/swiotlb-xen.c
-> index 67aa74d20162..5ab2616153f0 100644
-> --- a/drivers/xen/swiotlb-xen.c
-> +++ b/drivers/xen/swiotlb-xen.c
-> @@ -403,6 +403,6 @@ const struct dma_map_ops xen_swiotlb_dma_ops = {
->  	.dma_supported = xen_swiotlb_dma_supported,
->  	.mmap = dma_common_mmap,
->  	.get_sgtable = dma_common_get_sgtable,
-> -	.alloc_pages = dma_common_alloc_pages,
-> +	.alloc_pages_op = dma_common_alloc_pages,
->  	.free_pages = dma_common_free_pages,
->  };
-> diff --git a/include/linux/dma-map-ops.h b/include/linux/dma-map-ops.h
-> index 31f114f486c4..d741940dcb3b 100644
-> --- a/include/linux/dma-map-ops.h
-> +++ b/include/linux/dma-map-ops.h
-> @@ -27,7 +27,7 @@ struct dma_map_ops {
->  			unsigned long attrs);
->  	void (*free)(struct device *dev, size_t size, void *vaddr,
->  			dma_addr_t dma_handle, unsigned long attrs);
-> -	struct page *(*alloc_pages)(struct device *dev, size_t size,
-> +	struct page *(*alloc_pages_op)(struct device *dev, size_t size,
->  			dma_addr_t *dma_handle, enum dma_data_direction dir,
->  			gfp_t gfp);
->  	void (*free_pages)(struct device *dev, size_t size, struct page *vaddr,
-> diff --git a/kernel/dma/mapping.c b/kernel/dma/mapping.c
-> index 9a4db5cce600..fc42930af14b 100644
-> --- a/kernel/dma/mapping.c
-> +++ b/kernel/dma/mapping.c
-> @@ -570,9 +570,9 @@ static struct page *__dma_alloc_pages(struct device *dev, size_t size,
->  	size = PAGE_ALIGN(size);
->  	if (dma_alloc_direct(dev, ops))
->  		return dma_direct_alloc_pages(dev, size, dma_handle, dir, gfp);
-> -	if (!ops->alloc_pages)
-> +	if (!ops->alloc_pages_op)
->  		return NULL;
-> -	return ops->alloc_pages(dev, size, dma_handle, dir, gfp);
-> +	return ops->alloc_pages_op(dev, size, dma_handle, dir, gfp);
->  }
->  
->  struct page *dma_alloc_pages(struct device *dev, size_t size,
+I think this patch slipped through the cracks. Peter, could you please
+take it into your tree?
+Thanks,
+Suren.
 
-I'm not impressed. This patch increases churn for code which does not
-(directly) benefit from the change, and that for limitations in your
-tooling?
-
-Why not just rename the conflicting uses in your local tree, but then
-remove the rename from the final patch series?
-
-Just my two cents,
-Petr T
+> Thanks!
+>
+> > ---
+> >  kernel/cgroup/cgroup.c | 10 ++++++++++
+> >  kernel/sched/psi.c     |  4 +---
+> >  2 files changed, 11 insertions(+), 3 deletions(-)
+> >
+> > diff --git a/kernel/cgroup/cgroup.c b/kernel/cgroup/cgroup.c
+> > index 935e8121b21e..b600a6baaeca 100644
+> > --- a/kernel/cgroup/cgroup.c
+> > +++ b/kernel/cgroup/cgroup.c
+> > @@ -3867,6 +3867,12 @@ static __poll_t cgroup_pressure_poll(struct kern=
+fs_open_file *of,
+> >         return psi_trigger_poll(&ctx->psi.trigger, of->file, pt);
+> >  }
+> >
+> > +static int cgroup_pressure_open(struct kernfs_open_file *of)
+> > +{
+> > +       return (of->file->f_mode & FMODE_WRITE && !capable(CAP_SYS_RESO=
+URCE)) ?
+> > +               -EPERM : 0;
+> > +}
+> > +
+> >  static void cgroup_pressure_release(struct kernfs_open_file *of)
+> >  {
+> >         struct cgroup_file_ctx *ctx =3D of->priv;
+> > @@ -5266,6 +5272,7 @@ static struct cftype cgroup_psi_files[] =3D {
+> >         {
+> >                 .name =3D "io.pressure",
+> >                 .file_offset =3D offsetof(struct cgroup, psi_files[PSI_=
+IO]),
+> > +               .open =3D cgroup_pressure_open,
+> >                 .seq_show =3D cgroup_io_pressure_show,
+> >                 .write =3D cgroup_io_pressure_write,
+> >                 .poll =3D cgroup_pressure_poll,
+> > @@ -5274,6 +5281,7 @@ static struct cftype cgroup_psi_files[] =3D {
+> >         {
+> >                 .name =3D "memory.pressure",
+> >                 .file_offset =3D offsetof(struct cgroup, psi_files[PSI_=
+MEM]),
+> > +               .open =3D cgroup_pressure_open,
+> >                 .seq_show =3D cgroup_memory_pressure_show,
+> >                 .write =3D cgroup_memory_pressure_write,
+> >                 .poll =3D cgroup_pressure_poll,
+> > @@ -5282,6 +5290,7 @@ static struct cftype cgroup_psi_files[] =3D {
+> >         {
+> >                 .name =3D "cpu.pressure",
+> >                 .file_offset =3D offsetof(struct cgroup, psi_files[PSI_=
+CPU]),
+> > +               .open =3D cgroup_pressure_open,
+> >                 .seq_show =3D cgroup_cpu_pressure_show,
+> >                 .write =3D cgroup_cpu_pressure_write,
+> >                 .poll =3D cgroup_pressure_poll,
+> > @@ -5291,6 +5300,7 @@ static struct cftype cgroup_psi_files[] =3D {
+> >         {
+> >                 .name =3D "irq.pressure",
+> >                 .file_offset =3D offsetof(struct cgroup, psi_files[PSI_=
+IRQ]),
+> > +               .open =3D cgroup_pressure_open,
+> >                 .seq_show =3D cgroup_irq_pressure_show,
+> >                 .write =3D cgroup_irq_pressure_write,
+> >                 .poll =3D cgroup_pressure_poll,
+> > diff --git a/kernel/sched/psi.c b/kernel/sched/psi.c
+> > index 02e011cabe91..0945f956bf80 100644
+> > --- a/kernel/sched/psi.c
+> > +++ b/kernel/sched/psi.c
+> > @@ -160,7 +160,6 @@ __setup("psi=3D", setup_psi);
+> >  #define EXP_300s       2034            /* 1/exp(2s/300s) */
+> >
+> >  /* PSI trigger definitions */
+> > -#define WINDOW_MIN_US 500000   /* Min window size is 500ms */
+> >  #define WINDOW_MAX_US 10000000 /* Max window size is 10s */
+> >  #define UPDATES_PER_WINDOW 10  /* 10 updates per window */
+> >
+> > @@ -1278,8 +1277,7 @@ struct psi_trigger *psi_trigger_create(struct psi=
+_group *group,
+> >         if (state >=3D PSI_NONIDLE)
+> >                 return ERR_PTR(-EINVAL);
+> >
+> > -       if (window_us < WINDOW_MIN_US ||
+> > -               window_us > WINDOW_MAX_US)
+> > +       if (window_us =3D=3D 0 || window_us > WINDOW_MAX_US)
+> >                 return ERR_PTR(-EINVAL);
+> >
+> >         /* Check threshold */
+> > --
+> > 2.40.0.rc0.216.gc4246ad0f0-goog
+> >
