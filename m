@@ -1,93 +1,126 @@
-From: Michal =?utf-8?Q?Koutn=C3=BD?= <mkoutny-IBi9RG/b67k@public.gmane.org>
-Subject: Re: cgroup: Clarification around usage_in_bytes and its relation to
- the page counter
-Date: Tue, 2 May 2023 19:44:57 +0200
-Message-ID: <p37th7kmkn3njp6nuu22qi5vnse3mdhlqen4wlk3ps26bdaujd@prgdu3vtm47y>
-References: <CAAKLMZ1fM1d4Drw0D2AkEwAG9iFOyT9qboy1REWtwS6Q00BA6Q@mail.gmail.com>
+From: Michal =?utf-8?Q?Koutn=C3=BD?= <mkoutny@suse.com>
+Subject: Re: [RFC PATCH 0/5] cgroup/cpuset: A new "isolcpus" paritition
+Date: Tue, 2 May 2023 20:01:16 +0200
+Message-ID: <jqkf7jkuyxqiupmxmdbmpnbpojub2pjsz3oogwncmwqdghlsgk@phsqzirmmlyl>
+References: <ZDdNy2NAfj2_1CbW@slm.duckdns.org>
+ <1b8d9128-d076-7d37-767d-11d6af314662@redhat.com>
+ <ZDdYOI9LB87ra2t_@slm.duckdns.org>
+ <9862da55-5f41-24c3-f3bb-4045ccf24b2e@redhat.com>
+ <226cb2da-e800-6531-4e57-cbf991022477@redhat.com>
+ <ZDmFLfII8EUX_ocY@slm.duckdns.org>
+ <c61ca9d0-c514-fb07-c2f2-3629e8898984@redhat.com>
+ <ZDmOjeBVsIcgSLIV@slm.duckdns.org>
+ <60ec12dc-943c-b8f0-8b6f-97c5d332144c@redhat.com>
+ <46d26abf-a725-b924-47fa-4419b20bbc02@redhat.com>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=pgp-sha512;
-        protocol="application/pgp-signature"; boundary="32lmaltfn23dhzgl"
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+        protocol="application/pgp-signature"; boundary="dk2c7how7kjjrmdw"
+Return-path: <linux-doc-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
-        t=1683049499; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+        t=1683050478; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
          mime-version:mime-version:content-type:content-type:
          in-reply-to:in-reply-to:references:references;
-        bh=MgLp4vIr0EtQova6tp/E9AbDg/ZxYjK50xAdJLTkr8o=;
-        b=W66VaMlPsdg7qRR+/IjaOJTeNwxv1vMoKD8HyGhhnW4wrsOVBZ487iYDyvOIPhdoHgH9Hm
-        8RB2Cnn2eU6iapC8fKjJM4AUsjeeKvGJWyD8qQ5HLDlKart23CaVomHZ5j28XszssBqbW6
-        DD6fZk6sFljHjHnzkpoQX/rZy+PMziA=
+        bh=+0f0hUbsvSFR9UE93IS6I2zL3LHIPpph9neOljoj1mE=;
+        b=D9fKqMwcb2qgqBv1yX/t/aA1+iNYzYkHC8ljzAS23401NpcT72tQ1UUPhm4T5mPjk9LeE+
+        FxS1WzcrgEP124Sgfj6zwUF1ZRXILfcmvYFjj+j2XPhHdmpSxxPdVltqCYcH9Phq3Z/J9A
+        KJ1Ekc6Yu3tQ+vei+SkgSkXSJTszLDA=
 Content-Disposition: inline
-In-Reply-To: <CAAKLMZ1fM1d4Drw0D2AkEwAG9iFOyT9qboy1REWtwS6Q00BA6Q-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+In-Reply-To: <46d26abf-a725-b924-47fa-4419b20bbc02@redhat.com>
 List-ID: <cgroups.vger.kernel.org>
-To: Michael Honaker <mchonaker-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Waiman Long <longman@redhat.com>
+Cc: Tejun Heo <tj@kernel.org>, Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, Jonathan Corbet <corbet@lwn.net>, Shuah Khan <shuah@kernel.org>, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kselftest@vger.kernel.org, Juri Lelli <juri.lelli@redhat.com>, Valentin Schneider <vschneid@redhat.com>, Frederic Weisbecker <frederic@kernel.org>
 
 
---32lmaltfn23dhzgl
-Content-Type: text/plain; charset=us-ascii
+--dk2c7how7kjjrmdw
+Content-Type: text/plain; charset=iso-8859-1
 Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-Hello Michael.
+Hello.
 
-On Wed, Apr 12, 2023 at 09:22:07PM -0400, Michael Honaker <mchonaker-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org> wrote:
-> I have been trying to get an accurate measurement of memory usage of a
-> non-root cgroup, specifically a Kubernetes container,
+The previous thread arrived incomplete to me, so I respond to the last
+message only. Point me to a message URL if it was covered.
 
-Beware that containers are more or less based on sharing resources,
-shared accounting is difficult and hence _accurate_ measurement may not
-be available or the numbers need some amount of interpretation.
+On Fri, Apr 14, 2023 at 03:06:27PM -0400, Waiman Long <longman@redhat.com> =
+wrote:
+> Below is a draft of the new cpuset.cpus.reserve cgroupfs file:
+>=20
+> =A0 cpuset.cpus.reserve
+> =A0=A0=A0=A0=A0=A0=A0 A read-write multiple values file which exists on a=
+ll
+> =A0=A0=A0=A0=A0=A0=A0 cpuset-enabled cgroups.
+>=20
+> =A0=A0=A0=A0=A0=A0=A0 It lists the reserved CPUs to be used for the creat=
+ion of
+> =A0=A0=A0=A0=A0=A0=A0 child partitions.=A0 See the section on "cpuset.cpu=
+s.partition"
+> =A0=A0=A0=A0=A0=A0=A0 below for more information on cpuset partition.=A0 =
+These reserved
+> =A0=A0=A0=A0=A0=A0=A0 CPUs should be a subset of "cpuset.cpus" and will b=
+e mutually
+> =A0=A0=A0=A0=A0=A0=A0 exclusive of "cpuset.cpus.effective" when used sinc=
+e these
+> =A0=A0=A0=A0=A0=A0=A0 reserved CPUs cannot be used by tasks in the curren=
+t cgroup.
+>=20
+> =A0=A0=A0=A0=A0=A0=A0 There are two modes for partition CPUs reservation -
+> =A0=A0=A0=A0=A0=A0=A0 auto or manual.=A0 The system starts up in auto mod=
+e where
+> =A0=A0=A0=A0=A0=A0=A0 "cpuset.cpus.reserve" will be set automatically whe=
+n valid
+> =A0=A0=A0=A0=A0=A0=A0 child partitions are created and users don't need t=
+o touch the
+> =A0=A0=A0=A0=A0=A0=A0 file at all.=A0 This mode has the limitation that t=
+he parent of a
+> =A0=A0=A0=A0=A0=A0=A0 partition must be a partition root itself.=A0 So ch=
+ild partition
+> =A0=A0=A0=A0=A0=A0=A0 has to be created one-by-one from the cgroup root d=
+own.
+>=20
+> =A0=A0=A0=A0=A0=A0=A0 To enable the creation of a partition down in the h=
+ierarchy
+> =A0=A0=A0=A0=A0=A0=A0 without the intermediate cgroups to be partition ro=
+ots,
 
-> and noticed some inconsistencies when comparing the value of
-> `memory.usage_in_bytes` with the information in `memory.stat`. After
-> further investigation of the cgroup docs
-> (/admin-guide/cgroups/memory.rst#usage_in_bytes) and an old LMKL
-> thread ("real meaning of memory.usage_in_bytes"),
+Why would be this needed? Owning a CPU (a resource) must logically be
+passed all the way from root to the target cgroup, i.e. this is
+expressed by valid partitioning down to given level.
 
-[OT: I suggest you move to cgroup v2, the entities are IMO better named
-and it's also more futureproof ;-)]
+>         one
+> =A0=A0=A0=A0=A0=A0=A0 has to turn on the manual reservation mode by writi=
+ng directly
+> =A0=A0=A0=A0=A0=A0=A0 to "cpuset.cpus.reserve" with a value different fro=
+m its
+> =A0=A0=A0=A0=A0=A0=A0 current value.=A0 By distributing the reserve CPUs =
+down the cgroup
+> =A0=A0=A0=A0=A0=A0=A0 hierarchy to the parent of the target cgroup, this =
+target cgroup
+> =A0=A0=A0=A0=A0=A0=A0 can be switched to become a partition root if its "=
+cpuset.cpus"
+> =A0=A0=A0=A0=A0=A0=A0 is a subset of the set of valid reserve CPUs in its=
+ parent.
 
-> I came to the understanding that `usage_in_bytes` actually shows the
-> value of the resource counter which is an overestimation due to the
-> counter being split into per-cpu chunks for caching,
+level n
+`- level n+1
+   cpuset.cpus	// these are actually configured by "owner" of level n
+   cpuset.cpus.partition // similrly here, level n decides if child is a pa=
+rtition
 
-I didn't read the thread but it's true that per-cpu batching may result
-in an error (both signs in theory). Since around v5.13 the
-implementation changed and error should be better:
-O(nr_cpus * nr_cgroups(subtree) * MEMCG_CHARGE_BATCH) -> O(nr_cpus * MEMCG_CHARGE_BATCH).
+I.e. what would be level n/cpuset.cpus.reserve good for when it can
+directly control level n+1/cpuset.cpus?
 
-> and that the real usage can be calculated from RSS+Cache gathered from
-> `memory.stat`.  I've created cadvisor issue #3286
-> (https://github.com/google/cadvisor/issues/3286) which goes into
-> greater detail on my investigation with examples.
-
-The difference that you spot there is not caused (merely) by the per-cpu
-optimization.
-What you see as the difference is mainly kernel memory (e.g. dentries,
-inodes, task_struct,...) -- RSS+Cache would only show memory that
-userspace is directly responsible for but not the kernel structures
-(whose size depends on kernel implementation afterall).
-
-(On v2, you could see breakdown of the kernel memory usage besides
-others in memory.stat.)
-
-> Is the above understanding still correct with the new page counters?
-> If so, could any memory allocations be reflected in `usage_in_bytes`
-> but not in `stat` for child cgroups? I want to ensure I'm not
-> missing anything by only monitoring the `stat` file.
-
-I hope the abve sheds some light on these questions.
-
+Thanks,
 Michal
 
---32lmaltfn23dhzgl
+--dk2c7how7kjjrmdw
 Content-Type: application/pgp-signature; name="signature.asc"
 
 -----BEGIN PGP SIGNATURE-----
 
-iHUEABYKAB0WIQTrXXag4J0QvXXBmkMkDQmsBEOquQUCZFFMFgAKCRAkDQmsBEOq
-uW7sAP93XpdrwS/ZlcnjTUBXiArOSqPj3IhP2i88OpLg4ZvXwgEAn+XPgGGv+hWQ
-wWxCTQjSrPbSD9acugPheEOKr/razQM=
-=s6ba
+iHUEABYKAB0WIQTrXXag4J0QvXXBmkMkDQmsBEOquQUCZFFP6gAKCRAkDQmsBEOq
+uf5WAP0TD4xZbzbRrza4aMPH3HGxMt5QxQoqQyFnCnecSe4ThwEA80+zGnGxZQv9
+yMROHtPHn2tZGEg0+1iKitQk/7QCnA0=
+=hh88
 -----END PGP SIGNATURE-----
 
---32lmaltfn23dhzgl--
+--dk2c7how7kjjrmdw--
