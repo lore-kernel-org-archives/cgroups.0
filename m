@@ -1,112 +1,79 @@
-From: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [RFC PATCH 3/3] cgroup: Do not take css_set_lock in
- cgroup_show_path
-Date: Tue, 2 May 2023 15:56:01 -0400
-Message-ID: <9e149289-c1c0-3297-145d-ad3a890056ac@redhat.com>
-References: <20230502133847.14570-1-mkoutny@suse.com>
- <20230502133847.14570-4-mkoutny@suse.com>
+From: Kent Overstreet <kent.overstreet-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>
+Subject: Re: [PATCH 03/40] fs: Convert alloc_inode_sb() to a macro
+Date: Tue, 2 May 2023 15:57:51 -0400
+Message-ID: <ZFFrP8WKRFgZRzoB@moria.home.lan>
+References: <20230501165450.15352-1-surenb@google.com>
+ <20230501165450.15352-4-surenb@google.com>
+ <20230502143530.1586e287@meshulam.tesarici.cz>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1683057367;
+Return-path: <linux-modules-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
+        t=1683057484;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=iMs73NusrIc3WnWcdl7Fx0I1f6axuQqjUOBlJwm9l/c=;
-        b=HHjTDNPbnDC4AFvS43aRgTee73bw2RWLhk5yANez+r0RAFMrlgRTFoTgDZamwISd5C3Cwc
-        W0sZt2kjd8k7B3A1NHwWpbvoGiq+17dmvmc+309m/pHP0JFa24Ee+MvW3aoKIJ2/u0j1JV
-        Z/qfvOxQgZwFKOhjmEUSzPAz0jvhG7E=
-Content-Language: en-US
-In-Reply-To: <20230502133847.14570-4-mkoutny-IBi9RG/b67k@public.gmane.org>
+        bh=bbTqJ6Cy48RWo6Tz/tI7JJZLpQOgd1GnXsK6J+pb2Po=;
+        b=TPEXvTAZj7eMMlezn0mxuUI2XEAYSmuur8j15Vhz2aAoEuxaC8gwe/DdLVCUdzI8I+L6aU
+        DEG5XTP5rhYFuMy34wKLVWK/nyN2iMJiF2WhtVwQS5E54+cSGLx6PlY24qgxqRCabxvnfl
+        6yoheYQVL8RgpgGG5HowroFYWwjIS0M=
+Content-Disposition: inline
+In-Reply-To: <20230502143530.1586e287-TD/jYOLh/Qr2G+KSGY6Hrl+YFMdMcpeZ@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="utf-8"; format="flowed"
-To: =?UTF-8?Q?Michal_Koutn=c3=bd?= <mkoutny-IBi9RG/b67k@public.gmane.org>, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-Cc: Alexander Viro <viro-RmSDqhL/yNMiFSDQTTA3OLVCufUGDwFn@public.gmane.org>, Christian Brauner <brauner-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Dave Chinner <dchinner-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Rik van Riel <riel-ebMLmSuQjDVBDgjK7y7TUQ@public.gmane.org>, Jiri Wiesner <jwiesner-l3A5Bk7waGM@public.gmane.org>
+Content-Type: text/plain; charset="utf-8"
+To: Petr =?utf-8?B?VGVzYcWZw61r?= <petr-hIRrMMry8ebtwjQa/ONI9g@public.gmane.org>
+Cc: Suren Baghdasaryan <surenb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, mhocko-IBi9RG/b67k@public.gmane.org, vbabka-AlSwsSmVLrQ@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org, mgorman-l3A5Bk7waGM@public.gmane.org, dave-h16yJtLeMjHk1uMJSBkQmQ@public.gmane.org, willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, liam.howlett-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org, corbet-T1hC0tSOHrs@public.gmane.org, void-gq6j2QGBifHby3iVrkZq2A@public.gmane.org, peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, juri.lelli-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, ldufour-tEXmvtCZX7AybS5Ee8rs3A@public.gmane.org, catalin.marinas-5wv7dgnIgG8@public.gmane.org, will-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, arnd-r2nGTMty4D4@public.gmane.org, tglx-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org, mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, dave.hansen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org, x86-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, peterx-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, david-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, mcgrof-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, masahiroy-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, nathan-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, dennis-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, muchun.song-fxUVXftIFDnyG1zEObXtfA@public.gmane.org, rppt-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, paulmck-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, pasha.tatashin-2EmBfe737+LQT0dZR+AlfA@public.gmane.org, yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, yuzhao-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, dhowells-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, andr
 
-On 5/2/23 09:38, Michal Koutný wrote:
-> /proc/$pid/mountinfo may accumulate lots of entries (causing frequent
-> re-reads of whole file) or lots cgroupfs entries alone.
-> The cgroupfs entries rendered with cgroup_show_path() may increase/be
-> subject of css_set_lock contention causing further slowdown -- not only
-> mountinfo rendering but any other css_set_lock user.
->
-> We leverage the fact that mountinfo reading happens with namespace_sem
-> taken and hierarchy roots thus cannot be freed concurrently.
->
-> There are three relevant nodes for each cgroupfs entry:
->
->          R ... cgroup hierarchy root
->          M ... mount root
->          C ... reader's cgroup NS root
->
-> mountinfo is supposed to show path from C to M.
->
-> Current's css_set (and linked root cgroups) are stable under
-> namespace_sem, therefore current_cgns_cgroup_from_root() doesn't need
-> css_set_lock.
->
-> When the path is assembled in kernfs_path_from_node(), we know that:
-> - C kernfs_node is (transitively) pinned via current->nsproxy,
-> - M kernfs_node is pinned thanks to namespace_sem,
-> - path C to M is pinned via child->parent references (this holds also
->    when C and M are in distinct subtrees).
->
-> Streamline mountinfo rendering a bit by relieving css_set_lock and add
-> careful notes about that.
->
-> Signed-off-by: Michal Koutný <mkoutny-IBi9RG/b67k@public.gmane.org>
-> ---
->   kernel/cgroup/cgroup.c | 12 +++++++-----
->   1 file changed, 7 insertions(+), 5 deletions(-)
->
-> diff --git a/kernel/cgroup/cgroup.c b/kernel/cgroup/cgroup.c
-> index 32d693a797b9..e2ec6f0028be 100644
-> --- a/kernel/cgroup/cgroup.c
-> +++ b/kernel/cgroup/cgroup.c
-> @@ -1407,12 +1407,18 @@ static inline struct cgroup *__cset_cgroup_from_root(struct css_set *cset,
->   	struct cgroup *res_cgroup = NULL;
->   
->   	if (cset == &init_css_set) {
-> +		/* callers must ensure root stability */
->   		res_cgroup = &root->cgrp;
->   	} else if (root == &cgrp_dfl_root) {
->   		res_cgroup = cset->dfl_cgrp;
->   	} else {
->   		struct cgrp_cset_link *link;
-> -		lockdep_assert_held(&css_set_lock);
-> +		/* cset's cgroups are pinned unless they are root cgroups that
-> +		 * were unmounted.  We look at links to !cgrp_dfl_root
-> +		 * cgroup_root, either lock ensures the list is not mutated
-> +		 */
-> +		lockdep_assert(lockdep_is_held(&css_set_lock) ||
-> +			       lockdep_is_held_type(&namespace_sem, -1));
-Again lockdep_is_held(&namespace_sem) is good enough.
+On Tue, May 02, 2023 at 02:35:30PM +0200, Petr Tesařík wrote:
+> On Mon,  1 May 2023 09:54:13 -0700
+> Suren Baghdasaryan <surenb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org> wrote:
+> 
+> > From: Kent Overstreet <kent.overstreet-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>
+> > 
+> > We're introducing alloc tagging, which tracks memory allocations by
+> > callsite. Converting alloc_inode_sb() to a macro means allocations will
+> > be tracked by its caller, which is a bit more useful.
+> > 
+> > Signed-off-by: Kent Overstreet <kent.overstreet-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>
+> > Signed-off-by: Suren Baghdasaryan <surenb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+> > Cc: Alexander Viro <viro-RmSDqhL/yNMiFSDQTTA3OLVCufUGDwFn@public.gmane.org>
+> > ---
+> >  include/linux/fs.h | 6 +-----
+> >  1 file changed, 1 insertion(+), 5 deletions(-)
+> > 
+> > diff --git a/include/linux/fs.h b/include/linux/fs.h
+> > index 21a981680856..4905ce14db0b 100644
+> > --- a/include/linux/fs.h
+> > +++ b/include/linux/fs.h
+> > @@ -2699,11 +2699,7 @@ int setattr_should_drop_sgid(struct mnt_idmap *idmap,
+> >   * This must be used for allocating filesystems specific inodes to set
+> >   * up the inode reclaim context correctly.
+> >   */
+> > -static inline void *
+> > -alloc_inode_sb(struct super_block *sb, struct kmem_cache *cache, gfp_t gfp)
+> > -{
+> > -	return kmem_cache_alloc_lru(cache, &sb->s_inode_lru, gfp);
+> > -}
+> > +#define alloc_inode_sb(_sb, _cache, _gfp) kmem_cache_alloc_lru(_cache, &_sb->s_inode_lru, _gfp)
+> 
+> Honestly, I don't like this change. In general, pre-processor macros
+> are ugly and error-prone.
 
->   
->   		list_for_each_entry(link, &cset->cgrp_links, cgrp_link) {
->   			struct cgroup *c = link->cgrp;
-> @@ -1438,8 +1444,6 @@ current_cgns_cgroup_from_root(struct cgroup_root *root)
->   	struct cgroup *res = NULL;
->   	struct css_set *cset;
->   
-> -	lockdep_assert_held(&css_set_lock);
-> -
->   	/* namespace_sem ensures `root` stability on unmount */
->   	lockdep_assert(lockdep_is_held_type(&namespace_sem, -1));
->   
-> @@ -1905,10 +1909,8 @@ int cgroup_show_path(struct seq_file *sf, struct kernfs_node *kf_node,
->   	if (!buf)
->   		return -ENOMEM;
->   
-> -	spin_lock_irq(&css_set_lock);
->   	ns_cgroup = current_cgns_cgroup_from_root(kf_cgroot);
->   	len = kernfs_path_from_node(kf_node, ns_cgroup->kn, buf, PATH_MAX);
-> -	spin_unlock_irq(&css_set_lock);
->   
->   	if (len >= PATH_MAX)
->   		len = -ERANGE;
-Cheers,
-Longman
+It's a one line macro, it's fine.
 
+> Besides, it works for you only because __kmem_cache_alloc_lru() is
+> declared __always_inline (unless CONFIG_SLUB_TINY is defined, but then
+> you probably don't want the tracking either). In any case, it's going
+> to be difficult for people to understand why and how this works.
+
+I think you must be confused. kmem_cache_alloc_lru() is a macro, and we
+need that macro to be expanded at the alloc_inode_sb() callsite. It's
+got nothing to do with whether or not __kmem_cache_alloc_lru() is inline
+or not.
+
+> If the actual caller of alloc_inode_sb() is needed, I'd rather add it
+> as a parameter and pass down _RET_IP_ explicitly here.
+
+That approach was considered, but adding an ip parameter to every memory
+allocation function would've been far more churn.
