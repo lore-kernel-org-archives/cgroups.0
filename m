@@ -1,73 +1,166 @@
-From: Maarten Lankhorst <maarten.lankhorst-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
-Subject: [RFC PATCH 0/4]  Add support for DRM cgroup memory accounting.
-Date: Wed,  3 May 2023 10:34:56 +0200
-Message-ID: <20230503083500.645848-1-maarten.lankhorst@linux.intel.com>
+From: Maarten Lankhorst <maarten.lankhorst@linux.intel.com>
+Subject: [RFC PATCH 1/4] cgroup: Add the DRM cgroup controller
+Date: Wed,  3 May 2023 10:34:57 +0200
+Message-ID: <20230503083500.645848-2-maarten.lankhorst@linux.intel.com>
+References: <20230503083500.645848-1-maarten.lankhorst@linux.intel.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Return-path: <amd-gfx-bounces-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>
+Return-path: <intel-gfx-bounces@lists.freedesktop.org>
+In-Reply-To: <20230503083500.645848-1-maarten.lankhorst@linux.intel.com>
 List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.freedesktop.org/mailman/options/amd-gfx>,
- <mailto:amd-gfx-request-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org?subject=unsubscribe>
-List-Archive: <https://lists.freedesktop.org/archives/amd-gfx>
-List-Post: <mailto:amd-gfx-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>
-List-Help: <mailto:amd-gfx-request-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.freedesktop.org/mailman/listinfo/amd-gfx>,
- <mailto:amd-gfx-request-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org?subject=subscribe>
-Errors-To: amd-gfx-bounces-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org
-Sender: "amd-gfx" <amd-gfx-bounces-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>
-Content-Type: text/plain; charset="us-ascii"
-To: dri-devel-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, intel-xe-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org
-Cc: Daniel Vetter <daniel-/w4YWyX8dFk@public.gmane.org>, Tvrtko Ursulin <tvrtko.ursulin-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Thomas Zimmermann <tzimmermann-l3A5Bk7waGM@public.gmane.org>, intel-gfx-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org, Maarten Lankhorst <maarten.lankhorst-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, amd-gfx-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org, Maxime Ripard <mripard-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, David Airlie <airlied-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+List-Unsubscribe: <https://lists.freedesktop.org/mailman/options/intel-gfx>,
+ <mailto:intel-gfx-request@lists.freedesktop.org?subject=unsubscribe>
+List-Archive: <https://lists.freedesktop.org/archives/intel-gfx>
+List-Post: <mailto:intel-gfx@lists.freedesktop.org>
+List-Help: <mailto:intel-gfx-request@lists.freedesktop.org?subject=help>
+List-Subscribe: <https://lists.freedesktop.org/mailman/listinfo/intel-gfx>,
+ <mailto:intel-gfx-request@lists.freedesktop.org?subject=subscribe>
+Errors-To: intel-gfx-bounces@lists.freedesktop.org
+Sender: "Intel-gfx" <intel-gfx-bounces@lists.freedesktop.org>
+Content-Type: text/plain; charset="utf-8"
+To: dri-devel@lists.freedesktop.org, cgroups@vger.kernel.org, intel-xe@lists.freedesktop.org
+Cc: Daniel Vetter <daniel@ffwll.ch>, Thomas Zimmermann <tzimmermann@suse.de>, intel-gfx@lists.freedesktop.org, linux-kernel@vger.kernel.org, amd-gfx@lists.freedesktop.org, Maxime Ripard <mripard@kernel.org>, Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, Tejun Heo <tj@kernel.org>, David Airlie <airlied@gmail.com>
 
-RFC as I'm looking for comments.
+From: Tvrtko Ursulin <tvrtko.ursulin@intel.com>
 
-For long running compute, it can be beneficial to partition the GPU memory
-between cgroups, so each cgroup can use its maximum amount of memory without
-interfering with other scheduled jobs. Done properly, this can alleviate the
-need for eviction, which might result in a job being terminated if the GPU
-doesn't support mid-thread preemption or recoverable page faults.
+Skeleton controller without any functionality.
 
-This is done by adding a bunch of knobs to cgroup:
-drm.capacity: Shows maximum capacity of each resource region.
-drm.max: Display or limit max amount of memory.
-drm.current: Current amount of memory in use.
-
-TTM has not been made cgroup aware yet, so instead of evicting from
-the current cgroup to stay within the cgroup limits, it simply returns
-the error -ENOSPC to userspace.
-
-I've used Tvrtko's cgroup controller series as a base, but it implemented
-scheduling weight, not memory accounting, so I only ended up keeping the
-base patch.
-
-Xe is not upstream yet, so the driver specific patch will only apply on
-https://gitlab.freedesktop.org/drm/xe/kernel
-
-Maarten Lankhorst (3):
-  drm/cgroup: Add memory accounting to DRM cgroup
-  drm/ttm: Handle -EAGAIN in ttm_resource_alloc as -ENOSPC.
-  drm/xe: Add support for the drm cgroup
-
-Tvrtko Ursulin (1):
-  cgroup: Add the DRM cgroup controller
-
- Documentation/admin-guide/cgroup-v2.rst    |  46 ++
- Documentation/gpu/drm-compute.rst          |  54 ++
- drivers/gpu/drm/ttm/ttm_bo.c               |   4 +-
- drivers/gpu/drm/xe/xe_device.c             |   4 +
- drivers/gpu/drm/xe/xe_device_types.h       |   4 +
- drivers/gpu/drm/xe/xe_ttm_vram_mgr.c       |  21 +-
- drivers/gpu/drm/xe/xe_ttm_vram_mgr_types.h |   5 +
- include/linux/cgroup_drm.h                 |  90 ++++
- include/linux/cgroup_subsys.h              |   4 +
- init/Kconfig                               |   7 +
- kernel/cgroup/Makefile                     |   1 +
- kernel/cgroup/drm.c                        | 557 +++++++++++++++++++++
- 12 files changed, 794 insertions(+), 3 deletions(-)
- create mode 100644 Documentation/gpu/drm-compute.rst
+Signed-off-by: Tvrtko Ursulin <tvrtko.ursulin@intel.com>
+Signed-off-by: Maarten Lankhorst <maarten.lankhorst@linux.intel.com>
+---
+ include/linux/cgroup_drm.h    |  9 ++++++
+ include/linux/cgroup_subsys.h |  4 +++
+ init/Kconfig                  |  7 ++++
+ kernel/cgroup/Makefile        |  1 +
+ kernel/cgroup/drm.c           | 60 +++++++++++++++++++++++++++++++++++
+ 5 files changed, 81 insertions(+)
  create mode 100644 include/linux/cgroup_drm.h
  create mode 100644 kernel/cgroup/drm.c
 
+diff --git a/include/linux/cgroup_drm.h b/include/linux/cgroup_drm.h
+new file mode 100644
+index 000000000000..8ef66a47619f
+--- /dev/null
++++ b/include/linux/cgroup_drm.h
+@@ -0,0 +1,9 @@
++/* SPDX-License-Identifier: MIT */
++/*
++ * Copyright © 2023 Intel Corporation
++ */
++
++#ifndef _CGROUP_DRM_H
++#define _CGROUP_DRM_H
++
++#endif	/* _CGROUP_DRM_H */
+diff --git a/include/linux/cgroup_subsys.h b/include/linux/cgroup_subsys.h
+index 445235487230..49460494a010 100644
+--- a/include/linux/cgroup_subsys.h
++++ b/include/linux/cgroup_subsys.h
+@@ -65,6 +65,10 @@ SUBSYS(rdma)
+ SUBSYS(misc)
+ #endif
+ 
++#if IS_ENABLED(CONFIG_CGROUP_DRM)
++SUBSYS(drm)
++#endif
++
+ /*
+  * The following subsystems are not supported on the default hierarchy.
+  */
+diff --git a/init/Kconfig b/init/Kconfig
+index 1fb5f313d18f..1679229143c0 100644
+--- a/init/Kconfig
++++ b/init/Kconfig
+@@ -1093,6 +1093,13 @@ config CGROUP_RDMA
+ 	  Attaching processes with active RDMA resources to the cgroup
+ 	  hierarchy is allowed even if can cross the hierarchy's limit.
+ 
++config CGROUP_DRM
++	bool "DRM controller"
++	help
++	  Provides the DRM subsystem controller.
++
++	  ...
++
+ config CGROUP_FREEZER
+ 	bool "Freezer controller"
+ 	help
+diff --git a/kernel/cgroup/Makefile b/kernel/cgroup/Makefile
+index 12f8457ad1f9..849bd2917477 100644
+--- a/kernel/cgroup/Makefile
++++ b/kernel/cgroup/Makefile
+@@ -6,4 +6,5 @@ obj-$(CONFIG_CGROUP_PIDS) += pids.o
+ obj-$(CONFIG_CGROUP_RDMA) += rdma.o
+ obj-$(CONFIG_CPUSETS) += cpuset.o
+ obj-$(CONFIG_CGROUP_MISC) += misc.o
++obj-$(CONFIG_CGROUP_DRM) += drm.o
+ obj-$(CONFIG_CGROUP_DEBUG) += debug.o
+diff --git a/kernel/cgroup/drm.c b/kernel/cgroup/drm.c
+new file mode 100644
+index 000000000000..02c8eaa633d3
+--- /dev/null
++++ b/kernel/cgroup/drm.c
+@@ -0,0 +1,60 @@
++/* SPDX-License-Identifier: MIT */
++/*
++ * Copyright © 2023 Intel Corporation
++ */
++
++#include <linux/cgroup.h>
++#include <linux/cgroup_drm.h>
++#include <linux/slab.h>
++
++struct drm_cgroup_state {
++	struct cgroup_subsys_state css;
++};
++
++struct drm_root_cgroup_state {
++	struct drm_cgroup_state drmcs;
++};
++
++static struct drm_root_cgroup_state root_drmcs;
++
++static inline struct drm_cgroup_state *
++css_to_drmcs(struct cgroup_subsys_state *css)
++{
++	return container_of(css, struct drm_cgroup_state, css);
++}
++
++static void drmcs_free(struct cgroup_subsys_state *css)
++{
++	struct drm_cgroup_state *drmcs = css_to_drmcs(css);
++
++	if (drmcs != &root_drmcs.drmcs)
++		kfree(drmcs);
++}
++
++static struct cgroup_subsys_state *
++drmcs_alloc(struct cgroup_subsys_state *parent_css)
++{
++	struct drm_cgroup_state *drmcs;
++
++	if (!parent_css) {
++		drmcs = &root_drmcs.drmcs;
++	} else {
++		drmcs = kzalloc(sizeof(*drmcs), GFP_KERNEL);
++		if (!drmcs)
++			return ERR_PTR(-ENOMEM);
++	}
++
++	return &drmcs->css;
++}
++
++struct cftype files[] = {
++	{ } /* Zero entry terminates. */
++};
++
++struct cgroup_subsys drm_cgrp_subsys = {
++	.css_alloc	= drmcs_alloc,
++	.css_free	= drmcs_free,
++	.early_init	= false,
++	.legacy_cftypes	= files,
++	.dfl_cftypes	= files,
++};
 -- 
 2.34.1
 
