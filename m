@@ -1,87 +1,80 @@
-From: Juri Lelli <juri.lelli@redhat.com>
-Subject: [PATCH v2 0/6] sched/deadline: cpuset: Rework DEADLINE bandwidth restoration
-Date: Wed,  3 May 2023 09:22:22 +0200
-Message-ID: <20230503072228.115707-1-juri.lelli@redhat.com>
+From: Juri Lelli <juri.lelli-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Subject: [PATCH v2 1/6] cgroup/cpuset: Rename functions dealing with DEADLINE accounting
+Date: Wed,  3 May 2023 09:22:23 +0200
+Message-ID: <20230503072228.115707-2-juri.lelli@redhat.com>
+References: <20230503072228.115707-1-juri.lelli@redhat.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1683098576;
+        s=mimecast20190719; t=1683098581;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:
-         content-transfer-encoding:content-transfer-encoding;
-        bh=IIZ/GCCJmx19uZ3mIOzJAELhL8g2Ju+C9RZzvBPp+14=;
-        b=UlD8BqzR8DFk0puuZ5Ptlirl9D9/L/DVHBLKqcTnNFKDtMFfm0OEWH4T5GtMUCkvRBzQHh
-        /S6TYuDVcPFEeU8nVxq5NL5ndbqUaZLq1x17aP/CyoAxuBgc6BGT0/wxl/pyPwTIxs/BK0
-        TZ5JqXCGle5be3/PRNlx5cJe0CQXp9Y=
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=FXQ0mcO+uCMP4DfjuxEbtb+zWtt0HFFweQAzf8+D5iw=;
+        b=hQ3eWJmrOwuodSiloy7tY/XktY318Cg8T0ZGVlSBEz6ZOm6q4dlHTD2T1OJNKhf5ul+xMQ
+        W0Redmnqm+EdRYXHelvVtBBZ1tnf2H7BYr7dufGnYIY+bTvUBvjdNRBEH1VN0faITLrgVd
+        KNpl34nWozTc1WjDD2Q6eqxs8Kpg1Lo=
+In-Reply-To: <20230503072228.115707-1-juri.lelli-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Peter Zijlstra <peterz@infradead.org>, Ingo Molnar <mingo@kernel.org>, Qais Yousef <qyousef@layalina.io>, Waiman Long <longman@redhat.com>, Tejun Heo <tj@kernel.org>, Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, Hao Luo <haoluo@google.com>
-Cc: Dietmar Eggemann <dietmar.eggemann@arm.com>, Steven Rostedt <rostedt@goodmis.org>, linux-kernel@vger.kernel.org, luca.abeni@santannapisa.it, claudio@evidence.eu.com, tommaso.cucinotta@santannapisa.it, bristot@redhat.com, mathieu.poirier@linaro.org, cgroups@vger.kernel.org, Vincent Guittot <vincent.guittot@linaro.org>, Wei Wang <wvw@google.com>, Rick Yiu <rickyiu@google.com>, Quentin Perret <qperret@google.com>, Heiko Carstens <hca@linux.ibm.com>, Vasily Gorbik <gor@linux.ibm.com>, Alexander Gordeev <agordeev@linux.ibm.com>, Sudeep Holla <sudeep.holla@arm.com>, Juri Lelli <juri.lelli@redhat.com>
+To: Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Ingo Molnar <mingo-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Qais Yousef <qyousef-wp2msK0BRk8tq7phqP6ubQ@public.gmane.org>, Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Hao Luo <haoluo-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Cc: Dietmar Eggemann <dietmar.eggemann-5wv7dgnIgG8@public.gmane.org>, Steven Rostedt <rostedt-nx8X9YLhiw1AfugRpC6u6w@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, luca.abeni-5rdYK369eBLQB0XuIGIEkQ@public.gmane.org, claudio-YOzL5CV4y4YG1A2ADO40+w@public.gmane.org, tommaso.cucinotta-5rdYK369eBLQB0XuIGIEkQ@public.gmane.org, bristot-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, mathieu.poirier-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Vincent Guittot <vincent.guittot-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, Wei Wang <wvw-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Rick Yiu <rickyiu-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Quentin Perret <qperret-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Heiko Carstens <hca-tEXmvtCZX7AybS5Ee8rs3A@public.gmane.org>, Vasily Gorbik <gor-tEXmvtCZX7AybS5Ee8rs3A@public.gmane.org>, Alexander Gordeev <agordeev-tEXmvtCZX7AybS5Ee8rs3A@public.gmane.org>, Sudeep Holla <sudeep.holla-5wv7dgnIgG8@public.gmane.org>, Juri Lelli <juri.lelli-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 
-Qais reported [1] that iterating over all tasks when rebuilding root
-domains for finding out which ones are DEADLINE and need their bandwidth
-correctly restored on such root domains can be a costly operation (10+
-ms delays on suspend-resume). He proposed we skip rebuilding root
-domains for certain operations, but that approach seemed arch specific
-and possibly prone to errors, as paths that ultimately trigger a rebuild
-might be quite convoluted (thanks Qais for spending time on this!).
+rebuild_root_domains() and update_tasks_root_domain() have neutral
+names, but actually deal with DEADLINE bandwidth accounting.
 
-This is v2 of an alternative approach (v1 at [3]) to fix the problem.
+Rename them to use 'dl_' prefix so that intent is more clear.
 
- 01/06 - Rename functions deadline with DEADLINE accounting (cleanup
-         suggested by Qais) - no functional change
- 02/06 - Bring back cpuset_mutex (so that we have write access to cpusets
-         from scheduler operations - and we also fix some problems
-         associated to percpu_cpuset_rwsem)
- 03/06 - Keep track of the number of DEADLINE tasks belonging to each cpuset
- 04/06 - Use this information to only perform the costly iteration if
-         DEADLINE tasks are actually present in the cpuset for which a
-         corresponding root domain is being rebuilt
- 05/06 - Create DL BW alloc, free & check overflow interface for bulk
-         bandwidth allocation/removal - no functional change 
- 06/06 - Fix bandwidth allocation handling for cgroup operation
-         involving multiple tasks
+No functional change.
 
-With respect to the v1 posting [3]
+Suggested-by: Qais Yousef <qyousef-wp2msK0BRk8tq7phqP6ubQ@public.gmane.org>
+Signed-off-by: Juri Lelli <juri.lelli-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+---
+ kernel/cgroup/cpuset.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
- 1 - rebase on top of Linus' tree as of today (865fdb08197e)
- 2 - move patch 6 to position 4 - Qais
-
-As the rebase needed some work, I decided to remove the tested and
-reviewed bys. Please take another look, just in case I messed something
-up.
-
-This set is also available from
-
-https://github.com/jlelli/linux.git deadline/rework-cpusets
-
-Best,
-Juri
-
-1 - https://lore.kernel.org/lkml/20230206221428.2125324-1-qyousef@layalina.io/
-2 - RFC https://lore.kernel.org/lkml/20230315121812.206079-1-juri.lelli@redhat.com/
-3 - v1  https://lore.kernel.org/lkml/20230329125558.255239-1-juri.lelli@redhat.com/
-
-Dietmar Eggemann (2):
-  sched/deadline: Create DL BW alloc, free & check overflow interface
-  cgroup/cpuset: Free DL BW in case can_attach() fails
-
-Juri Lelli (4):
-  cgroup/cpuset: Rename functions dealing with DEADLINE accounting
-  sched/cpuset: Bring back cpuset_mutex
-  sched/cpuset: Keep track of SCHED_DEADLINE task in cpusets
-  cgroup/cpuset: Iterate only if DEADLINE tasks are present
-
- include/linux/cpuset.h  |  12 +-
- include/linux/sched.h   |   4 +-
- kernel/cgroup/cgroup.c  |   4 +
- kernel/cgroup/cpuset.c  | 242 ++++++++++++++++++++++++++--------------
- kernel/sched/core.c     |  41 +++----
- kernel/sched/deadline.c |  67 ++++++++---
- kernel/sched/sched.h    |   2 +-
- 7 files changed, 244 insertions(+), 128 deletions(-)
-
+diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
+index e4ca2dd2b764..428ab46291e2 100644
+--- a/kernel/cgroup/cpuset.c
++++ b/kernel/cgroup/cpuset.c
+@@ -1066,7 +1066,7 @@ static int generate_sched_domains(cpumask_var_t **domains,
+ 	return ndoms;
+ }
+ 
+-static void update_tasks_root_domain(struct cpuset *cs)
++static void dl_update_tasks_root_domain(struct cpuset *cs)
+ {
+ 	struct css_task_iter it;
+ 	struct task_struct *task;
+@@ -1079,7 +1079,7 @@ static void update_tasks_root_domain(struct cpuset *cs)
+ 	css_task_iter_end(&it);
+ }
+ 
+-static void rebuild_root_domains(void)
++static void dl_rebuild_rd_accounting(void)
+ {
+ 	struct cpuset *cs = NULL;
+ 	struct cgroup_subsys_state *pos_css;
+@@ -1107,7 +1107,7 @@ static void rebuild_root_domains(void)
+ 
+ 		rcu_read_unlock();
+ 
+-		update_tasks_root_domain(cs);
++		dl_update_tasks_root_domain(cs);
+ 
+ 		rcu_read_lock();
+ 		css_put(&cs->css);
+@@ -1121,7 +1121,7 @@ partition_and_rebuild_sched_domains(int ndoms_new, cpumask_var_t doms_new[],
+ {
+ 	mutex_lock(&sched_domains_mutex);
+ 	partition_sched_domains_locked(ndoms_new, doms_new, dattr_new);
+-	rebuild_root_domains();
++	dl_rebuild_rd_accounting();
+ 	mutex_unlock(&sched_domains_mutex);
+ }
+ 
 -- 
 2.40.1
 
