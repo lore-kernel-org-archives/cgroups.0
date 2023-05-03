@@ -1,86 +1,48 @@
-From: Kent Overstreet <kent.overstreet-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>
-Subject: Re: [PATCH 00/40] Memory allocation profiling
-Date: Wed, 3 May 2023 13:51:23 -0400
-Message-ID: <ZFKfG7bVuOAk27yP@moria.home.lan>
-References: <20230501165450.15352-1-surenb@google.com>
- <ZFIMaflxeHS3uR/A@dhcp22.suse.cz>
- <ZFIOfb6/jHwLqg6M@moria.home.lan>
- <ZFISlX+mSx4QJDK6@dhcp22.suse.cz>
- <ZFIVtB8JyKk0ddA5@moria.home.lan>
- <ZFKNZZwC8EUbOLMv@slm.duckdns.org>
+From: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH v2 1/2] memcg: use seq_buf_do_printk() with mem_cgroup_print_oom_meminfo()
+Date: Wed, 3 May 2023 17:52:26 +0000
+Message-ID: <20230503175226.nyjmmbnohm6xxckd@google.com>
+References: <20230428132406.2540811-1-yosryahmed@google.com> <20230428132406.2540811-2-yosryahmed@google.com>
 Mime-Version: 1.0
-Return-path: <linux-modules-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
-        t=1683136295;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=/8YhiaEwKxHE5nN6YeY/72JOBihWRYRCXK0QvEQ+Qv4=;
-        b=Jly2gSOTge1iO+BeCp9KJ0ZW8ODyKqKj/7GANaWuFp3dPaClfWwyMC5BLYot5DJO7a2FFf
-        YyYI10zIBhCz11qKXQtTYVH3uRaoKIrlrIHjDrmNc87rMsL2sQdREfYAXhrBfufag5HVF+
-        u8SjeEjj/nsMRlWo9oQA/L4PFnEpZqQ=
-Content-Disposition: inline
-In-Reply-To: <ZFKNZZwC8EUbOLMv-NiLfg/pYEd1N0TnZuCh8vA@public.gmane.org>
-List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20221208; t=1683136348; x=1685728348;
+        h=cc:to:from:subject:message-id:references:mime-version:in-reply-to
+         :date:from:to:cc:subject:date:message-id:reply-to;
+        bh=RZYSjSUR1TVNLCONU/ktPYm4b5B8g2ry+YtlqDqVDwA=;
+        b=06jHQvfsD3SDUJMSu6ULA+Lqi2Rheb3urP5pez8MV1dafSxYy0/iecp7i3W9YM8kw0
+         Z8sDp7LJx6LxY6887Lp9tpfA2PRnZ+5qsmf/2ne9kOhMV6oNSgGhzuXqwMC3i6HQpw8p
+         D8X9p8yhzKfJ/bgSYEC5uIPGefibu0HxTKSIOIWINb3PnNySA5vrkGDdfiFHPxJVa3eg
+         fzeTNSZPX/rk1YdIOuq6L93DdQc6YUPO6bt/7O5Wu9R3mWPc7MGSncLmqdQi7vfNKPNv
+         eNUJWumFkZPqhtINkPq+WqdkN0g7gmfclLzeSV9JpuQEB/g+6NsZV9V3lB08IqjbYy4P
+         Yf/Q==
+In-Reply-To: <20230428132406.2540811-2-yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+List-ID: <cgroups.vger.kernel.org>
 Content-Transfer-Encoding: 7bit
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>, Suren Baghdasaryan <surenb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, vbabka-AlSwsSmVLrQ@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org, mgorman-l3A5Bk7waGM@public.gmane.org, dave-h16yJtLeMjHk1uMJSBkQmQ@public.gmane.org, willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, liam.howlett-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org, corbet-T1hC0tSOHrs@public.gmane.org, void-gq6j2QGBifHby3iVrkZq2A@public.gmane.org, peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, juri.lelli-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, ldufour-tEXmvtCZX7AybS5Ee8rs3A@public.gmane.org, catalin.marinas-5wv7dgnIgG8@public.gmane.org, will-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, arnd-r2nGTMty4D4@public.gmane.org, tglx-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org, mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, dave.hansen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org, x86-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, peterx-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, david-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, mcgrof-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, masahiroy-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, nathan-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, dennis-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, muchun.song-fxUVXftIFDnyG1zEObXtfA@public.gmane.org, rppt-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, paulmck-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, pasha.tatashin-2EmBfe737+LQT0dZR+AlfA@public.gmane.org, yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, yuzhao-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, dhowells-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org
+To: Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Muchun Song <muchun.song-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Sergey Senozhatsky <senozhatsky-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>, Steven Rostedt <rostedt-nx8X9YLhiw1AfugRpC6u6w@public.gmane.org>, Petr Mladek <pmladek-IBi9RG/b67k@public.gmane.org>, Chris Li <chrisl-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
 
-On Wed, May 03, 2023 at 06:35:49AM -1000, Tejun Heo wrote:
-> Hello, Kent.
+On Fri, Apr 28, 2023 at 01:24:05PM +0000, Yosry Ahmed wrote:
+> Currently, we format all the memcg stats into a buffer in
+> mem_cgroup_print_oom_meminfo() and use pr_info() to dump it to the logs.
+> However, this buffer is large in size. Although it is currently working
+> as intended, ther is a dependency between the memcg stats buffer and the
+> printk record size limit.
 > 
-> On Wed, May 03, 2023 at 04:05:08AM -0400, Kent Overstreet wrote:
-> > No, we're still waiting on the tracing people to _demonstrate_, not
-> > claim, that this is at all possible in a comparable way with tracing. 
+> If we add more stats in the future and the buffer becomes larger than
+> the printk record size limit, or if the prink record size limit is
+> reduced, the logs may be truncated.
 > 
-> So, we (meta) happen to do stuff like this all the time in the fleet to hunt
-> down tricky persistent problems like memory leaks, ref leaks, what-have-you.
-> In recent kernels, with kprobe and BPF, our ability to debug these sorts of
-> problems has improved a great deal. Below, I'm attaching a bcc script I used
-> to hunt down, IIRC, a double vfree. It's not exactly for a leak but leaks
-> can follow the same pattern.
+> It is safer to use seq_buf_do_printk(), which will automatically break
+> up the buffer at line breaks and issue small printk() calls.
 > 
-> There are of course some pros and cons to this approach:
+> Refactor the code to move the seq_buf from memory_stat_format() to its
+> callers, and use seq_buf_do_printk() to print the seq_buf in
+> mem_cgroup_print_oom_meminfo().
 > 
-> Pros:
-> 
-> * The framework doesn't really have any runtime overhead, so we can have it
->   deployed in the entire fleet and debug wherever problem is.
-> 
-> * It's fully flexible and programmable which enables non-trivial filtering
->   and summarizing to be done inside kernel w/ BPF as necessary, which is
->   pretty handy for tracking high frequency events.
-> 
-> * BPF is pretty performant. Dedicated built-in kernel code can do better of
->   course but BPF's jit compiled code & its data structures are fast enough.
->   I don't remember any time this was a problem.
-> 
-> Cons:
-> 
-> * BPF has some learning curve. Also the fact that what it provides is a wide
->   open field rather than something scoped out for a specific problem can
->   make it seem a bit daunting at the beginning.
-> 
-> * Because tracking starts when the script starts running, it doesn't know
->   anything which has happened upto that point, so you gotta pay attention to
->   handling e.g. handling frees which don't match allocs. It's kinda annoying
->   but not a huge problem usually. There are ways to build in BPF progs into
->   the kernel and load it early but I haven't experiemnted with it yet
->   personally.
-> 
-> I'm not necessarily against adding dedicated memory debugging mechanism but
-> do wonder whether the extra benefits would be enough to justify the code and
-> maintenance overhead.
-> 
-> Oh, a bit of delta but for anyone who's more interested in debugging
-> problems like this, while I tend to go for bcc
-> (https://github.com/iovisor/bcc) for this sort of problems. Others prefer to
-> write against libbpf directly or use bpftrace
-> (https://github.com/iovisor/bpftrace).
+> Signed-off-by: Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+> Acked-by: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
+> Reviewed-by: Sergey Senozhatsky <senozhatsky-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>
 
-Do you have example output?
-
-TBH I'm skeptical that it's even possible to do full memory allocation
-profiling with tracing/bpf, due to recursive memory allocations and
-needing an index of outstanding allcations.
+Acked-by: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
