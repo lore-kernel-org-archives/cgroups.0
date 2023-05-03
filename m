@@ -1,48 +1,84 @@
-From: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH v2 1/2] memcg: use seq_buf_do_printk() with mem_cgroup_print_oom_meminfo()
-Date: Wed, 3 May 2023 17:52:26 +0000
-Message-ID: <20230503175226.nyjmmbnohm6xxckd@google.com>
-References: <20230428132406.2540811-1-yosryahmed@google.com> <20230428132406.2540811-2-yosryahmed@google.com>
+From: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH v2 1/6] cgroup/cpuset: Rename functions dealing with
+ DEADLINE accounting
+Date: Wed, 3 May 2023 13:54:26 -0400
+Message-ID: <a3011e82-9e44-9292-dd51-e557d31930c2@redhat.com>
+References: <20230503072228.115707-1-juri.lelli@redhat.com>
+ <20230503072228.115707-2-juri.lelli@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20221208; t=1683136348; x=1685728348;
-        h=cc:to:from:subject:message-id:references:mime-version:in-reply-to
-         :date:from:to:cc:subject:date:message-id:reply-to;
-        bh=RZYSjSUR1TVNLCONU/ktPYm4b5B8g2ry+YtlqDqVDwA=;
-        b=06jHQvfsD3SDUJMSu6ULA+Lqi2Rheb3urP5pez8MV1dafSxYy0/iecp7i3W9YM8kw0
-         Z8sDp7LJx6LxY6887Lp9tpfA2PRnZ+5qsmf/2ne9kOhMV6oNSgGhzuXqwMC3i6HQpw8p
-         D8X9p8yhzKfJ/bgSYEC5uIPGefibu0HxTKSIOIWINb3PnNySA5vrkGDdfiFHPxJVa3eg
-         fzeTNSZPX/rk1YdIOuq6L93DdQc6YUPO6bt/7O5Wu9R3mWPc7MGSncLmqdQi7vfNKPNv
-         eNUJWumFkZPqhtINkPq+WqdkN0g7gmfclLzeSV9JpuQEB/g+6NsZV9V3lB08IqjbYy4P
-         Yf/Q==
-In-Reply-To: <20230428132406.2540811-2-yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-List-ID: <cgroups.vger.kernel.org>
 Content-Transfer-Encoding: 7bit
-To: Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Muchun Song <muchun.song-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Sergey Senozhatsky <senozhatsky-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>, Steven Rostedt <rostedt-nx8X9YLhiw1AfugRpC6u6w@public.gmane.org>, Petr Mladek <pmladek-IBi9RG/b67k@public.gmane.org>, Chris Li <chrisl-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1683136476;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=cKPUL7FZWA4e+itJ2WAtXLunhkYaY3Bk3M9ZOMdUVpQ=;
+        b=hbM85wjG5OqYg/6yF//dDtyBCiqICqD/YvlKsnu2vkIU53VC4mr/94yTYdIqe8adof3ILw
+        JnLfoPEMHfzb8S9I9q9Vlb3+wXIK5eaq+RWYMDqaZPUAFO2BsdOQ2MSYRjqPvMkmr5FyLQ
+        GpHV8Cmq0jxDbEmuSUBTIGwsh7eBmCE=
+Content-Language: en-US
+In-Reply-To: <20230503072228.115707-2-juri.lelli-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+List-ID: <cgroups.vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"; format="flowed"
+To: Juri Lelli <juri.lelli-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Ingo Molnar <mingo-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Qais Yousef <qyousef-wp2msK0BRk8tq7phqP6ubQ@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Hao Luo <haoluo-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Cc: Dietmar Eggemann <dietmar.eggemann-5wv7dgnIgG8@public.gmane.org>, Steven Rostedt <rostedt-nx8X9YLhiw1AfugRpC6u6w@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, luca.abeni-5rdYK369eBLQB0XuIGIEkQ@public.gmane.org, claudio-YOzL5CV4y4YG1A2ADO40+w@public.gmane.org, tommaso.cucinotta-5rdYK369eBLQB0XuIGIEkQ@public.gmane.org, bristot-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, mathieu.poirier-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Vincent Guittot <vincent.guittot-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, Wei Wang <wvw-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Rick Yiu <rickyiu-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Quentin Perret <qperret-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Heiko Carstens <hca-tEXmvtCZX7AybS5Ee8rs3A@public.gmane.org>, Vasily Gorbik <gor-tEXmvtCZX7AybS5Ee8rs3A@public.gmane.org>, Alexander Gordeev <agordeev-tEXmvtCZX7AybS5Ee8rs3A@public.gmane.org>, Sudeep Holla <sudeep.holla-5wv7dgnIgG8@public.gmane.org>
 
-On Fri, Apr 28, 2023 at 01:24:05PM +0000, Yosry Ahmed wrote:
-> Currently, we format all the memcg stats into a buffer in
-> mem_cgroup_print_oom_meminfo() and use pr_info() to dump it to the logs.
-> However, this buffer is large in size. Although it is currently working
-> as intended, ther is a dependency between the memcg stats buffer and the
-> printk record size limit.
-> 
-> If we add more stats in the future and the buffer becomes larger than
-> the printk record size limit, or if the prink record size limit is
-> reduced, the logs may be truncated.
-> 
-> It is safer to use seq_buf_do_printk(), which will automatically break
-> up the buffer at line breaks and issue small printk() calls.
-> 
-> Refactor the code to move the seq_buf from memory_stat_format() to its
-> callers, and use seq_buf_do_printk() to print the seq_buf in
-> mem_cgroup_print_oom_meminfo().
-> 
-> Signed-off-by: Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-> Acked-by: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
-> Reviewed-by: Sergey Senozhatsky <senozhatsky-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>
 
-Acked-by: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+On 5/3/23 03:22, Juri Lelli wrote:
+> rebuild_root_domains() and update_tasks_root_domain() have neutral
+> names, but actually deal with DEADLINE bandwidth accounting.
+>
+> Rename them to use 'dl_' prefix so that intent is more clear.
+>
+> No functional change.
+>
+> Suggested-by: Qais Yousef <qyousef-wp2msK0BRk8tq7phqP6ubQ@public.gmane.org>
+> Signed-off-by: Juri Lelli <juri.lelli-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+> ---
+>   kernel/cgroup/cpuset.c | 8 ++++----
+>   1 file changed, 4 insertions(+), 4 deletions(-)
+>
+> diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
+> index e4ca2dd2b764..428ab46291e2 100644
+> --- a/kernel/cgroup/cpuset.c
+> +++ b/kernel/cgroup/cpuset.c
+> @@ -1066,7 +1066,7 @@ static int generate_sched_domains(cpumask_var_t **domains,
+>   	return ndoms;
+>   }
+>   
+> -static void update_tasks_root_domain(struct cpuset *cs)
+> +static void dl_update_tasks_root_domain(struct cpuset *cs)
+>   {
+>   	struct css_task_iter it;
+>   	struct task_struct *task;
+> @@ -1079,7 +1079,7 @@ static void update_tasks_root_domain(struct cpuset *cs)
+>   	css_task_iter_end(&it);
+>   }
+>   
+> -static void rebuild_root_domains(void)
+> +static void dl_rebuild_rd_accounting(void)
+>   {
+>   	struct cpuset *cs = NULL;
+>   	struct cgroup_subsys_state *pos_css;
+> @@ -1107,7 +1107,7 @@ static void rebuild_root_domains(void)
+>   
+>   		rcu_read_unlock();
+>   
+> -		update_tasks_root_domain(cs);
+> +		dl_update_tasks_root_domain(cs);
+>   
+>   		rcu_read_lock();
+>   		css_put(&cs->css);
+> @@ -1121,7 +1121,7 @@ partition_and_rebuild_sched_domains(int ndoms_new, cpumask_var_t doms_new[],
+>   {
+>   	mutex_lock(&sched_domains_mutex);
+>   	partition_sched_domains_locked(ndoms_new, doms_new, dattr_new);
+> -	rebuild_root_domains();
+> +	dl_rebuild_rd_accounting();
+>   	mutex_unlock(&sched_domains_mutex);
+>   }
+>   
+Reviewed-by: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+
