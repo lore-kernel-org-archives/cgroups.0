@@ -1,77 +1,37 @@
-From: Kent Overstreet <kent.overstreet@linux.dev>
-Subject: Re: [PATCH 00/40] Memory allocation profiling
-Date: Wed, 3 May 2023 12:03:11 -0400
-Message-ID: <ZFKFv6F3pRtnAWSS@moria.home.lan>
+From: Steven Rostedt <rostedt-nx8X9YLhiw1AfugRpC6u6w@public.gmane.org>
+Subject: Re: [PATCH 19/40] change alloc_pages name in dma_map_ops to avoid
+ name conflicts
+Date: Wed, 3 May 2023 12:25:29 -0400
+Message-ID: <20230503122529.44ef2d56@gandalf.local.home>
 References: <20230501165450.15352-1-surenb@google.com>
- <ZFIMaflxeHS3uR/A@dhcp22.suse.cz>
- <ZFIOfb6/jHwLqg6M@moria.home.lan>
- <ZFISlX+mSx4QJDK6@dhcp22.suse.cz>
- <20230503115051.30b8a97f@meshulam.tesarici.cz>
- <ZFIv+30UH7+ySCZr@moria.home.lan>
- <25a1ea786712df5111d7d1db42490624ac63651e.camel@HansenPartnership.com>
- <ZFJ9hlQ3ZIU1XYCY@moria.home.lan>
- <f57b77b0-74da-41a3-a3bc-969ded4e0410@lucifer.local>
+        <20230501165450.15352-20-surenb@google.com>
 Mime-Version: 1.0
-Return-path: <linux-doc-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
-        t=1683129803;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=MZ0TWwv0Mpu9IjWcxRCWjJEEQ++kpZPmKK/VcTJkl7k=;
-        b=FpGctQbM8W0rfqOGZOmSKFnYLpxrclq3L7E+rrXnS/9nXRbb9R5M7EzAN6wvhioCICdsHM
-        WM800GTR3zcYRzwg97hBrpkz/9ZsEWI3RL80N/2zwrpf92rM0McRD43/F36Q+ZHI2sCc0L
-        g2qQO4EQowCmjkSmuSEX+YK+w94lB2M=
-Content-Disposition: inline
-In-Reply-To: <f57b77b0-74da-41a3-a3bc-969ded4e0410@lucifer.local>
+Content-Transfer-Encoding: 7bit
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <20230501165450.15352-20-surenb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Lorenzo Stoakes <lstoakes@gmail.com>
-Cc: James Bottomley <James.Bottomley@hansenpartnership.com>, Petr =?utf-8?B?VGVzYcWZw61r?= <petr@tesarici.cz>, Michal Hocko <mhocko@suse.com>, Suren Baghdasaryan <surenb@google.com>, akpm@linux-foundation.org, vbabka@suse.cz, hannes@cmpxchg.org, roman.gushchin@linux.dev, mgorman@suse.de, dave@stgolabs.net, willy@infradead.org, liam.howlett@oracle.com, corbet@lwn.net, void@manifault.com, peterz@infradead.org, juri.lelli@redhat.com, ldufour@linux.ibm.com, catalin.marinas@arm.com, will@kernel.org, arnd@arndb.de, tglx@linutronix.de, mingo@redhat.com, dave.hansen@linux.intel.com, x86@kernel.org, peterx@redhat.com, david@redhat.com, axboe@kernel.dk, mcgrof@kernel.org, masahiroy@kernel.org, nathan@kernel.org, dennis@kernel.org, tj@kernel.org, muchun.song@linux.dev, rppt@kernel.org, pa
+To: Suren Baghdasaryan <surenb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Cc: akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, kent.overstreet-fxUVXftIFDnyG1zEObXtfA@public.gmane.org, mhocko-IBi9RG/b67k@public.gmane.org, vbabka-AlSwsSmVLrQ@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org, mgorman-l3A5Bk7waGM@public.gmane.org, dave-h16yJtLeMjHk1uMJSBkQmQ@public.gmane.org, willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, liam.howlett-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org, corbet-T1hC0tSOHrs@public.gmane.org, void-gq6j2QGBifHby3iVrkZq2A@public.gmane.org, peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, juri.lelli-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, ldufour-tEXmvtCZX7AybS5Ee8rs3A@public.gmane.org, catalin.marinas-5wv7dgnIgG8@public.gmane.org, will-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, arnd-r2nGTMty4D4@public.gmane.org, tglx-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org, mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, dave.hansen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org, x86-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, peterx-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, david-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, mcgrof-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, masahiroy-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, nathan-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, dennis-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, muchun.song-fxUVXftIFDnyG1zEObXtfA@public.gmane.org, rppt-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, paulmck-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, pasha.tatashin-2EmBfe737+LQT0dZR+AlfA@public.gmane.org, yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, yuzhao-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, dhowells-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, andreyknvl@gmail.
 
-On Wed, May 03, 2023 at 04:37:36PM +0100, Lorenzo Stoakes wrote:
-> As an outside observer, I can assure you that absolutely came across as a
-> personal attack, and the precise kind that puts people off from
-> contributing. I should know as a hobbyist contributor myself.
-> 
-> > If I was mistaken I do apologize, but lately I've run across quite a lot
-> > of people offering review feedback to patches I post that turn out to
-> > have 0 or 10 patches in the kernel, and - to be blunt - a pattern of
-> > offering feedback in strong language with a presumption of experience
-> > that takes a lot to respond to adequately on a technical basis.
-> >
-> 
-> I, who may very well not merit being considered a contributor of
-> significant merit in your view, have had such 'drive-by' commentary on some
-> of my patches by precisely this type of person, and at no time felt the
-> need to question whether they were a true Scotsman or not. It's simply not
-> productive.
-> 
-> > I don't think a suggestion to spend a bit more time reading code instead
-> > of speculating is out of order! We could all, put more effort into how
-> > we offer review feedback.
-> 
-> It's the means by which you say it that counts for everything. If you feel
-> the technical comments might not be merited on a deeper level, perhaps ask
-> a broader question, or even don't respond at all? There are other means
-> available.
-> 
-> It's remarkable the impact comments like the one you made can have on
-> contributors, certainly those of us who are not maintainers and are
-> naturally plagued with imposter syndrome, so I would ask you on a human
-> level to try to be a little more considerate.
-> 
-> By all means address technical issues as robustly as you feel appropriate,
-> that is after all the purpose of code review, but just take a step back and
-> perhaps find the 'cuddlier' side of yourself when not addressing technical
-> things :)
+On Mon,  1 May 2023 09:54:29 -0700
+Suren Baghdasaryan <surenb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org> wrote:
 
-Thanks for your reply, it's level headed and appreciated.
+> After redefining alloc_pages, all uses of that name are being replaced.
+> Change the conflicting names to prevent preprocessor from replacing them
+> when it's not intended.
 
-But I personally value directness, and I see quite a few people in this
-thread going all out on the tone policing - but look, without the
-directness the confusion (that Petr is not actually a new contributor)
-never would've been cleared up.
+Note, every change log should have enough information in it to know why it
+is being done. This says what the patch does, but does not fully explain
+"why". It should never be assumed that one must read other patches to get
+the context. A year from now, investigating git history, this may be the
+only thing someone sees for why this change occurred.
 
-Food for thought, perhaps?
+The "why" above is simply "prevent preprocessor from replacing them
+when it's not intended". What does that mean?
+
+-- Steve
+
+
+> 
+> Signed-off-by: Suren Baghdasaryan <surenb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
