@@ -1,85 +1,101 @@
-From: =?UTF-8?Q?Thomas_Hellstr=c3=b6m?= <thomas.hellstrom@linux.intel.com>
-Subject: Re: [Intel-xe] [RFC PATCH 3/4] drm/ttm: Handle -EAGAIN
- in ttm_resource_alloc as -ENOSPC.
-Date: Wed, 3 May 2023 11:11:32 +0200
-Message-ID: <888841c4-7bd4-8174-7786-033715c995c6@linux.intel.com>
-References: <20230503083500.645848-1-maarten.lankhorst@linux.intel.com>
- <20230503083500.645848-4-maarten.lankhorst@linux.intel.com>
+From: Andy Shevchenko <andy.shevchenko@gmail.com>
+Subject: Re: [PATCH 01/40] lib/string_helpers: Drop space in string_get_size's output
+Date: Wed, 3 May 2023 12:12:12 +0300
+Message-ID: <CAHp75Vd_VMOh1zxJvr0KqhxYBXAU1X+Ax7YA1sJ0G_abEpn-Dg@mail.gmail.com>
+References: <20230501165450.15352-2-surenb@google.com> <ouuidemyregstrijempvhv357ggp4tgnv6cijhasnungsovokm@jkgvyuyw2fti>
+ <ZFAUj+Q+hP7cWs4w@moria.home.lan> <b6b472b65b76e95bb4c7fc7eac1ee296fdbb64fd.camel@HansenPartnership.com>
+ <ZFCA2FF+9MI8LI5i@moria.home.lan> <CAHp75VdK2bgU8P+-np7ScVWTEpLrz+muG-R15SXm=ETXnjaiZg@mail.gmail.com>
+ <ZFCsAZFMhPWIQIpk@moria.home.lan> <CAHp75VdvRshCthpFOjtmajVgCS_8YoJBGbLVukPwU+t79Jgmww@mail.gmail.com>
+ <ZFHB2ATrPIsjObm/@moria.home.lan> <CAHp75VdH07gTYCPvp2FRjnWn17BxpJCcFBbFPpjpGxBt1B158A@mail.gmail.com>
+ <ZFIJeSv9xn9qnMzg@moria.home.lan>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <intel-gfx-bounces@lists.freedesktop.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
- d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
- t=1683105101; x=1714641101;
- h=message-id:date:mime-version:subject:to:cc:references:
- from:in-reply-to:content-transfer-encoding;
- bh=yZdDxF7eM2/0DaJdrpLaz+vSoS07hfHOMx2AFF1OeTM=;
- b=ZlxfqmhP0GtMqNps8JIe86VXSChnecBASJBRT3GqdYvqhyt3l9UZIEaT
- 7CeKI7BYZn8r3xQpZuQaJEJuvN7Myj2J96SjWcXjinpwBz5uqeDHgvOpP
- wxV9Up3o9bH3sxZnpQpVoi4hQqQ+vlCU5PJ+pT0Mc+VxbnkSlj5o4l6GX
- cBhNDdHc7ROhG5eoeMs99EIZKXV4VuWgQxYg7wBBX9FpQH4m88roiPFdv
- HDDElvg3hIKx7XofGIgotHHnJiDsjkJiiE/2jHhq++wQY7kUAetfj55D/
- UlcTcEWTFrYzOz7NJgd8pQEz72A5+TZAJ3n5QwYbuXkqpKRflSHz4F4Yr Q==;
-Content-Language: en-US
-In-Reply-To: <20230503083500.645848-4-maarten.lankhorst@linux.intel.com>
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.freedesktop.org/mailman/options/intel-gfx>,
- <mailto:intel-gfx-request@lists.freedesktop.org?subject=unsubscribe>
-List-Archive: <https://lists.freedesktop.org/archives/intel-gfx>
-List-Post: <mailto:intel-gfx@lists.freedesktop.org>
-List-Help: <mailto:intel-gfx-request@lists.freedesktop.org?subject=help>
-List-Subscribe: <https://lists.freedesktop.org/mailman/listinfo/intel-gfx>,
- <mailto:intel-gfx-request@lists.freedesktop.org?subject=subscribe>
-Errors-To: intel-gfx-bounces@lists.freedesktop.org
-Sender: "Intel-gfx" <intel-gfx-bounces@lists.freedesktop.org>
-Content-Type: text/plain; charset="us-ascii"; format="flowed"
-To: Maarten Lankhorst <maarten.lankhorst@linux.intel.com>, dri-devel@lists.freedesktop.org, cgroups@vger.kernel.org, intel-xe@lists.freedesktop.org
-Cc: Daniel Vetter <daniel@ffwll.ch>, Zefan Li <lizefan.x@bytedance.com>, intel-gfx@lists.freedesktop.org, linux-kernel@vger.kernel.org, amd-gfx@lists.freedesktop.org, Maxime Ripard <mripard@kernel.org>, Thomas Zimmermann <tzimmermann@suse.de>, Johannes Weiner <hannes@cmpxchg.org>, Tejun Heo <tj@kernel.org>, David Airlie <airlied@gmail.com>
+Content-Transfer-Encoding: quoted-printable
+Return-path: <linux-arch-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20221208; t=1683105170; x=1685697170;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=TEZd+b8sulXt8fKAN8kz+Gm51fXRGcBOvDO84eUPrqA=;
+        b=lkpnSWbImRhXpMdXf/j2tYcHtARa7pZxpe80UwOhD4R61KpJDN5E6c3vkOZJZtEsdd
+         NIOFyi6+CcEllvCmz+ezBqynxF+o1JnKK9z/EV67UWGPh2kFZbUVxyRHZCZkw1kqq8rz
+         D1ODfYDy+ZvYfj3AH/q3S+H4OrTddDujLMLoFoZBIeqfcAukFwbiQa/sO0taRXV/GD4U
+         O5s1H1vUGlkYsqkokTGq0Ace+9Jt9tMQ9MhYfRBameD9A6V7QtQlcyepsIhLTlDMhvcT
+         QESiwW/ebN8bNURL5Wk9400Ojw9jq2OZaVXEW9BBl9Ohxc4ib4YptZaU3URY4a45BJzR
+         laiQ==
+In-Reply-To: <ZFIJeSv9xn9qnMzg@moria.home.lan>
+List-ID: <cgroups.vger.kernel.org>
+Content-Type: text/plain; charset="utf-8"
+To: Kent Overstreet <kent.overstreet@linux.dev>
+Cc: James Bottomley <James.Bottomley@hansenpartnership.com>, Suren Baghdasaryan <surenb@google.com>, akpm@linux-foundation.org, mhocko@suse.com, vbabka@suse.cz, hannes@cmpxchg.org, roman.gushchin@linux.dev, mgorman@suse.de, willy@infradead.org, liam.howlett@oracle.com, corbet@lwn.net, void@manifault.com, peterz@infradead.org, juri.lelli@redhat.com, ldufour@linux.ibm.com, catalin.marinas@arm.com, will@kernel.org, arnd@arndb.de, tglx@linutronix.de, mingo@redhat.com, dave.hansen@linux.intel.com, x86@kernel.org, peterx@redhat.com, david@redhat.com, axboe@kernel.dk, mcgrof@kernel.org, masahiroy@kernel.org, nathan@kernel.org, dennis@kernel.org, tj@kernel.org, muchun.song@linux.dev, rppt@kernel.org, paulmck@kernel.org, pasha.tatashin@soleen.com, yosryahmed@google.com, yuzhao@google.com, dhowe
 
-Hi, Maarten
-
-On 5/3/23 10:34, Maarten Lankhorst wrote:
-> This allows the drm cgroup controller to return no space is available..
+On Wed, May 3, 2023 at 10:13=E2=80=AFAM Kent Overstreet
+<kent.overstreet@linux.dev> wrote:
+> On Wed, May 03, 2023 at 09:30:11AM +0300, Andy Shevchenko wrote:
+> > On Wed, May 3, 2023 at 5:07=E2=80=AFAM Kent Overstreet
+> > <kent.overstreet@linux.dev> wrote:
+> > > On Tue, May 02, 2023 at 06:19:27PM +0300, Andy Shevchenko wrote:
+> > > > On Tue, May 2, 2023 at 9:22=E2=80=AFAM Kent Overstreet
+> > > > <kent.overstreet@linux.dev> wrote:
+> > > > > On Tue, May 02, 2023 at 08:33:57AM +0300, Andy Shevchenko wrote:
+> > > > > > Actually instead of producing zillions of variants, do a %p ext=
+ension
+> > > > > > to the printf() and that's it. We have, for example, %pt with T=
+ and
+> > > > > > with space to follow users that want one or the other variant. =
+Same
+> > > > > > can be done with string_get_size().
+> > > > >
+> > > > > God no.
+> > > >
+> > > > Any elaboration what's wrong with that?
+> > >
+> > > I'm really not a fan of %p extensions in general (they are what peopl=
+e
+> > > reach for because we can't standardize on a common string output API)=
+,
+> >
+> > The whole story behind, for example, %pt is to _standardize_ the
+> > output of the same stanza in the kernel.
 >
-> XXX: This is a hopeless simplification that changes behavior, and
-> returns -ENOSPC even if we could evict ourselves from the current
-> cgroup.
+> Wtf does this have to do with the rest of the discussion? The %p thing
+> seems like a total non sequitar and a distraction.
 >
-> Ideally, the eviction code becomes cgroup aware, and will force eviction
-> from the current cgroup or its parents.
+> I'm not getting involved with that. All I'm interested in is fixing the
+> memory allocation profiling output to make it more usable.
 >
-> Signed-off-by: Maarten Lankhorst <maarten.lankhorst@linux.intel.com>
-
-Thinking of the shrinker analogy, do non-cgroup aware shrinkers just 
-shrink blindly or do they reject shrinking like this patch when a cgroup 
-limit is reached?
-
-/Thomas
-
-
-> ---
->   drivers/gpu/drm/ttm/ttm_bo.c | 4 +++-
->   1 file changed, 3 insertions(+), 1 deletion(-)
+> > > but when we'd be passing it bare integers the lack of type safety wou=
+ld
+> > > be a particularly big footgun.
+> >
+> > There is no difference to any other place in the kernel where we can
+> > shoot into our foot.
 >
-> diff --git a/drivers/gpu/drm/ttm/ttm_bo.c b/drivers/gpu/drm/ttm/ttm_bo.c
-> index bd5dae4d1624..e057d5d8f09a 100644
-> --- a/drivers/gpu/drm/ttm/ttm_bo.c
-> +++ b/drivers/gpu/drm/ttm/ttm_bo.c
-> @@ -731,6 +731,8 @@ static int ttm_bo_mem_force_space(struct ttm_buffer_object *bo,
->   		ret = ttm_resource_alloc(bo, place, mem);
->   		if (likely(!ret))
->   			break;
-> +		if (ret == -EAGAIN)
-> +			return -ENOSPC;
->   		if (unlikely(ret != -ENOSPC))
->   			return ret;
->   		ret = ttm_mem_evict_first(bdev, man, place, ctx,
-> @@ -783,7 +785,7 @@ int ttm_bo_mem_space(struct ttm_buffer_object *bo,
->   
->   		type_found = true;
->   		ret = ttm_resource_alloc(bo, place, mem);
-> -		if (ret == -ENOSPC)
-> +		if (ret == -ENOSPC || ret == -EAGAIN)
->   			continue;
->   		if (unlikely(ret))
->   			goto error;
+> Yeah, no, absolutely not. Passing different size integers to
+> string_get_size() is fine; passing pointers to different size integers
+> to a %p extension will explode and the compiler won't be able to warn.
+
+This is another topic. Yes, there is a discussion to have a compiler
+plugin to check this.
+
+> > > > God no for zillion APIs for almost the same. Today you want space,
+> > > > tomorrow some other (special) delimiter.
+> > >
+> > > No, I just want to delete the space and output numbers the same way
+> > > everyone else does. And if we are stuck with two string_get_size()
+> > > functions, %p extensions in no way improve the situation.
+> >
+> > I think it's exactly for the opposite, i.e. standardize that output
+> > once and for all.
+>
+> So, are you dropping your NACK then, so we can standardize the kernel on
+> the way everything else does it?
+
+No, you are breaking existing users. The NAK stays.
+The whole discussion after that is to make the way on how users can
+utilize your format and existing format without multiplying APIs.
+
+
+--=20
+With Best Regards,
+Andy Shevchenko
