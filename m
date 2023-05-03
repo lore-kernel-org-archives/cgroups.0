@@ -1,45 +1,44 @@
-From: =?UTF-8?q?Michal=20Koutn=C3=BD?= <mkoutny-IBi9RG/b67k@public.gmane.org>
-Subject: [RFC PATCH] cgroup: Return error when attempting to migrate a zombie process
-Date: Wed,  3 May 2023 14:53:59 +0200
-Message-ID: <20230503125359.14789-1-mkoutny@suse.com>
+From: Steven Rostedt <rostedt@goodmis.org>
+Subject: Re: [PATCH 00/40] Memory allocation profiling
+Date: Wed, 3 May 2023 09:21:28 -0400
+Message-ID: <20230503092128.1a120845@gandalf.local.home>
+References: <20230501165450.15352-1-surenb@google.com>
+        <ZFIMaflxeHS3uR/A@dhcp22.suse.cz>
+        <ZFIOfb6/jHwLqg6M@moria.home.lan>
+        <ZFISlX+mSx4QJDK6@dhcp22.suse.cz>
+        <ZFIVtB8JyKk0ddA5@moria.home.lan>
 Mime-Version: 1.0
-Content-Transfer-Encoding: base64
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
-        t=1683118442; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding;
-        bh=XGQuVbsJSpb3XLS+PmIsQvClRUbeKXxErey9Ewqz9fM=;
-        b=chZi2O4e9/GB1oKRKC9Hfqkl6IfrkSSPGMUBfDu9Vj7bOqk3o22tv2oyX3AvbbHqWiE8xK
-        FQGsfFkRsAvGEXzIwnGGKoI7/5atVK12eFnEpLC8iBeRSvv6QsESycZXHZ6S2Wa/i/OSIU
-        OexiNAKjs9f7vG6vfdJfQ4anBsioP8M=
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-arch-owner@vger.kernel.org>
+In-Reply-To: <ZFIVtB8JyKk0ddA5@moria.home.lan>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="macroman"
-To: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Benjamin Berg <benjamin-cdvu00un1VgdHxzADdlk8Q@public.gmane.org>
+Content-Type: text/plain; charset="us-ascii"
+To: Kent Overstreet <kent.overstreet@linux.dev>
+Cc: Michal Hocko <mhocko@suse.com>, Suren Baghdasaryan <surenb@google.com>, akpm@linux-foundation.org, vbabka@suse.cz, hannes@cmpxchg.org, roman.gushchin@linux.dev, mgorman@suse.de, dave@stgolabs.net, willy@infradead.org, liam.howlett@oracle.com, corbet@lwn.net, void@manifault.com, peterz@infradead.org, juri.lelli@redhat.com, ldufour@linux.ibm.com, catalin.marinas@arm.com, will@kernel.org, arnd@arndb.de, tglx@linutronix.de, mingo@redhat.com, dave.hansen@linux.intel.com, x86@kernel.org, peterx@redhat.com, david@redhat.com, axboe@kernel.dk, mcgrof@kernel.org, masahiroy@kernel.org, nathan@kernel.org, dennis@kernel.org, tj@kernel.org, muchun.song@linux.dev, rppt@kernel.org, paulmck@kernel.org, pasha.tatashin@soleen.com, yosryahmed@google.com, yuzhao@google.com, dhowells@redhat.com
 
-Wm9tYmllcyBhcmVuJ3QgbWlncmF0ZWQuIEhvd2V2ZXIsIHJldHVybiB2YWx1ZSBvZiBhIG1pZ3Jh
-dGlvbiB3cml0ZSBtYXkKc3VnZ2VzdCBhIHpvbWJpZSBwcm9jZXNzIHdhcyBtaWdyYXRlZCBhbmQg
-Y2F1c2luZyBjb25mdXNpb24gYWJvdXQgbGFjawpvZiBjZ3JvdXAuZXZlbnRzOnBvcHVsYXRlZCBi
-ZXR3ZWVuIG9yaWdpbiBhbmQgdGFyZ2V0IGNncm91cHMgKGUuZy4KdGFyZ2V0IGNncm91cCBybWRp
-cikuCgpOb3RpZnkgdGhlIHVzZXJzIGFib3V0IG5vIGVmZmVjdCBvZiB0aGVpciBhY3Rpb24gYnkg
-YSByZXR1cm4gdmFsdWUuCih1cGRhdGVfZGZsX2Nzc2VzIG1pZ3JhdGlvbiBvZiB6b21iaWVzIHN0
-aWxsIHNpbGVudGx5IHBhc3NlcyBzaW5jZSBpdCBpcwpub3QgbWVhbnQgdG8gYmUgdXNlci12aXNp
-YmxlIG1pZ3JhdGlvbiBhbnl3YXkuKQoKU3VnZ2VzdGVkLWJ5OiBCZW5qYW1pbiBCZXJnIDxiZW5q
-YW1pbi1jZHZ1MDB1bjFWZ2RIeHpBRGRsazhRQHB1YmxpYy5nbWFuZS5vcmc+ClNpZ25lZC1vZmYt
-Ynk6IE1pY2hhbCBLb3V0bsO9IDxta291dG55LUlCaTlSRy9iNjdrQHB1YmxpYy5nbWFuZS5vcmc+
-Ci0tLQoga2VybmVsL2Nncm91cC9jZ3JvdXAuYyB8IDMgKystCiAxIGZpbGUgY2hhbmdlZCwgMiBp
-bnNlcnRpb25zKCspLCAxIGRlbGV0aW9uKC0pCgpSZWFzb25zIGZvciBSRkM6CjEpIFNvbWUgdXNl
-cnMgbWF5IG5vdGljZSB0aGUgY2hhbmdlLAoyKSBFSU5WQUwgdnMgRVNDSFIsCjMpIGFkZCBhIHNl
-bGZ0ZXN0PwoKZGlmZiAtLWdpdCBhL2tlcm5lbC9jZ3JvdXAvY2dyb3VwLmMgYi9rZXJuZWwvY2dy
-b3VwL2Nncm91cC5jCmluZGV4IDYyNWQ3NDgzOTUxYy4uMzA2NTQ3ZGQ3Yjc2IDEwMDY0NAotLS0g
-YS9rZXJuZWwvY2dyb3VwL2Nncm91cC5jCisrKyBiL2tlcm5lbC9jZ3JvdXAvY2dyb3VwLmMKQEAg
-LTI5NjgsNyArMjk2OCw4IEBAIHN0cnVjdCB0YXNrX3N0cnVjdCAqY2dyb3VwX3Byb2NzX3dyaXRl
-X3N0YXJ0KGNoYXIgKmJ1ZiwgYm9vbCB0aHJlYWRncm91cCwKIAkgKiBiZWNvbWUgdHJhcHBlZCBp
-biBhIGNwdXNldCwgb3IgUlQga3RocmVhZCBtYXkgYmUgYm9ybiBpbiBhCiAJICogY2dyb3VwIHdp
-dGggbm8gcnRfcnVudGltZSBhbGxvY2F0ZWQuICBKdXN0IHNheSBuby4KIAkgKi8KLQlpZiAodHNr
-LT5ub19jZ3JvdXBfbWlncmF0aW9uIHx8ICh0c2stPmZsYWdzICYgUEZfTk9fU0VUQUZGSU5JVFkp
-KSB7CisJaWYgKHRzay0+bm9fY2dyb3VwX21pZ3JhdGlvbiB8fCAodHNrLT5mbGFncyAmIFBGX05P
-X1NFVEFGRklOSVRZKSB8fAorCSAgICAhYXRvbWljX3JlYWQoJnRzay0+c2lnbmFsLT5saXZlKSkg
-ewogCQl0c2sgPSBFUlJfUFRSKC1FSU5WQUwpOwogCQlnb3RvIG91dF91bmxvY2tfdGhyZWFkZ3Jv
-dXA7CiAJfQotLSAKMi40MC4xCgo=
+On Wed, 3 May 2023 04:05:08 -0400
+Kent Overstreet <kent.overstreet@linux.dev> wrote:
+
+> > The burden is on you and Suren. You are proposing the implement an
+> > alternative tracing infrastructure.  
+> 
+> No, we're still waiting on the tracing people to _demonstrate_, not
+> claim, that this is at all possible in a comparable way with tracing. 
+
+It's not my job to do your work for you!
+
+I gave you hints on how you can do this with attaching to existing trace
+events and your response was "If you don't think it's hard, go ahead and
+show us." No! I'm too busy with my own work to do free work for you!
+
+https://lore.kernel.org/all/20220905235007.sc4uk6illlog62fl@kmo-framework/
+
+I know it's easier to create something from scratch that you fully know,
+than to work with an existing infrastructure that you need to spend effort
+and learn to make it do what you want. But by recreating the work, you now
+pass the burden onto everyone else that needs to learn what you did. Not to
+mention, we would likely have multiple ways to do the same thing.
+
+Sorry, but that's not how an open source community is suppose to work.
+
+-- Steve
