@@ -1,51 +1,45 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH 00/40] Memory allocation profiling
-Date: Wed, 03 May 2023 08:33:48 -0400
-Message-ID: <25a1ea786712df5111d7d1db42490624ac63651e.camel@HansenPartnership.com>
-References: <20230501165450.15352-1-surenb@google.com>
-         <ZFIMaflxeHS3uR/A@dhcp22.suse.cz> <ZFIOfb6/jHwLqg6M@moria.home.lan>
-         <ZFISlX+mSx4QJDK6@dhcp22.suse.cz>
-         <20230503115051.30b8a97f@meshulam.tesarici.cz>
-         <ZFIv+30UH7+ySCZr@moria.home.lan>
+From: =?UTF-8?q?Michal=20Koutn=C3=BD?= <mkoutny-IBi9RG/b67k@public.gmane.org>
+Subject: [RFC PATCH] cgroup: Return error when attempting to migrate a zombie process
+Date: Wed,  3 May 2023 14:53:59 +0200
+Message-ID: <20230503125359.14789-1-mkoutny@suse.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-fsdevel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-        d=hansenpartnership.com; s=20151216; t=1683117236;
-        bh=ouniWm3kSvheJ5FVfsQv5nBr8bj1HWMP2KRRhetgh0w=;
-        h=Message-ID:Subject:From:To:Date:In-Reply-To:References:From;
-        b=tBkpGMeHZlzQT7xcRfhegUu+wRFRMNYKk6KHQH9rVVXBpIbjN/8+o1xoQ19Hqpohg
-         OkNzp5X7Gz8O9ULzqmlhb2B/3qykYYJsyqEUw/puHJIAqQho1Um/vUhig69kw9pE34
-         3VJbCcqjcs3yhCW9eIwUZKzOzdLAc5JMGM1fjNZI=
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-        d=hansenpartnership.com; s=20151216; t=1683117236;
-        bh=ouniWm3kSvheJ5FVfsQv5nBr8bj1HWMP2KRRhetgh0w=;
-        h=Message-ID:Subject:From:To:Date:In-Reply-To:References:From;
-        b=tBkpGMeHZlzQT7xcRfhegUu+wRFRMNYKk6KHQH9rVVXBpIbjN/8+o1xoQ19Hqpohg
-         OkNzp5X7Gz8O9ULzqmlhb2B/3qykYYJsyqEUw/puHJIAqQho1Um/vUhig69kw9pE34
-         3VJbCcqjcs3yhCW9eIwUZKzOzdLAc5JMGM1fjNZI=
-In-Reply-To: <ZFIv+30UH7+ySCZr@moria.home.lan>
+Content-Transfer-Encoding: base64
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
+        t=1683118442; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding;
+        bh=XGQuVbsJSpb3XLS+PmIsQvClRUbeKXxErey9Ewqz9fM=;
+        b=chZi2O4e9/GB1oKRKC9Hfqkl6IfrkSSPGMUBfDu9Vj7bOqk3o22tv2oyX3AvbbHqWiE8xK
+        FQGsfFkRsAvGEXzIwnGGKoI7/5atVK12eFnEpLC8iBeRSvv6QsESycZXHZ6S2Wa/i/OSIU
+        OexiNAKjs9f7vG6vfdJfQ4anBsioP8M=
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="utf-8"
-To: Kent Overstreet <kent.overstreet@linux.dev>, Petr =?UTF-8?Q?Tesa=C5=99=C3=ADk?= <petr@tesarici.cz>
-Cc: Michal Hocko <mhocko@suse.com>, Suren Baghdasaryan <surenb@google.com>, akpm@linux-foundation.org, vbabka@suse.cz, hannes@cmpxchg.org, roman.gushchin@linux.dev, mgorman@suse.de, dave@stgolabs.net, willy@infradead.org, liam.howlett@oracle.com, corbet@lwn.net, void@manifault.com, peterz@infradead.org, juri.lelli@redhat.com, ldufour@linux.ibm.com, catalin.marinas@arm.com, will@kernel.org, arnd@arndb.de, tglx@linutronix.de, mingo@redhat.com, dave.hansen@linux.intel.com, x86@kernel.org, peterx@redhat.com, david@redhat.com, axboe@kernel.dk, mcgrof@kernel.org, masahiroy@kernel.org, nathan@kernel.org, dennis@kernel.org, tj@kernel.org, muchun.song@linux.dev, rppt@kernel.org, paulmck@kernel.org, pasha.tatashin@soleen.com, yosryahmed@google.com, yuzhao@google.com, dhowells@redhat.com
+Content-Type: text/plain; charset="macroman"
+To: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Benjamin Berg <benjamin-cdvu00un1VgdHxzADdlk8Q@public.gmane.org>
 
-On Wed, 2023-05-03 at 05:57 -0400, Kent Overstreet wrote:
-> On Wed, May 03, 2023 at 11:50:51AM +0200, Petr Tesařík wrote:
-> > If anyone ever wants to use this code tagging framework for
-> > something
-> > else, they will also have to convert relevant functions to macros,
-> > slowly changing the kernel to a minefield where local identifiers,
-> > struct, union and enum tags, field names and labels must avoid name
-> > conflict with a tagged function. For now, I have to remember that
-> > alloc_pages is forbidden, but the list may grow.
-> 
-> Also, since you're not actually a kernel contributor yet...
-
-You have an amazing talent for being wrong.  But even if you were
-actually right about this, it would be an ad hominem personal attack on
-a new contributor which crosses the line into unacceptable behaviour on
-the list and runs counter to our code of conduct.
-
-James
-
+Wm9tYmllcyBhcmVuJ3QgbWlncmF0ZWQuIEhvd2V2ZXIsIHJldHVybiB2YWx1ZSBvZiBhIG1pZ3Jh
+dGlvbiB3cml0ZSBtYXkKc3VnZ2VzdCBhIHpvbWJpZSBwcm9jZXNzIHdhcyBtaWdyYXRlZCBhbmQg
+Y2F1c2luZyBjb25mdXNpb24gYWJvdXQgbGFjawpvZiBjZ3JvdXAuZXZlbnRzOnBvcHVsYXRlZCBi
+ZXR3ZWVuIG9yaWdpbiBhbmQgdGFyZ2V0IGNncm91cHMgKGUuZy4KdGFyZ2V0IGNncm91cCBybWRp
+cikuCgpOb3RpZnkgdGhlIHVzZXJzIGFib3V0IG5vIGVmZmVjdCBvZiB0aGVpciBhY3Rpb24gYnkg
+YSByZXR1cm4gdmFsdWUuCih1cGRhdGVfZGZsX2Nzc2VzIG1pZ3JhdGlvbiBvZiB6b21iaWVzIHN0
+aWxsIHNpbGVudGx5IHBhc3NlcyBzaW5jZSBpdCBpcwpub3QgbWVhbnQgdG8gYmUgdXNlci12aXNp
+YmxlIG1pZ3JhdGlvbiBhbnl3YXkuKQoKU3VnZ2VzdGVkLWJ5OiBCZW5qYW1pbiBCZXJnIDxiZW5q
+YW1pbi1jZHZ1MDB1bjFWZ2RIeHpBRGRsazhRQHB1YmxpYy5nbWFuZS5vcmc+ClNpZ25lZC1vZmYt
+Ynk6IE1pY2hhbCBLb3V0bsO9IDxta291dG55LUlCaTlSRy9iNjdrQHB1YmxpYy5nbWFuZS5vcmc+
+Ci0tLQoga2VybmVsL2Nncm91cC9jZ3JvdXAuYyB8IDMgKystCiAxIGZpbGUgY2hhbmdlZCwgMiBp
+bnNlcnRpb25zKCspLCAxIGRlbGV0aW9uKC0pCgpSZWFzb25zIGZvciBSRkM6CjEpIFNvbWUgdXNl
+cnMgbWF5IG5vdGljZSB0aGUgY2hhbmdlLAoyKSBFSU5WQUwgdnMgRVNDSFIsCjMpIGFkZCBhIHNl
+bGZ0ZXN0PwoKZGlmZiAtLWdpdCBhL2tlcm5lbC9jZ3JvdXAvY2dyb3VwLmMgYi9rZXJuZWwvY2dy
+b3VwL2Nncm91cC5jCmluZGV4IDYyNWQ3NDgzOTUxYy4uMzA2NTQ3ZGQ3Yjc2IDEwMDY0NAotLS0g
+YS9rZXJuZWwvY2dyb3VwL2Nncm91cC5jCisrKyBiL2tlcm5lbC9jZ3JvdXAvY2dyb3VwLmMKQEAg
+LTI5NjgsNyArMjk2OCw4IEBAIHN0cnVjdCB0YXNrX3N0cnVjdCAqY2dyb3VwX3Byb2NzX3dyaXRl
+X3N0YXJ0KGNoYXIgKmJ1ZiwgYm9vbCB0aHJlYWRncm91cCwKIAkgKiBiZWNvbWUgdHJhcHBlZCBp
+biBhIGNwdXNldCwgb3IgUlQga3RocmVhZCBtYXkgYmUgYm9ybiBpbiBhCiAJICogY2dyb3VwIHdp
+dGggbm8gcnRfcnVudGltZSBhbGxvY2F0ZWQuICBKdXN0IHNheSBuby4KIAkgKi8KLQlpZiAodHNr
+LT5ub19jZ3JvdXBfbWlncmF0aW9uIHx8ICh0c2stPmZsYWdzICYgUEZfTk9fU0VUQUZGSU5JVFkp
+KSB7CisJaWYgKHRzay0+bm9fY2dyb3VwX21pZ3JhdGlvbiB8fCAodHNrLT5mbGFncyAmIFBGX05P
+X1NFVEFGRklOSVRZKSB8fAorCSAgICAhYXRvbWljX3JlYWQoJnRzay0+c2lnbmFsLT5saXZlKSkg
+ewogCQl0c2sgPSBFUlJfUFRSKC1FSU5WQUwpOwogCQlnb3RvIG91dF91bmxvY2tfdGhyZWFkZ3Jv
+dXA7CiAJfQotLSAKMi40MC4xCgo=
