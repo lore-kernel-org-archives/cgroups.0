@@ -1,49 +1,86 @@
-From: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH v2 5/6] sched/deadline: Create DL BW alloc, free & check
- overflow interface
-Date: Wed, 3 May 2023 13:45:24 -0400
-Message-ID: <5a64fdd5-ee1a-7609-99a9-a8d1e282e393@redhat.com>
-References: <20230503072228.115707-1-juri.lelli@redhat.com>
- <20230503072228.115707-6-juri.lelli@redhat.com>
+From: Kent Overstreet <kent.overstreet-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>
+Subject: Re: [PATCH 00/40] Memory allocation profiling
+Date: Wed, 3 May 2023 13:51:23 -0400
+Message-ID: <ZFKfG7bVuOAk27yP@moria.home.lan>
+References: <20230501165450.15352-1-surenb@google.com>
+ <ZFIMaflxeHS3uR/A@dhcp22.suse.cz>
+ <ZFIOfb6/jHwLqg6M@moria.home.lan>
+ <ZFISlX+mSx4QJDK6@dhcp22.suse.cz>
+ <ZFIVtB8JyKk0ddA5@moria.home.lan>
+ <ZFKNZZwC8EUbOLMv@slm.duckdns.org>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1683135930;
+Return-path: <linux-modules-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
+        t=1683136295;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=i+1daImuCgAFQ62zz1n0R8N9/43jAwavxjwtDs1QPpw=;
-        b=M41QegfpV+70HZ4DUbNQqfbYVju4PefYqYGauOZybahXoWlyYzdtHoBr44/esieFWj+pKo
-        BloZvmTb15rdjbNmH/0GP14BG7Us2H1B/uB1E0o1xwwMC2IEwNScsFyx0nyR3rDQckaTLF
-        3RH+tDvnkZb0WR+OgYeCzT3nLD/MSzM=
-Content-Language: en-US
-In-Reply-To: <20230503072228.115707-6-juri.lelli-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+        bh=/8YhiaEwKxHE5nN6YeY/72JOBihWRYRCXK0QvEQ+Qv4=;
+        b=Jly2gSOTge1iO+BeCp9KJ0ZW8ODyKqKj/7GANaWuFp3dPaClfWwyMC5BLYot5DJO7a2FFf
+        YyYI10zIBhCz11qKXQtTYVH3uRaoKIrlrIHjDrmNc87rMsL2sQdREfYAXhrBfufag5HVF+
+        u8SjeEjj/nsMRlWo9oQA/L4PFnEpZqQ=
+Content-Disposition: inline
+In-Reply-To: <ZFKNZZwC8EUbOLMv-NiLfg/pYEd1N0TnZuCh8vA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"; format="flowed"
-To: Juri Lelli <juri.lelli-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Ingo Molnar <mingo-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Qais Yousef <qyousef-wp2msK0BRk8tq7phqP6ubQ@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Hao Luo <haoluo-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Cc: Dietmar Eggemann <dietmar.eggemann-5wv7dgnIgG8@public.gmane.org>, Steven Rostedt <rostedt-nx8X9YLhiw1AfugRpC6u6w@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, luca.abeni-5rdYK369eBLQB0XuIGIEkQ@public.gmane.org, claudio-YOzL5CV4y4YG1A2ADO40+w@public.gmane.org, tommaso.cucinotta-5rdYK369eBLQB0XuIGIEkQ@public.gmane.org, bristot-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, mathieu.poirier-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Vincent Guittot <vincent.guittot-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, Wei Wang <wvw-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Rick Yiu <rickyiu-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Quentin Perret <qperret-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Heiko Carstens <hca-tEXmvtCZX7AybS5Ee8rs3A@public.gmane.org>, Vasily Gorbik <gor-tEXmvtCZX7AybS5Ee8rs3A@public.gmane.org>, Alexander Gordeev <agordeev-tEXmvtCZX7AybS5Ee8rs3A@public.gmane.org>, Sudeep Holla <sudeep.holla-5wv7dgnIgG8@public.gmane.org>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>, Suren Baghdasaryan <surenb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, vbabka-AlSwsSmVLrQ@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org, mgorman-l3A5Bk7waGM@public.gmane.org, dave-h16yJtLeMjHk1uMJSBkQmQ@public.gmane.org, willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, liam.howlett-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org, corbet-T1hC0tSOHrs@public.gmane.org, void-gq6j2QGBifHby3iVrkZq2A@public.gmane.org, peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, juri.lelli-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, ldufour-tEXmvtCZX7AybS5Ee8rs3A@public.gmane.org, catalin.marinas-5wv7dgnIgG8@public.gmane.org, will-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, arnd-r2nGTMty4D4@public.gmane.org, tglx-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org, mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, dave.hansen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org, x86-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, peterx-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, david-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, mcgrof-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, masahiroy-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, nathan-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, dennis-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, muchun.song-fxUVXftIFDnyG1zEObXtfA@public.gmane.org, rppt-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, paulmck-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, pasha.tatashin-2EmBfe737+LQT0dZR+AlfA@public.gmane.org, yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, yuzhao-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, dhowells-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org
 
-On 5/3/23 03:22, Juri Lelli wrote:
-> From: Dietmar Eggemann <dietmar.eggemann-5wv7dgnIgG8@public.gmane.org>
->
-> Rework the existing dl_cpu_busy() interface which offers DL BW overflow
-> checking and per-task DL BW allocation.
->
-> Add dl_bw_free() as an interface to be able to free DL BW.
-> It will be used to allow freeing of the DL BW request done during
-> cpuset_can_attach() in case multiple controllers are attached to the
-> cgroup next to the cpuset controller and one of the non-cpuset
-> can_attach() fails.
->
-> dl_bw_alloc() (and dl_bw_free()) now take a `u64 dl_bw` parameter
-> instead of `struct task_struct *p` used in dl_cpu_busy().  This allows
-> to allocate DL BW for a set of tasks too rater than only for a single
+On Wed, May 03, 2023 at 06:35:49AM -1000, Tejun Heo wrote:
+> Hello, Kent.
+> 
+> On Wed, May 03, 2023 at 04:05:08AM -0400, Kent Overstreet wrote:
+> > No, we're still waiting on the tracing people to _demonstrate_, not
+> > claim, that this is at all possible in a comparable way with tracing. 
+> 
+> So, we (meta) happen to do stuff like this all the time in the fleet to hunt
+> down tricky persistent problems like memory leaks, ref leaks, what-have-you.
+> In recent kernels, with kprobe and BPF, our ability to debug these sorts of
+> problems has improved a great deal. Below, I'm attaching a bcc script I used
+> to hunt down, IIRC, a double vfree. It's not exactly for a leak but leaks
+> can follow the same pattern.
+> 
+> There are of course some pros and cons to this approach:
+> 
+> Pros:
+> 
+> * The framework doesn't really have any runtime overhead, so we can have it
+>   deployed in the entire fleet and debug wherever problem is.
+> 
+> * It's fully flexible and programmable which enables non-trivial filtering
+>   and summarizing to be done inside kernel w/ BPF as necessary, which is
+>   pretty handy for tracking high frequency events.
+> 
+> * BPF is pretty performant. Dedicated built-in kernel code can do better of
+>   course but BPF's jit compiled code & its data structures are fast enough.
+>   I don't remember any time this was a problem.
+> 
+> Cons:
+> 
+> * BPF has some learning curve. Also the fact that what it provides is a wide
+>   open field rather than something scoped out for a specific problem can
+>   make it seem a bit daunting at the beginning.
+> 
+> * Because tracking starts when the script starts running, it doesn't know
+>   anything which has happened upto that point, so you gotta pay attention to
+>   handling e.g. handling frees which don't match allocs. It's kinda annoying
+>   but not a huge problem usually. There are ways to build in BPF progs into
+>   the kernel and load it early but I haven't experiemnted with it yet
+>   personally.
+> 
+> I'm not necessarily against adding dedicated memory debugging mechanism but
+> do wonder whether the extra benefits would be enough to justify the code and
+> maintenance overhead.
+> 
+> Oh, a bit of delta but for anyone who's more interested in debugging
+> problems like this, while I tend to go for bcc
+> (https://github.com/iovisor/bcc) for this sort of problems. Others prefer to
+> write against libbpf directly or use bpftrace
+> (https://github.com/iovisor/bpftrace).
 
-Typo: "rater" => "rather".
+Do you have example output?
 
-Cheers,
-Longman
-
-
+TBH I'm skeptical that it's even possible to do full memory allocation
+profiling with tracing/bpf, due to recursive memory allocations and
+needing an index of outstanding allcations.
