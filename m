@@ -1,60 +1,40 @@
-From: Michal Hocko <mhocko@suse.com>
-Subject: Re: [PATCH 35/40] lib: implement context capture support for tagged
- allocations
-Date: Thu, 4 May 2023 10:09:57 +0200
-Message-ID: <ZFNoVfb+1W4NAh74@dhcp22.suse.cz>
-References: <20230501165450.15352-1-surenb@google.com>
- <20230501165450.15352-36-surenb@google.com>
- <ZFIPmnrSIdJ5yusM@dhcp22.suse.cz>
- <CAJuCfpGsvWupMbasqvwcMYsOOPxTQqi1ed5+=vyu-yoPQwwybg@mail.gmail.com>
+From: Juri Lelli <juri.lelli-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH v2 2/6] sched/cpuset: Bring back cpuset_mutex
+Date: Thu, 4 May 2023 10:13:00 +0200
+Message-ID: <ZFNpDELMDUoK99HM@localhost.localdomain>
+References: <20230503072228.115707-1-juri.lelli@redhat.com>
+ <20230503072228.115707-3-juri.lelli@redhat.com>
+ <20230504062105.GD1734100@hirez.programming.kicks-ass.net>
 Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-Return-path: <linux-doc-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
-        t=1683187798; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1683187987;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          in-reply-to:in-reply-to:references:references;
-        bh=H0f9aUoTiM+sJjdWNgkunI1DxI6aESt6W4qyqw6LAGM=;
-        b=pWdGUIdHnc7pXvP6bdU3/IRv7Ifbi1CA0lQX+z9/n34tBigeeWwOZDECe8lz33AC0mNuHl
-        AQdkuJamTlc3SfQd1m0hniHdcNs/5uk7Udyj1zoIuvzn0qfUFiaTx3hK+ZExAUDSxsNTzp
-        xfg6Wx9ZGfIrh+ttMaaBChPygRSla+0=
+        bh=Rvq9QYdFcVHzrD8NG0o1jSPMkcXmSSUXCp6nCK/Vwpg=;
+        b=F1pCiity+N7IBL9c54xby+07f4dL9CixkQOb80cYFEV8KD9V7ECqlGjSYtrvsfQUTEXKG0
+        fRswP9RFlSTm+VjETyEvgho/SUXV2BYSK3BtakhP3QroSg0JJ6Xt0zJgIriScrNgU3ptRH
+        N6a61WwCbHn6tJpYXDkVJl0Pez2RkC8=
 Content-Disposition: inline
-In-Reply-To: <CAJuCfpGsvWupMbasqvwcMYsOOPxTQqi1ed5+=vyu-yoPQwwybg@mail.gmail.com>
+In-Reply-To: <20230504062105.GD1734100-Nxj+rRp3nVydTX5a5knrm8zTDFooKrT+cvkQGrU6aU0@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="windows-1252"
-To: Suren Baghdasaryan <surenb@google.com>
-Cc: akpm@linux-foundation.org, kent.overstreet@linux.dev, vbabka@suse.cz, hannes@cmpxchg.org, roman.gushchin@linux.dev, mgorman@suse.de, dave@stgolabs.net, willy@infradead.org, liam.howlett@oracle.com, corbet@lwn.net, void@manifault.com, peterz@infradead.org, juri.lelli@redhat.com, ldufour@linux.ibm.com, catalin.marinas@arm.com, will@kernel.org, arnd@arndb.de, tglx@linutronix.de, mingo@redhat.com, dave.hansen@linux.intel.com, x86@kernel.org, peterx@redhat.com, david@redhat.com, axboe@kernel.dk, mcgrof@kernel.org, masahiroy@kernel.org, nathan@kernel.org, dennis@kernel.org, tj@kernel.org, muchun.song@linux.dev, rppt@kernel.org, paulmck@kernel.org, pasha.tatashin@soleen.com, yosryahmed@google.com, yuzhao@google.com, dhowells@redhat.com, hughd@google.com, andreyknvl@gmail.com, keescook@chr
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
+Cc: Ingo Molnar <mingo-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Qais Yousef <qyousef-wp2msK0BRk8tq7phqP6ubQ@public.gmane.org>, Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Hao Luo <haoluo-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Dietmar Eggemann <dietmar.eggemann-5wv7dgnIgG8@public.gmane.org>, Steven Rostedt <rostedt-nx8X9YLhiw1AfugRpC6u6w@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, luca.abeni-5rdYK369eBLQB0XuIGIEkQ@public.gmane.org, claudio-YOzL5CV4y4YG1A2ADO40+w@public.gmane.org, tommaso.cucinotta-5rdYK369eBLQB0XuIGIEkQ@public.gmane.org, bristot-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, mathieu.poirier-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Vincent Guittot <vincent.guittot-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, Wei Wang <wvw-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Rick Yiu <rickyiu-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Quentin Perret <qperret-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Heiko Carstens <hca-tEXmvtCZX7AybS5Ee8rs3A@public.gmane.org>, Vasily Gorbik <gor-tEXmvtCZX7AybS5Ee8rs3A@public.gmane.org>, Alexander Gordeev <agordeev-tEXmvtCZX7AybS5Ee8rs3A@public.gmane.org>
 
-On Wed 03-05-23 08:24:19, Suren Baghdasaryan wrote:
-> On Wed, May 3, 2023 at 12:39=E2=80=AFAM Michal Hocko <mhocko@suse.com> wr=
-ote:
-> >
-> > On Mon 01-05-23 09:54:45, Suren Baghdasaryan wrote:
-> > [...]
-> > > +struct codetag_ctx *alloc_tag_create_ctx(struct alloc_tag *tag, size=
-_t size)
-> > > +{
-> > > +     struct alloc_call_ctx *ac_ctx;
-> > > +
-> > > +     /* TODO: use a dedicated kmem_cache */
-> > > +     ac_ctx =3D kmalloc(sizeof(struct alloc_call_ctx), GFP_KERNEL);
-> >
-> > You cannot really use GFP_KERNEL here. This is post_alloc_hook path and
-> > that has its own gfp context.
->=20
-> I missed that. Would it be appropriate to use the gfp_flags parameter
-> of post_alloc_hook() here?
+On 04/05/23 08:21, Peter Zijlstra wrote:
+> On Wed, May 03, 2023 at 09:22:24AM +0200, Juri Lelli wrote:
+> > Turns out percpu_cpuset_rwsem - commit 1243dc518c9d ("cgroup/cpuset:
+> > Convert cpuset_mutex to percpu_rwsem") - wasn't such a brilliant idea,
+> > as it has been reported to cause slowdowns in workloads that need to
+> > change cpuset configuration frequently and it is also not implementing
+> > priority inheritance (which causes troubles with realtime workloads).
+> 
+> What were they doing ? Dynamically adjusting the DL parameters?
+> 
 
-No. the original allocation could have been GFP_USER based and you do
-not want these allocations to pullute other zones potentially. You want
-GFP_KERNEL compatible subset of that mask.
+Yes, calling sched_setattr to adjust params and/or add/remove DL
+reservations.
 
-But even then I really detest an additional allocation from this context
-for every single allocation request. There GFP_NOWAIT allocation for
-steckdepot but that is at least cached and generally not allocating.
-This will allocate for every single allocation. There must be a better
-way.
---=20
-Michal Hocko
-SUSE Labs
