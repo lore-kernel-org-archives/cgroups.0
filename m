@@ -1,59 +1,163 @@
-From: Juri Lelli <juri.lelli-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH v2 0/6] sched/deadline: cpuset: Rework DEADLINE bandwidth
- restoration
-Date: Thu, 4 May 2023 10:17:41 +0200
-Message-ID: <ZFNqJf+BQ0GMdr+y@localhost.localdomain>
-References: <20230503072228.115707-1-juri.lelli@redhat.com>
- <20230504062525.GF1734100@hirez.programming.kicks-ass.net>
+From: Michal Hocko <mhocko@suse.com>
+Subject: Re: [PATCH 00/40] Memory allocation profiling
+Date: Thu, 4 May 2023 11:07:22 +0200
+Message-ID: <ZFN1yswCd9wRgYPR@dhcp22.suse.cz>
+References: <20230501165450.15352-1-surenb@google.com>
+ <ZFIMaflxeHS3uR/A@dhcp22.suse.cz>
+ <CAJuCfpHxbYFxDENYFfnggh1D8ot4s493PQX0C7kD-JLvixC-Vg@mail.gmail.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1683188269;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+Content-Transfer-Encoding: quoted-printable
+Return-path: <linux-arch-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
+        t=1683191243; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=Crz7SVqLScSwCZtKT1O0mIOH4ecEo3dE2+AhPDuZk1M=;
-        b=A5OpTG9qfRRJBZbEvQE9vw//p98yQcMROL0UDDloQzVeE30peqIumY63Ui7CcLhaSE8bw4
-        ChevWVwALne7n9w/V4/lhmLtlp4hZDxZAZOYP0bA8qC1wW1SuSy9pQKIM4k0IaIP46Z92E
-        93t39G4asQLHmhiR51Zmg9wTMgyX+ZU=
+        bh=+qJXmRqw+FfGzaNlkZLDu9Le9CEnkyHeMqv8Le5oQts=;
+        b=ANDPuuGSLrqGeihHM91AJqPDxRdii3XkVbscUjditUheMtvnk8aFBqZLYzfGOSm4Wpep5y
+        MN0JxYMPYvRX9Ro+qxZW6USNL5DsbvnuexjUyhsNUQ1F8AiMfWl8V+BA7+Nj2/Wdmi4sGz
+        dYzHf3+YdyqXWoFquZFW6OeAMIcZ5Gc=
 Content-Disposition: inline
-In-Reply-To: <20230504062525.GF1734100-Nxj+rRp3nVydTX5a5knrm8zTDFooKrT+cvkQGrU6aU0@public.gmane.org>
+In-Reply-To: <CAJuCfpHxbYFxDENYFfnggh1D8ot4s493PQX0C7kD-JLvixC-Vg@mail.gmail.com>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
-Cc: Ingo Molnar <mingo-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Qais Yousef <qyousef-wp2msK0BRk8tq7phqP6ubQ@public.gmane.org>, Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Hao Luo <haoluo-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Dietmar Eggemann <dietmar.eggemann-5wv7dgnIgG8@public.gmane.org>, Steven Rostedt <rostedt-nx8X9YLhiw1AfugRpC6u6w@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, luca.abeni-5rdYK369eBLQB0XuIGIEkQ@public.gmane.org, claudio-YOzL5CV4y4YG1A2ADO40+w@public.gmane.org, tommaso.cucinotta-5rdYK369eBLQB0XuIGIEkQ@public.gmane.org, bristot-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, mathieu.poirier-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Vincent Guittot <vincent.guittot-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, Wei Wang <wvw-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Rick Yiu <rickyiu-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Quentin Perret <qperret-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Heiko Carstens <hca-tEXmvtCZX7AybS5Ee8rs3A@public.gmane.org>, Vasily Gorbik <gor-tEXmvtCZX7AybS5Ee8rs3A@public.gmane.org>, Alexander Gordeev <agordeev-tEXmvtCZX7AybS5Ee8rs3A@public.gmane.org>
+Content-Type: text/plain; charset="windows-1252"
+To: Suren Baghdasaryan <surenb@google.com>
+Cc: akpm@linux-foundation.org, kent.overstreet@linux.dev, vbabka@suse.cz, hannes@cmpxchg.org, roman.gushchin@linux.dev, mgorman@suse.de, dave@stgolabs.net, willy@infradead.org, liam.howlett@oracle.com, corbet@lwn.net, void@manifault.com, peterz@infradead.org, juri.lelli@redhat.com, ldufour@linux.ibm.com, catalin.marinas@arm.com, will@kernel.org, arnd@arndb.de, tglx@linutronix.de, mingo@redhat.com, dave.hansen@linux.intel.com, x86@kernel.org, peterx@redhat.com, david@redhat.com, axboe@kernel.dk, mcgrof@kernel.org, masahiroy@kernel.org, nathan@kernel.org, dennis@kernel.org, tj@kernel.org, muchun.song@linux.dev, rppt@kernel.org, paulmck@kernel.org, pasha.tatashin@soleen.com, yosryahmed@google.com, yuzhao@google.com, dhowells@redhat.com, hughd@google.com, andreyknvl@gmail.com, keescook@chr
 
-On 04/05/23 08:25, Peter Zijlstra wrote:
-> On Wed, May 03, 2023 at 09:22:22AM +0200, Juri Lelli wrote:
-> 
-> > Dietmar Eggemann (2):
-> >   sched/deadline: Create DL BW alloc, free & check overflow interface
-> >   cgroup/cpuset: Free DL BW in case can_attach() fails
-> > 
-> > Juri Lelli (4):
-> >   cgroup/cpuset: Rename functions dealing with DEADLINE accounting
-> >   sched/cpuset: Bring back cpuset_mutex
-> >   sched/cpuset: Keep track of SCHED_DEADLINE task in cpusets
-> >   cgroup/cpuset: Iterate only if DEADLINE tasks are present
-> > 
-> >  include/linux/cpuset.h  |  12 +-
-> >  include/linux/sched.h   |   4 +-
-> >  kernel/cgroup/cgroup.c  |   4 +
-> >  kernel/cgroup/cpuset.c  | 242 ++++++++++++++++++++++++++--------------
-> >  kernel/sched/core.c     |  41 +++----
-> >  kernel/sched/deadline.c |  67 ++++++++---
-> >  kernel/sched/sched.h    |   2 +-
-> >  7 files changed, 244 insertions(+), 128 deletions(-)
-> 
-> Aside from a few niggles, these look fine to me. Who were you expecting
-> to merge these, tj or me?
+On Wed 03-05-23 08:09:28, Suren Baghdasaryan wrote:
+> On Wed, May 3, 2023 at 12:25=E2=80=AFAM Michal Hocko <mhocko@suse.com> wr=
+ote:
+[...]
+> Thanks for summarizing!
+>=20
+> > At least those I find the most important:
+> > - This is a big change and it adds a significant maintenance burden
+> >   because each allocation entry point needs to be handled specifically.
+> >   The cost will grow with the intended coverage especially there when
+> >   allocation is hidden in a library code.
+>=20
+> Do you mean with more allocations in the codebase more codetags will
+> be generated? Is that the concern?
 
-Thanks for reviewing!
+No. I am mostly concerned about the _maintenance_ overhead. For the
+bare tracking (without profiling and thus stack traces) only those
+allocations that are directly inlined into the consumer are really
+of any use. That increases the code impact of the tracing because any
+relevant allocation location has to go through the micro surgery.=20
 
-Not entirely sure, it's kind of split, but maybe the cgroup changes are
-predominant (cpuset_mutex is probably contributing the most). So, maybe
-tj? Assuming this looks good to him as well of course. :)
+e.g. is it really interesting to know that there is a likely memory
+leak in seq_file proper doing and allocation? No as it is the specific
+implementation using seq_file that is leaking most likely. There are
+other examples like that See?
 
-Thanks!
+> Or maybe as you commented in
+> another patch that context capturing feature does not limit how many
+> stacks will be captured?
 
+That is a memory overhead which can be really huge and it would be nice
+to be more explicit about that in the cover letter. It is a downside for
+sure but not something that has a code maintenance impact and it is an
+opt-in so it can be enabled only when necessary.
+
+Quite honestly, though, the more I look into context capturing part it
+seems to me that there is much more to be reconsidered there and if you
+really want to move forward with the code tagging part then you should
+drop that for now. It would make the whole series smaller and easier to
+digest.
+
+> > - It has been brought up that this is duplicating functionality already
+> >   available via existing tracing infrastructure. You should make it very
+> >   clear why that is not suitable for the job
+>=20
+> I experimented with using tracing with _RET_IP_ to implement this
+> accounting. The major issue is the _RET_IP_ to codetag lookup runtime
+> overhead which is orders of magnitude higher than proposed code
+> tagging approach. With code tagging proposal, that link is resolved at
+> compile time. Since we want this mechanism deployed in production, we
+> want to keep the overhead to the absolute minimum.
+> You asked me before how much overhead would be tolerable and the
+> answer will always be "as small as possible". This is especially true
+> for slab allocators which are ridiculously fast and regressing them
+> would be very noticable (due to the frequent use).
+
+It would have been more convincing if you had some numbers at hands.
+E.g. this is a typical workload we are dealing with. With the compile
+time tags we are able to learn this with that much of cost. With a dynamic
+tracing we are able to learn this much with that cost. See? As small as
+possible is a rather vague term that different people will have a very
+different idea about.
+
+> There is another issue, which I think can be solved in a smart way but
+> will either affect performance or would require more memory. With the
+> tracing approach we don't know beforehand how many individual
+> allocation sites exist, so we have to allocate code tags (or similar
+> structures for counting) at runtime vs compile time. We can be smart
+> about it and allocate in batches or even preallocate more than we need
+> beforehand but, as I said, it will require some kind of compromise.
+
+I have tried our usual distribution config (only vmlinux without modules
+so the real impact will be larger as we build a lot of stuff into
+modules) just to get an idea:
+   text    data     bss     dec     hex filename
+28755345        17040322        19845124        65640791        3e99957 vml=
+inux.before
+28867168        17571838        19386372        65825378        3ec6a62 vml=
+inux.after
+
+Less than 1% for text 3% for data.  This is not all that terrible
+for an initial submission and a more dynamic approach could be added
+later. E.g. with a smaller pre-allocated hash table that could be
+expanded lazily. Anyway not something I would be losing sleep over. This
+can always be improved later on.
+
+> I understand that code tagging creates additional maintenance burdens
+> but I hope it also produces enough benefits that people will want
+> this. The cost is also hopefully amortized when additional
+> applications like the ones we presented in RFC [1] are built using the
+> same framework.
+
+TBH I am much more concerned about the maintenance burden on the MM side
+than the actual code tagging itslef which is much more self contained. I
+haven't seen other potential applications of the same infrastructure and
+maybe the code impact would be much smaller than in the MM proper. Our
+allocator API is really hairy and convoluted.
+
+> > - We already have page_owner infrastructure that provides allocation
+> >   tracking data. Why it cannot be used/extended?
+>=20
+> 1. The overhead.
+
+Do you have any numbers?
+
+> 2. Covers only page allocators.
+
+Yes this sucks.
+>=20
+> I didn't think about extending the page_owner approach to slab
+> allocators but I suspect it would not be trivial. I don't see
+> attaching an owner to every slab object to be a scalable solution. The
+> overhead would again be of concern here.
+
+This would have been a nice argument to mention in the changelog so that
+we know that you have considered that option at least. Why should I (as
+a reviewer) wild guess that?
+
+> I should point out that there was one important technical concern
+> about lack of a kill switch for this feature, which was an issue for
+> distributions that can't disable the CONFIG flag. In this series we
+> addressed that concern.
+
+Thanks, that is certainly appreciated. I haven't looked deeper into that
+part but from the cover letter I have understood that CONFIG_MEM_ALLOC_PROF=
+ILING
+implies unconditional page_ext and therefore the memory overhead
+assosiated with that. There seems to be a killswitch nomem_profiling but
+from a quick look it doesn't seem to disable page_ext allocations. I
+might be missing something there of course. Having a highlevel
+describtion for that would be really nice as well.
+
+> [1] https://lore.kernel.org/all/20220830214919.53220-1-surenb@google.com/
+
+--=20
+Michal Hocko
+SUSE Labs
