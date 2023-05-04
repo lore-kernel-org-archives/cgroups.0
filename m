@@ -1,219 +1,78 @@
-From: Yu Kuai <yukuai1-XF6JlduFytWkHkcT6e4Xnw@public.gmane.org>
-Subject: Re: [PATCH for-6.4/block] block/rq_qos: protect rq_qos apis with a
- new lock
-Date: Thu, 4 May 2023 10:16:47 +0800
-Message-ID: <20340af6-a59f-6efd-eaa2-472276487203@huaweicloud.com>
-References: <20230414084008.2085155-1-yukuai1@huaweicloud.com>
- <dde18143-b3bf-e493-c10a-5ffd2d8b772a@huaweicloud.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH 00/40] Memory allocation profiling
+Date: Wed, 3 May 2023 16:25:30 -1000
+Message-ID: <ZFMXmj9ZhSe5wyaS@slm.duckdns.org>
+References: <20230503180726.GA196054@cmpxchg.org>
+ <ZFKlrP7nLn93iIRf@slm.duckdns.org>
+ <ZFKqh5Dh93UULdse@slm.duckdns.org>
+ <ZFKubD/lq7oB4svV@moria.home.lan>
+ <ZFKu6zWA00AzArMF@slm.duckdns.org>
+ <ZFKxcfqkUQ60zBB_@slm.duckdns.org>
+ <CAJuCfpEPkCJZO2svT-GfmpJ+V-jSLyFDKM_atnqPVRBKtzgtnQ@mail.gmail.com>
+ <ZFK6pwOelIlhV8Bm@slm.duckdns.org>
+ <ZFK9XMSzOBxIFOHm@slm.duckdns.org>
+ <CAJuCfpE4YD_BumqFf2-NC8KS9D+kq0s_o4gRyWAH-WK4SgqUbA@mail.gmail.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <dde18143-b3bf-e493-c10a-5ffd2d8b772a-XF6JlduFytWkHkcT6e4Xnw@public.gmane.org>
+Content-Transfer-Encoding: quoted-printable
+Return-path: <linux-doc-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20221208; t=1683167134; x=1685759134;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :mime-version:references:message-id:subject:cc:to:from:date:sender
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=X+UY7cUQaVo4x4W0WCSPsCuWeI5BUJEgh7i3Xst55/Y=;
+        b=Rp/D+oug52h2Ti6mXmuImpIIDf60HeMLUvF0iIK2vttPwspm5hYlNosuEHVSrbtxTw
+         U1aaOkS4o4kHX9lqnCC9bE9Qv4BkTepdXgX1eP7e7ih03h1Znb/fBHAFzIs3ZLAdzyf8
+         Bdy+N5QGo07p0OmImH8mBW0eWTxAwcVTxazuYtPxC6BmtMp0/XcbyFMmmZorx8qew2E9
+         Ccf9SafoTVOkRODhvQ6MQpCKPYkFE27/aFmb6+IC+s7J6n+xuSEgUyUsQVp7VEWj1Bkv
+         v88EEfrZMkPXlnUNcgeQfwXyllZK7EU5nBpftptzpU3ovg2Ugby7Q+WZX0I3unGEo1Nj
+         E0SQ==
+Sender: Tejun Heo <htejun@gmail.com>
+Content-Disposition: inline
+In-Reply-To: <CAJuCfpE4YD_BumqFf2-NC8KS9D+kq0s_o4gRyWAH-WK4SgqUbA@mail.gmail.com>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="utf-8"; format="flowed"
-To: Yu Kuai <yukuai1-XF6JlduFytWkHkcT6e4Xnw@public.gmane.org>, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, hch-jcswGhMUV9g@public.gmane.org, josef-DigfWCa+lFGyeJad7bwFQA@public.gmane.org, axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, yi.zhang-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, yangerkun-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, "yukuai (C)" <yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Content-Type: text/plain; charset="windows-1252"
+To: Suren Baghdasaryan <surenb@google.com>
+Cc: Kent Overstreet <kent.overstreet@linux.dev>, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@suse.com>, akpm@linux-foundation.org, vbabka@suse.cz, roman.gushchin@linux.dev, mgorman@suse.de, dave@stgolabs.net, willy@infradead.org, liam.howlett@oracle.com, corbet@lwn.net, void@manifault.com, peterz@infradead.org, juri.lelli@redhat.com, ldufour@linux.ibm.com, catalin.marinas@arm.com, will@kernel.org, arnd@arndb.de, tglx@linutronix.de, mingo@redhat.com, dave.hansen@linux.intel.com, x86@kernel.org, peterx@redhat.com, david@redhat.com, axboe@kernel.dk, mcgrof@kernel.org, masahiroy@kernel.org, nathan@kernel.org, dennis@kernel.org, muchun.song@linux.dev, rppt@kernel.org, paulmck@kernel.org, pasha.tatashin@soleen.com, yosryahmed@google.com, yuzhao@google.com, dhowells@redhat.com
 
+Hello,
 
+On Wed, May 03, 2023 at 01:14:57PM -0700, Suren Baghdasaryan wrote:
+> On Wed, May 3, 2023 at 1:00=E2=80=AFPM Tejun Heo <tj@kernel.org> wrote:
+> > Another related question. So, the reason for macro'ing stuff is needed =
+is
+> > because you want to print the line directly from kernel, right?
+>=20
+> The main reason is because we want to inject a code tag at the
+> location of the call. If we have a code tag injected at every
+> allocation call, then finding the allocation counter (code tag) to
+> operate takes no time.
+>
+> > Is that
+> > really necessary? Values from __builtin_return_address() can easily be
+> > printed out as function+offset from kernel which already gives most of =
+the
+> > necessary information for triaging and mapping that back to source line=
+ from
+> > userspace isn't difficult. Wouldn't using __builtin_return_address() ma=
+ke
+> > the whole thing a lot simpler?
+>=20
+> If we do that we have to associate that address with the allocation
+> counter at runtime on the first allocation and look it up on all
+> following allocations. That introduces the overhead which we are
+> trying to avoid by using macros.
 
-在 2023/04/23 16:15, Yu Kuai 写道:
-> Hi,
-> 
-> 在 2023/04/14 16:40, Yu Kuai 写道:
->> From: Yu Kuai <yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
->>
->> commit 50e34d78815e ("block: disable the elevator int del_gendisk")
->> move rq_qos_exit() from disk_release() to del_gendisk(), this will
->> introduce some problems:
->>
->> 1) If rq_qos_add() is triggered by enabling iocost/iolatency through
->>     cgroupfs, then it can concurrent with del_gendisk(), it's not safe to
->>     write 'q->rq_qos' concurrently.
->>
->> 2) Activate cgroup policy that is relied on rq_qos will call
->>     rq_qos_add() and blkcg_activate_policy(), and if rq_qos_exit() is
->>     called in the middle, null-ptr-dereference will be triggered in
->>     blkcg_activate_policy().
->>
->> 3) blkg_conf_open_bdev() can call blkdev_get_no_open() first to find the
->>     disk, then if rq_qos_exit() from del_gendisk() is done before
->>     rq_qos_add(), then memory will be leaked.
->>
->> This patch add a new disk level mutex 'rq_qos_mutex':
->>
->> 1) The lock will protect rq_qos_exit() directly.
->>
->> 2) For wbt that doesn't relied on blk-cgroup, rq_qos_add() can only be
->>     called from disk initialization for now because wbt can't be
->>     destructed until rq_qos_exit(), so it's safe not to protect wbt for
->>     now. Hoever, in case that rq_qos dynamically destruction is supported
->>     in the furture, this patch also protect rq_qos_add() from wbt_init()
->>     directly, this is enough because blk-sysfs already synchronize
->>     writers with disk removal.
->>
->> 3) For iocost and iolatency, in order to synchronize disk removal and
->>     cgroup configuration, the lock is held after blkdev_get_no_open()
->>     from blkg_conf_open_bdev(), and is released in blkg_conf_exit().
->>     In order to fix the above memory leak, disk_live() is checked after
->>     holding the new lock.
->>
-> 
-> Friendly ping ...
+I see. I'm a bit skeptical about the performance angle given that the hot
+path can be probably made really cheap even with lookups. In most cases,
+it's just gonna be an extra pointer deref and a few more arithmetics. That
+can show up in microbenchmarks but it's not gonna be much. The benefit of
+going that route would be the tracking thing being mostly self contained.
 
-Friendly ping ...
-> 
-> Thanks,
-> Kuai
->> Fixes: 50e34d78815e ("block: disable the elevator int del_gendisk")
->> Signed-off-by: Yu Kuai <yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
->> ---
->>   block/blk-cgroup.c     |  9 +++++++++
->>   block/blk-core.c       |  1 +
->>   block/blk-rq-qos.c     | 20 ++++++--------------
->>   block/blk-wbt.c        |  2 ++
->>   include/linux/blkdev.h |  1 +
->>   5 files changed, 19 insertions(+), 14 deletions(-)
->>
->> diff --git a/block/blk-cgroup.c b/block/blk-cgroup.c
->> index 1c1ebeb51003..0d79d864ecb1 100644
->> --- a/block/blk-cgroup.c
->> +++ b/block/blk-cgroup.c
->> @@ -705,6 +705,13 @@ int blkg_conf_open_bdev(struct blkg_conf_ctx *ctx)
->>           return -ENODEV;
->>       }
->> +    mutex_lock(&bdev->bd_queue->rq_qos_mutex);
->> +    if (!disk_live(bdev->bd_disk)) {
->> +        blkdev_put_no_open(bdev);
->> +        mutex_unlock(&bdev->bd_queue->rq_qos_mutex);
->> +        return -ENODEV;
->> +    }
->> +
->>       ctx->body = input;
->>       ctx->bdev = bdev;
->>       return 0;
->> @@ -849,6 +856,7 @@ EXPORT_SYMBOL_GPL(blkg_conf_prep);
->>    */
->>   void blkg_conf_exit(struct blkg_conf_ctx *ctx)
->>       __releases(&ctx->bdev->bd_queue->queue_lock)
->> +    __releases(&ctx->bdev->bd_queue->rq_qos_mutex)
->>   {
->>       if (ctx->blkg) {
->>           spin_unlock_irq(&bdev_get_queue(ctx->bdev)->queue_lock);
->> @@ -856,6 +864,7 @@ void blkg_conf_exit(struct blkg_conf_ctx *ctx)
->>       }
->>       if (ctx->bdev) {
->> +        mutex_unlock(&ctx->bdev->bd_queue->rq_qos_mutex);
->>           blkdev_put_no_open(ctx->bdev);
->>           ctx->body = NULL;
->>           ctx->bdev = NULL;
->> diff --git a/block/blk-core.c b/block/blk-core.c
->> index 269765d16cfd..fc7f902bdf5b 100644
->> --- a/block/blk-core.c
->> +++ b/block/blk-core.c
->> @@ -420,6 +420,7 @@ struct request_queue *blk_alloc_queue(int node_id)
->>       mutex_init(&q->debugfs_mutex);
->>       mutex_init(&q->sysfs_lock);
->>       mutex_init(&q->sysfs_dir_lock);
->> +    mutex_init(&q->rq_qos_mutex);
->>       spin_lock_init(&q->queue_lock);
->>       init_waitqueue_head(&q->mq_freeze_wq);
->> diff --git a/block/blk-rq-qos.c b/block/blk-rq-qos.c
->> index d8cc820a365e..167be74df4ee 100644
->> --- a/block/blk-rq-qos.c
->> +++ b/block/blk-rq-qos.c
->> @@ -288,11 +288,13 @@ void rq_qos_wait(struct rq_wait *rqw, void 
->> *private_data,
->>   void rq_qos_exit(struct request_queue *q)
->>   {
->> +    mutex_lock(&q->rq_qos_mutex);
->>       while (q->rq_qos) {
->>           struct rq_qos *rqos = q->rq_qos;
->>           q->rq_qos = rqos->next;
->>           rqos->ops->exit(rqos);
->>       }
->> +    mutex_unlock(&q->rq_qos_mutex);
->>   }
->>   int rq_qos_add(struct rq_qos *rqos, struct gendisk *disk, enum 
->> rq_qos_id id,
->> @@ -300,6 +302,8 @@ int rq_qos_add(struct rq_qos *rqos, struct gendisk 
->> *disk, enum rq_qos_id id,
->>   {
->>       struct request_queue *q = disk->queue;
->> +    lockdep_assert_held(&q->rq_qos_mutex);
->> +
->>       rqos->disk = disk;
->>       rqos->id = id;
->>       rqos->ops = ops;
->> @@ -307,18 +311,13 @@ int rq_qos_add(struct rq_qos *rqos, struct 
->> gendisk *disk, enum rq_qos_id id,
->>       /*
->>        * No IO can be in-flight when adding rqos, so freeze queue, which
->>        * is fine since we only support rq_qos for blk-mq queue.
->> -     *
->> -     * Reuse ->queue_lock for protecting against other concurrent
->> -     * rq_qos adding/deleting
->>        */
->>       blk_mq_freeze_queue(q);
->> -    spin_lock_irq(&q->queue_lock);
->>       if (rq_qos_id(q, rqos->id))
->>           goto ebusy;
->>       rqos->next = q->rq_qos;
->>       q->rq_qos = rqos;
->> -    spin_unlock_irq(&q->queue_lock);
->>       blk_mq_unfreeze_queue(q);
->> @@ -330,7 +329,6 @@ int rq_qos_add(struct rq_qos *rqos, struct gendisk 
->> *disk, enum rq_qos_id id,
->>       return 0;
->>   ebusy:
->> -    spin_unlock_irq(&q->queue_lock);
->>       blk_mq_unfreeze_queue(q);
->>       return -EBUSY;
->>   }
->> @@ -340,21 +338,15 @@ void rq_qos_del(struct rq_qos *rqos)
->>       struct request_queue *q = rqos->disk->queue;
->>       struct rq_qos **cur;
->> -    /*
->> -     * See comment in rq_qos_add() about freezing queue & using
->> -     * ->queue_lock.
->> -     */
->> -    blk_mq_freeze_queue(q);
->> +    lockdep_assert_held(&q->rq_qos_mutex);
->> -    spin_lock_irq(&q->queue_lock);
->> +    blk_mq_freeze_queue(q);
->>       for (cur = &q->rq_qos; *cur; cur = &(*cur)->next) {
->>           if (*cur == rqos) {
->>               *cur = rqos->next;
->>               break;
->>           }
->>       }
->> -    spin_unlock_irq(&q->queue_lock);
->> -
->>       blk_mq_unfreeze_queue(q);
->>       mutex_lock(&q->debugfs_mutex);
->> diff --git a/block/blk-wbt.c b/block/blk-wbt.c
->> index e49a48684532..53bf5aa6f9ad 100644
->> --- a/block/blk-wbt.c
->> +++ b/block/blk-wbt.c
->> @@ -942,7 +942,9 @@ int wbt_init(struct gendisk *disk)
->>       /*
->>        * Assign rwb and add the stats callback.
->>        */
->> +    mutex_lock(&q->rq_qos_mutex);
->>       ret = rq_qos_add(&rwb->rqos, disk, RQ_QOS_WBT, &wbt_rqos_ops);
->> +    mutex_unlock(&q->rq_qos_mutex);
->>       if (ret)
->>           goto err_free;
->> diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
->> index 6ede578dfbc6..17774f55743e 100644
->> --- a/include/linux/blkdev.h
->> +++ b/include/linux/blkdev.h
->> @@ -395,6 +395,7 @@ struct request_queue {
->>       struct blk_queue_stats    *stats;
->>       struct rq_qos        *rq_qos;
->> +    struct mutex        rq_qos_mutex;
->>       const struct blk_mq_ops    *mq_ops;
->>
-> 
-> .
-> 
+That said, it's nice to not have to worry about allocating tracking slots
+and managing hash table, so no strong opinion.
 
+Thanks.
+
+--=20
+tejun
