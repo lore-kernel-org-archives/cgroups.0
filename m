@@ -1,105 +1,194 @@
-From: hanjinke <hanjinke.666-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
-Subject: Re: [External] Re: [PATCH v2] blk-throttle: Fix io statistics for
- cgroup v1
-Date: Thu, 4 May 2023 23:08:53 +0800
-Message-ID: <eb2eeb6b-07da-4e98-142c-da1e7ea35c2b@bytedance.com>
-References: <20230401094708.77631-1-hanjinke.666@bytedance.com>
- <ZEwY5Oo+5inO9UFf@righiandr-XPS-13-7390>
+From: Chris Li <chrisl-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [LSF/MM/BPF TOPIC] Reducing zombie memcgs
+Date: Thu, 4 May 2023 08:31:59 -0700
+Message-ID: <ZFPP71czDDxMPLQK@google.com>
+References: <CABdmKX2M6koq4Q0Cmp_-=wbP0Qa190HdEGGaHfxNS05gAkUtPA@mail.gmail.com>
+ <ZFLdDyHoIdJSXJt+@google.com>
+ <874josz4rd.fsf@nvidia.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=bytedance.com; s=google; t=1683212939; x=1685804939;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to:subject
-         :user-agent:mime-version:date:message-id:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=OFa1D5Tpf/QrQJM5h3CrUwGz4UKarPH+tDSx3KZiqW0=;
-        b=DNqvvH4fVrTxxmy3uWocPqMrVQzGrvn1bKV/DBRhuLaJP6xVuRfHqmbHfrevd1owR/
-         jiCrzjiOJ6WKw3SidjtKGTAo3Kw6pc6zVNOe6oEJ3Q7NwivVlUyL5fyWvqWOdTYm67kg
-         bB8EjQA5ooh95ZqFlEOhksFT0f1AAMr4Zq0N5VHLOQUfiSYQ2Jc4c9mMxf5zpl9GlztJ
-         79At54zrwpPkmPzu2hgVlWkTkzYQtfrDyMp6XW8rtYcSI5MAQsYKVXYMVqd667juw5MI
-         6RoawcuDBmVVXahW627FRVPS71JWh8CGrpk9MFh7Dh0Tq7PtZCP2VYWXY72KPg5byozj
-         1LIA==
-In-Reply-To: <ZEwY5Oo+5inO9UFf@righiandr-XPS-13-7390>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1683214321;
+        bh=K5f+ZOBIkEgY0QWXt5bxgfyR6U3QA/ZYNaRqOMRJ4Yc=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=vJW6O++UBsBewhBKc7iq/zdEBCDG4VOYkoQC+cvDBlINQOYRMwWZy8FL7p3tfQ0wq
+         LKm9KdTI8hjkv0hEx9UvLnqfqaefpIsKixresfkRmfhQY1MKbvgVTon7+q4VO95FRM
+         haB+aGCfcCDy8qlISl+D1uE+BaixU6ySTa5RMcUHFfIdP/273Vbkjha14s8lQ2P8dy
+         PeRPa2jPahjujRY3NbkgUIyl1xDGD+qcD7kOLklXFARXbrw5DeKbNwsnUz9kRKtdka
+         N+s87Gz7czfgpXkYZy2l5hYuxJDDkpodjyqxxufKwVw5X3AA22QrIzW/CWap5j3zMt
+         +RsKeM2dpZ9Ow==
+Content-Disposition: inline
+In-Reply-To: <874josz4rd.fsf-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="utf-8"; format="flowed"
-To: Andrea Righi <andrea.righi-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org>
-Cc: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, josef-DigfWCa+lFGyeJad7bwFQA@public.gmane.org, axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Type: text/plain; charset="utf-8"
+To: Alistair Popple <apopple-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>
+Cc: "T.J. Mercier" <tjmercier-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, lsf-pc-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Muchun Song <muchun.song-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Jason Gunthorpe <jgg-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>, Kalesh Singh <kaleshsingh-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Yu Zhao <yuzhao-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 
-Hi
+On Thu, May 04, 2023 at 09:58:56PM +1000, Alistair Popple wrote:
+> 
+> Chris Li <chrisl-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org> writes:
+> 
+> > Hi T.J.,
+> >
+> > On Tue, Apr 11, 2023 at 04:36:37PM -0700, T.J. Mercier wrote:
+> >> When a memcg is removed by userspace it gets offlined by the kernel.
+> >> Offline memcgs are hidden from user space, but they still live in the
+> >> kernel until their reference count drops to 0. New allocations cannot
+> >> be charged to offline memcgs, but existing allocations charged to
+> >> offline memcgs remain charged, and hold a reference to the memcg.
+> >> 
+> >> As such, an offline memcg can remain in the kernel indefinitely,
+> >> becoming a zombie memcg. The accumulation of a large number of zombie
+> >> memcgs lead to increased system overhead (mainly percpu data in struct
+> >> mem_cgroup). It also causes some kernel operations that scale with the
+> >> number of memcgs to become less efficient (e.g. reclaim).
+> >> 
+> >> There are currently out-of-tree solutions which attempt to
+> >> periodically clean up zombie memcgs by reclaiming from them. However
+> >> that is not effective for non-reclaimable memory, which it would be
+> >> better to reparent or recharge to an online cgroup. There are also
+> >> proposed changes that would benefit from recharging for shared
+> >> resources like pinned pages, or DMA buffer pages.
+> >
+> > I am also interested in this topic. T.J. and I have some offline
+> > discussion about this. We have some proposals to solve this
+> > problem.
+> >
+> > I will share the write up here for the up coming LSF/MM discussion.
+> 
+> Unfortunately I won't be attending LSF/MM in person this year but I am
 
-Sorry for delay（Chinese Labor Day holiday).
+Will you be able to join virtually?
 
-在 2023/4/29 上午3:05, Andrea Righi 写道:
-> On Sat, Apr 01, 2023 at 05:47:08PM +0800, Jinke Han wrote:
->> From: Jinke Han <hanjinke.666-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
->>
->> After commit f382fb0bcef4 ("block: remove legacy IO schedulers"),
->> blkio.throttle.io_serviced and blkio.throttle.io_service_bytes become
->> the only stable io stats interface of cgroup v1, and these statistics
->> are done in the blk-throttle code. But the current code only counts the
->> bios that are actually throttled. When the user does not add the throttle
->> limit, the io stats for cgroup v1 has nothing. I fix it according to the
->> statistical method of v2, and made it count all ios accurately.
->>
->> Fixes: a7b36ee6ba29 ("block: move blk-throtl fast path inline")
->> Signed-off-by: Jinke Han <hanjinke.666-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
-> 
-> Thanks for fixing this!
-> 
-> The code looks correct to me, but this seems to report io statistics
-> only if at least one throttling limit is defined. IIRC with cgroup v1 it
-> was possible to see the io statistics inside a cgroup also with no
-> throttling limits configured.
-> 
-> Basically to restore the old behavior we would need to drop the
-> cgroup_subsys_on_dfl() check, something like the following (on top of
-> your patch).
-> 
-> But I'm not sure if we're breaking other behaviors in this way...
-> opinions?
-> 
->   block/blk-cgroup.c   |  3 ---
->   block/blk-throttle.h | 12 +++++-------
->   2 files changed, 5 insertions(+), 10 deletions(-)
-> 
-> diff --git a/block/blk-cgroup.c b/block/blk-cgroup.c
-> index 79138bfc6001..43af86db7cf3 100644
-> --- a/block/blk-cgroup.c
-> +++ b/block/blk-cgroup.c
-> @@ -2045,9 +2045,6 @@ void blk_cgroup_bio_start(struct bio *bio)
->   	struct blkg_iostat_set *bis;
->   	unsigned long flags;
->   
-> -	if (!cgroup_subsys_on_dfl(io_cgrp_subsys))
-> -		return;
-> -
->   	/* Root-level stats are sourced from system-wide IO stats */
->   	if (!cgroup_parent(blkcg->css.cgroup))
->   		return;
-> diff --git a/block/blk-throttle.h b/block/blk-throttle.h
-> index d1ccbfe9f797..bcb40ee2eeba 100644
-> --- a/block/blk-throttle.h
-> +++ b/block/blk-throttle.h
-> @@ -185,14 +185,12 @@ static inline bool blk_should_throtl(struct bio *bio)
->   	struct throtl_grp *tg = blkg_to_tg(bio->bi_blkg);
->   	int rw = bio_data_dir(bio);
->   
-> -	if (!cgroup_subsys_on_dfl(io_cgrp_subsys)) {
-> -		if (!bio_flagged(bio, BIO_CGROUP_ACCT)) {
-> -			bio_set_flag(bio, BIO_CGROUP_ACCT);
-> -			blkg_rwstat_add(&tg->stat_bytes, bio->bi_opf,
-> -					bio->bi_iter.bi_size);
-> -		}
-> -		blkg_rwstat_add(&tg->stat_ios, bio->bi_opf, 1);
-> +	if (!bio_flagged(bio, BIO_CGROUP_ACCT)) {
-> +		bio_set_flag(bio, BIO_CGROUP_ACCT);
-> +		blkg_rwstat_add(&tg->stat_bytes, bio->bi_opf,
-> +				bio->bi_iter.bi_size);
->   	}
-> +	blkg_rwstat_add(&tg->stat_ios, bio->bi_opf, 1);
+> interested in this topic as well from the point of view of limiting
+> pinned pages with cgroups. I am hoping to revive this patch series soon:
 
-It seems that statistics have been carried out in both v1 and v2，we can 
-get the statistics of v2 from io.stat, is it necessary to count v2 here?
 
+
+> 
+> https://lore.kernel.org/linux-mm/cover.c238416f0e82377b449846dbb2459ae9d7030c8e.1675669136.git-series.apopple-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org/
+> 
+> The main problem with this series was getting agreement on whether to
+> add pinning as a separate cgroup (which is what the series currently
+> does) or whether it should be part of a per-page memcg limit.
+> 
+> The issue with per-page memcg limits is what to do for shared
+> mappings. The below suggestion sounds promising because the pins for
+> shared pages could be charged to the smemcg. However I'm not sure how it
+> would solve the problem of a process in cgroup A being able to raise the
+> pin count of cgroup B when pinning a smemcg page which was one of the
+> reason I introduced a new cgroup controller.
+
+Now that I think of it, I can see the pin count memcg as a subtype of
+smemcg.
+
+The smemcg can have a limit as well, when it add to a memcg, the operation
+raise the pin count smemcg charge over the smemcg limit will fail.
+
+For the detail tracking of shared/unshared behavior, the smemcg can model it
+as a step 2 feature.
+
+There are four different kind of operation can perform on a smemcg:
+
+1) allocate/charge memory. The charge will add on the per smemcg charge
+counter, check against the per smemcg limit. ENOMEM if it is over the limit.
+
+2) free/uncharge memory. Similar to above just subtract the counter.
+
+3) share/mmap already charged memory. This will not change the smemcg charge
+count, it will add to a per <smemcg, memcg> borrow counter. It is possible to
+put a limit on that counter as well, even though I haven't given too much thought
+of how useful it is. That will limit how much memory can mapped from the smemcg.
+
+4) unshare/unmmap already charged memory. That will reduce the per <smemcg, memcg>
+borrow counter.
+
+Will that work for your pin memory usage?
+
+> 
+> > Shared Memory Cgroup Controllers
+> >
+> > = Introduction
+> >
+> > The current memory cgroup controller does not support shared memory
+> > objects. For the memory that is shared between different processes, it
+> > is not obvious which process should get charged. Google has some
+> > internal tmpfs “memcg=” mount option to charge tmpfs data to a
+> > specific memcg that’s often different from where charging processes
+> > run. However it faces some difficulties when the charged memcg exits
+> > and the charged memcg becomes a zombie memcg.
+> > Other approaches include “re-parenting” the memcg charge to the parent
+> > memcg. Which has its own problem. If the charge is huge, iteration of
+> > the reparenting can be costly.
+> >
+> > = Proposed Solution
+> >
+> > The proposed solution is to add a new type of memory controller for
+> > shared memory usage. E.g. tmpfs, hugetlb, file system mmap and
+> > dma_buf. This shared memory cgroup controller object will have the
+> > same life cycle of the underlying shared memory.
+> >
+> > Processes can not be added to the shared memory cgroup. Instead the
+> > shared memory cgroup can be added to the memcg using a “smemcg” API
+> > file, similar to adding a process into the “tasks” API file.
+> > When a smemcg is added to the memcg, the amount of memory that has
+> > been shared in the memcg process will be accounted for as the part of
+> > the memcg “memory.current”.The memory.current of the memcg is make up
+> > of two parts, 1) the processes anonymous memory and 2) the memory
+> > shared from smemcg.
+> >
+> > When the memcg “memory.current” is raised to the limit. The kernel
+> > will active try to reclaim for the memcg to make “smemcg memory +
+> > process anonymous memory” within the limit.
+> 
+> That means a process in one cgroup could force reclaim of smemcg memory
+> in use by a process in another cgroup right? I guess that's no different
+> to the current situation though.
+> 
+> > Further memory allocation
+> > within those memcg processes will fail if the limit can not be
+> > followed. If many reclaim attempts fail to bring the memcg
+> > “memory.current” within the limit, the process in this memcg will get
+> > OOM killed.
+> 
+> How would this work if say a charge for cgroup A to a smemcg in both
+> cgroup A and B would cause cgroup B to go over its memory limit and not
+> enough memory could be reclaimed from cgroup B? OOM killing a process in
+> cgroup B due to a charge from cgroup A doesn't sound like a good idea.
+
+If we separate out the charge counter with the borrow counter, that problem
+will be solved. When smemcg is add to memcg A, we can have a policy specific
+that adding the <smemcg, memcg A> borrow counter into memcg A's "memory.current".
+
+If B did not map that page, that page will not be part of <smemcg, memcg B>
+borrow count. B will not be punished.
+
+However if B did map that page, The <smemcg, memcg B> need to increase as well.
+B will be punished for it.
+
+Will that work for your example situation?
+
+> > = Benefits
+> >
+> > The benefits of this solution include:
+> > * No zombie memcg. The life cycle of the smemcg match the share memory file system or dma_buf.
+> 
+> If we added pinning it could get a bit messier, as it would have to hang
+> around until the driver unpinned the pages. But I don't think that's a
+> problem.
+
+
+That is exactly the reason pin memory can belong to a pin smemcg. You just need
+to model the driver holding the pin ref count as one of the share/mmap operation.
+Then the pin smemcg will not go away if there is a pending pin ref count on it.
+
+We have have different policy option on smemcg.
+For the simple usage don't care the per memcg borrow counter, it can add the
+smemcg's charge count to "memory.current".
+
+Only the user who cares about per memcg usage of a smemcg will need to maintain
+per <smemcg, memcg> borrow counter, at additional cost.
+
+Chris
 
