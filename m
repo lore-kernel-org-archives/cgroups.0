@@ -1,260 +1,715 @@
-From: Alistair Popple <apopple-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [LSF/MM/BPF TOPIC] Reducing zombie memcgs
-Date: Fri, 05 May 2023 23:53:24 +1000
-Message-ID: <877ctm518f.fsf@nvidia.com>
-References: <CABdmKX2M6koq4Q0Cmp_-=wbP0Qa190HdEGGaHfxNS05gAkUtPA@mail.gmail.com>
- <ZFLdDyHoIdJSXJt+@google.com> <874josz4rd.fsf@nvidia.com>
- <ZFPP71czDDxMPLQK@google.com>
+From: Maarten Lankhorst <maarten.lankhorst-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
+Subject: Re: [Intel-gfx] [RFC PATCH 2/4] drm/cgroup: Add memory accounting to
+ DRM cgroup
+Date: Fri, 5 May 2023 16:21:01 +0200
+Message-ID: <0a77fbd1-159a-4a59-65e4-315049e121c7@linux.intel.com>
+References: <20230503083500.645848-1-maarten.lankhorst@linux.intel.com>
+ <20230503083500.645848-3-maarten.lankhorst@linux.intel.com>
+ <c9d1e666-50e9-d66a-d751-f4ec39fcb7bb@linux.intel.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 8bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
- s=selector2;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=GFzTmHoD0YW+y+JyJp63tu3++Ylp2gWaHOWpJbm059w=;
- b=sA8OzQ6MUTpAebtpHyYbws/2Rq253+ioTTJIb6ocEIwLzsL6/2M85FEQIxEQaQbYBqL2XfKWzbFKek0CxoO7JcZknfqD6BSxGrrN23mNL1e8pwVuX4fRpbwmrYM6KqGrMjWXKUptoX7gD4VcqWj6gin9l22w3a8wY3Czq63Djxo/mUo9VO3MHYCQxzFBMSaVCMmSl1D6YqJUmXKMIBDtvJYO1BNx+9hjOGKpRcxf3TO8/hQ2SjU8+nhwjIEoRYejaU3IFe4zLX6em8h1xdLyubdCn1m9/JW8kmMRqkF8rx4HMsc4//rwZEO67+M6aKGa8qmAOn4UOfluTU5dgSHu5w==
-In-reply-to: <ZFPP71czDDxMPLQK-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
- -text follows this line--
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1683296468; x=1714832468;
+  h=message-id:date:mime-version:subject:to:cc:references:
+   from:in-reply-to:content-transfer-encoding;
+  bh=NZWJ3Q5+rSqIgUlecZoPu1CnitpcX/OQtos+1FiW7mQ=;
+  b=lKTgvz7XZE38zJMnh2xasw7xTdNPnmoMTP0rScWbawZ+b+rS9wh8hHx/
+   O+ZbZ0aGtAhwWK+iKIfPorcjfgfF7o3I6gSXafAPB0bDAAP092fntzRbX
+   5E/YffnOY7F900jnwXhqCS/xNs7TFLbugYyzTUXbabVG8enDJ7vxjMxlG
+   ieINqygKCZ5SUtY+1ESVxJO/MOyAY7G3ckm06IYQOxip+sH14jspFSSsM
+   iLcUzpTvk00qvo7l1uHC+6b0K0XKHiiZwMyUndCz6n9UdH7AvtuYtXjQJ
+   MAzTV/rWHxxf4f8pOUvFoaJuYtK/I6yA6D1YpmYPE5RNpqlIll4MMMFtt
+   w==;
+Content-Language: en-US
+In-Reply-To: <c9d1e666-50e9-d66a-d751-f4ec39fcb7bb-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="utf-8"
-To: Chris Li <chrisl-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: "T.J. Mercier" <tjmercier-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, lsf-pc-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Muchun Song <muchun.song-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Jason Gunthorpe <jgg-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>, Kalesh Singh <kaleshsingh-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Yu Zhao <yuzhao-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Content-Type: text/plain; charset="utf-8"; format="flowed"
+To: Tvrtko Ursulin <tvrtko.ursulin-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, dri-devel-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, intel-xe-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org
+Cc: Daniel Vetter <daniel-/w4YWyX8dFk@public.gmane.org>, Thomas Zimmermann <tzimmermann-l3A5Bk7waGM@public.gmane.org>, intel-gfx-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, amd-gfx-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org, Maxime Ripard <mripard-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, David Airlie <airlied-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 
+I just now noticed the other comments. Wiill address them.
 
-Chris Li <chrisl-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org> writes:
-
-> On Thu, May 04, 2023 at 09:58:56PM +1000, Alistair Popple wrote:
->>=20
->> Chris Li <chrisl-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org> writes:
->>=20
->> > Hi T.J.,
->> >
->> > On Tue, Apr 11, 2023 at 04:36:37PM -0700, T.J. Mercier wrote:
->> >> When a memcg is removed by userspace it gets offlined by the kernel.
->> >> Offline memcgs are hidden from user space, but they still live in the
->> >> kernel until their reference count drops to 0. New allocations cannot
->> >> be charged to offline memcgs, but existing allocations charged to
->> >> offline memcgs remain charged, and hold a reference to the memcg.
->> >>=20
->> >> As such, an offline memcg can remain in the kernel indefinitely,
->> >> becoming a zombie memcg. The accumulation of a large number of zombie
->> >> memcgs lead to increased system overhead (mainly percpu data in struc=
-t
->> >> mem_cgroup). It also causes some kernel operations that scale with th=
-e
->> >> number of memcgs to become less efficient (e.g. reclaim).
->> >>=20
->> >> There are currently out-of-tree solutions which attempt to
->> >> periodically clean up zombie memcgs by reclaiming from them. However
->> >> that is not effective for non-reclaimable memory, which it would be
->> >> better to reparent or recharge to an online cgroup. There are also
->> >> proposed changes that would benefit from recharging for shared
->> >> resources like pinned pages, or DMA buffer pages.
->> >
->> > I am also interested in this topic. T.J. and I have some offline
->> > discussion about this. We have some proposals to solve this
->> > problem.
->> >
->> > I will share the write up here for the up coming LSF/MM discussion.
->>=20
->> Unfortunately I won't be attending LSF/MM in person this year but I am
+On 2023-05-03 17:31, Tvrtko Ursulin wrote:
 >
-> Will you be able to join virtually?
-
-I should be able to join afternoon sessions virtually.
-
->> interested in this topic as well from the point of view of limiting
->> pinned pages with cgroups. I am hoping to revive this patch series soon:
+> On 03/05/2023 09:34, Maarten Lankhorst wrote:
+>> Based roughly on the rdma and misc cgroup controllers, with a lot of
+>> the accounting code borrowed from rdma.
+>>
+>> The interface is simple:
+>> - populate drmcgroup_device->regions[..] name and size for each active
+>>    region.
+>> - Call drm(m)cg_register_device()
+>> - Use drmcg_try_charge to check if you can allocate a chunk of memory,
+>>    use drmcg_uncharge when freeing it. This may return an error code,
+>>    or -EAGAIN when the cgroup limit is reached.
+>>
+>> The ttm code transforms -EAGAIN back to -ENOSPC since it has specific
+>> logic for -ENOSPC, and returning -EAGAIN to userspace causes drmIoctl
+>> to restart infinitely.
+>>
+>> This API allows you to limit stuff with cgroups.
+>> You can see the supported cards in /sys/fs/cgroup/drm.capacity
+>> You need to echo +drm to cgroup.subtree_control, and then you can
+>> partition memory.
+>>
+>> In each cgroup subdir:
+>> drm.max shows the current limits of the cgroup.
+>> drm.current the current amount of allocated memory used by this cgroup.
+>> drm.events shows the amount of time max memory was reached.
 >
->>=20
->> https://lore.kernel.org/linux-mm/cover.c238416f0e82377b449846dbb2459ae9d=
-7030c8e.1675669136.git-series.apopple-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org/
->>=20
->> The main problem with this series was getting agreement on whether to
->> add pinning as a separate cgroup (which is what the series currently
->> does) or whether it should be part of a per-page memcg limit.
->>=20
->> The issue with per-page memcg limits is what to do for shared
->> mappings. The below suggestion sounds promising because the pins for
->> shared pages could be charged to the smemcg. However I'm not sure how it
->> would solve the problem of a process in cgroup A being able to raise the
->> pin count of cgroup B when pinning a smemcg page which was one of the
->> reason I introduced a new cgroup controller.
+> Events is not in the patch?
 >
-> Now that I think of it, I can see the pin count memcg as a subtype of
-> smemcg.
+>> Signed-off-by: Maarten Lankhorst <maarten.lankhorst-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
+>> ---
+>>   Documentation/admin-guide/cgroup-v2.rst |  46 ++
+>>   Documentation/gpu/drm-compute.rst       |  54 +++
+>>   include/linux/cgroup_drm.h              |  81 ++++
+>>   kernel/cgroup/drm.c                     | 539 +++++++++++++++++++++++-
+>>   4 files changed, 699 insertions(+), 21 deletions(-)
+>>   create mode 100644 Documentation/gpu/drm-compute.rst
+>>
+>> diff --git a/Documentation/admin-guide/cgroup-v2.rst 
+>> b/Documentation/admin-guide/cgroup-v2.rst
+>> index f67c0829350b..b858d99cb2ef 100644
+>> --- a/Documentation/admin-guide/cgroup-v2.rst
+>> +++ b/Documentation/admin-guide/cgroup-v2.rst
+>> @@ -2374,6 +2374,52 @@ RDMA Interface Files
+>>         mlx4_0 hca_handle=1 hca_object=20
+>>         ocrdma1 hca_handle=1 hca_object=23
+>>   +DRM
+>> +----
+>> +
+>> +The "drm" controller regulates the distribution and accounting of
+>> +DRM resources.
+>> +
+>> +DRM Interface Files
+>> +~~~~~~~~~~~~~~~~~~~~
+>> +
+>> +  drm.max
+>> +    A readwrite nested-keyed file that exists for all the cgroups
+>> +    except root that describes current configured resource limit
+>> +    for a DRM device.
+>> +
+>> +    Lines are keyed by device name and are not ordered.
+>> +    Each line contains space separated resource name and its configured
+>> +    limit that can be distributed.
+>> +
+>> +    The following nested keys are defined.
+>> +
+>> +      ========== 
+>> =======================================================
+>> +      region.*     Maximum amount of bytes that allocatable in this 
+>> region
+>> +      ========== 
+>> =======================================================
+>> +
+>> +    An example for xe follows::
+>> +
+>> +      0000:03:00.0 region.vram0=1073741824 region.stolen=max
+>> +
+>> +  drm.capacity
+>> +    A read-only file that describes maximum region capacity.
+>> +    It only exists on the root cgroup. Not all memory can be
+>> +    allocated by cgroups, as the kernel reserves some for
+>> +    internal use.
+>> +
+>> +    An example for xe follows::
+>> +
+>> +      0000:03:00.0 region.vram0=8514437120 region.stolen=67108864
+>> +
+>> +  drm.current
+>> +    A read-only file that describes current resource usage.
+>> +    It exists for all the cgroup except root.
+>> +
+>> +    An example for xe follows::
+>> +
+>> +      0000:03:00.0 region.vram0=12550144 region.stolen=8650752
+>> +
+>>   HugeTLB
+>>   -------
+>>   diff --git a/Documentation/gpu/drm-compute.rst 
+>> b/Documentation/gpu/drm-compute.rst
+>> new file mode 100644
+>> index 000000000000..116270976ef7
+>> --- /dev/null
+>> +++ b/Documentation/gpu/drm-compute.rst
+>> @@ -0,0 +1,54 @@
+>> +==================================
+>> +Long running workloads and compute
+>> +==================================
+>> +
+>> +Long running workloads (compute) are workloads that will not 
+>> complete in 10
+>> +seconds. (The time let the user wait before he reaches for the power 
+>> button).
+>> +This means that other techniques need to be used to manage those 
+>> workloads,
+>> +that cannot use fences.
+>> +
+>> +Some hardware may schedule compute jobs, and have no way to pre-empt 
+>> them, or
+>> +have their memory swapped out from them. Or they simply want their 
+>> workload
+>> +not to be preempted or swapped out at all.
+>> +
+>> +This means that it differs from what is described in 
+>> driver-api/dma-buf.rst.
+>> +
+>> +As with normal compute jobs, dma-fence may not be used at all. In 
+>> this case,
+>> +not even to force preemption. The driver with is simply forced to 
+>> unmap a BO
+>> +from the long compute job's address space on unbind immediately, not 
+>> even
+>> +waiting for the workload to complete. Effectively this terminates 
+>> the workload
+>> +when there is no hardware support to recover.
+>> +
+>> +Since this is undesirable, there need to be mitigations to prevent a 
+>> workload
+>> +from being terminated. There are several possible approach, all with 
+>> their
+>> +advantages and drawbacks.
+>> +
+>> +The first approach you will likely try is to pin all buffers used by 
+>> compute.
+>> +This guarantees that the job will run uninterrupted, but also allows 
+>> a very
+>> +denial of service attack by pinning as much memory as possible, 
+>> hogging the
+>> +all GPU memory, and possibly a huge chunk of CPU memory.
+>> +
+>> +A second approach that will work slightly better on its own is 
+>> adding an option
+>> +not to evict when creating a new job (any kind). If all of userspace 
+>> opts in
+>> +to this flag, it would prevent cooperating userspace from forced 
+>> terminating
+>> +older compute jobs to start a new one.
+>> +
+>> +If job preemption and recoverable pagefaults are not available, 
+>> those are the
+>> +only approaches possible. So even with those, you want a separate 
+>> way of
+>> +controlling resources. The standard kernel way of doing so is cgroups.
+>> +
+>> +This creates a third option, using cgroups to prevent eviction. Both 
+>> GPU and
+>> +driver-allocated CPU memory would be accounted to the correct 
+>> cgroup, and
+>> +eviction would be made cgroup aware. This allows the GPU to be 
+>> partitioned
+>> +into cgroups, that will allow jobs to run next to each other without
+>> +interference.
 >
-> The smemcg can have a limit as well, when it add to a memcg, the operatio=
-n
-> raise the pin count smemcg charge over the smemcg limit will fail.
-
-I'm not sure that works for the pinned scenario. If a smemcg already has
-pinned pages adding it to another memcg shouldn't raise the pin count of
-the memcg it's being added to. The pin counts should only be raised in
-memcg's of processes actually requesting the page be pinned. See below
-though, the idea of borrowing seems helpful.
-
-So for pinning at least I don't see a per smemcg limit being useful.
-
-> For the detail tracking of shared/unshared behavior, the smemcg can model=
- it
-> as a step 2 feature.
+> The 3rd approach is only valid if used strictly with device local 
+> memory, right? Because as soon as system memory backed buffers are 
+> used this approach cannot guarantee no eviction can be triggered.
 >
-> There are four different kind of operation can perform on a smemcg:
+>> +
+>> +The interface to the cgroup would be similar to the current CPU memory
+>> +interface, with similar semantics for min/low/high/max, if eviction can
+>> +be made cgroup aware. For now only max is implemented.
+>> +
+>> +What should be noted is that each memory region (tiled memory for 
+>> example)
+>> +should have its own accounting, using $card key0 = value0 key1 = 
+>> value1.
+>> +
+>> +The key is set to the regionid set by the driver, for example "tile0".
+>> +For the value of $card, we use drmGetUnique().
+>> diff --git a/include/linux/cgroup_drm.h b/include/linux/cgroup_drm.h
+>> index 8ef66a47619f..4f17b1c85f47 100644
+>> --- a/include/linux/cgroup_drm.h
+>> +++ b/include/linux/cgroup_drm.h
+>> @@ -6,4 +6,85 @@
+>>   #ifndef _CGROUP_DRM_H
+>>   #define _CGROUP_DRM_H
+>>   +#include <linux/types.h>
+>> +
+>> +#include <drm/drm_managed.h>
+>> +
+>> +struct drm_device;
+>> +struct drm_file;
+>> +
+>> +struct drmcgroup_state;
+>> +
+>> +/*
+>> + * Use 8 as max, because of N^2 lookup when setting things, can be 
+>> bumped if needed
+>> + * Identical to TTM_NUM_MEM_TYPES to allow simplifying that code.
+>> + */
+>> +#define DRMCG_MAX_REGIONS 8
+>> +
+>> +struct drmcgroup_device {
+>> +    struct list_head list;
+>> +    struct list_head pools;
+>> +
+>> +    struct {
+>> +        u64 size;
+>> +        const char *name;
+>> +    } regions[DRMCG_MAX_REGIONS];
+>> +
+>> +    /* Name describing the card, set by drmcg_register_device */
+>> +    const char *name;
+>> +
+>> +};
+>> +
+>> +#if IS_ENABLED(CONFIG_CGROUP_DRM)
+>> +int drmcg_register_device(struct drm_device *dev,
+>> +               struct drmcgroup_device *drm_cg);
+>> +void drmcg_unregister_device(struct drmcgroup_device *cgdev);
+>> +int drmcg_try_charge(struct drmcgroup_state **drmcg,
+>> +             struct drmcgroup_device *cgdev,
+>> +             u32 index, u64 size);
+>> +void drmcg_uncharge(struct drmcgroup_state *drmcg,
+>> +            struct drmcgroup_device *cgdev,
+>> +            u32 index, u64 size);
+>> +#else
+>> +static inline int
+>> +drmcg_register_device(struct drm_device *dev,
+>> +              struct drm_cgroup *drm_cg)
+>> +{
+>> +    return 0;
+>> +}
+>> +
+>> +static inline void drmcg_unregister_device(struct drmcgroup_device 
+>> *cgdev)
+>> +{
+>> +}
+>> +
+>> +static inline int drmcg_try_charge(struct drmcgroup_state **drmcg,
+>> +                   struct drmcgroup_device *cgdev,
+>> +                   u32 index, u64 size)
+>> +{
+>> +    *drmcg = NULL;
+>> +    return 0;
+>> +}
+>> +
+>> +static inline void drmcg_uncharge(struct drmcgroup_state *drmcg,
+>> +                  struct drmcgroup_device *cgdev,
+>> +                  u32 index, u64 size)
+>> +{ }
+>> +#endif
+>> +
+>> +static inline void drmmcg_unregister_device(struct drm_device *dev, 
+>> void *arg)
+>> +{
+>> +    drmcg_unregister_device(arg);
+>> +}
+>> +
+>> +/*
+>> + * This needs to be done as inline, because cgroup lives in the core
+>> + * kernel and it cannot call drm calls directly
+>> + */
+>> +static inline int drmmcg_register_device(struct drm_device *dev,
+>> +                     struct drmcgroup_device *cgdev)
+>> +{
+>> +    return drmcg_register_device(dev, cgdev) ?:
+>> +        drmm_add_action_or_reset(dev, drmmcg_unregister_device, cgdev);
+>> +}
+>> +
+>>   #endif    /* _CGROUP_DRM_H */
+>> diff --git a/kernel/cgroup/drm.c b/kernel/cgroup/drm.c
+>> index 02c8eaa633d3..a93d9344fd36 100644
+>> --- a/kernel/cgroup/drm.c
+>> +++ b/kernel/cgroup/drm.c
+>> @@ -1,60 +1,557 @@
+>> -/* SPDX-License-Identifier: MIT */
+>> +// SPDX-License-Identifier: GPL-2.0
+>>   /*
+>> - * Copyright © 2023 Intel Corporation
+>> + * Copyright 2023 Intel
+>> + * Partially based on the rdma and misc controllers, which bear the 
+>> following copyrights:
+>> + *
+>> + * Copyright 2020 Google LLC
+>> + * Copyright (C) 2016 Parav Pandit <pandit.parav-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+>>    */
+>>     #include <linux/cgroup.h>
+>>   #include <linux/cgroup_drm.h>
+>> +#include <linux/list.h>
+>> +#include <linux/mutex.h>
+>> +#include <linux/parser.h>
+>>   #include <linux/slab.h>
+>>   -struct drm_cgroup_state {
 >
-> 1) allocate/charge memory. The charge will add on the per smemcg charge
-> counter, check against the per smemcg limit. ENOMEM if it is over the lim=
-it.
+> As a side note, it'd be easier to read the diff if you left the name 
+> as is, and some other details too, like the static root group (I need 
+> to remind myself if/why I needed it, but does it harm you?) and my 
+> missed static keywords and needless static struct initialization. I 
+> will fix that up in my patch localy. Aynway, that way it would maybe 
+> be less churn from one patch to the other in the series.
 >
-> 2) free/uncharge memory. Similar to above just subtract the counter.
+>> +#include <drm/drm_device.h>
+>> +#include <drm/drm_drv.h>
+>> +#include <drm/drm_file.h>
+>> +#include <drm/drm_managed.h>
+>> +
+>> +struct drmcgroup_state {
+>>       struct cgroup_subsys_state css;
+>> +
+>> +    struct list_head pools;
+>>   };
+>>   -struct drm_root_cgroup_state {
+>> -    struct drm_cgroup_state drmcs;
+>> +struct drmcgroup_pool_state {
+>> +    struct drmcgroup_device *device;
+>> +    struct drmcgroup_resource {
+>> +        s64 max, used;
+>> +    } resources[DRMCG_MAX_REGIONS];
+>> +
+>> +    s64 usage_sum;
+>> +
+>> +    struct list_head    cg_node;
 >
-> 3) share/mmap already charged memory. This will not change the smemcg cha=
-rge
-> count, it will add to a per <smemcg, memcg> borrow counter. It is possibl=
-e to
-> put a limit on that counter as well, even though I haven't given too much=
- thought
-> of how useful it is. That will limit how much memory can mapped from the =
-smemcg.
-
-I would like to see the idea of a borrow counter fleshed out some more
-but this sounds like it could work for the pinning scenario.
-
-Pinning could be charged to the per <smemcg, memcg> borrow counter and
-the pin limit would be enforced against that plus the anonymous pins.
-
-Implementation wise we'd need a way to lookup both the smemcg of the
-struct page and the memcg that the pinning task belongs to.
-
-> 4) unshare/unmmap already charged memory. That will reduce the per <smemc=
-g, memcg>
-> borrow counter.
-
-Actually this is where things might get a bit tricky for pinning. We'd
-have to reduce the pin charge when a driver calls put_page(). But that
-implies looking up the borrow counter / <smemcg, memcg> pair a driver
-charged the page to.
-
-I will have to give this idea some more tought though. Most drivers
-don't store anything other than the struct page pointers, but my series
-added an accounting struct which I think could reference the borrow
-counter.
-
-> Will that work for your pin memory usage?
-
-I think it could help. I will give it some thought.
-
->>=20
->> > Shared Memory Cgroup Controllers
->> >
->> > =3D Introduction
->> >
->> > The current memory cgroup controller does not support shared memory
->> > objects. For the memory that is shared between different processes, it
->> > is not obvious which process should get charged. Google has some
->> > internal tmpfs =E2=80=9Cmemcg=3D=E2=80=9D mount option to charge tmpfs=
- data to a
->> > specific memcg that=E2=80=99s often different from where charging proc=
-esses
->> > run. However it faces some difficulties when the charged memcg exits
->> > and the charged memcg becomes a zombie memcg.
->> > Other approaches include =E2=80=9Cre-parenting=E2=80=9D the memcg char=
-ge to the parent
->> > memcg. Which has its own problem. If the charge is huge, iteration of
->> > the reparenting can be costly.
->> >
->> > =3D Proposed Solution
->> >
->> > The proposed solution is to add a new type of memory controller for
->> > shared memory usage. E.g. tmpfs, hugetlb, file system mmap and
->> > dma_buf. This shared memory cgroup controller object will have the
->> > same life cycle of the underlying shared memory.
->> >
->> > Processes can not be added to the shared memory cgroup. Instead the
->> > shared memory cgroup can be added to the memcg using a =E2=80=9Csmemcg=
-=E2=80=9D API
->> > file, similar to adding a process into the =E2=80=9Ctasks=E2=80=9D API=
- file.
->> > When a smemcg is added to the memcg, the amount of memory that has
->> > been shared in the memcg process will be accounted for as the part of
->> > the memcg =E2=80=9Cmemory.current=E2=80=9D.The memory.current of the m=
-emcg is make up
->> > of two parts, 1) the processes anonymous memory and 2) the memory
->> > shared from smemcg.
->> >
->> > When the memcg =E2=80=9Cmemory.current=E2=80=9D is raised to the limit=
-. The kernel
->> > will active try to reclaim for the memcg to make =E2=80=9Csmemcg memor=
-y +
->> > process anonymous memory=E2=80=9D within the limit.
->>=20
->> That means a process in one cgroup could force reclaim of smemcg memory
->> in use by a process in another cgroup right? I guess that's no different
->> to the current situation though.
->>=20
->> > Further memory allocation
->> > within those memcg processes will fail if the limit can not be
->> > followed. If many reclaim attempts fail to bring the memcg
->> > =E2=80=9Cmemory.current=E2=80=9D within the limit, the process in this=
- memcg will get
->> > OOM killed.
->>=20
->> How would this work if say a charge for cgroup A to a smemcg in both
->> cgroup A and B would cause cgroup B to go over its memory limit and not
->> enough memory could be reclaimed from cgroup B? OOM killing a process in
->> cgroup B due to a charge from cgroup A doesn't sound like a good idea.
+> cg always makes me think cgroup and not css so it is a bit confusing.
 >
-> If we separate out the charge counter with the borrow counter, that probl=
-em
-> will be solved. When smemcg is add to memcg A, we can have a policy speci=
-fic
-> that adding the <smemcg, memcg A> borrow counter into memcg A's "memory.c=
-urrent".
->
-> If B did not map that page, that page will not be part of <smemcg, memcg =
-B>
-> borrow count. B will not be punished.
->
-> However if B did map that page, The <smemcg, memcg B> need to increase as=
- well.
-> B will be punished for it.
->
-> Will that work for your example situation?
+> Why are two lists needed?
 
-I think so, although I have been looking at this more from the point of
-view of pinning. It sounds like we could treat pinning in much the same
-way as mapping though.
+The second list is used during teardown of a specific device, but it 
+could probably traverse the entirety of  the cgroup hierarchy instead.
 
->> > =3D Benefits
->> >
->> > The benefits of this solution include:
->> > * No zombie memcg. The life cycle of the smemcg match the share memory=
- file system or dma_buf.
->>=20
->> If we added pinning it could get a bit messier, as it would have to hang
->> around until the driver unpinned the pages. But I don't think that's a
->> problem.
->
->
-> That is exactly the reason pin memory can belong to a pin smemcg. You jus=
-t need
-> to model the driver holding the pin ref count as one of the share/mmap op=
-eration.
->
-> Then the pin smemcg will not go away if there is a pending pin ref count =
-on it.
->
-> We have have different policy option on smemcg.
-> For the simple usage don't care the per memcg borrow counter, it can add =
-the
-> smemcg's charge count to "memory.current".
->
-> Only the user who cares about per memcg usage of a smemcg will need to ma=
-intain
-> per <smemcg, memcg> borrow counter, at additional cost.
+This probably needs some more core locks though, and since other cgroups 
+implementations used the dual list approach I've used that instead.
 
-Right, I think pinning drivers will always have to care about the borrow
-counter so will have to track that.
+>
+>> +    struct list_head    dev_node;
+>>   };
+>>   -static struct drm_root_cgroup_state root_drmcs;
+>> +static DEFINE_MUTEX(drmcg_mutex);
+>> +static LIST_HEAD(drmcg_devices);
+>>   -static inline struct drm_cgroup_state *
+>> +static inline struct drmcgroup_state *
+>>   css_to_drmcs(struct cgroup_subsys_state *css)
+>>   {
+>> -    return container_of(css, struct drm_cgroup_state, css);
+>> +    return container_of(css, struct drmcgroup_state, css);
+>> +}
+>> +
+>> +static inline struct drmcgroup_state *get_current_drmcg(void)
+>> +{
+>> +    return css_to_drmcs(task_get_css(current, drm_cgrp_id));
+>> +}
+>> +
+>> +static struct drmcgroup_state *parent_drmcg(struct drmcgroup_state *cg)
+>> +{
+>> +    return css_to_drmcs(cg->css.parent);
+>> +}
+>> +
+>> +static void free_cg_pool_locked(struct drmcgroup_pool_state *pool)
+>> +{
+>> +    lockdep_assert_held(&drmcg_mutex);
+>> +
+>> +    list_del(&pool->cg_node);
+>> +    list_del(&pool->dev_node);
+>> +    kfree(pool);
+>> +}
+>> +
+>> +static void
+>> +set_resource_max(struct drmcgroup_pool_state *pool, int i, u64 new_max)
+>> +{
+>> +    pool->resources[i].max = new_max;
+>> +}
+>> +
+>> +static void set_all_resource_max_limit(struct drmcgroup_pool_state 
+>> *rpool)
+>> +{
+>> +    int i;
+>> +
+>> +    for (i = 0; i < DRMCG_MAX_REGIONS; i++)
+>> +        set_resource_max(rpool, i, S64_MAX);
+>> +}
+>> +
+>> +static void drmcs_offline(struct cgroup_subsys_state *css)
+>> +{
+>> +    struct drmcgroup_state *drmcs = css_to_drmcs(css);
+>> +    struct drmcgroup_pool_state *pool, *next;
+>> +
+>> +    mutex_lock(&drmcg_mutex);
+>> +    list_for_each_entry_safe(pool, next, &drmcs->pools, cg_node) {
+>> +        if (!pool->usage_sum) {
+>> +            free_cg_pool_locked(pool);
+>> +        } else {
+>> +            /* Reset all regions, last uncharge will remove pool */
+>> +            set_all_resource_max_limit(pool);
+>> +        }
+>> +    }
+>> +    mutex_unlock(&drmcg_mutex);
+>>   }
+>>     static void drmcs_free(struct cgroup_subsys_state *css)
+>>   {
+>> -    struct drm_cgroup_state *drmcs = css_to_drmcs(css);
+>> +    struct drmcgroup_state *drmcs = css_to_drmcs(css);
+>>   -    if (drmcs != &root_drmcs.drmcs)
+>> -        kfree(drmcs);
+>> +    kfree(drmcs);
+>>   }
+>>     static struct cgroup_subsys_state *
+>>   drmcs_alloc(struct cgroup_subsys_state *parent_css)
+>>   {
+>> -    struct drm_cgroup_state *drmcs;
+>> +    struct drmcgroup_state *drmcs = kzalloc(sizeof(*drmcs), 
+>> GFP_KERNEL);
+>> +    if (!drmcs)
+>> +        return ERR_PTR(-ENOMEM);
+>> +
+>> +    INIT_LIST_HEAD(&drmcs->pools);
+>> +    return &drmcs->css;
+>> +}
+>> +
+>> +static struct drmcgroup_pool_state *
+>> +find_cg_pool_locked(struct drmcgroup_state *drmcs, struct 
+>> drmcgroup_device *dev)
+>> +{
+>> +    struct drmcgroup_pool_state *pool;
+>> +
+>> +    list_for_each_entry(pool, &drmcs->pools, cg_node)
+>> +        if (pool->device == dev)
+>> +            return pool;
+>> +
+>> +    return NULL;
+>> +}
+>> +
+>> +static struct drmcgroup_pool_state *
+>> +get_cg_pool_locked(struct drmcgroup_state *drmcs, struct 
+>> drmcgroup_device *dev)
+>> +{
+>> +    struct drmcgroup_pool_state *pool;
+>> +
+>> +    pool = find_cg_pool_locked(drmcs, dev);
+>> +    if (pool)
+>> +        return pool;
+>> +
+>> +    pool = kzalloc(sizeof(*pool), GFP_KERNEL);
+>> +    if (!pool)
+>> +        return ERR_PTR(-ENOMEM);
+>> +
+>> +    pool->device = dev;
+>> +    set_all_resource_max_limit(pool);
+>>   -    if (!parent_css) {
+>> -        drmcs = &root_drmcs.drmcs;
+>> -    } else {
+>> -        drmcs = kzalloc(sizeof(*drmcs), GFP_KERNEL);
+>> -        if (!drmcs)
+>> -            return ERR_PTR(-ENOMEM);
+>> +    INIT_LIST_HEAD(&pool->cg_node);
+>> +    INIT_LIST_HEAD(&pool->dev_node);
+>> +    list_add_tail(&pool->cg_node, &drmcs->pools);
+>> +    list_add_tail(&pool->dev_node, &dev->pools);
+>> +    return pool;
+>> +}
+>> +
+>> +void drmcg_unregister_device(struct drmcgroup_device *cgdev)
+>> +{
+>> +    struct drmcgroup_pool_state *pool, *next;
+>> +
+>> +    mutex_lock(&drmcg_mutex);
+>> +    list_del(&cgdev->list);
+>> +
+>> +    list_for_each_entry_safe(pool, next, &cgdev->pools, dev_node)
+>> +        free_cg_pool_locked(pool);
+>> +    mutex_unlock(&drmcg_mutex);
+>> +    kfree(cgdev->name);
+>> +}
+>> +
+>> +EXPORT_SYMBOL_GPL(drmcg_unregister_device);
+>> +
+>> +int drmcg_register_device(struct drm_device *dev,
+>> +              struct drmcgroup_device *cgdev)
+>> +{
+>> +    char *name = kstrdup(dev->unique, GFP_KERNEL);
+>> +    if (!name)
+>> +        return -ENOMEM;
+>> +
+>> +    INIT_LIST_HEAD(&cgdev->pools);
+>> +    mutex_lock(&drmcg_mutex);
+>> +    cgdev->name = name;
+>> +    list_add_tail(&cgdev->list, &drmcg_devices);
+>> +    mutex_unlock(&drmcg_mutex);
+>> +
+>> +    return 0;
+>> +}
+>> +EXPORT_SYMBOL_GPL(drmcg_register_device);
+>> +
+>> +static int drmcg_max_show(struct seq_file *sf, void *v)
+>> +{
+>> +    struct drmcgroup_state *drmcs = css_to_drmcs(seq_css(sf));
+>> +    struct drmcgroup_pool_state *pool;
+>> +
+>> +    mutex_lock(&drmcg_mutex);
+>> +    list_for_each_entry(pool, &drmcs->pools, cg_node) {
+>> +        struct drmcgroup_device *dev = pool->device;
+>> +        int i;
+>> +
+>> +        seq_puts(sf, dev->name);
+>> +
+>> +        for (i = 0; i < DRMCG_MAX_REGIONS; i++) {
+>> +            if (!dev->regions[i].name)
+>> +                continue;
+>> +
+>> +            if (pool->resources[i].max < S64_MAX)
+>> +                seq_printf(sf, " region.%s=%lld", dev->regions[i].name,
+>> +                       pool->resources[i].max);
+>> +            else
+>> +                seq_printf(sf, " region.%s=max", dev->regions[i].name);
+>> +        }
+>> +
+>> +        seq_putc(sf, '\n');
+>>       }
+>> +    mutex_unlock(&drmcg_mutex);
+>>   -    return &drmcs->css;
+>> +    return 0;
+>> +}
+>> +
+>> +static struct drmcgroup_device *drmcg_get_device_locked(const char 
+>> *name)
+>> +{
+>> +    struct drmcgroup_device *dev;
+>> +
+>> +    lockdep_assert_held(&drmcg_mutex);
+>> +
+>> +    list_for_each_entry(dev, &drmcg_devices, list)
+>> +        if (!strcmp(name, dev->name))
+>> +            return dev;
+>> +
+>> +    return NULL;
+>> +}
+>> +
+>> +static void try_to_free_cg_pool_locked(struct drmcgroup_pool_state 
+>> *pool)
+>> +{
+>> +    struct drmcgroup_device *dev = pool->device;
+>> +    u32 i;
+>> +
+>> +    /* Memory charged to this pool */
+>> +    if (pool->usage_sum)
+>> +        return;
+>> +
+>> +    for (i = 0; i < DRMCG_MAX_REGIONS; i++) {
+>> +        if (!dev->regions[i].name)
+>> +            continue;
+>> +
+>> +        /* Is a specific limit set? */
+>> +        if (pool->resources[i].max < S64_MAX)
+>> +            return;
+>> +    }
+>> +
+>> +    /*
+>> +     * No user of the pool and all entries are set to defaults;
+>> +     * safe to delete this pool.
+>> +     */
+>> +    free_cg_pool_locked(pool);
+>> +}
+>> +
+>> +
+>> +static void
+>> +uncharge_cg_locked(struct drmcgroup_state *drmcs,
+>> +           struct drmcgroup_device *cgdev,
+>> +           u32 index, u64 size)
+>> +{
+>> +    struct drmcgroup_pool_state *pool;
+>> +
+>> +    pool = find_cg_pool_locked(drmcs, cgdev);
+>> +
+>> +    if (unlikely(!pool)) {
+>> +        pr_warn("Invalid device %p or drm cgroup %p\n", cgdev, drmcs);
+>> +        return;
+>> +    }
+>> +
+>> +    pool->resources[index].used -= size;
+>> +
+>> +    /*
+>> +     * A negative count (or overflow) is invalid,
+>> +     * it indicates a bug in the rdma controller.
+>> +     */
+>> +    WARN_ON_ONCE(pool->resources[index].used < 0);
+>> +    pool->usage_sum--;
+>> +    try_to_free_cg_pool_locked(pool);
+>> +}
+>> +
+>> +static void drmcg_uncharge_hierarchy(struct drmcgroup_state *drmcs,
+>> +                     struct drmcgroup_device *cgdev,
+>> +                     struct drmcgroup_state *stop_cg,
+>> +                     u32 index, u64 size)
+>> +{
+>> +    struct drmcgroup_state *p;
+>> +
+>> +    mutex_lock(&drmcg_mutex);
+>> +
+>> +    for (p = drmcs; p != stop_cg; p = parent_drmcg(p))
+>> +        uncharge_cg_locked(p, cgdev, index, size);
+>> +
+>> +    mutex_unlock(&drmcg_mutex);
+>> +
+>> +    css_put(&drmcs->css);
+>> +}
+>> +
+>> +void drmcg_uncharge(struct drmcgroup_state *drmcs,
+>> +            struct drmcgroup_device *cgdev,
+>> +            u32 index,
+>> +            u64 size)
+>> +{
+>> +    if (index >= DRMCG_MAX_REGIONS)
+>> +        return;
+>> +
+>> +    drmcg_uncharge_hierarchy(drmcs, cgdev, NULL, index, size);
+>> +}
+>> +EXPORT_SYMBOL_GPL(drmcg_uncharge);
+>> +
+>> +int drmcg_try_charge(struct drmcgroup_state **drmcs,
+>> +             struct drmcgroup_device *cgdev,
+>> +             u32 index,
+>> +             u64 size)
+>> +{
+>> +    struct drmcgroup_state *cg, *p;
+>> +    struct drmcgroup_pool_state *pool;
+>> +    u64 new;
+>> +    int ret = 0;
+>> +
+>> +    if (index >= DRMCG_MAX_REGIONS)
+>> +        return -EINVAL;
+>> +
+>> +    /*
+>> +     * hold on to css, as cgroup can be removed but resource
+>> +     * accounting happens on css.
+>> +     */
+>> +    cg = get_current_drmcg();
+>
+> 1)
+>
+> I am not familiar with the Xe flows - charging is at the point of 
+> actual backing store allocation?
+>
+> What about buffer sharing?
+>
+> Also, given how the css is permanently stored in the caller - you 
+> deliberately decided not to deal with task migrations? I am not sure 
+> that will work. Or maybe just omitted for RFC v1?
 
-> Chris
+The other cgroup implementations don' really seem to implement 
+migration; when a resource is allocated, it is charged to the process 
+allocating it. I guess we could implement handover in dma-buf, but
+
+but I think the lack of migration should be harmless.
+
+> 2)
+>
+> Buffer objects which Xe can migrate between memory regions will be 
+> correctly charge/uncharged as they are moved?
+
+Correct. It will be charged in both places while moving, and afterwards 
+the old allocation is uncharged when freeing.
+
+I'm working on making TTM more cgroups aware while evicting, by adding 
+the limiting css as possible return pointer. TTM
+
+can only evict memory that is charged to the cgroup for which the limit 
+is hit, or one of its subgroups.
+
+Cheers,
+
+~Maarten
 
