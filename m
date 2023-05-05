@@ -1,81 +1,80 @@
-From: Michal =?utf-8?Q?Koutn=C3=BD?= <mkoutny@suse.com>
-Subject: Re: [RFC PATCH 3/3] cgroup: Do not take css_set_lock in
- cgroup_show_path
-Date: Fri, 5 May 2023 19:32:40 +0200
-Message-ID: <ta7bilcvc7lzt5tvs44y5wxqt6i3gdmvzwcr5h2vxhjhshmivk@3mecui76fxvy>
-References: <20230502133847.14570-1-mkoutny@suse.com>
- <20230502133847.14570-4-mkoutny@suse.com>
- <ZFUktg4Yxa30jRBX@slm.duckdns.org>
+From: Suren Baghdasaryan <surenb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH 35/40] lib: implement context capture support for tagged allocations
+Date: Fri, 5 May 2023 11:10:20 -0700
+Message-ID: <CAJuCfpFOLyZKvtqHuukOZvegxGHVUcAtbh3Egt+01yZ9kcEAew@mail.gmail.com>
+References: <20230501165450.15352-1-surenb@google.com> <20230501165450.15352-36-surenb@google.com>
+ <ZFIPmnrSIdJ5yusM@dhcp22.suse.cz> <CAJuCfpGsvWupMbasqvwcMYsOOPxTQqi1ed5+=vyu-yoPQwwybg@mail.gmail.com>
+ <ZFNoVfb+1W4NAh74@dhcp22.suse.cz> <CAJuCfpGUtw6cbjLsksGJKATZfTV0FEYRXwXT0pZV83XqQydBgg@mail.gmail.com>
+ <ZFTA8xVzxWc345Ug@dhcp22.suse.cz>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha512;
-        protocol="application/pgp-signature"; boundary="rylaem3izw3vqdtr"
-Return-path: <linux-fsdevel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
-        t=1683307962; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=08FuX13wN9U4YYw2axhJqWpBUnoUcHOE2BMKcuHHIII=;
-        b=dSvKo4grqGLt7OmzVg7CvER57EhkmRq43a6GttLWDA5VsTzGOjkr03cZx88FUETDQfnQKQ
-        +6cC/JbCvornmP+fW+kmIflQXd0nBQ67ryVRD/tVNdVe9L3/bISJGQv+7ggjZLE7hzD8fN
-        UuFbRmICbHw5Y0K1bER7vze628L+ysM=
-Content-Disposition: inline
-In-Reply-To: <ZFUktg4Yxa30jRBX@slm.duckdns.org>
-List-ID: <cgroups.vger.kernel.org>
-To: Tejun Heo <tj@kernel.org>
-Cc: linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, Alexander Viro <viro@zeniv.linux.org.uk>, Christian Brauner <brauner@kernel.org>, Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, Dave Chinner <dchinner@redhat.com>, Rik van Riel <riel@surriel.com>, Jiri Wiesner <jwiesner@suse.de>
-
-
---rylaem3izw3vqdtr
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
 Content-Transfer-Encoding: quoted-printable
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20221208; t=1683310232; x=1685902232;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=QVZYG1JecNO86jzNV6C/AMNw6VQt+fJvqwCxq5mp/Nc=;
+        b=JuehaV/RJK9Y4fUOdxkcZEuqDGAuEF/acJdDqJ45XbKARUoqq4czDg4ZH8mqWvQs0W
+         C3cMUZ3VtCr6q/eI+6qJp58nulUMjZvQdZpvpUFXRdmOfRfhasZuNayk1xVHyGVy9Mwz
+         ItoP45q/KUOjBJ5HUc+Vlm240zAnqes7cusDh4wsBFNSxkmDsbQVgr1QY7ENaCb2Pf+o
+         stmyjKNibly7r3/lcAzIGX4ZSS4stgbgtYjMfq5c0cI/ZADNQtKt98fqV/f8MiQv11Tt
+         rfeoXeDHmM1lnkcbyLTsW9UrOEazY/VwbfsLiL1Vyfp7oqXyyedjHeSP3hv1vKGbwqQn
+         8juQ==
+In-Reply-To: <ZFTA8xVzxWc345Ug-2MMpYkNvuYDjFM9bn6wA6Q@public.gmane.org>
+List-ID: <cgroups.vger.kernel.org>
+Content-Type: text/plain; charset="windows-1252"
+To: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
+Cc: akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, kent.overstreet-fxUVXftIFDnyG1zEObXtfA@public.gmane.org, vbabka-AlSwsSmVLrQ@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org, mgorman-l3A5Bk7waGM@public.gmane.org, dave-h16yJtLeMjHk1uMJSBkQmQ@public.gmane.org, willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, liam.howlett-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org, corbet-T1hC0tSOHrs@public.gmane.org, void-gq6j2QGBifHby3iVrkZq2A@public.gmane.org, peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, juri.lelli-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, ldufour-tEXmvtCZX7AybS5Ee8rs3A@public.gmane.org, catalin.marinas-5wv7dgnIgG8@public.gmane.org, will-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, arnd-r2nGTMty4D4@public.gmane.org, tglx-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org, mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, dave.hansen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org, x86-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, peterx-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, david-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, mcgrof-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, masahiroy-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, nathan-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, dennis-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, muchun.song-fxUVXftIFDnyG1zEObXtfA@public.gmane.org, rppt-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, paulmck-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, pasha.tatashin-2EmBfe737+LQT0dZR+AlfA@public.gmane.org, yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, yuzhao-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, dhowells-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, andreyknvl-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, keescook@chr
 
-On Fri, May 05, 2023 at 05:45:58AM -1000, Tejun Heo <tj@kernel.org> wrote:
-> > There are three relevant nodes for each cgroupfs entry:
-> >=20
-> >         R ... cgroup hierarchy root
-> >         M ... mount root
-> >         C ... reader's cgroup NS root
-> >=20
-> > mountinfo is supposed to show path from C to M.
->=20
-> At least for cgroup2, the path from C to M isn't gonna change once NS is
-> established, right?
+On Fri, May 5, 2023 at 1:40=E2=80=AFAM Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org> wrote=
+:
+>
+> On Thu 04-05-23 09:22:07, Suren Baghdasaryan wrote:
+> [...]
+> > > But even then I really detest an additional allocation from this cont=
+ext
+> > > for every single allocation request. There GFP_NOWAIT allocation for
+> > > steckdepot but that is at least cached and generally not allocating.
+> > > This will allocate for every single allocation.
+> >
+> > A small correction here. alloc_tag_create_ctx() is used only for
+> > allocations which we requested to capture the context. So, this last
+> > sentence is true for allocations we specifically marked to capture the
+> > context, not in general.
+>
+> Ohh, right. I have misunderstood that part. Slightly better, still
+> potentially a scalability issue because hard to debug memory leaks
+> usually use a generic caches (for kmalloc). So this might be still a lot
+> of objects to track.
 
-Right. Although, the argument about M (when C above M or when C and M in
-different subtrees) implicitly relies on the namespace_sem.
+Yes, generally speaking, if a single code location is allocating very
+frequently then enabling context capture for it will generate many
+callstack buffers.
 
-> Nothing can be moved or renamed while the NS root is there. If so,
-> can't we just cache the formatted path and return the same thing
-> without any locking?
+Your note about use of generic caches makes me think we still have a
+small misunderstanding. We tag at the allocation call site, not based
+on which cache is used. Two kmalloc calls from different code
+locations will have unique codetags for each, so enabling context
+capture for one would not result in context capturing for the other
+one.
 
-Here I find the caching complexity not worth it for v2 only (also C is
-in the eye of the beholder) -- because then css_set_lock can be dropped
-=66rom cgroup_show_path with simpler reasoning.
+>
+> > > There must be a better way.
+> >
+> > Yeah, agree, it would be good to avoid allocations in this path. Any
+> > specific ideas on how to improve this? Pooling/caching perhaps? I
+> > think kmem_cache does some of that already but maybe something else?
+>
+> The best I can come up with is a preallocated hash table to store
+> references to stack depots with some additional data associated. The
+> memory overhead could be still quite big but the hash tables could be
+> resized lazily.
 
-(Sadly, the bigger benefit would be on hybrid setups multiplied by the
-number of v1 hierarchies listed.)
+Ok, that seems like the continuation of you suggestion in another
+thread to combine identical callstack traces. That's an excellent
+idea! I think it would not be hard to implement. Thanks!
 
-(OTOH, the caching argument and weights for it may be different for
-/proc/$pid/cgroup.)
-
-> The proposed changes seem a bit too brittle to me.
-
-OK, I'll look into separate cgroup_show_path and cgroup1_show_path
-approach.
-
-Thanks,
-Michal
-
---rylaem3izw3vqdtr
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-
-iHUEABYKAB0WIQTrXXag4J0QvXXBmkMkDQmsBEOquQUCZFU9swAKCRAkDQmsBEOq
-uSoLAQD754ptzc5v4SJdwNDmNSnDSByFIjlKbnAxKHci/pO4ywD+MIDAb1A+syAS
-I2WGGvHWDmD2tCQtQb85PVVcokfqkQ0=
-=uY1H
------END PGP SIGNATURE-----
-
---rylaem3izw3vqdtr--
+> --
+> Michal Hocko
+> SUSE Labs
