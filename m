@@ -1,54 +1,73 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [RFC PATCH 3/3] cgroup: Do not take css_set_lock in
- cgroup_show_path
-Date: Fri, 5 May 2023 08:17:10 -1000
-Message-ID: <ZFVIJlAMyzTh3QTP@slm.duckdns.org>
-References: <20230502133847.14570-1-mkoutny@suse.com>
- <20230502133847.14570-4-mkoutny@suse.com>
- <ZFUktg4Yxa30jRBX@slm.duckdns.org>
- <ta7bilcvc7lzt5tvs44y5wxqt6i3gdmvzwcr5h2vxhjhshmivk@3mecui76fxvy>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [RFC PATCH] cgroup: Return error when attempting to migrate a
+ zombie process
+Date: Fri, 5 May 2023 09:04:37 -1000
+Message-ID: <ZFVTRdP6eK1soMVR@slm.duckdns.org>
+References: <20230503125359.14789-1-mkoutny@suse.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: quoted-printable
-Return-path: <linux-fsdevel-owner@vger.kernel.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20221208; t=1683310632; x=1685902632;
+        d=gmail.com; s=20221208; t=1683313479; x=1685905479;
         h=in-reply-to:content-transfer-encoding:content-disposition
          :mime-version:references:message-id:subject:cc:to:from:date:sender
          :from:to:cc:subject:date:message-id:reply-to;
-        bh=hQHYPlEOPVX2QdptzuBIqeiKD9YF9ynx2rWgtCguSI8=;
-        b=GATLJaLXKGT4UkAZCszdVSnAxGdXekLCDA78/LXvLjMCrf0gMpGYAkPJRHrMm0efTx
-         2AM0YfRkyInaP8G4IZNRe8myyYOaXG5+TuMqRchxZEwR9sTQCmwEF4avYnvLkXRb0lXu
-         ZshUyzcCLOseMwGIi5mw2rXGsskJBuqqTZRnN6UkR7zZub+q9aiBuh3FpMqLNkZUP7KI
-         BTdvqQlkE1CsXOaAfreOSuXojjPs3gqE52ZkWkmQuFz8wYaw1ctggUDUAoX3BGqn+nzM
-         IFKIvUYSxV1GPI2RQJ0y+DCJy+DHy7Y/zHqZ2b9RsvjJufRA8dGuYr0hlB18YDukodzy
-         N2XA==
-Sender: Tejun Heo <htejun@gmail.com>
+        bh=GEPgHiIOCiYrMnaimD0D7235Mb8MCc1N6gYw0WH5GLs=;
+        b=Au926MGGOcupcwgRZNPEgfjNbK0PODV7VIpOzZqOU78a0/d5A/nhZgSe44BHtoRbCl
+         N8yC+LTAbpe691HIteKMgub3UY1Fmc6asWv+2XB0OmiqcaK9giMLMF9dDQRBydnj9IfC
+         Srpke8eUMka6WLDIFI0BIS9r95VGQUhzjxnQmOuZvBEGC8iIJgeTL3EVnIubxDDs2fdT
+         nOF57loKxP+rhjB1irK/WnYXFYicmCzNdZYPq6E5M+GHVZL+15qKCaTwtqP0UTZM2anX
+         RXwbF34otYxQNVgQhK1gSYDBZAqYRLgsCIdgLw/4E+NLqG2ZummrrMYm1cJ5K01Fyh5a
+         LbQg==
+Sender: Tejun Heo <htejun-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 Content-Disposition: inline
-In-Reply-To: <ta7bilcvc7lzt5tvs44y5wxqt6i3gdmvzwcr5h2vxhjhshmivk@3mecui76fxvy>
+In-Reply-To: <20230503125359.14789-1-mkoutny-IBi9RG/b67k@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="iso-8859-1"
-To: Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny@suse.com>
-Cc: linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, Alexander Viro <viro@zeniv.linux.org.uk>, Christian Brauner <brauner@kernel.org>, Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, Dave Chinner <dchinner@redhat.com>, Rik van Riel <riel@surriel.com>, Jiri Wiesner <jwiesner@suse.de>
+To: Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny-IBi9RG/b67k@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Benjamin Berg <benjamin-cdvu00un1VgdHxzADdlk8Q@public.gmane.org>
 
 Hello,
 
-On Fri, May 05, 2023 at 07:32:40PM +0200, Michal Koutn=FD wrote:
-> On Fri, May 05, 2023 at 05:45:58AM -1000, Tejun Heo <tj@kernel.org> wrote:
-> > > There are three relevant nodes for each cgroupfs entry:
-> > >=20
-> > >         R ... cgroup hierarchy root
-> > >         M ... mount root
-> > >         C ... reader's cgroup NS root
-> > >=20
-> > > mountinfo is supposed to show path from C to M.
-> >=20
-> > At least for cgroup2, the path from C to M isn't gonna change once NS is
-> > established, right?
+On Wed, May 03, 2023 at 02:53:59PM +0200, Michal Koutn=FD wrote:
+> Zombies aren't migrated. However, return value of a migration write may
+> suggest a zombie process was migrated and causing confusion about lack
+> of cgroup.events:populated between origin and target cgroups (e.g.
+> target cgroup rmdir).
 >=20
-> Right. Although, the argument about M (when C above M or when C and M in
-> different subtrees) implicitly relies on the namespace_sem.
+> Notify the users about no effect of their action by a return value.
+> (update_dfl_csses migration of zombies still silently passes since it is
+> not meant to be user-visible migration anyway.)
+>=20
+> Suggested-by: Benjamin Berg <benjamin-cdvu00un1VgdHxzADdlk8Q@public.gmane=
+.org>
+> Signed-off-by: Michal Koutn=FD <mkoutny-IBi9RG/b67k@public.gmane.org>
+> ---
+>  kernel/cgroup/cgroup.c | 3 ++-
+>  1 file changed, 2 insertions(+), 1 deletion(-)
+>=20
+> Reasons for RFC:
+> 1) Some users may notice the change,
+> 2) EINVAL vs ESCHR,
+> 3) add a selftest?
+>=20
+> diff --git a/kernel/cgroup/cgroup.c b/kernel/cgroup/cgroup.c
+> index 625d7483951c..306547dd7b76 100644
+> --- a/kernel/cgroup/cgroup.c
+> +++ b/kernel/cgroup/cgroup.c
+> @@ -2968,7 +2968,8 @@ struct task_struct *cgroup_procs_write_start(char *=
+buf, bool threadgroup,
+>  	 * become trapped in a cpuset, or RT kthread may be born in a
+>  	 * cgroup with no rt_runtime allocated.  Just say no.
+>  	 */
+> -	if (tsk->no_cgroup_migration || (tsk->flags & PF_NO_SETAFFINITY)) {
+> +	if (tsk->no_cgroup_migration || (tsk->flags & PF_NO_SETAFFINITY) ||
+> +	    !atomic_read(&tsk->signal->live)) {
 
-I don't follow. Can you please elaborate a bit more?
+This seems racy to me. The liveness state can change between here and the
+PF_EXITING check in cgroup_migrate_add_task(), right? Wouldn't it be better
+to just track how many tasks are tracked and return -ESRCH if none was
+migrated?
 
 Thanks.
 
