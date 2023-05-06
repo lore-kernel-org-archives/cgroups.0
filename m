@@ -1,128 +1,223 @@
-From: kernel test robot <lkp@intel.com>
-Subject: Re: [PATCH v3 1/2] mm: memcontrol: protect the memory in cgroup from
- being oom killed
-Date: Sat, 6 May 2023 22:27:12 +0800
-Message-ID: <202305062204.ob5SRKVX-lkp@intel.com>
-References: <20230506114948.6862-2-chengkaitao@didiglobal.com>
+From: Chris Li <chrisl-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [LSF/MM/BPF TOPIC] Reducing zombie memcgs
+Date: Sat, 6 May 2023 15:49:08 -0700
+Message-ID: <ZFbZZPkSpsKMe8iR@google.com>
+References: <CABdmKX2M6koq4Q0Cmp_-=wbP0Qa190HdEGGaHfxNS05gAkUtPA@mail.gmail.com>
+ <ZFLdDyHoIdJSXJt+@google.com>
+ <874josz4rd.fsf@nvidia.com>
+ <ZFPP71czDDxMPLQK@google.com>
+ <877ctm518f.fsf@nvidia.com>
 Mime-Version: 1.0
-Return-path: <linux-doc-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1683383245; x=1714919245;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:in-reply-to;
-  bh=1CM9sz3xyD29vV94S0eoChIFsorjvoMRR3Da8zuVnF4=;
-  b=LYIxqVd95isXWzUD7qg6HeqbAc+p3SORCfxHFfHNQh784mvMtGo/z96X
-   if9qDa91Ikzqv2uvIIO0BXp2JrrTtg6G3t2WfM3HlnB8OQLkdFizGjH0C
-   ljjIBZ5XqNiKY2nmQxuTycGWFfXuFm4v6KaB4vLUw4WVBHOVgWFLxVfI4
-   mf1fv+BqQhGrb3rqGLZx2GS9URZ4HWmg1U4jlMVttygW0AD6tk03P9cEe
-   /7Vf3dqvj+mUiDDlsyOrBLjb4v/Q+PUmhx2F2Vb99ATNP0F0FmCdtm64q
-   Bo4dEGLDrtLgXie+qs+bWLA3QEY46MGnxik//cNWRLzmK0gyS0FE/0fAq
-   w==;
+Content-Transfer-Encoding: 8bit
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1683413351;
+        bh=kx7QPUz0Y8c8AV4z4IpLKWfOYG/J2j7xHQZfV8fP1ic=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=KeK0udaOZpM6vUDMDN04busMODfk9CA9ck1xfge5y3enIwkvBq89tbuHPUCO7wL3X
+         j3Wf1oTsYMDkM+AFFYCCnxiAoSzPL6s07lOCEkms7FcD4+byrS5flkUsMtSxIOzZe4
+         9Bz/YWhPNP7XoYxSrMQDoBvTSZeubN/WriMTRvABWQJ0ggMbLHCrnqHPbo14SeqNH4
+         oOI1LquKwvY9B6DBCv7cJ1eqzRLeTe0PldWQJYKGBZOeH8u4NW2FmG5Of8CAsTmoRE
+         tUXCeDwcJbjJA7SVfkjup6dUeUrsLTHzTHnZNyEbRLp6PjcmUvJKh+GN8oodm+Co3i
+         WiZrAVGg3yJqA==
 Content-Disposition: inline
-In-Reply-To: <20230506114948.6862-2-chengkaitao@didiglobal.com>
+In-Reply-To: <877ctm518f.fsf-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: chengkaitao <chengkaitao@didiglobal.com>, tj@kernel.org, lizefan.x@bytedance.com, hannes@cmpxchg.org, corbet@lwn.net, mhocko@kernel.org, roman.gushchin@linux.dev, shakeelb@google.com, akpm@linux-foundation.org, brauner@kernel.org, muchun.song@linux.dev
-Cc: llvm@lists.linux.dev, oe-kbuild-all@lists.linux.dev, viro@zeniv.linux.org.uk, zhengqi.arch@bytedance.com, ebiederm@xmission.com, Liam.Howlett@oracle.com, chengzhihao1@huawei.com, pilgrimtao@gmail.com, haolee.swjtu@gmail.com, yuzhao@google.com, willy@infradead.org, vasily.averin@linux.dev, vbabka@suse.cz, surenb@google.com, sfr@canb.auug.org.au, mcgrof@kernel.org, sujiaxun@uniontech.com, feng.tang@intel.com, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+To: Alistair Popple <apopple-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>
+Cc: "T.J. Mercier" <tjmercier-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, lsf-pc-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Muchun Song <muchun.song-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Jason Gunthorpe <jgg-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>, Kalesh Singh <kaleshsingh-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Yu Zhao <yuzhao-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 
-Hi chengkaitao,
+On Fri, May 05, 2023 at 11:53:24PM +1000, Alistair Popple wrote:
+> 
+> >> Unfortunately I won't be attending LSF/MM in person this year but I am
+> >
+> > Will you be able to join virtually?
+> 
+> I should be able to join afternoon sessions virtually.
 
-kernel test robot noticed the following build warnings:
+Great.
 
-[auto build test WARNING on akpm-mm/mm-everything]
-[also build test WARNING on tj-cgroup/for-next linus/master v6.3 next-20230505]
-[If your patch is applied to the wrong git tree, kindly drop us a note.
-And when submitting patch, we suggest to use '--base' as documented in
-https://git-scm.com/docs/git-format-patch#_base_tree_information]
+> >> The issue with per-page memcg limits is what to do for shared
+> >> mappings. The below suggestion sounds promising because the pins for
+> >> shared pages could be charged to the smemcg. However I'm not sure how it
+> >> would solve the problem of a process in cgroup A being able to raise the
+> >> pin count of cgroup B when pinning a smemcg page which was one of the
+> >> reason I introduced a new cgroup controller.
+> >
+> > Now that I think of it, I can see the pin count memcg as a subtype of
+> > smemcg.
+> >
+> > The smemcg can have a limit as well, when it add to a memcg, the operation
+> > raise the pin count smemcg charge over the smemcg limit will fail.
+> 
+> I'm not sure that works for the pinned scenario. If a smemcg already has
+> pinned pages adding it to another memcg shouldn't raise the pin count of
+> the memcg it's being added to. The pin counts should only be raised in
+> memcg's of processes actually requesting the page be pinned. See below
+> though, the idea of borrowing seems helpful.
 
-url:    https://github.com/intel-lab-lkp/linux/commits/chengkaitao/mm-memcontrol-protect-the-memory-in-cgroup-from-being-oom-killed/20230506-195043
-base:   https://git.kernel.org/pub/scm/linux/kernel/git/akpm/mm.git mm-everything
-patch link:    https://lore.kernel.org/r/20230506114948.6862-2-chengkaitao%40didiglobal.com
-patch subject: [PATCH v3 1/2] mm: memcontrol: protect the memory in cgroup from being oom killed
-config: i386-randconfig-a011-20230501 (https://download.01.org/0day-ci/archive/20230506/202305062204.ob5SRKVX-lkp@intel.com/config)
-compiler: clang version 14.0.6 (https://github.com/llvm/llvm-project f28c006a5895fc0e329fe15fead81e37457cb1d1)
-reproduce (this is a W=1 build):
-        wget https://raw.githubusercontent.com/intel/lkp-tests/master/sbin/make.cross -O ~/bin/make.cross
-        chmod +x ~/bin/make.cross
-        # https://github.com/intel-lab-lkp/linux/commit/a2779b308166286f77728f04043cb7a17a16dd46
-        git remote add linux-review https://github.com/intel-lab-lkp/linux
-        git fetch --no-tags linux-review chengkaitao/mm-memcontrol-protect-the-memory-in-cgroup-from-being-oom-killed/20230506-195043
-        git checkout a2779b308166286f77728f04043cb7a17a16dd46
-        # save the config file
-        mkdir build_dir && cp config build_dir/.config
-        COMPILER_INSTALL_PATH=$HOME/0day COMPILER=clang make.cross W=1 O=build_dir ARCH=i386 olddefconfig
-        COMPILER_INSTALL_PATH=$HOME/0day COMPILER=clang make.cross W=1 O=build_dir ARCH=i386 SHELL=/bin/bash
+I am very interested in letting smemcg support your pin usage case.
+I read your patch thread a bit but I still feel a bit fuzzy about
+the pin usage workflow.
 
-If you fix the issue, kindly add following tag where applicable
-| Reported-by: kernel test robot <lkp@intel.com>
-| Link: https://lore.kernel.org/oe-kbuild-all/202305062204.ob5SRKVX-lkp@intel.com/
+If you have some more detailed write up of the usage case, with a sequence
+of interaction and desired outcome that would help me understand. Links to
+the previous threads work too.
 
-All warnings (new ones prefixed by >>):
+We can set up some meetings to discuss it as well.
 
->> mm/page_counter.c:44:36: warning: overflow in expression; result is -2147483648 with type 'long' [-Winteger-overflow]
-           if (protected == PAGE_COUNTER_MAX + 1)
-                                             ^
-   1 warning generated.
---
-   mm/memcontrol.c:1739:2: error: implicit declaration of function 'seq_buf_do_printk' is invalid in C99 [-Werror,-Wimplicit-function-declaration]
-           seq_buf_do_printk(&s, KERN_INFO);
-           ^
->> mm/memcontrol.c:6445:37: warning: overflow in expression; result is -2147483648 with type 'long' [-Winteger-overflow]
-           else if (value == PAGE_COUNTER_MAX + 1)
-                                              ^
-   mm/memcontrol.c:6743:34: warning: overflow in expression; result is -2147483648 with type 'long' [-Winteger-overflow]
-                   oom_protect = PAGE_COUNTER_MAX + 1;
-                                                  ^
-   2 warnings and 1 error generated.
+> So for pinning at least I don't see a per smemcg limit being useful.
 
+That is fine.  I see you are interested in the <smemcg, memcg> limit.
 
-vim +/long +44 mm/page_counter.c
+> > For the detail tracking of shared/unshared behavior, the smemcg can model it
+> > as a step 2 feature.
+> >
+> > There are four different kind of operation can perform on a smemcg:
+> >
+> > 1) allocate/charge memory. The charge will add on the per smemcg charge
+> > counter, check against the per smemcg limit. ENOMEM if it is over the limit.
+> >
+> > 2) free/uncharge memory. Similar to above just subtract the counter.
+> >
+> > 3) share/mmap already charged memory. This will not change the smemcg charge
+> > count, it will add to a per <smemcg, memcg> borrow counter. It is possible to
+> > put a limit on that counter as well, even though I haven't given too much thought
+> > of how useful it is. That will limit how much memory can mapped from the smemcg.
+> 
+> I would like to see the idea of a borrow counter fleshed out some more
+> but this sounds like it could work for the pinning scenario.
+> 
+> Pinning could be charged to the per <smemcg, memcg> borrow counter and
+> the pin limit would be enforced against that plus the anonymous pins.
+> 
+> Implementation wise we'd need a way to lookup both the smemcg of the
+> struct page and the memcg that the pinning task belongs to.
 
-    15	
-    16	static void propagate_protected_usage(struct page_counter *c,
-    17					      unsigned long usage)
-    18	{
-    19		unsigned long protected, old_protected;
-    20		long delta;
-    21	
-    22		if (!c->parent)
-    23			return;
-    24	
-    25		protected = min(usage, READ_ONCE(c->min));
-    26		old_protected = atomic_long_read(&c->min_usage);
-    27		if (protected != old_protected) {
-    28			old_protected = atomic_long_xchg(&c->min_usage, protected);
-    29			delta = protected - old_protected;
-    30			if (delta)
-    31				atomic_long_add(delta, &c->parent->children_min_usage);
-    32		}
-    33	
-    34		protected = min(usage, READ_ONCE(c->low));
-    35		old_protected = atomic_long_read(&c->low_usage);
-    36		if (protected != old_protected) {
-    37			old_protected = atomic_long_xchg(&c->low_usage, protected);
-    38			delta = protected - old_protected;
-    39			if (delta)
-    40				atomic_long_add(delta, &c->parent->children_low_usage);
-    41		}
-    42	
-    43		protected = READ_ONCE(c->oom_protect);
-  > 44		if (protected == PAGE_COUNTER_MAX + 1)
-    45			protected = atomic_long_read(&c->children_oom_protect_usage);
-    46		else
-    47			protected = min(usage, protected);
-    48		old_protected = atomic_long_read(&c->oom_protect_usage);
-    49		if (protected != old_protected) {
-    50			old_protected = atomic_long_xchg(&c->oom_protect_usage, protected);
-    51			delta = protected - old_protected;
-    52			if (delta)
-    53				atomic_long_add(delta, &c->parent->children_oom_protect_usage);
-    54		}
-    55	}
-    56	
+The page->memcg_data points to the pin smemcg. I am hoping pinning API or
+the current memcg can get to the pinning memcg.
 
--- 
-0-DAY CI Kernel Test Service
-https://github.com/intel/lkp-tests
+> > 4) unshare/unmmap already charged memory. That will reduce the per <smemcg, memcg>
+> > borrow counter.
+> 
+> Actually this is where things might get a bit tricky for pinning. We'd
+> have to reduce the pin charge when a driver calls put_page(). But that
+> implies looking up the borrow counter / <smemcg, memcg> pair a driver
+> charged the page to.
+
+Does the pin page share between different memcg or just one memcg?
+
+If it is shared, can the put_page() API indicate it is performing in behalf
+of which memcg?
+> I will have to give this idea some more tought though. Most drivers
+> don't store anything other than the struct page pointers, but my series
+> added an accounting struct which I think could reference the borrow
+> counter.
+
+Ack.
+
+> 
+> > Will that work for your pin memory usage?
+> 
+> I think it could help. I will give it some thought.
+
+Ack.
+> 
+> >> 
+> >> > Shared Memory Cgroup Controllers
+> >> >
+> >> > = Introduction
+> >> >
+> >> > The current memory cgroup controller does not support shared memory
+> >> > objects. For the memory that is shared between different processes, it
+> >> > is not obvious which process should get charged. Google has some
+> >> > internal tmpfs “memcg=” mount option to charge tmpfs data to a
+> >> > specific memcg that’s often different from where charging processes
+> >> > run. However it faces some difficulties when the charged memcg exits
+> >> > and the charged memcg becomes a zombie memcg.
+> >> > Other approaches include “re-parenting” the memcg charge to the parent
+> >> > memcg. Which has its own problem. If the charge is huge, iteration of
+> >> > the reparenting can be costly.
+> >> >
+> >> > = Proposed Solution
+> >> >
+> >> > The proposed solution is to add a new type of memory controller for
+> >> > shared memory usage. E.g. tmpfs, hugetlb, file system mmap and
+> >> > dma_buf. This shared memory cgroup controller object will have the
+> >> > same life cycle of the underlying shared memory.
+> >> >
+> >> > Processes can not be added to the shared memory cgroup. Instead the
+> >> > shared memory cgroup can be added to the memcg using a “smemcg” API
+> >> > file, similar to adding a process into the “tasks” API file.
+> >> > When a smemcg is added to the memcg, the amount of memory that has
+> >> > been shared in the memcg process will be accounted for as the part of
+> >> > the memcg “memory.current”.The memory.current of the memcg is make up
+> >> > of two parts, 1) the processes anonymous memory and 2) the memory
+> >> > shared from smemcg.
+> >> >
+> >> > When the memcg “memory.current” is raised to the limit. The kernel
+> >> > will active try to reclaim for the memcg to make “smemcg memory +
+> >> > process anonymous memory” within the limit.
+> >> 
+> >> That means a process in one cgroup could force reclaim of smemcg memory
+> >> in use by a process in another cgroup right? I guess that's no different
+> >> to the current situation though.
+> >> 
+> >> > Further memory allocation
+> >> > within those memcg processes will fail if the limit can not be
+> >> > followed. If many reclaim attempts fail to bring the memcg
+> >> > “memory.current” within the limit, the process in this memcg will get
+> >> > OOM killed.
+> >> 
+> >> How would this work if say a charge for cgroup A to a smemcg in both
+> >> cgroup A and B would cause cgroup B to go over its memory limit and not
+> >> enough memory could be reclaimed from cgroup B? OOM killing a process in
+> >> cgroup B due to a charge from cgroup A doesn't sound like a good idea.
+> >
+> > If we separate out the charge counter with the borrow counter, that problem
+> > will be solved. When smemcg is add to memcg A, we can have a policy specific
+> > that adding the <smemcg, memcg A> borrow counter into memcg A's "memory.current".
+> >
+> > If B did not map that page, that page will not be part of <smemcg, memcg B>
+> > borrow count. B will not be punished.
+> >
+> > However if B did map that page, The <smemcg, memcg B> need to increase as well.
+> > B will be punished for it.
+> >
+> > Will that work for your example situation?
+> 
+> I think so, although I have been looking at this more from the point of
+> view of pinning. It sounds like we could treat pinning in much the same
+> way as mapping though.
+
+Ack.
+> 
+> >> > = Benefits
+> >> >
+> >> > The benefits of this solution include:
+> >> > * No zombie memcg. The life cycle of the smemcg match the share memory file system or dma_buf.
+> >> 
+> >> If we added pinning it could get a bit messier, as it would have to hang
+> >> around until the driver unpinned the pages. But I don't think that's a
+> >> problem.
+> >
+> >
+> > That is exactly the reason pin memory can belong to a pin smemcg. You just need
+> > to model the driver holding the pin ref count as one of the share/mmap operation.
+> >
+> > Then the pin smemcg will not go away if there is a pending pin ref count on it.
+> >
+> > We have have different policy option on smemcg.
+> > For the simple usage don't care the per memcg borrow counter, it can add the
+> > smemcg's charge count to "memory.current".
+> >
+> > Only the user who cares about per memcg usage of a smemcg will need to maintain
+> > per <smemcg, memcg> borrow counter, at additional cost.
+> 
+> Right, I think pinning drivers will always have to care about the borrow
+> counter so will have to track that.
+
+Ack.
+
+Chris
+
