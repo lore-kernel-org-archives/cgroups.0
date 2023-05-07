@@ -1,59 +1,106 @@
-From: Kent Overstreet <kent.overstreet@linux.dev>
-Subject: Re: [PATCH 00/40] Memory allocation profiling
-Date: Sun, 7 May 2023 13:01:57 -0400
-Message-ID: <ZFfZhTiXqeV1enD4@moria.home.lan>
-References: <20230501165450.15352-1-surenb@google.com>
- <ZFIMaflxeHS3uR/A@dhcp22.suse.cz>
- <CAJuCfpHxbYFxDENYFfnggh1D8ot4s493PQX0C7kD-JLvixC-Vg@mail.gmail.com>
- <ZFN1yswCd9wRgYPR@dhcp22.suse.cz>
- <CAJuCfpEkV_+pAjxyEpMqY+x7buZhSpj5qDF6KubsS=ObrQKUZg@mail.gmail.com>
- <ZFd9BiSorMldWiff@dhcp22.suse.cz>
+From: Jinke Han <hanjinke.666@bytedance.com>
+Subject: [PATCH v3] blk-throttle: Fix io statistics for cgroup v1
+Date: Mon,  8 May 2023 01:06:31 +0800
+Message-ID: <20230507170631.89607-1-hanjinke.666@bytedance.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
-        t=1683478930;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=K2IKs9gP6n8AwGF/yIy3vUTevnAld9lGncsxDoAPz7I=;
-        b=RBllo5SEteiXdDXnxk7cvHhWc/ZZh0WQhZDZBnP+ByAnv8lRSeIbU166BGu3cTiWFAlwdB
-        nBFEChtqdNB9Z3bo6qijnMaFFiQ4D4cogj6akL7Hso38B4dGgPNp5YpE0GoUhkJAbR1zsk
-        SwoHfdcoAv3j3qWwaVk8QGGqXSvbXYE=
-Content-Disposition: inline
-In-Reply-To: <ZFd9BiSorMldWiff@dhcp22.suse.cz>
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-block-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=bytedance.com; s=google; t=1683479248; x=1686071248;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=GwSoQAc7RbQrYw6wtZrAMpWLXHB/By9Q7OuDr1RV12Y=;
+        b=PHn3HatrrXTilibhO/B32WQZfXLxtuQRjz3v3L2ZfTB9+VVfks2XHVrwDw8QEDzc34
+         nRzUlgMxNktS121uu7zypH1Rp/S3fBwUJqtWRT1wB17zDGnc1bsbLAoWowu4t2QAb293
+         UDM2cCdAcdgO7PF9CmnXJl8XDJCaL7J0alieJUM3hyb+3l1TloGpfuq82/xDVa8DWLn7
+         IBnroT+IA39zWwwC3YexhUD/iQBhTujVWyEmuN2sORnYQ4/zxRtOhmcVZJZorD5X8D4t
+         ZxyRhJMgR2J7/mpg2D/S9x79GzL4iSHtI8KbysR0Wx5//OGYvrcMTUUUjgP/5Ivs6OZD
+         fEBQ==
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="windows-1252"
-To: Michal Hocko <mhocko@suse.com>
-Cc: Suren Baghdasaryan <surenb@google.com>, akpm@linux-foundation.org, vbabka@suse.cz, hannes@cmpxchg.org, roman.gushchin@linux.dev, mgorman@suse.de, dave@stgolabs.net, willy@infradead.org, liam.howlett@oracle.com, corbet@lwn.net, void@manifault.com, peterz@infradead.org, juri.lelli@redhat.com, ldufour@linux.ibm.com, catalin.marinas@arm.com, will@kernel.org, arnd@arndb.de, tglx@linutronix.de, mingo@redhat.com, dave.hansen@linux.intel.com, x86@kernel.org, peterx@redhat.com, david@redhat.com, axboe@kernel.dk, mcgrof@kernel.org, masahiroy@kernel.org, nathan@kernel.org, dennis@kernel.org, tj@kernel.org, muchun.song@linux.dev, rppt@kernel.org, paulmck@kernel.org, pasha.tatashin@soleen.com, yosryahmed@google.com, yuzhao@google.com, dhowells@redhat.com, hughd@google.com, andreyknvl@gmail.com
+Content-Type: text/plain; charset="us-ascii"
+To: tj@kernel.org, josef@toxicpanda.com, axboe@kernel.dk
+Cc: cgroups@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, songmuchun@bytedance.com, andrea.righi@canonical.com, Jinke Han <hanjinke.666@bytedance.com>
 
-On Sun, May 07, 2023 at 12:27:18PM +0200, Michal Hocko wrote:
-> On Thu 04-05-23 08:08:13, Suren Baghdasaryan wrote:
-> > On Thu, May 4, 2023 at 2:07=E2=80=AFAM Michal Hocko <mhocko@suse.com> w=
-rote:
-> [...]
-> > > e.g. is it really interesting to know that there is a likely memory
-> > > leak in seq_file proper doing and allocation? No as it is the specific
-> > > implementation using seq_file that is leaking most likely. There are
-> > > other examples like that See?
-> >=20
-> > Yes, I see that. One level tracking does not provide all the
-> > information needed to track such issues. Something more informative
-> > would cost more. That's why our proposal is to have a light-weight
-> > mechanism to get a high level picture and then be able to zoom into a
-> > specific area using context capture. If you have ideas to improve
-> > this, I'm open to suggestions.
->=20
-> Well, I think that a more scalable approach would be to not track in
-> callers but in the allocator itself. The full stack trace might not be
-> all that important or interesting and maybe even increase the overall
-> overhead but a partial one with a configurable depth would sound more
-> interesting to me. A per cache hastable indexed by stack trace reference
-> and extending slab metadata to store the reference for kfree path won't
-> be free but the overhead might be just acceptable.
+From: Jinke Han <hanjinke.666@bytedance.com>
 
-How would you propose to annotate what call chains need what depth of
-stack trace recorded?
+After commit f382fb0bcef4 ("block: remove legacy IO schedulers"),
+blkio.throttle.io_serviced and blkio.throttle.io_service_bytes become
+the only stable io stats interface of cgroup v1, and these statistics
+are done in the blk-throttle code. But the current code only counts the
+bios that are actually throttled. When the user does not add the throttle
+limit, the io stats for cgroup v1 has nothing. I fix it according to the
+statistical method of v2, and made it count all ios accurately.
 
-How would you propose to make this performant?
+Fixes: a7b36ee6ba29 ("block: move blk-throtl fast path inline")
+Tested-by: Andrea Righi <andrea.righi@canonical.com>
+Signed-off-by: Jinke Han <hanjinke.666@bytedance.com>
+---
+ block/blk-cgroup.c   | 6 ++++--
+ block/blk-throttle.c | 6 ------
+ block/blk-throttle.h | 9 +++++++++
+ 3 files changed, 13 insertions(+), 8 deletions(-)
+
+diff --git a/block/blk-cgroup.c b/block/blk-cgroup.c
+index 0ce64dd73cfe..5b29912a0ee2 100644
+--- a/block/blk-cgroup.c
++++ b/block/blk-cgroup.c
+@@ -2048,6 +2048,9 @@ void blk_cgroup_bio_start(struct bio *bio)
+ 	struct blkg_iostat_set *bis;
+ 	unsigned long flags;
+ 
++	if (!cgroup_subsys_on_dfl(io_cgrp_subsys))
++		return;
++
+ 	/* Root-level stats are sourced from system-wide IO stats */
+ 	if (!cgroup_parent(blkcg->css.cgroup))
+ 		return;
+@@ -2079,8 +2082,7 @@ void blk_cgroup_bio_start(struct bio *bio)
+ 	}
+ 
+ 	u64_stats_update_end_irqrestore(&bis->sync, flags);
+-	if (cgroup_subsys_on_dfl(io_cgrp_subsys))
+-		cgroup_rstat_updated(blkcg->css.cgroup, cpu);
++	cgroup_rstat_updated(blkcg->css.cgroup, cpu);
+ 	put_cpu();
+ }
+ 
+diff --git a/block/blk-throttle.c b/block/blk-throttle.c
+index 9d010d867fbf..7397ff199d66 100644
+--- a/block/blk-throttle.c
++++ b/block/blk-throttle.c
+@@ -2178,12 +2178,6 @@ bool __blk_throtl_bio(struct bio *bio)
+ 
+ 	rcu_read_lock();
+ 
+-	if (!cgroup_subsys_on_dfl(io_cgrp_subsys)) {
+-		blkg_rwstat_add(&tg->stat_bytes, bio->bi_opf,
+-				bio->bi_iter.bi_size);
+-		blkg_rwstat_add(&tg->stat_ios, bio->bi_opf, 1);
+-	}
+-
+ 	spin_lock_irq(&q->queue_lock);
+ 
+ 	throtl_update_latency_buckets(td);
+diff --git a/block/blk-throttle.h b/block/blk-throttle.h
+index ef4b7a4de987..d1ccbfe9f797 100644
+--- a/block/blk-throttle.h
++++ b/block/blk-throttle.h
+@@ -185,6 +185,15 @@ static inline bool blk_should_throtl(struct bio *bio)
+ 	struct throtl_grp *tg = blkg_to_tg(bio->bi_blkg);
+ 	int rw = bio_data_dir(bio);
+ 
++	if (!cgroup_subsys_on_dfl(io_cgrp_subsys)) {
++		if (!bio_flagged(bio, BIO_CGROUP_ACCT)) {
++			bio_set_flag(bio, BIO_CGROUP_ACCT);
++			blkg_rwstat_add(&tg->stat_bytes, bio->bi_opf,
++					bio->bi_iter.bi_size);
++		}
++		blkg_rwstat_add(&tg->stat_ios, bio->bi_opf, 1);
++	}
++
+ 	/* iops limit is always counted */
+ 	if (tg->has_rules_iops[rw])
+ 		return true;
+-- 
+2.20.1
+
