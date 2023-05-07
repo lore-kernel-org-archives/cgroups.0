@@ -1,53 +1,63 @@
-From: Michal Hocko <mhocko@suse.com>
-Subject: Re: [PATCH v3 0/2] memcontrol: support cgroup level OOM protection
-Date: Sun, 7 May 2023 12:11:58 +0200
-Message-ID: <ZFd5bpfYc3nPEVie@dhcp22.suse.cz>
-References: <20230506114948.6862-1-chengkaitao@didiglobal.com>
+From: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
+Subject: Re: [PATCH 00/40] Memory allocation profiling
+Date: Sun, 7 May 2023 12:27:18 +0200
+Message-ID: <ZFd9BiSorMldWiff@dhcp22.suse.cz>
+References: <20230501165450.15352-1-surenb@google.com>
+ <ZFIMaflxeHS3uR/A@dhcp22.suse.cz>
+ <CAJuCfpHxbYFxDENYFfnggh1D8ot4s493PQX0C7kD-JLvixC-Vg@mail.gmail.com>
+ <ZFN1yswCd9wRgYPR@dhcp22.suse.cz>
+ <CAJuCfpEkV_+pAjxyEpMqY+x7buZhSpj5qDF6KubsS=ObrQKUZg@mail.gmail.com>
 Mime-Version: 1.0
-Return-path: <linux-doc-owner@vger.kernel.org>
+Content-Transfer-Encoding: quoted-printable
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
-        t=1683454319; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+        t=1683455239; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
          mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=E2IBRhSYCp7770K3WZ9qLNwH/ZcVfrY9C1tieDZlpdg=;
-        b=FIbi3vnJWeyisZKQAKPVxxKWxGo2cNOIKsLNgCwvtQ9PD+03S4WGFNTrTeJVW8AyA0ho3C
-        4qhOKE4ROa0kpIcILETDzKxA6afhoxlER3gNbyxMQyTTYalxOeW0dQ8rZBj0mnF5I5ObNd
-        ZJsiFec8xeevqFYY1Vrw1++ytRBXVaw=
+        bh=oav2A28KVKDaotNibkAokXcYPyLTU0ijj1klZnIOiRI=;
+        b=c+QuWE6EU4wWKhietxfwN/3l7yAy0K35os01H7NfRFE82alr8YUVFXQqf5mweH8wlzKf+k
+        lu0AkCEfmwJ2VDmkoLh8SVCJbT4jzXXTf9sUf9reepl+WLoX/HYO+d0q2t7pYqKTvW4ACE
+        6vuKCAGkjFOK3NT53IiVKVs+9jUJHkc=
 Content-Disposition: inline
-In-Reply-To: <20230506114948.6862-1-chengkaitao@didiglobal.com>
+In-Reply-To: <CAJuCfpEkV_+pAjxyEpMqY+x7buZhSpj5qDF6KubsS=ObrQKUZg-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: chengkaitao <chengkaitao@didiglobal.com>
-Cc: tj@kernel.org, lizefan.x@bytedance.com, hannes@cmpxchg.org, corbet@lwn.net, roman.gushchin@linux.dev, shakeelb@google.com, akpm@linux-foundation.org, brauner@kernel.org, muchun.song@linux.dev, viro@zeniv.linux.org.uk, zhengqi.arch@bytedance.com, ebiederm@xmission.com, Liam.Howlett@oracle.com, chengzhihao1@huawei.com, pilgrimtao@gmail.com, haolee.swjtu@gmail.com, yuzhao@google.com, willy@infradead.org, vasily.averin@linux.dev, vbabka@suse.cz, surenb@google.com, sfr@canb.auug.org.au, mcgrof@kernel.org, sujiaxun@uniontech.com, feng.tang@intel.com, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org
+Content-Type: text/plain; charset="windows-1252"
+To: Suren Baghdasaryan <surenb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Cc: akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, kent.overstreet-fxUVXftIFDnyG1zEObXtfA@public.gmane.org, vbabka-AlSwsSmVLrQ@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org, mgorman-l3A5Bk7waGM@public.gmane.org, dave-h16yJtLeMjHk1uMJSBkQmQ@public.gmane.org, willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, liam.howlett-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org, corbet-T1hC0tSOHrs@public.gmane.org, void-gq6j2QGBifHby3iVrkZq2A@public.gmane.org, peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, juri.lelli-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, ldufour-tEXmvtCZX7AybS5Ee8rs3A@public.gmane.org, catalin.marinas-5wv7dgnIgG8@public.gmane.org, will-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, arnd-r2nGTMty4D4@public.gmane.org, tglx-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org, mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, dave.hansen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org, x86-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, peterx-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, david-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, mcgrof-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, masahiroy-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, nathan-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, dennis-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, muchun.song-fxUVXftIFDnyG1zEObXtfA@public.gmane.org, rppt-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, paulmck-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, pasha.tatashin-2EmBfe737+LQT0dZR+AlfA@public.gmane.org, yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, yuzhao-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, dhowells-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, andreyknvl-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, keescook@chr
 
-On Sat 06-05-23 19:49:46, chengkaitao wrote:
-> Establish a new OOM score algorithm, supports the cgroup level OOM
-> protection mechanism. When an global/memcg oom event occurs, we treat
-> all processes in the cgroup as a whole, and OOM killers need to select
-> the process to kill based on the protection quota of the cgroup
+On Thu 04-05-23 08:08:13, Suren Baghdasaryan wrote:
+> On Thu, May 4, 2023 at 2:07=E2=80=AFAM Michal Hocko <mhocko-IBi9RG/b67k@p=
+ublic.gmane.org> wrote:
+[...]
+> > e.g. is it really interesting to know that there is a likely memory
+> > leak in seq_file proper doing and allocation? No as it is the specific
+> > implementation using seq_file that is leaking most likely. There are
+> > other examples like that See?
+>=20
+> Yes, I see that. One level tracking does not provide all the
+> information needed to track such issues. Something more informative
+> would cost more. That's why our proposal is to have a light-weight
+> mechanism to get a high level picture and then be able to zoom into a
+> specific area using context capture. If you have ideas to improve
+> this, I'm open to suggestions.
 
-Although your patch 1 briefly touches on some advantages of this
-interface there is a lack of actual usecase. Arguing that oom_score_adj
-is hard because it needs a parent process is rather weak to be honest.
-It is just trivial to create a thin wrapper, use systemd to launch
-important services or simply update the value after the fact. Now
-oom_score_adj has its own downsides of course (most notably a
-granularity and a lack of group protection.
+Well, I think that a more scalable approach would be to not track in
+callers but in the allocator itself. The full stack trace might not be
+all that important or interesting and maybe even increase the overall
+overhead but a partial one with a configurable depth would sound more
+interesting to me. A per cache hastable indexed by stack trace reference
+and extending slab metadata to store the reference for kfree path won't
+be free but the overhead might be just acceptable.
 
-That being said, make sure you describe your usecase more thoroughly.
-Please also make sure you describe the intended heuristic of the knob.
-It is not really clear from the description how this fits hierarchical
-behavior of cgroups. I would be especially interested in the semantics
-of non-leaf memcgs protection as they do not have any actual processes
-to protect.
+If the stack unwinding is really too expensive for tracking another
+option would be to add code tags dynamically to the compiled
+kernel without any actual code changes. I can imagine the tracing
+infrastructure could be used for that or maybe even consider compiler
+plugins to inject code for functions marked as allocators. So the kernel
+could be instrumented even without eny userspace tooling required by
+users directly.
 
-Also there have been concerns mentioned in v2 discussion and it would be
-really appreciated to summarize how you have dealt with them.
-
-Please also note that many people are going to be slow in responding
-this week because of LSFMM conference
-(https://events.linuxfoundation.org/lsfmm/)
--- 
+--=20
 Michal Hocko
 SUSE Labs
