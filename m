@@ -1,99 +1,71 @@
-From: Kent Overstreet <kent.overstreet-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>
-Subject: Re: [PATCH 00/40] Memory allocation profiling
-Date: Mon, 8 May 2023 16:48:27 -0400
-Message-ID: <ZFlgG02A87qPNIn1@moria.home.lan>
-References: <20230501165450.15352-1-surenb@google.com>
- <ZFIMaflxeHS3uR/A@dhcp22.suse.cz>
- <CAJuCfpHxbYFxDENYFfnggh1D8ot4s493PQX0C7kD-JLvixC-Vg@mail.gmail.com>
- <ZFN1yswCd9wRgYPR@dhcp22.suse.cz>
- <ZFfd99w9vFTftB8D@moria.home.lan>
- <20230508175206.7dc3f87c@meshulam.tesarici.cz>
- <ZFkb1p80vq19rieI@moria.home.lan>
- <20230508180913.6a018b21@meshulam.tesarici.cz>
- <ZFkjRBCExpXfI+O5@moria.home.lan>
- <20230508205939.0b5b485c@meshulam.tesarici.cz>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH v3 0/6] sched/deadline: cpuset: Rework DEADLINE bandwidth
+ restoration
+Date: Mon, 8 May 2023 13:24:16 -1000
+Message-ID: <ZFmEoBoX15FIpyW1@slm.duckdns.org>
+References: <20230508075854.17215-1-juri.lelli@redhat.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
-        t=1683578919;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=T9yUrg/v5raybQi2xKwTXiJDyugUh7KFNSbnsbVf1ko=;
-        b=JlOqRkPdzk5AJhxPMwu8AlexUvrKA9kXRniMs6KXFAxkkCykU6KjHBDIF+g4xO4yC/3Xao
-        +RuScEMByhVbOYP7Nl+Ojs+6ZTV4KDzSfRqi3slN82Zdtt1OUgviKekasieY9DgexpymM2
-        tFWfTgTgTslrvfQsG/FcZTuRpfPmr6I=
+Return-path: <linux-kernel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20221208; t=1683588259; x=1686180259;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:sender:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=xWUewLtyjjleyCE27N0mgy++XbZ3xZJBSp9FQArDlQU=;
+        b=cMgyvKzfMRZ5F6dobb+hxpXJmFiFNPdymS/AneW1qDN9sWCmT/PL8mluUI+VSw0I7L
+         yLOTKnHDqulRpFgPTlbgJ068wRQv3ph93VqvAylgj0TBV9hjoWcIyVwstwcQo6JoKuBf
+         GfmMQ9iDoviqnYAGxX0P1lj/KwdXQcJk+6KOxAIbdfgXgu9sNn0HBGqbnRIvJ30Wm0fG
+         gDB/Txt23JlWHtP7he4FGgXwIz+m1WwbgFCcKj6sXoBdsA9RU8kz5nsushGnw8lEzrBQ
+         JDOGRmm5Sj7o913tB4WBuCs3EcWn7K50tzAM96peisZmCKkOYcTUdyN0crppKzcxCPco
+         89bA==
+Sender: Tejun Heo <htejun@gmail.com>
 Content-Disposition: inline
-In-Reply-To: <20230508205939.0b5b485c-TD/jYOLh/Qr2G+KSGY6Hrl+YFMdMcpeZ@public.gmane.org>
+In-Reply-To: <20230508075854.17215-1-juri.lelli@redhat.com>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="utf-8"
-To: Petr =?utf-8?B?VGVzYcWZw61r?= <petr-hIRrMMry8ebtwjQa/ONI9g@public.gmane.org>
-Cc: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>, Suren Baghdasaryan <surenb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, vbabka-AlSwsSmVLrQ@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org, mgorman-l3A5Bk7waGM@public.gmane.org, dave-h16yJtLeMjHk1uMJSBkQmQ@public.gmane.org, willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, liam.howlett-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org, corbet-T1hC0tSOHrs@public.gmane.org, void-gq6j2QGBifHby3iVrkZq2A@public.gmane.org, peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, juri.lelli-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, ldufour-tEXmvtCZX7AybS5Ee8rs3A@public.gmane.org, catalin.marinas-5wv7dgnIgG8@public.gmane.org, will-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, arnd-r2nGTMty4D4@public.gmane.org, tglx-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org, mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, dave.hansen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org, x86-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, peterx-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, david-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, mcgrof-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, masahiroy-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, nathan-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, dennis-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, muchun.song-fxUVXftIFDnyG1zEObXtfA@public.gmane.org, rppt-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, paulmck-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, pasha.tatashin-2EmBfe737+LQT0dZR+AlfA@public.gmane.org, yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, yuzhao-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, dhowells-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Juri Lelli <juri.lelli@redhat.com>
+Cc: Peter Zijlstra <peterz@infradead.org>, Ingo Molnar <mingo@kernel.org>, Qais Yousef <qyousef@layalina.io>, Waiman Long <longman@redhat.com>, Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, Hao Luo <haoluo@google.com>, Dietmar Eggemann <dietmar.eggemann@arm.com>, Steven Rostedt <rostedt@goodmis.org>, linux-kernel@vger.kernel.org, luca.abeni@santannapisa.it, claudio@evidence.eu.com, tommaso.cucinotta@santannapisa.it, bristot@redhat.com, mathieu.poirier@linaro.org, cgroups@vger.kernel.org, Vincent Guittot <vincent.guittot@linaro.org>, Wei Wang <wvw@google.com>, Rick Yiu <rickyiu@google.com>, Quentin Perret <qperret@google.com>, Heiko Carstens <hca@linux.ibm.com>, Vasily Gorbik <gor@linux.ibm.com>, Alexander Gordeev <agor>
 
-On Mon, May 08, 2023 at 08:59:39PM +0200, Petr Tesařík wrote:
-> On Mon, 8 May 2023 12:28:52 -0400
-> Kent Overstreet <kent.overstreet-fxUVXftIFDnyG1zEObXtfA@public.gmane.org> wrote:
+On Mon, May 08, 2023 at 09:58:48AM +0200, Juri Lelli wrote:
+> Qais reported [1] that iterating over all tasks when rebuilding root
+> domains for finding out which ones are DEADLINE and need their bandwidth
+> correctly restored on such root domains can be a costly operation (10+
+> ms delays on suspend-resume). He proposed we skip rebuilding root
+> domains for certain operations, but that approach seemed arch specific
+> and possibly prone to errors, as paths that ultimately trigger a rebuild
+> might be quite convoluted (thanks Qais for spending time on this!).
 > 
-> > On Mon, May 08, 2023 at 06:09:13PM +0200, Petr Tesařík wrote:
-> > > Sure, although AFAIK the index does not cover all possible config
-> > > options (so non-x86 arch code is often forgotten). However, that's the
-> > > less important part.
-> > > 
-> > > What do you do if you need to hook something that does conflict with an
-> > > existing identifier?  
-> > 
-> > As already happens in this patchset, rename the other identifier.
-> > 
-> > But this is C, we avoid these kinds of conflicts already because the
-> > language has no namespacing
+> This is v3 of an alternative approach (v2 at [4]) to fix the problem.
 > 
-> This statement is not accurate, but I agree there's not much. Refer to
-> section 6.2.3 of ISO/IEC9899:2018 (Name spaces of identifiers).
+>  01/06 - Rename functions deadline with DEADLINE accounting (cleanup
+>          suggested by Qais) - no functional change
+>  02/06 - Bring back cpuset_mutex (so that we have write access to cpusets
+>          from scheduler operations - and we also fix some problems
+>          associated to percpu_cpuset_rwsem)
+>  03/06 - Keep track of the number of DEADLINE tasks belonging to each cpuset
+>  04/06 - Use this information to only perform the costly iteration if
+>          DEADLINE tasks are actually present in the cpuset for which a
+>          corresponding root domain is being rebuilt
+>  05/06 - Create DL BW alloc, free & check overflow interface for bulk
+>          bandwidth allocation/removal - no functional change 
+>  06/06 - Fix bandwidth allocation handling for cgroup operation
+>          involving multiple tasks
 > 
-> More importantly, macros also interfere with identifier scoping, e.g.
-> you cannot even have a local variable with the same name as a macro.
-> That's why I dislike macros so much.
+> With respect to the v2 posting [4]
+> 
+>  1 - rebase on top of Linus' tree as of today (ac9a78681b92)
+>  2 - add the 'why' to 5/6 changelog - Peter
+>  3 - explicitly say that we need to keep cpuset_mutex a mutex for PI on
+>      2/6 - Peter
+> 
+> This set is also available from
+> 
+> https://github.com/jlelli/linux.git deadline/rework-cpusets
 
-Shadowing a global identifier like that would at best be considered poor
-style, so I don't see this as a major downside.
+Applied to cgroup/for-6.5.
 
-> But since there's no clear policy regarding macros in the kernel, I'm
-> merely showing a downside; it's perfectly fine to write kernel code
-> like this as long as the maintainers agree that the limitation is
-> acceptable and outweighed by the benefits.
+Thanks.
 
-Macros do have lots of tricky downsides, but in general we're not shy
-about using them for things that can't be done otherwise; see
-wait_event(), all of tracing...
-
-I think we could in general do a job of making the macros _themselves_
-more managable, when writing things that need to be macros I'll often
-have just the wrapper as a macro and write the bulk as inline functions.
-See the generic radix tree code for example.
-
-Reflection is a major use case for macros, and the underlying mechanism
-here - code tagging - is something worth talking about more, since it's
-codifying something that's been done ad-hoc in the kernel for a long
-time and something we hope to refactor other existing code to use,
-including tracing - I've got a patch already written to convert the
-dynamic debug code to code tagging; it's a nice -200 loc cleanup.
-
-Regarding the alloc_hooks() macro itself specifically, I've got more
-plans for it. I have another patch series after this one that implements
-code tagging based fault injection, which is _far_ more ergonomic to use
-than our existing fault injection capabilities (and this matters! Fault
-injection is a really important tool for getting good test coverage, but
-tools that are a pain in the ass to use don't get used) - and with the
-alloc_hooks() macro already in place, we'll be able to turn _every
-individual memory allocation callsite_ into a distinct, individually
-selectable fault injection point - which is something our existing fault
-injection framework attempts at but doesn't really manage.
-
-If we can get this in, it'll make it really easy to write unit tests
-that iterate over every memory allocation site in a given module,
-individually telling them to fail, run a workload until they hit, and
-verify that the code path being tested was executed. It'll nicely
-complement the fuzz testing capabilities that we've been working on,
-particularly in filesystem land.
+-- 
+tejun
