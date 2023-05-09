@@ -1,78 +1,89 @@
-From: Michal =?utf-8?Q?Koutn=C3=BD?= <mkoutny-IBi9RG/b67k@public.gmane.org>
-Subject: Re: [RFC PATCH] cgroup: Return error when attempting to migrate a
- zombie process
-Date: Tue, 9 May 2023 12:03:48 +0200
-Message-ID: <cetfatnt2cy2pmcskg243ebau36au2vy6fi6mu7hpgg3e7kjp4@gg7l5zoix4xt>
-References: <20230503125359.14789-1-mkoutny@suse.com>
- <ZFVTRdP6eK1soMVR@slm.duckdns.org>
+From: Michal =?utf-8?Q?Koutn=C3=BD?= <mkoutny@suse.com>
+Subject: Re: [RFC PATCH 3/3] cgroup: Do not take css_set_lock in
+ cgroup_show_path
+Date: Tue, 9 May 2023 12:34:53 +0200
+Message-ID: <6rjdfjltz5kkwzobpeefbqxzj4wbd4jzstdryb6rb67td3x45q@5ujarspzjk3x>
+References: <20230502133847.14570-1-mkoutny@suse.com>
+ <20230502133847.14570-4-mkoutny@suse.com>
+ <ZFUktg4Yxa30jRBX@slm.duckdns.org>
+ <ta7bilcvc7lzt5tvs44y5wxqt6i3gdmvzwcr5h2vxhjhshmivk@3mecui76fxvy>
+ <ZFVIJlAMyzTh3QTP@slm.duckdns.org>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=pgp-sha512;
-        protocol="application/pgp-signature"; boundary="kajz4hm6ew66s2tm"
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+        protocol="application/pgp-signature"; boundary="ulul6m7iwj5svxlz"
+Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
-        t=1683626629; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+        t=1683628495; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
          mime-version:mime-version:content-type:content-type:
          in-reply-to:in-reply-to:references:references;
-        bh=jVOcH3ojLkF2oleErumS69jiq2T/Qhx9NHw4f5gaQfM=;
-        b=EkRevYyx8PlFZqTaDOGZUy0A3OlcDuXYp+8WnEwhteSXOC+jm4o+uVjFd3PqkV3+b9/ULI
-        0fNxYIR1s/7M3CIJ0OYb6jixod9/IoCmGW47JhMnPPfc/6tkEpp0AwQZ+bpEwLtv8cNBQK
-        PRSt9u7dk3pavlC5Dqdk0gMzT0d5s1w=
+        bh=z4MbD2ACh3hpHrhSw43Y87lfUQzej8A7wcLhxK8QwrA=;
+        b=LCF1CluIkegxLgjO5KHPunJbcrtz1mpYn4LktBxFrmsa1yUrhGvoB/SU6WhCId+SSKFl0I
+        Wj60Zs47HrzWF17T1B0WtMKCQ8EPgJ7D0WEPsx3xqk0x+d7b9hDcwBZvUHgpi9uautR5Oh
+        Fq1PClRqCUVlbLFwr21WOx0RIshBdbs=
 Content-Disposition: inline
-In-Reply-To: <ZFVTRdP6eK1soMVR-NiLfg/pYEd1N0TnZuCh8vA@public.gmane.org>
+In-Reply-To: <ZFVIJlAMyzTh3QTP@slm.duckdns.org>
 List-ID: <cgroups.vger.kernel.org>
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Benjamin Berg <benjamin-cdvu00un1VgdHxzADdlk8Q@public.gmane.org>
+To: Tejun Heo <tj@kernel.org>
+Cc: linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, Alexander Viro <viro@zeniv.linux.org.uk>, Christian Brauner <brauner@kernel.org>, Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, Dave Chinner <dchinner@redhat.com>, Rik van Riel <riel@surriel.com>, Jiri Wiesner <jwiesner@suse.de>
 
 
---kajz4hm6ew66s2tm
-Content-Type: text/plain; charset=us-ascii
+--ulul6m7iwj5svxlz
+Content-Type: text/plain; charset=iso-8859-1
 Content-Disposition: inline
 Content-Transfer-Encoding: quoted-printable
 
-On Fri, May 05, 2023 at 09:04:37AM -1000, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org> wrote:
-> This seems racy to me. The liveness state can change between here and the
-> PF_EXITING check in cgroup_migrate_add_task(), right?
+On Fri, May 05, 2023 at 08:17:10AM -1000, Tejun Heo <tj@kernel.org> wrote:
+> On Fri, May 05, 2023 at 07:32:40PM +0200, Michal Koutn=FD wrote:
+> > On Fri, May 05, 2023 at 05:45:58AM -1000, Tejun Heo <tj@kernel.org> wro=
+te:
+> > > > There are three relevant nodes for each cgroupfs entry:
+> > > >=20
+> > > >         R ... cgroup hierarchy root
+> > > >         M ... mount root
+> > > >         C ... reader's cgroup NS root
+> > > >=20
+> > > > mountinfo is supposed to show path from C to M.
+> > >=20
+> > > At least for cgroup2, the path from C to M isn't gonna change once NS=
+ is
+> > > established, right?
+> >=20
+> > Right. Although, the argument about M (when C above M or when C and M in
+> > different subtrees) implicitly relies on the namespace_sem.
+>=20
+> I don't follow. Can you please elaborate a bit more?
 
-You're right, threadgroup lock won't prevent that (as I got wrongly in
-the patch):
+I wanted to say that even with restriction to cgroup2, the css_set_lock
+removal would also rely on namespace_sem.
 
-  cgroup_procs_write_start                                =20
-                                                     do_exit
-                                                       exit_signals
-                                                         cgroup_threadgroup=
-_change_begin
-                                                           tsk->flags |=3D =
-PF_EXITING
-                                                         cgroup_threadgroup=
-_change_end
-    percpu_down_write(&cgroup_threadgroup_rwsem)          =20
-      ...                                                 =20
-      atomic_read(&live)                                  =20
-                                                       ...
-                                                       atomic_dec_and_test(=
-live)
-      ...                                                 =20
-      cgroup_migrate_add_task                             =20
-      ...                                                 =20
-    percpu_up_write(&cgroup_threadgroup_rwsem)
+For a given mountinfo entry the path C--M won't change (no renames).
+The question is whether cgroup M will stay around (with the relaxed
+locking):
 
+  - C >=3D M (C is below M)=20
+    -> C (transitively) pins M
 
-> Wouldn't it be better to just track how many tasks are tracked and
-> return -ESRCH if none was migrated?
+  - C < M (C is above M) or C and M are in two disjoint subtrees (path
+    goes through a common ancestor)
+    -> M could be released without relation to C (even on cgroup2, with
+       the css_set_lock removed) but such a destructive operation on M
+       is excluded as long as namespace_sem is held during entry
+       rendering.
 
-Thanks, such an integral sounds better, will see.
+Does that clarify the trade-off of removing css_set_lock at this spot?
 
+Thanks,
 Michal
 
---kajz4hm6ew66s2tm
+--ulul6m7iwj5svxlz
 Content-Type: application/pgp-signature; name="signature.asc"
 
 -----BEGIN PGP SIGNATURE-----
 
-iHUEABYKAB0WIQTrXXag4J0QvXXBmkMkDQmsBEOquQUCZFoagQAKCRAkDQmsBEOq
-uV58AP0YJRo7aRKynt665xXOLH1SQSTX1MShDbDSZVr+4pBULgEAx887fE5n3Mar
-tkkG4OI6a6Bof2v6liLPXWWg50Giigo=
-=CdaX
+iHUEABYKAB0WIQTrXXag4J0QvXXBmkMkDQmsBEOquQUCZFohyQAKCRAkDQmsBEOq
+uS+lAP0TvpVVVydhEBrTrZvKptICgVmSEmOvO3nyzJIgl+tsiQD/dQDf8sn52aYM
+5X1mlDRdvM/4tqdyHD5ZxRmF7hI+PAo=
+=d4Sg
 -----END PGP SIGNATURE-----
 
---kajz4hm6ew66s2tm--
+--ulul6m7iwj5svxlz--
