@@ -1,89 +1,206 @@
-From: Michal =?utf-8?Q?Koutn=C3=BD?= <mkoutny@suse.com>
-Subject: Re: [RFC PATCH 3/3] cgroup: Do not take css_set_lock in
- cgroup_show_path
-Date: Tue, 9 May 2023 12:34:53 +0200
-Message-ID: <6rjdfjltz5kkwzobpeefbqxzj4wbd4jzstdryb6rb67td3x45q@5ujarspzjk3x>
-References: <20230502133847.14570-1-mkoutny@suse.com>
- <20230502133847.14570-4-mkoutny@suse.com>
- <ZFUktg4Yxa30jRBX@slm.duckdns.org>
- <ta7bilcvc7lzt5tvs44y5wxqt6i3gdmvzwcr5h2vxhjhshmivk@3mecui76fxvy>
- <ZFVIJlAMyzTh3QTP@slm.duckdns.org>
-Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha512;
-        protocol="application/pgp-signature"; boundary="ulul6m7iwj5svxlz"
-Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
-        t=1683628495; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=z4MbD2ACh3hpHrhSw43Y87lfUQzej8A7wcLhxK8QwrA=;
-        b=LCF1CluIkegxLgjO5KHPunJbcrtz1mpYn4LktBxFrmsa1yUrhGvoB/SU6WhCId+SSKFl0I
-        Wj60Zs47HrzWF17T1B0WtMKCQ8EPgJ7D0WEPsx3xqk0x+d7b9hDcwBZvUHgpi9uautR5Oh
-        Fq1PClRqCUVlbLFwr21WOx0RIshBdbs=
-Content-Disposition: inline
-In-Reply-To: <ZFVIJlAMyzTh3QTP@slm.duckdns.org>
+From: kernel test robot <lkp-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+Subject: [tj-cgroup:for-next] BUILD SUCCESS
+ 2ef269ef1ac006acf974793d975539244d77b28f
+Date: Tue, 09 May 2023 20:06:31 +0800
+Message-ID: <20230509120631.uuDD2%lkp@intel.com>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1683634009; x=1715170009;
+  h=date:from:to:cc:subject:message-id;
+  bh=XbYGJAu1p+Y1z9nbuMQD5fz8jpS+b+N8stWFwx8d1e8=;
+  b=GQMsD0Ni2t5l+6hxtdn9QDjmZvgI4ULqPnIQnXnJlR1+znG/w1WZQSuO
+   vq+3CshBC35YqZLsXtE3/24+pIYc11OYaMqwWhtyjTJ2yAAe0zqUZruJO
+   bV7XRB7V1fm+H98fyM8aSWX8s09cxvgGGudm82bldtS4HS2GJR+y0IxRc
+   TJAtdOymR+h75yATvFn9ixjaOESZ9xqBvjwLXKhz91RPZ0DpyhhXQCVSY
+   2G7Wq+ZVQ6iYjyNw9U7Zjvm9/weU198hYL8PgPskT0uUDh8hqNC1nMCxZ
+   EiKNnzExVVDse4REuFHg2DE7P5TOy3d4AlTOG34bLBgc8eAZKO26pJQZX
+   w==;
 List-ID: <cgroups.vger.kernel.org>
-To: Tejun Heo <tj@kernel.org>
-Cc: linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, Alexander Viro <viro@zeniv.linux.org.uk>, Christian Brauner <brauner@kernel.org>, Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, Dave Chinner <dchinner@redhat.com>, Rik van Riel <riel@surriel.com>, Jiri Wiesner <jwiesner@suse.de>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
+tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git for-next
+branch HEAD: 2ef269ef1ac006acf974793d975539244d77b28f  cgroup/cpuset: Free DL BW in case can_attach() fails
 
---ulul6m7iwj5svxlz
-Content-Type: text/plain; charset=iso-8859-1
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+elapsed time: 734m
 
-On Fri, May 05, 2023 at 08:17:10AM -1000, Tejun Heo <tj@kernel.org> wrote:
-> On Fri, May 05, 2023 at 07:32:40PM +0200, Michal Koutn=FD wrote:
-> > On Fri, May 05, 2023 at 05:45:58AM -1000, Tejun Heo <tj@kernel.org> wro=
-te:
-> > > > There are three relevant nodes for each cgroupfs entry:
-> > > >=20
-> > > >         R ... cgroup hierarchy root
-> > > >         M ... mount root
-> > > >         C ... reader's cgroup NS root
-> > > >=20
-> > > > mountinfo is supposed to show path from C to M.
-> > >=20
-> > > At least for cgroup2, the path from C to M isn't gonna change once NS=
- is
-> > > established, right?
-> >=20
-> > Right. Although, the argument about M (when C above M or when C and M in
-> > different subtrees) implicitly relies on the namespace_sem.
->=20
-> I don't follow. Can you please elaborate a bit more?
+configs tested: 165
+configs skipped: 11
 
-I wanted to say that even with restriction to cgroup2, the css_set_lock
-removal would also rely on namespace_sem.
+The following configs have been built successfully.
+More configs may be tested in the coming days.
 
-For a given mountinfo entry the path C--M won't change (no renames).
-The question is whether cgroup M will stay around (with the relaxed
-locking):
+tested configs:
+alpha                            allyesconfig   gcc  
+alpha        buildonly-randconfig-r006-20230508   gcc  
+alpha                               defconfig   gcc  
+alpha                randconfig-r001-20230507   gcc  
+alpha                randconfig-r023-20230507   gcc  
+alpha                randconfig-r025-20230507   gcc  
+alpha                randconfig-r026-20230507   gcc  
+alpha                randconfig-r032-20230507   gcc  
+arc                              allyesconfig   gcc  
+arc          buildonly-randconfig-r002-20230507   gcc  
+arc          buildonly-randconfig-r003-20230508   gcc  
+arc                                 defconfig   gcc  
+arc                  randconfig-r043-20230507   gcc  
+arc                  randconfig-r043-20230508   gcc  
+arm                              allmodconfig   gcc  
+arm                              allyesconfig   gcc  
+arm          buildonly-randconfig-r001-20230507   gcc  
+arm          buildonly-randconfig-r002-20230508   clang
+arm          buildonly-randconfig-r003-20230507   gcc  
+arm                                 defconfig   gcc  
+arm                  randconfig-r005-20230507   clang
+arm                  randconfig-r014-20230508   clang
+arm                  randconfig-r026-20230508   clang
+arm                  randconfig-r046-20230507   gcc  
+arm                  randconfig-r046-20230508   clang
+arm64                            allyesconfig   gcc  
+arm64        buildonly-randconfig-r001-20230507   gcc  
+arm64        buildonly-randconfig-r006-20230507   gcc  
+arm64                               defconfig   gcc  
+arm64                randconfig-r011-20230507   clang
+arm64                randconfig-r031-20230507   gcc  
+csky                                defconfig   gcc  
+csky                 randconfig-r003-20230507   gcc  
+csky                 randconfig-r014-20230508   gcc  
+hexagon      buildonly-randconfig-r002-20230508   clang
+hexagon      buildonly-randconfig-r006-20230508   clang
+hexagon              randconfig-r006-20230507   clang
+hexagon              randconfig-r011-20230508   clang
+hexagon              randconfig-r023-20230507   clang
+hexagon              randconfig-r034-20230507   clang
+hexagon              randconfig-r041-20230507   clang
+hexagon              randconfig-r041-20230508   clang
+hexagon              randconfig-r045-20230507   clang
+hexagon              randconfig-r045-20230508   clang
+i386                             allyesconfig   gcc  
+i386                              debian-10.3   gcc  
+i386                                defconfig   gcc  
+i386                 randconfig-a001-20230508   clang
+i386                 randconfig-a002-20230508   clang
+i386                 randconfig-a003-20230508   clang
+i386                 randconfig-a004-20230508   clang
+i386                 randconfig-a005-20230508   clang
+i386                 randconfig-a006-20230508   clang
+i386                 randconfig-a011-20230508   gcc  
+i386                 randconfig-a012-20230508   gcc  
+i386                 randconfig-a013-20230508   gcc  
+i386                 randconfig-a014-20230508   gcc  
+i386                 randconfig-a015-20230508   gcc  
+i386                 randconfig-a016-20230508   gcc  
+i386                 randconfig-r002-20230508   clang
+i386                 randconfig-r015-20230508   gcc  
+ia64                             allmodconfig   gcc  
+ia64                                defconfig   gcc  
+ia64                 randconfig-r001-20230508   gcc  
+ia64                 randconfig-r021-20230507   gcc  
+loongarch                        allmodconfig   gcc  
+loongarch                         allnoconfig   gcc  
+loongarch    buildonly-randconfig-r003-20230508   gcc  
+loongarch                           defconfig   gcc  
+loongarch            randconfig-r006-20230507   gcc  
+loongarch            randconfig-r014-20230507   gcc  
+m68k                             allmodconfig   gcc  
+m68k         buildonly-randconfig-r004-20230508   gcc  
+m68k                                defconfig   gcc  
+m68k                 randconfig-r016-20230507   gcc  
+m68k                 randconfig-r024-20230507   gcc  
+microblaze   buildonly-randconfig-r002-20230507   gcc  
+microblaze   buildonly-randconfig-r005-20230507   gcc  
+microblaze           randconfig-r004-20230508   gcc  
+microblaze           randconfig-r011-20230507   gcc  
+microblaze           randconfig-r011-20230508   gcc  
+microblaze           randconfig-r013-20230507   gcc  
+microblaze           randconfig-r015-20230507   gcc  
+microblaze           randconfig-r022-20230507   gcc  
+microblaze           randconfig-r024-20230507   gcc  
+mips                             allmodconfig   gcc  
+mips                             allyesconfig   gcc  
+mips                 randconfig-r016-20230507   gcc  
+mips                 randconfig-r026-20230507   gcc  
+mips                 randconfig-r033-20230507   clang
+mips                 randconfig-r034-20230507   clang
+nios2                               defconfig   gcc  
+nios2                randconfig-r002-20230507   gcc  
+nios2                randconfig-r014-20230507   gcc  
+nios2                randconfig-r021-20230507   gcc  
+nios2                randconfig-r033-20230507   gcc  
+nios2                randconfig-r036-20230507   gcc  
+openrisc     buildonly-randconfig-r006-20230507   gcc  
+openrisc             randconfig-r001-20230507   gcc  
+openrisc             randconfig-r013-20230507   gcc  
+openrisc             randconfig-r015-20230507   gcc  
+openrisc             randconfig-r031-20230507   gcc  
+openrisc             randconfig-r036-20230507   gcc  
+parisc       buildonly-randconfig-r004-20230507   gcc  
+parisc                              defconfig   gcc  
+parisc               randconfig-r012-20230508   gcc  
+parisc64                            defconfig   gcc  
+powerpc                          allmodconfig   gcc  
+powerpc                           allnoconfig   gcc  
+powerpc              randconfig-r002-20230507   gcc  
+powerpc              randconfig-r005-20230508   clang
+powerpc              randconfig-r006-20230508   clang
+powerpc              randconfig-r022-20230508   gcc  
+riscv                            allmodconfig   gcc  
+riscv                             allnoconfig   gcc  
+riscv        buildonly-randconfig-r004-20230507   clang
+riscv        buildonly-randconfig-r005-20230507   clang
+riscv        buildonly-randconfig-r005-20230508   gcc  
+riscv                               defconfig   gcc  
+riscv                randconfig-r013-20230508   gcc  
+riscv                randconfig-r025-20230508   gcc  
+riscv                randconfig-r042-20230507   clang
+riscv                randconfig-r042-20230508   gcc  
+riscv                          rv32_defconfig   gcc  
+s390                             allmodconfig   gcc  
+s390                             allyesconfig   gcc  
+s390         buildonly-randconfig-r001-20230508   gcc  
+s390                                defconfig   gcc  
+s390                 randconfig-r003-20230508   clang
+s390                 randconfig-r044-20230507   clang
+s390                 randconfig-r044-20230508   gcc  
+sh                               allmodconfig   gcc  
+sh           buildonly-randconfig-r003-20230507   gcc  
+sh           buildonly-randconfig-r005-20230508   gcc  
+sh                   randconfig-r013-20230508   gcc  
+sparc        buildonly-randconfig-r001-20230508   gcc  
+sparc                               defconfig   gcc  
+sparc                randconfig-r005-20230507   gcc  
+sparc                randconfig-r035-20230507   gcc  
+sparc64      buildonly-randconfig-r004-20230508   gcc  
+sparc64              randconfig-r012-20230508   gcc  
+sparc64              randconfig-r022-20230507   gcc  
+sparc64              randconfig-r032-20230507   gcc  
+sparc64              randconfig-r035-20230507   gcc  
+um                             i386_defconfig   gcc  
+um                           x86_64_defconfig   gcc  
+x86_64                            allnoconfig   gcc  
+x86_64                           allyesconfig   gcc  
+x86_64                              defconfig   gcc  
+x86_64                                  kexec   gcc  
+x86_64               randconfig-a001-20230508   clang
+x86_64               randconfig-a002-20230508   clang
+x86_64               randconfig-a003-20230508   clang
+x86_64               randconfig-a004-20230508   clang
+x86_64               randconfig-a005-20230508   clang
+x86_64               randconfig-a006-20230508   clang
+x86_64               randconfig-a011-20230508   gcc  
+x86_64               randconfig-a012-20230508   gcc  
+x86_64               randconfig-a013-20230508   gcc  
+x86_64               randconfig-a014-20230508   gcc  
+x86_64               randconfig-a015-20230508   gcc  
+x86_64               randconfig-a016-20230508   gcc  
+x86_64                               rhel-8.3   gcc  
+xtensa               randconfig-r016-20230508   gcc  
+xtensa               randconfig-r021-20230508   gcc  
 
-  - C >=3D M (C is below M)=20
-    -> C (transitively) pins M
-
-  - C < M (C is above M) or C and M are in two disjoint subtrees (path
-    goes through a common ancestor)
-    -> M could be released without relation to C (even on cgroup2, with
-       the css_set_lock removed) but such a destructive operation on M
-       is excluded as long as namespace_sem is held during entry
-       rendering.
-
-Does that clarify the trade-off of removing css_set_lock at this spot?
-
-Thanks,
-Michal
-
---ulul6m7iwj5svxlz
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-
-iHUEABYKAB0WIQTrXXag4J0QvXXBmkMkDQmsBEOquQUCZFohyQAKCRAkDQmsBEOq
-uS+lAP0TvpVVVydhEBrTrZvKptICgVmSEmOvO3nyzJIgl+tsiQD/dQDf8sn52aYM
-5X1mlDRdvM/4tqdyHD5ZxRmF7hI+PAo=
-=d4Sg
------END PGP SIGNATURE-----
-
---ulul6m7iwj5svxlz--
+-- 
+0-DAY CI Kernel Test Service
+https://github.com/intel/lkp-tests
