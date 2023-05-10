@@ -1,74 +1,159 @@
-From: "Zhang, Cathy" <cathy.zhang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
-Subject: RE: [PATCH net-next 1/2] net: Keep sk->sk_forward_alloc as a proper
- size
-Date: Wed, 10 May 2023 11:11:37 +0000
-Message-ID: <CH3PR11MB7345ABB947E183AFB7C18322FC779@CH3PR11MB7345.namprd11.prod.outlook.com>
-References: <20230508020801.10702-1-cathy.zhang@intel.com>
- <20230508020801.10702-2-cathy.zhang@intel.com>
+From: Eric Dumazet <edumazet-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH net-next 1/2] net: Keep sk->sk_forward_alloc as a proper size
+Date: Wed, 10 May 2023 13:24:53 +0200
+Message-ID: <CANn89i+9rQcGey+AJyhR02pTTBNhWN+P78e4a8knfC9F5sx0hQ@mail.gmail.com>
+References: <20230508020801.10702-1-cathy.zhang@intel.com> <20230508020801.10702-2-cathy.zhang@intel.com>
  <3887b08ac0e55e27a24d2f66afcfff1961ed9b13.camel@redhat.com>
  <CH3PR11MB73459006FCE3887E1EA3B82FFC769@CH3PR11MB7345.namprd11.prod.outlook.com>
  <CH3PR11MB73456D792EC6E7614E2EF14DFC769@CH3PR11MB7345.namprd11.prod.outlook.com>
  <CANn89iL6Ckuu9vOEvc7A9CBLGuh-EpbwFRxRAchV-6VFyhTUpg@mail.gmail.com>
  <CH3PR11MB73458BB403D537CFA96FD8DDFC769@CH3PR11MB7345.namprd11.prod.outlook.com>
  <CANn89iJvpgXTwGEiXAkFwY3j3RqVhNzJ_6_zmuRb4w7rUA_8Ug@mail.gmail.com>
- <CALvZod6JRuWHftDcH0uw00v=yi_6BKspGCkDA4AbmzLHaLi2Fg@mail.gmail.com>
+ <CALvZod6JRuWHftDcH0uw00v=yi_6BKspGCkDA4AbmzLHaLi2Fg@mail.gmail.com> <CH3PR11MB7345ABB947E183AFB7C18322FC779@CH3PR11MB7345.namprd11.prod.outlook.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: base64
+Content-Transfer-Encoding: quoted-printable
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1683717101; x=1715253101;
-  h=from:to:cc:subject:date:message-id:references:
-   in-reply-to:content-transfer-encoding:mime-version;
-  bh=PYNjDozDipF+mUdAF2AhOD5OPShxkRs+xPQuv9ENnog=;
-  b=CaT7slPl0x1wsu2C25JZNWzS3oaCSJuEU2kZ0dYc0Mcu6/cWB8lvdj9O
-   VS1M0dCQNbLoyR8L0ZTVnhwkJ0uuIRwiga+cMVFD4a2fZf6+aBjKKPCfw
-   qIdTgPv55pVYg9G6+Vd0A51iffvxMhTyDY8XYbqIzOGUQpnu7YAH7JALV
-   7YbF84vOHV64vMC+jiV6QJIDnVrFn550h3QRdbsIsPtgqJxePpGjfqtQ2
-   /FwFSGJhgDECcjFL2SXKB3NKbxNUQ0aW0J5IjNh35TjO6yJDFyfFr9I5H
-   OXPoWa6VM/6Ihui3cpx+kbple0kNvXuuYzXmOJ9NgJ+C4DAYfITnQUKe5
-   w==;
-In-Reply-To: <CALvZod6JRuWHftDcH0uw00v=yi_6BKspGCkDA4AbmzLHaLi2Fg-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
-Content-Language: en-US
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20221208; t=1683717905; x=1686309905;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=yCUB8//jyn0v6VuC0Mv1gAetwatciCjYaByO0V5N8x4=;
+        b=glDScdM+b+Eq4bPgyBFONs+ujCqj0fUTzb2C1b7YC9k0bX00m378sp+jClAFSCEYIj
+         7GQmW5yCYlh8ljWEw+78HDoWFDW3woBXw6OWf3sutdWuRau9RpJTBeFzr5rniNgwu8B1
+         RXeBFJvwdpWuXrQNRVHHeJxrfM+4flHaskwNjG8OzWaUKrYT8zOnmkjN6UEowshjdkVX
+         PiEWdYsuLY3ObbHKdPzefSLUPMZzXEQ/uJ8/dDTSaTJaCz/lXYPUOCVsKTIZMN5k1a3O
+         fhKq0sDR4DzxKg5KKy/y8r4CgHK0FDtbgeUmotkf4M6TOF0GI1bPRq/wwfAJEGhj4ODp
+         eilA==
+In-Reply-To: <CH3PR11MB7345ABB947E183AFB7C18322FC779-WQKEFoXy4NEXvLLfv6NhPJPPoyLQLiKMvxpqHgZTriW3zl9H0oFU5g@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="windows-1252"
-To: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Eric Dumazet <edumazet-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Linux MM <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Cc: Paolo Abeni <pabeni-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org" <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>, "kuba-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org" <kuba-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, "Brandeburg, Jesse" <jesse.brandeburg-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, "Srinivas, Suresh" <suresh.srinivas-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, "Chen, Tim C" <tim.c.chen-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, "You, Lizhen" <lizhen.you-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, "eric.dumazet-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org" <eric.dumazet-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, "netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Type: text/plain; charset="utf-8"
+To: "Zhang, Cathy" <cathy.zhang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+Cc: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Linux MM <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Paolo Abeni <pabeni-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org" <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>, "kuba-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org" <kuba-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, "Brandeburg, Jesse" <jesse.brandeburg-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, "Srinivas, Suresh" <suresh.srinivas-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, "Chen, Tim C" <tim.c.chen-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, "You, Lizhen" <lizhen.you-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, "eric.dumazet-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org" <eric.dumazet-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, "netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 
-SGkgU2hha2VlbCwgRXJpYyBhbmQgYWxsLA0KDQpIb3cgYWJvdXQgYWRkaW5nIG1lbW9yeSBwcmVz
-c3VyZSBjaGVja2luZyBpbiBza19tZW1fdW5jaGFyZ2UoKQ0KdG8gZGVjaWRlIGlmIGtlZXAgcGFy
-dCBvZiBtZW1vcnkgb3Igbm90LCB3aGljaCBjYW4gaGVscCBhdm9pZCB0aGUgaXNzdWUNCnlvdSBm
-aXhlZCBhbmQgdGhlIHByb2JsZW0gd2UgZmluZCBvbiB0aGUgc3lzdGVtIHdpdGggbW9yZSBDUFVz
-Lg0KDQpUaGUgY29kZSBkcmFmdCBpcyBsaWtlIHRoaXM6DQoNCnN0YXRpYyBpbmxpbmUgdm9pZCBz
-a19tZW1fdW5jaGFyZ2Uoc3RydWN0IHNvY2sgKnNrLCBpbnQgc2l6ZSkNCnsNCiAgICAgICAgaW50
-IHJlY2xhaW1hYmxlOw0KICAgICAgICBpbnQgcmVjbGFpbV90aHJlc2hvbGQgPSBTS19SRUNMQUlN
-X1RIUkVTSE9MRDsNCg0KICAgICAgICBpZiAoIXNrX2hhc19hY2NvdW50KHNrKSkNCiAgICAgICAg
-ICAgICAgICByZXR1cm47DQogICAgICAgIHNrLT5za19mb3J3YXJkX2FsbG9jICs9IHNpemU7DQoN
-CiAgICAgICAgaWYgKG1lbV9jZ3JvdXBfc29ja2V0c19lbmFibGVkICYmIHNrLT5za19tZW1jZyAm
-Jg0KICAgICAgICAgICAgbWVtX2Nncm91cF91bmRlcl9zb2NrZXRfcHJlc3N1cmUoc2stPnNrX21l
-bWNnKSkgew0KICAgICAgICAgICAgICAgIHNrX21lbV9yZWNsYWltKHNrKTsNCiAgICAgICAgICAg
-ICAgICByZXR1cm47DQogICAgICAgIH0NCg0KICAgICAgICByZWNsYWltYWJsZSA9IHNrLT5za19m
-b3J3YXJkX2FsbG9jIC0gc2tfdW51c2VkX3Jlc2VydmVkX21lbShzayk7DQoNCiAgICAgICAgaWYg
-KHJlY2xhaW1hYmxlID4gcmVjbGFpbV90aHJlc2hvbGQpIHsNCiAgICAgICAgICAgICAgICByZWNs
-YWltYWJsZSAtPSByZWNsYWltX3RocmVzaG9sZDsNCiAgICAgICAgICAgICAgICBfX3NrX21lbV9y
-ZWNsYWltKHNrLCByZWNsYWltYWJsZSk7DQogICAgICAgIH0NCn0NCg0KSSd2ZSBydW4gYSB0ZXN0
-IHdpdGggdGhlIG5ldyBjb2RlLCB0aGUgcmVzdWx0IGxvb2tzIGdvb2QsIGl0IGRvZXMgbm90IGlu
-dHJvZHVjZQ0KbGF0ZW5jeSwgUlBTIGlzIHRoZSBzYW1lLg0KDQo+IC0tLS0tT3JpZ2luYWwgTWVz
-c2FnZS0tLS0tDQo+IEZyb206IFNoYWtlZWwgQnV0dCA8c2hha2VlbGJAZ29vZ2xlLmNvbT4NCj4g
-U2VudDogV2VkbmVzZGF5LCBNYXkgMTAsIDIwMjMgMTI6MTAgQU0NCj4gVG86IEVyaWMgRHVtYXpl
-dCA8ZWR1bWF6ZXRAZ29vZ2xlLmNvbT47IExpbnV4IE1NIDxsaW51eC0NCj4gbW1Aa3ZhY2sub3Jn
-PjsgQ2dyb3VwcyA8Y2dyb3Vwc0B2Z2VyLmtlcm5lbC5vcmc+DQo+IENjOiBaaGFuZywgQ2F0aHkg
-PGNhdGh5LnpoYW5nQGludGVsLmNvbT47IFBhb2xvIEFiZW5pDQo+IDxwYWJlbmlAcmVkaGF0LmNv
-bT47IGRhdmVtQGRhdmVtbG9mdC5uZXQ7IGt1YmFAa2VybmVsLm9yZzsNCj4gQnJhbmRlYnVyZywg
-SmVzc2UgPGplc3NlLmJyYW5kZWJ1cmdAaW50ZWwuY29tPjsgU3Jpbml2YXMsIFN1cmVzaA0KPiA8
-c3VyZXNoLnNyaW5pdmFzQGludGVsLmNvbT47IENoZW4sIFRpbSBDIDx0aW0uYy5jaGVuQGludGVs
-LmNvbT47IFlvdSwNCj4gTGl6aGVuIDxsaXpoZW4ueW91QGludGVsLmNvbT47IGVyaWMuZHVtYXpl
-dEBnbWFpbC5jb207DQo+IG5ldGRldkB2Z2VyLmtlcm5lbC5vcmcNCj4gU3ViamVjdDogUmU6IFtQ
-QVRDSCBuZXQtbmV4dCAxLzJdIG5ldDogS2VlcCBzay0+c2tfZm9yd2FyZF9hbGxvYyBhcyBhIHBy
-b3Blcg0KPiBzaXplDQo+IA0KPiArbGludXgtbW0gJiBjZ3JvdXANCj4gDQo+IFRocmVhZDogaHR0
-cHM6Ly9sb3JlLmtlcm5lbC5vcmcvYWxsLzIwMjMwNTA4MDIwODAxLjEwNzAyLTEtDQo+IGNhdGh5
-LnpoYW5nQGludGVsLmNvbS8NCj4gDQo+IE9uIFR1ZSwgTWF5IDksIDIwMjMgYXQgODo0M+KAr0FN
-IEVyaWMgRHVtYXpldCA8ZWR1bWF6ZXRAZ29vZ2xlLmNvbT4NCj4gd3JvdGU6DQo+ID4NCj4gWy4u
-Ll0NCj4gPiBTb21lIG1tIGV4cGVydHMgc2hvdWxkIGNoaW1lIGluLCB0aGlzIGlzIG5vdCBhIG5l
-dHdvcmtpbmcgaXNzdWUuDQo+IA0KPiBNb3N0IG9mIHRoZSBNTSBmb2xrcyBhcmUgYnVzeSBpbiBM
-U0ZNTSB0aGlzIHdlZWsuIEkgd2lsbCB0YWtlIGEgbG9vayBhdCB0aGlzDQo+IHNvb24uDQo=
+On Wed, May 10, 2023 at 1:11=E2=80=AFPM Zhang, Cathy <cathy.zhang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org=
+> wrote:
+>
+> Hi Shakeel, Eric and all,
+>
+> How about adding memory pressure checking in sk_mem_uncharge()
+> to decide if keep part of memory or not, which can help avoid the issue
+> you fixed and the problem we find on the system with more CPUs.
+>
+> The code draft is like this:
+>
+> static inline void sk_mem_uncharge(struct sock *sk, int size)
+> {
+>         int reclaimable;
+>         int reclaim_threshold =3D SK_RECLAIM_THRESHOLD;
+>
+>         if (!sk_has_account(sk))
+>                 return;
+>         sk->sk_forward_alloc +=3D size;
+>
+>         if (mem_cgroup_sockets_enabled && sk->sk_memcg &&
+>             mem_cgroup_under_socket_pressure(sk->sk_memcg)) {
+>                 sk_mem_reclaim(sk);
+>                 return;
+>         }
+>
+>         reclaimable =3D sk->sk_forward_alloc - sk_unused_reserved_mem(sk)=
+;
+>
+>         if (reclaimable > reclaim_threshold) {
+>                 reclaimable -=3D reclaim_threshold;
+>                 __sk_mem_reclaim(sk, reclaimable);
+>         }
+> }
+>
+> I've run a test with the new code, the result looks good, it does not int=
+roduce
+> latency, RPS is the same.
+>
+
+It will not work for sockets that are idle, after a burst.
+If we restore per socket caches, we will need a shrinker.
+Trust me, we do not want that kind of big hammer, crushing latencies.
+
+Have you tried to increase batch sizes ?
+
+Any kind of cache (even per-cpu) might need some adjustment when core
+count or expected traffic is increasing.
+This was somehow hinted in
+commit 1813e51eece0ad6f4aacaeb738e7cced46feb470
+Author: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Date:   Thu Aug 25 00:05:06 2022 +0000
+
+    memcg: increase MEMCG_CHARGE_BATCH to 64
+
+
+
+diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
+index 222d7370134c73e59fdbdf598ed8d66897dbbf1d..0418229d30c25d114132a1ed46a=
+c01358cf21424
+100644
+--- a/include/linux/memcontrol.h
++++ b/include/linux/memcontrol.h
+@@ -334,7 +334,7 @@ struct mem_cgroup {
+  * TODO: maybe necessary to use big numbers in big irons or dynamic
+based of the
+  * workload.
+  */
+-#define MEMCG_CHARGE_BATCH 64U
++#define MEMCG_CHARGE_BATCH 128U
+
+ extern struct mem_cgroup *root_mem_cgroup;
+
+diff --git a/include/net/sock.h b/include/net/sock.h
+index 656ea89f60ff90d600d16f40302000db64057c64..82f6a288be650f886b207e6a5e6=
+2a1d5dda808b0
+100644
+--- a/include/net/sock.h
++++ b/include/net/sock.h
+@@ -1433,8 +1433,8 @@ sk_memory_allocated(const struct sock *sk)
+        return proto_memory_allocated(sk->sk_prot);
+ }
+
+-/* 1 MB per cpu, in page units */
+-#define SK_MEMORY_PCPU_RESERVE (1 << (20 - PAGE_SHIFT))
++/* 2 MB per cpu, in page units */
++#define SK_MEMORY_PCPU_RESERVE (1 << (21 - PAGE_SHIFT))
+
+ static inline void
+ sk_memory_allocated_add(struct sock *sk, int amt)
+
+
+
+
+
+
+> > -----Original Message-----
+> > From: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+> > Sent: Wednesday, May 10, 2023 12:10 AM
+> > To: Eric Dumazet <edumazet-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>; Linux MM <linux-
+> > mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>; Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+> > Cc: Zhang, Cathy <cathy.zhang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>; Paolo Abeni
+> > <pabeni-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>; davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org; kuba-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org;
+> > Brandeburg, Jesse <jesse.brandeburg-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>; Srinivas, Suresh
+> > <suresh.srinivas-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>; Chen, Tim C <tim.c.chen-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>; You,
+> > Lizhen <lizhen.you-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>; eric.dumazet-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org;
+> > netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+> > Subject: Re: [PATCH net-next 1/2] net: Keep sk->sk_forward_alloc as a p=
+roper
+> > size
+> >
+> > +linux-mm & cgroup
+> >
+> > Thread: https://lore.kernel.org/all/20230508020801.10702-1-
+> > cathy.zhang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org/
+> >
+> > On Tue, May 9, 2023 at 8:43=E2=80=AFAM Eric Dumazet <edumazet-hpIqsD4AKldhl2p70BpVqQ@public.gmane.org=
+m>
+> > wrote:
+> > >
+> > [...]
+> > > Some mm experts should chime in, this is not a networking issue.
+> >
+> > Most of the MM folks are busy in LSFMM this week. I will take a look at=
+ this
+> > soon.
