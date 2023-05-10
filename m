@@ -1,90 +1,55 @@
-From: "Zhang, Cathy" <cathy.zhang@intel.com>
-Subject: RE: [PATCH net-next 1/2] net: Keep sk->sk_forward_alloc as a proper
- size
-Date: Wed, 10 May 2023 07:32:03 +0000
-Message-ID: <CH3PR11MB73458B537328CB4F96BE3497FC779@CH3PR11MB7345.namprd11.prod.outlook.com>
-References: <20230508020801.10702-1-cathy.zhang@intel.com>
- <20230508020801.10702-2-cathy.zhang@intel.com>
- <20230509171910.yka3hucbwfnnq5fq@google.com>
- <DM6PR11MB41078CDC3B97ED88AF71DEBFDC769@DM6PR11MB4107.namprd11.prod.outlook.com>
- <CALvZod7njXsc0JDHxxi_+0c=owNwC6m1g_FieRfY4XkfuTmo1A@mail.gmail.com>
- <CH3PR11MB734547B820C475A465BA6D94FC779@CH3PR11MB7345.namprd11.prod.outlook.com>
+From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Subject: Re: [RFC PATCH 1/2] mm: multigen-LRU: working set reporting
+Date: Wed, 10 May 2023 10:25:54 +0200
+Message-ID: <2023051016-snarl-fame-9d6b@gregkh>
+References: <20230509185419.1088297-1-yuanchu@google.com>
+ <20230509185419.1088297-2-yuanchu@google.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: base64
-Return-path: <netdev+bounces-1344-gl-netdev-2=m.gmane-mx.org@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1683703990; x=1715239990;
-  h=from:to:cc:subject:date:message-id:references:
-   in-reply-to:content-transfer-encoding:mime-version;
-  bh=8E85QzoLrD0HZDvr68t+olXePj7qfrXbC7Qm67avPXA=;
-  b=KbJU+dtFecMq7Jmyis+4AFqmtXvja4e2nJ3/mT6DpiEUx4KfHHiUPoGl
-   d6IjnmA9HZ49HQ6tuFG/ibjpLnWXm1L7V+GjpMUf5kCE/t9zQMgM1FLaE
-   CiCVmeydJdR92eopfnYUeK59R4as3JobdPSqRwGMzmA3ViVprryeCoGO8
-   FWlNhzIOqq+c+4u3et6wKbrhY5m/IXwLF0TEs/9F472dnHDd1ENwx7fXT
-   1sxmRZv5LdavYn0si8GKNQPOiKRpD7b+RQhBsNEwJfNK5n1k484n22uRT
-   rHYD8aQ0anEjvF0xyTwse9aDSeViImdbjnAJNMi/xOJV7RUyF4tmP0FCQ
-   g==;
-In-Reply-To: <CH3PR11MB734547B820C475A465BA6D94FC779@CH3PR11MB7345.namprd11.prod.outlook.com>
-Content-Language: en-US
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <virtualization-bounces@lists.linux-foundation.org>
+DKIM-Filter: OpenDKIM Filter v2.11.0 smtp3.osuosl.org 3553460FF1
+DKIM-Filter: OpenDKIM Filter v2.11.0 smtp3.osuosl.org B723860F81
+DKIM-Filter: OpenDKIM Filter v2.11.0 smtp4.osuosl.org 760EC41F85
+DKIM-Filter: OpenDKIM Filter v2.11.0 smtp4.osuosl.org C5DBD41F81
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linuxfoundation.org;
+ s=korg; t=1683707156;
+ bh=yyuOZPHJUbcP9aRarpv4MRiXOkJWXGAGGyeBIlMq4nc=;
+ h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+ b=0LiSIdWiydHsjiJsZ54H/qYkl8uWEKUlPA1USETAuz4e/hFVQ+Ekx7+/+fUO6lZ8u
+ +hp8e+zrKfDfaeUa/gyx6wqCtOsUIwF5TKHQLHhrUvCHv23cDbUCpr3sFqNXY606RL
+ WwUdqKEAeBMjRJRVVFULAWqg/156NVs9dBQo2dLY=
+Content-Disposition: inline
+In-Reply-To: <20230509185419.1088297-2-yuanchu@google.com>
 List-Id: <cgroups.vger.kernel.org>
-List-Subscribe: <mailto:netdev+subscribe@vger.kernel.org>
-List-Unsubscribe: <mailto:netdev+unsubscribe@vger.kernel.org>
-Content-Type: text/plain; charset="windows-1252"
-To: Shakeel Butt <shakeelb@google.com>, "Chen, Tim C" <tim.c.chen@intel.com>
-Cc: "edumazet@google.com" <edumazet@google.com>, "davem@davemloft.net" <davem@davemloft.net>, "kuba@kernel.org" <kuba@kernel.org>, "pabeni@redhat.com" <pabeni@redhat.com>, "Brandeburg, Jesse" <jesse.brandeburg@intel.com>, "Srinivas, Suresh" <suresh.srinivas@intel.com>, "You, Lizhen" <lizhen.you@intel.com>, "eric.dumazet@gmail.com" <eric.dumazet@gmail.com>, "netdev@vger.kernel.org" <netdev@vger.kernel.org>, "linux-mm@kvack.org" <linux-mm@kvack.org>, "cgroups@vger.kernel.org" <cgroups@vger.kernel.org>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/virtualization>, 
+ <mailto:virtualization-request@lists.linux-foundation.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/virtualization/>
+List-Post: <mailto:virtualization@lists.linux-foundation.org>
+List-Help: <mailto:virtualization-request@lists.linux-foundation.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/virtualization>, 
+ <mailto:virtualization-request@lists.linux-foundation.org?subject=subscribe>
+Errors-To: virtualization-bounces@lists.linux-foundation.org
+Sender: "Virtualization" <virtualization-bounces@lists.linux-foundation.org>
+To: Yuanchu Xie <yuanchu@google.com>
+Cc: "Michael S. Tsirkin" <mst@redhat.com>, Roman Gushchin <roman.gushchin@linux.dev>, Michal Hocko <mhocko@kernel.org>, Yosry Ahmed <yosryahmed@google.com>, linux-mm@kvack.org, kai.huang@intel.com, hch@lst.de, Yu Zhao <yuzhao@google.com>, Aneesh Kumar K V <aneesh.kumar@linux.ibm.com>, "Matthew Wilcox (Oracle)" <willy@infradead.org>, talumbau <talumbau@google.com>, "Sudarshan Rajagopalan (QUIC)" <quic_sudaraja@quicinc.com>, Shakeel Butt <shakeelb@google.com>, cgroups@vger.kernel.org, virtualization@lists.linux-foundation.org, jon@nutanix.com, SeongJae Park <sj@kernel.org>, Muchun Song <muchun.song@linux.dev>, linux-kernel@vger.kernel.org, Johannes Weiner <hannes@cmpxchg.org>, "Rafael J. Wysocki" <rafael@kernel.org>, Andrew Morton <akpm@linux-foundation.org>, Vasily Averin <vasily.averin@linux.dev>
 
-DQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogWmhhbmcsIENhdGh5DQo+
-IFNlbnQ6IFdlZG5lc2RheSwgTWF5IDEwLCAyMDIzIDM6MDQgUE0NCj4gVG86IFNoYWtlZWwgQnV0
-dCA8c2hha2VlbGJAZ29vZ2xlLmNvbT47IENoZW4sIFRpbSBDDQo+IDx0aW0uYy5jaGVuQGludGVs
-LmNvbT4NCj4gQ2M6IGVkdW1hemV0QGdvb2dsZS5jb207IGRhdmVtQGRhdmVtbG9mdC5uZXQ7IGt1
-YmFAa2VybmVsLm9yZzsNCj4gcGFiZW5pQHJlZGhhdC5jb207IEJyYW5kZWJ1cmcsIEplc3NlIDxq
-ZXNzZS5icmFuZGVidXJnQGludGVsLmNvbT47DQo+IFNyaW5pdmFzLCBTdXJlc2ggPHN1cmVzaC5z
-cmluaXZhc0BpbnRlbC5jb20+OyBZb3UsIExpemhlbg0KPiA8TGl6aGVuLllvdUBpbnRlbC5jb20+
-OyBlcmljLmR1bWF6ZXRAZ21haWwuY29tOyBuZXRkZXZAdmdlci5rZXJuZWwub3JnOw0KPiBsaW51
-eC1tbUBrdmFjay5vcmc7IGNncm91cHNAdmdlci5rZXJuZWwub3JnDQo+IFN1YmplY3Q6IFJFOiBb
-UEFUQ0ggbmV0LW5leHQgMS8yXSBuZXQ6IEtlZXAgc2stPnNrX2ZvcndhcmRfYWxsb2MgYXMgYSBw
-cm9wZXINCj4gc2l6ZQ0KPiANCj4gDQo+IA0KPiA+IC0tLS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0t
-DQo+ID4gRnJvbTogU2hha2VlbCBCdXR0IDxzaGFrZWVsYkBnb29nbGUuY29tPg0KPiA+IFNlbnQ6
-IFdlZG5lc2RheSwgTWF5IDEwLCAyMDIzIDI6MTggQU0NCj4gPiBUbzogQ2hlbiwgVGltIEMgPHRp
-bS5jLmNoZW5AaW50ZWwuY29tPg0KPiA+IENjOiBaaGFuZywgQ2F0aHkgPGNhdGh5LnpoYW5nQGlu
-dGVsLmNvbT47IGVkdW1hemV0QGdvb2dsZS5jb207DQo+ID4gZGF2ZW1AZGF2ZW1sb2Z0Lm5ldDsg
-a3ViYUBrZXJuZWwub3JnOyBwYWJlbmlAcmVkaGF0LmNvbTsNCj4gQnJhbmRlYnVyZywNCj4gPiBK
-ZXNzZSA8amVzc2UuYnJhbmRlYnVyZ0BpbnRlbC5jb20+OyBTcmluaXZhcywgU3VyZXNoDQo+ID4g
-PHN1cmVzaC5zcmluaXZhc0BpbnRlbC5jb20+OyBZb3UsIExpemhlbiA8bGl6aGVuLnlvdUBpbnRl
-bC5jb20+Ow0KPiA+IGVyaWMuZHVtYXpldEBnbWFpbC5jb207IG5ldGRldkB2Z2VyLmtlcm5lbC5v
-cmc7IGxpbnV4LW1tQGt2YWNrLm9yZzsNCj4gPiBjZ3JvdXBzQHZnZXIua2VybmVsLm9yZw0KPiA+
-IFN1YmplY3Q6IFJlOiBbUEFUQ0ggbmV0LW5leHQgMS8yXSBuZXQ6IEtlZXAgc2stPnNrX2Zvcndh
-cmRfYWxsb2MgYXMgYQ0KPiA+IHByb3BlciBzaXplDQo+ID4NCj4gPiBPbiBUdWUsIE1heSA5LCAy
-MDIzIGF0IDExOjA04oCvQU0gQ2hlbiwgVGltIEMgPHRpbS5jLmNoZW5AaW50ZWwuY29tPg0KPiB3
-cm90ZToNCj4gPiA+DQo+ID4gPiA+Pg0KPiA+ID4gPj4gUnVuIG1lbWNhY2hlZCB3aXRoIG1lbXRp
-ZXJfYmVuY2hhbXJrIHRvIHZlcmlmeSB0aGUgb3B0aW1pemF0aW9uDQo+ID4gPiA+PiBmaXguIDgg
-c2VydmVyLWNsaWVudCBwYWlycyBhcmUgY3JlYXRlZCB3aXRoIGJyaWRnZSBuZXR3b3JrIG9uDQo+
-ID4gPiA+PiBsb2NhbGhvc3QsIHNlcnZlciBhbmQgY2xpZW50IG9mIHRoZSBzYW1lIHBhaXIgc2hh
-cmUgMjggbG9naWNhbCBDUFVzLg0KPiA+ID4gPj4NCj4gPiA+ID4gPlJlc3VsdHMgKEF2ZXJhZ2Ug
-Zm9yIDUgcnVuKQ0KPiA+ID4gPiA+UlBTICh3aXRoL3dpdGhvdXQgcGF0Y2gpICAgICArMi4wN3gN
-Cj4gPiA+ID4gPg0KPiA+ID4NCj4gPiA+ID5EbyB5b3UgaGF2ZSByZWdyZXNzaW9uIGRhdGEgZnJv
-bSBhbnkgcHJvZHVjdGlvbiB3b3JrbG9hZD8gUGxlYXNlDQo+ID4gPiA+a2VlcA0KPiA+IGluIG1p
-bmQgdGhhdCBtYW55IHRpbWVzIHdlIChNTSBzdWJzeXN0ZW0pIGFjY2VwdHMgdGhlIHJlZ3Jlc3Np
-b25zIG9mDQo+ID4gbWljcm9iZW5jaG1hcmtzIG92ZXIgY29tcGxpY2F0ZWQgb3B0aW1pemF0aW9u
-cy4gU28sIGlmIHRoZXJlIGlzIGEgcmVhbA0KPiA+IHByb2R1Y3Rpb24gcmVncmVzc2lvbiwgcGxl
-YXNlIGJlIHZlcnkgZXhwbGljaXQgYWJvdXQgaXQuDQo+ID4gPg0KPiA+ID4gVGhvdWdoIG1lbWNh
-Y2hlZCBpcyBhY3R1YWxseSB1c2VkIGJ5IHBlb3BsZSBpbiBwcm9kdWN0aW9uLiBTbyB0aGlzDQo+
-ID4gPiBpc24ndA0KPiA+IGFuIHVucmVhbGlzdGljIHNjZW5hcmlvLg0KPiA+ID4NCj4gPg0KPiA+
-IFllcywgbWVtY2FjaGVkIGlzIHVzZWQgaW4gcHJvZHVjdGlvbiBidXQgSSBhbSBub3Qgc3VyZSBh
-bnlvbmUgcnVucyA4DQo+ID4gcGFpcnMgb2Ygc2VydmVyIGFuZCBjbGllbnQgb24gdGhlIHNhbWUg
-bWFjaGluZSBmb3IgcHJvZHVjdGlvbg0KPiA+IHdvcmtsb2FkLiBBbnl3YXlzLCB3ZSBjYW4gZGlz
-Y3VzcywgaWYgbmVlZGVkLCBhYm91dCB0aGUgcHJhY3RpY2FsaXR5DQo+ID4gb2YgdGhlIGJlbmNo
-bWFyayBhZnRlciB3ZSBoYXZlIHNvbWUgaW1wYWN0ZnVsIG1lbWNnIG9wdGltaXphdGlvbnMuDQo+
-IA0KPiBUaGUgdGVzdCBpcyBydW4gb24gcGxhdGZvcm0gd2l0aCAyMjQgQ1BVcyAoSFQgZW5hYmxl
-ZCkuIEl0J3Mgbm90IGEgbXVzdCB0byBydW4NCj4gOCBwYWlycywgdGhlIG1lbWNnIGNoYXJnZSBo
-b3QgcGF0aHMgY2FuIGJlIG9ic2VydmVkIGlmIHdlIHJ1biBvbmx5IG9uZSBwYWlyDQo+IGJ1dCB3
-aXRoIG1vcmUgQ1BVcy4gTGV2ZXJhZ2UgYWxsIENQVSByZXNvdXJjZXMgb24gVENQIGNvbm5lY3Rp
-b24gdG8gc3RyZXNzDQo+IGNvbnRlbnRpb25zLg0KDQpJZiB3ZSBydW4gbGVzcyBzZXJ2ZXItY2xp
-ZW50IHBhaXJzICg8PSAzKSwgYW5kIGVhY2ggcGFpciBpcyB3aXRoIDI4IENQVXMgc2hhcmVkLA0K
-dGhhdCBtZWFucyA8PTg0IENQVXMgYWN0dWFsbHkgcnVuLCB0aGVyZSBpcyBubyBvYnZpb3VzIG1l
-bWNnIGNoYXJnZSBvdmVyaGVhZA0Kb2JzZXJ2ZWQuIEJ1dCB3aGVuIHdlIHJ1biBtb3JlIHRoYW4g
-MTEyIENQVXMgKD49IDQgcGFpcnMpIHRvIHN0cmVzcyB0aGUgc3lzdGVtDQp3aXRoIFRDUCBtZW1v
-cnkgYWxsb2NhdGlvbiwgbWVtY2cgY2hhcmdlIHdpbGwgYmUgdGhlIGJvdHRsZW5lY2suDQoNCj4g
-DQo+ID4NCj4gPiA+IFRpbQ0K
+On Wed, May 10, 2023 at 02:54:18AM +0800, Yuanchu Xie wrote:
+> From: talumbau <talumbau@google.com>
 
+Please fix the name here.
+
+> 
+> A single patch to be broken up into multiple patches.
+
+What does this mean?
+
+> - Add working set reporting structure.
+> - Add per-node and per-memcg interfaces for working set reporting.
+> - Implement working set backend for MGLRU.
+
+Please break it up to be reviewable, otherwise no one will review it.
+
+thanks,
+
+greg k-h
