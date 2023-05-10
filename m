@@ -1,55 +1,74 @@
-From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Subject: Re: [RFC PATCH 1/2] mm: multigen-LRU: working set reporting
-Date: Wed, 10 May 2023 10:25:54 +0200
-Message-ID: <2023051016-snarl-fame-9d6b@gregkh>
-References: <20230509185419.1088297-1-yuanchu@google.com>
- <20230509185419.1088297-2-yuanchu@google.com>
+From: "Zhang, Cathy" <cathy.zhang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+Subject: RE: [PATCH net-next 1/2] net: Keep sk->sk_forward_alloc as a proper
+ size
+Date: Wed, 10 May 2023 11:11:37 +0000
+Message-ID: <CH3PR11MB7345ABB947E183AFB7C18322FC779@CH3PR11MB7345.namprd11.prod.outlook.com>
+References: <20230508020801.10702-1-cathy.zhang@intel.com>
+ <20230508020801.10702-2-cathy.zhang@intel.com>
+ <3887b08ac0e55e27a24d2f66afcfff1961ed9b13.camel@redhat.com>
+ <CH3PR11MB73459006FCE3887E1EA3B82FFC769@CH3PR11MB7345.namprd11.prod.outlook.com>
+ <CH3PR11MB73456D792EC6E7614E2EF14DFC769@CH3PR11MB7345.namprd11.prod.outlook.com>
+ <CANn89iL6Ckuu9vOEvc7A9CBLGuh-EpbwFRxRAchV-6VFyhTUpg@mail.gmail.com>
+ <CH3PR11MB73458BB403D537CFA96FD8DDFC769@CH3PR11MB7345.namprd11.prod.outlook.com>
+ <CANn89iJvpgXTwGEiXAkFwY3j3RqVhNzJ_6_zmuRb4w7rUA_8Ug@mail.gmail.com>
+ <CALvZod6JRuWHftDcH0uw00v=yi_6BKspGCkDA4AbmzLHaLi2Fg@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <virtualization-bounces@lists.linux-foundation.org>
-DKIM-Filter: OpenDKIM Filter v2.11.0 smtp3.osuosl.org 3553460FF1
-DKIM-Filter: OpenDKIM Filter v2.11.0 smtp3.osuosl.org B723860F81
-DKIM-Filter: OpenDKIM Filter v2.11.0 smtp4.osuosl.org 760EC41F85
-DKIM-Filter: OpenDKIM Filter v2.11.0 smtp4.osuosl.org C5DBD41F81
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linuxfoundation.org;
- s=korg; t=1683707156;
- bh=yyuOZPHJUbcP9aRarpv4MRiXOkJWXGAGGyeBIlMq4nc=;
- h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
- b=0LiSIdWiydHsjiJsZ54H/qYkl8uWEKUlPA1USETAuz4e/hFVQ+Ekx7+/+fUO6lZ8u
- +hp8e+zrKfDfaeUa/gyx6wqCtOsUIwF5TKHQLHhrUvCHv23cDbUCpr3sFqNXY606RL
- WwUdqKEAeBMjRJRVVFULAWqg/156NVs9dBQo2dLY=
-Content-Disposition: inline
-In-Reply-To: <20230509185419.1088297-2-yuanchu@google.com>
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/virtualization>, 
- <mailto:virtualization-request@lists.linux-foundation.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/virtualization/>
-List-Post: <mailto:virtualization@lists.linux-foundation.org>
-List-Help: <mailto:virtualization-request@lists.linux-foundation.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/virtualization>, 
- <mailto:virtualization-request@lists.linux-foundation.org?subject=subscribe>
-Errors-To: virtualization-bounces@lists.linux-foundation.org
-Sender: "Virtualization" <virtualization-bounces@lists.linux-foundation.org>
-To: Yuanchu Xie <yuanchu@google.com>
-Cc: "Michael S. Tsirkin" <mst@redhat.com>, Roman Gushchin <roman.gushchin@linux.dev>, Michal Hocko <mhocko@kernel.org>, Yosry Ahmed <yosryahmed@google.com>, linux-mm@kvack.org, kai.huang@intel.com, hch@lst.de, Yu Zhao <yuzhao@google.com>, Aneesh Kumar K V <aneesh.kumar@linux.ibm.com>, "Matthew Wilcox (Oracle)" <willy@infradead.org>, talumbau <talumbau@google.com>, "Sudarshan Rajagopalan (QUIC)" <quic_sudaraja@quicinc.com>, Shakeel Butt <shakeelb@google.com>, cgroups@vger.kernel.org, virtualization@lists.linux-foundation.org, jon@nutanix.com, SeongJae Park <sj@kernel.org>, Muchun Song <muchun.song@linux.dev>, linux-kernel@vger.kernel.org, Johannes Weiner <hannes@cmpxchg.org>, "Rafael J. Wysocki" <rafael@kernel.org>, Andrew Morton <akpm@linux-foundation.org>, Vasily Averin <vasily.averin@linux.dev>
+Content-Transfer-Encoding: base64
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1683717101; x=1715253101;
+  h=from:to:cc:subject:date:message-id:references:
+   in-reply-to:content-transfer-encoding:mime-version;
+  bh=PYNjDozDipF+mUdAF2AhOD5OPShxkRs+xPQuv9ENnog=;
+  b=CaT7slPl0x1wsu2C25JZNWzS3oaCSJuEU2kZ0dYc0Mcu6/cWB8lvdj9O
+   VS1M0dCQNbLoyR8L0ZTVnhwkJ0uuIRwiga+cMVFD4a2fZf6+aBjKKPCfw
+   qIdTgPv55pVYg9G6+Vd0A51iffvxMhTyDY8XYbqIzOGUQpnu7YAH7JALV
+   7YbF84vOHV64vMC+jiV6QJIDnVrFn550h3QRdbsIsPtgqJxePpGjfqtQ2
+   /FwFSGJhgDECcjFL2SXKB3NKbxNUQ0aW0J5IjNh35TjO6yJDFyfFr9I5H
+   OXPoWa6VM/6Ihui3cpx+kbple0kNvXuuYzXmOJ9NgJ+C4DAYfITnQUKe5
+   w==;
+In-Reply-To: <CALvZod6JRuWHftDcH0uw00v=yi_6BKspGCkDA4AbmzLHaLi2Fg-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+Content-Language: en-US
+List-ID: <cgroups.vger.kernel.org>
+Content-Type: text/plain; charset="windows-1252"
+To: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Eric Dumazet <edumazet-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Linux MM <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Cc: Paolo Abeni <pabeni-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org" <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>, "kuba-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org" <kuba-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, "Brandeburg, Jesse" <jesse.brandeburg-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, "Srinivas, Suresh" <suresh.srinivas-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, "Chen, Tim C" <tim.c.chen-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, "You, Lizhen" <lizhen.you-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, "eric.dumazet-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org" <eric.dumazet-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, "netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 
-On Wed, May 10, 2023 at 02:54:18AM +0800, Yuanchu Xie wrote:
-> From: talumbau <talumbau@google.com>
-
-Please fix the name here.
-
-> 
-> A single patch to be broken up into multiple patches.
-
-What does this mean?
-
-> - Add working set reporting structure.
-> - Add per-node and per-memcg interfaces for working set reporting.
-> - Implement working set backend for MGLRU.
-
-Please break it up to be reviewable, otherwise no one will review it.
-
-thanks,
-
-greg k-h
+SGkgU2hha2VlbCwgRXJpYyBhbmQgYWxsLA0KDQpIb3cgYWJvdXQgYWRkaW5nIG1lbW9yeSBwcmVz
+c3VyZSBjaGVja2luZyBpbiBza19tZW1fdW5jaGFyZ2UoKQ0KdG8gZGVjaWRlIGlmIGtlZXAgcGFy
+dCBvZiBtZW1vcnkgb3Igbm90LCB3aGljaCBjYW4gaGVscCBhdm9pZCB0aGUgaXNzdWUNCnlvdSBm
+aXhlZCBhbmQgdGhlIHByb2JsZW0gd2UgZmluZCBvbiB0aGUgc3lzdGVtIHdpdGggbW9yZSBDUFVz
+Lg0KDQpUaGUgY29kZSBkcmFmdCBpcyBsaWtlIHRoaXM6DQoNCnN0YXRpYyBpbmxpbmUgdm9pZCBz
+a19tZW1fdW5jaGFyZ2Uoc3RydWN0IHNvY2sgKnNrLCBpbnQgc2l6ZSkNCnsNCiAgICAgICAgaW50
+IHJlY2xhaW1hYmxlOw0KICAgICAgICBpbnQgcmVjbGFpbV90aHJlc2hvbGQgPSBTS19SRUNMQUlN
+X1RIUkVTSE9MRDsNCg0KICAgICAgICBpZiAoIXNrX2hhc19hY2NvdW50KHNrKSkNCiAgICAgICAg
+ICAgICAgICByZXR1cm47DQogICAgICAgIHNrLT5za19mb3J3YXJkX2FsbG9jICs9IHNpemU7DQoN
+CiAgICAgICAgaWYgKG1lbV9jZ3JvdXBfc29ja2V0c19lbmFibGVkICYmIHNrLT5za19tZW1jZyAm
+Jg0KICAgICAgICAgICAgbWVtX2Nncm91cF91bmRlcl9zb2NrZXRfcHJlc3N1cmUoc2stPnNrX21l
+bWNnKSkgew0KICAgICAgICAgICAgICAgIHNrX21lbV9yZWNsYWltKHNrKTsNCiAgICAgICAgICAg
+ICAgICByZXR1cm47DQogICAgICAgIH0NCg0KICAgICAgICByZWNsYWltYWJsZSA9IHNrLT5za19m
+b3J3YXJkX2FsbG9jIC0gc2tfdW51c2VkX3Jlc2VydmVkX21lbShzayk7DQoNCiAgICAgICAgaWYg
+KHJlY2xhaW1hYmxlID4gcmVjbGFpbV90aHJlc2hvbGQpIHsNCiAgICAgICAgICAgICAgICByZWNs
+YWltYWJsZSAtPSByZWNsYWltX3RocmVzaG9sZDsNCiAgICAgICAgICAgICAgICBfX3NrX21lbV9y
+ZWNsYWltKHNrLCByZWNsYWltYWJsZSk7DQogICAgICAgIH0NCn0NCg0KSSd2ZSBydW4gYSB0ZXN0
+IHdpdGggdGhlIG5ldyBjb2RlLCB0aGUgcmVzdWx0IGxvb2tzIGdvb2QsIGl0IGRvZXMgbm90IGlu
+dHJvZHVjZQ0KbGF0ZW5jeSwgUlBTIGlzIHRoZSBzYW1lLg0KDQo+IC0tLS0tT3JpZ2luYWwgTWVz
+c2FnZS0tLS0tDQo+IEZyb206IFNoYWtlZWwgQnV0dCA8c2hha2VlbGJAZ29vZ2xlLmNvbT4NCj4g
+U2VudDogV2VkbmVzZGF5LCBNYXkgMTAsIDIwMjMgMTI6MTAgQU0NCj4gVG86IEVyaWMgRHVtYXpl
+dCA8ZWR1bWF6ZXRAZ29vZ2xlLmNvbT47IExpbnV4IE1NIDxsaW51eC0NCj4gbW1Aa3ZhY2sub3Jn
+PjsgQ2dyb3VwcyA8Y2dyb3Vwc0B2Z2VyLmtlcm5lbC5vcmc+DQo+IENjOiBaaGFuZywgQ2F0aHkg
+PGNhdGh5LnpoYW5nQGludGVsLmNvbT47IFBhb2xvIEFiZW5pDQo+IDxwYWJlbmlAcmVkaGF0LmNv
+bT47IGRhdmVtQGRhdmVtbG9mdC5uZXQ7IGt1YmFAa2VybmVsLm9yZzsNCj4gQnJhbmRlYnVyZywg
+SmVzc2UgPGplc3NlLmJyYW5kZWJ1cmdAaW50ZWwuY29tPjsgU3Jpbml2YXMsIFN1cmVzaA0KPiA8
+c3VyZXNoLnNyaW5pdmFzQGludGVsLmNvbT47IENoZW4sIFRpbSBDIDx0aW0uYy5jaGVuQGludGVs
+LmNvbT47IFlvdSwNCj4gTGl6aGVuIDxsaXpoZW4ueW91QGludGVsLmNvbT47IGVyaWMuZHVtYXpl
+dEBnbWFpbC5jb207DQo+IG5ldGRldkB2Z2VyLmtlcm5lbC5vcmcNCj4gU3ViamVjdDogUmU6IFtQ
+QVRDSCBuZXQtbmV4dCAxLzJdIG5ldDogS2VlcCBzay0+c2tfZm9yd2FyZF9hbGxvYyBhcyBhIHBy
+b3Blcg0KPiBzaXplDQo+IA0KPiArbGludXgtbW0gJiBjZ3JvdXANCj4gDQo+IFRocmVhZDogaHR0
+cHM6Ly9sb3JlLmtlcm5lbC5vcmcvYWxsLzIwMjMwNTA4MDIwODAxLjEwNzAyLTEtDQo+IGNhdGh5
+LnpoYW5nQGludGVsLmNvbS8NCj4gDQo+IE9uIFR1ZSwgTWF5IDksIDIwMjMgYXQgODo0M+KAr0FN
+IEVyaWMgRHVtYXpldCA8ZWR1bWF6ZXRAZ29vZ2xlLmNvbT4NCj4gd3JvdGU6DQo+ID4NCj4gWy4u
+Ll0NCj4gPiBTb21lIG1tIGV4cGVydHMgc2hvdWxkIGNoaW1lIGluLCB0aGlzIGlzIG5vdCBhIG5l
+dHdvcmtpbmcgaXNzdWUuDQo+IA0KPiBNb3N0IG9mIHRoZSBNTSBmb2xrcyBhcmUgYnVzeSBpbiBM
+U0ZNTSB0aGlzIHdlZWsuIEkgd2lsbCB0YWtlIGEgbG9vayBhdCB0aGlzDQo+IHNvb24uDQo=
