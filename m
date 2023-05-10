@@ -1,127 +1,347 @@
-From: "Zhang, Cathy" <cathy.zhang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
-Subject: RE: [PATCH net-next 1/2] net: Keep sk->sk_forward_alloc as a proper
- size
-Date: Wed, 10 May 2023 13:52:16 +0000
-Message-ID: <CH3PR11MB73455A98A232920B322C3976FC779@CH3PR11MB7345.namprd11.prod.outlook.com>
-References: <20230508020801.10702-1-cathy.zhang@intel.com>
- <20230508020801.10702-2-cathy.zhang@intel.com>
- <3887b08ac0e55e27a24d2f66afcfff1961ed9b13.camel@redhat.com>
- <CH3PR11MB73459006FCE3887E1EA3B82FFC769@CH3PR11MB7345.namprd11.prod.outlook.com>
- <CH3PR11MB73456D792EC6E7614E2EF14DFC769@CH3PR11MB7345.namprd11.prod.outlook.com>
- <CANn89iL6Ckuu9vOEvc7A9CBLGuh-EpbwFRxRAchV-6VFyhTUpg@mail.gmail.com>
- <CH3PR11MB73458BB403D537CFA96FD8DDFC769@CH3PR11MB7345.namprd11.prod.outlook.com>
- <CANn89iJvpgXTwGEiXAkFwY3j3RqVhNzJ_6_zmuRb4w7rUA_8Ug@mail.gmail.com>
- <CALvZod6JRuWHftDcH0uw00v=yi_6BKspGCkDA4AbmzLHaLi2Fg@mail.gmail.com>
- <CH3PR11MB7345ABB947E183AFB7C18322FC779@CH3PR11MB7345.namprd11.prod.outlook.com>
- <CANn89i+9rQcGey+AJyhR02pTTBNhWN+P78e4a8knfC9F5sx0hQ@mail.gmail.com>
+From: Chris Li <chrisl-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [LSF/MM/BPF TOPIC] Reducing zombie memcgs
+Date: Wed, 10 May 2023 07:51:48 -0700
+Message-ID: <ZFuvhP5qGPivokc0@google.com>
+References: <CABdmKX2M6koq4Q0Cmp_-=wbP0Qa190HdEGGaHfxNS05gAkUtPA@mail.gmail.com>
+ <ZFLdDyHoIdJSXJt+@google.com>
+ <874josz4rd.fsf@nvidia.com>
+ <ZFPP71czDDxMPLQK@google.com>
+ <877ctm518f.fsf@nvidia.com>
+ <ZFbZZPkSpsKMe8iR@google.com>
+ <87ttwnkzap.fsf@nvidia.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Transfer-Encoding: 8bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1683726899; x=1715262899;
-  h=from:to:cc:subject:date:message-id:references:
-   in-reply-to:content-transfer-encoding:mime-version;
-  bh=Ike/YhTQ6FqDHgwb1fH8bcZ4R5gcgL1tekZJPzTAz4c=;
-  b=L38/C97B24LKQvGTXOXBAw0pJ/Mazck8rj7AfI9+pbwgaJBoL9HDpUDe
-   vFv1DhLmghT16dWroayKhEnYnIgFDzUOjK6EKaAVKrxkKrIIG4HJ6PuiL
-   rmokubQ5YZIagcl7rNmmVJMkgRtuwOoo6EenZSOUoR/w47mcgl/vW8PLl
-   bJCN4LkXx3TDl99AIgn66WiFubwyOHKrXAFu0hcB0G6T4YmeKX7CLgiCU
-   ObFOQpEj42P8D2mxk6LKBVVo7s6XUbG2XmuMGaJ63mg8XmTWJN0atGcIc
-   1Nx6fgO1/W2dtFiekH3vj2428JoC4YitnRjKmvpJ4+59ro0HPel2kqgI3
-   w==;
-In-Reply-To: <CANn89i+9rQcGey+AJyhR02pTTBNhWN+P78e4a8knfC9F5sx0hQ-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
-Content-Language: en-US
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1683730310;
+        bh=7evBYi0i7GbTztiP0Mr29XwL0agrgkBAJJMMkwtKGRM=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=cyhtXMYhgJyKmzhMNocfhYL1c1rv5GpL+M8naZmrG5TP6GM0t9vC5Ka6yUuu45WPL
+         DY45XWrBza3BDjXcPciDwnrl0ervqHsfQpSpMZQzEgee9fj30fu31AHsnF7oj4gMe0
+         Tx1NNAO0fRbvo7Cb2A1xBSFoi2DAlPva7eHrx7o191esszeEdQk3bKdGTNqjWkM/Co
+         htQpS6O6S5hKi+ec3LeMsykesSYnVAbZhVvZtxs+QRxiPvEHSTv8orMN28m+3M/C9U
+         hW/Wak1Qe5NlBIzqglc+vhh6QL5dd9JVIkAFcqGpg3yA+GEX4TK2CjPikrmr0jCoSN
+         olZyoGd1cxj7A==
+Content-Disposition: inline
+In-Reply-To: <87ttwnkzap.fsf-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-To: Eric Dumazet <edumazet-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Cc: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Linux MM <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Paolo Abeni <pabeni-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org" <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>, "kuba-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org" <kuba-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, "Brandeburg, Jesse" <jesse.brandeburg-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, "Srinivas, Suresh" <suresh.srinivas-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, "Chen, Tim C" <tim.c.chen-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, "You, Lizhen" <lizhen.you-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, "eric.dumazet-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org" <eric.dumazet-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, "netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Type: text/plain; charset="utf-8"
+To: Alistair Popple <apopple-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>
+Cc: "T.J. Mercier" <tjmercier-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, lsf-pc-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Muchun Song <muchun.song-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Jason Gunthorpe <jgg-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>, Kalesh Singh <kaleshsingh-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Yu Zhao <yuzhao-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 
-DQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogRXJpYyBEdW1hemV0IDxl
-ZHVtYXpldEBnb29nbGUuY29tPg0KPiBTZW50OiBXZWRuZXNkYXksIE1heSAxMCwgMjAyMyA3OjI1
-IFBNDQo+IFRvOiBaaGFuZywgQ2F0aHkgPGNhdGh5LnpoYW5nQGludGVsLmNvbT4NCj4gQ2M6IFNo
-YWtlZWwgQnV0dCA8c2hha2VlbGJAZ29vZ2xlLmNvbT47IExpbnV4IE1NIDxsaW51eC1tbUBrdmFj
-ay5vcmc+Ow0KPiBDZ3JvdXBzIDxjZ3JvdXBzQHZnZXIua2VybmVsLm9yZz47IFBhb2xvIEFiZW5p
-IDxwYWJlbmlAcmVkaGF0LmNvbT47DQo+IGRhdmVtQGRhdmVtbG9mdC5uZXQ7IGt1YmFAa2VybmVs
-Lm9yZzsgQnJhbmRlYnVyZywgSmVzc2UNCj4gPGplc3NlLmJyYW5kZWJ1cmdAaW50ZWwuY29tPjsg
-U3Jpbml2YXMsIFN1cmVzaA0KPiA8c3VyZXNoLnNyaW5pdmFzQGludGVsLmNvbT47IENoZW4sIFRp
-bSBDIDx0aW0uYy5jaGVuQGludGVsLmNvbT47IFlvdSwNCj4gTGl6aGVuIDxsaXpoZW4ueW91QGlu
-dGVsLmNvbT47IGVyaWMuZHVtYXpldEBnbWFpbC5jb207DQo+IG5ldGRldkB2Z2VyLmtlcm5lbC5v
-cmcNCj4gU3ViamVjdDogUmU6IFtQQVRDSCBuZXQtbmV4dCAxLzJdIG5ldDogS2VlcCBzay0+c2tf
-Zm9yd2FyZF9hbGxvYyBhcyBhIHByb3Blcg0KPiBzaXplDQo+IA0KPiBPbiBXZWQsIE1heSAxMCwg
-MjAyMyBhdCAxOjEx4oCvUE0gWmhhbmcsIENhdGh5IDxjYXRoeS56aGFuZ0BpbnRlbC5jb20+DQo+
-IHdyb3RlOg0KPiA+DQo+ID4gSGkgU2hha2VlbCwgRXJpYyBhbmQgYWxsLA0KPiA+DQo+ID4gSG93
-IGFib3V0IGFkZGluZyBtZW1vcnkgcHJlc3N1cmUgY2hlY2tpbmcgaW4gc2tfbWVtX3VuY2hhcmdl
-KCkgdG8NCj4gPiBkZWNpZGUgaWYga2VlcCBwYXJ0IG9mIG1lbW9yeSBvciBub3QsIHdoaWNoIGNh
-biBoZWxwIGF2b2lkIHRoZSBpc3N1ZQ0KPiA+IHlvdSBmaXhlZCBhbmQgdGhlIHByb2JsZW0gd2Ug
-ZmluZCBvbiB0aGUgc3lzdGVtIHdpdGggbW9yZSBDUFVzLg0KPiA+DQo+ID4gVGhlIGNvZGUgZHJh
-ZnQgaXMgbGlrZSB0aGlzOg0KPiA+DQo+ID4gc3RhdGljIGlubGluZSB2b2lkIHNrX21lbV91bmNo
-YXJnZShzdHJ1Y3Qgc29jayAqc2ssIGludCBzaXplKSB7DQo+ID4gICAgICAgICBpbnQgcmVjbGFp
-bWFibGU7DQo+ID4gICAgICAgICBpbnQgcmVjbGFpbV90aHJlc2hvbGQgPSBTS19SRUNMQUlNX1RI
-UkVTSE9MRDsNCj4gPg0KPiA+ICAgICAgICAgaWYgKCFza19oYXNfYWNjb3VudChzaykpDQo+ID4g
-ICAgICAgICAgICAgICAgIHJldHVybjsNCj4gPiAgICAgICAgIHNrLT5za19mb3J3YXJkX2FsbG9j
-ICs9IHNpemU7DQo+ID4NCj4gPiAgICAgICAgIGlmIChtZW1fY2dyb3VwX3NvY2tldHNfZW5hYmxl
-ZCAmJiBzay0+c2tfbWVtY2cgJiYNCj4gPiAgICAgICAgICAgICBtZW1fY2dyb3VwX3VuZGVyX3Nv
-Y2tldF9wcmVzc3VyZShzay0+c2tfbWVtY2cpKSB7DQo+ID4gICAgICAgICAgICAgICAgIHNrX21l
-bV9yZWNsYWltKHNrKTsNCj4gPiAgICAgICAgICAgICAgICAgcmV0dXJuOw0KPiA+ICAgICAgICAg
-fQ0KPiA+DQo+ID4gICAgICAgICByZWNsYWltYWJsZSA9IHNrLT5za19mb3J3YXJkX2FsbG9jIC0N
-Cj4gPiBza191bnVzZWRfcmVzZXJ2ZWRfbWVtKHNrKTsNCj4gPg0KPiA+ICAgICAgICAgaWYgKHJl
-Y2xhaW1hYmxlID4gcmVjbGFpbV90aHJlc2hvbGQpIHsNCj4gPiAgICAgICAgICAgICAgICAgcmVj
-bGFpbWFibGUgLT0gcmVjbGFpbV90aHJlc2hvbGQ7DQo+ID4gICAgICAgICAgICAgICAgIF9fc2tf
-bWVtX3JlY2xhaW0oc2ssIHJlY2xhaW1hYmxlKTsNCj4gPiAgICAgICAgIH0NCj4gPiB9DQo+ID4N
-Cj4gPiBJJ3ZlIHJ1biBhIHRlc3Qgd2l0aCB0aGUgbmV3IGNvZGUsIHRoZSByZXN1bHQgbG9va3Mg
-Z29vZCwgaXQgZG9lcyBub3QNCj4gPiBpbnRyb2R1Y2UgbGF0ZW5jeSwgUlBTIGlzIHRoZSBzYW1l
-Lg0KPiA+DQo+IA0KPiBJdCB3aWxsIG5vdCB3b3JrIGZvciBzb2NrZXRzIHRoYXQgYXJlIGlkbGUs
-IGFmdGVyIGEgYnVyc3QuDQo+IElmIHdlIHJlc3RvcmUgcGVyIHNvY2tldCBjYWNoZXMsIHdlIHdp
-bGwgbmVlZCBhIHNocmlua2VyLg0KPiBUcnVzdCBtZSwgd2UgZG8gbm90IHdhbnQgdGhhdCBraW5k
-IG9mIGJpZyBoYW1tZXIsIGNydXNoaW5nIGxhdGVuY2llcy4NCj4gDQo+IEhhdmUgeW91IHRyaWVk
-IHRvIGluY3JlYXNlIGJhdGNoIHNpemVzID8NCg0KSSBqdXMgcGlja2VkIHVwIDI1NiBhbmQgMTAy
-NCBmb3IgYSB0cnksIGJ1dCBubyBoZWxwLCB0aGUgb3ZlcmhlYWQgc3RpbGwgZXhpc3RzLg0KDQo+
-IA0KPiBBbnkga2luZCBvZiBjYWNoZSAoZXZlbiBwZXItY3B1KSBtaWdodCBuZWVkIHNvbWUgYWRq
-dXN0bWVudCB3aGVuIGNvcmUNCj4gY291bnQgb3IgZXhwZWN0ZWQgdHJhZmZpYyBpcyBpbmNyZWFz
-aW5nLg0KPiBUaGlzIHdhcyBzb21laG93IGhpbnRlZCBpbg0KPiBjb21taXQgMTgxM2U1MWVlY2Uw
-YWQ2ZjRhYWNhZWI3MzhlN2NjZWQ0NmZlYjQ3MA0KPiBBdXRob3I6IFNoYWtlZWwgQnV0dCA8c2hh
-a2VlbGJAZ29vZ2xlLmNvbT4NCj4gRGF0ZTogICBUaHUgQXVnIDI1IDAwOjA1OjA2IDIwMjIgKzAw
-MDANCj4gDQo+ICAgICBtZW1jZzogaW5jcmVhc2UgTUVNQ0dfQ0hBUkdFX0JBVENIIHRvIDY0DQo+
-IA0KPiANCj4gDQo+IGRpZmYgLS1naXQgYS9pbmNsdWRlL2xpbnV4L21lbWNvbnRyb2wuaCBiL2lu
-Y2x1ZGUvbGludXgvbWVtY29udHJvbC5oIGluZGV4DQo+IDIyMmQ3MzcwMTM0YzczZTU5ZmRiZGY1
-OThlZDhkNjY4OTdkYmJmMWQuLjA0MTgyMjlkMzBjMjVkMTE0MTMyYTFlDQo+IGQ0NmFjMDEzNThj
-ZjIxNDI0DQo+IDEwMDY0NA0KPiAtLS0gYS9pbmNsdWRlL2xpbnV4L21lbWNvbnRyb2wuaA0KPiAr
-KysgYi9pbmNsdWRlL2xpbnV4L21lbWNvbnRyb2wuaA0KPiBAQCAtMzM0LDcgKzMzNCw3IEBAIHN0
-cnVjdCBtZW1fY2dyb3VwIHsNCj4gICAqIFRPRE86IG1heWJlIG5lY2Vzc2FyeSB0byB1c2UgYmln
-IG51bWJlcnMgaW4gYmlnIGlyb25zIG9yIGR5bmFtaWMgYmFzZWQNCj4gb2YgdGhlDQo+ICAgKiB3
-b3JrbG9hZC4NCj4gICAqLw0KPiAtI2RlZmluZSBNRU1DR19DSEFSR0VfQkFUQ0ggNjRVDQo+ICsj
-ZGVmaW5lIE1FTUNHX0NIQVJHRV9CQVRDSCAxMjhVDQo+IA0KPiAgZXh0ZXJuIHN0cnVjdCBtZW1f
-Y2dyb3VwICpyb290X21lbV9jZ3JvdXA7DQo+IA0KPiBkaWZmIC0tZ2l0IGEvaW5jbHVkZS9uZXQv
-c29jay5oIGIvaW5jbHVkZS9uZXQvc29jay5oIGluZGV4DQo+IDY1NmVhODlmNjBmZjkwZDYwMGQx
-NmY0MDMwMjAwMGRiNjQwNTdjNjQuLjgyZjZhMjg4YmU2NTBmODg2YjIwN2U2YQ0KPiA1ZTYyYTFk
-NWRkYTgwOGIwDQo+IDEwMDY0NA0KPiAtLS0gYS9pbmNsdWRlL25ldC9zb2NrLmgNCj4gKysrIGIv
-aW5jbHVkZS9uZXQvc29jay5oDQo+IEBAIC0xNDMzLDggKzE0MzMsOCBAQCBza19tZW1vcnlfYWxs
-b2NhdGVkKGNvbnN0IHN0cnVjdCBzb2NrICpzaykNCj4gICAgICAgICByZXR1cm4gcHJvdG9fbWVt
-b3J5X2FsbG9jYXRlZChzay0+c2tfcHJvdCk7DQo+ICB9DQo+IA0KPiAtLyogMSBNQiBwZXIgY3B1
-LCBpbiBwYWdlIHVuaXRzICovDQo+IC0jZGVmaW5lIFNLX01FTU9SWV9QQ1BVX1JFU0VSVkUgKDEg
-PDwgKDIwIC0gUEFHRV9TSElGVCkpDQo+ICsvKiAyIE1CIHBlciBjcHUsIGluIHBhZ2UgdW5pdHMg
-Ki8NCj4gKyNkZWZpbmUgU0tfTUVNT1JZX1BDUFVfUkVTRVJWRSAoMSA8PCAoMjEgLSBQQUdFX1NI
-SUZUKSkNCj4gDQo+ICBzdGF0aWMgaW5saW5lIHZvaWQNCj4gIHNrX21lbW9yeV9hbGxvY2F0ZWRf
-YWRkKHN0cnVjdCBzb2NrICpzaywgaW50IGFtdCkNCj4gDQo+IA0KPiANCj4gDQo+IA0KPiANCj4g
-PiA+IC0tLS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0tDQo+ID4gPiBGcm9tOiBTaGFrZWVsIEJ1dHQg
-PHNoYWtlZWxiQGdvb2dsZS5jb20+DQo+ID4gPiBTZW50OiBXZWRuZXNkYXksIE1heSAxMCwgMjAy
-MyAxMjoxMCBBTQ0KPiA+ID4gVG86IEVyaWMgRHVtYXpldCA8ZWR1bWF6ZXRAZ29vZ2xlLmNvbT47
-IExpbnV4IE1NIDxsaW51eC0NCj4gPiA+IG1tQGt2YWNrLm9yZz47IENncm91cHMgPGNncm91cHNA
-dmdlci5rZXJuZWwub3JnPg0KPiA+ID4gQ2M6IFpoYW5nLCBDYXRoeSA8Y2F0aHkuemhhbmdAaW50
-ZWwuY29tPjsgUGFvbG8gQWJlbmkNCj4gPiA+IDxwYWJlbmlAcmVkaGF0LmNvbT47IGRhdmVtQGRh
-dmVtbG9mdC5uZXQ7IGt1YmFAa2VybmVsLm9yZzsNCj4gPiA+IEJyYW5kZWJ1cmcsIEplc3NlIDxq
-ZXNzZS5icmFuZGVidXJnQGludGVsLmNvbT47IFNyaW5pdmFzLCBTdXJlc2gNCj4gPiA+IDxzdXJl
-c2guc3Jpbml2YXNAaW50ZWwuY29tPjsgQ2hlbiwgVGltIEMgPHRpbS5jLmNoZW5AaW50ZWwuY29t
-PjsNCj4gPiA+IFlvdSwgTGl6aGVuIDxsaXpoZW4ueW91QGludGVsLmNvbT47IGVyaWMuZHVtYXpl
-dEBnbWFpbC5jb207DQo+ID4gPiBuZXRkZXZAdmdlci5rZXJuZWwub3JnDQo+ID4gPiBTdWJqZWN0
-OiBSZTogW1BBVENIIG5ldC1uZXh0IDEvMl0gbmV0OiBLZWVwIHNrLT5za19mb3J3YXJkX2FsbG9j
-IGFzDQo+ID4gPiBhIHByb3BlciBzaXplDQo+ID4gPg0KPiA+ID4gK2xpbnV4LW1tICYgY2dyb3Vw
-DQo+ID4gPg0KPiA+ID4gVGhyZWFkOiBodHRwczovL2xvcmUua2VybmVsLm9yZy9hbGwvMjAyMzA1
-MDgwMjA4MDEuMTA3MDItMS0NCj4gPiA+IGNhdGh5LnpoYW5nQGludGVsLmNvbS8NCj4gPiA+DQo+
-ID4gPiBPbiBUdWUsIE1heSA5LCAyMDIzIGF0IDg6NDPigK9BTSBFcmljIER1bWF6ZXQgPGVkdW1h
-emV0QGdvb2dsZS5jb20+DQo+ID4gPiB3cm90ZToNCj4gPiA+ID4NCj4gPiA+IFsuLi5dDQo+ID4g
-PiA+IFNvbWUgbW0gZXhwZXJ0cyBzaG91bGQgY2hpbWUgaW4sIHRoaXMgaXMgbm90IGEgbmV0d29y
-a2luZyBpc3N1ZS4NCj4gPiA+DQo+ID4gPiBNb3N0IG9mIHRoZSBNTSBmb2xrcyBhcmUgYnVzeSBp
-biBMU0ZNTSB0aGlzIHdlZWsuIEkgd2lsbCB0YWtlIGEgbG9vaw0KPiA+ID4gYXQgdGhpcyBzb29u
-Lg0K
+Hi Alistair,
+
+On Mon, May 08, 2023 at 06:17:04PM +1000, Alistair Popple wrote:
+> Actually I don't have an invite so might not make it. However I believe
+> Jason Gunthorpe is there and he has been helping with this as well so he
+> might be able to attend the session. Or we could discuss it in one of
+
+Yes, I talked to Jason Gunthorpe and asked him about the usage workflow
+of the pin memory controller. He tell me that his original intend is
+just to have something like RLIMIT but without the quirky limitation
+of the RLIMIT. It has nothing to do with sharing memory.
+Share memories are only brought up during the online discussion.  I guess
+the share memory has similar reference count and facing similar challenges
+on double counting.
+
+> the Linux MM biweeklies. (TBH I've been busy on other work and am only
+> just getting back up to speed on this myself).
+> 
+> > If you have some more detailed write up of the usage case, with a sequence
+> > of interaction and desired outcome that would help me understand. Links to
+> > the previous threads work too.
+> 
+> Unfortunately I don't (yet) have a detailed write up. But the primary
+> use case we had in mind was sandboxing of containers and qemu instances
+> to be able to limit the total amount of memory they can pin.
+
+Ack.
+ 
+> This is just like the existing RLIMIT, just with the limit assigned via
+> a cgroup instead of a per-process or per-user limit as they can easily
+> be subverted, particularly the per-process limit.
+
+Ack.
+
+> The sandboxing requirement is what drove us to not use the existing
+> per-page memcg.
+
+Not sure I understand what you mean here "use the existing per-page memcg".
+Do you mean you need byte counter rather than page counter?
+
+On the other hand it is not important to understand the rest of your points.
+I can move on.
+
+> For private mappings it would be fine because the page
+> would only ever be mapped by a process in a single cgroup (ie. a single
+> memcg).
+
+Ack.
+ 
+> However for shared mappings it isn't - processes in different cgroups
+> could be mapping the same page but the accounting should happen to the
+> cgroup the process is in, not the cgroup that happens to "own" the page.
+
+Ack. That is actually the root of the share memory problem. The model
+of charging to the first process does not work well for share usage.
+
+> It is also possible that the page might not be mapped at all. For
+> example a driver may be pinning a page with pin_user_pages(), but the
+> userspace process may have munmap()ped it.
+
+Ack.
+In that case the driver will need to hold a reference count for it, right?
+
+> 
+> For drivers pinned memory is generally associated with some operation on
+> a file-descriptor. So the desired interaction/outcome is:
+> 
+> 1. Process in cgroup A opens file-descriptor
+> 2. Calls an ioctl() on the FD to pin memory.
+> 3. Driver charges the memory to a counter and checks it's under the
+>    limit.
+> 4. If over limit the ioctl() will fail.
+
+Ack.
+
+> 
+> This is effectively how the vm_pinned/locked RLIMIT works today. Even if
+> a shared page is already pinned the process should still be "punished"
+> for pinning the page.
+
+OK. This is the critical usage information that I want to know. Thanks for
+the explaination.
+
+So there are two different definition of the pin page count:
+1) sum(total set of pages that this memcg process issue pin ioctl on)
+2) sum(total set of pined page this memcg process own a reference count on)
+
+It seems you want 2).
+
+If a page has three reference counts inside one memcg, e.g. map three times. 
+Does the pin count three times or only once?
+
+> Hence the interest in the total <smemcg, memcg>  limit.
+> 
+> Pinned memory may also outlive the process that created it - drivers
+> associate it via a file-descriptor not a process and even if the FD is
+> closed there's nothing say a driver has to unpin the memory then
+> (although most do).
+
+Ack.
+
+> 
+> > We can set up some meetings to discuss it as well.
+> >
+> >> So for pinning at least I don't see a per smemcg limit being useful.
+> >
+> > That is fine.  I see you are interested in the <smemcg, memcg> limit.
+> 
+> Right, because it sounds like it will allow pinning the same struct page
+> multiple times to result in multiple charges. With the current memcg
+
+Multiple times to different memcgs I assume, please see the above question
+regard multiple times to the same memcg.
+
+> implementation this isn't possible because a page can only be associated
+> with a single memcg.
+
+Ack.
+
+> 
+> A limit on just smemcg doesn't seem useful from a sandboxing perspective
+> because processes from other cgroups can use up the limit.
+
+Ack.
+
+> >> Implementation wise we'd need a way to lookup both the smemcg of the
+> >> struct page and the memcg that the pinning task belongs to.
+> >
+> > The page->memcg_data points to the pin smemcg. I am hoping pinning API or
+> > the current memcg can get to the pinning memcg.
+> 
+> So the memcg to charge would come from the process doing the
+> pin_user_pages() rather than say page->memcg_data? Seems reasonable.
+
+That is more of a question for you. What is the desired behavior.
+If charge the current process that perform the pin_user_pages()
+works for you. Great.
+
+I agree charge the pin count to current process memcg seems to make
+sense.
+
+> >> > 4) unshare/unmmap already charged memory. That will reduce the per <smemcg, memcg>
+> >> > borrow counter.
+> >> 
+> >> Actually this is where things might get a bit tricky for pinning. We'd
+> >> have to reduce the pin charge when a driver calls put_page(). But that
+> >> implies looking up the borrow counter / <smemcg, memcg> pair a driver
+> >> charged the page to.
+> >
+> > Does the pin page share between different memcg or just one memcg?
+> 
+> In general it can share between different memcg. Consider a shared
+> mapping shared with processes in two different cgroups (A and B). There
+> is nothing stopping each process opening a file-descriptor and calling
+> an ioctl() to pin the shared page.
+
+Ack.
+
+> Each should be punished for pinning the page in the sense that the pin
+> count for their respective cgroups must go up.
+
+Ack. That clarfy my previous question. You want definition 2)
+
+> Drivers pinning shared pages is I think relatively rare, but it's
+> theorectically possible and if we're going down the path of adding
+> limits for pinning to memcg it's something we need to deal with to make
+> sandboxing effective.
+
+The driver will still have a current processor. Do you mean in this case,
+the current processor is not the right one to charge?
+Another option can be charge to a default system/kernel smemcg or a driver
+smemcg as well.
+
+> 
+> > If it is shared, can the put_page() API indicate it is performing in behalf
+> > of which memcg?
+> 
+> I think so - although it varies by driver.
+> 
+> Drivers have to store the array of pages pinned so should be able to
+> track the memcg with that as well. My series added a struct vm_account
+> which would be the obvious place to keep that reference.
+
+Where does the struct vm_account lives?
+
+> Each set of pin 
+> operations on a FD would need a new memcg reference though so it would
+> add overhead for drivers that only pin a small number of pages at a
+> time.
+
+Set is more complicate then allow double counting the same page in the
+same smemcg. Again mostly just collecting requirement from you.
+
+> 
+> Non-driver users such as the mlock() syscall don't keep a pinned pages
+> array around but they should be able to use the current memcg during
+> munlock().
+
+Ack.
+
+Chris
+
+> 
+> >> I will have to give this idea some more tought though. Most drivers
+> >> don't store anything other than the struct page pointers, but my series
+> >> added an accounting struct which I think could reference the borrow
+> >> counter.
+> >
+> > Ack.
+> >
+> >> 
+> >> > Will that work for your pin memory usage?
+> >> 
+> >> I think it could help. I will give it some thought.
+> >
+> > Ack.
+> >> 
+> >> >> 
+> >> >> > Shared Memory Cgroup Controllers
+> >> >> >
+> >> >> > = Introduction
+> >> >> >
+> >> >> > The current memory cgroup controller does not support shared memory
+> >> >> > objects. For the memory that is shared between different processes, it
+> >> >> > is not obvious which process should get charged. Google has some
+> >> >> > internal tmpfs “memcg=” mount option to charge tmpfs data to a
+> >> >> > specific memcg that’s often different from where charging processes
+> >> >> > run. However it faces some difficulties when the charged memcg exits
+> >> >> > and the charged memcg becomes a zombie memcg.
+> >> >> > Other approaches include “re-parenting” the memcg charge to the parent
+> >> >> > memcg. Which has its own problem. If the charge is huge, iteration of
+> >> >> > the reparenting can be costly.
+> >> >> >
+> >> >> > = Proposed Solution
+> >> >> >
+> >> >> > The proposed solution is to add a new type of memory controller for
+> >> >> > shared memory usage. E.g. tmpfs, hugetlb, file system mmap and
+> >> >> > dma_buf. This shared memory cgroup controller object will have the
+> >> >> > same life cycle of the underlying shared memory.
+> >> >> >
+> >> >> > Processes can not be added to the shared memory cgroup. Instead the
+> >> >> > shared memory cgroup can be added to the memcg using a “smemcg” API
+> >> >> > file, similar to adding a process into the “tasks” API file.
+> >> >> > When a smemcg is added to the memcg, the amount of memory that has
+> >> >> > been shared in the memcg process will be accounted for as the part of
+> >> >> > the memcg “memory.current”.The memory.current of the memcg is make up
+> >> >> > of two parts, 1) the processes anonymous memory and 2) the memory
+> >> >> > shared from smemcg.
+> >> >> >
+> >> >> > When the memcg “memory.current” is raised to the limit. The kernel
+> >> >> > will active try to reclaim for the memcg to make “smemcg memory +
+> >> >> > process anonymous memory” within the limit.
+> >> >> 
+> >> >> That means a process in one cgroup could force reclaim of smemcg memory
+> >> >> in use by a process in another cgroup right? I guess that's no different
+> >> >> to the current situation though.
+> >> >> 
+> >> >> > Further memory allocation
+> >> >> > within those memcg processes will fail if the limit can not be
+> >> >> > followed. If many reclaim attempts fail to bring the memcg
+> >> >> > “memory.current” within the limit, the process in this memcg will get
+> >> >> > OOM killed.
+> >> >> 
+> >> >> How would this work if say a charge for cgroup A to a smemcg in both
+> >> >> cgroup A and B would cause cgroup B to go over its memory limit and not
+> >> >> enough memory could be reclaimed from cgroup B? OOM killing a process in
+> >> >> cgroup B due to a charge from cgroup A doesn't sound like a good idea.
+> >> >
+> >> > If we separate out the charge counter with the borrow counter, that problem
+> >> > will be solved. When smemcg is add to memcg A, we can have a policy specific
+> >> > that adding the <smemcg, memcg A> borrow counter into memcg A's "memory.current".
+> >> >
+> >> > If B did not map that page, that page will not be part of <smemcg, memcg B>
+> >> > borrow count. B will not be punished.
+> >> >
+> >> > However if B did map that page, The <smemcg, memcg B> need to increase as well.
+> >> > B will be punished for it.
+> >> >
+> >> > Will that work for your example situation?
+> >> 
+> >> I think so, although I have been looking at this more from the point of
+> >> view of pinning. It sounds like we could treat pinning in much the same
+> >> way as mapping though.
+> >
+> > Ack.
+> >> 
+> >> >> > = Benefits
+> >> >> >
+> >> >> > The benefits of this solution include:
+> >> >> > * No zombie memcg. The life cycle of the smemcg match the share memory file system or dma_buf.
+> >> >> 
+> >> >> If we added pinning it could get a bit messier, as it would have to hang
+> >> >> around until the driver unpinned the pages. But I don't think that's a
+> >> >> problem.
+> >> >
+> >> >
+> >> > That is exactly the reason pin memory can belong to a pin smemcg. You just need
+> >> > to model the driver holding the pin ref count as one of the share/mmap operation.
+> >> >
+> >> > Then the pin smemcg will not go away if there is a pending pin ref count on it.
+> >> >
+> >> > We have have different policy option on smemcg.
+> >> > For the simple usage don't care the per memcg borrow counter, it can add the
+> >> > smemcg's charge count to "memory.current".
+> >> >
+> >> > Only the user who cares about per memcg usage of a smemcg will need to maintain
+> >> > per <smemcg, memcg> borrow counter, at additional cost.
+> >> 
+> >> Right, I think pinning drivers will always have to care about the borrow
+> >> counter so will have to track that.
+> >
+> > Ack.
+> >
+> > Chris
+> 
+> 
