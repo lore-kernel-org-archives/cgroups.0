@@ -1,304 +1,192 @@
-From: Maarten Lankhorst <maarten.lankhorst-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
-Subject: Re: [RFC PATCH 0/4] Add support for DRM cgroup memory accounting.
-Date: Wed, 10 May 2023 16:59:01 +0200
-Message-ID: <4d6fbce3-a676-f648-7a09-6f6dcc4bdb46@linux.intel.com>
-References: <20230503083500.645848-1-maarten.lankhorst@linux.intel.com>
- <ZFVeI2DKQXddKDNl@slm.duckdns.org>
+From: Eric Dumazet <edumazet-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH net-next 1/2] net: Keep sk->sk_forward_alloc as a proper size
+Date: Wed, 10 May 2023 17:07:22 +0200
+Message-ID: <CANn89i+J+ciJGPkWAFKDwhzJERFJr9_2Or=ehpwSTYO14qzHmA@mail.gmail.com>
+References: <20230508020801.10702-1-cathy.zhang@intel.com> <20230508020801.10702-2-cathy.zhang@intel.com>
+ <3887b08ac0e55e27a24d2f66afcfff1961ed9b13.camel@redhat.com>
+ <CH3PR11MB73459006FCE3887E1EA3B82FFC769@CH3PR11MB7345.namprd11.prod.outlook.com>
+ <CH3PR11MB73456D792EC6E7614E2EF14DFC769@CH3PR11MB7345.namprd11.prod.outlook.com>
+ <CANn89iL6Ckuu9vOEvc7A9CBLGuh-EpbwFRxRAchV-6VFyhTUpg@mail.gmail.com>
+ <CH3PR11MB73458BB403D537CFA96FD8DDFC769@CH3PR11MB7345.namprd11.prod.outlook.com>
+ <CANn89iJvpgXTwGEiXAkFwY3j3RqVhNzJ_6_zmuRb4w7rUA_8Ug@mail.gmail.com>
+ <CALvZod6JRuWHftDcH0uw00v=yi_6BKspGCkDA4AbmzLHaLi2Fg@mail.gmail.com>
+ <CH3PR11MB7345ABB947E183AFB7C18322FC779@CH3PR11MB7345.namprd11.prod.outlook.com>
+ <CANn89i+9rQcGey+AJyhR02pTTBNhWN+P78e4a8knfC9F5sx0hQ@mail.gmail.com> <CH3PR11MB73455A98A232920B322C3976FC779@CH3PR11MB7345.namprd11.prod.outlook.com>
 Mime-Version: 1.0
-Content-Type: multipart/alternative;
- boundary="------------L9LEjtZf5zN6LJSFQm2Vgkmg"
-Return-path: <amd-gfx-bounces-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
- d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
- t=1683730760; x=1715266760;
- h=message-id:date:mime-version:subject:to:cc:references:
- from:in-reply-to;
- bh=5PcR85UP60W1q4JTlwAaNEIiLv3C4MtG+bgQlozaZAU=;
- b=ezezgabZuGpi/mh1m6UpjvksZm5pcYA/KDxi4zihy/Hflmd9fzpkz9wf
- uJs0LRZfsTPwWqyCUg5B66BdRXiR8CEWpJO4qLaDJTlVqA4vxvny6CDJW
- MOpRlUTo4D8yRIzGaf5jmug+EeuOsodKlYz6b6K7uQw1j7biHT5HAFe/K
- aLXyUjKKRbw2sNxJ1wvIW1oNssD6c0+0XjpSf5yvNMpuIkJUIVHXV+QmK
- AsSkAqrMogRWMcSsukyk2aC8ArDSudGVDdA14ZzQHj2en2UrqxG015y1b
- NwDZk0pLlz7ye4VpDVQkIl3W5jJrIIHfqLSp1GNBNA0CXKQ7eY+LJj3wS Q==;
-Content-Language: en-US
-In-Reply-To: <ZFVeI2DKQXddKDNl-NiLfg/pYEd1N0TnZuCh8vA@public.gmane.org>
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.freedesktop.org/mailman/options/amd-gfx>,
- <mailto:amd-gfx-request-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org?subject=unsubscribe>
-List-Archive: <https://lists.freedesktop.org/archives/amd-gfx>
-List-Post: <mailto:amd-gfx-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>
-List-Help: <mailto:amd-gfx-request-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.freedesktop.org/mailman/listinfo/amd-gfx>,
- <mailto:amd-gfx-request-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org?subject=subscribe>
-Errors-To: amd-gfx-bounces-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org
-Sender: "amd-gfx" <amd-gfx-bounces-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: Maxime Ripard <mripard-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Daniel Vetter <daniel-/w4YWyX8dFk@public.gmane.org>, Tvrtko Ursulin <tvrtko.ursulin-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Thomas Zimmermann <tzimmermann-l3A5Bk7waGM@public.gmane.org>, intel-gfx-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, dri-devel-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org, amd-gfx-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, David Airlie <airlied-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, intel-xe-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org
+Content-Transfer-Encoding: quoted-printable
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20221208; t=1683731255; x=1686323255;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=+TNYqcSs6PC6BWjv/cKNCEBTiGNlpvDG9qZWo/NwWgk=;
+        b=VHa+zJPx3Vz6wytMa3SIhZzYfgU2/Niwh71tnoKAYIeWA2H5epFTFhHSQvFN43kk6B
+         cFDZen9tkH7p0WZnnrOzwIENa38J8Y14PbDUEwOakn8Oj0yZBW9fs6jWD/rDzE/vB43V
+         Qz1d1XAKURN9MomiGhS9L4fJncNHQsNIPFngC2R0ThLp3yRrL/r6pOGWoH0IgAa/XqMm
+         CVNitkcf2R+0SqHeNhSZUmYJ8hLSdPSSfbH8jGOIcZpl6IWOPynuR1hReNmhPg5z0teg
+         5Ktw1dOsG4oFDuFWcd42P5fNifriJTDIeKvlkgfQQq0BmKMypIUJTRWWVWw1yJyVBdFh
+         vP7g==
+In-Reply-To: <CH3PR11MB73455A98A232920B322C3976FC779-WQKEFoXy4NEXvLLfv6NhPJPPoyLQLiKMvxpqHgZTriW3zl9H0oFU5g@public.gmane.org>
+List-ID: <cgroups.vger.kernel.org>
+Content-Type: text/plain; charset="utf-8"
+To: "Zhang, Cathy" <cathy.zhang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+Cc: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Linux MM <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Paolo Abeni <pabeni-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org" <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>, "kuba-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org" <kuba-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, "Brandeburg, Jesse" <jesse.brandeburg-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, "Srinivas, Suresh" <suresh.srinivas-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, "Chen, Tim C" <tim.c.chen-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, "You, Lizhen" <lizhen.you-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, "eric.dumazet-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org" <eric.dumazet-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, "netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 
-This is a multi-part message in MIME format.
---------------L9LEjtZf5zN6LJSFQm2Vgkmg
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-
-Hey,
-
-On 2023-05-05 21:50, Tejun Heo wrote:
-> Hello,
+On Wed, May 10, 2023 at 3:54=E2=80=AFPM Zhang, Cathy <cathy.zhang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org=
+> wrote:
 >
-> On Wed, May 03, 2023 at 10:34:56AM +0200, Maarten Lankhorst wrote:
->> RFC as I'm looking for comments.
->>
->> For long running compute, it can be beneficial to partition the GPU memory
->> between cgroups, so each cgroup can use its maximum amount of memory without
->> interfering with other scheduled jobs. Done properly, this can alleviate the
->> need for eviction, which might result in a job being terminated if the GPU
->> doesn't support mid-thread preemption or recoverable page faults.
->>
->> This is done by adding a bunch of knobs to cgroup:
->> drm.capacity: Shows maximum capacity of each resource region.
->> drm.max: Display or limit max amount of memory.
->> drm.current: Current amount of memory in use.
->>
->> TTM has not been made cgroup aware yet, so instead of evicting from
->> the current cgroup to stay within the cgroup limits, it simply returns
->> the error -ENOSPC to userspace.
->>
->> I've used Tvrtko's cgroup controller series as a base, but it implemented
->> scheduling weight, not memory accounting, so I only ended up keeping the
->> base patch.
->>
->> Xe is not upstream yet, so the driver specific patch will only apply on
->> https://gitlab.freedesktop.org/drm/xe/kernel
-> Some high-level feedbacks.
 >
-> * There have been multiple attempts at this but the track record is kinda
->    poor. People don't seem to agree what should constitute DRM memory and how
->    they should be accounted / controlled.
+>
+> > -----Original Message-----
+> > From: Eric Dumazet <edumazet-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+> > Sent: Wednesday, May 10, 2023 7:25 PM
+> > To: Zhang, Cathy <cathy.zhang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+> > Cc: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>; Linux MM <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>;
+> > Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>; Paolo Abeni <pabeni-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>;
+> > davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org; kuba-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org; Brandeburg, Jesse
+> > <jesse.brandeburg-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>; Srinivas, Suresh
+> > <suresh.srinivas-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>; Chen, Tim C <tim.c.chen-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>; You,
+> > Lizhen <lizhen.you-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>; eric.dumazet-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org;
+> > netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+> > Subject: Re: [PATCH net-next 1/2] net: Keep sk->sk_forward_alloc as a p=
+roper
+> > size
+> >
+> > On Wed, May 10, 2023 at 1:11=E2=80=AFPM Zhang, Cathy <cathy.zhang@intel=
+.com>
+> > wrote:
+> > >
+> > > Hi Shakeel, Eric and all,
+> > >
+> > > How about adding memory pressure checking in sk_mem_uncharge() to
+> > > decide if keep part of memory or not, which can help avoid the issue
+> > > you fixed and the problem we find on the system with more CPUs.
+> > >
+> > > The code draft is like this:
+> > >
+> > > static inline void sk_mem_uncharge(struct sock *sk, int size) {
+> > >         int reclaimable;
+> > >         int reclaim_threshold =3D SK_RECLAIM_THRESHOLD;
+> > >
+> > >         if (!sk_has_account(sk))
+> > >                 return;
+> > >         sk->sk_forward_alloc +=3D size;
+> > >
+> > >         if (mem_cgroup_sockets_enabled && sk->sk_memcg &&
+> > >             mem_cgroup_under_socket_pressure(sk->sk_memcg)) {
+> > >                 sk_mem_reclaim(sk);
+> > >                 return;
+> > >         }
+> > >
+> > >         reclaimable =3D sk->sk_forward_alloc -
+> > > sk_unused_reserved_mem(sk);
+> > >
+> > >         if (reclaimable > reclaim_threshold) {
+> > >                 reclaimable -=3D reclaim_threshold;
+> > >                 __sk_mem_reclaim(sk, reclaimable);
+> > >         }
+> > > }
+> > >
+> > > I've run a test with the new code, the result looks good, it does not
+> > > introduce latency, RPS is the same.
+> > >
+> >
+> > It will not work for sockets that are idle, after a burst.
+> > If we restore per socket caches, we will need a shrinker.
+> > Trust me, we do not want that kind of big hammer, crushing latencies.
+> >
+> > Have you tried to increase batch sizes ?
+>
+> I jus picked up 256 and 1024 for a try, but no help, the overhead still e=
+xists.
 
-Thanks for the feedback.
+This makes no sense at all.
 
-I think for a lot of drivers, what is VRAM might have different meaning, but the intention
-is it being accounted in the same way. Most drivers use TTM, which has a standard way
-of allocating memory, and a standard way of evicting VRAM.
+I suspect a plain bug in mm/memcontrol.c
 
-This makes it very useful for the usecase which I'm looking at, long running compute.
-When you have long running jobs, you don't want them to be interrupted because a completely
-unrelated process needs some VRAM, and one of the compute jobs buffers are being evicted.
+I will let mm experts work on this.
 
-Some hardware does not support mid-thread preemption or page fault recovery, this means that
-when memory is evicted, the compute job is terminated.
-
-The full problem statement is in drm-compute.rst in the memory accounting patch.
-
-> * I like Tvrtko's scheduling patchset because it exposes a generic interface
->    which makes sense regardless of hardware details and then each driver can
->    implement the configured control in whatever way they can. However, even
->    for that, there doesn't seem much buy-in from other drivers.
-
-Yeah, that is correct. But it tries to solve a different part of the problem.
-
-> * This proposal seems narrowly scoped trying to solve a specific problem
->    which may not translate to different hardware configurations. Please let
->    me know if I got that wrong, but if that's the case, I think a better and
->    easier approach might be just being a part of the misc controller. That
->    doesn't require much extra code and should be able to provide everything
->    necessary for statically limiting specific resources.
-
-The misc controller is not granular enough. A single computer may have any number of
-graphics cards, some of them with multiple regions of vram inside a single card.
-
-For compute and shared hosting you might want to limit the usage of a single memory
-region on a single card, and then limit the same limits for the rest too, to prevent
-triggering eviction.
-
-The current version doesn't handle eviction correctly, because I was still working
-on it and I wanted to post a RFC. As a result, the case where resource limit is hit
-will evict the device's entire memory or get stuck in a loop. With some changes, the
-next version will not have this bug. This results in a few changes to the core code. [1]
-
-In the next version, I will move all the code for handling the resource limit to
-TTM's eviction layer, because otherwise it cannot handle the resource limit correctly.
-
-The effect of moving the code to TTM, is that it will make the code even more generic
-for drivers that have vram and use TTM. When using TTM, you only have to describe your
-VRAM, update some fields in the TTM manager and (un)register your device with the
-cgroup handler on (un)load. It's quite trivial to add vram accounting to amdgpu and
-nouveau. [2]
-
-If you want to add a knob for scheduling weight for a process, it makes sense to
-also add resource usage as a knob, otherwise the effect of that knob is very
-limited. So even for Tvrtko's original proposed usecase, it would make sense.
-
-Cheers,
-~Maarten
-
---------
-[1] Compared to this version:
-  static inline int drmcg_try_charge(struct drmcgroup_state **drmcs,
-+                                  struct drmcgroup_state **limitcs,
-                                    struct drmcgroup_device *cgdev,
-                                    u32 index, u64 size)
-
-This now returns which cgroup's limit is hit on -EAGAIN.
-
-+bool drmcs_grouped(struct drmcgroup_state *limitcs,
-+                  struct drmcgroup_state *testcs);
-Tells if testcs is the same as limitcs, or a subgroup of it. This allows us to
-skip evicting when it's unneeded. If we want to add a min, it will make sense
-to pass the size too, to skip some subcgroups below min.
-
-+void drmcs_put(struct drmcgroup_state *drmcs);
-Drops the limitcs ref.
--------------------
-[2] With the next version, I can very easily implement the cgroup handling on amdgpu too:
-- embed a struct drmcgroup_device inside amdgpu_device.
-- In amdgpu_vram_mgr_init, populate the struct drmcgroup_device.regions[0] for vram,
-   and set ttm_resource_manager->cg to &adev->drmcgroup_device
-- Call drmcg_register_device after, and drmcg_unregister_device after cleaning up vram.
-
-So if anyone wants to limit VRAM on amdgpu or qxl or nouveau (left as exercise for reader)
-afterwards, it will work as intended, while the driver doesn't have to be cgroups aware.
-
---------------L9LEjtZf5zN6LJSFQm2Vgkmg
-Content-Type: text/html; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-
-<html>
-  <head>
-    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-  </head>
-  <body>
-    <p>Hey,<br>
-    </p>
-    <div class="moz-cite-prefix">On 2023-05-05 21:50, Tejun Heo wrote:<br>
-    </div>
-    <blockquote type="cite" cite="mid:ZFVeI2DKQXddKDNl-NiLfg/pYEd1N0TnZuCh8vA@public.gmane.org">
-      <pre class="moz-quote-pre" wrap="">Hello,
-
-On Wed, May 03, 2023 at 10:34:56AM +0200, Maarten Lankhorst wrote:
-</pre>
-      <blockquote type="cite">
-        <pre class="moz-quote-pre" wrap="">RFC as I'm looking for comments.
-
-For long running compute, it can be beneficial to partition the GPU memory
-between cgroups, so each cgroup can use its maximum amount of memory without
-interfering with other scheduled jobs. Done properly, this can alleviate the
-need for eviction, which might result in a job being terminated if the GPU
-doesn't support mid-thread preemption or recoverable page faults.
-
-This is done by adding a bunch of knobs to cgroup:
-drm.capacity: Shows maximum capacity of each resource region.
-drm.max: Display or limit max amount of memory.
-drm.current: Current amount of memory in use.
-
-TTM has not been made cgroup aware yet, so instead of evicting from
-the current cgroup to stay within the cgroup limits, it simply returns
-the error -ENOSPC to userspace.
-
-I've used Tvrtko's cgroup controller series as a base, but it implemented
-scheduling weight, not memory accounting, so I only ended up keeping the
-base patch.
-
-Xe is not upstream yet, so the driver specific patch will only apply on
-<a class="moz-txt-link-freetext" href="https://gitlab.freedesktop.org/drm/xe/kernel">https://gitlab.freedesktop.org/drm/xe/kernel</a>
-</pre>
-      </blockquote>
-      <pre class="moz-quote-pre" wrap="">
-Some high-level feedbacks.
-
-* There have been multiple attempts at this but the track record is kinda
-  poor. People don't seem to agree what should constitute DRM memory and how
-  they should be accounted / controlled.</pre>
-    </blockquote>
-    <pre>Thanks for the feedback.
-
-I think for a lot of drivers, what is VRAM might have different meaning, but the intention
-is it being accounted in the same way. Most drivers use TTM, which has a standard way
-of allocating memory, and a standard way of evicting VRAM.
-
-This makes it very useful for the usecase which I'm looking at, long running compute.
-When you have long running jobs, you don't want them to be interrupted because a completely
-unrelated process needs some VRAM, and one of the compute jobs buffers are being evicted.
-
-Some hardware does not support mid-thread preemption or page fault recovery, this means that
-when memory is evicted, the compute job is terminated.
-
-The full problem statement is in drm-compute.rst in the memory accounting patch.
-
-</pre>
-    <blockquote type="cite" cite="mid:ZFVeI2DKQXddKDNl-NiLfg/pYEd1N0TnZuCh8vA@public.gmane.org">
-      <pre class="moz-quote-pre" wrap="">* I like Tvrtko's scheduling patchset because it exposes a generic interface
-  which makes sense regardless of hardware details and then each driver can
-  implement the configured control in whatever way they can. However, even
-  for that, there doesn't seem much buy-in from other drivers.</pre>
-    </blockquote>
-    <pre>Yeah, that is correct. But it tries to solve a different part of the problem.</pre>
-    <blockquote type="cite" cite="mid:ZFVeI2DKQXddKDNl-NiLfg/pYEd1N0TnZuCh8vA@public.gmane.org">
-      <pre class="moz-quote-pre" wrap="">* This proposal seems narrowly scoped trying to solve a specific problem
-  which may not translate to different hardware configurations. Please let
-  me know if I got that wrong, but if that's the case, I think a better and
-  easier approach might be just being a part of the misc controller. That
-  doesn't require much extra code and should be able to provide everything
-  necessary for statically limiting specific resources.
-</pre>
-    </blockquote>
-    <pre>The misc controller is not granular enough. A single computer may have any number of
-graphics cards, some of them with multiple regions of vram inside a single card.
-
-For compute and shared hosting you might want to limit the usage of a single memory
-region on a single card, and then limit the same limits for the rest too, to prevent
-triggering eviction.
-
-The current version doesn't handle eviction correctly, because I was still working
-on it and I wanted to post a RFC. As a result, the case where resource limit is hit
-will evict the device's entire memory or get stuck in a loop. With some changes, the
-next version will not have this bug. This results in a few changes to the core code. [1]
-
-In the next version, I will move all the code for handling the resource limit to
-TTM's eviction layer, because otherwise it cannot handle the resource limit correctly.
-
-The effect of moving the code to TTM, is that it will make the code even more generic
-for drivers that have vram and use TTM. When using TTM, you only have to describe your
-VRAM, update some fields in the TTM manager and (un)register your device with the
-cgroup handler on (un)load. It's quite trivial to add vram accounting to amdgpu and
-nouveau. [2]
-
-If you want to add a knob for scheduling weight for a process, it makes sense to
-also add resource usage as a knob, otherwise the effect of that knob is very
-limited. So even for Tvrtko's original proposed usecase, it would make sense.
-
-Cheers,
-~Maarten
-
---------
-[1] Compared to this version:
- static inline int drmcg_try_charge(struct drmcgroup_state **drmcs,
-+                                  struct drmcgroup_state **limitcs,
-                                   struct drmcgroup_device *cgdev,
-                                   u32 index, u64 size)
-
-This now returns which cgroup's limit is hit on -EAGAIN.
-
-+bool drmcs_grouped(struct drmcgroup_state *limitcs,
-+                  struct drmcgroup_state *testcs);
-Tells if testcs is the same as limitcs, or a subgroup of it. This allows us to
-skip evicting when it's unneeded. If we want to add a min, it will make sense
-to pass the size too, to skip some subcgroups below min.
-
-+void drmcs_put(struct drmcgroup_state *drmcs);
-Drops the limitcs ref.
--------------------
-[2] With the next version, I can very easily implement the cgroup handling on amdgpu too:
-- embed a struct drmcgroup_device inside amdgpu_device.
-- In amdgpu_vram_mgr_init, populate the struct drmcgroup_device.regions[0] for vram,
-  and set ttm_resource_manager-&gt;cg to &amp;adev-&gt;drmcgroup_device
-- Call drmcg_register_device after, and drmcg_unregister_device after cleaning up vram.
-
-So if anyone wants to limit VRAM on amdgpu or qxl or nouveau (left as exercise for reader)
-afterwards, it will work as intended, while the driver doesn't have to be cgroups aware.
-
-</pre>
-  </body>
-</html>
-
---------------L9LEjtZf5zN6LJSFQm2Vgkmg--
+>
+> >
+> > Any kind of cache (even per-cpu) might need some adjustment when core
+> > count or expected traffic is increasing.
+> > This was somehow hinted in
+> > commit 1813e51eece0ad6f4aacaeb738e7cced46feb470
+> > Author: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+> > Date:   Thu Aug 25 00:05:06 2022 +0000
+> >
+> >     memcg: increase MEMCG_CHARGE_BATCH to 64
+> >
+> >
+> >
+> > diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h in=
+dex
+> > 222d7370134c73e59fdbdf598ed8d66897dbbf1d..0418229d30c25d114132a1e
+> > d46ac01358cf21424
+> > 100644
+> > --- a/include/linux/memcontrol.h
+> > +++ b/include/linux/memcontrol.h
+> > @@ -334,7 +334,7 @@ struct mem_cgroup {
+> >   * TODO: maybe necessary to use big numbers in big irons or dynamic ba=
+sed
+> > of the
+> >   * workload.
+> >   */
+> > -#define MEMCG_CHARGE_BATCH 64U
+> > +#define MEMCG_CHARGE_BATCH 128U
+> >
+> >  extern struct mem_cgroup *root_mem_cgroup;
+> >
+> > diff --git a/include/net/sock.h b/include/net/sock.h index
+> > 656ea89f60ff90d600d16f40302000db64057c64..82f6a288be650f886b207e6a
+> > 5e62a1d5dda808b0
+> > 100644
+> > --- a/include/net/sock.h
+> > +++ b/include/net/sock.h
+> > @@ -1433,8 +1433,8 @@ sk_memory_allocated(const struct sock *sk)
+> >         return proto_memory_allocated(sk->sk_prot);
+> >  }
+> >
+> > -/* 1 MB per cpu, in page units */
+> > -#define SK_MEMORY_PCPU_RESERVE (1 << (20 - PAGE_SHIFT))
+> > +/* 2 MB per cpu, in page units */
+> > +#define SK_MEMORY_PCPU_RESERVE (1 << (21 - PAGE_SHIFT))
+> >
+> >  static inline void
+> >  sk_memory_allocated_add(struct sock *sk, int amt)
+> >
+> >
+> >
+> >
+> >
+> >
+> > > > -----Original Message-----
+> > > > From: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+> > > > Sent: Wednesday, May 10, 2023 12:10 AM
+> > > > To: Eric Dumazet <edumazet-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>; Linux MM <linux-
+> > > > mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>; Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+> > > > Cc: Zhang, Cathy <cathy.zhang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>; Paolo Abeni
+> > > > <pabeni-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>; davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org; kuba-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org;
+> > > > Brandeburg, Jesse <jesse.brandeburg-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>; Srinivas, Suresh
+> > > > <suresh.srinivas-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>; Chen, Tim C <tim.c.chen-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>;
+> > > > You, Lizhen <lizhen.you-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>; eric.dumazet-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org;
+> > > > netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+> > > > Subject: Re: [PATCH net-next 1/2] net: Keep sk->sk_forward_alloc as
+> > > > a proper size
+> > > >
+> > > > +linux-mm & cgroup
+> > > >
+> > > > Thread: https://lore.kernel.org/all/20230508020801.10702-1-
+> > > > cathy.zhang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org/
+> > > >
+> > > > On Tue, May 9, 2023 at 8:43=E2=80=AFAM Eric Dumazet <edumazet@googl=
+e.com>
+> > > > wrote:
+> > > > >
+> > > > [...]
+> > > > > Some mm experts should chime in, this is not a networking issue.
+> > > >
+> > > > Most of the MM folks are busy in LSFMM this week. I will take a loo=
+k
+> > > > at this soon.
