@@ -1,80 +1,68 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [RFC PATCH 0/4] Add support for DRM cgroup memory accounting.
-Date: Wed, 10 May 2023 08:46:00 -1000
-Message-ID: <ZFvmaGNo0buQEUi1@slm.duckdns.org>
-References: <20230503083500.645848-1-maarten.lankhorst@linux.intel.com>
- <ZFVeI2DKQXddKDNl@slm.duckdns.org>
- <4d6fbce3-a676-f648-7a09-6f6dcc4bdb46@linux.intel.com>
+From: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH net-next 1/2] net: Keep sk->sk_forward_alloc as a proper size
+Date: Wed, 10 May 2023 12:00:02 -0700
+Message-ID: <CALvZod4n+Kwa1sOV9jxiEMTUoO7MaCGWz=wT3MHOuj4t-+9S6Q@mail.gmail.com>
+References: <20230508020801.10702-1-cathy.zhang@intel.com> <20230508020801.10702-2-cathy.zhang@intel.com>
+ <3887b08ac0e55e27a24d2f66afcfff1961ed9b13.camel@redhat.com>
+ <CH3PR11MB73459006FCE3887E1EA3B82FFC769@CH3PR11MB7345.namprd11.prod.outlook.com>
+ <CH3PR11MB73456D792EC6E7614E2EF14DFC769@CH3PR11MB7345.namprd11.prod.outlook.com>
+ <CANn89iL6Ckuu9vOEvc7A9CBLGuh-EpbwFRxRAchV-6VFyhTUpg@mail.gmail.com>
+ <CH3PR11MB73458BB403D537CFA96FD8DDFC769@CH3PR11MB7345.namprd11.prod.outlook.com>
+ <CANn89iJvpgXTwGEiXAkFwY3j3RqVhNzJ_6_zmuRb4w7rUA_8Ug@mail.gmail.com>
+ <CALvZod6JRuWHftDcH0uw00v=yi_6BKspGCkDA4AbmzLHaLi2Fg@mail.gmail.com>
+ <CH3PR11MB7345ABB947E183AFB7C18322FC779@CH3PR11MB7345.namprd11.prod.outlook.com>
+ <CANn89i+9rQcGey+AJyhR02pTTBNhWN+P78e4a8knfC9F5sx0hQ@mail.gmail.com>
+ <CH3PR11MB73455A98A232920B322C3976FC779@CH3PR11MB7345.namprd11.prod.outlook.com>
+ <CANn89i+J+ciJGPkWAFKDwhzJERFJr9_2Or=ehpwSTYO14qzHmA@mail.gmail.com> <CH3PR11MB734502756F495CB9C520494FFC779@CH3PR11MB7345.namprd11.prod.outlook.com>
 Mime-Version: 1.0
-Return-path: <amd-gfx-bounces-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>
+Content-Transfer-Encoding: quoted-printable
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=gmail.com; s=20221208; t=1683744362; x=1686336362;
- h=in-reply-to:content-disposition:mime-version:references:message-id
- :subject:cc:to:from:date:sender:from:to:cc:subject:date:message-id
- :reply-to; bh=5fuvzbzfAPaWz0F0qnb+ng0M3t+DRDPEy+SEvx5Zlpw=;
- b=WaX/lA3Y5RC6vqi8Gstz4xLqZDGmFXeG7a3rgiWsDu5hUwAToAZzkqoYMo1FT7KjnA
- ARUu3pTtOMc7WAoU2YOH9cnEDLX7dlPp5Fk+vl639nloA3cqkDUb96asyf9ZQw15ihXz
- nIf9q2YeVZUyrcSMtyeAkgoRbV+oLyls91sRKUg2xusZZZ3Ihxuq/x0/E/g2898K6qQY
- NY2fYU0eav3eoftoQ/+ak267O1ldNVnrMhtexIpFA1GoP5llXOIGlF9JxtpQi2ToH3Sb
- zXx6m0I8PgYy7bI06tjMymfporVo62Z/NoPWgDzh1wszI52lSrupgJLtKhGceUulCGBv
- Mj0g==
-Content-Disposition: inline
-In-Reply-To: <4d6fbce3-a676-f648-7a09-6f6dcc4bdb46-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.freedesktop.org/mailman/options/amd-gfx>,
- <mailto:amd-gfx-request-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org?subject=unsubscribe>
-List-Archive: <https://lists.freedesktop.org/archives/amd-gfx>
-List-Post: <mailto:amd-gfx-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>
-List-Help: <mailto:amd-gfx-request-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.freedesktop.org/mailman/listinfo/amd-gfx>,
- <mailto:amd-gfx-request-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org?subject=subscribe>
-Errors-To: amd-gfx-bounces-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org
-Sender: "amd-gfx" <amd-gfx-bounces-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Maarten Lankhorst <maarten.lankhorst-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
-Cc: Maxime Ripard <mripard-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Daniel Vetter <daniel-/w4YWyX8dFk@public.gmane.org>, Tvrtko Ursulin <tvrtko.ursulin-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Thomas Zimmermann <tzimmermann-l3A5Bk7waGM@public.gmane.org>, intel-gfx-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, dri-devel-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org, amd-gfx-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, David Airlie <airlied-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, intel-xe-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org
+        d=google.com; s=20221208; t=1683745214; x=1686337214;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=xKsdgPcqj7KmYQZqWilT9rwcetEcIXv94yhUAf7G1sA=;
+        b=BvJIvdH3Wybsgy9FE4pyTQfaOjRyNKOOtwD8AxKBkOLwQnEb8UA1Ez5R0nRn2CFFBL
+         BXgoH7pw0kursav4wE2lwTrsKDnbBpwm7XG4ro5lrOuMCnNM9OqssguSNAUo7HbNaWwC
+         j40w6tVnkluvyUchlgU8rYyRRcEQwmE3Zpnbh6RscDtfNz10rYG0KfpUKVd8wmoNZj9I
+         vTdcpjPoxtgDsptCivj+6K0OgYH6Bcgllqe2Y3mDvoTxA67v54GNd+C7Q5M4TB3/70n0
+         h5NlSITmtP1wgtX8LZtx21dkK0mPYkk0oTPqWfrXi9seT6ecC66ADSSg2marBGDzT/7q
+         kIZg==
+In-Reply-To: <CH3PR11MB734502756F495CB9C520494FFC779-WQKEFoXy4NEXvLLfv6NhPJPPoyLQLiKMvxpqHgZTriW3zl9H0oFU5g@public.gmane.org>
+List-ID: <cgroups.vger.kernel.org>
+Content-Type: text/plain; charset="windows-1252"
+To: "Zhang, Cathy" <cathy.zhang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+Cc: Eric Dumazet <edumazet-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Linux MM <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Paolo Abeni <pabeni-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org" <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>, "kuba-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org" <kuba-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, "Brandeburg, Jesse" <jesse.brandeburg-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, "Srinivas, Suresh" <suresh.srinivas-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, "Chen, Tim C" <tim.c.chen-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, "You, Lizhen" <lizhen.you-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, "eric.dumazet-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org" <eric.dumazet-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, "netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 
-Hello,
+On Wed, May 10, 2023 at 9:09=E2=80=AFAM Zhang, Cathy <cathy.zhang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org=
+> wrote:
+>
+>
+[...]
+> > > >
+> > > > Have you tried to increase batch sizes ?
+> > >
+> > > I jus picked up 256 and 1024 for a try, but no help, the overhead sti=
+ll exists.
+> >
+> > This makes no sense at all.
+>
+> Eric,
+>
+> I added a pr_info in try_charge_memcg() to print nr_pages if
+> nr_pages >=3D MEMCG_CHARGE_BATCH, except it prints 64 during the initiali=
+zation
+> of instances, there is no other output during the running. That means nr_=
+pages is not
+> over 64, I guess that might be the reason why to increase MEMCG_CHARGE_BA=
+TCH
+> doesn't affect this case.
+>
 
-On Wed, May 10, 2023 at 04:59:01PM +0200, Maarten Lankhorst wrote:
-> The misc controller is not granular enough. A single computer may have any number of
-> graphics cards, some of them with multiple regions of vram inside a single card.
-
-Extending the misc controller to support dynamic keys shouldn't be that
-difficult.
-
-...
-> In the next version, I will move all the code for handling the resource limit to
-> TTM's eviction layer, because otherwise it cannot handle the resource limit correctly.
-> 
-> The effect of moving the code to TTM, is that it will make the code even more generic
-> for drivers that have vram and use TTM. When using TTM, you only have to describe your
-> VRAM, update some fields in the TTM manager and (un)register your device with the
-> cgroup handler on (un)load. It's quite trivial to add vram accounting to amdgpu and
-> nouveau. [2]
-> 
-> If you want to add a knob for scheduling weight for a process, it makes sense to
-> also add resource usage as a knob, otherwise the effect of that knob is very
-> limited. So even for Tvrtko's original proposed usecase, it would make sense.
-
-It does make sense but unlike Tvrtko's scheduling weights what's being
-proposed doesn't seem to encapsulate GPU memory resource in a generic enough
-manner at least to my untrained eyes. ie. w/ drm.weight, I don't need any
-specific knoweldge of how a specific GPU operates to say "this guy should
-get 2x processing power over that guy". This more or less holds for other
-major resources including CPU, memory and IO. What you're proposing seems a
-lot more tied to hardware details and users would have to know a lot more
-about how memory is configured on that particular GPU.
-
-Now, if this is inherent to how all, or at least most, GPUs operate, sure,
-but otherwise let's start small in terms of interface and not take up space
-which should be for something universal. If this turns out to be the way,
-expanding to take up the generic interface space isn't difficult.
-
-I don't know GPU space so please educate me where I'm wrong.
-
-Thanks.
-
--- 
-tejun
+I am assuming you increased MEMCG_CHARGE_BATCH to 256 and 1024 but
+that did not help. To me that just means there is a different
+bottleneck in the memcg charging codepath. Can you please share the
+perf profile? Please note that memcg charging does a lot of other
+things as well like updating memcg stats and checking (and enforcing)
+memory.high even if you have not set memory.high.
