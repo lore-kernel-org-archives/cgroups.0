@@ -1,159 +1,127 @@
-From: Eric Dumazet <edumazet-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH net-next 1/2] net: Keep sk->sk_forward_alloc as a proper size
-Date: Wed, 10 May 2023 13:24:53 +0200
-Message-ID: <CANn89i+9rQcGey+AJyhR02pTTBNhWN+P78e4a8knfC9F5sx0hQ@mail.gmail.com>
-References: <20230508020801.10702-1-cathy.zhang@intel.com> <20230508020801.10702-2-cathy.zhang@intel.com>
+From: "Zhang, Cathy" <cathy.zhang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+Subject: RE: [PATCH net-next 1/2] net: Keep sk->sk_forward_alloc as a proper
+ size
+Date: Wed, 10 May 2023 13:52:16 +0000
+Message-ID: <CH3PR11MB73455A98A232920B322C3976FC779@CH3PR11MB7345.namprd11.prod.outlook.com>
+References: <20230508020801.10702-1-cathy.zhang@intel.com>
+ <20230508020801.10702-2-cathy.zhang@intel.com>
  <3887b08ac0e55e27a24d2f66afcfff1961ed9b13.camel@redhat.com>
  <CH3PR11MB73459006FCE3887E1EA3B82FFC769@CH3PR11MB7345.namprd11.prod.outlook.com>
  <CH3PR11MB73456D792EC6E7614E2EF14DFC769@CH3PR11MB7345.namprd11.prod.outlook.com>
  <CANn89iL6Ckuu9vOEvc7A9CBLGuh-EpbwFRxRAchV-6VFyhTUpg@mail.gmail.com>
  <CH3PR11MB73458BB403D537CFA96FD8DDFC769@CH3PR11MB7345.namprd11.prod.outlook.com>
  <CANn89iJvpgXTwGEiXAkFwY3j3RqVhNzJ_6_zmuRb4w7rUA_8Ug@mail.gmail.com>
- <CALvZod6JRuWHftDcH0uw00v=yi_6BKspGCkDA4AbmzLHaLi2Fg@mail.gmail.com> <CH3PR11MB7345ABB947E183AFB7C18322FC779@CH3PR11MB7345.namprd11.prod.outlook.com>
+ <CALvZod6JRuWHftDcH0uw00v=yi_6BKspGCkDA4AbmzLHaLi2Fg@mail.gmail.com>
+ <CH3PR11MB7345ABB947E183AFB7C18322FC779@CH3PR11MB7345.namprd11.prod.outlook.com>
+ <CANn89i+9rQcGey+AJyhR02pTTBNhWN+P78e4a8knfC9F5sx0hQ@mail.gmail.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20221208; t=1683717905; x=1686309905;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=yCUB8//jyn0v6VuC0Mv1gAetwatciCjYaByO0V5N8x4=;
-        b=glDScdM+b+Eq4bPgyBFONs+ujCqj0fUTzb2C1b7YC9k0bX00m378sp+jClAFSCEYIj
-         7GQmW5yCYlh8ljWEw+78HDoWFDW3woBXw6OWf3sutdWuRau9RpJTBeFzr5rniNgwu8B1
-         RXeBFJvwdpWuXrQNRVHHeJxrfM+4flHaskwNjG8OzWaUKrYT8zOnmkjN6UEowshjdkVX
-         PiEWdYsuLY3ObbHKdPzefSLUPMZzXEQ/uJ8/dDTSaTJaCz/lXYPUOCVsKTIZMN5k1a3O
-         fhKq0sDR4DzxKg5KKy/y8r4CgHK0FDtbgeUmotkf4M6TOF0GI1bPRq/wwfAJEGhj4ODp
-         eilA==
-In-Reply-To: <CH3PR11MB7345ABB947E183AFB7C18322FC779-WQKEFoXy4NEXvLLfv6NhPJPPoyLQLiKMvxpqHgZTriW3zl9H0oFU5g@public.gmane.org>
-List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="utf-8"
-To: "Zhang, Cathy" <cathy.zhang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+Content-Transfer-Encoding: base64
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1683726899; x=1715262899;
+  h=from:to:cc:subject:date:message-id:references:
+   in-reply-to:content-transfer-encoding:mime-version;
+  bh=Ike/YhTQ6FqDHgwb1fH8bcZ4R5gcgL1tekZJPzTAz4c=;
+  b=L38/C97B24LKQvGTXOXBAw0pJ/Mazck8rj7AfI9+pbwgaJBoL9HDpUDe
+   vFv1DhLmghT16dWroayKhEnYnIgFDzUOjK6EKaAVKrxkKrIIG4HJ6PuiL
+   rmokubQ5YZIagcl7rNmmVJMkgRtuwOoo6EenZSOUoR/w47mcgl/vW8PLl
+   bJCN4LkXx3TDl99AIgn66WiFubwyOHKrXAFu0hcB0G6T4YmeKX7CLgiCU
+   ObFOQpEj42P8D2mxk6LKBVVo7s6XUbG2XmuMGaJ63mg8XmTWJN0atGcIc
+   1Nx6fgO1/W2dtFiekH3vj2428JoC4YitnRjKmvpJ4+59ro0HPel2kqgI3
+   w==;
+In-Reply-To: <CANn89i+9rQcGey+AJyhR02pTTBNhWN+P78e4a8knfC9F5sx0hQ-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+Content-Language: en-US
+List-ID: <cgroups.vger.kernel.org>
+To: Eric Dumazet <edumazet-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 Cc: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Linux MM <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Paolo Abeni <pabeni-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org" <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>, "kuba-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org" <kuba-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, "Brandeburg, Jesse" <jesse.brandeburg-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, "Srinivas, Suresh" <suresh.srinivas-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, "Chen, Tim C" <tim.c.chen-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, "You, Lizhen" <lizhen.you-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, "eric.dumazet-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org" <eric.dumazet-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, "netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 
-On Wed, May 10, 2023 at 1:11=E2=80=AFPM Zhang, Cathy <cathy.zhang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org=
-> wrote:
->
-> Hi Shakeel, Eric and all,
->
-> How about adding memory pressure checking in sk_mem_uncharge()
-> to decide if keep part of memory or not, which can help avoid the issue
-> you fixed and the problem we find on the system with more CPUs.
->
-> The code draft is like this:
->
-> static inline void sk_mem_uncharge(struct sock *sk, int size)
-> {
->         int reclaimable;
->         int reclaim_threshold =3D SK_RECLAIM_THRESHOLD;
->
->         if (!sk_has_account(sk))
->                 return;
->         sk->sk_forward_alloc +=3D size;
->
->         if (mem_cgroup_sockets_enabled && sk->sk_memcg &&
->             mem_cgroup_under_socket_pressure(sk->sk_memcg)) {
->                 sk_mem_reclaim(sk);
->                 return;
->         }
->
->         reclaimable =3D sk->sk_forward_alloc - sk_unused_reserved_mem(sk)=
-;
->
->         if (reclaimable > reclaim_threshold) {
->                 reclaimable -=3D reclaim_threshold;
->                 __sk_mem_reclaim(sk, reclaimable);
->         }
-> }
->
-> I've run a test with the new code, the result looks good, it does not int=
-roduce
-> latency, RPS is the same.
->
-
-It will not work for sockets that are idle, after a burst.
-If we restore per socket caches, we will need a shrinker.
-Trust me, we do not want that kind of big hammer, crushing latencies.
-
-Have you tried to increase batch sizes ?
-
-Any kind of cache (even per-cpu) might need some adjustment when core
-count or expected traffic is increasing.
-This was somehow hinted in
-commit 1813e51eece0ad6f4aacaeb738e7cced46feb470
-Author: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Date:   Thu Aug 25 00:05:06 2022 +0000
-
-    memcg: increase MEMCG_CHARGE_BATCH to 64
-
-
-
-diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
-index 222d7370134c73e59fdbdf598ed8d66897dbbf1d..0418229d30c25d114132a1ed46a=
-c01358cf21424
-100644
---- a/include/linux/memcontrol.h
-+++ b/include/linux/memcontrol.h
-@@ -334,7 +334,7 @@ struct mem_cgroup {
-  * TODO: maybe necessary to use big numbers in big irons or dynamic
-based of the
-  * workload.
-  */
--#define MEMCG_CHARGE_BATCH 64U
-+#define MEMCG_CHARGE_BATCH 128U
-
- extern struct mem_cgroup *root_mem_cgroup;
-
-diff --git a/include/net/sock.h b/include/net/sock.h
-index 656ea89f60ff90d600d16f40302000db64057c64..82f6a288be650f886b207e6a5e6=
-2a1d5dda808b0
-100644
---- a/include/net/sock.h
-+++ b/include/net/sock.h
-@@ -1433,8 +1433,8 @@ sk_memory_allocated(const struct sock *sk)
-        return proto_memory_allocated(sk->sk_prot);
- }
-
--/* 1 MB per cpu, in page units */
--#define SK_MEMORY_PCPU_RESERVE (1 << (20 - PAGE_SHIFT))
-+/* 2 MB per cpu, in page units */
-+#define SK_MEMORY_PCPU_RESERVE (1 << (21 - PAGE_SHIFT))
-
- static inline void
- sk_memory_allocated_add(struct sock *sk, int amt)
-
-
-
-
-
-
-> > -----Original Message-----
-> > From: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-> > Sent: Wednesday, May 10, 2023 12:10 AM
-> > To: Eric Dumazet <edumazet-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>; Linux MM <linux-
-> > mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>; Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-> > Cc: Zhang, Cathy <cathy.zhang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>; Paolo Abeni
-> > <pabeni-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>; davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org; kuba-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org;
-> > Brandeburg, Jesse <jesse.brandeburg-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>; Srinivas, Suresh
-> > <suresh.srinivas-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>; Chen, Tim C <tim.c.chen-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>; You,
-> > Lizhen <lizhen.you-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>; eric.dumazet-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org;
-> > netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-> > Subject: Re: [PATCH net-next 1/2] net: Keep sk->sk_forward_alloc as a p=
-roper
-> > size
-> >
-> > +linux-mm & cgroup
-> >
-> > Thread: https://lore.kernel.org/all/20230508020801.10702-1-
-> > cathy.zhang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org/
-> >
-> > On Tue, May 9, 2023 at 8:43=E2=80=AFAM Eric Dumazet <edumazet-hpIqsD4AKldhl2p70BpVqQ@public.gmane.org=
-m>
-> > wrote:
-> > >
-> > [...]
-> > > Some mm experts should chime in, this is not a networking issue.
-> >
-> > Most of the MM folks are busy in LSFMM this week. I will take a look at=
- this
-> > soon.
+DQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogRXJpYyBEdW1hemV0IDxl
+ZHVtYXpldEBnb29nbGUuY29tPg0KPiBTZW50OiBXZWRuZXNkYXksIE1heSAxMCwgMjAyMyA3OjI1
+IFBNDQo+IFRvOiBaaGFuZywgQ2F0aHkgPGNhdGh5LnpoYW5nQGludGVsLmNvbT4NCj4gQ2M6IFNo
+YWtlZWwgQnV0dCA8c2hha2VlbGJAZ29vZ2xlLmNvbT47IExpbnV4IE1NIDxsaW51eC1tbUBrdmFj
+ay5vcmc+Ow0KPiBDZ3JvdXBzIDxjZ3JvdXBzQHZnZXIua2VybmVsLm9yZz47IFBhb2xvIEFiZW5p
+IDxwYWJlbmlAcmVkaGF0LmNvbT47DQo+IGRhdmVtQGRhdmVtbG9mdC5uZXQ7IGt1YmFAa2VybmVs
+Lm9yZzsgQnJhbmRlYnVyZywgSmVzc2UNCj4gPGplc3NlLmJyYW5kZWJ1cmdAaW50ZWwuY29tPjsg
+U3Jpbml2YXMsIFN1cmVzaA0KPiA8c3VyZXNoLnNyaW5pdmFzQGludGVsLmNvbT47IENoZW4sIFRp
+bSBDIDx0aW0uYy5jaGVuQGludGVsLmNvbT47IFlvdSwNCj4gTGl6aGVuIDxsaXpoZW4ueW91QGlu
+dGVsLmNvbT47IGVyaWMuZHVtYXpldEBnbWFpbC5jb207DQo+IG5ldGRldkB2Z2VyLmtlcm5lbC5v
+cmcNCj4gU3ViamVjdDogUmU6IFtQQVRDSCBuZXQtbmV4dCAxLzJdIG5ldDogS2VlcCBzay0+c2tf
+Zm9yd2FyZF9hbGxvYyBhcyBhIHByb3Blcg0KPiBzaXplDQo+IA0KPiBPbiBXZWQsIE1heSAxMCwg
+MjAyMyBhdCAxOjEx4oCvUE0gWmhhbmcsIENhdGh5IDxjYXRoeS56aGFuZ0BpbnRlbC5jb20+DQo+
+IHdyb3RlOg0KPiA+DQo+ID4gSGkgU2hha2VlbCwgRXJpYyBhbmQgYWxsLA0KPiA+DQo+ID4gSG93
+IGFib3V0IGFkZGluZyBtZW1vcnkgcHJlc3N1cmUgY2hlY2tpbmcgaW4gc2tfbWVtX3VuY2hhcmdl
+KCkgdG8NCj4gPiBkZWNpZGUgaWYga2VlcCBwYXJ0IG9mIG1lbW9yeSBvciBub3QsIHdoaWNoIGNh
+biBoZWxwIGF2b2lkIHRoZSBpc3N1ZQ0KPiA+IHlvdSBmaXhlZCBhbmQgdGhlIHByb2JsZW0gd2Ug
+ZmluZCBvbiB0aGUgc3lzdGVtIHdpdGggbW9yZSBDUFVzLg0KPiA+DQo+ID4gVGhlIGNvZGUgZHJh
+ZnQgaXMgbGlrZSB0aGlzOg0KPiA+DQo+ID4gc3RhdGljIGlubGluZSB2b2lkIHNrX21lbV91bmNo
+YXJnZShzdHJ1Y3Qgc29jayAqc2ssIGludCBzaXplKSB7DQo+ID4gICAgICAgICBpbnQgcmVjbGFp
+bWFibGU7DQo+ID4gICAgICAgICBpbnQgcmVjbGFpbV90aHJlc2hvbGQgPSBTS19SRUNMQUlNX1RI
+UkVTSE9MRDsNCj4gPg0KPiA+ICAgICAgICAgaWYgKCFza19oYXNfYWNjb3VudChzaykpDQo+ID4g
+ICAgICAgICAgICAgICAgIHJldHVybjsNCj4gPiAgICAgICAgIHNrLT5za19mb3J3YXJkX2FsbG9j
+ICs9IHNpemU7DQo+ID4NCj4gPiAgICAgICAgIGlmIChtZW1fY2dyb3VwX3NvY2tldHNfZW5hYmxl
+ZCAmJiBzay0+c2tfbWVtY2cgJiYNCj4gPiAgICAgICAgICAgICBtZW1fY2dyb3VwX3VuZGVyX3Nv
+Y2tldF9wcmVzc3VyZShzay0+c2tfbWVtY2cpKSB7DQo+ID4gICAgICAgICAgICAgICAgIHNrX21l
+bV9yZWNsYWltKHNrKTsNCj4gPiAgICAgICAgICAgICAgICAgcmV0dXJuOw0KPiA+ICAgICAgICAg
+fQ0KPiA+DQo+ID4gICAgICAgICByZWNsYWltYWJsZSA9IHNrLT5za19mb3J3YXJkX2FsbG9jIC0N
+Cj4gPiBza191bnVzZWRfcmVzZXJ2ZWRfbWVtKHNrKTsNCj4gPg0KPiA+ICAgICAgICAgaWYgKHJl
+Y2xhaW1hYmxlID4gcmVjbGFpbV90aHJlc2hvbGQpIHsNCj4gPiAgICAgICAgICAgICAgICAgcmVj
+bGFpbWFibGUgLT0gcmVjbGFpbV90aHJlc2hvbGQ7DQo+ID4gICAgICAgICAgICAgICAgIF9fc2tf
+bWVtX3JlY2xhaW0oc2ssIHJlY2xhaW1hYmxlKTsNCj4gPiAgICAgICAgIH0NCj4gPiB9DQo+ID4N
+Cj4gPiBJJ3ZlIHJ1biBhIHRlc3Qgd2l0aCB0aGUgbmV3IGNvZGUsIHRoZSByZXN1bHQgbG9va3Mg
+Z29vZCwgaXQgZG9lcyBub3QNCj4gPiBpbnRyb2R1Y2UgbGF0ZW5jeSwgUlBTIGlzIHRoZSBzYW1l
+Lg0KPiA+DQo+IA0KPiBJdCB3aWxsIG5vdCB3b3JrIGZvciBzb2NrZXRzIHRoYXQgYXJlIGlkbGUs
+IGFmdGVyIGEgYnVyc3QuDQo+IElmIHdlIHJlc3RvcmUgcGVyIHNvY2tldCBjYWNoZXMsIHdlIHdp
+bGwgbmVlZCBhIHNocmlua2VyLg0KPiBUcnVzdCBtZSwgd2UgZG8gbm90IHdhbnQgdGhhdCBraW5k
+IG9mIGJpZyBoYW1tZXIsIGNydXNoaW5nIGxhdGVuY2llcy4NCj4gDQo+IEhhdmUgeW91IHRyaWVk
+IHRvIGluY3JlYXNlIGJhdGNoIHNpemVzID8NCg0KSSBqdXMgcGlja2VkIHVwIDI1NiBhbmQgMTAy
+NCBmb3IgYSB0cnksIGJ1dCBubyBoZWxwLCB0aGUgb3ZlcmhlYWQgc3RpbGwgZXhpc3RzLg0KDQo+
+IA0KPiBBbnkga2luZCBvZiBjYWNoZSAoZXZlbiBwZXItY3B1KSBtaWdodCBuZWVkIHNvbWUgYWRq
+dXN0bWVudCB3aGVuIGNvcmUNCj4gY291bnQgb3IgZXhwZWN0ZWQgdHJhZmZpYyBpcyBpbmNyZWFz
+aW5nLg0KPiBUaGlzIHdhcyBzb21laG93IGhpbnRlZCBpbg0KPiBjb21taXQgMTgxM2U1MWVlY2Uw
+YWQ2ZjRhYWNhZWI3MzhlN2NjZWQ0NmZlYjQ3MA0KPiBBdXRob3I6IFNoYWtlZWwgQnV0dCA8c2hh
+a2VlbGJAZ29vZ2xlLmNvbT4NCj4gRGF0ZTogICBUaHUgQXVnIDI1IDAwOjA1OjA2IDIwMjIgKzAw
+MDANCj4gDQo+ICAgICBtZW1jZzogaW5jcmVhc2UgTUVNQ0dfQ0hBUkdFX0JBVENIIHRvIDY0DQo+
+IA0KPiANCj4gDQo+IGRpZmYgLS1naXQgYS9pbmNsdWRlL2xpbnV4L21lbWNvbnRyb2wuaCBiL2lu
+Y2x1ZGUvbGludXgvbWVtY29udHJvbC5oIGluZGV4DQo+IDIyMmQ3MzcwMTM0YzczZTU5ZmRiZGY1
+OThlZDhkNjY4OTdkYmJmMWQuLjA0MTgyMjlkMzBjMjVkMTE0MTMyYTFlDQo+IGQ0NmFjMDEzNThj
+ZjIxNDI0DQo+IDEwMDY0NA0KPiAtLS0gYS9pbmNsdWRlL2xpbnV4L21lbWNvbnRyb2wuaA0KPiAr
+KysgYi9pbmNsdWRlL2xpbnV4L21lbWNvbnRyb2wuaA0KPiBAQCAtMzM0LDcgKzMzNCw3IEBAIHN0
+cnVjdCBtZW1fY2dyb3VwIHsNCj4gICAqIFRPRE86IG1heWJlIG5lY2Vzc2FyeSB0byB1c2UgYmln
+IG51bWJlcnMgaW4gYmlnIGlyb25zIG9yIGR5bmFtaWMgYmFzZWQNCj4gb2YgdGhlDQo+ICAgKiB3
+b3JrbG9hZC4NCj4gICAqLw0KPiAtI2RlZmluZSBNRU1DR19DSEFSR0VfQkFUQ0ggNjRVDQo+ICsj
+ZGVmaW5lIE1FTUNHX0NIQVJHRV9CQVRDSCAxMjhVDQo+IA0KPiAgZXh0ZXJuIHN0cnVjdCBtZW1f
+Y2dyb3VwICpyb290X21lbV9jZ3JvdXA7DQo+IA0KPiBkaWZmIC0tZ2l0IGEvaW5jbHVkZS9uZXQv
+c29jay5oIGIvaW5jbHVkZS9uZXQvc29jay5oIGluZGV4DQo+IDY1NmVhODlmNjBmZjkwZDYwMGQx
+NmY0MDMwMjAwMGRiNjQwNTdjNjQuLjgyZjZhMjg4YmU2NTBmODg2YjIwN2U2YQ0KPiA1ZTYyYTFk
+NWRkYTgwOGIwDQo+IDEwMDY0NA0KPiAtLS0gYS9pbmNsdWRlL25ldC9zb2NrLmgNCj4gKysrIGIv
+aW5jbHVkZS9uZXQvc29jay5oDQo+IEBAIC0xNDMzLDggKzE0MzMsOCBAQCBza19tZW1vcnlfYWxs
+b2NhdGVkKGNvbnN0IHN0cnVjdCBzb2NrICpzaykNCj4gICAgICAgICByZXR1cm4gcHJvdG9fbWVt
+b3J5X2FsbG9jYXRlZChzay0+c2tfcHJvdCk7DQo+ICB9DQo+IA0KPiAtLyogMSBNQiBwZXIgY3B1
+LCBpbiBwYWdlIHVuaXRzICovDQo+IC0jZGVmaW5lIFNLX01FTU9SWV9QQ1BVX1JFU0VSVkUgKDEg
+PDwgKDIwIC0gUEFHRV9TSElGVCkpDQo+ICsvKiAyIE1CIHBlciBjcHUsIGluIHBhZ2UgdW5pdHMg
+Ki8NCj4gKyNkZWZpbmUgU0tfTUVNT1JZX1BDUFVfUkVTRVJWRSAoMSA8PCAoMjEgLSBQQUdFX1NI
+SUZUKSkNCj4gDQo+ICBzdGF0aWMgaW5saW5lIHZvaWQNCj4gIHNrX21lbW9yeV9hbGxvY2F0ZWRf
+YWRkKHN0cnVjdCBzb2NrICpzaywgaW50IGFtdCkNCj4gDQo+IA0KPiANCj4gDQo+IA0KPiANCj4g
+PiA+IC0tLS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0tDQo+ID4gPiBGcm9tOiBTaGFrZWVsIEJ1dHQg
+PHNoYWtlZWxiQGdvb2dsZS5jb20+DQo+ID4gPiBTZW50OiBXZWRuZXNkYXksIE1heSAxMCwgMjAy
+MyAxMjoxMCBBTQ0KPiA+ID4gVG86IEVyaWMgRHVtYXpldCA8ZWR1bWF6ZXRAZ29vZ2xlLmNvbT47
+IExpbnV4IE1NIDxsaW51eC0NCj4gPiA+IG1tQGt2YWNrLm9yZz47IENncm91cHMgPGNncm91cHNA
+dmdlci5rZXJuZWwub3JnPg0KPiA+ID4gQ2M6IFpoYW5nLCBDYXRoeSA8Y2F0aHkuemhhbmdAaW50
+ZWwuY29tPjsgUGFvbG8gQWJlbmkNCj4gPiA+IDxwYWJlbmlAcmVkaGF0LmNvbT47IGRhdmVtQGRh
+dmVtbG9mdC5uZXQ7IGt1YmFAa2VybmVsLm9yZzsNCj4gPiA+IEJyYW5kZWJ1cmcsIEplc3NlIDxq
+ZXNzZS5icmFuZGVidXJnQGludGVsLmNvbT47IFNyaW5pdmFzLCBTdXJlc2gNCj4gPiA+IDxzdXJl
+c2guc3Jpbml2YXNAaW50ZWwuY29tPjsgQ2hlbiwgVGltIEMgPHRpbS5jLmNoZW5AaW50ZWwuY29t
+PjsNCj4gPiA+IFlvdSwgTGl6aGVuIDxsaXpoZW4ueW91QGludGVsLmNvbT47IGVyaWMuZHVtYXpl
+dEBnbWFpbC5jb207DQo+ID4gPiBuZXRkZXZAdmdlci5rZXJuZWwub3JnDQo+ID4gPiBTdWJqZWN0
+OiBSZTogW1BBVENIIG5ldC1uZXh0IDEvMl0gbmV0OiBLZWVwIHNrLT5za19mb3J3YXJkX2FsbG9j
+IGFzDQo+ID4gPiBhIHByb3BlciBzaXplDQo+ID4gPg0KPiA+ID4gK2xpbnV4LW1tICYgY2dyb3Vw
+DQo+ID4gPg0KPiA+ID4gVGhyZWFkOiBodHRwczovL2xvcmUua2VybmVsLm9yZy9hbGwvMjAyMzA1
+MDgwMjA4MDEuMTA3MDItMS0NCj4gPiA+IGNhdGh5LnpoYW5nQGludGVsLmNvbS8NCj4gPiA+DQo+
+ID4gPiBPbiBUdWUsIE1heSA5LCAyMDIzIGF0IDg6NDPigK9BTSBFcmljIER1bWF6ZXQgPGVkdW1h
+emV0QGdvb2dsZS5jb20+DQo+ID4gPiB3cm90ZToNCj4gPiA+ID4NCj4gPiA+IFsuLi5dDQo+ID4g
+PiA+IFNvbWUgbW0gZXhwZXJ0cyBzaG91bGQgY2hpbWUgaW4sIHRoaXMgaXMgbm90IGEgbmV0d29y
+a2luZyBpc3N1ZS4NCj4gPiA+DQo+ID4gPiBNb3N0IG9mIHRoZSBNTSBmb2xrcyBhcmUgYnVzeSBp
+biBMU0ZNTSB0aGlzIHdlZWsuIEkgd2lsbCB0YWtlIGEgbG9vaw0KPiA+ID4gYXQgdGhpcyBzb29u
+Lg0K
