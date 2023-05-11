@@ -1,31 +1,250 @@
-From: Yu Kuai <yukuai1-XF6JlduFytWkHkcT6e4Xnw@public.gmane.org>
-Subject: [PATCH -next 0/6] blk-wbt: minor fix and cleanup
-Date: Thu, 11 May 2023 09:45:03 +0800
-Message-ID: <20230511014509.679482-1-yukuai1@huaweicloud.com>
+From: Yu Kuai <yukuai1@huaweicloud.com>
+Subject: [PATCH -next 2/6] blk-wbt: don't create wbt sysfs entry if CONFIG_BLK_WBT is disabled
+Date: Thu, 11 May 2023 09:45:05 +0800
+Message-ID: <20230511014509.679482-3-yukuai1@huaweicloud.com>
+References: <20230511014509.679482-1-yukuai1@huaweicloud.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <linux-block-owner@vger.kernel.org>
+In-Reply-To: <20230511014509.679482-1-yukuai1@huaweicloud.com>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: hch-jcswGhMUV9g@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, josef-DigfWCa+lFGyeJad7bwFQA@public.gmane.org, axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, yukuai1-XF6JlduFytWkHkcT6e4Xnw@public.gmane.org, yi.zhang-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, yangerkun-hv44wF8Li93QT0dZR+AlfA@public.gmane.org
+To: hch@lst.de, tj@kernel.org, josef@toxicpanda.com, axboe@kernel.dk, yukuai3@huawei.com
+Cc: cgroups@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, yukuai1@huaweicloud.com, yi.zhang@huawei.com, yangerkun@huawei.com
 
-From: Yu Kuai <yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+From: Yu Kuai <yukuai3@huawei.com>
 
-Yu Kuai (6):
-  blk-wbt: fix that wbt can't be disabled by default
-  blk-wbt: don't create wbt sysfs entry if CONFIG_BLK_WBT is disabled
-  blk-wbt: don't enable wbt for bio based device
-  blk-wbt: remove deadcode to handle wbt enable/disable with io inflight
-  blk-wbt: cleanup rwb_enabled() and wbt_disabled()
-  blk-iocost: move wbt_enable/disable_default() out of spinlock
+sysfs entry /sys/block/[device]/queue/wbt_lat_usec will be created even
+if CONFIG_BLK_WBT is disabled, while read and write will always fail.
+It doesn't make sense to create a sysfs entry that can't be accessed,
+so don't create such entry.
 
- block/blk-iocost.c |   7 ++-
- block/blk-sysfs.c  | 147 ++++++++++++++++++++++++---------------------
- block/blk-wbt.c    |  26 ++------
- block/blk-wbt.h    |  19 ------
- 4 files changed, 88 insertions(+), 111 deletions(-)
+Signed-off-by: Yu Kuai <yukuai3@huawei.com>
+---
+ block/blk-sysfs.c | 143 ++++++++++++++++++++++++----------------------
+ block/blk-wbt.h   |  19 ------
+ 2 files changed, 74 insertions(+), 88 deletions(-)
 
+diff --git a/block/blk-sysfs.c b/block/blk-sysfs.c
+index a64208583853..6c1c4ba66bc0 100644
+--- a/block/blk-sysfs.c
++++ b/block/blk-sysfs.c
+@@ -47,19 +47,6 @@ queue_var_store(unsigned long *var, const char *page, size_t count)
+ 	return count;
+ }
+ 
+-static ssize_t queue_var_store64(s64 *var, const char *page)
+-{
+-	int err;
+-	s64 v;
+-
+-	err = kstrtos64(page, 10, &v);
+-	if (err < 0)
+-		return err;
+-
+-	*var = v;
+-	return 0;
+-}
+-
+ static ssize_t queue_requests_show(struct request_queue *q, char *page)
+ {
+ 	return queue_var_show(q->nr_requests, page);
+@@ -451,61 +438,6 @@ static ssize_t queue_io_timeout_store(struct request_queue *q, const char *page,
+ 	return count;
+ }
+ 
+-static ssize_t queue_wb_lat_show(struct request_queue *q, char *page)
+-{
+-	if (!wbt_rq_qos(q))
+-		return -EINVAL;
+-
+-	if (wbt_disabled(q))
+-		return sprintf(page, "0\n");
+-
+-	return sprintf(page, "%llu\n", div_u64(wbt_get_min_lat(q), 1000));
+-}
+-
+-static ssize_t queue_wb_lat_store(struct request_queue *q, const char *page,
+-				  size_t count)
+-{
+-	struct rq_qos *rqos;
+-	ssize_t ret;
+-	s64 val;
+-
+-	ret = queue_var_store64(&val, page);
+-	if (ret < 0)
+-		return ret;
+-	if (val < -1)
+-		return -EINVAL;
+-
+-	rqos = wbt_rq_qos(q);
+-	if (!rqos) {
+-		ret = wbt_init(q->disk);
+-		if (ret)
+-			return ret;
+-	}
+-
+-	if (val == -1)
+-		val = wbt_default_latency_nsec(q);
+-	else if (val >= 0)
+-		val *= 1000ULL;
+-
+-	if (wbt_get_min_lat(q) == val)
+-		return count;
+-
+-	/*
+-	 * Ensure that the queue is idled, in case the latency update
+-	 * ends up either enabling or disabling wbt completely. We can't
+-	 * have IO inflight if that happens.
+-	 */
+-	blk_mq_freeze_queue(q);
+-	blk_mq_quiesce_queue(q);
+-
+-	wbt_set_min_lat(q, val);
+-
+-	blk_mq_unquiesce_queue(q);
+-	blk_mq_unfreeze_queue(q);
+-
+-	return count;
+-}
+-
+ static ssize_t queue_wc_show(struct request_queue *q, char *page)
+ {
+ 	if (test_bit(QUEUE_FLAG_WC, &q->queue_flags))
+@@ -598,7 +530,6 @@ QUEUE_RW_ENTRY(queue_wc, "write_cache");
+ QUEUE_RO_ENTRY(queue_fua, "fua");
+ QUEUE_RO_ENTRY(queue_dax, "dax");
+ QUEUE_RW_ENTRY(queue_io_timeout, "io_timeout");
+-QUEUE_RW_ENTRY(queue_wb_lat, "wbt_lat_usec");
+ QUEUE_RO_ENTRY(queue_virt_boundary_mask, "virt_boundary_mask");
+ QUEUE_RO_ENTRY(queue_dma_alignment, "dma_alignment");
+ 
+@@ -617,6 +548,78 @@ QUEUE_RW_ENTRY(queue_iostats, "iostats");
+ QUEUE_RW_ENTRY(queue_random, "add_random");
+ QUEUE_RW_ENTRY(queue_stable_writes, "stable_writes");
+ 
++#ifdef CONFIG_BLK_WBT
++static ssize_t queue_var_store64(s64 *var, const char *page)
++{
++	int err;
++	s64 v;
++
++	err = kstrtos64(page, 10, &v);
++	if (err < 0)
++		return err;
++
++	*var = v;
++	return 0;
++}
++
++static ssize_t queue_wb_lat_show(struct request_queue *q, char *page)
++{
++	if (!wbt_rq_qos(q))
++		return -EINVAL;
++
++	if (wbt_disabled(q))
++		return sprintf(page, "0\n");
++
++	return sprintf(page, "%llu\n", div_u64(wbt_get_min_lat(q), 1000));
++}
++
++static ssize_t queue_wb_lat_store(struct request_queue *q, const char *page,
++				  size_t count)
++{
++	struct rq_qos *rqos;
++	ssize_t ret;
++	s64 val;
++
++	ret = queue_var_store64(&val, page);
++	if (ret < 0)
++		return ret;
++	if (val < -1)
++		return -EINVAL;
++
++	rqos = wbt_rq_qos(q);
++	if (!rqos) {
++		ret = wbt_init(q->disk);
++		if (ret)
++			return ret;
++	}
++
++	if (val == -1)
++		val = wbt_default_latency_nsec(q);
++	else if (val >= 0)
++		val *= 1000ULL;
++
++	if (wbt_get_min_lat(q) == val)
++		return count;
++
++	/*
++	 * Ensure that the queue is idled, in case the latency update
++	 * ends up either enabling or disabling wbt completely. We can't
++	 * have IO inflight if that happens.
++	 */
++	blk_mq_freeze_queue(q);
++	blk_mq_quiesce_queue(q);
++
++	wbt_set_min_lat(q, val);
++
++	blk_mq_unquiesce_queue(q);
++	blk_mq_unfreeze_queue(q);
++
++	return count;
++}
++
++QUEUE_RW_ENTRY(queue_wb_lat, "wbt_lat_usec");
++#endif
++
+ static struct attribute *queue_attrs[] = {
+ 	&queue_requests_entry.attr,
+ 	&queue_ra_entry.attr,
+@@ -655,7 +658,9 @@ static struct attribute *queue_attrs[] = {
+ 	&queue_wc_entry.attr,
+ 	&queue_fua_entry.attr,
+ 	&queue_dax_entry.attr,
++#ifdef CONFIG_BLK_WBT
+ 	&queue_wb_lat_entry.attr,
++#endif
+ 	&queue_poll_delay_entry.attr,
+ 	&queue_io_timeout_entry.attr,
+ #ifdef CONFIG_BLK_DEV_THROTTLING_LOW
+diff --git a/block/blk-wbt.h b/block/blk-wbt.h
+index ba6cca5849a6..8a029e138f7a 100644
+--- a/block/blk-wbt.h
++++ b/block/blk-wbt.h
+@@ -18,10 +18,6 @@ u64 wbt_default_latency_nsec(struct request_queue *);
+ 
+ #else
+ 
+-static inline int wbt_init(struct gendisk *disk)
+-{
+-	return -EINVAL;
+-}
+ static inline void wbt_disable_default(struct gendisk *disk)
+ {
+ }
+@@ -31,21 +27,6 @@ static inline void wbt_enable_default(struct gendisk *disk)
+ static inline void wbt_set_write_cache(struct request_queue *q, bool wc)
+ {
+ }
+-static inline u64 wbt_get_min_lat(struct request_queue *q)
+-{
+-	return 0;
+-}
+-static inline void wbt_set_min_lat(struct request_queue *q, u64 val)
+-{
+-}
+-static inline u64 wbt_default_latency_nsec(struct request_queue *q)
+-{
+-	return 0;
+-}
+-static inline bool wbt_disabled(struct request_queue *q)
+-{
+-	return true;
+-}
+ 
+ #endif /* CONFIG_BLK_WBT */
+ 
 -- 
 2.39.2
 
