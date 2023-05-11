@@ -1,10 +1,8 @@
-From: "Zhang, Cathy" <cathy.zhang@intel.com>
-Subject: RE: [PATCH net-next 1/2] net: Keep sk->sk_forward_alloc as a proper
- size
-Date: Thu, 11 May 2023 06:59:19 +0000
-Message-ID: <IA0PR11MB7355E486112E922AA6095CCCFC749@IA0PR11MB7355.namprd11.prod.outlook.com>
-References: <20230508020801.10702-1-cathy.zhang@intel.com>
- <20230508020801.10702-2-cathy.zhang@intel.com>
+From: Eric Dumazet <edumazet-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH net-next 1/2] net: Keep sk->sk_forward_alloc as a proper size
+Date: Thu, 11 May 2023 09:50:30 +0200
+Message-ID: <CANn89iJbAGnZd42SVZEYWFLYVbmHM3p2UDawUKxUBhVDH5A2=A@mail.gmail.com>
+References: <20230508020801.10702-1-cathy.zhang@intel.com> <20230508020801.10702-2-cathy.zhang@intel.com>
  <3887b08ac0e55e27a24d2f66afcfff1961ed9b13.camel@redhat.com>
  <CH3PR11MB73459006FCE3887E1EA3B82FFC769@CH3PR11MB7345.namprd11.prod.outlook.com>
  <CH3PR11MB73456D792EC6E7614E2EF14DFC769@CH3PR11MB7345.namprd11.prod.outlook.com>
@@ -19,104 +17,149 @@ References: <20230508020801.10702-1-cathy.zhang@intel.com>
  <CH3PR11MB734502756F495CB9C520494FFC779@CH3PR11MB7345.namprd11.prod.outlook.com>
  <CALvZod4n+Kwa1sOV9jxiEMTUoO7MaCGWz=wT3MHOuj4t-+9S6Q@mail.gmail.com>
  <CH3PR11MB73454C44EC8BCD43685BCB58FC749@CH3PR11MB7345.namprd11.prod.outlook.com>
+ <IA0PR11MB7355E486112E922AA6095CCCFC749@IA0PR11MB7355.namprd11.prod.outlook.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: base64
-Return-path: <netdev+bounces-1673-gl-netdev-2=m.gmane-mx.org@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1683788443; x=1715324443;
-  h=from:to:cc:subject:date:message-id:references:
-   in-reply-to:content-transfer-encoding:mime-version;
-  bh=7BeTkFPa3D2zQxZy5atdaRurpQ4t6WWMO9ZXt2iSjuk=;
-  b=OKaZo8r9ajoRb2yZVafqABf1nmlgbX+MlLXaLgyPNqpTlN9qfmoCGQ0J
-   PO907+iceCCaUxsrRBZ8t2xpio36cCJfXqg4/GxA4afYIWa1SGDyN079C
-   7IkZvJdfQzjL9bNtkDaGqD2xDNSOlQO2GvPWbfVkXxkUK0OM5HXrfwHVM
-   VZuiAd5V/+YNKR/QGY1xcMbraSMUJxVp15Nmf4jKBcQnrRDPU0XrIT/np
-   ip54hARsAZScagVZfg0sp1+qSnmNGTP1y1DWQDOHAs+RAxs5qZvOxu2/9
-   C1md/JOlTDItDQ594YRKZe5MSfl0uFbFA6WhF89hnR9Jv/0D6904CrEd4
-   g==;
-In-Reply-To: <CH3PR11MB73454C44EC8BCD43685BCB58FC749@CH3PR11MB7345.namprd11.prod.outlook.com>
-Content-Language: en-US
-List-Id: <cgroups.vger.kernel.org>
-List-Subscribe: <mailto:netdev+subscribe@vger.kernel.org>
-List-Unsubscribe: <mailto:netdev+unsubscribe@vger.kernel.org>
-Content-Type: text/plain; charset="windows-1252"
-To: Shakeel Butt <shakeelb@google.com>
-Cc: Eric Dumazet <edumazet@google.com>, Linux MM <linux-mm@kvack.org>, Cgroups <cgroups@vger.kernel.org>, Paolo Abeni <pabeni@redhat.com>, "davem@davemloft.net" <davem@davemloft.net>, "kuba@kernel.org" <kuba@kernel.org>, "Brandeburg, Jesse" <jesse.brandeburg@intel.com>, "Srinivas, Suresh" <suresh.srinivas@intel.com>, "Chen, Tim C" <tim.c.chen@intel.com>, "You, Lizhen" <lizhen.you@intel.com>, "eric.dumazet@gmail.com" <eric.dumazet@gmail.com>, "netdev@vger.kernel.org" <netdev@vger.kernel.org>
+Content-Transfer-Encoding: quoted-printable
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20221208; t=1683791443; x=1686383443;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=ybwF8qJFWAbvIvu+SC1YZHKFpjOW6AAAy4k7z/ztuq8=;
+        b=TpTvOo69AQQX6ckCLnMGs2C1Ya6+FtQsvhiEZukT0WOHLPa07jBGET3X+nbAMr1oII
+         R527Pl+B48yYnKtX27XeGJfugo+z5bSUH/sqfd0dIjeUa2XBeE4EFu2rts/BQl3iVIHv
+         zqBO4Z1XEHk40zwW6plDhl55btXvYaBAbhZBcW+ElbgJjm1k8mQoq42qjt14t2ZS4HNz
+         zVt5v/M/buMkXDJYdtgaXtOOYZDXh4FaSoDQTV5QSDy5hstp+KI+/WouYOz7vbw6Jjxb
+         bqYabyihtnyc6iqaudJsjdtgibb89uBOxRZNM3ODJMMgZSAsSYA8FuO80G5H2zzEAbwR
+         9l4A==
+In-Reply-To: <IA0PR11MB7355E486112E922AA6095CCCFC749-py0Qfd72Ncwkr2bXB6wcV5PPoyLQLiKMvxpqHgZTriW3zl9H0oFU5g@public.gmane.org>
+List-ID: <cgroups.vger.kernel.org>
+Content-Type: text/plain; charset="utf-8"
+To: "Zhang, Cathy" <cathy.zhang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+Cc: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Linux MM <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Paolo Abeni <pabeni-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org" <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>, "kuba-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org" <kuba-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, "Brandeburg, Jesse" <jesse.brandeburg-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, "Srinivas, Suresh" <suresh.srinivas-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, "Chen, Tim C" <tim.c.chen-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, "You, Lizhen" <lizhen.you-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, "eric.dumazet-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org" <eric.dumazet-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, "netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 
-DQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogWmhhbmcsIENhdGh5DQo+
-IFNlbnQ6IFRodXJzZGF5LCBNYXkgMTEsIDIwMjMgODo1MyBBTQ0KPiBUbzogU2hha2VlbCBCdXR0
-IDxzaGFrZWVsYkBnb29nbGUuY29tPg0KPiBDYzogRXJpYyBEdW1hemV0IDxlZHVtYXpldEBnb29n
-bGUuY29tPjsgTGludXggTU0gPGxpbnV4LQ0KPiBtbUBrdmFjay5vcmc+OyBDZ3JvdXBzIDxjZ3Jv
-dXBzQHZnZXIua2VybmVsLm9yZz47IFBhb2xvIEFiZW5pDQo+IDxwYWJlbmlAcmVkaGF0LmNvbT47
-IGRhdmVtQGRhdmVtbG9mdC5uZXQ7IGt1YmFAa2VybmVsLm9yZzsNCj4gQnJhbmRlYnVyZywgSmVz
-c2UgPGplc3NlLmJyYW5kZWJ1cmdAaW50ZWwuY29tPjsgU3Jpbml2YXMsIFN1cmVzaA0KPiA8c3Vy
-ZXNoLnNyaW5pdmFzQGludGVsLmNvbT47IENoZW4sIFRpbSBDIDx0aW0uYy5jaGVuQGludGVsLmNv
-bT47IFlvdSwNCj4gTGl6aGVuIDxMaXpoZW4uWW91QGludGVsLmNvbT47IGVyaWMuZHVtYXpldEBn
-bWFpbC5jb207DQo+IG5ldGRldkB2Z2VyLmtlcm5lbC5vcmcNCj4gU3ViamVjdDogUkU6IFtQQVRD
-SCBuZXQtbmV4dCAxLzJdIG5ldDogS2VlcCBzay0+c2tfZm9yd2FyZF9hbGxvYyBhcyBhIHByb3Bl
-cg0KPiBzaXplDQo+IA0KPiANCj4gDQo+ID4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4g
-PiBGcm9tOiBTaGFrZWVsIEJ1dHQgPHNoYWtlZWxiQGdvb2dsZS5jb20+DQo+ID4gU2VudDogVGh1
-cnNkYXksIE1heSAxMSwgMjAyMyAzOjAwIEFNDQo+ID4gVG86IFpoYW5nLCBDYXRoeSA8Y2F0aHku
-emhhbmdAaW50ZWwuY29tPg0KPiA+IENjOiBFcmljIER1bWF6ZXQgPGVkdW1hemV0QGdvb2dsZS5j
-b20+OyBMaW51eCBNTSA8bGludXgtDQo+ID4gbW1Aa3ZhY2sub3JnPjsgQ2dyb3VwcyA8Y2dyb3Vw
-c0B2Z2VyLmtlcm5lbC5vcmc+OyBQYW9sbyBBYmVuaQ0KPiA+IDxwYWJlbmlAcmVkaGF0LmNvbT47
-IGRhdmVtQGRhdmVtbG9mdC5uZXQ7IGt1YmFAa2VybmVsLm9yZzsNCj4gQnJhbmRlYnVyZywNCj4g
-PiBKZXNzZSA8amVzc2UuYnJhbmRlYnVyZ0BpbnRlbC5jb20+OyBTcmluaXZhcywgU3VyZXNoDQo+
-ID4gPHN1cmVzaC5zcmluaXZhc0BpbnRlbC5jb20+OyBDaGVuLCBUaW0gQyA8dGltLmMuY2hlbkBp
-bnRlbC5jb20+OyBZb3UsDQo+ID4gTGl6aGVuIDxsaXpoZW4ueW91QGludGVsLmNvbT47IGVyaWMu
-ZHVtYXpldEBnbWFpbC5jb207DQo+ID4gbmV0ZGV2QHZnZXIua2VybmVsLm9yZw0KPiA+IFN1Ympl
-Y3Q6IFJlOiBbUEFUQ0ggbmV0LW5leHQgMS8yXSBuZXQ6IEtlZXAgc2stPnNrX2ZvcndhcmRfYWxs
-b2MgYXMgYQ0KPiA+IHByb3BlciBzaXplDQo+ID4NCj4gPiBPbiBXZWQsIE1heSAxMCwgMjAyMyBh
-dCA5OjA54oCvQU0gWmhhbmcsIENhdGh5IDxjYXRoeS56aGFuZ0BpbnRlbC5jb20+DQo+ID4gd3Jv
-dGU6DQo+ID4gPg0KPiA+ID4NCj4gPiBbLi4uXQ0KPiA+ID4gPiA+ID4NCj4gPiA+ID4gPiA+IEhh
-dmUgeW91IHRyaWVkIHRvIGluY3JlYXNlIGJhdGNoIHNpemVzID8NCj4gPiA+ID4gPg0KPiA+ID4g
-PiA+IEkganVzIHBpY2tlZCB1cCAyNTYgYW5kIDEwMjQgZm9yIGEgdHJ5LCBidXQgbm8gaGVscCwg
-dGhlDQo+ID4gPiA+ID4gb3ZlcmhlYWQgc3RpbGwNCj4gPiBleGlzdHMuDQo+ID4gPiA+DQo+ID4g
-PiA+IFRoaXMgbWFrZXMgbm8gc2Vuc2UgYXQgYWxsLg0KPiA+ID4NCj4gPiA+IEVyaWMsDQo+ID4g
-Pg0KPiA+ID4gSSBhZGRlZCBhIHByX2luZm8gaW4gdHJ5X2NoYXJnZV9tZW1jZygpIHRvIHByaW50
-IG5yX3BhZ2VzIGlmDQo+ID4gPiBucl9wYWdlcw0KPiA+ID4gPj0gTUVNQ0dfQ0hBUkdFX0JBVENI
-LCBleGNlcHQgaXQgcHJpbnRzIDY0IGR1cmluZyB0aGUgaW5pdGlhbGl6YXRpb24NCj4gPiA+IG9m
-IGluc3RhbmNlcywgdGhlcmUgaXMgbm8gb3RoZXIgb3V0cHV0IGR1cmluZyB0aGUgcnVubmluZy4g
-VGhhdA0KPiA+ID4gbWVhbnMgbnJfcGFnZXMgaXMgbm90IG92ZXIgNjQsIEkgZ3Vlc3MgdGhhdCBt
-aWdodCBiZSB0aGUgcmVhc29uIHdoeQ0KPiA+ID4gdG8gaW5jcmVhc2UgTUVNQ0dfQ0hBUkdFX0JB
-VENIIGRvZXNuJ3QgYWZmZWN0IHRoaXMgY2FzZS4NCj4gPiA+DQo+ID4NCj4gPiBJIGFtIGFzc3Vt
-aW5nIHlvdSBpbmNyZWFzZWQgTUVNQ0dfQ0hBUkdFX0JBVENIIHRvIDI1NiBhbmQgMTAyNA0KPiBi
-dXQNCj4gPiB0aGF0IGRpZCBub3QgaGVscC4gVG8gbWUgdGhhdCBqdXN0IG1lYW5zIHRoZXJlIGlz
-IGEgZGlmZmVyZW50DQo+ID4gYm90dGxlbmVjayBpbiB0aGUgbWVtY2cgY2hhcmdpbmcgY29kZXBh
-dGguIENhbiB5b3UgcGxlYXNlIHNoYXJlIHRoZQ0KPiA+IHBlcmYgcHJvZmlsZT8gUGxlYXNlIG5v
-dGUgdGhhdCBtZW1jZyBjaGFyZ2luZyBkb2VzIGEgbG90IG9mIG90aGVyDQo+ID4gdGhpbmdzIGFz
-IHdlbGwgbGlrZSB1cGRhdGluZyBtZW1jZyBzdGF0cyBhbmQgY2hlY2tpbmcgKGFuZCBlbmZvcmNp
-bmcpDQo+ID4gbWVtb3J5LmhpZ2ggZXZlbiBpZiB5b3UgaGF2ZSBub3Qgc2V0IG1lbW9yeS5oaWdo
-Lg0KPiANCj4gVGhhbmtzIFNoYWtlZWwhIEkgd2lsbCBjaGVjayBtb3JlIGRldGFpbHMgb24gd2hh
-dCB5b3UgbWVudGlvbmVkLiBXZSB1c2UNCj4gInN1ZG8gcGVyZiB0b3AgLXAgJChkb2NrZXIgaW5z
-cGVjdCAtZiAne3suU3RhdGUuUGlkfX0nIG1lbWNhY2hlZF8yKSIgdG8NCj4gbW9uaXRvciBvbmUg
-b2YgdGhvc2UgaW5zdGFuY2VzLCBhbmQgYWxzbyB1c2UgInN1ZG8gcGVyZiB0b3AiIHRvIGNoZWNr
-IHRoZQ0KPiBvdmVyaGVhZCBmcm9tIHN5c3RlbSB3aWRlLg0KDQpIZXJlIGlzIHRoZSBhbm5vdGF0
-ZSBvdXRwdXQgb2YgcGVyZiB0b3AgZm9yIHRoZSB0aHJlZSBtZW1jZyBob3QgcGF0aHM6DQoNClNo
-b3dpbmcgY3ljbGVzIGZvciBwYWdlX2NvdW50ZXJfdHJ5X2NoYXJnZQ0KICBFdmVudHMgIFBjbnQg
-KD49NSUpDQogUGVyY2VudCB8ICAgICAgU291cmNlIGNvZGUgJiBEaXNhc3NlbWJseSBvZiBlbGYg
-Zm9yIGN5Y2xlcyAoNTQzMjg4IHNhbXBsZXMsIHBlcmNlbnQ6IGxvY2FsIHBlcmlvZCkNCi0tLS0t
-LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
-LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLQ0KICAgIDAuMDAgOiAgIGZmZmZm
-ZmZmODE0MTM4OGQ6ICAgICAgIG1vdiAgICAlcjEyLCVyYXgNCiAgIDc2LjgyIDogICBmZmZmZmZm
-ZjgxNDEzODkwOiAgICAgICBsb2NrIHhhZGQgJXJheCwoJXJieCkNCiAgIDIyLjEwIDogICBmZmZm
-ZmZmZjgxNDEzODk1OiAgICAgICBsZWEgICAgKCVyMTIsJXJheCwxKSwlcjE1DQoNCg0KU2hvd2lu
-ZyBjeWNsZXMgZm9yIHBhZ2VfY291bnRlcl9jYW5jZWwNCiAgRXZlbnRzICBQY250ICg+PTUlKQ0K
-IFBlcmNlbnQgfCAgICAgIFNvdXJjZSBjb2RlICYgRGlzYXNzZW1ibHkgb2YgZWxmIGZvciBjeWNs
-ZXMgKDEwMDQ3NDQgc2FtcGxlcywgcGVyY2VudDogbG9jYWwgcGVyaW9kKQ0KLS0tLS0tLS0tLS0t
-LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
-LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLQ0KICAgICAgICAgOiAxNjAgICAgICAgICAg
-ICAgIHJldHVybiBpICsgeGFkZCgmdi0+Y291bnRlciwgaSk7DQogICA3Ny40MiA6ICAgZmZmZmZm
-ZmY4MTQxMzc1OTogICAgICAgbG9jayB4YWRkICVyYXgsKCVyZGkpDQogICAyMi4zNCA6ICAgZmZm
-ZmZmZmY4MTQxMzc1ZTogICAgICAgc3ViICAgICVyc2ksJXJheA0KDQoNClNob3dpbmcgY3ljbGVz
-IGZvciB0cnlfY2hhcmdlX21lbWNnDQogIEV2ZW50cyAgUGNudCAoPj01JSkNCiBQZXJjZW50IHwg
-ICAgICBTb3VyY2UgY29kZSAmIERpc2Fzc2VtYmx5IG9mIGVsZiBmb3IgY3ljbGVzICgyNTY1MzEg
-c2FtcGxlcywgcGVyY2VudDogbG9jYWwgcGVyaW9kKQ0KLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
-LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
-LS0tLS0tLS0tLS0tLS0tLS0tDQogICAgICAgICA6IDIyICAgICAgICAgICAgICAgcmV0dXJuIF9f
-UkVBRF9PTkNFKCh2KS0+Y291bnRlcik7DQogICA3Ny41MyA6ICAgZmZmZmZmZmY4MTQxZGY4Njog
-ICAgICAgbW92ICAgIDB4MTAwKCVyMTMpLCVyZHgNCiAgICAgICAgIDogMjgyNiAgICAgICAgICAg
-ICBSRUFEX09OQ0UobWVtY2ctPm1lbW9yeS5oaWdoKTsNCiAgIDE5LjQ1IDogICBmZmZmZmZmZjgx
-NDFkZjhkOiAgICAgICBtb3YgICAgMHgxOTAoJXIxMyksJXJjeA0K
+On Thu, May 11, 2023 at 9:00=E2=80=AFAM Zhang, Cathy <cathy.zhang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org=
+> wrote:
+>
+>
+>
+> > -----Original Message-----
+> > From: Zhang, Cathy
+> > Sent: Thursday, May 11, 2023 8:53 AM
+> > To: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+> > Cc: Eric Dumazet <edumazet-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>; Linux MM <linux-
+> > mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>; Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>; Paolo Abeni
+> > <pabeni-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>; davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org; kuba-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org;
+> > Brandeburg, Jesse <jesse.brandeburg-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>; Srinivas, Suresh
+> > <suresh.srinivas-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>; Chen, Tim C <tim.c.chen-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>; You,
+> > Lizhen <Lizhen.You-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>; eric.dumazet-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org;
+> > netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+> > Subject: RE: [PATCH net-next 1/2] net: Keep sk->sk_forward_alloc as a p=
+roper
+> > size
+> >
+> >
+> >
+> > > -----Original Message-----
+> > > From: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+> > > Sent: Thursday, May 11, 2023 3:00 AM
+> > > To: Zhang, Cathy <cathy.zhang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+> > > Cc: Eric Dumazet <edumazet-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>; Linux MM <linux-
+> > > mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>; Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>; Paolo Abeni
+> > > <pabeni-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>; davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org; kuba-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org;
+> > Brandeburg,
+> > > Jesse <jesse.brandeburg-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>; Srinivas, Suresh
+> > > <suresh.srinivas-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>; Chen, Tim C <tim.c.chen-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>; You,
+> > > Lizhen <lizhen.you-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>; eric.dumazet-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org;
+> > > netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+> > > Subject: Re: [PATCH net-next 1/2] net: Keep sk->sk_forward_alloc as a
+> > > proper size
+> > >
+> > > On Wed, May 10, 2023 at 9:09=E2=80=AFAM Zhang, Cathy <cathy.zhang@int=
+el.com>
+> > > wrote:
+> > > >
+> > > >
+> > > [...]
+> > > > > > >
+> > > > > > > Have you tried to increase batch sizes ?
+> > > > > >
+> > > > > > I jus picked up 256 and 1024 for a try, but no help, the
+> > > > > > overhead still
+> > > exists.
+> > > > >
+> > > > > This makes no sense at all.
+> > > >
+> > > > Eric,
+> > > >
+> > > > I added a pr_info in try_charge_memcg() to print nr_pages if
+> > > > nr_pages
+> > > > >=3D MEMCG_CHARGE_BATCH, except it prints 64 during the initializat=
+ion
+> > > > of instances, there is no other output during the running. That
+> > > > means nr_pages is not over 64, I guess that might be the reason why
+> > > > to increase MEMCG_CHARGE_BATCH doesn't affect this case.
+> > > >
+> > >
+> > > I am assuming you increased MEMCG_CHARGE_BATCH to 256 and 1024
+> > but
+> > > that did not help. To me that just means there is a different
+> > > bottleneck in the memcg charging codepath. Can you please share the
+> > > perf profile? Please note that memcg charging does a lot of other
+> > > things as well like updating memcg stats and checking (and enforcing)
+> > > memory.high even if you have not set memory.high.
+> >
+> > Thanks Shakeel! I will check more details on what you mentioned. We use
+> > "sudo perf top -p $(docker inspect -f '{{.State.Pid}}' memcached_2)" to
+> > monitor one of those instances, and also use "sudo perf top" to check t=
+he
+> > overhead from system wide.
+>
+> Here is the annotate output of perf top for the three memcg hot paths:
+>
+> Showing cycles for page_counter_try_charge
+>   Events  Pcnt (>=3D5%)
+>  Percent |      Source code & Disassembly of elf for cycles (543288 sampl=
+es, percent: local period)
+> -------------------------------------------------------------------------=
+--------------------------
+>     0.00 :   ffffffff8141388d:       mov    %r12,%rax
+>    76.82 :   ffffffff81413890:       lock xadd %rax,(%rbx)
+>    22.10 :   ffffffff81413895:       lea    (%r12,%rax,1),%r15
+>
+>
+> Showing cycles for page_counter_cancel
+>   Events  Pcnt (>=3D5%)
+>  Percent |      Source code & Disassembly of elf for cycles (1004744 samp=
+les, percent: local period)
+> -------------------------------------------------------------------------=
+---------------------------
+>          : 160              return i + xadd(&v->counter, i);
+>    77.42 :   ffffffff81413759:       lock xadd %rax,(%rdi)
+>    22.34 :   ffffffff8141375e:       sub    %rsi,%rax
+>
+>
+> Showing cycles for try_charge_memcg
+>   Events  Pcnt (>=3D5%)
+>  Percent |      Source code & Disassembly of elf for cycles (256531 sampl=
+es, percent: local period)
+> -------------------------------------------------------------------------=
+--------------------------
+>          : 22               return __READ_ONCE((v)->counter);
+>    77.53 :   ffffffff8141df86:       mov    0x100(%r13),%rdx
+>          : 2826             READ_ONCE(memcg->memory.high);
+>    19.45 :   ffffffff8141df8d:       mov    0x190(%r13),%rcx
 
+This is rephrasing the info you gave earlier ?
+
+  16.77%  [kernel]            [k] page_counter_try_charge
+    16.56%  [kernel]            [k] page_counter_cancel
+    15.65%  [kernel]            [k] try_charge_memcg
+
+What matters here is a call graph.
+
+perf record -a -g sleep 5 # While the test is running
+perf report --no-children --stdio
+
+What precise kernel are you using btw ?
