@@ -1,48 +1,122 @@
-From: Muchun Song <songmuchun@bytedance.com>
-Subject: Re: [PATCH v3] blk-throttle: Fix io statistics for cgroup v1
-Date: Thu, 11 May 2023 14:38:00 +0800
-Message-ID: <CAMZfGtV8FUoBzhPjFu8V5=e=dQ3wRm+qK7S0HHCB22cjKDLAdQ@mail.gmail.com>
-References: <20230507170631.89607-1-hanjinke.666@bytedance.com>
+From: "Zhang, Cathy" <cathy.zhang@intel.com>
+Subject: RE: [PATCH net-next 1/2] net: Keep sk->sk_forward_alloc as a proper
+ size
+Date: Thu, 11 May 2023 06:59:19 +0000
+Message-ID: <IA0PR11MB7355E486112E922AA6095CCCFC749@IA0PR11MB7355.namprd11.prod.outlook.com>
+References: <20230508020801.10702-1-cathy.zhang@intel.com>
+ <20230508020801.10702-2-cathy.zhang@intel.com>
+ <3887b08ac0e55e27a24d2f66afcfff1961ed9b13.camel@redhat.com>
+ <CH3PR11MB73459006FCE3887E1EA3B82FFC769@CH3PR11MB7345.namprd11.prod.outlook.com>
+ <CH3PR11MB73456D792EC6E7614E2EF14DFC769@CH3PR11MB7345.namprd11.prod.outlook.com>
+ <CANn89iL6Ckuu9vOEvc7A9CBLGuh-EpbwFRxRAchV-6VFyhTUpg@mail.gmail.com>
+ <CH3PR11MB73458BB403D537CFA96FD8DDFC769@CH3PR11MB7345.namprd11.prod.outlook.com>
+ <CANn89iJvpgXTwGEiXAkFwY3j3RqVhNzJ_6_zmuRb4w7rUA_8Ug@mail.gmail.com>
+ <CALvZod6JRuWHftDcH0uw00v=yi_6BKspGCkDA4AbmzLHaLi2Fg@mail.gmail.com>
+ <CH3PR11MB7345ABB947E183AFB7C18322FC779@CH3PR11MB7345.namprd11.prod.outlook.com>
+ <CANn89i+9rQcGey+AJyhR02pTTBNhWN+P78e4a8knfC9F5sx0hQ@mail.gmail.com>
+ <CH3PR11MB73455A98A232920B322C3976FC779@CH3PR11MB7345.namprd11.prod.outlook.com>
+ <CANn89i+J+ciJGPkWAFKDwhzJERFJr9_2Or=ehpwSTYO14qzHmA@mail.gmail.com>
+ <CH3PR11MB734502756F495CB9C520494FFC779@CH3PR11MB7345.namprd11.prod.outlook.com>
+ <CALvZod4n+Kwa1sOV9jxiEMTUoO7MaCGWz=wT3MHOuj4t-+9S6Q@mail.gmail.com>
+ <CH3PR11MB73454C44EC8BCD43685BCB58FC749@CH3PR11MB7345.namprd11.prod.outlook.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-Return-path: <linux-block-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=bytedance.com; s=google; t=1683787117; x=1686379117;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=wYtaRcshlY3QmxEEqVJsJU+0bmCyXLBCJqkTVjmG1hA=;
-        b=d0SnZ+pjyye00WmokuVRn85o0hU1sSEe2pqirea4ZcrpkfnFfRYD5NIGNnwLArYw3e
-         iv64Az5W7Mu6DGr5zAJF0G8CcBCqF+sF384FS8jxP5axqWOpR9v+E5hN6C+C43h/hTNT
-         0Yx7lFxm3QbgqJZg7f+9vk4JZk/9f4SujuFsWm4dfd9cVPLYUwMwbnjJFjr+VvzXVno/
-         jRtlFY3mjWUXLzS3+M7/j9KC/kW7xmujUlxKN60lZpZQNRCgUXJwiyhSzBdtnmEbV+u8
-         spumpdd5/+/4H/V5/yepOz9LH8iOQZNj3AK2Py3JcECSr0I5tTJe9mQ7GWgdn6jT/Psc
-         i6uQ==
-In-Reply-To: <20230507170631.89607-1-hanjinke.666@bytedance.com>
-List-ID: <cgroups.vger.kernel.org>
+Content-Transfer-Encoding: base64
+Return-path: <netdev+bounces-1673-gl-netdev-2=m.gmane-mx.org@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1683788443; x=1715324443;
+  h=from:to:cc:subject:date:message-id:references:
+   in-reply-to:content-transfer-encoding:mime-version;
+  bh=7BeTkFPa3D2zQxZy5atdaRurpQ4t6WWMO9ZXt2iSjuk=;
+  b=OKaZo8r9ajoRb2yZVafqABf1nmlgbX+MlLXaLgyPNqpTlN9qfmoCGQ0J
+   PO907+iceCCaUxsrRBZ8t2xpio36cCJfXqg4/GxA4afYIWa1SGDyN079C
+   7IkZvJdfQzjL9bNtkDaGqD2xDNSOlQO2GvPWbfVkXxkUK0OM5HXrfwHVM
+   VZuiAd5V/+YNKR/QGY1xcMbraSMUJxVp15Nmf4jKBcQnrRDPU0XrIT/np
+   ip54hARsAZScagVZfg0sp1+qSnmNGTP1y1DWQDOHAs+RAxs5qZvOxu2/9
+   C1md/JOlTDItDQ594YRKZe5MSfl0uFbFA6WhF89hnR9Jv/0D6904CrEd4
+   g==;
+In-Reply-To: <CH3PR11MB73454C44EC8BCD43685BCB58FC749@CH3PR11MB7345.namprd11.prod.outlook.com>
+Content-Language: en-US
+List-Id: <cgroups.vger.kernel.org>
+List-Subscribe: <mailto:netdev+subscribe@vger.kernel.org>
+List-Unsubscribe: <mailto:netdev+unsubscribe@vger.kernel.org>
 Content-Type: text/plain; charset="windows-1252"
-To: Jinke Han <hanjinke.666@bytedance.com>
-Cc: tj@kernel.org, josef@toxicpanda.com, axboe@kernel.dk, cgroups@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, andrea.righi@canonical.com
+To: Shakeel Butt <shakeelb@google.com>
+Cc: Eric Dumazet <edumazet@google.com>, Linux MM <linux-mm@kvack.org>, Cgroups <cgroups@vger.kernel.org>, Paolo Abeni <pabeni@redhat.com>, "davem@davemloft.net" <davem@davemloft.net>, "kuba@kernel.org" <kuba@kernel.org>, "Brandeburg, Jesse" <jesse.brandeburg@intel.com>, "Srinivas, Suresh" <suresh.srinivas@intel.com>, "Chen, Tim C" <tim.c.chen@intel.com>, "You, Lizhen" <lizhen.you@intel.com>, "eric.dumazet@gmail.com" <eric.dumazet@gmail.com>, "netdev@vger.kernel.org" <netdev@vger.kernel.org>
 
-On Mon, May 8, 2023 at 1:07=E2=80=AFAM Jinke Han <hanjinke.666@bytedance.co=
-m> wrote:
->
-> From: Jinke Han <hanjinke.666@bytedance.com>
->
-> After commit f382fb0bcef4 ("block: remove legacy IO schedulers"),
-> blkio.throttle.io_serviced and blkio.throttle.io_service_bytes become
-> the only stable io stats interface of cgroup v1, and these statistics
-> are done in the blk-throttle code. But the current code only counts the
-> bios that are actually throttled. When the user does not add the throttle
-> limit, the io stats for cgroup v1 has nothing. I fix it according to the
-> statistical method of v2, and made it count all ios accurately.
->
-> Fixes: a7b36ee6ba29 ("block: move blk-throtl fast path inline")
-> Tested-by: Andrea Righi <andrea.righi@canonical.com>
-> Signed-off-by: Jinke Han <hanjinke.666@bytedance.com>
+DQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogWmhhbmcsIENhdGh5DQo+
+IFNlbnQ6IFRodXJzZGF5LCBNYXkgMTEsIDIwMjMgODo1MyBBTQ0KPiBUbzogU2hha2VlbCBCdXR0
+IDxzaGFrZWVsYkBnb29nbGUuY29tPg0KPiBDYzogRXJpYyBEdW1hemV0IDxlZHVtYXpldEBnb29n
+bGUuY29tPjsgTGludXggTU0gPGxpbnV4LQ0KPiBtbUBrdmFjay5vcmc+OyBDZ3JvdXBzIDxjZ3Jv
+dXBzQHZnZXIua2VybmVsLm9yZz47IFBhb2xvIEFiZW5pDQo+IDxwYWJlbmlAcmVkaGF0LmNvbT47
+IGRhdmVtQGRhdmVtbG9mdC5uZXQ7IGt1YmFAa2VybmVsLm9yZzsNCj4gQnJhbmRlYnVyZywgSmVz
+c2UgPGplc3NlLmJyYW5kZWJ1cmdAaW50ZWwuY29tPjsgU3Jpbml2YXMsIFN1cmVzaA0KPiA8c3Vy
+ZXNoLnNyaW5pdmFzQGludGVsLmNvbT47IENoZW4sIFRpbSBDIDx0aW0uYy5jaGVuQGludGVsLmNv
+bT47IFlvdSwNCj4gTGl6aGVuIDxMaXpoZW4uWW91QGludGVsLmNvbT47IGVyaWMuZHVtYXpldEBn
+bWFpbC5jb207DQo+IG5ldGRldkB2Z2VyLmtlcm5lbC5vcmcNCj4gU3ViamVjdDogUkU6IFtQQVRD
+SCBuZXQtbmV4dCAxLzJdIG5ldDogS2VlcCBzay0+c2tfZm9yd2FyZF9hbGxvYyBhcyBhIHByb3Bl
+cg0KPiBzaXplDQo+IA0KPiANCj4gDQo+ID4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4g
+PiBGcm9tOiBTaGFrZWVsIEJ1dHQgPHNoYWtlZWxiQGdvb2dsZS5jb20+DQo+ID4gU2VudDogVGh1
+cnNkYXksIE1heSAxMSwgMjAyMyAzOjAwIEFNDQo+ID4gVG86IFpoYW5nLCBDYXRoeSA8Y2F0aHku
+emhhbmdAaW50ZWwuY29tPg0KPiA+IENjOiBFcmljIER1bWF6ZXQgPGVkdW1hemV0QGdvb2dsZS5j
+b20+OyBMaW51eCBNTSA8bGludXgtDQo+ID4gbW1Aa3ZhY2sub3JnPjsgQ2dyb3VwcyA8Y2dyb3Vw
+c0B2Z2VyLmtlcm5lbC5vcmc+OyBQYW9sbyBBYmVuaQ0KPiA+IDxwYWJlbmlAcmVkaGF0LmNvbT47
+IGRhdmVtQGRhdmVtbG9mdC5uZXQ7IGt1YmFAa2VybmVsLm9yZzsNCj4gQnJhbmRlYnVyZywNCj4g
+PiBKZXNzZSA8amVzc2UuYnJhbmRlYnVyZ0BpbnRlbC5jb20+OyBTcmluaXZhcywgU3VyZXNoDQo+
+ID4gPHN1cmVzaC5zcmluaXZhc0BpbnRlbC5jb20+OyBDaGVuLCBUaW0gQyA8dGltLmMuY2hlbkBp
+bnRlbC5jb20+OyBZb3UsDQo+ID4gTGl6aGVuIDxsaXpoZW4ueW91QGludGVsLmNvbT47IGVyaWMu
+ZHVtYXpldEBnbWFpbC5jb207DQo+ID4gbmV0ZGV2QHZnZXIua2VybmVsLm9yZw0KPiA+IFN1Ympl
+Y3Q6IFJlOiBbUEFUQ0ggbmV0LW5leHQgMS8yXSBuZXQ6IEtlZXAgc2stPnNrX2ZvcndhcmRfYWxs
+b2MgYXMgYQ0KPiA+IHByb3BlciBzaXplDQo+ID4NCj4gPiBPbiBXZWQsIE1heSAxMCwgMjAyMyBh
+dCA5OjA54oCvQU0gWmhhbmcsIENhdGh5IDxjYXRoeS56aGFuZ0BpbnRlbC5jb20+DQo+ID4gd3Jv
+dGU6DQo+ID4gPg0KPiA+ID4NCj4gPiBbLi4uXQ0KPiA+ID4gPiA+ID4NCj4gPiA+ID4gPiA+IEhh
+dmUgeW91IHRyaWVkIHRvIGluY3JlYXNlIGJhdGNoIHNpemVzID8NCj4gPiA+ID4gPg0KPiA+ID4g
+PiA+IEkganVzIHBpY2tlZCB1cCAyNTYgYW5kIDEwMjQgZm9yIGEgdHJ5LCBidXQgbm8gaGVscCwg
+dGhlDQo+ID4gPiA+ID4gb3ZlcmhlYWQgc3RpbGwNCj4gPiBleGlzdHMuDQo+ID4gPiA+DQo+ID4g
+PiA+IFRoaXMgbWFrZXMgbm8gc2Vuc2UgYXQgYWxsLg0KPiA+ID4NCj4gPiA+IEVyaWMsDQo+ID4g
+Pg0KPiA+ID4gSSBhZGRlZCBhIHByX2luZm8gaW4gdHJ5X2NoYXJnZV9tZW1jZygpIHRvIHByaW50
+IG5yX3BhZ2VzIGlmDQo+ID4gPiBucl9wYWdlcw0KPiA+ID4gPj0gTUVNQ0dfQ0hBUkdFX0JBVENI
+LCBleGNlcHQgaXQgcHJpbnRzIDY0IGR1cmluZyB0aGUgaW5pdGlhbGl6YXRpb24NCj4gPiA+IG9m
+IGluc3RhbmNlcywgdGhlcmUgaXMgbm8gb3RoZXIgb3V0cHV0IGR1cmluZyB0aGUgcnVubmluZy4g
+VGhhdA0KPiA+ID4gbWVhbnMgbnJfcGFnZXMgaXMgbm90IG92ZXIgNjQsIEkgZ3Vlc3MgdGhhdCBt
+aWdodCBiZSB0aGUgcmVhc29uIHdoeQ0KPiA+ID4gdG8gaW5jcmVhc2UgTUVNQ0dfQ0hBUkdFX0JB
+VENIIGRvZXNuJ3QgYWZmZWN0IHRoaXMgY2FzZS4NCj4gPiA+DQo+ID4NCj4gPiBJIGFtIGFzc3Vt
+aW5nIHlvdSBpbmNyZWFzZWQgTUVNQ0dfQ0hBUkdFX0JBVENIIHRvIDI1NiBhbmQgMTAyNA0KPiBi
+dXQNCj4gPiB0aGF0IGRpZCBub3QgaGVscC4gVG8gbWUgdGhhdCBqdXN0IG1lYW5zIHRoZXJlIGlz
+IGEgZGlmZmVyZW50DQo+ID4gYm90dGxlbmVjayBpbiB0aGUgbWVtY2cgY2hhcmdpbmcgY29kZXBh
+dGguIENhbiB5b3UgcGxlYXNlIHNoYXJlIHRoZQ0KPiA+IHBlcmYgcHJvZmlsZT8gUGxlYXNlIG5v
+dGUgdGhhdCBtZW1jZyBjaGFyZ2luZyBkb2VzIGEgbG90IG9mIG90aGVyDQo+ID4gdGhpbmdzIGFz
+IHdlbGwgbGlrZSB1cGRhdGluZyBtZW1jZyBzdGF0cyBhbmQgY2hlY2tpbmcgKGFuZCBlbmZvcmNp
+bmcpDQo+ID4gbWVtb3J5LmhpZ2ggZXZlbiBpZiB5b3UgaGF2ZSBub3Qgc2V0IG1lbW9yeS5oaWdo
+Lg0KPiANCj4gVGhhbmtzIFNoYWtlZWwhIEkgd2lsbCBjaGVjayBtb3JlIGRldGFpbHMgb24gd2hh
+dCB5b3UgbWVudGlvbmVkLiBXZSB1c2UNCj4gInN1ZG8gcGVyZiB0b3AgLXAgJChkb2NrZXIgaW5z
+cGVjdCAtZiAne3suU3RhdGUuUGlkfX0nIG1lbWNhY2hlZF8yKSIgdG8NCj4gbW9uaXRvciBvbmUg
+b2YgdGhvc2UgaW5zdGFuY2VzLCBhbmQgYWxzbyB1c2UgInN1ZG8gcGVyZiB0b3AiIHRvIGNoZWNr
+IHRoZQ0KPiBvdmVyaGVhZCBmcm9tIHN5c3RlbSB3aWRlLg0KDQpIZXJlIGlzIHRoZSBhbm5vdGF0
+ZSBvdXRwdXQgb2YgcGVyZiB0b3AgZm9yIHRoZSB0aHJlZSBtZW1jZyBob3QgcGF0aHM6DQoNClNo
+b3dpbmcgY3ljbGVzIGZvciBwYWdlX2NvdW50ZXJfdHJ5X2NoYXJnZQ0KICBFdmVudHMgIFBjbnQg
+KD49NSUpDQogUGVyY2VudCB8ICAgICAgU291cmNlIGNvZGUgJiBEaXNhc3NlbWJseSBvZiBlbGYg
+Zm9yIGN5Y2xlcyAoNTQzMjg4IHNhbXBsZXMsIHBlcmNlbnQ6IGxvY2FsIHBlcmlvZCkNCi0tLS0t
+LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
+LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLQ0KICAgIDAuMDAgOiAgIGZmZmZm
+ZmZmODE0MTM4OGQ6ICAgICAgIG1vdiAgICAlcjEyLCVyYXgNCiAgIDc2LjgyIDogICBmZmZmZmZm
+ZjgxNDEzODkwOiAgICAgICBsb2NrIHhhZGQgJXJheCwoJXJieCkNCiAgIDIyLjEwIDogICBmZmZm
+ZmZmZjgxNDEzODk1OiAgICAgICBsZWEgICAgKCVyMTIsJXJheCwxKSwlcjE1DQoNCg0KU2hvd2lu
+ZyBjeWNsZXMgZm9yIHBhZ2VfY291bnRlcl9jYW5jZWwNCiAgRXZlbnRzICBQY250ICg+PTUlKQ0K
+IFBlcmNlbnQgfCAgICAgIFNvdXJjZSBjb2RlICYgRGlzYXNzZW1ibHkgb2YgZWxmIGZvciBjeWNs
+ZXMgKDEwMDQ3NDQgc2FtcGxlcywgcGVyY2VudDogbG9jYWwgcGVyaW9kKQ0KLS0tLS0tLS0tLS0t
+LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
+LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLQ0KICAgICAgICAgOiAxNjAgICAgICAgICAg
+ICAgIHJldHVybiBpICsgeGFkZCgmdi0+Y291bnRlciwgaSk7DQogICA3Ny40MiA6ICAgZmZmZmZm
+ZmY4MTQxMzc1OTogICAgICAgbG9jayB4YWRkICVyYXgsKCVyZGkpDQogICAyMi4zNCA6ICAgZmZm
+ZmZmZmY4MTQxMzc1ZTogICAgICAgc3ViICAgICVyc2ksJXJheA0KDQoNClNob3dpbmcgY3ljbGVz
+IGZvciB0cnlfY2hhcmdlX21lbWNnDQogIEV2ZW50cyAgUGNudCAoPj01JSkNCiBQZXJjZW50IHwg
+ICAgICBTb3VyY2UgY29kZSAmIERpc2Fzc2VtYmx5IG9mIGVsZiBmb3IgY3ljbGVzICgyNTY1MzEg
+c2FtcGxlcywgcGVyY2VudDogbG9jYWwgcGVyaW9kKQ0KLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
+LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
+LS0tLS0tLS0tLS0tLS0tLS0tDQogICAgICAgICA6IDIyICAgICAgICAgICAgICAgcmV0dXJuIF9f
+UkVBRF9PTkNFKCh2KS0+Y291bnRlcik7DQogICA3Ny41MyA6ICAgZmZmZmZmZmY4MTQxZGY4Njog
+ICAgICAgbW92ICAgIDB4MTAwKCVyMTMpLCVyZHgNCiAgICAgICAgIDogMjgyNiAgICAgICAgICAg
+ICBSRUFEX09OQ0UobWVtY2ctPm1lbW9yeS5oaWdoKTsNCiAgIDE5LjQ1IDogICBmZmZmZmZmZjgx
+NDFkZjhkOiAgICAgICBtb3YgICAgMHgxOTAoJXIxMyksJXJjeA0K
 
-Good catch.
-
-Acked-by: Muchun Song <songmuchun@bytedance.com>
-
-Thanks.
