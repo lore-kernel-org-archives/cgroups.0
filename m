@@ -1,180 +1,104 @@
-From: Maarten Lankhorst <maarten.lankhorst-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
-Subject: Re: [Intel-gfx] [RFC PATCH 0/4] Add support for DRM cgroup memory
- accounting.
-Date: Thu, 11 May 2023 21:58:02 +0200
-Message-ID: <a7200fd7-769c-6a32-0fa7-6a37b7214d70@linux.intel.com>
-References: <20230503083500.645848-1-maarten.lankhorst@linux.intel.com>
- <ZFVeI2DKQXddKDNl@slm.duckdns.org>
- <4d6fbce3-a676-f648-7a09-6f6dcc4bdb46@linux.intel.com>
- <ZFvmaGNo0buQEUi1@slm.duckdns.org>
- <562bd20d-36b9-a617-92cc-460f2eece22e@linux.intel.com>
+From: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH net-next 1/2] net: Keep sk->sk_forward_alloc as a proper size
+Date: Thu, 11 May 2023 21:18:42 +0000
+Message-ID: <20230511211338.oi4xwoueqmntsuna@google.com>
+References: <CH3PR11MB7345ABB947E183AFB7C18322FC779@CH3PR11MB7345.namprd11.prod.outlook.com>
+ <CANn89i+9rQcGey+AJyhR02pTTBNhWN+P78e4a8knfC9F5sx0hQ@mail.gmail.com>
+ <CH3PR11MB73455A98A232920B322C3976FC779@CH3PR11MB7345.namprd11.prod.outlook.com>
+ <CANn89i+J+ciJGPkWAFKDwhzJERFJr9_2Or=ehpwSTYO14qzHmA@mail.gmail.com>
+ <CH3PR11MB734502756F495CB9C520494FFC779@CH3PR11MB7345.namprd11.prod.outlook.com>
+ <CALvZod4n+Kwa1sOV9jxiEMTUoO7MaCGWz=wT3MHOuj4t-+9S6Q@mail.gmail.com>
+ <CH3PR11MB73454C44EC8BCD43685BCB58FC749@CH3PR11MB7345.namprd11.prod.outlook.com>
+ <IA0PR11MB7355E486112E922AA6095CCCFC749@IA0PR11MB7355.namprd11.prod.outlook.com>
+ <CANn89iJbAGnZd42SVZEYWFLYVbmHM3p2UDawUKxUBhVDH5A2=A@mail.gmail.com> <IA0PR11MB73557DEAB912737FD61D2873FC749@IA0PR11MB7355.namprd11.prod.outlook.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset="us-ascii"
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1683835089; x=1715371089;
-  h=message-id:date:mime-version:subject:to:cc:references:
-   from:in-reply-to:content-transfer-encoding;
-  bh=oZQ2G4WUfAcfYRxx/1cCaNzzx8xkE/WLQXfCP4Oc3BE=;
-  b=J1Q9LW9qKHiIAECKGTfYpf0wRw0t0TKBr2XKntWceh6atxq2mcQwpcD7
-   zosXh86LgRMA/Ovu+YtL59JbN8spLECJNs/rfZXs0v9Q+B01nOW7aMMcw
-   qUxcDnIrFbenMxRocOVva1vbXfekzNLJ6L92NCDZsuOfYYfNV+iFy1LSR
-   3BWB5lK8Bm8kIDQ+iPKFcUyBiYMdMn/1nP/qxWea0zJCXs5Uxo+Rn0rJB
-   T59w9YnMKWeXYA/0IKmXO2uB0/Ou+FDcx0+Zymj1Zmoqk4btxPdmJp6V1
-   W3Mv5LwrX/+bt2kuyYKHmBNyErmTpy4m8maym2vJs+CuAuaColSjfbm1x
-   A==;
-Content-Language: en-US
-In-Reply-To: <562bd20d-36b9-a617-92cc-460f2eece22e-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20221208; t=1683839925; x=1686431925;
+        h=cc:to:from:subject:message-id:references:mime-version:in-reply-to
+         :date:from:to:cc:subject:date:message-id:reply-to;
+        bh=wFv5ci7ov6TO/nbE/lFV0e8LOwHUTHRp5fyIeOp00NI=;
+        b=DRDZQiesqpSkMtadBPnXaSLFftLOF2tRVveccLBHVnBfk/IjvUoQA1Vknb0qgMsFbd
+         ul40I6todx42bog/6ILqg96UcxIK20g7/qxVXO8QgOpBrtxjLfYfJ3yb7AbTA509nJ45
+         vVEgVqAVXuEAW3i7m6KpNZ8E7yUqe9DG3mXiQ3HPPZBITzC95+Q2dKAzmolVjjK8pwj6
+         a9Cs5cxJHtaEZmMYpeJlaDWPHHQqqVCMIVRPH7naWvhq4An6q1xPYDSHdHn8VQ1eQ3Qq
+         1xo4xpza4/4wjkUjYkP6SbE4ymEBfN6VGHOcKr1q1VYLux/W7k50O5Jteg6uKDtjsnQ8
+         c8RA==
+In-Reply-To: <IA0PR11MB73557DEAB912737FD61D2873FC749-py0Qfd72Ncwkr2bXB6wcV5PPoyLQLiKMvxpqHgZTriW3zl9H0oFU5g@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="windows-1252"
-To: Tvrtko Ursulin <tvrtko.ursulin-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: Maxime Ripard <mripard-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Daniel Vetter <daniel-/w4YWyX8dFk@public.gmane.org>, Thomas Zimmermann <tzimmermann-l3A5Bk7waGM@public.gmane.org>, intel-gfx-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, dri-devel-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org, amd-gfx-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, David Airlie <airlied-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, intel-xe-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org
+Content-Transfer-Encoding: 7bit
+To: Zhang-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, Cathy <cathy.zhang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+Cc: Eric Dumazet <edumazet-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Linux MM <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Paolo Abeni <pabeni-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org" <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>, "kuba-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org" <kuba-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Brandeburg-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, Jesse <jesse.brandeburg-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Srinivas-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, Suresh <suresh.srinivas-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Chen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, Tim C <tim.c.chen-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, You-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, Lizhen <lizhen.you-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, "eric.dumazet-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org" <eric.dumazet-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, "netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 
-Hey,
+On Thu, May 11, 2023 at 09:26:46AM +0000, Zhang, Cathy wrote:
+> 
+[...]
+> 
+>      8.98%  mc-worker        [kernel.vmlinux]          [k] page_counter_cancel
+>             |
+>              --8.97%--page_counter_cancel
+>                        |
+>                         --8.97%--page_counter_uncharge
+>                                   drain_stock
+>                                   __refill_stock
+>                                   refill_stock
+>                                   |
+>                                    --8.91%--try_charge_memcg
+>                                              mem_cgroup_charge_skmem
 
-On 2023-05-11 12:14, Tvrtko Ursulin wrote:
->
-> On 10/05/2023 19:46, Tejun Heo wrote:
->> Hello,
->>
->> On Wed, May 10, 2023 at 04:59:01PM +0200, Maarten Lankhorst wrote:
->>> The misc controller is not granular enough. A single computer may have =
-any number of
->>> graphics cards, some of them with multiple regions of vram inside a sin=
-gle card.
->>
->> Extending the misc controller to support dynamic keys shouldn't be that
->> difficult.
->>
->> ...
->>> In the next version, I will move all the code for handling the resource=
- limit to
->>> TTM's eviction layer, because otherwise it cannot handle the resource l=
-imit correctly.
->>>
->>> The effect of moving the code to TTM, is that it will make the code eve=
-n more generic
->>> for drivers that have vram and use TTM. When using TTM, you only have t=
-o describe your
->>> VRAM, update some fields in the TTM manager and (un)register your devic=
-e with the
->>> cgroup handler on (un)load. It's quite trivial to add vram accounting t=
-o amdgpu and
->>> nouveau. [2]
->>>
->>> If you want to add a knob for scheduling weight for a process, it makes=
- sense to
->>> also add resource usage as a knob, otherwise the effect of that knob is=
- very
->>> limited. So even for Tvrtko's original proposed usecase, it would make =
-sense.
->>
->> It does make sense but unlike Tvrtko's scheduling weights what's being
->> proposed doesn't seem to encapsulate GPU memory resource in a generic en=
-ough
->> manner at least to my untrained eyes. ie. w/ drm.weight, I don't need any
->> specific knoweldge of how a specific GPU operates to say "this guy should
->> get 2x processing power over that guy". This more or less holds for other
->> major resources including CPU, memory and IO. What you're proposing seem=
-s a
->> lot more tied to hardware details and users would have to know a lot more
->> about how memory is configured on that particular GPU.
->>
->> Now, if this is inherent to how all, or at least most, GPUs operate, sur=
-e,
->> but otherwise let's start small in terms of interface and not take up sp=
-ace
->> which should be for something universal. If this turns out to be the way,
->> expanding to take up the generic interface space isn't difficult.
->>
->> I don't know GPU space so please educate me where I'm wrong.
->
-> I was hoping it might be passable in principle (in some form, pending dis=
-cussion on semantics) given how Maarten's proposal starts with only very sp=
-ecific per-device-per-memory regions controls, which is applicable to many =
-devices. And hard limit at that, which probably has less complicated semant=
-ics, or at least implementation.
->
-> My understanding of the proposal is that the allocation either fits, or i=
-t evicts from the parent's hierarchy (if possible) and then fits, or it fai=
-ls. Which sounds simple enough.
+I do want to understand for above which specific condition in
+__refill_stock is causing to drain stock in the charge code path. Can
+you please re-run and profile your test with following code snippet (or
+use any other mechanism which can answer the question)?
 
-Yeah, for vram it=C5=9B that simple. I think for mapped and sysmem regions =
-we may require the
-possiblity to ignore the limits as well, as it's possible to move to those =
-regions from
-eviction. We probably don't want eviction to fail because of too low limits.
+From f1d91043f21f4b29717c78615b374d79fc021d1f Mon Sep 17 00:00:00 2001
+From: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Date: Thu, 11 May 2023 20:00:19 +0000
+Subject: [PATCH] Debug drain on charging.
 
-> I do however agree that it is a limited use case. So from the negative si=
-de of the debating camp I have to ask if this use case could be simply sati=
-sfied by providing a driver/device global over commit yes/no control? In ot=
-her words, is it really important to partition the vram space ahead of time=
-, and from the kernel side too? Wouldn't the relevant (highly specialised) =
-applications work just fine with global over commit disabled? Even if the o=
-ption to configure their maximum allowed working set from the userspace sid=
-e was needed.
+---
+ mm/memcontrol.c | 14 ++++++++++++--
+ 1 file changed, 12 insertions(+), 2 deletions(-)
 
-Disabling overcommit? Do you mean pinning the memory workload? This causes =
-a denial of service if
-done without limits, and that's what we're trying to avoid. There is no nee=
-d for immunity from
-eviction. Overcommit is still useful inside the cgroup itself, we only want=
- immunity from being
-evicted by another process performing another workload.
-
-> Or if we conclude cgroup controller is the way to go, would adding less s=
-pecific limits make it more palatable? I am thinking here some generic "dev=
-ice memory resident". Not per device, not per memory region. So userspace/a=
-dmins have some chance of configuring generic limits. That would require co=
-ming up with more generic use cases though so another thing to discuss. Lik=
-e who would use that and for what.
-
-You would run into ambiguity with that. I think it's fine to assume any num=
-ber of vram regions. In most cases, the number is 1.
-
-I don't see that number going much higher, 2 is already on the high side. A=
- simple controller could just half each region separately.
-
-> Assuming also we can agree that "device memory resident" is a stable/soli=
-d concept across drm. Should be easier than for integrated GPUs, for which =
-I have to admit I currently don't remember if allocations are already consi=
-stently covered by the memory controller. Even if they are ownership is pro=
-bably wrong.
-Likely, especially when evicting another process' memory. That needs some t=
-hought. Likely we have to keep the original cgroup as an owner.
-> Group ownership is possibly a concern in this proposal too. Because I rem=
-ember the previous attempt of adding some drm stats to memcg explained that=
- for instance on Android all buffers are allocated by a central process and=
- then handed over to other processes. So transferring ownership was explain=
-ed as critical.
-Is this done using dma-buf? Ownership could be handed over on import then. =
-If not, what is the mechanism they use?
-> Regards,
->
-> Tvrtko
->
-> P.S.
-> On the matter of naming the uapi interface - in any case I wouldn't use t=
-he "unqualified" drm namespace such as drm.max/current/capacity. I think al=
-l those should include a specific prefix to signify it is about memory. In =
-some way.
-
-I've deliberately added region to each key, so what happens is that drm.cap=
-acity/max/current contains: $pciid region.vram0=3D$value, that way, if we w=
-ant to add non-memory resources, it becomes possible to do so by choosing a=
- different prefix.
-
-For example number of engines that can be created would also be possible to=
- add to those files, but that might be more driver specific.
-
-I tried to keep it generic like that. In this way I didn't immediately poll=
-ute the entire namespace.
-
-Of course, if needed, we can make it drm.region_max etc instead and drop it=
- from the cgroup key entries instead.
-
-Cheers,
-
-Maarten
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index d31fb1e2cb33..4c1c3d90a4a3 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -2311,6 +2311,16 @@ static void drain_local_stock(struct work_struct *dummy)
+ 		obj_cgroup_put(old);
+ }
+ 
++static noinline void drain_stock_1(struct memcg_stock_pcp *stock)
++{
++	drain_stock(stock);
++}
++
++static noinline void drain_stock_2(struct memcg_stock_pcp *stock)
++{
++	drain_stock(stock);
++}
++
+ /*
+  * Cache charges(val) to local per_cpu area.
+  * This will be consumed by consume_stock() function, later.
+@@ -2321,14 +2331,14 @@ static void __refill_stock(struct mem_cgroup *memcg, unsigned int nr_pages)
+ 
+ 	stock = this_cpu_ptr(&memcg_stock);
+ 	if (READ_ONCE(stock->cached) != memcg) { /* reset if necessary */
+-		drain_stock(stock);
++		drain_stock_1(stock);
+ 		css_get(&memcg->css);
+ 		WRITE_ONCE(stock->cached, memcg);
+ 	}
+ 	stock->nr_pages += nr_pages;
+ 
+ 	if (stock->nr_pages > MEMCG_CHARGE_BATCH)
+-		drain_stock(stock);
++		drain_stock_2(stock);
+ }
+ 
+ static void refill_stock(struct mem_cgroup *memcg, unsigned int nr_pages)
+-- 
+2.40.1.606.ga4b1b128d6-goog
 
