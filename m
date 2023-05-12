@@ -1,140 +1,87 @@
-From: Yu Kuai <yukuai1@huaweicloud.com>
-Subject: [PATCH -next v2 6/6] blk-sysfs: add a new attr_group for blk_mq
-Date: Fri, 12 May 2023 17:35:54 +0800
-Message-ID: <20230512093554.911753-7-yukuai1@huaweicloud.com>
+From: Chengming Zhou <chengming.zhou@linux.dev>
+Subject: Re: [PATCH -next v2 1/6] blk-wbt: fix that wbt can't be disabled by
+ default
+Date: Fri, 12 May 2023 17:59:43 +0800
+Message-ID: <fecc63de-9477-cad4-79f3-bdb1f1e3ab5f@linux.dev>
 References: <20230512093554.911753-1-yukuai1@huaweicloud.com>
+ <20230512093554.911753-2-yukuai1@huaweicloud.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20230512093554.911753-1-yukuai1@huaweicloud.com>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
+        t=1683885592;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=n0JL1nhvy2ngw84v1yQfJqMPUYFftdCNHh/mrNVJuFQ=;
+        b=VDZwyA0YGJ/KFhQoo2GxCv9LWe6GedDa244Vnxy7pKf6QEG79Gt2/sr6tAxJrwxzZcNPWs
+        QDt/mNnzz+oKFvV7NGkJ8SX0kjUYCzDYmspt8qaTPfv9nvEcUrNeuOJh2kbyKy7tt7dS3n
+        RzyAvowXz/3bqX6dDj5/n2CPMr2Kpc4=
+Content-Language: en-US
+In-Reply-To: <20230512093554.911753-2-yukuai1@huaweicloud.com>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: hch@lst.de, tj@kernel.org, josef@toxicpanda.com, axboe@kernel.dk, yukuai3@huawei.com
-Cc: lukas.bulwahn@gmail.com, cgroups@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, yukuai1@huaweicloud.com, yi.zhang@huawei.com, yangerkun@huawei.com
+To: Yu Kuai <yukuai1@huaweicloud.com>
+Cc: hch@lst.de, tj@kernel.org, josef@toxicpanda.com, axboe@kernel.dk, yukuai3@huawei.com, lukas.bulwahn@gmail.com, cgroups@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, yi.zhang@huawei.com, yangerkun@huawei.com
 
-From: Yu Kuai <yukuai3@huawei.com>
+On 2023/5/12 17:35, Yu Kuai wrote:
+> From: Yu Kuai <yukuai3@huawei.com>
+> 
+> commit b11d31ae01e6 ("blk-wbt: remove unnecessary check in
+> wbt_enable_default()") removes the checking of CONFIG_BLK_WBT_MQ by
+> mistake, which is used to control enable or disable wbt by default.
+> 
+> Fix the problem by adding back the checking. This patch also do a litter
+> cleanup to make related code more readable.
+> 
+> Fixes: b11d31ae01e6 ("blk-wbt: remove unnecessary check in wbt_enable_default()")
+> Reported-by: Lukas Bulwahn <lukas.bulwahn@gmail.com>
+> Link: https://lore.kernel.org/lkml/CAKXUXMzfKq_J9nKHGyr5P5rvUETY4B-fxoQD4sO+NYjFOfVtZA@mail.gmail.com/t/
+> Signed-off-by: Yu Kuai <yukuai3@huawei.com>
+> ---
+>  block/blk-wbt.c | 12 +++++++-----
+>  1 file changed, 7 insertions(+), 5 deletions(-)
+> 
+> diff --git a/block/blk-wbt.c b/block/blk-wbt.c
+> index e49a48684532..9ec2a2f1eda3 100644
+> --- a/block/blk-wbt.c
+> +++ b/block/blk-wbt.c
+> @@ -730,14 +730,16 @@ void wbt_enable_default(struct gendisk *disk)
+>  {
+>  	struct request_queue *q = disk->queue;
+>  	struct rq_qos *rqos;
+> -	bool disable_flag = q->elevator &&
+> -		    test_bit(ELEVATOR_FLAG_DISABLE_WBT, &q->elevator->flags);
+> +	bool enable = IS_ENABLED(CONFIG_BLK_WBT_MQ);
+> +
+> +	if (q->elevator &&
+> +	    test_bit(ELEVATOR_FLAG_DISABLE_WBT, &q->elevator->flags))
+> +		enable = false;
 
-Currently wbt sysfs entry is created for bio based device, and wbt can
-be enabled for such device through sysfs while it doesn't make sense
-because wbt can only work for rq based device. In the meantime, there
-are other similar sysfs entries.
+Why not just early return, so "enable" is not needed at all?
 
-Fix this by adding a new attr_group for blk_mq, and sysfs entries will
-only be created when the device is rq based.
+I have another question that CONFIG_BLK_WBT_MQ is not much flexible, can we
+just get rid of it? (I'm not sure when to disable it in the config)
 
-Suggested-by: Christoph Hellwig <hch@lst.de>
-Signed-off-by: Yu Kuai <yukuai3@huawei.com>
----
- block/blk-sysfs.c | 42 +++++++++++++++++++++++++++++++-----------
- 1 file changed, 31 insertions(+), 11 deletions(-)
+Thanks.
 
-diff --git a/block/blk-sysfs.c b/block/blk-sysfs.c
-index 6c1c4ba66bc0..afc797fb0dfc 100644
---- a/block/blk-sysfs.c
-+++ b/block/blk-sysfs.c
-@@ -621,7 +621,6 @@ QUEUE_RW_ENTRY(queue_wb_lat, "wbt_lat_usec");
- #endif
- 
- static struct attribute *queue_attrs[] = {
--	&queue_requests_entry.attr,
- 	&queue_ra_entry.attr,
- 	&queue_max_hw_sectors_entry.attr,
- 	&queue_max_sectors_entry.attr,
-@@ -629,7 +628,6 @@ static struct attribute *queue_attrs[] = {
- 	&queue_max_discard_segments_entry.attr,
- 	&queue_max_integrity_segments_entry.attr,
- 	&queue_max_segment_size_entry.attr,
--	&elv_iosched_entry.attr,
- 	&queue_hw_sector_size_entry.attr,
- 	&queue_logical_block_size_entry.attr,
- 	&queue_physical_block_size_entry.attr,
-@@ -650,7 +648,6 @@ static struct attribute *queue_attrs[] = {
- 	&queue_max_open_zones_entry.attr,
- 	&queue_max_active_zones_entry.attr,
- 	&queue_nomerges_entry.attr,
--	&queue_rq_affinity_entry.attr,
- 	&queue_iostats_entry.attr,
- 	&queue_stable_writes_entry.attr,
- 	&queue_random_entry.attr,
-@@ -658,11 +655,7 @@ static struct attribute *queue_attrs[] = {
- 	&queue_wc_entry.attr,
- 	&queue_fua_entry.attr,
- 	&queue_dax_entry.attr,
--#ifdef CONFIG_BLK_WBT
--	&queue_wb_lat_entry.attr,
--#endif
- 	&queue_poll_delay_entry.attr,
--	&queue_io_timeout_entry.attr,
- #ifdef CONFIG_BLK_DEV_THROTTLING_LOW
- 	&blk_throtl_sample_time_entry.attr,
- #endif
-@@ -671,16 +664,23 @@ static struct attribute *queue_attrs[] = {
- 	NULL,
- };
- 
-+static struct attribute *blk_mq_queue_attrs[] = {
-+	&queue_requests_entry.attr,
-+	&elv_iosched_entry.attr,
-+	&queue_rq_affinity_entry.attr,
-+	&queue_io_timeout_entry.attr,
-+#ifdef CONFIG_BLK_WBT
-+	&queue_wb_lat_entry.attr,
-+#endif
-+	NULL,
-+};
-+
- static umode_t queue_attr_visible(struct kobject *kobj, struct attribute *attr,
- 				int n)
- {
- 	struct gendisk *disk = container_of(kobj, struct gendisk, queue_kobj);
- 	struct request_queue *q = disk->queue;
- 
--	if (attr == &queue_io_timeout_entry.attr &&
--		(!q->mq_ops || !q->mq_ops->timeout))
--			return 0;
--
- 	if ((attr == &queue_max_open_zones_entry.attr ||
- 	     attr == &queue_max_active_zones_entry.attr) &&
- 	    !blk_queue_is_zoned(q))
-@@ -689,11 +689,30 @@ static umode_t queue_attr_visible(struct kobject *kobj, struct attribute *attr,
- 	return attr->mode;
- }
- 
-+static umode_t blk_mq_queue_attr_visible(struct kobject *kobj,
-+					 struct attribute *attr, int n)
-+{
-+	struct gendisk *disk = container_of(kobj, struct gendisk, queue_kobj);
-+	struct request_queue *q = disk->queue;
-+
-+	if (!queue_is_mq(q))
-+		return 0;
-+
-+	if (attr == &queue_io_timeout_entry.attr && !q->mq_ops->timeout)
-+		return 0;
-+
-+	return attr->mode;
-+}
-+
- static struct attribute_group queue_attr_group = {
- 	.attrs = queue_attrs,
- 	.is_visible = queue_attr_visible,
- };
- 
-+static struct attribute_group blk_mq_queue_attr_group = {
-+	.attrs = blk_mq_queue_attrs,
-+	.is_visible = blk_mq_queue_attr_visible,
-+};
- 
- #define to_queue(atr) container_of((atr), struct queue_sysfs_entry, attr)
- 
-@@ -738,6 +757,7 @@ static const struct sysfs_ops queue_sysfs_ops = {
- 
- static const struct attribute_group *blk_queue_attr_groups[] = {
- 	&queue_attr_group,
-+	&blk_mq_queue_attr_group,
- 	NULL
- };
- 
--- 
-2.39.2
-
+>  
+>  	/* Throttling already enabled? */
+>  	rqos = wbt_rq_qos(q);
+>  	if (rqos) {
+> -		if (!disable_flag &&
+> -		    RQWB(rqos)->enable_state == WBT_STATE_OFF_DEFAULT)
+> +		if (enable && RQWB(rqos)->enable_state == WBT_STATE_OFF_DEFAULT)
+>  			RQWB(rqos)->enable_state = WBT_STATE_ON_DEFAULT;
+>  		return;
+>  	}
+> @@ -746,7 +748,7 @@ void wbt_enable_default(struct gendisk *disk)
+>  	if (!blk_queue_registered(q))
+>  		return;
+>  
+> -	if (queue_is_mq(q) && !disable_flag)
+> +	if (queue_is_mq(q) && enable)
+>  		wbt_init(disk);
+>  }
+>  EXPORT_SYMBOL_GPL(wbt_enable_default);
