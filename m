@@ -1,73 +1,51 @@
-From: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH net-next 1/2] net: Keep sk->sk_forward_alloc as a proper size
-Date: Fri, 12 May 2023 17:17:01 +0000
-Message-ID: <20230512171702.923725-1-shakeelb@google.com>
-References: <CH3PR11MB7345DBA6F79282169AAFE9E0FC759@CH3PR11MB7345.namprd11.prod.outlook.com>
+From: Jason Gunthorpe <jgg-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [LSF/MM/BPF TOPIC] Reducing zombie memcgs
+Date: Fri, 12 May 2023 18:09:20 -0300
+Message-ID: <ZF6rACJzilA06oe+@nvidia.com>
+References: <CABdmKX2M6koq4Q0Cmp_-=wbP0Qa190HdEGGaHfxNS05gAkUtPA@mail.gmail.com>
+ <ZFLdDyHoIdJSXJt+@google.com>
+ <874josz4rd.fsf@nvidia.com>
+ <ZFPP71czDDxMPLQK@google.com>
+ <877ctm518f.fsf@nvidia.com>
+ <ZFbZZPkSpsKMe8iR@google.com>
+ <87ttwnkzap.fsf@nvidia.com>
+ <ZFuvhP5qGPivokc0@google.com>
+ <87jzxe9baj.fsf@nvidia.com>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20221208; t=1683911825; x=1686503825;
-        h=cc:to:from:subject:message-id:mime-version:in-reply-to:date:from:to
-         :cc:subject:date:message-id:reply-to;
-        bh=g/vEoaxxlidjk6ZRnVQ6vBnM5rJLiZ0SFsw4oljX9Bo=;
-        b=6TzRO4dhn5IQ9F9oBlZSna42ZOqtLV1QcfYJqq0S5da4w8udY31eLcwr/E03q3nFoB
-         ODjOKKPktW+57iOsHRQ94HWijxeHVRQsNCKzBtLgwx52ZLMDichW/UVkpYTYMo5c+c0W
-         C37q+PaEllbmgwGvnyQiCScSGXH2VUjfY+x9RPgqiCjw/Q824wEI2tVYxRUTa5OHSyKh
-         EqLwh6+KXRPctS0apgFG1m5k2fJn1Mxh+A9hEQ/vmsThZr9DgY1FQaCJ0OwDCjLGIHFI
-         dzA74UjBQoyNUMFHq06ENAe24xaZNGPz8dMoD+WWJaA7alhFLNTbdqDlZ4lWEuoihrbQ
-         7G+g==
-In-Reply-To: <CH3PR11MB7345DBA6F79282169AAFE9E0FC759-WQKEFoXy4NEXvLLfv6NhPJPPoyLQLiKMvxpqHgZTriW3zl9H0oFU5g@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
+ s=selector2;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=x55qt4WozEzcvVLV3w9xOL/S4v7cSAQ9J++ugA59PIU=;
+ b=JBC+OGjC14bwo3BIV2VZvGdajWc8KoK7lcPuZS7YeNCSIYm9O3FJq0Ri47/Tw69v8V30loe5NY8Sqlynqs9bsy60M9/Jp0h1N82XgrkVa28gurGiYFNVcvogHKZvsx6WMM0MKnQJyLsXdxtuaPSXsu0Y42CAeopzqOMOs9STCxzg4f7fbBw9vkUjA5s03HrXUxj5ZCJQNHJ/jeu+60WN4u8fJ3xcaxdEyh/ZEVZ0b2APFO907hONzl6OW9+AYOrdQs50GtwrZEMd4KAirDAjc3FTdOJ89muyX6baEVVmXVS/tqMRHu+DoaLOcM10cr4KOrun9xfKLuRPpi/jf2Udow==
+Content-Disposition: inline
+In-Reply-To: <87jzxe9baj.fsf-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Cathy Zhang <cathy.zhang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
-Cc: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Eric Dumazet <edumazet-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Linux MM <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Paolo Abeni <pabeni-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org" <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>, "kuba-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org" <kuba-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, "Brandeburg-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org" <Brandeburg-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Jesse Brandeburg <jesse.brandeburg-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Suresh Srinivas <suresh.srinivas-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Tim C Chen <tim.c.chen-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Lizhen You <lizhen.you-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, "eric.dumazet-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org" <eric.dumazet-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, "netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+To: Alistair Popple <apopple-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>
+Cc: Chris Li <chrisl-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, "T.J. Mercier" <tjmercier-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, lsf-pc-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Muchun Song <muchun.song-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Kalesh Singh <kaleshsingh-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Yu Zhao <yuzhao-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 
-On Fri, May 12, 2023 at 05:51:40AM +0000, Zhang, Cathy wrote:
-> 
-> 
-[...]
-> > 
-> > Thanks a lot. This tells us that one or both of following scenarios are
-> > happening:
-> > 
-> > 1. In the softirq recv path, the kernel is processing packets from multiple
-> > memcgs.
-> > 
-> > 2. The process running on the CPU belongs to memcg which is different from
-> > the memcgs whose packets are being received on that CPU.
-> 
-> Thanks for sharing the points, Shakeel! Is there any trace records you want to
-> collect?
-> 
+On Fri, May 12, 2023 at 06:45:13PM +1000, Alistair Popple wrote:
 
-Can you please try the following patch and see if there is any
-improvement?
+> However review comments suggested it needed to be added as part of
+> memcg. As soon as we do that we have to address how we deal with shared
+> memory. If we stick with the original RLIMIT proposal this discussion
+> goes away, but based on feedback I think I need to at least investigate
+> integrating it into memcg to get anything merged.
 
+Personally I don't see how we can effectively solve the per-page
+problem without also tracking all the owning memcgs for every
+page. This means giving each struct page an array of memcgs
 
-From 48eb23c8cbb5d6c6086299c8a5ae4b3485c79a8c Mon Sep 17 00:00:00 2001
-From: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Date: Fri, 12 May 2023 17:04:35 +0000
-Subject: [PATCH] No batch charge in irq context
+I suspect this will be too expensive to be realistically
+implementable.
 
----
- mm/memcontrol.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+If it is done then we may not even need a pin controller on its own as
+the main memcg should capture most of it. (althought it doesn't
+distinguish between movable/swappable and non-swappable memory)
 
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index d31fb1e2cb33..f1453a140fc8 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -2652,7 +2652,8 @@ void mem_cgroup_handle_over_high(void)
- static int try_charge_memcg(struct mem_cgroup *memcg, gfp_t gfp_mask,
- 			unsigned int nr_pages)
- {
--	unsigned int batch = max(MEMCG_CHARGE_BATCH, nr_pages);
-+	unsigned int batch = in_task() ?
-+		max(MEMCG_CHARGE_BATCH, nr_pages) : nr_pages;
- 	int nr_retries = MAX_RECLAIM_RETRIES;
- 	struct mem_cgroup *mem_over_limit;
- 	struct page_counter *counter;
--- 
-2.40.1.606.ga4b1b128d6-goog
+But this is all being done for the libvirt people, so it would be good
+to involve them
 
+Jason
