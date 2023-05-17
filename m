@@ -1,93 +1,84 @@
-From: Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+From: =?utf-8?B?56iL5Z6y5rabIENoZW5na2FpdGFvIENoZW5n?= 
+        <chengkaitao@didiglobal.com>
 Subject: Re: [PATCH v4 0/2] memcontrol: support cgroup level OOM protection
-Date: Wed, 17 May 2023 01:09:50 -0700
-Message-ID: <CAJD7tkbHKQBoz7kn6ZjMTMoxLKYs7x9w4uRGWLvuyOogmBkZ_g@mail.gmail.com>
-References: <CAJD7tkYPGwAFo0mrhq5twsVquwFwkhOyPwsZJtECw-5HAXtQrg@mail.gmail.com>
- <09A746CC-E38D-4ECA-B0F4-862EC6229A0F@didiglobal.com>
+Date: Wed, 17 May 2023 10:01:48 +0000
+Message-ID: <6AB7FF12-F855-4D5B-9F75-9F7D64823144@didiglobal.com>
+References: <CAJD7tkbHKQBoz7kn6ZjMTMoxLKYs7x9w4uRGWLvuyOogmBkZ_g@mail.gmail.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20221208; t=1684311027; x=1686903027;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=M/JbPTvNpjTaAOSiw7cq2XUFwTTZo3maiLd9kZ3gbPY=;
-        b=E/nQr0TtAbvKOJgpRKAM1JVFuP/MwUX23KxLMaK9E935LDpjE6s9HpTk6zcktHzA3V
-         lVxuSKWxkpaEF/0X7X4fb0A2wQtR+BP46udE3XC2KotT4N3Y20wucgNCN5myvUQPrgYm
-         hf8qXaIk4/mtVqOzBMdebf1uOebU+yZFQwgKC0uSR7A2S8DJaBgTCt2tXTRjmHgu9gTl
-         He1rqLvC6itIyQX551xHdP0ntcFbz4HClZ9Wg7mkLnBAKGlfTSh3/2KEYLgKR0024kd1
-         FZk9gcyZUQemmV3CyHP8mGDAj9j4MwZkxgKrt5y90zAG/N8tFGr657bHQAGYojKPXnWN
-         MoDw==
-In-Reply-To: <09A746CC-E38D-4ECA-B0F4-862EC6229A0F-+mmu7dyatJ+Rq8AjE7tl8g@public.gmane.org>
-List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="utf-8"
-To: =?UTF-8?B?56iL5Z6y5rabIENoZW5na2FpdGFvIENoZW5n?= <chengkaitao-+mmu7dyatJ+Rq8AjE7tl8g@public.gmane.org>
-Cc: "tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org" <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, "lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org" <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, "hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org" <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, "corbet-T1hC0tSOHrs@public.gmane.org" <corbet-T1hC0tSOHrs@public.gmane.org>, "mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org" <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, "roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org" <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, "shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org" <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, "akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org" <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, "brauner-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org" <brauner-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, "muchun.song-fxUVXftIFDnyG1zEObXtfA@public.gmane.org" <muchun.song-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, "viro-RmSDqhL/yNMiFSDQTTA3OLVCufUGDwFn@public.gmane.org" <viro-RmSDqhL/yNMiFSDQTTA3OLVCufUGDwFn@public.gmane.org>, "zhengqi.arch-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org" <zhengqi.arch-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, "ebiederm-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org" <ebiederm-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org>, "Liam.Howlett-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org" <Liam.Howlett-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, "chengzhihao1-hv44wF8Li93QT0dZR+AlfA@public.gmane.org" <chengzhihao1-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, "pilgrimtao-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org" <pilgrimtao-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Content-Transfer-Encoding: base64
+Return-path: <linux-doc-owner@vger.kernel.org>
+In-Reply-To: <CAJD7tkbHKQBoz7kn6ZjMTMoxLKYs7x9w4uRGWLvuyOogmBkZ_g@mail.gmail.com>
+Content-Language: zh-CN
+Content-ID: <370AA8CD74597143B46B0A36D41DF0C7@didichuxing.com>
+List-ID: <cgroups.vger.kernel.org>
+To: Yosry Ahmed <yosryahmed@google.com>
+Cc: "tj@kernel.org" <tj@kernel.org>, "lizefan.x@bytedance.com" <lizefan.x@bytedance.com>, "hannes@cmpxchg.org" <hannes@cmpxchg.org>, "corbet@lwn.net" <corbet@lwn.net>, "mhocko@kernel.org" <mhocko@kernel.org>, "roman.gushchin@linux.dev" <roman.gushchin@linux.dev>, "shakeelb@google.com" <shakeelb@google.com>, "akpm@linux-foundation.org" <akpm@linux-foundation.org>, "brauner@kernel.org" <brauner@kernel.org>, "muchun.song@linux.dev" <muchun.song@linux.dev>, "viro@zeniv.linux.org.uk" <viro@zeniv.linux.org.uk>, "zhengqi.arch@bytedance.com" <zhengqi.arch@bytedance.com>, "ebiederm@xmission.com" <ebiederm@xmission.com>, "Liam.Howlett@oracle.com" <Liam.Howlett@oracle.com>, "chengzhihao1@huawei.com" <chengzhihao1@huawei.com>, "pilgrimtao@gmail.com" <pilgrimtao@gmail.com>
 
-On Wed, May 17, 2023 at 1:01=E2=80=AFAM =E7=A8=8B=E5=9E=B2=E6=B6=9B Chengka=
-itao Cheng
-<chengkaitao-+mmu7dyatJ+Rq8AjE7tl8g@public.gmane.org> wrote:
->
-> At 2023-05-17 14:59:06, "Yosry Ahmed" <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org> wrote:
-> >+David Rientjes
-> >
-> >On Tue, May 16, 2023 at 8:20=E2=80=AFPM chengkaitao <chengkaitao@didiglo=
-bal.com> wrote:
-> >>
-> >> Establish a new OOM score algorithm, supports the cgroup level OOM
-> >> protection mechanism. When an global/memcg oom event occurs, we treat
-> >> all processes in the cgroup as a whole, and OOM killers need to select
-> >> the process to kill based on the protection quota of the cgroup.
-> >>
-> >
-> >Perhaps this is only slightly relevant, but at Google we do have a
-> >different per-memcg approach to protect from OOM kills, or more
-> >specifically tell the kernel how we would like the OOM killer to
-> >behave.
-> >
-> >We define an interface called memory.oom_score_badness, and we also
-> >allow it to be specified per-process through a procfs interface,
-> >similar to oom_score_adj.
-> >
-> >These scores essentially tell the OOM killer the order in which we
-> >prefer memcgs to be OOM'd, and the order in which we want processes in
-> >the memcg to be OOM'd. By default, all processes and memcgs start with
-> >the same score. Ties are broken based on the rss of the process or the
-> >usage of the memcg (prefer to kill the process/memcg that will free
-> >more memory) -- similar to the current OOM killer.
->
-> Thank you for providing a new application scenario. You have described a
-> new per-memcg approach, but a simple introduction cannot explain the
-> details of your approach clearly. If you could compare and analyze my
-> patches for possible defects, or if your new approach has advantages
-> that my patches do not have, I would greatly appreciate it.
-
-Sorry if I was not clear, I am not implying in any way that the
-approach I am describing is better than your patches. I am guilty of
-not conducting the proper analysis you are requesting.
-
-I just saw the thread and thought it might be interesting to you or
-others to know the approach that we have been using for years in our
-production. I guess the target is the same, be able to tell the OOM
-killer which memcgs/processes are more important to protect. The
-fundamental difference is that instead of tuning this based on the
-memory usage of the memcg (your approach), we essentially give the OOM
-killer the ordering in which we want memcgs/processes to be OOM
-killed. This maps to jobs priorities essentially.
-
-If this approach works for you (or any other audience), that's great,
-I can share more details and perhaps we can reach something that we
-can both use :)
-
->
-> >This has been brought up before in other discussions without much
-> >interest [1], but just thought it may be relevant here.
-> >
-> >[1]https://lore.kernel.org/lkml/CAHS8izN3ej1mqUpnNQ8c-1Bx5EeO7q5NOkh0qrY=
-_4PLqc8rkHA-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org/#t
->
-> --
-> Thanks for your comment!
-> chengkaitao
->
+QXQgMjAyMy0wNS0xNyAxNjowOTo1MCwgIllvc3J5IEFobWVkIiA8eW9zcnlhaG1lZEBnb29nbGUu
+Y29tPiB3cm90ZToNCj5PbiBXZWQsIE1heSAxNywgMjAyMyBhdCAxOjAx4oCvQU0g56iL5Z6y5rab
+IENoZW5na2FpdGFvIENoZW5nDQo+PGNoZW5na2FpdGFvQGRpZGlnbG9iYWwuY29tPiB3cm90ZToN
+Cj4+DQo+PiBBdCAyMDIzLTA1LTE3IDE0OjU5OjA2LCAiWW9zcnkgQWhtZWQiIDx5b3NyeWFobWVk
+QGdvb2dsZS5jb20+IHdyb3RlOg0KPj4gPitEYXZpZCBSaWVudGplcw0KPj4gPg0KPj4gPk9uIFR1
+ZSwgTWF5IDE2LCAyMDIzIGF0IDg6MjDigK9QTSBjaGVuZ2thaXRhbyA8Y2hlbmdrYWl0YW9AZGlk
+aWdsb2JhbC5jb20+IHdyb3RlOg0KPj4gPj4NCj4+ID4+IEVzdGFibGlzaCBhIG5ldyBPT00gc2Nv
+cmUgYWxnb3JpdGhtLCBzdXBwb3J0cyB0aGUgY2dyb3VwIGxldmVsIE9PTQ0KPj4gPj4gcHJvdGVj
+dGlvbiBtZWNoYW5pc20uIFdoZW4gYW4gZ2xvYmFsL21lbWNnIG9vbSBldmVudCBvY2N1cnMsIHdl
+IHRyZWF0DQo+PiA+PiBhbGwgcHJvY2Vzc2VzIGluIHRoZSBjZ3JvdXAgYXMgYSB3aG9sZSwgYW5k
+IE9PTSBraWxsZXJzIG5lZWQgdG8gc2VsZWN0DQo+PiA+PiB0aGUgcHJvY2VzcyB0byBraWxsIGJh
+c2VkIG9uIHRoZSBwcm90ZWN0aW9uIHF1b3RhIG9mIHRoZSBjZ3JvdXAuDQo+PiA+Pg0KPj4gPg0K
+Pj4gPlBlcmhhcHMgdGhpcyBpcyBvbmx5IHNsaWdodGx5IHJlbGV2YW50LCBidXQgYXQgR29vZ2xl
+IHdlIGRvIGhhdmUgYQ0KPj4gPmRpZmZlcmVudCBwZXItbWVtY2cgYXBwcm9hY2ggdG8gcHJvdGVj
+dCBmcm9tIE9PTSBraWxscywgb3IgbW9yZQ0KPj4gPnNwZWNpZmljYWxseSB0ZWxsIHRoZSBrZXJu
+ZWwgaG93IHdlIHdvdWxkIGxpa2UgdGhlIE9PTSBraWxsZXIgdG8NCj4+ID5iZWhhdmUuDQo+PiA+
+DQo+PiA+V2UgZGVmaW5lIGFuIGludGVyZmFjZSBjYWxsZWQgbWVtb3J5Lm9vbV9zY29yZV9iYWRu
+ZXNzLCBhbmQgd2UgYWxzbw0KPj4gPmFsbG93IGl0IHRvIGJlIHNwZWNpZmllZCBwZXItcHJvY2Vz
+cyB0aHJvdWdoIGEgcHJvY2ZzIGludGVyZmFjZSwNCj4+ID5zaW1pbGFyIHRvIG9vbV9zY29yZV9h
+ZGouDQo+PiA+DQo+PiA+VGhlc2Ugc2NvcmVzIGVzc2VudGlhbGx5IHRlbGwgdGhlIE9PTSBraWxs
+ZXIgdGhlIG9yZGVyIGluIHdoaWNoIHdlDQo+PiA+cHJlZmVyIG1lbWNncyB0byBiZSBPT00nZCwg
+YW5kIHRoZSBvcmRlciBpbiB3aGljaCB3ZSB3YW50IHByb2Nlc3NlcyBpbg0KPj4gPnRoZSBtZW1j
+ZyB0byBiZSBPT00nZC4gQnkgZGVmYXVsdCwgYWxsIHByb2Nlc3NlcyBhbmQgbWVtY2dzIHN0YXJ0
+IHdpdGgNCj4+ID50aGUgc2FtZSBzY29yZS4gVGllcyBhcmUgYnJva2VuIGJhc2VkIG9uIHRoZSBy
+c3Mgb2YgdGhlIHByb2Nlc3Mgb3IgdGhlDQo+PiA+dXNhZ2Ugb2YgdGhlIG1lbWNnIChwcmVmZXIg
+dG8ga2lsbCB0aGUgcHJvY2Vzcy9tZW1jZyB0aGF0IHdpbGwgZnJlZQ0KPj4gPm1vcmUgbWVtb3J5
+KSAtLSBzaW1pbGFyIHRvIHRoZSBjdXJyZW50IE9PTSBraWxsZXIuDQo+Pg0KPj4gVGhhbmsgeW91
+IGZvciBwcm92aWRpbmcgYSBuZXcgYXBwbGljYXRpb24gc2NlbmFyaW8uIFlvdSBoYXZlIGRlc2Ny
+aWJlZCBhDQo+PiBuZXcgcGVyLW1lbWNnIGFwcHJvYWNoLCBidXQgYSBzaW1wbGUgaW50cm9kdWN0
+aW9uIGNhbm5vdCBleHBsYWluIHRoZQ0KPj4gZGV0YWlscyBvZiB5b3VyIGFwcHJvYWNoIGNsZWFy
+bHkuIElmIHlvdSBjb3VsZCBjb21wYXJlIGFuZCBhbmFseXplIG15DQo+PiBwYXRjaGVzIGZvciBw
+b3NzaWJsZSBkZWZlY3RzLCBvciBpZiB5b3VyIG5ldyBhcHByb2FjaCBoYXMgYWR2YW50YWdlcw0K
+Pj4gdGhhdCBteSBwYXRjaGVzIGRvIG5vdCBoYXZlLCBJIHdvdWxkIGdyZWF0bHkgYXBwcmVjaWF0
+ZSBpdC4NCj4NCj5Tb3JyeSBpZiBJIHdhcyBub3QgY2xlYXIsIEkgYW0gbm90IGltcGx5aW5nIGlu
+IGFueSB3YXkgdGhhdCB0aGUNCj5hcHByb2FjaCBJIGFtIGRlc2NyaWJpbmcgaXMgYmV0dGVyIHRo
+YW4geW91ciBwYXRjaGVzLiBJIGFtIGd1aWx0eSBvZg0KPm5vdCBjb25kdWN0aW5nIHRoZSBwcm9w
+ZXIgYW5hbHlzaXMgeW91IGFyZSByZXF1ZXN0aW5nLg0KDQpUaGVyZSBpcyBubyBwZXJmZWN0IGFw
+cHJvYWNoIGluIHRoZSB3b3JsZCwgYW5kIEkgYWxzbyBzZWVrIHlvdXIgYWR2aWNlIHdpdGgNCmEg
+bGVhcm5pbmcgYXR0aXR1ZGUuIFlvdSBkb24ndCBuZWVkIHRvIHNheSBzb3JyeSwgSSBzaG91bGQg
+c2F5IHRoYW5rIHlvdS4NCg0KPkkganVzdCBzYXcgdGhlIHRocmVhZCBhbmQgdGhvdWdodCBpdCBt
+aWdodCBiZSBpbnRlcmVzdGluZyB0byB5b3Ugb3INCj5vdGhlcnMgdG8ga25vdyB0aGUgYXBwcm9h
+Y2ggdGhhdCB3ZSBoYXZlIGJlZW4gdXNpbmcgZm9yIHllYXJzIGluIG91cg0KPnByb2R1Y3Rpb24u
+IEkgZ3Vlc3MgdGhlIHRhcmdldCBpcyB0aGUgc2FtZSwgYmUgYWJsZSB0byB0ZWxsIHRoZSBPT00N
+Cj5raWxsZXIgd2hpY2ggbWVtY2dzL3Byb2Nlc3NlcyBhcmUgbW9yZSBpbXBvcnRhbnQgdG8gcHJv
+dGVjdC4gVGhlDQo+ZnVuZGFtZW50YWwgZGlmZmVyZW5jZSBpcyB0aGF0IGluc3RlYWQgb2YgdHVu
+aW5nIHRoaXMgYmFzZWQgb24gdGhlDQo+bWVtb3J5IHVzYWdlIG9mIHRoZSBtZW1jZyAoeW91ciBh
+cHByb2FjaCksIHdlIGVzc2VudGlhbGx5IGdpdmUgdGhlIE9PTQ0KPmtpbGxlciB0aGUgb3JkZXJp
+bmcgaW4gd2hpY2ggd2Ugd2FudCBtZW1jZ3MvcHJvY2Vzc2VzIHRvIGJlIE9PTQ0KPmtpbGxlZC4g
+VGhpcyBtYXBzIHRvIGpvYnMgcHJpb3JpdGllcyBlc3NlbnRpYWxseS4NCg0KS2lsbGluZyBwcm9j
+ZXNzZXMgaW4gb3JkZXIgb2YgbWVtb3J5IHVzYWdlIGNhbm5vdCBlZmZlY3RpdmVseSBwcm90ZWN0
+DQppbXBvcnRhbnQgcHJvY2Vzc2VzLiBLaWxsaW5nIHByb2Nlc3NlcyBpbiBhIHVzZXItZGVmaW5l
+ZCBwcmlvcml0eSBvcmRlcg0Kd2lsbCByZXN1bHQgaW4gYSBsYXJnZSBudW1iZXIgb2YgT09NIGV2
+ZW50cyBhbmQgc3RpbGwgbm90IGJlaW5nIGFibGUgdG8NCnJlbGVhc2UgZW5vdWdoIG1lbW9yeS4g
+SSBoYXZlIGJlZW4gc2VhcmNoaW5nIGZvciBhIGJhbGFuY2UgYmV0d2Vlbg0KdGhlIHR3byBtZXRo
+b2RzLCBzbyB0aGF0IHRoZWlyIHNob3J0Y29taW5ncyBhcmUgbm90IHRvbyBvYnZpb3VzLg0KVGhl
+IGJpZ2dlc3QgYWR2YW50YWdlIG9mIG1lbWNnIGlzIGl0cyB0cmVlIHRvcG9sb2d5LCBhbmQgSSBh
+bHNvIGhvcGUNCnRvIG1ha2UgZ29vZCB1c2Ugb2YgaXQuDQoNCj5JZiB0aGlzIGFwcHJvYWNoIHdv
+cmtzIGZvciB5b3UgKG9yIGFueSBvdGhlciBhdWRpZW5jZSksIHRoYXQncyBncmVhdCwNCj5JIGNh
+biBzaGFyZSBtb3JlIGRldGFpbHMgYW5kIHBlcmhhcHMgd2UgY2FuIHJlYWNoIHNvbWV0aGluZyB0
+aGF0IHdlDQo+Y2FuIGJvdGggdXNlIDopDQoNCklmIHlvdSBoYXZlIGEgZ29vZCBpZGVhLCBwbGVh
+c2Ugc2hhcmUgbW9yZSBkZXRhaWxzIG9yIHNob3cgc29tZSBjb2RlLg0KSSB3b3VsZCBncmVhdGx5
+IGFwcHJlY2lhdGUgaXQNCg0KPj4NCj4+ID5UaGlzIGhhcyBiZWVuIGJyb3VnaHQgdXAgYmVmb3Jl
+IGluIG90aGVyIGRpc2N1c3Npb25zIHdpdGhvdXQgbXVjaA0KPj4gPmludGVyZXN0IFsxXSwgYnV0
+IGp1c3QgdGhvdWdodCBpdCBtYXkgYmUgcmVsZXZhbnQgaGVyZS4NCj4+ID4NCj4+ID5bMV1odHRw
+czovL2xvcmUua2VybmVsLm9yZy9sa21sL0NBSFM4aXpOM2VqMW1xVXBuTlE4Yy0xQng1RWVPN3E1
+Tk9raDBxcllfNFBMcWM4cmtIQUBtYWlsLmdtYWlsLmNvbS8jdA0KDQotLQ0KVGhhbmtzIGZvciB5
+b3VyIGNvbW1lbnQhDQpjaGVuZ2thaXRhbw0KDQo=
