@@ -1,51 +1,93 @@
-From: =?utf-8?B?56iL5Z6y5rabIENoZW5na2FpdGFvIENoZW5n?= 
-        <chengkaitao@didiglobal.com>
+From: Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 Subject: Re: [PATCH v4 0/2] memcontrol: support cgroup level OOM protection
-Date: Wed, 17 May 2023 08:01:20 +0000
-Message-ID: <09A746CC-E38D-4ECA-B0F4-862EC6229A0F@didiglobal.com>
+Date: Wed, 17 May 2023 01:09:50 -0700
+Message-ID: <CAJD7tkbHKQBoz7kn6ZjMTMoxLKYs7x9w4uRGWLvuyOogmBkZ_g@mail.gmail.com>
 References: <CAJD7tkYPGwAFo0mrhq5twsVquwFwkhOyPwsZJtECw-5HAXtQrg@mail.gmail.com>
+ <09A746CC-E38D-4ECA-B0F4-862EC6229A0F@didiglobal.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: base64
-Return-path: <linux-doc-owner@vger.kernel.org>
-In-Reply-To: <CAJD7tkYPGwAFo0mrhq5twsVquwFwkhOyPwsZJtECw-5HAXtQrg@mail.gmail.com>
-Content-Language: zh-CN
-Content-ID: <13CC8B0707FBE64DB87317BF1BE42440@didichuxing.com>
+Content-Transfer-Encoding: quoted-printable
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20221208; t=1684311027; x=1686903027;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=M/JbPTvNpjTaAOSiw7cq2XUFwTTZo3maiLd9kZ3gbPY=;
+        b=E/nQr0TtAbvKOJgpRKAM1JVFuP/MwUX23KxLMaK9E935LDpjE6s9HpTk6zcktHzA3V
+         lVxuSKWxkpaEF/0X7X4fb0A2wQtR+BP46udE3XC2KotT4N3Y20wucgNCN5myvUQPrgYm
+         hf8qXaIk4/mtVqOzBMdebf1uOebU+yZFQwgKC0uSR7A2S8DJaBgTCt2tXTRjmHgu9gTl
+         He1rqLvC6itIyQX551xHdP0ntcFbz4HClZ9Wg7mkLnBAKGlfTSh3/2KEYLgKR0024kd1
+         FZk9gcyZUQemmV3CyHP8mGDAj9j4MwZkxgKrt5y90zAG/N8tFGr657bHQAGYojKPXnWN
+         MoDw==
+In-Reply-To: <09A746CC-E38D-4ECA-B0F4-862EC6229A0F-+mmu7dyatJ+Rq8AjE7tl8g@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="windows-1252"
-To: Yosry Ahmed <yosryahmed@google.com>
-Cc: "tj@kernel.org" <tj@kernel.org>, "lizefan.x@bytedance.com" <lizefan.x@bytedance.com>, "hannes@cmpxchg.org" <hannes@cmpxchg.org>, "corbet@lwn.net" <corbet@lwn.net>, "mhocko@kernel.org" <mhocko@kernel.org>, "roman.gushchin@linux.dev" <roman.gushchin@linux.dev>, "shakeelb@google.com" <shakeelb@google.com>, "akpm@linux-foundation.org" <akpm@linux-foundation.org>, "brauner@kernel.org" <brauner@kernel.org>, "muchun.song@linux.dev" <muchun.song@linux.dev>, "viro@zeniv.linux.org.uk" <viro@zeniv.linux.org.uk>, "zhengqi.arch@bytedance.com" <zhengqi.arch@bytedance.com>, "ebiederm@xmission.com" <ebiederm@xmission.com>, "Liam.Howlett@oracle.com" <Liam.Howlett@oracle.com>, "chengzhihao1@huawei.com" <chengzhihao1@huawei.com>, "pilgrimtao@gmail.com" <pilgrimtao@gmail.com>
+Content-Type: text/plain; charset="utf-8"
+To: =?UTF-8?B?56iL5Z6y5rabIENoZW5na2FpdGFvIENoZW5n?= <chengkaitao-+mmu7dyatJ+Rq8AjE7tl8g@public.gmane.org>
+Cc: "tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org" <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, "lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org" <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, "hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org" <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, "corbet-T1hC0tSOHrs@public.gmane.org" <corbet-T1hC0tSOHrs@public.gmane.org>, "mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org" <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, "roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org" <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, "shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org" <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, "akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org" <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, "brauner-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org" <brauner-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, "muchun.song-fxUVXftIFDnyG1zEObXtfA@public.gmane.org" <muchun.song-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, "viro-RmSDqhL/yNMiFSDQTTA3OLVCufUGDwFn@public.gmane.org" <viro-RmSDqhL/yNMiFSDQTTA3OLVCufUGDwFn@public.gmane.org>, "zhengqi.arch-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org" <zhengqi.arch-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, "ebiederm-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org" <ebiederm-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org>, "Liam.Howlett-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org" <Liam.Howlett-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, "chengzhihao1-hv44wF8Li93QT0dZR+AlfA@public.gmane.org" <chengzhihao1-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, "pilgrimtao-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org" <pilgrimtao-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 
-QXQgMjAyMy0wNS0xNyAxNDo1OTowNiwgIllvc3J5IEFobWVkIiA8eW9zcnlhaG1lZEBnb29nbGUu
-Y29tPiB3cm90ZToNCj4rRGF2aWQgUmllbnRqZXMNCj4NCj5PbiBUdWUsIE1heSAxNiwgMjAyMyBh
-dCA4OjIw4oCvUE0gY2hlbmdrYWl0YW8gPGNoZW5na2FpdGFvQGRpZGlnbG9iYWwuY29tPiB3cm90
-ZToNCj4+DQo+PiBFc3RhYmxpc2ggYSBuZXcgT09NIHNjb3JlIGFsZ29yaXRobSwgc3VwcG9ydHMg
-dGhlIGNncm91cCBsZXZlbCBPT00NCj4+IHByb3RlY3Rpb24gbWVjaGFuaXNtLiBXaGVuIGFuIGds
-b2JhbC9tZW1jZyBvb20gZXZlbnQgb2NjdXJzLCB3ZSB0cmVhdA0KPj4gYWxsIHByb2Nlc3NlcyBp
-biB0aGUgY2dyb3VwIGFzIGEgd2hvbGUsIGFuZCBPT00ga2lsbGVycyBuZWVkIHRvIHNlbGVjdA0K
-Pj4gdGhlIHByb2Nlc3MgdG8ga2lsbCBiYXNlZCBvbiB0aGUgcHJvdGVjdGlvbiBxdW90YSBvZiB0
-aGUgY2dyb3VwLg0KPj4NCj4NCj5QZXJoYXBzIHRoaXMgaXMgb25seSBzbGlnaHRseSByZWxldmFu
-dCwgYnV0IGF0IEdvb2dsZSB3ZSBkbyBoYXZlIGENCj5kaWZmZXJlbnQgcGVyLW1lbWNnIGFwcHJv
-YWNoIHRvIHByb3RlY3QgZnJvbSBPT00ga2lsbHMsIG9yIG1vcmUNCj5zcGVjaWZpY2FsbHkgdGVs
-bCB0aGUga2VybmVsIGhvdyB3ZSB3b3VsZCBsaWtlIHRoZSBPT00ga2lsbGVyIHRvDQo+YmVoYXZl
-Lg0KPg0KPldlIGRlZmluZSBhbiBpbnRlcmZhY2UgY2FsbGVkIG1lbW9yeS5vb21fc2NvcmVfYmFk
-bmVzcywgYW5kIHdlIGFsc28NCj5hbGxvdyBpdCB0byBiZSBzcGVjaWZpZWQgcGVyLXByb2Nlc3Mg
-dGhyb3VnaCBhIHByb2NmcyBpbnRlcmZhY2UsDQo+c2ltaWxhciB0byBvb21fc2NvcmVfYWRqLg0K
-Pg0KPlRoZXNlIHNjb3JlcyBlc3NlbnRpYWxseSB0ZWxsIHRoZSBPT00ga2lsbGVyIHRoZSBvcmRl
-ciBpbiB3aGljaCB3ZQ0KPnByZWZlciBtZW1jZ3MgdG8gYmUgT09NJ2QsIGFuZCB0aGUgb3JkZXIg
-aW4gd2hpY2ggd2Ugd2FudCBwcm9jZXNzZXMgaW4NCj50aGUgbWVtY2cgdG8gYmUgT09NJ2QuIEJ5
-IGRlZmF1bHQsIGFsbCBwcm9jZXNzZXMgYW5kIG1lbWNncyBzdGFydCB3aXRoDQo+dGhlIHNhbWUg
-c2NvcmUuIFRpZXMgYXJlIGJyb2tlbiBiYXNlZCBvbiB0aGUgcnNzIG9mIHRoZSBwcm9jZXNzIG9y
-IHRoZQ0KPnVzYWdlIG9mIHRoZSBtZW1jZyAocHJlZmVyIHRvIGtpbGwgdGhlIHByb2Nlc3MvbWVt
-Y2cgdGhhdCB3aWxsIGZyZWUNCj5tb3JlIG1lbW9yeSkgLS0gc2ltaWxhciB0byB0aGUgY3VycmVu
-dCBPT00ga2lsbGVyLg0KDQpUaGFuayB5b3UgZm9yIHByb3ZpZGluZyBhIG5ldyBhcHBsaWNhdGlv
-biBzY2VuYXJpby4gWW91IGhhdmUgZGVzY3JpYmVkIGENCm5ldyBwZXItbWVtY2cgYXBwcm9hY2gs
-IGJ1dCBhIHNpbXBsZSBpbnRyb2R1Y3Rpb24gY2Fubm90IGV4cGxhaW4gdGhlDQpkZXRhaWxzIG9m
-IHlvdXIgYXBwcm9hY2ggY2xlYXJseS4gSWYgeW91IGNvdWxkIGNvbXBhcmUgYW5kIGFuYWx5emUg
-bXkNCnBhdGNoZXMgZm9yIHBvc3NpYmxlIGRlZmVjdHMsIG9yIGlmIHlvdXIgbmV3IGFwcHJvYWNo
-IGhhcyBhZHZhbnRhZ2VzDQp0aGF0IG15IHBhdGNoZXMgZG8gbm90IGhhdmUsIEkgd291bGQgZ3Jl
-YXRseSBhcHByZWNpYXRlIGl0Lg0KDQo+VGhpcyBoYXMgYmVlbiBicm91Z2h0IHVwIGJlZm9yZSBp
-biBvdGhlciBkaXNjdXNzaW9ucyB3aXRob3V0IG11Y2gNCj5pbnRlcmVzdCBbMV0sIGJ1dCBqdXN0
-IHRob3VnaHQgaXQgbWF5IGJlIHJlbGV2YW50IGhlcmUuDQo+DQo+WzFdaHR0cHM6Ly9sb3JlLmtl
-cm5lbC5vcmcvbGttbC9DQUhTOGl6TjNlajFtcVVwbk5ROGMtMUJ4NUVlTzdxNU5Pa2gwcXJZXzRQ
-THFjOHJrSEFAbWFpbC5nbWFpbC5jb20vI3QNCg0KLS0gDQpUaGFua3MgZm9yIHlvdXIgY29tbWVu
-dCENCmNoZW5na2FpdGFvDQoNCg==
+On Wed, May 17, 2023 at 1:01=E2=80=AFAM =E7=A8=8B=E5=9E=B2=E6=B6=9B Chengka=
+itao Cheng
+<chengkaitao-+mmu7dyatJ+Rq8AjE7tl8g@public.gmane.org> wrote:
+>
+> At 2023-05-17 14:59:06, "Yosry Ahmed" <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org> wrote:
+> >+David Rientjes
+> >
+> >On Tue, May 16, 2023 at 8:20=E2=80=AFPM chengkaitao <chengkaitao@didiglo=
+bal.com> wrote:
+> >>
+> >> Establish a new OOM score algorithm, supports the cgroup level OOM
+> >> protection mechanism. When an global/memcg oom event occurs, we treat
+> >> all processes in the cgroup as a whole, and OOM killers need to select
+> >> the process to kill based on the protection quota of the cgroup.
+> >>
+> >
+> >Perhaps this is only slightly relevant, but at Google we do have a
+> >different per-memcg approach to protect from OOM kills, or more
+> >specifically tell the kernel how we would like the OOM killer to
+> >behave.
+> >
+> >We define an interface called memory.oom_score_badness, and we also
+> >allow it to be specified per-process through a procfs interface,
+> >similar to oom_score_adj.
+> >
+> >These scores essentially tell the OOM killer the order in which we
+> >prefer memcgs to be OOM'd, and the order in which we want processes in
+> >the memcg to be OOM'd. By default, all processes and memcgs start with
+> >the same score. Ties are broken based on the rss of the process or the
+> >usage of the memcg (prefer to kill the process/memcg that will free
+> >more memory) -- similar to the current OOM killer.
+>
+> Thank you for providing a new application scenario. You have described a
+> new per-memcg approach, but a simple introduction cannot explain the
+> details of your approach clearly. If you could compare and analyze my
+> patches for possible defects, or if your new approach has advantages
+> that my patches do not have, I would greatly appreciate it.
+
+Sorry if I was not clear, I am not implying in any way that the
+approach I am describing is better than your patches. I am guilty of
+not conducting the proper analysis you are requesting.
+
+I just saw the thread and thought it might be interesting to you or
+others to know the approach that we have been using for years in our
+production. I guess the target is the same, be able to tell the OOM
+killer which memcgs/processes are more important to protect. The
+fundamental difference is that instead of tuning this based on the
+memory usage of the memcg (your approach), we essentially give the OOM
+killer the ordering in which we want memcgs/processes to be OOM
+killed. This maps to jobs priorities essentially.
+
+If this approach works for you (or any other audience), that's great,
+I can share more details and perhaps we can reach something that we
+can both use :)
+
+>
+> >This has been brought up before in other discussions without much
+> >interest [1], but just thought it may be relevant here.
+> >
+> >[1]https://lore.kernel.org/lkml/CAHS8izN3ej1mqUpnNQ8c-1Bx5EeO7q5NOkh0qrY=
+_4PLqc8rkHA-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org/#t
+>
+> --
+> Thanks for your comment!
+> chengkaitao
+>
