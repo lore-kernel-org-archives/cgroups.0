@@ -1,60 +1,121 @@
-From: Alistair Popple <apopple-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [LSF/MM/BPF TOPIC] Reducing zombie memcgs
-Date: Tue, 16 May 2023 22:21:10 +1000
-Message-ID: <87y1lo8nwp.fsf@nvidia.com>
-References: <CABdmKX2M6koq4Q0Cmp_-=wbP0Qa190HdEGGaHfxNS05gAkUtPA@mail.gmail.com>
- <ZFLdDyHoIdJSXJt+@google.com> <874josz4rd.fsf@nvidia.com>
- <ZFPP71czDDxMPLQK@google.com> <877ctm518f.fsf@nvidia.com>
- <ZFbZZPkSpsKMe8iR@google.com> <87ttwnkzap.fsf@nvidia.com>
- <ZFuvhP5qGPivokc0@google.com> <87jzxe9baj.fsf@nvidia.com>
- <ZF6rACJzilA06oe+@nvidia.com>
+From: chengkaitao <chengkaitao@didiglobal.com>
+Subject: [PATCH v4 0/2] memcontrol: support cgroup level OOM protection
+Date: Wed, 17 May 2023 11:20:30 +0800
+Message-ID: <20230517032032.76334-1-chengkaitao@didiglobal.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
- s=selector2;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=fzcjHcXWoVQ9GLNTnd73sPk1oCZehBHl2lJh8tWwizI=;
- b=lA1ZEmsHCWucaqf46VPtbG1zVcANVfgFiM/r3FVhqk4KUSwab2J6jN4WlVcn7n5XMEl5ozBa05jokKvsMhpYCuz+XwfbSu5FtNM3/zA4rweKJek+iu9Mo3WUY+H9XJyBprGOitFRKOx1UQaSqRGiJ1yVOgU09f7hQ3Slt9PtoePR4kmnE5WbQKZNwTtvWqInjYqxjMNIEbWtZvwvEOHef0ewAzdLt8hFrGXJtAlKr8tD4qfjWV+S4BGhACiGuSr4bHAv9Ppdf1qOgbzLu7TLAUWHUAdy/CeOMu7mU89XYn5MOz+pVLAwDU4qRqMYJDzQou2RJWLTtHrz/gPqgZzmkA==
-In-reply-to: <ZF6rACJzilA06oe+-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>
+Content-Transfer-Encoding: 7BIT
+Return-path: <linux-doc-owner@vger.kernel.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Jason Gunthorpe <jgg-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>
-Cc: Chris Li <chrisl-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, "T.J. Mercier" <tjmercier-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, lsf-pc-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Muchun Song <muchun.song-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Kalesh Singh <kaleshsingh-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Yu Zhao <yuzhao-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+To: tj@kernel.org, lizefan.x@bytedance.com, hannes@cmpxchg.org, corbet@lwn.net, mhocko@kernel.org, roman.gushchin@linux.dev, shakeelb@google.com, akpm@linux-foundation.org, brauner@kernel.org, muchun.song@linux.dev
+Cc: viro@zeniv.linux.org.uk, zhengqi.arch@bytedance.com, ebiederm@xmission.com, Liam.Howlett@Oracle.com, chengzhihao1@huawei.com, pilgrimtao@gmail.com, haolee.swjtu@gmail.com, yuzhao@google.com, willy@infradead.org, vasily.averin@linux.dev, vbabka@suse.cz, surenb@google.com, sfr@canb.auug.org.au, mcgrof@kernel.org, sujiaxun@uniontech.com, feng.tang@intel.com, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, chengkaitao <chengkaitao@didiglobal.com>
 
+Establish a new OOM score algorithm, supports the cgroup level OOM
+protection mechanism. When an global/memcg oom event occurs, we treat
+all processes in the cgroup as a whole, and OOM killers need to select
+the process to kill based on the protection quota of the cgroup.
 
-Jason Gunthorpe <jgg-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org> writes:
+Here is a more detailed comparison and introduction of the old 
+oom_score_adj mechanism and the new oom_protect mechanism,
 
-> On Fri, May 12, 2023 at 06:45:13PM +1000, Alistair Popple wrote:
->
->> However review comments suggested it needed to be added as part of
->> memcg. As soon as we do that we have to address how we deal with shared
->> memory. If we stick with the original RLIMIT proposal this discussion
->> goes away, but based on feedback I think I need to at least investigate
->> integrating it into memcg to get anything merged.
->
-> Personally I don't see how we can effectively solve the per-page
-> problem without also tracking all the owning memcgs for every
-> page. This means giving each struct page an array of memcgs
->
-> I suspect this will be too expensive to be realistically
-> implementable.
+1. The regulating granularity of oom_protect is smaller than that of
+   oom_score_adj. On a 512G physical machine, the minimum granularity
+   adjusted by oom_score_adj is 512M, and the minimum granularity
+   adjusted by oom_protect is one page (4K)
+2. It may be simple to create a lightweight parent process and uniformly
+   set the oom_score_adj of some important processes, but it is not a
+   simple matter to make multi-level settings for tens of thousands of
+   processes on the physical machine through the lightweight parent
+   processes. We may need a huge table to record the value of oom_score_adj
+   maintained by all lightweight parent processes, and the user process
+   limited by the parent process has no ability to change its own
+   oom_score_adj, because it does not know the details of the huge
+   table. on the other hand, we have to set the common parent process'
+   oom_score_adj, before it forks all children processes. We must strictly
+   follow this setting sequence, and once oom_score_adj is set, it cannot
+   be changed. To sum up, it is very difficult to apply oom_score_adj in
+   other situations. The new patch adopts the cgroup mechanism. It does not
+   need any parent process to manage oom_score_adj. the settings between
+   each memcg are independent of each other, making it easier to plan the
+   OOM order of all processes. Due to the unique nature of memory
+   resources, current Service cloud vendors are not oversold in memory
+   planning. I would like to use the new patch to try to achieve the
+   possibility of oversold memory resources.
+3. I conducted a test and deployed an excessive number of containers on
+   a physical machine, By setting the oom_score_adj value of all processes
+   in the container to a positive number through dockerinit, even processes
+   that occupy very little memory in the container are easily killed,
+   resulting in a large number of invalid kill behaviors. If dockerinit is
+   also killed unfortunately, it will trigger container self-healing, and
+   the container will rebuild, resulting in more severe memory
+   oscillations. The new patch abandons the behavior of adding an equal
+   amount of oom_score_adj to each process in the container and adopts a
+   shared oom_protect quota for all processes in the container. If a
+   process in the container is killed, the remaining other processes will
+   receive more oom_protect quota, making it more difficult for the
+   remaining processes to be killed. In my test case, the new patch reduced
+   the number of invalid kill behaviors by 70%. 
+4. oom_score_adj is a global configuration that cannot achieve a kill
+   order that only affects a certain memcg-oom-killer. However, the
+   oom_protect mechanism inherits downwards (If the oom_protect quota of
+   the parent cgroup is less than the sum of sub-cgroups oom_protect quota,
+   the oom_protect quota of each sub-cgroup will be proportionally reduced.
+   If the oom_protect quota of the parent cgroup is greater than the sum of
+   sub-cgroups oom_protect quota, the oom_protect quota of each sub-cgroup
+   will be proportionally increased). The purpose of doing so is that users
+   can set oom_protect quota according to their own needs, and the system
+   management process can set appropriate oom_protect quota on the parent
+   memcg as the final cover. If the oom_protect of the parent cgroup is 0,
+   the kill order of memcg-oom or global-ooms will not be affected by user
+   specific settings.
+5. Per-process accounting does not count shared memory, similar to
+   active page cache, which also increases the probability of OOM-kill.
+   However, the memcg accounting may be more reasonable, as its memory
+   statistics are more comprehensive. In the new patch, all the shared
+   memory will also consume the oom_protect quota of the memcg, and the
+   process's oom_protect quota of the memcg will decrease, the probability
+   of they being killed will increase.
+6. In the final discussion of patch v2, we discussed that although the
+   adjustment range of oom_score_adj is [-1000,1000], but essentially it
+   only allows two usecases(OOM_SCORE_ADJ_MIN, OOM_SCORE_ADJ_MAX) reliably.
+   Everything in between is clumsy at best. In order to solve this problem
+   in the new patch, I introduced a new indicator oom_kill_inherit, which
+   counts the number of times the local and child cgroups have been
+   selected by the OOM killer of the ancestor cgroup. oom_kill_inherit
+   maintains a negative correlation with memory.oom.protect, so we have a
+   ruler to measure the optimal value of memory.oom.protect. By observing
+   the proportion of oom_kill_inherit in the parent cgroup, I can
+   effectively adjust the value of oom_protect to achieve the best.
 
-Yep, agree with that. Tracking the list of memcgs was the main problem
-that prevented this.
+Changelog:
+v4:
+  * Fix warning: overflow in expression. (patch 1)
+  * Supplementary commit information. (patch 0)
+v3:
+  * Add "auto" option for memory.oom.protect. (patch 1)
+  * Fix division errors. (patch 1)
+  * Add observation indicator oom_kill_inherit. (patch 2)
+  https://lore.kernel.org/linux-mm/20230506114948.6862-1-chengkaitao@didiglobal.com/
+v2:
+  * Modify the formula of the process request memcg protection quota.
+  https://lore.kernel.org/linux-mm/20221208034644.3077-1-chengkaitao@didiglobal.com/
+v1:
+  https://lore.kernel.org/linux-mm/20221130070158.44221-1-chengkaitao@didiglobal.com/
 
-> If it is done then we may not even need a pin controller on its own as
-> the main memcg should capture most of it. (althought it doesn't
-> distinguish between movable/swappable and non-swappable memory)
->
-> But this is all being done for the libvirt people, so it would be good
-> to involve them
+chengkaitao (2):
+  mm: memcontrol: protect the memory in cgroup from being oom killed
+  memcg: add oom_kill_inherit event indicator
 
-Do you know of anyone specifically there that is interested in this?
-I've rebased my series on latest upstream and am about to resend it so
-would be good to get some feedback from them.
+ Documentation/admin-guide/cgroup-v2.rst |  29 ++++-
+ fs/proc/base.c                          |  17 ++-
+ include/linux/memcontrol.h              |  46 +++++++-
+ include/linux/oom.h                     |   3 +-
+ include/linux/page_counter.h            |   6 +
+ mm/memcontrol.c                         | 199 ++++++++++++++++++++++++++++++++
+ mm/oom_kill.c                           |  25 ++--
+ mm/page_counter.c                       |  30 +++++
+ 8 files changed, 334 insertions(+), 21 deletions(-)
 
-Thanks.
-
-> Jason
+-- 
+2.14.1
 
