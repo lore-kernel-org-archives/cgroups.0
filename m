@@ -1,150 +1,110 @@
-From: Yosry Ahmed <yosryahmed@google.com>
+From: =?utf-8?B?56iL5Z6y5rabIENoZW5na2FpdGFvIENoZW5n?= 
+        <chengkaitao@didiglobal.com>
 Subject: Re: [PATCH v4 0/2] memcontrol: support cgroup level OOM protection
-Date: Wed, 17 May 2023 13:42:12 -0700
-Message-ID: <CAJD7tkaOMeeGNqm6nFyHgPhd9VpnCVqCAYCY725NoTohTMAnmw@mail.gmail.com>
-References: <CAJD7tkbHKQBoz7kn6ZjMTMoxLKYs7x9w4uRGWLvuyOogmBkZ_g@mail.gmail.com>
- <6AB7FF12-F855-4D5B-9F75-9F7D64823144@didiglobal.com>
+Date: Thu, 18 May 2023 05:12:11 +0000
+Message-ID: <B66FDA24-50C6-444D-BD84-124E68A2AEEE@didiglobal.com>
+References: <CAJD7tkaOMeeGNqm6nFyHgPhd9VpnCVqCAYCY725NoTohTMAnmw@mail.gmail.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-Return-path: <linux-doc-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20221208; t=1684356168; x=1686948168;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=CvCkfJyXdBizSrj+S1CIuIjHPj7mR2pZW70tMG5/ENw=;
-        b=k1ibNgQ1aq28Dhp9cGBlgSxQJ7lbc/VdbcXrDj0eAoSPCEx1xcoDbcgMCSEqtIEIKI
-         3GPic5hMCSaX21aJvzjbvjDyMc8l0sqejX2otxM8GSrW6JWPtr/4f8YtHld2rn1dnUBx
-         k+aSQCrSTdfmO5gim5Lnq9Ve8U1YlVehAWMGpz0+oufZ424aTfD8G852MYX5GuYYjS21
-         vsrdXtzfvgk/1X5CChW00yaz0QHjQVFPesWj0npLjj185JeKtvibvT3TRJg1tejKzou7
-         gemYCK9U2mfESleEXZ1k2GewsSh30YnAmHtuHgyWG99vSxr6pMWI54GUX+JThPbOoTqA
-         IbpQ==
-In-Reply-To: <6AB7FF12-F855-4D5B-9F75-9F7D64823144@didiglobal.com>
-List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="utf-8"
-To: =?UTF-8?B?56iL5Z6y5rabIENoZW5na2FpdGFvIENoZW5n?= <chengkaitao@didiglobal.com>
+Content-Transfer-Encoding: base64
+Return-path: <linux-doc-owner@vger.kernel.org>
+In-Reply-To: <CAJD7tkaOMeeGNqm6nFyHgPhd9VpnCVqCAYCY725NoTohTMAnmw@mail.gmail.com>
+Content-Language: zh-CN
+Content-ID: <979D7504BF289D4BA11C323B85EB0DF5@didichuxing.com>
+List-ID: <cgroups.vger.kernel.org>
+To: Yosry Ahmed <yosryahmed@google.com>
 Cc: "tj@kernel.org" <tj@kernel.org>, "lizefan.x@bytedance.com" <lizefan.x@bytedance.com>, "hannes@cmpxchg.org" <hannes@cmpxchg.org>, "corbet@lwn.net" <corbet@lwn.net>, "mhocko@kernel.org" <mhocko@kernel.org>, "roman.gushchin@linux.dev" <roman.gushchin@linux.dev>, "shakeelb@google.com" <shakeelb@google.com>, "akpm@linux-foundation.org" <akpm@linux-foundation.org>, "brauner@kernel.org" <brauner@kernel.org>, "muchun.song@linux.dev" <muchun.song@linux.dev>, "viro@zeniv.linux.org.uk" <viro@zeniv.linux.org.uk>, "zhengqi.arch@bytedance.com" <zhengqi.arch@bytedance.com>, "ebiederm@xmission.com" <ebiederm@xmission.com>, "Liam.Howlett@oracle.com" <Liam.Howlett@oracle.com>, "chengzhihao1@huawei.com" <chengzhihao1@huawei.com>, "pilgrimtao@gmail.com" <pilgrimtao@gmail.com>
 
-On Wed, May 17, 2023 at 3:01=E2=80=AFAM =E7=A8=8B=E5=9E=B2=E6=B6=9B Chengka=
-itao Cheng
-<chengkaitao@didiglobal.com> wrote:
->
-> At 2023-05-17 16:09:50, "Yosry Ahmed" <yosryahmed@google.com> wrote:
-> >On Wed, May 17, 2023 at 1:01=E2=80=AFAM =E7=A8=8B=E5=9E=B2=E6=B6=9B Chen=
-gkaitao Cheng
-> ><chengkaitao@didiglobal.com> wrote:
-> >>
-> >> At 2023-05-17 14:59:06, "Yosry Ahmed" <yosryahmed@google.com> wrote:
-> >> >+David Rientjes
-> >> >
-> >> >On Tue, May 16, 2023 at 8:20=E2=80=AFPM chengkaitao <chengkaitao@didi=
-global.com> wrote:
-> >> >>
-> >> >> Establish a new OOM score algorithm, supports the cgroup level OOM
-> >> >> protection mechanism. When an global/memcg oom event occurs, we tre=
-at
-> >> >> all processes in the cgroup as a whole, and OOM killers need to sel=
-ect
-> >> >> the process to kill based on the protection quota of the cgroup.
-> >> >>
-> >> >
-> >> >Perhaps this is only slightly relevant, but at Google we do have a
-> >> >different per-memcg approach to protect from OOM kills, or more
-> >> >specifically tell the kernel how we would like the OOM killer to
-> >> >behave.
-> >> >
-> >> >We define an interface called memory.oom_score_badness, and we also
-> >> >allow it to be specified per-process through a procfs interface,
-> >> >similar to oom_score_adj.
-> >> >
-> >> >These scores essentially tell the OOM killer the order in which we
-> >> >prefer memcgs to be OOM'd, and the order in which we want processes i=
-n
-> >> >the memcg to be OOM'd. By default, all processes and memcgs start wit=
-h
-> >> >the same score. Ties are broken based on the rss of the process or th=
-e
-> >> >usage of the memcg (prefer to kill the process/memcg that will free
-> >> >more memory) -- similar to the current OOM killer.
-> >>
-> >> Thank you for providing a new application scenario. You have described=
- a
-> >> new per-memcg approach, but a simple introduction cannot explain the
-> >> details of your approach clearly. If you could compare and analyze my
-> >> patches for possible defects, or if your new approach has advantages
-> >> that my patches do not have, I would greatly appreciate it.
-> >
-> >Sorry if I was not clear, I am not implying in any way that the
-> >approach I am describing is better than your patches. I am guilty of
-> >not conducting the proper analysis you are requesting.
->
-> There is no perfect approach in the world, and I also seek your advice wi=
-th
-> a learning attitude. You don't need to say sorry, I should say thank you.
->
-> >I just saw the thread and thought it might be interesting to you or
-> >others to know the approach that we have been using for years in our
-> >production. I guess the target is the same, be able to tell the OOM
-> >killer which memcgs/processes are more important to protect. The
-> >fundamental difference is that instead of tuning this based on the
-> >memory usage of the memcg (your approach), we essentially give the OOM
-> >killer the ordering in which we want memcgs/processes to be OOM
-> >killed. This maps to jobs priorities essentially.
->
-> Killing processes in order of memory usage cannot effectively protect
-> important processes. Killing processes in a user-defined priority order
-> will result in a large number of OOM events and still not being able to
-> release enough memory. I have been searching for a balance between
-> the two methods, so that their shortcomings are not too obvious.
-> The biggest advantage of memcg is its tree topology, and I also hope
-> to make good use of it.
-
-For us, killing processes in a user-defined priority order works well.
-
-It seems like to tune memory.oom.protect you use oom_kill_inherit to
-observe how many times this memcg has been killed due to a limit in an
-ancestor. Wouldn't it be more straightforward to specify the priority
-of protections among memcgs?
-
-For example, if you observe multiple memcgs being OOM killed due to
-hitting an ancestor limit, you will need to decide which of them to
-increase memory.oom.protect for more, based on their importance.
-Otherwise, if you increase all of them, then there is no point if all
-the memory is protected, right?
-
-In this case, wouldn't it be easier to just tell the OOM killer the
-relative priority among the memcgs?
-
->
-> >If this approach works for you (or any other audience), that's great,
-> >I can share more details and perhaps we can reach something that we
-> >can both use :)
->
-> If you have a good idea, please share more details or show some code.
-> I would greatly appreciate it
-
-The code we have needs to be rebased onto a different version and
-cleaned up before it can be shared, but essentially it is as
-described.
-
-(a) All processes and memcgs start with a default score.
-(b) Userspace can specify scores for memcgs and processes. A higher
-score means higher priority (aka less score gets killed first).
-(c) The OOM killer essentially looks for the memcg with the lowest
-scores to kill, then among this memcg, it looks for the process with
-the lowest score. Ties are broken based on usage, so essentially if
-all processes/memcgs have the default score, we fallback to the
-current OOM behavior.
-
->
-> >>
-> >> >This has been brought up before in other discussions without much
-> >> >interest [1], but just thought it may be relevant here.
-> >> >
-> >> >[1]https://lore.kernel.org/lkml/CAHS8izN3ej1mqUpnNQ8c-1Bx5EeO7q5NOkh0=
-qrY_4PLqc8rkHA@mail.gmail.com/#t
->
-> --
-> Thanks for your comment!
-> chengkaitao
->
+QXQgMjAyMy0wNS0xOCAwNDo0MjoxMiwgIllvc3J5IEFobWVkIiA8eW9zcnlhaG1lZEBnb29nbGUu
+Y29tPiB3cm90ZToNCj5PbiBXZWQsIE1heSAxNywgMjAyMyBhdCAzOjAx4oCvQU0g56iL5Z6y5rab
+IENoZW5na2FpdGFvIENoZW5nDQo+PGNoZW5na2FpdGFvQGRpZGlnbG9iYWwuY29tPiB3cm90ZToN
+Cj4+DQo+PiBBdCAyMDIzLTA1LTE3IDE2OjA5OjUwLCAiWW9zcnkgQWhtZWQiIDx5b3NyeWFobWVk
+QGdvb2dsZS5jb20+IHdyb3RlOg0KPj4gPk9uIFdlZCwgTWF5IDE3LCAyMDIzIGF0IDE6MDHigK9B
+TSDnqIvlnrLmtpsgQ2hlbmdrYWl0YW8gQ2hlbmcNCj4+ID48Y2hlbmdrYWl0YW9AZGlkaWdsb2Jh
+bC5jb20+IHdyb3RlOg0KPj4gPj4NCj4+ID4+IEF0IDIwMjMtMDUtMTcgMTQ6NTk6MDYsICJZb3Ny
+eSBBaG1lZCIgPHlvc3J5YWhtZWRAZ29vZ2xlLmNvbT4gd3JvdGU6DQo+PiA+PiA+K0RhdmlkIFJp
+ZW50amVzDQo+PiA+PiA+DQo+PiA+PiA+T24gVHVlLCBNYXkgMTYsIDIwMjMgYXQgODoyMOKAr1BN
+IGNoZW5na2FpdGFvIDxjaGVuZ2thaXRhb0BkaWRpZ2xvYmFsLmNvbT4gd3JvdGU6DQo+PiA+PiA+
+Pg0KPj4gPj4gVGhhbmsgeW91IGZvciBwcm92aWRpbmcgYSBuZXcgYXBwbGljYXRpb24gc2NlbmFy
+aW8uIFlvdSBoYXZlIGRlc2NyaWJlZCBhDQo+PiA+PiBuZXcgcGVyLW1lbWNnIGFwcHJvYWNoLCBi
+dXQgYSBzaW1wbGUgaW50cm9kdWN0aW9uIGNhbm5vdCBleHBsYWluIHRoZQ0KPj4gPj4gZGV0YWls
+cyBvZiB5b3VyIGFwcHJvYWNoIGNsZWFybHkuIElmIHlvdSBjb3VsZCBjb21wYXJlIGFuZCBhbmFs
+eXplIG15DQo+PiA+PiBwYXRjaGVzIGZvciBwb3NzaWJsZSBkZWZlY3RzLCBvciBpZiB5b3VyIG5l
+dyBhcHByb2FjaCBoYXMgYWR2YW50YWdlcw0KPj4gPj4gdGhhdCBteSBwYXRjaGVzIGRvIG5vdCBo
+YXZlLCBJIHdvdWxkIGdyZWF0bHkgYXBwcmVjaWF0ZSBpdC4NCj4+ID4NCj4+ID5Tb3JyeSBpZiBJ
+IHdhcyBub3QgY2xlYXIsIEkgYW0gbm90IGltcGx5aW5nIGluIGFueSB3YXkgdGhhdCB0aGUNCj4+
+ID5hcHByb2FjaCBJIGFtIGRlc2NyaWJpbmcgaXMgYmV0dGVyIHRoYW4geW91ciBwYXRjaGVzLiBJ
+IGFtIGd1aWx0eSBvZg0KPj4gPm5vdCBjb25kdWN0aW5nIHRoZSBwcm9wZXIgYW5hbHlzaXMgeW91
+IGFyZSByZXF1ZXN0aW5nLg0KPj4NCj4+IFRoZXJlIGlzIG5vIHBlcmZlY3QgYXBwcm9hY2ggaW4g
+dGhlIHdvcmxkLCBhbmQgSSBhbHNvIHNlZWsgeW91ciBhZHZpY2Ugd2l0aA0KPj4gYSBsZWFybmlu
+ZyBhdHRpdHVkZS4gWW91IGRvbid0IG5lZWQgdG8gc2F5IHNvcnJ5LCBJIHNob3VsZCBzYXkgdGhh
+bmsgeW91Lg0KPj4NCj4+ID5JIGp1c3Qgc2F3IHRoZSB0aHJlYWQgYW5kIHRob3VnaHQgaXQgbWln
+aHQgYmUgaW50ZXJlc3RpbmcgdG8geW91IG9yDQo+PiA+b3RoZXJzIHRvIGtub3cgdGhlIGFwcHJv
+YWNoIHRoYXQgd2UgaGF2ZSBiZWVuIHVzaW5nIGZvciB5ZWFycyBpbiBvdXINCj4+ID5wcm9kdWN0
+aW9uLiBJIGd1ZXNzIHRoZSB0YXJnZXQgaXMgdGhlIHNhbWUsIGJlIGFibGUgdG8gdGVsbCB0aGUg
+T09NDQo+PiA+a2lsbGVyIHdoaWNoIG1lbWNncy9wcm9jZXNzZXMgYXJlIG1vcmUgaW1wb3J0YW50
+IHRvIHByb3RlY3QuIFRoZQ0KPj4gPmZ1bmRhbWVudGFsIGRpZmZlcmVuY2UgaXMgdGhhdCBpbnN0
+ZWFkIG9mIHR1bmluZyB0aGlzIGJhc2VkIG9uIHRoZQ0KPj4gPm1lbW9yeSB1c2FnZSBvZiB0aGUg
+bWVtY2cgKHlvdXIgYXBwcm9hY2gpLCB3ZSBlc3NlbnRpYWxseSBnaXZlIHRoZSBPT00NCj4+ID5r
+aWxsZXIgdGhlIG9yZGVyaW5nIGluIHdoaWNoIHdlIHdhbnQgbWVtY2dzL3Byb2Nlc3NlcyB0byBi
+ZSBPT00NCj4+ID5raWxsZWQuIFRoaXMgbWFwcyB0byBqb2JzIHByaW9yaXRpZXMgZXNzZW50aWFs
+bHkuDQo+Pg0KPj4gS2lsbGluZyBwcm9jZXNzZXMgaW4gb3JkZXIgb2YgbWVtb3J5IHVzYWdlIGNh
+bm5vdCBlZmZlY3RpdmVseSBwcm90ZWN0DQo+PiBpbXBvcnRhbnQgcHJvY2Vzc2VzLiBLaWxsaW5n
+IHByb2Nlc3NlcyBpbiBhIHVzZXItZGVmaW5lZCBwcmlvcml0eSBvcmRlcg0KPj4gd2lsbCByZXN1
+bHQgaW4gYSBsYXJnZSBudW1iZXIgb2YgT09NIGV2ZW50cyBhbmQgc3RpbGwgbm90IGJlaW5nIGFi
+bGUgdG8NCj4+IHJlbGVhc2UgZW5vdWdoIG1lbW9yeS4gSSBoYXZlIGJlZW4gc2VhcmNoaW5nIGZv
+ciBhIGJhbGFuY2UgYmV0d2Vlbg0KPj4gdGhlIHR3byBtZXRob2RzLCBzbyB0aGF0IHRoZWlyIHNo
+b3J0Y29taW5ncyBhcmUgbm90IHRvbyBvYnZpb3VzLg0KPj4gVGhlIGJpZ2dlc3QgYWR2YW50YWdl
+IG9mIG1lbWNnIGlzIGl0cyB0cmVlIHRvcG9sb2d5LCBhbmQgSSBhbHNvIGhvcGUNCj4+IHRvIG1h
+a2UgZ29vZCB1c2Ugb2YgaXQuDQo+DQo+Rm9yIHVzLCBraWxsaW5nIHByb2Nlc3NlcyBpbiBhIHVz
+ZXItZGVmaW5lZCBwcmlvcml0eSBvcmRlciB3b3JrcyB3ZWxsLg0KPg0KPkl0IHNlZW1zIGxpa2Ug
+dG8gdHVuZSBtZW1vcnkub29tLnByb3RlY3QgeW91IHVzZSBvb21fa2lsbF9pbmhlcml0IHRvDQo+
+b2JzZXJ2ZSBob3cgbWFueSB0aW1lcyB0aGlzIG1lbWNnIGhhcyBiZWVuIGtpbGxlZCBkdWUgdG8g
+YSBsaW1pdCBpbiBhbg0KPmFuY2VzdG9yLiBXb3VsZG4ndCBpdCBiZSBtb3JlIHN0cmFpZ2h0Zm9y
+d2FyZCB0byBzcGVjaWZ5IHRoZSBwcmlvcml0eQ0KPm9mIHByb3RlY3Rpb25zIGFtb25nIG1lbWNn
+cz8NCj4NCj5Gb3IgZXhhbXBsZSwgaWYgeW91IG9ic2VydmUgbXVsdGlwbGUgbWVtY2dzIGJlaW5n
+IE9PTSBraWxsZWQgZHVlIHRvDQo+aGl0dGluZyBhbiBhbmNlc3RvciBsaW1pdCwgeW91IHdpbGwg
+bmVlZCB0byBkZWNpZGUgd2hpY2ggb2YgdGhlbSB0bw0KPmluY3JlYXNlIG1lbW9yeS5vb20ucHJv
+dGVjdCBmb3IgbW9yZSwgYmFzZWQgb24gdGhlaXIgaW1wb3J0YW5jZS4NCj5PdGhlcndpc2UsIGlm
+IHlvdSBpbmNyZWFzZSBhbGwgb2YgdGhlbSwgdGhlbiB0aGVyZSBpcyBubyBwb2ludCBpZiBhbGwN
+Cj50aGUgbWVtb3J5IGlzIHByb3RlY3RlZCwgcmlnaHQ/DQoNCklmIGFsbCBtZW1vcnkgaW4gbWVt
+Y2cgaXMgcHJvdGVjdGVkLCBpdHMgbWVhbmluZyBpcyBzaW1pbGFyIHRvIHRoYXQgb2YgdGhlDQpo
+aWdoZXN0IHByaW9yaXR5IG1lbWNnIGluIHlvdXIgYXBwcm9hY2gsIHdoaWNoIGlzIHVsdGltYXRl
+bHkga2lsbGVkIG9yDQpuZXZlciBraWxsZWQuDQoNCj5JbiB0aGlzIGNhc2UsIHdvdWxkbid0IGl0
+IGJlIGVhc2llciB0byBqdXN0IHRlbGwgdGhlIE9PTSBraWxsZXIgdGhlDQo+cmVsYXRpdmUgcHJp
+b3JpdHkgYW1vbmcgdGhlIG1lbWNncz8NCj4NCj4+DQo+PiA+SWYgdGhpcyBhcHByb2FjaCB3b3Jr
+cyBmb3IgeW91IChvciBhbnkgb3RoZXIgYXVkaWVuY2UpLCB0aGF0J3MgZ3JlYXQsDQo+PiA+SSBj
+YW4gc2hhcmUgbW9yZSBkZXRhaWxzIGFuZCBwZXJoYXBzIHdlIGNhbiByZWFjaCBzb21ldGhpbmcg
+dGhhdCB3ZQ0KPj4gPmNhbiBib3RoIHVzZSA6KQ0KPj4NCj4+IElmIHlvdSBoYXZlIGEgZ29vZCBp
+ZGVhLCBwbGVhc2Ugc2hhcmUgbW9yZSBkZXRhaWxzIG9yIHNob3cgc29tZSBjb2RlLg0KPj4gSSB3
+b3VsZCBncmVhdGx5IGFwcHJlY2lhdGUgaXQNCj4NCj5UaGUgY29kZSB3ZSBoYXZlIG5lZWRzIHRv
+IGJlIHJlYmFzZWQgb250byBhIGRpZmZlcmVudCB2ZXJzaW9uIGFuZA0KPmNsZWFuZWQgdXAgYmVm
+b3JlIGl0IGNhbiBiZSBzaGFyZWQsIGJ1dCBlc3NlbnRpYWxseSBpdCBpcyBhcw0KPmRlc2NyaWJl
+ZC4NCj4NCj4oYSkgQWxsIHByb2Nlc3NlcyBhbmQgbWVtY2dzIHN0YXJ0IHdpdGggYSBkZWZhdWx0
+IHNjb3JlLg0KPihiKSBVc2Vyc3BhY2UgY2FuIHNwZWNpZnkgc2NvcmVzIGZvciBtZW1jZ3MgYW5k
+IHByb2Nlc3Nlcy4gQSBoaWdoZXINCj5zY29yZSBtZWFucyBoaWdoZXIgcHJpb3JpdHkgKGFrYSBs
+ZXNzIHNjb3JlIGdldHMga2lsbGVkIGZpcnN0KS4NCj4oYykgVGhlIE9PTSBraWxsZXIgZXNzZW50
+aWFsbHkgbG9va3MgZm9yIHRoZSBtZW1jZyB3aXRoIHRoZSBsb3dlc3QNCj5zY29yZXMgdG8ga2ls
+bCwgdGhlbiBhbW9uZyB0aGlzIG1lbWNnLCBpdCBsb29rcyBmb3IgdGhlIHByb2Nlc3Mgd2l0aA0K
+PnRoZSBsb3dlc3Qgc2NvcmUuIFRpZXMgYXJlIGJyb2tlbiBiYXNlZCBvbiB1c2FnZSwgc28gZXNz
+ZW50aWFsbHkgaWYNCj5hbGwgcHJvY2Vzc2VzL21lbWNncyBoYXZlIHRoZSBkZWZhdWx0IHNjb3Jl
+LCB3ZSBmYWxsYmFjayB0byB0aGUNCj5jdXJyZW50IE9PTSBiZWhhdmlvci4NCg0KSWYgbWVtb3J5
+IG92ZXJzb2xkIGlzIHNldmVyZSwgYWxsIHByb2Nlc3NlcyBvZiB0aGUgbG93ZXN0IHByaW9yaXR5
+DQptZW1jZyBtYXkgYmUga2lsbGVkIGJlZm9yZSBzZWxlY3Rpbmcgb3RoZXIgbWVtY2cgcHJvY2Vz
+c2VzLg0KSWYgdGhlcmUgYXJlIDEwMDAgcHJvY2Vzc2VzIHdpdGggYWxtb3N0IHplcm8gbWVtb3J5
+IHVzYWdlIGluDQp0aGUgbG93ZXN0IHByaW9yaXR5IG1lbWNnLCAxMDAwIGludmFsaWQga2lsbCBl
+dmVudHMgbWF5IG9jY3VyLg0KVG8gYXZvaWQgdGhpcyBzaXR1YXRpb24sIGV2ZW4gZm9yIHRoZSBs
+b3dlc3QgcHJpb3JpdHkgbWVtY2csDQpJIHdpbGwgbGVhdmUgaGltIGEgdmVyeSBzbWFsbCBvb20u
+cHJvdGVjdCBxdW90YS4NCg0KSWYgZmFjZWQgd2l0aCB0d28gbWVtY2dzIHdpdGggdGhlIHNhbWUg
+dG90YWwgbWVtb3J5IHVzYWdlIGFuZA0KcHJpb3JpdHksIG1lbWNnIEEgaGFzIG1vcmUgcHJvY2Vz
+c2VzIGJ1dCBsZXNzIG1lbW9yeSB1c2FnZSBwZXINCnNpbmdsZSBwcm9jZXNzLCBhbmQgbWVtY2cg
+QiBoYXMgZmV3ZXIgcHJvY2Vzc2VzIGJ1dCBtb3JlDQptZW1vcnkgdXNhZ2UgcGVyIHNpbmdsZSBw
+cm9jZXNzLCB0aGVuIHdoZW4gT09NIG9jY3VycywgdGhlDQpwcm9jZXNzZXMgaW4gbWVtY2cgQiBt
+YXkgY29udGludWUgdG8gYmUga2lsbGVkIHVudGlsIGFsbCBwcm9jZXNzZXMNCmluIG1lbWNnIEIg
+YXJlIGtpbGxlZCwgd2hpY2ggaXMgdW5mYWlyIHRvIG1lbWNnIEIgYmVjYXVzZSBtZW1jZyBBDQph
+bHNvIG9jY3VwaWVzIGEgbGFyZ2UgYW1vdW50IG9mIG1lbW9yeS4NCg0KRG9zZSB5b3VyIGFwcHJv
+YWNoIGhhdmUgdGhlc2UgaXNzdWVzPyBLaWxsaW5nIHByb2Nlc3NlcyBpbiBhDQp1c2VyLWRlZmlu
+ZWQgcHJpb3JpdHkgaXMgaW5kZWVkIGVhc2llciBhbmQgY2FuIHdvcmsgd2VsbCBpbiBtb3N0IGNh
+c2VzLA0KYnV0IEkgaGF2ZSBiZWVuIHRyeWluZyB0byBzb2x2ZSB0aGUgY2FzZXMgdGhhdCBpdCBj
+YW5ub3QgY292ZXIuDQoNCi0tDQpUaGFua3MgZm9yIHlvdXIgY29tbWVudCENCmNoZW5na2FpdGFv
+DQoNCg0K
