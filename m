@@ -1,46 +1,60 @@
-From: Haifeng Xu <haifeng.xu-LL2PKPoSiP3QT0dZR+AlfA@public.gmane.org>
-Subject: [PATCH 1/2] mm/memcontrol: fix typo in comment
-Date: Mon, 22 May 2023 09:52:32 +0000
-Message-ID: <20230522095233.4246-1-haifeng.xu@shopee.com>
+From: Haifeng Xu <haifeng.xu@shopee.com>
+Subject: [PATCH 2/2] selftests: cgroup: fix unexpected failure on test_memcg_low
+Date: Mon, 22 May 2023 09:52:33 +0000
+Message-ID: <20230522095233.4246-2-haifeng.xu@shopee.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=shopee.com; s=shopee.com; t=1684749169; x=1687341169;
+        d=shopee.com; s=shopee.com; t=1684749203; x=1687341203;
         h=content-transfer-encoding:mime-version:message-id:date:subject:cc
          :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=NppiYUjLfZGAuzUVZ8J+F3/te0H7WwC9yNWRHxqdAXU=;
-        b=mAHXhjnr4B10Di+HRXfOvHd45RH1ZC09M2i5WRiSBgtjO1iMvJbys9NM7W/AsSE3Tf
-         aNzA/ntPMdNMpF9baZBpdG+WGvf3d3LHjeGVj8FC53cvq4OayvPxKsyVFEJs6ynw0r+Z
-         Ipz3a9Xb0xy3+SGT7XoswuCsUz2YDYSwTZeuY9geRJKeEZIz7V91Dpr3ruuDuXH0oi0h
-         NpOKVdG9nLLXup+8gM28O/BgZ2GOTDRIedKyPuGXDKcsagJFgU9D2Zxe5zT+kl5jzZKn
-         fYBaJ/ZIjtxbGjjF3EuQcJTBbAXvT963tZNucsj7Y9FEjX4HPt9NdBqyHWvwYXztyor2
-         95Iw==
+        bh=hnIfipm8ADmVcPlfJeR2m6dzYHlF2xT+Sv9iRF6t3cY=;
+        b=AOzpCt/R5/HiWo6POXCM45SpS08bNlo11NcaKUQY8fbE74t46SQzwFReeowIfN1QBH
+         k42Pa4PS1GDGK68evYz8AKEVOtCHJrI1Ycb8tBHltfRKXUCfVX1cpN31oU4AKAUV/v3b
+         atvu/X/oySVxlD9Eqt4fOQR6IS55Z8JZhWRWfm2AikBq/n8wh3FmecrWs6Y5Ev6ljHfQ
+         u2sjZwIfVdOOAmurBV6Mx3WGS2fliHR2vLyTGHn7M5FHSLYPQ+zCv1C2h3ehMN+xzzZF
+         3022G70xrM3eiXml5jDArQFZrTLKq5hqXeoebTIw7Z+yxmB0sA3rMeGeSB+1U4Ak/wmv
+         Xm/w==
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org
-Cc: roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Haifeng Xu <haifeng.xu-LL2PKPoSiP3QT0dZR+AlfA@public.gmane.org>
+To: mhocko@kernel.org
+Cc: roman.gushchin@linux.dev, hannes@cmpxchg.org, shakeelb@google.com, akpm@linux-foundation.org, cgroups@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org, Haifeng Xu <haifeng.xu@shopee.com>
 
-Replace 'then' with 'than'.
+Since commit f079a020ba95 ("selftests: memcg: factor out common parts
+of memory.{low,min} tests"), the value used in second alloc_anon has
+changed from 148M to 170M. Because memory.low allows reclaiming page
+cache in child cgroups, so the memory.current is close to 30M instead
+of 50M. Therefore, adjust the expected value of parent cgroup.
 
-Signed-off-by: Haifeng Xu <haifeng.xu-LL2PKPoSiP3QT0dZR+AlfA@public.gmane.org>
+Fixes: f079a020ba95 ("selftests: memcg: factor out common parts of memory.{low,min} tests")
+Signed-off-by: Haifeng Xu <haifeng.xu@shopee.com>
 ---
- mm/memcontrol.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ tools/testing/selftests/cgroup/test_memcontrol.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
 
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index 4b27e245a055..ee78d3870edd 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -6896,7 +6896,7 @@ static unsigned long effective_protection(unsigned long usage,
- 	protected = min(usage, setting);
- 	/*
- 	 * If all cgroups at this level combined claim and use more
--	 * protection then what the parent affords them, distribute
-+	 * protection than what the parent affords them, distribute
- 	 * shares in proportion to utilization.
- 	 *
- 	 * We are using actual utilization rather than the statically
+diff --git a/tools/testing/selftests/cgroup/test_memcontrol.c b/tools/testing/selftests/cgroup/test_memcontrol.c
+index f4f7c0aef702..a2a90f4bfe9f 100644
+--- a/tools/testing/selftests/cgroup/test_memcontrol.c
++++ b/tools/testing/selftests/cgroup/test_memcontrol.c
+@@ -292,6 +292,7 @@ static int test_memcg_protection(const char *root, bool min)
+ 	char *children[4] = {NULL};
+ 	const char *attribute = min ? "memory.min" : "memory.low";
+ 	long c[4];
++	long current;
+ 	int i, attempts;
+ 	int fd;
+ 
+@@ -400,7 +401,8 @@ static int test_memcg_protection(const char *root, bool min)
+ 		goto cleanup;
+ 	}
+ 
+-	if (!values_close(cg_read_long(parent[1], "memory.current"), MB(50), 3))
++	current = min ? MB(50) : MB(30);
++	if (!values_close(cg_read_long(parent[1], "memory.current"), current, 3))
+ 		goto cleanup;
+ 
+ 	if (!reclaim_until(children[0], MB(10)))
 -- 
 2.25.1
 
