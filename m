@@ -1,92 +1,76 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [RFC PATCH 3/3] cgroup: Do not take css_set_lock in
- cgroup_show_path
-Date: Mon, 22 May 2023 10:55:12 -1000
-Message-ID: <ZGvWsOOw2C68SYUx@slm.duckdns.org>
-References: <20230502133847.14570-1-mkoutny@suse.com>
- <20230502133847.14570-4-mkoutny@suse.com>
- <ZFUktg4Yxa30jRBX@slm.duckdns.org>
- <ta7bilcvc7lzt5tvs44y5wxqt6i3gdmvzwcr5h2vxhjhshmivk@3mecui76fxvy>
- <ZFVIJlAMyzTh3QTP@slm.duckdns.org>
- <6rjdfjltz5kkwzobpeefbqxzj4wbd4jzstdryb6rb67td3x45q@5ujarspzjk3x>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCH for-6.4/block] block/rq_qos: protect rq_qos apis with a
+ new lock
+Date: Mon, 22 May 2023 10:59:31 -1000
+Message-ID: <ZGvXs8zmXcxsxL9D@slm.duckdns.org>
+References: <20230414084008.2085155-1-yukuai1@huaweicloud.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-Return-path: <linux-fsdevel-owner@vger.kernel.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20221208; t=1684788915; x=1687380915;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :mime-version:references:message-id:subject:cc:to:from:date:sender
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=jcZ4xLHlFOBJMSeqJOPUC+cCxzFb/2bpMue0o2+LyWg=;
-        b=NhDfKwKmQqTx0k0rb4etztvU4oZUGCrD6GnpDCUv5gYrdAInkuG+Pbfj2sWkRK75GE
-         eEv4hZBxOKHblTbEOwTE8x6zJjRsFkyPrKtDO5aSvmAzTGc9h2JeKkeliGLT4oxzAM+z
-         cqrGjTVlai+tBgdsWwPy2OB5kzJWfbCe2HwZib6Rd12NaySc4rZGX3wwAwljRyPxCuM7
-         mkkG66UWcfS8BoUgs04jDarriwnupHX7oygNuJwUINElggfMahoJvfCuSFteFLt58k2i
-         bWUIDDlJPDXAH7NrXm4602kvJUflIHBfpMI2XRO2fB4UVTvnvlAt2dcpTbtjAqgsi1HT
-         0LXw==
-Sender: Tejun Heo <htejun@gmail.com>
+        d=gmail.com; s=20221208; t=1684789174; x=1687381174;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:sender:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=REd5LAfz4pnrlWJeTXd7TNxPZb5If45Ls7fcUl4wW74=;
+        b=lRz3eawJzzyIYWWtoGkyPPVw4Nh3+OLy6jFJMU+raeIShsezJRKl644EXFjT8VXibp
+         HtJYoF9JEJBg1ClhPIoL6RiIcabDVfxMQPhGwQIHtkl7W0bHy7yjiwWYtoFH9LBHhYOU
+         JEiONdLbci65yJjPkYqVHntuJUL81Tsa0epXl5zHQ1Oe8SuyaMT1EvhdvIUB2HjHhQHl
+         Vs28CO3mP8kL3yjk9PfS8QV4l6+YVEYuPDyAMycXEGEcuUDzt+xC/uWjuHpt/UNCHrz/
+         BYyWPHtO5gNxmtmuteRhpakBhlwavqOtp7CZh4twewBcTdi8yL/m+ozPxlptx9Fyn0o1
+         tmQg==
+Sender: Tejun Heo <htejun-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 Content-Disposition: inline
-In-Reply-To: <6rjdfjltz5kkwzobpeefbqxzj4wbd4jzstdryb6rb67td3x45q@5ujarspzjk3x>
+In-Reply-To: <20230414084008.2085155-1-yukuai1-XF6JlduFytWkHkcT6e4Xnw@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="iso-8859-1"
-To: Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny@suse.com>
-Cc: linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, Alexander Viro <viro@zeniv.linux.org.uk>, Christian Brauner <brauner@kernel.org>, Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, Dave Chinner <dchinner@redhat.com>, Rik van Riel <riel@surriel.com>, Jiri Wiesner <jwiesner@suse.de>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Yu Kuai <yukuai1-XF6JlduFytWkHkcT6e4Xnw@public.gmane.org>
+Cc: hch-jcswGhMUV9g@public.gmane.org, josef-DigfWCa+lFGyeJad7bwFQA@public.gmane.org, axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, yi.zhang-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, yangerkun-hv44wF8Li93QT0dZR+AlfA@public.gmane.org
 
-Hello, Michal.
+On Fri, Apr 14, 2023 at 04:40:08PM +0800, Yu Kuai wrote:
+> From: Yu Kuai <yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+> 
+> commit 50e34d78815e ("block: disable the elevator int del_gendisk")
+> move rq_qos_exit() from disk_release() to del_gendisk(), this will
+> introduce some problems:
+> 
+> 1) If rq_qos_add() is triggered by enabling iocost/iolatency through
+>    cgroupfs, then it can concurrent with del_gendisk(), it's not safe to
+>    write 'q->rq_qos' concurrently.
+> 
+> 2) Activate cgroup policy that is relied on rq_qos will call
+>    rq_qos_add() and blkcg_activate_policy(), and if rq_qos_exit() is
+>    called in the middle, null-ptr-dereference will be triggered in
+>    blkcg_activate_policy().
+> 
+> 3) blkg_conf_open_bdev() can call blkdev_get_no_open() first to find the
+>    disk, then if rq_qos_exit() from del_gendisk() is done before
+>    rq_qos_add(), then memory will be leaked.
+> 
+> This patch add a new disk level mutex 'rq_qos_mutex':
+> 
+> 1) The lock will protect rq_qos_exit() directly.
+> 
+> 2) For wbt that doesn't relied on blk-cgroup, rq_qos_add() can only be
+>    called from disk initialization for now because wbt can't be
+>    destructed until rq_qos_exit(), so it's safe not to protect wbt for
+>    now. Hoever, in case that rq_qos dynamically destruction is supported
+>    in the furture, this patch also protect rq_qos_add() from wbt_init()
+>    directly, this is enough because blk-sysfs already synchronize
+>    writers with disk removal.
+> 
+> 3) For iocost and iolatency, in order to synchronize disk removal and
+>    cgroup configuration, the lock is held after blkdev_get_no_open()
+>    from blkg_conf_open_bdev(), and is released in blkg_conf_exit().
+>    In order to fix the above memory leak, disk_live() is checked after
+>    holding the new lock.
+> 
+> Fixes: 50e34d78815e ("block: disable the elevator int del_gendisk")
+> Signed-off-by: Yu Kuai <yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 
-Sorry about the delay.
+Acked-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 
-On Tue, May 09, 2023 at 12:34:53PM +0200, Michal Koutn=FD wrote:
-> On Fri, May 05, 2023 at 08:17:10AM -1000, Tejun Heo <tj@kernel.org> wrote:
-> > On Fri, May 05, 2023 at 07:32:40PM +0200, Michal Koutn=FD wrote:
-> > > On Fri, May 05, 2023 at 05:45:58AM -1000, Tejun Heo <tj@kernel.org> w=
-rote:
-> > > > > There are three relevant nodes for each cgroupfs entry:
-> > > > >=20
-> > > > >         R ... cgroup hierarchy root
-> > > > >         M ... mount root
-> > > > >         C ... reader's cgroup NS root
-> > > > >=20
-> > > > > mountinfo is supposed to show path from C to M.
-> > > >=20
-> > > > At least for cgroup2, the path from C to M isn't gonna change once =
-NS is
-> > > > established, right?
-> > >=20
-> > > Right. Although, the argument about M (when C above M or when C and M=
- in
-> > > different subtrees) implicitly relies on the namespace_sem.
-> >=20
-> > I don't follow. Can you please elaborate a bit more?
->=20
-> I wanted to say that even with restriction to cgroup2, the css_set_lock
-> removal would also rely on namespace_sem.
->=20
-> For a given mountinfo entry the path C--M won't change (no renames).
-> The question is whether cgroup M will stay around (with the relaxed
-> locking):
->=20
->   - C >=3D M (C is below M)=20
->     -> C (transitively) pins M
+Thanks.
 
-Yeah, this was what I was thinking.
-
->   - C < M (C is above M) or C and M are in two disjoint subtrees (path
->     goes through a common ancestor)
->     -> M could be released without relation to C (even on cgroup2, with
->        the css_set_lock removed) but such a destructive operation on M
->        is excluded as long as namespace_sem is held during entry
->        rendering.
->=20
-> Does that clarify the trade-off of removing css_set_lock at this spot?
-
-Right, you can have cgroup outside NS root still mounted and that mount root
-can be viewed from multiple cgroup NS's, so the the path isn't fixed either.
-
-Having enough lockdep annotations should do but if reasonable the preference
-is being a bit more self-contained.
-
-Thanks for the explanation.
-
---=20
+-- 
 tejun
