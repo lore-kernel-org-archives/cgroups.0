@@ -1,60 +1,55 @@
-From: Haifeng Xu <haifeng.xu@shopee.com>
-Subject: [PATCH 2/2] selftests: cgroup: fix unexpected failure on test_memcg_low
-Date: Mon, 22 May 2023 09:52:33 +0000
-Message-ID: <20230522095233.4246-2-haifeng.xu@shopee.com>
+From: "Linux regression tracking (Thorsten Leemhuis)" 
+        <regressions-rCxcAJFjeRkk+I/owrrOrA@public.gmane.org>
+Subject: Re: [PATCH -next v2 0/6] blk-wbt: minor fix and cleanup
+Date: Mon, 22 May 2023 14:00:51 +0200
+Message-ID: <5d53e634-33c2-e040-3c34-6c36e32eed81@leemhuis.info>
+References: <20230512093554.911753-1-yukuai1@huaweicloud.com>
+ <2b18e6ed-bce0-44f5-5ec4-8903f3c85cfe@kernel.dk>
+Reply-To: Linux regressions mailing list <regressions-cunTk1MwBs/YUNznpcFYbw@public.gmane.org>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=shopee.com; s=shopee.com; t=1684749203; x=1687341203;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=hnIfipm8ADmVcPlfJeR2m6dzYHlF2xT+Sv9iRF6t3cY=;
-        b=AOzpCt/R5/HiWo6POXCM45SpS08bNlo11NcaKUQY8fbE74t46SQzwFReeowIfN1QBH
-         k42Pa4PS1GDGK68evYz8AKEVOtCHJrI1Ycb8tBHltfRKXUCfVX1cpN31oU4AKAUV/v3b
-         atvu/X/oySVxlD9Eqt4fOQR6IS55Z8JZhWRWfm2AikBq/n8wh3FmecrWs6Y5Ev6ljHfQ
-         u2sjZwIfVdOOAmurBV6Mx3WGS2fliHR2vLyTGHn7M5FHSLYPQ+zCv1C2h3ehMN+xzzZF
-         3022G70xrM3eiXml5jDArQFZrTLKq5hqXeoebTIw7Z+yxmB0sA3rMeGeSB+1U4Ak/wmv
-         Xm/w==
+Content-Transfer-Encoding: quoted-printable
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Language: en-US, de-DE
+In-Reply-To: <2b18e6ed-bce0-44f5-5ec4-8903f3c85cfe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-To: mhocko@kernel.org
-Cc: roman.gushchin@linux.dev, hannes@cmpxchg.org, shakeelb@google.com, akpm@linux-foundation.org, cgroups@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org, Haifeng Xu <haifeng.xu@shopee.com>
+Content-Type: text/plain; charset="windows-1252"
+To: Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, Yu Kuai <yukuai1-XF6JlduFytWkHkcT6e4Xnw@public.gmane.org>, hch-jcswGhMUV9g@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, josef-DigfWCa+lFGyeJad7bwFQA@public.gmane.org, yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org
+Cc: lukas.bulwahn-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, yi.zhang-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, yangerkun-hv44wF8Li93QT0dZR+AlfA@public.gmane.org
 
-Since commit f079a020ba95 ("selftests: memcg: factor out common parts
-of memory.{low,min} tests"), the value used in second alloc_anon has
-changed from 148M to 170M. Because memory.low allows reclaiming page
-cache in child cgroups, so the memory.current is close to 30M instead
-of 50M. Therefore, adjust the expected value of parent cgroup.
+On 12.05.23 16:58, Jens Axboe wrote:
+> On 5/12/23 3:35=E2=80=AFAM, Yu Kuai wrote:
+>> From: Yu Kuai <yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+>>
+>> Changes in v2:
+>>  - make the code more readable for patch 1
+>>  - add a new attr_group that is only visible for rq based device
+>>  - explain in detail for patch 4
+>>  - add review tag for patch 2,3,5
+>>
+>> Yu Kuai (6):
+>>   blk-wbt: fix that wbt can't be disabled by default
+>>   blk-wbt: don't create wbt sysfs entry if CONFIG_BLK_WBT is disabled
+>>   blk-wbt: remove dead code to handle wbt enable/disable with io
+>>     inflight
+>>   blk-wbt: cleanup rwb_enabled() and wbt_disabled()
+>>   blk-iocost: move wbt_enable/disable_default() out of spinlock
+>>   blk-sysfs: add a new attr_group for blk_mq
+>>
+>>  block/blk-iocost.c |   7 +-
+>>  block/blk-sysfs.c  | 181 ++++++++++++++++++++++++++-------------------
+>>  block/blk-wbt.c    |  33 +++------
+>>  block/blk-wbt.h    |  19 -----
+>>  4 files changed, 117 insertions(+), 123 deletions(-)
+>=20
+> We need a 6.4 version of the fix to get rid of the regression. If you
+> want to do cleanups on top of that, then that's fine and that can go into
+> 6.5. But don't mix them up.
 
-Fixes: f079a020ba95 ("selftests: memcg: factor out common parts of memory.{low,min} tests")
-Signed-off-by: Haifeng Xu <haifeng.xu@shopee.com>
----
- tools/testing/selftests/cgroup/test_memcontrol.c | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
+Hmm, it seems nothing has happened here since ten days to fix this
+regression that likely is still present in 6.3. Yu Kuai, did it fall
+through the cracks, or is what Jens asked for more complicated than it
+sounds?
 
-diff --git a/tools/testing/selftests/cgroup/test_memcontrol.c b/tools/testing/selftests/cgroup/test_memcontrol.c
-index f4f7c0aef702..a2a90f4bfe9f 100644
---- a/tools/testing/selftests/cgroup/test_memcontrol.c
-+++ b/tools/testing/selftests/cgroup/test_memcontrol.c
-@@ -292,6 +292,7 @@ static int test_memcg_protection(const char *root, bool min)
- 	char *children[4] = {NULL};
- 	const char *attribute = min ? "memory.min" : "memory.low";
- 	long c[4];
-+	long current;
- 	int i, attempts;
- 	int fd;
- 
-@@ -400,7 +401,8 @@ static int test_memcg_protection(const char *root, bool min)
- 		goto cleanup;
- 	}
- 
--	if (!values_close(cg_read_long(parent[1], "memory.current"), MB(50), 3))
-+	current = min ? MB(50) : MB(30);
-+	if (!values_close(cg_read_long(parent[1], "memory.current"), current, 3))
- 		goto cleanup;
- 
- 	if (!reclaim_until(children[0], MB(10)))
--- 
-2.25.1
+Or was progress made and I just missed it?
 
+Ciao, Thorsten (wearing his 'the Linux kernel's regression tracker' hat)
