@@ -1,127 +1,92 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: Re: [RFC PATCH 0/5] cgroup/cpuset: A new "isolcpus" paritition
-Date: Mon, 22 May 2023 09:49:38 -1000
-Message-ID: <ZGvHUjOCjwat91Gq@slm.duckdns.org>
-References: <ZDmOjeBVsIcgSLIV@slm.duckdns.org>
- <60ec12dc-943c-b8f0-8b6f-97c5d332144c@redhat.com>
- <46d26abf-a725-b924-47fa-4419b20bbc02@redhat.com>
- <jqkf7jkuyxqiupmxmdbmpnbpojub2pjsz3oogwncmwqdghlsgk@phsqzirmmlyl>
- <f2bd7b1e-190e-1d08-f085-b4cae36fb5be@redhat.com>
- <ZFGOTHQj3k5rzmyR@blackbook>
- <deb7b684-3d7c-b3ae-7b36-5b7ba2dd8001@redhat.com>
- <ZFUo5IYAIwTEKR4_@slm.duckdns.org>
- <759603dd-7538-54ad-e63d-bb827b618ae3@redhat.com>
- <405b2805-538c-790b-5bf8-e90d3660f116@redhat.com>
+Subject: Re: [RFC PATCH 3/3] cgroup: Do not take css_set_lock in
+ cgroup_show_path
+Date: Mon, 22 May 2023 10:55:12 -1000
+Message-ID: <ZGvWsOOw2C68SYUx@slm.duckdns.org>
+References: <20230502133847.14570-1-mkoutny@suse.com>
+ <20230502133847.14570-4-mkoutny@suse.com>
+ <ZFUktg4Yxa30jRBX@slm.duckdns.org>
+ <ta7bilcvc7lzt5tvs44y5wxqt6i3gdmvzwcr5h2vxhjhshmivk@3mecui76fxvy>
+ <ZFVIJlAMyzTh3QTP@slm.duckdns.org>
+ <6rjdfjltz5kkwzobpeefbqxzj4wbd4jzstdryb6rb67td3x45q@5ujarspzjk3x>
 Mime-Version: 1.0
 Content-Transfer-Encoding: quoted-printable
-Return-path: <linux-doc-owner@vger.kernel.org>
+Return-path: <linux-fsdevel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20221208; t=1684784981; x=1687376981;
+        d=gmail.com; s=20221208; t=1684788915; x=1687380915;
         h=in-reply-to:content-transfer-encoding:content-disposition
          :mime-version:references:message-id:subject:cc:to:from:date:sender
          :from:to:cc:subject:date:message-id:reply-to;
-        bh=Ko/ib0DbbBIkYeF2ySdhWs5YudE4zxsP9MRqrw+BLoI=;
-        b=BHPHExlQjMdC1v2AlWCLoTJz495eSqFbI+OF9by02n2sfozwxdUWrjSK+k5DNG+tFM
-         0jXmVCZy15YjYtpqRupyHQWDzCgOMrfYB8x7fusFUnIIOy7OWv+0Ur+/tulnIG8ionbK
-         5ACCwNe65d9/G8bQONpgwu7gPsz6di3IeHfd9NgbznMRGplWO/LSP66bzPAlIxFbTuhp
-         l0EohHPfuCQsy8XwLElVEnFKB8GUXEZXoPVpbwGRG8kjSvspXtSzoW+59K8LbNccSI+U
-         Zy8GgtoF7Ak+whIz33YDy2AXryq4EL7GgumSVCjXzPWRAWU/tu4xO1EHkrANlY42nsDJ
-         T/6w==
+        bh=jcZ4xLHlFOBJMSeqJOPUC+cCxzFb/2bpMue0o2+LyWg=;
+        b=NhDfKwKmQqTx0k0rb4etztvU4oZUGCrD6GnpDCUv5gYrdAInkuG+Pbfj2sWkRK75GE
+         eEv4hZBxOKHblTbEOwTE8x6zJjRsFkyPrKtDO5aSvmAzTGc9h2JeKkeliGLT4oxzAM+z
+         cqrGjTVlai+tBgdsWwPy2OB5kzJWfbCe2HwZib6Rd12NaySc4rZGX3wwAwljRyPxCuM7
+         mkkG66UWcfS8BoUgs04jDarriwnupHX7oygNuJwUINElggfMahoJvfCuSFteFLt58k2i
+         bWUIDDlJPDXAH7NrXm4602kvJUflIHBfpMI2XRO2fB4UVTvnvlAt2dcpTbtjAqgsi1HT
+         0LXw==
 Sender: Tejun Heo <htejun@gmail.com>
 Content-Disposition: inline
-In-Reply-To: <405b2805-538c-790b-5bf8-e90d3660f116@redhat.com>
+In-Reply-To: <6rjdfjltz5kkwzobpeefbqxzj4wbd4jzstdryb6rb67td3x45q@5ujarspzjk3x>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="iso-8859-1"
-To: Waiman Long <longman@redhat.com>
-Cc: Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny@suse.com>, Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, Jonathan Corbet <corbet@lwn.net>, Shuah Khan <shuah@kernel.org>, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kselftest@vger.kernel.org, Juri Lelli <juri.lelli@redhat.com>, Valentin Schneider <vschneid@redhat.com>, Frederic Weisbecker <frederic@kernel.org>, Mrunal Patel <mpatel@redhat.com>, Ryan Phillips <rphillips@redhat.com>, Brent Rowsell <browsell@redhat.com>, Peter Hunt <pehunt@redhat.com>, Phil Auld <pauld@redhat.com>
+To: Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny@suse.com>
+Cc: linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, Alexander Viro <viro@zeniv.linux.org.uk>, Christian Brauner <brauner@kernel.org>, Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, Dave Chinner <dchinner@redhat.com>, Rik van Riel <riel@surriel.com>, Jiri Wiesner <jwiesner@suse.de>
 
-Hello, Waiman.
+Hello, Michal.
 
-On Sun, May 07, 2023 at 09:03:44PM -0400, Waiman Long wrote:
-...
-> =A0 cpuset.cpus.reserve
-> =A0=A0 =A0A read-write multiple values file which exists only on root
-> =A0=A0 =A0cgroup.
->=20
-> =A0=A0 =A0It lists all the CPUs that are reserved for adjacent and remote
-> =A0=A0 =A0partitions created in the system.=A0 See the next section for
-> =A0=A0 =A0more information on what an adjacent or remote partitions is.
->=20
-> =A0=A0 =A0Creation of adjacent partition does not require touching this
-> =A0=A0 =A0control file as CPU reservation will be done automatically.
-> =A0=A0 =A0In order to create a remote partition, the CPUs needed by the
-> =A0=A0 =A0remote partition has to be written to this file first.
->=20
-> =A0=A0 =A0A "+" prefix can be used to indicate a list of additional
-> =A0=A0 =A0CPUs that are to be added without disturbing the CPUs that are
-> =A0=A0 =A0originally there.=A0 For example, if its current value is "3-4",
-> =A0=A0 =A0echoing ""+5" to it will change it to "3-5".
->
-> =A0=A0 =A0Once a remote partition is destroyed, its CPUs have to be
-> =A0=A0 =A0removed from this file or no other process can use them.=A0 A "=
--"
-> =A0=A0 =A0prefix can be used to remove a list of CPUs from it.=A0 However,
-> =A0=A0 =A0removing CPUs that are currently used in existing partitions
-> =A0=A0 =A0may cause those partitions to become invalid.=A0 A single "-"
-> =A0=A0 =A0character without any number can be used to indicate removal
-> =A0=A0 =A0of all the free CPUs not allocated to any partitions to avoid
-> =A0=A0 =A0accidental partition invalidation.
+Sorry about the delay.
 
-Why is the syntax different from .cpus? Wouldn't it be better to keep them
-the same?
+On Tue, May 09, 2023 at 12:34:53PM +0200, Michal Koutn=FD wrote:
+> On Fri, May 05, 2023 at 08:17:10AM -1000, Tejun Heo <tj@kernel.org> wrote:
+> > On Fri, May 05, 2023 at 07:32:40PM +0200, Michal Koutn=FD wrote:
+> > > On Fri, May 05, 2023 at 05:45:58AM -1000, Tejun Heo <tj@kernel.org> w=
+rote:
+> > > > > There are three relevant nodes for each cgroupfs entry:
+> > > > >=20
+> > > > >         R ... cgroup hierarchy root
+> > > > >         M ... mount root
+> > > > >         C ... reader's cgroup NS root
+> > > > >=20
+> > > > > mountinfo is supposed to show path from C to M.
+> > > >=20
+> > > > At least for cgroup2, the path from C to M isn't gonna change once =
+NS is
+> > > > established, right?
+> > >=20
+> > > Right. Although, the argument about M (when C above M or when C and M=
+ in
+> > > different subtrees) implicitly relies on the namespace_sem.
+> >=20
+> > I don't follow. Can you please elaborate a bit more?
+>=20
+> I wanted to say that even with restriction to cgroup2, the css_set_lock
+> removal would also rely on namespace_sem.
+>=20
+> For a given mountinfo entry the path C--M won't change (no renames).
+> The question is whether cgroup M will stay around (with the relaxed
+> locking):
+>=20
+>   - C >=3D M (C is below M)=20
+>     -> C (transitively) pins M
 
-> =A0 cpuset.cpus.partition
-> =A0=A0 =A0A read-write single value file which exists on non-root
-> =A0=A0 =A0cpuset-enabled cgroups.=A0 This flag is owned by the parent cgr=
-oup
-> =A0=A0 =A0and is not delegatable.
->=20
-> =A0=A0 =A0It accepts only the following input values when written to.
->=20
-> =A0=A0 =A0=A0 =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=A0=A0=A0 =3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D
-> =A0=A0 =A0=A0 "member"=A0=A0=A0 Non-root member of a partition
-> =A0=A0 =A0=A0 "root"=A0=A0=A0 Partition root
-> =A0=A0 =A0=A0 "isolated"=A0=A0=A0 Partition root without load balancing
-> =A0=A0 =A0=A0 =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=A0=A0=A0 =3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D
->=20
-> =A0=A0 =A0A cpuset partition is a collection of cgroups with a partition
-> =A0=A0 =A0root at the top of the hierarchy and its descendants except
-> =A0=A0 =A0those that are separate partition roots themselves and their
-> =A0=A0 =A0descendants.=A0 A partition has exclusive access to the set of
-> =A0=A0 =A0CPUs allocated to it.=A0 Other cgroups outside of that partition
-> =A0=A0 =A0cannot use any CPUs in that set.
->=20
-> =A0=A0 =A0There are two types of partitions - adjacent and remote.=A0 The
-> =A0=A0 =A0parent of an adjacent partition must be a valid partition root.
-> =A0=A0 =A0Partition roots of adjacent partitions are all clustered around
-> =A0=A0 =A0the root cgroup.=A0 Creation of adjacent partition is done by
-> =A0=A0 =A0writing the desired partition type into "cpuset.cpus.partition".
->=20
-> =A0=A0 =A0A remote partition does not require a partition root parent.
-> =A0=A0 =A0So a remote partition can be formed far from the root cgroup.
-> =A0=A0 =A0However, its creation is a 2-step process.=A0 The CPUs needed
-> =A0=A0 =A0by a remote partition ("cpuset.cpus" of the partition root)
-> =A0=A0 =A0has to be written into "cpuset.cpus.reserve" of the root
-> =A0=A0 =A0cgroup first.=A0 After that, "isolated" can be written into
-> =A0=A0 =A0"cpuset.cpus.partition" of the partition root to form a remote
-> =A0=A0 =A0isolated partition which is the only supported remote partition
-> =A0=A0 =A0type for now.
->=20
-> =A0=A0 =A0All remote partitions are terminal as adjacent partition cannot
-> =A0=A0 =A0be created underneath it.
+Yeah, this was what I was thinking.
 
-Can you elaborate this extra restriction a bit further?
+>   - C < M (C is above M) or C and M are in two disjoint subtrees (path
+>     goes through a common ancestor)
+>     -> M could be released without relation to C (even on cgroup2, with
+>        the css_set_lock removed) but such a destructive operation on M
+>        is excluded as long as namespace_sem is held during entry
+>        rendering.
+>=20
+> Does that clarify the trade-off of removing css_set_lock at this spot?
 
-In general, I think it'd be really helpful if the document explains the
-reasoning behind the design decisions. ie. Why is reserving for? What
-purpose does it serve that the regular isolated ones cannot? That'd help
-clarifying the design decisions.
+Right, you can have cgroup outside NS root still mounted and that mount root
+can be viewed from multiple cgroup NS's, so the the path isn't fixed either.
 
-Thanks.
+Having enough lockdep annotations should do but if reasonable the preference
+is being a bit more self-contained.
+
+Thanks for the explanation.
 
 --=20
 tejun
