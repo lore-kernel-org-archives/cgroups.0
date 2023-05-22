@@ -1,97 +1,83 @@
-From: John Sperbeck <jsperbeck-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Subject: [PATCH] cgroup: always put cset in cgroup_css_set_put_fork
-Date: Sun, 21 May 2023 19:29:53 +0000
-Message-ID: <20230521192953.229715-1-jsperbeck@google.com>
+From: Qi Zheng <qi.zheng-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>
+Subject: Re: [PATCH] cgroup: fix missing cpus_read_{lock,unlock}() in
+ cgroup_transfer_tasks()
+Date: Mon, 22 May 2023 10:23:10 +0800
+Message-ID: <9a60d198-8c0a-9287-7c87-f129197d76f5@linux.dev>
+References: <20230517074545.2045035-1-qi.zheng@linux.dev>
+ <75E872A8-652F-40B0-80D0-378569E77775@linux.dev>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20221208; t=1684697418; x=1687289418;
-        h=cc:to:from:subject:message-id:mime-version:date:from:to:cc:subject
-         :date:message-id:reply-to;
-        bh=QsimBcbFkkOqpywwSH5EJmOyk1K46aweYARqzOVnpbQ=;
-        b=AwAik3WBbsct7NHTK6mPHFMdHYq0nx82//vVz1V6opRw5i8IPg0Ue9Coqr0iV4/bk+
-         SD6HHE9uIf5r3eg6/MKyA7eUk8I3MrANEz+hkV7gQhVeURby/SVKQW7nV6gOc+y9lHLJ
-         RscGr1/QqfmQMCRw7KydEfjk4FTpyhkfgP/XVgY0tXk+VgTH4yy7+98lBP5r3iFKoCty
-         YOtb/qJ71FZIuoLQEP6DhJRGVOiVLDob2y2gMupeXKSi0qwe3K1IW/NHW9plCPo/jRfI
-         4J5Qyf6tlrDYkWoIKf+67HIDR+H14iGWbAx4tRshmD8zE50IlDQDS3OttxBrWj3+YGQL
-         V50w==
-List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Christian Brauner <brauner-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, John Sperbeck <jsperbeck-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
+        t=1684722196;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=UHYDEvtNUWQuWC8UlRB684xx3KqIVrHp5jpKfKK7/Rs=;
+        b=mLyJnuISRSOn7JYqLqW/9fffUHnxwZ4K7bCP+b0RJL95YYS1JYBp5ZsMaS0AwQVeAWju4W
+        SC1S9MehptXFK2pfj2KorF/IIHgYcRUs4pZoV7UKnfk+Epe/orgRxJQ3AgyAcIsVrtpP4s
+        Uqz7Q5wSm5fpZD87c040T+aK3PV/eno=
+Content-Language: en-US
+In-Reply-To: <75E872A8-652F-40B0-80D0-378569E77775-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>
+List-ID: <cgroups.vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"; format="flowed"
+To: Muchun Song <muchun.song-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Qi Zheng <zhengqi.arch-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Zhao Gongyi <zhaogongyi-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
 
-A successful call to cgroup_css_set_fork() will always have taken
-a ref on kargs->cset (regardless of CLONE_INTO_CGROUP), so always
-do a corresponding put in cgroup_css_set_put_fork().
 
-Without this, a cset and its contained css structures will be
-leaked for some fork failures.  The following script reproduces
-the leak for a fork failure due to exceeding pids.max in the
-pids controller.  A similar thing can happen if we jump to the
-bad_fork_cancel_cgroup label in copy_process().
 
-[ -z "$1" ] && echo "Usage $0 pids-root" && exit 1
-PID_ROOT=$1
-CGROUP=$PID_ROOT/foo
+On 2023/5/17 15:51, Muchun Song wrote:
+> 
+> 
+>> On May 17, 2023, at 15:45, Qi Zheng <qi.zheng-fxUVXftIFDnyG1zEObXtfA@public.gmane.org> wrote:
+>>
+>> From: Qi Zheng <zhengqi.arch-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
+>>
+>> The commit 4f7e7236435c ("cgroup: Fix threadgroup_rwsem <-> cpus_read_lock()
+>> deadlock") fixed the deadlock between cgroup_threadgroup_rwsem and
+>> cpus_read_lock() by introducing cgroup_attach_{lock,unlock}() and removing
+>> cpus_read_{lock,unlock}() from cpuset_attach(). But cgroup_transfer_tasks()
+>> was missed and not handled, which will cause th following warning:
+>>
+>> WARNING: CPU: 0 PID: 589 at kernel/cpu.c:526 lockdep_assert_cpus_held+0x32/0x40
+>> CPU: 0 PID: 589 Comm: kworker/1:4 Not tainted 6.4.0-rc2-next-20230517 #50
+>> Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS 1.14.0-2 04/01/2014
+>> Workqueue: events cpuset_hotplug_workfn
+>> RIP: 0010:lockdep_assert_cpus_held+0x32/0x40
+>> <...>
+>> Call Trace:
+>>   <TASK>
+>>   cpuset_attach+0x40/0x240
+>>   cgroup_migrate_execute+0x452/0x5e0
+>>   ? _raw_spin_unlock_irq+0x28/0x40
+>>   cgroup_transfer_tasks+0x1f3/0x360
+>>   ? find_held_lock+0x32/0x90
+>>   ? cpuset_hotplug_workfn+0xc81/0xed0
+>>   cpuset_hotplug_workfn+0xcb1/0xed0
+>>   ? process_one_work+0x248/0x5b0
+>>   process_one_work+0x2b9/0x5b0
+>>   worker_thread+0x56/0x3b0
+>>   ? process_one_work+0x5b0/0x5b0
+>>   kthread+0xf1/0x120
+>>   ? kthread_complete_and_exit+0x20/0x20
+>>   ret_from_fork+0x1f/0x30
+>>   </TASK>
+>>
+>> So just use the cgroup_attach_{lock,unlock}() helper to fix it.
+>>
+>> Fixes: 4f7e7236435c ("cgroup: Fix threadgroup_rwsem <-> cpus_read_lock() deadlock")
+>> Reported-by: Zhao Gongyi <zhaogongyi-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
+>> Signed-off-by: Qi Zheng <zhengqi.arch-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
+> 
+> Acked-by: Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
 
-[ -e $CGROUP ] && rmdir -f $CGROUP
-mkdir $CGROUP
-echo 5 > $CGROUP/pids.max
-echo $$ > $CGROUP/cgroup.procs
+Thanks. And hi Tejun, Can this patch be applied?
 
-fork_bomb()
-{
-	set -e
-	for i in $(seq 10); do
-		/bin/sleep 3600 &
-	done
-}
+> 
+> Thanks.
+> 
 
-(fork_bomb) &
-wait
-echo $$ > $PID_ROOT/cgroup.procs
-kill $(cat $CGROUP/cgroup.procs)
-rmdir $CGROUP
-
-Fixes: ef2c41cf38a7 ("clone3: allow spawning processes into cgroups")
-Signed-off-by: John Sperbeck <jsperbeck-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
----
- kernel/cgroup/cgroup.c | 17 ++++++++---------
- 1 file changed, 8 insertions(+), 9 deletions(-)
-
-diff --git a/kernel/cgroup/cgroup.c b/kernel/cgroup/cgroup.c
-index 625d7483951c..245cf62ce85a 100644
---- a/kernel/cgroup/cgroup.c
-+++ b/kernel/cgroup/cgroup.c
-@@ -6486,19 +6486,18 @@ static int cgroup_css_set_fork(struct kernel_clone_args *kargs)
- static void cgroup_css_set_put_fork(struct kernel_clone_args *kargs)
- 	__releases(&cgroup_threadgroup_rwsem) __releases(&cgroup_mutex)
- {
-+	struct cgroup *cgrp = kargs->cgrp;
-+	struct css_set *cset = kargs->cset;
-+
- 	cgroup_threadgroup_change_end(current);
- 
--	if (kargs->flags & CLONE_INTO_CGROUP) {
--		struct cgroup *cgrp = kargs->cgrp;
--		struct css_set *cset = kargs->cset;
-+	if (cset) {
-+		put_css_set(cset);
-+		kargs->cset = NULL;
-+	}
- 
-+	if (kargs->flags & CLONE_INTO_CGROUP) {
- 		cgroup_unlock();
--
--		if (cset) {
--			put_css_set(cset);
--			kargs->cset = NULL;
--		}
--
- 		if (cgrp) {
- 			cgroup_put(cgrp);
- 			kargs->cgrp = NULL;
 -- 
-2.40.1.698.g37aff9b760-goog
-
+Thanks,
+Qi
