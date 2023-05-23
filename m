@@ -1,44 +1,45 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH -next] cgroup: Remove out-of-date comment in
- cgroup_migrate()
-Date: Tue, 23 May 2023 09:09:20 -1000
-Message-ID: <ZG0PYH7a9Mw50bEl@slm.duckdns.org>
-References: <20230523111456.146053-1-xiujianfeng@huaweicloud.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [RFC PATCH 2/3] cgroup: Rely on namespace_sem in
+ current_cgns_cgroup_from_root explicitly
+Date: Tue, 23 May 2023 09:12:31 -1000
+Message-ID: <ZG0QH7gvKNFj0n34@slm.duckdns.org>
+References: <20230502133847.14570-1-mkoutny@suse.com>
+ <20230502133847.14570-3-mkoutny@suse.com>
+ <20230523-radar-gleich-781fd4006057@brauner>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <linux-fsdevel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20221208; t=1684868963; x=1687460963;
+        d=gmail.com; s=20221208; t=1684869154; x=1687461154;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:sender:from:to:cc:subject:date:message-id
          :reply-to;
-        bh=6z5OxRlNGFDksqOxV/WuukP5r2QPiQu+c1cFCQeYYDE=;
-        b=Fjq2/r2eJg8sxpSURL2bskZvWvE/vaukNbU7Hr8dfPIbfks/WfaA/iyDBHVTG8qLJU
-         JSB9bDnVnCl6OVMYqZUoI+EesTtZdzvDLno5/pKHSv4+GsSV1bcnjjfj7Ek3iCEzQGeD
-         frvVPGI/tA0gYTokSJptMu17N3CwYUDVFjP4tIkW+2vZeXRxUbpm1G9O/qun6DmIua58
-         Y2L0+Gn9PNMJaTqxqjoWTBqgutnxtV7+35UlkNhouHeG1VXbNcd23UnjO1m244dz3LO/
-         AMXiW6ga2oIQmmzpTL3V8d749fuuxrZfi8lvkmeN8VHijWOZAnMsJGSESis1fSslZ2/J
-         10lA==
-Sender: Tejun Heo <htejun-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+        bh=WDHOuli6LQC21PVL1jIVJHkKd4nR+BXbovWUBQJSo5E=;
+        b=nnt2ZPVfDdLgMsE9DXatFeQI53mTIFlO7r2+Zrd8elz107npuksySY3Ik1QMx5QeNX
+         HuOBQsQNrA/4wYyDJaFh9NPUg8lo6sK8UdVOIgh+yku9tcUmeqEKa1bmSLkHCTZpNAtZ
+         phaeSMPxMN6d+QDQDOK5pKidVFhjxa9v8JZl8GD2g18uY+eHydQG8lOel3kyJgBZ2CuN
+         xouiWeZ9l9EroDXJDxzAli1p9aGcoARKs2ChHGPIQKpLGakbEcGpuWxumVEiUfOrzOai
+         PFDoRS2Y0B6VOAwv/BIKMqp47OYcP++4oJc4kvO3xaJx4T5OdMssVkhoz1Hwoer8UTyA
+         uzzA==
+Sender: Tejun Heo <htejun@gmail.com>
 Content-Disposition: inline
-In-Reply-To: <20230523111456.146053-1-xiujianfeng-XF6JlduFytWkHkcT6e4Xnw@public.gmane.org>
+In-Reply-To: <20230523-radar-gleich-781fd4006057@brauner>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Xiu Jianfeng <xiujianfeng-XF6JlduFytWkHkcT6e4Xnw@public.gmane.org>
-Cc: lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Christian Brauner <brauner@kernel.org>
+Cc: Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny@suse.com>, linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, Alexander Viro <viro@zeniv.linux.org.uk>, Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, Dave Chinner <dchinner@redhat.com>, Rik van Riel <riel@surriel.com>, Jiri Wiesner <jwiesner@suse.de>
 
-On Tue, May 23, 2023 at 07:14:56PM +0800, Xiu Jianfeng wrote:
-> From: Xiu Jianfeng <xiujianfeng-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-> 
-> Commit 674b745e22b3 ("cgroup: remove rcu_read_lock()/rcu_read_unlock()
-> in critical section of spin_lock_irq()") has removed the rcu_read_lock,
-> which makes the comment out-of-date, so remove it.
-> 
-> Signed-off-by: Xiu Jianfeng <xiujianfeng-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Hello,
 
-So, that removed rcu_read_lock() because it's implied by the irq disable but
-the comment content is still useful in describing what's preventing
-use-after-free. Can you please update the comment accordingly instead?
+On Tue, May 23, 2023 at 12:42:46PM +0200, Christian Brauner wrote:
+...
+> Nope, we're not putting namespace_sem in a header. The code it protects
+> is massively sensitive and it interacts with mount_lock and other locks.
+> This stays private to fs/namespace.c as far as I'm concerned.
+
+Michal, would it make sense to add a separate locking in cgroup.c? It'll add
+a bit more overhead but not massively so and we should be able to get
+similar gain without entangling with namespace locking.
 
 Thanks.
 
