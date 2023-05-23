@@ -1,42 +1,40 @@
-From: Xiu Jianfeng <xiujianfeng-XF6JlduFytWkHkcT6e4Xnw@public.gmane.org>
-Subject: [PATCH -next] cgroup: Remove out-of-date comment in cgroup_migrate()
-Date: Tue, 23 May 2023 19:14:56 +0800
-Message-ID: <20230523111456.146053-1-xiujianfeng@huaweicloud.com>
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+From: Christian Brauner <brauner@kernel.org>
+Subject: Re: [RFC PATCH 0/3] Rework locking when rendering mountinfo cgroup
+ paths
+Date: Tue, 23 May 2023 14:09:12 +0200
+Message-ID: <20230523-salamander-gemeldet-b549ea345cf8@brauner>
+References: <20230502133847.14570-1-mkoutny@suse.com>
+Mime-Version: 1.0
+Content-Transfer-Encoding: quoted-printable
+Return-path: <linux-fsdevel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1684843758;
+        bh=3HvMiLwSxwQEG8Ntmcawz72NdT2pUbel5Q8Sk7Zjzik=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=DJ2qIB74oDOP+PUdnYONaOPP2l2LQGFy/WVyW1zNXHabrGks7kUzGD+Oh8zH3hO8w
+         FD7fwqyB58gRA9260iNFdDIkIX60E6tFGmX+7enMxHmTSGvRrutzOkNcD2Y14/cSfJ
+         1FluobWOkijaPdBgyxPv1hUEpLPCkTDdjxLsKjfd9XevhkcRd1xN+fxjPqLTJnqPg3
+         bXmdRyvpwgOTeoPgCoR+0hJF5gRv5Lb0OsuG1lxUN7B4Zyn6ymo3qlRDNUjugjWito
+         /x3quZKgWRZQBbpi4ClKR3b8Ey5XZwYT+usTx63Bqcbmdh1kj5xdD2OL/hM9fpuww3
+         VtqMoRCM6ysWQ==
+Content-Disposition: inline
+In-Reply-To: <20230502133847.14570-1-mkoutny@suse.com>
 List-ID: <cgroups.vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, xiujianfeng-XF6JlduFytWkHkcT6e4Xnw@public.gmane.org
+Content-Type: text/plain; charset="iso-8859-1"
+To: Michal =?utf-8?Q?Koutn=C3=BD?= <mkoutny@suse.com>
+Cc: linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, Alexander Viro <viro@zeniv.linux.org.uk>, Tejun Heo <tj@kernel.org>, Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, Dave Chinner <dchinner@redhat.com>, Rik van Riel <riel@surriel.com>, Jiri Wiesner <jwiesner@suse.de>
 
-From: Xiu Jianfeng <xiujianfeng-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+On Tue, May 02, 2023 at 03:38:44PM +0200, Michal Koutn=C3=BD wrote:
+> Idea for these modification came up when css_set_lock seemed unneeded in
+> cgroup_show_path.
+> It's a delicate change, so the deciding factor was when cgroup_show_path =
+popped
+> up also in some profiles of frequent mountinfo readers.
+> The idea is to trade the exclusive css_set_lock for the shared
+> namespace_sem when rendering cgroup paths. Details are described more in
 
-Commit 674b745e22b3 ("cgroup: remove rcu_read_lock()/rcu_read_unlock()
-in critical section of spin_lock_irq()") has removed the rcu_read_lock,
-which makes the comment out-of-date, so remove it.
-
-Signed-off-by: Xiu Jianfeng <xiujianfeng-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
----
- kernel/cgroup/cgroup.c | 5 -----
- 1 file changed, 5 deletions(-)
-
-diff --git a/kernel/cgroup/cgroup.c b/kernel/cgroup/cgroup.c
-index d8ba2c67910d..415d51c713ad 100644
---- a/kernel/cgroup/cgroup.c
-+++ b/kernel/cgroup/cgroup.c
-@@ -2871,11 +2871,6 @@ int cgroup_migrate(struct task_struct *leader, bool threadgroup,
- {
- 	struct task_struct *task;
- 
--	/*
--	 * Prevent freeing of tasks while we take a snapshot. Tasks that are
--	 * already PF_EXITING could be freed from underneath us unless we
--	 * take an rcu_read_lock.
--	 */
- 	spin_lock_irq(&css_set_lock);
- 	task = leader;
- 	do {
--- 
-2.17.1
-
+I have no issue with the cgroup specific part of relying on
+namespace_sem but kernel/cgroup/ has no business of being aware of
+namespace semaphore in any way. Leave a comment to clarify what you're
+doing but we're not going to sprinkle namespace_sem references - even if
+only for the sake of lockdep - into other subsystems.
