@@ -1,79 +1,50 @@
-From: Michal =?utf-8?Q?Koutn=C3=BD?= <mkoutny-IBi9RG/b67k@public.gmane.org>
-Subject: Re: [PATCH] cgroup: rstat: Simplified cgroup_base_stat_flush()
- update last_bstat logic
-Date: Tue, 23 May 2023 17:14:28 +0200
-Message-ID: <5g73i4yvi4ub4dqrf4dnq5qghkyckoygmgd2st6be3gg7twww2@w6zim6nxpt3b>
-References: <20230518124142.57644-1-jiahao.os@bytedance.com>
- <f39b9229-e59c-2b1c-7f3f-1aeedfad44dc@bytedance.com>
+From: Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>
+Subject: Re: [PATCH for-6.4/block] block/rq_qos: protect rq_qos apis with a
+ new lock
+Date: Tue, 23 May 2023 11:13:59 -0600
+Message-ID: <168486203985.398377.17593981162726402548.b4-ty@kernel.dk>
+References: <20230414084008.2085155-1-yukuai1@huaweicloud.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha512;
-        protocol="application/pgp-signature"; boundary="wg2kypm56q6zgssf"
+Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
-        t=1684854870; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=TkLyPkT+GsXSuBlfsNmALpub2P5cbuZv3uR/8NK1ky0=;
-        b=fcrH5ERbBAosvtM3sKUk3hFQzKgQeSkCA4K9SRdafLYsKszWYKAZid+OERHyO74Tz7T82s
-        JSUdRkqoJzEk0MGj7qlVteas8OpU4uxXh/zsuaM/Kkkw8G8E2URO+5W8hru2wqxtrggH3Z
-        2EF4m4urlnB9MG4mUGJYmbxLqQzgC6Y=
-Content-Disposition: inline
-In-Reply-To: <f39b9229-e59c-2b1c-7f3f-1aeedfad44dc-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=kernel-dk.20221208.gappssmtp.com; s=20221208; t=1684862041; x=1687454041;
+        h=content-transfer-encoding:mime-version:date:message-id:subject
+         :references:in-reply-to:cc:to:from:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=qmWtJOzNztkpnf4UzHCczQhsDx+hgxiMe2XgRqYyHhI=;
+        b=rQvy6TSK+wfTlo0HdARvbSVdkvmZoky53LQfz6I/sHZSh/vam08zvcWX8BKFq35rPJ
+         FiOXal8syvG9pEP0WTv6iW7eSanhHy7ABqS8itvydZ8rH14nwiDgZz79SGNg3RH3bQj8
+         WTmLv9HJ2uOAsK7i88YATrsiJwt/hKCRYYVxQMA7/a3MuM4g4yafCnt36kQlOjL/VWPH
+         6o5dMj0POMwamomezMYNOxNy841T05ufNRwMDpAkAYeEwREsLkqobJ+hg8+fwPBm4nOe
+         u6quTE5qyRblQsMAa260HpGZ0iO2Y0Wue1iugiodj3bo6gNKl8rdK5sY8KOYxSKugSqK
+         REMA==
+In-Reply-To: <20230414084008.2085155-1-yukuai1-XF6JlduFytWkHkcT6e4Xnw@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-To: Hao Jia <jiahao.os-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
-Cc: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Type: text/plain; charset="us-ascii"
+To: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, hch-jcswGhMUV9g@public.gmane.org, josef-DigfWCa+lFGyeJad7bwFQA@public.gmane.org, Yu Kuai <yukuai1-XF6JlduFytWkHkcT6e4Xnw@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, yi.zhang-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, yangerkun-hv44wF8Li93QT0dZR+AlfA@public.gmane.org
 
 
---wg2kypm56q6zgssf
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+On Fri, 14 Apr 2023 16:40:08 +0800, Yu Kuai wrote:
+> commit 50e34d78815e ("block: disable the elevator int del_gendisk")
+> move rq_qos_exit() from disk_release() to del_gendisk(), this will
+> introduce some problems:
+> 
+> 1) If rq_qos_add() is triggered by enabling iocost/iolatency through
+>    cgroupfs, then it can concurrent with del_gendisk(), it's not safe to
+>    write 'q->rq_qos' concurrently.
+> 
+> [...]
 
-Hello Jia.
+Applied, thanks!
 
-On Fri, May 19, 2023 at 12:15:57PM +0800, Hao Jia <jiahao.os-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>=
- wrote:
-> Maybe something like this?
+[1/1] block/rq_qos: protect rq_qos apis with a new lock
+      commit: a13bd91be22318768d55470cbc0b0f4488ef9edf
 
-(Next time please send with a version bump in subject.)
+Best regards,
+-- 
+Jens Axboe
 
 
-> In cgroup_base_stat_flush() function, {rstatc, cgrp}->last_bstat
-> needs to be updated to the current {rstatc, cgrp}->bstat after the
-> calculation.
->=20
-> For the rstatc->last_bstat case, rstatc->bstat may be updated on other
-> cpus during our calculation, resulting in inconsistent rstatc->bstat
-> statistics for the two reads. So we use the temporary variable @cur to
-> record the read statc->bstat statistics, and use @cur to update
-> rstatc->last_bstat.
 
-If a concurrent update happens after sample of bstat was taken for
-calculation, it won't be reflected in the flushed result.
-But subsequent flush will use the updated bstat and the difference from
-last_bstat would account for that concurrent change (and any other
-changes between the flushes).
-
-IOW flushing cannot prevent concurrent updates but it will give
-eventually consistent (repeated without more updates) results.
-
-> It is better for us to assign directly instead of using
-> cgroup_base_stat_add() to update {rstatc, cgrp}->last_bstat.
-
-Or do you mean the copying is faster then arithmetics?
-
-Thanks,
-Michal
-
---wg2kypm56q6zgssf
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-
-iHUEABYKAB0WIQTrXXag4J0QvXXBmkMkDQmsBEOquQUCZGzYUgAKCRAkDQmsBEOq
-uW/EAPwMre77h1BOYEzmFLgU5ag4wBzdTwS70cy56P6QTg7dgAEAwdZrK+0lAsgP
-xGFhjmxnFKU0VP6MC3rCl/yhKOddwQ8=
-=25fp
------END PGP SIGNATURE-----
-
---wg2kypm56q6zgssf--
