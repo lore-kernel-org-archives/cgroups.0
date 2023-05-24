@@ -1,97 +1,184 @@
-From: Hao Jia <jiahao.os-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
-Subject: Re: [External] Re: [PATCH] cgroup: rstat: Simplified
- cgroup_base_stat_flush() update last_bstat logic
-Date: Wed, 24 May 2023 16:41:08 +0800
-Message-ID: <8e65aa62-c92c-857d-3e27-8ccddf51b07f@bytedance.com>
-References: <20230518124142.57644-1-jiahao.os@bytedance.com>
- <f39b9229-e59c-2b1c-7f3f-1aeedfad44dc@bytedance.com>
- <5g73i4yvi4ub4dqrf4dnq5qghkyckoygmgd2st6be3gg7twww2@w6zim6nxpt3b>
- <4d49f7e7-2488-9690-258e-34e617cfef6f@bytedance.com>
- <remnwctqmxleig7ywt6puhxnpmzjo7xm6hlfhpnul46ulfnw7j@36sbuxhuatto>
+From: cuigaosheng <cuigaosheng1-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Subject: Bug report: Unable to handle kernel paging request at virtual address
+ 00000000c0000010
+Date: Wed, 24 May 2023 20:13:35 +0800
+Message-ID: <c0a63cf1-7487-5670-771b-5077a73be4c7@huawei.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: quoted-printable
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=bytedance.com; s=google; t=1684917680; x=1687509680;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to:subject
-         :user-agent:mime-version:date:message-id:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=dTHbB0gony/TYMogUW6Qo/V1GtsaSfduo/QCXMjaxUM=;
-        b=ZnX7arnhJ7Q+Ipi910Jn2NK7QtDaPy4TlGLSCmXMrFgaUyqr1HH/K1c8b6/vd5Uy7O
-         jNoxiqXlVyu7dS8JQ6XZcHcyTIWBo5LiGPQ2ieUIGyL0YZetHQ2aHFnCghlX8XgkIv+F
-         f5EuBJnyV4VDQSb9NGCcJtePUs1XekOOsQ7ZeebwLbsoZ8oXPbGQ8lEuVgI+YY4ZT/0S
-         A5DUGll7sRLEHXSOQqu1Q8FZI26Y3oe3l2415CbQ8TxjnBND2kMPXNEJYohRbUKP5kVZ
-         woD/ctZI3vJHoAqhsIdLRO+9uYd6q4ASQGv3xtle4N7GIVzykLdRozpCCKQxXXlzaFno
-         K06w==
-In-Reply-To: <remnwctqmxleig7ywt6puhxnpmzjo7xm6hlfhpnul46ulfnw7j@36sbuxhuatto>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="iso-8859-1"; format="flowed"
-To: =?UTF-8?Q?Michal_Koutn=c3=bd?= <mkoutny-IBi9RG/b67k@public.gmane.org>
-Cc: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Type: text/plain; charset="windows-1252"; format="flowed"
+To: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, juri.lelli-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, vincent.guittot-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org, dietmar.eggemann-5wv7dgnIgG8@public.gmane.org, longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, cuigaosheng1-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, mathieu.poirier-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org, dietmar.eggemann-5wv7dgnIgG8@public.gmane.org, tglx-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org, bristot-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, claudio-YOzL5CV4y4YG1A2ADO40+w@public.gmane.org, longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, luca.abeni-5rdYK369eBLQB0XuIGIEkQ@public.gmane.org, rostedt-nx8X9YLhiw1AfugRpC6u6w@public.gmane.org, Xiujianfeng <xiujianfeng-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, wangweiyang <wangweiyang2-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
 
+Hi,everybody
 
-On 2023/5/24 Michal Koutn=C3=BD wrote:
-> On Wed, May 24, 2023 at 02:54:10PM +0800, Hao Jia <jiahao.os-EC8Uxl6Npydl=
-57MIdRCFDg@public.gmane.org> wrote:
->> Yes, so we need @curr to record the bstat value after the sequence fetch=
- is
->> completed.
->=20
-> No, I still don't see a problem that it solves. If you find incorrect
-> data being reported, please explain it more/with an example.
+There is a bug in the mainline code(https://kernel.googlesource.com/pub/scm=
+/linux/kernel/git/stable/linux.git -b master).
 
-Sorry to confuse you.
+The bug's call trace as follows:
+> refcount_t: addition on 0; use-after-free.
+>   WARNING: CPU: 1 PID: 342 at lib/refcount.c:25 refcount_warn_saturate+0x=
+a0/0x148
+>   Hardware name: Huawei TaiShan 2280 /BC11SPCD, BIOS 1.79 12/28/2022
+>   Workqueue: events cpuset_hotplug_workfn
+>   Call trace:
+>    refcount_warn_saturate+0xa0/0x148
+>    __refcount_add.constprop.0+0x5c/0x80
+>    css_task_iter_advance_css_set+0xd8/0x210
+>    css_task_iter_advance+0xa8/0x120
+>    css_task_iter_next+0x94/0x158
+>    update_tasks_root_domain+0x58/0x98
+>    rebuild_root_domains+0xa0/0x1b0
+>    rebuild_sched_domains_locked+0x144/0x188
+>    cpuset_hotplug_workfn+0x138/0x5a0
+>    process_one_work+0x1e8/0x448
+>    worker_thread+0x228/0x3e0
+>    kthread+0xe0/0xf0
+>    ret_from_fork+0x10/0x20
+>   ---[ end trace 0000000000000000 ]---
+>   ------------[ cut here ]------------
+>   refcount_t: underflow; use-after-free.
+>   WARNING: CPU: 1 PID: 342 at lib/refcount.c:28 refcount_warn_saturate+0x=
+f4/0x148
+>   Hardware name: Huawei TaiShan 2280 /BC11SPCD, BIOS 1.79 12/28/2022
+>   Workqueue: events cpuset_hotplug_workfn
+>   Call trace:
+>    refcount_warn_saturate+0xf4/0x148
+>    put_css_set_locked+0x80/0x98
+>    css_task_iter_end+0x70/0x160
+>    update_tasks_root_domain+0x68/0x98
+>    rebuild_root_domains+0xa0/0x1b0
+>    rebuild_sched_domains_locked+0x144/0x188
+>    cpuset_hotplug_workfn+0x138/0x5a0
+>    process_one_work+0x1e8/0x448
+>    worker_thread+0x228/0x3e0
+>    kthread+0xe0/0xf0
+>    ret_from_fork+0x10/0x20
+>   ---[ end trace 0000000000000000 ]---
+>   process 10324 (cpuhotplug_do_s) no longer affine to cpu1
+>   psci: CPU1 killed (polled 0 ms)
+>   Unable to handle kernel paging request at virtual address 00000000c0000=
+010
+>   Internal error: Oops: 0000000096000004 [#1] SMP
+>   Hardware name: Huawei TaiShan 2280 /BC11SPCD, BIOS 1.79 12/28/2022
+>   Workqueue: cgroup_destroy css_free_rwork_fn
+>   Call trace:
+>    cgroup_apply_control_disable+0xb0/0x1f8
+>    rebind_subsystems+0x20c/0x548
+>    cgroup_destroy_root+0x64/0x240
+>    css_free_rwork_fn+0x18c/0x1a8
+>    process_one_work+0x1e8/0x448
+>    worker_thread+0x178/0x3e0
+>    kthread+0xe0/0xf0
+>    ret_from_fork+0x10/0x20
+>   Code: 91012842 8b020f62 f9400453 b4000293 (f9400a60)
+>   SMP: stopping secondary CPUs
+>   Starting crashdump kernel...
+This bug occurs in concurrency scenarios, In the hotplug, update_tasks_root=
+_domain will
+iterate over all tasks on the cpuset/root domain, the code as follows:
+> static void update_tasks_root_domain(struct cpuset *cs)
+> {
+>          struct css_task_iter it;
+>          struct task_struct *task;
+>
+>          css_task_iter_start(&cs->css, 0, &it); // hold css_set_lock in c=
+ss_task_iter_start
+>                  ... //nolock time1: don't hold css_set_lock
+>          while ((task =3D css_task_iter_next(&it))) // hold css_set_lock =
+in css_task_iter_next
+>                  dl_add_task_root_domain(task); //nolock time2: don't hol=
+d css_set_lock
+>
+>          css_task_iter_end(&it);
+> }
+The cgroup.e_csets will be traversed through css_task_iter, and it->cset_he=
+ad will record
+the head of the e_cset list that is currently traversed, we will hold css_s=
+et_lock in
+css_task_iter_start or in css_task_iter_next, but we don't always hold the =
+css_set_lock,
+such as "nolock time1" and "nolock time2" in the code comments above.
 
-My earliest patch is like this:
+During the time without css_set_lock in update_tasks_root_domain, if it->cu=
+r_cset(current css_set)
+is migrated to another list, such as:
+> int rebind_subsystems(struct cgroup_root *dst_root, u16 ss_mask)
+> {
+>      ...
+>       spin_lock_irq(&css_set_lock);
+>       hash_for_each(css_set_table, i, cset, hlist)
+>          list_move_tail(&cset->e_cset_node[ss->id], &dcgrp->e_csets[ss->i=
+d]);
+>      spin_unlock_irq(&css_set_lock);
+>      ...
+> }
+The bug will be triggered. As follows:
 
-diff --git a/kernel/cgroup/rstat.c b/kernel/cgroup/rstat.c
-index 9c4c55228567..3e5c4c1c92c6 100644
---- a/kernel/cgroup/rstat.c
-+++ b/kernel/cgroup/rstat.c
-@@ -376,14 +376,14 @@ static void cgroup_base_stat_flush(struct cgroup=20
-*cgrp, int cpu)
-     /* propagate percpu delta to global */
-     cgroup_base_stat_sub(&delta, &rstatc->last_bstat);  (1) <---
-     cgroup_base_stat_add(&cgrp->bstat, &delta);
-- cgroup_base_stat_add(&rstatc->last_bstat, &delta);
-+ rstatc->last_bstat =3D rstatc->bstat; 			(2) <--
+#1> in css_task_iter_start(), it->cset_head =3D &css->cgroup->e_csets[css->=
+ss->id]; list A
+#2> in css_task_iter_next(&it), it->cur_cset=3DnodeA=EF=BC=8Creturn task
+#3> move nodeA to listB, for example: rebind_subsystems(),list_move_tail(no=
+deA, listB),then nodeA->next =3D headB
+#4> next css_task_iter_next, new =3D nodeA->next =3D=3D headB
+#5> headB is not a valid css_set, but now new !=3D it->cset_head(nodeA), so=
+ headB will be referred to as a valid css_set
+#6> get_css_set(headB), refcount warning
 
-     /* propagate global delta to parent (unless that's root) */
-     if (cgroup_parent(parent)) {
-        delta =3D cgrp->bstat;
-        cgroup_base_stat_sub(&delta, &cgrp->last_bstat);
-        cgroup_base_stat_add(&parent->bstat, &delta);
-- cgroup_base_stat_add(&cgrp->last_bstat, &delta);
-+ cgrp->last_bstat =3D cgrp->bstat;
-     }
-   }
+The following changes will increase the probability of this bug being trigg=
+ered:
+> diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
+> index e4ca2dd2b764..120e0c23517f 100644
+> --- a/kernel/cgroup/cpuset.c
+> +++ b/kernel/cgroup/cpuset.c
+> @@ -66,6 +66,7 @@
+>   #include <linux/mutex.h>
+>   #include <linux/cgroup.h>
+>   #include <linux/wait.h>
+> +#include <linux/delay.h>
+>
+>   DEFINE_STATIC_KEY_FALSE(cpusets_pre_enable_key);
+>   DEFINE_STATIC_KEY_FALSE(cpusets_enabled_key);
+> @@ -1073,8 +1074,10 @@ static void update_tasks_root_domain(struct cpuset=
+ *cs)
+>
+>          css_task_iter_start(&cs->css, 0, &it);
+>
+> -       while ((task =3D css_task_iter_next(&it)))
+> +       while ((task =3D css_task_iter_next(&it))) {
+> +               udelay(1000 * 10);
+>                  dl_add_task_root_domain(task);
+> +       }
+>
+>          css_task_iter_end(&it);
+>   }
 
-If I understand correctly, the rstatc->bstat at (1) and (2) may be=20
-different. At (2) rstatc->bstat may have been updated on other CPUs.
-Or we should not read rstatc->bstat directly, we should pass the=20
-following way
+We can trigger this bug with ltp test cases(https://github.com/linux-test-p=
+roject/ltp/blob/master/runtest/controllers):
 
-     do {
-        seq =3D __u64_stats_fetch_begin(&rstatc->bsync);
-        cur =3D rstatc->bstat;
-     } while (__u64_stats_fetch_retry(&rstatc->bsync, seq));
+step 1: create a process to execute the following usecases:
+cpuhotplug02 cpuhotplug02.sh -c 1 -l 1
+cpuhotplug03 cpuhotplug03.sh -c 1 -l 1
+cpuhotplug04 cpuhotplug04.sh -l 1
+cpuhotplug05 cpuhotplug05.sh -c 1 -l 1 -d /tmp
+cpuhotplug06 cpuhotplug06.sh -c 1 -l 1
+cpuhotplug07 cpuhotplug07.sh -c 1 -l 1 -d /usr/src/linux
+
+step 2: create another process to execute the following usecases:
+cpuset_base_ops cpuset_base_ops_testset.sh
+cpuset_inherit cpuset_inherit_testset.sh
+cpuset_exclusive cpuset_exclusive_test.sh
+cpuset_hierarchy cpuset_hierarchy_test.sh
+cpuset_syscall cpuset_syscall_testset.sh
+cpuset_sched_domains cpuset_sched_domains_test.sh
+cpuset_load_balance cpuset_load_balance_test.sh
+cpuset_hotplug cpuset_hotplug_test.sh
+cpuset_memory cpuset_memory_testset.sh
+
+Looking forward to your reply.
+
+Thanks.
 
 
->=20
->> Yes, but it may not be obvious.
->> Another reason is that when we complete an update, we snapshot last_bsta=
-t as
->> the current bstat, which is better for readers to understand. Arithmetic=
-s is
->> somewhat obscure.
->=20
-> The readability here is subjective. It'd be interesting to have some
-> data comparing arithmetics vs copying though.
-
-Thanks for your suggestion, I plan to use RDTSC to compare the time=20
-consumption of arithmetics vs copying. Do you have better suggestions or=20
-tools?
-
-Thanks,
-Hao
