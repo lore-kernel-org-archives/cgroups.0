@@ -1,99 +1,72 @@
-From: "Lars R. Damerow" <lars@pixar.com>
-Subject: [PATCH] mm/memcontrol: export memcg.swap watermark via sysfs for v2 memcg
-Date: Wed, 24 May 2023 11:17:33 -0700
-Message-ID: <20230524181734.125696-1-lars@pixar.com>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCH -next v2] cgroup: Update out-of-date comment in
+ cgroup_migrate()
+Date: Wed, 24 May 2023 12:23:13 -1000
+Message-ID: <ZG6OURkhj4uQUTCo@slm.duckdns.org>
+References: <20230524065431.145434-1-xiujianfeng@huaweicloud.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=pixar.com; i=@pixar.com; q=dns/txt; s=dkimdefault;
-  t=1684952348; x=1716488348;
-  h=from:to:cc:subject:date:message-id:mime-version:
-   content-transfer-encoding;
-  bh=ww88k/sRfXor8CGXgyhHTr6O6My3nfazkW6nHTYMUoE=;
-  b=fHnFefEvF0bbH0frkbR6r20UGIwhKiyLDDc0bDmTswmj6w/g7xK3oJfm
-   dYYVFFuL27hrPFApW6XIJEKFiKwFOHXUMb9iICLgorst7maptfBmNQ5db
-   GuaypsXuO0qkQzGQBZgPpBbS9xMNcqyoTXrjpCMGpJFVoLjmHeS3Tn86H
-   0DSodqrwtjnqzJpWAUZVJ/PQgU4eXjDkGqFSp7JX5HTqOK/gJstWkEIM/
-   Lh6XzhLhykRd2sWp7UPmPoJXzM7dIXZRwcb4o5LlysIz6pRCRqT5GE19O
-   01IFz/s4O+9ecg4dt/ZWg1G+Gh7SC+/LZzFeOUVHKBqkVLCyyuKReXzSF
-   Q==;
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20221208; t=1684966995; x=1687558995;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:sender:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=8Ps4++BD4n2hLwrgjdjqi8hVhoVdzFMxyoqft8e+OG8=;
+        b=BxSoVxn1ynWjBrokKf8e2fM0dA5n50KyomGLR6Vb0G9LzB6NAEHYiFrT4g5TK2m6UL
+         oedNlWCgSX62iIQofjo1qmkaElTaq6b5I6kq6gGdjZXZ6K/+36AhJJbdkGXJD7iQffAh
+         McYJRjGRXeot0dRQzR3QWFJChJTGtNL0cCeLIM2ZM8Llf8ZlWQ3zIIi4hAAbHYtusfHE
+         qlumgkbFb1g3kUL/n1jwjxgRG+iyDv0MUW7EU7Kpq/QGyKc0U7Y+1x5IejkhicHrp3Md
+         TJLsGeLA+SCSNzpsj6GBh7jTyV4qBGQxUAh1gIJWUMLhW6bFwEU6srNqAr0MaVT9FIJr
+         e5pA==
+Sender: Tejun Heo <htejun-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <20230524065431.145434-1-xiujianfeng-XF6JlduFytWkHkcT6e4Xnw@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: mhocko@kernel.org, roman.gushchin@linux.dev, shakeelb@google.com
-Cc: tj@kernel.org, lizefan.x@bytedance.com, hannes@cmpxchg.org, corbet@lwn.net, muchun.song@linux.dev, akpm@linux-foundation.org, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org, lars@pixar.com
+Content-Transfer-Encoding: 7bit
+To: Xiu Jianfeng <xiujianfeng-XF6JlduFytWkHkcT6e4Xnw@public.gmane.org>
+Cc: lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-This patch is similar to commit 8e20d4b33266 ("mm/memcontrol: export
-memcg->watermark via sysfs for v2 memcg"), but exports the swap counter's
-watermark.
+Hello,
 
-We allocate jobs to our compute farm using heuristics determined by memory
-and swap usage from previous jobs. Tracking the peak swap usage for new
-jobs is important for determining when jobs are exceeding their expected
-bounds, or when our baseline metrics are getting outdated.
+I further edited the comment and applied the patch to cgroup/for-6.5
 
-Our toolset was written to use the "memory.memsw.max_usage_in_bytes" file
-in cgroups v1, and altering it to poll cgroups v2's "memory.swap.current"
-would give less accurate results as well as add complication to the code.
-Having this watermark exposed in sysfs is much preferred.
+Thanks.
 
-Signed-off-by: Lars R. Damerow <lars@pixar.com>
+From 659db0789c2e66c5d6a52d57008e3a7401a3ffff Mon Sep 17 00:00:00 2001
+From: Xiu Jianfeng <xiujianfeng-XF6JlduFytWkHkcT6e4Xnw@public.gmane.org>
+Date: Wed, 24 May 2023 14:54:31 +0800
+Subject: [PATCH] cgroup: Update out-of-date comment in cgroup_migrate()
+
+Commit 674b745e22b3 ("cgroup: remove rcu_read_lock()/rcu_read_unlock()
+in critical section of spin_lock_irq()") has removed the rcu_read_lock,
+which makes the comment out-of-date, so update it.
+
+tj: Updated the comment a bit.
+
+Signed-off-by: Xiu Jianfeng <xiujianfeng-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 ---
- Documentation/admin-guide/cgroup-v2.rst |  7 +++++++
- mm/memcontrol.c                         | 13 +++++++++++++
- 2 files changed, 20 insertions(+)
+ kernel/cgroup/cgroup.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/Documentation/admin-guide/cgroup-v2.rst b/Documentation/admin-guide/cgroup-v2.rst
-index f67c0829350b..1ffe019483ac 100644
---- a/Documentation/admin-guide/cgroup-v2.rst
-+++ b/Documentation/admin-guide/cgroup-v2.rst
-@@ -1582,6 +1582,13 @@ PAGE_SIZE multiple when read back.
+diff --git a/kernel/cgroup/cgroup.c b/kernel/cgroup/cgroup.c
+index 9d809191a54f..f329f49529a2 100644
+--- a/kernel/cgroup/cgroup.c
++++ b/kernel/cgroup/cgroup.c
+@@ -2872,9 +2872,9 @@ int cgroup_migrate(struct task_struct *leader, bool threadgroup,
+ 	struct task_struct *task;
  
- 	Healthy workloads are not expected to reach this limit.
- 
-+  memory.swap.peak
-+	A read-only single value file which exists on non-root
-+	cgroups.
-+
-+	The max swap usage recorded for the cgroup and its
-+	descendants since the creation of the cgroup.
-+
-   memory.swap.max
- 	A read-write single value file which exists on non-root
- 	cgroups.  The default is "max".
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index 4b27e245a055..1862fee15274 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -7656,6 +7656,14 @@ static u64 swap_current_read(struct cgroup_subsys_state *css,
- 	return (u64)page_counter_read(&memcg->swap) * PAGE_SIZE;
- }
- 
-+static u64 swap_peak_read(struct cgroup_subsys_state *css,
-+			  struct cftype *cft)
-+{
-+	struct mem_cgroup *memcg = mem_cgroup_from_css(css);
-+
-+	return (u64)memcg->swap.watermark * PAGE_SIZE;
-+}
-+
- static int swap_high_show(struct seq_file *m, void *v)
- {
- 	return seq_puts_memcg_tunable(m,
-@@ -7734,6 +7742,11 @@ static struct cftype swap_files[] = {
- 		.seq_show = swap_max_show,
- 		.write = swap_max_write,
- 	},
-+	{
-+		.name = "swap.peak",
-+		.flags = CFTYPE_NOT_ON_ROOT,
-+		.read_u64 = swap_peak_read,
-+	},
- 	{
- 		.name = "swap.events",
- 		.flags = CFTYPE_NOT_ON_ROOT,
-
-base-commit: 9d646009f65d62d32815f376465a3b92d8d9b046
+ 	/*
+-	 * Prevent freeing of tasks while we take a snapshot. Tasks that are
+-	 * already PF_EXITING could be freed from underneath us unless we
+-	 * take an rcu_read_lock.
++	 * The following thread iteration should be inside an RCU critical
++	 * section to prevent tasks from being freed while taking the snapshot.
++	 * spin_lock_irq() implies RCU critical section here.
+ 	 */
+ 	spin_lock_irq(&css_set_lock);
+ 	task = leader;
 -- 
-2.39.2
+2.40.1
 
