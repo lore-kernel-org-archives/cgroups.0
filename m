@@ -1,52 +1,220 @@
-From: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH] blk-cgroup: Flush stats before releasing blkcg_gq
-Date: Thu, 25 May 2023 11:25:05 -0400
-Message-ID: <8f56f60f-8dd3-d798-3d81-6ccbb185465d@redhat.com>
-References: <20230524011935.719659-1-ming.lei@redhat.com>
- <CAJD7tkZkbro4H-QC=RJx_dfCdGQ5c=4NJhbFrcEmQSidaaMOmg@mail.gmail.com>
- <ZG14VnHl20lt9jLc@ovpn-8-17.pek2.redhat.com>
- <3ej42djuuzwx36yf2yeo5ggyrvogeaguos5jtve2bvuaejnwff@fak3yjwe2fbi>
+From: Waiman Long <longman@redhat.com>
+Subject: [PATCH] blk-cgroup: Flush stats before releasing blkcg_gq
+Date: Thu, 25 May 2023 12:01:05 -0400
+Message-ID: <20230525160105.1968749-1-longman@redhat.com>
+References: <20230525043518.831721-1-ming.lei@redhat.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1685028311;
+        s=mimecast20190719; t=1685030514;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         to:to:cc:cc:mime-version:mime-version:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=fMrxhWgLyOUzKMB1Tal5g/FIIXS1y2NZ/71A12nEoZg=;
-        b=RZqLRQIbG+ECn3iQXrIExaPkNFiYs7HaNZMdFpWgOftekITSrcTbCn3bFnF2x4FhhGF9lW
-        M6Q4VKMQ0CrnMll9NtzVUpL8IBZ6hw3b8XbbhfSH7t8NSl+54MQPj/43JvGhTAvvsAIhmf
-        jZrZOwyVRu9sVH5wez0oTkqkou5Rkeo=
-Content-Language: en-US
-In-Reply-To: <3ej42djuuzwx36yf2yeo5ggyrvogeaguos5jtve2bvuaejnwff@fak3yjwe2fbi>
+        bh=QvUcs4If2hARdVYQbwQSb9t9GwbJ5lUj+bf6ECD95z4=;
+        b=Aks1mSHSztRZ9cY0vydYln/3+g8bsD9Sx/bwVBLgvRh27CeZezTvFT9rGslEJlI4bQPLZP
+        epSAoiH4Ml31ZJV5Bc3k9o/HgwxrI5FViYGqTYPKymc64ldfiH/RDd9vVNSweu06eVBG5c
+        LzfuJoPLJsvolrScgwzlVK0MoGAM7GA=
+In-Reply-To: <20230525043518.831721-1-ming.lei@redhat.com>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="iso-8859-1"; format="flowed"
-To: =?UTF-8?Q?Michal_Koutn=c3=bd?= <mkoutny-IBi9RG/b67k@public.gmane.org>, Ming Lei <ming.lei-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Cc: Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Linux-MM <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Muchun Song <muchun.song-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Content-Type: text/plain; charset="us-ascii"
+To: Jens Axboe <axboe@kernel.dk>, Tejun Heo <tj@kernel.org>, Josef Bacik <josef@toxicpanda.com>, Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>
+Cc: cgroups@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, =?UTF-8?q?Michal=20Koutn=C3=BD?= <mkoutny@suse.com>, Yosry Ahmed <yosryahmed@google.com>, Jay Shin <jaeshin@redhat.com>, Waiman Long <longman@redhat.com>, stable@vger.kernel.org, Ming Lei <ming.lei@redhat.com>
 
+As noted by Michal, the blkg_iostat_set's in the lockless list hold
+reference to blkg's to protect against their removal. Those blkg's
+hold reference to blkcg. When a cgroup is being destroyed,
+cgroup_rstat_flush() is only called at css_release_work_fn() which
+is called when the blkcg reference count reaches 0. This circular
+dependency will prevent blkcg and some blkgs from being freed after
+they are made offline.
 
-On 5/25/23 10:11, Michal Koutn=C3=BD wrote:
-> On Wed, May 24, 2023 at 10:37:10AM +0800, Ming Lei <ming.lei-H+wXaHxf7aLQ=
-T0dZR+AlfA@public.gmane.org> wrote:
->>> I am not at all familiar with blkcg, but does calling
->>> cgroup_rstat_flush() in offline_css() fix the problem?
->> Except for offline, this list needs to be flushed after the associated d=
-isk
->> is deleted.
-> Why the second flush trigger?
-> a) To break another ref-dependency cycle (like on the blkcg side)?
-> b) To avoid stale data upon device removal?
->
-> (Because b) should be unnecessary, a future reader would flush when
-> needed.)
+It is less a problem if the cgroup to be destroyed also has other
+controllers like memory that will call cgroup_rstat_flush() which will
+clean up the reference count. If block is the only controller that uses
+rstat, these offline blkcg and blkgs may never be freed leaking more
+and more memory over time.
 
-Since the percpu blkg_iostat_set's that are linked in the lockless list=20
-will be freed if the corresponding blkcg_gq is freed, we need to flush=20
-the lockless list to avoid potential use-after-free in a future=20
-cgroup_rstat_flush*() call.
+To prevent this potential memory leak:
 
-Cheers,
-Longman
+- flush blkcg per-cpu stats list in __blkg_release(), when no new stat
+  can be added to avoid use-after-free of the percpu blkg_iostat_set in
+  futue cgroup_rstat_flush*() calls.
+
+- add a cgroup_rstat_flush_acquire() helper and call it to acquire
+  cgroup_rstat_lock to block concurrent execution of other
+  cgroup_rstat_flush*() calls
+
+- don't grab bio->bi_blkg reference when adding the stats into blkcg's
+  per-cpu stat list since all stats are guaranteed to be consumed before
+  releasing blkg instance, and grabbing blkg reference for stats was
+  the most fragile part of original patch
+
+Based on Waiman's patch:
+
+https://lore.kernel.org/linux-block/20221215033132.230023-3-longman@redhat.com/
+
+Fixes: 3b8cc6298724 ("blk-cgroup: Optimize blkcg_rstat_flush()")
+Cc: stable@vger.kernel.org
+Reported-by: Jay Shin <jaeshin@redhat.com>
+Cc: Waiman Long <longman@redhat.com>
+Cc: Tejun Heo <tj@kernel.org>
+Cc: mkoutny@suse.com
+Cc: Yosry Ahmed <yosryahmed@google.com>
+Co-developed-by: Ming Lei <ming.lei@redhat.com>
+Signed-off-by: Ming Lei <ming.lei@redhat.com>
+Signed-off-by: Waiman Long <longman@redhat.com>
+---
+ block/blk-cgroup.c     | 57 +++++++++++++++++++++++++++++++-----------
+ include/linux/cgroup.h |  1 +
+ kernel/cgroup/rstat.c  | 15 ++++++++++-
+ 3 files changed, 57 insertions(+), 16 deletions(-)
+
+diff --git a/block/blk-cgroup.c b/block/blk-cgroup.c
+index 0ce64dd73cfe..90c2efc3767f 100644
+--- a/block/blk-cgroup.c
++++ b/block/blk-cgroup.c
+@@ -160,13 +160,39 @@ static void blkg_free(struct blkcg_gq *blkg)
+ 	schedule_work(&blkg->free_work);
+ }
+ 
++static void __blkcg_rstat_flush(struct llist_node *lnode);
++
+ static void __blkg_release(struct rcu_head *rcu)
+ {
+ 	struct blkcg_gq *blkg = container_of(rcu, struct blkcg_gq, rcu_head);
++	struct blkcg *blkcg = blkg->blkcg;
++	int cpu;
+ 
+ #ifdef CONFIG_BLK_CGROUP_PUNT_BIO
+ 	WARN_ON(!bio_list_empty(&blkg->async_bios));
+ #endif
++	/*
++	 * Flush all the non-empty percpu lockless lists before releasing
++	 * us, given these stat belongs to us.
++	 *
++	 * Hold the cgroup_rstat_lock before calling __blkcg_rstat_flush()
++	 * to block concurrent cgroup_rstat_flush*() calls.
++	 */
++	for_each_possible_cpu(cpu) {
++		struct llist_head *lhead = per_cpu_ptr(blkcg->lhead, cpu);
++		struct llist_node *lnode;
++
++		if (llist_empty(lhead))
++			continue;
++
++		lnode = llist_del_all(lhead);
++		if (!lnode)
++			continue;
++
++		cgroup_rstat_flush_acquire();
++		__blkcg_rstat_flush(lnode);
++		cgroup_rstat_flush_release();
++	}
+ 
+ 	/* release the blkcg and parent blkg refs this blkg has been holding */
+ 	css_put(&blkg->blkcg->css);
+@@ -951,23 +977,12 @@ static void blkcg_iostat_update(struct blkcg_gq *blkg, struct blkg_iostat *cur,
+ 	u64_stats_update_end_irqrestore(&blkg->iostat.sync, flags);
+ }
+ 
+-static void blkcg_rstat_flush(struct cgroup_subsys_state *css, int cpu)
++static void __blkcg_rstat_flush(struct llist_node *lnode)
+ {
+-	struct blkcg *blkcg = css_to_blkcg(css);
+-	struct llist_head *lhead = per_cpu_ptr(blkcg->lhead, cpu);
+-	struct llist_node *lnode;
+ 	struct blkg_iostat_set *bisc, *next_bisc;
+ 
+-	/* Root-level stats are sourced from system-wide IO stats */
+-	if (!cgroup_parent(css->cgroup))
+-		return;
+-
+ 	rcu_read_lock();
+ 
+-	lnode = llist_del_all(lhead);
+-	if (!lnode)
+-		goto out;
+-
+ 	/*
+ 	 * Iterate only the iostat_cpu's queued in the lockless list.
+ 	 */
+@@ -991,13 +1006,26 @@ static void blkcg_rstat_flush(struct cgroup_subsys_state *css, int cpu)
+ 		if (parent && parent->parent)
+ 			blkcg_iostat_update(parent, &blkg->iostat.cur,
+ 					    &blkg->iostat.last);
+-		percpu_ref_put(&blkg->refcnt);
+ 	}
+ 
+-out:
+ 	rcu_read_unlock();
+ }
+ 
++static void blkcg_rstat_flush(struct cgroup_subsys_state *css, int cpu)
++{
++	struct blkcg *blkcg = css_to_blkcg(css);
++	struct llist_head *lhead = per_cpu_ptr(blkcg->lhead, cpu);
++	struct llist_node *lnode;
++
++	/* Root-level stats are sourced from system-wide IO stats */
++	if (!cgroup_parent(css->cgroup))
++		return;
++
++	lnode = llist_del_all(lhead);
++	if (lnode)
++		__blkcg_rstat_flush(lnode);
++}
++
+ /*
+  * We source root cgroup stats from the system-wide stats to avoid
+  * tracking the same information twice and incurring overhead when no
+@@ -2075,7 +2103,6 @@ void blk_cgroup_bio_start(struct bio *bio)
+ 
+ 		llist_add(&bis->lnode, lhead);
+ 		WRITE_ONCE(bis->lqueued, true);
+-		percpu_ref_get(&bis->blkg->refcnt);
+ 	}
+ 
+ 	u64_stats_update_end_irqrestore(&bis->sync, flags);
+diff --git a/include/linux/cgroup.h b/include/linux/cgroup.h
+index 885f5395fcd0..88e6647f49df 100644
+--- a/include/linux/cgroup.h
++++ b/include/linux/cgroup.h
+@@ -694,6 +694,7 @@ void cgroup_rstat_updated(struct cgroup *cgrp, int cpu);
+ void cgroup_rstat_flush(struct cgroup *cgrp);
+ void cgroup_rstat_flush_atomic(struct cgroup *cgrp);
+ void cgroup_rstat_flush_hold(struct cgroup *cgrp);
++void cgroup_rstat_flush_acquire(void);
+ void cgroup_rstat_flush_release(void);
+ 
+ /*
+diff --git a/kernel/cgroup/rstat.c b/kernel/cgroup/rstat.c
+index 9c4c55228567..b0fd4e27f466 100644
+--- a/kernel/cgroup/rstat.c
++++ b/kernel/cgroup/rstat.c
+@@ -273,7 +273,20 @@ void cgroup_rstat_flush_hold(struct cgroup *cgrp)
+ }
+ 
+ /**
+- * cgroup_rstat_flush_release - release cgroup_rstat_flush_hold()
++ * cgroup_rstat_flush_acquire - acquire cgroup_rstat_lock
++ *
++ * Callers can acquire the internal cgroup_rstat_lock to prevent concurrent
++ * execution of cgroup_rstat_flush*() and the controller callbacks.
++ */
++void cgroup_rstat_flush_acquire(void)
++	__acquires(&cgroup_rstat_lock)
++{
++	spin_lock_irq(&cgroup_rstat_lock);
++}
++
++/**
++ * cgroup_rstat_flush_release - release cgroup_rstat_flush_hold() or
++ *				cgroup_rstat_flush_acquire()
+  */
+ void cgroup_rstat_flush_release(void)
+ 	__releases(&cgroup_rstat_lock)
+-- 
+2.31.1
 
