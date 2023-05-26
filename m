@@ -1,98 +1,152 @@
-From: Ming Lei <ming.lei@redhat.com>
-Subject: Re: [PATCH] blk-cgroup: Flush stats before releasing blkcg_gq
-Date: Fri, 26 May 2023 08:34:04 +0800
-Message-ID: <ZG/+fB+f8Lf2PKc7@ovpn-8-21.pek2.redhat.com>
-References: <20230525043518.831721-1-ming.lei@redhat.com>
- <20230525160105.1968749-1-longman@redhat.com>
- <64f20e27-0927-334d-5414-9bb81d639cec@redhat.com>
+From: Yu Kuai <yukuai1-XF6JlduFytWkHkcT6e4Xnw@public.gmane.org>
+Subject: Re: [PATCH -next v2 6/6] blk-sysfs: add a new attr_group for blk_mq
+Date: Fri, 26 May 2023 17:38:10 +0800
+Message-ID: <8cafbd02-182a-4071-7e04-cc6f96045852@huaweicloud.com>
+References: <20230512093554.911753-1-yukuai1@huaweicloud.com>
+ <20230512093554.911753-7-yukuai1@huaweicloud.com>
 Mime-Version: 1.0
-Return-path: <stable-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1685061260;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=3HkhSmcztqk7WRQegC24K1K8Fj702Fn4WVYpg4vLlng=;
-        b=CF3AVpPmm2IFmrlocxx08P3YoXCCVK1WwiW4YJfbZJZPECz0g21oV1sWLNWQvGzmKf2W6i
-        SdBAAzK4tnhdKQrbbQ4JC+VHK39RBCvZMl/2EHs+NB5L56e7PCcINKtN0Taw6OdHCNhX7q
-        9cARyB8q9XYW08benkI+2BpWpvwifgs=
-Content-Disposition: inline
-In-Reply-To: <64f20e27-0927-334d-5414-9bb81d639cec@redhat.com>
+Content-Transfer-Encoding: quoted-printable
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <20230512093554.911753-7-yukuai1-XF6JlduFytWkHkcT6e4Xnw@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Waiman Long <longman@redhat.com>
-Cc: Jens Axboe <axboe@kernel.dk>, Tejun Heo <tj@kernel.org>, Josef Bacik <josef@toxicpanda.com>, Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, cgroups@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny@suse.com>, Yosry Ahmed <yosryahmed@google.com>, Jay Shin <jaeshin@redhat.com>, stable@vger.kernel.org, ming.lei@redhat.com
+Content-Type: text/plain; charset="iso-8859-1"; format="flowed"
+To: Yu Kuai <yukuai1-XF6JlduFytWkHkcT6e4Xnw@public.gmane.org>, hch-jcswGhMUV9g@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, josef-DigfWCa+lFGyeJad7bwFQA@public.gmane.org, axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org
+Cc: lukas.bulwahn-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, yi.zhang-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, yangerkun-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, "yukuai (C)" <yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 
-On Thu, May 25, 2023 at 12:06:07PM -0400, Waiman Long wrote:
-> On 5/25/23 12:01, Waiman Long wrote:
-> > As noted by Michal, the blkg_iostat_set's in the lockless list hold
-> > reference to blkg's to protect against their removal. Those blkg's
-> > hold reference to blkcg. When a cgroup is being destroyed,
-> > cgroup_rstat_flush() is only called at css_release_work_fn() which
-> > is called when the blkcg reference count reaches 0. This circular
-> > dependency will prevent blkcg and some blkgs from being freed after
-> > they are made offline.
-> > 
-> > It is less a problem if the cgroup to be destroyed also has other
-> > controllers like memory that will call cgroup_rstat_flush() which will
-> > clean up the reference count. If block is the only controller that uses
-> > rstat, these offline blkcg and blkgs may never be freed leaking more
-> > and more memory over time.
-> > 
-> > To prevent this potential memory leak:
-> > 
-> > - flush blkcg per-cpu stats list in __blkg_release(), when no new stat
-> >    can be added to avoid use-after-free of the percpu blkg_iostat_set in
-> >    futue cgroup_rstat_flush*() calls.
-> > 
-> > - add a cgroup_rstat_flush_acquire() helper and call it to acquire
-> >    cgroup_rstat_lock to block concurrent execution of other
-> >    cgroup_rstat_flush*() calls
-> > 
-> > - don't grab bio->bi_blkg reference when adding the stats into blkcg's
-> >    per-cpu stat list since all stats are guaranteed to be consumed before
-> >    releasing blkg instance, and grabbing blkg reference for stats was
-> >    the most fragile part of original patch
-> > 
-> > Based on Waiman's patch:
-> > 
-> > https://lore.kernel.org/linux-block/20221215033132.230023-3-longman@redhat.com/
-> > 
-> > Fixes: 3b8cc6298724 ("blk-cgroup: Optimize blkcg_rstat_flush()")
-> > Cc: stable@vger.kernel.org
-> > Reported-by: Jay Shin <jaeshin@redhat.com>
-> > Cc: Waiman Long <longman@redhat.com>
-> > Cc: Tejun Heo <tj@kernel.org>
-> > Cc: mkoutny@suse.com
-> > Cc: Yosry Ahmed <yosryahmed@google.com>
-> > Co-developed-by: Ming Lei <ming.lei@redhat.com>
-> > Signed-off-by: Ming Lei <ming.lei@redhat.com>
-> > Signed-off-by: Waiman Long <longman@redhat.com>
-> > ---
-> >   block/blk-cgroup.c     | 57 +++++++++++++++++++++++++++++++-----------
-> >   include/linux/cgroup.h |  1 +
-> >   kernel/cgroup/rstat.c  | 15 ++++++++++-
-> >   3 files changed, 57 insertions(+), 16 deletions(-)
-> 
-> This is my counter-proposal to Ming's v3 patch. The major difference is that
-> I used the existing cgroup_rstat_lock instead of adding a new internal lock.
-> This minimizes performance impact to existing cgroup_rstat_flush*() call
+Hi, Christoph
 
-The added internal lock has ~zero perf impact on rstat flush cause
-the lock won't be contended basically.
+=D4=DA 2023/05/12 17:35, Yu Kuai =D0=B4=B5=C0:
+> From: Yu Kuai <yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+>=20
+> Currently wbt sysfs entry is created for bio based device, and wbt can
+> be enabled for such device through sysfs while it doesn't make sense
+> because wbt can only work for rq based device. In the meantime, there
+> are other similar sysfs entries.
+>=20
+> Fix this by adding a new attr_group for blk_mq, and sysfs entries will
+> only be created when the device is rq based.
+>=20
+> Suggested-by: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
+> Signed-off-by: Yu Kuai <yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 
-> while achieving the same objective. I am fine with Ming current v3 patch if
-> we decide to go that way.
+Any comments about this patch?
 
-As I mentioned, the main motivation with internal lock is to make the fix as
-simple as possible since cross-subsystem change isn't involved, and I am fine
-with any following cleanup or improvement on current blkg rstat flush.
-
-Another benefit with this internal lock is that race in blkcg_reset_stats()
-can be avoided.
-
-
-Thanks, 
-Ming
+Thanks,
+Kuai
+> ---
+>   block/blk-sysfs.c | 42 +++++++++++++++++++++++++++++++-----------
+>   1 file changed, 31 insertions(+), 11 deletions(-)
+>=20
+> diff --git a/block/blk-sysfs.c b/block/blk-sysfs.c
+> index 6c1c4ba66bc0..afc797fb0dfc 100644
+> --- a/block/blk-sysfs.c
+> +++ b/block/blk-sysfs.c
+> @@ -621,7 +621,6 @@ QUEUE_RW_ENTRY(queue_wb_lat, "wbt_lat_usec");
+>   #endif
+>  =20
+>   static struct attribute *queue_attrs[] =3D {
+> -	&queue_requests_entry.attr,
+>   	&queue_ra_entry.attr,
+>   	&queue_max_hw_sectors_entry.attr,
+>   	&queue_max_sectors_entry.attr,
+> @@ -629,7 +628,6 @@ static struct attribute *queue_attrs[] =3D {
+>   	&queue_max_discard_segments_entry.attr,
+>   	&queue_max_integrity_segments_entry.attr,
+>   	&queue_max_segment_size_entry.attr,
+> -	&elv_iosched_entry.attr,
+>   	&queue_hw_sector_size_entry.attr,
+>   	&queue_logical_block_size_entry.attr,
+>   	&queue_physical_block_size_entry.attr,
+> @@ -650,7 +648,6 @@ static struct attribute *queue_attrs[] =3D {
+>   	&queue_max_open_zones_entry.attr,
+>   	&queue_max_active_zones_entry.attr,
+>   	&queue_nomerges_entry.attr,
+> -	&queue_rq_affinity_entry.attr,
+>   	&queue_iostats_entry.attr,
+>   	&queue_stable_writes_entry.attr,
+>   	&queue_random_entry.attr,
+> @@ -658,11 +655,7 @@ static struct attribute *queue_attrs[] =3D {
+>   	&queue_wc_entry.attr,
+>   	&queue_fua_entry.attr,
+>   	&queue_dax_entry.attr,
+> -#ifdef CONFIG_BLK_WBT
+> -	&queue_wb_lat_entry.attr,
+> -#endif
+>   	&queue_poll_delay_entry.attr,
+> -	&queue_io_timeout_entry.attr,
+>   #ifdef CONFIG_BLK_DEV_THROTTLING_LOW
+>   	&blk_throtl_sample_time_entry.attr,
+>   #endif
+> @@ -671,16 +664,23 @@ static struct attribute *queue_attrs[] =3D {
+>   	NULL,
+>   };
+>  =20
+> +static struct attribute *blk_mq_queue_attrs[] =3D {
+> +	&queue_requests_entry.attr,
+> +	&elv_iosched_entry.attr,
+> +	&queue_rq_affinity_entry.attr,
+> +	&queue_io_timeout_entry.attr,
+> +#ifdef CONFIG_BLK_WBT
+> +	&queue_wb_lat_entry.attr,
+> +#endif
+> +	NULL,
+> +};
+> +
+>   static umode_t queue_attr_visible(struct kobject *kobj, struct attribut=
+e *attr,
+>   				int n)
+>   {
+>   	struct gendisk *disk =3D container_of(kobj, struct gendisk, queue_kobj=
+);
+>   	struct request_queue *q =3D disk->queue;
+>  =20
+> -	if (attr =3D=3D &queue_io_timeout_entry.attr &&
+> -		(!q->mq_ops || !q->mq_ops->timeout))
+> -			return 0;
+> -
+>   	if ((attr =3D=3D &queue_max_open_zones_entry.attr ||
+>   	     attr =3D=3D &queue_max_active_zones_entry.attr) &&
+>   	    !blk_queue_is_zoned(q))
+> @@ -689,11 +689,30 @@ static umode_t queue_attr_visible(struct kobject *k=
+obj, struct attribute *attr,
+>   	return attr->mode;
+>   }
+>  =20
+> +static umode_t blk_mq_queue_attr_visible(struct kobject *kobj,
+> +					 struct attribute *attr, int n)
+> +{
+> +	struct gendisk *disk =3D container_of(kobj, struct gendisk, queue_kobj);
+> +	struct request_queue *q =3D disk->queue;
+> +
+> +	if (!queue_is_mq(q))
+> +		return 0;
+> +
+> +	if (attr =3D=3D &queue_io_timeout_entry.attr && !q->mq_ops->timeout)
+> +		return 0;
+> +
+> +	return attr->mode;
+> +}
+> +
+>   static struct attribute_group queue_attr_group =3D {
+>   	.attrs =3D queue_attrs,
+>   	.is_visible =3D queue_attr_visible,
+>   };
+>  =20
+> +static struct attribute_group blk_mq_queue_attr_group =3D {
+> +	.attrs =3D blk_mq_queue_attrs,
+> +	.is_visible =3D blk_mq_queue_attr_visible,
+> +};
+>  =20
+>   #define to_queue(atr) container_of((atr), struct queue_sysfs_entry, att=
+r)
+>  =20
+> @@ -738,6 +757,7 @@ static const struct sysfs_ops queue_sysfs_ops =3D {
+>  =20
+>   static const struct attribute_group *blk_queue_attr_groups[] =3D {
+>   	&queue_attr_group,
+> +	&blk_mq_queue_attr_group,
+>   	NULL
+>   };
+>  =20
+>=20
 
