@@ -1,223 +1,98 @@
-From: Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH v4 0/2] memcontrol: support cgroup level OOM protection
-Date: Thu, 25 May 2023 10:19:20 -0700
-Message-ID: <CAJD7tkaQdSTDX0Q7zvvYrA3Y4TcvLdWKnN3yc8VpfWRpUjcYBw@mail.gmail.com>
-References: <CAJD7tkZwCreOS_XxDM_9mOTBo=Gatr12r1xtc64B_e5+HJhRqg@mail.gmail.com>
- <B438A058-7C4A-46B3-B6FB-4CF32BD7D294@didiglobal.com>
+From: Ming Lei <ming.lei@redhat.com>
+Subject: Re: [PATCH] blk-cgroup: Flush stats before releasing blkcg_gq
+Date: Fri, 26 May 2023 08:34:04 +0800
+Message-ID: <ZG/+fB+f8Lf2PKc7@ovpn-8-21.pek2.redhat.com>
+References: <20230525043518.831721-1-ming.lei@redhat.com>
+ <20230525160105.1968749-1-longman@redhat.com>
+ <64f20e27-0927-334d-5414-9bb81d639cec@redhat.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20221208; t=1685035197; x=1687627197;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=wavdum6yYAqpFeopZHwVVFgnm4JMHiQDU/53zz3FxBY=;
-        b=goawVQC5jsSd/ZTijZq1yB03zafWo77t7+Zao+UGglnPeOunriCGqUVh062x+pz1AY
-         Tm6HF3/F6232FkJS/srHiOjoWJ2WkCfRbkSzQmEN5ODbd7yGZCOQ5sLH4DYv5CrGa+s5
-         e0VL41YYNBfodf21AAsHSNGeEZXBPWbV6TSR/vppHSrWwPAjso3m69mzGaS7WCIsY2qk
-         YHv4D1XAI2Hh7zUAqDDxfH/EH3R8VK0LKb7a4VOuaSMqwY/BqZ7j6t6IO9IYPhg0aIRw
-         /Ls6gN2GUX2SboOkFRqwC832l5xeBUyf3o+FzvunNuWi6pJRcGXO7ckZjC16TypYGtTQ
-         yPeg==
-In-Reply-To: <B438A058-7C4A-46B3-B6FB-4CF32BD7D294-+mmu7dyatJ+Rq8AjE7tl8g@public.gmane.org>
+Return-path: <stable-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1685061260;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=3HkhSmcztqk7WRQegC24K1K8Fj702Fn4WVYpg4vLlng=;
+        b=CF3AVpPmm2IFmrlocxx08P3YoXCCVK1WwiW4YJfbZJZPECz0g21oV1sWLNWQvGzmKf2W6i
+        SdBAAzK4tnhdKQrbbQ4JC+VHK39RBCvZMl/2EHs+NB5L56e7PCcINKtN0Taw6OdHCNhX7q
+        9cARyB8q9XYW08benkI+2BpWpvwifgs=
+Content-Disposition: inline
+In-Reply-To: <64f20e27-0927-334d-5414-9bb81d639cec@redhat.com>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="utf-8"
-To: =?UTF-8?B?56iL5Z6y5rabIENoZW5na2FpdGFvIENoZW5n?= <chengkaitao-+mmu7dyatJ+Rq8AjE7tl8g@public.gmane.org>
-Cc: "tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org" <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, "lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org" <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, "hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org" <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, "corbet-T1hC0tSOHrs@public.gmane.org" <corbet-T1hC0tSOHrs@public.gmane.org>, "mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org" <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, "roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org" <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, "shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org" <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, "akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org" <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, "brauner-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org" <brauner-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, "muchun.song-fxUVXftIFDnyG1zEObXtfA@public.gmane.org" <muchun.song-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, "viro-RmSDqhL/yNMiFSDQTTA3OLVCufUGDwFn@public.gmane.org" <viro-RmSDqhL/yNMiFSDQTTA3OLVCufUGDwFn@public.gmane.org>, "zhengqi.arch-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org" <zhengqi.arch-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, "ebiederm-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org" <ebiederm-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org>, "Liam.Howlett-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org" <Liam.Howlett-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, "chengzhihao1-hv44wF8Li93QT0dZR+AlfA@public.gmane.org" <chengzhihao1-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, "pilgrimtao-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org" <pilgrimtao-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Waiman Long <longman@redhat.com>
+Cc: Jens Axboe <axboe@kernel.dk>, Tejun Heo <tj@kernel.org>, Josef Bacik <josef@toxicpanda.com>, Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, cgroups@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny@suse.com>, Yosry Ahmed <yosryahmed@google.com>, Jay Shin <jaeshin@redhat.com>, stable@vger.kernel.org, ming.lei@redhat.com
 
-On Thu, May 25, 2023 at 1:19=E2=80=AFAM =E7=A8=8B=E5=9E=B2=E6=B6=9B Chengka=
-itao Cheng
-<chengkaitao-+mmu7dyatJ+Rq8AjE7tl8g@public.gmane.org> wrote:
->
-> At 2023-05-24 06:02:55, "Yosry Ahmed" <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org> wrote:
-> >On Sat, May 20, 2023 at 2:52=E2=80=AFAM =E7=A8=8B=E5=9E=B2=E6=B6=9B Chen=
-gkaitao Cheng
-> ><chengkaitao-+mmu7dyatJ+Rq8AjE7tl8g@public.gmane.org> wrote:
-> >>
-> >> At 2023-05-20 06:04:26, "Yosry Ahmed" <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org> wrote:
-> >> >On Wed, May 17, 2023 at 10:12=E2=80=AFPM =E7=A8=8B=E5=9E=B2=E6=B6=9B =
-Chengkaitao Cheng
-> >> ><chengkaitao-+mmu7dyatJ+Rq8AjE7tl8g@public.gmane.org> wrote:
-> >> >>
-> >> >> At 2023-05-18 04:42:12, "Yosry Ahmed" <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org> wrote=
-:
-> >> >> >On Wed, May 17, 2023 at 3:01=E2=80=AFAM =E7=A8=8B=E5=9E=B2=E6=B6=
-=9B Chengkaitao Cheng
-> >> >> ><chengkaitao-+mmu7dyatJ+Rq8AjE7tl8g@public.gmane.org> wrote:
-> >> >> >>
-> >> >> >> At 2023-05-17 16:09:50, "Yosry Ahmed" <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org> wr=
-ote:
-> >> >> >> >On Wed, May 17, 2023 at 1:01=E2=80=AFAM =E7=A8=8B=E5=9E=B2=E6=
-=B6=9B Chengkaitao Cheng
-> >> >> >> ><chengkaitao-+mmu7dyatJ+Rq8AjE7tl8g@public.gmane.org> wrote:
-> >> >> >> >>
-> >> >> >>
-> >> >> >> Killing processes in order of memory usage cannot effectively pr=
-otect
-> >> >> >> important processes. Killing processes in a user-defined priorit=
-y order
-> >> >> >> will result in a large number of OOM events and still not being =
-able to
-> >> >> >> release enough memory. I have been searching for a balance betwe=
-en
-> >> >> >> the two methods, so that their shortcomings are not too obvious.
-> >> >> >> The biggest advantage of memcg is its tree topology, and I also =
-hope
-> >> >> >> to make good use of it.
-> >> >> >
-> >> >> >For us, killing processes in a user-defined priority order works w=
-ell.
-> >> >> >
-> >> >> >It seems like to tune memory.oom.protect you use oom_kill_inherit =
-to
-> >> >> >observe how many times this memcg has been killed due to a limit i=
-n an
-> >> >> >ancestor. Wouldn't it be more straightforward to specify the prior=
-ity
-> >> >> >of protections among memcgs?
-> >> >> >
-> >> >> >For example, if you observe multiple memcgs being OOM killed due t=
-o
-> >> >> >hitting an ancestor limit, you will need to decide which of them t=
-o
-> >> >> >increase memory.oom.protect for more, based on their importance.
-> >> >> >Otherwise, if you increase all of them, then there is no point if =
-all
-> >> >> >the memory is protected, right?
-> >> >>
-> >> >> If all memory in memcg is protected, its meaning is similar to that=
- of the
-> >> >> highest priority memcg in your approach, which is ultimately killed=
- or
-> >> >> never killed.
-> >> >
-> >> >Makes sense. I believe it gets a bit trickier when you want to
-> >> >describe relative ordering between memcgs using memory.oom.protect.
-> >>
-> >> Actually, my original intention was not to use memory.oom.protect to
-> >> achieve relative ordering between memcgs, it was just a feature that
-> >> happened to be achievable. My initial idea was to protect a certain
-> >> proportion of memory in memcg from being killed, and through the
-> >> method, physical memory can be reasonably planned. Both the physical
-> >> machine manager and container manager can add some unimportant
-> >> loads beyond the oom.protect limit, greatly improving the oversold
-> >> rate of memory. In the worst case scenario, the physical machine can
-> >> always provide all the memory limited by memory.oom.protect for memcg.
-> >>
-> >> On the other hand, I also want to achieve relative ordering of interna=
-l
-> >> processes in memcg, not just a unified ordering of all memcgs on
-> >> physical machines.
-> >
-> >For us, having a strict priority ordering-based selection is
-> >essential. We have different tiers of jobs of different importance,
-> >and a job of higher priority should not be killed before a lower
-> >priority task if possible, no matter how much memory either of them is
-> >using. Protecting memcgs solely based on their usage can be useful in
-> >some scenarios, but not in a system where you have different tiers of
-> >jobs running with strict priority ordering.
->
-> If you want to run with strict priority ordering, it can also be achieved=
-,
-> but it may be quite troublesome. The directory structure shown below
-> can achieve the goal.
->
->              root
->            /      \
->    cgroup A       cgroup B
-> (protect=3Dmax)    (protect=3D0)
->                 /          \
->            cgroup C      cgroup D
->         (protect=3Dmax)   (protect=3D0)
->                        /          \
->                   cgroup E      cgroup F
->                (protect=3Dmax)   (protect=3D0)
->
-> Oom kill order: F > E > C > A
+On Thu, May 25, 2023 at 12:06:07PM -0400, Waiman Long wrote:
+> On 5/25/23 12:01, Waiman Long wrote:
+> > As noted by Michal, the blkg_iostat_set's in the lockless list hold
+> > reference to blkg's to protect against their removal. Those blkg's
+> > hold reference to blkcg. When a cgroup is being destroyed,
+> > cgroup_rstat_flush() is only called at css_release_work_fn() which
+> > is called when the blkcg reference count reaches 0. This circular
+> > dependency will prevent blkcg and some blkgs from being freed after
+> > they are made offline.
+> > 
+> > It is less a problem if the cgroup to be destroyed also has other
+> > controllers like memory that will call cgroup_rstat_flush() which will
+> > clean up the reference count. If block is the only controller that uses
+> > rstat, these offline blkcg and blkgs may never be freed leaking more
+> > and more memory over time.
+> > 
+> > To prevent this potential memory leak:
+> > 
+> > - flush blkcg per-cpu stats list in __blkg_release(), when no new stat
+> >    can be added to avoid use-after-free of the percpu blkg_iostat_set in
+> >    futue cgroup_rstat_flush*() calls.
+> > 
+> > - add a cgroup_rstat_flush_acquire() helper and call it to acquire
+> >    cgroup_rstat_lock to block concurrent execution of other
+> >    cgroup_rstat_flush*() calls
+> > 
+> > - don't grab bio->bi_blkg reference when adding the stats into blkcg's
+> >    per-cpu stat list since all stats are guaranteed to be consumed before
+> >    releasing blkg instance, and grabbing blkg reference for stats was
+> >    the most fragile part of original patch
+> > 
+> > Based on Waiman's patch:
+> > 
+> > https://lore.kernel.org/linux-block/20221215033132.230023-3-longman@redhat.com/
+> > 
+> > Fixes: 3b8cc6298724 ("blk-cgroup: Optimize blkcg_rstat_flush()")
+> > Cc: stable@vger.kernel.org
+> > Reported-by: Jay Shin <jaeshin@redhat.com>
+> > Cc: Waiman Long <longman@redhat.com>
+> > Cc: Tejun Heo <tj@kernel.org>
+> > Cc: mkoutny@suse.com
+> > Cc: Yosry Ahmed <yosryahmed@google.com>
+> > Co-developed-by: Ming Lei <ming.lei@redhat.com>
+> > Signed-off-by: Ming Lei <ming.lei@redhat.com>
+> > Signed-off-by: Waiman Long <longman@redhat.com>
+> > ---
+> >   block/blk-cgroup.c     | 57 +++++++++++++++++++++++++++++++-----------
+> >   include/linux/cgroup.h |  1 +
+> >   kernel/cgroup/rstat.c  | 15 ++++++++++-
+> >   3 files changed, 57 insertions(+), 16 deletions(-)
+> 
+> This is my counter-proposal to Ming's v3 patch. The major difference is that
+> I used the existing cgroup_rstat_lock instead of adding a new internal lock.
+> This minimizes performance impact to existing cgroup_rstat_flush*() call
 
-This requires restructuring the cgroup hierarchy which comes with a
-lot of other factors, I don't think that's practically an option.
+The added internal lock has ~zero perf impact on rstat flush cause
+the lock won't be contended basically.
 
->
-> As mentioned earlier, "running with strict priority ordering" may be
-> some extreme issues, that requires the manager to make a choice.
+> while achieving the same objective. I am fine with Ming current v3 patch if
+> we decide to go that way.
 
-We have been using strict priority ordering in our fleet for many
-years now and we depend on it. Some jobs are simply more important
-than others, regardless of their usage.
+As I mentioned, the main motivation with internal lock is to make the fix as
+simple as possible since cross-subsystem change isn't involved, and I am fine
+with any following cleanup or improvement on current blkg rstat flush.
 
->
-> >>
-> >> >> >In this case, wouldn't it be easier to just tell the OOM killer th=
-e
-> >> >> >relative priority among the memcgs?
-> >> >> >
-> >> >> >>
-> >> >> >> >If this approach works for you (or any other audience), that's =
-great,
-> >> >> >> >I can share more details and perhaps we can reach something tha=
-t we
-> >> >> >> >can both use :)
-> >> >> >>
-> >> >> >> If you have a good idea, please share more details or show some =
-code.
-> >> >> >> I would greatly appreciate it
-> >> >> >
-> >> >> >The code we have needs to be rebased onto a different version and
-> >> >> >cleaned up before it can be shared, but essentially it is as
-> >> >> >described.
-> >> >> >
-> >> >> >(a) All processes and memcgs start with a default score.
-> >> >> >(b) Userspace can specify scores for memcgs and processes. A highe=
-r
-> >> >> >score means higher priority (aka less score gets killed first).
-> >> >> >(c) The OOM killer essentially looks for the memcg with the lowest
-> >> >> >scores to kill, then among this memcg, it looks for the process wi=
-th
-> >> >> >the lowest score. Ties are broken based on usage, so essentially i=
-f
-> >> >> >all processes/memcgs have the default score, we fallback to the
-> >> >> >current OOM behavior.
-> >> >>
-> >> >> If memory oversold is severe, all processes of the lowest priority
-> >> >> memcg may be killed before selecting other memcg processes.
-> >> >> If there are 1000 processes with almost zero memory usage in
-> >> >> the lowest priority memcg, 1000 invalid kill events may occur.
-> >> >> To avoid this situation, even for the lowest priority memcg,
-> >> >> I will leave him a very small oom.protect quota.
-> >> >
-> >> >I checked internally, and this is indeed something that we see from
-> >> >time to time. We try to avoid that with userspace OOM killing, but
-> >> >it's not 100% effective.
-> >> >
-> >> >>
-> >> >> If faced with two memcgs with the same total memory usage and
-> >> >> priority, memcg A has more processes but less memory usage per
-> >> >> single process, and memcg B has fewer processes but more
-> >> >> memory usage per single process, then when OOM occurs, the
-> >> >> processes in memcg B may continue to be killed until all processes
-> >> >> in memcg B are killed, which is unfair to memcg B because memcg A
-> >> >> also occupies a large amount of memory.
-> >> >
-> >> >I believe in this case we will kill one process in memcg B, then the
-> >> >usage of memcg A will become higher, so we will pick a process from
-> >> >memcg A next.
-> >>
-> >> If there is only one process in memcg A and its memory usage is higher
-> >> than any other process in memcg B, but the total memory usage of
-> >> memcg A is lower than that of memcg B. In this case, if the OOM-killer
-> >> still chooses the process in memcg A. it may be unfair to memcg A.
-> >>
-> >> >> Dose your approach have these issues? Killing processes in a
-> >> >> user-defined priority is indeed easier and can work well in most ca=
-ses,
-> >> >> but I have been trying to solve the cases that it cannot cover.
-> >> >
-> >> >The first issue is relatable with our approach. Let me dig more info
-> >> >from our internal teams and get back to you with more details.
->
-> --
-> Thanks for your comment!
-> chengkaitao
->
->
+Another benefit with this internal lock is that race in blkcg_reset_stats()
+can be avoided.
+
+
+Thanks, 
+Ming
+
