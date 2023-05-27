@@ -1,130 +1,76 @@
 From: Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH] memcg: remove unused mem_cgroup_from_obj()
-Date: Fri, 26 May 2023 20:55:22 -0700
-Message-ID: <CAJD7tkZhUB9N6R-1mWAPGV=awEO0Y0cmi9OmGiVhjSfdFBCirQ@mail.gmail.com>
-References: <20230527103126.398267-1-linmiaohe@huawei.com>
+Subject: Re: [PATCH] cgroup: remove unused macro for_each_e_css()
+Date: Fri, 26 May 2023 20:55:49 -0700
+Message-ID: <CAJD7tkbY0kXbb3r3ObgOjmSa5kmw7n1uhN=Opvumty3=i9Ev0g@mail.gmail.com>
+References: <20230527093353.153078-1-linmiaohe@huawei.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: quoted-printable
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20221208; t=1685159759; x=1687751759;
+        d=google.com; s=20221208; t=1685159785; x=1687751785;
         h=content-transfer-encoding:cc:to:subject:message-id:date:from
          :in-reply-to:references:mime-version:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=EIU3ApG2t6G3Om8A3cojlnR0RAZfWHqg0wkrw6J9EhQ=;
-        b=7anKzrx54MpIV/vXgrNEGJ+XZ3nR4S6+xWVOb3/Tt5YzVkbt7WPWY4f/AUP5W2UVr9
-         K530DnGhnTIFcYiYmBbo+tPqqc0Ukj9QD1CkrX7XYrabbntH5JpVHcroD+SlRHKtx3Rc
-         kY9L1c3K7NoOo4hOq0VERwTXnGOaLU2O0SqU/NyahwGPOOUbS5EUDCZArHOouWnL9tEg
-         LeojmsUC/tR7MDeCs6MFcte8HBoOGbF4eHruYHv8bCvGelALDHxcGpq7H+s6hSYEOfkY
-         E9QwDQeUZPLWNJY8DCUHU9Ztj6DnJmr57JCEklUa3J76GNHAbm8Up0Y+fc+yiJ39usxW
-         MKHg==
-In-Reply-To: <20230527103126.398267-1-linmiaohe-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+        bh=Zcxx+uBeHJ8GiGdDOZOOVVIqwP9cLUm7L1SVeB9sLvM=;
+        b=xE6160P9Zr4wEkT61Vr5IkbHXpmY1HjWeK774oQn5uOLjZ2QEShy9mhrvVb4HqrxNS
+         Z6YAg0LrJSUZi4tWr0CbVwQP+J5RhaPpDHoV4HUQHCB33J/wh1mvABD2dO+suyipiw9p
+         QCz+GmmD3/0o1Pyp7lX+CznaXnTzdYR0Id4oWQEPZ5F2ga6slqiCNJPehrr+OrqLM2d1
+         Whe/YslfEdc084vxdVSFYv/Jl+2Z69RrvRZpAXfhZZiPq2ClZnt9quqrkENE6BIROcRp
+         P+9RUjet0hlHRR4Qtj6bY4XtxobK8M7zWElCDxcqPoakr+NiUD5EL3rinGOj0K2M14QT
+         nKRg==
+In-Reply-To: <20230527093353.153078-1-linmiaohe-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="windows-1252"
 To: Miaohe Lin <linmiaohe-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Cc: hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org, shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, muchun.song-fxUVXftIFDnyG1zEObXtfA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Cc: lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Fri, May 26, 2023 at 7:40=E2=80=AFPM Miaohe Lin <linmiaohe-hv44wF8Li93QT0dZR+AlfA@public.gmane.org> w=
+On Fri, May 26, 2023 at 6:43=E2=80=AFPM Miaohe Lin <linmiaohe-hv44wF8Li93QT0dZR+AlfA@public.gmane.org> w=
 rote:
 >
-> The function mem_cgroup_from_obj() is not used anymore. Remove it and
-> clean up relevant comments.
+> for_each_e_css() is unused now. Remove it.
 >
 > Signed-off-by: Miaohe Lin <linmiaohe-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-> ---
->  include/linux/memcontrol.h |  6 ------
->  mm/memcontrol.c            | 31 -------------------------------
->  2 files changed, 37 deletions(-)
->
-> diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
-> index 00a88cf947e1..ce8c2355ed9f 100644
-> --- a/include/linux/memcontrol.h
-> +++ b/include/linux/memcontrol.h
-> @@ -1813,7 +1813,6 @@ static inline int memcg_kmem_id(struct mem_cgroup *=
-memcg)
->         return memcg ? memcg->kmemcg_id : -1;
->  }
->
-> -struct mem_cgroup *mem_cgroup_from_obj(void *p);
->  struct mem_cgroup *mem_cgroup_from_slab_obj(void *p);
->
->  static inline void count_objcg_event(struct obj_cgroup *objcg,
-> @@ -1876,11 +1875,6 @@ static inline int memcg_kmem_id(struct mem_cgroup =
-*memcg)
->         return -1;
->  }
->
-> -static inline struct mem_cgroup *mem_cgroup_from_obj(void *p)
-> -{
-> -       return NULL;
-> -}
-> -
->  static inline struct mem_cgroup *mem_cgroup_from_slab_obj(void *p)
->  {
->         return NULL;
-> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-> index 6a3d4ce87b8a..532b29c9a0fe 100644
-> --- a/mm/memcontrol.c
-> +++ b/mm/memcontrol.c
-> @@ -2972,37 +2972,6 @@ struct mem_cgroup *mem_cgroup_from_obj_folio(struc=
-t folio *folio, void *p)
->  /*
->   * Returns a pointer to the memory cgroup to which the kernel object is =
-charged.
->   *
-> - * A passed kernel object can be a slab object, vmalloc object or a gene=
-ric
-> - * kernel page, so different mechanisms for getting the memory cgroup po=
-inter
-> - * should be used.
-> - *
-> - * In certain cases (e.g. kernel stacks or large kmallocs with SLUB) the=
- caller
-> - * can not know for sure how the kernel object is implemented.
-> - * mem_cgroup_from_obj() can be safely used in such cases.
-> - *
-> - * The caller must ensure the memcg lifetime, e.g. by taking rcu_read_lo=
-ck(),
-> - * cgroup_mutex, etc.
-> - */
-> -struct mem_cgroup *mem_cgroup_from_obj(void *p)
-> -{
-> -       struct folio *folio;
-> -
-> -       if (mem_cgroup_disabled())
-> -               return NULL;
-> -
-> -       if (unlikely(is_vmalloc_addr(p)))
-> -               folio =3D page_folio(vmalloc_to_page(p));
-> -       else
-> -               folio =3D virt_to_folio(p);
-> -
-> -       return mem_cgroup_from_obj_folio(folio, p);
-> -}
-> -
-> -/*
-> - * Returns a pointer to the memory cgroup to which the kernel object is =
-charged.
-> - * Similar to mem_cgroup_from_obj(), but faster and not suitable for obj=
-ects,
-> - * allocated using vmalloc().
 
-Perhaps keep the line about not being suitable for objects allocated
-using vmalloc()? To be fair it's obvious from the function name, but I
-am guessing whoever added it did for a reason.
-
-I don't feel strongly either way, LGTM. I can't see any references in
-Linus's tree or mm-unstable.
+LGTM. I can't see any references in Linus's tree or mm-unstable.
 
 Reviewed-by: Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 
-
+> ---
+>  kernel/cgroup/cgroup.c | 15 ---------------
+>  1 file changed, 15 deletions(-)
+>
+> diff --git a/kernel/cgroup/cgroup.c b/kernel/cgroup/cgroup.c
+> index 625d7483951c..413b4f1f1b70 100644
+> --- a/kernel/cgroup/cgroup.c
+> +++ b/kernel/cgroup/cgroup.c
+> @@ -689,21 +689,6 @@ EXPORT_SYMBOL_GPL(of_css);
+>                                 lockdep_is_held(&cgroup_mutex)))) { }   \
+>                 else
+>
+> -/**
+> - * for_each_e_css - iterate all effective css's of a cgroup
+> - * @css: the iteration cursor
+> - * @ssid: the index of the subsystem, CGROUP_SUBSYS_COUNT after reaching=
+ the end
+> - * @cgrp: the target cgroup to iterate css's of
 > - *
->   * A passed kernel object must be a slab object or a generic kernel page=
-.
->   *
->   * The caller must ensure the memcg lifetime, e.g. by taking rcu_read_lo=
-ck(),
+> - * Should be called under cgroup_[tree_]mutex.
+> - */
+> -#define for_each_e_css(css, ssid, cgrp)                                 =
+           \
+> -       for ((ssid) =3D 0; (ssid) < CGROUP_SUBSYS_COUNT; (ssid)++)       =
+     \
+> -               if (!((css) =3D cgroup_e_css_by_mask(cgrp,               =
+     \
+> -                                                  cgroup_subsys[(ssid)])=
+)) \
+> -                       ;                                                =
+   \
+> -               else
+> -
+>  /**
+>   * do_each_subsys_mask - filter for_each_subsys with a bitmask
+>   * @ss: the iteration cursor
 > --
 > 2.27.0
 >
