@@ -1,7 +1,7 @@
 From: Yu Kuai <yukuai1-XF6JlduFytWkHkcT6e4Xnw@public.gmane.org>
-Subject: [PATCH -next v3 2/5] blk-wbt: remove dead code to handle wbt enable/disable with io inflight
-Date: Sat, 27 May 2023 09:06:41 +0800
-Message-ID: <20230527010644.647900-3-yukuai1@huaweicloud.com>
+Subject: [PATCH -next v3 5/5] blk-sysfs: add a new attr_group for blk_mq
+Date: Sat, 27 May 2023 09:06:44 +0800
+Message-ID: <20230527010644.647900-6-yukuai1@huaweicloud.com>
 References: <20230527010644.647900-1-yukuai1@huaweicloud.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
@@ -14,53 +14,127 @@ Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-block-u79uwXL29TY76Z2
 
 From: Yu Kuai <yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 
-enable or disable wbt is always called with queue freezed, so that wbt
-can never be enabled or disabled while io is still inflight, and this
-behaviour should always hold to avoid io hang(There have been reported
-several times).
+Currently wbt sysfs entry is created for bio based device, and wbt can
+be enabled for such device through sysfs while it doesn't make sense
+because wbt can only work for rq based device. In the meantime, there
+are other similar sysfs entries.
 
-Therefor, the code to handle wbt enable/diskble with io inflight is not
-and never will be used, hence remove such dead code.
+Fix this by adding a new attr_group for blk_mq, and sysfs entries will
+only be created when the device is rq based.
 
+Suggested-by: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
 Signed-off-by: Yu Kuai <yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 Reviewed-by: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
 ---
- block/blk-wbt.c | 16 ----------------
- 1 file changed, 16 deletions(-)
+ block/blk-sysfs.c | 42 +++++++++++++++++++++++++++++++-----------
+ 1 file changed, 31 insertions(+), 11 deletions(-)
 
-diff --git a/block/blk-wbt.c b/block/blk-wbt.c
-index 9ec2a2f1eda3..cb464c572840 100644
---- a/block/blk-wbt.c
-+++ b/block/blk-wbt.c
-@@ -200,15 +200,6 @@ static void wbt_rqw_done(struct rq_wb *rwb, struct rq_wait *rqw,
+diff --git a/block/blk-sysfs.c b/block/blk-sysfs.c
+index 6c1c4ba66bc0..afc797fb0dfc 100644
+--- a/block/blk-sysfs.c
++++ b/block/blk-sysfs.c
+@@ -621,7 +621,6 @@ QUEUE_RW_ENTRY(queue_wb_lat, "wbt_lat_usec");
+ #endif
  
- 	inflight = atomic_dec_return(&rqw->inflight);
+ static struct attribute *queue_attrs[] = {
+-	&queue_requests_entry.attr,
+ 	&queue_ra_entry.attr,
+ 	&queue_max_hw_sectors_entry.attr,
+ 	&queue_max_sectors_entry.attr,
+@@ -629,7 +628,6 @@ static struct attribute *queue_attrs[] = {
+ 	&queue_max_discard_segments_entry.attr,
+ 	&queue_max_integrity_segments_entry.attr,
+ 	&queue_max_segment_size_entry.attr,
+-	&elv_iosched_entry.attr,
+ 	&queue_hw_sector_size_entry.attr,
+ 	&queue_logical_block_size_entry.attr,
+ 	&queue_physical_block_size_entry.attr,
+@@ -650,7 +648,6 @@ static struct attribute *queue_attrs[] = {
+ 	&queue_max_open_zones_entry.attr,
+ 	&queue_max_active_zones_entry.attr,
+ 	&queue_nomerges_entry.attr,
+-	&queue_rq_affinity_entry.attr,
+ 	&queue_iostats_entry.attr,
+ 	&queue_stable_writes_entry.attr,
+ 	&queue_random_entry.attr,
+@@ -658,11 +655,7 @@ static struct attribute *queue_attrs[] = {
+ 	&queue_wc_entry.attr,
+ 	&queue_fua_entry.attr,
+ 	&queue_dax_entry.attr,
+-#ifdef CONFIG_BLK_WBT
+-	&queue_wb_lat_entry.attr,
+-#endif
+ 	&queue_poll_delay_entry.attr,
+-	&queue_io_timeout_entry.attr,
+ #ifdef CONFIG_BLK_DEV_THROTTLING_LOW
+ 	&blk_throtl_sample_time_entry.attr,
+ #endif
+@@ -671,16 +664,23 @@ static struct attribute *queue_attrs[] = {
+ 	NULL,
+ };
  
--	/*
--	 * wbt got disabled with IO in flight. Wake up any potential
--	 * waiters, we don't have to do more than that.
--	 */
--	if (unlikely(!rwb_enabled(rwb))) {
--		rwb_wake_all(rwb);
--		return;
--	}
--
- 	/*
- 	 * For discards, our limit is always the background. For writes, if
- 	 * the device does write back caching, drop further down before we
-@@ -545,13 +536,6 @@ static inline unsigned int get_limit(struct rq_wb *rwb, blk_opf_t opf)
++static struct attribute *blk_mq_queue_attrs[] = {
++	&queue_requests_entry.attr,
++	&elv_iosched_entry.attr,
++	&queue_rq_affinity_entry.attr,
++	&queue_io_timeout_entry.attr,
++#ifdef CONFIG_BLK_WBT
++	&queue_wb_lat_entry.attr,
++#endif
++	NULL,
++};
++
+ static umode_t queue_attr_visible(struct kobject *kobj, struct attribute *attr,
+ 				int n)
  {
- 	unsigned int limit;
+ 	struct gendisk *disk = container_of(kobj, struct gendisk, queue_kobj);
+ 	struct request_queue *q = disk->queue;
  
--	/*
--	 * If we got disabled, just return UINT_MAX. This ensures that
--	 * we'll properly inc a new IO, and dec+wakeup at the end.
--	 */
--	if (!rwb_enabled(rwb))
--		return UINT_MAX;
+-	if (attr == &queue_io_timeout_entry.attr &&
+-		(!q->mq_ops || !q->mq_ops->timeout))
+-			return 0;
 -
- 	if ((opf & REQ_OP_MASK) == REQ_OP_DISCARD)
- 		return rwb->wb_background;
+ 	if ((attr == &queue_max_open_zones_entry.attr ||
+ 	     attr == &queue_max_active_zones_entry.attr) &&
+ 	    !blk_queue_is_zoned(q))
+@@ -689,11 +689,30 @@ static umode_t queue_attr_visible(struct kobject *kobj, struct attribute *attr,
+ 	return attr->mode;
+ }
+ 
++static umode_t blk_mq_queue_attr_visible(struct kobject *kobj,
++					 struct attribute *attr, int n)
++{
++	struct gendisk *disk = container_of(kobj, struct gendisk, queue_kobj);
++	struct request_queue *q = disk->queue;
++
++	if (!queue_is_mq(q))
++		return 0;
++
++	if (attr == &queue_io_timeout_entry.attr && !q->mq_ops->timeout)
++		return 0;
++
++	return attr->mode;
++}
++
+ static struct attribute_group queue_attr_group = {
+ 	.attrs = queue_attrs,
+ 	.is_visible = queue_attr_visible,
+ };
+ 
++static struct attribute_group blk_mq_queue_attr_group = {
++	.attrs = blk_mq_queue_attrs,
++	.is_visible = blk_mq_queue_attr_visible,
++};
+ 
+ #define to_queue(atr) container_of((atr), struct queue_sysfs_entry, attr)
+ 
+@@ -738,6 +757,7 @@ static const struct sysfs_ops queue_sysfs_ops = {
+ 
+ static const struct attribute_group *blk_queue_attr_groups[] = {
+ 	&queue_attr_group,
++	&blk_mq_queue_attr_group,
+ 	NULL
+ };
  
 -- 
 2.39.2
