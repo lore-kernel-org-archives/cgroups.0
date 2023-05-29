@@ -1,179 +1,144 @@
-From: Yu Kuai <yukuai1-XF6JlduFytWkHkcT6e4Xnw@public.gmane.org>
-Subject: Re: [PATCH] blk-iocost: use spin_lock_irqsave in
- adjust_inuse_and_calc_cost
-Date: Mon, 29 May 2023 21:04:05 +0800
-Message-ID: <33d41ddd-73bd-8e12-9aba-e074c4d67deb@huaweicloud.com>
-References: <20230527091904.3001833-1-linan666@huaweicloud.com>
+From: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
+Subject: Re: [PATCH v3 0/2] memcontrol: support cgroup level OOM protection
+Date: Mon, 29 May 2023 16:02:47 +0200
+Message-ID: <ZHSwhyGnPteiLKs/@dhcp22.suse.cz>
+References: <ZGtoNu7zIRRy7qK0@dhcp22.suse.cz>
+ <96BFCF52-A5F6-4B73-ACAE-ACF11798E374@didiglobal.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 8bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <20230527091904.3001833-1-linan666-XF6JlduFytWkHkcT6e4Xnw@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
+        t=1685368968; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=7GJRpbbOWjmOtMjAXUNy6RFw5qpoxHIxlBqF4FAib7E=;
+        b=PzWJFOZl5hglKjHwGxSFNG6csgGjPjfcCOSu6qaea4hDEpHamSzdd5mblQCvMY6xFMO5YP
+        Wy8pgjSViC6VqTZwueSmOMNPcclCa/lwqdmXyknyZBQD/vK1JfVjZet7E04ToMWekJxtm/
+        FkCKDmMYPAi9od8uFZKh0JI+m1s4/Wo=
+Content-Disposition: inline
+In-Reply-To: <96BFCF52-A5F6-4B73-ACAE-ACF11798E374-+mmu7dyatJ+Rq8AjE7tl8g@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="iso-8859-1"; format="flowed"
-To: linan666-XF6JlduFytWkHkcT6e4Xnw@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, josef-DigfWCa+lFGyeJad7bwFQA@public.gmane.org, axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linan122-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, yi.zhang-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, houtao1-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, yangerkun-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, "yukuai (C)" <yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Content-Type: text/plain; charset="utf-8"
+To: =?utf-8?B?56iL5Z6y5rab?= Chengkaitao Cheng <chengkaitao-+mmu7dyatJ+Rq8AjE7tl8g@public.gmane.org>
+Cc: "tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org" <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, "lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org" <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, "hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org" <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, "corbet-T1hC0tSOHrs@public.gmane.org" <corbet-T1hC0tSOHrs@public.gmane.org>, "roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org" <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, "shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org" <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, "akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org" <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, "brauner-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org" <brauner-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, "muchun.song-fxUVXftIFDnyG1zEObXtfA@public.gmane.org" <muchun.song-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, "viro-RmSDqhL/yNMiFSDQTTA3OLVCufUGDwFn@public.gmane.org" <viro-RmSDqhL/yNMiFSDQTTA3OLVCufUGDwFn@public.gmane.org>, "zhengqi.arch-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org" <zhengqi.arch-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, "ebiederm-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org" <ebiederm-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org>, "Liam.Howlett-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org" <Liam.Howlett-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, "chengzhihao1-hv44wF8Li93QT0dZR+AlfA@public.gmane.org" <chengzhihao1-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, "pilgrimtao-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org" <pilgrimtao-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, "haolee.swjtu-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org" <haolee.swjtu-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 
-Hi,
+On Thu 25-05-23 07:35:41, 程垲涛 Chengkaitao Cheng wrote:
+> At 2023-05-22 21:03:50, "Michal Hocko" <mhocko-IBi9RG/b67k@public.gmane.org> wrote:
+[...]
+> >> I have created a new indicator oom_kill_inherit that maintains a negative correlation 
+> >> with memory.oom.protect, so we have a ruler to measure the optimal value of 
+> >> memory.oom.protect.
+> >
+> >An example might help here.
+> 
+> In my testing case, by adjusting memory.oom.protect, I was able to significantly 
+> reduce the oom_kill_inherit of the corresponding cgroup. In a physical machine 
+> with severely oversold memory, I divided all cgroups into three categories and 
+> controlled their probability of being selected by the oom-killer to 0%,% 20, 
+> and 80%, respectively.
 
-=D4=DA 2023/05/27 17:19, linan666-XF6JlduFytWkHkcT6e4Xnw@public.gmane.org =
-=D0=B4=B5=C0:
-> From: Li Nan <linan122-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
->=20
-> adjust_inuse_and_calc_cost() use spin_lock_irq() and IRQ will be enabled
-> when unlock. DEADLOCK might happen if we have held other locks and disabl=
-ed
-> IRQ before invoking it.
->=20
-> Fix it by using spin_lock_irqsave() instead, which can keep IRQ state
-> consistent with before when unlock.
->=20
->    =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D
->    WARNING: inconsistent lock state
->    5.10.0-02758-g8e5f91fd772f #26 Not tainted
->    --------------------------------
->    inconsistent {IN-HARDIRQ-W} -> {HARDIRQ-ON-W} usage.
->    kworker/2:3/388 [HC0[0]:SC0[0]:HE0:SE1] takes:
->    ffff888118c00c28 (&bfqd->lock){?.-.}-{2:2}, at: spin_lock_irq
->    ffff888118c00c28 (&bfqd->lock){?.-.}-{2:2}, at: bfq_bio_merge+0x141/0x=
-390
->    {IN-HARDIRQ-W} state was registered at:
->      __lock_acquire+0x3d7/0x1070
->      lock_acquire+0x197/0x4a0
->      __raw_spin_lock_irqsave
->      _raw_spin_lock_irqsave+0x3b/0x60
->      bfq_idle_slice_timer_body
->      bfq_idle_slice_timer+0x53/0x1d0
->      __run_hrtimer+0x477/0xa70
->      __hrtimer_run_queues+0x1c6/0x2d0
->      hrtimer_interrupt+0x302/0x9e0
->      local_apic_timer_interrupt
->      __sysvec_apic_timer_interrupt+0xfd/0x420
->      run_sysvec_on_irqstack_cond
->      sysvec_apic_timer_interrupt+0x46/0xa0
->      asm_sysvec_apic_timer_interrupt+0x12/0x20
->    irq event stamp: 837522
->    hardirqs last  enabled at (837521): [<ffffffff84b9419d>] __raw_spin_un=
-lock_irqrestore
->    hardirqs last  enabled at (837521): [<ffffffff84b9419d>] _raw_spin_unl=
-ock_irqrestore+0x3d/0x40
->    hardirqs last disabled at (837522): [<ffffffff84b93fa3>] __raw_spin_lo=
-ck_irq
->    hardirqs last disabled at (837522): [<ffffffff84b93fa3>] _raw_spin_loc=
-k_irq+0x43/0x50
->    softirqs last  enabled at (835852): [<ffffffff84e00558>] __do_softirq+=
-0x558/0x8ec
->    softirqs last disabled at (835845): [<ffffffff84c010ff>] asm_call_irq_=
-on_stack+0xf/0x20
->=20
->    other info that might help us debug this:
->     Possible unsafe locking scenario:
->=20
->           CPU0
->           ----
->      lock(&bfqd->lock);
->      <Interrupt>
->        lock(&bfqd->lock);
->=20
->     *** DEADLOCK ***
->=20
->    3 locks held by kworker/2:3/388:
->     #0: ffff888107af0f38 ((wq_completion)kthrotld){+.+.}-{0:0}, at: proce=
-ss_one_work+0x742/0x13f0
->     #1: ffff8881176bfdd8 ((work_completion)(&td->dispatch_work)){+.+.}-{0=
-:0}, at: process_one_work+0x777/0x13f0
->     #2: ffff888118c00c28 (&bfqd->lock){?.-.}-{2:2}, at: spin_lock_irq
->     #2: ffff888118c00c28 (&bfqd->lock){?.-.}-{2:2}, at: bfq_bio_merge+0x1=
-41/0x390
->=20
->    stack backtrace:
->    CPU: 2 PID: 388 Comm: kworker/2:3 Not tainted 5.10.0-02758-g8e5f91fd77=
-2f #26
->    Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS rel-1.14.0=
--0-g155821a1990b-prebuilt.qemu.org 04/01/2014
->    Workqueue: kthrotld blk_throtl_dispatch_work_fn
->    Call Trace:
->     __dump_stack lib/dump_stack.c:77 [inline]
->     dump_stack+0x107/0x167
->     print_usage_bug
->     valid_state
->     mark_lock_irq.cold+0x32/0x3a
->     mark_lock+0x693/0xbc0
->     mark_held_locks+0x9e/0xe0
->     __trace_hardirqs_on_caller
->     lockdep_hardirqs_on_prepare.part.0+0x151/0x360
->     trace_hardirqs_on+0x5b/0x180
->     __raw_spin_unlock_irq
->     _raw_spin_unlock_irq+0x24/0x40
->     spin_unlock_irq
->     adjust_inuse_and_calc_cost+0x4fb/0x970
->     ioc_rqos_merge+0x277/0x740
->     __rq_qos_merge+0x62/0xb0
->     rq_qos_merge
->     bio_attempt_back_merge+0x12c/0x4a0
->     blk_mq_sched_try_merge+0x1b6/0x4d0
->     bfq_bio_merge+0x24a/0x390
->     __blk_mq_sched_bio_merge+0xa6/0x460
->     blk_mq_sched_bio_merge
->     blk_mq_submit_bio+0x2e7/0x1ee0
->     __submit_bio_noacct_mq+0x175/0x3b0
->     submit_bio_noacct+0x1fb/0x270
->     blk_throtl_dispatch_work_fn+0x1ef/0x2b0
->     process_one_work+0x83e/0x13f0
->     process_scheduled_works
->     worker_thread+0x7e3/0xd80
->     kthread+0x353/0x470
->     ret_from_fork+0x1f/0x30
+I might be just dense but I am lost. Can we focus on the barebone
+semantic of the group oom selection and killing first. No magic
+auto-tuning at this stage please.
 
-So this happens when iocost is used together with bfq, performance will
-be quite bad in this case, I don't think there will be any real use
-case. However, the changes looks reasonable, feel free to add:
+> >> >> about the semantics of non-leaf memcgs protection,
+> >> >> If a non-leaf memcg's oom_protect quota is set, its leaf memcg will proportionally 
+> >> >> calculate the new effective oom_protect quota based on non-leaf memcg's quota.
+> >> >
+> >> >So the non-leaf memcg is never used as a target? What if the workload is
+> >> >distributed over several sub-groups? Our current oom.group
+> >> >implementation traverses the tree to find a common ancestor in the oom
+> >> >domain with the oom.group.
+> >> 
+> >> If the oom_protect quota of the parent non-leaf memcg is less than the sum of 
+> >> sub-groups oom_protect quota, the oom_protect quota of each sub-group will 
+> >> be proportionally reduced
+> >> If the oom_protect quota of the parent non-leaf memcg is greater than the sum 
+> >> of sub-groups oom_protect quota, the oom_protect quota of each sub-group 
+> >> will be proportionally increased
+> >> The purpose of doing so is that users can set oom_protect quota according to 
+> >> their own needs, and the system management process can set appropriate 
+> >> oom_protect quota on the parent non-leaf memcg as the final cover, so that 
+> >> the system management process can indirectly manage all user processes.
+> >
+> >I guess that you are trying to say that the oom protection has a
+> >standard hierarchical behavior. And that is fine, well, in fact it is
+> >mandatory for any control knob to have a sane hierarchical properties.
+> >But that doesn't address my above question. Let me try again. When is a
+> >non-leaf memcg potentially selected as the oom victim? It doesn't have
+> >any tasks directly but it might be a suitable target to kill a multi
+> >memcg based workload (e.g. a full container).
+> 
+> If nonleaf memcg have the higher memory usage and the smaller 
+> memory.oom.protect, it will have the higher the probability being 
+> selected by the killer. If the non-leaf memcg is selected as the oom 
+> victim, OOM-killer will continue to select the appropriate child 
+> memcg downwards until the leaf memcg is selected.
 
-Reviewed-by: Yu Kuai <yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
->=20
-> Fixes: b0853ab4a238 ("blk-iocost: revamp in-period donation snapbacks")
-> Signed-off-by: Li Nan <linan122-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-> ---
->   block/blk-iocost.c | 7 ++++---
->   1 file changed, 4 insertions(+), 3 deletions(-)
->=20
-> diff --git a/block/blk-iocost.c b/block/blk-iocost.c
-> index 82e634d552d9..7581893e0d82 100644
-> --- a/block/blk-iocost.c
-> +++ b/block/blk-iocost.c
-> @@ -2438,6 +2438,7 @@ static u64 adjust_inuse_and_calc_cost(struct ioc_gq=
- *iocg, u64 vtime,
->   	u32 hwi, adj_step;
->   	s64 margin;
->   	u64 cost, new_inuse;
-> +	unsigned long flags;
->  =20
->   	current_hweight(iocg, NULL, &hwi);
->   	old_hwi =3D hwi;
-> @@ -2456,11 +2457,11 @@ static u64 adjust_inuse_and_calc_cost(struct ioc_=
-gq *iocg, u64 vtime,
->   	    iocg->inuse =3D=3D iocg->active)
->   		return cost;
->  =20
-> -	spin_lock_irq(&ioc->lock);
-> +	spin_lock_irqsave(&ioc->lock, flags);
->  =20
->   	/* we own inuse only when @iocg is in the normal active state */
->   	if (iocg->abs_vdebt || list_empty(&iocg->active_list)) {
-> -		spin_unlock_irq(&ioc->lock);
-> +		spin_unlock_irqrestore(&ioc->lock, flags);
->   		return cost;
->   	}
->  =20
-> @@ -2481,7 +2482,7 @@ static u64 adjust_inuse_and_calc_cost(struct ioc_gq=
- *iocg, u64 vtime,
->   	} while (time_after64(vtime + cost, now->vnow) &&
->   		 iocg->inuse !=3D iocg->active);
->  =20
-> -	spin_unlock_irq(&ioc->lock);
-> +	spin_unlock_irqrestore(&ioc->lock, flags);
->  =20
->   	TRACE_IOCG_PATH(inuse_adjust, iocg, now,
->   			old_inuse, iocg->inuse, old_hwi, hwi);
->=20
+Parent memcg has more or equal memory charged than its child(ren) by
+definition. Let me try to ask differently. Say you have the following
+hierarchy
 
+		  root
+		/     \
+       container_A     container_B
+     (oom.prot=100M)   (oom.prot=200M)
+     (usage=120M)      (usage=180M)
+     /     |     \
+    A      B      C
+                 / \
+		C1  C2
+
+
+container_B is protected so it should be excluded. Correct? So we are at
+container_A to chose from. There are multiple ways the system and
+continer admin might want to achieve.
+1) system admin might want to shut down the whole container.
+2) continer admin might want to shut the whole container down
+3) cont. admin might want to shut down a whole sub group (e.g. C as it
+   is a self contained workload and killing portion of it will put it into
+   inconsistent state).
+4) cont. admin might want to kill the most excess cgroup with tasks (i.e. a
+   leaf memcg).
+5) admin might want to kill a process in the most excess memcg.
+
+Now we already have oom.group thingy that can drive the group killing
+policy but it is not really clear how you want to incorporate that to
+the protection.
+
+Again, I think that an oom.protection makes sense but the semantic has
+to be very carefully thought through because it is quite easy to create
+corner cases and weird behavior. I also think that oom.group has to be
+consistent with the protection.
+
+> >> >All that being said and with the usecase described more specifically. I
+> >> >can see that memcg based oom victim selection makes some sense. That
+> >> >menas that it is always a memcg selected and all tasks withing killed.
+> >> >Memcg based protection can be used to evaluate which memcg to choose and
+> >> >the overall scheme should be still manageable. It would indeed resemble
+> >> >memory protection for the regular reclaim.
+> >> >
+> >> >One thing that is still not really clear to me is to how group vs.
+> >> >non-group ooms could be handled gracefully. Right now we can handle that
+> >> >because the oom selection is still process based but with the protection
+> >> >this will become more problematic as explained previously. Essentially
+> >> >we would need to enforce the oom selection to be memcg based for all
+> >> >memcgs. Maybe a mount knob? What do you think?
+> >> 
+> >> There is a function in the patch to determine whether the oom_protect 
+> >> mechanism is enabled. All memory.oom.protect nodes default to 0, so the function 
+> >> <is_root_oom_protect> returns 0 by default.
+> >
+> >How can an admin determine what is the current oom detection logic?
+> 
+> The memory.oom.protect are set by the administrator themselves, and they 
+> must know what the current OOM policy is. Reading the memory.oom.protect 
+> of the first level cgroup directory and observing whether it is 0 can also 
+> determine whether the oom.protect policy is enabled.
+
+How do you achieve that from withing a container which doesn't have a
+full visibility to the cgroup tree?
+-- 
+Michal Hocko
+SUSE Labs
