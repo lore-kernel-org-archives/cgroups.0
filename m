@@ -1,54 +1,84 @@
-From: Jason Gunthorpe <jgg-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [LSF/MM/BPF TOPIC] Reducing zombie memcgs
-Date: Mon, 29 May 2023 16:31:02 -0300
-Message-ID: <ZHT9dqihVNWqccmY@nvidia.com>
-References: <CABdmKX2M6koq4Q0Cmp_-=wbP0Qa190HdEGGaHfxNS05gAkUtPA@mail.gmail.com>
- <ZFLdDyHoIdJSXJt+@google.com>
- <874josz4rd.fsf@nvidia.com>
- <ZFPP71czDDxMPLQK@google.com>
- <877ctm518f.fsf@nvidia.com>
- <ZFbZZPkSpsKMe8iR@google.com>
- <87ttwnkzap.fsf@nvidia.com>
- <ZFuvhP5qGPivokc0@google.com>
- <87jzxe9baj.fsf@nvidia.com>
- <ZGjntWoAfgyT0doo@google.com>
+From: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH v2 3/4] sock: Consider memcg pressure when raising sockmem
+Date: Mon, 29 May 2023 21:12:05 +0000
+Message-ID: <20230529211205.6clthjyt37c4opju@google.com>
+References: <20230522070122.6727-1-wuyun.abel@bytedance.com>
+ <20230522070122.6727-4-wuyun.abel@bytedance.com> <20230525012259.qd6i6rtqvvae3or7@google.com>
+ <73b1381e-6a59-26fe-c0b6-51ea3ebf60f8@bytedance.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
- s=selector2;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=/J5dDKR78diflsnAZsCnyCogLwszsrvEJfa7BwqUF0w=;
- b=iR9SYMQOX8VeMwvQq1H13x+rlkfXXniOGWkTplX/MaxBGAvvOkWegP4++Drvq2syehrwOcjY47E04ZiV9q7wDzfxfOh31guouIZKlHscDHU4RAhitVINPzBGP/w9ehXsthGjFg8aiTnXQvP6R1ngevIrDXgZs9AkqGBv8hfI37UD96WEHa7iVMPNT1vE3szAgzdWixm//enzTpFjnfq3D2kdA93vG3ltwDgKSwrW+clWgz4Jtt99s7jEmMMdWLngqEV608wveeEbE5kuAeXoiz2TbJETXw4TjelhXdc34YS4mWlVhx7WOoQEf4soN/eMBQcPBeUvZ2Qp9ttd65XRHg==
-Content-Disposition: inline
-In-Reply-To: <ZGjntWoAfgyT0doo-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20221208; t=1685394727; x=1687986727;
+        h=cc:to:from:subject:message-id:references:mime-version:in-reply-to
+         :date:from:to:cc:subject:date:message-id:reply-to;
+        bh=SNIbMRRuukreAZUC2GpTXXJapIJH6ZTqRY6eETcu5do=;
+        b=a58aF0yeP61zDhlUOfNZLdoceiGGu26FxV3w360cVEX5mXHSCikCT9QZERrFOn+Wgg
+         PQV3rmSuBZyWY7RJpxGCaweRtPtOGXNtJcQhRUc2Iiihmavwag/sytmxBLigXGwWZ5lk
+         MLQoJyIYLb64f3BZPnDxbbiLlxkUMoohc9b/lJFrsKSBEmQDa4uuUXrKl0lWOYjJlass
+         Vm9R7gNJl0aoBHuFj+eLnN5KovJ8X9KpPljEMIAznmET2jGKoJR2W7ks9R7Zl7Kw+ity
+         mkmUkdCwuo7zJwvR5vpEgDRs5datWM1md9+4+SU5d4GrZlIohZop23cGF+rwOMxEyoPR
+         NYUw==
+In-Reply-To: <73b1381e-6a59-26fe-c0b6-51ea3ebf60f8-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
+List-ID: <cgroups.vger.kernel.org>
 Content-Transfer-Encoding: 7bit
-To: Chris Li <chrisl-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: Alistair Popple <apopple-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>, "T.J. Mercier" <tjmercier-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, lsf-pc-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Muchun Song <muchun.song-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Kalesh Singh <kaleshsingh-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Yu Zhao <yuzhao-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+To: Abel Wu <wuyun.abel-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
+Cc: "David S . Miller" <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>, Eric Dumazet <edumazet-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Jakub Kicinski <kuba-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Paolo Abeni <pabeni-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Sat, May 20, 2023 at 08:31:01AM -0700, Chris Li wrote:
-> > This is basically where we need to get everyone aligned. The RLIMIT
-> > approach currently implemented by my patch series does (2). For example:
-> > 
-> > 1. If a process in a pincg requests (eg. via driver ioctl) to pin a page
-> >    it is charged against the pincg limit and will fail if going over
-> >    limit.
-> > 
-> > 2. If the same process requests another pin (doesn't matter if it's the
-> >    same page or not) it will be charged again and can't go over limit.
-> > 
-> > 3. If another process in the same pincg requests a page (again, doesn't
-> >    matter if it's the same page or not) be pinned it will be charged
-> >    against the limit.
+
++linux-mm and cgroups
+
+On Mon, May 29, 2023 at 07:58:45PM +0800, Abel Wu wrote:
+> Hi Shakeel, thanks for reviewing! And sorry for replying so late,
+> I was on a vocation :)
 > 
-> I see. You want to track and punish the number of time process
-> issue pin ioctl on the page.
+> On 5/25/23 9:22 AM, Shakeel Butt wrote:
+> > On Mon, May 22, 2023 at 03:01:21PM +0800, Abel Wu wrote:
+> > > For now __sk_mem_raise_allocated() mainly considers global socket
+> > > memory pressure and allows to raise if no global pressure observed,
+> > > including the sockets whose memcgs are in pressure, which might
+> > > result in longer memcg memstall.
+> > > 
+> > > So take net-memcg's pressure into consideration when allocating
+> > > socket memory to alleviate long tail latencies.
+> > > 
+> > > Signed-off-by: Abel Wu <wuyun.abel-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
+> > 
+> > Hi Abel,
+> > 
+> > Have you seen any real world production issue which is fixed by this
+> > patch or is it more of a fix after reading code?
+> 
+> The latter. But we do observe one common case in the production env
+> that p2p service, which mainly downloads container images, running
+> inside a container with tight memory limit can easily be throttled and
+> keep memstalled for a long period of time and sometimes even be OOM-
+> killed. This service shows burst usage of TCP memory and I think it
+> indeed needs suppressing sockmem allocation if memcg is already under
+> pressure. The memcg pressure is usually caused by too many page caches
+> and the dirty ones starting to be wrote back to slow backends. So it
+> is insane to continuously receive net data to consume more memory.
+> 
 
-Yes, because it is feasible to count that without a lot of overhead
+We actually made an intentional decision to not throttle the incoming
+traffic under memory pressure. See 720ca52bcef22 ("net-memcg: avoid
+stalls when under memory pressure"). If you think the throttling
+behavior is preferred for your application, please propose the patch
+separately and we can work on how to enable flexible policy here.
 
-In a perfect world each cgroup would be charged exactly once while any
-pin is active regardless of how many times something in the cgroup
-caused it to be pinned	.
+> > 
+> > This code is quite subtle and small changes can cause unintended
+> > behavior changes. At the moment the tcp memory accounting and memcg
+> > accounting is intermingled and I think we should decouple them.
+> 
+> My original intention to post this patchset is to clarify that:
+> 
+>   - proto pressure only considers sysctl_mem[] (patch 2)
+>   - memcg pressure only indicates the pressure inside itself
+>   - consider both whenever needs allocation or reclaim (patch 1,3)
+> 
+> In this way, the two kinds of pressure maintain purer semantics, and
+> socket core can react on both of them properly and consistently.
 
-Jason
+Can you please resend you patch series (without patch 3) and Cc to
+linux-mm, cgroups list and memcg maintainers as well?
