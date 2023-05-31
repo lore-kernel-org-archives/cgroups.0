@@ -1,696 +1,293 @@
 From: Waiman Long <longman@redhat.com>
-Subject: [PATCH v2 6/6] cgroup/cpuset: Extend test_cpuset_prs.sh to test remote partition
-Date: Wed, 31 May 2023 12:34:05 -0400
-Message-ID: <20230531163405.2200292-7-longman@redhat.com>
+Subject: [PATCH v2 1/6] cgroup/cpuset: Extract out CS_CPU_EXCLUSIVE & CS_SCHED_LOAD_BALANCE handling
+Date: Wed, 31 May 2023 12:34:00 -0400
+Message-ID: <20230531163405.2200292-2-longman@redhat.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-doc-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1685550859;
+        s=mimecast20190719; t=1685550858;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:
          content-transfer-encoding:content-transfer-encoding;
-        bh=fWC+xMKYUWhcyHC+CrTtBR7WmXg0XqK4TynuYciSr5g=;
-        b=cB+IBRawpxuL372gKmjCaNxFkznmV2wvbFKkURBxH0HYV58X4knnyHa7dMw/cGOUxixDuH
-        2RrCWpjg4YPIblCZ9pNA1KEd3gKmm/TkS/xzyhSonA2JDMKHsihWOw9GFDbdt2bWwjRgZA
-        83axlsYUydLEvSqPYdzVeKq02HDRt5g=
+        bh=hNwDItSa7gah8NTUpgcKB6a8T7nVlWQpfJD91nGKxdk=;
+        b=SZs+jZ5G/JjI3aY5ViOhwjvAVKn6CpJLJm2zN6APHAv3vbjBiulLDyOtDH2NFnN0+9J0uj
+        n3NQ9lNykR2JuPyUdAzyya02lfUb7FBKZlhTEUwvnRslanm2n1Ly3Bq2T9vqlVwZDeThiH
+        bCgiqPUsTIC0Bq6Ib8pjfVspj6dUctk=
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 To: Tejun Heo <tj@kernel.org>, Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, Jonathan Corbet <corbet@lwn.net>, Shuah Khan <shuah@kernel.org>
 Cc: linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kselftest@vger.kernel.org, Juri Lelli <juri.lelli@redhat.com>, Valentin Schneider <vschneid@redhat.com>, Frederic Weisbecker <frederic@kernel.org>, Mrunal Patel <mpatel@redhat.com>, Ryan Phillips <rphillips@redhat.com>, Brent Rowsell <browsell@redhat.com>, Peter Hunt <pehunt@redhat.com>, Phil Auld <pauld@redhat.com>, Waiman Long <longman@redhat.com>
 
-This patch extends the test_cpuset_prs.sh test script to support testing
-the new remote partition and use the new "cpuset.cpus.reserve" file of
-the root cgroup by adding new tests for them. In addition, the following
-changes are also made:
+Extract out the setting of CS_CPU_EXCLUSIVE and CS_SCHED_LOAD_BALANCE
+flags as well as the rebuilding of scheduling domains into the new
+update_partition_exclusive() and update_partition_sd_lb() helper
+functions to simplify the logic. The update_partition_exclusive()
+helper is called mainly at the beginning of the caller, but it may be
+called at the end too. The update_partition_sd_lb() helper is called
+at the end of the caller.
 
- 1) Run the state transition tests directly under root to ease testing
-    of remote partition and remove the unneeded test column.
- 2) Add support for the .__DEBUG__.cpuset.cpus.subpartitions file if
-    "cgroup_debug" kernel boot option is specified and a new column
-    into TEST_MATRIX for testing against this cgroup control file.
- 3) Add another column to for the list of expected isolated CPUs and
-    compare it with the actual value by looking at the state of
-    /sys/kernel/debug/sched/domains which will be available if the
-    verbose flag is set.
+This patch should reduce the chance that cpuset partition will end up
+in an incorrect state.
 
 Signed-off-by: Waiman Long <longman@redhat.com>
 ---
- .../selftests/cgroup/test_cpuset_prs.sh       | 403 ++++++++++++------
- 1 file changed, 267 insertions(+), 136 deletions(-)
+ kernel/cgroup/cpuset.c | 134 ++++++++++++++++++++++++-----------------
+ 1 file changed, 79 insertions(+), 55 deletions(-)
 
-diff --git a/tools/testing/selftests/cgroup/test_cpuset_prs.sh b/tools/testing/selftests/cgroup/test_cpuset_prs.sh
-index 2b5215cc599f..8054b2f16a4f 100755
---- a/tools/testing/selftests/cgroup/test_cpuset_prs.sh
-+++ b/tools/testing/selftests/cgroup/test_cpuset_prs.sh
-@@ -3,9 +3,13 @@
- #
- # Test for cpuset v2 partition root state (PRS)
- #
--# The sched verbose flag is set, if available, so that the console log
-+# The sched verbose flag can be optionally set so that the console log
- # can be examined for the correct setting of scheduling domain.
- #
-+# Due to RCU freeing of dying cpusets, this test may report effective cpus
-+# reset failure if the system is not able to clean up those cpusets in time.
-+# Repeat the test with the -d option to increase the delay factor may help.
-+#
- 
- skip_test() {
- 	echo "$1"
-@@ -22,27 +26,27 @@ WAIT_INOTIFY=$(cd $(dirname $0); pwd)/wait_inotify
- # Find cgroup v2 mount point
- CGROUP2=$(mount -t cgroup2 | head -1 | awk -e '{print $3}')
- [[ -n "$CGROUP2" ]] || skip_test "Cgroup v2 mount point not found!"
-+RESERVE_CPUS=$CGROUP2/cpuset.cpus.reserve
-+CPULIST=$(cat $CGROUP2/cpuset.cpus.effective)
- 
--CPUS=$(lscpu | grep "^CPU(s):" | sed -e "s/.*:[[:space:]]*//")
--[[ $CPUS -lt 8 ]] && skip_test "Test needs at least 8 cpus available!"
-+NR_CPUS=$(lscpu | grep "^CPU(s):" | sed -e "s/.*:[[:space:]]*//")
-+[[ $NR_CPUS -lt 8 ]] && skip_test "Test needs at least 8 cpus available!"
- 
- # Set verbose flag and delay factor
- PROG=$1
--VERBOSE=
-+VERBOSE=0
- DELAY_FACTOR=1
- SCHED_DEBUG=
- while [[ "$1" = -* ]]
- do
- 	case "$1" in
--		-v) VERBOSE=1
-+		-v) ((VERBOSE++))
- 		    # Enable sched/verbose can slow thing down
- 		    [[ $DELAY_FACTOR -eq 1 ]] &&
- 			DELAY_FACTOR=2
--		    break
- 		    ;;
- 		-d) DELAY_FACTOR=$2
- 		    shift
--		    break
- 		    ;;
- 		*)  echo "Usage: $PROG [-v] [-d <delay-factor>"
- 		    exit
-@@ -52,7 +56,7 @@ do
- done
- 
- # Set sched verbose flag if available when "-v" option is specified
--if [[ -n "$VERBOSE" && -d /sys/kernel/debug/sched ]]
-+if [[ $VERBOSE -gt 0 && -d /sys/kernel/debug/sched ]]
- then
- 	# Used to restore the original setting during cleanup
- 	SCHED_DEBUG=$(cat /sys/kernel/debug/sched/verbose)
-@@ -61,15 +65,28 @@ fi
- 
- cd $CGROUP2
- echo +cpuset > cgroup.subtree_control
-+
-+#
-+# If cpuset has been set up and used in child cgroups, we may not be able to
-+# create partition under root cgroup because of the CPU exclusivity rule.
-+# So we are going to skip the test if this is the case.
-+#
- [[ -d test ]] || mkdir test
--cd test
-+echo 0-6 > test/cpuset.cpus
-+echo root > test/cpuset.cpus.partition
-+cat test/cpuset.cpus.partition | grep -q invalid
-+RESULT=$?
-+echo member > test/cpuset.cpus.partition
-+echo "" > test/cpuset.cpus
-+[[ $RESULT -eq 0 ]] && skip_test "Child cgroups are using cpuset!"
- 
- cleanup()
+diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
+index 2c76fcd9f0bc..12a0b583aca4 100644
+--- a/kernel/cgroup/cpuset.c
++++ b/kernel/cgroup/cpuset.c
+@@ -1278,7 +1278,7 @@ static void update_tasks_cpumask(struct cpuset *cs, struct cpumask *new_cpus)
+ static void compute_effective_cpumask(struct cpumask *new_cpus,
+ 				      struct cpuset *cs, struct cpuset *parent)
  {
- 	online_cpus
-+	cd $CGROUP2
- 	rmdir A1/A2/A3 A1/A2 A1 B1 > /dev/null 2>&1
--	cd ..
- 	rmdir test > /dev/null 2>&1
-+	echo "" > cpuset.cpus.reserve
- 	[[ -n "$SCHED_DEBUG" ]] &&
- 		echo "$SCHED_DEBUG" > /sys/kernel/debug/sched/verbose
- }
-@@ -103,7 +120,7 @@ test_partition()
- 	[[ $? -eq 0 ]] || exit 1
- 	ACTUAL_VAL=$(cat cpuset.cpus.partition)
- 	[[ $ACTUAL_VAL != $EXPECTED_VAL ]] && {
--		echo "cpuset.cpus.partition: expect $EXPECTED_VAL, found $EXPECTED_VAL"
-+		echo "cpuset.cpus.partition: expect $EXPECTED_VAL, found $ACTUAL_VAL"
- 		echo "Test FAILED"
- 		exit 1
- 	}
-@@ -114,7 +131,7 @@ test_effective_cpus()
- 	EXPECTED_VAL=$1
- 	ACTUAL_VAL=$(cat cpuset.cpus.effective)
- 	[[ "$ACTUAL_VAL" != "$EXPECTED_VAL" ]] && {
--		echo "cpuset.cpus.effective: expect '$EXPECTED_VAL', found '$EXPECTED_VAL'"
-+		echo "cpuset.cpus.effective: expect '$EXPECTED_VAL', found '$ACTUAL_VAL'"
- 		echo "Test FAILED"
- 		exit 1
- 	}
-@@ -139,6 +156,7 @@ test_add_proc()
- #
- test_isolated()
- {
-+	cd $CGROUP2/test
- 	echo 2-3 > cpuset.cpus
- 	TYPE=$(cat cpuset.cpus.partition)
- 	[[ $TYPE = member ]] || echo member > cpuset.cpus.partition
-@@ -203,125 +221,152 @@ test_isolated()
- #
- # Cgroup test hierarchy
- #
--# test -- A1 -- A2 -- A3
--#      \- B1
-+# root -- A1 -- A2 -- A3
-+#      +- B1
- #
--#  P<v> = set cpus.partition (0:member, 1:root, 2:isolated, -1:root invalid)
-+#  P<v> = set cpus.partition (0:member, 1:root, 2:isolated)
- #  C<l> = add cpu-list
- #  S<p> = use prefix in subtree_control
- #  T    = put a task into cgroup
--#  O<c>-<v> = Write <v> to CPU online file of <c>
-+#  O<c>=<v> = Write <v> to CPU online file of <c>
- #
- SETUP_A123_PARTITIONS="C1-3:P1:S+ C2-3:P1:S+ C3:P1"
- TEST_MATRIX=(
--	# test  old-A1 old-A2 old-A3 old-B1 new-A1 new-A2 new-A3 new-B1 fail ECPUs Pstate
--	# ----  ------ ------ ------ ------ ------ ------ ------ ------ ---- ----- ------
--	"  S+    C0-1     .      .    C2-3    S+    C4-5     .      .     0 A2:0-1"
--	"  S+    C0-1     .      .    C2-3    P1      .      .      .     0 "
--	"  S+    C0-1     .      .    C2-3   P1:S+ C0-1:P1   .      .     0 "
--	"  S+    C0-1     .      .    C2-3   P1:S+  C1:P1    .      .     0 "
--	"  S+   C0-1:S+   .      .    C2-3     .      .      .     P1     0 "
--	"  S+   C0-1:P1   .      .    C2-3    S+     C1      .      .     0 "
--	"  S+   C0-1:P1   .      .    C2-3    S+    C1:P1    .      .     0 "
--	"  S+   C0-1:P1   .      .    C2-3    S+    C1:P1    .     P1     0 "
--	"  S+   C0-1:P1   .      .    C2-3   C4-5     .      .      .     0 A1:4-5"
--	"  S+   C0-1:P1   .      .    C2-3  S+:C4-5   .      .      .     0 A1:4-5"
--	"  S+    C0-1     .      .   C2-3:P1   .      .      .     C2     0 "
--	"  S+    C0-1     .      .   C2-3:P1   .      .      .    C4-5    0 B1:4-5"
--	"  S+ C0-3:P1:S+ C2-3:P1 .      .      .      .      .      .     0 A1:0-1,A2:2-3"
--	"  S+ C0-3:P1:S+ C2-3:P1 .      .     C1-3    .      .      .     0 A1:1,A2:2-3"
--	"  S+ C2-3:P1:S+  C3:P1  .      .     C3      .      .      .     0 A1:,A2:3 A1:P1,A2:P1"
--	"  S+ C2-3:P1:S+  C3:P1  .      .     C3      P0     .      .     0 A1:3,A2:3 A1:P1,A2:P0"
--	"  S+ C2-3:P1:S+  C2:P1  .      .     C2-4    .      .      .     0 A1:3-4,A2:2"
--	"  S+ C2-3:P1:S+  C3:P1  .      .     C3      .      .     C0-2   0 A1:,B1:0-2 A1:P1,A2:P1"
--	"  S+ $SETUP_A123_PARTITIONS    .     C2-3    .      .      .     0 A1:,A2:2,A3:3 A1:P1,A2:P1,A3:P1"
-+	#  old-A1 old-A2 old-A3 old-B1 new-A1 new-A2 new-A3 new-B1 fail ECPUs Pstate PCPUS ISOLCPUS
-+	#  ------ ------ ------ ------ ------ ------ ------ ------ ---- ----- ------ ----- --------
-+	"   C0-1     .      .    C2-3    S+    C4-5     .      .     0 A2:0-1"
-+	"   C0-1     .      .    C2-3    P1      .      .      .     0 "
-+	"   C0-1     .      .    C2-3   P1:S+ C0-1:P1   .      .     0 "
-+	"   C0-1     .      .    C2-3   P1:S+  C1:P1    .      .     0 "
-+	"  C0-1:S+   .      .    C2-3     .      .      .     P1     0 "
-+	"  C0-1:P1   .      .    C2-3    S+     C1      .      .     0 "
-+	"  C0-1:P1   .      .    C2-3    S+    C1:P1    .      .     0 "
-+	"  C0-1:P1   .      .    C2-3    S+    C1:P1    .     P1     0 "
-+	"  C0-1:P1   .      .    C2-3   C4-5     .      .      .     0 A1:4-5"
-+	"  C0-1:P1   .      .    C2-3  S+:C4-5   .      .      .     0 A1:4-5"
-+	"   C0-1     .      .   C2-3:P1   .      .      .     C2     0 "
-+	"   C0-1     .      .   C2-3:P1   .      .      .    C4-5    0 B1:4-5"
-+	"C0-3:P1:S+ C2-3:P1 .      .      .      .      .      .     0 A1:0-1,A2:2-3"
-+	"C0-3:P1:S+ C2-3:P1 .      .     C1-3    .      .      .     0 A1:1,A2:2-3"
-+	"C2-3:P1:S+  C3:P1  .      .     C3      .      .      .     0 A1:,A2:3 A1:P1,A2:P1"
-+	"C2-3:P1:S+  C3:P1  .      .     C3      P0     .      .     0 A1:3,A2:3 A1:P1,A2:P0"
-+	"C2-3:P1:S+  C2:P1  .      .     C2-4    .      .      .     0 A1:3-4,A2:2"
-+	"C2-3:P1:S+  C3:P1  .      .     C3      .      .     C0-2   0 A1:,B1:0-2 A1:P1,A2:P1"
-+	"$SETUP_A123_PARTITIONS    .     C2-3    .      .      .     0 A1:,A2:2,A3:3 A1:P1,A2:P1,A3:P1"
+-	if (parent->nr_subparts_cpus) {
++	if (parent->nr_subparts_cpus && is_partition_valid(cs)) {
+ 		cpumask_or(new_cpus, parent->effective_cpus,
+ 			   parent->subparts_cpus);
+ 		cpumask_and(new_cpus, new_cpus, cs->cpus_allowed);
+@@ -1300,6 +1300,43 @@ enum subparts_cmd {
  
- 	# CPU offlining cases:
--	"  S+    C0-1     .      .    C2-3    S+    C4-5     .     O2-0   0 A1:0-1,B1:3"
--	"  S+ C0-3:P1:S+ C2-3:P1 .      .     O2-0    .      .      .     0 A1:0-1,A2:3"
--	"  S+ C0-3:P1:S+ C2-3:P1 .      .     O2-0   O2-1    .      .     0 A1:0-1,A2:2-3"
--	"  S+ C0-3:P1:S+ C2-3:P1 .      .     O1-0    .      .      .     0 A1:0,A2:2-3"
--	"  S+ C0-3:P1:S+ C2-3:P1 .      .     O1-0   O1-1    .      .     0 A1:0-1,A2:2-3"
--	"  S+ C2-3:P1:S+  C3:P1  .      .     O3-0   O3-1    .      .     0 A1:2,A2:3 A1:P1,A2:P1"
--	"  S+ C2-3:P1:S+  C3:P2  .      .     O3-0   O3-1    .      .     0 A1:2,A2:3 A1:P1,A2:P2"
--	"  S+ C2-3:P1:S+  C3:P1  .      .     O2-0   O2-1    .      .     0 A1:2,A2:3 A1:P1,A2:P1"
--	"  S+ C2-3:P1:S+  C3:P2  .      .     O2-0   O2-1    .      .     0 A1:2,A2:3 A1:P1,A2:P2"
--	"  S+ C2-3:P1:S+  C3:P1  .      .     O2-0    .      .      .     0 A1:,A2:3 A1:P1,A2:P1"
--	"  S+ C2-3:P1:S+  C3:P1  .      .     O3-0    .      .      .     0 A1:2,A2: A1:P1,A2:P1"
--	"  S+ C2-3:P1:S+  C3:P1  .      .    T:O2-0   .      .      .     0 A1:3,A2:3 A1:P1,A2:P-1"
--	"  S+ C2-3:P1:S+  C3:P1  .      .      .    T:O3-0   .      .     0 A1:2,A2:2 A1:P1,A2:P-1"
--	"  S+ $SETUP_A123_PARTITIONS    .     O1-0    .      .      .     0 A1:,A2:2,A3:3 A1:P1,A2:P1,A3:P1"
--	"  S+ $SETUP_A123_PARTITIONS    .     O2-0    .      .      .     0 A1:1,A2:,A3:3 A1:P1,A2:P1,A3:P1"
--	"  S+ $SETUP_A123_PARTITIONS    .     O3-0    .      .      .     0 A1:1,A2:2,A3: A1:P1,A2:P1,A3:P1"
--	"  S+ $SETUP_A123_PARTITIONS    .    T:O1-0   .      .      .     0 A1:2-3,A2:2-3,A3:3 A1:P1,A2:P-1,A3:P-1"
--	"  S+ $SETUP_A123_PARTITIONS    .      .    T:O2-0   .      .     0 A1:1,A2:3,A3:3 A1:P1,A2:P1,A3:P-1"
--	"  S+ $SETUP_A123_PARTITIONS    .      .      .    T:O3-0   .     0 A1:1,A2:2,A3:2 A1:P1,A2:P1,A3:P-1"
--	"  S+ $SETUP_A123_PARTITIONS    .    T:O1-0  O1-1    .      .     0 A1:1,A2:2,A3:3 A1:P1,A2:P1,A3:P1"
--	"  S+ $SETUP_A123_PARTITIONS    .      .    T:O2-0  O2-1    .     0 A1:1,A2:2,A3:3 A1:P1,A2:P1,A3:P1"
--	"  S+ $SETUP_A123_PARTITIONS    .      .      .    T:O3-0  O3-1   0 A1:1,A2:2,A3:3 A1:P1,A2:P1,A3:P1"
--	"  S+ $SETUP_A123_PARTITIONS    .    T:O1-0  O2-0   O1-1    .     0 A1:1,A2:,A3:3 A1:P1,A2:P1,A3:P1"
--	"  S+ $SETUP_A123_PARTITIONS    .    T:O1-0  O2-0   O2-1    .     0 A1:2-3,A2:2-3,A3:3 A1:P1,A2:P-1,A3:P-1"
--
--	# test  old-A1 old-A2 old-A3 old-B1 new-A1 new-A2 new-A3 new-B1 fail ECPUs Pstate
--	# ----  ------ ------ ------ ------ ------ ------ ------ ------ ---- ----- ------
-+	"   C0-1     .      .    C2-3    S+    C4-5     .     O2=0   0 A1:0-1,B1:3"
-+	"C0-3:P1:S+ C2-3:P1 .      .     O2=0    .      .      .     0 A1:0-1,A2:3"
-+	"C0-3:P1:S+ C2-3:P1 .      .     O2=0   O2=1    .      .     0 A1:0-1,A2:2-3"
-+	"C0-3:P1:S+ C2-3:P1 .      .     O1=0    .      .      .     0 A1:0,A2:2-3"
-+	"C0-3:P1:S+ C2-3:P1 .      .     O1=0   O1=1    .      .     0 A1:0-1,A2:2-3"
-+	"C2-3:P1:S+  C3:P1  .      .     O3=0   O3=1    .      .     0 A1:2,A2:3 A1:P1,A2:P1"
-+	"C2-3:P1:S+  C3:P2  .      .     O3=0   O3=1    .      .     0 A1:2,A2:3 A1:P1,A2:P2"
-+	"C2-3:P1:S+  C3:P1  .      .     O2=0   O2=1    .      .     0 A1:2,A2:3 A1:P1,A2:P1"
-+	"C2-3:P1:S+  C3:P2  .      .     O2=0   O2=1    .      .     0 A1:2,A2:3 A1:P1,A2:P2"
-+	"C2-3:P1:S+  C3:P1  .      .     O2=0    .      .      .     0 A1:,A2:3 A1:P1,A2:P1"
-+	"C2-3:P1:S+  C3:P1  .      .     O3=0    .      .      .     0 A1:2,A2: A1:P1,A2:P1"
-+	"C2-3:P1:S+  C3:P1  .      .    T:O2=0   .      .      .     0 A1:3,A2:3 A1:P1,A2:P-1"
-+	"C2-3:P1:S+  C3:P1  .      .      .    T:O3=0   .      .     0 A1:2,A2:2 A1:P1,A2:P-1"
-+	"$SETUP_A123_PARTITIONS    .     O1=0    .      .      .     0 A1:,A2:2,A3:3 A1:P1,A2:P1,A3:P1"
-+	"$SETUP_A123_PARTITIONS    .     O2=0    .      .      .     0 A1:1,A2:,A3:3 A1:P1,A2:P1,A3:P1"
-+	"$SETUP_A123_PARTITIONS    .     O3=0    .      .      .     0 A1:1,A2:2,A3: A1:P1,A2:P1,A3:P1"
-+	"$SETUP_A123_PARTITIONS    .    T:O1=0   .      .      .     0 A1:2-3,A2:2-3,A3:3 A1:P1,A2:P-1,A3:P-1"
-+	"$SETUP_A123_PARTITIONS    .      .    T:O2=0   .      .     0 A1:1,A2:3,A3:3 A1:P1,A2:P1,A3:P-1"
-+	"$SETUP_A123_PARTITIONS    .      .      .    T:O3=0   .     0 A1:1,A2:2,A3:2 A1:P1,A2:P1,A3:P-1"
-+	"$SETUP_A123_PARTITIONS    .    T:O1=0  O1=1    .      .     0 A1:1,A2:2,A3:3 A1:P1,A2:P1,A3:P1"
-+	"$SETUP_A123_PARTITIONS    .      .    T:O2=0  O2=1    .     0 A1:1,A2:2,A3:3 A1:P1,A2:P1,A3:P1"
-+	"$SETUP_A123_PARTITIONS    .      .      .    T:O3=0  O3=1   0 A1:1,A2:2,A3:3 A1:P1,A2:P1,A3:P1"
-+	"$SETUP_A123_PARTITIONS    .    T:O1=0  O2=0   O1=1    .     0 A1:1,A2:,A3:3 A1:P1,A2:P1,A3:P1"
-+	"$SETUP_A123_PARTITIONS    .    T:O1=0  O2=0   O2=1    .     0 A1:2-3,A2:2-3,A3:3 A1:P1,A2:P-1,A3:P-1"
+ static int update_flag(cpuset_flagbits_t bit, struct cpuset *cs,
+ 		       int turning_on);
 +
-+	#  old-A1 old-A2 old-A3 old-B1 new-A1 new-A2 new-A3 new-B1 fail ECPUs Pstate PCPUS ISOLCPUS
-+	#  ------ ------ ------ ------ ------ ------ ------ ------ ---- ----- ------ ----- --------
-+	#
-+	# Remote partition and cpuset.cpus.reserve tests
-+	#
-+	" C0-3:S+ C1-3:S+ C2-3     .    R2-3     .      .      .     0 A1:0-1,A2:1,A3:1 . . 2-3"
-+	" C0-3:S+ C1-3:S+ C2-3     .    R2-3     P2     .      .     0 A1:0-1,A2:1,A3:1 A1:P0,A2:P-2 . 2-3"
-+	" C0-3:S+ C1-3:S+ C2-3     .    R2-3     .      P2     .     0 A1:0-1,A2:1,A3:2-3 A1:P0,A3:P2 . 2-3"
-+	" C0-3:S+ C1-3:S+ C2-3     .    R2-3     .    P2:C3    .     0 A1:0-1,A2:1,A3:3 A1:P0,A3:P2 . 2-3"
-+	" C0-3:S+ C1-3:S+ C2-3   C2-3   R2-3     .      .      P2    0 A1:0-1,A2:1,A3:1 A1:P0,A3:P0,B1:P-2 . 2-3"
-+	" C0-3:S+ C1-3:S+ C2-3   C4-5   R4-5     .      .      P2    0 B1:4-5 B1:P2 . 4-5"
-+	" C0-3:S+ C1-3:S+ C2-3    C4    R2-4     .      P2     P2    0 A3:2-3,B1:4 A3:P2,B1:P2 . 2-4"
-+	" C0-3:S+ C1-3:S+ C2-3    C4    R2-4     .    P2:C1-3  P2    0 A3:1,B1:4 A3:P-2,B1:P2 . 2-4"
-+	" C0-3:S+ C1-3:S+ C2-3    C4    R2-3     .      P2     P2    0 A3:2-3,B1:4 A3:P2,B1:P2 . 2-4"
-+	" C0-3:S+ C1-3:S+ C2-3    C4    R1-3     P2     P2     .     0 A2:1-3,A3:2-3 A2:P2,A3:P-2 . 1-3"
-+	" C0-3:S+ C1-3:S+ C2-3    C4    R2-3     .      P2   P2:C4-5 0 A3:2-3,B1:4-5 A3:P2,B1:P2 . 2-5"
-+	" C0-3:S+ C1-3:S+ C2-3    C4    R2-4     .      P2   P2:R-4  0 A3:2-3 A3:P2,B1:P-2 . 2-3"
-+	" C0-3:S+ C1-3:S+ C2-3    C4    R2-4     .    P2:R-2   P2    0 A3:2,B1:4 A3:P-2,B1:P2 . 3-4"
-+
-+	# Remote partition offline test
-+	" C0-3:S+ C1-3:S+ C2-3     .    R2-3     .    P2:O2=0  .     0 A1:0-1,A2:1,A3:3 A1:P0,A3:P2 . 2-3"
-+	" C0-3:S+ C1-3:S+ C2-3     .    R2-3     .    P2:O2=0 O2=1   0 A1:0-1,A2:1,A3:2-3 A1:P0,A3:P2 . 2-3"
-+	" C0-3:S+ C1-3:S+  C2      .    R2-3     .    P2:O2=0  .     0 A1:0-1,A2:1,A3:1 A1:P0,A3:P-2 . 2-3"
-+
-+	# An invalidated remote partition cannot self-recover from hotplug
-+	" C0-3:S+ C1-3:S+  C2      .    R2-3     .    P2:O2=0 O2=1   0 A1:0-1,A2:1,A3:1 A1:P0,A3:P-2 . 2-3"
-+
-+	# base  old-A1 old-A2 old-A3 old-B1 new-A1 new-A2 new-A3 new-B1 fail ECPUs Pstate PCPUS ISOLCPUS
-+	# ----  ------ ------ ------ ------ ------ ------ ------ ------ ---- ----- ------ ----- --------
- 	#
- 	# Incorrect change to cpuset.cpus invalidates partition root
- 	#
- 	# Adding CPUs to partition root that are not in parent's
- 	# cpuset.cpus is allowed, but those extra CPUs are ignored.
--	"  S+ C2-3:P1:S+ C3:P1   .      .      .     C2-4    .      .     0 A1:,A2:2-3 A1:P1,A2:P1"
-+	"C2-3:P1:S+ C3:P1   .      .      .     C2-4    .      .     0 A1:,A2:2-3 A1:P1,A2:P1"
- 
- 	# Taking away all CPUs from parent or itself if there are tasks
- 	# will make the partition invalid.
--	"  S+ C2-3:P1:S+  C3:P1  .      .      T     C2-3    .      .     0 A1:2-3,A2:2-3 A1:P1,A2:P-1"
--	"  S+  C3:P1:S+    C3    .      .      T      P1     .      .     0 A1:3,A2:3 A1:P1,A2:P-1"
--	"  S+ $SETUP_A123_PARTITIONS    .    T:C2-3   .      .      .     0 A1:2-3,A2:2-3,A3:3 A1:P1,A2:P-1,A3:P-1"
--	"  S+ $SETUP_A123_PARTITIONS    . T:C2-3:C1-3 .      .      .     0 A1:1,A2:2,A3:3 A1:P1,A2:P1,A3:P1"
-+	"C2-3:P1:S+  C3:P1  .      .      T     C2-3    .      .     0 A1:2-3,A2:2-3 A1:P1,A2:P-1"
-+	" C3:P1:S+    C3    .      .      T      P1     .      .     0 A1:3,A2:3 A1:P1,A2:P-1"
-+	"$SETUP_A123_PARTITIONS    .    T:C2-3   .      .      .     0 A1:2-3,A2:2-3,A3:3 A1:P1,A2:P-1,A3:P-1"
-+	"$SETUP_A123_PARTITIONS    . T:C2-3:C1-3 .      .      .     0 A1:1,A2:2,A3:3 A1:P1,A2:P1,A3:P1"
- 
- 	# Changing a partition root to member makes child partitions invalid
--	"  S+ C2-3:P1:S+  C3:P1  .      .      P0     .      .      .     0 A1:2-3,A2:3 A1:P0,A2:P-1"
--	"  S+ $SETUP_A123_PARTITIONS    .     C2-3    P0     .      .     0 A1:2-3,A2:2-3,A3:3 A1:P1,A2:P0,A3:P-1"
-+	"C2-3:P1:S+  C3:P1  .      .      P0     .      .      .     0 A1:2-3,A2:3 A1:P0,A2:P-1"
-+	"$SETUP_A123_PARTITIONS    .     C2-3    P0     .      .     0 A1:2-3,A2:2-3,A3:3 A1:P1,A2:P0,A3:P-1"
- 
- 	# cpuset.cpus can contains cpus not in parent's cpuset.cpus as long
- 	# as they overlap.
--	"  S+ C2-3:P1:S+  .      .      .      .   C3-4:P1   .      .     0 A1:2,A2:3 A1:P1,A2:P1"
-+	"C2-3:P1:S+  .      .      .      .   C3-4:P1   .      .     0 A1:2,A2:3 A1:P1,A2:P1"
- 
- 	# Deletion of CPUs distributed to child cgroup is allowed.
--	"  S+ C0-1:P1:S+ C1      .    C2-3   C4-5     .      .      .     0 A1:4-5,A2:4-5"
-+	"C0-1:P1:S+ C1      .    C2-3   C4-5     .      .      .     0 A1:4-5,A2:4-5"
- 
- 	# To become a valid partition root, cpuset.cpus must overlap parent's
- 	# cpuset.cpus.
--	"  S+   C0-1:P1   .      .    C2-3    S+   C4-5:P1   .      .     0 A1:0-1,A2:0-1 A1:P1,A2:P-1"
-+	"  C0-1:P1   .      .    C2-3    S+   C4-5:P1   .      .     0 A1:0-1,A2:0-1 A1:P1,A2:P-1"
- 
- 	# Enabling partition with child cpusets is allowed
--	"  S+   C0-1:S+  C1      .    C2-3    P1      .      .      .     0 A1:0-1,A2:1 A1:P1"
-+	"  C0-1:S+  C1      .    C2-3    P1      .      .      .     0 A1:0-1,A2:1 A1:P1"
- 
- 	# A partition root with non-partition root parent is invalid, but it
- 	# can be made valid if its parent becomes a partition root too.
--	"  S+   C0-1:S+  C1      .    C2-3     .      P2     .      .     0 A1:0-1,A2:1 A1:P0,A2:P-2"
--	"  S+   C0-1:S+ C1:P2    .    C2-3     P1     .      .      .     0 A1:0,A2:1 A1:P1,A2:P2"
-+	"  C0-1:S+  C1      .    C2-3     .      P2     .      .     0 A1:0-1,A2:1 A1:P0,A2:P-2"
-+	"  C0-1:S+ C1:P2    .    C2-3     P1     .      .      .     0 A1:0,A2:1 A1:P1,A2:P2"
- 
- 	# A non-exclusive cpuset.cpus change will invalidate partition and its siblings
--	"  S+   C0-1:P1   .      .    C2-3   C0-2     .      .      .     0 A1:0-2,B1:2-3 A1:P-1,B1:P0"
--	"  S+   C0-1:P1   .      .  P1:C2-3  C0-2   .      .      .     0 A1:0-2,B1:2-3 A1:P-1,B1:P-1"
--	"  S+    C0-1     .      .  P1:C2-3  C0-2   .      .      .     0 A1:0-2,B1:2-3 A1:P0,B1:P-1"
-+	"  C0-1:P1   .      .    C2-3   C0-2     .      .      .     0 A1:0-2,B1:2-3 A1:P-1,B1:P0"
-+	"  C0-1:P1   .      .  P1:C2-3  C0-2     .      .      .     0 A1:0-2,B1:2-3 A1:P-1,B1:P-1"
-+	"   C0-1     .      .  P1:C2-3  C0-2     .      .      .     0 A1:0-2,B1:2-3 A1:P0,B1:P-1"
- 
--	# test  old-A1 old-A2 old-A3 old-B1 new-A1 new-A2 new-A3 new-B1 fail ECPUs Pstate
--	# ----  ------ ------ ------ ------ ------ ------ ------ ------ ---- ----- ------
-+	# base  old-A1 old-A2 old-A3 old-B1 new-A1 new-A2 new-A3 new-B1 fail ECPUs Pstate PCPUS ISOLCPUS
-+	# ----  ------ ------ ------ ------ ------ ------ ------ ------ ---- ----- ------ ----- --------
- 	# Failure cases:
- 
- 	# A task cannot be added to a partition with no cpu
--	"  S+ C2-3:P1:S+  C3:P1  .      .    O2-0:T   .      .      .     1 A1:,A2:3 A1:P1,A2:P1"
-+	"C2-3:P1:S+  C3:P1  .      .    O2=0:T   .      .      .     1 A1:,A2:3 A1:P1,A2:P1"
- )
- 
- #
- # Write to the cpu online file
--#  $1 - <c>-<v> where <c> = cpu number, <v> value to be written
-+#  $1 - <c>=<v> where <c> = cpu number, <v> value to be written
- #
- write_cpu_online()
- {
--	CPU=${1%-*}
--	VAL=${1#*-}
-+	CPU=${1%=*}
-+	VAL=${1#*=}
- 	CPUFILE=//sys/devices/system/cpu/cpu${CPU}/online
- 	if [[ $VAL -eq 0 ]]
- 	then
-@@ -349,11 +394,12 @@ set_ctrl_state()
- 	TMPMSG=/tmp/.msg_$$
- 	CGRP=$1
- 	STATE=$2
--	SHOWERR=${3}${VERBOSE}
-+	SHOWERR=${3}
- 	CTRL=${CTRL:=$CONTROLLER}
- 	HASERR=0
- 	REDIRECT="2> $TMPMSG"
- 	[[ -z "$STATE" || "$STATE" = '.' ]] && return 0
-+	[[ $VERBOSE -gt 0 ]] && SHOWERR=1
- 
- 	rm -f $TMPMSG
- 	for CMD in $(echo $STATE | sed -e "s/:/ /g")
-@@ -368,6 +414,11 @@ set_ctrl_state()
- 			PREFIX=${CMD#?}
- 			COMM="echo ${PREFIX}${CTRL} > $SFILE"
- 			eval $COMM $REDIRECT
-+		elif [[ $S = R ]]
-+		then
-+			CPUS=${CMD#?}
-+			COMM="echo $CPUS > $RESERVE_CPUS"
-+			eval $COMM $REDIRECT
- 		elif [[ $S = C ]]
- 		then
- 			CPUS=${CMD#?}
-@@ -430,7 +481,7 @@ online_cpus()
- 	[[ -n "OFFLINE_CPUS" ]] && {
- 		for C in $OFFLINE_CPUS
- 		do
--			write_cpu_online ${C}-1
-+			write_cpu_online ${C}=1
- 		done
- 	}
- }
-@@ -443,18 +494,25 @@ reset_cgroup_states()
- 	echo 0 > $CGROUP2/cgroup.procs
- 	online_cpus
- 	rmdir A1/A2/A3 A1/A2 A1 B1 > /dev/null 2>&1
--	set_ctrl_state . S-
-+	pause 0.02
-+	set_ctrl_state . R-
- 	pause 0.01
- }
- 
- dump_states()
- {
--	for DIR in A1 A1/A2 A1/A2/A3 B1
-+	for DIR in . A1 A1/A2 A1/A2/A3 B1
- 	do
- 		ECPUS=$DIR/cpuset.cpus.effective
-+		RCPUS=$DIR/cpuset.cpus.reserve
-+		CPUS=$DIR/cpuset.cpus
- 		PRS=$DIR/cpuset.cpus.partition
-+		PCPUS=$DIR/.__DEBUG__.cpuset.cpus.subpartitions
-+		[[ -e $CPUS  ]] && echo "$CPUS: $(cat $CPUS)"
-+		[[ -e $RCPUS ]] && echo "$RCPUS: $(cat $RCPUS)"
- 		[[ -e $ECPUS ]] && echo "$ECPUS: $(cat $ECPUS)"
- 		[[ -e $PRS   ]] && echo "$PRS: $(cat $PRS)"
-+		[[ -e $PCPUS ]] && echo "$PCPUS: $(cat $PCPUS)"
- 	done
- }
- 
-@@ -478,6 +536,26 @@ check_effective_cpus()
- 	done
- }
- 
-+#
-+# Check subparts cpus
-+# $1 - check string, format: <cgroup>:<cpu-list>[,<cgroup>:<cpu-list>]*
-+#
-+check_subparts_cpus()
++/*
++ * Update partition exclusive flag
++ *
++ * Return: 0 if successful, an error code otherwise
++ */
++static int update_partition_exclusive(struct cpuset *cs, int new_prs)
 +{
-+	CHK_STR=$1
-+	for CHK in $(echo $CHK_STR | sed -e "s/,/ /g")
-+	do
-+		set -- $(echo $CHK | sed -e "s/:/ /g")
-+		CGRP=$1
-+		CPUS=$2
-+		[[ $CGRP = A2 ]] && CGRP=A1/A2
-+		[[ $CGRP = A3 ]] && CGRP=A1/A2/A3
-+		FILE=$CGRP/.__DEBUG__.cpuset.cpus.subpartitions
-+		[[ -e $FILE ]] || return 0	# Skip test
-+		[[ $CPUS = $(cat $FILE) ]] || return 1
-+	done
++	bool exclusive = (new_prs > 0);
++
++	if (exclusive && !is_cpu_exclusive(cs)) {
++		if (update_flag(CS_CPU_EXCLUSIVE, cs, 1))
++			return PERR_NOTEXCL;
++	} else if (!exclusive && is_cpu_exclusive(cs)) {
++		/* Turning off CS_CPU_EXCLUSIVE will not return error */
++		update_flag(CS_CPU_EXCLUSIVE, cs, 0);
++	}
++	return 0;
 +}
 +
- #
- # Check cgroup states
- #  $1 - check string, format: <cgroup>:<state>[,<cgroup>:<state>]*
-@@ -524,6 +602,67 @@ check_cgroup_states()
- 	return 0
- }
- 
-+#
-+# Get isolated (including offline) CPUs by looking at
-+# /sys/kernel/debug/sched/domains and compare that with the expected value.
-+#
-+# $1 - expected isolated cpu list
-+#
-+check_isolcpus()
++/*
++ * Update partition load balance flag and/or rebuild sched domain
++ *
++ * Changing load balance flag will automatically call
++ * rebuild_sched_domains_locked().
++ */
++static void update_partition_sd_lb(struct cpuset *cs, int old_prs)
 +{
-+	EXPECT_VAL=$1
-+	ISOLCPUS=
-+	LASTISOLCPU=
-+	SCHED_DOMAINS=/sys/kernel/debug/sched/domains
-+	[[ -d $SCHED_DOMAINS ]] || {
-+		# Check reserve cpus instead
-+		ISOLCPUS=$(cat $RESERVE_CPUS)
-+		[[ $EXPECT_VAL = $ISOLCPUS ]]
-+		return $?
++	int new_prs = cs->partition_root_state;
++	bool new_lb = (new_prs != PRS_ISOLATED);
++
++	if (new_lb != !!is_sched_load_balance(cs))
++		update_flag(CS_SCHED_LOAD_BALANCE, cs, new_lb);
++	else if ((new_prs > 0) || (old_prs > 0))
++		rebuild_sched_domains_locked();
++}
++
+ /**
+  * update_parent_subparts_cpumask - update subparts_cpus mask of parent cpuset
+  * @cs:      The cpuset that requests change in partition root state
+@@ -1359,8 +1396,7 @@ static int update_parent_subparts_cpumask(struct cpuset *cs, int cmd,
+ 		return is_partition_invalid(parent)
+ 		       ? PERR_INVPARENT : PERR_NOTPART;
+ 	}
+-	if ((newmask && cpumask_empty(newmask)) ||
+-	   (!newmask && cpumask_empty(cs->cpus_allowed)))
++	if (!newmask && cpumask_empty(cs->cpus_allowed))
+ 		return PERR_CPUSEMPTY;
+ 
+ 	/*
+@@ -1426,11 +1462,16 @@ static int update_parent_subparts_cpumask(struct cpuset *cs, int cmd,
+ 		cpumask_and(tmp->addmask, newmask, parent->cpus_allowed);
+ 		adding = cpumask_andnot(tmp->addmask, tmp->addmask,
+ 					parent->subparts_cpus);
++		/*
++		 * Empty cpumask is not allewed
++		 */
++		if (cpumask_empty(newmask)) {
++			part_error = PERR_CPUSEMPTY;
+ 		/*
+ 		 * Make partition invalid if parent's effective_cpus could
+ 		 * become empty and there are tasks in the parent.
+ 		 */
+-		if (adding &&
++		} else if (adding &&
+ 		    cpumask_subset(parent->effective_cpus, tmp->addmask) &&
+ 		    !cpumask_intersects(tmp->delmask, cpu_active_mask) &&
+ 		    partition_is_populated(parent, cs)) {
+@@ -1503,14 +1544,13 @@ static int update_parent_subparts_cpumask(struct cpuset *cs, int cmd,
+ 
+ 	/*
+ 	 * Transitioning between invalid to valid or vice versa may require
+-	 * changing CS_CPU_EXCLUSIVE and CS_SCHED_LOAD_BALANCE.
++	 * changing CS_CPU_EXCLUSIVE.
+ 	 */
+ 	if (old_prs != new_prs) {
+-		if (is_prs_invalid(old_prs) && !is_cpu_exclusive(cs) &&
+-		    (update_flag(CS_CPU_EXCLUSIVE, cs, 1) < 0))
+-			return PERR_NOTEXCL;
+-		if (is_prs_invalid(new_prs) && is_cpu_exclusive(cs))
+-			update_flag(CS_CPU_EXCLUSIVE, cs, 0);
++		int err = update_partition_exclusive(cs, new_prs);
++
++		if (err)
++			return err;
+ 	}
+ 
+ 	/*
+@@ -1547,15 +1587,16 @@ static int update_parent_subparts_cpumask(struct cpuset *cs, int cmd,
+ 		update_tasks_cpumask(parent, tmp->addmask);
+ 
+ 	/*
+-	 * Set or clear CS_SCHED_LOAD_BALANCE when partcmd_update, if necessary.
+-	 * rebuild_sched_domains_locked() may be called.
++	 * For partcmd_update without newmask, it is being called from
++	 * cpuset_hotplug_workfn() where cpus_read_lock() wasn't taken.
++	 * Update the load balance flag and scheduling domain if
++	 * cpus_read_trylock() is successful.
+ 	 */
+-	if (old_prs != new_prs) {
+-		if (old_prs == PRS_ISOLATED)
+-			update_flag(CS_SCHED_LOAD_BALANCE, cs, 1);
+-		else if (new_prs == PRS_ISOLATED)
+-			update_flag(CS_SCHED_LOAD_BALANCE, cs, 0);
++	if ((cmd == partcmd_update) && !newmask && cpus_read_trylock()) {
++		update_partition_sd_lb(cs, old_prs);
++		cpus_read_unlock();
+ 	}
++
+ 	notify_partition_change(cs, old_prs);
+ 	return 0;
+ }
+@@ -1770,6 +1811,7 @@ static int update_cpumask(struct cpuset *cs, struct cpuset *trialcs,
+ 	int retval;
+ 	struct tmpmasks tmp;
+ 	bool invalidate = false;
++	int old_prs = cs->partition_root_state;
+ 
+ 	/* top_cpuset.cpus_allowed tracks cpu_online_mask; it's read-only */
+ 	if (cs == &top_cpuset)
+@@ -1889,6 +1931,9 @@ static int update_cpumask(struct cpuset *cs, struct cpuset *trialcs,
+ 		 */
+ 		if (parent->child_ecpus_count)
+ 			update_sibling_cpumasks(parent, cs, &tmp);
++
++		/* Update CS_SCHED_LOAD_BALANCE and/or sched_domains */
++		update_partition_sd_lb(cs, old_prs);
+ 	}
+ 	return 0;
+ }
+@@ -2265,7 +2310,6 @@ static int update_flag(cpuset_flagbits_t bit, struct cpuset *cs,
+ static int update_prstate(struct cpuset *cs, int new_prs)
+ {
+ 	int err = PERR_NONE, old_prs = cs->partition_root_state;
+-	bool sched_domain_rebuilt = false;
+ 	struct cpuset *parent = parent_cs(cs);
+ 	struct tmpmasks tmpmask;
+ 
+@@ -2284,45 +2328,28 @@ static int update_prstate(struct cpuset *cs, int new_prs)
+ 	if (alloc_cpumasks(NULL, &tmpmask))
+ 		return -ENOMEM;
+ 
++	err = update_partition_exclusive(cs, new_prs);
++	if (err)
++		goto out;
++
+ 	if (!old_prs) {
+ 		/*
+-		 * Turning on partition root requires setting the
+-		 * CS_CPU_EXCLUSIVE bit implicitly as well and cpus_allowed
+-		 * cannot be empty.
++		 * cpus_allowed cannot be empty.
+ 		 */
+ 		if (cpumask_empty(cs->cpus_allowed)) {
+ 			err = PERR_CPUSEMPTY;
+ 			goto out;
+ 		}
+ 
+-		err = update_flag(CS_CPU_EXCLUSIVE, cs, 1);
+-		if (err) {
+-			err = PERR_NOTEXCL;
+-			goto out;
+-		}
+-
+ 		err = update_parent_subparts_cpumask(cs, partcmd_enable,
+ 						     NULL, &tmpmask);
+-		if (err) {
+-			update_flag(CS_CPU_EXCLUSIVE, cs, 0);
++		if (err)
+ 			goto out;
+-		}
+-
+-		if (new_prs == PRS_ISOLATED) {
+-			/*
+-			 * Disable the load balance flag should not return an
+-			 * error unless the system is running out of memory.
+-			 */
+-			update_flag(CS_SCHED_LOAD_BALANCE, cs, 0);
+-			sched_domain_rebuilt = true;
+-		}
+ 	} else if (old_prs && new_prs) {
+ 		/*
+ 		 * A change in load balance state only, no change in cpumasks.
+ 		 */
+-		update_flag(CS_SCHED_LOAD_BALANCE, cs, (new_prs != PRS_ISOLATED));
+-		sched_domain_rebuilt = true;
+-		goto out;	/* Sched domain is rebuilt in update_flag() */
++		goto out;
+ 	} else {
+ 		/*
+ 		 * Switching back to member is always allowed even if it
+@@ -2341,15 +2368,6 @@ static int update_prstate(struct cpuset *cs, int new_prs)
+ 			compute_effective_cpumask(cs->effective_cpus, cs, parent);
+ 			spin_unlock_irq(&callback_lock);
+ 		}
+-
+-		/* Turning off CS_CPU_EXCLUSIVE will not return error */
+-		update_flag(CS_CPU_EXCLUSIVE, cs, 0);
+-
+-		if (!is_sched_load_balance(cs)) {
+-			/* Make sure load balance is on */
+-			update_flag(CS_SCHED_LOAD_BALANCE, cs, 1);
+-			sched_domain_rebuilt = true;
+-		}
+ 	}
+ 
+ 	update_tasks_cpumask(parent, tmpmask.new_cpus);
+@@ -2357,18 +2375,24 @@ static int update_prstate(struct cpuset *cs, int new_prs)
+ 	if (parent->child_ecpus_count)
+ 		update_sibling_cpumasks(parent, cs, &tmpmask);
+ 
+-	if (!sched_domain_rebuilt)
+-		rebuild_sched_domains_locked();
+ out:
+ 	/*
+-	 * Make partition invalid if an error happen
++	 * Make partition invalid & disable CS_CPU_EXCLUSIVE if an error
++	 * happens.
+ 	 */
+-	if (err)
++	if (err) {
+ 		new_prs = -new_prs;
++		update_partition_exclusive(cs, new_prs);
 +	}
 +
-+	for ((CPU=0; CPU < $NR_CPUS; CPU++))
-+	do
-+		[[ -n "$(ls ${SCHED_DOMAINS}/cpu$CPU)" ]] && continue
+ 	spin_lock_irq(&callback_lock);
+ 	cs->partition_root_state = new_prs;
+ 	WRITE_ONCE(cs->prs_err, err);
+ 	spin_unlock_irq(&callback_lock);
 +
-+		if [[ -z "$LASTISOLCPU" ]]
-+		then
-+			ISOLCPUS=$CPU
-+			LASTISOLCPU=$CPU
-+		elif [[ "$LASTISOLCPU" -eq $((CPU - 1)) ]]
-+		then
-+			echo $ISOLCPUS | grep -q "\<$LASTISOLCPU\$"
-+			if [[ $? -eq 0 ]]
-+			then
-+				ISOLCPUS=${ISOLCPUS}-
-+			fi
-+			LASTISOLCPU=$CPU
-+		else
-+			if [[ $ISOLCPUS = *- ]]
-+			then
-+				ISOLCPUS=${ISOLCPUS}$LASTISOLCPU
-+			fi
-+			ISOLCPUS=${ISOLCPUS},$CPU
-+			LASTISOLCPU=$CPU
-+		fi
-+	done
-+	[[ "$ISOLCPUS" = *- ]] && ISOLCPUS=${ISOLCPUS}$LASTISOLCPU
-+	[[ $EXPECT_VAL = $ISOLCPUS ]]
-+}
++	/* Update sched domains and load balance flag */
++	update_partition_sd_lb(cs, old_prs);
 +
-+test_fail()
-+{
-+	TESTNUM=$1
-+	TESTTYPE=$2
-+	ADDINFO=$3
-+	echo "Test $TEST[$TESTNUM] failed $TESTTYPE check!"
-+	[[ -n "$ADDINFO" ]] && echo "*** $ADDINFO ***"
-+	eval echo \"\${$TEST[$I]}\"
-+	echo
-+	dump_states
-+	exit 1
-+}
-+
- #
- # Run cpuset state transition test
- #  $1 - test matrix name
-@@ -536,88 +675,81 @@ run_state_test()
- {
- 	TEST=$1
- 	CONTROLLER=cpuset
--	CPULIST=0-6
- 	I=0
- 	eval CNT="\${#$TEST[@]}"
- 
- 	reset_cgroup_states
--	echo $CPULIST > cpuset.cpus
--	echo root > cpuset.cpus.partition
- 	console_msg "Running state transition test ..."
- 
- 	while [[ $I -lt $CNT ]]
- 	do
- 		echo "Running test $I ..." > /dev/console
-+		[[ $VERBOSE -gt 1 ]] && {
-+			echo ""
-+			eval echo \"\${$TEST[$I]}\"
-+		}
- 		eval set -- "\${$TEST[$I]}"
--		ROOT=$1
--		OLD_A1=$2
--		OLD_A2=$3
--		OLD_A3=$4
--		OLD_B1=$5
--		NEW_A1=$6
--		NEW_A2=$7
--		NEW_A3=$8
--		NEW_B1=$9
--		RESULT=${10}
--		ECPUS=${11}
--		STATES=${12}
--
--		set_ctrl_state_noerr .        $ROOT
-+		OLD_A1=$1
-+		OLD_A2=$2
-+		OLD_A3=$3
-+		OLD_B1=$4
-+		NEW_A1=$5
-+		NEW_A2=$6
-+		NEW_A3=$7
-+		NEW_B1=$8
-+		RESULT=$9
-+		ECPUS=${10}
-+		STATES=${11}
-+		PCPUS=${12}
-+		ICPUS=${13}
-+
-+		set_ctrl_state_noerr B1       $OLD_B1
- 		set_ctrl_state_noerr A1       $OLD_A1
- 		set_ctrl_state_noerr A1/A2    $OLD_A2
- 		set_ctrl_state_noerr A1/A2/A3 $OLD_A3
--		set_ctrl_state_noerr B1       $OLD_B1
- 		RETVAL=0
- 		set_ctrl_state A1       $NEW_A1; ((RETVAL += $?))
- 		set_ctrl_state A1/A2    $NEW_A2; ((RETVAL += $?))
- 		set_ctrl_state A1/A2/A3 $NEW_A3; ((RETVAL += $?))
- 		set_ctrl_state B1       $NEW_B1; ((RETVAL += $?))
- 
--		[[ $RETVAL -ne $RESULT ]] && {
--			echo "Test $TEST[$I] failed result check!"
--			eval echo \"\${$TEST[$I]}\"
--			dump_states
--			exit 1
--		}
-+		[[ $RETVAL -ne $RESULT ]] && test_fail $I result
- 
- 		[[ -n "$ECPUS" && "$ECPUS" != . ]] && {
- 			check_effective_cpus $ECPUS
--			[[ $? -ne 0 ]] && {
--				echo "Test $TEST[$I] failed effective CPU check!"
--				eval echo \"\${$TEST[$I]}\"
--				echo
--				dump_states
--				exit 1
--			}
-+			[[ $? -ne 0 ]] && test_fail $I "effective CPU"
- 		}
- 
--		[[ -n "$STATES" ]] && {
-+		[[ -n "$STATES" && "$STATES" != . ]] && {
- 			check_cgroup_states $STATES
--			[[ $? -ne 0 ]] && {
--				echo "FAILED: Test $TEST[$I] failed states check!"
--				eval echo \"\${$TEST[$I]}\"
--				echo
--				dump_states
--				exit 1
--			}
-+			[[ $? -ne 0 ]] && test_fail $I states
-+		}
-+
-+		[[ -n "$PCPUS" && "$PCPUS" != . ]] && {
-+			check_subparts_cpus $PCPUS
-+			[[ $? -ne 0 ]] && test_fail $I "subpartitions CPU"
- 		}
- 
-+		# Compare the expected isolated CPUs with the actual ones,
-+		# if available
-+		[[ -n "$ICPUS" ]] && {
-+			check_isolcpus $ICPUS
-+			[[ $? -ne 0 ]] && test_fail $I "isolated CPU" \
-+				"Expect $ICPUS, get $ISOLCPUS instead"
-+		}
- 		reset_cgroup_states
- 		#
- 		# Check to see if effective cpu list changes
- 		#
--		pause 0.05
- 		NEWLIST=$(cat cpuset.cpus.effective)
- 		[[ $NEWLIST != $CPULIST ]] && {
- 			echo "Effective cpus changed to $NEWLIST after test $I!"
- 			exit 1
- 		}
--		[[ -n "$VERBOSE" ]] && echo "Test $I done."
-+		[[ $VERBOSE -gt 0 ]] && echo "Test $I done."
- 		((I++))
- 	done
- 	echo "All $I tests of $TEST PASSED."
--
--	echo member > cpuset.cpus.partition
- }
- 
- #
-@@ -642,6 +774,7 @@ test_inotify()
- {
- 	ERR=0
- 	PRS=/tmp/.prs_$$
-+	cd $CGROUP2/test
- 	[[ -f $WAIT_INOTIFY ]] || {
- 		echo "wait_inotify not found, inotify test SKIPPED."
- 		return
-@@ -655,7 +788,7 @@ test_inotify()
- 	rm -f $PRS
- 	wait_inotify $PWD/cpuset.cpus.partition $PRS &
- 	pause 0.01
--	set_ctrl_state . "O1-0"
-+	set_ctrl_state . "O1=0"
- 	pause 0.01
- 	check_cgroup_states ".:P-1"
- 	if [[ $? -ne 0 ]]
-@@ -689,5 +822,3 @@ run_state_test TEST_MATRIX
- test_isolated
- test_inotify
- echo "All tests PASSED."
--cd ..
--rmdir test
+ 	/*
+ 	 * Update child cpusets, if present.
+ 	 * Force update if switching back to member.
 -- 
 2.31.1
 
