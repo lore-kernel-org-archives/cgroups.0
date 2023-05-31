@@ -1,45 +1,183 @@
-From: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH net-next 1/2] net: Keep sk->sk_forward_alloc as a proper size
-Date: Wed, 31 May 2023 19:45:20 +0000
-Message-ID: <20230531194520.qhvibyyaqg7vwi6s@google.com>
-References: <CH3PR11MB7345DBA6F79282169AAFE9E0FC759@CH3PR11MB7345.namprd11.prod.outlook.com>
- <20230512171702.923725-1-shakeelb@google.com> <CH3PR11MB7345035086C1661BF5352E6EFC789@CH3PR11MB7345.namprd11.prod.outlook.com>
- <CALvZod7n2yHU8PMn5b39w6E+NhLtBynDKfo1GEfXaa64_tqMWQ@mail.gmail.com>
- <CH3PR11MB7345E9EAC5917338F1C357C0FC789@CH3PR11MB7345.namprd11.prod.outlook.com>
- <CALvZod6txDQ9kOHrNFL64XiKxmbVHqMtWNiptUdGt9UuhQVLOQ@mail.gmail.com>
- <ZGMYz+08I62u+Yeu@xsang-OptiPlex-9020> <20230517162447.dztfzmx3hhetfs2q@google.com>
- <ZHcJUF4f9VcnyGVt@xsang-OptiPlex-9020>
+From: Randy Dunlap <rdunlap@infradead.org>
+Subject: Re: [PATCH v2 5/6] cgroup/cpuset: Documentation update for partition
+Date: Wed, 31 May 2023 16:11:30 -0700
+Message-ID: <c26c2a9e-13af-2b7c-d3dd-8455a10d84c6@infradead.org>
+References: <20230531163405.2200292-6-longman@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20221208; t=1685562323; x=1688154323;
-        h=cc:to:from:subject:message-id:references:mime-version:in-reply-to
-         :date:from:to:cc:subject:date:message-id:reply-to;
-        bh=PpDJlNrnAO4fvUz0RfTCu45Wzom8uht2t6b0Eby6tSU=;
-        b=CvwTOcZ+TPBW93dVo+GG+czxQgBJ4WRtQUZ1hKODLz7NuLQPGgy7BYqE7Y9Tdkzjs2
-         y9tozNN7oF4sU7BsyHzJbWPgNPvoSqYlMRj7uvKxy2fkxrWhoH/SmrTTamAvlmKzi73n
-         W8mGe+0pczU1OXBLkd9m6kH3YhP81peoXSGI7ypFYEQjAIAOGwvke5aVDbsNuxKBxx3g
-         MOnvBekiaK0TO9D2/JhS+c/l+b0tzOEqCm96tealv8uLdXS4aRGyO8bnFdb0QJST5yjO
-         WtjQXe1h3uwVrRpHfxidaBd5zAxB8fKm6q3xgsTzuj02HlikkhGtotuFCckThw1vLK4o
-         eh0Q==
-In-Reply-To: <ZHcJUF4f9VcnyGVt@xsang-OptiPlex-9020>
-List-ID: <cgroups.vger.kernel.org>
 Content-Transfer-Encoding: 7bit
-To: Oliver Sang <oliver.sang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
-Cc: Zhang Cathy <cathy.zhang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Yin Fengwei <fengwei.yin-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Feng Tang <feng.tang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Eric Dumazet <edumazet-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Linux MM <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Paolo Abeni <pabeni-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org" <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>, "kuba-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org" <kuba-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Brandeburg Jesse <jesse.brandeburg-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Srinivas Suresh <suresh.srinivas-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Chen Tim C <tim.c.chen-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, You Lizhen <lizhen.you-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, "eric.dumazet-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org" <eric.dumazet-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, "netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, philip.li-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org, yujie.liu-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
+        Content-Type:In-Reply-To:From:References:Cc:To:Subject:MIME-Version:Date:
+        Message-ID:Sender:Reply-To:Content-ID:Content-Description;
+        bh=nmte9E9sXVloF6HUJV4QBiAwzkNA1xzyrniH4jntggs=; b=a/Su64r/VzsuH3nHvF5cXQ/zgX
+        mnKbP/aBaq+ZKi1XzrsK5gORPxNLqYyEbzM/22/x3NWQBBvc2x40ocTn6gG995iRZqKuiP8SjxXxj
+        qLVIkE3AiIGnpz3HntG6+qWplO3b1BaoYoWEKEVozzHNKgZ5TAVm7jab3w5HLtNGRwY08V+jgmAU/
+        k0hbkbFKP9kq3T5KpJy1RGUHwunKj6Dv7TC50cVxWnnpJN/nhMuSb5swDMrYOCFfTZYnaZImZAHiP
+        QhVxkXXjmuFY/4cOkVVCQu1y+RQ7Z0GRaPI9305VKIbvEkg9ugWQtn2c1yKEYPVCyB5S7xBUdjQD9
+        +3vYiCvw==;
+Content-Language: en-US
+In-Reply-To: <20230531163405.2200292-6-longman@redhat.com>
+List-ID: <cgroups.vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"
+To: Waiman Long <longman@redhat.com>, Tejun Heo <tj@kernel.org>, Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, Jonathan Corbet <corbet@lwn.net>, Shuah Khan <shuah@kernel.org>
+Cc: linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kselftest@vger.kernel.org, Juri Lelli <juri.lelli@redhat.com>, Valentin Schneider <vschneid@redhat.com>, Frederic Weisbecker <frederic@kernel.org>, Mrunal Patel <mpatel@redhat.com>, Ryan Phillips <rphillips@redhat.com>, Brent Rowsell <browsell@redhat.com>, Peter Hunt <pehunt@redhat.com>, Phil Auld <pauld@redhat.com>
 
-Hi Oliver,
+Hi,
 
-On Wed, May 31, 2023 at 04:46:08PM +0800, Oliver Sang wrote:
-[...]
+Just a few small nits below:
+
+On 5/31/23 09:34, Waiman Long wrote:
+> This patch updates the cgroup-v2.rst file to include information about
+> the new "cpuset.cpus.reserve" control file as well as the new remote
+> partition.
 > 
-> we applied below patch upon v6.4-rc2, so far, we didn't spot out performance
-> impacts of it to other tests.
+> Signed-off-by: Waiman Long <longman@redhat.com>
+> ---
+>  Documentation/admin-guide/cgroup-v2.rst | 92 +++++++++++++++++++++----
+>  1 file changed, 79 insertions(+), 13 deletions(-)
 > 
-> but we found -7.6% regression of netperf.Throughput_Mbps
-> 
+> diff --git a/Documentation/admin-guide/cgroup-v2.rst b/Documentation/admin-guide/cgroup-v2.rst
+> index f67c0829350b..3e9351c2cd27 100644
+> --- a/Documentation/admin-guide/cgroup-v2.rst
+> +++ b/Documentation/admin-guide/cgroup-v2.rst
+> @@ -2215,6 +2215,38 @@ Cpuset Interface Files
+>  
+>  	Its value will be affected by memory nodes hotplug events.
+>  
+> +  cpuset.cpus.reserve
+> +	A read-write multiple values file which exists only on root
+> +	cgroup.
+> +
+> +	It lists all the CPUs that are reserved for adjacent and remote
+> +	partitions created in the system.  See the next section for
+> +	more information on what an adjacent or remote partitions is.
+> +
+> +	Creation of adjacent partition does not require touching this
+> +	control file as CPU reservation will be done automatically.
+> +	In order to create a remote partition, the CPUs needed by the
+> +	remote partition has to be written to this file first.
+> +
+> +	Due to the fact that "cpuset.cpus.reserve" holds reserve CPUs
+> +	that can be used by multiple partitions and automatic reservation
+> +	may also race with manual reservation, an extension prefixes of
+> +	"+" and "-" are allowed for this file to reduce race.
+> +
+> +	A "+" prefix can be used to indicate a list of additional
+> +	CPUs that are to be added without disturbing the CPUs that are
+> +	originally there.  For example, if its current value is "3-4",
+> +	echoing ""+5" to it will change it to "3-5".
 
-Thanks, this is what I was looking for. I will dig deeper and decide how
-to proceed (i.e. improve this patch or work on long term approach).
+	        "+5"
 
+> +
+> +	Once a remote partition is destroyed, its CPUs have to be
+> +	removed from this file or no other process can use them.  A "-"
+> +	prefix can be used to remove a list of CPUs from it.  However,
+> +	removing CPUs that are currently used in existing partitions
+> +	may cause those partitions to become invalid.  A single "-"
+> +	character without any number can be used to indicate removal
+> +	of all the free CPUs not yet allocated to any partitions to
+> +	avoid accidental partition invalidation.
+> +
+>    cpuset.cpus.partition
+>  	A read-write single value file which exists on non-root
+>  	cpuset-enabled cgroups.  This flag is owned by the parent cgroup
+> @@ -2228,25 +2260,49 @@ Cpuset Interface Files
+>  	  "isolated"	Partition root without load balancing
+>  	  ==========	=====================================
+>  
+> -	The root cgroup is always a partition root and its state
+> -	cannot be changed.  All other non-root cgroups start out as
+> -	"member".
+> +	A cpuset partition is a collection of cgroups with a partition
+> +	root at the top of the hierarchy and its descendants except
+> +	those that are separate partition roots themselves and their
+> +	descendants.  A partition has exclusive access to the set of
+> +	CPUs allocated to it.  Other cgroups outside of that partition
+> +	cannot use any CPUs in that set.
+> +
+> +	There are two types of partitions - adjacent and remote.  The
+> +	parent of an adjacent partition must be a valid partition root.
+> +	Partition roots of adjacent partitions are all clustered around
+> +	the root cgroup.  Creation of adjacent partition is done by
+> +	writing the desired partition type into "cpuset.cpus.partition".
+> +
+> +	A remote partition does not require a partition root parent.
+> +	So a remote partition can be formed far from the root cgroup.
+> +	However, its creation is a 2-step process.  The CPUs needed
+> +	by a remote partition ("cpuset.cpus" of the partition root)
+> +	has to be written into "cpuset.cpus.reserve" of the root
+> +	cgroup first.  After that, "isolated" can be written into
+> +	"cpuset.cpus.partition" of the partition root to form a remote
+> +	isolated partition which is the only supported remote partition
+> +	type for now.
+> +
+> +	All remote partitions are terminal as adjacent partition cannot
+> +	be created underneath it.  With the way remote partition is
+> +	formed, it is not possible to create another valid remote
+> +	partition underneath it.
+> +
+> +	The root cgroup is always a partition root and its state cannot
+> +	be changed.  All other non-root cgroups start out as "member".
+>  
+>  	When set to "root", the current cgroup is the root of a new
+> -	partition or scheduling domain that comprises itself and all
+> -	its descendants except those that are separate partition roots
+> -	themselves and their descendants.
+> +	partition or scheduling domain.
+>  
+> -	When set to "isolated", the CPUs in that partition root will
+> +	When set to "isolated", the CPUs in that partition will
+>  	be in an isolated state without any load balancing from the
+>  	scheduler.  Tasks placed in such a partition with multiple
+>  	CPUs should be carefully distributed and bound to each of the
+>  	individual CPUs for optimal performance.
+>  
+> -	The value shown in "cpuset.cpus.effective" of a partition root
+> -	is the CPUs that the partition root can dedicate to a potential
+> -	new child partition root. The new child subtracts available
+> -	CPUs from its parent "cpuset.cpus.effective".
+> +	The value shown in "cpuset.cpus.effective" of a partition root is
+> +	the CPUs that are dedicated to that partition and not available
+> +	to cgroups outside of that partittion.
+
+	                           partition.
+
+>  
+>  	A partition root ("root" or "isolated") can be in one of the
+>  	two possible states - valid or invalid.  An invalid partition
+> @@ -2270,8 +2326,8 @@ Cpuset Interface Files
+>  	In the case of an invalid partition root, a descriptive string on
+>  	why the partition is invalid is included within parentheses.
+>  
+> -	For a partition root to become valid, the following conditions
+> -	must be met.
+> +	For an adjacent partition root to be valid, the following
+> +	conditions must be met.
+>  
+>  	1) The "cpuset.cpus" is exclusive with its siblings , i.e. they
+>  	   are not shared by any of its siblings (exclusivity rule).
+> @@ -2281,6 +2337,16 @@ Cpuset Interface Files
+>  	4) The "cpuset.cpus.effective" cannot be empty unless there is
+>  	   no task associated with this partition.
+>  
+> +	For a remote partition root to be valid, the following conditions
+> +	must be met.
+> +
+> +	1) The same exclusivity rule as adjacent partition root.
+> +	2) The "cpuset.cpus" is not empty and all the CPUs must be
+> +	   present in "cpuset.cpus.reserve" of the root cgroup and none
+> +	   of them are allocated to another partition.
+> +	3) The "cpuset.cpus" value must be present in all its ancestors
+> +	   to ensure proper hierarchical cpu distribution.
+
+	                                 CPU
+
+> +
+>  	External events like hotplug or changes to "cpuset.cpus" can
+>  	cause a valid partition root to become invalid and vice versa.
+>  	Note that a task cannot be moved to a cgroup with empty
+
+-- 
+~Randy
