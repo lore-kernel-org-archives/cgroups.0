@@ -1,293 +1,436 @@
 From: Waiman Long <longman@redhat.com>
-Subject: [PATCH v2 1/6] cgroup/cpuset: Extract out CS_CPU_EXCLUSIVE & CS_SCHED_LOAD_BALANCE handling
-Date: Wed, 31 May 2023 12:34:00 -0400
-Message-ID: <20230531163405.2200292-2-longman@redhat.com>
+Subject: [PATCH v2 3/6] cgroup/cpuset: Add cpuset.cpus.reserve for top cpuset
+Date: Wed, 31 May 2023 12:34:02 -0400
+Message-ID: <20230531163405.2200292-4-longman@redhat.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Return-path: <linux-doc-owner@vger.kernel.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1685550858;
+        s=mimecast20190719; t=1685550864;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding;
-        bh=hNwDItSa7gah8NTUpgcKB6a8T7nVlWQpfJD91nGKxdk=;
-        b=SZs+jZ5G/JjI3aY5ViOhwjvAVKn6CpJLJm2zN6APHAv3vbjBiulLDyOtDH2NFnN0+9J0uj
-        n3NQ9lNykR2JuPyUdAzyya02lfUb7FBKZlhTEUwvnRslanm2n1Ly3Bq2T9vqlVwZDeThiH
-        bCgiqPUsTIC0Bq6Ib8pjfVspj6dUctk=
+        bh=MunOFJWMe7tgW+XM6Of/HoGxuH83AnN8mCmfMnOlUl8=;
+        b=KBaAfdqCS5RwPEyeqcY1RMsORNHzZsGPqIsrS///+NUpmI0mkms1YOAWOACbpg1A8LcGEy
+        cPNeoQxlcAZe/7yBPvGYBEGiNu8Zma4RaJVqNVRLY6vO6hpNPY+nuhbeGdT0PcoggJOAIa
+        3LXfkil+K8tSkojpfAZznN2SKSL2APo=
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset="utf-8"
 To: Tejun Heo <tj@kernel.org>, Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, Jonathan Corbet <corbet@lwn.net>, Shuah Khan <shuah@kernel.org>
 Cc: linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kselftest@vger.kernel.org, Juri Lelli <juri.lelli@redhat.com>, Valentin Schneider <vschneid@redhat.com>, Frederic Weisbecker <frederic@kernel.org>, Mrunal Patel <mpatel@redhat.com>, Ryan Phillips <rphillips@redhat.com>, Brent Rowsell <browsell@redhat.com>, Peter Hunt <pehunt@redhat.com>, Phil Auld <pauld@redhat.com>, Waiman Long <longman@redhat.com>
 
-Extract out the setting of CS_CPU_EXCLUSIVE and CS_SCHED_LOAD_BALANCE
-flags as well as the rebuilding of scheduling domains into the new
-update_partition_exclusive() and update_partition_sd_lb() helper
-functions to simplify the logic. The update_partition_exclusive()
-helper is called mainly at the beginning of the caller, but it may be
-called at the end too. The update_partition_sd_lb() helper is called
-at the end of the caller.
+A cpuset partition is a collection of cpusets with a partition root
+and its descendants from that root downward excluding any cpusets that
+are part of other partitions. A partition has exclusive access to a set
+of CPUs granted to it. Other cpusets outside of a partition cannot use
+any CPUs in that set.
 
-This patch should reduce the chance that cpuset partition will end up
-in an incorrect state.
+Currently, creation of partitions requires a hierarchical CPUs
+distribution model where the parent of a partition root has to be
+a partition root itself. Hence all the partition roots have to be
+clustered around the cgroup root.
+
+To enable the creation of a remote partition down in the hierarchy
+without a parental partition root, we need a way to reserve the CPUs
+that will be used in a remote partition. Introduce a new root-only
+"cpuset.cpus.reserve" control file in the top cpuset for this particular
+purpose.
+
+By default, the new "cpuset.cpus.reserve" control file will track
+the subparts_cpus cpumask in the top cpuset. By writing into this new
+control file, however, we can reserve additional CPUs that can be used
+in a remote partition. Any CPUs that are in "cpuset.cpus.reserve" will
+have to be removed from the effective_cpus of all the cpusets that are
+not part of that valid partitions.
+
+The prefix "+" and "-" can be used to indicate the addition to or the
+subtraction from the existing CPUs in "cpuset.cpus.reserve".  A single
+"-" character indicate the deletion of all the free reserve CPUs not
+allocated to any existing partition.
 
 Signed-off-by: Waiman Long <longman@redhat.com>
 ---
- kernel/cgroup/cpuset.c | 134 ++++++++++++++++++++++++-----------------
- 1 file changed, 79 insertions(+), 55 deletions(-)
+ kernel/cgroup/cpuset.c | 253 ++++++++++++++++++++++++++++++++++++++---
+ 1 file changed, 239 insertions(+), 14 deletions(-)
 
 diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
-index 2c76fcd9f0bc..12a0b583aca4 100644
+index 8604c919e1e4..69abe95a9969 100644
 --- a/kernel/cgroup/cpuset.c
 +++ b/kernel/cgroup/cpuset.c
-@@ -1278,7 +1278,7 @@ static void update_tasks_cpumask(struct cpuset *cs, struct cpumask *new_cpus)
- static void compute_effective_cpumask(struct cpumask *new_cpus,
- 				      struct cpuset *cs, struct cpuset *parent)
- {
--	if (parent->nr_subparts_cpus) {
-+	if (parent->nr_subparts_cpus && is_partition_valid(cs)) {
- 		cpumask_or(new_cpus, parent->effective_cpus,
- 			   parent->subparts_cpus);
- 		cpumask_and(new_cpus, new_cpus, cs->cpus_allowed);
-@@ -1300,6 +1300,43 @@ enum subparts_cmd {
+@@ -208,7 +208,33 @@ struct cpuset {
+ 	struct cgroup_file partition_file;
+ };
  
- static int update_flag(cpuset_flagbits_t bit, struct cpuset *cs,
- 		       int turning_on);
-+
+-static cpumask_var_t	cs_tmp_cpus;	/* Temp cpumask for partition */
 +/*
-+ * Update partition exclusive flag
++ * Reserved CPUs for partitions.
 + *
-+ * Return: 0 if successful, an error code otherwise
++ * By default, CPUs used in partitions are tracked in the parent's
++ * subparts_cpus mask following a hierarchical CPUs distribution model.
++ * To enable the creation of a remote partition down in the hierarchy
++ * without a parental partition root, one can write directly to
++ * cpuset.cpus.reserve in the root cgroup to allocate more CPUs that can
++ * be used by remote partitions. Removal of existing reserved CPUs may
++ * also cause some existing partitions to become invalid.
++ *
++ * All the cpumasks below should only be used with cpuset_mutex held.
++ * Modification of cs_reserve_cpus & cs_free_reserve_cpus also requires
++ * holding the callback_lock.
++ *
++ * Relationship among cs_reserve_cpus, cs_free_reserve_cpus and
++ * top_cpuset.subparts_cpus are:
++ *
++ *   top_cpuset.subparts_cpus ⊆ cs_reserve_cpus
++ *   cs_free_reserve_cpus     ⊆ cs_reserve_cpus
++ *   top_cpuset.subparts_cpus ∩ cs_free_reserve_cpus = ∅
++ *   cs_reserve_cpus - cs_free_reserve_cpus - top_cpuset.subparts_cpus
++ *	= CPUs dedicated to remote partitions
 + */
-+static int update_partition_exclusive(struct cpuset *cs, int new_prs)
-+{
-+	bool exclusive = (new_prs > 0);
++static cpumask_var_t	cs_reserve_cpus;	/* Reserved CPUs */
++static cpumask_var_t	cs_free_reserve_cpus;	/* Unallocated reserved CPUs */
++static cpumask_var_t	cs_tmp_cpus;		/* Temp cpumask for partition */
+ 
+ /*
+  * Partition root states:
+@@ -1202,13 +1228,13 @@ static void rebuild_sched_domains_locked(void)
+ 	 * should be the same as the active CPUs, so checking only top_cpuset
+ 	 * is enough to detect racing CPU offlines.
+ 	 */
+-	if (!top_cpuset.nr_subparts_cpus &&
++	if (cpumask_empty(cs_reserve_cpus) &&
+ 	    !cpumask_equal(top_cpuset.effective_cpus, cpu_active_mask))
+ 		return;
+ 
+ 	/*
+ 	 * With subpartition CPUs, however, the effective CPUs of a partition
+-	 * root should be only a subset of the active CPUs.  Since a CPU in any
++	 * root should only be a subset of the active CPUs.  Since a CPU in any
+ 	 * partition root could be offlined, all must be checked.
+ 	 */
+ 	if (top_cpuset.nr_subparts_cpus) {
+@@ -1275,7 +1301,7 @@ static void update_tasks_cpumask(struct cpuset *cs, struct cpumask *new_cpus)
+ 			 */
+ 			if ((task->flags & PF_KTHREAD) && kthread_is_per_cpu(task))
+ 				continue;
+-			cpumask_andnot(new_cpus, possible_mask, cs->subparts_cpus);
++			cpumask_andnot(new_cpus, possible_mask, cs_reserve_cpus);
+ 		} else {
+ 			cpumask_and(new_cpus, possible_mask, cs->effective_cpus);
+ 		}
+@@ -1406,6 +1432,7 @@ static int update_parent_subparts_cpumask(struct cpuset *cs, int cmd,
+ 	int deleting;	/* Moving cpus from subparts_cpus to effective_cpus */
+ 	int old_prs, new_prs;
+ 	int part_error = PERR_NONE;	/* Partition error? */
++	bool update_reserve = (parent == &top_cpuset);
+ 
+ 	lockdep_assert_held(&cpuset_mutex);
+ 
+@@ -1576,7 +1603,7 @@ static int update_parent_subparts_cpumask(struct cpuset *cs, int cmd,
+ 	}
+ 
+ 	/*
+-	 * Change the parent's subparts_cpus.
++	 * Change the parent's subparts_cpus and maybe cs_reserve_cpus.
+ 	 * Newly added CPUs will be removed from effective_cpus and
+ 	 * newly deleted ones will be added back to effective_cpus.
+ 	 */
+@@ -1586,10 +1613,25 @@ static int update_parent_subparts_cpumask(struct cpuset *cs, int cmd,
+ 			   parent->subparts_cpus, tmp->addmask);
+ 		cpumask_andnot(parent->effective_cpus,
+ 			       parent->effective_cpus, tmp->addmask);
++		if (update_reserve) {
++			cpumask_or(cs_reserve_cpus,
++				   cs_reserve_cpus, tmp->addmask);
++			cpumask_andnot(cs_free_reserve_cpus,
++				       cs_free_reserve_cpus, tmp->addmask);
++		}
+ 	}
+ 	if (deleting) {
+ 		cpumask_andnot(parent->subparts_cpus,
+ 			       parent->subparts_cpus, tmp->delmask);
++		/*
++		 * The automatic cpu reservation of adjacent partition
++		 * won't add back the deleted CPUs to cs_free_reserve_cpus.
++		 * Instead, they are returned back to effective_cpus of top
++		 * cpuset.
++		 */
++		if (update_reserve)
++			cpumask_andnot(cs_reserve_cpus,
++				       cs_reserve_cpus, tmp->delmask);
+ 		/*
+ 		 * Some of the CPUs in subparts_cpus might have been offlined.
+ 		 */
+@@ -1783,6 +1825,8 @@ static void update_cpumasks_hier(struct cpuset *cs, struct tmpmasks *tmp,
+ 
+ 	if (need_rebuild_sched_domains)
+ 		rebuild_sched_domains_locked();
 +
-+	if (exclusive && !is_cpu_exclusive(cs)) {
-+		if (update_flag(CS_CPU_EXCLUSIVE, cs, 1))
-+			return PERR_NOTEXCL;
-+	} else if (!exclusive && is_cpu_exclusive(cs)) {
-+		/* Turning off CS_CPU_EXCLUSIVE will not return error */
-+		update_flag(CS_CPU_EXCLUSIVE, cs, 0);
++	return;
+ }
+ 
+ /**
+@@ -1955,6 +1999,167 @@ static int update_cpumask(struct cpuset *cs, struct cpuset *trialcs,
+ 	return 0;
+ }
+ 
++/**
++ * update_reserve_cpumask - update cs_reserve_cpus
++ * @trialcs: trial cpuset
++ * @buf: buffer of cpu numbers written to this cpuset
++ * Return: 0 if successful, < 0 if error
++ */
++static int update_reserve_cpumask(struct cpuset *trialcs, const char *buf)
++{
++	struct cgroup_subsys_state *css;
++	struct cpuset *cs;
++	bool adding, deleting;
++	struct tmpmasks tmp;
++
++	adding = deleting = false;
++	if (*buf == '+') {
++		adding = true;
++		buf++;
++	} else if (*buf == '-') {
++		deleting = true;
++		buf++;
 +	}
++
++	if (!*buf) {
++		if (adding)
++			return -EINVAL;
++
++		if (deleting) {
++			if (cpumask_empty(cs_free_reserve_cpus))
++				return 0;
++			cpumask_copy(trialcs->cpus_allowed, cs_free_reserve_cpus);
++		} else {
++			cpumask_clear(trialcs->cpus_allowed);
++		}
++	} else {
++		int retval = cpulist_parse(buf, trialcs->cpus_allowed);
++
++		if (retval < 0)
++			return retval;
++	}
++
++	if (!adding && !deleting &&
++	    cpumask_equal(trialcs->cpus_allowed, cs_reserve_cpus))
++		return 0;
++
++	/* Preserve trialcs->cpus_allowed for now */
++	init_tmpmasks(&tmp, NULL, trialcs->subparts_cpus,
++		      trialcs->effective_cpus);
++
++	/*
++	 * Compute the addition and removal of CPUs to/from cs_reserve_cpus
++	 */
++	if (!adding && !deleting) {
++		adding = cpumask_andnot(tmp.addmask, trialcs->cpus_allowed,
++					cs_reserve_cpus);
++		deleting = cpumask_andnot(tmp.delmask, cs_reserve_cpus,
++					  trialcs->cpus_allowed);
++	} else if (adding) {
++		adding = cpumask_andnot(tmp.addmask,
++					trialcs->cpus_allowed, cs_reserve_cpus);
++		cpumask_or(trialcs->cpus_allowed, cs_reserve_cpus, tmp.addmask);
++	} else {	/* deleting */
++		deleting = cpumask_and(tmp.delmask,
++				       trialcs->cpus_allowed, cs_reserve_cpus);
++		cpumask_andnot(trialcs->cpus_allowed, cs_reserve_cpus, tmp.delmask);
++	}
++
++	if (!adding && !deleting)
++		return 0;
++
++	/*
++	 * Invalidate remote partitions if necessary
++	 */
++	if (deleting) {
++		/* TODO */
++	}
++
++	/*
++	 * Cannot use up all the CPUs in top_cpuset.effective_cpus
++	 */
++	if (!deleting && adding &&
++	    cpumask_subset(top_cpuset.effective_cpus, tmp.addmask))
++		return -EINVAL;
++
++	spin_lock_irq(&callback_lock);
++	/*
++	 * Update top_cpuset.effective_cpus, cs_reserve_cpus &
++	 * cs_free_reserve_cpus.
++	 */
++	if (adding)
++		cpumask_or(cs_free_reserve_cpus, cs_free_reserve_cpus,
++			   tmp.addmask);
++	cpumask_copy(cs_reserve_cpus, trialcs->cpus_allowed);
++	cpumask_andnot(top_cpuset.effective_cpus,
++		       cpu_active_mask, cs_reserve_cpus);
++
++	/*
++	 * Remove CPUs from cs_free_reserve_cpus first. Anything left
++	 * means some partitions has to be made invalid.
++	 */
++	if (deleting & cpumask_and(cs_tmp_cpus, cs_free_reserve_cpus,
++				   tmp.delmask)) {
++		cpumask_andnot(cs_free_reserve_cpus, cs_free_reserve_cpus,
++			       cs_tmp_cpus);
++		deleting = cpumask_andnot(tmp.delmask, tmp.delmask,
++					  cs_tmp_cpus);
++	}
++	spin_unlock_irq(&callback_lock);
++
++	/*
++	 * Invalidate some adjacent partitions under top cpuset, if necessary
++	 */
++	if (deleting && cpumask_and(cs_tmp_cpus, tmp.delmask,
++				    top_cpuset.subparts_cpus)) {
++		struct cgroup_subsys_state *css;
++		struct cpuset *cp;
++
++		/*
++		 * Temporarily save the remaining CPUs to be deleted in
++		 * trialcs->cpus_allowed to be restored back to tmp.delmask
++		 * later.
++		 */
++		deleting = cpumask_andnot(trialcs->cpus_allowed, tmp.delmask,
++					  cs_tmp_cpus);
++		rcu_read_lock();
++		cpuset_for_each_child(cp, css, &top_cpuset)
++			if (is_partition_valid(cp) &&
++			    cpumask_intersects(cs_tmp_cpus, cp->cpus_allowed)) {
++				rcu_read_unlock();
++				update_parent_subparts_cpumask(cp, partcmd_invalidate, NULL, &tmp);
++				rcu_read_lock();
++			}
++		rcu_read_unlock();
++		if (deleting)
++			cpumask_copy(tmp.delmask, trialcs->cpus_allowed);
++	}
++
++	/* Can now use all of trialcs */
++	init_tmpmasks(&tmp, trialcs->cpus_allowed, trialcs->subparts_cpus,
++		      trialcs->effective_cpus);
++
++	/*
++	 * Update effective_cpus of all descendants that are not in
++	 * partitions and rebuild sched domaiins.
++	 */
++	rcu_read_lock();
++	cpuset_for_each_child(cs, css, &top_cpuset) {
++		compute_effective_cpumask(tmp.new_cpus, cs, &top_cpuset);
++		if (cpumask_equal(tmp.new_cpus, cs->effective_cpus))
++			continue;
++		if (!css_tryget_online(&cs->css))
++			continue;
++		rcu_read_unlock();
++		update_cpumasks_hier(cs, &tmp, false);
++		rcu_read_lock();
++		css_put(&cs->css);
++	}
++	rcu_read_unlock();
++	rebuild_sched_domains_locked();
 +	return 0;
 +}
 +
-+/*
-+ * Update partition load balance flag and/or rebuild sched domain
-+ *
-+ * Changing load balance flag will automatically call
-+ * rebuild_sched_domains_locked().
-+ */
-+static void update_partition_sd_lb(struct cpuset *cs, int old_prs)
-+{
-+	int new_prs = cs->partition_root_state;
-+	bool new_lb = (new_prs != PRS_ISOLATED);
+ /*
+  * Migrate memory region from one set of nodes to another.  This is
+  * performed asynchronously as it can be called from process migration path
+@@ -2743,6 +2948,7 @@ typedef enum {
+ 	FILE_EFFECTIVE_CPULIST,
+ 	FILE_EFFECTIVE_MEMLIST,
+ 	FILE_SUBPARTS_CPULIST,
++	FILE_RESERVE_CPULIST,
+ 	FILE_CPU_EXCLUSIVE,
+ 	FILE_MEM_EXCLUSIVE,
+ 	FILE_MEM_HARDWALL,
+@@ -2880,6 +3086,9 @@ static ssize_t cpuset_write_resmask(struct kernfs_open_file *of,
+ 	case FILE_CPULIST:
+ 		retval = update_cpumask(cs, trialcs, buf);
+ 		break;
++	case FILE_RESERVE_CPULIST:
++		retval = update_reserve_cpumask(trialcs, buf);
++		break;
+ 	case FILE_MEMLIST:
+ 		retval = update_nodemask(cs, trialcs, buf);
+ 		break;
+@@ -2927,6 +3136,9 @@ static int cpuset_common_seq_show(struct seq_file *sf, void *v)
+ 	case FILE_EFFECTIVE_MEMLIST:
+ 		seq_printf(sf, "%*pbl\n", nodemask_pr_args(&cs->effective_mems));
+ 		break;
++	case FILE_RESERVE_CPULIST:
++		seq_printf(sf, "%*pbl\n", cpumask_pr_args(cs_reserve_cpus));
++		break;
+ 	case FILE_SUBPARTS_CPULIST:
+ 		seq_printf(sf, "%*pbl\n", cpumask_pr_args(cs->subparts_cpus));
+ 		break;
+@@ -3200,6 +3412,14 @@ static struct cftype dfl_files[] = {
+ 		.file_offset = offsetof(struct cpuset, partition_file),
+ 	},
+ 
++	{
++		.name = "cpus.reserve",
++		.seq_show = cpuset_common_seq_show,
++		.write = cpuset_write_resmask,
++		.private = FILE_RESERVE_CPULIST,
++		.flags = CFTYPE_ONLY_ON_ROOT,
++	},
 +
-+	if (new_lb != !!is_sched_load_balance(cs))
-+		update_flag(CS_SCHED_LOAD_BALANCE, cs, new_lb);
-+	else if ((new_prs > 0) || (old_prs > 0))
-+		rebuild_sched_domains_locked();
-+}
-+
- /**
-  * update_parent_subparts_cpumask - update subparts_cpus mask of parent cpuset
-  * @cs:      The cpuset that requests change in partition root state
-@@ -1359,8 +1396,7 @@ static int update_parent_subparts_cpumask(struct cpuset *cs, int cmd,
- 		return is_partition_invalid(parent)
- 		       ? PERR_INVPARENT : PERR_NOTPART;
- 	}
--	if ((newmask && cpumask_empty(newmask)) ||
--	   (!newmask && cpumask_empty(cs->cpus_allowed)))
-+	if (!newmask && cpumask_empty(cs->cpus_allowed))
- 		return PERR_CPUSEMPTY;
+ 	{
+ 		.name = "cpus.subpartitions",
+ 		.seq_show = cpuset_common_seq_show,
+@@ -3510,6 +3730,8 @@ int __init cpuset_init(void)
+ 	BUG_ON(!alloc_cpumask_var(&top_cpuset.effective_cpus, GFP_KERNEL));
+ 	BUG_ON(!zalloc_cpumask_var(&top_cpuset.subparts_cpus, GFP_KERNEL));
+ 	BUG_ON(!zalloc_cpumask_var(&cs_tmp_cpus, GFP_KERNEL));
++	BUG_ON(!zalloc_cpumask_var(&cs_reserve_cpus, GFP_KERNEL));
++	BUG_ON(!zalloc_cpumask_var(&cs_free_reserve_cpus, GFP_KERNEL));
+ 
+ 	cpumask_setall(top_cpuset.cpus_allowed);
+ 	nodes_setall(top_cpuset.mems_allowed);
+@@ -3788,10 +4010,10 @@ static void cpuset_hotplug_workfn(struct work_struct *work)
+ 	mems_updated = !nodes_equal(top_cpuset.effective_mems, new_mems);
  
  	/*
-@@ -1426,11 +1462,16 @@ static int update_parent_subparts_cpumask(struct cpuset *cs, int cmd,
- 		cpumask_and(tmp->addmask, newmask, parent->cpus_allowed);
- 		adding = cpumask_andnot(tmp->addmask, tmp->addmask,
- 					parent->subparts_cpus);
-+		/*
-+		 * Empty cpumask is not allewed
-+		 */
-+		if (cpumask_empty(newmask)) {
-+			part_error = PERR_CPUSEMPTY;
- 		/*
- 		 * Make partition invalid if parent's effective_cpus could
- 		 * become empty and there are tasks in the parent.
- 		 */
--		if (adding &&
-+		} else if (adding &&
- 		    cpumask_subset(parent->effective_cpus, tmp->addmask) &&
- 		    !cpumask_intersects(tmp->delmask, cpu_active_mask) &&
- 		    partition_is_populated(parent, cs)) {
-@@ -1503,14 +1544,13 @@ static int update_parent_subparts_cpumask(struct cpuset *cs, int cmd,
- 
- 	/*
- 	 * Transitioning between invalid to valid or vice versa may require
--	 * changing CS_CPU_EXCLUSIVE and CS_SCHED_LOAD_BALANCE.
-+	 * changing CS_CPU_EXCLUSIVE.
+-	 * In the rare case that hotplug removes all the cpus in subparts_cpus,
++	 * In the rare case that hotplug removes all the reserve cpus,
+ 	 * we assumed that cpus are updated.
  	 */
- 	if (old_prs != new_prs) {
--		if (is_prs_invalid(old_prs) && !is_cpu_exclusive(cs) &&
--		    (update_flag(CS_CPU_EXCLUSIVE, cs, 1) < 0))
--			return PERR_NOTEXCL;
--		if (is_prs_invalid(new_prs) && is_cpu_exclusive(cs))
--			update_flag(CS_CPU_EXCLUSIVE, cs, 0);
-+		int err = update_partition_exclusive(cs, new_prs);
-+
-+		if (err)
-+			return err;
- 	}
+-	if (!cpus_updated && top_cpuset.nr_subparts_cpus)
++	if (!cpus_updated && !cpumask_empty(cs_reserve_cpus))
+ 		cpus_updated = true;
  
- 	/*
-@@ -1547,15 +1587,16 @@ static int update_parent_subparts_cpumask(struct cpuset *cs, int cmd,
- 		update_tasks_cpumask(parent, tmp->addmask);
- 
- 	/*
--	 * Set or clear CS_SCHED_LOAD_BALANCE when partcmd_update, if necessary.
--	 * rebuild_sched_domains_locked() may be called.
-+	 * For partcmd_update without newmask, it is being called from
-+	 * cpuset_hotplug_workfn() where cpus_read_lock() wasn't taken.
-+	 * Update the load balance flag and scheduling domain if
-+	 * cpus_read_trylock() is successful.
- 	 */
--	if (old_prs != new_prs) {
--		if (old_prs == PRS_ISOLATED)
--			update_flag(CS_SCHED_LOAD_BALANCE, cs, 1);
--		else if (new_prs == PRS_ISOLATED)
--			update_flag(CS_SCHED_LOAD_BALANCE, cs, 0);
-+	if ((cmd == partcmd_update) && !newmask && cpus_read_trylock()) {
-+		update_partition_sd_lb(cs, old_prs);
-+		cpus_read_unlock();
- 	}
-+
- 	notify_partition_change(cs, old_prs);
- 	return 0;
- }
-@@ -1770,6 +1811,7 @@ static int update_cpumask(struct cpuset *cs, struct cpuset *trialcs,
- 	int retval;
- 	struct tmpmasks tmp;
- 	bool invalidate = false;
-+	int old_prs = cs->partition_root_state;
- 
- 	/* top_cpuset.cpus_allowed tracks cpu_online_mask; it's read-only */
- 	if (cs == &top_cpuset)
-@@ -1889,6 +1931,9 @@ static int update_cpumask(struct cpuset *cs, struct cpuset *trialcs,
- 		 */
- 		if (parent->child_ecpus_count)
- 			update_sibling_cpumasks(parent, cs, &tmp);
-+
-+		/* Update CS_SCHED_LOAD_BALANCE and/or sched_domains */
-+		update_partition_sd_lb(cs, old_prs);
- 	}
- 	return 0;
- }
-@@ -2265,7 +2310,6 @@ static int update_flag(cpuset_flagbits_t bit, struct cpuset *cs,
- static int update_prstate(struct cpuset *cs, int new_prs)
- {
- 	int err = PERR_NONE, old_prs = cs->partition_root_state;
--	bool sched_domain_rebuilt = false;
- 	struct cpuset *parent = parent_cs(cs);
- 	struct tmpmasks tmpmask;
- 
-@@ -2284,45 +2328,28 @@ static int update_prstate(struct cpuset *cs, int new_prs)
- 	if (alloc_cpumasks(NULL, &tmpmask))
- 		return -ENOMEM;
- 
-+	err = update_partition_exclusive(cs, new_prs);
-+	if (err)
-+		goto out;
-+
- 	if (!old_prs) {
+ 	/* synchronize cpus_allowed to cpu_active_mask */
+@@ -3801,18 +4023,21 @@ static void cpuset_hotplug_workfn(struct work_struct *work)
+ 			cpumask_copy(top_cpuset.cpus_allowed, &new_cpus);
  		/*
--		 * Turning on partition root requires setting the
--		 * CS_CPU_EXCLUSIVE bit implicitly as well and cpus_allowed
--		 * cannot be empty.
-+		 * cpus_allowed cannot be empty.
+ 		 * Make sure that CPUs allocated to child partitions
+-		 * do not show up in effective_cpus. If no CPU is left,
+-		 * we clear the subparts_cpus & let the child partitions
+-		 * fight for the CPUs again.
++		 * do not show up in top_cpuset's effective_cpus. In the
++		 * unlikely event tht no effective CPU is left in top_cpuset,
++		 * we clear all the reserve cpus and let the non-remote child
++		 * partitions fight for the CPUs again.
  		 */
- 		if (cpumask_empty(cs->cpus_allowed)) {
- 			err = PERR_CPUSEMPTY;
- 			goto out;
+-		if (top_cpuset.nr_subparts_cpus) {
+-			if (cpumask_subset(&new_cpus,
+-					   top_cpuset.subparts_cpus)) {
++		if (!cpumask_empty(cs_reserve_cpus)) {
++
++			if (cpumask_subset(&new_cpus, cs_reserve_cpus)) {
+ 				top_cpuset.nr_subparts_cpus = 0;
+ 				cpumask_clear(top_cpuset.subparts_cpus);
++				cpumask_clear(cs_free_reserve_cpus);
++				cpumask_clear(cs_reserve_cpus);
+ 			} else {
+ 				cpumask_andnot(&new_cpus, &new_cpus,
+-					       top_cpuset.subparts_cpus);
++					       cs_reserve_cpus);
+ 			}
  		}
- 
--		err = update_flag(CS_CPU_EXCLUSIVE, cs, 1);
--		if (err) {
--			err = PERR_NOTEXCL;
--			goto out;
--		}
--
- 		err = update_parent_subparts_cpumask(cs, partcmd_enable,
- 						     NULL, &tmpmask);
--		if (err) {
--			update_flag(CS_CPU_EXCLUSIVE, cs, 0);
-+		if (err)
- 			goto out;
--		}
--
--		if (new_prs == PRS_ISOLATED) {
--			/*
--			 * Disable the load balance flag should not return an
--			 * error unless the system is running out of memory.
--			 */
--			update_flag(CS_SCHED_LOAD_BALANCE, cs, 0);
--			sched_domain_rebuilt = true;
--		}
- 	} else if (old_prs && new_prs) {
- 		/*
- 		 * A change in load balance state only, no change in cpumasks.
- 		 */
--		update_flag(CS_SCHED_LOAD_BALANCE, cs, (new_prs != PRS_ISOLATED));
--		sched_domain_rebuilt = true;
--		goto out;	/* Sched domain is rebuilt in update_flag() */
-+		goto out;
- 	} else {
- 		/*
- 		 * Switching back to member is always allowed even if it
-@@ -2341,15 +2368,6 @@ static int update_prstate(struct cpuset *cs, int new_prs)
- 			compute_effective_cpumask(cs->effective_cpus, cs, parent);
- 			spin_unlock_irq(&callback_lock);
- 		}
--
--		/* Turning off CS_CPU_EXCLUSIVE will not return error */
--		update_flag(CS_CPU_EXCLUSIVE, cs, 0);
--
--		if (!is_sched_load_balance(cs)) {
--			/* Make sure load balance is on */
--			update_flag(CS_SCHED_LOAD_BALANCE, cs, 1);
--			sched_domain_rebuilt = true;
--		}
- 	}
- 
- 	update_tasks_cpumask(parent, tmpmask.new_cpus);
-@@ -2357,18 +2375,24 @@ static int update_prstate(struct cpuset *cs, int new_prs)
- 	if (parent->child_ecpus_count)
- 		update_sibling_cpumasks(parent, cs, &tmpmask);
- 
--	if (!sched_domain_rebuilt)
--		rebuild_sched_domains_locked();
- out:
- 	/*
--	 * Make partition invalid if an error happen
-+	 * Make partition invalid & disable CS_CPU_EXCLUSIVE if an error
-+	 * happens.
- 	 */
--	if (err)
-+	if (err) {
- 		new_prs = -new_prs;
-+		update_partition_exclusive(cs, new_prs);
-+	}
-+
- 	spin_lock_irq(&callback_lock);
- 	cs->partition_root_state = new_prs;
- 	WRITE_ONCE(cs->prs_err, err);
- 	spin_unlock_irq(&callback_lock);
-+
-+	/* Update sched domains and load balance flag */
-+	update_partition_sd_lb(cs, old_prs);
-+
- 	/*
- 	 * Update child cpusets, if present.
- 	 * Force update if switching back to member.
+ 		cpumask_copy(top_cpuset.effective_cpus, &new_cpus);
 -- 
 2.31.1
 
