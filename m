@@ -1,101 +1,45 @@
-From: Eric Dumazet <edumazet-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH net-next 1/2] net: Keep sk->sk_forward_alloc as a proper size
-Date: Thu, 1 Jun 2023 05:21:51 +0200
-Message-ID: <CANn89iLPbd3JDvFCgvZO_1sppCyFDFQ_fqJy3kKBAucJrbm_vw@mail.gmail.com>
-References: <CH3PR11MB7345DBA6F79282169AAFE9E0FC759@CH3PR11MB7345.namprd11.prod.outlook.com>
- <20230512171702.923725-1-shakeelb@google.com> <CH3PR11MB7345035086C1661BF5352E6EFC789@CH3PR11MB7345.namprd11.prod.outlook.com>
- <CALvZod7n2yHU8PMn5b39w6E+NhLtBynDKfo1GEfXaa64_tqMWQ@mail.gmail.com>
- <CH3PR11MB7345E9EAC5917338F1C357C0FC789@CH3PR11MB7345.namprd11.prod.outlook.com>
- <CALvZod6txDQ9kOHrNFL64XiKxmbVHqMtWNiptUdGt9UuhQVLOQ@mail.gmail.com>
- <ZGMYz+08I62u+Yeu@xsang-OptiPlex-9020> <20230517162447.dztfzmx3hhetfs2q@google.com>
- <ZHcJUF4f9VcnyGVt@xsang-OptiPlex-9020> <20230531194520.qhvibyyaqg7vwi6s@google.com>
- <CH3PR11MB73454186CA28AE6ACCEA9674FC499@CH3PR11MB7345.namprd11.prod.outlook.com>
+From: Paolo Abeni <pabeni@redhat.com>
+Subject: Re: [PATCH v4 4/4] sock: Remove redundant cond of memcg pressure
+Date: Thu, 01 Jun 2023 11:10:32 +0200
+Message-ID: <db32243e6cb70798edcf33a9d5c82a8c7ba556e2.camel@redhat.com>
+References: <20230530114011.13368-1-wuyun.abel@bytedance.com>
+	 <20230530114011.13368-5-wuyun.abel@bytedance.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: quoted-printable
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20221208; t=1685589723; x=1688181723;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=qStCg7KeACsi2KVI6FrJ4HwOilw06iHPCAkOe/uQA0Q=;
-        b=F+a3gWbqc5yvzXtyB3N2bGHooXmHV7Le8S7sW/yVCLU1xCJkFBNuoEDREeMI6S9a/u
-         lEROE+8+MoRFn4wAK/rstppBHdPTTqAgNqGrFvTfpI9msilONOo3t8TLTVwLryJfLfPR
-         ZIP4335XuiBknLIzEDoiQkYlG1esppjFJCpnROVgTEvdgS1jX0CBispLOZR21JAYON0+
-         yZL9aEcdajnFvUdH8HjETBefVAUJ3Osp5WDLyoJOYd9jkttb/DB7HSDDnxoxexiFXXOd
-         4DL2z1hWQ6cii5dD8B6ar/6dErmSUvHLdtgMEUIsXjyEaXPpt0mzvHis8tbBNdpUNcqy
-         E0fA==
-In-Reply-To: <CH3PR11MB73454186CA28AE6ACCEA9674FC499-WQKEFoXy4NEXvLLfv6NhPJPPoyLQLiKMvxpqHgZTriW3zl9H0oFU5g@public.gmane.org>
-List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="windows-1252"
-To: "Zhang, Cathy" <cathy.zhang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
-Cc: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, "Sang, Oliver" <oliver.sang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, "Yin, Fengwei" <fengwei.yin-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, "Tang, Feng" <feng.tang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Linux MM <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Paolo Abeni <pabeni-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org" <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>, "kuba-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org" <kuba-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, "Brandeburg, Jesse" <jesse.brandeburg-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, "Srinivas, Suresh" <suresh.srinivas-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, "Chen, Tim C" <tim.c.chen-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, "You, Lizhen" <lizhen.you-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, "eric.dumazet-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org" <eric.dumazet-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, "netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "Li, Philip" <philip.li-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, "Liu, Yujie" <yujie.liu-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+Return-path: <netdev+bounces-7041-gl-netdev-2=m.gmane-mx.org@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1685610644;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=g14oLQSgEmt6zzVDTbcm+P3Q+U0P9qW/qGUNJAVuUPE=;
+	b=Ml3NHHTqF0YjUWT36sDC61n0gBIT+lvd6FixJbHoBTHNfRqsExJTXgT5kkS/zUd4CAge+s
+	HI5uCi9YxT0ZBZPa0k0FJ5ceJJLFNm/t9RbFsytWEa+Z8yT8cVWBatMOWL7t/AWflNIdVj
+	pGLPES6hS/XDDgOcIRQmT8DckRLAWn4=
+In-Reply-To: <20230530114011.13368-5-wuyun.abel@bytedance.com>
+List-Id: <cgroups.vger.kernel.org>
+List-Subscribe: <mailto:netdev+subscribe@vger.kernel.org>
+List-Unsubscribe: <mailto:netdev+unsubscribe@vger.kernel.org>
+Content-Type: text/plain; charset="iso-8859-1"
+To: Abel Wu <wuyun.abel@bytedance.com>, "David S . Miller" <davem@davemloft.net>, Eric Dumazet <edumazet@google.com>, Jakub Kicinski <kuba@kernel.org>, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, Shakeel Butt <shakeelb@google.com>, Muchun Song <muchun.song@linux.dev>
+Cc: Simon Horman <simon.horman@corigine.com>, netdev@vger.kernel.org, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Thu, Jun 1, 2023 at 4:48=E2=80=AFAM Zhang, Cathy <cathy.zhang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>=
- wrote:
->
->
->
-> > -----Original Message-----
-> > From: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-> > Sent: Thursday, June 1, 2023 3:45 AM
-> > To: Sang, Oliver <oliver.sang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
-> > Cc: Zhang, Cathy <cathy.zhang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>; Yin, Fengwei
-> > <fengwei.yin-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>; Tang, Feng <feng.tang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>; Eric Dumazet
-> > <edumazet-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>; Linux MM <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>; Cgroups
-> > <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>; Paolo Abeni <pabeni-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>;
-> > davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org; kuba-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org; Brandeburg, Jesse
-> > <jesse.brandeburg-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>; Srinivas, Suresh
-> > <suresh.srinivas-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>; Chen, Tim C <tim.c.chen-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>; You,
-> > Lizhen <lizhen.you-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>; eric.dumazet-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org;
-> > netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org; Li, Philip <philip.li-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>; Liu, Yujie
-> > <yujie.liu-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
-> > Subject: Re: [PATCH net-next 1/2] net: Keep sk->sk_forward_alloc as a p=
-roper
-> > size
-> >
-> > Hi Oliver,
-> >
-> > On Wed, May 31, 2023 at 04:46:08PM +0800, Oliver Sang wrote:
-> > [...]
-> > >
-> > > we applied below patch upon v6.4-rc2, so far, we didn't spot out
-> > > performance impacts of it to other tests.
-> > >
-> > > but we found -7.6% regression of netperf.Throughput_Mbps
-> > >
-> >
-> > Thanks, this is what I was looking for. I will dig deeper and decide ho=
-w to
-> > proceed (i.e. improve this patch or work on long term approach).
->
-> Hi Shakeel,
-> If I understand correctly, I think the long-term goal you mentioned is to
-> implement a per-memcg per-cpu cache or a percpu_counter solution, right?
-> A per-memcg per-cpu cache solution can avoid the uncharge overhead and
-> reduce charge overhead, while the percpu_counter solution can help avoid
-> the charge overhead ultimately. It seems both are necessary and complex.
->
-> The above is from memory side, regarding to our original proposal that is=
- to
-> tune the reclaim threshold from network side, Eric and you worry about th=
-at
-> it might re-introduce the OOM issue. I see the following two interfaces i=
-n
-> network stack, which indicate the memory usage status, so is it possible =
-to
-> tune the reclaim threshold to smaller when enter memory pressure and set
-> it to 64K when leave memory pressure? How do you think?
->         void                    (*enter_memory_pressure)(struct sock *sk)=
-;
->         void                    (*leave_memory_pressure)(struct sock *sk)=
-;
->
+On Tue, 2023-05-30 at 19:40 +0800, Abel Wu wrote:
+> Now with the previous patch, __sk_mem_raise_allocated() considers
+> the memory pressure of both global and the socket's memcg on a func-
+> wide level,=C2=A0
 
-No it is not possible to reclaim 'the threshold' when 10,000,000
-sockets are alive and kept
-a budget around 64KB.
-We do not have a shrinker and we do not want one.
-The only sensible solution is per-cpu cache.
-This was done in core TCP stack, a similar solution is needed in
-memcg, if memcg has to be used.
+Since the "previous patch" (aka "sock: Consider memcg pressure when
+raising sockmem") has been dropped in this series revision, I guess
+this patch should be dropped, too?
+
+Is this targeting the 'net-next' tree or the 'net' one? please specify
+the target tree into the subj line. I think we could consider net-next
+for this series, given the IMHO not trivial implications.
+
+Cheers,
+
+Paolo
+
+
