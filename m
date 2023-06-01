@@ -1,139 +1,92 @@
-From: Michal =?utf-8?Q?Koutn=C3=BD?= <mkoutny-IBi9RG/b67k@public.gmane.org>
-Subject: Re: [PATCH] cgroup: Stop task iteration when rebinding subsystem
-Date: Thu, 1 Jun 2023 19:33:53 +0200
-Message-ID: <ojymhf4m3p52py6sezwbc2zamxm46wmhxs577uucima6evj2sc@djoi3dhzbdf6>
-References: <20230526114139.70274-1-xiujianfeng@huaweicloud.com>
+From: Dan Schatzberg <schatzberg.dan-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Subject: [PATCH] Documentation: Clarify usage of memory limits
+Date: Thu,  1 Jun 2023 11:38:19 -0700
+Message-ID: <20230601183820.3839891-1-schatzberg.dan@gmail.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha512;
-        protocol="application/pgp-signature"; boundary="vmv26htnxfuy7rbb"
+Content-Transfer-Encoding: 8bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
-        t=1685640835; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=bhh+WbNovcJY32/ZmD2ytQlFKOEBfg7zTQ3V3+mleLM=;
-        b=GyZM6g34CDsG/6yBK741e7b69x3H2uugU01hI+rOGMe7wMtff7G67jUvgZEDxMzZkPrlKv
-        R0/EO0BxJu6AuNfIGHtebfrjDdJrMUUlKPP8+VDC+ByhCkxIauMW4XxDc9xuken5TUdtIX
-        XyOn4MVb1gCRwmpMY9IzH9EFSJNA3rQ=
-Content-Disposition: inline
-In-Reply-To: <20230526114139.70274-1-xiujianfeng-XF6JlduFytWkHkcT6e4Xnw@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20221208; t=1685644703; x=1688236703;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=SzJSGye10y66Z1Cc9RFPHp9tWIbjNHpbJLhF+8yAFeo=;
+        b=Cbq9QM48Z6LYiuI0eqBqMNi7B0znBZKapVJt0GVsuDyMvxSqOoOaZQwp2T7lMVU3Zx
+         6vyB5naOztqPiso2+220gnQtd5JjVJaDbxaSttSMzTcSWj7SkAmBNaK0txhjVmruGo+/
+         +3t+dYZtvMALXnh2JgVqXPKP8guWh5uH9XCkoiW/N5iJCZ6PGIXJJwiRHdmdG3AHwoBp
+         qqhA5WQUBLDTM1vLp6buhENr6YcISGoSQ3IIOvGhEYBUDgs4Fl0Ff3uXdG3CNyiYJ8lW
+         kRbvXZro2PrOnkACkh0cd0Dlgbld8n02Cm03eJWGZukFomSV8qEO+7S2BoCbecgv/4a0
+         SXLA==
 List-ID: <cgroups.vger.kernel.org>
-To: Xiu Jianfeng <xiujianfeng-XF6JlduFytWkHkcT6e4Xnw@public.gmane.org>
-Cc: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cuigaosheng1-hv44wF8Li93QT0dZR+AlfA@public.gmane.org
+Content-Type: text/plain; charset="us-ascii"
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: Chris Down <chris-6Bi1550iOqEnzZ6mRAm98g@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Jonathan Corbet <corbet-T1hC0tSOHrs@public.gmane.org>, "open list:CONTROL GROUP CGROUP" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "open list:DOCUMENTATION" <linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, open list <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 
+The existing documentation refers to memory.high as the "main mechanism
+to control memory usage." This seems incorrect to me - memory.high can
+result in reclaim pressure which simply leads to stalls unless some
+external component observes and actions on it (e.g. systemd-oomd can be
+used for this purpose). While this is feasible, users are unaware of
+this interaction and are led to believe that memory.high alone is an
+effective mechanism for limiting memory.
 
---vmv26htnxfuy7rbb
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+The documentation should recommend the use of memory.max as the
+effective way to enforce memory limits - it triggers reclaim and results
+in OOM kills by itself.
 
-Hello Jianfeng.
+Signed-off-by: Dan Schatzberg <schatzberg.dan-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+---
+ Documentation/admin-guide/cgroup-v2.rst | 22 ++++++++++------------
+ 1 file changed, 10 insertions(+), 12 deletions(-)
 
-On Fri, May 26, 2023 at 07:41:39PM +0800, Xiu Jianfeng <xiujianfeng@huaweic=
-loud.com> wrote:
-> The race that cause this bug can be shown as below:
->=20
-> (hotplug cpu)                | (umount cpuset)
-> mutex_lock(&cpuset_mutex)    | mutex_lock(&cgroup_mutex)
-> cpuset_hotplug_workfn        |
->  rebuild_root_domains        |  rebind_subsystems
->   update_tasks_root_domain   |   spin_lock_irq(&css_set_lock)
->    css_task_iter_start       |    list_move_tail(&cset->e_cset_node[ss->i=
-d]
->    while(css_task_iter_next) |                  &dcgrp->e_csets[ss->id]);
->    css_task_iter_end         |   spin_unlock_irq(&css_set_lock)
-> mutex_unlock(&cpuset_mutex)  | mutex_unlock(&cgroup_mutex)
+diff --git a/Documentation/admin-guide/cgroup-v2.rst b/Documentation/admin-guide/cgroup-v2.rst
+index f67c0829350b..e592a9364473 100644
+--- a/Documentation/admin-guide/cgroup-v2.rst
++++ b/Documentation/admin-guide/cgroup-v2.rst
+@@ -1213,23 +1213,25 @@ PAGE_SIZE multiple when read back.
+ 	A read-write single value file which exists on non-root
+ 	cgroups.  The default is "max".
+ 
+-	Memory usage throttle limit.  This is the main mechanism to
+-	control memory usage of a cgroup.  If a cgroup's usage goes
++	Memory usage throttle limit.  If a cgroup's usage goes
+ 	over the high boundary, the processes of the cgroup are
+ 	throttled and put under heavy reclaim pressure.
+ 
+ 	Going over the high limit never invokes the OOM killer and
+-	under extreme conditions the limit may be breached.
++	under extreme conditions the limit may be breached. The high
++	limit should be used in scenarios where an external process
++	monitors the limited cgroup to alleviate heavy reclaim
++	pressure.
+ 
+   memory.max
+ 	A read-write single value file which exists on non-root
+ 	cgroups.  The default is "max".
+ 
+-	Memory usage hard limit.  This is the final protection
+-	mechanism.  If a cgroup's memory usage reaches this limit and
+-	can't be reduced, the OOM killer is invoked in the cgroup.
+-	Under certain circumstances, the usage may go over the limit
+-	temporarily.
++	Memory usage hard limit.  This is the main mechanism to limit
++	memory usage of a cgroup.  If a cgroup's memory usage reaches
++	this limit and can't be reduced, the OOM killer is invoked in
++	the cgroup. Under certain circumstances, the usage may go
++	over the limit temporarily.
+ 
+ 	In default configuration regular 0-order allocations always
+ 	succeed unless OOM killer chooses current task as a victim.
+@@ -1238,10 +1240,6 @@ PAGE_SIZE multiple when read back.
+ 	Caller could retry them differently, return into userspace
+ 	as -ENOMEM or silently ignore in cases like disk readahead.
+ 
+-	This is the ultimate protection mechanism.  As long as the
+-	high limit is used and monitored properly, this limit's
+-	utility is limited to providing the final safety net.
+-
+   memory.reclaim
+ 	A write-only nested-keyed file which exists for all cgroups.
+ 
+-- 
+2.34.1
 
-Good catch!
-
->=20
-> Inside css_task_iter_start/next/end, css_set_lock is hold and then
-> released, so when iterating task(left side), the css_set may be moved to
-> another list(right side), then it->cset_head points to the old list head
-> and it->cset_pos->next points to the head node of new list, which can't
-> be used as struct css_set.
-
-I find your analysis sane -- the stale it->cset_head is problematic.
-
-> To fix this issue, introduce CSS_TASK_ITER_STOPPED flag for css_task_iter.
-> when moving css_set to dcgrp->e_csets[ss->id] in rebind_subsystems(), stop
-> the task iteration.
-
-Does it mean that iteration would not yield all tasks that are
-associated with give cs->css? That sounds like broken correctness of the
-iterator.
-
-I may suggest a slightly different approach that should not affect
-running iterators.
-- I had to switch from all css_sets to only scgrp's css_sets since
-  css_set_table order of css_sets may be different than scgrp->e_csets
-- Not sure how portable is using array element as a `member` argument of
-  offsetof (in expansion of list_for_each_entry_safe).
-
-This is only to illustrate the idea, i.e. merely compile tested.
-
-WDYT?
-
-Regards,
-Michal
-
-diff --git a/kernel/cgroup/cgroup.c b/kernel/cgroup/cgroup.c
-index 625d7483951c..e67d2a0776c1 100644
---- a/kernel/cgroup/cgroup.c
-+++ b/kernel/cgroup/cgroup.c
-@@ -1798,7 +1798,7 @@ int rebind_subsystems(struct cgroup_root *dst_root, u=
-16 ss_mask)
- {
- 	struct cgroup *dcgrp =3D &dst_root->cgrp;
- 	struct cgroup_subsys *ss;
--	int ssid, i, ret;
-+	int ssid, ret;
- 	u16 dfl_disable_ss_mask =3D 0;
-=20
- 	lockdep_assert_held(&cgroup_mutex);
-@@ -1842,7 +1842,8 @@ int rebind_subsystems(struct cgroup_root *dst_root, u=
-16 ss_mask)
- 		struct cgroup_root *src_root =3D ss->root;
- 		struct cgroup *scgrp =3D &src_root->cgrp;
- 		struct cgroup_subsys_state *css =3D cgroup_css(scgrp, ss);
--		struct css_set *cset;
-+		struct css_set *cset, *cset_pos;
-+		struct css_task_iter *it;
-=20
- 		WARN_ON(!css || cgroup_css(dcgrp, ss));
-=20
-@@ -1860,9 +1861,18 @@ int rebind_subsystems(struct cgroup_root *dst_root, =
-u16 ss_mask)
- 		css->cgroup =3D dcgrp;
-=20
- 		spin_lock_irq(&css_set_lock);
--		hash_for_each(css_set_table, i, cset, hlist)
-+		WARN_ON(!list_empty(&dcgrp->e_csets[ss->id]));
-+		list_for_each_entry_safe(cset, cset_pos, &scgrp->e_csets[ss->id], e_cset=
-_node[ss->id]) {
- 			list_move_tail(&cset->e_cset_node[ss->id],
- 				       &dcgrp->e_csets[ss->id]);
-+			/* all css_sets of scgrp together in same order to dcgrp,
-+			 * patch in-flight iterators to preserve correct iteration,
-+			 * cset_head is under css_set_lock */
-+			list_for_each_entry(it, &cset->task_iters, iters_node) {
-+				if (it->cset_head =3D=3D &scgrp->e_csets[ss->id])
-+					it->cset_head =3D &dcgrp->e_csets[ss->id];
-+			}
-+		}
- 		spin_unlock_irq(&css_set_lock);
-=20
- 		if (ss->css_rstat_flush) {
-
---vmv26htnxfuy7rbb
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-
-iHUEABYKAB0WIQTrXXag4J0QvXXBmkMkDQmsBEOquQUCZHjWfwAKCRAkDQmsBEOq
-uYdwAP9NTo9oYu1o7d0GiJXma1Lp+QYKGqjf1QdRIHmnJu9FiQD6A6tMliFa6BqD
-z89g4VthZWDKKSIs2NmvhIsqOsqXOww=
-=rREO
------END PGP SIGNATURE-----
-
---vmv26htnxfuy7rbb--
