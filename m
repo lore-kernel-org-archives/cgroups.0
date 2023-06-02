@@ -1,125 +1,56 @@
-From: Xiu Jianfeng <xiujianfeng-XF6JlduFytWkHkcT6e4Xnw@public.gmane.org>
-Subject: Re: [PATCH] cgroup: Stop task iteration when rebinding subsystem
-Date: Fri, 2 Jun 2023 16:15:39 +0800
-Message-ID: <92671ed7-ca4f-48e4-f29d-a42860f93d89@huaweicloud.com>
-References: <20230526114139.70274-1-xiujianfeng@huaweicloud.com>
- <ojymhf4m3p52py6sezwbc2zamxm46wmhxs577uucima6evj2sc@djoi3dhzbdf6>
+From: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH net-next v5 1/3] net-memcg: Fold dependency into memcg
+ pressure cond
+Date: Fri, 2 Jun 2023 20:25:49 +0000
+Message-ID: <20230602202549.7nvrv4bx4cu7qxdn@google.com>
+References: <20230602081135.75424-1-wuyun.abel@bytedance.com> <20230602081135.75424-2-wuyun.abel@bytedance.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset="us-ascii"
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Content-Language: en-US
-In-Reply-To: <ojymhf4m3p52py6sezwbc2zamxm46wmhxs577uucima6evj2sc@djoi3dhzbdf6>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20221208; t=1685737551; x=1688329551;
+        h=cc:to:from:subject:message-id:references:mime-version:in-reply-to
+         :date:from:to:cc:subject:date:message-id:reply-to;
+        bh=E/w9dpHTMqgkLEKvl14+NZFKAOeWHv5+6Cm9LcEp2Pk=;
+        b=yLQeX37dgxp9PBBi8VizndbTFQ0QUx+l8iC6lB7aHf3WHqlzVM0sr3Knbm3N2EWBhw
+         eZqpYVjs3t3t1cmAGoCNORvLZ8+FHUiHEBRNL7D6U6HSt7vWq9CRTVbjf660HFdOYef1
+         R97noyMAORChP/anS1o79GwHXO2AK1/h+l1kpywQpPrYYYroDrmPZE/yWMiufDsascoF
+         OLfw0QrP0qttpoClFMjgNKc8UoPuf2u3EbtL+JKqUsVnx0s+fHYPrwPOiysst7WXYUE4
+         FUzN8Gk9kCSOktftMRWy2E51SlIaTtlyrVESbO6KanMkf4BVwX+YmFT1EMvmNOATbh9/
+         kw+A==
+In-Reply-To: <20230602081135.75424-2-wuyun.abel-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="iso-8859-1"
-To: =?UTF-8?Q?Michal_Koutn=c3=bd?= <mkoutny-IBi9RG/b67k@public.gmane.org>
-Cc: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cuigaosheng1-hv44wF8Li93QT0dZR+AlfA@public.gmane.org
+Content-Transfer-Encoding: 7bit
+To: Abel Wu <wuyun.abel-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
+Cc: "David S . Miller" <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>, Eric Dumazet <edumazet-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Jakub Kicinski <kuba-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Paolo Abeni <pabeni-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Muchun Song <muchun.song-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Simon Horman <simon.horman-JqlR5BE4aJhWk0Htik3J/w@public.gmane.org>, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-Hi Michal,
+On Fri, Jun 02, 2023 at 04:11:33PM +0800, Abel Wu wrote:
+> The callers of mem_cgroup_under_socket_pressure() should always make
+> sure that (mem_cgroup_sockets_enabled && sk->sk_memcg) is true. So
+> instead of coding around all the callsites, put the dependencies into
+> mem_cgroup_under_socket_pressure() to avoid redundancy and possibly
+> bugs.
+> 
+> This change might also introduce slight function call overhead *iff*
+> the function gets expanded in the future. But for now this change
+> doesn't make binaries different (checked by vimdiff) except the one
+> net/ipv4/tcp_input.o (by scripts/bloat-o-meter), which is probably
+> negligible to performance:
+> 
+> add/remove: 0/0 grow/shrink: 1/2 up/down: 5/-5 (0)
+> Function                                     old     new   delta
+> tcp_grow_window                              573     578      +5
+> tcp_try_rmem_schedule                       1083    1081      -2
+> tcp_check_space                              324     321      -3
+> Total: Before=44647, After=44647, chg +0.00%
+> 
+> So folding the dependencies into mem_cgroup_under_socket_pressure()
+> is generally a good thing and provides better readablility.
+> 
 
-On 2023/6/2 1:33, Michal Koutn=C3=BD wrote:
-> Hello Jianfeng.
->=20
-> On Fri, May 26, 2023 at 07:41:39PM +0800, Xiu Jianfeng <xiujianfeng-XF6Jl=
-duFytWkHkcT6e4Xnw@public.gmane.org> wrote:
->> The race that cause this bug can be shown as below:
->>
->> (hotplug cpu)                | (umount cpuset)
->> mutex_lock(&cpuset_mutex)    | mutex_lock(&cgroup_mutex)
->> cpuset_hotplug_workfn        |
->>  rebuild_root_domains        |  rebind_subsystems
->>   update_tasks_root_domain   |   spin_lock_irq(&css_set_lock)
->>    css_task_iter_start       |    list_move_tail(&cset->e_cset_node[ss->=
-id]
->>    while(css_task_iter_next) |                  &dcgrp->e_csets[ss->id]);
->>    css_task_iter_end         |   spin_unlock_irq(&css_set_lock)
->> mutex_unlock(&cpuset_mutex)  | mutex_unlock(&cgroup_mutex)
->=20
-> Good catch!
->=20
->>
->> Inside css_task_iter_start/next/end, css_set_lock is hold and then
->> released, so when iterating task(left side), the css_set may be moved to
->> another list(right side), then it->cset_head points to the old list head
->> and it->cset_pos->next points to the head node of new list, which can't
->> be used as struct css_set.
->=20
-> I find your analysis sane -- the stale it->cset_head is problematic.
->=20
->> To fix this issue, introduce CSS_TASK_ITER_STOPPED flag for css_task_ite=
-r.
->> when moving css_set to dcgrp->e_csets[ss->id] in rebind_subsystems(), st=
-op
->> the task iteration.
->=20
-> Does it mean that iteration would not yield all tasks that are
-> associated with give cs->css? That sounds like broken correctness of the
-> iterator.
->=20
-> I may suggest a slightly different approach that should not affect
-> running iterators.
-> - I had to switch from all css_sets to only scgrp's css_sets since
->   css_set_table order of css_sets may be different than scgrp->e_csets
-> - Not sure how portable is using array element as a `member` argument of
->   offsetof (in expansion of list_for_each_entry_safe).
->=20
-> This is only to illustrate the idea, i.e. merely compile tested.
->=20
-> WDYT?
-
-Yes, I think this approach is better for it doesn't affect the running
-iterators, and we have tested it, it can solve this issue, thank you.
-
-So if maintainers agree, I would send a v2.
-
->=20
-> Regards,
-> Michal
->=20
-> diff --git a/kernel/cgroup/cgroup.c b/kernel/cgroup/cgroup.c
-> index 625d7483951c..e67d2a0776c1 100644
-> --- a/kernel/cgroup/cgroup.c
-> +++ b/kernel/cgroup/cgroup.c
-> @@ -1798,7 +1798,7 @@ int rebind_subsystems(struct cgroup_root *dst_root,=
- u16 ss_mask)
->  {
->  	struct cgroup *dcgrp =3D &dst_root->cgrp;
->  	struct cgroup_subsys *ss;
-> -	int ssid, i, ret;
-> +	int ssid, ret;
->  	u16 dfl_disable_ss_mask =3D 0;
-> =20
->  	lockdep_assert_held(&cgroup_mutex);
-> @@ -1842,7 +1842,8 @@ int rebind_subsystems(struct cgroup_root *dst_root,=
- u16 ss_mask)
->  		struct cgroup_root *src_root =3D ss->root;
->  		struct cgroup *scgrp =3D &src_root->cgrp;
->  		struct cgroup_subsys_state *css =3D cgroup_css(scgrp, ss);
-> -		struct css_set *cset;
-> +		struct css_set *cset, *cset_pos;
-> +		struct css_task_iter *it;
-> =20
->  		WARN_ON(!css || cgroup_css(dcgrp, ss));
-> =20
-> @@ -1860,9 +1861,18 @@ int rebind_subsystems(struct cgroup_root *dst_root=
-, u16 ss_mask)
->  		css->cgroup =3D dcgrp;
-> =20
->  		spin_lock_irq(&css_set_lock);
-> -		hash_for_each(css_set_table, i, cset, hlist)
-> +		WARN_ON(!list_empty(&dcgrp->e_csets[ss->id]));
-> +		list_for_each_entry_safe(cset, cset_pos, &scgrp->e_csets[ss->id], e_cs=
-et_node[ss->id]) {
->  			list_move_tail(&cset->e_cset_node[ss->id],
->  				       &dcgrp->e_csets[ss->id]);
-> +			/* all css_sets of scgrp together in same order to dcgrp,
-> +			 * patch in-flight iterators to preserve correct iteration,
-> +			 * cset_head is under css_set_lock */
-> +			list_for_each_entry(it, &cset->task_iters, iters_node) {
-> +				if (it->cset_head =3D=3D &scgrp->e_csets[ss->id])
-> +					it->cset_head =3D &dcgrp->e_csets[ss->id];
-> +			}
-> +		}
->  		spin_unlock_irq(&css_set_lock);
-> =20
->  		if (ss->css_rstat_flush) {
+I don't see how it is improving readability. If you have removed the use
+of mem_cgroup_sockets_enabled completely from the networking then I can
+understand but this change IMHO will actually decrease the readability
+because the later readers will have to reason why we are doing this
+check at some places but not other.
 
