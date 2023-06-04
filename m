@@ -1,103 +1,136 @@
-From: Chris Down <chris-6Bi1550iOqEnzZ6mRAm98g@public.gmane.org>
-Subject: Re: [PATCH] Documentation: Clarify usage of memory limits
-Date: Sat, 3 Jun 2023 22:33:50 +0100
-Message-ID: <ZHuxvjP4QlsT1saH@chrisdown.name>
-References: <20230601183820.3839891-1-schatzberg.dan@gmail.com>
+From: =?utf-8?B?56iL5Z6y5rabIENoZW5na2FpdGFvIENoZW5n?= 
+        <chengkaitao@didiglobal.com>
+Subject: Re: [PATCH v3 0/2] memcontrol: support cgroup level OOM protection
+Date: Sun, 4 Jun 2023 08:05:53 +0000
+Message-ID: <C5E5137F-8754-40CC-9F0C-0EB3D8AC1EC2@didiglobal.com>
+References: <ZHSwhyGnPteiLKs/@dhcp22.suse.cz>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=chrisdown.name; s=google; t=1685828031; x=1688420031;
-        h=user-agent:in-reply-to:content-disposition:mime-version:references
-         :message-id:subject:cc:to:from:date:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=VPgdBuOb3Mk3v1wiPzP0vcApMpycUA28Au999GkAKxA=;
-        b=D3Y8+UlBvD28MImoMBw8EQN27ymlp+CpIHs8DUTXSuWC/2z4HjNVGgQw6xlaEWYl7y
-         tBzUH8yq2WdHoBJBJCMkaXOabLKHqgpvAvXB+x2Lq/oldMQ6qb87FFv3ro42Gx3wP4+p
-         Sf398UgV54hGA+VSakDaldq+PoP4qE3KtkEIQ=
-Content-Disposition: inline
-In-Reply-To: <20230601183820.3839891-1-schatzberg.dan-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <linux-doc-owner@vger.kernel.org>
+In-Reply-To: <ZHSwhyGnPteiLKs/@dhcp22.suse.cz>
+Content-Language: zh-CN
+Content-ID: <53CFA6917DA8D6419DBF6114AC5F3BE4@didichuxing.com>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"; format="flowed"
-Content-Transfer-Encoding: 7bit
-To: Dan Schatzberg <schatzberg.dan-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Jonathan Corbet <corbet-T1hC0tSOHrs@public.gmane.org>, "open list:CONTROL GROUP (CGROUP)" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "open list:DOCUMENTATION" <linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, open list <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+To: Michal Hocko <mhocko@suse.com>
+Cc: "tj@kernel.org" <tj@kernel.org>, "lizefan.x@bytedance.com" <lizefan.x@bytedance.com>, "hannes@cmpxchg.org" <hannes@cmpxchg.org>, "corbet@lwn.net" <corbet@lwn.net>, "roman.gushchin@linux.dev" <roman.gushchin@linux.dev>, "shakeelb@google.com" <shakeelb@google.com>, "akpm@linux-foundation.org" <akpm@linux-foundation.org>, "brauner@kernel.org" <brauner@kernel.org>, "muchun.song@linux.dev" <muchun.song@linux.dev>, "viro@zeniv.linux.org.uk" <viro@zeniv.linux.org.uk>, "zhengqi.arch@bytedance.com" <zhengqi.arch@bytedance.com>, "ebiederm@xmission.com" <ebiederm@xmission.com>, "Liam.Howlett@oracle.com" <Liam.Howlett@oracle.com>, "chengzhihao1@huawei.com" <chengzhihao1@huawei.com>, "pilgrimtao@gmail.com" <pilgrimtao@gmail.com>, "haolee.swjtu@gmail.com" <haolee.swjtu@gmail.com>
 
-Dan Schatzberg writes:
->The existing documentation refers to memory.high as the "main mechanism
->to control memory usage." This seems incorrect to me - memory.high can
->result in reclaim pressure which simply leads to stalls unless some
->external component observes and actions on it (e.g. systemd-oomd can be
->used for this purpose). While this is feasible, users are unaware of
->this interaction and are led to believe that memory.high alone is an
->effective mechanism for limiting memory.
->
->The documentation should recommend the use of memory.max as the
->effective way to enforce memory limits - it triggers reclaim and results
->in OOM kills by itself.
->
->Signed-off-by: Dan Schatzberg <schatzberg.dan-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-
-Oof, the documentation is very out of date indeed -- no wonder people were 
-confused by other advice to only use memory.high with something external 
-monitoring the cgroup.
-
-Thanks!
-
-Acked-by: Chris Down <chris-6Bi1550iOqEnzZ6mRAm98g@public.gmane.org>
-
->---
-> Documentation/admin-guide/cgroup-v2.rst | 22 ++++++++++------------
-> 1 file changed, 10 insertions(+), 12 deletions(-)
->
->diff --git a/Documentation/admin-guide/cgroup-v2.rst b/Documentation/admin-guide/cgroup-v2.rst
->index f67c0829350b..e592a9364473 100644
->--- a/Documentation/admin-guide/cgroup-v2.rst
->+++ b/Documentation/admin-guide/cgroup-v2.rst
->@@ -1213,23 +1213,25 @@ PAGE_SIZE multiple when read back.
-> 	A read-write single value file which exists on non-root
-> 	cgroups.  The default is "max".
->
->-	Memory usage throttle limit.  This is the main mechanism to
->-	control memory usage of a cgroup.  If a cgroup's usage goes
->+	Memory usage throttle limit.  If a cgroup's usage goes
-> 	over the high boundary, the processes of the cgroup are
-> 	throttled and put under heavy reclaim pressure.
->
-> 	Going over the high limit never invokes the OOM killer and
->-	under extreme conditions the limit may be breached.
->+	under extreme conditions the limit may be breached. The high
->+	limit should be used in scenarios where an external process
->+	monitors the limited cgroup to alleviate heavy reclaim
->+	pressure.
->
->   memory.max
-> 	A read-write single value file which exists on non-root
-> 	cgroups.  The default is "max".
->
->-	Memory usage hard limit.  This is the final protection
->-	mechanism.  If a cgroup's memory usage reaches this limit and
->-	can't be reduced, the OOM killer is invoked in the cgroup.
->-	Under certain circumstances, the usage may go over the limit
->-	temporarily.
->+	Memory usage hard limit.  This is the main mechanism to limit
->+	memory usage of a cgroup.  If a cgroup's memory usage reaches
->+	this limit and can't be reduced, the OOM killer is invoked in
->+	the cgroup. Under certain circumstances, the usage may go
->+	over the limit temporarily.
->
-> 	In default configuration regular 0-order allocations always
-> 	succeed unless OOM killer chooses current task as a victim.
->@@ -1238,10 +1240,6 @@ PAGE_SIZE multiple when read back.
-> 	Caller could retry them differently, return into userspace
-> 	as -ENOMEM or silently ignore in cases like disk readahead.
->
->-	This is the ultimate protection mechanism.  As long as the
->-	high limit is used and monitored properly, this limit's
->-	utility is limited to providing the final safety net.
->-
->   memory.reclaim
-> 	A write-only nested-keyed file which exists for all cgroups.
->
->-- 
->2.34.1
->
+QXQgMjAyMy0wNS0yOSAyMjowMjo0NywgIk1pY2hhbCBIb2NrbyIgPG1ob2Nrb0BzdXNlLmNvbT4g
+d3JvdGU6DQo+T24gVGh1IDI1LTA1LTIzIDA3OjM1OjQxLCDnqIvlnrLmtpsgQ2hlbmdrYWl0YW8g
+Q2hlbmcgd3JvdGU6DQo+PiBBdCAyMDIzLTA1LTIyIDIxOjAzOjUwLCAiTWljaGFsIEhvY2tvIiA8
+bWhvY2tvQHN1c2UuY29tPiB3cm90ZToNCj5bLi4uXQ0KPj4gPj4gSSBoYXZlIGNyZWF0ZWQgYSBu
+ZXcgaW5kaWNhdG9yIG9vbV9raWxsX2luaGVyaXQgdGhhdCBtYWludGFpbnMgYSBuZWdhdGl2ZSBj
+b3JyZWxhdGlvbiANCj4+ID4+IHdpdGggbWVtb3J5Lm9vbS5wcm90ZWN0LCBzbyB3ZSBoYXZlIGEg
+cnVsZXIgdG8gbWVhc3VyZSB0aGUgb3B0aW1hbCB2YWx1ZSBvZiANCj4+ID4+IG1lbW9yeS5vb20u
+cHJvdGVjdC4NCj4+ID4NCj4+ID5BbiBleGFtcGxlIG1pZ2h0IGhlbHAgaGVyZS4NCj4+IA0KPj4g
+SW4gbXkgdGVzdGluZyBjYXNlLCBieSBhZGp1c3RpbmcgbWVtb3J5Lm9vbS5wcm90ZWN0LCBJIHdh
+cyBhYmxlIHRvIHNpZ25pZmljYW50bHkgDQo+PiByZWR1Y2UgdGhlIG9vbV9raWxsX2luaGVyaXQg
+b2YgdGhlIGNvcnJlc3BvbmRpbmcgY2dyb3VwLiBJbiBhIHBoeXNpY2FsIG1hY2hpbmUgDQo+PiB3
+aXRoIHNldmVyZWx5IG92ZXJzb2xkIG1lbW9yeSwgSSBkaXZpZGVkIGFsbCBjZ3JvdXBzIGludG8g
+dGhyZWUgY2F0ZWdvcmllcyBhbmQgDQo+PiBjb250cm9sbGVkIHRoZWlyIHByb2JhYmlsaXR5IG9m
+IGJlaW5nIHNlbGVjdGVkIGJ5IHRoZSBvb20ta2lsbGVyIHRvIDAlLCUgMjAsIA0KPj4gYW5kIDgw
+JSwgcmVzcGVjdGl2ZWx5Lg0KPg0KPkkgbWlnaHQgYmUganVzdCBkZW5zZSBidXQgSSBhbSBsb3N0
+LiBDYW4gd2UgZm9jdXMgb24gdGhlIGJhcmVib25lDQo+c2VtYW50aWMgb2YgdGhlIGdyb3VwIG9v
+bSBzZWxlY3Rpb24gYW5kIGtpbGxpbmcgZmlyc3QuIE5vIG1hZ2ljDQo+YXV0by10dW5pbmcgYXQg
+dGhpcyBzdGFnZSBwbGVhc2UuDQo+DQo+PiA+PiA+PiBhYm91dCB0aGUgc2VtYW50aWNzIG9mIG5v
+bi1sZWFmIG1lbWNncyBwcm90ZWN0aW9uLA0KPj4gPj4gPj4gSWYgYSBub24tbGVhZiBtZW1jZydz
+IG9vbV9wcm90ZWN0IHF1b3RhIGlzIHNldCwgaXRzIGxlYWYgbWVtY2cgd2lsbCBwcm9wb3J0aW9u
+YWxseSANCj4+ID4+ID4+IGNhbGN1bGF0ZSB0aGUgbmV3IGVmZmVjdGl2ZSBvb21fcHJvdGVjdCBx
+dW90YSBiYXNlZCBvbiBub24tbGVhZiBtZW1jZydzIHF1b3RhLg0KPj4gPj4gPg0KPj4gPj4gPlNv
+IHRoZSBub24tbGVhZiBtZW1jZyBpcyBuZXZlciB1c2VkIGFzIGEgdGFyZ2V0PyBXaGF0IGlmIHRo
+ZSB3b3JrbG9hZCBpcw0KPj4gPj4gPmRpc3RyaWJ1dGVkIG92ZXIgc2V2ZXJhbCBzdWItZ3JvdXBz
+PyBPdXIgY3VycmVudCBvb20uZ3JvdXANCj4+ID4+ID5pbXBsZW1lbnRhdGlvbiB0cmF2ZXJzZXMg
+dGhlIHRyZWUgdG8gZmluZCBhIGNvbW1vbiBhbmNlc3RvciBpbiB0aGUgb29tDQo+PiA+PiA+ZG9t
+YWluIHdpdGggdGhlIG9vbS5ncm91cC4NCj4+ID4+IA0KPj4gPj4gSWYgdGhlIG9vbV9wcm90ZWN0
+IHF1b3RhIG9mIHRoZSBwYXJlbnQgbm9uLWxlYWYgbWVtY2cgaXMgbGVzcyB0aGFuIHRoZSBzdW0g
+b2YgDQo+PiA+PiBzdWItZ3JvdXBzIG9vbV9wcm90ZWN0IHF1b3RhLCB0aGUgb29tX3Byb3RlY3Qg
+cXVvdGEgb2YgZWFjaCBzdWItZ3JvdXAgd2lsbCANCj4+ID4+IGJlIHByb3BvcnRpb25hbGx5IHJl
+ZHVjZWQNCj4+ID4+IElmIHRoZSBvb21fcHJvdGVjdCBxdW90YSBvZiB0aGUgcGFyZW50IG5vbi1s
+ZWFmIG1lbWNnIGlzIGdyZWF0ZXIgdGhhbiB0aGUgc3VtIA0KPj4gPj4gb2Ygc3ViLWdyb3VwcyBv
+b21fcHJvdGVjdCBxdW90YSwgdGhlIG9vbV9wcm90ZWN0IHF1b3RhIG9mIGVhY2ggc3ViLWdyb3Vw
+IA0KPj4gPj4gd2lsbCBiZSBwcm9wb3J0aW9uYWxseSBpbmNyZWFzZWQNCj4+ID4+IFRoZSBwdXJw
+b3NlIG9mIGRvaW5nIHNvIGlzIHRoYXQgdXNlcnMgY2FuIHNldCBvb21fcHJvdGVjdCBxdW90YSBh
+Y2NvcmRpbmcgdG8gDQo+PiA+PiB0aGVpciBvd24gbmVlZHMsIGFuZCB0aGUgc3lzdGVtIG1hbmFn
+ZW1lbnQgcHJvY2VzcyBjYW4gc2V0IGFwcHJvcHJpYXRlIA0KPj4gPj4gb29tX3Byb3RlY3QgcXVv
+dGEgb24gdGhlIHBhcmVudCBub24tbGVhZiBtZW1jZyBhcyB0aGUgZmluYWwgY292ZXIsIHNvIHRo
+YXQgDQo+PiA+PiB0aGUgc3lzdGVtIG1hbmFnZW1lbnQgcHJvY2VzcyBjYW4gaW5kaXJlY3RseSBt
+YW5hZ2UgYWxsIHVzZXIgcHJvY2Vzc2VzLg0KPj4gPg0KPj4gPkkgZ3Vlc3MgdGhhdCB5b3UgYXJl
+IHRyeWluZyB0byBzYXkgdGhhdCB0aGUgb29tIHByb3RlY3Rpb24gaGFzIGENCj4+ID5zdGFuZGFy
+ZCBoaWVyYXJjaGljYWwgYmVoYXZpb3IuIEFuZCB0aGF0IGlzIGZpbmUsIHdlbGwsIGluIGZhY3Qg
+aXQgaXMNCj4+ID5tYW5kYXRvcnkgZm9yIGFueSBjb250cm9sIGtub2IgdG8gaGF2ZSBhIHNhbmUg
+aGllcmFyY2hpY2FsIHByb3BlcnRpZXMuDQo+PiA+QnV0IHRoYXQgZG9lc24ndCBhZGRyZXNzIG15
+IGFib3ZlIHF1ZXN0aW9uLiBMZXQgbWUgdHJ5IGFnYWluLiBXaGVuIGlzIGENCj4+ID5ub24tbGVh
+ZiBtZW1jZyBwb3RlbnRpYWxseSBzZWxlY3RlZCBhcyB0aGUgb29tIHZpY3RpbT8gSXQgZG9lc24n
+dCBoYXZlDQo+PiA+YW55IHRhc2tzIGRpcmVjdGx5IGJ1dCBpdCBtaWdodCBiZSBhIHN1aXRhYmxl
+IHRhcmdldCB0byBraWxsIGEgbXVsdGkNCj4+ID5tZW1jZyBiYXNlZCB3b3JrbG9hZCAoZS5nLiBh
+IGZ1bGwgY29udGFpbmVyKS4NCj4+IA0KPj4gSWYgbm9ubGVhZiBtZW1jZyBoYXZlIHRoZSBoaWdo
+ZXIgbWVtb3J5IHVzYWdlIGFuZCB0aGUgc21hbGxlciANCj4+IG1lbW9yeS5vb20ucHJvdGVjdCwg
+aXQgd2lsbCBoYXZlIHRoZSBoaWdoZXIgdGhlIHByb2JhYmlsaXR5IGJlaW5nIA0KPj4gc2VsZWN0
+ZWQgYnkgdGhlIGtpbGxlci4gSWYgdGhlIG5vbi1sZWFmIG1lbWNnIGlzIHNlbGVjdGVkIGFzIHRo
+ZSBvb20gDQo+PiB2aWN0aW0sIE9PTS1raWxsZXIgd2lsbCBjb250aW51ZSB0byBzZWxlY3QgdGhl
+IGFwcHJvcHJpYXRlIGNoaWxkIA0KPj4gbWVtY2cgZG93bndhcmRzIHVudGlsIHRoZSBsZWFmIG1l
+bWNnIGlzIHNlbGVjdGVkLg0KPg0KPlBhcmVudCBtZW1jZyBoYXMgbW9yZSBvciBlcXVhbCBtZW1v
+cnkgY2hhcmdlZCB0aGFuIGl0cyBjaGlsZChyZW4pIGJ5DQo+ZGVmaW5pdGlvbi4gTGV0IG1lIHRy
+eSB0byBhc2sgZGlmZmVyZW50bHkuIFNheSB5b3UgaGF2ZSB0aGUgZm9sbG93aW5nDQo+aGllcmFy
+Y2h5DQo+DQo+CQkgIHJvb3QNCj4JCS8gICAgIFwNCj4gICAgICAgY29udGFpbmVyX0EgICAgIGNv
+bnRhaW5lcl9CDQo+ICAgICAob29tLnByb3Q9MTAwTSkgICAob29tLnByb3Q9MjAwTSkNCj4gICAg
+ICh1c2FnZT0xMjBNKSAgICAgICh1c2FnZT0xODBNKQ0KPiAgICAgLyAgICAgfCAgICAgXA0KPiAg
+ICBBICAgICAgQiAgICAgIEMNCj4gICAgICAgICAgICAgICAgIC8gXA0KPgkJQzEgIEMyDQo+DQo+
+DQo+Y29udGFpbmVyX0IgaXMgcHJvdGVjdGVkIHNvIGl0IHNob3VsZCBiZSBleGNsdWRlZC4gQ29y
+cmVjdD8gU28gd2UgYXJlIGF0DQo+Y29udGFpbmVyX0EgdG8gY2hvc2UgZnJvbS4gVGhlcmUgYXJl
+IG11bHRpcGxlIHdheXMgdGhlIHN5c3RlbSBhbmQNCj5jb250aW5lciBhZG1pbiBtaWdodCB3YW50
+IHRvIGFjaGlldmUuDQo+MSkgc3lzdGVtIGFkbWluIG1pZ2h0IHdhbnQgdG8gc2h1dCBkb3duIHRo
+ZSB3aG9sZSBjb250YWluZXIuDQo+MikgY29udGluZXIgYWRtaW4gbWlnaHQgd2FudCB0byBzaHV0
+IHRoZSB3aG9sZSBjb250YWluZXIgZG93bg0KPjMpIGNvbnQuIGFkbWluIG1pZ2h0IHdhbnQgdG8g
+c2h1dCBkb3duIGEgd2hvbGUgc3ViIGdyb3VwIChlLmcuIEMgYXMgaXQNCj4gICBpcyBhIHNlbGYg
+Y29udGFpbmVkIHdvcmtsb2FkIGFuZCBraWxsaW5nIHBvcnRpb24gb2YgaXQgd2lsbCBwdXQgaXQg
+aW50bw0KPiAgIGluY29uc2lzdGVudCBzdGF0ZSkuDQo+NCkgY29udC4gYWRtaW4gbWlnaHQgd2Fu
+dCB0byBraWxsIHRoZSBtb3N0IGV4Y2VzcyBjZ3JvdXAgd2l0aCB0YXNrcyAoaS5lLiBhDQo+ICAg
+bGVhZiBtZW1jZykuDQo+NSkgYWRtaW4gbWlnaHQgd2FudCB0byBraWxsIGEgcHJvY2VzcyBpbiB0
+aGUgbW9zdCBleGNlc3MgbWVtY2cuDQo+DQo+Tm93IHdlIGFscmVhZHkgaGF2ZSBvb20uZ3JvdXAg
+dGhpbmd5IHRoYXQgY2FuIGRyaXZlIHRoZSBncm91cCBraWxsaW5nDQo+cG9saWN5IGJ1dCBpdCBp
+cyBub3QgcmVhbGx5IGNsZWFyIGhvdyB5b3Ugd2FudCB0byBpbmNvcnBvcmF0ZSB0aGF0IHRvDQo+
+dGhlIHByb3RlY3Rpb24uDQo+DQo+QWdhaW4sIEkgdGhpbmsgdGhhdCBhbiBvb20ucHJvdGVjdGlv
+biBtYWtlcyBzZW5zZSBidXQgdGhlIHNlbWFudGljIGhhcw0KPnRvIGJlIHZlcnkgY2FyZWZ1bGx5
+IHRob3VnaHQgdGhyb3VnaCBiZWNhdXNlIGl0IGlzIHF1aXRlIGVhc3kgdG8gY3JlYXRlDQo+Y29y
+bmVyIGNhc2VzIGFuZCB3ZWlyZCBiZWhhdmlvci4gSSBhbHNvIHRoaW5rIHRoYXQgb29tLmdyb3Vw
+IGhhcyB0byBiZQ0KPmNvbnNpc3RlbnQgd2l0aCB0aGUgcHJvdGVjdGlvbi4NCg0KVGhlIGJhcmVi
+b25lIHNlbWFudGljIG9mIHRoZSBmdW5jdGlvbiBpbXBsZW1lbnRlZCBieSBteSBwYXRjaCBhcmUg
+DQpzdW1tYXJpemVkIGFzIGZvbGxvd3M6DQpNZW1jZyBvbmx5IGFsbG93cyBwcm9jZXNzZXMgaW4g
+dGhlIG1lbWNnIHRvIGJlIHNlbGVjdGVkIGJ5IHRoZWlyIA0KYW5jZXN0b3IncyBPT00ga2lsbGVy
+IHdoZW4gdGhlIG1lbW9yeSB1c2FnZSBleGNlZWRzICJvb20ucHJvdGVjdCINCg0KSXQgc2hvdWxk
+IGJlIG5vdGVkIHRoYXQgIm9vbS5wcm90ZWN0IiBhbmQgIm9vbS5ncm91cCIgYXJlIGNvbXBsZXRl
+bHkgDQpkaWZmZXJlbnQgdGhpbmdzLCBhbmQga25lYWRpbmcgdGhlbSB0b2dldGhlciBtYXkgbWFr
+ZSB0aGUgZXhwbGFuYXRpb24gDQptb3JlIGNvbmZ1c2luZy4NCg0KPj4gPj4gPkFsbCB0aGF0IGJl
+aW5nIHNhaWQgYW5kIHdpdGggdGhlIHVzZWNhc2UgZGVzY3JpYmVkIG1vcmUgc3BlY2lmaWNhbGx5
+LiBJDQo+PiA+PiA+Y2FuIHNlZSB0aGF0IG1lbWNnIGJhc2VkIG9vbSB2aWN0aW0gc2VsZWN0aW9u
+IG1ha2VzIHNvbWUgc2Vuc2UuIFRoYXQNCj4+ID4+ID5tZW5hcyB0aGF0IGl0IGlzIGFsd2F5cyBh
+IG1lbWNnIHNlbGVjdGVkIGFuZCBhbGwgdGFza3Mgd2l0aGluZyBraWxsZWQuDQo+PiA+PiA+TWVt
+Y2cgYmFzZWQgcHJvdGVjdGlvbiBjYW4gYmUgdXNlZCB0byBldmFsdWF0ZSB3aGljaCBtZW1jZyB0
+byBjaG9vc2UgYW5kDQo+PiA+PiA+dGhlIG92ZXJhbGwgc2NoZW1lIHNob3VsZCBiZSBzdGlsbCBt
+YW5hZ2VhYmxlLiBJdCB3b3VsZCBpbmRlZWQgcmVzZW1ibGUNCj4+ID4+ID5tZW1vcnkgcHJvdGVj
+dGlvbiBmb3IgdGhlIHJlZ3VsYXIgcmVjbGFpbS4NCj4+ID4+ID4NCj4+ID4+ID5PbmUgdGhpbmcg
+dGhhdCBpcyBzdGlsbCBub3QgcmVhbGx5IGNsZWFyIHRvIG1lIGlzIHRvIGhvdyBncm91cCB2cy4N
+Cj4+ID4+ID5ub24tZ3JvdXAgb29tcyBjb3VsZCBiZSBoYW5kbGVkIGdyYWNlZnVsbHkuIFJpZ2h0
+IG5vdyB3ZSBjYW4gaGFuZGxlIHRoYXQNCj4+ID4+ID5iZWNhdXNlIHRoZSBvb20gc2VsZWN0aW9u
+IGlzIHN0aWxsIHByb2Nlc3MgYmFzZWQgYnV0IHdpdGggdGhlIHByb3RlY3Rpb24NCj4+ID4+ID50
+aGlzIHdpbGwgYmVjb21lIG1vcmUgcHJvYmxlbWF0aWMgYXMgZXhwbGFpbmVkIHByZXZpb3VzbHku
+IEVzc2VudGlhbGx5DQo+PiA+PiA+d2Ugd291bGQgbmVlZCB0byBlbmZvcmNlIHRoZSBvb20gc2Vs
+ZWN0aW9uIHRvIGJlIG1lbWNnIGJhc2VkIGZvciBhbGwNCj4+ID4+ID5tZW1jZ3MuIE1heWJlIGEg
+bW91bnQga25vYj8gV2hhdCBkbyB5b3UgdGhpbms/DQo+PiA+PiANCj4+ID4+IFRoZXJlIGlzIGEg
+ZnVuY3Rpb24gaW4gdGhlIHBhdGNoIHRvIGRldGVybWluZSB3aGV0aGVyIHRoZSBvb21fcHJvdGVj
+dCANCj4+ID4+IG1lY2hhbmlzbSBpcyBlbmFibGVkLiBBbGwgbWVtb3J5Lm9vbS5wcm90ZWN0IG5v
+ZGVzIGRlZmF1bHQgdG8gMCwgc28gdGhlIGZ1bmN0aW9uIA0KPj4gPj4gPGlzX3Jvb3Rfb29tX3By
+b3RlY3Q+IHJldHVybnMgMCBieSBkZWZhdWx0Lg0KPj4gPg0KPj4gPkhvdyBjYW4gYW4gYWRtaW4g
+ZGV0ZXJtaW5lIHdoYXQgaXMgdGhlIGN1cnJlbnQgb29tIGRldGVjdGlvbiBsb2dpYz8NCj4+IA0K
+Pj4gVGhlIG1lbW9yeS5vb20ucHJvdGVjdCBhcmUgc2V0IGJ5IHRoZSBhZG1pbmlzdHJhdG9yIHRo
+ZW1zZWx2ZXMsIGFuZCB0aGV5IA0KPj4gbXVzdCBrbm93IHdoYXQgdGhlIGN1cnJlbnQgT09NIHBv
+bGljeSBpcy4gUmVhZGluZyB0aGUgbWVtb3J5Lm9vbS5wcm90ZWN0IA0KPj4gb2YgdGhlIGZpcnN0
+IGxldmVsIGNncm91cCBkaXJlY3RvcnkgYW5kIG9ic2VydmluZyB3aGV0aGVyIGl0IGlzIDAgY2Fu
+IGFsc28gDQo+PiBkZXRlcm1pbmUgd2hldGhlciB0aGUgb29tLnByb3RlY3QgcG9saWN5IGlzIGVu
+YWJsZWQuDQo+DQo+SG93IGRvIHlvdSBhY2hpZXZlIHRoYXQgZnJvbSB3aXRoaW5nIGEgY29udGFp
+bmVyIHdoaWNoIGRvZXNuJ3QgaGF2ZSBhDQo+ZnVsbCB2aXNpYmlsaXR5IHRvIHRoZSBjZ3JvdXAg
+dHJlZT8NCg0KVGhlIGNvbnRhaW5lciBkb2VzIG5vdCBuZWVkIHRvIGhhdmUgZnVsbCB2aXNpYmls
+aXR5IHRvIHRoZSBjZ3JvdXAgdHJlZSwgZnVuY3Rpb24gDQoib29tLnByb3RlY3QiIHJlcXVpcmVz
+IGl0IHRvIG9ubHkgZm9jdXMgb24gbG9jYWwgY2dyb3VwIGFuZCBzdWJncm91cCB0cmVlcy4NCg0K
+LS0NClRoYW5rcyBmb3IgeW91ciBjb21tZW50IQ0KY2hlbmdrYWl0YW8NCg0K
