@@ -1,214 +1,99 @@
-From: Yosry Ahmed <yosryahmed@google.com>
-Subject: Re: [PATCH v3 0/2] memcontrol: support cgroup level OOM protection
-Date: Sun, 4 Jun 2023 01:25:42 -0700
-Message-ID: <CAJD7tkaw_7vYACsyzAtY9L0ZVC0B=XJEWgG=Ad_dOtL_pBDDvQ@mail.gmail.com>
-References: <ZFd5bpfYc3nPEVie@dhcp22.suse.cz> <66F9BB37-3BE1-4B0F-8DE1-97085AF4BED2@didiglobal.com>
- <ZFkEqhAs7FELUO3a@dhcp22.suse.cz>
+From: Willem de Bruijn <willemdebruijn.kernel-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Subject: Re: [PATCH net-next v5 2/3] sock: Always take memcg pressure into consideration
+Date: Sun, 4 Jun 2023 12:36:25 +0200
+Message-ID: <CAF=yD-LFQRreWq1RMkvLw9Nj3NQpJwbDSCfECUhh-aVchR-jsg@mail.gmail.com>
+References: <20230602081135.75424-1-wuyun.abel@bytedance.com>
+ <20230602081135.75424-3-wuyun.abel@bytedance.com> <20230602204159.vo7fmuvh3y2pdfi5@google.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: quoted-printable
-Return-path: <linux-fsdevel-owner@vger.kernel.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20221208; t=1685867179; x=1688459179;
+        d=gmail.com; s=20221208; t=1685875025; x=1688467025;
         h=content-transfer-encoding:cc:to:subject:message-id:date:from
          :in-reply-to:references:mime-version:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=AFfM5d2nTHRmpRlO8mIDJZgjXTrnnKiTQlq61ReJsa0=;
-        b=JmQ+twu4hyc6GP5UJQA6Eu29aA0DwIhCrRkHmDjwYwe/BSzxhojMr8b26mJnMv8/jg
-         BtIXW2q5PfM1UgknUh9nKTTPZ8XLNMBwVvrOGlXr95KLX76vfLyP1M++KLH7kIrYQ/yY
-         BOVKOwnF9SIi+7FHkP0XtD+3ZADPO3kRukwbA7EBKhI1h9xA3NasnueOukU9xlEyLM7I
-         FWugG+Ccy00cHRUGTSQCmWT49iWdS0QpCS0bf4ReiAWadq53Mici8wKzHFjfcbFLSVOa
-         w2SfgAiOpXSoxFYDV2PvgszyHJJp2+rsk6TshffX3hYXYZ7NG9ghdkDzN3FOWDJDAbwk
-         Lotw==
-In-Reply-To: <ZFkEqhAs7FELUO3a@dhcp22.suse.cz>
+        bh=J+cW+W+2ToTmL5Y4D5MrCTf7iqNWcTE2j9X0ITTZBzs=;
+        b=JExgNb84ODfc1n2XYy4S5jPF5F4lLgn7e28BYdaq3YfVbJndWp2rO96Rdh2dExcsHU
+         o6OARLsIs0cAT76nDYzVxjtwNmLABQakff6/4TpMI/yozfxXxqm6sFLyqf/w5LZIXBbJ
+         zC+DbBMB32zQiqJxDneHHS2/E0CYotb8OIUKI+V5VTIv2lWE148GMOVcB3Sz6inUchTf
+         5S7GFwgSCoO5P0QRbPejsO+0c74YvVvfAxGr0+h5lK3heEBzYzXCSo+dzGKndszXGaVs
+         IA/ycRfW5pKCmGcjO/I0uEXZ0x0f1bvZpRvY9SSAGseCrXor94SjXYofHsJViBEkHaHA
+         FT0A==
+In-Reply-To: <20230602204159.vo7fmuvh3y2pdfi5-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="utf-8"
-To: Michal Hocko <mhocko@suse.com>
-Cc: =?UTF-8?B?56iL5Z6y5rabIENoZW5na2FpdGFvIENoZW5n?= <chengkaitao@didiglobal.com>, "tj@kernel.org" <tj@kernel.org>, "lizefan.x@bytedance.com" <lizefan.x@bytedance.com>, "hannes@cmpxchg.org" <hannes@cmpxchg.org>, "corbet@lwn.net" <corbet@lwn.net>, "roman.gushchin@linux.dev" <roman.gushchin@linux.dev>, "shakeelb@google.com" <shakeelb@google.com>, "akpm@linux-foundation.org" <akpm@linux-foundation.org>, "brauner@kernel.org" <brauner@kernel.org>, "muchun.song@linux.dev" <muchun.song@linux.dev>, "viro@zeniv.linux.org.uk" <viro@zeniv.linux.org.uk>, "zhengqi.arch@bytedance.com" <zhengqi.arch@bytedance.com>, "ebiederm@xmission.com" <ebiederm@xmission.com>, "Liam.Howlett@oracle.com" <Liam.Howlett@oracle.com>, "chengzhihao1@huawei.com" <chengzhihao1@huawei.com>, pilgrimtao@gmai
+Content-Type: text/plain; charset="windows-1252"
+To: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Cc: Abel Wu <wuyun.abel-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, "David S . Miller" <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>, Eric Dumazet <edumazet-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Jakub Kicinski <kuba-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Paolo Abeni <pabeni-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Muchun Song <muchun.song-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Simon Horman <simon.horman-JqlR5BE4aJhWk0Htik3J/w@public.gmane.org>, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Mon, May 8, 2023 at 7:18=E2=80=AFAM Michal Hocko <mhocko@suse.com> wrote=
-:
+On Fri, Jun 2, 2023 at 10:42=E2=80=AFPM Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org> =
+wrote:
 >
-> On Mon 08-05-23 09:08:25, =E7=A8=8B=E5=9E=B2=E6=B6=9B Chengkaitao Cheng w=
-rote:
-> > At 2023-05-07 18:11:58, "Michal Hocko" <mhocko@suse.com> wrote:
-> > >On Sat 06-05-23 19:49:46, chengkaitao wrote:
-> > >> Establish a new OOM score algorithm, supports the cgroup level OOM
-> > >> protection mechanism. When an global/memcg oom event occurs, we trea=
-t
-> > >> all processes in the cgroup as a whole, and OOM killers need to sele=
-ct
-> > >> the process to kill based on the protection quota of the cgroup
-> > >
-> > >Although your patch 1 briefly touches on some advantages of this
-> > >interface there is a lack of actual usecase. Arguing that oom_score_ad=
-j
-> > >is hard because it needs a parent process is rather weak to be honest.
-> > >It is just trivial to create a thin wrapper, use systemd to launch
-> > >important services or simply update the value after the fact. Now
-> > >oom_score_adj has its own downsides of course (most notably a
-> > >granularity and a lack of group protection.
-> > >
-> > >That being said, make sure you describe your usecase more thoroughly.
-> > >Please also make sure you describe the intended heuristic of the knob.
-> > >It is not really clear from the description how this fits hierarchical
-> > >behavior of cgroups. I would be especially interested in the semantics
-> > >of non-leaf memcgs protection as they do not have any actual processes
-> > >to protect.
-> > >
-> > >Also there have been concerns mentioned in v2 discussion and it would =
-be
-> > >really appreciated to summarize how you have dealt with them.
-> > >
-> > >Please also note that many people are going to be slow in responding
-> > >this week because of LSFMM conference
-> > >(https://events.linuxfoundation.org/lsfmm/)
+> On Fri, Jun 02, 2023 at 04:11:34PM +0800, Abel Wu wrote:
+> > The sk_under_memory_pressure() is called to check whether there is
+> > memory pressure related to this socket. But now it ignores the net-
+> > memcg's pressure if the proto of the socket doesn't care about the
+> > global pressure, which may put burden on its memcg compaction or
+> > reclaim path (also remember that socket memory is un-reclaimable).
 > >
-> > Here is a more detailed comparison and introduction of the old oom_scor=
-e_adj
-> > mechanism and the new oom_protect mechanism,
-> > 1. The regulating granularity of oom_protect is smaller than that of oo=
-m_score_adj.
-> > On a 512G physical machine, the minimum granularity adjusted by oom_sco=
-re_adj
-> > is 512M, and the minimum granularity adjusted by oom_protect is one pag=
-e (4K).
-> > 2. It may be simple to create a lightweight parent process and uniforml=
-y set the
-> > oom_score_adj of some important processes, but it is not a simple matte=
-r to make
-> > multi-level settings for tens of thousands of processes on the physical=
- machine
-> > through the lightweight parent processes. We may need a huge table to r=
-ecord the
-> > value of oom_score_adj maintained by all lightweight parent processes, =
-and the
-> > user process limited by the parent process has no ability to change its=
- own
-> > oom_score_adj, because it does not know the details of the huge table. =
-The new
-> > patch adopts the cgroup mechanism. It does not need any parent process =
-to manage
-> > oom_score_adj. the settings between each memcg are independent of each =
-other,
-> > making it easier to plan the OOM order of all processes. Due to the uni=
-que nature
-> > of memory resources, current Service cloud vendors are not oversold in =
-memory
-> > planning. I would like to use the new patch to try to achieve the possi=
-bility of
-> > oversold memory resources.
+> > So always check the memcg's vm status to alleviate memstalls when
+> > it's in pressure.
+> >
 >
-> OK, this is more specific about the usecase. Thanks! So essentially what
-> it boils down to is that you are handling many containers (memcgs from
-> our POV) and they have different priorities. You want to overcommit the
-> memory to the extend that global ooms are not an unexpected event. Once
-> that happens the total memory consumption of a specific memcg is less
-> important than its "priority". You define that priority by the excess of
-> the memory usage above a user defined threshold. Correct?
+> This is interesting. UDP is the only protocol which supports memory
+> accounting (i.e. udp_memory_allocated) but it does not define
+> memory_pressure. In addition, it does have sysctl_udp_mem. So
+> effectively UDP supports a hard limit and ignores memcg pressure at the
+> moment. This patch will change its behavior to consider memcg pressure
+> as well. I don't have any objection but let's get opinion of UDP
+> maintainer.
 
-There has been a parallel discussion in the cover letter thread of v4
-[1]. To summarize, at Google, we have been using OOM scores to
-describe different job priorities in a more explicit way -- regardless
-of memory usage. It is strictly priority-based OOM killing. Ties are
-broken based on memory usage.
+Others have more experience with memory pressure on UDP, for the
+record. Paolo worked on UDP memory pressure in
+https://lore.kernel.org/netdev/cover.1579281705.git.pabeni-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org/
 
-We understand that something like memory.oom.protect has an advantage
-in the sense that you can skip killing a process if you know that it
-won't free enough memory anyway, but for an environment where multiple
-jobs of different priorities are running, we find it crucial to be
-able to define strict ordering. Some jobs are simply more important
-than others, regardless of their memory usage.
+It does seem odd to me to modify sk_under_memory_pressure only. See
+for instance its use in __sk_mem_raise_allocated:
 
-It would be great if we can arrive at an interface that serves this
-use case as well.
+        if (sk_has_memory_pressure(sk)) {
+                u64 alloc;
 
-Thanks!
+                if (!sk_under_memory_pressure(sk))
+                        return 1;
 
-[1]https://lore.kernel.org/linux-mm/CAJD7tkaQdSTDX0Q7zvvYrA3Y4TcvLdWKnN3yc8=
-VpfWRpUjcYBw@mail.gmail.com/
+This is not even reached as sk_has_memory_pressure is false for UDP.
+So this commit only affects the only other protocol-independent
+caller, __sk_mem_reduce_allocated, to possibly call
+sk_leave_memory_pressure if now under the global limit.
 
->
-> Your cover letter mentions that then "all processes in the cgroup as a
-> whole". That to me reads as oom.group oom killer policy. But a brief
-> look into the patch suggests you are still looking at specific tasks and
-> this has been a concern in the previous version of the patch because
-> memcg accounting and per-process accounting are detached.
->
-> > 3. I conducted a test and deployed an excessive number of containers on=
- a physical
-> > machine, By setting the oom_score_adj value of all processes in the con=
-tainer to
-> > a positive number through dockerinit, even processes that occupy very l=
-ittle memory
-> > in the container are easily killed, resulting in a large number of inva=
-lid kill behaviors.
-> > If dockerinit is also killed unfortunately, it will trigger container s=
-elf-healing, and the
-> > container will rebuild, resulting in more severe memory oscillations. T=
-he new patch
-> > abandons the behavior of adding an equal amount of oom_score_adj to eac=
-h process
-> > in the container and adopts a shared oom_protect quota for all processe=
-s in the container.
-> > If a process in the container is killed, the remaining other processes =
-will receive more
-> > oom_protect quota, making it more difficult for the remaining processes=
- to be killed.
-> > In my test case, the new patch reduced the number of invalid kill behav=
-iors by 70%.
-> > 4. oom_score_adj is a global configuration that cannot achieve a kill o=
-rder that only
-> > affects a certain memcg-oom-killer. However, the oom_protect mechanism =
-inherits
-> > downwards, and user can only change the kill order of its own memcg oom=
-, but the
-> > kill order of their parent memcg-oom-killer or global-oom-killer will n=
-ot be affected
->
-> Yes oom_score_adj has shortcomings.
->
-> > In the final discussion of patch v2, we discussed that although the adj=
-ustment range
-> > of oom_score_adj is [-1000,1000], but essentially it only allows two us=
-ecases
-> > (OOM_SCORE_ADJ_MIN, OOM_SCORE_ADJ_MAX) reliably. Everything in between =
-is
-> > clumsy at best. In order to solve this problem in the new patch, I intr=
-oduced a new
-> > indicator oom_kill_inherit, which counts the number of times the local =
-and child
-> > cgroups have been selected by the OOM killer of the ancestor cgroup. By=
- observing
-> > the proportion of oom_kill_inherit in the parent cgroup, I can effectiv=
-ely adjust the
-> > value of oom_protect to achieve the best.
->
-> What does the best mean in this context?
->
-> > about the semantics of non-leaf memcgs protection,
-> > If a non-leaf memcg's oom_protect quota is set, its leaf memcg will pro=
-portionally
-> > calculate the new effective oom_protect quota based on non-leaf memcg's=
- quota.
->
-> So the non-leaf memcg is never used as a target? What if the workload is
-> distributed over several sub-groups? Our current oom.group
-> implementation traverses the tree to find a common ancestor in the oom
-> domain with the oom.group.
->
-> All that being said and with the usecase described more specifically. I
-> can see that memcg based oom victim selection makes some sense. That
-> menas that it is always a memcg selected and all tasks withing killed.
-> Memcg based protection can be used to evaluate which memcg to choose and
-> the overall scheme should be still manageable. It would indeed resemble
-> memory protection for the regular reclaim.
->
-> One thing that is still not really clear to me is to how group vs.
-> non-group ooms could be handled gracefully. Right now we can handle that
-> because the oom selection is still process based but with the protection
-> this will become more problematic as explained previously. Essentially
-> we would need to enforce the oom selection to be memcg based for all
-> memcgs. Maybe a mount knob? What do you think?
-> --
-> Michal Hocko
-> SUSE Labs
+What is the expected behavioral change in practice of this commit?
+
+
+> > Signed-off-by: Abel Wu <wuyun.abel-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
+> > ---
+> >  include/net/sock.h | 6 ++----
+> >  1 file changed, 2 insertions(+), 4 deletions(-)
+> >
+> > diff --git a/include/net/sock.h b/include/net/sock.h
+> > index 3f63253ee092..ad1895ffbc4a 100644
+> > --- a/include/net/sock.h
+> > +++ b/include/net/sock.h
+> > @@ -1411,13 +1411,11 @@ static inline bool sk_has_memory_pressure(const=
+ struct sock *sk)
+> >
+> >  static inline bool sk_under_memory_pressure(const struct sock *sk)
+> >  {
+> > -     if (!sk->sk_prot->memory_pressure)
+> > -             return false;
+> > -
+> >       if (mem_cgroup_under_socket_pressure(sk->sk_memcg))
+> >               return true;
+> >
+> > -     return !!*sk->sk_prot->memory_pressure;
+> > +     return sk->sk_prot->memory_pressure &&
+> > +             *sk->sk_prot->memory_pressure;
+> >  }
+> >
+> >  static inline long
+> > --
+> > 2.37.3
+> >
