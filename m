@@ -1,112 +1,38 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [RFC PATCH 0/5] cgroup/cpuset: A new "isolcpus" paritition
-Date: Mon, 5 Jun 2023 10:27:33 -1000
-Message-ID: <ZH5FNc6wjlGPsaaO@slm.duckdns.org>
-References: <f2bd7b1e-190e-1d08-f085-b4cae36fb5be@redhat.com>
- <ZFGOTHQj3k5rzmyR@blackbook>
- <deb7b684-3d7c-b3ae-7b36-5b7ba2dd8001@redhat.com>
- <ZFUo5IYAIwTEKR4_@slm.duckdns.org>
- <759603dd-7538-54ad-e63d-bb827b618ae3@redhat.com>
- <405b2805-538c-790b-5bf8-e90d3660f116@redhat.com>
- <ZGvHUjOCjwat91Gq@slm.duckdns.org>
- <18793f4a-fd39-2e71-0b77-856afb01547b@redhat.com>
- <ZH4jfmypOXGJPu0D@slm.duckdns.org>
- <be64a569-4388-9dd9-3e06-36d716a54f6c@redhat.com>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCH] cgroup: make cgroup_is_threaded() and
+ cgroup_is_thread_root() static
+Date: Mon, 5 Jun 2023 10:31:56 -1000
+Message-ID: <ZH5GPHPW0ihSKtNo@slm.duckdns.org>
+References: <20230603071304.1077085-1-linmiaohe@huawei.com>
 Mime-Version: 1.0
-Return-path: <linux-doc-owner@vger.kernel.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20221208; t=1685996855; x=1688588855;
+        d=gmail.com; s=20221208; t=1685997118; x=1688589118;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:sender:from:to:cc:subject:date:message-id
          :reply-to;
-        bh=IcWiwa0YHCZMhNxhxBqh5ZQM/CWxwyBQyza33kkTAC0=;
-        b=i8JXhA9zZMx49v6PRp16clRpN55RyyktDBCfAeBEFfFnEgBqXEDKSYt5ZAyi47e2uf
-         Y/KK46uCWEJLuizeei3enQGeTIl69jOUY8zzIOeGmy3aM/zO7xwfOV+YSbg9EV0cg3G5
-         hqztIAp2GcduSsce4mxSdP04CxAfOcqixllrUe0J8cFFjAlTpii8qkv+EVJQ/+JgZrMh
-         jwbkaENVdINA4RprEbsTX78c//E3/Kj+Oj57bnekhvsKtWG1usE1kmO636cgxZsrWRL+
-         k/INory2HDFdwDxgptcLlPMiQ/obxvaq2ZlTJU/Oba5Vr1E31iY6gKks/921N+Jkqh+K
-         G7wQ==
-Sender: Tejun Heo <htejun@gmail.com>
+        bh=/6PHjxXVqGr/anCjyWJ5NzVjZ6+kUpY7d4+0bLn+hMA=;
+        b=NK5TWOw6+PRoYhYmwe5WM0uChPHx86tWH1VxaEQlzps5NSc8B0vdDz1cdbIemALTXG
+         5yPMWTU9W3imDF86OBSrMJxYzDFZj4Y5fBapiVDvh2EqZgU0uciddeEqByTixhqdIGwX
+         KfeTIaaU3G/Ue8Te/+48Ps47QbhMDFq0VvXWBdHea8j5KL9ty0Bjw0P9rwmmINyq6D19
+         ItdRglwt6tJKO8tNM1dfbqYWlZpFgThs1oR/8zQqqXL9KSm5srbTnejOedAKhgh/xt2M
+         vuwEDr1Saela38h4NnO/7JCJrXaqJ8zGsT5AurllQSOQ2p1YtkOqD8UULaPAzAwcm9K0
+         lFAg==
+Sender: Tejun Heo <htejun-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 Content-Disposition: inline
-In-Reply-To: <be64a569-4388-9dd9-3e06-36d716a54f6c@redhat.com>
+In-Reply-To: <20230603071304.1077085-1-linmiaohe-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Waiman Long <longman@redhat.com>
-Cc: Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny@suse.com>, Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, Jonathan Corbet <corbet@lwn.net>, Shuah Khan <shuah@kernel.org>, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kselftest@vger.kernel.org, Juri Lelli <juri.lelli@redhat.com>, Valentin Schneider <vschneid@redhat.com>, Frederic Weisbecker <frederic@kernel.org>, Mrunal Patel <mpatel@redhat.com>, Ryan Phillips <rphillips@redhat.com>, Brent Rowsell <browsell@redhat.com>, Peter Hunt <pehunt@redhat.com>, Phil Auld <pauld@redhat.com>
+To: Miaohe Lin <linmiaohe-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Cc: lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-Hello,
-
-On Mon, Jun 05, 2023 at 04:00:39PM -0400, Waiman Long wrote:
-...
-> > file seems hacky to me. e.g. How would it interact with namespacing? Are
-> > there reasons why this can't be properly hierarchical other than the amount
-> > of work needed? For example:
-> > 
-> >    cpuset.cpus.exclusive is a per-cgroup file and represents the mask of CPUs
-> >    that the cgroup holds exclusively. The mask is always a subset of
-> >    cpuset.cpus. The parent loses access to a CPU when the CPU is given to a
-> >    child by setting the CPU in the child's cpus.exclusive and the CPU can't
-> >    be given to more than one child. IOW, exclusive CPUs are available only to
-> >    the leaf cgroups that have them set in their .exclusive file.
-> > 
-> >    When a cgroup is turned into a partition, its cpuset.cpus and
-> >    cpuset.cpus.exclusive should be the same. For backward compatibility, if
-> >    the cgroup's parent is already a partition, cpuset will automatically
-> >    attempt to add all cpus in cpuset.cpus into cpuset.cpus.exclusive.
-> > 
-> > I could well be missing something important but I'd really like to see
-> > something like the above where the reservation feature blends in with the
-> > rest of cpuset.
+On Sat, Jun 03, 2023 at 03:13:04PM +0800, Miaohe Lin wrote:
+> They're only called inside cgroup.c. Make them static.
 > 
-> It can certainly be made hierarchical as you suggest. It does increase
-> complexity from both user and kernel point of view.
-> 
-> From the user point of view, there is one more knob to manage hierarchically
-> which is not used that often.
+> Signed-off-by: Miaohe Lin <linmiaohe-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 
-From user pov, this only affects them when they want to create partitions
-down the tree, right?
-
-> From the kernel point of view, we may need to have one more cpumask per
-> cpuset as the current subparts_cpus is used to track automatic reservation.
-> We need another cpumask to contain extra exclusive CPUs not allocated
-> through automatic reservation. The fact that you mention this new control
-> file as a list of exclusively owned CPUs for this cgroup. Creating a
-> partition is in fact allocating exclusive CPUs to a cgroup. So it kind of
-> overlaps with the cpuset.cpus.partititon file. Can we fail a write to
-
-Yes, it substitutes and expands on cpuset.cpus.partition behavior.
-
-> cpuset.cpus.exclusive if those exclusive CPUs cannot be granted or will this
-> exclusive list is only valid if a valid partition can be formed. So we need
-> to properly manage the dependency between these 2 control files.
-
-So, I think cpus.exclusive can become the sole mechanism to arbitrate
-exclusive owenership of CPUs and .partition can depend on .exclusive.
-
-> Alternatively, I have no problem exposing cpuset.cpus.exclusive as a
-> read-only file. It is a bit problematic if we need to make it writable.
-
-I don't follow. How would remote partitions work then?
-
-> As for namespacing, you do raise a good point. I was thinking mostly from a
-> whole system point of view as the use case that I am aware of does not needs
-> that. To allow delegation of exclusive CPUs to a child cgroup, that cgroup
-> has to be a partition root itself. One compromise that I can think of is to
-> only allow automatic reservation only in such a scenario. In that case, I
-> need to support a remote load balanced partition as well and hierarchical
-> sub-partitions underneath it. That can be done with some extra code to the
-> existing v2 patchset without introducing too much complexity.
-> 
-> IOW, the use of remote partition is only allowed on the whole system level
-> where one has access to the cgroup root. Exclusive CPUs distribution within
-> a container can only be done via the use of adjacent partitions with
-> automatic reservation. Will that be a good enough compromise from your point
-> of view?
-
-It seems too twisted to me. I'd much prefer it to be better integrated with
-the rest of cpuset.
+Applied to cgroup/for-6.5.
 
 Thanks.
 
