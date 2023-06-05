@@ -1,63 +1,68 @@
-From: Abel Wu <wuyun.abel@bytedance.com>
-Subject: Re: Re: [PATCH net-next v5 1/3] net-memcg: Fold dependency into memcg
- pressure cond
-Date: Mon, 5 Jun 2023 19:52:10 +0800
-Message-ID: <2a45da69-b164-0a4f-eb45-fe57f301bc4b@bytedance.com>
-References: <20230602081135.75424-1-wuyun.abel@bytedance.com>
- <20230602081135.75424-2-wuyun.abel@bytedance.com>
- <20230602202549.7nvrv4bx4cu7qxdn@google.com>
+From: Zou Cao <zoucaox-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Subject: [PATCH] cgroup: fixed the cset refcnt leak when fork() failed
+Date: Mon,  5 Jun 2023 21:04:44 +0800
+Message-ID: <20230605130444.1421-1-zoucao@kuaishou.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Transfer-Encoding: 8bit
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=bytedance.com; s=google; t=1685965938; x=1688557938;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=JyOkEllK607lv9MCxWlko/8/h878DjdboSx2KDG6rPU=;
-        b=eabMDt3oXuyeHqL6H95VDxv5qnDlp7C/hXkIKi9mE5RBAoY3t66MibAVJ1OyJOW3RI
-         LESpN9wTXsuJaXmyQk+hrcImYockzT2vENkn0uB59YWGFQT7hU0htS22r94rGoWZJ1YS
-         eoMFe+spUeV1gW22xOKgrGgYhj/hXExeWe7dvKuanyNNdN57KqW3msbApkAjrVNHxOtH
-         2EV24MAFpyA7wBZbT8EjHQGq6521MTjFuENHeMbCjF6EV2PW0DHne8ZVihA3/f7CW1fQ
-         8Bv+F4Ee4r1/xl5PFWZJhZqmG6IGRtjbIuE4DZGEOct1kfALIIWaFsW2cZWi2tbimrFI
-         H4JQ==
-Content-Language: en-US
-In-Reply-To: <20230602202549.7nvrv4bx4cu7qxdn@google.com>
+        d=gmail.com; s=20221208; t=1685970296; x=1688562296;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=PwnioUR0ZjoyRGzrp5k5mjXo7WPIskiZGVP9H/Ozl1w=;
+        b=ikWXlcNmcjTchboSGAIljatHvSG1Z4LVpxBFkZ9O1es07NKSLDjhDfsLYrkfj8J8re
+         JLiOzSxDdNlnBMcKLYmB/eFroD/t8DpaSJZLaNskfnHACkfLND8sljVzpqiA3FtKk8Hf
+         bl3rK/ew+hxR6lwA9ZX/w9ulk67kwP7kJZ0katk94Gpvw76pFfAoi7r6QuYK/3QqFFbD
+         +TQ5MtVRhCOp47VRQeNhtXolsiEpyYmSczhBNeDAZh5T7LjPM1S21GZa9GtZRTVMjgeP
+         5WdqyznmnMtecDf/2/bMpuU9NUZKDFS1F1MIqN/S9qCaEkUnd/7tViMEV3qLUiR6vk4R
+         49KQ==
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"; format="flowed"
-To: Shakeel Butt <shakeelb@google.com>
-Cc: "David S . Miller" <davem@davemloft.net>, Eric Dumazet <edumazet@google.com>, Jakub Kicinski <kuba@kernel.org>, Paolo Abeni <pabeni@redhat.com>, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, Muchun Song <muchun.song@linux.dev>, Simon Horman <simon.horman@corigine.com>, netdev@vger.kernel.org, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+To: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, brauner-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, Zou Cao <zoucao-e2CXd7i0PsxWk0Htik3J/w@public.gmane.org>
 
-On 6/3/23 4:25 AM, Shakeel Butt wrote:
-> On Fri, Jun 02, 2023 at 04:11:33PM +0800, Abel Wu wrote:
->> The callers of mem_cgroup_under_socket_pressure() should always make
->> sure that (mem_cgroup_sockets_enabled && sk->sk_memcg) is true. So
->> instead of coding around all the callsites, put the dependencies into
->> mem_cgroup_under_socket_pressure() to avoid redundancy and possibly
->> bugs.
->>
->> This change might also introduce slight function call overhead *iff*
->> the function gets expanded in the future. But for now this change
->> doesn't make binaries different (checked by vimdiff) except the one
->> net/ipv4/tcp_input.o (by scripts/bloat-o-meter), which is probably
->> negligible to performance:
->>
->> add/remove: 0/0 grow/shrink: 1/2 up/down: 5/-5 (0)
->> Function                                     old     new   delta
->> tcp_grow_window                              573     578      +5
->> tcp_try_rmem_schedule                       1083    1081      -2
->> tcp_check_space                              324     321      -3
->> Total: Before=44647, After=44647, chg +0.00%
->>
->> So folding the dependencies into mem_cgroup_under_socket_pressure()
->> is generally a good thing and provides better readablility.
->>
-> 
-> I don't see how it is improving readability. If you have removed the use
-> of mem_cgroup_sockets_enabled completely from the networking then I can
-> understand but this change IMHO will actually decrease the readability
-> because the later readers will have to reason why we are doing this
-> check at some places but not other.
+TeamID: B1486294
 
-Yes, I agree. I am trying to let networking get rid of this macro
-entirely, but get stuck on inet_csk_accept().. :(
+when fork, cset will be increased by commit "ef2c41cf38a7", the refcnt will
+be decrease by child exit, but when failed in fork(), this refcnt will
+be lost decrease in cgroup_cancel_fork as follow:
+
+copy_process
+     |
+cgroup_can_fork    //  increase the css refcount
+  ......
+  spin_lock_irq(&css_set_lock);
+  cset = task_css_setcurrent);
+  get_css_set(cset);
+  spin_unlock_irq&css_set_lock);
+  ......
+     |
+goto cgroup_cancel_fork    // if failed in  copy_process
+     |
+cgroup_cancel_fork  // lost the decrease refcount if flag not CLONE_INTO_CGROUP
+
+Fixes: ef2c41cf38a7 ("clone3: allow spawning processes into cgroups")
+Signed-off-by: Zou Cao <zoucao-e2CXd7i0PsxWk0Htik3J/w@public.gmane.org>
+---
+ kernel/cgroup/cgroup.c | 5 +++++
+ 1 file changed, 5 insertions(+)
+
+diff --git a/kernel/cgroup/cgroup.c b/kernel/cgroup/cgroup.c
+index d18c2ef..5ecd706 100644
+--- a/kernel/cgroup/cgroup.c
++++ b/kernel/cgroup/cgroup.c
+@@ -6284,6 +6284,11 @@ void cgroup_cancel_fork(struct task_struct *child,
+ 		if (ss->cancel_fork)
+ 			ss->cancel_fork(child, kargs->cset);
+ 
++	if (!(kargs->flags & CLONE_INTO_CGROUP) &&
++			kargs->cset) {
++		put_css_set(kargs->cset);
++	}
++
+ 	cgroup_css_set_put_fork(kargs);
+ }
+ 
+-- 
+1.8.3.1
+
