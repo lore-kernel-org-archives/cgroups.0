@@ -1,55 +1,63 @@
-From: David Hildenbrand <david-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH] memcg: use helper macro FLUSH_TIME
-Date: Mon, 5 Jun 2023 13:32:19 +0200
-Message-ID: <9c475907-0c58-98a2-adaa-6c94b671db9e@redhat.com>
-References: <20230603072116.1101690-1-linmiaohe@huawei.com>
+From: Abel Wu <wuyun.abel@bytedance.com>
+Subject: Re: Re: [PATCH net-next v5 1/3] net-memcg: Fold dependency into memcg
+ pressure cond
+Date: Mon, 5 Jun 2023 19:52:10 +0800
+Message-ID: <2a45da69-b164-0a4f-eb45-fe57f301bc4b@bytedance.com>
+References: <20230602081135.75424-1-wuyun.abel@bytedance.com>
+ <20230602081135.75424-2-wuyun.abel@bytedance.com>
+ <20230602202549.7nvrv4bx4cu7qxdn@google.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1685964743;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=WAZyxjHSKhdNxeHRuvnFvS4kEsJUoO6wNay6Vh0Axqo=;
-        b=ZrzObrYtQX3hNDNhM6KLzVrwAtg6Mj2D9XxmSA7kCzUSjD7Bc93KseZg8cnYzM9yq6ki+s
-        ysud7k57WE46TNAmpY1aBP3Y2EoKyW5IdWk5aDtFoMQyZvErDGsez/j5AWFV4WJJXosvxb
-        +4yCcbE/UTc3W9texzyLpc1GjJdJQKc=
+Return-path: <linux-kernel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=bytedance.com; s=google; t=1685965938; x=1688557938;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=JyOkEllK607lv9MCxWlko/8/h878DjdboSx2KDG6rPU=;
+        b=eabMDt3oXuyeHqL6H95VDxv5qnDlp7C/hXkIKi9mE5RBAoY3t66MibAVJ1OyJOW3RI
+         LESpN9wTXsuJaXmyQk+hrcImYockzT2vENkn0uB59YWGFQT7hU0htS22r94rGoWZJ1YS
+         eoMFe+spUeV1gW22xOKgrGgYhj/hXExeWe7dvKuanyNNdN57KqW3msbApkAjrVNHxOtH
+         2EV24MAFpyA7wBZbT8EjHQGq6521MTjFuENHeMbCjF6EV2PW0DHne8ZVihA3/f7CW1fQ
+         8Bv+F4Ee4r1/xl5PFWZJhZqmG6IGRtjbIuE4DZGEOct1kfALIIWaFsW2cZWi2tbimrFI
+         H4JQ==
 Content-Language: en-US
-In-Reply-To: <20230603072116.1101690-1-linmiaohe-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+In-Reply-To: <20230602202549.7nvrv4bx4cu7qxdn@google.com>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"; format="flowed"
-To: Miaohe Lin <linmiaohe-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org, shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org
-Cc: muchun.song-fxUVXftIFDnyG1zEObXtfA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Shakeel Butt <shakeelb@google.com>
+Cc: "David S . Miller" <davem@davemloft.net>, Eric Dumazet <edumazet@google.com>, Jakub Kicinski <kuba@kernel.org>, Paolo Abeni <pabeni@redhat.com>, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, Muchun Song <muchun.song@linux.dev>, Simon Horman <simon.horman@corigine.com>, netdev@vger.kernel.org, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On 03.06.23 09:21, Miaohe Lin wrote:
-> Use helper macro FLUSH_TIME to indicate the flush time to improve the
-> readability a bit. No functional change intended.
+On 6/3/23 4:25 AM, Shakeel Butt wrote:
+> On Fri, Jun 02, 2023 at 04:11:33PM +0800, Abel Wu wrote:
+>> The callers of mem_cgroup_under_socket_pressure() should always make
+>> sure that (mem_cgroup_sockets_enabled && sk->sk_memcg) is true. So
+>> instead of coding around all the callsites, put the dependencies into
+>> mem_cgroup_under_socket_pressure() to avoid redundancy and possibly
+>> bugs.
+>>
+>> This change might also introduce slight function call overhead *iff*
+>> the function gets expanded in the future. But for now this change
+>> doesn't make binaries different (checked by vimdiff) except the one
+>> net/ipv4/tcp_input.o (by scripts/bloat-o-meter), which is probably
+>> negligible to performance:
+>>
+>> add/remove: 0/0 grow/shrink: 1/2 up/down: 5/-5 (0)
+>> Function                                     old     new   delta
+>> tcp_grow_window                              573     578      +5
+>> tcp_try_rmem_schedule                       1083    1081      -2
+>> tcp_check_space                              324     321      -3
+>> Total: Before=44647, After=44647, chg +0.00%
+>>
+>> So folding the dependencies into mem_cgroup_under_socket_pressure()
+>> is generally a good thing and provides better readablility.
+>>
 > 
-> Signed-off-by: Miaohe Lin <linmiaohe-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-> ---
->   mm/memcontrol.c | 2 +-
->   1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-> index d8569594239c..f204c9f2e69c 100644
-> --- a/mm/memcontrol.c
-> +++ b/mm/memcontrol.c
-> @@ -5397,7 +5397,7 @@ static int mem_cgroup_css_online(struct cgroup_subsys_state *css)
->   
->   	if (unlikely(mem_cgroup_is_root(memcg)))
->   		queue_delayed_work(system_unbound_wq, &stats_flush_dwork,
-> -				   2UL*HZ);
-> +				   FLUSH_TIME);
->   	lru_gen_online_memcg(memcg);
->   	return 0;
->   offline_kmem:
+> I don't see how it is improving readability. If you have removed the use
+> of mem_cgroup_sockets_enabled completely from the networking then I can
+> understand but this change IMHO will actually decrease the readability
+> because the later readers will have to reason why we are doing this
+> check at some places but not other.
 
-Reviewed-by: David Hildenbrand <david-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-
--- 
-Cheers,
-
-David / dhildenb
-
+Yes, I agree. I am trying to let networking get rid of this macro
+entirely, but get stuck on inet_csk_accept().. :(
