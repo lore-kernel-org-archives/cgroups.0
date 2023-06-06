@@ -1,40 +1,65 @@
-From: Dan Schatzberg <schatzberg.dan@gmail.com>
-Subject: Re: [PATCH] Documentation: Clarify usage of memory limits
-Date: Tue, 6 Jun 2023 09:09:50 -0400
-Message-ID: <ZH8wHva5/8n1EJv0@dschatzberg-fedora-PC0Y6AEN>
-References: <20230601183820.3839891-1-schatzberg.dan@gmail.com>
- <ZH55K79CaSD6Zya1@slm.duckdns.org>
+From: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Subject: [PATCH] blk-cgroup: Reinit blkg_iostat_set after clearing in blkcg_reset_stats()
+Date: Tue,  6 Jun 2023 14:07:24 -0400
+Message-ID: <20230606180724.2455066-1-longman@redhat.com>
 Mime-Version: 1.0
-Return-path: <linux-doc-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20221208; t=1686056993; x=1688648993;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=33ubNGnlWzb0zUgKXOo7PameOxfWs466JIL20ejCxRU=;
-        b=YLInumMaJo4nCJrIXzReQU0BlvN7m/0+3WtFgkqlPKn6GyR1fIwy2krQvMzHNjBGH1
-         Y68DUYUasgdDYG/uqY+QQR0cx+AWlJ90UMPDSrj03K7ZPH/Vcg+7r/ioR4jNrittWwJV
-         OWXP2/8dAEQaaQnInokesrQdcEBGKe0kDdwzHAOP972bTAcmV3T0+h9xvzx/JmmslsqT
-         WyYU75DQR0D7ifiPW7k56WL7/LxxgAn5oHOrj6CtGzvZpuIl0Hoo169ua5O1ja5QvQvo
-         +mKDM5pGvxu/FO4dEtgsRgQq8OX00FRaGyrOm/XI0oC/+XGwwQ1XXsu/XVNuyfhRCFnr
-         Lfrw==
-Content-Disposition: inline
-In-Reply-To: <ZH55K79CaSD6Zya1@slm.duckdns.org>
+Content-Transfer-Encoding: 8bit
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1686074858;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:
+         content-transfer-encoding:content-transfer-encoding;
+        bh=KCHea5uxb09v02T7QiZVlUPaNE7poMAC7MU6JVuAUYE=;
+        b=V3TuXbabn58WdLBobkXbAYrjP1IdoVGYZIkeb0u3sjWyIqo1vJNyz1QgbOBVcOHUjOYFhq
+        su1jnErhF3gKoP0PqFDvDQnr8eI+qd3xVr029tWL55wzOmzkEFrTcxl+9FGRi/kNYviG7v
+        LqUdR4hObTrJ7RcE4rgooDIYzifTwLA=
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Tejun Heo <tj@kernel.org>
-Cc: Chris Down <chris@chrisdown.name>, Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, Jonathan Corbet <corbet@lwn.net>, "open list:CONTROL GROUP (CGROUP)" <cgroups@vger.kernel.org>, "open list:DOCUMENTATION" <linux-doc@vger.kernel.org>, open list <linux-kernel@vger.kernel.org>
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, Josef Bacik <josef-DigfWCa+lFGyeJad7bwFQA@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Ming Lei <ming.lei-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 
-On Mon, Jun 05, 2023 at 02:09:15PM -1000, Tejun Heo wrote:
-> Hello,
->
-> ...
-> 
-> I think it'd be helpful to provide pointers to oomd and systemd's
-> implementation of it here.
+When blkg_alloc() is called to allocate a blkcg_gq structure
+with the associated blkg_iostat_set's, there are 2 fields within
+blkg_iostat_set that requires proper initialization - blkg & sync.
+The former field was introduced by commit 3b8cc6298724 ("blk-cgroup:
+Optimize blkcg_rstat_flush()") while the later one was introduced by
+commit f73316482977 ("blk-cgroup: reimplement basic IO stats using
+cgroup rstat").
 
-Yeah, I considered that but didn't see any other external links in
-this doc, so it felt out of place. I don't feel strongly, but feel
-free to add to the patch and link to oomd
-(https://github.com/facebookincubator/oomd) and systemd-oomd
-(https://www.freedesktop.org/software/systemd/man/systemd-oomd.service.html)
+Unfortunately those fields in the blkg_iostat_set's are not properly
+re-initialized when they are cleared in v1's blkcg_reset_stats(). This
+can lead to a kernel panic due to NULL pointer access of the blkg
+pointer. The missing initialization of sync is less problematic and
+can be a problem in a debug kernel due to missing lockdep initialization.
+
+Fix these problems by re-initializing them after memory clearing.
+
+Fixes: 3b8cc6298724 ("blk-cgroup: Optimize blkcg_rstat_flush()")
+Fixes: f73316482977 ("blk-cgroup: reimplement basic IO stats using cgroup rstat")
+Signed-off-by: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+---
+ block/blk-cgroup.c | 5 +++++
+ 1 file changed, 5 insertions(+)
+
+diff --git a/block/blk-cgroup.c b/block/blk-cgroup.c
+index 90c2efc3767f..48084321e3e0 100644
+--- a/block/blk-cgroup.c
++++ b/block/blk-cgroup.c
+@@ -636,8 +636,13 @@ static int blkcg_reset_stats(struct cgroup_subsys_state *css,
+ 			struct blkg_iostat_set *bis =
+ 				per_cpu_ptr(blkg->iostat_cpu, cpu);
+ 			memset(bis, 0, sizeof(*bis));
++
++			/* Re-initialize the cleared blkg_iostat_set */
++			u64_stats_init(&bis->sync);
++			bis->blkg = blkg;
+ 		}
+ 		memset(&blkg->iostat, 0, sizeof(blkg->iostat));
++		u64_stats_init(&blkg->iostat.sync);
+ 
+ 		for (i = 0; i < BLKCG_MAX_POLS; i++) {
+ 			struct blkcg_policy *pol = blkcg_policy[i];
+-- 
+2.31.1
+
