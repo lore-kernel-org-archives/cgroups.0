@@ -1,68 +1,76 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [RFC PATCH 0/5] cgroup/cpuset: A new "isolcpus" paritition
-Date: Tue, 6 Jun 2023 10:13:31 -1000
-Message-ID: <ZH-Ta7jDozegNo3o@slm.duckdns.org>
-References: <759603dd-7538-54ad-e63d-bb827b618ae3@redhat.com>
- <405b2805-538c-790b-5bf8-e90d3660f116@redhat.com>
- <ZGvHUjOCjwat91Gq@slm.duckdns.org>
- <18793f4a-fd39-2e71-0b77-856afb01547b@redhat.com>
- <ZH4jfmypOXGJPu0D@slm.duckdns.org>
- <be64a569-4388-9dd9-3e06-36d716a54f6c@redhat.com>
- <ZH5FNc6wjlGPsaaO@slm.duckdns.org>
- <a2220c9f-7a8d-da82-ecc0-b39f3807408c@redhat.com>
- <ZH-P7X_yjnVfhy7b@slm.duckdns.org>
- <563fd5e1-650a-e329-8aab-2fa1953a9f49@redhat.com>
+From: Ming Lei <ming.lei-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH] blk-cgroup: Reinit blkg_iostat_set after clearing in
+ blkcg_reset_stats()
+Date: Wed, 7 Jun 2023 09:28:08 +0800
+Message-ID: <ZH/dKFnTIHZqsjQa@ovpn-8-23.pek2.redhat.com>
+References: <20230606180724.2455066-1-longman@redhat.com>
 Mime-Version: 1.0
-Return-path: <linux-doc-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20221208; t=1686082412; x=1688674412;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:sender:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=4fV7Pb5i2MwRKtXI+L72eacF/AO/0yqXx0MJ01SSud0=;
-        b=pDP+yL9WN+pff/JjCduS7JvbmoHcUSbG+eB9kCz+wqvdammYyaHY7+8vJHuvMS2fq/
-         wiDeLf7KOGZcqtQNbGAEc8cfZqZ03MuVCAWl7EFXiUe4r2M3mpMpPBs3vzm9/Bo/75Lx
-         9BQjCpEmrUs9QbozWlAryEHce3fGTg8unUtkNcIsLsEbC87BqGdI/b2EUZjbVWjLf58a
-         zelXaH1SDbvnKF5pNVwCS69lLvPBQLsjYLmUOVlxC0+SblWdlOdmN5POjSpacS5wXzdW
-         kKAwGzBoG4g4vye8rCXAQcekBLgJRqhfL3YzPy42XeTh0addYmx2XSyBsIhIO743iW5y
-         8a9Q==
-Sender: Tejun Heo <htejun@gmail.com>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1686101300;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=1h0nXm4obQWr/nMN17xlxThI6u2crQzlPISlM1jWir0=;
+        b=XaAwKWI8M34st32pDbwA7SxRgVZ813Ujx0f0R6yXS5VQ3Nb/7TkkY2TtQ9OB1A5Bs7rTZg
+        H1JeEA47bkMUCZuN0+OPdGJM1FFV8I46CgFBDrApLt8ESwg4YkskKGzssqp5yISTiVLyA3
+        KTx/yUieOnRU3OVXpzVqDqye3iMwh5Y=
 Content-Disposition: inline
-In-Reply-To: <563fd5e1-650a-e329-8aab-2fa1953a9f49@redhat.com>
+In-Reply-To: <20230606180724.2455066-1-longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Waiman Long <longman@redhat.com>
-Cc: Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny@suse.com>, Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, Jonathan Corbet <corbet@lwn.net>, Shuah Khan <shuah@kernel.org>, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kselftest@vger.kernel.org, Juri Lelli <juri.lelli@redhat.com>, Valentin Schneider <vschneid@redhat.com>, Frederic Weisbecker <frederic@kernel.org>, Mrunal Patel <mpatel@redhat.com>, Ryan Phillips <rphillips@redhat.com>, Brent Rowsell <browsell@redhat.com>, Peter Hunt <pehunt@redhat.com>, Phil Auld <pauld@redhat.com>
+To: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, Josef Bacik <josef-DigfWCa+lFGyeJad7bwFQA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-Hello,
-
-On Tue, Jun 06, 2023 at 04:11:02PM -0400, Waiman Long wrote:
-...
-> The current CPU exclusive behavior is limited to sibling cgroups only.
-> Because of the hierarchical nature of cpu distribution, the set of exclusive
-> CPUs have to appear in all its ancestors. When partition is enabled, we do a
-> sibling exclusivity test at that point to verify that it is exclusive. It
-> looks like you want to do an exclusivity test even when the partition isn't
-> active. I can certainly do that when the file is being updated. However, it
-> will fail the write if the exclusivity test fails just like the v1
-> cpuset.cpus.exclusive flag if you are OK with that.
-
-Yeah, doesn't look like there's a way around it if we want to make
-.exclusive a feature which is useful on its own.
-
-> > Instead, it can be sth like "if the parent is a
-> > partition root, cpuset implicitly tries to set all CPUs in its cpus file in
-> > its cpus.exclusive file" so that user-visible behavior stays unchanged
-> > depending on past history.
+On Tue, Jun 06, 2023 at 02:07:24PM -0400, Waiman Long wrote:
+> When blkg_alloc() is called to allocate a blkcg_gq structure
+> with the associated blkg_iostat_set's, there are 2 fields within
+> blkg_iostat_set that requires proper initialization - blkg & sync.
+> The former field was introduced by commit 3b8cc6298724 ("blk-cgroup:
+> Optimize blkcg_rstat_flush()") while the later one was introduced by
+> commit f73316482977 ("blk-cgroup: reimplement basic IO stats using
+> cgroup rstat").
 > 
-> If parent is a partition root, auto reservation will be done and
-> cpus.exclusive will be set automatically just like before. So existing
-> applications using partition will not be affected.
+> Unfortunately those fields in the blkg_iostat_set's are not properly
+> re-initialized when they are cleared in v1's blkcg_reset_stats(). This
+> can lead to a kernel panic due to NULL pointer access of the blkg
+> pointer. The missing initialization of sync is less problematic and
+> can be a problem in a debug kernel due to missing lockdep initialization.
+> 
+> Fix these problems by re-initializing them after memory clearing.
+> 
+> Fixes: 3b8cc6298724 ("blk-cgroup: Optimize blkcg_rstat_flush()")
+> Fixes: f73316482977 ("blk-cgroup: reimplement basic IO stats using cgroup rstat")
+> Signed-off-by: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+> ---
+>  block/blk-cgroup.c | 5 +++++
+>  1 file changed, 5 insertions(+)
+> 
+> diff --git a/block/blk-cgroup.c b/block/blk-cgroup.c
+> index 90c2efc3767f..48084321e3e0 100644
+> --- a/block/blk-cgroup.c
+> +++ b/block/blk-cgroup.c
+> @@ -636,8 +636,13 @@ static int blkcg_reset_stats(struct cgroup_subsys_state *css,
+>  			struct blkg_iostat_set *bis =
+>  				per_cpu_ptr(blkg->iostat_cpu, cpu);
+>  			memset(bis, 0, sizeof(*bis));
+> +
+> +			/* Re-initialize the cleared blkg_iostat_set */
+> +			u64_stats_init(&bis->sync);
+> +			bis->blkg = blkg;
+>  		}
+>  		memset(&blkg->iostat, 0, sizeof(blkg->iostat));
+> +		u64_stats_init(&blkg->iostat.sync);
+>  
+>  		for (i = 0; i < BLKCG_MAX_POLS; i++) {
+>  			struct blkcg_policy *pol = blkcg_policy[i];
 
-Sounds great.
+Looks fine,
 
-Thanks.
+Reviewed-by: Ming Lei <ming.lei-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 
--- 
-tejun
+
+Thanks,
+Ming
+
