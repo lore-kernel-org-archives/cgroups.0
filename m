@@ -1,50 +1,73 @@
-From: Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>
-Subject: Re: [PATCH] blk-cgroup: Reinit blkg_iostat_set after clearing in
- blkcg_reset_stats()
-Date: Wed, 07 Jun 2023 07:52:33 -0600
-Message-ID: <168614595386.134969.17908041000836291196.b4-ty@kernel.dk>
-References: <20230606180724.2455066-1-longman@redhat.com>
+From: Greg Kroah-Hartman <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>
+Subject: [PATCH 5.15 121/159] block/blk-iocost (gcc13): keep large values in a new enum
+Date: Wed,  7 Jun 2023 22:17:04 +0200
+Message-ID: <20230607200907.635181797@linuxfoundation.org>
+References: <20230607200903.652580797@linuxfoundation.org>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=kernel-dk.20221208.gappssmtp.com; s=20221208; t=1686145955; x=1688737955;
-        h=content-transfer-encoding:mime-version:date:message-id:subject
-         :references:in-reply-to:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=8pWjfG7YX2PU6lTg87BQzQgK5gQrtCZuLosIt3qtFrw=;
-        b=QMGMlVX9pT4+APXXvlD2HGaGEg55QMH0btBqGqRw+dtdVOGo1kh5q+IRJfikBCjoAZ
-         vafj+YrmGCGYaOtKcFzs/g7GriOKBIzWtZZeh8BfNxsIDJ7VseMMJPYoiNuQt7caTcMI
-         fbzdenPFcryIzgWI+zcXPps0vDUIFsZMliLzzzo2NMTbOU8IV+6GRTdzS4etu2E7bG1G
-         zZy5GDzKAFGL863kgCYdqdlrRhzG8ovq7gNP99KiwoUnVzy58N3hDEkaisdrZi9QqDvh
-         12nHG5VND02dBavngpMxFq36XYe5fvooIddYSP6a8+XPAVtLp/lIB0YMBjMBb3y/nBpV
-         Px9w==
-In-Reply-To: <20230606180724.2455066-1-longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linuxfoundation.org;
+        s=korg; t=1686171712;
+        bh=3g1ezkSeNovKyNA/mYRnkKvsFp4NaVHgDIm4yL0ohA8=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=RCBKLAI5qdA2mToaPW/eWLYpXW2HGo7G5X7Z81GYFO5xaQXDHrgOue4NJM0We1vQM
+         7WiOvqRQENEsOkhxhv7zRIc0RTS0I0o91U3kJ9Q0G4iK2Prv9sgz6lxPcFECzwrvQc
+         Ay1XgrvajT4Vg4SzFJngyOU9320qbr+7nW1RjFrQ=
+In-Reply-To: <20230607200903.652580797-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Josef Bacik <josef-DigfWCa+lFGyeJad7bwFQA@public.gmane.org>, Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Ming Lei <ming.lei-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+To: stable-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Cc: Greg Kroah-Hartman <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>, patches-cunTk1MwBs/YUNznpcFYbw@public.gmane.org, Martin Liska <mliska-AlSwsSmVLrQ@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Josef Bacik <josef-DigfWCa+lFGyeJad7bwFQA@public.gmane.org>, Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, "Jiri Slaby (SUSE)" <jirislaby-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 
+From: Jiri Slaby (SUSE) <jirislaby-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 
-On Tue, 06 Jun 2023 14:07:24 -0400, Waiman Long wrote:
-> When blkg_alloc() is called to allocate a blkcg_gq structure
-> with the associated blkg_iostat_set's, there are 2 fields within
-> blkg_iostat_set that requires proper initialization - blkg & sync.
-> The former field was introduced by commit 3b8cc6298724 ("blk-cgroup:
-> Optimize blkcg_rstat_flush()") while the later one was introduced by
-> commit f73316482977 ("blk-cgroup: reimplement basic IO stats using
-> cgroup rstat").
-> 
-> [...]
+commit ff1cc97b1f4c10db224f276d9615b22835b8c424 upstream.
 
-Applied, thanks!
+Since gcc13, each member of an enum has the same type as the enum [1]. And
+that is inherited from its members. Provided:
+  VTIME_PER_SEC_SHIFT     = 37,
+  VTIME_PER_SEC           = 1LLU << VTIME_PER_SEC_SHIFT,
+  ...
+  AUTOP_CYCLE_NSEC        = 10LLU * NSEC_PER_SEC,
+the named type is unsigned long.
 
-[1/1] blk-cgroup: Reinit blkg_iostat_set after clearing in blkcg_reset_stats()
-      commit: 3d2af77e31ade05ff7ccc3658c3635ec1bea0979
+This generates warnings with gcc-13:
+  block/blk-iocost.c: In function 'ioc_weight_prfill':
+  block/blk-iocost.c:3037:37: error: format '%u' expects argument of type 'unsigned int', but argument 4 has type 'long unsigned int'
 
-Best regards,
--- 
-Jens Axboe
+  block/blk-iocost.c: In function 'ioc_weight_show':
+  block/blk-iocost.c:3047:34: error: format '%u' expects argument of type 'unsigned int', but argument 3 has type 'long unsigned int'
 
+So split the anonymous enum with large values to a separate enum, so
+that they don't affect other members.
+
+[1] https://gcc.gnu.org/bugzilla/show_bug.cgi?id=36113
+
+Cc: Martin Liska <mliska-AlSwsSmVLrQ@public.gmane.org>
+Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: Josef Bacik <josef-DigfWCa+lFGyeJad7bwFQA@public.gmane.org>
+Cc: Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Cc: linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Signed-off-by: Jiri Slaby (SUSE) <jirislaby-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Link: https://lore.kernel.org/r/20221213120826.17446-1-jirislaby-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org
+Signed-off-by: Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>
+Signed-off-by: Greg Kroah-Hartman <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>
+---
+ block/blk-iocost.c |    2 ++
+ 1 file changed, 2 insertions(+)
+
+--- a/block/blk-iocost.c
++++ b/block/blk-iocost.c
+@@ -232,7 +232,9 @@ enum {
+ 
+ 	/* 1/64k is granular enough and can easily be handled w/ u32 */
+ 	WEIGHT_ONE		= 1 << 16,
++};
+ 
++enum {
+ 	/*
+ 	 * As vtime is used to calculate the cost of each IO, it needs to
+ 	 * be fairly high precision.  For example, it should be able to
 
 
