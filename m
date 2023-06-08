@@ -1,104 +1,174 @@
-From: Tvrtko Ursulin <tvrtko.ursulin@linux.intel.com>
-Subject: Re: [RFC 02/10] drm: Update file owner during use
-Date: Thu, 8 Jun 2023 15:26:26 +0100
-Message-ID: <77587046-aede-f625-6a35-55bf9c5f1179@linux.intel.com>
-References: <20230314141904.1210824-1-tvrtko.ursulin@linux.intel.com>
- <20230314141904.1210824-3-tvrtko.ursulin@linux.intel.com>
- <CACvgo52Bb3kBua8dh+eac6dhSwiJLMGAdGDAa+LQYoOwCLPLNA@mail.gmail.com>
+From: syzbot <syzbot+2ab700fe1829880a2ec6-Pl5Pbv+GP7P466ipTTIvnc23WoclnBCfAL8bYrjMMd8@public.gmane.org>
+Subject: [syzbot] [cgroups?] possible deadlock in static_key_slow_inc (3)
+Date: Thu, 08 Jun 2023 09:56:54 -0700
+Message-ID: <000000000000bd448705fda123f5@google.com>
 Mime-Version: 1.0
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+List-ID: <cgroups.vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <intel-gfx-bounces@lists.freedesktop.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
- d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
- t=1686234394; x=1717770394;
- h=message-id:date:mime-version:subject:to:cc:references:
- from:in-reply-to:content-transfer-encoding;
- bh=AOHF8Rb86ntesAI/yE6eOPe27CYMX9ghGd4LAdbYQLs=;
- b=BcwFml25Sr/dOSSPU1y6ThQrGTqKryVTHvrp3UCfNDOTkmtXwwBToeof
- vLfpHhjembt8qs82bnG8wJlJxDnMIZ0G+3udb9/oI++//U9+8us+Ujd4Z
- Z3W2r9xW2xZSqk7tMEpEFJDoY8ErkaiCyumpVEPnT7oTpN31jqHdghP9d
- SnF60o0pY+vetnr2JBQPq9hdqNinHABDP2WN5zZmqfoeVg2sHK7QczMwV
- gkK358S/QlrbwXLKsovyoi64iKOofvTH+f33KeYzFi2ZSmfo9geszQDzS
- vsPJw14j2JWEdFjyTmvnGgFjPFh6NP0JtTcbqDRbZjWX3Ko17TLI2LLgH Q==;
-Content-Language: en-US
-In-Reply-To: <CACvgo52Bb3kBua8dh+eac6dhSwiJLMGAdGDAa+LQYoOwCLPLNA@mail.gmail.com>
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.freedesktop.org/mailman/options/intel-gfx>,
- <mailto:intel-gfx-request@lists.freedesktop.org?subject=unsubscribe>
-List-Archive: <https://lists.freedesktop.org/archives/intel-gfx>
-List-Post: <mailto:intel-gfx@lists.freedesktop.org>
-List-Help: <mailto:intel-gfx-request@lists.freedesktop.org?subject=help>
-List-Subscribe: <https://lists.freedesktop.org/mailman/listinfo/intel-gfx>,
- <mailto:intel-gfx-request@lists.freedesktop.org?subject=subscribe>
-Errors-To: intel-gfx-bounces@lists.freedesktop.org
-Sender: "Intel-gfx" <intel-gfx-bounces@lists.freedesktop.org>
-Content-Type: text/plain; charset="us-ascii"; format="flowed"
-To: Emil Velikov <emil.l.velikov@gmail.com>
-Cc: Rob Clark <robdclark@chromium.org>, cgroups@vger.kernel.org, Dave Airlie <airlied@redhat.com>, Kenny.Ho@amd.com, Intel-gfx@lists.freedesktop.org, linux-kernel@vger.kernel.org, dri-devel@lists.freedesktop.org, "T . J . Mercier" <tjmercier@google.com>, Johannes Weiner <hannes@cmpxchg.org>, Zefan Li <lizefan.x@bytedance.com>, Daniel Vetter <daniel.vetter@ffwll.ch>, Tejun Heo <tj@kernel.org>, =?UTF-8?Q?St=c3=a9phane_Marchesin?= <marcheu@chromium.org>, =?UTF-8?Q?Christian_K=c3=b6nig?= <christian.koenig@amd.com>
+To: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org, syzkaller-bugs-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org
+
+Hello,
+
+syzbot found the following issue on:
+
+HEAD commit:    5f63595ebd82 Merge tag 'input-for-v6.4-rc5' of git://git.k..
+git tree:       upstream
+console+strace: https://syzkaller.appspot.com/x/log.txt?x=153fcc63280000
+kernel config:  https://syzkaller.appspot.com/x/.config?x=7474de833c217bf4
+dashboard link: https://syzkaller.appspot.com/bug?extid=2ab700fe1829880a2ec6
+compiler:       Debian clang version 15.0.7, GNU ld (GNU Binutils for Debian) 2.35.2
+syz repro:      https://syzkaller.appspot.com/x/repro.syz?x=1321e2fd280000
+C reproducer:   https://syzkaller.appspot.com/x/repro.c?x=11946afd280000
+
+Downloadable assets:
+disk image: https://storage.googleapis.com/syzbot-assets/d12b9e46ffe8/disk-5f63595e.raw.xz
+vmlinux: https://storage.googleapis.com/syzbot-assets/c9044ded7edd/vmlinux-5f63595e.xz
+kernel image: https://storage.googleapis.com/syzbot-assets/09f0fd3926e8/bzImage-5f63595e.xz
+
+IMPORTANT: if you fix the issue, please add the following tag to the commit:
+Reported-by: syzbot+2ab700fe1829880a2ec6-Pl5Pbv+GP7P466ipTTIvnc23WoclnBCfAL8bYrjMMd8@public.gmane.org
+
+======================================================
+WARNING: possible circular locking dependency detected
+6.4.0-rc5-syzkaller-00024-g5f63595ebd82 #0 Not tainted
+------------------------------------------------------
+syz-executor324/4995 is trying to acquire lock:
+ffffffff8cdc3ff0 (cpu_hotplug_lock){++++}-{0:0}, at: static_key_slow_inc+0x12/0x30 kernel/jump_label.c:185
+
+but task is already holding lock:
+ffffffff8cf5a688 (freezer_mutex){+.+.}-{3:3}, at: freezer_css_online+0x4f/0x150 kernel/cgroup/legacy_freezer.c:111
+
+which lock already depends on the new lock.
 
 
-On 21/04/2023 13:13, Emil Velikov wrote:
-> Greetings everyone,
-> 
-> Above all - hell yeah. Thank you Tvrtko, this has been annoying the
-> hell out of me for ages.
+the existing dependency chain (in reverse order) is:
 
-Yay!
+-> #1 (freezer_mutex){+.+.}-{3:3}:
+       lock_acquire+0x1e3/0x520 kernel/locking/lockdep.c:5705
+       __mutex_lock_common+0x1d8/0x2530 kernel/locking/mutex.c:603
+       __mutex_lock kernel/locking/mutex.c:747 [inline]
+       mutex_lock_nested+0x1b/0x20 kernel/locking/mutex.c:799
+       freezer_change_state kernel/cgroup/legacy_freezer.c:389 [inline]
+       freezer_write+0xa8/0x3f0 kernel/cgroup/legacy_freezer.c:429
+       cgroup_file_write+0x2ca/0x6a0 kernel/cgroup/cgroup.c:4071
+       kernfs_fop_write_iter+0x3a6/0x4f0 fs/kernfs/file.c:334
+       call_write_iter include/linux/fs.h:1868 [inline]
+       new_sync_write fs/read_write.c:491 [inline]
+       vfs_write+0x790/0xb20 fs/read_write.c:584
+       ksys_write+0x1a0/0x2c0 fs/read_write.c:637
+       do_syscall_x64 arch/x86/entry/common.c:50 [inline]
+       do_syscall_64+0x41/0xc0 arch/x86/entry/common.c:80
+       entry_SYSCALL_64_after_hwframe+0x63/0xcd
 
-> On Tue, 14 Mar 2023 at 14:19, Tvrtko Ursulin
-> <tvrtko.ursulin@linux.intel.com> wrote:
->>
->> From: Tvrtko Ursulin <tvrtko.ursulin@intel.com>
->>
->> With the typical model where the display server opends the file descriptor
->> and then hands it over to the client we were showing stale data in
->> debugfs.
-> 
-> s/opends/opens/
+-> #0 (cpu_hotplug_lock){++++}-{0:0}:
+       check_prev_add kernel/locking/lockdep.c:3113 [inline]
+       check_prevs_add kernel/locking/lockdep.c:3232 [inline]
+       validate_chain+0x166b/0x58f0 kernel/locking/lockdep.c:3847
+       __lock_acquire+0x1316/0x2070 kernel/locking/lockdep.c:5088
+       lock_acquire+0x1e3/0x520 kernel/locking/lockdep.c:5705
+       percpu_down_read include/linux/percpu-rwsem.h:51 [inline]
+       cpus_read_lock+0x42/0x150 kernel/cpu.c:310
+       static_key_slow_inc+0x12/0x30 kernel/jump_label.c:185
+       freezer_css_online+0xc6/0x150 kernel/cgroup/legacy_freezer.c:117
+       online_css+0xba/0x260 kernel/cgroup/cgroup.c:5491
+       css_create kernel/cgroup/cgroup.c:5562 [inline]
+       cgroup_apply_control_enable+0x7d1/0xae0 kernel/cgroup/cgroup.c:3249
+       cgroup_mkdir+0xd8f/0x1000 kernel/cgroup/cgroup.c:5758
+       kernfs_iop_mkdir+0x279/0x400 fs/kernfs/dir.c:1219
+       vfs_mkdir+0x29d/0x450 fs/namei.c:4115
+       do_mkdirat+0x264/0x520 fs/namei.c:4138
+       __do_sys_mkdirat fs/namei.c:4153 [inline]
+       __se_sys_mkdirat fs/namei.c:4151 [inline]
+       __x64_sys_mkdirat+0x89/0xa0 fs/namei.c:4151
+       do_syscall_x64 arch/x86/entry/common.c:50 [inline]
+       do_syscall_64+0x41/0xc0 arch/x86/entry/common.c:80
+       entry_SYSCALL_64_after_hwframe+0x63/0xcd
 
-Thanks!
+other info that might help us debug this:
 
-> But as a whole the sentence is fairly misleading. Story time:
-> 
-> The traditional model, the server was the orchestrator managing the
-> primary device node. From the fd, to the master status and
-> authentication. But looking at the fd alone, this has varied across
-> the years.
-> 
-> IIRC in the DRI1 days, Xorg (libdrm really) would have a list of open
-> fd(s) and reuse those whenever needed, DRI2 the client was responsible
-> for open() themselves and with DRI3 the fd was passed to the client.
-> 
-> Around the inception of DRI3 and systemd-logind, the latter became
-> another possible orchestrator. Whereby Xorg and Wayland compositors
-> could ask it for the fd. For various reasons (hysterical and genuine
-> ones) Xorg has a fallback path going the open(), whereas Wayland
-> compositors are moving to solely relying on logind... some never had
-> fallback even.
-> 
-> Over the past few years, more projects have emerged which provide
-> functionality similar (be that on API level, Dbus, or otherwise) to
-> systemd-logind.
-> 
-> 
-> Apart from that, the commit is spot on. I like the use of rcu and the
-> was_master handling is correct. With some message polish this commit
-> is:
-> Reviewed-by: Emil Velikov <emil.l.velikov@gmail.com>
+ Possible unsafe locking scenario:
 
-Are you okay if I just paste your very fine explanation verbatim, with 
-credits?
+       CPU0                    CPU1
+       ----                    ----
+  lock(freezer_mutex);
+                               lock(cpu_hotplug_lock);
+                               lock(freezer_mutex);
+  rlock(cpu_hotplug_lock);
 
-> I also had a brief look at 01/10, although I cannot find many
-> references for the pid <> tguid mappings. Be that on the kernel side
-> or userspace - do you have any links that I can educate myself?
+ *** DEADLOCK ***
 
-TGID or thread group leader. For single threaded userspace TGID equals 
-to PID, while for multi-threaded first thread TGID equals PID/TID, while 
-additional threads PID/TID does not equal TGID. Clear, as mud? :) My 
-POSIX book is misplaced somewhere having not consulted it years... :)
+4 locks held by syz-executor324/4995:
+ #0: ffff88807da6c460 (sb_writers#10){.+.+}-{0:0}, at: mnt_want_write+0x3f/0x90 fs/namespace.c:394
+ #1: ffff888075c6eee0 (&type->i_mutex_dir_key#7/1){+.+.}-{3:3}, at: inode_lock_nested include/linux/fs.h:810 [inline]
+ #1: ffff888075c6eee0 (&type->i_mutex_dir_key#7/1){+.+.}-{3:3}, at: filename_create+0x260/0x530 fs/namei.c:3884
+ #2: ffffffff8cf4f768 (cgroup_mutex){+.+.}-{3:3}, at: cgroup_lock include/linux/cgroup.h:370 [inline]
+ #2: ffffffff8cf4f768 (cgroup_mutex){+.+.}-{3:3}, at: cgroup_kn_lock_live+0xe9/0x290 kernel/cgroup/cgroup.c:1683
+ #3: ffffffff8cf5a688 (freezer_mutex){+.+.}-{3:3}, at: freezer_css_online+0x4f/0x150 kernel/cgroup/legacy_freezer.c:111
 
-Regards,
+stack backtrace:
+CPU: 0 PID: 4995 Comm: syz-executor324 Not tainted 6.4.0-rc5-syzkaller-00024-g5f63595ebd82 #0
+Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 05/25/2023
+Call Trace:
+ <TASK>
+ __dump_stack lib/dump_stack.c:88 [inline]
+ dump_stack_lvl+0x1e7/0x2d0 lib/dump_stack.c:106
+ check_noncircular+0x2fe/0x3b0 kernel/locking/lockdep.c:2188
+ check_prev_add kernel/locking/lockdep.c:3113 [inline]
+ check_prevs_add kernel/locking/lockdep.c:3232 [inline]
+ validate_chain+0x166b/0x58f0 kernel/locking/lockdep.c:3847
+ __lock_acquire+0x1316/0x2070 kernel/locking/lockdep.c:5088
+ lock_acquire+0x1e3/0x520 kernel/locking/lockdep.c:5705
+ percpu_down_read include/linux/percpu-rwsem.h:51 [inline]
+ cpus_read_lock+0x42/0x150 kernel/cpu.c:310
+ static_key_slow_inc+0x12/0x30 kernel/jump_label.c:185
+ freezer_css_online+0xc6/0x150 kernel/cgroup/legacy_freezer.c:117
+ online_css+0xba/0x260 kernel/cgroup/cgroup.c:5491
+ css_create kernel/cgroup/cgroup.c:5562 [inline]
+ cgroup_apply_control_enable+0x7d1/0xae0 kernel/cgroup/cgroup.c:3249
+ cgroup_mkdir+0xd8f/0x1000 kernel/cgroup/cgroup.c:5758
+ kernfs_iop_mkdir+0x279/0x400 fs/kernfs/dir.c:1219
+ vfs_mkdir+0x29d/0x450 fs/namei.c:4115
+ do_mkdirat+0x264/0x520 fs/namei.c:4138
+ __do_sys_mkdirat fs/namei.c:4153 [inline]
+ __se_sys_mkdirat fs/namei.c:4151 [inline]
+ __x64_sys_mkdirat+0x89/0xa0 fs/namei.c:4151
+ do_syscall_x64 arch/x86/entry/common.c:50 [inline]
+ do_syscall_64+0x41/0xc0 arch/x86/entry/common.c:80
+ entry_SYSCALL_64_after_hwframe+0x63/0xcd
+RIP: 0033:0x7f7e55624e09
+Code: 28 00 00 00 75 05 48 83 c4 28 c3 e8 51 15 00 00 90 48 89 f8 48 89 f7 48 89 d6 48 89 ca 4d 89 c2 4d 89 c8 4c 8b 4c 24 08 0f 05 <48> 3d 01 f0 ff ff 73 01 c3 48 c7 c1 c0 ff ff ff f7 d8 64 89 01 48
+RSP: 002b:00007fff7236ac98 EFLAGS: 00000246 ORIG_RAX: 0000000000000102
+RAX: ffffffffffffffda RBX: 0000000000000003 RCX: 00007f7e55624e09
+RDX: 00000000000001ff RSI: 0000000020000180 RDI: 0000000000000003
+RBP: 0000000000000000 R08: 00007fff7236acc0 R09: 00007fff7236acc0
+R10: 00007fff7236acc0 R11: 0000000000000246 R12: 00007fff7236acbc
+R13: 00007fff7236acd0 R14: 00007fff7236ad10 R15: 0000000000000000
+ </TASK>
 
-Tvrtko
 
+---
+This report is generated by a bot. It may contain errors.
+See https://goo.gl/tpsmEJ for more information about syzbot.
+syzbot engineers can be reached at syzkaller-/JYPxA39Uh5TLH3MbocFF+G/Ez6ZCGd0@public.gmane.org
+
+syzbot will keep track of this issue. See:
+https://goo.gl/tpsmEJ#status for how to communicate with syzbot.
+
+If the bug is already fixed, let syzbot know by replying with:
+#syz fix: exact-commit-title
+
+If you want syzbot to run the reproducer, reply with:
+#syz test: git://repo/address.git branch-or-commit-hash
+If you attach or paste a git patch, syzbot will apply it before testing.
+
+If you want to change bug's subsystems, reply with:
+#syz set subsystems: new-subsystem
+(See the list of subsystem names on the web dashboard)
+
+If the bug is a duplicate of another bug, reply with:
+#syz dup: exact-subject-of-another-report
+
+If you want to undo deduplication, reply with:
+#syz undup
