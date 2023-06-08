@@ -1,55 +1,104 @@
-From: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH] cgroup/cpuset: Fix comment in cpuset_hotplug_workfn
-Date: Thu, 8 Jun 2023 08:22:06 -0400
-Message-ID: <7ff8c948-c5e2-ac5b-6633-8583b8cb75fe@redhat.com>
-References: <20230608085439.27501-1-suhua.tanke@gmail.com>
+From: Tvrtko Ursulin <tvrtko.ursulin@linux.intel.com>
+Subject: Re: [RFC 02/10] drm: Update file owner during use
+Date: Thu, 8 Jun 2023 15:26:26 +0100
+Message-ID: <77587046-aede-f625-6a35-55bf9c5f1179@linux.intel.com>
+References: <20230314141904.1210824-1-tvrtko.ursulin@linux.intel.com>
+ <20230314141904.1210824-3-tvrtko.ursulin@linux.intel.com>
+ <CACvgo52Bb3kBua8dh+eac6dhSwiJLMGAdGDAa+LQYoOwCLPLNA@mail.gmail.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1686226932;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=j6zJ80tFIxXTVHRh/16qEQREsJv1j4C9vyoJ2KH4/8c=;
-        b=AW9y+DCNh3q94I6r9c5PCL5+kN95gM/aV5bzFbXxVOo/z2qQEA3mvXLUhXGmh8db0ftOD0
-        rUR+9xrkvrts/cnHbtmgZuJvrCvHGFMulV6ss+mGf7RHuUU4NK2itzP10AwMK8V6g80Rg2
-        hq0expNu4UwczQykeKbH/v8c1fxRXi8=
+Return-path: <intel-gfx-bounces@lists.freedesktop.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+ d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+ t=1686234394; x=1717770394;
+ h=message-id:date:mime-version:subject:to:cc:references:
+ from:in-reply-to:content-transfer-encoding;
+ bh=AOHF8Rb86ntesAI/yE6eOPe27CYMX9ghGd4LAdbYQLs=;
+ b=BcwFml25Sr/dOSSPU1y6ThQrGTqKryVTHvrp3UCfNDOTkmtXwwBToeof
+ vLfpHhjembt8qs82bnG8wJlJxDnMIZ0G+3udb9/oI++//U9+8us+Ujd4Z
+ Z3W2r9xW2xZSqk7tMEpEFJDoY8ErkaiCyumpVEPnT7oTpN31jqHdghP9d
+ SnF60o0pY+vetnr2JBQPq9hdqNinHABDP2WN5zZmqfoeVg2sHK7QczMwV
+ gkK358S/QlrbwXLKsovyoi64iKOofvTH+f33KeYzFi2ZSmfo9geszQDzS
+ vsPJw14j2JWEdFjyTmvnGgFjPFh6NP0JtTcbqDRbZjWX3Ko17TLI2LLgH Q==;
 Content-Language: en-US
-In-Reply-To: <20230608085439.27501-1-suhua.tanke-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-List-ID: <cgroups.vger.kernel.org>
+In-Reply-To: <CACvgo52Bb3kBua8dh+eac6dhSwiJLMGAdGDAa+LQYoOwCLPLNA@mail.gmail.com>
+List-Id: <cgroups.vger.kernel.org>
+List-Unsubscribe: <https://lists.freedesktop.org/mailman/options/intel-gfx>,
+ <mailto:intel-gfx-request@lists.freedesktop.org?subject=unsubscribe>
+List-Archive: <https://lists.freedesktop.org/archives/intel-gfx>
+List-Post: <mailto:intel-gfx@lists.freedesktop.org>
+List-Help: <mailto:intel-gfx-request@lists.freedesktop.org?subject=help>
+List-Subscribe: <https://lists.freedesktop.org/mailman/listinfo/intel-gfx>,
+ <mailto:intel-gfx-request@lists.freedesktop.org?subject=subscribe>
+Errors-To: intel-gfx-bounces@lists.freedesktop.org
+Sender: "Intel-gfx" <intel-gfx-bounces@lists.freedesktop.org>
 Content-Type: text/plain; charset="us-ascii"; format="flowed"
-To: suhua <suhua.tanke-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Emil Velikov <emil.l.velikov@gmail.com>
+Cc: Rob Clark <robdclark@chromium.org>, cgroups@vger.kernel.org, Dave Airlie <airlied@redhat.com>, Kenny.Ho@amd.com, Intel-gfx@lists.freedesktop.org, linux-kernel@vger.kernel.org, dri-devel@lists.freedesktop.org, "T . J . Mercier" <tjmercier@google.com>, Johannes Weiner <hannes@cmpxchg.org>, Zefan Li <lizefan.x@bytedance.com>, Daniel Vetter <daniel.vetter@ffwll.ch>, Tejun Heo <tj@kernel.org>, =?UTF-8?Q?St=c3=a9phane_Marchesin?= <marcheu@chromium.org>, =?UTF-8?Q?Christian_K=c3=b6nig?= <christian.koenig@amd.com>
 
-On 6/8/23 04:54, suhua wrote:
-> "synchronize cpus_allowed to cpu_active_mask"
-> -> "synchronize cpu_active_mask to cpus_allowed"
->
-> Signed-off-by: suhua <suhua.tanke-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-> ---
->   kernel/cgroup/cpuset.c | 2 +-
->   1 file changed, 1 insertion(+), 1 deletion(-)
->
-> diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
-> index b0aee733b92b..4810d29e2d63 100644
-> --- a/kernel/cgroup/cpuset.c
-> +++ b/kernel/cgroup/cpuset.c
-> @@ -3739,7 +3739,7 @@ static void cpuset_hotplug_workfn(struct work_struct *work)
->   	if (!cpus_updated && top_cpuset.nr_subparts_cpus)
->   		cpus_updated = true;
->   
-> -	/* synchronize cpus_allowed to cpu_active_mask */
-> +	/* synchronize cpu_active_mask to cpus_allowed */
->   	if (cpus_updated) {
->   		spin_lock_irq(&callback_lock);
->   		if (!on_dfl)
 
-The comment is a bit outdated. The synchronization is only meant for 
-cgroup v1, but it is correct in this regard. We are matching 
-cpus_allowed of top_cpuset to cpu_active_mask, not the other way around.
+On 21/04/2023 13:13, Emil Velikov wrote:
+> Greetings everyone,
+> 
+> Above all - hell yeah. Thank you Tvrtko, this has been annoying the
+> hell out of me for ages.
 
-Cheers,
-Longman
+Yay!
+
+> On Tue, 14 Mar 2023 at 14:19, Tvrtko Ursulin
+> <tvrtko.ursulin@linux.intel.com> wrote:
+>>
+>> From: Tvrtko Ursulin <tvrtko.ursulin@intel.com>
+>>
+>> With the typical model where the display server opends the file descriptor
+>> and then hands it over to the client we were showing stale data in
+>> debugfs.
+> 
+> s/opends/opens/
+
+Thanks!
+
+> But as a whole the sentence is fairly misleading. Story time:
+> 
+> The traditional model, the server was the orchestrator managing the
+> primary device node. From the fd, to the master status and
+> authentication. But looking at the fd alone, this has varied across
+> the years.
+> 
+> IIRC in the DRI1 days, Xorg (libdrm really) would have a list of open
+> fd(s) and reuse those whenever needed, DRI2 the client was responsible
+> for open() themselves and with DRI3 the fd was passed to the client.
+> 
+> Around the inception of DRI3 and systemd-logind, the latter became
+> another possible orchestrator. Whereby Xorg and Wayland compositors
+> could ask it for the fd. For various reasons (hysterical and genuine
+> ones) Xorg has a fallback path going the open(), whereas Wayland
+> compositors are moving to solely relying on logind... some never had
+> fallback even.
+> 
+> Over the past few years, more projects have emerged which provide
+> functionality similar (be that on API level, Dbus, or otherwise) to
+> systemd-logind.
+> 
+> 
+> Apart from that, the commit is spot on. I like the use of rcu and the
+> was_master handling is correct. With some message polish this commit
+> is:
+> Reviewed-by: Emil Velikov <emil.l.velikov@gmail.com>
+
+Are you okay if I just paste your very fine explanation verbatim, with 
+credits?
+
+> I also had a brief look at 01/10, although I cannot find many
+> references for the pid <> tguid mappings. Be that on the kernel side
+> or userspace - do you have any links that I can educate myself?
+
+TGID or thread group leader. For single threaded userspace TGID equals 
+to PID, while for multi-threaded first thread TGID equals PID/TID, while 
+additional threads PID/TID does not equal TGID. Clear, as mud? :) My 
+POSIX book is misplaced somewhere having not consulted it years... :)
+
+Regards,
+
+Tvrtko
 
