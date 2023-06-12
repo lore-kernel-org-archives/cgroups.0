@@ -1,74 +1,64 @@
-From: Tetsuo Handa <penguin-kernel-JPay3/Yim36HaxMnTkn67Xf5DAMn2ifp@public.gmane.org>
-Subject: [PATCH] cgroup,freezer: hold cpu_hotplug_lock before freezer_mutex in
- freezer_css_{online,offline}()
-Date: Sun, 11 Jun 2023 22:48:12 +0900
-Message-ID: <69ab449f-1981-2d53-79fb-b2ac91ea9cef@I-love.SAKURA.ne.jp>
-References: <000000000000bd448705fda123f5@google.com>
- <000000000000d1565005fda9cef1@google.com>
+From: Hao Jia <jiahao.os-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
+Subject: Re: [External] Re: [PATCH] cgroup: rstat: Simplified
+ cgroup_base_stat_flush() update last_bstat logic
+Date: Mon, 12 Jun 2023 11:13:41 +0800
+Message-ID: <d6d19a61-a584-1839-e6cc-ea63479ca800@bytedance.com>
+References: <20230518124142.57644-1-jiahao.os@bytedance.com>
+ <f39b9229-e59c-2b1c-7f3f-1aeedfad44dc@bytedance.com>
+ <5g73i4yvi4ub4dqrf4dnq5qghkyckoygmgd2st6be3gg7twww2@w6zim6nxpt3b>
+ <4d49f7e7-2488-9690-258e-34e617cfef6f@bytedance.com>
+ <remnwctqmxleig7ywt6puhxnpmzjo7xm6hlfhpnul46ulfnw7j@36sbuxhuatto>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: quoted-printable
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Content-Language: en-US
-In-Reply-To: <000000000000d1565005fda9cef1-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=bytedance.com; s=google; t=1686539625; x=1689131625;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to:subject
+         :user-agent:mime-version:date:message-id:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=isvk/E9G1J5c+bipF9hN5zG+Nag5iOn+AJ5rYPC8Si8=;
+        b=azPuT2b/FtHoAE095FDR2kcjtJf9/JJ1kwqBOO/u2aEEI3Upa/kUJnA5vvloGhQG7r
+         Iq+fbnSJBqkhGGYeCBgoOWvSIujRe8NiJ3FYP1EHlVv7vrfk6oxNh8ZHXDfYsBuKotAy
+         +5+Cpmfhr7aM9znnX2mKAAj3dqHQUyVUhQZN1OLISWBXX9O8eJHZ7BIZAYE5CXkzSFC6
+         sZvc2fzdRRDexf2en3ztWWHCPpXkv4oj5GFlhfIkzBO3Xp/0g8psQ5l1YC4ye66gAwfH
+         ghNd3rtQE07xppYBOMZIBJDrr4kp5uJ8mKIhAXPrM2LZE4peyAM6++6FZZ1os15mN2Ie
+         Yedw==
+In-Reply-To: <remnwctqmxleig7ywt6puhxnpmzjo7xm6hlfhpnul46ulfnw7j@36sbuxhuatto>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Type: text/plain; charset="iso-8859-1"; format="flowed"
+To: =?UTF-8?Q?Michal_Koutn=c3=bd?= <mkoutny-IBi9RG/b67k@public.gmane.org>
+Cc: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-syzbot is again reporting circular locking dependency between
-cpu_hotplug_lock and freezer_mutex. Do like what we did with
-commit 57dcd64c7e036299 ("cgroup,freezer: hold cpu_hotplug_lock
-before freezer_mutex").
 
-Reported-by: syzbot <syzbot+2ab700fe1829880a2ec6-Pl5Pbv+GP7P466ipTTIvnc23WoclnBCfAL8bYrjMMd8@public.gmane.org>
-Closes: https://syzkaller.appspot.com/bug?extid=2ab700fe1829880a2ec6
-Signed-off-by: Tetsuo Handa <penguin-kernel-JPay3/Yim36HaxMnTkn67Xf5DAMn2ifp@public.gmane.org>
-Tested-by: syzbot <syzbot+2ab700fe1829880a2ec6-Pl5Pbv+GP7P466ipTTIvnc23WoclnBCfAL8bYrjMMd8@public.gmane.org>
----
- kernel/cgroup/legacy_freezer.c | 8 ++++++--
- 1 file changed, 6 insertions(+), 2 deletions(-)
 
-diff --git a/kernel/cgroup/legacy_freezer.c b/kernel/cgroup/legacy_freezer.c
-index 936473203a6b..122dacb3a443 100644
---- a/kernel/cgroup/legacy_freezer.c
-+++ b/kernel/cgroup/legacy_freezer.c
-@@ -108,16 +108,18 @@ static int freezer_css_online(struct cgroup_subsys_state *css)
- 	struct freezer *freezer = css_freezer(css);
- 	struct freezer *parent = parent_freezer(freezer);
- 
-+	cpus_read_lock();
- 	mutex_lock(&freezer_mutex);
- 
- 	freezer->state |= CGROUP_FREEZER_ONLINE;
- 
- 	if (parent && (parent->state & CGROUP_FREEZING)) {
- 		freezer->state |= CGROUP_FREEZING_PARENT | CGROUP_FROZEN;
--		static_branch_inc(&freezer_active);
-+		static_branch_inc_cpuslocked(&freezer_active);
- 	}
- 
- 	mutex_unlock(&freezer_mutex);
-+	cpus_read_unlock();
- 	return 0;
- }
- 
-@@ -132,14 +134,16 @@ static void freezer_css_offline(struct cgroup_subsys_state *css)
- {
- 	struct freezer *freezer = css_freezer(css);
- 
-+	cpus_read_lock();
- 	mutex_lock(&freezer_mutex);
- 
- 	if (freezer->state & CGROUP_FREEZING)
--		static_branch_dec(&freezer_active);
-+		static_branch_dec_cpuslocked(&freezer_active);
- 
- 	freezer->state = 0;
- 
- 	mutex_unlock(&freezer_mutex);
-+	cpus_read_unlock();
- }
- 
- static void freezer_css_free(struct cgroup_subsys_state *css)
--- 
-2.18.4
+On 2023/5/24 Michal Koutn=C3=BD wrote:
+> On Wed, May 24, 2023 at 02:54:10PM +0800, Hao Jia <jiahao.os-EC8Uxl6Npydl=
+57MIdRCFDg@public.gmane.org> wrote:
+>> Yes, so we need @curr to record the bstat value after the sequence fetch=
+ is
+>> completed.
+>=20
+> No, I still don't see a problem that it solves. If you find incorrect
+> data being reported, please explain it more/with an example.
+>=20
+>> Yes, but it may not be obvious.
+>> Another reason is that when we complete an update, we snapshot last_bsta=
+t as
+>> the current bstat, which is better for readers to understand. Arithmetic=
+s is
+>> somewhat obscure.
+>=20
+> The readability here is subjective. It'd be interesting to have some
+> data comparing arithmetics vs copying though.
+>=20
 
+Sorry for replying you so late. I am using RDTSC on my machine (an Intel=20
+Xeon(R) Platinum 8260 CPU@2.40GHz machine with 2 NUMA nodes each of=20
+which has 24 cores with SMT2 enabled, so 96 CPUs in total.) to compare=20
+the time consumption of arithmetics vs copying. There is almost no=20
+difference in the time consumption between arithmetics and copying.
+
+
+
+> HTH,
+> Michal
