@@ -1,25 +1,25 @@
-From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Subject: [PATCH 5.4 02/45] block/blk-iocost (gcc13): keep large values in a new enum
-Date: Mon, 12 Jun 2023 12:25:56 +0200
-Message-ID: <20230612101654.735115280@linuxfoundation.org>
-References: <20230612101654.644983109@linuxfoundation.org>
+From: Greg Kroah-Hartman <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>
+Subject: [PATCH 5.10 08/68] block/blk-iocost (gcc13): keep large values in a new enum
+Date: Mon, 12 Jun 2023 12:26:00 +0200
+Message-ID: <20230612101658.811733055@linuxfoundation.org>
+References: <20230612101658.437327280@linuxfoundation.org>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Return-path: <linux-block-owner@vger.kernel.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linuxfoundation.org;
-        s=korg; t=1686565841;
-        bh=gQGaPDgWsb+Epxj7TQ++nTbbJhV5jGXReNdHkDhpiUI=;
+        s=korg; t=1686565986;
+        bh=3g1ezkSeNovKyNA/mYRnkKvsFp4NaVHgDIm4yL0ohA8=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=tG3uw76KEoTEUdYQgemVGT0JXEi85fBDPYis5cwS7lysXcYcXB9YWO8gUCN10Wcgm
-         J4FQw8inzEXMnuvca9tY0ivQ8rZ4TjrsYaoxgFRd8cJDEoTcv80JuvIGf/gfA0RqOq
-         PRuzbdlQnPR6hMFnW9v6qaJz7mgJ7rO9u28i431Q=
-In-Reply-To: <20230612101654.644983109@linuxfoundation.org>
+        b=QtmF08sghYmBDd9UBshT23jBK1ILZr+o1F+BzTsat6Kh+D+hwS07zeGzWc+edA010
+         03/fwA7fAbgXeqHHvJSp2BcVCUL9dNVuvYiJs9URhXmRK2LBv8BJfHvzwngUe6T8sf
+         pyEhx0P9U7ChM2QNKh45nGdF6zke6xHWOqgQeMh8=
+In-Reply-To: <20230612101658.437327280-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: stable@vger.kernel.org
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>, patches@lists.linux.dev, Martin Liska <mliska@suse.cz>, Tejun Heo <tj@kernel.org>, Josef Bacik <josef@toxicpanda.com>, Jens Axboe <axboe@kernel.dk>, cgroups@vger.kernel.org, linux-block@vger.kernel.org, "Jiri Slaby (SUSE)" <jirislaby@kernel.org>
+To: stable-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Cc: Greg Kroah-Hartman <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>, patches-cunTk1MwBs/YUNznpcFYbw@public.gmane.org, Martin Liska <mliska-AlSwsSmVLrQ@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Josef Bacik <josef-DigfWCa+lFGyeJad7bwFQA@public.gmane.org>, Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, "Jiri Slaby (SUSE)" <jirislaby-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 
-From: Jiri Slaby (SUSE) <jirislaby@kernel.org>
+From: Jiri Slaby (SUSE) <jirislaby-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 
 commit ff1cc97b1f4c10db224f276d9615b22835b8c424 upstream.
 
@@ -43,26 +43,26 @@ that they don't affect other members.
 
 [1] https://gcc.gnu.org/bugzilla/show_bug.cgi?id=36113
 
-Cc: Martin Liska <mliska@suse.cz>
-Cc: Tejun Heo <tj@kernel.org>
-Cc: Josef Bacik <josef@toxicpanda.com>
-Cc: Jens Axboe <axboe@kernel.dk>
-Cc: cgroups@vger.kernel.org
-Cc: linux-block@vger.kernel.org
-Signed-off-by: Jiri Slaby (SUSE) <jirislaby@kernel.org>
-Link: https://lore.kernel.org/r/20221213120826.17446-1-jirislaby@kernel.org
-Signed-off-by: Jens Axboe <axboe@kernel.dk>
-Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: Martin Liska <mliska-AlSwsSmVLrQ@public.gmane.org>
+Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: Josef Bacik <josef-DigfWCa+lFGyeJad7bwFQA@public.gmane.org>
+Cc: Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Cc: linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Signed-off-by: Jiri Slaby (SUSE) <jirislaby-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Link: https://lore.kernel.org/r/20221213120826.17446-1-jirislaby-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org
+Signed-off-by: Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>
+Signed-off-by: Greg Kroah-Hartman <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>
 ---
  block/blk-iocost.c |    2 ++
  1 file changed, 2 insertions(+)
 
 --- a/block/blk-iocost.c
 +++ b/block/blk-iocost.c
-@@ -248,7 +248,9 @@ enum {
+@@ -232,7 +232,9 @@ enum {
  
  	/* 1/64k is granular enough and can easily be handled w/ u32 */
- 	HWEIGHT_WHOLE		= 1 << 16,
+ 	WEIGHT_ONE		= 1 << 16,
 +};
  
 +enum {
