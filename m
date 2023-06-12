@@ -1,64 +1,73 @@
-From: Hao Jia <jiahao.os-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
-Subject: Re: [External] Re: [PATCH] cgroup: rstat: Simplified
- cgroup_base_stat_flush() update last_bstat logic
-Date: Mon, 12 Jun 2023 11:13:41 +0800
-Message-ID: <d6d19a61-a584-1839-e6cc-ea63479ca800@bytedance.com>
-References: <20230518124142.57644-1-jiahao.os@bytedance.com>
- <f39b9229-e59c-2b1c-7f3f-1aeedfad44dc@bytedance.com>
- <5g73i4yvi4ub4dqrf4dnq5qghkyckoygmgd2st6be3gg7twww2@w6zim6nxpt3b>
- <4d49f7e7-2488-9690-258e-34e617cfef6f@bytedance.com>
- <remnwctqmxleig7ywt6puhxnpmzjo7xm6hlfhpnul46ulfnw7j@36sbuxhuatto>
+From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Subject: [PATCH 5.4 02/45] block/blk-iocost (gcc13): keep large values in a new enum
+Date: Mon, 12 Jun 2023 12:25:56 +0200
+Message-ID: <20230612101654.735115280@linuxfoundation.org>
+References: <20230612101654.644983109@linuxfoundation.org>
 Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=bytedance.com; s=google; t=1686539625; x=1689131625;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to:subject
-         :user-agent:mime-version:date:message-id:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=isvk/E9G1J5c+bipF9hN5zG+Nag5iOn+AJ5rYPC8Si8=;
-        b=azPuT2b/FtHoAE095FDR2kcjtJf9/JJ1kwqBOO/u2aEEI3Upa/kUJnA5vvloGhQG7r
-         Iq+fbnSJBqkhGGYeCBgoOWvSIujRe8NiJ3FYP1EHlVv7vrfk6oxNh8ZHXDfYsBuKotAy
-         +5+Cpmfhr7aM9znnX2mKAAj3dqHQUyVUhQZN1OLISWBXX9O8eJHZ7BIZAYE5CXkzSFC6
-         sZvc2fzdRRDexf2en3ztWWHCPpXkv4oj5GFlhfIkzBO3Xp/0g8psQ5l1YC4ye66gAwfH
-         ghNd3rtQE07xppYBOMZIBJDrr4kp5uJ8mKIhAXPrM2LZE4peyAM6++6FZZ1os15mN2Ie
-         Yedw==
-In-Reply-To: <remnwctqmxleig7ywt6puhxnpmzjo7xm6hlfhpnul46ulfnw7j@36sbuxhuatto>
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-block-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linuxfoundation.org;
+        s=korg; t=1686565841;
+        bh=gQGaPDgWsb+Epxj7TQ++nTbbJhV5jGXReNdHkDhpiUI=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=tG3uw76KEoTEUdYQgemVGT0JXEi85fBDPYis5cwS7lysXcYcXB9YWO8gUCN10Wcgm
+         J4FQw8inzEXMnuvca9tY0ivQ8rZ4TjrsYaoxgFRd8cJDEoTcv80JuvIGf/gfA0RqOq
+         PRuzbdlQnPR6hMFnW9v6qaJz7mgJ7rO9u28i431Q=
+In-Reply-To: <20230612101654.644983109@linuxfoundation.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="iso-8859-1"; format="flowed"
-To: =?UTF-8?Q?Michal_Koutn=c3=bd?= <mkoutny-IBi9RG/b67k@public.gmane.org>
-Cc: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Type: text/plain; charset="us-ascii"
+To: stable@vger.kernel.org
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>, patches@lists.linux.dev, Martin Liska <mliska@suse.cz>, Tejun Heo <tj@kernel.org>, Josef Bacik <josef@toxicpanda.com>, Jens Axboe <axboe@kernel.dk>, cgroups@vger.kernel.org, linux-block@vger.kernel.org, "Jiri Slaby (SUSE)" <jirislaby@kernel.org>
+
+From: Jiri Slaby (SUSE) <jirislaby@kernel.org>
+
+commit ff1cc97b1f4c10db224f276d9615b22835b8c424 upstream.
+
+Since gcc13, each member of an enum has the same type as the enum [1]. And
+that is inherited from its members. Provided:
+  VTIME_PER_SEC_SHIFT     = 37,
+  VTIME_PER_SEC           = 1LLU << VTIME_PER_SEC_SHIFT,
+  ...
+  AUTOP_CYCLE_NSEC        = 10LLU * NSEC_PER_SEC,
+the named type is unsigned long.
+
+This generates warnings with gcc-13:
+  block/blk-iocost.c: In function 'ioc_weight_prfill':
+  block/blk-iocost.c:3037:37: error: format '%u' expects argument of type 'unsigned int', but argument 4 has type 'long unsigned int'
+
+  block/blk-iocost.c: In function 'ioc_weight_show':
+  block/blk-iocost.c:3047:34: error: format '%u' expects argument of type 'unsigned int', but argument 3 has type 'long unsigned int'
+
+So split the anonymous enum with large values to a separate enum, so
+that they don't affect other members.
+
+[1] https://gcc.gnu.org/bugzilla/show_bug.cgi?id=36113
+
+Cc: Martin Liska <mliska@suse.cz>
+Cc: Tejun Heo <tj@kernel.org>
+Cc: Josef Bacik <josef@toxicpanda.com>
+Cc: Jens Axboe <axboe@kernel.dk>
+Cc: cgroups@vger.kernel.org
+Cc: linux-block@vger.kernel.org
+Signed-off-by: Jiri Slaby (SUSE) <jirislaby@kernel.org>
+Link: https://lore.kernel.org/r/20221213120826.17446-1-jirislaby@kernel.org
+Signed-off-by: Jens Axboe <axboe@kernel.dk>
+Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+---
+ block/blk-iocost.c |    2 ++
+ 1 file changed, 2 insertions(+)
+
+--- a/block/blk-iocost.c
++++ b/block/blk-iocost.c
+@@ -248,7 +248,9 @@ enum {
+ 
+ 	/* 1/64k is granular enough and can easily be handled w/ u32 */
+ 	HWEIGHT_WHOLE		= 1 << 16,
++};
+ 
++enum {
+ 	/*
+ 	 * As vtime is used to calculate the cost of each IO, it needs to
+ 	 * be fairly high precision.  For example, it should be able to
 
 
-
-On 2023/5/24 Michal Koutn=C3=BD wrote:
-> On Wed, May 24, 2023 at 02:54:10PM +0800, Hao Jia <jiahao.os-EC8Uxl6Npydl=
-57MIdRCFDg@public.gmane.org> wrote:
->> Yes, so we need @curr to record the bstat value after the sequence fetch=
- is
->> completed.
->=20
-> No, I still don't see a problem that it solves. If you find incorrect
-> data being reported, please explain it more/with an example.
->=20
->> Yes, but it may not be obvious.
->> Another reason is that when we complete an update, we snapshot last_bsta=
-t as
->> the current bstat, which is better for readers to understand. Arithmetic=
-s is
->> somewhat obscure.
->=20
-> The readability here is subjective. It'd be interesting to have some
-> data comparing arithmetics vs copying though.
->=20
-
-Sorry for replying you so late. I am using RDTSC on my machine (an Intel=20
-Xeon(R) Platinum 8260 CPU@2.40GHz machine with 2 NUMA nodes each of=20
-which has 24 cores with SMT2 enabled, so 96 CPUs in total.) to compare=20
-the time consumption of arithmetics vs copying. There is almost no=20
-difference in the time consumption between arithmetics and copying.
-
-
-
-> HTH,
-> Michal
