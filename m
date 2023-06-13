@@ -1,253 +1,92 @@
-From: Josh Don <joshdon-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Subject: [PATCH v2 2/2] sched: add throttled time stat for throttled children
-Date: Mon, 12 Jun 2023 16:27:48 -0700
-Message-ID: <20230612232748.3948659-2-joshdon@google.com>
-References: <20230612232748.3948659-1-joshdon@google.com>
+From: Abel Wu <wuyun.abel@bytedance.com>
+Subject: Re: Re: [RFC PATCH net-next] sock: Propose socket.urgent for sockmem
+ isolation
+Date: Tue, 13 Jun 2023 14:46:32 +0800
+Message-ID: <b879d810-132b-38ab-c13d-30fabdc8954a@bytedance.com>
+References: <20230609082712.34889-1-wuyun.abel@bytedance.com>
+ <CANn89i+Qqq5nV0oRLh_KEHRV6VmSbS5PsSvayVHBi52FbB=sKA@mail.gmail.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Transfer-Encoding: quoted-printable
+Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20221208; t=1686612488; x=1689204488;
-        h=cc:to:from:subject:message-id:references:mime-version:in-reply-to
-         :date:from:to:cc:subject:date:message-id:reply-to;
-        bh=oCytQCDhKbiqioymJHM+7olUPxDWofcnuBl6H0wZRyo=;
-        b=Py2PwKTqVicb+jybRPotQ5wz2OFI2pFdUp6MtBJLqth76DODWnhYirm9qAZFJCn9bW
-         281i9pI0o5ytyHAk3lwEKNiqTZdHZerKxsxxVr2zuW1bpPNd6CKDBPuVeXLo/GlDANDs
-         UcYYo+LEDZ09I9IYPlMsGc7zA82INWsFTQEfpwKFJuEVnvI+FFXyY8/3xuNKFs22pUuJ
-         CXTtdcqpgHkuiPuPAZJd4TQQgJMxitoVmJ6+fVM3kXHBBsscuqnjwYm+PSvdJMZFBI6U
-         2aZ0HEvyH2iWj4NX580tJLx85S1DZD65IwdRg3olcss2TzXVPIL5gwt/JYsvb2ggaPsx
-         DCZg==
-In-Reply-To: <20230612232748.3948659-1-joshdon-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+        d=bytedance.com; s=google; t=1686638805; x=1689230805;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=NHNXSDSAPdGJpNANCbsAPKFp2yaEgGD+KFXl6OMicdU=;
+        b=N3xIpdGJflW3eOUqyzlLAk5abO21PLtlV9Mx6Umc9Y1/aUS6ZbK6xRXRwrBlCl8Hpt
+         c4VFcfT/4bTwUNGcVg175+fbr1PAChggD6uVFx3lHagvhox0mUPosWozHs3j411OtiIg
+         q1Z9LwzcFS02JAqJpGtU1gtlg9MoyXwZnR3qtAhSBZqlvB3neANc61YpQBDp8CqDL8LB
+         zEmXHHS2jlaLBD/YUj1zWpzLM2mP/B13pd8pD5UXNt67O89fC37Inmaq9CEiTcuxvhdX
+         fHhNFtYe96lllaquqJtuXVScNXSyTJXbWF6oVsGptmNDOdfS0LS+Pg89wOXHPW1dV3a+
+         flmg==
+Content-Language: en-US
+In-Reply-To: <CANn89i+Qqq5nV0oRLh_KEHRV6VmSbS5PsSvayVHBi52FbB=sKA@mail.gmail.com>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Juri Lelli <juri.lelli-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Vincent Guittot <vincent.guittot-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>
-Cc: Dietmar Eggemann <dietmar.eggemann-5wv7dgnIgG8@public.gmane.org>, Steven Rostedt <rostedt-nx8X9YLhiw1AfugRpC6u6w@public.gmane.org>, Ben Segall <bsegall-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Mel Gorman <mgorman-l3A5Bk7waGM@public.gmane.org>, Daniel Bristot de Oliveira <bristot-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Valentin Schneider <vschneid-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Xiangling Kong <xiangling-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Josh Don <joshdon-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Content-Type: text/plain; charset="windows-1252"; format="flowed"
+To: Eric Dumazet <edumazet@google.com>
+Cc: Tejun Heo <tj@kernel.org>, Christian Warloe <cwarloe@google.com>, Wei Wang <weiwan@google.com>, "David S. Miller" <davem@davemloft.net>, Jakub Kicinski <kuba@kernel.org>, Paolo Abeni <pabeni@redhat.com>, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, Roman Gushchin <roman.gushchin@linux.dev>, Shakeel Butt <shakeelb@google.com>, Muchun Song <muchun.song@linux.dev>, Andrew Morton <akpm@linux-foundation.org>, David Ahern <dsahern@kernel.org>, Yosry Ahmed <yosryahmed@google.com>, "Matthew Wilcox (Oracle)" <willy@infradead.org>, Yu Zhao <yuzhao@google.com>, Vasily Averin <vasily.averin@linux.dev>, Kuniyuki Iwashima <kuniyu@amazon.com>, Martin KaFai Lau <martin.lau@kernel.org>, Xin Long <lucien.xin@gmail.com>, Jason
 
-We currently export the total throttled time for cgroups that are given
-a bandwidth limit. This patch extends this accounting to also account
-the total time that each children cgroup has been throttled.
+On 6/9/23 5:07 PM, Eric Dumazet wrote:
+> On Fri, Jun 9, 2023 at 10:28=E2=80=AFAM Abel Wu <wuyun.abel@bytedance.com=
+> wrote:
+>>
+>> This is just a PoC patch intended to resume the discussion about
+>> tcpmem isolation opened by Google in LPC'22 [1].
+>>
+>> We are facing the same problem that the global shared threshold can
+>> cause isolation issues. Low priority jobs can hog TCP memory and
+>> adversely impact higher priority jobs. What's worse is that these
+>> low priority jobs usually have smaller cpu weights leading to poor
+>> ability to consume rx data.
+>>
+>> To tackle this problem, an interface for non-root cgroup memory
+>> controller named 'socket.urgent' is proposed. It determines whether
+>> the sockets of this cgroup and its descendants can escape from the
+>> constrains or not under global socket memory pressure.
+>>
+>> The 'urgent' semantics will not take effect under memcg pressure in
+>> order to protect against worse memstalls, thus will be the same as
+>> before without this patch.
+>>
+>> This proposal doesn't remove protocal's threshold as we found it
+>> useful in restraining memory defragment. As aforementioned the low
+>> priority jobs can hog lots of memory, which is unreclaimable and
+>> unmovable, for some time due to small cpu weight.
+>>
+>> So in practice we allow high priority jobs with net-memcg accounting
+>> enabled to escape the global constrains if the net-memcg itselt is
+>> not under pressure. While for lower priority jobs, the budget will
+>> be tightened as the memory usage of 'urgent' jobs increases. In this
+>> way we can finally achieve:
+>>
+>>    - Important jobs won't be priority inversed by the background
+>>      jobs in terms of socket memory pressure/limit.
+>>
+>>    - Global constrains are still effective, but only on non-urgent
+>>      jobs, useful for admins on policy decision on defrag.
+>>
+>> Comments/Ideas are welcomed, thanks!
+>>
+>=20
+> This seems to go in a complete opposite direction than memcg promises.
+>=20
+> Can we fix memcg, so that :
+>=20
+> Each group can use the memory it was provisioned (this includes TCP buffe=
+rs)
 
-This is useful to understand the degree to which children have been
-affected by the throttling control. Children which are not runnable
-during the entire throttled period, for example, will not show any
-self-throttling time during this period.
+Yes, but might not be easy once memory gets over-committed (which is
+common in modern data-centers). So as a tradeoff, we intend to put
+harder constraint on memory allocation for low priority jobs. Or else
+if every job can use its provisioned memory, than there will be more
+memstalls blocking random jobs which could be the important ones.
+Either way hurts performance, but the difference is whose performance
+gets hurt.
 
-Expose this in a new interface, 'cpu.stat.local', which is similar to
-how non-hierarchical events are accounted in 'memory.events.local'.
+Memory protection (memory.{min,low}) helps the important jobs less
+affected by memstalls. But once low priority jobs use lots of kernel
+memory like sockmem, the protection might become much less efficient.
 
-Signed-off-by: Josh Don <joshdon-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
----
-v2:
-- moved export to new cpu.stat.local file, per Tejun's recommendation
-
- include/linux/cgroup-defs.h |  2 ++
- kernel/cgroup/cgroup.c      | 34 ++++++++++++++++++++++++++++
- kernel/sched/core.c         | 44 +++++++++++++++++++++++++++++++++++++
- kernel/sched/fair.c         | 21 +++++++++++++++++-
- kernel/sched/sched.h        |  2 ++
- 5 files changed, 102 insertions(+), 1 deletion(-)
-
-diff --git a/include/linux/cgroup-defs.h b/include/linux/cgroup-defs.h
-index 8a0d5466c7be..ae20dbb885d6 100644
---- a/include/linux/cgroup-defs.h
-+++ b/include/linux/cgroup-defs.h
-@@ -661,6 +661,8 @@ struct cgroup_subsys {
- 	void (*css_rstat_flush)(struct cgroup_subsys_state *css, int cpu);
- 	int (*css_extra_stat_show)(struct seq_file *seq,
- 				   struct cgroup_subsys_state *css);
-+	int (*css_local_stat_show)(struct seq_file *seq,
-+				   struct cgroup_subsys_state *css);
- 
- 	int (*can_attach)(struct cgroup_taskset *tset);
- 	void (*cancel_attach)(struct cgroup_taskset *tset);
-diff --git a/kernel/cgroup/cgroup.c b/kernel/cgroup/cgroup.c
-index b26ae200abef..eafbdb58ee81 100644
---- a/kernel/cgroup/cgroup.c
-+++ b/kernel/cgroup/cgroup.c
-@@ -3726,6 +3726,36 @@ static int cpu_stat_show(struct seq_file *seq, void *v)
- 	return ret;
- }
- 
-+static int __maybe_unused cgroup_local_stat_show(struct seq_file *seq,
-+						 struct cgroup *cgrp, int ssid)
-+{
-+	struct cgroup_subsys *ss = cgroup_subsys[ssid];
-+	struct cgroup_subsys_state *css;
-+	int ret;
-+
-+	if (!ss->css_local_stat_show)
-+		return 0;
-+
-+	css = cgroup_tryget_css(cgrp, ss);
-+	if (!css)
-+		return 0;
-+
-+	ret = ss->css_local_stat_show(seq, css);
-+	css_put(css);
-+	return ret;
-+}
-+
-+static int cpu_local_stat_show(struct seq_file *seq, void *v)
-+{
-+	struct cgroup __maybe_unused *cgrp = seq_css(seq)->cgroup;
-+	int ret = 0;
-+
-+#ifdef CONFIG_CGROUP_SCHED
-+	ret = cgroup_local_stat_show(seq, cgrp, cpu_cgrp_id);
-+#endif
-+	return ret;
-+}
-+
- #ifdef CONFIG_PSI
- static int cgroup_io_pressure_show(struct seq_file *seq, void *v)
- {
-@@ -5276,6 +5306,10 @@ static struct cftype cgroup_base_files[] = {
- 		.name = "cpu.stat",
- 		.seq_show = cpu_stat_show,
- 	},
-+	{
-+		.name = "cpu.stat.local",
-+		.seq_show = cpu_local_stat_show,
-+	},
- 	{ }	/* terminate */
- };
- 
-diff --git a/kernel/sched/core.c b/kernel/sched/core.c
-index a68d1276bab0..02e1a1a78bd0 100644
---- a/kernel/sched/core.c
-+++ b/kernel/sched/core.c
-@@ -11103,6 +11103,27 @@ static int cpu_cfs_stat_show(struct seq_file *sf, void *v)
- 
- 	return 0;
- }
-+
-+static u64 throttled_time_self(struct task_group *tg)
-+{
-+	int i;
-+	u64 total = 0;
-+
-+	for_each_possible_cpu(i) {
-+		total += READ_ONCE(tg->cfs_rq[i]->throttled_clock_self_time);
-+	}
-+
-+	return total;
-+}
-+
-+static int cpu_cfs_local_stat_show(struct seq_file *sf, void *v)
-+{
-+	struct task_group *tg = css_tg(seq_css(sf));
-+
-+	seq_printf(sf, "throttled_time %llu\n", throttled_time_self(tg));
-+
-+	return 0;
-+}
- #endif /* CONFIG_CFS_BANDWIDTH */
- #endif /* CONFIG_FAIR_GROUP_SCHED */
- 
-@@ -11179,6 +11200,10 @@ static struct cftype cpu_legacy_files[] = {
- 		.name = "stat",
- 		.seq_show = cpu_cfs_stat_show,
- 	},
-+	{
-+		.name = "stat.local",
-+		.seq_show = cpu_cfs_local_stat_show,
-+	},
- #endif
- #ifdef CONFIG_RT_GROUP_SCHED
- 	{
-@@ -11235,6 +11260,24 @@ static int cpu_extra_stat_show(struct seq_file *sf,
- 	return 0;
- }
- 
-+static int cpu_local_stat_show(struct seq_file *sf,
-+			       struct cgroup_subsys_state *css)
-+{
-+#ifdef CONFIG_CFS_BANDWIDTH
-+	{
-+		struct task_group *tg = css_tg(css);
-+		u64 throttled_self_usec;
-+
-+		throttled_self_usec = throttled_time_self(tg);
-+		do_div(throttled_self_usec, NSEC_PER_USEC);
-+
-+		seq_printf(sf, "throttled_usec %llu\n",
-+			   throttled_self_usec);
-+	}
-+#endif
-+	return 0;
-+}
-+
- #ifdef CONFIG_FAIR_GROUP_SCHED
- static u64 cpu_weight_read_u64(struct cgroup_subsys_state *css,
- 			       struct cftype *cft)
-@@ -11413,6 +11456,7 @@ struct cgroup_subsys cpu_cgrp_subsys = {
- 	.css_released	= cpu_cgroup_css_released,
- 	.css_free	= cpu_cgroup_css_free,
- 	.css_extra_stat_show = cpu_extra_stat_show,
-+	.css_local_stat_show = cpu_local_stat_show,
- #ifdef CONFIG_RT_GROUP_SCHED
- 	.can_attach	= cpu_cgroup_can_attach,
- #endif
-diff --git a/kernel/sched/fair.c b/kernel/sched/fair.c
-index ddd5dc18b238..606885fc67be 100644
---- a/kernel/sched/fair.c
-+++ b/kernel/sched/fair.c
-@@ -4877,8 +4877,12 @@ enqueue_entity(struct cfs_rq *cfs_rq, struct sched_entity *se, int flags)
- 			list_add_leaf_cfs_rq(cfs_rq);
- 		} else {
- #ifdef CONFIG_CFS_BANDWIDTH
-+			struct rq *rq = rq_of(cfs_rq);
-+
- 			if (!cfs_rq->throttled_clock)
--				cfs_rq->throttled_clock = rq_clock(rq_of(cfs_rq));
-+				cfs_rq->throttled_clock = rq_clock(rq);
-+			if (!cfs_rq->throttled_clock_self)
-+				cfs_rq->throttled_clock_self = rq_clock(rq);
- #endif
- 		}
- 	}
-@@ -5385,6 +5389,17 @@ static int tg_unthrottle_up(struct task_group *tg, void *data)
- 			list_add_leaf_cfs_rq(cfs_rq);
- 	}
- 
-+	if (cfs_rq->throttled_clock_self) {
-+		u64 delta = rq_clock(rq) - cfs_rq->throttled_clock_self;
-+
-+		cfs_rq->throttled_clock_self = 0;
-+
-+		if (SCHED_WARN_ON((s64)delta < 0))
-+			delta = 0;
-+
-+		cfs_rq->throttled_clock_self_time += delta;
-+	}
-+
- 	return 0;
- }
- 
-@@ -5400,6 +5415,10 @@ static int tg_throttle_down(struct task_group *tg, void *data)
- 	}
- 	cfs_rq->throttle_count++;
- 
-+	SCHED_WARN_ON(cfs_rq->throttled_clock_self);
-+	if (cfs_rq->nr_running)
-+		cfs_rq->throttled_clock_self = rq_clock(rq);
-+
- 	return 0;
- }
- 
-diff --git a/kernel/sched/sched.h b/kernel/sched/sched.h
-index 678446251c35..1d4c2434ec9b 100644
---- a/kernel/sched/sched.h
-+++ b/kernel/sched/sched.h
-@@ -642,6 +642,8 @@ struct cfs_rq {
- 	u64			throttled_clock;
- 	u64			throttled_clock_pelt;
- 	u64			throttled_clock_pelt_time;
-+	u64			throttled_clock_self;
-+	u64			throttled_clock_self_time;
- 	int			throttled;
- 	int			throttle_count;
- 	struct list_head	throttled_list;
--- 
-2.41.0.162.gfafddb0af9-goog
-
+>=20
+> Global tcp_memory can disappear (set tcp_mem to infinity)
