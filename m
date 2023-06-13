@@ -1,56 +1,172 @@
-From: "tj@kernel.org" <tj@kernel.org>
-Subject: Re: [PATCH v3 0/2] memcontrol: support cgroup level OOM protection
-Date: Mon, 12 Jun 2023 22:40:32 -1000
-Message-ID: <ZIgrgGQQ-tYEQJFr@slm.duckdns.org>
-References: <ZFd5bpfYc3nPEVie@dhcp22.suse.cz>
- <66F9BB37-3BE1-4B0F-8DE1-97085AF4BED2@didiglobal.com>
- <ZFkEqhAs7FELUO3a@dhcp22.suse.cz>
- <CAJD7tkaw_7vYACsyzAtY9L0ZVC0B=XJEWgG=Ad_dOtL_pBDDvQ@mail.gmail.com>
- <ZIgodGWoC/R07eak@dhcp22.suse.cz>
-Mime-Version: 1.0
-Return-path: <linux-doc-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20221208; t=1686645629; x=1689237629;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:sender:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=Uuddb9c9VUE9xG/wODQy6qGOGm/KkteE8GYq9MCwRAo=;
-        b=hHVs3qPi0Aq8cI3ZELcon2W8/5mlGpERDvjit7DNkZJGLihmbAwJbkACfzIIgkxIpc
-         j4vFdsP/WWW0wIJd/+64pTHuEO5ZVFDRuI3Ji6gM8fK45NJlH0e7e/arPF6r2r2akpsM
-         +P2AQH9buFVjbPQZ+tH8SrQvxbwlEmqMjiKsi3b2c61QcoDyZqrxyk3f27/fjkKTuQeH
-         oJykroMIDIs7GXAhup68spefTPKSnD3abb/0MnqQMjKiiJpTM6AyYrvCdFBlKCBeyInX
-         hAmGy+znv8erLXrRjh7AGDf7f3c0YH8bWp8o24v/AElZnau34Ib2Vq14+f23at78jucW
-         sshQ==
-Sender: Tejun Heo <htejun@gmail.com>
-Content-Disposition: inline
-In-Reply-To: <ZIgodGWoC/R07eak@dhcp22.suse.cz>
+From: kernel test robot <lkp-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+Subject: [tj-cgroup:for-next] BUILD SUCCESS
+ 18740f47e5fa808d936213e4bbc6aaa25d7a2525
+Date: Tue, 13 Jun 2023 17:47:25 +0800
+Message-ID: <202306131723.aar3nZ0K-lkp@intel.com>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1686649667; x=1718185667;
+  h=date:from:to:cc:subject:message-id;
+  bh=HZd48uqxfaDIgHt97ozisplnqXPdXA6oeXgYNnFAeSk=;
+  b=jHCa+ffQarVbxH08zjO8B3/Z1wcdlyrM1Gqi+GBrJY8geG3ekS9u1cj2
+   p6Dw6QC1PJ+wc4Ei1HlWshklxLJCkGQiAE4bmEKv5KpnkDAuKSwbaoMRl
+   EovUWZZAa1yELYFvXgDlt4F88qyKz4/pH99ncGoFn5Z2f/98hzrSksn/Y
+   JdgPjoa/51jtRXJj8g7QYwzEAj22gPRGclMadK7pj91ovx+QrROpNJurG
+   O5azViRsC627PrtEKGLx/8IiP1viSILugFBX4ri4frgDuIRYfAi2yZuZv
+   vX+s2u5mjSdDpQruGRKL730jEC+00rAi49Vb/FAmXgdGtYtfP9lNdMdVi
+   Q==;
 List-ID: <cgroups.vger.kernel.org>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Michal Hocko <mhocko@suse.com>
-Cc: Yosry Ahmed <yosryahmed@google.com>, =?utf-8?B?56iL5Z6y5rab?= Chengkaitao Cheng <chengkaitao@didiglobal.com>, "lizefan.x@bytedance.com" <lizefan.x@bytedance.com>, "hannes@cmpxchg.org" <hannes@cmpxchg.org>, "corbet@lwn.net" <corbet@lwn.net>, "roman.gushchin@linux.dev" <roman.gushchin@linux.dev>, "shakeelb@google.com" <shakeelb@google.com>, "akpm@linux-foundation.org" <akpm@linux-foundation.org>, "brauner@kernel.org" <brauner@kernel.org>, "muchun.song@linux.dev" <muchun.song@linux.dev>, "viro@zeniv.linux.org.uk" <viro@zeniv.linux.org.uk>, "zhengqi.arch@bytedance.com" <zhengqi.arch@bytedance.com>, "ebiederm@xmission.com" <ebiederm@xmission.com>, "Liam.Howlett@oracle.com" <Liam.Howlett@oracle.com>, "chengzhihao1@huawei.com" <chengzhihao1@huawei.com>, pilgrimta
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-Hello,
+tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git for-next
+branch HEAD: 18740f47e5fa808d936213e4bbc6aaa25d7a2525  Merge branch 'for-6.5' into for-next
 
-On Tue, Jun 13, 2023 at 10:27:32AM +0200, Michal Hocko wrote:
-> On the other hand I can see a need to customizable OOM victim selection
-> functionality. We've been through that discussion on several other
-> occasions and the best thing we could come up with was to allow to plug
-> BPF into the victim selection process and allow to bypass the system
-> default method. No code has ever materialized from those discussions
-> though. Maybe this is the time to revive that idea again?
+elapsed time: 723m
 
-Yeah, my 5 cent - trying to define a rigid interface for something complex
-and flexible is a fool's errand.
+configs tested: 130
+configs skipped: 5
 
-Johannes knows a lot better than me but we (meta) are handling most OOMs
-with oomd which gives more than sufficient policy flexibility. That said,
-handling OOMs in userspace requires wholesale configuration changes (e.g.
-working IO isolation) and being able to steer kernel OOM kills can be useful
-for many folks. I haven't thought too much about it but the problem seems
-pretty well fit for offloading policy decisions to a BPF program.
+The following configs have been built successfully.
+More configs may be tested in the coming days.
 
-Thanks.
+tested configs:
+alpha                            allyesconfig   gcc  
+alpha                               defconfig   gcc  
+arc                              allyesconfig   gcc  
+arc                                 defconfig   gcc  
+arc                  randconfig-r025-20230612   gcc  
+arc                  randconfig-r033-20230612   gcc  
+arc                  randconfig-r043-20230612   gcc  
+arm                              allmodconfig   gcc  
+arm                              allyesconfig   gcc  
+arm                         axm55xx_defconfig   gcc  
+arm                                 defconfig   gcc  
+arm                            hisi_defconfig   gcc  
+arm                         nhk8815_defconfig   gcc  
+arm                  randconfig-r016-20230612   clang
+arm                  randconfig-r036-20230612   gcc  
+arm                  randconfig-r046-20230612   clang
+arm                           u8500_defconfig   gcc  
+arm64                            allyesconfig   gcc  
+arm64                               defconfig   gcc  
+csky         buildonly-randconfig-r002-20230612   gcc  
+csky                                defconfig   gcc  
+csky                 randconfig-r002-20230612   gcc  
+csky                 randconfig-r003-20230612   gcc  
+csky                 randconfig-r031-20230612   gcc  
+csky                 randconfig-r032-20230612   gcc  
+hexagon              randconfig-r041-20230612   clang
+hexagon              randconfig-r045-20230612   clang
+i386                             allyesconfig   gcc  
+i386                              debian-10.3   gcc  
+i386                                defconfig   gcc  
+i386                 randconfig-i001-20230612   clang
+i386                 randconfig-i002-20230612   clang
+i386                 randconfig-i003-20230612   clang
+i386                 randconfig-i004-20230612   clang
+i386                 randconfig-i005-20230612   clang
+i386                 randconfig-i006-20230612   clang
+i386                 randconfig-i011-20230612   gcc  
+i386                 randconfig-i012-20230612   gcc  
+i386                 randconfig-i013-20230612   gcc  
+i386                 randconfig-i014-20230612   gcc  
+i386                 randconfig-i015-20230612   gcc  
+i386                 randconfig-i016-20230612   gcc  
+i386                 randconfig-r035-20230612   clang
+loongarch                        allmodconfig   gcc  
+loongarch                         allnoconfig   gcc  
+loongarch                           defconfig   gcc  
+m68k                             allmodconfig   gcc  
+m68k                             allyesconfig   gcc  
+m68k         buildonly-randconfig-r004-20230612   gcc  
+m68k                                defconfig   gcc  
+m68k                 randconfig-r004-20230612   gcc  
+m68k                 randconfig-r023-20230612   gcc  
+m68k                 randconfig-r033-20230612   gcc  
+microblaze           randconfig-r013-20230612   gcc  
+mips                             allmodconfig   gcc  
+mips                             allyesconfig   gcc  
+mips         buildonly-randconfig-r006-20230612   gcc  
+mips                     cu1830-neo_defconfig   clang
+mips                     loongson2k_defconfig   clang
+mips                 randconfig-r001-20230612   gcc  
+mips                 randconfig-r031-20230612   gcc  
+mips                 randconfig-r034-20230612   gcc  
+mips                         rt305x_defconfig   gcc  
+nios2                               defconfig   gcc  
+nios2                randconfig-r014-20230612   gcc  
+nios2                randconfig-r022-20230612   gcc  
+openrisc     buildonly-randconfig-r004-20230612   gcc  
+openrisc             randconfig-r015-20230612   gcc  
+openrisc             randconfig-r024-20230612   gcc  
+openrisc             randconfig-r036-20230612   gcc  
+parisc                           allyesconfig   gcc  
+parisc       buildonly-randconfig-r003-20230612   gcc  
+parisc                              defconfig   gcc  
+parisc               randconfig-r004-20230612   gcc  
+parisc               randconfig-r012-20230612   gcc  
+parisc64                            defconfig   gcc  
+powerpc                          allmodconfig   gcc  
+powerpc                           allnoconfig   gcc  
+powerpc      buildonly-randconfig-r002-20230612   gcc  
+powerpc      buildonly-randconfig-r005-20230612   gcc  
+powerpc                      obs600_defconfig   clang
+powerpc                      pasemi_defconfig   gcc  
+riscv                            allmodconfig   gcc  
+riscv                             allnoconfig   gcc  
+riscv                            allyesconfig   gcc  
+riscv        buildonly-randconfig-r005-20230612   gcc  
+riscv                               defconfig   gcc  
+riscv                randconfig-r006-20230612   clang
+riscv                randconfig-r011-20230612   gcc  
+riscv                randconfig-r042-20230612   gcc  
+riscv                          rv32_defconfig   gcc  
+s390                             allmodconfig   gcc  
+s390                             allyesconfig   gcc  
+s390                                defconfig   gcc  
+s390                 randconfig-r026-20230612   gcc  
+s390                 randconfig-r044-20230612   gcc  
+sh                               allmodconfig   gcc  
+sh                             espt_defconfig   gcc  
+sh                   randconfig-r002-20230612   gcc  
+sh                   randconfig-r012-20230612   gcc  
+sh                        sh7785lcr_defconfig   gcc  
+sparc                            allyesconfig   gcc  
+sparc                               defconfig   gcc  
+sparc                randconfig-r001-20230612   gcc  
+sparc                randconfig-r011-20230612   gcc  
+sparc64      buildonly-randconfig-r001-20230612   gcc  
+sparc64              randconfig-r013-20230612   gcc  
+sparc64              randconfig-r015-20230612   gcc  
+sparc64              randconfig-r021-20230612   gcc  
+um                             i386_defconfig   gcc  
+um                           x86_64_defconfig   clang
+um                           x86_64_defconfig   gcc  
+x86_64                           allyesconfig   gcc  
+x86_64                              defconfig   gcc  
+x86_64                                  kexec   gcc  
+x86_64               randconfig-a001-20230612   clang
+x86_64               randconfig-a002-20230612   clang
+x86_64               randconfig-a003-20230612   clang
+x86_64               randconfig-a004-20230612   clang
+x86_64               randconfig-a005-20230612   clang
+x86_64               randconfig-a006-20230612   clang
+x86_64               randconfig-a011-20230612   gcc  
+x86_64               randconfig-a012-20230612   gcc  
+x86_64               randconfig-a013-20230612   gcc  
+x86_64               randconfig-a014-20230612   gcc  
+x86_64               randconfig-a015-20230612   gcc  
+x86_64               randconfig-a016-20230612   gcc  
+x86_64               randconfig-r005-20230612   clang
+x86_64               randconfig-r014-20230612   gcc  
+x86_64                          rhel-8.3-rust   clang
+x86_64                               rhel-8.3   gcc  
 
 -- 
-tejun
+0-DAY CI Kernel Test Service
+https://github.com/intel/lkp-tests/wiki
