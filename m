@@ -1,139 +1,103 @@
-From: Yosry Ahmed <yosryahmed@google.com>
-Subject: Re: [PATCH v3 0/2] memcontrol: support cgroup level OOM protection
-Date: Thu, 15 Jun 2023 18:44:46 -0700
-Message-ID: <CAJD7tkYtJcC6zYqy5vWeaB=1Rv16gY=q+OG7vF_Oc=DmVk24GA@mail.gmail.com>
-References: <ZFd5bpfYc3nPEVie@dhcp22.suse.cz> <66F9BB37-3BE1-4B0F-8DE1-97085AF4BED2@didiglobal.com>
- <ZFkEqhAs7FELUO3a@dhcp22.suse.cz> <CAJD7tkaw_7vYACsyzAtY9L0ZVC0B=XJEWgG=Ad_dOtL_pBDDvQ@mail.gmail.com>
- <ZIgodGWoC/R07eak@dhcp22.suse.cz> <CAJD7tkawYZAWKYgttgtPjscnZTARj+QaGZLGiMiSadwC3oCELQ@mail.gmail.com>
- <ZIhb1EwvrdKXpEMb@dhcp22.suse.cz> <CAJD7tka-w8-0G5hjr8MRAue0wct0UPh4-BrPEGkOa1eUycz5mQ@mail.gmail.com>
- <ZIrqYX9olxbZJML2@dhcp22.suse.cz>
+From: Abel Wu <wuyun.abel@bytedance.com>
+Subject: Re: [RFC PATCH net-next] sock: Propose socket.urgent for sockmem
+ isolation
+Date: Fri, 16 Jun 2023 15:27:24 +0800
+Message-ID: <42285da4-ea80-78ca-4c71-6562170614c8@bytedance.com>
+References: <20230609082712.34889-1-wuyun.abel@bytedance.com>
+ <CANn89i+Qqq5nV0oRLh_KEHRV6VmSbS5PsSvayVHBi52FbB=sKA@mail.gmail.com>
+ <b879d810-132b-38ab-c13d-30fabdc8954a@bytedance.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-Return-path: <linux-doc-owner@vger.kernel.org>
+Content-Transfer-Encoding: 8bit
+Return-path: <netdev+bounces-11311-gl-netdev-2=m.gmane-mx.org@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20221208; t=1686879923; x=1689471923;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=TTYhjgjxFSXf3VV7TigycNG8AweXhCpfWjk/TzQLXHc=;
-        b=S3sEkwkMSll1Qn9sm5LHOkOGyqa9IWwEh1o6Y2R2ElKB5bZkFZpm65z7B/tJRybHER
-         yTY2PIEZH0eR3Po6ZzHc16OeGyVIkYmwtCdXTjriszEjXtNBantUF2Ozi0mpVcPOGbQR
-         VgvxxP+s36cJ6ooAMxS1X3+6p3goyhZP/H5vJrbNfsyKpR2M7tBc+v8IN6GtYfyfbbta
-         ICo8LaY+2xcwDkL7DVIETr6Y4ilhpY6Yewxp7bD4HTMOHcQrYq25VgUL9Z1BeZ7c2lQW
-         a+FSy7QJEBUbtpKMDq5KKPiz2RtmaJRgAFtsxBoSZ+nKhq+XI8wXK4yAB4bxQZC1j+qn
-         v45Q==
-In-Reply-To: <ZIrqYX9olxbZJML2@dhcp22.suse.cz>
-List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="utf-8"
-To: Michal Hocko <mhocko@suse.com>
-Cc: =?UTF-8?B?56iL5Z6y5rabIENoZW5na2FpdGFvIENoZW5n?= <chengkaitao@didiglobal.com>, "tj@kernel.org" <tj@kernel.org>, "lizefan.x@bytedance.com" <lizefan.x@bytedance.com>, "hannes@cmpxchg.org" <hannes@cmpxchg.org>, "corbet@lwn.net" <corbet@lwn.net>, "roman.gushchin@linux.dev" <roman.gushchin@linux.dev>, "shakeelb@google.com" <shakeelb@google.com>, "akpm@linux-foundation.org" <akpm@linux-foundation.org>, "brauner@kernel.org" <brauner@kernel.org>, "muchun.song@linux.dev" <muchun.song@linux.dev>, "viro@zeniv.linux.org.uk" <viro@zeniv.linux.org.uk>, "zhengqi.arch@bytedance.com" <zhengqi.arch@bytedance.com>, "ebiederm@xmission.com" <ebiederm@xmission.com>, "Liam.Howlett@oracle.com" <Liam.Howlett@oracle.com>, "chengzhihao1@huawei.com" <chengzhihao1@huawei.com>, pilgrimtao@gmai
+        d=bytedance.com; s=google; t=1686900456; x=1689492456;
+        h=content-transfer-encoding:in-reply-to:content-language:references
+         :cc:to:from:subject:user-agent:mime-version:date:message-id:from:to
+         :cc:subject:date:message-id:reply-to;
+        bh=9nn1acQnmBrxxKtKr0fIyJP3cG1pp8tJvpkDo6e+3KI=;
+        b=VRySI+g5OyhFq3+xJSt3XxtxCawIas+z+Lic4uM27Z/udSbrXCTBXMbmW3AmwIUo/g
+         +j64SzyuI3pM64/QBgs69XNPGhOiAnEjKd6QtJiH1liw/ezSt6iX9shVnsA95OXnchOh
+         9JvQ6UQRi5s4QwwA7Ua701jbMXoPDsn53P3dOg+psguoZBsLTojgzvwwyEy8UdhAuk71
+         ojp4elmyT5+Dm/h2WqZsUNvIm63ZHNQ2j7KP4DKglGusmxmVk8EFDp2wFt7xMuAuKHbj
+         IRMA0WEPlxSgbgehJyNbJGm9KVDEcvEkN2yP5QuROXtcc5BpmvVpV0ZDyvA8ehpR3gUI
+         s+ZQ==
+List-Id: <cgroups.vger.kernel.org>
+List-Subscribe: <mailto:netdev+subscribe@vger.kernel.org>
+List-Unsubscribe: <mailto:netdev+unsubscribe@vger.kernel.org>
+Content-Language: en-US
+In-Reply-To: <b879d810-132b-38ab-c13d-30fabdc8954a@bytedance.com>
+Content-Type: text/plain; charset="utf-8"; format="flowed"
+To: Eric Dumazet <edumazet@google.com>, Shakeel Butt <shakeelb@google.com>
+Cc: Tejun Heo <tj@kernel.org>, Christian Warloe <cwarloe@google.com>, Wei Wang <weiwan@google.com>, "David S. Miller" <davem@davemloft.net>, Jakub Kicinski <kuba@kernel.org>, Paolo Abeni <pabeni@redhat.com>, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, Roman Gushchin <roman.gushchin@linux.dev>, Muchun Song <muchun.song@linux.dev>, Andrew Morton <akpm@linux-foundation.org>, David Ahern <dsahern@kernel.org>, Yosry Ahmed <yosryahmed@google.com>, "Matthew Wilcox (Oracle)" <willy@infradead.org>, Yu Zhao <yuzhao@google.com>, Vasily Averin <vasily.averin@linux.dev>, Kuniyuki Iwashima <kuniyu@amazon.com>, Martin KaFai Lau <martin.lau@kernel.org>, Xin Long <lucien.xin@gmail.com>, Jason Xing <kernelxing@tencent.com>, Michal Hocko <mhocko@suse.com>, Alexei Starovoitov <ast@kernel.org>, open list <linux-kernel@vger.kernel.org>, open list:NETWORKING [GENERAL
 
-On Thu, Jun 15, 2023 at 3:39=E2=80=AFAM Michal Hocko <mhocko@suse.com> wrot=
-e:
->
-> On Tue 13-06-23 13:24:24, Yosry Ahmed wrote:
-> > On Tue, Jun 13, 2023 at 5:06=E2=80=AFAM Michal Hocko <mhocko@suse.com> =
-wrote:
-> > >
-> > > On Tue 13-06-23 01:36:51, Yosry Ahmed wrote:
-> > > > +David Rientjes
-> > > >
-> > > > On Tue, Jun 13, 2023 at 1:27=E2=80=AFAM Michal Hocko <mhocko@suse.c=
-om> wrote:
-> > > > >
-> > > > > On Sun 04-06-23 01:25:42, Yosry Ahmed wrote:
-> > > > > [...]
-> > > > > > There has been a parallel discussion in the cover letter thread=
- of v4
-> > > > > > [1]. To summarize, at Google, we have been using OOM scores to
-> > > > > > describe different job priorities in a more explicit way -- reg=
-ardless
-> > > > > > of memory usage. It is strictly priority-based OOM killing. Tie=
-s are
-> > > > > > broken based on memory usage.
-> > > > > >
-> > > > > > We understand that something like memory.oom.protect has an adv=
-antage
-> > > > > > in the sense that you can skip killing a process if you know th=
-at it
-> > > > > > won't free enough memory anyway, but for an environment where m=
-ultiple
-> > > > > > jobs of different priorities are running, we find it crucial to=
- be
-> > > > > > able to define strict ordering. Some jobs are simply more impor=
-tant
-> > > > > > than others, regardless of their memory usage.
-> > > > >
-> > > > > I do remember that discussion. I am not a great fan of simple pri=
-ority
-> > > > > based interfaces TBH. It sounds as an easy interface but it hits
-> > > > > complications as soon as you try to define a proper/sensible
-> > > > > hierarchical semantic. I can see how they might work on leaf memc=
-gs with
-> > > > > statically assigned priorities but that sounds like a very narrow
-> > > > > usecase IMHO.
-> > > >
-> > > > Do you mind elaborating the problem with the hierarchical semantics=
-?
-> > >
-> > > Well, let me be more specific. If you have a simple hierarchical nume=
-ric
-> > > enforcement (assume higher priority more likely to be chosen and the
-> > > effective priority to be max(self, max(parents)) then the semantic
-> > > itslef is straightforward.
-> > >
-> > > I am not really sure about the practical manageability though. I have
-> > > hard time to imagine priority assignment on something like a shared
-> > > workload with a more complex hierarchy. For example:
-> > >             root
-> > >         /    |    \
-> > > cont_A    cont_B  cont_C
-> > >
-> > > each container running its workload with own hierarchy structures tha=
-t
-> > > might be rather dynamic during the lifetime. In order to have a
-> > > predictable OOM behavior you need to watch and reassign priorities al=
-l
-> > > the time, no?
-> >
-> > In our case we don't really manage the entire hierarchy in a
-> > centralized fashion. Each container gets a score based on their
-> > relative priority, and each container is free to set scores within its
-> > subcontainers if needed. Isn't this what the hierarchy is all about?
-> > Each parent only cares about its direct children. On the system level,
-> > we care about the priority ordering of containers. Ordering within
-> > containers can be deferred to containers.
->
-> This really depends on the workload. This might be working for your
-> setup but as I've said above, many workloads would be struggling with
-> re-prioritizing as soon as a new workload is started and oom priorities
-> would need to be reorganized as a result. The setup is just too static
-> to be generally useful IMHO.
-> You can avoid that by essentially making mid-layers no priority and only
-> rely on leaf memcgs when this would become more flexible. This is
-> something even more complicated with the top-down approach.
+Gentle ping :)
 
-I agree that other setups may find it more difficult if one entity
-needs to manage the entire tree, although if the scores range is large
-enough, I don't really think it's that static. When a new workload is
-started you decide what its priority is compared to the existing
-workloads and set its score as such. We use a range of scores from 0
-to 10,000 (and it can easily be larger), so it's easy to assign new
-scores without reorganizing the existing scores.
+Any suggestions for memory over-committed scenario?
 
->
-> That being said, I can see workloads which could benefit from a
-> priority (essentially user spaced controlled oom pre-selection) based
-> policy. But there are many other policies like that that would be
-> usecase specific and not generic enough so I do not think this is worth
-> a generic interface and would fall into BPF or alike based policies.
+Thanks,
+	Abel
 
-That's reasonable. I can't speak for other folks. Perhaps no single
-policy will be generic enough, and we should focus on enabling
-customized policy. Perhaps other userspace OOM agents can benefit from
-this as well.
+On 6/13/23 2:46 PM, Abel Wu wrote:
+> On 6/9/23 5:07 PM, Eric Dumazet wrote:
+>> On Fri, Jun 9, 2023 at 10:28 AM Abel Wu <wuyun.abel@bytedance.com> wrote:
+>>>
+>>> This is just a PoC patch intended to resume the discussion about
+>>> tcpmem isolation opened by Google in LPC'22 [1].
+>>>
+>>> We are facing the same problem that the global shared threshold can
+>>> cause isolation issues. Low priority jobs can hog TCP memory and
+>>> adversely impact higher priority jobs. What's worse is that these
+>>> low priority jobs usually have smaller cpu weights leading to poor
+>>> ability to consume rx data.
+>>>
+>>> To tackle this problem, an interface for non-root cgroup memory
+>>> controller named 'socket.urgent' is proposed. It determines whether
+>>> the sockets of this cgroup and its descendants can escape from the
+>>> constrains or not under global socket memory pressure.
+>>>
+>>> The 'urgent' semantics will not take effect under memcg pressure in
+>>> order to protect against worse memstalls, thus will be the same as
+>>> before without this patch.
+>>>
+>>> This proposal doesn't remove protocal's threshold as we found it
+>>> useful in restraining memory defragment. As aforementioned the low
+>>> priority jobs can hog lots of memory, which is unreclaimable and
+>>> unmovable, for some time due to small cpu weight.
+>>>
+>>> So in practice we allow high priority jobs with net-memcg accounting
+>>> enabled to escape the global constrains if the net-memcg itselt is
+>>> not under pressure. While for lower priority jobs, the budget will
+>>> be tightened as the memory usage of 'urgent' jobs increases. In this
+>>> way we can finally achieve:
+>>>
+>>>    - Important jobs won't be priority inversed by the background
+>>>      jobs in terms of socket memory pressure/limit.
+>>>
+>>>    - Global constrains are still effective, but only on non-urgent
+>>>      jobs, useful for admins on policy decision on defrag.
+>>>
+>>> Comments/Ideas are welcomed, thanks!
+>>>
+>>
+>> This seems to go in a complete opposite direction than memcg promises.
+>>
+>> Can we fix memcg, so that :
+>>
+>> Each group can use the memory it was provisioned (this includes TCP 
+>> buffers)
+> 
+> Yes, but might not be easy once memory gets over-committed (which is
+> common in modern data-centers). So as a tradeoff, we intend to put
+> harder constraint on memory allocation for low priority jobs. Or else
+> if every job can use its provisioned memory, than there will be more
+> memstalls blocking random jobs which could be the important ones.
+> Either way hurts performance, but the difference is whose performance
+> gets hurt.
+> 
+> Memory protection (memory.{min,low}) helps the important jobs less
+> affected by memstalls. But once low priority jobs use lots of kernel
+> memory like sockmem, the protection might become much less efficient.
+> 
+>>
+>> Global tcp_memory can disappear (set tcp_mem to infinity)
 
->
-> --
-> Michal Hocko
-> SUSE Labs
