@@ -1,103 +1,142 @@
-From: Abel Wu <wuyun.abel@bytedance.com>
-Subject: Re: [RFC PATCH net-next] sock: Propose socket.urgent for sockmem
- isolation
-Date: Fri, 16 Jun 2023 15:27:24 +0800
-Message-ID: <42285da4-ea80-78ca-4c71-6562170614c8@bytedance.com>
-References: <20230609082712.34889-1-wuyun.abel@bytedance.com>
- <CANn89i+Qqq5nV0oRLh_KEHRV6VmSbS5PsSvayVHBi52FbB=sKA@mail.gmail.com>
- <b879d810-132b-38ab-c13d-30fabdc8954a@bytedance.com>
+From: Haifeng Xu <haifeng.xu@shopee.com>
+Subject: Re: [PATCH 1/2] mm/memcontrol: do not tweak node in mem_cgroup_init()
+Date: Fri, 16 Jun 2023 16:28:38 +0800
+Message-ID: <47119364-30ac-cb57-7fd8-d9aa4b230478@shopee.com>
+References: <20230615073226.1343-1-haifeng.xu@shopee.com>
+ <ZIrIb7pgRXln27nv@dhcp22.suse.cz>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Return-path: <netdev+bounces-11311-gl-netdev-2=m.gmane-mx.org@vger.kernel.org>
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=bytedance.com; s=google; t=1686900456; x=1689492456;
-        h=content-transfer-encoding:in-reply-to:content-language:references
-         :cc:to:from:subject:user-agent:mime-version:date:message-id:from:to
-         :cc:subject:date:message-id:reply-to;
-        bh=9nn1acQnmBrxxKtKr0fIyJP3cG1pp8tJvpkDo6e+3KI=;
-        b=VRySI+g5OyhFq3+xJSt3XxtxCawIas+z+Lic4uM27Z/udSbrXCTBXMbmW3AmwIUo/g
-         +j64SzyuI3pM64/QBgs69XNPGhOiAnEjKd6QtJiH1liw/ezSt6iX9shVnsA95OXnchOh
-         9JvQ6UQRi5s4QwwA7Ua701jbMXoPDsn53P3dOg+psguoZBsLTojgzvwwyEy8UdhAuk71
-         ojp4elmyT5+Dm/h2WqZsUNvIm63ZHNQ2j7KP4DKglGusmxmVk8EFDp2wFt7xMuAuKHbj
-         IRMA0WEPlxSgbgehJyNbJGm9KVDEcvEkN2yP5QuROXtcc5BpmvVpV0ZDyvA8ehpR3gUI
-         s+ZQ==
-List-Id: <cgroups.vger.kernel.org>
-List-Subscribe: <mailto:netdev+subscribe@vger.kernel.org>
-List-Unsubscribe: <mailto:netdev+unsubscribe@vger.kernel.org>
-Content-Language: en-US
-In-Reply-To: <b879d810-132b-38ab-c13d-30fabdc8954a@bytedance.com>
-Content-Type: text/plain; charset="utf-8"; format="flowed"
-To: Eric Dumazet <edumazet@google.com>, Shakeel Butt <shakeelb@google.com>
-Cc: Tejun Heo <tj@kernel.org>, Christian Warloe <cwarloe@google.com>, Wei Wang <weiwan@google.com>, "David S. Miller" <davem@davemloft.net>, Jakub Kicinski <kuba@kernel.org>, Paolo Abeni <pabeni@redhat.com>, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, Roman Gushchin <roman.gushchin@linux.dev>, Muchun Song <muchun.song@linux.dev>, Andrew Morton <akpm@linux-foundation.org>, David Ahern <dsahern@kernel.org>, Yosry Ahmed <yosryahmed@google.com>, "Matthew Wilcox (Oracle)" <willy@infradead.org>, Yu Zhao <yuzhao@google.com>, Vasily Averin <vasily.averin@linux.dev>, Kuniyuki Iwashima <kuniyu@amazon.com>, Martin KaFai Lau <martin.lau@kernel.org>, Xin Long <lucien.xin@gmail.com>, Jason Xing <kernelxing@tencent.com>, Michal Hocko <mhocko@suse.com>, Alexei Starovoitov <ast@kernel.org>, open list <linux-kernel@vger.kernel.org>, open list:NETWORKING [GENERAL
+        d=shopee.com; s=shopee.com; t=1686904123; x=1689496123;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to:subject
+         :user-agent:mime-version:date:message-id:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=oDUVlxr6MIHuvrj4qFPZKLZUZbfg4Er9rrj+u7M45oY=;
+        b=RqRoDM6U9yZrXYYLMxuPkioIiUXPKKv4f1voJfglrx856kDWQ4InU3T953oGyFvEx1
+         VCtzXMmCfz2+nWM1hHGDbWfIyg+YohWISPrJ5C+isy1rxB3x9zqYAvfFMek7vUt6E5S7
+         +xQ53ddcA0Eg7evsHfFGzfTvHPys0n4GIOGNfx7/l1est+VX3BIJwFflM2GRNFBa+Ahf
+         NaGx4nl3WpfAIN3qCg4iI8BwXen7OGXZAm6fFB0SUQcRBBy3GOVkWtQXAlZGsqJ1EbAr
+         nIFds4nKrdg9MSVAYMPWte1TiPY7Pwd8QwhS56xYzDSu8T+hJAv+A706RnxIh9M4W+NK
+         DtiQ==
+In-Reply-To: <ZIrIb7pgRXln27nv@dhcp22.suse.cz>
+List-ID: <cgroups.vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"
+To: Michal Hocko <mhocko@suse.com>
+Cc: roman.gushchin@linux.dev, hannes@cmpxchg.org, shakeelb@google.com, akpm@linux-foundation.org, cgroups@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org
 
-Gentle ping :)
 
-Any suggestions for memory over-committed scenario?
 
-Thanks,
-	Abel
-
-On 6/13/23 2:46 PM, Abel Wu wrote:
-> On 6/9/23 5:07 PM, Eric Dumazet wrote:
->> On Fri, Jun 9, 2023 at 10:28 AM Abel Wu <wuyun.abel@bytedance.com> wrote:
->>>
->>> This is just a PoC patch intended to resume the discussion about
->>> tcpmem isolation opened by Google in LPC'22 [1].
->>>
->>> We are facing the same problem that the global shared threshold can
->>> cause isolation issues. Low priority jobs can hog TCP memory and
->>> adversely impact higher priority jobs. What's worse is that these
->>> low priority jobs usually have smaller cpu weights leading to poor
->>> ability to consume rx data.
->>>
->>> To tackle this problem, an interface for non-root cgroup memory
->>> controller named 'socket.urgent' is proposed. It determines whether
->>> the sockets of this cgroup and its descendants can escape from the
->>> constrains or not under global socket memory pressure.
->>>
->>> The 'urgent' semantics will not take effect under memcg pressure in
->>> order to protect against worse memstalls, thus will be the same as
->>> before without this patch.
->>>
->>> This proposal doesn't remove protocal's threshold as we found it
->>> useful in restraining memory defragment. As aforementioned the low
->>> priority jobs can hog lots of memory, which is unreclaimable and
->>> unmovable, for some time due to small cpu weight.
->>>
->>> So in practice we allow high priority jobs with net-memcg accounting
->>> enabled to escape the global constrains if the net-memcg itselt is
->>> not under pressure. While for lower priority jobs, the budget will
->>> be tightened as the memory usage of 'urgent' jobs increases. In this
->>> way we can finally achieve:
->>>
->>>    - Important jobs won't be priority inversed by the background
->>>      jobs in terms of socket memory pressure/limit.
->>>
->>>    - Global constrains are still effective, but only on non-urgent
->>>      jobs, useful for admins on policy decision on defrag.
->>>
->>> Comments/Ideas are welcomed, thanks!
->>>
->>
->> This seems to go in a complete opposite direction than memcg promises.
->>
->> Can we fix memcg, so that :
->>
->> Each group can use the memory it was provisioned (this includes TCP 
->> buffers)
+On 2023/6/15 16:14, Michal Hocko wrote:
+> On Thu 15-06-23 07:32:25, Haifeng Xu wrote:
+>> mem_cgroup_init() request for allocations from each possible node, and
+>> it's used to be a problem because NODE_DATA is not allocated for offline
+>> node. Things have already changed since commit 09f49dca570a9 ("mm: handle
+>> uninitialized numa nodes gracefully"), so it's unnecessary to check for
+>> !node_online nodes here.
 > 
-> Yes, but might not be easy once memory gets over-committed (which is
-> common in modern data-centers). So as a tradeoff, we intend to put
-> harder constraint on memory allocation for low priority jobs. Or else
-> if every job can use its provisioned memory, than there will be more
-> memstalls blocking random jobs which could be the important ones.
-> Either way hurts performance, but the difference is whose performance
-> gets hurt.
-> 
-> Memory protection (memory.{min,low}) helps the important jobs less
-> affected by memstalls. But once low priority jobs use lots of kernel
-> memory like sockmem, the protection might become much less efficient.
-> 
->>
->> Global tcp_memory can disappear (set tcp_mem to infinity)
+> How have you tested this patch?
 
+Start with one empty node:
+
+qemu-system-x86_64 \
+  -kernel vmlinux \
+  -initrd full.rootfs.cpio.gz \
+  -append "console=ttyS0,115200 root=/dev/ram0 nokaslr earlyprintk=serial oops=panic panic_on_warn" \
+  -drive format=qcow2,file=vm_disk.qcow2,media=disk,if=ide \
+  -enable-kvm \
+  -cpu host \
+  -m 8G,slots=2,maxmem=16G \
+  -smp cores=4,threads=1,sockets=2  \
+  -object memory-backend-ram,id=mem0,size=4G \
+  -object memory-backend-ram,id=mem1,size=4G \
+  -numa node,memdev=mem0,cpus=0-3,nodeid=0 \
+  -numa node,memdev=mem1,cpus=4-7,nodeid=1 \
+  -numa node,nodeid=2 \
+  -net nic,model=virtio,macaddr=52:54:00:12:34:58 \
+  -net user \
+  -nographic \
+  -rtc base=localtime \
+  -gdb tcp::6000
+
+Guest state when booting:
+[    0.048881] NUMA: Node 0 [mem 0x00000000-0x0009ffff] + [mem 0x00100000-0xbfffffff] -> [mem 0x00000000-0xbfffffff]
+[    0.050489] NUMA: Node 0 [mem 0x00000000-0xbfffffff] + [mem 0x100000000-0x13fffffff] -> [mem 0x00000000-0x13fffffff]
+[    0.052173] NODE_DATA(0) allocated [mem 0x13fffc000-0x13fffffff]
+[    0.053164] NODE_DATA(1) allocated [mem 0x23fffa000-0x23fffdfff]
+[    0.054187] Zone ranges:
+[    0.054587]   DMA      [mem 0x0000000000001000-0x0000000000ffffff]
+[    0.055551]   DMA32    [mem 0x0000000001000000-0x00000000ffffffff]
+[    0.056515]   Normal   [mem 0x0000000100000000-0x000000023fffffff]
+[    0.057484] Movable zone start for each node
+[    0.058149] Early memory node ranges
+[    0.058705]   node   0: [mem 0x0000000000001000-0x000000000009efff]
+[    0.059679]   node   0: [mem 0x0000000000100000-0x00000000bffdffff]
+[    0.060659]   node   0: [mem 0x0000000100000000-0x000000013fffffff]
+[    0.061649]   node   1: [mem 0x0000000140000000-0x000000023fffffff]
+[    0.062638] Initmem setup node 0 [mem 0x0000000000001000-0x000000013fffffff]
+[    0.063745] Initmem setup node 1 [mem 0x0000000140000000-0x000000023fffffff]
+[    0.064855]   DMA zone: 158 reserved pages exceeds freesize 0
+[    0.065746] Initializing node 2 as memoryless
+[    0.066437] Initmem setup node 2 as memoryless
+[    0.067132]   DMA zone: 158 reserved pages exceeds freesize 0
+[    0.068037] On node 0, zone DMA: 1 pages in unavailable ranges
+[    0.068265] On node 0, zone DMA: 97 pages in unavailable ranges
+[    0.124755] On node 0, zone Normal: 32 pages in unavailable ranges
+
+
+cat /sys/devices/system/node/online
+0-1
+cat /sys/devices/system/node/possible
+0-2
+
+In addition, I add a debug meesage:
+
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index 7ebf64e48b25..3d786281377d 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -7424,7 +7424,7 @@ static int __init mem_cgroup_init(void)
+                rtpn = kzalloc_node(sizeof(*rtpn), GFP_KERNEL, node);
+                if (!rtpn)
+                        continue;
+-
++               pr_info("allocate rtpn node %d.\n", node);
+                rtpn->rb_root = RB_ROOT;
+                rtpn->rb_rightmost = NULL;
+                spin_lock_init(&rtpn->lock);
+
+
+[    0.561420] allocate rtpn node 0.
+[    0.562324] allocate rtpn node 1.
+[    0.563322] allocate rtpn node 2.
+
+
+> 
+> I am not saying it is wrong and it looks like the right thing to do. But
+> the early init code has proven to be more subtle than expected so it is
+> definitely good to know that this has been tested on memory less setup
+> and passed.
+> 
+>> Signed-off-by: Haifeng Xu <haifeng.xu@shopee.com>
+>> ---
+>>  mm/memcontrol.c | 3 +--
+>>  1 file changed, 1 insertion(+), 2 deletions(-)
+>>
+>> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+>> index 4b27e245a055..c73c5fb33f65 100644
+>> --- a/mm/memcontrol.c
+>> +++ b/mm/memcontrol.c
+>> @@ -7421,8 +7421,7 @@ static int __init mem_cgroup_init(void)
+>>  	for_each_node(node) {
+>>  		struct mem_cgroup_tree_per_node *rtpn;
+>>  
+>> -		rtpn = kzalloc_node(sizeof(*rtpn), GFP_KERNEL,
+>> -				    node_online(node) ? node : NUMA_NO_NODE);
+>> +		rtpn = kzalloc_node(sizeof(*rtpn), GFP_KERNEL, node);
+>>  
+>>  		rtpn->rb_root = RB_ROOT;
+>>  		rtpn->rb_rightmost = NULL;
+>> -- 
+>> 2.25.1
+> 
