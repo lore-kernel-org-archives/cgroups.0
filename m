@@ -1,30 +1,30 @@
 From: kernel test robot <lkp-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
 Subject: Re: [PATCH] memcg: remove unneeded header files
-Date: Sat, 17 Jun 2023 17:12:40 +0800
-Message-ID: <202306171649.O90yt13M-lkp@intel.com>
+Date: Sat, 17 Jun 2023 17:24:14 +0800
+Message-ID: <202306171711.3ZCE2wVo-lkp@intel.com>
 References: <20230617072658.1826560-1-linmiaohe@huawei.com>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1686993209; x=1718529209;
+  t=1686993870; x=1718529870;
   h=date:from:to:cc:subject:message-id:references:
    mime-version:in-reply-to;
-  bh=08QS7Gwvov/7c+f5JerWj3mbiwURUQm6js4XGT9n+oU=;
-  b=YfwItNUBuyL7qZzmGdkxau4myAAsuMw2NQvGMzksBQx3oB8PpJdd8KMD
-   gl5SFhVXPeq2gnZKWZDQbFqh/Xpbtgi56QzD5j5AFoIcdcx93xlSu46yG
-   5pt4/uaPTlumZ+Jc+osQaAibE3UV0EMSI06/ZuugxdTrzwiux+nf7/2EM
-   btbgMXYUnFF2WOsU6gP86oVwHeMjO3PJXEf+L2pDvJjQ56KQDl3aO3bsF
-   pzbiclo3zI+d0yIz02mu5JhQ6PfBekSjQW5ANmSUS3vjiDjTG3XlDAtKt
-   +gFDzGMKW/JqKOLTo55jUjYfB6qZYBEHLobcBlLAucFu2SorzQmgRzU1j
-   w==;
+  bh=Q12Mn3SskxHyYSjjc9NvWyCrgucyGSmuPx1bDTGGBEY=;
+  b=Gp44bZTQnHNkOsPOzMVYDQ54ICZLFr8TR6127rnX3arYKDFUSysGYD8W
+   C9OdI6ORqkYcdFQ3zqy0f12w+4LAWuqUuTvE9dNgwgIpenORaLT9WHUqh
+   XK99egMV7C8KxsVYlssi/pHjoit3cy8jNGlm3Jh977iMyXusrBRVfUIZt
+   +5BUwy/+9bYkLbYDCg0UVcqkrMtgr34HSUbpMPEo9ZODbTs5pJNgQWS73
+   qJtEzSUJJY8Sv9HQUWebM7AU4dJQ2V/iSfD+sdyP37fzcXWGzKIuc5Rrq
+   TjptsuWe+0S/UFXl/1SDew59Gytc0GevTtxNQtQznUKbolJFNAk1HjciY
+   A==;
 Content-Disposition: inline
 In-Reply-To: <20230617072658.1826560-1-linmiaohe-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org, shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org
-Cc: oe-kbuild-all-cunTk1MwBs/YUNznpcFYbw@public.gmane.org, muchun.song-fxUVXftIFDnyG1zEObXtfA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linmiaohe-hv44wF8Li93QT0dZR+AlfA@public.gmane.org
+Cc: llvm-cunTk1MwBs/YUNznpcFYbw@public.gmane.org, oe-kbuild-all-cunTk1MwBs/YUNznpcFYbw@public.gmane.org, muchun.song-fxUVXftIFDnyG1zEObXtfA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linmiaohe-hv44wF8Li93QT0dZR+AlfA@public.gmane.org
 
 Hi Miaohe,
 
@@ -40,27 +40,28 @@ url:    https://github.com/intel-lab-lkp/linux/commits/Miaohe-Lin/memcg-remove-u
 base:   https://git.kernel.org/pub/scm/linux/kernel/git/akpm/mm.git mm-everything
 patch link:    https://lore.kernel.org/r/20230617072658.1826560-1-linmiaohe%40huawei.com
 patch subject: [PATCH] memcg: remove unneeded header files
-config: nios2-randconfig-r004-20230617 (https://download.01.org/0day-ci/archive/20230617/202306171649.O90yt13M-lkp-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org/config)
-compiler: nios2-linux-gcc (GCC) 12.3.0
-reproduce: (https://download.01.org/0day-ci/archive/20230617/202306171649.O90yt13M-lkp-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org/reproduce)
+config: i386-randconfig-i012-20230617 (https://download.01.org/0day-ci/archive/20230617/202306171711.3ZCE2wVo-lkp-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org/config)
+compiler: clang version 15.0.7 (https://github.com/llvm/llvm-project.git 8dfdcc7b7bf66834a761bd8de445840ef68e4d1a)
+reproduce: (https://download.01.org/0day-ci/archive/20230617/202306171711.3ZCE2wVo-lkp-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org/reproduce)
 
 If you fix the issue in a separate patch/commit (i.e. not just a new version of
 the same patch/commit), kindly add following tags
 | Reported-by: kernel test robot <lkp-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
-| Closes: https://lore.kernel.org/oe-kbuild-all/202306171649.O90yt13M-lkp-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org/
+| Closes: https://lore.kernel.org/oe-kbuild-all/202306171711.3ZCE2wVo-lkp-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org/
 
 All errors (new ones prefixed by >>):
 
-   mm/memcontrol.c: In function 'mem_cgroup_css_offline':
->> mm/memcontrol.c:5447:9: error: implicit declaration of function 'wb_memcg_offline' [-Werror=implicit-function-declaration]
-    5447 |         wb_memcg_offline(memcg);
-         |         ^~~~~~~~~~~~~~~~
-   mm/memcontrol.c: In function 'mem_cgroup_move_account':
->> mm/memcontrol.c:5788:29: error: implicit declaration of function 'mapping_can_writeback'; did you mean 'mapping_map_writable'? [-Werror=implicit-function-declaration]
-    5788 |                         if (mapping_can_writeback(mapping)) {
-         |                             ^~~~~~~~~~~~~~~~~~~~~
-         |                             mapping_map_writable
-   cc1: some warnings being treated as errors
+>> mm/memcontrol.c:5447:2: error: call to undeclared function 'wb_memcg_offline'; ISO C99 and later do not support implicit function declarations [-Werror,-Wimplicit-function-declaration]
+           wb_memcg_offline(memcg);
+           ^
+>> mm/memcontrol.c:5788:8: error: call to undeclared function 'mapping_can_writeback'; ISO C99 and later do not support implicit function declarations [-Werror,-Wimplicit-function-declaration]
+                           if (mapping_can_writeback(mapping)) {
+                               ^
+   mm/memcontrol.c:5788:8: note: did you mean 'mapping_map_writable'?
+   include/linux/fs.h:545:19: note: 'mapping_map_writable' declared here
+   static inline int mapping_map_writable(struct address_space *mapping)
+                     ^
+   2 errors generated.
 
 
 vim +/wb_memcg_offline +5447 mm/memcontrol.c
