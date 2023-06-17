@@ -1,75 +1,49 @@
-From: Haifeng Xu <haifeng.xu-LL2PKPoSiP3QT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH 2/2] mm/memcontrol: add check for allocation failure in
- mem_cgroup_init()
-Date: Fri, 16 Jun 2023 16:47:17 +0800
-Message-ID: <69cea432-f784-a734-f93e-50b0f897767c@shopee.com>
-References: <20230615073226.1343-2-haifeng.xu@shopee.com>
- <ZIrLLmb+o77Wy2sY@dhcp22.suse.cz>
+From: Miaohe Lin <linmiaohe-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Subject: [PATCH] memcg: remove unneeded header files
+Date: Sat, 17 Jun 2023 15:26:58 +0800
+Message-ID: <20230617072658.1826560-1-linmiaohe@huawei.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 7BIT
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=shopee.com; s=shopee.com; t=1686905242; x=1689497242;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to:subject
-         :user-agent:mime-version:date:message-id:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=14jtraihfDQYuZKnWqtYB4vhXjv2bj/la1fKtOJoayo=;
-        b=d+2AVHZsTy1E9KJtZsJvVVIyla7VzuCveJTq0FID83gOrCC7aVgr8vXcIuC65p7y+t
-         HYPlVbzUYU+h2icnfnip4UwI5FywmONNI/kPFPFF9vEj5fRZqpJto8QVv7mdi7rS3MHK
-         W7KuNCQkLcdtegaVBZfWp4lrUveeUdg658RxbJ34/yLhNlXG/c4U8fEcYhZo838ulhVy
-         WDHZ1HXAlUmVqKGCI+DDDEw1E35RTcqsghoZOYqGHbPZgXWCsXKHUGVBCn9e1liIIzGd
-         TBbUtCAJxZ1XmbK4m0E4CTseD8E3dPQoVkuN312wIj9IxC05IkX7dpdKJL2xuH6fjvRo
-         VUNA==
-In-Reply-To: <ZIrLLmb+o77Wy2sY-2MMpYkNvuYDjFM9bn6wA6Q@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
-Cc: roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org, shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org
+Cc: muchun.song-fxUVXftIFDnyG1zEObXtfA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linmiaohe-hv44wF8Li93QT0dZR+AlfA@public.gmane.org
 
+Remove some unneeded header files. No functional change intended.
 
+Signed-off-by: Miaohe Lin <linmiaohe-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+---
+ mm/memcontrol.c | 5 -----
+ 1 file changed, 5 deletions(-)
 
-On 2023/6/15 16:26, Michal Hocko wrote:
-> On Thu 15-06-23 07:32:26, Haifeng Xu wrote:
->> If mem_cgroup_init() fails to allocate mem_cgroup_tree_per_node, we
->> should not try to initilaize it. Add check for this case to avoid
->> potential NULL pointer dereference.
-> 
-> Technically yes and it seems that all users of soft_limit_tree.rb_tree_per_node
-> correctly check for NULL so this would be graceful failure handling. At
-> least superficially because the feature itself would be semi-broken when
-> used. But more practically this is a 24B allocation and if we fail to
-> allocate that early during the boot we are screwed anyway. Would such
-> a system have any chance to boot all the way to userspace? Woul any
-> userspace actually work?
-> 
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index d42742edfeac..a2c82a18745d 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -30,14 +30,10 @@
+ #include <linux/cgroup.h>
+ #include <linux/pagewalk.h>
+ #include <linux/sched/mm.h>
+-#include <linux/shmem_fs.h>
+-#include <linux/hugetlb.h>
+ #include <linux/pagemap.h>
+ #include <linux/vm_event_item.h>
+ #include <linux/smp.h>
+ #include <linux/page-flags.h>
+-#include <linux/backing-dev.h>
+-#include <linux/bit_spinlock.h>
+ #include <linux/rcupdate.h>
+ #include <linux/limits.h>
+ #include <linux/export.h>
+@@ -66,7 +62,6 @@
+ #include <linux/sched/isolation.h>
+ #include "internal.h"
+ #include <net/sock.h>
+-#include <net/ip.h>
+ #include "slab.h"
+ #include "swap.h"
+ 
+-- 
+2.27.0
 
-The memory request is too small and It's unlikely to fail during early init.
-If it fails, I think the system won't work.
-
-> Is this patch motivated by a code reading or is there any actual
-> practical upside of handling the error here?
->  
-
-There is no real world problem, just from code review.
-
->> Signed-off-by: Haifeng Xu <haifeng.xu-LL2PKPoSiP3QT0dZR+AlfA@public.gmane.org>
->> ---
->>  mm/memcontrol.c | 2 ++
->>  1 file changed, 2 insertions(+)
->>
->> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
->> index c73c5fb33f65..7ebf64e48b25 100644
->> --- a/mm/memcontrol.c
->> +++ b/mm/memcontrol.c
->> @@ -7422,6 +7422,8 @@ static int __init mem_cgroup_init(void)
->>  		struct mem_cgroup_tree_per_node *rtpn;
->>  
->>  		rtpn = kzalloc_node(sizeof(*rtpn), GFP_KERNEL, node);
->> +		if (!rtpn)
->> +			continue;
->>  
->>  		rtpn->rb_root = RB_ROOT;
->>  		rtpn->rb_rightmost = NULL;
->> -- 
->> 2.25.1
-> 
