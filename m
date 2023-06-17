@@ -1,37 +1,102 @@
-From: Miaohe Lin <linmiaohe-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Subject: [PATCH] cgroup/cpuset: remove unneeded nodes_or() in cpuset_change_task_nodemask()
-Date: Sat, 17 Jun 2023 16:30:43 +0800
-Message-ID: <20230617083043.2065556-1-linmiaohe@huawei.com>
+From: kernel test robot <lkp-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+Subject: Re: [PATCH] memcg: remove unneeded header files
+Date: Sat, 17 Jun 2023 17:12:40 +0800
+Message-ID: <202306171649.O90yt13M-lkp@intel.com>
+References: <20230617072658.1826560-1-linmiaohe@huawei.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7BIT
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1686993209; x=1718529209;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:in-reply-to;
+  bh=08QS7Gwvov/7c+f5JerWj3mbiwURUQm6js4XGT9n+oU=;
+  b=YfwItNUBuyL7qZzmGdkxau4myAAsuMw2NQvGMzksBQx3oB8PpJdd8KMD
+   gl5SFhVXPeq2gnZKWZDQbFqh/Xpbtgi56QzD5j5AFoIcdcx93xlSu46yG
+   5pt4/uaPTlumZ+Jc+osQaAibE3UV0EMSI06/ZuugxdTrzwiux+nf7/2EM
+   btbgMXYUnFF2WOsU6gP86oVwHeMjO3PJXEf+L2pDvJjQ56KQDl3aO3bsF
+   pzbiclo3zI+d0yIz02mu5JhQ6PfBekSjQW5ANmSUS3vjiDjTG3XlDAtKt
+   +gFDzGMKW/JqKOLTo55jUjYfB6qZYBEHLobcBlLAucFu2SorzQmgRzU1j
+   w==;
+Content-Disposition: inline
+In-Reply-To: <20230617072658.1826560-1-linmiaohe-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linmiaohe-hv44wF8Li93QT0dZR+AlfA@public.gmane.org
+Content-Transfer-Encoding: 7bit
+To: hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org, shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org
+Cc: oe-kbuild-all-cunTk1MwBs/YUNznpcFYbw@public.gmane.org, muchun.song-fxUVXftIFDnyG1zEObXtfA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linmiaohe-hv44wF8Li93QT0dZR+AlfA@public.gmane.org
 
-The tsk->mems_allowed is changed before calling mpol_rebind_task() and
-being reassigned right after it. But tsk->mems_allowed is not needed
-inside mpol_rebind_task(). So remove unneeded tsk->mems_allowed modify
-via nodes_or() here.
+Hi Miaohe,
 
-Signed-off-by: Miaohe Lin <linmiaohe-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
----
- kernel/cgroup/cpuset.c | 1 -
- 1 file changed, 1 deletion(-)
+kernel test robot noticed the following build errors:
 
-diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
-index 58e6f18f01c1..33a429c1179f 100644
---- a/kernel/cgroup/cpuset.c
-+++ b/kernel/cgroup/cpuset.c
-@@ -1941,7 +1941,6 @@ static void cpuset_change_task_nodemask(struct task_struct *tsk,
- 	local_irq_disable();
- 	write_seqcount_begin(&tsk->mems_allowed_seq);
- 
--	nodes_or(tsk->mems_allowed, tsk->mems_allowed, *newmems);
- 	mpol_rebind_task(tsk, newmems);
- 	tsk->mems_allowed = *newmems;
- 
+[auto build test ERROR on akpm-mm/mm-everything]
+[also build test ERROR on linus/master v6.4-rc6 next-20230616]
+[If your patch is applied to the wrong git tree, kindly drop us a note.
+And when submitting patch, we suggest to use '--base' as documented in
+https://git-scm.com/docs/git-format-patch#_base_tree_information]
+
+url:    https://github.com/intel-lab-lkp/linux/commits/Miaohe-Lin/memcg-remove-unneeded-header-files/20230617-152922
+base:   https://git.kernel.org/pub/scm/linux/kernel/git/akpm/mm.git mm-everything
+patch link:    https://lore.kernel.org/r/20230617072658.1826560-1-linmiaohe%40huawei.com
+patch subject: [PATCH] memcg: remove unneeded header files
+config: nios2-randconfig-r004-20230617 (https://download.01.org/0day-ci/archive/20230617/202306171649.O90yt13M-lkp-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org/config)
+compiler: nios2-linux-gcc (GCC) 12.3.0
+reproduce: (https://download.01.org/0day-ci/archive/20230617/202306171649.O90yt13M-lkp-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org/reproduce)
+
+If you fix the issue in a separate patch/commit (i.e. not just a new version of
+the same patch/commit), kindly add following tags
+| Reported-by: kernel test robot <lkp-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+| Closes: https://lore.kernel.org/oe-kbuild-all/202306171649.O90yt13M-lkp-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org/
+
+All errors (new ones prefixed by >>):
+
+   mm/memcontrol.c: In function 'mem_cgroup_css_offline':
+>> mm/memcontrol.c:5447:9: error: implicit declaration of function 'wb_memcg_offline' [-Werror=implicit-function-declaration]
+    5447 |         wb_memcg_offline(memcg);
+         |         ^~~~~~~~~~~~~~~~
+   mm/memcontrol.c: In function 'mem_cgroup_move_account':
+>> mm/memcontrol.c:5788:29: error: implicit declaration of function 'mapping_can_writeback'; did you mean 'mapping_map_writable'? [-Werror=implicit-function-declaration]
+    5788 |                         if (mapping_can_writeback(mapping)) {
+         |                             ^~~~~~~~~~~~~~~~~~~~~
+         |                             mapping_map_writable
+   cc1: some warnings being treated as errors
+
+
+vim +/wb_memcg_offline +5447 mm/memcontrol.c
+
+8cdea7c0545426 Balbir Singh      2008-02-07  5424  
+eb95419b023aba Tejun Heo         2013-08-08  5425  static void mem_cgroup_css_offline(struct cgroup_subsys_state *css)
+df878fb04dea04 KAMEZAWA Hiroyuki 2008-02-07  5426  {
+eb95419b023aba Tejun Heo         2013-08-08  5427  	struct mem_cgroup *memcg = mem_cgroup_from_css(css);
+3bc942f372af38 Tejun Heo         2013-11-22  5428  	struct mem_cgroup_event *event, *tmp;
+79bd9814e5ec9a Tejun Heo         2013-11-22  5429  
+79bd9814e5ec9a Tejun Heo         2013-11-22  5430  	/*
+79bd9814e5ec9a Tejun Heo         2013-11-22  5431  	 * Unregister events and notify userspace.
+79bd9814e5ec9a Tejun Heo         2013-11-22  5432  	 * Notify userspace about cgroup removing only after rmdir of cgroup
+79bd9814e5ec9a Tejun Heo         2013-11-22  5433  	 * directory to avoid race between userspace and kernelspace.
+79bd9814e5ec9a Tejun Heo         2013-11-22  5434  	 */
+4ba9515d32bac1 Shakeel Butt      2021-09-02  5435  	spin_lock_irq(&memcg->event_list_lock);
+fba94807837850 Tejun Heo         2013-11-22  5436  	list_for_each_entry_safe(event, tmp, &memcg->event_list, list) {
+79bd9814e5ec9a Tejun Heo         2013-11-22  5437  		list_del_init(&event->list);
+79bd9814e5ec9a Tejun Heo         2013-11-22  5438  		schedule_work(&event->remove);
+79bd9814e5ec9a Tejun Heo         2013-11-22  5439  	}
+4ba9515d32bac1 Shakeel Butt      2021-09-02  5440  	spin_unlock_irq(&memcg->event_list_lock);
+ec64f51545fffb KAMEZAWA Hiroyuki 2009-04-02  5441  
+bf8d5d52ffe89a Roman Gushchin    2018-06-07  5442  	page_counter_set_min(&memcg->memory, 0);
+230671533d6463 Roman Gushchin    2018-06-07  5443  	page_counter_set_low(&memcg->memory, 0);
+63677c745d63ba Roman Gushchin    2017-09-06  5444  
+567e9ab2e614e5 Johannes Weiner   2016-01-20  5445  	memcg_offline_kmem(memcg);
+a178015cde6998 Yang Shi          2021-05-04  5446  	reparent_shrinker_deferred(memcg);
+52ebea749aaed1 Tejun Heo         2015-05-22 @5447  	wb_memcg_offline(memcg);
+e4dde56cd20867 Yu Zhao           2022-12-21  5448  	lru_gen_offline_memcg(memcg);
+73f576c04b9410 Johannes Weiner   2016-07-20  5449  
+591edfb10a949d Roman Gushchin    2018-10-26  5450  	drain_all_stock(memcg);
+591edfb10a949d Roman Gushchin    2018-10-26  5451  
+73f576c04b9410 Johannes Weiner   2016-07-20  5452  	mem_cgroup_id_put(memcg);
+df878fb04dea04 KAMEZAWA Hiroyuki 2008-02-07  5453  }
+df878fb04dea04 KAMEZAWA Hiroyuki 2008-02-07  5454  
+
 -- 
-2.27.0
-
+0-DAY CI Kernel Test Service
+https://github.com/intel/lkp-tests/wiki
