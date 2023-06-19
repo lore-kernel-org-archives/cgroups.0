@@ -1,42 +1,87 @@
-From: Miaohe Lin <linmiaohe-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH] memcg: remove unneeded header files
-Date: Mon, 19 Jun 2023 09:38:47 +0800
-Message-ID: <1b7ef52f-bf7b-692f-d906-288c8a64f37c@huawei.com>
-References: <20230617072658.1826560-1-linmiaohe@huawei.com>
- <202306171649.O90yt13M-lkp@intel.com>
+From: Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Subject: [PATCH] selftests/cgroup: allow running a specific test with test_memcontrol
+Date: Mon, 19 Jun 2023 05:17:15 +0000
+Message-ID: <20230619051715.2306134-1-yosryahmed@google.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <202306171649.O90yt13M-lkp-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
-Content-Language: en-US
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20221208; t=1687151840; x=1689743840;
+        h=cc:to:from:subject:message-id:mime-version:date:from:to:cc:subject
+         :date:message-id:reply-to;
+        bh=wIJtbiNHWORZFFJvZlaFdgy0aymB8UjaLQ1n2ZbqAGA=;
+        b=gF61XMV36bH0I0OFvVtMJMGfMqtsf5GRLhWCa6KadS7mbkOfJd8Nx9f6fyfD0xONPr
+         gWmimxA9RjSurXO02roA0UblNhg0/LzFtfe/76MNLOqk8f9E40XXbrQ+OXLQjhme9er0
+         6CVWLC/hLBlwKdhfotjAtiyH1l14V+xB12eI5kJJf84Jn36fg+DSVCh+xi1dPFJmsGgw
+         6oXNg/F33JJmP82PkyDzdux+9ZZZBoRQOXweSvCZJwPQafOLvflD1OXS0vtB8Si0QDor
+         NrjaREvL25r/7Hjs1fV4HN2tV5ZQ0H55KOrMpxqUn40TA3clVeMbmIoNBPOWMcYoU+Gz
+         x87A==
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: kernel test robot <lkp-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
-Cc: oe-kbuild-all-cunTk1MwBs/YUNznpcFYbw@public.gmane.org, muchun.song-fxUVXftIFDnyG1zEObXtfA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org, shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org
+Content-Transfer-Encoding: 7bit
+To: Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Muchun Song <muchun.song-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kselftest-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 
-On 2023/6/17 17:12, kernel test robot wrote:
-> Hi Miaohe,
-> 
-> kernel test robot noticed the following build errors:
-> 
-> [auto build test ERROR on akpm-mm/mm-everything]
-> [also build test ERROR on linus/master v6.4-rc6 next-20230616]
-> [If your patch is applied to the wrong git tree, kindly drop us a note.
-> And when submitting patch, we suggest to use '--base' as documented in
-> https://git-scm.com/docs/git-format-patch#_base_tree_information]
-> 
-> url:    https://github.com/intel-lab-lkp/linux/commits/Miaohe-Lin/memcg-remove-unneeded-header-files/20230617-152922
-> base:   https://git.kernel.org/pub/scm/linux/kernel/git/akpm/mm.git mm-everything
-> patch link:    https://lore.kernel.org/r/20230617072658.1826560-1-linmiaohe%40huawei.com
-> patch subject: [PATCH] memcg: remove unneeded header files
-> config: nios2-randconfig-r004-20230617 (https://download.01.org/0day-ci/archive/20230617/202306171649.O90yt13M-lkp-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org/config)
-> compiler: nios2-linux-gcc (GCC) 12.3.0
-> reproduce: (https://download.01.org/0day-ci/archive/20230617/202306171649.O90yt13M-lkp-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org/reproduce)
-> 
-> If you fix the issue in a separate patch/commit (i.e. not just a new version of
-> the same patch/commit), kindly add following tags
-> | Reported-by: kernel test robot <lkp-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
-> | Closes: https://lore.kernel.org/oe-kbuild-all/202306171649.O90yt13M-lkp-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org/
+It is handy during testing and/or debugging to be able to run a single
+test from test_memcontrol. Allow passing in a test name through a
+command line argument (e.g. ./test_memcontrol -t test_memcg_recharge).
 
-Many thanks for report. Will fix it.
+Change-Id: I0e0d74d81fdd9d997987389085a816715160467f
+Signed-off-by: Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+---
+ .../selftests/cgroup/test_memcontrol.c        | 30 +++++++++++++++++++
+ 1 file changed, 30 insertions(+)
+
+diff --git a/tools/testing/selftests/cgroup/test_memcontrol.c b/tools/testing/selftests/cgroup/test_memcontrol.c
+index a2a90f4bfe9f..d8f8a13bc6c4 100644
+--- a/tools/testing/selftests/cgroup/test_memcontrol.c
++++ b/tools/testing/selftests/cgroup/test_memcontrol.c
+@@ -1308,9 +1308,36 @@ struct memcg_test {
+ 
+ int main(int argc, char **argv)
+ {
++	int opt;
+ 	char root[PATH_MAX];
++	int selected_test = -1;
+ 	int i, proc_status, ret = EXIT_SUCCESS;
+ 
++	while ((opt = getopt(argc, argv, "ht:")) != -1) {
++		switch (opt) {
++		case 't':
++			for (i = 0; i < ARRAY_SIZE(tests); i++) {
++				if (!strcmp(tests[i].name, optarg)) {
++					selected_test = i;
++					break;
++				}
++			}
++			if (selected_test >= 0)
++				break;
++			fprintf(stderr, "test %s not found\n", optarg);
++			return EXIT_FAILURE;
++		case 'h':
++			fprintf(stderr,
++				"Usage: %s [-h] [-t name]\n"
++				"\t-h       print help\n"
++				"\t-t name  run specific test\n"
++				, argv[0]);
++			return ret;
++		default:
++			break;
++		}
++	}
++
+ 	if (cg_find_unified_root(root, sizeof(root)))
+ 		ksft_exit_skip("cgroup v2 isn't mounted\n");
+ 
+@@ -1336,6 +1363,9 @@ int main(int argc, char **argv)
+ 	has_localevents = proc_status;
+ 
+ 	for (i = 0; i < ARRAY_SIZE(tests); i++) {
++		if (selected_test >= 0 && selected_test != i)
++			continue;
++
+ 		switch (tests[i].fn(root)) {
+ 		case KSFT_PASS:
+ 			ksft_test_result_pass("%s\n", tests[i].name);
+-- 
+2.41.0.162.gfafddb0af9-goog
 
