@@ -1,60 +1,54 @@
-From: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH] cgroup/cpuset: remove unneeded nodes_or() in
- cpuset_change_task_nodemask()
-Date: Mon, 19 Jun 2023 10:37:57 -0400
-Message-ID: <c32a0bad-b20f-e53b-a38a-5da687b8a205@redhat.com>
-References: <20230617083043.2065556-1-linmiaohe@huawei.com>
+From: Michal =?utf-8?Q?Koutn=C3=BD?= <mkoutny-IBi9RG/b67k@public.gmane.org>
+Subject: Re: [RFC PATCH net-next] sock: Propose socket.urgent for sockmem
+ isolation
+Date: Mon, 19 Jun 2023 19:30:44 +0200
+Message-ID: <4p22vtjrpu4obmbjivgpe635gbpjmhsfisnxghgsson2g6yy5r@ovawhchw7maq>
+References: <20230609082712.34889-1-wuyun.abel@bytedance.com>
+ <CANn89i+Qqq5nV0oRLh_KEHRV6VmSbS5PsSvayVHBi52FbB=sKA@mail.gmail.com>
+ <b879d810-132b-38ab-c13d-30fabdc8954a@bytedance.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; micalg=pgp-sha512;
+        protocol="application/pgp-signature"; boundary="gmi7m3lyy75eha77"
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1687185483;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
+        t=1687195846; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
          in-reply-to:in-reply-to:references:references;
-        bh=n81+s1XEobkyuHvPUCbHGRBITPBL/Ux61aHB9fOgZks=;
-        b=eRrDuNebKAAyEMwcEgJtiRi/FuDoYMiNErV20tBL6m/EpVvl6lj2M1s8w2jNzX46L+nphx
-        Xsq+81aY7BcupxnrInvSgpZFG+JqQMQpTv5KfxO3xQu3VXaSCnLluGsjQvn7JOicv0Qfwh
-        yBPhfDr89twlps/9hYiCW/mvhzP2rP0=
-Content-Language: en-US
-In-Reply-To: <20230617083043.2065556-1-linmiaohe-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+        bh=xQFY7fZePp2Fj2uiaSid1me/iXz0lajB7QFNjTT4+ls=;
+        b=pQDFDQhHXe7phJt2fLX6ATZgBbeZhDTeziVy/2jZ2ixsWgmpbNLBNi7nbpYLDA8l/FFmcP
+        TF2KLLk5U5yCq8QR0WdQC1HSOfTQDoivDzVuA9P7h1z4nK7a78h/gLR2/pNN2LoyLBKUhc
+        /iogDsjyLttIrG2Z6PpDRYlw0dAv8hs=
+Content-Disposition: inline
+In-Reply-To: <b879d810-132b-38ab-c13d-30fabdc8954a-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"; format="flowed"
-To: Miaohe Lin <linmiaohe-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Abel Wu <wuyun.abel-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
+Cc: Eric Dumazet <edumazet-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Christian Warloe <cwarloe-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Wei Wang <weiwan-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, "David S. Miller" <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>, Jakub Kicinski <kuba-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Paolo Abeni <pabeni-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Muchun Song <muchun.song-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, David Ahern <dsahern-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, "Matthew Wilcox (Oracle)" <willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Yu Zhao <yuzhao-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Vasily Averin <vasily.averin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Kuniyuki Iwashima <kuniyu-vV1OtcyAfmbQT0dZR+AlfA@public.gmane.org>, Martin KaFai Lau <martin.lau-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Xi
 
-On 6/17/23 04:30, Miaohe Lin wrote:
-> The tsk->mems_allowed is changed before calling mpol_rebind_task() and
-> being reassigned right after it. But tsk->mems_allowed is not needed
-> inside mpol_rebind_task(). So remove unneeded tsk->mems_allowed modify
-> via nodes_or() here.
->
-> Signed-off-by: Miaohe Lin <linmiaohe-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-> ---
->   kernel/cgroup/cpuset.c | 1 -
->   1 file changed, 1 deletion(-)
->
-> diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
-> index 58e6f18f01c1..33a429c1179f 100644
-> --- a/kernel/cgroup/cpuset.c
-> +++ b/kernel/cgroup/cpuset.c
-> @@ -1941,7 +1941,6 @@ static void cpuset_change_task_nodemask(struct task_struct *tsk,
->   	local_irq_disable();
->   	write_seqcount_begin(&tsk->mems_allowed_seq);
->   
-> -	nodes_or(tsk->mems_allowed, tsk->mems_allowed, *newmems);
->   	mpol_rebind_task(tsk, newmems);
->   	tsk->mems_allowed = *newmems;
->   
 
-That line was inserted by commit cc9a6c8776615 ("cpuset: mm: reduce 
-large amounts of memory barrier related damage v3"). At first glance, it 
-does looks like it is not necessary. However, I am not sure if a race is 
-possible that will produce a false failure because of missing this line.
+--gmi7m3lyy75eha77
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 
-My 2 cents.
+On Tue, Jun 13, 2023 at 02:46:32PM +0800, Abel Wu <wuyun.abel-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org> wrote:
+> Memory protection (memory.{min,low}) helps the important jobs less
+> affected by memstalls. But once low priority jobs use lots of kernel
+> memory like sockmem, the protection might become much less efficient.
 
-Cheers,
-Longman
+What would happen if you applied memory.{min,low} to the important jobs
+and memory.{max,high} to the low prio ones?
 
+Thanks,
+Michal
+
+--gmi7m3lyy75eha77
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iHUEABYKAB0WIQQpEWyjXuwGT2dDBqAGvrMr/1gcjgUCZJCQwgAKCRAGvrMr/1gc
+jlfqAP4n8Ka+X+iVeFLtQT/sbo8Dudkos2fyhrkWo0/AJG9aogD9GEihJOOgAxk9
+aCoZ0Kwdy6zyeUy+7PVrsCAOIKJHJQc=
+=1Q4d
+-----END PGP SIGNATURE-----
+
+--gmi7m3lyy75eha77--
