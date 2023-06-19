@@ -1,97 +1,68 @@
-From: Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH] selftests/cgroup: allow running a specific test with test_memcontrol
-Date: Sun, 18 Jun 2023 22:18:54 -0700
-Message-ID: <CAJD7tkYspn8LwCDh2fjfGePWbRB405M3d1tgtax_4dGFSk3jBg@mail.gmail.com>
-References: <20230619051715.2306134-1-yosryahmed@google.com>
+From: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
+Subject: Re: [PATCH] memcg: remove unneeded header files
+Date: Mon, 19 Jun 2023 09:19:45 +0200
+Message-ID: <ZJABkaSdZP+K6dOh@dhcp22.suse.cz>
+References: <20230617072658.1826560-1-linmiaohe@huawei.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20221208; t=1687151971; x=1689743971;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=xkIBRh1CRI7l1b26sTYaQ/9/gUUFxPZU0t2NyWKWH7Q=;
-        b=eUeNwGRZOej+JmaNNUaJ6OPJIgJYdwORyCeMfKZTOjdOO76BnXQtHBcPlqW8xlMFQY
-         s1nvqNLfu7R+DtrblqmhCcyNv9raxlOUrGUkijSYF2DLN/Fx1lHmAyyGItjJsLQKZ9SB
-         GPfMkm2H1dEBHmBvUMD1gOtZO1fVM3k/h0NmiHlxO9RkzW6RQBtin+wJYQW/lxXbrH2y
-         2jT67uQLUKUbBewiI+qS3az+zA4/Ja0YIqT9Cp1VvKdGyGO7ldm1/RKTqK5ZdG6UMaPi
-         c/6Ert/O4bIexYOn5ii9geuHAbjF/UjC8Wjr754r+o8/7VgLwsDMrXGWCp8mWr05623N
-         VqbQ==
-In-Reply-To: <20230619051715.2306134-1-yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
+        t=1687159186; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=GDE22N6RhZJ008soRf2pb0Es9I9DW+ry9z9nMBOE6Qs=;
+        b=GIP9IjQevaWuqsO9XKJc0QPPQQxbsj457qjoQ/Jq9JjZyaVqo02HuYv28wkIPbskWuRoj6
+        rPPkhzIkTk1xQYcqXuYrg/bazd3S40oCZ04mFdwzlKWloaOe1i3PHk0Doy1lv207fqbPbU
+        HXlv+iPFOCBtv1Ul82ato2iLLjC99OI=
+Content-Disposition: inline
+In-Reply-To: <20230617072658.1826560-1-linmiaohe-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="windows-1252"
-To: Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
-Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Muchun Song <muchun.song-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kselftest-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Miaohe Lin <linmiaohe-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Cc: hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org, shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, muchun.song-fxUVXftIFDnyG1zEObXtfA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Sun, Jun 18, 2023 at 10:17=E2=80=AFPM Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org=
-> wrote:
->
-> It is handy during testing and/or debugging to be able to run a single
-> test from test_memcontrol. Allow passing in a test name through a
-> command line argument (e.g. ./test_memcontrol -t test_memcg_recharge).
->
-> Change-Id: I0e0d74d81fdd9d997987389085a816715160467f
+On Sat 17-06-23 15:26:58, Miaohe Lin wrote:
+> Remove some unneeded header files. No functional change intended.
 
-I missed removing this gerrit tag, sorry. Will fix it if/when I respin.
-
-> Signed-off-by: Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Header inclusion cleanups are certainly welcome but it would be much
+more preferred to explain why those are not needed. As build test follow
+ups show this is much more subtle than it seems.
+> 
+> Signed-off-by: Miaohe Lin <linmiaohe-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 > ---
->  .../selftests/cgroup/test_memcontrol.c        | 30 +++++++++++++++++++
->  1 file changed, 30 insertions(+)
->
-> diff --git a/tools/testing/selftests/cgroup/test_memcontrol.c b/tools/tes=
-ting/selftests/cgroup/test_memcontrol.c
-> index a2a90f4bfe9f..d8f8a13bc6c4 100644
-> --- a/tools/testing/selftests/cgroup/test_memcontrol.c
-> +++ b/tools/testing/selftests/cgroup/test_memcontrol.c
-> @@ -1308,9 +1308,36 @@ struct memcg_test {
->
->  int main(int argc, char **argv)
->  {
-> +       int opt;
->         char root[PATH_MAX];
-> +       int selected_test =3D -1;
->         int i, proc_status, ret =3D EXIT_SUCCESS;
->
-> +       while ((opt =3D getopt(argc, argv, "ht:")) !=3D -1) {
-> +               switch (opt) {
-> +               case 't':
-> +                       for (i =3D 0; i < ARRAY_SIZE(tests); i++) {
-> +                               if (!strcmp(tests[i].name, optarg)) {
-> +                                       selected_test =3D i;
-> +                                       break;
-> +                               }
-> +                       }
-> +                       if (selected_test >=3D 0)
-> +                               break;
-> +                       fprintf(stderr, "test %s not found\n", optarg);
-> +                       return EXIT_FAILURE;
-> +               case 'h':
-> +                       fprintf(stderr,
-> +                               "Usage: %s [-h] [-t name]\n"
-> +                               "\t-h       print help\n"
-> +                               "\t-t name  run specific test\n"
-> +                               , argv[0]);
-> +                       return ret;
-> +               default:
-> +                       break;
-> +               }
-> +       }
-> +
->         if (cg_find_unified_root(root, sizeof(root)))
->                 ksft_exit_skip("cgroup v2 isn't mounted\n");
->
-> @@ -1336,6 +1363,9 @@ int main(int argc, char **argv)
->         has_localevents =3D proc_status;
->
->         for (i =3D 0; i < ARRAY_SIZE(tests); i++) {
-> +               if (selected_test >=3D 0 && selected_test !=3D i)
-> +                       continue;
-> +
->                 switch (tests[i].fn(root)) {
->                 case KSFT_PASS:
->                         ksft_test_result_pass("%s\n", tests[i].name);
-> --
-> 2.41.0.162.gfafddb0af9-goog
->
+>  mm/memcontrol.c | 5 -----
+>  1 file changed, 5 deletions(-)
+> 
+> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+> index d42742edfeac..a2c82a18745d 100644
+> --- a/mm/memcontrol.c
+> +++ b/mm/memcontrol.c
+> @@ -30,14 +30,10 @@
+>  #include <linux/cgroup.h>
+>  #include <linux/pagewalk.h>
+>  #include <linux/sched/mm.h>
+> -#include <linux/shmem_fs.h>
+> -#include <linux/hugetlb.h>
+>  #include <linux/pagemap.h>
+>  #include <linux/vm_event_item.h>
+>  #include <linux/smp.h>
+>  #include <linux/page-flags.h>
+> -#include <linux/backing-dev.h>
+> -#include <linux/bit_spinlock.h>
+>  #include <linux/rcupdate.h>
+>  #include <linux/limits.h>
+>  #include <linux/export.h>
+> @@ -66,7 +62,6 @@
+>  #include <linux/sched/isolation.h>
+>  #include "internal.h"
+>  #include <net/sock.h>
+> -#include <net/ip.h>
+>  #include "slab.h"
+>  #include "swap.h"
+>  
+> -- 
+> 2.27.0
+
+-- 
+Michal Hocko
+SUSE Labs
