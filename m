@@ -1,57 +1,52 @@
-From: Miaohe Lin <linmiaohe-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH] cgroup/cpuset: remove unneeded nodes_or() in
- cpuset_change_task_nodemask()
-Date: Tue, 20 Jun 2023 12:02:58 +0800
-Message-ID: <6f3e30f7-8781-2cf3-07a5-b0635c7d9045@huawei.com>
-References: <20230617083043.2065556-1-linmiaohe@huawei.com>
- <c32a0bad-b20f-e53b-a38a-5da687b8a205@redhat.com>
+From: Abel Wu <wuyun.abel@bytedance.com>
+Subject: Re: Re: [RFC PATCH net-next] sock: Propose socket.urgent for sockmem
+ isolation
+Date: Tue, 20 Jun 2023 14:39:20 +0800
+Message-ID: <8ac1034d-4ddf-86a6-a7dc-769bc5080fac@bytedance.com>
+References: <20230609082712.34889-1-wuyun.abel@bytedance.com>
+ <CANn89i+Qqq5nV0oRLh_KEHRV6VmSbS5PsSvayVHBi52FbB=sKA@mail.gmail.com>
+ <b879d810-132b-38ab-c13d-30fabdc8954a@bytedance.com>
+ <4p22vtjrpu4obmbjivgpe635gbpjmhsfisnxghgsson2g6yy5r@ovawhchw7maq>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 8bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <c32a0bad-b20f-e53b-a38a-5da687b8a205-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Content-Transfer-Encoding: quoted-printable
+Return-path: <linux-kernel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=bytedance.com; s=google; t=1687243172; x=1689835172;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=auJ6EJaNEhBlb5WUEu9u5pzfD1n3KesDYvPGRacKRpY=;
+        b=Q0x5ZOGt4/v3wQppV0vu3j4kjyVREZuzdlXMoLL29N7NXduun7x+/qMKtZI9/fJvkE
+         uXAJEwy/vwqunPx2kBUjpJnwRZJYHPKEU135M3wz8Lbji0KHP6SAo8dzYCyUA91hD2hK
+         qQFY1wwfxb6zZ2hcn39cy6SQgMduj6ZO6UnIgFsg/LsEwb5s1ohxYtTnc3+lnKX4c4up
+         9b0HQQSe2NnahNMiG0Ue1NNNiQHRN1pqAwwNk3vqHBW6OZsxoTORWGTDR/hX/gVasPBI
+         RgeSOvQLSLXUsLXt6N2Sx/C/uwmT3Q+vwAAehP4zPVzFD3vAPrUxgSq1xPAf2WLJ68Is
+         nDzw==
 Content-Language: en-US
+In-Reply-To: <4p22vtjrpu4obmbjivgpe635gbpjmhsfisnxghgsson2g6yy5r@ovawhchw7maq>
 List-ID: <cgroups.vger.kernel.org>
-To: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Type: text/plain; charset="iso-8859-1"; format="flowed"
+To: =?UTF-8?Q?Michal_Koutn=c3=bd?= <mkoutny@suse.com>
+Cc: Eric Dumazet <edumazet@google.com>, Tejun Heo <tj@kernel.org>, Christian Warloe <cwarloe@google.com>, Wei Wang <weiwan@google.com>, "David S. Miller" <davem@davemloft.net>, Jakub Kicinski <kuba@kernel.org>, Paolo Abeni <pabeni@redhat.com>, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, Roman Gushchin <roman.gushchin@linux.dev>, Shakeel Butt <shakeelb@google.com>, Muchun Song <muchun.song@linux.dev>, Andrew Morton <akpm@linux-foundation.org>, David Ahern <dsahern@kernel.org>, Yosry Ahmed <yosryahmed@google.com>, "Matthew Wilcox (Oracle)" <willy@infradead.org>, Yu Zhao <yuzhao@google.com>, Vasily Averin <vasily.averin@linux.dev>, Kuniyuki Iwashima <kuniyu@amazon.com>, Martin KaFai Lau <martin.lau@kernel.org>, Xi
 
-On 2023/6/19 22:37, Waiman Long wrote:
-> On 6/17/23 04:30, Miaohe Lin wrote:
->> The tsk->mems_allowed is changed before calling mpol_rebind_task() and
->> being reassigned right after it. But tsk->mems_allowed is not needed
->> inside mpol_rebind_task(). So remove unneeded tsk->mems_allowed modify
->> via nodes_or() here.
->>
->> Signed-off-by: Miaohe Lin <linmiaohe-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
->> ---
->>   kernel/cgroup/cpuset.c | 1 -
->>   1 file changed, 1 deletion(-)
->>
->> diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
->> index 58e6f18f01c1..33a429c1179f 100644
->> --- a/kernel/cgroup/cpuset.c
->> +++ b/kernel/cgroup/cpuset.c
->> @@ -1941,7 +1941,6 @@ static void cpuset_change_task_nodemask(struct task_struct *tsk,
->>       local_irq_disable();
->>       write_seqcount_begin(&tsk->mems_allowed_seq);
->>   -    nodes_or(tsk->mems_allowed, tsk->mems_allowed, *newmems);
->>       mpol_rebind_task(tsk, newmems);
->>       tsk->mems_allowed = *newmems;
->>   
-> 
-> That line was inserted by commit cc9a6c8776615 ("cpuset: mm: reduce large amounts of memory barrier related damage v3"). At first glance, it does looks like it is not necessary. However, I am not sure if a race is possible that will produce a false failure because of missing this line.
-> 
+Hi Michal,
 
-Thanks for your comment. IMHO, the code is protected with mems_allowed_seq seqlock. So it should be fine even if there's a race.
-I will take a closer look to make sure whether race exists.
+On 6/20/23 1:30 AM, Michal Koutn=C3=BD wrote:
+> On Tue, Jun 13, 2023 at 02:46:32PM +0800, Abel Wu <wuyun.abel@bytedance.c=
+om> wrote:
+>> Memory protection (memory.{min,low}) helps the important jobs less
+>> affected by memstalls. But once low priority jobs use lots of kernel
+>> memory like sockmem, the protection might become much less efficient.
+>=20
+> What would happen if you applied memory.{min,low} to the important jobs
+> and memory.{max,high} to the low prio ones?
 
-> My 2 cents.
+I might expect that the memory of low prio jobs gets reclaimed first.
+Specifically we set memory.low to protect the working-set for important
+jobs. Due to the best-effort behavior of 'low', the important jobs can
+still be affected if not enough memory reclaimed from the low prio ones.
+And we don't use 'min' (yet?) because the need for flexibility when
+memory is tight.
 
-Thanks.
-
-> 
-> Cheers,
-> Longman
-> 
-> .
-
+Best Regards,
+	Abel
