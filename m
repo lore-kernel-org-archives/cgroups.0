@@ -1,21 +1,21 @@
 From: Yuanchu Xie <yuanchu-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Subject: [RFC PATCH v2 4/6] mm: extend working set reporting to memcgs
-Date: Wed, 21 Jun 2023 18:04:52 +0000
-Message-ID: <20230621180454.973862-5-yuanchu@google.com>
+Subject: [RFC PATCH v2 6/6] virtio-balloon: Add Working Set reporting
+Date: Wed, 21 Jun 2023 18:04:54 +0000
+Message-ID: <20230621180454.973862-7-yuanchu@google.com>
 References: <20230621180454.973862-1-yuanchu@google.com>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20221208; t=1687371430; x=1689963430;
+        d=google.com; s=20221208; t=1687371434; x=1689963434;
         h=cc:to:from:subject:message-id:references:mime-version:in-reply-to
          :date:from:to:cc:subject:date:message-id:reply-to;
-        bh=P8vYzFHxLWdhm/YYBuM4cir+l3MkexuRd1yB7xK/qZo=;
-        b=TwWoi+pZl5v8X1NfXYAXDFTjFQRH0gRf8kcFXat6SAjcaa5QAAlB1haHO0q77RAinF
-         D7xdtDa76dKs0GBJ34FBnPIsbh4xyimY5wrW1f6snuskuEcZJCOzknkqQ824BwEme3MM
-         E6lxh0I4tvcYJRHOS1/KATWGHFctdscLKfObeEhRzcu1IiMQFS9ynJo1hdgECo0P8Gpt
-         Xor2kFxaCjpsZ3henaaUXtkntEKa7iivsPZyOrHfOsxsId1bV6FY8Ohj1/LpkWsG+GdH
-         d7oCOnaC7hgluf1VkKFS52Jq6dvfFstI19Xby8uEeRklXtHAMo72yh/opONH6YPZCAbt
-         StMg==
+        bh=nQEbqydm3aL8QCWI0JBHm0Z6aDHcaid/YGMOE1SbX2c=;
+        b=PrCXSIfLnBmUtPYYUmkwE7KJpSUraf0vLrQ2op9siDUjsF/iFitSuaxbZsZzv7vceT
+         agqOlwEx1ZgaHTJXqPJVw5v/Q9J0pJzHeQ7/eV/ZiJG1oHbMZTM/vO4crBHXbQmHdgej
+         qGIqz6KtSnRtXDC3w9vqtnBVj/t6kzCgKkL2QmL8VXVOYtKIW5WJReUtIQWtc1D2VP8s
+         wtcYva1qOl9J2ywR33pdi4ZWORX2IQiNbGuqANzecOj2iW7VtYdCVsCb5ZgwlzhnCUvm
+         HTczbg559emgkr6xxtcTwEXFAU7yb6WiUwofa0nT4QVBR6JTvnQQBFn/kA/RukNC8Ti7
+         JPrg==
 In-Reply-To: <20230621180454.973862-1-yuanchu-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
@@ -23,423 +23,671 @@ Content-Transfer-Encoding: 7bit
 To: Greg Kroah-Hartman <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>, "Rafael J . Wysocki" <rafael-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, "Michael S . Tsirkin" <mst-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, David Hildenbrand <david-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Jason Wang <jasowang-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Muchun Song <muchun.song-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Yu Zhao <yuzhao-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Kefeng Wang <wangkefeng.wang-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Kairui Song <kasong-1Nz4purKYjRBDgjK7y7TUQ@public.gmane.org>, Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Yuanchu Xie <yuanchu-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, "T . J . Alumbaugh" <talumbau-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 Cc: Wei Xu <weixugc-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, SeongJae Park <sj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Sudarshan Rajagopalan <quic_sudaraja-jfJNa2p1gH1BDgjK7y7TUQ@public.gmane.org>, kai.huang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org, hch-jcswGhMUV9g@public.gmane.org, jon-8cO4VLV/4DJBDgjK7y7TUQ@public.gmane.org, Aneesh Kumar K V <aneesh.kumar-tEXmvtCZX7AybS5Ee8rs3A@public.gmane.org>, Matthew Wilcox <willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Vasily Averin <vasily.averin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, virtualization-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-Break down the system-wide working set reporting into
-per-memcg reports, which aggregages its children hierarchically.
-The per-node working set reporting histograms and refresh/report
-threshold files are presented as memcg files, showing a report
-containing all the nodes.
+From: "T.J. Alumbaugh" <talumbau-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+
+Add working set and notification vqueues, along with a
+simple interface to kernel WS functions. The driver receives
+config info and sends reports on notification. A mutex is
+used to guard virtio_balloon state.
 
 Signed-off-by: T.J. Alumbaugh <talumbau-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 Signed-off-by: Yuanchu Xie <yuanchu-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 ---
- include/linux/memcontrol.h |   6 +
- include/linux/wsr.h        |   4 +
- mm/memcontrol.c            | 262 ++++++++++++++++++++++++++++++++++++-
- mm/vmscan.c                |   9 +-
- 4 files changed, 277 insertions(+), 4 deletions(-)
+ drivers/virtio/virtio_balloon.c     | 288 ++++++++++++++++++++++++++++
+ include/linux/balloon_compaction.h  |   3 +
+ include/linux/wsr.h                 |  29 ++-
+ include/uapi/linux/virtio_balloon.h |  33 ++++
+ mm/vmscan.c                         | 106 ++++++++++
+ 5 files changed, 457 insertions(+), 2 deletions(-)
 
-diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
-index 85dc9b88ea379..96971aa6a48cd 100644
---- a/include/linux/memcontrol.h
-+++ b/include/linux/memcontrol.h
-@@ -10,6 +10,7 @@
- 
- #ifndef _LINUX_MEMCONTROL_H
- #define _LINUX_MEMCONTROL_H
-+#include <linux/wait.h>
- #include <linux/cgroup.h>
- #include <linux/vm_event_item.h>
- #include <linux/hardirq.h>
-@@ -325,6 +326,11 @@ struct mem_cgroup {
- 	struct lru_gen_mm_list mm_list;
- #endif
- 
-+#ifdef CONFIG_WSR
-+	int wsr_event;
-+	wait_queue_head_t wsr_wait_queue;
-+#endif
-+
- 	struct mem_cgroup_per_node *nodeinfo[];
+diff --git a/drivers/virtio/virtio_balloon.c b/drivers/virtio/virtio_balloon.c
+index 3f78a3a1eb753..0cb6a46eb7e8a 100644
+--- a/drivers/virtio/virtio_balloon.c
++++ b/drivers/virtio/virtio_balloon.c
+@@ -11,6 +11,7 @@
+ #include <linux/swap.h>
+ #include <linux/workqueue.h>
+ #include <linux/delay.h>
++#include <linux/device.h>
+ #include <linux/slab.h>
+ #include <linux/module.h>
+ #include <linux/balloon_compaction.h>
+@@ -45,6 +46,8 @@ enum virtio_balloon_vq {
+ 	VIRTIO_BALLOON_VQ_STATS,
+ 	VIRTIO_BALLOON_VQ_FREE_PAGE,
+ 	VIRTIO_BALLOON_VQ_REPORTING,
++	VIRTIO_BALLOON_VQ_WORKING_SET,
++	VIRTIO_BALLOON_VQ_NOTIFY,
+ 	VIRTIO_BALLOON_VQ_MAX
  };
  
+@@ -55,6 +58,9 @@ enum virtio_balloon_config_read {
+ struct virtio_balloon {
+ 	struct virtio_device *vdev;
+ 	struct virtqueue *inflate_vq, *deflate_vq, *stats_vq, *free_page_vq;
++#ifdef CONFIG_WSR
++	struct virtqueue *working_set_vq, *notification_vq;
++#endif
+ 
+ 	/* Balloon's own wq for cpu-intensive work items */
+ 	struct workqueue_struct *balloon_wq;
+@@ -64,6 +70,10 @@ struct virtio_balloon {
+ 	/* The balloon servicing is delegated to a freezable workqueue. */
+ 	struct work_struct update_balloon_stats_work;
+ 	struct work_struct update_balloon_size_work;
++#ifdef CONFIG_WSR
++	struct work_struct update_balloon_working_set_work;
++	struct work_struct update_balloon_notification_work;
++#endif
+ 
+ 	/* Prevent updating balloon when it is being canceled. */
+ 	spinlock_t stop_update_lock;
+@@ -119,6 +129,16 @@ struct virtio_balloon {
+ 	/* Free page reporting device */
+ 	struct virtqueue *reporting_vq;
+ 	struct page_reporting_dev_info pr_dev_info;
++
++#ifdef CONFIG_WSR
++	/* Working Set reporting */
++	u8 working_set_num_bins;
++	struct virtio_balloon_working_set *working_set;
++
++	/* A buffer to hold incoming notification from the host. */
++	unsigned int notification_size;
++	void *notification_buf;
++#endif
+ };
+ 
+ static const struct virtio_device_id id_table[] = {
+@@ -465,6 +485,211 @@ static void update_balloon_stats_func(struct work_struct *work)
+ 	stats_handle_request(vb);
+ }
+ 
++#ifdef CONFIG_WSR
++/* Must hold the balloon_lock while calling this function. */
++static inline void reset_working_set(struct virtio_balloon *vb)
++{
++	int i;
++
++	for (i = 0; i < vb->working_set_num_bins; ++i) {
++		vb->working_set[i].tag = cpu_to_virtio16(vb->vdev, -1);
++		vb->working_set[i].node_id = cpu_to_virtio16(vb->vdev, -1);
++		vb->working_set[i].idle_age_ms = cpu_to_virtio64(vb->vdev, 0);
++		vb->working_set[i].memory_size_bytes[0] = cpu_to_virtio64(vb->vdev, -1);
++		vb->working_set[i].memory_size_bytes[1] = cpu_to_virtio64(vb->vdev, -1);
++	}
++}
++
++/* Must hold the balloon_lock while calling this function. */
++static inline void update_working_set(struct virtio_balloon *vb, int idx,
++			       u64 idle_age, u64 bytes_anon,
++			       u64 bytes_file, int node_id)
++{
++	vb->working_set[idx].tag = cpu_to_virtio16(vb->vdev, VIRTIO_BALLOON_WS_RECLAIMABLE);
++	vb->working_set[idx].node_id = cpu_to_virtio16(vb->vdev, node_id);
++	vb->working_set[idx].idle_age_ms = cpu_to_virtio64(vb->vdev, idle_age);
++	vb->working_set[idx].memory_size_bytes[0] = cpu_to_virtio64(vb->vdev,
++	     bytes_anon);
++	vb->working_set[idx].memory_size_bytes[1] = cpu_to_virtio64(vb->vdev,
++	     bytes_file);
++}
++
++static bool working_set_is_init(struct virtio_balloon *vb)
++{
++	if (vb->working_set[0].idle_age_ms > 0)
++		return true;
++	return false;
++}
++
++static void virtio_balloon_working_set_request(void)
++{
++	struct pglist_data *pgdat;
++	int nid = NUMA_NO_NODE;
++
++	if (IS_ENABLED(CONFIG_NUMA)) {
++		for_each_online_node(nid) {
++			if (node_possible(nid)) {
++				pgdat = NODE_DATA(nid);
++				working_set_request(pgdat);
++			}
++		}
++	} else {
++		pgdat = NODE_DATA(nid);
++		working_set_request(pgdat);
++	}
++}
++
++static void notification_receive(struct virtqueue *vq)
++{
++	struct virtio_balloon *vb = vq->vdev->priv;
++
++	spin_lock(&vb->stop_update_lock);
++	if (!vb->stop_update)
++		queue_work(system_freezable_wq, &vb->update_balloon_notification_work);
++	spin_unlock(&vb->stop_update_lock);
++}
++
++static int virtio_balloon_register_working_set_receiver(struct virtio_balloon *vb,
++	__virtio64 *intervals, unsigned long nr_bins, __virtio64 refresh_ms,
++	__virtio64 report_ms)
++{
++	struct pglist_data *pgdat;
++	unsigned long *bin_intervals = NULL;
++	int i, err;
++	int nid = NUMA_NO_NODE;
++
++	if (intervals && nr_bins) {
++		/* TODO: keep values as 32-bits throughout. */
++		bin_intervals = kzalloc(sizeof(unsigned long) * (nr_bins-1),
++			GFP_KERNEL);
++		for (i = 0; i < nr_bins - 1; i++)
++			bin_intervals[i] = (unsigned long)intervals[i];
++
++		if (IS_ENABLED(CONFIG_NUMA)) {
++			for_each_online_node(nid) {
++				if (node_possible(nid)) {
++					pgdat = NODE_DATA(nid);
++					err = register_working_set_receiver(vb,
++						pgdat, &(bin_intervals[0]),
++						nr_bins, (unsigned long) refresh_ms,
++						(unsigned long) report_ms);
++				}
++			}
++		} else {
++			pgdat = NODE_DATA(nid);
++			err = register_working_set_receiver(vb, pgdat,
++				&(bin_intervals[0]), nr_bins,
++				(unsigned long) refresh_ms,
++				(unsigned long) report_ms);
++		}
++		kfree(bin_intervals);
++		return err;
++	}
++	return -EINVAL;
++}
++
++void working_set_notify(void *ws_receiver, struct ws_bin *bins, int node_id)
++{
++	u64 bytes_nr_file, bytes_nr_anon;
++	struct virtio_balloon *vb = ws_receiver;
++	int idx = 0;
++
++	if (!mutex_trylock(&vb->balloon_lock))
++		return;
++	for (; idx < vb->working_set_num_bins; idx++) {
++		bytes_nr_anon = (u64)(bins[idx].nr_pages[0]) * PAGE_SIZE;
++		bytes_nr_file = (u64)(bins[idx].nr_pages[1]) * PAGE_SIZE;
++		update_working_set(vb, idx, jiffies_to_msecs(bins[idx].idle_age),
++			bytes_nr_anon, bytes_nr_file, node_id);
++	}
++	mutex_unlock(&vb->balloon_lock);
++	/* Send the working set report to the device. */
++	spin_lock(&vb->stop_update_lock);
++	if (!vb->stop_update)
++		queue_work(system_freezable_wq, &vb->update_balloon_working_set_work);
++	spin_unlock(&vb->stop_update_lock);
++}
++EXPORT_SYMBOL(working_set_notify);
++
++static void update_balloon_notification_func(struct work_struct *work)
++{
++	struct virtio_balloon *vb;
++	struct scatterlist sg_in;
++	struct pglist_data *pgdat;
++	__virtio64 *bin_intervals;
++	__virtio64 refresh_ms, report_ms;
++	int16_t tag;
++	char *buf;
++	int len;
++
++	vb = container_of(work, struct virtio_balloon,
++			  update_balloon_notification_work);
++
++	/* Read a Working Set notification from the device. */
++	buf = (char *)vb->notification_buf;
++	tag = *((int16_t *)buf);
++	buf += sizeof(int16_t);
++	if (tag == VIRTIO_BALLOON_WS_REQUEST) {
++		pgdat = NODE_DATA(NUMA_NO_NODE);
++		virtio_balloon_working_set_request();
++	} else if (tag == VIRTIO_BALLOON_WS_CONFIG) {
++		mutex_lock(&vb->balloon_lock);
++		reset_working_set(vb);
++		mutex_unlock(&vb->balloon_lock);
++		bin_intervals = (__virtio64 *) buf;
++		buf += sizeof(__virtio64) * (vb->working_set_num_bins - 1);
++		refresh_ms = *((__virtio64 *) buf);
++		buf += sizeof(__virtio64);
++		report_ms = *((__virtio64 *) buf);
++		virtio_balloon_register_working_set_receiver(vb, bin_intervals,
++			vb->working_set_num_bins, refresh_ms, report_ms);
++	} else {
++		dev_warn(&vb->vdev->dev, "Received invalid notification, %u\n", tag);
++		return;
++	}
++
++	/* Detach all the used buffers from the vq */
++	while (virtqueue_get_buf(vb->notification_vq, &len))
++		;
++	/* Add a new notification buffer for device to fill. */
++	sg_init_one(&sg_in, vb->notification_buf, vb->notification_size);
++	virtqueue_add_inbuf(vb->notification_vq, &sg_in, 1, vb, GFP_KERNEL);
++	virtqueue_kick(vb->notification_vq);
++}
++
++static void update_balloon_ws_func(struct work_struct *work)
++{
++	struct virtio_balloon *vb;
++	struct scatterlist sg_out;
++	int err = 0;
++	int unused;
++
++	vb = container_of(work, struct virtio_balloon,
++			  update_balloon_working_set_work);
++
++	mutex_lock(&vb->balloon_lock);
++	if (working_set_is_init(vb)) {
++		/* Detach all the used buffers from the vq */
++		while (virtqueue_get_buf(vb->working_set_vq, &unused))
++			;
++		sg_init_one(&sg_out, vb->working_set,
++			(sizeof(struct virtio_balloon_working_set) *
++			vb->working_set_num_bins));
++		err = virtqueue_add_outbuf(vb->working_set_vq, &sg_out, 1, vb, GFP_KERNEL);
++	} else {
++		dev_warn(&vb->vdev->dev, "Working Set not initialized.");
++		err = -EINVAL;
++	}
++	mutex_unlock(&vb->balloon_lock);
++	if (unlikely(err)) {
++		dev_err(&vb->vdev->dev,
++			"Failed to send working set report err = %d\n", err);
++	} else {
++		virtqueue_kick(vb->working_set_vq);
++	}
++}
++#endif /* CONFIG_WSR */
++
+ static void update_balloon_size_func(struct work_struct *work)
+ {
+ 	struct virtio_balloon *vb;
+@@ -508,6 +733,10 @@ static int init_vqs(struct virtio_balloon *vb)
+ 	callbacks[VIRTIO_BALLOON_VQ_FREE_PAGE] = NULL;
+ 	names[VIRTIO_BALLOON_VQ_FREE_PAGE] = NULL;
+ 	names[VIRTIO_BALLOON_VQ_REPORTING] = NULL;
++	callbacks[VIRTIO_BALLOON_VQ_WORKING_SET] = NULL;
++	names[VIRTIO_BALLOON_VQ_WORKING_SET] = NULL;
++	callbacks[VIRTIO_BALLOON_VQ_NOTIFY] = NULL;
++	names[VIRTIO_BALLOON_VQ_NOTIFY] = NULL;
+ 
+ 	if (virtio_has_feature(vb->vdev, VIRTIO_BALLOON_F_STATS_VQ)) {
+ 		names[VIRTIO_BALLOON_VQ_STATS] = "stats";
+@@ -524,6 +753,15 @@ static int init_vqs(struct virtio_balloon *vb)
+ 		callbacks[VIRTIO_BALLOON_VQ_REPORTING] = balloon_ack;
+ 	}
+ 
++#ifdef CONFIG_WSR
++	if (virtio_has_feature(vb->vdev, VIRTIO_BALLOON_F_WS_REPORTING)) {
++		names[VIRTIO_BALLOON_VQ_WORKING_SET] = "ws";
++		callbacks[VIRTIO_BALLOON_VQ_WORKING_SET] = NULL;
++		names[VIRTIO_BALLOON_VQ_NOTIFY] = "notify";
++		callbacks[VIRTIO_BALLOON_VQ_NOTIFY] = notification_receive;
++	}
++#endif
++
+ 	err = virtio_find_vqs(vb->vdev, VIRTIO_BALLOON_VQ_MAX, vqs,
+ 			      callbacks, names, NULL);
+ 	if (err)
+@@ -534,6 +772,7 @@ static int init_vqs(struct virtio_balloon *vb)
+ 	if (virtio_has_feature(vb->vdev, VIRTIO_BALLOON_F_STATS_VQ)) {
+ 		struct scatterlist sg;
+ 		unsigned int num_stats;
++
+ 		vb->stats_vq = vqs[VIRTIO_BALLOON_VQ_STATS];
+ 
+ 		/*
+@@ -553,6 +792,25 @@ static int init_vqs(struct virtio_balloon *vb)
+ 		virtqueue_kick(vb->stats_vq);
+ 	}
+ 
++#ifdef CONFIG_WSR
++	if (virtio_has_feature(vb->vdev, VIRTIO_BALLOON_F_WS_REPORTING)) {
++		struct scatterlist sg;
++
++		vb->working_set_vq = vqs[VIRTIO_BALLOON_VQ_WORKING_SET];
++		vb->notification_vq = vqs[VIRTIO_BALLOON_VQ_NOTIFY];
++
++		/* Prime the notification virtqueue for the device to fill.*/
++		sg_init_one(&sg, vb->notification_buf, vb->notification_size);
++		err = virtqueue_add_inbuf(vb->notification_vq, &sg, 1, vb, GFP_KERNEL);
++		if (unlikely(err)) {
++			dev_err(&vb->vdev->dev,
++				"Failed to prepare notifications, err = %d\n", err);
++		} else {
++			virtqueue_kick(vb->notification_vq);
++		}
++	}
++#endif
++
+ 	if (virtio_has_feature(vb->vdev, VIRTIO_BALLOON_F_FREE_PAGE_HINT))
+ 		vb->free_page_vq = vqs[VIRTIO_BALLOON_VQ_FREE_PAGE];
+ 
+@@ -878,6 +1136,10 @@ static int virtballoon_probe(struct virtio_device *vdev)
+ 
+ 	INIT_WORK(&vb->update_balloon_stats_work, update_balloon_stats_func);
+ 	INIT_WORK(&vb->update_balloon_size_work, update_balloon_size_func);
++#ifdef CONFIG_WSR
++	INIT_WORK(&vb->update_balloon_working_set_work, update_balloon_ws_func);
++	INIT_WORK(&vb->update_balloon_notification_work, update_balloon_notification_func);
++#endif
+ 	spin_lock_init(&vb->stop_update_lock);
+ 	mutex_init(&vb->balloon_lock);
+ 	init_waitqueue_head(&vb->acked);
+@@ -885,6 +1147,23 @@ static int virtballoon_probe(struct virtio_device *vdev)
+ 
+ 	balloon_devinfo_init(&vb->vb_dev_info);
+ 
++#ifdef CONFIG_WSR
++	if (virtio_has_feature(vdev, VIRTIO_BALLOON_F_WS_REPORTING)) {
++		virtio_cread_le(vdev, struct virtio_balloon_config, working_set_num_bins,
++				&vb->working_set_num_bins);
++		dev_err(&vb->vdev->dev, "in probe , num bins: %d ", vb->working_set_num_bins);
++		/* Allocate space for a Working Set report. */
++		vb->working_set = kcalloc(vb->working_set_num_bins,
++				 sizeof(struct virtio_balloon_working_set), GFP_KERNEL);
++		/* Allocate space for host notifications. */
++		vb->notification_size =
++			sizeof(uint16_t) +
++			sizeof(uint64_t) * (vb->working_set_num_bins + 1);
++		vb->notification_buf = kzalloc(vb->notification_size, GFP_KERNEL);
++		reset_working_set(vb);
++	}
++#endif
++
+ 	err = init_vqs(vb);
+ 	if (err)
+ 		goto out_free_vb;
+@@ -1034,11 +1313,19 @@ static void virtballoon_remove(struct virtio_device *vdev)
+ 		unregister_oom_notifier(&vb->oom_nb);
+ 	if (virtio_has_feature(vb->vdev, VIRTIO_BALLOON_F_FREE_PAGE_HINT))
+ 		virtio_balloon_unregister_shrinker(vb);
++#ifdef CONFIG_WSR
++	if (virtio_has_feature(vb->vdev, VIRTIO_BALLOON_F_WS_REPORTING))
++		unregister_working_set_receiver(vb);
++#endif
+ 	spin_lock_irq(&vb->stop_update_lock);
+ 	vb->stop_update = true;
+ 	spin_unlock_irq(&vb->stop_update_lock);
+ 	cancel_work_sync(&vb->update_balloon_size_work);
+ 	cancel_work_sync(&vb->update_balloon_stats_work);
++#ifdef CONFIG_WSR
++	cancel_work_sync(&vb->update_balloon_working_set_work);
++	cancel_work_sync(&vb->update_balloon_notification_work);
++#endif
+ 
+ 	if (virtio_has_feature(vdev, VIRTIO_BALLOON_F_FREE_PAGE_HINT)) {
+ 		cancel_work_sync(&vb->report_free_page_work);
+@@ -1104,6 +1391,7 @@ static unsigned int features[] = {
+ 	VIRTIO_BALLOON_F_FREE_PAGE_HINT,
+ 	VIRTIO_BALLOON_F_PAGE_POISON,
+ 	VIRTIO_BALLOON_F_REPORTING,
++	VIRTIO_BALLOON_F_WS_REPORTING,
+ };
+ 
+ static struct virtio_driver virtio_balloon_driver = {
+diff --git a/include/linux/balloon_compaction.h b/include/linux/balloon_compaction.h
+index 5ca2d56996201..7bbf5281d84d3 100644
+--- a/include/linux/balloon_compaction.h
++++ b/include/linux/balloon_compaction.h
+@@ -43,6 +43,7 @@
+ #include <linux/err.h>
+ #include <linux/fs.h>
+ #include <linux/list.h>
++#include <linux/mmzone.h>
+ 
+ /*
+  * Balloon device information descriptor.
+@@ -67,6 +68,8 @@ extern size_t balloon_page_list_enqueue(struct balloon_dev_info *b_dev_info,
+ 				      struct list_head *pages);
+ extern size_t balloon_page_list_dequeue(struct balloon_dev_info *b_dev_info,
+ 				     struct list_head *pages, size_t n_req_pages);
++extern void working_set_notify(void *ws_receiver, struct ws_bin *bins,
++			       int node_id);
+ 
+ static inline void balloon_devinfo_init(struct balloon_dev_info *balloon)
+ {
 diff --git a/include/linux/wsr.h b/include/linux/wsr.h
-index 85c901ce026b9..d45f7cc0672ac 100644
+index 68246734679cd..671ca5426254d 100644
 --- a/include/linux/wsr.h
 +++ b/include/linux/wsr.h
-@@ -48,6 +48,7 @@ ssize_t wsr_intervals_ms_parse(char *src, struct ws_bin *bins);
-  */
- void wsr_refresh(struct wsr *wsr, struct mem_cgroup *root,
+@@ -53,6 +53,16 @@ void wsr_refresh(struct wsr *wsr, struct mem_cgroup *root,
  		 struct pglist_data *pgdat);
-+void report_ws(struct pglist_data *pgdat, struct scan_control *sc);
+ void report_reaccess(struct lruvec *lruvec, struct lru_gen_mm_walk *walk);
+ void report_ws(struct pglist_data *pgdat, struct scan_control *sc);
++/*
++ * Function to send the working set report to a receiver (e.g. the balloon driver)
++ * TODO: Replace with a proper registration interface, similar to shrinkers.
++ */
++int register_working_set_receiver(void *receiver, struct pglist_data *pgdat,
++				unsigned long *intervals, unsigned long nr_bins,
++				unsigned long report_threshold,
++				unsigned long refresh_threshold);
++void unregister_working_set_receiver(void *receiver);
++bool working_set_request(struct pglist_data *pgdat);
  #else
  struct ws_bin;
  struct wsr;
-@@ -73,6 +74,9 @@ static inline void wsr_refresh(struct wsr *wsr, struct mem_cgroup *root,
- 		 struct pglist_data *pgdat)
+@@ -84,6 +94,21 @@ static inline void report_reaccess(struct lruvec *lruvec, struct lru_gen_mm_walk
+ static inline void report_ws(struct pglist_data *pgdat, struct scan_control *sc)
  {
  }
-+static inline void report_ws(struct pglist_data *pgdat, struct scan_control *sc)
+-#endif	/* CONFIG_WSR */
++static inline int
++register_working_set_receiver(void *receiver, struct pglist_data *pgdat,
++			      unsigned long *intervals, unsigned long nr_bins,
++			      unsigned long report_threshold,
++			      unsigned long refresh_threshold)
++{
++	return -EINVAL;
++}
++static inline void unregister_working_set_receiver(void *receiver)
 +{
 +}
- #endif	/* CONFIG_WSR */
- 
- #endif	/* _LINUX_WSR_H */
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index 2eee092f8f119..edf5bb31bb19c 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -25,6 +25,7 @@
-  * Copyright (C) 2020 Alibaba, Inc, Alex Shi
-  */
- 
-+#include <linux/wait.h>
- #include <linux/page_counter.h>
- #include <linux/memcontrol.h>
- #include <linux/cgroup.h>
-@@ -65,6 +66,7 @@
- #include <linux/seq_buf.h>
- #include "internal.h"
- #include <net/sock.h>
-+#include <linux/wsr.h>
- #include <net/ip.h>
- #include "slab.h"
- #include "swap.h"
-@@ -5233,6 +5235,7 @@ static void free_mem_cgroup_per_node_info(struct mem_cgroup *memcg, int node)
- 	if (!pn)
- 		return;
- 
-+	wsr_destroy(&pn->lruvec);
- 	free_percpu(pn->lruvec_stats_percpu);
- 	kfree(pn);
- }
-@@ -5311,6 +5314,10 @@ static struct mem_cgroup *mem_cgroup_alloc(void)
- 	spin_lock_init(&memcg->deferred_split_queue.split_queue_lock);
- 	INIT_LIST_HEAD(&memcg->deferred_split_queue.split_queue);
- 	memcg->deferred_split_queue.split_queue_len = 0;
-+#endif
-+#ifdef CONFIG_WSR
-+	memcg->wsr_event = 0;
-+	init_waitqueue_head(&memcg->wsr_wait_queue);
- #endif
- 	idr_replace(&mem_cgroup_idr, memcg, memcg->id.id);
- 	lru_gen_init_memcg(memcg);
-@@ -5411,6 +5418,11 @@ static void mem_cgroup_css_offline(struct cgroup_subsys_state *css)
- 	}
- 	spin_unlock_irq(&memcg->event_list_lock);
- 
-+#ifdef CONFIG_WSR
-+	wake_up_pollfree(&memcg->wsr_wait_queue);
-+	synchronize_rcu();
-+#endif
-+
- 	page_counter_set_min(&memcg->memory, 0);
- 	page_counter_set_low(&memcg->memory, 0);
- 
-@@ -6642,6 +6654,228 @@ static ssize_t memory_reclaim(struct kernfs_open_file *of, char *buf,
- 	return nbytes;
- }
- 
-+#ifdef CONFIG_WSR
-+static int memory_wsr_intervals_ms_show(struct seq_file *m, void *v)
++static inline bool working_set_request(struct pglist_data *pgdat)
 +{
-+	int nid;
-+	struct mem_cgroup *memcg = mem_cgroup_from_seq(m);
-+
-+	for_each_node_state(nid, N_MEMORY) {
-+		struct wsr *wsr;
-+		struct ws_bin *bin;
-+
-+		wsr = lruvec_wsr(mem_cgroup_lruvec(memcg, NODE_DATA(nid)));
-+		mutex_lock(&wsr->bins_lock);
-+		seq_printf(m, "N%d=", nid);
-+		for (bin = wsr->bins; bin->idle_age != -1; bin++)
-+			seq_printf(m, "%u,", jiffies_to_msecs(bin->idle_age));
-+		mutex_unlock(&wsr->bins_lock);
-+
-+		seq_printf(m, "%lld ", LLONG_MAX);
-+	}
-+	seq_putc(m, '\n');
-+
-+	return 0;
++	return false;
 +}
++#endif /* CONFIG_WSR */
+ 
+-#endif	/* _LINUX_WSR_H */
++#endif /* _LINUX_WSR_H */
+diff --git a/include/uapi/linux/virtio_balloon.h b/include/uapi/linux/virtio_balloon.h
+index ddaa45e723c4c..a682d917daca1 100644
+--- a/include/uapi/linux/virtio_balloon.h
++++ b/include/uapi/linux/virtio_balloon.h
+@@ -37,6 +37,7 @@
+ #define VIRTIO_BALLOON_F_FREE_PAGE_HINT	3 /* VQ to report free pages */
+ #define VIRTIO_BALLOON_F_PAGE_POISON	4 /* Guest is using page poisoning */
+ #define VIRTIO_BALLOON_F_REPORTING	5 /* Page reporting virtqueue */
++#define VIRTIO_BALLOON_F_WS_REPORTING 6 /* Working Set Size reporting */
+ 
+ /* Size of a PFN in the balloon interface. */
+ #define VIRTIO_BALLOON_PFN_SHIFT 12
+@@ -59,6 +60,9 @@ struct virtio_balloon_config {
+ 	};
+ 	/* Stores PAGE_POISON if page poisoning is in use */
+ 	__le32 poison_val;
++	/* Number of bins for Working Set report if in use. */
++	__u8 working_set_num_bins;
++	__u8 padding[3];
+ };
+ 
+ #define VIRTIO_BALLOON_S_SWAP_IN  0   /* Amount of memory swapped in */
+@@ -116,4 +120,33 @@ struct virtio_balloon_stat {
+ 	__virtio64 val;
+ } __attribute__((packed));
+ 
++/* Enumerate all possible message types from the device. */
++enum virtio_balloon_working_set_op {
++	VIRTIO_BALLOON_WS_REQUEST = 1,
++	VIRTIO_BALLOON_WS_CONFIG = 2,
++};
 +
-+static ssize_t memory_wsr_intervals_ms_parse(struct kernfs_open_file *of,
-+					     char *buf, size_t nbytes,
-+					     unsigned int *nid_out,
-+					     struct ws_bin *bins)
++/* The metadata values for Working Set Reports. */
++enum virtio_balloon_working_set_tags {
++	/* Memory is reclaimable by guest */
++	VIRTIO_BALLOON_WS_RECLAIMABLE = 0,
++	/* Memory can only be discarded by guest */
++	VIRTIO_BALLOON_WS_DISCARDABLE = 1,
++};
++
++/*
++ * Working Set Report structure.
++ */
++struct virtio_balloon_working_set {
++	/* A tag for additional metadata. */
++	__le16 tag;
++	/* the NUMA node for this report. */
++	__le16 node_id;
++	uint8_t reserved[4];
++	/* The idle age (in ms) of this bin of memory */
++	__virtio64 idle_age_ms;
++	/* A bin each for anonymous and file-backed memory. */
++	__le64 memory_size_bytes[2];
++};
++
+ #endif /* _LINUX_VIRTIO_BALLOON_H */
+diff --git a/mm/vmscan.c b/mm/vmscan.c
+index bc8c026ceef0d..c89728f8f61ba 100644
+--- a/mm/vmscan.c
++++ b/mm/vmscan.c
+@@ -5911,6 +5911,57 @@ late_initcall(init_lru_gen);
+  ******************************************************************************/
+ 
+ #ifdef CONFIG_WSR
++static void *wsr_receiver;
++
++/*
++ * Register/unregister a receiver of working set notifications
++ * TODO: Replace with a proper registration interface, similar to shrinkers.
++ */
++int register_working_set_receiver(void *receiver, struct pglist_data *pgdat,
++				  unsigned long *intervals,
++				  unsigned long nr_bins,
++				  unsigned long refresh_threshold,
++				  unsigned long report_threshold)
 +{
-+	char *node, *intervals;
-+	unsigned int nid;
-+	int err;
-+
-+	buf = strstrip(buf);
-+	intervals = buf;
-+	node = strsep(&intervals, "=");
-+
-+	if (*node != 'N')
-+		return -EINVAL;
-+
-+	err = kstrtouint(node + 1, 0, &nid);
-+	if (err)
-+		return err;
-+
-+	if (nid >= nr_node_ids || !node_state(nid, N_MEMORY))
-+		return -EINVAL;
-+
-+	err = wsr_intervals_ms_parse(intervals, bins);
-+	if (err)
-+		return err;
-+
-+	*nid_out = nid;
-+	return 0;
-+}
-+
-+static ssize_t memory_wsr_intervals_ms_write(struct kernfs_open_file *of,
-+					     char *buf, size_t nbytes,
-+					     loff_t off)
-+{
-+	unsigned int nid;
-+	int err;
 +	struct wsr *wsr;
 +	struct ws_bin *bins;
-+	struct mem_cgroup *memcg = mem_cgroup_from_css(of_css(of));
++	int i;
++
++	wsr_receiver = receiver;
++
++	if (!pgdat)
++		return 0;
++
++	if (!intervals || !nr_bins)
++		return 0;
 +
 +	bins = kzalloc(sizeof(wsr->bins), GFP_KERNEL);
 +	if (!bins)
 +		return -ENOMEM;
 +
-+	err = memory_wsr_intervals_ms_parse(of, buf, nbytes, &nid, bins);
-+	if (err)
-+		goto failed;
++	for (i = 0; i < nr_bins - 1; i++) {
++		bins[i].idle_age = msecs_to_jiffies(*intervals);
++		intervals++;
++	}
++	bins[i].idle_age = -1;
 +
-+	wsr = lruvec_wsr(mem_cgroup_lruvec(memcg, NODE_DATA(nid)));
++	wsr = lruvec_wsr(mem_cgroup_lruvec(NULL, pgdat));
++
 +	mutex_lock(&wsr->bins_lock);
 +	memcpy(wsr->bins, bins, sizeof(wsr->bins));
++	WRITE_ONCE(wsr->refresh_threshold, msecs_to_jiffies(refresh_threshold));
++	WRITE_ONCE(wsr->report_threshold, msecs_to_jiffies(report_threshold));
 +	mutex_unlock(&wsr->bins_lock);
-+failed:
-+	kfree(bins);
-+	return err ?: nbytes;
-+}
-+
-+static int memory_wsr_refresh_ms_show(struct seq_file *m, void *v)
-+{
-+	int nid;
-+	struct mem_cgroup *memcg = mem_cgroup_from_seq(m);
-+
-+	for_each_node_state(nid, N_MEMORY) {
-+		struct wsr *wsr =
-+			lruvec_wsr(mem_cgroup_lruvec(memcg, NODE_DATA(nid)));
-+
-+		seq_printf(m, "N%d=%u ", nid,
-+			   jiffies_to_msecs(READ_ONCE(wsr->refresh_threshold)));
-+	}
-+	seq_putc(m, '\n');
-+
 +	return 0;
 +}
++EXPORT_SYMBOL(register_working_set_receiver);
 +
-+static ssize_t memory_wsr_threshold_parse(char *buf, size_t nbytes,
-+					  unsigned int *nid_out,
-+					  unsigned int *msecs)
++void unregister_working_set_receiver(void *receiver)
 +{
-+	char *node, *threshold;
-+	unsigned int nid;
-+	int err;
-+
-+	buf = strstrip(buf);
-+	threshold = buf;
-+	node = strsep(&threshold, "=");
-+
-+	if (*node != 'N')
-+		return -EINVAL;
-+
-+	err = kstrtouint(node + 1, 0, &nid);
-+	if (err)
-+		return err;
-+
-+	if (nid >= nr_node_ids || !node_state(nid, N_MEMORY))
-+		return -EINVAL;
-+
-+	err = kstrtouint(threshold, 0, msecs);
-+	if (err)
-+		return err;
-+
-+	*nid_out = nid;
-+
-+	return nbytes;
++	wsr_receiver = NULL;
 +}
++EXPORT_SYMBOL(unregister_working_set_receiver);
 +
-+static ssize_t memory_wsr_refresh_ms_write(struct kernfs_open_file *of,
-+					   char *buf, size_t nbytes, loff_t off)
-+{
-+	unsigned int nid, msecs;
-+	struct wsr *wsr;
-+	struct mem_cgroup *memcg = mem_cgroup_from_css(of_css(of));
-+	ssize_t ret = memory_wsr_threshold_parse(buf, nbytes, &nid, &msecs);
-+
-+	if (ret < 0)
-+		return ret;
-+
-+	wsr = lruvec_wsr(mem_cgroup_lruvec(memcg, NODE_DATA(nid)));
-+	WRITE_ONCE(wsr->refresh_threshold, msecs_to_jiffies(msecs));
-+	return ret;
-+}
-+
-+static int memory_wsr_report_ms_show(struct seq_file *m, void *v)
-+{
-+	int nid;
-+	struct mem_cgroup *memcg = mem_cgroup_from_seq(m);
-+
-+	for_each_node_state(nid, N_MEMORY) {
-+		struct wsr *wsr =
-+			lruvec_wsr(mem_cgroup_lruvec(memcg, NODE_DATA(nid)));
-+
-+		seq_printf(m, "N%d=%u ", nid,
-+			   jiffies_to_msecs(READ_ONCE(wsr->report_threshold)));
-+	}
-+	seq_putc(m, '\n');
-+
-+	return 0;
-+}
-+
-+static ssize_t memory_wsr_report_ms_write(struct kernfs_open_file *of,
-+					  char *buf, size_t nbytes, loff_t off)
-+{
-+	unsigned int nid, msecs;
-+	struct wsr *wsr;
-+	struct mem_cgroup *memcg = mem_cgroup_from_css(of_css(of));
-+	ssize_t ret = memory_wsr_threshold_parse(buf, nbytes, &nid, &msecs);
-+
-+	if (ret < 0)
-+		return ret;
-+
-+	wsr = lruvec_wsr(mem_cgroup_lruvec(memcg, NODE_DATA(nid)));
-+	WRITE_ONCE(wsr->report_threshold, msecs_to_jiffies(msecs));
-+	return ret;
-+}
-+
-+static int memory_wsr_histogram_show(struct seq_file *m, void *v)
-+{
-+	int nid;
-+	struct mem_cgroup *memcg = mem_cgroup_from_seq(m);
-+
-+	for_each_node_state(nid, N_MEMORY) {
-+		struct wsr *wsr =
-+			lruvec_wsr(mem_cgroup_lruvec(memcg, NODE_DATA(nid)));
-+		struct ws_bin *bin;
-+
-+		seq_printf(m, "N%d\n", nid);
-+
-+		mutex_lock(&wsr->bins_lock);
-+		wsr_refresh(wsr, memcg, NODE_DATA(nid));
-+		for (bin = wsr->bins; bin->idle_age != -1; bin++)
-+			seq_printf(m, "%u anon=%lu file=%lu\n",
-+				   jiffies_to_msecs(bin->idle_age),
-+				   bin->nr_pages[0], bin->nr_pages[1]);
-+
-+		seq_printf(m, "%lld anon=%lu file=%lu\n", LLONG_MAX,
-+			   bin->nr_pages[0], bin->nr_pages[1]);
-+
-+		mutex_unlock(&wsr->bins_lock);
-+	}
-+
-+	return 0;
-+}
-+
-+__poll_t memory_wsr_histogram_poll(struct kernfs_open_file *of,
-+				   struct poll_table_struct *pt)
-+{
-+	struct mem_cgroup *memcg = mem_cgroup_from_css(of_css(of));
-+
-+	if (memcg->css.flags & CSS_DYING)
-+		return DEFAULT_POLLMASK;
-+
-+	poll_wait(of->file, &memcg->wsr_wait_queue, pt);
-+	if (cmpxchg(&memcg->wsr_event, 1, 0) == 1)
-+		return DEFAULT_POLLMASK | EPOLLPRI;
-+	return DEFAULT_POLLMASK;
-+}
-+#endif
-+
- static struct cftype memory_files[] = {
- 	{
- 		.name = "current",
-@@ -6710,7 +6944,33 @@ static struct cftype memory_files[] = {
- 		.flags = CFTYPE_NS_DELEGATABLE,
- 		.write = memory_reclaim,
- 	},
--	{ }	/* terminate */
-+#ifdef CONFIG_WSR
-+	{
-+		.name = "wsr.intervals_ms",
-+		.flags = CFTYPE_NOT_ON_ROOT | CFTYPE_NS_DELEGATABLE,
-+		.seq_show = memory_wsr_intervals_ms_show,
-+		.write = memory_wsr_intervals_ms_write,
-+	},
-+	{
-+		.name = "wsr.refresh_ms",
-+		.flags = CFTYPE_NOT_ON_ROOT | CFTYPE_NS_DELEGATABLE,
-+		.seq_show = memory_wsr_refresh_ms_show,
-+		.write = memory_wsr_refresh_ms_write,
-+	},
-+	{
-+		.name = "wsr.report_ms",
-+		.flags = CFTYPE_NOT_ON_ROOT | CFTYPE_NS_DELEGATABLE,
-+		.seq_show = memory_wsr_report_ms_show,
-+		.write = memory_wsr_report_ms_write,
-+	},
-+	{
-+		.name = "wsr.histogram",
-+		.flags = CFTYPE_NOT_ON_ROOT | CFTYPE_NS_DELEGATABLE,
-+		.seq_show = memory_wsr_histogram_show,
-+		.poll = memory_wsr_histogram_poll,
-+	},
-+#endif
-+	{} /* terminate */
- };
- 
- struct cgroup_subsys memory_cgrp_subsys = {
-diff --git a/mm/vmscan.c b/mm/vmscan.c
-index c56fddcec88fb..ba254b6e91e19 100644
---- a/mm/vmscan.c
-+++ b/mm/vmscan.c
-@@ -4559,8 +4559,6 @@ static bool age_lruvec(struct lruvec *lruvec, struct scan_control *sc, unsigned
- 	return true;
- }
- 
--static void report_ws(struct pglist_data *pgdat, struct scan_control *sc);
--
- /* to protect the working set of the last N jiffies */
- static unsigned long lru_gen_min_ttl __read_mostly;
- 
-@@ -5937,7 +5935,7 @@ void wsr_refresh(struct wsr *wsr, struct mem_cgroup *root,
- 	}
- }
- 
--static void report_ws(struct pglist_data *pgdat, struct scan_control *sc)
-+void report_ws(struct pglist_data *pgdat, struct scan_control *sc)
+ void wsr_refresh(struct wsr *wsr, struct mem_cgroup *root,
+ 		 struct pglist_data *pgdat)
  {
- 	static DEFINE_RATELIMIT_STATE(rate, HZ, 3);
+@@ -5967,6 +6018,16 @@ void report_ws(struct pglist_data *pgdat, struct scan_control *sc)
+ 	refresh_wsr(wsr, memcg, pgdat, sc, 0);
+ 	WRITE_ONCE(wsr->timestamp, jiffies);
  
-@@ -5969,6 +5967,8 @@ static void report_ws(struct pglist_data *pgdat, struct scan_control *sc)
++	/* Balloon driver subscribes to global memory reclaim.
++	 * This requires CONFIG_VIRTIO_BALLOON=y, not m, because
++	 * it's calling a function defined in virtio_balloon.c.
++	 * This is a hack to have balloon notifications work in a
++	 * proof of concept, and aproper notification registration
++	 * interface is on the TODO list.
++	 */
++	if (!cgroup_reclaim(sc) && wsr_receiver)
++		working_set_notify(wsr_receiver, wsr->bins, pgdat->node_id);
++
+ 	mutex_unlock(&wsr->bins_lock);
  
  	if (wsr->notifier)
- 		kernfs_notify(wsr->notifier);
-+	if (memcg && cmpxchg(&memcg->wsr_event, 0, 1) == 0)
-+		wake_up_interruptible(&memcg->wsr_wait_queue);
+@@ -5974,6 +6035,51 @@ void report_ws(struct pglist_data *pgdat, struct scan_control *sc)
+ 	if (memcg && cmpxchg(&memcg->wsr_event, 0, 1) == 0)
+ 		wake_up_interruptible(&memcg->wsr_wait_queue);
  }
++
++/* TODO: Replace with a proper registration interface, similar to shrinkers. */
++bool working_set_request(struct pglist_data *pgdat)
++{
++	unsigned int flags;
++	struct scan_control sc = {
++		.may_writepage = true,
++		.may_unmap = true,
++		.may_swap = true,
++		.reclaim_idx = MAX_NR_ZONES - 1,
++		.gfp_mask = GFP_KERNEL,
++	};
++	struct wsr *wsr;
++
++	if (!wsr_receiver)
++		return false;
++
++	wsr = lruvec_wsr(mem_cgroup_lruvec(NULL, pgdat));
++
++	if (!mutex_trylock(&wsr->bins_lock))
++		return false;
++
++	if (wsr->bins->idle_age != -1) {
++		unsigned long timestamp = READ_ONCE(wsr->timestamp);
++		unsigned long threshold = READ_ONCE(wsr->refresh_threshold);
++
++		if (time_is_before_jiffies(timestamp + threshold)) {
++			// We might need to refresh the report.
++			set_task_reclaim_state(current, &sc.reclaim_state);
++			flags = memalloc_noreclaim_save();
++			refresh_wsr(wsr, NULL, pgdat, &sc, threshold);
++			memalloc_noreclaim_restore(flags);
++			set_task_reclaim_state(current, NULL);
++		}
++	}
++
++	if (wsr_receiver)
++		working_set_notify(wsr_receiver, wsr->bins, pgdat->node_id);
++
++	mutex_unlock(&wsr->bins_lock);
++	return true;
++
++}
++EXPORT_SYMBOL(working_set_request);
++
  #endif /* CONFIG_WSR */
  
-@@ -6486,6 +6486,9 @@ static void shrink_zones(struct zonelist *zonelist, struct scan_control *sc)
- 		if (zone->zone_pgdat == last_pgdat)
- 			continue;
- 		last_pgdat = zone->zone_pgdat;
-+
-+		if (!sc->proactive)
-+			report_ws(zone->zone_pgdat, sc);
- 		shrink_node(zone->zone_pgdat, sc);
- 	}
- 
+ #else /* !CONFIG_LRU_GEN */
 -- 
 2.41.0.162.gfafddb0af9-goog
 
