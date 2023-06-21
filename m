@@ -1,51 +1,65 @@
 From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH v3 2/2] sched: add throttled time stat for throttled
- children
-Date: Wed, 21 Jun 2023 11:23:17 -1000
-Message-ID: <ZJNqRefKRP5mxFaw@slm.duckdns.org>
-References: <20230620183247.737942-1-joshdon@google.com>
- <20230620183247.737942-2-joshdon@google.com>
+Subject: [GIT PULL] cgroup: Fixes for v6.4-rc7
+Date: Wed, 21 Jun 2023 12:05:53 -1000
+Message-ID: <ZJN0Qa--_aBSJ_K3@slm.duckdns.org>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20221208; t=1687382600; x=1689974600;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:sender:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=I4rxMNbWqvL7SlrQRGe8uFSm6XpuYw7vzKHdGgmcjiI=;
-        b=MSf3PCXq6wdLohcP9gMgCzMabwUNVmiy4Osu4b3QDHklikztVAPUZkOPJaihAdm1z4
-         cKDA/Zb36eDxDxF/+j92qnBpKTjKp9o8FPaqZaPw4KdEaiTPHoy8t0rCXJ/ytda3tKtS
-         wUi42M5xqm0IeiQ6aF096aYo7xjYAzNDPdOS1HVoaOmwnvVVQ3GdmoT9oVj60i3UeOnK
-         nBnJFEZHfvRvi++CwEzljmyCohdD2tZQ5aSD4piwJDOvGgrayNoUkG0oGTpYoN3coPJM
-         aAyoM8KEMMRJgcckSr6tUgfo4L5r2FuiKEssu4ZqtvoZc2Ye5PuZw+l4sSxXQhS/NpRR
-         cf/A==
+        d=gmail.com; s=20221208; t=1687385156; x=1689977156;
+        h=content-disposition:mime-version:message-id:subject:cc:to:from:date
+         :sender:from:to:cc:subject:date:message-id:reply-to;
+        bh=1hF4dAVFDAMGVp+Y09Z0Lab7Zc0WkcRinzpiiIGzUs8=;
+        b=RZdjBlnOJEvcG/Y3K8ZI01UT3N8hTQc0Aji+3t3Grs+Dsmzfht3GhgkQlFcD8jfsam
+         AisAu6MjUUbU3jpCdeVAauA08WKcAcUV7p6EFewLB2//fOPqs+/Z/YUtljoYjjIIiQAw
+         +1rGGe623UT6BFJ+1a7YHmiq/aKiGjOA39T99EViEOCZFstoq4P2px4wRV+c3tz3FxUH
+         0pHH8v2tqL5gCM2c2wcQginKgPGEZrSqS+dGyOrMsg8c12ZHEZOI6UBsNWtDsZshr11u
+         zo17IG7VjsfNtmdng/OrwsFaXGG89YiZ8d4VwHgekk2faJbd2xRi/L7K7qQRGeN/WEEy
+         o3qA==
 Sender: Tejun Heo <htejun-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 Content-Disposition: inline
-In-Reply-To: <20230620183247.737942-2-joshdon-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Josh Don <joshdon-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Cc: Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Juri Lelli <juri.lelli-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Vincent Guittot <vincent.guittot-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, Dietmar Eggemann <dietmar.eggemann-5wv7dgnIgG8@public.gmane.org>, Steven Rostedt <rostedt-nx8X9YLhiw1AfugRpC6u6w@public.gmane.org>, Ben Segall <bsegall-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Mel Gorman <mgorman-l3A5Bk7waGM@public.gmane.org>, Daniel Bristot de Oliveira <bristot-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Valentin Schneider <vschneid-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, mkoutny-IBi9RG/b67k@public.gmane.org
+To: Linus Torvalds <torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Tue, Jun 20, 2023 at 11:32:47AM -0700, Josh Don wrote:
-> We currently export the total throttled time for cgroups that are given
-> a bandwidth limit. This patch extends this accounting to also account
-> the total time that each children cgroup has been throttled.
-> 
-> This is useful to understand the degree to which children have been
-> affected by the throttling control. Children which are not runnable
-> during the entire throttled period, for example, will not show any
-> self-throttling time during this period.
-> 
-> Expose this in a new interface, 'cpu.stat.local', which is similar to
-> how non-hierarchical events are accounted in 'memory.events.local'.
-> 
-> Signed-off-by: Josh Don <joshdon-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+The following changes since commit 5647e53f7856bb39dae781fe26aa65a699e2fc9f:
 
-Acked-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+  cgroup: Documentation: Clarify usage of memory limits (2023-06-05 14:08:12 -1000)
 
-Thanks.
+are available in the Git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git/ cgroup-for-6.4-rc7-fixes
+
+for you to fetch changes up to 6f363f5aa845561f7ea496d8b1175e3204470486:
+
+  cgroup: Do not corrupt task iteration when rebinding subsystem (2023-06-12 07:21:57 -1000)
+
+----------------------------------------------------------------
+cgroup: Fixes for v6.4-rc7
+
+It's late but here are two bug fixes. Both fix problems which can be severe
+but are very confined in scope. The risk to most use cases should be
+minimal.
+
+* Fix for an old bug which triggers if a cgroup subsystem is remounted to a
+  different hierarchy while someone is reading its cgroup.procs/tasks file.
+  The risk is pretty low given how seldom cgroup subsystems are moved across
+  hierarchies.
+
+* We moved cpus_read_lock() outside of cgroup internal locks a while ago but
+  forgot to update the legacy_freezer leading to lockdep triggers. Fixed.
+
+----------------------------------------------------------------
+Tetsuo Handa (1):
+      cgroup,freezer: hold cpu_hotplug_lock before freezer_mutex in freezer_css_{online,offline}()
+
+Xiu Jianfeng (1):
+      cgroup: Do not corrupt task iteration when rebinding subsystem
+
+ kernel/cgroup/cgroup.c         | 20 +++++++++++++++++---
+ kernel/cgroup/legacy_freezer.c |  8 ++++++--
+ 2 files changed, 23 insertions(+), 5 deletions(-)
 
 -- 
 tejun
