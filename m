@@ -1,43 +1,44 @@
-From: Kees Cook <keescook-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>
-Subject: Re: [PATCH][next] cgroup: Avoid -Wstringop-overflow warnings
-Date: Tue, 20 Jun 2023 12:51:04 -0700
-Message-ID: <202306201250.6FA10ADF4@keescook>
-References: <ZIpm3pcs3iCP9UaR@work>
+From: Domenico Cerasuolo <cerasuolodomenico-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Subject: [PATCH 0/3] selftests: cgroup: add zswap test program
+Date: Wed, 21 Jun 2023 17:35:45 +0200
+Message-ID: <20230621153548.428093-1-cerasuolodomenico@gmail.com>
 Mime-Version: 1.0
+Content-Transfer-Encoding: 8bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=chromium.org; s=google; t=1687290665; x=1689882665;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=fEQfxADvgSzjQCfBomhgDaEgGtqyU75um/V6Dxu05cc=;
-        b=bYg+oupnLPHq6deMXlRsxgjqDTrfbi7ADGIUtbQfBQXgJObZaO/KjayEbPgKT45RRz
-         icYzOrlCbPuoaZu8Xl+6oXqqOBi/yyNQJ8SwgCBgJUredayRBaNxkcYKZygJDu16iCwy
-         OMnbMkyBU6X4YOPCSK3RdowMxqqtNjyQ0QM8Y=
-Content-Disposition: inline
-In-Reply-To: <ZIpm3pcs3iCP9UaR@work>
+        d=gmail.com; s=20221208; t=1687361753; x=1689953753;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=yLC3Qvm8n/w4CH5ToSb5DN8Odh2TdBdFkjR985bJsFU=;
+        b=XNNg4geRz6v9Rne19hZvE7dAvG7m5JVqo482JTQxpuo2aiaamcJHYjpGzn/hDYhn4R
+         34MbwzgM88Y7NgENR6uA17UWiK/FzRBMbt1DFnUdf/mnGNQNinfxbqTCgaBInMhCjq/6
+         iDIClLNEKaInpZedkWU6pP+zF1LqhgBnl4dg2ZXMBVZ/R6gsIStjaGRbimg/YBE0791l
+         65L7T1AnG/c1WBy3tN6kQkfY+SaHhzvlga+WLowV4xjOg8hXtcaUv89A8tFbU3d0h1Ny
+         BdRGtaLRnrf+kWj5Lxx6BX30XOo9xbnOVazlq7DRD/evPGoK0K+t6rOCUa7/slGjr6Z2
+         w+Vg==
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: "Gustavo A. R. Silva" <gustavoars-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-hardening-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, shuah-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org, shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, muchun.song-fxUVXftIFDnyG1zEObXtfA@public.gmane.org, sjenning-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, ddstreet-EkmVulN54Sk@public.gmane.org, vitaly.wool-OWPKS81ov/FWk0Htik3J/w@public.gmane.org, riel-ebMLmSuQjDVBDgjK7y7TUQ@public.gmane.org, nphamcs-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org
+Cc: akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kselftest-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Domenico Cerasuolo <cerasuolodomenico-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 
-On Wed, Jun 14, 2023 at 07:18:22PM -0600, Gustavo A. R. Silva wrote:
-> Address the following -Wstringop-overflow warnings seen when
-> built with ARM architecture and aspeed_g4_defconfig configuration
-> (notice that under this configuration CGROUP_SUBSYS_COUNT == 0):
-> kernel/cgroup/cgroup.c:1208:16: warning: 'find_existing_css_set' accessing 4 bytes in a region of size 0 [-Wstringop-overflow=]
-> kernel/cgroup/cgroup.c:1258:15: warning: 'css_set_hash' accessing 4 bytes in a region of size 0 [-Wstringop-overflow=]
-> kernel/cgroup/cgroup.c:6089:18: warning: 'css_set_hash' accessing 4 bytes in a region of size 0 [-Wstringop-overflow=]
-> kernel/cgroup/cgroup.c:6153:18: warning: 'css_set_hash' accessing 4 bytes in a region of size 0 [-Wstringop-overflow=]
-> 
-> These changes are based on commit d20d30ebb199 ("cgroup: Avoid compiler
-> warnings with no subsystems").
-> 
-> Signed-off-by: Gustavo A. R. Silva <gustavoars-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+This series adds 2 zswap related selftests that verify known and fixed
+issues. A new dedicated test program (test_zswap) is proposed since
+the test cases are specific to zswap and hosts specific helpers.
 
-Ah nice, this should reduce code size for the "0" case too.
+The first patch adds the (empty) test program, while the other 2 add an
+actual test function each.
 
-Reviewed-by: Kees Cook <keescook-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>
+Domenico Cerasuolo (3):
+  selftests: cgroup: add test_zswap program
+  selftests: cgroup: add test_zswap with no kmem bypass test
+  selftests: cgroup: add zswap-memcg unwanted writeback test
+
+ tools/testing/selftests/cgroup/.gitignore   |   1 +
+ tools/testing/selftests/cgroup/Makefile     |   2 +
+ tools/testing/selftests/cgroup/test_zswap.c | 286 ++++++++++++++++++++
+ 3 files changed, 289 insertions(+)
+ create mode 100644 tools/testing/selftests/cgroup/test_zswap.c
 
 -- 
-Kees Cook
+2.34.1
+
