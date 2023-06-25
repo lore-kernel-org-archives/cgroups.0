@@ -1,49 +1,81 @@
-From: Jens Axboe <axboe@kernel.dk>
-Subject: Re: [PATCH v3] blk-throttle: Fix io statistics for cgroup v1
-Date: Sun, 25 Jun 2023 08:01:22 -0600
-Message-ID: <168770168286.14597.14477909506148885094.b4-ty@kernel.dk>
-References: <20230507170631.89607-1-hanjinke.666@bytedance.com>
+From: Abel Wu <wuyun.abel@bytedance.com>
+Subject: [PATCH net-next 1/2] net-memcg: Scopify the indicators of sockmem pressure
+Date: Sun, 25 Jun 2023 22:28:10 +0800
+Message-ID: <20230625142820.47185-1-wuyun.abel@bytedance.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-block-owner@vger.kernel.org>
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=kernel-dk.20221208.gappssmtp.com; s=20221208; t=1687701684; x=1690293684;
-        h=content-transfer-encoding:mime-version:date:message-id:subject
-         :references:in-reply-to:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=81hUfeigYJdMFcea0oHNmqYrI7BM6QQbtVqGrjtpVcw=;
-        b=omJ60U9Qa+EzsyrYGCEYVm7rpu9bSuvkuuFwvdy+o9XQXcz6Gn3wNKLQoPwPsKHU/T
-         LLEcea6iFpOYaYujaAt6zQv2cjHlvilSbazMzJSb2CPn2Pd+FS+Z/jkXf/aZGYkmCeVp
-         R4Ox3wKFBv73f8gYU1G+ATs/2DFRCnDjCGHvJ+fAhIh1JER2+kOFZTQILWhlWkjyhhMD
-         uqR+oPbHY+cTdQW0Oz3aeMuZGTHDjhCadDMaQEhQgKaCq/MyUyo0Jrh5cPAvN5a5uXJl
-         NorS5USW7yLstX0sh3xaEPnAso4GSPACcMW7/zF73tdc331xKHrHks1xVMLafI9kzziR
-         ykuQ==
-In-Reply-To: <20230507170631.89607-1-hanjinke.666@bytedance.com>
+        d=bytedance.com; s=google; t=1687703359; x=1690295359;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=TGKSvilmZgPJXmejRM2lBTN0K9/2tgMZGylX16m+j6g=;
+        b=eG2+tYqWkPkRCKS2RqWlEWAPeVeLRLXmJgJx4B9MSOk2J+FsmkJeEiMFUA6KvpbbCr
+         89LyphI33da0F/giPdABa5kExZR8OYAsgy2vh6TTPohdM7/mDDY59lwOBYhzfAZGp30D
+         05pvyoXfP1v6weRD8GBJFn77jPCHxgvEBe4tRKrmVB99zADfpEQj9rgiQSB4nWZARxBJ
+         iugI3imnns3+ApJ9CMskLtS5DWhnJubAU58LcP/z9QP9bpnq/Uer7js5m5TVx2r4pZLD
+         9dBPFp5TTAK7U6Hbyi7hFev30VCCcg47CUJ0RupDMTD90mAWngVaaxqxkRgiGVjgjUqd
+         gIpA==
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: tj@kernel.org, josef@toxicpanda.com, Jinke Han <hanjinke.666@bytedance.com>
-Cc: cgroups@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, andrea.righi@canonical.com, Muchun Song <muchun.song@linux.dev>
+To: "David S. Miller" <davem@davemloft.net>, Eric Dumazet <edumazet@google.com>, Jakub Kicinski <kuba@kernel.org>, Paolo Abeni <pabeni@redhat.com>, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, Roman Gushchin <roman.gushchin@linux.dev>, Shakeel Butt <shakeelb@google.com>, Muchun Song <muchun.song@linux.dev>, Andrew Morton <akpm@linux-foundation.org>, David Ahern <dsahern@kernel.org>, Yosry Ahmed <yosryahmed@google.com>, "Matthew Wilcox (Oracle)" <willy@infradead.org>, Yu Zhao <yuzhao@google.com>, Abel Wu <wuyun.abel@bytedance.com>, Kuniyuki Iwashima <kuniyu@amazon.com>, Alexei Starovoitov <ast@kernel.org>, Martin KaFai Lau <martin.lau@kernel.org>, Alexander Mikhalitsyn <alexander@mihalicyn.com>, Breno Leitao <lei>
+Cc: Michal Hocko <mhocko@suse.com>, open list <linux-kernel@vger.kernel.org>, "open list:NETWORKING [GENERAL]" <netdev@vger.kernel.org>, "open list:CONTROL GROUP - MEMORY RESOURCE
+        CONTROLLER MEMCG" <cgroups@vger.kernel.org>, "open list:CONTROL GROUP - MEMORY RESOURCE
+        CONTROLLER MEMCG" <linux-mm@kvack.org>
 
+Now there are two indicators of socket memory pressure sit inside
+struct mem_cgroup, socket_pressure and tcpmem_pressure.
 
-On Mon, 08 May 2023 01:06:31 +0800, Jinke Han wrote:
-> After commit f382fb0bcef4 ("block: remove legacy IO schedulers"),
-> blkio.throttle.io_serviced and blkio.throttle.io_service_bytes become
-> the only stable io stats interface of cgroup v1, and these statistics
-> are done in the blk-throttle code. But the current code only counts the
-> bios that are actually throttled. When the user does not add the throttle
-> limit, the io stats for cgroup v1 has nothing. I fix it according to the
-> statistical method of v2, and made it count all ios accurately.
-> 
-> [...]
+When in legacy mode aka. cgroupv1, the socket memory is charged
+into a separate counter memcg->tcpmem rather than ->memory, so
+the reclaim pressure of the memcg has nothing to do with socket's
+pressure at all. While for default mode, the ->tcpmem is simply
+not used.
 
-Applied, thanks!
+So {socket,tcpmem}_pressure are only used in default/legacy mode
+respectively. This patch fixes the pieces of code that make mixed
+use of both.
 
-[1/1] blk-throttle: Fix io statistics for cgroup v1
-      commit: ad7c3b41e86b59943a903d23c7b037d820e6270c
+Signed-off-by: Abel Wu <wuyun.abel@bytedance.com>
+---
+ include/linux/memcontrol.h | 4 ++--
+ mm/vmpressure.c            | 8 ++++++++
+ 2 files changed, 10 insertions(+), 2 deletions(-)
 
-Best regards,
+diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
+index 222d7370134c..9b1b536b4ec9 100644
+--- a/include/linux/memcontrol.h
++++ b/include/linux/memcontrol.h
+@@ -1743,8 +1743,8 @@ void mem_cgroup_sk_alloc(struct sock *sk);
+ void mem_cgroup_sk_free(struct sock *sk);
+ static inline bool mem_cgroup_under_socket_pressure(struct mem_cgroup *memcg)
+ {
+-	if (!cgroup_subsys_on_dfl(memory_cgrp_subsys) && memcg->tcpmem_pressure)
+-		return true;
++	if (!cgroup_subsys_on_dfl(memory_cgrp_subsys))
++		return !!memcg->tcpmem_pressure;
+ 	do {
+ 		if (time_before(jiffies, READ_ONCE(memcg->socket_pressure)))
+ 			return true;
+diff --git a/mm/vmpressure.c b/mm/vmpressure.c
+index b52644771cc4..22c6689d9302 100644
+--- a/mm/vmpressure.c
++++ b/mm/vmpressure.c
+@@ -244,6 +244,14 @@ void vmpressure(gfp_t gfp, struct mem_cgroup *memcg, bool tree,
+ 	if (mem_cgroup_disabled())
+ 		return;
+ 
++	/*
++	 * The in-kernel users only care about the reclaim efficiency
++	 * for this @memcg rather than the whole subtree, and there
++	 * isn't and won't be any in-kernel user in a legacy cgroup.
++	 */
++	if (!cgroup_subsys_on_dfl(memory_cgrp_subsys) && !tree)
++		return;
++
+ 	vmpr = memcg_to_vmpressure(memcg);
+ 
+ 	/*
 -- 
-Jens Axboe
-
-
+2.37.3
 
