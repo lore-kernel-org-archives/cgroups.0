@@ -1,63 +1,105 @@
-From: Suren Baghdasaryan <surenb@google.com>
-Subject: Re: [PATCH 1/2] kernfs: add kernfs_ops.free operation to free
- resources tied to the file
-Date: Mon, 26 Jun 2023 13:39:18 -0700
-Message-ID: <CAJuCfpGt8Bg1VLkx-aMw7_JTvh=co4QSM9B=fvikp0mQ-6rvjg@mail.gmail.com>
-References: <20230626201713.1204982-1-surenb@google.com> <ZJn1tQDgfmcE7mNG@slm.duckdns.org>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: [GIT PULL] cgroup: Changes for v6.5
+Date: Mon, 26 Jun 2023 12:30:19 -1000
+Message-ID: <ZJoRezbOXRTLIL3T@slm.duckdns.org>
 Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-Return-path: <linux-fsdevel-owner@vger.kernel.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20221208; t=1687811970; x=1690403970;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=MEFUJeeBn6YjH4lK418olg3ruMKuxKIepWsfszUOpy4=;
-        b=L6+t78u34A4EOsgO/5wyxp0/LGY+KJO2+xEm2/un0aE1W+UJ2WdK6S/UKVpguxRp5L
-         R5MBxyaqs+VsDVFucNqfi5acwzpetEuEiNoaZ8TINLUMNyLQrLw5ImKiNAUPyZP6AkhM
-         z9B43yz4ZPCStialiseimZwqXg90RajcVEsWa9D609XnTsfkElxPVXq9vzh/7VCTNHVv
-         ziS22l4ZeeTvBn6hGJgR0FsPhw4xt3yYJhqLCQR4EOQ9FePLgVx2Z54nPJ8gKrH0uwRL
-         cxZ5QZHAFRxraqfIGAatLgaElWfrPTD/K+Aa76+FxYyYGofVf9k/HTmhNNqiY77DmCW5
-         0/5w==
-In-Reply-To: <ZJn1tQDgfmcE7mNG@slm.duckdns.org>
+        d=gmail.com; s=20221208; t=1687818620; x=1690410620;
+        h=content-disposition:mime-version:message-id:subject:cc:to:from:date
+         :sender:from:to:cc:subject:date:message-id:reply-to;
+        bh=srYH61jPdlaM0MowCsJN0isuziRw2t+pfv2C6FBW2u4=;
+        b=oc1Y9ulu/tTCNJdypcysex6m70Pojpf1VuD3SGuFtEhBKrItjq5TNwCpmusDlTXp/r
+         1DsH1GcEp1Q4gNQ7VN8sl6aSwaZk0sPZtwMXgcMg0m49KCn1Gl7x1T64mczVXKBChTrR
+         hhrVPwOgH6uNBaIfuk4+lDNAe6bc/SjBU6+TcMryHwEYCuE1YLjaugyWZ7Kan/92bvML
+         26L/22Hz4aGiCAizqmv/Ha7m5SqFLhPPbj5m7KX10Q6hZB7XUkjKrE2n2Dl98aq4YYiG
+         5hDu7/PUnx1Ym0YFPnx37gSBpUpHSPyxF6CgC0c6ucG6Zj9VHEtSb5nZPkrfHLp8Bc66
+         So5g==
+Sender: Tejun Heo <htejun-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Content-Disposition: inline
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="windows-1252"
-To: Tejun Heo <tj@kernel.org>
-Cc: gregkh@linuxfoundation.org, peterz@infradead.org, lujialin4@huawei.com, lizefan.x@bytedance.com, hannes@cmpxchg.org, mingo@redhat.com, ebiggers@kernel.org, oleg@redhat.com, akpm@linux-foundation.org, viro@zeniv.linux.org.uk, brauner@kernel.org, juri.lelli@redhat.com, vincent.guittot@linaro.org, dietmar.eggemann@arm.com, rostedt@goodmis.org, bsegall@google.com, mgorman@suse.de, bristot@redhat.com, vschneid@redhat.com, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, linux-fsdevel@vger.kernel.org, kernel-team@android.com
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Linus Torvalds <torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Mon, Jun 26, 2023 at 1:31=E2=80=AFPM Tejun Heo <tj@kernel.org> wrote:
->
-> On Mon, Jun 26, 2023 at 01:17:12PM -0700, Suren Baghdasaryan wrote:
-> > diff --git a/include/linux/kernfs.h b/include/linux/kernfs.h
-> > index 73f5c120def8..a7e404ff31bb 100644
-> > --- a/include/linux/kernfs.h
-> > +++ b/include/linux/kernfs.h
-> > @@ -273,6 +273,11 @@ struct kernfs_ops {
-> >        */
-> >       int (*open)(struct kernfs_open_file *of);
-> >       void (*release)(struct kernfs_open_file *of);
-> > +     /*
-> > +      * Free resources tied to the lifecycle of the file, like a
-> > +      * waitqueue used for polling.
-> > +      */
-> > +     void (*free)(struct kernfs_open_file *of);
->
-> I think this can use a bit more commenting - ie. explain that release may=
- be
-> called earlier than the actual freeing of the file and how that can lead =
-to
-> problems. Othre than that, looks fine to me.
+The following changes since commit ba0ad6ed89fd5dada3b7b65ef2b08e95d449d4ab:
 
-Sure, once I get more feedback I'll post the next version with
-expanded description.
-Thanks!
+  media: nxp: imx8-isi: fix buiding on 32-bit (2023-05-08 09:10:07 -0700)
 
->
-> Greg, as Suren suggested, I can route both patches through the cgroup tre=
-e
-> if you're okay with it.
->
-> Thanks.
->
-> --
-> tejun
+are available in the Git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git/ tags/cgroup-for-6.5
+
+for you to fetch changes up to 81621430c81bb7965c3d5807039bc2b5b3ec87ca:
+
+  Revert "cgroup: Avoid -Wstringop-overflow warnings" (2023-06-22 08:51:14 -1000)
+
+----------------------------------------------------------------
+cgroup: Changes for v6.5
+
+* Whenever cpuset needs to rebuild sched_domain, it walked all tasks looking
+  for DEADLINE tasks as they need to be accounted on the new domain. Walking
+  all tasks can be expensive and there may not be any DEADLINE tasks at all.
+  Task iteration is now omitted if there are no DEADLINE tasks.
+
+* Fixes DEADLINE bandwidth misaccounting after task migration failures.
+
+* When no controller is enabled, -Wstringop-overflow warning is triggered.
+  The fix patch added an early exit which is too eager and got reverted for
+  now. Will fix later.
+
+* Everything else are minor cleanups.
+
+----------------------------------------------------------------
+Azeem Shaikh (1):
+      cgroup: Replace all non-returning strlcpy with strscpy
+
+Dietmar Eggemann (2):
+      sched/deadline: Create DL BW alloc, free & check overflow interface
+      cgroup/cpuset: Free DL BW in case can_attach() fails
+
+Gaosheng Cui (2):
+      cgroup: Replace the css_set call with cgroup_get
+      rdmacg: fix kernel-doc warnings in rdmacg
+
+Gustavo A. R. Silva (1):
+      cgroup: Avoid -Wstringop-overflow warnings
+
+Juri Lelli (4):
+      cgroup/cpuset: Rename functions dealing with DEADLINE accounting
+      sched/cpuset: Bring back cpuset_mutex
+      sched/cpuset: Keep track of SCHED_DEADLINE task in cpusets
+      cgroup/cpuset: Iterate only if DEADLINE tasks are present
+
+LeiZhou-97 (1):
+      cgroup/misc: Expose misc.current on cgroup v2 root
+
+Miaohe Lin (6):
+      cgroup/cpuset: remove unneeded header files
+      cgroup: remove unused macro for_each_e_css()
+      cgroup: make cgroup_is_threaded() and cgroup_is_thread_root() static
+      cgroup/cpuset: remove unneeded header files
+      cgroup: remove unused task_cgroup_path()
+      cgroup: remove obsolete comment on cgroup_on_dfl()
+
+Tejun Heo (1):
+      Revert "cgroup: Avoid -Wstringop-overflow warnings"
+
+Xiu Jianfeng (1):
+      cgroup: Update out-of-date comment in cgroup_migrate()
+
+ Documentation/admin-guide/cgroup-v2.rst |   2 +-
+ include/linux/cgroup.h                  |   1 -
+ include/linux/cpuset.h                  |  12 +-
+ include/linux/sched.h                   |   4 +-
+ kernel/cgroup/cgroup-internal.h         |   2 -
+ kernel/cgroup/cgroup-v1.c               |   4 +-
+ kernel/cgroup/cgroup.c                  |  72 ++-------
+ kernel/cgroup/cpuset.c                  | 267 +++++++++++++++++++-------------
+ kernel/cgroup/misc.c                    |   1 -
+ kernel/cgroup/rdma.c                    |   2 +
+ kernel/sched/core.c                     |  41 +++--
+ kernel/sched/deadline.c                 |  67 ++++++--
+ kernel/sched/sched.h                    |   2 +-
+ 13 files changed, 257 insertions(+), 220 deletions(-)
