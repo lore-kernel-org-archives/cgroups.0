@@ -1,114 +1,55 @@
-From: Suren Baghdasaryan <surenb@google.com>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 Subject: Re: [PATCH 1/2] kernfs: add kernfs_ops.free operation to free
  resources tied to the file
-Date: Mon, 26 Jun 2023 13:21:07 -0700
-Message-ID: <CAJuCfpGM-yEoG0YsjA_3AQ9PZa=daC7eJHL7huXAzB8zV7AmKg@mail.gmail.com>
+Date: Mon, 26 Jun 2023 10:31:49 -1000
+Message-ID: <ZJn1tQDgfmcE7mNG@slm.duckdns.org>
 References: <20230626201713.1204982-1-surenb@google.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-Return-path: <linux-fsdevel-owner@vger.kernel.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20221208; t=1687810878; x=1690402878;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=NfWVz+A34dcRU8jVvD1uvLnBMJMnVmBYO+8hH+swTnI=;
-        b=auOTUoCoLj8ulXOSurwSalH+VuiHVvQyIP0D6uN0eGXwvkBNl/WLBgXr5yjtB9hacj
-         II7AOSuuj06hwAL4gt41/64RMS+bch7IHSNAL1C4zLRU0sNopNW/Q8KirQKa0K3jnFb2
-         TGFz6U6BuaVX58KAN69EkFvN/7LzPl/DlaaQ559Dm3886dCgpLDoPws/tniO7DIewVQA
-         klhNgV/peNBRwZJJx/9HLRDEkLHvp7Wh+yceEDZn+W/5/mFWuDFX3NnLXOJCm0oS3/8H
-         Bsx8VblwwOvzuPXDRoGjZ+UUkPJysSqI0MNNUTIb+4gTI3gLNPXUcnbwO/NqYT470F1n
-         4lrQ==
-In-Reply-To: <20230626201713.1204982-1-surenb@google.com>
+        d=gmail.com; s=20221208; t=1687811510; x=1690403510;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:sender:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=OTCUF3XNaBvj4PKCzDGtH7uEP3TDMjaq/uRkjjEZ9Kc=;
+        b=cuVy06QAcKG7awJdVWfu3saYHOdNHs21sEzuNJv1hP1fJMvoZXxx44+ki4ge02Zws6
+         3+H7SLURjdL0eGT0h09pJSxeORiSBwJC3GZQmDtWew8yDFbmp9pmcn7/+DMlBTpX6D15
+         Vf2rCPnevhB4/EoCpVRwAh3pbOxfls3TA4wg83yboMFqod0y+weJAf4BQuTKhFeZBYIz
+         yUYxqXLQ9sLYGGdYBlZXxxO+b7aRW5xiPbjVx4FOps38qMnvYtzeqF+/RB66SAD+jSsB
+         mLT49KB0jhpZeghMFlfDB4kLvTlGiK9P0huREC178+E7wxC9xlR7So/FVYt7A+DNeLAA
+         LdDg==
+Sender: Tejun Heo <htejun-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <20230626201713.1204982-1-surenb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="windows-1252"
-To: tj@kernel.org
-Cc: gregkh@linuxfoundation.org, peterz@infradead.org, lujialin4@huawei.com, lizefan.x@bytedance.com, hannes@cmpxchg.org, mingo@redhat.com, ebiggers@kernel.org, oleg@redhat.com, akpm@linux-foundation.org, viro@zeniv.linux.org.uk, brauner@kernel.org, juri.lelli@redhat.com, vincent.guittot@linaro.org, dietmar.eggemann@arm.com, rostedt@goodmis.org, bsegall@google.com, mgorman@suse.de, bristot@redhat.com, vschneid@redhat.com, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, linux-fsdevel@vger.kernel.org, kernel-team@android.com
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Suren Baghdasaryan <surenb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Cc: gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org, peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, lujialin4-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, ebiggers-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, oleg-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, viro-RmSDqhL/yNMiFSDQTTA3OLVCufUGDwFn@public.gmane.org, brauner-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, juri.lelli-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, vincent.guittot-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org, dietmar.eggemann-5wv7dgnIgG8@public.gmane.org, rostedt-nx8X9YLhiw1AfugRpC6u6w@public.gmane.org, bsegall-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, mgorman-l3A5Bk7waGM@public.gmane.org, bristot-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, vschneid-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-z5hGa2qSFaRBDgjK7y7TUQ@public.gmane.org
 
-On Mon, Jun 26, 2023 at 1:17=E2=80=AFPM Suren Baghdasaryan <surenb@google.c=
-om> wrote:
->
-> kernfs_ops.release operation can be called from kernfs_drain_open_files
-> which is not tied to the file's real lifecycle. Introduce a new kernfs_op=
-s
-> free operation which is called only when the last fput() of the file is
-> performed and therefore is strictly tied to the file's lifecycle. This
-> operation will be used for freeing resources tied to the file, like
-> waitqueues used for polling the file.
-
-While this patchset touches kernfs, cgroups and psi areas (3 different
-maintainers), I think cgroups are the most relevant area for it, so
-IMHO Tejun's tree would be the right one to get them once reviewed and
-acknowledged. Thanks!
-
->
-> Signed-off-by: Suren Baghdasaryan <surenb@google.com>
-> ---
->  fs/kernfs/file.c       | 8 +++++---
->  include/linux/kernfs.h | 5 +++++
->  2 files changed, 10 insertions(+), 3 deletions(-)
->
-> diff --git a/fs/kernfs/file.c b/fs/kernfs/file.c
-> index 40c4661f15b7..acc52d23d8f6 100644
-> --- a/fs/kernfs/file.c
-> +++ b/fs/kernfs/file.c
-> @@ -766,7 +766,7 @@ static int kernfs_fop_open(struct inode *inode, struc=
-t file *file)
->
->  /* used from release/drain to ensure that ->release() is called exactly =
-once */
->  static void kernfs_release_file(struct kernfs_node *kn,
-> -                               struct kernfs_open_file *of)
-> +                               struct kernfs_open_file *of, bool final)
->  {
->         /*
->          * @of is guaranteed to have no other file operations in flight a=
-nd
-> @@ -787,6 +787,8 @@ static void kernfs_release_file(struct kernfs_node *k=
-n,
->                 of->released =3D true;
->                 of_on(of)->nr_to_release--;
->         }
-> +       if (final && kn->attr.ops->free)
-> +               kn->attr.ops->free(of);
->  }
->
->  static int kernfs_fop_release(struct inode *inode, struct file *filp)
-> @@ -798,7 +800,7 @@ static int kernfs_fop_release(struct inode *inode, st=
-ruct file *filp)
->                 struct mutex *mutex;
->
->                 mutex =3D kernfs_open_file_mutex_lock(kn);
-> -               kernfs_release_file(kn, of);
-> +               kernfs_release_file(kn, of, true);
->                 mutex_unlock(mutex);
->         }
->
-> @@ -852,7 +854,7 @@ void kernfs_drain_open_files(struct kernfs_node *kn)
->                 }
->
->                 if (kn->flags & KERNFS_HAS_RELEASE)
-> -                       kernfs_release_file(kn, of);
-> +                       kernfs_release_file(kn, of, false);
->         }
->
->         WARN_ON_ONCE(on->nr_mmapped || on->nr_to_release);
+On Mon, Jun 26, 2023 at 01:17:12PM -0700, Suren Baghdasaryan wrote:
 > diff --git a/include/linux/kernfs.h b/include/linux/kernfs.h
 > index 73f5c120def8..a7e404ff31bb 100644
 > --- a/include/linux/kernfs.h
 > +++ b/include/linux/kernfs.h
 > @@ -273,6 +273,11 @@ struct kernfs_ops {
->          */
->         int (*open)(struct kernfs_open_file *of);
->         void (*release)(struct kernfs_open_file *of);
-> +       /*
-> +        * Free resources tied to the lifecycle of the file, like a
-> +        * waitqueue used for polling.
-> +        */
-> +       void (*free)(struct kernfs_open_file *of);
->
->         /*
->          * Read is handled by either seq_file or raw_read().
-> --
-> 2.41.0.162.gfafddb0af9-goog
->
+>  	 */
+>  	int (*open)(struct kernfs_open_file *of);
+>  	void (*release)(struct kernfs_open_file *of);
+> +	/*
+> +	 * Free resources tied to the lifecycle of the file, like a
+> +	 * waitqueue used for polling.
+> +	 */
+> +	void (*free)(struct kernfs_open_file *of);
+
+I think this can use a bit more commenting - ie. explain that release may be
+called earlier than the actual freeing of the file and how that can lead to
+problems. Othre than that, looks fine to me.
+
+Greg, as Suren suggested, I can route both patches through the cgroup tree
+if you're okay with it.
+
+Thanks.
+
+-- 
+tejun
