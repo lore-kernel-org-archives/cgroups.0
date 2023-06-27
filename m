@@ -1,119 +1,129 @@
-From: Waiman Long <longman@redhat.com>
-Subject: [PATCH v4 7/9] cgroup/cpuset: Check partition conflict with housekeeping setup
-Date: Tue, 27 Jun 2023 10:35:06 -0400
-Message-ID: <20230627143508.1576882-8-longman@redhat.com>
+From: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Subject: [PATCH v4 4/9] cgroup/cpuset: Allow suppression of sched domain rebuild in update_cpumasks_hier()
+Date: Tue, 27 Jun 2023 10:35:03 -0400
+Message-ID: <20230627143508.1576882-5-longman@redhat.com>
 References: <20230627143508.1576882-1-longman@redhat.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Return-path: <linux-doc-owner@vger.kernel.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1687876563;
+        s=mimecast20190719; t=1687876562;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=vmQ47yrk6oi4cwmpXV9NlSGFJ5Yq05aPKaX6AWXHzFg=;
-        b=UN21Mqra9VuzAjK4Oq9vSEUtX9R4K61p2qSfpiw0AXVxYXPojVTcyA/6e7y5+f19X82IkB
-        xIZWogAsiSO34MeXc32glZvZGEhcpOoEDY8Ia2ksSR6j7/YVVFz7EAmR4jZ/968pHqTyKq
-        /rJt9NElVZOF+IdF5W0I2Vu2zd0IPk4=
-In-Reply-To: <20230627143508.1576882-1-longman@redhat.com>
+        bh=T1/GI0DN/l36YNRdQUEP56Qh0Q1HrifFn5e4yBEgTec=;
+        b=DJxZE1TrJRLPo/bVs5+FQH9bZYEKwaqDVMtkuYqJL8kGu4pMMUdVIZdcxHPX+fjV+cv1n+
+        xdcmycHjbzkwuGwOeXf67ijklpz1cCqRXG1XM1O9sllGwGJiv5IIO2xEJEWS+UB3foA/gO
+        36WGZtHAUQL8IOHOmnTCPll3lyNIhKo=
+In-Reply-To: <20230627143508.1576882-1-longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Tejun Heo <tj@kernel.org>, Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, Jonathan Corbet <corbet@lwn.net>, Shuah Khan <shuah@kernel.org>
-Cc: linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kselftest@vger.kernel.org, Juri Lelli <juri.lelli@redhat.com>, Valentin Schneider <vschneid@redhat.com>, Frederic Weisbecker <frederic@kernel.org>, Mrunal Patel <mpatel@redhat.com>, Ryan Phillips <rphillips@redhat.com>, Brent Rowsell <browsell@redhat.com>, Peter Hunt <pehunt@redhat.com>, Phil Auld <pauld@redhat.com>, Waiman Long <longman@redhat.com>
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Jonathan Corbet <corbet-T1hC0tSOHrs@public.gmane.org>, Shuah Khan <shuah-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kselftest-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Juri Lelli <juri.lelli-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Valentin Schneider <vschneid-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Frederic Weisbecker <frederic-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Mrunal Patel <mpatel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Ryan Phillips <rphillips-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Brent Rowsell <browsell-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Peter Hunt <pehunt-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Phil Auld <pauld-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 
-A user can pre-configure certain CPUs in an isolated state at boot time
-with the "isolcpus" kernel boot command line option. Those CPUs will
-not be in the housekeeping_cpumask(HK_TYPE_DOMAIN) and so will not
-be in any sched domains. This may conflict with the partition setup
-at runtime. Those boot time isolated CPUs should only be used in an
-isolated partition.
+A single partition setup and tear-down operation can lead to
+multiple rebuild_sched_domains_locked() calls which is a waste of
+effort. This can partly be mitigated by adding a flag to suppress the
+rebuild_sched_domains_locked() call in update_cpumasks_hier(). Since
+a Boolean flag has already been passed as the 3rd argument to
+update_cpumasks_hier(), we can extend that to a full flag word.
 
-This patch adds the necessary check and disallows partition setup if the
-check fails.
+The sched domain rebuild suppression is now enabled in
+update_sibling_cpumasks() as all it callers will do the sched domain
+rebuild after its return later on anyway.
 
-Signed-off-by: Waiman Long <longman@redhat.com>
+Signed-off-by: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 ---
- kernel/cgroup/cpuset.c | 31 +++++++++++++++++++++++++++++++
- 1 file changed, 31 insertions(+)
+ kernel/cgroup/cpuset.c | 24 ++++++++++++++++--------
+ 1 file changed, 16 insertions(+), 8 deletions(-)
 
 diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
-index 56aa7b4f213c..3b0805eacb6b 100644
+index b8ccc1be7bde..64f9e305b3ab 100644
 --- a/kernel/cgroup/cpuset.c
 +++ b/kernel/cgroup/cpuset.c
-@@ -75,6 +75,7 @@ enum prs_errcode {
- 	PERR_NOCPUS,
- 	PERR_HOTPLUG,
- 	PERR_CPUSEMPTY,
-+	PERR_HKEEPING,
- };
- 
- static const char * const perr_strings[] = {
-@@ -85,6 +86,7 @@ static const char * const perr_strings[] = {
- 	[PERR_NOCPUS]    = "Parent unable to distribute cpu downstream",
- 	[PERR_HOTPLUG]   = "No cpu available due to hotplug",
- 	[PERR_CPUSEMPTY] = "cpuset.cpus is empty",
-+	[PERR_HKEEPING]  = "partition config conflicts with housekeeping setup",
- };
- 
- struct cpuset {
-@@ -1574,6 +1576,26 @@ static int remote_cpus_update(struct cpuset *cs, struct cpumask *newmask,
+@@ -1590,6 +1590,12 @@ static int update_parent_subparts_cpumask(struct cpuset *cs, int cmd,
  	return 0;
  }
  
 +/*
-+ * prstate_housekeeping_conflict - check for partition & housekeeping conflicts
-+ * @prstate: partition root state to be checked
-+ * @new_cpus: cpu mask
-+ * Return: true if there is conflict, false otherwise
-+ *
-+ * CPUs outside of housekeeping_cpumask(HK_TYPE_DOMAIN) can only be used in
-+ * an isolated partition.
++ * update_cpumasks_hier() flags
 + */
-+static bool prstate_housekeeping_conflict(int prstate, struct cpumask *new_cpus)
-+{
-+	const struct cpumask *hk_domain = housekeeping_cpumask(HK_TYPE_DOMAIN);
-+	bool all_in_hk = cpumask_subset(new_cpus, hk_domain);
++#define HIER_CHECKALL		0x01	/* Check all cpusets with no skipping */
++#define HIER_NO_SD_REBUILD	0x02	/* Don't rebuild sched domains */
 +
-+	if (!all_in_hk && (prstate != PRS_ISOLATED))
-+		return true;
-+
-+	return false;
-+}
-+
- /**
-  * update_parent_effective_cpumask - update effective_cpus mask of parent cpuset
-  * @cs:      The cpuset that requests change in partition root state
-@@ -1674,6 +1696,9 @@ static int update_parent_effective_cpumask(struct cpuset *cs, int cmd,
- 		if (!cpumask_intersects(xcpus, parent->exclusive_cpus))
- 			return PERR_INVCPUS;
+ /*
+  * update_cpumasks_hier - Update effective cpumasks and tasks in the subtree
+  * @cs:  the cpuset to consider
+@@ -1604,7 +1610,7 @@ static int update_parent_subparts_cpumask(struct cpuset *cs, int cmd,
+  * Called with cpuset_mutex held
+  */
+ static void update_cpumasks_hier(struct cpuset *cs, struct tmpmasks *tmp,
+-				 bool force)
++				 int flags)
+ {
+ 	struct cpuset *cp;
+ 	struct cgroup_subsys_state *pos_css;
+@@ -1644,10 +1650,10 @@ static void update_cpumasks_hier(struct cpuset *cs, struct tmpmasks *tmp,
+ 		 * Skip the whole subtree if
+ 		 * 1) the cpumask remains the same,
+ 		 * 2) has no partition root state,
+-		 * 3) force flag not set, and
++		 * 3) HIER_CHECKALL flag not set, and
+ 		 * 4) for v2 load balance state same as its parent.
+ 		 */
+-		if (!cp->partition_root_state && !force &&
++		if (!cp->partition_root_state && !(flags & HIER_CHECKALL) &&
+ 		    cpumask_equal(tmp->new_cpus, cp->effective_cpus) &&
+ 		    (!cgroup_subsys_on_dfl(cpuset_cgrp_subsys) ||
+ 		    (is_sched_load_balance(parent) == is_sched_load_balance(cp)))) {
+@@ -1764,7 +1770,7 @@ static void update_cpumasks_hier(struct cpuset *cs, struct tmpmasks *tmp,
+ 	}
+ 	rcu_read_unlock();
  
-+		if (prstate_housekeeping_conflict(new_prs, xcpus))
-+			return PERR_HKEEPING;
-+
- 		/*
- 		 * A parent can be left with no CPU as long as there is no
- 		 * task directly associated with the parent partition.
-@@ -2249,6 +2274,9 @@ static int update_cpumask(struct cpuset *cs, struct cpuset *trialcs,
- 		if (cpumask_empty(trialcs->exclusive_cpus)) {
- 			invalidate = true;
- 			cs->prs_err = PERR_INVCPUS;
-+		} else if (prstate_housekeeping_conflict(old_prs, trialcs->exclusive_cpus)) {
-+			invalidate = true;
-+			cs->prs_err = PERR_HKEEPING;
- 		} else if (tasks_nocpu_error(parent, cs, trialcs->exclusive_cpus)) {
- 			invalidate = true;
- 			cs->prs_err = PERR_NOCPUS;
-@@ -2381,6 +2409,9 @@ static int update_exclusive_cpumask(struct cpuset *cs, struct cpuset *trialcs,
- 		if (cpumask_empty(trialcs->exclusive_cpus)) {
- 			invalidate = true;
- 			cs->prs_err = PERR_INVCPUS;
-+		} else if (prstate_housekeeping_conflict(old_prs, trialcs->exclusive_cpus)) {
-+			invalidate = true;
-+			cs->prs_err = PERR_HKEEPING;
- 		} else if (tasks_nocpu_error(parent, cs, trialcs->exclusive_cpus)) {
- 			invalidate = true;
- 			cs->prs_err = PERR_NOCPUS;
+-	if (need_rebuild_sched_domains)
++	if (need_rebuild_sched_domains && !(flags & HIER_NO_SD_REBUILD))
+ 		rebuild_sched_domains_locked();
+ }
+ 
+@@ -1788,7 +1794,9 @@ static void update_sibling_cpumasks(struct cpuset *parent, struct cpuset *cs,
+ 	 * to use the right effective_cpus value.
+ 	 *
+ 	 * The update_cpumasks_hier() function may sleep. So we have to
+-	 * release the RCU read lock before calling it.
++	 * release the RCU read lock before calling it. HIER_NO_SD_REBUILD
++	 * flag is used to suppress rebuild of sched domains as the callers
++	 * will take care of that.
+ 	 */
+ 	rcu_read_lock();
+ 	cpuset_for_each_child(sibling, pos_css, parent) {
+@@ -1800,7 +1808,7 @@ static void update_sibling_cpumasks(struct cpuset *parent, struct cpuset *cs,
+ 			continue;
+ 
+ 		rcu_read_unlock();
+-		update_cpumasks_hier(sibling, tmp, false);
++		update_cpumasks_hier(sibling, tmp, HIER_NO_SD_REBUILD);
+ 		rcu_read_lock();
+ 		css_put(&sibling->css);
+ 	}
+@@ -1913,7 +1921,7 @@ static int update_cpumask(struct cpuset *cs, struct cpuset *trialcs,
+ 	spin_unlock_irq(&callback_lock);
+ 
+ 	/* effective_cpus will be updated here */
+-	update_cpumasks_hier(cs, &tmp, false);
++	update_cpumasks_hier(cs, &tmp, 0);
+ 
+ 	if (cs->partition_root_state) {
+ 		struct cpuset *parent = parent_cs(cs);
+@@ -2382,7 +2390,7 @@ static int update_prstate(struct cpuset *cs, int new_prs)
+ 	 * Force update if switching back to member.
+ 	 */
+ 	if (!list_empty(&cs->css.children))
+-		update_cpumasks_hier(cs, &tmpmask, !new_prs);
++		update_cpumasks_hier(cs, &tmpmask, !new_prs ? HIER_CHECKALL : 0);
+ 
+ 	/* Update sched domains and load balance flag */
+ 	update_partition_sd_lb(cs, old_prs);
 -- 
 2.31.1
 
