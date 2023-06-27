@@ -1,152 +1,119 @@
-From: kernel test robot <lkp-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
-Subject: [tj-cgroup:test-merge] BUILD SUCCESS
- f6a72e65a90216f5be921e156ba0fba21472fdb7
-Date: Tue, 27 Jun 2023 21:42:51 +0800
-Message-ID: <202306272150.jMZYiKtb-lkp@intel.com>
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1687873393; x=1719409393;
-  h=date:from:to:cc:subject:message-id;
-  bh=Y8VJ2xTu6CsTiNmwGbkhKXYvB0GRt0y4eEcC790IfSs=;
-  b=kjjyKbdpuRScK7iejHRju+iCpZzfPj54D69F3pfRjHXtmY7TLSDCm/sT
-   o/czglwCDLKjzVKCIezFdm+Hj4KPSRGfshLnUOzf4tENhYGIwm/d23iJi
-   rROfuZop22JEvFEgVpLa4lO19J+PcT4uLSQFE9JkMU2r8MKjE5MqQqD72
-   Ah4jqapykREYskAdVqMF7HqdvGf1tc39cBhSyw96fRpO/YEUWXzXXA2qJ
-   Bx8qscz6sl58PwmFKjjuhJiQrC6hBlhRYggJCbzKbXPIm/SoXvGXTX4pr
-   b+YsXkdqsac5mtQwTmwkW6Kzq0Fw1WCF9B8SHslo9tNfv8Mq79E3o+CC+
-   g==;
+From: Waiman Long <longman@redhat.com>
+Subject: [PATCH v4 7/9] cgroup/cpuset: Check partition conflict with housekeeping setup
+Date: Tue, 27 Jun 2023 10:35:06 -0400
+Message-ID: <20230627143508.1576882-8-longman@redhat.com>
+References: <20230627143508.1576882-1-longman@redhat.com>
+Mime-Version: 1.0
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-doc-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1687876563;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=vmQ47yrk6oi4cwmpXV9NlSGFJ5Yq05aPKaX6AWXHzFg=;
+        b=UN21Mqra9VuzAjK4Oq9vSEUtX9R4K61p2qSfpiw0AXVxYXPojVTcyA/6e7y5+f19X82IkB
+        xIZWogAsiSO34MeXc32glZvZGEhcpOoEDY8Ia2ksSR6j7/YVVFz7EAmR4jZ/968pHqTyKq
+        /rJt9NElVZOF+IdF5W0I2Vu2zd0IPk4=
+In-Reply-To: <20230627143508.1576882-1-longman@redhat.com>
 List-ID: <cgroups.vger.kernel.org>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Tejun Heo <tj@kernel.org>, Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, Jonathan Corbet <corbet@lwn.net>, Shuah Khan <shuah@kernel.org>
+Cc: linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kselftest@vger.kernel.org, Juri Lelli <juri.lelli@redhat.com>, Valentin Schneider <vschneid@redhat.com>, Frederic Weisbecker <frederic@kernel.org>, Mrunal Patel <mpatel@redhat.com>, Ryan Phillips <rphillips@redhat.com>, Brent Rowsell <browsell@redhat.com>, Peter Hunt <pehunt@redhat.com>, Phil Auld <pauld@redhat.com>, Waiman Long <longman@redhat.com>
 
-tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git test-merge
-branch HEAD: f6a72e65a90216f5be921e156ba0fba21472fdb7  Merge branch 'for-6.5' into test-merge
+A user can pre-configure certain CPUs in an isolated state at boot time
+with the "isolcpus" kernel boot command line option. Those CPUs will
+not be in the housekeeping_cpumask(HK_TYPE_DOMAIN) and so will not
+be in any sched domains. This may conflict with the partition setup
+at runtime. Those boot time isolated CPUs should only be used in an
+isolated partition.
 
-elapsed time: 723m
+This patch adds the necessary check and disallows partition setup if the
+check fails.
 
-configs tested: 111
-configs skipped: 7
+Signed-off-by: Waiman Long <longman@redhat.com>
+---
+ kernel/cgroup/cpuset.c | 31 +++++++++++++++++++++++++++++++
+ 1 file changed, 31 insertions(+)
 
-The following configs have been built successfully.
-More configs may be tested in the coming days.
-
-tested configs:
-alpha                            allyesconfig   gcc  
-alpha                               defconfig   gcc  
-arc                              allyesconfig   gcc  
-arc                                 defconfig   gcc  
-arc                  randconfig-r043-20230627   gcc  
-arm                              allmodconfig   gcc  
-arm                              allyesconfig   gcc  
-arm                     am200epdkit_defconfig   clang
-arm                       aspeed_g4_defconfig   clang
-arm                                 defconfig   gcc  
-arm                  randconfig-r006-20230627   clang
-arm                  randconfig-r031-20230627   clang
-arm                  randconfig-r035-20230627   clang
-arm                  randconfig-r046-20230627   gcc  
-arm64                            allyesconfig   gcc  
-arm64                               defconfig   gcc  
-csky                                defconfig   gcc  
-hexagon              randconfig-r041-20230627   clang
-hexagon              randconfig-r045-20230627   clang
-i386                             allyesconfig   gcc  
-i386         buildonly-randconfig-r004-20230627   gcc  
-i386         buildonly-randconfig-r005-20230627   gcc  
-i386         buildonly-randconfig-r006-20230627   gcc  
-i386                              debian-10.3   gcc  
-i386                                defconfig   gcc  
-i386                 randconfig-i001-20230627   gcc  
-i386                 randconfig-i002-20230627   gcc  
-i386                 randconfig-i003-20230627   gcc  
-i386                 randconfig-i004-20230627   gcc  
-i386                 randconfig-i005-20230627   gcc  
-i386                 randconfig-i006-20230627   gcc  
-i386                 randconfig-i011-20230627   clang
-i386                 randconfig-i012-20230627   clang
-i386                 randconfig-i013-20230627   clang
-i386                 randconfig-i014-20230627   clang
-i386                 randconfig-i015-20230627   clang
-i386                 randconfig-i016-20230627   clang
-loongarch                        allmodconfig   gcc  
-loongarch                         allnoconfig   gcc  
-loongarch                           defconfig   gcc  
-loongarch            randconfig-r032-20230627   gcc  
-m68k                             allmodconfig   gcc  
-m68k                             allyesconfig   gcc  
-m68k                                defconfig   gcc  
-m68k                 randconfig-r013-20230627   gcc  
-microblaze           randconfig-r016-20230627   gcc  
-microblaze           randconfig-r021-20230627   gcc  
-mips                             allmodconfig   gcc  
-mips                             allyesconfig   gcc  
-mips                          malta_defconfig   clang
-nios2                               defconfig   gcc  
-nios2                randconfig-r014-20230627   gcc  
-openrisc             randconfig-r003-20230627   gcc  
-parisc                           allyesconfig   gcc  
-parisc                              defconfig   gcc  
-parisc64                            defconfig   gcc  
-powerpc                          allmodconfig   gcc  
-powerpc                           allnoconfig   gcc  
-powerpc                 mpc832x_rdb_defconfig   clang
-powerpc               mpc834x_itxgp_defconfig   clang
-powerpc              randconfig-r001-20230627   gcc  
-powerpc              randconfig-r012-20230627   clang
-riscv                            allmodconfig   gcc  
-riscv                             allnoconfig   gcc  
-riscv                            allyesconfig   gcc  
-riscv                               defconfig   gcc  
-riscv                randconfig-r004-20230627   gcc  
-riscv                randconfig-r042-20230627   clang
-riscv                          rv32_defconfig   gcc  
-s390                             allmodconfig   gcc  
-s390                             allyesconfig   gcc  
-s390                          debug_defconfig   gcc  
-s390                                defconfig   gcc  
-s390                 randconfig-r026-20230627   clang
-s390                 randconfig-r044-20230627   clang
-sh                               allmodconfig   gcc  
-sh                   randconfig-r011-20230627   gcc  
-sh                   randconfig-r022-20230627   gcc  
-sh                          rsk7264_defconfig   gcc  
-sparc                            allyesconfig   gcc  
-sparc                               defconfig   gcc  
-sparc64              randconfig-r024-20230627   gcc  
-um                               allmodconfig   clang
-um                                allnoconfig   clang
-um                               allyesconfig   clang
-um                                  defconfig   gcc  
-um                             i386_defconfig   gcc  
-um                           x86_64_defconfig   gcc  
-x86_64                           allyesconfig   gcc  
-x86_64       buildonly-randconfig-r001-20230627   gcc  
-x86_64       buildonly-randconfig-r002-20230627   gcc  
-x86_64       buildonly-randconfig-r003-20230627   gcc  
-x86_64                              defconfig   gcc  
-x86_64                                  kexec   gcc  
-x86_64               randconfig-r005-20230627   gcc  
-x86_64               randconfig-x001-20230627   clang
-x86_64               randconfig-x002-20230627   clang
-x86_64               randconfig-x003-20230627   clang
-x86_64               randconfig-x004-20230627   clang
-x86_64               randconfig-x005-20230627   clang
-x86_64               randconfig-x006-20230627   clang
-x86_64               randconfig-x011-20230627   gcc  
-x86_64               randconfig-x012-20230627   gcc  
-x86_64               randconfig-x013-20230627   gcc  
-x86_64               randconfig-x014-20230627   gcc  
-x86_64               randconfig-x015-20230627   gcc  
-x86_64               randconfig-x016-20230627   gcc  
-x86_64                          rhel-8.3-rust   clang
-x86_64                               rhel-8.3   gcc  
-xtensa               randconfig-r002-20230627   gcc  
-xtensa               randconfig-r015-20230627   gcc  
-
+diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
+index 56aa7b4f213c..3b0805eacb6b 100644
+--- a/kernel/cgroup/cpuset.c
++++ b/kernel/cgroup/cpuset.c
+@@ -75,6 +75,7 @@ enum prs_errcode {
+ 	PERR_NOCPUS,
+ 	PERR_HOTPLUG,
+ 	PERR_CPUSEMPTY,
++	PERR_HKEEPING,
+ };
+ 
+ static const char * const perr_strings[] = {
+@@ -85,6 +86,7 @@ static const char * const perr_strings[] = {
+ 	[PERR_NOCPUS]    = "Parent unable to distribute cpu downstream",
+ 	[PERR_HOTPLUG]   = "No cpu available due to hotplug",
+ 	[PERR_CPUSEMPTY] = "cpuset.cpus is empty",
++	[PERR_HKEEPING]  = "partition config conflicts with housekeeping setup",
+ };
+ 
+ struct cpuset {
+@@ -1574,6 +1576,26 @@ static int remote_cpus_update(struct cpuset *cs, struct cpumask *newmask,
+ 	return 0;
+ }
+ 
++/*
++ * prstate_housekeeping_conflict - check for partition & housekeeping conflicts
++ * @prstate: partition root state to be checked
++ * @new_cpus: cpu mask
++ * Return: true if there is conflict, false otherwise
++ *
++ * CPUs outside of housekeeping_cpumask(HK_TYPE_DOMAIN) can only be used in
++ * an isolated partition.
++ */
++static bool prstate_housekeeping_conflict(int prstate, struct cpumask *new_cpus)
++{
++	const struct cpumask *hk_domain = housekeeping_cpumask(HK_TYPE_DOMAIN);
++	bool all_in_hk = cpumask_subset(new_cpus, hk_domain);
++
++	if (!all_in_hk && (prstate != PRS_ISOLATED))
++		return true;
++
++	return false;
++}
++
+ /**
+  * update_parent_effective_cpumask - update effective_cpus mask of parent cpuset
+  * @cs:      The cpuset that requests change in partition root state
+@@ -1674,6 +1696,9 @@ static int update_parent_effective_cpumask(struct cpuset *cs, int cmd,
+ 		if (!cpumask_intersects(xcpus, parent->exclusive_cpus))
+ 			return PERR_INVCPUS;
+ 
++		if (prstate_housekeeping_conflict(new_prs, xcpus))
++			return PERR_HKEEPING;
++
+ 		/*
+ 		 * A parent can be left with no CPU as long as there is no
+ 		 * task directly associated with the parent partition.
+@@ -2249,6 +2274,9 @@ static int update_cpumask(struct cpuset *cs, struct cpuset *trialcs,
+ 		if (cpumask_empty(trialcs->exclusive_cpus)) {
+ 			invalidate = true;
+ 			cs->prs_err = PERR_INVCPUS;
++		} else if (prstate_housekeeping_conflict(old_prs, trialcs->exclusive_cpus)) {
++			invalidate = true;
++			cs->prs_err = PERR_HKEEPING;
+ 		} else if (tasks_nocpu_error(parent, cs, trialcs->exclusive_cpus)) {
+ 			invalidate = true;
+ 			cs->prs_err = PERR_NOCPUS;
+@@ -2381,6 +2409,9 @@ static int update_exclusive_cpumask(struct cpuset *cs, struct cpuset *trialcs,
+ 		if (cpumask_empty(trialcs->exclusive_cpus)) {
+ 			invalidate = true;
+ 			cs->prs_err = PERR_INVCPUS;
++		} else if (prstate_housekeeping_conflict(old_prs, trialcs->exclusive_cpus)) {
++			invalidate = true;
++			cs->prs_err = PERR_HKEEPING;
+ 		} else if (tasks_nocpu_error(parent, cs, trialcs->exclusive_cpus)) {
+ 			invalidate = true;
+ 			cs->prs_err = PERR_NOCPUS;
 -- 
-0-DAY CI Kernel Test Service
-https://github.com/intel/lkp-tests/wiki
+2.31.1
+
