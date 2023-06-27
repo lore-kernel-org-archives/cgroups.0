@@ -1,89 +1,117 @@
-From: kernel test robot <lkp@intel.com>
-Subject: Re: [PATCH v3 5/9] cgroup/cpuset: Add cpuset.cpus.exclusive for v2
-Date: Tue, 27 Jun 2023 12:12:37 +0800
-Message-ID: <202306271214.Vd5UDf4Y-lkp@intel.com>
-References: <20230627005529.1564984-6-longman@redhat.com>
+From: Greg KH <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>
+Subject: Re: [PATCH 1/2] kernfs: add kernfs_ops.free operation to free
+ resources tied to the file
+Date: Tue, 27 Jun 2023 08:25:39 +0200
+Message-ID: <2023062757-hardening-confusion-6f4e@gregkh>
+References: <20230626201713.1204982-1-surenb@google.com>
 Mime-Version: 1.0
-Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1687839180; x=1719375180;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:in-reply-to;
-  bh=e1b0fi0vY8js4lH2qqnZOIMHiQIDCirQwxuk84EGyQM=;
-  b=H7DOV8VfFryKhYQJ0A5/yOhjfxkzDC3QjXJM5nHLf4QahDlICjsi+sfx
-   XDKSOwO8i8+mZ5NPbOdjgA0ACiF0lnzuBl+nPnxf3uH8YTGlNX8LvioqU
-   V7/+jb5S0vkg83s6Ct3iIAhJXpGcxnv4Q6MOldNDYHYUAJbopW53q4slO
-   7b9O/udQtpSuSJX6GdtlL7iDtq80lJJkxtGNULnu8PtGtq0qSoKahhv58
-   EjJo6LbR/OzHP0QEVFn1Okkp0pDksEOQCUEg588iiqA2wJWx6JgEpdugM
-   Aflq5+Hn6W9xOz8eQ9zJkqieMD3MDGrg60iATNjiZ9zdOY696G7om49fd
-   Q==;
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linuxfoundation.org;
+        s=korg; t=1687847141;
+        bh=G+F0E2NcaLt8e1QCrT2yY6Id7JkiDTVt7DBza4Bc/dg=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=p5XvuwFfrqNnOwm9y1fTdCNvb5JbWJefenTltGV07r8SGY9J08p6MIEbptiY/uwkC
+         US5xTwvT+G5A8rL/dC3GzkZblQxIE240V0y+Psc6WBXDCwZmxmDqwQxkqEk7aYdmzd
+         zE/2SXVui3/GzPlRnRS/FQFr8Usb0Hp6mwZtaj3Y=
 Content-Disposition: inline
-In-Reply-To: <20230627005529.1564984-6-longman@redhat.com>
+In-Reply-To: <20230626201713.1204982-1-surenb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Waiman Long <longman@redhat.com>, Tejun Heo <tj@kernel.org>, Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, Jonathan Corbet <corbet@lwn.net>, Shuah Khan <skhan@linuxfoundation.org>
-Cc: oe-kbuild-all@lists.linux.dev, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kselftest@vger.kernel.org, Juri Lelli <juri.lelli@redhat.com>, Valentin Schneider <vschneid@redhat.com>, Frederic Weisbecker <frederic@kernel.org>, Mrunal Patel <mpatel@redhat.com>, Ryan Phillips <rphillips@redhat.com>, Brent Rowsell <browsell@redhat.com>, Peter Hunt <pehunt@redhat.com>, Phil Auld <pauld@redhat.com>, Waiman Long <longman@redhat.com>
+To: Suren Baghdasaryan <surenb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Cc: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, lujialin4-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, ebiggers-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, oleg-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, viro-RmSDqhL/yNMiFSDQTTA3OLVCufUGDwFn@public.gmane.org, brauner-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, juri.lelli-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, vincent.guittot-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org, dietmar.eggemann-5wv7dgnIgG8@public.gmane.org, rostedt-nx8X9YLhiw1AfugRpC6u6w@public.gmane.org, bsegall-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, mgorman-l3A5Bk7waGM@public.gmane.org, bristot-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, vschneid-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-z5hGa2qSFaRBDgjK7y7TUQ@public.gmane.org
 
-Hi Waiman,
+On Mon, Jun 26, 2023 at 01:17:12PM -0700, Suren Baghdasaryan wrote:
+> kernfs_ops.release operation can be called from kernfs_drain_open_files
+> which is not tied to the file's real lifecycle. Introduce a new kernfs_ops
+> free operation which is called only when the last fput() of the file is
+> performed and therefore is strictly tied to the file's lifecycle. This
+> operation will be used for freeing resources tied to the file, like
+> waitqueues used for polling the file.
 
-kernel test robot noticed the following build errors:
-
-[auto build test ERROR on next-20230626]
-[also build test ERROR on v6.4]
-[cannot apply to tj-cgroup/for-next linus/master v6.4 v6.4-rc7 v6.4-rc6]
-[If your patch is applied to the wrong git tree, kindly drop us a note.
-And when submitting patch, we suggest to use '--base' as documented in
-https://git-scm.com/docs/git-format-patch#_base_tree_information]
-
-url:    https://github.com/intel-lab-lkp/linux/commits/Waiman-Long/cgroup-cpuset-Inherit-parent-s-load-balance-state-in-v2/20230627-090025
-base:   next-20230626
-patch link:    https://lore.kernel.org/r/20230627005529.1564984-6-longman%40redhat.com
-patch subject: [PATCH v3 5/9] cgroup/cpuset: Add cpuset.cpus.exclusive for v2
-config: s390-defconfig (https://download.01.org/0day-ci/archive/20230627/202306271214.Vd5UDf4Y-lkp@intel.com/config)
-compiler: s390-linux-gcc (GCC) 12.3.0
-reproduce: (https://download.01.org/0day-ci/archive/20230627/202306271214.Vd5UDf4Y-lkp@intel.com/reproduce)
-
-If you fix the issue in a separate patch/commit (i.e. not just a new version of
-the same patch/commit), kindly add following tags
-| Reported-by: kernel test robot <lkp@intel.com>
-| Closes: https://lore.kernel.org/oe-kbuild-all/202306271214.Vd5UDf4Y-lkp@intel.com/
-
-All errors (new ones prefixed by >>):
-
-   kernel/cgroup/cpuset.c: In function 'cpu_exclusive_check':
->> kernel/cgroup/cpuset.c:699:15: error: assignment to expression with array type
-     699 |         cpus1 = cpumask_empty(cs1->exclusive_cpus)
-         |               ^
-   kernel/cgroup/cpuset.c:701:15: error: assignment to expression with array type
-     701 |         cpus2 = cpumask_empty(cs2->exclusive_cpus)
-         |               ^
+This is confusing, shouldn't release be the "last" time the file is
+handled and then all resources attached to it freed?  Why do we need
+another callback, shouldn't release handle this?
 
 
-vim +699 kernel/cgroup/cpuset.c
+> 
+> Signed-off-by: Suren Baghdasaryan <surenb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+> ---
+>  fs/kernfs/file.c       | 8 +++++---
+>  include/linux/kernfs.h | 5 +++++
+>  2 files changed, 10 insertions(+), 3 deletions(-)
+> 
+> diff --git a/fs/kernfs/file.c b/fs/kernfs/file.c
+> index 40c4661f15b7..acc52d23d8f6 100644
+> --- a/fs/kernfs/file.c
+> +++ b/fs/kernfs/file.c
+> @@ -766,7 +766,7 @@ static int kernfs_fop_open(struct inode *inode, struct file *file)
+>  
+>  /* used from release/drain to ensure that ->release() is called exactly once */
+>  static void kernfs_release_file(struct kernfs_node *kn,
+> -				struct kernfs_open_file *of)
+> +				struct kernfs_open_file *of, bool final)
 
-   689	
-   690	/*
-   691	 * cpu_exclusive_check() - check if two cpusets are exclusive
-   692	 *
-   693	 * Return 0 if exclusive, -EINVAL if not
-   694	 */
-   695	static inline bool cpu_exclusive_check(struct cpuset *cs1, struct cpuset *cs2)
-   696	{
-   697		cpumask_var_t cpus1, cpus2;
-   698	
- > 699		cpus1 = cpumask_empty(cs1->exclusive_cpus)
-   700			? cs1->cpus_allowed : cs1->exclusive_cpus;
-   701		cpus2 = cpumask_empty(cs2->exclusive_cpus)
-   702			? cs2->cpus_allowed : cs2->exclusive_cpus;
-   703	
-   704		if (cpumask_intersects(cpus1, cpus2))
-   705			return -EINVAL;
-   706		return 0;
-   707	}
-   708	
+Adding flags to functions like this are a pain, now we need to look it
+up every time to see what that bool means.
 
--- 
-0-DAY CI Kernel Test Service
-https://github.com/intel/lkp-tests/wiki
+And when we do, we see that it is not documented here so we have no idea
+of what it is :(
+
+This is not going to be maintainable as-is, sorry.
+
+>  {
+>  	/*
+>  	 * @of is guaranteed to have no other file operations in flight and
+> @@ -787,6 +787,8 @@ static void kernfs_release_file(struct kernfs_node *kn,
+>  		of->released = true;
+>  		of_on(of)->nr_to_release--;
+>  	}
+> +	if (final && kn->attr.ops->free)
+> +		kn->attr.ops->free(of);
+>  }
+>  
+>  static int kernfs_fop_release(struct inode *inode, struct file *filp)
+> @@ -798,7 +800,7 @@ static int kernfs_fop_release(struct inode *inode, struct file *filp)
+>  		struct mutex *mutex;
+>  
+>  		mutex = kernfs_open_file_mutex_lock(kn);
+> -		kernfs_release_file(kn, of);
+> +		kernfs_release_file(kn, of, true);
+>  		mutex_unlock(mutex);
+>  	}
+>  
+> @@ -852,7 +854,7 @@ void kernfs_drain_open_files(struct kernfs_node *kn)
+>  		}
+>  
+>  		if (kn->flags & KERNFS_HAS_RELEASE)
+> -			kernfs_release_file(kn, of);
+> +			kernfs_release_file(kn, of, false);
+
+Why isn't this also the "last" time things are touched here?  why is it
+false?
+
+
+>  	}
+>  
+>  	WARN_ON_ONCE(on->nr_mmapped || on->nr_to_release);
+> diff --git a/include/linux/kernfs.h b/include/linux/kernfs.h
+> index 73f5c120def8..a7e404ff31bb 100644
+> --- a/include/linux/kernfs.h
+> +++ b/include/linux/kernfs.h
+> @@ -273,6 +273,11 @@ struct kernfs_ops {
+>  	 */
+>  	int (*open)(struct kernfs_open_file *of);
+>  	void (*release)(struct kernfs_open_file *of);
+> +	/*
+> +	 * Free resources tied to the lifecycle of the file, like a
+> +	 * waitqueue used for polling.
+> +	 */
+> +	void (*free)(struct kernfs_open_file *of);
+
+I agree with Tejun, this needs to be documented much better and show how
+you really should never need to use this :)
+
+thanks,
+
+greg k-h
