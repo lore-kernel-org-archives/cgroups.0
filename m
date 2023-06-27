@@ -1,189 +1,157 @@
-From: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Subject: [PATCH v4 8/9] cgroup/cpuset: Documentation update for partition
-Date: Tue, 27 Jun 2023 10:35:07 -0400
-Message-ID: <20230627143508.1576882-9-longman@redhat.com>
+From: Waiman Long <longman@redhat.com>
+Subject: [PATCH v4 3/9] cgroup/cpuset: Improve temporary cpumasks handling
+Date: Tue, 27 Jun 2023 10:35:02 -0400
+Message-ID: <20230627143508.1576882-4-longman@redhat.com>
 References: <20230627143508.1576882-1-longman@redhat.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <linux-doc-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1687876586;
+        s=mimecast20190719; t=1687876587;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=5WrK5WBWoc32LURr2EuT+ipNK/yro3aBjT13t4QPtY8=;
-        b=f9pSxslYiw5Q1Z8BBehcBmyLCP7l22AFWitTUIdaqC6af6crh6U9FJvT3MXCHzq4hQcum+
-        RFVe7oBNkJd1wqYfDC/okPk/117ZAjqVMLfiDsOpFR82SG5bTMUsu21QvW5Mx4WfbvVnCl
-        LSu8lgzBhP0dRgfSu3c3PM38IutlG4w=
-In-Reply-To: <20230627143508.1576882-1-longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+        bh=WPhp6M85RYtJ1OdHBAv4hPr3cT4UKKt6nbqDvx5A+ks=;
+        b=eQF6Fq3q6cLfDHWoRJXng2nK5J7WiJbuKPMJ70Uhm4C9c49GmrBsuWpDNW88bsdgSEy5Da
+        Enf+704XzGABNo2kRcz0FWUk4qk0AHLK292WLnGUx4gcP6LBF7rAlTf19U0eOrHLsVXAtu
+        3TN4ovdC+GWUQrKAS41EvxOAyYcQqmQ=
+In-Reply-To: <20230627143508.1576882-1-longman@redhat.com>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Jonathan Corbet <corbet-T1hC0tSOHrs@public.gmane.org>, Shuah Khan <shuah-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kselftest-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Juri Lelli <juri.lelli-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Valentin Schneider <vschneid-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Frederic Weisbecker <frederic-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Mrunal Patel <mpatel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Ryan Phillips <rphillips-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Brent Rowsell <browsell-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Peter Hunt <pehunt-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Phil Auld <pauld-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+To: Tejun Heo <tj@kernel.org>, Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, Jonathan Corbet <corbet@lwn.net>, Shuah Khan <shuah@kernel.org>
+Cc: linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kselftest@vger.kernel.org, Juri Lelli <juri.lelli@redhat.com>, Valentin Schneider <vschneid@redhat.com>, Frederic Weisbecker <frederic@kernel.org>, Mrunal Patel <mpatel@redhat.com>, Ryan Phillips <rphillips@redhat.com>, Brent Rowsell <browsell@redhat.com>, Peter Hunt <pehunt@redhat.com>, Phil Auld <pauld@redhat.com>, Waiman Long <longman@redhat.com>
 
-This patch updates the cgroup-v2.rst file to include information about
-the new "cpuset.cpus.exclusive" control file as well as the new remote
-partition.
+The limitation that update_parent_subparts_cpumask() can only use
+addmask & delmask in the given tmp cpumasks is fragile and may lead to
+unexpected error.
 
-Signed-off-by: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Fix this problem by allocating/freeing a struct tmpmasks in
+update_cpumask() to avoid reusing the cpumasks in trial_cs.
+
+With this change, we can move the update_tasks_cpumask() for the
+parent and update_sibling_cpumasks() for the sibling to inside
+update_parent_subparts_cpumask().
+
+Signed-off-by: Waiman Long <longman@redhat.com>
 ---
- Documentation/admin-guide/cgroup-v2.rst | 100 ++++++++++++++++++------
- 1 file changed, 74 insertions(+), 26 deletions(-)
+ kernel/cgroup/cpuset.c | 42 +++++++++++++-----------------------------
+ 1 file changed, 13 insertions(+), 29 deletions(-)
 
-diff --git a/Documentation/admin-guide/cgroup-v2.rst b/Documentation/admin-guide/cgroup-v2.rst
-index d9f3768a10db..8dd7464f93dc 100644
---- a/Documentation/admin-guide/cgroup-v2.rst
-+++ b/Documentation/admin-guide/cgroup-v2.rst
-@@ -2215,6 +2215,27 @@ Cpuset Interface Files
+diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
+index ade33e50ffe2..b8ccc1be7bde 100644
+--- a/kernel/cgroup/cpuset.c
++++ b/kernel/cgroup/cpuset.c
+@@ -1277,6 +1277,8 @@ enum subparts_cmd {
  
- 	Its value will be affected by memory nodes hotplug events.
+ static int update_flag(cpuset_flagbits_t bit, struct cpuset *cs,
+ 		       int turning_on);
++static void update_sibling_cpumasks(struct cpuset *parent, struct cpuset *cs,
++				    struct tmpmasks *tmp);
  
-+  cpuset.cpus.exclusive
-+	A read-write multiple values file which exists on non-root
-+	cpuset-enabled cgroups.
-+
-+	It lists all the exclusive CPUs that can be used to create a
-+	new cpuset partition.  Its value is not used unless the cgroup
-+	becomes a valid partition root.  See the next section below
-+	for a description of what a cpuset partition is.
-+
-+	The root cgroup is a partition root and all its available CPUs
-+	are in its exclusive CPU set.
-+
-+	There are constraints on what values are acceptable
-+	to this control file.  Its value must be a subset of
-+	the cgroup's "cpuset.cpus" value and the parent cgroup's
-+	"cpuset.cpus.exclusive" value.	For a parent cgroup, any one
-+	its exclusive CPUs can only be distributed to at most one of
-+	its child cgroups.  Having an exclusive CPU appearing in two or
-+	more of its child cgroups is not allowed (the exclusivity rule).
-+	An invalid value will be rejected with a write error.
-+
-   cpuset.cpus.partition
- 	A read-write single value file which exists on non-root
- 	cpuset-enabled cgroups.  This flag is owned by the parent cgroup
-@@ -2228,26 +2249,41 @@ Cpuset Interface Files
- 	  "isolated"	Partition root without load balancing
- 	  ==========	=====================================
+ /*
+  * Update partition exclusive flag
+@@ -1447,7 +1449,7 @@ static int update_parent_subparts_cpumask(struct cpuset *cs, int cmd,
+ 		adding = cpumask_andnot(tmp->addmask, tmp->addmask,
+ 					parent->subparts_cpus);
+ 		/*
+-		 * Empty cpumask is not allewed
++		 * Empty cpumask is not allowed
+ 		 */
+ 		if (cpumask_empty(newmask)) {
+ 			part_error = PERR_CPUSEMPTY;
+@@ -1567,8 +1569,11 @@ static int update_parent_subparts_cpumask(struct cpuset *cs, int cmd,
  
--	The root cgroup is always a partition root and its state
--	cannot be changed.  All other non-root cgroups start out as
--	"member".
-+	A cpuset partition is a collection of cpuset-enabled cgroups with
-+	a partition root at the top of the hierarchy and its descendants
-+	except those that are separate partition roots themselves and
-+	their descendants.  A partition has exclusive access to the
-+	set of exclusive CPUs allocated to it.	Other cgroups outside
-+	of that partition cannot use any CPUs in that set.
-+
-+	There are two types of partitions - local and remote.  A local
-+	partition is one whose parent cgroup is also a valid partition
-+	root.  A remote partition is one whose parent cgroup is not a
-+	valid partition root itself.  Writing to "cpuset.cpus.exclusive"
-+	is not mandatory for the creation of a local partition as its
-+	"cpuset.cpus.exclusive" file will be filled in automatically if
-+	it is not set.	The automaticaly set value will be based on its
-+	"cpuset.cpus" value.  Writing the proper "cpuset.cpus.exclusive"
-+	values down the cgroup hierarchy is mandatory for the creation
-+	of a remote partition.
-+
-+	Currently, a remote partition cannot be created under a local
-+	partition.  All the ancestors of a remote partition root except
-+	the root cgroup cannot be partition root.
-+
-+	The root cgroup is always a partition root and its state cannot
-+	be changed.  All other non-root cgroups start out as "member".
+ 	spin_unlock_irq(&callback_lock);
  
- 	When set to "root", the current cgroup is the root of a new
--	partition or scheduling domain that comprises itself and all
--	its descendants except those that are separate partition roots
--	themselves and their descendants.
-+	partition or scheduling domain.  The set of exclusive CPUs is
-+	determined by the value of its "cpuset.cpus.exclusive".
+-	if (adding || deleting)
++	if (adding || deleting) {
+ 		update_tasks_cpumask(parent, tmp->addmask);
++		if (parent->child_ecpus_count)
++			update_sibling_cpumasks(parent, cs, tmp);
++	}
  
--	When set to "isolated", the CPUs in that partition root will
-+	When set to "isolated", the CPUs in that partition will
- 	be in an isolated state without any load balancing from the
- 	scheduler.  Tasks placed in such a partition with multiple
- 	CPUs should be carefully distributed and bound to each of the
- 	individual CPUs for optimal performance.
+ 	/*
+ 	 * For partcmd_update without newmask, it is being called from
+@@ -1842,18 +1847,8 @@ static int update_cpumask(struct cpuset *cs, struct cpuset *trialcs,
+ 	if (cpumask_equal(cs->cpus_allowed, trialcs->cpus_allowed))
+ 		return 0;
  
--	The value shown in "cpuset.cpus.effective" of a partition root
--	is the CPUs that the partition root can dedicate to a potential
--	new child partition root. The new child subtracts available
--	CPUs from its parent "cpuset.cpus.effective".
+-#ifdef CONFIG_CPUMASK_OFFSTACK
+-	/*
+-	 * Use the cpumasks in trialcs for tmpmasks when they are pointers
+-	 * to allocated cpumasks.
+-	 *
+-	 * Note that update_parent_subparts_cpumask() uses only addmask &
+-	 * delmask, but not new_cpus.
+-	 */
+-	tmp.addmask  = trialcs->subparts_cpus;
+-	tmp.delmask  = trialcs->effective_cpus;
+-	tmp.new_cpus = NULL;
+-#endif
++	if (alloc_cpumasks(NULL, &tmp))
++		return -ENOMEM;
+ 
+ 	retval = validate_change(cs, trialcs);
+ 
+@@ -1882,7 +1877,7 @@ static int update_cpumask(struct cpuset *cs, struct cpuset *trialcs,
+ 		retval = 0;
+ 	}
+ 	if (retval < 0)
+-		return retval;
++		goto out_free;
+ 
+ 	if (cs->partition_root_state) {
+ 		if (invalidate)
+@@ -1917,11 +1912,6 @@ static int update_cpumask(struct cpuset *cs, struct cpuset *trialcs,
+ 	}
+ 	spin_unlock_irq(&callback_lock);
+ 
+-#ifdef CONFIG_CPUMASK_OFFSTACK
+-	/* Now trialcs->cpus_allowed is available */
+-	tmp.new_cpus = trialcs->cpus_allowed;
+-#endif
 -
- 	A partition root ("root" or "isolated") can be in one of the
- 	two possible states - valid or invalid.  An invalid partition
- 	root is in a degraded state where some state information may
-@@ -2270,33 +2306,40 @@ Cpuset Interface Files
- 	In the case of an invalid partition root, a descriptive string on
- 	why the partition is invalid is included within parentheses.
+ 	/* effective_cpus will be updated here */
+ 	update_cpumasks_hier(cs, &tmp, false);
  
--	For a partition root to become valid, the following conditions
-+	For a local partition root to be valid, the following conditions
- 	must be met.
+@@ -1938,6 +1928,8 @@ static int update_cpumask(struct cpuset *cs, struct cpuset *trialcs,
+ 		/* Update CS_SCHED_LOAD_BALANCE and/or sched_domains */
+ 		update_partition_sd_lb(cs, old_prs);
+ 	}
++out_free:
++	free_cpumasks(NULL, &tmp);
+ 	return 0;
+ }
  
--	1) The "cpuset.cpus" is exclusive with its siblings , i.e. they
--	   are not shared by any of its siblings (exclusivity rule).
--	2) The parent cgroup is a valid partition root.
--	3) The "cpuset.cpus" is not empty and must contain at least
--	   one of the CPUs from parent's "cpuset.cpus", i.e. they overlap.
-+	1) The parent cgroup is a valid partition root.
-+	2) The "cpuset.cpus.exclusive" is exclusive with its siblings ,
-+	   i.e. they are not shared by any of its siblings (exclusivity
-+	   rule).
-+	3) The "cpuset.cpus.exclusive" is not empty, but it may contain
-+	   offline CPUs.
- 	4) The "cpuset.cpus.effective" cannot be empty unless there is
- 	   no task associated with this partition.
+@@ -2346,13 +2338,11 @@ static int update_prstate(struct cpuset *cs, int new_prs)
  
--	External events like hotplug or changes to "cpuset.cpus" can
--	cause a valid partition root to become invalid and vice versa.
--	Note that a task cannot be moved to a cgroup with empty
--	"cpuset.cpus.effective".
-+	For a remote partition root to be valid, all the above conditions
-+	except the first one must be met.
-+
-+	External events like hotplug or changes to "cpuset.cpus" or
-+	"cpuset.cpus.exclusive" can cause a valid partition root to
-+	become invalid and vice versa.	Note that a task cannot be
-+	moved to a cgroup with empty "cpuset.cpus.effective".
- 
- 	For a valid partition root with the sibling cpu exclusivity
- 	rule enabled, changes made to "cpuset.cpus" that violate the
- 	exclusivity rule will invalidate the partition as well as its
- 	sibling partitions with conflicting cpuset.cpus values. So
--	care must be taking in changing "cpuset.cpus".
-+	care must be taking in changing "cpuset.cpus".	Changes to
-+	"cpuset.cpus.exclusive" that violates the exclusivity rule will
-+	not be allowed.
- 
- 	A valid non-root parent partition may distribute out all its CPUs
--	to its child partitions when there is no task associated with it.
-+	to its child local partitions when there is no task associated
-+	with it.
- 
--	Care must be taken to change a valid partition root to
--	"member" as all its child partitions, if present, will become
-+	Care must be taken to change a valid partition root to "member"
-+	as all its child local partitions, if present, will become
- 	invalid causing disruption to tasks running in those child
- 	partitions. These inactivated partitions could be recovered if
- 	their parent is switched back to a partition root with a proper
-@@ -2310,6 +2353,11 @@ Cpuset Interface Files
- 	to "cpuset.cpus.partition" without the need to do continuous
- 	polling.
- 
-+	A user can pre-configure certain CPUs to an isolated state at
-+	boot time with the "isolcpus" kernel boot command line option.
-+	If those CPUs are to be put into a partition, they have to
-+	be used in an isolated partition.
-+
- 
- Device controller
- -----------------
+ 		err = update_parent_subparts_cpumask(cs, partcmd_enable,
+ 						     NULL, &tmpmask);
+-		if (err)
+-			goto out;
+ 	} else if (old_prs && new_prs) {
+ 		/*
+ 		 * A change in load balance state only, no change in cpumasks.
+ 		 */
+-		goto out;
++		;
+ 	} else {
+ 		/*
+ 		 * Switching back to member is always allowed even if it
+@@ -2372,12 +2362,6 @@ static int update_prstate(struct cpuset *cs, int new_prs)
+ 			spin_unlock_irq(&callback_lock);
+ 		}
+ 	}
+-
+-	update_tasks_cpumask(parent, tmpmask.new_cpus);
+-
+-	if (parent->child_ecpus_count)
+-		update_sibling_cpumasks(parent, cs, &tmpmask);
+-
+ out:
+ 	/*
+ 	 * Make partition invalid & disable CS_CPU_EXCLUSIVE if an error
 -- 
 2.31.1
 
