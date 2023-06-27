@@ -1,157 +1,129 @@
 From: Waiman Long <longman@redhat.com>
-Subject: [PATCH v3 3/9] cgroup/cpuset: Improve temporary cpumasks handling
-Date: Mon, 26 Jun 2023 20:55:23 -0400
-Message-ID: <20230627005529.1564984-4-longman@redhat.com>
+Subject: [PATCH v3 4/9] cgroup/cpuset: Allow suppression of sched domain rebuild in update_cpumasks_hier()
+Date: Mon, 26 Jun 2023 20:55:24 -0400
+Message-ID: <20230627005529.1564984-5-longman@redhat.com>
 References: <20230627005529.1564984-1-longman@redhat.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-doc-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1687827365;
+        s=mimecast20190719; t=1687827366;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=WPhp6M85RYtJ1OdHBAv4hPr3cT4UKKt6nbqDvx5A+ks=;
-        b=DY8EmzHqESUby1j32G/9BwlxOmK0di2w6aMSAeY/L5uCCn4VCOzoM5zhMnawbAjAG6Bt7a
-        AwofoL9KJJZVhkn4aKIRHgWI1NxmS8zb2aRCHzyGPjNiMETllqR6mRToxFJsWGf4tJ/yyR
-        tQaH1i2zm1ISCWU5EM/8+9pAinaym6I=
+        bh=T1/GI0DN/l36YNRdQUEP56Qh0Q1HrifFn5e4yBEgTec=;
+        b=BqLVSeroPj1F6Mxsm1k635tqlvYiCX8yabq+4+kTTQ2nBEIHikmWW7cc1uGU+O7YGtijid
+        EbIEK1fbeClrjYlq89mFp9cdxkJgt+IvFs8pPAR3rQFq7nH1J/YgTSwllfWysILh5ts20d
+        +9Y8bQD8FrhOZMiLs1QYaMPhv5QZlGA=
 In-Reply-To: <20230627005529.1564984-1-longman@redhat.com>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 To: Tejun Heo <tj@kernel.org>, Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, Jonathan Corbet <corbet@lwn.net>, Shuah Khan <shuah@kernel.org>
 Cc: linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kselftest@vger.kernel.org, Juri Lelli <juri.lelli@redhat.com>, Valentin Schneider <vschneid@redhat.com>, Frederic Weisbecker <frederic@kernel.org>, Mrunal Patel <mpatel@redhat.com>, Ryan Phillips <rphillips@redhat.com>, Brent Rowsell <browsell@redhat.com>, Peter Hunt <pehunt@redhat.com>, Phil Auld <pauld@redhat.com>, Waiman Long <longman@redhat.com>
 
-The limitation that update_parent_subparts_cpumask() can only use
-addmask & delmask in the given tmp cpumasks is fragile and may lead to
-unexpected error.
+A single partition setup and tear-down operation can lead to
+multiple rebuild_sched_domains_locked() calls which is a waste of
+effort. This can partly be mitigated by adding a flag to suppress the
+rebuild_sched_domains_locked() call in update_cpumasks_hier(). Since
+a Boolean flag has already been passed as the 3rd argument to
+update_cpumasks_hier(), we can extend that to a full flag word.
 
-Fix this problem by allocating/freeing a struct tmpmasks in
-update_cpumask() to avoid reusing the cpumasks in trial_cs.
-
-With this change, we can move the update_tasks_cpumask() for the
-parent and update_sibling_cpumasks() for the sibling to inside
-update_parent_subparts_cpumask().
+The sched domain rebuild suppression is now enabled in
+update_sibling_cpumasks() as all it callers will do the sched domain
+rebuild after its return later on anyway.
 
 Signed-off-by: Waiman Long <longman@redhat.com>
 ---
- kernel/cgroup/cpuset.c | 42 +++++++++++++-----------------------------
- 1 file changed, 13 insertions(+), 29 deletions(-)
+ kernel/cgroup/cpuset.c | 24 ++++++++++++++++--------
+ 1 file changed, 16 insertions(+), 8 deletions(-)
 
 diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
-index ade33e50ffe2..b8ccc1be7bde 100644
+index b8ccc1be7bde..64f9e305b3ab 100644
 --- a/kernel/cgroup/cpuset.c
 +++ b/kernel/cgroup/cpuset.c
-@@ -1277,6 +1277,8 @@ enum subparts_cmd {
- 
- static int update_flag(cpuset_flagbits_t bit, struct cpuset *cs,
- 		       int turning_on);
-+static void update_sibling_cpumasks(struct cpuset *parent, struct cpuset *cs,
-+				    struct tmpmasks *tmp);
- 
- /*
-  * Update partition exclusive flag
-@@ -1447,7 +1449,7 @@ static int update_parent_subparts_cpumask(struct cpuset *cs, int cmd,
- 		adding = cpumask_andnot(tmp->addmask, tmp->addmask,
- 					parent->subparts_cpus);
- 		/*
--		 * Empty cpumask is not allewed
-+		 * Empty cpumask is not allowed
- 		 */
- 		if (cpumask_empty(newmask)) {
- 			part_error = PERR_CPUSEMPTY;
-@@ -1567,8 +1569,11 @@ static int update_parent_subparts_cpumask(struct cpuset *cs, int cmd,
- 
- 	spin_unlock_irq(&callback_lock);
- 
--	if (adding || deleting)
-+	if (adding || deleting) {
- 		update_tasks_cpumask(parent, tmp->addmask);
-+		if (parent->child_ecpus_count)
-+			update_sibling_cpumasks(parent, cs, tmp);
-+	}
- 
- 	/*
- 	 * For partcmd_update without newmask, it is being called from
-@@ -1842,18 +1847,8 @@ static int update_cpumask(struct cpuset *cs, struct cpuset *trialcs,
- 	if (cpumask_equal(cs->cpus_allowed, trialcs->cpus_allowed))
- 		return 0;
- 
--#ifdef CONFIG_CPUMASK_OFFSTACK
--	/*
--	 * Use the cpumasks in trialcs for tmpmasks when they are pointers
--	 * to allocated cpumasks.
--	 *
--	 * Note that update_parent_subparts_cpumask() uses only addmask &
--	 * delmask, but not new_cpus.
--	 */
--	tmp.addmask  = trialcs->subparts_cpus;
--	tmp.delmask  = trialcs->effective_cpus;
--	tmp.new_cpus = NULL;
--#endif
-+	if (alloc_cpumasks(NULL, &tmp))
-+		return -ENOMEM;
- 
- 	retval = validate_change(cs, trialcs);
- 
-@@ -1882,7 +1877,7 @@ static int update_cpumask(struct cpuset *cs, struct cpuset *trialcs,
- 		retval = 0;
- 	}
- 	if (retval < 0)
--		return retval;
-+		goto out_free;
- 
- 	if (cs->partition_root_state) {
- 		if (invalidate)
-@@ -1917,11 +1912,6 @@ static int update_cpumask(struct cpuset *cs, struct cpuset *trialcs,
- 	}
- 	spin_unlock_irq(&callback_lock);
- 
--#ifdef CONFIG_CPUMASK_OFFSTACK
--	/* Now trialcs->cpus_allowed is available */
--	tmp.new_cpus = trialcs->cpus_allowed;
--#endif
--
- 	/* effective_cpus will be updated here */
- 	update_cpumasks_hier(cs, &tmp, false);
- 
-@@ -1938,6 +1928,8 @@ static int update_cpumask(struct cpuset *cs, struct cpuset *trialcs,
- 		/* Update CS_SCHED_LOAD_BALANCE and/or sched_domains */
- 		update_partition_sd_lb(cs, old_prs);
- 	}
-+out_free:
-+	free_cpumasks(NULL, &tmp);
+@@ -1590,6 +1590,12 @@ static int update_parent_subparts_cpumask(struct cpuset *cs, int cmd,
  	return 0;
  }
  
-@@ -2346,13 +2338,11 @@ static int update_prstate(struct cpuset *cs, int new_prs)
- 
- 		err = update_parent_subparts_cpumask(cs, partcmd_enable,
- 						     NULL, &tmpmask);
--		if (err)
--			goto out;
- 	} else if (old_prs && new_prs) {
- 		/*
- 		 * A change in load balance state only, no change in cpumasks.
++/*
++ * update_cpumasks_hier() flags
++ */
++#define HIER_CHECKALL		0x01	/* Check all cpusets with no skipping */
++#define HIER_NO_SD_REBUILD	0x02	/* Don't rebuild sched domains */
++
+ /*
+  * update_cpumasks_hier - Update effective cpumasks and tasks in the subtree
+  * @cs:  the cpuset to consider
+@@ -1604,7 +1610,7 @@ static int update_parent_subparts_cpumask(struct cpuset *cs, int cmd,
+  * Called with cpuset_mutex held
+  */
+ static void update_cpumasks_hier(struct cpuset *cs, struct tmpmasks *tmp,
+-				 bool force)
++				 int flags)
+ {
+ 	struct cpuset *cp;
+ 	struct cgroup_subsys_state *pos_css;
+@@ -1644,10 +1650,10 @@ static void update_cpumasks_hier(struct cpuset *cs, struct tmpmasks *tmp,
+ 		 * Skip the whole subtree if
+ 		 * 1) the cpumask remains the same,
+ 		 * 2) has no partition root state,
+-		 * 3) force flag not set, and
++		 * 3) HIER_CHECKALL flag not set, and
+ 		 * 4) for v2 load balance state same as its parent.
  		 */
--		goto out;
-+		;
- 	} else {
- 		/*
- 		 * Switching back to member is always allowed even if it
-@@ -2372,12 +2362,6 @@ static int update_prstate(struct cpuset *cs, int new_prs)
- 			spin_unlock_irq(&callback_lock);
- 		}
+-		if (!cp->partition_root_state && !force &&
++		if (!cp->partition_root_state && !(flags & HIER_CHECKALL) &&
+ 		    cpumask_equal(tmp->new_cpus, cp->effective_cpus) &&
+ 		    (!cgroup_subsys_on_dfl(cpuset_cgrp_subsys) ||
+ 		    (is_sched_load_balance(parent) == is_sched_load_balance(cp)))) {
+@@ -1764,7 +1770,7 @@ static void update_cpumasks_hier(struct cpuset *cs, struct tmpmasks *tmp,
  	}
--
--	update_tasks_cpumask(parent, tmpmask.new_cpus);
--
--	if (parent->child_ecpus_count)
--		update_sibling_cpumasks(parent, cs, &tmpmask);
--
- out:
- 	/*
- 	 * Make partition invalid & disable CS_CPU_EXCLUSIVE if an error
+ 	rcu_read_unlock();
+ 
+-	if (need_rebuild_sched_domains)
++	if (need_rebuild_sched_domains && !(flags & HIER_NO_SD_REBUILD))
+ 		rebuild_sched_domains_locked();
+ }
+ 
+@@ -1788,7 +1794,9 @@ static void update_sibling_cpumasks(struct cpuset *parent, struct cpuset *cs,
+ 	 * to use the right effective_cpus value.
+ 	 *
+ 	 * The update_cpumasks_hier() function may sleep. So we have to
+-	 * release the RCU read lock before calling it.
++	 * release the RCU read lock before calling it. HIER_NO_SD_REBUILD
++	 * flag is used to suppress rebuild of sched domains as the callers
++	 * will take care of that.
+ 	 */
+ 	rcu_read_lock();
+ 	cpuset_for_each_child(sibling, pos_css, parent) {
+@@ -1800,7 +1808,7 @@ static void update_sibling_cpumasks(struct cpuset *parent, struct cpuset *cs,
+ 			continue;
+ 
+ 		rcu_read_unlock();
+-		update_cpumasks_hier(sibling, tmp, false);
++		update_cpumasks_hier(sibling, tmp, HIER_NO_SD_REBUILD);
+ 		rcu_read_lock();
+ 		css_put(&sibling->css);
+ 	}
+@@ -1913,7 +1921,7 @@ static int update_cpumask(struct cpuset *cs, struct cpuset *trialcs,
+ 	spin_unlock_irq(&callback_lock);
+ 
+ 	/* effective_cpus will be updated here */
+-	update_cpumasks_hier(cs, &tmp, false);
++	update_cpumasks_hier(cs, &tmp, 0);
+ 
+ 	if (cs->partition_root_state) {
+ 		struct cpuset *parent = parent_cs(cs);
+@@ -2382,7 +2390,7 @@ static int update_prstate(struct cpuset *cs, int new_prs)
+ 	 * Force update if switching back to member.
+ 	 */
+ 	if (!list_empty(&cs->css.children))
+-		update_cpumasks_hier(cs, &tmpmask, !new_prs);
++		update_cpumasks_hier(cs, &tmpmask, !new_prs ? HIER_CHECKALL : 0);
+ 
+ 	/* Update sched domains and load balance flag */
+ 	update_partition_sd_lb(cs, old_prs);
 -- 
 2.31.1
 
