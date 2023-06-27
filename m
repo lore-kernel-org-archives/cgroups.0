@@ -1,157 +1,101 @@
 From: Waiman Long <longman@redhat.com>
-Subject: [PATCH v4 3/9] cgroup/cpuset: Improve temporary cpumasks handling
-Date: Tue, 27 Jun 2023 10:35:02 -0400
-Message-ID: <20230627143508.1576882-4-longman@redhat.com>
+Subject: [PATCH v4 1/9] cgroup/cpuset: Inherit parent's load balance state in v2
+Date: Tue, 27 Jun 2023 10:35:00 -0400
+Message-ID: <20230627143508.1576882-2-longman@redhat.com>
 References: <20230627143508.1576882-1-longman@redhat.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Return-path: <linux-doc-owner@vger.kernel.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1687876587;
+        s=mimecast20190719; t=1687876854;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=WPhp6M85RYtJ1OdHBAv4hPr3cT4UKKt6nbqDvx5A+ks=;
-        b=eQF6Fq3q6cLfDHWoRJXng2nK5J7WiJbuKPMJ70Uhm4C9c49GmrBsuWpDNW88bsdgSEy5Da
-        Enf+704XzGABNo2kRcz0FWUk4qk0AHLK292WLnGUx4gcP6LBF7rAlTf19U0eOrHLsVXAtu
-        3TN4ovdC+GWUQrKAS41EvxOAyYcQqmQ=
+        bh=HxXXRG19n9JIA9MH1iFO6LWghYV5obKh5ig/aXiH0Xo=;
+        b=Nr91JhniCyJ5YnFJ0lxxd/vDwd4cMfXxD+am4efr/LW3a4PB/2YNZLwLflPExxHYkNvVNu
+        zybfnIKJ4oHhQNmxATH76xEIvV9sWIVcc/5Gjuk1D8q7A4uA8jdCUbhK1xR9EuwJb6XFf+
+        wafraWg8UuaBJQbbF97af7eY5lTGQn0=
 In-Reply-To: <20230627143508.1576882-1-longman@redhat.com>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 To: Tejun Heo <tj@kernel.org>, Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, Jonathan Corbet <corbet@lwn.net>, Shuah Khan <shuah@kernel.org>
 Cc: linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kselftest@vger.kernel.org, Juri Lelli <juri.lelli@redhat.com>, Valentin Schneider <vschneid@redhat.com>, Frederic Weisbecker <frederic@kernel.org>, Mrunal Patel <mpatel@redhat.com>, Ryan Phillips <rphillips@redhat.com>, Brent Rowsell <browsell@redhat.com>, Peter Hunt <pehunt@redhat.com>, Phil Auld <pauld@redhat.com>, Waiman Long <longman@redhat.com>
 
-The limitation that update_parent_subparts_cpumask() can only use
-addmask & delmask in the given tmp cpumasks is fragile and may lead to
-unexpected error.
+Since commit f28e22441f35 ("cgroup/cpuset: Add a new isolated
+cpus.partition type"), the CS_SCHED_LOAD_BALANCE bit of a v2 cpuset
+can be on or off. The child cpusets of a partition root must have the
+same setting as its parent or it may screw up the rebuilding of sched
+domains. Fix this problem by making sure the a child v2 cpuset will
+follows its parent cpuset load balance state unless the child cpuset
+is a new partition root itself.
 
-Fix this problem by allocating/freeing a struct tmpmasks in
-update_cpumask() to avoid reusing the cpumasks in trial_cs.
-
-With this change, we can move the update_tasks_cpumask() for the
-parent and update_sibling_cpumasks() for the sibling to inside
-update_parent_subparts_cpumask().
-
+Fixes: f28e22441f35 ("cgroup/cpuset: Add a new isolated cpus.partition type")
 Signed-off-by: Waiman Long <longman@redhat.com>
 ---
- kernel/cgroup/cpuset.c | 42 +++++++++++++-----------------------------
- 1 file changed, 13 insertions(+), 29 deletions(-)
+ kernel/cgroup/cpuset.c | 33 ++++++++++++++++++++++++++++++---
+ 1 file changed, 30 insertions(+), 3 deletions(-)
 
 diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
-index ade33e50ffe2..b8ccc1be7bde 100644
+index 58e6f18f01c1..170e342b07e3 100644
 --- a/kernel/cgroup/cpuset.c
 +++ b/kernel/cgroup/cpuset.c
-@@ -1277,6 +1277,8 @@ enum subparts_cmd {
- 
- static int update_flag(cpuset_flagbits_t bit, struct cpuset *cs,
- 		       int turning_on);
-+static void update_sibling_cpumasks(struct cpuset *parent, struct cpuset *cs,
-+				    struct tmpmasks *tmp);
- 
- /*
-  * Update partition exclusive flag
-@@ -1447,7 +1449,7 @@ static int update_parent_subparts_cpumask(struct cpuset *cs, int cmd,
- 		adding = cpumask_andnot(tmp->addmask, tmp->addmask,
- 					parent->subparts_cpus);
- 		/*
--		 * Empty cpumask is not allewed
-+		 * Empty cpumask is not allowed
- 		 */
- 		if (cpumask_empty(newmask)) {
- 			part_error = PERR_CPUSEMPTY;
-@@ -1567,8 +1569,11 @@ static int update_parent_subparts_cpumask(struct cpuset *cs, int cmd,
- 
- 	spin_unlock_irq(&callback_lock);
- 
--	if (adding || deleting)
-+	if (adding || deleting) {
- 		update_tasks_cpumask(parent, tmp->addmask);
-+		if (parent->child_ecpus_count)
-+			update_sibling_cpumasks(parent, cs, tmp);
-+	}
- 
- 	/*
- 	 * For partcmd_update without newmask, it is being called from
-@@ -1842,18 +1847,8 @@ static int update_cpumask(struct cpuset *cs, struct cpuset *trialcs,
- 	if (cpumask_equal(cs->cpus_allowed, trialcs->cpus_allowed))
- 		return 0;
- 
--#ifdef CONFIG_CPUMASK_OFFSTACK
--	/*
--	 * Use the cpumasks in trialcs for tmpmasks when they are pointers
--	 * to allocated cpumasks.
--	 *
--	 * Note that update_parent_subparts_cpumask() uses only addmask &
--	 * delmask, but not new_cpus.
--	 */
--	tmp.addmask  = trialcs->subparts_cpus;
--	tmp.delmask  = trialcs->effective_cpus;
--	tmp.new_cpus = NULL;
--#endif
-+	if (alloc_cpumasks(NULL, &tmp))
-+		return -ENOMEM;
- 
- 	retval = validate_change(cs, trialcs);
- 
-@@ -1882,7 +1877,7 @@ static int update_cpumask(struct cpuset *cs, struct cpuset *trialcs,
- 		retval = 0;
- 	}
- 	if (retval < 0)
--		return retval;
-+		goto out_free;
- 
- 	if (cs->partition_root_state) {
- 		if (invalidate)
-@@ -1917,11 +1912,6 @@ static int update_cpumask(struct cpuset *cs, struct cpuset *trialcs,
- 	}
- 	spin_unlock_irq(&callback_lock);
- 
--#ifdef CONFIG_CPUMASK_OFFSTACK
--	/* Now trialcs->cpus_allowed is available */
--	tmp.new_cpus = trialcs->cpus_allowed;
--#endif
--
- 	/* effective_cpus will be updated here */
- 	update_cpumasks_hier(cs, &tmp, false);
- 
-@@ -1938,6 +1928,8 @@ static int update_cpumask(struct cpuset *cs, struct cpuset *trialcs,
- 		/* Update CS_SCHED_LOAD_BALANCE and/or sched_domains */
- 		update_partition_sd_lb(cs, old_prs);
- 	}
-+out_free:
-+	free_cpumasks(NULL, &tmp);
- 	return 0;
- }
- 
-@@ -2346,13 +2338,11 @@ static int update_prstate(struct cpuset *cs, int new_prs)
- 
- 		err = update_parent_subparts_cpumask(cs, partcmd_enable,
- 						     NULL, &tmpmask);
--		if (err)
--			goto out;
- 	} else if (old_prs && new_prs) {
- 		/*
- 		 * A change in load balance state only, no change in cpumasks.
- 		 */
--		goto out;
-+		;
- 	} else {
- 		/*
- 		 * Switching back to member is always allowed even if it
-@@ -2372,12 +2362,6 @@ static int update_prstate(struct cpuset *cs, int new_prs)
- 			spin_unlock_irq(&callback_lock);
+@@ -1588,11 +1588,16 @@ static void update_cpumasks_hier(struct cpuset *cs, struct tmpmasks *tmp,
  		}
+ 
+ 		/*
+-		 * Skip the whole subtree if the cpumask remains the same
+-		 * and has no partition root state and force flag not set.
++		 * Skip the whole subtree if
++		 * 1) the cpumask remains the same,
++		 * 2) has no partition root state,
++		 * 3) force flag not set, and
++		 * 4) for v2 load balance state same as its parent.
+ 		 */
+ 		if (!cp->partition_root_state && !force &&
+-		    cpumask_equal(tmp->new_cpus, cp->effective_cpus)) {
++		    cpumask_equal(tmp->new_cpus, cp->effective_cpus) &&
++		    (!cgroup_subsys_on_dfl(cpuset_cgrp_subsys) ||
++		    (is_sched_load_balance(parent) == is_sched_load_balance(cp)))) {
+ 			pos_css = css_rightmost_descendant(pos_css);
+ 			continue;
+ 		}
+@@ -1675,6 +1680,20 @@ static void update_cpumasks_hier(struct cpuset *cs, struct tmpmasks *tmp,
+ 
+ 		update_tasks_cpumask(cp, tmp->new_cpus);
+ 
++		/*
++		 * On default hierarchy, inherit the CS_SCHED_LOAD_BALANCE
++		 * from parent if current cpuset isn't a valid partition root
++		 * and their load balance states differ.
++		 */
++		if (cgroup_subsys_on_dfl(cpuset_cgrp_subsys) &&
++		    !is_partition_valid(cp) &&
++		    (is_sched_load_balance(parent) != is_sched_load_balance(cp))) {
++			if (is_sched_load_balance(parent))
++				set_bit(CS_SCHED_LOAD_BALANCE, &cp->flags);
++			else
++				clear_bit(CS_SCHED_LOAD_BALANCE, &cp->flags);
++		}
++
+ 		/*
+ 		 * On legacy hierarchy, if the effective cpumask of any non-
+ 		 * empty cpuset is changed, we need to rebuild sched domains.
+@@ -3222,6 +3241,14 @@ static int cpuset_css_online(struct cgroup_subsys_state *css)
+ 		cs->use_parent_ecpus = true;
+ 		parent->child_ecpus_count++;
  	}
--
--	update_tasks_cpumask(parent, tmpmask.new_cpus);
--
--	if (parent->child_ecpus_count)
--		update_sibling_cpumasks(parent, cs, &tmpmask);
--
- out:
- 	/*
- 	 * Make partition invalid & disable CS_CPU_EXCLUSIVE if an error
++
++	/*
++	 * For v2, clear CS_SCHED_LOAD_BALANCE if parent is isolated
++	 */
++	if (cgroup_subsys_on_dfl(cpuset_cgrp_subsys) &&
++	    !is_sched_load_balance(parent))
++		clear_bit(CS_SCHED_LOAD_BALANCE, &cs->flags);
++
+ 	spin_unlock_irq(&callback_lock);
+ 
+ 	if (!test_bit(CGRP_CPUSET_CLONE_CHILDREN, &css->cgroup->flags))
 -- 
 2.31.1
 
