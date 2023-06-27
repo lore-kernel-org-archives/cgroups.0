@@ -1,110 +1,62 @@
-From: Suren Baghdasaryan <surenb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+From: Matthew Wilcox <willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
 Subject: Re: [PATCH 1/2] kernfs: add kernfs_ops.free operation to free
  resources tied to the file
-Date: Tue, 27 Jun 2023 10:36:21 -0700
-Message-ID: <CAJuCfpGSntZwfzyeHYOYOcmLJvj80DKTUnj+y-DFVF524C3eVw@mail.gmail.com>
-References: <20230626201713.1204982-1-surenb@google.com> <ZJn1tQDgfmcE7mNG@slm.duckdns.org>
- <20230627-kanon-hievt-bfdb583ddaa6@brauner> <CAJuCfpECKqYiekDK6Zw58w10n1T4Q3R+2nymfHX2ZGfQVDC3VQ@mail.gmail.com>
- <20230627-ausgaben-brauhaus-a33e292558d8@brauner>
+Date: Tue, 27 Jun 2023 18:36:22 +0100
+Message-ID: <ZJseFr/BHh+bZ7NM@casper.infradead.org>
+References: <20230626201713.1204982-1-surenb@google.com>
+ <2023062757-hardening-confusion-6f4e@gregkh>
+ <CAJuCfpGUTMP2FTzzx+bq9_5KZjo1r_qspHYZXK2Ors-yU3XhqQ@mail.gmail.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: quoted-printable
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20221208; t=1687887392; x=1690479392;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=se2ReXfTDI0bXoCNygO1qTaRa/855o/ehreExnjKHr4=;
-        b=UbiFd6YoylHJILWdhk6BfqhqffX7VZGyKqllKO+PLZxQgyXEVk7mLWiCPmMOH0eG1A
-         mz4x3Z55tg1CsUsg9y5/38jsuMiEGWpTEQsU8IHLE6s9l73ZN4tt6JHXtzXyWoSqZodT
-         CJ4SOcXTjvD3Ab6tdreO3k/QraNDuA04zVIsO7NwaQ1mUyQ18XfMQcxX0xfbLkyTZ0ka
-         bRPn6/iTaf0QK3v/2n1QveesbyfGhn4ArML8353gQvj9YDEgvbAF7kJoEi6lJNa+zf4H
-         Q/aAUDW/oj0lYLERWPtfXkfaFIGuITEF8dIbtHK1BFK4Vx5rVC1d2fjbye7WlBFg9M3Z
-         aEEg==
-In-Reply-To: <20230627-ausgaben-brauhaus-a33e292558d8@brauner>
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Transfer-Encoding:
+        Content-Type:MIME-Version:References:Message-ID:Subject:Cc:To:From:Date:
+        Sender:Reply-To:Content-ID:Content-Description;
+        bh=ilydTjdTS9jPS3Q531k5dt3/10xWOBh9LY6FBdmbcHw=; b=cXWltV79wDZw6RHYQjchi8TzHq
+        6Kc6/NEUYJlQkKY8P9EiMBEP6KFDPdWnHxsHtPaeeFbNx0FS8iShKjqtxHxqTelUktI5TnHr5pepl
+        iv/zfF5pzzgoIuN46eiRmCbgTu23x9Lal5BK/nU0AcHQ5m09H94J22R6OC1DvHGDn0f+whuK1lgqJ
+        zMHN+oSdlUqf6qpoCwIT5xbTr78wbd4LR6kIBHy5d+JjeTVLKNwDyVh1NUB8tHdY/K6FJurYL1aY2
+        yjEivrmcWKqF3kueW64pt3BfKVrr7aaE5iqahwMe8J72Ng/sqpqzlgXPw2elPZdJkcV8oKB8fs1Pq
+        8tJg3p8Q==;
+Content-Disposition: inline
+In-Reply-To: <CAJuCfpGUTMP2FTzzx+bq9_5KZjo1r_qspHYZXK2Ors-yU3XhqQ-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="utf-8"
-To: Christian Brauner <brauner-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org, peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, lujialin4-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, ebiggers-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, oleg-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, viro-RmSDqhL/yNMiFSDQTTA3OLVCufUGDwFn@public.gmane.org, juri.lelli-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, vincent.guittot-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org, dietmar.eggemann-5wv7dgnIgG8@public.gmane.org, rostedt-nx8X9YLhiw1AfugRpC6u6w@public.gmane.org, bsegall-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, mgorman-l3A5Bk7waGM@public.gmane.org, bristot-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, vschneid-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-z5hGa2qSFaRBDgjK7y7TUQ@public.gmane.org
+Content-Type: text/plain; charset="windows-1252"
+To: Suren Baghdasaryan <surenb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Cc: Greg KH <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, lujialin4-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, ebiggers-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, oleg-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, viro-RmSDqhL/yNMiFSDQTTA3OLVCufUGDwFn@public.gmane.org, brauner-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, juri.lelli-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, vincent.guittot-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org, dietmar.eggemann-5wv7dgnIgG8@public.gmane.org, rostedt-nx8X9YLhiw1AfugRpC6u6w@public.gmane.org, bsegall-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, mgorman-l3A5Bk7waGM@public.gmane.org, bristot-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, vschneid-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-z5hGa2qSFaRBDgjK7y7TUQ@public.gmane.org
 
-On Tue, Jun 27, 2023 at 10:30=E2=80=AFAM Christian Brauner <brauner@kernel.=
-org> wrote:
->
-> On Tue, Jun 27, 2023 at 10:09:27AM -0700, Suren Baghdasaryan wrote:
-> > On Tue, Jun 27, 2023 at 1:24=E2=80=AFAM Christian Brauner <brauner@kern=
-el.org> wrote:
-> > >
-> > > On Mon, Jun 26, 2023 at 10:31:49AM -1000, Tejun Heo wrote:
-> > > > On Mon, Jun 26, 2023 at 01:17:12PM -0700, Suren Baghdasaryan wrote:
-> > > > > diff --git a/include/linux/kernfs.h b/include/linux/kernfs.h
-> > > > > index 73f5c120def8..a7e404ff31bb 100644
-> > > > > --- a/include/linux/kernfs.h
-> > > > > +++ b/include/linux/kernfs.h
-> > > > > @@ -273,6 +273,11 @@ struct kernfs_ops {
-> > > > >      */
-> > > > >     int (*open)(struct kernfs_open_file *of);
-> > > > >     void (*release)(struct kernfs_open_file *of);
-> > > > > +   /*
-> > > > > +    * Free resources tied to the lifecycle of the file, like a
-> > > > > +    * waitqueue used for polling.
-> > > > > +    */
-> > > > > +   void (*free)(struct kernfs_open_file *of);
-> > > >
-> > > > I think this can use a bit more commenting - ie. explain that relea=
-se may be
-> > > > called earlier than the actual freeing of the file and how that can=
- lead to
-> > > > problems. Othre than that, looks fine to me.
-> > >
-> > > It seems the more natural thing to do would be to introduce a ->drain=
-()
-> > > operation and order it before ->release(), no?
+On Tue, Jun 27, 2023 at 10:03:15AM -0700, Suren Baghdasaryan wrote:
+> On Mon, Jun 26, 2023 at 11:25=E2=80=AFPM Greg KH <gregkh-hQyY1W1yCW8ekmWl=
+sbkhG0B+6BGkLq7r@public.gmane.org> wrote:
 > >
-> > I assume you mean we should add a ->drain() operation and call it when
-> > kernfs_drain_open_files()  causes kernfs_release_file()? That would
-> > work but if any existing release() handler counts on the current
-> > behavior (release() being called while draining) then we should find
-> > and fix these. Hopefully they don't really depend on the current
-> > behavior but I dunno.
->
-> Before I wrote that I did a naive
->
->         > git grep -A 20 kernfs_ops | grep \\.release
->         kernel/cgroup/cgroup.c- .release                =3D cgroup_file_r=
-elease,
->         kernel/cgroup/cgroup.c- .release                =3D cgroup_file_r=
-elease,
->
-> which only gave cgroup_release_file(). Might be I'm missing some convolut=
-ed
-> callchains though or macro magic...
->
-> ->release() was added in
->
->     commit 0e67db2f9fe91937e798e3d7d22c50a8438187e1
->     kernfs: add kernfs_ops->open/release() callbacks
->
->     Add ->open/release() methods to kernfs_ops.  ->open() is called when
->     the file is opened and ->release() when the file is either released o=
-r
->     severed.  These callbacks can be used, for example, to manage
->     persistent caching objects over multiple seq_file iterations.
->
->     Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
->     Acked-by: Greg Kroah-Hartman <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>
->     Acked-by: Acked-by: Zefan Li <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
->
->
-> which mentions "either releases or severed" which imho already points to
-> separate methods.
+> > On Mon, Jun 26, 2023 at 01:17:12PM -0700, Suren Baghdasaryan wrote:
+> > > kernfs_ops.release operation can be called from kernfs_drain_open_fil=
+es
+> > > which is not tied to the file's real lifecycle. Introduce a new kernf=
+s_ops
+> > > free operation which is called only when the last fput() of the file =
+is
+> > > performed and therefore is strictly tied to the file's lifecycle. This
+> > > operation will be used for freeing resources tied to the file, like
+> > > waitqueues used for polling the file.
+> >
+> > This is confusing, shouldn't release be the "last" time the file is
+> > handled and then all resources attached to it freed?  Why do we need
+> > another callback, shouldn't release handle this?
+>=20
+> That is what I thought too but apparently kernfs_drain_open_files()
+> can also cause ops->release to be called while the file keeps on
+> living (see details here:
+> https://lore.kernel.org/all/CAJuCfpFZ3B4530TgsSHqp5F_gwfrDujwRYewKReJru=
+=3D=3DMdEHQg-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org/#t).
 
-Interesting. I guess we can add op->drain() and make all existing
-handlers of ops->release() to handle ops->drain() with the same
-handler. That should keep them happy and for my case I'll be releasing
-resources only inside ops->release(). Does that sound good?
+If we're splitting these two functions apart, can we use the same naming
+as the VFS please?
 
->
-> --
-> To unsubscribe from this group and stop receiving emails from it, send an=
- email to kernel-team+unsubscribe-z5hGa2qSFaTowKkBSvOlow@public.gmane.org
->
+``flush``
+        called by the close(2) system call to flush a file
+
+``release``
+        called when the last reference to an open file is closed
+
