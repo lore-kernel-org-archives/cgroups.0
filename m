@@ -1,90 +1,39 @@
-From: Suren Baghdasaryan <surenb@google.com>
-Subject: Re: [PATCH 1/2] kernfs: add kernfs_ops.free operation to free
- resources tied to the file
-Date: Wed, 28 Jun 2023 14:50:59 -0700
-Message-ID: <CAJuCfpFKjhmti8k6OHoDHAu6dPvqP0jn8FFdSDPqmRfH97bkiQ@mail.gmail.com>
-References: <CAJuCfpGoNbLOLm08LWKPOgn05+FB1GEqeMTUSJUZpRmDYQSjpA@mail.gmail.com>
- <20230628-meisennest-redlich-c09e79fde7f7@brauner> <CAJuCfpHqZ=5a_2k==FsdBbwDCF7+s7Ji3aZ37LBqUgyXLMz7gA@mail.gmail.com>
- <20230628-faden-qualvoll-6c33b570f54c@brauner> <CAJuCfpF=DjwpWuhugJkVzet2diLkf8eagqxjR8iad39odKdeYQ@mail.gmail.com>
- <20230628-spotten-anzweifeln-e494d16de48a@brauner> <ZJx1nkqbQRVCaKgF@slm.duckdns.org>
- <CAJuCfpEFo6WowJ_4XPXH+=D4acFvFqEa4Fuc=+qF8=Jkhn=3pA@mail.gmail.com>
- <2023062845-stabilize-boogieman-1925@gregkh> <CAJuCfpFqYytC+5GY9X+jhxiRvhAyyNd27o0=Nbmt_Wc5LFL1Sw@mail.gmail.com>
- <ZJyZWtK4nihRkTME@slm.duckdns.org>
+From: =?UTF-8?q?Michal=20Koutn=C3=BD?= <mkoutny-IBi9RG/b67k@public.gmane.org>
+Subject: [PATCH 0/3] cpuset: Allow setscheduler regardless of manipulated task
+Date: Thu, 29 Jun 2023 11:11:43 +0200
+Message-ID: <20230629091146.28801-1-mkoutny@suse.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-Return-path: <linux-fsdevel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20221208; t=1687989073; x=1690581073;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=oiU1ba44MUUFQMwv4R2LW1J18iVFXpq0u3lKLnpz3Xc=;
-        b=yGSq9469ZtBk1ZalIinO4oHCn6+fl9Mioak3I3ItprNlBB2i5CG8SW2uaDJYBJ82CF
-         peruRSwPdWE3ulMVZphVZF6Td9mBMDF2emMRSAaDIr4OkPG0hzUxwu759Prh9CPgykAx
-         XRFojr8qVtzUt0+3h9YqMTuRkgvFqqhNGoo7jyIUzTMo9Fv/tcwxK7Pf509o/7+YAM/1
-         tKV74JfZJ9/F1aCnWQNLG0fLkTUQjrmSCb3EA6ygUrlLtha+2T5pHZRJYeNdWPu6mZye
-         XjSaajeSL6VnNlsmoOo7Wm/driYwl+iqhGitf5wrv0LKJ3PsUo+PeXq0IYSVgg2GDAX8
-         73Ww==
-In-Reply-To: <ZJyZWtK4nihRkTME@slm.duckdns.org>
+Content-Transfer-Encoding: base64
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
+        t=1688029913; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding;
+        bh=eakZ9Lwqp66DOPYDD7y7VLeLOLV3zqoUBYGx3Z4WOnY=;
+        b=eLEATQF/QD87CNPxQL0qRd1yPM+gwm4aUtlPjCwxI47+fW7Z9tuLJHE7ks451dK4laL3pI
+        8zEvCnCS3XrXPZVxZw5oQgqEbXxyuLUXAi4fXxLJX5nTejhVbG5jLbIqoquhY5LWEHNgTk
+        id7Hkm0ccym9GKAtLhyiRko4959cZdY=
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="windows-1252"
-To: Tejun Heo <tj@kernel.org>
-Cc: Greg KH <gregkh@linuxfoundation.org>, Christian Brauner <brauner@kernel.org>, peterz@infradead.org, lujialin4@huawei.com, lizefan.x@bytedance.com, hannes@cmpxchg.org, mingo@redhat.com, ebiggers@kernel.org, oleg@redhat.com, akpm@linux-foundation.org, viro@zeniv.linux.org.uk, juri.lelli@redhat.com, vincent.guittot@linaro.org, dietmar.eggemann@arm.com, rostedt@goodmis.org, bsegall@google.com, mgorman@suse.de, bristot@redhat.com, vschneid@redhat.com, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, linux-fsdevel@vger.kernel.org, kernel-team@android.com
+Content-Type: text/plain; charset="macroman"
+To: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kselftest-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Cc: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Shuah Khan <shuah-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 
-On Wed, Jun 28, 2023 at 1:34=E2=80=AFPM Tejun Heo <tj@kernel.org> wrote:
->
-> Hello, Suren.
->
-> On Wed, Jun 28, 2023 at 01:12:23PM -0700, Suren Baghdasaryan wrote:
-> > AFAIU all other files that handle polling rely on f_op->release()
-> > being called after all the users are gone, therefore they can safely
-> > free their resources. However kernfs can call ->release() while there
-> > are still active users of the file. I can't use that operation for
-> > resource cleanup therefore I was suggesting to add a new operation
-> > which would be called only after the last fput() and would guarantee
-> > no users. Again, I'm not an expert in this, so there might be a better
-> > way to handle it. Please advise.
->
-> So, w/ kernfs, the right thing to do is making sure that whatever is expo=
-sed
-> to the kernfs user is terminated on removal - ie. after kernfs_ops->relea=
-se
-> is called, the ops table should be considered dead and there shouldn't be
-> anything left to clean up from the kernfs user side. You can add abstract=
-ion
-> kernfs so that kernfs can terminate the calls coming down from the higher
-> layers on its own. That's how every other operation is handled and what
-> should happen with the psi polling too.
-
-I'm not sure I understand. The waitqueue head we are freeing in
-->release() can be accessed asynchronously and does not require any
-kernfs_op call. Here is a recap of that race:
-
-                                                do_select
-                                                      vfs_poll
-cgroup_pressure_release
-    psi_trigger_destroy
-        wake_up_pollfree(&t->event_wait) -> unblocks vfs_poll
-        synchronize_rcu()
-        kfree(t) -> frees waitqueue head
-                                                     poll_freewait() -> UAF
-
-Note that poll_freewait() is not part of any kernel_op, so I'm not
-sure how adding an abstraction kernfs would help, but again, this is
-new territory for me and I might be missing something.
-
-On a different note, I think there might be an easy way to fix this.
-What if psi triggers reuse kernfs_open_node->poll waitqueue head?
-Since we are overriding the ->poll() method, that waitqueue head is
-unused AFAIKT. And best of all, its lifecycle is tied to the file's
-lifecycle, so it does not have the issue that trigger waitqueue head
-has. In the trigger I could simply store a pointer to that waitqueue
-and use it. Then in ->release() freeing trigger would not affect the
-waitqueue at all. Does that sound sane?
-
-
->
-> Thanks.
->
-> --
-> tejun
+Q2hhbmdlcyBpbiB2MToKLSBhZGRlZCBzZWxmdGVzdHMKLSBjb21tZW50cyByZXdvcmRpbmcKClJG
+QyBpbiBodHRwczovL2xvcmUua2VybmVsLm9yZy9yLzIwMjIwNjIzMTI0OTQ0LjI3NTMtMS1ta291
+dG55LUlCaTlSRy9iNjdrQHB1YmxpYy5nbWFuZS5vcmcKCk1pY2hhbCBLb3V0bsO9ICgzKToKICBj
+cHVzZXQ6IEFsbG93IHNldHNjaGVkdWxlciByZWdhcmRsZXNzIG9mIG1hbmlwdWxhdGVkIHRhc2sK
+ICBzZWxmdGVzdHM6IGNncm91cDogTWlub3IgY29kZSByZW9yZ2FuaXphdGlvbnMKICBzZWxmdGVz
+dHM6IGNncm91cDogQWRkIGNwdXNldCBtaWdyYXRpb25zIHRlc3RjYXNlCgogTUFJTlRBSU5FUlMg
+ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIHwgICAyICsKIGtlcm5lbC9jZ3JvdXAv
+Y3B1c2V0LmMgICAgICAgICAgICAgICAgICAgICAgICB8ICAgNyArCiB0b29scy90ZXN0aW5nL3Nl
+bGZ0ZXN0cy9jZ3JvdXAvLmdpdGlnbm9yZSAgICAgfCAgIDEgKwogdG9vbHMvdGVzdGluZy9zZWxm
+dGVzdHMvY2dyb3VwL01ha2VmaWxlICAgICAgIHwgICAyICsKIHRvb2xzL3Rlc3Rpbmcvc2VsZnRl
+c3RzL2Nncm91cC9jZ3JvdXBfdXRpbC5jICB8ICAgMiArCiB0b29scy90ZXN0aW5nL3NlbGZ0ZXN0
+cy9jZ3JvdXAvY2dyb3VwX3V0aWwuaCAgfCAgIDIgKwogdG9vbHMvdGVzdGluZy9zZWxmdGVzdHMv
+Y2dyb3VwL3Rlc3RfY29yZS5jICAgIHwgICAyICstCiB0b29scy90ZXN0aW5nL3NlbGZ0ZXN0cy9j
+Z3JvdXAvdGVzdF9jcHVzZXQuYyAgfCAyNzIgKysrKysrKysrKysrKysrKysrCiAuLi4vc2VsZnRl
+c3RzL2Nncm91cC90ZXN0X2NwdXNldF9wcnMuc2ggICAgICAgfCAgIDIgKy0KIDkgZmlsZXMgY2hh
+bmdlZCwgMjkwIGluc2VydGlvbnMoKyksIDIgZGVsZXRpb25zKC0pCiBjcmVhdGUgbW9kZSAxMDA2
+NDQgdG9vbHMvdGVzdGluZy9zZWxmdGVzdHMvY2dyb3VwL3Rlc3RfY3B1c2V0LmMKCgpiYXNlLWNv
+bW1pdDogNjk5NWUyZGU2ODkxYzcyNGJmZWIyZGIzM2Q3Yjg3Nzc1ZjkxM2FkMQotLSAKMi40MS4w
+Cgo=
