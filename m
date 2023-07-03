@@ -1,76 +1,106 @@
-From: =?UTF-8?q?Michal=20Koutn=C3=BD?= <mkoutny-IBi9RG/b67k@public.gmane.org>
-Subject: [PATCH v3 2/3] selftests: cgroup: Minor code reorganizations
-Date: Mon,  3 Jul 2023 19:27:40 +0200
-Message-ID: <20230703172741.25392-3-mkoutny@suse.com>
+From: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH v3 1/3] cpuset: Allow setscheduler regardless of
+ manipulated task
+Date: Mon, 3 Jul 2023 14:00:13 -0400
+Message-ID: <f54ae464-6684-5640-4b1e-90af0cb769cd@redhat.com>
 References: <20230703172741.25392-1-mkoutny@suse.com>
+ <20230703172741.25392-2-mkoutny@suse.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: base64
+Content-Transfer-Encoding: 8bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
-        t=1688405263; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1688407215;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=tdTsxfSnc5J48DYVbkQ319BZmwsMm6KxF6jWIimyuF0=;
-        b=P7mpWSSd6ugptxFXneoMnbkGa/9Ezend+8I1KTyUljga8e4aHu3drlKDPsmevTBxtFolWw
-        hSuim1r1I+6KwQd9CNykqFQXkYtst0IqU+Hlw3VJOXcSayzmMIxPfpQ9/ThquUenGMMNnC
-        +u5XVCNLhgaKsSntBIawBRTs+jTlGew=
-In-Reply-To: <20230703172741.25392-1-mkoutny-IBi9RG/b67k@public.gmane.org>
+        bh=VjXD9hgua/WyFNkzAf/5dqsBFSxFdg110zmVMs5EXro=;
+        b=HzCMh324nktszn4H8HB/7Be3jbomVWGJWvQNNC8QAYhTJ/AkoBEZvjvvxu22/6qbfzqzFF
+        m8wUQKgP/mDs6OpSaEHS792R19AmHy8YIWYvC/2JIi07ApYYLkDOIjLeXMZ9TM3KGxT7oq
+        fC9bvQrCzZm1qfDR6YwhpfcJ8tLz2Jw=
+Content-Language: en-US
+In-Reply-To: <20230703172741.25392-2-mkoutny-IBi9RG/b67k@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="macroman"
-To: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kselftest-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-Cc: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Shuah Khan <shuah-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Content-Type: text/plain; charset="utf-8"; format="flowed"
+To: =?UTF-8?Q?Michal_Koutn=c3=bd?= <mkoutny-IBi9RG/b67k@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kselftest-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Cc: Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Shuah Khan <shuah-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 
-Tm8gZnVuY3Rpb25hbCBjaGFuZ2UgaW50ZW5kZWQsIHRoZXNlIHNtYWxsIGNoYW5nZXMgYXJlIG1l
-cmdlZCBpbnRvIG9uZQpjb21taXQgYW5kIHRoZXkgc2VydmUgYXMgYSBwcmVwYXJhdGlvbiBmb3Ig
-YW4gdXBjb21pbmcgbmV3IHRlc3RjYXNlLgoKU2lnbmVkLW9mZi1ieTogTWljaGFsIEtvdXRuw70g
-PG1rb3V0bnktSUJpOVJHL2I2N2tAcHVibGljLmdtYW5lLm9yZz4KLS0tCiBNQUlOVEFJTkVSUyAg
-ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIHwgMSArCiB0b29scy90ZXN0aW5n
-L3NlbGZ0ZXN0cy9jZ3JvdXAvY2dyb3VwX3V0aWwuYyAgICAgIHwgMiArKwogdG9vbHMvdGVzdGlu
-Zy9zZWxmdGVzdHMvY2dyb3VwL2Nncm91cF91dGlsLmggICAgICB8IDIgKysKIHRvb2xzL3Rlc3Rp
-bmcvc2VsZnRlc3RzL2Nncm91cC90ZXN0X2NvcmUuYyAgICAgICAgfCAyICstCiB0b29scy90ZXN0
-aW5nL3NlbGZ0ZXN0cy9jZ3JvdXAvdGVzdF9jcHVzZXRfcHJzLnNoIHwgMiArLQogNSBmaWxlcyBj
-aGFuZ2VkLCA3IGluc2VydGlvbnMoKyksIDIgZGVsZXRpb25zKC0pCgpkaWZmIC0tZ2l0IGEvTUFJ
-TlRBSU5FUlMgYi9NQUlOVEFJTkVSUwppbmRleCBlMDk3NmFlMmE1MjMuLjAzYmVjODM5NDRjNCAx
-MDA2NDQKLS0tIGEvTUFJTlRBSU5FUlMKKysrIGIvTUFJTlRBSU5FUlMKQEAgLTUyNjAsNiArNTI2
-MCw3IEBAIFQ6CWdpdCBnaXQ6Ly9naXQua2VybmVsLm9yZy9wdWIvc2NtL2xpbnV4L2tlcm5lbC9n
-aXQvdGovY2dyb3VwLmdpdAogRjoJRG9jdW1lbnRhdGlvbi9hZG1pbi1ndWlkZS9jZ3JvdXAtdjEv
-Y3B1c2V0cy5yc3QKIEY6CWluY2x1ZGUvbGludXgvY3B1c2V0LmgKIEY6CWtlcm5lbC9jZ3JvdXAv
-Y3B1c2V0LmMKK0Y6CXRvb2xzL3Rlc3Rpbmcvc2VsZnRlc3RzL2Nncm91cC90ZXN0X2NwdXNldF9w
-cnMuc2gKIAogQ09OVFJPTCBHUk9VUCAtIE1FTU9SWSBSRVNPVVJDRSBDT05UUk9MTEVSIChNRU1D
-RykKIE06CUpvaGFubmVzIFdlaW5lciA8aGFubmVzLWRydVVndmwwTENOQWZ1Z1JwQzZ1NndAcHVi
-bGljLmdtYW5lLm9yZz4KZGlmZiAtLWdpdCBhL3Rvb2xzL3Rlc3Rpbmcvc2VsZnRlc3RzL2Nncm91
-cC9jZ3JvdXBfdXRpbC5jIGIvdG9vbHMvdGVzdGluZy9zZWxmdGVzdHMvY2dyb3VwL2Nncm91cF91
-dGlsLmMKaW5kZXggZThiYmJkYjc3ZTBkLi4wMzQwZDRjYThmNTEgMTAwNjQ0Ci0tLSBhL3Rvb2xz
-L3Rlc3Rpbmcvc2VsZnRlc3RzL2Nncm91cC9jZ3JvdXBfdXRpbC5jCisrKyBiL3Rvb2xzL3Rlc3Rp
-bmcvc2VsZnRlc3RzL2Nncm91cC9jZ3JvdXBfdXRpbC5jCkBAIC0yODYsNiArMjg2LDggQEAgaW50
-IGNnX2Rlc3Ryb3koY29uc3QgY2hhciAqY2dyb3VwKQogewogCWludCByZXQ7CiAKKwlpZiAoIWNn
-cm91cCkKKwkJcmV0dXJuIDA7CiByZXRyeToKIAlyZXQgPSBybWRpcihjZ3JvdXApOwogCWlmIChy
-ZXQgJiYgZXJybm8gPT0gRUJVU1kpIHsKZGlmZiAtLWdpdCBhL3Rvb2xzL3Rlc3Rpbmcvc2VsZnRl
-c3RzL2Nncm91cC9jZ3JvdXBfdXRpbC5oIGIvdG9vbHMvdGVzdGluZy9zZWxmdGVzdHMvY2dyb3Vw
-L2Nncm91cF91dGlsLmgKaW5kZXggYzkyZGY0ZTVkMzk1Li4xZGY3ZjIwMjIxNGEgMTAwNjQ0Ci0t
-LSBhL3Rvb2xzL3Rlc3Rpbmcvc2VsZnRlc3RzL2Nncm91cC9jZ3JvdXBfdXRpbC5oCisrKyBiL3Rv
-b2xzL3Rlc3Rpbmcvc2VsZnRlc3RzL2Nncm91cC9jZ3JvdXBfdXRpbC5oCkBAIC0xMSw2ICsxMSw4
-IEBACiAjZGVmaW5lIFVTRUNfUEVSX1NFQwkxMDAwMDAwTAogI2RlZmluZSBOU0VDX1BFUl9TRUMJ
-MTAwMDAwMDAwMEwKIAorI2RlZmluZSBURVNUX1VJRAk2NTUzNCAvKiB1c3VhbGx5IG5vYm9keSwg
-YW55ICFyb290IGlzIGZpbmUgKi8KKwogLyoKICAqIENoZWNrcyBpZiB0d28gZ2l2ZW4gdmFsdWVz
-IGRpZmZlciBieSBsZXNzIHRoYW4gZXJyJSBvZiB0aGVpciBzdW0uCiAgKi8KZGlmZiAtLWdpdCBh
-L3Rvb2xzL3Rlc3Rpbmcvc2VsZnRlc3RzL2Nncm91cC90ZXN0X2NvcmUuYyBiL3Rvb2xzL3Rlc3Rp
-bmcvc2VsZnRlc3RzL2Nncm91cC90ZXN0X2NvcmUuYwppbmRleCA2MDAxMjM1MDMwNjMuLjgwYWE2
-YjIzNzNiOSAxMDA2NDQKLS0tIGEvdG9vbHMvdGVzdGluZy9zZWxmdGVzdHMvY2dyb3VwL3Rlc3Rf
-Y29yZS5jCisrKyBiL3Rvb2xzL3Rlc3Rpbmcvc2VsZnRlc3RzL2Nncm91cC90ZXN0X2NvcmUuYwpA
-QCAtNjgzLDcgKzY4Myw3IEBAIHN0YXRpYyBpbnQgdGVzdF9jZ2NvcmVfdGhyZWFkX21pZ3JhdGlv
-bihjb25zdCBjaGFyICpyb290KQogICovCiBzdGF0aWMgaW50IHRlc3RfY2djb3JlX2xlc3Nlcl9l
-dWlkX29wZW4oY29uc3QgY2hhciAqcm9vdCkKIHsKLQljb25zdCB1aWRfdCB0ZXN0X2V1aWQgPSA2
-NTUzNDsJLyogdXN1YWxseSBub2JvZHksIGFueSAhcm9vdCBpcyBmaW5lICovCisJY29uc3QgdWlk
-X3QgdGVzdF9ldWlkID0gVEVTVF9VSUQ7CiAJaW50IHJldCA9IEtTRlRfRkFJTDsKIAljaGFyICpj
-Z190ZXN0X2EgPSBOVUxMLCAqY2dfdGVzdF9iID0gTlVMTDsKIAljaGFyICpjZ190ZXN0X2FfcHJv
-Y3MgPSBOVUxMLCAqY2dfdGVzdF9iX3Byb2NzID0gTlVMTDsKZGlmZiAtLWdpdCBhL3Rvb2xzL3Rl
-c3Rpbmcvc2VsZnRlc3RzL2Nncm91cC90ZXN0X2NwdXNldF9wcnMuc2ggYi90b29scy90ZXN0aW5n
-L3NlbGZ0ZXN0cy9jZ3JvdXAvdGVzdF9jcHVzZXRfcHJzLnNoCmluZGV4IDJiNTIxNWNjNTk5Zi4u
-NGFmYjEzMmU0ZTRmIDEwMDc1NQotLS0gYS90b29scy90ZXN0aW5nL3NlbGZ0ZXN0cy9jZ3JvdXAv
-dGVzdF9jcHVzZXRfcHJzLnNoCisrKyBiL3Rvb2xzL3Rlc3Rpbmcvc2VsZnRlc3RzL2Nncm91cC90
-ZXN0X2NwdXNldF9wcnMuc2gKQEAgLTEwLDcgKzEwLDcgQEAKIHNraXBfdGVzdCgpIHsKIAllY2hv
-ICIkMSIKIAllY2hvICJUZXN0IFNLSVBQRUQiCi0JZXhpdCAwCisJZXhpdCA0ICMga3NmdF9za2lw
-CiB9CiAKIFtbICQoaWQgLXUpIC1lcSAwIF1dIHx8IHNraXBfdGVzdCAiVGVzdCBtdXN0IGJlIHJ1
-biBhcyByb290ISIKLS0gCjIuNDEuMAoK
+On 7/3/23 13:27, Michal Koutný wrote:
+> When we migrate a task between two cgroups, one of the checks is a
+> verification whether we can modify task's scheduler settings
+> (cap_task_setscheduler()).
+>
+> An implicit migration occurs also when enabling a controller on the
+> unified hierarchy (think of parent to child migration). The
+> aforementioned check may be problematic if the caller of the migration
+> (enabling a controller) has no permissions over migrated tasks.
+> For instance, a user's cgroup that ends up running a process of a
+> different user. Although cgroup permissions are configured favorably,
+> the enablement fails due to the foreign process [1].
+>
+> Change the behavior by relaxing the permissions check on the unified
+> hierarchy when no effective change would happen.
+> This is in accordance with unified hierarchy attachment behavior when
+> permissions of the source to target cgroups are decisive whereas the
+> migrated task is opaque (as opposed to more restrictive check in
+> __cgroup1_procs_write()).
+>
+> Notice that foreign task's affinity may still be modified if the user
+> can modify destination cgroup's cpuset attributes
+> (update_tasks_cpumask() does no permissions check). The permissions
+> check could thus be skipped on v2 even when affinity changes. Stay
+> conservative in this patch though.
+>
+> [1] https://github.com/systemd/systemd/issues/18293#issuecomment-831205649
+>
+> Signed-off-by: Michal Koutný <mkoutny-IBi9RG/b67k@public.gmane.org>
+> ---
+>   kernel/cgroup/cpuset.c | 19 ++++++++++++++++---
+>   1 file changed, 16 insertions(+), 3 deletions(-)
+>
+> diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
+> index 58e6f18f01c1..0a9b860844ca 100644
+> --- a/kernel/cgroup/cpuset.c
+> +++ b/kernel/cgroup/cpuset.c
+> @@ -2487,6 +2487,7 @@ static int cpuset_can_attach(struct cgroup_taskset *tset)
+>   	struct cgroup_subsys_state *css;
+>   	struct cpuset *cs, *oldcs;
+>   	struct task_struct *task;
+> +	bool cpus_updated, mems_updated;
+>   	int ret;
+>   
+>   	/* used later by cpuset_attach() */
+> @@ -2501,13 +2502,25 @@ static int cpuset_can_attach(struct cgroup_taskset *tset)
+>   	if (ret)
+>   		goto out_unlock;
+>   
+> +	cpus_updated = !cpumask_equal(cs->effective_cpus, oldcs->effective_cpus);
+> +	mems_updated = !nodes_equal(cs->effective_mems, oldcs->effective_mems);
+> +
+>   	cgroup_taskset_for_each(task, css, tset) {
+>   		ret = task_can_attach(task);
+>   		if (ret)
+>   			goto out_unlock;
+> -		ret = security_task_setscheduler(task);
+> -		if (ret)
+> -			goto out_unlock;
+> +
+> +		/*
+> +		 * Skip rights over task check in v2 when nothing changes,
+> +		 * migration permission derives from hierarchy ownership in
+> +		 * cgroup_procs_write_permission()).
+> +		 */
+> +		if (!cgroup_subsys_on_dfl(cpuset_cgrp_subsys) ||
+> +		    (cpus_updated || mems_updated)) {
+> +			ret = security_task_setscheduler(task);
+> +			if (ret)
+> +				goto out_unlock;
+> +		}
+>   
+>   		if (dl_task(task)) {
+>   			cs->nr_migrate_dl_tasks++;
+Reviewed-by: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+
+Thanks,
+Longman
+
