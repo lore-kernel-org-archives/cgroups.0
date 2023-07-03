@@ -1,106 +1,85 @@
-From: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH v3 2/3] selftests: cgroup: Minor code reorganizations
-Date: Mon, 3 Jul 2023 14:01:26 -0400
-Message-ID: <4bae7852-61b9-999d-765d-a8f0d0084256@redhat.com>
-References: <20230703172741.25392-1-mkoutny@suse.com>
- <20230703172741.25392-3-mkoutny@suse.com>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCH] nvmet: allow associating port to a cgroup via configfs
+Date: Mon, 3 Jul 2023 09:16:21 -1000
+Message-ID: <ZKMehaAF0v-nV1qt@slm.duckdns.org>
+References: <20230627100215.1206008-1-ofir.gal@volumez.com>
+ <30d03bba-c2e1-7847-f17e-403d4e648228@grimberg.me>
+ <90150ffd-ba2d-6528-21b7-7ea493cd2b9a@nvidia.com>
+ <79894bd9-03c7-8d27-eb6a-5e1336550449@volumez.com>
+ <ab204a2d-9a30-7c90-8afa-fc84c935730f@grimberg.me>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1688407292;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=iFe8atToFS2utTEa2xH/lGx0LLo+DpKgRn21BdsYeHk=;
-        b=Eyj1tDRyX0v/X1G7HWQ0vIq+wc3fuT/nG2rPE6RZkaFyf9HOCNiSfB8i9S/bYI7wUXKNKR
-        Yk+L1Scm4gPsJzQDVwDSX3IxhxOI42YZ3/7k60P66OeBpcqJ1oqgPe+MWOGckGoOXyJaoL
-        qSn8j2py6Lf2+i765NJSzNmjvaArBfY=
-Content-Language: en-US
-In-Reply-To: <20230703172741.25392-3-mkoutny-IBi9RG/b67k@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20221208; t=1688411784; x=1691003784;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:sender:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=dlgEq4UH4vDTOZrzscCBubu+ZOjeAEIOmPqCH5Q/VA4=;
+        b=siqjtbELynGlxxIRUqqlm1qRIIGPI04SUqntEeyZ9DeXx8FwnRhhG/EMMubIceFYt7
+         RRc7uebvlYi6FEe+8lMc6vsu5mreNBpTjxbiemcLNzjSRJHa47+8ElZ+ZrFSTMgC8SLF
+         BdgsZU43OvuG+VFZfruUNF9AvzzruQwh8EtBS/bwmJpTm/c+JPYvgxaLxxfx8qiu1c3P
+         t7b9zQnHnBx/ccB3g1NZG2DjONQLSTNCZOak+814Gk3OIZVIuE9lwn8CK76yHtvRnjf3
+         DBGIWj/E2eMuYQAMN1bN26jfh/sw16Py4Qdwr82U39plffa37oiePNcacDwtOPVgGxP4
+         Be5Q==
+Sender: Tejun Heo <htejun-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <ab204a2d-9a30-7c90-8afa-fc84c935730f-NQWnxTmZq1alnMjI0IkVqw@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="utf-8"; format="flowed"
-To: =?UTF-8?Q?Michal_Koutn=c3=bd?= <mkoutny-IBi9RG/b67k@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kselftest-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-Cc: Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Shuah Khan <shuah-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Sagi Grimberg <sagi-NQWnxTmZq1alnMjI0IkVqw@public.gmane.org>
+Cc: Ofir Gal <ofir.gal-83CFe9096HFBDgjK7y7TUQ@public.gmane.org>, Chaitanya Kulkarni <chaitanyak-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>, "hch-jcswGhMUV9g@public.gmane.org" <hch-jcswGhMUV9g@public.gmane.org>, "linux-nvme-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org" <linux-nvme-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
+Hello,
 
-On 7/3/23 13:27, Michal Koutný wrote:
-> No functional change intended, these small changes are merged into one
-> commit and they serve as a preparation for an upcoming new testcase.
->
-> Signed-off-by: Michal Koutný <mkoutny-IBi9RG/b67k@public.gmane.org>
-> ---
->   MAINTAINERS                                       | 1 +
->   tools/testing/selftests/cgroup/cgroup_util.c      | 2 ++
->   tools/testing/selftests/cgroup/cgroup_util.h      | 2 ++
->   tools/testing/selftests/cgroup/test_core.c        | 2 +-
->   tools/testing/selftests/cgroup/test_cpuset_prs.sh | 2 +-
->   5 files changed, 7 insertions(+), 2 deletions(-)
->
-> diff --git a/MAINTAINERS b/MAINTAINERS
-> index e0976ae2a523..03bec83944c4 100644
-> --- a/MAINTAINERS
-> +++ b/MAINTAINERS
-> @@ -5260,6 +5260,7 @@ T:	git git://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git
->   F:	Documentation/admin-guide/cgroup-v1/cpusets.rst
->   F:	include/linux/cpuset.h
->   F:	kernel/cgroup/cpuset.c
-> +F:	tools/testing/selftests/cgroup/test_cpuset_prs.sh
->   
->   CONTROL GROUP - MEMORY RESOURCE CONTROLLER (MEMCG)
->   M:	Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-> diff --git a/tools/testing/selftests/cgroup/cgroup_util.c b/tools/testing/selftests/cgroup/cgroup_util.c
-> index e8bbbdb77e0d..0340d4ca8f51 100644
-> --- a/tools/testing/selftests/cgroup/cgroup_util.c
-> +++ b/tools/testing/selftests/cgroup/cgroup_util.c
-> @@ -286,6 +286,8 @@ int cg_destroy(const char *cgroup)
->   {
->   	int ret;
->   
-> +	if (!cgroup)
-> +		return 0;
->   retry:
->   	ret = rmdir(cgroup);
->   	if (ret && errno == EBUSY) {
-> diff --git a/tools/testing/selftests/cgroup/cgroup_util.h b/tools/testing/selftests/cgroup/cgroup_util.h
-> index c92df4e5d395..1df7f202214a 100644
-> --- a/tools/testing/selftests/cgroup/cgroup_util.h
-> +++ b/tools/testing/selftests/cgroup/cgroup_util.h
-> @@ -11,6 +11,8 @@
->   #define USEC_PER_SEC	1000000L
->   #define NSEC_PER_SEC	1000000000L
->   
-> +#define TEST_UID	65534 /* usually nobody, any !root is fine */
-> +
->   /*
->    * Checks if two given values differ by less than err% of their sum.
->    */
-> diff --git a/tools/testing/selftests/cgroup/test_core.c b/tools/testing/selftests/cgroup/test_core.c
-> index 600123503063..80aa6b2373b9 100644
-> --- a/tools/testing/selftests/cgroup/test_core.c
-> +++ b/tools/testing/selftests/cgroup/test_core.c
-> @@ -683,7 +683,7 @@ static int test_cgcore_thread_migration(const char *root)
->    */
->   static int test_cgcore_lesser_euid_open(const char *root)
->   {
-> -	const uid_t test_euid = 65534;	/* usually nobody, any !root is fine */
-> +	const uid_t test_euid = TEST_UID;
->   	int ret = KSFT_FAIL;
->   	char *cg_test_a = NULL, *cg_test_b = NULL;
->   	char *cg_test_a_procs = NULL, *cg_test_b_procs = NULL;
-> diff --git a/tools/testing/selftests/cgroup/test_cpuset_prs.sh b/tools/testing/selftests/cgroup/test_cpuset_prs.sh
-> index 2b5215cc599f..4afb132e4e4f 100755
-> --- a/tools/testing/selftests/cgroup/test_cpuset_prs.sh
-> +++ b/tools/testing/selftests/cgroup/test_cpuset_prs.sh
-> @@ -10,7 +10,7 @@
->   skip_test() {
->   	echo "$1"
->   	echo "Test SKIPPED"
-> -	exit 0
-> +	exit 4 # ksft_skip
->   }
->   
->   [[ $(id -u) -eq 0 ]] || skip_test "Test must be run as root!"
-Reviewed-by: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+On Mon, Jul 03, 2023 at 04:21:40PM +0300, Sagi Grimberg wrote:
+> > Thorttiling files and passthru isn't possible with cgroup v1 as well,
+> > cgroup v2 broke the abillity to throttle bdevs. The purpose of the patch
+> > is to re-enable the broken functionality.
+> 
+> cgroupv2 didn't break anything, this was never an intended feature of
+> the linux nvme target, so it couldn't have been broken. Did anyone
+> know that people are doing this with nvmet?
 
+Maybe he's referring to the fact that cgroup1 allowed throttling root
+cgroups? Maybe they were throttling from the root cgroup on the client side?
+
+> I'm pretty sure others on the list are treating this as a suggested
+> new feature for nvmet. and designing this feature as something that
+> is only supported for blkdevs is undersirable.
+> 
+> > There was an attempt to re-enable the functionality by allowing io
+> > throttle on the root cgroup but it's against the cgroup v2 design.
+> > Reference:
+> > https://lore.kernel.org/r/20220114093000.3323470-1-yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org/
+> > 
+> > A full blown nvmet cgroup controller may be a complete solution, but it
+> > may take some time to achieve,
+> 
+> I don't see any other sane solution here.
+> 
+> Maybe Tejun/others think differently here?
+
+I'm not necessarily against the idea of enabling subsystems to assign cgroup
+membership to entities which aren't processes or threads. It does make sense
+for cases where a kernel subsystem is serving multiple classes of users
+which aren't processes as here and it's likely that we'd need something
+similar for certain memory regions in a limited way (e.g. tmpfs chunk shared
+across multiple cgroups).
+
+That said, because we haven't done this before, we haven't figured out how
+the API should be like and we definitely want something which can be used in
+a similar fashion across the board. Also, cgroup does assume that resources
+are always associated with processes or threads, and making this work with
+non-task entity would require some generalization there. Maybe the solution
+is to always have a tying kthread which serves as a proxy for the resource
+but that seems a bit nasty at least on the first thought.
+
+In principle, at least from cgroup POV, I think the idea of being able to
+assign cgroup membership to subsystem-specific entities is okay. In
+practice, there are quite a few challenges to address.
+
+Thanks.
+
+-- 
+tejun
