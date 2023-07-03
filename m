@@ -1,87 +1,61 @@
-From: Sasha Levin <sashal-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: [PATCH AUTOSEL 6.1 2/3] selftests: cgroup: Add 'malloc' failures checks in test_memcontrol
-Date: Sun,  2 Jul 2023 15:39:03 -0400
-Message-ID: <20230702193904.1775957-2-sashal@kernel.org>
-References: <20230702193904.1775957-1-sashal@kernel.org>
+From: Miaohe Lin <linmiaohe-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH] cgroup/cpuset: update parent subparts cpumask while
+ holding css refcnt
+Date: Mon, 3 Jul 2023 10:58:19 +0800
+Message-ID: <53486caa-8ca7-78f5-71ac-d5692b482c94@huawei.com>
+References: <20230701065049.1758266-1-linmiaohe@huawei.com>
+ <9244d968-b25a-066f-2ff3-1281bf03983e@redhat.com>
+ <a6c55b82-71eb-ad18-e4b2-d62f1102a0e4@redhat.com>
 Mime-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 8bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1688326749;
-        bh=qbSmFjkxX3HUcFYifbkogWWlpPQjlc1XuGkAs7z+xus=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=A8GVO2PWCoelwP6GOJDM6eAGJPmAOtwe5fP7TwGURIHyjMAU5N2CuEFuHdMJwZJbZ
-         R4iKCnURDXQznGvpNGI7ZLv9s/ZilZYTE4nNodI4I4Mt2ZA/ov04OVEXsnYJ1syB7h
-         IJmKwB5lGxCE/xdtXbAcDaOAM1AZor0ASqG68GT7AaFDn8M+jBfY0pNDwYJKblIzmO
-         7kai64nnYittYJCFRHmVNDxzOpepE9uXt7VS2eaYWudRLSlTZGWyd5QYYx5cANWSax
-         mfRNWXSIXrAKXZowyOhQ6O+LZR1jD/fNlLDkmQwLosqhqx6YytoHiRBfr11iZwYw98
-         NVhLevtUWchew==
-In-Reply-To: <20230702193904.1775957-1-sashal-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+In-Reply-To: <a6c55b82-71eb-ad18-e4b2-d62f1102a0e4-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Content-Language: en-US
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-To: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, stable-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-Cc: Ivan Orlov <ivan.orlov0322-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Shuah Khan <skhan-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>, Sasha Levin <sashal-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org, shuah-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kselftest-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org
 
-From: Ivan Orlov <ivan.orlov0322-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+On 2023/7/2 7:46, Waiman Long wrote:
+> On 7/1/23 19:38, Waiman Long wrote:
+>> On 7/1/23 02:50, Miaohe Lin wrote:
+>>> update_parent_subparts_cpumask() is called outside RCU read-side critical
+>>> section without holding extra css refcnt of cp. In theroy, cp could be
+>>> freed at any time. Holding extra css refcnt to ensure cp is valid while
+>>> updating parent subparts cpumask.
+>>>
+>>> Fixes: d7c8142d5a55 ("cgroup/cpuset: Make partition invalid if cpumask change violates exclusivity rule")
+>>> Signed-off-by: Miaohe Lin <linmiaohe-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+>>> ---
+>>>   kernel/cgroup/cpuset.c | 3 +++
+>>>   1 file changed, 3 insertions(+)
+>>>
+>>> diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
+>>> index 58e6f18f01c1..632a9986d5de 100644
+>>> --- a/kernel/cgroup/cpuset.c
+>>> +++ b/kernel/cgroup/cpuset.c
+>>> @@ -1806,9 +1806,12 @@ static int update_cpumask(struct cpuset *cs, struct cpuset *trialcs,
+>>>           cpuset_for_each_child(cp, css, parent)
+>>>               if (is_partition_valid(cp) &&
+>>>                   cpumask_intersects(trialcs->cpus_allowed, cp->cpus_allowed)) {
+>>> +                if (!css_tryget_online(&cp->css))
+>>> +                    continue;
+>>>                   rcu_read_unlock();
+>>>                   update_parent_subparts_cpumask(cp, partcmd_invalidate, NULL, &tmp);
+>>>                   rcu_read_lock();
+>>> +                css_put(&cp->css);
+>>>               }
+>>>           rcu_read_unlock();
+>>>           retval = 0;
+>>
+>> Thanks for finding that. It looks good to me.
+>>
+>> Reviewed-by: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+> 
+> Though, I will say that an offline cpuset cannot be a valid partition root. So it is not really a problem. For correctness sake and consistency with other similar code, I am in favor of getting it merged.
 
-[ Upstream commit c83f320e55a49abd90629f42a72897afd579e0de ]
+Yes, cpuset_mutex will prevent cpuset from being offline while update cpumask. And as you mentioned, this patch makes code more consistency at least.
+Thanks for your review and comment.
 
-There are several 'malloc' calls in test_memcontrol, which can be
-unsuccessful. This patch will add 'malloc' failures checking to
-give more details about test's fail reasons and avoid possible
-undefined behavior during the future null dereference (like the
-one in alloc_anon_50M_check_swap function).
 
-Signed-off-by: Ivan Orlov <ivan.orlov0322-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Reviewed-by: Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
-Acked-by: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Acked-by: Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>
-Signed-off-by: Shuah Khan <skhan-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>
-Signed-off-by: Sasha Levin <sashal-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
----
- tools/testing/selftests/cgroup/test_memcontrol.c | 15 +++++++++++++++
- 1 file changed, 15 insertions(+)
-
-diff --git a/tools/testing/selftests/cgroup/test_memcontrol.c b/tools/testing/selftests/cgroup/test_memcontrol.c
-index 8833359556f38..fe4f9f4302822 100644
---- a/tools/testing/selftests/cgroup/test_memcontrol.c
-+++ b/tools/testing/selftests/cgroup/test_memcontrol.c
-@@ -98,6 +98,11 @@ static int alloc_anon_50M_check(const char *cgroup, void *arg)
- 	int ret = -1;
- 
- 	buf = malloc(size);
-+	if (buf == NULL) {
-+		fprintf(stderr, "malloc() failed\n");
-+		return -1;
-+	}
-+
- 	for (ptr = buf; ptr < buf + size; ptr += PAGE_SIZE)
- 		*ptr = 0;
- 
-@@ -211,6 +216,11 @@ static int alloc_anon_noexit(const char *cgroup, void *arg)
- 	char *buf, *ptr;
- 
- 	buf = malloc(size);
-+	if (buf == NULL) {
-+		fprintf(stderr, "malloc() failed\n");
-+		return -1;
-+	}
-+
- 	for (ptr = buf; ptr < buf + size; ptr += PAGE_SIZE)
- 		*ptr = 0;
- 
-@@ -759,6 +769,11 @@ static int alloc_anon_50M_check_swap(const char *cgroup, void *arg)
- 	int ret = -1;
- 
- 	buf = malloc(size);
-+	if (buf == NULL) {
-+		fprintf(stderr, "malloc() failed\n");
-+		return -1;
-+	}
-+
- 	for (ptr = buf; ptr < buf + size; ptr += PAGE_SIZE)
- 		*ptr = 0;
- 
--- 
-2.39.2
 
