@@ -1,247 +1,73 @@
-From: Sagi Grimberg <sagi-NQWnxTmZq1alnMjI0IkVqw@public.gmane.org>
-Subject: Re: [PATCH] nvmet: allow associating port to a cgroup via configfs
-Date: Mon, 3 Jul 2023 16:21:40 +0300
-Message-ID: <ab204a2d-9a30-7c90-8afa-fc84c935730f@grimberg.me>
-References: <20230627100215.1206008-1-ofir.gal@volumez.com>
- <30d03bba-c2e1-7847-f17e-403d4e648228@grimberg.me>
- <90150ffd-ba2d-6528-21b7-7ea493cd2b9a@nvidia.com>
- <79894bd9-03c7-8d27-eb6a-5e1336550449@volumez.com>
+From: =?UTF-8?q?Michal=20Koutn=C3=BD?= <mkoutny-IBi9RG/b67k@public.gmane.org>
+Subject: [PATCH v3 1/3] cpuset: Allow setscheduler regardless of manipulated task
+Date: Mon,  3 Jul 2023 19:27:39 +0200
+Message-ID: <20230703172741.25392-2-mkoutny@suse.com>
+References: <20230703172741.25392-1-mkoutny@suse.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: base64
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Content-Language: en-US
-In-Reply-To: <79894bd9-03c7-8d27-eb6a-5e1336550449-83CFe9096HFBDgjK7y7TUQ@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
+        t=1688405263; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=NRKA7HZbx/PNfhSZJXmKgXZ8xGGJ/O1hIuO7ezGpPQQ=;
+        b=Hn9DTlo6aF63q8ALuo80CjuvfTC0UlfB+iyNy+47ll7kQmJmt67mmHScMTlKKO+VWhhAEC
+        pifkY+Bd1bdQ357+s6sp/Oxj5KUXjyCfyq4x160nlXLRR0vlOnsPM5bD52gAZX3yzbLKGX
+        RRDass0gnpAoyS8bS1WjrmFKhTksYio=
+In-Reply-To: <20230703172741.25392-1-mkoutny-IBi9RG/b67k@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="utf-8"; format="flowed"
-To: Ofir Gal <ofir.gal-83CFe9096HFBDgjK7y7TUQ@public.gmane.org>, Chaitanya Kulkarni <chaitanyak-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>
-Cc: "hch-jcswGhMUV9g@public.gmane.org" <hch-jcswGhMUV9g@public.gmane.org>, "linux-nvme-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org" <linux-nvme-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org
+Content-Type: text/plain; charset="macroman"
+To: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kselftest-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Cc: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Shuah Khan <shuah-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 
-
-> Hey Sagi and Chaitanya,
-> 
-> On 28/06/2023 5:33, Chaitanya Kulkarni wrote:
->> On 6/27/23 14:13, Sagi Grimberg wrote:
->>> Hey Ofir,
->>>
->>>> Currently there is no way to throttle nvme targets with cgroup v2.
->>>
->>> How do you do it with v1?
-> With v1 I would add a blkio rule at the cgroup root level. The bio's
-> that the nvme target submits aren't associated to a specific cgroup,
-> which makes them follow the rules of the cgroup root level.
-> 
-> V2 doesn't allow to set rules at the root level by design.
-> 
->>>> The IOs that the nvme target submits lack associating to a cgroup,
->>>> which makes them act as root cgroup. The root cgroup can't be throttled
->>>> with the cgroup v2 mechanism.
->>>
->>> What happens to file or passthru backends? You paid attention just to
->>> bdev. I don't see how this is sanely supported with files. It's possible
->>> if you convert nvmet to use its own dedicated kthreads and infer the
->>> cg from the kthread. That presents a whole other set of issues.
->>>
->>
->> if we are doing it for one back-end we cannot leave other back-ends out ...
->>
->>> Maybe the cleanest way to implement something like this is to implement
->>> a full blown nvmet cgroup controller that you can apply a whole set of
->>> resources to, in addition to I/O.
-> 
-> Thorttiling files and passthru isn't possible with cgroup v1 as well,
-> cgroup v2 broke the abillity to throttle bdevs. The purpose of the patch
-> is to re-enable the broken functionality.
-
-cgroupv2 didn't break anything, this was never an intended feature of
-the linux nvme target, so it couldn't have been broken. Did anyone
-know that people are doing this with nvmet?
-
-I'm pretty sure others on the list are treating this as a suggested
-new feature for nvmet. and designing this feature as something that
-is only supported for blkdevs is undersirable.
-
-
-> There was an attempt to re-enable the functionality by allowing io
-> throttle on the root cgroup but it's against the cgroup v2 design.
-> Reference:
-> https://lore.kernel.org/r/20220114093000.3323470-1-yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org/
-> 
-> A full blown nvmet cgroup controller may be a complete solution, but it
-> may take some time to achieve,
-
-I don't see any other sane solution here.
-
-Maybe Tejun/others think differently here?
-
-> while the feature is still broken.
-
-Again, this is not a breakage.
-
-> 
->>>
->>>> Signed-off-by: Ofir Gal <ofir.gal-83CFe9096HFBDgjK7y7TUQ@public.gmane.org>
->>>> ---
->>>>    drivers/nvme/target/configfs.c    | 77 +++++++++++++++++++++++++++++++
->>>>    drivers/nvme/target/core.c        |  3 ++
->>>>    drivers/nvme/target/io-cmd-bdev.c | 13 ++++++
->>>>    drivers/nvme/target/nvmet.h       |  3 ++
->>>>    include/linux/cgroup.h            |  5 ++
->>>>    kernel/cgroup/cgroup-internal.h   |  5 --
->>>
->>> Don't mix cgroup and nvmet changes in the same patch.
-> 
-> Thanks for claryfing I wansn's sure if it's nessecary I would split the
-> patch for v2.
-> 
->>>
->>>>    6 files changed, 101 insertions(+), 5 deletions(-)
->>>>
->>>> diff --git a/drivers/nvme/target/configfs.c
->>>> b/drivers/nvme/target/configfs.c
->>>> index 907143870da5..2e8f93a07498 100644
->>>> --- a/drivers/nvme/target/configfs.c
->>>> +++ b/drivers/nvme/target/configfs.c
->>>> @@ -12,6 +12,7 @@
->>>>    #include <linux/ctype.h>
->>>>    #include <linux/pci.h>
->>>>    #include <linux/pci-p2pdma.h>
->>>> +#include <linux/cgroup.h>
->>>>    #ifdef CONFIG_NVME_TARGET_AUTH
->>>>    #include <linux/nvme-auth.h>
->>>>    #endif
->>>> @@ -281,6 +282,81 @@ static ssize_t
->>>> nvmet_param_pi_enable_store(struct config_item *item,
->>>>    CONFIGFS_ATTR(nvmet_, param_pi_enable);
->>>>    #endif
->>>>    +static ssize_t nvmet_param_associated_cgroup_show(struct
->>>> config_item *item,
->>>> +        char *page)
->>>> +{
->>>> +    struct nvmet_port *port = to_nvmet_port(item);
->>>> +    ssize_t len = 0;
->>>> +    ssize_t retval;
->>>> +    char *suffix;
->>>> +
->>>> +    /* No cgroup has been set means the IOs are assoicated to the
->>>> root cgroup */
->>>> +    if (!port->cgrp)
->>>> +        goto root_cgroup;
->>>> +
->>>> +    retval = cgroup_path_ns(port->cgrp, page, PAGE_SIZE,
->>>> +                         current->nsproxy->cgroup_ns);
->>>> +    if (retval >= PATH_MAX || retval >= PAGE_SIZE)
->>>> +        return -ENAMETOOLONG;
->>>> +
->>>> +    /* No cgroup found means the IOs are assoicated to the root
->>>> cgroup */
->>>> +    if (retval < 0)
->>>> +        goto root_cgroup;
->>>> +
->>>> +    len += retval;
->>>> +
->>>> +    suffix = cgroup_is_dead(port->cgrp) ? " (deleted)\n" : "\n";
->>>> +    len += snprintf(page + len, PAGE_SIZE - len, suffix);
->>>> +
->>>> +    return len;
->>>> +
->>>> +root_cgroup:
->>>> +    return snprintf(page, PAGE_SIZE, "/\n");
->>>> +}
->>>> +
->>>> +static ssize_t nvmet_param_associated_cgroup_store(struct
->>>> config_item *item,
->>>> +        const char *page, size_t count)
->>>> +{
->>>> +    struct nvmet_port *port = to_nvmet_port(item);
->>>> +    struct cgroup_subsys_state *blkcg;
->>>> +    ssize_t retval = -EINVAL;
->>>> +    struct cgroup *cgrp;
->>>> +    char *path;
->>>> +    int len;
->>>> +
->>>> +    len = strcspn(page, "\n");
->>>> +    if (!len)
->>>> +        return -EINVAL;
->>>> +
->>>> +    path = kmemdup_nul(page, len, GFP_KERNEL);
->>>> +    if (!path)
->>>> +        return -ENOMEM;
->>>> +
->>>> +    cgrp = cgroup_get_from_path(path);
->>>> +    kfree(path);
->>>> +    if (IS_ERR(cgrp))
->>>> +        return -ENOENT;
->>>> +
->>>> +    blkcg = cgroup_get_e_css(cgrp, &io_cgrp_subsys);
->>>> +    if (!blkcg)
->>>> +        goto out_put_cgroup;
->>>> +
->>>> +    /* Put old cgroup */
->>>> +    if (port->cgrp)
->>>> +        cgroup_put(port->cgrp);
->>>> +
->>>> +    port->cgrp = cgrp;
->>>> +    port->blkcg = blkcg;
->>>> +
->>>> +    return count;
->>>> +
->>>> +out_put_cgroup:
->>>> +    cgroup_put(cgrp);
->>>> +    return retval;
->>>> +}
->>>
->>> I'm not at all convinced that nvmet ratelimiting does not
->>> require a dedicated cgroup controller... Rgardles, this doesn't
->>> look like a port attribute, its a subsystem attribute.
->>
->> +1 here, can you please explain the choice of port ?
-> 
-> In cgroup threads/processes are associated to a specific control group.
-> Each control group may have different rules to throttle various devices.
-> For example we may have 2 applications both using the same bdev.
-> By associating the apps to different cgroups, we can create a different
-> throttling rule for each app.
-> Throttling is done by echoing "MAJOR:MINOR rbps=X wiops=Y" to "io.max"
-> of the cgroup.
-> 
-> Associating a subsystem to a cgroup will only allow us to create a
-> single rule for each namespace (bdev) in this subsystem.
-> When associating the nvme port to the cgroup it acts as the "thread"
-> that handles the IO for the target, which aligns with the cgroup design.
-
-The port does not own the thread though, rdma/loop inherit the
-"thread" from something entirely different. tcp uses the same worker
-threads for all ports (global workqueue).
-
-IIUC, a cgroup would be associated with a specific host, and the entity
-that is host aware is a subsystem, not a port.
-
-> Regardless if the attribute is part of the port or the subsystem, the
-> user needs to specify constraints per namespace. I see no clear value in
-> setting the cgroup attribute on the subsystem.
-
-Maybe it would be worth to explain what you are trying to achieve here,
-because my understanding is that you want to allow different hosts to
-get different I/O service levels. The right place to do this is the
-subsystem AFAICT.
-
-> On the other hand, by associating a port to a cgroup we could have
-> multiple constraints per namespace. It will allow the user to have more
-> control of the behavior of his system.
-
-Can you please clarify what you mean by "multiple constraints per
-namespace"?
-
-> For example a system with a RDMA port and a TCP port that are connected
-> to the same subsystem's can apply different limits for each port.
-> 
-> This could be complimentary to NVMe ANA for example, where the target
-> could apply different constraints for optimized and non-optimized paths
-
-I don't understand what you are suggesting here. nvme already has
-asymmetry semantics between controllers.
-
-I think you are mixing two different things. There is asymmetric access
-in nvmet (which could translate to tcp vs. rdma or to something else)
-and there is providing different I/O service levels to different hosts.
-I don't see how these two are connected.
+V2hlbiB3ZSBtaWdyYXRlIGEgdGFzayBiZXR3ZWVuIHR3byBjZ3JvdXBzLCBvbmUgb2YgdGhlIGNo
+ZWNrcyBpcyBhCnZlcmlmaWNhdGlvbiB3aGV0aGVyIHdlIGNhbiBtb2RpZnkgdGFzaydzIHNjaGVk
+dWxlciBzZXR0aW5ncwooY2FwX3Rhc2tfc2V0c2NoZWR1bGVyKCkpLgoKQW4gaW1wbGljaXQgbWln
+cmF0aW9uIG9jY3VycyBhbHNvIHdoZW4gZW5hYmxpbmcgYSBjb250cm9sbGVyIG9uIHRoZQp1bmlm
+aWVkIGhpZXJhcmNoeSAodGhpbmsgb2YgcGFyZW50IHRvIGNoaWxkIG1pZ3JhdGlvbikuIFRoZQph
+Zm9yZW1lbnRpb25lZCBjaGVjayBtYXkgYmUgcHJvYmxlbWF0aWMgaWYgdGhlIGNhbGxlciBvZiB0
+aGUgbWlncmF0aW9uCihlbmFibGluZyBhIGNvbnRyb2xsZXIpIGhhcyBubyBwZXJtaXNzaW9ucyBv
+dmVyIG1pZ3JhdGVkIHRhc2tzLgpGb3IgaW5zdGFuY2UsIGEgdXNlcidzIGNncm91cCB0aGF0IGVu
+ZHMgdXAgcnVubmluZyBhIHByb2Nlc3Mgb2YgYQpkaWZmZXJlbnQgdXNlci4gQWx0aG91Z2ggY2dy
+b3VwIHBlcm1pc3Npb25zIGFyZSBjb25maWd1cmVkIGZhdm9yYWJseSwKdGhlIGVuYWJsZW1lbnQg
+ZmFpbHMgZHVlIHRvIHRoZSBmb3JlaWduIHByb2Nlc3MgWzFdLgoKQ2hhbmdlIHRoZSBiZWhhdmlv
+ciBieSByZWxheGluZyB0aGUgcGVybWlzc2lvbnMgY2hlY2sgb24gdGhlIHVuaWZpZWQKaGllcmFy
+Y2h5IHdoZW4gbm8gZWZmZWN0aXZlIGNoYW5nZSB3b3VsZCBoYXBwZW4uClRoaXMgaXMgaW4gYWNj
+b3JkYW5jZSB3aXRoIHVuaWZpZWQgaGllcmFyY2h5IGF0dGFjaG1lbnQgYmVoYXZpb3Igd2hlbgpw
+ZXJtaXNzaW9ucyBvZiB0aGUgc291cmNlIHRvIHRhcmdldCBjZ3JvdXBzIGFyZSBkZWNpc2l2ZSB3
+aGVyZWFzIHRoZQptaWdyYXRlZCB0YXNrIGlzIG9wYXF1ZSAoYXMgb3Bwb3NlZCB0byBtb3JlIHJl
+c3RyaWN0aXZlIGNoZWNrIGluCl9fY2dyb3VwMV9wcm9jc193cml0ZSgpKS4KCk5vdGljZSB0aGF0
+IGZvcmVpZ24gdGFzaydzIGFmZmluaXR5IG1heSBzdGlsbCBiZSBtb2RpZmllZCBpZiB0aGUgdXNl
+cgpjYW4gbW9kaWZ5IGRlc3RpbmF0aW9uIGNncm91cCdzIGNwdXNldCBhdHRyaWJ1dGVzCih1cGRh
+dGVfdGFza3NfY3B1bWFzaygpIGRvZXMgbm8gcGVybWlzc2lvbnMgY2hlY2spLiBUaGUgcGVybWlz
+c2lvbnMKY2hlY2sgY291bGQgdGh1cyBiZSBza2lwcGVkIG9uIHYyIGV2ZW4gd2hlbiBhZmZpbml0
+eSBjaGFuZ2VzLiBTdGF5CmNvbnNlcnZhdGl2ZSBpbiB0aGlzIHBhdGNoIHRob3VnaC4KClsxXSBo
+dHRwczovL2dpdGh1Yi5jb20vc3lzdGVtZC9zeXN0ZW1kL2lzc3Vlcy8xODI5MyNpc3N1ZWNvbW1l
+bnQtODMxMjA1NjQ5CgpTaWduZWQtb2ZmLWJ5OiBNaWNoYWwgS291dG7DvSA8bWtvdXRueS1JQmk5
+UkcvYjY3a0BwdWJsaWMuZ21hbmUub3JnPgotLS0KIGtlcm5lbC9jZ3JvdXAvY3B1c2V0LmMgfCAx
+OSArKysrKysrKysrKysrKysrLS0tCiAxIGZpbGUgY2hhbmdlZCwgMTYgaW5zZXJ0aW9ucygrKSwg
+MyBkZWxldGlvbnMoLSkKCmRpZmYgLS1naXQgYS9rZXJuZWwvY2dyb3VwL2NwdXNldC5jIGIva2Vy
+bmVsL2Nncm91cC9jcHVzZXQuYwppbmRleCA1OGU2ZjE4ZjAxYzEuLjBhOWI4NjA4NDRjYSAxMDA2
+NDQKLS0tIGEva2VybmVsL2Nncm91cC9jcHVzZXQuYworKysgYi9rZXJuZWwvY2dyb3VwL2NwdXNl
+dC5jCkBAIC0yNDg3LDYgKzI0ODcsNyBAQCBzdGF0aWMgaW50IGNwdXNldF9jYW5fYXR0YWNoKHN0
+cnVjdCBjZ3JvdXBfdGFza3NldCAqdHNldCkKIAlzdHJ1Y3QgY2dyb3VwX3N1YnN5c19zdGF0ZSAq
+Y3NzOwogCXN0cnVjdCBjcHVzZXQgKmNzLCAqb2xkY3M7CiAJc3RydWN0IHRhc2tfc3RydWN0ICp0
+YXNrOworCWJvb2wgY3B1c191cGRhdGVkLCBtZW1zX3VwZGF0ZWQ7CiAJaW50IHJldDsKIAogCS8q
+IHVzZWQgbGF0ZXIgYnkgY3B1c2V0X2F0dGFjaCgpICovCkBAIC0yNTAxLDEzICsyNTAyLDI1IEBA
+IHN0YXRpYyBpbnQgY3B1c2V0X2Nhbl9hdHRhY2goc3RydWN0IGNncm91cF90YXNrc2V0ICp0c2V0
+KQogCWlmIChyZXQpCiAJCWdvdG8gb3V0X3VubG9jazsKIAorCWNwdXNfdXBkYXRlZCA9ICFjcHVt
+YXNrX2VxdWFsKGNzLT5lZmZlY3RpdmVfY3B1cywgb2xkY3MtPmVmZmVjdGl2ZV9jcHVzKTsKKwlt
+ZW1zX3VwZGF0ZWQgPSAhbm9kZXNfZXF1YWwoY3MtPmVmZmVjdGl2ZV9tZW1zLCBvbGRjcy0+ZWZm
+ZWN0aXZlX21lbXMpOworCiAJY2dyb3VwX3Rhc2tzZXRfZm9yX2VhY2godGFzaywgY3NzLCB0c2V0
+KSB7CiAJCXJldCA9IHRhc2tfY2FuX2F0dGFjaCh0YXNrKTsKIAkJaWYgKHJldCkKIAkJCWdvdG8g
+b3V0X3VubG9jazsKLQkJcmV0ID0gc2VjdXJpdHlfdGFza19zZXRzY2hlZHVsZXIodGFzayk7Ci0J
+CWlmIChyZXQpCi0JCQlnb3RvIG91dF91bmxvY2s7CisKKwkJLyoKKwkJICogU2tpcCByaWdodHMg
+b3ZlciB0YXNrIGNoZWNrIGluIHYyIHdoZW4gbm90aGluZyBjaGFuZ2VzLAorCQkgKiBtaWdyYXRp
+b24gcGVybWlzc2lvbiBkZXJpdmVzIGZyb20gaGllcmFyY2h5IG93bmVyc2hpcCBpbgorCQkgKiBj
+Z3JvdXBfcHJvY3Nfd3JpdGVfcGVybWlzc2lvbigpKS4KKwkJICovCisJCWlmICghY2dyb3VwX3N1
+YnN5c19vbl9kZmwoY3B1c2V0X2NncnBfc3Vic3lzKSB8fAorCQkgICAgKGNwdXNfdXBkYXRlZCB8
+fCBtZW1zX3VwZGF0ZWQpKSB7CisJCQlyZXQgPSBzZWN1cml0eV90YXNrX3NldHNjaGVkdWxlcih0
+YXNrKTsKKwkJCWlmIChyZXQpCisJCQkJZ290byBvdXRfdW5sb2NrOworCQl9CiAKIAkJaWYgKGRs
+X3Rhc2sodGFzaykpIHsKIAkJCWNzLT5ucl9taWdyYXRlX2RsX3Rhc2tzKys7Ci0tIAoyLjQxLjAK
+Cg==
