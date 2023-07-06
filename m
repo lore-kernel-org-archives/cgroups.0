@@ -1,91 +1,65 @@
-From: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Subject: Re: Expensive memory.stat + cpu.stat reads
-Date: Thu, 6 Jul 2023 06:20:45 +0000
-Message-ID: <20230706062045.xwmwns7cm4fxd7iu@google.com>
-References: <CABWYdi0c6__rh-K7dcM_pkf9BJdTRtAU08M43KO9ME4-dsgfoQ@mail.gmail.com>
+From: Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
+Subject: Re: [PATCH v2 1/1] sched/psi: use kernfs polling functions for PSI
+ trigger polling
+Date: Thu, 6 Jul 2023 10:16:51 +0200
+Message-ID: <20230706081651.GF2833176@hirez.programming.kicks-ass.net>
+References: <20230630005612.1014540-1-surenb@google.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20221208; t=1688624448; x=1691216448;
-        h=cc:to:from:subject:message-id:references:mime-version:in-reply-to
-         :date:from:to:cc:subject:date:message-id:reply-to;
-        bh=054dwjt9BZCou3BvPjMRnfFzZ2wjHCy2lrA2F8To2Yk=;
-        b=a/gZc1hvT7JRiiUYzG1SPVOHiHFMZ5cv81dBONAX0K6rQb/SqodZ/lLZoD6G628ExP
-         YAd7fHKCO8Uce6GfN3NdeaykplGQ29jTP1s1duFpDpYznOqIoHbToAyL5+/e4rjop4px
-         RnYjO1Dq2V76xE62yjTCc5gppCq4Ilyvg6B+wC/at9D5beVGj/dSGIKww8CivxZHgMPs
-         xUAr63iI0RUxB/1CrizQ0kDz4z+hUrxNojnH+C506j0HK6jQWpTT4OiCsEUo2etb1Qaj
-         qq9nOEvhORD0DyWKW/sSLHCUa79qo5POjO0faDZksJV99qlPER3hM1mrmWsqRtzP1voK
-         kuCg==
-In-Reply-To: <CABWYdi0c6__rh-K7dcM_pkf9BJdTRtAU08M43KO9ME4-dsgfoQ-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=desiato.20200630; h=In-Reply-To:Content-Type:MIME-Version:
+        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=Ic9S92rG11eB3Mil6OSX84uIjeGI6KbMJWkDNWokDEY=; b=na4q44nbMfZC7izyi5ajSs6ppq
+        bGmiaPfc5VPM0or3kB8A+OGoTRZ98DRuhWkPwu9v+PIv4Nl5Y7fwiSkmzoIYr19nFqpFZpqgweKaM
+        TzyDub1JFUHz/W1M4AluZuqG+Ahlzdsy9itfLqsHqSnfFKmz6jzkQdD+ocNiKOr84TKlIRGquRitq
+        a/nfcmQFW2VM86l23s2BxHC0p1Ix49+Y7CSgMcqpgH91ENR0Kwrs0NDHq1NKKZFbAwcVlLfvY8/xb
+        Bj5iXoVeTwgb4jtHYlz0bpJPun29kzy8VGtAJ6+jOzFeTR7A64MG6OhfhHVT68MUU75SD/5Oqk0C9
+        OOa76p+g==;
+Content-Disposition: inline
+In-Reply-To: <20230630005612.1014540-1-surenb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Ivan Babrou <ivan-lDpJ742SOEtZroRs9YW3xA@public.gmane.org>
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Linux MM <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, kernel-team <kernel-team-lDpJ742SOEtZroRs9YW3xA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Muchun Song <muchun.song-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, linux-kernel <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+To: Suren Baghdasaryan <surenb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Cc: gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, lujialin4-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, ebiggers-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, oleg-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, viro-RmSDqhL/yNMiFSDQTTA3OLVCufUGDwFn@public.gmane.org, brauner-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, juri.lelli-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, vincent.guittot-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org, dietmar.eggemann-5wv7dgnIgG8@public.gmane.org, rostedt-nx8X9YLhiw1AfugRpC6u6w@public.gmane.org, bsegall-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, mgorman-l3A5Bk7waGM@public.gmane.org, bristot-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, vschneid-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-z5hGa2qSFaRBDgjK7y7TUQ@public.gmane.org
 
-On Fri, Jun 30, 2023 at 04:22:28PM -0700, Ivan Babrou wrote:
-> Hello,
+On Thu, Jun 29, 2023 at 05:56:12PM -0700, Suren Baghdasaryan wrote:
+> Destroying psi trigger in cgroup_file_release causes UAF issues when
+> a cgroup is removed from under a polling process. This is happening
+> because cgroup removal causes a call to cgroup_file_release while the
+> actual file is still alive. Destroying the trigger at this point would
+> also destroy its waitqueue head and if there is still a polling process
+> on that file accessing the waitqueue, it will step on the freed pointer:
 > 
-> We're seeing CPU load issues with cgroup stats retrieval. I made a
-> public gist with all the details, including the repro code (which
-> unfortunately requires heavily loaded hardware) and some flamegraphs:
+> do_select
+>   vfs_poll
+>                            do_rmdir
+>                              cgroup_rmdir
+>                                kernfs_drain_open_files
+>                                  cgroup_file_release
+>                                    cgroup_pressure_release
+>                                      psi_trigger_destroy
+>                                        wake_up_pollfree(&t->event_wait)
+> // vfs_poll is unblocked
+>                                        synchronize_rcu
+>                                        kfree(t)
+>   poll_freewait -> UAF access to the trigger's waitqueue head
 > 
-> * https://gist.github.com/bobrik/5ba58fb75a48620a1965026ad30a0a13
+> Patch [1] fixed this issue for epoll() case using wake_up_pollfree(),
+> however the same issue exists for synchronous poll() case.
+> The root cause of this issue is that the lifecycles of the psi trigger's
+> waitqueue and of the file associated with the trigger are different. Fix
+> this by using kernfs_generic_poll function when polling on cgroup-specific
+> psi triggers. It internally uses kernfs_open_node->poll waitqueue head
+> with its lifecycle tied to the file's lifecycle. This also renders the
+> fix in [1] obsolete, so revert it.
 > 
-> I'll repeat the gist of that gist here. Our repro has the following
-> output after a warm-up run:
+> [1] commit c2dbe32d5db5 ("sched/psi: Fix use-after-free in ep_remove_wait_queue()")
 > 
-> completed:  5.17s [manual / mem-stat + cpu-stat]
-> completed:  5.59s [manual / cpu-stat + mem-stat]
-> completed:  0.52s [manual / mem-stat]
-> completed:  0.04s [manual / cpu-stat]
-> 
-> The first two lines do effectively the following:
-> 
-> for _ in $(seq 1 1000); do cat /sys/fs/cgroup/system.slice/memory.stat
-> /sys/fs/cgroup/system.slice/cpu.stat > /dev/null
-> 
-> The latter two are the same thing, but via two loops:
-> 
-> for _ in $(seq 1 1000); do cat /sys/fs/cgroup/system.slice/cpu.stat >
-> /dev/null; done
-> for _ in $(seq 1 1000); do cat /sys/fs/cgroup/system.slice/memory.stat
-> > /dev/null; done
-> 
-> As you might've noticed from the output, splitting the loop into two
-> makes the code run 10x faster. This isn't great, because most
-> monitoring software likes to get all stats for one service before
-> reading the stats for the next one, which maps to the slow and
-> expensive way of doing this.
-> 
-> We're running Linux v6.1 (the output is from v6.1.25) with no patches
-> that touch the cgroup or mm subsystems, so you can assume vanilla
-> kernel.
-> 
-> From the flamegraph it just looks like rstat flushing takes longer. I
-> used the following flags on an AMD EPYC 7642 system (our usual pick
-> cpu-clock was blaming spinlock irqrestore, which was questionable):
-> 
-> perf -e cycles -g --call-graph fp -F 999 -- /tmp/repro
-> 
-> Naturally, there are two questions that arise:
-> 
-> * Is this expected (I guess not, but good to be sure)?
-> * What can we do to make this better?
-> 
-> I am happy to try out patches or to do some tracing to help understand
-> this better.
+> Fixes: 0e94682b73bf ("psi: introduce psi monitor")
+> Reported-by: Lu Jialin <lujialin4-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+> Closes: https://lore.kernel.org/all/20230613062306.101831-1-lujialin4-hv44wF8Li93QT0dZR+AlfA@public.gmane.org/
+> Signed-off-by: Suren Baghdasaryan <surenb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 
-Hi Ivan,
-
-Thanks a lot, as always, for reporting this. This is not expected and
-should be fixed. Is the issue easy to repro or some specific workload or
-high load/traffic is required? Can you repro this with the latest linus
-tree? Also do you see any difference of root's cgroup.stat where this
-issue happens vs good state?
-
-BTW I am away for next month with very limited connectivity, so expect
-slow response.
-
-thanks,
-Shakeel
+Thanks, I'll stuff it in sched/urgent after -rc1.
