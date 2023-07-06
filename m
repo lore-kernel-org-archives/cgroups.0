@@ -1,59 +1,35 @@
-From: Miaohe Lin <linmiaohe-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Subject: [PATCH] cgroup: minor cleanup for cgroup_extra_stat_show()
-Date: Thu, 6 Jul 2023 17:42:42 +0800
-Message-ID: <20230706094242.1707709-1-linmiaohe@huawei.com>
+From: Miaohe Lin <linmiaohe@huawei.com>
+Subject: [PATCH] mm/memcg: remove definition of MEM_CGROUP_ID_MAX when !CONFIG_MEMCG
+Date: Thu, 6 Jul 2023 19:28:20 +0800
+Message-ID: <20230706112820.2393447-1-linmiaohe@huawei.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7BIT
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linmiaohe-hv44wF8Li93QT0dZR+AlfA@public.gmane.org
+To: akpm@linux-foundation.org, hannes@cmpxchg.org, mhocko@kernel.org, roman.gushchin@linux.dev, shakeelb@google.com
+Cc: muchun.song@linux.dev, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org, linmiaohe@huawei.com
 
-Make it under CONFIG_CGROUP_SCHED to rid of __maybe_unused annotation.
-And further fetch cgrp inside cgroup_extra_stat_show() directly to rid
-of __maybe_unused annotation of cgrp. No functional change intended.
+MEM_CGROUP_ID_MAX is only used when CONFIG_MEMCG is configured. Remove
+unneeded !CONFIG_MEMCG variant.
 
-Signed-off-by: Miaohe Lin <linmiaohe-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Signed-off-by: Miaohe Lin <linmiaohe@huawei.com>
 ---
- kernel/cgroup/cgroup.c | 9 +++++----
- 1 file changed, 5 insertions(+), 4 deletions(-)
+ include/linux/memcontrol.h | 1 -
+ 1 file changed, 1 deletion(-)
 
-diff --git a/kernel/cgroup/cgroup.c b/kernel/cgroup/cgroup.c
-index bfe3cd8ccf36..b990eda6b3cd 100644
---- a/kernel/cgroup/cgroup.c
-+++ b/kernel/cgroup/cgroup.c
-@@ -3654,9 +3654,10 @@ static int cgroup_stat_show(struct seq_file *seq, void *v)
- 	return 0;
- }
+diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
+index 5818af8eca5a..634a282099bf 100644
+--- a/include/linux/memcontrol.h
++++ b/include/linux/memcontrol.h
+@@ -1158,7 +1158,6 @@ unsigned long mem_cgroup_soft_limit_reclaim(pg_data_t *pgdat, int order,
+ #else /* CONFIG_MEMCG */
  
--static int __maybe_unused cgroup_extra_stat_show(struct seq_file *seq,
--						 struct cgroup *cgrp, int ssid)
-+#ifdef CONFIG_CGROUP_SCHED
-+static int cgroup_extra_stat_show(struct seq_file *seq, int ssid)
+ #define MEM_CGROUP_ID_SHIFT	0
+-#define MEM_CGROUP_ID_MAX	0
+ 
+ static inline struct mem_cgroup *folio_memcg(struct folio *folio)
  {
-+	struct cgroup *cgrp = seq_css(seq)->cgroup;
- 	struct cgroup_subsys *ss = cgroup_subsys[ssid];
- 	struct cgroup_subsys_state *css;
- 	int ret;
-@@ -3672,15 +3673,15 @@ static int __maybe_unused cgroup_extra_stat_show(struct seq_file *seq,
- 	css_put(css);
- 	return ret;
- }
-+#endif
- 
- static int cpu_stat_show(struct seq_file *seq, void *v)
- {
--	struct cgroup __maybe_unused *cgrp = seq_css(seq)->cgroup;
- 	int ret = 0;
- 
- 	cgroup_base_stat_cputime_show(seq);
- #ifdef CONFIG_CGROUP_SCHED
--	ret = cgroup_extra_stat_show(seq, cgrp, cpu_cgrp_id);
-+	ret = cgroup_extra_stat_show(seq, cpu_cgrp_id);
- #endif
- 	return ret;
- }
 -- 
 2.33.0
 
