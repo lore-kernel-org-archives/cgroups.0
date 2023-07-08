@@ -1,50 +1,61 @@
-From: Miaohe Lin <linmiaohe-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH] mm/memcg: remove definition of MEM_CGROUP_ID_MAX when
- !CONFIG_MEMCG
-Date: Fri, 7 Jul 2023 10:38:27 +0800
-Message-ID: <f94905da-b98e-0a18-a9d8-18ee109be566@huawei.com>
-References: <20230706112820.2393447-1-linmiaohe@huawei.com>
- <892B507C-CFE8-4792-BA5F-3C698290A8EE@linux.dev>
- <61ce2910-f3de-cfb7-bdd3-546ade0cb6f3@huawei.com>
- <52C942A9-29F7-473F-8674-6CB584F009BA@linux.dev>
+From: Miaohe Lin <linmiaohe@huawei.com>
+Subject: [PATCH v2] mm/memcg: minor cleanup for MEM_CGROUP_ID_MAX
+Date: Sat, 8 Jul 2023 10:33:04 +0800
+Message-ID: <20230708023304.1184111-1-linmiaohe@huawei.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <52C942A9-29F7-473F-8674-6CB584F009BA-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>
-Content-Language: en-US
+Content-Transfer-Encoding: 7BIT
+Return-path: <linux-kernel-owner@vger.kernel.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Muchun Song <muchun.song-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>
-Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux Memory Management List <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>
+To: akpm@linux-foundation.org, hannes@cmpxchg.org, mhocko@kernel.org, roman.gushchin@linux.dev, shakeelb@google.com
+Cc: muchun.song@linux.dev, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, linmiaohe@huawei.com
 
-On 2023/7/7 10:25, Muchun Song wrote:
-> 
-> 
->> On Jul 7, 2023, at 10:06, Miaohe Lin <linmiaohe-hv44wF8Li93QT0dZR+AlfA@public.gmane.org> wrote:
->>
->> On 2023/7/7 9:47, Muchun Song wrote:
->>>
->>>
->>>> On Jul 6, 2023, at 19:28, Miaohe Lin <linmiaohe-hv44wF8Li93QT0dZR+AlfA@public.gmane.org> wrote:
->>>>
->>>> MEM_CGROUP_ID_MAX is only used when CONFIG_MEMCG is configured. Remove
->>>> unneeded !CONFIG_MEMCG variant.
->>>>
->>>> Signed-off-by: Miaohe Lin <linmiaohe-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
->>>
->>> MEM_CGROUP_ID_MAX is also only used in mem_cgroup_alloc(), maybe you also
->>> could move it from memcontrol.h to memcontrol.c. And define it as:
->>>
->>> #define MEM_CGROUP_ID_MAX ((1U << MEM_CGROUP_ID_SHIFT) - 1)
->>>
->>> I am not suggesting defining it as USHRT_MAX, because if someone changes
->>> MEM_CGROUP_ID_SHIFT in the future, then MEM_CGROUP_ID_MAX will not updated
->>> accordingly.
->>
->> Looks sensible to me. Do you suggest squashing above changes into the current patch
->> or a separate patch is preferred?
-> 
-> I think it's better to squash.
+MEM_CGROUP_ID_MAX is only used when CONFIG_MEMCG is configured. So remove
+unneeded !CONFIG_MEMCG variant. Also it's only used in mem_cgroup_alloc(),
+so move it from memcontrol.h to memcontrol.c. And further define it as:
+  #define MEM_CGROUP_ID_MAX ((1UL << MEM_CGROUP_ID_SHIFT) - 1)
+so if someone changes MEM_CGROUP_ID_SHIFT in the future, then
+MEM_CGROUP_ID_MAX will be updated accordingly, as suggested by Muchun.
 
-Will do if no objection. Thanks.
+Reviewed-by: Muchun Song <songmuchun@bytedance.com>
+Signed-off-by: Miaohe Lin <linmiaohe@huawei.com>
+---
+ include/linux/memcontrol.h | 2 --
+ mm/memcontrol.c            | 1 +
+ 2 files changed, 1 insertion(+), 2 deletions(-)
+
+diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
+index 5818af8eca5a..58eb7ca65699 100644
+--- a/include/linux/memcontrol.h
++++ b/include/linux/memcontrol.h
+@@ -61,7 +61,6 @@ struct mem_cgroup_reclaim_cookie {
+ #ifdef CONFIG_MEMCG
+ 
+ #define MEM_CGROUP_ID_SHIFT	16
+-#define MEM_CGROUP_ID_MAX	USHRT_MAX
+ 
+ struct mem_cgroup_id {
+ 	int id;
+@@ -1158,7 +1157,6 @@ unsigned long mem_cgroup_soft_limit_reclaim(pg_data_t *pgdat, int order,
+ #else /* CONFIG_MEMCG */
+ 
+ #define MEM_CGROUP_ID_SHIFT	0
+-#define MEM_CGROUP_ID_MAX	0
+ 
+ static inline struct mem_cgroup *folio_memcg(struct folio *folio)
+ {
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index e8ca4bdcb03c..284396ea8a33 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -5165,6 +5165,7 @@ static struct cftype mem_cgroup_legacy_files[] = {
+  * those references are manageable from userspace.
+  */
+ 
++#define MEM_CGROUP_ID_MAX	((1UL << MEM_CGROUP_ID_SHIFT) - 1)
+ static DEFINE_IDR(mem_cgroup_idr);
+ 
+ static void mem_cgroup_id_remove(struct mem_cgroup *memcg)
+-- 
+2.33.0
 
