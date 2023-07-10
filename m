@@ -1,124 +1,68 @@
 From: Ivan Babrou <ivan@cloudflare.com>
 Subject: Re: Expensive memory.stat + cpu.stat reads
-Date: Mon, 10 Jul 2023 16:21:51 -0700
-Message-ID: <CABWYdi2pBaCrdKcM37oBomc+5W8MdRp1HwPpOExBGYfZitxyWA@mail.gmail.com>
+Date: Mon, 10 Jul 2023 16:23:45 -0700
+Message-ID: <CABWYdi20sL8pK2jjS=v0OG+dPxWnSBXvknVEWeyB47V0F5Wayw@mail.gmail.com>
 References: <CABWYdi0c6__rh-K7dcM_pkf9BJdTRtAU08M43KO9ME4-dsgfoQ@mail.gmail.com>
- <20230706062045.xwmwns7cm4fxd7iu@google.com>
+ <gbqumqkxixvvrbbqh55rw6thgfa67tw2kkcuauc4xj5t6pnivd@3yfkokngo43w>
 Mime-Version: 1.0
 Content-Transfer-Encoding: quoted-printable
 Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=cloudflare.com; s=google; t=1689031322; x=1691623322;
+        d=cloudflare.com; s=google; t=1689031436; x=1691623436;
         h=content-transfer-encoding:cc:to:subject:message-id:date:from
          :in-reply-to:references:mime-version:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=GQcaxlquPgLsEtf9zjMdvG6opf0s0bsmOxkcrF9GkyU=;
-        b=LiKHuEY8+B0eE9iet2Xj4FKSCqKi9D4frQwFtNXsst0xV4BzybsxdnwYPBK6KXCGkz
-         2ACTx02GPmCH4E5+NW576cPNdAIEkyeDmTmTiXibeodrdQFcZAdo50kWCBaramTS4KIO
-         srCm8oB7dsyVg4AgU/wBvSV+TRePAExXqzxNA=
-In-Reply-To: <20230706062045.xwmwns7cm4fxd7iu@google.com>
+        bh=Ax+jVrYfNmxpClqi51wVQRM9DJaaLI9Ll9U+M+qNnIE=;
+        b=BLXTGXARwPCt0Z3QY6Hkyqe8P+UvKJuwOcDpcUhFrh7oauHoH7ek9S8FnzkxNKruxX
+         h3Fkat+06xrYJVtdH+Ksjd099ymifYhPIVXtCSUuBFupjA4JzaCHCo03hWSvfs1PRNB+
+         k5eZnIfD3YabAza1cBlawD8pI6YWJibUkXyDA=
+In-Reply-To: <gbqumqkxixvvrbbqh55rw6thgfa67tw2kkcuauc4xj5t6pnivd@3yfkokngo43w>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="windows-1252"
-To: Shakeel Butt <shakeelb@google.com>
-Cc: cgroups@vger.kernel.org, Linux MM <linux-mm@kvack.org>, kernel-team <kernel-team@cloudflare.com>, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, Roman Gushchin <roman.gushchin@linux.dev>, Muchun Song <muchun.song@linux.dev>, Andrew Morton <akpm@linux-foundation.org>, linux-kernel <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset="utf-8"
+To: =?UTF-8?Q?Michal_Koutn=C3=BD?= <mkoutny@suse.com>
+Cc: cgroups@vger.kernel.org, Linux MM <linux-mm@kvack.org>, kernel-team <kernel-team@cloudflare.com>, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, Roman Gushchin <roman.gushchin@linux.dev>, Shakeel Butt <shakeelb@google.com>, Muchun Song <muchun.song@linux.dev>, Andrew Morton <akpm@linux-foundation.org>, linux-kernel <linux-kernel@vger.kernel.org>
 
-On Wed, Jul 5, 2023 at 11:20=E2=80=AFPM Shakeel Butt <shakeelb@google.com> =
-wrote:
+On Mon, Jul 10, 2023 at 7:44=E2=80=AFAM Michal Koutn=C3=BD <mkoutny@suse.co=
+m> wrote:
 >
-> On Fri, Jun 30, 2023 at 04:22:28PM -0700, Ivan Babrou wrote:
-> > Hello,
-> >
-> > We're seeing CPU load issues with cgroup stats retrieval. I made a
-> > public gist with all the details, including the repro code (which
-> > unfortunately requires heavily loaded hardware) and some flamegraphs:
-> >
-> > * https://gist.github.com/bobrik/5ba58fb75a48620a1965026ad30a0a13
-> >
-> > I'll repeat the gist of that gist here. Our repro has the following
-> > output after a warm-up run:
-> >
-> > completed:  5.17s [manual / mem-stat + cpu-stat]
-> > completed:  5.59s [manual / cpu-stat + mem-stat]
-> > completed:  0.52s [manual / mem-stat]
-> > completed:  0.04s [manual / cpu-stat]
-> >
-> > The first two lines do effectively the following:
-> >
-> > for _ in $(seq 1 1000); do cat /sys/fs/cgroup/system.slice/memory.stat
-> > /sys/fs/cgroup/system.slice/cpu.stat > /dev/null
-> >
-> > The latter two are the same thing, but via two loops:
-> >
-> > for _ in $(seq 1 1000); do cat /sys/fs/cgroup/system.slice/cpu.stat >
-> > /dev/null; done
-> > for _ in $(seq 1 1000); do cat /sys/fs/cgroup/system.slice/memory.stat
-> > > /dev/null; done
-> >
+> Hello.
+>
+> On Fri, Jun 30, 2023 at 04:22:28PM -0700, Ivan Babrou <ivan@cloudflare.co=
+m> wrote:
 > > As you might've noticed from the output, splitting the loop into two
-> > makes the code run 10x faster. This isn't great, because most
-> > monitoring software likes to get all stats for one service before
-> > reading the stats for the next one, which maps to the slow and
-> > expensive way of doing this.
-> >
+> > makes the code run 10x faster.
+>
+> That is curious.
+>
 > > We're running Linux v6.1 (the output is from v6.1.25) with no patches
 > > that touch the cgroup or mm subsystems, so you can assume vanilla
 > > kernel.
-> >
-> > From the flamegraph it just looks like rstat flushing takes longer. I
-> > used the following flags on an AMD EPYC 7642 system (our usual pick
-> > cpu-clock was blaming spinlock irqrestore, which was questionable):
-> >
-> > perf -e cycles -g --call-graph fp -F 999 -- /tmp/repro
-> >
-> > Naturally, there are two questions that arise:
-> >
-> > * Is this expected (I guess not, but good to be sure)?
-> > * What can we do to make this better?
-> >
+>
+> Have you watched for this on older kernels too?
+
+We've been on v6.1 for quite a while now, but it's possible that we
+weren't paying enough attention before to notice.
+
 > > I am happy to try out patches or to do some tracing to help understand
 > > this better.
 >
-> Hi Ivan,
->
-> Thanks a lot, as always, for reporting this. This is not expected and
-> should be fixed. Is the issue easy to repro or some specific workload or
-> high load/traffic is required? Can you repro this with the latest linus
-> tree? Also do you see any difference of root's cgroup.stat where this
-> issue happens vs good state?
+> I see in your reproducer you tried swapping order of controllers
+> flushed.
+> Have you also tried flushing same controller twice (in the inner loop)?
+> (Despite the expectation is that it shouldn't be different from half the
+> scenario where ran two loops.)
 
-I'm afraid there's no easy way to reproduce. We see it from time to
-time in different locations. The one that I was looking at for the
-initial email does not reproduce it anymore:
+Same controller twice is fast (whether it's mem + mem or cpu + cpu):
 
-completed:  0.75s [manual / cpu-stat + mem-stat]
-completed:  0.72s [manual / mem-stat]
-completed:  0.05s [manual / cpu-stat]
-
-I took the top 20 servers by metrics scrape duration for cadvisor and
-it it does happen on the slowest ones:
-
-completed: 22.32s [manual / cpu-stat + mem-stat]
-completed:  0.34s [manual / mem-stat]
-completed:  1.68s [manual / cpu-stat]
-
-Is cadvisor or a similar metrics agent used by Google? Any chance you
-could see if your own fleet exhibits this behavior?
-
-Given that this behavior requires full production setup with customer
-traffic and long qualification times we have for kernels, I'm not sure
-if I can try the linus tree here.
-
-I uploaded the contents of /sys/fs/cgroup/memory.stat here:
-
-* https://gist.github.com/bobrik/9255b5e8ed0a83afb73ebf06b79f07c4
-
-The fast one is v6.1.37 and the slow one is v6.1.25. I'm not sure if
-the kernel version makes a difference or if it's a matter of uptime /
-traffic profile. The data is from two different locations. The fast
-location has gone through an expansion, which meant a full reboot with
-a kernel upgrade, so maybe that affected things:
-
-* https://i.imgur.com/x8uyMaF.png
-
-Let me try to reboot the slow location and see if there's any lasting
-improvement.
+warm-up
+completed: 17.24s [manual / cpu-stat + mem-stat]
+completed:  1.02s [manual / mem-stat+mem-stat]
+completed:  0.59s [manual / cpu-stat+cpu-stat]
+completed:  0.44s [manual / mem-stat]
+completed:  0.16s [manual / cpu-stat]
+running
+completed: 14.32s [manual / cpu-stat + mem-stat]
+completed:  1.25s [manual / mem-stat+mem-stat]
+completed:  0.42s [manual / cpu-stat+cpu-stat]
+completed:  0.12s [manual / mem-stat]
+completed:  0.50s [manual / cpu-stat]
