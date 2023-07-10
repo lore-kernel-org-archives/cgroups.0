@@ -1,59 +1,75 @@
-From: Michal =?utf-8?Q?Koutn=C3=BD?= <mkoutny-IBi9RG/b67k@public.gmane.org>
-Subject: Re: [PATCH] cgroup/cpuset: update parent subparts cpumask while
- holding css refcnt
-Date: Mon, 10 Jul 2023 17:51:24 +0200
-Message-ID: <ag6ed2ebb3azrienshnvn775ejp6jsftx66we7mwcavv74q4s7@xm5djhor7bjl>
-References: <20230701065049.1758266-1-linmiaohe@huawei.com>
- <fbabnjfly5w6fxrhe3eu6ebspngz2hd3tqs6rrbropcdvylnhs@ayjdpq73kwui>
- <74f1906e-fe58-c745-a851-b160374f7acf@redhat.com>
+From: Ivan Babrou <ivan-lDpJ742SOEtZroRs9YW3xA@public.gmane.org>
+Subject: [PATCH] kernfs: attach uuid for every kernfs and report it in fsid
+Date: Mon, 10 Jul 2023 11:33:38 -0700
+Message-ID: <20230710183338.58531-1-ivan@cloudflare.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha512;
-        protocol="application/pgp-signature"; boundary="ktauyloq4o6i5icy"
+Content-Transfer-Encoding: 8bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
-        t=1689004285; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=o3Yl6KJ5iaf9hnfCzXQRl84Iaqux0AkHxDIFY4RqjNw=;
-        b=RZVYDWZ3/urg8+OJrIGYGpUrF751dlFkNaykpkxGQn+RqXVDGewk43zN/vQ2i0TKnuoxE/
-        s7uQLUU69qyMXv11RQzR4bprnARgyqFrYmMNWSbM1NRZ3Q442UZgzD6NFe5dgPpxB63CnK
-        wdVjoFlpxkXACX6TRNmKaO0oBArtHfg=
-Content-Disposition: inline
-In-Reply-To: <74f1906e-fe58-c745-a851-b160374f7acf-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=cloudflare.com; s=google; t=1689014021; x=1691606021;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=KfOFwa2MqGzUVHMgMbaymeSQf/jXq0PE9ZHxapBD3Wg=;
+        b=L6sqxAkYvprfFLOpuEhxBMp3KNnplB0ZZcAipTraoZiFvvCxf5cGIkbNgr1XsLKwwt
+         dYDuePFBEKrJay9FP/gc2BkJQgoUC0I4JXHljZAkscoST0FgIb9tIOctKtBoElAIOCeJ
+         RLip2ZlDiqlYFlPsq3R684aqltWpmCQoDLRgg=
 List-ID: <cgroups.vger.kernel.org>
-To: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Cc: Miaohe Lin <linmiaohe-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Type: text/plain; charset="us-ascii"
+To: linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Cc: kernel-team-lDpJ742SOEtZroRs9YW3xA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Greg Kroah-Hartman <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Amir Goldstein <amir73il-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>, Jan Kara <jack-AlSwsSmVLrQ@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Ivan Babrou <ivan-lDpJ742SOEtZroRs9YW3xA@public.gmane.org>
 
+The following two commits added the same thing for tmpfs:
 
---ktauyloq4o6i5icy
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+* commit 2b4db79618ad ("tmpfs: generate random sb->s_uuid")
+* commit 59cda49ecf6c ("shmem: allow reporting fanotify events with file handles on tmpfs")
 
-On Mon, Jul 10, 2023 at 11:40:36AM -0400, Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org> wrote:
-> I believe the primary reason is because update_parent_subparts_cpumask() can
-> potential run for quite a while. So we don't want to hold the rcu_read_lock
-> for too long.
+Having fsid allows using fanotify, which is especially handy for cgroups,
+where one might be interested in knowing when they are created or removed.
 
-But holding cpuset_mutex is even worse than rcu_read_lock()? IOW is the
-relieve with this reason worth it?
+Signed-off-by: Ivan Babrou <ivan-lDpJ742SOEtZroRs9YW3xA@public.gmane.org>
+---
+ fs/kernfs/mount.c | 13 ++++++++++++-
+ 1 file changed, 12 insertions(+), 1 deletion(-)
 
-> There may also be a potential that schedule() may be called.
+diff --git a/fs/kernfs/mount.c b/fs/kernfs/mount.c
+index d49606accb07..930026842359 100644
+--- a/fs/kernfs/mount.c
++++ b/fs/kernfs/mount.c
+@@ -16,6 +16,8 @@
+ #include <linux/namei.h>
+ #include <linux/seq_file.h>
+ #include <linux/exportfs.h>
++#include <linux/uuid.h>
++#include <linux/statfs.h>
+ 
+ #include "kernfs-internal.h"
+ 
+@@ -45,8 +47,15 @@ static int kernfs_sop_show_path(struct seq_file *sf, struct dentry *dentry)
+ 	return 0;
+ }
+ 
++int kernfs_statfs(struct dentry *dentry, struct kstatfs *buf)
++{
++	simple_statfs(dentry, buf);
++	buf->f_fsid = uuid_to_fsid(dentry->d_sb->s_uuid.b);
++	return 0;
++}
++
+ const struct super_operations kernfs_sops = {
+-	.statfs		= simple_statfs,
++	.statfs		= kernfs_statfs,
+ 	.drop_inode	= generic_delete_inode,
+ 	.evict_inode	= kernfs_evict_inode,
+ 
+@@ -351,6 +360,8 @@ int kernfs_get_tree(struct fs_context *fc)
+ 		}
+ 		sb->s_flags |= SB_ACTIVE;
+ 
++		uuid_gen(&sb->s_uuid);
++
+ 		down_write(&root->kernfs_supers_rwsem);
+ 		list_add(&info->node, &info->root->supers);
+ 		up_write(&root->kernfs_supers_rwsem);
+-- 
+2.41.0
 
-Do you mean the spinlocks with PREEMPT_RT or anything else? (That seems
-like the actual reason IIUC.)
-
-Thanks,
-Michal
-
---ktauyloq4o6i5icy
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-
-iHUEABYKAB0WIQQpEWyjXuwGT2dDBqAGvrMr/1gcjgUCZKwo+gAKCRAGvrMr/1gc
-jvoTAQDxUP5rRDvddw1/LeVeB6ciZXYjqioRtToDzNWdWiOIFAEAi10plOPMMm5q
-0JhePeVrhp89P6ZsW9Vqi4y25ZY1mA4=
-=qaQM
------END PGP SIGNATURE-----
-
---ktauyloq4o6i5icy--
