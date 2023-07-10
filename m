@@ -1,42 +1,87 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH] cgroup: remove unneeded return value of
- cgroup_rm_cftypes_locked()
-Date: Mon, 10 Jul 2023 09:40:01 -1000
-Message-ID: <ZKxeke6SfBe37Jso@slm.duckdns.org>
-References: <20230701073856.2095425-1-linmiaohe@huawei.com>
+From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Subject: Re: [PATCH] kernfs: attach uuid for every kernfs and report it in
+ fsid
+Date: Mon, 10 Jul 2023 21:40:23 +0200
+Message-ID: <2023071039-negate-stalemate-6987@gregkh>
+References: <20230710183338.58531-1-ivan@cloudflare.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20221208; t=1689018003; x=1691610003;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:sender:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=ivhLVKhACKnZhgX7GHkfgbJfc6Z11Wv6X0HCdw2KFv4=;
-        b=ig89NSSNCjVNIUtp+LTVjG7HGB9E2wmkZykr4cZYhYKHnJFmCdAGyPdHPq24XHeZ5t
-         hnJlw4JRuHka8VDdhWnaF6l4pvXy5vYPzk1YOJk0BMhyTBtJl/WAso1qUD9w8T5i4sfD
-         sP+V8Z0/l0dO+K6u8JrMmWsvjD3pq2ldsDSfS21zyooQOmjDkGzgZgoFFKiAVTodTlLf
-         HRa0L0HYZNmrg8tPBz/z9BB5+lD7zUb1TCDiTowsYQreCy4xRFPUtFrQGDjHM8UiLiFf
-         hK+bIaVW6ZCjCO7gDPGpGf0WMVGRe9PcCiGNrl7BvNDMKJNF3PA7fflK5i2ggufGx7if
-         /4pg==
-Sender: Tejun Heo <htejun-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linuxfoundation.org;
+        s=korg; t=1689018026;
+        bh=yuEwCfsCHkzRGHioN9r3RJD8uvoHEkZZ+tM35dQuu0U=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=H9ezdzpUTWP9gByiwB8dcAzwVtqLCIujEEl7pU3BLP9lsZMBRda+6wdyCdvFVU1+a
+         tb6xg1l7zOEtS0dUTiV6qT70egINkR4wmWENP3QeVGCrWtplajD48EtnXIckshPVMd
+         M58PpjbMwJ+E0BNXJtPj85WyAjGLKBtzTxByFuCU=
 Content-Disposition: inline
-In-Reply-To: <20230701073856.2095425-1-linmiaohe-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+In-Reply-To: <20230710183338.58531-1-ivan@cloudflare.com>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Miaohe Lin <linmiaohe-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Cc: hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Ivan Babrou <ivan@cloudflare.com>
+Cc: linux-fsdevel@vger.kernel.org, kernel-team@cloudflare.com, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, Tejun Heo <tj@kernel.org>, Hugh Dickins <hughd@google.com>, Andrew Morton <akpm@linux-foundation.org>, Amir Goldstein <amir73il@gmail.com>, Christoph Hellwig <hch@lst.de>, Jan Kara <jack@suse.cz>, Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>
 
-On Sat, Jul 01, 2023 at 03:38:56PM +0800, Miaohe Lin wrote:
-> The return value of cgroup_rm_cftypes_locked() is always 0. So remove
-> it to simplify the code. No functional change intended.
+On Mon, Jul 10, 2023 at 11:33:38AM -0700, Ivan Babrou wrote:
+> The following two commits added the same thing for tmpfs:
 > 
-> Signed-off-by: Miaohe Lin <linmiaohe-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+> * commit 2b4db79618ad ("tmpfs: generate random sb->s_uuid")
+> * commit 59cda49ecf6c ("shmem: allow reporting fanotify events with file handles on tmpfs")
+> 
+> Having fsid allows using fanotify, which is especially handy for cgroups,
+> where one might be interested in knowing when they are created or removed.
+> 
+> Signed-off-by: Ivan Babrou <ivan@cloudflare.com>
+> ---
+>  fs/kernfs/mount.c | 13 ++++++++++++-
+>  1 file changed, 12 insertions(+), 1 deletion(-)
+> 
+> diff --git a/fs/kernfs/mount.c b/fs/kernfs/mount.c
+> index d49606accb07..930026842359 100644
+> --- a/fs/kernfs/mount.c
+> +++ b/fs/kernfs/mount.c
+> @@ -16,6 +16,8 @@
+>  #include <linux/namei.h>
+>  #include <linux/seq_file.h>
+>  #include <linux/exportfs.h>
+> +#include <linux/uuid.h>
+> +#include <linux/statfs.h>
+>  
+>  #include "kernfs-internal.h"
+>  
+> @@ -45,8 +47,15 @@ static int kernfs_sop_show_path(struct seq_file *sf, struct dentry *dentry)
+>  	return 0;
+>  }
+>  
+> +int kernfs_statfs(struct dentry *dentry, struct kstatfs *buf)
+> +{
+> +	simple_statfs(dentry, buf);
+> +	buf->f_fsid = uuid_to_fsid(dentry->d_sb->s_uuid.b);
+> +	return 0;
+> +}
+> +
+>  const struct super_operations kernfs_sops = {
+> -	.statfs		= simple_statfs,
+> +	.statfs		= kernfs_statfs,
+>  	.drop_inode	= generic_delete_inode,
+>  	.evict_inode	= kernfs_evict_inode,
+>  
+> @@ -351,6 +360,8 @@ int kernfs_get_tree(struct fs_context *fc)
+>  		}
+>  		sb->s_flags |= SB_ACTIVE;
+>  
+> +		uuid_gen(&sb->s_uuid);
 
-Applied to cgroup/for-6.6. Please feel free to follow up with the comment
-addition Michal suggested.
+Since kernfs has as lot of nodes (like hundreds of thousands if not more
+at times, being created at boot time), did you just slow down creating
+them all, and increase the memory usage in a measurable way?
 
-Thanks.
+We were trying to slim things down, what userspace tools need this
+change?  Who is going to use it, and what for?
 
--- 
-tejun
+There were some benchmarks people were doing with booting large memory
+systems that you might want to reproduce here to verify that nothing is
+going to be harmed.
+
+thanks,
+
+greg k-h
