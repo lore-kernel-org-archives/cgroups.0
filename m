@@ -1,47 +1,108 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH v4 8/9] cgroup/cpuset: Documentation update for partition
-Date: Mon, 10 Jul 2023 14:42:54 -1000
-Message-ID: <ZKyljsbJgLNpsBLI@slm.duckdns.org>
-References: <20230627143508.1576882-1-longman@redhat.com>
- <20230627143508.1576882-9-longman@redhat.com>
- <ZKx4ZJowRhRtjZxB@slm.duckdns.org>
- <6d5aee58-f558-868c-76e0-0b58f8332110@redhat.com>
+From: Waiman Long <longman@redhat.com>
+Subject: Re: Expensive memory.stat + cpu.stat reads
+Date: Mon, 10 Jul 2023 20:44:15 -0400
+Message-ID: <d3f3a7bc-b181-a408-af1d-dd401c172cbf@redhat.com>
+References: <CABWYdi0c6__rh-K7dcM_pkf9BJdTRtAU08M43KO9ME4-dsgfoQ@mail.gmail.com>
+ <20230706062045.xwmwns7cm4fxd7iu@google.com>
+ <CABWYdi2pBaCrdKcM37oBomc+5W8MdRp1HwPpOExBGYfZitxyWA@mail.gmail.com>
 Mime-Version: 1.0
-Return-path: <linux-doc-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20221208; t=1689036177; x=1691628177;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:sender:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=wqRUB5GOcQ1b+cRv1jVfh7t7hV1+cLaTJfgnZElCik8=;
-        b=fStzMHOmVVj1XFBo8m8JIqOV4qRKdD6NBhDqvoD1ujGZh2PM6dkZ8MIBJ+nWzmHb4s
-         UqTFODF5I1PwXsOX3QeWHl+IGXLA/luXJ/HBORQffFBKWEF8mYCkoUGBNi9JXkSLmF/C
-         9mtLTd4VeoDQjwmzw2bjAPrjcJucK+SOmg2+XmTvGLYk6RyrraW+FuUg/KorzOo5C/gj
-         fP7cTvV3NeWUFAXE1s0ueIlyV6YMAAuDjNiCTv45hXoCDcWSJwc7E56efvP4eH6FwNHg
-         7GRnvAHRgCQ2K3DHxEnmoCDmBpyQ5Ao0kYyaUd66yabQyM1PyQhcz4h0ZAXL62K0rdlF
-         Yztg==
-Sender: Tejun Heo <htejun@gmail.com>
-Content-Disposition: inline
-In-Reply-To: <6d5aee58-f558-868c-76e0-0b58f8332110@redhat.com>
+Content-Transfer-Encoding: quoted-printable
+Return-path: <linux-kernel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1689036260;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=xh89EtaamRoEiOvIq1NF8NCe+vpDYxFReDkvfE9D/uk=;
+        b=BR1zNz1ZCVZwH2AxbQQsRswWHGFuyDPDNM4kWJB2/QMt5vKMi03944gMtpbOHiONaRYNcO
+        4Vkh+INgiDQfzEn4E+GrNYQSvu5fx7H5BnOf3+XJ4YwdJ/tVRiv8vgavW95jbaFQgjv1hL
+        H6u6OOkFwlD4pC6ZA3wvZyzreeQRx5w=
+Content-Language: en-US
+In-Reply-To: <CABWYdi2pBaCrdKcM37oBomc+5W8MdRp1HwPpOExBGYfZitxyWA@mail.gmail.com>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Waiman Long <longman@redhat.com>
-Cc: Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, Jonathan Corbet <corbet@lwn.net>, Shuah Khan <shuah@kernel.org>, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kselftest@vger.kernel.org, Juri Lelli <juri.lelli@redhat.com>, Valentin Schneider <vschneid@redhat.com>, Frederic Weisbecker <frederic@kernel.org>, Mrunal Patel <mpatel@redhat.com>, Ryan Phillips <rphillips@redhat.com>, Brent Rowsell <browsell@redhat.com>, Peter Hunt <pehunt@redhat.com>, Phil Auld <pauld@redhat.com>
+Content-Type: text/plain; charset="windows-1252"; format="flowed"
+To: Ivan Babrou <ivan@cloudflare.com>, Shakeel Butt <shakeelb@google.com>
+Cc: cgroups@vger.kernel.org, Linux MM <linux-mm@kvack.org>, kernel-team <kernel-team@cloudflare.com>, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, Roman Gushchin <roman.gushchin@linux.dev>, Muchun Song <muchun.song@linux.dev>, Andrew Morton <akpm@linux-foundation.org>, linux-kernel <linux-kernel@vger.kernel.org>
 
-Hello,
+On 7/10/23 19:21, Ivan Babrou wrote:
+> On Wed, Jul 5, 2023 at 11:20=E2=80=AFPM Shakeel Butt <shakeelb@google.com=
+> wrote:
+>> On Fri, Jun 30, 2023 at 04:22:28PM -0700, Ivan Babrou wrote:
+>>> Hello,
+>>>
+>>> We're seeing CPU load issues with cgroup stats retrieval. I made a
+>>> public gist with all the details, including the repro code (which
+>>> unfortunately requires heavily loaded hardware) and some flamegraphs:
+>>>
+>>> * https://gist.github.com/bobrik/5ba58fb75a48620a1965026ad30a0a13
+>>>
+>>> I'll repeat the gist of that gist here. Our repro has the following
+>>> output after a warm-up run:
+>>>
+>>> completed:  5.17s [manual / mem-stat + cpu-stat]
+>>> completed:  5.59s [manual / cpu-stat + mem-stat]
+>>> completed:  0.52s [manual / mem-stat]
+>>> completed:  0.04s [manual / cpu-stat]
+>>>
+>>> The first two lines do effectively the following:
+>>>
+>>> for _ in $(seq 1 1000); do cat /sys/fs/cgroup/system.slice/memory.stat
+>>> /sys/fs/cgroup/system.slice/cpu.stat > /dev/null
+>>>
+>>> The latter two are the same thing, but via two loops:
+>>>
+>>> for _ in $(seq 1 1000); do cat /sys/fs/cgroup/system.slice/cpu.stat >
+>>> /dev/null; done
+>>> for _ in $(seq 1 1000); do cat /sys/fs/cgroup/system.slice/memory.stat
+>>>> /dev/null; done
+>>> As you might've noticed from the output, splitting the loop into two
+>>> makes the code run 10x faster. This isn't great, because most
+>>> monitoring software likes to get all stats for one service before
+>>> reading the stats for the next one, which maps to the slow and
+>>> expensive way of doing this.
+>>>
+>>> We're running Linux v6.1 (the output is from v6.1.25) with no patches
+>>> that touch the cgroup or mm subsystems, so you can assume vanilla
+>>> kernel.
+>>>
+>>>  From the flamegraph it just looks like rstat flushing takes longer. I
+>>> used the following flags on an AMD EPYC 7642 system (our usual pick
+>>> cpu-clock was blaming spinlock irqrestore, which was questionable):
+>>>
+>>> perf -e cycles -g --call-graph fp -F 999 -- /tmp/repro
+>>>
+>>> Naturally, there are two questions that arise:
+>>>
+>>> * Is this expected (I guess not, but good to be sure)?
+>>> * What can we do to make this better?
+>>>
+>>> I am happy to try out patches or to do some tracing to help understand
+>>> this better.
+>> Hi Ivan,
+>>
+>> Thanks a lot, as always, for reporting this. This is not expected and
+>> should be fixed. Is the issue easy to repro or some specific workload or
+>> high load/traffic is required? Can you repro this with the latest linus
+>> tree? Also do you see any difference of root's cgroup.stat where this
+>> issue happens vs good state?
+> I'm afraid there's no easy way to reproduce. We see it from time to
+> time in different locations. The one that I was looking at for the
+> initial email does not reproduce it anymore:
 
-On Mon, Jul 10, 2023 at 08:21:43PM -0400, Waiman Long wrote:
-> > Wouldn't a partition root's cpus.exclusive always contain all of the CPUs in
-> > its cpus? Would it make sense for cpus.exclusive to be different from .cpus?
-> 
-> In auto-filled case, it should be the same as cpuset.cpus. I will clarify
-> that in the documentation. Thanks for catching that.
+My understanding of mem-stat and cpu-stat is that they are independent=20
+of each other. In theory, reading one shouldn't affect the performance=20
+of reading the others. Since you are doing mem-stat and cpu-stat reading=20
+repetitively in a loop, it is likely that all the data are in the cache=20
+most of the time resulting in very fast processing time. If it happens=20
+that the specific memory location of mem-stat and cpu-stat data are such=20
+that reading one will cause the other data to be flushed out of the=20
+cache and have to be re-read from memory again, you could see=20
+significant performance regression.
 
-When the user writes something to the file, what would it mena if the
-content differs from the cgroup's cpuset.cpus?
+It is one of the possible causes, but I may be wrong.
 
-Thanks.
+Cheers,
+Longman
 
--- 
-tejun
+
