@@ -1,176 +1,199 @@
-From: kernel test robot <lkp-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
-Subject: [tj-cgroup:for-next] BUILD SUCCESS
- 3ae0b773211ed0231e7ee3e8d28ec4ab9bc5134b
-Date: Tue, 11 Jul 2023 17:38:51 +0800
-Message-ID: <202307111749.89zcAkgJ-lkp@intel.com>
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1689068342; x=1720604342;
-  h=date:from:to:cc:subject:message-id;
-  bh=N1LdrD0T7R8hlsa1sWwu5bKiaBknxeYxY7mcVYyH/Nc=;
-  b=nMjGwYQiDqHUP0HpKlTzwlBTxVKDU0RO8UCM6mI7ggqyxnpWUs8R2uvq
-   I1ySHeNGZqBCMBOijzti61k6pOAnc8Av3ADmSGeMeALmrhLHAeoHfFfX7
-   o+zrEgvEVKodjEOHOlRJ+bFf6TT9KR0dGHpN2V/jYwHw5+IACSeju2bPP
-   pDLFEWcxQn+DFVU2ahRXnUGBjt6GQoTAWLb1YnyjsXKPFSY9Udtl31RRV
-   Ss+JPn6wbap6LzHCQnqpMsm7EXP/1p5REGFPDvn8NPztSPbpMaQYZhle1
-   ca9xj9mPoM9A3iDYcmzS+ZJggdrlALge8W8nBH20mpFOFf+uk63eAgX4n
-   g==;
+From: Amir Goldstein <amir73il@gmail.com>
+Subject: Re: [PATCH] kernfs: attach uuid for every kernfs and report it in fsid
+Date: Tue, 11 Jul 2023 12:49:05 +0300
+Message-ID: <CAOQ4uxiFhkSM2pSNLCE6cLz6mhYOvk5D7vDsghVTqy9cDqeqew@mail.gmail.com>
+References: <20230710183338.58531-1-ivan@cloudflare.com> <2023071039-negate-stalemate-6987@gregkh>
+ <CABWYdi39+TJd1qV3nWs_eYc7XMC0RvxG22ihfq7rzuPaNvn1cQ@mail.gmail.com>
+Mime-Version: 1.0
+Content-Transfer-Encoding: quoted-printable
+Return-path: <linux-fsdevel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20221208; t=1689068956; x=1691660956;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=cgTQWK83Q6lSONgCo8OzSJU3WKSIiULajv7A0glKus8=;
+        b=SKiWdbryeyTtX1nzsOkUQ3ulE0JKKwe1cRwSAp+Z75vs3LMIdpm+2BSaoraEk/cBs+
+         2fcdpFxelIs5hSAnKrIWjQKhkC+5b6TRvDQE96zdN7qE2AmwvnU8yPNAhj9ZFySIQB/A
+         vbuqpCLHXCZ1psfpPlT7fixcRkg+KYIkJsH75WzfyMbLwgKkFXt3vnXafDTyrDutEEsa
+         oU7L7ltPua2vUjRTGrEljK2oU26wUXuZBVOJpXnfazMcx1pfDA3ZZ+eYDCbMb7UjCiB5
+         Q5s2Sx9evpa67plRQVvfXtpyOTlycAycxbHoL+H+JalSgihYx4Q6pghUuINvkapK/uEq
+         Cv8A==
+In-Reply-To: <CABWYdi39+TJd1qV3nWs_eYc7XMC0RvxG22ihfq7rzuPaNvn1cQ@mail.gmail.com>
 List-ID: <cgroups.vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Type: text/plain; charset="utf-8"
+To: Ivan Babrou <ivan@cloudflare.com>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>, linux-fsdevel@vger.kernel.org, kernel-team@cloudflare.com, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, Tejun Heo <tj@kernel.org>, Hugh Dickins <hughd@google.com>, Andrew Morton <akpm@linux-foundation.org>, Christoph Hellwig <hch@lst.de>, Jan Kara <jack@suse.cz>, Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, Christian Brauner <brauner@kernel.org>
 
-tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git for-next
-branch HEAD: 3ae0b773211ed0231e7ee3e8d28ec4ab9bc5134b  cgroup/cpuset: Allow suppression of sched domain rebuild in update_cpumasks_hier()
+On Tue, Jul 11, 2023 at 12:21=E2=80=AFAM Ivan Babrou <ivan@cloudflare.com> =
+wrote:
+>
+> On Mon, Jul 10, 2023 at 12:40=E2=80=AFPM Greg Kroah-Hartman
+> <gregkh@linuxfoundation.org> wrote:
+> >
+> > On Mon, Jul 10, 2023 at 11:33:38AM -0700, Ivan Babrou wrote:
+> > > The following two commits added the same thing for tmpfs:
+> > >
+> > > * commit 2b4db79618ad ("tmpfs: generate random sb->s_uuid")
+> > > * commit 59cda49ecf6c ("shmem: allow reporting fanotify events with f=
+ile handles on tmpfs")
+> > >
+> > > Having fsid allows using fanotify, which is especially handy for cgro=
+ups,
+> > > where one might be interested in knowing when they are created or rem=
+oved.
+> > >
+> > > Signed-off-by: Ivan Babrou <ivan@cloudflare.com>
+> > > ---
+> > >  fs/kernfs/mount.c | 13 ++++++++++++-
+> > >  1 file changed, 12 insertions(+), 1 deletion(-)
+> > >
+> > > diff --git a/fs/kernfs/mount.c b/fs/kernfs/mount.c
+> > > index d49606accb07..930026842359 100644
+> > > --- a/fs/kernfs/mount.c
+> > > +++ b/fs/kernfs/mount.c
+> > > @@ -16,6 +16,8 @@
+> > >  #include <linux/namei.h>
+> > >  #include <linux/seq_file.h>
+> > >  #include <linux/exportfs.h>
+> > > +#include <linux/uuid.h>
+> > > +#include <linux/statfs.h>
+> > >
+> > >  #include "kernfs-internal.h"
+> > >
+> > > @@ -45,8 +47,15 @@ static int kernfs_sop_show_path(struct seq_file *s=
+f, struct dentry *dentry)
+> > >       return 0;
+> > >  }
+> > >
+> > > +int kernfs_statfs(struct dentry *dentry, struct kstatfs *buf)
+> > > +{
+> > > +     simple_statfs(dentry, buf);
+> > > +     buf->f_fsid =3D uuid_to_fsid(dentry->d_sb->s_uuid.b);
+> > > +     return 0;
+> > > +}
+> > > +
+> > >  const struct super_operations kernfs_sops =3D {
+> > > -     .statfs         =3D simple_statfs,
+> > > +     .statfs         =3D kernfs_statfs,
+> > >       .drop_inode     =3D generic_delete_inode,
+> > >       .evict_inode    =3D kernfs_evict_inode,
+> > >
+> > > @@ -351,6 +360,8 @@ int kernfs_get_tree(struct fs_context *fc)
+> > >               }
+> > >               sb->s_flags |=3D SB_ACTIVE;
+> > >
+> > > +             uuid_gen(&sb->s_uuid);
+> >
+> > Since kernfs has as lot of nodes (like hundreds of thousands if not mor=
+e
+> > at times, being created at boot time), did you just slow down creating
+> > them all, and increase the memory usage in a measurable way?
+>
+> This is just for the superblock, not every inode. The memory increase
+> is one UUID per kernfs instance (there are maybe 10 of them on a basic
+> system), which is trivial. Same goes for CPU usage.
+>
+> > We were trying to slim things down, what userspace tools need this
+> > change?  Who is going to use it, and what for?
+>
+> The one concrete thing is ebpf_exporter:
+>
+> * https://github.com/cloudflare/ebpf_exporter
+>
+> I want to monitor cgroup changes, so that I can have an up to date map
+> of inode -> cgroup path, so that I can resolve the value returned from
+> bpf_get_current_cgroup_id() into something that a human can easily
+> grasp (think system.slice/nginx.service). Currently I do a full sweep
+> to build a map, which doesn't work if a cgroup is short lived, as it
+> just disappears before I can resolve it. Unfortunately, systemd
+> recycles cgroups on restart, changing inode number, so this is a very
+> real issue.
+>
+> There's also this old wiki page from systemd:
+>
+> * https://freedesktop.org/wiki/Software/systemd/Optimizations
+>
+> Quoting from there:
+>
+> > Get rid of systemd-cgroups-agent. Currently, whenever a systemd cgroup =
+runs empty a tool "systemd-cgroups-agent" is invoked by the kernel which th=
+en notifies systemd about it. The need for this tool should really go away,=
+ which will save a number of forked processes at boot, and should make thin=
+gs faster (especially shutdown). This requires introduction of a new kernel=
+ interface to get notifications for cgroups running empty, for example via =
+fanotify() on cgroupfs.
+>
+> So a similar need to mine, but for different systemd-related needs.
+>
+> Initially I tried adding this for cgroup fs only, but the problem felt
+> very generic, so I pivoted to having it in kernfs instead, so that any
+> kernfs based filesystem would benefit.
+>
+> Given pretty much non-existing overhead and simplicity of this, I
+> think it's a change worth doing, unless there's a good reason to not
+> do it. I cc'd plenty of people to make sure it's not a bad decision.
+>
 
-elapsed time: 720m
+I agree. I think it was a good decision.
+I have some followup questions though.
 
-configs tested: 135
-configs skipped: 8
+I guess your use case cares about the creation of cgroups?
+as long as the only way to create a cgroup is via vfs
+vfs_mkdir() -> ... cgroup_mkdir()
+fsnotify_mkdir() will be called.
+Is that a correct statement?
+Because if not, then explicit fsnotify_mkdir() calls may be needed
+similar to tracefs/debugfs.
 
-The following configs have been built successfully.
-More configs may be tested in the coming days.
+I don't think that the statement holds for dieing cgroups,
+so explicit fsnotify_rmdir() are almost certainly needed to make
+inotify/fanotify monitoring on cgroups complete.
 
-tested configs:
-alpha                            allyesconfig   gcc  
-alpha                               defconfig   gcc  
-alpha                randconfig-r015-20230710   gcc  
-arc                              allyesconfig   gcc  
-arc                                 defconfig   gcc  
-arc                  randconfig-r024-20230710   gcc  
-arc                  randconfig-r043-20230710   gcc  
-arc                  randconfig-r043-20230711   gcc  
-arm                              allmodconfig   gcc  
-arm                              allyesconfig   gcc  
-arm                                 defconfig   gcc  
-arm                  randconfig-r005-20230710   clang
-arm                  randconfig-r025-20230710   gcc  
-arm                  randconfig-r046-20230710   gcc  
-arm                  randconfig-r046-20230711   clang
-arm64                            allyesconfig   gcc  
-arm64                               defconfig   gcc  
-arm64                randconfig-r014-20230710   clang
-arm64                randconfig-r025-20230710   clang
-arm64                randconfig-r034-20230710   gcc  
-csky                                defconfig   gcc  
-hexagon              randconfig-r035-20230710   clang
-hexagon              randconfig-r041-20230710   clang
-hexagon              randconfig-r041-20230711   clang
-hexagon              randconfig-r045-20230710   clang
-hexagon              randconfig-r045-20230711   clang
-i386                             allyesconfig   gcc  
-i386         buildonly-randconfig-r004-20230710   gcc  
-i386         buildonly-randconfig-r004-20230711   clang
-i386         buildonly-randconfig-r005-20230710   gcc  
-i386         buildonly-randconfig-r005-20230711   clang
-i386         buildonly-randconfig-r006-20230710   gcc  
-i386         buildonly-randconfig-r006-20230711   clang
-i386                              debian-10.3   gcc  
-i386                                defconfig   gcc  
-i386                 randconfig-i001-20230710   gcc  
-i386                 randconfig-i002-20230710   gcc  
-i386                 randconfig-i003-20230710   gcc  
-i386                 randconfig-i004-20230710   gcc  
-i386                 randconfig-i005-20230710   gcc  
-i386                 randconfig-i006-20230710   gcc  
-i386                 randconfig-i011-20230710   clang
-i386                 randconfig-i012-20230710   clang
-i386                 randconfig-i013-20230710   clang
-i386                 randconfig-i014-20230710   clang
-i386                 randconfig-i015-20230710   clang
-i386                 randconfig-i016-20230710   clang
-i386                 randconfig-r024-20230710   clang
-i386                 randconfig-r031-20230710   gcc  
-loongarch                        allmodconfig   gcc  
-loongarch                         allnoconfig   gcc  
-loongarch                           defconfig   gcc  
-loongarch            randconfig-r001-20230710   gcc  
-loongarch            randconfig-r022-20230710   gcc  
-m68k                             allmodconfig   gcc  
-m68k                             allyesconfig   gcc  
-m68k                                defconfig   gcc  
-m68k                 randconfig-r003-20230710   gcc  
-m68k                 randconfig-r012-20230710   gcc  
-m68k                 randconfig-r026-20230710   gcc  
-m68k                 randconfig-r034-20230710   gcc  
-microblaze           randconfig-r011-20230710   gcc  
-microblaze           randconfig-r013-20230710   gcc  
-microblaze           randconfig-r032-20230710   gcc  
-microblaze           randconfig-r035-20230710   gcc  
-mips                             allmodconfig   gcc  
-mips                             allyesconfig   gcc  
-mips                 randconfig-r002-20230710   clang
-mips                 randconfig-r014-20230710   gcc  
-nios2                               defconfig   gcc  
-nios2                randconfig-r023-20230710   gcc  
-openrisc             randconfig-r003-20230710   gcc  
-openrisc             randconfig-r006-20230710   gcc  
-openrisc             randconfig-r021-20230710   gcc  
-parisc                           allyesconfig   gcc  
-parisc                              defconfig   gcc  
-parisc               randconfig-r032-20230710   gcc  
-parisc64                            defconfig   gcc  
-powerpc                          allmodconfig   gcc  
-powerpc                           allnoconfig   gcc  
-riscv                            allmodconfig   gcc  
-riscv                             allnoconfig   gcc  
-riscv                            allyesconfig   gcc  
-riscv                               defconfig   gcc  
-riscv                randconfig-r002-20230710   gcc  
-riscv                randconfig-r013-20230710   clang
-riscv                randconfig-r026-20230710   clang
-riscv                randconfig-r042-20230711   gcc  
-riscv                          rv32_defconfig   gcc  
-s390                             allmodconfig   gcc  
-s390                             allyesconfig   gcc  
-s390                                defconfig   gcc  
-s390                 randconfig-r004-20230710   gcc  
-s390                 randconfig-r031-20230710   gcc  
-s390                 randconfig-r036-20230710   gcc  
-s390                 randconfig-r044-20230710   clang
-s390                 randconfig-r044-20230711   gcc  
-sh                               allmodconfig   gcc  
-sh                   randconfig-r004-20230710   gcc  
-sh                   randconfig-r033-20230710   gcc  
-sparc                            allyesconfig   gcc  
-sparc                               defconfig   gcc  
-sparc                randconfig-r005-20230710   gcc  
-sparc64              randconfig-r016-20230710   gcc  
-um                               allmodconfig   clang
-um                                allnoconfig   clang
-um                               allyesconfig   clang
-um                                  defconfig   gcc  
-um                             i386_defconfig   gcc  
-um                           x86_64_defconfig   gcc  
-x86_64                           allyesconfig   gcc  
-x86_64       buildonly-randconfig-r001-20230710   gcc  
-x86_64       buildonly-randconfig-r001-20230711   clang
-x86_64       buildonly-randconfig-r002-20230710   gcc  
-x86_64       buildonly-randconfig-r002-20230711   clang
-x86_64       buildonly-randconfig-r003-20230710   gcc  
-x86_64       buildonly-randconfig-r003-20230711   clang
-x86_64                              defconfig   gcc  
-x86_64                                  kexec   gcc  
-x86_64               randconfig-r011-20230710   clang
-x86_64               randconfig-x001-20230710   clang
-x86_64               randconfig-x002-20230710   clang
-x86_64               randconfig-x003-20230710   clang
-x86_64               randconfig-x004-20230710   clang
-x86_64               randconfig-x005-20230710   clang
-x86_64               randconfig-x006-20230710   clang
-x86_64               randconfig-x011-20230710   gcc  
-x86_64               randconfig-x012-20230710   gcc  
-x86_64               randconfig-x013-20230710   gcc  
-x86_64               randconfig-x014-20230710   gcc  
-x86_64               randconfig-x015-20230710   gcc  
-x86_64               randconfig-x016-20230710   gcc  
-x86_64                          rhel-8.3-rust   clang
-x86_64                               rhel-8.3   gcc  
-xtensa               randconfig-r033-20230710   gcc  
+I am on the fence w.r.t making the above a prerequisite to merging
+your patch.
 
--- 
-0-DAY CI Kernel Test Service
-https://github.com/intel/lkp-tests/wiki
+One the one hand, inotify monitoring of cgroups directory was already
+possible (I think?) with the mentioned shortcomings for a long time.
+
+On the other hand, we have an opportunity to add support to fanotify
+monitoring of cgroups directory only after the missing fsnotify hooks
+are added, making fanotify API a much more reliable option for
+monitoring cgroups.
+
+So I am leaning towards requiring the missing fsnotify hooks before
+attaching a unique fsid to cgroups/kernfs.
+
+In any case, either with or without the missing hooks, I would not
+want this patch merged until Jan had a chance to look at the
+implications and weigh in on the missing hooks question.
+Jan is on vacation for three weeks, so in the meanwhile, feel free
+to implement and test the missing hooks or wait for his judgement.
+
+On an unrelated side topic,
+I would like to point your attention to this comment in the patch that
+was just merged to v6.5-rc1:
+
+69562eb0bd3e ("fanotify: disallow mount/sb marks on kernel internal pseudo =
+fs")
+
+        /*
+         * mount and sb marks are not allowed on kernel internal pseudo fs,
+         * like pipe_mnt, because that would subscribe to events on all the
+         * anonynous pipes in the system.
+         *
+         * SB_NOUSER covers all of the internal pseudo fs whose objects are=
+ not
+         * exposed to user's mount namespace, but there are other SB_KERNMO=
+UNT
+         * fs, like nsfs, debugfs, for which the value of allowing sb and m=
+ount
+         * mark is questionable. For now we leave them alone.
+         */
+
+My question to you, as the only user I know of for fanotify FAN_REPORT_FID
+on SB_KERNMOUNT, do you have plans to use a mount or filesystem mark
+to monitor cgroups? or only inotify-like directory watches?
+
+Thanks,
+Amir.
