@@ -1,86 +1,84 @@
-From: Miaohe Lin <linmiaohe@huawei.com>
-Subject: [PATCH] cgroup: put cgroup_tryget_css() inside CONFIG_CGROUP_SCHED
-Date: Tue, 11 Jul 2023 10:38:20 +0800
-Message-ID: <20230711023820.3854596-1-linmiaohe@huawei.com>
+From: Miaohe Lin <linmiaohe-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH] cgroup/cpuset: update parent subparts cpumask while
+ holding css refcnt
+Date: Tue, 11 Jul 2023 10:52:02 +0800
+Message-ID: <30b1f809-a11b-efe8-289c-04a801f20207@huawei.com>
+References: <20230701065049.1758266-1-linmiaohe@huawei.com>
+ <fbabnjfly5w6fxrhe3eu6ebspngz2hd3tqs6rrbropcdvylnhs@ayjdpq73kwui>
+ <74f1906e-fe58-c745-a851-b160374f7acf@redhat.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7BIT
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 8bit
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <74f1906e-fe58-c745-a851-b160374f7acf-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Content-Language: en-US
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-To: tj@kernel.org, hannes@cmpxchg.org, sfr@canb.auug.org.au, lizefan.x@bytedance.com
-Cc: cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, linux-next@vger.kernel.org, linmiaohe@huawei.com
+To: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, =?UTF-8?Q?Michal_Koutn=c3=bd?= <mkoutny-IBi9RG/b67k@public.gmane.org>
+Cc: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-Put cgroup_tryget_css() inside CONFIG_CGROUP_SCHED to fix the warning
-of 'cgroup_tryget_css' defined but not used [-Wunused-function] when
-CONFIG_CGROUP_SCHED is disabled.
+On 2023/7/10 23:40, Waiman Long wrote:
+> On 7/10/23 11:11, Michal Koutný wrote:
+>> Hello.
+>>
+>> On Sat, Jul 01, 2023 at 02:50:49PM +0800, Miaohe Lin <linmiaohe-hv44wF8Li93QT0dZR+AlfA@public.gmane.org> wrote:
+>>> --- a/kernel/cgroup/cpuset.c
+>>> +++ b/kernel/cgroup/cpuset.c
+>>> @@ -1806,9 +1806,12 @@ static int update_cpumask(struct cpuset *cs, struct cpuset *trialcs,
+>>>           cpuset_for_each_child(cp, css, parent)
+>>>               if (is_partition_valid(cp) &&
+>>>                   cpumask_intersects(trialcs->cpus_allowed, cp->cpus_allowed)) {
+>>> +                if (!css_tryget_online(&cp->css))
+>>> +                    continue;
+>>>                   rcu_read_unlock();
+>>>                   update_parent_subparts_cpumask(cp, partcmd_invalidate, NULL, &tmp);
+>>>                   rcu_read_lock();
+>>> +                css_put(&cp->css);
+>> Apologies for a possibly noob question -- why is RCU read lock
+>> temporarily dropped within the loop?
+>> (Is it only because of callback_lock or cgroup_file_kn_lock (via
+>> notify_partition_change()) on PREEMPT_RT?)
+>>
+>>
+>>
+>> [
+>> OT question:
+>>     cpuset_for_each_child(cp, css, parent)                (1)
+>>         if (is_partition_valid(cp) &&
+>>             cpumask_intersects(trialcs->cpus_allowed, cp->cpus_allowed)) {
+>>             if (!css_tryget_online(&cp->css))
+>>                 continue;
+>>             rcu_read_unlock();
+>>             update_parent_subparts_cpumask(cp, partcmd_invalidate, NULL, &tmp);
+>>               ...
+>>               update_tasks_cpumask(cp->parent)
+>>                 ...
+>>                 css_task_iter_start(&cp->parent->css, 0, &it);    (2)
+>>                   ...
+>>             rcu_read_lock();
+>>             css_put(&cp->css);
+>>         }
+>>
+>> May this touch each task same number of times as its depth within
+>> herarchy?
+> 
+> I believe the primary reason is because update_parent_subparts_cpumask() can potential run for quite a while. So we don't want to hold the rcu_read_lock for too long. There may also be a potential that schedule() may be called.
 
-Signed-off-by: Miaohe Lin <linmiaohe@huawei.com>
----
- kernel/cgroup/cgroup.c | 44 +++++++++++++++++++++---------------------
- 1 file changed, 22 insertions(+), 22 deletions(-)
+IMHO, the reason should be as same as the below commit:
 
-diff --git a/kernel/cgroup/cgroup.c b/kernel/cgroup/cgroup.c
-index b990eda6b3cd..46401157028e 100644
---- a/kernel/cgroup/cgroup.c
-+++ b/kernel/cgroup/cgroup.c
-@@ -492,28 +492,6 @@ static struct cgroup_subsys_state *cgroup_css(struct cgroup *cgrp,
- 		return &cgrp->self;
- }
- 
--/**
-- * cgroup_tryget_css - try to get a cgroup's css for the specified subsystem
-- * @cgrp: the cgroup of interest
-- * @ss: the subsystem of interest
-- *
-- * Find and get @cgrp's css associated with @ss.  If the css doesn't exist
-- * or is offline, %NULL is returned.
-- */
--static struct cgroup_subsys_state *cgroup_tryget_css(struct cgroup *cgrp,
--						     struct cgroup_subsys *ss)
--{
--	struct cgroup_subsys_state *css;
--
--	rcu_read_lock();
--	css = cgroup_css(cgrp, ss);
--	if (css && !css_tryget_online(css))
--		css = NULL;
--	rcu_read_unlock();
--
--	return css;
--}
--
- /**
-  * cgroup_e_css_by_mask - obtain a cgroup's effective css for the specified ss
-  * @cgrp: the cgroup of interest
-@@ -3655,6 +3633,28 @@ static int cgroup_stat_show(struct seq_file *seq, void *v)
- }
- 
- #ifdef CONFIG_CGROUP_SCHED
-+/**
-+ * cgroup_tryget_css - try to get a cgroup's css for the specified subsystem
-+ * @cgrp: the cgroup of interest
-+ * @ss: the subsystem of interest
-+ *
-+ * Find and get @cgrp's css associated with @ss.  If the css doesn't exist
-+ * or is offline, %NULL is returned.
-+ */
-+static struct cgroup_subsys_state *cgroup_tryget_css(struct cgroup *cgrp,
-+						     struct cgroup_subsys *ss)
-+{
-+	struct cgroup_subsys_state *css;
-+
-+	rcu_read_lock();
-+	css = cgroup_css(cgrp, ss);
-+	if (css && !css_tryget_online(css))
-+		css = NULL;
-+	rcu_read_unlock();
-+
-+	return css;
-+}
-+
- static int cgroup_extra_stat_show(struct seq_file *seq, int ssid)
- {
- 	struct cgroup *cgrp = seq_css(seq)->cgroup;
--- 
-2.33.0
+commit 2bdfd2825c9662463371e6691b1a794e97fa36b4
+Author: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Date:   Wed Feb 2 22:31:03 2022 -0500
+
+    cgroup/cpuset: Fix "suspicious RCU usage" lockdep warning
+
+    It was found that a "suspicious RCU usage" lockdep warning was issued
+    with the rcu_read_lock() call in update_sibling_cpumasks().  It is
+    because the update_cpumasks_hier() function may sleep. So we have
+    to release the RCU lock, call update_cpumasks_hier() and reacquire
+    it afterward.
+
+    Also add a percpu_rwsem_assert_held() in update_sibling_cpumasks()
+    instead of stating that in the comment.
+
+Thanks both.
 
