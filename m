@@ -1,52 +1,65 @@
-From: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH v4 8/9] cgroup/cpuset: Documentation update for partition
-Date: Mon, 10 Jul 2023 20:21:43 -0400
-Message-ID: <6d5aee58-f558-868c-76e0-0b58f8332110@redhat.com>
+From: Waiman Long <longman@redhat.com>
+Subject: Re: [PATCH v4 0/9] cgroup/cpuset: Support remote partitions
+Date: Mon, 10 Jul 2023 20:33:11 -0400
+Message-ID: <305038a0-1db8-3d0d-3447-48be1f03d41c@redhat.com>
 References: <20230627143508.1576882-1-longman@redhat.com>
- <20230627143508.1576882-9-longman@redhat.com>
- <ZKx4ZJowRhRtjZxB@slm.duckdns.org>
+ <ZKxzTrN2yiKfXndI@slm.duckdns.org>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <linux-doc-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1689034909;
+        s=mimecast20190719; t=1689035598;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=3lffsLwd9raQCh04kyVM/H+XhSacCMhW6kPfQWTCBjE=;
-        b=QqvpdXlChr2hJa9bGbDD1AfRdDnBRAPEeXjtNP1fxJXB2Pa/3RYcb5pEJqDyNkJeYnOQQ4
-        kJz8bW6qDSRTY7NpEr67BFDh4uo+2tyOh+lvcNjpLJaG+4tO8sUkRLjFOCrv/jI5UghS9T
-        trPn00pJK3sMCzlYAcB4yt3BhT6PfuI=
+        bh=2jCZmfZzjejGxfBXjkcFRYAyVQ6S1vH30csYuUaEOJU=;
+        b=Vir5G9FA0zcka2wPLOucbm06WgO47HkZYR62ZNKhOJWbMiU8oaPTw9Lsyc7orGrZeU8+zs
+        EPlozDn4GidPTjNyNSV7KT+87AFjNGJC2u3+ZxPt/nsnsBF/msdrKl47hVmQumo6yJsvkl
+        yafBID8sv23oCUg5fynQn6IHMYGypSg=
 Content-Language: en-US
-In-Reply-To: <ZKx4ZJowRhRtjZxB-NiLfg/pYEd1N0TnZuCh8vA@public.gmane.org>
+In-Reply-To: <ZKxzTrN2yiKfXndI@slm.duckdns.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"; format="flowed"
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Jonathan Corbet <corbet-T1hC0tSOHrs@public.gmane.org>, Shuah Khan <shuah-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kselftest-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Juri Lelli <juri.lelli-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Valentin Schneider <vschneid-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Frederic Weisbecker <frederic-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Mrunal Patel <mpatel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Ryan Phillips <rphillips-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Brent Rowsell <browsell-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Peter Hunt <pehunt-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Phil Auld <pauld-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+To: Tejun Heo <tj@kernel.org>
+Cc: Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, Jonathan Corbet <corbet@lwn.net>, Shuah Khan <shuah@kernel.org>, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kselftest@vger.kernel.org, Juri Lelli <juri.lelli@redhat.com>, Valentin Schneider <vschneid@redhat.com>, Frederic Weisbecker <frederic@kernel.org>, Mrunal Patel <mpatel@redhat.com>, Ryan Phillips <rphillips@redhat.com>, Brent Rowsell <browsell@redhat.com>, Peter Hunt <pehunt@redhat.com>, Phil Auld <pauld@redhat.com>
 
-On 7/10/23 17:30, Tejun Heo wrote:
-> Hello,
+On 7/10/23 17:08, Tejun Heo wrote:
+> Hello, Waiman.
 >
-> On Tue, Jun 27, 2023 at 10:35:07AM -0400, Waiman Long wrote:
+> I applied the prep patches. They look good on their own.
+>
+> On Tue, Jun 27, 2023 at 10:34:59AM -0400, Waiman Long wrote:
 > ...
->> +	There are two types of partitions - local and remote.  A local
->> +	partition is one whose parent cgroup is also a valid partition
->> +	root.  A remote partition is one whose parent cgroup is not a
->> +	valid partition root itself.  Writing to "cpuset.cpus.exclusive"
->> +	is not mandatory for the creation of a local partition as its
->> +	"cpuset.cpus.exclusive" file will be filled in automatically if
->> +	it is not set.	The automaticaly set value will be based on its
->> +	"cpuset.cpus" value.  Writing the proper "cpuset.cpus.exclusive"
->> +	values down the cgroup hierarchy is mandatory for the creation
->> +	of a remote partition.
-> Wouldn't a partition root's cpus.exclusive always contain all of the CPUs in
-> its cpus? Would it make sense for cpus.exclusive to be different from .cpus?
+>> cpuset. Unlike "cpuset.cpus", invalid input to "cpuset.cpus.exclusive"
+>> will be rejected with an error. This new control file has no effect on
+> We cannot maintain this as an invariant tho, right? For example, what
+> happens when a parent cgroup later wants to withdraw a CPU from its
+> cpuset.cpus which should always be allowed regardless of what its
+> descendants are doing? Even with cpus.exclusive itself, I think it'd be
+> important to always allow ancestors to be able to withdraw from the
+> commitment as with other resources. I suppose one can argue that giving
+> exclusive access to CPUs is a special case which doesn't follow this rule
+> but cpus.exclusive having to be nested inside cpus which is subject to that
+> rule makes that combination too contorted.
 >
-> Thanks.
+> Would it be difficult to follow how isolation modes behave when the target
+> configuration can't be achieved?
 
-In auto-filled case, it should be the same as cpuset.cpus. I will 
-clarify that in the documentation. Thanks for catching that.
+I would like to clarify that withdrawal of CPUs from 
+cpuset.cpus.exclusive is always allowed. It is the addition of CPUs not 
+presents in cpuset.cpus that will be rejected. The invariant is that 
+cpuset.cpus.exclusive must always be a subset of cpuset.cpus. Any change 
+that violates this rule is not allowed. Alternately I can silently 
+dropped the offending CPUs without returning an error, but that may 
+surprise users.
+
+BTW, withdrawal of CPUs from cpuset.cpus will also withdraw them from 
+cpuset.cpus.exclusive, if present. This allows the partition code to use 
+cpuset.cpus.exclusive directly to determine the allowable exclusive CPUs 
+without doing an intersection with cpuset.cpus each time it is used.
+
+Please let me know if you want a different behavior.
 
 Cheers,
 Longman
