@@ -1,48 +1,40 @@
 From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH] cgroup: remove unneeded return value of
- cgroup_rm_cftypes_locked()
-Date: Tue, 11 Jul 2023 11:40:23 -1000
-Message-ID: <ZK3MR5liSMSrlKVm@slm.duckdns.org>
-References: <20230701073856.2095425-1-linmiaohe@huawei.com>
- <ZKxeke6SfBe37Jso@slm.duckdns.org>
- <27428e7d-e280-2f78-7856-056d4e174057@huawei.com>
+Subject: Re: [PATCH] cgroup: put cgroup_tryget_css() inside
+ CONFIG_CGROUP_SCHED
+Date: Tue, 11 Jul 2023 11:46:28 -1000
+Message-ID: <ZK3NtKHk_w7XoAVZ@slm.duckdns.org>
+References: <20230711023820.3854596-1-linmiaohe@huawei.com>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20221208; t=1689111625; x=1691703625;
+        d=gmail.com; s=20221208; t=1689111990; x=1691703990;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:sender:from:to:cc:subject:date:message-id
          :reply-to;
-        bh=bzWAKJljFotAV5RnvCyAUBH4oa3yNrE3i5b8cXS4wDs=;
-        b=H01SSHIb1kS93H6HNYS/RLOyZc28d9HFwfIOpFx4oZPNYDhZvhiUTVu1TkqFq3e7Yy
-         DcuRfyEW04VrLtmT/urRmUi6zZ00CHAOW2ABnQUc9rtno7jgsA1XeG366wfTuHiFm/kK
-         gUMlKOcH2Pfgf/f2VvC2K97MrnNyyaJ2rWY9rBhQKn86qSW+UCWTn/rIMPuO+Mf7aqgV
-         e5evxzYfzYBiAGDi77p53xjSWUcVXvE/wfo6LlsPIk8HBOT+S7jFgkINsbxjSq6hccQ5
-         UhyInggwinXaLec/Q+VgspeCqGvvaV9uS+kZhwBMX2MQjHRYW20uZCqibWzIlde+Dy7e
-         9Urw==
+        bh=kyzlh81U6Ju2jWhDiLjgeqy7+sksvV31PzhzVl8MBhQ=;
+        b=aPy0SNz9dz6HANDuditq55E3EjWQCri+A9re2o5i05xDNLrJFWA3izghbC7A0uVoJX
+         QXALQHOutvp97mrZej0leDFB9kp4fGa85LoQzCdj+tc3cLv8A4jq4qxl8mtrGA4KRm1I
+         kZPJXtt6NQJLOZ+QnPOuM4vJLWnGnmOMb6SyFhJ+htPUt3j7eGUQAiCWFv/6KBkW3zqJ
+         TSuapNB3+JMMaZ32q/jC9za6PUB4IoZEonxcNSv0qFTuFGXVfGDQGXDQjK/lapCVElIf
+         NZN2Y0E5H6oI5UHwpiITD7sDl1DcXH9Ei8bQ2+2j3rs5OlXpTtdihDw6hMW1tCJ0l0KT
+         00rQ==
 Sender: Tejun Heo <htejun-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 Content-Disposition: inline
-In-Reply-To: <27428e7d-e280-2f78-7856-056d4e174057-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+In-Reply-To: <20230711023820.3854596-1-linmiaohe-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: Miaohe Lin <linmiaohe-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Cc: hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Cc: hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, sfr-3FnU+UHB4dNDw9hX6IcOSA@public.gmane.org, lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-next-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Tue, Jul 11, 2023 at 11:00:58AM +0800, Miaohe Lin wrote:
-> On 2023/7/11 3:40, Tejun Heo wrote:
-> > On Sat, Jul 01, 2023 at 03:38:56PM +0800, Miaohe Lin wrote:
-> >> The return value of cgroup_rm_cftypes_locked() is always 0. So remove
-> >> it to simplify the code. No functional change intended.
-> >>
-> >> Signed-off-by: Miaohe Lin <linmiaohe-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-> > 
-> > Applied to cgroup/for-6.6. Please feel free to follow up with the comment
-> > addition Michal suggested.
+On Tue, Jul 11, 2023 at 10:38:20AM +0800, Miaohe Lin wrote:
+> Put cgroup_tryget_css() inside CONFIG_CGROUP_SCHED to fix the warning
+> of 'cgroup_tryget_css' defined but not used [-Wunused-function] when
+> CONFIG_CGROUP_SCHED is disabled.
 > 
-> Should I send a v2 patch or a separate patch? Both is fine to me.
+> Signed-off-by: Miaohe Lin <linmiaohe-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 
-Please send a separate patch.
+Applied to cgroup/for-6.6.
 
 Thanks.
 
