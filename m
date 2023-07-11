@@ -1,79 +1,97 @@
-From: Abel Wu <wuyun.abel-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
-Subject: [PATCH RESEND net-next 2/2] net-memcg: Remove redundant tcpmem_pressure
-Date: Tue, 11 Jul 2023 20:41:44 +0800
-Message-ID: <20230711124157.97169-2-wuyun.abel@bytedance.com>
-References: <20230711124157.97169-1-wuyun.abel@bytedance.com>
+From: Greg Kroah-Hartman <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>
+Subject: Re: [PATCH] kernfs: attach uuid for every kernfs and report it in
+ fsid
+Date: Tue, 11 Jul 2023 16:04:03 +0200
+Message-ID: <2023071159-unsigned-salvation-405d@gregkh>
+References: <20230710183338.58531-1-ivan@cloudflare.com>
+ <2023071039-negate-stalemate-6987@gregkh>
+ <CABWYdi39+TJd1qV3nWs_eYc7XMC0RvxG22ihfq7rzuPaNvn1cQ@mail.gmail.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: quoted-printable
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=bytedance.com; s=google; t=1689079359; x=1691671359;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=WF8p9HwwgSPuKR34SMZuqSQ7aAssq/odh5sAxqcKAUo=;
-        b=PfObz486Wz+B8XCRMJmNpdOHd0bdAenCGoIFIrS0nn6pqgOGHIHHLLi/E7y4xelPQs
-         oV1L5cDtGQ4gFHo4+itEHIwzUsNI9UXysv8UU/Pza3CLcUbZHUcxkt1As11YdvxnX8RF
-         H17ZVvTu4nrEDSvdfN39NUxyIGNfeoTwnjdkSADFNYnqT8BI11t6wbWjHwH7o/9kadrH
-         e5S5yw3IMsz3lksjyY+6iOF1Q4m7p0LVb07p4UTqbAdR2d9VI1K3CWAVsuHGT4SgzzBo
-         xLZVs2ZfUmoYmSJPyCtnkjpSavzGDmGYFi8eCIFGc6qahboTah/quQSujY0SX5PCPa3e
-         hfRg==
-In-Reply-To: <20230711124157.97169-1-wuyun.abel-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linuxfoundation.org;
+        s=korg; t=1689084246;
+        bh=hkjM3kAIgQB2MsZK32Y0LnSzvU+OKdW0pajbNogIOCY=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=n9y6shDSvExiH8umQsf+SFCjEhlxKpJcK1FITT1X9fxWaBcy/PBj6GNyONmVduAK7
+         VrN+5V1Cp/gDD5e/zaI0L7WDA3s767ezmniJorTsn3GXlqUFZeSrma97UopLdgpudB
+         7GEQmf3i8/WAon5QrBgT3kivHV+TBb+xGvmBcNmI=
+Content-Disposition: inline
+In-Reply-To: <CABWYdi39+TJd1qV3nWs_eYc7XMC0RvxG22ihfq7rzuPaNvn1cQ-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-To: "David S. Miller" <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>, Eric Dumazet <edumazet-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Jakub Kicinski <kuba-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Paolo Abeni <pabeni-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Muchun Song <muchun.song-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, David Ahern <dsahern-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, "Matthew Wilcox (Oracle)" <willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Yu Zhao <yuzhao-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Abel Wu <wuyun.abel-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Yafang Shao <laoar.shao-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Kefeng Wang <wangkefeng.wang-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Kuniyuki Iwashima <kuniyu-vV1OtcyAfmbQT0dZR+AlfA@public.gmane.org>, Martin KaFai Lau <martin.lau-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Alexander Mikhalitsyn <al>
-Cc: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>, open list <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "open list:NETWORKING [GENERAL]" <netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "open list:CONTROL GROUP - MEMORY RESOURCE
-        CONTROLLER MEMCG" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "open list:CONTROL GROUP - MEMORY RESOURCE
-        CONTROLLER MEMCG" <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>
+Content-Type: text/plain; charset="windows-1252"
+To: Ivan Babrou <ivan-lDpJ742SOEtZroRs9YW3xA@public.gmane.org>
+Cc: linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-lDpJ742SOEtZroRs9YW3xA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Amir Goldstein <amir73il-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>, Jan Kara <jack-AlSwsSmVLrQ@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
 
-As {socket,tcpmem}_pressure are only used in default/legacy mode
-respectively, use socket_pressure instead of tcpmem_pressure in all
-kinds of cgroup hierarchies.
+On Mon, Jul 10, 2023 at 02:21:10PM -0700, Ivan Babrou wrote:
+> On Mon, Jul 10, 2023 at 12:40=E2=80=AFPM Greg Kroah-Hartman
+> <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org> wrote:
+> >
+> > On Mon, Jul 10, 2023 at 11:33:38AM -0700, Ivan Babrou wrote:
+> > > The following two commits added the same thing for tmpfs:
+> > >
+> > > * commit 2b4db79618ad ("tmpfs: generate random sb->s_uuid")
+> > > * commit 59cda49ecf6c ("shmem: allow reporting fanotify events with f=
+ile handles on tmpfs")
+> > >
+> > > Having fsid allows using fanotify, which is especially handy for cgro=
+ups,
+> > > where one might be interested in knowing when they are created or rem=
+oved.
+> > >
+> > > Signed-off-by: Ivan Babrou <ivan-lDpJ742SOEtZroRs9YW3xA@public.gmane.=
+org>
+> > > ---
+> > >  fs/kernfs/mount.c | 13 ++++++++++++-
+> > >  1 file changed, 12 insertions(+), 1 deletion(-)
+> > >
+> > > diff --git a/fs/kernfs/mount.c b/fs/kernfs/mount.c
+> > > index d49606accb07..930026842359 100644
+> > > --- a/fs/kernfs/mount.c
+> > > +++ b/fs/kernfs/mount.c
+> > > @@ -16,6 +16,8 @@
+> > >  #include <linux/namei.h>
+> > >  #include <linux/seq_file.h>
+> > >  #include <linux/exportfs.h>
+> > > +#include <linux/uuid.h>
+> > > +#include <linux/statfs.h>
+> > >
+> > >  #include "kernfs-internal.h"
+> > >
+> > > @@ -45,8 +47,15 @@ static int kernfs_sop_show_path(struct seq_file *s=
+f, struct dentry *dentry)
+> > >       return 0;
+> > >  }
+> > >
+> > > +int kernfs_statfs(struct dentry *dentry, struct kstatfs *buf)
+> > > +{
+> > > +     simple_statfs(dentry, buf);
+> > > +     buf->f_fsid =3D uuid_to_fsid(dentry->d_sb->s_uuid.b);
+> > > +     return 0;
+> > > +}
+> > > +
+> > >  const struct super_operations kernfs_sops =3D {
+> > > -     .statfs         =3D simple_statfs,
+> > > +     .statfs         =3D kernfs_statfs,
+> > >       .drop_inode     =3D generic_delete_inode,
+> > >       .evict_inode    =3D kernfs_evict_inode,
+> > >
+> > > @@ -351,6 +360,8 @@ int kernfs_get_tree(struct fs_context *fc)
+> > >               }
+> > >               sb->s_flags |=3D SB_ACTIVE;
+> > >
+> > > +             uuid_gen(&sb->s_uuid);
+> >
+> > Since kernfs has as lot of nodes (like hundreds of thousands if not more
+> > at times, being created at boot time), did you just slow down creating
+> > them all, and increase the memory usage in a measurable way?
+>=20
+> This is just for the superblock, not every inode. The memory increase
+> is one UUID per kernfs instance (there are maybe 10 of them on a basic
+> system), which is trivial. Same goes for CPU usage.
 
-Signed-off-by: Abel Wu <wuyun.abel-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
----
- include/linux/memcontrol.h | 3 +--
- mm/memcontrol.c            | 4 ++--
- 2 files changed, 3 insertions(+), 4 deletions(-)
+Ah, ok, my fault, thanks for clearing that up.
 
-diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
-index 5860c7f316b9..341d397186ff 100644
---- a/include/linux/memcontrol.h
-+++ b/include/linux/memcontrol.h
-@@ -288,7 +288,6 @@ struct mem_cgroup {
- 
- 	/* Legacy tcp memory accounting */
- 	bool			tcpmem_active;
--	int			tcpmem_pressure;
- 
- #ifdef CONFIG_MEMCG_KMEM
- 	int kmemcg_id;
-@@ -1728,7 +1727,7 @@ void mem_cgroup_sk_free(struct sock *sk);
- static inline bool mem_cgroup_under_socket_pressure(struct mem_cgroup *memcg)
- {
- 	if (!cgroup_subsys_on_dfl(memory_cgrp_subsys))
--		return !!memcg->tcpmem_pressure;
-+		return !!memcg->socket_pressure;
- 	do {
- 		if (time_before(jiffies, READ_ONCE(memcg->socket_pressure)))
- 			return true;
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index e8ca4bdcb03c..e9e26dbd65b5 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -7292,10 +7292,10 @@ bool mem_cgroup_charge_skmem(struct mem_cgroup *memcg, unsigned int nr_pages,
- 		struct page_counter *fail;
- 
- 		if (page_counter_try_charge(&memcg->tcpmem, nr_pages, &fail)) {
--			memcg->tcpmem_pressure = 0;
-+			memcg->socket_pressure = 0;
- 			return true;
- 		}
--		memcg->tcpmem_pressure = 1;
-+		memcg->socket_pressure = 1;
- 		if (gfp_mask & __GFP_NOFAIL) {
- 			page_counter_charge(&memcg->tcpmem, nr_pages);
- 			return true;
--- 
-2.37.3
+thanks,
 
+greg k-h
