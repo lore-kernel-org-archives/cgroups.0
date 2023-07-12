@@ -1,50 +1,41 @@
-From: Miaohe Lin <linmiaohe-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH] cgroup: remove unneeded return value of
- cgroup_rm_cftypes_locked()
-Date: Wed, 12 Jul 2023 10:02:41 +0800
-Message-ID: <b197a86c-93bb-879e-34dc-f03c4e4f824c@huawei.com>
-References: <20230701073856.2095425-1-linmiaohe@huawei.com>
- <ZKxeke6SfBe37Jso@slm.duckdns.org>
- <27428e7d-e280-2f78-7856-056d4e174057@huawei.com>
- <ZK3MR5liSMSrlKVm@slm.duckdns.org>
+From: Jakub Kicinski <kuba-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCH RESEND net-next 1/2] net-memcg: Scopify the indicators
+ of sockmem pressure
+Date: Tue, 11 Jul 2023 20:45:37 -0700
+Message-ID: <20230711204537.04cb1124@kernel.org>
+References: <20230711124157.97169-1-wuyun.abel@bytedance.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <ZK3MR5liSMSrlKVm-NiLfg/pYEd1N0TnZuCh8vA@public.gmane.org>
-Content-Language: en-US
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1689133539;
+        bh=kV1aAg4a4cV9uuw2PocMUWykoJKk/tyIh0MW/t13PJs=;
+        h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
+        b=GD62fC1aPLT4Chb4Q2u79JyVL01BCjTdBo6PhaMSEQghTJVJ2XMfb8K4IA+5zMHhm
+         Jw5/r04qhJG3aBR8GiU4bqed0fsjfTvIcbfb6yTVO/VaN9jYHTc9bLnaqE6xisBuL2
+         DFlYzM4h3GDQcPSUU8/iQpd3F3709bWbKmrIjdADvjUlCi170bJr8v5f93PdOLp2wg
+         nARXUSE+et76TRzo+W1gxu3XwSJZf7jgKK72NG0sQ02KHSbo3GZ+nPTpLCh6eWNMR1
+         38TqTfOPM7T4rqJJpU4+HxdOul3kyGc7D8rFNUpml/fi7eSw5LpV8FvkUIEcjwXB8S
+         4b6xx+Y7a3Kvw==
+In-Reply-To: <20230711124157.97169-1-wuyun.abel-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, =?UTF-8?Q?Michal_Koutn=c3=bd?= <mkoutny-IBi9RG/b67k@public.gmane.org>
-Cc: hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Abel Wu <wuyun.abel-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
+Cc: "David S. Miller" <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>, Eric Dumazet <edumazet-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Paolo Abeni <pabeni-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Muchun Song <muchun.song-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, David Ahern <dsahern-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, "Matthew Wilcox (Oracle)" <willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Yu Zhao <yuzhao-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Kefeng Wang <wangkefeng.wang-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Yafang Shao <laoar.shao-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Kuniyuki Iwashima <kuniyu-vV1OtcyAfmbQT0dZR+AlfA@public.gmane.org>, Martin KaFai Lau <martin.lau-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Alexander Mikhalitsyn <alexander-uFy+/5nkmnuaMJb+Lgu22Q@public.gmane.org>, Breno Leitao <leitao-8fiUuRrzOP0dnm+yROfE0A@public.gmane.org>, David
 
-On 2023/7/12 5:40, Tejun Heo wrote:
-> On Tue, Jul 11, 2023 at 11:00:58AM +0800, Miaohe Lin wrote:
->> On 2023/7/11 3:40, Tejun Heo wrote:
->>> On Sat, Jul 01, 2023 at 03:38:56PM +0800, Miaohe Lin wrote:
->>>> The return value of cgroup_rm_cftypes_locked() is always 0. So remove
->>>> it to simplify the code. No functional change intended.
->>>>
->>>> Signed-off-by: Miaohe Lin <linmiaohe-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
->>>
->>> Applied to cgroup/for-6.6. Please feel free to follow up with the comment
->>> addition Michal suggested.
->>
->> Should I send a v2 patch or a separate patch? Both is fine to me.
+On Tue, 11 Jul 2023 20:41:43 +0800 Abel Wu wrote:
+> Now there are two indicators of socket memory pressure sit inside
+> struct mem_cgroup, socket_pressure and tcpmem_pressure.
 > 
-> Please send a separate patch.
+> When in legacy mode aka. cgroupv1, the socket memory is charged
+> into a separate counter memcg->tcpmem rather than ->memory, so
+> the reclaim pressure of the memcg has nothing to do with socket's
+> pressure at all. While for default mode, the ->tcpmem is simply
+> not used.
+> 
+> So {socket,tcpmem}_pressure are only used in default/legacy mode
+> respectively. This patch fixes the pieces of code that make mixed
+> use of both.
 
-I see. But since Michal is meant adding the reasoning to the commit message, it seems
-a v2 patch is required. Or could you help modify the commit message? It should looks
-like:
-
-"
-The return value of cgroup_rm_cftypes_locked() is always 0 and swallowing
-errors on removal is fine because cgroup_addrm_files() won't fail at
-removal. So remove return value to simplify the code. No functional
-change intended.
-"
-
-Thanks a lot.
-
-
-
+Eric Dumazet is currently AFK, can we wait for him to return 
+(in about a week) before merging?
