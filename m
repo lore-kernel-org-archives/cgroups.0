@@ -1,23 +1,24 @@
 From: Tvrtko Ursulin <tvrtko.ursulin@linux.intel.com>
-Subject: [PATCH 08/17] drm/cgroup: Track DRM clients per cgroup
-Date: Wed, 12 Jul 2023 12:45:56 +0100
-Message-ID: <20230712114605.519432-9-tvrtko.ursulin@linux.intel.com>
+Subject: [PATCH 13/17] drm/i915: Wire up with drm controller GPU
+ time query
+Date: Wed, 12 Jul 2023 12:46:01 +0100
+Message-ID: <20230712114605.519432-14-tvrtko.ursulin@linux.intel.com>
 References: <20230712114605.519432-1-tvrtko.ursulin@linux.intel.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Return-path: <intel-gfx-bounces@lists.freedesktop.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
- t=1689162470; x=1720698470;
+ t=1689162482; x=1720698482;
  h=from:to:cc:subject:date:message-id:in-reply-to:
  references:mime-version:content-transfer-encoding;
- bh=k6qOYu4NXclI3gFUyWZN4CiwVZNliuA6Qng+UvN29DI=;
- b=GMKdUcYkbUwO+AIgiragx27EjOb4Cbi5qcDnS4RS5rKB91AyAfTtJ1u9
- d5AWsgN6hnXDvXySxYfyAEZy6V+ZPhMKqQpgcjJkKNp/vY5SwkKuzaGcj
- yny27I3MeQGSHQC9HIBsFxyYg8Hac7WCOj8je0VUhkk2hRIGYEeHDyoEF
- p8bN1yS2p7geQ5o5gSHM8bOIfX9Pr/6AVyYFA5wgk1cWGfJ1Xn5OjcbmS
- G7g25b4AlqCksg9DvmZPnGve6EbxLAbwHhZ9mKwDQ/XNvsU8wEvMSOiGP
- nrGvNlMOStU117+bz2tXVgakEAueF82UKYKktLOn+crxH+dyjzugcUaYi g==;
+ bh=mbUDZguU3/3ubuVhjLVfeypXgwnwUhCLLRTeHmZzUr0=;
+ b=ADMLASZtL1Y929qd/LECG1g9p98mG0QB2ZvDIssBv3f/reEmCr/JuWqc
+ mfLtyYxBYFSUvs5yzzuUUcavnkR1BAeurmX+yMmMN0gnK4kL6o2vAhDge
+ vbRf4KRcYwwQKCp63sWNW8W1SEc+UhZtLtiZGMX120BaUgIAoXT+Fwika
+ e/zmfaB4RB5UxaB8MrXBzhsrtxLf6g9BTOAzcDNxYi3UNy2XYb3mcr/1D
+ 9ubegREqH7gnvlQn5q4AOg90SJ8bkNwbGpaa5yUZ+33+ib06O5HyhN4f7
+ Cdf9OLu81ebUYVJu8MZD12Zy5mMR+qOkzcUNG84fJC/zWmSjetdDVGy3z g==;
 In-Reply-To: <20230712114605.519432-1-tvrtko.ursulin@linux.intel.com>
 List-Id: <cgroups.vger.kernel.org>
 List-Unsubscribe: <https://lists.freedesktop.org/mailman/options/intel-gfx>,
@@ -35,204 +36,200 @@ Cc: Rob Clark <robdclark@chromium.org>, Kenny.Ho@amd.com, Daniel Vetter <daniel.
 
 From: Tvrtko Ursulin <tvrtko.ursulin@intel.com>
 
-To enable propagation of settings from the cgroup DRM controller to DRM
-and vice-versa, we need to start tracking to which cgroups DRM clients
-belong.
+Implement the drm_cgroup_ops->active_time_us callback.
 
 Signed-off-by: Tvrtko Ursulin <tvrtko.ursulin@intel.com>
 ---
- drivers/gpu/drm/drm_file.c |  6 ++++
- include/drm/drm_file.h     |  6 ++++
- include/linux/cgroup_drm.h | 20 ++++++++++++
- kernel/cgroup/drm.c        | 62 +++++++++++++++++++++++++++++++++++++-
- 4 files changed, 93 insertions(+), 1 deletion(-)
+ drivers/gpu/drm/i915/i915_driver.c     |   8 ++
+ drivers/gpu/drm/i915/i915_drm_client.c | 116 ++++++++++++++++++-------
+ drivers/gpu/drm/i915/i915_drm_client.h |   2 +
+ 3 files changed, 94 insertions(+), 32 deletions(-)
 
-diff --git a/drivers/gpu/drm/drm_file.c b/drivers/gpu/drm/drm_file.c
-index e692770ef6d3..794ffb487472 100644
---- a/drivers/gpu/drm/drm_file.c
-+++ b/drivers/gpu/drm/drm_file.c
-@@ -32,6 +32,7 @@
-  */
+diff --git a/drivers/gpu/drm/i915/i915_driver.c b/drivers/gpu/drm/i915/i915_driver.c
+index 294b022de22b..62a544d17659 100644
+--- a/drivers/gpu/drm/i915/i915_driver.c
++++ b/drivers/gpu/drm/i915/i915_driver.c
+@@ -1791,6 +1791,12 @@ static const struct drm_ioctl_desc i915_ioctls[] = {
+ 	DRM_IOCTL_DEF_DRV(I915_GEM_VM_DESTROY, i915_gem_vm_destroy_ioctl, DRM_RENDER_ALLOW),
+ };
  
- #include <linux/anon_inodes.h>
-+#include <linux/cgroup_drm.h>
- #include <linux/dma-fence.h>
- #include <linux/file.h>
- #include <linux/module.h>
-@@ -304,6 +305,8 @@ static void drm_close_helper(struct file *filp)
- 	list_del(&file_priv->lhead);
- 	mutex_unlock(&dev->filelist_mutex);
- 
-+	drmcgroup_client_close(file_priv);
++#ifdef CONFIG_CGROUP_DRM
++static const struct drm_cgroup_ops i915_drm_cgroup_ops = {
++	.active_time_us = i915_drm_cgroup_get_active_time_us,
++};
++#endif
 +
- 	drm_file_free(file_priv);
+ /*
+  * Interface history:
+  *
+@@ -1820,6 +1826,8 @@ static const struct drm_driver i915_drm_driver = {
+ 	.postclose = i915_driver_postclose,
+ 	.show_fdinfo = PTR_IF(IS_ENABLED(CONFIG_PROC_FS), i915_drm_client_fdinfo),
+ 
++	.cg_ops = PTR_IF(IS_ENABLED(CONFIG_CGROUP_DRM), &i915_drm_cgroup_ops),
++
+ 	.gem_prime_import = i915_gem_prime_import,
+ 
+ 	.dumb_create = i915_gem_dumb_create,
+diff --git a/drivers/gpu/drm/i915/i915_drm_client.c b/drivers/gpu/drm/i915/i915_drm_client.c
+index 9e7a6075ee25..c3298beb094a 100644
+--- a/drivers/gpu/drm/i915/i915_drm_client.c
++++ b/drivers/gpu/drm/i915/i915_drm_client.c
+@@ -44,6 +44,86 @@ void __i915_drm_client_free(struct kref *kref)
+ 	kfree(client);
  }
  
-@@ -367,6 +370,8 @@ int drm_open_helper(struct file *filp, struct drm_minor *minor)
- 	list_add(&priv->lhead, &dev->filelist);
- 	mutex_unlock(&dev->filelist_mutex);
- 
-+	drmcgroup_client_open(priv);
-+
- #ifdef CONFIG_DRM_LEGACY
- #ifdef __alpha__
- 	/*
-@@ -533,6 +538,7 @@ void drm_file_update_pid(struct drm_file *filp)
- 	mutex_unlock(&dev->filelist_mutex);
- 
- 	if (pid != old) {
-+		drmcgroup_client_migrate(filp);
- 		get_pid(pid);
- 		synchronize_rcu();
- 		put_pid(old);
-diff --git a/include/drm/drm_file.h b/include/drm/drm_file.h
-index c76249d5467e..e8fb3a39d482 100644
---- a/include/drm/drm_file.h
-+++ b/include/drm/drm_file.h
-@@ -30,6 +30,7 @@
- #ifndef _DRM_FILE_H_
- #define _DRM_FILE_H_
- 
-+#include <linux/cgroup.h>
- #include <linux/types.h>
- #include <linux/completion.h>
- #include <linux/idr.h>
-@@ -283,6 +284,11 @@ struct drm_file {
- 	/** @minor: &struct drm_minor for this file. */
- 	struct drm_minor *minor;
- 
-+#if IS_ENABLED(CONFIG_CGROUP_DRM)
-+	struct cgroup_subsys_state *__css;
-+	struct list_head clink;
-+#endif
-+
- 	/**
- 	 * @object_idr:
- 	 *
-diff --git a/include/linux/cgroup_drm.h b/include/linux/cgroup_drm.h
-index 8ef66a47619f..176431842d8e 100644
---- a/include/linux/cgroup_drm.h
-+++ b/include/linux/cgroup_drm.h
-@@ -6,4 +6,24 @@
- #ifndef _CGROUP_DRM_H
- #define _CGROUP_DRM_H
- 
-+#include <drm/drm_file.h>
-+
-+#if IS_ENABLED(CONFIG_CGROUP_DRM)
-+void drmcgroup_client_open(struct drm_file *file_priv);
-+void drmcgroup_client_close(struct drm_file *file_priv);
-+void drmcgroup_client_migrate(struct drm_file *file_priv);
-+#else
-+static inline void drmcgroup_client_open(struct drm_file *file_priv)
-+{
-+}
-+
-+static inline void drmcgroup_client_close(struct drm_file *file_priv)
-+{
-+}
-+
-+static void drmcgroup_client_migrate(struct drm_file *file_priv)
-+{
-+}
-+#endif
-+
- #endif	/* _CGROUP_DRM_H */
-diff --git a/kernel/cgroup/drm.c b/kernel/cgroup/drm.c
-index 02c8eaa633d3..d702be1b441f 100644
---- a/kernel/cgroup/drm.c
-+++ b/kernel/cgroup/drm.c
-@@ -5,17 +5,25 @@
- 
- #include <linux/cgroup.h>
- #include <linux/cgroup_drm.h>
-+#include <linux/list.h>
-+#include <linux/mutex.h>
- #include <linux/slab.h>
- 
- struct drm_cgroup_state {
- 	struct cgroup_subsys_state css;
-+
-+	struct list_head clients;
- };
- 
- struct drm_root_cgroup_state {
- 	struct drm_cgroup_state drmcs;
- };
- 
--static struct drm_root_cgroup_state root_drmcs;
-+static struct drm_root_cgroup_state root_drmcs = {
-+	.drmcs.clients = LIST_HEAD_INIT(root_drmcs.drmcs.clients),
++#if defined(CONFIG_PROC_FS) || defined(CONFIG_CGROUP_DRM)
++static const char * const uabi_class_names[] = {
++	[I915_ENGINE_CLASS_RENDER] = "render",
++	[I915_ENGINE_CLASS_COPY] = "copy",
++	[I915_ENGINE_CLASS_VIDEO] = "video",
++	[I915_ENGINE_CLASS_VIDEO_ENHANCE] = "video-enhance",
++	[I915_ENGINE_CLASS_COMPUTE] = "compute",
 +};
 +
-+static DEFINE_MUTEX(drmcg_mutex);
- 
- static inline struct drm_cgroup_state *
- css_to_drmcs(struct cgroup_subsys_state *css)
-@@ -42,11 +50,63 @@ drmcs_alloc(struct cgroup_subsys_state *parent_css)
- 		drmcs = kzalloc(sizeof(*drmcs), GFP_KERNEL);
- 		if (!drmcs)
- 			return ERR_PTR(-ENOMEM);
-+
-+		INIT_LIST_HEAD(&drmcs->clients);
- 	}
- 
- 	return &drmcs->css;
- }
- 
-+void drmcgroup_client_open(struct drm_file *file_priv)
++static u64 busy_add(struct i915_gem_context *ctx, unsigned int class)
 +{
-+	struct drm_cgroup_state *drmcs;
++	struct i915_gem_engines_iter it;
++	struct intel_context *ce;
++	u64 total = 0;
 +
-+	drmcs = css_to_drmcs(task_get_css(current, drm_cgrp_id));
++	for_each_gem_engine(ce, rcu_dereference(ctx->engines), it) {
++		if (ce->engine->uabi_class != class)
++			continue;
 +
-+	mutex_lock(&drmcg_mutex);
-+	file_priv->__css = &drmcs->css; /* Keeps the reference. */
-+	list_add_tail(&file_priv->clink, &drmcs->clients);
-+	mutex_unlock(&drmcg_mutex);
-+}
-+EXPORT_SYMBOL_GPL(drmcgroup_client_open);
-+
-+void drmcgroup_client_close(struct drm_file *file_priv)
-+{
-+	struct drm_cgroup_state *drmcs;
-+
-+	drmcs = css_to_drmcs(file_priv->__css);
-+
-+	mutex_lock(&drmcg_mutex);
-+	list_del(&file_priv->clink);
-+	file_priv->__css = NULL;
-+	mutex_unlock(&drmcg_mutex);
-+
-+	css_put(&drmcs->css);
-+}
-+EXPORT_SYMBOL_GPL(drmcgroup_client_close);
-+
-+void drmcgroup_client_migrate(struct drm_file *file_priv)
-+{
-+	struct drm_cgroup_state *src, *dst;
-+	struct cgroup_subsys_state *old;
-+
-+	mutex_lock(&drmcg_mutex);
-+
-+	old = file_priv->__css;
-+	src = css_to_drmcs(old);
-+	dst = css_to_drmcs(task_get_css(current, drm_cgrp_id));
-+
-+	if (src != dst) {
-+		file_priv->__css = &dst->css; /* Keeps the reference. */
-+		list_move_tail(&file_priv->clink, &dst->clients);
++		total += intel_context_get_total_runtime_ns(ce);
 +	}
 +
-+	mutex_unlock(&drmcg_mutex);
-+
-+	css_put(old);
++	return total;
 +}
-+EXPORT_SYMBOL_GPL(drmcgroup_client_migrate);
 +
- struct cftype files[] = {
- 	{ } /* Zero entry terminates. */
- };
++static u64 get_class_active_ns(struct i915_drm_client *client,
++			       struct drm_i915_private *i915,
++			       unsigned int class,
++			       unsigned int *capacity)
++{
++	struct i915_gem_context *ctx;
++	u64 total;
++
++	*capacity = i915->engine_uabi_class_count[class];
++	if (!*capacity)
++		return 0;
++
++	total = atomic64_read(&client->past_runtime[class]);
++
++	rcu_read_lock();
++	list_for_each_entry_rcu(ctx, &client->ctx_list, client_link)
++		total += busy_add(ctx, class);
++	rcu_read_unlock();
++
++	return total;
++}
++
++static bool supports_stats(struct drm_i915_private *i915)
++{
++	return GRAPHICS_VER(i915) >= 8;
++}
++#endif
++
++#if defined(CONFIG_CGROUP_DRM)
++u64 i915_drm_cgroup_get_active_time_us(struct drm_file *file)
++{
++	struct drm_i915_file_private *fpriv = file->driver_priv;
++	struct i915_drm_client *client = fpriv->client;
++	struct drm_i915_private *i915 = fpriv->i915;
++	unsigned int i;
++	u64 busy = 0;
++
++	if (!supports_stats(i915))
++		return 0;
++
++	for (i = 0; i < ARRAY_SIZE(uabi_class_names); i++) {
++		unsigned int capacity;
++		u64 b;
++
++		b = get_class_active_ns(client, i915, i, &capacity);
++		if (capacity) {
++			b = DIV_ROUND_UP_ULL(b, capacity * 1000);
++			busy += b;
++		}
++	}
++
++	return busy;
++}
++#endif
++
+ #ifdef CONFIG_PROC_FS
+ static void
+ obj_meminfo(struct drm_i915_gem_object *obj,
+@@ -128,44 +208,16 @@ static void show_meminfo(struct drm_printer *p, struct drm_file *file)
+ 				       mr->name);
+ }
+ 
+-static const char * const uabi_class_names[] = {
+-	[I915_ENGINE_CLASS_RENDER] = "render",
+-	[I915_ENGINE_CLASS_COPY] = "copy",
+-	[I915_ENGINE_CLASS_VIDEO] = "video",
+-	[I915_ENGINE_CLASS_VIDEO_ENHANCE] = "video-enhance",
+-	[I915_ENGINE_CLASS_COMPUTE] = "compute",
+-};
+-
+-static u64 busy_add(struct i915_gem_context *ctx, unsigned int class)
+-{
+-	struct i915_gem_engines_iter it;
+-	struct intel_context *ce;
+-	u64 total = 0;
+-
+-	for_each_gem_engine(ce, rcu_dereference(ctx->engines), it) {
+-		if (ce->engine->uabi_class != class)
+-			continue;
+-
+-		total += intel_context_get_total_runtime_ns(ce);
+-	}
+-
+-	return total;
+-}
+-
+ static void
+ show_client_class(struct drm_printer *p,
+ 		  struct drm_i915_private *i915,
+ 		  struct i915_drm_client *client,
+ 		  unsigned int class)
+ {
+-	const unsigned int capacity = i915->engine_uabi_class_count[class];
+-	u64 total = atomic64_read(&client->past_runtime[class]);
+-	struct i915_gem_context *ctx;
++	unsigned int capacity;
++	u64 total;
+ 
+-	rcu_read_lock();
+-	list_for_each_entry_rcu(ctx, &client->ctx_list, client_link)
+-		total += busy_add(ctx, class);
+-	rcu_read_unlock();
++	total = get_class_active_ns(client, i915, class, &capacity);
+ 
+ 	if (capacity)
+ 		drm_printf(p, "drm-engine-%s:\t%llu ns\n",
+@@ -191,7 +243,7 @@ void i915_drm_client_fdinfo(struct drm_printer *p, struct drm_file *file)
+ 
+ 	show_meminfo(p, file);
+ 
+-	if (GRAPHICS_VER(i915) < 8)
++	if (!supports_stats(i915))
+ 		return;
+ 
+ 	for (i = 0; i < ARRAY_SIZE(uabi_class_names); i++)
+diff --git a/drivers/gpu/drm/i915/i915_drm_client.h b/drivers/gpu/drm/i915/i915_drm_client.h
+index 69cedfcd3d69..e0b143890e69 100644
+--- a/drivers/gpu/drm/i915/i915_drm_client.h
++++ b/drivers/gpu/drm/i915/i915_drm_client.h
+@@ -90,4 +90,6 @@ i915_drm_client_add_context_objects(struct i915_drm_client *client,
+ }
+ #endif
+ 
++u64 i915_drm_cgroup_get_active_time_us(struct drm_file *file);
++
+ #endif /* !__I915_DRM_CLIENT_H__ */
 -- 
 2.39.2
 
