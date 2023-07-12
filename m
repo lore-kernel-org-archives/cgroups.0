@@ -1,129 +1,196 @@
-From: Haitao Huang <haitao.huang@linux.intel.com>
-Subject: [PATCH v3 22/28] Docs/x86/sgx: Add description for cgroup support
-Date: Wed, 12 Jul 2023 16:01:56 -0700
-Message-ID: <20230712230202.47929-23-haitao.huang@linux.intel.com>
+From: Haitao Huang <haitao.huang-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
+Subject: [PATCH v3 20/28] cgroup/misc: Add SGX EPC resource type and export APIs for SGX driver
+Date: Wed, 12 Jul 2023 16:01:54 -0700
+Message-ID: <20230712230202.47929-21-haitao.huang@linux.intel.com>
 References: <20230712230202.47929-1-haitao.huang@linux.intel.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Return-path: <linux-doc-owner@vger.kernel.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1689202939; x=1720738939;
+  t=1689202937; x=1720738937;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=3e6QAWNAF76VcJMJbXCen6twY/3D+MIdev0F0r8XF58=;
-  b=oANffFx/YGS2HrYl6AeDIxCZkLz6ksoJBoPchd3wx2flotjBff7sN+6d
-   LESeEwRrbdzfSWFlBb8k7N5cFOORNp/CdluwmuBiWUa5b5d5PCWzChBdx
-   jdyJWb9SGrLTG8l7DK1cYBu2hxVj5L4MO4PNDwA98HmpaPGn3AFg/0za3
-   Nr6yJX1OUphVOSOiUqXungmEmTFXMqkFRCgRe7b/eMsCz7HXcrAQai2vQ
-   r36H2emfNvTGoeg3UrZjsSvQVQ12sJYDix9OCsLqiU2uvBggiGrigUxMV
-   mZi36gWRI0yAff4757UqMzoKNbBlfqPqHdOAKY4LZSzKhzq9JmeBtn5Ru
-   A==;
-In-Reply-To: <20230712230202.47929-1-haitao.huang@linux.intel.com>
+  bh=zH+XX+VHFK8n349nOoRMB7hDW6982oRC8Tt5cNcQSvM=;
+  b=mj4Oh7sRh93BpuCLSxSnKB11aJS3Nm9hJPt0N3mr9ETzlWpcYNw/LsrR
+   ld0MPuvyCmlABUrEFMjnTLGsERthz0XlDXDkqrQMKAf2iVqYh5Vz+Mri+
+   yXkN0STUMIbecOeb5T0XDRaWb+YI7sf/uZBHYjXrYYrfR558w5Hqewtu7
+   2j66Q3wp5XUX1NaiPnp1px4LKNYhEWdBtZqOzbLogadmtgTwIF3hFQGYR
+   VeKeMRy7laqson8As6VhRANiBVgWZ8GVvAilhoAk12BmCI8N2fmdiBDY/
+   u2xJ/7Hu1eDzCicI0359pJUt5Y9tV3twRRl6TETuP3bUShUUeK3RKGuJp
+   g==;
+In-Reply-To: <20230712230202.47929-1-haitao.huang-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: jarkko@kernel.org, dave.hansen@linux.intel.com, tj@kernel.org, linux-kernel@vger.kernel.org, linux-sgx@vger.kernel.org, cgroups@vger.kernel.org, Thomas Gleixner <tglx@linutronix.de>, Ingo Molnar <mingo@redhat.com>, Borislav Petkov <bp@alien8.de>, x86@kernel.org, "H. Peter Anvin" <hpa@zytor.com>, Jonathan Corbet <corbet@lwn.net>
-Cc: kai.huang@intel.com, reinette.chatre@intel.com, Kristen Carlson Accardi <kristen@linux.intel.com>, zhiquan1.li@intel.com, seanjc@google.com, bagasdotme@gmail.com, linux-doc@vger.kernel.org, zhanb@microsoft.com, anakrish@microsoft.com, mikko.ylinen@linux.intel.com
+To: jarkko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, dave.hansen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-sgx-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Cc: kai.huang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org, reinette.chatre-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org, Kristen Carlson Accardi <kristen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, zhiquan1.li-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org
 
-From: Kristen Carlson Accardi <kristen@linux.intel.com>
+From: Kristen Carlson Accardi <kristen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
 
-Add initial documentation of how to regulate the distribution of
-SGX Enclave Page Cache (EPC) memory via the Miscellaneous cgroup
+The SGX driver will need to get access to the root misc_cg object
+to do iterative walks and also determine if a charge will be
+towards the root cgroup or not.
+
+To manage the SGX EPC memory via the misc controller, the SGX
+driver will also need to be able to iterate over the misc cgroup
+hierarchy.
+
+Move parent_misc() into misc_cgroup.h and make inline to make this
+function available to SGX, rename it to misc_cg_parent(), and update
+misc.c to use the new name.
+
+Add per resource type private data so that SGX can store additional
+per cgroup data with the misc_cg struct.
+
+Allow SGX EPC memory to be a valid resource type for the misc
 controller.
 
-Signed-off-by: Sean Christopherson <sean.j.christopherson@intel.com>
-Signed-off-by: Kristen Carlson Accardi <kristen@linux.intel.com>
-Cc: Sean Christopherson <seanjc@google.com>
-Reviewed-by: Bagas Sanjaya <bagasdotme@gmail.com>
+Signed-off-by: Kristen Carlson Accardi <kristen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
+Signed-off-by: Haitao Huang <haitao.huang-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
 ---
- Documentation/arch/x86/sgx.rst | 77 ++++++++++++++++++++++++++++++++++
- 1 file changed, 77 insertions(+)
+ include/linux/misc_cgroup.h | 29 +++++++++++++++++++++++++++++
+ kernel/cgroup/misc.c        | 25 ++++++++++++-------------
+ 2 files changed, 41 insertions(+), 13 deletions(-)
 
-diff --git a/Documentation/arch/x86/sgx.rst b/Documentation/arch/x86/sgx.rst
-index 2bcbffacbed5..f6ca5594dcf2 100644
---- a/Documentation/arch/x86/sgx.rst
-+++ b/Documentation/arch/x86/sgx.rst
-@@ -300,3 +300,80 @@ to expected failures and handle them as follows:
-    first call.  It indicates a bug in the kernel or the userspace client
-    if any of the second round of ``SGX_IOC_VEPC_REMOVE_ALL`` calls has
-    a return code other than 0.
+diff --git a/include/linux/misc_cgroup.h b/include/linux/misc_cgroup.h
+index 9962b870d382..8bef9d92e36a 100644
+--- a/include/linux/misc_cgroup.h
++++ b/include/linux/misc_cgroup.h
+@@ -17,6 +17,10 @@ enum misc_res_type {
+ 	MISC_CG_RES_SEV,
+ 	/* AMD SEV-ES ASIDs resource */
+ 	MISC_CG_RES_SEV_ES,
++#endif
++#ifdef CONFIG_CGROUP_SGX_EPC
++	/* SGX EPC memory resource */
++	MISC_CG_RES_SGX_EPC,
+ #endif
+ 	MISC_CG_RES_TYPES
+ };
+@@ -37,6 +41,7 @@ struct misc_res {
+ 	unsigned long max;
+ 	atomic_long_t usage;
+ 	atomic_long_t events;
++	void *priv;
+ 
+ 	/* per resource callback ops */
+ 	int (*misc_cg_alloc)(struct misc_cg *cg);
+@@ -58,6 +63,7 @@ struct misc_cg {
+ 	struct misc_res res[MISC_CG_RES_TYPES];
+ };
+ 
++struct misc_cg *misc_cg_root(void);
+ unsigned long misc_cg_res_total_usage(enum misc_res_type type);
+ int misc_cg_set_capacity(enum misc_res_type type, unsigned long capacity);
+ int misc_cg_try_charge(enum misc_res_type type, struct misc_cg *cg,
+@@ -79,6 +85,20 @@ static inline struct misc_cg *css_misc(struct cgroup_subsys_state *css)
+ 	return css ? container_of(css, struct misc_cg, css) : NULL;
+ }
+ 
++/**
++ * misc_cg_parent() - Get the parent of the passed misc cgroup.
++ * @cgroup: cgroup whose parent needs to be fetched.
++ *
++ * Context: Any context.
++ * Return:
++ * * struct misc_cg* - Parent of the @cgroup.
++ * * %NULL - If @cgroup is null or the passed cgroup does not have a parent.
++ */
++static inline struct misc_cg *misc_cg_parent(struct misc_cg *cgroup)
++{
++	return cgroup ? css_misc(cgroup->css.parent) : NULL;
++}
 +
+ /*
+  * get_current_misc_cg() - Find and get the misc cgroup of the current task.
+  *
+@@ -103,6 +123,15 @@ static inline void put_misc_cg(struct misc_cg *cg)
+ }
+ 
+ #else /* !CONFIG_CGROUP_MISC */
++static inline struct misc_cg *misc_cg_root(void)
++{
++	return NULL;
++}
 +
-+Cgroup Support
-+==============
-+
-+The "sgx_epc" resource within the Miscellaneous cgroup controller regulates
-+distribution of SGX EPC memory, which is a subset of system RAM that
-+is used to provide SGX-enabled applications with protected memory,
-+and is otherwise inaccessible, i.e. shows up as reserved in
-+/proc/iomem and cannot be read/written outside of an SGX enclave.
-+
-+Although current systems implement EPC by stealing memory from RAM,
-+for all intents and purposes the EPC is independent from normal system
-+memory, e.g. must be reserved at boot from RAM and cannot be converted
-+between EPC and normal memory while the system is running.  The EPC is
-+managed by the SGX subsystem and is not accounted by the memory
-+controller.  Note that this is true only for EPC memory itself, i.e.
-+normal memory allocations related to SGX and EPC memory, e.g. the
-+backing memory for evicted EPC pages, are accounted, limited and
-+protected by the memory controller.
-+
-+Much like normal system memory, EPC memory can be overcommitted via
-+virtual memory techniques and pages can be swapped out of the EPC
-+to their backing store (normal system memory allocated via shmem).
-+The SGX EPC subsystem is analogous to the memory subsytem, and
-+it implements limit and protection models for EPC memory.
-+
-+SGX EPC Interface Files
-+-----------------------
-+
-+For a generic description of the Miscellaneous controller interface
-+files, please see Documentation/admin-guide/cgroup-v2.rst
-+
-+All SGX EPC memory amounts are in bytes unless explicitly stated
-+otherwise.  If a value which is not PAGE_SIZE aligned is written,
-+the actual value used by the controller will be rounded down to
-+the closest PAGE_SIZE multiple.
-+
-+  misc.capacity
-+        A read-only flat-keyed file shown only in the root cgroup.
-+        The sgx_epc resource will show the total amount of EPC
-+        memory available on the platform.
-+
-+  misc.current
-+        A read-only flat-keyed file shown in the non-root cgroups.
-+        The sgx_epc resource will show the current active EPC memory
-+        usage of the cgroup and its descendants. EPC pages that are
-+        swapped out to backing RAM are not included in the current count.
-+
-+  misc.max
-+        A read-write single value file which exists on non-root
-+        cgroups. The sgx_epc resource will show the EPC usage
-+        hard limit. The default is "max".
-+
-+        If a cgroup's EPC usage reaches this limit, EPC allocations,
-+        e.g. for page fault handling, will be blocked until EPC can
-+        be reclaimed from the cgroup.  If EPC cannot be reclaimed in
-+        a timely manner, reclaim will be forced, e.g. by ignoring LRU.
-+
-+  misc.events
-+	A read-write flat-keyed file which exists on non-root cgroups.
-+	Writes to the file reset the event counters to zero.  A value
-+	change in this file generates a file modified event.
-+
-+	  max
-+		The number of times the cgroup has triggered a reclaim
-+		due to its EPC usage approaching (or exceeding) its max
-+		EPC boundary.
-+
-+Migration
-+---------
-+
-+Once an EPC page is charged to a cgroup (during allocation), it
-+remains charged to the original cgroup until the page is released
-+or reclaimed.  Migrating a process to a different cgroup doesn't
-+move the EPC charges that it incurred while in the previous cgroup
-+to its new cgroup.
++static inline struct misc_cg *misc_cg_parent(struct misc_cg *cg)
++{
++	return NULL;
++}
+ 
+ static inline unsigned long misc_cg_res_total_usage(enum misc_res_type type)
+ {
+diff --git a/kernel/cgroup/misc.c b/kernel/cgroup/misc.c
+index 4736db3cd418..ea18eae862a4 100644
+--- a/kernel/cgroup/misc.c
++++ b/kernel/cgroup/misc.c
+@@ -24,6 +24,10 @@ static const char *const misc_res_name[] = {
+ 	/* AMD SEV-ES ASIDs resource */
+ 	"sev_es",
+ #endif
++#ifdef CONFIG_CGROUP_SGX_EPC
++	/* Intel SGX EPC memory bytes */
++	"sgx_epc",
++#endif
+ };
+ 
+ /* Root misc cgroup */
+@@ -40,18 +44,13 @@ static struct misc_cg root_cg;
+ static unsigned long misc_res_capacity[MISC_CG_RES_TYPES];
+ 
+ /**
+- * parent_misc() - Get the parent of the passed misc cgroup.
+- * @cgroup: cgroup whose parent needs to be fetched.
+- *
+- * Context: Any context.
+- * Return:
+- * * struct misc_cg* - Parent of the @cgroup.
+- * * %NULL - If @cgroup is null or the passed cgroup does not have a parent.
++ * misc_cg_root() - Return the root misc cgroup.
+  */
+-static struct misc_cg *parent_misc(struct misc_cg *cgroup)
++struct misc_cg *misc_cg_root(void)
+ {
+-	return cgroup ? css_misc(cgroup->css.parent) : NULL;
++	return &root_cg;
+ }
++EXPORT_SYMBOL_GPL(misc_cg_root);
+ 
+ /**
+  * valid_type() - Check if @type is valid or not.
+@@ -151,7 +150,7 @@ int misc_cg_try_charge(enum misc_res_type type, struct misc_cg *cg,
+ 	if (!amount)
+ 		return 0;
+ 
+-	for (i = cg; i; i = parent_misc(i)) {
++	for (i = cg; i; i = misc_cg_parent(i)) {
+ 		res = &i->res[type];
+ 		new_usage = atomic_long_add_return(amount, &res->usage);
+ 		if (new_usage > READ_ONCE(res->max) ||
+@@ -164,12 +163,12 @@ int misc_cg_try_charge(enum misc_res_type type, struct misc_cg *cg,
+ 	return 0;
+ 
+ err_charge:
+-	for (j = i; j; j = parent_misc(j)) {
++	for (j = i; j; j = misc_cg_parent(j)) {
+ 		atomic_long_inc(&j->res[type].events);
+ 		cgroup_file_notify(&j->events_file);
+ 	}
+ 
+-	for (j = cg; j != i; j = parent_misc(j))
++	for (j = cg; j != i; j = misc_cg_parent(j))
+ 		misc_cg_cancel_charge(type, j, amount);
+ 	misc_cg_cancel_charge(type, i, amount);
+ 	return ret;
+@@ -192,7 +191,7 @@ void misc_cg_uncharge(enum misc_res_type type, struct misc_cg *cg,
+ 	if (!(amount && valid_type(type) && cg))
+ 		return;
+ 
+-	for (i = cg; i; i = parent_misc(i))
++	for (i = cg; i; i = misc_cg_parent(i))
+ 		misc_cg_cancel_charge(type, i, amount);
+ }
+ EXPORT_SYMBOL_GPL(misc_cg_uncharge);
 -- 
 2.25.1
 
