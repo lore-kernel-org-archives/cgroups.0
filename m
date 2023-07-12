@@ -1,24 +1,24 @@
 From: Tvrtko Ursulin <tvrtko.ursulin@linux.intel.com>
-Subject: [PATCH 13/17] drm/i915: Wire up with drm controller GPU
- time query
-Date: Wed, 12 Jul 2023 12:46:01 +0100
-Message-ID: <20230712114605.519432-14-tvrtko.ursulin@linux.intel.com>
+Subject: [PATCH 17/17] drm/i915: Wire up to the drm cgroup
+ memory stats
+Date: Wed, 12 Jul 2023 12:46:05 +0100
+Message-ID: <20230712114605.519432-18-tvrtko.ursulin@linux.intel.com>
 References: <20230712114605.519432-1-tvrtko.ursulin@linux.intel.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Return-path: <intel-gfx-bounces@lists.freedesktop.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
- t=1689162482; x=1720698482;
+ t=1689162486; x=1720698486;
  h=from:to:cc:subject:date:message-id:in-reply-to:
  references:mime-version:content-transfer-encoding;
- bh=mbUDZguU3/3ubuVhjLVfeypXgwnwUhCLLRTeHmZzUr0=;
- b=ADMLASZtL1Y929qd/LECG1g9p98mG0QB2ZvDIssBv3f/reEmCr/JuWqc
- mfLtyYxBYFSUvs5yzzuUUcavnkR1BAeurmX+yMmMN0gnK4kL6o2vAhDge
- vbRf4KRcYwwQKCp63sWNW8W1SEc+UhZtLtiZGMX120BaUgIAoXT+Fwika
- e/zmfaB4RB5UxaB8MrXBzhsrtxLf6g9BTOAzcDNxYi3UNy2XYb3mcr/1D
- 9ubegREqH7gnvlQn5q4AOg90SJ8bkNwbGpaa5yUZ+33+ib06O5HyhN4f7
- Cdf9OLu81ebUYVJu8MZD12Zy5mMR+qOkzcUNG84fJC/zWmSjetdDVGy3z g==;
+ bh=pTDsHp5N+DNZ4FPD2rGEEDX1s4pQgY6qlebjQjJtQfU=;
+ b=eAOsQh0FXfgoeG5WGOyZ0BGGxUAJhsDKihyjfMwNtelS19gfpqeLuuBp
+ Z7lS5RKOIHsXHjBdTY62c/7w6HtUAR6fbBzAEouWGl6xMLOsmOheliOWk
+ FiRgpFm57QXMmqhPgI9EpkyCN5CifWeQjVDQlpcrXtKCHU43n+y73zl89
+ GIAiy/9n+lHpqli+BPUDjHxlsxHnOeyGjrTadLIU1O343dO5ivK4d2c5d
+ RuJgN7MT/qGapS4dRIoMYbQ7ay1y1OGAB8w8r6/6cbaQigGLE8utaVFsu
+ XFSVG8xRE8XkfoVULpGUF6LXAgJ4sveB7pjmOnl8iAxgFHa2+AUFZ8FF8 A==;
 In-Reply-To: <20230712114605.519432-1-tvrtko.ursulin@linux.intel.com>
 List-Id: <cgroups.vger.kernel.org>
 List-Unsubscribe: <https://lists.freedesktop.org/mailman/options/intel-gfx>,
@@ -36,198 +36,290 @@ Cc: Rob Clark <robdclark@chromium.org>, Kenny.Ho@amd.com, Daniel Vetter <daniel.
 
 From: Tvrtko Ursulin <tvrtko.ursulin@intel.com>
 
-Implement the drm_cgroup_ops->active_time_us callback.
+Simply refactor the existing helpers which collate the data for fdinfo
+and share them with thin drm cgroup controller callbacks.
 
 Signed-off-by: Tvrtko Ursulin <tvrtko.ursulin@intel.com>
 ---
- drivers/gpu/drm/i915/i915_driver.c     |   8 ++
- drivers/gpu/drm/i915/i915_drm_client.c | 116 ++++++++++++++++++-------
- drivers/gpu/drm/i915/i915_drm_client.h |   2 +
- 3 files changed, 94 insertions(+), 32 deletions(-)
+ drivers/gpu/drm/i915/i915_driver.c     |   4 +
+ drivers/gpu/drm/i915/i915_drm_client.c | 183 ++++++++++++++++---------
+ drivers/gpu/drm/i915/i915_drm_client.h |  11 +-
+ 3 files changed, 129 insertions(+), 69 deletions(-)
 
 diff --git a/drivers/gpu/drm/i915/i915_driver.c b/drivers/gpu/drm/i915/i915_driver.c
-index 294b022de22b..62a544d17659 100644
+index 3b9d47c2097b..a299edc9eb79 100644
 --- a/drivers/gpu/drm/i915/i915_driver.c
 +++ b/drivers/gpu/drm/i915/i915_driver.c
-@@ -1791,6 +1791,12 @@ static const struct drm_ioctl_desc i915_ioctls[] = {
- 	DRM_IOCTL_DEF_DRV(I915_GEM_VM_DESTROY, i915_gem_vm_destroy_ioctl, DRM_RENDER_ALLOW),
+@@ -1795,6 +1795,10 @@ static const struct drm_ioctl_desc i915_ioctls[] = {
+ static const struct drm_cgroup_ops i915_drm_cgroup_ops = {
+ 	.active_time_us = i915_drm_cgroup_get_active_time_us,
+ 	.signal_budget = i915_drm_cgroup_signal_budget,
++
++	.num_memory_regions	= i915_drm_cgroup_num_memory_regions,
++	.memory_region_name	= i915_drm_cgroup_memory_region_name,
++	.memory_stats		= i915_drm_cgroup_memory_stats,
  };
+ #endif
  
-+#ifdef CONFIG_CGROUP_DRM
-+static const struct drm_cgroup_ops i915_drm_cgroup_ops = {
-+	.active_time_us = i915_drm_cgroup_get_active_time_us,
-+};
-+#endif
-+
- /*
-  * Interface history:
-  *
-@@ -1820,6 +1826,8 @@ static const struct drm_driver i915_drm_driver = {
- 	.postclose = i915_driver_postclose,
- 	.show_fdinfo = PTR_IF(IS_ENABLED(CONFIG_PROC_FS), i915_drm_client_fdinfo),
- 
-+	.cg_ops = PTR_IF(IS_ENABLED(CONFIG_CGROUP_DRM), &i915_drm_cgroup_ops),
-+
- 	.gem_prime_import = i915_gem_prime_import,
- 
- 	.dumb_create = i915_gem_dumb_create,
 diff --git a/drivers/gpu/drm/i915/i915_drm_client.c b/drivers/gpu/drm/i915/i915_drm_client.c
-index 9e7a6075ee25..c3298beb094a 100644
+index 9be007b10523..c54b1ac753c6 100644
 --- a/drivers/gpu/drm/i915/i915_drm_client.c
 +++ b/drivers/gpu/drm/i915/i915_drm_client.c
-@@ -44,6 +44,86 @@ void __i915_drm_client_free(struct kref *kref)
- 	kfree(client);
+@@ -29,7 +29,7 @@ struct i915_drm_client *i915_drm_client_alloc(void)
+ 	kref_init(&client->kref);
+ 	spin_lock_init(&client->ctx_lock);
+ 	INIT_LIST_HEAD(&client->ctx_list);
+-#ifdef CONFIG_PROC_FS
++#if defined(CONFIG_PROC_FS) || defined(CONFIG_CGROUP_DRM)
+ 	spin_lock_init(&client->objects_lock);
+ 	INIT_LIST_HEAD(&client->objects_list);
+ #endif
+@@ -46,6 +46,89 @@ void __i915_drm_client_free(struct kref *kref)
  }
  
-+#if defined(CONFIG_PROC_FS) || defined(CONFIG_CGROUP_DRM)
-+static const char * const uabi_class_names[] = {
-+	[I915_ENGINE_CLASS_RENDER] = "render",
-+	[I915_ENGINE_CLASS_COPY] = "copy",
-+	[I915_ENGINE_CLASS_VIDEO] = "video",
-+	[I915_ENGINE_CLASS_VIDEO_ENHANCE] = "video-enhance",
-+	[I915_ENGINE_CLASS_COMPUTE] = "compute",
-+};
-+
-+static u64 busy_add(struct i915_gem_context *ctx, unsigned int class)
+ #if defined(CONFIG_PROC_FS) || defined(CONFIG_CGROUP_DRM)
++static void
++obj_meminfo(struct drm_i915_gem_object *obj,
++	    struct drm_memory_stats *stats,
++	    unsigned int num)
 +{
-+	struct i915_gem_engines_iter it;
-+	struct intel_context *ce;
-+	u64 total = 0;
++	struct intel_memory_region *mr;
++	u64 sz = obj->base.size;
++	enum intel_region_id id;
++	unsigned int i;
 +
-+	for_each_gem_engine(ce, rcu_dereference(ctx->engines), it) {
-+		if (ce->engine->uabi_class != class)
-+			continue;
++	/* Attribute size and shared to all possible memory regions. */
++	for (i = 0; i < obj->mm.n_placements; i++) {
++		mr = obj->mm.placements[i];
++		id = mr->id;
 +
-+		total += intel_context_get_total_runtime_ns(ce);
++		if (WARN_ON_ONCE(id >= num))
++			return;
++
++		if (obj->base.handle_count > 1)
++			stats[id].shared += sz;
++		else
++			stats[id].private += sz;
 +	}
 +
-+	return total;
++	/* Attribute other categories to only the current region. */
++	mr = obj->mm.region;
++	if (mr)
++		id = mr->id;
++	else
++		id = INTEL_REGION_SMEM;
++
++	if (WARN_ON_ONCE(id >= num))
++		return;
++
++	if (!obj->mm.n_placements) {
++		if (obj->base.handle_count > 1)
++			stats[id].shared += sz;
++		else
++			stats[id].private += sz;
++	}
++
++	if (i915_gem_object_has_pages(obj)) {
++		stats[id].resident += sz;
++
++		if (!dma_resv_test_signaled(obj->base.resv,
++					    dma_resv_usage_rw(true)))
++			stats[id].active += sz;
++		else if (i915_gem_object_is_shrinkable(obj) &&
++			 obj->mm.madv == I915_MADV_DONTNEED)
++			stats[id].purgeable += sz;
++	}
 +}
 +
-+static u64 get_class_active_ns(struct i915_drm_client *client,
-+			       struct drm_i915_private *i915,
-+			       unsigned int class,
-+			       unsigned int *capacity)
-+{
-+	struct i915_gem_context *ctx;
-+	u64 total;
-+
-+	*capacity = i915->engine_uabi_class_count[class];
-+	if (!*capacity)
-+		return 0;
-+
-+	total = atomic64_read(&client->past_runtime[class]);
-+
-+	rcu_read_lock();
-+	list_for_each_entry_rcu(ctx, &client->ctx_list, client_link)
-+		total += busy_add(ctx, class);
-+	rcu_read_unlock();
-+
-+	return total;
-+}
-+
-+static bool supports_stats(struct drm_i915_private *i915)
-+{
-+	return GRAPHICS_VER(i915) >= 8;
-+}
-+#endif
-+
-+#if defined(CONFIG_CGROUP_DRM)
-+u64 i915_drm_cgroup_get_active_time_us(struct drm_file *file)
++static void
++memory_stats(struct drm_file *file,
++	     struct drm_memory_stats *stats,
++	     unsigned int num)
 +{
 +	struct drm_i915_file_private *fpriv = file->driver_priv;
 +	struct i915_drm_client *client = fpriv->client;
-+	struct drm_i915_private *i915 = fpriv->i915;
-+	unsigned int i;
-+	u64 busy = 0;
++	struct drm_i915_gem_object *obj;
++	struct list_head *pos;
++	unsigned int id;
 +
-+	if (!supports_stats(i915))
-+		return 0;
++	/* Public objects. */
++	spin_lock(&file->table_lock);
++	idr_for_each_entry(&file->object_idr, obj, id)
++		obj_meminfo(obj, stats, num);
++	spin_unlock(&file->table_lock);
 +
-+	for (i = 0; i < ARRAY_SIZE(uabi_class_names); i++) {
-+		unsigned int capacity;
-+		u64 b;
++	/* Internal objects. */
++	rcu_read_lock();
++	list_for_each_rcu(pos, &client->objects_list) {
++		obj = i915_gem_object_get_rcu(list_entry(pos, typeof(*obj),
++							 client_link));
++		if (!obj)
++			continue;
++		obj_meminfo(obj, stats, num);
++		i915_gem_object_put(obj);
++	}
++	rcu_read_unlock();
++}
 +
-+		b = get_class_active_ns(client, i915, i, &capacity);
-+		if (capacity) {
-+			b = DIV_ROUND_UP_ULL(b, capacity * 1000);
-+			busy += b;
-+		}
+ static const char * const uabi_class_names[] = {
+ 	[I915_ENGINE_CLASS_RENDER] = "render",
+ 	[I915_ENGINE_CLASS_COPY] = "copy",
+@@ -255,83 +338,47 @@ int i915_drm_cgroup_signal_budget(struct drm_file *file, u64 usage, u64 budget)
+ 
+ 	return ret;
+ }
++
++unsigned int i915_drm_cgroup_num_memory_regions(const struct drm_device *dev)
++{
++	return INTEL_REGION_UNKNOWN;
++}
++
++const char *i915_drm_cgroup_memory_region_name(const struct drm_device *dev,
++					       unsigned int index)
++{
++	const struct drm_i915_private *i915 = to_i915(dev);
++
++	if (index < ARRAY_SIZE(i915->mm.regions)) {
++		struct intel_memory_region *mr = i915->mm.regions[index];
++
++		if (mr)
++			return mr->name;
 +	}
 +
-+	return busy;
++	return NULL;
 +}
-+#endif
 +
- #ifdef CONFIG_PROC_FS
- static void
- obj_meminfo(struct drm_i915_gem_object *obj,
-@@ -128,44 +208,16 @@ static void show_meminfo(struct drm_printer *p, struct drm_file *file)
- 				       mr->name);
- }
- 
--static const char * const uabi_class_names[] = {
--	[I915_ENGINE_CLASS_RENDER] = "render",
--	[I915_ENGINE_CLASS_COPY] = "copy",
--	[I915_ENGINE_CLASS_VIDEO] = "video",
--	[I915_ENGINE_CLASS_VIDEO_ENHANCE] = "video-enhance",
--	[I915_ENGINE_CLASS_COMPUTE] = "compute",
--};
--
--static u64 busy_add(struct i915_gem_context *ctx, unsigned int class)
--{
--	struct i915_gem_engines_iter it;
--	struct intel_context *ce;
--	u64 total = 0;
--
--	for_each_gem_engine(ce, rcu_dereference(ctx->engines), it) {
--		if (ce->engine->uabi_class != class)
--			continue;
--
--		total += intel_context_get_total_runtime_ns(ce);
--	}
--
--	return total;
--}
--
- static void
- show_client_class(struct drm_printer *p,
- 		  struct drm_i915_private *i915,
- 		  struct i915_drm_client *client,
- 		  unsigned int class)
- {
--	const unsigned int capacity = i915->engine_uabi_class_count[class];
--	u64 total = atomic64_read(&client->past_runtime[class]);
--	struct i915_gem_context *ctx;
-+	unsigned int capacity;
-+	u64 total;
- 
--	rcu_read_lock();
--	list_for_each_entry_rcu(ctx, &client->ctx_list, client_link)
--		total += busy_add(ctx, class);
--	rcu_read_unlock();
-+	total = get_class_active_ns(client, i915, class, &capacity);
- 
- 	if (capacity)
- 		drm_printf(p, "drm-engine-%s:\t%llu ns\n",
-@@ -191,7 +243,7 @@ void i915_drm_client_fdinfo(struct drm_printer *p, struct drm_file *file)
- 
- 	show_meminfo(p, file);
- 
--	if (GRAPHICS_VER(i915) < 8)
-+	if (!supports_stats(i915))
- 		return;
- 
- 	for (i = 0; i < ARRAY_SIZE(uabi_class_names); i++)
-diff --git a/drivers/gpu/drm/i915/i915_drm_client.h b/drivers/gpu/drm/i915/i915_drm_client.h
-index 69cedfcd3d69..e0b143890e69 100644
---- a/drivers/gpu/drm/i915/i915_drm_client.h
-+++ b/drivers/gpu/drm/i915/i915_drm_client.h
-@@ -90,4 +90,6 @@ i915_drm_client_add_context_objects(struct i915_drm_client *client,
- }
++unsigned int i915_drm_cgroup_memory_stats(struct drm_file *file,
++					  struct drm_memory_stats *stats,
++					  unsigned int num)
++{
++	memory_stats(file, stats, num);
++
++	return DRM_GEM_OBJECT_RESIDENT | DRM_GEM_OBJECT_PURGEABLE;
++}
  #endif
  
-+u64 i915_drm_cgroup_get_active_time_us(struct drm_file *file);
+ #ifdef CONFIG_PROC_FS
+-static void
+-obj_meminfo(struct drm_i915_gem_object *obj,
+-	    struct drm_memory_stats stats[INTEL_REGION_UNKNOWN])
+-{
+-	struct intel_memory_region *mr;
+-	u64 sz = obj->base.size;
+-	enum intel_region_id id;
+-	unsigned int i;
+-
+-	/* Attribute size and shared to all possible memory regions. */
+-	for (i = 0; i < obj->mm.n_placements; i++) {
+-		mr = obj->mm.placements[i];
+-		id = mr->id;
+-
+-		if (obj->base.handle_count > 1)
+-			stats[id].shared += sz;
+-		else
+-			stats[id].private += sz;
+-	}
+-
+-	/* Attribute other categories to only the current region. */
+-	mr = obj->mm.region;
+-	if (mr)
+-		id = mr->id;
+-	else
+-		id = INTEL_REGION_SMEM;
+-
+-	if (!obj->mm.n_placements) {
+-		if (obj->base.handle_count > 1)
+-			stats[id].shared += sz;
+-		else
+-			stats[id].private += sz;
+-	}
+-
+-	if (i915_gem_object_has_pages(obj)) {
+-		stats[id].resident += sz;
+-
+-		if (!dma_resv_test_signaled(obj->base.resv,
+-					    dma_resv_usage_rw(true)))
+-			stats[id].active += sz;
+-		else if (i915_gem_object_is_shrinkable(obj) &&
+-			 obj->mm.madv == I915_MADV_DONTNEED)
+-			stats[id].purgeable += sz;
+-	}
+-}
+-
+ static void show_meminfo(struct drm_printer *p, struct drm_file *file)
+ {
+ 	struct drm_memory_stats stats[INTEL_REGION_UNKNOWN] = {};
+ 	struct drm_i915_file_private *fpriv = file->driver_priv;
+-	struct i915_drm_client *client = fpriv->client;
+ 	struct drm_i915_private *i915 = fpriv->i915;
+-	struct drm_i915_gem_object *obj;
+ 	struct intel_memory_region *mr;
+-	struct list_head *pos;
+ 	unsigned int id;
+ 
+-	/* Public objects. */
+-	spin_lock(&file->table_lock);
+-	idr_for_each_entry(&file->object_idr, obj, id)
+-		obj_meminfo(obj, stats);
+-	spin_unlock(&file->table_lock);
+-
+-	/* Internal objects. */
+-	rcu_read_lock();
+-	list_for_each_rcu(pos, &client->objects_list) {
+-		obj = i915_gem_object_get_rcu(list_entry(pos, typeof(*obj),
+-							 client_link));
+-		if (!obj)
+-			continue;
+-		obj_meminfo(obj, stats);
+-		i915_gem_object_put(obj);
+-	}
+-	rcu_read_unlock();
++	memory_stats(file, stats, ARRAY_SIZE(stats));
+ 
+ 	for_each_memory_region(mr, i915, id)
+ 		drm_print_memory_stats(p,
+@@ -382,7 +429,9 @@ void i915_drm_client_fdinfo(struct drm_printer *p, struct drm_file *file)
+ 	for (i = 0; i < ARRAY_SIZE(uabi_class_names); i++)
+ 		show_client_class(p, i915, file_priv->client, i);
+ }
++#endif
+ 
++#if defined(CONFIG_PROC_FS) || defined(CONFIG_CGROUP_DRM)
+ void i915_drm_client_add_object(struct i915_drm_client *client,
+ 				struct drm_i915_gem_object *obj)
+ {
+diff --git a/drivers/gpu/drm/i915/i915_drm_client.h b/drivers/gpu/drm/i915/i915_drm_client.h
+index 6eadc9596b8f..8b34be25e887 100644
+--- a/drivers/gpu/drm/i915/i915_drm_client.h
++++ b/drivers/gpu/drm/i915/i915_drm_client.h
+@@ -29,7 +29,7 @@ struct i915_drm_client {
+ 	spinlock_t ctx_lock; /* For add/remove from ctx_list. */
+ 	struct list_head ctx_list; /* List of contexts belonging to client. */
+ 
+-#ifdef CONFIG_PROC_FS
++#if defined(CONFIG_PROC_FS) || defined(CONFIG_CGROUP_DRM)
+ 	/**
+ 	 * @objects_lock: lock protecting @objects_list
+ 	 */
+@@ -74,7 +74,7 @@ struct i915_drm_client *i915_drm_client_alloc(void);
+ 
+ void i915_drm_client_fdinfo(struct drm_printer *p, struct drm_file *file);
+ 
+-#ifdef CONFIG_PROC_FS
++#if defined(CONFIG_PROC_FS) || defined(CONFIG_CGROUP_DRM)
+ void i915_drm_client_add_object(struct i915_drm_client *client,
+ 				struct drm_i915_gem_object *obj);
+ bool i915_drm_client_remove_object(struct drm_i915_gem_object *obj);
+@@ -101,4 +101,11 @@ u64 i915_drm_cgroup_get_active_time_us(struct drm_file *file);
+ int i915_drm_cgroup_signal_budget(struct drm_file *file,
+ 				  u64 usage, u64 budget);
+ 
++unsigned int i915_drm_cgroup_num_memory_regions(const struct drm_device *);
++const char *i915_drm_cgroup_memory_region_name(const struct drm_device *,
++					       unsigned int index);
++unsigned int i915_drm_cgroup_memory_stats(struct drm_file *,
++					  struct drm_memory_stats *,
++					  unsigned int num);
 +
  #endif /* !__I915_DRM_CLIENT_H__ */
 -- 
