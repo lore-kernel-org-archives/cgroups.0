@@ -1,49 +1,89 @@
-From: Alex Williamson <alex.williamson@redhat.com>
-Subject: Re: [PATCH 0/2] eventfd: simplify signal helpers
-Date: Thu, 13 Jul 2023 11:10:54 -0600
-Message-ID: <20230713111054.75cdf2b8.alex.williamson@redhat.com>
-References: <20230713-vfs-eventfd-signal-v1-0-7fda6c5d212b@kernel.org>
+From: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Subject: [PATCH-cgroup v5 0/5] cgroup/cpuset: Support remote partitions
+Date: Thu, 13 Jul 2023 13:25:56 -0400
+Message-ID: <20230713172601.3285847-1-longman@redhat.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <intel-gfx-bounces@lists.freedesktop.org>
+Content-Transfer-Encoding: 8bit
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
- s=mimecast20190719; t=1689268260;
- h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
- to:to:cc:cc:mime-version:mime-version:content-type:content-type:
- content-transfer-encoding:content-transfer-encoding:
- in-reply-to:in-reply-to:references:references;
- bh=+UPgPFBGvQHuZjwqO9ik4oPicS3MZwipCdBIqa3Pous=;
- b=gNfBuFkf0gGu6EVWbDwoyiU8boJV7eRq6L3WSboaHg0RAldYAOV74SvuSMS+x9W+rsPL/m
- BKOFbjtxsjuIxIyC6zdpsd+oXETnMFGRgtb7c+TCRAtzOQbPlNeRoBjm9fX9rU5uS/IkH4
- Utl8POcE6XSSrdOtWXvbguHI7QlEQoE=
-In-Reply-To: <20230713-vfs-eventfd-signal-v1-0-7fda6c5d212b@kernel.org>
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.freedesktop.org/mailman/options/intel-gfx>,
- <mailto:intel-gfx-request@lists.freedesktop.org?subject=unsubscribe>
-List-Archive: <https://lists.freedesktop.org/archives/intel-gfx>
-List-Post: <mailto:intel-gfx@lists.freedesktop.org>
-List-Help: <mailto:intel-gfx-request@lists.freedesktop.org?subject=help>
-List-Subscribe: <https://lists.freedesktop.org/mailman/listinfo/intel-gfx>,
- <mailto:intel-gfx-request@lists.freedesktop.org?subject=subscribe>
-Errors-To: intel-gfx-bounces@lists.freedesktop.org
-Sender: "Intel-gfx" <intel-gfx-bounces@lists.freedesktop.org>
+        s=mimecast20190719; t=1689269187;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:
+         content-transfer-encoding:content-transfer-encoding;
+        bh=b39/2E54J6/ek/nF8sDTY7kZp1goyhE+qUqHrG0pcmw=;
+        b=PfMP2tsUOJ7+EqKRvoF2cu1t8V8dlE1T90Opli5TOLpIB41Uee0WpUfP6K0ZdEfmxbSaS2
+        yd9Qz9awTbtlh7/glEXXqx2zJ8panE6e0hnlj2WD54j+ODLECmBEG91mEn4JTNTY1+SBnh
+        uDjofV0zb4VmzeliUe5q/FqCh25CFLc=
+List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Christian Brauner <brauner@kernel.org>
-Cc: linux-aio@kvack.org, Muchun Song <muchun.song@linux.dev>, Tony Krowiak <akrowiak@linux.ibm.com>, Matthew Rosato <mjrosato@linux.ibm.com>, Paul Durrant <paul@xen.org>, Tom Rix <trix@redhat.com>, Jason Wang <jasowang@redhat.com>, Roman Gushchin <roman.gushchin@linux.dev>, dri-devel@lists.freedesktop.org, Michal Hocko <mhocko@kernel.org>, Heiko Carstens <hca@linux.ibm.com>, linux-mm@kvack.org, Kirti Wankhede <kwankhede@nvidia.com>, Vineeth Vijayan <vneethv@linux.ibm.com>, Diana Craciun <diana.craciun@oss.nxp.com>, Borislav Petkov <bp@alien8.de>, Alexander Gordeev <agordeev@linux.ibm.com>, Fei Li <fei1.li@intel.com>, Xuan Zhuo <xuanzhuo@linux.alibaba.com>, Arnd Bergmann <arnd@arndb.de>, Leon Romanovsky <leon@kernel.org>, jaz@semihalf.com, linux-rdma@vger.kernel.org, x86@kernel.org, Halil Pasic <pasic@linux.ibm.com>, Jason Gunthorpe <jgg@ziepe.ca>, Ingo Molnar <mingo@redhat.co>
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Christian Brauner <brauner-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Jonathan Corbet <corbet-T1hC0tSOHrs@public.gmane.org>, Shuah Khan <shuah-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Juri Lelli <juri.lelli-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Dietmar Eggemann <dietmar.eggemann-5wv7dgnIgG8@public.gmane.org>, =?UTF-8?q?Michal=20Koutn=C3=BD?= <mkoutny-IBi9RG/b67k@public.gmane.org>, Giuseppe Scrivano <gscrivan-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 
-On Thu, 13 Jul 2023 12:05:36 +0200
-Christian Brauner <brauner@kernel.org> wrote:
+ v5:
+  - [v4] https://lore.kernel.org/lkml/20230627143508.1576882-1-longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org/
+  - Drop the first 4 patches as they had been merged.
+  - Make cpuset.cpus.exclusive invariant once it is manually set. This
+    also means the cpuset.cpus.exclusive may not show the effective value
+    that is actually being used.
+  - Update the documentation and test accordingly.
 
-> Hey everyone,
-> 
-> This simplifies the eventfd_signal() and eventfd_signal_mask() helpers
-> by removing the count argument which is effectively unused.
+ v4:
+  - [v3] https://lore.kernel.org/lkml/20230627005529.1564984-1-longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org/
+  - Fix compilation problem reported by kernel test robot.
 
-We have a patch under review which does in fact make use of the
-signaling value:
+This patch series introduces a new cpuset control file
+"cpuset.cpus.exclusive" which must be a subset of "cpuset.cpus"
+and the parent's "cpuset.cpus.exclusive". This control file lists
+the exclusive CPUs to be distributed down the hierarchy. Any one
+of the exclusive CPUs can only be distributed to at most one child
+cpuset. Unlike "cpuset.cpus", invalid input to "cpuset.cpus.exclusive"
+will be rejected with an error. This new control file has no effect on
+the behavior of the cpuset until it turns into a partition root. At that
+point, its effective CPUs will be set to its exclusive CPUs unless some
+of them are offline.
 
-https://lore.kernel.org/all/20230630155936.3015595-1-jaz@semihalf.com/
+This patch series also introduces a new category of cpuset partition
+called remote partitions. The existing partition category where the
+partition roots have to be clustered around the root cgroup in a
+hierarchical way is now referred to as local partitions.
 
-Thanks,
-Alex
+A remote partition can be formed far from the root cgroup
+with no partition root parent. While local partitions can be
+created without touching "cpuset.cpus.exclusive" as it can be set
+automatically if a cpuset becomes a local partition root. Properly set
+"cpuset.cpus.exclusive" values down the hierarchy are required to create
+a remote partition.
+
+Both scheduling and isolated partitions can be formed in a remote
+partition. A local partition can be created under a remote partition.
+A remote partition, however, cannot be formed under a local partition
+for now.
+
+Modern container orchestration tools like Kubernetes use the cgroup
+hierarchy to manage different containers. And it is relying on other
+middleware like systemd to help managing it. If a container needs to
+use isolated CPUs, it is hard to get those with the local partitions
+as it will require the administrative parent cgroup to be a partition
+root too which tool like systemd may not be ready to manage.
+
+With this patch series, we allow the creation of remote partition
+far from the root. The container management tool can manage the
+"cpuset.cpus.exclusive" file without impacting the other cpuset
+files that are managed by other middlewares. Of course, invalid
+"cpuset.cpus.exclusive" values will be rejected.
+
+Waiman Long (5):
+  cgroup/cpuset: Add cpuset.cpus.exclusive for v2
+  cgroup/cpuset: Introduce remote partition
+  cgroup/cpuset: Check partition conflict with housekeeping setup
+  cgroup/cpuset: Documentation update for partition
+  cgroup/cpuset: Extend test_cpuset_prs.sh to test remote partition
+
+ Documentation/admin-guide/cgroup-v2.rst       |  114 +-
+ kernel/cgroup/cpuset.c                        | 1242 ++++++++++++-----
+ .../selftests/cgroup/test_cpuset_prs.sh       |  419 ++++--
+ 3 files changed, 1291 insertions(+), 484 deletions(-)
+
+-- 
+2.31.1
 
