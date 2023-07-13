@@ -1,133 +1,49 @@
-From: Christian Brauner <brauner@kernel.org>
-Subject: Re: [PATCH 2/2] eventfd: simplify eventfd_signal_mask()
-Date: Thu, 13 Jul 2023 16:52:34 +0200
-Message-ID: <20230713-mahnen-drosseln-fa717117e827@brauner>
+From: Alex Williamson <alex.williamson@redhat.com>
+Subject: Re: [PATCH 0/2] eventfd: simplify signal helpers
+Date: Thu, 13 Jul 2023 11:10:54 -0600
+Message-ID: <20230713111054.75cdf2b8.alex.williamson@redhat.com>
 References: <20230713-vfs-eventfd-signal-v1-0-7fda6c5d212b@kernel.org>
- <20230713-vfs-eventfd-signal-v1-2-7fda6c5d212b@kernel.org>
- <ZLAK+FA3qgbHW0YK@google.com>
 Mime-Version: 1.0
-Return-path: <io-uring-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1689259971;
-        bh=R4Hkl4iroQ+C4d3AaFA6aa52uzI7aPnAyTDDN/lwc78=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=RS/6gRgqvF3ybwn8Ovqq43iLhI7Yv15SZZP2U5CNn6IhgXHQH9mo4nByA/g4W736R
-         AkMi1WqcMsHhNrtO7dGPqCwKIYlgvLK+7FW5vJj2elL3FTubJgM81//BHDuM8QqyRP
-         Csacjb3yQ3aRtIn7A1i9sInqtS8VRY/O0QwqwwSlh+wJ04gvPtGAbDZaSnmdfd209l
-         vt3KpAe4HIE13hYrO1C7jusvVYug5pHUh1tQDDmm+XtqhW6CbXRqbqDYOCl1W9QxOQ
-         VXNT8IMNIH9hLd1wzLndR4KoVQB79H/FYLq25P8lOlildm0R+bpsuSo9TwClPA0kLV
-         csu2vX1i0ECSg==
-Content-Disposition: inline
-In-Reply-To: <ZLAK+FA3qgbHW0YK@google.com>
-List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Sean Christopherson <seanjc@google.com>
-Cc: linux-fsdevel@vger.kernel.org, Vitaly Kuznetsov <vkuznets@redhat.com>, Paolo Bonzini <pbonzini@redhat.com>, Thomas Gleixner <tglx@linutronix.de>, Ingo Molnar <mingo@redhat.com>, Borislav Petkov <bp@alien8.de>, Dave Hansen <dave.hansen@linux.intel.com>, x86@kernel.org, David Woodhouse <dwmw2@infradead.org>, Paul Durrant <paul@xen.org>, Oded Gabbay <ogabbay@kernel.org>, Wu Hao <hao.wu@intel.com>, Tom Rix <trix@redhat.com>, Moritz Fischer <mdf@kernel.org>, Xu Yilun <yilun.xu@intel.com>, Zhenyu Wang <zhenyuw@linux.intel.com>, Zhi Wang <zhi.a.wang@intel.com>, Jani Nikula <jani.nikula@linux.intel.com>, Joonas Lahtinen <joonas.lahtinen@linux.intel.com>, Rodrigo Vivi <rodrigo.vivi@intel.com>, Tvrtko Ursulin <tvrtko.ursulin@linux.intel.com>, David Airlie <airlied@gma>
+Return-path: <intel-gfx-bounces@lists.freedesktop.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+ s=mimecast20190719; t=1689268260;
+ h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+ to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+ content-transfer-encoding:content-transfer-encoding:
+ in-reply-to:in-reply-to:references:references;
+ bh=+UPgPFBGvQHuZjwqO9ik4oPicS3MZwipCdBIqa3Pous=;
+ b=gNfBuFkf0gGu6EVWbDwoyiU8boJV7eRq6L3WSboaHg0RAldYAOV74SvuSMS+x9W+rsPL/m
+ BKOFbjtxsjuIxIyC6zdpsd+oXETnMFGRgtb7c+TCRAtzOQbPlNeRoBjm9fX9rU5uS/IkH4
+ Utl8POcE6XSSrdOtWXvbguHI7QlEQoE=
+In-Reply-To: <20230713-vfs-eventfd-signal-v1-0-7fda6c5d212b@kernel.org>
+List-Id: <cgroups.vger.kernel.org>
+List-Unsubscribe: <https://lists.freedesktop.org/mailman/options/intel-gfx>,
+ <mailto:intel-gfx-request@lists.freedesktop.org?subject=unsubscribe>
+List-Archive: <https://lists.freedesktop.org/archives/intel-gfx>
+List-Post: <mailto:intel-gfx@lists.freedesktop.org>
+List-Help: <mailto:intel-gfx-request@lists.freedesktop.org?subject=help>
+List-Subscribe: <https://lists.freedesktop.org/mailman/listinfo/intel-gfx>,
+ <mailto:intel-gfx-request@lists.freedesktop.org?subject=subscribe>
+Errors-To: intel-gfx-bounces@lists.freedesktop.org
+Sender: "Intel-gfx" <intel-gfx-bounces@lists.freedesktop.org>
+Content-Type: text/plain; charset="us-ascii"
+To: Christian Brauner <brauner@kernel.org>
+Cc: linux-aio@kvack.org, Muchun Song <muchun.song@linux.dev>, Tony Krowiak <akrowiak@linux.ibm.com>, Matthew Rosato <mjrosato@linux.ibm.com>, Paul Durrant <paul@xen.org>, Tom Rix <trix@redhat.com>, Jason Wang <jasowang@redhat.com>, Roman Gushchin <roman.gushchin@linux.dev>, dri-devel@lists.freedesktop.org, Michal Hocko <mhocko@kernel.org>, Heiko Carstens <hca@linux.ibm.com>, linux-mm@kvack.org, Kirti Wankhede <kwankhede@nvidia.com>, Vineeth Vijayan <vneethv@linux.ibm.com>, Diana Craciun <diana.craciun@oss.nxp.com>, Borislav Petkov <bp@alien8.de>, Alexander Gordeev <agordeev@linux.ibm.com>, Fei Li <fei1.li@intel.com>, Xuan Zhuo <xuanzhuo@linux.alibaba.com>, Arnd Bergmann <arnd@arndb.de>, Leon Romanovsky <leon@kernel.org>, jaz@semihalf.com, linux-rdma@vger.kernel.org, x86@kernel.org, Halil Pasic <pasic@linux.ibm.com>, Jason Gunthorpe <jgg@ziepe.ca>, Ingo Molnar <mingo@redhat.co>
 
-On Thu, Jul 13, 2023 at 07:33:05AM -0700, Sean Christopherson wrote:
-> On Thu, Jul 13, 2023, Christian Brauner wrote:
-> > diff --git a/fs/eventfd.c b/fs/eventfd.c
-> > index dc9e01053235..077be5da72bd 100644
-> > --- a/fs/eventfd.c
-> > +++ b/fs/eventfd.c
-> > @@ -43,9 +43,10 @@ struct eventfd_ctx {
-> >  	int id;
-> >  };
-> >  
-> > -__u64 eventfd_signal_mask(struct eventfd_ctx *ctx, __u64 n, __poll_t mask)
-> > +bool eventfd_signal_mask(struct eventfd_ctx *ctx, __poll_t mask)
-> >  {
-> >  	unsigned long flags;
-> > +	__u64 n = 1;
-> >  
-> >  	/*
-> >  	 * Deadlock or stack overflow issues can happen if we recurse here
-> > @@ -68,7 +69,7 @@ __u64 eventfd_signal_mask(struct eventfd_ctx *ctx, __u64 n, __poll_t mask)
-> >  	current->in_eventfd = 0;
-> >  	spin_unlock_irqrestore(&ctx->wqh.lock, flags);
-> >  
-> > -	return n;
-> > +	return n == 1;
-> >  }
-> 
-> ...
-> 
-> > @@ -58,13 +58,12 @@ static inline struct eventfd_ctx *eventfd_ctx_fdget(int fd)
-> >  	return ERR_PTR(-ENOSYS);
-> >  }
-> >  
-> > -static inline int eventfd_signal(struct eventfd_ctx *ctx)
-> > +static inline bool eventfd_signal(struct eventfd_ctx *ctx)
-> >  {
-> >  	return -ENOSYS;
-> >  }
-> >  
-> > -static inline int eventfd_signal_mask(struct eventfd_ctx *ctx, __u64 n,
-> > -				      unsigned mask)
-> > +static inline bool eventfd_signal_mask(struct eventfd_ctx *ctx, unsigned mask)
-> >  {
-> >  	return -ENOSYS;
-> 
-> This will morph to "true" for what should be an error case.  One option would be
+On Thu, 13 Jul 2023 12:05:36 +0200
+Christian Brauner <brauner@kernel.org> wrote:
 
-Ewww, that means it did return -ENOSYS before any of this.
+> Hey everyone,
+> 
+> This simplifies the eventfd_signal() and eventfd_signal_mask() helpers
+> by removing the count argument which is effectively unused.
 
-> to have eventfd_signal_mask() return 0/-errno instead of the count, but looking
-> at all the callers, nothing ever actually consumes the result.
-> 
-> KVMGT morphs failure into -EFAULT
-> 
-> 	if (vgpu->msi_trigger && eventfd_signal(vgpu->msi_trigger, 1) != 1)
-> 		return -EFAULT;
-> 
-> but the only caller of that user ignores the return value.
-> 
-> 	if (vgpu_vreg(vgpu, i915_mmio_reg_offset(GEN8_MASTER_IRQ))
-> 			& ~GEN8_MASTER_IRQ_CONTROL)
-> 		inject_virtual_interrupt(vgpu);
-> 
-> The sample driver in samples/vfio-mdev/mtty.c uses a similar pattern: prints an
-> error but otherwise ignores the result.
-> 
-> So why not return nothing?  That will simplify eventfd_signal_mask() a wee bit
-> more, and eliminate that bizarre return value confusion for the ugly stubs, e.g.
+We have a patch under review which does in fact make use of the
+signaling value:
 
-Yeah, it used to return an int in the non-eventfd and a __u64 in the
-eventfd case.
+https://lore.kernel.org/all/20230630155936.3015595-1-jaz@semihalf.com/
 
-> 
-> void eventfd_signal_mask(struct eventfd_ctx *ctx, unsigned mask)
-> {
-> 	unsigned long flags;
-> 
-> 	/*
-> 	 * Deadlock or stack overflow issues can happen if we recurse here
-> 	 * through waitqueue wakeup handlers. If the caller users potentially
-> 	 * nested waitqueues with custom wakeup handlers, then it should
-> 	 * check eventfd_signal_allowed() before calling this function. If
-> 	 * it returns false, the eventfd_signal() call should be deferred to a
-> 	 * safe context.
-> 	 */
-> 	if (WARN_ON_ONCE(current->in_eventfd))
-> 		return;
-> 
-> 	spin_lock_irqsave(&ctx->wqh.lock, flags);
-> 	current->in_eventfd = 1;
-> 	if (ctx->count < ULLONG_MAX)
-> 		ctx->count++;
-> 	if (waitqueue_active(&ctx->wqh))
-> 		wake_up_locked_poll(&ctx->wqh, EPOLLIN | mask);
-> 	current->in_eventfd = 0;
-> 	spin_unlock_irqrestore(&ctx->wqh.lock, flags);
-> }
-> 
-> You could even go further and unify the real and stub versions of eventfd_signal().
+Thanks,
+Alex
 
-The reason I didn't make eventfd_signal_mask() return void was that it
-was called from eventfd_signal() which did, I didn't realize the caller
-didn't actually consume the return value.
-
-If we can let both return void it gets simpler.
-
-Thanks for that.
