@@ -1,36 +1,40 @@
 From: Miaohe Lin <linmiaohe-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Subject: [PATCH] cgroup: use cached local variable parent in for loop
-Date: Sat, 15 Jul 2023 11:08:29 +0800
-Message-ID: <20230715030829.2343109-1-linmiaohe@huawei.com>
+Subject: [PATCH] mm/memcg: use get_page() for device private pages in mc_handle_swap_pte()
+Date: Sat, 15 Jul 2023 11:28:02 +0800
+Message-ID: <20230715032802.2508163-1-linmiaohe@huawei.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7BIT
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linmiaohe-hv44wF8Li93QT0dZR+AlfA@public.gmane.org
+To: akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org, shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org
+Cc: muchun.song-fxUVXftIFDnyG1zEObXtfA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linmiaohe-hv44wF8Li93QT0dZR+AlfA@public.gmane.org
 
-Use local variable parent to initialize iter tcgrp in for loop so the size
-of cgroup.o can be reduced by 64 bytes. No functional change intended.
+When page table locked is held, the page can't be freed from under us.
+So use get_page() to get the extra page reference to simplify the code.
+No functional change intended.
 
 Signed-off-by: Miaohe Lin <linmiaohe-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 ---
- kernel/cgroup/cgroup.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ mm/memcontrol.c | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
 
-diff --git a/kernel/cgroup/cgroup.c b/kernel/cgroup/cgroup.c
-index 6225d5829459..033f38fb5cef 100644
---- a/kernel/cgroup/cgroup.c
-+++ b/kernel/cgroup/cgroup.c
-@@ -5894,7 +5894,7 @@ static int cgroup_destroy_locked(struct cgroup *cgrp)
- 		parent->nr_threaded_children--;
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index 93e3cc581b51..4ca382efb1ca 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -5670,8 +5670,9 @@ static struct page *mc_handle_swap_pte(struct vm_area_struct *vma,
+ 	 */
+ 	if (is_device_private_entry(ent)) {
+ 		page = pfn_swap_entry_to_page(ent);
+-		if (!get_page_unless_zero(page))
+-			return NULL;
++		/* Get a page reference while we know the page can't be freed. */
++		get_page(page);
++
+ 		return page;
+ 	}
  
- 	spin_lock_irq(&css_set_lock);
--	for (tcgrp = cgroup_parent(cgrp); tcgrp; tcgrp = cgroup_parent(tcgrp)) {
-+	for (tcgrp = parent; tcgrp; tcgrp = cgroup_parent(tcgrp)) {
- 		tcgrp->nr_descendants--;
- 		tcgrp->nr_dying_descendants++;
- 		/*
 -- 
 2.33.0
 
