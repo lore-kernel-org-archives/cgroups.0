@@ -1,40 +1,44 @@
-From: "Jarkko Sakkinen" <jarkko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH v3 18/28] cgroup/misc: Fix an overflow
-Date: Mon, 17 Jul 2023 13:15:19 +0000
-Message-ID: <CU4H43P3H35X.1BCA3CE4D1250@seitikki>
+From: "Jarkko Sakkinen" <jarkko@kernel.org>
+Subject: Re: [PATCH v3 19/28] cgroup/misc: Add per resource callbacks for
+ CSS events
+Date: Mon, 17 Jul 2023 13:16:04 +0000
+Message-ID: <CU4H4O6WHRY2.2Q6YGBQQFJBK5@seitikki>
 References: <20230712230202.47929-1-haitao.huang@linux.intel.com>
- <20230712230202.47929-19-haitao.huang@linux.intel.com>
+ <20230712230202.47929-20-haitao.huang@linux.intel.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: quoted-printable
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1689599723;
-        bh=TPoLuNdok8xu469zt+gJUA+72duNsVIwHpKBEXyRj8U=;
-        h=Date:Subject:From:To:Cc:References:In-Reply-To:From;
-        b=eNDT/Gt2Zpla10k8gy1Fza+XuWfpc4fT2vL05ThKyjAfvKHwVhd2drBHf1OFuwNtS
-         5kKARQIlTXZan+yWS97J8FbrysJ9uQC2SbPYeuE75MdNvX1SNSIxI2EkCvZx4uuK1u
-         fU971SaXjOc9j5/tJFQ2ILNJu5GLfdWeOJMEFdzlV1ciUoTrPWH9k8ppua1iWbrR3b
-         G1eifQQo1TKw4xPoeEkBDfluI37QQ3tmta+cjCBzS15mchxYAqUDklyIgr5TPXzRq6
-         AcsberFs9b0a+0HS/80l0sZ8YSRfjOHsHJD8Br1KbXQ20hvl7AA/bFUAU0qUOoxrL9
-         VuDThiaCVZgMQ==
-In-Reply-To: <20230712230202.47929-19-haitao.huang-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
+        s=k20201202; t=1689599768;
+        bh=yX5VD4argzEiOYVVZ5od4hN9Yb9EkGyUcdTxKzHkZWU=;
+        h=Date:Cc:Subject:From:To:References:In-Reply-To:From;
+        b=Yv6zBWBYNM+sft7PEHdXi84Pv8RrkBtUbsBGNXVdel9FV09PWDVdkMJ6pebKorOGO
+         K1KrFHyH4CJpBdELg4D2uEadYShlllNoHSKyJykPf5VGkeww4I6PN87EeIbTAfxoHf
+         jbsz60Lzztz4ubmgxEa9/oDHbIZQN/9uxIDE1qBYYXzQeyEMJxg4APVq5OE2+plftT
+         4Tbl80up8rDQrlY1A1gj2DIguS8mR2aHlDR+RnZtjkAoyiSt5bhzUpDueb2Z3pBY5l
+         YdArnWftCLSItCTwW5IPZwspVX+BAeJE3ckvPK+kc1G8pe2yk12IJ6Q9iKiS4HL70L
+         rUMU9bmfVHPDg==
+In-Reply-To: <20230712230202.47929-20-haitao.huang@linux.intel.com>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Haitao Huang <haitao.huang-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, dave.hansen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-sgx-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Cc: kai.huang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org, reinette.chatre-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org, zhiquan1.li-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org, kristen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org
+To: Haitao Huang <haitao.huang@linux.intel.com>, dave.hansen@linux.intel.com, tj@kernel.org, linux-kernel@vger.kernel.org, linux-sgx@vger.kernel.org, cgroups@vger.kernel.org, Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>
+Cc: kai.huang@intel.com, reinette.chatre@intel.com, Kristen Carlson Accardi <kristen@linux.intel.com>, zhiquan1.li@intel.com
 
 On Wed Jul 12, 2023 at 11:01 PM UTC, Haitao Huang wrote:
-> Overflow may happen in misc_cg_try_charge if new_usage becomes above
-> INT_MAX, for example, on platforms with large SGX EPC sizes.
+> From: Kristen Carlson Accardi <kristen@linux.intel.com>
 >
-> Change type of new_usage to long from int and check overflow.
+> Consumers of the misc cgroup controller might need to perform separate
+> actions for Cgroups Subsystem State(CSS) events: cgroup alloc and free.
+> In addition, writes to the max value may also need separate action. Add
+> the ability to allow downstream users to setup callbacks for these
+> operations, and call the corresponding per-resource-type callback when
+> appropriate.
 >
-> Signed-off-by: Haitao Huang <haitao.huang-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
+> This code will be utilized by the SGX driver in a future patch.
+>
+> Signed-off-by: Kristen Carlson Accardi <kristen@linux.intel.com>
+> Signed-off-by: Haitao Huang <haitao.huang@linux.intel.com>
 
-As are bug fixes, this is also precursory work that SGX cgroups patches
-should build on top of. Therefore, it should be in the very beginning,
-right after any possible bug fixes to the existing code.
+Ditto. Belongs to the head of the patch set.
 
 BR, Jarkko
-
-
