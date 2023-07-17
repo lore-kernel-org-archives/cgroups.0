@@ -1,80 +1,121 @@
-From: "Haitao Huang" <haitao.huang-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
-Subject: Re: [PATCH] cgroup/misc: Fix an overflow
-Date: Mon, 17 Jul 2023 14:01:03 -0500
-Message-ID: <op.178pr1qewjvjmi@hhuan26-mobl.amr.corp.intel.com>
-References: <20230717184719.85523-1-haitao.huang@linux.intel.com>
- <CU4OCLEHU1S5.359W394902648@seitikki> <ZLWPN_xyGFrqqJkV@slm.duckdns.org>
+From: Alex Williamson <alex.williamson@redhat.com>
+Subject: Re: [PATCH 0/2] eventfd: simplify signal helpers
+Date: Mon, 17 Jul 2023 13:08:31 -0600
+Message-ID: <20230717130831.0f18381a.alex.williamson@redhat.com>
+References: <20230630155936.3015595-1-jaz@semihalf.com>
+	<20230714-gauner-unsolidarisch-fc51f96c61e8@brauner>
+	<CAH76GKPF4BjJLrzLBW8k12ATaAGADeMYc2NQ9+j0KgRa0pomUw@mail.gmail.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1689620467; x=1721156467;
-  h=to:cc:subject:references:date:mime-version:
-   content-transfer-encoding:from:message-id:in-reply-to;
-  bh=sq3GI+ekMZZMEXPDxZHwJHymVmQnKtlKlGxUtHPgnQU=;
-  b=FsNKM1fJRotMfKdt1z+jD0Ve/vGmhRsTj6pFRNGX8puqeAiRvrEcrQtW
-   qWKPO4Ky2XzsSuTTBXRlaVxlvjunwX+P1g7miY6bEgIwd1ltU5gCIPRG6
-   Q002767vDieUlhSYnuRHnZOCUzzSMKCGkRxOkSzwJ8FuOE42wF+gPP/Mp
-   TpdZdsEFOmGVynu6X+Eg7C8nZjY07i4g82Za8phGZeqljBSmx+RT8qVg4
-   ePrTgs51Jgd8tXKV8bAyxow68ND/cDSLbBcouIwCd7CEyOlo3ibDA2a+k
-   2diJJjFCLlLPFsLEuABh/b/GUUphBC1NP4I2Wrtx9inpEo+FgPvJsBa4q
-   g==;
-In-Reply-To: <ZLWPN_xyGFrqqJkV-NiLfg/pYEd1N0TnZuCh8vA@public.gmane.org>
+Content-Transfer-Encoding: quoted-printable
+Return-path: <owner-linux-aio@kvack.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1689620916;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=qHz5V5lwxUlduWSVUZLKGbl1lWEkFIrU74CIU+5Jsd8=;
+	b=GzDhDbaqmhUIrUx/hs9lggdhALbPT6ujFbRvFnYTPdFWYpprz1v1wZM80teH6EYOGN8s42
+	A29slQUAhFX4M6A5BWJl7mV7YKvIV7CVTLx8kw5Hg2BBpj9eTD5bgyTIuatAl959AC1aoa
+	UXN0vUn1CV5OvKptQ3AgecLmpYw2L7U=
+In-Reply-To: <CAH76GKPF4BjJLrzLBW8k12ATaAGADeMYc2NQ9+j0KgRa0pomUw@mail.gmail.com>
+Sender: owner-linux-aio@kvack.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"; format="flowed"; delsp="yes"
-To: Jarkko Sakkinen <jarkko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: dave.hansen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-sgx-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, vipinsh-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, kai.huang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org, reinette.chatre-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org, zhiquan1.li-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org, kristen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org
+Content-Type: text/plain; charset="windows-1252"
+To: Grzegorz Jaszczyk <jaz@semihalf.com>
+Cc: Christian Brauner <brauner@kernel.org>, linux-fsdevel@vger.kernel.org, linux-aio@kvack.org, linux-usb@vger.kernel.org, Matthew Rosato <mjrosato@linux.ibm.com>, Paul Durrant <paul@xen.org>, Tom Rix <trix@redhat.com>, Jason Wang <jasowang@redhat.com>, dri-devel@lists.freedesktop.org, Michal Hocko <mhocko@kernel.org>, linux-mm@kvack.org, Kirti Wankhede <kwankhede@nvidia.com>, Paolo Bonzini <pbonzini@redhat.com>, Jens Axboe <axboe@kernel.dk>, Vineeth Vijayan <vneethv@linux.ibm.com>, Diana Craciun <diana.craciun@oss.nxp.com>, Alexander Gordeev <agordeev@linux.ibm.com>, Xuan Zhuo <xuanzhuo@linux.alibaba.com>, Shakeel Butt <shakeelb@google.com>, Vasily Gorbik <gor@linux.ibm.com>, Leon Romanovsky <leon@kernel.org>, Harald Freudenberger <freude@linux.ibm.com>, Fei Li <fei1.li@intel.com>, x86@kernel.org, Roman Gushchin <roman.gushchin@linux.dev>, Halil Pasic <pasic@linux.ibm.com>
 
-On Mon, 17 Jul 2023 13:57:59 -0500, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org> wrote:
+On Mon, 17 Jul 2023 10:29:34 +0200
+Grzegorz Jaszczyk <jaz@semihalf.com> wrote:
 
-> On Mon, Jul 17, 2023 at 06:55:32PM +0000, Jarkko Sakkinen wrote:
->> On Mon Jul 17, 2023 at 6:47 PM UTC, Haitao Huang wrote:
->> > The variable 'new_usage' in misc_cg_try_charge() may overflow if it
->> > becomes above INT_MAX. This was observed when I implement the new SGX
->> > EPC cgroup[1] as a misc cgroup and test on a platform with large SGX  
->> EPC
->> > sizes.
->> >
->> > Change type of new_usage to long from int and check overflow.
->> >
->> > Fixes: a72232eabdfcf ("cgroup: Add misc cgroup controller")
->> > Signed-off-by: Haitao Huang <haitao.huang-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
->> >
->> > [1]  
->> https://lore.kernel.org/linux-sgx/20230712230202.47929-1-haitao.huang-VuQAYsv1563Yd54FQh9/CA@public.gmane.org/
->> > ---
->> >  kernel/cgroup/misc.c | 6 +++---
->> >  1 file changed, 3 insertions(+), 3 deletions(-)
->> >
->> > diff --git a/kernel/cgroup/misc.c b/kernel/cgroup/misc.c
->> > index fe3e8a0eb7ed..ff9f900981a3 100644
->> > --- a/kernel/cgroup/misc.c
->> > +++ b/kernel/cgroup/misc.c
->> > @@ -143,7 +143,7 @@ int misc_cg_try_charge(enum misc_res_type type,  
->> struct misc_cg *cg,
->> >  	struct misc_cg *i, *j;
->> >  	int ret;
->> >  	struct misc_res *res;
->> > -	int new_usage;
->> > +	long new_usage;
->> >
->> >  	if (!(valid_type(type) && cg && READ_ONCE(misc_res_capacity[type])))
->> >  		return -EINVAL;
->> > @@ -153,10 +153,10 @@ int misc_cg_try_charge(enum misc_res_type type,  
->> struct misc_cg *cg,
->> >
->> >  	for (i = cg; i; i = parent_misc(i)) {
->> >  		res = &i->res[type];
->> > -
->>
->> This is extra noise in the patch, please remove the change.
->
-> Lemme just revert it. Haitao, can you instead make the resource counters  
-> and
-> all related variables explicit 64bit instead?
->
+> pt., 14 lip 2023 o 09:05 Christian Brauner <brauner@kernel.org> napisa=C5=
+=82(a):
+> >
+> > On Thu, Jul 13, 2023 at 11:10:54AM -0600, Alex Williamson wrote: =20
+> > > On Thu, 13 Jul 2023 12:05:36 +0200
+> > > Christian Brauner <brauner@kernel.org> wrote:
+> > > =20
+> > > > Hey everyone,
+> > > >
+> > > > This simplifies the eventfd_signal() and eventfd_signal_mask() help=
+ers
+> > > > by removing the count argument which is effectively unused. =20
+> > >
+> > > We have a patch under review which does in fact make use of the
+> > > signaling value:
+> > >
+> > > https://lore.kernel.org/all/20230630155936.3015595-1-jaz@semihalf.com=
+/ =20
+> >
+> > Huh, thanks for the link.
+> >
+> > Quoting from
+> > https://patchwork.kernel.org/project/kvm/patch/20230307220553.631069-1-=
+jaz@semihalf.com/#25266856
+> > =20
+> > > Reading an eventfd returns an 8-byte value, we generally only use it
+> > > as a counter, but it's been discussed previously and IIRC, it's possi=
+ble
+> > > to use that value as a notification value. =20
+> >
+> > So the goal is to pipe a specific value through eventfd? But it is
+> > explicitly a counter. The whole thing is written around a counter and
+> > each write and signal adds to the counter.
+> >
+> > The consequences are pretty well described in the cover letter of
+> > v6 https://lore.kernel.org/all/20230630155936.3015595-1-jaz@semihalf.co=
+m/
+> > =20
+> > > Since the eventfd counter is used as ACPI notification value
+> > > placeholder, the eventfd signaling needs to be serialized in order to
+> > > not end up with notification values being coalesced. Therefore ACPI
+> > > notification values are buffered and signalized one by one, when the
+> > > previous notification value has been consumed. =20
+> >
+> > But isn't this a good indication that you really don't want an eventfd
+> > but something that's explicitly designed to associate specific data wit=
+h
+> > a notification? Using eventfd in that manner requires serialization,
+> > buffering, and enforces ordering.
 
-Will do.
-Thanks
-Haitao
+What would that mechanism be?  We've been iterating on getting the
+serialization and buffering correct, but I don't know of another means
+that combines the notification with a value, so we'd likely end up with
+an eventfd only for notification and a separate ring buffer for
+notification values.
+
+As this series demonstrates, the current in-kernel users only increment
+the counter and most userspace likely discards the counter value, which
+makes the counter largely a waste.  While perhaps unconventional,
+there's no requirement that the counter may only be incremented by one,
+nor any restriction that I see in how userspace must interpret the
+counter value.
+
+As I understand the ACPI notification proposal that Grzegorz links
+below, a notification with an interpreted value allows for a more
+direct userspace implementation when dealing with a series of discrete
+notification with value events.  Thanks,
+
+Alex
+
+> > I have no skin in the game aside from having to drop this conversion
+> > which I'm fine to do if there are actually users for this btu really,
+> > that looks a lot like abusing an api that really wasn't designed for
+> > this. =20
+>=20
+> https://patchwork.kernel.org/project/kvm/patch/20230307220553.631069-1-ja=
+z@semihalf.com/
+> was posted at the beginig of March and one of the main things we've
+> discussed was the mechanism for propagating acpi notification value.
+> We've endup with eventfd as the best mechanism and have actually been
+> using it from v2. I really do not want to waste this effort, I think
+> we are quite advanced with v6 now. Additionally we didn't actually
+> modify any part of eventfd support that was in place, we only used it
+> in a specific (and discussed beforehand) way.
+
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-aio' in
+the body to majordomo@kvack.org.  For more info on Linux AIO,
+see: http://www.kvack.org/aio/
+Don't email: <a href=mailto:"aart@kvack.org">aart@kvack.org</a>
