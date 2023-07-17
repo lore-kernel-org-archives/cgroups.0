@@ -1,44 +1,84 @@
-From: "Jarkko Sakkinen" <jarkko@kernel.org>
-Subject: Re: [PATCH v3 19/28] cgroup/misc: Add per resource callbacks for
- CSS events
-Date: Mon, 17 Jul 2023 13:16:04 +0000
-Message-ID: <CU4H4O6WHRY2.2Q6YGBQQFJBK5@seitikki>
+From: "Haitao Huang" <haitao.huang-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
+Subject: Re: [PATCH v3 03/28] x86/sgx: Add 'struct sgx_epc_lru_lists' to
+ encapsulate lru list(s)
+Date: Mon, 17 Jul 2023 08:23:00 -0500
+Message-ID: <op.17794m01wjvjmi@hhuan26-mobl.amr.corp.intel.com>
 References: <20230712230202.47929-1-haitao.huang@linux.intel.com>
- <20230712230202.47929-20-haitao.huang@linux.intel.com>
+ <20230712230202.47929-4-haitao.huang@linux.intel.com>
+ <CU4GHCJTRKLZ.1RK23NWPHJGNI@seitikki>
 Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1689599768;
-        bh=yX5VD4argzEiOYVVZ5od4hN9Yb9EkGyUcdTxKzHkZWU=;
-        h=Date:Cc:Subject:From:To:References:In-Reply-To:From;
-        b=Yv6zBWBYNM+sft7PEHdXi84Pv8RrkBtUbsBGNXVdel9FV09PWDVdkMJ6pebKorOGO
-         K1KrFHyH4CJpBdELg4D2uEadYShlllNoHSKyJykPf5VGkeww4I6PN87EeIbTAfxoHf
-         jbsz60Lzztz4ubmgxEa9/oDHbIZQN/9uxIDE1qBYYXzQeyEMJxg4APVq5OE2+plftT
-         4Tbl80up8rDQrlY1A1gj2DIguS8mR2aHlDR+RnZtjkAoyiSt5bhzUpDueb2Z3pBY5l
-         YdArnWftCLSItCTwW5IPZwspVX+BAeJE3ckvPK+kc1G8pe2yk12IJ6Q9iKiS4HL70L
-         rUMU9bmfVHPDg==
-In-Reply-To: <20230712230202.47929-20-haitao.huang@linux.intel.com>
+Content-Transfer-Encoding: 7bit
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1689600378; x=1721136378;
+  h=to:cc:subject:references:date:mime-version:
+   content-transfer-encoding:from:message-id:in-reply-to;
+  bh=kSV+42buHlYkZswjzK71Zxt1+CC8bsivgjmnDWsyDDU=;
+  b=Xo2NZXcTMJTAsxXzjFJdw7y4u2cy6k20NYPmeVW9cMay4C/N2oOiGu9x
+   QfWDab74lkEYoWsqy7Lya3FnUeMHwQgx+uH84wmPHximhT8iaEaFbyty0
+   n1JSTS04yTCnNyru//Ja6ADkEbpNOJEoeDz9B8p+GOYYeey4G7RfrAmlZ
+   di8qh6mymvdt6dwWtvd1pEXXm37BGK2GT3B0opCFhWuH3s85s4xKYGkcd
+   GU2u4RuRLEZc9rZBy/3f3b0/s6TqA1FJFsx5DFXz8NJdyMqyZKnBWG2B9
+   91Qt9AC45Lrr/XL0VIJ3ZxYz2ZYbB/UTcMa8u5nX7UM2FITa/zbqu/TTE
+   w==;
+In-Reply-To: <CU4GHCJTRKLZ.1RK23NWPHJGNI@seitikki>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-To: Haitao Huang <haitao.huang@linux.intel.com>, dave.hansen@linux.intel.com, tj@kernel.org, linux-kernel@vger.kernel.org, linux-sgx@vger.kernel.org, cgroups@vger.kernel.org, Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>
-Cc: kai.huang@intel.com, reinette.chatre@intel.com, Kristen Carlson Accardi <kristen@linux.intel.com>, zhiquan1.li@intel.com
+Content-Type: text/plain; charset="us-ascii"; format="flowed"; delsp="yes"
+To: dave.hansen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-sgx-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Thomas Gleixner <tglx-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>, Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Borislav Petkov <bp-Gina5bIWoIWzQB+pC5nmwQ@public.gmane.org>, x86-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, "H. Peter Anvin" <hpa-YMNOUZJC4hwAvxtiuMwx3w@public.gmane.org>, Jarkko Sakkinen <jarkko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: kai.huang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org, reinette.chatre-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org, Kristen Carlson Accardi <kristen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, zhiquan1.li-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org, seanjc-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org
 
-On Wed Jul 12, 2023 at 11:01 PM UTC, Haitao Huang wrote:
-> From: Kristen Carlson Accardi <kristen@linux.intel.com>
->
-> Consumers of the misc cgroup controller might need to perform separate
-> actions for Cgroups Subsystem State(CSS) events: cgroup alloc and free.
-> In addition, writes to the max value may also need separate action. Add
-> the ability to allow downstream users to setup callbacks for these
-> operations, and call the corresponding per-resource-type callback when
-> appropriate.
->
-> This code will be utilized by the SGX driver in a future patch.
->
-> Signed-off-by: Kristen Carlson Accardi <kristen@linux.intel.com>
-> Signed-off-by: Haitao Huang <haitao.huang@linux.intel.com>
+On Mon, 17 Jul 2023 07:45:36 -0500, Jarkko Sakkinen <jarkko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>  
+wrote:
 
-Ditto. Belongs to the head of the patch set.
+> On Wed Jul 12, 2023 at 11:01 PM UTC, Haitao Huang wrote:
+>> From: Kristen Carlson Accardi <kristen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
+>>
+>> Introduce a data structure to wrap the existing reclaimable list
+>> and its spinlock in a struct to minimize the code changes needed
+>> to handle multiple LRUs as well as reclaimable and non-reclaimable
+>> lists. The new structure will be used in a following set of patches to
+>> implement SGX EPC cgroups.
+>>
+>> The changes to the structure needed for unreclaimable lists will be
+>> added in later patches.
+>>
+>> Signed-off-by: Sean Christopherson <sean.j.christopherson-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+>> Signed-off-by: Kristen Carlson Accardi <kristen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
+>> Signed-off-by: Haitao Huang <haitao.huang-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
+>> Cc: Sean Christopherson <seanjc-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+>>
+>> V3:
+>> Removed the helper functions and revised commit messages
+>> ---
+>>  arch/x86/kernel/cpu/sgx/sgx.h | 17 +++++++++++++++++
+>>  1 file changed, 17 insertions(+)
+>>
+>> diff --git a/arch/x86/kernel/cpu/sgx/sgx.h  
+>> b/arch/x86/kernel/cpu/sgx/sgx.h
+>> index f6e3c5810eef..77fceba73a25 100644
+>> --- a/arch/x86/kernel/cpu/sgx/sgx.h
+>> +++ b/arch/x86/kernel/cpu/sgx/sgx.h
+>> @@ -92,6 +92,23 @@ static inline void *sgx_get_epc_virt_addr(struct  
+>> sgx_epc_page *page)
+>>  	return section->virt_addr + index * PAGE_SIZE;
+>>  }
+>>
+>> +/*
+>> + * This data structure wraps a list of reclaimable EPC pages, and a  
+>> list of
+>> + * non-reclaimable EPC pages and is used to implement a LRU policy  
+>> during
+>> + * reclamation.
+>> + */
+>> +struct sgx_epc_lru_lists {
+>> +	/* Must acquire this lock to access */
+>> +	spinlock_t lock;
+>
+> Isn't this self-explanatory, why the inline comment?
 
-BR, Jarkko
+I got a warning from the checkpatch script complaining this lock needs  
+comments.
+
+Thanks
+Haitao
