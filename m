@@ -1,66 +1,89 @@
 From: "Jarkko Sakkinen" <jarkko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH v3 02/28] x86/sgx: Add EPC page flags to identify owner
- type
-Date: Mon, 17 Jul 2023 12:43:31 +0000
-Message-ID: <CU4GFR4WLMZP.3R9HJQFFG1JEK@seitikki>
+Subject: Re: [PATCH v3 03/28] x86/sgx: Add 'struct sgx_epc_lru_lists' to
+ encapsulate lru list(s)
+Date: Mon, 17 Jul 2023 12:45:36 +0000
+Message-ID: <CU4GHCJTRKLZ.1RK23NWPHJGNI@seitikki>
 References: <20230712230202.47929-1-haitao.huang@linux.intel.com>
- <20230712230202.47929-3-haitao.huang@linux.intel.com>
- <CU4GEFJ8R4US.227AN2H482Q4G@seitikki>
+ <20230712230202.47929-4-haitao.huang@linux.intel.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: quoted-printable
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1689597816;
-        bh=7B2Pjw6NKXemEOfCP4Ct4UyD922UxZCxaO6K3gVi/7E=;
-        h=Date:Subject:From:To:Cc:References:In-Reply-To:From;
-        b=OBushMGAKDmd4+oHNO5CKO8iknCBEDcvl5hf2of5KPj1BfEJCq7TVDaEvrMjoqLlq
-         2TqfkuZvscTEC5Uee8X00ZQcbtClJ7+r6x6S3ZGVP0L0sIZ7PsfDCks/N6OKw3eqzm
-         jA3MFXDNom5FJzY8hIRJWWVwNBei9J3GWe9AE98TJQjtsnJjnNI1O7EIqtWP4Tmx4O
-         gXsWE61LX8N0YPg4XtrwcGpf+BH8Cvy6NCkspYxBMv9opPOug/Ti0SowGR2IRRL3zo
-         XpF9cJO8Zo4voPbDGC7qeGog8ml7AaCbUnZ6qppr6+xrJytDTObPsoqyRu+kUMZxZV
-         S+3i9iULCfdpg==
-In-Reply-To: <CU4GEFJ8R4US.227AN2H482Q4G@seitikki>
+        s=k20201202; t=1689597941;
+        bh=gO1fpIF4DrAPNB+QftjUHUJdhOei+AxWsZlYNQnSN+E=;
+        h=Date:Cc:Subject:From:To:References:In-Reply-To:From;
+        b=tMsP/BQ24EY3ad0FkSEF2GXd7wj/sMcuwrJdufSy1jZNXzcdRqx7rGNvPMwYUezXm
+         zuPMvxT97kn3WQMolnkDvbWiywN5xoSsdCOZQ2Yv5hIHiGv4uyrVW8W9zrtpswA+rk
+         zumJ26mCSHg1oa0pyZKDDTkTk8Wh5ExfiF6CQA/bb7VzFZ/2tzquH81WNw5hiaS7Lw
+         YGttfb3x0HJEoqB0FQUMfUqy/aAzRG/zbgolX8CzyNFgp3eWEfikQbIxR55YrCsudK
+         yRShGGCil31NE7bWJNz0M7meW7BDYJVaLWDGqT2S9To1jLrCUcJs6iRyzpwTJNOI6F
+         K74NG/tTBoZPg==
+In-Reply-To: <20230712230202.47929-4-haitao.huang-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Jarkko Sakkinen <jarkko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Haitao Huang <haitao.huang-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, dave.hansen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-sgx-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Thomas Gleixner <tglx-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>, Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Borislav Petkov <bp-Gina5bIWoIWzQB+pC5nmwQ@public.gmane.org>, x86-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, "H. Peter Anvin" <hpa-YMNOUZJC4hwAvxtiuMwx3w@public.gmane.org>
-Cc: kai.huang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org, reinette.chatre-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org, Sean Christopherson <sean.j.christopherson-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, zhiquan1.li-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org, kristen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org, seanjc-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org
+To: Haitao Huang <haitao.huang-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, dave.hansen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-sgx-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Thomas Gleixner <tglx-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>, Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Borislav Petkov <bp-Gina5bIWoIWzQB+pC5nmwQ@public.gmane.org>, x86-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, "H. Peter Anvin" <hpa-YMNOUZJC4hwAvxtiuMwx3w@public.gmane.org>
+Cc: kai.huang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org, reinette.chatre-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org, Kristen Carlson Accardi <kristen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, zhiquan1.li-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org, seanjc-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org
 
-On Mon Jul 17, 2023 at 12:41 PM UTC, Jarkko Sakkinen wrote:
-> On Wed Jul 12, 2023 at 11:01 PM UTC, Haitao Huang wrote:
-> > From: Sean Christopherson <sean.j.christopherson-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
-> >
-> > Two types of owners, 'sgx_encl' for VA pages and 'sgx_encl_page' for ot=
-her,
-> > can be stored in the union field in sgx_epc_page struct introduced in t=
-he
-> > previous patch.
+On Wed Jul 12, 2023 at 11:01 PM UTC, Haitao Huang wrote:
+> From: Kristen Carlson Accardi <kristen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
 >
-> This would be easier to follow:
+> Introduce a data structure to wrap the existing reclaimable list
+> and its spinlock in a struct to minimize the code changes needed
+> to handle multiple LRUs as well as reclaimable and non-reclaimable
+> lists. The new structure will be used in a following set of patches to
+> implement SGX EPC cgroups.
 >
-> "Two types of owners of struct_epc_page, 'sgx_encl' for VA pages and
-> 'sgx_encl_page' can be stored in the previously introduced union field."
+> The changes to the structure needed for unreclaimable lists will be
+> added in later patches.
 >
-> > When cgroup OOM support is added in a later patch, the owning enclave o=
-f a
-> > page will need to be identified. Retrieving the sgx_encl struct from a
-> > sgx_epc_page will be different if the page is a VA page vs. other encla=
-ve
-> > pages.
-> >
-> > Add 2 flags which will identify the type of the owner and apply them
-> > accordingly to newly allocated pages.
+> Signed-off-by: Sean Christopherson <sean.j.christopherson-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+> Signed-off-by: Kristen Carlson Accardi <kristen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
+> Signed-off-by: Haitao Huang <haitao.huang-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
+> Cc: Sean Christopherson <seanjc-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 >
-> This would be easier to follow:
+> V3:
+> Removed the helper functions and revised commit messages
+> ---
+>  arch/x86/kernel/cpu/sgx/sgx.h | 17 +++++++++++++++++
+>  1 file changed, 17 insertions(+)
 >
-> "OOM support for cgroups requires that the owner needs to be identified
-> when selecting pages from the unreclaimable list. Address this by adding
-> flags for identifying the owner type."
->
-> It is better to carry the story a little bit forward than say that a
-> subsequent patch will require this :-) I.e. enough to get at least a
-> rough idea what is going on.
+> diff --git a/arch/x86/kernel/cpu/sgx/sgx.h b/arch/x86/kernel/cpu/sgx/sgx.=
+h
+> index f6e3c5810eef..77fceba73a25 100644
+> --- a/arch/x86/kernel/cpu/sgx/sgx.h
+> +++ b/arch/x86/kernel/cpu/sgx/sgx.h
+> @@ -92,6 +92,23 @@ static inline void *sgx_get_epc_virt_addr(struct sgx_e=
+pc_page *page)
+>  	return section->virt_addr + index * PAGE_SIZE;
+>  }
+> =20
+> +/*
+> + * This data structure wraps a list of reclaimable EPC pages, and a list=
+ of
+> + * non-reclaimable EPC pages and is used to implement a LRU policy durin=
+g
+> + * reclamation.
+> + */
+> +struct sgx_epc_lru_lists {
+> +	/* Must acquire this lock to access */
+> +	spinlock_t lock;
 
-Oops, sent by mistake. I was going to say that the flag would be better
-named simply as SGX_EPC_OWNER_PAGE instead of SGX_EPC_OWNER_ENCL_PAGE.
+Isn't this self-explanatory, why the inline comment?
+
+> +	struct list_head reclaimable;
+> +};
+> +
+> +static inline void sgx_lru_init(struct sgx_epc_lru_lists *lrus)
+> +{
+> +	spin_lock_init(&lrus->lock);
+> +	INIT_LIST_HEAD(&lrus->reclaimable);
+> +}
+> +
+>  struct sgx_epc_page *__sgx_alloc_epc_page(void);
+>  void sgx_free_epc_page(struct sgx_epc_page *page);
+> =20
+> --=20
+> 2.25.1
+
 
 BR, Jarkko
