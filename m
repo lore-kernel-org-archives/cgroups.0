@@ -1,60 +1,64 @@
-From: Carlos Bilbao <carlos.bilbao-5C7GfCeVMHo@public.gmane.org>
-Subject: Re: [PATCH] blk-iocost: fix seq_printf compile type mismatch error
-Date: Mon, 17 Jul 2023 09:23:44 -0500
-Message-ID: <7b79f7b5-3313-3465-be4b-47648b93e63e@amd.com>
-References: <20230717141852.153965-1-carlos.bilbao@amd.com>
+From: "Jarkko Sakkinen" <jarkko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCH v3 17/28] x86/sgx: fix a NULL pointer
+Date: Mon, 17 Jul 2023 14:33:46 +0000
+Message-ID: <CU4IS5XRH3PK.M9DAVXJ7PSSE@seitikki>
+References: <20230712230202.47929-1-haitao.huang@linux.intel.com>
+ <20230712230202.47929-18-haitao.huang@linux.intel.com>
+ <CU4GJG1NRTUD.275UVHM8W2VED@seitikki> <CU4GKARPLGU5.1CVBNY9N4K28F@seitikki>
+ <op.1779qgkdwjvjmi@hhuan26-mobl.amr.corp.intel.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: quoted-printable
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=amd.com; s=selector1;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=qnGRLR2tZ1S3L61lfI649dIH7f8G6DiNExIwXPMtkZQ=;
- b=Flc5v0YuYM1VO2xf5loZMVuF131YcapTU/k1Ao+PiYjWAZz3lvOfaTyTMV9zmC7oPU/tVZHd6lwLTzX+iwG8fI8Jp3huiSqb4Z21J9WapoRYi2h5hUxg7j4HvGrgn6DuIP/buhgvhag0im8o+yd0E+EGuoT7BtSZamSlhzO88G4=
-Content-Language: en-US
-In-Reply-To: <20230717141852.153965-1-carlos.bilbao-5C7GfCeVMHo@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1689604431;
+        bh=I21ZDliWD7GOdnTUiUm/tPH/YR8Nmd8AOMXf8/BsAhQ=;
+        h=Date:Cc:Subject:From:To:References:In-Reply-To:From;
+        b=IHUkmxqZ8XZmpa+aN5HU8DZORxXMoMRWO+WWbx47YVDPP8qvPcVzhLHh1XeIU1nv8
+         QzuwK0t9DPm/8gU/fnssor4Fkmq/bB8XGYkbHHr7y4nEmeUstm1rRH2EwPj95Ker1K
+         ndQjU7fQqZIg6zCAfCxTzu03K585baZEwR6GK48cFRJRo8r8l0MRQ4w+PA1hZNqEk2
+         rosP4lYUR6++AlrfPC7kpK3RXNhNpJEOgiJy4QIqZNBgQEvsDCtykn/s6ikPHmljVM
+         iwMAYqHp7lpN2ENeBAvgFFQ5uBO42xfrgNcJzvgxERPEFLRFCZbhD5sy8yNFfJ9l7k
+         qM+Ktsgp12Txw==
+In-Reply-To: <op.1779qgkdwjvjmi-yDQzE4XY+yVaPPhiJ6yCxLKMmGWinSIL2HeeBUIffwg@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"; format="flowed"
-To: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, josef-DigfWCa+lFGyeJad7bwFQA@public.gmane.org, axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Type: text/plain; charset="us-ascii"
+To: Haitao Huang <haitao.huang-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, dave.hansen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-sgx-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Thomas Gleixner <tglx-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>, Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Borislav Petkov <bp-Gina5bIWoIWzQB+pC5nmwQ@public.gmane.org>, x86-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, "H. Peter Anvin" <hpa-YMNOUZJC4hwAvxtiuMwx3w@public.gmane.org>
+Cc: kai.huang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org, reinette.chatre-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org, zhiquan1.li-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org, kristen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org, seanjc-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org
 
-On 7/17/23 09:18, Carlos Bilbao wrote:
-> From: amd <amd-bi+AKbBUZKY6gyzm1THtWbp2dZbC/Bob@public.gmane.org>
+On Mon Jul 17, 2023 at 1:14 PM UTC, Haitao Huang wrote:
+> On Mon, 17 Jul 2023 07:49:27 -0500, Jarkko Sakkinen <jarkko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org> =
+=20
+> wrote:
+>
+> > On Mon Jul 17, 2023 at 12:48 PM UTC, Jarkko Sakkinen wrote:
+> >> On Wed Jul 12, 2023 at 11:01 PM UTC, Haitao Huang wrote:
+> >> > Under heavy load, the SGX EPC reclaimers (ksgxd or future EPC cgroup
+> >> > worker) may reclaim SECS EPC page for an enclave and set
+> >> > encl->secs.epc_page to NULL. But the SECS EPC page is required for =
+=20
+> >> EAUG
+> >> > in #PF handler and is used without checking for NULL and reloading.
+> >> >
+> >> > Fix this by checking if SECS is loaded before EAUG and load it if it=
+ =20
+> >> was
+> >> > reclaimed.
+> >> >
+> >> > Signed-off-by: Haitao Huang <haitao.huang-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
+> >>
+> >> A bug fix should be 1/*.
+> >
+> > And a fixes tag.
+> >
+> > Or is there a bug that is momentized by the earlier patches? This patch
+> > feels confusing to say the least.
+> >
+>
+> It happens in heavy reclaiming cases, just extremely rare when EPC =20
+> accounting is not partitioned into cgroups. Will add fix tag with the =20
+> related EDMM patch. And move this as the first patch.
 
-Please disregard this "From" label.
+I understand, it is just a good practice to follow, i.e. have prelude
+and then the "real" changes :-)
 
-> 
-> Fix two type mismatch errors encountered while compiling blk-iocost.c with
-> GCC version 13.1.1 that involved constant operator WEIGHT_ONE. Cast the
-> result of the division operation to (unsigned int) to match the expected
-> format specifier %u in two seq_printf invocations.
-> 
-> Reviewed-by: Carlos Bilbao <carlos.bilbao-5C7GfCeVMHo@public.gmane.org>
-> ---
->   block/blk-iocost.c | 4 ++--
->   1 file changed, 2 insertions(+), 2 deletions(-)
-> 
-> diff --git a/block/blk-iocost.c b/block/blk-iocost.c
-> index 495396425bad..4721009a3f03 100644
-> --- a/block/blk-iocost.c
-> +++ b/block/blk-iocost.c
-> @@ -3032,7 +3032,7 @@ static u64 ioc_weight_prfill(struct seq_file *sf, struct blkg_policy_data *pd,
->   	struct ioc_gq *iocg = pd_to_iocg(pd);
->   
->   	if (dname && iocg->cfg_weight)
-> -		seq_printf(sf, "%s %u\n", dname, iocg->cfg_weight / WEIGHT_ONE);
-> +		seq_printf(sf, "%s %u\n", dname, (unsigned int)(iocg->cfg_weight / (unsigned int)WEIGHT_ONE));
->   	return 0;
->   }
->   
-> @@ -3042,7 +3042,7 @@ static int ioc_weight_show(struct seq_file *sf, void *v)
->   	struct blkcg *blkcg = css_to_blkcg(seq_css(sf));
->   	struct ioc_cgrp *iocc = blkcg_to_iocc(blkcg);
->   
-> -	seq_printf(sf, "default %u\n", iocc->dfl_weight / WEIGHT_ONE);
-> +	seq_printf(sf, "default %u\n", (unsigned int) (iocc->dfl_weight / (unsigned int)WEIGHT_ONE));
->   	blkcg_print_blkgs(sf, blkcg, ioc_weight_prfill,
->   			  &blkcg_policy_iocost, seq_cft(sf)->private, false);
->   	return 0;
-
-Thanks,
-Carlos
+BR, Jarkko
