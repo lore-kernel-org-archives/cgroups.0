@@ -1,62 +1,38 @@
 From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [External] Re: [PATCH] cgroup/rstat: record the cumulative
- per-cpu time of cgroup and its descendants
-Date: Tue, 18 Jul 2023 11:53:26 -1000
-Message-ID: <ZLcJ1nH8KzWzoQWj@slm.duckdns.org>
-References: <20230717093612.40846-1-jiahao.os@bytedance.com>
- <ZLWb-LsBD041hMvr@slm.duckdns.org>
- <2655026d-6ae4-c14c-95b0-4177eefa434f@bytedance.com>
+Subject: Re: [PATCH] cgroup/misc: update struct members descriptions
+Date: Tue, 18 Jul 2023 12:03:46 -1000
+Message-ID: <ZLcMQiHnrkptxw8Q@slm.duckdns.org>
+References: <20230718090834.1829191-1-kamalesh.babulal@oracle.com>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20221208; t=1689717209; x=1692309209;
+        d=gmail.com; s=20221208; t=1689717828; x=1692309828;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:sender:from:to:cc:subject:date:message-id
          :reply-to;
-        bh=hSi1Ye4tnidz3swlAKJl5aSHuZF44JYEhatv2BKTlOQ=;
-        b=SZ0tTu6wpG2yNC7ys9W1/E8S7xaA6eRzb41+qynFT6suIRQZeKbOi/JHgHB2znyz8z
-         sUXssVqsuJP79/tRbGRSdAxYoaLQyXa6sNibrztdE7BEm/gXgZlwo7jGSTxBQtgBSoNw
-         P4GAbZI5hNvN10ddluCGqgqbmEB5PMDz4Hp1Vj9REZzygM2MS72ejDUlmt+iG5AyPuI/
-         AG+lCdH0/6kVacWDcXfg62XMDmnOA+SE8ABAWGn9ktSCp5k8m5BvLQs5h4qRVA/ecBvP
-         xY1uHKVfNHWnUQ1SkV7uDA8afxAbyaeycd4JwPnApcmgJjFSv4xHlIM9djPegdDlI8G3
-         kQbw==
+        bh=FR+6E9FyZxtez1dGS44CZnCU/J8novnbxJHJ/pWrifY=;
+        b=T5EhxnRXBSA7LDQpQiVg3BdYf/rybxuzpOdRyouCElvPFosDcNy7erdqXQ8E/EoWc1
+         XORYYUp4WziozuqO980Vj0N1N3z6YXgrrNNIqzVxU99CZJI0AriyiJS40o41t+GG99eX
+         QzzjbcmJRL/Il4EBULf5EktEhyjYyEXKCkn/g4IpiGWHAFjr7h+cIQEf2YgZ8EOABfaw
+         U19EOVHLry9io77aGzkvdEMnfZIDFLkLkiWoUnIXYwB/3fdN7t1f5tcaEz+c88VPBnRI
+         pl/jpm92kgR2L8o5ynFpK2FjSoG54rEEwP8TPqfi1Tx+TcLRhe9UFWc/9uMEB3OC8YCo
+         ouEQ==
 Sender: Tejun Heo <htejun-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 Content-Disposition: inline
-In-Reply-To: <2655026d-6ae4-c14c-95b0-4177eefa434f-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
+In-Reply-To: <20230718090834.1829191-1-kamalesh.babulal-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Hao Jia <jiahao.os-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
-Cc: lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, mkoutny-IBi9RG/b67k@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Kamalesh Babulal <kamalesh.babulal-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
+Cc: Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Tom Hromatka <tom.hromatka-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Tue, Jul 18, 2023 at 06:08:50PM +0800, Hao Jia wrote:
-> https://github.com/jiaozhouxiaojia/cgv2-stat-percpu_test/tree/main
+On Tue, Jul 18, 2023 at 02:38:34PM +0530, Kamalesh Babulal wrote:
+> Update the miscellaneous controller's structure member's description of
+> struct misc_res and struct misc_cg.
+> 
+> Signed-off-by: Kamalesh Babulal <kamalesh.babulal-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
 
-Isn't that just adding the same numbers twice and verifying that? Maybe I'm
-misunderstanding you. Here's a simpler case:
-
-  # cd /sys/fs/cgroup
-  # mkdir -p asdf/test0
-  # grep usage_usec asdf/test0/cpu.stat
-  usage_usec 0
-  # echo $$ > asdf/test0/cgroup.procs
-  # stress -c 1 & sleep 1; kill %%
-  [1] 122329
-  stress: info: [122329] dispatching hogs: 1 cpu, 0 io, 0 vm, 0 hdd
-  # grep usage_usec asdf/test0/cpu.stat
-  usage_usec 1000956
-  [1]+  Terminated              stress -c 1
-  # grep usage_usec asdf/cpu.stat
-  usage_usec 1002548
-  # echo $$ > /sys/fs/cgroup/cgroup.procs
-  # rmdir asdf/test0
-  # grep usage_usec asdf/cpu.stat
-  usage_usec 1006338
-
-So, we run `stress -c 1` for 1 second in the asdf/test0 cgroup and
-asdf/cpu.stat correctly reports the cumulative usage. After removing
-asdf/test0 cgroup, asdf's usage_usec is still there. What's missing here?
-What are you adding?
+Applied to cgroup/for-6.6.
 
 Thanks.
 
