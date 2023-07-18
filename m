@@ -1,112 +1,45 @@
-From: Hao Jia <jiahao.os-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
-Subject: Re: [External] Re: [PATCH] cgroup/rstat: record the cumulative
- per-cpu time of cgroup and its descendants
-Date: Tue, 18 Jul 2023 18:08:50 +0800
-Message-ID: <2655026d-6ae4-c14c-95b0-4177eefa434f@bytedance.com>
-References: <20230717093612.40846-1-jiahao.os@bytedance.com>
- <ZLWb-LsBD041hMvr@slm.duckdns.org>
+From: Carlos Bilbao <carlos.bilbao-5C7GfCeVMHo@public.gmane.org>
+Subject: Re: [PATCH] blk-iocost: fix seq_printf compile type mismatch error
+Date: Tue, 18 Jul 2023 10:37:23 -0500
+Message-ID: <7044d6b3-a5d1-572d-a755-74f8d4fd31c5@amd.com>
+References: <20230717141852.153965-1-carlos.bilbao@amd.com>
+ <ZLWNHuTGk0fy8pjE@slm.duckdns.org>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=bytedance.com; s=google; t=1689674937; x=1692266937;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to:subject
-         :user-agent:mime-version:date:message-id:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=V/5gRpkxT+kOgGiftiK7jx1s41nMMWH8tu708xIUfYw=;
-        b=e29uBYrQhBw4fVZyXQO7maKHrmGmHqN+r7Pfwwyw8qN9L6QCG6qasmVYpauU/7y7NX
-         V1X4gAJCY8eMMHCZ6WctiEW3goRs8B6TcI3b+mYc0KIKrLxLOeTJRRMitQXRYx9PU0hU
-         xSSWULc1KTRrdRMIQwft32MH3hqNk315E3+JLhLH/sXfdIbL3x+zsjwNwqs3Hk1HUWMb
-         F7eLpqoe+75AjdzbXqk512b2wDlLhX0JV6O3mp4qSguIX3Rfwn2jkEyijkJgyjFqNUrL
-         G9HD9+OO++W4mpIMQzFx1HP9oFlTa1ZHh7Dx9dO57Y3PiP7cdWJWnBfe6/QfwZk2S2a9
-         joaw==
-In-Reply-To: <ZLWb-LsBD041hMvr-NiLfg/pYEd1N0TnZuCh8vA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=amd.com; s=selector1;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=V7XHEmfyWtTbSEl7bLivWOkRxdzNXEMVg3qG+Go3LlA=;
+ b=fPW+EOBC/QjKl1LI2/ls5Bs5At/UQRyTrGyrmFeCq4Jx/+53vLVvBjb2WJhb1MKeU80j0FozOFHu+d+D6Cy/f4SFVeJ62E9sqEVmMcml8hMCIMTKjn+4YQ231loQj6u9Dy77SMOtMQkfIQ4HhxLnowPr5/ycKqKzojCdZRtM/4A=
+Content-Language: en-US
+In-Reply-To: <ZLWNHuTGk0fy8pjE-NiLfg/pYEd1N0TnZuCh8vA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"; format="flowed"
+Content-Type: text/plain; charset="utf-8"; format="flowed"
 To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, mkoutny-IBi9RG/b67k@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Cc: josef-DigfWCa+lFGyeJad7bwFQA@public.gmane.org, axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, amd <amd-bi+AKbBUZKY6gyzm1THtWbp2dZbC/Bob@public.gmane.org>
 
-
-Hello,
-On 2023/7/18 Tejun Heo wrote:
-
-> On Mon, Jul 17, 2023 at 05:36:12PM +0800, Hao Jia wrote:
->> Now the member variable bstat of the structure cgroup_rstat_cpu
+On 7/17/23 13:49, Tejun Heo wrote:
+> On Mon, Jul 17, 2023 at 09:18:52AM -0500, Carlos Bilbao wrote:
+>> From: amd <amd-bi+AKbBUZKY6gyzm1THtWbp2dZbC/Bob@public.gmane.org>
+>>
+>> Fix two type mismatch errors encountered while compiling blk-iocost.c with
+>> GCC version 13.1.1 that involved constant operator WEIGHT_ONE. Cast the
+>> result of the division operation to (unsigned int) to match the expected
+>> format specifier %u in two seq_printf invocations.
 > 
-> You said "now" indicating that the behavior has changed recently but I don't
-> see what changed there. Can you elaborate?
+> Can you detail the warnings? Was that on 32bit compiles?
 
-Thank you for your review, sorry for confusing you with my expression, 
-it is true that it has not changed, bstat has always recorded the 
-per-cpu time of cgroup itself.
+The concrete error was: "format ‘%u’ expects argument of type ‘unsigned
+int’, but argument 3 has type ‘long unsigned int’". If I run:
 
-> 
->> records the per-cpu time of the cgroup itself, but does not
->> include the per-cpu time of its descendants. The per-cpu time
-> 
-> It does. The per-cpu delta is added to its parent and then that will in turn
-> be used to propagate to its parent.
->Yes, so only cgrp->bstat contains the cpu time of the cgroup and its 
-descendants. rstatc->bstat only records the per-cpu time of cgroup itself.
+$ echo | cpp -dM | grep __LP64__
+#define __LP64__ 1
+
+which makes me believe it is not 32 bits.
 
 > 
-> I think you're misunderstanding how the code works. Can you please double
-> check?
-
---- a/kernel/cgroup/rstat.c
-+++ b/kernel/cgroup/rstat.c
-@@ -361,11 +361,15 @@ static void cgroup_base_stat_flush(struct cgroup 
-*cgrp, int cpu)
-  	cgroup_base_stat_sub(&delta, &rstatc->last_bstat);
-  	cgroup_base_stat_add(&cgrp->bstat, &delta);
-  	cgroup_base_stat_add(&rstatc->last_bstat, &delta);
-
-We add the current cgroup's per-cpu delta to its per-cpu variable 
-(cumul_bstat).
-
-+	cgroup_base_stat_add(&rstatc->cumul_bstat, &delta);
-
-  	/* propagate global delta to parent (unless that's root) */
-  	if (cgroup_parent(parent)) {
-  		delta = cgrp->bstat;
-+		rstatc = cgroup_rstat_cpu(parent, cpu);
-+
-  		cgroup_base_stat_sub(&delta, &cgrp->last_bstat);
-
-Since we hold the global cgroup_rstat_lock and disable interrupts in 
-cgroup_base_stat_flush() and we only update cgrp->bstat here.
-So the global delta at this time is equal to the increment of this 
-cgroup and its descendants on this cpu (unless root cgroup), so we can 
-add the global delta to the cumul_bstat of its parent and propagate it 
-upward.
-
-+		cgroup_base_stat_add(&rstatc->cumul_bstat, &delta);
-  		cgroup_base_stat_add(&parent->bstat, &delta);
-  		cgroup_base_stat_add(&cgrp->last_bstat, &delta);
-  	}
-
-
-I wrote a kernel module to verify and test the above kernel code,
-The kernel module adds a cpu.stat_percpu_all file for each cgroup, which 
-can output the per-cpu time information of the cgroup and its 
-descendants calculated in two ways:
-1. Cumulatively add the per-cpu bstat of cgroup and each of its descendants.
-2. Directly output @cumul_bstat read in the kernel (patch has been applied).
-When the child cgroup is not removed, the results calculated by the two 
-methods should be equal.
-
-NOTE: We need to flush the data before "cat cpu.stat_percpu_all", such 
-as "cat cpu.stat".
-
-Code link:
-https://github.com/jiaozhouxiaojia/cgv2-stat-percpu_test/tree/main
-
-The testing procedure is in README.
-
-I installed the 6.5.0-rc1 kernel on my machine (an Intel Xeon(R) 
-Platinum 8260 machine 96 CPUs in total.) and did some tests.
-So far I haven't found anything unusual, if I'm wrong, please point it 
-out, it's very helpful to me, thanks again!
+> Thanks.
+> 
 
 Thanks,
-Hao
+Carlos
