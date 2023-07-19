@@ -1,41 +1,37 @@
-From: David Laight <David.Laight@ACULAB.COM>
-Subject: RE: [PATCH] blk-iocost: fix seq_printf compile type mismatch error
-Date: Wed, 19 Jul 2023 08:57:32 +0000
-Message-ID: <2b4540aadc3c4449a192aeed6211f232@AcuMS.aculab.com>
-References: <20230717141852.153965-1-carlos.bilbao@amd.com>
- <ZLWNHuTGk0fy8pjE@slm.duckdns.org>
+From: Miaohe Lin <linmiaohe-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Subject: [PATCH] cgroup: fix obsolete comment above cgroup_create()
+Date: Wed, 19 Jul 2023 17:06:40 +0800
+Message-ID: <20230719090640.2568600-1-linmiaohe@huawei.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-block-owner@vger.kernel.org>
-In-Reply-To: <ZLWNHuTGk0fy8pjE@slm.duckdns.org>
-Content-Language: en-US
+Content-Transfer-Encoding: 7BIT
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: 'Tejun Heo' <tj@kernel.org>, Carlos Bilbao <carlos.bilbao@amd.com>
-Cc: "josef@toxicpanda.com" <josef@toxicpanda.com>, "axboe@kernel.dk" <axboe@kernel.dk>, "cgroups@vger.kernel.org" <cgroups@vger.kernel.org>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, amd <amd@localhost.localdomain>
+To: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linmiaohe-hv44wF8Li93QT0dZR+AlfA@public.gmane.org
 
-From: Tejun Heo
-> Sent: 17 July 2023 19:49
-> 
-> On Mon, Jul 17, 2023 at 09:18:52AM -0500, Carlos Bilbao wrote:
-> > From: amd <amd@localhost.localdomain>
-> >
-> > Fix two type mismatch errors encountered while compiling blk-iocost.c with
-> > GCC version 13.1.1 that involved constant operator WEIGHT_ONE. Cast the
-> > result of the division operation to (unsigned int) to match the expected
-> > format specifier %u in two seq_printf invocations.
-> 
-> Can you detail the warnings? Was that on 32bit compiles?
+Since commit 743210386c03 ("cgroup: use cgrp->kn->id as the cgroup ID"),
+cgrp is associated with its kernfs_node. Update corresponding comment.
 
-The problem is caused by gcc 13 changing the types of the
-constants inside an enum to be all the same.
+Signed-off-by: Miaohe Lin <linmiaohe-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+---
+ kernel/cgroup/cgroup.c | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
 
-The best fix is (probably) to replace all the enum used to
-define unrelated constants with #defines.
-
-	David
-
--
-Registered Address Lakeside, Bramley Road, Mount Farm, Milton Keynes, MK1 1PT, UK
-Registration No: 1397386 (Wales)
+diff --git a/kernel/cgroup/cgroup.c b/kernel/cgroup/cgroup.c
+index 40ee81f982ff..44bf9e3ffb8a 100644
+--- a/kernel/cgroup/cgroup.c
++++ b/kernel/cgroup/cgroup.c
+@@ -5544,8 +5544,7 @@ static struct cgroup_subsys_state *css_create(struct cgroup *cgrp,
+ 
+ /*
+  * The returned cgroup is fully initialized including its control mask, but
+- * it isn't associated with its kernfs_node and doesn't have the control
+- * mask applied.
++ * it doesn't have the control mask applied.
+  */
+ static struct cgroup *cgroup_create(struct cgroup *parent, const char *name,
+ 				    umode_t mode)
+-- 
+2.33.0
 
