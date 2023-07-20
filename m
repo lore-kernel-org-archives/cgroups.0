@@ -1,66 +1,53 @@
-From: Efly Young <yangyifei03@kuaishou.com>
-Subject: [PATCH] mm:vmscan: fix inaccurate reclaim during proactive reclaim
-Date: Thu, 20 Jul 2023 15:27:08 +0800
-Message-ID: <20230720072708.55067-1-yangyifei03@kuaishou.com>
+From: Abel Wu <wuyun.abel@bytedance.com>
+Subject: Re: [PATCH RESEND net-next 1/2] net-memcg: Scopify the indicators of
+ sockmem pressure
+Date: Thu, 20 Jul 2023 15:58:49 +0800
+Message-ID: <d114834c-2336-673f-f200-87fc6efb411f@bytedance.com>
+References: <20230711124157.97169-1-wuyun.abel@bytedance.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; d=kuaishou.com; s=dkim; c=relaxed/relaxed;
-        t=1689838068; h=from:subject:to:date:message-id;
-        bh=2hvt2nAb9FQGc8JWV2zRVOy7HcAR3TW4z5ZsrMla/mw=;
-        b=Ov9ON0jOMvPY7tYxtSF27RXIYX5/ESwleAfyzbMcRkfahhvPD8+vCRgUolm4nuFAX7xrxXLLqLP
-        VC0ugqxGe1jauqIjydi7S9YH2M2vjCjTteErwqG546qEglqgQx2dxnNycFZVOCvZX9fbPRgt69Um7
-        2ew2dB1E6Kom/DkdCz0=
-List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-To: hannes@cmpxchg.org
-Cc: cgroups@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org, bpf@vger.kernel.org
+Content-Transfer-Encoding: 7bit
+Return-path: <netdev+bounces-19368-gl-netdev-2=m.gmane-mx.org@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=bytedance.com; s=google; t=1689839944; x=1690444744;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=QCBG10jWmv8n11PUl1At+mRhQs+STyCHC9Y8ykk98hs=;
+        b=Nnu9yXWnT11QAdbQ9GUhYKZSFFcUk0bsZdtUNqUMHxBWMFa6402Ny2yH5iQxEZhGtt
+         Kz3XRv01VgrqlGSpLQm7E8BKzJTbIbnZkymzLZbp9YmpoHsQYwRejn13SBbT7IrQTO6U
+         SSKMw0RKNd+ruoF1X7gd4bGzDUdn3VZamns/FpVKcyZVE8bZfh3ZB7SkwGWidjmpWE2S
+         z1eYV6E/QnugvkY/taUn0a53MkAB3OHG65tL3psRnBqx/L04+GCvHT8xrBnv01/ZpdL0
+         kXwHSiBUs/WAYR8ArUnjYyaQ6W/MAMWTQXpvjgTEogO5unsJNpTbyHBzDOtgtGFpgt0g
+         Sp/Q==
+List-Id: <cgroups.vger.kernel.org>
+List-Subscribe: <mailto:netdev+subscribe@vger.kernel.org>
+List-Unsubscribe: <mailto:netdev+unsubscribe@vger.kernel.org>
+Content-Language: en-US
+In-Reply-To: <20230711124157.97169-1-wuyun.abel@bytedance.com>
+Content-Type: text/plain; charset="us-ascii"; format="flowed"
+To: "David S. Miller" <davem@davemloft.net>, Eric Dumazet <edumazet@google.com>, Jakub Kicinski <kuba@kernel.org>, Paolo Abeni <pabeni@redhat.com>, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, Roman Gushchin <roman.gushchin@linux.dev>, Shakeel Butt <shakeelb@google.com>, Muchun Song <muchun.song@linux.dev>, Andrew Morton <akpm@linux-foundation.org>, David Ahern <dsahern@kernel.org>, Yosry Ahmed <yosryahmed@google.com>, "Matthew Wilcox (Oracle)" <willy@infradead.org>, Yu Zhao <yuzhao@google.com>, Kefeng Wang <wangkefeng.wang@huawei.com>, Yafang Shao <laoar.shao@gmail.com>, Kuniyuki Iwashima <kuniyu@amazon.com>, Martin KaFai Lau <martin.lau@kernel.org>, Alexander Mikhalitsyn <alexander@mihalicyn.com>, Breno Leitao <leitao@debian.org>, David Howells <dhowells@redhat.com>, Jason Xing <kernelxing@tencent.com>, Xin Long <lucien.xin@gmail.com>
+Cc: Michal Hocko <mhocko@suse.com>, Alexei Starovoitov <ast@kernel.org>, open list <linux-kernel@vger.kernel.org>, "open list:NETWORKING [GENERAL]" <netdev@vger.kernel.org>, "open list:CONTROL GROUP - MEMORY RESOURCE CONTROLLER (MEMCG)" <cgroups@vger.kernel.org>, "open list:CONTROL GROUP - MEMORY RESOURCE CONTROLLER (MEMCG)" <linux-mm@kvack.org>
 
-Before commit f53af4285d77 ("mm: vmscan: fix extreme overreclaim and
-swap floods"), proactive reclaim will extreme overreclaim sometimes.
-But proactive reclaim still inaccurate and some extent overreclaim.
+Gentle ping :)
 
-Problematic case is easy to construct. Allocate lots of anonymous
-memory (e.g., 20G) in a memcg, then swapping by writing memory.recalim
-and there is a certain probability of overreclaim. For example, request
-1G by writing memory.reclaim will eventually reclaim 1.7G or other
-values more than 1G.
-
-The reason is that reclaimer may have already reclaimed part of requested
-memory in one loop, but before adjust sc->nr_to_reclaim in outer loop,
-call shrink_lruvec() again will still follow the current sc->nr_to_reclaim
-to work. It will eventually lead to overreclaim. In theory, the amount
-of reclaimed would be in [request, 2 * request).
-
-Reclaimer usually tends to reclaim more than request. But either direct
-or kswapd reclaim have much smaller nr_to_reclaim targets, so it is
-less noticeable and not have much impact.
-
-Proactive reclaim can usually come in with a larger value, so the error
-is difficult to ignore. Considering proactive reclaim is usually low
-frequency, handle the batching into smaller chunks is a better approach.
-
-Signed-off-by: Efly Young <yangyifei03@kuaishou.com>
-Signed-off-by: Johannes Weiner <hannes@cmpxchg.org>
----
- mm/memcontrol.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
-
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index 4b27e24..d36cf88 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -6741,8 +6741,8 @@ static ssize_t memory_reclaim(struct kernfs_open_file *of, char *buf,
- 			lru_add_drain_all();
- 
- 		reclaimed = try_to_free_mem_cgroup_pages(memcg,
--						nr_to_reclaim - nr_reclaimed,
--						GFP_KERNEL, reclaim_options);
-+					min(nr_to_reclaim - nr_reclaimed, SWAP_CLUSTER_MAX),
-+					GFP_KERNEL, reclaim_options);
- 
- 		if (!reclaimed && !nr_retries--)
- 			return -EAGAIN;
--- 
-1.8.3.1
+On 7/11/23 8:41 PM, Abel Wu wrote:
+> Now there are two indicators of socket memory pressure sit inside
+> struct mem_cgroup, socket_pressure and tcpmem_pressure.
+> 
+> When in legacy mode aka. cgroupv1, the socket memory is charged
+> into a separate counter memcg->tcpmem rather than ->memory, so
+> the reclaim pressure of the memcg has nothing to do with socket's
+> pressure at all. While for default mode, the ->tcpmem is simply
+> not used.
+> 
+> So {socket,tcpmem}_pressure are only used in default/legacy mode
+> respectively. This patch fixes the pieces of code that make mixed
+> use of both.
+> 
+> Signed-off-by: Abel Wu <wuyun.abel@bytedance.com>
+> ---
+>   include/linux/memcontrol.h | 4 ++--
+>   mm/vmpressure.c            | 8 ++++++++
+>   2 files changed, 10 insertions(+), 2 deletions(-)
+> 
 
