@@ -1,58 +1,237 @@
-From: 'Tejun Heo' <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH] blk-iocost: fix seq_printf compile type mismatch error
-Date: Thu, 20 Jul 2023 10:06:54 -1000
-Message-ID: <ZLmT3mXuDlYY61w0@slm.duckdns.org>
-References: <20230717141852.153965-1-carlos.bilbao@amd.com>
- <ZLWNHuTGk0fy8pjE@slm.duckdns.org>
- <2b4540aadc3c4449a192aeed6211f232@AcuMS.aculab.com>
+From: Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [RFC PATCH 0/8] memory recharging for offline memcgs
+Date: Thu, 20 Jul 2023 14:33:15 -0700
+Message-ID: <CAJD7tkb7MKR=b09etEb4jPSMRKj=w1B2PSf3_vWyuWHh+iyppg@mail.gmail.com>
+References: <20230720070825.992023-1-yosryahmed@google.com> <20230720153515.GA1003248@cmpxchg.org>
 Mime-Version: 1.0
+Content-Transfer-Encoding: quoted-printable
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20221208; t=1689883617; x=1690488417;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:sender:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=zRzMPL6a/BSNtiQ7PJzND7IfnG5RjjKshq+ayDJRwvE=;
-        b=kZIq9ybemRD+z70zrt95FXrBHFPHV9z/ZL6uhkUy+NMiMeb1ftSsvyQesVG3rung/8
-         StKvGhzKm87e0EmDAArGi/OpQRYaBX+ijkyxRDwREw4WO3X3HDnALsNzYZqcx5Sd6QOc
-         iWEVrUthWYQCvOKLAo3ODL8Pl9vUglt3E4qiHVwNbLXnFmj8aJCwpmZaaWZLoKn/mJiB
-         Ovi+Zy45y62uqB0h4m29zNjzHs7UitPpt+kYNHyLYVEIJAvO3JuTUzbjSB/BaEeodbnI
-         Zj/AeMIOXUGtWYEs/nE8rLZUXzAEfnHm7xpk1IuVAsdG5NsWCk5BwlL0fo+ioKeQuWY5
-         1yYw==
-Sender: Tejun Heo <htejun-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <2b4540aadc3c4449a192aeed6211f232-1XygrNkDbNvwg4NCKwmqgw@public.gmane.org>
+        d=google.com; s=20221208; t=1689888832; x=1690493632;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=I+zX1bzsNkI0w4pR3H5aVCG6OfBqU8naraYStIVWSF8=;
+        b=gTnuC4fXAxfL5c6Up6plbcrQtf7FKHa3JMqHzp4fQaIZs9BAU7DSP9RBRD8kfaprby
+         7PM/C/nMYLbnYTEn2on3Gp8g2rXccV4oqyTTptnSQKmYl2RgvUKAhSZc1pdnaXm79pN/
+         n0XfmbV4Kuc4fBaA1Syuq/uaRlj2UEM+ywUYy2DSo0FVUPVD3G0GeD48yMcH0pDYXHv1
+         VUlX2xxNvRi4TJNe6LUvJtUU5Ay8w+K86np4gJYgx+M8kHBm6ToKixbj0Iq8R+dBW7/r
+         /ItHmvbE56th06WI6rUnaFogKID7C25DD2kjdr0yxz1JrKxdtm792yTnLMMZTDQ3jv7+
+         0tZA==
+In-Reply-To: <20230720153515.GA1003248-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: David Laight <David.Laight-JxhZ9S5GRejQT0dZR+AlfA@public.gmane.org>
-Cc: Carlos Bilbao <carlos.bilbao-5C7GfCeVMHo@public.gmane.org>, "josef-DigfWCa+lFGyeJad7bwFQA@public.gmane.org" <josef-DigfWCa+lFGyeJad7bwFQA@public.gmane.org>, "axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org" <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, "cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, amd <amd-bi+AKbBUZKY6gyzm1THtWbp2dZbC/Bob@public.gmane.org>
+Content-Type: text/plain; charset="windows-1252"
+To: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Muchun Song <muchun.song-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, "Matthew Wilcox (Oracle)" <willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Yu Zhao <yuzhao-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Luis Chamberlain <mcgrof-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Kees Cook <keescook-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>, Iurii Zaikin <yzaikin-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, "T.J. Mercier" <tjmercier-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Wed, Jul 19, 2023 at 08:57:32AM +0000, David Laight wrote:
-> From: Tejun Heo
-> > Sent: 17 July 2023 19:49
-> > 
-> > On Mon, Jul 17, 2023 at 09:18:52AM -0500, Carlos Bilbao wrote:
-> > > From: amd <amd-bi+AKbBUZKY6gyzm1THtWbp2dZbC/Bob@public.gmane.org>
-> > >
-> > > Fix two type mismatch errors encountered while compiling blk-iocost.c with
-> > > GCC version 13.1.1 that involved constant operator WEIGHT_ONE. Cast the
-> > > result of the division operation to (unsigned int) to match the expected
-> > > format specifier %u in two seq_printf invocations.
-> > 
-> > Can you detail the warnings? Was that on 32bit compiles?
-> 
-> The problem is caused by gcc 13 changing the types of the
-> constants inside an enum to be all the same.
-> 
-> The best fix is (probably) to replace all the enum used to
-> define unrelated constants with #defines.
+On Thu, Jul 20, 2023 at 8:35=E2=80=AFAM Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org=
+> wrote:
+>
+> On Thu, Jul 20, 2023 at 07:08:17AM +0000, Yosry Ahmed wrote:
+> > This patch series implements the proposal in LSF/MM/BPF 2023 conference
+> > for reducing offline/zombie memcgs by memory recharging [1]. The main
+> > difference is that this series focuses on recharging and does not
+> > include eviction of any memory charged to offline memcgs.
+> >
+> > Two methods of recharging are proposed:
+> >
+> > (a) Recharging of mapped folios.
+> >
+> > When a memcg is offlined, queue an asynchronous worker that will walk
+> > the lruvec of the offline memcg and try to recharge any mapped folios t=
+o
+> > the memcg of one of the processes mapping the folio. The main assumptio=
+n
+> > is that a process mapping the folio is the "rightful" owner of the
+> > memory.
+> >
+> > Currently, this is only supported for evictable folios, as the
+> > unevictable lru is imaginary and we cannot iterate the folios on it. A
+> > separate proposal [2] was made to revive the unevictable lru, which
+> > would allow recharging of unevictable folios.
+> >
+> > (b) Deferred recharging of folios.
+> >
+> > For folios that are unmapped, or mapped but we fail to recharge them
+> > with (a), we rely on deferred recharging. Simply put, any time a folio
+> > is accessed or dirtied by a userspace process, and that folio is charge=
+d
+> > to an offline memcg, we will try to recharge it to the memcg of the
+> > process accessing the folio. Again, we assume this process should be th=
+e
+> > "rightful" owner of the memory. This is also done asynchronously to avo=
+id
+> > slowing down the data access path.
+>
+> I'm super skeptical of this proposal.
 
-Yeah, but then you end up without any way to read that value from outside
-the kernel for BPF, drgn or any other tools which use debug info. That
-actually matters.
+I expected this :)
 
-Thanks.
+>
+> Recharging *might* be the most desirable semantics from a user pov,
+> but only if it applies consistently to the whole memory footprint.
+> There is no mention of slab allocations such as inodes, dentries,
+> network buffers etc. which can be a significant part of a cgroup's
+> footprint. These are currently reparented. I don't think doing one
+> thing with half of the memory, and a totally different thing with the
+> other half upon cgroup deletion is going to be acceptable semantics.
 
--- 
-tejun
+I think, as you say, recharging has the most desirable semantics
+because the charge is maintained where it *should* be (with who is
+actually using it). We simply cannot do that for kernel memory,
+because we have no way of attributing it to a user. On the other hand,
+we *can* attribute user memory to a user. Consistency is great, but
+our inability to do (arguably) the right thing for one type of memory,
+doesn't mean we shouldn't do it when we can. I would also argue that
+user memory (anon/file pages) would commonly be the larger portion of
+memory on a machine compared to kernel memory (e.g. slab).
+
+>
+> It appears this also brings back the reliability issue that caused us
+> to deprecate charge moving. The recharge path has trylocks, LRU
+> isolation attempts, GFP_ATOMIC allocations. These introduce a variable
+> error rate into the relocation process,
+
+Recharging is naturally best effort, because it's non-disruptive.
+After a memcg dies, the kernel continuously tries to move the charges
+away from it on every chance it gets. If it fails one time that's
+fine, there will be other chances. Compared to the status quo, it is
+definitely better than just leaving all the memory behind with the
+zombie memcg. I would argue that over time (and accesses), most/all
+memory should eventually get recharged. If not, something is not
+working correctly, or a wrong assumption is being made.
+
+> which causes pages that should
+> belong to the same domain to be scattered around all over the place.
+
+I strongly disagree with this point. Ideally, yes, memory charged to a
+memcg would belong to the same domain. In practice, due to the first
+touch charging semantics, this is far from the truth. For anonymous
+memory, sure, they all belong to the same domain (mostly), the process
+they belong to. But most of anonymous memory will go away when the
+process dies anyway, the problem is mostly with shared resources (e.g.
+file, tmpfs, ..). With file/tmpfs memory, the charging behavior is
+random. The first memcg that touches a page gets charged for it.
+Consequently, the file/tmpfs memory charged to a memcg would be a
+mixture of pages from different files in different mounts, definitely
+not a single domain. Perhaps with some workloads, where each memcg is
+accessing different files, most memory charged to a memcg will belong
+to the same domain, but in this case, recharging wouldn't move it away
+anyway.
+
+> It also means that zombie pinning still exists, but it's now even more
+> influenced by timing and race conditions, and so less predictable.
+
+It still exists, but it is improved. The kernel tries to move charges
+away from zombies on every chance it gets instead of doing nothing
+about it. It is less predictable, can't argue about this, but it can't
+get worse, only better.
+
+>
+> There are two issues being conflated here:
+>
+> a) the problem of zombie cgroups, and
+>
+> b) who controls resources that outlive the control domain.
+>
+> For a), reparenting is still the most reasonable proposal. It's
+> reliable for one, but it also fixes the problem fully within the
+> established, user-facing semantics: resources that belong to a cgroup
+> also hierarchically belong to all ancestral groups; if those resources
+> outlive the last-level control domain, they continue to belong to the
+> parents. This is how it works today, and this is how it continues to
+> work with reparenting. The only difference is that those resources no
+> longer pin a dead cgroup anymore, but instead are physically linked to
+> the next online ancestor. Since dead cgroups have no effective control
+> parameters anymore, this is semantically equivalent - it's just a more
+> memory efficient implementation of the same exact thing.
+
+I agree that reparenting is more deterministic and reliable, but there
+are two major flaws off the top of my head:
+
+(1) If a memcg touches a page one time and gets charged for it, the
+charge is stuck in its hierarchy forever. It can get reparented, but
+it will never be charged to whoever is actually using it again, unless
+it is reclaimed and refaulted (in some cases).
+
+Consider this hierarchy:
+    root
+  /       \
+A        B
+            \
+            C
+
+Consider a case where memcg C touches a library file once, and gets
+charged for some memory, and then dies. The memory gets reparente to
+memcg B. Meanwhile, memcg A is continuously using the memory that
+memcg B is charged for. memcg B would be indefinitely taxed by memcg
+A. The only way out is if memcg B hit its limit, and the pages get
+reclaimed, and then refaulted and recharged to memcg A. In some cases
+(e.g. tmpfs), even then the memory would still get charged to memcg B.
+There is no way to get rid of the charge until the resource itself is
+freed.
+
+This problem exists today, even without reparenting, with the
+difference being that the charge will remain with C instead of B.
+Recharging offers a better alternative where the charge will be
+correctly moved to A, the "rightful" owner.
+
+(2) In the above scenario, when memcg B dies, the memory will be
+reparented to the root. That's even worse. Now memcg A is using memory
+that is not accounted for anywhere, essentially an accounting leak.
+From an admin perspective, the memory charged to root is system
+overhead, it is lost capacity. For long-living systems, as memcgs are
+created and destroyed for different workloads, memory will keep
+accumulating at the root. The machine will keep leaking capacity over
+time, and accounting becomes less and less accurate as more memory
+becomes charged to the root.
+
+>
+> b) is a discussion totally separate from this.
+
+I would argue that the zombie problem is (at least partially) an
+artifact of the shared/sticky resources problem. If all resources are
+used by one memcg and do not outlive it, we wouldn't have zombies.
+
+> We can argue what we
+> want this behavior to be, but I'd argue strongly that whatever we do
+> here should apply to all resources managed by the controller equally.
+
+User memory and kernel memory are very different in nature. Ideally
+yeah, we want to treat all resources equally. But user memory is
+naturally more attributable to users and easier to account correctly
+than kernel memory.
+
+>
+> It could also be argued that if you don't want to lose control over a
+> set of resources, then maybe don't delete their control domain while
+> they are still alive and in use.
+
+This is easier said than done :) As I mentioned earlier, the charging
+semantics are inherently indeterministic for shared resources (e.g.
+file/tmpfs). The user cannot control or monitor which resources belong
+to which control domain. Each memcg in the system could be charged for
+one page from each file in a shared library for all that matters :)
+
+> For example, when restarting a
+> workload, and the new instance is expected to have largely the same
+> workingset, consider reusing the cgroup instead of making a new one.
+
+In a large fleet with many different jobs getting rescheduled and
+restarted on different machines, it's really hard in practice to do
+so. We can keep the same cgroup if the same workload is being
+restarted on the same machine, sure, but most of the time there's a
+new workload arriving or so. We can't reuse containers in this case.
+
+>
+> For the zombie problem, I think we should merge Muchun's patches
+> ASAP. They've been proposed several times, they have Roman's reviews
+> and acks, and they do not change user-facing semantics. There is no
+> good reason not to merge them.
+
+There are some, which I pointed out above.
+
+All in all, I understand where you are coming from. Your concerns are
+valid. Recharging is not a perfect approach, but it is arguably the
+best we can do at this point. Being indeterministic sucks, but our
+charging semantics are inherently indeterministic anyway.
