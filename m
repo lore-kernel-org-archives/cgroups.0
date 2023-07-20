@@ -1,38 +1,40 @@
-From: Tejun Heo <tj@kernel.org>
+From: 'Tejun Heo' <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 Subject: Re: [PATCH] blk-iocost: fix seq_printf compile type mismatch error
-Date: Thu, 20 Jul 2023 10:05:26 -1000
-Message-ID: <ZLmThnoXvEqlgf_q@slm.duckdns.org>
+Date: Thu, 20 Jul 2023 10:06:54 -1000
+Message-ID: <ZLmT3mXuDlYY61w0@slm.duckdns.org>
 References: <20230717141852.153965-1-carlos.bilbao@amd.com>
  <ZLWNHuTGk0fy8pjE@slm.duckdns.org>
- <7044d6b3-a5d1-572d-a755-74f8d4fd31c5@amd.com>
+ <2b4540aadc3c4449a192aeed6211f232@AcuMS.aculab.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20221208; t=1689883529; x=1690488329;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :mime-version:references:message-id:subject:cc:to:from:date:sender
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=ShySli6sDETZMpAPGpGb5lvBBzti4dS5P6Lg1E17Uvs=;
-        b=hz1Cuka5AmWn4oFd8xD3RyAUehliZu/h3GyLa0qEvCBnGPlUAswENy+LknBCwgcDrO
-         aHzNRzQ7Jg4PVCAY/Z9r940jKGI4UClejTJhA0b3L+424a6HsmiaZOSaJeI2Ok1hqqdC
-         Ip9e+0/GWLafW040QyOXl1teqgCifhoZLPLaazK47F93L7fVLWOWZoM8VlLLbjRdl6my
-         tZXqV/2B9pQGYWhkccYFgJuEbZ9kf1eSMISBb73DopoLsxEQbi1RE9va1oh7PChiGb2B
-         L+qUsVBtXpQSxWsENguGaaLb5qtr7udDE5SOgcrpWn9yFbCZ9lF7RIrIo5ov+YksX1ld
-         1GdQ==
-Sender: Tejun Heo <htejun@gmail.com>
+        d=gmail.com; s=20221208; t=1689883617; x=1690488417;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:sender:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=zRzMPL6a/BSNtiQ7PJzND7IfnG5RjjKshq+ayDJRwvE=;
+        b=kZIq9ybemRD+z70zrt95FXrBHFPHV9z/ZL6uhkUy+NMiMeb1ftSsvyQesVG3rung/8
+         StKvGhzKm87e0EmDAArGi/OpQRYaBX+ijkyxRDwREw4WO3X3HDnALsNzYZqcx5Sd6QOc
+         iWEVrUthWYQCvOKLAo3ODL8Pl9vUglt3E4qiHVwNbLXnFmj8aJCwpmZaaWZLoKn/mJiB
+         Ovi+Zy45y62uqB0h4m29zNjzHs7UitPpt+kYNHyLYVEIJAvO3JuTUzbjSB/BaEeodbnI
+         Zj/AeMIOXUGtWYEs/nE8rLZUXzAEfnHm7xpk1IuVAsdG5NsWCk5BwlL0fo+ioKeQuWY5
+         1yYw==
+Sender: Tejun Heo <htejun-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 Content-Disposition: inline
-In-Reply-To: <7044d6b3-a5d1-572d-a755-74f8d4fd31c5@amd.com>
+In-Reply-To: <2b4540aadc3c4449a192aeed6211f232-1XygrNkDbNvwg4NCKwmqgw@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="utf-8"
-To: Carlos Bilbao <carlos.bilbao@amd.com>
-Cc: josef@toxicpanda.com, axboe@kernel.dk, cgroups@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, amd <amd@localhost.localdomain>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: David Laight <David.Laight-JxhZ9S5GRejQT0dZR+AlfA@public.gmane.org>
+Cc: Carlos Bilbao <carlos.bilbao-5C7GfCeVMHo@public.gmane.org>, "josef-DigfWCa+lFGyeJad7bwFQA@public.gmane.org" <josef-DigfWCa+lFGyeJad7bwFQA@public.gmane.org>, "axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org" <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, "cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, amd <amd-bi+AKbBUZKY6gyzm1THtWbp2dZbC/Bob@public.gmane.org>
 
-On Tue, Jul 18, 2023 at 10:37:23AM -0500, Carlos Bilbao wrote:
-> On 7/17/23 13:49, Tejun Heo wrote:
+On Wed, Jul 19, 2023 at 08:57:32AM +0000, David Laight wrote:
+> From: Tejun Heo
+> > Sent: 17 July 2023 19:49
+> > 
 > > On Mon, Jul 17, 2023 at 09:18:52AM -0500, Carlos Bilbao wrote:
-> > > From: amd <amd@localhost.localdomain>
-> > > 
+> > > From: amd <amd-bi+AKbBUZKY6gyzm1THtWbp2dZbC/Bob@public.gmane.org>
+> > >
 > > > Fix two type mismatch errors encountered while compiling blk-iocost.c with
 > > > GCC version 13.1.1 that involved constant operator WEIGHT_ONE. Cast the
 > > > result of the division operation to (unsigned int) to match the expected
@@ -40,17 +42,15 @@ On Tue, Jul 18, 2023 at 10:37:23AM -0500, Carlos Bilbao wrote:
 > > 
 > > Can you detail the warnings? Was that on 32bit compiles?
 > 
-> The concrete error was: "format ‘%u’ expects argument of type ‘unsigned
-> int’, but argument 3 has type ‘long unsigned int’". If I run:
+> The problem is caused by gcc 13 changing the types of the
+> constants inside an enum to be all the same.
 > 
-> $ echo | cpp -dM | grep __LP64__
-> #define __LP64__ 1
-> 
-> which makes me believe it is not 32 bits.
+> The best fix is (probably) to replace all the enum used to
+> define unrelated constants with #defines.
 
-So, we broke up the enum definitions so that WEIGHT_ONE doesn't end up being
-a ulong. Which kernel are you building? Can you plesae try the current
-linus#master?
+Yeah, but then you end up without any way to read that value from outside
+the kernel for BPF, drgn or any other tools which use debug info. That
+actually matters.
 
 Thanks.
 
