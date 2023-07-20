@@ -1,107 +1,86 @@
 From: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Subject: Re: [RFC PATCH 0/8] memory recharging for offline memcgs
-Date: Thu, 20 Jul 2023 11:35:15 -0400
-Message-ID: <20230720153515.GA1003248@cmpxchg.org>
-References: <20230720070825.992023-1-yosryahmed@google.com>
+Subject: Re: [PATCH] mm:vmscan: fix inaccurate reclaim during proactive
+ reclaim
+Date: Thu, 20 Jul 2023 12:24:40 -0400
+Message-ID: <20230720162440.GA1015794@cmpxchg.org>
+References: <20230720072708.55067-1-yangyifei03@kuaishou.com>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=cmpxchg-org.20221208.gappssmtp.com; s=20221208; t=1689867318; x=1690472118;
+        d=cmpxchg-org.20221208.gappssmtp.com; s=20221208; t=1689870282; x=1690475082;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=1n+rFJmpt3qB6JDh31e2VoNgqrjqEMhcmnlZeysYmYE=;
-        b=4k9D+J7Kpdc0v2PabFm8Hmk1Rg0EfWw4RPCEG+efTc4WtuWKXjt/fnBhLoqCeZE2tu
-         ZJZgFzOafPl7KmThIItTT/LAYNvIuj4QKYPs3Y/WUaerPCDvtD8AbSYxdJBV6gq7erZ0
-         QkSqfy+6llSiQFqdoU+Kj0piE8M5QnD+2ORQ6bx9iEqn54wsDOFBvtj9QYGtnMZTZ8U7
-         KfVsmYYL0Ey+U08VcwemcoYSxU65LDlXnWhRO97b+vEfwHygN164fwsiag0Q4Bu72//P
-         +QQgOU1mJjt87DcTNtsI3PcXd+3/ZgW182eFDepQugrD6/ju3NE4lu6THcTcE7LkVK6j
-         uHUA==
+        bh=s74T/DS0uEk+n6R0wwBy5aetjEjuSLERJS55RIwoaX4=;
+        b=IZzpQokKpB0UhARjk1C5AYsxhEoUwekbG1CIGPqpzF+J5EyUNV4fXvSh6ICM60s/l/
+         l3LTb+/4oHtXOm/axHhrDe9RYyjLFUcJp/fjdEfH3AfdarB9wYiD6qDHqXQIUGTULJjY
+         vw7yjUAGA6a1rzcc8PN64w16jP4JWgFnyix3oUPgbdJpcchORfcHKjhuGO7hDatwjMex
+         Tgoo3H3N3xNYsZnI1oMU+JFxWEkqso9+qil3xyi6Lze7Drl2ReIPDqQjSEa8jAMYviY/
+         z9eO+nZw1PsJ45lS/RFq6qSgkSD6Jl0gP4PD3UUJ8jAvUFV4u798afEKcJEM6QS2Vj9Y
+         5HwA==
 Content-Disposition: inline
-In-Reply-To: <20230720070825.992023-1-yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+In-Reply-To: <20230720072708.55067-1-yangyifei03-e2CXd7i0PsxWk0Htik3J/w@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Muchun Song <muchun.song-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, "Matthew Wilcox (Oracle)" <willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Yu Zhao <yuzhao-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Luis Chamberlain <mcgrof-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Kees Cook <keescook-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>, Iurii Zaikin <yzaikin-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, "T.J. Mercier" <tjmercier-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Efly Young <yangyifei03-e2CXd7i0PsxWk0Htik3J/w@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, bpf-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 
-On Thu, Jul 20, 2023 at 07:08:17AM +0000, Yosry Ahmed wrote:
-> This patch series implements the proposal in LSF/MM/BPF 2023 conference
-> for reducing offline/zombie memcgs by memory recharging [1]. The main
-> difference is that this series focuses on recharging and does not
-> include eviction of any memory charged to offline memcgs.
+On Thu, Jul 20, 2023 at 03:27:08PM +0800, Efly Young wrote:
+> Before commit f53af4285d77 ("mm: vmscan: fix extreme overreclaim and
+> swap floods"), proactive reclaim will extreme overreclaim sometimes.
+> But proactive reclaim still inaccurate and some extent overreclaim.
 > 
-> Two methods of recharging are proposed:
+> Problematic case is easy to construct. Allocate lots of anonymous
+> memory (e.g., 20G) in a memcg, then swapping by writing memory.recalim
+> and there is a certain probability of overreclaim. For example, request
+> 1G by writing memory.reclaim will eventually reclaim 1.7G or other
+> values more than 1G.
 > 
-> (a) Recharging of mapped folios.
+> The reason is that reclaimer may have already reclaimed part of requested
+> memory in one loop, but before adjust sc->nr_to_reclaim in outer loop,
+> call shrink_lruvec() again will still follow the current sc->nr_to_reclaim
+> to work. It will eventually lead to overreclaim. In theory, the amount
+> of reclaimed would be in [request, 2 * request).
 > 
-> When a memcg is offlined, queue an asynchronous worker that will walk
-> the lruvec of the offline memcg and try to recharge any mapped folios to
-> the memcg of one of the processes mapping the folio. The main assumption
-> is that a process mapping the folio is the "rightful" owner of the
-> memory.
+> Reclaimer usually tends to reclaim more than request. But either direct
+> or kswapd reclaim have much smaller nr_to_reclaim targets, so it is
+> less noticeable and not have much impact.
 > 
-> Currently, this is only supported for evictable folios, as the
-> unevictable lru is imaginary and we cannot iterate the folios on it. A
-> separate proposal [2] was made to revive the unevictable lru, which
-> would allow recharging of unevictable folios.
+> Proactive reclaim can usually come in with a larger value, so the error
+> is difficult to ignore. Considering proactive reclaim is usually low
+> frequency, handle the batching into smaller chunks is a better approach.
 > 
-> (b) Deferred recharging of folios.
+> Signed-off-by: Efly Young <yangyifei03-e2CXd7i0PsxWk0Htik3J/w@public.gmane.org>
+> Signed-off-by: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+
+Hey, I didn't write the patch, you did :) Please change it to
+
+Suggested-by: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+
+You can also add
+
+Acked-by: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+
+[quoting remainder for new CCs]
+
+> ---
+>  mm/memcontrol.c | 4 ++--
+>  1 file changed, 2 insertions(+), 2 deletions(-)
 > 
-> For folios that are unmapped, or mapped but we fail to recharge them
-> with (a), we rely on deferred recharging. Simply put, any time a folio
-> is accessed or dirtied by a userspace process, and that folio is charged
-> to an offline memcg, we will try to recharge it to the memcg of the
-> process accessing the folio. Again, we assume this process should be the
-> "rightful" owner of the memory. This is also done asynchronously to avoid
-> slowing down the data access path.
-
-I'm super skeptical of this proposal.
-
-Recharging *might* be the most desirable semantics from a user pov,
-but only if it applies consistently to the whole memory footprint.
-There is no mention of slab allocations such as inodes, dentries,
-network buffers etc. which can be a significant part of a cgroup's
-footprint. These are currently reparented. I don't think doing one
-thing with half of the memory, and a totally different thing with the
-other half upon cgroup deletion is going to be acceptable semantics.
-
-It appears this also brings back the reliability issue that caused us
-to deprecate charge moving. The recharge path has trylocks, LRU
-isolation attempts, GFP_ATOMIC allocations. These introduce a variable
-error rate into the relocation process, which causes pages that should
-belong to the same domain to be scattered around all over the place.
-It also means that zombie pinning still exists, but it's now even more
-influenced by timing and race conditions, and so less predictable.
-
-There are two issues being conflated here:
-
-a) the problem of zombie cgroups, and
-
-b) who controls resources that outlive the control domain.
-
-For a), reparenting is still the most reasonable proposal. It's
-reliable for one, but it also fixes the problem fully within the
-established, user-facing semantics: resources that belong to a cgroup
-also hierarchically belong to all ancestral groups; if those resources
-outlive the last-level control domain, they continue to belong to the
-parents. This is how it works today, and this is how it continues to
-work with reparenting. The only difference is that those resources no
-longer pin a dead cgroup anymore, but instead are physically linked to
-the next online ancestor. Since dead cgroups have no effective control
-parameters anymore, this is semantically equivalent - it's just a more
-memory efficient implementation of the same exact thing.
-
-b) is a discussion totally separate from this. We can argue what we
-want this behavior to be, but I'd argue strongly that whatever we do
-here should apply to all resources managed by the controller equally.
-
-It could also be argued that if you don't want to lose control over a
-set of resources, then maybe don't delete their control domain while
-they are still alive and in use. For example, when restarting a
-workload, and the new instance is expected to have largely the same
-workingset, consider reusing the cgroup instead of making a new one.
-
-For the zombie problem, I think we should merge Muchun's patches
-ASAP. They've been proposed several times, they have Roman's reviews
-and acks, and they do not change user-facing semantics. There is no
-good reason not to merge them.
+> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+> index 4b27e24..d36cf88 100644
+> --- a/mm/memcontrol.c
+> +++ b/mm/memcontrol.c
+> @@ -6741,8 +6741,8 @@ static ssize_t memory_reclaim(struct kernfs_open_file *of, char *buf,
+>  			lru_add_drain_all();
+>  
+>  		reclaimed = try_to_free_mem_cgroup_pages(memcg,
+> -						nr_to_reclaim - nr_reclaimed,
+> -						GFP_KERNEL, reclaim_options);
+> +					min(nr_to_reclaim - nr_reclaimed, SWAP_CLUSTER_MAX),
+> +					GFP_KERNEL, reclaim_options);
+>  
+>  		if (!reclaimed && !nr_retries--)
+>  			return -EAGAIN;
+> -- 
+> 1.8.3.1
