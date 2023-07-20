@@ -1,21 +1,21 @@
 From: Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Subject: [RFC PATCH 3/8] memcg: recharge mapped folios when a memcg is offlined
-Date: Thu, 20 Jul 2023 07:08:20 +0000
-Message-ID: <20230720070825.992023-4-yosryahmed@google.com>
+Subject: [RFC PATCH 4/8] memcg: support deferred memcg recharging
+Date: Thu, 20 Jul 2023 07:08:21 +0000
+Message-ID: <20230720070825.992023-5-yosryahmed@google.com>
 References: <20230720070825.992023-1-yosryahmed@google.com>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20221208; t=1689836913; x=1692428913;
+        d=google.com; s=20221208; t=1689836915; x=1692428915;
         h=cc:to:from:subject:message-id:references:mime-version:in-reply-to
          :date:from:to:cc:subject:date:message-id:reply-to;
-        bh=zkE9erfuSG8gEvl0NErmWP/HjsAjs5BO1W50P95ENGk=;
-        b=e/D65lKvyv50V3yr9BFRknnH79sSEuD/+1vUrcA4yvr7h7CImtQrd+boASPoSkcO0L
-         6nRrg9RNuJbGc3QdJ+P9rn/E7NPWcOSDBxQOvrkM1p7NFo6krBFtBVk5c7HmdKOK4Es2
-         PuB6i+F5kcVT9zlYpRauNGwgIdsKA8qks2YqdR/pIFwq1jYHE090fjgDVGsSN7ZNarF3
-         4Cq9H5nWz2ZZjH50Yn64E7tOX0T+9lLwqWlGsXWl0d6eVKSMhor5hN/I8U314hOaUpAt
-         UvHj1RrFPkxtGpaYcmmpPta/OEHLEEHI1epsszfPSw/hGh7pMPrxFrxoMgzBHB89kmi2
-         mFqA==
+        bh=pwRzTa1HWBGDz2y6kKmJLG3qmZZBS7SfdYMDl6S6pYU=;
+        b=buokeDrFKzaUQNx7mhOgxc7yhdstiZpTj86UXwGCh3nTqt6qszmfeuRufu8Lj7sJoB
+         FZ8d+MffXHna2mt12Y1ia8+ZNaiYEL4KKqiWl5QyksN4EKDtA5MmamlaJzubK1L4iKoj
+         JnIOyZVRWPOZEDrLS+Z7GpFAMpF6YowvDF+xXDYfmorPwNBAYyVmDpwyqMhca813Xnoe
+         RKGYMhZTq7+fZsmgRNH21NnT88RSM7deT4LXZ9ISfVkZGDcZnSBTWZjY2y9bjfmsBNsN
+         UTtLHPVn8pgWNVg/M6uRpXBrkyjKtRhGZuuMQmP3rtFreh0ZALGBo7Ltyu1x30E1hL2z
+         2vZQ==
 In-Reply-To: <20230720070825.992023-1-yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
@@ -23,317 +23,223 @@ Content-Transfer-Encoding: 7bit
 To: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 Cc: Muchun Song <muchun.song-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, "Matthew Wilcox (Oracle)" <willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Yu Zhao <yuzhao-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Luis Chamberlain <mcgrof-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Kees Cook <keescook-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>, Iurii Zaikin <yzaikin-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, "T.J. Mercier" <tjmercier-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 
-When a cgroup is removed by userspace and its memcg goes offline,
-attempt to recharge the pages charged to the memcg to other memcgs that
-are actually using the folios. Recharging is done in an asynchronous
-worker as it is an expensive operation and needs to acquire multiple
-locks.
+The previous patch added support for memcg recharging for mapped folios
+when a memcg goes offline. For unmapped folios, it is not straighforward
+to find a rightful memcg to recharge the folio to. Hence, add support
+for deferred recharging.
 
-Recharge targets are identified by walking the rmap and checking the
-memcgs of the processes mapping the folio, if any. We avoid an OOM kill
-if we fail to charge the folio, to avoid inducing an OOM kill at a
-seemingly random point in time in the target memcg.
+Deferred recharging provides a hook that can be added in data access
+paths: folio_memcg_deferred_recharge().
 
-If we fail for any reason (e.g. could not isolate all folios, could not
-lock folio, target memcg reached its limit, etc), we reschedule the
-worker to rety.
+folio_memcg_deferred_recharge() will check if the memcg that the folio
+is charged to is offline. If so, it will queue an asynchronous worker to
+attempt to recharge the folio to the memcg of the process accessing the
+folio. An asynchronous worker is used for 2 reasons:
+(a) Avoid expensive operations on the data access path.
+(b) Acquring some locks (e.g. folio lock, lruvec lock) is not safe to do
+    from all contexts.
+
+Deferring recharging will not cause an OOM kill in the target memcg. If
+recharging fails for any reason, the worker reschedules itself to retry,
+unless the folio is freed or the target memcg goes offline.
 
 Signed-off-by: Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 ---
- include/linux/memcontrol.h |   6 +
- mm/memcontrol.c            | 230 +++++++++++++++++++++++++++++++++++++
- 2 files changed, 236 insertions(+)
+ include/linux/memcontrol.h |   6 ++
+ mm/memcontrol.c            | 125 +++++++++++++++++++++++++++++++++++--
+ 2 files changed, 126 insertions(+), 5 deletions(-)
 
 diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
-index 5818af8eca5a..b41d69685ead 100644
+index b41d69685ead..59b653d4a76e 100644
 --- a/include/linux/memcontrol.h
 +++ b/include/linux/memcontrol.h
-@@ -326,6 +326,12 @@ struct mem_cgroup {
- 	struct lru_gen_mm_list mm_list;
- #endif
+@@ -956,6 +956,8 @@ void mem_cgroup_print_oom_group(struct mem_cgroup *memcg);
+ void folio_memcg_lock(struct folio *folio);
+ void folio_memcg_unlock(struct folio *folio);
  
-+	/* async recharge of mapped folios for offline memcgs */
-+	struct {
-+		struct delayed_work dwork;
-+		int retries;
-+	} recharge_mapped_work;
++void folio_memcg_deferred_recharge(struct folio *folio);
 +
- 	struct mem_cgroup_per_node *nodeinfo[];
- };
+ void __mod_memcg_state(struct mem_cgroup *memcg, int idx, int val);
  
+ /* try to stablize folio_memcg() for all the pages in a memcg */
+@@ -1461,6 +1463,10 @@ static inline void mem_cgroup_unlock_pages(void)
+ 	rcu_read_unlock();
+ }
+ 
++static inline void folio_memcg_deferred_recharge(struct folio *folio)
++{
++}
++
+ static inline void mem_cgroup_handle_over_high(void)
+ {
+ }
 diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index ffdb848f4003..a46bc8f000c8 100644
+index a46bc8f000c8..cf9fb51ecfcc 100644
 --- a/mm/memcontrol.c
 +++ b/mm/memcontrol.c
-@@ -96,6 +96,8 @@ static bool cgroup_memory_nobpf __ro_after_init;
- static DECLARE_WAIT_QUEUE_HEAD(memcg_cgwb_frn_waitq);
- #endif
+@@ -6398,6 +6398,7 @@ static bool mem_cgroup_recharge_folio(struct folio *folio,
+ }
  
-+static struct workqueue_struct *memcg_recharge_wq;
-+
- /* Whether legacy memory+swap accounting is active */
- static bool do_memsw_account(void)
+ struct folio_memcg_rmap_recharge_arg {
++	struct mem_cgroup *memcg;
+ 	bool recharged;
+ };
+ 
+@@ -6415,10 +6416,12 @@ static bool folio_memcg_rmap_recharge_one(struct folio *folio,
+ 	 */
+ 	recharge_arg->recharged = false;
+ 	while (page_vma_mapped_walk(&pvmw)) {
+-		memcg = get_mem_cgroup_from_mm(vma->vm_mm);
++		memcg = recharge_arg->memcg ?:
++			get_mem_cgroup_from_mm(vma->vm_mm);
+ 		if (mem_cgroup_recharge_folio(folio, memcg))
+ 			recharge_arg->recharged = true;
+-		mem_cgroup_put(memcg);
++		if (!recharge_arg->memcg)
++			mem_cgroup_put(memcg);
+ 		page_vma_mapped_walk_done(&pvmw);
+ 		break;
+ 	}
+@@ -6428,9 +6431,13 @@ static bool folio_memcg_rmap_recharge_one(struct folio *folio,
+ }
+ 
+ /* Returns true if recharging is successful */
+-static bool folio_memcg_rmap_recharge(struct folio *folio)
++static bool folio_memcg_rmap_recharge(struct folio *folio,
++				      struct mem_cgroup *memcg)
  {
-@@ -5427,6 +5429,8 @@ static int mem_cgroup_css_online(struct cgroup_subsys_state *css)
- 	return -ENOMEM;
+-	struct folio_memcg_rmap_recharge_arg arg = { .recharged = false };
++	struct folio_memcg_rmap_recharge_arg arg = {
++		.recharged = false,
++		.memcg = memcg,
++	};
+ 	struct rmap_walk_control rwc = {
+ 		.rmap_one = folio_memcg_rmap_recharge_one,
+ 		.arg = (void *)&arg,
+@@ -6527,7 +6534,7 @@ static bool memcg_recharge_lruvec_list(struct lruvec *lruvec,
+ 			continue;
+ 		}
+ 
+-		if (folio_memcg_rmap_recharge(folio))
++		if (folio_memcg_rmap_recharge(folio, NULL))
+ 			*nr_recharged += folio_nr_pages(folio);
+ 
+ 		folio_unlock(folio);
+@@ -6587,6 +6594,114 @@ static void memcg_recharge_mapped_folios(struct mem_cgroup *memcg)
+ 	}
  }
  
-+static void memcg_recharge_mapped_folios(struct mem_cgroup *memcg);
-+
- static void mem_cgroup_css_offline(struct cgroup_subsys_state *css)
- {
- 	struct mem_cgroup *memcg = mem_cgroup_from_css(css);
-@@ -5455,6 +5459,8 @@ static void mem_cgroup_css_offline(struct cgroup_subsys_state *css)
- 	drain_all_stock(memcg);
- 
- 	mem_cgroup_id_put(memcg);
-+
-+	memcg_recharge_mapped_folios(memcg);
- }
- 
- static void mem_cgroup_css_released(struct cgroup_subsys_state *css)
-@@ -5487,6 +5493,7 @@ static void mem_cgroup_css_free(struct cgroup_subsys_state *css)
- 
- 	vmpressure_cleanup(&memcg->vmpressure);
- 	cancel_work_sync(&memcg->high_work);
-+	cancel_delayed_work_sync(&memcg->recharge_mapped_work.dwork);
- 	mem_cgroup_remove_from_trees(memcg);
- 	free_shrinker_info(memcg);
- 	mem_cgroup_free(memcg);
-@@ -6367,6 +6374,219 @@ static void mem_cgroup_move_task(void)
- }
- #endif
- 
-+/* Returns true if recharging is successful */
-+static bool mem_cgroup_recharge_folio(struct folio *folio,
-+				      struct mem_cgroup *new_memcg)
++/* Result is only stable if @folio is locked */
++static bool should_do_deferred_recharge(struct folio *folio)
 +{
-+	struct mem_cgroup *old_memcg = folio_memcg(folio);
-+	gfp_t gfp = GFP_KERNEL | __GFP_RETRY_MAYFAIL;
-+	long nr_pages = folio_nr_pages(folio);
-+	int err = -1;
++	struct mem_cgroup *memcg;
++	bool ret;
 +
-+	if (!new_memcg)
-+		goto out;
++	rcu_read_lock();
++	memcg = folio_memcg_rcu(folio);
++	ret = memcg && !!(memcg->css.flags & CSS_DYING);
++	rcu_read_unlock();
 +
-+	err = try_charge(new_memcg, gfp, nr_pages);
-+	if (err)
-+		goto out;
-+
-+	err = mem_cgroup_move_account(&folio->page, folio_test_large(folio),
-+				      old_memcg, new_memcg);
-+	cancel_charge(err ? new_memcg : old_memcg, nr_pages);
-+out:
-+	return err == 0;
++	return ret;
 +}
 +
-+struct folio_memcg_rmap_recharge_arg {
-+	bool recharged;
++struct deferred_recharge_work {
++	struct folio *folio;
++	struct mem_cgroup *memcg;
++	struct work_struct work;
 +};
 +
-+static bool folio_memcg_rmap_recharge_one(struct folio *folio,
-+		struct vm_area_struct *vma, unsigned long address, void *arg)
++static void folio_memcg_do_deferred_recharge(struct work_struct *work)
 +{
-+	struct folio_memcg_rmap_recharge_arg *recharge_arg = arg;
-+	DEFINE_FOLIO_VMA_WALK(pvmw, folio, vma, address, 0);
-+	struct mem_cgroup *memcg;
++	struct deferred_recharge_work *recharge_work = container_of(work,
++					struct deferred_recharge_work, work);
++	struct folio *folio = recharge_work->folio;
++	struct mem_cgroup *new = recharge_work->memcg;
++	struct mem_cgroup *old;
++
++	/* We are holding the last ref to the folio, let it be freed */
++	if (unlikely(folio_ref_count(folio) == 1))
++		goto out;
++
++	if (!folio_isolate_lru(folio))
++		goto out;
++
++	if (unlikely(!folio_trylock(folio)))
++		goto out_putback;
++
++	/* @folio was already recharged since the worker was queued? */
++	if (unlikely(!should_do_deferred_recharge(folio)))
++		goto out_unlock;
++
++	/* @folio was already recharged to @new and it already went offline? */
++	old = folio_memcg(folio);
++	if (unlikely(old == new))
++		goto out_unlock;
 +
 +	/*
-+	 * page_vma_mapped_walk() is only needed to grab any pte lock to
-+	 * serialize with page_remove_rmap(), as folio_mapped() must remain
-+	 * stable during the move.
++	 * folio_mapped() must remain stable during the move. If the folio is
++	 * mapped, we must use rmap recharge to serialize against unmapping.
++	 * Otherwise, if the folio is unmapped, the folio lock is held so this
++	 * should prevent faults against the pagecache or swapcache to map it.
 +	 */
-+	recharge_arg->recharged = false;
-+	while (page_vma_mapped_walk(&pvmw)) {
-+		memcg = get_mem_cgroup_from_mm(vma->vm_mm);
-+		if (mem_cgroup_recharge_folio(folio, memcg))
-+			recharge_arg->recharged = true;
-+		mem_cgroup_put(memcg);
-+		page_vma_mapped_walk_done(&pvmw);
-+		break;
-+	}
++	mem_cgroup_start_move_charge(old);
++	if (folio_mapped(folio))
++		folio_memcg_rmap_recharge(folio, new);
++	else
++		mem_cgroup_recharge_folio(folio, new);
++	mem_cgroup_end_move_charge(old);
 +
-+	/* stop the rmap walk if we were successful */
-+	return !recharge_arg->recharged;
++out_unlock:
++	folio_unlock(folio);
++out_putback:
++	folio_putback_lru(folio);
++out:
++	folio_put(folio);
++	mem_cgroup_put(new);
++	kfree(recharge_work);
 +}
 +
-+/* Returns true if recharging is successful */
-+static bool folio_memcg_rmap_recharge(struct folio *folio)
++/*
++ * Queue deferred work to recharge @folio to current's memcg if needed.
++ */
++void folio_memcg_deferred_recharge(struct folio *folio)
 +{
-+	struct folio_memcg_rmap_recharge_arg arg = { .recharged = false };
-+	struct rmap_walk_control rwc = {
-+		.rmap_one = folio_memcg_rmap_recharge_one,
-+		.arg = (void *)&arg,
-+		.anon_lock = folio_lock_anon_vma_read,
-+		.try_lock = true,
-+	};
++	struct deferred_recharge_work *recharge_work = NULL;
++	struct mem_cgroup *memcg = NULL;
 +
-+	rmap_walk(folio, &rwc);
-+	return arg.recharged;
-+}
-+
-+static unsigned long lruvec_nr_local_mapped_pages(struct lruvec *lruvec)
-+{
-+	return lruvec_page_state_local(lruvec, NR_ANON_MAPPED) +
-+		lruvec_page_state_local(lruvec, NR_FILE_MAPPED);
-+}
-+
-+static unsigned long memcg_nr_local_mapped_pages(struct mem_cgroup *memcg)
-+{
-+	return memcg_page_state_local(memcg, NR_ANON_MAPPED) +
-+		memcg_page_state_local(memcg, NR_FILE_MAPPED);
-+}
-+
-+static bool memcg_recharge_lruvec_list(struct lruvec *lruvec,
-+				       struct list_head *list,
-+				       enum lru_list lru,
-+				       void *arg)
-+{
-+	int isolated_idx = NR_ISOLATED_ANON + is_file_lru(lru);
-+	struct mem_cgroup *memcg = lruvec_memcg(lruvec);
-+	unsigned long *nr_recharged = arg;
-+	unsigned long nr_staged = 0;
-+	LIST_HEAD(folios_skipped);
-+	LIST_HEAD(folios_staged);
-+	struct folio *folio;
-+
-+	/* Are we done with mapped pages on this node? */
-+	if (!lruvec_nr_local_mapped_pages(lruvec))
-+		return true;
-+
-+	/*
-+	 * Iterating the LRUs here is tricky, because we
-+	 * usually cannot iterate the entire list with the
-+	 * lock held, and the LRU can change once we release it.
-+	 *
-+	 * What we try to do is isolate as many folios as we can
-+	 * without hogging the lock or the cpu. We need to move
-+	 * all the folios we iterate off the list to try to
-+	 * avoid re-visiting them on retries.
-+	 *
-+	 * The folios we are interested in are moved to
-+	 * @folios_staged, and other folios are moved to
-+	 * @folios_skipped. Before releasing the lock, we splice
-+	 * @folios_skipped back into the beginning of the LRU.
-+	 * This essentially rotates the LRU, similar to reclaim,
-+	 * as lru_to_folio() fetches folios from the end of the
-+	 * LRU.
-+	 */
-+	spin_lock_irq(&lruvec->lru_lock);
-+	while (!list_empty(list) && !need_resched() &&
-+	       !spin_is_contended(&lruvec->lru_lock)) {
-+		folio = lru_to_folio(list);
-+		if (!folio_mapped(folio)) {
-+			list_move(&folio->lru, &folios_skipped);
-+			continue;
-+		}
-+
-+		if (unlikely(!folio_try_get(folio))) {
-+			list_move(&folio->lru, &folios_skipped);
-+			continue;
-+		}
-+
-+		if (!folio_test_clear_lru(folio)) {
-+			list_move(&folio->lru, &folios_skipped);
-+			folio_put(folio);
-+			continue;
-+		}
-+
-+		lruvec_del_folio(lruvec, folio);
-+		list_add(&folio->lru, &folios_staged);
-+		nr_staged += folio_nr_pages(folio);
-+	}
-+	list_splice(&folios_skipped, list);
-+	spin_unlock_irq(&lruvec->lru_lock);
-+
-+	mod_lruvec_state(lruvec, isolated_idx, nr_staged);
-+	mem_cgroup_start_move_charge(memcg);
-+	while (!list_empty(&folios_staged)) {
-+		folio = lru_to_folio(&folios_staged);
-+		list_del(&folio->lru);
-+
-+		if (!folio_trylock(folio)) {
-+			folio_putback_lru(folio);
-+			continue;
-+		}
-+
-+		if (folio_memcg_rmap_recharge(folio))
-+			*nr_recharged += folio_nr_pages(folio);
-+
-+		folio_unlock(folio);
-+		folio_putback_lru(folio);
-+		cond_resched();
-+	}
-+	mem_cgroup_end_move_charge(memcg);
-+	mod_lruvec_state(lruvec, isolated_idx, -nr_staged);
-+	return false;
-+}
-+
-+static void memcg_do_recharge_mapped_folios(struct work_struct *work)
-+{
-+	struct delayed_work *dwork = to_delayed_work(work);
-+	struct mem_cgroup *memcg = container_of(dwork, struct mem_cgroup,
-+						recharge_mapped_work.dwork);
-+	unsigned long nr_recharged = 0;
-+	struct lruvec *lruvec;
-+	int nid;
-+
-+	lru_add_drain_all();
-+	for_each_node_state(nid, N_MEMORY) {
-+		lruvec = mem_cgroup_lruvec(memcg, NODE_DATA(nid));
-+		lruvec_for_each_list(lruvec, memcg_recharge_lruvec_list,
-+				     &nr_recharged);
-+	}
-+
-+	/* Are we done with all mapped folios? */
-+	if (!memcg_nr_local_mapped_pages(memcg))
++	/* racy check, the async worker will check again with @folio locked */
++	if (likely(!should_do_deferred_recharge(folio)))
 +		return;
 +
-+	/* Did we make progress? reset retries */
-+	if (nr_recharged > 0)
-+		memcg->recharge_mapped_work.retries = 0;
++	if (unlikely(!memcg_recharge_wq))
++		return;
 +
-+	/* Exponentially increase delay before each retry (from 1ms to ~32s) */
-+	if (memcg->recharge_mapped_work.retries < MAX_RECLAIM_RETRIES)
-+		queue_delayed_work(memcg_recharge_wq,
-+				   &memcg->recharge_mapped_work.dwork,
-+				   1 << memcg->recharge_mapped_work.retries++);
-+}
++	if (unlikely(!folio_try_get(folio)))
++		return;
 +
-+static void memcg_recharge_mapped_folios(struct mem_cgroup *memcg)
-+{
-+	/*
-+	 * We need to initialize the work here, even if we are not going to
-+	 * queue it, such that cancel_delayed_work_sync() in
-+	 * mem_cgroup_css_free() does not complain.
-+	 */
-+	INIT_DELAYED_WORK(&memcg->recharge_mapped_work.dwork,
-+			  memcg_do_recharge_mapped_folios);
++	memcg = get_mem_cgroup_from_mm(current->mm);
++	if (!memcg)
++		goto fail;
 +
-+	if (memcg_recharge_wq && memcg_nr_local_mapped_pages(memcg)) {
-+		memcg->recharge_mapped_work.retries = 0;
-+		queue_delayed_work(memcg_recharge_wq,
-+				   &memcg->recharge_mapped_work.dwork, 0);
-+	}
++	recharge_work = kmalloc(sizeof(*recharge_work), GFP_ATOMIC);
++	if (!recharge_work)
++		goto fail;
++
++	/* we hold refs to both the folio and the memcg we are charging to */
++	recharge_work->folio = folio;
++	recharge_work->memcg = memcg;
++	INIT_WORK(&recharge_work->work, folio_memcg_do_deferred_recharge);
++	queue_work(memcg_recharge_wq, &recharge_work->work);
++	return;
++fail:
++	kfree(recharge_work);
++	mem_cgroup_put(memcg);
++	folio_put(folio);
 +}
 +
  #ifdef CONFIG_LRU_GEN
  static void mem_cgroup_attach(struct cgroup_taskset *tset)
  {
-@@ -7904,3 +8124,13 @@ static int __init mem_cgroup_swap_init(void)
- subsys_initcall(mem_cgroup_swap_init);
- 
- #endif /* CONFIG_SWAP */
-+
-+static int __init memcg_recharge_wq_init(void)
-+{
-+	if (mem_cgroup_disabled())
-+		return 0;
-+	memcg_recharge_wq = alloc_workqueue("memcg_recharge", WQ_UNBOUND, 0);
-+	WARN_ON(!memcg_recharge_wq);
-+	return 0;
-+}
-+subsys_initcall(memcg_recharge_wq_init);
 -- 
 2.41.0.255.g8b1d071c50-goog
 
