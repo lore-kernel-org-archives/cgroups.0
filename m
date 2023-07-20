@@ -1,97 +1,96 @@
-From: "T.J. Mercier" <tjmercier@google.com>
-Subject: Re: [RFC v5 00/17] DRM cgroup controller with
- scheduling control and memory stats
-Date: Wed, 19 Jul 2023 13:31:54 -0700
-Message-ID: <CABdmKX1PUF+X897ZMOr0RNiYdoiL_2NkcSt+Eh55BfW-05LopQ@mail.gmail.com>
-References: <20230712114605.519432-1-tvrtko.ursulin@linux.intel.com>
+From: Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Subject: [RFC PATCH 0/8] memory recharging for offline memcgs
+Date: Thu, 20 Jul 2023 07:08:17 +0000
+Message-ID: <20230720070825.992023-1-yosryahmed@google.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-Return-path: <intel-gfx-bounces@lists.freedesktop.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=google.com; s=20221208; t=1689798726; x=1692390726;
- h=content-transfer-encoding:cc:to:subject:message-id:date:from
- :in-reply-to:references:mime-version:from:to:cc:subject:date
- :message-id:reply-to;
- bh=hVa5fBSVAdHHhZFj/pRkL4ALpTE995mDIMsnkkRTm0Q=;
- b=Lde5n1cKOA1T4bKffkRp7OCLFw3kIzNszFORWjdILVZqUjkjtj/r9hJnWetWPtfHma
- ljuFtQpXVY4jecYQAp9auj6671m4eJtWAWASvcxJ0vh6TBOL3L3JPhny0qmlkfIO9s+W
- 8B9dU1kPuZnzPVLrgJf4wHRzdb2yDbMwGZLSaAOSX8ifu+zNVAZ4k00aAjhvtL71UYFE
- zBzIW5qzWajLb4R1YlKHx0jzIA1FhXb9NOCMhsidexUSwl+9zzaHMeWSsIwt4d/UKdn3
- ou8P9mOiEJewUTZVMKvwVKWKgZcn3ZknSYuePQSkjSIgj6WoH4BvzHG+o4ET6ZkJEN1+
- idEw==
-In-Reply-To: <20230712114605.519432-1-tvrtko.ursulin@linux.intel.com>
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.freedesktop.org/mailman/options/intel-gfx>,
- <mailto:intel-gfx-request@lists.freedesktop.org?subject=unsubscribe>
-List-Archive: <https://lists.freedesktop.org/archives/intel-gfx>
-List-Post: <mailto:intel-gfx@lists.freedesktop.org>
-List-Help: <mailto:intel-gfx-request@lists.freedesktop.org?subject=help>
-List-Subscribe: <https://lists.freedesktop.org/mailman/listinfo/intel-gfx>,
- <mailto:intel-gfx-request@lists.freedesktop.org?subject=subscribe>
-Errors-To: intel-gfx-bounces@lists.freedesktop.org
-Sender: "Intel-gfx" <intel-gfx-bounces@lists.freedesktop.org>
-Content-Type: text/plain; charset="windows-1252"
-To: Tvrtko Ursulin <tvrtko.ursulin@linux.intel.com>
-Cc: Rob Clark <robdclark@chromium.org>, Kenny.Ho@amd.com, Dave Airlie <airlied@redhat.com>, =?UTF-8?Q?St=C3=A9phane_Marchesin?= <marcheu@chromium.org>, Daniel Vetter <daniel.vetter@ffwll.ch>, Intel-gfx@lists.freedesktop.org, linux-kernel@vger.kernel.org, dri-devel@lists.freedesktop.org, Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, Tejun Heo <tj@kernel.org>, cgroups@vger.kernel.org, Eero Tamminen <eero.t.tamminen@intel.com>, =?UTF-8?Q?Christian_K=C3=B6nig?= <christian.koenig@amd.com>
+        d=google.com; s=20221208; t=1689836908; x=1692428908;
+        h=cc:to:from:subject:message-id:mime-version:date:from:to:cc:subject
+         :date:message-id:reply-to;
+        bh=U/LCb/swRVuVzVICP60Gq89mZaxuIEA6maW/j6Ih8uc=;
+        b=NmItOuI1BO8FpivokQJywTfJdRc87myk9anTbJ4UoJVsByhpyWZ2NhGs3XaN2cP2Nt
+         JOV9ihqCzY8Rxsp+r6isfIFkW/SUwj9Vss4W2DuK2ccFsP635edEhy1jQxM9GiR5RwCK
+         5oMMI3/PuSouXpEAZw7u4v68TUmwdBfHnyKCeBIftZE10kZdkxmv5uViyp1Mkr88BgDy
+         w0adw8Rgvu0dZI9YOQ0lxUV8rJvfzPt+gm6BycHBJUwzSYgtNUNUoYFoNjXznI+XvsO6
+         3RMjTaAvwUCkl3RUI9BRhsU/hvOSutDDKijJFjy210IHQPmnpkspt3yoNydMInG9aMxS
+         +bjQ==
+List-ID: <cgroups.vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Cc: Muchun Song <muchun.song-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, "Matthew Wilcox (Oracle)" <willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Yu Zhao <yuzhao-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Luis Chamberlain <mcgrof-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Kees Cook <keescook-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>, Iurii Zaikin <yzaikin-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, "T.J. Mercier" <tjmercier-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 
-On Wed, Jul 12, 2023 at 4:47=E2=80=AFAM Tvrtko Ursulin
-<tvrtko.ursulin@linux.intel.com> wrote:
->
->   drm.memory.stat
->         A nested file containing cumulative memory statistics for the who=
-le
->         sub-hierarchy, broken down into separate GPUs and separate memory
->         regions supported by the latter.
->
->         For example::
->
->           $ cat drm.memory.stat
->           card0 region=3Dsystem total=3D12898304 shared=3D0 active=3D0 re=
-sident=3D12111872 purgeable=3D167936
->           card0 region=3Dstolen-system total=3D0 shared=3D0 active=3D0 re=
-sident=3D0 purgeable=3D0
->
->         Card designation corresponds to the DRM device names and multiple=
- line
->         entries can be present per card.
->
->         Memory region names should be expected to be driver specific with=
- the
->         exception of 'system' which is standardised and applicable for GP=
-Us
->         which can operate on system memory buffers.
->
->         Sub-keys 'resident' and 'purgeable' are optional.
->
->         Per category region usage is reported in bytes.
->
->  * Feedback from people interested in drm.active_us and drm.memory.stat i=
-s
->    required to understand the use cases and their usefulness (of the fiel=
-ds).
->
->    Memory stats are something which was easy to add to my series, since I=
- was
->    already working on the fdinfo memory stats patches, but the question i=
-s how
->    useful it is.
->
-Hi Tvrtko,
+This patch series implements the proposal in LSF/MM/BPF 2023 conference
+for reducing offline/zombie memcgs by memory recharging [1]. The main
+difference is that this series focuses on recharging and does not
+include eviction of any memory charged to offline memcgs.
 
-I think this style of driver-defined categories for reporting of
-memory could potentially allow us to eliminate the GPU memory tracking
-tracepoint used on Android (gpu_mem_total). This would involve reading
-drm.memory.stat at the root cgroup (I see it's currently disabled on
-the root), which means traversing the whole cgroup tree under the
-cgroup lock to generate the values on-demand. This would be done
-rarely, but I still wonder what the cost of that would turn out to be.
-The drm_memory_stats categories in the output don't seem like a big
-value-add for this use-case, but no real objection to them being
-there. I know it's called the DRM cgroup controller, but it'd be nice
-if there were a way to make the mem tracking part work for any driver
-that wishes to participate as many of our devices don't use a DRM
-driver. But making that work doesn't look like it would fit very
-cleanly into this controller, so I'll just shut up now.
+Two methods of recharging are proposed:
 
-Thanks!
--T.J.
+(a) Recharging of mapped folios.
+
+When a memcg is offlined, queue an asynchronous worker that will walk
+the lruvec of the offline memcg and try to recharge any mapped folios to
+the memcg of one of the processes mapping the folio. The main assumption
+is that a process mapping the folio is the "rightful" owner of the
+memory.
+
+Currently, this is only supported for evictable folios, as the
+unevictable lru is imaginary and we cannot iterate the folios on it. A
+separate proposal [2] was made to revive the unevictable lru, which
+would allow recharging of unevictable folios.
+
+(b) Deferred recharging of folios.
+
+For folios that are unmapped, or mapped but we fail to recharge them
+with (a), we rely on deferred recharging. Simply put, any time a folio
+is accessed or dirtied by a userspace process, and that folio is charged
+to an offline memcg, we will try to recharge it to the memcg of the
+process accessing the folio. Again, we assume this process should be the
+"rightful" owner of the memory. This is also done asynchronously to avoid
+slowing down the data access path.
+
+In both cases, we never OOM kill the recharging target if it goes above
+limit. This is to avoid OOM killing a process an arbitrary amount of
+time after it started using memory. This is a conservative policy that
+can be revisited later.
+
+The patches in this series are divided as follows:
+- Patches 1 & 2 are preliminary refactoring and helpers introducion.
+- Patches 3 to 5 implement (a) and (b) above.
+- Patches 6 & 7 add stats, a sysctl, and a config option.
+- Patch 8 is a selftest.
+
+[1]https://lore.kernel.org/linux-mm/CABdmKX2M6koq4Q0Cmp_-=wbP0Qa190HdEGGaHfxNS05gAkUtPA-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org/
+[2]https://lore.kernel.org/lkml/20230618065719.1363271-1-yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org/
+
+Yosry Ahmed (8):
+  memcg: refactor updating memcg->moving_account
+  mm: vmscan: add lruvec_for_each_list() helper
+  memcg: recharge mapped folios when a memcg is offlined
+  memcg: support deferred memcg recharging
+  memcg: recharge folios when accessed or dirtied
+  memcg: add stats for offline memcgs recharging
+  memcg: add sysctl and config option to control memory recharging
+  selftests: cgroup: test_memcontrol: add a selftest for memcg
+    recharging
+
+ include/linux/memcontrol.h                    |  14 +
+ include/linux/swap.h                          |   8 +
+ include/linux/vm_event_item.h                 |   5 +
+ kernel/sysctl.c                               |  11 +
+ mm/Kconfig                                    |  12 +
+ mm/memcontrol.c                               | 376 +++++++++++++++++-
+ mm/page-writeback.c                           |   2 +
+ mm/swap.c                                     |   2 +
+ mm/vmscan.c                                   |  28 ++
+ mm/vmstat.c                                   |   6 +-
+ tools/testing/selftests/cgroup/cgroup_util.c  |  14 +
+ tools/testing/selftests/cgroup/cgroup_util.h  |   1 +
+ .../selftests/cgroup/test_memcontrol.c        | 310 +++++++++++++++
+ 13 files changed, 784 insertions(+), 5 deletions(-)
+
+-- 
+2.41.0.255.g8b1d071c50-goog
+
