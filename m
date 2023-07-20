@@ -1,51 +1,58 @@
-From: Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>
-Subject: Re: [PATCH] blk-iocost: skip empty flush bio in iocost
-Date: Thu, 20 Jul 2023 14:02:28 -0600
-Message-ID: <168988334811.126089.11961578901520630861.b4-ty@kernel.dk>
-References: <20230720121441.1408522-1-chengming.zhou@linux.dev>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH] blk-iocost: fix seq_printf compile type mismatch error
+Date: Thu, 20 Jul 2023 10:05:26 -1000
+Message-ID: <ZLmThnoXvEqlgf_q@slm.duckdns.org>
+References: <20230717141852.153965-1-carlos.bilbao@amd.com>
+ <ZLWNHuTGk0fy8pjE@slm.duckdns.org>
+ <7044d6b3-a5d1-572d-a755-74f8d4fd31c5@amd.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=kernel-dk.20221208.gappssmtp.com; s=20221208; t=1689883349; x=1690488149;
-        h=content-transfer-encoding:mime-version:date:message-id:subject
-         :references:in-reply-to:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=lm9L8OGKEHZdmU9hnM3GKjbpRPyEmtA8o0crHfCp3hU=;
-        b=4LjnEBByBbYMg48CJm/WiUWl6CGT7KLK3x1yg9e74apbaaiCjJKsG0LP+pH+C5XbpD
-         1aQURjA7F3xiTiJ6/Wt0zs00qVbFZzPBiuuQig0lbZf2eHNKjrWr6awACXx6C43Croe4
-         8Cndlkg1wBerLxo6OEWgL7fBwSPsEnlO7Uj4SkhGi5ts9s2VHSn3XzZlR2DawlFgCJyt
-         g5l4ytQnFqyZdqCSAC3YUl9X6ZKXdCCbcG4PvXmalUn1qRda/jPe5oBVuIXPyeD1fMKF
-         +DlQmLCX9ZNogRTJHsBHSvlrqF02hiYaPoPUX3auskDSRlzsITpO6mzsEkIKviViU/tx
-         3Rqg==
-In-Reply-To: <20230720121441.1408522-1-chengming.zhou-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>
+        d=gmail.com; s=20221208; t=1689883529; x=1690488329;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :mime-version:references:message-id:subject:cc:to:from:date:sender
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=ShySli6sDETZMpAPGpGb5lvBBzti4dS5P6Lg1E17Uvs=;
+        b=hz1Cuka5AmWn4oFd8xD3RyAUehliZu/h3GyLa0qEvCBnGPlUAswENy+LknBCwgcDrO
+         aHzNRzQ7Jg4PVCAY/Z9r940jKGI4UClejTJhA0b3L+424a6HsmiaZOSaJeI2Ok1hqqdC
+         Ip9e+0/GWLafW040QyOXl1teqgCifhoZLPLaazK47F93L7fVLWOWZoM8VlLLbjRdl6my
+         tZXqV/2B9pQGYWhkccYFgJuEbZ9kf1eSMISBb73DopoLsxEQbi1RE9va1oh7PChiGb2B
+         L+qUsVBtXpQSxWsENguGaaLb5qtr7udDE5SOgcrpWn9yFbCZ9lF7RIrIo5ov+YksX1ld
+         1GdQ==
+Sender: Tejun Heo <htejun@gmail.com>
+Content-Disposition: inline
+In-Reply-To: <7044d6b3-a5d1-572d-a755-74f8d4fd31c5@amd.com>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-To: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, josef-DigfWCa+lFGyeJad7bwFQA@public.gmane.org, chengming.zhou-fxUVXftIFDnyG1zEObXtfA@public.gmane.org
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, zhouchengming-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org
+Content-Type: text/plain; charset="utf-8"
+To: Carlos Bilbao <carlos.bilbao@amd.com>
+Cc: josef@toxicpanda.com, axboe@kernel.dk, cgroups@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, amd <amd@localhost.localdomain>
 
-
-On Thu, 20 Jul 2023 20:14:41 +0800, chengming.zhou-fxUVXftIFDnyG1zEObXtfA@public.gmane.org wrote:
-> The flush bio may have data, may have no data (empty flush), we couldn't
-> calculate cost for empty flush bio. So we'd better just skip it for now.
+On Tue, Jul 18, 2023 at 10:37:23AM -0500, Carlos Bilbao wrote:
+> On 7/17/23 13:49, Tejun Heo wrote:
+> > On Mon, Jul 17, 2023 at 09:18:52AM -0500, Carlos Bilbao wrote:
+> > > From: amd <amd@localhost.localdomain>
+> > > 
+> > > Fix two type mismatch errors encountered while compiling blk-iocost.c with
+> > > GCC version 13.1.1 that involved constant operator WEIGHT_ONE. Cast the
+> > > result of the division operation to (unsigned int) to match the expected
+> > > format specifier %u in two seq_printf invocations.
+> > 
+> > Can you detail the warnings? Was that on 32bit compiles?
 > 
-> Another side effect is that empty flush bio's bio_end_sector() is 0, cause
-> iocg->cursor reset to 0, may break the cost calculation of other bios.
+> The concrete error was: "format ‘%u’ expects argument of type ‘unsigned
+> int’, but argument 3 has type ‘long unsigned int’". If I run:
 > 
-> This isn't good enough, since flush bio still consume the device bandwidth,
-> but flush request is special, can be merged randomly in the flush state
-> machine, we don't know how to calculate cost for it for now.
+> $ echo | cpp -dM | grep __LP64__
+> #define __LP64__ 1
 > 
-> [...]
+> which makes me believe it is not 32 bits.
 
-Applied, thanks!
+So, we broke up the enum definitions so that WEIGHT_ONE doesn't end up being
+a ulong. Which kernel are you building? Can you plesae try the current
+linus#master?
 
-[1/1] blk-iocost: skip empty flush bio in iocost
-      commit: 013adcbef165c3eaf73e297b7482290593815ab8
+Thanks.
 
-Best regards,
 -- 
-Jens Axboe
-
-
-
+tejun
