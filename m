@@ -1,51 +1,60 @@
-From: Abel Wu <wuyun.abel-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
-Subject: Re: Re: [PATCH RESEND net-next 1/2] net-memcg: Scopify the indicators
- of sockmem pressure
-Date: Thu, 20 Jul 2023 19:34:20 +0800
-Message-ID: <be65ab74-8ee4-9ae5-f0ff-88c9fd2fbeb5@bytedance.com>
-References: <20230711124157.97169-1-wuyun.abel@bytedance.com>
- <d114834c-2336-673f-f200-87fc6efb411f@bytedance.com>
- <CANn89iLBLBO0CK-9r-eZiQL+h2bwTHL2nR6az5Az6W_-pBierw@mail.gmail.com>
+From: chengming.zhou@linux.dev
+Subject: [PATCH] blk-iocost: skip empty flush bio in iocost
+Date: Thu, 20 Jul 2023 20:14:41 +0800
+Message-ID: <20230720121441.1408522-1-chengming.zhou@linux.dev>
 Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=bytedance.com; s=google; t=1689852874; x=1690457674;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=0RmeowStXIEPULQOAaOWZp78vxjHDoSNjkADxM9sQfc=;
-        b=M0DrMvL74mRRIv17Hv8ig5J7sQWnEZTZf84dLaKCQsXxQtcIgMlfIxVoaUskKOWIQp
-         fc302CL33o59MSl/yZvbZ3cRlyAqQ9Kh0p54L4s336jjQljCzQbPmPNSghHWbn49o8Ql
-         nQIvdHMaKpDxF1KLMqkeUTAACQaYlmmEtxaIsbMJ5xyfdUTgLnJEACez6gA4w3gnEy1b
-         ILbyO3KvZmyrBsyIkE4hD01a9/9tAVPHEyBG1j5r2rIVFiUjio2hrkrjITfr0xQYaSJY
-         53iJT35RsFQW7KN5Czi4n0AEmfUDUCTM9PP9fUG9bs9UyQrpj0H+HtBmSr/2nv9oXdjM
-         EPaA==
-Content-Language: en-US
-In-Reply-To: <CANn89iLBLBO0CK-9r-eZiQL+h2bwTHL2nR6az5Az6W_-pBierw-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-block-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
+        t=1689855359;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:
+         content-transfer-encoding:content-transfer-encoding;
+        bh=1qUoKI3SbOAj4JugO0eFEKpo/XtZkaAZd4jHbDGRCXI=;
+        b=UYRVGSJeMWgVT/Cmj35t2ZweiX0f74MUBaOSw4MLtDmMy3IiuQrHv8RU4qRm/+sTXZG3zj
+        +eK1+VPGThdCpfSCGWbopKgw5Dw3dyzfnI+h4Dk0lnIiYvGH6rNedI6u3cchFohjzDfaRp
+        UtcGfRKuKFeW1oGmtQWsxdDyRcpHit4=
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="windows-1252"; format="flowed"
-To: Eric Dumazet <edumazet-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Cc: "David S. Miller" <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>, Jakub Kicinski <kuba-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Paolo Abeni <pabeni-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Muchun Song <muchun.song-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, David Ahern <dsahern-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, "Matthew Wilcox (Oracle)" <willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Yu Zhao <yuzhao-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Kefeng Wang <wangkefeng.wang-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Yafang Shao <laoar.shao-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Kuniyuki Iwashima <kuniyu-vV1OtcyAfmbQT0dZR+AlfA@public.gmane.org>, Martin KaFai Lau <martin.lau-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Alexander Mikhalitsyn <alexander-uFy+/5nkmnuaMJb+Lgu22Q@public.gmane.org>, Breno Leitao <leitao-8fiUuRrzOP0dnm+yROfE0A@public.gmane.org>, David Howells <dhowells-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Jason Xing <ker>
+Content-Type: text/plain; charset="us-ascii"
+To: tj@kernel.org, josef@toxicpanda.com
+Cc: axboe@kernel.dk, cgroups@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, zhouchengming@bytedance.com
 
-On 7/20/23 4:57 PM, Eric Dumazet wrote:
-> On Thu, Jul 20, 2023 at 9:59=E2=80=AFAM Abel Wu <wuyun.abel-EC8Uxl6Npydl5=
-7MIdRCFDg@public.gmane.org> wrote:
->>
->> Gentle ping :)
->=20
-> I was hoping for some feedback from memcg experts.
+From: Chengming Zhou <zhouchengming@bytedance.com>
 
-Me too :)
+The flush bio may have data, may have no data (empty flush), we couldn't
+calculate cost for empty flush bio. So we'd better just skip it for now.
 
->=20
-> You claim to fix a bug, please provide a Fixes: tag so that we can
-> involve original patch author.
+Another side effect is that empty flush bio's bio_end_sector() is 0, cause
+iocg->cursor reset to 0, may break the cost calculation of other bios.
 
-Sorry for missing that part, will be added in next version.
+This isn't good enough, since flush bio still consume the device bandwidth,
+but flush request is special, can be merged randomly in the flush state
+machine, we don't know how to calculate cost for it for now.
 
-Fixes: 8e8ae645249b ("mm: memcontrol: hook up vmpressure to socket=20
-pressure")
+Its completion time also has flaws, which may include the pre-flush or
+post-flush completion time, but I don't know if we need to fix that and
+how to fix it.
 
-Thanks!
-	Abel
+Signed-off-by: Chengming Zhou <zhouchengming@bytedance.com>
+---
+ block/blk-iocost.c | 4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/block/blk-iocost.c b/block/blk-iocost.c
+index 6084a9519883..e735b3e9997c 100644
+--- a/block/blk-iocost.c
++++ b/block/blk-iocost.c
+@@ -2516,6 +2516,10 @@ static void calc_vtime_cost_builtin(struct bio *bio, struct ioc_gq *iocg,
+ 	u64 seek_pages = 0;
+ 	u64 cost = 0;
+ 
++	/* Can't calculate cost for empty bio */
++	if (!bio->bi_iter.bi_size)
++		goto out;
++
+ 	switch (bio_op(bio)) {
+ 	case REQ_OP_READ:
+ 		coef_seqio	= ioc->params.lcoefs[LCOEF_RSEQIO];
+-- 
+2.41.0
+
