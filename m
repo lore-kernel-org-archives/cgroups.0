@@ -1,128 +1,79 @@
-From: Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [RFC PATCH 0/8] memory recharging for offline memcgs
-Date: Fri, 21 Jul 2023 13:59:55 -0700
-Message-ID: <CAJD7tkaro0opThQaMTFr_8sAjiFFEsaZK9YzEjBaSiDJ93DOBg@mail.gmail.com>
-References: <20230720070825.992023-1-yosryahmed@google.com>
- <20230720153515.GA1003248@cmpxchg.org> <ZLmRlTej8Tm82kXG@slm.duckdns.org>
- <CAJD7tkYhu3g9u7HkUTFBtT3Q4edVZ2g1TWV1FDcyM9srrYCBLg@mail.gmail.com>
- <ZLmxLUNdxMi5s2Kq@slm.duckdns.org> <CAJD7tkZKo_oSZ-mQc-knMELP8kiY1N7taQhdV6tPsqN0tg=gog@mail.gmail.com>
- <ZLm1ptOYH6F8fGHT@slm.duckdns.org> <CAJD7tkbDxw-hqG8i85NhnjxmXFMbR5OaSW5dHDVYfdA=ZnPAEw@mail.gmail.com>
- <ZLrN1BE42Tsybm6j@slm.duckdns.org> <CAJD7tkatz1JhKVj_iP9J0H7fPJnUSurZkCT1iJTJ=+qRen_nLQ@mail.gmail.com>
- <20230721204408.GA1033322@cmpxchg.org>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH 08/17] drm/cgroup: Track DRM clients per
+ cgroup
+Date: Fri, 21 Jul 2023 12:14:49 -1000
+Message-ID: <ZLsDWcwTL9aE0-5h@slm.duckdns.org>
+References: <20230712114605.519432-1-tvrtko.ursulin@linux.intel.com>
+ <20230712114605.519432-9-tvrtko.ursulin@linux.intel.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <intel-gfx-bounces@lists.freedesktop.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20221208; t=1689973232; x=1690578032;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=JOgbHJec+Tti6Wru7OdTqH4+oMnk38DLOG9c4qJJzP8=;
-        b=hkZ+D5g5lDrDl4A690EnFIQrEBWzd57RPaM7SaKw8Y1xk7u1cAMRN4ld2mJkGcGqTY
-         /owNQyHKnflgKZIMZHrBc4AfSR3tYOaMOz+dYxvCdQz1ey2+U9QmjTviN0Qum0KxXOdw
-         8SFQWbBe/mtcxHqLJFyQClCzU3YhFgrJb03GP0qsdY0KqtaR9x7Hx4Kq9tfA6JVlHuMC
-         ypntCYhcJXE3lxIkq+N9LeOkrGyUDm31Kih652QMPZI12bzYmDTEAxVdi1OIoHwEX4uX
-         mQtgA1yxQCz6Ur0+IYN0S57Jk3wDnFBAsv0rrUdhewR+YipnqPXBqEiLqMAQS7fN91mG
-         kzeA==
-In-Reply-To: <20230721204408.GA1033322-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="utf-8"
-To: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Muchun Song <muchun.song-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, "Matthew Wilcox (Oracle)" <willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Yu Zhao <yuzhao-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Luis Chamberlain <mcgrof-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Kees Cook <keescook-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>, Iurii Zaikin <yzaikin-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, "T.J. Mercier" <tjmercier-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+ d=gmail.com; s=20221208; t=1689977692; x=1690582492;
+ h=in-reply-to:content-disposition:mime-version:references:message-id
+ :subject:cc:to:from:date:sender:from:to:cc:subject:date:message-id
+ :reply-to; bh=dXrwI0f7BDKHLGwATVJjnhmJ48tgd3+2nr9dmXSF18o=;
+ b=r3cG7lOFcoYQwf+fNGpD139Z1Covyp+2lo5zJD5XnTAf8/K2pT9/dUBD2deat8FKKY
+ npfSKBeTWt4RQmlwADclDm3Xd4QSNgj7U/QuvE7Vkq1WJcsnq0VH2IZGR/0WuWD7+4su
+ kiKtRxjosdCNcaRgSFvEgYafPhLPyLWkrbkuBDotW3bpA9q1EiSVmA2iZ4tTSqwy+x1V
+ KiHpqELnKXUa/gYZKJKU3S/5o+DJixx9URsj4dgQ1EG8f6aW6uYrKfS/sYl7EHM94Nbo
+ 9uTZv8JxLxGV3Og6f1YzX10gR7qDoVLgNvBQMuU3LzHEcL3qr43+/kFZWh+cmYCbyOpe
+ 7O6Q==
+Content-Disposition: inline
+In-Reply-To: <20230712114605.519432-9-tvrtko.ursulin@linux.intel.com>
+List-Id: <cgroups.vger.kernel.org>
+List-Unsubscribe: <https://lists.freedesktop.org/mailman/options/intel-gfx>,
+ <mailto:intel-gfx-request@lists.freedesktop.org?subject=unsubscribe>
+List-Archive: <https://lists.freedesktop.org/archives/intel-gfx>
+List-Post: <mailto:intel-gfx@lists.freedesktop.org>
+List-Help: <mailto:intel-gfx-request@lists.freedesktop.org?subject=help>
+List-Subscribe: <https://lists.freedesktop.org/mailman/listinfo/intel-gfx>,
+ <mailto:intel-gfx-request@lists.freedesktop.org?subject=subscribe>
+Errors-To: intel-gfx-bounces@lists.freedesktop.org
+Sender: "Intel-gfx" <intel-gfx-bounces@lists.freedesktop.org>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Tvrtko Ursulin <tvrtko.ursulin@linux.intel.com>
+Cc: Rob Clark <robdclark@chromium.org>, Kenny.Ho@amd.com, Dave Airlie <airlied@redhat.com>, =?iso-8859-1?Q?St=E9phane?= Marchesin <marcheu@chromium.org>, Daniel Vetter <daniel.vetter@ffwll.ch>, Intel-gfx@lists.freedesktop.org, linux-kernel@vger.kernel.org, dri-devel@lists.freedesktop.org, Christian =?iso-8859-1?Q?K=F6nig?= <christian.koenig@amd.com>, Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, cgroups@vger.kernel.org, "T . J . Mercier" <tjmercier@google.com>
 
-On Fri, Jul 21, 2023 at 1:44=E2=80=AFPM Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org=
-> wrote:
->
-> On Fri, Jul 21, 2023 at 11:47:49AM -0700, Yosry Ahmed wrote:
-> > On Fri, Jul 21, 2023 at 11:26=E2=80=AFAM Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org> wrot=
-e:
-> > >
-> > > Hello,
-> > >
-> > > On Fri, Jul 21, 2023 at 11:15:21AM -0700, Yosry Ahmed wrote:
-> > > > On Thu, Jul 20, 2023 at 3:31=E2=80=AFPM Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org> w=
-rote:
-> > > > > memory at least in our case. The sharing across them comes down t=
-o things
-> > > > > like some common library pages which don't really account for muc=
-h these
-> > > > > days.
-> > > >
-> > > > Keep in mind that even a single page charged to a memcg and used by
-> > > > another memcg is sufficient to result in a zombie memcg.
-> > >
-> > > I mean, yeah, that's a separate issue or rather a subset which isn't =
-all
-> > > that controversial. That can be deterministically solved by reparenti=
-ng to
-> > > the parent like how slab is handled. I think the "deterministic" part=
- is
-> > > important here. As you said, even a single page can pin a dying cgrou=
-p.
-> >
-> > There are serious flaws with reparenting that I mentioned above. We do
-> > it for kernel memory, but that's because we really have no other
-> > choice. Oftentimes the memory is not reclaimable and we cannot find an
-> > owner for it. This doesn't mean it's the right answer for user memory.
-> >
-> > The semantics are new compared to normal charging (as opposed to
-> > recharging, as I explain below). There is an extra layer of
-> > indirection that we did not (as far as I know) measure the impact of.
-> > Parents end up with pages that they never used and we have no
-> > observability into where it came from. Most importantly, over time
-> > user memory will keep accumulating at the root, reducing the accuracy
-> > and usefulness of accounting, effectively an accounting leak and
-> > reduction of capacity. Memory that is not attributed to any user, aka
-> > system overhead.
->
-> Reparenting has been the behavior since the first iteration of cgroups
-> in the kernel. The initial implementation would loop over the LRUs and
-> reparent pages synchronously during rmdir. This had some locking
-> issues, so we switched to the current implementation of just leaving
-> the zombie memcg behind but neutralizing its controls.
+Hello,
 
-Thanks for the context.
+On Wed, Jul 12, 2023 at 12:45:56PM +0100, Tvrtko Ursulin wrote:
+> +void drmcgroup_client_migrate(struct drm_file *file_priv)
+> +{
+> +	struct drm_cgroup_state *src, *dst;
+> +	struct cgroup_subsys_state *old;
+> +
+> +	mutex_lock(&drmcg_mutex);
+> +
+> +	old = file_priv->__css;
+> +	src = css_to_drmcs(old);
+> +	dst = css_to_drmcs(task_get_css(current, drm_cgrp_id));
+> +
+> +	if (src != dst) {
+> +		file_priv->__css = &dst->css; /* Keeps the reference. */
+> +		list_move_tail(&file_priv->clink, &dst->clients);
+> +	}
+> +
+> +	mutex_unlock(&drmcg_mutex);
+> +
+> +	css_put(old);
+> +}
+> +EXPORT_SYMBOL_GPL(drmcgroup_client_migrate);
 
->
-> Thanks to Roman's objcg abstraction, we can now go back to the old
-> implementation of directly moving pages up to avoid the zombies.
->
-> However, these were pure implementation changes. The user-visible
-> semantics never varied: when you delete a cgroup, any leftover
-> resources are subject to control by the remaining parent cgroups.
-> Don't remove control domains if you still need to control resources.
-> But none of this is new or would change in any way!
+So, you're implicitly migrating the fd to the latest ioctl user on the first
+access. While this may work for state-less control like usage time. This
+likely will cause problem if you later want to add stateful control for
+memory consumption. e.g. What happens if the new destination doesn't have
+enough budget to accommodate the fd's usage? Let's say we allow over-commit
+with follow-up reclaim or oom kill actions, if so, can we guarantee that all
+memory ownership for can always be updated? If not, what happens after
+failure?
 
-The problem is that you cannot fully monitor or control all the
-resources charged to a control domain. The example of common shared
-libraries stands, the pages are charged on first touch basis. You
-can't easily control it or monitor who is charged for what exactly.
-Even if you can find out, is the answer to leave the cgroup alive
-forever because it is charged for a shared resource?
+If DRM needs to transfer fd ownership with resources attached to it, it
+likely would be a good idea to make that an explicit operation so that the
+attempt can be verified and failed if necessary.
 
-> Neutralizing
-> controls of a zombie cgroup results in the same behavior and
-> accounting as linking the pages to the parent cgroup's LRU!
->
-> The only thing that's new is the zombie cgroups. We can fix that by
-> effectively going back to the earlier implementation, but thanks to
-> objcg without the locking problems.
->
-> I just wanted to address this, because your description/framing of
-> reparenting strikes me as quite wrong.
+Thanks.
 
-Thanks for the context, and sorry if my framing was inaccurate. I was
-more focused on the in-kernel semantics rather than user-visible
-semantics. Nonetheless, with today's status or with reparenting, once
-the memory is at the root level (whether reparented to the root level,
-or in a zombie memcg whose parent is root), the memory has effectively
-escaped accounting. This is not a new problem that reparenting would
-introduce, but it's a problem that recharging is trying to fix that
-reparenting won't.
-
-As I outlined above, the semantics of recharging are not new, they are
-equivalent to reclaiming and refaulting the memory in a more
-accelerated/efficient manner. The indeterminism in recharging is very
-similar to reclaiming and refaulting.
-
-What do you think?
+-- 
+tejun
