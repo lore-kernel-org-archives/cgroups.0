@@ -1,40 +1,120 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH] cgroup: fix obsolete comment above cgroup_create()
-Date: Fri, 21 Jul 2023 09:55:14 -1000
-Message-ID: <ZLrioiCmugdroXGJ@slm.duckdns.org>
-References: <20230719090640.2568600-1-linmiaohe@huawei.com>
+From: Yosry Ahmed <yosryahmed@google.com>
+Subject: Re: [RFC PATCH 0/8] memory recharging for offline memcgs
+Date: Fri, 21 Jul 2023 13:37:51 -0700
+Message-ID: <CAJD7tkZmjVLN0ih3CJFJto8Zvfeb-4+A_9DJpC+iWzVw-Z9yag@mail.gmail.com>
+References: <20230720070825.992023-1-yosryahmed@google.com>
+ <20230720153515.GA1003248@cmpxchg.org> <ZLmRlTej8Tm82kXG@slm.duckdns.org>
+ <CAJD7tkYhu3g9u7HkUTFBtT3Q4edVZ2g1TWV1FDcyM9srrYCBLg@mail.gmail.com>
+ <ZLmxLUNdxMi5s2Kq@slm.duckdns.org> <CAJD7tkZKo_oSZ-mQc-knMELP8kiY1N7taQhdV6tPsqN0tg=gog@mail.gmail.com>
+ <ZLm1ptOYH6F8fGHT@slm.duckdns.org> <CAJD7tkbDxw-hqG8i85NhnjxmXFMbR5OaSW5dHDVYfdA=ZnPAEw@mail.gmail.com>
+ <ZLrN1BE42Tsybm6j@slm.duckdns.org> <CAJD7tkatz1JhKVj_iP9J0H7fPJnUSurZkCT1iJTJ=+qRen_nLQ@mail.gmail.com>
+ <ZLraAD0F-McgdJNv@slm.duckdns.org>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Transfer-Encoding: quoted-printable
+Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20221208; t=1689969316; x=1690574116;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:sender:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=ngS40wnJU6Nz9N58o+ae3RDY44wKRgOxGzApMOm7Pwo=;
-        b=PqYaWRMTzF3Y28/FcPMachG4wI9LhwSaZoXAt9+dCQR7Eba996f6aZpcjo53JTvgSo
-         sirafyLQw1T4DX2Nk5CzOyv0Zc0dxfg1NHI0blSN+8pydPzX54e3goFR3VkYC34KQasG
-         lRVN2tZiUm1nEErmjkbZdtakLrmehiIQVaet4xSt0C7jB5/9z30Ab0A220xse6jKj0wF
-         G7kVEMstTVdyRFAiWURMN2HV/0OmDxIbZ94gFR/BjgMI9yXjc4jJuXbp0w/KoYtcZbjn
-         z16S3q86/Ka7KoCoIncxmSFH65UqpzO5YT9d1sf4pjaHgocJIr7UJbaJmx57jvcnYDdE
-         p0nQ==
-Sender: Tejun Heo <htejun-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <20230719090640.2568600-1-linmiaohe-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+        d=google.com; s=20221208; t=1689971909; x=1690576709;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=yqqIc7aKNfw1AoPDdLMW6uHAgEFbeLCdE9gekNCu4dY=;
+        b=M/PwwIqI59V50uzvt0exFtHh9+yRnpOV1yb2n5IU96sD6sldNtKBmNPYO+aHgO07Sb
+         9jxNL6fK/OGgQ+Nh+P56c1euonksbQhgybBOHA7Rplm/n5/IFxA4zLPt1mGySMyBnYwZ
+         jlgMgx+dT6k+FMwUybQym0muhy75No4ejRKBBACIufTDrlz6/Wsv5UN0OL4RBdyKJC0z
+         XC/pXE+u8YkaDalg91bDHSSiGXSLSLTaXuESKBZz6zRPH3venAKSPcgd4rZzxlvkg3jY
+         A8LVQuSoFpwcZGKVXTIZ79wNQBazMi0skVxBTJLXLIiMClvnWpbFykCgt9TT6omOMOCr
+         dlqg==
+In-Reply-To: <ZLraAD0F-McgdJNv@slm.duckdns.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Miaohe Lin <linmiaohe-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Cc: hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Type: text/plain; charset="utf-8"
+To: Tejun Heo <tj@kernel.org>
+Cc: Johannes Weiner <hannes@cmpxchg.org>, Andrew Morton <akpm@linux-foundation.org>, Michal Hocko <mhocko@kernel.org>, Roman Gushchin <roman.gushchin@linux.dev>, Shakeel Butt <shakeelb@google.com>, Muchun Song <muchun.song@linux.dev>, "Matthew Wilcox (Oracle)" <willy@infradead.org>, Zefan Li <lizefan.x@bytedance.com>, Yu Zhao <yuzhao@google.com>, Luis Chamberlain <mcgrof@kernel.org>, Kees Cook <keescook@chromium.org>, Iurii Zaikin <yzaikin@google.com>, "T.J. Mercier" <tjmercier@google.com>, Greg Thelen <gthelen@google.com>, linux-kernel@vger.kernel.org, linux-mm@kvack.org, cgroups@vger.kernel.org
 
-On Wed, Jul 19, 2023 at 05:06:40PM +0800, Miaohe Lin wrote:
-> Since commit 743210386c03 ("cgroup: use cgrp->kn->id as the cgroup ID"),
-> cgrp is associated with its kernfs_node. Update corresponding comment.
-> 
-> Signed-off-by: Miaohe Lin <linmiaohe-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+On Fri, Jul 21, 2023 at 12:18=E2=80=AFPM Tejun Heo <tj@kernel.org> wrote:
+>
+> Hello,
+>
+> On Fri, Jul 21, 2023 at 11:47:49AM -0700, Yosry Ahmed wrote:
+> > On Fri, Jul 21, 2023 at 11:26=E2=80=AFAM Tejun Heo <tj@kernel.org> wrot=
+e:
+> > > On Fri, Jul 21, 2023 at 11:15:21AM -0700, Yosry Ahmed wrote:
+> > > > On Thu, Jul 20, 2023 at 3:31=E2=80=AFPM Tejun Heo <tj@kernel.org> w=
+rote:
+> > > > > memory at least in our case. The sharing across them comes down t=
+o things
+> > > > > like some common library pages which don't really account for muc=
+h these
+> > > > > days.
+> > > >
+> > > > Keep in mind that even a single page charged to a memcg and used by
+> > > > another memcg is sufficient to result in a zombie memcg.
+> > >
+> > > I mean, yeah, that's a separate issue or rather a subset which isn't =
+all
+> > > that controversial. That can be deterministically solved by reparenti=
+ng to
+> > > the parent like how slab is handled. I think the "deterministic" part=
+ is
+> > > important here. As you said, even a single page can pin a dying cgrou=
+p.
+> >
+> > There are serious flaws with reparenting that I mentioned above. We do
+> > it for kernel memory, but that's because we really have no other
+> > choice. Oftentimes the memory is not reclaimable and we cannot find an
+> > owner for it. This doesn't mean it's the right answer for user memory.
+> >
+> > The semantics are new compared to normal charging (as opposed to
+> > recharging, as I explain below). There is an extra layer of
+> > indirection that we did not (as far as I know) measure the impact of.
+> > Parents end up with pages that they never used and we have no
+> > observability into where it came from. Most importantly, over time
+> > user memory will keep accumulating at the root, reducing the accuracy
+> > and usefulness of accounting, effectively an accounting leak and
+> > reduction of capacity. Memory that is not attributed to any user, aka
+> > system overhead.
+>
+> That really sounds like the setup is missing cgroup layers tracking
+> persistent resources. Most of the problems you describe can be solved by
+> adding cgroup layers at the right spots which would usually align with th=
+e
+> logical structure of the system, right?
 
-Applied to cgroup/for-6.6.
+It is difficult to track down all persistent/shareable resources and
+find the users, especially when both the resources and the users are
+dynamically changed. A simple example is text files for a shared
+library or sidecar processes that run with different workloads and
+need to have their usage charged to the workload, but they may have
+memory. For those cases there is no layering that would work. More
+practically, sometimes userspace just doesn't even know what exactly
+is being shared by whom.
 
-Thanks.
+>
+> ...
+> > I believe recharging is being mis-framed here :)
+> >
+> > Recharging semantics are not new, it is a shortcut to a process that
+> > is already happening that is focused on offline memcgs. Let's take a
+> > step back.
+>
+> Yeah, it does sound better when viewed that way. I'm still not sure what
+> extra problems it solves tho. We experienced similar problems but AFAIK a=
+ll
+> of them came down to needing the appropriate hierarchical structure to
+> capture how resources are being used on systems.
 
--- 
-tejun
+It solves the problem of zombie memcgs and unaccounted memory. It is
+great that in some cases an appropriate hierarchy structure fixes the
+problem by accurately capturing how resources are being shared, but in
+some cases it's not as straightforward. Recharging attempts to fix the
+problem in a way that is more consistent with current semantics and
+more appealing that reparenting in terms of rightful ownership.
+
+Some systems are not rebooted for months. Can you imagine how much
+memory can be accumulated at the root (escaping all accounting) over
+months of reparenting?
+
+>
+> Thanks.
+>
+> --
+> tejun
