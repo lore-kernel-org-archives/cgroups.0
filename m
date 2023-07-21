@@ -1,67 +1,52 @@
-From: Efly Young <yangyifei03-e2CXd7i0PsxWk0Htik3J/w@public.gmane.org>
-Subject: [PATCH] mm:vmscan: fix inaccurate reclaim during proactive reclaim
-Date: Fri, 21 Jul 2023 09:41:16 +0800
-Message-ID: <20230721014116.3388-1-yangyifei03@kuaishou.com>
+From: "Haitao Huang" <haitao.huang-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
+Subject: Re: [PATCH 2/2] cgroup/misc: Change counters to be explicit 64bit
+ types
+Date: Thu, 20 Jul 2023 21:48:39 -0500
+Message-ID: <op.18evfdcdwjvjmi@hhuan26-mobl.amr.corp.intel.com>
+References: <ZLWmdBfcuPUBtk1K@slm.duckdns.org>
+ <20230718010845.35197-1-haitao.huang@linux.intel.com>
+ <20230718010845.35197-2-haitao.huang@linux.intel.com>
+ <ZLcXmvDKheCRYOjG@slm.duckdns.org>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; d=kuaishou.com; s=dkim; c=relaxed/relaxed;
-        t=1689903819; h=from:subject:to:date:message-id;
-        bh=WfBeYmQN+HAjcDnQhJBJiepaQUpxGJpfp8LGbLzGAuw=;
-        b=Uaujp7JrVr1HhJ67/IKB8PC6lCzPwguABUa/mYbRzCJlEzSqAEHPT0u5lEaBUcmfYhVglsuMskD
-        zNAu9f2cVSHPRTkK2DKpir1lJq754dPe/xWT7D0VITqwOEDznIdlwlwb4C36JHtvxa6y3QNe7yz8J
-        QjoFX/q8VCAyp35S4jU=
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1689907722; x=1721443722;
+  h=to:cc:subject:references:date:mime-version:
+   content-transfer-encoding:from:message-id:in-reply-to;
+  bh=XKjWZfAaaEnKwxsr5tOMCJ5LqOzSg2spiv8E+t92fOw=;
+  b=TS/CyM6o0KCtj7nPPsuesZzwRP1czDuKGKv5Awn3uUuk57lh0ZPVHxqD
+   m92P1it0v+MIyh6jAfkXPz/WBu6C80NjWAxNFb/3TTC7waUyT+JxKd+N5
+   xnbNH7LieWUs+uXgC0B0fRdL7Zs3zUwvEd2Te3crFBsjDbJOuOY0BDdnY
+   83ThfpgeGfX5E+qlWkIjchq6gtjAojNN4zZNjUi9MnbhRtcdYffznDRAF
+   4HMcOn1cuB2G/M9LoLr0rmzaG5KF/huZhftoLH9Ez4czrCt6GXpOgvTyo
+   yPKt7TZ3Vqa6wJYw9qgdNJqirzSK68Q7MOVmnu1FUf9of/rPlecXRFied
+   w==;
+In-Reply-To: <ZLcXmvDKheCRYOjG-NiLfg/pYEd1N0TnZuCh8vA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-To: hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org
-Cc: bpf-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, mhocko-IBi9RG/b67k@public.gmane.org, shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, yangyifei03-e2CXd7i0PsxWk0Htik3J/w@public.gmane.org
+Content-Type: text/plain; charset="us-ascii"; format="flowed"; delsp="yes"
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: jarkko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, dave.hansen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-sgx-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, vipinsh-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, kai.huang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org, reinette.chatre-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org, zhiquan1.li-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org, kristen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org
 
-Before commit f53af4285d77 ("mm: vmscan: fix extreme overreclaim and
-swap floods"), proactive reclaim will extreme overreclaim sometimes.
-But proactive reclaim still inaccurate and some extent overreclaim.
+Hi
+On Tue, 18 Jul 2023 17:52:10 -0500, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org> wrote:
 
-Problematic case is easy to construct. Allocate lots of anonymous
-memory (e.g., 20G) in a memcg, then swapping by writing memory.recalim
-and there is a certain probability of overreclaim. For example, request
-1G by writing memory.reclaim will eventually reclaim 1.7G or other
-values more than 1G.
+> On Mon, Jul 17, 2023 at 06:08:45PM -0700, Haitao Huang wrote:
+>> So the variables can account for resources of huge quantities even on
+>> 32-bit machines.
+>>
+>> Signed-off-by: Haitao Huang <haitao.huang-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
+>
+> Applied to cgroup/for-6.6 with some whitespace adjustments. I think the  
+> code
+> is broken when we cross the signed boundary but that's not a new problem
+> caused by your patch. I think what we should do is to treat atomic64_t  
+> reads
+> as u64 instead of putting it in s64.
+>
 
-The reason is that reclaimer may have already reclaimed part of requested
-memory in one loop, but before adjust sc->nr_to_reclaim in outer loop,
-call shrink_lruvec() again will still follow the current sc->nr_to_reclaim
-to work. It will eventually lead to overreclaim. In theory, the amount
-of reclaimed would be in [request, 2 * request).
-
-Reclaimer usually tends to reclaim more than request. But either direct
-or kswapd reclaim have much smaller nr_to_reclaim targets, so it is
-less noticeable and not have much impact.
-
-Proactive reclaim can usually come in with a larger value, so the error
-is difficult to ignore. Considering proactive reclaim is usually low
-frequency, handle the batching into smaller chunks is a better approach.
-
-Signed-off-by: Efly Young <yangyifei03-e2CXd7i0PsxWk0Htik3J/w@public.gmane.org>
-Suggested-by: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Acked-by: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
----
- mm/memcontrol.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
-
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index 4b27e24..d36cf88 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -6741,8 +6741,8 @@ static ssize_t memory_reclaim(struct kernfs_open_file *of, char *buf,
- 			lru_add_drain_all();
- 
- 		reclaimed = try_to_free_mem_cgroup_pages(memcg,
--						nr_to_reclaim - nr_reclaimed,
--						GFP_KERNEL, reclaim_options);
-+					min(nr_to_reclaim - nr_reclaimed, SWAP_CLUSTER_MAX),
-+					GFP_KERNEL, reclaim_options);
- 
- 		if (!reclaimed && !nr_retries--)
- 			return -EAGAIN;
--- 
-1.8.3.1
-
+Thanks. I think you meant the 'new_usage' in try_charge.
+I'll send a patch.
+BR
+Haitao
