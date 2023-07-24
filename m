@@ -1,97 +1,57 @@
-From: "Huang, Kai" <kai.huang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
-Subject: Re: [PATCH v3 03/28] x86/sgx: Add 'struct sgx_epc_lru_lists' to
- encapsulate lru list(s)
-Date: Mon, 24 Jul 2023 10:04:48 +0000
-Message-ID: <4f5496d2e0ea8edba430e7de7304bdd840616146.camel@intel.com>
-References: <20230712230202.47929-1-haitao.huang@linux.intel.com>
-         <20230712230202.47929-4-haitao.huang@linux.intel.com>
-         <CU4GHCJTRKLZ.1RK23NWPHJGNI@seitikki>
-         <op.17794m01wjvjmi@hhuan26-mobl.amr.corp.intel.com>
+From: Kai Huang <kai.huang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+Subject: [PATCH] misc_cgroup: Fix the obsolete comment around 'struct misc_res'
+Date: Mon, 24 Jul 2023 23:54:25 +1200
+Message-ID: <20230724115425.1452383-1-kai.huang@intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Transfer-Encoding: 8bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1690193115; x=1721729115;
-  h=from:to:cc:subject:date:message-id:references:
-   in-reply-to:content-id:content-transfer-encoding:
-   mime-version;
-  bh=xoUy+sVThULwB+gO/87BBgov24OO84qnKGkh8g5AmU4=;
-  b=VBjnUFau6+tHXoDyhpdmGDu9tlq/EiRRzkheuzkGPiK2IcQWf5KQLDHR
-   uaF3ffuCy4xaknq3SHlJch2lOCz1p+xCwMVtjtoHzBonE/zmFgc81VVvd
-   tP762t0jVg3QoJetX63MneLomI+dRfmC/Nd6ipxqBe+GjSaE+LT90OTVp
-   cEdcZqpFggW6VXifSmtzKpK7CDwSWBQyCgqU9zOYHCmDU/npfpqtWLQLg
-   6udZ/3vF7zQXEbrB9F0Q3oZAJm8Dz4hVjTCzoRFln08Lvh4nYGF3x2IV3
-   HB1+l9Js8/gmOELT1S/BGqu8vsTsZbBmJMhBB/YiR3FA2UQTQfMXwEgat
-   w==;
-In-Reply-To: <op.17794m01wjvjmi-yDQzE4XY+yVaPPhiJ6yCxLKMmGWinSIL2HeeBUIffwg@public.gmane.org>
-Content-Language: en-US
-Content-ID: <C7F7F2AA4E911044B1C876BDA49C80EF-Hry67jCOGbCcE4WynfumptQqCkab/8FMAL8bYrjMMd8@public.gmane.org>
+  t=1690199679; x=1721735679;
+  h=from:to:cc:subject:date:message-id:mime-version:
+   content-transfer-encoding;
+  bh=dUUOtqOX17ixG0CQwxEwuagR7WN91Ssj1qeb6A0Plp0=;
+  b=NfqbXbxzvsEWlqE2ntIx/yYp8GgSckaGBblCdxL4N53L1G9RFGCpk2Dt
+   yOYl1ab3FxCmpfzjJeeTIHx4FzH2bgVbv6BJuHPUZq9xILObnBWzejgRX
+   //3OZarSU2uc1Y9nxDRfB+h8eawNsooX1MQkzcipn0Z3ifQ1dq1oVxf2L
+   eMObKmtCT2/La7xu0J4ONYAmrxn9FUudo4Pzj5K5PaA5HH9C7uqxbIYZx
+   THl7xrD6Zto4QUplUlt/4vwsLSEGfRzT/9geDRw3ke+fF4RgOsOdkeuT1
+   8VGPmjFCKQIa7TDmgQFsUFORh0GQzJHZb/KUSW5PwBkocpC7mjEE4tMjl
+   g==;
 List-ID: <cgroups.vger.kernel.org>
-To: "hpa-YMNOUZJC4hwAvxtiuMwx3w@public.gmane.org" <hpa-YMNOUZJC4hwAvxtiuMwx3w@public.gmane.org>, "linux-sgx-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-sgx-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "jarkko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org" <jarkko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, "dave.hansen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org" <dave.hansen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, "cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "bp-Gina5bIWoIWzQB+pC5nmwQ@public.gmane.org" <bp-Gina5bIWoIWzQB+pC5nmwQ@public.gmane.org>, "linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "tglx-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org" <tglx-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>, "x86-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org" <x86-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, "haitao.huang-VuQAYsv1563Yd54FQh9/CA@public.gmane.org" <haitao.huang-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, "tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org" <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, "mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org" <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Cc: "kristen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org" <kristen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, "Chatre, Reinette" <reinette.chatre-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, "Li, Zhiquan1" <zhiquan1.li-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, "Christopherson,, Sean" <seanjc-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Content-Type: text/plain; charset="us-ascii"
+To: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Cc: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Kai Huang <kai.huang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
 
-T24gTW9uLCAyMDIzLTA3LTE3IGF0IDA4OjIzIC0wNTAwLCBIYWl0YW8gSHVhbmcgd3JvdGU6DQo+
-IE9uIE1vbiwgMTcgSnVsIDIwMjMgMDc6NDU6MzYgLTA1MDAsIEphcmtrbyBTYWtraW5lbiA8amFy
-a2tvQGtlcm5lbC5vcmc+ICANCj4gd3JvdGU6DQo+IA0KPiA+IE9uIFdlZCBKdWwgMTIsIDIwMjMg
-YXQgMTE6MDEgUE0gVVRDLCBIYWl0YW8gSHVhbmcgd3JvdGU6DQo+ID4gPiBGcm9tOiBLcmlzdGVu
-IENhcmxzb24gQWNjYXJkaSA8a3Jpc3RlbkBsaW51eC5pbnRlbC5jb20+DQo+ID4gPiANCj4gPiA+
-IEludHJvZHVjZSBhIGRhdGEgc3RydWN0dXJlIHRvIHdyYXAgdGhlIGV4aXN0aW5nIHJlY2xhaW1h
-YmxlIGxpc3QNCj4gPiA+IGFuZCBpdHMgc3BpbmxvY2sgaW4gYSBzdHJ1Y3QgdG8gbWluaW1pemUg
-dGhlIGNvZGUgY2hhbmdlcyBuZWVkZWQNCj4gPiA+IHRvIGhhbmRsZSBtdWx0aXBsZSBMUlVzIGFz
-IHdlbGwgYXMgcmVjbGFpbWFibGUgYW5kIG5vbi1yZWNsYWltYWJsZQ0KPiA+ID4gbGlzdHMuIFRo
-ZSBuZXcgc3RydWN0dXJlIHdpbGwgYmUgdXNlZCBpbiBhIGZvbGxvd2luZyBzZXQgb2YgcGF0Y2hl
-cyB0bw0KPiA+ID4gaW1wbGVtZW50IFNHWCBFUEMgY2dyb3Vwcy4NCg0KQWx0aG91Z2ggYnJpZWZs
-eSBtZW50aW9uZWQgaW4gdGhlIGZpcnN0IHBhdGNoLCBpdCB3b3VsZCBiZSBiZXR0ZXIgdG8gcHV0
-IG1vcmUNCmJhY2tncm91bmQgYWJvdXQgdGhlICJyZWNsYWltYWJsZSIgYW5kICJub24tcmVjbGFp
-bWFibGUiIHRoaW5nIGhlcmUsIGZvY3VzaW5nIG9uDQpfd2h5XyB3ZSBuZWVkIG11bHRpcGxlIExS
-VXMgKHByZXN1bWFibHkgeW91IG1lYW4gdHdvIGxpc3RzOiByZWNsYWltYWJsZSBhbmQgbm9uLQ0K
-cmVjbGFpbWFibGUpLg0KDQo+ID4gPiANCj4gPiA+IFRoZSBjaGFuZ2VzIHRvIHRoZSBzdHJ1Y3R1
-cmUgbmVlZGVkIGZvciB1bnJlY2xhaW1hYmxlIGxpc3RzIHdpbGwgYmUNCj4gPiA+IGFkZGVkIGlu
-IGxhdGVyIHBhdGNoZXMuDQo+ID4gPiANCj4gPiA+IFNpZ25lZC1vZmYtYnk6IFNlYW4gQ2hyaXN0
-b3BoZXJzb24gPHNlYW4uai5jaHJpc3RvcGhlcnNvbkBpbnRlbC5jb20+DQo+ID4gPiBTaWduZWQt
-b2ZmLWJ5OiBLcmlzdGVuIENhcmxzb24gQWNjYXJkaSA8a3Jpc3RlbkBsaW51eC5pbnRlbC5jb20+
-DQo+ID4gPiBTaWduZWQtb2ZmLWJ5OiBIYWl0YW8gSHVhbmcgPGhhaXRhby5odWFuZ0BsaW51eC5p
-bnRlbC5jb20+DQo+ID4gPiBDYzogU2VhbiBDaHJpc3RvcGhlcnNvbiA8c2VhbmpjQGdvb2dsZS5j
-b20+DQo+ID4gPiANCj4gPiA+IFYzOg0KPiA+ID4gUmVtb3ZlZCB0aGUgaGVscGVyIGZ1bmN0aW9u
-cyBhbmQgcmV2aXNlZCBjb21taXQgbWVzc2FnZXMNCg0KUGxlYXNlIHB1dCBjaGFuZ2UgaGlzdG9y
-eSBpbnRvOg0KDQotLS0NCiAgY2hhbmdlIGhpc3RvcnkNCi0tLQ0KDQpTbyBpdCBjYW4gYmUgc3Ry
-aXBwZWQgYXdheSB3aGVuIGFwcGx5aW5nIHRoZSBwYXRjaC4NCg0KPiA+ID4gLS0tDQo+ID4gPiAg
-YXJjaC94ODYva2VybmVsL2NwdS9zZ3gvc2d4LmggfCAxNyArKysrKysrKysrKysrKysrKw0KPiA+
-ID4gIDEgZmlsZSBjaGFuZ2VkLCAxNyBpbnNlcnRpb25zKCspDQo+ID4gPiANCj4gPiA+IGRpZmYg
-LS1naXQgYS9hcmNoL3g4Ni9rZXJuZWwvY3B1L3NneC9zZ3guaCAgDQo+ID4gPiBiL2FyY2gveDg2
-L2tlcm5lbC9jcHUvc2d4L3NneC5oDQo+ID4gPiBpbmRleCBmNmUzYzU4MTBlZWYuLjc3ZmNlYmE3
-M2EyNSAxMDA2NDQNCj4gPiA+IC0tLSBhL2FyY2gveDg2L2tlcm5lbC9jcHUvc2d4L3NneC5oDQo+
-ID4gPiArKysgYi9hcmNoL3g4Ni9rZXJuZWwvY3B1L3NneC9zZ3guaA0KPiA+ID4gQEAgLTkyLDYg
-KzkyLDIzIEBAIHN0YXRpYyBpbmxpbmUgdm9pZCAqc2d4X2dldF9lcGNfdmlydF9hZGRyKHN0cnVj
-dCAgDQo+ID4gPiBzZ3hfZXBjX3BhZ2UgKnBhZ2UpDQo+ID4gPiAgCXJldHVybiBzZWN0aW9uLT52
-aXJ0X2FkZHIgKyBpbmRleCAqIFBBR0VfU0laRTsNCj4gPiA+ICB9DQo+ID4gPiANCj4gPiA+ICsv
-Kg0KPiA+ID4gKyAqIFRoaXMgZGF0YSBzdHJ1Y3R1cmUgd3JhcHMgYSBsaXN0IG9mIHJlY2xhaW1h
-YmxlIEVQQyBwYWdlcywgYW5kIGEgIA0KPiA+ID4gbGlzdCBvZg0KPiA+ID4gKyAqIG5vbi1yZWNs
-YWltYWJsZSBFUEMgcGFnZXMgYW5kIGlzIHVzZWQgdG8gaW1wbGVtZW50IGEgTFJVIHBvbGljeSAg
-DQo+ID4gPiBkdXJpbmcNCj4gPiA+ICsgKiByZWNsYW1hdGlvbi4NCj4gPiA+ICsgKi8NCg0KSSdk
-IHByZWZlciB0byBub3QgbWVudGlvbiB0aGUgIm5vbi1yZWNsYWltYWJsZSIgdGhpbmcgaW4gdGhp
-cyBwYXRjaCwgYnV0IGRlZmVyDQp0byB0aGUgb25lIGFjdHVhbGx5IGludHJvZHVjZXMgdGhlICJu
-b24tcmVjbGFpbWFibGUiIGxpc3QuICBBY3R1YWxseSwgSSBkb24ndA0KdGhpbmsgd2UgZXZlbiBu
-ZWVkIHRoaXMgY29tbWVudCwgZ2l2ZW4geW91IGhhdmUgdGhpcyBpbiB0aGUgc3RydWN0dXJlOg0K
-DQoJc3RydWN0IGxpc3RfaGVhZCByZWNsYWltYWJsZTsNCg0KV2hpY2ggYWxyZWFkeSBleHBsYWlu
-cyB0aGUgInJlY2xhaW1hYmxlIiBsaXN0LiAgSSBzdXBwb3NlIHRoZSBub24tcmVjbGFpbWFibGUN
-Cmxpc3Qgd291bGQgYmUgbmFtZWQgc2ltaWxhcmx5IHRodXMgbmVlZCBubyBjb21tZW50IGVpdGhl
-ci4NCg0KQWxzbywgSSBhbSB3b25kZXJpbmcgd2h5IHlvdSBuZWVkIHRvIHNwbGl0IHRoaXMgb3V0
-IGFzIGEgc2VwYXJhdGUgcGF0Y2guICBJdA0KYmFzaWNhbGx5IGRvZXMgbm90aGluZy4gIFRvIG1l
-IHlvdSBzaG91bGQganVzdCBtZXJnZSB0aGlzIHRvIHRoZSBuZXh0IHBhdGNoLA0Kd2hpY2ggYWN0
-dWFsbHkgZG9lcyB3aGF0IHlvdSBjbGFpbWVkIGluIHRoZSBjaGFuZ2Vsb2c6DQoNCglJbnRyb2R1
-Y2UgYSBkYXRhIHN0cnVjdHVyZSB0byB3cmFwIHRoZSBleGlzdGluZyByZWNsYWltYWJsZSBsaXN0
-IGFuZMKgDQoJaXRzwqBzcGlubG9jayAuLi4NCg0KVGhlbiB0aGlzIGNhbiBiZSBhbiBpbmZyYXN0
-cnVjdHVyZSBjaGFuZ2UgcGF0Y2gsIHdoaWNoIGRvZXNuJ3QgYnJpbmcgYW55DQpmdW5jdGlvbmFs
-IGNoYW5nZSwgdG8gc3VwcG9ydCB0aGUgbm9uLXJlY2xhaW1hYmxlIGxpc3QuDQoNCg0KPiA+ID4g
-K3N0cnVjdCBzZ3hfZXBjX2xydV9saXN0cyB7DQo+ID4gPiArCS8qIE11c3QgYWNxdWlyZSB0aGlz
-IGxvY2sgdG8gYWNjZXNzICovDQo+ID4gPiArCXNwaW5sb2NrX3QgbG9jazsNCj4gPiANCj4gPiBJ
-c24ndCB0aGlzIHNlbGYtZXhwbGFuYXRvcnksIHdoeSB0aGUgaW5saW5lIGNvbW1lbnQ/DQo+IA0K
-PiBJIGdvdCBhIHdhcm5pbmcgZnJvbSB0aGUgY2hlY2twYXRjaCBzY3JpcHQgY29tcGxhaW5pbmcg
-dGhpcyBsb2NrIG5lZWRzICANCj4gY29tbWVudHMuDQoNCkkgc3VzcGVjdGVkIHRoaXMsIHNvIEkg
-YXBwbGllZCB0aGlzIHBhdGNoLCByZW1vdmVkIHRoZSBjb21tZW50LCBnZW5lcmF0ZWQgYSBuZXcN
-CnBhdGNoLCBhbmQgcnVuIGNoZWNrcGF0Y2gucGwgZm9yIGl0LiAgSXQgZGlkbid0IHJlcG9ydCBh
-bnkgd2FybmluZy9lcnJvciBpbiBteQ0KdGVzdGluZy4NCg0KQXJlIHlvdSBzdXJlIHlvdSBnb3Qg
-YSB3YXJuaW5nPw0K
+The comment of the 'failed' member of 'struct misc_res' is obsolete
+since commit b03357528fd9 ("misc_cgroup: remove error log to avoid log
+flood"), which removed the 'failed' member from the structure.  Remove
+the obsolete comment.
+
+Also add the missing comment for the 'events' field, which should come
+with commit f279294b3293 ("misc_cgroup: introduce misc.events to count
+failures") where the 'events' member was added.
+
+Signed-off-by: Kai Huang <kai.huang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+---
+ include/linux/misc_cgroup.h | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/include/linux/misc_cgroup.h b/include/linux/misc_cgroup.h
+index c238207d1615..41aa213a1125 100644
+--- a/include/linux/misc_cgroup.h
++++ b/include/linux/misc_cgroup.h
+@@ -31,7 +31,7 @@ struct misc_cg;
+  * struct misc_res: Per cgroup per misc type resource
+  * @max: Maximum limit on the resource.
+  * @usage: Current usage of the resource.
+- * @failed: True if charged failed for the resource in a cgroup.
++ * @events: Charge failure event counter of the resource.
+  */
+ struct misc_res {
+ 	unsigned long max;
+
+base-commit: 3f01e9fed8454dcd89727016c3e5b2fbb8f8e50c
+-- 
+2.41.0
+
