@@ -1,81 +1,53 @@
-From: Tvrtko Ursulin <tvrtko.ursulin@linux.intel.com>
-Subject: Re: [PATCH 15/17] cgroup/drm: Expose GPU utilisation
-Date: Tue, 25 Jul 2023 15:08:40 +0100
-Message-ID: <3b96cada-3433-139c-3180-1f050f0f80f3@linux.intel.com>
-References: <20230712114605.519432-1-tvrtko.ursulin@linux.intel.com>
- <20230712114605.519432-16-tvrtko.ursulin@linux.intel.com>
- <ZLsEdJeEAPYWFunT@slm.duckdns.org> <ZLsEomsuxoy-YnkA@slm.duckdns.org>
+From: "Haitao Huang" <haitao.huang@linux.intel.com>
+Subject: Re: [PATCH v3 00/28] Add Cgroup support for SGX EPC memory
+Date: Tue, 25 Jul 2023 12:16:06 -0500
+Message-ID: <op.18nd84c7wjvjmi@hhuan26-mobl.amr.corp.intel.com>
+References: <20230712230202.47929-1-haitao.huang@linux.intel.com>
+ <6bedc9fe-88b5-8382-aa65-ded66b58aa2c@intel.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Return-path: <intel-gfx-bounces@lists.freedesktop.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
- d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
- t=1690294128; x=1721830128;
- h=message-id:date:mime-version:subject:to:cc:references:
- from:in-reply-to:content-transfer-encoding;
- bh=Knqc8R0mT6fenbyn7oqDjc0TJDtO4aGF9VcaDoL2Pq8=;
- b=Kw2roxenD2KMHCw+N03NZrl6duCrXAUItgXOWDVwYO/z1lbyGnVIkdEc
- H5VGnLpERcRnVkKTz+EgZPlOTfkzgzFAJ7Zb1o6RaA+IiEbAHlOlOhLER
- U2Y2iYyOU5+DlZ/tNC+Uka5gn4UnOe65t3PQhSrlI2+qH0M5dsL/iic8t
- qor04Kv5O2ag5va8qzmyAme8R7rwarQ+pyLkungroq4VoubRcwtG0CAZV
- KDIrX60BVyZ7ZajsKe6dcwsskwcGRf07leoX6bDainHGJc3w4HhKhhNvE
- sx0nI21Quo3Q9xAtBBJy40qNPYYURl2onAMuftIR8JfFKZRdRXaThk0t6 w==;
-Content-Language: en-US
-In-Reply-To: <ZLsEomsuxoy-YnkA@slm.duckdns.org>
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.freedesktop.org/mailman/options/intel-gfx>,
- <mailto:intel-gfx-request@lists.freedesktop.org?subject=unsubscribe>
-List-Archive: <https://lists.freedesktop.org/archives/intel-gfx>
-List-Post: <mailto:intel-gfx@lists.freedesktop.org>
-List-Help: <mailto:intel-gfx-request@lists.freedesktop.org?subject=help>
-List-Subscribe: <https://lists.freedesktop.org/mailman/listinfo/intel-gfx>,
- <mailto:intel-gfx-request@lists.freedesktop.org?subject=subscribe>
-Errors-To: intel-gfx-bounces@lists.freedesktop.org
-Sender: "Intel-gfx" <intel-gfx-bounces@lists.freedesktop.org>
-Content-Type: text/plain; charset="us-ascii"; format="flowed"
-To: Tejun Heo <tj@kernel.org>
-Cc: Rob Clark <robdclark@chromium.org>, Kenny.Ho@amd.com, Dave Airlie <airlied@redhat.com>, =?UTF-8?Q?St=c3=a9phane_Marchesin?= <marcheu@chromium.org>, Daniel Vetter <daniel.vetter@ffwll.ch>, Intel-gfx@lists.freedesktop.org, linux-kernel@vger.kernel.org, dri-devel@lists.freedesktop.org, =?UTF-8?Q?Christian_K=c3=b6nig?= <christian.koenig@amd.com>, Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, cgroups@vger.kernel.org, Eero Tamminen <eero.t.tamminen@intel.com>, "T . J . Mercier" <tjmercier@google.com>
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1690305373; x=1721841373;
+  h=to:cc:subject:references:date:mime-version:
+   content-transfer-encoding:from:message-id:in-reply-to;
+  bh=acChHG7yYZ3Qqd5Vg1It58EizdosOgoh5agGHaDhu4o=;
+  b=lBsDnsctn7FsqH7Q949bxMYiqpL+5ohu9V6c5Luc3qk5mslqyktsp8m3
+   ZPMfXHzFOHAlxQzbOuyZuIWSXryMRbTCAKjnpj/TUbL7J7+KAk4tv4fLs
+   JijIQl5SHvdhAztCleoZ5hUXJdoLIOFNeT2jb6k98+N89K5Jo0iuipNI4
+   hddvqnAugFTNrwoPFZ6bQY07o6l+c5YHgNu8uklV/fb36AkMT1yeZRmc2
+   4/DnL6zwEHx39TPquWwI+qQWtYR0Vk5QkOJ6UVEMnhKkU85DhicO2twca
+   E2CGGs9btYfS3Hs6mBSZ97fT5ebQhVxJDIVGhEP4Z57KhvpLVBYK6wyJ6
+   g==;
+In-Reply-To: <6bedc9fe-88b5-8382-aa65-ded66b58aa2c@intel.com>
+List-ID: <cgroups.vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"; format="flowed"; delsp="yes"
+To: jarkko@kernel.org, dave.hansen@linux.intel.com, tj@kernel.org, linux-kernel@vger.kernel.org, linux-sgx@vger.kernel.org, cgroups@vger.kernel.org, X86-kernel <x86@kernel.org>, Sohil Mehta <sohil.mehta@intel.com>
+Cc: kai.huang@intel.com, reinette.chatre@intel.com, zhiquan1.li@intel.com, kristen@linux.intel.com, seanjc@google.com, zhanb@microsoft.com, anakrish@microsoft.com, mikko.ylinen@linux.intel.com
 
+On Mon, 24 Jul 2023 14:09:21 -0500, Sohil Mehta <sohil.mehta@intel.com>  
+wrote:
 
-On 21/07/2023 23:20, Tejun Heo wrote:
-> On Fri, Jul 21, 2023 at 12:19:32PM -1000, Tejun Heo wrote:
->> On Wed, Jul 12, 2023 at 12:46:03PM +0100, Tvrtko Ursulin wrote:
->>> +  drm.active_us
->>> +	GPU time used by the group recursively including all child groups.
+> Hi Haitao,
+>
+> On 7/12/2023 4:01 PM, Haitao Huang wrote:
+>
+>> I appreciate your comments and feedback.
 >>
->> Maybe instead add drm.stat and have "usage_usec" inside? That'd be more
->> consistent with cpu side.
+>
+> Nit: You missed emailing the cover letter to x86@kernel.org. I think a
+> few other people included in the individual patches are also missing in
+> the cover letter.
+>
+> In general, it might be useful to keep the email list consistent across
+> the cover letter and the individual patches.
+>
+> -Sohil
 
-Could be, but no strong opinion from my side either way. Perhaps it boils down to what could be put in the file, I mean to decide whether keyed format makes sense or not.
-  
-> Also, shouldn't this be keyed by the drm device?
-  
-It could have that too, or it could come later. Fun with GPUs that it not only could be keyed by the device, but also by the type of the GPU engine. (Which are a) vendor specific and b) some aree fully independent, some partially so, and some not at all - so it could get complicated semantics wise really fast.)
+Thanks
 
-If for now I'd go with drm.stat/usage_usec containing the total time spent how would you suggest adding per device granularity? Files as documented are either flag or nested, not both at the same time. So something like:
-
-usage_usec 100000
-card0 usage_usec 50000
-card1 usage_usec 50000
-
-Would or would not fly? Have two files along the lines of drm.stat and drm.dev_stat?
-
-While on this general topic, you will notice that for memory stats I have _sort of_ nested keyed per device format, for example on integrated Intel GPU:
-
-   $ cat drm.memory.stat
-   card0 region=system total=12898304 shared=0 active=0 resident=12111872 purgeable=167936
-   card0 region=stolen-system total=0 shared=0 active=0 resident=0 purgeable=0
-
-If one a discrete Intel GPU two more lines would appear with memory regions of local and local-system. But then on some server class multi-tile GPUs even further regions with more than one device local memory region. And users do want to see this granularity for container use cases at least.
-
-Anyway, this may not be compatible with the nested key format as documented in cgroup-v2.rst, although it does not explicitly say.
-
-Should I cheat and create key names based on device and memory region name and let userspace parse it? Like:
-
-   $ cat drm.memory.stat
-   card0.system total=12898304 shared=0 active=0 resident=12111872 purgeable=167936
-   card0.stolen-system total=0 shared=0 active=0 resident=0 purgeable=0
-
-Regards,
-
-Tvrtko
+I'll change to use the same set of lists and addresses for all patches and  
+cover letters in next version.
+BR
+Haitao
