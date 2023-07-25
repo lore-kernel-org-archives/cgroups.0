@@ -1,107 +1,87 @@
-From: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Subject: Re: [PATCH] mm: memcg: use rstat for non-hierarchical stats
-Date: Tue, 25 Jul 2023 10:04:35 -0400
-Message-ID: <20230725140435.GB1146582@cmpxchg.org>
-References: <20230719174613.3062124-1-yosryahmed@google.com>
+From: Michal =?utf-8?Q?Koutn=C3=BD?= <mkoutny-IBi9RG/b67k@public.gmane.org>
+Subject: Re: [PATCH] kernfs: attach uuid for every kernfs and report it in
+ fsid
+Date: Tue, 25 Jul 2023 16:07:17 +0200
+Message-ID: <jy7ktvlb4tkg6pl2vll6u4gozfji7giddyseypj4w2d2ue4gvn@4tw7dmjy4hfv>
+References: <20230710183338.58531-1-ivan@cloudflare.com>
+ <2023071039-negate-stalemate-6987@gregkh>
+ <CABWYdi39+TJd1qV3nWs_eYc7XMC0RvxG22ihfq7rzuPaNvn1cQ@mail.gmail.com>
 Mime-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha512;
+        protocol="application/pgp-signature"; boundary="7ajxxoxppngon7fy"
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=cmpxchg-org.20221208.gappssmtp.com; s=20221208; t=1690293876; x=1690898676;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=L6q2fbSEUaRmabz4YeOC1QVhb19awtdwyXc9KAJHQSg=;
-        b=NhRu+ZEBbGmHUyV23DWyyUEl6Nq9VUT++p+9QWJdkAJ01svswkr1clQ+XgDEJoKZlu
-         Weht+NskAhuvf8tGjjG2GgCJMoox5KBq9h7cac9rQqrC1vpsp28oMsNe9KY4CjN98NgM
-         2onTXCyaJs2t96h7XB5cCypHFdWg+fwb65PFB8O3ZrvuiaJHuzW2QZDMOqGry5xTxZnL
-         a0LtNC5vIK9Xsexs+3OgGgt5bslUleSsJtnl1gA4F45g2Ko2FIGEpl62me3wUqr1jORf
-         2aM4RpjbPng4AlA4q3lBQwcuniuBSVYARmbS0pCKD+STkQGtoiTn6CFXFLVdidVlar95
-         wCyQ==
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
+        t=1690294038; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=J8/twdbVnVALjyy6alnaVgEL7SCtymIvo2fO0lAEw1A=;
+        b=qtdc/DbznROvVm5FX3MMqXZU8IO/sm1dnPWwStcgf8XhwngPg/8F36cKRQCxhatKSPIlfZ
+        +CDxXTnNzaFH/1RRe2u/5bP+Smx254C82UsNjI329f/rkl9GaBWT0AsChmjpADwDrINbLo
+        F78flZYtWWIeNSgv/oDehdNdvzioFhk=
 Content-Disposition: inline
-In-Reply-To: <20230719174613.3062124-1-yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+In-Reply-To: <CABWYdi39+TJd1qV3nWs_eYc7XMC0RvxG22ihfq7rzuPaNvn1cQ-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Cc: Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Muchun Song <muchun.song-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
+To: Ivan Babrou <ivan-lDpJ742SOEtZroRs9YW3xA@public.gmane.org>
+Cc: Greg Kroah-Hartman <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-lDpJ742SOEtZroRs9YW3xA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Amir Goldstein <amir73il-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>, Jan Kara <jack-AlSwsSmVLrQ@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
 
-On Wed, Jul 19, 2023 at 05:46:13PM +0000, Yosry Ahmed wrote:
-> Currently, memcg uses rstat to maintain hierarchical stats. The rstat
-> framework keeps track of which cgroups have updates on which cpus.
-> 
-> For non-hierarchical stats, as memcg moved to rstat, they are no longer
-> readily available as counters. Instead, the percpu counters for a given
-> stat need to be summed to get the non-hierarchical stat value. This
-> causes a performance regression when reading non-hierarchical stats on
-> kernels where memcg moved to using rstat. This is especially visible
-> when reading memory.stat on cgroup v1. There are also some code paths
-> internal to the kernel that read such non-hierarchical stats.
 
-It's actually not an rstat regression. It's always been this costly.
+--7ajxxoxppngon7fy
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-Quick history:
+Hello.
 
-We used to maintain *all* stats in per-cpu counters at the local
-level. memory.stat reads would have to iterate and aggregate the
-entire subtree every time. This was obviously very costly, so we added
-batched upward propagation during stat updates to simplify reads:
+On Mon, Jul 10, 2023 at 02:21:10PM -0700, Ivan Babrou <ivan-lDpJ742SOEtZroRs9YW3xA@public.gmane.org>=
+ wrote:
+> I want to monitor cgroup changes, so that I can have an up to date map
+> of inode -> cgroup path, so that I can resolve the value returned from
+> bpf_get_current_cgroup_id() into something that a human can easily
+> grasp (think system.slice/nginx.service).
 
-commit 42a300353577ccc17ecc627b8570a89fa1678bec
-Author: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Date:   Tue May 14 15:47:12 2019 -0700
+Have you considered cgroup_path_from_kernfs_id()?
 
-    mm: memcontrol: fix recursive statistics correctness & scalabilty
+> Currently I do a full sweep to build a map, which doesn't work if a
+> cgroup is short lived, as it just disappears before I can resolve it.
+> Unfortunately, systemd recycles cgroups on restart, changing inode
+> number, so this is a very real issue.
 
-However, that caused a regression in the stat write path, as the
-upward propagation would bottleneck on the cachelines in the shared
-parents. The fix for *that* re-introduced the per-cpu loops in the
-local stat reads:
+So, a historical map of cgroup id -> path is also useful for you, right?
+(IOW, cgroup_path_from_kernfs_id() is possible but it'd inflate log
+buffer size if full paths were stored instead of ids.)
 
-commit 815744d75152078cde5391fc1e3c2d4424323fb6
-Author: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Date:   Thu Jun 13 15:55:46 2019 -0700
+(I think a similar map would be beneficial for SCM_CGROUP [1] idea too.)
 
-    mm: memcontrol: don't batch updates of local VM stats and events
 
-So I wouldn't say it's a regression from rstat. Except for that short
-period between the two commits above, the read side for local stats
-was always expensive.
+> There's also this old wiki page from systemd:
+>=20
+> * https://freedesktop.org/wiki/Software/systemd/Optimizations
 
-rstat promises a shot at finally fixing it, with less risk to the
-write path.
+The page also states:
 
-> It is inefficient to iterate and sum counters in all cpus when the rstat
-> framework knows exactly when a percpu counter has an update. Instead,
-> maintain cpu-aggregated non-hierarchical counters for each stat. During
-> an rstat flush, keep those updated as well. When reading
-> non-hierarchical stats, we no longer need to iterate cpus, we just need
-> to read the maintainer counters, similar to hierarchical stats.
-> 
-> A caveat is that we now a stats flush before reading
-> local/non-hierarchical stats through {memcg/lruvec}_page_state_local()
-> or memcg_events_local(), where we previously only needed a flush to
-> read hierarchical stats. Most contexts reading non-hierarchical stats
-> are already doing a flush, add a flush to the only missing context in
-> count_shadow_nodes().
-> 
-> With this patch, reading memory.stat from 1000 memcgs is 3x faster on a
-> machine with 256 cpus on cgroup v1:
->  # for i in $(seq 1000); do mkdir /sys/fs/cgroup/memory/cg$i; done
->  # time cat /dev/cgroup/memory/cg*/memory.stat > /dev/null
->  real	 0m0.125s
->  user	 0m0.005s
->  sys	 0m0.120s
-> 
-> After:
->  real	 0m0.032s
->  user	 0m0.005s
->  sys	 0m0.027s
-> 
-> Signed-off-by: Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+> Last edited Sat 18 May 2013 08:20:38 AM UTC
 
-Acked-by: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Emptiness notifications via release_agent are so 2016 :-), unified
+hiearchy has more convenient API [2], this is FTR.
 
-But I want to be clear: this isn't a regression fix. It's a new
-performance optimization for the deprecated cgroup1 code. And it comes
-at the cost of higher memory footprint for both cgroup1 AND cgroup2.
 
-If this causes a regression, we should revert it again. But let's try.
+My 0.02=E2=82=AC,
+Michal
+
+[1] https://uapi-group.org/kernel-features/
+[2] https://www.kernel.org/doc/html/latest/admin-guide/cgroup-v2.html?#un-p=
+opulated-notification
+
+
+--7ajxxoxppngon7fy
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iHUEABYKAB0WIQQpEWyjXuwGT2dDBqAGvrMr/1gcjgUCZL/XEgAKCRAGvrMr/1gc
+jnObAQCJ3C0hDVOfZEzkb1UOgnA4h3h266lsMaQDV8ICV1nHDQEAwyoY1QBjJ5E0
+NgxyIDgfAir+2Th7xhf/1vF56yIvUA4=
+=a7jr
+-----END PGP SIGNATURE-----
+
+--7ajxxoxppngon7fy--
