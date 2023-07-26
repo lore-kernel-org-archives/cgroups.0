@@ -1,80 +1,55 @@
-From: Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+From: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
 Subject: Re: [PATCH v2] mm: memcg: use rstat for non-hierarchical stats
-Date: Wed, 26 Jul 2023 08:14:35 -0700
-Message-ID: <CAJD7tkYS1iSo94WhtDE2GbpTkukaKY3aAKTSaUkGj0K5ifek+A@mail.gmail.com>
+Date: Wed, 26 Jul 2023 11:20:55 -0400
+Message-ID: <20230726152055.GC1365610@cmpxchg.org>
 References: <20230726002904.655377-1-yosryahmed@google.com>
- <20230726002904.655377-2-yosryahmed@google.com> <CAJD7tkZK2T2ebOPw6K0M+YWyKUtx9bE2uyFj4VOehhd+fYnk8w@mail.gmail.com>
- <20230726151315.GB1365610@cmpxchg.org>
+ <20230726002904.655377-2-yosryahmed@google.com>
+ <ZMCBzUH7qIdc3Y2X@P9FQF9L96D>
+ <CAJD7tkZDpni+VM61i-jUgvn=TkZ5CySotTmUAFQPwMSjDfOEWQ@mail.gmail.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: quoted-printable
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20221208; t=1690384512; x=1690989312;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=EmHtEDaViE9w7v3YPcqZQ4Gg5qZi74veSidbXAx7Uuk=;
-        b=Z0sm/6YlFBVHxaxcjSwwX/bHyhr+EAoV9DMvYiCLh1gzjeElQo2oiosipQdXcgFCHC
-         Dh4l2DPNInb8wFxoVcaMu053NsAepgd8juJJfi4f77Oq8z0fvgOLujl1esBDHY59v22f
-         II4Ew7GK+kdxPpty5uTynOE0fZn80NMl/SqI9jM4NmWlTGldJ0png0oDQtxH5YQ2jU3C
-         YHPELzG2W5BDzAJ1G9YhcsCe6V4xvHEGxMVEG09eNkGKoa5TFPuol693V9n79qX3GuTR
-         7S9RI4L/pBPsq54wiwxps6KS/O679itw93JRxiFCJQL9iOnmPpwTAZkp5AOvwgnOm/En
-         ohrA==
-In-Reply-To: <20230726151315.GB1365610-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+        d=cmpxchg-org.20221208.gappssmtp.com; s=20221208; t=1690384857; x=1690989657;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :mime-version:references:message-id:subject:cc:to:from:date:from:to
+         :cc:subject:date:message-id:reply-to;
+        bh=TR6oQPY6JNSBn86BXUT6Jb7RsPiu2t8ttrP3Qk1ckmA=;
+        b=kEYIf12WH7QjPdNoSCv0WUSbARvQjmtVxX7NfaQzrYxV1/+nRefphJ/BTVVpb3PI3k
+         tDFiu/YtGXzrb7LxUR36pX2VIcIE4gHAqkuNB3cwZSL76h5iTQjva8lKEpiF5mixmS9j
+         zB/QcNjxJqpZs0gjpSEB7cQ4TxsEnvvfcOAkvF72PHHpzXrX5hHIncAuMkUoFmSw29aN
+         JZcwXccKyQocpVHQG72luYQIe6XFkG0KPfRT9NwyYpkFvDisRm1YB/A5Egv0H0ixL38b
+         OZ54MHmoHTmvqEI8a/dnmJJEjpzdkkfjyjwLJuB4INwzRuRMAb3gXkjvoN4j4vRJw8KA
+         vfGQ==
+Content-Disposition: inline
+In-Reply-To: <CAJD7tkZDpni+VM61i-jUgvn=TkZ5CySotTmUAFQPwMSjDfOEWQ-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="utf-8"
-To: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Muchun Song <muchun.song-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+Content-Type: text/plain; charset="windows-1252"
+To: Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Cc: Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Muchun Song <muchun.song-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
 
-On Wed, Jul 26, 2023 at 8:13=E2=80=AFAM Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org=
-> wrote:
->
-> On Tue, Jul 25, 2023 at 05:36:45PM -0700, Yosry Ahmed wrote:
-> > On Tue, Jul 25, 2023 at 5:29=E2=80=AFPM Yosry Ahmed <yosryahmed@google.=
-com> wrote:
-> > > - Fix a subtle bug where updating a local counter would be missed if =
-it
-> > >   was cancelled out by a pending update from child memcgs.
+On Tue, Jul 25, 2023 at 07:20:02PM -0700, Yosry Ahmed wrote:
+> On Tue, Jul 25, 2023 at 7:15=E2=80=AFPM Roman Gushchin <roman.gushchin-fx=
+UVXftIFDnyG1zEObXtfA@public.gmane.org> wrote:
 > >
-> >
-> > Johannes, I fixed a subtle bug here and I kept your Ack, I wasn't sure
-> > what the Ack retention policy should be here. A quick look at the fix
-> > would be great.
->
-> Ah, I found it:
->
-> > > @@ -5542,19 +5539,23 @@ static void mem_cgroup_css_rstat_flush(struct=
- cgroup_subsys_state *css, int cpu)
-> > >                         memcg->vmstats->state_pending[i] =3D 0;
+> > On Wed, Jul 26, 2023 at 12:29:04AM +0000, Yosry Ahmed wrote:
+> > > Currently, memcg uses rstat to maintain hierarchical stats. Counters =
+are
+> > > maintained for hierarchical stats at each memcg. Rstat tracks which
+> > > cgroups have updates on which cpus to keep those counters fresh on the
+> > > read-side.
 > > >
-> > >                 /* Add CPU changes on this level since the last flush=
- */
-> > > +               delta_cpu =3D 0;
-> > >                 v =3D READ_ONCE(statc->state[i]);
-> > >                 if (v !=3D statc->state_prev[i]) {
-> > > -                       delta +=3D v - statc->state_prev[i];
-> > > +                       delta_cpu =3D v - statc->state_prev[i];
-> > > +                       delta +=3D delta_cpu;
-> > >                         statc->state_prev[i] =3D v;
-> > >                 }
-> > >
-> > > -               if (!delta)
-> > > -                       continue;
-> > > -
-> > >                 /* Aggregate counts on this level and propagate upwar=
-ds */
-> > > -               memcg->vmstats->state[i] +=3D delta;
-> > > -               if (parent)
-> > > -                       parent->vmstats->state_pending[i] +=3D delta;
-> > > +               if (delta_cpu)
-> > > +                       memcg->vmstats->state_local[i] +=3D delta_cpu=
-;
->
-> When delta nulls out, but delta_cpu is non-zero... subtle.
+> > > For non-hierarchical stats, we do not maintain counters. Instead, the
+> >                                                 global?
+>=20
+> Do you mean "we do not maintain global counters"? I think "global" is
+> confusing, because it can be thought of as all cpus or as including
+> the subtree (as opposed to local for non-hierarchical stats).
 
-Yup, led to a few missed updates, was not trivial to track down :)
+"global" seems fine to me, I don't think it's ambiguous in the direct
+comparison with per-cpu counts.
 
->
-> This fixed version looks good, please keep my ack :)
+Alternatively, rephrase the whole thing? Something like:
 
-Thanks!
+"Non-hierarchical stats are currently not covered by rstat. Their
+per-cpu counters are summed up on every read, which is expensive."
