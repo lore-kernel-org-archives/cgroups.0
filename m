@@ -1,279 +1,104 @@
-From: Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Subject: [PATCH v3] mm: memcg: use rstat for non-hierarchical stats
-Date: Wed, 26 Jul 2023 15:32:23 +0000
-Message-ID: <20230726153223.821757-2-yosryahmed@google.com>
-References: <20230726153223.821757-1-yosryahmed@google.com>
+From: Tvrtko Ursulin <tvrtko.ursulin@linux.intel.com>
+Subject: Re: [PATCH 16/17] cgroup/drm: Expose memory stats
+Date: Wed, 26 Jul 2023 17:44:28 +0100
+Message-ID: <8959f665-4353-3630-a6c7-5dca60959faa@linux.intel.com>
+References: <20230712114605.519432-1-tvrtko.ursulin@linux.intel.com>
+ <20230712114605.519432-17-tvrtko.ursulin@linux.intel.com>
+ <ZLsFBHqCQdPHoZVw@slm.duckdns.org>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20221208; t=1690385548; x=1690990348;
-        h=cc:to:from:subject:message-id:references:mime-version:in-reply-to
-         :date:from:to:cc:subject:date:message-id:reply-to;
-        bh=IS3cSpJD3j6ulMLRBZ9gZy0A5tXWGEsHEODupeAki5g=;
-        b=lGrx2OlMN5uaelIDW6jt45bRnkk4+1lMaY5s8DWR98+qigtB0H1XUg9D48/l1wsWoa
-         MHZluRtLsrga2YkZCNL0ea+2D/F8Y7FqLK8R1Frs5T/mT+lB3CFmO+1ZKoRPpjP+AETu
-         qfJo/HRl4Bl0bJmqTPUPTtFy4ol0tVMMRqBMGu2CU7GooPCWatnwAbljFZrOd/nR1FGi
-         fRmrdrBVgJamIwFAHoFgYexvqgB/4Ah3pV0MkLiW/24P5gzffngDNJWFvR0yadlbHsYY
-         XS4OSZxKJZYHJMr+7CfJu06VdJuIe4UsMCJjmR/hbVyYlIN17HU/t898Mjwajet8zBVp
-         oTMA==
-In-Reply-To: <20230726153223.821757-1-yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Muchun Song <muchun.song-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
-Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Return-path: <intel-gfx-bounces@lists.freedesktop.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+ d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+ t=1690389876; x=1721925876;
+ h=message-id:date:mime-version:subject:to:cc:references:
+ from:in-reply-to:content-transfer-encoding;
+ bh=4yYCYMS1X5+8+dKZLjO0tNUiV3DOrWeoyubjzbdu4rY=;
+ b=QYmyWShxHwr52uPIUZ8l/V+HHrXshhcKDHfB3v9LBiQejEX1WHPMYWwy
+ w4IqQKSxXslelUQYy+kGwnyIU6WC09fCfMcNiAPqigVS8adMk2ooflvgi
+ 9g7tG/45We64uirdScr2TAAXpSsmHA7FL68/6XurwtGasQ+ppPnUJfIRb
+ XlOMkw0P3k+kYPUka3zkIwXcyrSF278CmihtjgzMH/AiTqtXrWtk6zDN/
+ i/Dvh9S+Ud2job5DMFqVGyOis56wnnKNaPhW95EbsnVObsQdVY/gM11e/
+ l6Y36eTVvwNOj8wae/laaXytgf17/4G66aIiPfzumHi0DrutwsNj6mYZ0 Q==;
+Content-Language: en-US
+In-Reply-To: <ZLsFBHqCQdPHoZVw@slm.duckdns.org>
+List-Id: <cgroups.vger.kernel.org>
+List-Unsubscribe: <https://lists.freedesktop.org/mailman/options/intel-gfx>,
+ <mailto:intel-gfx-request@lists.freedesktop.org?subject=unsubscribe>
+List-Archive: <https://lists.freedesktop.org/archives/intel-gfx>
+List-Post: <mailto:intel-gfx@lists.freedesktop.org>
+List-Help: <mailto:intel-gfx-request@lists.freedesktop.org?subject=help>
+List-Subscribe: <https://lists.freedesktop.org/mailman/listinfo/intel-gfx>,
+ <mailto:intel-gfx-request@lists.freedesktop.org?subject=subscribe>
+Errors-To: intel-gfx-bounces@lists.freedesktop.org
+Sender: "Intel-gfx" <intel-gfx-bounces@lists.freedesktop.org>
+Content-Type: text/plain; charset="us-ascii"; format="flowed"
+To: Tejun Heo <tj@kernel.org>
+Cc: Rob Clark <robdclark@chromium.org>, Kenny.Ho@amd.com, Dave Airlie <airlied@redhat.com>, =?UTF-8?Q?St=c3=a9phane_Marchesin?= <marcheu@chromium.org>, Daniel Vetter <daniel.vetter@ffwll.ch>, Intel-gfx@lists.freedesktop.org, linux-kernel@vger.kernel.org, dri-devel@lists.freedesktop.org, =?UTF-8?Q?Christian_K=c3=b6nig?= <christian.koenig@amd.com>, Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, cgroups@vger.kernel.org, Eero Tamminen <eero.t.tamminen@intel.com>, "T . J . Mercier" <tjmercier@google.com>
 
-Currently, memcg uses rstat to maintain aggregated hierarchical stats.
-Counters are maintained for hierarchical stats at each memcg. Rstat
-tracks which cgroups have updates on which cpus to keep those counters
-fresh on the read-side.
 
-Non-hierarchical stats are currently not covered by rstat. Their
-per-cpu counters are summed up on every read, which is expensive.
-The original implementation did the same. At some point before rstat,
-non-hierarchical aggregated counters were introduced by
-commit a983b5ebee57 ("mm: memcontrol: fix excessive complexity in
-memory.stat reporting"). However, those counters were updated on the
-performance critical write-side, which caused regressions, so they were
-later removed by commit 815744d75152 ("mm: memcontrol: don't batch
-updates of local VM stats and events"). See [1] for more detailed
-history.
+On 21/07/2023 23:21, Tejun Heo wrote:
+> On Wed, Jul 12, 2023 at 12:46:04PM +0100, Tvrtko Ursulin wrote:
+>>    $ cat drm.memory.stat
+>>    card0 region=system total=12898304 shared=0 active=0 resident=12111872 purgeable=167936
+>>    card0 region=stolen-system total=0 shared=0 active=0 resident=0 purgeable=0
+>>
+>> Data is generated on demand for simplicty of implementation ie. no running
+>> totals are kept or accounted during migrations and such. Various
+>> optimisations such as cheaper collection of data are possible but
+>> deliberately left out for now.
+>>
+>> Overall, the feature is deemed to be useful to container orchestration
+>> software (and manual management).
+>>
+>> Limits, either soft or hard, are not envisaged to be implemented on top of
+>> this approach due on demand nature of collecting the stats.
+> 
+> So, yeah, if you want to add memory controls, we better think through how
+> the fd ownership migration should work.
 
-Kernel versions in between a983b5ebee57 & 815744d75152 (a year and a
-half) enjoyed cheap reads of non-hierarchical stats, specifically on
-cgroup v1. When moving to more recent kernels, a performance regression
-for reading non-hierarchical stats is observed.
+It would be quite easy to make the implicit migration fail - just the 
+matter of failing the first ioctl, which is what triggers the migration, 
+after the file descriptor access from a new owner.
 
-Now that we have rstat, we know exactly which percpu counters have
-updates for each stat. We can maintain non-hierarchical counters again,
-making reads much more efficient, without affecting the performance
-critical write-side. Hence, add non-hierarchical (i.e local) counters
-for the stats, and extend rstat flushing to keep those up-to-date.
+But I don't think I can really add that in the RFC given I have no hard 
+controls or anything like that.
 
-A caveat is that we now need a stats flush before reading
-local/non-hierarchical stats through {memcg/lruvec}_page_state_local()
-or memcg_events_local(), where we previously only needed a flush to
-read hierarchical stats. Most contexts reading non-hierarchical stats
-are already doing a flush, add a flush to the only missing context in
-count_shadow_nodes().
+With GPU usage throttling it doesn't really apply, at least I don't 
+think it does, since even when migrated to a lower budget group it would 
+just get immediately de-prioritized.
 
-With this patch, reading memory.stat from 1000 memcgs is 3x faster on a
-machine with 256 cpus on cgroup v1:
- # for i in $(seq 1000); do mkdir /sys/fs/cgroup/memory/cg$i; done
- # time cat /dev/cgroup/memory/cg*/memory.stat > /dev/null
- real	 0m0.125s
- user	 0m0.005s
- sys	 0m0.120s
+I don't think hard GPU time limits are feasible in general, and while 
+soft might be, again I don't see that any limiting would necessarily 
+have to run immediately on implicit migration.
 
-After:
- real	 0m0.032s
- user	 0m0.005s
- sys	 0m0.027s
+Second part of the story are hypothetical/future memory controls.
 
-[1]https://lore.kernel.org/lkml/20230725201811.GA1231514-druUgvl0LCNAfugRpC6u6w@public.gmane.org/
+I think first thing to say is that implicit migration is important, but 
+it is not really established to use the file descriptor from two places 
+or to migrate more than once. It is simply fresh fd which gets sent to 
+clients from Xorg, which is one of the legacy ways of doing things.
 
-Signed-off-by: Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Acked-by: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Acked-by: Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>
----
+So we probably can just ignore that given no significant amount of 
+memory ownership would be getting migrated.
 
-v2 -> v3:
-- Commit log fixes (thanks Roman & Johannes).
+And for drm.memory.stat I think what I have is good enough - both 
+private and shared data get accounted, for any clients that have handles 
+to particular buffers.
 
-v2: https://lore.kernel.org/lkml/20230726002904.655377-2-yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org/
+Maarten was working on memory controls so maybe he would have more 
+thoughts on memory ownership and implicit migration.
 
----
- include/linux/memcontrol.h |  7 ++--
- mm/memcontrol.c            | 67 +++++++++++++++++++++-----------------
- mm/workingset.c            |  1 +
- 3 files changed, 43 insertions(+), 32 deletions(-)
+But I don't think there is anything incompatible with that and 
+drm.memory.stats as proposed here, given how the categories reported are 
+the established ones from the DRM fdinfo spec, and it is fact of the 
+matter that we can have multiple memory regions per driver.
 
-diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
-index 5818af8eca5a..a9f2861a57a5 100644
---- a/include/linux/memcontrol.h
-+++ b/include/linux/memcontrol.h
-@@ -112,6 +112,9 @@ struct lruvec_stats {
- 	/* Aggregated (CPU and subtree) state */
- 	long state[NR_VM_NODE_STAT_ITEMS];
- 
-+	/* Non-hierarchical (CPU aggregated) state */
-+	long state_local[NR_VM_NODE_STAT_ITEMS];
-+
- 	/* Pending child counts during tree propagation */
- 	long state_pending[NR_VM_NODE_STAT_ITEMS];
- };
-@@ -1020,14 +1023,12 @@ static inline unsigned long lruvec_page_state_local(struct lruvec *lruvec,
- {
- 	struct mem_cgroup_per_node *pn;
- 	long x = 0;
--	int cpu;
- 
- 	if (mem_cgroup_disabled())
- 		return node_page_state(lruvec_pgdat(lruvec), idx);
- 
- 	pn = container_of(lruvec, struct mem_cgroup_per_node, lruvec);
--	for_each_possible_cpu(cpu)
--		x += per_cpu(pn->lruvec_stats_percpu->state[idx], cpu);
-+	x = READ_ONCE(pn->lruvec_stats.state_local[idx]);
- #ifdef CONFIG_SMP
- 	if (x < 0)
- 		x = 0;
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index e8ca4bdcb03c..50f8035e998a 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -742,6 +742,10 @@ struct memcg_vmstats {
- 	long			state[MEMCG_NR_STAT];
- 	unsigned long		events[NR_MEMCG_EVENTS];
- 
-+	/* Non-hierarchical (CPU aggregated) page state & events */
-+	long			state_local[MEMCG_NR_STAT];
-+	unsigned long		events_local[NR_MEMCG_EVENTS];
-+
- 	/* Pending child counts during tree propagation */
- 	long			state_pending[MEMCG_NR_STAT];
- 	unsigned long		events_pending[NR_MEMCG_EVENTS];
-@@ -775,11 +779,8 @@ void __mod_memcg_state(struct mem_cgroup *memcg, int idx, int val)
- /* idx can be of type enum memcg_stat_item or node_stat_item. */
- static unsigned long memcg_page_state_local(struct mem_cgroup *memcg, int idx)
- {
--	long x = 0;
--	int cpu;
-+	long x = READ_ONCE(memcg->vmstats->state_local[idx]);
- 
--	for_each_possible_cpu(cpu)
--		x += per_cpu(memcg->vmstats_percpu->state[idx], cpu);
- #ifdef CONFIG_SMP
- 	if (x < 0)
- 		x = 0;
-@@ -926,16 +927,12 @@ static unsigned long memcg_events(struct mem_cgroup *memcg, int event)
- 
- static unsigned long memcg_events_local(struct mem_cgroup *memcg, int event)
- {
--	long x = 0;
--	int cpu;
- 	int index = memcg_events_index(event);
- 
- 	if (index < 0)
- 		return 0;
- 
--	for_each_possible_cpu(cpu)
--		x += per_cpu(memcg->vmstats_percpu->events[index], cpu);
--	return x;
-+	return READ_ONCE(memcg->vmstats->events_local[index]);
- }
- 
- static void mem_cgroup_charge_statistics(struct mem_cgroup *memcg,
-@@ -5526,7 +5523,7 @@ static void mem_cgroup_css_rstat_flush(struct cgroup_subsys_state *css, int cpu)
- 	struct mem_cgroup *memcg = mem_cgroup_from_css(css);
- 	struct mem_cgroup *parent = parent_mem_cgroup(memcg);
- 	struct memcg_vmstats_percpu *statc;
--	long delta, v;
-+	long delta, delta_cpu, v;
- 	int i, nid;
- 
- 	statc = per_cpu_ptr(memcg->vmstats_percpu, cpu);
-@@ -5542,19 +5539,23 @@ static void mem_cgroup_css_rstat_flush(struct cgroup_subsys_state *css, int cpu)
- 			memcg->vmstats->state_pending[i] = 0;
- 
- 		/* Add CPU changes on this level since the last flush */
-+		delta_cpu = 0;
- 		v = READ_ONCE(statc->state[i]);
- 		if (v != statc->state_prev[i]) {
--			delta += v - statc->state_prev[i];
-+			delta_cpu = v - statc->state_prev[i];
-+			delta += delta_cpu;
- 			statc->state_prev[i] = v;
- 		}
- 
--		if (!delta)
--			continue;
--
- 		/* Aggregate counts on this level and propagate upwards */
--		memcg->vmstats->state[i] += delta;
--		if (parent)
--			parent->vmstats->state_pending[i] += delta;
-+		if (delta_cpu)
-+			memcg->vmstats->state_local[i] += delta_cpu;
-+
-+		if (delta) {
-+			memcg->vmstats->state[i] += delta;
-+			if (parent)
-+				parent->vmstats->state_pending[i] += delta;
-+		}
- 	}
- 
- 	for (i = 0; i < NR_MEMCG_EVENTS; i++) {
-@@ -5562,18 +5563,22 @@ static void mem_cgroup_css_rstat_flush(struct cgroup_subsys_state *css, int cpu)
- 		if (delta)
- 			memcg->vmstats->events_pending[i] = 0;
- 
-+		delta_cpu = 0;
- 		v = READ_ONCE(statc->events[i]);
- 		if (v != statc->events_prev[i]) {
--			delta += v - statc->events_prev[i];
-+			delta_cpu = v - statc->events_prev[i];
-+			delta += delta_cpu;
- 			statc->events_prev[i] = v;
- 		}
- 
--		if (!delta)
--			continue;
-+		if (delta_cpu)
-+			memcg->vmstats->events_local[i] += delta_cpu;
- 
--		memcg->vmstats->events[i] += delta;
--		if (parent)
--			parent->vmstats->events_pending[i] += delta;
-+		if (delta) {
-+			memcg->vmstats->events[i] += delta;
-+			if (parent)
-+				parent->vmstats->events_pending[i] += delta;
-+		}
- 	}
- 
- 	for_each_node_state(nid, N_MEMORY) {
-@@ -5591,18 +5596,22 @@ static void mem_cgroup_css_rstat_flush(struct cgroup_subsys_state *css, int cpu)
- 			if (delta)
- 				pn->lruvec_stats.state_pending[i] = 0;
- 
-+			delta_cpu = 0;
- 			v = READ_ONCE(lstatc->state[i]);
- 			if (v != lstatc->state_prev[i]) {
--				delta += v - lstatc->state_prev[i];
-+				delta_cpu = v - lstatc->state_prev[i];
-+				delta += delta_cpu;
- 				lstatc->state_prev[i] = v;
- 			}
- 
--			if (!delta)
--				continue;
-+			if (delta_cpu)
-+				pn->lruvec_stats.state_local[i] += delta_cpu;
- 
--			pn->lruvec_stats.state[i] += delta;
--			if (ppn)
--				ppn->lruvec_stats.state_pending[i] += delta;
-+			if (delta) {
-+				pn->lruvec_stats.state[i] += delta;
-+				if (ppn)
-+					ppn->lruvec_stats.state_pending[i] += delta;
-+			}
- 		}
- 	}
- }
-diff --git a/mm/workingset.c b/mm/workingset.c
-index 4686ae363000..da58a26d0d4d 100644
---- a/mm/workingset.c
-+++ b/mm/workingset.c
-@@ -664,6 +664,7 @@ static unsigned long count_shadow_nodes(struct shrinker *shrinker,
- 		struct lruvec *lruvec;
- 		int i;
- 
-+		mem_cgroup_flush_stats();
- 		lruvec = mem_cgroup_lruvec(sc->memcg, NODE_DATA(sc->nid));
- 		for (pages = 0, i = 0; i < NR_LRU_LISTS; i++)
- 			pages += lruvec_page_state_local(lruvec,
--- 
-2.41.0.487.g6d72f3e995-goog
+The main thing that would change between this RFC and future memory 
+controls in the area of drm.memory.stat is the implementation - it would 
+have to get changed under the hood from "collect on query" to "account 
+at allocation/free/etc". But that is just implementation details.
 
+Regards,
+
+Tvrtko
