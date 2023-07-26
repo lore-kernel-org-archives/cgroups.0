@@ -1,143 +1,70 @@
-From: Tvrtko Ursulin <tvrtko.ursulin@linux.intel.com>
-Subject: Re: [PATCH 16/17] cgroup/drm: Expose memory stats
-Date: Wed, 26 Jul 2023 12:41:27 +0100
-Message-ID: <89d7181c-6830-ca6e-0c39-caa49d14d474@linux.intel.com>
-References: <20230712114605.519432-1-tvrtko.ursulin@linux.intel.com>
- <20230712114605.519432-17-tvrtko.ursulin@linux.intel.com>
- <ZLsFBHqCQdPHoZVw@slm.duckdns.org>
- <ea64d7bf-c01b-f4ad-a36b-f77e2c2ea931@linux.intel.com>
+From: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Subject: Re: [PATCH v2] mm: memcg: use rstat for non-hierarchical stats
+Date: Wed, 26 Jul 2023 11:13:15 -0400
+Message-ID: <20230726151315.GB1365610@cmpxchg.org>
+References: <20230726002904.655377-1-yosryahmed@google.com>
+ <20230726002904.655377-2-yosryahmed@google.com>
+ <CAJD7tkZK2T2ebOPw6K0M+YWyKUtx9bE2uyFj4VOehhd+fYnk8w@mail.gmail.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Return-path: <intel-gfx-bounces@lists.freedesktop.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
- d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
- t=1690371695; x=1721907695;
- h=message-id:date:mime-version:subject:to:cc:references:
- from:in-reply-to:content-transfer-encoding;
- bh=PkVu2FDpja2qAE94z99NnNol7HutAbJ4ogDZ3EgAmRI=;
- b=nss8jPSlNrrC+l9JmUrVBK56lfgcchqzaXsMKkBjUWRAXjjJDEuZyrOv
- ETIxDhidXRCtpJu/RbIvrkbQNoxF136wG6NMU416cPg3b0s88uvRT7TOv
- duAtLKFmHUQYcU9eobgHHWc2/+5ci/nuSfR6DGBC5Z1RP55OP4w8L1yIG
- ZZ0ZGokqpg7DQx3EFF9jkarOUpVF70ZeGJwnrvf5qRv0YR2p81vmU7NHl
- JcXyBkw0e8uqG+fPKnyu/mHQRdI7AjpVsChZyr2zdCXfjtX45wWGr+idS
- gJKFB1ktHebQXoeoV78D1rLRqk2e5AnGPrzdCbVa9tZB/9ExTeokWZY61 Q==;
-Content-Language: en-US
-In-Reply-To: <ea64d7bf-c01b-f4ad-a36b-f77e2c2ea931@linux.intel.com>
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.freedesktop.org/mailman/options/intel-gfx>,
- <mailto:intel-gfx-request@lists.freedesktop.org?subject=unsubscribe>
-List-Archive: <https://lists.freedesktop.org/archives/intel-gfx>
-List-Post: <mailto:intel-gfx@lists.freedesktop.org>
-List-Help: <mailto:intel-gfx-request@lists.freedesktop.org?subject=help>
-List-Subscribe: <https://lists.freedesktop.org/mailman/listinfo/intel-gfx>,
- <mailto:intel-gfx-request@lists.freedesktop.org?subject=subscribe>
-Errors-To: intel-gfx-bounces@lists.freedesktop.org
-Sender: "Intel-gfx" <intel-gfx-bounces@lists.freedesktop.org>
-Content-Type: text/plain; charset="utf-8"; format="flowed"
-To: Maarten Lankhorst <maarten.lankhorst@linux.intel.com>, Tejun Heo <tj@kernel.org>
-Cc: Rob Clark <robdclark@chromium.org>, Kenny.Ho@amd.com, Dave Airlie <airlied@redhat.com>, =?UTF-8?Q?St=c3=a9phane_Marchesin?= <marcheu@chromium.org>, Daniel Vetter <daniel.vetter@ffwll.ch>, Intel-gfx@lists.freedesktop.org, linux-kernel@vger.kernel.org, dri-devel@lists.freedesktop.org, =?UTF-8?Q?Christian_K=c3=b6nig?= <christian.koenig@amd.com>, Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, cgroups@vger.kernel.org, Eero Tamminen <eero.t.tamminen@intel.com>, "T . J . Mercier" <tjmercier@google.com>
+Content-Transfer-Encoding: quoted-printable
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=cmpxchg-org.20221208.gappssmtp.com; s=20221208; t=1690384396; x=1690989196;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :mime-version:references:message-id:subject:cc:to:from:date:from:to
+         :cc:subject:date:message-id:reply-to;
+        bh=cOppSR5vSHMc40APmcMzvAsvziT5KwEmkPNskmCaQgY=;
+        b=razagjx5BCylQt5gjh9JrWZm0vXpRLG/piHYhTLKRLsw9zcpX1u5k0Vs+hrO22eo3e
+         SfkcFjXF8k7a6zX2GsTDxVI2P7C+p9cdeVVWqBacemwDslPEmqfniR9mE8nddDPpabCq
+         6dpDA4eXbXF/C7KRKLKH9oiVBg422CJtTD+CuvLV8xPXFpUPKo+R5iLBGqZvb3s/Lcgh
+         hcK6qEOL48zST1lv9PuFKcWCke1qdlDDBpP5Om1APf4OhVh7DuHGAn6rqniiipNv2AJS
+         PvL182LpjVrdjNiaGRVqcfKAt3ZgIZ/o2SV1UV7SVi8513mRcui/7i7sk96Jke6mFDC+
+         XSfQ==
+Content-Disposition: inline
+In-Reply-To: <CAJD7tkZK2T2ebOPw6K0M+YWyKUtx9bE2uyFj4VOehhd+fYnk8w-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+List-ID: <cgroups.vger.kernel.org>
+Content-Type: text/plain; charset="windows-1252"
+To: Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Muchun Song <muchun.song-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
 
+On Tue, Jul 25, 2023 at 05:36:45PM -0700, Yosry Ahmed wrote:
+> On Tue, Jul 25, 2023 at 5:29=E2=80=AFPM Yosry Ahmed <yosryahmed-hpIqsD4AK=
+lfQT0dZR+AlfA@public.gmane.org> wrote:
+> > - Fix a subtle bug where updating a local counter would be missed if it
+> >   was cancelled out by a pending update from child memcgs.
+>=20
+>=20
+> Johannes, I fixed a subtle bug here and I kept your Ack, I wasn't sure
+> what the Ack retention policy should be here. A quick look at the fix
+> would be great.
 
-On 26/07/2023 11:14, Maarten Lankhorst wrote:
-> Hey,
-> 
-> On 2023-07-22 00:21, Tejun Heo wrote:
->> On Wed, Jul 12, 2023 at 12:46:04PM +0100, Tvrtko Ursulin wrote:
->>>    $ cat drm.memory.stat
->>>    card0 region=system total=12898304 shared=0 active=0 
->>> resident=12111872 purgeable=167936
->>>    card0 region=stolen-system total=0 shared=0 active=0 resident=0 
->>> purgeable=0
->>>
->>> Data is generated on demand for simplicty of implementation ie. no 
->>> running
->>> totals are kept or accounted during migrations and such. Various
->>> optimisations such as cheaper collection of data are possible but
->>> deliberately left out for now.
->>>
->>> Overall, the feature is deemed to be useful to container orchestration
->>> software (and manual management).
->>>
->>> Limits, either soft or hard, are not envisaged to be implemented on 
->>> top of
->>> this approach due on demand nature of collecting the stats.
->>
->> So, yeah, if you want to add memory controls, we better think through how
->> the fd ownership migration should work.
-> I've taken a look at the series, since I have been working on cgroup 
-> memory eviction.
-> 
-> The scheduling stuff will work for i915, since it has a purely software 
-> execlist scheduler, but I don't think it will work for GuC (firmware) 
-> scheduling or other drivers that use the generic drm scheduler.
+Ah, I found it:
 
-It actually works - I used to have a blurb in the cover letter about it 
-but apparently I dropped it. Just a bit less well with many clients, 
-since there are fewer priority levels.
+> > @@ -5542,19 +5539,23 @@ static void mem_cgroup_css_rstat_flush(struct c=
+group_subsys_state *css, int cpu)
+> >                         memcg->vmstats->state_pending[i] =3D 0;
+> >
+> >                 /* Add CPU changes on this level since the last flush */
+> > +               delta_cpu =3D 0;
+> >                 v =3D READ_ONCE(statc->state[i]);
+> >                 if (v !=3D statc->state_prev[i]) {
+> > -                       delta +=3D v - statc->state_prev[i];
+> > +                       delta_cpu =3D v - statc->state_prev[i];
+> > +                       delta +=3D delta_cpu;
+> >                         statc->state_prev[i] =3D v;
+> >                 }
+> >
+> > -               if (!delta)
+> > -                       continue;
+> > -
+> >                 /* Aggregate counts on this level and propagate upwards=
+ */
+> > -               memcg->vmstats->state[i] +=3D delta;
+> > -               if (parent)
+> > -                       parent->vmstats->state_pending[i] +=3D delta;
+> > +               if (delta_cpu)
+> > +                       memcg->vmstats->state_local[i] +=3D delta_cpu;
 
-All that the design requires from the invididual drivers is some way to 
-react to the "you are over budget by this much" signal. The rest is 
-driver and backend specific.
+When delta nulls out, but delta_cpu is non-zero... subtle.
 
-> For something like this,  you would probably want it to work inside the 
-> drm scheduler first. Presumably, this can be done by setting a weight on 
-> each runqueue, and perhaps adding a callback to update one for a running 
-> queue. Calculating the weights hierarchically might be fun..
-
-It is not needed to work in drm scheduler first. In fact drm scheduler 
-based drivers can plug into what I have since it already has the notion 
-of scheduling priorities.
-
-They would only need to implement a hook which allow the cgroup 
-controller to query client GPU utilisation and another to received the 
-over budget signal.
-
-Amdgpu and msm AFAIK could be easy candidates because they both support 
-per client utilisation and priorities.
-
-Looks like I need to put all this info back into the cover letter.
-
-Also, hierarchic weights and time budgets are all already there. What 
-could be done later is make this all smarter and respect the time budget 
-with more precision. That would however, in many cases including Intel, 
-require co-operation with the firmware. In any case it is only work in 
-the implementation, while the cgroup control interface remains the same.
-
-> I have taken a look at how the rest of cgroup controllers change 
-> ownership when moved to a different cgroup, and the answer was: not at 
-> all. If we attempt to create the scheduler controls only on the first 
-> time the fd is used, you could probably get rid of all the tracking.
-
-Can you send a CPU file descriptor from process A to process B and have 
-CPU usage belonging to process B show up in process' A cgroup, or 
-vice-versa? Nope, I am not making any sense, am I? My point being it is 
-not like-to-like, model is different.
-
-No ownership transfer would mean in wide deployments all GPU utilisation 
-would be assigned to Xorg and so there is no point to any of this. No 
-way to throttle a cgroup with un-important GPU clients for instance.
-
-> This can be done very easily with the drm scheduler.
-> 
-> WRT memory, I think the consensus is to track system memory like normal 
-> memory. Stolen memory doesn't need to be tracked. It's kernel only 
-> memory, used for internal bookkeeping  only.
-> 
-> The only time userspace can directly manipulate stolen memory, is by 
-> mapping the pinned initial framebuffer to its own address space. The 
-> only allocation it can do is when a framebuffer is displayed, and 
-> framebuffer compression creates some stolen memory. Userspace is not
-> aware of this though, and has no way to manipulate those contents.
-
-Stolen memory is irrelevant and not something cgroup controller knows 
-about. Point is drivers say which memory regions they have and their 
-utilisation.
-
-Imagine instead of stolen it said vram0, or on Intel multi-tile it shows 
-local0 and local1. People working with containers are interested to see 
-this breakdown. I guess the parallel and use case here is closer to 
-memory.numa_stat.
-
-Regards,
-
-Tvrtko
+This fixed version looks good, please keep my ack :)
