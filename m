@@ -1,102 +1,134 @@
-From: Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH v2] mm: memcg: use rstat for non-hierarchical stats
-Date: Tue, 25 Jul 2023 19:20:02 -0700
-Message-ID: <CAJD7tkZDpni+VM61i-jUgvn=TkZ5CySotTmUAFQPwMSjDfOEWQ@mail.gmail.com>
-References: <20230726002904.655377-1-yosryahmed@google.com>
- <20230726002904.655377-2-yosryahmed@google.com> <ZMCBzUH7qIdc3Y2X@P9FQF9L96D>
+From: Roman Gushchin <roman.gushchin@linux.dev>
+Subject: Re: Re: [PATCH RESEND net-next 1/2] net-memcg: Scopify the
+ indicators of sockmem pressure
+Date: Tue, 25 Jul 2023 19:56:13 -0700
+Message-ID: <ZMCLTQgVT68jwbVh@P9FQF9L96D>
+References: <20230711124157.97169-1-wuyun.abel@bytedance.com>
+ <ZLsg1wklldKkVI2Z@P9FQF9L96D.corp.robot.car>
+ <58e75f44-16e3-a40a-4c8a-0f61bbf393f9@bytedance.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20221208; t=1690338039; x=1690942839;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=Q8i3sOYpsPz/5z4EGZvbSWnvU6I/qPCguplntjXR3Gg=;
-        b=zX/ucMGvp64UIN2TBRjHmtg4M1ZyQus/V7XJMJabp2TI34u8ATIOzuXKNEbYJ4Kq/U
-         BAKXhx0djH/AEVYojD9/E4xeO9cMvEt4Q7FJdKvT/iBZvjqMfcCHxyLLyXzoN1kfmn4y
-         +WGwrX73lXIInJs01RyhmihamNPtRWXfO6l/9EqNC7Bn9C7HpLP6V0FecaFlvFhFMg1G
-         TwvkTuXVRcGhPlxOZWecmoB+yoxr1xdd3xW1gu0iQ7xZm8D4YKSmaEReUGBk8cK4mHc9
-         zFsF57XxKoiFxStRGmlWBI1QeUWI0d0uElU3pVrr/lweOwaFdKbRTCg0PV9S8jpXHqy/
-         wbSw==
-In-Reply-To: <ZMCBzUH7qIdc3Y2X@P9FQF9L96D>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
+        t=1690340181;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=M8HcyBJhNbmAFYQ4vhr/4v6PwhJI/M2KUGD3rBet++I=;
+        b=CWY0VoBdxv90fE2Kx4slvk7SKhNU64RiS4zo/67lqAHvkomMISjpuadrAKmiZtx3178RPo
+        yfNQlTWX6efUd8GwjE2kygFoh9/mTxSUiV5Wph+uzlk+0wfwPoF0KJq+FVvK2fSuFHgH1v
+        ppQqROFo3fA+qYCo3RRaBLzBqJjPyxU=
+Content-Disposition: inline
+In-Reply-To: <58e75f44-16e3-a40a-4c8a-0f61bbf393f9@bytedance.com>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="windows-1252"
-To: Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>
-Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Muchun Song <muchun.song-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Abel Wu <wuyun.abel@bytedance.com>
+Cc: "David S. Miller" <davem@davemloft.net>, Eric Dumazet <edumazet@google.com>, Jakub Kicinski <kuba@kernel.org>, Paolo Abeni <pabeni@redhat.com>, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, Shakeel Butt <shakeelb@google.com>, Muchun Song <muchun.song@linux.dev>, Andrew Morton <akpm@linux-foundation.org>, David Ahern <dsahern@kernel.org>, Yosry Ahmed <yosryahmed@google.com>, "Matthew Wilcox (Oracle)" <willy@infradead.org>, Yu Zhao <yuzhao@google.com>, Kefeng Wang <wangkefeng.wang@huawei.com>, Yafang Shao <laoar.shao@gmail.com>, Kuniyuki Iwashima <kuniyu@amazon.com>, Martin KaFai Lau <martin.lau@kernel.org>, Alexander Mikhalitsyn <alexander@mihalicyn.com>, Breno Leitao <leitao@debian.org>, David Howells <dhowel>
 
-On Tue, Jul 25, 2023 at 7:15=E2=80=AFPM Roman Gushchin <roman.gushchin@linu=
-x.dev> wrote:
->
-> On Wed, Jul 26, 2023 at 12:29:04AM +0000, Yosry Ahmed wrote:
-> > Currently, memcg uses rstat to maintain hierarchical stats. Counters ar=
-e
-> > maintained for hierarchical stats at each memcg. Rstat tracks which
-> > cgroups have updates on which cpus to keep those counters fresh on the
-> > read-side.
-> >
-> > For non-hierarchical stats, we do not maintain counters. Instead, the
->                                                 global?
+On Mon, Jul 24, 2023 at 11:47:02AM +0800, Abel Wu wrote:
+> Hi Roman, thanks for taking time to have a look!
+> 
+> On 7/22/23 8:20 AM, Roman Gushchin wrote:
+> > On Tue, Jul 11, 2023 at 08:41:43PM +0800, Abel Wu wrote:
+> > > Now there are two indicators of socket memory pressure sit inside
+> > > struct mem_cgroup, socket_pressure and tcpmem_pressure.
+> > 
+> > Hi Abel!
+> > 
+> > > When in legacy mode aka. cgroupv1, the socket memory is charged
+> > > into a separate counter memcg->tcpmem rather than ->memory, so
+> > > the reclaim pressure of the memcg has nothing to do with socket's
+> > > pressure at all.
+> > 
+> > But we still might set memcg->socket_pressure and propagate the pressure,
+> > right?
+> 
+> Yes, but the pressure comes from memcg->socket_pressure does not mean
+> pressure in socket memory in cgroupv1, which might lead to premature
+> reclamation or throttling on socket memory allocation. As the following
+> example shows:
+> 
+> 			->memory	->tcpmem
+> 	limit		10G		10G
+> 	usage		9G		4G
+> 	pressure	true		false
 
-Do you mean "we do not maintain global counters"? I think "global" is
-confusing, because it can be thought of as all cpus or as including
-the subtree (as opposed to local for non-hierarchical stats).
+Yes, now it makes sense to me. Thank you for the explanation.
 
-> > percpu counters for a given stat need to be summed to get the
-> > non-hierarchical stat value. The original implementation did the same.
-> > At some point before rstat, non-hierarchical counters were introduced b=
-y
-> > commit a983b5ebee57 ("mm: memcontrol: fix excessive complexity in
-> > memory.stat reporting"). However, those counters were updated on the
-> > performance critical write-side, which caused regressions, so they were
-> > later removed by commit 815744d75152 ("mm: memcontrol: don't batch
-> > updates of local VM stats and events"). See [1] for more detailed
-> > history.
-> >
-> > Kernel versions in between a983b5ebee57 & 815744d75152 (a year and a
-> > half) enjoyed cheap reads of non-hierarchical stats, specifically on
-> > cgroup v1. When moving to more recent kernels, a performance regression
-> > for reading non-hierarchical stats is observed.
-> >
-> > Now that we have rstat, we know exactly which percpu counters have
-> > updates for each stat. We can maintain non-hierarchical counters again,
-> > making reads much more efficient, without affecting the performance
-> > critical write-side. Hence, add non-hierarchical (i.e local) counters
-> > for the stats, and extend rstat flushing to keep those up-to-date.
-> >
-> > A caveat is that we now a stats flush before reading
->                          need?
+Then I'd organize the patchset in the following way:
+1) cgroup v1-only fix to not throttle tcpmem based on the vmpressure
+2) a formal code refactoring
 
-Ah yes. I am hoping Andrew can amend this but I am happy to send a v3 as we=
-ll.
+> 
+> the memcg's memory limits are both set to 10G, and the ->memory part
+> is suffering from reclaim pressure while ->tcpmem still has much room
+> for use. I have no idea why should treat the ->tcpmem as under pressure
+> in this scenario, am I missed something?
+> 
+> > If you're changing this, you need to provide a bit more data on why it's
+> > a good idea. I'm not saying the current status is perfect, but I think we need
+> > a bit more justification for this change.
+> > 
+> > > While for default mode, the ->tcpmem is simply
+> > > not used.
+> > > 
+> > > So {socket,tcpmem}_pressure are only used in default/legacy mode
+> > > respectively. This patch fixes the pieces of code that make mixed
+> > > use of both.
+> > > 
+> > > Signed-off-by: Abel Wu <wuyun.abel@bytedance.com>
+> > > ---
+> > >   include/linux/memcontrol.h | 4 ++--
+> > >   mm/vmpressure.c            | 8 ++++++++
+> > >   2 files changed, 10 insertions(+), 2 deletions(-)
+> > > 
+> > > diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
+> > > index 5818af8eca5a..5860c7f316b9 100644
+> > > --- a/include/linux/memcontrol.h
+> > > +++ b/include/linux/memcontrol.h
+> > > @@ -1727,8 +1727,8 @@ void mem_cgroup_sk_alloc(struct sock *sk);
+> > >   void mem_cgroup_sk_free(struct sock *sk);
+> > >   static inline bool mem_cgroup_under_socket_pressure(struct mem_cgroup *memcg)
+> > >   {
+> > > -	if (!cgroup_subsys_on_dfl(memory_cgrp_subsys) && memcg->tcpmem_pressure)
+> > > -		return true;
+> > > +	if (!cgroup_subsys_on_dfl(memory_cgrp_subsys))
+> > > +		return !!memcg->tcpmem_pressure;
+> > 
+> > So here you can have something like
+> >     if (cgroup_subsys_on_dfl(memory_cgrp_subsys)) {
+> >          do {
+> >              if (time_before(jiffies, READ_ONCE(memcg->socket_pressure)))
+> >                    return true;
+> >          } while ((memcg = parent_mem_cgroup(memcg)));
+> >     } else {
+> > 	return !!READ_ONCE(memcg->socket_pressure);
+> >     }
+> 
+> Yes, this looks better.
+> 
+> > 
+> > And, please, add a bold comment here or nearby the socket_pressure definition
+> > that it has a different semantics in the legacy and default modes.
+> 
+> Agreed.
+> 
+> > 
+> > Overall I think it's a good idea to clean these things up and thank you
+> > for working on this. But I wonder if we can make the next step and leave only
+> > one mechanism for both cgroup v1 and v2 instead of having this weird setup
+> > where memcg->socket_pressure is set differently from different paths on cgroup
+> > v1 and v2.
+> 
+> There is some difficulty in unifying the mechanism for both cgroup
+> designs. Throttling socket memory allocation when memcg is under
+> pressure only makes sense when socket memory and other usages are
+> sharing the same limit, which is not true for cgroupv1. Thoughts?
 
-> > local/non-hierarchical stats through {memcg/lruvec}_page_state_local()
-> > or memcg_events_local(), where we previously only needed a flush to
-> > read hierarchical stats. Most contexts reading non-hierarchical stats
-> > are already doing a flush, add a flush to the only missing context in
-> > count_shadow_nodes().
-> >
-> > With this patch, reading memory.stat from 1000 memcgs is 3x faster on a
-> > machine with 256 cpus on cgroup v1:
-> >  # for i in $(seq 1000); do mkdir /sys/fs/cgroup/memory/cg$i; done
-> >  # time cat /dev/cgroup/memory/cg*/memory.stat > /dev/null
-> >  real  0m0.125s
-> >  user  0m0.005s
-> >  sys   0m0.120s
-> >
-> > After:
-> >  real  0m0.032s
-> >  user  0m0.005s
-> >  sys   0m0.027s
-> >
-> > [1]https://lore.kernel.org/lkml/20230725201811.GA1231514-druUgvl0LCNAfugRpC6u6w@public.gmane.org/
-> >
-> > Signed-off-by: Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-> > Acked-by: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
->
-> Acked-by: Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>
+I see... Generally speaking cgroup v1 is considered frozen, so we can leave it
+as it is, except when it creates an unnecessary complexity in the code.
+
+I'm curious, was your work driven by some real-world problem or a desire to clean
+up the code? Both are valid reasons of course.
 
 Thanks!
-
->
-> Thank you!
