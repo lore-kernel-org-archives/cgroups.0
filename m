@@ -1,105 +1,129 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH 16/17] cgroup/drm: Expose memory stats
-Date: Wed, 26 Jul 2023 09:49:57 -1000
-Message-ID: <ZMF45fhrZhiNdn53@slm.duckdns.org>
-References: <20230712114605.519432-1-tvrtko.ursulin@linux.intel.com>
- <20230712114605.519432-17-tvrtko.ursulin@linux.intel.com>
- <ZLsFBHqCQdPHoZVw@slm.duckdns.org>
- <8959f665-4353-3630-a6c7-5dca60959faa@linux.intel.com>
+From: Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>
+Subject: Re: Re: [PATCH RESEND net-next 1/2] net-memcg: Scopify the
+ indicators of sockmem pressure
+Date: Wed, 26 Jul 2023 17:19:00 -0700
+Message-ID: <ZMG39B6B41yLAu9r@P9FQF9L96D>
+References: <20230711124157.97169-1-wuyun.abel@bytedance.com>
+ <ZLsg1wklldKkVI2Z@P9FQF9L96D.corp.robot.car>
+ <58e75f44-16e3-a40a-4c8a-0f61bbf393f9@bytedance.com>
+ <ZMCLTQgVT68jwbVh@P9FQF9L96D>
+ <29de901f-ae4c-a900-a553-17ec4f096f0e@bytedance.com>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20221208; t=1690401000; x=1691005800;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:sender:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=o0fC+88gZBz8jtA7XWzXX83zAKhjWaVQ+UtgjI6/8g4=;
-        b=oukBQFR9IQO7+GHjeNafPLNndng0nKABjpaczwth9BgzQpiqLcIQmG3R0hQGndcxJm
-         cYdWVh5nwhTZeVggUqY+dTHuIGwyN30/6fp2sp0wyfL72IGfNgg/LyhmK/aOsL0qe9rh
-         hdl08+mPzCse2OTUc3DCOSQQdlnPnOVKbMtUM7PQdS9pjxjPVU1Ss81NUNDkqum4hDE7
-         kbOOH4W3oJ+SWJh62vMxckP4920VO+vrtvTrkBs9b9GwH/Y8ktjUNvzdGAnSNbKu64a/
-         V4UOi3avOQ9xPragbr0BWF/d/6EXsVAYc16BmiSMrYcqsAW0FvN+x0wHlEhYvWG6eIOr
-         cRAw==
-Sender: Tejun Heo <htejun-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
+        t=1690417148;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=jizH7v8h0ocLCeBVRJsVfm8/gDMdAlThvwyLIayxfSI=;
+        b=lHp8Ez0cvZftnjDrB+shn/YNJVCu9ie28cUDW6kKAWN9CYushKaLWWLFDlFpQOd9vnCkaO
+        r4qTSQbFbOUgr2R2v2e9qVbliFGWAF6WcfaWgPuxoQboQjxu39lTx2LJSJKTdhv8YbLd4U
+        7V/b6hzWXibp+IHendqnuPPJOMGZtJM=
 Content-Disposition: inline
-In-Reply-To: <8959f665-4353-3630-a6c7-5dca60959faa-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
+In-Reply-To: <29de901f-ae4c-a900-a553-17ec4f096f0e-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Tvrtko Ursulin <tvrtko.ursulin-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
-Cc: Intel-gfx-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org, dri-devel-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Dave Airlie <airlied-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Daniel Vetter <daniel.vetter-/w4YWyX8dFk@public.gmane.org>, Rob Clark <robdclark-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>, =?iso-8859-1?Q?St=E9phane?= Marchesin <marcheu-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>, "T . J . Mercier" <tjmercier-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Kenny.Ho-5C7GfCeVMHo@public.gmane.org, Christian =?iso-8859-1?Q?K=F6nig?= <christian.koenig-5C7GfCeVMHo@public.gmane.org>, Brian Welty <brian.welty-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Tvrtko Ursulin <tvrtko.ursulin-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Maarten Lankhorst <maarten.lankhorst-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, Eero Tamminen <eero.t.tamminen-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+To: Abel Wu <wuyun.abel-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
+Cc: "David S. Miller" <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>, Eric Dumazet <edumazet-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Jakub Kicinski <kuba-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Paolo Abeni <pabeni-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Muchun Song <muchun.song-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, David Ahern <dsahern-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, "Matthew Wilcox (Oracle)" <willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Yu Zhao <yuzhao-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Kefeng Wang <wangkefeng.wang-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Yafang Shao <laoar.shao-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Kuniyuki Iwashima <kuniyu-vV1OtcyAfmbQT0dZR+AlfA@public.gmane.org>, Martin KaFai Lau <martin.lau-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Alexander Mikhalitsyn <alexander-uFy+/5nkmnuaMJb+Lgu22Q@public.gmane.org>, Breno Leitao <leitao-8fiUuRrzOP0dnm+yROfE0A@public.gmane.org>, David Howells <dhowel>
 
-Hello,
-
-On Wed, Jul 26, 2023 at 05:44:28PM +0100, Tvrtko Ursulin wrote:
-...
-> > So, yeah, if you want to add memory controls, we better think through how
-> > the fd ownership migration should work.
+On Wed, Jul 26, 2023 at 04:44:24PM +0800, Abel Wu wrote:
+> On 7/26/23 10:56 AM, Roman Gushchin wrote:
+> > On Mon, Jul 24, 2023 at 11:47:02AM +0800, Abel Wu wrote:
+> > > Hi Roman, thanks for taking time to have a look!
+> > > > 
+> > > > > When in legacy mode aka. cgroupv1, the socket memory is charged
+> > > > > into a separate counter memcg->tcpmem rather than ->memory, so
+> > > > > the reclaim pressure of the memcg has nothing to do with socket's
+> > > > > pressure at all.
+> > > > 
+> > > > But we still might set memcg->socket_pressure and propagate the pressure,
+> > > > right?
+> > > 
+> > > Yes, but the pressure comes from memcg->socket_pressure does not mean
+> > > pressure in socket memory in cgroupv1, which might lead to premature
+> > > reclamation or throttling on socket memory allocation. As the following
+> > > example shows:
+> > > 
+> > > 			->memory	->tcpmem
+> > > 	limit		10G		10G
+> > > 	usage		9G		4G
+> > > 	pressure	true		false
+> > 
+> > Yes, now it makes sense to me. Thank you for the explanation.
 > 
-> It would be quite easy to make the implicit migration fail - just the matter
-> of failing the first ioctl, which is what triggers the migration, after the
-> file descriptor access from a new owner.
-
-So, it'd be best if there's no migration involved at all as per the
-discussion with Maarten.
-
-> But I don't think I can really add that in the RFC given I have no hard
-> controls or anything like that.
+> Cheers!
 > 
-> With GPU usage throttling it doesn't really apply, at least I don't think it
-> does, since even when migrated to a lower budget group it would just get
-> immediately de-prioritized.
+> > 
+> > Then I'd organize the patchset in the following way:
+> > 1) cgroup v1-only fix to not throttle tcpmem based on the vmpressure
+> > 2) a formal code refactoring
 > 
-> I don't think hard GPU time limits are feasible in general, and while soft
-> might be, again I don't see that any limiting would necessarily have to run
-> immediately on implicit migration.
+> OK, I will take a try to re-organize in next version.
 
-Yeah, I wouldn't worry about hard allocation of GPU time. CPU RT control
-does that but it's barely used.
-
-> Second part of the story are hypothetical/future memory controls.
+Thank you!
 > 
-> I think first thing to say is that implicit migration is important, but it
-> is not really established to use the file descriptor from two places or to
-> migrate more than once. It is simply fresh fd which gets sent to clients
-> from Xorg, which is one of the legacy ways of doing things.
+> > > > 
+> > > > Overall I think it's a good idea to clean these things up and thank you
+> > > > for working on this. But I wonder if we can make the next step and leave only
+> > > > one mechanism for both cgroup v1 and v2 instead of having this weird setup
+> > > > where memcg->socket_pressure is set differently from different paths on cgroup
+> > > > v1 and v2.
+> > > 
+> > > There is some difficulty in unifying the mechanism for both cgroup
+> > > designs. Throttling socket memory allocation when memcg is under
+> > > pressure only makes sense when socket memory and other usages are
+> > > sharing the same limit, which is not true for cgroupv1. Thoughts?
+> > 
+> > I see... Generally speaking cgroup v1 is considered frozen, so we can leave it
+> > as it is, except when it creates an unnecessary complexity in the code.
 > 
-> So we probably can just ignore that given no significant amount of memory
-> ownership would be getting migrated.
+> Are you suggesting that the 2nd patch can be ignored and keep
+> ->tcpmem_pressure as it is? Or keep the 2nd patch and add some
+> explanation around as you suggested in last reply?
 
-So, if this is the case, it'd be better to clarify this. ie. if the summary is:
+I suggest to split a code refactoring (which is not expected to bring any
+functional changes) and an actual change of the behavior on cgroup v1.
+Re the refactoring: I see a lot of value in adding comments and make the
+code more readable, I don't see that much value in merging two variables.
+But if it comes organically with the code simplification - nice.
 
-fd gets assigned to the user with a certain action at which point the fd
-doesn't have significant resources attached to it and the fd can't be moved
-to some other cgroup afterwards.
-
-then, everything is pretty simple. No need to worry about migration at all.
-fd just gets assigned once at the beginning and everything gets accounted
-towards that afterwards.
-
-> And for drm.memory.stat I think what I have is good enough - both private
-> and shared data get accounted, for any clients that have handles to
-> particular buffers.
 > 
-> Maarten was working on memory controls so maybe he would have more thoughts
-> on memory ownership and implicit migration.
+> > 
+> > I'm curious, was your work driven by some real-world problem or a desire to clean
+> > up the code? Both are valid reasons of course.
 > 
-> But I don't think there is anything incompatible with that and
-> drm.memory.stats as proposed here, given how the categories reported are the
-> established ones from the DRM fdinfo spec, and it is fact of the matter that
-> we can have multiple memory regions per driver.
+> We (a cloud service provider) are migrating users to cgroupv2,
+> but encountered some problems among which the socket memory
+> really puts us in a difficult situation. There is no specific
+> threshold for socket memory in cgroupv2 and relies largely on
+> workloads doing traffic control themselves.
 > 
-> The main thing that would change between this RFC and future memory controls
-> in the area of drm.memory.stat is the implementation - it would have to get
-> changed under the hood from "collect on query" to "account at
-> allocation/free/etc". But that is just implementation details.
+> Say one workload behaves fine in cgroupv1 with 10G of ->memory
+> and 1G of ->tcpmem, but will suck (or even be OOMed) in cgroupv2
+> with 11G of ->memory due to burst memory usage on socket.
+> 
+> It's rational for the workloads to build some traffic control
+> to better utilize the resources they bought, but from kernel's
+> point of view it's also reasonable to suppress the allocation
+> of socket memory once there is a shortage of free memory, given
+> that performance degradation is better than failure.
 
-I'd much prefer to straighten out this before adding a prelimiary stat only
-thing. If the previously described ownership model is sufficient, none of
-this is complicated, right? We can just add counters to track the resources
-and print them out.
+Yeah, I can see it. But Idk if it's too workload-specific to have
+a single-policy-fits-all-cases approach.
+E.g. some workloads might prefer to have a portion of pagecache
+being reclaimed.
+What do you think?
 
-Thanks.
+> 
+> Currently the mechanism of net-memcg's pressure doesn't work as
+> we expected, please check the discussion in [1]. Besides this,
+> we are also working on mitigating the priority inversion issue
+> introduced by the net protocols' global shared thresholds [2],
+> which has something to do with the net-memcg's pressure. This
+> patchset and maybe some other are byproducts of the above work.
+> 
+> [1] https://lore.kernel.org/netdev/20230602081135.75424-1-wuyun.abel-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org/
+> [2] https://lore.kernel.org/netdev/20230609082712.34889-1-wuyun.abel-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org/
 
--- 
-tejun
+Thanks for the clarification!
