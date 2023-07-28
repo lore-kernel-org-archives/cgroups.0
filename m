@@ -1,100 +1,55 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [External] Re: [PATCH] cgroup/rstat: record the cumulative
- per-cpu time of cgroup and its descendants
-Date: Thu, 27 Jul 2023 07:44:28 -1000
-Message-ID: <ZMKs_GpHEW6Pfusj@slm.duckdns.org>
-References: <20230717093612.40846-1-jiahao.os@bytedance.com>
- <ZLWb-LsBD041hMvr@slm.duckdns.org>
- <2655026d-6ae4-c14c-95b0-4177eefa434f@bytedance.com>
- <ZLcJ1nH8KzWzoQWj@slm.duckdns.org>
- <b4424767-dce7-08a9-3759-43cc9dfa4273@bytedance.com>
- <3d2b68bf-9f40-c779-dcfd-4cf9939edecc@bytedance.com>
+From: "Zhang, Cathy" <cathy.zhang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+Subject: RE: [PATCH net-next 1/2] net: Keep sk->sk_forward_alloc as a proper
+ size
+Date: Fri, 28 Jul 2023 02:26:45 +0000
+Message-ID: <CH3PR11MB7345C15CA3D7C5E630BF1353FC06A@CH3PR11MB7345.namprd11.prod.outlook.com>
+References: <CH3PR11MB7345DBA6F79282169AAFE9E0FC759@CH3PR11MB7345.namprd11.prod.outlook.com>
+ <20230512171702.923725-1-shakeelb@google.com>
+ <CH3PR11MB7345035086C1661BF5352E6EFC789@CH3PR11MB7345.namprd11.prod.outlook.com>
+ <CALvZod7n2yHU8PMn5b39w6E+NhLtBynDKfo1GEfXaa64_tqMWQ@mail.gmail.com>
+ <CH3PR11MB7345E9EAC5917338F1C357C0FC789@CH3PR11MB7345.namprd11.prod.outlook.com>
+ <CALvZod6txDQ9kOHrNFL64XiKxmbVHqMtWNiptUdGt9UuhQVLOQ@mail.gmail.com>
+ <ZGMYz+08I62u+Yeu@xsang-OptiPlex-9020>
+ <20230517162447.dztfzmx3hhetfs2q@google.com>
+ <CANn89iL0SD=F69b=naEmzoKysscnHGX7tP6jF9MOvthSeZ53Pw@mail.gmail.com>
+ <CALvZod6LFdydR5Zdhx1SMgknxTUJgabewi5-Ux6U=nO105GPSg@mail.gmail.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: base64
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20221208; t=1690479870; x=1691084670;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :mime-version:references:message-id:subject:cc:to:from:date:sender
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=CMgWDc9HbFTZfCAa6CCrY6Sm3n2por+mG+JbQWL++uA=;
-        b=RCcaFekWryy06wzg7UAG1HDH/IAEIm1lTcU2yxEyeXZqezvcy9ba1nwpBwUzwpGQgc
-         lQ3sb9j9/E0Yaev3i/fzaujjnPQbX7LogkJXoL90KihlX1Zom10V1ZM0F3VdaIkxDOKf
-         dFkC6yqPsAl14hIZglw5FB2XcyowxvSwcPHyuYwmG2oIZ7foSHXypHzsEIgE9jMl8FcR
-         Sb8z/S59K2ojW/sYB4CYTjqALXlxjMX7Hcx7WUUnGJQ4izz77GRc1u4vcaT0OWD5+F00
-         r8vwmL5MFpeJ3guxnS7gaG6omeZ+Tu8E5AIyp2mAWjKMqDs4vCtnF3nlfvVOPCwN9xG0
-         LNbg==
-Sender: Tejun Heo <htejun-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <3d2b68bf-9f40-c779-dcfd-4cf9939edecc-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1690511209; x=1722047209;
+  h=from:to:cc:subject:date:message-id:references:
+   in-reply-to:content-transfer-encoding:mime-version;
+  bh=HwzsRqxzjCszbsy1MnuNxvXF/3BkBEt4OqzXHy0+Ojo=;
+  b=aNd+BC+Fq0GtoaVHeWk5cxO7E178jmqdl+ijxDt4gV8Y866bWf4Z93gk
+   XjrsST2epKZCylX9tSjCs0OtG4HqpoCotPDYsmgdNGLTD2GRSe5WZrJFQ
+   paSzqb5Xy8lexP6/9+nbO5dAswMh7E63Fn+heM9PAvWMrTIFvuTG37TKb
+   8XtUsZMilRQZYq/9nPAM1qXET5BcAKT2AShSAYpGwJ+nl2GPTgVrwYhoe
+   t5SurTFacyII7g7ObKULojz6OBN8bG+j17w6z9TymGNbwVKjOxrbd9pBW
+   XWj2QO7SE4kBEAVE+sVgim+QuAqgo63eZzHvnEEUW/bPQHzNq8jaGmdj4
+   Q==;
+In-Reply-To: <CALvZod6LFdydR5Zdhx1SMgknxTUJgabewi5-Ux6U=nO105GPSg-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+Content-Language: en-US
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="iso-8859-1"
-To: Hao Jia <jiahao.os-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
-Cc: lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, mkoutny-IBi9RG/b67k@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Type: text/plain; charset="us-ascii"
+To: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Eric Dumazet <edumazet-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+Cc: "Sang, Oliver" <oliver.sang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, "Yin, Fengwei" <fengwei.yin-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, "Tang, Feng" <feng.tang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Linux MM <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Paolo Abeni <pabeni-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org" <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>, "kuba-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org" <kuba-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, "Brandeburg, Jesse" <jesse.brandeburg-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, "Srinivas, Suresh" <suresh.srinivas-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, "Chen, Tim C" <tim.c.chen-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, "You, Lizhen" <lizhen.you-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, "eric.dumazet-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org" <eric.dumazet-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, "netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "Li, Philip" <philip.li-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, "Liu, Yujie" <yujie.liu-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
 
-On Thu, Jul 27, 2023 at 08:05:44PM +0800, Hao Jia wrote:
->=20
->=20
-> On 2023/7/19 Hao Jia wrote:
-> >=20
-> >=20
-> > On 2023/7/19 Tejun Heo wrote:
-> > > On Tue, Jul 18, 2023 at 06:08:50PM +0800, Hao Jia wrote:
-> > > > https://github.com/jiaozhouxiaojia/cgv2-stat-percpu_test/tree/main
-> > >=20
-> > > So, we run `stress -c 1` for 1 second in the asdf/test0 cgroup and
-> > > asdf/cpu.stat correctly reports the cumulative usage. After removing
-> > > asdf/test0 cgroup, asdf's usage_usec is still there. What's missing h=
-ere?
-> >=20
-> > Sorry, some of my expressions may have misled you.
-> >=20
-> > Yes, cpu.stat will display the cumulative **global** cpu time of the
-> > cgroup and its descendants (the corresponding kernel variable is
-> > "cgrp->bstat"), and it will not be lost when the child cgroup is
-> > removed.
-> >=20
-> > Similarly, we need a **per-cpu** variable to record the accumulated
-> > per-cpu time of cgroup and its descendants.
-> > The existing kernel variable "cgroup_rstat_cpu(cgrp, cpu)->bstat" is not
-> > satisfied, it only records the per-cpu time of cgroup itself,
-> > So I try to add "cgroup_rstat_cpu(cgrp, cpu)->cumul_bstat" to record
-> > per-cpu time of cgroup and its descendants.
-> >=20
-> > In order to verify the correctness of my patch, I wrote a kernel module
-> > to compare the results of calculating the per-cpu time of cgroup and its
-> > descendants in two ways:
-> >  =A0 Method 1. Traverse and add the per-cpu rstatc->bstat of cgroup and
-> > each of its descendants.
-> >  =A0 Method 2. Directly read "cgroup_rstat_cpu(cgrp, cpu)->cumul_bstat"=
- in
-> > the kernel.
-> >=20
-> > When the child cgroup is not removed, the results calculated by the two
-> > methods should be equal.
-> >=20
-> > > What are you adding?
-> > I want to add a **per-cpu variable** to record the cumulative per-cpu
-> > time of cgroup and its descendants, which is similar to the variable
-> > "cgrp->bstat", but it is a per-cpu variable.
-> > It is very useful and convenient for calculating the usage of cgroup on
-> > each cpu, and its behavior is similar to the "cpuacct.usage*" interface
-> > of cgroup v1.
-> >=20
->=20
-> Hello Tejun,
->=20
-> I don't know if I explained it clearly, and do you understand what I mean?
->=20
-> Would you mind adding a variable like this to facilitate per-cpu usage
-> calculations and migration from cgroup v1 to cgroup v2?
-
-Oh yeah, I do. I'm just thinking whether we also want to expose that in the
-cgroupfs. We are currently not showing anything per-cpu and the output
-formatting gets nasty with a huge number of CPUs, so maybe that's not going
-to work out all that well. Anyways, I'll get back to you next week.
-
-Thanks.
-
---=20
-tejun
+IA0KPiBUaGUgaGllcmFyY2hpY2FsIG5hdHVyZSBvZiBtZW1jZyBtYWtlcyB0aGF0IGEgYml0IGNv
+bXBsaWNhdGVkLiBXZSBoYXZlDQo+IHNvbWV0aGluZyBzaW1pbGFyIGZvciBtZW1jZyBzdGF0cyB3
+aGljaCBpcyByc3RhdCBpbmZyYSB3aGVyZSB0aGUgc3RhdHMgYXJlDQo+IHNhdmVkIHBlci1tZW1j
+ZyBwZXItY3B1IGFuZCBnZXQgYWNjdW11bGF0ZWQgaGllcmFyY2hpY2FsbHkgZXZlcnkgMg0KPiBz
+ZWNvbmRzLiBUaGlzIHdvcmtzIGZpbmUgZm9yIHN0YXRzIGJ1dCBmb3IgbGltaXRzIHRoZXJlIHdv
+dWxkIGJlIGEgbmVlZCBmb3INCj4gc29tZSBhZGRpdGlvbmFsIHJlc3RyaWN0aW9ucy4NCj4gDQo+
+IEFsc28gc29tZXRpbWUgYWdvIEFuZHJldyBhc2tlZCBtZSB0byBleHBsb3JlIHJlcGxhY2luZyB0
+aGUgYXRvbWljIGNvdW50ZXINCj4gaW4gcGFnZV9jb3VudGVyIHdpdGggcGVyY3B1X2NvdW50ZXIu
+IEludHVpdGlvbiBpcyB0aGF0IG1vc3Qgb2YgdGhlIHRpbWUgdGhlDQo+IHVzYWdlIGlzIG5vdCBo
+aXR0aW5nIHRoZSBsaW1pdCwgc28gd2UgY2FuIHVzZSBfX3BlcmNwdV9jb3VudGVyX2NvbXBhcmUg
+Zm9yDQo+IGVuZm9yY2VtZW50Lg0KPiANCj4gTGV0IG1lIHNwZW5kIHNvbWUgdGltZSB0byBleHBs
+b3JlIHBlci1tZW1jZyBwZXItY3B1IGNhY2hlIG9yIGlmDQo+IHBlcmNwdV9jb3VudGVyIHdvdWxk
+IGJlIGJldHRlci4NCg0KR3JlZXRpbmdzIFNoYWtlZWwsDQoNCkhvcGUgdGhpcyBtZXNzYWdlIGZp
+bmRzIHlvdSB3ZWxsLiBJIHdhbnQgdG8gaW5xdWlyeSBhYm91dCB0aGUgY3VycmVudCBzdGF0dXMg
+b2YNCnRoZSBmaXhpbmcuIEhhdmUgeW91IGNvbXBsZXRlZCB0aGUgZXZhbHVhdGlvbiBhbmQgc3Rh
+cnRlZCB3b3JraW5nIG9uIHRoZSBmaW5hbA0Kc29sdXRpb24/DQoNCj4gDQo+IEZvciBub3csIHRo
+aXMgcGF0Y2ggaXMgbW9yZSBsaWtlIGFuIFJGQy4NCg==
