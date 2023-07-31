@@ -1,69 +1,44 @@
-From: Dan Carpenter <dan.carpenter-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>
-Subject: [bug report] selftests: cgroup: add test_zswap with no kmem bypass
- test
-Date: Mon, 31 Jul 2023 10:23:33 +0300
-Message-ID: <477f3cd4-d2ec-4a0e-8e77-87968467d4a2@moroto.mountain>
+From: "Jarkko Sakkinen" <jarkko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCH v3 11/28] x85/sgx: Return the number of EPC pages that
+ were successfully reclaimed
+Date: Mon, 31 Jul 2023 11:10:55 +0000
+Message-ID: <CUGB8HJ4IYB9.1VVYV9GK75UYX@seitikki>
+References: <20230712230202.47929-1-haitao.huang@linux.intel.com>
+ <20230712230202.47929-12-haitao.huang@linux.intel.com>
+ <ZMUKd7KY6Kquubjf@duo.ucw.cz>
 Mime-Version: 1.0
+Content-Transfer-Encoding: quoted-printable
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1690788218; x=1691393018;
-        h=content-disposition:mime-version:message-id:subject:cc:to:from:date
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=lJoYO3abZlnLiViPN3Pe9+sAeSfdHAGtroUhAzE18qk=;
-        b=dHg9toW9T2T3EO8tD1JNKX15Xe8ZFGctyxSc7P8ASzkBRRW19wvMTFLZvrT3Z+I1ke
-         aNWJsOE3fKyOsSNn/rmR3nKWgx/mSkK5J0/pN3rxMc8uGhNymlXDKgjlHg4jExnAJ9du
-         3ybVltdZE4yC15r51bDwNLjqw+bhOtEVBVQvGGSS6YyoQgKNOFu7ZtlM38mSq+m2q7a0
-         4V6aI6nPrtNyAaRNyItJb1WmPT/agXH/CoASqZ2bpDahfX12fC9RRKg8ywL941snk0vd
-         BkSCTmlvpFHvkb5svuB9j+udzHBCXDARDHgV+1GCRlugbiC7u5ZAX1irP1igFgq0uYIn
-         uC8g==
-Content-Disposition: inline
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1690801861;
+        bh=GQE4ikJOGvMhp7gKtfrRyBB/OigQHtCUYCx9FoUAlLg=;
+        h=Date:Cc:Subject:From:To:References:In-Reply-To:From;
+        b=c+5iI4lBI1Xr9Q6XgHXyYMgH7oUBx77jiwy8HUfsDonzUm3db0QulCo65lQZsc8z+
+         nboML0pAKixv0122Jd994M03a17edVOcADc4PO1XrXlJYoyeBaXt2NUKWDSrDau2Zn
+         GezQAPLMzstIeqp0hm4UIGUVXM2XVVmXCZhehBnHVDFOKZkWhZXhl8XPtxsgQ6v+fe
+         Ma/G2MSniOQNEY7Mst43pQWrr5k4qTh2GlNuOAGS4WIx7+UPem1oqBmX08c4lckeOp
+         osm1Rug37jBNdHdOpauhHvqBBvA0t4gFQYQYQeE04fG2cETavr1hxmQ6YVutpXFH39
+         xxqsBqNSBtCxw==
+In-Reply-To: <ZMUKd7KY6Kquubjf-1kjADaKPMenrBKCeMvbIDA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: cerasuolodomenico-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Pavel Machek <pavel-+ZI9xUNit7I@public.gmane.org>, Haitao Huang <haitao.huang-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
+Cc: dave.hansen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-sgx-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Thomas Gleixner <tglx-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>, Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Borislav Petkov <bp-Gina5bIWoIWzQB+pC5nmwQ@public.gmane.org>, x86-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, "H. Peter Anvin" <hpa-YMNOUZJC4hwAvxtiuMwx3w@public.gmane.org>, kai.huang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org, reinette.chatre-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org, Sean Christopherson <sean.j.christopherson-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, zhiquan1.li-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org, kristen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org, seanjc-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org
 
-Hello Domenico Cerasuolo,
+On Sat Jul 29, 2023 at 12:47 PM UTC, Pavel Machek wrote:
+> Hi!
+>
+> > From: Sean Christopherson <sean.j.christopherson-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+> >=20
+> > Return the number of reclaimed pages from sgx_reclaim_pages(), the EPC
+> > cgroup will use the result to track the success rate of its reclaim
+> > calls, e.g. to escalate to a more forceful reclaiming mode if
+> > necessary.
+>
+> Subject says x85. While some would love to see support of Linux on
+> Intel 8085, I guess it should be x86.
 
-The patch 7c967f267b1d: "selftests: cgroup: add test_zswap with no
-kmem bypass test" from Jun 21, 2023 (linux-next), leads to the
-following Smatch static checker warning:
+hmm... that could potentially be also a step towards also to zilog z80
+compatibility :-)
 
-	tools/testing/selftests/cgroup/test_zswap.c:211 test_no_kmem_bypass()
-	warn: unsigned 'stored_pages' is never less than zero.
-
-./tools/testing/selftests/cgroup/test_zswap.c
-    197         /* Try to wakeup kswapd and let it push child memory to zswap */
-    198         set_min_free_kb(min_free_kb_high);
-    199         for (int i = 0; i < 20; i++) {
-    200                 size_t stored_pages;
-    201                 char *trigger_allocation = malloc(trigger_allocation_size);
-    202 
-    203                 if (!trigger_allocation)
-    204                         break;
-    205                 for (int i = 0; i < trigger_allocation_size; i += 4095)
-    206                         trigger_allocation[i] = 'b';
-    207                 usleep(100000);
-    208                 free(trigger_allocation);
-    209                 if (get_zswap_stored_pages(&stored_pages))
-    210                         break;
---> 211                 if (stored_pages < 0)
-
-size_t can't be negative.  Is there any reason to check this even?
-
-    212                         break;
-    213                 /* If memory was pushed to zswap, verify it belongs to memcg */
-    214                 if (stored_pages > stored_pages_threshold) {
-    215                         int zswapped = cg_read_key_long(test_group, "memory.stat", "zswapped ");
-    216                         int delta = stored_pages * 4096 - zswapped;
-    217                         int result_ok = delta < stored_pages * 4096 / 4;
-    218 
-    219                         ret = result_ok ? KSFT_PASS : KSFT_FAIL;
-    220                         break;
-    221                 }
-    222         }
-    223 
-    224         kill(child_pid, SIGTERM);
-
-regards,
-dan carpenter
+BR, Jarkko
