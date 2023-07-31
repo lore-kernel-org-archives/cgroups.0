@@ -1,55 +1,41 @@
-From: Ivan Babrou <ivan@cloudflare.com>
-Subject: Re: [PATCH] kernfs: attach uuid for every kernfs and report it in fsid
-Date: Mon, 31 Jul 2023 11:49:24 -0700
-Message-ID: <CABWYdi3s35QZXSeb95XUeLyOkM66po603-ows1n3np=Lt4g1nw@mail.gmail.com>
-References: <20230710183338.58531-1-ivan@cloudflare.com> <2023071039-negate-stalemate-6987@gregkh>
- <CABWYdi39+TJd1qV3nWs_eYc7XMC0RvxG22ihfq7rzuPaNvn1cQ@mail.gmail.com>
- <CAOQ4uxiFhkSM2pSNLCE6cLz6mhYOvk5D7vDsghVTqy9cDqeqew@mail.gmail.com> <20230731134615.delje45enx3tkyco@quack3>
+From: Christian Brauner <brauner-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCH v2] kernfs: attach uuid for every kernfs and report it in
+ fsid
+Date: Mon, 31 Jul 2023 21:08:41 +0200
+Message-ID: <20230731-raubzug-imposant-ef57be965397@brauner>
+References: <20230731184731.64568-1-ivan@cloudflare.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-Return-path: <linux-fsdevel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=cloudflare.com; s=google; t=1690829375; x=1691434175;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=tSrMC3+SJ0egYG0f2gwoLknFT0dgY+FAasCFfQTvvxk=;
-        b=TPZP/yMbUeQTiuSSmHPaXqzypxoYzjL9bpLQpl0sY8BgdmcRkvH9tlSaOBGz+GX6Rw
-         r7vFIC1zKA9ozOF6N2GPcB4UABRxXkHaRMY4XC4SVCpUl6dpAGWvWd5MVy3+9ZC0O4yV
-         65rxWUeZOu5KUypxo2o9f9h4X+VtKC6wRMJ6U=
-In-Reply-To: <20230731134615.delje45enx3tkyco@quack3>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1690830526;
+        bh=nRBJMPp0sswdctWCTu+S7qVu3zqxXdAcDEbnShpEQW0=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=UjkZnK+t0wOVDp1QOAPx6ZoWCsvFM50FrgFaQfBlSKUvA7D4FqoB/A6JDo0q3AQq5
+         4l+apP61ADKhwdHownNGFjTUGWS1MDbHF4DYRdzXGQoUjtlU5gKAcuM19smIvFwK0a
+         KSagBxXRU91qOXCwdNbxjgImvMMTphF0Ue3Lj4lRjyhzi13RGxTpDcqcOrmXs27dJR
+         Zv7IZNGTsCrbpoMQ/f+ufD4Ow7kNil+Q9r1+6MRQsvJYeneMnWTAI6R1xNTZ2lcuYN
+         v7I3DS9/RknRsMOuKJLqQffUEpQNSMvhoLgNyDsE37HLwSotV1AV0rMr1ObgZTbMil
+         y/ajxqtemKP6A==
+Content-Disposition: inline
+In-Reply-To: <20230731184731.64568-1-ivan-lDpJ742SOEtZroRs9YW3xA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="windows-1252"
-To: Jan Kara <jack@suse.cz>
-Cc: Amir Goldstein <amir73il@gmail.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, linux-fsdevel@vger.kernel.org, kernel-team@cloudflare.com, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, Tejun Heo <tj@kernel.org>, Hugh Dickins <hughd@google.com>, Andrew Morton <akpm@linux-foundation.org>, Christoph Hellwig <hch@lst.de>, Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, Christian Brauner <brauner@kernel.org>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Ivan Babrou <ivan-lDpJ742SOEtZroRs9YW3xA@public.gmane.org>
+Cc: linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-lDpJ742SOEtZroRs9YW3xA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Amir Goldstein <amir73il-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Michal =?utf-8?Q?Koutn=C3=BD?= <mkoutny-IBi9RG/b67k@public.gmane.org>, Jan Kara <jack-AlSwsSmVLrQ@public.gmane.org>, Greg Kroah-Hartman <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 
-On Mon, Jul 31, 2023 at 6:46=E2=80=AFAM Jan Kara <jack@suse.cz> wrote:
-> > I agree. I think it was a good decision.
-> > I have some followup questions though.
-> >
-> > I guess your use case cares about the creation of cgroups?
-> > as long as the only way to create a cgroup is via vfs
-> > vfs_mkdir() -> ... cgroup_mkdir()
-> > fsnotify_mkdir() will be called.
-> > Is that a correct statement?
-> > Because if not, then explicit fsnotify_mkdir() calls may be needed
-> > similar to tracefs/debugfs.
-> >
-> > I don't think that the statement holds for dieing cgroups,
-> > so explicit fsnotify_rmdir() are almost certainly needed to make
-> > inotify/fanotify monitoring on cgroups complete.
->
-> Yeah, as Ivan writes, we should already have all that is needed to
-> generate CREATE and DELETE events for the cgroup filesystem. In theory
-> inotify or fanotify for inodes could be already used with cgroupfs now.
-> Thus I have no objection to providing fsid for it so that filesystem-wide
-> notifications can be used for it as well. Feel free to add:
->
-> Acked-by: Jan Kara <jack@suse.cz>
->
-> to your patch.
+On Mon, Jul 31, 2023 at 11:47:31AM -0700, Ivan Babrou wrote:
+> The following two commits added the same thing for tmpfs:
+> 
+> * commit 2b4db79618ad ("tmpfs: generate random sb->s_uuid")
+> * commit 59cda49ecf6c ("shmem: allow reporting fanotify events with file handles on tmpfs")
+> 
+> Having fsid allows using fanotify, which is especially handy for cgroups,
+> where one might be interested in knowing when they are created or removed.
+> 
+> Signed-off-by: Ivan Babrou <ivan-lDpJ742SOEtZroRs9YW3xA@public.gmane.org>
+> Acked-by: Jan Kara <jack-AlSwsSmVLrQ@public.gmane.org>
+> 
+> ---
 
-Thank you, I just sent v2:
-
-* https://lore.kernel.org/linux-fsdevel/20230731184731.64568-1-ivan@cloudfl=
-are.com/
+Acked-by: Christian Brauner <brauner-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
