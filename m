@@ -1,79 +1,55 @@
-From: Ivan Babrou <ivan-lDpJ742SOEtZroRs9YW3xA@public.gmane.org>
-Subject: [PATCH v2] kernfs: attach uuid for every kernfs and report it in fsid
-Date: Mon, 31 Jul 2023 11:47:31 -0700
-Message-ID: <20230731184731.64568-1-ivan@cloudflare.com>
+From: Ivan Babrou <ivan@cloudflare.com>
+Subject: Re: [PATCH] kernfs: attach uuid for every kernfs and report it in fsid
+Date: Mon, 31 Jul 2023 11:49:24 -0700
+Message-ID: <CABWYdi3s35QZXSeb95XUeLyOkM66po603-ows1n3np=Lt4g1nw@mail.gmail.com>
+References: <20230710183338.58531-1-ivan@cloudflare.com> <2023071039-negate-stalemate-6987@gregkh>
+ <CABWYdi39+TJd1qV3nWs_eYc7XMC0RvxG22ihfq7rzuPaNvn1cQ@mail.gmail.com>
+ <CAOQ4uxiFhkSM2pSNLCE6cLz6mhYOvk5D7vDsghVTqy9cDqeqew@mail.gmail.com> <20230731134615.delje45enx3tkyco@quack3>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Transfer-Encoding: quoted-printable
+Return-path: <linux-fsdevel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=cloudflare.com; s=google; t=1690829267; x=1691434067;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=JN96jnVa8IBWwtTClB8xPfkb6N6bM5c/T3ET8uC8oJ8=;
-        b=CcpnP8uIrewmUPxFzGigZZ3wM009a2S2lsstGRByU7TVDE4ACXyD8Q2cIWpB9vMe4V
-         lwLjoXxULsemtIkLeCagPlwSVYxBlMwYXDOV1GvqLzv1sfzKeZbtwiVdUIVdvw5LnMVk
-         cjbDwGJtbi39YEqp6zlMG9hewljSHKqfi6oQs=
+        d=cloudflare.com; s=google; t=1690829375; x=1691434175;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=tSrMC3+SJ0egYG0f2gwoLknFT0dgY+FAasCFfQTvvxk=;
+        b=TPZP/yMbUeQTiuSSmHPaXqzypxoYzjL9bpLQpl0sY8BgdmcRkvH9tlSaOBGz+GX6Rw
+         r7vFIC1zKA9ozOF6N2GPcB4UABRxXkHaRMY4XC4SVCpUl6dpAGWvWd5MVy3+9ZC0O4yV
+         65rxWUeZOu5KUypxo2o9f9h4X+VtKC6wRMJ6U=
+In-Reply-To: <20230731134615.delje45enx3tkyco@quack3>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-To: linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-Cc: kernel-team-lDpJ742SOEtZroRs9YW3xA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Amir Goldstein <amir73il-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, =?UTF-8?q?Michal=20Koutn=C3=BD?= <mkoutny-IBi9RG/b67k@public.gmane.org>, Ivan Babrou <ivan-lDpJ742SOEtZroRs9YW3xA@public.gmane.org>, Jan Kara <jack-AlSwsSmVLrQ@public.gmane.org>, Greg Kroah-Hartman <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Content-Type: text/plain; charset="windows-1252"
+To: Jan Kara <jack@suse.cz>
+Cc: Amir Goldstein <amir73il@gmail.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, linux-fsdevel@vger.kernel.org, kernel-team@cloudflare.com, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, Tejun Heo <tj@kernel.org>, Hugh Dickins <hughd@google.com>, Andrew Morton <akpm@linux-foundation.org>, Christoph Hellwig <hch@lst.de>, Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, Christian Brauner <brauner@kernel.org>
 
-The following two commits added the same thing for tmpfs:
+On Mon, Jul 31, 2023 at 6:46=E2=80=AFAM Jan Kara <jack@suse.cz> wrote:
+> > I agree. I think it was a good decision.
+> > I have some followup questions though.
+> >
+> > I guess your use case cares about the creation of cgroups?
+> > as long as the only way to create a cgroup is via vfs
+> > vfs_mkdir() -> ... cgroup_mkdir()
+> > fsnotify_mkdir() will be called.
+> > Is that a correct statement?
+> > Because if not, then explicit fsnotify_mkdir() calls may be needed
+> > similar to tracefs/debugfs.
+> >
+> > I don't think that the statement holds for dieing cgroups,
+> > so explicit fsnotify_rmdir() are almost certainly needed to make
+> > inotify/fanotify monitoring on cgroups complete.
+>
+> Yeah, as Ivan writes, we should already have all that is needed to
+> generate CREATE and DELETE events for the cgroup filesystem. In theory
+> inotify or fanotify for inodes could be already used with cgroupfs now.
+> Thus I have no objection to providing fsid for it so that filesystem-wide
+> notifications can be used for it as well. Feel free to add:
+>
+> Acked-by: Jan Kara <jack@suse.cz>
+>
+> to your patch.
 
-* commit 2b4db79618ad ("tmpfs: generate random sb->s_uuid")
-* commit 59cda49ecf6c ("shmem: allow reporting fanotify events with file handles on tmpfs")
+Thank you, I just sent v2:
 
-Having fsid allows using fanotify, which is especially handy for cgroups,
-where one might be interested in knowing when they are created or removed.
-
-Signed-off-by: Ivan Babrou <ivan-lDpJ742SOEtZroRs9YW3xA@public.gmane.org>
-Acked-by: Jan Kara <jack-AlSwsSmVLrQ@public.gmane.org>
-
----
-v2: Added a missing static and an ack from Jan Kara
----
- fs/kernfs/mount.c | 13 ++++++++++++-
- 1 file changed, 12 insertions(+), 1 deletion(-)
-
-diff --git a/fs/kernfs/mount.c b/fs/kernfs/mount.c
-index d49606accb07..930026842359 100644
---- a/fs/kernfs/mount.c
-+++ b/fs/kernfs/mount.c
-@@ -16,6 +16,8 @@
- #include <linux/namei.h>
- #include <linux/seq_file.h>
- #include <linux/exportfs.h>
-+#include <linux/uuid.h>
-+#include <linux/statfs.h>
- 
- #include "kernfs-internal.h"
- 
-@@ -45,8 +47,15 @@ static int kernfs_sop_show_path(struct seq_file *sf, struct dentry *dentry)
- 	return 0;
- }
- 
-+int kernfs_statfs(struct dentry *dentry, struct kstatfs *buf)
-+{
-+	simple_statfs(dentry, buf);
-+	buf->f_fsid = uuid_to_fsid(dentry->d_sb->s_uuid.b);
-+	return 0;
-+}
-+
- const struct super_operations kernfs_sops = {
--	.statfs		= simple_statfs,
-+	.statfs		= kernfs_statfs,
- 	.drop_inode	= generic_delete_inode,
- 	.evict_inode	= kernfs_evict_inode,
- 
-@@ -351,6 +360,8 @@ int kernfs_get_tree(struct fs_context *fc)
- 		}
- 		sb->s_flags |= SB_ACTIVE;
- 
-+		uuid_gen(&sb->s_uuid);
-+
- 		down_write(&root->kernfs_supers_rwsem);
- 		list_add(&info->node, &info->root->supers);
- 		up_write(&root->kernfs_supers_rwsem);
--- 
-2.41.0
-
+* https://lore.kernel.org/linux-fsdevel/20230731184731.64568-1-ivan@cloudfl=
+are.com/
