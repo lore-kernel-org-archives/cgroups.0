@@ -1,48 +1,58 @@
-From: Carlos Bilbao <carlos.bilbao-5C7GfCeVMHo@public.gmane.org>
-Subject: Re: [PATCH] blk-iocost: fix seq_printf compile type mismatch error
-Date: Mon, 31 Jul 2023 10:04:14 -0500
-Message-ID: <7f451eb2-6e62-9e49-c47a-e0de59cc7ebf@amd.com>
-References: <20230717141852.153965-1-carlos.bilbao@amd.com>
- <93557f79-c12c-3c3f-2c25-9ba50a618daa@amd.com>
- <ZLstYbAzqkqwIRzy@slm.duckdns.org>
+From: Jonathan Corbet <corbet@lwn.net>
+Subject: Re: [PATCH] docs: cgroup-v1: replace dead CONFIG_MEM_RES_CTRL_SWAP
+ symbol
+Date: Mon, 31 Jul 2023 09:55:22 -0600
+Message-ID: <87o7jsdqj9.fsf@meer.lwn.net>
+References: <20230728105723.251892-1-krzpaw@gmail.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=amd.com; s=selector1;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=7Bazck+NSeWS8nQUxV63068N65y644YleC1gT1b/6Hs=;
- b=A/bLWs5DHGfNVorZL0MUvfyhsId7QIGgj83MEseDYpY37Rm0gV2eMmsgcVnYEdobB31R5FABMnFEGSPDRcQxXQjtWNNETZPyfVDBLS9xGYobL9+VAp29D+rRzY1XznC71oPY7ivvqOn/TzA+4fO7IiVU4S/BO/JmakYRa0Pqa+0=
-Content-Language: en-US
-In-Reply-To: <ZLstYbAzqkqwIRzy-NiLfg/pYEd1N0TnZuCh8vA@public.gmane.org>
+Return-path: <linux-doc-owner@vger.kernel.org>
+DKIM-Filter: OpenDKIM Filter v2.11.0 ms.lwn.net 164D92C5
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=lwn.net; s=20201203;
+        t=1690818923; bh=dtzt/1jmMl4ga6TG3AzFsLIjNNRRFlSVYKzq/KA6aHE=;
+        h=From:To:Cc:Subject:In-Reply-To:References:Date:From;
+        b=nYMA56oTwm5Bop7XCKDoHg3GVBw08llGFlzSEtzk9O36IZtYIWDQF3rDAQWBxAGKk
+         +MNlYbRw4GXjnCCwATwkmhuZMXdvWVobLuVXevNhMBR7rjZvA1M3zwtI3irCuvrs30
+         qFeeWxSyqBA4FV1tas9lcBbGpYmTwwz+aNz2y0NR6G+633oKRy1fjjSAXoVIIH+QoU
+         hgWWrfgkLtupN2uI7StwPwS3Ky8Bnyuf//DDOG25UwepaDM36UD9HwedPppDML2OTk
+         uGKQRJqCxAKGuszQtHIs73dcyJ4lgk2YOp9ZctnuMUthsWHWgPv5vCKdwbayRdaKE1
+         fP0MMfyiZzOxw==
+In-Reply-To: <20230728105723.251892-1-krzpaw@gmail.com>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"; format="flowed"
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: josef-DigfWCa+lFGyeJad7bwFQA@public.gmane.org, axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, amd <amd-bi+AKbBUZKY6gyzm1THtWbp2dZbC/Bob@public.gmane.org>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Krzysztof Pawlaczyk <krzpaw@gmail.com>, Tejun Heo <tj@kernel.org>, Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, lukas.bulwahn@gmail.com
+Cc: Krzysztof Pawlaczyk <krzpaw@gmail.com>
 
-On 7/21/23 20:14, Tejun Heo wrote:
-> On Fri, Jul 21, 2023 at 05:32:04PM -0500, Carlos Bilbao wrote:
->> On 7/17/23 9:18 AM, Carlos Bilbao wrote:
->>> From: amd <amd-bi+AKbBUZKY6gyzm1THtWbp2dZbC/Bob@public.gmane.org>
->>>
->>> Fix two type mismatch errors encountered while compiling blk-iocost.c with
->>> GCC version 13.1.1 that involved constant operator WEIGHT_ONE. Cast the
->>> result of the division operation to (unsigned int) to match the expected
->>> format specifier %u in two seq_printf invocations.
->>>
->>> Reviewed-by: Carlos Bilbao <carlos.bilbao-5C7GfCeVMHo@public.gmane.org>
->> This should have been:
->>
->> Signed-off-by: Carlos Bilbao <carlos.bilbao-5C7GfCeVMHo@public.gmane.org>
-> 
-> Carlos, can you please retest the current linus#master?
-> 
+Krzysztof Pawlaczyk <krzpaw@gmail.com> writes:
 
-Yes, that version compiled successfully without changes in my compiler. The
-kernel that gave me said error was a custom v6.1.0-rc4 (Obtained from:
-https://github.com/coconut-svsm/linux/tree/svsm-host)
+> Commit e55b9f96860f ("mm: memcontrol: drop dead CONFIG_MEMCG_SWAP
+> config symbol") removed MEMCG_SWAP as it was just a shorthand for
+> CONFIG_MEMCG && CONFIG_SWAP.
+>
+> The commit also adjusted the documentation but missed reference to
+> CONFIG_MEM_RES_CTRL_SWAP, which was the previous name of
+> CONFIG_MEMCG_SWAP before renaming in commit c255a458055e ("memcg: rename
+> config variables").
+>
+> Update the reference to the current state.
+>
+> Signed-off-by: Krzysztof Pawlaczyk <krzpaw@gmail.com>
+> ---
+>  Documentation/admin-guide/cgroup-v1/memcg_test.rst | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+>
+> diff --git a/Documentation/admin-guide/cgroup-v1/memcg_test.rst b/Documentation/admin-guide/cgroup-v1/memcg_test.rst
+> index a402359abb99..1f128458ddea 100644
+> --- a/Documentation/admin-guide/cgroup-v1/memcg_test.rst
+> +++ b/Documentation/admin-guide/cgroup-v1/memcg_test.rst
+> @@ -62,7 +62,7 @@ Please note that implementation details can be changed.
+>  
+>  	At cancel(), simply usage -= PAGE_SIZE.
+>  
+> -Under below explanation, we assume CONFIG_MEM_RES_CTRL_SWAP=y.
+> +Under below explanation, we assume CONFIG_SWAP=y.
+>  
 
-> Thanks.
-> 
+Applied, thanks.
 
-Thanks,
-Carlos
+jon
