@@ -1,51 +1,46 @@
-From: Kamalesh Babulal <kamalesh.babulal-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
-Subject: [PATCH] cgroup: clean up printk()
-Date: Tue,  1 Aug 2023 12:52:14 +0530
-Message-ID: <20230801072217.103554-1-kamalesh.babulal@oracle.com>
+From: Miaohe Lin <linmiaohe-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH] cgroup: minor cleanup for cgroup_local_stat_show()
+Date: Tue, 1 Aug 2023 15:48:09 +0800
+Message-ID: <3ec1f5d9-4887-4583-a973-92298a9bc924@huawei.com>
+References: <20230723031932.3152951-1-linmiaohe@huawei.com>
+ <ZMBERCXR27X_gRAt@slm.duckdns.org>
+ <ec3df402-7681-3d0c-b9ce-d50eb7383b1e@huawei.com>
+ <719a19c4-3be5-2260-7349-b3f1bb774f4f@huawei.com>
+ <ZMhIFUsxEtA_B781@slm.duckdns.org>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
- subject : date : message-id : content-transfer-encoding : content-type :
- mime-version; s=corp-2023-03-30;
- bh=V+kYGbsJzklsoofs/xc8UeJfE4hfedq+SXIGbVs2jIE=;
- b=xSBTJTD32TEmS/5/KbhAgmPuk/2cOohqg71QyfmQkFReojvCnNuDAjpAKlu2Dv7lGgou
- 2cOqQfbCzvD7fs1BJzmVb2Zs/uiXm7/gmlsR0SvWjrIF4qx9r1dP+FD1jVsn7Gcr0qWE
- TYg+yuVjac0CISgqEQ3OYjP9YhwWYxHGArIsFtKNqA2fIusK0pqcv9i9IdKFNWlqvtf1
- WmdVNK8AMxG6CrRbi/SABLrAViEEpPNQ38rxJm90RONGe4T1/qRQVmhus3cjyZGGW89Y
- D/zhG0i3eJ13c6ovgmaeFAFE9KYfHgO7/3BBGmYVVvHCqcXrQieW1QwMqS7u10Gw+Rvj jw== 
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=V+kYGbsJzklsoofs/xc8UeJfE4hfedq+SXIGbVs2jIE=;
- b=jX6Ia1i1YSmhJ15pM/dqZPQ2/RvUX6KWMbtw3POaNlQnIBwKaR1bQBPQUDaH/OpBWnPl2S1sjMAJQsp8eq3B6FN6rWrn6ye+j1MrPARN5zQ3xKM6AC/PY/Tt81V8hYr1oprJlYh1uktPO4miQKV2hGBjtTrS8420h0JTHA7ImSA=
+In-Reply-To: <ZMhIFUsxEtA_B781-NiLfg/pYEd1N0TnZuCh8vA@public.gmane.org>
+Content-Language: en-US
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Cc: Tom Hromatka <tom.hromatka-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-Convert the only printk() to use pr_*() helper. No functional change.
+On 2023/8/1 7:47, Tejun Heo wrote:
+> On Thu, Jul 27, 2023 at 07:50:11PM +0800, Miaohe Lin wrote:
+>> On 2023/7/26 9:06, Miaohe Lin wrote:
+>>> On 2023/7/26 5:53, Tejun Heo wrote:
+>>>> On Sun, Jul 23, 2023 at 11:19:32AM +0800, Miaohe Lin wrote:
+>>>>> Make it under CONFIG_CGROUP_SCHED to rid of __maybe_unused annotation.
+>>>>> Also put cgroup_tryget_css() inside CONFIG_CGROUP_SCHED as it's only
+>>>>> called when CONFIG_CGROUP_SCHED. No functional change intended.
+>>>>>
+>>>>> Signed-off-by: Miaohe Lin <linmiaohe-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+>>>>
+>>>> Patch doesn't apply to cgroup/for-6.6. Can you please respin?
+>>>
+>>> Sure. Will resend the patch based on cgroup/for-6.6.
+>>
+>> The commit "sched: add throttled time stat for throttled children" is still in the linux-next tree. So I think I have
+>> to wait for it to be merged into cgroup tree first.
+> 
+> You can just send the patch against cgroup/for-6.6 branch. We can sort out
+> the merge conflicts later.
 
-Signed-off-by: Kamalesh Babulal <kamalesh.babulal-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
----
- kernel/cgroup/cgroup.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+Do you mean send the patch against cgroup/for-6.6 branch assuming commit "sched: add throttled time stat for throttled children"
+has been merged into cgroup/for-6.6 branch? It seems the current code in that branch is fine itself.
 
-diff --git a/kernel/cgroup/cgroup.c b/kernel/cgroup/cgroup.c
-index c7aafb59ecf2..33b586db14ef 100644
---- a/kernel/cgroup/cgroup.c
-+++ b/kernel/cgroup/cgroup.c
-@@ -6086,8 +6086,8 @@ int __init cgroup_init(void)
- 			continue;
- 
- 		if (cgroup1_ssid_disabled(ssid))
--			printk(KERN_INFO "Disabling %s control group subsystem in v1 mounts\n",
--			       ss->name);
-+			pr_info("Disabling %s control group subsystem in v1 mounts\n",
-+				ss->name);
- 
- 		cgrp_dfl_root.subsys_mask |= 1 << ss->id;
- 
--- 
-2.41.0
+Thanks for your advice.
+
 
