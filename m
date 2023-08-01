@@ -1,37 +1,39 @@
-From: Miaohe Lin <linmiaohe-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Subject: [PATCH] cgroup: fix obsolete function name above css_free_rwork_fn()
-Date: Tue, 1 Aug 2023 20:40:34 +0800
-Message-ID: <20230801124034.2245419-1-linmiaohe@huawei.com>
+From: Miaohe Lin <linmiaohe@huawei.com>
+Subject: [PATCH] mm/memcg: update obsolete comment above parent_mem_cgroup()
+Date: Tue, 1 Aug 2023 20:43:59 +0800
+Message-ID: <20230801124359.2266860-1-linmiaohe@huawei.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7BIT
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linmiaohe-hv44wF8Li93QT0dZR+AlfA@public.gmane.org
+To: akpm@linux-foundation.org
+Cc: linux-mm@kvack.org, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, linmiaohe@huawei.com
 
-Since commit 8f36aaec9c92 ("cgroup: Use rcu_work instead of explicit rcu
-and work item"), css_free_work_fn has been renamed to css_free_rwork_fn.
-Update corresponding comment.
+Since commit bef8620cd8e0 ("mm: memcg: deprecate the non-hierarchical
+mode"), use_hierarchy is already deprecated. And it's further removed
+via commit 9d9d341df4d5 ("cgroup: remove obsoleted broken_hierarchy
+and warned_broken_hierarchy"). Update corresponding comment.
 
-Signed-off-by: Miaohe Lin <linmiaohe-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Signed-off-by: Miaohe Lin <linmiaohe@huawei.com>
 ---
- kernel/cgroup/cgroup.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ include/linux/memcontrol.h | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
 
-diff --git a/kernel/cgroup/cgroup.c b/kernel/cgroup/cgroup.c
-index c7aafb59ecf2..d620d7ec47e8 100644
---- a/kernel/cgroup/cgroup.c
-+++ b/kernel/cgroup/cgroup.c
-@@ -5301,7 +5301,7 @@ static struct cftype cgroup_psi_files[] = {
-  *    RCU callback.
+diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
+index 3bd00f224224..11810a2cfd2d 100644
+--- a/include/linux/memcontrol.h
++++ b/include/linux/memcontrol.h
+@@ -863,8 +863,7 @@ static inline struct mem_cgroup *lruvec_memcg(struct lruvec *lruvec)
+  * parent_mem_cgroup - find the accounting parent of a memcg
+  * @memcg: memcg whose parent to find
   *
-  * 4. After the grace period, the css can be freed.  Implemented in
-- *    css_free_work_fn().
-+ *    css_free_rwork_fn().
-  *
-  * It is actually hairier because both step 2 and 4 require process context
-  * and thus involve punting to css->destroy_work adding two additional
+- * Returns the parent memcg, or NULL if this is the root or the memory
+- * controller is in legacy no-hierarchy mode.
++ * Returns the parent memcg, or NULL if this is the root.
+  */
+ static inline struct mem_cgroup *parent_mem_cgroup(struct mem_cgroup *memcg)
+ {
 -- 
 2.33.0
 
