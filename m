@@ -1,80 +1,48 @@
-From: Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH v3] mm: memcg: use rstat for non-hierarchical stats
-Date: Wed, 2 Aug 2023 01:11:53 -0700
-Message-ID: <CAJD7tkY4hTTCfqSGa_XexbH=WSTJ4WXWeMXSU+6KW8qfr7agfQ@mail.gmail.com>
-References: <20230726153223.821757-1-yosryahmed@google.com>
- <20230726153223.821757-2-yosryahmed@google.com> <ZMkXDuwD8RFRKnNQ@dhcp22.suse.cz>
- <CAJD7tkbb8AWR-duWb+at-S9MMz48b0JqnM+b5ok83TzvXvPb+A@mail.gmail.com>
- <CAJD7tkbZi16w4mYngVK8qA84FMijmHvwzMjHfrJiCsV=WjixOA@mail.gmail.com> <ZMoIYLwITUZzXp4C@dhcp22.suse.cz>
+From: Lucas Karpinski <lkarpins-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Subject: [PATCH] kselftests: cgroup: fix kmem test slab1 check
+Date: Wed, 2 Aug 2023 14:41:05 -0400
+Message-ID: <m6jbt5hzq27ygt3l4xyiaxxb7i5auvb2lahbcj4yaxxigqzu5e@5rn6s2yjzv7u>
 Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20221208; t=1690963950; x=1691568750;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=mbfWfMV50AarvWD5inw6HeTT4LJutE3Rh+ubSQUN7nw=;
-        b=A7CXYSrzdB5JXUD+7TCbtjYXqsDsijx1Qdih2Ww0e826+V/wI+JeaBTYRRV/cOs7yL
-         15UHOQr5FA1Sx0dmaVxVTdw+klq5kFNneo6tqFVCNM4hFZLZCKgk2utxHXdGIvlPgZLa
-         3dEZUaL+11e8wHIVj5u5stdyVVQM22KYzS/H4AYYeyTqrtkdVY76SxyKBSvcEEXB2sJu
-         QUE2bQoTGJXp4/Gw1pzCfyUMM8pEEBvcN/Xg3y3sJrL56Me5G8XV4GI9Auc269FYZD4V
-         0WwHsAbVbENXuGd6QRWFeGdXWdSGTGshDHcFjYRwqbkvlUFwGwJKWgwsXKuxzbI0+hWa
-         Iecg==
-In-Reply-To: <ZMoIYLwITUZzXp4C-2MMpYkNvuYDjFM9bn6wA6Q@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1691001677;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type;
+        bh=1UYMawsk0oCgqDs8Xb3YIEArI5yAvmzUq9f9k4hm6BI=;
+        b=W9nA/g8AbvhKkRyD8y5SWla6yhuSnSEKfURHKnpY5nnGG3k6i8gTkSITTsvrj7B/IuDUFY
+        LyIjkOdl7IPNEF8bcEfcpk8q+oqvDXlf7OnbWjFDr+JNJW25F5rdyPqj2IwU/56kgZBS46
+        Jn7YIldr7ekwXnKJv9JVF9W8SXqBXfM=
+Content-Disposition: inline
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="utf-8"
-To: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
-Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Muchun Song <muchun.song-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org, shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org, shuah-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org
+Cc: muchun.song-fxUVXftIFDnyG1zEObXtfA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kselftest-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Wed, Aug 2, 2023 at 12:40=E2=80=AFAM Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org> wrot=
-e:
->
-> On Tue 01-08-23 10:29:39, Yosry Ahmed wrote:
-> > On Tue, Aug 1, 2023 at 9:39=E2=80=AFAM Yosry Ahmed <yosryahmed@google.c=
-om> wrote:
-> [...]
-> > > > Have you measured any potential regression for cgroup v2 which coll=
-ects
-> > > > all this data without ever using it (AFAICS)?
-> > >
-> > > I did not. I did not expect noticeable regressions given that all the
-> > > extra work is done during flushing, which should mostly be done by th=
-e
-> > > asynchronous worker, but can also happen in the stats reading context=
-.
-> > > Let me run the same script on cgroup v2 just in case and report back.
-> >
-> > A few runs on mm-unstable with this patch:
-> >
-> > # time cat /sys/fs/cgroup/cg*/memory.stat > /dev/null
->
-> Is this really representative test to make? I would have expected the
-> overhead would be mostly in mem_cgroup_css_rstat_flush (if it is visible
-> at all of course). This would be more likely visible in all cpus busy
-> situation (you can try heavy parallel kernel build from tmpfs for
-> example).
+test_kmem_basic creates 100,000 negative dentries, with each one mapping
+to a slab object. After memory.high is set, these are reclaimed through
+the shrink_slab function call which reclaims all 100,000 entries. The test
+passes the majority of the time because when slab1 is calculated, it is
+often above 0, however, 0 is also an acceptable value.
 
+Signed-off-by: Lucas Karpinski <lkarpins-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+---
+ tools/testing/selftests/cgroup/test_kmem.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-I see. You are more worried about asynchronous flushing eating cpu
-time rather than the synchronous flushing being slower. In fact, my
-test is actually not representative at all because probably most of
-the cgroups either do not have updates or the asynchronous flusher got
-to them first.
+diff --git a/tools/testing/selftests/cgroup/test_kmem.c b/tools/testing/selftests/cgroup/test_kmem.c
+index 258ddc565deb..ba0a0bfc5a98 100644
+--- a/tools/testing/selftests/cgroup/test_kmem.c
++++ b/tools/testing/selftests/cgroup/test_kmem.c
+@@ -71,7 +71,7 @@ static int test_kmem_basic(const char *root)
+ 
+ 	cg_write(cg, "memory.high", "1M");
+ 	slab1 = cg_read_key_long(cg, "memory.stat", "slab ");
+-	if (slab1 <= 0)
++	if (slab1 < 0)
+ 		goto cleanup;
+ 
+ 	current = cg_read_long(cg, "memory.current");
+-- 
+2.41.0
 
-Let me try a workload that is more parallel & cpu intensive and report
-back. I am thinking of parallel reclaim/refault loops since both
-reclaim and refault paths invoke stat updates and stat flushing.
-
->
-> [...]
->
-> > It looks like there are no regressions on cgroup v2 when reading the
-> > stats. Please let me know if you want me to send a new version with
-> > the cgroup v2 results as well in the commit log -- or I can just send
-> > a new commit log. Whatever is easier for Andrew.
->
-> Updating the changelog should be good enough.
-> --
-> Michal Hocko
-> SUSE Labs
