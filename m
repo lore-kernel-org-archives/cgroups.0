@@ -1,83 +1,59 @@
 From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH v5 4/5] cgroup/cpuset: Documentation update for partition
-Date: Wed, 2 Aug 2023 11:01:57 -1000
-Message-ID: <ZMrERWeIeEOGzXHO@slm.duckdns.org>
-References: <20230713172601.3285847-1-longman@redhat.com>
- <20230713172601.3285847-5-longman@redhat.com>
+Subject: Re: [External] Re: [PATCH] cgroup/rstat: record the cumulative
+ per-cpu time of cgroup and its descendants
+Date: Wed, 2 Aug 2023 11:39:41 -1000
+Message-ID: <ZMrNHf2tg8AZ2F0z@slm.duckdns.org>
+References: <20230717093612.40846-1-jiahao.os@bytedance.com>
+ <ZLWb-LsBD041hMvr@slm.duckdns.org>
+ <2655026d-6ae4-c14c-95b0-4177eefa434f@bytedance.com>
+ <ZLcJ1nH8KzWzoQWj@slm.duckdns.org>
+ <b4424767-dce7-08a9-3759-43cc9dfa4273@bytedance.com>
+ <3d2b68bf-9f40-c779-dcfd-4cf9939edecc@bytedance.com>
+ <ZMKs_GpHEW6Pfusj@slm.duckdns.org>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20221208; t=1691010119; x=1691614919;
+        d=gmail.com; s=20221208; t=1691012384; x=1691617184;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:sender:from:to:cc:subject:date:message-id
          :reply-to;
-        bh=B5eoW13Er2byi3F5AVWdPVCJvLFofz+zD3HXMr0r2JM=;
-        b=P1bVrDOw/XQIdFJy0p0oko56FRhKc/+1jthxROevZRwecRH5Uht2TndqyzxXrGGMog
-         7/30DAYMILosXblR2uDbNqmfTJrJMBW568BcowS8vvbiHkiYdm130TChDOkV8z2pXcMs
-         JIQa7odjTt+Hxyp0rxDAR4JkZ68MimCN76/dauJ6lareMIriz1fgAKe/SjYkFD9foGyk
-         RufJNhvEQAOyBDZciJv+71xUTQgxVCkM9UKYs4VDR4ZbVvgFgnbLsUdnW8PCp73IgO3Z
-         188Gk8UPI+WKN3h4oIfAgFSkQZ2mK/9lQRZpLS9Xo5/AK5XjzeLp31hGu5CfFmzyVgKt
-         ryiw==
+        bh=dg1csT6sQap9Rjj/9a7I+zdOC12NSKIzfI8UlxG6Z6s=;
+        b=D5od+G8Q5l6okpcSGorDH8rVDi8dKCBthkqpfYBIBJlUCMIh9J5CpRVct3JKaQvA1B
+         IOL7SasPOzvfL8/mSWNYFSsfFCQWNM5JxkOGVwAatzOmGjXIBKMplWnSyh0G8xhrJ2BM
+         luNIHpVg2gOIh/cf9EmBsozBHMIWBgjLI8ckR675XgH16xGIs4qLRva01KuoNNRPl4kZ
+         oOcthTE0Bt20SOx7bSL00SsleLB3chZI++TfTdJDvk80Z475KNWTj+/NlOOKhwdz6wo5
+         yYKiBWxas6X63T8Vks8qHaljufFTCxBvS8BmXseG1AXraZZ6CUv8U3WDqygStNlRZWxa
+         Z8rw==
 Sender: Tejun Heo <htejun-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 Content-Disposition: inline
-In-Reply-To: <20230713172601.3285847-5-longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+In-Reply-To: <ZMKs_GpHEW6Pfusj-NiLfg/pYEd1N0TnZuCh8vA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Cc: Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Christian Brauner <brauner-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Jonathan Corbet <corbet-T1hC0tSOHrs@public.gmane.org>, Shuah Khan <shuah-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Juri Lelli <juri.lelli-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Dietmar Eggemann <dietmar.eggemann-5wv7dgnIgG8@public.gmane.org>, Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny-IBi9RG/b67k@public.gmane.org>, Giuseppe Scrivano <gscrivan-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+To: Hao Jia <jiahao.os-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
+Cc: lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, mkoutny-IBi9RG/b67k@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-Hello, Waiman.
+Hello,
 
-On Thu, Jul 13, 2023 at 01:26:00PM -0400, Waiman Long wrote:
-...
-> +	When a valid partition is created, the value of this file will
-> +	be automatically set to the largest subset of "cpuset.cpus"
-> +	that can be granted for exclusive access from its parent if
-> +	its value isn't explicitly set before.
-> +
-> +	Users can also manually set it to a value that is different from
-> +	"cpuset.cpus".	In this case, its value becomes invariant and
-> +	may no longer reflect the effective value that is being used
-> +	to create a valid partition if some dependent cpuset control
-> +	files are modified.
-> +
-> +	There are constraints on what values are acceptable to this
-> +	control file.  If a null string is provided, it will invalidate a
-> +	valid partition root and reset its invariant state.  Otherwise,
-> +	its value must be a subset of the cgroup's "cpuset.cpus" value
-> +	and the parent cgroup's "cpuset.cpus.exclusive" value.
+On Thu, Jul 27, 2023 at 07:44:28AM -1000, Tejun Heo wrote:
+> Oh yeah, I do. I'm just thinking whether we also want to expose that in the
+> cgroupfs. We are currently not showing anything per-cpu and the output
+> formatting gets nasty with a huge number of CPUs, so maybe that's not going
+> to work out all that well. Anyways, I'll get back to you next week.
 
-As I wrote before, the hidden state really bothers me. This is fine when
-there is one person configuring the system, but working with automated
-management and monitoring tools can be really confusing at scale when there
-are hidden states like this as there's no way to determine the current state
-by looking at what's visible at the interface level.
+I couldn't come up with an answer. Let's go ahead with adding the field but
+can you please do the followings?
 
-Can't we do something like the following?
+* Name it to something like subtree_bstat instead of cumul_bstat. The
+  counters are all cumulative.
 
-* cpuset.cpus.exclusive can be set to any possible cpus. While I'm not
-  completely against failing certain writes (e.g. siblings having
-  overlapping masks is never correct or useful), expanding that to
-  hierarchical checking quickly gets into trouble around what happens when
-  an ancestor retracts a CPU.
+* Are you sure the upward propagation logic is correct? It's calculating
+  global delta and then propagating to the per-cpu delta of the parent. Is
+  that correct because the two delta calculations always end up the same?
 
-  I don't think it makes sense to reject writes if the applied rules can't
-  be invariants for the same reason given for avoiding hidden states - the
-  system can be managed by multiple agents at different delegation levels.
-  One layer changing resource configuration shouldn't affect the success or
-  failure of configuration operations in other layers.
-
-* cpuset.cpus.exclusive.effective shows what's currently available for
-  exclusive usage - ie. what'd be used for a partition if the cgroup is to
-  become a partition at that point.
-
-  This, I think, gets rid of the need for the hidden states. If .exclusive
-  of a child of a partition is empty, its .exclusive.effective can show all
-  the CPUs allowed in it. If .exclusive is set then, .exclusive.effective
-  shows the available subset.
-
-What do you think?
+* Please add a comment explaining that the field is not currently used
+  outside of being read from bpf / drgn and what not and that we're still
+  trying to determine how to expose that in the cgroupfs interface.
 
 Thanks.
 
