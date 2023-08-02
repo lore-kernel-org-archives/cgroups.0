@@ -1,48 +1,63 @@
-From: Lucas Karpinski <lkarpins-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Subject: [PATCH] kselftests: cgroup: fix kmem test slab1 check
-Date: Wed, 2 Aug 2023 14:41:05 -0400
-Message-ID: <m6jbt5hzq27ygt3l4xyiaxxb7i5auvb2lahbcj4yaxxigqzu5e@5rn6s2yjzv7u>
+From: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH -next] cgroup/cpuset: fix kernel-doc
+Date: Wed, 2 Aug 2023 15:25:46 -0400
+Message-ID: <2dffccd0-d7a3-58aa-6dc6-d44ac67f6e99@redhat.com>
+References: <20230802030412.173344-1-caixinchen1@huawei.com>
 Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1691001677;
+        s=mimecast20190719; t=1691004349;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type;
-        bh=1UYMawsk0oCgqDs8Xb3YIEArI5yAvmzUq9f9k4hm6BI=;
-        b=W9nA/g8AbvhKkRyD8y5SWla6yhuSnSEKfURHKnpY5nnGG3k6i8gTkSITTsvrj7B/IuDUFY
-        LyIjkOdl7IPNEF8bcEfcpk8q+oqvDXlf7OnbWjFDr+JNJW25F5rdyPqj2IwU/56kgZBS46
-        Jn7YIldr7ekwXnKJv9JVF9W8SXqBXfM=
-Content-Disposition: inline
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=Prrsefdk3q3EqmcQR6Ob1G4yDp+W6OWglyjzE+QR0R8=;
+        b=Xml2rYQY+/9npUwZWTghhexNNk0+7ytN1YzJzF5/EGR6AZ0JWUIXB3L0Jdm7wQgtGguRwH
+        iHRGqPrh5gCAMp2fUF+E8/EAuHTrBFexdrruIaHTdmxXb0FJLkHJUhc85ioFjXv3umT/dW
+        q8xlqhW4Lx9PTqnze0p9FoMdkL1pGWk=
+Content-Language: en-US
+In-Reply-To: <20230802030412.173344-1-caixinchen1-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org, shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org, shuah-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org
-Cc: muchun.song-fxUVXftIFDnyG1zEObXtfA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kselftest-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Type: text/plain; charset="us-ascii"; format="flowed"
+To: Cai Xinchen <caixinchen1-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-test_kmem_basic creates 100,000 negative dentries, with each one mapping
-to a slab object. After memory.high is set, these are reclaimed through
-the shrink_slab function call which reclaims all 100,000 entries. The test
-passes the majority of the time because when slab1 is calculated, it is
-often above 0, however, 0 is also an acceptable value.
+On 8/1/23 23:04, Cai Xinchen wrote:
+> Add kernel-doc of param @rotor to fix warnings:
+>
+> kernel/cgroup/cpuset.c:4162: warning: Function parameter or member
+> 'rotor' not described in 'cpuset_spread_node'
+> kernel/cgroup/cpuset.c:3771: warning: Function parameter or member
+> 'work' not described in 'cpuset_hotplug_workfn'
+>
+> Signed-off-by: Cai Xinchen <caixinchen1-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+> ---
+>   kernel/cgroup/cpuset.c | 2 ++
+>   1 file changed, 2 insertions(+)
+>
+> diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
+> index b278b60ed788..58ec88efa4f8 100644
+> --- a/kernel/cgroup/cpuset.c
+> +++ b/kernel/cgroup/cpuset.c
+> @@ -3753,6 +3753,7 @@ static void cpuset_hotplug_update_tasks(struct cpuset *cs, struct tmpmasks *tmp)
+>   
+>   /**
+>    * cpuset_hotplug_workfn - handle CPU/memory hotunplug for a cpuset
+> + * @work: unused
+>    *
+>    * This function is called after either CPU or memory configuration has
+>    * changed and updates cpuset accordingly.  The top_cpuset is always
+> @@ -4135,6 +4136,7 @@ bool cpuset_node_allowed(int node, gfp_t gfp_mask)
+>   
+>   /**
+>    * cpuset_spread_node() - On which node to begin search for a page
+> + * @rotor: round robin rotor
+>    *
+>    * If a task is marked PF_SPREAD_PAGE or PF_SPREAD_SLAB (as for
+>    * tasks in a cpuset with is_spread_page or is_spread_slab set),
 
-Signed-off-by: Lucas Karpinski <lkarpins-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
----
- tools/testing/selftests/cgroup/test_kmem.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Looks good to me.
 
-diff --git a/tools/testing/selftests/cgroup/test_kmem.c b/tools/testing/selftests/cgroup/test_kmem.c
-index 258ddc565deb..ba0a0bfc5a98 100644
---- a/tools/testing/selftests/cgroup/test_kmem.c
-+++ b/tools/testing/selftests/cgroup/test_kmem.c
-@@ -71,7 +71,7 @@ static int test_kmem_basic(const char *root)
- 
- 	cg_write(cg, "memory.high", "1M");
- 	slab1 = cg_read_key_long(cg, "memory.stat", "slab ");
--	if (slab1 <= 0)
-+	if (slab1 < 0)
- 		goto cleanup;
- 
- 	current = cg_read_long(cg, "memory.current");
--- 
-2.41.0
+Acked-by: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 
