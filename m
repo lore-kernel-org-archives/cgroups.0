@@ -1,61 +1,84 @@
-From: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Subject: Re: [PATCH v2] selftests: cgroup: fix test_kmem_basic slab1 check
-Date: Thu, 3 Aug 2023 12:08:28 -0400
-Message-ID: <20230803160828.GA223746@cmpxchg.org>
-References: <ix6vzgjqay2x7bskle7pypoint4nj66fwq7odvd5hektatvp2l@kukoifnfj3dr>
+From: Lucas Karpinski <lkarpins@redhat.com>
+Subject: Re: [PATCH] selftests: cgroup: fix test_kmem_basic false positives
+Date: Thu, 3 Aug 2023 12:13:26 -0400
+Message-ID: <tqt5od6fuwid5qf2vjhkxef2swlccpki5oikx4pdoabyycrdpe@kzx2rpscvwgs>
+References: <20230801135632.1768830-1-hannes@cmpxchg.org>
+ <c40ca485-f52e-411a-9f33-3adabc53c0fc@paulmck-laptop>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=cmpxchg-org.20221208.gappssmtp.com; s=20221208; t=1691078909; x=1691683709;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=+XToHAF3Tp6ttDMOwj4eUjXmrH43hQkGliAE52bu3OI=;
-        b=nwBfuP1EF89+aISDQLUPsPs557pMHRTYHh/moPt/GEUf3VZSegFJN2WLjwtOxNaeVr
-         tELhzCnpQiVVzn/p9TxTM40ypLAI9Wl8Dm00Ma0u6gCG9cYdJZyEwo/8Du3Xb48kiI3S
-         aj+mMtHg5P4dd9nwwPCbs602BbZueBi9x/ZXCX+ClObKOCBNOJ2QGS2u1cys65T6jh4F
-         sdy7Pm6FD7EqT02Lj5dytAzyu/Lm8M/yCK7CYer/QhZjZ1QXAsA3k1m/WtIhfHYpfDaQ
-         JTwBdRXqxtir8UKBvShgRNW5OjaHl24g01HNtAzPqjO+63i2Pwtjedb13yOisZI7uZQ1
-         KP1A==
+Return-path: <linux-kernel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1691079218;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=NBGgPFoZzZurgnvdLr2MN4Fp3sMcoIPkqmKxp6vR8Tk=;
+        b=OaEUAdm2ZBPfMQuFubVxwTt801x2nffLCOcg3J90JvTxz6+FC3JFKAdDhMPp3+IZJvOVNa
+        JEty4vYM93xuRcuvCFdltXgIw2Oofgd/ulDripzSEcKrtiW24Nmv9PM4Xq5pFalTzlz/UV
+        PwpTBO9n0Ruu/FkfArOy4/ukApRjLMg=
 Content-Disposition: inline
-In-Reply-To: <ix6vzgjqay2x7bskle7pypoint4nj66fwq7odvd5hektatvp2l@kukoifnfj3dr>
+In-Reply-To: <c40ca485-f52e-411a-9f33-3adabc53c0fc@paulmck-laptop>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Lucas Karpinski <lkarpins-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Cc: Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Muchun Song <muchun.song-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Shuah Khan <shuah-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kselftest-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: "Paul E. McKenney" <paulmck@kernel.org>
+Cc: Johannes Weiner <hannes@cmpxchg.org>, Andrew Morton <akpm@linux-foundation.org>, Roman Gushchin <roman.gushchin@linux.dev>, Michal Hocko <mhocko@suse.com>, linux-kselftest@vger.kernel.org, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Thu, Aug 03, 2023 at 12:00:47PM -0400, Lucas Karpinski wrote:
-> test_kmem_basic creates 100,000 negative dentries, with each one mapping
-> to a slab object. After memory.high is set, these are reclaimed through
-> the shrink_slab function call which reclaims all 100,000 entries. The
-> test passes the majority of the time because when slab1 is calculated,
-> it is often above 0, however, 0 is also an acceptable value.
+On Tue, Aug 01, 2023 at 09:39:28AM -0700, Paul E. McKenney wrote:
+> On Tue, Aug 01, 2023 at 09:56:32AM -0400, Johannes Weiner wrote:
+> > This test fails routinely in our prod testing environment, and I can
+> > reproduce it locally as well.
+> > 
+> > The test allocates dcache inside a cgroup, then drops the memory limit
+> > and checks that usage drops correspondingly. The reason it fails is
+> > because dentries are freed with an RCU delay - a debugging sleep shows
+> > that usage drops as expected shortly after.
+> > 
+> > Insert a 1s sleep after dropping the limit. This should be good
+> > enough, assuming that machines running those tests are otherwise not
+> > very busy.
+> > 
+> > Signed-off-by: Johannes Weiner <hannes@cmpxchg.org>
 > 
-> Signed-off-by: Lucas Karpinski <lkarpins-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+> I am putting together something more formal, but this will certainly
+> improve things, as Johannes says, assuming the system goes mostly
+> idle during that one-second wait.  So:
+> 
+> Acked-by: Paul E. McKenney <paulmck@kernel.org>
+> 
+> Yes, there are corner cases, such as the system having millions of
+> RCU callbacks queued and being unable to invoke them all during that
+> one-second interval.  But that is a corner case, and that is exactly
+> why I will be putting together something more formal.  ;-)
+> 
+> 							Thanx, Paul
+> 
+> > ---
+> >  tools/testing/selftests/cgroup/test_kmem.c | 4 ++++
+> >  1 file changed, 4 insertions(+)
+> > 
+> > diff --git a/tools/testing/selftests/cgroup/test_kmem.c b/tools/testing/selftests/cgroup/test_kmem.c
+> > index 258ddc565deb..1b2cec9d18a4 100644
+> > --- a/tools/testing/selftests/cgroup/test_kmem.c
+> > +++ b/tools/testing/selftests/cgroup/test_kmem.c
+> > @@ -70,6 +70,10 @@ static int test_kmem_basic(const char *root)
+> >  		goto cleanup;
+> >  
+> >  	cg_write(cg, "memory.high", "1M");
+> > +
+> > +	/* wait for RCU freeing */
+> > +	sleep(1);
+> > +
+> >  	slab1 = cg_read_key_long(cg, "memory.stat", "slab ");
+> >  	if (slab1 <= 0)
+> >  		goto cleanup;
+> > -- 
+> > 2.41.0
+> >
 
-Acked-by: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+The same issue exists in the test case test_kmem_memcg_deletion. I
+wouldn't mind posting the patch, but it seems you want to propose
+something more formal. Let me know your opinion.
 
-> @@ -71,7 +71,7 @@ static int test_kmem_basic(const char *root)
->  
->  	cg_write(cg, "memory.high", "1M");
->  	slab1 = cg_read_key_long(cg, "memory.stat", "slab ");
-> -	if (slab1 <= 0)
-> +	if (slab1 < 0)
->  		goto cleanup;
-
-This conflicts with a recent patch already queued up in -mm:
-
-  selftests: cgroup: fix test_kmem_basic false positives
-
-which adds a sleep(1) between cg_write() and cg_read_key_long().
-
-Can you please rebase on top of
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/akpm/mm.git mm-unstable
-
-and re-send the patch with
-
-  To: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
-
-? Thanks
+Thanks,
+Lucas
 
