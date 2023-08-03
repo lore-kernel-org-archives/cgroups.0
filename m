@@ -1,54 +1,121 @@
-From: Miaohe Lin <linmiaohe-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH] cgroup: minor cleanup for cgroup_local_stat_show()
-Date: Thu, 3 Aug 2023 09:38:10 +0800
-Message-ID: <404ee96a-bde3-1fa4-7985-9edbf41b248a@huawei.com>
-References: <20230723031932.3152951-1-linmiaohe@huawei.com>
- <ZMBERCXR27X_gRAt@slm.duckdns.org>
- <ec3df402-7681-3d0c-b9ce-d50eb7383b1e@huawei.com>
- <719a19c4-3be5-2260-7349-b3f1bb774f4f@huawei.com>
- <ZMhIFUsxEtA_B781@slm.duckdns.org>
- <3ec1f5d9-4887-4583-a973-92298a9bc924@huawei.com>
- <ZMqxCVOkU7pKK9OO@slm.duckdns.org>
+From: Miaohe Lin <linmiaohe@huawei.com>
+Subject: [PATCH] cgroup: minor cleanup for cgroup_local_stat_show()
+Date: Thu, 3 Aug 2023 19:31:23 +0800
+Message-ID: <20230803113123.577023-1-linmiaohe@huawei.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <ZMqxCVOkU7pKK9OO-NiLfg/pYEd1N0TnZuCh8vA@public.gmane.org>
-Content-Language: en-US
+Content-Transfer-Encoding: 7BIT
+Return-path: <linux-kernel-owner@vger.kernel.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: akpm@linux-foundation.org
+Cc: tj@kernel.org, hannes@cmpxchg.org, lizefan.x@bytedance.com, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, linmiaohe@huawei.com
 
-On 2023/8/3 3:39, Tejun Heo wrote:
-> On Tue, Aug 01, 2023 at 03:48:09PM +0800, Miaohe Lin wrote:
->> On 2023/8/1 7:47, Tejun Heo wrote:
->>> On Thu, Jul 27, 2023 at 07:50:11PM +0800, Miaohe Lin wrote:
->>>> On 2023/7/26 9:06, Miaohe Lin wrote:
->>>>> On 2023/7/26 5:53, Tejun Heo wrote:
->>>>>> On Sun, Jul 23, 2023 at 11:19:32AM +0800, Miaohe Lin wrote:
->>>>>>> Make it under CONFIG_CGROUP_SCHED to rid of __maybe_unused annotation.
->>>>>>> Also put cgroup_tryget_css() inside CONFIG_CGROUP_SCHED as it's only
->>>>>>> called when CONFIG_CGROUP_SCHED. No functional change intended.
->>>>>>>
->>>>>>> Signed-off-by: Miaohe Lin <linmiaohe-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
->>>>>>
->>>>>> Patch doesn't apply to cgroup/for-6.6. Can you please respin?
->>>>>
->>>>> Sure. Will resend the patch based on cgroup/for-6.6.
->>>>
->>>> The commit "sched: add throttled time stat for throttled children" is still in the linux-next tree. So I think I have
->>>> to wait for it to be merged into cgroup tree first.
->>>
->>> You can just send the patch against cgroup/for-6.6 branch. We can sort out
->>> the merge conflicts later.
->>
->> Do you mean send the patch against cgroup/for-6.6 branch assuming commit "sched: add throttled time stat for throttled children"
->> has been merged into cgroup/for-6.6 branch? It seems the current code in that branch is fine itself.
-> 
-> Ah, I see. That patch isn't going to go through cgroup/for-6.6. It will go
-> directly from -mm to mainline when the merge window opens. Can you please
-> resend the patch to Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org> with me cc'd?
-> 
+Make it under CONFIG_CGROUP_SCHED to rid of __maybe_unused annotation.
+Also put cgroup_tryget_css() inside CONFIG_CGROUP_SCHED as it's only
+called when CONFIG_CGROUP_SCHED. No functional change intended.
 
-Will do. Thanks. :)
+Signed-off-by: Miaohe Lin <linmiaohe@huawei.com>
+---
+ kernel/cgroup/cgroup.c | 63 ++++++++++++++++++++++--------------------
+ 1 file changed, 33 insertions(+), 30 deletions(-)
+
+diff --git a/kernel/cgroup/cgroup.c b/kernel/cgroup/cgroup.c
+index c2c97529235a..e9239651cf4a 100644
+--- a/kernel/cgroup/cgroup.c
++++ b/kernel/cgroup/cgroup.c
+@@ -492,28 +492,6 @@ static struct cgroup_subsys_state *cgroup_css(struct cgroup *cgrp,
+ 		return &cgrp->self;
+ }
+ 
+-/**
+- * cgroup_tryget_css - try to get a cgroup's css for the specified subsystem
+- * @cgrp: the cgroup of interest
+- * @ss: the subsystem of interest
+- *
+- * Find and get @cgrp's css associated with @ss.  If the css doesn't exist
+- * or is offline, %NULL is returned.
+- */
+-static struct cgroup_subsys_state *cgroup_tryget_css(struct cgroup *cgrp,
+-						     struct cgroup_subsys *ss)
+-{
+-	struct cgroup_subsys_state *css;
+-
+-	rcu_read_lock();
+-	css = cgroup_css(cgrp, ss);
+-	if (css && !css_tryget_online(css))
+-		css = NULL;
+-	rcu_read_unlock();
+-
+-	return css;
+-}
+-
+ /**
+  * cgroup_e_css_by_mask - obtain a cgroup's effective css for the specified ss
+  * @cgrp: the cgroup of interest
+@@ -3655,6 +3633,28 @@ static int cgroup_stat_show(struct seq_file *seq, void *v)
+ }
+ 
+ #ifdef CONFIG_CGROUP_SCHED
++/**
++ * cgroup_tryget_css - try to get a cgroup's css for the specified subsystem
++ * @cgrp: the cgroup of interest
++ * @ss: the subsystem of interest
++ *
++ * Find and get @cgrp's css associated with @ss.  If the css doesn't exist
++ * or is offline, %NULL is returned.
++ */
++static struct cgroup_subsys_state *cgroup_tryget_css(struct cgroup *cgrp,
++						     struct cgroup_subsys *ss)
++{
++	struct cgroup_subsys_state *css;
++
++	rcu_read_lock();
++	css = cgroup_css(cgrp, ss);
++	if (css && !css_tryget_online(css))
++		css = NULL;
++	rcu_read_unlock();
++
++	return css;
++}
++
+ static int cgroup_extra_stat_show(struct seq_file *seq, int ssid)
+ {
+ 	struct cgroup *cgrp = seq_css(seq)->cgroup;
+@@ -3686,8 +3686,9 @@ static int cpu_stat_show(struct seq_file *seq, void *v)
+ 	return ret;
+ }
+ 
+-static int __maybe_unused cgroup_local_stat_show(struct seq_file *seq,
+-						 struct cgroup *cgrp, int ssid)
++#ifdef CONFIG_CGROUP_SCHED
++static int cgroup_local_stat_show(struct seq_file *seq,
++				  struct cgroup *cgrp, int ssid)
+ {
+ 	struct cgroup_subsys *ss = cgroup_subsys[ssid];
+ 	struct cgroup_subsys_state *css;
+@@ -3707,14 +3708,16 @@ static int __maybe_unused cgroup_local_stat_show(struct seq_file *seq,
+ 
+ static int cpu_local_stat_show(struct seq_file *seq, void *v)
+ {
+-	struct cgroup __maybe_unused *cgrp = seq_css(seq)->cgroup;
+-	int ret = 0;
++	struct cgroup *cgrp = seq_css(seq)->cgroup;
+ 
+-#ifdef CONFIG_CGROUP_SCHED
+-	ret = cgroup_local_stat_show(seq, cgrp, cpu_cgrp_id);
+-#endif
+-	return ret;
++	return cgroup_local_stat_show(seq, cgrp, cpu_cgrp_id);
++}
++#else
++static int cpu_local_stat_show(struct seq_file *seq, void *v)
++{
++	return 0;
+ }
++#endif
+ 
+ #ifdef CONFIG_PSI
+ static int cgroup_io_pressure_show(struct seq_file *seq, void *v)
+-- 
+2.33.0
 
