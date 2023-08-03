@@ -1,332 +1,111 @@
 From: Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Subject: [PATCH v4] mm: memcg: use rstat for non-hierarchical stats
-Date: Thu,  3 Aug 2023 18:50:46 +0000
-Message-ID: <20230803185046.1385770-1-yosryahmed@google.com>
+Subject: Re: [PATCH v3] mm: memcg: use rstat for non-hierarchical stats
+Date: Thu, 3 Aug 2023 11:52:21 -0700
+Message-ID: <CAJD7tkZ2u0db3UP3K+2ag12VCRhzjJVrwipsyMV2fb9jdfwCzg@mail.gmail.com>
+References: <20230726153223.821757-1-yosryahmed@google.com>
+ <20230726153223.821757-2-yosryahmed@google.com> <ZMkXDuwD8RFRKnNQ@dhcp22.suse.cz>
+ <CAJD7tkbb8AWR-duWb+at-S9MMz48b0JqnM+b5ok83TzvXvPb+A@mail.gmail.com>
+ <CAJD7tkbZi16w4mYngVK8qA84FMijmHvwzMjHfrJiCsV=WjixOA@mail.gmail.com>
+ <ZMoIYLwITUZzXp4C@dhcp22.suse.cz> <CAJD7tkY4hTTCfqSGa_XexbH=WSTJ4WXWeMXSU+6KW8qfr7agfQ@mail.gmail.com>
+ <CAJD7tkb17x=qwoO37uxyYXLEUVp15BQKR+Xfh7Sg9Hx-wTQ_=w@mail.gmail.com> <ZMu/+ysmksCZqcem@dhcp22.suse.cz>
 Mime-Version: 1.0
+Content-Transfer-Encoding: quoted-printable
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20221208; t=1691088649; x=1691693449;
-        h=cc:to:from:subject:message-id:mime-version:date:from:to:cc:subject
-         :date:message-id:reply-to;
-        bh=1XyQ/ZegLbwguWS1UpeIGzNx959kwuq92WVqqIghPaA=;
-        b=5lrHqege0J6Q+nTQjju/1hs3TARjmexNgoAE2A9oG9GF2NC2KD1hUJ7HaPG/gRMhkQ
-         rRQefydgm0kytCsXqbAgd1S2i3d+MPxOQDcxsSH4Af3Cte4QEiM6ZJlmNkwNNVN7IIiH
-         1XEc6we68gQMUoCp/2JetDLXcbXQIHYLfl1LdUl+vosg84WXC8GWVXbgc6uyLZldxyeT
-         PTOSMPGWfrM0L9cioRb7+Dil5J5+VfpN94tUq/Josdqo5hq3xuHtMIernY6tKkN8d8wr
-         Z7EfeopWF6FEzvu6p1JCiglQluqndliVsPsd1kTtqooCDKQNUF1UFsMM0F3tAsVDZqyA
-         ZR3g==
+        d=google.com; s=20221208; t=1691088778; x=1691693578;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=16O8o09yKlIrWJqVGKmGPXtBxRWH/JyAAhiz2PZ5hMc=;
+        b=GzW5xwJ4SS3NFZxvIos1RPhdVI40cJHjHyRgQFOtkhHPZz7b+nSGci357csx/1V2IB
+         WF/FvNJGDDyqO/t3E1XggUbY9hOBM9OuzEOLda5rk/HOZdxPZ99UbIg5nx5kFScVSxEb
+         lv/ICaBqhOvyMSyCpzHn100B4O3Xlrt3LZcr3JiV5+wHKHd6ztj7RzCygsqmrZhY6dvv
+         pyM5Kdh2l7+Ba4qn5QYe8t68ZnsyC56FMznLyFS9c8erDQnQz5aNcCsr0vgMF5pStmOr
+         xfMftZnQ/q87+szHwrXALvSxxMSMtils8s1jU3ZbaDbZn4DP4akZAjg2dSLbWbGm8Iig
+         vblg==
+In-Reply-To: <ZMu/+ysmksCZqcem-2MMpYkNvuYDjFM9bn6wA6Q@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
-Cc: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Muchun Song <muchun.song-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Content-Type: text/plain; charset="windows-1252"
+To: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
+Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Muchun Song <muchun.song-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
 
-Currently, memcg uses rstat to maintain aggregated hierarchical stats.
-Counters are maintained for hierarchical stats at each memcg.  Rstat
-tracks which cgroups have updates on which cpus to keep those counters
-fresh on the read-side.
+On Thu, Aug 3, 2023 at 7:55=E2=80=AFAM Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org> wrote=
+:
+>
+> On Wed 02-08-23 15:02:55, Yosry Ahmed wrote:
+> [...]
+> > Let me know if the testing is satisfactory for you. I can send an
+> > updated commit log accordingly with a summary of this conversation.
+>
+> Yes this should be sufficient as it exercises all the CPUs so the
+> overhead in flushing should be visible if this was a real deal. I would
+> have gone with kernel build test as that has a broader code coverage but
+> this artificial test should give some red flags as well. So good enough.
+> Amending the changelog with this would be helpful as well so that future
+> us and others will know what kind of testing has been done.
+>
+> Acked-by: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
 
-Non-hierarchical stats are currently not covered by rstat.  Their per-cpu
-counters are summed up on every read, which is expensive.  The original
-implementation did the same.  At some point before rstat, non-hierarchical
-aggregated counters were introduced by commit a983b5ebee57 ("mm:
-memcontrol: fix excessive complexity in memory.stat reporting").  However,
-those counters were updated on the performance critical write-side, which
-caused regressions, so they were later removed by commit 815744d75152
-("mm: memcontrol: don't batch updates of local VM stats and events").  See
-[1] for more detailed history.
+Thanks! I sent a v4 with your Ack and an amended changelog that
+describes the testing done and points to the script attached here.
 
-Kernel versions in between a983b5ebee57 & 815744d75152 (a year and a half)
-enjoyed cheap reads of non-hierarchical stats, specifically on cgroup v1.
-When moving to more recent kernels, a performance regression for reading
-non-hierarchical stats is observed.
-
-Now that we have rstat, we know exactly which percpu counters have updates
-for each stat.  We can maintain non-hierarchical counters again, making
-reads much more efficient, without affecting the performance critical
-write-side.  Hence, add non-hierarchical (i.e local) counters for the
-stats, and extend rstat flushing to keep those up-to-date.
-
-A caveat is that we now need a stats flush before reading
-local/non-hierarchical stats through {memcg/lruvec}_page_state_local() or
-memcg_events_local(), where we previously only needed a flush to read
-hierarchical stats.  Most contexts reading non-hierarchical stats are
-already doing a flush, add a flush to the only missing context in
-count_shadow_nodes().
-
-With this patch, reading memory.stat from 1000 memcgs is 3x faster on a
-machine with 256 cpus on cgroup v1:
-
- # for i in $(seq 1000); do mkdir /sys/fs/cgroup/memory/cg$i; done
- # time cat /sys/fs/cgroup/memory/cg*/memory.stat > /dev/null
- real	 0m0.125s
- user	 0m0.005s
- sys	 0m0.120s
-
-After:
- real	 0m0.032s
- user	 0m0.005s
- sys	 0m0.027s
-
-To make sure there are no regressions on cgroup v2, I ran an artificial
-reclaim/refault stress test [2] that creates (NR_CPUS *
-2) cgroups, assigns them limits, runs a worker process in each cgroup
-that allocates tmpfs memory equal to quadruple the limit (to invoke
-reclaim continuously), and then reads back the entire file (to invoke
-refaults). All workers are run in parallel, and zram is used as a
-swapping backend. Both reclaim and refault have conditional stats
-flushing. I ran this on a machine with 112 cpus, once on mm-unstable,
-and once on mm-unstable with this patch reverted.
-
-(1) A few runs without this patch:
-
- # time ./stress_reclaim_refault.sh
- real 0m9.949s
- user 0m0.496s
- sys 14m44.974s
-
- # time ./stress_reclaim_refault.sh
- real 0m10.049s
- user 0m0.486s
- sys 14m55.791s
-
- # time ./stress_reclaim_refault.sh
- real 0m9.984s
- user 0m0.481s
- sys 14m53.841s
-
-(2) A few runs with this patch:
-
- # time ./stress_reclaim_refault.sh
- real 0m9.885s
- user 0m0.486s
- sys 14m48.753s
-
- # time ./stress_reclaim_refault.sh
- real 0m9.903s
- user 0m0.495s
- sys 14m48.339s
-
- # time ./stress_reclaim_refault.sh
- real 0m9.861s
- user 0m0.507s
- sys 14m49.317s
-
-No regressions are observed with this patch. There is actually a very
-slight improvement. If I have to guess, maybe it's because we avoid
-the percpu loop in count_shadow_nodes() when calling
-lruvec_page_state_local(), but I could not prove this using perf, it's
-probably in the noise.
-
-[1] https://lore.kernel.org/lkml/20230725201811.GA1231514-druUgvl0LCNAfugRpC6u6w@public.gmane.org/
-[2] https://lore.kernel.org/lkml/CAJD7tkb17x=qwoO37uxyYXLEUVp15BQKR+Xfh7Sg9Hx-wTQ_=w@mail.gmail.com/
-
-Link: https://lkml.kernel.org/r/20230726153223.821757-2-yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org
-Signed-off-by: Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Acked-by: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Acked-by: Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>
-Acked-by: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
----
-
-v3 -> v4:
-- Added A-b from Michal Hocko (Thanks!).
-- Amended the changelog with additional testing for regressions (as
-  requested by Michal Hocko).
-
-v3: https://lore.kernel.org/lkml/20230726153223.821757-2-yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org/
-
----
- include/linux/memcontrol.h |  7 ++--
- mm/memcontrol.c            | 67 +++++++++++++++++++++-----------------
- mm/workingset.c            |  1 +
- 3 files changed, 43 insertions(+), 32 deletions(-)
-
-diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
-index 058fb748e128..e765d1ff9cbb 100644
---- a/include/linux/memcontrol.h
-+++ b/include/linux/memcontrol.h
-@@ -111,6 +111,9 @@ struct lruvec_stats {
- 	/* Aggregated (CPU and subtree) state */
- 	long state[NR_VM_NODE_STAT_ITEMS];
- 
-+	/* Non-hierarchical (CPU aggregated) state */
-+	long state_local[NR_VM_NODE_STAT_ITEMS];
-+
- 	/* Pending child counts during tree propagation */
- 	long state_pending[NR_VM_NODE_STAT_ITEMS];
- };
-@@ -1019,14 +1022,12 @@ static inline unsigned long lruvec_page_state_local(struct lruvec *lruvec,
- {
- 	struct mem_cgroup_per_node *pn;
- 	long x = 0;
--	int cpu;
- 
- 	if (mem_cgroup_disabled())
- 		return node_page_state(lruvec_pgdat(lruvec), idx);
- 
- 	pn = container_of(lruvec, struct mem_cgroup_per_node, lruvec);
--	for_each_possible_cpu(cpu)
--		x += per_cpu(pn->lruvec_stats_percpu->state[idx], cpu);
-+	x = READ_ONCE(pn->lruvec_stats.state_local[idx]);
- #ifdef CONFIG_SMP
- 	if (x < 0)
- 		x = 0;
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index 062d925336cb..35d7e66ab032 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -742,6 +742,10 @@ struct memcg_vmstats {
- 	long			state[MEMCG_NR_STAT];
- 	unsigned long		events[NR_MEMCG_EVENTS];
- 
-+	/* Non-hierarchical (CPU aggregated) page state & events */
-+	long			state_local[MEMCG_NR_STAT];
-+	unsigned long		events_local[NR_MEMCG_EVENTS];
-+
- 	/* Pending child counts during tree propagation */
- 	long			state_pending[MEMCG_NR_STAT];
- 	unsigned long		events_pending[NR_MEMCG_EVENTS];
-@@ -775,11 +779,8 @@ void __mod_memcg_state(struct mem_cgroup *memcg, int idx, int val)
- /* idx can be of type enum memcg_stat_item or node_stat_item. */
- static unsigned long memcg_page_state_local(struct mem_cgroup *memcg, int idx)
- {
--	long x = 0;
--	int cpu;
-+	long x = READ_ONCE(memcg->vmstats->state_local[idx]);
- 
--	for_each_possible_cpu(cpu)
--		x += per_cpu(memcg->vmstats_percpu->state[idx], cpu);
- #ifdef CONFIG_SMP
- 	if (x < 0)
- 		x = 0;
-@@ -926,16 +927,12 @@ static unsigned long memcg_events(struct mem_cgroup *memcg, int event)
- 
- static unsigned long memcg_events_local(struct mem_cgroup *memcg, int event)
- {
--	long x = 0;
--	int cpu;
- 	int index = memcg_events_index(event);
- 
- 	if (index < 0)
- 		return 0;
- 
--	for_each_possible_cpu(cpu)
--		x += per_cpu(memcg->vmstats_percpu->events[index], cpu);
--	return x;
-+	return READ_ONCE(memcg->vmstats->events_local[index]);
- }
- 
- static void mem_cgroup_charge_statistics(struct mem_cgroup *memcg,
-@@ -5517,7 +5514,7 @@ static void mem_cgroup_css_rstat_flush(struct cgroup_subsys_state *css, int cpu)
- 	struct mem_cgroup *memcg = mem_cgroup_from_css(css);
- 	struct mem_cgroup *parent = parent_mem_cgroup(memcg);
- 	struct memcg_vmstats_percpu *statc;
--	long delta, v;
-+	long delta, delta_cpu, v;
- 	int i, nid;
- 
- 	statc = per_cpu_ptr(memcg->vmstats_percpu, cpu);
-@@ -5533,19 +5530,23 @@ static void mem_cgroup_css_rstat_flush(struct cgroup_subsys_state *css, int cpu)
- 			memcg->vmstats->state_pending[i] = 0;
- 
- 		/* Add CPU changes on this level since the last flush */
-+		delta_cpu = 0;
- 		v = READ_ONCE(statc->state[i]);
- 		if (v != statc->state_prev[i]) {
--			delta += v - statc->state_prev[i];
-+			delta_cpu = v - statc->state_prev[i];
-+			delta += delta_cpu;
- 			statc->state_prev[i] = v;
- 		}
- 
--		if (!delta)
--			continue;
--
- 		/* Aggregate counts on this level and propagate upwards */
--		memcg->vmstats->state[i] += delta;
--		if (parent)
--			parent->vmstats->state_pending[i] += delta;
-+		if (delta_cpu)
-+			memcg->vmstats->state_local[i] += delta_cpu;
-+
-+		if (delta) {
-+			memcg->vmstats->state[i] += delta;
-+			if (parent)
-+				parent->vmstats->state_pending[i] += delta;
-+		}
- 	}
- 
- 	for (i = 0; i < NR_MEMCG_EVENTS; i++) {
-@@ -5553,18 +5554,22 @@ static void mem_cgroup_css_rstat_flush(struct cgroup_subsys_state *css, int cpu)
- 		if (delta)
- 			memcg->vmstats->events_pending[i] = 0;
- 
-+		delta_cpu = 0;
- 		v = READ_ONCE(statc->events[i]);
- 		if (v != statc->events_prev[i]) {
--			delta += v - statc->events_prev[i];
-+			delta_cpu = v - statc->events_prev[i];
-+			delta += delta_cpu;
- 			statc->events_prev[i] = v;
- 		}
- 
--		if (!delta)
--			continue;
-+		if (delta_cpu)
-+			memcg->vmstats->events_local[i] += delta_cpu;
- 
--		memcg->vmstats->events[i] += delta;
--		if (parent)
--			parent->vmstats->events_pending[i] += delta;
-+		if (delta) {
-+			memcg->vmstats->events[i] += delta;
-+			if (parent)
-+				parent->vmstats->events_pending[i] += delta;
-+		}
- 	}
- 
- 	for_each_node_state(nid, N_MEMORY) {
-@@ -5582,18 +5587,22 @@ static void mem_cgroup_css_rstat_flush(struct cgroup_subsys_state *css, int cpu)
- 			if (delta)
- 				pn->lruvec_stats.state_pending[i] = 0;
- 
-+			delta_cpu = 0;
- 			v = READ_ONCE(lstatc->state[i]);
- 			if (v != lstatc->state_prev[i]) {
--				delta += v - lstatc->state_prev[i];
-+				delta_cpu = v - lstatc->state_prev[i];
-+				delta += delta_cpu;
- 				lstatc->state_prev[i] = v;
- 			}
- 
--			if (!delta)
--				continue;
-+			if (delta_cpu)
-+				pn->lruvec_stats.state_local[i] += delta_cpu;
- 
--			pn->lruvec_stats.state[i] += delta;
--			if (ppn)
--				ppn->lruvec_stats.state_pending[i] += delta;
-+			if (delta) {
-+				pn->lruvec_stats.state[i] += delta;
-+				if (ppn)
-+					ppn->lruvec_stats.state_pending[i] += delta;
-+			}
- 		}
- 	}
- }
-diff --git a/mm/workingset.c b/mm/workingset.c
-index 4686ae363000..da58a26d0d4d 100644
---- a/mm/workingset.c
-+++ b/mm/workingset.c
-@@ -664,6 +664,7 @@ static unsigned long count_shadow_nodes(struct shrinker *shrinker,
- 		struct lruvec *lruvec;
- 		int i;
- 
-+		mem_cgroup_flush_stats();
- 		lruvec = mem_cgroup_lruvec(sc->memcg, NODE_DATA(sc->nid));
- 		for (pages = 0, i = 0; i < NR_LRU_LISTS; i++)
- 			pages += lruvec_page_state_local(lruvec,
--- 
-2.41.0.585.gd2178a4bd4-goog
-
+>
+> >
+> > > > --
+> > > > Michal Hocko
+> > > > SUSE Labs
+>
+> > #!/bin/bash
+> >
+> > NR_CPUS=3D$(getconf _NPROCESSORS_ONLN)
+> > NR_CGROUPS=3D$(( NR_CPUS * 2 ))
+> > TEST_MB=3D50
+> > TOTAL_MB=3D$((TEST_MB * NR_CGROUPS))
+> > TMPFS=3D$(mktemp -d)
+> > ROOT=3D"/sys/fs/cgroup/"
+> > ZRAM_DEV=3D"/mnt/devtmpfs/zram0"
+> >
+> > cleanup() {
+> >   umount $TMPFS
+> >   rm -rf $TMPFS
+> >   for i in $(seq $NR_CGROUPS); do
+> >     cgroup=3D"$ROOT/cg$i"
+> >     rmdir $cgroup
+> >   done
+> >   swapoff $ZRAM_DEV
+> >   echo 1 > "/sys/block/zram0/reset"
+> > }
+> > trap cleanup INT QUIT EXIT
+> >
+> > # Setup zram
+> > echo $((TOTAL_MB << 20)) > "/sys/block/zram0/disksize"
+> > mkswap $ZRAM_DEV
+> > swapon $ZRAM_DEV
+> > echo "Setup zram done"
+> >
+> > # Create cgroups, set limits
+> > echo "+memory" > "$ROOT/cgroup.subtree_control"
+> > for i in $(seq $NR_CGROUPS); do
+> >   cgroup=3D"$ROOT/cg$i"
+> >   mkdir $cgroup
+> >   echo $(( (TEST_MB << 20) / 4)) > "$cgroup/memory.max"
+> > done
+> > echo "Setup cgroups done"
+> >
+> > # Start workers to allocate tmpfs memory
+> > mount -t tmpfs none $TMPFS
+> > for i in $(seq $NR_CGROUPS); do
+> >   cgroup=3D"$ROOT/cg$i"
+> >   f=3D"$TMPFS/tmp$i"
+> >   (echo 0 > "$cgroup/cgroup.procs" &&
+> >     dd if=3D/dev/zero of=3D$f bs=3D1M count=3D$TEST_MB status=3Dnone &&
+> >     cat $f > /dev/null)&
+> > done
+> >
+> > # Wait for workers
+> > wait
+>
+>
+> --
+> Michal Hocko
+> SUSE Labs
