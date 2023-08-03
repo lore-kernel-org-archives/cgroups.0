@@ -1,103 +1,51 @@
-From: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
-Subject: Re: [PATCH v3] mm: memcg: use rstat for non-hierarchical stats
-Date: Thu, 3 Aug 2023 16:55:55 +0200
-Message-ID: <ZMu/+ysmksCZqcem@dhcp22.suse.cz>
-References: <20230726153223.821757-1-yosryahmed@google.com>
- <20230726153223.821757-2-yosryahmed@google.com>
- <ZMkXDuwD8RFRKnNQ@dhcp22.suse.cz>
- <CAJD7tkbb8AWR-duWb+at-S9MMz48b0JqnM+b5ok83TzvXvPb+A@mail.gmail.com>
- <CAJD7tkbZi16w4mYngVK8qA84FMijmHvwzMjHfrJiCsV=WjixOA@mail.gmail.com>
- <ZMoIYLwITUZzXp4C@dhcp22.suse.cz>
- <CAJD7tkY4hTTCfqSGa_XexbH=WSTJ4WXWeMXSU+6KW8qfr7agfQ@mail.gmail.com>
- <CAJD7tkb17x=qwoO37uxyYXLEUVp15BQKR+Xfh7Sg9Hx-wTQ_=w@mail.gmail.com>
+From: Lucas Karpinski <lkarpins-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Subject: [PATCH v2] selftests: cgroup: fix test_kmem_basic slab1 check
+Date: Thu, 3 Aug 2023 12:00:47 -0400
+Message-ID: <ix6vzgjqay2x7bskle7pypoint4nj66fwq7odvd5hektatvp2l@kukoifnfj3dr>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
-        t=1691074556; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=/VNlnAgBc91S2tYQvLwrXhvlLqKeVtz0vo49rvSQNPE=;
-        b=kVP0di1gzsJsEBbQQkq4/uiFNVNskhJjfzgyi/9R6Qhac7n1+AnbpJ3GFGHXK1e+0/sDW6
-        sq63HRQ8VLd7ptKuupjYjswPoJqTloEdleyab3q5EYZ4DzgBIi9l/Py/OhKsDxNCtMEd3n
-        8pBrxdzb8ugos/N86bbFPaoIGR7Bv4s=
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1691078459;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type;
+        bh=cwXRj1KBICVmDyXNwF6/K1df3vGE/T6x9GRpnMzQtuM=;
+        b=fXfuTyl9529XxoXuRK1mBvY3jcrxrtPpo+yFmuET/VL2QOqPRAu1A9YoOkE6eWBrS5OL19
+        h/k77UDupzGe7rCKuwh+WyBDBtY8AWkkMIj/Vx2Uonc/KucOrYzpsI7ioE+RInu/hraBFu
+        PCzyPk9XivrdzH22N0cuGzDoQ1sADHs=
 Content-Disposition: inline
-In-Reply-To: <CAJD7tkb17x=qwoO37uxyYXLEUVp15BQKR+Xfh7Sg9Hx-wTQ_=w@mail.gmail.com>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Muchun Song <muchun.song-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
+To: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Muchun Song <muchun.song-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Shuah Khan <shuah-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: Muchun Song <muchun.song-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kselftest-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Wed 02-08-23 15:02:55, Yosry Ahmed wrote:
-[...]
-> Let me know if the testing is satisfactory for you. I can send an
-> updated commit log accordingly with a summary of this conversation.
+test_kmem_basic creates 100,000 negative dentries, with each one mapping
+to a slab object. After memory.high is set, these are reclaimed through
+the shrink_slab function call which reclaims all 100,000 entries. The
+test passes the majority of the time because when slab1 is calculated,
+it is often above 0, however, 0 is also an acceptable value.
 
-Yes this should be sufficient as it exercises all the CPUs so the
-overhead in flushing should be visible if this was a real deal. I would
-have gone with kernel build test as that has a broader code coverage but
-this artificial test should give some red flags as well. So good enough.
-Amending the changelog with this would be helpful as well so that future
-us and others will know what kind of testing has been done.
+Signed-off-by: Lucas Karpinski <lkarpins-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+---
+https://lore.kernel.org/all/m6jbt5hzq27ygt3l4xyiaxxb7i5auvb2lahbcj4yaxxigqzu5e@5rn6s2yjzv7u/
+V2: Corrected title
 
-Acked-by: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
+ tools/testing/selftests/cgroup/test_kmem.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-> 
-> > > --
-> > > Michal Hocko
-> > > SUSE Labs
-
-> #!/bin/bash
-> 
-> NR_CPUS=$(getconf _NPROCESSORS_ONLN)
-> NR_CGROUPS=$(( NR_CPUS * 2 ))
-> TEST_MB=50
-> TOTAL_MB=$((TEST_MB * NR_CGROUPS))
-> TMPFS=$(mktemp -d)
-> ROOT="/sys/fs/cgroup/"
-> ZRAM_DEV="/mnt/devtmpfs/zram0"
-> 
-> cleanup() {
->   umount $TMPFS
->   rm -rf $TMPFS
->   for i in $(seq $NR_CGROUPS); do
->     cgroup="$ROOT/cg$i"
->     rmdir $cgroup
->   done
->   swapoff $ZRAM_DEV
->   echo 1 > "/sys/block/zram0/reset"
-> }
-> trap cleanup INT QUIT EXIT
-> 
-> # Setup zram
-> echo $((TOTAL_MB << 20)) > "/sys/block/zram0/disksize"
-> mkswap $ZRAM_DEV
-> swapon $ZRAM_DEV
-> echo "Setup zram done"
-> 
-> # Create cgroups, set limits
-> echo "+memory" > "$ROOT/cgroup.subtree_control"
-> for i in $(seq $NR_CGROUPS); do
->   cgroup="$ROOT/cg$i"
->   mkdir $cgroup
->   echo $(( (TEST_MB << 20) / 4)) > "$cgroup/memory.max"
-> done
-> echo "Setup cgroups done"
-> 
-> # Start workers to allocate tmpfs memory
-> mount -t tmpfs none $TMPFS
-> for i in $(seq $NR_CGROUPS); do
->   cgroup="$ROOT/cg$i"
->   f="$TMPFS/tmp$i"
->   (echo 0 > "$cgroup/cgroup.procs" &&
->     dd if=/dev/zero of=$f bs=1M count=$TEST_MB status=none &&
->     cat $f > /dev/null)&
-> done
-> 
-> # Wait for workers
-> wait
-
-
+diff --git a/tools/testing/selftests/cgroup/test_kmem.c b/tools/testing/selftests/cgroup/test_kmem.c
+index 258ddc565deb..ba0a0bfc5a98 100644
+--- a/tools/testing/selftests/cgroup/test_kmem.c
++++ b/tools/testing/selftests/cgroup/test_kmem.c
+@@ -71,7 +71,7 @@ static int test_kmem_basic(const char *root)
+ 
+ 	cg_write(cg, "memory.high", "1M");
+ 	slab1 = cg_read_key_long(cg, "memory.stat", "slab ");
+-	if (slab1 <= 0)
++	if (slab1 < 0)
+ 		goto cleanup;
+ 
+ 	current = cg_read_long(cg, "memory.current");
 -- 
-Michal Hocko
-SUSE Labs
+2.41.0
+
