@@ -1,48 +1,103 @@
-From: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Subject: Re: [PATCH] cgroup: minor cleanup for cgroup_local_stat_show()
-Date: Thu, 3 Aug 2023 10:27:58 -0400
-Message-ID: <20230803142758.GC219857@cmpxchg.org>
-References: <20230803113123.577023-1-linmiaohe@huawei.com>
+From: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
+Subject: Re: [PATCH v3] mm: memcg: use rstat for non-hierarchical stats
+Date: Thu, 3 Aug 2023 16:55:55 +0200
+Message-ID: <ZMu/+ysmksCZqcem@dhcp22.suse.cz>
+References: <20230726153223.821757-1-yosryahmed@google.com>
+ <20230726153223.821757-2-yosryahmed@google.com>
+ <ZMkXDuwD8RFRKnNQ@dhcp22.suse.cz>
+ <CAJD7tkbb8AWR-duWb+at-S9MMz48b0JqnM+b5ok83TzvXvPb+A@mail.gmail.com>
+ <CAJD7tkbZi16w4mYngVK8qA84FMijmHvwzMjHfrJiCsV=WjixOA@mail.gmail.com>
+ <ZMoIYLwITUZzXp4C@dhcp22.suse.cz>
+ <CAJD7tkY4hTTCfqSGa_XexbH=WSTJ4WXWeMXSU+6KW8qfr7agfQ@mail.gmail.com>
+ <CAJD7tkb17x=qwoO37uxyYXLEUVp15BQKR+Xfh7Sg9Hx-wTQ_=w@mail.gmail.com>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=cmpxchg-org.20221208.gappssmtp.com; s=20221208; t=1691072879; x=1691677679;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=8CXtNf2juTpnNbc2iwpH+iIlLPgtlL44HuZlVb5tpAE=;
-        b=we6Fk7q9zEhw+CJrONTMaJeY7V/kFX0HXrXBKxV2JUSNlNTJWCPnPehRlsHF+z0blk
-         sCi0pOw0r/N0CWun/xl5QKYU5EqnUJgwj5FZ8JNAqoJy1DQT2hCMZCnpOuWyGc48sE3D
-         sTyG5UxVGS4xRHYoxx1I/z/P48lOZIsUcjeK5qGjLLilXjY5rsapUi4EEYINt6r3pbBr
-         gPVHJC6fpUvkYchQcfc6WKZCHsLYaReFuKXCga7sr7uJ92TuEhl1w+DkcZxa64DNoiBq
-         hx0rO7pxXlDuzIVFdnJkvgOiXqqxD81njci1PpeY8re9g1MiTPuvkpD2EJIKFDJIHVOh
-         ol4g==
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
+        t=1691074556; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=/VNlnAgBc91S2tYQvLwrXhvlLqKeVtz0vo49rvSQNPE=;
+        b=kVP0di1gzsJsEBbQQkq4/uiFNVNskhJjfzgyi/9R6Qhac7n1+AnbpJ3GFGHXK1e+0/sDW6
+        sq63HRQ8VLd7ptKuupjYjswPoJqTloEdleyab3q5EYZ4DzgBIi9l/Py/OhKsDxNCtMEd3n
+        8pBrxdzb8ugos/N86bbFPaoIGR7Bv4s=
 Content-Disposition: inline
-In-Reply-To: <20230803113123.577023-1-linmiaohe-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+In-Reply-To: <CAJD7tkb17x=qwoO37uxyYXLEUVp15BQKR+Xfh7Sg9Hx-wTQ_=w@mail.gmail.com>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Miaohe Lin <linmiaohe-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Cc: akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Muchun Song <muchun.song-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
 
-On Thu, Aug 03, 2023 at 07:31:23PM +0800, Miaohe Lin wrote:
-> Make it under CONFIG_CGROUP_SCHED to rid of __maybe_unused annotation.
-> Also put cgroup_tryget_css() inside CONFIG_CGROUP_SCHED as it's only
-> called when CONFIG_CGROUP_SCHED. No functional change intended.
+On Wed 02-08-23 15:02:55, Yosry Ahmed wrote:
+[...]
+> Let me know if the testing is satisfactory for you. I can send an
+> updated commit log accordingly with a summary of this conversation.
+
+Yes this should be sufficient as it exercises all the CPUs so the
+overhead in flushing should be visible if this was a real deal. I would
+have gone with kernel build test as that has a broader code coverage but
+this artificial test should give some red flags as well. So good enough.
+Amending the changelog with this would be helpful as well so that future
+us and others will know what kind of testing has been done.
+
+Acked-by: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
+
 > 
-> Signed-off-by: Miaohe Lin <linmiaohe-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+> > > --
+> > > Michal Hocko
+> > > SUSE Labs
 
-Acked-by: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+> #!/bin/bash
+> 
+> NR_CPUS=$(getconf _NPROCESSORS_ONLN)
+> NR_CGROUPS=$(( NR_CPUS * 2 ))
+> TEST_MB=50
+> TOTAL_MB=$((TEST_MB * NR_CGROUPS))
+> TMPFS=$(mktemp -d)
+> ROOT="/sys/fs/cgroup/"
+> ZRAM_DEV="/mnt/devtmpfs/zram0"
+> 
+> cleanup() {
+>   umount $TMPFS
+>   rm -rf $TMPFS
+>   for i in $(seq $NR_CGROUPS); do
+>     cgroup="$ROOT/cg$i"
+>     rmdir $cgroup
+>   done
+>   swapoff $ZRAM_DEV
+>   echo 1 > "/sys/block/zram0/reset"
+> }
+> trap cleanup INT QUIT EXIT
+> 
+> # Setup zram
+> echo $((TOTAL_MB << 20)) > "/sys/block/zram0/disksize"
+> mkswap $ZRAM_DEV
+> swapon $ZRAM_DEV
+> echo "Setup zram done"
+> 
+> # Create cgroups, set limits
+> echo "+memory" > "$ROOT/cgroup.subtree_control"
+> for i in $(seq $NR_CGROUPS); do
+>   cgroup="$ROOT/cg$i"
+>   mkdir $cgroup
+>   echo $(( (TEST_MB << 20) / 4)) > "$cgroup/memory.max"
+> done
+> echo "Setup cgroups done"
+> 
+> # Start workers to allocate tmpfs memory
+> mount -t tmpfs none $TMPFS
+> for i in $(seq $NR_CGROUPS); do
+>   cgroup="$ROOT/cg$i"
+>   f="$TMPFS/tmp$i"
+>   (echo 0 > "$cgroup/cgroup.procs" &&
+>     dd if=/dev/zero of=$f bs=1M count=$TEST_MB status=none &&
+>     cat $f > /dev/null)&
+> done
+> 
+> # Wait for workers
+> wait
 
-> @@ -3686,8 +3686,9 @@ static int cpu_stat_show(struct seq_file *seq, void *v)
->  	return ret;
->  }
->  
-> -static int __maybe_unused cgroup_local_stat_show(struct seq_file *seq,
-> -						 struct cgroup *cgrp, int ssid)
-> +#ifdef CONFIG_CGROUP_SCHED
-> +static int cgroup_local_stat_show(struct seq_file *seq,
-> +				  struct cgroup *cgrp, int ssid)
 
-Andrew, this is based on "sched: add throttled time stat for throttled
-children" in -next (coming in from -tip). Hence the routing through
-you rather than the cgroup tree.
+-- 
+Michal Hocko
+SUSE Labs
