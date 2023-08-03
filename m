@@ -1,84 +1,43 @@
-From: Lucas Karpinski <lkarpins@redhat.com>
-Subject: Re: [PATCH] selftests: cgroup: fix test_kmem_basic false positives
-Date: Thu, 3 Aug 2023 12:13:26 -0400
-Message-ID: <tqt5od6fuwid5qf2vjhkxef2swlccpki5oikx4pdoabyycrdpe@kzx2rpscvwgs>
-References: <20230801135632.1768830-1-hannes@cmpxchg.org>
- <c40ca485-f52e-411a-9f33-3adabc53c0fc@paulmck-laptop>
+From: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+Subject: Re: [PATCH] cgroup: minor cleanup for cgroup_local_stat_show()
+Date: Thu, 3 Aug 2023 10:05:33 -0700
+Message-ID: <20230803100533.a9bdac370de2e8e4bee0f33a@linux-foundation.org>
+References: <20230803113123.577023-1-linmiaohe@huawei.com>
+        <20230803142758.GC219857@cmpxchg.org>
 Mime-Version: 1.0
-Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1691079218;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=NBGgPFoZzZurgnvdLr2MN4Fp3sMcoIPkqmKxp6vR8Tk=;
-        b=OaEUAdm2ZBPfMQuFubVxwTt801x2nffLCOcg3J90JvTxz6+FC3JFKAdDhMPp3+IZJvOVNa
-        JEty4vYM93xuRcuvCFdltXgIw2Oofgd/ulDripzSEcKrtiW24Nmv9PM4Xq5pFalTzlz/UV
-        PwpTBO9n0Ruu/FkfArOy4/ukApRjLMg=
-Content-Disposition: inline
-In-Reply-To: <c40ca485-f52e-411a-9f33-3adabc53c0fc@paulmck-laptop>
+Content-Transfer-Encoding: 7bit
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linux-foundation.org;
+        s=korg; t=1691082334;
+        bh=mKXYwoVy5HfvYiKywnPPMjvSi6Q9LzPXn0QPxBh7klc=;
+        h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
+        b=sR/84AOqkNrlcyI3Mg///cmnKs9K7ETOFfWUvoe1dfQx5DKvUhLK0PQV/VfacxYKJ
+         c9FskuPuzEyD0/Tut7Eg8+l/huwAJp84RU/+2om1L2s6CgrKvpPktF5KRDDNtb/hjd
+         y3DtIqnBfSiziLpvk1Mk36RNcIEzzVBWcY1gLVII=
+In-Reply-To: <20230803142758.GC219857-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: "Paul E. McKenney" <paulmck@kernel.org>
-Cc: Johannes Weiner <hannes@cmpxchg.org>, Andrew Morton <akpm@linux-foundation.org>, Roman Gushchin <roman.gushchin@linux.dev>, Michal Hocko <mhocko@suse.com>, linux-kselftest@vger.kernel.org, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Cc: Miaohe Lin <linmiaohe-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Tue, Aug 01, 2023 at 09:39:28AM -0700, Paul E. McKenney wrote:
-> On Tue, Aug 01, 2023 at 09:56:32AM -0400, Johannes Weiner wrote:
-> > This test fails routinely in our prod testing environment, and I can
-> > reproduce it locally as well.
-> > 
-> > The test allocates dcache inside a cgroup, then drops the memory limit
-> > and checks that usage drops correspondingly. The reason it fails is
-> > because dentries are freed with an RCU delay - a debugging sleep shows
-> > that usage drops as expected shortly after.
-> > 
-> > Insert a 1s sleep after dropping the limit. This should be good
-> > enough, assuming that machines running those tests are otherwise not
-> > very busy.
-> > 
-> > Signed-off-by: Johannes Weiner <hannes@cmpxchg.org>
-> 
-> I am putting together something more formal, but this will certainly
-> improve things, as Johannes says, assuming the system goes mostly
-> idle during that one-second wait.  So:
-> 
-> Acked-by: Paul E. McKenney <paulmck@kernel.org>
-> 
-> Yes, there are corner cases, such as the system having millions of
-> RCU callbacks queued and being unable to invoke them all during that
-> one-second interval.  But that is a corner case, and that is exactly
-> why I will be putting together something more formal.  ;-)
-> 
-> 							Thanx, Paul
-> 
-> > ---
-> >  tools/testing/selftests/cgroup/test_kmem.c | 4 ++++
-> >  1 file changed, 4 insertions(+)
-> > 
-> > diff --git a/tools/testing/selftests/cgroup/test_kmem.c b/tools/testing/selftests/cgroup/test_kmem.c
-> > index 258ddc565deb..1b2cec9d18a4 100644
-> > --- a/tools/testing/selftests/cgroup/test_kmem.c
-> > +++ b/tools/testing/selftests/cgroup/test_kmem.c
-> > @@ -70,6 +70,10 @@ static int test_kmem_basic(const char *root)
-> >  		goto cleanup;
+On Thu, 3 Aug 2023 10:27:58 -0400 Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org> wrote:
+
+> > @@ -3686,8 +3686,9 @@ static int cpu_stat_show(struct seq_file *seq, void *v)
+> >  	return ret;
+> >  }
 > >  
-> >  	cg_write(cg, "memory.high", "1M");
-> > +
-> > +	/* wait for RCU freeing */
-> > +	sleep(1);
-> > +
-> >  	slab1 = cg_read_key_long(cg, "memory.stat", "slab ");
-> >  	if (slab1 <= 0)
-> >  		goto cleanup;
-> > -- 
-> > 2.41.0
-> >
+> > -static int __maybe_unused cgroup_local_stat_show(struct seq_file *seq,
+> > -						 struct cgroup *cgrp, int ssid)
+> > +#ifdef CONFIG_CGROUP_SCHED
+> > +static int cgroup_local_stat_show(struct seq_file *seq,
+> > +				  struct cgroup *cgrp, int ssid)
+> 
+> Andrew, this is based on "sched: add throttled time stat for throttled
+> children" in -next (coming in from -tip). Hence the routing through
+> you rather than the cgroup tree.
 
-The same issue exists in the test case test_kmem_memcg_deletion. I
-wouldn't mind posting the patch, but it seems you want to propose
-something more formal. Let me know your opinion.
+Since switching to the more gitty workflow I have lost the power to
+carry patches against -next.  I could regain that power I guess, but
+this is the first time the requirement has come up.
 
-Thanks,
-Lucas
-
+So for now I'll save this patch away for the next -rc cycle.
