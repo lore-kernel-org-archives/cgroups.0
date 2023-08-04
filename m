@@ -1,57 +1,56 @@
-From: Li Lingfeng <lilingfeng@huaweicloud.com>
-Subject: [PATCH -next] block: remove init_mutex in blk_iolatency_try_init
-Date: Fri,  4 Aug 2023 19:36:59 +0800
-Message-ID: <20230804113659.3816877-1-lilingfeng@huaweicloud.com>
+From: Lucas Karpinski <lkarpins@redhat.com>
+Subject: [PATCH] selftests: cgroup: fix test_kmem_memcg_deletion false
+ positives
+Date: Fri, 4 Aug 2023 11:37:33 -0400
+Message-ID: <edpx3ejic2cxolhoynxvwal2i4a35akopg6hshcfxker6oxcn7@l32pzfyucgec>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-block-owner@vger.kernel.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1691163465;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type;
+        bh=sWUCadNhtS5nrUCHR//9fr6i9W+VBU3reP6ArzIMKD4=;
+        b=IXgb4SEGI77dtLPfazeZyb8o4OIt5EX0rKx3Ymw8vmT0cOtpzk9FCHwKofKSPUKGPqgo27
+        AbpEKS5x1RPkIClfAlQhHrr97ZgQkXQ4njrVL7+Qoxg76PVUu1rlCT1jcAbba/SMeaNq4r
+        Z5zPk3k7jncUHKJ+AP1XGANyEmFneYA=
+Content-Disposition: inline
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: tj@kernel.org
-Cc: josef@toxicpanda.com, axboe@kernel.dk, cgroups@vger.kernel.org, linux-block@vger.kernel.org, yukuai3@huawei.com, linan122@huawei.com, yi.zhang@huawei.com, yangerkun@huawei.com, lilingfeng@huaweicloud.com, lilingfeng3@huawei.com
+Content-Transfer-Encoding: 7bit
+To: Andrew Morton <akpm@linux-foundation.org>, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, Roman Gushchin <roman.gushchin@linux.dev>, Shakeel Butt <shakeelb@google.com>, Muchun Song <muchun.song@linux.dev>, Tejun Heo <tj@kernel.org>, Zefan Li <lizefan.x@bytedance.com>, Shuah Khan <shuah@kernel.org>
+Cc: Muchun Song <muchun.song@linux.dev>, cgroups@vger.kernel.org, linux-mm@kvack.org, linux-kselftest@vger.kernel.org, linux-kernel@vger.kernel.org
 
-From: Li Lingfeng <lilingfeng3@huawei.com>
+The test allocates dcache inside a cgroup, then destroys the cgroups and
+then checks the sanity of numbers on the parent level. The reason it
+fails is because dentries are freed with an RCU delay - a debugging
+sleep shows that usage drops as expected shortly after.
 
-Commit a13696b83da4 ("blk-iolatency: Make initialization lazy") adds
-a mutex named "init_mutex" in blk_iolatency_try_init for the race
-condition of initializing RQ_QOS_LATENCY.
-Now a new lock has been add to struct request_queue by commit a13bd91be223
-("block/rq_qos: protect rq_qos apis with a new lock"). And it has been
-held in blkg_conf_open_bdev before calling blk_iolatency_init.
-So it's not necessary to keep init_mutex in blk_iolatency_try_init, just
-remove it.
+Insert a 1s sleep after completing the cgroup creation/deletions. This
+should be good enough, assuming that machines running those tests are
+otherwise not very busy. This commit is directly inspired by Johannes
+over at the link below.
 
-Signed-off-by: Li Lingfeng <lilingfeng3@huawei.com>
+Link: https://lore.kernel.org/all/20230801135632.1768830-1-hannes@cmpxchg.org/
+
+Signed-off-by: Lucas Karpinski <lkarpins@redhat.com>
 ---
- block/blk-iolatency.c | 5 -----
- 1 file changed, 5 deletions(-)
+ tools/testing/selftests/cgroup/test_kmem.c | 3 +++
+ 1 file changed, 3 insertions(+)
 
-diff --git a/block/blk-iolatency.c b/block/blk-iolatency.c
-index fd5fec989e39..8fbd6bc96acb 100644
---- a/block/blk-iolatency.c
-+++ b/block/blk-iolatency.c
-@@ -826,7 +826,6 @@ static void iolatency_clear_scaling(struct blkcg_gq *blkg)
+diff --git a/tools/testing/selftests/cgroup/test_kmem.c b/tools/testing/selftests/cgroup/test_kmem.c
+index 67cc0182058d..7ac384bbfdd5 100644
+--- a/tools/testing/selftests/cgroup/test_kmem.c
++++ b/tools/testing/selftests/cgroup/test_kmem.c
+@@ -183,6 +183,9 @@ static int test_kmem_memcg_deletion(const char *root)
+ 	if (cg_run_in_subcgroups(parent, alloc_kmem_smp, NULL, 100))
+ 		goto cleanup;
  
- static int blk_iolatency_try_init(struct blkg_conf_ctx *ctx)
- {
--	static DEFINE_MUTEX(init_mutex);
- 	int ret;
- 
- 	ret = blkg_conf_open_bdev(ctx);
-@@ -837,13 +836,9 @@ static int blk_iolatency_try_init(struct blkg_conf_ctx *ctx)
- 	 * blk_iolatency_init() may fail after rq_qos_add() succeeds which can
- 	 * confuse iolat_rq_qos() test. Make the test and init atomic.
- 	 */
--	mutex_lock(&init_mutex);
--
- 	if (!iolat_rq_qos(ctx->bdev->bd_queue))
- 		ret = blk_iolatency_init(ctx->bdev->bd_disk);
- 
--	mutex_unlock(&init_mutex);
--
- 	return ret;
- }
- 
++	/* wait for RCU freeing */
++	sleep(1);
++
+ 	current = cg_read_long(parent, "memory.current");
+ 	slab = cg_read_key_long(parent, "memory.stat", "slab ");
+ 	anon = cg_read_key_long(parent, "memory.stat", "anon ");
 -- 
-2.39.2
+2.41.0
 
