@@ -1,63 +1,61 @@
 From: Lucas Karpinski <lkarpins-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH] selftests: cgroup: fix test_kmem_memcg_deletion false
- positives
-Date: Fri, 4 Aug 2023 14:59:28 -0400
-Message-ID: <x2zp6vbr5c3oa3xyfctj66y4ikdxtuo7wsqamkqgyt5ppu6ccb@vwxzimqvrhgk>
-References: <edpx3ejic2cxolhoynxvwal2i4a35akopg6hshcfxker6oxcn7@l32pzfyucgec>
- <20230804163716.GA337691@cmpxchg.org>
+Subject: [PATCH v3] selftests: cgroup: fix test_kmem_basic less than error
+Date: Fri, 4 Aug 2023 15:35:29 -0400
+Message-ID: <7d6gcuyzdjcice6qbphrmpmv5skr5jtglg375unnjxqhstvhxc@qkn6dw6bao6v>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1691175583;
+        s=mimecast20190719; t=1691177753;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=8TRlrLFCMco4XO+xD44hANqOAJKBhYI/ogDyetWODDc=;
-        b=h7sp4Sog4dhP+jLK55vXWj/8VefiAvkVBQqOLTL7LDgj9t0tdlVqLn2se6GqLUkzcpgR3I
-        /Ak1YRlVHPOodQnLbjLH/QPfQLxNEXKnEhXCfZ3qIcnsJpKMhCKqhWEK2pTFP294/uzj6l
-        lJ7NSyPpzuJMnCA8HjlAGfwo3oRnLsA=
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type;
+        bh=/fEGLQTPa3ePRn0SUruCR/akdAF06PibGk+SoDw6oqs=;
+        b=EKepgm59iEW0B4OmUB2n2dIYEg80eS9pWxANbLzawBzMWgFpg6+l4s5Ruko2L5Ly5/KabE
+        KasgEN0ynKNy8fxLQDBeP7t3iisxryDBy6YvUmnFIr1vCi6Kz3ob9aVvxsa7cmmIMULOFc
+        NmCw4HnM4J3dxnEklTAxl+oVQ9xWBlM=
 Content-Disposition: inline
-In-Reply-To: <20230804163716.GA337691-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Muchun Song <muchun.song-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Shuah Khan <shuah-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kselftest-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Muchun Song <muchun.song-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Shuah Khan <shuah-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: Muchun Song <muchun.song-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kselftest-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Fri, Aug 04, 2023 at 12:37:16PM -0400, Johannes Weiner wrote:
-> On Fri, Aug 04, 2023 at 11:37:33AM -0400, Lucas Karpinski wrote:
-> > The test allocates dcache inside a cgroup, then destroys the cgroups and
-> > then checks the sanity of numbers on the parent level. The reason it
-> > fails is because dentries are freed with an RCU delay - a debugging
-> > sleep shows that usage drops as expected shortly after.
-> > 
-> > Insert a 1s sleep after completing the cgroup creation/deletions. This
-> > should be good enough, assuming that machines running those tests are
-> > otherwise not very busy. This commit is directly inspired by Johannes
-> > over at the link below.
-> > 
-> > Link: https://lore.kernel.org/all/20230801135632.1768830-1-hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org/
-> > 
-> > Signed-off-by: Lucas Karpinski <lkarpins-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-> 
-> Maybe I'm missing something, but there isn't a limit set anywhere that
-> would cause the dentries to be reclaimed and freed, no? When the
-> subgroups are deleted, the objects are just moved to the parent. The
-> counters inside the parent (which are hierarchical) shouldn't change.
-> 
-> So this seems to be a different scenario than test_kmem_basic. If the
-> test is failing for you, I can't quite see why.
->
-You're right, the parent inherited the counters and it should behave
-the same whether I'm directly removing the child or if I was moving it
-under another cgroup. I do see the behaviour you described on my
-x86_64 setup, but the wrong behaviour on my aarch64 dev. platform. I'll
-take a closer look, but just wanted to leave an example here of what I
-see.
+test_kmem_basic creates 100,000 negative dentries, with each one mapping
+to a slab object. After memory.high is set, these are reclaimed through
+the shrink_slab function call which reclaims all 100,000 entries. The
+test passes the majority of the time because when slab1 or current is
+calculated, it is often above 0, however, 0 is also an acceptable value.
 
-Example of slab size pre/post sleep:
-slab_pre = 18164688, slab_post = 3360000
+Signed-off-by: Lucas Karpinski <lkarpins-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+---
+In the previous patch, I missed a change to the variable 'current' even
+after some testing as the issue was so sporadic. Current takes the slab
+size into account and can also face the same issue where it fails since
+the reported value is 0, which is an acceptable value.
 
-Thanks,
-Lucas
+Drop: b4abfc19 in mm-unstable
+V2: https://lore.kernel.org/all/ix6vzgjqay2x7bskle7pypoint4nj66fwq7odvd5hektatvp2l@kukoifnfj3dr/
+
+ tools/testing/selftests/cgroup/test_kmem.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/tools/testing/selftests/cgroup/test_kmem.c b/tools/testing/selftests/cgroup/test_kmem.c
+index 1b2cec9d18a4..ed2e50bb1e76 100644
+--- a/tools/testing/selftests/cgroup/test_kmem.c
++++ b/tools/testing/selftests/cgroup/test_kmem.c
+@@ -75,11 +75,11 @@ static int test_kmem_basic(const char *root)
+ 	sleep(1);
+ 
+ 	slab1 = cg_read_key_long(cg, "memory.stat", "slab ");
+-	if (slab1 <= 0)
++	if (slab1 < 0)
+ 		goto cleanup;
+ 
+ 	current = cg_read_long(cg, "memory.current");
+-	if (current <= 0)
++	if (current < 0)
+ 		goto cleanup;
+ 
+ 	if (slab1 < slab0 / 2 && current < slab0 / 2)
+-- 
+2.41.0
 
