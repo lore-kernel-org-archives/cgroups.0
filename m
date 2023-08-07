@@ -1,119 +1,151 @@
 From: Hao Jia <jiahao.os@bytedance.com>
-Subject: [PATCH v2] cgroup/rstat: Record the cumulative per-cpu time of cgroup and its descendants
-Date: Mon,  7 Aug 2023 11:29:30 +0800
-Message-ID: <20230807032930.87785-1-jiahao.os@bytedance.com>
+Subject: Re: [External] Re: [PATCH] cgroup/rstat: record the cumulative
+ per-cpu time of cgroup and its descendants
+Date: Mon, 7 Aug 2023 11:36:22 +0800
+Message-ID: <2ee4f673-8218-ac72-684f-3cd78c46f750@bytedance.com>
+References: <20230717093612.40846-1-jiahao.os@bytedance.com>
+ <ZLWb-LsBD041hMvr@slm.duckdns.org>
+ <2655026d-6ae4-c14c-95b0-4177eefa434f@bytedance.com>
+ <ZLcJ1nH8KzWzoQWj@slm.duckdns.org>
+ <b4424767-dce7-08a9-3759-43cc9dfa4273@bytedance.com>
+ <3d2b68bf-9f40-c779-dcfd-4cf9939edecc@bytedance.com>
+ <ZMKs_GpHEW6Pfusj@slm.duckdns.org> <ZMrNHf2tg8AZ2F0z@slm.duckdns.org>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=bytedance.com; s=google; t=1691379002; x=1691983802;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=VSleIMqg0obClaPZQhg7+Ks6xrxwU85bZ75FMLlTO7c=;
-        b=EnSVSnHsPlsW89xzfLkP3wUxd8KSZca7gDZUxHD2RVP7s44GVLnjzcbWmFVtLJnCV8
-         CzDZNRwl2mo+D5XvQH1+JytoDuc4qdfSgKWq3EyWXSmbTMvnOB5fyBYbl9KaltxT6h2c
-         FLSDhmaOfPYzWAd7bYGacMNsodAJgWHCZOjWe5ig6QevjgkdBPvKaFQbfpDcV/HTXQuX
-         JrFxQb61l1zOUWWtucIgRCWnV3ogBWY3QhZilZ30hMLXiYYn4m3jDHi5ASFDduPgb5vK
-         lvZGlTKYsprzbg0kqS+VVw9LK0m6HbbH1yYT8Pv9F4h4U2QhqCNHVFyRIzJzmnkp72nl
-         1zbg==
+        d=bytedance.com; s=google; t=1691379388; x=1691984188;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to:subject
+         :user-agent:mime-version:date:message-id:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=WAmHsv0aooR3nX10HEjLL5tP/plsIB0hDyj15nET4fc=;
+        b=HX/bG4KLwTRh5wjISv7jDf/BZhZZfMUQIkKKTpsE4Z/nEdgem5yGJQ+klykQb7Br0q
+         y7EA4Xwz6bfgAGBQ4je7kw+PXiEnHaeArh2+vVWRJ5R9GbwnzOWeJoAemOa10kykp9xs
+         sr7uBgapdp0vnVjhZdiUHAXUpwVoJqEWqfYiAHpIZuPu3bL/MJ/MEeLVObazbIxMmrPE
+         ULlmAFuVXJtd3P6tz4I0Ken9ItLgysJzH3OhNswJQO8BKFVzsjN4sPM8mUk0t0qifGfh
+         FFZ5MOWXOM+mbM3Pa2SRYH6Udxq6Z3Uu8YbpxsE+pFrs64y9fepLwckCpV2uWOFy/AW1
+         apDQ==
+In-Reply-To: <ZMrNHf2tg8AZ2F0z@slm.duckdns.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-To: tj@kernel.org, lizefan.x@bytedance.com, hannes@cmpxchg.org, mkoutny@suse.com, songmuchun@bytedance.com, muchun.song@linux.dev, wuyun.abel@bytedance.com
-Cc: cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, Hao Jia <jiahao.os@bytedance.com>
+Content-Type: text/plain; charset="utf-8"; format="flowed"
+To: Tejun Heo <tj@kernel.org>
+Cc: lizefan.x@bytedance.com, hannes@cmpxchg.org, mkoutny@suse.com, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
 
-The member variable bstat of the structure cgroup_rstat_cpu
-records the per-cpu time of the cgroup itself, but does not
-include the per-cpu time of its descendants. The per-cpu time
-including descendants is very useful for calculating the
-per-cpu usage of cgroups.
 
-Although we can indirectly obtain the total per-cpu time
-of the cgroup and its descendants by accumulating the per-cpu
-bstat of each descendant of the cgroup. But after a child cgroup
-is removed, we will lose its bstat information. This will cause
-the cumulative value to be non-monotonic, thus affecting
-the accuracy of cgroup per-cpu usage.
 
-So we add the subtree_bstat variable to record the total
-per-cpu time of this cgroup and its descendants, which is
-similar to "cpuacct.usage*" in cgroup v1. And this is
-also helpful for the migration from cgroup v1 to cgroup v2.
-After adding this variable, we can obtain the per-cpu time of
-cgroup and its descendants in user mode through eBPF/drgn, etc.
-And we are still trying to determine how to expose it in the
-cgroupfs interface.
+On 2023/8/3 Tejun Heo wrote:
+> I couldn't come up with an answer. Let's go ahead with adding the field but
+> can you please do the followings?
+> 
 
-Suggested-by: Tejun Heo <tj@kernel.org>
-Signed-off-by: Hao Jia <jiahao.os@bytedance.com>
----
- include/linux/cgroup-defs.h | 14 ++++++++++++++
- kernel/cgroup/rstat.c       | 12 ++++++++++--
- 2 files changed, 24 insertions(+), 2 deletions(-)
+Thank you for your suggestion. I am very willing to do it.
 
-diff --git a/include/linux/cgroup-defs.h b/include/linux/cgroup-defs.h
-index 8a0d5466c7be..7a2862172f51 100644
---- a/include/linux/cgroup-defs.h
-+++ b/include/linux/cgroup-defs.h
-@@ -341,6 +341,20 @@ struct cgroup_rstat_cpu {
- 	 */
- 	struct cgroup_base_stat last_bstat;
- 
-+	/*
-+	 * This field is used to record the cumulative per-cpu time of
-+	 * the cgroup and its descendants. Currently it can be read via
-+	 * eBPF/drgn etc, and we are still trying to determine how to
-+	 * expose it in the cgroupfs interface.
-+	 */
-+	struct cgroup_base_stat subtree_bstat;
-+
-+	/*
-+	 * Snapshots at the last reading. These are used to calculate the
-+	 * deltas to propagate to the per-cpu subtree_bstat.
-+	 */
-+	struct cgroup_base_stat last_subtree_bstat;
-+
- 	/*
- 	 * Child cgroups with stat updates on this cpu since the last read
- 	 * are linked on the parent's ->updated_children through
-diff --git a/kernel/cgroup/rstat.c b/kernel/cgroup/rstat.c
-index 2542c21b6b6d..d80d7a608141 100644
---- a/kernel/cgroup/rstat.c
-+++ b/kernel/cgroup/rstat.c
-@@ -344,6 +344,7 @@ static void cgroup_base_stat_flush(struct cgroup *cgrp, int cpu)
- {
- 	struct cgroup_rstat_cpu *rstatc = cgroup_rstat_cpu(cgrp, cpu);
- 	struct cgroup *parent = cgroup_parent(cgrp);
-+	struct cgroup_rstat_cpu *prstatc;
- 	struct cgroup_base_stat delta;
- 	unsigned seq;
- 
-@@ -357,17 +358,24 @@ static void cgroup_base_stat_flush(struct cgroup *cgrp, int cpu)
- 		delta = rstatc->bstat;
- 	} while (__u64_stats_fetch_retry(&rstatc->bsync, seq));
- 
--	/* propagate percpu delta to global */
-+	/* propagate per-cpu delta to cgroup and per-cpu global statistics */
- 	cgroup_base_stat_sub(&delta, &rstatc->last_bstat);
- 	cgroup_base_stat_add(&cgrp->bstat, &delta);
- 	cgroup_base_stat_add(&rstatc->last_bstat, &delta);
-+	cgroup_base_stat_add(&rstatc->subtree_bstat, &delta);
- 
--	/* propagate global delta to parent (unless that's root) */
-+	/* propagate cgroup and per-cpu global delta to parent (unless that's root) */
- 	if (cgroup_parent(parent)) {
- 		delta = cgrp->bstat;
- 		cgroup_base_stat_sub(&delta, &cgrp->last_bstat);
- 		cgroup_base_stat_add(&parent->bstat, &delta);
- 		cgroup_base_stat_add(&cgrp->last_bstat, &delta);
-+
-+		delta = rstatc->subtree_bstat;
-+		prstatc = cgroup_rstat_cpu(parent, cpu);
-+		cgroup_base_stat_sub(&delta, &rstatc->last_subtree_bstat);
-+		cgroup_base_stat_add(&prstatc->subtree_bstat, &delta);
-+		cgroup_base_stat_add(&rstatc->last_subtree_bstat, &delta);
- 	}
- }
- 
--- 
-2.37.0
+> * Name it to something like subtree_bstat instead of cumul_bstat. The
+>    counters are all cumulative.
 
+I did it in v2 patch.
+
+> 
+> * Are you sure the upward propagation logic is correct? It's calculating
+>    global delta and then propagating to the per-cpu delta of the parent. Is
+>    that correct because the two delta calculations always end up the same?
+
+Sorry, I made a mistake and misled you. These two deltas are not always 
+equal.
+
+I found and reproduced a bug case:
+We build /sys/fs/cgroup/test /sys/fs/cgroup/test/t1, 
+/sys/fs/cgroup/test/t1/tt1 in turn.
+And there are only tasks in /sys/fs/cgroup/test/t1/tt1. After applying 
+this patch, some operations and corresponding data changes are as follows:
+
+Step 1、cat /sys/fs/cgroup/test/t1/tt1/cpu.stat
+*cpu 6* current flush cgroup /test/t1/tt1
+per-cpu delta utime 0 stime 0 sum_exec_runtime 257341
+/test/t1/tt1 cumul_bstat(cpu 6) utime 0 stime 0 sum_exec_runtime 257341
+/test/t1/tt1 cgrp->bstat utime 0 stime 0 sum_exec_runtime 257341
+if (cgroup_parent(parent)) {
+     cgrp delta utime 0 stime 0 sum_exec_runtime 257341
+     parent(/test/t1) ->bstat utime 0 stime 0 sum_exec_runtime 257341
+     parent(/test/t1) last_bstat utime 0 stime 0 sum_exec_runtime 0
+     parent(/test/t1) cumul_bstat utime 0 stime 0 sum_exec_runtime 257341
+}
+
+
+Step 2、cat /sys/fs/cgroup/test/t1/tt1/cpu.stat
+*cpu 12* current flush cgroup /test/t1/tt1
+per-cpu delta utime 0 stime 1000000 sum_exec_runtime 747042
+/test/t1/tt1 cumul_bstat utime 0 stime 1000000 sum_exec_runtime 747042
+/test/t1/tt1 cgrp->bstat utime 0 stime 1000000 sum_exec_runtime 1004383
+if (cgroup_parent(parent)) {
+     cgrp delta utime 0 stime 1000000 sum_exec_runtime 747042
+     parent(/test/t1) ->bstat utime 0 stime 1000000 sum_exec_runtime 1004383
+     parent(/test/t1) last_bstat utime 0 stime 0 sum_exec_runtime 0
+     parent(/test/t1) cumul_bstat utime 0 stime 1000000 sum_exec_runtime 
+747042
+}
+
+
+Step 3、cat /sys/fs/cgroup/test/cpu.stat
+(cgroup fulsh /test/t1/tt1 -> /test/t1 -> /test in turn)
+
+*cpu 6*  current flush cgroup /test/t1/tt1
+per-cpu delta utime 0 stime 0 sum_exec_runtime 263468
+/test/t1/tt1 cumul_bstat(cpu 6) utime 0 stime 0 sum_exec_runtime 520809
+/test/t1/tt1 cgrp->bstat utime 0 stime 1000000 sum_exec_runtime 1267851
+if (cgroup_parent(parent)) {
+     cgrp delta utime 0 stime 0 sum_exec_runtime 263468
+     parent(/test/t1) ->bstat utime 0 stime 1000000 sum_exec_runtime 1267851
+     parent(/test/t1) last_bstat utime 0 stime 0 sum_exec_runtime 0
+     parent(/test/t1) cumul_bstat utime 0 stime 0 sum_exec_runtime 520809
+}
+
+*cpu 6* current flush cgroup /test/t1
+per-cpu delta utime 0 stime 0 sum_exec_runtime 0
+/test/t1 cumul_bstat(cpu 6) utime 0 stime 0 sum_exec_runtime 520809
+/test/t1 cgrp->bstat utime 0 stime 1000000 sum_exec_runtime 1267851
+if (cgroup_parent(parent)) {
+     cgrp delta utime 0 stime 1000000 sum_exec_runtime 1267851  <---
+     parent(/test) ->bstat utime 0 stime 1000000 sum_exec_runtime 1267851
+     parent(/test) last_bstat utime 0 stime 0 sum_exec_runtime 0
+     parent(/test) cumul_bstat (cpu 6) utime 0 stime 1000000 
+sum_exec_runtime 1267851 <--- *error*
+******
+   Here cgrp delta is *not equal* to per-cpu delta.
+   The frequency of cgroup (/test) and its chiled cgroup (/test/t1/tt1) 
+  flush is inconsistent.
+   In other words (when we call cgroup_base_stat_flush(), we will not 
+necessarily flush to the highest-level cgroup except root(like step 1 
+and 2 above)).
+   Therefore, cgrp delta may contain the cumulative value of multiple 
+per-cpu deltas.
+
+   The correct value of parent(/test) cumul_bstat should be utime 0 
+stime 0 sum_exec_runtime 520809.
+******
+}
+
+*cpu 6* current flush cgroup /test
+per-cpu delta utime 0 stime 0 sum_exec_runtime 0
+cumul_bstat utime 0 stime 1000000 sum_exec_runtime 1267851
+/test ->bstat utime 0 stime 1000000 sum_exec_runtime 1267851
+	cgroup_parent(parent) is NULL end.
+
+
+So we should add a per-cpu variable subtree_last_bstat similar to 
+cgrp->last_bstat to record the last value.
+
+I have sent v2 patch, please review it again.
+v2 link:
+https://lore.kernel.org/all/20230807032930.87785-1-jiahao.os@bytedance.com
+
+
+> * Please add a comment explaining that the field is not currently used
+>    outside of being read from bpf / drgn and what not and that we're still
+>    trying to determine how to expose that in the cgroupfs interface.
+
+
+Thanks, I did it in v2 patch.
+
+Thanks,
+Hao
