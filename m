@@ -1,151 +1,66 @@
-From: Hao Jia <jiahao.os@bytedance.com>
-Subject: Re: [External] Re: [PATCH] cgroup/rstat: record the cumulative
- per-cpu time of cgroup and its descendants
-Date: Mon, 7 Aug 2023 11:36:22 +0800
-Message-ID: <2ee4f673-8218-ac72-684f-3cd78c46f750@bytedance.com>
-References: <20230717093612.40846-1-jiahao.os@bytedance.com>
- <ZLWb-LsBD041hMvr@slm.duckdns.org>
- <2655026d-6ae4-c14c-95b0-4177eefa434f@bytedance.com>
- <ZLcJ1nH8KzWzoQWj@slm.duckdns.org>
- <b4424767-dce7-08a9-3759-43cc9dfa4273@bytedance.com>
- <3d2b68bf-9f40-c779-dcfd-4cf9939edecc@bytedance.com>
- <ZMKs_GpHEW6Pfusj@slm.duckdns.org> <ZMrNHf2tg8AZ2F0z@slm.duckdns.org>
+From: Yu Kuai <yukuai1-XF6JlduFytWkHkcT6e4Xnw@public.gmane.org>
+Subject: Re: [PATCH -next] block: remove init_mutex in blk_iolatency_try_init
+Date: Mon, 7 Aug 2023 14:18:43 +0800
+Message-ID: <7436e5af-f32c-6eea-7b25-d416c414f3c5@huaweicloud.com>
+References: <20230804113659.3816877-1-lilingfeng@huaweicloud.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=bytedance.com; s=google; t=1691379388; x=1691984188;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to:subject
-         :user-agent:mime-version:date:message-id:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=WAmHsv0aooR3nX10HEjLL5tP/plsIB0hDyj15nET4fc=;
-        b=HX/bG4KLwTRh5wjISv7jDf/BZhZZfMUQIkKKTpsE4Z/nEdgem5yGJQ+klykQb7Br0q
-         y7EA4Xwz6bfgAGBQ4je7kw+PXiEnHaeArh2+vVWRJ5R9GbwnzOWeJoAemOa10kykp9xs
-         sr7uBgapdp0vnVjhZdiUHAXUpwVoJqEWqfYiAHpIZuPu3bL/MJ/MEeLVObazbIxMmrPE
-         ULlmAFuVXJtd3P6tz4I0Ken9ItLgysJzH3OhNswJQO8BKFVzsjN4sPM8mUk0t0qifGfh
-         FFZ5MOWXOM+mbM3Pa2SRYH6Udxq6Z3Uu8YbpxsE+pFrs64y9fepLwckCpV2uWOFy/AW1
-         apDQ==
-In-Reply-To: <ZMrNHf2tg8AZ2F0z@slm.duckdns.org>
+Content-Transfer-Encoding: quoted-printable
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <20230804113659.3816877-1-lilingfeng-XF6JlduFytWkHkcT6e4Xnw@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="utf-8"; format="flowed"
-To: Tejun Heo <tj@kernel.org>
-Cc: lizefan.x@bytedance.com, hannes@cmpxchg.org, mkoutny@suse.com, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset="iso-8859-1"; format="flowed"
+To: Li Lingfeng <lilingfeng-XF6JlduFytWkHkcT6e4Xnw@public.gmane.org>, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org
+Cc: josef-DigfWCa+lFGyeJad7bwFQA@public.gmane.org, axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linan122-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, yi.zhang-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, yangerkun-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, lilingfeng3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, "yukuai (C)" <yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 
+=D4=DA 2023/08/04 19:36, Li Lingfeng =D0=B4=B5=C0:
+> From: Li Lingfeng <lilingfeng3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+>=20
+> Commit a13696b83da4 ("blk-iolatency: Make initialization lazy") adds
+> a mutex named "init_mutex" in blk_iolatency_try_init for the race
+> condition of initializing RQ_QOS_LATENCY.
+> Now a new lock has been add to struct request_queue by commit a13bd91be223
+> ("block/rq_qos: protect rq_qos apis with a new lock"). And it has been
+> held in blkg_conf_open_bdev before calling blk_iolatency_init.
+> So it's not necessary to keep init_mutex in blk_iolatency_try_init, just
+> remove it.
 
+LGTM
 
-On 2023/8/3 Tejun Heo wrote:
-> I couldn't come up with an answer. Let's go ahead with adding the field but
-> can you please do the followings?
-> 
+Reviewed-by: Yu Kuai <yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+>=20
+> Signed-off-by: Li Lingfeng <lilingfeng3-hv44wF8Li93QT0dZR+AlfA@public.gma=
+ne.org>
+> ---
+>   block/blk-iolatency.c | 5 -----
+>   1 file changed, 5 deletions(-)
+>=20
+> diff --git a/block/blk-iolatency.c b/block/blk-iolatency.c
+> index fd5fec989e39..8fbd6bc96acb 100644
+> --- a/block/blk-iolatency.c
+> +++ b/block/blk-iolatency.c
+> @@ -826,7 +826,6 @@ static void iolatency_clear_scaling(struct blkcg_gq *=
+blkg)
+>  =20
+>   static int blk_iolatency_try_init(struct blkg_conf_ctx *ctx)
+>   {
+> -	static DEFINE_MUTEX(init_mutex);
+>   	int ret;
+>  =20
+>   	ret =3D blkg_conf_open_bdev(ctx);
+> @@ -837,13 +836,9 @@ static int blk_iolatency_try_init(struct blkg_conf_c=
+tx *ctx)
+>   	 * blk_iolatency_init() may fail after rq_qos_add() succeeds which can
+>   	 * confuse iolat_rq_qos() test. Make the test and init atomic.
+>   	 */
+> -	mutex_lock(&init_mutex);
+> -
+>   	if (!iolat_rq_qos(ctx->bdev->bd_queue))
+>   		ret =3D blk_iolatency_init(ctx->bdev->bd_disk);
+>  =20
+> -	mutex_unlock(&init_mutex);
+> -
+>   	return ret;
+>   }
+>  =20
+>=20
 
-Thank you for your suggestion. I am very willing to do it.
-
-> * Name it to something like subtree_bstat instead of cumul_bstat. The
->    counters are all cumulative.
-
-I did it in v2 patch.
-
-> 
-> * Are you sure the upward propagation logic is correct? It's calculating
->    global delta and then propagating to the per-cpu delta of the parent. Is
->    that correct because the two delta calculations always end up the same?
-
-Sorry, I made a mistake and misled you. These two deltas are not always 
-equal.
-
-I found and reproduced a bug case:
-We build /sys/fs/cgroup/test /sys/fs/cgroup/test/t1, 
-/sys/fs/cgroup/test/t1/tt1 in turn.
-And there are only tasks in /sys/fs/cgroup/test/t1/tt1. After applying 
-this patch, some operations and corresponding data changes are as follows:
-
-Step 1、cat /sys/fs/cgroup/test/t1/tt1/cpu.stat
-*cpu 6* current flush cgroup /test/t1/tt1
-per-cpu delta utime 0 stime 0 sum_exec_runtime 257341
-/test/t1/tt1 cumul_bstat(cpu 6) utime 0 stime 0 sum_exec_runtime 257341
-/test/t1/tt1 cgrp->bstat utime 0 stime 0 sum_exec_runtime 257341
-if (cgroup_parent(parent)) {
-     cgrp delta utime 0 stime 0 sum_exec_runtime 257341
-     parent(/test/t1) ->bstat utime 0 stime 0 sum_exec_runtime 257341
-     parent(/test/t1) last_bstat utime 0 stime 0 sum_exec_runtime 0
-     parent(/test/t1) cumul_bstat utime 0 stime 0 sum_exec_runtime 257341
-}
-
-
-Step 2、cat /sys/fs/cgroup/test/t1/tt1/cpu.stat
-*cpu 12* current flush cgroup /test/t1/tt1
-per-cpu delta utime 0 stime 1000000 sum_exec_runtime 747042
-/test/t1/tt1 cumul_bstat utime 0 stime 1000000 sum_exec_runtime 747042
-/test/t1/tt1 cgrp->bstat utime 0 stime 1000000 sum_exec_runtime 1004383
-if (cgroup_parent(parent)) {
-     cgrp delta utime 0 stime 1000000 sum_exec_runtime 747042
-     parent(/test/t1) ->bstat utime 0 stime 1000000 sum_exec_runtime 1004383
-     parent(/test/t1) last_bstat utime 0 stime 0 sum_exec_runtime 0
-     parent(/test/t1) cumul_bstat utime 0 stime 1000000 sum_exec_runtime 
-747042
-}
-
-
-Step 3、cat /sys/fs/cgroup/test/cpu.stat
-(cgroup fulsh /test/t1/tt1 -> /test/t1 -> /test in turn)
-
-*cpu 6*  current flush cgroup /test/t1/tt1
-per-cpu delta utime 0 stime 0 sum_exec_runtime 263468
-/test/t1/tt1 cumul_bstat(cpu 6) utime 0 stime 0 sum_exec_runtime 520809
-/test/t1/tt1 cgrp->bstat utime 0 stime 1000000 sum_exec_runtime 1267851
-if (cgroup_parent(parent)) {
-     cgrp delta utime 0 stime 0 sum_exec_runtime 263468
-     parent(/test/t1) ->bstat utime 0 stime 1000000 sum_exec_runtime 1267851
-     parent(/test/t1) last_bstat utime 0 stime 0 sum_exec_runtime 0
-     parent(/test/t1) cumul_bstat utime 0 stime 0 sum_exec_runtime 520809
-}
-
-*cpu 6* current flush cgroup /test/t1
-per-cpu delta utime 0 stime 0 sum_exec_runtime 0
-/test/t1 cumul_bstat(cpu 6) utime 0 stime 0 sum_exec_runtime 520809
-/test/t1 cgrp->bstat utime 0 stime 1000000 sum_exec_runtime 1267851
-if (cgroup_parent(parent)) {
-     cgrp delta utime 0 stime 1000000 sum_exec_runtime 1267851  <---
-     parent(/test) ->bstat utime 0 stime 1000000 sum_exec_runtime 1267851
-     parent(/test) last_bstat utime 0 stime 0 sum_exec_runtime 0
-     parent(/test) cumul_bstat (cpu 6) utime 0 stime 1000000 
-sum_exec_runtime 1267851 <--- *error*
-******
-   Here cgrp delta is *not equal* to per-cpu delta.
-   The frequency of cgroup (/test) and its chiled cgroup (/test/t1/tt1) 
-  flush is inconsistent.
-   In other words (when we call cgroup_base_stat_flush(), we will not 
-necessarily flush to the highest-level cgroup except root(like step 1 
-and 2 above)).
-   Therefore, cgrp delta may contain the cumulative value of multiple 
-per-cpu deltas.
-
-   The correct value of parent(/test) cumul_bstat should be utime 0 
-stime 0 sum_exec_runtime 520809.
-******
-}
-
-*cpu 6* current flush cgroup /test
-per-cpu delta utime 0 stime 0 sum_exec_runtime 0
-cumul_bstat utime 0 stime 1000000 sum_exec_runtime 1267851
-/test ->bstat utime 0 stime 1000000 sum_exec_runtime 1267851
-	cgroup_parent(parent) is NULL end.
-
-
-So we should add a per-cpu variable subtree_last_bstat similar to 
-cgrp->last_bstat to record the last value.
-
-I have sent v2 patch, please review it again.
-v2 link:
-https://lore.kernel.org/all/20230807032930.87785-1-jiahao.os@bytedance.com
-
-
-> * Please add a comment explaining that the field is not currently used
->    outside of being read from bpf / drgn and what not and that we're still
->    trying to determine how to expose that in the cgroupfs interface.
-
-
-Thanks, I did it in v2 patch.
-
-Thanks,
-Hao
