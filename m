@@ -1,168 +1,55 @@
-From: kernel test robot <lkp-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
-Subject: [tj-cgroup:for-next] BUILD SUCCESS
- 0437719c1a97791481c5fd59642494f2108701a8
-Date: Tue, 08 Aug 2023 15:00:52 +0800
-Message-ID: <202308081551.ERxqlVdc-lkp@intel.com>
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1691510104; x=1723046104;
-  h=date:from:to:cc:subject:message-id;
-  bh=pk4aQ0FfxkHhiRBx3kOsi8unsqRNnMKZMr1hDMA2n2g=;
-  b=Yj8WviLuoaXH6CjdIV5wngsLNXuGK0acoDFnV2cabYEYktiX/oNgkgIi
-   pDJxD8XS3Zd5PK7R7DSLVpZVXLIqtZcH7qKi7/nsc+Z2vHWngQ8kue/Dx
-   INW9zxXeiBurA55S2xirnBRsDyDG1BFBWg+ih476RC6j2kMz9Q+rqsPOo
-   r5Ahli/rMkdUzAvPd3WKaY6QFd6g6lUSa8MBW8q5FHSEmWpdc4ujBlmI8
-   vU8HpJy8RUp4yA86PkD3pqUnGrkR/IAK0LaCljY6merSRalpkyHkFJS4i
-   yl5VdgP7JR09oXqx3YUIfTMzgVYEAWUb09ac8KSq/3HOPbgbswNdNZeX+
-   A==;
-List-ID: <cgroups.vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+From: David Hildenbrand <david-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH v2 5/7] mm: thp: split huge page to any lower order pages.
+Date: Tue, 8 Aug 2023 11:01:19 +0200
+Message-ID: <b545cac8-76f7-e3c3-0e1c-3cb922c9c9ae@redhat.com>
+References: <20230329011712.3242298-1-zi.yan@sent.com>
+ <20230329011712.3242298-6-zi.yan@sent.com>
+Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1691510601;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=shf77ttmFOuwEPRuUfK1N01vHtXf9AN1dtY0xeqDGqo=;
+        b=cKSmuAPLhLy0qmt+d0sVjk6Pa+cyD0Y3TksVjrhUC3KnJOyLgTk2Ekjj3jJnnOJutSioJF
+        uO2DO5CX6O7lR5hMBqUzN5XRngm0pvrRCsPEfcFgE8eXLT71CtIsb8g+/KVsLyd45Q4Lp0
+        pvMeBk8s7EJ+PamdoVjCfmZhQYfkb3I=
+Content-Language: en-US
+In-Reply-To: <20230329011712.3242298-6-zi.yan-vRdzynncJC4@public.gmane.org>
+List-ID: <cgroups.vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"; format="flowed"
+To: Zi Yan <ziy-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>, "Matthew Wilcox (Oracle)" <willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Yang Shi <shy828301-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Yu Zhao <yuzhao-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
+Cc: "Kirill A . Shutemov" <kirill.shutemov-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, Ryan Roberts <ryan.roberts-5wv7dgnIgG8@public.gmane.org>, =?UTF-8?Q?Michal_Koutn=c3=bd?= <mkoutny-IBi9RG/b67k@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Zach O'Keefe <zokeefe-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kselftest-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git for-next
-branch HEAD: 0437719c1a97791481c5fd59642494f2108701a8  cgroup/rstat: Record the cumulative per-cpu time of cgroup and its descendants
+On 29.03.23 03:17, Zi Yan wrote:
+> From: Zi Yan <ziy-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>
+> 
+> To split a THP to any lower order pages, we need to reform THPs on
+> subpages at given order and add page refcount based on the new page
+> order. Also we need to reinitialize page_deferred_list after removing
+> the page from the split_queue, otherwise a subsequent split will see
+> list corruption when checking the page_deferred_list again.
+> 
+> It has many uses, like minimizing the number of pages after
+> truncating a huge pagecache page. For anonymous THPs, we can only split
+> them to order-0 like before until we add support for any size anonymous
+> THPs.
+>
 
-elapsed time: 724m
+Because I'm currently looking into something that would also not be 
+compatible with order-1 for now:
 
-configs tested: 127
-configs skipped: 8
+You should make it clear that order-1 is not supported, like:
 
-The following configs have been built successfully.
-More configs may be tested in the coming days.
+"mm: thp: split huge page to any lower order pages (except order 1)"
 
-tested configs:
-alpha                            allyesconfig   gcc  
-alpha                               defconfig   gcc  
-alpha                randconfig-r002-20230807   gcc  
-alpha                randconfig-r006-20230807   gcc  
-alpha                randconfig-r013-20230807   gcc  
-alpha                randconfig-r014-20230807   gcc  
-alpha                randconfig-r025-20230807   gcc  
-arc                              allyesconfig   gcc  
-arc                                 defconfig   gcc  
-arc                  randconfig-r043-20230807   gcc  
-arm                              allmodconfig   gcc  
-arm                              allyesconfig   gcc  
-arm                                 defconfig   gcc  
-arm                  randconfig-r012-20230807   gcc  
-arm                  randconfig-r032-20230807   clang
-arm                  randconfig-r033-20230807   clang
-arm                  randconfig-r046-20230807   gcc  
-arm64                            allyesconfig   gcc  
-arm64                               defconfig   gcc  
-arm64                randconfig-r004-20230807   gcc  
-arm64                randconfig-r005-20230807   gcc  
-csky                                defconfig   gcc  
-csky                 randconfig-r024-20230807   gcc  
-hexagon              randconfig-r011-20230807   clang
-hexagon              randconfig-r031-20230807   clang
-hexagon              randconfig-r041-20230807   clang
-hexagon              randconfig-r045-20230807   clang
-i386                             allyesconfig   gcc  
-i386         buildonly-randconfig-r004-20230807   gcc  
-i386         buildonly-randconfig-r005-20230807   gcc  
-i386         buildonly-randconfig-r006-20230807   gcc  
-i386                              debian-10.3   gcc  
-i386                                defconfig   gcc  
-i386                 randconfig-i001-20230807   gcc  
-i386                 randconfig-i002-20230807   gcc  
-i386                 randconfig-i003-20230807   gcc  
-i386                 randconfig-i004-20230807   gcc  
-i386                 randconfig-i005-20230807   gcc  
-i386                 randconfig-i006-20230807   gcc  
-i386                 randconfig-i011-20230807   clang
-i386                 randconfig-i012-20230807   clang
-i386                 randconfig-i013-20230807   clang
-i386                 randconfig-i014-20230807   clang
-i386                 randconfig-i015-20230807   clang
-i386                 randconfig-i016-20230807   clang
-i386                 randconfig-r031-20230807   gcc  
-i386                 randconfig-r032-20230807   gcc  
-i386                 randconfig-r034-20230807   gcc  
-loongarch                        allmodconfig   gcc  
-loongarch                         allnoconfig   gcc  
-loongarch                           defconfig   gcc  
-loongarch            randconfig-r001-20230807   gcc  
-loongarch            randconfig-r003-20230807   gcc  
-loongarch            randconfig-r025-20230807   gcc  
-m68k                             allmodconfig   gcc  
-m68k                             allyesconfig   gcc  
-m68k                                defconfig   gcc  
-microblaze           randconfig-r015-20230807   gcc  
-microblaze           randconfig-r021-20230807   gcc  
-microblaze           randconfig-r035-20230807   gcc  
-mips                             allmodconfig   gcc  
-mips                             allyesconfig   gcc  
-mips                 randconfig-r021-20230807   gcc  
-mips                 randconfig-r023-20230807   gcc  
-nios2                               defconfig   gcc  
-nios2                randconfig-r001-20230807   gcc  
-nios2                randconfig-r034-20230807   gcc  
-nios2                randconfig-r036-20230807   gcc  
-openrisc             randconfig-r022-20230807   gcc  
-openrisc             randconfig-r024-20230807   gcc  
-openrisc             randconfig-r026-20230807   gcc  
-parisc                           allyesconfig   gcc  
-parisc                              defconfig   gcc  
-parisc               randconfig-r003-20230807   gcc  
-parisc               randconfig-r012-20230807   gcc  
-parisc               randconfig-r026-20230807   gcc  
-parisc64                            defconfig   gcc  
-powerpc                          allmodconfig   gcc  
-powerpc                           allnoconfig   gcc  
-powerpc              randconfig-r005-20230807   gcc  
-powerpc              randconfig-r011-20230807   clang
-powerpc              randconfig-r015-20230807   clang
-powerpc              randconfig-r036-20230807   gcc  
-riscv                            allmodconfig   gcc  
-riscv                             allnoconfig   gcc  
-riscv                            allyesconfig   gcc  
-riscv                               defconfig   gcc  
-riscv                randconfig-r042-20230807   clang
-riscv                          rv32_defconfig   gcc  
-s390                             allmodconfig   gcc  
-s390                             allyesconfig   gcc  
-s390                                defconfig   gcc  
-s390                 randconfig-r016-20230807   clang
-s390                 randconfig-r044-20230807   clang
-sh                               allmodconfig   gcc  
-sparc                            allyesconfig   gcc  
-sparc                               defconfig   gcc  
-sparc                randconfig-r014-20230807   gcc  
-sparc                randconfig-r023-20230807   gcc  
-sparc64              randconfig-r013-20230807   gcc  
-um                               allmodconfig   clang
-um                                allnoconfig   clang
-um                               allyesconfig   clang
-um                                  defconfig   gcc  
-um                             i386_defconfig   gcc  
-um                           x86_64_defconfig   gcc  
-x86_64                           allyesconfig   gcc  
-x86_64       buildonly-randconfig-r001-20230807   gcc  
-x86_64       buildonly-randconfig-r002-20230807   gcc  
-x86_64       buildonly-randconfig-r003-20230807   gcc  
-x86_64                              defconfig   gcc  
-x86_64                                  kexec   gcc  
-x86_64               randconfig-r004-20230807   gcc  
-x86_64               randconfig-x001-20230807   clang
-x86_64               randconfig-x002-20230807   clang
-x86_64               randconfig-x003-20230807   clang
-x86_64               randconfig-x004-20230807   clang
-x86_64               randconfig-x005-20230807   clang
-x86_64               randconfig-x006-20230807   clang
-x86_64               randconfig-x011-20230807   gcc  
-x86_64               randconfig-x012-20230807   gcc  
-x86_64               randconfig-x013-20230807   gcc  
-x86_64               randconfig-x014-20230807   gcc  
-x86_64               randconfig-x015-20230807   gcc  
-x86_64               randconfig-x016-20230807   gcc  
-x86_64                          rhel-8.3-rust   clang
-x86_64                               rhel-8.3   gcc  
+And clarify in the subject why that is the case.
 
 -- 
-0-DAY CI Kernel Test Service
-https://github.com/intel/lkp-tests/wiki
+Cheers,
+
+David / dhildenb
+
