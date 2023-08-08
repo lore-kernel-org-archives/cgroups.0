@@ -1,63 +1,168 @@
-From: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
-Subject: Re: [PATCH] mm/memcontrol: add tips for kmem.slabinfo
-Date: Tue, 8 Aug 2023 09:29:54 +0200
-Message-ID: <ZNHu8m3h3ckn+HeI@dhcp22.suse.cz>
-References: <20230808022229.1560559-1-xiongwei.song@windriver.com>
- <ZNG9vwg1K6fn1SvN@P9FQF9L96D>
-Mime-Version: 1.0
+From: kernel test robot <lkp-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+Subject: [tj-cgroup:for-next] BUILD SUCCESS
+ 0437719c1a97791481c5fd59642494f2108701a8
+Date: Tue, 08 Aug 2023 15:00:52 +0800
+Message-ID: <202308081551.ERxqlVdc-lkp@intel.com>
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
-        t=1691479795; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=lpA4KdrK70TL2Etj3PL1Cfra8aJL0LqY3fuNb0fiTvc=;
-        b=mgZVAibaY3lnvIFmOTTHRMtxp3t7qQKh8BnOSevYzZfKQ9ODixCurYGn0FceCkXYyYsp0+
-        RvsA+wkdqZohpaqPEn1MlNCQFu0gtGvRAx4qDNx3uVWO++I0kqwdfjEmJD+LpiPmQNnfxG
-        pO3CeZANL2wZKxSHtzxRki9EQbPlmFg=
-Content-Disposition: inline
-In-Reply-To: <ZNG9vwg1K6fn1SvN@P9FQF9L96D>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1691510104; x=1723046104;
+  h=date:from:to:cc:subject:message-id;
+  bh=pk4aQ0FfxkHhiRBx3kOsi8unsqRNnMKZMr1hDMA2n2g=;
+  b=Yj8WviLuoaXH6CjdIV5wngsLNXuGK0acoDFnV2cabYEYktiX/oNgkgIi
+   pDJxD8XS3Zd5PK7R7DSLVpZVXLIqtZcH7qKi7/nsc+Z2vHWngQ8kue/Dx
+   INW9zxXeiBurA55S2xirnBRsDyDG1BFBWg+ih476RC6j2kMz9Q+rqsPOo
+   r5Ahli/rMkdUzAvPd3WKaY6QFd6g6lUSa8MBW8q5FHSEmWpdc4ujBlmI8
+   vU8HpJy8RUp4yA86PkD3pqUnGrkR/IAK0LaCljY6merSRalpkyHkFJS4i
+   yl5VdgP7JR09oXqx3YUIfTMzgVYEAWUb09ac8KSq/3HOPbgbswNdNZeX+
+   A==;
 List-ID: <cgroups.vger.kernel.org>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>
-Cc: xiongwei.song-CWA4WttNNZF54TAoqtyWWQ@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, muchun.song-fxUVXftIFDnyG1zEObXtfA@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Mon 07-08-23 20:59:59, Roman Gushchin wrote:
-> On Tue, Aug 08, 2023 at 10:22:29AM +0800, xiongwei.song-CWA4WttNNZF54TAoqtyWWQ@public.gmane.org wrote:
-> > From: Xiongwei Song <xiongwei.song-CWA4WttNNZF54TAoqtyWWQ@public.gmane.org>
-> > 
-> > No any output from kmem.slabinfo, which is not friendly. Adding
-> > tips for it.
-> > 
-> > Signed-off-by: Xiongwei Song <xiongwei.song-CWA4WttNNZF54TAoqtyWWQ@public.gmane.org>
-> > ---
-> >  mm/memcontrol.c | 6 ++----
-> >  1 file changed, 2 insertions(+), 4 deletions(-)
-> > 
-> > diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-> > index e8ca4bdcb03c..58d3bd93890b 100644
-> > --- a/mm/memcontrol.c
-> > +++ b/mm/memcontrol.c
-> > @@ -5002,10 +5002,8 @@ static ssize_t memcg_write_event_control(struct kernfs_open_file *of,
-> >  #if defined(CONFIG_MEMCG_KMEM) && (defined(CONFIG_SLAB) || defined(CONFIG_SLUB_DEBUG))
-> >  static int mem_cgroup_slab_show(struct seq_file *m, void *p)
-> >  {
-> > -	/*
-> > -	 * Deprecated.
-> > -	 * Please, take a look at tools/cgroup/memcg_slabinfo.py .
-> > -	 */
-> > +	seq_puts(m, "This file is deprecated.\n"
-> > +		"Please use tools/cgroup/memcg_slabinfo.py, which is in kernel source.\n");
-> 
-> It'll break the ABI.
+tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git for-next
+branch HEAD: 0437719c1a97791481c5fd59642494f2108701a8  cgroup/rstat: Record the cumulative per-cpu time of cgroup and its descendants
 
-Agreed
+elapsed time: 724m
 
-> The only possible option here is to use WARN_ON_ONCE(), which will print once to dmesg.
-> But honestly I'm not sure we need it.
+configs tested: 127
+configs skipped: 8
 
-There are systems with panic_on_warn configured. I do not think we want
-those to go down just becasue some random tool tries to read this file.
+The following configs have been built successfully.
+More configs may be tested in the coming days.
+
+tested configs:
+alpha                            allyesconfig   gcc  
+alpha                               defconfig   gcc  
+alpha                randconfig-r002-20230807   gcc  
+alpha                randconfig-r006-20230807   gcc  
+alpha                randconfig-r013-20230807   gcc  
+alpha                randconfig-r014-20230807   gcc  
+alpha                randconfig-r025-20230807   gcc  
+arc                              allyesconfig   gcc  
+arc                                 defconfig   gcc  
+arc                  randconfig-r043-20230807   gcc  
+arm                              allmodconfig   gcc  
+arm                              allyesconfig   gcc  
+arm                                 defconfig   gcc  
+arm                  randconfig-r012-20230807   gcc  
+arm                  randconfig-r032-20230807   clang
+arm                  randconfig-r033-20230807   clang
+arm                  randconfig-r046-20230807   gcc  
+arm64                            allyesconfig   gcc  
+arm64                               defconfig   gcc  
+arm64                randconfig-r004-20230807   gcc  
+arm64                randconfig-r005-20230807   gcc  
+csky                                defconfig   gcc  
+csky                 randconfig-r024-20230807   gcc  
+hexagon              randconfig-r011-20230807   clang
+hexagon              randconfig-r031-20230807   clang
+hexagon              randconfig-r041-20230807   clang
+hexagon              randconfig-r045-20230807   clang
+i386                             allyesconfig   gcc  
+i386         buildonly-randconfig-r004-20230807   gcc  
+i386         buildonly-randconfig-r005-20230807   gcc  
+i386         buildonly-randconfig-r006-20230807   gcc  
+i386                              debian-10.3   gcc  
+i386                                defconfig   gcc  
+i386                 randconfig-i001-20230807   gcc  
+i386                 randconfig-i002-20230807   gcc  
+i386                 randconfig-i003-20230807   gcc  
+i386                 randconfig-i004-20230807   gcc  
+i386                 randconfig-i005-20230807   gcc  
+i386                 randconfig-i006-20230807   gcc  
+i386                 randconfig-i011-20230807   clang
+i386                 randconfig-i012-20230807   clang
+i386                 randconfig-i013-20230807   clang
+i386                 randconfig-i014-20230807   clang
+i386                 randconfig-i015-20230807   clang
+i386                 randconfig-i016-20230807   clang
+i386                 randconfig-r031-20230807   gcc  
+i386                 randconfig-r032-20230807   gcc  
+i386                 randconfig-r034-20230807   gcc  
+loongarch                        allmodconfig   gcc  
+loongarch                         allnoconfig   gcc  
+loongarch                           defconfig   gcc  
+loongarch            randconfig-r001-20230807   gcc  
+loongarch            randconfig-r003-20230807   gcc  
+loongarch            randconfig-r025-20230807   gcc  
+m68k                             allmodconfig   gcc  
+m68k                             allyesconfig   gcc  
+m68k                                defconfig   gcc  
+microblaze           randconfig-r015-20230807   gcc  
+microblaze           randconfig-r021-20230807   gcc  
+microblaze           randconfig-r035-20230807   gcc  
+mips                             allmodconfig   gcc  
+mips                             allyesconfig   gcc  
+mips                 randconfig-r021-20230807   gcc  
+mips                 randconfig-r023-20230807   gcc  
+nios2                               defconfig   gcc  
+nios2                randconfig-r001-20230807   gcc  
+nios2                randconfig-r034-20230807   gcc  
+nios2                randconfig-r036-20230807   gcc  
+openrisc             randconfig-r022-20230807   gcc  
+openrisc             randconfig-r024-20230807   gcc  
+openrisc             randconfig-r026-20230807   gcc  
+parisc                           allyesconfig   gcc  
+parisc                              defconfig   gcc  
+parisc               randconfig-r003-20230807   gcc  
+parisc               randconfig-r012-20230807   gcc  
+parisc               randconfig-r026-20230807   gcc  
+parisc64                            defconfig   gcc  
+powerpc                          allmodconfig   gcc  
+powerpc                           allnoconfig   gcc  
+powerpc              randconfig-r005-20230807   gcc  
+powerpc              randconfig-r011-20230807   clang
+powerpc              randconfig-r015-20230807   clang
+powerpc              randconfig-r036-20230807   gcc  
+riscv                            allmodconfig   gcc  
+riscv                             allnoconfig   gcc  
+riscv                            allyesconfig   gcc  
+riscv                               defconfig   gcc  
+riscv                randconfig-r042-20230807   clang
+riscv                          rv32_defconfig   gcc  
+s390                             allmodconfig   gcc  
+s390                             allyesconfig   gcc  
+s390                                defconfig   gcc  
+s390                 randconfig-r016-20230807   clang
+s390                 randconfig-r044-20230807   clang
+sh                               allmodconfig   gcc  
+sparc                            allyesconfig   gcc  
+sparc                               defconfig   gcc  
+sparc                randconfig-r014-20230807   gcc  
+sparc                randconfig-r023-20230807   gcc  
+sparc64              randconfig-r013-20230807   gcc  
+um                               allmodconfig   clang
+um                                allnoconfig   clang
+um                               allyesconfig   clang
+um                                  defconfig   gcc  
+um                             i386_defconfig   gcc  
+um                           x86_64_defconfig   gcc  
+x86_64                           allyesconfig   gcc  
+x86_64       buildonly-randconfig-r001-20230807   gcc  
+x86_64       buildonly-randconfig-r002-20230807   gcc  
+x86_64       buildonly-randconfig-r003-20230807   gcc  
+x86_64                              defconfig   gcc  
+x86_64                                  kexec   gcc  
+x86_64               randconfig-r004-20230807   gcc  
+x86_64               randconfig-x001-20230807   clang
+x86_64               randconfig-x002-20230807   clang
+x86_64               randconfig-x003-20230807   clang
+x86_64               randconfig-x004-20230807   clang
+x86_64               randconfig-x005-20230807   clang
+x86_64               randconfig-x006-20230807   clang
+x86_64               randconfig-x011-20230807   gcc  
+x86_64               randconfig-x012-20230807   gcc  
+x86_64               randconfig-x013-20230807   gcc  
+x86_64               randconfig-x014-20230807   gcc  
+x86_64               randconfig-x015-20230807   gcc  
+x86_64               randconfig-x016-20230807   gcc  
+x86_64                          rhel-8.3-rust   clang
+x86_64                               rhel-8.3   gcc  
+
 -- 
-Michal Hocko
-SUSE Labs
+0-DAY CI Kernel Test Service
+https://github.com/intel/lkp-tests/wiki
