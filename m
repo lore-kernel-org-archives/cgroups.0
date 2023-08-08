@@ -1,55 +1,43 @@
-From: David Hildenbrand <david-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH v2 5/7] mm: thp: split huge page to any lower order pages.
-Date: Tue, 8 Aug 2023 11:01:19 +0200
-Message-ID: <b545cac8-76f7-e3c3-0e1c-3cb922c9c9ae@redhat.com>
-References: <20230329011712.3242298-1-zi.yan@sent.com>
- <20230329011712.3242298-6-zi.yan@sent.com>
+From: Xiongwei Song <sxwjean-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Subject: Re: [PATCH] mm/memcontrol: add tips for kmem.slabinfo
+Date: Tue, 8 Aug 2023 20:10:19 +0800
+Message-ID: <CAEVVKH8yxY7bbSS4i10rFBT6uq1x99n+R2=SEs73uvWr0zMXyw@mail.gmail.com>
+References: <20230808022229.1560559-1-xiongwei.song@windriver.com> <ZNGsz3FC6q/jJ0+Z@casper.infradead.org>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: quoted-printable
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1691510601;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=shf77ttmFOuwEPRuUfK1N01vHtXf9AN1dtY0xeqDGqo=;
-        b=cKSmuAPLhLy0qmt+d0sVjk6Pa+cyD0Y3TksVjrhUC3KnJOyLgTk2Ekjj3jJnnOJutSioJF
-        uO2DO5CX6O7lR5hMBqUzN5XRngm0pvrRCsPEfcFgE8eXLT71CtIsb8g+/KVsLyd45Q4Lp0
-        pvMeBk8s7EJ+PamdoVjCfmZhQYfkb3I=
-Content-Language: en-US
-In-Reply-To: <20230329011712.3242298-6-zi.yan-vRdzynncJC4@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20221208; t=1691511672; x=1692116472;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=dQjuyyNTy33tUChendA12c1wzE5rL9uSYQp+xAh/JHk=;
+        b=oWVgu9FnRlZjuS3BL5oIvNY6f7zFl1L1NND+TyyByiDK7tpbp4Qa55TbCQ5IO/iv85
+         ILSMg6DUOmdq3uhQ9fkfbLvPbh1L9ShW7sv89RVJN+9k8M179GvyEFtr38vI1lr+99lp
+         YnUdXM5NmleR0BBhqaD3VGDv+T+8zho3LyfvZOKkJRFa0gibQl2gxZWbLZ69K3AKNlZ9
+         82FhqBz9KXn53zaxFT7A2kvaYb9n4h2k57ZPmfa3aye5CHMPpGiIY/8DzwEq3KUKX9+8
+         HWB0y8l8WWaw7z0NOMEukwZPp2xV/9eQ/VXuGU2s3zM1vpDQVe0xcTElMcWOd6WOGJlt
+         fA0A==
+In-Reply-To: <ZNGsz3FC6q/jJ0+Z-FZi0V3Vbi30CUdFEqe4BF2D2FQJk+8+b@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"; format="flowed"
-To: Zi Yan <ziy-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>, "Matthew Wilcox (Oracle)" <willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Yang Shi <shy828301-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Yu Zhao <yuzhao-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
-Cc: "Kirill A . Shutemov" <kirill.shutemov-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, Ryan Roberts <ryan.roberts-5wv7dgnIgG8@public.gmane.org>, =?UTF-8?Q?Michal_Koutn=c3=bd?= <mkoutny-IBi9RG/b67k@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Zach O'Keefe <zokeefe-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kselftest-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Type: text/plain; charset="windows-1252"
+To: Matthew Wilcox <willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
+Cc: xiongwei.song-CWA4WttNNZF54TAoqtyWWQ@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org, shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, muchun.song-fxUVXftIFDnyG1zEObXtfA@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On 29.03.23 03:17, Zi Yan wrote:
-> From: Zi Yan <ziy-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>
-> 
-> To split a THP to any lower order pages, we need to reform THPs on
-> subpages at given order and add page refcount based on the new page
-> order. Also we need to reinitialize page_deferred_list after removing
-> the page from the split_queue, otherwise a subsequent split will see
-> list corruption when checking the page_deferred_list again.
-> 
-> It has many uses, like minimizing the number of pages after
-> truncating a huge pagecache page. For anonymous THPs, we can only split
-> them to order-0 like before until we add support for any size anonymous
-> THPs.
+On Tue, Aug 8, 2023 at 10:47=E2=80=AFAM Matthew Wilcox <willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org=
+> wrote:
 >
+> On Tue, Aug 08, 2023 at 10:22:29AM +0800, xiongwei.song-CWA4WttNNZF54TAoqtyWWQ@public.gmane.org wro=
+te:
+> > From: Xiongwei Song <xiongwei.song-CWA4WttNNZF54TAoqtyWWQ@public.gmane.org>
+> >
+> > No any output from kmem.slabinfo, which is not friendly. Adding
+> > tips for it.
+>
+> What happens to tools which look in this file?
 
-Because I'm currently looking into something that would also not be 
-compatible with order-1 for now:
+I thought the mem_cgroup_slab_show() function should be removed or
+provide some useful info.
 
-You should make it clear that order-1 is not supported, like:
-
-"mm: thp: split huge page to any lower order pages (except order 1)"
-
-And clarify in the subject why that is the case.
-
--- 
-Cheers,
-
-David / dhildenb
-
+Thanks.
+>
