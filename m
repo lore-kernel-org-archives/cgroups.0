@@ -1,88 +1,77 @@
-From: Li Lingfeng <lilingfeng@huaweicloud.com>
-Subject: [PATCH -next v2] block: remove init_mutex and open-code blk_iolatency_try_init
-Date: Wed,  9 Aug 2023 19:29:28 +0800
-Message-ID: <20230809112928.2009183-1-lilingfeng@huaweicloud.com>
+From: Michal =?utf-8?Q?Koutn=C3=BD?= <mkoutny-IBi9RG/b67k@public.gmane.org>
+Subject: Re: [PATCH -next v2] block: remove init_mutex and open-code
+ blk_iolatency_try_init
+Date: Wed, 9 Aug 2023 14:11:12 +0200
+Message-ID: <6dcshmol4oz4hpsm42s3ocfdg7rtykkx2vjg6fd6zdvmkbmg7w@4liecv2rxqqk>
+References: <20230809112928.2009183-1-lilingfeng@huaweicloud.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-block-owner@vger.kernel.org>
+Content-Type: multipart/signed; micalg=pgp-sha512;
+        protocol="application/pgp-signature"; boundary="vz25knwjnl4pua2b"
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
+        t=1691583074; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=0bFw/WJBWsVmnC3JIQOGCnya92pXr+LvPFTesg/9s1Q=;
+        b=ub7DH9nJ6UoqBcoyE6iSeIUyE0clsVVe5kr8cLreCRs3+yOwc6WU+42omEKVGcb/gvgfPj
+        oVqhy3fAHZCWwoR+tdZRHfU3fYjPFnVc3wKvCw4PhA4i7plNsvJhMFx5UZ7fOrghG9i54O
+        d09dv4DUMpoBrW3WSb1ipEZMLrYeBpE=
+Content-Disposition: inline
+In-Reply-To: <20230809112928.2009183-1-lilingfeng-XF6JlduFytWkHkcT6e4Xnw@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-To: tj@kernel.org
-Cc: josef@toxicpanda.com, axboe@kernel.dk, mkoutny@suse.com, cgroups@vger.kernel.org, linux-block@vger.kernel.org, yukuai3@huawei.com, linan122@huawei.com, yi.zhang@huawei.com, yangerkun@huawei.com, lilingfeng@huaweicloud.com, lilingfeng3@huawei.com
+To: Li Lingfeng <lilingfeng-XF6JlduFytWkHkcT6e4Xnw@public.gmane.org>
+Cc: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, josef-DigfWCa+lFGyeJad7bwFQA@public.gmane.org, axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, linan122-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, yi.zhang-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, yangerkun-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, lilingfeng3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org
 
-From: Li Lingfeng <lilingfeng3@huawei.com>
 
-Commit a13696b83da4 ("blk-iolatency: Make initialization lazy") adds
-a mutex named "init_mutex" in blk_iolatency_try_init for the race
-condition of initializing RQ_QOS_LATENCY.
-Now a new lock has been add to struct request_queue by commit a13bd91be223
-("block/rq_qos: protect rq_qos apis with a new lock"). And it has been
-held in blkg_conf_open_bdev before calling blk_iolatency_init.
-So it's not necessary to keep init_mutex in blk_iolatency_try_init, just
-remove it.
+--vz25knwjnl4pua2b
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-Since init_mutex has been removed, blk_iolatency_try_init can be
-open-coded back to iolatency_set_limit() like ioc_qos_write().
+On Wed, Aug 09, 2023 at 07:29:28PM +0800, Li Lingfeng <lilingfeng@huaweiclo=
+ud.com> wrote:
+>  1 file changed, 10 insertions(+), 24 deletions(-)
 
-Signed-off-by: Li Lingfeng <lilingfeng3@huawei.com>
----
-  v1->v2: open-code blk_iolatency_try_init()
+I like this bottom line.
 
- block/blk-iolatency.c | 34 ++++++++++------------------------
- 1 file changed, 10 insertions(+), 24 deletions(-)
+> @@ -861,7 +838,16 @@ static ssize_t iolatency_set_limit(struct kernfs_ope=
+n_file *of, char *buf,
+> =20
+>  	blkg_conf_init(&ctx, buf);
+> =20
+> -	ret =3D blk_iolatency_try_init(&ctx);
+> +	ret =3D blkg_conf_open_bdev(&ctx);
+> +	if (ret)
+> +		goto out;
+> +
+> +	/*
+> +	 * blk_iolatency_init() may fail after rq_qos_add() succeeds which can
+> +	 * confuse iolat_rq_qos() test. Make the test and init atomic.
+> +	 */
 
-diff --git a/block/blk-iolatency.c b/block/blk-iolatency.c
-index fd5fec989e39..e1dbf18a1d1d 100644
---- a/block/blk-iolatency.c
-+++ b/block/blk-iolatency.c
-@@ -824,29 +824,6 @@ static void iolatency_clear_scaling(struct blkcg_gq *blkg)
- 	}
- }
- 
--static int blk_iolatency_try_init(struct blkg_conf_ctx *ctx)
--{
--	static DEFINE_MUTEX(init_mutex);
--	int ret;
--
--	ret = blkg_conf_open_bdev(ctx);
--	if (ret)
--		return ret;
--
--	/*
--	 * blk_iolatency_init() may fail after rq_qos_add() succeeds which can
--	 * confuse iolat_rq_qos() test. Make the test and init atomic.
--	 */
--	mutex_lock(&init_mutex);
--
--	if (!iolat_rq_qos(ctx->bdev->bd_queue))
--		ret = blk_iolatency_init(ctx->bdev->bd_disk);
--
--	mutex_unlock(&init_mutex);
--
--	return ret;
--}
--
- static ssize_t iolatency_set_limit(struct kernfs_open_file *of, char *buf,
- 			     size_t nbytes, loff_t off)
- {
-@@ -861,7 +838,16 @@ static ssize_t iolatency_set_limit(struct kernfs_open_file *of, char *buf,
- 
- 	blkg_conf_init(&ctx, buf);
- 
--	ret = blk_iolatency_try_init(&ctx);
-+	ret = blkg_conf_open_bdev(&ctx);
-+	if (ret)
-+		goto out;
-+
-+	/*
-+	 * blk_iolatency_init() may fail after rq_qos_add() succeeds which can
-+	 * confuse iolat_rq_qos() test. Make the test and init atomic.
-+	 */
-+	if (!iolat_rq_qos(ctx.bdev->bd_queue))
-+		ret = blk_iolatency_init(ctx.bdev->bd_disk);
- 	if (ret)
- 		goto out;
- 
--- 
-2.39.2
+Perhaps add here
+	lockdep_assert_held(ctx.bdev->bd_queue->rq_qos_mutex);
 
+because without that the last sentence of the comment misses the
+context.
+
+> +	if (!iolat_rq_qos(ctx.bdev->bd_queue))
+> +		ret =3D blk_iolatency_init(ctx.bdev->bd_disk);
+>  	if (ret)
+>  		goto out;
+
+Thanks,
+Michal
+
+--vz25knwjnl4pua2b
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iHUEABYKAB0WIQQpEWyjXuwGT2dDBqAGvrMr/1gcjgUCZNOCXgAKCRAGvrMr/1gc
+jqQ5AP97ZVTbopQGteWUqwgmcSpEJ6DaXzMfGJ8JRsEFEncwPQD/d9YGR41xRPtq
+9ifkSdCa+JcV+2WAW25bjYGN6+hovwc=
+=8mdk
+-----END PGP SIGNATURE-----
+
+--vz25knwjnl4pua2b--
