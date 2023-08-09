@@ -1,77 +1,138 @@
-From: Michal =?utf-8?Q?Koutn=C3=BD?= <mkoutny-IBi9RG/b67k@public.gmane.org>
-Subject: Re: [PATCH -next v2] block: remove init_mutex and open-code
- blk_iolatency_try_init
-Date: Wed, 9 Aug 2023 14:11:12 +0200
-Message-ID: <6dcshmol4oz4hpsm42s3ocfdg7rtykkx2vjg6fd6zdvmkbmg7w@4liecv2rxqqk>
-References: <20230809112928.2009183-1-lilingfeng@huaweicloud.com>
+From: Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH] mm: memcg: provide accurate stats for userspace reads
+Date: Wed, 9 Aug 2023 05:31:04 -0700
+Message-ID: <CAJD7tkYhxbd2e+4HMZVKUfD4cx6oDauna3vLmttNPLCmFNtpgA@mail.gmail.com>
+References: <20230809045810.1659356-1-yosryahmed@google.com> <ZNNTgZVPZipTL/UM@dhcp22.suse.cz>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha512;
-        protocol="application/pgp-signature"; boundary="vz25knwjnl4pua2b"
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
-        t=1691583074; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=0bFw/WJBWsVmnC3JIQOGCnya92pXr+LvPFTesg/9s1Q=;
-        b=ub7DH9nJ6UoqBcoyE6iSeIUyE0clsVVe5kr8cLreCRs3+yOwc6WU+42omEKVGcb/gvgfPj
-        oVqhy3fAHZCWwoR+tdZRHfU3fYjPFnVc3wKvCw4PhA4i7plNsvJhMFx5UZ7fOrghG9i54O
-        d09dv4DUMpoBrW3WSb1ipEZMLrYeBpE=
-Content-Disposition: inline
-In-Reply-To: <20230809112928.2009183-1-lilingfeng-XF6JlduFytWkHkcT6e4Xnw@public.gmane.org>
-List-ID: <cgroups.vger.kernel.org>
-To: Li Lingfeng <lilingfeng-XF6JlduFytWkHkcT6e4Xnw@public.gmane.org>
-Cc: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, josef-DigfWCa+lFGyeJad7bwFQA@public.gmane.org, axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, linan122-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, yi.zhang-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, yangerkun-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, lilingfeng3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org
-
-
---vz25knwjnl4pua2b
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
 Content-Transfer-Encoding: quoted-printable
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20221208; t=1691584300; x=1692189100;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=ovz1LQ6CtkIwOn2X9qPamiwiMkn0NFocCNlrpAkV6FE=;
+        b=z87ipBGX3qL/8LN9fCqtHDrLvXwt7S+tuWniA0tiSN+CNh6VbxxtBmQyhlh+HSLCWN
+         MokZhrhhkDyQWUhh9ddK3revJvWDVvj2sxHC4KXjeDpHTshiyAuc70hwHoBgd0D3IuBu
+         5k9b808R7uSlBLTvoexBmRyAkLz6yt2iieSuBEiwwYnarzGFdq2UbjWDrhJYDGYDKrzU
+         Ngn0OvDY/ASZZNoBb+Po1N546t3BYGJ/Kndgkbj6cNDyIWWYTuWeiikDfIujTd9k81IP
+         ioqXYMTlg8TrKl0DP1iGK/J5PrbeS+eADjISSm/JLbcsqPhfWZABOt3x9Ej67B+2ocPB
+         8qXw==
+In-Reply-To: <ZNNTgZVPZipTL/UM-2MMpYkNvuYDjFM9bn6wA6Q@public.gmane.org>
+List-ID: <cgroups.vger.kernel.org>
+Content-Type: text/plain; charset="windows-1252"
+To: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
+Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Muchun Song <muchun.song-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Wed, Aug 09, 2023 at 07:29:28PM +0800, Li Lingfeng <lilingfeng@huaweiclo=
-ud.com> wrote:
->  1 file changed, 10 insertions(+), 24 deletions(-)
+On Wed, Aug 9, 2023 at 1:51=E2=80=AFAM Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org> wrote=
+:
+>
+> On Wed 09-08-23 04:58:10, Yosry Ahmed wrote:
+> > Over time, the memcg code added multiple optimizations to the stats
+> > flushing path that introduce a tradeoff between accuracy and
+> > performance. In some contexts (e.g. dirty throttling, refaults, etc), a
+> > full rstat flush of the stats in the tree can be too expensive. Such
+> > optimizations include [1]:
+> > (a) Introducing a periodic background flusher to keep the size of the
+> > update tree from growing unbounded.
+> > (b) Allowing only one thread to flush at a time, and other concurrent
+> > flushers just skip the flush. This avoids a thundering herd problem
+> > when multiple reclaim/refault threads attempt to flush the stats at
+> > once.
+> > (c) Only executing a flush if the magnitude of the stats updates exceed=
+s
+> > a certain threshold.
+> >
+> > These optimizations were necessary to make flushing feasible in
+> > performance-critical paths, and they come at the cost of some accuracy
+> > that we choose to live without. On the other hand, for flushes invoked
+> > when userspace is reading the stats, the tradeoff is less appealing
+> > This code path is not performance-critical, and the inaccuracies can
+> > affect userspace behavior. For example, skipping flushing when there is
+> > another ongoing flush is essentially a coin flip. We don't know if the
+> > ongoing flush is done with the subtree of interest or not.
+>
+> I am not convinced by this much TBH. What kind of precision do you
+> really need and how much off is what we provide?
+>
+> More expensive read of stats from userspace is quite easy to notice
+> and usually reported as a regression. So you should have a convincing
+> argument that an extra time spent is really worth it. AFAIK there are
+> many monitoring (top like) tools which simply read those files regularly
+> just to show numbers and they certainly do not need a high level of
+> precision.
 
-I like this bottom line.
+We used to spend this time before commit fd25a9e0e23b ("memcg: unify
+memcg stat flushing") which generalized the "skip if ongoing flush"
+for all stat flushing. As far I know, the problem was contention on
+the flushing lock which also affected critical paths like refault.
 
-> @@ -861,7 +838,16 @@ static ssize_t iolatency_set_limit(struct kernfs_ope=
-n_file *of, char *buf,
-> =20
->  	blkg_conf_init(&ctx, buf);
-> =20
-> -	ret =3D blk_iolatency_try_init(&ctx);
-> +	ret =3D blkg_conf_open_bdev(&ctx);
-> +	if (ret)
-> +		goto out;
-> +
-> +	/*
-> +	 * blk_iolatency_init() may fail after rq_qos_add() succeeds which can
-> +	 * confuse iolat_rq_qos() test. Make the test and init atomic.
-> +	 */
+The problem is that the current behavior is indeterministic, if cpu A
+tries to flush stats and cpu B is already doing that, cpu A will just
+skip. At that point, the cgroup(s) that cpu A cares about may have
+been fully flushed, partially flushed (in terms of cpus), or not
+flushed at all. We have no idea. We just know that someone else is
+flushing something. IOW, in some cases the flush request will be
+completely ignored and userspace will read stale stats (up to 2s + the
+periodic flusher runtime).
 
-Perhaps add here
-	lockdep_assert_held(ctx.bdev->bd_queue->rq_qos_mutex);
+Some workloads need to read up-to-date stats as feedback to actions
+(e.g. after proactive reclaim, or for userspace OOM killing purposes),
+and reading such stale stats causes regressions or misbehavior by
+userspace.
 
-because without that the last sentence of the comment misses the
-context.
+>
+> [...]
+> > @@ -639,17 +639,24 @@ static inline void memcg_rstat_updated(struct mem=
+_cgroup *memcg, int val)
+> >       }
+> >  }
+> >
+> > -static void do_flush_stats(void)
+> > +static void do_flush_stats(bool full)
+> >  {
+> > +     if (!atomic_read(&stats_flush_ongoing) &&
+> > +         !atomic_xchg(&stats_flush_ongoing, 1))
+> > +             goto flush;
+> > +
+> >       /*
+> > -      * We always flush the entire tree, so concurrent flushers can ju=
+st
+> > -      * skip. This avoids a thundering herd problem on the rstat globa=
+l lock
+> > -      * from memcg flushers (e.g. reclaim, refault, etc).
+> > +      * We always flush the entire tree, so concurrent flushers can ch=
+oose to
+> > +      * skip if accuracy is not critical. Otherwise, wait for the ongo=
+ing
+> > +      * flush to complete. This avoids a thundering herd problem on th=
+e rstat
+> > +      * global lock from memcg flushers (e.g. reclaim, refault, etc).
+> >        */
+> > -     if (atomic_read(&stats_flush_ongoing) ||
+> > -         atomic_xchg(&stats_flush_ongoing, 1))
+> > -             return;
+> > -
+> > +     while (full && atomic_read(&stats_flush_ongoing) =3D=3D 1) {
+> > +             if (!cond_resched())
+> > +                     cpu_relax();
+>
+> You are reinveting a mutex with spinning waiter. Why don't you simply
+> make stats_flush_ongoing a real mutex and make use try_lock for !full
+> flush and normal lock otherwise?
 
-> +	if (!iolat_rq_qos(ctx.bdev->bd_queue))
-> +		ret =3D blk_iolatency_init(ctx.bdev->bd_disk);
->  	if (ret)
->  		goto out;
+So that was actually a spinlock at one point, when we used to skip if
+try_lock failed. We opted for an atomic because the lock was only used
+in a try_lock fashion. The problem here is that the atomic is used to
+ensure that only one thread actually attempts to flush at a time (and
+others skip/wait), to avoid a thundering herd problem on
+cgroup_rstat_lock.
 
-Thanks,
-Michal
+Here, what I am trying to do is essentially equivalent to "wait until
+the lock is available but don't grab it". If we make
+stats_flush_ongoing a mutex, I am afraid the thundering herd problem
+will be reintroduced for stats_flush_ongoing this time.
 
---vz25knwjnl4pua2b
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-
-iHUEABYKAB0WIQQpEWyjXuwGT2dDBqAGvrMr/1gcjgUCZNOCXgAKCRAGvrMr/1gc
-jqQ5AP97ZVTbopQGteWUqwgmcSpEJ6DaXzMfGJ8JRsEFEncwPQD/d9YGR41xRPtq
-9ifkSdCa+JcV+2WAW25bjYGN6+hovwc=
-=8mdk
------END PGP SIGNATURE-----
-
---vz25knwjnl4pua2b--
+I am not sure if there's a cleaner way of doing this, but I am
+certainly open for suggestions. I also don't like how the spinning
+loop looks as of now.
