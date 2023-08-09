@@ -1,38 +1,88 @@
-From: Li Lingfeng <lilingfeng-XF6JlduFytWkHkcT6e4Xnw@public.gmane.org>
-Subject: Re: [PATCH -next] block: remove init_mutex in blk_iolatency_try_init
-Date: Wed, 9 Aug 2023 18:57:52 +0800
-Message-ID: <c8b09f3b-b8c2-4973-255a-ab63bd6cf771@huaweicloud.com>
-References: <20230804113659.3816877-1-lilingfeng@huaweicloud.com>
- <o6nnp6jwzpchlqsiusbioqsyaml2fonxzmzi46yrycjgtq6hyb@ixqiysu6lmpe>
+From: Li Lingfeng <lilingfeng@huaweicloud.com>
+Subject: [PATCH -next v2] block: remove init_mutex and open-code blk_iolatency_try_init
+Date: Wed,  9 Aug 2023 19:29:28 +0800
+Message-ID: <20230809112928.2009183-1-lilingfeng@huaweicloud.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <o6nnp6jwzpchlqsiusbioqsyaml2fonxzmzi46yrycjgtq6hyb@ixqiysu6lmpe>
+Return-path: <linux-block-owner@vger.kernel.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="utf-8"; format="flowed"
-To: =?UTF-8?Q?Michal_Koutn=c3=bd?= <mkoutny-IBi9RG/b67k@public.gmane.org>
-Cc: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, josef-DigfWCa+lFGyeJad7bwFQA@public.gmane.org, axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, linan122-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, yi.zhang-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, yangerkun-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, lilingfeng3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org
+Content-Type: text/plain; charset="us-ascii"
+To: tj@kernel.org
+Cc: josef@toxicpanda.com, axboe@kernel.dk, mkoutny@suse.com, cgroups@vger.kernel.org, linux-block@vger.kernel.org, yukuai3@huawei.com, linan122@huawei.com, yi.zhang@huawei.com, yangerkun@huawei.com, lilingfeng@huaweicloud.com, lilingfeng3@huawei.com
 
-Thanks for your advice, I will send a new patch soon.
+From: Li Lingfeng <lilingfeng3@huawei.com>
 
-在 2023/8/8 0:05, Michal Koutný 写道:
-> Hello.
->
-> On Fri, Aug 04, 2023 at 07:36:59PM +0800, Li Lingfeng <lilingfeng-XF6JlduFytWkHkcT6e4Xnw@public.gmane.org> wrote:
->> From: Li Lingfeng <lilingfeng3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
->>
->> Commit a13696b83da4 ("blk-iolatency: Make initialization lazy") adds
->> a mutex named "init_mutex" in blk_iolatency_try_init for the race
->> condition of initializing RQ_QOS_LATENCY.
->> Now a new lock has been add to struct request_queue by commit a13bd91be223
->> ("block/rq_qos: protect rq_qos apis with a new lock"). And it has been
->> held in blkg_conf_open_bdev before calling blk_iolatency_init.
->> So it's not necessary to keep init_mutex in blk_iolatency_try_init, just
->> remove it.
-> I'm looking at ioc_cost_model_write() or ioc_qos_write() where is
-> a similar pattern.
-> Could the check+init be open-coded back to iolatency_set_limit() to make
-> code more regular?
->
-> Michal
+Commit a13696b83da4 ("blk-iolatency: Make initialization lazy") adds
+a mutex named "init_mutex" in blk_iolatency_try_init for the race
+condition of initializing RQ_QOS_LATENCY.
+Now a new lock has been add to struct request_queue by commit a13bd91be223
+("block/rq_qos: protect rq_qos apis with a new lock"). And it has been
+held in blkg_conf_open_bdev before calling blk_iolatency_init.
+So it's not necessary to keep init_mutex in blk_iolatency_try_init, just
+remove it.
+
+Since init_mutex has been removed, blk_iolatency_try_init can be
+open-coded back to iolatency_set_limit() like ioc_qos_write().
+
+Signed-off-by: Li Lingfeng <lilingfeng3@huawei.com>
+---
+  v1->v2: open-code blk_iolatency_try_init()
+
+ block/blk-iolatency.c | 34 ++++++++++------------------------
+ 1 file changed, 10 insertions(+), 24 deletions(-)
+
+diff --git a/block/blk-iolatency.c b/block/blk-iolatency.c
+index fd5fec989e39..e1dbf18a1d1d 100644
+--- a/block/blk-iolatency.c
++++ b/block/blk-iolatency.c
+@@ -824,29 +824,6 @@ static void iolatency_clear_scaling(struct blkcg_gq *blkg)
+ 	}
+ }
+ 
+-static int blk_iolatency_try_init(struct blkg_conf_ctx *ctx)
+-{
+-	static DEFINE_MUTEX(init_mutex);
+-	int ret;
+-
+-	ret = blkg_conf_open_bdev(ctx);
+-	if (ret)
+-		return ret;
+-
+-	/*
+-	 * blk_iolatency_init() may fail after rq_qos_add() succeeds which can
+-	 * confuse iolat_rq_qos() test. Make the test and init atomic.
+-	 */
+-	mutex_lock(&init_mutex);
+-
+-	if (!iolat_rq_qos(ctx->bdev->bd_queue))
+-		ret = blk_iolatency_init(ctx->bdev->bd_disk);
+-
+-	mutex_unlock(&init_mutex);
+-
+-	return ret;
+-}
+-
+ static ssize_t iolatency_set_limit(struct kernfs_open_file *of, char *buf,
+ 			     size_t nbytes, loff_t off)
+ {
+@@ -861,7 +838,16 @@ static ssize_t iolatency_set_limit(struct kernfs_open_file *of, char *buf,
+ 
+ 	blkg_conf_init(&ctx, buf);
+ 
+-	ret = blk_iolatency_try_init(&ctx);
++	ret = blkg_conf_open_bdev(&ctx);
++	if (ret)
++		goto out;
++
++	/*
++	 * blk_iolatency_init() may fail after rq_qos_add() succeeds which can
++	 * confuse iolat_rq_qos() test. Make the test and init atomic.
++	 */
++	if (!iolat_rq_qos(ctx.bdev->bd_queue))
++		ret = blk_iolatency_init(ctx.bdev->bd_disk);
+ 	if (ret)
+ 		goto out;
+ 
+-- 
+2.39.2
 
