@@ -1,19 +1,19 @@
-From: Li kunyu <kunyu-5L972MDCkn1Wk0Htik3J/w@public.gmane.org>
+From: Li kunyu <kunyu@nfschina.com>
 Subject: [PATCH] =?UTF-8?q?cgroup:=20cgroup:=20Remove=20unnecessary=20?= =?UTF-8?q?=E2=80=980=E2=80=99=20values=20from=20ret?=
-Date: Fri, 11 Aug 2023 09:16:39 -0000 (UTC)
-Message-ID: <20230813014734.2916-1-kunyu@nfschina.com>
+Date: Fri, 11 Aug 2023 09:16:44 -0000 (UTC)
+Message-ID: <20230813014734.2916-1-kunyu__16537.8689229087$1691745404$gmane$org@nfschina.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
 Date: Sun, 13 Aug 2023 09:47:34 +0800
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Li kunyu <kunyu-5L972MDCkn1Wk0Htik3J/w@public.gmane.org>
+To: tj@kernel.org, lizefan.x@bytedance.com, hannes@cmpxchg.org
+Cc: cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, Li kunyu <kunyu@nfschina.com>
 
 ret is assigned first, so it does not need to initialize the assignment.
 
-Signed-off-by: Li kunyu <kunyu-5L972MDCkn1Wk0Htik3J/w@public.gmane.org>
+Signed-off-by: Li kunyu <kunyu@nfschina.com>
 ---
  kernel/cgroup/cgroup.c | 10 +++++-----
  1 file changed, 5 insertions(+), 5 deletions(-)
