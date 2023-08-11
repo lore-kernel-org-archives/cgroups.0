@@ -1,55 +1,61 @@
-From: Michal =?utf-8?Q?Koutn=C3=BD?= <mkoutny-IBi9RG/b67k@public.gmane.org>
+From: Yu Kuai <yukuai1-XF6JlduFytWkHkcT6e4Xnw@public.gmane.org>
 Subject: Re: [PATCH -next v3] block: remove init_mutex and open-code
  blk_iolatency_try_init
-Date: Fri, 11 Aug 2023 10:23:49 +0200
-Message-ID: <dtobag743cbzb3rxzldu36wszqtnbayz2grpyj2cctptfybtt3@66ico6n2clrr>
+Date: Fri, 11 Aug 2023 16:53:44 +0800
+Message-ID: <60dbff4b-d823-5dc9-ff8e-36648ddf7207@huaweicloud.com>
 References: <20230810035111.2236335-1-lilingfeng@huaweicloud.com>
  <6637e6cd-20aa-110a-40ae-53ecd6eb4184@huaweicloud.com>
  <d4050f7e-d491-c111-3e26-160e7d5a4208@huaweicloud.com>
+ <dtobag743cbzb3rxzldu36wszqtnbayz2grpyj2cctptfybtt3@66ico6n2clrr>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha512;
-        protocol="application/pgp-signature"; boundary="zqhlkl5irnp4pmde"
+Content-Transfer-Encoding: 8bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
-        t=1691742231; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=XAHLRJ91aICIGGOaaGit2Y6QwMl3ywOsiEqwUzwig6c=;
-        b=hi4xqu/Xfb/lRFWXg7qi1rorGt75xQyV7YSBTBCzbp54A1sqfXGGQ0CMDnBSR1tjGbLqaA
-        RF9GfgvYb7hKLzmRQrqQIk7arD6AZgAuIrpY6Z4doEpsGxRhamIyCz+HcYBMh2vcRIkNin
-        q1NpSE1INhzEIH2Vp6IeCwfvg3d4aLo=
-Content-Disposition: inline
-In-Reply-To: <d4050f7e-d491-c111-3e26-160e7d5a4208-XF6JlduFytWkHkcT6e4Xnw@public.gmane.org>
+In-Reply-To: <dtobag743cbzb3rxzldu36wszqtnbayz2grpyj2cctptfybtt3@66ico6n2clrr>
 List-ID: <cgroups.vger.kernel.org>
-To: Yu Kuai <yukuai1-XF6JlduFytWkHkcT6e4Xnw@public.gmane.org>
+Content-Type: text/plain; charset="utf-8"; format="flowed"
+To: =?UTF-8?Q?Michal_Koutn=c3=bd?= <mkoutny-IBi9RG/b67k@public.gmane.org>, Yu Kuai <yukuai1-XF6JlduFytWkHkcT6e4Xnw@public.gmane.org>
 Cc: Li Lingfeng <lilingfeng-XF6JlduFytWkHkcT6e4Xnw@public.gmane.org>, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, josef-DigfWCa+lFGyeJad7bwFQA@public.gmane.org, axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linan122-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, yi.zhang-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, yangerkun-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, lilingfeng3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, "yukuai (C)" <yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 
 
---zqhlkl5irnp4pmde
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
 
-On Fri, Aug 11, 2023 at 09:44:55AM +0800, Yu Kuai <yukuai1-XF6JlduFytWkHkcT6e4Xnw@public.gmane.org> wrote:
-> Now that this problem doesn't exist, I think it's ok just to remove this
-> comment.
+在 2023/08/11 16:23, Michal Koutný 写道:
+> On Fri, Aug 11, 2023 at 09:44:55AM +0800, Yu Kuai <yukuai1-XF6JlduFytWkHkcT6e4Xnw@public.gmane.org> wrote:
+>> Now that this problem doesn't exist, I think it's ok just to remove this
+>> comment.
+> 
+> Why doesn't the problem exist now?
+> IIUC, it does but it's prevented thanks to outer synchronization via
+> rq_qos_mutex. Hence the comment clarifies why is the lockdep_assert
+> placed here.
+> 
 
-Why doesn't the problem exist now?
-IIUC, it does but it's prevented thanks to outer synchronization via
-rq_qos_mutex. Hence the comment clarifies why is the lockdep_assert
-placed here.
+Yes, it'm implemented in the upper layer that rq_qos_add() and
+blkcg_activate_policy() should be atmoic, and currently there is no
+comments for that.
 
+Perhaps it's better to add some comments like following in rq_qos_add()
+instead?
 
-Michal
+diff --git a/block/blk-rq-qos.c b/block/blk-rq-qos.c
+index 167be74df4ee..8e8c597ea01b 100644
+--- a/block/blk-rq-qos.c
++++ b/block/blk-rq-qos.c
+@@ -302,6 +302,11 @@ int rq_qos_add(struct rq_qos *rqos, struct gendisk 
+*disk, enum rq_qos_id id,
+  {
+         struct request_queue *q = disk->queue;
 
---zqhlkl5irnp4pmde
-Content-Type: application/pgp-signature; name="signature.asc"
++       /*
++        * If rq_qos is used with cgroup policy, and cgroup policy can be
++        * initialized through cgroupfs, 'rq_qos_mutex' should be held
++        * untill blkcg_activate_policy() is done after this function 
+return.
++        */
+         lockdep_assert_held(&q->rq_qos_mutex);
 
------BEGIN PGP SIGNATURE-----
+         rqos->disk = disk;
 
-iHUEABYKAB0WIQQpEWyjXuwGT2dDBqAGvrMr/1gcjgUCZNXwBgAKCRAGvrMr/1gc
-jh/AAP9SvWJp6Nz9+hOawByX3LxRnZ9iMEwthx4HdWkkUFWzigEA5WqdymnqVleY
-CwTyxjDyPdWnuMyLErCzkRgA/BTmYgo=
-=qLjb
------END PGP SIGNATURE-----
+> 
+> Michal
+> 
 
---zqhlkl5irnp4pmde--
