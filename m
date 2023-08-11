@@ -1,31 +1,31 @@
 From: kernel test robot <lkp-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
 Subject: Re: [PATCH] cgroup: cgroup: =?utf-8?Q?Remo?=
  =?utf-8?B?dmUgdW5uZWNlc3Nhcnkg4oCYMOKAmQ==?= values from ret
-Date: Fri, 11 Aug 2023 21:17:55 +0800
-Message-ID: <202308112134.cHq2KhFM-lkp@intel.com>
+Date: Fri, 11 Aug 2023 21:28:13 +0800
+Message-ID: <202308112139.lVjuXYZg-lkp@intel.com>
 References: <20230813014734.2916-1-kunyu@nfschina.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1691759925; x=1723295925;
+  t=1691760526; x=1723296526;
   h=date:from:to:cc:subject:message-id:references:
    mime-version:content-transfer-encoding:in-reply-to;
-  bh=LZExdhkOrTYKPjUezsTjpMDrT0pVuYd3aBLIrKl/gtg=;
-  b=XWxaR1Nl5ZoMrhAmCanUMkycMZS9xRKpbMrtk2YWkWj7jMwqdhkUj2Vx
-   VQ2u+5VuDbrFfboRN61IwB6P7OUPwkwBYn3TembxeKgSbWbQpHFY6t+5k
-   w9RbhbzeoyWnAM+C9pZKBNfGGNYJHZopLrEF+GD6RgvpBu4al1WvG/wdu
-   NMJhqrW0QcqAOlpFm1KvRNo2uFVhGnY4U7KaLuHtbhED8hJe9TkBPm9Dk
-   f9zDkuhKZS4MuVZrC0SE6k+anu9smLbIg8Hat4mtK557jY2D3CXaSdFmH
-   GOAH9ZLOJ1tFVyiVRYOHw2n1+dy70g9Z4igz/4mKm7G1obQXnruag58jk
+  bh=NbxrrXvoiSicJd1C4RwRcvJ2E3Rl98Kr2w0LNsNE+g8=;
+  b=dV/8THL08tgrnGu0xeZ06XzvraKbd8PVUFAtLgY033sn32oI/fK3thEn
+   hG+hUZAYr2zH2UKOk7r4PnqwJQQexLSu0JS3am8KzXMhsHd3OSXVkCNHI
+   GM36NqKd/AYjzSwSWZ9rpqibxKTlZX/CGVUHufBVX0RZyA9bOCjfMy+cA
+   uqd75OGstzgXC3N4BDUg6+ymWY50Qbwp0y2reU3lxSruBjW2GlDFmOFsQ
+   i8C1tnShXMywjOOZj1ZbiOs49xwFp5DOHOpq/qtnJ/OBwk4m8p/2H6J7O
+   e4o2FwXSfK2A8OT35cpe9EizpFN8HurngT+LPxjg0+m4Hec2cGbyT9JIf
    Q==;
 Content-Disposition: inline
 In-Reply-To: <20230813014734.2916-1-kunyu-5L972MDCkn1Wk0Htik3J/w@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="utf-8"
 To: Li kunyu <kunyu-5L972MDCkn1Wk0Htik3J/w@public.gmane.org>, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org
-Cc: oe-kbuild-all-cunTk1MwBs/YUNznpcFYbw@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Li kunyu <kunyu-5L972MDCkn1Wk0Htik3J/w@public.gmane.org>
+Cc: llvm-cunTk1MwBs/YUNznpcFYbw@public.gmane.org, oe-kbuild-all-cunTk1MwBs/YUNznpcFYbw@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Li kunyu <kunyu-5L972MDCkn1Wk0Htik3J/w@public.gmane.org>
 
 Hi Li,
 
@@ -42,26 +42,25 @@ url:    https://github.com/intel-lab-lkp/linux/commits/Li-kunyu/cgroup-cgroup-Re
 base:   v6.5-rc5
 patch link:    https://lore.kernel.org/r/20230813014734.2916-1-kunyu%40nfschina.com
 patch subject: [PATCH] cgroup: cgroup: Remove unnecessary ‘0’ values from ret
-config: nios2-randconfig-r031-20230811 (https://download.01.org/0day-ci/archive/20230811/202308112134.cHq2KhFM-lkp-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org/config)
-compiler: nios2-linux-gcc (GCC) 12.3.0
-reproduce: (https://download.01.org/0day-ci/archive/20230811/202308112134.cHq2KhFM-lkp-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org/reproduce)
+config: x86_64-randconfig-r035-20230811 (https://download.01.org/0day-ci/archive/20230811/202308112139.lVjuXYZg-lkp-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org/config)
+compiler: clang version 16.0.4 (https://github.com/llvm/llvm-project.git ae42196bc493ffe877a7e3dff8be32035dea4d07)
+reproduce: (https://download.01.org/0day-ci/archive/20230811/202308112139.lVjuXYZg-lkp-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org/reproduce)
 
 If you fix the issue in a separate patch/commit (i.e. not just a new version of
 the same patch/commit), kindly add following tags
 | Reported-by: kernel test robot <lkp-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
-| Closes: https://lore.kernel.org/oe-kbuild-all/202308112134.cHq2KhFM-lkp-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org/
+| Closes: https://lore.kernel.org/oe-kbuild-all/202308112139.lVjuXYZg-lkp-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org/
 
 All warnings (new ones prefixed by >>):
 
-   kernel/cgroup/cgroup.c: In function 'delegate_show':
->> kernel/cgroup/cgroup.c:7000:15: warning: 'ret' is used uninitialized [-Wuninitialized]
-    7000 |         ret = show_delegatable_files(cgroup_base_files, buf + ret,
-         |               ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    7001 |                                      PAGE_SIZE - ret, NULL);
-         |                                      ~~~~~~~~~~~~~~~~~~~~~~
-   kernel/cgroup/cgroup.c:6998:17: note: 'ret' was declared here
-    6998 |         ssize_t ret;
-         |                 ^~~
+>> kernel/cgroup/cgroup.c:7000:56: warning: variable 'ret' is uninitialized when used here [-Wuninitialized]
+           ret = show_delegatable_files(cgroup_base_files, buf + ret,
+                                                                 ^~~
+   kernel/cgroup/cgroup.c:6998:13: note: initialize the variable 'ret' to silence this warning
+           ssize_t ret;
+                      ^
+                       = 0
+   1 warning generated.
 
 
 vim +/ret +7000 kernel/cgroup/cgroup.c
