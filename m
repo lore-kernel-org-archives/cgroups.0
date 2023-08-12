@@ -1,124 +1,102 @@
-From: kernel test robot <lkp@intel.com>
-Subject: Re: [PATCH] cgroup: cgroup: =?utf-8?Q?Remo?=
- =?utf-8?B?dmUgdW5uZWNlc3Nhcnkg4oCYTlVMTOKAmQ==?= values from res
-Date: Sat, 12 Aug 2023 13:43:51 +0800
-Message-ID: <202308121338.k2YdCXVR-lkp@intel.com>
-References: <20230813015142.3095-1-kunyu@nfschina.com>
+From: zhuxiaohui <zhuxiaohui400-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Subject: [PATCH 1/1] blk-throttle: fix throttle configuring not effective
+Date: Sat, 12 Aug 2023 15:21:16 +0800
+Message-ID: <20230812072116.42321-1-zhuxiaohui.400@bytedance.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1691819047; x=1723355047;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:content-transfer-encoding:in-reply-to;
-  bh=vsrqajthoEmurm5NVfeEuBVx0HE3ai+cd5EQa9FXyeU=;
-  b=O11TuYHTxBpvqxfQ8kbsaG2f1S3kIjFEidbn/fH7Y7hAGOkLu3RnoX/4
-   xz0/zl4QFfJ+HwLS/PC4RWRvZZhuUJFpoHmcz2l7nFvgHRQ+WTCjZfYU2
-   DvaA5U66JMwOXdeVXNDBaUl8FGS7HvdhnkYB6QQ0Q3POIEeWsSjz6RHu7
-   IHPIou5ptwnppWmPeZWskjxSe90ynhtVySggyfEwIFEZjspqFnpaWse1i
-   1lqDXv4Z473s2+2xeaC5HZaMvi10Tz1Tzmec7OTYOm7JTFT8/OweMvBVB
-   TaJd4YwHd0eO/4FyEs1dukdp5KSjkasFGk7EbsIEXPeal/zHmoiBv5Dv4
-   w==;
-Content-Disposition: inline
-In-Reply-To: <20230813015142.3095-1-kunyu@nfschina.com>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20221208; t=1691824884; x=1692429684;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=IEENV70+bdbkoZdaUV5XqhM/23tTitj6To+lYwver7M=;
+        b=o7GwMmBzt4k4OkA91irOXoOtbUDgvM2iz+y5d7B6/5HN74c1sjPuZ6uZJQa3Ce+sc7
+         vGTTqxblgVyVBvKDBfMPjt8Exmr1eHtAb8vexkXuORyuHK/BOil+XQUl7R7uhPIzFQQj
+         OQbd/KCOE/okri3p5POGhiZwk0my/2A5dfjbz8T4qb8D+6IwPItdM9J1s7AkKdjxymSd
+         IOx/678dJNyXnwZnxzdeahovq7hwmyCqCDj0BFvrhqWnZj8ZL9Fhv2idMpVuXAPp78H0
+         BTSXV3rRqQSWLUwzzkdRwYJD40P/f/4licOGWFA2z9WeIrpAOZ2yiaOLM6UMIzuvEN6V
+         dXfg==
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="utf-8"
-To: Li kunyu <kunyu@nfschina.com>, tj@kernel.org, lizefan.x@bytedance.com, hannes@cmpxchg.org
-Cc: llvm@lists.linux.dev, oe-kbuild-all@lists.linux.dev, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, Li kunyu <kunyu@nfschina.com>
+Content-Type: text/plain; charset="us-ascii"
+To: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, josef-DigfWCa+lFGyeJad7bwFQA@public.gmane.org, axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org
+Cc: linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, zhuxiaohui <zhuxiaohui.400-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
 
-Hi Li,
+when updating block throttle limit with persistence and stable io
+pressure, especially a relative high io pressure, fio test e.g.,
+there may never be a change to start a new slice, and carryover_ios &
+carryover_bytes will not be cleared.
 
-kernel test robot noticed the following build warnings:
+As a result, when reconfiguring block throttle limit, we can notice that
+the actual iops and throughput is a random value far away from what is
+set
 
-[auto build test WARNING on tj-cgroup/for-next]
-[cannot apply to linus/master v6.5-rc5 next-20230809]
-[If your patch is applied to the wrong git tree, kindly drop us a note.
-And when submitting patch, we suggest to use '--base' as documented in
-https://git-scm.com/docs/git-format-patch#_base_tree_information]
+So we need to update carryover value when dispatching bio
 
-url:    https://github.com/intel-lab-lkp/linux/commits/Li-kunyu/cgroup-cgroup-Remove-unnecessary-NULL-values-from-res/20230811-172322
-base:   https://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git for-next
-patch link:    https://lore.kernel.org/r/20230813015142.3095-1-kunyu%40nfschina.com
-patch subject: [PATCH] cgroup: cgroup: Remove unnecessary ‘NULL’ values from res
-config: x86_64-randconfig-x002-20230812 (https://download.01.org/0day-ci/archive/20230812/202308121338.k2YdCXVR-lkp@intel.com/config)
-compiler: clang version 16.0.4 (https://github.com/llvm/llvm-project.git ae42196bc493ffe877a7e3dff8be32035dea4d07)
-reproduce: (https://download.01.org/0day-ci/archive/20230812/202308121338.k2YdCXVR-lkp@intel.com/reproduce)
+Signed-off-by: zhuxiaohui <zhuxiaohui.400-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
+---
+ block/blk-throttle.c | 26 ++++++++++++++++++++++++++
+ block/blk-throttle.h |  4 ++--
+ 2 files changed, 28 insertions(+), 2 deletions(-)
 
-If you fix the issue in a separate patch/commit (i.e. not just a new version of
-the same patch/commit), kindly add following tags
-| Reported-by: kernel test robot <lkp@intel.com>
-| Closes: https://lore.kernel.org/oe-kbuild-all/202308121338.k2YdCXVR-lkp@intel.com/
-
-All warnings (new ones prefixed by >>):
-
->> kernel/cgroup/cgroup.c:1380:3: warning: variable 'res' is used uninitialized whenever 'for' loop exits because its condition is false [-Wsometimes-uninitialized]
-                   list_for_each_entry(link, &cset->cgrp_links, cgrp_link) {
-                   ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-   include/linux/list.h:578:7: note: expanded from macro 'list_for_each_entry'
-                &pos->member != (head);                                    \
-                ^~~~~~~~~~~~~~~~~~~~~~
-   kernel/cgroup/cgroup.c:1391:10: note: uninitialized use occurs here
-           BUG_ON(!res);
-                   ^~~
-   include/asm-generic/bug.h:62:45: note: expanded from macro 'BUG_ON'
-   #define BUG_ON(condition) do { if (unlikely(condition)) BUG(); } while (0)
-                                               ^~~~~~~~~
-   include/linux/compiler.h:78:42: note: expanded from macro 'unlikely'
-   # define unlikely(x)    __builtin_expect(!!(x), 0)
-                                               ^
-   kernel/cgroup/cgroup.c:1380:3: note: remove the condition if it is always true
-                   list_for_each_entry(link, &cset->cgrp_links, cgrp_link) {
-                   ^
-   include/linux/list.h:578:7: note: expanded from macro 'list_for_each_entry'
-                &pos->member != (head);                                    \
-                ^
-   kernel/cgroup/cgroup.c:1367:20: note: initialize the variable 'res' to silence this warning
-           struct cgroup *res;
-                             ^
-                              = NULL
-   1 warning generated.
-
-
-vim +1380 kernel/cgroup/cgroup.c
-
-f2e85d574e881f kernel/cgroup.c        Tejun Heo       2014-02-11  1359  
-4f41fc59620fce kernel/cgroup.c        Serge E. Hallyn 2016-05-09  1360  /*
-4f41fc59620fce kernel/cgroup.c        Serge E. Hallyn 2016-05-09  1361   * look up cgroup associated with current task's cgroup namespace on the
-4f41fc59620fce kernel/cgroup.c        Serge E. Hallyn 2016-05-09  1362   * specified hierarchy
-4f41fc59620fce kernel/cgroup.c        Serge E. Hallyn 2016-05-09  1363   */
-4f41fc59620fce kernel/cgroup.c        Serge E. Hallyn 2016-05-09  1364  static struct cgroup *
-4f41fc59620fce kernel/cgroup.c        Serge E. Hallyn 2016-05-09  1365  current_cgns_cgroup_from_root(struct cgroup_root *root)
-4f41fc59620fce kernel/cgroup.c        Serge E. Hallyn 2016-05-09  1366  {
-aa6f66ec5ebc27 kernel/cgroup/cgroup.c Li kunyu        2023-08-13  1367  	struct cgroup *res;
-4f41fc59620fce kernel/cgroup.c        Serge E. Hallyn 2016-05-09  1368  	struct css_set *cset;
-4f41fc59620fce kernel/cgroup.c        Serge E. Hallyn 2016-05-09  1369  
-4f41fc59620fce kernel/cgroup.c        Serge E. Hallyn 2016-05-09  1370  	lockdep_assert_held(&css_set_lock);
-4f41fc59620fce kernel/cgroup.c        Serge E. Hallyn 2016-05-09  1371  
-4f41fc59620fce kernel/cgroup.c        Serge E. Hallyn 2016-05-09  1372  	rcu_read_lock();
-4f41fc59620fce kernel/cgroup.c        Serge E. Hallyn 2016-05-09  1373  
-4f41fc59620fce kernel/cgroup.c        Serge E. Hallyn 2016-05-09  1374  	cset = current->nsproxy->cgroup_ns->root_cset;
-4f41fc59620fce kernel/cgroup.c        Serge E. Hallyn 2016-05-09  1375  	if (cset == &init_css_set) {
-4f41fc59620fce kernel/cgroup.c        Serge E. Hallyn 2016-05-09  1376  		res = &root->cgrp;
-4f41fc59620fce kernel/cgroup.c        Serge E. Hallyn 2016-05-09  1377  	} else {
-4f41fc59620fce kernel/cgroup.c        Serge E. Hallyn 2016-05-09  1378  		struct cgrp_cset_link *link;
-4f41fc59620fce kernel/cgroup.c        Serge E. Hallyn 2016-05-09  1379  
-4f41fc59620fce kernel/cgroup.c        Serge E. Hallyn 2016-05-09 @1380  		list_for_each_entry(link, &cset->cgrp_links, cgrp_link) {
-4f41fc59620fce kernel/cgroup.c        Serge E. Hallyn 2016-05-09  1381  			struct cgroup *c = link->cgrp;
-4f41fc59620fce kernel/cgroup.c        Serge E. Hallyn 2016-05-09  1382  
-4f41fc59620fce kernel/cgroup.c        Serge E. Hallyn 2016-05-09  1383  			if (c->root == root) {
-4f41fc59620fce kernel/cgroup.c        Serge E. Hallyn 2016-05-09  1384  				res = c;
-4f41fc59620fce kernel/cgroup.c        Serge E. Hallyn 2016-05-09  1385  				break;
-4f41fc59620fce kernel/cgroup.c        Serge E. Hallyn 2016-05-09  1386  			}
-4f41fc59620fce kernel/cgroup.c        Serge E. Hallyn 2016-05-09  1387  		}
-4f41fc59620fce kernel/cgroup.c        Serge E. Hallyn 2016-05-09  1388  	}
-4f41fc59620fce kernel/cgroup.c        Serge E. Hallyn 2016-05-09  1389  	rcu_read_unlock();
-4f41fc59620fce kernel/cgroup.c        Serge E. Hallyn 2016-05-09  1390  
-4f41fc59620fce kernel/cgroup.c        Serge E. Hallyn 2016-05-09  1391  	BUG_ON(!res);
-4f41fc59620fce kernel/cgroup.c        Serge E. Hallyn 2016-05-09  1392  	return res;
-4f41fc59620fce kernel/cgroup.c        Serge E. Hallyn 2016-05-09  1393  }
-4f41fc59620fce kernel/cgroup.c        Serge E. Hallyn 2016-05-09  1394  
-
+diff --git a/block/blk-throttle.c b/block/blk-throttle.c
+index 7397ff199d66..13c9d87a7201 100644
+--- a/block/blk-throttle.c
++++ b/block/blk-throttle.c
+@@ -821,6 +821,30 @@ static void tg_update_carryover(struct throtl_grp *tg)
+ 		   tg->carryover_ios[READ], tg->carryover_ios[WRITE]);
+ }
+ 
++static void tg_charge_carryover(struct throtl_grp *tg, struct bio *bio)
++{
++	bool rw = bio_data_dir(bio);
++
++	if (unlikely(tg->carryover_bytes[rw])) {
++		unsigned int bio_size = throtl_bio_data_size(bio);
++		unsigned int carryout_size = abs(tg->carryover_bytes[rw]);
++
++		carryout_size = min(carryout_size, bio_size);
++
++		if (tg->carryover_bytes[rw] < 0)
++			tg->carryover_bytes[rw] += carryout_size;
++		else
++			tg->carryover_bytes[rw] -= carryout_size;
++	}
++
++	if (unlikely(tg->carryover_ios[rw])) {
++		if (tg->carryover_ios[rw] < 0)
++			tg->carryover_ios[rw] += 1;
++		else
++			tg->carryover_ios[rw] -= 1;
++	}
++}
++
+ static unsigned long tg_within_iops_limit(struct throtl_grp *tg, struct bio *bio,
+ 				 u32 iops_limit)
+ {
+@@ -965,6 +989,8 @@ static void throtl_charge_bio(struct throtl_grp *tg, struct bio *bio)
+ 
+ 	tg->io_disp[rw]++;
+ 	tg->last_io_disp[rw]++;
++
++	tg_charge_carryover(tg, bio);
+ }
+ 
+ /**
+diff --git a/block/blk-throttle.h b/block/blk-throttle.h
+index d1ccbfe9f797..8f1642becb23 100644
+--- a/block/blk-throttle.h
++++ b/block/blk-throttle.h
+@@ -127,8 +127,8 @@ struct throtl_grp {
+ 	 * bytes/ios are waited already in previous configuration, and they will
+ 	 * be used to calculate wait time under new configuration.
+ 	 */
+-	uint64_t carryover_bytes[2];
+-	unsigned int carryover_ios[2];
++	int64_t carryover_bytes[2];
++	int carryover_ios[2];
+ 
+ 	unsigned long last_check_time;
+ 
 -- 
-0-DAY CI Kernel Test Service
-https://github.com/intel/lkp-tests/wiki
+2.39.2
+
