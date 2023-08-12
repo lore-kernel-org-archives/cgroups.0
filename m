@@ -1,54 +1,75 @@
-From: Yu Kuai <yukuai1-XF6JlduFytWkHkcT6e4Xnw@public.gmane.org>
-Subject: Re: [PATCH -next v3] block: remove init_mutex and open-code
- blk_iolatency_try_init
-Date: Sat, 12 Aug 2023 09:42:26 +0800
-Message-ID: <b93e426e-d9b6-34df-be28-90b715c7a711@huaweicloud.com>
-References: <20230810035111.2236335-1-lilingfeng@huaweicloud.com>
- <169176317573.160467.10047297090390573799.b4-ty@kernel.dk>
+From: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH] mm: memcg: provide accurate stats for userspace reads
+Date: Fri, 11 Aug 2023 19:08:19 -0700
+Message-ID: <CALvZod55S3XeK-MquTq0mDuipq8j0vFymQeX_XnPb_HuPK+oGQ@mail.gmail.com>
+References: <20230809045810.1659356-1-yosryahmed@google.com>
+ <ZNNTgZVPZipTL/UM@dhcp22.suse.cz> <CAJD7tkYhxbd2e+4HMZVKUfD4cx6oDauna3vLmttNPLCmFNtpgA@mail.gmail.com>
+ <ZNONgeoytpkchHga@dhcp22.suse.cz> <CAJD7tkb9C77UUxAykw_uMQvkzGyaZOZhM0nwWn_kcPjV0umyuA@mail.gmail.com>
+ <ZNOVS0Smp2PHUIuq@dhcp22.suse.cz> <CAJD7tkZFxbjas=VfhYSGU84Y5vyjuqHqGsRjiDEOSDWh2BxNAg@mail.gmail.com>
+ <ZNYnx9NqwSsXKhX3@dhcp22.suse.cz> <CAJD7tkbJ1fnMDudtsS2xubKn0RTWz7t0Hem=PSRQQp3sGf-iOw@mail.gmail.com>
+ <ZNaLGVUtPu7Ua/jL@dhcp22.suse.cz> <CAJD7tkbF1tNi8v0W4Mnqs0rzpRBshOFepxFTa1SiSvmBEBUEvw@mail.gmail.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: quoted-printable
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <169176317573.160467.10047297090390573799.b4-ty-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20221208; t=1691806112; x=1692410912;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=prshbHi/RKP0L2cqyUY4iqu/u7CuqG4ghac599t9a+c=;
+        b=ReRx55kHOx8AyhNaCNICBO3aB+8MDPDoP1bHhZkVlrgxynlOIcCOUhQLwCn8BDNYw3
+         0Of4nqaCvFFX3F9rwMrq/poL70+DBi+ykgx6RuCSdq3EjKthBBGVHNqfNjwWYSiv+1Tm
+         qM/zSvWaQg+U7H6Ln56hYIedt/nmux/3RJNo1V3dI2YA7SqezrOIdhIRDftNhBjkSSZ4
+         UqwMWgmQVLAuevHN83O6259kWMIvzy5lvJqosQDVH3JxJ/rEPkCzbwCaPV47rX/TTX97
+         glAcCit60db6/4eMR1hdiWSeq05x2fPt9Hg4Y46oEShGuTdMYhUeSHcV4dpLtBd+aeiB
+         IgFg==
+In-Reply-To: <CAJD7tkbF1tNi8v0W4Mnqs0rzpRBshOFepxFTa1SiSvmBEBUEvw-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="utf-8"; format="flowed"
-To: Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, Li Lingfeng <lilingfeng-XF6JlduFytWkHkcT6e4Xnw@public.gmane.org>
-Cc: josef-DigfWCa+lFGyeJad7bwFQA@public.gmane.org, mkoutny-IBi9RG/b67k@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linan122-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, yi.zhang-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, yangerkun-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, lilingfeng3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, "yukuai (C)" <yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Content-Type: text/plain; charset="windows-1252"
+To: Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Cc: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Muchun Song <muchun.song-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-Hi, Jens
+Hi all,
 
-在 2023/08/11 22:12, Jens Axboe 写道:
-> 
-> On Thu, 10 Aug 2023 11:51:11 +0800, Li Lingfeng wrote:
->> Commit a13696b83da4 ("blk-iolatency: Make initialization lazy") adds
->> a mutex named "init_mutex" in blk_iolatency_try_init for the race
->> condition of initializing RQ_QOS_LATENCY.
->> Now a new lock has been add to struct request_queue by commit a13bd91be223
->> ("block/rq_qos: protect rq_qos apis with a new lock"). And it has been
->> held in blkg_conf_open_bdev before calling blk_iolatency_init.
->> So it's not necessary to keep init_mutex in blk_iolatency_try_init, just
->> remove it.
->>
->> [...]
-> 
-> Applied, thanks!
-> 
-> [1/1] block: remove init_mutex and open-code blk_iolatency_try_init
->        commit: 4eb44d10766ac0fae5973998fd2a0103df1d3fe1
+(sorry for late response as I was away)
 
-This version has a minor problem that pss in mutex for
-lockdep_assert_held() is not a pointer:
+On Fri, Aug 11, 2023 at 1:40=E2=80=AFPM Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>=
+ wrote:
+>
+[...]
+> > > >
+> > > > Last note, for /proc/vmstat we have /proc/sys/vm/stat_refresh to tr=
+igger
+> > > > an explicit refresh. For those users who really need more accurate
+> > > > numbers we might consider interface like that. Or allow to write to=
+ stat
+> > > > file and do that in the write handler.
+> > >
+> > > This wouldn't be my first option, but if that's the only way to get
+> > > accurate stats I'll take it.
+> >
+> > To be honest, this would be my preferable option because of 2 reasons.
+> > a) we do not want to guarantee to much on the precision front because
+> > that would just makes maintainability much more harder with different
+> > people having a different opinion of how much precision is enough and b=
+)
+> > it makes the more rare (need precise) case the special case rather than
+> > the default.
+>
+> How about we go with the proposed approach in this patch (or the mutex
+> approach as it's much cleaner), and if someone complains about slow
+> reads we revert the change and introduce the refresh API? We might
+> just get away with making all reads accurate and avoid the hassle of
+> updating some userspace readers to do write-then-read. We don't know
+> for sure that something will regress.
+>
+> What do you think?
 
- > lockdep_assert_held(ctx.bdev->bd_queue->rq_qos_mutex);
-
-should be:
-lockdep_assert_held(&ctx.bdev->bd_queue->rq_qos_mutex);
-
-Perhaps can you drop this patch for now, and Lingfeng can send a v4?
-
-Thanks,
-Kuai
-
-> 
-> Best regards,
-> 
-
+Actually I am with Michal on this one. As I see multiple regression
+reports for reading the stats, I am inclined towards rate limiting the
+sync stats flushing from user readable interfaces (through
+mem_cgroup_flush_stats_ratelimited()) and providing a separate
+interface as suggested by Michal to explicitly flush the stats for
+users ok with the cost. Since we flush the stats every 2 seconds, most
+of the users should be fine and the users who care about accuracy can
+pay for it.
