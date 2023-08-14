@@ -1,122 +1,105 @@
-From: Yu Kuai <yukuai1@huaweicloud.com>
-Subject: Re: [PATCH 1/1] blk-throttle: fix throttle configuring not effective
-Date: Mon, 14 Aug 2023 10:01:21 +0800
-Message-ID: <d69f850a-ecfc-61dc-a970-64f57fff806f@huaweicloud.com>
-References: <20230812072116.42321-1-zhuxiaohui.400@bytedance.com>
- <5ba76f5e-9b02-13c8-c2a3-b15fe016261d@huaweicloud.com>
+From: Abel Wu <wuyun.abel@bytedance.com>
+Subject: [PATCH net-next v2] net-memcg: Fix scope of sockmem pressure indicators
+Date: Mon, 14 Aug 2023 15:09:11 +0800
+Message-ID: <20230814070923.35769-1-wuyun.abel@bytedance.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Return-path: <linux-block-owner@vger.kernel.org>
-In-Reply-To: <5ba76f5e-9b02-13c8-c2a3-b15fe016261d@huaweicloud.com>
-List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="utf-8"; format="flowed"
-To: Yu Kuai <yukuai1@huaweicloud.com>, zhuxiaohui <zhuxiaohui400@gmail.com>, tj@kernel.org, josef@toxicpanda.com, axboe@kernel.dk, =?UTF-8?Q?Michal_Koutn=c3=bd?= <mkoutny@suse.com>
-Cc: linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, zhuxiaohui <zhuxiaohui.400@bytedance.com>, "yukuai (C)" <yukuai3@huawei.com>
+Return-path: <netdev+bounces-27237-gl-netdev-2=m.gmane-mx.org@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=bytedance.com; s=google; t=1691996990; x=1692601790;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=0c3TLEEphAL5/eO0YPgnOFzgaQ5OvBXzIFtvrL+QOK4=;
+        b=F1xTxqTrvmFeFiUwpFxZm3x1pFr/mDQ1sBDBqQiiQYoLeWGdyQnoRyVZk+3sIzi6FN
+         aRK8HpgYM40c5hmWVDml1XrE0VoWDzs1SVzl9lbI3gEbCPKixhnm95T164E3BGz7y/fc
+         nFE0Zb0/efoTC2kjjNVHUX8yawznVQg64xNDhBwHnAS6xS7BpCFnXs2mpqZYl77+RHhK
+         T+HC/MQRo2R7lbzcivfMB7kvt5ifzOmX3J5HbBlZl66WmIc3vzCTENJr4WDLctWxXGHp
+         owXjECGkqq1B4C1wHG18SY7DCVj0eB7hN3Wp3RI7qy6LTNpieHLJuLReiOrWMpnH1iOu
+         hQ4A==
+List-Id: <cgroups.vger.kernel.org>
+List-Subscribe: <mailto:netdev+subscribe@vger.kernel.org>
+List-Unsubscribe: <mailto:netdev+unsubscribe@vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"
+To: "David S. Miller" <davem@davemloft.net>, Eric Dumazet <edumazet@google.com>, Jakub Kicinski <kuba@kernel.org>, Paolo Abeni <pabeni@redhat.com>, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, Roman Gushchin <roman.gushchin@linux.dev>, Shakeel Butt <shakeelb@google.com>, Muchun Song <muchun.song@linux.dev>, Andrew Morton <akpm@linux-foundation.org>, David Ahern <dsahern@kernel.org>, Yosry Ahmed <yosryahmed@google.com>, "Matthew Wilcox (Oracle)" <willy@infradead.org>, Yu Zhao <yuzhao@google.com>, Kefeng Wang <wangkefeng.wang@huawei.com>, Yafang Shao <laoar.shao@gmail.com>, Kuniyuki Iwashima <kuniyu@amazon.com>, Martin KaFai Lau <martin.lau@kernel.org>, Breno Leitao <leitao@debian.org>, Alexander Mikhalitsyn <alexander@mihalicyn.com>, David Howells <dhowells@redhat.com>, Jason Xing <kernelxing@tencent.com>, Vladimir Davydov <vdavydov.dev@gma>
+Cc: Abel Wu <wuyun.abel@bytedance.com>, Michal Hocko <mhocko@suse.com>, open list <linux-kernel@vger.kernel.org>, "open list:NETWORKING [GENERAL]" <netdev@vger.kernel.org>, "open list:CONTROL GROUP - MEMORY RESOURCE CONTROLLER MEMCG" <cgroups@vger.kernel.org>, "open list:CONTROL GROUP - MEMORY RESOURCE CONTROLLER MEMCG" <linux-mm@kvack.org>
 
-+CC Michal.
+Now there are two indicators of socket memory pressure sit inside
+struct mem_cgroup, socket_pressure and tcpmem_pressure, indicating
+memory reclaim pressure in memcg->memory and ->tcpmem respectively.
 
-在 2023/08/12 15:53, Yu Kuai 写道:
-> Hi,
-> 
-> 在 2023/08/12 15:21, zhuxiaohui 写道:
->> when updating block throttle limit with persistence and stable io
->> pressure, especially a relative high io pressure, fio test e.g.,
->> there may never be a change to start a new slice, and carryover_ios &
->> carryover_bytes will not be cleared.
->>
->> As a result, when reconfiguring block throttle limit, we can notice that
->> the actual iops and throughput is a random value far away from what is
->> set
->>
->> So we need to update carryover value when dispatching bio
-> 
-> I don't understand, not clear carryover_bytes/ios is what expected, and
-> how can they affect actual bandwith/iops.
-> 
-> Can you give a example how you tested and why current calculation is not
-> correct?
+When in legacy mode (cgroupv1), the socket memory is charged into
+->tcpmem which is independent of ->memory, so socket_pressure has
+nothing to do with socket's pressure at all. Things could be worse
+by taking socket_pressure into consideration in legacy mode, as a
+pressure in ->memory can lead to premature reclamation/throttling
+in socket.
 
-I can reporduce this, but this patch is obviously wrong. You must
-explaim how the calculation is not correct.
+While for the default mode (cgroupv2), the socket memory is charged
+into ->memory, and ->tcpmem/->tcpmem_pressure are simply not used.
 
-After a quick loock, I found that carryover_bytes/ios is not updated in
-throtl_trim_slice(), while tg->io/bytes_disp[] can be cleared. This is
-definitly a problem.
+So {socket,tcpmem}_pressure are only used in default/legacy mode
+respectively for indicating socket memory pressure. This patch fixes
+the pieces of code that make mixed use of both.
 
-Thanks,
-Kuai
+Fixes: 8e8ae645249b ("mm: memcontrol: hook up vmpressure to socket pressure")
+Signed-off-by: Abel Wu <wuyun.abel@bytedance.com>
+---
+v2:
+ - Add a comment to clarify the scope of indicators (Roman)
+ - Drop code cleanup on tcpmem_pressure (Roman)
+ - Fix the lack of a Fixes: tag (Eric)
+---
+ include/linux/memcontrol.h | 9 +++++++--
+ mm/vmpressure.c            | 8 ++++++++
+ 2 files changed, 15 insertions(+), 2 deletions(-)
 
-> 
-> Thanks,
-> Kuai
-> 
->>
->> Signed-off-by: zhuxiaohui <zhuxiaohui.400@bytedance.com>
->> ---
->>   block/blk-throttle.c | 26 ++++++++++++++++++++++++++
->>   block/blk-throttle.h |  4 ++--
->>   2 files changed, 28 insertions(+), 2 deletions(-)
->>
->> diff --git a/block/blk-throttle.c b/block/blk-throttle.c
->> index 7397ff199d66..13c9d87a7201 100644
->> --- a/block/blk-throttle.c
->> +++ b/block/blk-throttle.c
->> @@ -821,6 +821,30 @@ static void tg_update_carryover(struct throtl_grp 
->> *tg)
->>              tg->carryover_ios[READ], tg->carryover_ios[WRITE]);
->>   }
->> +static void tg_charge_carryover(struct throtl_grp *tg, struct bio *bio)
->> +{
->> +    bool rw = bio_data_dir(bio);
->> +
->> +    if (unlikely(tg->carryover_bytes[rw])) {
->> +        unsigned int bio_size = throtl_bio_data_size(bio);
->> +        unsigned int carryout_size = abs(tg->carryover_bytes[rw]);
->> +
->> +        carryout_size = min(carryout_size, bio_size);
->> +
->> +        if (tg->carryover_bytes[rw] < 0)
->> +            tg->carryover_bytes[rw] += carryout_size;
->> +        else
->> +            tg->carryover_bytes[rw] -= carryout_size;
->> +    }
->> +
->> +    if (unlikely(tg->carryover_ios[rw])) {
->> +        if (tg->carryover_ios[rw] < 0)
->> +            tg->carryover_ios[rw] += 1;
->> +        else
->> +            tg->carryover_ios[rw] -= 1;
->> +    }
->> +}
->> +
->>   static unsigned long tg_within_iops_limit(struct throtl_grp *tg, 
->> struct bio *bio,
->>                    u32 iops_limit)
->>   {
->> @@ -965,6 +989,8 @@ static void throtl_charge_bio(struct throtl_grp 
->> *tg, struct bio *bio)
->>       tg->io_disp[rw]++;
->>       tg->last_io_disp[rw]++;
->> +
->> +    tg_charge_carryover(tg, bio);
->>   }
->>   /**
->> diff --git a/block/blk-throttle.h b/block/blk-throttle.h
->> index d1ccbfe9f797..8f1642becb23 100644
->> --- a/block/blk-throttle.h
->> +++ b/block/blk-throttle.h
->> @@ -127,8 +127,8 @@ struct throtl_grp {
->>        * bytes/ios are waited already in previous configuration, and 
->> they will
->>        * be used to calculate wait time under new configuration.
->>        */
->> -    uint64_t carryover_bytes[2];
->> -    unsigned int carryover_ios[2];
->> +    int64_t carryover_bytes[2];
->> +    int carryover_ios[2];
->>       unsigned long last_check_time;
->>
-> 
-> .
-> 
+diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
+index 5818af8eca5a..dbf26bc89dd4 100644
+--- a/include/linux/memcontrol.h
++++ b/include/linux/memcontrol.h
+@@ -284,6 +284,11 @@ struct mem_cgroup {
+ 	atomic_long_t		memory_events[MEMCG_NR_MEMORY_EVENTS];
+ 	atomic_long_t		memory_events_local[MEMCG_NR_MEMORY_EVENTS];
+ 
++	/*
++	 * Hint of reclaim pressure for socket memroy management. Note
++	 * that this indicator should NOT be used in legacy cgroup mode
++	 * where socket memory is accounted/charged separately.
++	 */
+ 	unsigned long		socket_pressure;
+ 
+ 	/* Legacy tcp memory accounting */
+@@ -1727,8 +1732,8 @@ void mem_cgroup_sk_alloc(struct sock *sk);
+ void mem_cgroup_sk_free(struct sock *sk);
+ static inline bool mem_cgroup_under_socket_pressure(struct mem_cgroup *memcg)
+ {
+-	if (!cgroup_subsys_on_dfl(memory_cgrp_subsys) && memcg->tcpmem_pressure)
+-		return true;
++	if (!cgroup_subsys_on_dfl(memory_cgrp_subsys))
++		return !!memcg->tcpmem_pressure;
+ 	do {
+ 		if (time_before(jiffies, READ_ONCE(memcg->socket_pressure)))
+ 			return true;
+diff --git a/mm/vmpressure.c b/mm/vmpressure.c
+index b52644771cc4..22c6689d9302 100644
+--- a/mm/vmpressure.c
++++ b/mm/vmpressure.c
+@@ -244,6 +244,14 @@ void vmpressure(gfp_t gfp, struct mem_cgroup *memcg, bool tree,
+ 	if (mem_cgroup_disabled())
+ 		return;
+ 
++	/*
++	 * The in-kernel users only care about the reclaim efficiency
++	 * for this @memcg rather than the whole subtree, and there
++	 * isn't and won't be any in-kernel user in a legacy cgroup.
++	 */
++	if (!cgroup_subsys_on_dfl(memory_cgrp_subsys) && !tree)
++		return;
++
+ 	vmpr = memcg_to_vmpressure(memcg);
+ 
+ 	/*
+-- 
+2.37.3
+
 
