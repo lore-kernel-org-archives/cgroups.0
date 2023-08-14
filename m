@@ -1,63 +1,63 @@
-From: Ivan Babrou <ivan-lDpJ742SOEtZroRs9YW3xA@public.gmane.org>
-Subject: Re: Expensive memory.stat + cpu.stat reads
-Date: Mon, 14 Aug 2023 10:56:23 -0700
-Message-ID: <CABWYdi2y+nsbum+0EnK4W_jF-8RNbNJJadiZH2Ofb_wnYjbrbA@mail.gmail.com>
-References: <CABWYdi0c6__rh-K7dcM_pkf9BJdTRtAU08M43KO9ME4-dsgfoQ@mail.gmail.com>
- <20230706062045.xwmwns7cm4fxd7iu@google.com> <CABWYdi2pBaCrdKcM37oBomc+5W8MdRp1HwPpOExBGYfZitxyWA@mail.gmail.com>
- <d3f3a7bc-b181-a408-af1d-dd401c172cbf@redhat.com> <CABWYdi2iWYT0sHpK74W6=Oz6HA_3bAqKQd4h+amK0n3T3nge6g@mail.gmail.com>
- <CABWYdi3YNwtPDwwJWmCO-ER50iP7CfbXkCep5TKb-9QzY-a40A@mail.gmail.com>
- <CABWYdi0+0gxr7PB4R8rh6hXO=H7ZaCzfk8bmOSeQMuZR7s7Pjg@mail.gmail.com>
- <a052dffe-ed5e-6d22-8af8-0861e618f327@redhat.com> <CABWYdi0CXy2GZax_s6O-Xc0gvH+TGJzKwv_v6QqMty9P-ATJug@mail.gmail.com>
- <CALvZod65Y-dSkH6a=ASTDTK2oGznTd7Yts1csttxoP0w9jaQUw@mail.gmail.com>
+From: Shakeel Butt <shakeelb@google.com>
+Subject: Re: [PATCH net-next v2] net-memcg: Fix scope of sockmem pressure indicators
+Date: Mon, 14 Aug 2023 13:18:23 -0700
+Message-ID: <CALvZod5C3yWdgWr83EAdVUCH5PEK8ew7Q+FOt_zGOFOE9HVyQQ@mail.gmail.com>
+References: <20230814070923.35769-1-wuyun.abel@bytedance.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: quoted-printable
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <netdev+bounces-27465-gl-netdev-2=m.gmane-mx.org@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=cloudflare.com; s=google; t=1692035795; x=1692640595;
+        d=google.com; s=20221208; t=1692044316; x=1692649116;
         h=content-transfer-encoding:cc:to:subject:message-id:date:from
          :in-reply-to:references:mime-version:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=jeN/HGuUgCuQPe5kPvEPkK0pdFU40c32aDEDmB1vFRU=;
-        b=eEoTsU2yEih/aF37TTSzmNf2+4o3WWF1X80OF2loX8zGBdBwW1B6vzzBdK1y20zH/r
-         Sn4ahzedMLMHlay9fr3/eue4Hp1AwOn310a632QCVrN47BPnt+Ui5eBFBTUf6vVlWfFy
-         LM6cmv43Q3SIto1Jjd8qhi9w9cYWGb0eYddco=
-In-Reply-To: <CALvZod65Y-dSkH6a=ASTDTK2oGznTd7Yts1csttxoP0w9jaQUw-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
-List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="utf-8"
-To: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Cc: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Linux MM <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, kernel-team <kernel-team-lDpJ742SOEtZroRs9YW3xA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Muchun Song <muchun.song-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, linux-kernel <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+        bh=LFWKye89AohEqYgCuqyO0wjrP9O8bS1Mmve3otWwOUQ=;
+        b=updUYgXLDGG4jlzZd5VTLcn4ck7IV7JsmtsFDKY3gGoK8cHcDcVAF65Px8wrcx4Rpw
+         5aeohd2TIc+lBdHaUcKOLojjvG5i1Sjtomi5Efvu9HKhrYtbkVsFBJQDc/gXDZXhrqDd
+         BTw7bVAxF4h6WbITliiLtT4buweGCJUSmaTwZQspzLmIKsmCe14t6a9HVIWT6YKlLvDV
+         mNs74AwJ0zU0/tetCBfCfSp0XcnRJ1m3IpOmybV/upnND0Ytv7jyrvl1TXrF9NGHKWnc
+         ExRJysByXqm0J8czAGmplNNLUBdHGyai37qngjYtFkqBvNbS/eLxW99NXQ+KREqbFOkq
+         +u2A==
+List-Id: <cgroups.vger.kernel.org>
+List-Subscribe: <mailto:netdev+subscribe@vger.kernel.org>
+List-Unsubscribe: <mailto:netdev+unsubscribe@vger.kernel.org>
+In-Reply-To: <20230814070923.35769-1-wuyun.abel@bytedance.com>
+Content-Type: text/plain; charset="windows-1252"
+To: Abel Wu <wuyun.abel@bytedance.com>
+Cc: "David S. Miller" <davem@davemloft.net>, Eric Dumazet <edumazet@google.com>, Jakub Kicinski <kuba@kernel.org>, Paolo Abeni <pabeni@redhat.com>, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, Roman Gushchin <roman.gushchin@linux.dev>, Muchun Song <muchun.song@linux.dev>, Andrew Morton <akpm@linux-foundation.org>, David Ahern <dsahern@kernel.org>, Yosry Ahmed <yosryahmed@google.com>, "Matthew Wilcox (Oracle)" <willy@infradead.org>, Yu Zhao <yuzhao@google.com>, Kefeng Wang <wangkefeng.wang@huawei.com>, Yafang Shao <laoar.shao@gmail.com>, Kuniyuki Iwashima <kuniyu@amazon.com>, Martin KaFai Lau <martin.lau@kernel.org>, Breno Leitao <leitao@debian.org>, Alexander Mikhalitsyn <alexander@mihalicyn.com>, David Howells <dhowells@redhat.com>, Jason Xing <kernelxing@tencent.com>, Vladimir Davydov <vdavydov.dev@gmail.com>, Michal Hocko <mhocko@suse.com>
 
-On Fri, Aug 11, 2023 at 7:34=E2=80=AFPM Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org> =
-wrote:
->
-> Hi Ivan,
->
-> (sorry for late response as I was away)
->
-> On Fri, Aug 11, 2023 at 3:35=E2=80=AFPM Ivan Babrou <ivan-lDpJ742SOEtZroRs9YW3xA@public.gmane.org>=
+On Mon, Aug 14, 2023 at 12:09=E2=80=AFAM Abel Wu <wuyun.abel@bytedance.com>=
  wrote:
-> [...]
-> > > > I spent some time looking into this and I think I landed on a fix:
-> > > >
-> > > > * https://github.com/bobrik/linux/commit/50b627811d54
-> > > >
-> > > > I'm not 100% sure if it's the right fix for the issue, but it reduc=
-es
-> > > > the runtime significantly.
 >
-> In your patch, can you try to replace mem_cgroup_flush_stats() with
-> mem_cgroup_flush_stats_ratelimited() instead of cgroup_rstat_flush().
-> I wanted to see if you observe any stale stats issues.
+> Now there are two indicators of socket memory pressure sit inside
+> struct mem_cgroup, socket_pressure and tcpmem_pressure, indicating
+> memory reclaim pressure in memcg->memory and ->tcpmem respectively.
+>
+> When in legacy mode (cgroupv1), the socket memory is charged into
+> ->tcpmem which is independent of ->memory, so socket_pressure has
+> nothing to do with socket's pressure at all. Things could be worse
+> by taking socket_pressure into consideration in legacy mode, as a
+> pressure in ->memory can lead to premature reclamation/throttling
+> in socket.
+>
+> While for the default mode (cgroupv2), the socket memory is charged
+> into ->memory, and ->tcpmem/->tcpmem_pressure are simply not used.
+>
+> So {socket,tcpmem}_pressure are only used in default/legacy mode
+> respectively for indicating socket memory pressure. This patch fixes
+> the pieces of code that make mixed use of both.
+>
+> Fixes: 8e8ae645249b ("mm: memcontrol: hook up vmpressure to socket pressu=
+re")
+> Signed-off-by: Abel Wu <wuyun.abel@bytedance.com>
 
-We scrape cgroup metrics every 53s and at that scale I doubt we'd
-notice any staleness. With 2s FLUSH_TIME it would be in the noise. We
-can even remove any sort of flushing from memory.stat as long as
-cpu.stat is read right before it as it does flushing for both.
+So, this is undoing the unintended exposure of v2 functionality for
+the v1. I wonder if someone might have started depending upon that
+behavior but I am more convinced that no one is using v1's tcpmem
+accounting due to performance impact. So, this looks good to me.
 
-I agree with Yosry that there's probably no reason to flush both cpu
-and memory stats at the same time.
+Acked-by: Shakeel Butt <shakeelb@google.com>
 
-It doesn't seem right to use delayed flush for memory and direct flush
-for cpu. Perhaps it doesn't matter as much to warrant a bigger rework
-of how it's done, but maybe then my patch to use the same mechanism
-between cpu and memory flushing makes sense?
+I do think we should start the deprecation process of v1's tcpmem accountin=
+g.
+
