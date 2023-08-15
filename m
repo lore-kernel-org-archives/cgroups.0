@@ -1,90 +1,172 @@
-From: "Gustavo A. R. Silva" <gustavo@embeddedor.com>
-Subject: Re: [PATCH][next] cgroup: Avoid -Wstringop-overflow warnings
-Date: Tue, 15 Aug 2023 13:04:32 -0600
-Message-ID: <e1c07dd0-e6bf-ca9c-107a-97c5043b1bc7@embeddedor.com>
-References: <ZIpm3pcs3iCP9UaR@work>
+From: kernel test robot <lkp-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+Subject: Re: [PATCH-cgroup v6 1/6] cgroup/cpuset: Add
+ cpuset.cpus.exclusive.effective for v2
+Date: Wed, 16 Aug 2023 07:18:53 +0800
+Message-ID: <202308160752.IWyhJoln-lkp@intel.com>
+References: <20230815153027.633355-2-longman@redhat.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=embeddedor.com; s=default; h=Content-Transfer-Encoding:Content-Type:
-        In-Reply-To:From:References:Cc:To:Subject:MIME-Version:Date:Message-ID:Sender
-        :Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:
-        Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:
-        List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
-        bh=oDTpbnZtb5YY58cxQ1+wqrLvX74qH9kX1x/86gt1r6c=; b=GYqk+IEZHDNl4F1KNkrjKQ4GCv
-        A8WuEZWAoPnmMiy5LJ5rLCvLrfBUjja3movkQMpr/X3RBuLXmLXSa2djw6dKXzKucDKJi/n0OzHsC
-        lgCkFhGiIVfQpofwfVRHtXlcHDGmrQXJIlLN2PSiVfQxmdIM0765db6fe82HYihlPM2Wgwn0/D8eP
-        i5nCbb2biNKRb53PVBwCZRjEqtmn5+EFTXARPbPFiG9+6QkFJxpCavWSSp4tRVGiuoVBC2TDajzeg
-        upx233SUSeGEbPUt3NXjHVv7jeWCyXSBmlaN+7ngIYg5E/XAJLYVujq0sfutwtvAhpl2ITu/tH/74
-        MUNz 
-Content-Language: en-US
-In-Reply-To: <ZIpm3pcs3iCP9UaR@work>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1692141557; x=1723677557;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:in-reply-to;
+  bh=jDk2PL7s6hbeKzM5yWZ5eP5NxRPS1Vb13QdP3E5ftMg=;
+  b=lXRFBNWltaKxRZMTXdUrzi/rYQpkDNWpVnn/FA1YTNgCp9sbklwuPtGm
+   TQdigrzowCGZgCy4aMryPaJnqLASzWerZoKcCoV2U9+hDFVngllDzv/LQ
+   ee8umAQZ1eWOnVSAmyFbDyCxqmNskNHYmku1GZltT8dMWmF0X8OPyhlpj
+   okz9z/vYxQDEEsb0OsKyMlq97ut0ogAy60TzFtQe7wYutMk96SvgzchLV
+   XANOYvC4lAIMvONhc346TtfIfx9T9xvS2RkZ9JDZnP+4OYPzTEGHKPJMD
+   yJksGHkfQLC4/fhd3KsfhNcEjsyGKnJzg3Fy0/+N9fjK+TUJcWr7/zxoT
+   A==;
+Content-Disposition: inline
+In-Reply-To: <20230815153027.633355-2-longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"; format="flowed"
-To: "Gustavo A. R. Silva" <gustavoars@kernel.org>, Tejun Heo <tj@kernel.org>, Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>
-Cc: cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, linux-hardening@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Christian Brauner <brauner-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Jonathan Corbet <corbet-T1hC0tSOHrs@public.gmane.org>, Shuah Khan <skhan-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>
+Cc: oe-kbuild-all-cunTk1MwBs/YUNznpcFYbw@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Juri Lelli <juri.lelli-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Dietmar Eggemann <dietmar.eggemann-5wv7dgnIgG8@public.gmane.org>, Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny-IBi9RG/b67k@public.gmane.org>, Giuseppe Scrivano <gscrivan-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 
-Hi all,
+Hi Waiman,
 
-I wonder if you have any suggestions on how to address this issue. As it seems that
-my last attempt caused some boot failures[1][2].
+kernel test robot noticed the following build warnings:
 
-At first, I thought that the right way to fix this was through a similar fix as this
-one[3]. But it seems I'm missing something else that I cannot determine yet.
+[auto build test WARNING on next-20230815]
+[cannot apply to tj-cgroup/for-next v6.5-rc6 v6.5-rc5 v6.5-rc4 linus/master v6.5-rc6]
+[If your patch is applied to the wrong git tree, kindly drop us a note.
+And when submitting patch, we suggest to use '--base' as documented in
+https://git-scm.com/docs/git-format-patch#_base_tree_information]
 
-These -Wstringop-overflow warnings are mostly the last ones remaining before we can
-finally enable this compiler option, globally.
+url:    https://github.com/intel-lab-lkp/linux/commits/Waiman-Long/cgroup-cpuset-Add-cpuset-cpus-exclusive-effective-for-v2/20230815-233522
+base:   next-20230815
+patch link:    https://lore.kernel.org/r/20230815153027.633355-2-longman%40redhat.com
+patch subject: [PATCH-cgroup v6 1/6] cgroup/cpuset: Add cpuset.cpus.exclusive.effective for v2
+config: parisc64-defconfig (https://download.01.org/0day-ci/archive/20230816/202308160752.IWyhJoln-lkp-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org/config)
+compiler: hppa-linux-gcc (GCC) 12.3.0
+reproduce: (https://download.01.org/0day-ci/archive/20230816/202308160752.IWyhJoln-lkp-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org/reproduce)
 
-Any help or advice on how to properly address this is greatly appreciated. :)
+If you fix the issue in a separate patch/commit (i.e. not just a new version of
+the same patch/commit), kindly add following tags
+| Reported-by: kernel test robot <lkp-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+| Closes: https://lore.kernel.org/oe-kbuild-all/202308160752.IWyhJoln-lkp-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org/
 
-Thanks!
---
-Gustavo
+All warnings (new ones prefixed by >>):
 
-[1] https://lore.kernel.org/linux-hardening/726aae97-755d-9806-11d4-2fb21aa93428@arm.com/
-[2] https://lore.kernel.org/linux-hardening/361c2f87-1424-f452-912f-0e4a339f5c46@kernel.org/
-[3] https://git.kernel.org/linus/d20d30ebb199
+   kernel/cgroup/cpuset.c: In function 'update_prstate':
+>> kernel/cgroup/cpuset.c:2468:30: warning: the comparison will always evaluate as 'true' for the address of 'effective_xcpus' will never be NULL [-Waddress]
+    2468 |         if ((new_prs > 0) && !cs->effective_xcpus) {
+         |                              ^
+   kernel/cgroup/cpuset.c:135:23: note: 'effective_xcpus' declared here
+     135 |         cpumask_var_t effective_xcpus;
+         |                       ^~~~~~~~~~~~~~~
 
 
-On 6/14/23 19:18, Gustavo A. R. Silva wrote:
-> Address the following -Wstringop-overflow warnings seen when
-> built with ARM architecture and aspeed_g4_defconfig configuration
-> (notice that under this configuration CGROUP_SUBSYS_COUNT == 0):
-> kernel/cgroup/cgroup.c:1208:16: warning: 'find_existing_css_set' accessing 4 bytes in a region of size 0 [-Wstringop-overflow=]
-> kernel/cgroup/cgroup.c:1258:15: warning: 'css_set_hash' accessing 4 bytes in a region of size 0 [-Wstringop-overflow=]
-> kernel/cgroup/cgroup.c:6089:18: warning: 'css_set_hash' accessing 4 bytes in a region of size 0 [-Wstringop-overflow=]
-> kernel/cgroup/cgroup.c:6153:18: warning: 'css_set_hash' accessing 4 bytes in a region of size 0 [-Wstringop-overflow=]
-> 
-> These changes are based on commit d20d30ebb199 ("cgroup: Avoid compiler
-> warnings with no subsystems").
-> 
-> Signed-off-by: Gustavo A. R. Silva <gustavoars@kernel.org>
-> ---
->   kernel/cgroup/cgroup.c | 6 ++++++
->   1 file changed, 6 insertions(+)
-> 
-> diff --git a/kernel/cgroup/cgroup.c b/kernel/cgroup/cgroup.c
-> index cd497b90e11a..1ee76e62eb98 100644
-> --- a/kernel/cgroup/cgroup.c
-> +++ b/kernel/cgroup/cgroup.c
-> @@ -1200,6 +1200,9 @@ static struct css_set *find_css_set(struct css_set *old_cset,
->   	unsigned long key;
->   	int ssid;
->   
-> +	if (!CGROUP_HAS_SUBSYS_CONFIG)
-> +		return NULL;
-> +
->   	lockdep_assert_held(&cgroup_mutex);
->   
->   	/* First see if we already have a cgroup group that matches
-> @@ -6045,6 +6048,9 @@ int __init cgroup_init(void)
->   	struct cgroup_subsys *ss;
->   	int ssid;
->   
-> +	if (!CGROUP_HAS_SUBSYS_CONFIG)
-> +		return -EINVAL;
-> +
->   	BUILD_BUG_ON(CGROUP_SUBSYS_COUNT > 16);
->   	BUG_ON(cgroup_init_cftypes(NULL, cgroup_base_files));
->   	BUG_ON(cgroup_init_cftypes(NULL, cgroup_psi_files));
+vim +2468 kernel/cgroup/cpuset.c
+
+  2435	
+  2436	/**
+  2437	 * update_prstate - update partition_root_state
+  2438	 * @cs: the cpuset to update
+  2439	 * @new_prs: new partition root state
+  2440	 * Return: 0 if successful, != 0 if error
+  2441	 *
+  2442	 * Call with cpuset_mutex held.
+  2443	 */
+  2444	static int update_prstate(struct cpuset *cs, int new_prs)
+  2445	{
+  2446		int err = PERR_NONE, old_prs = cs->partition_root_state;
+  2447		struct tmpmasks tmpmask;
+  2448	
+  2449		if (old_prs == new_prs)
+  2450			return 0;
+  2451	
+  2452		/*
+  2453		 * For a previously invalid partition root, leave it at being
+  2454		 * invalid if new_prs is not "member".
+  2455		 */
+  2456		if (new_prs && is_prs_invalid(old_prs)) {
+  2457			cs->partition_root_state = -new_prs;
+  2458			return 0;
+  2459		}
+  2460	
+  2461		if (alloc_cpumasks(NULL, &tmpmask))
+  2462			return -ENOMEM;
+  2463	
+  2464		/*
+  2465		 * Setup effective_xcpus if not set yet, it will be cleared later
+  2466		 * if partition becomes invalid.
+  2467		 */
+> 2468		if ((new_prs > 0) && !cs->effective_xcpus) {
+  2469			struct cpuset *parent = parent_cs(cs);
+  2470	
+  2471			spin_lock_irq(&callback_lock);
+  2472			cpumask_and(cs->effective_xcpus,
+  2473				    cs->cpus_allowed, parent->effective_xcpus);
+  2474			spin_unlock_irq(&callback_lock);
+  2475		}
+  2476	
+  2477		err = update_partition_exclusive(cs, new_prs);
+  2478		if (err)
+  2479			goto out;
+  2480	
+  2481		if (!old_prs) {
+  2482			/*
+  2483			 * cpus_allowed cannot be empty.
+  2484			 */
+  2485			if (cpumask_empty(cs->cpus_allowed)) {
+  2486				err = PERR_CPUSEMPTY;
+  2487				goto out;
+  2488			}
+  2489	
+  2490			err = update_parent_effective_cpumask(cs, partcmd_enable,
+  2491							      NULL, &tmpmask);
+  2492		} else if (old_prs && new_prs) {
+  2493			/*
+  2494			 * A change in load balance state only, no change in cpumasks.
+  2495			 */
+  2496			;
+  2497		} else {
+  2498			/*
+  2499			 * Switching back to member is always allowed even if it
+  2500			 * disables child partitions.
+  2501			 */
+  2502			update_parent_effective_cpumask(cs, partcmd_disable, NULL,
+  2503							&tmpmask);
+  2504	
+  2505			/*
+  2506			 * Invalidation of child partitions will be done in
+  2507			 * update_cpumasks_hier().
+  2508			 */
+  2509		}
+  2510	out:
+  2511		/*
+  2512		 * Make partition invalid & disable CS_CPU_EXCLUSIVE if an error
+  2513		 * happens.
+  2514		 */
+  2515		if (err) {
+  2516			new_prs = -new_prs;
+  2517			update_partition_exclusive(cs, new_prs);
+  2518		}
+  2519	
+  2520		spin_lock_irq(&callback_lock);
+  2521		cs->partition_root_state = new_prs;
+  2522		WRITE_ONCE(cs->prs_err, err);
+  2523		if (!is_partition_valid(cs))
+  2524			cpumask_clear(cs->effective_xcpus);
+  2525		spin_unlock_irq(&callback_lock);
+  2526	
+  2527		/* Force update if switching back to member */
+  2528		update_cpumasks_hier(cs, &tmpmask, !new_prs ? HIER_CHECKALL : 0);
+  2529	
+  2530		/* Update sched domains and load balance flag */
+  2531		update_partition_sd_lb(cs, old_prs);
+  2532	
+  2533		notify_partition_change(cs, old_prs);
+  2534		free_cpumasks(NULL, &tmpmask);
+  2535		return 0;
+  2536	}
+  2537	
+
+-- 
+0-DAY CI Kernel Test Service
+https://github.com/intel/lkp-tests/wiki
