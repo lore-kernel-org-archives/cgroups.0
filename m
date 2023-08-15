@@ -1,54 +1,68 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+From: Yosry Ahmed <yosryahmed@google.com>
 Subject: Re: [PATCH] mm: memcg: provide accurate stats for userspace reads
-Date: Mon, 14 Aug 2023 14:47:55 -1000
-Message-ID: <ZNrLO5PAEZw4yjI9@slm.duckdns.org>
+Date: Mon, 14 Aug 2023 17:50:46 -0700
+Message-ID: <CAJD7tkYgCySTX28zK9GZiWwsabR4nv7M2hQ57y12si-fqtv7zg@mail.gmail.com>
 References: <CAJD7tkYZxjAHrodVDK=wmz-sULJrq2VhC_5ecRP7T-KiaOcTuw@mail.gmail.com>
  <CALvZod46Cz_=5UgiyAKM+VgKyk=KJCqDqXu91=9uHy7-2wk53g@mail.gmail.com>
  <CAJD7tkY-ezyYebvcs=8Z_zrw2UVW8jf2WvP1G8tu2rT=2sMnAA@mail.gmail.com>
  <CALvZod5fH9xu_+6x85K38f63GfKGWD1LqtD2R4d09xmDtLB7ew@mail.gmail.com>
- <ZNdEaw2nktq1NfmH@dhcp22.suse.cz>
- <CAJD7tkaFHgc3eN1K1wYsQFWMLu4+Frf9DJ-5HOja2nC20Es9Dw@mail.gmail.com>
- <ZNrDWqfjXtAYhnvT@slm.duckdns.org>
- <CAJD7tkYBFz-gZ2QsHxUMT=t0KNXs66S-zzMPebadHx9zaG0Q3w@mail.gmail.com>
- <ZNrITZVTf2EILRJq@slm.duckdns.org>
- <CAJD7tkaXwoF-faApweAmm7Db7jAuS3EO7hVvdyVtqW_rE+T9Vg@mail.gmail.com>
+ <ZNdEaw2nktq1NfmH@dhcp22.suse.cz> <CAJD7tkaFHgc3eN1K1wYsQFWMLu4+Frf9DJ-5HOja2nC20Es9Dw@mail.gmail.com>
+ <ZNrDWqfjXtAYhnvT@slm.duckdns.org> <CAJD7tkYBFz-gZ2QsHxUMT=t0KNXs66S-zzMPebadHx9zaG0Q3w@mail.gmail.com>
+ <ZNrITZVTf2EILRJq@slm.duckdns.org> <CAJD7tkaXwoF-faApweAmm7Db7jAuS3EO7hVvdyVtqW_rE+T9Vg@mail.gmail.com>
+ <ZNrLO5PAEZw4yjI9@slm.duckdns.org>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Transfer-Encoding: quoted-printable
+Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20221208; t=1692060477; x=1692665277;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:sender:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=nNEJH3hSSRRHyRk+tOxvRsyumLi4vURSWSdvolmYkGg=;
-        b=BFRuwagfFi9+OedefmC8mcbgzAetuiMxU/z+Brfx5yvijvQeffS9HYxWoftGxN0iAn
-         XlpfCa1jBU1A2gAAU0DqCZlvtCCvqBOfZ5jnQ/QP6hAYNDNPFcw8PHQ1r7QAaGH/rYBL
-         pyar1XexlSvHmjHuilFQEuVejUCSSY14DcGnPOkG8G/kisQw5MPaUrlKsK/cSFlGvx52
-         5KdNvhtEDXpB5vKzIeIj8GXhVLyuS5AI6K5AY2NZcdTxn5++l8bcL6j6s+xcwAcSvJ4x
-         UEAf/nH9NkphyEM+A6WsCS7/d5up3bJXvnJbuZiE/HEag9ZlIpWaIftXFL+auU873v54
-         WS+w==
-Sender: Tejun Heo <htejun-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <CAJD7tkaXwoF-faApweAmm7Db7jAuS3EO7hVvdyVtqW_rE+T9Vg-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+        d=google.com; s=20221208; t=1692060683; x=1692665483;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=5DF8cCN5c46hMXv7mfXAxrDIYQabUgmS1Hsrig0V+jQ=;
+        b=OqEkid6LHJUv/dnnZQeNSbgPrTga2p1Rg7hC4lce9ysXWPFOb965ybIH11k9KozkYE
+         ++Q/tf1K5gcbbTOpBJwvPUu+khrw9WL0zXKRU4T1sQYBO+GIfKqNstu2m4fOKzHPFVgh
+         RslMiu059PrSxFkvqcBGE1uAJDrfm0+aWeoRRFjPern7kCkCL+ND9+b1+vbUuFEDgSoc
+         POSYw0EN/F5RdTEAizBNUBDtNI5MRiAM2MT58N9sYEAsV/LE7ATMssVAb1qDBfos1d0l
+         5wm9zSdVQFwAZ7hw1vwuzDQA8dyBkeIA9spid8dBeJp17yeTcCVoEN5n9StLcr3vFIOa
+         /cOQ==
+In-Reply-To: <ZNrLO5PAEZw4yjI9@slm.duckdns.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Cc: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Muchun Song <muchun.song-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Type: text/plain; charset="windows-1252"
+To: Tejun Heo <tj@kernel.org>
+Cc: Michal Hocko <mhocko@suse.com>, Shakeel Butt <shakeelb@google.com>, Johannes Weiner <hannes@cmpxchg.org>, Roman Gushchin <roman.gushchin@linux.dev>, Andrew Morton <akpm@linux-foundation.org>, Muchun Song <muchun.song@linux.dev>, cgroups@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org
 
-Hello,
+On Mon, Aug 14, 2023 at 5:48=E2=80=AFPM Tejun Heo <tj@kernel.org> wrote:
+>
+> Hello,
+>
+> On Mon, Aug 14, 2023 at 05:39:15PM -0700, Yosry Ahmed wrote:
+> > I believe dropping unified flushing, if possible of course, may fix
+> > both problems.
+>
+> Yeah, flushing the whole tree for every stat read will push up the big O
+> complexity of the operation. It shouldn't be too bad because only what's
+> updated since the last read will need flushing but if you have a really b=
+ig
+> machine with a lot of constantly active cgroups, you're still gonna feel =
+it.
+> So, yeah, drop that and switch the global lock to mutex and we should all=
+ be
+> good?
 
-On Mon, Aug 14, 2023 at 05:39:15PM -0700, Yosry Ahmed wrote:
-> I believe dropping unified flushing, if possible of course, may fix
-> both problems.
+I hope so, but I am not sure.
 
-Yeah, flushing the whole tree for every stat read will push up the big O
-complexity of the operation. It shouldn't be too bad because only what's
-updated since the last read will need flushing but if you have a really big
-machine with a lot of constantly active cgroups, you're still gonna feel it.
-So, yeah, drop that and switch the global lock to mutex and we should all be
-good?
+The unified flushing was added initially to mitigate a thundering herd
+problem from concurrent in-kernel flushers (e.g. concurrent reclaims),
+but back then flushing was atomic so we had to keep the spinlock held
+for a long time. I think it should be better now, but I am hoping
+Shakeel will chime in since he added the unified flushing originally.
 
-Thanks.
+We also need to agree on what to do about stats_flushing_threshold and
+flush_next_time since they're both global now (since all flushing is
+global).
 
--- 
-tejun
+>
+> Thanks.
+>
+> --
+> tejun
