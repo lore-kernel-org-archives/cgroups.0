@@ -1,36 +1,92 @@
 From: Yu Kuai <yukuai1-XF6JlduFytWkHkcT6e4Xnw@public.gmane.org>
-Subject: [PATCH -next 0/4] cleanup and fixes for 'carryover_ios/bytes'
-Date: Tue, 15 Aug 2023 09:41:19 +0800
-Message-ID: <20230815014123.368929-1-yukuai1@huaweicloud.com>
+Subject: [PATCH -next 2/4] blk-throttle: fix wrong comparation while 'carryover_ios/bytes' is negative
+Date: Tue, 15 Aug 2023 09:41:21 +0800
+Message-ID: <20230815014123.368929-3-yukuai1@huaweicloud.com>
+References: <20230815014123.368929-1-yukuai1@huaweicloud.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <20230815014123.368929-1-yukuai1-XF6JlduFytWkHkcT6e4Xnw@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset="us-ascii"
 To: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, josef-DigfWCa+lFGyeJad7bwFQA@public.gmane.org, axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, mkoutny-IBi9RG/b67k@public.gmane.org
 Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, yukuai1-XF6JlduFytWkHkcT6e4Xnw@public.gmane.org, yi.zhang-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, yangerkun-hv44wF8Li93QT0dZR+AlfA@public.gmane.org
 
 From: Yu Kuai <yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 
-Patch 1 print signed value for 'carryover_ios/bytes' to user.
+carryover_ios/bytes[] can be negative in the case that ios are
+dispatched in the slice in advance, and then configuration is updated.
+For example:
 
-Patch 2 fix that comparation ”unsigned value < negative value“ will
-pass, causing that io won't be throttled in the silce.
+1) set iops limit to 1000, and slice start is 0, slice end is 100ms;
+2) current time is 0, and 100 ios are dispatched, those ios will not be
+   throttled, hence io_disp is 100;
+3) still at current time 0, update iops limit to 100, then carryover_ios
+   is (0 - 100) = -100;
+4) then, dispatch a new io at time 0, the expected result is that this
+   io will wait for 1s. The calculation in tg_within_iops_limit:
 
-Patch 3,4 fix that 'carryover_ios/bytes' is not cleared while
-'io/bytes_disp' is cleared, causing that throttle is not accurate.
+   io_disp = 0;
+   io_allowed = calculate_io_allowed + carryover_ios
+	      = 10 + (-100) = -90;
+   io won't be throttled if (io_disp + 1 < io_allowed) passed.
 
-Yu Kuai (4):
-  blk-throttle: print signed value 'carryover_bytes/ios' for user
-  blk-throttle: fix wrong comparation while 'carryover_ios/bytes' is
-    negative
-  blk-throttle: use calculate_io/bytes_allowed() for throtl_trim_slice()
-  blk-throttle: consider 'carryover_ios/bytes' in throtl_trim_slice()
+Before this patch, in step 4) (io_disp + 1 < io_allowed) is passed,
+because -90 for unsigned value is very huge, and such io won't be
+throttled.
 
- block/blk-throttle.c | 105 +++++++++++++++++++++----------------------
- block/blk-throttle.h |   4 +-
- 2 files changed, 54 insertions(+), 55 deletions(-)
+Fix this problem by checking if 'io/bytes_allowed' is negative first.
 
+Signed-off-by: Yu Kuai <yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+---
+ block/blk-throttle.c | 11 +++++------
+ 1 file changed, 5 insertions(+), 6 deletions(-)
+
+diff --git a/block/blk-throttle.c b/block/blk-throttle.c
+index 5184f17f5129..7c93144d03da 100644
+--- a/block/blk-throttle.c
++++ b/block/blk-throttle.c
+@@ -825,7 +825,7 @@ static unsigned long tg_within_iops_limit(struct throtl_grp *tg, struct bio *bio
+ 				 u32 iops_limit)
+ {
+ 	bool rw = bio_data_dir(bio);
+-	unsigned int io_allowed;
++	int io_allowed;
+ 	unsigned long jiffy_elapsed, jiffy_wait, jiffy_elapsed_rnd;
+ 
+ 	if (iops_limit == UINT_MAX) {
+@@ -838,9 +838,8 @@ static unsigned long tg_within_iops_limit(struct throtl_grp *tg, struct bio *bio
+ 	jiffy_elapsed_rnd = roundup(jiffy_elapsed + 1, tg->td->throtl_slice);
+ 	io_allowed = calculate_io_allowed(iops_limit, jiffy_elapsed_rnd) +
+ 		     tg->carryover_ios[rw];
+-	if (tg->io_disp[rw] + 1 <= io_allowed) {
++	if (io_allowed > 0 && tg->io_disp[rw] + 1 <= io_allowed)
+ 		return 0;
+-	}
+ 
+ 	/* Calc approx time to dispatch */
+ 	jiffy_wait = jiffy_elapsed_rnd - jiffy_elapsed;
+@@ -851,7 +850,8 @@ static unsigned long tg_within_bps_limit(struct throtl_grp *tg, struct bio *bio,
+ 				u64 bps_limit)
+ {
+ 	bool rw = bio_data_dir(bio);
+-	u64 bytes_allowed, extra_bytes;
++	long long bytes_allowed;
++	u64 extra_bytes;
+ 	unsigned long jiffy_elapsed, jiffy_wait, jiffy_elapsed_rnd;
+ 	unsigned int bio_size = throtl_bio_data_size(bio);
+ 
+@@ -869,9 +869,8 @@ static unsigned long tg_within_bps_limit(struct throtl_grp *tg, struct bio *bio,
+ 	jiffy_elapsed_rnd = roundup(jiffy_elapsed_rnd, tg->td->throtl_slice);
+ 	bytes_allowed = calculate_bytes_allowed(bps_limit, jiffy_elapsed_rnd) +
+ 			tg->carryover_bytes[rw];
+-	if (tg->bytes_disp[rw] + bio_size <= bytes_allowed) {
++	if (bytes_allowed > 0 && tg->bytes_disp[rw] + bio_size <= bytes_allowed)
+ 		return 0;
+-	}
+ 
+ 	/* Calc approx time to dispatch */
+ 	extra_bytes = tg->bytes_disp[rw] + bio_size - bytes_allowed;
 -- 
 2.39.2
 
