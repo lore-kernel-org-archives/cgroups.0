@@ -1,7 +1,7 @@
 From: Yu Kuai <yukuai1-XF6JlduFytWkHkcT6e4Xnw@public.gmane.org>
-Subject: [PATCH -next 2/4] blk-throttle: fix wrong comparation while 'carryover_ios/bytes' is negative
-Date: Tue, 15 Aug 2023 09:41:21 +0800
-Message-ID: <20230815014123.368929-3-yukuai1@huaweicloud.com>
+Subject: [PATCH -next 3/4] blk-throttle: use calculate_io/bytes_allowed() for throtl_trim_slice()
+Date: Tue, 15 Aug 2023 09:41:22 +0800
+Message-ID: <20230815014123.368929-4-yukuai1@huaweicloud.com>
 References: <20230815014123.368929-1-yukuai1@huaweicloud.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
@@ -14,79 +14,131 @@ Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-block-u79uwXL29TY76Z2
 
 From: Yu Kuai <yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 
-carryover_ios/bytes[] can be negative in the case that ios are
-dispatched in the slice in advance, and then configuration is updated.
-For example:
-
-1) set iops limit to 1000, and slice start is 0, slice end is 100ms;
-2) current time is 0, and 100 ios are dispatched, those ios will not be
-   throttled, hence io_disp is 100;
-3) still at current time 0, update iops limit to 100, then carryover_ios
-   is (0 - 100) = -100;
-4) then, dispatch a new io at time 0, the expected result is that this
-   io will wait for 1s. The calculation in tg_within_iops_limit:
-
-   io_disp = 0;
-   io_allowed = calculate_io_allowed + carryover_ios
-	      = 10 + (-100) = -90;
-   io won't be throttled if (io_disp + 1 < io_allowed) passed.
-
-Before this patch, in step 4) (io_disp + 1 < io_allowed) is passed,
-because -90 for unsigned value is very huge, and such io won't be
-throttled.
-
-Fix this problem by checking if 'io/bytes_allowed' is negative first.
+There are no functional changes, just make the code cleaner.
 
 Signed-off-by: Yu Kuai <yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 ---
- block/blk-throttle.c | 11 +++++------
- 1 file changed, 5 insertions(+), 6 deletions(-)
+ block/blk-throttle.c | 81 +++++++++++++++++++++-----------------------
+ 1 file changed, 38 insertions(+), 43 deletions(-)
 
 diff --git a/block/blk-throttle.c b/block/blk-throttle.c
-index 5184f17f5129..7c93144d03da 100644
+index 7c93144d03da..e5296960c799 100644
 --- a/block/blk-throttle.c
 +++ b/block/blk-throttle.c
-@@ -825,7 +825,7 @@ static unsigned long tg_within_iops_limit(struct throtl_grp *tg, struct bio *bio
- 				 u32 iops_limit)
+@@ -697,11 +697,40 @@ static bool throtl_slice_used(struct throtl_grp *tg, bool rw)
+ 	return true;
+ }
+ 
++static unsigned int calculate_io_allowed(u32 iops_limit,
++					 unsigned long jiffy_elapsed)
++{
++	unsigned int io_allowed;
++	u64 tmp;
++
++	/*
++	 * jiffy_elapsed should not be a big value as minimum iops can be
++	 * 1 then at max jiffy elapsed should be equivalent of 1 second as we
++	 * will allow dispatch after 1 second and after that slice should
++	 * have been trimmed.
++	 */
++
++	tmp = (u64)iops_limit * jiffy_elapsed;
++	do_div(tmp, HZ);
++
++	if (tmp > UINT_MAX)
++		io_allowed = UINT_MAX;
++	else
++		io_allowed = tmp;
++
++	return io_allowed;
++}
++
++static u64 calculate_bytes_allowed(u64 bps_limit, unsigned long jiffy_elapsed)
++{
++	return mul_u64_u64_div_u64(bps_limit, (u64)jiffy_elapsed, (u64)HZ);
++}
++
+ /* Trim the used slices and adjust slice start accordingly */
+ static inline void throtl_trim_slice(struct throtl_grp *tg, bool rw)
  {
- 	bool rw = bio_data_dir(bio);
+-	unsigned long nr_slices, time_elapsed, io_trim;
+-	u64 bytes_trim, tmp;
++	unsigned long time_elapsed, io_trim;
++	u64 bytes_trim;
+ 
+ 	BUG_ON(time_before(tg->slice_end[rw], tg->slice_start[rw]));
+ 
+@@ -723,19 +752,14 @@ static inline void throtl_trim_slice(struct throtl_grp *tg, bool rw)
+ 
+ 	throtl_set_slice_end(tg, rw, jiffies + tg->td->throtl_slice);
+ 
+-	time_elapsed = jiffies - tg->slice_start[rw];
+-
+-	nr_slices = time_elapsed / tg->td->throtl_slice;
+-
+-	if (!nr_slices)
++	time_elapsed = rounddown(jiffies - tg->slice_start[rw],
++				 tg->td->throtl_slice);
++	if (!time_elapsed)
+ 		return;
+-	tmp = tg_bps_limit(tg, rw) * tg->td->throtl_slice * nr_slices;
+-	do_div(tmp, HZ);
+-	bytes_trim = tmp;
+-
+-	io_trim = (tg_iops_limit(tg, rw) * tg->td->throtl_slice * nr_slices) /
+-		HZ;
+ 
++	bytes_trim = calculate_bytes_allowed(tg_bps_limit(tg, rw),
++					     time_elapsed);
++	io_trim = calculate_io_allowed(tg_iops_limit(tg, rw), time_elapsed);
+ 	if (!bytes_trim && !io_trim)
+ 		return;
+ 
+@@ -749,7 +773,7 @@ static inline void throtl_trim_slice(struct throtl_grp *tg, bool rw)
+ 	else
+ 		tg->io_disp[rw] = 0;
+ 
+-	tg->slice_start[rw] += nr_slices * tg->td->throtl_slice;
++	tg->slice_start[rw] += time_elapsed;
+ 
+ 	throtl_log(&tg->service_queue,
+ 		   "[%c] trim slice nr=%lu bytes=%llu io=%lu start=%lu end=%lu jiffies=%lu",
+@@ -757,35 +781,6 @@ static inline void throtl_trim_slice(struct throtl_grp *tg, bool rw)
+ 		   tg->slice_start[rw], tg->slice_end[rw], jiffies);
+ }
+ 
+-static unsigned int calculate_io_allowed(u32 iops_limit,
+-					 unsigned long jiffy_elapsed)
+-{
 -	unsigned int io_allowed;
-+	int io_allowed;
- 	unsigned long jiffy_elapsed, jiffy_wait, jiffy_elapsed_rnd;
- 
- 	if (iops_limit == UINT_MAX) {
-@@ -838,9 +838,8 @@ static unsigned long tg_within_iops_limit(struct throtl_grp *tg, struct bio *bio
- 	jiffy_elapsed_rnd = roundup(jiffy_elapsed + 1, tg->td->throtl_slice);
- 	io_allowed = calculate_io_allowed(iops_limit, jiffy_elapsed_rnd) +
- 		     tg->carryover_ios[rw];
--	if (tg->io_disp[rw] + 1 <= io_allowed) {
-+	if (io_allowed > 0 && tg->io_disp[rw] + 1 <= io_allowed)
- 		return 0;
--	}
- 
- 	/* Calc approx time to dispatch */
- 	jiffy_wait = jiffy_elapsed_rnd - jiffy_elapsed;
-@@ -851,7 +850,8 @@ static unsigned long tg_within_bps_limit(struct throtl_grp *tg, struct bio *bio,
- 				u64 bps_limit)
+-	u64 tmp;
+-
+-	/*
+-	 * jiffy_elapsed should not be a big value as minimum iops can be
+-	 * 1 then at max jiffy elapsed should be equivalent of 1 second as we
+-	 * will allow dispatch after 1 second and after that slice should
+-	 * have been trimmed.
+-	 */
+-
+-	tmp = (u64)iops_limit * jiffy_elapsed;
+-	do_div(tmp, HZ);
+-
+-	if (tmp > UINT_MAX)
+-		io_allowed = UINT_MAX;
+-	else
+-		io_allowed = tmp;
+-
+-	return io_allowed;
+-}
+-
+-static u64 calculate_bytes_allowed(u64 bps_limit, unsigned long jiffy_elapsed)
+-{
+-	return mul_u64_u64_div_u64(bps_limit, (u64)jiffy_elapsed, (u64)HZ);
+-}
+-
+ static void __tg_update_carryover(struct throtl_grp *tg, bool rw)
  {
- 	bool rw = bio_data_dir(bio);
--	u64 bytes_allowed, extra_bytes;
-+	long long bytes_allowed;
-+	u64 extra_bytes;
- 	unsigned long jiffy_elapsed, jiffy_wait, jiffy_elapsed_rnd;
- 	unsigned int bio_size = throtl_bio_data_size(bio);
- 
-@@ -869,9 +869,8 @@ static unsigned long tg_within_bps_limit(struct throtl_grp *tg, struct bio *bio,
- 	jiffy_elapsed_rnd = roundup(jiffy_elapsed_rnd, tg->td->throtl_slice);
- 	bytes_allowed = calculate_bytes_allowed(bps_limit, jiffy_elapsed_rnd) +
- 			tg->carryover_bytes[rw];
--	if (tg->bytes_disp[rw] + bio_size <= bytes_allowed) {
-+	if (bytes_allowed > 0 && tg->bytes_disp[rw] + bio_size <= bytes_allowed)
- 		return 0;
--	}
- 
- 	/* Calc approx time to dispatch */
- 	extra_bytes = tg->bytes_disp[rw] + bio_size - bytes_allowed;
+ 	unsigned long jiffy_elapsed = jiffies - tg->slice_start[rw];
 -- 
 2.39.2
 
