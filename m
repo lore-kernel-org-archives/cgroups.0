@@ -1,85 +1,224 @@
-From: Abel Wu <wuyun.abel@bytedance.com>
-Subject: Re: Re: [PATCH net-next v2] net-memcg: Fix scope of sockmem pressure
- indicators
-Date: Tue, 15 Aug 2023 10:53:35 +0800
-Message-ID: <ef6a383f-56b0-9ac5-b358-1a29cf595a24@bytedance.com>
-References: <20230814070923.35769-1-wuyun.abel@bytedance.com>
- <CALvZod5C3yWdgWr83EAdVUCH5PEK8ew7Q+FOt_zGOFOE9HVyQQ@mail.gmail.com>
-Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-Return-path: <netdev+bounces-27552-gl-netdev-2=m.gmane-mx.org@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=bytedance.com; s=google; t=1692068023; x=1692672823;
-        h=content-transfer-encoding:in-reply-to:from:content-language
-         :references:cc:to:subject:user-agent:mime-version:date:message-id
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=a8HyUjDBkW62Y7ia/YRzhrRt6SI0MoeiKF06ymvveI4=;
-        b=e5H6YSxaquRTypkZyjRtJDCwTmj5Z8r9Hx5apY8RhyinYxtJgLPHfj1RJYFYO+7j7h
-         /XDrG7/16OKncrgd4rQzDKiDxmTxML7eTcIcJlApNVK7VwSPMRia945Nj3UpFZFqLVxr
-         c+TJdcrrYEsJ2D+NPAvrqWZ/lcET6O9a7jF5NDA3w5oNdN00BW0X7ksw3eGvMmN4iAVv
-         IPJTW3vBweY463qXeEMbiUcYWz3Ge+Zn5GN9ZdDLS+iEAXkLnBKigA9mtVVe0iPmHT/9
-         HIfoGsl7xLunxJrwgoVyzkqCS1QH7hmlNRPFsL1uZKuEccnQq4wlLjkrsukuqlh8NNH1
-         rMpg==
-List-Id: <cgroups.vger.kernel.org>
-List-Subscribe: <mailto:netdev+subscribe@vger.kernel.org>
-List-Unsubscribe: <mailto:netdev+unsubscribe@vger.kernel.org>
-Content-Language: en-US
-In-Reply-To: <CALvZod5C3yWdgWr83EAdVUCH5PEK8ew7Q+FOt_zGOFOE9HVyQQ@mail.gmail.com>
-Content-Type: text/plain; charset="windows-1252"; format="flowed"
-To: Shakeel Butt <shakeelb@google.com>
-Cc: "David S. Miller" <davem@davemloft.net>, Eric Dumazet <edumazet@google.com>, Jakub Kicinski <kuba@kernel.org>, Paolo Abeni <pabeni@redhat.com>, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, Roman Gushchin <roman.gushchin@linux.dev>, Muchun Song <muchun.song@linux.dev>, Andrew Morton <akpm@linux-foundation.org>, David Ahern <dsahern@kernel.org>, Yosry Ahmed <yosryahmed@google.com>, "Matthew Wilcox (Oracle)" <willy@infradead.org>, Yu Zhao <yuzhao@google.com>, Kefeng Wang <wangkefeng.wang@huawei.com>, Yafang Shao <laoar.shao@gmail.com>, Kuniyuki Iwashima <kuniyu@amazon.com>, Martin KaFai Lau <martin.lau@kernel.org>, Breno Leitao <leitao@debian.org>, Alexander Mikhalitsyn <alexander@mihalicyn.com>, David Howells <dhowells@redhat.com>, Jason Xing <kernelxing@tencent.com>, Vladimir Davydov <vdavydov.dev@gmail.com>, Michal Hocko <mhocko@suse.com>, ope
+From: kernel test robot <lkp-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+Subject: [tj-cgroup:for-next] BUILD SUCCESS
+ 82b90b6c5b38e457c7081d50dff11ecbafc1e61a
+Date: Tue, 15 Aug 2023 21:44:37 +0800
+Message-ID: <202308152135.jZbme0EF-lkp@intel.com>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1692107109; x=1723643109;
+  h=date:from:to:cc:subject:message-id;
+  bh=d2HX1SFUGRxuad7Xj7sFRUUHCHzhR0c3vHhMEqo/GPI=;
+  b=gafY2FDL6c/u6C4K4hNQ7ImkMsy4rTQ0epHh93CHjuAQdURt/Yrkf5KI
+   CZbpmtqN6WFsjGT3QN8WHLtiHGfrUvv7Inme+4xIMdAyST+zq8i1jRgg2
+   z7OO4GFgnWIsYsqQ0RQHZ0Lbsct0PQqiW5kNsq/Pdsqjp1edUiaOI+t1i
+   ER5dKcBsdgWVC/J2av0Y+1JQOnzBFctrCw7Z0DZsrfY1CFbRTHc1ZP5v7
+   DgMsI23bh9Dj9sEaJKVAmSnSCiwmTBKKfYfNDLNi9wNvxPv7pNV4R4rs9
+   2+46VDauC46xv3ig7ISPFFc+qqxJSkopOE3aYwnZknLbmsTFuB4xCqR7H
+   g==;
+List-ID: <cgroups.vger.kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On 8/15/23 4:18 AM, Shakeel Butt wrote:
-> On Mon, Aug 14, 2023 at 12:09=E2=80=AFAM Abel Wu <wuyun.abel@bytedance.co=
-m> wrote:
->>
->> Now there are two indicators of socket memory pressure sit inside
->> struct mem_cgroup, socket_pressure and tcpmem_pressure, indicating
->> memory reclaim pressure in memcg->memory and ->tcpmem respectively.
->>
->> When in legacy mode (cgroupv1), the socket memory is charged into
->> ->tcpmem which is independent of ->memory, so socket_pressure has
->> nothing to do with socket's pressure at all. Things could be worse
->> by taking socket_pressure into consideration in legacy mode, as a
->> pressure in ->memory can lead to premature reclamation/throttling
->> in socket.
->>
->> While for the default mode (cgroupv2), the socket memory is charged
->> into ->memory, and ->tcpmem/->tcpmem_pressure are simply not used.
->>
->> So {socket,tcpmem}_pressure are only used in default/legacy mode
->> respectively for indicating socket memory pressure. This patch fixes
->> the pieces of code that make mixed use of both.
->>
->> Fixes: 8e8ae645249b ("mm: memcontrol: hook up vmpressure to socket press=
-ure")
->> Signed-off-by: Abel Wu <wuyun.abel@bytedance.com>
->=20
-> So, this is undoing the unintended exposure of v2 functionality for
+tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git for-next
+branch HEAD: 82b90b6c5b38e457c7081d50dff11ecbafc1e61a  cgroup:namespace: Remove unused cgroup_namespaces_init()
 
-Exactly.
+elapsed time: 723m
 
-> the v1. I wonder if someone might have started depending upon that
-> behavior but I am more convinced that no one is using v1's tcpmem
-> accounting due to performance impact. So, this looks good to me.
+configs tested: 183
+configs skipped: 17
 
-Agreed. The performance impact is not negligible. While not accounting
-tcpmem is also undesired for Resource Manager to do provision properly.
-So we have to migrate to cgroupv2, and now we encountered a new issue.
-Some discussion with Roman can be found here:
+The following configs have been built successfully.
+More configs may be tested in the coming days.
 
-https://lore.kernel.org/netdev/29de901f-ae4c-a900-a553-17ec4f096f0e@bytedan=
-ce.com/
+tested configs:
+alpha                            allyesconfig   gcc  
+alpha                               defconfig   gcc  
+alpha                randconfig-r001-20230815   gcc  
+alpha                randconfig-r021-20230815   gcc  
+alpha                randconfig-r022-20230815   gcc  
+alpha                randconfig-r023-20230815   gcc  
+alpha                randconfig-r024-20230815   gcc  
+alpha                randconfig-r031-20230815   gcc  
+alpha                randconfig-r035-20230815   gcc  
+alpha                randconfig-r036-20230815   gcc  
+arc                              allyesconfig   gcc  
+arc                                 defconfig   gcc  
+arc                  randconfig-r003-20230815   gcc  
+arc                  randconfig-r011-20230815   gcc  
+arc                  randconfig-r024-20230815   gcc  
+arc                  randconfig-r031-20230815   gcc  
+arc                  randconfig-r043-20230815   gcc  
+arm                              allmodconfig   gcc  
+arm                              allyesconfig   gcc  
+arm                                 defconfig   gcc  
+arm                           h3600_defconfig   gcc  
+arm                         lpc18xx_defconfig   gcc  
+arm                          moxart_defconfig   clang
+arm                        multi_v7_defconfig   gcc  
+arm                             mxs_defconfig   clang
+arm                  randconfig-r004-20230815   gcc  
+arm                  randconfig-r006-20230815   gcc  
+arm                  randconfig-r032-20230815   gcc  
+arm                  randconfig-r046-20230815   clang
+arm                           sama7_defconfig   clang
+arm                        spear6xx_defconfig   gcc  
+arm                           sunxi_defconfig   gcc  
+arm                           tegra_defconfig   gcc  
+arm64                            allyesconfig   gcc  
+arm64                               defconfig   gcc  
+arm64                randconfig-r016-20230815   gcc  
+csky                                defconfig   gcc  
+csky                 randconfig-r031-20230815   gcc  
+hexagon              randconfig-r024-20230815   clang
+hexagon              randconfig-r041-20230815   clang
+hexagon              randconfig-r045-20230815   clang
+i386                             allyesconfig   gcc  
+i386         buildonly-randconfig-r004-20230815   clang
+i386         buildonly-randconfig-r005-20230815   clang
+i386         buildonly-randconfig-r006-20230815   clang
+i386                              debian-10.3   gcc  
+i386                                defconfig   gcc  
+i386                 randconfig-i001-20230815   clang
+i386                 randconfig-i002-20230815   clang
+i386                 randconfig-i003-20230815   clang
+i386                 randconfig-i004-20230815   clang
+i386                 randconfig-i005-20230815   clang
+i386                 randconfig-i006-20230815   clang
+i386                 randconfig-i011-20230815   gcc  
+i386                 randconfig-i012-20230815   gcc  
+i386                 randconfig-i013-20230815   gcc  
+i386                 randconfig-i014-20230815   gcc  
+i386                 randconfig-i015-20230815   gcc  
+i386                 randconfig-i016-20230815   gcc  
+i386                 randconfig-r016-20230815   gcc  
+i386                 randconfig-r024-20230815   gcc  
+i386                 randconfig-r025-20230815   gcc  
+i386                 randconfig-r033-20230815   clang
+loongarch                        allmodconfig   gcc  
+loongarch                         allnoconfig   gcc  
+loongarch                           defconfig   gcc  
+loongarch            randconfig-r023-20230815   gcc  
+m68k                             allmodconfig   gcc  
+m68k                             allyesconfig   gcc  
+m68k                       bvme6000_defconfig   gcc  
+m68k                                defconfig   gcc  
+m68k                 randconfig-r003-20230815   gcc  
+m68k                 randconfig-r013-20230815   gcc  
+m68k                 randconfig-r016-20230815   gcc  
+m68k                 randconfig-r025-20230815   gcc  
+m68k                          sun3x_defconfig   gcc  
+microblaze           randconfig-r023-20230815   gcc  
+mips                             allmodconfig   gcc  
+mips                             allyesconfig   gcc  
+mips                  cavium_octeon_defconfig   gcc  
+mips                     cu1000-neo_defconfig   clang
+mips                           jazz_defconfig   gcc  
+mips                       lemote2f_defconfig   clang
+mips                     loongson1b_defconfig   gcc  
+mips                  maltasmvp_eva_defconfig   gcc  
+mips                 randconfig-r002-20230815   gcc  
+nios2                         3c120_defconfig   gcc  
+nios2                               defconfig   gcc  
+nios2                randconfig-r002-20230815   gcc  
+nios2                randconfig-r023-20230815   gcc  
+nios2                randconfig-r031-20230815   gcc  
+openrisc                    or1ksim_defconfig   gcc  
+openrisc             randconfig-r001-20230815   gcc  
+openrisc             randconfig-r012-20230815   gcc  
+openrisc             randconfig-r022-20230815   gcc  
+openrisc             randconfig-r035-20230815   gcc  
+parisc                           allyesconfig   gcc  
+parisc                              defconfig   gcc  
+parisc               randconfig-r013-20230815   gcc  
+parisc               randconfig-r015-20230815   gcc  
+parisc               randconfig-r022-20230815   gcc  
+parisc               randconfig-r024-20230815   gcc  
+parisc               randconfig-r026-20230815   gcc  
+parisc               randconfig-r032-20230815   gcc  
+parisc               randconfig-r033-20230815   gcc  
+parisc64                            defconfig   gcc  
+powerpc                          allmodconfig   gcc  
+powerpc                           allnoconfig   gcc  
+powerpc                       ebony_defconfig   gcc  
+powerpc                    klondike_defconfig   gcc  
+powerpc                      mgcoge_defconfig   gcc  
+powerpc                    mvme5100_defconfig   gcc  
+powerpc                    sam440ep_defconfig   gcc  
+riscv                            allmodconfig   gcc  
+riscv                             allnoconfig   gcc  
+riscv                            allyesconfig   gcc  
+riscv                               defconfig   gcc  
+riscv                randconfig-r021-20230815   gcc  
+riscv                randconfig-r025-20230815   gcc  
+riscv                randconfig-r026-20230815   gcc  
+riscv                randconfig-r042-20230815   gcc  
+riscv                          rv32_defconfig   gcc  
+s390                             allmodconfig   gcc  
+s390                             allyesconfig   gcc  
+s390                                defconfig   gcc  
+s390                 randconfig-r012-20230815   gcc  
+s390                 randconfig-r044-20230815   gcc  
+sh                               allmodconfig   gcc  
+sh                   randconfig-r014-20230815   gcc  
+sh                   randconfig-r025-20230815   gcc  
+sh                   rts7751r2dplus_defconfig   gcc  
+sh                          sdk7780_defconfig   gcc  
+sh                           se7619_defconfig   gcc  
+sh                           se7705_defconfig   gcc  
+sh                            titan_defconfig   gcc  
+sh                              ul2_defconfig   gcc  
+sparc                            allyesconfig   gcc  
+sparc                               defconfig   gcc  
+sparc                randconfig-r021-20230815   gcc  
+sparc                randconfig-r022-20230815   gcc  
+sparc                randconfig-r023-20230815   gcc  
+sparc                randconfig-r026-20230815   gcc  
+sparc                randconfig-r034-20230815   gcc  
+sparc                randconfig-r036-20230815   gcc  
+sparc64              randconfig-r004-20230815   gcc  
+sparc64              randconfig-r011-20230815   gcc  
+sparc64              randconfig-r021-20230815   gcc  
+um                               allmodconfig   clang
+um                                allnoconfig   clang
+um                               allyesconfig   clang
+um                                  defconfig   gcc  
+um                             i386_defconfig   gcc  
+um                   randconfig-r005-20230815   gcc  
+um                   randconfig-r014-20230815   clang
+um                   randconfig-r026-20230815   clang
+um                           x86_64_defconfig   gcc  
+x86_64                           allyesconfig   gcc  
+x86_64       buildonly-randconfig-r001-20230815   clang
+x86_64       buildonly-randconfig-r002-20230815   clang
+x86_64       buildonly-randconfig-r003-20230815   clang
+x86_64                              defconfig   gcc  
+x86_64                                  kexec   gcc  
+x86_64               randconfig-r006-20230815   clang
+x86_64               randconfig-x001-20230815   gcc  
+x86_64               randconfig-x002-20230815   gcc  
+x86_64               randconfig-x003-20230815   gcc  
+x86_64               randconfig-x004-20230815   gcc  
+x86_64               randconfig-x005-20230815   gcc  
+x86_64               randconfig-x006-20230815   gcc  
+x86_64               randconfig-x011-20230815   clang
+x86_64               randconfig-x012-20230815   clang
+x86_64               randconfig-x013-20230815   clang
+x86_64               randconfig-x014-20230815   clang
+x86_64               randconfig-x015-20230815   clang
+x86_64               randconfig-x016-20230815   clang
+x86_64                          rhel-8.3-rust   clang
+x86_64                               rhel-8.3   gcc  
+xtensa               randconfig-r004-20230815   gcc  
+xtensa               randconfig-r014-20230815   gcc  
+xtensa               randconfig-r015-20230815   gcc  
+xtensa               randconfig-r021-20230815   gcc  
+xtensa               randconfig-r022-20230815   gcc  
+xtensa               randconfig-r026-20230815   gcc  
 
-It would be great if you can shed some light on this!
-
->=20
-> Acked-by: Shakeel Butt <shakeelb@google.com>
-
-Thanks!
-	Abel
-
->=20
-> I do think we should start the deprecation process of v1's tcpmem account=
-ing.
-
+-- 
+0-DAY CI Kernel Test Service
+https://github.com/intel/lkp-tests/wiki
