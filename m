@@ -1,119 +1,98 @@
-From: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Subject: [PATCH-cgroup v6 4/6] cgroup/cpuset: Check partition conflict with housekeeping setup
-Date: Tue, 15 Aug 2023 11:30:25 -0400
-Message-ID: <20230815153027.633355-5-longman@redhat.com>
-References: <20230815153027.633355-1-longman@redhat.com>
+From: Waiman Long <longman@redhat.com>
+Subject: [PATCH-cgroup v6 0/6] cgroup/cpuset: Support remote partitions
+Date: Tue, 15 Aug 2023 11:30:21 -0400
+Message-ID: <20230815153027.633355-1-longman@redhat.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1692113453;
+        s=mimecast20190719; t=1692113450;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=lohESFIvlzyZPy5EqizT6cujwSQc/IAqYfiYml/IU5Q=;
-        b=IqbBdxV+/LIQUcXQ8rHsUks6dnOj+Nd0zxOmuIaUVNTs8GNqPWIYUZ9BQkBcSMhfx117h7
-        Cob7/RSB1yxSLEspPlJPsQxfkqaW62tspUWTpzoU3dFFaAspYKbxNnkXs0xZtV4MWDKTtX
-        ZCdtiNFuL0Xc4dtEVi7wHSHz4MM1bLs=
-In-Reply-To: <20230815153027.633355-1-longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+         content-transfer-encoding:content-transfer-encoding;
+        bh=daE6eAQxqOJuN7ZDS1e0cYUDWgx2XMNqJQ6DBOaarzY=;
+        b=KJPiJC1tE5gXRqX7axg/EZzrv7Cd0dOfc6N0U1r6U5e0KfvRv9gUty1k85z8oc4m5NP6nV
+        IPwNSrIui1caTpkwULt1k4ZGlSXu6QHKW1ZD9+pbkZLTchSJCSsRKusyMfsESiF3R7Sa8C
+        LqmGF/6m4T3oCe2UMbwqkhjX61Hn17M=
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Christian Brauner <brauner-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Jonathan Corbet <corbet-T1hC0tSOHrs@public.gmane.org>, Shuah Khan <shuah-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Juri Lelli <juri.lelli-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Dietmar Eggemann <dietmar.eggemann-5wv7dgnIgG8@public.gmane.org>, =?UTF-8?q?Michal=20Koutn=C3=BD?= <mkoutny-IBi9RG/b67k@public.gmane.org>, Giuseppe Scrivano <gscrivan-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+To: Tejun Heo <tj@kernel.org>, Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, Christian Brauner <brauner@kernel.org>, Jonathan Corbet <corbet@lwn.net>, Shuah Khan <shuah@kernel.org>
+Cc: cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, Juri Lelli <juri.lelli@redhat.com>, Dietmar Eggemann <dietmar.eggemann@arm.com>, =?UTF-8?q?Michal=20Koutn=C3=BD?= <mkoutny@suse.com>, Giuseppe Scrivano <gscrivan@redhat.com>, Waiman Long <longman@redhat.com>
 
-A user can pre-configure certain CPUs in an isolated state at boot time
-with the "isolcpus" kernel boot command line option. Those CPUs will
-not be in the housekeeping_cpumask(HK_TYPE_DOMAIN) and so will not
-be in any sched domains. This may conflict with the partition setup
-at runtime. Those boot time isolated CPUs should only be used in an
-isolated partition.
+ v6:
+  - [v5] https://lore.kernel.org/lkml/20230713172601.3285847-1-longman@redhat.com/
+  - Add another read-only cpuset.cpus.exclusive.effective control file
+    to expose the effective set of exclusive CPUs.
+  - Update the documentation and test accordingly.
 
-This patch adds the necessary check and disallows partition setup if the
-check fails.
+ v5:
+  - [v4] https://lore.kernel.org/lkml/20230627143508.1576882-1-longman@redhat.com/
+  - Drop the first 4 patches as they had been merged.
+  - Make cpuset.cpus.exclusive invariant once it is manually set. This
+    also means the cpuset.cpus.exclusive may not show the effective value
+    that is actually being used.
+  - Update the documentation and test accordingly.
 
-Signed-off-by: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
----
- kernel/cgroup/cpuset.c | 31 +++++++++++++++++++++++++++++++
- 1 file changed, 31 insertions(+)
+ v4:
+  - [v3] https://lore.kernel.org/lkml/20230627005529.1564984-1-longman@redhat.com/
+  - Fix compilation problem reported by kernel test robot.
 
-diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
-index 5b4d72f2f09d..7b83050f5485 100644
---- a/kernel/cgroup/cpuset.c
-+++ b/kernel/cgroup/cpuset.c
-@@ -75,6 +75,7 @@ enum prs_errcode {
- 	PERR_NOCPUS,
- 	PERR_HOTPLUG,
- 	PERR_CPUSEMPTY,
-+	PERR_HKEEPING,
- };
- 
- static const char * const perr_strings[] = {
-@@ -85,6 +86,7 @@ static const char * const perr_strings[] = {
- 	[PERR_NOCPUS]    = "Parent unable to distribute cpu downstream",
- 	[PERR_HOTPLUG]   = "No cpu available due to hotplug",
- 	[PERR_CPUSEMPTY] = "cpuset.cpus is empty",
-+	[PERR_HKEEPING]  = "partition config conflicts with housekeeping setup",
- };
- 
- struct cpuset {
-@@ -1654,6 +1656,26 @@ static void remote_partition_check(struct cpuset *cs, struct cpumask *newmask,
- 		rebuild_sched_domains_locked();
- }
- 
-+/*
-+ * prstate_housekeeping_conflict - check for partition & housekeeping conflicts
-+ * @prstate: partition root state to be checked
-+ * @new_cpus: cpu mask
-+ * Return: true if there is conflict, false otherwise
-+ *
-+ * CPUs outside of housekeeping_cpumask(HK_TYPE_DOMAIN) can only be used in
-+ * an isolated partition.
-+ */
-+static bool prstate_housekeeping_conflict(int prstate, struct cpumask *new_cpus)
-+{
-+	const struct cpumask *hk_domain = housekeeping_cpumask(HK_TYPE_DOMAIN);
-+	bool all_in_hk = cpumask_subset(new_cpus, hk_domain);
-+
-+	if (!all_in_hk && (prstate != PRS_ISOLATED))
-+		return true;
-+
-+	return false;
-+}
-+
- /**
-  * update_parent_effective_cpumask - update effective_cpus mask of parent cpuset
-  * @cs:      The cpuset that requests change in partition root state
-@@ -1755,6 +1777,9 @@ static int update_parent_effective_cpumask(struct cpuset *cs, int cmd,
- 		if (!cpumask_intersects(xcpus, parent->effective_xcpus))
- 			return PERR_INVCPUS;
- 
-+		if (prstate_housekeeping_conflict(new_prs, xcpus))
-+			return PERR_HKEEPING;
-+
- 		/*
- 		 * A parent can be left with no CPU as long as there is no
- 		 * task directly associated with the parent partition.
-@@ -2338,6 +2363,9 @@ static int update_cpumask(struct cpuset *cs, struct cpuset *trialcs,
- 		if (cpumask_empty(trialcs->effective_xcpus)) {
- 			invalidate = true;
- 			cs->prs_err = PERR_INVCPUS;
-+		} else if (prstate_housekeeping_conflict(old_prs, trialcs->effective_xcpus)) {
-+			invalidate = true;
-+			cs->prs_err = PERR_HKEEPING;
- 		} else if (tasks_nocpu_error(parent, cs, trialcs->effective_xcpus)) {
- 			invalidate = true;
- 			cs->prs_err = PERR_NOCPUS;
-@@ -2482,6 +2510,9 @@ static int update_exclusive_cpumask(struct cpuset *cs, struct cpuset *trialcs,
- 		if (!trialcs->exclusive_cpus) {
- 			invalidate = true;
- 			cs->prs_err = PERR_INVCPUS;
-+		} else if (prstate_housekeeping_conflict(old_prs, trialcs->effective_xcpus)) {
-+			invalidate = true;
-+			cs->prs_err = PERR_HKEEPING;
- 		} else if (tasks_nocpu_error(parent, cs, trialcs->exclusive_cpus)) {
- 			invalidate = true;
- 			cs->prs_err = PERR_NOCPUS;
+This patch series introduces new cpuset control
+files "cpuset.cpus.exclusive" (read-write) and
+"cpuset.cpus.exclusive.effective" (read only) for better control of
+which exclusive CPUs are being distributed down the cgroup hierarchy
+for creating cpuset partition.
+
+Any one of the exclusive CPUs can only be distributed to at most one
+child cpuset. Invalid input to "cpuset.cpus.exclusive" that violates the
+sibling exclusivity rule will be rejected. This new control files has
+no effect on the behavior of the cpuset until it turns into a partition
+root. At that point, its effective CPUs will be set to its exclusive
+CPUs unless some of them are offline.
+
+This patch series also introduces a new category of cpuset partition
+called remote partitions. The existing partition category where the
+partition roots have to be clustered around the root cgroup in a
+hierarchical way is now referred to as local partitions.
+
+A remote partition can be formed far from the root cgroup with no
+partition root parent. While local partitions can be created without
+touching "cpuset.cpus.exclusive" as it can be set automatically
+if a cpuset becomes a local partition root. Properly setting
+"cpuset.cpus.exclusive" values down the hierarchy are required to create
+a remote partition.
+
+Both scheduling and isolated partitions can be formed as a remote
+partition. A local partition can be created under a remote partition.
+A remote partition, however, cannot be formed under a local partition
+for now.
+
+Modern container orchestration tools like Kubernetes use the cgroup
+hierarchy to manage different containers. And it is relying on other
+middleware like systemd to help managing it. If a container needs to
+use isolated CPUs, it is hard to get those with the local partitions
+as it will require the administrative parent cgroup to be a partition
+root too which tool like systemd may not be ready to manage.
+
+With this patch series, we allow the creation of remote partition
+far from the root. The container management tool can manage the
+"cpuset.cpus.exclusive" file without impacting the other cpuset
+files that are managed by other middlewares. Of course, invalid
+"cpuset.cpus.exclusive" values will be rejected.
+
+Waiman Long (6):
+  cgroup/cpuset: Add cpuset.cpus.exclusive.effective for v2
+  cgroup/cpuset: Add cpuset.cpus.exclusive for v2
+  cgroup/cpuset: Introduce remote partition
+  cgroup/cpuset: Check partition conflict with housekeeping setup
+  cgroup/cpuset: Documentation update for partition
+  cgroup/cpuset: Extend test_cpuset_prs.sh to test remote partition
+
+ Documentation/admin-guide/cgroup-v2.rst       |  123 +-
+ kernel/cgroup/cpuset.c                        | 1283 +++++++++++++----
+ .../selftests/cgroup/test_cpuset_prs.sh       |  428 ++++--
+ 3 files changed, 1343 insertions(+), 491 deletions(-)
+
 -- 
 2.31.1
 
