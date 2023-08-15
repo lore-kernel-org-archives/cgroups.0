@@ -1,75 +1,86 @@
-From: Yosry Ahmed <yosryahmed@google.com>
-Subject: Re: Expensive memory.stat + cpu.stat reads
-Date: Mon, 14 Aug 2023 17:31:12 -0700
-Message-ID: <CAJD7tkbzznhwkYacA75Se2Wi2pfXSkH77B_wgGC9r90ua7N76Q@mail.gmail.com>
-References: <CABWYdi0c6__rh-K7dcM_pkf9BJdTRtAU08M43KO9ME4-dsgfoQ@mail.gmail.com>
- <20230706062045.xwmwns7cm4fxd7iu@google.com> <CABWYdi2pBaCrdKcM37oBomc+5W8MdRp1HwPpOExBGYfZitxyWA@mail.gmail.com>
- <d3f3a7bc-b181-a408-af1d-dd401c172cbf@redhat.com> <CABWYdi2iWYT0sHpK74W6=Oz6HA_3bAqKQd4h+amK0n3T3nge6g@mail.gmail.com>
- <CABWYdi3YNwtPDwwJWmCO-ER50iP7CfbXkCep5TKb-9QzY-a40A@mail.gmail.com>
- <CABWYdi0+0gxr7PB4R8rh6hXO=H7ZaCzfk8bmOSeQMuZR7s7Pjg@mail.gmail.com>
- <CAJD7tkaf5GNbyhCbWyyLtxpqmZ4+iByQgmS1QEFf+bnEMCdmFA@mail.gmail.com>
- <CAJD7tkb=dUfc=L+61noQYHymHPUHswm_XUyFvRdaZemo80qUdQ@mail.gmail.com>
- <ZNrEV1qEcQMUgztn@slm.duckdns.org> <CABWYdi3z7Y4qdjPv4wiHyM6Wvwy_VwSLGA92=_PdYyVZgQDSYQ@mail.gmail.com>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCH] mm: memcg: provide accurate stats for userspace reads
+Date: Mon, 14 Aug 2023 14:35:25 -1000
+Message-ID: <ZNrITZVTf2EILRJq@slm.duckdns.org>
+References: <CAJD7tkbF1tNi8v0W4Mnqs0rzpRBshOFepxFTa1SiSvmBEBUEvw@mail.gmail.com>
+ <CALvZod55S3XeK-MquTq0mDuipq8j0vFymQeX_XnPb_HuPK+oGQ@mail.gmail.com>
+ <CAJD7tkYZxjAHrodVDK=wmz-sULJrq2VhC_5ecRP7T-KiaOcTuw@mail.gmail.com>
+ <CALvZod46Cz_=5UgiyAKM+VgKyk=KJCqDqXu91=9uHy7-2wk53g@mail.gmail.com>
+ <CAJD7tkY-ezyYebvcs=8Z_zrw2UVW8jf2WvP1G8tu2rT=2sMnAA@mail.gmail.com>
+ <CALvZod5fH9xu_+6x85K38f63GfKGWD1LqtD2R4d09xmDtLB7ew@mail.gmail.com>
+ <ZNdEaw2nktq1NfmH@dhcp22.suse.cz>
+ <CAJD7tkaFHgc3eN1K1wYsQFWMLu4+Frf9DJ-5HOja2nC20Es9Dw@mail.gmail.com>
+ <ZNrDWqfjXtAYhnvT@slm.duckdns.org>
+ <CAJD7tkYBFz-gZ2QsHxUMT=t0KNXs66S-zzMPebadHx9zaG0Q3w@mail.gmail.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20221208; t=1692059509; x=1692664309;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=T7/jDiS7/IrE21nefdgl6ERSoRxxFYoQh4qkRl/Z/u0=;
-        b=CMp325nAJZYOQWN8OUYs8iYOETxzcLv+d/AwJkN8om25cEMN45r3ssYVm/eQWcpS0K
-         DJOj3Q08o/3Vky7kzXvwPFx15c1frFa7rA51u14GOuK9Z9eFqMbeoAM7U/K+ycAXW+Sb
-         o/IPm8INg68M9Ej2pA/g6ALCp54lEjRvYZeUlr83lgnft8PxDjP7Wj1P9wG9e000RpxY
-         l2fjWFfiSB+velwcNNsi5JNsz2H1nF+PAJ1YOTZ2t8w2WtR2afvJItUy5V/uG/cW6vlc
-         eEY9JHGmhrqohqpsYsXPAn5ge/T2HJ8d8lPaTGSof8HwiTOCZ2L82uDN4Qb2XxRHEytC
-         Od4w==
-In-Reply-To: <CABWYdi3z7Y4qdjPv4wiHyM6Wvwy_VwSLGA92=_PdYyVZgQDSYQ@mail.gmail.com>
+        d=gmail.com; s=20221208; t=1692059727; x=1692664527;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:sender:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=bfAmkgzB7vT7tpPqvlusS7lhE5MuyQY4MvJWqWEdMxw=;
+        b=Q3FsTHwS9lFILlCZTL+VSW2aBgIikI37LyzDBlO0rg0yAWWl8WiLTTad1Bw93yvH2Z
+         6+H2tD04Xx312hOQjfVs27DFdL6BpDfUgH3bGOLnXfU6snGVTi+SuseJ4OifnvpGkxDr
+         7JxqVmNrBAZB0ief7FxYgn9iQKvIGAqQQi5CNmTYRSrxjBEfskBkDsspIzSrAK/aJg7x
+         f2nsQFkayTk8wUfT/jQZzyxeA+3lz1jN9M8+8YF+8FCQmW5s/n9Zuni13dkFGyJoQPYv
+         QmmmIL1K28eb5SymTU5DSEDwbxqSnpm9lF4RfGQ00GO5KnsBKtt5CZPR0kq/u1Kq9JmR
+         OySw==
+Sender: Tejun Heo <htejun-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <CAJD7tkYBFz-gZ2QsHxUMT=t0KNXs66S-zzMPebadHx9zaG0Q3w-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="utf-8"
-To: Ivan Babrou <ivan@cloudflare.com>
-Cc: Tejun Heo <tj@kernel.org>, Waiman Long <longman@redhat.com>, Shakeel Butt <shakeelb@google.com>, cgroups@vger.kernel.org, Linux MM <linux-mm@kvack.org>, kernel-team <kernel-team@cloudflare.com>, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, Roman Gushchin <roman.gushchin@linux.dev>, Muchun Song <muchun.song@linux.dev>, Andrew Morton <akpm@linux-foundation.org>, linux-kernel <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Cc: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Muchun Song <muchun.song-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Mon, Aug 14, 2023 at 5:30=E2=80=AFPM Ivan Babrou <ivan@cloudflare.com> w=
-rote:
->
-> On Mon, Aug 14, 2023 at 5:18=E2=80=AFPM Tejun Heo <tj@kernel.org> wrote:
-> >
-> > Hello,
-> >
-> > On Fri, Aug 11, 2023 at 05:01:08PM -0700, Yosry Ahmed wrote:
-> > > There have been a lot of problems coming from this global rstat lock:
-> > > hard lockups (when we used to flush atomically), unified flushing
-> > > being expensive, skipping flushing being inaccurate, etc.
-> > >
-> > > I wonder if it's time to rethink this lock and break it down into
-> > > granular locks. Perhaps a per-cgroup lock, and develop a locking
-> > > scheme where you always lock a parent then a child, then flush the
-> > > child and unlock it and move to the next child, etc. This will allow
-> > > concurrent flushing of non-root cgroups. Even when flushing the root,
-> > > if we flush all its children first without locking the root, then onl=
-y
-> > > lock the root when flushing the top-level children, then some level o=
-f
-> > > concurrency can be achieved.
-> > >
-> > > Maybe this is too complicated, I never tried to implement it, but I
-> > > have been bouncing around this idea in my head for a while now.
-> > >
-> > > We can also split the update tree per controller. As far as I can tel=
-l
-> > > there is no reason to flush cpu stats for example when someone wants
-> > > to read memory stats.
-> >
-> > There's another thread. Let's continue there but I'm a bit skeptical wh=
-ether
-> > splitting the lock is a good solution here. Regardless of locking, we d=
-on't
-> > want to run in an atomic context for that long anwyay.
->
-> Could you link to the other thread?
+Hello,
 
-I supposedly CC'd you there, but I realized it didn't work for some reason:
-https://lore.kernel.org/lkml/CAJD7tkYBFz-gZ2QsHxUMT=3Dt0KNXs66S-zzMPebadHx9=
-zaG0Q3w@mail.gmail.com/
+On Mon, Aug 14, 2023 at 05:28:22PM -0700, Yosry Ahmed wrote:
+> > So, the original design used mutex for synchronize flushing with the idea
+> > being that updates are high freq but reads are low freq and can be
+> > relatively slow. Using rstats for mm internal operations changed this
+> > assumption quite a bit and we ended up switching that mutex with a lock.
+> 
+> Naive question, do mutexes handle thundering herd problems better than
+> spinlocks? I would assume so but I am not sure.
+
+I don't know. We can ask Waiman if that becomes a problem.
+
+> > * Flush-side, maybe we can break flushing into per-cpu or whatnot but
+> >   there's no avoiding the fact that flushing can take quite a while if there
+> >   are a lot to flush whether locks are split or not. I wonder whether it'd
+> >   be possible to go back to mutex for flushing and update the users to
+> >   either consume the cached values or operate in a sleepable context if
+> >   synchronous read is necessary, which is the right thing to do anyway given
+> >   how long flushes can take.
+> 
+> Unfortunately it cannot be broken down into per-cpu as all flushers
+> update the same per-cgroup counters, so we need a bigger locking
+> scope. Switching to atomics really hurts performance. Breaking down
+> the lock to be per-cgroup is doable, but since we need to lock both
+> the parent and the cgroup, flushing top-level cgroups (which I assume
+> is most common) will lock the root anyway.
+
+Plus, there's not much point in flushing in parallel, so I don't feel too
+enthusiastic about splitting flush locking.
+
+> All flushers right now operate in sleepable context, so we can go
+> again to the mutex if you think this will make things better. The
+
+Yes, I think that'd be more sane.
+
+> slowness problem reported recently is in a sleepable context, it's
+> just too slow for userspace if I understand correctly.
+
+I mean, there's a certain amount of work to do. There's no way around it if
+you wanna read the counters synchronously. The only solution there would be
+using a cached value or having some sort of auto-flushing mechanism so that
+the amount to flush don't build up too much - e.g. keep a count of the
+number of entries to flush and trigger flush if it goes over some threshold.
+
+Thanks.
+
+-- 
+tejun
