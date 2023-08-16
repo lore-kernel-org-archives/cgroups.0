@@ -1,98 +1,110 @@
-From: Yu Kuai <yukuai1@huaweicloud.com>
-Subject: [PATCH -next v2 4/4] blk-throttle: consider 'carryover_ios/bytes' in throtl_trim_slice()
-Date: Wed, 16 Aug 2023 09:27:08 +0800
-Message-ID: <20230816012708.1193747-5-yukuai1@huaweicloud.com>
-References: <20230816012708.1193747-1-yukuai1@huaweicloud.com>
+From: Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH] mm: memcg: provide accurate stats for userspace reads
+Date: Tue, 15 Aug 2023 19:19:20 -0700
+Message-ID: <CAJD7tkYzr2cg-aQ899vfqB4jR7iP83t8f-Z4AH8d9iW-yw-nnQ@mail.gmail.com>
+References: <CAJD7tkYZxjAHrodVDK=wmz-sULJrq2VhC_5ecRP7T-KiaOcTuw@mail.gmail.com>
+ <CALvZod46Cz_=5UgiyAKM+VgKyk=KJCqDqXu91=9uHy7-2wk53g@mail.gmail.com>
+ <CAJD7tkY-ezyYebvcs=8Z_zrw2UVW8jf2WvP1G8tu2rT=2sMnAA@mail.gmail.com>
+ <CALvZod5fH9xu_+6x85K38f63GfKGWD1LqtD2R4d09xmDtLB7ew@mail.gmail.com>
+ <ZNdEaw2nktq1NfmH@dhcp22.suse.cz> <CAJD7tkaFHgc3eN1K1wYsQFWMLu4+Frf9DJ-5HOja2nC20Es9Dw@mail.gmail.com>
+ <ZNrDWqfjXtAYhnvT@slm.duckdns.org> <CAJD7tkYBFz-gZ2QsHxUMT=t0KNXs66S-zzMPebadHx9zaG0Q3w@mail.gmail.com>
+ <ZNrITZVTf2EILRJq@slm.duckdns.org> <CAJD7tkaXwoF-faApweAmm7Db7jAuS3EO7hVvdyVtqW_rE+T9Vg@mail.gmail.com>
+ <ZNrLO5PAEZw4yjI9@slm.duckdns.org> <CAJD7tkYgCySTX28zK9GZiWwsabR4nv7M2hQ57y12si-fqtv7zg@mail.gmail.com>
+ <CALvZod6KRxiDzrppCgx+=SHg2+96nFE5crwXCKwe9PZbWM_6cQ@mail.gmail.com>
+ <CAJD7tkaUzhvZPohpo1F8TUKRPuXH7bjDeg9VCzN2CbywQbRutQ@mail.gmail.com> <CALvZod6HUtYhDaXiwXSrcwfxLSrZ37sZhKY1Mg4kmpDFk13aYw@mail.gmail.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20230816012708.1193747-1-yukuai1@huaweicloud.com>
+Content-Transfer-Encoding: quoted-printable
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20221208; t=1692152399; x=1692757199;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=V37BsPFrQfflT/FozBg7eajhwQW33aYWS46wbu2Ypkg=;
+        b=0QZSUunPFCDBu7ePJO+ZUAJzTXgigsi5VNYuL05PmuqaCgP+zWcsDOoK4uBnj+Gg1B
+         xiu4JLzGNSuShm+gtMpqjUgpqeK36gFrPFC8krbioG1dOUspb6EXb8NiXABp6ifpZvJL
+         nBWvhdyDy9Cjrc6JGod54iQ1PqCr9i3QhL/7EAY9AgeqxMV1VMzo01SQtoKrD56q6GEc
+         iljoQajqNzWVfbgnMusqhIDqOZrGH6GWVvoplEdL5ZrGaEs37M9t4k1R5zgdAMLawa1A
+         7qFUznQjxAotmuX9LT0Xu8BuoXq3POeGNydhcfsOZ/7mojILhRLmA8/S2vhzLXnFN7qA
+         p1xA==
+In-Reply-To: <CALvZod6HUtYhDaXiwXSrcwfxLSrZ37sZhKY1Mg4kmpDFk13aYw-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-To: tj@kernel.org, josef@toxicpanda.com, axboe@kernel.dk, yukuai3@huawei.com, mkoutny@suse.com
-Cc: cgroups@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, yukuai1@huaweicloud.com, yi.zhang@huawei.com, yangerkun@huawei.com
+Content-Type: text/plain; charset="utf-8"
+To: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Muchun Song <muchun.song-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Ivan Babrou <ivan-lDpJ742SOEtZroRs9YW3xA@public.gmane.org>
 
-From: Yu Kuai <yukuai3@huawei.com>
+On Tue, Aug 15, 2023 at 6:14=E2=80=AFPM Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org> =
+wrote:
+>
+> On Tue, Aug 15, 2023 at 5:29=E2=80=AFPM Yosry Ahmed <yosryahmed-hpIqsD4AKldhl2p70BpVqQ@public.gmane.org=
+m> wrote:
+> >
+> [...]
+> > >
+> > > I thought we already reached the decision on how to proceed here. Let
+> > > me summarize what I think we should do:
+> > >
+> > > 1. Completely remove the sync flush from stat files read from userspa=
+ce.
+> > > 2. Provide a separate way/interface to explicitly flush stats for
+> > > users who want more accurate stats and can pay the cost. This is
+> > > similar to the stat_refresh interface.
+> > > 3. Keep the 2 sec periodic stats flusher.
+> >
+> > I think this solution is suboptimal to be honest, I think we can do bet=
+ter.
+> >
+> > With recent improvements to spinlocks/mutexes, and flushers becoming
+> > sleepable, I think a better solution would be to remove unified
+> > flushing and let everyone only flush the subtree they care about. Sync
+> > flushing becomes much better (unless you're flushing root ofc), and
+> > concurrent flushing wouldn't cause too many problems (ideally no
+> > thundering herd, and rstat lock can be dropped at cpu boundaries in
+> > cgroup_rstat_flush_locked()).
+> >
+> > If we do this, stat reads can be much faster as Ivan demonstrated with
+> > his patch that only flushes the cgroup being read, and we do not
+> > sacrifice accuracy as we never skip flushing. We also do not need a
+> > separate interface for explicit refresh.
+> >
+> > In all cases, we need to keep the 2 sec periodic flusher. What we need
+> > to figure out if we remove unified flushing is:
+> >
+> > 1. Handling stats_flush_threshold.
+> > 2. Handling flush_next_time.
+> >
+> > Both of these are global now, and will need to be adapted to
+> > non-unified non-global flushing.
+>
+> The only thing we are disagreeing on is (1) the complete removal of
+> sync flush and an explicit flush interface versus (2) keep doing the
+> sync flush of the subtree.
+>
+> To me (1) seems more optimal particularly for the server use-case
+> where a node controller reads stats of root and as well as cgroups of
+> a couple of top levels (we actually do this internally). Doing flush
+> once explicitly and then reading the stats for all such cgroups seems
+> better to me.
 
-Currently, 'carryover_ios/bytes' is not handled in throtl_trim_slice(),
-for consequence, 'carryover_ios/bytes' will be used to throttle bio
-multiple times, for example:
+The problem in (1) is that first of all it's a behavioral change, we
+start having explicit staleness in the stats, and userspace needs to
+adapt by explicitly requesting a flush. A node controller can be
+enlightened to do so, but on a system with a lot of cgroups, if you
+flush once explicitly and iterate through all cgroups, the flush will
+be stale by the time you reach the last cgroup. Keep in mind there are
+also users that read their own stats, figuring out which users need to
+flush explicitly vs. read cached stats is a problem.
 
-1) set iops limit to 100, and slice start is 0, slice end is 100ms;
-2) current time is 0, and 10 ios are dispatched, those io won't be
-   throttled and io_disp is 10;
-3) still at current time 0, update iops limit to 1000, carryover_ios is
-   updated to (0 - 10) = -10;
-4) in this slice(0 - 100ms), io_allowed = 100 + (-10) = 90, which means
-   only 90 ios can be dispatched without waiting;
-5) assume that io is throttled in slice(0 - 100ms), and
-   throtl_trim_slice() update silce to (100ms - 200ms). In this case,
-   'carryover_ios/bytes' is not cleared and still only 90 ios can be
-   dispatched between 100ms - 200ms.
+Taking a step back, the total work that needs to be done does not
+change with (2). A node controller iterating cgroups and reading their
+stats will do the same amount of flushing, it will just be distributed
+across multiple read syscalls, so shorter intervals in kernel space.
 
-Fix this problem by updating 'carryover_ios/bytes' in
-throtl_trim_slice().
+There are also in-kernel flushers (e.g. reclaim and dirty throttling)
+that will benefit from (2) by reading more accurate stats without
+having to flush the entire tree. The behavior is currently
+indeterministic, you may get fresh or stale stats, you may flush one
+cgroup or 100 cgroups.
 
-Fixes: a880ae93e5b5 ("blk-throttle: fix io hung due to configuration updates")
-Reported-by: zhuxiaohui <zhuxiaohui.400@bytedance.com>
-Link: https://lore.kernel.org/all/20230812072116.42321-1-zhuxiaohui.400@bytedance.com/
-Signed-off-by: Yu Kuai <yukuai3@huawei.com>
----
- block/blk-throttle.c | 21 +++++++++++++--------
- 1 file changed, 13 insertions(+), 8 deletions(-)
-
-diff --git a/block/blk-throttle.c b/block/blk-throttle.c
-index 69a994156772..38a881cf97d0 100644
---- a/block/blk-throttle.c
-+++ b/block/blk-throttle.c
-@@ -729,8 +729,9 @@ static u64 calculate_bytes_allowed(u64 bps_limit, unsigned long jiffy_elapsed)
- /* Trim the used slices and adjust slice start accordingly */
- static inline void throtl_trim_slice(struct throtl_grp *tg, bool rw)
- {
--	unsigned long time_elapsed, io_trim;
--	u64 bytes_trim;
-+	unsigned long time_elapsed;
-+	long long bytes_trim;
-+	int io_trim;
- 
- 	BUG_ON(time_before(tg->slice_end[rw], tg->slice_start[rw]));
- 
-@@ -758,17 +759,21 @@ static inline void throtl_trim_slice(struct throtl_grp *tg, bool rw)
- 		return;
- 
- 	bytes_trim = calculate_bytes_allowed(tg_bps_limit(tg, rw),
--					     time_elapsed);
--	io_trim = calculate_io_allowed(tg_iops_limit(tg, rw), time_elapsed);
--	if (!bytes_trim && !io_trim)
-+					     time_elapsed) +
-+		     tg->carryover_bytes[rw];
-+	io_trim = calculate_io_allowed(tg_iops_limit(tg, rw), time_elapsed) +
-+		  tg->carryover_ios[rw];
-+	if (bytes_trim <= 0 && io_trim <= 0)
- 		return;
- 
--	if (tg->bytes_disp[rw] >= bytes_trim)
-+	tg->carryover_bytes[rw] = 0;
-+	if ((long long)tg->bytes_disp[rw] >= bytes_trim)
- 		tg->bytes_disp[rw] -= bytes_trim;
- 	else
- 		tg->bytes_disp[rw] = 0;
- 
--	if (tg->io_disp[rw] >= io_trim)
-+	tg->carryover_ios[rw] = 0;
-+	if ((int)tg->io_disp[rw] >= io_trim)
- 		tg->io_disp[rw] -= io_trim;
- 	else
- 		tg->io_disp[rw] = 0;
-@@ -776,7 +781,7 @@ static inline void throtl_trim_slice(struct throtl_grp *tg, bool rw)
- 	tg->slice_start[rw] += time_elapsed;
- 
- 	throtl_log(&tg->service_queue,
--		   "[%c] trim slice nr=%lu bytes=%llu io=%lu start=%lu end=%lu jiffies=%lu",
-+		   "[%c] trim slice nr=%lu bytes=%lld io=%d start=%lu end=%lu jiffies=%lu",
- 		   rw == READ ? 'R' : 'W', time_elapsed / tg->td->throtl_slice,
- 		   bytes_trim, io_trim, tg->slice_start[rw], tg->slice_end[rw],
- 		   jiffies);
--- 
-2.39.2
-
+I think with (2) we make less compromises in terms of accuracy and
+determinism, and it's a less disruptive change to userspace.
