@@ -1,78 +1,62 @@
-From: Gang Li <gang.li@linux.dev>
-Subject: Re: [PATCH v4] mm: oom: introduce cpuset oom
-Date: Thu, 17 Aug 2023 16:40:46 +0800
-Message-ID: <9ba0de31-b9b8-fb10-011e-b24e9dba5ccd@linux.dev>
-References: <20230411065816.9798-1-ligang.bdlg@bytedance.com>
- <ZDVwaqzOBNTpuR1w@dhcp22.suse.cz>
+From: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
+Subject: Re: [PATCH RT] mm/memcg: Fix recursive locking on refill_stock() on
+ PREEMPT_RT
+Date: Thu, 17 Aug 2023 11:12:24 +0200
+Message-ID: <20230817091224.nqKGjRlK@linutronix.de>
+References: <20230809-memcg-fix-recursive-lock-v1-1-0870815484c6@concurrent-rt.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
-        t=1692261651;
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
+        s=2020; t=1692263546;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=nIphj18RtSktOChYllHuu9FMoXo0StpvUC/Vo4hk6Xc=;
-        b=YoBZrjACVksy7EYTvMwTn/K0VhdgDsK1M9FMSZYMJ2ji5UPgut5HZmPHbNhafQHl9OVfRz
-        hutBe++EfG9ZTsLKVWqvz45nyDwaBBdqTcSBVJQZxhkor7Bdr+Oqmg58p50bHfR9dy1AkI
-        zpiGdJyUq2jAD+qB2jRuuxdP/waMHIg=
-Content-Language: en-US
-In-Reply-To: <ZDVwaqzOBNTpuR1w@dhcp22.suse.cz>
+        bh=fp7L9O2Ivmey6Olx0dpGU5sez7ZYHKV4H6RchIR6KxA=;
+        b=JRdvd/eKLOliRx3lLc3OTMoAtNH1lR95NU3kcFTs1+Vaz47YIH89WQJPPE5N1faSoHxq73
+        uhQWcYl6nLdHRjQO0zajRdGpuJiacZ/gp36u9wC8rnaHp+fh7DxjxzW+CTL6PbVe4WWyWY
+        M0CsF45ETpn5soMKQ5N8ezKyIjyM/kX+L5Hj+IsGfHi7AtA/t+R0sIQCr9efIz/d2AkJOJ
+        pJ5Ip7SRtoTJjT7UnOMhWaFE/dOJ4m4RPuPoZhChn40GDt53KYlcjF8306Of2pjgh9V10n
+        o/++k/BAXpNjnCTB30pRGmI4G2neZ4jgT3CIJ8Sd0Q1MXmT8PMCBVs9f4WERaA==
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
+        s=2020e; t=1692263546;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=fp7L9O2Ivmey6Olx0dpGU5sez7ZYHKV4H6RchIR6KxA=;
+        b=WWdAKbwMGiTgZxy+lMApDQ7tAQ4WREZhUatRs9g13frtT7w+0rU0CqNuzffADX+rcJww7v
+        cJT1/UjiLILE95Dw==
+Content-Disposition: inline
+In-Reply-To: <20230809-memcg-fix-recursive-lock-v1-1-0870815484c6@concurrent-rt.com>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"; format="flowed"
-To: Michal Hocko <mhocko@suse.com>
-Cc: Waiman Long <longman@redhat.com>, cgroups@vger.kernel.org, linux-mm@kvack.org, rientjes@google.com, Zefan Li <lizefan.x@bytedance.com>, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: zachary.goldstein@concurrent-rt.com, "Luis Claudio R. Goncalves" <lgoncalv@redhat.com>, stable-rt@vger.kernel.org
+Cc: linux-mm@kvack.org, cgroups@vger.kernel.org, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, Andrew Morton <akpm@linux-foundation.org>, Thomas Gleixner <tglx@linutronix.de>, Steven Rostedt <rostedt@goodmis.org>, linux-kernel@vger.kernel.org, linux-rt-users@vger.kernel.org
 
-Apologize for the extremely delayed response. I was previously occupied
-with work unrelated to the Linux kernel.
+On 2023-08-10 15:05:34 [-0400], Zachary Goldstein via B4 Relay wrote:
+> From: Zachary Goldstein <zachary.goldstein@concurrent-rt.com>
+> 
+> 5.10 suffers from the same recursive locking issue that
+> commit a848d25434de4 ("mm/memcg: Opencode the inner part of
+> obj_cgroup_uncharge_pages() in drain_obj_stock()") fixes.
 
-On 2023/4/11 22:36, Michal Hocko wrote:
-> I believe it still wouldn't hurt to be more specific here.
-> CONSTRAINT_CPUSET is rather obscure. Looking at this just makes my head
-> spin.
->          /* Check this allocation failure is caused by cpuset's wall function */
->          for_each_zone_zonelist_nodemask(zone, z, oc->zonelist,
->                          highest_zoneidx, oc->nodemask)
->                  if (!cpuset_zone_allowed(zone, oc->gfp_mask))
->                          cpuset_limited = true;
-> > Does this even work properly and why? prepare_alloc_pages sets
-> oc->nodemask to current->mems_allowed but the above gives us
-> cpuset_limited only if there is at least one zone/node that is not
-> oc->nodemask compatible. So it seems like this wouldn't ever get set
-> unless oc->nodemask got reset somewhere. This is a maze indeed.Is there
+This is the commit id from the stable-rt tree for the v5.15 series.
+The original commit was af9a3b69e84be ("mm/memcg: opencode the inner
+part of obj_cgroup_uncharge_pages() in drain_obj_stock()").
 
-In __alloc_pages:
-```
-/*
-  * Restore the original nodemask if it was potentially replaced with
-  * &cpuset_current_mems_allowed to optimize the fast-path attempt.
-  */
-ac.nodemask = nodemask;
-page = __alloc_pages_slowpath(alloc_gfp, order, &ac);
+> Modified description from the commit to reflect this patch changes:
+> 
+> Provide the inner part of refill_stock() as __refill_stock() without
+> disabling interrupts. This eases the integration of local_lock_t where
+> recursive locking must be avoided.
+> Open code __memcg_kmem_uncharge() in drain_obj_stock() and
+> obj_cgroup_release() and use __refill_stock(). The caller of
+> drain_obj_stock() and obj_cgroup_release() already disables interrupts.
+> 
+> Signed-off-by: Zachary Goldstein <zachary.goldstein@concurrent-rt.com>
 
-```
+I would prefer a proper backport similar to the commit you mentioned.
+This would include keeping the author ship and so on.
+The change itself looks okay.
 
-__alloc_pages set ac.nodemask back to mempolicy before call
-__alloc_pages_slowpath.
-
-
-> any reason why we cannot rely on __GFP_HARWALL here? Or should we
-
-In prepare_alloc_pages:
-```
-if (cpusets_enabled()) {
-	*alloc_gfp |= __GFP_HARDWALL;
-	...
-}
-```
-
-Since __GFP_HARDWALL is set as long as cpuset is enabled, I think we can
-use it to determine if we are under the constraint of CPUSET.
-
-But I have a question: Why we always set __GFP_HARDWALL when cpuset is
-enabled, regardless of the value of cpuset.mem_hardwall?
-
-
-Thanks,
-Gang Li
+Sebastian
