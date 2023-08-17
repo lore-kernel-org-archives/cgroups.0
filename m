@@ -1,98 +1,65 @@
-From: "Gustavo A. R. Silva" <gustavoars-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: [PATCH v3][next] cgroup: Avoid -Wstringop-overflow warnings
-Date: Thu, 17 Aug 2023 11:19:13 -0600
-Message-ID: <ZN5WkbPelHUSTXOA@work>
+From: "Gustavo A. R. Silva" <gustavo@embeddedor.com>
+Subject: Re: [PATCH v2][next] cgroup: Avoid -Wstringop-overflow warnings
+Date: Thu, 17 Aug 2023 11:23:38 -0600
+Message-ID: <32c7ea41-8b00-c92e-02ec-d535428e55bb@embeddedor.com>
+References: <ZN02iLcZYgxHFrEN@work> <ZN02wFqzvwP2JI-K@slm.duckdns.org>
+ <202308161356.4AED47263E@keescook> <ZN05IZBfaKkPKJfH@slm.duckdns.org>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1692292692;
-        bh=PUtRgHl3t9y/PCdYajGwcmizA+UGYBohYR7AEs0pjoo=;
-        h=Date:From:To:Cc:Subject:From;
-        b=qrg+XKqtRmV4/lmX29QP+7xjp0iql30uzjiD/+IZf66y5T9KcdewLTYZLNPMLLHyM
-         zZuOu2SBecnTFBGa+i5d8VK1GcTirNqkjHGiCHxy0AtS5/VasEbdKajh/kCrAhRnB0
-         ENAHlyX5uztjNp2p+SMQATfNTA0AjNScQgDEWtxMjBJs0Nfn9AgMsEYjz6kE4bNIOq
-         cTF8302WgmW7xV7ayZzahJqkK2AT4OyN83DHtmaVZKbBwHcMOuAe5RmpNWN6yLRzw3
-         HOiC+2xAbd3s9kXKmpB+C/kqsS3s5VE9PLJWxVPFgyuO30dXs6ROSxF9HEwlIKjFta
-         iH27n6fLi5eIg==
-Content-Disposition: inline
-List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, "Gustavo A. R. Silva" <gustavoars-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, linux-hardening-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=embeddedor.com; s=default; h=Content-Transfer-Encoding:Content-Type:
+        In-Reply-To:From:References:Cc:To:Subject:MIME-Version:Date:Message-ID:Sender
+        :Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:
+        Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:
+        List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
+        bh=XsIhFA6p1MkMu1lgiaxFpYzkM6VAgL0B/RLP+o3ibj0=; b=PPXTDZN3LckRmEB6i0+w8aLhVh
+        bknx7JpDqM62KROQHLSlbSJQKUE2IzMxM6axtrpJ2xUrA00LnpwKOglWINcFWkSoLC/6RO/P2i5dH
+        YJNak3Bae7X6n7PWsTS4NVAsABO6yq/RDV8DdVE90Tb92hYnCI9Il+2I12kkQP9XYyXwcxNZ1owNQ
+        c6FZ9CHc7mvrYkbtBvye2XWtMmhAX3AsC0P3GyGbxpK5INA/jUloBKpMoUcCpgfyouWMe42Lq+U7A
+        +EGL8HEDWMReC0D5mT1I86G0SI+sqt1KRWUAgAO+HP4ctNo/f11AeOFVa0SCtkw/6XuR1xoPoPRO1
+        c5Lt 
+Content-Language: en-US
+In-Reply-To: <ZN05IZBfaKkPKJfH@slm.duckdns.org>
+List-ID: <cgroups.vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"; format="flowed"
+To: Tejun Heo <tj@kernel.org>, Kees Cook <keescook@chromium.org>
+Cc: "Gustavo A. R. Silva" <gustavoars@kernel.org>, Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, linux-hardening@vger.kernel.org
 
-Change the notation from pointer-to-array to pointer-to-pointer.
-With this, we avoid the compiler complaining about trying
-to access a region of size zero as an argument during function
-calls.
 
-This is a workaround to prevent the compiler complaining about
-accessing an array of size zero when evaluating the arguments
-of a couple of function calls. See below:
 
-kernel/cgroup/cgroup.c: In function 'find_css_set':
-kernel/cgroup/cgroup.c:1206:16: warning: 'find_existing_css_set' accessing 4 bytes in a region of size 0 [-Wstringop-overflow=]
- 1206 |         cset = find_existing_css_set(old_cset, cgrp, template);
-      |                ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-kernel/cgroup/cgroup.c:1206:16: note: referencing argument 3 of type 'struct cgroup_subsys_state *[0]'
-kernel/cgroup/cgroup.c:1071:24: note: in a call to function 'find_existing_css_set'
- 1071 | static struct css_set *find_existing_css_set(struct css_set *old_cset,
-      |                        ^~~~~~~~~~~~~~~~~~~~~
+On 8/16/23 15:01, Tejun Heo wrote:
+> On Wed, Aug 16, 2023 at 01:57:16PM -0700, Kees Cook wrote:
+>> On Wed, Aug 16, 2023 at 10:51:12AM -1000, Tejun Heo wrote:
+>>> Hello,
+>>>
+>>> On Wed, Aug 16, 2023 at 02:50:16PM -0600, Gustavo A. R. Silva wrote:
+>>>> Change the notation from pointer-to-array to pointer-to-pointer.
+>>>> With this, we avoid the compiler complaining about trying
+>>>> to access a region of size zero as an argument during function
+>>>> calls.
+>>>
+>>> Haha, I thought the functions were actually accessing the memory. This can't
+>>> be an intended behavior on the compiler's side, right?
+>>
+>> I think it's a result of inlining -- the compiler ends up with a case
+>> where it looks like it might be possible to index a zero-sized array,
+>> but it is "accidentally safe".
+> 
+> Ah I see. It's not that the compiler knows that ** access is safe. It's more
+> that it only applies the check on arrays. Is that right? Gustavo, I don't
 
-With the change to pointer-to-pointer, the functions are not prevented
-from being executed, and they will do what they have to do when
-CGROUP_SUBSYS_COUNT == 0.
+That's correct.
 
-Address the following -Wstringop-overflow warnings seen when
-built with ARM architecture and aspeed_g4_defconfig configuration
-(notice that under this configuration CGROUP_SUBSYS_COUNT == 0):
+> mind the patch but can you update the patch description a bit explaining a
+> bit more on what's going on with the complier? It doesn't have to be the
+> full explanation but it'd be useful to explicitly point out that we're just
+> working around the compiler being a bit silly.
 
-kernel/cgroup/cgroup.c:1208:16: warning: 'find_existing_css_set' accessing 4 bytes in a region of size 0 [-Wstringop-overflow=]
-kernel/cgroup/cgroup.c:1258:15: warning: 'css_set_hash' accessing 4 bytes in a region of size 0 [-Wstringop-overflow=]
-kernel/cgroup/cgroup.c:6089:18: warning: 'css_set_hash' accessing 4 bytes in a region of size 0 [-Wstringop-overflow=]
-kernel/cgroup/cgroup.c:6153:18: warning: 'css_set_hash' accessing 4 bytes in a region of size 0 [-Wstringop-overflow=]
+I just sent v3:
 
-This results in no differences in binary output.
+	https://lore.kernel.org/linux-hardening/ZN5WkbPelHUSTXOA@work/
 
-Link: https://github.com/KSPP/linux/issues/316
-Signed-off-by: Gustavo A. R. Silva <gustavoars-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
----
-Changes in v3:
- - Update changelog text to point out that this is a workaround.
-
-Changes in v2:
- - Use pointer-to-pointer instead of pointer-to-array.
- - Update changelog text.
- - Link: https://lore.kernel.org/linux-hardening/ZN02iLcZYgxHFrEN@work/
-
-v1:
- - Link: https://lore.kernel.org/linux-hardening/ZIpm3pcs3iCP9UaR@work/
-
- kernel/cgroup/cgroup.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
-
-diff --git a/kernel/cgroup/cgroup.c b/kernel/cgroup/cgroup.c
-index ccbbba06da5b..68e2d9812e3f 100644
---- a/kernel/cgroup/cgroup.c
-+++ b/kernel/cgroup/cgroup.c
-@@ -929,7 +929,7 @@ static void css_set_move_task(struct task_struct *task,
- #define CSS_SET_HASH_BITS	7
- static DEFINE_HASHTABLE(css_set_table, CSS_SET_HASH_BITS);
- 
--static unsigned long css_set_hash(struct cgroup_subsys_state *css[])
-+static unsigned long css_set_hash(struct cgroup_subsys_state **css)
- {
- 	unsigned long key = 0UL;
- 	struct cgroup_subsys *ss;
-@@ -1070,7 +1070,7 @@ static bool compare_css_sets(struct css_set *cset,
-  */
- static struct css_set *find_existing_css_set(struct css_set *old_cset,
- 					struct cgroup *cgrp,
--					struct cgroup_subsys_state *template[])
-+					struct cgroup_subsys_state **template)
- {
- 	struct cgroup_root *root = cgrp->root;
- 	struct cgroup_subsys *ss;
--- 
-2.34.1
-
+Thanks
+--
+Gustavo
