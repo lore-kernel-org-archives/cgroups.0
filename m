@@ -1,100 +1,78 @@
-From: Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH] mm: memcg: provide accurate stats for userspace reads
-Date: Wed, 16 Aug 2023 15:35:26 -0700
-Message-ID: <CAJD7tkYSk-73c1=5vmuRdykAQO=pJSkQFgRqkpdfnh7f-Zufkw@mail.gmail.com>
-References: <CAJD7tkYBFz-gZ2QsHxUMT=t0KNXs66S-zzMPebadHx9zaG0Q3w@mail.gmail.com>
- <ZNrITZVTf2EILRJq@slm.duckdns.org> <CAJD7tkaXwoF-faApweAmm7Db7jAuS3EO7hVvdyVtqW_rE+T9Vg@mail.gmail.com>
- <ZNrLO5PAEZw4yjI9@slm.duckdns.org> <CAJD7tkYgCySTX28zK9GZiWwsabR4nv7M2hQ57y12si-fqtv7zg@mail.gmail.com>
- <CALvZod6KRxiDzrppCgx+=SHg2+96nFE5crwXCKwe9PZbWM_6cQ@mail.gmail.com>
- <CAJD7tkaUzhvZPohpo1F8TUKRPuXH7bjDeg9VCzN2CbywQbRutQ@mail.gmail.com>
- <CALvZod6HUtYhDaXiwXSrcwfxLSrZ37sZhKY1Mg4kmpDFk13aYw@mail.gmail.com>
- <CAJD7tkYzr2cg-aQ899vfqB4jR7iP83t8f-Z4AH8d9iW-yw-nnQ@mail.gmail.com>
- <CALvZod441xBoXzhqLWTZ+xnqDOFkHmvrzspr9NAr+nybqXgS-A@mail.gmail.com> <ZN0eqq4hLRYQPHCI@slm.duckdns.org>
+From: Gang Li <gang.li@linux.dev>
+Subject: Re: [PATCH v4] mm: oom: introduce cpuset oom
+Date: Thu, 17 Aug 2023 16:40:46 +0800
+Message-ID: <9ba0de31-b9b8-fb10-011e-b24e9dba5ccd@linux.dev>
+References: <20230411065816.9798-1-ligang.bdlg@bytedance.com>
+ <ZDVwaqzOBNTpuR1w@dhcp22.suse.cz>
 Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20221208; t=1692225363; x=1692830163;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=HQmT7Uh6sWQfVX+jY524yxLYNHKGsl2fBek6097smRE=;
-        b=HE9ACyuPPztqNyPxMJQxaWvmISJrT2O9wxlj6I3goqtgzDkkUS1kgXt+rhwzwpNVau
-         vgAcjEFeg8oZ2Y7Qn54zx6x10dTczteNXnJCK8dJiC8IdA1AnK98T4udBeNNZDHmCxT8
-         TesHS7tlAyWIfqrRXQ5Bq0wKxcgC92lmxlUCOADGVHL1AYWe9PWf+1vxj7oSPUonsg4N
-         8bexPQjNfdrbICA/7tpvLEd7RzKCdazkK1XZJ5tw9Iull4sR7NqpzIELjVlqslZvIoz+
-         FNMUm9u69u6T8dHHa6ghSukbVowSf6hc6Z+mTkLJdHWWEHWESEj5KRZkM2SrzOr7eUp8
-         wLnw==
-In-Reply-To: <ZN0eqq4hLRYQPHCI-NiLfg/pYEd1N0TnZuCh8vA@public.gmane.org>
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
+        t=1692261651;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=nIphj18RtSktOChYllHuu9FMoXo0StpvUC/Vo4hk6Xc=;
+        b=YoBZrjACVksy7EYTvMwTn/K0VhdgDsK1M9FMSZYMJ2ji5UPgut5HZmPHbNhafQHl9OVfRz
+        hutBe++EfG9ZTsLKVWqvz45nyDwaBBdqTcSBVJQZxhkor7Bdr+Oqmg58p50bHfR9dy1AkI
+        zpiGdJyUq2jAD+qB2jRuuxdP/waMHIg=
+Content-Language: en-US
+In-Reply-To: <ZDVwaqzOBNTpuR1w@dhcp22.suse.cz>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="windows-1252"
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Muchun Song <muchun.song-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Ivan Babrou <ivan-lDpJ742SOEtZroRs9YW3xA@public.gmane.org>
+Content-Type: text/plain; charset="us-ascii"; format="flowed"
+To: Michal Hocko <mhocko@suse.com>
+Cc: Waiman Long <longman@redhat.com>, cgroups@vger.kernel.org, linux-mm@kvack.org, rientjes@google.com, Zefan Li <lizefan.x@bytedance.com>, linux-kernel@vger.kernel.org
 
-On Wed, Aug 16, 2023 at 12:08=E2=80=AFPM Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org> wrote:
->
-> Hello,
->
-> On Wed, Aug 16, 2023 at 10:11:20AM -0700, Shakeel Butt wrote:
-> > These options are not white and black and there can be something in
-> > between but let me be very clear on what I don't want and would NACK.
->
-> I'm not a big fan of interfaces with hidden states. What you're proposing
-> isn't strictly that but it's still a bit nasty. So, if we can get by with=
-out
-> doing that, that'd be great.
+Apologize for the extremely delayed response. I was previously occupied
+with work unrelated to the Linux kernel.
 
-Agreed. I will try to send patches soon implementing option (2) above,
-basically removing unified flushing. I will try to document any
-potential regressions that may happen and how we may fix them. Ideally
-we see no regressions.
+On 2023/4/11 22:36, Michal Hocko wrote:
+> I believe it still wouldn't hurt to be more specific here.
+> CONSTRAINT_CPUSET is rather obscure. Looking at this just makes my head
+> spin.
+>          /* Check this allocation failure is caused by cpuset's wall function */
+>          for_each_zone_zonelist_nodemask(zone, z, oc->zonelist,
+>                          highest_zoneidx, oc->nodemask)
+>                  if (!cpuset_zone_allowed(zone, oc->gfp_mask))
+>                          cpuset_limited = true;
+> > Does this even work properly and why? prepare_alloc_pages sets
+> oc->nodemask to current->mems_allowed but the above gives us
+> cpuset_limited only if there is at least one zone/node that is not
+> oc->nodemask compatible. So it seems like this wouldn't ever get set
+> unless oc->nodemask got reset somewhere. This is a maze indeed.Is there
 
->
-> > I don't want a global sleepable lock which can be taken by potentially
-> > any application running on the system. We have seen similar global
-> > locks causing isolation and priority inversion issues in production.
-> > So, not another lock which needs to be taken under extreme condition
-> > (reading stats under OOM) by a high priority task (node controller)
-> > and might be held by a low priority task.
->
-> Yeah, this is a real concern. Those priority inversions do occur and can =
-be
-> serious but causing serious problems under memory pressure usually requir=
-es
-> involving memory allocations and IOs. Here, it's just all CPU. So, at lea=
-st
-> in OOM conditions, this shouldn't be in the way (the system wouldn't have
-> anything else to do anyway).
->
-> It is true that this still can lead to priority through CPU competition t=
-ho.
-> However, that problem isn't necessarily solved by what you're suggesting
-> either unless you want to restrict explicit flushing based on permissions
-> which is another can of worms.
+In __alloc_pages:
+```
+/*
+  * Restore the original nodemask if it was potentially replaced with
+  * &cpuset_current_mems_allowed to optimize the fast-path attempt.
+  */
+ac.nodemask = nodemask;
+page = __alloc_pages_slowpath(alloc_gfp, order, &ac);
 
-Right. Also in the case of a mutex, if we disable preemption while
-holding the mutex, this makes sure that whoever holding the mutex does
-not starve waiters. Essentially the difference would be that waiters
-will sleep with the mutex instead of spinning, but the mutex holder
-itself wouldn't sleep.
+```
 
-I will make this a separate patch, just in case it's too
-controversial. Switching the spinlock to a mutex should not block
-removing unified flushing.
+__alloc_pages set ac.nodemask back to mempolicy before call
+__alloc_pages_slowpath.
 
->
-> My preference is not exposing this in user interface. This is mostly aris=
-ing
-> from internal implementation details and isn't what users necessarily car=
-e
-> about. There are many things we can do on the kernel side to make trade-o=
-ffs
-> among overhead, staleness and priority inversions. If we make this an
-> explicit userland interface behavior, we get locked into that semantics
-> which we'll likely regret in some future.
->
 
-Yeah that's what I am trying to do here as well.  I will try to follow
-up on this discussion with patches soon.
+> any reason why we cannot rely on __GFP_HARWALL here? Or should we
 
-Thanks everyone!
+In prepare_alloc_pages:
+```
+if (cpusets_enabled()) {
+	*alloc_gfp |= __GFP_HARDWALL;
+	...
+}
+```
+
+Since __GFP_HARDWALL is set as long as cpuset is enabled, I think we can
+use it to determine if we are under the constraint of CPUSET.
+
+But I have a question: Why we always set __GFP_HARDWALL when cpuset is
+enabled, regardless of the value of cpuset.mem_hardwall?
+
+
+Thanks,
+Gang Li
