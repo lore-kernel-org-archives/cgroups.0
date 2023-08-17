@@ -1,62 +1,84 @@
-From: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
-Subject: Re: [PATCH RT] mm/memcg: Fix recursive locking on refill_stock() on
- PREEMPT_RT
-Date: Thu, 17 Aug 2023 11:12:24 +0200
-Message-ID: <20230817091224.nqKGjRlK@linutronix.de>
-References: <20230809-memcg-fix-recursive-lock-v1-1-0870815484c6@concurrent-rt.com>
+From: Lucas Karpinski <lkarpins-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Subject: [PATCH v2] selftests: cgroup: fix test_kmem_memcg_deletion kernel
+ mem check
+Date: Thu, 17 Aug 2023 08:47:26 -0400
+Message-ID: <jnyjalhg43mdnn6su2a2kmwzqasdyjsfdvipim2i2hvqo7w6y2@st57sbo4bkxf>
 Mime-Version: 1.0
-Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020; t=1692263546;
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1692276458;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=fp7L9O2Ivmey6Olx0dpGU5sez7ZYHKV4H6RchIR6KxA=;
-        b=JRdvd/eKLOliRx3lLc3OTMoAtNH1lR95NU3kcFTs1+Vaz47YIH89WQJPPE5N1faSoHxq73
-        uhQWcYl6nLdHRjQO0zajRdGpuJiacZ/gp36u9wC8rnaHp+fh7DxjxzW+CTL6PbVe4WWyWY
-        M0CsF45ETpn5soMKQ5N8ezKyIjyM/kX+L5Hj+IsGfHi7AtA/t+R0sIQCr9efIz/d2AkJOJ
-        pJ5Ip7SRtoTJjT7UnOMhWaFE/dOJ4m4RPuPoZhChn40GDt53KYlcjF8306Of2pjgh9V10n
-        o/++k/BAXpNjnCTB30pRGmI4G2neZ4jgT3CIJ8Sd0Q1MXmT8PMCBVs9f4WERaA==
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020e; t=1692263546;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=fp7L9O2Ivmey6Olx0dpGU5sez7ZYHKV4H6RchIR6KxA=;
-        b=WWdAKbwMGiTgZxy+lMApDQ7tAQ4WREZhUatRs9g13frtT7w+0rU0CqNuzffADX+rcJww7v
-        cJT1/UjiLILE95Dw==
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type;
+        bh=27yOpoFS3kI6hX/wnm/PheNvRJtvVh2pmNTKVNiCv/U=;
+        b=ZOkRhSn/zCJWcaEisK/qx2UpX15Sx4auUstXw/GHstn97CqFEYjaHyX/RWMZJPuFjdKRyH
+        SfQYuIIfvAcwxfIToW8nvpceMQb26XWRF/Dz0rd0RApTik9n7gh+Mn3C5hpXiffsNiKgCf
+        49aiFf9Npte/MwMxJw5zZuovI9hiYEA=
 Content-Disposition: inline
-In-Reply-To: <20230809-memcg-fix-recursive-lock-v1-1-0870815484c6@concurrent-rt.com>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: zachary.goldstein@concurrent-rt.com, "Luis Claudio R. Goncalves" <lgoncalv@redhat.com>, stable-rt@vger.kernel.org
-Cc: linux-mm@kvack.org, cgroups@vger.kernel.org, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, Andrew Morton <akpm@linux-foundation.org>, Thomas Gleixner <tglx@linutronix.de>, Steven Rostedt <rostedt@goodmis.org>, linux-kernel@vger.kernel.org, linux-rt-users@vger.kernel.org
+To: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Muchun Song <muchun.song-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Shuah Khan <shuah-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: Muchun Song <muchun.song-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kselftest-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On 2023-08-10 15:05:34 [-0400], Zachary Goldstein via B4 Relay wrote:
-> From: Zachary Goldstein <zachary.goldstein@concurrent-rt.com>
-> 
-> 5.10 suffers from the same recursive locking issue that
-> commit a848d25434de4 ("mm/memcg: Opencode the inner part of
-> obj_cgroup_uncharge_pages() in drain_obj_stock()") fixes.
+The combination of using slab, anon, file, kernel_stack, and percpu is
+not accurate for total kernel memory utilization. Checking kernel within
+memory.stat provides a more accurate measurement.
 
-This is the commit id from the stable-rt tree for the v5.15 series.
-The original commit was af9a3b69e84be ("mm/memcg: opencode the inner
-part of obj_cgroup_uncharge_pages() in drain_obj_stock()").
+Signed-off-by: Lucas Karpinski <lkarpins-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+---
+ v1: https://lore.kernel.org/all/eex2vdlg4ow2j5bybmav73nbfzuspkk4zobnk7svua4jaypqb5@7ie6e4mci43t/
 
-> Modified description from the commit to reflect this patch changes:
-> 
-> Provide the inner part of refill_stock() as __refill_stock() without
-> disabling interrupts. This eases the integration of local_lock_t where
-> recursive locking must be avoided.
-> Open code __memcg_kmem_uncharge() in drain_obj_stock() and
-> obj_cgroup_release() and use __refill_stock(). The caller of
-> drain_obj_stock() and obj_cgroup_release() already disables interrupts.
-> 
-> Signed-off-by: Zachary Goldstein <zachary.goldstein@concurrent-rt.com>
+ tools/testing/selftests/cgroup/test_kmem.c | 25 +++++-----------------
+ 1 file changed, 5 insertions(+), 20 deletions(-)
 
-I would prefer a proper backport similar to the commit you mentioned.
-This would include keeping the author ship and so on.
-The change itself looks okay.
+diff --git a/tools/testing/selftests/cgroup/test_kmem.c b/tools/testing/selftests/cgroup/test_kmem.c
+index ed2e50bb1e76..3ef979ee0edf 100644
+--- a/tools/testing/selftests/cgroup/test_kmem.c
++++ b/tools/testing/selftests/cgroup/test_kmem.c
+@@ -166,7 +166,7 @@ static int cg_run_in_subcgroups(const char *parent,
+  */
+ static int test_kmem_memcg_deletion(const char *root)
+ {
+-	long current, slab, anon, file, kernel_stack, pagetables, percpu, sock, sum;
++	long current, kernel;
+ 	int ret = KSFT_FAIL;
+ 	char *parent;
+ 
+@@ -184,30 +184,15 @@ static int test_kmem_memcg_deletion(const char *root)
+ 		goto cleanup;
+ 
+ 	current = cg_read_long(parent, "memory.current");
+-	slab = cg_read_key_long(parent, "memory.stat", "slab ");
+-	anon = cg_read_key_long(parent, "memory.stat", "anon ");
+-	file = cg_read_key_long(parent, "memory.stat", "file ");
+-	kernel_stack = cg_read_key_long(parent, "memory.stat", "kernel_stack ");
+-	pagetables = cg_read_key_long(parent, "memory.stat", "pagetables ");
+-	percpu = cg_read_key_long(parent, "memory.stat", "percpu ");
+-	sock = cg_read_key_long(parent, "memory.stat", "sock ");
+-	if (current < 0 || slab < 0 || anon < 0 || file < 0 ||
+-	    kernel_stack < 0 || pagetables < 0 || percpu < 0 || sock < 0)
++	kernel = cg_read_key_long(parent, "memory.stat", "kernel ");
++	if (current < 0 || kernel < 0)
+ 		goto cleanup;
+ 
+-	sum = slab + anon + file + kernel_stack + pagetables + percpu + sock;
+-	if (abs(sum - current) < MAX_VMSTAT_ERROR) {
++	if (abs(kernel - current) < MAX_VMSTAT_ERROR) {
+ 		ret = KSFT_PASS;
+ 	} else {
+ 		printf("memory.current = %ld\n", current);
+-		printf("slab + anon + file + kernel_stack = %ld\n", sum);
+-		printf("slab = %ld\n", slab);
+-		printf("anon = %ld\n", anon);
+-		printf("file = %ld\n", file);
+-		printf("kernel_stack = %ld\n", kernel_stack);
+-		printf("pagetables = %ld\n", pagetables);
+-		printf("percpu = %ld\n", percpu);
+-		printf("sock = %ld\n", sock);
++		printf("kernel = %ld\n", kernel);
+ 	}
+ 
+ cleanup:
+-- 
+2.41.0
 
-Sebastian
