@@ -1,39 +1,71 @@
-From: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH v3] selftests: cgroup: fix test_kmem_memcg_deletion kernel
- mem check
-Date: Thu, 17 Aug 2023 13:02:08 -0700
-Message-ID: <CALvZod4C7+q+wF6UYRq5Ud75o8PevUExHVs_kFZ9sDbzQbqM3A@mail.gmail.com>
-References: <bvrhe2tpsts2azaroq4ubp2slawmop6orndsswrewuscw3ugvk@kmemmrttsnc7>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH v3][next] cgroup: Avoid -Wstringop-overflow warnings
+Date: Thu, 17 Aug 2023 11:57:02 -1000
+Message-ID: <ZN6Xrsssr4Pys8YQ@slm.duckdns.org>
+References: <ZN5WkbPelHUSTXOA@work>
 Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20221208; t=1692302541; x=1692907341;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=ZFt42+2gL2zS27EyJiumcQJzSPb9Kj8mX4pG71zx5cw=;
-        b=JeEPJFThFtK7b6jYwe7zK72koT1k9KkeHpiFPJ1aRPzOL9oY6vKDr3BSOZoLEbtizJ
-         Faulh/e/+MOgduHk0RrucQCigvVUys2uGZPsgkaKG7ggxeQ2Q6SIbiE3UFC0X5LSz6DR
-         /3uvEDap0anA8Ibix8KixmMZl4KuKYTvn6avYKILdWvbhZPBnESwBXLjiqrS73/4uy6t
-         4hqy8HdMOqKjbYhf+EbLjT1wqvs+yOGIJ6tXWJNOOG47x9iNH49Z1H7EhySv84DVy5hw
-         JwShuWqZmI4uoPbF/i06RvThRAfJKnhDyoIORcVFFVDmMtjOruBuLioebzarH/PG9U4I
-         ZWdA==
-In-Reply-To: <bvrhe2tpsts2azaroq4ubp2slawmop6orndsswrewuscw3ugvk@kmemmrttsnc7>
+        d=gmail.com; s=20221208; t=1692309424; x=1692914224;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:sender:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=Z0omXZny2n+CByL2k7ciGeHHMSQ9u/agRJB2cjviSi4=;
+        b=hr056v+KwQCD7KsAAiffnt/3sSt1kTIcf8ne4SKRK1o44FszUJAWCBrFUQsZHgYJDd
+         bTx5INJz3ICUgZz0sm7keyITgp8HsgzZ5fohuetFK5lXFrlPf34LBKJauHkvKMfd+HWR
+         rSkXHrHmvgzDtHH9FbA4JhNetRxt06m8trUlP4HeA8yKYy4R9AoHI/uo/u4JVQy+wmR+
+         NRbSgaY2wzwBttQN0mjQtVyq6GMvxh+wPKKLjiow1eQwe/MqfXp0XZ08TJ0tD85qGHep
+         zaK8DfYd9FSX3Ds78+mMzfluB+IRK6o7PCoOqHPsCa8To8OnwauvRZPsxxGUDk3gt1Bu
+         GyAw==
+Sender: Tejun Heo <htejun@gmail.com>
+Content-Disposition: inline
+In-Reply-To: <ZN5WkbPelHUSTXOA@work>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="windows-1252"
-To: Lucas Karpinski <lkarpins-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Muchun Song <muchun.song-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Shuah Khan <shuah-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kselftest-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: "Gustavo A. R. Silva" <gustavoars@kernel.org>
+Cc: Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, linux-hardening@vger.kernel.org
 
-On Thu, Aug 17, 2023 at 12:58=E2=80=AFPM Lucas Karpinski <lkarpins@redhat.c=
-om> wrote:
->
-> Currently, not all kernel memory usage is being accounted for. This
-> commit switches to using the kernel entry within memory.stat which
-> already includes kernel_stack, pagetables, and slab. The kernel entry
-> also includes vmalloc and other additional kernel memory use cases which
-> were missing.
->
-> Signed-off-by: Lucas Karpinski <lkarpins-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+On Thu, Aug 17, 2023 at 11:19:13AM -0600, Gustavo A. R. Silva wrote:
+> Change the notation from pointer-to-array to pointer-to-pointer.
+> With this, we avoid the compiler complaining about trying
+> to access a region of size zero as an argument during function
+> calls.
+> 
+> This is a workaround to prevent the compiler complaining about
+> accessing an array of size zero when evaluating the arguments
+> of a couple of function calls. See below:
+> 
+> kernel/cgroup/cgroup.c: In function 'find_css_set':
+> kernel/cgroup/cgroup.c:1206:16: warning: 'find_existing_css_set' accessing 4 bytes in a region of size 0 [-Wstringop-overflow=]
+>  1206 |         cset = find_existing_css_set(old_cset, cgrp, template);
+>       |                ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+> kernel/cgroup/cgroup.c:1206:16: note: referencing argument 3 of type 'struct cgroup_subsys_state *[0]'
+> kernel/cgroup/cgroup.c:1071:24: note: in a call to function 'find_existing_css_set'
+>  1071 | static struct css_set *find_existing_css_set(struct css_set *old_cset,
+>       |                        ^~~~~~~~~~~~~~~~~~~~~
+> 
+> With the change to pointer-to-pointer, the functions are not prevented
+> from being executed, and they will do what they have to do when
+> CGROUP_SUBSYS_COUNT == 0.
+> 
+> Address the following -Wstringop-overflow warnings seen when
+> built with ARM architecture and aspeed_g4_defconfig configuration
+> (notice that under this configuration CGROUP_SUBSYS_COUNT == 0):
+> 
+> kernel/cgroup/cgroup.c:1208:16: warning: 'find_existing_css_set' accessing 4 bytes in a region of size 0 [-Wstringop-overflow=]
+> kernel/cgroup/cgroup.c:1258:15: warning: 'css_set_hash' accessing 4 bytes in a region of size 0 [-Wstringop-overflow=]
+> kernel/cgroup/cgroup.c:6089:18: warning: 'css_set_hash' accessing 4 bytes in a region of size 0 [-Wstringop-overflow=]
+> kernel/cgroup/cgroup.c:6153:18: warning: 'css_set_hash' accessing 4 bytes in a region of size 0 [-Wstringop-overflow=]
+> 
+> This results in no differences in binary output.
+> 
+> Link: https://github.com/KSPP/linux/issues/316
+> Signed-off-by: Gustavo A. R. Silva <gustavoars@kernel.org>
 
-Acked-by: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Applied to cgroup/for-6.6.
+
+Thanks.
+
+-- 
+tejun
