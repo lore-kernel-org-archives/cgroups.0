@@ -1,65 +1,83 @@
-From: "Gustavo A. R. Silva" <gustavo@embeddedor.com>
-Subject: Re: [PATCH v2][next] cgroup: Avoid -Wstringop-overflow warnings
-Date: Thu, 17 Aug 2023 11:23:38 -0600
-Message-ID: <32c7ea41-8b00-c92e-02ec-d535428e55bb@embeddedor.com>
-References: <ZN02iLcZYgxHFrEN@work> <ZN02wFqzvwP2JI-K@slm.duckdns.org>
- <202308161356.4AED47263E@keescook> <ZN05IZBfaKkPKJfH@slm.duckdns.org>
+From: Lucas Karpinski <lkarpins@redhat.com>
+Subject: Re: [PATCH v2] selftests: cgroup: fix test_kmem_memcg_deletion
+ kernel mem check
+Date: Thu, 17 Aug 2023 14:11:38 -0400
+Message-ID: <nnxvxk23hrbr2rj2g5upbks6w766cgubhltfamvsto3mxidcxa@iovra4ubeq35>
+References: <jnyjalhg43mdnn6su2a2kmwzqasdyjsfdvipim2i2hvqo7w6y2@st57sbo4bkxf>
+ <20230817170702.mwem4nsy2ka4gj7n@google.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=embeddedor.com; s=default; h=Content-Transfer-Encoding:Content-Type:
-        In-Reply-To:From:References:Cc:To:Subject:MIME-Version:Date:Message-ID:Sender
-        :Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:
-        Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:
-        List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
-        bh=XsIhFA6p1MkMu1lgiaxFpYzkM6VAgL0B/RLP+o3ibj0=; b=PPXTDZN3LckRmEB6i0+w8aLhVh
-        bknx7JpDqM62KROQHLSlbSJQKUE2IzMxM6axtrpJ2xUrA00LnpwKOglWINcFWkSoLC/6RO/P2i5dH
-        YJNak3Bae7X6n7PWsTS4NVAsABO6yq/RDV8DdVE90Tb92hYnCI9Il+2I12kkQP9XYyXwcxNZ1owNQ
-        c6FZ9CHc7mvrYkbtBvye2XWtMmhAX3AsC0P3GyGbxpK5INA/jUloBKpMoUcCpgfyouWMe42Lq+U7A
-        +EGL8HEDWMReC0D5mT1I86G0SI+sqt1KRWUAgAO+HP4ctNo/f11AeOFVa0SCtkw/6XuR1xoPoPRO1
-        c5Lt 
-Content-Language: en-US
-In-Reply-To: <ZN05IZBfaKkPKJfH@slm.duckdns.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1692295912;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=rTErNomPttgl/viRXoYlofNYirDpLy640wteux782+8=;
+        b=YNK5dy8uH35jY42ykJTHL3vk6ecyuqc4Odixp3qIjbUzypaoZPVSfjTVvHxSTGHcDhGmcd
+        i61T8KwQGkX5YzdSJMdtpjrd0jQa42BALyqyV7yA58fOgKXFLwqFj2aJGmAzzDWOkai+vH
+        fvRwBs2kBKciR1q6GKnBxdoLAegD3Ls=
+Content-Disposition: inline
+In-Reply-To: <20230817170702.mwem4nsy2ka4gj7n@google.com>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"; format="flowed"
-To: Tejun Heo <tj@kernel.org>, Kees Cook <keescook@chromium.org>
-Cc: "Gustavo A. R. Silva" <gustavoars@kernel.org>, Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, linux-hardening@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Shakeel Butt <shakeelb@google.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, Roman Gushchin <roman.gushchin@linux.dev>, Muchun Song <muchun.song@linux.dev>, Tejun Heo <tj@kernel.org>, Zefan Li <lizefan.x@bytedance.com>, Shuah Khan <shuah@kernel.org>, cgroups@vger.kernel.org, linux-mm@kvack.org, linux-kselftest@vger.kernel.org, linux-kernel@vger.kernel.org
 
-
-
-On 8/16/23 15:01, Tejun Heo wrote:
-> On Wed, Aug 16, 2023 at 01:57:16PM -0700, Kees Cook wrote:
->> On Wed, Aug 16, 2023 at 10:51:12AM -1000, Tejun Heo wrote:
->>> Hello,
->>>
->>> On Wed, Aug 16, 2023 at 02:50:16PM -0600, Gustavo A. R. Silva wrote:
->>>> Change the notation from pointer-to-array to pointer-to-pointer.
->>>> With this, we avoid the compiler complaining about trying
->>>> to access a region of size zero as an argument during function
->>>> calls.
->>>
->>> Haha, I thought the functions were actually accessing the memory. This can't
->>> be an intended behavior on the compiler's side, right?
->>
->> I think it's a result of inlining -- the compiler ends up with a case
->> where it looks like it might be possible to index a zero-sized array,
->> but it is "accidentally safe".
+On Thu, Aug 17, 2023 at 05:07:02PM +0000, Shakeel Butt wrote:
+> On Thu, Aug 17, 2023 at 08:47:26AM -0400, Lucas Karpinski wrote:
+> > The combination of using slab, anon, file, kernel_stack, and percpu is
+> > not accurate for total kernel memory utilization. Checking kernel within
+> > memory.stat provides a more accurate measurement.
+> > 
+> > Signed-off-by: Lucas Karpinski <lkarpins@redhat.com>
+> > ---
+> >  v1: https://lore.kernel.org/all/eex2vdlg4ow2j5bybmav73nbfzuspkk4zobnk7svua4jaypqb5@7ie6e4mci43t/
+> > 
+> >  tools/testing/selftests/cgroup/test_kmem.c | 25 +++++-----------------
+> >  1 file changed, 5 insertions(+), 20 deletions(-)
+> > 
+> > diff --git a/tools/testing/selftests/cgroup/test_kmem.c b/tools/testing/selftests/cgroup/test_kmem.c
+> > index ed2e50bb1e76..3ef979ee0edf 100644
+> > --- a/tools/testing/selftests/cgroup/test_kmem.c
+> > +++ b/tools/testing/selftests/cgroup/test_kmem.c
+> > @@ -166,7 +166,7 @@ static int cg_run_in_subcgroups(const char *parent,
+> >   */
+> >  static int test_kmem_memcg_deletion(const char *root)
+> >  {
+> > -	long current, slab, anon, file, kernel_stack, pagetables, percpu, sock, sum;
+> > +	long current, kernel;
+> >  	int ret = KSFT_FAIL;
+> >  	char *parent;
+> >  
+> > @@ -184,30 +184,15 @@ static int test_kmem_memcg_deletion(const char *root)
+> >  		goto cleanup;
+> >  
+> >  	current = cg_read_long(parent, "memory.current");
+> > -	slab = cg_read_key_long(parent, "memory.stat", "slab ");
+> > -	anon = cg_read_key_long(parent, "memory.stat", "anon ");
+> > -	file = cg_read_key_long(parent, "memory.stat", "file ");
+> > -	kernel_stack = cg_read_key_long(parent, "memory.stat", "kernel_stack ");
+> > -	pagetables = cg_read_key_long(parent, "memory.stat", "pagetables ");
+> > -	percpu = cg_read_key_long(parent, "memory.stat", "percpu ");
+> > -	sock = cg_read_key_long(parent, "memory.stat", "sock ");
+> > -	if (current < 0 || slab < 0 || anon < 0 || file < 0 ||
+> > -	    kernel_stack < 0 || pagetables < 0 || percpu < 0 || sock < 0)
+> > +	kernel = cg_read_key_long(parent, "memory.stat", "kernel ");
+> > +	if (current < 0 || kernel < 0)
+> >  		goto cleanup;
+> >  
+> > -	sum = slab + anon + file + kernel_stack + pagetables + percpu + sock;
+> > -	if (abs(sum - current) < MAX_VMSTAT_ERROR) {
+> > +	if (abs(kernel - current) < MAX_VMSTAT_ERROR) {
 > 
-> Ah I see. It's not that the compiler knows that ** access is safe. It's more
-> that it only applies the check on arrays. Is that right? Gustavo, I don't
+> I don't think this is what you want. Since slab, kernel_stack,
+> pagetables and percpu are included in the kmem stats, you just want to
+> replace those with kmem. Basically keep the anon, file and sock stats.
+>
 
-That's correct.
+Will fix and send new patch version.
 
-> mind the patch but can you update the patch description a bit explaining a
-> bit more on what's going on with the complier? It doesn't have to be the
-> full explanation but it'd be useful to explicitly point out that we're just
-> working around the compiler being a bit silly.
+Thanks,
+Lucas
 
-I just sent v3:
-
-	https://lore.kernel.org/linux-hardening/ZN5WkbPelHUSTXOA@work/
-
-Thanks
---
-Gustavo
