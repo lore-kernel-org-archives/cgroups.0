@@ -1,37 +1,46 @@
-From: Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>
-Subject: Re: [PATCH v3] selftests: cgroup: fix test_kmem_memcg_deletion
- kernel mem check
-Date: Thu, 17 Aug 2023 15:09:41 -0700
-Message-ID: <ZN6apSESQA399VIB@P9FQF9L96D.corp.robot.car>
-References: <bvrhe2tpsts2azaroq4ubp2slawmop6orndsswrewuscw3ugvk@kmemmrttsnc7>
+From: "Matthew Wilcox (Oracle)" <willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
+Subject: [PATCH 1/4] mm: Fix kernel-doc warning from tlb_flush_rmaps()
+Date: Fri, 18 Aug 2023 21:06:27 +0100
+Message-ID: <20230818200630.2719595-2-willy@infradead.org>
+References: <20230818200630.2719595-1-willy@infradead.org>
 Mime-Version: 1.0
+Content-Transfer-Encoding: 8bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
-        t=1692310205;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=AZWOzIrMKkpUc+BDEgZDeC3Wh2PXNMAFyhgvJslJ6wg=;
-        b=xEIQ3L38jf6DxtO1AtG3hpWCWS4o0JBWtd/5QNnpQQ8aRxSbnxY4v7SXUtB9VAdbMk70+s
-        FhPFrDoJEcJSGjRiQa+SxKT0G9po0KTB107NHjDgyq4AdJj9tJNPm5tWpeZZDQHUGuplve
-        Br+JYDAsz3Kq/nwQ7l9HLUMnxJgoCjg=
-Content-Disposition: inline
-In-Reply-To: <bvrhe2tpsts2azaroq4ubp2slawmop6orndsswrewuscw3ugvk@kmemmrttsnc7>
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=casper.20170209; h=Content-Transfer-Encoding:MIME-Version:
+        References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:
+        Content-Type:Content-ID:Content-Description;
+        bh=hBTE4z1qFRK8GKVkm74TePYQyzNHYl26/C9WeYlReVs=; b=nCMQUJtkYsiL9VLEqUAbyMPRNU
+        FkMc5ws1uHU5C7DeZssEFP6ua822AKo3VO0PvVhd6XFmc4viXKfWrynUKg+8rvSUk/rbq6DZa6JZY
+        Pk82WHNbCI/6AjlbREUTYzzcPcFkqTBS4vZ4YzaclfawVnVQ7A1nM7TYp/okctf3RoFGtFPkGXXw5
+        cNLUdxTup4Yqp9SiwXSKm/JuLnPYGad0o84JGBV04hdcelsREQakr7eapSVsU5hOV8vKRQUzfYAev
+        V58r161EPRq1WZ+sNB3X/ELtxoGemEq849+vHpH1TzzZJfT2nk7dVfoDJfWoCm0WRLzWAO+CjdI7+
+        iNXer5Mw==;
+In-Reply-To: <20230818200630.2719595-1-willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Lucas Karpinski <lkarpins-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Muchun Song <muchun.song-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Shuah Khan <shuah-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kselftest-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+Cc: "Matthew Wilcox (Oracle)" <willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Mike Rapoport <rppt-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Thu, Aug 17, 2023 at 03:57:48PM -0400, Lucas Karpinski wrote:
-> Currently, not all kernel memory usage is being accounted for. This
-> commit switches to using the kernel entry within memory.stat which
-> already includes kernel_stack, pagetables, and slab. The kernel entry
-> also includes vmalloc and other additional kernel memory use cases which
-> were missing.
-> 
-> Signed-off-by: Lucas Karpinski <lkarpins-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+The vma parameter wasn't described.
 
-Acked-by: Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>
+Signed-off-by: Matthew Wilcox (Oracle) <willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
+---
+ mm/mmu_gather.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-Thanks!
+diff --git a/mm/mmu_gather.c b/mm/mmu_gather.c
+index ea9683e12936..4f559f4ddd21 100644
+--- a/mm/mmu_gather.c
++++ b/mm/mmu_gather.c
+@@ -63,6 +63,7 @@ static void tlb_flush_rmap_batch(struct mmu_gather_batch *batch, struct vm_area_
+ /**
+  * tlb_flush_rmaps - do pending rmap removals after we have flushed the TLB
+  * @tlb: the current mmu_gather
++ * @vma: The memory area from which the pages are being removed.
+  *
+  * Note that because of how tlb_next_batch() above works, we will
+  * never start multiple new batches with pending delayed rmaps, so
+-- 
+2.40.1
+
