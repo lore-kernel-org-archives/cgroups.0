@@ -1,39 +1,37 @@
-From: Lu Jialin <lujialin4-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Subject: [PATCH] memcg: Removed duplication detection for mem_cgroup_uncharge_swap
-Date: Sat, 19 Aug 2023 08:13:02 +0000
-Message-ID: <20230819081302.1217098-1-lujialin4@huawei.com>
+From: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH] memcg: Removed duplication detection for mem_cgroup_uncharge_swap
+Date: Sat, 19 Aug 2023 22:15:12 -0700
+Message-ID: <CALvZod6AmsQb+srO5JjMQH0xFx_Ybu=KxdrX+i+f7BzbK1DUiA@mail.gmail.com>
+References: <20230819081302.1217098-1-lujialin4@huawei.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7BIT
+Content-Transfer-Encoding: quoted-printable
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20221208; t=1692508524; x=1693113324;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=QHzkhq/2CNg7lFMLeaog/UrvW1UqZ1CtPUmwbLqtOso=;
+        b=nrQiyjOjJgcaUd2bk6SQdWj5LUoQRiQaNvV3OXquVrONrch9Wsbd6GIbPFmmNEDNyB
+         29owdNMnZkMOs9CZbup2nYnf6BB+WZq+G0JsrFFj4u+ZZY142ePVUn2zyprs6B+dZxnZ
+         K81VlDP+tLe+QLce0rYfnTKWFi6pmJq61kqfwBs0We34X0KJJdMSBeJA2zPHPReDhI13
+         2Provo2k/OOGfiUny7nal9athlK4IcTcBWLf3C0BOx7s6erKTG+PVzRpIZTZPJlqLppA
+         x+oyDUjXk43LQTeqPoRWboN4p6Bi/3/2tv5ZQPt8lwGOpRvUDK7JvThsVsCHwEcOuvrP
+         EG1w==
+In-Reply-To: <20230819081302.1217098-1-lujialin4-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-To: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
-Cc: Lu Jialin <lujialin4-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
+Content-Type: text/plain; charset="windows-1252"
+To: Lu Jialin <lujialin4-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
 
-__mem_cgroup_uncharge_swap is only called in mem_cgroup_uncharge_swap,
-if mem cgroup is disabled, __mem_cgroup_uncharge_swap cannot be called.
-Therefore, there is no need to judge whether mem_cgroup is disabled or
-not.
+On Sat, Aug 19, 2023 at 1:14=E2=80=AFAM Lu Jialin <lujialin4-hv44wF8Li93QT0dZR+AlfA@public.gmane.org> wr=
+ote:
+>
+> __mem_cgroup_uncharge_swap is only called in mem_cgroup_uncharge_swap,
+> if mem cgroup is disabled, __mem_cgroup_uncharge_swap cannot be called.
+> Therefore, there is no need to judge whether mem_cgroup is disabled or
+> not.
+>
+> Signed-off-by: Lu Jialin <lujialin4-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 
-Signed-off-by: Lu Jialin <lujialin4-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
----
- mm/memcontrol.c | 3 ---
- 1 file changed, 3 deletions(-)
-
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index e8ca4bdcb03c..274af096c748 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -7535,9 +7535,6 @@ void __mem_cgroup_uncharge_swap(swp_entry_t entry, unsigned int nr_pages)
- 	struct mem_cgroup *memcg;
- 	unsigned short id;
- 
--	if (mem_cgroup_disabled())
--		return;
--
- 	id = swap_cgroup_record(entry, 0, nr_pages);
- 	rcu_read_lock();
- 	memcg = mem_cgroup_from_id(id);
--- 
-2.34.1
-
+Acked-by: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
