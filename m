@@ -1,92 +1,49 @@
-From: Randy Dunlap <rdunlap@infradead.org>
-Subject: Re: [PATCH 2/4] mm: Fix get_mctgt_type() kernel-doc
-Date: Sat, 19 Aug 2023 17:52:04 -0700
-Message-ID: <df2ec434-69cd-fe3b-50de-462a9c7eda41@infradead.org>
-References: <20230818200630.2719595-1-willy@infradead.org>
- <20230818200630.2719595-3-willy@infradead.org>
+From: Qais Yousef <qyousef@layalina.io>
+Subject: Re: [PATCH 0/6] Backport rework of deadline bandwidth restoration
+ for 5.10.y
+Date: Mon, 21 Aug 2023 00:02:57 +0100
+Message-ID: <20230820230257.gmcmjuuirzq6xs52@airbuntu>
+References: <20230820152144.517461-1-qyousef@layalina.io>
+ <883a5a4f-b34e-689c-2fbd-7bf03db532eb@redhat.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-doc-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
-        Content-Type:In-Reply-To:From:References:Cc:To:Subject:MIME-Version:Date:
-        Message-ID:Sender:Reply-To:Content-ID:Content-Description;
-        bh=c94fHYxIWl9lBifgcspinxKU2QHJURmIgDdd+1otOjo=; b=GDPo+eqAkD2WDQPmJ2y2konEcv
-        fp4a5Zv29YS4L903aE7mPxLttTS8765T5saJnuvJPvyLla6eC4H2k15yRLsZk3R7Ki3u/Lvn+Z6zE
-        TGWQQ/eEvCNmfI5O51mNrdR+vrat/83NmlbCiG0Fm+d+ri9Km+r67lVW3RYuVeaYKW7ngGHR5K5Si
-        zK6NheDXhSjOVaSmWrHbtKSoO6sXELTTK5D77Co26QjB5BuNUzGZ8UtJO7lZS2QwY/IwZQuYup6w+
-        GTVhZEM9xaKiFQzvO2CwBclmBFzETmmMymycokOU0UkC254WwvrdvT3PfUFGAUDDFCZPe1AlAbuNf
-        YcJfsVmw==;
-Content-Language: en-US
-In-Reply-To: <20230818200630.2719595-3-willy@infradead.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=layalina-io.20221208.gappssmtp.com; s=20221208; t=1692572579; x=1693177379;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=zASfMBgzYAjTR9c8GY5qaV+9MUOdSaUxlBCpiQVP8k0=;
+        b=t/M436gLUC3+++Lm6yg65sJ9KSAuXIfPhOB12Lo8i7//DnPoosE1I3P39EuLVL4PNO
+         zRxoSgoVSQgGE3VjMiyyof23ui1TFdgoOKaNFJqRby3F43/I7OR79Cz5BLE5wPYPtI5T
+         VBr3r68voLEMZTuMRzdBo/IZTrf/8IHoS1DY3JjHEIyBznscOY5H2pCCx6BI5FHNijtM
+         PPDqEKa5XS8oOtFuuVIwZel0iFIUHGm+0+a427vbiMxzGMDaz4p0GD7I/pHZfv3K5R9g
+         SxKsr4mnY/efclf92+bb94JKR4Cr2yuLCpMgCL6hEieNYhRuwNR6i4S5WrF4+WvvQekE
+         eH2g==
+Content-Disposition: inline
+In-Reply-To: <883a5a4f-b34e-689c-2fbd-7bf03db532eb@redhat.com>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: "Matthew Wilcox (Oracle)" <willy@infradead.org>, Andrew Morton <akpm@linux-foundation.org>
-Cc: linux-mm@kvack.org, Mike Rapoport <rppt@kernel.org>, linux-doc@vger.kernel.org, cgroups@vger.kernel.org
+Content-Transfer-Encoding: 7bit
+To: Waiman Long <longman@redhat.com>
+Cc: stable@vger.kernel.org, Juri Lelli <juri.lelli@redhat.com>, Tejun Heo <tj@kernel.org>, Dietmar Eggemann <dietmar.eggemann@arm.com>, Peter Zijlstra <peterz@infradead.org>, Vincent Guittot <vincent.guittot@linaro.org>, Ingo Molnar <mingo@kernel.org>, Hao Luo <haoluo@google.com>, John Stultz <jstultz@google.com>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
 
-
-
-On 8/18/23 13:06, Matthew Wilcox (Oracle) wrote:
-> Convert the return values to an ReST list and tidy up the wording while
-> I'm touching it.
+On 08/20/23 12:24, Waiman Long wrote:
 > 
-> Signed-off-by: Matthew Wilcox (Oracle) <willy@infradead.org>
-> ---
->  mm/memcontrol.c | 31 +++++++++++++------------------
->  1 file changed, 13 insertions(+), 18 deletions(-)
+> On 8/20/23 11:21, Qais Yousef wrote:
+> > This is a backport of the series that fixes the way deadline bandwidth
+> > restoration is done which is causing noticeable delay on resume path. It also
+> > converts the cpuset lock back into a mutex which some users on Android too.
+> > I lack the details but AFAIU the read/write semaphore was slower on high
+> > contention.
 > 
-> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-> index e041ba827e59..cd8b3ae6b8d9 100644
-> --- a/mm/memcontrol.c
-> +++ b/mm/memcontrol.c
-> @@ -5850,25 +5850,20 @@ static int mem_cgroup_move_account(struct page *page,
->   * @ptent: the pte to be checked
->   * @target: the pointer the target page or swap ent will be stored(can be NULL)
->   *
-> - * Returns
-> - *   0(MC_TARGET_NONE): if the pte is not a target for move charge.
-> - *   1(MC_TARGET_PAGE): if the page corresponding to this pte is a target for
-> - *     move charge. if @target is not NULL, the page is stored in target->page
-> - *     with extra refcnt got(Callers should handle it).
-> - *   2(MC_TARGET_SWAP): if the swap entry corresponding to this pte is a
-> - *     target for charge migration. if @target is not NULL, the entry is stored
-> - *     in target->ent.
-> - *   3(MC_TARGET_DEVICE): like MC_TARGET_PAGE  but page is device memory and
-> - *   thus not on the lru.
-> - *     For now we such page is charge like a regular page would be as for all
-> - *     intent and purposes it is just special memory taking the place of a
-> - *     regular page.
-> - *
-> - *     See Documentations/vm/hmm.txt and include/linux/hmm.h
-> - *
-> - * Called with pte lock held.
-> + * Context: Called with pte lock held.
-> + * Return:
-> + * * MC_TARGET_NONE - If the pte is not a target for move charge.
-> + * * MC_TARGET_PAGE - If the page corresponding to this pte is a target for
-> + *   move charge. If @target is not NULL, the page is stored in target->page
-> + *   with extra refcnt got (Callers should handle it).
+> Note that it was a percpu rwsem before this patch series. It was not a
+> regular rwsem. Percpu rwsem isn't designed to handle high write lock
+> contention. A regular rwsem should be similar to mutex in performance when
+> handling high write lock contention.
 
-I would s/got/taken/.
+Thanks a lot for the clarification Waiman! Much appreciated.
 
-> + * * MC_TARGET_SWAP - If the swap entry corresponding to this pte is a
-> + *   target for charge migration. if @target is not NULL, the entry is stored
 
-s/if/If/
+Cheers
 
-> + *   in target->ent.
-> + * * MC_TARGET_DEVICE - Like MC_TARGET_PAGE but page is device memory and
-> + *   thus not on the lru.  For now such page is charged like a regular page
-> + *   would be as it is just special memory taking the place of a regular page.
-> + *   See Documentations/vm/hmm.txt and include/linux/hmm.h
->   */
-> -
->  static enum mc_target_type get_mctgt_type(struct vm_area_struct *vma,
->  		unsigned long addr, pte_t ptent, union mc_target *target)
->  {
-
-Reviewed-by: Randy Dunlap <rdunlap@infradead.org>
-Thanks.
-
--- 
-~Randy
+--
+Qais Yousef
