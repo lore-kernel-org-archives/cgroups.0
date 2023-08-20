@@ -1,218 +1,192 @@
-From: Qais Yousef <qyousef-wp2msK0BRk8tq7phqP6ubQ@public.gmane.org>
-Subject: [PATCH 6/6] cgroup/cpuset: Free DL BW in case can_attach() fails
-Date: Sun, 20 Aug 2023 16:21:44 +0100
-Message-ID: <20230820152144.517461-7-qyousef@layalina.io>
+From: Qais Yousef <qyousef@layalina.io>
+Subject: [PATCH 3/6] sched/cpuset: Keep track of SCHED_DEADLINE task in cpusets
+Date: Sun, 20 Aug 2023 16:21:41 +0100
+Message-ID: <20230820152144.517461-4-qyousef@layalina.io>
 References: <20230820152144.517461-1-qyousef@layalina.io>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <stable-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=layalina-io.20221208.gappssmtp.com; s=20221208; t=1692544915; x=1693149715;
+        d=layalina-io.20221208.gappssmtp.com; s=20221208; t=1692544912; x=1693149712;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=R4eaIWX40z8aFQo5GiCOptHOVpDMLSBVPcf1X2aT4ak=;
-        b=QsXYhxXf782rhJMh/sqsFzrX21R2XzYEvaym0Bu52SKp465+zDHhM5fpV8ZJ00vZf7
-         BBa8tgl9VO6d/WAkohGEYZ4k3RIopI/mFAXUmvrJFY4Ux3LTRqCTGaK/b0aeO8h+rhpc
-         w2eKjxhF7OKvGZ0qNyYSYLAx76zxzbOZ8uTF30ZdxGES7dBTz8+nR4n/08dYmSkEdh6d
-         K3tEARiYiwsMAuk03NtiSVa23xQ9cgTCGeqNXwNl+pN3QX2e2/QbPfgeU/t/ocIiz6ho
-         L3vztvCYkbRlEYPjaQnQaRsUuKt67bYRV272S5XitjNvkPtcqMpgLLz/oxtyhKSd5Fzs
-         xsjQ==
-In-Reply-To: <20230820152144.517461-1-qyousef-wp2msK0BRk8tq7phqP6ubQ@public.gmane.org>
+        bh=sPjb9X+iW100sHXDLNl7mCpjYd6b3DTbRET67T+y9tc=;
+        b=KlQWPqufkUeiyXTjvp8nHpE9RRtahNKjSEHnuBtoTMA7pOXuuVLDkTV9dRQUWIlZ1R
+         cVyko8RBwlE0MOcAzGSPeI1bE9fLPjgNaaS+QyyJ6oj/FkLPE2W0BTgYLPwPmPh8vqH1
+         dqMuL6BXP8dhKEgvVvs5Piy947BFLYs/2dJ9DHpc6uzMTRcjNFqyfS5OcqrCzkUS31kr
+         BHdcxPJJ+BFpA2jnKk/eYWOOwNy/711uvPCgI+qGrNz3Mpp68yfWVNdNZ4db7eTbPd4t
+         aJDpU0sNMhXirnAmnL08ufV5YqQUb37SCSaSHbj+7PbnYPZ9LXYdQLxOUJ/21dS1mI2u
+         fyuQ==
+In-Reply-To: <20230820152144.517461-1-qyousef@layalina.io>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: stable-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-Cc: Juri Lelli <juri.lelli-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Dietmar Eggemann <dietmar.eggemann-5wv7dgnIgG8@public.gmane.org>, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Vincent Guittot <vincent.guittot-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, Ingo Molnar <mingo-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Hao Luo <haoluo-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, John Stultz <jstultz-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Qais Yousef <qyousef-wp2msK0BRk8tq7phqP6ubQ@public.gmane.org>
+To: stable@vger.kernel.org
+Cc: Juri Lelli <juri.lelli@redhat.com>, Waiman Long <longman@redhat.com>, Tejun Heo <tj@kernel.org>, Dietmar Eggemann <dietmar.eggemann@arm.com>, Peter Zijlstra <peterz@infradead.org>, Vincent Guittot <vincent.guittot@linaro.org>, Ingo Molnar <mingo@kernel.org>, Hao Luo <haoluo@google.com>, John Stultz <jstultz@google.com>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, Qais Yousef <qyousef@layalina.io>
 
-From: Dietmar Eggemann <dietmar.eggemann-5wv7dgnIgG8@public.gmane.org>
+From: Juri Lelli <juri.lelli@redhat.com>
 
-commit 2ef269ef1ac006acf974793d975539244d77b28f upstream.
+commit 6c24849f5515e4966d94fa5279bdff4acf2e9489 upstream.
 
-cpuset_can_attach() can fail. Postpone DL BW allocation until all tasks
-have been checked. DL BW is not allocated per-task but as a sum over
-all DL tasks migrating.
+Qais reported that iterating over all tasks when rebuilding root domains
+for finding out which ones are DEADLINE and need their bandwidth
+correctly restored on such root domains can be a costly operation (10+
+ms delays on suspend-resume).
 
-If multiple controllers are attached to the cgroup next to the cpuset
-controller a non-cpuset can_attach() can fail. In this case free DL BW
-in cpuset_cancel_attach().
+To fix the problem keep track of the number of DEADLINE tasks belonging
+to each cpuset and then use this information (followup patch) to only
+perform the above iteration if DEADLINE tasks are actually present in
+the cpuset for which a corresponding root domain is being rebuilt.
 
-Finally, update cpuset DL task count (nr_deadline_tasks) only in
-cpuset_attach().
-
-Suggested-by: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Signed-off-by: Dietmar Eggemann <dietmar.eggemann-5wv7dgnIgG8@public.gmane.org>
-Signed-off-by: Juri Lelli <juri.lelli-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Reviewed-by: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-(cherry picked from commit 2ef269ef1ac006acf974793d975539244d77b28f)
-[Fix conflicts in kernel/cgroup/cpuset.c due to new code being applied
-that is not applicable on this branch. Reject new code.]
-Signed-off-by: Qais Yousef (Google) <qyousef-wp2msK0BRk8tq7phqP6ubQ@public.gmane.org>
+Reported-by: Qais Yousef (Google) <qyousef@layalina.io>
+Link: https://lore.kernel.org/lkml/20230206221428.2125324-1-qyousef@layalina.io/
+Signed-off-by: Juri Lelli <juri.lelli@redhat.com>
+Reviewed-by: Waiman Long <longman@redhat.com>
+Signed-off-by: Tejun Heo <tj@kernel.org>
+(cherry picked from commit 6c24849f5515e4966d94fa5279bdff4acf2e9489)
+[Fix conflicts in kernel/cgroup/cpuset.c and kernel/sched/deadline.c due
+to pulling new fields and functions. Remove new code and match the patch
+diff.]
+Signed-off-by: Qais Yousef (Google) <qyousef@layalina.io>
 ---
- include/linux/sched.h  |  2 +-
- kernel/cgroup/cpuset.c | 51 ++++++++++++++++++++++++++++++++++++++----
- kernel/sched/core.c    | 17 ++------------
- 3 files changed, 50 insertions(+), 20 deletions(-)
+ include/linux/cpuset.h  |  4 ++++
+ kernel/cgroup/cgroup.c  |  4 ++++
+ kernel/cgroup/cpuset.c  | 25 +++++++++++++++++++++++++
+ kernel/sched/deadline.c | 13 +++++++++++++
+ 4 files changed, 46 insertions(+)
 
-diff --git a/include/linux/sched.h b/include/linux/sched.h
-index f4b3640dadb8..aa015416c569 100644
---- a/include/linux/sched.h
-+++ b/include/linux/sched.h
-@@ -1657,7 +1657,7 @@ current_restore_flags(unsigned long orig_flags, unsigned long flags)
- }
+diff --git a/include/linux/cpuset.h b/include/linux/cpuset.h
+index 3261a45f97d1..b70224370832 100644
+--- a/include/linux/cpuset.h
++++ b/include/linux/cpuset.h
+@@ -55,6 +55,8 @@ extern void cpuset_init_smp(void);
+ extern void cpuset_force_rebuild(void);
+ extern void cpuset_update_active_cpus(void);
+ extern void cpuset_wait_for_hotplug(void);
++extern void inc_dl_tasks_cs(struct task_struct *task);
++extern void dec_dl_tasks_cs(struct task_struct *task);
+ extern void cpuset_lock(void);
+ extern void cpuset_unlock(void);
+ extern void cpuset_cpus_allowed(struct task_struct *p, struct cpumask *mask);
+@@ -178,6 +180,8 @@ static inline void cpuset_update_active_cpus(void)
  
- extern int cpuset_cpumask_can_shrink(const struct cpumask *cur, const struct cpumask *trial);
--extern int task_can_attach(struct task_struct *p, const struct cpumask *cs_effective_cpus);
-+extern int task_can_attach(struct task_struct *p);
- extern int dl_bw_alloc(int cpu, u64 dl_bw);
- extern void dl_bw_free(int cpu, u64 dl_bw);
- #ifdef CONFIG_SMP
+ static inline void cpuset_wait_for_hotplug(void) { }
+ 
++static inline void inc_dl_tasks_cs(struct task_struct *task) { }
++static inline void dec_dl_tasks_cs(struct task_struct *task) { }
+ static inline void cpuset_lock(void) { }
+ static inline void cpuset_unlock(void) { }
+ 
+diff --git a/kernel/cgroup/cgroup.c b/kernel/cgroup/cgroup.c
+index 70ed21607e47..11400eba6124 100644
+--- a/kernel/cgroup/cgroup.c
++++ b/kernel/cgroup/cgroup.c
+@@ -56,6 +56,7 @@
+ #include <linux/file.h>
+ #include <linux/fs_parser.h>
+ #include <linux/sched/cputime.h>
++#include <linux/sched/deadline.h>
+ #include <linux/psi.h>
+ #include <net/sock.h>
+ 
+@@ -6326,6 +6327,9 @@ void cgroup_exit(struct task_struct *tsk)
+ 	list_add_tail(&tsk->cg_list, &cset->dying_tasks);
+ 	cset->nr_tasks--;
+ 
++	if (dl_task(tsk))
++		dec_dl_tasks_cs(tsk);
++
+ 	WARN_ON_ONCE(cgroup_task_frozen(tsk));
+ 	if (unlikely(cgroup_task_freeze(tsk)))
+ 		cgroup_update_frozen(task_dfl_cgroup(tsk));
 diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
-index 6c69e715b05a..195f9cccab20 100644
+index 8f31ed881938..fa8684c790a9 100644
 --- a/kernel/cgroup/cpuset.c
 +++ b/kernel/cgroup/cpuset.c
-@@ -167,6 +167,8 @@ struct cpuset {
- 	 * know when to rebuild associated root domain bandwidth information.
+@@ -161,6 +161,12 @@ struct cpuset {
  	 */
- 	int nr_deadline_tasks;
-+	int nr_migrate_dl_tasks;
-+	u64 sum_migrate_dl_bw;
+ 	int use_parent_ecpus;
+ 	int child_ecpus_count;
++
++	/*
++	 * number of SCHED_DEADLINE tasks attached to this cpuset, so that we
++	 * know when to rebuild associated root domain bandwidth information.
++	 */
++	int nr_deadline_tasks;
  };
  
  /*
-@@ -2168,16 +2170,23 @@ static int fmeter_getrate(struct fmeter *fmp)
+@@ -206,6 +212,20 @@ static inline struct cpuset *parent_cs(struct cpuset *cs)
+ 	return css_cs(cs->css.parent);
+ }
  
- static struct cpuset *cpuset_attach_old_cs;
- 
-+static void reset_migrate_dl_data(struct cpuset *cs)
++void inc_dl_tasks_cs(struct task_struct *p)
 +{
-+	cs->nr_migrate_dl_tasks = 0;
-+	cs->sum_migrate_dl_bw = 0;
++	struct cpuset *cs = task_cs(p);
++
++	cs->nr_deadline_tasks++;
 +}
 +
- /* Called by cgroups to determine if a cpuset is usable; cpuset_mutex held */
- static int cpuset_can_attach(struct cgroup_taskset *tset)
- {
- 	struct cgroup_subsys_state *css;
--	struct cpuset *cs;
-+	struct cpuset *cs, *oldcs;
- 	struct task_struct *task;
- 	int ret;
- 
- 	/* used later by cpuset_attach() */
- 	cpuset_attach_old_cs = task_cs(cgroup_taskset_first(tset, &css));
-+	oldcs = cpuset_attach_old_cs;
- 	cs = css_cs(css);
- 
- 	mutex_lock(&cpuset_mutex);
-@@ -2189,7 +2198,7 @@ static int cpuset_can_attach(struct cgroup_taskset *tset)
- 		goto out_unlock;
- 
- 	cgroup_taskset_for_each(task, css, tset) {
--		ret = task_can_attach(task, cs->effective_cpus);
-+		ret = task_can_attach(task);
++void dec_dl_tasks_cs(struct task_struct *p)
++{
++	struct cpuset *cs = task_cs(p);
++
++	cs->nr_deadline_tasks--;
++}
++
+ /* bits in struct cpuset flags field */
+ typedef enum {
+ 	CS_ONLINE,
+@@ -2172,6 +2192,11 @@ static int cpuset_can_attach(struct cgroup_taskset *tset)
+ 		ret = security_task_setscheduler(task);
  		if (ret)
  			goto out_unlock;
- 		ret = security_task_setscheduler(task);
-@@ -2197,11 +2206,31 @@ static int cpuset_can_attach(struct cgroup_taskset *tset)
- 			goto out_unlock;
- 
- 		if (dl_task(task)) {
--			cs->nr_deadline_tasks++;
--			cpuset_attach_old_cs->nr_deadline_tasks--;
-+			cs->nr_migrate_dl_tasks++;
-+			cs->sum_migrate_dl_bw += task->dl.dl_bw;
- 		}
++
++		if (dl_task(task)) {
++			cs->nr_deadline_tasks++;
++			cpuset_attach_old_cs->nr_deadline_tasks--;
++		}
  	}
  
-+	if (!cs->nr_migrate_dl_tasks)
-+		goto out_success;
-+
-+	if (!cpumask_intersects(oldcs->effective_cpus, cs->effective_cpus)) {
-+		int cpu = cpumask_any_and(cpu_active_mask, cs->effective_cpus);
-+
-+		if (unlikely(cpu >= nr_cpu_ids)) {
-+			reset_migrate_dl_data(cs);
-+			ret = -EINVAL;
-+			goto out_unlock;
-+		}
-+
-+		ret = dl_bw_alloc(cpu, cs->sum_migrate_dl_bw);
-+		if (ret) {
-+			reset_migrate_dl_data(cs);
-+			goto out_unlock;
-+		}
-+	}
-+
-+out_success:
  	/*
- 	 * Mark attach is in progress.  This makes validate_change() fail
- 	 * changes which zero cpus/mems_allowed.
-@@ -2225,6 +2254,14 @@ static void cpuset_cancel_attach(struct cgroup_taskset *tset)
- 	cs->attach_in_progress--;
- 	if (!cs->attach_in_progress)
- 		wake_up(&cpuset_attach_wq);
+diff --git a/kernel/sched/deadline.c b/kernel/sched/deadline.c
+index f59cb3e8a613..7d66c31db46c 100644
+--- a/kernel/sched/deadline.c
++++ b/kernel/sched/deadline.c
+@@ -17,6 +17,7 @@
+  */
+ #include "sched.h"
+ #include "pelt.h"
++#include <linux/cpuset.h>
+ 
+ struct dl_bandwidth def_dl_bandwidth;
+ 
+@@ -2417,6 +2418,12 @@ static void switched_from_dl(struct rq *rq, struct task_struct *p)
+ 	if (task_on_rq_queued(p) && p->dl.dl_runtime)
+ 		task_non_contending(p);
+ 
++	/*
++	 * In case a task is setscheduled out from SCHED_DEADLINE we need to
++	 * keep track of that on its cpuset (for correct bandwidth tracking).
++	 */
++	dec_dl_tasks_cs(p);
 +
-+	if (cs->nr_migrate_dl_tasks) {
-+		int cpu = cpumask_any(cs->effective_cpus);
+ 	if (!task_on_rq_queued(p)) {
+ 		/*
+ 		 * Inactive timer is armed. However, p is leaving DEADLINE and
+@@ -2457,6 +2464,12 @@ static void switched_to_dl(struct rq *rq, struct task_struct *p)
+ 	if (hrtimer_try_to_cancel(&p->dl.inactive_timer) == 1)
+ 		put_task_struct(p);
+ 
++	/*
++	 * In case a task is setscheduled to SCHED_DEADLINE we need to keep
++	 * track of that on its cpuset (for correct bandwidth tracking).
++	 */
++	inc_dl_tasks_cs(p);
 +
-+		dl_bw_free(cpu, cs->sum_migrate_dl_bw);
-+		reset_migrate_dl_data(cs);
-+	}
-+
- 	mutex_unlock(&cpuset_mutex);
- }
- 
-@@ -2299,6 +2336,12 @@ static void cpuset_attach(struct cgroup_taskset *tset)
- 
- 	cs->old_mems_allowed = cpuset_attach_nodemask_to;
- 
-+	if (cs->nr_migrate_dl_tasks) {
-+		cs->nr_deadline_tasks += cs->nr_migrate_dl_tasks;
-+		oldcs->nr_deadline_tasks -= cs->nr_migrate_dl_tasks;
-+		reset_migrate_dl_data(cs);
-+	}
-+
- 	cs->attach_in_progress--;
- 	if (!cs->attach_in_progress)
- 		wake_up(&cpuset_attach_wq);
-diff --git a/kernel/sched/core.c b/kernel/sched/core.c
-index 3cfcd2059a66..40f40f359c5d 100644
---- a/kernel/sched/core.c
-+++ b/kernel/sched/core.c
-@@ -6600,8 +6600,7 @@ int cpuset_cpumask_can_shrink(const struct cpumask *cur,
- 	return ret;
- }
- 
--int task_can_attach(struct task_struct *p,
--		    const struct cpumask *cs_effective_cpus)
-+int task_can_attach(struct task_struct *p)
- {
- 	int ret = 0;
- 
-@@ -6614,21 +6613,9 @@ int task_can_attach(struct task_struct *p,
- 	 * success of set_cpus_allowed_ptr() on all attached tasks
- 	 * before cpus_mask may be changed.
- 	 */
--	if (p->flags & PF_NO_SETAFFINITY) {
-+	if (p->flags & PF_NO_SETAFFINITY)
- 		ret = -EINVAL;
--		goto out;
--	}
--
--	if (dl_task(p) && !cpumask_intersects(task_rq(p)->rd->span,
--					      cs_effective_cpus)) {
--		int cpu = cpumask_any_and(cpu_active_mask, cs_effective_cpus);
- 
--		if (unlikely(cpu >= nr_cpu_ids))
--			return -EINVAL;
--		ret = dl_bw_alloc(cpu, p->dl.dl_bw);
--	}
--
--out:
- 	return ret;
- }
- 
+ 	/* If p is not queued we will update its parameters at next wakeup. */
+ 	if (!task_on_rq_queued(p)) {
+ 		add_rq_bw(&p->dl, &rq->dl);
 -- 
 2.34.1
 
