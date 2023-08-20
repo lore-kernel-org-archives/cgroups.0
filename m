@@ -1,42 +1,68 @@
-From: Waiman Long <longman@redhat.com>
-Subject: Re: [PATCH 0/6] Backport rework of deadline bandwidth restoration for
- 5.10.y
-Date: Sun, 20 Aug 2023 12:24:33 -0400
-Message-ID: <883a5a4f-b34e-689c-2fbd-7bf03db532eb@redhat.com>
-References: <20230820152144.517461-1-qyousef@layalina.io>
+From: Randy Dunlap <rdunlap-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
+Subject: Re: [PATCH 3/4] mm: Fix clean_record_shared_mapping_range kernel-doc
+Date: Sat, 19 Aug 2023 17:51:55 -0700
+Message-ID: <26481804-ae24-beb9-9374-8050b4ac070a@infradead.org>
+References: <20230818200630.2719595-1-willy@infradead.org>
+ <20230818200630.2719595-4-willy@infradead.org>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Return-path: <stable-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1692548683;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=LTIIx7UvbdXxFhLIfELCeFcfxNRehzpT464zSPyQ1Nc=;
-        b=I4QGbJwgxrqg7W8nQY0Czb1vHfAHboztEBAd/aDBFXAjFBC2cot8E+SWKLC/qNX7FugPHv
-        g0ta0rDHJHhFYfMrwRez5UxItpdKMyp+JgE8fBmZuXcRrRnqXeXxSFzmMYDtufhFiZtxoA
-        /6d07RpaiY3BAInoaHytP8+AUSQXuC8=
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
+        Content-Type:In-Reply-To:References:Cc:To:Subject:From:MIME-Version:Date:
+        Message-ID:Sender:Reply-To:Content-ID:Content-Description;
+        bh=gr55w12BJ8HanXJKtEGmjMkhrZT3R55wNuvQW7dICuQ=; b=IrDzPDlxB0+dYccoVG43B3F+hs
+        1OlUNYHcISxSlyVVSc8T51Mwcg65C6q7VnWkafRYHxD3dFvEEYGtOD9KEAxSoCDJ7Da2puA3fGkV9
+        eJ9DywZDzWlFeQpO6QKeCnC4Nhawgm/ffygvpMOLaYAMyt4FSo8DZwi7el7OMOEMWRmJmFIPkyl4/
+        VsrXJBWypxSwzvTdjaAoEnPmgcgfnsQ0jxjx4encoHDS/EKYzfUkCGWXxCaKII0nRHQbhAu4t+uFj
+        3zFVvICX17teJDcJ0YRGuXgvRB/943ATEPGfLkYE3q0wxfxCv3R3hZvABPRqbfAUqPptEsuPX43Q/
+        q1FIV9rQ==;
 Content-Language: en-US
-In-Reply-To: <20230820152144.517461-1-qyousef@layalina.io>
+In-Reply-To: <20230818200630.2719595-4-willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"; format="flowed"
-To: Qais Yousef <qyousef@layalina.io>, stable@vger.kernel.org
-Cc: Juri Lelli <juri.lelli@redhat.com>, Tejun Heo <tj@kernel.org>, Dietmar Eggemann <dietmar.eggemann@arm.com>, Peter Zijlstra <peterz@infradead.org>, Vincent Guittot <vincent.guittot@linaro.org>, Ingo Molnar <mingo@kernel.org>, Hao Luo <haoluo@google.com>, John Stultz <jstultz@google.com>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+To: "Matthew Wilcox (Oracle)" <willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+Cc: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Mike Rapoport <rppt-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
 
-On 8/20/23 11:21, Qais Yousef wrote:
-> This is a backport of the series that fixes the way deadline bandwidth
-> restoration is done which is causing noticeable delay on resume path. It also
-> converts the cpuset lock back into a mutex which some users on Android too.
-> I lack the details but AFAIU the read/write semaphore was slower on high
-> contention.
 
-Note that it was a percpu rwsem before this patch series. It was not a 
-regular rwsem. Percpu rwsem isn't designed to handle high write lock 
-contention. A regular rwsem should be similar to mutex in performance 
-when handling high write lock contention.
+On 8/18/23 13:06, Matthew Wilcox (Oracle) wrote:
+> Turn the a), b) into an unordered ReST list and remove the unnecessary
+> 'Note:' prefix.
+> 
+> Signed-off-by: Matthew Wilcox (Oracle) <willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
 
-Cheers,
-Longman
+Acked-by: Randy Dunlap <rdunlap-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
+Thanks.
 
+> ---
+>  mm/mapping_dirty_helpers.c | 11 ++++++-----
+>  1 file changed, 6 insertions(+), 5 deletions(-)
+> 
+> diff --git a/mm/mapping_dirty_helpers.c b/mm/mapping_dirty_helpers.c
+> index a26dd8bcfcdb..2f8829b3541a 100644
+> --- a/mm/mapping_dirty_helpers.c
+> +++ b/mm/mapping_dirty_helpers.c
+> @@ -288,13 +288,14 @@ EXPORT_SYMBOL_GPL(wp_shared_mapping_range);
+>   * @end: Pointer to the number of the last set bit in @bitmap.
+>   * none set. The value is modified as new bits are set by the function.
+>   *
+> - * Note: When this function returns there is no guarantee that a CPU has
+> + * When this function returns there is no guarantee that a CPU has
+>   * not already dirtied new ptes. However it will not clean any ptes not
+>   * reported in the bitmap. The guarantees are as follows:
+> - * a) All ptes dirty when the function starts executing will end up recorded
+> - *    in the bitmap.
+> - * b) All ptes dirtied after that will either remain dirty, be recorded in the
+> - *    bitmap or both.
+> + *
+> + * * All ptes dirty when the function starts executing will end up recorded
+> + *   in the bitmap.
+> + * * All ptes dirtied after that will either remain dirty, be recorded in the
+> + *   bitmap or both.
+>   *
+>   * If a caller needs to make sure all dirty ptes are picked up and none
+>   * additional are added, it first needs to write-protect the address-space
+
+-- 
+~Randy
