@@ -1,24 +1,24 @@
 From: Qais Yousef <qyousef-wp2msK0BRk8tq7phqP6ubQ@public.gmane.org>
 Subject: [PATCH 1/6] cgroup/cpuset: Rename functions dealing with DEADLINE accounting
-Date: Sun, 20 Aug 2023 16:21:39 +0100
-Message-ID: <20230820152144.517461-2-qyousef@layalina.io>
-References: <20230820152144.517461-1-qyousef@layalina.io>
+Date: Sun, 20 Aug 2023 16:22:53 +0100
+Message-ID: <20230820152258.518128-2-qyousef@layalina.io>
+References: <20230820152258.518128-1-qyousef@layalina.io>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=layalina-io.20221208.gappssmtp.com; s=20221208; t=1692544911; x=1693149711;
+        d=layalina-io.20221208.gappssmtp.com; s=20221208; t=1692544984; x=1693149784;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=Uy6sCJLNuc3jH8uH7wQ4wwiTwUaAG3ufvYgTJlzJMXY=;
-        b=sh6ZPyRqXR9Cgl9kNLAJeZIU3Atyf8mIKlI6KuOiX3LLMMQ9qdM4Ap4W5pl2Q2RFJV
-         szXa6z5c2LLoQgjH38/9lO+GZDR+cQ9Nov4QNzPLwbTDffuhbHKUgSvBLZ76yoxW+Rmd
-         qPISR53JMgl4zka960zCMB4/W4+kyqYB5pCn29x3fHjRhFoxFlkFphs2jyTkTAAOc4bY
-         bhJEdlOTcK1jQoBLkhpQviAbQ4hy5f2dxl5nhIIolIgKrRbFpBBn3vOZUc7fBUccstjI
-         9oNKqMYcCB5UeY4GPE9x18G51QcN7dtNpLmumeFphb5I4pc5u2SJyFCK0v4MeIKbD91S
-         4QWg==
-In-Reply-To: <20230820152144.517461-1-qyousef-wp2msK0BRk8tq7phqP6ubQ@public.gmane.org>
+        bh=uGKyARVcdmy9q5MfP+wkkLHAfHG9qOLxVevsPvfEUVw=;
+        b=Do2ue4Y+/ZJOLugGYY0E8XKnkh9k1nN16G/r8pNiNB8wL7R+lB1wpGoFR6ywwmy7qw
+         J8ErqEw9djt9QocokoWK7Ywi4ywptdG0OJMBfLDYI9x8Cwb+2L/yATE4CrbXXAFlUKj3
+         cYY8FXqWdB+D2nCgiyOWvghOJFvIusHcSwyAlMiIfzeLymDuiakdsPXqrIzbdlryHjFB
+         4Uk3Is7HTsYRQUZMl8OXxk03i0ojN0vj+lD9F5mZzgmHrOFRYPlXrE/H0itmIfNNA1Ms
+         N6KUV74wfhdGdzU5l8EHZJpAJm3XaTrSUm13DtPdO52XjbS3rOfOBAR1PDkcHp0tlQlZ
+         gMqw==
+In-Reply-To: <20230820152258.518128-1-qyousef-wp2msK0BRk8tq7phqP6ubQ@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 To: stable-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
@@ -46,10 +46,10 @@ Signed-off-by: Qais Yousef (Google) <qyousef-wp2msK0BRk8tq7phqP6ubQ@public.gmane
  1 file changed, 4 insertions(+), 4 deletions(-)
 
 diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
-index b476591168dc..96b56226a304 100644
+index fb895eaf3a7c..de078f6c1144 100644
 --- a/kernel/cgroup/cpuset.c
 +++ b/kernel/cgroup/cpuset.c
-@@ -912,7 +912,7 @@ static int generate_sched_domains(cpumask_var_t **domains,
+@@ -940,7 +940,7 @@ static int generate_sched_domains(cpumask_var_t **domains,
  	return ndoms;
  }
  
@@ -58,7 +58,7 @@ index b476591168dc..96b56226a304 100644
  {
  	struct css_task_iter it;
  	struct task_struct *task;
-@@ -925,7 +925,7 @@ static void update_tasks_root_domain(struct cpuset *cs)
+@@ -953,7 +953,7 @@ static void update_tasks_root_domain(struct cpuset *cs)
  	css_task_iter_end(&it);
  }
  
@@ -67,7 +67,7 @@ index b476591168dc..96b56226a304 100644
  {
  	struct cpuset *cs = NULL;
  	struct cgroup_subsys_state *pos_css;
-@@ -953,7 +953,7 @@ static void rebuild_root_domains(void)
+@@ -981,7 +981,7 @@ static void rebuild_root_domains(void)
  
  		rcu_read_unlock();
  
@@ -76,7 +76,7 @@ index b476591168dc..96b56226a304 100644
  
  		rcu_read_lock();
  		css_put(&cs->css);
-@@ -967,7 +967,7 @@ partition_and_rebuild_sched_domains(int ndoms_new, cpumask_var_t doms_new[],
+@@ -995,7 +995,7 @@ partition_and_rebuild_sched_domains(int ndoms_new, cpumask_var_t doms_new[],
  {
  	mutex_lock(&sched_domains_mutex);
  	partition_sched_domains_locked(ndoms_new, doms_new, dattr_new);
