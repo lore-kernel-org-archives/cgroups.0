@@ -1,145 +1,162 @@
-From: Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Subject: [PATCH 3/3] mm: memcg: use non-unified stats flushing for userspace reads
-Date: Mon, 21 Aug 2023 20:54:58 +0000
-Message-ID: <20230821205458.1764662-4-yosryahmed@google.com>
-References: <20230821205458.1764662-1-yosryahmed@google.com>
+From: Yosry Ahmed <yosryahmed@google.com>
+Subject: Re: [PATCH] mm: memcg: provide accurate stats for userspace reads
+Date: Mon, 21 Aug 2023 13:58:22 -0700
+Message-ID: <CAJD7tkZNfaWcMmCizRMfw_EQ0=nZ+xUkLEBdxvp5GK3+poV2aQ@mail.gmail.com>
+References: <CAJD7tkYBFz-gZ2QsHxUMT=t0KNXs66S-zzMPebadHx9zaG0Q3w@mail.gmail.com>
+ <ZNrITZVTf2EILRJq@slm.duckdns.org> <CAJD7tkaXwoF-faApweAmm7Db7jAuS3EO7hVvdyVtqW_rE+T9Vg@mail.gmail.com>
+ <ZNrLO5PAEZw4yjI9@slm.duckdns.org> <CAJD7tkYgCySTX28zK9GZiWwsabR4nv7M2hQ57y12si-fqtv7zg@mail.gmail.com>
+ <CALvZod6KRxiDzrppCgx+=SHg2+96nFE5crwXCKwe9PZbWM_6cQ@mail.gmail.com>
+ <CAJD7tkaUzhvZPohpo1F8TUKRPuXH7bjDeg9VCzN2CbywQbRutQ@mail.gmail.com>
+ <CALvZod6HUtYhDaXiwXSrcwfxLSrZ37sZhKY1Mg4kmpDFk13aYw@mail.gmail.com>
+ <CAJD7tkYzr2cg-aQ899vfqB4jR7iP83t8f-Z4AH8d9iW-yw-nnQ@mail.gmail.com>
+ <CALvZod441xBoXzhqLWTZ+xnqDOFkHmvrzspr9NAr+nybqXgS-A@mail.gmail.com>
+ <ZN0eqq4hLRYQPHCI@slm.duckdns.org> <CAJD7tkYSk-73c1=5vmuRdykAQO=pJSkQFgRqkpdfnh7f-Zufkw@mail.gmail.com>
+ <CAJD7tkYGeYzQ=zVm_Ewgqfc4u1udSvjThLxOrghmMHO=rqvaDA@mail.gmail.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Transfer-Encoding: quoted-printable
+Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20221208; t=1692651323; x=1693256123;
-        h=cc:to:from:subject:message-id:references:mime-version:in-reply-to
-         :date:from:to:cc:subject:date:message-id:reply-to;
-        bh=II24bAIuGVg2YyiqwiCMReE2mVTE25qmDUAuXBGJ4Ok=;
-        b=KmH6O0vZ9sBp7HHBae0PwJCnRa8ujSumjQ0AlsGJ1pi5KbQIxpyrvcCO0krC5ztY+u
-         N8ljzGOzIX6jer2HV1GxzZPCURYnOZC6D1lrlNXbpCHNDpRJB0nITXoN0mon6iaCy4e1
-         QkiLalZ25r1ZxplkbXN+NiDkoW8GDcA+Uj1Shac+wu5psshTskn8q8Lf6B5bKZffckoB
-         jKrEuG2Vw03aNvOQfFER14s8IkriQqDS2U2JTgSKgCtg7TmcMJ9q3B18uyHoSMZM7lnj
-         ioj21pXqwFO1fJbsQwZ0rFa+1Vc07Ob56riuci9Ea7Iw13vPBzZ96Hsd5+OoDw6zGDiR
-         3h5Q==
-In-Reply-To: <20230821205458.1764662-1-yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+        d=google.com; s=20221208; t=1692651539; x=1693256339;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=IbpQ6J2JbDbq9n2VQq/6we3rCBQZ2LXRiD+xapKkGXw=;
+        b=U8qf/ENQTd2sCVviFY7hWlKIaAEj8on8IZmLHdWDcLUdn1xNFXFpQF+vAd/IQdGYHC
+         opuIAkQgOKr5sqPudhkcPSXI4KMe3WtfotnVUiiHfqZZxttlyJRij/6AJTOdzKjdiycI
+         N1TZStvj86wlanUfbAFjmwF/jq9QGZyWZXVvuBa/9vYvSqpkxlJNRNDzCj35JQf3iw2c
+         dP8ARm2Tu1mUD25pF9mpx9GTvjhq+swewTo0XQfKxKNrhB9GXY8vH5adzkEuuMMsunxB
+         7xF3zah+cMidpUjvkveU5hTtr9xzy9mK24FfKEXNDFHF2Q7ah4RPJVwGuK5IdJ91wr0i
+         F/sw==
+In-Reply-To: <CAJD7tkYGeYzQ=zVm_Ewgqfc4u1udSvjThLxOrghmMHO=rqvaDA@mail.gmail.com>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
-Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Muchun Song <muchun.song-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Ivan Babrou <ivan-lDpJ742SOEtZroRs9YW3xA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Content-Type: text/plain; charset="utf-8"
+To: Tejun Heo <tj@kernel.org>
+Cc: Shakeel Butt <shakeelb@google.com>, Michal Hocko <mhocko@suse.com>, Johannes Weiner <hannes@cmpxchg.org>, Roman Gushchin <roman.gushchin@linux.dev>, Andrew Morton <akpm@linux-foundation.org>, Muchun Song <muchun.song@linux.dev>, cgroups@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org, Ivan Babrou <ivan@cloudflare.com>
 
-Unified flushing allows for great concurrency for paths that attempt to
-flush the stats, at the expense of potential staleness and a single
-flusher paying the extra cost of flushing the full tree.
+On Fri, Aug 18, 2023 at 2:40=E2=80=AFPM Yosry Ahmed <yosryahmed@google.com>=
+ wrote:
+>
+> On Wed, Aug 16, 2023 at 3:35=E2=80=AFPM Yosry Ahmed <yosryahmed@google.co=
+m> wrote:
+> >
+> > On Wed, Aug 16, 2023 at 12:08=E2=80=AFPM Tejun Heo <tj@kernel.org> wrot=
+e:
+> > >
+> > > Hello,
+> > >
+> > > On Wed, Aug 16, 2023 at 10:11:20AM -0700, Shakeel Butt wrote:
+> > > > These options are not white and black and there can be something in
+> > > > between but let me be very clear on what I don't want and would NAC=
+K.
+> > >
+> > > I'm not a big fan of interfaces with hidden states. What you're propo=
+sing
+> > > isn't strictly that but it's still a bit nasty. So, if we can get by =
+without
+> > > doing that, that'd be great.
+> >
+> > Agreed. I will try to send patches soon implementing option (2) above,
+> > basically removing unified flushing. I will try to document any
+> > potential regressions that may happen and how we may fix them. Ideally
+> > we see no regressions.
+> >
+> > >
+> > > > I don't want a global sleepable lock which can be taken by potentia=
+lly
+> > > > any application running on the system. We have seen similar global
+> > > > locks causing isolation and priority inversion issues in production=
+.
+> > > > So, not another lock which needs to be taken under extreme conditio=
+n
+> > > > (reading stats under OOM) by a high priority task (node controller)
+> > > > and might be held by a low priority task.
+> > >
+> > > Yeah, this is a real concern. Those priority inversions do occur and =
+can be
+> > > serious but causing serious problems under memory pressure usually re=
+quires
+> > > involving memory allocations and IOs. Here, it's just all CPU. So, at=
+ least
+> > > in OOM conditions, this shouldn't be in the way (the system wouldn't =
+have
+> > > anything else to do anyway).
+> > >
+> > > It is true that this still can lead to priority through CPU competiti=
+on tho.
+> > > However, that problem isn't necessarily solved by what you're suggest=
+ing
+> > > either unless you want to restrict explicit flushing based on permiss=
+ions
+> > > which is another can of worms.
+> >
+> > Right. Also in the case of a mutex, if we disable preemption while
+> > holding the mutex, this makes sure that whoever holding the mutex does
+> > not starve waiters. Essentially the difference would be that waiters
+> > will sleep with the mutex instead of spinning, but the mutex holder
+> > itself wouldn't sleep.
+> >
+> > I will make this a separate patch, just in case it's too
+> > controversial. Switching the spinlock to a mutex should not block
+> > removing unified flushing.
+> >
+> > >
+> > > My preference is not exposing this in user interface. This is mostly =
+arising
+> > > from internal implementation details and isn't what users necessarily=
+ care
+> > > about. There are many things we can do on the kernel side to make tra=
+de-offs
+> > > among overhead, staleness and priority inversions. If we make this an
+> > > explicit userland interface behavior, we get locked into that semanti=
+cs
+> > > which we'll likely regret in some future.
+> > >
+> >
+> > Yeah that's what I am trying to do here as well.  I will try to follow
+> > up on this discussion with patches soon.
+> >
+> > Thanks everyone!
+>
+> So status update. I tried implementing removing unified flushing. I
+> can send the patches if it helps visualize things, but essentially
+> mem_cgroup_flush_stats{_ratelimited} takes a memcg argument that it
+> passes to cgroup_flush_stats(). No skipping if someone else is
+> flushing (stats_flush_ongoing) and no threshold at which we start
+> flushing (stats_flush_threshold).
+>
+> I tested this by some synthetic reclaim stress test that I wrote,
+> because reclaim is the easiest way to stress in-kernel flushing. I
+> basically create 10s or 100s cgroups and run workers in them that keep
+> allocating memory beyond the limit. I also run workers that
+> periodically read the stats.
+>
+> Removing unified flushing makes such a synthetic benchmark 2-3 times
+> slower. This is not surprising, as all these concurrent reclaimers
+> used to just skip flushing, regardless of whether or not they get
+> accurate stats. Now I don't know how realistic such a benchmark is,
+> but if there's a workload somewhere that runs into such conditions it
+> will surely regress.
+>
+> Sorry if the above is difficult to visualize. I can send the patches
+> and the test script if it makes things easier, I just didn't want to
+> overwhelm the thread.
+>
+> I think there are 2 options going forward:
+> (a) If we believe removing unified flushing is the best way forward
+> for most use cases, then we need to find a better way of testing this
+> approach practically. Any suggestions here are useful.
+>
+> (b) Decide that it's too expensive to remove unified flushing
+> completely, at least for in-kernel flushers that can see a lot of
+> concurrency. We can only remove unified flushing for userspace reads.
+> Only flush the memcg being read and never skip (essentially what Ivan
+> tried). There are already some flushing contexts that do this (e.g.
+> zswap memcg charging code). I believe as long as there isn't a lot of
+> concurrency in these paths it should be fine to skip unified flushing
+> for them, and keep it only for in-kernel flushers.
 
-This tradeoff makes sense for in-kernel flushers that may observe high
-concurrency (e.g. reclaim, refault). For userspace readers, stale stats
-may be unexpected and problematic, especially when such stats are used
-for critical paths such as userspace OOM handling. Additionally, a
-userspace reader will occasionally pay the cost of flushing the entire
-hierarchy, which also causes problems in some cases [1].
+I sent a short series implementing (b) above:
+https://lore.kernel.org/lkml/20230821205458.1764662-1-yosryahmed@google.com=
+/
 
-Opt userspace reads out of unified flushing. This makes the cost of
-reading the stats more predictable (proportional to the size of the
-subtree), as well as the freshness of the stats. Since userspace readers
-are not expected to have similar concurrency to in-kernel flushers,
-serializing them among themselves and among in-kernel flushers should be
-okay.
-
-This was tested on a machine with 256 cpus by running a synthetic test
-The script that creates 50 top-level cgroups, each with 5 children (250
-leaf cgroups). Each leaf cgroup has 10 processes running that allocate
-memory beyond the cgroup limit, invoking reclaim (which is an in-kernel
-unified flusher). Concurrently, one thread is spawned per-cgroup to read
-the stats every second (including root, top-level, and leaf cgroups --
-so total 251 threads). No regressions were observed in the total running
-time; which means that non-unified userspace readers are not slowing
-down in-kernel unified flushers:
-
-Base (mm-unstable):
-
-real	0m18.228s
-user	0m9.463s
-sys	60m15.879s
-
-real	0m20.828s
-user	0m8.535s
-sys	70m12.364s
-
-real	0m19.789s
-user	0m9.177s
-sys	66m10.798s
-
-With this patch:
-
-real	0m19.632s
-user	0m8.608s
-sys	64m23.483s
-
-real	0m18.463s
-user	0m7.465s
-sys	60m34.089s
-
-real	0m20.309s
-user	0m7.754s
-sys	68m2.392s
-
-Additionally, the average latency for reading stats went from roughly
-40ms to 5 ms, because we mostly read the stats of leaf cgroups in this
-script, so we only have to flush one cgroup, instead of *sometimes*
-flushing the entire tree with unified flushing.
-
-[1]https://lore.kernel.org/lkml/CABWYdi0c6__rh-K7dcM_pkf9BJdTRtAU08M43KO9ME4-dsgfoQ-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org/
-
-Signed-off-by: Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
----
- mm/memcontrol.c | 10 +++++-----
- 1 file changed, 5 insertions(+), 5 deletions(-)
-
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index 90f08b35fa77..d3b13a06224c 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -1606,7 +1606,7 @@ static void memcg_stat_format(struct mem_cgroup *memcg, struct seq_buf *s)
- 	 *
- 	 * Current memory state:
- 	 */
--	mem_cgroup_try_flush_stats();
-+	do_stats_flush(memcg);
- 
- 	for (i = 0; i < ARRAY_SIZE(memory_stats); i++) {
- 		u64 size;
-@@ -4048,7 +4048,7 @@ static int memcg_numa_stat_show(struct seq_file *m, void *v)
- 	int nid;
- 	struct mem_cgroup *memcg = mem_cgroup_from_seq(m);
- 
--	mem_cgroup_try_flush_stats();
-+	do_stats_flush(memcg);
- 
- 	for (stat = stats; stat < stats + ARRAY_SIZE(stats); stat++) {
- 		seq_printf(m, "%s=%lu", stat->name,
-@@ -4123,7 +4123,7 @@ static void memcg1_stat_format(struct mem_cgroup *memcg, struct seq_buf *s)
- 
- 	BUILD_BUG_ON(ARRAY_SIZE(memcg1_stat_names) != ARRAY_SIZE(memcg1_stats));
- 
--	mem_cgroup_try_flush_stats();
-+	do_stats_flush(memcg);
- 
- 	for (i = 0; i < ARRAY_SIZE(memcg1_stats); i++) {
- 		unsigned long nr;
-@@ -4625,7 +4625,7 @@ void mem_cgroup_wb_stats(struct bdi_writeback *wb, unsigned long *pfilepages,
- 	struct mem_cgroup *memcg = mem_cgroup_from_css(wb->memcg_css);
- 	struct mem_cgroup *parent;
- 
--	mem_cgroup_try_flush_stats();
-+	do_stats_flush(memcg);
- 
- 	*pdirty = memcg_page_state(memcg, NR_FILE_DIRTY);
- 	*pwriteback = memcg_page_state(memcg, NR_WRITEBACK);
-@@ -6640,7 +6640,7 @@ static int memory_numa_stat_show(struct seq_file *m, void *v)
- 	int i;
- 	struct mem_cgroup *memcg = mem_cgroup_from_seq(m);
- 
--	mem_cgroup_try_flush_stats();
-+	do_stats_flush(memcg);
- 
- 	for (i = 0; i < ARRAY_SIZE(memory_stats); i++) {
- 		int nid;
--- 
-2.42.0.rc1.204.g551eb34607-goog
-
+Basic testing shows that it works well.
