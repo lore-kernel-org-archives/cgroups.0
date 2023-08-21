@@ -1,39 +1,48 @@
-From: Anastasia Belova <abelova-5XX0/9e/aDUTdZ/Q6W51Bg@public.gmane.org>
-Subject: [PATCH] mm: memcomtrol: add warning in case of rtpn = NULL
-Date: Mon, 21 Aug 2023 17:20:51 +0300
-Message-ID: <20230821142051.31889-1-abelova@astralinux.ru>
+From: Matthew Wilcox <willy@infradead.org>
+Subject: Re: [PATCH] mm: memcomtrol: add warning in case of rtpn = NULL
+Date: Mon, 21 Aug 2023 15:25:53 +0100
+Message-ID: <ZONz8Zqwg4cuCGCe@casper.infradead.org>
+References: <20230821142051.31889-1-abelova@astralinux.ru>
 Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
+        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=VBLWbhiJ5Y+LfXHbB2wVDfY3nQIzq6btaVbaMioHfUU=; b=Ob3wf54jrst6pqEm8LXcrMnm9m
+        zF7UTAPg+4G/Z5X/gaXsOzPf8/oPTBEWz7UZaZpozdHcPyh6WMpbkSp/NnhWspC2e246EiVEkjRLu
+        d3r7s09NuEB8Dzoy+YQ6SoiraRD8K64+WiEeWNAcaI+BDL6Zjqsfy32mpPbM7Ey+s3JKw4YnuH0rI
+        yxCGVA86DMQPQD/4plE7ar23F5o6tS5xMrhF41ovILa9yv/Ro1TbOpb/vfms/cgwecRF2N8Mt/v0B
+        +JDa9sUH+GMEPdmmz6EU1+XUSOYsC4qneL7wNd5mx3dBA0dplXzyTpv9rJoKsObtBWZB73hH/XH+m
+        LoJI12zg==;
+Content-Disposition: inline
+In-Reply-To: <20230821142051.31889-1-abelova@astralinux.ru>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Cc: Anastasia Belova <abelova-5XX0/9e/aDUTdZ/Q6W51Bg@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Muchun Song <muchun.song-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, lvc-project-tpLiQldItUH5n4uC9ZG1Ww@public.gmane.org
+Content-Transfer-Encoding: 7bit
+To: Anastasia Belova <abelova@astralinux.ru>
+Cc: Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, Roman Gushchin <roman.gushchin@linux.dev>, Shakeel Butt <shakeelb@google.com>, Muchun Song <muchun.song@linux.dev>, Andrew Morton <akpm@linux-foundation.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, cgroups@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org, lvc-project@linuxtesting.org
 
-kzalloc_node may return NULL. So rtpn should be
-checked before dereference in mem_cgroup_init.
+On Mon, Aug 21, 2023 at 05:20:51PM +0300, Anastasia Belova wrote:
+> kzalloc_node may return NULL. So rtpn should be
+> checked before dereference in mem_cgroup_init.
 
-Found by Linux Verification Center (linuxtesting.org) with SVACE.
+What good will this do?
 
-Fixes: 95a045f63d98 ("mm: memcontrol: consolidate memory controller initi=
-alization")
-Signed-off-by: Anastasia Belova <abelova-5XX0/9e/aDUTdZ/Q6W51Bg@public.gmane.org>
----
- mm/memcontrol.c | 1 +
- 1 file changed, 1 insertion(+)
+>  
+>  		rtpn = kzalloc_node(sizeof(*rtpn), GFP_KERNEL, node);
+> +		WARN_ON(!rtpn);
+>  
+>  		rtpn->rb_root = RB_ROOT;
 
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index e8ca4bdcb03c..7998dbf3c7cd 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -7377,6 +7377,7 @@ static int __init mem_cgroup_init(void)
- 		struct mem_cgroup_tree_per_node *rtpn;
-=20
- 		rtpn =3D kzalloc_node(sizeof(*rtpn), GFP_KERNEL, node);
-+		WARN_ON(!rtpn);
-=20
- 		rtpn->rb_root =3D RB_ROOT;
- 		rtpn->rb_rightmost =3D NULL;
---=20
-2.30.2
+so you'll get a warning right before you get a crash, which will provide
+exactly the same information.  And you'd already have a warning that
+the memory allocation had failed (because __GFP_NOWARN wasn't set).
+So you've increased the amount of data from 2 dumps to 3 without providing
+any neww information.
+
+If you _did_ something to avoid the crash, there might be a point to
+this, but the fact is that small GFP_KERNEL allocations _don't_ fail.
+You need to teach your tool that, or you'll be overwhelmed with
+false positives.
 
