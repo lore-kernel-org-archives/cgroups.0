@@ -1,110 +1,67 @@
-From: Mike Rapoport <rppt-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH 4/4] mm: Add orphaned kernel-doc to the rst files.
-Date: Mon, 21 Aug 2023 17:55:48 +0300
-Message-ID: <20230821145548.GE9849@kernel.org>
-References: <20230818200630.2719595-1-willy@infradead.org>
- <20230818200630.2719595-5-willy@infradead.org>
+From: Yosry Ahmed <yosryahmed@google.com>
+Subject: [PATCH 0/3] memcg: non-unified flushing for userspace stats
+Date: Mon, 21 Aug 2023 20:54:55 +0000
+Message-ID: <20230821205458.1764662-1-yosryahmed@google.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1692629774;
-        bh=JzR+Jr/LbLcg3R+8alMuMPEoX/4+6Yrco6xCCTNqmmI=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=k6PRd1kpuLk4oe04CIlvYkbQxfyIIYRNqOxLmMc04/9+2rjj6g6Ut6iZXGnB5Ldva
-         v78sy92rfrpcA9dkV2fWwK5KAxV63wElUa1P0Kz0SrgZ+C6WLBADa9pHaMiWpzUjeP
-         pDXYif0syTetoV2/u3tD8eHuoHSSF3puadWCBKN5fCxji6kkL+FwQK2d7WRKj3Pzpl
-         XmjCoW66X28u7nHPxmdleBUquaXrn/OPV3d4YcEYIKUYKRD6tO/vOKVN0YopTn9mSS
-         q0HT2omqz5fVrqL+HOfrcvit2vpzIfJDMcJyWlW+Oii9WwU4w9pvdaLBeFZgvxadqr
-         5eExUI6OVyqHQ==
-Content-Disposition: inline
-In-Reply-To: <20230818200630.2719595-5-willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20221208; t=1692651301; x=1693256101;
+        h=cc:to:from:subject:message-id:mime-version:date:from:to:cc:subject
+         :date:message-id:reply-to;
+        bh=kxBzNRuKT3FK2xpnd0zI9fHxTniHJWyags4nIBlfqGo=;
+        b=VapQsrLTsIuBdCvmJlnkDnAHLl9uwXYyl4pfelPDhgZfBCaf5UuJw/4Df69B1daF5W
+         gCChcu7YIx6NYtBnd3VU2xjT4LtJH6C/uxHDF7ZH/XP0VUHjmQ+px5zJGjW8u6Pyo3Oj
+         yj/4S4uWg7n3+4ebepXr/CillPdeCpQ5UBCWFWdu+mHPXoiOzfNDuksE7H66dECQgKT6
+         m1AWJKvfJ8wt7vsYfZxBy4KRUdv08ei+xhliPGh0s3uythMQplNFuk0BbdjYyAumUH0L
+         lIyQdhxBjiYhgCOEDtvGnrQH3rbPBra4M16LsQzP1POusk9aDfzM4/jaIedXoVa+MnbM
+         DV9g==
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: "Matthew Wilcox (Oracle)" <willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
-Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, Roman Gushchin <roman.gushchin@linux.dev>, Shakeel Butt <shakeelb@google.com>, Muchun Song <muchun.song@linux.dev>, Ivan Babrou <ivan@cloudflare.com>, Tejun Heo <tj@kernel.org>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, Yosry Ahmed <yosryahmed@google.com>
 
-On Fri, Aug 18, 2023 at 09:06:30PM +0100, Matthew Wilcox (Oracle) wrote:
-> There are many files in mm/ that contain kernel-doc which is not
-> currently published on kernel.org.  Some of it is easily categorisable,
-> but most of it is going into the miscellaneous documentation section to
-> be organised later.
-> 
-> Some files aren't ready to be included; they contain documentation with
-> build errors.  Or they're nommu.c which duplicates documentation from
-> "real" MMU systems.  Those files are noted with a # mark (although really
-> anything which isn't a recognised directive would do to prevent inclusion)
-> 
-> Signed-off-by: Matthew Wilcox (Oracle) <willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
+Most memcg flushing contexts using "unified" flushing, where only one
+flusher is allowed at a time (others skip), and all flushers need to
+flush the entire tree. This works well with high concurrency, which
+mostly comes from in-kernel flushers (e.g. reclaim, refault, ..).
 
-Acked-by: Mike Rapoport (IBM) <rppt-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+For userspace reads, unified flushing leads to non-deterministic stats
+staleness and reading cost. This series clarifies and documents the
+differences between unified and non-unified flushing (patches 1 & 2),
+then opts userspace reads out of unified flushing (patch 3).
 
-> ---
->  Documentation/core-api/mm-api.rst | 25 +++++++++++++++++++++++++
->  Documentation/mm/highmem.rst      |  1 +
->  Documentation/mm/zsmalloc.rst     |  5 +++++
->  3 files changed, 31 insertions(+)
-> 
-> diff --git a/Documentation/core-api/mm-api.rst b/Documentation/core-api/mm-api.rst
-> index f5dde5bceaea..2d091c873d1e 100644
-> --- a/Documentation/core-api/mm-api.rst
-> +++ b/Documentation/core-api/mm-api.rst
-> @@ -115,3 +115,28 @@ More Memory Management Functions
->  .. kernel-doc:: include/linux/mmzone.h
->  .. kernel-doc:: mm/util.c
->     :functions: folio_mapping
-> +
-> +.. kernel-doc:: mm/rmap.c
-> +.. kernel-doc:: mm/migrate.c
-> +.. kernel-doc:: mm/mmap.c
-> +.. kernel-doc:: mm/kmemleak.c
-> +.. #kernel-doc:: mm/hmm.c (build warnings)
-> +.. kernel-doc:: mm/memremap.c
-> +.. kernel-doc:: mm/hugetlb.c
-> +.. kernel-doc:: mm/swap.c
-> +.. kernel-doc:: mm/zpool.c
-> +.. kernel-doc:: mm/memcontrol.c
-> +.. #kernel-doc:: mm/memory-tiers.c (build warnings)
-> +.. kernel-doc:: mm/shmem.c
-> +.. kernel-doc:: mm/migrate_device.c
-> +.. #kernel-doc:: mm/nommu.c (duplicates kernel-doc from other files)
-> +.. kernel-doc:: mm/mapping_dirty_helpers.c
-> +.. #kernel-doc:: mm/memory-failure.c (build warnings)
-> +.. kernel-doc:: mm/percpu.c
-> +.. kernel-doc:: mm/maccess.c
-> +.. kernel-doc:: mm/vmscan.c
-> +.. kernel-doc:: mm/memory_hotplug.c
-> +.. kernel-doc:: mm/mmu_notifier.c
-> +.. kernel-doc:: mm/balloon_compaction.c
-> +.. kernel-doc:: mm/huge_memory.c
-> +.. kernel-doc:: mm/io-mapping.c
-> diff --git a/Documentation/mm/highmem.rst b/Documentation/mm/highmem.rst
-> index fe68e02fc8ff..9d92e3f2b3d6 100644
-> --- a/Documentation/mm/highmem.rst
-> +++ b/Documentation/mm/highmem.rst
-> @@ -209,4 +209,5 @@ Functions
->  =========
->  
->  .. kernel-doc:: include/linux/highmem.h
-> +.. kernel-doc:: mm/highmem.c
->  .. kernel-doc:: include/linux/highmem-internal.h
-> diff --git a/Documentation/mm/zsmalloc.rst b/Documentation/mm/zsmalloc.rst
-> index a3c26d587752..76902835e68e 100644
-> --- a/Documentation/mm/zsmalloc.rst
-> +++ b/Documentation/mm/zsmalloc.rst
-> @@ -263,3 +263,8 @@ is heavy internal fragmentation and zspool compaction is unable to relocate
->  objects and release zspages. In these cases, it is recommended to decrease
->  the limit on the size of the zspage chains (as specified by the
->  CONFIG_ZSMALLOC_CHAIN_SIZE option).
-> +
-> +Functions
-> +=========
-> +
-> +.. kernel-doc:: mm/zsmalloc.c
-> -- 
-> 2.40.1
-> 
+This patch series is a follow up on the discussion in [1]. That was a
+patch that proposed that userspace reads wait for ongoing unified
+flushers to complete before returning. There were concerns about the
+latency that this introduces to userspace reads, especially with ongoing
+reports of expensive stat reads even with unified flushing. Hence, this
+series follows a different approach, by opting userspace reads out of
+unified flushing completely. The cost of userspace reads are now
+determinstic, and depend on the size of the subtree being read. This
+should fix both the *sometimes* expensive reads (due to flushing the
+entire tree) and occasional staless (due to skipping flushing).
+
+I attempted to remove unified flushing completely, but noticed that
+in-kernel flushers with high concurrency (e.g. hundreds of concurrent
+reclaimers). This sort of concurrency is not expected from userspace
+reads. More details about testing and some numbers in the last patch's
+changelog.
+
+[1]https://lore.kernel.org/lkml/20230809045810.1659356-1-yosryahmed@google.com/
+[2]https://lore.kernel.org/lkml/CABWYdi0c6__rh-K7dcM_pkf9BJdTRtAU08M43KO9ME4-dsgfoQ@mail.gmail.com/
+
+Yosry Ahmed (3):
+  mm: memcg: properly name and document unified stats flushing
+  mm: memcg: add a helper for non-unified stats flushing
+  mm: memcg: use non-unified stats flushing for userspace reads
+
+ include/linux/memcontrol.h |  8 ++---
+ mm/memcontrol.c            | 74 +++++++++++++++++++++++++++-----------
+ mm/vmscan.c                |  2 +-
+ mm/workingset.c            |  4 +--
+ 4 files changed, 60 insertions(+), 28 deletions(-)
 
 -- 
-Sincerely yours,
-Mike.
+2.42.0.rc1.204.g551eb34607-goog
+
