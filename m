@@ -1,45 +1,39 @@
-From: Greg KH <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>
-Subject: Re: [PATCH 0/6] Backport rework of deadline bandwidth restoration
- for 6.1.y
-Date: Mon, 21 Aug 2023 15:26:03 +0200
-Message-ID: <2023082140-dreaded-hemstitch-84b9@gregkh>
-References: <20230820152417.518806-1-qyousef@layalina.io>
+From: Anastasia Belova <abelova-5XX0/9e/aDUTdZ/Q6W51Bg@public.gmane.org>
+Subject: [PATCH] mm: memcomtrol: add warning in case of rtpn = NULL
+Date: Mon, 21 Aug 2023 17:20:51 +0300
+Message-ID: <20230821142051.31889-1-abelova@astralinux.ru>
 Mime-Version: 1.0
+Content-Transfer-Encoding: quoted-printable
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linuxfoundation.org;
-        s=korg; t=1692624366;
-        bh=wo0AEq7EVLKcJNozUw706Dbt/mblagvb19WS0DocC+A=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=V/U5FQXfP7owWoyl3u1JxwD1cHjEUFKG09746gRFkXDP1fKWXpzqEutKp5T+YVlIw
-         6D6CY94Zcc1Emt2MBjamEHENJfOnn/7+afTAltLYm3pkNlcrocUDqmGateOT0InCAn
-         AUxwehIro76XKzfZ3YhS8n84UtJuLMwwG0dhQEG0=
-Content-Disposition: inline
-In-Reply-To: <20230820152417.518806-1-qyousef-wp2msK0BRk8tq7phqP6ubQ@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Qais Yousef <qyousef-wp2msK0BRk8tq7phqP6ubQ@public.gmane.org>
-Cc: stable-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Juri Lelli <juri.lelli-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Dietmar Eggemann <dietmar.eggemann-5wv7dgnIgG8@public.gmane.org>, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Vincent Guittot <vincent.guittot-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, Ingo Molnar <mingo-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Hao Luo <haoluo-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, John Stultz <jstultz-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Cc: Anastasia Belova <abelova-5XX0/9e/aDUTdZ/Q6W51Bg@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Muchun Song <muchun.song-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, lvc-project-tpLiQldItUH5n4uC9ZG1Ww@public.gmane.org
 
-On Sun, Aug 20, 2023 at 04:24:11PM +0100, Qais Yousef wrote:
-> This is a backport of the series that fixes the way deadline bandwidth
-> restoration is done which is causing noticeable delay on resume path. It also
-> converts the cpuset lock back into a mutex which some users on Android too.
-> I lack the details but AFAIU the read/write semaphore was slower on high
-> contention.
-> 
-> Compile tested against some randconfig for different archs and tested against
-> android14-6.1 GKI kernel.
-> 
-> My testing is limited to resume path only; and general phone usage to make sure
-> nothing falls apart. Would be good to have some deadline specific testing done
-> too.
-> 
-> Based on v6.1.46
+kzalloc_node may return NULL. So rtpn should be
+checked before dereference in mem_cgroup_init.
 
-I can't take these for only some branches, as you know.  Any reason why
-you didn't also do 6.4.y?
+Found by Linux Verification Center (linuxtesting.org) with SVACE.
 
-thanks,
+Fixes: 95a045f63d98 ("mm: memcontrol: consolidate memory controller initi=
+alization")
+Signed-off-by: Anastasia Belova <abelova-5XX0/9e/aDUTdZ/Q6W51Bg@public.gmane.org>
+---
+ mm/memcontrol.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-greg k-h
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index e8ca4bdcb03c..7998dbf3c7cd 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -7377,6 +7377,7 @@ static int __init mem_cgroup_init(void)
+ 		struct mem_cgroup_tree_per_node *rtpn;
+=20
+ 		rtpn =3D kzalloc_node(sizeof(*rtpn), GFP_KERNEL, node);
++		WARN_ON(!rtpn);
+=20
+ 		rtpn->rb_root =3D RB_ROOT;
+ 		rtpn->rb_rightmost =3D NULL;
+--=20
+2.30.2
+
