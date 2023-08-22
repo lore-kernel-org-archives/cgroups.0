@@ -1,100 +1,86 @@
-From: Liu Shixin <liushixin2-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Subject: [PATCH v2] mm: vmscan: reclaim anon pages if there are swapcache pages
-Date: Tue, 22 Aug 2023 10:49:01 +0800
-Message-ID: <20230822024901.2412520-1-liushixin2@huawei.com>
+From: Gang Li <gang.li@linux.dev>
+Subject: Re: [PATCH v4] mm: oom: introduce cpuset oom
+Date: Tue, 22 Aug 2023 14:31:41 +0800
+Message-ID: <3ac6b49e-f605-6f8f-ba22-a411269cb818@linux.dev>
+References: <20230411065816.9798-1-ligang.bdlg@bytedance.com>
+ <ZDVwaqzOBNTpuR1w@dhcp22.suse.cz>
+ <9ba0de31-b9b8-fb10-011e-b24e9dba5ccd@linux.dev>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7BIT
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
+        t=1692685909;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=PkmheFjFxExaCu9L5a48Fws0uehvzL2G5MIM97l1kY8=;
+        b=QMPCPA7FLfHqCiIiLXVPW69lDGE0fSXD2eJYvbjXmXmsgFpE/SjABJKQ/WbI6jyP0vVU8P
+        QOGjpKqk+XX2DeE0jyNCysjqWaFWXWicyMZJZNtpMuoMcDIBQmB4q0Lp76NINGsMS2M+Pm
+        15JKLKEgl8zodMWAv3PMCxJ8/bcy5tc=
+Content-Language: en-US
+In-Reply-To: <9ba0de31-b9b8-fb10-011e-b24e9dba5ccd@linux.dev>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-To: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Muchun Song <muchun.song-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, wangkefeng.wang-hv44wF8Li93QT0dZR+AlfA@public.gmane.org
-Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Liu Shixin <liushixin2-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Content-Type: text/plain; charset="utf-8"; format="flowed"
+To: Michal Hocko <mhocko@suse.com>, Waiman Long <longman@redhat.com>
+Cc: cgroups@vger.kernel.org, linux-mm@kvack.org, rientjes@google.com, Zefan Li <lizefan.x@bytedance.com>, linux-kernel@vger.kernel.org, gang.li@linux.dev
 
-When spaces of swap devices are exhausted, only file pages can be reclaimed.
-But there are still some swapcache pages in anon lru list. This can lead
-to a premature out-of-memory.
+Hi,
 
-This problem can be fixed by checking number of swapcache pages in
-can_reclaim_anon_pages(). For memcg v2, there are swapcache stat that can
-be used directly. For memcg v1, use total_swapcache_pages() instead, which
-may not accurate but can solve the problem.
+On 2023/8/17 16:40, Gang Li wrote:
+> On 2023/4/11 22:36, Michal Hocko wrote:
+>> I believe it still wouldn't hurt to be more specific here.
+>> CONSTRAINT_CPUSET is rather obscure. Looking at this just makes my head
+>> spin.
+>>          /* Check this allocation failure is caused by cpuset's wall 
+>> function */
+>>          for_each_zone_zonelist_nodemask(zone, z, oc->zonelist,
+>>                          highest_zoneidx, oc->nodemask)
+>>                  if (!cpuset_zone_allowed(zone, oc->gfp_mask))
+>>                          cpuset_limited = true;
+>> > Does this even work properly and why? prepare_alloc_pages sets
+>> oc->nodemask to current->mems_allowed but the above gives us
+>> cpuset_limited only if there is at least one zone/node that is not
+>> oc->nodemask compatible. So it seems like this wouldn't ever get set
+>> unless oc->nodemask got reset somewhere. This is a maze indeed.Is there
+> 
+> In __alloc_pages:
+> ```
+> /*
+>   * Restore the original nodemask if it was potentially replaced with
+>   * &cpuset_current_mems_allowed to optimize the fast-path attempt.
+>   */
+> ac.nodemask = nodemask;
+> page = __alloc_pages_slowpath(alloc_gfp, order, &ac);
+> 
+> ```
+> 
+> __alloc_pages set ac.nodemask back to mempolicy before call
+> __alloc_pages_slowpath.
+> 
+> 
+>> any reason why we cannot rely on __GFP_HARWALL here? Or should we
+> 
+> In prepare_alloc_pages:
+> ```
+> if (cpusets_enabled()) {
+>      *alloc_gfp |= __GFP_HARDWALL;
+>      ...
+> }
+> ```
+> 
+> Since __GFP_HARDWALL is set as long as cpuset is enabled, I think we can
+> use it to determine if we are under the constraint of CPUSET.
+> 
 
-Signed-off-by: Liu Shixin <liushixin2-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
----
- include/linux/swap.h |  6 ++++++
- mm/memcontrol.c      |  8 ++++++++
- mm/vmscan.c          | 12 ++++++++----
- 3 files changed, 22 insertions(+), 4 deletions(-)
+We have two nodemasks: one from the parameters of __alloc_pages and
+another from cpuset. If the node allowed by the parameters of
+__alloc_pages is not allowed by cpuset, it means that this page
+allocation is constrained by cpuset, and thus CONSTRAINT_CPUSET can be
+returned.
 
-diff --git a/include/linux/swap.h b/include/linux/swap.h
-index 456546443f1f..0318e918bfa4 100644
---- a/include/linux/swap.h
-+++ b/include/linux/swap.h
-@@ -669,6 +669,7 @@ static inline void mem_cgroup_uncharge_swap(swp_entry_t entry, unsigned int nr_p
- }
- 
- extern long mem_cgroup_get_nr_swap_pages(struct mem_cgroup *memcg);
-+extern long mem_cgroup_get_nr_swapcache_pages(struct mem_cgroup *memcg);
- extern bool mem_cgroup_swap_full(struct folio *folio);
- #else
- static inline void mem_cgroup_swapout(struct folio *folio, swp_entry_t entry)
-@@ -691,6 +692,11 @@ static inline long mem_cgroup_get_nr_swap_pages(struct mem_cgroup *memcg)
- 	return get_nr_swap_pages();
- }
- 
-+static inline long mem_cgroup_get_nr_swapcache_pages(struct mem_cgroup *memcg)
-+{
-+	return total_swapcache_pages();
-+}
-+
- static inline bool mem_cgroup_swap_full(struct folio *folio)
- {
- 	return vm_swap_full();
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index e8ca4bdcb03c..3e578f41023e 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -7567,6 +7567,14 @@ long mem_cgroup_get_nr_swap_pages(struct mem_cgroup *memcg)
- 	return nr_swap_pages;
- }
- 
-+long mem_cgroup_get_nr_swapcache_pages(struct mem_cgroup *memcg)
-+{
-+	if (mem_cgroup_disabled() || do_memsw_account())
-+		return total_swapcache_pages();
-+
-+	return memcg_page_state(memcg, NR_SWAPCACHE);
-+}
-+
- bool mem_cgroup_swap_full(struct folio *folio)
- {
- 	struct mem_cgroup *memcg;
-diff --git a/mm/vmscan.c b/mm/vmscan.c
-index 7c33c5b653ef..bcb6279cbae7 100644
---- a/mm/vmscan.c
-+++ b/mm/vmscan.c
-@@ -609,13 +609,17 @@ static inline bool can_reclaim_anon_pages(struct mem_cgroup *memcg,
- 	if (memcg == NULL) {
- 		/*
- 		 * For non-memcg reclaim, is there
--		 * space in any swap device?
-+		 * space in any swap device or swapcache pages?
- 		 */
--		if (get_nr_swap_pages() > 0)
-+		if (get_nr_swap_pages() + total_swapcache_pages() > 0)
- 			return true;
- 	} else {
--		/* Is the memcg below its swap limit? */
--		if (mem_cgroup_get_nr_swap_pages(memcg) > 0)
-+		/*
-+		 * Is the memcg below its swap limit or is there swapcache
-+		 * pages can be freed?
-+		 */
-+		if (mem_cgroup_get_nr_swap_pages(memcg) +
-+		    mem_cgroup_get_nr_swapcache_pages(memcg) > 0)
- 			return true;
- 	}
- 
--- 
-2.25.1
+I guess this piece of code is reasonable and we can keep the
+code as it is.
 
+Thanks,
+Gang Li.
