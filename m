@@ -1,64 +1,68 @@
-From: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
-Subject: Re: [PATCH 3/3] mm: memcg: use non-unified stats flushing for
- userspace reads
-Date: Tue, 22 Aug 2023 11:06:03 +0200
-Message-ID: <ZOR6eyYfJYlxdMet@dhcp22.suse.cz>
+From: Michal =?utf-8?Q?Koutn=C3=BD?= <mkoutny@suse.com>
+Subject: Re: [PATCH 0/3] memcg: non-unified flushing for userspace stats
+Date: Tue, 22 Aug 2023 15:00:55 +0200
+Message-ID: <a4opjlmm5it3ujoypcgjfljfamjvr7gu34sc7lrjldfbqzz4lj@6w4lqdcfd3zu>
 References: <20230821205458.1764662-1-yosryahmed@google.com>
- <20230821205458.1764662-4-yosryahmed@google.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Type: multipart/signed; micalg=pgp-sha512;
+        protocol="application/pgp-signature"; boundary="rsgiuzyi263iyyyh"
+Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
-        t=1692695164; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+        t=1692709257; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
          mime-version:mime-version:content-type:content-type:
          in-reply-to:in-reply-to:references:references;
-        bh=PjhH5JJ/uYj/hECeKPplzMxBqTx0eSMbwEKi7pYJDLA=;
-        b=m2Duffi8ECPm5ogSxiwZKOFctpoO5fB08TMKXwxMq8yjY4G+cG8jzdmMe/oms4pw/lNOlt
-        5w9rj/Ky0czINnSBLoieks0aLYxh9a2faKlXMdN9+A2q7jnnzFcmLEeyigE2twSMeg+g3G
-        KCx7Wi4jeTs0OyFj8UFIEZm2MZOm3kQ=
+        bh=OAbqRGEAHu7Ri1BEFwHTiMJqbULQ9AggcksOng91Am0=;
+        b=cvqkpboFbqEuoqpJwUDKKnH2hSxO9sIKRD0OoHN68lpKaWPMvn6sYj3+y0FrVNkubvdd7y
+        fhRZvkxdGrVB+2klXgVvUwuoxPBUH8NGm3GOyNzDLkZAbcqa6o+Bcu80dpJ1LGXUdWbeAr
+        YktZZL9KkXW/Gqnkv6S94Mwwu6RQorc=
 Content-Disposition: inline
-In-Reply-To: <20230821205458.1764662-4-yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+In-Reply-To: <20230821205458.1764662-1-yosryahmed@google.com>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Muchun Song <muchun.song-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Ivan Babrou <ivan-lDpJ742SOEtZroRs9YW3xA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Yosry Ahmed <yosryahmed@google.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, Roman Gushchin <roman.gushchin@linux.dev>, Shakeel Butt <shakeelb@google.com>, Muchun Song <muchun.song@linux.dev>, Ivan Babrou <ivan@cloudflare.com>, Tejun Heo <tj@kernel.org>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Mon 21-08-23 20:54:58, Yosry Ahmed wrote:
-> Unified flushing allows for great concurrency for paths that attempt to
-> flush the stats, at the expense of potential staleness and a single
-> flusher paying the extra cost of flushing the full tree.
-> 
-> This tradeoff makes sense for in-kernel flushers that may observe high
-> concurrency (e.g. reclaim, refault). For userspace readers, stale stats
-> may be unexpected and problematic, especially when such stats are used
-> for critical paths such as userspace OOM handling. Additionally, a
-> userspace reader will occasionally pay the cost of flushing the entire
-> hierarchy, which also causes problems in some cases [1].
-> 
-> Opt userspace reads out of unified flushing. This makes the cost of
-> reading the stats more predictable (proportional to the size of the
-> subtree), as well as the freshness of the stats. Since userspace readers
-> are not expected to have similar concurrency to in-kernel flushers,
-> serializing them among themselves and among in-kernel flushers should be
-> okay.
-> 
-> This was tested on a machine with 256 cpus by running a synthetic test
-> The script that creates 50 top-level cgroups, each with 5 children (250
-> leaf cgroups). Each leaf cgroup has 10 processes running that allocate
-> memory beyond the cgroup limit, invoking reclaim (which is an in-kernel
-> unified flusher). Concurrently, one thread is spawned per-cgroup to read
-> the stats every second (including root, top-level, and leaf cgroups --
-> so total 251 threads). No regressions were observed in the total running
-> time; which means that non-unified userspace readers are not slowing
-> down in-kernel unified flushers:
 
-I have to admit I am rather confused by cgroup_rstat_flush (and
-cgroup_rstat_flush_locked). The former says it can block but the later
-doesn't ever block and even if it drops the cgroup_rstat_lock it merely
-cond_rescheds or busy loops. How much of a contention and yielding can
-you see with this patch? What is the worst case? How bad a random user
-can make the situation by going crazy and trying to flush from many
-different contexts?
--- 
-Michal Hocko
-SUSE Labs
+--rsgiuzyi263iyyyh
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+
+Hello.
+
+On Mon, Aug 21, 2023 at 08:54:55PM +0000, Yosry Ahmed <yosryahmed@google.com> wrote:
+> For userspace reads, unified flushing leads to non-deterministic stats
+> staleness and reading cost.
+
+I only skimed previous threads but I don't remember if it was resolved:
+a) periodic flushing was too much spaced for user space readers (i.e. 2s
+   delay is too much [1]),
+b) periodic flushing didn't catch up (i.e. full tree flush can
+   occassionaly take more than 2s) leading to extra staleness?
+
+[1] Assuming that nr_cpus*MEMCG_CHARGE_BATCH error bound is also too
+    much for userspace readers, correct?
+
+> The cost of userspace reads are now determinstic, and depend on the
+> size of the subtree being read. This should fix both the *sometimes*
+> expensive reads (due to flushing the entire tree) and occasional
+> staless (due to skipping flushing).
+
+This is nice, thanks to the atomic removal in the commit 0a2dc6ac3329
+("cgroup: remove cgroup_rstat_flush_atomic()"). I think the smaller
+chunks with yielding could be universally better (last words :-).
+
+Thanks,
+Michal
+
+
+--rsgiuzyi263iyyyh
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iHUEABYKAB0WIQQpEWyjXuwGT2dDBqAGvrMr/1gcjgUCZOSxhQAKCRAGvrMr/1gc
+jql9AP416SvKn+uj/hrokt/s6nOdeQdWlzpvkkf2UKZg17whHgD/SdSKRx0jIIbq
+nqT/QXyO3EYKtOWfLu6jR/PVNXm4+A8=
+=/E7c
+-----END PGP SIGNATURE-----
+
+--rsgiuzyi263iyyyh--
