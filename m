@@ -1,83 +1,130 @@
-From: Yosry Ahmed <yosryahmed@google.com>
-Subject: Re: [PATCH 2/3] mm: memcg: add a helper for non-unified stats flushing
-Date: Tue, 22 Aug 2023 09:48:54 -0700
-Message-ID: <CAJD7tkagAie6otamEEVZb5ohp_QUGdTKUNJTTXYfVaaxhtNcAg@mail.gmail.com>
-References: <20230821205458.1764662-1-yosryahmed@google.com>
- <20230821205458.1764662-3-yosryahmed@google.com> <y7vvyndehadwy5ouounm5oyo52bqhsysiizuphzki2h3bwpdpc@3hvaq6sp6f4k>
- <CAJD7tkaVuiMU-ifJiyH5d_W1hi9DnAymYJxzBxEKCVX+tU=OCA@mail.gmail.com> <5y3e32ek6owren3q5e3gzonzxzdhs53ihywj3mtbhz56hnizfy@fctafygsnfaq>
+From: Liu Shixin <liushixin2-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH v2] mm: vmscan: reclaim anon pages if there are swapcache
+ pages
+Date: Wed, 23 Aug 2023 10:00:58 +0800
+Message-ID: <50c49baf-d04a-f1e3-0d0e-7bb8e22c3889@huawei.com>
+References: <20230822024901.2412520-1-liushixin2@huawei.com>
+ <CAJD7tkZkYsopuqGH_Lo=kE4=HO33wmvK6mXhuq4p_KZ6pYuXtw@mail.gmail.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20221208; t=1692722970; x=1693327770;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=WJmDDFJoMLmcyBm51AyWwKm0mGOPqtKf1wtM4HOCd6M=;
-        b=z/ZcE0oHwC3zR8NDp4bW3XqoSpzVbY2KmnrUawT1fecWeKXgItsUwmoERgBzAVcrXt
-         OyqgwYNeGzzdww9YMqahsKQmONsJaB/JJngxFfXEnp7bUSHTUu9WUyrw2pwy0Xl+beCR
-         xPfA24TB0vtuT/DvwxcACnNjjh/mXTjp8Fv/0seZQuHIE6sv3WmXI94PMt//cvRPkiN9
-         8yqteKYSfo5q7OpO3Njcp0Pta5kxN8cxXNj+l5R7ZU0NrZdh++lNER4Y1IlEIp/OjzP7
-         JKTgrCeaXakGNXdf/8RZsCTLbe/LhI8+SRwvH4b+DRYsBUUFWyLxKFrIQQG8RVPfVytN
-         /Y1w==
-In-Reply-To: <5y3e32ek6owren3q5e3gzonzxzdhs53ihywj3mtbhz56hnizfy@fctafygsnfaq>
-List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="utf-8"
-To: =?UTF-8?Q?Michal_Koutn=C3=BD?= <mkoutny@suse.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, Roman Gushchin <roman.gushchin@linux.dev>, Shakeel Butt <shakeelb@google.com>, Muchun Song <muchun.song@linux.dev>, Ivan Babrou <ivan@cloudflare.com>, Tejun Heo <tj@kernel.org>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Transfer-Encoding: 8bit
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <CAJD7tkZkYsopuqGH_Lo=kE4=HO33wmvK6mXhuq4p_KZ6pYuXtw-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+List-ID: <cgroups.vger.kernel.org>
+To: Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Muchun Song <muchun.song-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, wangkefeng.wang-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
 
-On Tue, Aug 22, 2023 at 9:35=E2=80=AFAM Michal Koutn=C3=BD <mkoutny@suse.co=
-m> wrote:
+
+
+On 2023/8/23 0:35, Yosry Ahmed wrote:
+> On Mon, Aug 21, 2023 at 6:54 PM Liu Shixin <liushixin2-hv44wF8Li93QT0dZR+AlfA@public.gmane.org> wrote:
+>> When spaces of swap devices are exhausted, only file pages can be reclaimed.
+>> But there are still some swapcache pages in anon lru list. This can lead
+>> to a premature out-of-memory.
+>>
+>> This problem can be fixed by checking number of swapcache pages in
+>> can_reclaim_anon_pages(). For memcg v2, there are swapcache stat that can
+>> be used directly. For memcg v1, use total_swapcache_pages() instead, which
+>> may not accurate but can solve the problem.
+> Interesting find. I wonder if we really don't have any handling of
+> this situation.
+I have alreadly test this problem and can confirm that it is a real problem.
+With 9MB swap space and 10MB mem_cgroup limit，when allocate 15MB memory,
+there is a probability that OOM occurs.
 >
-> On Tue, Aug 22, 2023 at 09:00:06AM -0700, Yosry Ahmed <yosryahmed@google.=
-com> wrote:
-> > We can probably also kick FLUSH_TIME forward as well.
+>> Signed-off-by: Liu Shixin <liushixin2-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+>> ---
+>>  include/linux/swap.h |  6 ++++++
+>>  mm/memcontrol.c      |  8 ++++++++
+>>  mm/vmscan.c          | 12 ++++++++----
+>>  3 files changed, 22 insertions(+), 4 deletions(-)
+>>
+>> diff --git a/include/linux/swap.h b/include/linux/swap.h
+>> index 456546443f1f..0318e918bfa4 100644
+>> --- a/include/linux/swap.h
+>> +++ b/include/linux/swap.h
+>> @@ -669,6 +669,7 @@ static inline void mem_cgroup_uncharge_swap(swp_entry_t entry, unsigned int nr_p
+>>  }
+>>
+>>  extern long mem_cgroup_get_nr_swap_pages(struct mem_cgroup *memcg);
+>> +extern long mem_cgroup_get_nr_swapcache_pages(struct mem_cgroup *memcg);
+>>  extern bool mem_cgroup_swap_full(struct folio *folio);
+>>  #else
+>>  static inline void mem_cgroup_swapout(struct folio *folio, swp_entry_t entry)
+>> @@ -691,6 +692,11 @@ static inline long mem_cgroup_get_nr_swap_pages(struct mem_cgroup *memcg)
+>>         return get_nr_swap_pages();
+>>  }
+>>
+>> +static inline long mem_cgroup_get_nr_swapcache_pages(struct mem_cgroup *memcg)
+>> +{
+>> +       return total_swapcache_pages();
+>> +}
+>> +
+>>  static inline bool mem_cgroup_swap_full(struct folio *folio)
+>>  {
+>>         return vm_swap_full();
+>> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+>> index e8ca4bdcb03c..3e578f41023e 100644
+>> --- a/mm/memcontrol.c
+>> +++ b/mm/memcontrol.c
+>> @@ -7567,6 +7567,14 @@ long mem_cgroup_get_nr_swap_pages(struct mem_cgroup *memcg)
+>>         return nr_swap_pages;
+>>  }
+>>
+>> +long mem_cgroup_get_nr_swapcache_pages(struct mem_cgroup *memcg)
+>> +{
+>> +       if (mem_cgroup_disabled() || do_memsw_account())
+>> +               return total_swapcache_pages();
+>> +
+>> +       return memcg_page_state(memcg, NR_SWAPCACHE);
+>> +}
+> Is there a reason why we cannot use NR_SWAPCACHE for cgroup v1? Isn't
+> that being maintained regardless of cgroup version? It is not exposed
+> in cgroup v1's memory.stat, but I don't think there is a reason we
+> can't do that -- if only to document that it is being used with cgroup
+> v1.
+Thanks for your advice, it is more appropriate to use NR_SWAPCACH.
 >
-> True, they guard same work.
 >
-> > Perhaps I can move both into do_stats_flush() then. If I understand
-> > correctly this is what you mean?
+>> +
+>>  bool mem_cgroup_swap_full(struct folio *folio)
+>>  {
+>>         struct mem_cgroup *memcg;
+>> diff --git a/mm/vmscan.c b/mm/vmscan.c
+>> index 7c33c5b653ef..bcb6279cbae7 100644
+>> --- a/mm/vmscan.c
+>> +++ b/mm/vmscan.c
+>> @@ -609,13 +609,17 @@ static inline bool can_reclaim_anon_pages(struct mem_cgroup *memcg,
+>>         if (memcg == NULL) {
+>>                 /*
+>>                  * For non-memcg reclaim, is there
+>> -                * space in any swap device?
+>> +                * space in any swap device or swapcache pages?
+>>                  */
+>> -               if (get_nr_swap_pages() > 0)
+>> +               if (get_nr_swap_pages() + total_swapcache_pages() > 0)
+>>                         return true;
+>>         } else {
+>> -               /* Is the memcg below its swap limit? */
+>> -               if (mem_cgroup_get_nr_swap_pages(memcg) > 0)
+>> +               /*
+>> +                * Is the memcg below its swap limit or is there swapcache
+>> +                * pages can be freed?
+>> +                */
+>> +               if (mem_cgroup_get_nr_swap_pages(memcg) +
+>> +                   mem_cgroup_get_nr_swapcache_pages(memcg) > 0)
+>>                         return true;
+>>         }
+> I wonder if it would be more efficient to set a bit in struct
+> scan_control if we only are out of swap spaces but have swap cache
+> pages, and only isolate anon pages that are in the swap cache, instead
+> of isolating random anon pages. We may end up isolating pages that are
+> not in the swap cache for a few iterations and wasting cycles.
+Good idea. Thanks.
 >
-> Yes.
->
-> > What do you think?
->
-> The latter is certainly better looking code.
->
-> I wasn't sure at first about moving stats_flush_threshold reset before
-> actual flush but on second thought it should not be a significant change
-> - readers: may skip flushing, the values that they read should still be
->   below the error threshold,
-
-Unified readers will skip anyway as there's an ongoing flush,
-non-unified readers don't check the threshold anyway (with this patch
-series). So for readers it should not be a change.
-
-> - writers: may be slowed down a bit (because of conditional atomic write
->   optimization in memcg_rstat_updates), presumably not on average
->   though.
-
-Yeah writers will start doing atomic writes once a flush starts
-instead of once it ends. I don't think it will matter in practice
-though. The optimization is only effective if we manage to surpass the
-threshold before the periodic flusher (or any unified flusher) kicks
-in and resets it. If we start doing atomic writes earlier, then we
-will also stop earlier; the number of atomic writes should stay the
-same.
-
-I think the only difference will be the scenario where we start atomic
-writes early but the periodic flush happens before we reach the
-threshold, in which case we aren't doing a lot of updates anyway.
-
-I hope this makes _any_ sense :)
-
->
-> So the latter should work too.
+>> --
+>> 2.25.1
+>>
+> .
 >
 
-I will include that in v2. I will wait for a bit of further review
-comments on this version first.
-
-Thanks for taking a look!
-
-> Michal
