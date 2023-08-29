@@ -1,86 +1,59 @@
-From: Yosry Ahmed <yosryahmed@google.com>
-Subject: Re: [PATCH 3/3] mm: memcg: use non-unified stats flushing for
- userspace reads
-Date: Tue, 29 Aug 2023 13:20:34 -0700
-Message-ID: <CAJD7tkZn_7ppFB1B1V8tBEw12LXCnEOue2Beq6e19PkUAVHUSQ@mail.gmail.com>
-References: <ZOW2PZN8Sgqq6uR2@dhcp22.suse.cz> <CAJD7tka34WjtwBWfkTu8ZCEUkLm7h-AyCXpw=h34n4RZ5qBVwA@mail.gmail.com>
- <ZOcDLD/1WaOwWis9@dhcp22.suse.cz> <CAJD7tkZby2enWa8_Js8joHqFx_tHB=aRqHOizaSiXMUjvEei4g@mail.gmail.com>
- <CAJD7tkadEtjK_NFwRe8yhUh_Mdx9LCLmCuj5Ty-pqp1rHTb-DA@mail.gmail.com>
- <ZOhSyvDxAyYUJ45i@dhcp22.suse.cz> <ZO48h7c9qwQxEPPA@slm.duckdns.org>
- <CAJD7tkaQ1hD9HHyYTK_vfCQ9PCVZag7qMBueKyB+sEn=swvNJA@mail.gmail.com>
- <ZO5IuULSCXMe9_pN@slm.duckdns.org> <CAJD7tkYtnhemCLBqFqOVurfWEaCjKtyEM745JYRxFS0r5cpZwQ@mail.gmail.com>
- <ZO5RROsZ1VESCsMG@slm.duckdns.org>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH 1/2] cgroup: Print v1 cgroup.procs and tasks without
+ pidlists
+Date: Tue, 29 Aug 2023 11:01:59 -1000
+Message-ID: <ZO5cx9UhqBzP2QX-@slm.duckdns.org>
+References: <20230823174804.23632-1-mkoutny@suse.com>
+ <20230823174804.23632-2-mkoutny@suse.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: quoted-printable
 Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20221208; t=1693340471; x=1693945271; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=TOlYcqn8beQHjGoc0Rc5zdI+Fp8S0JCnlA3frimuCzk=;
-        b=nyA6kP+bHHClyA0VkxrhbCG/koc4svjXIbKSdfDmP78sWe3Ayia11iC026uAdafagz
-         8ciYB3b+09qlidGWMzXKopliiQwcRAp+xJ4qWmDolr4c46z2IKMPdivb4GtLBXLtFCZv
-         Uy+Ji531qs3ohqkb8KreIiL66sROhCex/56AxE8K3Fb7MDMa4hmWlK4lJTaSF2Ma6TAs
-         0rj11UPJqPlyOsO29bMF6q+ZNzafjpHv4ZEprOuHPx9twewVv/O19eKzKP8faKvhOJ/5
-         9PBCKtrwhPExRIqMZoDDq+PgKfyDktXCfdO18uKbnlf0ip0xrvnZj0n2BlS4CBcNWDcM
-         YSaA==
-In-Reply-To: <ZO5RROsZ1VESCsMG@slm.duckdns.org>
+        d=gmail.com; s=20221208; t=1693342922; x=1693947722; darn=vger.kernel.org;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :mime-version:references:message-id:subject:cc:to:from:date:sender
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=RMyy3L586kb8cKfelvrLkGkpSHTkexvGQpQjE1LwdFo=;
+        b=CyS5CPua06THdQxkbEFgECOylZrddrh+R/xL1V4Hgbp3Hp98GdIh394fmg3cEBkD4G
+         31IuNUsJfa0D1IstYXy7U4jYmK5+fO0hXlKm6aWD/Tcu2lap9D55BoANYlnFxseYEGxS
+         /caoQL8ZEsjObmP5rt/dgXpyl8bgoxPS8r3NpD6F7AEYq4DhYf03g/5zp98nmVY1kmvO
+         CdcTRviQiLJAKOsbOXWzqhVsErGjFQFXVH8E5LaGeuI+TyDsO0OgXAjSnL+S04g67LnL
+         2L4ufEIg+/53OGazOhUdQZNmPdXSL/2GsHeYoO4NFOw+jZF04peiGH0zNlmwEieLC34J
+         W9nA==
+Sender: Tejun Heo <htejun@gmail.com>
+Content-Disposition: inline
+In-Reply-To: <20230823174804.23632-2-mkoutny@suse.com>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="windows-1252"
-To: Tejun Heo <tj@kernel.org>
-Cc: Michal Hocko <mhocko@suse.com>, Andrew Morton <akpm@linux-foundation.org>, Johannes Weiner <hannes@cmpxchg.org>, Roman Gushchin <roman.gushchin@linux.dev>, Shakeel Butt <shakeelb@google.com>, Muchun Song <muchun.song@linux.dev>, Ivan Babrou <ivan@cloudflare.com>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset="iso-8859-1"
+To: Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny@suse.com>
+Cc: cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, Firo Yang <firo.yang@suse.com>
 
-On Tue, Aug 29, 2023 at 1:12=E2=80=AFPM Tejun Heo <tj@kernel.org> wrote:
->
-> Hello,
->
-> On Tue, Aug 29, 2023 at 12:54:06PM -0700, Yosry Ahmed wrote:
-> ...
-> > > Maybe leave the global lock as-is and gate the userland flushers with=
- a
-> > > mutex so that there's only ever one contenting on the rstat lock from
-> > > userland side?
-> >
-> > Waiman suggested this as well. We can do that for sure, although I
-> > think we should wait until we are sure it's needed.
-> >
-> > One question. If whoever is holding that mutex is either flushing with
-> > the spinlock held or spinning (i.e not sleepable or preemptable),
-> > wouldn't this be equivalent to just changing the spinlock with a mutex
-> > and disable preemption while holding it?
->
-> Well, it creates layering so that userspace can't flood the inner lock wh=
-ich
-> can cause contention issues for kernel side users. Not sleeping while
-> actively flushing is an side-effect too but the code at least doesn't loo=
-k
-> as anti-patterny as disabling preemption right after grabbing a mutex.
+Hello, Michal.
 
-I see. At most one kernel side flusher will be spinning for the lock
-at any given point anyway, but I guess having that one kernel side
-flusher competing against one user side flusher is better competing
-with N flushers.
+On Wed, Aug 23, 2023 at 07:48:03PM +0200, Michal Koutn=FD wrote:
+> pidlists are structure that allows printing cgroup member tasks in
+> sorted order and with proper pidns (in)visibility.
+>=20
+> The promise of sorted output was removed in the commit 7823da36ce8e
+> ("cgroups: update documentation of cgroups tasks and procs files") (more
+> than 13 years ago at the time of writing this).
 
-I will add a mutex on the userspace read side then and spin a v3.
-Hopefully this addresses Michal's concern as well. The lock dropping
-logic will still exist for the inner lock, but when one userspace
-reader drops the inner lock other readers won't be able to pick it up.
+While this is true, I'm not sure it'd be a good idea to change the behavior
+after all these years. Whoever is still using cgroup1 likely doens't mean to
+update their code at all and it's difficult to rule out odd-ball users that
+might have been depending on the ordered output knowingly or unknowingly.
 
->
-> I don't have a strong preference. As long as we stay away from introducin=
-g a
-> new user interface construct and can address the noticed scalability issu=
-es,
-> it should be fine. Note that there are other ways to address priority
-> inversions and contentions too - e.g. we can always bounce flushing to a
-> [kthread_]kworker and rate limit (or rather latency limit) how often
-> different classes of users can trigger flushing. I don't think we have to=
- go
-> there yet but if the simpler meaures don't work out, there are still many
-> ways to solve the problem within the kernel.
+> On systems that still use v1 hierarchies (e.g. systemd in non-unified
+> mode), pidlists are problematic because:
+> a) their cache unnecessarily busies workqueues (cgroup_pidlist_destroy_wq)
+> b) PID recycling [1] may lead to logging noise:
+> > seq_file: buggy .next function kernfs_seq_next did not update position =
+index
 
-I whole-heartedly agree with the preference to fix the problem within
-the kernel with minimal/none user space involvement.
+While I like the code reduction, I wonder whether the right course of action
+is just fixing the warning here.
 
-Thanks!
+Thanks.
+
+--=20
+tejun
