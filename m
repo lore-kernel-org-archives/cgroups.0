@@ -1,170 +1,59 @@
-From: "Huang, Ying" <ying.huang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
-Subject: Re: [PATCH v4] mm: vmscan: try to reclaim swapcache pages if no
- swap space
-Date: Tue, 29 Aug 2023 10:12:27 +0800
-Message-ID: <87y1hu4mwk.fsf@yhuang6-desk2.ccr.corp.intel.com>
-References: <20230829024104.1505530-1-liushixin2@huawei.com>
+From: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
+Subject: Re: [PATCH 3/3] mm: memcg: use non-unified stats flushing for
+ userspace reads
+Date: Tue, 29 Aug 2023 09:27:41 +0200
+Message-ID: <ZO2d7dT8gulMyb8g@dhcp22.suse.cz>
+References: <ZOcDLD/1WaOwWis9@dhcp22.suse.cz>
+ <CAJD7tkZby2enWa8_Js8joHqFx_tHB=aRqHOizaSiXMUjvEei4g@mail.gmail.com>
+ <CAJD7tkadEtjK_NFwRe8yhUh_Mdx9LCLmCuj5Ty-pqp1rHTb-DA@mail.gmail.com>
+ <ZOhSyvDxAyYUJ45i@dhcp22.suse.cz>
+ <CAJD7tkYPyb+2zOKqctQw-vhuwYRg85e6v2Y44xWJofHZ+F+YQw@mail.gmail.com>
+ <ZOzBgfzlGdrPD4gk@dhcp22.suse.cz>
+ <CAJD7tkakMcaR_6NygEXCt6GF8TOuzYAUQe1im+vu2F3G4jtz=w@mail.gmail.com>
+ <CALvZod7uxDd3Lrd3VwTTC-SDvqhdj2Ly-dYVswO=TBM=XTnkcg@mail.gmail.com>
+ <CAJD7tkbnvMCNfQwY_dmVe2SWR5NeN+3RzFhsVyimM1ATaX0D5A@mail.gmail.com>
+ <599b167c-deaf-4b92-aa8b-5767b8608483@redhat.com>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1693275275; x=1724811275;
-  h=from:to:cc:subject:references:date:in-reply-to:
-   message-id:mime-version;
-  bh=nR9wTrI9cfzWP5jUNG5QsV5f2sCU0io+s5Xq9+gWL5g=;
-  b=O+zNqBCKSdQOkaJUDhj5I8NUyj1lmHkxn7tQywOt0K3dMtvhnrDSMflU
-   /zNS1zTNLbYj+Tx/nrCjUhXnl/Jy+aErpn2TcW+CNFB0FnLAf+WhZkePK
-   LOT4YnqF7sJc88c8MOBKOTtW/FvQ9g+wtCvdOrsfsbMtaG5/opZyF0hm7
-   PBGfbVTX/3C6hmMKAUx+JEy+krcyp8d4YYZBlyJJ+abKD5nOLFD/Ri7Ge
-   9UD8fdjhsiCCJOLLALi4DfmbI0+Xu1301XQ7YcmcstoA3zRFXyvPQRpN1
-   ZFU51jrM+WVaOBULQTCMt5OcBNODc6ARV/lovtJoVUlPC71v67EwUoR7n
-   w==;
-In-Reply-To: <20230829024104.1505530-1-liushixin2-hv44wF8Li93QT0dZR+AlfA@public.gmane.org> (Liu Shixin's
-        message of "Tue, 29 Aug 2023 10:41:04 +0800")
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
+        t=1693294061; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=dQVt7ZAS3h7P9TWs6MRywImntPzLi7vWjCeWqczW/dg=;
+        b=vRtPLaqq11XecAmTHq2dlcBEu/g6yqdBioRszoAaLNULFSMb19oU7qqGZT+5RLT0dTCl/s
+        lSFUCG69b9+dF7PAvMR/seI8n+VXJUKB8Ske1TiNs6BC6TJryS8nzrbdYPEonTxhj3cNZ0
+        ragBTYGG3uSYLX6fMD7g+XhiJe7VIdI=
+Content-Disposition: inline
+In-Reply-To: <599b167c-deaf-4b92-aa8b-5767b8608483-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Liu Shixin <liushixin2-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Cc: Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Muchun Song <muchun.song-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, wangkefeng.wang-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
+To: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Cc: Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Muchun Song <muchun.song-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Ivan Babrou <ivan-lDpJ742SOEtZroRs9YW3xA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-Liu Shixin <liushixin2-hv44wF8Li93QT0dZR+AlfA@public.gmane.org> writes:
+On Mon 28-08-23 13:27:23, Waiman Long wrote:
+> 
+> On 8/28/23 13:07, Yosry Ahmed wrote:
+> > 
+> > > Here I agree with you. Let's go with the approach which is easy to
+> > > undo for now. Though I prefer the new explicit interface for flushing,
+> > > that step would be very hard to undo. Let's reevaluate if the proposed
+> > > approach shows negative impact on production traffic and I think
+> > > Cloudflare folks can give us the results soon.
+> > Do you prefer we also switch to using a mutex (with preemption
+> > disabled) to avoid the scenario Michal described where flushers give
+> > up the lock and sleep resulting in an unbounded wait time in the worst
+> > case?
+> 
+> Locking with mutex with preemption disabled is an oxymoron.
 
-> When spaces of swap devices are exhausted, only file pages can be reclaimed.
-> But there are still some swapcache pages in anon lru list. This can lead
-> to a premature out-of-memory.
->
-> The problem is found with such step:
->
->  Firstly, set a 9MB disk swap space, then create a cgroup with 10MB
->  memory limit, then runs an program to allocates about 15MB memory.
->
-> The problem occurs occasionally, which may need about 100 times.
->
-> Fix it by checking number of swapcache pages in can_reclaim_anon_pages().
-> If the number is not zero, return true either. Moreover, add a new bit
-> swapcache_only in struct scan_control to skip isolating anon pages that
-> are not swapcache when only swapcache pages can be reclaimed to accelerate
-> reclaim efficiency.
->
-> Link: https://lore.kernel.org/linux-mm/14e15f31-f3d3-4169-8ed9-fb36e57cf578-hv44wF8Li93QT0dZR+AlfA@public.gmane.org/
-> Signed-off-by: Liu Shixin <liushixin2-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-> Tested-by: Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+I believe Yosry wanted to disable preemption _after_ the lock is taken
+to reduce the time spent while it is held. The idea to use the mutex is
+to reduce spinning and more importantly to get rid of lock dropping
+part. It is not really clear (but unlikely) we can drop it while
+preserving the spinlock as the thing scales with O(#cgroups x #cpus)
+in the worst case.
 
-LGTM, Thanks!
-
-Reviewed-by: "Huang, Ying" <ying.huang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
-
-> ---
->  include/linux/swap.h |  6 ++++++
->  mm/memcontrol.c      |  8 ++++++++
->  mm/vmscan.c          | 29 +++++++++++++++++++++++++++--
->  3 files changed, 41 insertions(+), 2 deletions(-)
->
-> diff --git a/include/linux/swap.h b/include/linux/swap.h
-> index 456546443f1f..0318e918bfa4 100644
-> --- a/include/linux/swap.h
-> +++ b/include/linux/swap.h
-> @@ -669,6 +669,7 @@ static inline void mem_cgroup_uncharge_swap(swp_entry_t entry, unsigned int nr_p
->  }
->  
->  extern long mem_cgroup_get_nr_swap_pages(struct mem_cgroup *memcg);
-> +extern long mem_cgroup_get_nr_swapcache_pages(struct mem_cgroup *memcg);
->  extern bool mem_cgroup_swap_full(struct folio *folio);
->  #else
->  static inline void mem_cgroup_swapout(struct folio *folio, swp_entry_t entry)
-> @@ -691,6 +692,11 @@ static inline long mem_cgroup_get_nr_swap_pages(struct mem_cgroup *memcg)
->  	return get_nr_swap_pages();
->  }
->  
-> +static inline long mem_cgroup_get_nr_swapcache_pages(struct mem_cgroup *memcg)
-> +{
-> +	return total_swapcache_pages();
-> +}
-> +
->  static inline bool mem_cgroup_swap_full(struct folio *folio)
->  {
->  	return vm_swap_full();
-> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-> index e8ca4bdcb03c..c465829db92b 100644
-> --- a/mm/memcontrol.c
-> +++ b/mm/memcontrol.c
-> @@ -7567,6 +7567,14 @@ long mem_cgroup_get_nr_swap_pages(struct mem_cgroup *memcg)
->  	return nr_swap_pages;
->  }
->  
-> +long mem_cgroup_get_nr_swapcache_pages(struct mem_cgroup *memcg)
-> +{
-> +	if (mem_cgroup_disabled())
-> +		return total_swapcache_pages();
-> +
-> +	return memcg_page_state(memcg, NR_SWAPCACHE);
-> +}
-> +
->  bool mem_cgroup_swap_full(struct folio *folio)
->  {
->  	struct mem_cgroup *memcg;
-> diff --git a/mm/vmscan.c b/mm/vmscan.c
-> index 1080209a568b..e73e2df8828d 100644
-> --- a/mm/vmscan.c
-> +++ b/mm/vmscan.c
-> @@ -137,6 +137,9 @@ struct scan_control {
->  	/* Always discard instead of demoting to lower tier memory */
->  	unsigned int no_demotion:1;
->  
-> +	/* Swap space is exhausted, only reclaim swapcache for anon LRU */
-> +	unsigned int swapcache_only:1;
-> +
->  	/* Allocation order */
->  	s8 order;
->  
-> @@ -613,10 +616,20 @@ static inline bool can_reclaim_anon_pages(struct mem_cgroup *memcg,
->  		 */
->  		if (get_nr_swap_pages() > 0)
->  			return true;
-> +		/* Is there any swapcache pages to reclaim? */
-> +		if (total_swapcache_pages() > 0) {
-> +			sc->swapcache_only = 1;
-> +			return true;
-> +		}
->  	} else {
->  		/* Is the memcg below its swap limit? */
->  		if (mem_cgroup_get_nr_swap_pages(memcg) > 0)
->  			return true;
-> +		/* Is there any swapcache pages in memcg to reclaim? */
-> +		if (mem_cgroup_get_nr_swapcache_pages(memcg) > 0) {
-> +			sc->swapcache_only = 1;
-> +			return true;
-> +		}
->  	}
->  
->  	/*
-> @@ -2280,6 +2293,19 @@ static bool skip_cma(struct folio *folio, struct scan_control *sc)
->  }
->  #endif
->  
-> +static bool skip_isolate(struct folio *folio, struct scan_control *sc,
-> +			 enum lru_list lru)
-> +{
-> +	if (folio_zonenum(folio) > sc->reclaim_idx)
-> +		return true;
-> +	if (skip_cma(folio, sc))
-> +		return true;
-> +	if (unlikely(sc->swapcache_only && !is_file_lru(lru) &&
-> +	    !folio_test_swapcache(folio)))
-> +		return true;
-> +	return false;
-> +}
-> +
->  /*
->   * Isolating page from the lruvec to fill in @dst list by nr_to_scan times.
->   *
-> @@ -2326,8 +2352,7 @@ static unsigned long isolate_lru_folios(unsigned long nr_to_scan,
->  		nr_pages = folio_nr_pages(folio);
->  		total_scan += nr_pages;
->  
-> -		if (folio_zonenum(folio) > sc->reclaim_idx ||
-> -				skip_cma(folio, sc)) {
-> +		if (skip_isolate(folio, sc, lru)) {
->  			nr_skipped[folio_zonenum(folio)] += nr_pages;
->  			move_to = &folios_skipped;
->  			goto move;
+-- 
+Michal Hocko
+SUSE Labs
