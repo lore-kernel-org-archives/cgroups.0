@@ -1,154 +1,77 @@
-From: Liu Shixin <liushixin2-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Subject: [PATCH v5] mm: vmscan: try to reclaim swapcache pages if no swap space
-Date: Wed, 30 Aug 2023 11:56:00 +0800
-Message-ID: <20230830035600.1656792-1-liushixin2@huawei.com>
+From: Yosry Ahmed <yosryahmed@google.com>
+Subject: [PATCH v3 0/4] memcg: non-unified flushing for userspace stats
+Date: Wed, 30 Aug 2023 17:53:31 +0000
+Message-ID: <20230830175335.1536008-1-yosryahmed@google.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7BIT
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20221208; t=1693418018; x=1694022818; darn=vger.kernel.org;
+        h=cc:to:from:subject:message-id:mime-version:date:from:to:cc:subject
+         :date:message-id:reply-to;
+        bh=Qn85V7xkChNZBzxdpkci4eOIaMaLPSl7wYjvXs+DpjY=;
+        b=vkOP3ZnFKkRZ3TacZtGaMg3vM75xZc7q+8eOc/oojVwBS7QwaUgW8JOlUfPgM9PPAB
+         5dJAinETPRWHSJPR0Rb9J8uVH1lv8JYvhQmYNmJ1vmUdiUiCbMwWXs8sOTdlN64Hgxhg
+         6GTyATw8L3Ocd5MEMmU6P2ti3i9622QF9I/AEOm6O6MnDN/23kfGFKcf1QP75o24hCv+
+         Jj80MuQl2nq3f357Fhn+B+vrLkTu0ggtS6jFv7jnrXHXRJYdACawL+XZtexJiSa1LHTL
+         /a2gJ9EZ5X3GHxrgAIiZtAuKOmZQmVy1qN/yx55pSwOlHsDzVs8+LDRyF91j9PT6FHV3
+         nT1g==
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Huang Ying <ying.huang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Muchun Song <muchun.song-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, wangkefeng.wang-hv44wF8Li93QT0dZR+AlfA@public.gmane.org
-Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Liu Shixin <liushixin2-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Content-Transfer-Encoding: 7bit
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, Roman Gushchin <roman.gushchin@linux.dev>, Shakeel Butt <shakeelb@google.com>, Muchun Song <muchun.song@linux.dev>, Ivan Babrou <ivan@cloudflare.com>, Tejun Heo <tj@kernel.org>, =?UTF-8?q?Michal=20Koutn=C3=BD?= <mkoutny@suse.com>, Waiman Long <longman@redhat.com>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, Yosry Ahmed <yosryahmed@google.com>
 
-When spaces of swap devices are exhausted, only file pages can be reclaimed.
-But there are still some swapcache pages in anon lru list. This can lead
-to a premature out-of-memory.
+Most memcg flushing contexts using "unified" flushing, where only one
+flusher is allowed at a time (others skip), and all flushers need to
+flush the entire tree. This works well with high concurrency, which
+mostly comes from in-kernel flushers (e.g. reclaim, refault, ..).
 
-The problem is found with such step:
+For userspace reads, unified flushing leads to non-deterministic stats
+staleness and reading cost. This series clarifies and documents the
+differences between unified and non-unified flushing (patches 1 & 2),
+then opts userspace reads out of unified flushing (patch 3).
 
- Firstly, set a 9MB disk swap space, then create a cgroup with 10MB
- memory limit, then runs an program to allocates about 15MB memory.
+This patch series is a follow up on the discussion in [1]. That was a
+patch that proposed that userspace reads wait for ongoing unified
+flushers to complete before returning. There were concerns about the
+latency that this introduces to userspace reads, especially with ongoing
+reports of expensive stat reads even with unified flushing. Hence, this
+series follows a different approach, by opting userspace reads out of
+unified flushing completely. The cost of userspace reads are now
+determinstic, and depend on the size of the subtree being read. This
+should fix both the *sometimes* expensive reads (due to flushing the
+entire tree) and occasional staless (due to skipping flushing).
 
-The problem occurs occasionally, which may need about 100 times.
+I attempted to remove unified flushing completely, but noticed that
+in-kernel flushers with high concurrency (e.g. hundreds of concurrent
+reclaimers). This sort of concurrency is not expected from userspace
+reads. More details about testing and some numbers in the last patch's
+changelog.
 
-Fix it by checking number of swapcache pages in can_reclaim_anon_pages().
-If the number is not zero, return true either. Moreover, add a new bit
-swapcache_only in struct scan_control to skip isolating anon pages that
-are not swapcache when only swapcache pages can be reclaimed to accelerate
-reclaim efficiency.
+v2 -> v3:
+- Renamed stats_flush_ongoing to stats_unified_flush_ongoing in patch 1
+  for more clarity.
+- Added a mutex for flushes by userspace readers to guard the internal
+  globla rstat lock from being hogged by userspace readers as suggested
+  by Tejun Heo and Waiman Long.
+- Fixed a bug in v2, where patch 4 also opted mem_cgroup_wb_stats() out
+  of unified flushing by mistake. mem_cgroup_wb_stats() is not for
+  userspace reading.
 
-Link: https://lore.kernel.org/lkml/CAJD7tkZAfgncV+KbKr36=eDzMnT=9dZOT0dpMWcurHLr6Do+GA-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org/
-Signed-off-by: Liu Shixin <liushixin2-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Tested-by: Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Reviewed-by: "Huang, Ying" <ying.huang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
-Reviewed-by: Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
----
-v3->v4: Add describe and link about how to reproduce the problem.
-v4->v5: Add Reviewed-by and reproducer link.
+v2: https://lore.kernel.org/lkml/20230828233319.340712-1-yosryahmed@google.com/
 
- include/linux/swap.h |  6 ++++++
- mm/memcontrol.c      |  8 ++++++++
- mm/vmscan.c          | 29 +++++++++++++++++++++++++++--
- 3 files changed, 41 insertions(+), 2 deletions(-)
+Yosry Ahmed (4):
+  mm: memcg: properly name and document unified stats flushing
+  mm: memcg: add a helper for non-unified stats flushing
+  mm: memcg: let non-unified root stats flushes help unified flushes
+  mm: memcg: use non-unified stats flushing for userspace reads
 
-diff --git a/include/linux/swap.h b/include/linux/swap.h
-index 456546443f1f..0318e918bfa4 100644
---- a/include/linux/swap.h
-+++ b/include/linux/swap.h
-@@ -669,6 +669,7 @@ static inline void mem_cgroup_uncharge_swap(swp_entry_t entry, unsigned int nr_p
- }
- 
- extern long mem_cgroup_get_nr_swap_pages(struct mem_cgroup *memcg);
-+extern long mem_cgroup_get_nr_swapcache_pages(struct mem_cgroup *memcg);
- extern bool mem_cgroup_swap_full(struct folio *folio);
- #else
- static inline void mem_cgroup_swapout(struct folio *folio, swp_entry_t entry)
-@@ -691,6 +692,11 @@ static inline long mem_cgroup_get_nr_swap_pages(struct mem_cgroup *memcg)
- 	return get_nr_swap_pages();
- }
- 
-+static inline long mem_cgroup_get_nr_swapcache_pages(struct mem_cgroup *memcg)
-+{
-+	return total_swapcache_pages();
-+}
-+
- static inline bool mem_cgroup_swap_full(struct folio *folio)
- {
- 	return vm_swap_full();
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index e8ca4bdcb03c..c465829db92b 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -7567,6 +7567,14 @@ long mem_cgroup_get_nr_swap_pages(struct mem_cgroup *memcg)
- 	return nr_swap_pages;
- }
- 
-+long mem_cgroup_get_nr_swapcache_pages(struct mem_cgroup *memcg)
-+{
-+	if (mem_cgroup_disabled())
-+		return total_swapcache_pages();
-+
-+	return memcg_page_state(memcg, NR_SWAPCACHE);
-+}
-+
- bool mem_cgroup_swap_full(struct folio *folio)
- {
- 	struct mem_cgroup *memcg;
-diff --git a/mm/vmscan.c b/mm/vmscan.c
-index 1080209a568b..e73e2df8828d 100644
---- a/mm/vmscan.c
-+++ b/mm/vmscan.c
-@@ -137,6 +137,9 @@ struct scan_control {
- 	/* Always discard instead of demoting to lower tier memory */
- 	unsigned int no_demotion:1;
- 
-+	/* Swap space is exhausted, only reclaim swapcache for anon LRU */
-+	unsigned int swapcache_only:1;
-+
- 	/* Allocation order */
- 	s8 order;
- 
-@@ -613,10 +616,20 @@ static inline bool can_reclaim_anon_pages(struct mem_cgroup *memcg,
- 		 */
- 		if (get_nr_swap_pages() > 0)
- 			return true;
-+		/* Is there any swapcache pages to reclaim? */
-+		if (total_swapcache_pages() > 0) {
-+			sc->swapcache_only = 1;
-+			return true;
-+		}
- 	} else {
- 		/* Is the memcg below its swap limit? */
- 		if (mem_cgroup_get_nr_swap_pages(memcg) > 0)
- 			return true;
-+		/* Is there any swapcache pages in memcg to reclaim? */
-+		if (mem_cgroup_get_nr_swapcache_pages(memcg) > 0) {
-+			sc->swapcache_only = 1;
-+			return true;
-+		}
- 	}
- 
- 	/*
-@@ -2280,6 +2293,19 @@ static bool skip_cma(struct folio *folio, struct scan_control *sc)
- }
- #endif
- 
-+static bool skip_isolate(struct folio *folio, struct scan_control *sc,
-+			 enum lru_list lru)
-+{
-+	if (folio_zonenum(folio) > sc->reclaim_idx)
-+		return true;
-+	if (skip_cma(folio, sc))
-+		return true;
-+	if (unlikely(sc->swapcache_only && !is_file_lru(lru) &&
-+	    !folio_test_swapcache(folio)))
-+		return true;
-+	return false;
-+}
-+
- /*
-  * Isolating page from the lruvec to fill in @dst list by nr_to_scan times.
-  *
-@@ -2326,8 +2352,7 @@ static unsigned long isolate_lru_folios(unsigned long nr_to_scan,
- 		nr_pages = folio_nr_pages(folio);
- 		total_scan += nr_pages;
- 
--		if (folio_zonenum(folio) > sc->reclaim_idx ||
--				skip_cma(folio, sc)) {
-+		if (skip_isolate(folio, sc, lru)) {
- 			nr_skipped[folio_zonenum(folio)] += nr_pages;
- 			move_to = &folios_skipped;
- 			goto move;
+ include/linux/memcontrol.h |   8 +--
+ mm/memcontrol.c            | 106 +++++++++++++++++++++++++++----------
+ mm/vmscan.c                |   2 +-
+ mm/workingset.c            |   4 +-
+ 4 files changed, 85 insertions(+), 35 deletions(-)
+
 -- 
-2.25.1
+2.42.0.rc2.253.gd59a3bf2b4-goog
 
