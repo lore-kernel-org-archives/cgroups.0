@@ -1,262 +1,44 @@
-From: Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Subject: [PATCH v3 1/4] mm: memcg: properly name and document unified stats flushing
-Date: Wed, 30 Aug 2023 17:53:32 +0000
-Message-ID: <20230830175335.1536008-2-yosryahmed@google.com>
-References: <20230830175335.1536008-1-yosryahmed@google.com>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCH-cgroup v7 0/6] cgroup/cpuset: Support remote partitions
+Date: Wed, 30 Aug 2023 09:26:24 -1000
+Message-ID: <ZO-X4KnEtOjhJffR@slm.duckdns.org>
+References: <20230817132454.755459-1-longman@redhat.com>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20221208; t=1693418023; x=1694022823; darn=vger.kernel.org;
-        h=cc:to:from:subject:message-id:references:mime-version:in-reply-to
-         :date:from:to:cc:subject:date:message-id:reply-to;
-        bh=6NYJxZAD84nnU9JwFvW1AuIl8sWdu9iyZk6Te6FK6mM=;
-        b=mmoxOWcbgppwwLgDFaTszdxpjUuJAPehq9iBdvOlvmhX7/J3B3MYkub1TJxURvQ2UM
-         X9Eig3jTo3+RZr2I4pJRKtrqMNLxBn1s6KS1nc1k7Bw9mQIohnYVMeEL9gAtHj1PtXFJ
-         MiwGLM2GDQojL2E81g+QgCoMsnKnRsTs576FjOZIjNBvKMsCLt7OLE8qkNHq7zr0y5Xt
-         d6bFL8GN1fbkab2C/oy9BIOakCT1SWPG4Ctge7S0+aQx/VRf15Tx+diYzNNHuaHF1u5T
-         8gw+vX8cY6KDMPozJ6Sttd+KDNI9d58WG7zR9vERQ58P2zxvV0RjG5JElZpEy9gF1ad7
-         Rj6g==
-In-Reply-To: <20230830175335.1536008-1-yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+        d=gmail.com; s=20221208; t=1693423587; x=1694028387; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:sender:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=GTF8uU39IXGUS1zNRIqYR6R0K0rtvdFudoKrSX9kw1k=;
+        b=AFvvh2vedbt/Klxv5llmSY+4QZo7dpggLb3kn7secLTvsXomFbp0WQwvKzDXKFrDYE
+         7YXAutZH0rOeSoE3JwB14MaLRHTdvosZsrUd15kje8ItKdHnhbBk2ILhxyhWR0zlwgrq
+         8iYqoWEGHidbCWVM+M+N/zPrRM+MbpVx1CDHVdXSF2XRoIAz1ZWFUpO4NO/GSTBH7YWN
+         jwts8l7QgK7PmRxFodyEMLPNMAKWg+d4RKBChA73FLZrpgVlgXHDS5sx5sBIgay9BKgN
+         b/IJzuSMt4oY00we0lXlY9i0gfv+DQcBJBvB2yJyGqPvejuiMCeweQA0LT4xGlA5ywOX
+         PFLg==
+Sender: Tejun Heo <htejun-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <20230817132454.755459-1-longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
-Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Muchun Song <muchun.song-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Ivan Babrou <ivan-lDpJ742SOEtZroRs9YW3xA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, =?UTF-8?q?Michal=20Koutn=C3=BD?= <mkoutny-IBi9RG/b67k@public.gmane.org>, Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+To: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Cc: Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Christian Brauner <brauner-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Jonathan Corbet <corbet-T1hC0tSOHrs@public.gmane.org>, Shuah Khan <shuah-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Juri Lelli <juri.lelli-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Dietmar Eggemann <dietmar.eggemann-5wv7dgnIgG8@public.gmane.org>, Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny-IBi9RG/b67k@public.gmane.org>, Giuseppe Scrivano <gscrivan-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 
-Most contexts that flush memcg stats use "unified" flushing, where
-basically all flushers attempt to flush the entire hierarchy, but only
-one flusher is allowed at a time, others skip flushing.
+Hello, Waiman.
 
-This is needed because we need to flush the stats from paths such as
-reclaim or refaults, which may have high concurrency, especially on
-large systems. Serializing such performance-sensitive paths can
-introduce regressions, hence, unified flushing offers a tradeoff between
-stats staleness and the performance impact of flushing stats.
+On Thu, Aug 17, 2023 at 09:24:48AM -0400, Waiman Long wrote:
+>  v7:
+>   - Fix a compilation problem in patch 1 & a memory allocation bug in
+>     patch 2.
+>   - Change exclusive_cpus type to cpumask_var_t to match other cpumasks
+>     and make code more consistent.
 
-Document this properly and explicitly by renaming the common flushing
-helper from do_flush_stats() to do_unified_stats_flush(), and adding
-documentation to describe unified flushing. Additionally, rename
-flushing APIs to add "try" in the name, which implies that flushing will
-not always happen. Also add proper documentation.
+This overall looks fine to me but I'm afraid we're a bit too late for this
+devel cycle. I'll merge these into cgroup/for-6.7 when it opens.
 
-No functional change intended.
+Thanks.
 
-Signed-off-by: Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
----
- include/linux/memcontrol.h |  8 ++---
- mm/memcontrol.c            | 61 +++++++++++++++++++++++++-------------
- mm/vmscan.c                |  2 +-
- mm/workingset.c            |  4 +--
- 4 files changed, 47 insertions(+), 28 deletions(-)
-
-diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
-index 11810a2cfd2d..d517b0cc5221 100644
---- a/include/linux/memcontrol.h
-+++ b/include/linux/memcontrol.h
-@@ -1034,8 +1034,8 @@ static inline unsigned long lruvec_page_state_local(struct lruvec *lruvec,
- 	return x;
- }
- 
--void mem_cgroup_flush_stats(void);
--void mem_cgroup_flush_stats_ratelimited(void);
-+void mem_cgroup_try_flush_stats(void);
-+void mem_cgroup_try_flush_stats_ratelimited(void);
- 
- void __mod_memcg_lruvec_state(struct lruvec *lruvec, enum node_stat_item idx,
- 			      int val);
-@@ -1519,11 +1519,11 @@ static inline unsigned long lruvec_page_state_local(struct lruvec *lruvec,
- 	return node_page_state(lruvec_pgdat(lruvec), idx);
- }
- 
--static inline void mem_cgroup_flush_stats(void)
-+static inline void mem_cgroup_try_flush_stats(void)
- {
- }
- 
--static inline void mem_cgroup_flush_stats_ratelimited(void)
-+static inline void mem_cgroup_try_flush_stats_ratelimited(void)
- {
- }
- 
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index cf57fe9318d5..2d0ec828a1c4 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -588,7 +588,7 @@ mem_cgroup_largest_soft_limit_node(struct mem_cgroup_tree_per_node *mctz)
- static void flush_memcg_stats_dwork(struct work_struct *w);
- static DECLARE_DEFERRABLE_WORK(stats_flush_dwork, flush_memcg_stats_dwork);
- static DEFINE_PER_CPU(unsigned int, stats_updates);
--static atomic_t stats_flush_ongoing = ATOMIC_INIT(0);
-+static atomic_t stats_unified_flush_ongoing = ATOMIC_INIT(0);
- static atomic_t stats_flush_threshold = ATOMIC_INIT(0);
- static u64 flush_next_time;
- 
-@@ -630,7 +630,7 @@ static inline void memcg_rstat_updated(struct mem_cgroup *memcg, int val)
- 		/*
- 		 * If stats_flush_threshold exceeds the threshold
- 		 * (>num_online_cpus()), cgroup stats update will be triggered
--		 * in __mem_cgroup_flush_stats(). Increasing this var further
-+		 * in mem_cgroup_try_flush_stats(). Increasing this var further
- 		 * is redundant and simply adds overhead in atomic update.
- 		 */
- 		if (atomic_read(&stats_flush_threshold) <= num_online_cpus())
-@@ -639,15 +639,19 @@ static inline void memcg_rstat_updated(struct mem_cgroup *memcg, int val)
- 	}
- }
- 
--static void do_flush_stats(void)
-+/*
-+ * do_unified_stats_flush - do a unified flush of memory cgroup statistics
-+ *
-+ * A unified flush tries to flush the entire hierarchy, but skips if there is
-+ * another ongoing flush. This is meant for flushers that may have a lot of
-+ * concurrency (e.g. reclaim, refault, etc), and should not be serialized to
-+ * avoid slowing down performance-sensitive paths. A unified flush may skip, and
-+ * hence may yield stale stats.
-+ */
-+static void do_unified_stats_flush(void)
- {
--	/*
--	 * We always flush the entire tree, so concurrent flushers can just
--	 * skip. This avoids a thundering herd problem on the rstat global lock
--	 * from memcg flushers (e.g. reclaim, refault, etc).
--	 */
--	if (atomic_read(&stats_flush_ongoing) ||
--	    atomic_xchg(&stats_flush_ongoing, 1))
-+	if (atomic_read(&stats_unified_flush_ongoing) ||
-+	    atomic_xchg(&stats_unified_flush_ongoing, 1))
- 		return;
- 
- 	WRITE_ONCE(flush_next_time, jiffies_64 + 2*FLUSH_TIME);
-@@ -655,19 +659,34 @@ static void do_flush_stats(void)
- 	cgroup_rstat_flush(root_mem_cgroup->css.cgroup);
- 
- 	atomic_set(&stats_flush_threshold, 0);
--	atomic_set(&stats_flush_ongoing, 0);
-+	atomic_set(&stats_unified_flush_ongoing, 0);
- }
- 
--void mem_cgroup_flush_stats(void)
-+/*
-+ * mem_cgroup_try_flush_stats - try to flush memory cgroup statistics
-+ *
-+ * Try to flush the stats of all memcgs that have stat updates since the last
-+ * flush. We do not flush the stats if:
-+ * - The magnitude of the pending updates is below a certain threshold.
-+ * - There is another ongoing unified flush (see do_unified_stats_flush()).
-+ *
-+ * Hence, the stats may be stale, but ideally by less than FLUSH_TIME due to
-+ * periodic flushing.
-+ */
-+void mem_cgroup_try_flush_stats(void)
- {
- 	if (atomic_read(&stats_flush_threshold) > num_online_cpus())
--		do_flush_stats();
-+		do_unified_stats_flush();
- }
- 
--void mem_cgroup_flush_stats_ratelimited(void)
-+/*
-+ * Like mem_cgroup_try_flush_stats(), but only flushes if the periodic flusher
-+ * is late.
-+ */
-+void mem_cgroup_try_flush_stats_ratelimited(void)
- {
- 	if (time_after64(jiffies_64, READ_ONCE(flush_next_time)))
--		mem_cgroup_flush_stats();
-+		mem_cgroup_try_flush_stats();
- }
- 
- static void flush_memcg_stats_dwork(struct work_struct *w)
-@@ -676,7 +695,7 @@ static void flush_memcg_stats_dwork(struct work_struct *w)
- 	 * Always flush here so that flushing in latency-sensitive paths is
- 	 * as cheap as possible.
- 	 */
--	do_flush_stats();
-+	do_unified_stats_flush();
- 	queue_delayed_work(system_unbound_wq, &stats_flush_dwork, FLUSH_TIME);
- }
- 
-@@ -1576,7 +1595,7 @@ static void memcg_stat_format(struct mem_cgroup *memcg, struct seq_buf *s)
- 	 *
- 	 * Current memory state:
- 	 */
--	mem_cgroup_flush_stats();
-+	mem_cgroup_try_flush_stats();
- 
- 	for (i = 0; i < ARRAY_SIZE(memory_stats); i++) {
- 		u64 size;
-@@ -4018,7 +4037,7 @@ static int memcg_numa_stat_show(struct seq_file *m, void *v)
- 	int nid;
- 	struct mem_cgroup *memcg = mem_cgroup_from_seq(m);
- 
--	mem_cgroup_flush_stats();
-+	mem_cgroup_try_flush_stats();
- 
- 	for (stat = stats; stat < stats + ARRAY_SIZE(stats); stat++) {
- 		seq_printf(m, "%s=%lu", stat->name,
-@@ -4093,7 +4112,7 @@ static void memcg1_stat_format(struct mem_cgroup *memcg, struct seq_buf *s)
- 
- 	BUILD_BUG_ON(ARRAY_SIZE(memcg1_stat_names) != ARRAY_SIZE(memcg1_stats));
- 
--	mem_cgroup_flush_stats();
-+	mem_cgroup_try_flush_stats();
- 
- 	for (i = 0; i < ARRAY_SIZE(memcg1_stats); i++) {
- 		unsigned long nr;
-@@ -4595,7 +4614,7 @@ void mem_cgroup_wb_stats(struct bdi_writeback *wb, unsigned long *pfilepages,
- 	struct mem_cgroup *memcg = mem_cgroup_from_css(wb->memcg_css);
- 	struct mem_cgroup *parent;
- 
--	mem_cgroup_flush_stats();
-+	mem_cgroup_try_flush_stats();
- 
- 	*pdirty = memcg_page_state(memcg, NR_FILE_DIRTY);
- 	*pwriteback = memcg_page_state(memcg, NR_WRITEBACK);
-@@ -6610,7 +6629,7 @@ static int memory_numa_stat_show(struct seq_file *m, void *v)
- 	int i;
- 	struct mem_cgroup *memcg = mem_cgroup_from_seq(m);
- 
--	mem_cgroup_flush_stats();
-+	mem_cgroup_try_flush_stats();
- 
- 	for (i = 0; i < ARRAY_SIZE(memory_stats); i++) {
- 		int nid;
-diff --git a/mm/vmscan.c b/mm/vmscan.c
-index c7c149cb8d66..457a18921fda 100644
---- a/mm/vmscan.c
-+++ b/mm/vmscan.c
-@@ -2923,7 +2923,7 @@ static void prepare_scan_count(pg_data_t *pgdat, struct scan_control *sc)
- 	 * Flush the memory cgroup stats, so that we read accurate per-memcg
- 	 * lruvec stats for heuristics.
- 	 */
--	mem_cgroup_flush_stats();
-+	mem_cgroup_try_flush_stats();
- 
- 	/*
- 	 * Determine the scan balance between anon and file LRUs.
-diff --git a/mm/workingset.c b/mm/workingset.c
-index da58a26d0d4d..affb8699e58d 100644
---- a/mm/workingset.c
-+++ b/mm/workingset.c
-@@ -520,7 +520,7 @@ void workingset_refault(struct folio *folio, void *shadow)
- 	}
- 
- 	/* Flush stats (and potentially sleep) before holding RCU read lock */
--	mem_cgroup_flush_stats_ratelimited();
-+	mem_cgroup_try_flush_stats_ratelimited();
- 
- 	rcu_read_lock();
- 
-@@ -664,7 +664,7 @@ static unsigned long count_shadow_nodes(struct shrinker *shrinker,
- 		struct lruvec *lruvec;
- 		int i;
- 
--		mem_cgroup_flush_stats();
-+		mem_cgroup_try_flush_stats();
- 		lruvec = mem_cgroup_lruvec(sc->memcg, NODE_DATA(sc->nid));
- 		for (pages = 0, i = 0; i < NR_LRU_LISTS; i++)
- 			pages += lruvec_page_state_local(lruvec,
 -- 
-2.42.0.rc2.253.gd59a3bf2b4-goog
-
+tejun
