@@ -1,61 +1,95 @@
-From: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
-Subject: Re: [PATCH 3/3] mm: memcg: use non-unified stats flushing for
- userspace reads
-Date: Thu, 31 Aug 2023 11:05:37 +0200
-Message-ID: <ZPBX4S6XKX+HsDdW@dhcp22.suse.cz>
-References: <ZOcDLD/1WaOwWis9@dhcp22.suse.cz>
- <CAJD7tkZby2enWa8_Js8joHqFx_tHB=aRqHOizaSiXMUjvEei4g@mail.gmail.com>
- <CAJD7tkadEtjK_NFwRe8yhUh_Mdx9LCLmCuj5Ty-pqp1rHTb-DA@mail.gmail.com>
- <ZOhSyvDxAyYUJ45i@dhcp22.suse.cz>
- <ZO48h7c9qwQxEPPA@slm.duckdns.org>
- <CAJD7tkaQ1hD9HHyYTK_vfCQ9PCVZag7qMBueKyB+sEn=swvNJA@mail.gmail.com>
- <ZO5IuULSCXMe9_pN@slm.duckdns.org>
- <CAJD7tkYtnhemCLBqFqOVurfWEaCjKtyEM745JYRxFS0r5cpZwQ@mail.gmail.com>
- <ZO5RROsZ1VESCsMG@slm.duckdns.org>
- <CAJD7tkZn_7ppFB1B1V8tBEw12LXCnEOue2Beq6e19PkUAVHUSQ@mail.gmail.com>
+From: Luiz Capitulino <luizcap-vV1OtcyAfmbQT0dZR+AlfA@public.gmane.org>
+Subject: [PATH] cgroup: add cgroup_favordynmods= command-line option
+Date: Thu, 31 Aug 2023 10:20:46 -0400
+Message-ID: <20230831142046.37177-1-luizcap@amazon.com>
 Mime-Version: 1.0
+Content-Transfer-Encoding: 8bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
-        t=1693472737; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=DujY6dkqedsXFZeiaLXoDY/sYyiJ8dFrPRvd9QhXe4U=;
-        b=TQbe7rXxOquuL1eiRja1QjBmuTWQRynSoCpR94kHmbf3Tw7pzzFmN0XBlcVvgYoueYiyQZ
-        EAuxq5zsTcDlPZA2bzGEcVIGn3riohjif4a+PCyY7jvWVrgmvzDzsMsNttjkkgrEGpfBJH
-        4CsiLRzknMGJH4L/emjN7lQ08pLIzkU=
-Content-Disposition: inline
-In-Reply-To: <CAJD7tkZn_7ppFB1B1V8tBEw12LXCnEOue2Beq6e19PkUAVHUSQ-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+  d=amazon.com; i=@amazon.com; q=dns/txt; s=amazon201209;
+  t=1693491695; x=1725027695;
+  h=from:to:cc:subject:date:message-id:mime-version:
+   content-transfer-encoding;
+  bh=TvFwiqQmFGnflqPwsI4vDJJirbAMWg8+sAoZoOii/Mg=;
+  b=Y74DhUqJqngXa4ZQ3x76K4gp3EkWdFvoVBl9FgJyTp5vHB3IDZ01jrEu
+   jhsxBaLwLnoI8WXZjSr5u9zEAHr/aRCU2muXxqLqUjat6OwVY3zW/QGfG
+   Qk+a1n4ivcaq5rV6Ze1Cjx+E4xk5NiuvZY7IpxvY9uRzHbuNzHDdGQwn5
+   U=;
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Muchun Song <muchun.song-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Ivan Babrou <ivan-lDpJ742SOEtZroRs9YW3xA@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Cc: lcapitulino-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org
 
-On Tue 29-08-23 13:20:34, Yosry Ahmed wrote:
-[...]
-> I will add a mutex on the userspace read side then and spin a v3.
-> Hopefully this addresses Michal's concern as well. The lock dropping
-> logic will still exist for the inner lock, but when one userspace
-> reader drops the inner lock other readers won't be able to pick it up.
+We have a need of using favordynmods with cgroup v1, which doesn't support
+changing mount flags during remount. Enabling CONFIG_FAVOR_DYNMODS at
+build-time is not an option because we want to be able to selectively
+enable it for certain systems.
 
-Yes, that would minimize the risk of the worst case pathological
-behavior.
+This commit addresses this by introducing the cgroup_favordynmods=
+command-line option. This option works for both cgroup v1 and v2 and
+also allows for disabling favorynmods when the kernel built with
+CONFIG_FAVOR_DYNMODS=y.
 
-> > I don't have a strong preference. As long as we stay away from introducing a
-> > new user interface construct and can address the noticed scalability issues,
-> > it should be fine. Note that there are other ways to address priority
-> > inversions and contentions too - e.g. we can always bounce flushing to a
-> > [kthread_]kworker and rate limit (or rather latency limit) how often
-> > different classes of users can trigger flushing. I don't think we have to go
-> > there yet but if the simpler meaures don't work out, there are still many
-> > ways to solve the problem within the kernel.
-> 
-> I whole-heartedly agree with the preference to fix the problem within
-> the kernel with minimal/none user space involvement.
+Signed-off-by: Luiz Capitulino <luizcap-vV1OtcyAfmbQT0dZR+AlfA@public.gmane.org>
+---
+ Documentation/admin-guide/kernel-parameters.txt |  4 ++++
+ kernel/cgroup/cgroup.c                          | 14 +++++++++++---
+ 2 files changed, 15 insertions(+), 3 deletions(-)
 
-Let's see. While I would love to see a solution that works for everybody
-without explicit interface we have hit problems with locks involved in
-stat files in the past.
+diff --git a/Documentation/admin-guide/kernel-parameters.txt b/Documentation/admin-guide/kernel-parameters.txt
+index 0c38a8af95ce..672f76a3c002 100644
+--- a/Documentation/admin-guide/kernel-parameters.txt
++++ b/Documentation/admin-guide/kernel-parameters.txt
+@@ -580,6 +580,10 @@
+ 			named mounts. Specifying both "all" and "named" disables
+ 			all v1 hierarchies.
+ 
++	cgroup_favordynmods= [KNL] Enable or Disable favordynmods.
++			Format: { "true" | "false" }
++			Defaults to the value of CONFIG_CGROUP_FAVOR_DYNMODS.
++
+ 	cgroup.memory=	[KNL] Pass options to the cgroup memory controller.
+ 			Format: <string>
+ 			nosocket -- Disable socket memory accounting.
+diff --git a/kernel/cgroup/cgroup.c b/kernel/cgroup/cgroup.c
+index 5fa95f86cb4d..b625825e270b 100644
+--- a/kernel/cgroup/cgroup.c
++++ b/kernel/cgroup/cgroup.c
+@@ -207,6 +207,8 @@ static u16 have_exit_callback __read_mostly;
+ static u16 have_release_callback __read_mostly;
+ static u16 have_canfork_callback __read_mostly;
+ 
++static bool have_favordynmods __read_mostly = IS_ENABLED(CONFIG_CGROUP_FAVOR_DYNMODS);
++
+ /* cgroup namespace for init task */
+ struct cgroup_namespace init_cgroup_ns = {
+ 	.ns.count	= REFCOUNT_INIT(2),
+@@ -2265,9 +2267,9 @@ static int cgroup_init_fs_context(struct fs_context *fc)
+ 	fc->user_ns = get_user_ns(ctx->ns->user_ns);
+ 	fc->global = true;
+ 
+-#ifdef CONFIG_CGROUP_FAVOR_DYNMODS
+-	ctx->flags |= CGRP_ROOT_FAVOR_DYNMODS;
+-#endif
++	if (have_favordynmods)
++		ctx->flags |= CGRP_ROOT_FAVOR_DYNMODS;
++
+ 	return 0;
+ }
+ 
+@@ -6767,6 +6769,12 @@ static int __init enable_cgroup_debug(char *str)
+ }
+ __setup("cgroup_debug", enable_cgroup_debug);
+ 
++static int __init cgroup_favordynmods_setup(char *str)
++{
++	return (kstrtobool(str, &have_favordynmods) == 0);
++}
++__setup("cgroup_favordynmods=", cgroup_favordynmods_setup);
++
+ /**
+  * css_tryget_online_from_dir - get corresponding css from a cgroup dentry
+  * @dentry: directory dentry of interest
 -- 
-Michal Hocko
-SUSE Labs
+2.40.1
+
