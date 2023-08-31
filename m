@@ -1,105 +1,71 @@
 From: Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH v3 4/4] mm: memcg: use non-unified stats flushing for
- userspace reads
-Date: Thu, 31 Aug 2023 09:40:03 -0700
-Message-ID: <CAJD7tkbo28Mc9ydPnqL_gKmi-QZGORE-FVcZcQnsLVTCA1UBzA@mail.gmail.com>
-References: <20230830175335.1536008-5-yosryahmed@google.com> <202308311025.538QuXBV-lkp@intel.com>
+Subject: [PATCH v4 0/4] memcg: non-unified flushing for userspace stats
+Date: Thu, 31 Aug 2023 16:56:07 +0000
+Message-ID: <20230831165611.2610118-1-yosryahmed@google.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20221208; t=1693500043; x=1694104843; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=drcv5mKJ9RhO4L7vLkvVuevPSBYeBJBAmcU4Oua4F00=;
-        b=yTA644q6Seh2/5aVPQn7DTe+hvJiKfe7COTZEj1glHSCcL7fDKUK/1sywwKG5n8iER
-         c4jKh5yEDHpRWaHqY8tLVG/EaKE13MuC1zzhih6R08Gl3r11V6dmrcPiVlPJ6+1hdLxr
-         MNj+XFgUQRpFcNJBHOJS3VVexBB0SlFXPaIq0rDfY5ot3dGgaazyxPwdJKTso9TOV0qL
-         C2RJzRP2Nkc2zBrwxQKX6VJstxV/lUoRx2JbIue0do+mgbBYv//842aKyqUQHTU5v1pZ
-         DEMVfaBX/tx/xlIDLq/Nb+X/9NajYL7H3DmtV2sPrev7+uWLU0tcbTYRa65363Zz6saF
-         uTKg==
-In-Reply-To: <202308311025.538QuXBV-lkp-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+        d=google.com; s=20221208; t=1693500973; x=1694105773; darn=vger.kernel.org;
+        h=cc:to:from:subject:message-id:mime-version:date:from:to:cc:subject
+         :date:message-id:reply-to;
+        bh=gOQaXSmI19T3CmRXHqALPzLoBcwM1iddQy4gNQ1FwHI=;
+        b=3Mk6IsV5i8zXUYIam0xe89FspudrAHmbi76z1/AanIj7zaz/8mf19LVT95ZWrINPCt
+         tVTgT6Cp102pT6jPl9hG0OLr8kkiLjBOLEAxB2fhaXVxfPKMBx+3nOidqUbxG0pxf0O8
+         h+kLxR0bvZQ3OHizNZbxM8FAW2896SZIvhizip2lcHbTSugx0UlfamoiPOCr69PDrRUB
+         vyMkIx1fYNvFXBIafiDNwUBDlOaOQUskoTd2fjpsHRQ46GCk6FVbLRjRvLYXb2/Fc2wn
+         3YuX7VPQlsNjYXdqNTOzTL053ujzxwzWa4rKLV/+h6oXpSypwRrbbBZBfFQkZjhW7a/2
+         r73Q==
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="windows-1252"
-To: kernel test robot <lkp-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
-Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, llvm-cunTk1MwBs/YUNznpcFYbw@public.gmane.org, oe-kbuild-all-cunTk1MwBs/YUNznpcFYbw@public.gmane.org, Linux Memory Management List <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Muchun Song <muchun.song-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Ivan Babrou <ivan-lDpJ742SOEtZroRs9YW3xA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, =?UTF-8?Q?Michal_Koutn=C3=BD?= <mkoutny-IBi9RG/b67k@public.gmane.org>, Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Muchun Song <muchun.song-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Ivan Babrou <ivan-lDpJ742SOEtZroRs9YW3xA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, =?UTF-8?q?Michal=20Koutn=C3=BD?= <mkoutny-IBi9RG/b67k@public.gmane.org>, Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 
-On Wed, Aug 30, 2023 at 8:08=E2=80=AFPM kernel test robot <lkp-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org> w=
-rote:
->
-> Hi Yosry,
->
-> kernel test robot noticed the following build warnings:
->
-> [auto build test WARNING on akpm-mm/mm-everything]
-> [also build test WARNING on linus/master next-20230830]
-> [cannot apply to v6.5]
-> [If your patch is applied to the wrong git tree, kindly drop us a note.
-> And when submitting patch, we suggest to use '--base' as documented in
-> https://git-scm.com/docs/git-format-patch#_base_tree_information]
->
-> url:    https://github.com/intel-lab-lkp/linux/commits/Yosry-Ahmed/mm-mem=
-cg-properly-name-and-document-unified-stats-flushing/20230831-015518
-> base:   https://git.kernel.org/pub/scm/linux/kernel/git/akpm/mm.git mm-ev=
-erything
-> patch link:    https://lore.kernel.org/r/20230830175335.1536008-5-yosryah=
-med%40google.com
-> patch subject: [PATCH v3 4/4] mm: memcg: use non-unified stats flushing f=
-or userspace reads
-> config: i386-randconfig-r013-20230831 (https://download.01.org/0day-ci/ar=
-chive/20230831/202308311025.538QuXBV-lkp-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org/config)
-> compiler: clang version 16.0.4 (https://github.com/llvm/llvm-project.git =
-ae42196bc493ffe877a7e3dff8be32035dea4d07)
-> reproduce (this is a W=3D1 build): (https://download.01.org/0day-ci/archi=
-ve/20230831/202308311025.538QuXBV-lkp-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org/reproduce)
->
-> If you fix the issue in a separate patch/commit (i.e. not just a new vers=
-ion of
-> the same patch/commit), kindly add following tags
-> | Reported-by: kernel test robot <lkp-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
-> | Closes: https://lore.kernel.org/oe-kbuild-all/202308311025.538QuXBV-lkp=
-@intel.com/
->
-> All warnings (new ones prefixed by >>):
->
-> >> mm/memcontrol.c:667:6: warning: no previous prototype for function 'me=
-m_cgroup_user_flush_stats' [-Wmissing-prototypes]
->    void mem_cgroup_user_flush_stats(struct mem_cgroup *memcg)
->         ^
->    mm/memcontrol.c:667:1: note: declare 'static' if the function is not i=
-ntended to be used outside of this translation unit
->    void mem_cgroup_user_flush_stats(struct mem_cgroup *memcg)
->    ^
->    static
->    1 warning generated.
+Most memcg flushing contexts using "unified" flushing, where only one
+flusher is allowed at a time (others skip), and all flushers need to
+flush the entire tree. This works well with high concurrency, which
+mostly comes from in-kernel flushers (e.g. reclaim, refault, ..).
 
-Ah silly mistake on my end. Will send v4 after making
-mem_cgroup_user_flush_stats() static.
+For userspace reads, unified flushing leads to non-deterministic stats
+staleness and reading cost. This series clarifies and documents the
+differences between unified and non-unified flushing (patches 1 & 2),
+then opts userspace reads out of unified flushing (patch 3).
 
->
->
-> vim +/mem_cgroup_user_flush_stats +667 mm/memcontrol.c
->
->    658
->    659  /*
->    660   * mem_cgroup_user_flush_stats - do a stats flush for a user read
->    661   * @memcg: memory cgroup to flush
->    662   *
->    663   * Flush the subtree of @memcg. A mutex is used for userspace rea=
-ders to gate
->    664   * the global rstat spinlock. This protects in-kernel flushers fr=
-om userspace
->    665   * readers hogging the lock.
->    666   */
->  > 667  void mem_cgroup_user_flush_stats(struct mem_cgroup *memcg)
->    668  {
->    669          mutex_lock(&stats_user_flush_mutex);
->    670          do_stats_flush(memcg);
->    671          mutex_unlock(&stats_user_flush_mutex);
->    672  }
->    673
->
-> --
-> 0-DAY CI Kernel Test Service
-> https://github.com/intel/lkp-tests/wiki
+This patch series is a follow up on the discussion in [1]. That was a
+patch that proposed that userspace reads wait for ongoing unified
+flushers to complete before returning. There were concerns about the
+latency that this introduces to userspace reads, especially with ongoing
+reports of expensive stat reads even with unified flushing. Hence, this
+series follows a different approach, by opting userspace reads out of
+unified flushing completely. The cost of userspace reads are now
+determinstic, and depend on the size of the subtree being read. This
+should fix both the *sometimes* expensive reads (due to flushing the
+entire tree) and occasional staless (due to skipping flushing).
+
+I attempted to remove unified flushing completely, but noticed that
+in-kernel flushers with high concurrency (e.g. hundreds of concurrent
+reclaimers). This sort of concurrency is not expected from userspace
+reads. More details about testing and some numbers in the last patch's
+changelog.
+
+v4 -> v5:
+- Fixed build error in the last patch with W=1 because of a missed
+  'static'.
+
+v4: https://lore.kernel.org/lkml/20230830175335.1536008-1-yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org/
+
+Yosry Ahmed (4):
+  mm: memcg: properly name and document unified stats flushing
+  mm: memcg: add a helper for non-unified stats flushing
+  mm: memcg: let non-unified root stats flushes help unified flushes
+  mm: memcg: use non-unified stats flushing for userspace reads
+
+ include/linux/memcontrol.h |   8 +--
+ mm/memcontrol.c            | 106 +++++++++++++++++++++++++++----------
+ mm/vmscan.c                |   2 +-
+ mm/workingset.c            |   4 +-
+ 4 files changed, 85 insertions(+), 35 deletions(-)
+
+-- 
+2.42.0.rc2.253.gd59a3bf2b4-goog
+
