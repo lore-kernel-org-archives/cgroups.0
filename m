@@ -1,95 +1,105 @@
-From: Luiz Capitulino <luizcap-vV1OtcyAfmbQT0dZR+AlfA@public.gmane.org>
-Subject: [PATH] cgroup: add cgroup_favordynmods= command-line option
-Date: Thu, 31 Aug 2023 10:20:46 -0400
-Message-ID: <20230831142046.37177-1-luizcap@amazon.com>
+From: Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH v3 4/4] mm: memcg: use non-unified stats flushing for
+ userspace reads
+Date: Thu, 31 Aug 2023 09:40:03 -0700
+Message-ID: <CAJD7tkbo28Mc9ydPnqL_gKmi-QZGORE-FVcZcQnsLVTCA1UBzA@mail.gmail.com>
+References: <20230830175335.1536008-5-yosryahmed@google.com> <202308311025.538QuXBV-lkp@intel.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: quoted-printable
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-  d=amazon.com; i=@amazon.com; q=dns/txt; s=amazon201209;
-  t=1693491695; x=1725027695;
-  h=from:to:cc:subject:date:message-id:mime-version:
-   content-transfer-encoding;
-  bh=TvFwiqQmFGnflqPwsI4vDJJirbAMWg8+sAoZoOii/Mg=;
-  b=Y74DhUqJqngXa4ZQ3x76K4gp3EkWdFvoVBl9FgJyTp5vHB3IDZ01jrEu
-   jhsxBaLwLnoI8WXZjSr5u9zEAHr/aRCU2muXxqLqUjat6OwVY3zW/QGfG
-   Qk+a1n4ivcaq5rV6Ze1Cjx+E4xk5NiuvZY7IpxvY9uRzHbuNzHDdGQwn5
-   U=;
+        d=google.com; s=20221208; t=1693500043; x=1694104843; darn=vger.kernel.org;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=drcv5mKJ9RhO4L7vLkvVuevPSBYeBJBAmcU4Oua4F00=;
+        b=yTA644q6Seh2/5aVPQn7DTe+hvJiKfe7COTZEj1glHSCcL7fDKUK/1sywwKG5n8iER
+         c4jKh5yEDHpRWaHqY8tLVG/EaKE13MuC1zzhih6R08Gl3r11V6dmrcPiVlPJ6+1hdLxr
+         MNj+XFgUQRpFcNJBHOJS3VVexBB0SlFXPaIq0rDfY5ot3dGgaazyxPwdJKTso9TOV0qL
+         C2RJzRP2Nkc2zBrwxQKX6VJstxV/lUoRx2JbIue0do+mgbBYv//842aKyqUQHTU5v1pZ
+         DEMVfaBX/tx/xlIDLq/Nb+X/9NajYL7H3DmtV2sPrev7+uWLU0tcbTYRa65363Zz6saF
+         uTKg==
+In-Reply-To: <202308311025.538QuXBV-lkp-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-To: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-Cc: lcapitulino-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org
+Content-Type: text/plain; charset="windows-1252"
+To: kernel test robot <lkp-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, llvm-cunTk1MwBs/YUNznpcFYbw@public.gmane.org, oe-kbuild-all-cunTk1MwBs/YUNznpcFYbw@public.gmane.org, Linux Memory Management List <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Muchun Song <muchun.song-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Ivan Babrou <ivan-lDpJ742SOEtZroRs9YW3xA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, =?UTF-8?Q?Michal_Koutn=C3=BD?= <mkoutny-IBi9RG/b67k@public.gmane.org>, Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-We have a need of using favordynmods with cgroup v1, which doesn't support
-changing mount flags during remount. Enabling CONFIG_FAVOR_DYNMODS at
-build-time is not an option because we want to be able to selectively
-enable it for certain systems.
+On Wed, Aug 30, 2023 at 8:08=E2=80=AFPM kernel test robot <lkp-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org> w=
+rote:
+>
+> Hi Yosry,
+>
+> kernel test robot noticed the following build warnings:
+>
+> [auto build test WARNING on akpm-mm/mm-everything]
+> [also build test WARNING on linus/master next-20230830]
+> [cannot apply to v6.5]
+> [If your patch is applied to the wrong git tree, kindly drop us a note.
+> And when submitting patch, we suggest to use '--base' as documented in
+> https://git-scm.com/docs/git-format-patch#_base_tree_information]
+>
+> url:    https://github.com/intel-lab-lkp/linux/commits/Yosry-Ahmed/mm-mem=
+cg-properly-name-and-document-unified-stats-flushing/20230831-015518
+> base:   https://git.kernel.org/pub/scm/linux/kernel/git/akpm/mm.git mm-ev=
+erything
+> patch link:    https://lore.kernel.org/r/20230830175335.1536008-5-yosryah=
+med%40google.com
+> patch subject: [PATCH v3 4/4] mm: memcg: use non-unified stats flushing f=
+or userspace reads
+> config: i386-randconfig-r013-20230831 (https://download.01.org/0day-ci/ar=
+chive/20230831/202308311025.538QuXBV-lkp-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org/config)
+> compiler: clang version 16.0.4 (https://github.com/llvm/llvm-project.git =
+ae42196bc493ffe877a7e3dff8be32035dea4d07)
+> reproduce (this is a W=3D1 build): (https://download.01.org/0day-ci/archi=
+ve/20230831/202308311025.538QuXBV-lkp-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org/reproduce)
+>
+> If you fix the issue in a separate patch/commit (i.e. not just a new vers=
+ion of
+> the same patch/commit), kindly add following tags
+> | Reported-by: kernel test robot <lkp-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+> | Closes: https://lore.kernel.org/oe-kbuild-all/202308311025.538QuXBV-lkp=
+@intel.com/
+>
+> All warnings (new ones prefixed by >>):
+>
+> >> mm/memcontrol.c:667:6: warning: no previous prototype for function 'me=
+m_cgroup_user_flush_stats' [-Wmissing-prototypes]
+>    void mem_cgroup_user_flush_stats(struct mem_cgroup *memcg)
+>         ^
+>    mm/memcontrol.c:667:1: note: declare 'static' if the function is not i=
+ntended to be used outside of this translation unit
+>    void mem_cgroup_user_flush_stats(struct mem_cgroup *memcg)
+>    ^
+>    static
+>    1 warning generated.
 
-This commit addresses this by introducing the cgroup_favordynmods=
-command-line option. This option works for both cgroup v1 and v2 and
-also allows for disabling favorynmods when the kernel built with
-CONFIG_FAVOR_DYNMODS=y.
+Ah silly mistake on my end. Will send v4 after making
+mem_cgroup_user_flush_stats() static.
 
-Signed-off-by: Luiz Capitulino <luizcap-vV1OtcyAfmbQT0dZR+AlfA@public.gmane.org>
----
- Documentation/admin-guide/kernel-parameters.txt |  4 ++++
- kernel/cgroup/cgroup.c                          | 14 +++++++++++---
- 2 files changed, 15 insertions(+), 3 deletions(-)
-
-diff --git a/Documentation/admin-guide/kernel-parameters.txt b/Documentation/admin-guide/kernel-parameters.txt
-index 0c38a8af95ce..672f76a3c002 100644
---- a/Documentation/admin-guide/kernel-parameters.txt
-+++ b/Documentation/admin-guide/kernel-parameters.txt
-@@ -580,6 +580,10 @@
- 			named mounts. Specifying both "all" and "named" disables
- 			all v1 hierarchies.
- 
-+	cgroup_favordynmods= [KNL] Enable or Disable favordynmods.
-+			Format: { "true" | "false" }
-+			Defaults to the value of CONFIG_CGROUP_FAVOR_DYNMODS.
-+
- 	cgroup.memory=	[KNL] Pass options to the cgroup memory controller.
- 			Format: <string>
- 			nosocket -- Disable socket memory accounting.
-diff --git a/kernel/cgroup/cgroup.c b/kernel/cgroup/cgroup.c
-index 5fa95f86cb4d..b625825e270b 100644
---- a/kernel/cgroup/cgroup.c
-+++ b/kernel/cgroup/cgroup.c
-@@ -207,6 +207,8 @@ static u16 have_exit_callback __read_mostly;
- static u16 have_release_callback __read_mostly;
- static u16 have_canfork_callback __read_mostly;
- 
-+static bool have_favordynmods __read_mostly = IS_ENABLED(CONFIG_CGROUP_FAVOR_DYNMODS);
-+
- /* cgroup namespace for init task */
- struct cgroup_namespace init_cgroup_ns = {
- 	.ns.count	= REFCOUNT_INIT(2),
-@@ -2265,9 +2267,9 @@ static int cgroup_init_fs_context(struct fs_context *fc)
- 	fc->user_ns = get_user_ns(ctx->ns->user_ns);
- 	fc->global = true;
- 
--#ifdef CONFIG_CGROUP_FAVOR_DYNMODS
--	ctx->flags |= CGRP_ROOT_FAVOR_DYNMODS;
--#endif
-+	if (have_favordynmods)
-+		ctx->flags |= CGRP_ROOT_FAVOR_DYNMODS;
-+
- 	return 0;
- }
- 
-@@ -6767,6 +6769,12 @@ static int __init enable_cgroup_debug(char *str)
- }
- __setup("cgroup_debug", enable_cgroup_debug);
- 
-+static int __init cgroup_favordynmods_setup(char *str)
-+{
-+	return (kstrtobool(str, &have_favordynmods) == 0);
-+}
-+__setup("cgroup_favordynmods=", cgroup_favordynmods_setup);
-+
- /**
-  * css_tryget_online_from_dir - get corresponding css from a cgroup dentry
-  * @dentry: directory dentry of interest
--- 
-2.40.1
-
+>
+>
+> vim +/mem_cgroup_user_flush_stats +667 mm/memcontrol.c
+>
+>    658
+>    659  /*
+>    660   * mem_cgroup_user_flush_stats - do a stats flush for a user read
+>    661   * @memcg: memory cgroup to flush
+>    662   *
+>    663   * Flush the subtree of @memcg. A mutex is used for userspace rea=
+ders to gate
+>    664   * the global rstat spinlock. This protects in-kernel flushers fr=
+om userspace
+>    665   * readers hogging the lock.
+>    666   */
+>  > 667  void mem_cgroup_user_flush_stats(struct mem_cgroup *memcg)
+>    668  {
+>    669          mutex_lock(&stats_user_flush_mutex);
+>    670          do_stats_flush(memcg);
+>    671          mutex_unlock(&stats_user_flush_mutex);
+>    672  }
+>    673
+>
+> --
+> 0-DAY CI Kernel Test Service
+> https://github.com/intel/lkp-tests/wiki
