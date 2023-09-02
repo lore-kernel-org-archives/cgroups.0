@@ -1,63 +1,51 @@
-From: Liu Shixin <liushixin2-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Subject: [PATCH] mm, memcg: expose swapcache stat for memcg v1
-Date: Sat, 2 Sep 2023 18:07:28 +0800
-Message-ID: <20230902100728.3850149-1-liushixin2@huawei.com>
+From: "Sudip Mukherjee (Codethink)" <sudipm.mukherjee@gmail.com>
+Subject: mainline build failure due to d1d4ff5d11a5 ("cgroup: put
+ cgroup_tryget_css() inside CONFIG_CGROUP_SCHED")
+Date: Sat, 2 Sep 2023 12:32:28 +0100
+Message-ID: <ZPMdTJ7zwrCkdMTu@debian>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7BIT
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20221208; t=1693654351; x=1694259151; darn=vger.kernel.org;
+        h=content-disposition:mime-version:message-id:subject:cc:to:from:date
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=8iUJUPxov9O7zxFefQw4YzTRyz6MbPYWWecwL9vIvnM=;
+        b=g9FkVRxIaVqqzJSoWbK4CTrwNeh/oQsNE7WKVNhTwR2PL13PPCmCvtnr4D1L4qnld4
+         r54kqdVFva6Z4qnzU9bTjUIl/kDuqRVGbEvBH0AnISJwlm3tNt2d3BuVMOny8RNlsOK4
+         ZPj0D1dUgpRnsUUnHyutz2/wyoTtzBpfatNOZFRk4V/+0zKY1EC34VV7LYr7b2f7wi6N
+         ZvJCD570pp5qZxEsIE0WFuk7kwSgVEiRcKvkFGjoCsz3T0N1+QMcbm1fIlDi8dNWEf+u
+         qSgj0tuT9rW3Uksle010kvQK5t5EJ7x93aSteknzWzJhGsn8W/EGX2N0jmZG8u6fvxGO
+         l59w==
+Content-Disposition: inline
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Jonathan Corbet <corbet-T1hC0tSOHrs@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Muchun Song <muchun.song-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Kefeng Wang <wangkefeng.wang-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Liu Shixin <liushixin2-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Content-Transfer-Encoding: 7bit
+To: Miaohe Lin <linmiaohe@huawei.com>, Tejun Heo <tj@kernel.org>
+Cc: Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, Linus Torvalds <torvalds@linux-foundation.org>, regressions@lists.linux.dev
 
-Since commit b6038942480e ("mm: memcg: add swapcache stat for memcg v2")
-adds swapcache stat for the cgroup v2, it seems there is no reason to
-hide it in memcg v1. Conversely, with swapcached it is more accurate to
-evaluate the available memory for memcg.
+Hi All,
 
-Suggested-by: Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Signed-off-by: Liu Shixin <liushixin2-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
----
- Documentation/admin-guide/cgroup-v1/memory.rst | 1 +
- mm/memcontrol.c                                | 6 ++++++
- 2 files changed, 7 insertions(+)
+The latest mainline kernel branch fails to build mips sb1250_swarm_defconfig with
+the error:
 
-diff --git a/Documentation/admin-guide/cgroup-v1/memory.rst b/Documentation/admin-guide/cgroup-v1/memory.rst
-index fabaad3fd9c2..fb4abe0dc228 100644
---- a/Documentation/admin-guide/cgroup-v1/memory.rst
-+++ b/Documentation/admin-guide/cgroup-v1/memory.rst
-@@ -546,6 +546,7 @@ memory.stat file includes following statistics:
-                     event happens each time a page is unaccounted from the
-                     cgroup.
-     swap            # of bytes of swap usage
-+    swapcached      # of bytes of swap cached in memory
-     dirty           # of bytes that are waiting to get written back to the disk.
-     writeback       # of bytes of file/anon cache that are queued for syncing to
-                     disk.
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index c465829db92b..619acf479be7 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -4068,6 +4068,9 @@ static const unsigned int memcg1_stats[] = {
- 	WORKINGSET_REFAULT_ANON,
- 	WORKINGSET_REFAULT_FILE,
- 	MEMCG_SWAP,
-+#ifdef CONFIG_SWAP
-+	NR_SWAPCACHE,
-+#endif
- };
- 
- static const char *const memcg1_stat_names[] = {
-@@ -4083,6 +4086,9 @@ static const char *const memcg1_stat_names[] = {
- 	"workingset_refault_anon",
- 	"workingset_refault_file",
- 	"swap",
-+#ifdef CONFIG_SWAP
-+	"swapcached",
-+#endif
- };
- 
- /* Universal VM events cgroup1 shows, original sort order */
+kernel/cgroup/cgroup.c: In function 'cgroup_local_stat_show':
+kernel/cgroup/cgroup.c:3699:15: error: implicit declaration of function 'cgroup_tryget_css'; did you mean 'cgroup_tryget'? [-Werror=implicit-function-declaration]
+ 3699 |         css = cgroup_tryget_css(cgrp, ss);
+      |               ^~~~~~~~~~~~~~~~~
+      |               cgroup_tryget
+kernel/cgroup/cgroup.c:3699:13: warning: assignment to 'struct cgroup_subsys_state *' from 'int' makes pointer from integer without a cast [-Wint-conversion]
+ 3699 |         css = cgroup_tryget_css(cgrp, ss);
+      |             ^
+
+
+git bisect pointed to d1d4ff5d11a5 ("cgroup: put cgroup_tryget_css() inside CONFIG_CGROUP_SCHED").
+
+Reverting the commit has fixed the build failure.
+
+I will be happy to test any patch or provide any extra log if needed.
+
+#regzbot introduced: d1d4ff5d11a5887a9c4cfc00294bc68ba03e7c16
+
 -- 
-2.25.1
-
+Regards
+Sudip
