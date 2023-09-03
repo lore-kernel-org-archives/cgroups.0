@@ -1,72 +1,85 @@
 From: Yafang Shao <laoar.shao-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: [RFC PATCH bpf-next 0/5] bpf, cgroup: Enable cgroup_array map on cgroup1
-Date: Sun,  3 Sep 2023 14:27:55 +0000
-Message-ID: <20230903142800.3870-1-laoar.shao@gmail.com>
+Subject: [RFC PATCH bpf-next 1/5] cgroup: Enable task_under_cgroup_hierarchy() on cgroup1
+Date: Sun,  3 Sep 2023 14:27:56 +0000
+Message-ID: <20230903142800.3870-2-laoar.shao@gmail.com>
+References: <20230903142800.3870-1-laoar.shao@gmail.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20221208; t=1693751288; x=1694356088; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=wXDwjjmxqBAOxuWYsnka7JEJGco2H68JBbaxg6PfkIk=;
-        b=jSNWjZ5wyBil44ZjC6NBwT9tp9IDYKITmez76HTetNXNAJrdXuSQ73e82iagc3zblY
-         lT5N439w2C5Lp38k8a5dQNI3BSkVScx/GMR7XBDsAuBF0fQ7TzLkzXiYP+57XulMi4vS
-         Cfj3mL5QoV5IVkF5LWuiqU64aL7FliupZM6JpYFdmXiS6S3+VHDBtqYlmVIDAWuz2i8t
-         tvJ4l24W4SxWYox+tKm8dhLVdAvNhG20EQfWvl/cRh7Xq2Nri1le6V3oJI7788Q7Qffu
-         6TvqjfZMRiGTC/fGFYdIne9UrdoaQ5PQE00jTEgTaE3NBLuNgZ61BP0dUCwNYojiUdpG
-         mOLQ==
+        d=gmail.com; s=20221208; t=1693751289; x=1694356089; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=cMXLcIWio9WW57rG1glRWMEPDKGAafnI6Sr1JX6PcGQ=;
+        b=LzVEieRrkSFlJ8mJ+2vRTvgW+b8tuZ1vl3MVX0HWrPwLSZpeV2sJGWL3iZ6LtUg3We
+         aIoe90saY0SE/4qVQTwIq496PdeKhSpaZHQFnmuEeS6BpoRNvz9SnXjtBK8qUPbQYy1C
+         XOPZc6WMep7QcvL9nMB/jlhT2+1/6D5BfllT5fNX15djA+4qvqFP365NbRAu+CGjLTqF
+         bkaheS4ccN4TYmzML38Dh6IhVwMD3mrCjyj4g17UZJRERfG0q3X9rgOrjtDC4OTCiSY5
+         /YxFUU7KgA5zRBQvYBVIDRPy4LQp1MpZFPEHwwzX+bGceV4mqwEdKRniJOA27wCRfk6D
+         e1Ng==
+In-Reply-To: <20230903142800.3870-1-laoar.shao-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 To: ast-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, daniel-FeC+5ew28dpmcu3hnIyYJQ@public.gmane.org, john.fastabend-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, andrii-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, martin.lau-fxUVXftIFDnyG1zEObXtfA@public.gmane.org, song-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, yonghong.song-fxUVXftIFDnyG1zEObXtfA@public.gmane.org, kpsingh-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, sdf-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, haoluo-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, jolsa-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org
 Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, bpf-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Yafang Shao <laoar.shao-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 
-Currently, the cgroup_array map serves as a critical component for
-bpf_current_under_cgroup() and bpf_skb_under_cgroup() functions, allowing
-us to determine whether a task or a socket buffer (skb) resides within a
-specific cgroup. However, a limitation exists as we can only store cgroup2
-file descriptors in the cgroup_array map. This limitation stems from the
-fact that cgroup_get_from_fd() exclusively supports cgroup2 file
-descriptors. Fortunately, an alternative solution presents itself by
-leveraging cgroup_v1v2_get_from_fd(), which accommodates both cgroup1 and
-cgroup2 file descriptors.
+Currently, the function task_under_cgroup_hierarchy() allows us to
+determine if a task resides exclusively within a cgroup2 hierarchy.
+Nevertheless, given the continued prevalence of cgroup1, it's useful that
+we make a minor adjustment to extend its functionality to cgroup1 as well.
+Once this modification is implemented, we will have the ability to
+effortlessly verify a task's cgroup membership within BPF programs. For
+instance, we can easily check if a task belongs to a cgroup1 directory,
+such as /sys/fs/cgroup/cpu,cpuacct/kubepods/burstable/ or
+/sys/fs/cgroup/cpu,cpuacct/kubepods/besteffort/.
 
-It is essential to note that it is safe to utilize a cgroup1 pointer within
-both bpf_current_under_cgroup() and bpf_skb_under_cgroup(), with the result
-of receiving a "false" return value when verifying a cgroup1 pointer. To
-enable the checking of tasks under a cgroup1 hierarchy, we can make a minor
-modification to task_under_cgroup_hierarchy() to add support for cgroup1.
+Signed-off-by: Yafang Shao <laoar.shao-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+---
+ include/linux/cgroup.h | 24 +++++++++++++++++++++---
+ 1 file changed, 21 insertions(+), 3 deletions(-)
 
-In our specific use case, we intend to use bpf_current_under_cgroup() to
-audit whether the current task resides within specific containers.
-Subsequently, we can use this information to create distinct ACLs within
-our LSM BPF programs, enabling us to control specific operations performed
-by these tasks.
-
-Considering the widespread use of cgroup1 in container environments,
-coupled with the considerable time it will take to transition to cgroup2,
-implementing this change will significantly enhance the utility of BPF
-in container scenarios. This is especially noteworthy because the necessary
-adjustments can be made with minimal alterations to both the cgroup
-subsystem and the BPF subsystem.
-
-Yafang Shao (5):
-  cgroup: Enable task_under_cgroup_hierarchy() on cgroup1
-  bpf: Enable cgroup_array map on cgroup1
-  selftests/bpf: Fix issues in setup_classid_environment()
-  selftests/bpf: Add new cgroup helper open_classid()
-  selftests/bpf: Add selftests for current_under_cgroupv1v2
-
- include/linux/cgroup.h                             | 24 ++++++-
- kernel/bpf/arraymap.c                              |  2 +-
- tools/testing/selftests/bpf/cgroup_helpers.c       | 34 ++++++++--
- tools/testing/selftests/bpf/cgroup_helpers.h       |  1 +
- .../bpf/prog_tests/current_under_cgroupv1v2.c      | 76 ++++++++++++++++++++++
- .../bpf/progs/test_current_under_cgroupv1v2.c      | 31 +++++++++
- 6 files changed, 160 insertions(+), 8 deletions(-)
- create mode 100644 tools/testing/selftests/bpf/prog_tests/current_under_cgroupv1v2.c
- create mode 100644 tools/testing/selftests/bpf/progs/test_current_under_cgroupv1v2.c
-
+diff --git a/include/linux/cgroup.h b/include/linux/cgroup.h
+index b307013..5414a2c 100644
+--- a/include/linux/cgroup.h
++++ b/include/linux/cgroup.h
+@@ -543,15 +543,33 @@ static inline struct cgroup *cgroup_ancestor(struct cgroup *cgrp,
+  * @ancestor: possible ancestor of @task's cgroup
+  *
+  * Tests whether @task's default cgroup hierarchy is a descendant of @ancestor.
+- * It follows all the same rules as cgroup_is_descendant, and only applies
+- * to the default hierarchy.
++ * It follows all the same rules as cgroup_is_descendant.
+  */
+ static inline bool task_under_cgroup_hierarchy(struct task_struct *task,
+ 					       struct cgroup *ancestor)
+ {
+ 	struct css_set *cset = task_css_set(task);
++	struct cgroup *cgrp;
++	bool ret = false;
++	int ssid;
++
++	if (ancestor->root == &cgrp_dfl_root)
++		return cgroup_is_descendant(cset->dfl_cgrp, ancestor);
++
++	for (ssid = 0; ssid < CGROUP_SUBSYS_COUNT; ssid++) {
++		if (!ancestor->subsys[ssid])
++			continue;
+ 
+-	return cgroup_is_descendant(cset->dfl_cgrp, ancestor);
++		cgrp = task_css(task, ssid)->cgroup;
++		if (!cgrp)
++			continue;
++
++		if (!cgroup_is_descendant(cgrp, ancestor))
++			return false;
++		if (!ret)
++			ret = true;
++	}
++	return ret;
+ }
+ 
+ /* no synchronization, the result can only be used as a hint */
 -- 
 1.8.3.1
 
