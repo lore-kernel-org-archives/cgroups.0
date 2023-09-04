@@ -1,165 +1,177 @@
-From: Yafang Shao <laoar.shao-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: [RFC PATCH bpf-next 5/5] selftests/bpf: Add selftests for current_under_cgroupv1v2
-Date: Sun,  3 Sep 2023 14:28:00 +0000
-Message-ID: <20230903142800.3870-6-laoar.shao@gmail.com>
-References: <20230903142800.3870-1-laoar.shao@gmail.com>
+From: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
+Subject: Re: [PATCH v5] mm: vmscan: try to reclaim swapcache pages if no swap
+ space
+Date: Mon, 4 Sep 2023 16:23:35 +0200
+Message-ID: <ZPXoZ2dmqXLkf6UV@dhcp22.suse.cz>
+References: <20230830035600.1656792-1-liushixin2@huawei.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20221208; t=1693751295; x=1694356095; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=GXV1VH0aENFBhlgyeq6hQvsVgH339T3EWStJqjKjW+o=;
-        b=iry41PyrpkV7Ny57Cr/afcfK2/SS8eUHsGTbKNY/Em4PSPLQkoufrHTR8RHtHkMNyK
-         GIWr3j1nnjSquvklGMlkBdZv9BjuUiglmYUAlB8imGpwus5VZZMky1QclI5sMcPtfOON
-         r0BldredxqtXiKss1b1oKadfQP22tGo/+lfNVuJJI+ZEW3Kmr+/B2qCSwe31X45fLRM/
-         R4H6rNwkASw7AluoQZiiNMxoxqaYysU5hwrww9WuUm3HRaxq/SqMujV4y7/22F9NZkYy
-         iZJ0iLUcj1HV6VIhR+NzB8SaiB07fJGie3z3Naj9eeGIahFWcyt6tQFPVn8rUqXGmQTu
-         /LMQ==
-In-Reply-To: <20230903142800.3870-1-laoar.shao-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
+        t=1693837416; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=QWDCEvzHucuSQUBB7EY+oxf1co3O21NGQJ9fGF2Y0bg=;
+        b=oQUkVC0NJ6QPqJQpJDPa7OPix6qR8zStud1/ci3OLV48lTmUQ2WMJ7pgtQY1YRD+U++3wB
+        Tk1zo9Tt2H1u+IMRbQZBCeUC6DwVvUvm+W0lr4Pc0ofmQbQxdUjb8OTliiLutbx7qGdyvE
+        NzXNQg5K9S378s83BDb9GA2a+otCE/w=
+Content-Disposition: inline
+In-Reply-To: <20230830035600.1656792-1-liushixin2-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: ast-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, daniel-FeC+5ew28dpmcu3hnIyYJQ@public.gmane.org, john.fastabend-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, andrii-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, martin.lau-fxUVXftIFDnyG1zEObXtfA@public.gmane.org, song-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, yonghong.song-fxUVXftIFDnyG1zEObXtfA@public.gmane.org, kpsingh-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, sdf-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, haoluo-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, jolsa-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, bpf-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Yafang Shao <laoar.shao-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Content-Transfer-Encoding: 7bit
+To: Liu Shixin <liushixin2-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Cc: Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Huang Ying <ying.huang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Muchun Song <muchun.song-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, wangkefeng.wang-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
 
-Add selftests for bpf_current_task_under_cgroup() on both cgroup1 and
-cgroup2. The result as follows,
+On Wed 30-08-23 11:56:00, Liu Shixin wrote:
+> When spaces of swap devices are exhausted, only file pages can be reclaimed.
+> But there are still some swapcache pages in anon lru list. This can lead
+> to a premature out-of-memory.
+> 
+> The problem is found with such step:
+> 
+>  Firstly, set a 9MB disk swap space, then create a cgroup with 10MB
+>  memory limit, then runs an program to allocates about 15MB memory.
+> 
+> The problem occurs occasionally, which may need about 100 times.
+> 
+> Fix it by checking number of swapcache pages in can_reclaim_anon_pages().
+> If the number is not zero, return true either. Moreover, add a new bit
+> swapcache_only in struct scan_control to skip isolating anon pages that
+> are not swapcache when only swapcache pages can be reclaimed to accelerate
+> reclaim efficiency.
 
-  $ tools/testing/selftests/bpf/test_progs --name=current_under_cgroupv1v2
-  #62/1    current_under_cgroupv1v2/test_current_under_cgroup2:OK
-  #62/2    current_under_cgroupv1v2/test_current_under_cgroup1:OK
-  #62      current_under_cgroupv1v2:OK
-  Summary: 1/2 PASSED, 0 SKIPPED, 0 FAILED
+Have you tested this also for the global reclaim? Am I just missing
+something or this could seriously stall the reclaim in swapcache_only
+mode if the swap cache pages cannot be dropped for some reason?
 
-Signed-off-by: Yafang Shao <laoar.shao-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
----
- .../bpf/prog_tests/current_under_cgroupv1v2.c      | 76 ++++++++++++++++++++++
- .../bpf/progs/test_current_under_cgroupv1v2.c      | 31 +++++++++
- 2 files changed, 107 insertions(+)
- create mode 100644 tools/testing/selftests/bpf/prog_tests/current_under_cgroupv1v2.c
- create mode 100644 tools/testing/selftests/bpf/progs/test_current_under_cgroupv1v2.c
+Also how big of a deal this is with somehow more realistic scenarios
+with limits that are not so small?
 
-diff --git a/tools/testing/selftests/bpf/prog_tests/current_under_cgroupv1v2.c b/tools/testing/selftests/bpf/prog_tests/current_under_cgroupv1v2.c
-new file mode 100644
-index 0000000..62efca3
---- /dev/null
-+++ b/tools/testing/selftests/bpf/prog_tests/current_under_cgroupv1v2.c
-@@ -0,0 +1,76 @@
-+// SPDX-License-Identifier: GPL-2.0
-+
-+#include <test_progs.h>
-+#include "cgroup_helpers.h"
-+#include "test_current_under_cgroupv1v2.skel.h"
-+
-+#define CGROUP2_DIR "/current_under_cgroup2"
-+
-+static void attach_progs(int cgrp_fd)
-+{
-+	struct test_current_under_cgroupv1v2 *skel;
-+	int cgrp_map_fd, ret, idx = 0;
-+
-+	skel = test_current_under_cgroupv1v2__open_and_load();
-+	if (!ASSERT_OK_PTR(skel, "test_current_under_cgroupv1v2__open"))
-+		return;
-+
-+	cgrp_map_fd = bpf_map__fd(skel->maps.cgrp_map);
-+	ret = bpf_map_update_elem(cgrp_map_fd, &idx, &cgrp_fd, BPF_ANY);
-+	if (!ASSERT_OK(ret, "update_cgrp_map"))
-+		goto cleanup;
-+
-+	/* Attach LSM prog first */
-+	skel->links.lsm_run = bpf_program__attach_lsm(skel->progs.lsm_run);
-+	if (!ASSERT_OK_PTR(skel->links.lsm_run, "lsm_attach"))
-+		goto cleanup;
-+
-+	/* LSM prog will be triggered when attaching fentry */
-+	skel->links.fentry_run = bpf_program__attach_trace(skel->progs.fentry_run);
-+	ASSERT_NULL(skel->links.fentry_run, "fentry_attach");
-+
-+cleanup:
-+	test_current_under_cgroupv1v2__destroy(skel);
-+}
-+
-+static void current_under_cgroup1(void)
-+{
-+	int cgrp_fd, ret;
-+
-+	/* Setup cgroup1 hierarchy */
-+	ret = setup_classid_environment();
-+	if (!ASSERT_OK(ret, "setup_classid_environment"))
-+		return;
-+
-+	ret = join_classid();
-+	if (!ASSERT_OK(ret, "join_cgroup1"))
-+		goto cleanup;
-+
-+	cgrp_fd = open_classid();
-+	attach_progs(cgrp_fd);
-+	close(cgrp_fd);
-+
-+cleanup:
-+	/* Cleanup cgroup1 hierarchy */
-+	cleanup_classid_environment();
-+}
-+
-+static void current_under_cgroup2(void)
-+{
-+	int cgrp_fd;
-+
-+	cgrp_fd = test__join_cgroup(CGROUP2_DIR);
-+	if (!ASSERT_GE(cgrp_fd, 0, "cgroup_join_cgroup2"))
-+		return;
-+
-+	attach_progs(cgrp_fd);
-+	close(cgrp_fd);
-+}
-+
-+void test_current_under_cgroupv1v2(void)
-+{
-+	if (test__start_subtest("test_current_under_cgroup2"))
-+		current_under_cgroup2();
-+	if (test__start_subtest("test_current_under_cgroup1"))
-+		current_under_cgroup1();
-+}
-diff --git a/tools/testing/selftests/bpf/progs/test_current_under_cgroupv1v2.c b/tools/testing/selftests/bpf/progs/test_current_under_cgroupv1v2.c
-new file mode 100644
-index 0000000..9f0af0b
---- /dev/null
-+++ b/tools/testing/selftests/bpf/progs/test_current_under_cgroupv1v2.c
-@@ -0,0 +1,31 @@
-+// SPDX-License-Identifier: GPL-2.0
-+
-+#include "vmlinux.h"
-+#include <bpf/bpf_helpers.h>
-+#include <bpf/bpf_tracing.h>
-+
-+struct {
-+	__uint(type, BPF_MAP_TYPE_CGROUP_ARRAY);
-+	__uint(key_size, sizeof(u32));
-+	__uint(value_size, sizeof(u32));
-+	__uint(max_entries, 1);
-+} cgrp_map SEC(".maps");
-+
-+SEC("lsm/bpf")
-+int BPF_PROG(lsm_run, int cmd, union bpf_attr *attr, unsigned int size)
-+{
-+	if (cmd != BPF_LINK_CREATE)
-+		return 0;
-+
-+	if (bpf_current_task_under_cgroup(&cgrp_map, 0 /* map index */))
-+		return -1;
-+	return 0;
-+}
-+
-+SEC("fentry/bpf_fentry_test1")
-+int BPF_PROG(fentry_run)
-+{
-+	return 0;
-+}
-+
-+char _license[] SEC("license") = "GPL";
+> Link: https://lore.kernel.org/lkml/CAJD7tkZAfgncV+KbKr36=eDzMnT=9dZOT0dpMWcurHLr6Do+GA-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org/
+> Signed-off-by: Liu Shixin <liushixin2-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+> Tested-by: Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+> Reviewed-by: "Huang, Ying" <ying.huang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+> Reviewed-by: Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+> ---
+> v3->v4: Add describe and link about how to reproduce the problem.
+> v4->v5: Add Reviewed-by and reproducer link.
+> 
+>  include/linux/swap.h |  6 ++++++
+>  mm/memcontrol.c      |  8 ++++++++
+>  mm/vmscan.c          | 29 +++++++++++++++++++++++++++--
+>  3 files changed, 41 insertions(+), 2 deletions(-)
+> 
+> diff --git a/include/linux/swap.h b/include/linux/swap.h
+> index 456546443f1f..0318e918bfa4 100644
+> --- a/include/linux/swap.h
+> +++ b/include/linux/swap.h
+> @@ -669,6 +669,7 @@ static inline void mem_cgroup_uncharge_swap(swp_entry_t entry, unsigned int nr_p
+>  }
+>  
+>  extern long mem_cgroup_get_nr_swap_pages(struct mem_cgroup *memcg);
+> +extern long mem_cgroup_get_nr_swapcache_pages(struct mem_cgroup *memcg);
+>  extern bool mem_cgroup_swap_full(struct folio *folio);
+>  #else
+>  static inline void mem_cgroup_swapout(struct folio *folio, swp_entry_t entry)
+> @@ -691,6 +692,11 @@ static inline long mem_cgroup_get_nr_swap_pages(struct mem_cgroup *memcg)
+>  	return get_nr_swap_pages();
+>  }
+>  
+> +static inline long mem_cgroup_get_nr_swapcache_pages(struct mem_cgroup *memcg)
+> +{
+> +	return total_swapcache_pages();
+> +}
+> +
+>  static inline bool mem_cgroup_swap_full(struct folio *folio)
+>  {
+>  	return vm_swap_full();
+> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+> index e8ca4bdcb03c..c465829db92b 100644
+> --- a/mm/memcontrol.c
+> +++ b/mm/memcontrol.c
+> @@ -7567,6 +7567,14 @@ long mem_cgroup_get_nr_swap_pages(struct mem_cgroup *memcg)
+>  	return nr_swap_pages;
+>  }
+>  
+> +long mem_cgroup_get_nr_swapcache_pages(struct mem_cgroup *memcg)
+> +{
+> +	if (mem_cgroup_disabled())
+> +		return total_swapcache_pages();
+> +
+> +	return memcg_page_state(memcg, NR_SWAPCACHE);
+> +}
+> +
+>  bool mem_cgroup_swap_full(struct folio *folio)
+>  {
+>  	struct mem_cgroup *memcg;
+> diff --git a/mm/vmscan.c b/mm/vmscan.c
+> index 1080209a568b..e73e2df8828d 100644
+> --- a/mm/vmscan.c
+> +++ b/mm/vmscan.c
+> @@ -137,6 +137,9 @@ struct scan_control {
+>  	/* Always discard instead of demoting to lower tier memory */
+>  	unsigned int no_demotion:1;
+>  
+> +	/* Swap space is exhausted, only reclaim swapcache for anon LRU */
+> +	unsigned int swapcache_only:1;
+> +
+>  	/* Allocation order */
+>  	s8 order;
+>  
+> @@ -613,10 +616,20 @@ static inline bool can_reclaim_anon_pages(struct mem_cgroup *memcg,
+>  		 */
+>  		if (get_nr_swap_pages() > 0)
+>  			return true;
+> +		/* Is there any swapcache pages to reclaim? */
+> +		if (total_swapcache_pages() > 0) {
+> +			sc->swapcache_only = 1;
+> +			return true;
+> +		}
+>  	} else {
+>  		/* Is the memcg below its swap limit? */
+>  		if (mem_cgroup_get_nr_swap_pages(memcg) > 0)
+>  			return true;
+> +		/* Is there any swapcache pages in memcg to reclaim? */
+> +		if (mem_cgroup_get_nr_swapcache_pages(memcg) > 0) {
+> +			sc->swapcache_only = 1;
+> +			return true;
+> +		}
+>  	}
+>  
+>  	/*
+> @@ -2280,6 +2293,19 @@ static bool skip_cma(struct folio *folio, struct scan_control *sc)
+>  }
+>  #endif
+>  
+> +static bool skip_isolate(struct folio *folio, struct scan_control *sc,
+> +			 enum lru_list lru)
+> +{
+> +	if (folio_zonenum(folio) > sc->reclaim_idx)
+> +		return true;
+> +	if (skip_cma(folio, sc))
+> +		return true;
+> +	if (unlikely(sc->swapcache_only && !is_file_lru(lru) &&
+> +	    !folio_test_swapcache(folio)))
+> +		return true;
+> +	return false;
+> +}
+> +
+>  /*
+>   * Isolating page from the lruvec to fill in @dst list by nr_to_scan times.
+>   *
+> @@ -2326,8 +2352,7 @@ static unsigned long isolate_lru_folios(unsigned long nr_to_scan,
+>  		nr_pages = folio_nr_pages(folio);
+>  		total_scan += nr_pages;
+>  
+> -		if (folio_zonenum(folio) > sc->reclaim_idx ||
+> -				skip_cma(folio, sc)) {
+> +		if (skip_isolate(folio, sc, lru)) {
+>  			nr_skipped[folio_zonenum(folio)] += nr_pages;
+>  			move_to = &folios_skipped;
+>  			goto move;
+> -- 
+> 2.25.1
+
 -- 
-1.8.3.1
-
+Michal Hocko
+SUSE Labs
