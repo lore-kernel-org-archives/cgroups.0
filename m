@@ -1,91 +1,67 @@
-From: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Subject: [PATCH v8 0/7] cgroup/cpuset: Support remote partitions
-Date: Tue,  5 Sep 2023 09:32:36 -0400
-Message-ID: <20230905133243.91107-1-longman@redhat.com>
+From: Michal =?utf-8?Q?Koutn=C3=BD?= <mkoutny-IBi9RG/b67k@public.gmane.org>
+Subject: Re: [PATCH v4 3/4] mm: memcg: let non-unified root stats flushes
+ help unified flushes
+Date: Tue, 5 Sep 2023 18:07:04 +0200
+Message-ID: <r5rbfskjjhkp5pjlwi7xqluc5lxq7bxo44gmxwhihn62ea75wp@iljnpiqo5dcr>
+References: <20230831165611.2610118-1-yosryahmed@google.com>
+ <20230831165611.2610118-4-yosryahmed@google.com>
+ <ZPXupwjewuLgksAI@dhcp22.suse.cz>
+ <6tne52ip62ucev7nmnim3m7fhcydnwcytyxynrlxxgaf4cbqea@r4hec425izap>
+ <ZPX6luPGqypp68+L@dhcp22.suse.cz>
+ <hrpw2bjsrs3pzxympb7cz4nohyeztnxkmdtzbzlfdba6ugkken@dhcdbbbrv4fn>
+ <CAJD7tkaHVtMiMYFocNiABuyhPcqt77gei0UeaDq4J7V-=tMFYA@mail.gmail.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: multipart/signed; micalg=pgp-sha512;
+        protocol="application/pgp-signature"; boundary="6stuxi5kzfaubddj"
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
+        t=1693930025; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=Z7DpwVTdzkO9zvTaC0Nmsn1euztwCXxmkNCfH0qy/6k=;
+        b=JuwiWsstsUx/RiXnQTVhHoohB5z8AqUuTYPwJqVfD3uJUgTGfqPeVba5V5NEEDW0ewNbK9
+        2wvuBRryGXfUBvhrEM36nhox84C+PqP2ReSDma8+WWvRf7DZGDThb4CHbjJ0OSiyUZiTSv
+        eZEMTFKIhS+9vnd097bZdCl7RTDQRUE=
+Content-Disposition: inline
+In-Reply-To: <CAJD7tkaHVtMiMYFocNiABuyhPcqt77gei0UeaDq4J7V-=tMFYA-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Christian Brauner <brauner-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Jonathan Corbet <corbet-T1hC0tSOHrs@public.gmane.org>, Shuah Khan <shuah-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Juri Lelli <juri.lelli-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Dietmar Eggemann <dietmar.eggemann-5wv7dgnIgG8@public.gmane.org>, =?UTF-8?q?Michal=20Koutn=C3=BD?= <mkoutny-IBi9RG/b67k@public.gmane.org>, Giuseppe Scrivano <gscrivan-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-
- v8:
-  - Add a new patch 1 to fix a load balance state problem.
-  - Add new test cases to the test script and fixes some bugs in error
-    handling.
-
- v7:
-  - https://lore.kernel.org/lkml/d0380dfa-ee2e-e492-38e3-31bf6644e511-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org/
-  - Fix a compilation problem in patch 1 & a memory allocation bug in
-    patch 2.
-  - Change exclusive_cpus type to cpumask_var_t to match other cpumasks
-    and make code more consistent.
-
- v6:
-  - https://lore.kernel.org/lkml/20230713172601.3285847-1-longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org/
-  - Add another read-only cpuset.cpus.exclusive.effective control file
-    to expose the effective set of exclusive CPUs.
-  - Update the documentation and test accordingly.
+To: Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Cc: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Muchun Song <muchun.song-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Ivan Babrou <ivan-lDpJ742SOEtZroRs9YW3xA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
 
-This patch series introduces new cpuset control
-files "cpuset.cpus.exclusive" (read-write) and
-"cpuset.cpus.exclusive.effective" (read only) for better control of
-which exclusive CPUs are being distributed down the cgroup hierarchy
-for creating cpuset partition.
+--6stuxi5kzfaubddj
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 
-Any one of the exclusive CPUs can only be distributed to at most one
-child cpuset. Invalid input to "cpuset.cpus.exclusive" that violates the
-sibling exclusivity rule will be rejected. This new control files has
-no effect on the behavior of the cpuset until it turns into a partition
-root. At that point, its effective CPUs will be set to its exclusive
-CPUs unless some of them are offline.
+On Tue, Sep 05, 2023 at 08:54:46AM -0700, Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org> wrote:
+> How would that create a userspace visible behavior that a dependency
+> can be formed on?
 
-This patch series also introduces a new category of cpuset partition
-called remote partitions. The existing partition category where the
-partition roots have to be clustered around the root cgroup in a
-hierarchical way is now referred to as local partitions.
+A userspace process reading out root memory.stat more frequently than
+in-kernel periodic flusher.
 
-A remote partition can be formed far from the root cgroup with no
-partition root parent. While local partitions can be created without
-touching "cpuset.cpus.exclusive" as it can be set automatically
-if a cpuset becomes a local partition root. Properly setting
-"cpuset.cpus.exclusive" values down the hierarchy are required to create
-a remote partition.
+> Users expecting reclaim to be faster right after reading root stats?
 
-Both scheduling and isolated partitions can be formed as a remote
-partition. A local partition can be created under a remote partition.
-A remote partition, however, cannot be formed under a local partition
-for now.
+Yes, that is what I had in mind.
 
-Modern container orchestration tools like Kubernetes use the cgroup
-hierarchy to manage different containers. And it is relying on other
-middleware like systemd to help managing it. If a container needs to
-use isolated CPUs, it is hard to get those with the local partitions
-as it will require the administrative parent cgroup to be a partition
-root too which tool like systemd may not be ready to manage.
+> I would guess that would be too flaky to cause a behavior that people
+> can depend on tbh.
 
-With this patch series, we allow the creation of remote partition
-far from the root. The container management tool can manage the
-"cpuset.cpus.exclusive" file without impacting the other cpuset
-files that are managed by other middlewares. Of course, invalid
-"cpuset.cpus.exclusive" values will be rejected.
+I agree it's a weird dependency. As I wrote, nothing that would be hard
+to take away.
 
-Waiman Long (7):
-  cgroup/cpuset: Fix load balance state in update_partition_sd_lb()
-  cgroup/cpuset: Add cpuset.cpus.exclusive.effective for v2
-  cgroup/cpuset: Add cpuset.cpus.exclusive for v2
-  cgroup/cpuset: Introduce remote partition
-  cgroup/cpuset: Check partition conflict with housekeeping setup
-  cgroup/cpuset: Documentation update for partition
-  cgroup/cpuset: Extend test_cpuset_prs.sh to test remote partition
 
- Documentation/admin-guide/cgroup-v2.rst       |  123 +-
- kernel/cgroup/cpuset.c                        | 1279 ++++++++++++-----
- .../selftests/cgroup/test_cpuset_prs.sh       |  458 ++++--
- 3 files changed, 1366 insertions(+), 494 deletions(-)
+Michal
 
--- 
-2.31.1
+--6stuxi5kzfaubddj
+Content-Type: application/pgp-signature; name="signature.asc"
 
+-----BEGIN PGP SIGNATURE-----
+
+iHUEABYKAB0WIQQpEWyjXuwGT2dDBqAGvrMr/1gcjgUCZPdSJgAKCRAGvrMr/1gc
+jvq0AP4lfNlWmGAFoLBq4DgbaLXZ/uCv05XZGxsrYdHcWo+uwAD8DGnuohLoPyYb
+uBX+a5AsCXJZEgbqY1PGUk/edfszRAk=
+=PUkx
+-----END PGP SIGNATURE-----
+
+--6stuxi5kzfaubddj--
