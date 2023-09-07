@@ -1,46 +1,68 @@
-From: Luiz Capitulino <luizcap-vV1OtcyAfmbQT0dZR+AlfA@public.gmane.org>
+From: Michal =?utf-8?Q?Koutn=C3=BD?= <mkoutny@suse.com>
 Subject: Re: [PATH v2] cgroup: add cgroup_favordynmods= command-line option
-Date: Thu, 7 Sep 2023 11:16:41 -0400
-Message-ID: <236f84be-26b0-758d-3d3f-380e536f72c2@amazon.com>
+Date: Thu, 7 Sep 2023 17:57:27 +0200
+Message-ID: <zqgnootbsjyj7wq5ayiallz4m2bz7ad6w67t24peglhc5v6ern@4pfqlshgpnie>
 References: <20230906005712.66461-1-luizcap@amazon.com>
  <lqcl5cblo3s45afvtgqjkbz2an3zwccsckglhpe3ufyffqavjk@ui45m6itz4ne>
+ <236f84be-26b0-758d-3d3f-380e536f72c2@amazon.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-  d=amazon.com; i=@amazon.com; q=dns/txt; s=amazon201209;
-  t=1694103549; x=1725639549;
-  h=message-id:date:mime-version:subject:to:cc:references:
-   from:in-reply-to:content-transfer-encoding;
-  bh=YauVF01CGBBHBYehJqzxf4f2JW+5DIf+1r8++cg5PLM=;
-  b=P3QAX8zLOfeNlSVYnBk8O4LKH1ZDrrYYpF7e5PWyUIqFknEMHKC+gYga
-   X84diM7Dk2gbtoCGXb6REJd4vyV+MHnc34nVKwcSA65wAwYGeBDizqPML
-   1Vcv/VNfXx/WGrSyHxxdk9memcIdxNSV4jeJi4m2QchDIFctqwQm09Pkz
-   4=;
-Content-Language: en-US
-In-Reply-To: <lqcl5cblo3s45afvtgqjkbz2an3zwccsckglhpe3ufyffqavjk@ui45m6itz4ne>
+Content-Type: multipart/signed; micalg=pgp-sha512;
+        protocol="application/pgp-signature"; boundary="7ibi6d2k6h7vappp"
+Return-path: <linux-kernel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
+        t=1694102248; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=UnG3kyHx/yySq1uQAqm63aAFoe+tK7nrYedgBgmw3Sk=;
+        b=qNG59kr3JPMUSa7aErahyZeWVgBZ/LFmTUWjofl1Ge+sd8TgCYFmeGfGN+Mcm7CcLguLwN
+        /dOcb3nSK9p7Tw6Q1dzdWC6bpyE8JLbQiNbaE7ObOW/zO5WOkvPGP+GQuE3b6/fOFgykRw
+        GnvMh13oE1m8dySb2Ffu6QFcmZbX4EI=
+Content-Disposition: inline
+In-Reply-To: <236f84be-26b0-758d-3d3f-380e536f72c2@amazon.com>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="iso-8859-1"; format="flowed"
-To: =?UTF-8?Q?Michal_Koutn=c3=bd?= <mkoutny-IBi9RG/b67k@public.gmane.org>
-Cc: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, lcapitulino-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org
+To: Luiz Capitulino <luizcap@amazon.com>
+Cc: tj@kernel.org, lizefan.x@bytedance.com, hannes@cmpxchg.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, longman@redhat.com, lcapitulino@gmail.com
 
 
+--7ibi6d2k6h7vappp
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-On 2023-09-07 11:06, Michal Koutn=C3=BD wrote:
-> On Wed, Sep 06, 2023 at 12:57:12AM +0000, Luiz Capitulino <luizcap-vV1Otc=
-yAfmbQT0dZR+AlfA@public.gmane.org> wrote:
->> We have a need of using favordynmods with cgroup v1, which doesn't suppo=
-rt
->> changing mount flags during remount. Enabling CONFIG_FAVOR_DYNMODS at
->> build-time is not an option because we want to be able to selectively
->> enable it for certain systems.
->=20
-> Could this be implemented by a utility that would read /proc/cmdline
-> (while kernel ignores the arg) and remount respective hierarchies
-> accordingly? Or what do I miss?
+On Thu, Sep 07, 2023 at 11:16:41AM -0400, Luiz Capitulino <luizcap@amazon.c=
+om> wrote:
+> Yeah, this works for cgroup v2 but my understanding is that cgroup v1
+> doesn't support changing flags in remount, take a look at
+> cgroup1_reconfigure().
 
-Yeah, this works for cgroup v2 but my understanding is that cgroup v1
-doesn't support changing flags in remount, take a look at
-cgroup1_reconfigure().
+Ah, didn't notice.
+Alhtough -- there seems to be a deeper issue -- the mount option doesn't
+have a per-root semantics. There is only a single
+cgroup_threadgroup_rwsem afterall.
 
-- Luiz
+Even with your cmdline option, you may loose the behavior after
+unmounting any of the v1 hierarchies (cgroup_destroy_root()
+unconditionally disables it).
+
+Or you could still achieve the result by mounting cgroup2 hierarchy with
+favordynmods. (And unmount it, default root is not ever released.)
+
+Maybe it would be the best to have this controllable only via v2
+hierarchy (as it's the only documented).
+(And maybe v1s should not show the option at all.)
+
+My 0.02=E2=82=AC,
+Michal
+
+--7ibi6d2k6h7vappp
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iHUEABYKAB0WIQQpEWyjXuwGT2dDBqAGvrMr/1gcjgUCZPny4gAKCRAGvrMr/1gc
+jqjdAQCR/eGLDLOEDNOiaj8HrKSt34AoCZ11IrxIBd136Vqe0gD9FLcG+ak0oijQ
+u/PovQBg+jQA2Hax7qFMyjarQs33IwQ=
+=BLiB
+-----END PGP SIGNATURE-----
+
+--7ibi6d2k6h7vappp--
