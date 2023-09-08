@@ -1,56 +1,84 @@
-From: syzbot <syzbot+b591856e0f0139f83023@syzkaller.appspotmail.com>
-Subject: Re: [syzbot] [mm?] kernel BUG in vma_replace_policy
-Date: Fri, 08 Sep 2023 11:04:30 -0700
-Message-ID: <000000000000e127ec0604dcce27@google.com>
-References: <000000000000f392a60604a65085@google.com>
+From: Alexei Starovoitov <alexei.starovoitov-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Subject: Re: [RFC PATCH bpf-next 0/5] bpf, cgroup: Enable cgroup_array map on cgroup1
+Date: Fri, 8 Sep 2023 11:09:03 -0700
+Message-ID: <CAADnVQL+6PsRbNMo=8kJpgw1OTbdLG9epsup0q7La5Ffqj6g6A@mail.gmail.com>
+References: <20230903142800.3870-1-laoar.shao@gmail.com> <qv2xdcsvb4brjsc7qx6ncxrudwusogdo4itzv4bx2perfjymwl@in7zaeymjiie>
+ <CALOAHbB-PF1LjSAxoCdePN6Va4D+ufkeDmq8s3b0AGtfX5E-cQ@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-riscv-bounces+glpr-linux-riscv=m.gmane-mx.org@lists.infradead.org>
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=lists.infradead.org; s=bombadil.20210309; h=Sender:
-	Content-Transfer-Encoding:Content-Type:List-Subscribe:List-Help:List-Post:
-	List-Archive:List-Unsubscribe:List-Id:To:From:Subject:Message-ID:In-Reply-To:
-	Date:MIME-Version:Reply-To:Cc:Content-ID:Content-Description:Resent-Date:
-	Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:References:
-	List-Owner; bh=Kp8tAmg80E2vuMNOc7zjwFE9R+yutezHVdaPMdDCi1Y=; b=x6AsxZeQ2jcAM6
-	Vsbw6/OCBMGdCjaDmHXMPhoTfKGTNyODtUi0x8XY+FkCdw6PqAK8qJeab49RtB/WZrGABDK/Z8/MK
-	k0QTJPFlCgvBXdtfyqDzWpBZoTN9iKUPA3XKLSglZVzWY30nIZfB22fJ+DbDnVFNRHgDMTTiZZg9u
-	U8BfB/D0KKFwJDw8flTSYh8L/5RxbPXuK4g2PnnhIpwe0m6PPFBfcNF4s8aIZFCo8XQpfTJtTs1iS
-	7rwSh9qg1wToQGkPOIzmUY0P75SRo2Ttlvbw3EQ/IG2TWS/EpZM8dfz5oo3DUJ4hFga28tghL/uUw
-	AgmJKwRPNM1bGsjsz1Nw==;
-In-Reply-To: <000000000000f392a60604a65085@google.com>
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-riscv>,
- <mailto:linux-riscv-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-riscv/>
-List-Post: <mailto:linux-riscv@lists.infradead.org>
-List-Help: <mailto:linux-riscv-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-riscv>,
- <mailto:linux-riscv-request@lists.infradead.org?subject=subscribe>
-Sender: "linux-riscv" <linux-riscv-bounces@lists.infradead.org>
-Errors-To: linux-riscv-bounces+glpr-linux-riscv=m.gmane-mx.org@lists.infradead.org
-To: 42.hyeyoo@gmail.com, Liam.Howlett@Oracle.com, agordeev@linux.ibm.com, akpm@linux-foundation.org, alexghiti@rivosinc.com, aou@eecs.berkeley.edu, borntraeger@linux.ibm.com, cgroups@vger.kernel.org, christophe.leroy@csgroup.eu, damon@lists.linux.dev, david@redhat.com, eadavis@sina.com, frankja@linux.ibm.com, gerald.schaefer@linux.ibm.com, gor@linux.ibm.com, hannes@cmpxchg.org, hca@linux.ibm.com, imbrenda@linux.ibm.com, jeeheng.sia@starfivetech.com, jglisse@redhat.com, kvm@vger.kernel.org, leyfoon.tan@starfivetech.com, linmiaohe@huawei.com, linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org, linux-riscv@lists.infradead.org, linux-s390@vger.kernel.org, linuxppc-dev@lists.ozlabs.org, mason.huo@starfivetech.com, mhocko@kernel.org, mpe@ellerman.id.au, muchun.song@linux.dev, naoya.horiguchi@nec.com, npiggin@gmail.com, palmer@dabbelt.com
+Content-Transfer-Encoding: quoted-printable
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20221208; t=1694196555; x=1694801355; darn=vger.kernel.org;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=FyPYK0w69+g1akkDzeNAWRhnsMpPNgkPja8VOvx5ZAo=;
+        b=d9JRdGQ58w6J1Evf2LP9ayMZ5BPwN+ugHJ9lnGTSwuI+upsMZbzs1H2IR4WqYXGNMA
+         QGPJR47Vbi8FUwH/OLfINGOr/8T69Jh6Lou3iBsYkKKeFB7i5DH8xdHG7JXhDBu26tQ5
+         GFbgqUahoRrEz+w3amIR4kPiuIZ1gHimAnycSKkTBlbIsvdmGYilyG5V7E+zao+wYmBU
+         fLkJANKX1ivtnNRWXxdz0tMai6CLJw4j/vELzREzL2m96myB+Mqw0XxF3LaWQJ4qQ3Xp
+         hmYqhdS2dk+eO2l8Hy81GM7rPD6MXt8ex/crEwCWeAd4PkwXEQODLmhWUsTKg5B945wp
+         j2xA==
+In-Reply-To: <CALOAHbB-PF1LjSAxoCdePN6Va4D+ufkeDmq8s3b0AGtfX5E-cQ-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+List-ID: <cgroups.vger.kernel.org>
+Content-Type: text/plain; charset="utf-8"
+To: Yafang Shao <laoar.shao-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Cc: =?UTF-8?Q?Michal_Koutn=C3=BD?= <mkoutny-IBi9RG/b67k@public.gmane.org>, Alexei Starovoitov <ast-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Daniel Borkmann <daniel-FeC+5ew28dpmcu3hnIyYJQ@public.gmane.org>, John Fastabend <john.fastabend-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Andrii Nakryiko <andrii-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Martin KaFai Lau <martin.lau-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Song Liu <song-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Yonghong Song <yonghong.song-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, KP Singh <kpsingh-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Stanislav Fomichev <sdf-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Hao Luo <haoluo-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Jiri Olsa <jolsa-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, "open list:CONTROL GROUP (CGROUP)" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, bpf <bpf-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 
-syzbot has bisected this issue to:
+On Thu, Sep 7, 2023 at 7:54=E2=80=AFPM Yafang Shao <laoar.shao-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org> w=
+rote:
+>
+> On Thu, Sep 7, 2023 at 10:41=E2=80=AFPM Michal Koutn=C3=BD <mkoutny@suse.=
+com> wrote:
+> >
+> > Hello Yafang.
+> >
+> > On Sun, Sep 03, 2023 at 02:27:55PM +0000, Yafang Shao <laoar.shao@gmail=
+.com> wrote:
+> > > In our specific use case, we intend to use bpf_current_under_cgroup()=
+ to
+> > > audit whether the current task resides within specific containers.
+> >
+> > I wonder -- how does this work in practice?
+>
+> In our practice, the cgroup_array map serves as a shared map utilized
+> by both our LSM programs and the target pods. as follows,
+>
+>     ----------------
+>     | target pod |
+>     ----------------
+>            |
+>            |
+>           V                                      ----------------
+>  /sys/fs/bpf/cgoup_array     <--- | LSM progs|
+>                                                   ----------------
+>
+> Within the target pods, we employ a script to update its cgroup file
+> descriptor into the cgroup_array, for instance:
+>
+>     cgrp_fd =3D open("/sys/fs/cgroup/cpu");
+>     cgrp_map_fd =3D bpf_obj_get("/sys/fs/bpf/cgroup_array");
+>     bpf_map_update_elem(cgrp_map_fd, &app_idx, &cgrp_fd, 0);
+>
+> Next, we will validate the contents of the cgroup_array within our LSM
+> programs, as follows:
+>
+>      if (!bpf_current_task_under_cgroup(&cgroup_array, app_idx))
+>             return -1;
+>
+> Within our Kubernetes deployment system, we will inject this script
+> into the target pods only if specific annotations, such as
+> "bpf_audit," are present. Consequently, users do not need to manually
+> modify their code; this process will be handled automatically.
+>
+> Within our Kubernetes environment, there is only a single instance of
+> these target pods on each host. Consequently, we can conveniently
+> utilize the array index as the application ID. However, in scenarios
+> where you have multiple instances running on a single host, you will
+> need to manage the mapping of instances to array indexes
+> independently. For cases with multiple instances, a cgroup_hash may be
+> a more suitable approach, although that is a separate discussion
+> altogether.
 
-commit 49b0638502da097c15d46cd4e871dbaa022caf7c
-Author: Suren Baghdasaryan <surenb@google.com>
-Date:   Fri Aug 4 15:27:19 2023 +0000
-
-    mm: enable page walking API to lock vmas during the walk
-
-bisection log:  https://syzkaller.appspot.com/x/bisect.txt?x=11fd2348680000
-start commit:   7733171926cc Merge tag 'mailbox-v6.6' of git://git.linaro...
-git tree:       upstream
-final oops:     https://syzkaller.appspot.com/x/report.txt?x=13fd2348680000
-console output: https://syzkaller.appspot.com/x/log.txt?x=15fd2348680000
-kernel config:  https://syzkaller.appspot.com/x/.config?x=b273cdfbc13e9a4b
-dashboard link: https://syzkaller.appspot.com/bug?extid=b591856e0f0139f83023
-syz repro:      https://syzkaller.appspot.com/x/repro.syz?x=15d4ecd0680000
-C reproducer:   https://syzkaller.appspot.com/x/repro.c?x=1055c284680000
-
-Reported-by: syzbot+b591856e0f0139f83023@syzkaller.appspotmail.com
-Fixes: 49b0638502da ("mm: enable page walking API to lock vmas during the walk")
-
-For information about bisection process see: https://goo.gl/tpsmEJ#bisection
+Is there a reason you cannot use bpf_get_current_cgroup_id()
+to associate task with cgroup in your lsm prog?
