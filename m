@@ -1,104 +1,58 @@
-From: Yafang Shao <laoar.shao@gmail.com>
-Subject: Re: [RFC PATCH bpf-next 0/5] bpf, cgroup: Enable cgroup_array map on cgroup1
-Date: Tue, 12 Sep 2023 11:30:32 +0800
-Message-ID: <CALOAHbC=yxSoBR=vok2295ejDOEYQK2C8LRjDLGRruhq-rDjOQ@mail.gmail.com>
-References: <20230903142800.3870-1-laoar.shao@gmail.com> <qv2xdcsvb4brjsc7qx6ncxrudwusogdo4itzv4bx2perfjymwl@in7zaeymjiie>
- <CALOAHbB-PF1LjSAxoCdePN6Va4D+ufkeDmq8s3b0AGtfX5E-cQ@mail.gmail.com>
- <CAADnVQL+6PsRbNMo=8kJpgw1OTbdLG9epsup0q7La5Ffqj6g6A@mail.gmail.com>
- <CALOAHbBhOL9w+rnh_xkgZZBhxMpbrmLZWhm1X+ZeDLfxxt8Nrw@mail.gmail.com> <ZP93gUwf_nLzDvM5@mtj.duckdns.org>
+From: Kamalesh Babulal <kamalesh.babulal-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
+Subject: [PATCH 1/2] cgroup: Check for ret during cgroup1_base_files cft addition
+Date: Tue, 12 Sep 2023 12:34:34 +0530
+Message-ID: <96694dfc5f4caf4d84a740c3b18b0a456c9ff522.1694501024.git.kamalesh.babulal@oracle.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-Return-path: <bpf+bounces-9701-glkb-bpf=m.gmane-mx.org@vger.kernel.org>
+Content-Transfer-Encoding: 8bit
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
+ subject : date : message-id : content-transfer-encoding : content-type :
+ mime-version; s=corp-2023-03-30;
+ bh=IbtARqtEJtnIVj732ScqBaTY+yhWlXka1stGRULn0WE=;
+ b=oTpm8pNo5rQ94xix2FhjyHu0uQx+3AEeddCPk21mhA5rDJloPLjL+BE73cTSvk3hVUwp
+ Ef24r8BErllHf1t1PK80ALCXUzPQ3LALoIUrLDQW1awNsJecDyo04EGlgB4j7dOMRvdW
+ vOearD+gJrQc9O2xng3JRe2Ab0ri6mqyrGgK60IQfVPtcXpU1Aow4tM7Ds71xOZk/EZF
+ Y5P9wV6TEhvNMD9RS05eOEVhuuG6uMu0DZOpLtJOuL7WrpWDv9MqlsK2BFZEA2z/j0Rn
+ R1qXYM/za6ELjJwltaFpFXRB5qXb3gYEJg3pgmFxLcsZz5S1R1l6Jx3i/L+seuBu/LID 5w== 
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20221208; t=1694489468; x=1695094268; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=9MZeZdeugBm4QxzIOrMKsGdKzrnk2bLq8bYUX0Gqf/Q=;
-        b=eA59svIddRb5g3UiAPLSKDHjTiive/NSqInb2nNRW53/uWBgREnFN/qsoj1i5uf9Fn
-         VaEa0fdUFEFg5AVdnxgtfv4arWNhp9bka2B3V9pekddbvkxBgLCECLAT6+ZbMpVIOVih
-         UBvNgPUb1/FvyxKmeh7NdaoeuApfWm3aV6G4bJYZnnXHS8/qHySaa0cLERux5SycLBeI
-         13pvyVH9sVOEhoNdyHRVCBDr5ri9cqx+retO7AzCNJYVgcagp79okWaMM0TXx31pk4c0
-         zfdCv/cLM4UmZMFLAnYkmwDw/IMzRWIlKNsOYpkgvkQZmh6+qxQ22bM3f2bzAprFjtnF
-         uWcA==
-List-Id: <cgroups.vger.kernel.org>
-List-Subscribe: <mailto:bpf+subscribe@vger.kernel.org>
-List-Unsubscribe: <mailto:bpf+unsubscribe@vger.kernel.org>
-In-Reply-To: <ZP93gUwf_nLzDvM5@mtj.duckdns.org>
-Content-Type: text/plain; charset="windows-1252"
-To: Tejun Heo <tj@kernel.org>
-Cc: Alexei Starovoitov <alexei.starovoitov@gmail.com>, =?UTF-8?Q?Michal_Koutn=C3=BD?= <mkoutny@suse.com>, Alexei Starovoitov <ast@kernel.org>, Daniel Borkmann <daniel@iogearbox.net>, John Fastabend <john.fastabend@gmail.com>, Andrii Nakryiko <andrii@kernel.org>, Martin KaFai Lau <martin.lau@linux.dev>, Song Liu <song@kernel.org>, Yonghong Song <yonghong.song@linux.dev>, KP Singh <kpsingh@kernel.org>, Stanislav Fomichev <sdf@google.com>, Hao Luo <haoluo@google.com>, Jiri Olsa <jolsa@kernel.org>, Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, Yosry Ahmed <yosryahmed@google.com>, "open list:CONTROL GROUP (CGROUP)" <cgroups@vger.kernel.org>, bpf <bpf@vger.kernel.org>
+ d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=IbtARqtEJtnIVj732ScqBaTY+yhWlXka1stGRULn0WE=;
+ b=EqOPPeqW1mnQ70nNOw0HQbZTh8p9Wx8QAHcmm7/iNmcgWRw/UxH43zbr1I4Td1RaEH9VTD4Vz992OU05OXx7sgthc+uQNqgKXi7Jh21JVYFtMWtU3E/kAmw+TZNnkSUexTTC1DkUW6wcwiyAVDtqaoz1xSaPVv/LeT2y/RYaeTI=
+List-ID: <cgroups.vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Cc: Tom Hromatka <tom.hromatka-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Tue, Sep 12, 2023 at 4:24=E2=80=AFAM Tejun Heo <tj@kernel.org> wrote:
->
-> On Sun, Sep 10, 2023 at 11:17:48AM +0800, Yafang Shao wrote:
-> > To acquire the cgroup_id, we can resort to open coding, as exemplified =
-below:
-> >
-> >     task =3D bpf_get_current_task_btf();
-> >     cgroups =3D task->cgroups;
-> >     cgroup =3D cgroups->subsys[cpu_cgrp_id]->cgroup;
-> >     key =3D cgroup->kn->id;
->
-> You can't hardcode it to a specific controller tree like that. You either
-> stick with fd based interface or need also add something to identify the
-> specifc cgroup1 tree.
+There is no check for possible failure while populating
+cgroup1_base_files cft in css_populate_dir(), like its cgroup v2 counter
+parts cgroup_{base,psi}_files.  In case of failure, the cgroup might not
+be set up right.  Add ret value check to return on failure.
 
-As pointed out by Alexei, I think we can introduce some
-cgroup_id-based kfuncs which can work for both cgroup1 and cgroup2.
+Signed-off-by: Kamalesh Babulal <kamalesh.babulal-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
+---
+ kernel/cgroup/cgroup.c | 6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
 
-Something as follows (untested),
+diff --git a/kernel/cgroup/cgroup.c b/kernel/cgroup/cgroup.c
+index 1fb7f562289d..a6b1ea324b0e 100644
+--- a/kernel/cgroup/cgroup.c
++++ b/kernel/cgroup/cgroup.c
+@@ -1731,8 +1731,10 @@ static int css_populate_dir(struct cgroup_subsys_state *css)
+ 					return ret;
+ 			}
+ 		} else {
+-			cgroup_addrm_files(css, cgrp,
+-					   cgroup1_base_files, true);
++			ret  =  cgroup_addrm_files(css, cgrp,
++						   cgroup1_base_files, true);
++			if  (ret  < 0)
++				return ret;
+ 		}
+ 	} else {
+ 		list_for_each_entry(cfts, &css->ss->cfts, node) {
 
-__bpf_kfunc u64 bpf_current_cgroup_id_from_subsys(int subsys)
-{
-        struct cgroup *cgroup;
-
-        cgroup =3D task_cgroup(current, subsys);
-        if (!cgroup)
-            return 0;
-        return cgroup_id(cgroup);
-}
-
-__bpf_kfunc struct cgroup *bpf_cgroup_from_subsys_id(u64 cgid, int subsys)
-{
-        struct cgroup_subsys_state *css =3D init_css_set.subsys[subsys];
-        struct cgroup *subsys_root =3D css->cgroup;
-
-        // We should introduce a new helper cgroup_get_from_subsys_id()
-        // in the cgroup subsystem.
-        return cgroup_get_from_subsys_id(subsys_root, cgid);
-}
-
-And change task_under_cgroup_hierarchy() as follows,
-
- static inline bool task_under_cgroup_hierarchy(struct task_struct *task,
-                                               struct cgroup *ancestor)
- {
-        struct css_set *cset =3D task_css_set(task);
--
--       return cgroup_is_descendant(cset->dfl_cgrp, ancestor);
-+       struct cgroup *cgrp;
-+       bool ret =3D false;
-+
-+       if (ancestor->root =3D=3D &cgrp_dfl_root)
-+               return cgroup_is_descendant(cset->dfl_cgrp, ancestor);
-+
-+       cgroup_lock();
-+       spin_lock_irq(&css_set_lock);
-+       cgrp =3D task_cgroup_from_root(task, ancestor->root);
-+       if (cgrp && cgroup_is_descendant(cgrp, ancestor))
-+               ret =3D true;
-+       spin_unlock_irq(&css_set_lock);
-+       cgroup_unlock();
-+       return ret;
- }
-
-With the above changes, I think it can meet most use cases with BPF on cgro=
-up1.
-What do you think ?
-
---
-Regards
-
-Yafang
+base-commit: 0bb80ecc33a8fb5a682236443c1e740d5c917d1d
+-- 
+2.41.0
 
