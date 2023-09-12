@@ -1,61 +1,64 @@
-From: Kamalesh Babulal <kamalesh.babulal-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
-Subject: [PATCH 2/2] cgroup: Avoid extra dereference in css_populate_dir()
-Date: Tue, 12 Sep 2023 12:34:35 +0530
-Message-ID: <5870fc2459d97b2e47c5a8dc47f1a2a3837c5e03.1694501024.git.kamalesh.babulal@oracle.com>
-References: <96694dfc5f4caf4d84a740c3b18b0a456c9ff522.1694501024.git.kamalesh.babulal@oracle.com>
+From: Domenico Cerasuolo <cerasuolodomenico@gmail.com>
+Subject: [PATCH] selftests: cgroup: fix test_zswap error path and meaningless check
+Date: Tue, 12 Sep 2023 10:38:00 +0200
+Message-ID: <20230912083800.57435-1-cerasuolodomenico@gmail.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
- subject : date : message-id : in-reply-to : references :
- content-transfer-encoding : content-type : mime-version;
- s=corp-2023-03-30; bh=1b8I90tAdz+bE6JZJ/5tIQJobWNFIwRGJFQzIURIWZ8=;
- b=mu8EXXGXnMounHiTfobQeETY3J9A6KgAubU6jPqiBGRyDNnyQmmC6esXq18xPQDnG/KU
- KS9R+g6N9HrKnHECuz1Z7cnZb/f7vSo+PzoY697afD0H7vavh0Nb/jV9igoth/Eta/c5
- yPvDa+dx6mkq2M23YtALEZPydH9NX6qnwY7CRz66T1z3Rxs/w/392CbLLS+oFaT52YYz
- vBkX5Cfl7xYSYuWRq02Esc0oV/7KK673qRCP0cpZfjswDF1BCJX1SWLB1+jE46WJUg4O
- oT1ekhRNQFik9aSaBMKll0XhgHuRCOKAXbSY4cnRE5omDyGXzXdEtZcDXRt+E5McRmmY qQ== 
+Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=1b8I90tAdz+bE6JZJ/5tIQJobWNFIwRGJFQzIURIWZ8=;
- b=D8Ei0jItgRhTL5P/z7Crw9FRkx7JUTOE1ZXS+LUwxenHAfTuqfND0na1pEGImEejob9zjRuUuJHZRpUXw2/2ey2aARDvZOs9X4VWNlQecQuvrFCBLKNRrauwz7Nn8D8Bs0oD8CTKRLC1vEZxvNGxbYLHqONJv0mgTAZJT3NGDFM=
-In-Reply-To: <96694dfc5f4caf4d84a740c3b18b0a456c9ff522.1694501024.git.kamalesh.babulal-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
+        d=gmail.com; s=20221208; t=1694507915; x=1695112715; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=d5WzW7udVB3HdwrirrUGrjvkqjfIkPOdv3DY3SpLmXk=;
+        b=kprj7FtczO5+01Xw1n/tLGqFrn4h+aI1W4RCgmCVk+sgHNEZc0gI6y5r8U/p2JwwW5
+         ijqy/USEumr+x1/XvTAv1GXBTosc4MM0GtlQafqXNg8c74CNffK7KHZatwRgFQhTDHwW
+         ScZv7b/m1d2fmkZWNakXFByd5l9XhcMF4uey2lA/6ojOa2AkvQ8zeMOiaSVfI4KDesLN
+         Hnh7K1zD1SrDjHh7CX5mk1LYnzRQrbTwRqB4PowqDm4CAhigzyH9SiC793x3A5UD2ODu
+         HPXUiBGU7VLYLtGEMtKlVYdJZdvHx/3YF9NPODYyrspCwmX0Ck8LuIxnK0IjItnegm+D
+         6JJw==
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Cc: Tom Hromatka <tom.hromatka-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: dan.carpenter@linaro.org, akpm@linux-foundation.org, kernel-team@meta.com, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, linux-kselftest@vger.kernel.org
+Cc: Domenico Cerasuolo <cerasuolodomenico@gmail.com>
 
-Use css directly instead of dereferencing it from &cgroup->self, while
-adding the cgroup v2 cft base and psi files in css_populate_dir(). Both
-points to the same css, when css->ss is NULL, this avoids extra deferences
-and makes code consistent in usage across the function.
+Replace destruction paths with simple returns before the test cgroup is
+created, there is nothing to free or destroy at that point.
 
-Signed-off-by: Kamalesh Babulal <kamalesh.babulal-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
+Remove pointless check, stored_pages is a size_t and cannot be < 0.
+
+Fixes: a549f9f31561 ("selftests: cgroup: add test_zswap with no kmem bypass test")
+Reported-by: Dan Carpenter <dan.carpenter@linaro.org>
+Signed-off-by: Domenico Cerasuolo <cerasuolodomenico@gmail.com>
 ---
- kernel/cgroup/cgroup.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ tools/testing/selftests/cgroup/test_zswap.c | 6 ++----
+ 1 file changed, 2 insertions(+), 4 deletions(-)
 
-diff --git a/kernel/cgroup/cgroup.c b/kernel/cgroup/cgroup.c
-index a6b1ea324b0e..f8ff85033e5a 100644
---- a/kernel/cgroup/cgroup.c
-+++ b/kernel/cgroup/cgroup.c
-@@ -1719,13 +1719,13 @@ static int css_populate_dir(struct cgroup_subsys_state *css)
+diff --git a/tools/testing/selftests/cgroup/test_zswap.c b/tools/testing/selftests/cgroup/test_zswap.c
+index 49def87a909b..5257106776d5 100644
+--- a/tools/testing/selftests/cgroup/test_zswap.c
++++ b/tools/testing/selftests/cgroup/test_zswap.c
+@@ -178,10 +178,10 @@ static int test_no_kmem_bypass(const char *root)
  
- 	if (!css->ss) {
- 		if (cgroup_on_dfl(cgrp)) {
--			ret = cgroup_addrm_files(&cgrp->self, cgrp,
-+			ret = cgroup_addrm_files(css, cgrp,
- 						 cgroup_base_files, true);
- 			if (ret < 0)
- 				return ret;
+ 	/* Set up test memcg */
+ 	if (cg_write(root, "cgroup.subtree_control", "+memory"))
+-		goto out;
++		return KSFT_FAIL;
+ 	test_group = cg_name(root, "kmem_bypass_test");
+ 	if (!test_group)
+-		goto out;
++		return KSFT_FAIL;
  
- 			if (cgroup_psi_enabled()) {
--				ret = cgroup_addrm_files(&cgrp->self, cgrp,
-+				ret = cgroup_addrm_files(css, cgrp,
- 							 cgroup_psi_files, true);
- 				if (ret < 0)
- 					return ret;
+ 	/* Spawn memcg child and wait for it to allocate */
+ 	set_min_free_kb(min_free_kb_low);
+@@ -208,8 +208,6 @@ static int test_no_kmem_bypass(const char *root)
+ 		free(trigger_allocation);
+ 		if (get_zswap_stored_pages(&stored_pages))
+ 			break;
+-		if (stored_pages < 0)
+-			break;
+ 		/* If memory was pushed to zswap, verify it belongs to memcg */
+ 		if (stored_pages > stored_pages_threshold) {
+ 			int zswapped = cg_read_key_long(test_group, "memory.stat", "zswapped ");
 -- 
-2.41.0
+2.34.1
 
