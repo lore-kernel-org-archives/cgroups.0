@@ -1,322 +1,603 @@
-From: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
-Subject: [PATCH 06/19] qibfs: use simple_release_fs
-Date: Wed, 13 Sep 2023 08:10:00 -0300
-Message-ID: <20230913111013.77623-7-hch@lst.de>
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH 03/19] fs: release anon dev_t in deactivate_locked_super
+Date: Wed, 13 Sep 2023 08:09:57 -0300
+Message-ID: <20230913111013.77623-4-hch@lst.de>
 References: <20230913111013.77623-1-hch@lst.de>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Return-path: <linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
         MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender
         :Reply-To:Content-Type:Content-ID:Content-Description;
-        bh=QtxUC0PBd27k/jPmifPKRgeZeU54oAe4sU/iHRhk3us=; b=3jF8AWqft55sENPRPWk4+bWnJK
-        Wny8RJRRcJOCnKQfKis+eSo5Ht8lSO5uqi8Mk14bXtPwXbtoItRQ6VHePz91Wi0ab2Mx2UFCjEuii
-        Erb5f7PDwveImNZXjR7INUB/HtkqxUwJkXmozhdIefKQOvgCkbLc5ytAUJXqOiFLd7nQdZ3Ky3FK/
-        ASQQsIleUTxD3RNLoemOhFq0knghz9g8cMssYrT4BoIMgtK46a+CTEWQg9aY8n9xE3pug5xOGLrCr
-        BsZgMnd69QJGoyJHfXBiq2W06yYu+eBLxYYfm9Pj2TFYIpKFqdq41mYxq2Z5ClsQHnFJlVjb229Zh
-        A/eAxolw==;
-In-Reply-To: <20230913111013.77623-1-hch-jcswGhMUV9g@public.gmane.org>
+        bh=3avJL3u53FV6NqWfVNR/cHfMXbZSKZNFLdERG/9TrPo=; b=AHb5SmSeP1rGpHmMiLyXBAyBuz
+        NjiS5PHlRkymtdfwux/qZCDQDIhM1N03z03eV/bhcgSRfsq1UoeSHVegcNUcwLYyYpypbVAoBw5+Y
+        7jrfAvyWIAwP9VDwES3HzHe7vUZ4D2v65qMImxcaTZkLU59GQG5cgWK4BG0rNV3hcWeLjgCrY53Kd
+        y4AUawhEdkcUbSAxYjMGh9hxwzKpgPcnF/+a7grduzv0tLcl64dckW5I/thHtke5Pmn8d0yK5Ma/B
+        2kJitaOaVl4nuKta7Dg1FYZf+Ce2rkVt3h+ihx6AJyaeunVkBysmTk9TCJE4jZCzYV3+ZnRahYlvR
+        hzrcqXfw==;
+In-Reply-To: <20230913111013.77623-1-hch@lst.de>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Christian Brauner <brauner-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Al Viro <viro-RmSDqhL/yNMiFSDQTTA3OLVCufUGDwFn@public.gmane.org>
-Cc: Heiko Carstens <hca-tEXmvtCZX7AybS5Ee8rs3A@public.gmane.org>, Vasily Gorbik <gor-tEXmvtCZX7AybS5Ee8rs3A@public.gmane.org>, Alexander Gordeev <agordeev-tEXmvtCZX7AybS5Ee8rs3A@public.gmane.org>, Fenghua Yu <fenghua.yu-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Reinette Chatre <reinette.chatre-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Miquel Raynal <miquel.raynal-LDxbnhwyfcJBDgjK7y7TUQ@public.gmane.org>, Richard Weinberger <richard-/L3Ra7n9ekc@public.gmane.org>, Vignesh Raghavendra <vigneshr-l0cyMroinI0@public.gmane.org>, Dennis Dalessandro <dennis.dalessandro-ntyVByD3zXaTtA8H5PvdGFaTQe2KTcn/@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Trond Myklebust <trond.myklebust-F/q8l9xzQnoyLce1RVWEUA@public.gmane.org>, Anna Schumaker <anna-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Kees Cook <keescook-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>, Damien Le Moal <dlemoal-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Naohiro Aota <naohiro.aota-Sjgp3cTcYWE@public.gmane.org>, Greg Kroah-Hartman <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>, linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-s390-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Christian Brauner <brauner@kernel.org>, Al Viro <viro@zeniv.linux.org.uk>
+Cc: Heiko Carstens <hca@linux.ibm.com>, Vasily Gorbik <gor@linux.ibm.com>, Alexander Gordeev <agordeev@linux.ibm.com>, Fenghua Yu <fenghua.yu@intel.com>, Reinette Chatre <reinette.chatre@intel.com>, Miquel Raynal <miquel.raynal@bootlin.com>, Richard Weinberger <richard@nod.at>, Vignesh Raghavendra <vigneshr@ti.com>, Dennis Dalessandro <dennis.dalessandro@cornelisnetworks.com>, Tejun Heo <tj@kernel.org>, Trond Myklebust <trond.myklebust@hammerspace.com>, Anna Schumaker <anna@kernel.org>, Kees Cook <keescook@chromium.org>, Damien Le Moal <dlemoal@kernel.org>, Naohiro Aota <naohiro.aota@wdc.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, linux-usb@vger.kernel.org, linux-kernel@vger.kernel.org, linux-s390@vger.kernel.org, linux-rdma@vger.kernel.org
 
-qibfs currently has convoluted code to allow registering HCAs while qibfs
-is not mounted and vice versa.  Switch to using simple_release_fs every
-time an entry is added to pin the fs instance and remove all the boiler
-plate code.
+Releasing an anon dev_t is a very common thing when freeing a
+super_block, as that's done for basically any not block based file
+system (modulo the odd mtd special case).  So instead of requiring
+a special ->kill_sb helper and a lot of boilerplate in more complicated
+file systems, just release the anon dev_t in deactivate_locked_super if
+the super_block was using one.
 
-Signed-off-by: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
+As the freeing is done after the main call to kill_super_notify, this
+removes the need for having two slightly different call sites for it.
+
+Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- drivers/infiniband/hw/qib/qib.h      |   4 +-
- drivers/infiniband/hw/qib/qib_fs.c   | 105 ++++++---------------------
- drivers/infiniband/hw/qib/qib_init.c |  32 +++-----
- 3 files changed, 36 insertions(+), 105 deletions(-)
+ block/bdev.c                    |  1 -
+ drivers/dax/super.c             |  1 -
+ drivers/dma-buf/dma-buf.c       |  1 -
+ drivers/gpu/drm/drm_drv.c       |  1 -
+ drivers/misc/cxl/api.c          |  1 -
+ drivers/scsi/cxlflash/ocxl_hw.c |  1 -
+ fs/9p/vfs_super.c               |  2 +-
+ fs/afs/super.c                  |  2 +-
+ fs/aio.c                        |  1 -
+ fs/anon_inodes.c                |  1 -
+ fs/autofs/inode.c               |  4 ++--
+ fs/btrfs/super.c                |  3 ++-
+ fs/btrfs/tests/btrfs-tests.c    |  1 -
+ fs/ceph/super.c                 |  2 +-
+ fs/coda/inode.c                 |  1 -
+ fs/ecryptfs/main.c              |  3 ++-
+ fs/erofs/super.c                |  4 ++--
+ fs/fuse/inode.c                 |  2 +-
+ fs/fuse/virtio_fs.c             |  2 +-
+ fs/hostfs/hostfs_kern.c         |  2 +-
+ fs/kernfs/mount.c               |  2 +-
+ fs/nfs/super.c                  |  2 +-
+ fs/nsfs.c                       |  1 -
+ fs/openpromfs/inode.c           |  1 -
+ fs/orangefs/super.c             |  2 +-
+ fs/overlayfs/super.c            |  1 -
+ fs/pipe.c                       |  1 -
+ fs/proc/root.c                  |  4 ++--
+ fs/smb/client/cifsfs.c          |  2 +-
+ fs/super.c                      | 22 ++++++++--------------
+ fs/ubifs/super.c                |  3 ++-
+ fs/vboxsf/super.c               |  1 -
+ include/linux/fs.h              |  1 -
+ kernel/resource.c               |  1 -
+ mm/secretmem.c                  |  1 -
+ net/socket.c                    |  1 -
+ security/apparmor/apparmorfs.c  |  1 -
+ 37 files changed, 30 insertions(+), 53 deletions(-)
 
-diff --git a/drivers/infiniband/hw/qib/qib.h b/drivers/infiniband/hw/qib/qib.h
-index 26c615772be390..f73c321d0bff88 100644
---- a/drivers/infiniband/hw/qib/qib.h
-+++ b/drivers/infiniband/hw/qib/qib.h
-@@ -1370,10 +1370,10 @@ void qib_device_remove(struct qib_devdata *);
- extern int qib_qsfp_dump(struct qib_pportdata *ppd, char *buf, int len);
- 
- int __init qib_init_qibfs(void);
--int __exit qib_exit_qibfs(void);
-+void __exit qib_exit_qibfs(void);
- 
- int qibfs_add(struct qib_devdata *);
--int qibfs_remove(struct qib_devdata *);
-+void qibfs_remove(struct qib_devdata *);
- 
- int qib_pcie_init(struct pci_dev *, const struct pci_device_id *);
- int qib_pcie_ddinit(struct qib_devdata *, struct pci_dev *,
-diff --git a/drivers/infiniband/hw/qib/qib_fs.c b/drivers/infiniband/hw/qib/qib_fs.c
-index ed7d4b02f45a63..c52ca34b32e67d 100644
---- a/drivers/infiniband/hw/qib/qib_fs.c
-+++ b/drivers/infiniband/hw/qib/qib_fs.c
-@@ -43,7 +43,9 @@
- 
- #define QIBFS_MAGIC 0x726a77
- 
--static struct super_block *qib_super;
-+static struct file_system_type qibfs_fs_type;
-+static struct vfsmount *qib_mount;
-+static int qib_mnt_count;
- 
- #define private2dd(file) (file_inode(file)->i_private)
- 
-@@ -355,15 +357,19 @@ static const struct file_operations flash_ops = {
- 	.llseek = default_llseek,
+diff --git a/block/bdev.c b/block/bdev.c
+index f3b13aa1b7d428..9db691401497bb 100644
+--- a/block/bdev.c
++++ b/block/bdev.c
+@@ -358,7 +358,6 @@ static int bd_init_fs_context(struct fs_context *fc)
+ static struct file_system_type bd_type = {
+ 	.name		= "bdev",
+ 	.init_fs_context = bd_init_fs_context,
+-	.kill_sb	= kill_anon_super,
  };
  
--static int add_cntr_files(struct super_block *sb, struct qib_devdata *dd)
-+int qibfs_add(struct qib_devdata *dd)
- {
- 	struct dentry *dir, *tmp;
- 	char unit[10];
- 	int ret, i;
-+	
-+	ret = simple_pin_fs(&qibfs_fs_type, &qib_mount, &qib_mnt_count);
-+	if (ret)
-+		return ret;
+ struct super_block *blockdev_superblock __read_mostly;
+diff --git a/drivers/dax/super.c b/drivers/dax/super.c
+index 0da9232ea1754b..a9315b7396e68a 100644
+--- a/drivers/dax/super.c
++++ b/drivers/dax/super.c
+@@ -397,7 +397,6 @@ static int dax_init_fs_context(struct fs_context *fc)
+ static struct file_system_type dax_fs_type = {
+ 	.name		= "dax",
+ 	.init_fs_context = dax_init_fs_context,
+-	.kill_sb	= kill_anon_super,
+ };
  
- 	/* create the per-unit directory */
- 	snprintf(unit, sizeof(unit), "%u", dd->unit);
--	ret = create_file(unit, S_IFDIR|S_IRUGO|S_IXUGO, sb->s_root, &dir,
-+	ret = create_file(unit, S_IFDIR|S_IRUGO|S_IXUGO, qib_mount->mnt_root, &dir,
- 			  &simple_dir_operations, dd);
- 	if (ret) {
- 		pr_err("create_file(%s) failed: %d\n", unit, ret);
-@@ -422,65 +428,35 @@ static int add_cntr_files(struct super_block *sb, struct qib_devdata *dd)
- 		pr_err("create_file(%s/flash) failed: %d\n",
- 			unit, ret);
- bail:
-+	simple_release_fs(&qib_mount, &qib_mnt_count);
- 	return ret;
- }
+ static int dax_test(struct inode *inode, void *data)
+diff --git a/drivers/dma-buf/dma-buf.c b/drivers/dma-buf/dma-buf.c
+index 21916bba77d58b..7313e99f6e8ea5 100644
+--- a/drivers/dma-buf/dma-buf.c
++++ b/drivers/dma-buf/dma-buf.c
+@@ -125,7 +125,6 @@ static int dma_buf_fs_init_context(struct fs_context *fc)
+ static struct file_system_type dma_buf_fs_type = {
+ 	.name = "dmabuf",
+ 	.init_fs_context = dma_buf_fs_init_context,
+-	.kill_sb = kill_anon_super,
+ };
  
--static int remove_device_files(struct super_block *sb,
--			       struct qib_devdata *dd)
-+void qibfs_remove(struct qib_devdata *dd)
- {
- 	struct dentry *dir;
- 	char unit[10];
+ static int dma_buf_mmap_internal(struct file *file, struct vm_area_struct *vma)
+diff --git a/drivers/gpu/drm/drm_drv.c b/drivers/gpu/drm/drm_drv.c
+index 3eda026ffac6a9..83676229cbe233 100644
+--- a/drivers/gpu/drm/drm_drv.c
++++ b/drivers/gpu/drm/drm_drv.c
+@@ -530,7 +530,6 @@ static struct file_system_type drm_fs_type = {
+ 	.name		= "drm",
+ 	.owner		= THIS_MODULE,
+ 	.init_fs_context = drm_fs_init_fs_context,
+-	.kill_sb	= kill_anon_super,
+ };
  
- 	snprintf(unit, sizeof(unit), "%u", dd->unit);
--	dir = lookup_one_len_unlocked(unit, sb->s_root, strlen(unit));
--
--	if (IS_ERR(dir)) {
--		pr_err("Lookup of %s failed\n", unit);
--		return PTR_ERR(dir);
--	}
--	simple_recursive_removal(dir, NULL);
--	return 0;
-+	dir = lookup_one_len_unlocked(unit, qib_mount->mnt_root, strlen(unit));
-+	if (!IS_ERR(dir))
-+		simple_recursive_removal(dir, NULL);
-+	simple_release_fs(&qib_mount, &qib_mnt_count);
- }
+ static struct inode *drm_fs_inode_new(void)
+diff --git a/drivers/misc/cxl/api.c b/drivers/misc/cxl/api.c
+index d85c5653086357..05b40076a0b481 100644
+--- a/drivers/misc/cxl/api.c
++++ b/drivers/misc/cxl/api.c
+@@ -44,7 +44,6 @@ static struct file_system_type cxl_fs_type = {
+ 	.name		= "cxl",
+ 	.owner		= THIS_MODULE,
+ 	.init_fs_context = cxl_fs_init_fs_context,
+-	.kill_sb	= kill_anon_super,
+ };
  
--/*
-- * This fills everything in when the fs is mounted, to handle umount/mount
-- * after device init.  The direct add_cntr_files() call handles adding
-- * them from the init code, when the fs is already mounted.
-- */
- static int qibfs_fill_super(struct super_block *sb, struct fs_context *fc)
- {
--	struct qib_devdata *dd;
--	unsigned long index;
--	int ret;
--
- 	static const struct tree_descr files[] = {
- 		[2] = {"driver_stats", &driver_ops[0], S_IRUGO},
- 		[3] = {"driver_stats_names", &driver_ops[1], S_IRUGO},
- 		{""},
+ 
+diff --git a/drivers/scsi/cxlflash/ocxl_hw.c b/drivers/scsi/cxlflash/ocxl_hw.c
+index 6542818e595a64..20f22610b104df 100644
+--- a/drivers/scsi/cxlflash/ocxl_hw.c
++++ b/drivers/scsi/cxlflash/ocxl_hw.c
+@@ -43,7 +43,6 @@ static struct file_system_type ocxlflash_fs_type = {
+ 	.name		= "ocxlflash",
+ 	.owner		= THIS_MODULE,
+ 	.init_fs_context = ocxlflash_fs_init_fs_context,
+-	.kill_sb	= kill_anon_super,
+ };
+ 
+ /*
+diff --git a/fs/9p/vfs_super.c b/fs/9p/vfs_super.c
+index 73db55c050bf10..9e60eddf5179ed 100644
+--- a/fs/9p/vfs_super.c
++++ b/fs/9p/vfs_super.c
+@@ -217,7 +217,7 @@ static void v9fs_kill_super(struct super_block *s)
+ 
+ 	p9_debug(P9_DEBUG_VFS, " %p\n", s);
+ 
+-	kill_anon_super(s);
++	generic_shutdown_super(s);
+ 
+ 	v9fs_session_cancel(v9ses);
+ 	v9fs_session_close(v9ses);
+diff --git a/fs/afs/super.c b/fs/afs/super.c
+index 95d713074dc813..754b9828233497 100644
+--- a/fs/afs/super.c
++++ b/fs/afs/super.c
+@@ -544,7 +544,7 @@ static void afs_kill_super(struct super_block *sb)
+ 	 */
+ 	if (as->volume)
+ 		rcu_assign_pointer(as->volume->sb, NULL);
+-	kill_anon_super(sb);
++	generic_shutdown_super(sb);
+ 	if (as->volume)
+ 		afs_deactivate_volume(as->volume);
+ 	afs_destroy_sbi(as);
+diff --git a/fs/aio.c b/fs/aio.c
+index a4c2a6bac72ce9..de56e4a880debe 100644
+--- a/fs/aio.c
++++ b/fs/aio.c
+@@ -293,7 +293,6 @@ static int __init aio_setup(void)
+ 	static struct file_system_type aio_fs = {
+ 		.name		= "aio",
+ 		.init_fs_context = aio_init_fs_context,
+-		.kill_sb	= kill_anon_super,
  	};
--
--	ret = simple_fill_super(sb, QIBFS_MAGIC, files);
--	if (ret) {
--		pr_err("simple_fill_super failed: %d\n", ret);
--		goto bail;
--	}
--
--	xa_for_each(&qib_dev_table, index, dd) {
--		ret = add_cntr_files(sb, dd);
--		if (ret)
--			goto bail;
--	}
--
--bail:
--	return ret;
-+	return simple_fill_super(sb, QIBFS_MAGIC, files);
- }
- 
- static int qibfs_get_tree(struct fs_context *fc)
- {
--	int ret = get_tree_single(fc, qibfs_fill_super);
--	if (ret == 0)
--		qib_super = fc->root->d_sb;
--	return ret;
-+	return get_tree_single(fc, qibfs_fill_super);
- }
- 
- static const struct fs_context_operations qibfs_context_ops = {
-@@ -493,46 +469,11 @@ static int qibfs_init_fs_context(struct fs_context *fc)
- 	return 0;
- }
- 
--static void qibfs_kill_super(struct super_block *s)
--{
--	kill_litter_super(s);
--	qib_super = NULL;
--}
--
--int qibfs_add(struct qib_devdata *dd)
--{
--	int ret;
--
--	/*
--	 * On first unit initialized, qib_super will not yet exist
--	 * because nobody has yet tried to mount the filesystem, so
--	 * we can't consider that to be an error; if an error occurs
--	 * during the mount, that will get a complaint, so this is OK.
--	 * add_cntr_files() for all units is done at mount from
--	 * qibfs_fill_super(), so one way or another, everything works.
--	 */
--	if (qib_super == NULL)
--		ret = 0;
--	else
--		ret = add_cntr_files(qib_super, dd);
--	return ret;
--}
--
--int qibfs_remove(struct qib_devdata *dd)
--{
--	int ret = 0;
--
--	if (qib_super)
--		ret = remove_device_files(qib_super, dd);
--
--	return ret;
--}
--
- static struct file_system_type qibfs_fs_type = {
--	.owner =        THIS_MODULE,
--	.name =         "ipathfs",
--	.init_fs_context = qibfs_init_fs_context,
--	.kill_sb =      qibfs_kill_super,
-+	.owner			= THIS_MODULE,
-+	.name			= "ipathfs",
-+	.init_fs_context	= qibfs_init_fs_context,
-+	.kill_sb		= kill_litter_super,
+ 	aio_mnt = kern_mount(&aio_fs);
+ 	if (IS_ERR(aio_mnt))
+diff --git a/fs/anon_inodes.c b/fs/anon_inodes.c
+index 24192a7667edf7..9c670bbe0f62ce 100644
+--- a/fs/anon_inodes.c
++++ b/fs/anon_inodes.c
+@@ -52,7 +52,6 @@ static int anon_inodefs_init_fs_context(struct fs_context *fc)
+ static struct file_system_type anon_inode_fs_type = {
+ 	.name		= "anon_inodefs",
+ 	.init_fs_context = anon_inodefs_init_fs_context,
+-	.kill_sb	= kill_anon_super,
  };
- MODULE_ALIAS_FS("ipathfs");
  
-@@ -541,7 +482,7 @@ int __init qib_init_qibfs(void)
- 	return register_filesystem(&qibfs_fs_type);
- }
- 
--int __exit qib_exit_qibfs(void)
-+void __exit qib_exit_qibfs(void)
- {
--	return unregister_filesystem(&qibfs_fs_type);
-+	unregister_filesystem(&qibfs_fs_type);
- }
-diff --git a/drivers/infiniband/hw/qib/qib_init.c b/drivers/infiniband/hw/qib/qib_init.c
-index 33667becd52b04..46306573a37a7d 100644
---- a/drivers/infiniband/hw/qib/qib_init.c
-+++ b/drivers/infiniband/hw/qib/qib_init.c
-@@ -1217,9 +1217,13 @@ static int __init qib_ib_init(void)
- {
- 	int ret;
- 
-+	ret = qib_init_qibfs();
-+	if (ret)
-+		return ret;
-+
- 	ret = qib_dev_init();
- 	if (ret)
--		goto bail;
-+		goto bail_fs;
- 
+ static struct inode *anon_inode_make_secure_inode(
+diff --git a/fs/autofs/inode.c b/fs/autofs/inode.c
+index 2b49662ed237de..c3b64799155840 100644
+--- a/fs/autofs/inode.c
++++ b/fs/autofs/inode.c
+@@ -44,7 +44,7 @@ void autofs_kill_sb(struct super_block *sb)
  	/*
- 	 * These must be called before the driver is registered with
-@@ -1237,10 +1241,7 @@ static int __init qib_ib_init(void)
- 		goto bail_dev;
+ 	 * In the event of a failure in get_sb_nodev the superblock
+ 	 * info is not present so nothing else has been setup, so
+-	 * just call kill_anon_super when we are called from
++	 * just call generic_shutdown_super when we are called from
+ 	 * deactivate_super.
+ 	 */
+ 	if (sbi) {
+@@ -54,7 +54,7 @@ void autofs_kill_sb(struct super_block *sb)
  	}
  
--	/* not fatal if it doesn't work */
--	if (qib_init_qibfs())
--		pr_err("Unable to register ipathfs\n");
--	goto bail; /* all OK */
-+	return ret;
- 
- bail_dev:
- #ifdef CONFIG_INFINIBAND_QIB_DCA
-@@ -1250,7 +1251,8 @@ static int __init qib_ib_init(void)
- 	qib_dbg_exit();
- #endif
- 	qib_dev_cleanup();
--bail:
-+bail_fs:
-+	qib_exit_qibfs();
- 	return ret;
+ 	pr_debug("shutting down\n");
+-	kill_litter_super(sb);
++	generic_shutdown_super(sb);
+ 	if (sbi)
+ 		kfree_rcu(sbi, rcu);
+ }
+diff --git a/fs/btrfs/super.c b/fs/btrfs/super.c
+index 09bfe68d2ea3fc..01b86bd4eae8dc 100644
+--- a/fs/btrfs/super.c
++++ b/fs/btrfs/super.c
+@@ -2141,7 +2141,8 @@ static int btrfs_statfs(struct dentry *dentry, struct kstatfs *buf)
+ static void btrfs_kill_super(struct super_block *sb)
+ {
+ 	struct btrfs_fs_info *fs_info = btrfs_sb(sb);
+-	kill_anon_super(sb);
++
++	generic_shutdown_super(sb);
+ 	btrfs_free_fs_info(fs_info);
  }
  
-@@ -1261,14 +1263,6 @@ module_init(qib_ib_init);
-  */
- static void __exit qib_ib_cleanup(void)
- {
--	int ret;
--
--	ret = qib_exit_qibfs();
--	if (ret)
--		pr_err(
--			"Unable to cleanup counter filesystem: error %d\n",
--			-ret);
--
- #ifdef CONFIG_INFINIBAND_QIB_DCA
- 	dca_unregister_notify(&dca_notifier);
- #endif
-@@ -1282,6 +1276,7 @@ static void __exit qib_ib_cleanup(void)
+diff --git a/fs/btrfs/tests/btrfs-tests.c b/fs/btrfs/tests/btrfs-tests.c
+index ca09cf9afce800..c30280376fc32e 100644
+--- a/fs/btrfs/tests/btrfs-tests.c
++++ b/fs/btrfs/tests/btrfs-tests.c
+@@ -48,7 +48,6 @@ static int btrfs_test_init_fs_context(struct fs_context *fc)
+ static struct file_system_type test_type = {
+ 	.name		= "btrfs_test_fs",
+ 	.init_fs_context = btrfs_test_init_fs_context,
+-	.kill_sb	= kill_anon_super,
+ };
  
- 	WARN_ON(!xa_empty(&qib_dev_table));
- 	qib_dev_cleanup();
-+	qib_exit_qibfs();
+ struct inode *btrfs_new_test_inode(void)
+diff --git a/fs/ceph/super.c b/fs/ceph/super.c
+index 2d7f5a8d4a9260..7feef0b35b97b5 100644
+--- a/fs/ceph/super.c
++++ b/fs/ceph/super.c
+@@ -1557,7 +1557,7 @@ static void ceph_kill_sb(struct super_block *s)
+ 	}
+ 
+ 	mdsc->stopping = CEPH_MDSC_STOPPING_FLUSHED;
+-	kill_anon_super(s);
++	generic_shutdown_super(s);
+ 
+ 	fsc->client->extra_mon_dispatch = NULL;
+ 	ceph_fs_debugfs_cleanup(fsc);
+diff --git a/fs/coda/inode.c b/fs/coda/inode.c
+index 0c7c2528791ebc..2d4ee3c7e8654b 100644
+--- a/fs/coda/inode.c
++++ b/fs/coda/inode.c
+@@ -325,7 +325,6 @@ struct file_system_type coda_fs_type = {
+ 	.owner		= THIS_MODULE,
+ 	.name		= "coda",
+ 	.mount		= coda_mount,
+-	.kill_sb	= kill_anon_super,
+ 	.fs_flags	= FS_BINARY_MOUNTDATA,
+ };
+ MODULE_ALIAS_FS("coda");
+diff --git a/fs/ecryptfs/main.c b/fs/ecryptfs/main.c
+index 2dc927ba067fec..d99b2311759166 100644
+--- a/fs/ecryptfs/main.c
++++ b/fs/ecryptfs/main.c
+@@ -625,7 +625,8 @@ static struct dentry *ecryptfs_mount(struct file_system_type *fs_type, int flags
+ static void ecryptfs_kill_block_super(struct super_block *sb)
+ {
+ 	struct ecryptfs_sb_info *sb_info = ecryptfs_superblock_to_private(sb);
+-	kill_anon_super(sb);
++
++	generic_shutdown_super(sb);
+ 	if (!sb_info)
+ 		return;
+ 	ecryptfs_destroy_mount_crypt_stat(&sb_info->mount_crypt_stat);
+diff --git a/fs/erofs/super.c b/fs/erofs/super.c
+index 44a24d573f1fd3..07c36ccf454e53 100644
+--- a/fs/erofs/super.c
++++ b/fs/erofs/super.c
+@@ -878,12 +878,12 @@ static void erofs_kill_sb(struct super_block *sb)
+ 
+ 	/* pseudo mount for anon inodes */
+ 	if (sb->s_flags & SB_KERNMOUNT) {
+-		kill_anon_super(sb);
++		generic_shutdown_super(sb);
+ 		return;
+ 	}
+ 
+ 	if (erofs_is_fscache_mode(sb))
+-		kill_anon_super(sb);
++		generic_shutdown_super(sb);
+ 	else
+ 		kill_block_super(sb);
+ 
+diff --git a/fs/fuse/inode.c b/fs/fuse/inode.c
+index 2e4eb7cf26fb33..42523edb32fd53 100644
+--- a/fs/fuse/inode.c
++++ b/fs/fuse/inode.c
+@@ -1840,7 +1840,7 @@ EXPORT_SYMBOL(fuse_mount_destroy);
+ static void fuse_kill_sb_anon(struct super_block *sb)
+ {
+ 	fuse_sb_destroy(sb);
+-	kill_anon_super(sb);
++	generic_shutdown_super(sb);
+ 	fuse_mount_destroy(get_fuse_mount_super(sb));
  }
  
- module_exit(qib_ib_cleanup);
-@@ -1469,7 +1464,7 @@ static int qib_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
- 		if (qib_mini_init)
- 			goto bail;
- 		if (!j) {
--			(void) qibfs_remove(dd);
-+			qibfs_remove(dd);
- 			qib_device_remove(dd);
- 		}
- 		if (!ret)
-@@ -1496,7 +1491,6 @@ static int qib_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
- static void qib_remove_one(struct pci_dev *pdev)
+diff --git a/fs/fuse/virtio_fs.c b/fs/fuse/virtio_fs.c
+index 5f1be1da92ce94..0a0d593e5a9c79 100644
+--- a/fs/fuse/virtio_fs.c
++++ b/fs/fuse/virtio_fs.c
+@@ -1398,7 +1398,7 @@ static void virtio_kill_sb(struct super_block *sb)
+ 		if (last)
+ 			virtio_fs_conn_destroy(fm);
+ 	}
+-	kill_anon_super(sb);
++	generic_shutdown_super(sb);
+ 	fuse_mount_destroy(fm);
+ }
+ 
+diff --git a/fs/hostfs/hostfs_kern.c b/fs/hostfs/hostfs_kern.c
+index dc5a5cea5fae41..97f3c9709418c9 100644
+--- a/fs/hostfs/hostfs_kern.c
++++ b/fs/hostfs/hostfs_kern.c
+@@ -981,7 +981,7 @@ static struct dentry *hostfs_read_sb(struct file_system_type *type,
+ 
+ static void hostfs_kill_sb(struct super_block *s)
  {
- 	struct qib_devdata *dd = pci_get_drvdata(pdev);
--	int ret;
+-	kill_anon_super(s);
++	generic_shutdown_super(s);
+ 	kfree(s->s_fs_info);
+ }
  
- 	/* unregister from IB core */
- 	qib_unregister_ib_device(dd);
-@@ -1513,11 +1507,7 @@ static void qib_remove_one(struct pci_dev *pdev)
- 	/* wait until all of our (qsfp) queue_work() calls complete */
- 	flush_workqueue(ib_wq);
+diff --git a/fs/kernfs/mount.c b/fs/kernfs/mount.c
+index c4bf26142eec9b..772d059d4054ec 100644
+--- a/fs/kernfs/mount.c
++++ b/fs/kernfs/mount.c
+@@ -399,7 +399,7 @@ void kernfs_kill_sb(struct super_block *sb)
+ 	 * Remove the superblock from fs_supers/s_instances
+ 	 * so we can't find it, before freeing kernfs_super_info.
+ 	 */
+-	kill_anon_super(sb);
++	generic_shutdown_super(sb);
+ 	kfree(info);
+ }
  
--	ret = qibfs_remove(dd);
--	if (ret)
--		qib_dev_err(dd, "Failed counters filesystem cleanup: %d\n",
--			    -ret);
+diff --git a/fs/nfs/super.c b/fs/nfs/super.c
+index 0d6473cb00cb3e..29d6a55b9d400d 100644
+--- a/fs/nfs/super.c
++++ b/fs/nfs/super.c
+@@ -1341,7 +1341,7 @@ void nfs_kill_super(struct super_block *s)
+ 	struct nfs_server *server = NFS_SB(s);
+ 
+ 	nfs_sysfs_move_sb_to_server(server);
+-	kill_anon_super(s);
++	generic_shutdown_super(s);
+ 
+ 	nfs_fscache_release_super_cookie(s);
+ 
+diff --git a/fs/nsfs.c b/fs/nsfs.c
+index 647a22433bd8a9..d5fb7c00fe21f1 100644
+--- a/fs/nsfs.c
++++ b/fs/nsfs.c
+@@ -277,7 +277,6 @@ static int nsfs_init_fs_context(struct fs_context *fc)
+ static struct file_system_type nsfs = {
+ 	.name = "nsfs",
+ 	.init_fs_context = nsfs_init_fs_context,
+-	.kill_sb = kill_anon_super,
+ };
+ 
+ void __init nsfs_init(void)
+diff --git a/fs/openpromfs/inode.c b/fs/openpromfs/inode.c
+index b2457cb97fa008..3b51dd926d11c8 100644
+--- a/fs/openpromfs/inode.c
++++ b/fs/openpromfs/inode.c
+@@ -427,7 +427,6 @@ static struct file_system_type openprom_fs_type = {
+ 	.owner		= THIS_MODULE,
+ 	.name		= "openpromfs",
+ 	.init_fs_context = openpromfs_init_fs_context,
+-	.kill_sb	= kill_anon_super,
+ };
+ MODULE_ALIAS_FS("openpromfs");
+ 
+diff --git a/fs/orangefs/super.c b/fs/orangefs/super.c
+index 5254256a224d7a..42cb3e9b1effee 100644
+--- a/fs/orangefs/super.c
++++ b/fs/orangefs/super.c
+@@ -602,7 +602,7 @@ void orangefs_kill_sb(struct super_block *sb)
+ 	gossip_debug(GOSSIP_SUPER_DEBUG, "orangefs_kill_sb: called\n");
+ 
+ 	/* provided sb cleanup */
+-	kill_anon_super(sb);
++	generic_shutdown_super(sb);
+ 
+ 	if (!ORANGEFS_SB(sb)) {
+ 		mutex_lock(&orangefs_request_mutex);
+diff --git a/fs/overlayfs/super.c b/fs/overlayfs/super.c
+index def266b5e2a33b..194cf18787496d 100644
+--- a/fs/overlayfs/super.c
++++ b/fs/overlayfs/super.c
+@@ -1507,7 +1507,6 @@ struct file_system_type ovl_fs_type = {
+ 	.init_fs_context	= ovl_init_fs_context,
+ 	.parameters		= ovl_parameter_spec,
+ 	.fs_flags		= FS_USERNS_MOUNT,
+-	.kill_sb		= kill_anon_super,
+ };
+ MODULE_ALIAS_FS("overlay");
+ 
+diff --git a/fs/pipe.c b/fs/pipe.c
+index 6c1a9b1db9076c..858e8b19d78527 100644
+--- a/fs/pipe.c
++++ b/fs/pipe.c
+@@ -1439,7 +1439,6 @@ static int pipefs_init_fs_context(struct fs_context *fc)
+ static struct file_system_type pipe_fs_type = {
+ 	.name		= "pipefs",
+ 	.init_fs_context = pipefs_init_fs_context,
+-	.kill_sb	= kill_anon_super,
+ };
+ 
+ #ifdef CONFIG_SYSCTL
+diff --git a/fs/proc/root.c b/fs/proc/root.c
+index 9191248f2dacb4..2282366449ac0b 100644
+--- a/fs/proc/root.c
++++ b/fs/proc/root.c
+@@ -262,14 +262,14 @@ static void proc_kill_sb(struct super_block *sb)
+ 	struct proc_fs_info *fs_info = proc_sb_info(sb);
+ 
+ 	if (!fs_info) {
+-		kill_anon_super(sb);
++		generic_shutdown_super(sb);
+ 		return;
+ 	}
+ 
+ 	dput(fs_info->proc_self);
+ 	dput(fs_info->proc_thread_self);
+ 
+-	kill_anon_super(sb);
++	generic_shutdown_super(sb);
+ 	put_pid_ns(fs_info->pid_ns);
+ 	kfree(fs_info);
+ }
+diff --git a/fs/smb/client/cifsfs.c b/fs/smb/client/cifsfs.c
+index 22869cda13565e..fb792acffeca37 100644
+--- a/fs/smb/client/cifsfs.c
++++ b/fs/smb/client/cifsfs.c
+@@ -302,7 +302,7 @@ static void cifs_kill_sb(struct super_block *sb)
+ 		cifs_sb->root = NULL;
+ 	}
+ 
+-	kill_anon_super(sb);
++	generic_shutdown_super(sb);
+ 	cifs_umount(cifs_sb);
+ }
+ 
+diff --git a/fs/super.c b/fs/super.c
+index ab234e6af48605..bbe55f0651cca4 100644
+--- a/fs/super.c
++++ b/fs/super.c
+@@ -438,10 +438,6 @@ static void kill_super_notify(struct super_block *sb)
+ {
+ 	lockdep_assert_not_held(&sb->s_umount);
+ 
+-	/* already notified earlier */
+-	if (sb->s_flags & SB_DEAD)
+-		return;
 -
-+	qibfs_remove(dd);
- 	qib_device_remove(dd);
+ 	/*
+ 	 * Remove it from @fs_supers so it isn't found by new
+ 	 * sget{_fc}() walkers anymore. Any concurrent mounter still
+@@ -491,6 +487,13 @@ void deactivate_locked_super(struct super_block *s)
  
- 	qib_postinit_cleanup(dd);
+ 	kill_super_notify(s);
+ 
++	/*
++	 * If the super_block was using an anon dev_t, release it now that we've
++	 * notified everyone that the super_block is going away.
++	 */
++	if (s->s_dev && MAJOR(s->s_dev) == 0)
++		free_anon_bdev(s->s_dev);
++
+ 	/*
+ 	 * Since list_lru_destroy() may sleep, we cannot call it from
+ 	 * put_super(), where we hold the sb_lock. Therefore we destroy
+@@ -1291,20 +1294,11 @@ int set_anon_super(struct super_block *s, void *data)
+ }
+ EXPORT_SYMBOL(set_anon_super);
+ 
+-void kill_anon_super(struct super_block *sb)
+-{
+-	dev_t dev = sb->s_dev;
+-	generic_shutdown_super(sb);
+-	kill_super_notify(sb);
+-	free_anon_bdev(dev);
+-}
+-EXPORT_SYMBOL(kill_anon_super);
+-
+ void kill_litter_super(struct super_block *sb)
+ {
+ 	if (sb->s_root)
+ 		d_genocide(sb->s_root);
+-	kill_anon_super(sb);
++	generic_shutdown_super(sb);
+ }
+ EXPORT_SYMBOL(kill_litter_super);
+ 
+diff --git a/fs/ubifs/super.c b/fs/ubifs/super.c
+index b08fb28d16b55b..6527175591a729 100644
+--- a/fs/ubifs/super.c
++++ b/fs/ubifs/super.c
+@@ -2350,7 +2350,8 @@ static struct dentry *ubifs_mount(struct file_system_type *fs_type, int flags,
+ static void kill_ubifs_super(struct super_block *s)
+ {
+ 	struct ubifs_info *c = s->s_fs_info;
+-	kill_anon_super(s);
++
++	generic_shutdown_super(s);
+ 	kfree(c);
+ }
+ 
+diff --git a/fs/vboxsf/super.c b/fs/vboxsf/super.c
+index 1fb8f4df60cbb3..aa7e627bf9bd4b 100644
+--- a/fs/vboxsf/super.c
++++ b/fs/vboxsf/super.c
+@@ -450,7 +450,6 @@ static struct file_system_type vboxsf_fs_type = {
+ 	.owner			= THIS_MODULE,
+ 	.name			= "vboxsf",
+ 	.init_fs_context	= vboxsf_init_fs_context,
+-	.kill_sb		= kill_anon_super
+ };
+ 
+ /* Module initialization/finalization handlers */
+diff --git a/include/linux/fs.h b/include/linux/fs.h
+index 4aeb3fa1192771..129b8c0c83960b 100644
+--- a/include/linux/fs.h
++++ b/include/linux/fs.h
+@@ -2382,7 +2382,6 @@ extern struct dentry *mount_subtree(struct vfsmount *mnt, const char *path);
+ void retire_super(struct super_block *sb);
+ void generic_shutdown_super(struct super_block *sb);
+ void kill_block_super(struct super_block *sb);
+-void kill_anon_super(struct super_block *sb);
+ void kill_litter_super(struct super_block *sb);
+ void deactivate_super(struct super_block *sb);
+ void deactivate_locked_super(struct super_block *sb);
+diff --git a/kernel/resource.c b/kernel/resource.c
+index b1763b2fd7ef3e..fde412517ef0cc 100644
+--- a/kernel/resource.c
++++ b/kernel/resource.c
+@@ -1979,7 +1979,6 @@ static struct file_system_type iomem_fs_type = {
+ 	.name		= "iomem",
+ 	.owner		= THIS_MODULE,
+ 	.init_fs_context = iomem_fs_init_fs_context,
+-	.kill_sb	= kill_anon_super,
+ };
+ 
+ static int __init iomem_init_inode(void)
+diff --git a/mm/secretmem.c b/mm/secretmem.c
+index 3afb5ad701e14a..74e1cdb1317cd7 100644
+--- a/mm/secretmem.c
++++ b/mm/secretmem.c
+@@ -275,7 +275,6 @@ static int secretmem_init_fs_context(struct fs_context *fc)
+ static struct file_system_type secretmem_fs = {
+ 	.name		= "secretmem",
+ 	.init_fs_context = secretmem_init_fs_context,
+-	.kill_sb	= kill_anon_super,
+ };
+ 
+ static int __init secretmem_init(void)
+diff --git a/net/socket.c b/net/socket.c
+index c8b08b32f097ec..a137b08a7d94d1 100644
+--- a/net/socket.c
++++ b/net/socket.c
+@@ -425,7 +425,6 @@ static struct vfsmount *sock_mnt __read_mostly;
+ static struct file_system_type sock_fs_type = {
+ 	.name =		"sockfs",
+ 	.init_fs_context = sockfs_init_fs_context,
+-	.kill_sb =	kill_anon_super,
+ };
+ 
+ /*
+diff --git a/security/apparmor/apparmorfs.c b/security/apparmor/apparmorfs.c
+index bd6a910f65282a..eceb5443842cdf 100644
+--- a/security/apparmor/apparmorfs.c
++++ b/security/apparmor/apparmorfs.c
+@@ -198,7 +198,6 @@ static struct file_system_type aafs_ops = {
+ 	.owner = THIS_MODULE,
+ 	.name = AAFS_NAME,
+ 	.init_fs_context = apparmorfs_init_fs_context,
+-	.kill_sb = kill_anon_super,
+ };
+ 
+ /**
 -- 
 2.39.2
 
