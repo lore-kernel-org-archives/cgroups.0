@@ -1,141 +1,82 @@
-From: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Subject: Re: [PATCH v2] mm: memcg: add THP swap out info for anonymous reclaim
-Date: Wed, 13 Sep 2023 11:52:17 -0400
-Message-ID: <20230913155217.GC45543@cmpxchg.org>
-References: <20230912021727.61601-1-vernhao@tencent.com>
+From: Alan Stern <stern-nwvwT67g6+6dFdvTe/nMLpVzexx5G7lz@public.gmane.org>
+Subject: Re: [PATCH 10/19] USB: gadget/legacy: remove sb_mutex
+Date: Wed, 13 Sep 2023 12:10:56 -0400
+Message-ID: <7f839be1-4898-41ad-8eda-10d5a0350bdf@rowland.harvard.edu>
+References: <20230913111013.77623-1-hch@lst.de>
+ <20230913111013.77623-11-hch@lst.de>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=cmpxchg-org.20230601.gappssmtp.com; s=20230601; t=1694620338; x=1695225138; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=U1o+xAaY0eE6mqHpp9tQ0uQLU9Huay2534Teze/R2PM=;
-        b=mP4K6tx6m8jDbVnwufSbH5lSLnoi99dPlXkX6G4rzn4sw8GKJ9rg1N/JznD4FvT3/k
-         iPAQC7xNhgiQ8llAAATBxuJEqt2G+VxBxCHSEH+A/59YfeDqHbTrhcWrZQ1XOzCIGzWi
-         kWVollAxCUs6hXYe8Gd9CjGjvkq0Qh2kZ3pgwSXC7xVqif8WFEap/s5PooeDjVIdD5vD
-         kSEgWCIg38DPi0AOOjm2q1PEnE0vrEqFkTA38Ycsgf0kHf02SqBcjNAypSXD78RKDboq
-         3zR6rYtxoh2ln9OVJ3F0pKKfLeWK2CnmqgSgFATMK84FABbb7sJx4NeL96heWUToqJ8n
-         k0rw==
+Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 Content-Disposition: inline
-In-Reply-To: <20230912021727.61601-1-vernhao-1Nz4purKYjRBDgjK7y7TUQ@public.gmane.org>
+In-Reply-To: <20230913111013.77623-11-hch-jcswGhMUV9g@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Vern Hao <haoxing990-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Cc: mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org, shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Xin Hao <vernhao-1Nz4purKYjRBDgjK7y7TUQ@public.gmane.org>
+To: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
+Cc: Christian Brauner <brauner-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Al Viro <viro-RmSDqhL/yNMiFSDQTTA3OLVCufUGDwFn@public.gmane.org>, Heiko Carstens <hca-tEXmvtCZX7AybS5Ee8rs3A@public.gmane.org>, Vasily Gorbik <gor-tEXmvtCZX7AybS5Ee8rs3A@public.gmane.org>, Alexander Gordeev <agordeev-tEXmvtCZX7AybS5Ee8rs3A@public.gmane.org>, Fenghua Yu <fenghua.yu-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Reinette Chatre <reinette.chatre-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Miquel Raynal <miquel.raynal-LDxbnhwyfcJBDgjK7y7TUQ@public.gmane.org>, Richard Weinberger <richard-/L3Ra7n9ekc@public.gmane.org>, Vignesh Raghavendra <vigneshr-l0cyMroinI0@public.gmane.org>, Dennis Dalessandro <dennis.dalessandro-ntyVByD3zXaTtA8H5PvdGFaTQe2KTcn/@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Trond Myklebust <trond.myklebust-F/q8l9xzQnoyLce1RVWEUA@public.gmane.org>, Anna Schumaker <anna-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Kees Cook <keescook-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>, Damien Le Moal <dlemoal-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Naohiro Aota <naohiro.aota-Sjgp3cTcYWE@public.gmane.org>, Greg Kroah-Hartman <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>, linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linu
 
-On Tue, Sep 12, 2023 at 10:17:25AM +0800, Vern Hao wrote:
-> From: Xin Hao <vernhao-1Nz4purKYjRBDgjK7y7TUQ@public.gmane.org>
+On Wed, Sep 13, 2023 at 08:10:04AM -0300, Christoph Hellwig wrote:
+> Creating new a new super_block vs freeing the old one for single instance
+> file systems is serialized by the wait for SB_DEAD.
 > 
-> At present, we support per-memcg reclaim strategy, however we do not
-> know the number of transparent huge pages being reclaimed, as we know
-> the transparent huge pages need to be splited before reclaim them, and
-> they will bring some performance bottleneck effect. for example, when
-> two memcg (A & B) are doing reclaim for anonymous pages at same time,
-> and 'A' memcg is reclaiming a large number of transparent huge pages, we
-> can better analyze that the performance bottleneck will be caused by 'A'
-> memcg.  therefore, in order to better analyze such problems, there add
-> THP swap out info for per-memcg.
+> Remove the superfluous sb_mutex.
 > 
-> Signed-off-by: Xin Hao <vernhao-1Nz4purKYjRBDgjK7y7TUQ@public.gmane.org>
+> Signed-off-by: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
 > ---
-> v1 -> v2
-> 	- Do some fix as Johannes Weiner suggestion.
-> v1: 
-> https://lore.kernel.org/linux-mm/20230911160824.GB103342-druUgvl0LCNAfugRpC6u6w@public.gmane.org/T/
+
+You might mention that this is essentially a reversion of commit 
+d18dcfe9860e ("USB: gadgetfs: Fix race between mounting and 
+unmounting").
+
+Alan Stern
+
+>  drivers/usb/gadget/legacy/inode.c | 6 ------
+>  1 file changed, 6 deletions(-)
 > 
->  mm/memcontrol.c | 2 ++
->  mm/page_io.c    | 4 +++-
->  mm/vmscan.c     | 1 +
->  3 files changed, 6 insertions(+), 1 deletion(-)
-> 
-> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-> index ecc07b47e813..32d50db9ea0d 100644
-> --- a/mm/memcontrol.c
-> +++ b/mm/memcontrol.c
-> @@ -752,6 +752,8 @@ static const unsigned int memcg_vm_event_stat[] = {
->  #ifdef CONFIG_TRANSPARENT_HUGEPAGE
->  	THP_FAULT_ALLOC,
->  	THP_COLLAPSE_ALLOC,
-> +	THP_SWPOUT,
-> +	THP_SWPOUT_FALLBACK,
-
-Can you please add documentation to
-Documentation/admin-guide/cgroup-v2.rst?
-
-Sorry, I missed this in v1.
-
-> @@ -208,8 +208,10 @@ int swap_writepage(struct page *page, struct writeback_control *wbc)
->  static inline void count_swpout_vm_event(struct folio *folio)
->  {
->  #ifdef CONFIG_TRANSPARENT_HUGEPAGE
-> -	if (unlikely(folio_test_pmd_mappable(folio)))
-> +	if (unlikely(folio_test_pmd_mappable(folio))) {
-> +		count_memcg_folio_events(folio, THP_SWPOUT, 1);
->  		count_vm_event(THP_SWPOUT);
-> +	}
->  #endif
->  	count_vm_events(PSWPOUT, folio_nr_pages(folio));
+> diff --git a/drivers/usb/gadget/legacy/inode.c b/drivers/usb/gadget/legacy/inode.c
+> index ce9e31f3d26bcc..a203266bc0dc82 100644
+> --- a/drivers/usb/gadget/legacy/inode.c
+> +++ b/drivers/usb/gadget/legacy/inode.c
+> @@ -229,7 +229,6 @@ static void put_ep (struct ep_data *data)
+>   */
+>  
+>  static const char *CHIP;
+> -static DEFINE_MUTEX(sb_mutex);		/* Serialize superblock operations */
+>  
+>  /*----------------------------------------------------------------------*/
+>  
+> @@ -2012,8 +2011,6 @@ gadgetfs_fill_super (struct super_block *sb, struct fs_context *fc)
+>  	struct dev_data	*dev;
+>  	int		rc;
+>  
+> -	mutex_lock(&sb_mutex);
+> -
+>  	if (the_device) {
+>  		rc = -ESRCH;
+>  		goto Done;
+> @@ -2069,7 +2066,6 @@ gadgetfs_fill_super (struct super_block *sb, struct fs_context *fc)
+>  	rc = -ENOMEM;
+>  
+>   Done:
+> -	mutex_unlock(&sb_mutex);
+>  	return rc;
 >  }
-
-Looking through the callers, they seem mostly fine except this one:
-
-static void sio_write_complete(struct kiocb *iocb, long ret)
-{
-	struct swap_iocb *sio = container_of(iocb, struct swap_iocb, iocb);
-	struct page *page = sio->bvec[0].bv_page;
-	int p;
-
-	if (ret != sio->len) {
-		/*
-		 * In the case of swap-over-nfs, this can be a
-		 * temporary failure if the system has limited
-		 * memory for allocating transmit buffers.
-		 * Mark the page dirty and avoid
-		 * folio_rotate_reclaimable but rate-limit the
-		 * messages but do not flag PageError like
-		 * the normal direct-to-bio case as it could
-		 * be temporary.
-		 */
-		pr_err_ratelimited("Write error %ld on dio swapfile (%llu)\n",
-				   ret, page_file_offset(page));
-		for (p = 0; p < sio->pages; p++) {
-			page = sio->bvec[p].bv_page;
-			set_page_dirty(page);
-			ClearPageReclaim(page);
-		}
-	} else {
-		for (p = 0; p < sio->pages; p++)
-			count_swpout_vm_event(page_folio(sio->bvec[p].bv_page));
-
-This is called at the end of IO where the page isn't locked
-anymore. Since it's not locked, page->memcg is not stable and might
-get freed (charge moving is deprecated but still possible).
-
-The fix is simple, though. Every other IO path bumps THP_SWPOUT before
-starting the IO while the page is still locked. We don't really care
-if we get SWPOUT events even for failed IOs. So we can just adjust
-this caller to fit the others, and count while still locked:
-
-diff --git a/mm/page_io.c b/mm/page_io.c
-index fe4c21af23f2..7925e19aeedd 100644
---- a/mm/page_io.c
-+++ b/mm/page_io.c
-@@ -278,9 +278,6 @@ static void sio_write_complete(struct kiocb *iocb, long ret)
- 			set_page_dirty(page);
- 			ClearPageReclaim(page);
- 		}
--	} else {
--		for (p = 0; p < sio->pages; p++)
--			count_swpout_vm_event(page_folio(sio->bvec[p].bv_page));
- 	}
- 
- 	for (p = 0; p < sio->pages; p++)
-@@ -296,6 +293,7 @@ static void swap_writepage_fs(struct page *page, struct writeback_control *wbc)
- 	struct file *swap_file = sis->swap_file;
- 	loff_t pos = page_file_offset(page);
- 
-+	count_swpout_vm_event(page_folio(sio->bvec[p].bv_page));
- 	set_page_writeback(page);
- 	unlock_page(page);
- 	if (wbc->swap_plug)
+>  
+> @@ -2092,7 +2088,6 @@ static int gadgetfs_init_fs_context(struct fs_context *fc)
+>  static void
+>  gadgetfs_kill_sb (struct super_block *sb)
+>  {
+> -	mutex_lock(&sb_mutex);
+>  	kill_litter_super (sb);
+>  	if (the_device) {
+>  		put_dev (the_device);
+> @@ -2100,7 +2095,6 @@ gadgetfs_kill_sb (struct super_block *sb)
+>  	}
+>  	kfree(CHIP);
+>  	CHIP = NULL;
+> -	mutex_unlock(&sb_mutex);
+>  }
+>  
+>  /*----------------------------------------------------------------------*/
+> -- 
+> 2.39.2
+> 
