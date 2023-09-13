@@ -1,141 +1,184 @@
 From: Haitao Huang <haitao.huang-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
-Subject: [PATCH v4 17/18] Docs/x86/sgx: Add description for cgroup support
-Date: Tue, 12 Sep 2023 21:06:34 -0700
-Message-ID: <20230913040635.28815-18-haitao.huang@linux.intel.com>
+Subject: [PATCH v4 18/18] selftests/sgx: Add scripts for epc cgroup testing
+Date: Tue, 12 Sep 2023 21:06:35 -0700
+Message-ID: <20230913040635.28815-19-haitao.huang@linux.intel.com>
 References: <20230913040635.28815-1-haitao.huang@linux.intel.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1694578140; x=1726114140;
+  t=1694578141; x=1726114141;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=hEu3sY0L0Zm8yUMNRt51Y+KGZj58gXXJpRMwbPXfe14=;
-  b=gaqSnY94y3UF2pguqjfrkbYW5gdGM8xzqQbZFSOGj65LIVAJpmBpZgxA
-   u06VPICdNuNON9OBvhyD32NIOePuqpf1TVpvHJ6PfAqdFt1J9G8Zvt/H1
-   QMGBDU6D5MXdsq6tBfpYrdk2ySg7KNGqVm9bk4UO0aTvEU8XYC1El9P8H
-   FCkyPaRlwWjCZtF7gB1QvMqzT7PlDJrtSbRVe0zpYeqlxl+6NxvcWSZ+R
-   IyDlTLMd/yhpn5LTolwJTuc6+BX+WkRvSDy8rgnO3i1Thze04pWDU7mNJ
-   jGx9Q6BJeGxuHUfSvtc4yAZ3vu6VUtRMMTsRBIpp2lNJlBZd66RGHviVL
-   A==;
+  bh=deuShLNhhDjtFREz/27mivDy0NewVu2ghIGkXQ/WYEo=;
+  b=BGRpBZfbppv+HPdcdDiUGm5ZsH97PhSvaBsw8VcWZcpsB4SUH9rRPcfV
+   Nmp8pezs6suwzQuuJhnFzIiQR5lmRF3hvk1kfKY8CkeyVSHrBbTZqsuMZ
+   2x6RlryAKoFTAPLCaGU9UbSl+GlI7uEdqeQUT6C4+OvKnUXR9BS6dT+kn
+   H1ckmoL9mD9l+iIfzuFZl7sS4xcUbXYJKUqbjgYEFjXUquytISxIpW3VZ
+   2MddTacl+TuHDhHCz4cCxamn5mK+KueABxA3ldQ2LkslKwcjw2G6rxdyB
+   aM0U4WOXSEJEWReESUcw2Gfs32O8BYGQg4gegAA2IREGS7uVIUXNuTI36
+   w==;
 In-Reply-To: <20230913040635.28815-1-haitao.huang-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 To: jarkko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, dave.hansen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-sgx-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, x86-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, tglx-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org, mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, bp-Gina5bIWoIWzQB+pC5nmwQ@public.gmane.org, hpa-YMNOUZJC4hwAvxtiuMwx3w@public.gmane.org, sohil.mehta-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org
 Cc: zhiquan1.li-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org, kristen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org, seanjc-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, zhanb-0li6OtcxBFHby3iVrkZq2A@public.gmane.org, anakrish-0li6OtcxBFHby3iVrkZq2A@public.gmane.org, mikko.ylinen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org, yangjie-0li6OtcxBFHby3iVrkZq2A@public.gmane.org
 
-From: Kristen Carlson Accardi <kristen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
+Scripts rely on cgroup-tools package from libcgroup [1].
 
-Add initial documentation of how to regulate the distribution of
-SGX Enclave Page Cache (EPC) memory via the Miscellaneous cgroup
-controller.
+To test:
+1) sudo ./setup_epc_cg.sh (optional one time setup)
+2) sudo ./run_tests_in_misc_cg.sh
 
-Signed-off-by: Sean Christopherson <sean.j.christopherson-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
-Signed-off-by: Kristen Carlson Accardi <kristen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
-Signed-off-by: Haitao Huang<haitao.huang-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
-Cc: Sean Christopherson <seanjc-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Reviewed-by: Bagas Sanjaya <bagasdotme-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+To watch misc group current:
+./watch_misc_for_tests.sh current
+
+[1] https://github.com/libcgroup/libcgroup/blob/main/README
+
+Signed-off-by: Haitao Huang <haitao.huang-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
 ---
 V4:
-- Fix indentation (Randy)
-- Change misc.events file to be read-only
-- Fix a typo for 'subsystem'
-- Add behavior when VMM overcommit EPC with a cgroup (Mikko)
----
- Documentation/arch/x86/sgx.rst | 82 ++++++++++++++++++++++++++++++++++
- 1 file changed, 82 insertions(+)
 
-diff --git a/Documentation/arch/x86/sgx.rst b/Documentation/arch/x86/sgx.rst
-index d90796adc2ec..65c211bd5342 100644
---- a/Documentation/arch/x86/sgx.rst
-+++ b/Documentation/arch/x86/sgx.rst
-@@ -300,3 +300,85 @@ to expected failures and handle them as follows:
-    first call.  It indicates a bug in the kernel or the userspace client
-    if any of the second round of ``SGX_IOC_VEPC_REMOVE_ALL`` calls has
-    a return code other than 0.
+Note: Need to apply on top of this series previously reviewed:
+https://lore.kernel.org/linux-sgx/20220905020411.17290-1-jarkko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org/
+---
+ .../selftests/sgx/run_tests_in_misc_cg.sh     | 68 +++++++++++++++++++
+ tools/testing/selftests/sgx/setup_epc_cg.sh   | 29 ++++++++
+ .../selftests/sgx/watch_misc_for_tests.sh     | 13 ++++
+ 3 files changed, 110 insertions(+)
+ create mode 100755 tools/testing/selftests/sgx/run_tests_in_misc_cg.sh
+ create mode 100755 tools/testing/selftests/sgx/setup_epc_cg.sh
+ create mode 100755 tools/testing/selftests/sgx/watch_misc_for_tests.sh
+
+diff --git a/tools/testing/selftests/sgx/run_tests_in_misc_cg.sh b/tools/testing/selftests/sgx/run_tests_in_misc_cg.sh
+new file mode 100755
+index 000000000000..63da7b23b74e
+--- /dev/null
++++ b/tools/testing/selftests/sgx/run_tests_in_misc_cg.sh
+@@ -0,0 +1,68 @@
++#!/bin/bash
++# SPDX-License-Identifier: GPL-2.0
++# Copyright(c) 2023 Intel Corporation.
 +
++if ! lscgroup | grep -q "test/test1/test3$"; then
++  echo "setting up cgroups for testing..."
++  ./setup_epc_cg.sh
++fi
 +
-+Cgroup Support
-+==============
++cmd='./test_sgx'
++default_test="augment_via_eaccept_long"
 +
-+The "sgx_epc" resource within the Miscellaneous cgroup controller regulates
-+distribution of SGX EPC memory, which is a subset of system RAM that
-+is used to provide SGX-enabled applications with protected memory,
-+and is otherwise inaccessible, i.e. shows up as reserved in
-+/proc/iomem and cannot be read/written outside of an SGX enclave.
++# We use 'tail' to skip header lines and 'sed' to remove 'enclave' from the first non-header line.
++list=$($cmd -l 2>&1 | tail -n +4 | sed '0,/^enclave/ s/^enclave//' | sed 's/^ *//')
 +
-+Although current systems implement EPC by stealing memory from RAM,
-+for all intents and purposes the EPC is independent from normal system
-+memory, e.g. must be reserved at boot from RAM and cannot be converted
-+between EPC and normal memory while the system is running.  The EPC is
-+managed by the SGX subsystem and is not accounted by the memory
-+controller.  Note that this is true only for EPC memory itself, i.e.
-+normal memory allocations related to SGX and EPC memory, e.g. the
-+backing memory for evicted EPC pages, are accounted, limited and
-+protected by the memory controller.
++IFS=$'\n' read -d '' -r -a lines <<< "$list"
++lines=("all" "${lines[@]}")
 +
-+Much like normal system memory, EPC memory can be overcommitted via
-+virtual memory techniques and pages can be swapped out of the EPC
-+to their backing store (normal system memory allocated via shmem).
-+The SGX EPC subsystem is analogous to the memory subsystem, and
-+it implements limit and protection models for EPC memory.
++echo "Available tests:"
++for i in "${!lines[@]}"; do
++  # Check if the current line is the default test
++  if [[ ${lines[$i]} == *"$default_test"* ]]; then
++    echo "$((i)). ${lines[$i]} (default)"
++  else
++    echo "$((i)). ${lines[$i]}"
++  fi
++done
 +
-+SGX EPC Interface Files
-+-----------------------
++echo "Please enter the number of the test you want to run (or press enter for the default test):"
++read choice
 +
-+For a generic description of the Miscellaneous controller interface
-+files, please see Documentation/admin-guide/cgroup-v2.rst
++if [ -z "$choice" ]; then
++  testname="$default_test"
++else
++  testname="${lines[$choice]}"
++fi
 +
-+All SGX EPC memory amounts are in bytes unless explicitly stated
-+otherwise.  If a value which is not PAGE_SIZE aligned is written,
-+the actual value used by the controller will be rounded down to
-+the closest PAGE_SIZE multiple.
++if [ "$testname" == "all" ]; then
++  test_cmd="$cmd"
++else
++  test_cmd="$cmd -t $testname"
++fi
 +
-+  misc.capacity
-+        A read-only flat-keyed file shown only in the root cgroup.
-+        The sgx_epc resource will show the total amount of EPC
-+        memory available on the platform.
++timestamp=$(date +%Y%m%d_%H%M%S)
 +
-+  misc.current
-+        A read-only flat-keyed file shown in the non-root cgroups.
-+        The sgx_epc resource will show the current active EPC memory
-+        usage of the cgroup and its descendants. EPC pages that are
-+        swapped out to backing RAM are not included in the current count.
++# Always use leaf node of misc cgroups so it works for both v1 and v2
++# these may fail on OOM
++nohup bash -c "cgexec -g misc:test/test1/test3 $test_cmd" >test1_1_$timestamp.log 2>&1 &
++nohup bash -c "cgexec -g misc:test/test1/test3 $test_cmd" >test1_2_$timestamp.log 2>&1 &
++nohup bash -c "cgexec -g misc:test/test1/test3 $test_cmd" >test1_3_$timestamp.log 2>&1 &
++nohup bash -c "cgexec -g misc:test/test1/test3 $test_cmd" >test1_4_$timestamp.log 2>&1 &
++nohup bash -c "cgexec -g misc:test/test1/test3 $test_cmd" >test1_5_$timestamp.log 2>&1 &
 +
-+  misc.max
-+        A read-write single value file which exists on non-root
-+        cgroups. The sgx_epc resource will show the EPC usage
-+        hard limit. The default is "max".
++# These tests may timeout on oversubscribed tests on 4G EPC
++nohup bash -c "cgexec -g misc:test/test2 $test_cmd" >test2_1_$timestamp.log 2>&1 &
++nohup bash -c "cgexec -g misc:test/test2 $test_cmd" >test2_2_$timestamp.log 2>&1 &
++nohup bash -c "cgexec -g misc:test/test2 $test_cmd" >test2_3_$timestamp.log 2>&1 &
++nohup bash -c "cgexec -g misc:test/test2 $test_cmd" >test2_4_$timestamp.log 2>&1 &
++nohup bash -c "cgexec -g misc:test/test2 $test_cmd" >test2_5_$timestamp.log 2>&1 &
++nohup bash -c "cgexec -g misc:test/test2 $test_cmd" >test2_6_$timestamp.log 2>&1 &
++nohup bash -c "cgexec -g misc:test/test2 $test_cmd" >test2_7_$timestamp.log 2>&1 &
++nohup bash -c "cgexec -g misc:test/test2 $test_cmd" >test2_8_$timestamp.log 2>&1 &
 +
-+        If a cgroup's EPC usage reaches this limit, EPC allocations,
-+        e.g. for page fault handling, will be blocked until EPC can
-+        be reclaimed from the cgroup.  If EPC cannot be reclaimed in
-+        a timely manner, reclaim will be forced, e.g. by ignoring LRU.
++# this should work on 4G EPC
++nohup bash -c "cgexec -g misc:test4 $test_cmd" >test4_1_$timestamp.log 2>&1 &
++nohup bash -c "cgexec -g misc:test4 $test_cmd" >test4_2_$timestamp.log 2>&1 &
++nohup bash -c "cgexec -g misc:test4 $test_cmd" >test4_3_$timestamp.log 2>&1 &
++nohup bash -c "cgexec -g misc:test4 $test_cmd" >test4_4_$timestamp.log 2>&1 &
+diff --git a/tools/testing/selftests/sgx/setup_epc_cg.sh b/tools/testing/selftests/sgx/setup_epc_cg.sh
+new file mode 100755
+index 000000000000..5fd137a66436
+--- /dev/null
++++ b/tools/testing/selftests/sgx/setup_epc_cg.sh
+@@ -0,0 +1,29 @@
++#!/bin/bash
++# SPDX-License-Identifier: GPL-2.0
++# Copyright(c) 2023 Intel Corporation.
 +
-+        The EPC pages allocated for KVM guests by the virtual EPC driver
-+        are not reclaimable by the host kernel SGX reclaimers. If a VMM
-+        tries to start a VM within a cgroup whose EPC usage reaches this
-+        limit, the virtual EPC driver will stop allocating more EPC for the
-+        VM, and return SIGBUS to the VMM which would abort the VM launch.
++cgcreate -g misc:test
++if [ $? -ne 0 ]; then
++    echo "Please make sure cgroup-tools is installed, and misc cgroup is mounted."
++    exit 1
++fi
++cgcreate -g misc:test/test1
++cgcreate -g misc:test/test1/test3
++cgcreate -g misc:test/test2
++cgcreate -g misc:test4
 +
-+  misc.events
-+        A read-only flat-keyed file which exists on non-root cgroups.
-+        A value change in this file generates a file modified event.
++# Setup for a platform with 4G EPC
++LARGER=4096000000
++LARGE=409600000
++SMALL=4096000
++if [ ! -d "/sys/fs/cgroup/misc" ]; then
++    echo "cgroups v2 is in use. Only leaf nodes can run a process"
++    echo "sgx_epc $SMALL" | tee /sys/fs/cgroup/test/test1/misc.max
++    echo "sgx_epc $LARGE" | tee /sys/fs/cgroup/test/test2/misc.max
++    echo "sgx_epc $LARGER" | tee /sys/fs/cgroup/test4/misc.max
++else
++    echo "cgroups v1 is in use."
++    echo "sgx_epc $SMALL" | tee /sys/fs/cgroup/misc/test/test1/misc.max
++    echo "sgx_epc $LARGE" | tee /sys/fs/cgroup/misc/test/test2/misc.max
++    echo "sgx_epc $LARGER" | tee /sys/fs/cgroup/misc/test4/misc.max
++fi
+diff --git a/tools/testing/selftests/sgx/watch_misc_for_tests.sh b/tools/testing/selftests/sgx/watch_misc_for_tests.sh
+new file mode 100755
+index 000000000000..dbd38f346e7b
+--- /dev/null
++++ b/tools/testing/selftests/sgx/watch_misc_for_tests.sh
+@@ -0,0 +1,13 @@
++#!/bin/bash
++# SPDX-License-Identifier: GPL-2.0
++# Copyright(c) 2023 Intel Corporation.
 +
-+          max
-+                The number of times the cgroup has triggered a reclaim
-+                due to its EPC usage approaching (or exceeding) its max
-+                EPC boundary.
++if [ -z "$1" ]
++  then
++    echo "No argument supplied, please provide 'max', 'current' or 'events'"
++    exit 1
++fi
 +
-+Migration
-+---------
++watch -n 1 "find /sys/fs/cgroup -wholename */test*/misc.$1 -exec sh -c \
++    'echo \"\$1:\"; cat \"\$1\"' _ {} \;"
 +
-+Once an EPC page is charged to a cgroup (during allocation), it
-+remains charged to the original cgroup until the page is released
-+or reclaimed.  Migrating a process to a different cgroup doesn't
-+move the EPC charges that it incurred while in the previous cgroup
-+to its new cgroup.
 -- 
 2.25.1
 
