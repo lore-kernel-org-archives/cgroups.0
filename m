@@ -1,24 +1,24 @@
 From: Haitao Huang <haitao.huang-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
-Subject: [PATCH v4 02/18] cgroup/misc: Add SGX EPC resource type and export APIs for SGX driver
-Date: Tue, 12 Sep 2023 21:06:19 -0700
-Message-ID: <20230913040635.28815-3-haitao.huang@linux.intel.com>
+Subject: [PATCH v4 04/18] x86/sgx: Use sgx_epc_lru_lists for existing active page list
+Date: Tue, 12 Sep 2023 21:06:21 -0700
+Message-ID: <20230913040635.28815-5-haitao.huang@linux.intel.com>
 References: <20230913040635.28815-1-haitao.huang@linux.intel.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1694578128; x=1726114128;
+  t=1694578129; x=1726114129;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=HqRj5uRH5mZXfWy3E/kPRnOT0vE/WrAZ/bOtfduqTXE=;
-  b=NBrZ6n5K5gFQKKSBgQzBXscMtI83lmxfUndRVUb5GHTBhU3OJ7IMHoUs
-   uVDKjLRkmXe18FQQejgqN0GJDBd4Sn7jSf+qJq18F/bj60SjE70B1t8MV
-   GPxLIRTLJYc5JBqNQOo9JXH2f5eHg9lfxN9+uI21PYJM6LLHLLP/jB96s
-   a/GFICsuuKILhX3kfT/SWVqoCDCOL83tZmn7C1nGGdZ0x8c1DoC2x4jTF
-   jfNZgFzelm8fCTPpS48r4OvWyot8g5DwlqpJexi1YQjSYYlSkYM6J3BQ8
-   WFJHVtPgXAzPlTBzT/N7kBSsgbUrLDKIiaLSdc1PG+yhK9+e9Wx+/LduT
-   w==;
+  bh=q3XKtro3U1/ep+dm2IKy9vFEYUcWpZyEJlm9hX4sn60=;
+  b=X2uL4tVuG5Yq2USAFRotXO0yi2lPy9ffAcyYCtc5e9s2elorfpHt4QP1
+   m1FO3jsCmRA5nI8mT8+VqOP1yVO21oOG4dsNBMOvoPzW6HXc96FvSTgBd
+   zqc0xdjRZrhe99motMrBRPjb1xQ3QupCPEtP37PFimWMY20jvfrUznWWQ
+   p4Ry2H8lFWmuApYhezc1Rb9f1iTpuYYXCQnSstaRfjFz2knxYwJFUTqqy
+   U1rgSbcLE51wpBrdEJ0+BX/4eguRZPNG/sp6qFqtDHQG4B7QSiUrqbY+5
+   P7452/QIiQJRFtHBV6bg4Xfb7eMLb8h6TaRktsLMWqRZetMWlpXTS22X7
+   A==;
 In-Reply-To: <20230913040635.28815-1-haitao.huang-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
@@ -27,173 +27,147 @@ Cc: zhiquan1.li-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org, kristen-VuQAYsv1563Yd54
 
 From: Kristen Carlson Accardi <kristen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
 
-The SGX driver will need to get access to the root misc_cg object
-to do iterative walks and also determine if a charge will be
-towards the root cgroup or not.
+All EPC pages of enclaves including VA and SECS will be tracked in
+sgx_epc_lru_lists structs, one per cgroup. For now just replace the
+existing sgx_active_page_list in the reclaimer and its spinlock with a
+global sgx_epc_lru_lists struct. VA and SECS pages are still not tracked
+at this point but they will be tracked after an unreclaimable LRU list
+is added to the sgx_epc_lru_lists struct.
 
-To manage the SGX EPC memory via the misc controller, the SGX
-driver will also need to be able to iterate over the misc cgroup
-hierarchy.
-
-Move parent_misc() into misc_cgroup.h and make inline to make this
-function available to SGX, rename it to misc_cg_parent(), and update
-misc.c to use the new name.
-
-Add per resource type private data so that SGX can store additional
-per cgroup data with the misc_cg struct.
-
-Allow SGX EPC memory to be a valid resource type for the misc
-controller.
-
+Signed-off-by: Sean Christopherson <sean.j.christopherson-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
 Signed-off-by: Kristen Carlson Accardi <kristen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
 Signed-off-by: Haitao Huang <haitao.huang-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
+Cc: Sean Christopherson <seanjc-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 ---
 V4:
-- Moved this to the second in the series.
----
- include/linux/misc_cgroup.h | 29 +++++++++++++++++++++++++++++
- kernel/cgroup/misc.c        | 25 ++++++++++++-------------
- 2 files changed, 41 insertions(+), 13 deletions(-)
+- No change, only reordered the patch.
 
-diff --git a/include/linux/misc_cgroup.h b/include/linux/misc_cgroup.h
-index e1bcd176c2de..6f8330f435ba 100644
---- a/include/linux/misc_cgroup.h
-+++ b/include/linux/misc_cgroup.h
-@@ -17,6 +17,10 @@ enum misc_res_type {
- 	MISC_CG_RES_SEV,
- 	/* AMD SEV-ES ASIDs resource */
- 	MISC_CG_RES_SEV_ES,
-+#endif
-+#ifdef CONFIG_CGROUP_SGX_EPC
-+	/* SGX EPC memory resource */
-+	MISC_CG_RES_SGX_EPC,
- #endif
- 	MISC_CG_RES_TYPES
- };
-@@ -37,6 +41,7 @@ struct misc_res {
- 	u64 max;
- 	atomic64_t usage;
- 	atomic64_t events;
-+	void *priv;
+V3:
+- Remove usage of list wrapper
+---
+ arch/x86/kernel/cpu/sgx/main.c | 39 +++++++++++++++++-----------------
+ 1 file changed, 20 insertions(+), 19 deletions(-)
+
+diff --git a/arch/x86/kernel/cpu/sgx/main.c b/arch/x86/kernel/cpu/sgx/main.c
+index 166692f2d501..afce51d6e94a 100644
+--- a/arch/x86/kernel/cpu/sgx/main.c
++++ b/arch/x86/kernel/cpu/sgx/main.c
+@@ -26,10 +26,9 @@ static DEFINE_XARRAY(sgx_epc_address_space);
  
- 	/* per resource callback ops */
- 	int (*misc_cg_alloc)(struct misc_cg *cg);
-@@ -59,6 +64,7 @@ struct misc_cg {
- 	struct misc_res res[MISC_CG_RES_TYPES];
- };
- 
-+struct misc_cg *misc_cg_root(void);
- u64 misc_cg_res_total_usage(enum misc_res_type type);
- int misc_cg_set_capacity(enum misc_res_type type, u64 capacity);
- int misc_cg_try_charge(enum misc_res_type type, struct misc_cg *cg, u64 amount);
-@@ -78,6 +84,20 @@ static inline struct misc_cg *css_misc(struct cgroup_subsys_state *css)
- 	return css ? container_of(css, struct misc_cg, css) : NULL;
- }
- 
-+/**
-+ * misc_cg_parent() - Get the parent of the passed misc cgroup.
-+ * @cgroup: cgroup whose parent needs to be fetched.
-+ *
-+ * Context: Any context.
-+ * Return:
-+ * * struct misc_cg* - Parent of the @cgroup.
-+ * * %NULL - If @cgroup is null or the passed cgroup does not have a parent.
-+ */
-+static inline struct misc_cg *misc_cg_parent(struct misc_cg *cgroup)
-+{
-+	return cgroup ? css_misc(cgroup->css.parent) : NULL;
-+}
-+
  /*
-  * get_current_misc_cg() - Find and get the misc cgroup of the current task.
-  *
-@@ -102,6 +122,15 @@ static inline void put_misc_cg(struct misc_cg *cg)
- }
- 
- #else /* !CONFIG_CGROUP_MISC */
-+static inline struct misc_cg *misc_cg_root(void)
-+{
-+	return NULL;
-+}
-+
-+static inline struct misc_cg *misc_cg_parent(struct misc_cg *cg)
-+{
-+	return NULL;
-+}
- 
- static inline u64 misc_cg_res_total_usage(enum misc_res_type type)
- {
-diff --git a/kernel/cgroup/misc.c b/kernel/cgroup/misc.c
-index e0092170d0dd..dbd881be773f 100644
---- a/kernel/cgroup/misc.c
-+++ b/kernel/cgroup/misc.c
-@@ -24,6 +24,10 @@ static const char *const misc_res_name[] = {
- 	/* AMD SEV-ES ASIDs resource */
- 	"sev_es",
- #endif
-+#ifdef CONFIG_CGROUP_SGX_EPC
-+	/* Intel SGX EPC memory bytes */
-+	"sgx_epc",
-+#endif
- };
- 
- /* Root misc cgroup */
-@@ -40,18 +44,13 @@ static struct misc_cg root_cg;
- static u64 misc_res_capacity[MISC_CG_RES_TYPES];
- 
- /**
-- * parent_misc() - Get the parent of the passed misc cgroup.
-- * @cgroup: cgroup whose parent needs to be fetched.
-- *
-- * Context: Any context.
-- * Return:
-- * * struct misc_cg* - Parent of the @cgroup.
-- * * %NULL - If @cgroup is null or the passed cgroup does not have a parent.
-+ * misc_cg_root() - Return the root misc cgroup.
+  * These variables are part of the state of the reclaimer, and must be accessed
+- * with sgx_reclaimer_lock acquired.
++ * with sgx_global_lru.lock acquired.
   */
--static struct misc_cg *parent_misc(struct misc_cg *cgroup)
-+struct misc_cg *misc_cg_root(void)
+-static LIST_HEAD(sgx_active_page_list);
+-static DEFINE_SPINLOCK(sgx_reclaimer_lock);
++static struct sgx_epc_lru_lists sgx_global_lru;
+ 
+ static atomic_long_t sgx_nr_free_pages = ATOMIC_LONG_INIT(0);
+ 
+@@ -304,13 +303,13 @@ static void sgx_reclaim_pages(void)
+ 	int ret;
+ 	int i;
+ 
+-	spin_lock(&sgx_reclaimer_lock);
++	spin_lock(&sgx_global_lru.lock);
+ 	for (i = 0; i < SGX_NR_TO_SCAN; i++) {
+-		if (list_empty(&sgx_active_page_list))
++		epc_page = list_first_entry_or_null(&sgx_global_lru.reclaimable,
++						    struct sgx_epc_page, list);
++		if (!epc_page)
+ 			break;
+ 
+-		epc_page = list_first_entry(&sgx_active_page_list,
+-					    struct sgx_epc_page, list);
+ 		list_del_init(&epc_page->list);
+ 		encl_page = epc_page->owner;
+ 
+@@ -322,7 +321,7 @@ static void sgx_reclaim_pages(void)
+ 			 */
+ 			epc_page->flags &= ~SGX_EPC_PAGE_RECLAIMER_TRACKED;
+ 	}
+-	spin_unlock(&sgx_reclaimer_lock);
++	spin_unlock(&sgx_global_lru.lock);
+ 
+ 	for (i = 0; i < cnt; i++) {
+ 		epc_page = chunk[i];
+@@ -345,9 +344,9 @@ static void sgx_reclaim_pages(void)
+ 		continue;
+ 
+ skip:
+-		spin_lock(&sgx_reclaimer_lock);
+-		list_add_tail(&epc_page->list, &sgx_active_page_list);
+-		spin_unlock(&sgx_reclaimer_lock);
++		spin_lock(&sgx_global_lru.lock);
++		list_add_tail(&epc_page->list, &sgx_global_lru.reclaimable);
++		spin_unlock(&sgx_global_lru.lock);
+ 
+ 		kref_put(&encl_page->encl->refcount, sgx_encl_release);
+ 
+@@ -378,7 +377,7 @@ static void sgx_reclaim_pages(void)
+ static bool sgx_should_reclaim(unsigned long watermark)
  {
--	return cgroup ? css_misc(cgroup->css.parent) : NULL;
-+	return &root_cg;
+ 	return atomic_long_read(&sgx_nr_free_pages) < watermark &&
+-	       !list_empty(&sgx_active_page_list);
++	       !list_empty(&sgx_global_lru.reclaimable);
  }
-+EXPORT_SYMBOL_GPL(misc_cg_root);
+ 
+ /*
+@@ -430,6 +429,8 @@ static bool __init sgx_page_reclaimer_init(void)
+ 
+ 	ksgxd_tsk = tsk;
+ 
++	sgx_lru_init(&sgx_global_lru);
++
+ 	return true;
+ }
+ 
+@@ -505,10 +506,10 @@ struct sgx_epc_page *__sgx_alloc_epc_page(void)
+  */
+ void sgx_mark_page_reclaimable(struct sgx_epc_page *page)
+ {
+-	spin_lock(&sgx_reclaimer_lock);
++	spin_lock(&sgx_global_lru.lock);
+ 	page->flags |= SGX_EPC_PAGE_RECLAIMER_TRACKED;
+-	list_add_tail(&page->list, &sgx_active_page_list);
+-	spin_unlock(&sgx_reclaimer_lock);
++	list_add_tail(&page->list, &sgx_global_lru.reclaimable);
++	spin_unlock(&sgx_global_lru.lock);
+ }
  
  /**
-  * valid_type() - Check if @type is valid or not.
-@@ -150,7 +149,7 @@ int misc_cg_try_charge(enum misc_res_type type, struct misc_cg *cg, u64 amount)
- 	if (!amount)
- 		return 0;
+@@ -523,18 +524,18 @@ void sgx_mark_page_reclaimable(struct sgx_epc_page *page)
+  */
+ int sgx_unmark_page_reclaimable(struct sgx_epc_page *page)
+ {
+-	spin_lock(&sgx_reclaimer_lock);
++	spin_lock(&sgx_global_lru.lock);
+ 	if (page->flags & SGX_EPC_PAGE_RECLAIMER_TRACKED) {
+ 		/* The page is being reclaimed. */
+ 		if (list_empty(&page->list)) {
+-			spin_unlock(&sgx_reclaimer_lock);
++			spin_unlock(&sgx_global_lru.lock);
+ 			return -EBUSY;
+ 		}
  
--	for (i = cg; i; i = parent_misc(i)) {
-+	for (i = cg; i; i = misc_cg_parent(i)) {
- 		res = &i->res[type];
- 
- 		new_usage = atomic64_add_return(amount, &res->usage);
-@@ -163,12 +162,12 @@ int misc_cg_try_charge(enum misc_res_type type, struct misc_cg *cg, u64 amount)
- 	return 0;
- 
- err_charge:
--	for (j = i; j; j = parent_misc(j)) {
-+	for (j = i; j; j = misc_cg_parent(j)) {
- 		atomic64_inc(&j->res[type].events);
- 		cgroup_file_notify(&j->events_file);
+ 		list_del(&page->list);
+ 		page->flags &= ~SGX_EPC_PAGE_RECLAIMER_TRACKED;
  	}
+-	spin_unlock(&sgx_reclaimer_lock);
++	spin_unlock(&sgx_global_lru.lock);
  
--	for (j = cg; j != i; j = parent_misc(j))
-+	for (j = cg; j != i; j = misc_cg_parent(j))
- 		misc_cg_cancel_charge(type, j, amount);
- 	misc_cg_cancel_charge(type, i, amount);
- 	return ret;
-@@ -190,7 +189,7 @@ void misc_cg_uncharge(enum misc_res_type type, struct misc_cg *cg, u64 amount)
- 	if (!(amount && valid_type(type) && cg))
- 		return;
- 
--	for (i = cg; i; i = parent_misc(i))
-+	for (i = cg; i; i = misc_cg_parent(i))
- 		misc_cg_cancel_charge(type, i, amount);
+ 	return 0;
  }
- EXPORT_SYMBOL_GPL(misc_cg_uncharge);
+@@ -567,7 +568,7 @@ struct sgx_epc_page *sgx_alloc_epc_page(void *owner, bool reclaim)
+ 			break;
+ 		}
+ 
+-		if (list_empty(&sgx_active_page_list))
++		if (list_empty(&sgx_global_lru.reclaimable))
+ 			return ERR_PTR(-ENOMEM);
+ 
+ 		if (!reclaim) {
 -- 
 2.25.1
 
