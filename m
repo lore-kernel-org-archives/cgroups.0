@@ -1,357 +1,63 @@
 From: Yosry Ahmed <yosryahmed@google.com>
-Subject: [PATCH 3/3] mm: memcg: optimize stats flushing for latency and accuracy
-Date: Wed, 13 Sep 2023 07:38:46 +0000
-Message-ID: <20230913073846.1528938-4-yosryahmed@google.com>
-References: <20230913073846.1528938-1-yosryahmed@google.com>
+Subject: [PATCH 0/3] memcg: more sophisticated stats flushing
+Date: Wed, 13 Sep 2023 07:38:43 +0000
+Message-ID: <20230913073846.1528938-1-yosryahmed@google.com>
 Mime-Version: 1.0
 Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20230601; t=1694590736; x=1695195536; darn=vger.kernel.org;
-        h=cc:to:from:subject:message-id:references:mime-version:in-reply-to
-         :date:from:to:cc:subject:date:message-id:reply-to;
-        bh=8wFSE4R6tL7pv8rA6Rke9m26hzyRIxknt8a2PL5Y0/4=;
-        b=zvqGHrsYQLEWdL37E9GhBc1pvdSBzBKYoeDJst6KnjmRVf4xPPtLS2Qa1ZgSB3T1Ki
-         C3l+iUWBbdRdyLGvvaUARoVBLQ4IG+xZT4ePLCeFsm9NGaJ0Aq7V8mHw1TTb4s4awXEx
-         q/fdeHRGshjwXc/mV6kgZfbmMdcs5Mz+jwV5xpVoD8E391x5coZdQ/6Rs2fy2+isLa3K
-         B2SuX+nQGDc3eGkM+8fOhxu3wpO0HumijHxGKhXTO2VQ56hgTesnU4eL41VbDKrgWlGa
-         7H553DTeEndbpr2uVT9EcQbzA0mg1ufjBDC1xNWL8GWINXP9bl8vRMAwTnUgGgWP2AbP
-         EbeQ==
-In-Reply-To: <20230913073846.1528938-1-yosryahmed@google.com>
+        d=google.com; s=20230601; t=1694591104; x=1695195904; darn=vger.kernel.org;
+        h=cc:to:from:subject:message-id:mime-version:date:from:to:cc:subject
+         :date:message-id:reply-to;
+        bh=TER8l9tb6XZzOMFgeFSUUqc1AW9x7/45uI22fSAHiTA=;
+        b=zqX1u6T24v63FwM5oiXBqKUxfT7wA7eHpHfU3nqWaUBaPEuc2qm6mwC7mxjVF9hMXb
+         Hr46PFYQqw1YJCy1DL1Wa0LV5dj9Q+KCvYyvIgEUDS8+rZgwUSVBa34NoZmV+OC5ktJc
+         au2R4K2s7O0PDVLAuADHma8mI/BRZdOljfnm11dOXSDopoJx09ZeYur04GvQ+ILrpxdJ
+         nKtGJOvjOZuq/DioVM4l3GdnIZ3xUEk4yM2CJKOseOnP0Bnb5NttKtGEnCC96YJ57t7J
+         vZaKrfZi5sIKsz+wotFF8wcAaHMOgGYJE9WtcpEdJ9snaz22YN6AYQ9gelIC0N56lweM
+         qauQ==
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: Andrew Morton <akpm@linux-foundation.org>
 Cc: Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, Roman Gushchin <roman.gushchin@linux.dev>, Shakeel Butt <shakeelb@google.com>, Muchun Song <muchun.song@linux.dev>, Ivan Babrou <ivan@cloudflare.com>, Tejun Heo <tj@kernel.org>, =?UTF-8?q?Michal=20Koutn=C3=BD?= <mkoutny@suse.com>, Waiman Long <longman@redhat.com>, kernel-team@cloudflare.com, Wei Xu <weixugc@google.com>, Greg Thelen <gthelen@google.com>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, Yosry Ahmed <yosryahmed@google.com>
 
-Stats flushing for memcg currently follows the following rules:
-- Always flush the entire memcg hierarchy (i.e. flush the root).
-- Only one flusher is allowed at a time. If someone else tries to flush
-  concurrently, they skip and return immediately.
-- A periodic flusher flushes all the stats every 2 seconds.
+The current stats flushing approach is very simple. Everyone tries to
+flush the entire tree, and only a single flusher is allowed. Concurrent
+flushers just skip the flush completely. This approach has problems that
+manifest in both flushing latency and stats accuracy (or freshness).
+This series introduces a more sophisticated approach that aims to find a
+better trade-off between accuracy and performance. Essentially we try to
+get the best accuracy with the minimal amount of work done when possible
+(fast path), and we fallback to more expensive or less accurate flushes
+only when necessary. Details are in the commit message of patch 3, which
+is really the core of this series.
 
-The reason this approach is followed is because all flushes are
-serialized by a global rstat spinlock. On the memcg side, flushing is
-invoked from userspace reads as well as in-kernel flushers (e.g.
-reclaim, refault, etc). This approach aims to avoid serializing all
-flushers on the global lock, which can cause a significant performance
-hit under high concurrency.
+Patches 1 & 2 are just cleanups with no functional change intended.
 
-This approach has the following problems:
-- Occasionally a userspace read of the stats of a non-root cgroup will
-  be too expensive as it has to flush the entire hierarchy [1].
-- Sometimes the stats accuracy are compromised if there is an ongoing
-  flush, and we skip and return before the subtree of interest is
-  actually flushed. This is more visible when reading stats from
-  userspace, but can also affect in-kernel flushers.
+This series replaces v4 of "memcg: non-unified flushing for userspace
+stats" series [1]. I did not send this as v5 as it completely deviates
+from what that patchset is doing (but still trying to solve the same
+problem). The approach followed in this series attempts to provide a
+more generic framework for flushing for both userspace readers and
+in-kernel flushers, to avoid having a lot of different flushing flavors.
+It also benefits in-kernel flushers as well as userspace readers.
 
-This patch aims to solve both problems by reworking how flushing
-currently works as follows:
-- Without contention, there is no need to flush the entire tree. In this
-  case, only flush the subtree of interest. This avoids the latency of a
-  full root flush if unnecessary.
-- With contention, fallback to a coalesced (aka unified) flush of the
-  entire hierarchy, a root flush. In this case, instead of returning
-  immediately if a root flush is ongoing, wait for it to finish
-  *without* attempting to acquire the lock or flush. This is done using
-  a completion. Compared to competing directly on the underlying lock,
-  this approach makes concurrent flushing a synchronization point
-  instead of a serialization point. Once  a root flush finishes, *all*
-  waiters can wake up and continue at once.
-- Finally, with very high contention, bound the number of waiters to the
-  number of online cpus. This keeps the flush latency bounded at the tail
-  (very high concurrency). We fallback to sacrificing stats freshness only
-  in such cases in favor of performance.
+This series is a result of the discussions held in [1], and various
+suggestions by Wei Xu <weixugc@google.com>.
 
-This was tested in two ways on a machine with 384 cpus:
-- A synthetic test with 5000 concurrent workers doing allocations and
-  reclaim, as well as 1000 readers for memory.stat (variation of [2]).
-  No significant regressions were noticed in the total runtime.
-  Note that if concurrent flushers compete directly on the spinlock
-  instead of waiting for a completion, this test shows 2x-3x slowdowns.
-  Even though subsequent flushers would have nothing to flush, just the
-  serialization and lock contention is a major problem. Using a
-  completion for synchronization instead seems to overcome this problem.
+[1] https://lore.kernel.org/lkml/20230831165611.2610118-1-yosryahmed@google.com/
 
-- A synthetic stress test for concurrently reading memcg stats provided
-  by Wei Xu.
-  With 10k threads reading the stats every 100ms:
-  - 98.8% of reads take <100us
-  - 1.09% of reads take 100us to 1ms.
-  - 0.11% of reads take 1ms to 10ms.
-  - Almost no reads take more than 10ms.
-  With 10k threads reading the stats every 10ms:
-  - 82.3% of reads take <100us.
-  - 4.2% of reads take 100us to 1ms.
-  - 4.7% of reads take 1ms to 10ms.
-  - 8.8% of reads take 10ms to 100ms.
-  - Almost no reads take more than 100ms.
+Yosry Ahmed (3):
+  mm: memcg: change flush_next_time to flush_last_time
+  mm: memcg: rename stats_flush_threshold to stats_updates_order
+  mm: memcg: optimize stats flushing for latency and accuracy
 
-[1] https://lore.kernel.org/lkml/CABWYdi0c6__rh-K7dcM_pkf9BJdTRtAU08M43KO9ME4-dsgfoQ@mail.gmail.com/
-[2] https://lore.kernel.org/lkml/CAJD7tka13M-zVZTyQJYL1iUAYvuQ1fcHbCjcOBZcz6POYTV-4g@mail.gmail.com/
-[3] https://lore.kernel.org/lkml/CAAPL-u9D2b=iF5Lf_cRnKxUfkiEe0AMDTu6yhrUAzX0b6a6rDg@mail.gmail.com/
-
-[weixugc@google.com: suggested the fallback logic and bounding the
-number of waiters]
-
-Signed-off-by: Yosry Ahmed <yosryahmed@google.com>
----
  include/linux/memcontrol.h |   4 +-
- mm/memcontrol.c            | 100 ++++++++++++++++++++++++++++---------
+ mm/memcontrol.c            | 125 ++++++++++++++++++++++++++-----------
  mm/vmscan.c                |   2 +-
  mm/workingset.c            |   8 ++-
- 4 files changed, 85 insertions(+), 29 deletions(-)
+ 4 files changed, 98 insertions(+), 41 deletions(-)
 
-diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
-index 11810a2cfd2d..4453cd3fc4b8 100644
---- a/include/linux/memcontrol.h
-+++ b/include/linux/memcontrol.h
-@@ -1034,7 +1034,7 @@ static inline unsigned long lruvec_page_state_local(struct lruvec *lruvec,
- 	return x;
- }
- 
--void mem_cgroup_flush_stats(void);
-+void mem_cgroup_flush_stats(struct mem_cgroup *memcg);
- void mem_cgroup_flush_stats_ratelimited(void);
- 
- void __mod_memcg_lruvec_state(struct lruvec *lruvec, enum node_stat_item idx,
-@@ -1519,7 +1519,7 @@ static inline unsigned long lruvec_page_state_local(struct lruvec *lruvec,
- 	return node_page_state(lruvec_pgdat(lruvec), idx);
- }
- 
--static inline void mem_cgroup_flush_stats(void)
-+static inline void mem_cgroup_flush_stats(struct mem_cgroup *memcg)
- {
- }
- 
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index d729870505f1..edff41e4b4e7 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -588,7 +588,6 @@ mem_cgroup_largest_soft_limit_node(struct mem_cgroup_tree_per_node *mctz)
- static void flush_memcg_stats_dwork(struct work_struct *w);
- static DECLARE_DEFERRABLE_WORK(stats_flush_dwork, flush_memcg_stats_dwork);
- static DEFINE_PER_CPU(unsigned int, stats_updates);
--static atomic_t stats_flush_ongoing = ATOMIC_INIT(0);
- /* stats_updates_order is in multiples of MEMCG_CHARGE_BATCH */
- static atomic_t stats_updates_order = ATOMIC_INIT(0);
- static u64 flush_last_time;
-@@ -639,36 +638,87 @@ static inline void memcg_rstat_updated(struct mem_cgroup *memcg, int val)
- 	}
- }
- 
--static void do_flush_stats(void)
-+/*
-+ * do_flush_stats - flush the statistics of a memory cgroup and its tree
-+ * @memcg: the memory cgroup to flush
-+ * @wait: wait for an ongoing root flush to complete before returning
-+ *
-+ * All flushes are serialized by the underlying rstat global lock. If there is
-+ * no contention, we try to only flush the subtree of the passed @memcg to
-+ * minimize the work. Otherwise, we coalesce multiple flushing requests into a
-+ * single flush of the root memcg. When there is an ongoing root flush, we wait
-+ * for its completion (unless otherwise requested), to get fresh stats. If the
-+ * number of waiters exceeds the number of cpus just skip the flush to bound the
-+ * flush latency at the tail with very high concurrency.
-+ *
-+ * This is a trade-off between stats accuracy and flush latency.
-+ */
-+static void do_flush_stats(struct mem_cgroup *memcg, bool wait)
- {
-+	static DECLARE_COMPLETION(root_flush_done);
-+	static DEFINE_SPINLOCK(root_flusher_lock);
-+	static DEFINE_MUTEX(subtree_flush_mutex);
-+	static atomic_t waiters = ATOMIC_INIT(0);
-+	static bool root_flush_ongoing;
-+	bool root_flusher = false;
-+
-+	/* Ongoing root flush, just wait for it (unless otherwise requested) */
-+	if (READ_ONCE(root_flush_ongoing))
-+		goto root_flush_or_wait;
-+
- 	/*
--	 * We always flush the entire tree, so concurrent flushers can just
--	 * skip. This avoids a thundering herd problem on the rstat global lock
--	 * from memcg flushers (e.g. reclaim, refault, etc).
-+	 * Opportunistically try to only flush the requested subtree. Otherwise
-+	 * fallback to a coalesced flush below.
- 	 */
--	if (atomic_read(&stats_flush_ongoing) ||
--	    atomic_xchg(&stats_flush_ongoing, 1))
-+	if (!mem_cgroup_is_root(memcg) && mutex_trylock(&subtree_flush_mutex)) {
-+		cgroup_rstat_flush(memcg->css.cgroup);
-+		mutex_unlock(&subtree_flush_mutex);
- 		return;
-+	}
- 
--	WRITE_ONCE(flush_last_time, jiffies_64);
--
--	cgroup_rstat_flush(root_mem_cgroup->css.cgroup);
-+	/* A coalesced root flush is in order. Are we the designated flusher? */
-+	spin_lock(&root_flusher_lock);
-+	if (!READ_ONCE(root_flush_ongoing)) {
-+		reinit_completion(&root_flush_done);
-+		/*
-+		 * We must reset the completion before setting
-+		 * root_flush_ongoing. Otherwise, waiters may call
-+		 * wait_for_completion() and immediately return before we flush.
-+		 */
-+		smp_wmb();
-+		WRITE_ONCE(root_flush_ongoing, true);
-+		root_flusher = true;
-+	}
-+	spin_unlock(&root_flusher_lock);
- 
--	atomic_set(&stats_updates_order, 0);
--	atomic_set(&stats_flush_ongoing, 0);
-+root_flush_or_wait:
-+	if (root_flusher) {
-+		cgroup_rstat_flush(root_mem_cgroup->css.cgroup);
-+		complete_all(&root_flush_done);
-+		atomic_set(&stats_updates_order, 0);
-+		WRITE_ONCE(flush_last_time, jiffies_64);
-+		WRITE_ONCE(root_flush_ongoing, false);
-+	} else if (wait && atomic_add_unless(&waiters, 1, num_online_cpus())) {
-+		smp_rmb(); /* see smp_wmb() above */
-+		wait_for_completion_interruptible(&root_flush_done);
-+		atomic_dec(&waiters);
-+	}
- }
- 
--void mem_cgroup_flush_stats(void)
-+void mem_cgroup_flush_stats(struct mem_cgroup *memcg)
- {
-+	if (!memcg)
-+		memcg = root_mem_cgroup;
-+
- 	if (atomic_read(&stats_updates_order) > STATS_FLUSH_THRESHOLD)
--		do_flush_stats();
-+		do_flush_stats(memcg, true);
- }
- 
- void mem_cgroup_flush_stats_ratelimited(void)
- {
- 	/* Only flush if the periodic flusher is one full cycle late */
- 	if (time_after64(jiffies_64, READ_ONCE(flush_last_time) + 2*FLUSH_TIME))
--		mem_cgroup_flush_stats();
-+		mem_cgroup_flush_stats(root_mem_cgroup);
- }
- 
- static void flush_memcg_stats_dwork(struct work_struct *w)
-@@ -677,7 +727,7 @@ static void flush_memcg_stats_dwork(struct work_struct *w)
- 	 * Deliberately ignore stats_updates_order here so that flushing in
- 	 * latency-sensitive paths is as cheap as possible.
- 	 */
--	do_flush_stats();
-+	do_flush_stats(root_mem_cgroup, false);
- 	queue_delayed_work(system_unbound_wq, &stats_flush_dwork, FLUSH_TIME);
- }
- 
-@@ -1577,7 +1627,7 @@ static void memcg_stat_format(struct mem_cgroup *memcg, struct seq_buf *s)
- 	 *
- 	 * Current memory state:
- 	 */
--	mem_cgroup_flush_stats();
-+	mem_cgroup_flush_stats(memcg);
- 
- 	for (i = 0; i < ARRAY_SIZE(memory_stats); i++) {
- 		u64 size;
-@@ -4019,7 +4069,7 @@ static int memcg_numa_stat_show(struct seq_file *m, void *v)
- 	int nid;
- 	struct mem_cgroup *memcg = mem_cgroup_from_seq(m);
- 
--	mem_cgroup_flush_stats();
-+	mem_cgroup_flush_stats(memcg);
- 
- 	for (stat = stats; stat < stats + ARRAY_SIZE(stats); stat++) {
- 		seq_printf(m, "%s=%lu", stat->name,
-@@ -4094,7 +4144,7 @@ static void memcg1_stat_format(struct mem_cgroup *memcg, struct seq_buf *s)
- 
- 	BUILD_BUG_ON(ARRAY_SIZE(memcg1_stat_names) != ARRAY_SIZE(memcg1_stats));
- 
--	mem_cgroup_flush_stats();
-+	mem_cgroup_flush_stats(memcg);
- 
- 	for (i = 0; i < ARRAY_SIZE(memcg1_stats); i++) {
- 		unsigned long nr;
-@@ -4596,7 +4646,7 @@ void mem_cgroup_wb_stats(struct bdi_writeback *wb, unsigned long *pfilepages,
- 	struct mem_cgroup *memcg = mem_cgroup_from_css(wb->memcg_css);
- 	struct mem_cgroup *parent;
- 
--	mem_cgroup_flush_stats();
-+	mem_cgroup_flush_stats(memcg);
- 
- 	*pdirty = memcg_page_state(memcg, NR_FILE_DIRTY);
- 	*pwriteback = memcg_page_state(memcg, NR_WRITEBACK);
-@@ -6606,7 +6656,7 @@ static int memory_numa_stat_show(struct seq_file *m, void *v)
- 	int i;
- 	struct mem_cgroup *memcg = mem_cgroup_from_seq(m);
- 
--	mem_cgroup_flush_stats();
-+	mem_cgroup_flush_stats(memcg);
- 
- 	for (i = 0; i < ARRAY_SIZE(memory_stats); i++) {
- 		int nid;
-@@ -7764,7 +7814,7 @@ bool obj_cgroup_may_zswap(struct obj_cgroup *objcg)
- 			break;
- 		}
- 
--		cgroup_rstat_flush(memcg->css.cgroup);
-+		mem_cgroup_flush_stats(memcg);
- 		pages = memcg_page_state(memcg, MEMCG_ZSWAP_B) / PAGE_SIZE;
- 		if (pages < max)
- 			continue;
-@@ -7829,8 +7879,10 @@ void obj_cgroup_uncharge_zswap(struct obj_cgroup *objcg, size_t size)
- static u64 zswap_current_read(struct cgroup_subsys_state *css,
- 			      struct cftype *cft)
- {
--	cgroup_rstat_flush(css->cgroup);
--	return memcg_page_state(mem_cgroup_from_css(css), MEMCG_ZSWAP_B);
-+	struct mem_cgroup *memcg = mem_cgroup_from_css(css);
-+
-+	mem_cgroup_flush_stats(memcg);
-+	return memcg_page_state(memcg, MEMCG_ZSWAP_B);
- }
- 
- static int zswap_max_show(struct seq_file *m, void *v)
-diff --git a/mm/vmscan.c b/mm/vmscan.c
-index 6f13394b112e..fc356b9bc003 100644
---- a/mm/vmscan.c
-+++ b/mm/vmscan.c
-@@ -2923,7 +2923,7 @@ static void prepare_scan_count(pg_data_t *pgdat, struct scan_control *sc)
- 	 * Flush the memory cgroup stats, so that we read accurate per-memcg
- 	 * lruvec stats for heuristics.
- 	 */
--	mem_cgroup_flush_stats();
-+	mem_cgroup_flush_stats(sc->target_mem_cgroup);
- 
- 	/*
- 	 * Determine the scan balance between anon and file LRUs.
-diff --git a/mm/workingset.c b/mm/workingset.c
-index da58a26d0d4d..13cbccf907f1 100644
---- a/mm/workingset.c
-+++ b/mm/workingset.c
-@@ -519,7 +519,11 @@ void workingset_refault(struct folio *folio, void *shadow)
- 		return;
- 	}
- 
--	/* Flush stats (and potentially sleep) before holding RCU read lock */
-+	/*
-+	 * Flush stats (and potentially sleep) before holding RCU read lock
-+	 * XXX: This can be reworked to pass in a memcg, similar to
-+	 * mem_cgroup_flush_stats().
-+	 */
- 	mem_cgroup_flush_stats_ratelimited();
- 
- 	rcu_read_lock();
-@@ -664,7 +668,7 @@ static unsigned long count_shadow_nodes(struct shrinker *shrinker,
- 		struct lruvec *lruvec;
- 		int i;
- 
--		mem_cgroup_flush_stats();
-+		mem_cgroup_flush_stats(sc->memcg);
- 		lruvec = mem_cgroup_lruvec(sc->memcg, NODE_DATA(sc->nid));
- 		for (pages = 0, i = 0; i < NR_LRU_LISTS; i++)
- 			pages += lruvec_page_state_local(lruvec,
 -- 
 2.42.0.283.g2d96d420d3-goog
 
