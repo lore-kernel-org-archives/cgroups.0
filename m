@@ -1,46 +1,82 @@
-From: Huan Yang <link-DGpbCiVdSXo@public.gmane.org>
-Subject: [PATCH 3/3] mm: multi-gen LRU: add per memcg "lru_gen" document
-Date: Thu, 14 Sep 2023 18:47:45 +0800
-Message-ID: <20230914104754.55-4-link@vivo.com>
-References: <20230914104754.55-1-link@vivo.com>
+From: Christian Brauner <brauner-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCH 03/19] fs: release anon dev_t in deactivate_locked_super
+Date: Thu, 14 Sep 2023 16:02:25 +0200
+Message-ID: <20230914-munkeln-pelzmantel-3e3a761acb72@brauner>
+References: <20230913111013.77623-1-hch@lst.de>
+ <20230913111013.77623-4-hch@lst.de>
+ <20230913232712.GC800259@ZenIV>
+ <20230914023705.GH800259@ZenIV>
+ <20230914053843.GI800259@ZenIV>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=vivo.com; s=selector2;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=mkdcu0RJevDOOepNMe9zA/YQFdE14GSo/+eXT41SmFY=;
- b=JLQidermfHMYYERI+cnyDx5Uvcy9ZKUuDudM4//wKNnYDtqRrmUpVAzaIstkCXEQzklZ8oInT/Dw6HHnW9w5xptYLNSwRIzbQdVMb0MIJMva+EPw6PaGjOm5NLf87at64j/z3hVXn09Fu9dek5XzC6f1Knzog4XYAysmk48abT56Iumd41t5Nm8kkMsan1KbZFeg8q2B99ibC6QjIzAlF1ZQgZF5NTAKfs3x1pWuglpecQcwFlc1lRgEctQF0xYKWb96oHcB3o8CPtHUPWvNOwPziMYP4tIHlcoW0BgaByVnEkV58/stH9Dn00BWC9Fe5tFgRLzFuXDQuHwU919Hrg==
-In-Reply-To: <20230914104754.55-1-link-DGpbCiVdSXo@public.gmane.org>
+Return-path: <linux-nfs-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1694700153;
+        bh=UbILtaDX6YaX9dgq96QTqXtymCmpeldgjR+T2oK3xaM=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=PNO+aHUgNDxHMtKVOjlzcOL7tLf+z9y1Iq9XnBkmWBc2p/Apxp3ZmIFvKQ7+UYpIj
+         vGqVGuRuqwz0WOI8F1gzCKpdQPNfFHmxOHmz3dSp8GqSj3cE46pwgm94yOyHfEGDiv
+         t9y7eUZSydl/+7e2w+r2yGmTZg5C3zcJTsLzrZROns45s7RhKOT5/mOoOYhEY9tIY0
+         aW5X29QrkwlJ6PisxRbW4j8ftjNKzQ2NS5JZkV/8+DbW86yP6ME2DQBOHUELgyT2nn
+         rGGSMchIIOuzQfCiLakKwcTxGR0UeiFBwERYJSLsssW7J/ySM61igFF7UL6hlSMHj2
+         OLKep8D3SXHCA==
+Content-Disposition: inline
+In-Reply-To: <20230914053843.GI800259@ZenIV>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Jonathan Corbet <corbet-T1hC0tSOHrs@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Muchun Song <muchun.song-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Suleiman Souhlal <suleiman-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Mike Rapoport <rppt-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, "Jan Alexander Steffens (heftig)" <heftig-fd97jBR+K/6hPH1hqNUYSQ@public.gmane.org>, Yu Zhao <yuzhao-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Huan Yang <link-DGpbCiVdSXo@public.gmane.org>, Brian Geffon <bgeffon-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Gaosheng Cui <cuigaosheng1-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Peter Xu <peterx-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Axel Rasmussen <axelrasmussen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, "T.J. Alumbaugh" <talumbau-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Kefeng Wang <wangkefeng.wang-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm@kvac
-Cc: kernel-DGpbCiVdSXo@public.gmane.org
+Content-Transfer-Encoding: 7bit
+To: Al Viro <viro-RmSDqhL/yNMiFSDQTTA3OLVCufUGDwFn@public.gmane.org>
+Cc: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>, Heiko Carstens <hca-tEXmvtCZX7AybS5Ee8rs3A@public.gmane.org>, Vasily Gorbik <gor-tEXmvtCZX7AybS5Ee8rs3A@public.gmane.org>, Alexander Gordeev <agordeev-tEXmvtCZX7AybS5Ee8rs3A@public.gmane.org>, Fenghua Yu <fenghua.yu-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Reinette Chatre <reinette.chatre-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Miquel Raynal <miquel.raynal-LDxbnhwyfcJBDgjK7y7TUQ@public.gmane.org>, Richard Weinberger <richard-/L3Ra7n9ekc@public.gmane.org>, Vignesh Raghavendra <vigneshr-l0cyMroinI0@public.gmane.org>, Dennis Dalessandro <dennis.dalessandro-ntyVByD3zXaTtA8H5PvdGFaTQe2KTcn/@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Trond Myklebust <trond.myklebust-F/q8l9xzQnoyLce1RVWEUA@public.gmane.org>, Anna Schumaker <anna-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Kees Cook <keescook-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>, Damien Le Moal <dlemoal-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Naohiro Aota <naohiro.aota-Sjgp3cTcYWE@public.gmane.org>, Greg Kroah-Hartman <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>, linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-s390-u79uwXL29TaqPxH82wqD4g@public.gmane.org
 
-change multi-gen LRU document.
+> Christoph, could you explain what the hell do we need that for?  It does
+> create the race in question and AFAICS 2c18a63b760a (and followups trying
+> to plug holes in it) had been nothing but headache.
+> 
+> Old logics: if mount attempt with a different fs type happens, -EBUSY
+> is precisely corrent - we would've gotten just that if mount() came
+> before umount().  If the type matches, we might
+> 	1) come before deactivate_locked_super() by umount(2).
+> No problem, we succeed.
+> 	2) come after the beginning of shutdown, but before the
+> removal from the list; fine, we'll wait for the sucker to be
+> unlocked (which happens in the end of generic_shutdown_super()),
+> notice it's dead and create a new superblock.  Since the only
+> part left on the umount side is closing the device, we are
+> just fine.
+> 	3) come after the removal from the list.  So we won't
+> wait for the old superblock to be unlocked, other than that
+> it's exactly the same as (2).  It doesn't matter whether we
+> open the device before or after close by umount - same owner
+> anyway, no -EBUSY.
+> 
+> Your "owner shall be the superblock" breaks that...
+> 
+> If you want to mess with _three_-way split of ->kill_sb(),
+> please start with writing down the rules re what should
+> go into each of those parts; such writeup should go into
+> Documentation/filesystems/porting anyway, even if the
+> split is a two-way one, BTW.
 
-Signed-off-by: Huan Yang <link-DGpbCiVdSXo@public.gmane.org>
----
- Documentation/admin-guide/mm/multigen_lru.rst | 10 ++++++++++
- 1 file changed, 10 insertions(+)
+Hm, I think that characterization of Christoph's changes is a bit harsh.
 
-diff --git a/Documentation/admin-guide/mm/multigen_lru.rst b/Documentation/admin-guide/mm/multigen_lru.rst
-index 33e068830497..078056b8cc7c 100644
---- a/Documentation/admin-guide/mm/multigen_lru.rst
-+++ b/Documentation/admin-guide/mm/multigen_lru.rst
-@@ -160,3 +160,13 @@ cold pages because of the overestimation, it retries on the next
- server according to the ranking result obtained from the working set
- estimation step. This less forceful approach limits the impacts on the
- existing jobs.
-+
-+Per memcg lru gen node
-+-----------------
-+In each memcg's dir, it contains ``lru_gen`` node. you can type upon cmd
-+without input memcg_id to do the same thing.
-+
-+    ``+ node_id max_gen_nr [can_swap [force_scan]]``
-+    ``- node_id min_gen_nr [swappiness [nr_to_reclaim]]``
-+
-+For show info, memcg's node always show the full info.
--- 
-2.34.1
+Yes, you're right that making the superblock and not the filesytem type
+the bd_holder changes the logic and we are aware of that of course. And
+it requires changes such as moving additional block device closing from
+where some callers currently do it.
 
+But the filesytem type is not a very useful holder itself and has other
+drawbacks. The obvious one being that it requires us to wade through all
+superblocks on the system trying to find the superblock associated with
+a given block device continously grabbing and dropping sb_lock and
+s_umount. None of that is very pleasant nor elegant and it is for sure
+not very easy to understand (Plus, it's broken for btrfs freezing and
+syncing via block level ioctls.).
+
+Using the superblock as holder makes this go away and is overall a lot
+more useful and intuitive and can be extended to filesystems with
+multiple devices (Of which we apparently are bound to get more.).
+
+So I think this change is worth the pain.
+
+It's a fair point that these lifetime rules should be documented in
+Documentation/filesystems/. The old lifetime documentation is too sparse
+to be useful though.
