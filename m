@@ -1,116 +1,30 @@
-From: kernel test robot <lkp@intel.com>
-Subject: Re: [PATCH 1/2] zswap: make shrinking memcg-aware
-Date: Thu, 14 Sep 2023 17:34:22 +0800
-Message-ID: <202309141736.ABab8fuf-lkp@intel.com>
-References: <20230911164024.2541401-2-nphamcs@gmail.com>
+From: Sergey Shtylyov <s.shtylyov@omp.ru>
+Subject: Re: [PATCH 10/19] USB: gadget/legacy: remove sb_mutex
+Date: Thu, 14 Sep 2023 13:22:59 +0300
+Message-ID: <d3935129-2ab9-0341-c606-fabac4a49010@omp.ru>
+References: <20230913111013.77623-1-hch@lst.de>
+ <20230913111013.77623-11-hch@lst.de>
 Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1694684111; x=1726220111;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:in-reply-to;
-  bh=xv1a0gFVKwM0KgM27I+fvR02P+gkJIUr4CQzjEBt0Mg=;
-  b=hiBU4ySwB4KR12n+cWyAhW4Q+o2bX8Yz4FbjQFBppRtZFC+55H0Ekftx
-   y+pmjOgbrGucN6kOTeuk/WvDrXfTjWjK/IAa9n5bxBzAqF0aYIK/2padQ
-   hgHq11UCfEfw7iLVcir1geMzcaG+LNDGkM70TWzjtpE4McN/V5Vnq6r/6
-   +QUoT8Mf3WNUXE+avmVxZ0NOUdQt9NKTIpenQV/eE0tyadNAOcU007LGI
-   hARV8Tin6j22JqaPwm1Kl7Vovdp3aECYZXz0kwzEViCt9Rfw84um22cUt
-   VvhjNjeJmPGG0gjVj27tMtOAOTJMCJ4uxAWMlSZId65bD80E9YxBHxtxm
-   g==;
-Content-Disposition: inline
-In-Reply-To: <20230911164024.2541401-2-nphamcs@gmail.com>
+In-Reply-To: <20230913111013.77623-11-hch@lst.de>
+Content-Language: en-US
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Nhat Pham <nphamcs@gmail.com>, akpm@linux-foundation.org
-Cc: oe-kbuild-all@lists.linux.dev, hannes@cmpxchg.org, cerasuolodomenico@gmail.com, yosryahmed@google.com, sjenning@redhat.com, ddstreet@ieee.org, vitaly.wool@konsulko.com, mhocko@kernel.org, roman.gushchin@linux.dev, shakeelb@google.com, muchun.song@linux.dev, linux-mm@kvack.org, kernel-team@meta.com, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>, Christian Brauner <brauner@kernel.org>, Al Viro <viro@zeniv.linux.org.uk>
+Cc: Heiko Carstens <hca@linux.ibm.com>, Vasily Gorbik <gor@linux.ibm.com>, Alexander Gordeev <agordeev@linux.ibm.com>, Fenghua Yu <fenghua.yu@intel.com>, Reinette Chatre <reinette.chatre@intel.com>, Miquel Raynal <miquel.raynal@bootlin.com>, Richard Weinberger <richard@nod.at>, Vignesh Raghavendra <vigneshr@ti.com>, Dennis Dalessandro <dennis.dalessandro@cornelisnetworks.com>, Tejun Heo <tj@kernel.org>, Trond Myklebust <trond.myklebust@hammerspace.com>, Anna Schumaker <anna@kernel.org>, Kees Cook <keescook@chromium.org>, Damien Le Moal <dlemoal@kernel.org>, Naohiro Aota <naohiro.aota@wdc.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, linux-usb@vger.kernel.org, linux-kernel@vger.kernel.org, linux-s390@vger.kernel.org, linux-rdma@vger.kernel
 
-Hi Nhat,
+On 9/13/23 2:10 PM, Christoph Hellwig wrote:
 
-kernel test robot noticed the following build errors:
+> Creating new a new super_block vs freeing the old one for single instance
+           ^^^^^^^^^
+   I can't parse that. :-)
 
-[auto build test ERROR on akpm-mm/mm-everything]
-[also build test ERROR on linus/master v6.6-rc1 next-20230914]
-[If your patch is applied to the wrong git tree, kindly drop us a note.
-And when submitting patch, we suggest to use '--base' as documented in
-https://git-scm.com/docs/git-format-patch#_base_tree_information]
+> file systems is serialized by the wait for SB_DEAD.
+> 
+> Remove the superfluous sb_mutex.
+> 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+[...]
 
-url:    https://github.com/intel-lab-lkp/linux/commits/Nhat-Pham/zswap-make-shrinking-memcg-aware/20230912-004147
-base:   https://git.kernel.org/pub/scm/linux/kernel/git/akpm/mm.git mm-everything
-patch link:    https://lore.kernel.org/r/20230911164024.2541401-2-nphamcs%40gmail.com
-patch subject: [PATCH 1/2] zswap: make shrinking memcg-aware
-config: loongarch-randconfig-001-20230914 (https://download.01.org/0day-ci/archive/20230914/202309141736.ABab8fuf-lkp@intel.com/config)
-compiler: loongarch64-linux-gcc (GCC) 13.2.0
-reproduce (this is a W=1 build): (https://download.01.org/0day-ci/archive/20230914/202309141736.ABab8fuf-lkp@intel.com/reproduce)
-
-If you fix the issue in a separate patch/commit (i.e. not just a new version of
-the same patch/commit), kindly add following tags
-| Reported-by: kernel test robot <lkp@intel.com>
-| Closes: https://lore.kernel.org/oe-kbuild-all/202309141736.ABab8fuf-lkp@intel.com/
-
-All error/warnings (new ones prefixed by >>):
-
-   mm/zswap.c: In function 'zswap_lru_add':
->> mm/zswap.c:320:17: error: implicit declaration of function 'get_mem_cgroup_from_objcg'; did you mean 'get_mem_cgroup_from_mm'? [-Werror=implicit-function-declaration]
-     320 |                 get_mem_cgroup_from_objcg(entry->objcg) : NULL;
-         |                 ^~~~~~~~~~~~~~~~~~~~~~~~~
-         |                 get_mem_cgroup_from_mm
->> mm/zswap.c:320:57: warning: pointer/integer type mismatch in conditional expression
-     320 |                 get_mem_cgroup_from_objcg(entry->objcg) : NULL;
-         |                                                         ^
-   mm/zswap.c: In function 'zswap_lru_del':
-   mm/zswap.c:330:57: warning: pointer/integer type mismatch in conditional expression
-     330 |                 get_mem_cgroup_from_objcg(entry->objcg) : NULL;
-         |                                                         ^
-   mm/zswap.c: In function 'shrink_memcg_cb':
-   mm/zswap.c:694:80: warning: pointer/integer type mismatch in conditional expression
-     694 |                 memcg = entry->objcg ? get_mem_cgroup_from_objcg(entry->objcg) : NULL;
-         |                                                                                ^
-   mm/zswap.c: In function 'shrink_worker':
->> mm/zswap.c:758:51: error: invalid use of undefined type 'struct mem_cgroup'
-     758 |                         css_put(&pool->next_shrink->css);
-         |                                                   ^~
-   mm/zswap.c: In function 'zswap_pool_destroy':
-   mm/zswap.c:906:43: error: invalid use of undefined type 'struct mem_cgroup'
-     906 |                 css_put(&pool->next_shrink->css);
-         |                                           ^~
-   mm/zswap.c: In function 'zswap_store':
->> mm/zswap.c:1298:23: warning: assignment to 'struct mem_cgroup *' from 'int' makes pointer from integer without a cast [-Wint-conversion]
-    1298 |                 memcg = get_mem_cgroup_from_objcg(objcg);
-         |                       ^
-   mm/zswap.c:1300:39: error: invalid use of undefined type 'struct mem_cgroup'
-    1300 |                         css_put(&memcg->css);
-         |                                       ^~
-   mm/zswap.c:1303:31: error: invalid use of undefined type 'struct mem_cgroup'
-    1303 |                 css_put(&memcg->css);
-         |                               ^~
-   mm/zswap.c:1349:23: warning: assignment to 'struct mem_cgroup *' from 'int' makes pointer from integer without a cast [-Wint-conversion]
-    1349 |                 memcg = get_mem_cgroup_from_objcg(objcg);
-         |                       ^
-   mm/zswap.c:1351:31: error: invalid use of undefined type 'struct mem_cgroup'
-    1351 |                 css_put(&memcg->css);
-         |                               ^~
-   cc1: some warnings being treated as errors
-
-
-vim +320 mm/zswap.c
-
-   313	
-   314	/*********************************
-   315	* lru functions
-   316	**********************************/
-   317	static bool zswap_lru_add(struct list_lru *list_lru, struct zswap_entry *entry)
-   318	{
-   319		struct mem_cgroup *memcg = entry->objcg ?
- > 320			get_mem_cgroup_from_objcg(entry->objcg) : NULL;
-   321		bool added = __list_lru_add(list_lru, &entry->lru, entry->nid, memcg);
-   322	
-   323		mem_cgroup_put(memcg);
-   324		return added;
-   325	}
-   326	
-
--- 
-0-DAY CI Kernel Test Service
-https://github.com/intel/lkp-tests/wiki
+MBR, Sergey
