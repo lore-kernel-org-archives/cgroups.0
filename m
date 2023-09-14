@@ -1,239 +1,119 @@
-From: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH 3/3] mm: memcg: optimize stats flushing for latency and
- accuracy
-Date: Thu, 14 Sep 2023 13:36:44 -0400
-Message-ID: <a58d757d-00a1-9872-9698-f613ff210ff5@redhat.com>
+From: Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH 3/3] mm: memcg: optimize stats flushing for latency and accuracy
+Date: Thu, 14 Sep 2023 10:56:52 -0700
+Message-ID: <CAJD7tkbb5zxEPSW6vvijDpQKCZiDcUJqe8SPvLHfo0RX7iHXAw@mail.gmail.com>
 References: <20230913073846.1528938-1-yosryahmed@google.com>
- <20230913073846.1528938-4-yosryahmed@google.com>
- <cbad0762-892f-229e-280e-1faafbcb36b8@redhat.com>
- <CAJD7tkYGaVVbMpd6RC7QreLGCWpvMEmwJ9LJAZHKqdsTGM22-Q@mail.gmail.com>
+ <20230913073846.1528938-4-yosryahmed@google.com> <CALvZod6j5E2MXFz463LRcrP6XY8FedzLUKW88c=ZY39B6mYyMA@mail.gmail.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: quoted-printable
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1694713012;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=h4hzn4St1hDKvPdOxDMBMmAGTrFFy2dEQTx58ZE1Vlo=;
-        b=G3nwAX6WFOKzZFD94Pcw9ggWzj0P0xMszJzK4Iyx+iyndBDCc06icjpKRbtwV64PugzpfT
-        y+8SgKxPhzEJzZyNY3VKrV/p8zJFWzZZJKEljs5Uov56324ABl4ZO0c7H2vD5jHJyXjmku
-        OChYbRCBhGWFeKGw2OcaF325ol7A/rE=
-Content-Language: en-US
-In-Reply-To: <CAJD7tkYGaVVbMpd6RC7QreLGCWpvMEmwJ9LJAZHKqdsTGM22-Q-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20230601; t=1694714251; x=1695319051; darn=vger.kernel.org;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=7VwkUDvl9cZBLnoPVjTuHGS1QPb1S9F5cL//3ghT7s0=;
+        b=YlWf9sD7GK4cXkl+pkBTdxc9bxdcUbiqFiuxTAoqK5nGIWWh5Tu6glIfvHSNyIVugD
+         W17YoFOy0fJsDwyd2mQA2343Rp3Ecjdy4fSP64NYey8tQe0aeia2U9PclC9gGCLNpGnp
+         Fun3PCAD+MWLDGTBTrXQEHf44ku1/FaD9Evg290F0OOPoGUzcMj/W1B0wKs3badVXY/R
+         n2I0mwhs/mmvKCOWdApbPL4nmCB2+o8gxjh7RZZ/cOS3Gczj8qnZZXmS0p3mK/9S6lw4
+         W2JGa1KxPbuucey4JBvpDSpcRJgic4Ner0KV8VaWA04CSDpRFCd03t703eoPVo0e3q3i
+         k39Q==
+In-Reply-To: <CALvZod6j5E2MXFz463LRcrP6XY8FedzLUKW88c=ZY39B6mYyMA-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="windows-1252"; format="flowed"
-To: Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Muchun Song <muchun.song-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Ivan Babrou <ivan-lDpJ742SOEtZroRs9YW3xA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, =?UTF-8?Q?Michal_Koutn=c3=bd?= <mkoutny-IBi9RG/b67k@public.gmane.org>, kernel-team-lDpJ742SOEtZroRs9YW3xA@public.gmane.org, Wei Xu <weixugc-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Type: text/plain; charset="utf-8"
+To: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Muchun Song <muchun.song-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Ivan Babrou <ivan-lDpJ742SOEtZroRs9YW3xA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, =?UTF-8?Q?Michal_Koutn=C3=BD?= <mkoutny-IBi9RG/b67k@public.gmane.org>, Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, kernel-team-lDpJ742SOEtZroRs9YW3xA@public.gmane.org, Wei Xu <weixugc-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-
-On 9/14/23 13:23, Yosry Ahmed wrote:
-> On Thu, Sep 14, 2023 at 10:19=E2=80=AFAM Waiman Long <longman-H+wXaHxf7aL=
-QT0dZR+AlfA@public.gmane.org> wrote:
->>
->> On 9/13/23 03:38, Yosry Ahmed wrote:
->>> Stats flushing for memcg currently follows the following rules:
->>> - Always flush the entire memcg hierarchy (i.e. flush the root).
->>> - Only one flusher is allowed at a time. If someone else tries to flush
->>>     concurrently, they skip and return immediately.
->>> - A periodic flusher flushes all the stats every 2 seconds.
->>>
->>> The reason this approach is followed is because all flushes are
->>> serialized by a global rstat spinlock. On the memcg side, flushing is
->>> invoked from userspace reads as well as in-kernel flushers (e.g.
->>> reclaim, refault, etc). This approach aims to avoid serializing all
->>> flushers on the global lock, which can cause a significant performance
->>> hit under high concurrency.
->>>
->>> This approach has the following problems:
->>> - Occasionally a userspace read of the stats of a non-root cgroup will
->>>     be too expensive as it has to flush the entire hierarchy [1].
->>> - Sometimes the stats accuracy are compromised if there is an ongoing
->>>     flush, and we skip and return before the subtree of interest is
->>>     actually flushed. This is more visible when reading stats from
->>>     userspace, but can also affect in-kernel flushers.
->>>
->>> This patch aims to solve both problems by reworking how flushing
->>> currently works as follows:
->>> - Without contention, there is no need to flush the entire tree. In this
->>>     case, only flush the subtree of interest. This avoids the latency o=
-f a
->>>     full root flush if unnecessary.
->>> - With contention, fallback to a coalesced (aka unified) flush of the
->>>     entire hierarchy, a root flush. In this case, instead of returning
->>>     immediately if a root flush is ongoing, wait for it to finish
->>>     *without* attempting to acquire the lock or flush. This is done usi=
-ng
->>>     a completion. Compared to competing directly on the underlying lock,
->>>     this approach makes concurrent flushing a synchronization point
->>>     instead of a serialization point. Once  a root flush finishes, *all*
->>>     waiters can wake up and continue at once.
->>> - Finally, with very high contention, bound the number of waiters to the
->>>     number of online cpus. This keeps the flush latency bounded at the =
-tail
->>>     (very high concurrency). We fallback to sacrificing stats freshness=
- only
->>>     in such cases in favor of performance.
->>>
->>> This was tested in two ways on a machine with 384 cpus:
->>> - A synthetic test with 5000 concurrent workers doing allocations and
->>>     reclaim, as well as 1000 readers for memory.stat (variation of [2]).
->>>     No significant regressions were noticed in the total runtime.
->>>     Note that if concurrent flushers compete directly on the spinlock
->>>     instead of waiting for a completion, this test shows 2x-3x slowdown=
-s.
->>>     Even though subsequent flushers would have nothing to flush, just t=
-he
->>>     serialization and lock contention is a major problem. Using a
->>>     completion for synchronization instead seems to overcome this probl=
-em.
->>>
->>> - A synthetic stress test for concurrently reading memcg stats provided
->>>     by Wei Xu.
->>>     With 10k threads reading the stats every 100ms:
->>>     - 98.8% of reads take <100us
->>>     - 1.09% of reads take 100us to 1ms.
->>>     - 0.11% of reads take 1ms to 10ms.
->>>     - Almost no reads take more than 10ms.
->>>     With 10k threads reading the stats every 10ms:
->>>     - 82.3% of reads take <100us.
->>>     - 4.2% of reads take 100us to 1ms.
->>>     - 4.7% of reads take 1ms to 10ms.
->>>     - 8.8% of reads take 10ms to 100ms.
->>>     - Almost no reads take more than 100ms.
->>>
->>> [1] https://lore.kernel.org/lkml/CABWYdi0c6__rh-K7dcM_pkf9BJdTRtAU08M43=
-KO9ME4-dsgfoQ-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org/
->>> [2] https://lore.kernel.org/lkml/CAJD7tka13M-zVZTyQJYL1iUAYvuQ1fcHbCjcO=
-BZcz6POYTV-4g-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org/
->>> [3] https://lore.kernel.org/lkml/CAAPL-u9D2b=3DiF5Lf_cRnKxUfkiEe0AMDTu6=
-yhrUAzX0b6a6rDg-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org/
->>>
->>> [weixugc-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org: suggested the fallbac=
-k logic and bounding the
->>> number of waiters]
->>>
->>> Signed-off-by: Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gm=
-ane.org>
->>> ---
->>>    include/linux/memcontrol.h |   4 +-
->>>    mm/memcontrol.c            | 100 ++++++++++++++++++++++++++++-------=
---
->>>    mm/vmscan.c                |   2 +-
->>>    mm/workingset.c            |   8 ++-
->>>    4 files changed, 85 insertions(+), 29 deletions(-)
->>>
->>> diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
->>> index 11810a2cfd2d..4453cd3fc4b8 100644
->>> --- a/include/linux/memcontrol.h
->>> +++ b/include/linux/memcontrol.h
->>> @@ -1034,7 +1034,7 @@ static inline unsigned long lruvec_page_state_loc=
-al(struct lruvec *lruvec,
->>>        return x;
->>>    }
->>>
->>> -void mem_cgroup_flush_stats(void);
->>> +void mem_cgroup_flush_stats(struct mem_cgroup *memcg);
->>>    void mem_cgroup_flush_stats_ratelimited(void);
->>>
->>>    void __mod_memcg_lruvec_state(struct lruvec *lruvec, enum node_stat_=
-item idx,
->>> @@ -1519,7 +1519,7 @@ static inline unsigned long lruvec_page_state_loc=
-al(struct lruvec *lruvec,
->>>        return node_page_state(lruvec_pgdat(lruvec), idx);
->>>    }
->>>
->>> -static inline void mem_cgroup_flush_stats(void)
->>> +static inline void mem_cgroup_flush_stats(struct mem_cgroup *memcg)
->>>    {
->>>    }
->>>
->>> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
->>> index d729870505f1..edff41e4b4e7 100644
->>> --- a/mm/memcontrol.c
->>> +++ b/mm/memcontrol.c
->>> @@ -588,7 +588,6 @@ mem_cgroup_largest_soft_limit_node(struct mem_cgrou=
-p_tree_per_node *mctz)
->>>    static void flush_memcg_stats_dwork(struct work_struct *w);
->>>    static DECLARE_DEFERRABLE_WORK(stats_flush_dwork, flush_memcg_stats_=
-dwork);
->>>    static DEFINE_PER_CPU(unsigned int, stats_updates);
->>> -static atomic_t stats_flush_ongoing =3D ATOMIC_INIT(0);
->>>    /* stats_updates_order is in multiples of MEMCG_CHARGE_BATCH */
->>>    static atomic_t stats_updates_order =3D ATOMIC_INIT(0);
->>>    static u64 flush_last_time;
->>> @@ -639,36 +638,87 @@ static inline void memcg_rstat_updated(struct mem=
-_cgroup *memcg, int val)
->>>        }
->>>    }
->>>
->>> -static void do_flush_stats(void)
->>> +/*
->>> + * do_flush_stats - flush the statistics of a memory cgroup and its tr=
-ee
->>> + * @memcg: the memory cgroup to flush
->>> + * @wait: wait for an ongoing root flush to complete before returning
->>> + *
->>> + * All flushes are serialized by the underlying rstat global lock. If =
-there is
->>> + * no contention, we try to only flush the subtree of the passed @memc=
-g to
->>> + * minimize the work. Otherwise, we coalesce multiple flushing request=
-s into a
->>> + * single flush of the root memcg. When there is an ongoing root flush=
-, we wait
->>> + * for its completion (unless otherwise requested), to get fresh stats=
-. If the
->>> + * number of waiters exceeds the number of cpus just skip the flush to=
- bound the
->>> + * flush latency at the tail with very high concurrency.
->>> + *
->>> + * This is a trade-off between stats accuracy and flush latency.
->>> + */
->>> +static void do_flush_stats(struct mem_cgroup *memcg, bool wait)
->>>    {
->>> +     static DECLARE_COMPLETION(root_flush_done);
->>> +     static DEFINE_SPINLOCK(root_flusher_lock);
->>> +     static DEFINE_MUTEX(subtree_flush_mutex);
->>> +     static atomic_t waiters =3D ATOMIC_INIT(0);
->>> +     static bool root_flush_ongoing;
->>> +     bool root_flusher =3D false;
->>> +
->>> +     /* Ongoing root flush, just wait for it (unless otherwise request=
-ed) */
->>> +     if (READ_ONCE(root_flush_ongoing))
->>> +             goto root_flush_or_wait;
->>> +
->>>        /*
->>> -      * We always flush the entire tree, so concurrent flushers can ju=
-st
->>> -      * skip. This avoids a thundering herd problem on the rstat globa=
-l lock
->>> -      * from memcg flushers (e.g. reclaim, refault, etc).
->>> +      * Opportunistically try to only flush the requested subtree. Oth=
-erwise
->>> +      * fallback to a coalesced flush below.
->>>         */
->>> -     if (atomic_read(&stats_flush_ongoing) ||
->>> -         atomic_xchg(&stats_flush_ongoing, 1))
->>> +     if (!mem_cgroup_is_root(memcg) && mutex_trylock(&subtree_flush_mu=
-tex)) {
->>> +             cgroup_rstat_flush(memcg->css.cgroup);
->>> +             mutex_unlock(&subtree_flush_mutex);
->>>                return;
->>> +     }
->> If mutex_trylock() is the only way to acquire subtree_flush_mutex, you
->> don't really need a mutex. Just a simple integer flag with xchg() call
->> should be enough.
-
-Equivalently test_and_set_bit() will work too.
-
-Cheers,
-Longman
-
-> Thanks for pointing this out. Agreed.
+On Thu, Sep 14, 2023 at 10:36=E2=80=AFAM Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>=
+ wrote:
 >
-> If we keep this approach I will drop that mutex.
+> On Wed, Sep 13, 2023 at 12:38=E2=80=AFAM Yosry Ahmed <yosryahmed@google.c=
+om> wrote:
+> >
+> > Stats flushing for memcg currently follows the following rules:
+> > - Always flush the entire memcg hierarchy (i.e. flush the root).
+> > - Only one flusher is allowed at a time. If someone else tries to flush
+> >   concurrently, they skip and return immediately.
+> > - A periodic flusher flushes all the stats every 2 seconds.
+> >
+> > The reason this approach is followed is because all flushes are
+> > serialized by a global rstat spinlock. On the memcg side, flushing is
+> > invoked from userspace reads as well as in-kernel flushers (e.g.
+> > reclaim, refault, etc). This approach aims to avoid serializing all
+> > flushers on the global lock, which can cause a significant performance
+> > hit under high concurrency.
+> >
+> > This approach has the following problems:
+> > - Occasionally a userspace read of the stats of a non-root cgroup will
+> >   be too expensive as it has to flush the entire hierarchy [1].
 >
+> This is a real world workload exhibiting the issue which is good.
+>
+> > - Sometimes the stats accuracy are compromised if there is an ongoing
+> >   flush, and we skip and return before the subtree of interest is
+> >   actually flushed. This is more visible when reading stats from
+> >   userspace, but can also affect in-kernel flushers.
+>
+> Please provide similar data/justification for the above. In addition:
+>
+> 1. How much delayed/stale stats have you observed on real world workload?
 
+I am not really sure. We don't have a wide deployment of kernels with
+rstat yet. These are problems observed in testing and/or concerns
+expressed by our userspace team.
+
+I am trying to solve this now because any problems that result from
+this staleness will be very hard to debug and link back to stale
+stats.
+
+>
+> 2. What is acceptable staleness in the stats for your use-case?
+
+Again, unfortunately I am not sure, but right now it can be O(seconds)
+which is not acceptable as we have workloads querying the stats every
+1s (and sometimes more frequently).
+
+>
+> 3. What is your use-case?
+
+A few use cases we have that may be affected by this:
+- System overhead: calculations using memory.usage and some stats from
+memory.stat. If one of them is fresh and the other one isn't we have
+an inconsistent view of the system.
+- Userspace OOM killing: We use some stats in memory.stat to gauge the
+amount of memory that will be freed by killing a task as sometimes
+memory.usage includes shared resources that wouldn't be freed anyway.
+- Proactive reclaim: we read memory.stat in a proactive reclaim
+feedback loop, stale stats may cause us to mistakenly think reclaim is
+ineffective and prematurely stop.
+
+>
+> 4. Does your use-case care about staleness of all the stats in
+> memory.stat or some specific stats?
+
+We have multiple use cases that can be affected by this, so I don't
+think there are some specific stats. I am also not aware of all
+possibly affected use cases.
+
+>
+> 5. If some specific stats in memory.stat, does it make sense to
+> decouple them from rstat and just pay the price up front to maintain
+> them accurately?
+>
+> Most importantly please please please be concise in your responses.
+
+I try, sometimes I am not sure how much detail is needed. Sorry about that =
+:)
+
+>
+> I know I am going back on some of the previous agreements but this
+> whole locking back and forth has made in question the original
+> motivation.
+
+That's okay. Taking a step back, having flushing being indeterministic
+in this way is a time bomb in my opinion. Note that this also affects
+in-kernel flushers like reclaim or dirty isolation, which I suspect
+will be more affected by staleness. No one complained yet AFAICT, but
+I think it's a time bomb. The worst part is that if/when a problem
+happens, we won't be able to easily tell what went wrong.
