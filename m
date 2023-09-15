@@ -1,144 +1,192 @@
-From: kernel test robot <lkp-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
-Subject: Re: [PATCH 2/2] zswap: shrinks zswap pool based on memory pressure
-Date: Fri, 15 Sep 2023 20:13:17 +0800
-Message-ID: <202309152048.GDMxTtFF-lkp@intel.com>
-References: <20230911164024.2541401-3-nphamcs@gmail.com>
+From: Christian Brauner <brauner-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCH 03/19] fs: release anon dev_t in deactivate_locked_super
+Date: Fri, 15 Sep 2023 16:12:07 +0200
+Message-ID: <20230915-zweit-frech-0e06394208a3@brauner>
+References: <20230913111013.77623-1-hch@lst.de>
+ <20230913111013.77623-4-hch@lst.de>
+ <20230913232712.GC800259@ZenIV>
+ <20230914023705.GH800259@ZenIV>
+ <20230914053843.GI800259@ZenIV>
+ <20230914-munkeln-pelzmantel-3e3a761acb72@brauner>
+ <20230914165805.GJ800259@ZenIV>
+ <20230915-elstern-etatplanung-906c6780af19@brauner>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1694780039; x=1726316039;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:in-reply-to;
-  bh=Zgee8zDq5uKDULAwPLWtzSfzZ94ccRmOL76tpinp1co=;
-  b=E5RJNW4uh4PHolr1cicb6fIJR3EWfdp6mw2cndY+M9RYaMAKumxXrYw7
-   RNUCeQya5DKzC6fapOIR/EcXCiZ5drj+6W1Vdn3DHvACuapABzRZVi6eR
-   VbEpzBWqtFCepOHAhL7owrxiL1+asa+66km7I0JmXUyo1xrUVuaUdbqGW
-   WzehFcoqCaA5yKz1w/DdnN1hlJNNDnhGjHj4TPEcJNC4oPzC/Q4u9vU9G
-   B5syvV9D3mykGwFytkSbtK3XxJmnucbH4lqlhTUHbz/OSgZvZp/+yqUCV
-   qm7mZnCFzydJJFuac6ypG4aaX4Uoqw25DBeEo2ZWSDYzruQJXYyzTIe79
-   A==;
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1694787135;
+        bh=/HmAzgm/+XfH2LHmsna9iSpae4XQo0btQtAdXOJ8lmI=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=mjYxRMQNwaQHIKQyYqQlgdWqCfnn9IZcTlEUtfZyLYqAA8oxvZV68JJrPo0oh4EU4
+         qE3X4RPLodL+YxmytKft3urNRQvw8EPPPH3HAwKX2yBZB3zGvHGs/+IduNDyKBBbow
+         QuhJk/wvqrH3k9B90Zpu5zsZQIBgqVGR+mYFK84Gsf6pcSGVhGScXYV5+3z6xVEBf/
+         oNL0GGCMG6glpSM0mBHJU/C/3ByYZIxqHkDjj7XWdyKEv5C1vsjrWl2Pv7YeHNVN0w
+         3oirLCA0Aem0LuUgx4+aDtkfgK5H5gz6yC9ZH+Qq1gcUYC6xhhht/1NJ9PYsBDN6rV
+         QxAi18p1Ej6Bg==
 Content-Disposition: inline
-In-Reply-To: <20230911164024.2541401-3-nphamcs-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+In-Reply-To: <20230915-elstern-etatplanung-906c6780af19@brauner>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Nhat Pham <nphamcs-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org
-Cc: oe-kbuild-all-cunTk1MwBs/YUNznpcFYbw@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, cerasuolodomenico-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, sjenning-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, ddstreet-EkmVulN54Sk@public.gmane.org, vitaly.wool-OWPKS81ov/FWk0Htik3J/w@public.gmane.org, mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org, shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, muchun.song-fxUVXftIFDnyG1zEObXtfA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, kernel-team-M8Ki61LpUEw@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Al Viro <viro-RmSDqhL/yNMiFSDQTTA3OLVCufUGDwFn@public.gmane.org>, Jan Kara <jack-AlSwsSmVLrQ@public.gmane.org>
+Cc: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>, Heiko Carstens <hca-tEXmvtCZX7AybS5Ee8rs3A@public.gmane.org>, Vasily Gorbik <gor-tEXmvtCZX7AybS5Ee8rs3A@public.gmane.org>, Alexander Gordeev <agordeev-tEXmvtCZX7AybS5Ee8rs3A@public.gmane.org>, Fenghua Yu <fenghua.yu-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Reinette Chatre <reinette.chatre-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Miquel Raynal <miquel.raynal-LDxbnhwyfcJBDgjK7y7TUQ@public.gmane.org>, Richard Weinberger <richard-/L3Ra7n9ekc@public.gmane.org>, Vignesh Raghavendra <vigneshr-l0cyMroinI0@public.gmane.org>, Dennis Dalessandro <dennis.dalessandro-ntyVByD3zXaTtA8H5PvdGFaTQe2KTcn/@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Trond Myklebust <trond.myklebust-F/q8l9xzQnoyLce1RVWEUA@public.gmane.org>, Anna Schumaker <anna-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Kees Cook <keescook-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>, Damien Le Moal <dlemoal-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Naohiro Aota <naohiro.aota-Sjgp3cTcYWE@public.gmane.org>, Greg Kroah-Hartman <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>, linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-s390-u79uwXL29TaqPxH82wqD4g@public.gmane.org
 
-Hi Nhat,
+> > tree of any filesystem (in-tree one or not) will have to go through the
+> > changes and figure out WTF to do with their existing code.  We are
+> > going to play whack-a-mole for at least several years as development
+> > branches get rebased and merged.
+> 
+> Let me write something up.
 
-kernel test robot noticed the following build errors:
+So here I've written two porting.rst patches that aim to reflect the
+current state of things (They do _not_ reflect what's in Christoph's
+series here as that'ss again pretty separate and will require additional
+spelling out.).
 
-[auto build test ERROR on akpm-mm/mm-everything]
-[also build test ERROR on linus/master v6.6-rc1 next-20230915]
-[If your patch is applied to the wrong git tree, kindly drop us a note.
-And when submitting patch, we suggest to use '--base' as documented in
-https://git-scm.com/docs/git-format-patch#_base_tree_information]
+I'm adding explanation for both the old and new logic fwiw. I hope to
+upstream these docs soon so we all have something to point to.
 
-url:    https://github.com/intel-lab-lkp/linux/commits/Nhat-Pham/zswap-make-shrinking-memcg-aware/20230912-004147
-base:   https://git.kernel.org/pub/scm/linux/kernel/git/akpm/mm.git mm-everything
-patch link:    https://lore.kernel.org/r/20230911164024.2541401-3-nphamcs%40gmail.com
-patch subject: [PATCH 2/2] zswap: shrinks zswap pool based on memory pressure
-config: loongarch-randconfig-001-20230914 (https://download.01.org/0day-ci/archive/20230915/202309152048.GDMxTtFF-lkp-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org/config)
-compiler: loongarch64-linux-gcc (GCC) 13.2.0
-reproduce (this is a W=1 build): (https://download.01.org/0day-ci/archive/20230915/202309152048.GDMxTtFF-lkp-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org/reproduce)
+From 200666901f53db74edf309d48e3c74fd275a822a Mon Sep 17 00:00:00 2001
+From: Christian Brauner <brauner-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Date: Fri, 15 Sep 2023 16:01:02 +0200
+Subject: [PATCH 1/2] porting: document new block device opening order
 
-If you fix the issue in a separate patch/commit (i.e. not just a new version of
-the same patch/commit), kindly add following tags
-| Reported-by: kernel test robot <lkp-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
-| Closes: https://lore.kernel.org/oe-kbuild-all/202309152048.GDMxTtFF-lkp-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org/
+Signed-off-by: Christian Brauner <brauner-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+---
+ Documentation/filesystems/porting.rst | 24 ++++++++++++++++++++++++
+ 1 file changed, 24 insertions(+)
 
-All errors (new ones prefixed by >>):
-
-   mm/zswap.c: In function 'zswap_lru_add':
-   mm/zswap.c:341:17: error: implicit declaration of function 'get_mem_cgroup_from_objcg'; did you mean 'get_mem_cgroup_from_mm'? [-Werror=implicit-function-declaration]
-     341 |                 get_mem_cgroup_from_objcg(entry->objcg) : NULL;
-         |                 ^~~~~~~~~~~~~~~~~~~~~~~~~
-         |                 get_mem_cgroup_from_mm
-   mm/zswap.c:341:57: warning: pointer/integer type mismatch in conditional expression
-     341 |                 get_mem_cgroup_from_objcg(entry->objcg) : NULL;
-         |                                                         ^
-   mm/zswap.c: In function 'zswap_lru_del':
-   mm/zswap.c:366:57: warning: pointer/integer type mismatch in conditional expression
-     366 |                 get_mem_cgroup_from_objcg(entry->objcg) : NULL;
-         |                                                         ^
-   mm/zswap.c: In function 'zswap_shrinker_count':
->> mm/zswap.c:546:9: error: implicit declaration of function 'cgroup_rstat_flush' [-Werror=implicit-function-declaration]
-     546 |         cgroup_rstat_flush(memcg->css.cgroup);
-         |         ^~~~~~~~~~~~~~~~~~
-   mm/zswap.c:546:33: error: invalid use of undefined type 'struct mem_cgroup'
-     546 |         cgroup_rstat_flush(memcg->css.cgroup);
-         |                                 ^~
-   mm/zswap.c: In function 'shrink_memcg_cb':
-   mm/zswap.c:816:80: warning: pointer/integer type mismatch in conditional expression
-     816 |                 memcg = entry->objcg ? get_mem_cgroup_from_objcg(entry->objcg) : NULL;
-         |                                                                                ^
-   mm/zswap.c: In function 'shrink_worker':
-   mm/zswap.c:896:51: error: invalid use of undefined type 'struct mem_cgroup'
-     896 |                         css_put(&pool->next_shrink->css);
-         |                                                   ^~
-   mm/zswap.c: In function 'zswap_pool_destroy':
-   mm/zswap.c:1054:43: error: invalid use of undefined type 'struct mem_cgroup'
-    1054 |                 css_put(&pool->next_shrink->css);
-         |                                           ^~
-   mm/zswap.c: In function 'zswap_store':
-   mm/zswap.c:1446:23: warning: assignment to 'struct mem_cgroup *' from 'int' makes pointer from integer without a cast [-Wint-conversion]
-    1446 |                 memcg = get_mem_cgroup_from_objcg(objcg);
-         |                       ^
-   mm/zswap.c:1448:39: error: invalid use of undefined type 'struct mem_cgroup'
-    1448 |                         css_put(&memcg->css);
-         |                                       ^~
-   mm/zswap.c:1451:31: error: invalid use of undefined type 'struct mem_cgroup'
-    1451 |                 css_put(&memcg->css);
-         |                               ^~
-   mm/zswap.c:1497:23: warning: assignment to 'struct mem_cgroup *' from 'int' makes pointer from integer without a cast [-Wint-conversion]
-    1497 |                 memcg = get_mem_cgroup_from_objcg(objcg);
-         |                       ^
-   mm/zswap.c:1499:31: error: invalid use of undefined type 'struct mem_cgroup'
-    1499 |                 css_put(&memcg->css);
-         |                               ^~
-   cc1: some warnings being treated as errors
-
-
-vim +/cgroup_rstat_flush +546 mm/zswap.c
-
-   537	
-   538	static unsigned long zswap_shrinker_count(struct shrinker *shrinker,
-   539			struct shrink_control *sc)
-   540	{
-   541		struct zswap_pool *pool = container_of(shrinker, typeof(*pool), shrinker);
-   542		struct mem_cgroup *memcg = sc->memcg;
-   543		struct lruvec *lruvec = mem_cgroup_lruvec(memcg, NODE_DATA(sc->nid));
-   544		unsigned long nr_backing, nr_stored, nr_freeable, flags;
-   545	
- > 546		cgroup_rstat_flush(memcg->css.cgroup);
-   547		nr_backing = memcg_page_state(memcg, MEMCG_ZSWAP_B) >> PAGE_SHIFT;
-   548		nr_stored = memcg_page_state(memcg, MEMCG_ZSWAPPED);
-   549	
-   550		if (!is_shrinker_enabled(memcg) || !nr_stored)
-   551			return 0;
-   552	
-   553		nr_freeable  = list_lru_shrink_count(&pool->list_lru, sc);
-   554		/*
-   555		 * Subtract the lru size by an estimate of the number of pages
-   556		 * that should be protected.
-   557		 */
-   558		spin_lock_irqsave(&lruvec->lru_lock, flags);
-   559		nr_freeable = nr_freeable > lruvec->nr_zswap_protected ?
-   560			nr_freeable - lruvec->nr_zswap_protected : 0;
-   561		spin_unlock_irqrestore(&lruvec->lru_lock, flags);
-   562	
-   563		/*
-   564		 * Scale the number of freeable pages by the memory saving factor.
-   565		 * This ensures that the better zswap compresses memory, the fewer
-   566		 * pages we will evict to swap (as it will otherwise incur IO for
-   567		 * relatively small memory saving).
-   568		 */
-   569		return mult_frac(nr_freeable, nr_backing, nr_stored);
-   570	}
-   571	
-
+diff --git a/Documentation/filesystems/porting.rst b/Documentation/filesystems/porting.rst
+index deac4e973ddc..f436b64b77bf 100644
+--- a/Documentation/filesystems/porting.rst
++++ b/Documentation/filesystems/porting.rst
+@@ -949,3 +949,27 @@ mmap_lock held.  All in-tree users have been audited and do not seem to
+ depend on the mmap_lock being held, but out of tree users should verify
+ for themselves.  If they do need it, they can return VM_FAULT_RETRY to
+ be called with the mmap_lock held.
++
++---
++
++**mandatory**
++
++The order of opening block devices and matching or creating superblocks has
++changed.
++
++The old logic opened block devices first and then tried to find a
++suitable superblock to reuse based on the block device pointer.
++
++The new logic finds or creates a superblock first, opening block devices
++afterwards. Since opening block devices cannot happen under s_umount because of
++lock ordering requirements s_umount is now dropped while opening block
++devices and reacquired before calling fill_super().
++
++In the old logic concurrent mounters would find the superblock on the list of
++active superblock for the filesystem type. Since the first opener of the block
++device would hold s_umount they would wait until the superblock became either
++born or died prematurely due to initialization failure.
++
++Since the new logic drops s_umount concurrent mounters could grab s_umount and
++would spin. Instead they are now made to wait using an explicit wait-wake
++mechanism without having to hold s_umount.
 -- 
-0-DAY CI Kernel Test Service
-https://github.com/intel/lkp-tests/wiki
+2.34.1
+
+From 1f09898322b4402219d8d3219d399c9e56a76bae Mon Sep 17 00:00:00 2001
+From: Christian Brauner <brauner-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Date: Fri, 15 Sep 2023 16:01:40 +0200
+Subject: [PATCH 2/2] porting: document superblock as block device holder
+
+Signed-off-by: Christian Brauner <brauner-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+---
+ Documentation/filesystems/porting.rst | 79 +++++++++++++++++++++++++++
+ 1 file changed, 79 insertions(+)
+
+diff --git a/Documentation/filesystems/porting.rst b/Documentation/filesystems/porting.rst
+index f436b64b77bf..fefefaf289b4 100644
+--- a/Documentation/filesystems/porting.rst
++++ b/Documentation/filesystems/porting.rst
+@@ -973,3 +973,82 @@ born or died prematurely due to initialization failure.
+ Since the new logic drops s_umount concurrent mounters could grab s_umount and
+ would spin. Instead they are now made to wait using an explicit wait-wake
+ mechanism without having to hold s_umount.
++
++---
++
++**mandatory**
++
++The holder of a block device is now the superblock.
++
++The holder of a block device used to be the file_system_type which wasn't
++particularly useful. It wasn't possible to go from block device to owning
++superblock without matching on the device pointer stored in the superblock.
++This mechanism would only work for a single device so the block layer couldn't
++find the owning superblock associated with additional devices.
++
++In the old mechanism reusing or creating a superblock for racing mount(2) and
++umount(2) relied on the file_system_type as the holder. This was severly
++underdocumented however:
++
++(1) If the concurrent mount(2) managed to grab an active reference before the
++    umount(2) dropped the last active reference in deactivate_locked_super()
++    the mounter would simply reuse the existing superblock.
++
++(2) If the mounter came after deactivate_locked_super() but before
++    the superblock had been removed from the list of superblocks of the
++    filesystem type the mounter would wait until the superblock was shutdown
++    and allocated a new superblock.
++
++(3) If the mounter came after deactivate_locked_super() and after
++    the superblock had been removed from the list of superblocks of the
++    filesystem type the mounter would allocate a new superblock.
++
++Because the holder of the block device was the filesystem type any concurrent
++mounter could open the block device without risking seeing EBUSY because the
++block device was still in use.
++
++Making the superblock the owner of the block device changes this as the holder
++is now a unique superblock and not shared among all superblocks of the
++filesystem type. So a concurrent mounter in (2) could suddenly see EBUSY when
++trying to open a block device whose holder was a different superblock.
++
++The new logic thus waits until the superblock and the devices are shutdown in
++->kill_sb(). Removal of the superblock from the list of superblocks of the
++filesystem type is now moved to a later point when the devices are closed:
++
++(1) Any concurrent mounter managing to grab an active reference on an existing
++    superblock is made to wait until the superblock is either ready or until
++    the superblock and all devices are shutdown in ->kill_sb().
++
++(2) If the mounter came after deactivate_locked_super() but before
++    the superblock had been removed from the list of superblocks of the
++    filesystem type the mounter is made to wait until the superblock and the
++    devices are shut down in ->kill_sb() and the superblock is removed from the
++    list of superblocks of the filesystem type.
++
++(3) This case is now collapsed into (2) as the superblock is left on the list
++    of superblocks of the filesystem type until all devices are shutdown in
++    ->kill_sb().
++
++As this is a VFS level change it has no practical consequences for filesystems
++other than that all of them must use one of the provided kill_litter_super(),
++kill_anon_super(), or kill_block_super() helpers.
++
++Filesystems that reuse superblocks based on non-static keys such as
++sb->s_fs_info must ensure that these keys remain valid across kill_*_super()
++calls. The expected pattern is::
++
++	static struct file_system_type some_fs_type = {
++		.name 		= "somefs",
++		.kill_sb 	= some_fs_kill_sb,
++	};
++
++	static void some_fs_kill_sb(struct super_block *sb)
++	{
++		struct some_fs_info *info = sb->s_fs_info;
++
++		kill_*_super(sb);
++		kfree(info);
++	}
++
++It's best practice to never deviate from this pattern.
+-- 
+2.34.1
+
