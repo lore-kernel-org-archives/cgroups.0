@@ -1,74 +1,88 @@
-From: Pierre Gondois <pierre.gondois-5wv7dgnIgG8@public.gmane.org>
-Subject: [PATCH 1/1] cgroup/cpuset: Rebuild sched domains if isolated partition changed
-Date: Fri, 15 Sep 2023 17:45:04 +0200
-Message-ID: <20230915154505.363754-2-pierre.gondois@arm.com>
-References: <20230915154505.363754-1-pierre.gondois@arm.com>
+From: "Haitao Huang" <haitao.huang@linux.intel.com>
+Subject: Re: [PATCH v4 03/18] x86/sgx: Add sgx_epc_lru_lists to encapsulate
+ LRU lists
+Date: Fri, 15 Sep 2023 11:28:28 -0500
+Message-ID: <op.2bbmpqncwjvjmi@hhuan26-mobl.amr.corp.intel.com>
+References: <20230913040635.28815-1-haitao.huang@linux.intel.com>
+ <20230913040635.28815-4-haitao.huang@linux.intel.com>
+ <851f9b3043732c17cd8f86a77ccee0b7c6caa22f.camel@intel.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <20230915154505.363754-1-pierre.gondois-5wv7dgnIgG8@public.gmane.org>
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1694795318; x=1726331318;
+  h=to:cc:subject:references:date:mime-version:
+   content-transfer-encoding:from:message-id:in-reply-to;
+  bh=cj9l7n2Bmb5XcYMcAhASPfEHm9/0gmYiOFma5VsXwGU=;
+  b=MzFaLDBa+DuoIw3OwezMGLM0QNB+PCgUYfIHVyv5pH+iGEiTqMn/lGqi
+   nmWDOWhMiRQtu3dOzyuuI2L9pHm1FpkAdd7Li/XG3ws0FYZciGeOmpb4p
+   IT3TfIvujsF1XvIt4OaZP9n0qhIuiILFbhmB/jTbGt63+2eD2eK3U00SA
+   isllENiclTUZcGsnBSsUB4+ZSPKwpnworVDmB7cWwLc7c2JXpN7KaPLnH
+   N7Gcv1edFhFyArbsnp8tF6e543DRQ7DrM86evj17R58y+XTYsGR/54+wq
+   tjgqsMkHNOoXqBRrNB4D8NYIernupCDUJPW65sOXnBbWg9uYMnLzqgEri
+   g==;
+In-Reply-To: <851f9b3043732c17cd8f86a77ccee0b7c6caa22f.camel@intel.com>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-To: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-Cc: rui.zhang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org, aaron.lu-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org, Pierre Gondois <pierre.gondois-5wv7dgnIgG8@public.gmane.org>, Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Type: text/plain; charset="us-ascii"; format="flowed"; delsp="yes"
+To: "hpa@zytor.com" <hpa@zytor.com>, "linux-sgx@vger.kernel.org" <linux-sgx@vger.kernel.org>, "x86@kernel.org" <x86@kernel.org>, "dave.hansen@linux.intel.com" <dave.hansen@linux.intel.com>, "cgroups@vger.kernel.org" <cgroups@vger.kernel.org>, "bp@alien8.de" <bp@alien8.de>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "jarkko@kernel.org" <jarkko@kernel.org>, "tglx@linutronix.de" <tglx@linutronix.de>, "Mehta, Sohil" <sohil.mehta@intel.com>, "tj@kernel.org" <tj@kernel.org>, "mingo@redhat.com" <mingo@redhat.com>, "Huang, Kai" <kai.huang@intel.com>
+Cc: "kristen@linux.intel.com" <kristen@linux.intel.com>, "yangjie@microsoft.com" <yangjie@microsoft.com>, "Li, Zhiquan1" <zhiquan1.li@intel.com>, "Christopherson,, Sean" <seanjc@google.com>, "mikko.ylinen@linux.intel.com" <mikko.ylinen@linux.intel.com>, "Zhang, Bo" <zhanb@microsoft.com>, "anakrish@microsoft.com" <anakrish@microsoft.com>
 
-When an isolated parition is created, the sched domains (sds) are
-rebuilt and the sds of the isolated CPUs are detached. This only
-happens at the creation of the isolated parition. Updating
-the cpuset of the partition doesn't rebuild the sds:
+On Thu, 14 Sep 2023 05:31:30 -0500, Huang, Kai <kai.huang@intel.com> wrote:
 
-To reproduce:
-  # ls /sys/kernel/debug/sched/domains/cpu0/
-  domain0
-  # ls /sys/kernel/debug/sched/domains/cpu1/
-  domain0
-  #
-  # mkdir cgroup
-  # mount -t cgroup2 none cgroup/
-  # mkdir cgroup/A1/
-  # echo "+cpuset" > cgroup/cgroup.subtree_control
-  # echo 0-3 > cgroup/A1/cpuset.cpus
-  # echo isolated > cgroup/A1/cpuset.cpus.partition
-  #
-  # ls /sys/kernel/debug/sched/domains/cpu0/
-  # ls /sys/kernel/debug/sched/domains/cpu1/
-  #
-  # echo 0 > cgroup/A1/cpuset.cpus
-  # ls /sys/kernel/debug/sched/domains/cpu0/
-  # ls /sys/kernel/debug/sched/domains/cpu1/
-  #
+> Some non-technical staff:
+>
+> On Tue, 2023-09-12 at 21:06 -0700, Haitao Huang wrote:
+>> From: Kristen Carlson Accardi <kristen@linux.intel.com>
+>
+> The patch was from Kristen, but ...
+>
+>>
+>> Introduce a data structure to wrap the existing reclaimable list and its
+>> spinlock. Each cgroup later will have one instance of this structure to
+>> track EPC pages allocated for processes associated with the same cgroup.
+>> Just like the global SGX reclaimer (ksgxd), an EPC cgroup reclaims pages
+>> from the reclaimable list in this structure when its usage reaches near
+>> its limit.
+>>
+>> Currently, ksgxd does not track the VA, SECS pages. They are considered
+>> as 'unreclaimable' pages that are only deallocated when their respective
+>> owning enclaves are destroyed and all associated resources released.
+>>
+>> When an EPC cgroup can not reclaim any more reclaimable EPC pages to
+>> reduce its usage below its limit, the cgroup must also reclaim those
+>> unreclaimables by killing their owning enclaves. The VA and SECS pages
+>> later are also tracked in an 'unreclaimable' list added to this  
+>> structure
+>> to support this OOM killing of enclaves.
+>>
+>> Signed-off-by: Sean Christopherson <sean.j.christopherson@intel.com>
+>> Signed-off-by: Kristen Carlson Accardi <kristen@linux.intel.com>
+>
+> ... it was firstly signed by Sean and then Kristen, which doesn't sound  
+> right.
+>
+> If the patch was from Kristen, then either Sean's SoB should come after
+> Kristen's (which means Sean took Kristen's patch and signed it), or you  
+> need to
+> have a Co-developed-by tag for Sean right before his SoB (which  
+> indicates Sean
+> participated in the development of the patch but likely he wasn't the  
+> main
+> developer).
+>
+> But I _guess_ the patch was just from Sean.
+>
+ From what I see:
+In v1 kristen included a "From" tsg for Sean. In v2 she split the original  
+patch into two and added some wrappers/ At that time, she removed the  
+"From" tag for both patches but kept the SOB and CC.
 
-Here CPU1 should have a sched domain re-attached.
+@Kristen, could you confirm?
 
-Signed-off-by: Pierre Gondois <pierre.gondois-5wv7dgnIgG8@public.gmane.org>
----
- kernel/cgroup/cpuset.c | 12 ++++++++----
- 1 file changed, 8 insertions(+), 4 deletions(-)
+I only removed the wrappers from v2 based on Dave's comments.
+So if confirmed by Kristen, should we add "From" tag for Sean?
 
-diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
-index 58e6f18f01c1..e3eb27ff9b68 100644
---- a/kernel/cgroup/cpuset.c
-+++ b/kernel/cgroup/cpuset.c
-@@ -1680,11 +1680,15 @@ static void update_cpumasks_hier(struct cpuset *cs, struct tmpmasks *tmp,
- 		 * empty cpuset is changed, we need to rebuild sched domains.
- 		 * On default hierarchy, the cpuset needs to be a partition
- 		 * root as well.
-+		 * Also rebuild sched domains if the cpuset of an isolated
-+		 * partition changed.
- 		 */
--		if (!cpumask_empty(cp->cpus_allowed) &&
--		    is_sched_load_balance(cp) &&
--		   (!cgroup_subsys_on_dfl(cpuset_cgrp_subsys) ||
--		    is_partition_valid(cp)))
-+		if ((!cpumask_empty(cp->cpus_allowed) &&
-+		     is_sched_load_balance(cp) &&
-+		     (!cgroup_subsys_on_dfl(cpuset_cgrp_subsys) ||
-+		      is_partition_valid(cp))) ||
-+		    (cp->partition_root_state == PRS_ISOLATED ||
-+		     cp->partition_root_state == PRS_INVALID_ISOLATED))
- 			need_rebuild_sched_domains = true;
- 
- 		rcu_read_lock();
--- 
-2.25.1
-
+I'll double check the other patches.
+Thanks
+Haitao
