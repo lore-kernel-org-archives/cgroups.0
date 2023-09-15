@@ -1,47 +1,76 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH v4 00/18] Add Cgroup support for SGX EPC memory
-Date: Fri, 15 Sep 2023 08:26:11 -1000
-Message-ID: <ZQShw25UBVvVvjQo@mtj.duckdns.org>
-References: <20230913040635.28815-1-haitao.huang@linux.intel.com>
+From: Hao Luo <haoluo@google.com>
+Subject: Re: [RFC PATCH bpf-next 0/5] bpf, cgroup: Enable cgroup_array map on cgroup1
+Date: Fri, 15 Sep 2023 11:57:23 -0700
+Message-ID: <CA+khW7hah317_beZ7QDA1R=sWi5q7TanRC+efMhivPKtWzbA4w@mail.gmail.com>
+References: <20230903142800.3870-1-laoar.shao@gmail.com> <qv2xdcsvb4brjsc7qx6ncxrudwusogdo4itzv4bx2perfjymwl@in7zaeymjiie>
+ <CALOAHbB-PF1LjSAxoCdePN6Va4D+ufkeDmq8s3b0AGtfX5E-cQ@mail.gmail.com>
+ <CAADnVQL+6PsRbNMo=8kJpgw1OTbdLG9epsup0q7La5Ffqj6g6A@mail.gmail.com>
+ <CALOAHbBhOL9w+rnh_xkgZZBhxMpbrmLZWhm1X+ZeDLfxxt8Nrw@mail.gmail.com>
+ <ZP93gUwf_nLzDvM5@mtj.duckdns.org> <CALOAHbC=yxSoBR=vok2295ejDOEYQK2C8LRjDLGRruhq-rDjOQ@mail.gmail.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Transfer-Encoding: quoted-printable
+Return-path: <bpf+bounces-10178-glkb-bpf=m.gmane-mx.org@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1694802373; x=1695407173; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:sender:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=dlV13QwwEAoXGdo9jbQW+sodfxxDlcgtLnB5aE/tibY=;
-        b=Zni0BN3MU3FgBGvb9E3SP8UfiOMf9LsjEgP83dBOE2MUiHd2kF91631DgiECWi9G3G
-         9j6cwAMJAHFkZk9fACn0OTo1n3YhpW92uT/YtOP7G3in8xwKlQFifT8GJq/1UKAnuW44
-         EJ8Mzthsm7LMHKHyT4SE5SBsyAQ09tHZtJnphTRBih9LHn+ouJ2JQGhgXAqEMpDogceR
-         buXRPYOU/W5w8XvAmKV+8ISs6AkNedKfAXGpwdvvJXphQ+qHWd/dmz9GOyV1//ODiYP9
-         kAe6dgEwd9UJysMP/sbShYe3oxKT7j1yHa2xprFX/UFP6/mJ0ExbR+0E8IaK/06YAv0a
-         N7Fg==
-Sender: Tejun Heo <htejun-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <20230913040635.28815-1-haitao.huang-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
-List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Haitao Huang <haitao.huang-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
-Cc: jarkko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, dave.hansen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-sgx-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, x86-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, tglx-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org, mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, bp-Gina5bIWoIWzQB+pC5nmwQ@public.gmane.org, hpa-YMNOUZJC4hwAvxtiuMwx3w@public.gmane.org, sohil.mehta-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org, zhiquan1.li-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org, kristen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org, seanjc-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, zhanb-0li6OtcxBFHby3iVrkZq2A@public.gmane.org, anakrish-0li6OtcxBFHby3iVrkZq2A@public.gmane.org, mikko.ylinen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org, yangjie-0li6OtcxBFHby3iVrkZq2A@public.gmane.org
+        d=google.com; s=20230601; t=1694804256; x=1695409056; darn=vger.kernel.org;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=9vEGyk9aimWeGVbqBDG5yx1Ea1IhyMQsNWatyoWMLY8=;
+        b=dY9jggijZ+uU4ytjXw5vqNvsdoRFFYoR4wT+b2nYenO+ihE5BpwKiJjJ5OQggRUW+0
+         0efTP4vGgelj4dko9e7ygo3nK3azUMfv698qZ730JytLdCR2zs5KocemkJ82BInsVLIr
+         qvBQ2cSCND7hxwY/Ft/n4LcuWtnkaaC5RHCzbfjeqWrSV6A17ZfP9iI9R0mc4S2W1Jf3
+         4pPoyDwhlKS4iFhYkcNtOF/GQLVLGZSlt2D6jKN+c7j6DPkDqgNvRf9URec/6fM5ikMf
+         ZU0pCWe1Pp4GxsMMhN2U+wi4pmiyzdPwoguJaUKp8UmLDgFBr3ENlPp+cbtUPcJPNILu
+         c7Nw==
+List-Id: <cgroups.vger.kernel.org>
+List-Subscribe: <mailto:bpf+subscribe@vger.kernel.org>
+List-Unsubscribe: <mailto:bpf+unsubscribe@vger.kernel.org>
+In-Reply-To: <CALOAHbC=yxSoBR=vok2295ejDOEYQK2C8LRjDLGRruhq-rDjOQ@mail.gmail.com>
+Content-Type: text/plain; charset="utf-8"
+To: Yafang Shao <laoar.shao@gmail.com>
+Cc: Tejun Heo <tj@kernel.org>, Alexei Starovoitov <alexei.starovoitov@gmail.com>, =?UTF-8?Q?Michal_Koutn=C3=BD?= <mkoutny@suse.com>, Alexei Starovoitov <ast@kernel.org>, Daniel Borkmann <daniel@iogearbox.net>, John Fastabend <john.fastabend@gmail.com>, Andrii Nakryiko <andrii@kernel.org>, Martin KaFai Lau <martin.lau@linux.dev>, Song Liu <song@kernel.org>, Yonghong Song <yonghong.song@linux.dev>, KP Singh <kpsingh@kernel.org>, Stanislav Fomichev <sdf@google.com>, Jiri Olsa <jolsa@kernel.org>, Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, Yosry Ahmed <yosryahmed@google.com>, "open list:CONTROL GROUP (CGROUP)" <cgroups@vger.kernel.org>, bpf <bpf@vger.kernel.org>
 
-On Tue, Sep 12, 2023 at 09:06:17PM -0700, Haitao Huang wrote:
-> SGX EPC memory allocations are separate from normal RAM allocations, and
-> are managed solely by the SGX subsystem. The existing cgroup memory
-> controller cannot be used to limit or account for SGX EPC memory, which is
-> a desirable feature in some environments, e.g., support for pod level
-> control in a Kubernates cluster on a VM or baremetal host [1,2].
-> 
-> This patchset implements the support for sgx_epc memory within the misc
-> cgroup controller. The user can use the misc cgroup controller to set and
-> enforce a max limit on total EPC usage per cgroup. The implementation
-> reports current usage and events of reaching the limit per cgroup as well
-> as the total system capacity.
+On Mon, Sep 11, 2023 at 8:31=E2=80=AFPM Yafang Shao <laoar.shao@gmail.com> =
+wrote:
+>
+> On Tue, Sep 12, 2023 at 4:24=E2=80=AFAM Tejun Heo <tj@kernel.org> wrote:
+> >
+> > On Sun, Sep 10, 2023 at 11:17:48AM +0800, Yafang Shao wrote:
+> > > To acquire the cgroup_id, we can resort to open coding, as exemplifie=
+d below:
+> > >
+> > >     task =3D bpf_get_current_task_btf();
+> > >     cgroups =3D task->cgroups;
+> > >     cgroup =3D cgroups->subsys[cpu_cgrp_id]->cgroup;
+> > >     key =3D cgroup->kn->id;
+> >
+> > You can't hardcode it to a specific controller tree like that. You eith=
+er
+> > stick with fd based interface or need also add something to identify th=
+e
+> > specifc cgroup1 tree.
+>
+> As pointed out by Alexei, I think we can introduce some
+> cgroup_id-based kfuncs which can work for both cgroup1 and cgroup2.
+>
+> Something as follows (untested),
+>
+> __bpf_kfunc u64 bpf_current_cgroup_id_from_subsys(int subsys)
+> {
+>         struct cgroup *cgroup;
+>
+>         cgroup =3D task_cgroup(current, subsys);
+>         if (!cgroup)
+>             return 0;
+>         return cgroup_id(cgroup);
+> }
+>
 
-Minor nit aside, it looks fine from cgroup side.
+Can we also support checking arbitrary tasks, instead of just current?
+I find myself often needing to find the cgroup only given a
+task_struct. For example, when attaching to context switch, I want to
+know whether the next task is under a cgroup. Having such a kfunc
+would be very useful. It can also be used in task_iter programs.
 
-Thanks.
+Hao
 
--- 
-tejun
