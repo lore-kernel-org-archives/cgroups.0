@@ -1,77 +1,46 @@
-From: "Haitao Huang" <haitao.huang@linux.intel.com>
-Subject: Re: [PATCH v4 01/18] cgroup/misc: Add per resource callbacks for CSS
- events
-Date: Fri, 15 Sep 2023 23:11:24 -0500
-Message-ID: <op.2bci9anpwjvjmi@hhuan26-mobl.amr.corp.intel.com>
+From: "Haitao Huang" <haitao.huang-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
+Subject: Re: [PATCH v4 12/18] x86/sgx: Add EPC OOM path to forcefully reclaim
+ EPC
+Date: Fri, 15 Sep 2023 23:19:53 -0500
+Message-ID: <op.2bcjnfkmwjvjmi@hhuan26-mobl.amr.corp.intel.com>
 References: <20230913040635.28815-1-haitao.huang@linux.intel.com>
- <20230913040635.28815-2-haitao.huang@linux.intel.com>
- <CVHOU5G1SCUT.RCBVZ3W8G2NJ@suppilovahvero>
+ <20230913040635.28815-13-haitao.huang@linux.intel.com>
+ <CVHWE8HC4SHA.FU2XVIXN6WB7@suppilovahvero>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1694837487; x=1726373487;
+  t=1694837997; x=1726373997;
   h=to:cc:subject:references:date:mime-version:
    content-transfer-encoding:from:message-id:in-reply-to;
-  bh=Ocjm2Eh/KArqUPzrkBFSGZbna2Rd/Mr3+qd+5IcYzMg=;
-  b=hm53PeNLgISk7VJdD+DxIEMCA2h1q1e4JNWNyU6FVfDSHNGMainxQ/a0
-   k7XRP+n7SD/l4PdsWPbdlbdY7Nlk0oOSrtJqrJpDF6Vx8VlBAor9Fuzq+
-   e6ASLpo2DqmArUbLaUvXDo5SZountN8EmwvEv/AXLPpuaN5xm8sUazyiB
-   A4tZNPBM4JkKMh+L2N5TU3JrqAsoZQMwi0R1kBoykZJQvUS1y1g32eoK3
-   X/STtGaQJj5YXt+fhaykOt4IveiGPpP0/22jsY0yedWX3abxATiS8IMLa
-   DglhymxuxkhfG9lPBlvySR29mnLUHWa9+A85+Cs2fBMNUuvmj3eJToqcU
-   w==;
-In-Reply-To: <CVHOU5G1SCUT.RCBVZ3W8G2NJ@suppilovahvero>
+  bh=gIPyWiuFfzCzD4q9eXt3xfBm9DVJMh2r9IPir+knJEA=;
+  b=FAzDEN9rRR2HqihsDZKXnLrKWzQYeYI4y+RCHEq7iDU0vBJ0kUtkrAC2
+   nuqHsAIMjMb7jfJ+ngrOuWRYCj7BCv7COjGIs5K/BtYmsXRGYQdM9HxBl
+   GlyLW2opqLI99XC1xek0V3w01fpRSMqQuZTpZ8WvkBU26+RXggxPkNCeK
+   xSTbGr1GTZbgEmxdFbUIo4N5dMLPmFFB7lOBLjDnO5r7RYKFPmTtP4to6
+   SObrY4GTnbZy9W/Wqm+/fHUMBmTOIlS36oF+FolRGohDIoUOAcEiJJ2al
+   frxc36LGjLNw53ChmzHSsxidtt61BL1lOLOXEDrL/L5FUnMrAJkDa3OVd
+   A==;
+In-Reply-To: <CVHWE8HC4SHA.FU2XVIXN6WB7@suppilovahvero>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"; format="flowed"; delsp="yes"
-To: dave.hansen@linux.intel.com, tj@kernel.org, linux-kernel@vger.kernel.org, linux-sgx@vger.kernel.org, x86@kernel.org, cgroups@vger.kernel.org, tglx@linutronix.de, mingo@redhat.com, bp@alien8.de, hpa@zytor.com, sohil.mehta@intel.com, Jarkko Sakkinen <jarkko@kernel.org>
-Cc: zhiquan1.li@intel.com, kristen@linux.intel.com, seanjc@google.com, zhanb@microsoft.com, anakrish@microsoft.com, mikko.ylinen@linux.intel.com, yangjie@microsoft.com
+To: dave.hansen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-sgx-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, x86-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, tglx-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org, mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, bp-Gina5bIWoIWzQB+pC5nmwQ@public.gmane.org, hpa-YMNOUZJC4hwAvxtiuMwx3w@public.gmane.org, sohil.mehta-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org, Jarkko Sakkinen <jarkko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: zhiquan1.li-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org, kristen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org, seanjc-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, zhanb-0li6OtcxBFHby3iVrkZq2A@public.gmane.org, anakrish-0li6OtcxBFHby3iVrkZq2A@public.gmane.org, mikko.ylinen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org, yangjie-0li6OtcxBFHby3iVrkZq2A@public.gmane.org
 
-Hi Jarkko
-
-On Wed, 13 Sep 2023 04:39:06 -0500, Jarkko Sakkinen <jarkko@kernel.org>  
+On Wed, 13 Sep 2023 10:34:28 -0500, Jarkko Sakkinen <jarkko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>  
 wrote:
 
-> On Wed Sep 13, 2023 at 7:06 AM EEST, Haitao Huang wrote:
->> From: Kristen Carlson Accardi <kristen@linux.intel.com>
->>
->> Consumers of the misc cgroup controller might need to perform separate
->> actions for Cgroups Subsystem State(CSS) events: cgroup alloc and free.
+>> +++ b/arch/x86/kernel/cpu/sgx/encl.h
+>> @@ -39,6 +39,7 @@ enum sgx_encl_flags {
+>>  	SGX_ENCL_DEBUG		= BIT(1),
+>>  	SGX_ENCL_CREATED	= BIT(2),
+>>  	SGX_ENCL_INITIALIZED	= BIT(3),
+>> +	SGX_ENCL_OOM		= BIT(4),
 >
-> nit: s/State(CSS)/State (CSS)/
->
-> "cgroup alloc" and "cgroup free" mean absolutely nothing.
->
->
->> In addition, writes to the max value may also need separate action. Add
->
-> What "the max value"?
->
->> the ability to allow downstream users to setup callbacks for these
->> operations, and call the corresponding per-resource-type callback when
->> appropriate.
->
-> Who are "the downstream users" and what sort of callbacks they setup?
+> Given how the constants are named before maybe SGX_ENCL_NO_MEMORY would
+> be more obvious.
 
-How about this?
-
-The misc cgroup controller (subsystem) currently does not perform resource  
-type specific action for Cgroups Subsystem State (CSS) events: the  
-'css_alloc' event when a cgroup is created and the 'css_free' event when a  
-cgroup is destroyed, or in event of user writing the max value to the  
-misc.max file to set the consumption limit of a specific resource  
-[admin-guide/cgroup-v2.rst, 5-9. Misc].
-
-Define callbacks for those events and allow resource providers to register  
-the callbacks per resource type as needed. This will be utilized later by  
-the EPC misc cgroup support implemented in the SGX driver:
-- On cgroup alloc, allocate and initialize necessary structures for EPC  
-reclaiming, e.g., LRU list, work queue, etc.
-- On cgroup free, cleanup and free those structures created in alloc.
-- On max write, trigger EPC reclaiming if the new limit is at or below  
-current consumption.
-
+Will do.
 Thanks
 Haitao
-
