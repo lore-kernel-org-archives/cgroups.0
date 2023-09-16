@@ -1,76 +1,59 @@
-From: Hao Luo <haoluo@google.com>
-Subject: Re: [RFC PATCH bpf-next 0/5] bpf, cgroup: Enable cgroup_array map on cgroup1
-Date: Fri, 15 Sep 2023 11:57:23 -0700
-Message-ID: <CA+khW7hah317_beZ7QDA1R=sWi5q7TanRC+efMhivPKtWzbA4w@mail.gmail.com>
-References: <20230903142800.3870-1-laoar.shao@gmail.com> <qv2xdcsvb4brjsc7qx6ncxrudwusogdo4itzv4bx2perfjymwl@in7zaeymjiie>
- <CALOAHbB-PF1LjSAxoCdePN6Va4D+ufkeDmq8s3b0AGtfX5E-cQ@mail.gmail.com>
- <CAADnVQL+6PsRbNMo=8kJpgw1OTbdLG9epsup0q7La5Ffqj6g6A@mail.gmail.com>
- <CALOAHbBhOL9w+rnh_xkgZZBhxMpbrmLZWhm1X+ZeDLfxxt8Nrw@mail.gmail.com>
- <ZP93gUwf_nLzDvM5@mtj.duckdns.org> <CALOAHbC=yxSoBR=vok2295ejDOEYQK2C8LRjDLGRruhq-rDjOQ@mail.gmail.com>
+From: "Haitao Huang" <haitao.huang@linux.intel.com>
+Subject: Re: [PATCH v4 01/18] cgroup/misc: Add per resource callbacks for CSS
+ events
+Date: Fri, 15 Sep 2023 20:27:06 -0500
+Message-ID: <op.2bcbngvpwjvjmi@hhuan26-mobl.amr.corp.intel.com>
+References: <20230913040635.28815-1-haitao.huang@linux.intel.com>
+ <20230913040635.28815-2-haitao.huang@linux.intel.com>
+ <ZQSaoXBg-X4cwFdX@mtj.duckdns.org> <ZQSbM9ItXVyeIU7F@mtj.duckdns.org>
 Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-Return-path: <bpf+bounces-10178-glkb-bpf=m.gmane-mx.org@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20230601; t=1694804256; x=1695409056; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=9vEGyk9aimWeGVbqBDG5yx1Ea1IhyMQsNWatyoWMLY8=;
-        b=dY9jggijZ+uU4ytjXw5vqNvsdoRFFYoR4wT+b2nYenO+ihE5BpwKiJjJ5OQggRUW+0
-         0efTP4vGgelj4dko9e7ygo3nK3azUMfv698qZ730JytLdCR2zs5KocemkJ82BInsVLIr
-         qvBQ2cSCND7hxwY/Ft/n4LcuWtnkaaC5RHCzbfjeqWrSV6A17ZfP9iI9R0mc4S2W1Jf3
-         4pPoyDwhlKS4iFhYkcNtOF/GQLVLGZSlt2D6jKN+c7j6DPkDqgNvRf9URec/6fM5ikMf
-         ZU0pCWe1Pp4GxsMMhN2U+wi4pmiyzdPwoguJaUKp8UmLDgFBr3ENlPp+cbtUPcJPNILu
-         c7Nw==
-List-Id: <cgroups.vger.kernel.org>
-List-Subscribe: <mailto:bpf+subscribe@vger.kernel.org>
-List-Unsubscribe: <mailto:bpf+unsubscribe@vger.kernel.org>
-In-Reply-To: <CALOAHbC=yxSoBR=vok2295ejDOEYQK2C8LRjDLGRruhq-rDjOQ@mail.gmail.com>
-Content-Type: text/plain; charset="utf-8"
-To: Yafang Shao <laoar.shao@gmail.com>
-Cc: Tejun Heo <tj@kernel.org>, Alexei Starovoitov <alexei.starovoitov@gmail.com>, =?UTF-8?Q?Michal_Koutn=C3=BD?= <mkoutny@suse.com>, Alexei Starovoitov <ast@kernel.org>, Daniel Borkmann <daniel@iogearbox.net>, John Fastabend <john.fastabend@gmail.com>, Andrii Nakryiko <andrii@kernel.org>, Martin KaFai Lau <martin.lau@linux.dev>, Song Liu <song@kernel.org>, Yonghong Song <yonghong.song@linux.dev>, KP Singh <kpsingh@kernel.org>, Stanislav Fomichev <sdf@google.com>, Jiri Olsa <jolsa@kernel.org>, Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, Yosry Ahmed <yosryahmed@google.com>, "open list:CONTROL GROUP (CGROUP)" <cgroups@vger.kernel.org>, bpf <bpf@vger.kernel.org>
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1694827630; x=1726363630;
+  h=to:cc:subject:references:date:mime-version:
+   content-transfer-encoding:from:message-id:in-reply-to;
+  bh=LSZ/Ims3Q2WIrfyaa9TBJMUmtRfQrZWhfLJol4CcGBY=;
+  b=ZryqysY/1oiPe9J8CU+PFqvz3Ck8IETEaBf6jC9Mvt4JwsvLrULNivj8
+   GvDstGNU/5so3AQ3+iYt5ZDDGnYnoxpnxUahtdOkzkrvbcMD5HpDOmL0X
+   ObcsUcSeDlYL4qV/J7j6ZdjK+P2lcVWH7krzIlM2dtVXTvWj9Oiwu/ZJ2
+   e1HvLCRfq75XXLCZvdzW95M5bwfHs3Sf+AeB0Mh0XFISI3UOpGvEq4wnC
+   NveIir9QWgt0ZuLLkLVhvMTrb9Vbs+W3mT69r8p2Sw/MhTORW1DU6HYQi
+   f8bUHgH5aqZZVutPw/uOiRwlcGniMVqMuln2xPrIT/RAF/YwDRn7uavdc
+   w==;
+In-Reply-To: <ZQSbM9ItXVyeIU7F@mtj.duckdns.org>
+List-ID: <cgroups.vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"; format="flowed"; delsp="yes"
+To: Tejun Heo <tj@kernel.org>
+Cc: jarkko@kernel.org, dave.hansen@linux.intel.com, linux-kernel@vger.kernel.org, linux-sgx@vger.kernel.org, x86@kernel.org, cgroups@vger.kernel.org, tglx@linutronix.de, mingo@redhat.com, bp@alien8.de, hpa@zytor.com, sohil.mehta@intel.com, zhiquan1.li@intel.com, kristen@linux.intel.com, seanjc@google.com, zhanb@microsoft.com, anakrish@microsoft.com, mikko.ylinen@linux.intel.com, yangjie@microsoft.com
 
-On Mon, Sep 11, 2023 at 8:31=E2=80=AFPM Yafang Shao <laoar.shao@gmail.com> =
-wrote:
+On Fri, 15 Sep 2023 12:58:11 -0500, Tejun Heo <tj@kernel.org> wrote:
+
+> On Fri, Sep 15, 2023 at 07:55:45AM -1000, Tejun Heo wrote:
+>> On Tue, Sep 12, 2023 at 09:06:18PM -0700, Haitao Huang wrote:
+>> > @@ -37,6 +37,11 @@ struct misc_res {
+>> >  	u64 max;
+>> >  	atomic64_t usage;
+>> >  	atomic64_t events;
+>> > +
+>> > +	/* per resource callback ops */
+>> > +	int (*misc_cg_alloc)(struct misc_cg *cg);
+>> > +	void (*misc_cg_free)(struct misc_cg *cg);
+>> > +	void (*misc_cg_max_write)(struct misc_cg *cg);
+>>
+>> A nit about naming. These are already in misc_res and cgroup_ and cgrp_
+>> prefixes are a lot more common. So, maybe go for sth like cgrp_alloc?
 >
-> On Tue, Sep 12, 2023 at 4:24=E2=80=AFAM Tejun Heo <tj@kernel.org> wrote:
-> >
-> > On Sun, Sep 10, 2023 at 11:17:48AM +0800, Yafang Shao wrote:
-> > > To acquire the cgroup_id, we can resort to open coding, as exemplifie=
-d below:
-> > >
-> > >     task =3D bpf_get_current_task_btf();
-> > >     cgroups =3D task->cgroups;
-> > >     cgroup =3D cgroups->subsys[cpu_cgrp_id]->cgroup;
-> > >     key =3D cgroup->kn->id;
-> >
-> > You can't hardcode it to a specific controller tree like that. You eith=
-er
-> > stick with fd based interface or need also add something to identify th=
-e
-> > specifc cgroup1 tree.
->
-> As pointed out by Alexei, I think we can introduce some
-> cgroup_id-based kfuncs which can work for both cgroup1 and cgroup2.
->
-> Something as follows (untested),
->
-> __bpf_kfunc u64 bpf_current_cgroup_id_from_subsys(int subsys)
-> {
->         struct cgroup *cgroup;
->
->         cgroup =3D task_cgroup(current, subsys);
->         if (!cgroup)
->             return 0;
->         return cgroup_id(cgroup);
-> }
+> Ah, never mind about the prefix part. misc is using cg_ prefix widely
+> already.
 >
 
-Can we also support checking arbitrary tasks, instead of just current?
-I find myself often needing to find the cgroup only given a
-task_struct. For example, when attaching to context switch, I want to
-know whether the next task is under a cgroup. Having such a kfunc
-would be very useful. It can also be used in task_iter programs.
 
-Hao
+Change them to plain alloc, free, max_write? As they are per resource  
+type, not per cgroup.
+Also following no-prefix naming scheme like "open" for fops, vma_ops, etc.
 
+Thanks for your review.
+
+Haitao
