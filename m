@@ -1,88 +1,82 @@
-From: "Haitao Huang" <haitao.huang@linux.intel.com>
-Subject: Re: [PATCH v4 15/18] x86/sgx: Prepare for multiple LRUs
-Date: Fri, 15 Sep 2023 23:18:10 -0500
-Message-ID: <op.2bcjkksxwjvjmi@hhuan26-mobl.amr.corp.intel.com>
-References: <20230913040635.28815-1-haitao.huang@linux.intel.com>
- <20230913040635.28815-16-haitao.huang@linux.intel.com>
- <CVHWKO25RFOU.24Z5A88M1VZA1@suppilovahvero>
+From: Yafang Shao <laoar.shao@gmail.com>
+Subject: Re: [RFC PATCH bpf-next 0/5] bpf, cgroup: Enable cgroup_array map on cgroup1
+Date: Sun, 17 Sep 2023 15:19:06 +0800
+Message-ID: <CALOAHbCG6W+dxpcO-f=U5=9WD-sEqRoLuhFrYAps-p944=sVgw@mail.gmail.com>
+References: <20230903142800.3870-1-laoar.shao@gmail.com> <qv2xdcsvb4brjsc7qx6ncxrudwusogdo4itzv4bx2perfjymwl@in7zaeymjiie>
+ <CALOAHbB-PF1LjSAxoCdePN6Va4D+ufkeDmq8s3b0AGtfX5E-cQ@mail.gmail.com>
+ <CAADnVQL+6PsRbNMo=8kJpgw1OTbdLG9epsup0q7La5Ffqj6g6A@mail.gmail.com>
+ <CALOAHbBhOL9w+rnh_xkgZZBhxMpbrmLZWhm1X+ZeDLfxxt8Nrw@mail.gmail.com>
+ <ZP93gUwf_nLzDvM5@mtj.duckdns.org> <CALOAHbC=yxSoBR=vok2295ejDOEYQK2C8LRjDLGRruhq-rDjOQ@mail.gmail.com>
+ <jikppfidbxyqpsswzamsqwcj4gy4ppysvcskrw4pa2ndajtul7@pns7byug3yez>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1694837894; x=1726373894;
-  h=to:cc:subject:references:date:mime-version:
-   content-transfer-encoding:from:message-id:in-reply-to;
-  bh=wkm3rOxr4C9IPUoX1RTAJ+4N+SIgfrASdFwWlqgLlMw=;
-  b=aQrm+SuB6OomIfeza++VE0vxqt06c5x5FMzK5cAb6ci2scqDW+a2uteJ
-   9KHb1IgGua766JVDUNfL3QQ92U23D9JpZJ2DsN/zVLy8XERsRv6B2gYE5
-   2D5IJbM3TyW9d+zLYC+Uv0DTzOOID8uEb5U/aueWDjVbaai6Og6guylRV
-   N83sZwEGLUQeHz3LZadxRqYRV/EHI7etThXMImu8FhsYQEYNRTpfkVrM1
-   ooKKhP4C7vXaB1sgbCrxClx6HWjYu/3EihRGlqePGBcnGjv8DLwzzaa9i
-   c0wjGejEkOdlLglIdtmKcR/DrcJw6aDzBBgpftSQ+MVza+ZtGEfpCPlfK
-   g==;
-In-Reply-To: <CVHWKO25RFOU.24Z5A88M1VZA1@suppilovahvero>
-List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"; format="flowed"; delsp="yes"
-To: dave.hansen@linux.intel.com, tj@kernel.org, linux-kernel@vger.kernel.org, linux-sgx@vger.kernel.org, x86@kernel.org, cgroups@vger.kernel.org, tglx@linutronix.de, mingo@redhat.com, bp@alien8.de, hpa@zytor.com, sohil.mehta@intel.com, Jarkko Sakkinen <jarkko@kernel.org>
-Cc: zhiquan1.li@intel.com, kristen@linux.intel.com, seanjc@google.com, zhanb@microsoft.com, anakrish@microsoft.com, mikko.ylinen@linux.intel.com, yangjie@microsoft.com
+Content-Transfer-Encoding: quoted-printable
+Return-path: <bpf+bounces-10217-glkb-bpf=m.gmane-mx.org@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1694935184; x=1695539984; darn=vger.kernel.org;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=CRzdICGYkpsfyS2a+MV5klEIYz7EG73NrctrxBdiSuU=;
+        b=AWi7djdkjI7wgvSowXYB1Ndy2/XQB+dV7lE3TDa3fBoRm+KkWEo560WpA4ZqO1tWXw
+         APsqw9cmQdcfEjZjmLHhqsOlw7FuuGAIhGkEZyfLiRB5UaKnFdTSbcH+yi1p4d+HZ7eJ
+         NwmF0eJnSh+hdn9ax4UgLwyWWU3oFaIVFT9rlTYX5loW0F/iVQUUh6jZ3vT8DIeK/28B
+         z5FUFk3EwTlWRuJOCBIiJ+hzDMKGTpKrqIF9I5rX5vWvxZQ+hzptRCnyaOnLwkCvePmx
+         wzbzSu0h0adIKWP1pHzYCtFNebrT9MeB5vC7EzM6laxageM0hvmAucOdPgLSGGQykfkC
+         bq1A==
+List-Id: <cgroups.vger.kernel.org>
+List-Subscribe: <mailto:bpf+subscribe@vger.kernel.org>
+List-Unsubscribe: <mailto:bpf+unsubscribe@vger.kernel.org>
+In-Reply-To: <jikppfidbxyqpsswzamsqwcj4gy4ppysvcskrw4pa2ndajtul7@pns7byug3yez>
+Content-Type: text/plain; charset="utf-8"
+To: =?UTF-8?Q?Michal_Koutn=C3=BD?= <mkoutny@suse.com>
+Cc: Tejun Heo <tj@kernel.org>, Alexei Starovoitov <alexei.starovoitov@gmail.com>, Alexei Starovoitov <ast@kernel.org>, Daniel Borkmann <daniel@iogearbox.net>, John Fastabend <john.fastabend@gmail.com>, Andrii Nakryiko <andrii@kernel.org>, Martin KaFai Lau <martin.lau@linux.dev>, Song Liu <song@kernel.org>, Yonghong Song <yonghong.song@linux.dev>, KP Singh <kpsingh@kernel.org>, Stanislav Fomichev <sdf@google.com>, Hao Luo <haoluo@google.com>, Jiri Olsa <jolsa@kernel.org>, Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, Yosry Ahmed <yosryahmed@google.com>, "open list:CONTROL GROUP (CGROUP)" <cgroups@vger.kernel.org>, bpf <bpf@vger.kernel.org>
 
-On Wed, 13 Sep 2023 10:42:52 -0500, Jarkko Sakkinen <jarkko@kernel.org>  
-wrote:
+On Sat, Sep 16, 2023 at 1:01=E2=80=AFAM Michal Koutn=C3=BD <mkoutny@suse.co=
+m> wrote:
+>
+> Hello.
+>
+> On Tue, Sep 12, 2023 at 11:30:32AM +0800, Yafang Shao <laoar.shao@gmail.c=
+om> wrote:
+> > With the above changes, I think it can meet most use cases with BPF on =
+cgroup1.
+> > What do you think ?
+>
+> I think the presented use case of LSM hooks is better served by the
+> default hierarchy (see also [1]).
 
-> On Wed Sep 13, 2023 at 7:06 AM EEST, Haitao Huang wrote:
->> Add sgx_can_reclaim() wrapper and encapsulate direct references to the
->> global LRU list in the reclaimer functions so that they can be called  
->> with
->> an LRU list per EPC cgroup.
->>
->> Signed-off-by: Sean Christopherson <sean.j.christopherson@intel.com>
->> Signed-off-by: Kristen Carlson Accardi <kristen@linux.intel.com>
->> Signed-off-by: Haitao Huang <haitao.huang@linux.intel.com>
->> Cc: Sean Christopherson <seanjc@google.com>
->> ---
->> V4:
->> - Re-organized this patch to include all changes related to
->> encapsulation of the global LRU
->> - Moved this patch to precede the EPC cgroup patch
->> ---
->>  arch/x86/kernel/cpu/sgx/main.c | 41 +++++++++++++++++++++++-----------
->>  1 file changed, 28 insertions(+), 13 deletions(-)
->>
->> diff --git a/arch/x86/kernel/cpu/sgx/main.c  
->> b/arch/x86/kernel/cpu/sgx/main.c
->> index ce316bd5e5bb..3d396fe5ec09 100644
->> --- a/arch/x86/kernel/cpu/sgx/main.c
->> +++ b/arch/x86/kernel/cpu/sgx/main.c
->> @@ -34,6 +34,16 @@ static DEFINE_XARRAY(sgx_epc_address_space);
->>   */
->>  static struct sgx_epc_lru_lists sgx_global_lru;
->>
->> +static inline struct sgx_epc_lru_lists *sgx_lru_lists(struct  
->> sgx_epc_page *epc_page)
->> +{
->> +	return &sgx_global_lru;
->> +}
->
-> I'd simply export sgx_global_lru.
->
-The purpose of this patch to to hide sgx_global_lru so later we can have  
-LRU per cgroup.
-I'll update the commit message to make it clear this is not just for   
-sgx_can_reclaim
+Hi Michal,
 
->> +static inline bool sgx_can_reclaim(void)
->> +{
->> +	return !list_empty(&sgx_global_lru.reclaimable);
->> +}
->
->
-> Accessors for the object should be named so that this fact is reflected,
-> e.g. sgx_global_lru_can_reclaim() in this case.
->
-> I would just open code this to the call sites though.
->
-ditto
+The crucial issue at hand is not whether the LSM hooks are better
+suited for the cgroup default hierarchy. What truly matters is the
+effort and time required to migrate all cgroup1-based applications to
+cgroup2-based ones. While transitioning a single component from
+cgroup1-based to cgroup2-based is a straightforward task, the
+complexity arises when multiple interdependent components in a
+production environment necessitate this transition. In such cases, the
+work becomes significantly challenging.
 
-Thanks
-Haitao
+> Relying on a chosen subsys v1 hierarchy is not systematic. And extending
+> ancestry checking on named v1 hierarchies seems backwards given
+> the existence of the default hierarchy.
+
+The cgroup becomes active only when it has one or more of its
+controllers enabled. In a production environment, a task is invariably
+governed by at least one cgroup controller. Even in hybrid cgroup
+mode, a task is subject to either a cgroup1 controller or a cgroup2
+controller. Our objective is to enhance BPF support for
+controller-based scenarios, eliminating the need to concern ourselves
+with hierarchies, whether they involve cgroup1 or cgroup2. This change
+seems quite reasonable, in my opinion.
+
+>
+>
+> Michal
+>
+> [1] https://docs.kernel.org/admin-guide/cgroup-v2.html#delegation-contain=
+ment
+
+--
+Regards
+Yafang
+
