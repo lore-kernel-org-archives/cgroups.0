@@ -1,124 +1,45 @@
-From: Pierre Gondois <pierre.gondois-5wv7dgnIgG8@public.gmane.org>
-Subject: Re: [PATCH 1/1] cgroup/cpuset: Rebuild sched domains if isolated
- partition changed
-Date: Mon, 18 Sep 2023 09:07:04 +0200
-Message-ID: <9777f0d2-2fdf-41cb-bd01-19c52939ef42@arm.com>
-References: <20230915154505.363754-1-pierre.gondois@arm.com>
- <20230915154505.363754-2-pierre.gondois@arm.com>
- <5e513c72-7198-a55e-6e2b-a811d5529284@redhat.com>
+From: Leon Romanovsky <leon-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCH 06/19] qibfs: use simple_release_fs
+Date: Mon, 18 Sep 2023 14:41:29 +0300
+Message-ID: <20230918114129.GA103601@unreal>
+References: <20230913111013.77623-1-hch@lst.de>
+ <20230913111013.77623-7-hch@lst.de>
 Mime-Version: 1.0
+Return-path: <linux-usb+bounces-321-glug-linux-usb=m.gmane-mx.org-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1695037293;
+	bh=k5whRDb703pFSoW6vBuZiC/uLzAA5qCrmwIb0niMTaw=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=Aq8BDUPTeZUbSi6r80BUN/6MwH1BAmiHYY4SHfZ7onFlzdMGfEKZJql8eJgFd8kcU
+	 VSUGCximU6yLeulyz9sCP0KhTKpgfeEuARR1qg4bJb/2c3E2+Aaq/FI7E9KE3mXGPA
+	 mMkzDccqY/MfireMOZxTAFoqx04P3/eEENahXkm++IxXno8NknhrffAlyV8usX4nkg
+	 fRFkfnnveLguRIcv9+LTO4c7dt1uE+rem3E3BlUrXtrNJpo5JMLyLk57Bw4w+y0H+Q
+	 CpPUMugfzFQ2rqTkkxwCEL03tDYtT39/xBNsmqTbEmsL2yuFfD5IL+86z+BlChrW+f
+	 YsxfJTuf+MXoQ==
+List-Id: <cgroups.vger.kernel.org>
+List-Subscribe: <mailto:linux-usb+subscribe-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+List-Unsubscribe: <mailto:linux-usb+unsubscribe-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <20230913111013.77623-7-hch-jcswGhMUV9g@public.gmane.org>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Content-Language: en-US
-In-Reply-To: <5e513c72-7198-a55e-6e2b-a811d5529284-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"; format="flowed"
-To: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-Cc: rui.zhang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org, aaron.lu-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
+Cc: Christian Brauner <brauner-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Al Viro <viro-RmSDqhL/yNMiFSDQTTA3OLVCufUGDwFn@public.gmane.org>, Heiko Carstens <hca-tEXmvtCZX7AybS5Ee8rs3A@public.gmane.org>, Vasily Gorbik <gor-tEXmvtCZX7AybS5Ee8rs3A@public.gmane.org>, Alexander Gordeev <agordeev-tEXmvtCZX7AybS5Ee8rs3A@public.gmane.org>, Fenghua Yu <fenghua.yu-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Reinette Chatre <reinette.chatre-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Miquel Raynal <miquel.raynal-LDxbnhwyfcJBDgjK7y7TUQ@public.gmane.org>, Richard Weinberger <richard-/L3Ra7n9ekc@public.gmane.org>, Vignesh Raghavendra <vigneshr-l0cyMroinI0@public.gmane.org>, Dennis Dalessandro <dennis.dalessandro-ntyVByD3zXaTtA8H5PvdGFaTQe2KTcn/@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Trond Myklebust <trond.myklebust-F/q8l9xzQnoyLce1RVWEUA@public.gmane.org>, Anna Schumaker <anna-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Kees Cook <keescook-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>, Damien Le Moal <dlemoal-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Naohiro Aota <naohiro.aota-Sjgp3cTcYWE@public.gmane.org>, Greg Kroah-Hartman <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>, linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-s390-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-nfs-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, 
 
-Hello Longman,
-
-On 9/17/23 18:51, Waiman Long wrote:
-> On 9/15/23 11:45, Pierre Gondois wrote:
->> When an isolated parition is created, the sched domains (sds) are
->> rebuilt and the sds of the isolated CPUs are detached. This only
->> happens at the creation of the isolated parition. Updating
->> the cpuset of the partition doesn't rebuild the sds:
->>
->> To reproduce:
->>     # ls /sys/kernel/debug/sched/domains/cpu0/
->>     domain0
->>     # ls /sys/kernel/debug/sched/domains/cpu1/
->>     domain0
->>     #
->>     # mkdir cgroup
->>     # mount -t cgroup2 none cgroup/
->>     # mkdir cgroup/A1/
->>     # echo "+cpuset" > cgroup/cgroup.subtree_control
->>     # echo 0-3 > cgroup/A1/cpuset.cpus
->>     # echo isolated > cgroup/A1/cpuset.cpus.partition
->>     #
->>     # ls /sys/kernel/debug/sched/domains/cpu0/
->>     # ls /sys/kernel/debug/sched/domains/cpu1/
->>     #
->>     # echo 0 > cgroup/A1/cpuset.cpus
->>     # ls /sys/kernel/debug/sched/domains/cpu0/
->>     # ls /sys/kernel/debug/sched/domains/cpu1/
->>     #
->>
->> Here CPU1 should have a sched domain re-attached.
->>
->> Signed-off-by: Pierre Gondois <pierre.gondois-5wv7dgnIgG8@public.gmane.org>
->> ---
->>    kernel/cgroup/cpuset.c | 12 ++++++++----
->>    1 file changed, 8 insertions(+), 4 deletions(-)
->>
->> diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
->> index 58e6f18f01c1..e3eb27ff9b68 100644
->> --- a/kernel/cgroup/cpuset.c
->> +++ b/kernel/cgroup/cpuset.c
->> @@ -1680,11 +1680,15 @@ static void update_cpumasks_hier(struct cpuset *cs, struct tmpmasks *tmp,
->>    		 * empty cpuset is changed, we need to rebuild sched domains.
->>    		 * On default hierarchy, the cpuset needs to be a partition
->>    		 * root as well.
->> +		 * Also rebuild sched domains if the cpuset of an isolated
->> +		 * partition changed.
->>    		 */
->> -		if (!cpumask_empty(cp->cpus_allowed) &&
->> -		    is_sched_load_balance(cp) &&
->> -		   (!cgroup_subsys_on_dfl(cpuset_cgrp_subsys) ||
->> -		    is_partition_valid(cp)))
->> +		if ((!cpumask_empty(cp->cpus_allowed) &&
->> +		     is_sched_load_balance(cp) &&
->> +		     (!cgroup_subsys_on_dfl(cpuset_cgrp_subsys) ||
->> +		      is_partition_valid(cp))) ||
->> +		    (cp->partition_root_state == PRS_ISOLATED ||
->> +		     cp->partition_root_state == PRS_INVALID_ISOLATED))
->>    			need_rebuild_sched_domains = true;
->>    
->>    		rcu_read_lock();
+On Wed, Sep 13, 2023 at 08:10:00AM -0300, Christoph Hellwig wrote:
+> qibfs currently has convoluted code to allow registering HCAs while qibfs
+> is not mounted and vice versa.  Switch to using simple_release_fs every
+> time an entry is added to pin the fs instance and remove all the boiler
+> plate code.
 > 
-> Thanks for spotting the problem and sending out a patch to fix it.
-> However, it should be done in the update_cpumask(). The sched_domain
-> rebuild in update_cpumasks_hier() is supposed to be used for impacted
-> descendant cpusets lower down in the hierarchy.
+> Signed-off-by: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
+> ---
+>  drivers/infiniband/hw/qib/qib.h      |   4 +-
+>  drivers/infiniband/hw/qib/qib_fs.c   | 105 ++++++---------------------
+>  drivers/infiniband/hw/qib/qib_init.c |  32 +++-----
+>  3 files changed, 36 insertions(+), 105 deletions(-)
 > 
-> Anyway, I believe this problem should have been fixed in commit
-> a86ce68078b2 ("cgroup/cpuset: Extract out CS_CPU_EXCLUSIVE &
-> CS_SCHED_LOAD_BALANCE handling") recently merged into the v6.6 kernel.
-> Would you mind testing the latest upstream kernel to see if this problem
-> is gone or not?
 
-Yes right, v6.6-rc2 kernel doesn't have this issue. My bad for not updating
-it ...
+Thanks,
+Reviewed-by: Leon Romanovsky <leon-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 
-However I think the second issue described in the cover letter can still be
-reproduced on v6.6-rc2. This present patch was not aiming to fix it though.
-
-Commands:
-# mkdir cgroup
-# mount -t cgroup2 none cgroup/
-# mkdir cgroup/A1 cgroup/B1
-# echo "+cpuset" > cgroup/cgroup.subtree_control
-# echo 0-3 > cgroup/A1/cpuset.cpus
-# echo isolated > cgroup/A1/cpuset.cpus.partition
-# echo 4-6 > cgroup/B1/cpuset.cpus
-# cat cgroup/A1/cpuset.cpus.partition
-isolated
-# echo 0-4 > cgroup/A1/cpuset.cpus
-# cat cgroup/A1/cpuset.cpus.partition
-isolated invalid (Cpu list in cpuset.cpus not exclusive)
-# echo 0-3 > cgroup/A1/cpuset.cpus
-# cat cgroup/A1/cpuset.cpus.partition
-isolated invalid (Cpu list in cpuset.cpus not exclusive)
-
-Cgroup A1 should be a valid isolated partition once its CPUs become
-exclusive again I believe,
-
-Regards,
-Pierre
-
-> 
-> Thanks,
-> Longman
-> 
