@@ -1,45 +1,79 @@
-From: Leon Romanovsky <leon-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH 06/19] qibfs: use simple_release_fs
-Date: Mon, 18 Sep 2023 14:41:29 +0300
-Message-ID: <20230918114129.GA103601@unreal>
-References: <20230913111013.77623-1-hch@lst.de>
- <20230913111013.77623-7-hch@lst.de>
+From: Michal =?utf-8?Q?Koutn=C3=BD?= <mkoutny@suse.com>
+Subject: Re: [RFC PATCH bpf-next 0/5] bpf, cgroup: Enable cgroup_array map on
+ cgroup1
+Date: Mon, 18 Sep 2023 16:44:19 +0200
+Message-ID: <nlprhofelq5pme7b7aawnaep3qxvzwq2gwgwxicrs6zakywttd@sdeji44v3xe2>
+References: <20230903142800.3870-1-laoar.shao@gmail.com>
+ <qv2xdcsvb4brjsc7qx6ncxrudwusogdo4itzv4bx2perfjymwl@in7zaeymjiie>
+ <CALOAHbB-PF1LjSAxoCdePN6Va4D+ufkeDmq8s3b0AGtfX5E-cQ@mail.gmail.com>
+ <CAADnVQL+6PsRbNMo=8kJpgw1OTbdLG9epsup0q7La5Ffqj6g6A@mail.gmail.com>
+ <CALOAHbBhOL9w+rnh_xkgZZBhxMpbrmLZWhm1X+ZeDLfxxt8Nrw@mail.gmail.com>
+ <ZP93gUwf_nLzDvM5@mtj.duckdns.org>
+ <CALOAHbC=yxSoBR=vok2295ejDOEYQK2C8LRjDLGRruhq-rDjOQ@mail.gmail.com>
+ <jikppfidbxyqpsswzamsqwcj4gy4ppysvcskrw4pa2ndajtul7@pns7byug3yez>
+ <CALOAHbCG6W+dxpcO-f=U5=9WD-sEqRoLuhFrYAps-p944=sVgw@mail.gmail.com>
 Mime-Version: 1.0
-Return-path: <linux-usb+bounces-321-glug-linux-usb=m.gmane-mx.org-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1695037293;
-	bh=k5whRDb703pFSoW6vBuZiC/uLzAA5qCrmwIb0niMTaw=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=Aq8BDUPTeZUbSi6r80BUN/6MwH1BAmiHYY4SHfZ7onFlzdMGfEKZJql8eJgFd8kcU
-	 VSUGCximU6yLeulyz9sCP0KhTKpgfeEuARR1qg4bJb/2c3E2+Aaq/FI7E9KE3mXGPA
-	 mMkzDccqY/MfireMOZxTAFoqx04P3/eEENahXkm++IxXno8NknhrffAlyV8usX4nkg
-	 fRFkfnnveLguRIcv9+LTO4c7dt1uE+rem3E3BlUrXtrNJpo5JMLyLk57Bw4w+y0H+Q
-	 CpPUMugfzFQ2rqTkkxwCEL03tDYtT39/xBNsmqTbEmsL2yuFfD5IL+86z+BlChrW+f
-	 YsxfJTuf+MXoQ==
+Content-Type: multipart/signed; micalg=pgp-sha512;
+	protocol="application/pgp-signature"; boundary="nc6bgo5yugaggn6w"
+Return-path: <bpf+bounces-10283-glkb-bpf=m.gmane-mx.org@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
+	t=1695048261; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=KSTcQ7jDh1oJ0HUjZfKQreOsvxKwNqv8dpWOPBspbQc=;
+	b=rxuEiqQmfb5q4TyOSIo7ToLiHlF1KWiMSI0MfYi82xXO8+K7nZ6Stj8hVZxYYJVTDwRI5m
+	zT/pPBrzax7yQDOVAdtSgMFN0gceHGtHWEcbz9HAWTURY2KKXhXLSC/J8LRaMkEcrq4nHF
+	8CbXBak6z4YdSVLe5AArY7B5L5KdfFQ=
 List-Id: <cgroups.vger.kernel.org>
-List-Subscribe: <mailto:linux-usb+subscribe-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-List-Unsubscribe: <mailto:linux-usb+unsubscribe-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+List-Subscribe: <mailto:bpf+subscribe@vger.kernel.org>
+List-Unsubscribe: <mailto:bpf+unsubscribe@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <20230913111013.77623-7-hch-jcswGhMUV9g@public.gmane.org>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
-Cc: Christian Brauner <brauner-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Al Viro <viro-RmSDqhL/yNMiFSDQTTA3OLVCufUGDwFn@public.gmane.org>, Heiko Carstens <hca-tEXmvtCZX7AybS5Ee8rs3A@public.gmane.org>, Vasily Gorbik <gor-tEXmvtCZX7AybS5Ee8rs3A@public.gmane.org>, Alexander Gordeev <agordeev-tEXmvtCZX7AybS5Ee8rs3A@public.gmane.org>, Fenghua Yu <fenghua.yu-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Reinette Chatre <reinette.chatre-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Miquel Raynal <miquel.raynal-LDxbnhwyfcJBDgjK7y7TUQ@public.gmane.org>, Richard Weinberger <richard-/L3Ra7n9ekc@public.gmane.org>, Vignesh Raghavendra <vigneshr-l0cyMroinI0@public.gmane.org>, Dennis Dalessandro <dennis.dalessandro-ntyVByD3zXaTtA8H5PvdGFaTQe2KTcn/@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Trond Myklebust <trond.myklebust-F/q8l9xzQnoyLce1RVWEUA@public.gmane.org>, Anna Schumaker <anna-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Kees Cook <keescook-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>, Damien Le Moal <dlemoal-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Naohiro Aota <naohiro.aota-Sjgp3cTcYWE@public.gmane.org>, Greg Kroah-Hartman <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>, linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-s390-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-nfs-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, 
+In-Reply-To: <CALOAHbCG6W+dxpcO-f=U5=9WD-sEqRoLuhFrYAps-p944=sVgw@mail.gmail.com>
+To: Yafang Shao <laoar.shao@gmail.com>
+Cc: Tejun Heo <tj@kernel.org>, Alexei Starovoitov <alexei.starovoitov@gmail.com>, Alexei Starovoitov <ast@kernel.org>, Daniel Borkmann <daniel@iogearbox.net>, John Fastabend <john.fastabend@gmail.com>, Andrii Nakryiko <andrii@kernel.org>, Martin KaFai Lau <martin.lau@linux.dev>, Song Liu <song@kernel.org>, Yonghong Song <yonghong.song@linux.dev>, KP Singh <kpsingh@kernel.org>, Stanislav Fomichev <sdf@google.com>, Hao Luo <haoluo@google.com>, Jiri Olsa <jolsa@kernel.org>, Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, Yosry Ahmed <yosryahmed@google.com>, "open list:CONTROL GROUP (CGROUP)" <cgroups@vger.kernel.org>, bpf <bpf@vger.kernel.org>
 
-On Wed, Sep 13, 2023 at 08:10:00AM -0300, Christoph Hellwig wrote:
-> qibfs currently has convoluted code to allow registering HCAs while qibfs
-> is not mounted and vice versa.  Switch to using simple_release_fs every
-> time an entry is added to pin the fs instance and remove all the boiler
-> plate code.
-> 
-> Signed-off-by: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
-> ---
->  drivers/infiniband/hw/qib/qib.h      |   4 +-
->  drivers/infiniband/hw/qib/qib_fs.c   | 105 ++++++---------------------
->  drivers/infiniband/hw/qib/qib_init.c |  32 +++-----
->  3 files changed, 36 insertions(+), 105 deletions(-)
-> 
 
-Thanks,
-Reviewed-by: Leon Romanovsky <leon-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+--nc6bgo5yugaggn6w
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+
+On Sun, Sep 17, 2023 at 03:19:06PM +0800, Yafang Shao <laoar.shao@gmail.com> wrote:
+> The crucial issue at hand is not whether the LSM hooks are better
+> suited for the cgroup default hierarchy. What truly matters is the
+> effort and time required to migrate all cgroup1-based applications to
+> cgroup2-based ones. While transitioning a single component from
+> cgroup1-based to cgroup2-based is a straightforward task, the
+> complexity arises when multiple interdependent components in a
+> production environment necessitate this transition. In such cases, the
+> work becomes significantly challenging.
+
+systemd's hybrid mode is the approach helping such combined
+environments. (I understand that it's not warranted with all container
+runtimes but FYI.) On v1-only deployments BPF predicates couldn't be
+used at all currently.
+
+Transition is transitional but accompanying complexity in the code would
+have to be kept much longer.
+
+> Our objective is to enhance BPF support for controller-based
+> scenarios, eliminating the need to concern ourselves with hierarchies,
+> whether they involve cgroup1 or cgroup2.
+
+I'm posting some notes on this to the 1st patch.
+
+Regards,
+Michal
+
+--nc6bgo5yugaggn6w
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iHUEABYKAB0WIQQpEWyjXuwGT2dDBqAGvrMr/1gcjgUCZQhiQQAKCRAGvrMr/1gc
+jiUfAP9yYts+3IR9/rQIVX/bgExVZv4l8A2+9vrZKTYQRHIUlQD/ZMTuTcvuE/No
+wfIpsCjbsISwSRehkoG+bfZtJcX7yww=
+=IuU9
+-----END PGP SIGNATURE-----
+
+--nc6bgo5yugaggn6w--
 
