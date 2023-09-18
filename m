@@ -1,79 +1,71 @@
-From: Michal =?utf-8?Q?Koutn=C3=BD?= <mkoutny@suse.com>
-Subject: Re: [RFC PATCH bpf-next 0/5] bpf, cgroup: Enable cgroup_array map on
- cgroup1
-Date: Mon, 18 Sep 2023 16:44:19 +0200
-Message-ID: <nlprhofelq5pme7b7aawnaep3qxvzwq2gwgwxicrs6zakywttd@sdeji44v3xe2>
-References: <20230903142800.3870-1-laoar.shao@gmail.com>
- <qv2xdcsvb4brjsc7qx6ncxrudwusogdo4itzv4bx2perfjymwl@in7zaeymjiie>
- <CALOAHbB-PF1LjSAxoCdePN6Va4D+ufkeDmq8s3b0AGtfX5E-cQ@mail.gmail.com>
- <CAADnVQL+6PsRbNMo=8kJpgw1OTbdLG9epsup0q7La5Ffqj6g6A@mail.gmail.com>
- <CALOAHbBhOL9w+rnh_xkgZZBhxMpbrmLZWhm1X+ZeDLfxxt8Nrw@mail.gmail.com>
- <ZP93gUwf_nLzDvM5@mtj.duckdns.org>
- <CALOAHbC=yxSoBR=vok2295ejDOEYQK2C8LRjDLGRruhq-rDjOQ@mail.gmail.com>
- <jikppfidbxyqpsswzamsqwcj4gy4ppysvcskrw4pa2ndajtul7@pns7byug3yez>
- <CALOAHbCG6W+dxpcO-f=U5=9WD-sEqRoLuhFrYAps-p944=sVgw@mail.gmail.com>
+From: Michal =?utf-8?Q?Koutn=C3=BD?= <mkoutny-IBi9RG/b67k@public.gmane.org>
+Subject: Re: [PATCH 15/19] kernfs: split ->kill_sb
+Date: Mon, 18 Sep 2023 17:24:11 +0200
+Message-ID: <vqax7efvf5h4agxge5g43pdl6tsa5on5mob74bydydd5vdxwb5@5fj2qgmuxjj3>
+References: <20230913111013.77623-1-hch@lst.de>
+ <20230913111013.77623-16-hch@lst.de>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=pgp-sha512;
-	protocol="application/pgp-signature"; boundary="nc6bgo5yugaggn6w"
-Return-path: <bpf+bounces-10283-glkb-bpf=m.gmane-mx.org@vger.kernel.org>
+	protocol="application/pgp-signature"; boundary="fb5cgu6m55xbwjgl"
+Return-path: <linux-usb+bounces-328-glug-linux-usb=m.gmane-mx.org-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
-	t=1695048261; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	t=1695050653; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
 	 mime-version:mime-version:content-type:content-type:
 	 in-reply-to:in-reply-to:references:references;
-	bh=KSTcQ7jDh1oJ0HUjZfKQreOsvxKwNqv8dpWOPBspbQc=;
-	b=rxuEiqQmfb5q4TyOSIo7ToLiHlF1KWiMSI0MfYi82xXO8+K7nZ6Stj8hVZxYYJVTDwRI5m
-	zT/pPBrzax7yQDOVAdtSgMFN0gceHGtHWEcbz9HAWTURY2KKXhXLSC/J8LRaMkEcrq4nHF
-	8CbXBak6z4YdSVLe5AArY7B5L5KdfFQ=
+	bh=ZTsaizh9uJKTEcz6c5p2g2QGw5JzmlLl2sAISOCHTb0=;
+	b=uNDNyyEycKJBCT8u9QqHT2QXUZQSV7KEwqPhRKMT8g78tvewNow7/PM0Dx8tyzi3UtSwzx
+	cITrOJ3w7steQa1htyVtogiSbMXtJDg/hwSQ96Jf43HJYSsCYwhj25c8Sf6DEVuyfURH1Y
+	aU9810o4zzQKZkEvrA6beovh34oBypU=
 List-Id: <cgroups.vger.kernel.org>
-List-Subscribe: <mailto:bpf+subscribe@vger.kernel.org>
-List-Unsubscribe: <mailto:bpf+unsubscribe@vger.kernel.org>
+List-Subscribe: <mailto:linux-usb+subscribe-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+List-Unsubscribe: <mailto:linux-usb+unsubscribe-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 Content-Disposition: inline
-In-Reply-To: <CALOAHbCG6W+dxpcO-f=U5=9WD-sEqRoLuhFrYAps-p944=sVgw@mail.gmail.com>
-To: Yafang Shao <laoar.shao@gmail.com>
-Cc: Tejun Heo <tj@kernel.org>, Alexei Starovoitov <alexei.starovoitov@gmail.com>, Alexei Starovoitov <ast@kernel.org>, Daniel Borkmann <daniel@iogearbox.net>, John Fastabend <john.fastabend@gmail.com>, Andrii Nakryiko <andrii@kernel.org>, Martin KaFai Lau <martin.lau@linux.dev>, Song Liu <song@kernel.org>, Yonghong Song <yonghong.song@linux.dev>, KP Singh <kpsingh@kernel.org>, Stanislav Fomichev <sdf@google.com>, Hao Luo <haoluo@google.com>, Jiri Olsa <jolsa@kernel.org>, Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, Yosry Ahmed <yosryahmed@google.com>, "open list:CONTROL GROUP (CGROUP)" <cgroups@vger.kernel.org>, bpf <bpf@vger.kernel.org>
+In-Reply-To: <20230913111013.77623-16-hch-jcswGhMUV9g@public.gmane.org>
+To: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
+Cc: Christian Brauner <brauner-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Al Viro <viro-RmSDqhL/yNMiFSDQTTA3OLVCufUGDwFn@public.gmane.org>, Heiko Carstens <hca-tEXmvtCZX7AybS5Ee8rs3A@public.gmane.org>, Vasily Gorbik <gor-tEXmvtCZX7AybS5Ee8rs3A@public.gmane.org>, Alexander Gordeev <agordeev-tEXmvtCZX7AybS5Ee8rs3A@public.gmane.org>, Fenghua Yu <fenghua.yu-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Reinette Chatre <reinette.chatre-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Miquel Raynal <miquel.raynal-LDxbnhwyfcJBDgjK7y7TUQ@public.gmane.org>, Richard Weinberger <richard-/L3Ra7n9ekc@public.gmane.org>, Vignesh Raghavendra <vigneshr-l0cyMroinI0@public.gmane.org>, Dennis Dalessandro <dennis.dalessandro-ntyVByD3zXaTtA8H5PvdGFaTQe2KTcn/@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Trond Myklebust <trond.myklebust-F/q8l9xzQnoyLce1RVWEUA@public.gmane.org>, Anna Schumaker <anna-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Kees Cook <keescook-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>, Damien Le Moal <dlemoal-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Naohiro Aota <naohiro.aota-Sjgp3cTcYWE@public.gmane.org>, Greg Kroah-Hartman <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>, linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-s390-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-nfs-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-hardeni
 
 
---nc6bgo5yugaggn6w
-Content-Type: text/plain; charset=us-ascii
+--fb5cgu6m55xbwjgl
+Content-Type: text/plain; charset=iso-8859-1
 Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-On Sun, Sep 17, 2023 at 03:19:06PM +0800, Yafang Shao <laoar.shao@gmail.com> wrote:
-> The crucial issue at hand is not whether the LSM hooks are better
-> suited for the cgroup default hierarchy. What truly matters is the
-> effort and time required to migrate all cgroup1-based applications to
-> cgroup2-based ones. While transitioning a single component from
-> cgroup1-based to cgroup2-based is a straightforward task, the
-> complexity arises when multiple interdependent components in a
-> production environment necessitate this transition. In such cases, the
-> work becomes significantly challenging.
+On Wed, Sep 13, 2023 at 08:10:09AM -0300, Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org> wr=
+ote:
+> Split the kernfs_kill_sb helper into helpers for the new split
+> shutdown_sb and free_sb methods.  Note that resctrl has very odd
+> locking in ->kill_sb, so this commit only releases the locking
+> acquired in rdt_shutdown_sb in rdt_free_sb.  This is not very good
+> code and relies on ->shutdown_sb and ->free_sb to always be called
+> in pairs, which it currently is.  The next commit will try to clean
+> this up.
+>=20
+> Signed-off-by: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
+> ---
+>  arch/x86/kernel/cpu/resctrl/rdtgroup.c | 12 +++++++++---
+>  fs/kernfs/mount.c                      | 18 ++++++++----------
+>  fs/sysfs/mount.c                       |  7 ++++---
+>  include/linux/kernfs.h                 |  5 ++---
+>  kernel/cgroup/cgroup.c                 | 10 ++++++----
+>  5 files changed, 29 insertions(+), 23 deletions(-)
 
-systemd's hybrid mode is the approach helping such combined
-environments. (I understand that it's not warranted with all container
-runtimes but FYI.) On v1-only deployments BPF predicates couldn't be
-used at all currently.
+Reviewed-by: Michal Koutn=FD <mkoutny-IBi9RG/b67k@public.gmane.org>
 
-Transition is transitional but accompanying complexity in the code would
-have to be kept much longer.
+(Also, I didn't find a necessity to have kernfs_free_sb(sb) under
+rdtgroup_mutex, so folding the following patch of the series may be fine
+too.)
 
-> Our objective is to enhance BPF support for controller-based
-> scenarios, eliminating the need to concern ourselves with hierarchies,
-> whether they involve cgroup1 or cgroup2.
 
-I'm posting some notes on this to the 1st patch.
-
-Regards,
-Michal
-
---nc6bgo5yugaggn6w
+--fb5cgu6m55xbwjgl
 Content-Type: application/pgp-signature; name="signature.asc"
 
 -----BEGIN PGP SIGNATURE-----
 
-iHUEABYKAB0WIQQpEWyjXuwGT2dDBqAGvrMr/1gcjgUCZQhiQQAKCRAGvrMr/1gc
-jiUfAP9yYts+3IR9/rQIVX/bgExVZv4l8A2+9vrZKTYQRHIUlQD/ZMTuTcvuE/No
-wfIpsCjbsISwSRehkoG+bfZtJcX7yww=
-=IuU9
+iHUEABYKAB0WIQQpEWyjXuwGT2dDBqAGvrMr/1gcjgUCZQhrmQAKCRAGvrMr/1gc
+joA0AQCDANwuvql51NVbMvBdMPjFI6Th8lDr5goiUMJIkDInfAEAgIpZtJp32qUD
+1HpNpPzzwxVHRHauSQjOpc8j5wdn+Qk=
+=yjqf
 -----END PGP SIGNATURE-----
 
---nc6bgo5yugaggn6w--
+--fb5cgu6m55xbwjgl--
 
