@@ -1,55 +1,46 @@
-From: Michal =?utf-8?Q?Koutn=C3=BD?= <mkoutny-IBi9RG/b67k@public.gmane.org>
+From: Luiz Capitulino <luizcap-vV1OtcyAfmbQT0dZR+AlfA@public.gmane.org>
 Subject: Re: [PATH v2] cgroup: add cgroup_favordynmods= command-line option
-Date: Tue, 19 Sep 2023 13:00:15 +0200
-Message-ID: <7zv7lqkondaacjhmc7oscyqzwugguxvjw2yhdhkv4axhhkts7a@upoxgl3qpunt>
+Date: Tue, 19 Sep 2023 09:42:21 -0400
+Message-ID: <55e64e7a-5783-94ce-a9fc-1979587c755f@amazon.com>
 References: <20230906005712.66461-1-luizcap@amazon.com>
  <29bdb453-c6e3-a047-1f27-e9656da92301@amazon.com>
  <ZQiNIWQe7spOwjil@slm.duckdns.org>
+ <7zv7lqkondaacjhmc7oscyqzwugguxvjw2yhdhkv4axhhkts7a@upoxgl3qpunt>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha512;
-        protocol="application/pgp-signature"; boundary="fq5yevqc27dto7fu"
+Content-Transfer-Encoding: quoted-printable
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
-        t=1695121217; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=kUW8+lJZM7K/XgtkgyMNw3L0b83uwQqlZMHcQJDzIAc=;
-        b=RL/WIN6uROihO8XYV/Rp8U4wVyp11s2T+EP8TBn6cVrqrApsc7WL1JTnAbNytc6oe6ZYID
-        jsyLxdp3PAXEQ3J0vw/dXVOL+5la0I1iAr4XLFMiEQxQ1eiZS/20BMnBFPjrCbo+fQ+yqb
-        MfImqgqcXiOhnW4rbFh2GFp39D/PP+I=
-Content-Disposition: inline
-In-Reply-To: <ZQiNIWQe7spOwjil-NiLfg/pYEd1N0TnZuCh8vA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+  d=amazon.com; i=@amazon.com; q=dns/txt; s=amazon201209;
+  t=1695130953; x=1726666953;
+  h=message-id:date:mime-version:subject:to:cc:references:
+   from:in-reply-to:content-transfer-encoding;
+  bh=LIiuvlEVoOet9vLgXao/ZPcDivQLZo5gFmYPlTZNxJs=;
+  b=GgttyW37o5FMspK0IG1bWyzuQaIH4OpVLD4XVpEUcp/NXWYuxxrcLoof
+   GBMWJtt85jMfcmenYOKlGcLDhgz1+IUlG3mL7AnDLhxGYn2i2CMpV7Rgf
+   O+2sJOG/BAO50oA6ca+EOxRkFpvqOe3K6H0CFVsZztaH5BgqLO8Jg8iGf
+   Y=;
+Content-Language: en-US
+In-Reply-To: <7zv7lqkondaacjhmc7oscyqzwugguxvjw2yhdhkv4axhhkts7a@upoxgl3qpunt>
 List-ID: <cgroups.vger.kernel.org>
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: Luiz Capitulino <luizcap-vV1OtcyAfmbQT0dZR+AlfA@public.gmane.org>, lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, lcapitulino-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org
+Content-Type: text/plain; charset="iso-8859-1"; format="flowed"
+To: =?UTF-8?Q?Michal_Koutn=c3=bd?= <mkoutny-IBi9RG/b67k@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, lcapitulino-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org
 
 
---fq5yevqc27dto7fu
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
 
-On Mon, Sep 18, 2023 at 07:47:13AM -1000, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org> wrote:
-> Michal raised some valid concerns. I don't really mind that it's not great
-> on the edges tho. Michal, what do you think?
+On 2023-09-19 07:00, Michal Koutn=C3=BD wrote:
+> On Mon, Sep 18, 2023 at 07:47:13AM -1000, Tejun Heo <tj-DgEjT+Ai2ygdnm+yR=
+OfE0A@public.gmane.org> wrote:
+>> Michal raised some valid concerns. I don't really mind that it's not gre=
+at
+>> on the edges tho. Michal, what do you think?
+>=20
+> I'd have a few suggestions:
+> - reset to have_dynmods value instead of false in cgroup_destroy_root()
+>    (to the benefing of the users of this option, not the common default
+>    users) or not touch the value in cgroup_destroy_root() at all
+> - s/CONFIG_FAVOR_DYNMODS/CONFIG_CGROUP_FAVOR_DYNMODS/ in commit message
 
-I'd have a few suggestions:
-- reset to have_dynmods value instead of false in cgroup_destroy_root()
-  (to the benefing of the users of this option, not the common default
-  users) or not touch the value in cgroup_destroy_root() at all
-- s/CONFIG_FAVOR_DYNMODS/CONFIG_CGROUP_FAVOR_DYNMODS/ in commit message
+Thank you for the detailed suggestions, Michal. I'll on this for v3.
 
-Those should be minor tweaks,
-Michal
-
---fq5yevqc27dto7fu
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-
-iHUEABYKAB0WIQQpEWyjXuwGT2dDBqAGvrMr/1gcjgUCZQl/PQAKCRAGvrMr/1gc
-jrkrAP0Tym353enXva+j6+YL+Gm0V3UvU+Jj6RKzfoMExDArZwEAwZ8CC+0DQZW1
-1VW13GrliCR0DXybstlYxSDVzLFvcAk=
-=OD1D
------END PGP SIGNATURE-----
-
---fq5yevqc27dto7fu--
+- Luiz
