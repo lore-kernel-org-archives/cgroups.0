@@ -1,275 +1,76 @@
-From: Yosry Ahmed <yosryahmed@google.com>
-Subject: Re: [PATCH 3/5] mm: memcg: make stats flushing threshold per-memcg
-Date: Thu, 21 Sep 2023 01:13:23 -0700
-Message-ID: <CAJD7tkabLAwg6D1xfc=+eQZm7Xpp+76KgVyJo8vS2teFeyDAjg@mail.gmail.com>
-References: <20230921081057.3440885-1-yosryahmed@google.com> <20230921081057.3440885-4-yosryahmed@google.com>
+From: Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Subject: [PATCH 1/5] mm: memcg: change flush_next_time to flush_last_time
+Date: Thu, 21 Sep 2023 08:10:53 +0000
+Message-ID: <20230921081057.3440885-2-yosryahmed@google.com>
+References: <20230921081057.3440885-1-yosryahmed@google.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20230601; t=1695318856; x=1695923656; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=+Cl15FReM+0BOvrBRx7ZaDFvWKYaZDzCR+8xQoQoeQk=;
-        b=rtrRwFLlUjPl/d7eHLR1alhFriXkGXZLaYx5Cjy1FgLwgXM5OGY98WugbtV43tLtiM
-         ZR04iJbTbda03qdwNcDSl36EOQtIKtFapOfeelWHCCSQNpsaTEnHdVIhb/o/4+IHE2RU
-         48SAkkZ8RO5INb798UIRtfMpLCN6Cx4j13isLvXRUNqAo+9MV/H72lnOxidMLpz0/j7e
-         i71qjSs2+TDYAkyKHzseRHVCc/1N01z1bGjoqyOqyqDEcKMc4ZfaDuUm85DFbDjq3oXr
-         MKMLwuswrGAjdwGXM6cJQMpNTKoIqfKuSmpjONWdIizpvvSIz/EV8IDw2N6vaDbX66wy
-         rpqg==
-In-Reply-To: <20230921081057.3440885-4-yosryahmed@google.com>
+        d=google.com; s=20230601; t=1695323103; x=1695927903; darn=vger.kernel.org;
+        h=cc:to:from:subject:message-id:references:mime-version:in-reply-to
+         :date:from:to:cc:subject:date:message-id:reply-to;
+        bh=FIm0UyACNB+n/akQREWxQWjORl9GVEfiVT/RezLXAow=;
+        b=o0WvARSm78ZHNoVIzoQy21+iNUit9PRwZX8aotevPUHejxCKR5BsEePG+Cq7tTnox8
+         ncOJsOXv1vzb5xnheDUl401hpf0g2obzET7pqixy9HHTm/lulbrCEK+caZd/ZKL76SCz
+         oujDGwDcAxgLeVX1L30kyp8WAqjeSoSN6hsRHET99YDQ5m5didQnk+EjZQqRzMAIOgko
+         GOXLVz1oCEDHd9ldvboyEW7GtIG2GC/kzuOwYSbd7efapTjS+R+aY/3kTMZExvxJFMQY
+         X7iiM5M4Sr0Fz2mTc3JR1N4JqkdRmRuLQKIlvPfxw2Za8tHw7oZ9hJVc73B8LFIlieXd
+         TTyA==
+In-Reply-To: <20230921081057.3440885-1-yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="windows-1252"
-To: Johannes Weiner <hannes@cmpxchg.org>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Michal Hocko <mhocko@kernel.org>, Roman Gushchin <roman.gushchin@linux.dev>, Shakeel Butt <shakeelb@google.com>, Muchun Song <muchun.song@linux.dev>, Ivan Babrou <ivan@cloudflare.com>, Tejun Heo <tj@kernel.org>, =?UTF-8?Q?Michal_Koutn=C3=BD?= <mkoutny@suse.com>, Waiman Long <longman@redhat.com>, kernel-team@cloudflare.com, Wei Xu <weixugc@google.com>, Greg Thelen <gthelen@google.com>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Muchun Song <muchun.song-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Ivan Babrou <ivan-lDpJ742SOEtZroRs9YW3xA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, =?UTF-8?q?Michal=20Koutn=C3=BD?= <mkoutny-IBi9RG/b67k@public.gmane.org>, Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, kernel-team-lDpJ742SOEtZroRs9YW3xA@public.gmane.org, Wei Xu <weixugc-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 
-On Thu, Sep 21, 2023 at 1:11=E2=80=AFAM Yosry Ahmed <yosryahmed@google.com>=
- wrote:
->
-> A global counter for the magnitude of memcg stats update is maintained
-> on the memcg side to avoid invoking rstat flushes when the pending
-> updates are not significant. This avoids unnecessary flushes, which are
-> not very cheap even if there isn't a lot of stats to flush. It also
-> avoids unnecessary lock contention on the underlying global rstat lock.
->
-> Make this threshold per-memcg. The scheme is followed where percpu (now
-> also per-memcg) counters are incremented in the update path, and only
-> propagated to per-memcg atomics when they exceed a certain threshold.
->
-> This provides two benefits:
-> (a) On large machines with a lot of memcgs, the global threshold can be
-> reached relatively fast, so guarding the underlying lock becomes less
-> effective. Making the threshold per-memcg avoids this.
->
-> (b) Having a global threshold makes it hard to do subtree flushes, as we
-> cannot reset the global counter except for a full flush. Per-memcg
-> counters removes this as a blocker from doing subtree flushes, which
-> helps avoid unnecessary work when the stats of a small subtree are
-> needed.
->
-> Nothing is free, of course. This comes at a cost:
-> (a) A new per-cpu counter per memcg, consuming NR_CPUS * NR_MEMCGS * 4
-> bytes.
->
-> (b) More work on the update side, although in the common case it will
-> only be percpu counter updates. The amount of work scales with the
-> number of ancestors (i.e. tree depth). This is not a new concept, adding
-> a cgroup to the rstat tree involves a parent loop, so is charging.
-> Testing in a later patch shows this doesn't introduce significant
-> regressions.
->
-> (c) The error margin in the stats for the system as a whole increases
-> from NR_CPUS * MEMCG_CHARGE_BATCH to NR_CPUS * MEMCG_CHARGE_BATCH *
-> NR_MEMCGS. This is probably fine because we have a similar per-memcg
-> error in charges coming from percpu stocks, and we have a periodic
-> flusher that makes sure we always flush all the stats every 2s anyway.
->
-> This patch was tested to make sure no significant regressions are
-> introduced on the update path as follows. In a cgroup that is 4 levels
-> deep (/sys/fs/cgroup/a/b/c/d), the following benchmarks were ran:
->
-> (a) neper [1] with 1000 flows and 100 threads (single machine). The
-> values in the table are the average of server and client throughputs in
-> mbps after 30 iterations, each running for 30s:
->
->                                 tcp_rr          tcp_stream
-> Base                            9504218.56      357366.84
-> Patched                         9656205.68      356978.39
-> Delta                           +1.6%           -0.1%
-> Standard Deviation              0.95%           1.03%
->
-> An increase in the performance of tcp_rr doesn't really make sense, but
-> it's probably in the noise. The same tests were ran with 1 flow and 1
-> thread but the throughput was too noisy to make any conclusions (the
-> averages did not show regressions nonetheless).
->
-> Looking at perf for one iteration of the above test, __mod_memcg_state()
-> (which is where memcg_rstat_updated() is called) does not show up at all
-> without this patch, but it shows up with this patch as 1.06% for tcp_rr
-> and 0.36% for tcp_stream.
->
-> (b) Running "stress-ng --vm 0 -t 1m --times --perf". I don't understand
-> stress-ng very well, so I am not sure that's the best way to test this,
-> but it spawns 384 workers and spits a lot of metrics which looks nice :)
-> I picked a few ones that seem to be relevant to the stats update path. I
-> also included cache misses as this patch introduce more atomics that may
-> bounce between cpu caches:
->
-> Metric                  Base            Patched         Delta
-> Cache Misses            3.394 B/sec     3.433 B/sec     +1.14%
-> Cache L1D Read          0.148 T/sec     0.154 T/sec     +4.05%
-> Cache L1D Read Miss     20.430 B/sec    21.820 B/sec    +6.8%
-> Page Faults Total       4.304 M/sec     4.535 M/sec     +5.4%
-> Page Faults Minor       4.304 M/sec     4.535 M/sec     +5.4%
-> Page Faults Major       18.794 /sec     0.000 /sec
-> Kmalloc                 0.153 M/sec     0.152 M/sec     -0.65%
-> Kfree                   0.152 M/sec     0.153 M/sec     +0.65%
-> MM Page Alloc           4.640 M/sec     4.898 M/sec     +5.56%
-> MM Page Free            4.639 M/sec     4.897 M/sec     +5.56%
-> Lock Contention Begin   0.362 M/sec     0.479 M/sec     +32.32%
-> Lock Contention End     0.362 M/sec     0.479 M/sec     +32.32%
-> page-cache add          238.057 /sec    0.000 /sec
-> page-cache del          6.265 /sec      6.267 /sec      -0.03%
->
-> This is only using a single run in each case. I am not sure what to
-> make out of most of these numbers, but they mostly seem in the noise
-> (some better, some worse). The lock contention numbers are interesting.
-> I am not sure if higher is better or worse here. No new locks or lock
-> sections are introduced by this patch either way.
->
-> Looking at perf, __mod_memcg_state() shows up as 0.00% with and without
-> this patch. This is suspicious, but I verified while stress-ng is
-> running that all the threads are in the right cgroup.
->
-> [1]https://github.com/google/neper
->
-> Signed-off-by: Yosry Ahmed <yosryahmed@google.com>
+flush_next_time is an inaccurate name. It's not the next time that
+periodic flushing will happen, it's rather the next time that
+ratelimited flushing can happen if the periodic flusher is late.
 
+Simplify its semantics by just storing the timestamp of the last flush
+instead, flush_last_time. Move the 2*FLUSH_TIME addition to
+mem_cgroup_flush_stats_ratelimited(), and add a comment explaining it.
+This way, all the ratelimiting semantics live in one place.
 
-Johannes, I think this might be what you have suggested in our
-previous discussion, but I am not sure this is what you meant for the
-update path, so I did not add a Suggested-by. Please let me know if
-this is what you meant and I can amend the tag as such.
+No functional change intended.
 
->
-> ---
->  mm/memcontrol.c | 49 +++++++++++++++++++++++++++++++++----------------
->  1 file changed, 33 insertions(+), 16 deletions(-)
->
-> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-> index ef7ad66a9e4c..c273c65bb642 100644
-> --- a/mm/memcontrol.c
-> +++ b/mm/memcontrol.c
-> @@ -627,6 +627,9 @@ struct memcg_vmstats_percpu {
->         /* Cgroup1: threshold notifications & softlimit tree updates */
->         unsigned long           nr_page_events;
->         unsigned long           targets[MEM_CGROUP_NTARGETS];
-> +
-> +       /* Stats updates since the last flush */
-> +       unsigned int            stats_updates;
->  };
->
->  struct memcg_vmstats {
-> @@ -641,6 +644,9 @@ struct memcg_vmstats {
->         /* Pending child counts during tree propagation */
->         long                    state_pending[MEMCG_NR_STAT];
->         unsigned long           events_pending[NR_MEMCG_EVENTS];
-> +
-> +       /* Stats updates since the last flush */
-> +       atomic64_t              stats_updates;
->  };
->
->  /*
-> @@ -660,9 +666,7 @@ struct memcg_vmstats {
->   */
->  static void flush_memcg_stats_dwork(struct work_struct *w);
->  static DECLARE_DEFERRABLE_WORK(stats_flush_dwork, flush_memcg_stats_dwor=
-k);
-> -static DEFINE_PER_CPU(unsigned int, stats_updates);
->  static atomic_t stats_flush_ongoing =3D ATOMIC_INIT(0);
-> -static atomic_t stats_flush_threshold =3D ATOMIC_INIT(0);
->  static u64 flush_last_time;
->
->  #define FLUSH_TIME (2UL*HZ)
-> @@ -689,26 +693,37 @@ static void memcg_stats_unlock(void)
->         preempt_enable_nested();
->  }
->
-> +
-> +static bool memcg_should_flush_stats(struct mem_cgroup *memcg)
-> +{
-> +       return atomic64_read(&memcg->vmstats->stats_updates) >
-> +               MEMCG_CHARGE_BATCH * num_online_cpus();
-> +}
-> +
->  static inline void memcg_rstat_updated(struct mem_cgroup *memcg, int val=
-)
->  {
-> +       int cpu =3D smp_processor_id();
->         unsigned int x;
->
->         if (!val)
->                 return;
->
-> -       cgroup_rstat_updated(memcg->css.cgroup, smp_processor_id());
-> +       cgroup_rstat_updated(memcg->css.cgroup, cpu);
-> +
-> +       for (; memcg; memcg =3D parent_mem_cgroup(memcg)) {
-> +               x =3D __this_cpu_add_return(memcg->vmstats_percpu->stats_=
-updates,
-> +                                         abs(val));
-> +
-> +               if (x < MEMCG_CHARGE_BATCH)
-> +                       continue;
->
-> -       x =3D __this_cpu_add_return(stats_updates, abs(val));
-> -       if (x > MEMCG_CHARGE_BATCH) {
->                 /*
-> -                * If stats_flush_threshold exceeds the threshold
-> -                * (>num_online_cpus()), cgroup stats update will be trig=
-gered
-> -                * in __mem_cgroup_flush_stats(). Increasing this var fur=
-ther
-> -                * is redundant and simply adds overhead in atomic update=
-.
-> +                * If @memcg is already flush-able, increasing stats_upda=
-tes is
-> +                * redundant. Avoid the overhead of the atomic update.
->                  */
-> -               if (atomic_read(&stats_flush_threshold) <=3D num_online_c=
-pus())
-> -                       atomic_add(x / MEMCG_CHARGE_BATCH, &stats_flush_t=
-hreshold);
-> -               __this_cpu_write(stats_updates, 0);
-> +               if (!memcg_should_flush_stats(memcg))
-> +                       atomic64_add(x, &memcg->vmstats->stats_updates);
-> +               __this_cpu_write(memcg->vmstats_percpu->stats_updates, 0)=
-;
->         }
->  }
->
-> @@ -727,13 +742,12 @@ static void do_flush_stats(void)
->
->         cgroup_rstat_flush(root_mem_cgroup->css.cgroup);
->
-> -       atomic_set(&stats_flush_threshold, 0);
->         atomic_set(&stats_flush_ongoing, 0);
->  }
->
->  void mem_cgroup_flush_stats(void)
->  {
-> -       if (atomic_read(&stats_flush_threshold) > num_online_cpus())
-> +       if (memcg_should_flush_stats(root_mem_cgroup))
->                 do_flush_stats();
->  }
->
-> @@ -747,8 +761,8 @@ void mem_cgroup_flush_stats_ratelimited(void)
->  static void flush_memcg_stats_dwork(struct work_struct *w)
->  {
->         /*
-> -        * Always flush here so that flushing in latency-sensitive paths =
-is
-> -        * as cheap as possible.
-> +        * Deliberately ignore memcg_should_flush_stats() here so that fl=
-ushing
-> +        * in latency-sensitive paths is as cheap as possible.
->          */
->         do_flush_stats();
->         queue_delayed_work(system_unbound_wq, &stats_flush_dwork, FLUSH_T=
-IME);
-> @@ -5622,6 +5636,9 @@ static void mem_cgroup_css_rstat_flush(struct cgrou=
-p_subsys_state *css, int cpu)
->                         }
->                 }
->         }
-> +       /* We are in a per-cpu loop here, only do the atomic write once *=
-/
-> +       if (atomic64_read(&memcg->vmstats->stats_updates))
-> +               atomic64_set(&memcg->vmstats->stats_updates, 0);
->  }
->
->  #ifdef CONFIG_MMU
-> --
-> 2.42.0.459.ge4e396fd5e-goog
->
+Signed-off-by: Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+---
+ mm/memcontrol.c | 7 ++++---
+ 1 file changed, 4 insertions(+), 3 deletions(-)
+
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index 927c64d3cbcb..49562dfdeab2 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -590,7 +590,7 @@ static DECLARE_DEFERRABLE_WORK(stats_flush_dwork, flush_memcg_stats_dwork);
+ static DEFINE_PER_CPU(unsigned int, stats_updates);
+ static atomic_t stats_flush_ongoing = ATOMIC_INIT(0);
+ static atomic_t stats_flush_threshold = ATOMIC_INIT(0);
+-static u64 flush_next_time;
++static u64 flush_last_time;
+ 
+ #define FLUSH_TIME (2UL*HZ)
+ 
+@@ -650,7 +650,7 @@ static void do_flush_stats(void)
+ 	    atomic_xchg(&stats_flush_ongoing, 1))
+ 		return;
+ 
+-	WRITE_ONCE(flush_next_time, jiffies_64 + 2*FLUSH_TIME);
++	WRITE_ONCE(flush_last_time, jiffies_64);
+ 
+ 	cgroup_rstat_flush(root_mem_cgroup->css.cgroup);
+ 
+@@ -666,7 +666,8 @@ void mem_cgroup_flush_stats(void)
+ 
+ void mem_cgroup_flush_stats_ratelimited(void)
+ {
+-	if (time_after64(jiffies_64, READ_ONCE(flush_next_time)))
++	/* Only flush if the periodic flusher is one full cycle late */
++	if (time_after64(jiffies_64, READ_ONCE(flush_last_time) + 2*FLUSH_TIME))
+ 		mem_cgroup_flush_stats();
+ }
+ 
+-- 
+2.42.0.459.ge4e396fd5e-goog
+
