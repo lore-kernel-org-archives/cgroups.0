@@ -1,170 +1,58 @@
-From: kernel test robot <lkp-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
-Subject: Re: [PATCH 4/5] mm: workingset: move the stats flush into
- workingset_test_recent()
-Date: Thu, 21 Sep 2023 19:05:40 +0800
-Message-ID: <202309211829.Efuqg8NE-lkp@intel.com>
-References: <20230921081057.3440885-5-yosryahmed@google.com>
+From: Yosry Ahmed <yosryahmed@google.com>
+Subject: [PATCH 0/5] mm: memcg: subtree stats flushing and thresholds
+Date: Thu, 21 Sep 2023 08:10:52 +0000
+Message-ID: <20230921081057.3440885-1-yosryahmed@google.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1695318603; x=1726854603;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:in-reply-to;
-  bh=FjWBe0gquMx3lNYmeIOSoDBa7nBK8aydjByq9TyafbE=;
-  b=JuwufzhiuqmcvPH4RfML1r0fw9NOvsz4Sh8rnL7VzBP5pK4kLuY1LvNH
-   cz03XKR1E/vXvVxVIZEx5BEAYonHVWI3m4bf54WUT+mKkQ2nPshG/l/T9
-   RygW7LyGVOlvAnPu5N5H5+oxWtNz6L51JrgL0WCRxXUc0qnUpC0bECOjb
-   unaGXYK+B+XWdlHydlHhW/3gpqUelMYtjG2u/DHEYkuE/PERinX+kvnbY
-   YXNANGwiR3cbmAkARjHpG9bw1g69DePtqRX3SXdGKoLW7s6nS4eNfcvNi
-   kUAceIHwDXAbgBXspY5bdDFwBK2+fG57CiVHtXzatoJ6UXdLqhjJ0qDuk
-   g==;
-Content-Disposition: inline
-In-Reply-To: <20230921081057.3440885-5-yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20230601; t=1695321130; x=1695925930; darn=vger.kernel.org;
+        h=cc:to:from:subject:message-id:mime-version:date:from:to:cc:subject
+         :date:message-id:reply-to;
+        bh=mOW1s/LOhiEKmGFQGGQ/gb7iNiCsFWbcKv8d4ZT/dpI=;
+        b=kOux8/8V0qi3LikJmeyi+kgFW4/Yi2d5zbrDwEGQJO45KZK7qlfg5m1hF8N7Cgs8x/
+         5aiJdkf+1GwnY4NZROjohnVZVFfS7hjws6FFv9ml5s/HT7h7AxNQGkLI8d9XXDT4RKYH
+         C04uH/JIQpzo/IxM6w63tZuJNU/L7dWeYMBcjkQjlIQ7rzJTe99ZYK8OXiQQ15Rzwn0f
+         CM0I+Q6nazKSdBMgBzkssnBvH+vXBs27mjn89eSPUWqOe8GETrie03zqoif9VCaq6g4P
+         cUeJW4dXt1HBWllPcgMLu8PkjR1vZGKqdcFgL3PYM3jZLIwlGBQQe2ORnlRZMB5Q8IAS
+         JBJw==
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
-Cc: oe-kbuild-all-cunTk1MwBs/YUNznpcFYbw@public.gmane.org, Linux Memory Management List <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Muchun Song <muchun.song-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Ivan Babrou <ivan-lDpJ742SOEtZroRs9YW3xA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny-IBi9RG/b67k@public.gmane.org>, Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, kernel-team-lDpJ742SOEtZroRs9YW3xA@public.gmane.org, Wei Xu <weixugc-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, Roman Gushchin <roman.gushchin@linux.dev>, Shakeel Butt <shakeelb@google.com>, Muchun Song <muchun.song@linux.dev>, Ivan Babrou <ivan@cloudflare.com>, Tejun Heo <tj@kernel.org>, =?UTF-8?q?Michal=20Koutn=C3=BD?= <mkoutny@suse.com>, Waiman Long <longman@redhat.com>, kernel-team@cloudflare.com, Wei Xu <weixugc@google.com>, Greg Thelen <gthelen@google.com>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, Yosry Ahmed <yosryahmed@google.com>
 
-Hi Yosry,
+This series attempts to address shortages in today's approach for memcg
+stats flushing, namely occasionally stale or expensive stat reads. The
+series does so by changing the threshold that we use to decide whether
+to trigger a flush to be per memcg instead of global (patch 3), and then
+changing flushing to be per memcg (i.e. subtree flushes) instead of
+global (patch 5).
 
-kernel test robot noticed the following build errors:
+Patch 3 & 5 are the core of the series, and they include more details
+and testing results. The rest are either cleanups or prep work.
 
-[auto build test ERROR on akpm-mm/mm-everything]
+This series replaces the "memcg: more sophisticated stats flushing"
+series [1], which also replaces another series, in a long list of
+attempts to improve memcg stats flushing. It is not a v2 as it is a
+completely different approach. This is based on collected feedback from
+discussions on lkml in all previous attempts. Hopefully, this is the
+final attempt.
 
-url:    https://github.com/intel-lab-lkp/linux/commits/Yosry-Ahmed/mm-memcg-change-flush_next_time-to-flush_last_time/20230921-161246
-base:   https://git.kernel.org/pub/scm/linux/kernel/git/akpm/mm.git mm-everything
-patch link:    https://lore.kernel.org/r/20230921081057.3440885-5-yosryahmed%40google.com
-patch subject: [PATCH 4/5] mm: workingset: move the stats flush into workingset_test_recent()
-config: powerpc-allnoconfig (https://download.01.org/0day-ci/archive/20230921/202309211829.Efuqg8NE-lkp-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org/config)
-compiler: powerpc-linux-gcc (GCC) 13.2.0
-reproduce (this is a W=1 build): (https://download.01.org/0day-ci/archive/20230921/202309211829.Efuqg8NE-lkp-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org/reproduce)
+[1]https://lore.kernel.org/lkml/20230913073846.1528938-1-yosryahmed@google.com/
 
-If you fix the issue in a separate patch/commit (i.e. not just a new version of
-the same patch/commit), kindly add following tags
-| Reported-by: kernel test robot <lkp-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
-| Closes: https://lore.kernel.org/oe-kbuild-all/202309211829.Efuqg8NE-lkp-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org/
+Yosry Ahmed (5):
+  mm: memcg: change flush_next_time to flush_last_time
+  mm: memcg: move vmstats structs definition above flushing code
+  mm: memcg: make stats flushing threshold per-memcg
+  mm: workingset: move the stats flush into workingset_test_recent()
+  mm: memcg: restore subtree stats flushing
 
-All errors (new ones prefixed by >>):
-
-   mm/workingset.c: In function 'workingset_test_recent':
->> mm/workingset.c:461:32: error: invalid use of undefined type 'struct mem_cgroup'
-     461 |         css_get(&eviction_memcg->css);
-         |                                ^~
-
-
-vim +461 mm/workingset.c
-
-   405	
-   406	/**
-   407	 * workingset_test_recent - tests if the shadow entry is for a folio that was
-   408	 * recently evicted. Also fills in @workingset with the value unpacked from
-   409	 * shadow.
-   410	 * @shadow: the shadow entry to be tested.
-   411	 * @file: whether the corresponding folio is from the file lru.
-   412	 * @workingset: where the workingset value unpacked from shadow should
-   413	 * be stored.
-   414	 *
-   415	 * Return: true if the shadow is for a recently evicted folio; false otherwise.
-   416	 */
-   417	bool workingset_test_recent(void *shadow, bool file, bool *workingset)
-   418	{
-   419		struct mem_cgroup *eviction_memcg;
-   420		struct lruvec *eviction_lruvec;
-   421		unsigned long refault_distance;
-   422		unsigned long workingset_size;
-   423		unsigned long refault;
-   424		int memcgid;
-   425		struct pglist_data *pgdat;
-   426		unsigned long eviction;
-   427	
-   428		rcu_read_lock();
-   429	
-   430		if (lru_gen_enabled()) {
-   431			bool recent = lru_gen_test_recent(shadow, file,
-   432							  &eviction_lruvec, &eviction,
-   433							  workingset);
-   434			rcu_read_unlock();
-   435			return recent;
-   436		}
-   437	
-   438		unpack_shadow(shadow, &memcgid, &pgdat, &eviction, workingset);
-   439		eviction <<= bucket_order;
-   440	
-   441		/*
-   442		 * Look up the memcg associated with the stored ID. It might
-   443		 * have been deleted since the folio's eviction.
-   444		 *
-   445		 * Note that in rare events the ID could have been recycled
-   446		 * for a new cgroup that refaults a shared folio. This is
-   447		 * impossible to tell from the available data. However, this
-   448		 * should be a rare and limited disturbance, and activations
-   449		 * are always speculative anyway. Ultimately, it's the aging
-   450		 * algorithm's job to shake out the minimum access frequency
-   451		 * for the active cache.
-   452		 *
-   453		 * XXX: On !CONFIG_MEMCG, this will always return NULL; it
-   454		 * would be better if the root_mem_cgroup existed in all
-   455		 * configurations instead.
-   456		 */
-   457		eviction_memcg = mem_cgroup_from_id(memcgid);
-   458		if (!mem_cgroup_disabled() && !eviction_memcg)
-   459			return false;
-   460	
- > 461		css_get(&eviction_memcg->css);
-   462		rcu_read_unlock();
-   463	
-   464		/* Flush stats (and potentially sleep) outside the RCU read section */
-   465		mem_cgroup_flush_stats_ratelimited();
-   466	
-   467		eviction_lruvec = mem_cgroup_lruvec(eviction_memcg, pgdat);
-   468		refault = atomic_long_read(&eviction_lruvec->nonresident_age);
-   469	
-   470		/*
-   471		 * Calculate the refault distance
-   472		 *
-   473		 * The unsigned subtraction here gives an accurate distance
-   474		 * across nonresident_age overflows in most cases. There is a
-   475		 * special case: usually, shadow entries have a short lifetime
-   476		 * and are either refaulted or reclaimed along with the inode
-   477		 * before they get too old.  But it is not impossible for the
-   478		 * nonresident_age to lap a shadow entry in the field, which
-   479		 * can then result in a false small refault distance, leading
-   480		 * to a false activation should this old entry actually
-   481		 * refault again.  However, earlier kernels used to deactivate
-   482		 * unconditionally with *every* reclaim invocation for the
-   483		 * longest time, so the occasional inappropriate activation
-   484		 * leading to pressure on the active list is not a problem.
-   485		 */
-   486		refault_distance = (refault - eviction) & EVICTION_MASK;
-   487	
-   488		/*
-   489		 * Compare the distance to the existing workingset size. We
-   490		 * don't activate pages that couldn't stay resident even if
-   491		 * all the memory was available to the workingset. Whether
-   492		 * workingset competition needs to consider anon or not depends
-   493		 * on having free swap space.
-   494		 */
-   495		workingset_size = lruvec_page_state(eviction_lruvec, NR_ACTIVE_FILE);
-   496		if (!file) {
-   497			workingset_size += lruvec_page_state(eviction_lruvec,
-   498							     NR_INACTIVE_FILE);
-   499		}
-   500		if (mem_cgroup_get_nr_swap_pages(eviction_memcg) > 0) {
-   501			workingset_size += lruvec_page_state(eviction_lruvec,
-   502							     NR_ACTIVE_ANON);
-   503			if (file) {
-   504				workingset_size += lruvec_page_state(eviction_lruvec,
-   505							     NR_INACTIVE_ANON);
-   506			}
-   507		}
-   508	
-   509		mem_cgroup_put(eviction_memcg);
-   510		return refault_distance <= workingset_size;
-   511	}
-   512	
+ include/linux/memcontrol.h |   8 +-
+ mm/memcontrol.c            | 269 +++++++++++++++++++++----------------
+ mm/vmscan.c                |   2 +-
+ mm/workingset.c            |  37 +++--
+ 4 files changed, 181 insertions(+), 135 deletions(-)
 
 -- 
-0-DAY CI Kernel Test Service
-https://github.com/intel/lkp-tests/wiki
+2.42.0.459.ge4e396fd5e-goog
+
