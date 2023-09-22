@@ -1,106 +1,135 @@
 From: Yafang Shao <laoar.shao-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: [RFC PATCH bpf-next 3/8] cgroup: Add cgroup_get_from_id_within_subsys()
-Date: Fri, 22 Sep 2023 11:28:41 +0000
-Message-ID: <20230922112846.4265-4-laoar.shao@gmail.com>
+Subject: [RFC PATCH bpf-next 4/8] bpf: Add new kfuncs support for cgroup controller
+Date: Fri, 22 Sep 2023 11:28:42 +0000
+Message-ID: <20230922112846.4265-5-laoar.shao@gmail.com>
 References: <20230922112846.4265-1-laoar.shao@gmail.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1695382150; x=1695986950; darn=vger.kernel.org;
+        d=gmail.com; s=20230601; t=1695382152; x=1695986952; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=IHx9zaz06OEXWU+TLyQGeUCpNolCvM+zvySDcLZVKEk=;
-        b=e6XHujtU2Xmv56Jn0+m+2DYhpGsthOUu9Gte9bZzvYYRAIDR0u29uGpH//SACfBzLI
-         MQrgx5QZnM8YL3OQxZvjXzYscm18DEr9t5cuO5dih6pUDkW11ejfi2nol1lrvKNWHpXK
-         dkrvX5fCWdvVh68V2SZJhBoPunsf8YH2tpmxfFQBT+N6R9S1p1TqBdrCddg+9m0JT14J
-         lqW1aBfBnS2iXB3y+/g0zDZSBdosQQlIDNLx6rcVP7MvIGEQ6oyuysubH9rhlMUGwB5T
-         z7UxooOhIwl+Cs+/ZCc5VEUgUxAZmNls+tsHfLt2PARq5Tjp+GElRAZZbCUDawbdYtj7
-         zcuA==
+        bh=+XT7WoTwvT3Nj7+0W/TJCIkVvjE4LDdWtuhMgBEm65Q=;
+        b=KqduS1WQ3tt/XGwC/26Nnm/PIg1S8yuPI7ISaGucHojbIEBJwigNaj1k7WHB7GWPGp
+         k46upGiZet85LZaaHB6RRt0cipiPiaYNOQKBkUBqgsN+stPDDSfjGQAHGoOUuDiUIPAN
+         NIyJ5wCdH/mN3EtsLhDmD0n4IReFd/psh3BsZn6o0xfzfKzfHGX0f1goutjOIS3A8UKb
+         HB+DL0svNVJCC4ripMfbxH5jJiWDjlms/jvbu8nR3unU+Q5x+qV/tH4wxqtQMdABGrHd
+         wXOiqLYWoFCsInAU/L86sSQL6EtzD8en9BQdneGWyIk0SCn/mMsUI+X/BofCHO94Pc47
+         A6FA==
 In-Reply-To: <20230922112846.4265-1-laoar.shao-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 To: ast-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, daniel-FeC+5ew28dpmcu3hnIyYJQ@public.gmane.org, john.fastabend-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, andrii-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, martin.lau-fxUVXftIFDnyG1zEObXtfA@public.gmane.org, song-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, yonghong.song-fxUVXftIFDnyG1zEObXtfA@public.gmane.org, kpsingh-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, sdf-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, haoluo-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, jolsa-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, mkoutny-IBi9RG/b67k@public.gmane.org
 Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, bpf-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Yafang Shao <laoar.shao-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 
-Introduce a new helper function to retrieve the cgroup associated with a
-specific cgroup ID within a particular subsystem.
+Introducing new kfuncs:
+
+- bpf_cgroup_id_from_task_within_controller
+  Retrieves the cgroup ID from a task within a specific cgroup controller.
+- bpf_cgroup_acquire_from_id_within_controller
+  Acquires the cgroup from a cgroup ID within a specific cgroup controller.
+- bpf_cgroup_ancestor_id_from_task_within_controller
+  Retrieves the ancestor cgroup ID from a task within a specific cgroup
+  controller.
+
+These functions eliminate the need to consider cgroup hierarchies,
+regardless of whether they involve cgroup1 or cgroup2.
 
 Signed-off-by: Yafang Shao <laoar.shao-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 ---
- include/linux/cgroup.h |  1 +
- kernel/cgroup/cgroup.c | 32 +++++++++++++++++++++++++++-----
- 2 files changed, 28 insertions(+), 5 deletions(-)
+ kernel/bpf/helpers.c | 70 ++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 70 insertions(+)
 
-diff --git a/include/linux/cgroup.h b/include/linux/cgroup.h
-index e16cfb98b44c..9f7616cbf710 100644
---- a/include/linux/cgroup.h
-+++ b/include/linux/cgroup.h
-@@ -656,6 +656,7 @@ static inline void cgroup_kthread_ready(void)
- 
- void cgroup_path_from_kernfs_id(u64 id, char *buf, size_t buflen);
- struct cgroup *cgroup_get_from_id(u64 id);
-+struct cgroup *cgroup_get_from_id_within_subsys(u64 cgid, int ssid);
- #else /* !CONFIG_CGROUPS */
- 
- struct cgroup_subsys_state;
-diff --git a/kernel/cgroup/cgroup.c b/kernel/cgroup/cgroup.c
-index 1fb7f562289d..d30a62eed14c 100644
---- a/kernel/cgroup/cgroup.c
-+++ b/kernel/cgroup/cgroup.c
-@@ -6195,17 +6195,28 @@ void cgroup_path_from_kernfs_id(u64 id, char *buf, size_t buflen)
+diff --git a/kernel/bpf/helpers.c b/kernel/bpf/helpers.c
+index bb521b181cc3..1316b5fda349 100644
+--- a/kernel/bpf/helpers.c
++++ b/kernel/bpf/helpers.c
+@@ -2219,6 +2219,73 @@ __bpf_kfunc long bpf_task_under_cgroup(struct task_struct *task,
+ 	rcu_read_unlock();
+ 	return ret;
  }
- 
- /*
-- * cgroup_get_from_id : get the cgroup associated with cgroup id
-- * @id: cgroup id
-+ * cgroup_get_from_id_within_subsys - get the cgroup associated with cgroup id
-+ *                                    within specific subsystem
-+ * @cgid: cgroup id
-+ * @ssid: cgroup subsystem id, -1 for cgroup default tree
-  * On success return the cgrp or ERR_PTR on failure
-  * Only cgroups within current task's cgroup NS are valid.
-  */
--struct cgroup *cgroup_get_from_id(u64 id)
-+struct cgroup *cgroup_get_from_id_within_subsys(u64 cgid, int ssid)
- {
-+	struct cgroup_root *root;
- 	struct kernfs_node *kn;
--	struct cgroup *cgrp, *root_cgrp;
-+	struct cgroup *cgrp;
- 
--	kn = kernfs_find_and_get_node_by_id(cgrp_dfl_root.kf_root, id);
-+	if (ssid == -1) {
-+		root = &cgrp_dfl_root;
-+	} else {
-+		if (ssid >= CGROUP_SUBSYS_COUNT)
-+			return ERR_PTR(-EINVAL);
-+		root = cgroup_subsys[ssid]->root;
-+	}
 +
-+	kn = kernfs_find_and_get_node_by_id(root->kf_root, cgid);
- 	if (!kn)
- 		return ERR_PTR(-ENOENT);
- 
-@@ -6226,6 +6237,17 @@ struct cgroup *cgroup_get_from_id(u64 id)
- 	if (!cgrp)
- 		return ERR_PTR(-ENOENT);
- 
++/**
++ * bpf_cgroup_id_from_task_within_controller - To get the associated cgroup_id from
++ * a task within a specific cgroup controller.
++ * @task: The target task
++ * @ssid: The id of cgroup controller, e.g. cpu_cgrp_id, memory_cgrp_id and etc.
++ */
++__bpf_kfunc u64 bpf_cgroup_id_from_task_within_controller(struct task_struct *task, int ssid)
++{
++	struct cgroup *cgroup;
++	int id = 0;
++
++	rcu_read_lock();
++	cgroup = task_cgroup(task, ssid);
++	if (!cgroup)
++		goto out;
++	id = cgroup_id(cgroup);
++
++out:
++	rcu_read_unlock();
++	return id;
++}
++
++/**
++ * bpf_cgroup_id_from_task_within_controller - To get the associated cgroup_id from
++ * a task within a specific cgroup controller.
++ * @task: The target task
++ * @ssid: The id of cgroup subsystem, e.g. cpu_cgrp_id, memory_cgrp_id and etc.
++ * @level: The level of ancestor to look up
++ */
++__bpf_kfunc u64 bpf_cgroup_ancestor_id_from_task_within_controller(struct task_struct *task,
++								   int ssid, int level)
++{
++	struct cgroup *cgrp, *ancestor;
++	int id = 0;
++
++	rcu_read_lock();
++	cgrp = task_cgroup(task, ssid);
++	if (!cgrp)
++		goto out;
++	ancestor = cgroup_ancestor(cgrp, level);
++	if (ancestor)
++		id = cgroup_id(ancestor);
++
++out:
++	rcu_read_unlock();
++	return id;
++}
++
++/**
++ * bpf_cgroup_acquire_from_id_within_controller - To acquire the cgroup from a
++ * cgroup id within specific cgroup controller. A cgroup acquired by this kfunc
++ * which is not stored in a map as a kptr, must be released by calling
++ * bpf_cgroup_release().
++ * @cgid: cgroup id
++ * @ssid: The id of a cgroup controller, e.g. cpu_cgrp_id, memory_cgrp_id and etc.
++ */
++__bpf_kfunc struct cgroup *bpf_cgroup_acquire_from_id_within_controller(u64 cgid, int ssid)
++{
++	struct cgroup *cgrp;
++
++	cgrp = cgroup_get_from_id_within_subsys(cgid, ssid);
++	if (IS_ERR(cgrp))
++		return NULL;
 +	return cgrp;
 +}
 +
-+struct cgroup *cgroup_get_from_id(u64 id)
-+{
-+	struct cgroup *root_cgrp, *cgrp;
-+
-+	cgrp = cgroup_get_from_id_within_subsys(id, -1);
-+	if (IS_ERR(cgrp))
-+		return cgrp;
-+
- 	root_cgrp = current_cgns_cgroup_dfl();
- 	if (!cgroup_is_descendant(cgrp, root_cgrp)) {
- 		cgroup_put(cgrp);
+ #endif /* CONFIG_CGROUPS */
+ 
+ /**
+@@ -2525,6 +2592,9 @@ BTF_ID_FLAGS(func, bpf_cgroup_release, KF_RELEASE)
+ BTF_ID_FLAGS(func, bpf_cgroup_ancestor, KF_ACQUIRE | KF_RCU | KF_RET_NULL)
+ BTF_ID_FLAGS(func, bpf_cgroup_from_id, KF_ACQUIRE | KF_RET_NULL)
+ BTF_ID_FLAGS(func, bpf_task_under_cgroup, KF_RCU)
++BTF_ID_FLAGS(func, bpf_cgroup_id_from_task_within_controller)
++BTF_ID_FLAGS(func, bpf_cgroup_ancestor_id_from_task_within_controller)
++BTF_ID_FLAGS(func, bpf_cgroup_acquire_from_id_within_controller, KF_ACQUIRE | KF_RET_NULL)
+ #endif
+ BTF_ID_FLAGS(func, bpf_task_from_pid, KF_ACQUIRE | KF_RET_NULL)
+ BTF_ID_FLAGS(func, bpf_throw)
 -- 
 2.30.1 (Apple Git-130)
 
