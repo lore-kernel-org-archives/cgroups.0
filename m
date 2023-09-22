@@ -1,32 +1,46 @@
-From: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
-Subject: Re: [PATCH 0/2] mm: memcg: fix tracking of pending stats updates
- values
-Date: Fri, 22 Sep 2023 10:03:10 -0700
-Message-ID: <20230922100310.102aa12ac2bdf0568e6e7432@linux-foundation.org>
-References: <20230922082542.466579-1-yosryahmed@google.com>
+From: Yosry Ahmed <yosryahmed@google.com>
+Subject: [PATCH v2 0/2] mm: memcg: fix tracking of pending stats updates values
+Date: Fri, 22 Sep 2023 17:57:38 +0000
+Message-ID: <20230922175741.635002-1-yosryahmed@google.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linux-foundation.org;
-        s=korg; t=1695402192;
-        bh=qa/QJ12DIUWvIeySIX2g6kqd2yUHHXJ+BRw50a4IKNU=;
-        h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
-        b=uZWF7kJrm5w73mco/RN5kh0tFZqol/wzUHts2vidpRz38ZzJryh0F8Jo8FNJ1KjRS
-         fvytGPaP6DT92lWdNVq/FOf7os8h8kRVgIb6Q+blcoSlcD8L3qWYBYT5RU0unpOhYv
-         ZQz8Myb6yh3K4y1JaIiCCoPWXMFcaasTV8Kdbmps=
-In-Reply-To: <20230922082542.466579-1-yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20230601; t=1695405463; x=1696010263; darn=vger.kernel.org;
+        h=cc:to:from:subject:message-id:mime-version:date:from:to:cc:subject
+         :date:message-id:reply-to;
+        bh=TWhlillKWVcEeVnrDyY8Q3IYayRPjR5OTdgTyF2A4S0=;
+        b=KF/mZ9HKfn/WA0ZSf/lvAI/cCURUB5ub3z+0/CTXUMMlv+Tym0E4kqnaDycqPdIVzb
+         Kzg/IyiwSilA9xiMNMXhEaf+Kti6bcrddodaJbrRYcALEiKJ3xPGVRNUoqKJYPL4sYe+
+         8Wtdixfgwt4qHlbh6c/3jWY/1I7VWb1ERxPLo1zWs9CbxsCjzms5SodHdiLP7iVmDfTa
+         0AC4QxCBiILwumu7weq3dLnxncip3+YMFKTLF7xZWLTjX+ENJzxRzUeuh63VRg5/Ei0Q
+         lc/zIx8N+5pNxfFH2zacDEz/Ckqwji3fKULiTVnh46f5a0yC9ObEn6wTgdjff5datgEt
+         mGJg==
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Cc: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Muchun Song <muchun.song-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, =?ISO-8859-1?Q? Michal_Koutn=FD ?= <mkoutny-IBi9RG/b67k@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Transfer-Encoding: 7bit
+To: Andrew Morton <akpm@linux-foundation.org>, Shakeel Butt <shakeelb@google.com>
+Cc: Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, Roman Gushchin <roman.gushchin@linux.dev>, Muchun Song <muchun.song@linux.dev>, =?UTF-8?q?Michal=20Koutn=C3=BD?= <mkoutny@suse.com>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, Yosry Ahmed <yosryahmed@google.com>
 
-On Fri, 22 Sep 2023 08:25:40 +0000 Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org> wrote:
+While working on adjacent code [1], I realized that the values passed
+into memcg_rstat_updated() to keep track of the magnitude of pending
+updates is consistent. It is mostly in pages, but sometimes it can be in
+bytes or KBs. Fix that.
 
-> While working on adjacent code [1], I realized that the values passed
-> into memcg_rstat_updated() to keep track of the magnitude of pending
-> updates is consistent. It is mostly in pages, but sometimes it can be in
-> bytes or KBs. Fix that.
+Patch 1 reworks memcg_page_state_unit() so that we can reuse it in patch
+2 to check and normalize the units of state updates.
 
-Clashes with "memcg: remove unused do_memsw_account in
-memcg1_stat_format", and maybe other things.  Can you please redo
-against mm-unsstable or linux-next?
+[1]https://lore.kernel.org/lkml/20230921081057.3440885-1-yosryahmed@google.com/
+
+v1 -> v2:
+- Rebased on top of mm-unstable.
+
+Yosry Ahmed (2):
+  mm: memcg: refactor page state unit helpers
+  mm: memcg: normalize the value passed into memcg_rstat_updated()
+
+ mm/memcontrol.c | 64 +++++++++++++++++++++++++++++++++++++++----------
+ 1 file changed, 51 insertions(+), 13 deletions(-)
+
+-- 
+2.42.0.515.g380fc7ccd1-goog
+
