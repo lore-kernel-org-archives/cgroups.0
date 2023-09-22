@@ -1,50 +1,54 @@
-From: Haifeng Xu <haifeng.xu-LL2PKPoSiP3QT0dZR+AlfA@public.gmane.org>
-Subject: [PATCH 2/2] memcg, oom: do not wake up memcg_oom_waitq if waitqueue is empty
-Date: Fri, 22 Sep 2023 07:05:29 +0000
-Message-ID: <20230922070529.362202-2-haifeng.xu@shopee.com>
+From: Christian Brauner <brauner@kernel.org>
+Subject: Re: [BUG?] fsconfig restart_syscall failed
+Date: Fri, 22 Sep 2023 10:08:36 +0200
+Message-ID: <20230922-drillen-muschel-c9bd03acfe00@brauner>
+References: <84e5fb5f-67c5-6d34-b93b-b307c6c9805c@huawei.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=shopee.com; s=shopee.com; t=1695366346; x=1695971146; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=XVblwGEZgzzMamuC2lPhj14gVXLYTQn0EwcGLXw/zVI=;
-        b=Yi3IgC1J4m1C1Iaz12L0Qr/sEJYpVFT7xpKLE/VYVUXL7BIzQ4AAfW8GK8ivNTU++L
-         fISQcvxWPyVVy2J7XsL8bFQu/gHRdVNyt1hmKSn+3OBGzUMOoe4+zUoVtKuz2IS/8tmb
-         JFA+RMSRsDqSNxR3BcZdVzqLeu8iUhmr2kOzUsOIiUZc6wwwsu3oM2VEqx4FiR6w/L/Z
-         nInXOAoZztjSv1UmyyMHiqf0t4U4hMuUjPk51jbTsLM3yw534hqv2OEiZy2myh5YvIcv
-         p/J8P/gELrybiQmttcV04RxQ+Ns1LRcwlbsBWoSUG+fJ2I2czj+DDyUFJufmqB5Jkhr8
-         E3pQ==
+Return-path: <linux-fsdevel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1695370121;
+        bh=EFZdZuA1bgAXV5AvWlugKRnoAhOxAfKWHVnlSpBHmsk=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=UVH7BLlMFJgfpXuwIOQyMJKeDa7uMySj42MzRYs1UY/wWNQ2tuCTY/wOvIpDlq/k/
+         O35vjFv3Yg8edSeTIZQWm4omxME67E3ctvgOJgleY9P2/RG6T3SmHoHJJLFdS3ctLw
+         tr+HovOZyeqp6y/RbkZWtFyISCuaGDTWGchtjioQAqmGIRSFVaTEvqbg75apFUYJEI
+         MUx0sNMMPHgoBDjiaK74rvSf8gZDxPTpkO3CGVuUrCF2l0RfTu6HqfzL2Rtk7xvGnr
+         tXBX2aDMNbxaUNn9fdJwLUEj27V3FxJqxpAMBw5eW10kSI/WMEeTGGifAkd5jq2JTo
+         jRhhF49G7kqfw==
+Content-Disposition: inline
+In-Reply-To: <84e5fb5f-67c5-6d34-b93b-b307c6c9805c@huawei.com>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-To: mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org
-Cc: hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org, shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Haifeng Xu <haifeng.xu-LL2PKPoSiP3QT0dZR+AlfA@public.gmane.org>
+Content-Type: text/plain; charset="utf-8"
+To: Cai Xinchen <caixinchen1@huawei.com>
+Cc: Tejun Heo <tj@kernel.org>, Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, cgroups@vger.kernel.org, Alexander Viro <viro@zeniv.linux.org.uk>, linux-fsdevel@vger.kernel.org, dhowells@redhat.com, linux-kernel@vger.kernel.org
 
-Only when memcg oom killer is disabled, the task which triggers memecg
-oom handling will sleep on a waitqueue. Except this case, the waitqueue
-is empty though under_oom is true. There is no need to step into wake
-up path when resolve the oom situation. So add a check that whether the
-waitqueue is empty.
+On Fri, Sep 22, 2023 at 10:18:24AM +0800, Cai Xinchen wrote:
+> Hello:
+>   I am doing some test for kernel 6.4, util-linux version:2.39.1.
+> Have you encountered similar problems? If there is a fix, please
+> let me know.
+> Thank you very much
+> 
+> --------------------------------------------------
+> 
+> util-linux version 2.39.1 call mount use fsopen->fsconfig->fsmount->close
+> instead of mount syscall.
+> 
+> And use this shell test:
+> 
+> #!/bin/bash
+> mkdir -p /tmp/cgroup/cgrouptest
+> while true
+> do
+>         mount -t cgroup -o none,name=foo cgroup /tmp/cgroup/cgrouptest
 
-Signed-off-by: Haifeng Xu <haifeng.xu-LL2PKPoSiP3QT0dZR+AlfA@public.gmane.org>
----
- mm/memcontrol.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index 0b6ed63504ca..2bb98ff5be3d 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -1918,7 +1918,7 @@ static void memcg_oom_recover(struct mem_cgroup *memcg)
- 	 * achieved by invoking mem_cgroup_mark_under_oom() before
- 	 * triggering notification.
- 	 */
--	if (memcg && memcg->under_oom)
-+	if (memcg && memcg->under_oom && !list_empty(&memcg_oom_waitq.head))
- 		__wake_up(&memcg_oom_waitq, TASK_NORMAL, 0, memcg);
- }
- 
--- 
-2.25.1
+> in mount syscall, no function will check fs->phase, and fc is recreate
+> in monnt syscall. However, in fdconfig syscall, fc->phase is not initial as
+> FS_CONTEXT_CREATE_PARAMS, restart_syscall will return -EBUSY. fc is created
+> in fsopen syscall.
 
+Mount api system calls aren't restartable so that doesn't work. cgroup2
+doesn't have this issue, only cgroup1 has. So cgroup1_get_tree() should
+probably be fixed if anyone cares.
