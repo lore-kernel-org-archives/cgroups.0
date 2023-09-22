@@ -1,92 +1,99 @@
-From: Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Subject: [PATCH 2/2] mm: memcg: normalize the value passed into memcg_rstat_updated()
-Date: Fri, 22 Sep 2023 08:25:42 +0000
-Message-ID: <20230922082542.466579-3-yosryahmed@google.com>
-References: <20230922082542.466579-1-yosryahmed@google.com>
+From: Yafang Shao <laoar.shao-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Subject: [RFC PATCH bpf-next 0/8] bpf, cgroup: Add bpf support for cgroup controller
+Date: Fri, 22 Sep 2023 11:28:38 +0000
+Message-ID: <20230922112846.4265-1-laoar.shao@gmail.com>
 Mime-Version: 1.0
+Content-Transfer-Encoding: 8bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20230601; t=1695371149; x=1695975949; darn=vger.kernel.org;
-        h=cc:to:from:subject:message-id:references:mime-version:in-reply-to
-         :date:from:to:cc:subject:date:message-id:reply-to;
-        bh=rIAAYaTevangAQtHpP5uU5ftp8AXloDBwmYe1UIN8vQ=;
-        b=XBjbXg+OCwQRzWSTySzeE3xjrZNExAPDUkhbOvLO3oyemoMhg+n+/8OOQeFtp8zjtd
-         NcZ3ngZPDetAfxubUT4T3c1GPJr8I0Nddh0dWkf80zfGvDegE2CnxRh+72pQ7AIvbs88
-         8btKp3IZGxFzOC8uOHfXSeAcH08Mv3ky2Ebz6VMCS9sMET/7+w6IjMNQBJAIXcR/76fx
-         fGh/11DdtjCr/tS+5l4GURiVu0p2Eavakt4072+jZlw8LUSZsH3rqq0e7n8Kb5YKscWh
-         NOe8Ds6BFFjw1MAIB2W5695bokZTXu1o4tggtxZRq54TzLRr/IVijIsmKIVKamb6q+fH
-         DdqA==
-In-Reply-To: <20230922082542.466579-1-yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+        d=gmail.com; s=20230601; t=1695382142; x=1695986942; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=eBmYJOqhxd1SazsqJY85EKAZwokTy4dGQOyg7MypJ/k=;
+        b=matmz69ZegDxdG4AsiHkPrzY4o4hx9uJZ72pFkr3JzSSPTQA/pfMwPR+YRAqrmNW1h
+         6ZM5wYGeLlNgqo8sKnIgAI4yUPmFjAxrHoswAIjRaoAll+HZCQYT+nAj6MkdscLvZpz5
+         GJCcHmem1m/RUJEBWdGMbOSfy8HvUupABRKZPzlStGWrFmBg5rbTEhYuruqQH/jUwmM4
+         Jt++HW1f3Xl1TslnbFZgbFyW/e31QmWq5PN+j/FlRj1gXSBewNhdeUjCTuvQPppOzkQn
+         ta2PlXa031TQPujFpmCpdOEDrnTPxC+qTkmtj7HNiIhdwPAX7ACXrLR6+65N3yCIDTvJ
+         yM+w==
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Muchun Song <muchun.song-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, =?UTF-8?q?Michal=20Koutn=C3=BD?= <mkoutny-IBi9RG/b67k@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+To: ast-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, daniel-FeC+5ew28dpmcu3hnIyYJQ@public.gmane.org, john.fastabend-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, andrii-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, martin.lau-fxUVXftIFDnyG1zEObXtfA@public.gmane.org, song-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, yonghong.song-fxUVXftIFDnyG1zEObXtfA@public.gmane.org, kpsingh-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, sdf-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, haoluo-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, jolsa-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, mkoutny-IBi9RG/b67k@public.gmane.org
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, bpf-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Yafang Shao <laoar.shao-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 
-memcg_rstat_updated() uses the value of the state update to keep track
-of the magnitude of pending updates, so that we only do a stats flush
-when it's worth the work. Most values passed into memcg_rstat_updated()
-are in pages, however, a few of them are actually in bytes or KBs.
+Currently, BPF is primarily confined to cgroup2, with the exception of
+cgroup_iter, which supports cgroup1 fds. Unfortunately, this limitation
+prevents us from harnessing the full potential of BPF within cgroup1
+environments.
 
-To put this into perspective, a 512 byte slab allocation today would
-look the same as allocating 512 pages. This may result in premature
-flushes, which means unnecessary work and latency.
+In our endeavor to seamlessly integrate BPF within our Kubernetes
+environment, which relies on cgroup1, we have been exploring the
+possibility of transitioning to cgroup2. While this transition is
+forward-looking, it poses challenges due to the necessity for numerous
+applications to adapt.
 
-Normalize all the state values passed into memcg_rstat_updated() to
-pages. Round up non-zero sub-page to 1 page, because
-memcg_rstat_updated() ignores 0 page updates.
+While we acknowledge that cgroup2 represents the future, we also recognize
+that such transitions demand time and effort. As a result, we are
+considering an alternative approach. Instead of migrating to cgroup2, we
+are contemplating modifications to the BPF kernel code to ensure
+compatibility with cgroup1. These adjustments appear to be relatively
+minor, making this option more feasible.
 
-Fixes: 5b3be698a872 ("memcg: better bounds on the memcg stats updates")
-Signed-off-by: Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
----
- mm/memcontrol.c | 20 ++++++++++++++++++--
- 1 file changed, 18 insertions(+), 2 deletions(-)
+Given the widespread use of cgroup1 in container environments, this change
+would be beneficial to many users.
 
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index 683aa8405c22..ea050908338a 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -761,6 +761,22 @@ unsigned long memcg_page_state(struct mem_cgroup *memcg, int idx)
- 	return x;
- }
- 
-+static int memcg_page_state_unit(int item);
-+
-+/*
-+ * Normalize the value passed into memcg_rstat_updated() to be in pages. Round
-+ * up non-zero sub-page updates to 1 page as zero page updates are ignored.
-+ */
-+static int memcg_state_val_in_pages(int idx, int val)
-+{
-+	int unit = memcg_page_state_unit(idx);
-+
-+	if (!val || unit == PAGE_SIZE)
-+		return val;
-+	else
-+		return max(val * unit / PAGE_SIZE, 1UL);
-+}
-+
- /**
-  * __mod_memcg_state - update cgroup memory statistics
-  * @memcg: the memory cgroup
-@@ -773,7 +789,7 @@ void __mod_memcg_state(struct mem_cgroup *memcg, int idx, int val)
- 		return;
- 
- 	__this_cpu_add(memcg->vmstats_percpu->state[idx], val);
--	memcg_rstat_updated(memcg, val);
-+	memcg_rstat_updated(memcg, memcg_state_val_in_pages(idx, val));
- }
- 
- /* idx can be of type enum memcg_stat_item or node_stat_item. */
-@@ -824,7 +840,7 @@ void __mod_memcg_lruvec_state(struct lruvec *lruvec, enum node_stat_item idx,
- 	/* Update lruvec */
- 	__this_cpu_add(pn->lruvec_stats_percpu->state[idx], val);
- 
--	memcg_rstat_updated(memcg, val);
-+	memcg_rstat_updated(memcg, memcg_state_val_in_pages(idx, val));
- 	memcg_stats_unlock();
- }
- 
+Based on our investigation, the optimal way to enable BPF on cgroup1 is to
+utilize the cgroup controller. The cgroup becomes active only when it has
+one or more of its controllers enabled. In production environments, a task
+is consistently managed by at least one cgroup controller. Consequently, we
+can always establish a direct link between a task and a cgroup controller,
+enabling us to perform actions based on this connection. As a consequence,
+this patchset introduces the following new kfuncs: 
+
+- bpf_cgroup_id_from_task_within_controller
+  Retrieves the cgroup ID from a task within a specific cgroup controller.
+- bpf_cgroup_acquire_from_id_within_controller
+  Acquires the cgroup from a cgroup ID within a specific cgroup controller.
+- bpf_cgroup_ancestor_id_from_task_within_controller
+  Retrieves the ancestor cgroup ID from a task within a specific cgroup
+  controller.
+
+The advantage of these new BPF kfuncs is their ability to abstract away the
+complexities of cgroup hierarchies, irrespective of whether they involve
+cgroup1 or cgroup2.
+
+In the future, we may expand controller-based support to other BPF
+functionalities, such as bpf_cgrp_storage, the attachment and detachment
+of cgroups, skb_under_cgroup, and more.
+
+Changes:
+- bpf, cgroup: Enable cgroup_array map on cgroup1
+  https://lore.kernel.org/bpf/20230903142800.3870-1-laoar.shao-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org/
+
+Yafang Shao (8):
+  bpf: Fix missed rcu read lock in bpf_task_under_cgroup()
+  cgroup: Enable task_under_cgroup_hierarchy() on cgroup1
+  cgroup: Add cgroup_get_from_id_within_subsys()
+  bpf: Add new kfuncs support for cgroup controller
+  selftests/bpf: Fix issues in setup_classid_environment()
+  selftests/bpf: Add parallel support for classid
+  selftests/bpf: Add new cgroup helper get_classid_cgroup_id()
+  selftests/bpf: Add selftests for cgroup controller
+
+ include/linux/cgroup-defs.h                   |  20 +++
+ include/linux/cgroup.h                        |  31 +++-
+ kernel/bpf/helpers.c                          |  77 ++++++++-
+ kernel/cgroup/cgroup-internal.h               |  20 ---
+ kernel/cgroup/cgroup.c                        |  32 +++-
+ tools/testing/selftests/bpf/cgroup_helpers.c  |  65 ++++++--
+ tools/testing/selftests/bpf/cgroup_helpers.h  |   3 +-
+ .../bpf/prog_tests/cgroup_controller.c        | 149 ++++++++++++++++++
+ .../selftests/bpf/prog_tests/cgroup_v1v2.c    |   2 +-
+ .../bpf/progs/test_cgroup_controller.c        |  80 ++++++++++
+ 10 files changed, 430 insertions(+), 49 deletions(-)
+ create mode 100644 tools/testing/selftests/bpf/prog_tests/cgroup_controller.c
+ create mode 100644 tools/testing/selftests/bpf/progs/test_cgroup_controller.c
+
 -- 
-2.42.0.515.g380fc7ccd1-goog
+2.30.1 (Apple Git-130)
 
