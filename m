@@ -1,47 +1,62 @@
-From: Yosry Ahmed <yosryahmed@google.com>
-Subject: Re: [PATCH 0/2] mm: memcg: fix tracking of pending stats updates values
-Date: Fri, 22 Sep 2023 10:59:13 -0700
-Message-ID: <CAJD7tkbHcJ59XLk1VqhkLtuZOqqw=VQyCqB1eooy6hR7eb3RSQ@mail.gmail.com>
-References: <20230922082542.466579-1-yosryahmed@google.com> <20230922100310.102aa12ac2bdf0568e6e7432@linux-foundation.org>
+From: Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>
+Subject: Re: [PATCH 1/2] memcg, oom: unmark under_oom after the oom killer is
+ done
+Date: Fri, 22 Sep 2023 16:17:28 -0700
+Message-ID: <ZQ4giCbTqUpmKWAa@P9FQF9L96D.corp.robot.car>
+References: <20230922070529.362202-1-haifeng.xu@shopee.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20230601; t=1695405593; x=1696010393; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=neFKDss4Eoz4zqBDkZFgiJEWmdfT57VEWXtM0Jgtcu8=;
-        b=NO2GxxrARKtVZOSuIAMt9Ix6EPjYW5hGkY5KMhlhPvlklZuBBhdfW3kQzC5UIS0Gcu
-         noUJVp1dkiwSLCuovsS6cydQnDXH5XO0oIM8TJa8aHmqSkWc0U4djBl2EYpwmbdTenLW
-         vcxon6A//JrFRuM567ICtp58sVYzH8TcEqvFnfhqISxB/TlRsu+WI0S2TS8QM2H8sJzG
-         daE25I68Iq6ByjiVUOX/McVVxqTLPVx+wNqyzVrYjk3mtwbMlk7VZtjfSvuX6jdrEtlv
-         jaNpj23Rwq3D197kfypZs0chiG70X45KWoPd8usq1ljHbZxU6qyxmR9Fp46Kd0XMX9Vs
-         ToCg==
-In-Reply-To: <20230922100310.102aa12ac2bdf0568e6e7432@linux-foundation.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
+        t=1695424651;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=iQQ1ROeb5sVWDljoKrPkH1Y3Dt9naFHqMwDT9jkaz80=;
+        b=lDcVe7Ctz0mr4FYdfk0PCQoXY9LxRip/ravP62GITtVHu/Vmta5XDggxyz6KEvsRfYJGd3
+        /PvmthJtM6zLKMIC7BNZIJjh2XpsYjdkw8ehXNSVqIMHmqqdZDf0s+Jk2SEQU29sVHGeMX
+        DfVr3cbPy8lpYlN/qX+ybiWaO7kS+eU=
+Content-Disposition: inline
+In-Reply-To: <20230922070529.362202-1-haifeng.xu-LL2PKPoSiP3QT0dZR+AlfA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="windows-1252"
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: Shakeel Butt <shakeelb@google.com>, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, Roman Gushchin <roman.gushchin@linux.dev>, Muchun Song <muchun.song@linux.dev>, =?UTF-8?Q?Michal_Koutn=C3=BD?= <mkoutny@suse.com>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Haifeng Xu <haifeng.xu-LL2PKPoSiP3QT0dZR+AlfA@public.gmane.org>
+Cc: mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
 
-On Fri, Sep 22, 2023 at 10:03=E2=80=AFAM Andrew Morton
-<akpm@linux-foundation.org> wrote:
->
-> On Fri, 22 Sep 2023 08:25:40 +0000 Yosry Ahmed <yosryahmed@google.com> wr=
-ote:
->
-> > While working on adjacent code [1], I realized that the values passed
-> > into memcg_rstat_updated() to keep track of the magnitude of pending
-> > updates is consistent. It is mostly in pages, but sometimes it can be i=
-n
-> > bytes or KBs. Fix that.
->
-> Clashes with "memcg: remove unused do_memsw_account in
-> memcg1_stat_format", and maybe other things.  Can you please redo
-> against mm-unsstable or linux-next?
+On Fri, Sep 22, 2023 at 07:05:28AM +0000, Haifeng Xu wrote:
+> When application in userland receives oom notification from kernel
+> and reads the oom_control file, it's confusing that under_oom is 0
+> though the omm killer hasn't finished. The reason is that under_oom
+> is cleared before invoking mem_cgroup_out_of_memory(), so move the
+> action that unmark under_oom after completing oom handling. Therefore,
+> the value of under_oom won't mislead users.
+> 
+> Signed-off-by: Haifeng Xu <haifeng.xu-LL2PKPoSiP3QT0dZR+AlfA@public.gmane.org>
 
-Done, sent v2:
-https://lore.kernel.org/linux-mm/20230922175741.635002-1-yosryahmed@google.=
-com/
+Makes sense to me.
+
+Acked-by: Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>
 
 Thanks!
+
+> ---
+>  mm/memcontrol.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+> index e8ca4bdcb03c..0b6ed63504ca 100644
+> --- a/mm/memcontrol.c
+> +++ b/mm/memcontrol.c
+> @@ -1970,8 +1970,8 @@ static bool mem_cgroup_oom(struct mem_cgroup *memcg, gfp_t mask, int order)
+>  	if (locked)
+>  		mem_cgroup_oom_notify(memcg);
+>  
+> -	mem_cgroup_unmark_under_oom(memcg);
+>  	ret = mem_cgroup_out_of_memory(memcg, mask, order);
+> +	mem_cgroup_unmark_under_oom(memcg);
+>  
+>  	if (locked)
+>  		mem_cgroup_oom_unlock(memcg);
+> -- 
+> 2.25.1
+> 
