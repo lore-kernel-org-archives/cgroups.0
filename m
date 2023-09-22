@@ -1,60 +1,32 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [RFC PATCH bpf-next 0/8] bpf, cgroup: Add bpf support for cgroup
- controller
-Date: Fri, 22 Sep 2023 06:52:18 -1000
-Message-ID: <ZQ3GQmYrYyKAg2uK@slm.duckdns.org>
-References: <20230922112846.4265-1-laoar.shao@gmail.com>
+From: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+Subject: Re: [PATCH 0/2] mm: memcg: fix tracking of pending stats updates
+ values
+Date: Fri, 22 Sep 2023 10:03:10 -0700
+Message-ID: <20230922100310.102aa12ac2bdf0568e6e7432@linux-foundation.org>
+References: <20230922082542.466579-1-yosryahmed@google.com>
 Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1695401541; x=1696006341; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:sender:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=seU9shViMhY31gmIUtGee7cdWlwMOHkiBVOkqV5wiBM=;
-        b=no5DHhq49rd/cEV4zYOSrQFvbA+lx6OEZ6f7pjPCjFrrxZlba1YNgeTV3dZs3eTOOx
-         GfhwRhK80sR0yfIwpS0J+8Ib7TDqsQS3hb/9bdtc9/7+0JIi5rGoncK1ZS76JOIqC7KD
-         6pfjnSBMV4E/14ToJfZ4GJY5R3HLKYrVQXOl5mvsIWEScBrKs/iz3ll+Q0g52L3NsbTm
-         X3XKlSQ/9sjkFFWbGlKqvIbweUY9XNy+M+BwzoRYi7YJsBoCb0dMUdvZ6ABpAO2QEAnR
-         me37/3+ev9zbmEVPpgyhzGvO5cwaeYWt3+pcZ7jX2XddYPeAS5/vt8JbVPL3RpyyhIKg
-         lxUQ==
-Sender: Tejun Heo <htejun-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <20230922112846.4265-1-laoar.shao-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linux-foundation.org;
+        s=korg; t=1695402192;
+        bh=qa/QJ12DIUWvIeySIX2g6kqd2yUHHXJ+BRw50a4IKNU=;
+        h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
+        b=uZWF7kJrm5w73mco/RN5kh0tFZqol/wzUHts2vidpRz38ZzJryh0F8Jo8FNJ1KjRS
+         fvytGPaP6DT92lWdNVq/FOf7os8h8kRVgIb6Q+blcoSlcD8L3qWYBYT5RU0unpOhYv
+         ZQz8Myb6yh3K4y1JaIiCCoPWXMFcaasTV8Kdbmps=
+In-Reply-To: <20230922082542.466579-1-yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Yafang Shao <laoar.shao-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Cc: ast-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, daniel-FeC+5ew28dpmcu3hnIyYJQ@public.gmane.org, john.fastabend-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, andrii-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, martin.lau-fxUVXftIFDnyG1zEObXtfA@public.gmane.org, song-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, yonghong.song-fxUVXftIFDnyG1zEObXtfA@public.gmane.org, kpsingh-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, sdf-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, haoluo-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, jolsa-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, mkoutny-IBi9RG/b67k@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, bpf-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Cc: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Roman Gushchin <roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, Muchun Song <muchun.song-fxUVXftIFDnyG1zEObXtfA@public.gmane.org>, =?ISO-8859-1?Q? Michal_Koutn=FD ?= <mkoutny-IBi9RG/b67k@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-Hello,
+On Fri, 22 Sep 2023 08:25:40 +0000 Yosry Ahmed <yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org> wrote:
 
-On Fri, Sep 22, 2023 at 11:28:38AM +0000, Yafang Shao wrote:
-> - bpf_cgroup_id_from_task_within_controller
->   Retrieves the cgroup ID from a task within a specific cgroup controller.
-> - bpf_cgroup_acquire_from_id_within_controller
->   Acquires the cgroup from a cgroup ID within a specific cgroup controller.
-> - bpf_cgroup_ancestor_id_from_task_within_controller
->   Retrieves the ancestor cgroup ID from a task within a specific cgroup
->   controller.
-> 
-> The advantage of these new BPF kfuncs is their ability to abstract away the
-> complexities of cgroup hierarchies, irrespective of whether they involve
-> cgroup1 or cgroup2.
+> While working on adjacent code [1], I realized that the values passed
+> into memcg_rstat_updated() to keep track of the magnitude of pending
+> updates is consistent. It is mostly in pages, but sometimes it can be in
+> bytes or KBs. Fix that.
 
-I'm afraid this is more likely to bring the unnecessary complexities of
-cgroup1 into cgroup2.
-
-> In the future, we may expand controller-based support to other BPF
-> functionalities, such as bpf_cgrp_storage, the attachment and detachment
-> of cgroups, skb_under_cgroup, and more.
-
-I'm okay with minor / trivial quality of life improvements to cgroup1 but
-this goes much beyond that and is starting to complications to cgroup2
-users, which I think is a pretty bad idea long term. I'm afraid I'm gonna
-have to nack this approach.
-
-Thanks.
-
--- 
-tejun
+Clashes with "memcg: remove unused do_memsw_account in
+memcg1_stat_format", and maybe other things.  Can you please redo
+against mm-unsstable or linux-next?
