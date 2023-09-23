@@ -1,24 +1,24 @@
 From: Haitao Huang <haitao.huang-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
-Subject: [PATCH v5 04/18] x86/sgx: Use sgx_epc_lru_lists for existing active page list
-Date: Fri, 22 Sep 2023 20:06:43 -0700
-Message-ID: <20230923030657.16148-5-haitao.huang@linux.intel.com>
+Subject: [PATCH v5 08/18] x86/sgx: Use a list to track to-be-reclaimed pages
+Date: Fri, 22 Sep 2023 20:06:47 -0700
+Message-ID: <20230923030657.16148-9-haitao.huang@linux.intel.com>
 References: <20230923030657.16148-1-haitao.huang@linux.intel.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1695438422; x=1726974422;
+  t=1695438425; x=1726974425;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=2XInwiTptBt8Hdm7nc27V3H+v3nniIpqVQk6SoGNLx0=;
-  b=ITTN1kjVtJRjkoeT++c7HQ4bQOZlv9LWRlIGCWeRdiq34MTUjMBRz1ov
-   Dj5GfFUBpie5gWlql6Uk0YODF+lkWpgy4ZdQPmtsZ45YtxrYeqQ9QmTiX
-   4ADJarwNM57uqoJ8ZJ5kpqqRL0P9uez9qSVSh1wRM7vJ4v6fru2adPqcs
-   TmGuVVOPDgGjJBQt1LSTWr7Ubl0bNYc/ffEnlGDcwrbc7OUdkg9fEJIAi
-   mP/zDWwPM8hJBWm45BSwu3SAXf8V3HecRDYk9+qoSjCb02WGjU3LFG2Lp
-   68b5xPDtbEmjovKw62JiZInQEme7uUJvqpcxjfLcwxlXEVBJf94WWf++g
-   Q==;
+  bh=mUkcYfLatdROP3kNi+VVBQokEDDPoz07w/WU/sAEnUA=;
+  b=aqMQTtLgGuf15Tse8w9MPy4+p26ouclTOBIzA+hYGIu+gIGEohogC+CP
+   /5q+y3K6kdY/5ZQTc3g/WD02temprhNtd0bdlc7Jq7fQ+fyqtfpuG26JA
+   kbapsrrtre+ISa5PlDVXzWI/k0SS9i+mZaT6DkBL80zrPb6uvla85c2eY
+   BWSfT6iO/qGp6GGC0PyCLW/pUxnVgmZW7lskREAsFzXTJRcsO1BupQOB0
+   bEUmW88gVGv/APd+sinwJFAik+EwevVFJvDIjtLbfKKkSRmVWHDwtTOLg
+   es3spATI39p3kx3MY+zzjsCfdeW6l/IbqzhPOjKMT7AK3UZLbqYaeWf6d
+   g==;
 In-Reply-To: <20230923030657.16148-1-haitao.huang-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
@@ -27,153 +27,123 @@ Cc: zhiquan1.li-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org, kristen-VuQAYsv1563Yd54
 
 From: Sean Christopherson <sean.j.christopherson-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
 
-All EPC pages of enclaves including Version Array (VA) and SGX Enclave
-Control Structure (SECS) will be tracked in sgx_epc_lru_lists structs,
-one per cgroup. For now just replace the existing sgx_active_page_list
-in the reclaimer and its spinlock with a global sgx_epc_lru_lists
-struct. VA and SECS pages are still not tracked at this point but they
-will be tracked after an unreclaimable LRU list is added to the
-sgx_epc_lru_lists struct.
+Change sgx_reclaim_pages() to use a list rather than an array for
+storing the epc_pages which will be reclaimed. This change is needed
+to transition to the LRU implementation for EPC cgroup support.
+
+When the EPC cgroup is implemented, the reclaiming process will do a
+pre-order tree walk for the subtree starting from the limit-violating
+cgroup.  When each node is visited, candidate pages are selected from
+its "reclaimable" LRU list and moved into this temporary list. Passing a
+list from node to node for temporary storage in this walk is more
+straightforward than using an array.
 
 Signed-off-by: Sean Christopherson <sean.j.christopherson-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
 Co-developed-by: Kristen Carlson Accardi <kristen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
 Signed-off-by: Kristen Carlson Accardi <kristen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
-Co-developed-by: Haitao Huang <haitao.huang-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
-Signed-off-by: Haitao Huang <haitao.huang-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
+Co-developed-by: Haitao Huang<haitao.huang-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
+Signed-off-by: Haitao Huang<haitao.huang-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
 Cc: Sean Christopherson <seanjc-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 ---
-V5:
-- Spelled out SECS, VA (Jarkko)
-
 V4:
-- No change, only reordered the patch.
+- Changes needed for patch reordering
+- Revised commit message
 
 V3:
-- Remove usage of list wrapper
+- Removed list wrappers
 ---
- arch/x86/kernel/cpu/sgx/main.c | 39 +++++++++++++++++-----------------
- 1 file changed, 20 insertions(+), 19 deletions(-)
+ arch/x86/kernel/cpu/sgx/main.c | 40 +++++++++++++++-------------------
+ 1 file changed, 18 insertions(+), 22 deletions(-)
 
 diff --git a/arch/x86/kernel/cpu/sgx/main.c b/arch/x86/kernel/cpu/sgx/main.c
-index 166692f2d501..afce51d6e94a 100644
+index c1ae19a154d0..fba06dc5abfe 100644
 --- a/arch/x86/kernel/cpu/sgx/main.c
 +++ b/arch/x86/kernel/cpu/sgx/main.c
-@@ -26,10 +26,9 @@ static DEFINE_XARRAY(sgx_epc_address_space);
- 
- /*
-  * These variables are part of the state of the reclaimer, and must be accessed
-- * with sgx_reclaimer_lock acquired.
-+ * with sgx_global_lru.lock acquired.
+@@ -293,12 +293,11 @@ static void sgx_reclaimer_write(struct sgx_epc_page *epc_page,
   */
--static LIST_HEAD(sgx_active_page_list);
--static DEFINE_SPINLOCK(sgx_reclaimer_lock);
-+static struct sgx_epc_lru_lists sgx_global_lru;
- 
- static atomic_long_t sgx_nr_free_pages = ATOMIC_LONG_INIT(0);
- 
-@@ -304,13 +303,13 @@ static void sgx_reclaim_pages(void)
+ static void sgx_reclaim_pages(void)
+ {
+-	struct sgx_epc_page *chunk[SGX_NR_TO_SCAN];
+ 	struct sgx_backing backing[SGX_NR_TO_SCAN];
++	struct sgx_epc_page *epc_page, *tmp;
+ 	struct sgx_encl_page *encl_page;
+-	struct sgx_epc_page *epc_page;
+ 	pgoff_t page_index;
+-	int cnt = 0;
++	LIST_HEAD(iso);
  	int ret;
  	int i;
  
--	spin_lock(&sgx_reclaimer_lock);
-+	spin_lock(&sgx_global_lru.lock);
- 	for (i = 0; i < SGX_NR_TO_SCAN; i++) {
--		if (list_empty(&sgx_active_page_list))
-+		epc_page = list_first_entry_or_null(&sgx_global_lru.reclaimable,
-+						    struct sgx_epc_page, list);
-+		if (!epc_page)
- 			break;
+@@ -314,18 +313,22 @@ static void sgx_reclaim_pages(void)
  
--		epc_page = list_first_entry(&sgx_active_page_list,
--					    struct sgx_epc_page, list);
- 		list_del_init(&epc_page->list);
+ 		if (kref_get_unless_zero(&encl_page->encl->refcount) != 0) {
+ 			sgx_epc_page_set_state(epc_page, SGX_EPC_PAGE_RECLAIM_IN_PROGRESS);
+-			chunk[cnt++] = epc_page;
++			list_move_tail(&epc_page->list, &iso);
+ 		} else {
+-			/* The owner is freeing the page. No need to add the
+-			 * page back to the list of reclaimable pages.
++			/* The owner is freeing the page, remove it from the
++			 * LRU list
+ 			 */
+ 			sgx_epc_page_reset_state(epc_page);
++			list_del_init(&epc_page->list);
+ 		}
+ 	}
+ 	spin_unlock(&sgx_global_lru.lock);
+ 
+-	for (i = 0; i < cnt; i++) {
+-		epc_page = chunk[i];
++	if (list_empty(&iso))
++		return;
++
++	i = 0;
++	list_for_each_entry_safe(epc_page, tmp, &iso, list) {
  		encl_page = epc_page->owner;
  
-@@ -322,7 +321,7 @@ static void sgx_reclaim_pages(void)
- 			 */
- 			epc_page->flags &= ~SGX_EPC_PAGE_RECLAIMER_TRACKED;
- 	}
--	spin_unlock(&sgx_reclaimer_lock);
-+	spin_unlock(&sgx_global_lru.lock);
+ 		if (!sgx_reclaimer_age(epc_page))
+@@ -340,6 +343,7 @@ static void sgx_reclaim_pages(void)
+ 			goto skip;
+ 		}
  
- 	for (i = 0; i < cnt; i++) {
- 		epc_page = chunk[i];
-@@ -345,9 +344,9 @@ static void sgx_reclaim_pages(void)
++		i++;
+ 		encl_page->desc |= SGX_ENCL_PAGE_BEING_RECLAIMED;
+ 		mutex_unlock(&encl_page->encl->lock);
  		continue;
- 
+@@ -347,27 +351,19 @@ static void sgx_reclaim_pages(void)
  skip:
--		spin_lock(&sgx_reclaimer_lock);
--		list_add_tail(&epc_page->list, &sgx_active_page_list);
--		spin_unlock(&sgx_reclaimer_lock);
-+		spin_lock(&sgx_global_lru.lock);
-+		list_add_tail(&epc_page->list, &sgx_global_lru.reclaimable);
-+		spin_unlock(&sgx_global_lru.lock);
+ 		spin_lock(&sgx_global_lru.lock);
+ 		sgx_epc_page_set_state(epc_page, SGX_EPC_PAGE_RECLAIMABLE);
+-		list_add_tail(&epc_page->list, &sgx_global_lru.reclaimable);
++		list_move_tail(&epc_page->list, &sgx_global_lru.reclaimable);
+ 		spin_unlock(&sgx_global_lru.lock);
  
  		kref_put(&encl_page->encl->refcount, sgx_encl_release);
- 
-@@ -378,7 +377,7 @@ static void sgx_reclaim_pages(void)
- static bool sgx_should_reclaim(unsigned long watermark)
- {
- 	return atomic_long_read(&sgx_nr_free_pages) < watermark &&
--	       !list_empty(&sgx_active_page_list);
-+	       !list_empty(&sgx_global_lru.reclaimable);
- }
- 
- /*
-@@ -430,6 +429,8 @@ static bool __init sgx_page_reclaimer_init(void)
- 
- 	ksgxd_tsk = tsk;
- 
-+	sgx_lru_init(&sgx_global_lru);
-+
- 	return true;
- }
- 
-@@ -505,10 +506,10 @@ struct sgx_epc_page *__sgx_alloc_epc_page(void)
-  */
- void sgx_mark_page_reclaimable(struct sgx_epc_page *page)
- {
--	spin_lock(&sgx_reclaimer_lock);
-+	spin_lock(&sgx_global_lru.lock);
- 	page->flags |= SGX_EPC_PAGE_RECLAIMER_TRACKED;
--	list_add_tail(&page->list, &sgx_active_page_list);
--	spin_unlock(&sgx_reclaimer_lock);
-+	list_add_tail(&page->list, &sgx_global_lru.reclaimable);
-+	spin_unlock(&sgx_global_lru.lock);
- }
- 
- /**
-@@ -523,18 +524,18 @@ void sgx_mark_page_reclaimable(struct sgx_epc_page *page)
-  */
- int sgx_unmark_page_reclaimable(struct sgx_epc_page *page)
- {
--	spin_lock(&sgx_reclaimer_lock);
-+	spin_lock(&sgx_global_lru.lock);
- 	if (page->flags & SGX_EPC_PAGE_RECLAIMER_TRACKED) {
- 		/* The page is being reclaimed. */
- 		if (list_empty(&page->list)) {
--			spin_unlock(&sgx_reclaimer_lock);
-+			spin_unlock(&sgx_global_lru.lock);
- 			return -EBUSY;
- 		}
- 
- 		list_del(&page->list);
- 		page->flags &= ~SGX_EPC_PAGE_RECLAIMER_TRACKED;
+-
+-		chunk[i] = NULL;
+-	}
+-
+-	for (i = 0; i < cnt; i++) {
+-		epc_page = chunk[i];
+-		if (epc_page)
+-			sgx_reclaimer_block(epc_page);
  	}
--	spin_unlock(&sgx_reclaimer_lock);
-+	spin_unlock(&sgx_global_lru.lock);
  
- 	return 0;
- }
-@@ -567,7 +568,7 @@ struct sgx_epc_page *sgx_alloc_epc_page(void *owner, bool reclaim)
- 			break;
- 		}
+-	for (i = 0; i < cnt; i++) {
+-		epc_page = chunk[i];
+-		if (!epc_page)
+-			continue;
++	list_for_each_entry(epc_page, &iso, list)
++		sgx_reclaimer_block(epc_page);
  
--		if (list_empty(&sgx_active_page_list))
-+		if (list_empty(&sgx_global_lru.reclaimable))
- 			return ERR_PTR(-ENOMEM);
++	i = 0;
++	list_for_each_entry_safe(epc_page, tmp, &iso, list) {
+ 		encl_page = epc_page->owner;
+-		sgx_reclaimer_write(epc_page, &backing[i]);
++		sgx_reclaimer_write(epc_page, &backing[i++]);
  
- 		if (!reclaim) {
+ 		kref_put(&encl_page->encl->refcount, sgx_encl_release);
+ 		sgx_epc_page_reset_state(epc_page);
 -- 
 2.25.1
 
