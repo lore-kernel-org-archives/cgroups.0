@@ -1,94 +1,234 @@
-From: Haitao Huang <haitao.huang@linux.intel.com>
-Subject: [PATCH v5 03/18] x86/sgx: Add sgx_epc_lru_lists to encapsulate LRU lists
-Date: Fri, 22 Sep 2023 20:06:42 -0700
-Message-ID: <20230923030657.16148-4-haitao.huang@linux.intel.com>
+From: Haitao Huang <haitao.huang-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
+Subject: [PATCH v5 09/18] x86/sgx: Store struct sgx_encl when allocating new VA pages
+Date: Fri, 22 Sep 2023 20:06:48 -0700
+Message-ID: <20230923030657.16148-10-haitao.huang@linux.intel.com>
 References: <20230923030657.16148-1-haitao.huang@linux.intel.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1695438422; x=1726974422;
+  t=1695438425; x=1726974425;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=Bl38Qf8S1sTRN04lW2YFAodcrfy1L4fMzLvJCxC13/E=;
-  b=axsybe+aDrMZ0KkfyOZE9abRzGIrB+i9eofz2fJIqTumnixBlfciEw/J
-   BjAHBdIdT3EsEXyMnzw1qWyWBt7rnlOO5JOFHQnivhXm3t172kkst+HRh
-   /at8+1vb/bVeCYz4vux0aBYwivGQOeh7x6jlSVc8XCoBA9QR5SJKU0YAQ
-   H6WSpVD4LWUhDqnzWUgx4BtFop4FR8EaepmRI82Tcjp3rdecVL2poYJ/V
-   WJJEqKo+VqNp2YhWzazf2D1/lDkd0mn70MT3WyZvxzXkAafyOsU0+C0HK
-   po6BgD5azrljYiJL9G7g3R/wYC+tbmCC79Vw6q+0WyfQJVqDxyGu89eHv
-   Q==;
-In-Reply-To: <20230923030657.16148-1-haitao.huang@linux.intel.com>
+  bh=CPVq7hMKhTxLnKfdXR7Q7yMpcir8DY5XsL5VtYGW0ew=;
+  b=UGcAPNMKOqBSrrtcEHqIYv7pf84DCxGXAqwrmd0+u9QtO/Aw004XgPWr
+   Ue7jVJvi1e1eSbT3G7YBJQp4BN5Oo9RR6JJi+i9lPrI9JyHT+YoKNWB4g
+   3C3mPZ6MCG+8n2RYMFKmYZdBgpaX8ZyrEx+h1hHwPLDlwwBJ1OHitT2MC
+   kxCjQSBIF1ImeZqh+IHyqCdc5cm6bOEYicIUEJp7A12grMLWY7YqfVvt4
+   cZhoJrwykFjoGWBrKLi0SfW0rkxImBWeBptIgnmD4E40Lm2qn40TNAWQ8
+   MKBLRtdOgylAzZMErwENispd5wHnBXczNPZeeKZxekJQpo/FWB5CSpoiZ
+   g==;
+In-Reply-To: <20230923030657.16148-1-haitao.huang-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: jarkko@kernel.org, dave.hansen@linux.intel.com, tj@kernel.org, linux-kernel@vger.kernel.org, linux-sgx@vger.kernel.org, x86@kernel.org, cgroups@vger.kernel.org, tglx@linutronix.de, mingo@redhat.com, bp@alien8.de, hpa@zytor.com, sohil.mehta@intel.com
-Cc: zhiquan1.li@intel.com, kristen@linux.intel.com, seanjc@google.com, zhanb@microsoft.com, anakrish@microsoft.com, mikko.ylinen@linux.intel.com, yangjie@microsoft.com
+To: jarkko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, dave.hansen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-sgx-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, x86-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, tglx-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org, mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, bp-Gina5bIWoIWzQB+pC5nmwQ@public.gmane.org, hpa-YMNOUZJC4hwAvxtiuMwx3w@public.gmane.org, sohil.mehta-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org
+Cc: zhiquan1.li-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org, kristen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org, seanjc-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, zhanb-0li6OtcxBFHby3iVrkZq2A@public.gmane.org, anakrish-0li6OtcxBFHby3iVrkZq2A@public.gmane.org, mikko.ylinen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org, yangjie-0li6OtcxBFHby3iVrkZq2A@public.gmane.org
 
-From: Sean Christopherson <sean.j.christopherson@intel.com>
+From: Sean Christopherson <sean.j.christopherson-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
 
-Introduce a data structure to wrap the existing reclaimable list and its
-spinlock. Each cgroup later will have one instance of this structure to
-track EPC pages allocated for processes associated with the same cgroup.
-Just like the global SGX reclaimer (ksgxd), an EPC cgroup reclaims pages
-from the reclaimable list in this structure when its usage reaches near
-its limit.
+In a later patch, when a cgroup has exceeded the max capacity for EPC
+pages, it may need to identify and OOM kill a less active enclave to
+make room for other enclaves within the same group. Such a victim
+enclave would have no active pages other than the unreclaimable Version
+Array (VA) and SECS pages.  Therefore, the cgroup needs examine its
+unreclaimable page list, and finding an enclave given a SECS page or a
+VA page. This will require a backpointer from a page to an enclave,
+which is not available for VA pages.
 
-Currently, ksgxd does not track the VA, SECS pages. They are considered
-as 'unreclaimable' pages that are only deallocated when their respective
-owning enclaves are destroyed and all associated resources released.
+Because struct sgx_epc_page instances of VA pages are not owned by an
+sgx_encl_page instance, mark their owner as sgx_encl: pass the struct
+sgx_encl of the enclave allocating the VA page to sgx_alloc_epc_page(),
+which will store this value in the owner field of the struct
+sgx_epc_page.  In a later patch, VA pages will be placed in an
+unreclaimable queue that can be examined by the cgroup to select the OOM
+killed enclave.
 
-When an EPC cgroup can not reclaim any more reclaimable EPC pages to
-reduce its usage below its limit, the cgroup must also reclaim those
-unreclaimables by killing their owning enclaves. The VA and SECS pages
-later are also tracked in an 'unreclaimable' list added to this structure
-to support this OOM killing of enclaves.
-
-Signed-off-by: Sean Christopherson <sean.j.christopherson@intel.com>
-Co-developed-by: Kristen Carlson Accardi <kristen@linux.intel.com>
-Signed-off-by: Kristen Carlson Accardi <kristen@linux.intel.com>
-Co-developed-by: Haitao Huang <haitao.huang@linux.intel.com>
-Signed-off-by: Haitao Huang <haitao.huang@linux.intel.com>
-Cc: Sean Christopherson <seanjc@google.com>
+Signed-off-by: Sean Christopherson <sean.j.christopherson-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+Co-developed-by: Kristen Carlson Accardi <kristen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
+Signed-off-by: Kristen Carlson Accardi <kristen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
+Co-developed-by: Haitao Huang <haitao.huang-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
+Signed-off-by: Haitao Huang <haitao.huang-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
+Cc: Sean Christopherson <seanjc-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 ---
+V5:
+- Fixed some comments in code (Jarkko)
+
 V4:
-- Removed unneeded comments for the spinlock and the non-reclaimables.
-(Kai, Jarkko)
-- Revised the commit to add introduction comments for unreclaimables and
-multiple LRU lists.(Kai)
-- Reordered the patches: delay all changes for unreclaimables to
-later, and this one becomes the first change in the SGX subsystem.
-
-V3:
-- Removed the helper functions and revised commit messages.
+- Changes needed for patch reordering
+- Revised commit messages (Jarkko)
 ---
- arch/x86/kernel/cpu/sgx/sgx.h | 14 ++++++++++++++
- 1 file changed, 14 insertions(+)
+ arch/x86/kernel/cpu/sgx/encl.c  |  5 +++--
+ arch/x86/kernel/cpu/sgx/encl.h  |  2 +-
+ arch/x86/kernel/cpu/sgx/ioctl.c |  2 +-
+ arch/x86/kernel/cpu/sgx/main.c  | 20 ++++++++++----------
+ arch/x86/kernel/cpu/sgx/sgx.h   |  7 ++++++-
+ 5 files changed, 21 insertions(+), 15 deletions(-)
 
+diff --git a/arch/x86/kernel/cpu/sgx/encl.c b/arch/x86/kernel/cpu/sgx/encl.c
+index f5afc8d65e22..ec3402d41b63 100644
+--- a/arch/x86/kernel/cpu/sgx/encl.c
++++ b/arch/x86/kernel/cpu/sgx/encl.c
+@@ -1236,6 +1236,7 @@ void sgx_zap_enclave_ptes(struct sgx_encl *encl, unsigned long addr)
+ 
+ /**
+  * sgx_alloc_va_page() - Allocate a Version Array (VA) page
++ * @encl:    The new owner of the page.
+  * @reclaim: Reclaim EPC pages directly if none available. Enclave
+  *           mutex should not be held if this is set.
+  *
+@@ -1245,12 +1246,12 @@ void sgx_zap_enclave_ptes(struct sgx_encl *encl, unsigned long addr)
+  *   a VA page,
+  *   -errno otherwise
+  */
+-struct sgx_epc_page *sgx_alloc_va_page(bool reclaim)
++struct sgx_epc_page *sgx_alloc_va_page(struct sgx_encl *encl, bool reclaim)
+ {
+ 	struct sgx_epc_page *epc_page;
+ 	int ret;
+ 
+-	epc_page = sgx_alloc_epc_page(NULL, reclaim);
++	epc_page = sgx_alloc_epc_page(encl, reclaim);
+ 	if (IS_ERR(epc_page))
+ 		return ERR_CAST(epc_page);
+ 
+diff --git a/arch/x86/kernel/cpu/sgx/encl.h b/arch/x86/kernel/cpu/sgx/encl.h
+index f94ff14c9486..831d63f80f5a 100644
+--- a/arch/x86/kernel/cpu/sgx/encl.h
++++ b/arch/x86/kernel/cpu/sgx/encl.h
+@@ -116,7 +116,7 @@ struct sgx_encl_page *sgx_encl_page_alloc(struct sgx_encl *encl,
+ 					  unsigned long offset,
+ 					  u64 secinfo_flags);
+ void sgx_zap_enclave_ptes(struct sgx_encl *encl, unsigned long addr);
+-struct sgx_epc_page *sgx_alloc_va_page(bool reclaim);
++struct sgx_epc_page *sgx_alloc_va_page(struct sgx_encl *encl, bool reclaim);
+ unsigned int sgx_alloc_va_slot(struct sgx_va_page *va_page);
+ void sgx_free_va_slot(struct sgx_va_page *va_page, unsigned int offset);
+ bool sgx_va_page_full(struct sgx_va_page *va_page);
+diff --git a/arch/x86/kernel/cpu/sgx/ioctl.c b/arch/x86/kernel/cpu/sgx/ioctl.c
+index 9a32bf5a1070..164256ea18d0 100644
+--- a/arch/x86/kernel/cpu/sgx/ioctl.c
++++ b/arch/x86/kernel/cpu/sgx/ioctl.c
+@@ -30,7 +30,7 @@ struct sgx_va_page *sgx_encl_grow(struct sgx_encl *encl, bool reclaim)
+ 		if (!va_page)
+ 			return ERR_PTR(-ENOMEM);
+ 
+-		va_page->epc_page = sgx_alloc_va_page(reclaim);
++		va_page->epc_page = sgx_alloc_va_page(encl, reclaim);
+ 		if (IS_ERR(va_page->epc_page)) {
+ 			err = ERR_CAST(va_page->epc_page);
+ 			kfree(va_page);
+diff --git a/arch/x86/kernel/cpu/sgx/main.c b/arch/x86/kernel/cpu/sgx/main.c
+index fba06dc5abfe..ed813288af44 100644
+--- a/arch/x86/kernel/cpu/sgx/main.c
++++ b/arch/x86/kernel/cpu/sgx/main.c
+@@ -107,7 +107,7 @@ static unsigned long __sgx_sanitize_pages(struct list_head *dirty_page_list)
+ 
+ static bool sgx_reclaimer_age(struct sgx_epc_page *epc_page)
+ {
+-	struct sgx_encl_page *page = epc_page->owner;
++	struct sgx_encl_page *page = epc_page->encl_page;
+ 	struct sgx_encl *encl = page->encl;
+ 	struct sgx_encl_mm *encl_mm;
+ 	bool ret = true;
+@@ -139,7 +139,7 @@ static bool sgx_reclaimer_age(struct sgx_epc_page *epc_page)
+ 
+ static void sgx_reclaimer_block(struct sgx_epc_page *epc_page)
+ {
+-	struct sgx_encl_page *page = epc_page->owner;
++	struct sgx_encl_page *page = epc_page->encl_page;
+ 	unsigned long addr = page->desc & PAGE_MASK;
+ 	struct sgx_encl *encl = page->encl;
+ 	int ret;
+@@ -196,7 +196,7 @@ void sgx_ipi_cb(void *info)
+ static void sgx_encl_ewb(struct sgx_epc_page *epc_page,
+ 			 struct sgx_backing *backing)
+ {
+-	struct sgx_encl_page *encl_page = epc_page->owner;
++	struct sgx_encl_page *encl_page = epc_page->encl_page;
+ 	struct sgx_encl *encl = encl_page->encl;
+ 	struct sgx_va_page *va_page;
+ 	unsigned int va_offset;
+@@ -249,7 +249,7 @@ static void sgx_encl_ewb(struct sgx_epc_page *epc_page,
+ static void sgx_reclaimer_write(struct sgx_epc_page *epc_page,
+ 				struct sgx_backing *backing)
+ {
+-	struct sgx_encl_page *encl_page = epc_page->owner;
++	struct sgx_encl_page *encl_page = epc_page->encl_page;
+ 	struct sgx_encl *encl = encl_page->encl;
+ 	struct sgx_backing secs_backing;
+ 	int ret;
+@@ -309,7 +309,7 @@ static void sgx_reclaim_pages(void)
+ 			break;
+ 
+ 		list_del_init(&epc_page->list);
+-		encl_page = epc_page->owner;
++		encl_page = epc_page->encl_page;
+ 
+ 		if (kref_get_unless_zero(&encl_page->encl->refcount) != 0) {
+ 			sgx_epc_page_set_state(epc_page, SGX_EPC_PAGE_RECLAIM_IN_PROGRESS);
+@@ -329,7 +329,7 @@ static void sgx_reclaim_pages(void)
+ 
+ 	i = 0;
+ 	list_for_each_entry_safe(epc_page, tmp, &iso, list) {
+-		encl_page = epc_page->owner;
++		encl_page = epc_page->encl_page;
+ 
+ 		if (!sgx_reclaimer_age(epc_page))
+ 			goto skip;
+@@ -362,7 +362,7 @@ static void sgx_reclaim_pages(void)
+ 
+ 	i = 0;
+ 	list_for_each_entry_safe(epc_page, tmp, &iso, list) {
+-		encl_page = epc_page->owner;
++		encl_page = epc_page->encl_page;
+ 		sgx_reclaimer_write(epc_page, &backing[i++]);
+ 
+ 		kref_put(&encl_page->encl->refcount, sgx_encl_release);
+@@ -562,7 +562,7 @@ struct sgx_epc_page *sgx_alloc_epc_page(void *owner, bool reclaim)
+ 	for ( ; ; ) {
+ 		page = __sgx_alloc_epc_page();
+ 		if (!IS_ERR(page)) {
+-			page->owner = owner;
++			page->encl_page = owner;
+ 			break;
+ 		}
+ 
+@@ -607,7 +607,7 @@ void sgx_free_epc_page(struct sgx_epc_page *page)
+ 
+ 	spin_lock(&node->lock);
+ 
+-	page->owner = NULL;
++	page->encl_page = NULL;
+ 	if (page->poison)
+ 		list_add(&page->list, &node->sgx_poison_page_list);
+ 	else
+@@ -642,7 +642,7 @@ static bool __init sgx_setup_epc_section(u64 phys_addr, u64 size,
+ 	for (i = 0; i < nr_pages; i++) {
+ 		section->pages[i].section = index;
+ 		section->pages[i].flags = 0;
+-		section->pages[i].owner = NULL;
++		section->pages[i].encl_page = NULL;
+ 		section->pages[i].poison = 0;
+ 		list_add_tail(&section->pages[i].list, &sgx_dirty_page_list);
+ 	}
 diff --git a/arch/x86/kernel/cpu/sgx/sgx.h b/arch/x86/kernel/cpu/sgx/sgx.h
-index d2dad21259a8..018414b2abe8 100644
+index 764cec23f4e5..5110dd433b80 100644
 --- a/arch/x86/kernel/cpu/sgx/sgx.h
 +++ b/arch/x86/kernel/cpu/sgx/sgx.h
-@@ -83,6 +83,20 @@ static inline void *sgx_get_epc_virt_addr(struct sgx_epc_page *page)
- 	return section->virt_addr + index * PAGE_SIZE;
- }
- 
-+/*
-+ * Tracks EPC pages reclaimable by the reclaimer (ksgxd).
-+ */
-+struct sgx_epc_lru_lists {
-+	spinlock_t lock;
-+	struct list_head reclaimable;
-+};
+@@ -68,7 +68,12 @@ struct sgx_epc_page {
+ 	unsigned int section;
+ 	u16 flags;
+ 	u16 poison;
+-	struct sgx_encl_page *owner;
 +
-+static inline void sgx_lru_init(struct sgx_epc_lru_lists *lrus)
-+{
-+	spin_lock_init(&lrus->lock);
-+	INIT_LIST_HEAD(&lrus->reclaimable);
-+}
-+
- struct sgx_epc_page *__sgx_alloc_epc_page(void);
- void sgx_free_epc_page(struct sgx_epc_page *page);
++	/* Possible owner types */
++	union {
++		struct sgx_encl_page *encl_page;
++		struct sgx_encl *encl;
++	};
+ 	struct list_head list;
+ };
  
 -- 
 2.25.1
