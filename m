@@ -1,235 +1,289 @@
 From: Haitao Huang <haitao.huang-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
-Subject: [PATCH v5 09/18] x86/sgx: Store struct sgx_encl when allocating new VA pages
-Date: Fri, 22 Sep 2023 20:06:48 -0700
-Message-ID: <20230923030657.16148-10-haitao.huang@linux.intel.com>
+Subject: [PATCH v5 06/18] x86/sgx: Introduce EPC page states
+Date: Fri, 22 Sep 2023 20:06:45 -0700
+Message-ID: <20230923030657.16148-7-haitao.huang@linux.intel.com>
 References: <20230923030657.16148-1-haitao.huang@linux.intel.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1695438425; x=1726974425;
+  t=1695438423; x=1726974423;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=CPVq7hMKhTxLnKfdXR7Q7yMpcir8DY5XsL5VtYGW0ew=;
-  b=UGcAPNMKOqBSrrtcEHqIYv7pf84DCxGXAqwrmd0+u9QtO/Aw004XgPWr
-   Ue7jVJvi1e1eSbT3G7YBJQp4BN5Oo9RR6JJi+i9lPrI9JyHT+YoKNWB4g
-   3C3mPZ6MCG+8n2RYMFKmYZdBgpaX8ZyrEx+h1hHwPLDlwwBJ1OHitT2MC
-   kxCjQSBIF1ImeZqh+IHyqCdc5cm6bOEYicIUEJp7A12grMLWY7YqfVvt4
-   cZhoJrwykFjoGWBrKLi0SfW0rkxImBWeBptIgnmD4E40Lm2qn40TNAWQ8
-   MKBLRtdOgylAzZMErwENispd5wHnBXczNPZeeKZxekJQpo/FWB5CSpoiZ
-   g==;
+  bh=W4lWkvNcyZmnYgi3wRQrFdf4W2G8XS4+lTbHa80YL7g=;
+  b=coxVdvqjtsJqYXoR1GpmC8dy9qPiHAu7cej4KsqB173KXZv7qI8fcjC2
+   UB7Nmv/0aPkgItMbJS7ypKk1ursE9Ly3frXtekXDnvL79A/b70eqT7kzR
+   8BVTcpu6gRGJAMHMWlcuYsMcAa4GsCjGhNrNBZNo75/jVJTQb9acIxrqw
+   phlwbof/bVvXjELvc9i1XuKwAvtAkLS8pVVaVbv/X0o/Gs19xJ+O9vQBg
+   +c8q3rn8gSg8ZsUqZZ5rokite65sizX/A1XMh94z+WwT/Ls0flY1emS2o
+   pfpZGHtt5Ea+ouZSLEXRL8VgbgtTGgbQIvDFLFFEJDFdg4gOXITeKVd0t
+   Q==;
 In-Reply-To: <20230923030657.16148-1-haitao.huang-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 To: jarkko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, dave.hansen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-sgx-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, x86-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, tglx-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org, mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, bp-Gina5bIWoIWzQB+pC5nmwQ@public.gmane.org, hpa-YMNOUZJC4hwAvxtiuMwx3w@public.gmane.org, sohil.mehta-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org
 Cc: zhiquan1.li-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org, kristen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org, seanjc-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, zhanb-0li6OtcxBFHby3iVrkZq2A@public.gmane.org, anakrish-0li6OtcxBFHby3iVrkZq2A@public.gmane.org, mikko.ylinen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org, yangjie-0li6OtcxBFHby3iVrkZq2A@public.gmane.org
 
-From: Sean Christopherson <sean.j.christopherson-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+Use the lower 3 bits in the flags field of sgx_epc_page struct to
+track EPC states in its life cycle and define an enum for possible
+states. More state(s) will be added later.
 
-In a later patch, when a cgroup has exceeded the max capacity for EPC
-pages, it may need to identify and OOM kill a less active enclave to
-make room for other enclaves within the same group. Such a victim
-enclave would have no active pages other than the unreclaimable Version
-Array (VA) and SECS pages.  Therefore, the cgroup needs examine its
-unreclaimable page list, and finding an enclave given a SECS page or a
-VA page. This will require a backpointer from a page to an enclave,
-which is not available for VA pages.
-
-Because struct sgx_epc_page instances of VA pages are not owned by an
-sgx_encl_page instance, mark their owner as sgx_encl: pass the struct
-sgx_encl of the enclave allocating the VA page to sgx_alloc_epc_page(),
-which will store this value in the owner field of the struct
-sgx_epc_page.  In a later patch, VA pages will be placed in an
-unreclaimable queue that can be examined by the cgroup to select the OOM
-killed enclave.
-
-Signed-off-by: Sean Christopherson <sean.j.christopherson-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
-Co-developed-by: Kristen Carlson Accardi <kristen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
-Signed-off-by: Kristen Carlson Accardi <kristen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
-Co-developed-by: Haitao Huang <haitao.huang-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
 Signed-off-by: Haitao Huang <haitao.huang-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
-Cc: Sean Christopherson <seanjc-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 ---
-V5:
-- Fixed some comments in code (Jarkko)
-
 V4:
-- Changes needed for patch reordering
-- Revised commit messages (Jarkko)
+- No changes other than required for patch reordering.
+
+V3:
+- This is new in V3 to replace the bit mask based approach (requested by Jarkko)
 ---
- arch/x86/kernel/cpu/sgx/encl.c  |  5 +++--
- arch/x86/kernel/cpu/sgx/encl.h  |  2 +-
- arch/x86/kernel/cpu/sgx/ioctl.c |  2 +-
- arch/x86/kernel/cpu/sgx/main.c  | 20 ++++++++++----------
- arch/x86/kernel/cpu/sgx/sgx.h   |  7 ++++++-
- 5 files changed, 21 insertions(+), 15 deletions(-)
+ arch/x86/kernel/cpu/sgx/encl.c  | 14 +++++++---
+ arch/x86/kernel/cpu/sgx/ioctl.c |  7 +++--
+ arch/x86/kernel/cpu/sgx/main.c  | 19 +++++++------
+ arch/x86/kernel/cpu/sgx/sgx.h   | 49 ++++++++++++++++++++++++++++++---
+ 4 files changed, 71 insertions(+), 18 deletions(-)
 
 diff --git a/arch/x86/kernel/cpu/sgx/encl.c b/arch/x86/kernel/cpu/sgx/encl.c
-index f5afc8d65e22..ec3402d41b63 100644
+index 97a53e34a8b4..f5afc8d65e22 100644
 --- a/arch/x86/kernel/cpu/sgx/encl.c
 +++ b/arch/x86/kernel/cpu/sgx/encl.c
-@@ -1236,6 +1236,7 @@ void sgx_zap_enclave_ptes(struct sgx_encl *encl, unsigned long addr)
- 
- /**
-  * sgx_alloc_va_page() - Allocate a Version Array (VA) page
-+ * @encl:    The new owner of the page.
-  * @reclaim: Reclaim EPC pages directly if none available. Enclave
-  *           mutex should not be held if this is set.
-  *
-@@ -1245,12 +1246,12 @@ void sgx_zap_enclave_ptes(struct sgx_encl *encl, unsigned long addr)
-  *   a VA page,
-  *   -errno otherwise
-  */
--struct sgx_epc_page *sgx_alloc_va_page(bool reclaim)
-+struct sgx_epc_page *sgx_alloc_va_page(struct sgx_encl *encl, bool reclaim)
+@@ -244,8 +244,12 @@ static struct sgx_epc_page *sgx_encl_load_secs(struct sgx_encl *encl)
  {
- 	struct sgx_epc_page *epc_page;
- 	int ret;
+ 	struct sgx_epc_page *epc_page = encl->secs.epc_page;
  
--	epc_page = sgx_alloc_epc_page(NULL, reclaim);
-+	epc_page = sgx_alloc_epc_page(encl, reclaim);
- 	if (IS_ERR(epc_page))
+-	if (!epc_page)
++	if (!epc_page) {
+ 		epc_page = sgx_encl_eldu(&encl->secs, NULL);
++		if (!IS_ERR(epc_page))
++			sgx_record_epc_page(epc_page,
++					    SGX_EPC_PAGE_UNRECLAIMABLE);
++	}
+ 
+ 	return epc_page;
+ }
+@@ -272,7 +276,7 @@ static struct sgx_encl_page *__sgx_encl_load_page(struct sgx_encl *encl,
  		return ERR_CAST(epc_page);
  
-diff --git a/arch/x86/kernel/cpu/sgx/encl.h b/arch/x86/kernel/cpu/sgx/encl.h
-index f94ff14c9486..831d63f80f5a 100644
---- a/arch/x86/kernel/cpu/sgx/encl.h
-+++ b/arch/x86/kernel/cpu/sgx/encl.h
-@@ -116,7 +116,7 @@ struct sgx_encl_page *sgx_encl_page_alloc(struct sgx_encl *encl,
- 					  unsigned long offset,
- 					  u64 secinfo_flags);
- void sgx_zap_enclave_ptes(struct sgx_encl *encl, unsigned long addr);
--struct sgx_epc_page *sgx_alloc_va_page(bool reclaim);
-+struct sgx_epc_page *sgx_alloc_va_page(struct sgx_encl *encl, bool reclaim);
- unsigned int sgx_alloc_va_slot(struct sgx_va_page *va_page);
- void sgx_free_va_slot(struct sgx_va_page *va_page, unsigned int offset);
- bool sgx_va_page_full(struct sgx_va_page *va_page);
+ 	encl->secs_child_cnt++;
+-	sgx_record_epc_page(epc_page, SGX_EPC_PAGE_RECLAIMER_TRACKED);
++	sgx_record_epc_page(epc_page, SGX_EPC_PAGE_RECLAIMABLE);
+ 
+ 	return entry;
+ }
+@@ -398,7 +402,7 @@ static vm_fault_t sgx_encl_eaug_page(struct vm_area_struct *vma,
+ 	encl_page->type = SGX_PAGE_TYPE_REG;
+ 	encl->secs_child_cnt++;
+ 
+-	sgx_record_epc_page(epc_page, SGX_EPC_PAGE_RECLAIMER_TRACKED);
++	sgx_record_epc_page(epc_page, SGX_EPC_PAGE_RECLAIMABLE);
+ 
+ 	phys_addr = sgx_get_epc_phys_addr(epc_page);
+ 	/*
+@@ -1256,6 +1260,8 @@ struct sgx_epc_page *sgx_alloc_va_page(bool reclaim)
+ 		sgx_encl_free_epc_page(epc_page);
+ 		return ERR_PTR(-EFAULT);
+ 	}
++	sgx_record_epc_page(epc_page,
++			    SGX_EPC_PAGE_UNRECLAIMABLE);
+ 
+ 	return epc_page;
+ }
+@@ -1315,7 +1321,7 @@ void sgx_encl_free_epc_page(struct sgx_epc_page *page)
+ {
+ 	int ret;
+ 
+-	WARN_ON_ONCE(page->flags & SGX_EPC_PAGE_RECLAIMER_TRACKED);
++	WARN_ON_ONCE(page->flags & SGX_EPC_PAGE_STATE_MASK);
+ 
+ 	ret = __eremove(sgx_get_epc_virt_addr(page));
+ 	if (WARN_ONCE(ret, EREMOVE_ERROR_MESSAGE, ret, ret))
 diff --git a/arch/x86/kernel/cpu/sgx/ioctl.c b/arch/x86/kernel/cpu/sgx/ioctl.c
-index 9a32bf5a1070..164256ea18d0 100644
+index a75eb44022a3..9a32bf5a1070 100644
 --- a/arch/x86/kernel/cpu/sgx/ioctl.c
 +++ b/arch/x86/kernel/cpu/sgx/ioctl.c
-@@ -30,7 +30,7 @@ struct sgx_va_page *sgx_encl_grow(struct sgx_encl *encl, bool reclaim)
- 		if (!va_page)
- 			return ERR_PTR(-ENOMEM);
+@@ -113,6 +113,9 @@ static int sgx_encl_create(struct sgx_encl *encl, struct sgx_secs *secs)
+ 	encl->attributes = secs->attributes;
+ 	encl->attributes_mask = SGX_ATTR_UNPRIV_MASK;
  
--		va_page->epc_page = sgx_alloc_va_page(reclaim);
-+		va_page->epc_page = sgx_alloc_va_page(encl, reclaim);
- 		if (IS_ERR(va_page->epc_page)) {
- 			err = ERR_CAST(va_page->epc_page);
- 			kfree(va_page);
-diff --git a/arch/x86/kernel/cpu/sgx/main.c b/arch/x86/kernel/cpu/sgx/main.c
-index fba06dc5abfe..ed813288af44 100644
---- a/arch/x86/kernel/cpu/sgx/main.c
-+++ b/arch/x86/kernel/cpu/sgx/main.c
-@@ -107,7 +107,7 @@ static unsigned long __sgx_sanitize_pages(struct list_head *dirty_page_list)
++	sgx_record_epc_page(encl->secs.epc_page,
++			    SGX_EPC_PAGE_UNRECLAIMABLE);
++
+ 	/* Set only after completion, as encl->lock has not been taken. */
+ 	set_bit(SGX_ENCL_CREATED, &encl->flags);
  
- static bool sgx_reclaimer_age(struct sgx_epc_page *epc_page)
- {
--	struct sgx_encl_page *page = epc_page->owner;
-+	struct sgx_encl_page *page = epc_page->encl_page;
- 	struct sgx_encl *encl = page->encl;
- 	struct sgx_encl_mm *encl_mm;
- 	bool ret = true;
-@@ -139,7 +139,7 @@ static bool sgx_reclaimer_age(struct sgx_epc_page *epc_page)
+@@ -322,7 +325,7 @@ static int sgx_encl_add_page(struct sgx_encl *encl, unsigned long src,
+ 			goto err_out;
+ 	}
  
- static void sgx_reclaimer_block(struct sgx_epc_page *epc_page)
- {
--	struct sgx_encl_page *page = epc_page->owner;
-+	struct sgx_encl_page *page = epc_page->encl_page;
- 	unsigned long addr = page->desc & PAGE_MASK;
- 	struct sgx_encl *encl = page->encl;
- 	int ret;
-@@ -196,7 +196,7 @@ void sgx_ipi_cb(void *info)
- static void sgx_encl_ewb(struct sgx_epc_page *epc_page,
- 			 struct sgx_backing *backing)
- {
--	struct sgx_encl_page *encl_page = epc_page->owner;
-+	struct sgx_encl_page *encl_page = epc_page->encl_page;
- 	struct sgx_encl *encl = encl_page->encl;
- 	struct sgx_va_page *va_page;
- 	unsigned int va_offset;
-@@ -249,7 +249,7 @@ static void sgx_encl_ewb(struct sgx_epc_page *epc_page,
- static void sgx_reclaimer_write(struct sgx_epc_page *epc_page,
- 				struct sgx_backing *backing)
- {
--	struct sgx_encl_page *encl_page = epc_page->owner;
-+	struct sgx_encl_page *encl_page = epc_page->encl_page;
- 	struct sgx_encl *encl = encl_page->encl;
- 	struct sgx_backing secs_backing;
- 	int ret;
-@@ -309,7 +309,7 @@ static void sgx_reclaim_pages(void)
- 			break;
+-	sgx_record_epc_page(epc_page, SGX_EPC_PAGE_RECLAIMER_TRACKED);
++	sgx_record_epc_page(epc_page, SGX_EPC_PAGE_RECLAIMABLE);
+ 	mutex_unlock(&encl->lock);
+ 	mmap_read_unlock(current->mm);
+ 	return ret;
+@@ -976,7 +979,7 @@ static long sgx_enclave_modify_types(struct sgx_encl *encl,
  
- 		list_del_init(&epc_page->list);
--		encl_page = epc_page->owner;
-+		encl_page = epc_page->encl_page;
+ 			mutex_lock(&encl->lock);
  
- 		if (kref_get_unless_zero(&encl_page->encl->refcount) != 0) {
- 			sgx_epc_page_set_state(epc_page, SGX_EPC_PAGE_RECLAIM_IN_PROGRESS);
-@@ -329,7 +329,7 @@ static void sgx_reclaim_pages(void)
- 
- 	i = 0;
- 	list_for_each_entry_safe(epc_page, tmp, &iso, list) {
--		encl_page = epc_page->owner;
-+		encl_page = epc_page->encl_page;
- 
- 		if (!sgx_reclaimer_age(epc_page))
- 			goto skip;
-@@ -362,7 +362,7 @@ static void sgx_reclaim_pages(void)
- 
- 	i = 0;
- 	list_for_each_entry_safe(epc_page, tmp, &iso, list) {
--		encl_page = epc_page->owner;
-+		encl_page = epc_page->encl_page;
- 		sgx_reclaimer_write(epc_page, &backing[i++]);
- 
- 		kref_put(&encl_page->encl->refcount, sgx_encl_release);
-@@ -562,7 +562,7 @@ struct sgx_epc_page *sgx_alloc_epc_page(void *owner, bool reclaim)
- 	for ( ; ; ) {
- 		page = __sgx_alloc_epc_page();
- 		if (!IS_ERR(page)) {
--			page->owner = owner;
-+			page->encl_page = owner;
- 			break;
+-			sgx_record_epc_page(entry->epc_page, SGX_EPC_PAGE_RECLAIMER_TRACKED);
++			sgx_record_epc_page(entry->epc_page, SGX_EPC_PAGE_RECLAIMABLE);
  		}
  
-@@ -607,7 +607,7 @@ void sgx_free_epc_page(struct sgx_epc_page *page)
+ 		/* Change EPC type */
+diff --git a/arch/x86/kernel/cpu/sgx/main.c b/arch/x86/kernel/cpu/sgx/main.c
+index dec1d57cbff6..b26860399402 100644
+--- a/arch/x86/kernel/cpu/sgx/main.c
++++ b/arch/x86/kernel/cpu/sgx/main.c
+@@ -318,7 +318,7 @@ static void sgx_reclaim_pages(void)
+ 			/* The owner is freeing the page. No need to add the
+ 			 * page back to the list of reclaimable pages.
+ 			 */
+-			epc_page->flags &= ~SGX_EPC_PAGE_RECLAIMER_TRACKED;
++			sgx_epc_page_reset_state(epc_page);
+ 	}
+ 	spin_unlock(&sgx_global_lru.lock);
  
+@@ -344,6 +344,7 @@ static void sgx_reclaim_pages(void)
+ 
+ skip:
+ 		spin_lock(&sgx_global_lru.lock);
++		sgx_epc_page_set_state(epc_page, SGX_EPC_PAGE_RECLAIMABLE);
+ 		list_add_tail(&epc_page->list, &sgx_global_lru.reclaimable);
+ 		spin_unlock(&sgx_global_lru.lock);
+ 
+@@ -367,7 +368,7 @@ static void sgx_reclaim_pages(void)
+ 		sgx_reclaimer_write(epc_page, &backing[i]);
+ 
+ 		kref_put(&encl_page->encl->refcount, sgx_encl_release);
+-		epc_page->flags &= ~SGX_EPC_PAGE_RECLAIMER_TRACKED;
++		sgx_epc_page_reset_state(epc_page);
+ 
+ 		sgx_free_epc_page(epc_page);
+ 	}
+@@ -507,9 +508,9 @@ struct sgx_epc_page *__sgx_alloc_epc_page(void)
+ void sgx_record_epc_page(struct sgx_epc_page *page, unsigned long flags)
+ {
+ 	spin_lock(&sgx_global_lru.lock);
+-	WARN_ON_ONCE(page->flags & SGX_EPC_PAGE_RECLAIMER_TRACKED);
++	WARN_ON_ONCE(sgx_epc_page_reclaimable(page->flags));
+ 	page->flags |= flags;
+-	if (flags & SGX_EPC_PAGE_RECLAIMER_TRACKED)
++	if (sgx_epc_page_reclaimable(flags))
+ 		list_add_tail(&page->list, &sgx_global_lru.reclaimable);
+ 	spin_unlock(&sgx_global_lru.lock);
+ }
+@@ -527,7 +528,7 @@ void sgx_record_epc_page(struct sgx_epc_page *page, unsigned long flags)
+ int sgx_drop_epc_page(struct sgx_epc_page *page)
+ {
+ 	spin_lock(&sgx_global_lru.lock);
+-	if (page->flags & SGX_EPC_PAGE_RECLAIMER_TRACKED) {
++	if (sgx_epc_page_reclaimable(page->flags)) {
+ 		/* The page is being reclaimed. */
+ 		if (list_empty(&page->list)) {
+ 			spin_unlock(&sgx_global_lru.lock);
+@@ -535,7 +536,7 @@ int sgx_drop_epc_page(struct sgx_epc_page *page)
+ 		}
+ 
+ 		list_del(&page->list);
+-		page->flags &= ~SGX_EPC_PAGE_RECLAIMER_TRACKED;
++		sgx_epc_page_reset_state(page);
+ 	}
+ 	spin_unlock(&sgx_global_lru.lock);
+ 
+@@ -607,6 +608,8 @@ void sgx_free_epc_page(struct sgx_epc_page *page)
+ 	struct sgx_epc_section *section = &sgx_epc_sections[page->section];
+ 	struct sgx_numa_node *node = section->node;
+ 
++	WARN_ON_ONCE(page->flags & (SGX_EPC_PAGE_STATE_MASK));
++
  	spin_lock(&node->lock);
  
--	page->owner = NULL;
-+	page->encl_page = NULL;
- 	if (page->poison)
+ 	page->owner = NULL;
+@@ -614,7 +617,7 @@ void sgx_free_epc_page(struct sgx_epc_page *page)
  		list_add(&page->list, &node->sgx_poison_page_list);
  	else
-@@ -642,7 +642,7 @@ static bool __init sgx_setup_epc_section(u64 phys_addr, u64 size,
- 	for (i = 0; i < nr_pages; i++) {
- 		section->pages[i].section = index;
- 		section->pages[i].flags = 0;
--		section->pages[i].owner = NULL;
-+		section->pages[i].encl_page = NULL;
- 		section->pages[i].poison = 0;
- 		list_add_tail(&section->pages[i].list, &sgx_dirty_page_list);
+ 		list_add_tail(&page->list, &node->free_page_list);
+-	page->flags = SGX_EPC_PAGE_IS_FREE;
++	page->flags = SGX_EPC_PAGE_FREE;
+ 
+ 	spin_unlock(&node->lock);
+ 	atomic_long_inc(&sgx_nr_free_pages);
+@@ -715,7 +718,7 @@ int arch_memory_failure(unsigned long pfn, int flags)
+ 	 * If the page is on a free list, move it to the per-node
+ 	 * poison page list.
+ 	 */
+-	if (page->flags & SGX_EPC_PAGE_IS_FREE) {
++	if (page->flags == SGX_EPC_PAGE_FREE) {
+ 		list_move(&page->list, &node->sgx_poison_page_list);
+ 		goto out;
  	}
 diff --git a/arch/x86/kernel/cpu/sgx/sgx.h b/arch/x86/kernel/cpu/sgx/sgx.h
-index 764cec23f4e5..5110dd433b80 100644
+index 113d930fd087..2faeb40b345f 100644
 --- a/arch/x86/kernel/cpu/sgx/sgx.h
 +++ b/arch/x86/kernel/cpu/sgx/sgx.h
-@@ -68,7 +68,12 @@ struct sgx_epc_page {
- 	unsigned int section;
- 	u16 flags;
- 	u16 poison;
--	struct sgx_encl_page *owner;
+@@ -23,11 +23,36 @@
+ #define SGX_NR_LOW_PAGES		32
+ #define SGX_NR_HIGH_PAGES		64
+ 
+-/* Pages, which are being tracked by the page reclaimer. */
+-#define SGX_EPC_PAGE_RECLAIMER_TRACKED	BIT(0)
++enum sgx_epc_page_state {
++	/* Not tracked by the reclaimer:
++	 * Pages allocated for virtual EPC which are never tracked by the host
++	 * reclaimer; pages just allocated from free list but not yet put in
++	 * use; pages just reclaimed, but not yet returned to the free list.
++	 * Becomes FREE after sgx_free_epc()
++	 * Becomes RECLAIMABLE or UNRECLAIMABLE after sgx_record_epc()
++	 */
++	SGX_EPC_PAGE_NOT_TRACKED = 0,
 +
-+	/* Possible owner types */
-+	union {
-+		struct sgx_encl_page *encl_page;
-+		struct sgx_encl *encl;
-+	};
++	/* Page is in the free list, ready for allocation
++	 * Becomes NOT_TRACKED after sgx_alloc_epc_page()
++	 */
++	SGX_EPC_PAGE_FREE = 1,
++
++	/* Page is in use and tracked in a reclaimable LRU list
++	 * Becomes NOT_TRACKED after sgx_drop_epc()
++	 */
++	SGX_EPC_PAGE_RECLAIMABLE = 2,
++
++	/* Page is in use but tracked in an unreclaimable LRU list. These are
++	 * only reclaimable when the whole enclave is OOM killed or the enclave
++	 * is released, e.g., VA, SECS pages
++	 * Becomes NOT_TRACKED after sgx_drop_epc()
++	 */
++	SGX_EPC_PAGE_UNRECLAIMABLE = 3,
+ 
+-/* Pages on free list */
+-#define SGX_EPC_PAGE_IS_FREE		BIT(1)
++};
++
++#define SGX_EPC_PAGE_STATE_MASK GENMASK(2, 0)
+ 
+ struct sgx_epc_page {
+ 	unsigned int section;
+@@ -37,6 +62,22 @@ struct sgx_epc_page {
  	struct list_head list;
  };
  
++static inline void sgx_epc_page_reset_state(struct sgx_epc_page *page)
++{
++	page->flags &= ~SGX_EPC_PAGE_STATE_MASK;
++}
++
++static inline void sgx_epc_page_set_state(struct sgx_epc_page *page, unsigned long flags)
++{
++	page->flags &= ~SGX_EPC_PAGE_STATE_MASK;
++	page->flags |= (flags & SGX_EPC_PAGE_STATE_MASK);
++}
++
++static inline bool sgx_epc_page_reclaimable(unsigned long flags)
++{
++	return SGX_EPC_PAGE_RECLAIMABLE == (flags & SGX_EPC_PAGE_STATE_MASK);
++}
++
+ /*
+  * Contains the tracking data for NUMA nodes having EPC pages. Most importantly,
+  * the free page list local to the node is stored here.
 -- 
 2.25.1
 
