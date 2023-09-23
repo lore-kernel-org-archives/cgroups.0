@@ -1,159 +1,179 @@
 From: Haitao Huang <haitao.huang-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
-Subject: [PATCH v5 01/18] cgroup/misc: Add per resource callbacks for CSS events
-Date: Fri, 22 Sep 2023 20:06:40 -0700
-Message-ID: <20230923030657.16148-2-haitao.huang@linux.intel.com>
+Subject: [PATCH v5 04/18] x86/sgx: Use sgx_epc_lru_lists for existing active page list
+Date: Fri, 22 Sep 2023 20:06:43 -0700
+Message-ID: <20230923030657.16148-5-haitao.huang@linux.intel.com>
 References: <20230923030657.16148-1-haitao.huang@linux.intel.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1695438421; x=1726974421;
+  t=1695438422; x=1726974422;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=CWaM84xI5mGXkf+aiRiMgd1gKaujRaa2JuPurtwlf8Y=;
-  b=U0B+NtHFKuBLO9I6DNye3WraaZEKf26w14SdDHHA07l1N79BAQ0lGhPb
-   8PCaWO2jrzXsqtSKx1atOyyIgN6Q51Kaj9me++3ONChEdNEi7Il3ogEZa
-   747VrJmx8vjHMiiQWA4Xteav+Apb373Qi2vurET8bP042ktzu5i5eHc/a
-   /sO+FhP3xE8niDlcoCKAXOK2h7p9qsFzbCr2vaGXSjO84mmM+rJ+23DZM
-   wBSTYfNs9SZ/+aXTu3JvlL0HcVa71QRKTCu6jy4Tvfj5LdejMn7VF/ngd
-   SmTMiZUnbumSPoXbOQ+fi82kEumAOusjqJWRTAeKRAIay2rRDsd/n6cOQ
-   A==;
+  bh=2XInwiTptBt8Hdm7nc27V3H+v3nniIpqVQk6SoGNLx0=;
+  b=ITTN1kjVtJRjkoeT++c7HQ4bQOZlv9LWRlIGCWeRdiq34MTUjMBRz1ov
+   Dj5GfFUBpie5gWlql6Uk0YODF+lkWpgy4ZdQPmtsZ45YtxrYeqQ9QmTiX
+   4ADJarwNM57uqoJ8ZJ5kpqqRL0P9uez9qSVSh1wRM7vJ4v6fru2adPqcs
+   TmGuVVOPDgGjJBQt1LSTWr7Ubl0bNYc/ffEnlGDcwrbc7OUdkg9fEJIAi
+   mP/zDWwPM8hJBWm45BSwu3SAXf8V3HecRDYk9+qoSjCb02WGjU3LFG2Lp
+   68b5xPDtbEmjovKw62JiZInQEme7uUJvqpcxjfLcwxlXEVBJf94WWf++g
+   Q==;
 In-Reply-To: <20230923030657.16148-1-haitao.huang-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 To: jarkko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, dave.hansen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-sgx-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, x86-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, tglx-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org, mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, bp-Gina5bIWoIWzQB+pC5nmwQ@public.gmane.org, hpa-YMNOUZJC4hwAvxtiuMwx3w@public.gmane.org, sohil.mehta-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org
 Cc: zhiquan1.li-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org, kristen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org, seanjc-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, zhanb-0li6OtcxBFHby3iVrkZq2A@public.gmane.org, anakrish-0li6OtcxBFHby3iVrkZq2A@public.gmane.org, mikko.ylinen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org, yangjie-0li6OtcxBFHby3iVrkZq2A@public.gmane.org
 
-From: Kristen Carlson Accardi <kristen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
+From: Sean Christopherson <sean.j.christopherson-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
 
-The misc cgroup controller (subsystem) currently does not perform
-resource type specific action for Cgroups Subsystem State (CSS) events:
-the 'css_alloc' event when a cgroup is created and the 'css_free' event
-when a cgroup is destroyed, or in event of user writing the max value to
-the misc.max file to set the usage limit of a specific resource
-[admin-guide/cgroup-v2.rst, 5-9. Misc].
+All EPC pages of enclaves including Version Array (VA) and SGX Enclave
+Control Structure (SECS) will be tracked in sgx_epc_lru_lists structs,
+one per cgroup. For now just replace the existing sgx_active_page_list
+in the reclaimer and its spinlock with a global sgx_epc_lru_lists
+struct. VA and SECS pages are still not tracked at this point but they
+will be tracked after an unreclaimable LRU list is added to the
+sgx_epc_lru_lists struct.
 
-Define callbacks for those events and allow resource providers to
-register the callbacks per resource type as needed. This will be
-utilized later by the EPC misc cgroup support implemented in the SGX
-driver:
-- On css_alloc, allocate and initialize necessary structures for EPC
-reclaiming, e.g., LRU list, work queue, etc.
-- On css_free, cleanup and free those structures created in alloc.
-- On max_write, trigger EPC reclaiming if the new limit is at or below
-current usage.
-
+Signed-off-by: Sean Christopherson <sean.j.christopherson-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+Co-developed-by: Kristen Carlson Accardi <kristen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
 Signed-off-by: Kristen Carlson Accardi <kristen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
+Co-developed-by: Haitao Huang <haitao.huang-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
 Signed-off-by: Haitao Huang <haitao.huang-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
+Cc: Sean Christopherson <seanjc-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 ---
 V5:
-- Remove prefixes from the callback names (tj)
-- Update commit message (Jarkko)
+- Spelled out SECS, VA (Jarkko)
 
 V4:
-- Moved this to the front of the series.
-- Applies on cgroup/for-6.6 with the overflow fix for misc.
+- No change, only reordered the patch.
 
 V3:
-- Removed the released() callback
+- Remove usage of list wrapper
 ---
- include/linux/misc_cgroup.h |  5 +++++
- kernel/cgroup/misc.c        | 32 +++++++++++++++++++++++++++++---
- 2 files changed, 34 insertions(+), 3 deletions(-)
+ arch/x86/kernel/cpu/sgx/main.c | 39 +++++++++++++++++-----------------
+ 1 file changed, 20 insertions(+), 19 deletions(-)
 
-diff --git a/include/linux/misc_cgroup.h b/include/linux/misc_cgroup.h
-index e799b1f8d05b..96a88822815a 100644
---- a/include/linux/misc_cgroup.h
-+++ b/include/linux/misc_cgroup.h
-@@ -37,6 +37,11 @@ struct misc_res {
- 	u64 max;
- 	atomic64_t usage;
- 	atomic64_t events;
-+
-+	/* per resource callback ops */
-+	int (*alloc)(struct misc_cg *cg);
-+	void (*free)(struct misc_cg *cg);
-+	void (*max_write)(struct misc_cg *cg);
- };
+diff --git a/arch/x86/kernel/cpu/sgx/main.c b/arch/x86/kernel/cpu/sgx/main.c
+index 166692f2d501..afce51d6e94a 100644
+--- a/arch/x86/kernel/cpu/sgx/main.c
++++ b/arch/x86/kernel/cpu/sgx/main.c
+@@ -26,10 +26,9 @@ static DEFINE_XARRAY(sgx_epc_address_space);
  
- /**
-diff --git a/kernel/cgroup/misc.c b/kernel/cgroup/misc.c
-index 79a3717a5803..62c9198dee21 100644
---- a/kernel/cgroup/misc.c
-+++ b/kernel/cgroup/misc.c
-@@ -276,10 +276,13 @@ static ssize_t misc_cg_max_write(struct kernfs_open_file *of, char *buf,
- 
- 	cg = css_misc(of_css(of));
- 
--	if (READ_ONCE(misc_res_capacity[type]))
-+	if (READ_ONCE(misc_res_capacity[type])) {
- 		WRITE_ONCE(cg->res[type].max, max);
--	else
-+		if (cg->res[type].max_write)
-+			cg->res[type].max_write(cg);
-+	} else {
- 		ret = -EINVAL;
-+	}
- 
- 	return ret ? ret : nbytes;
- }
-@@ -383,23 +386,39 @@ static struct cftype misc_cg_files[] = {
- static struct cgroup_subsys_state *
- misc_cg_alloc(struct cgroup_subsys_state *parent_css)
- {
-+	struct misc_cg *parent_cg;
- 	enum misc_res_type i;
- 	struct misc_cg *cg;
-+	int ret;
- 
- 	if (!parent_css) {
- 		cg = &root_cg;
-+		parent_cg = &root_cg;
- 	} else {
- 		cg = kzalloc(sizeof(*cg), GFP_KERNEL);
- 		if (!cg)
- 			return ERR_PTR(-ENOMEM);
-+		parent_cg = css_misc(parent_css);
- 	}
- 
- 	for (i = 0; i < MISC_CG_RES_TYPES; i++) {
- 		WRITE_ONCE(cg->res[i].max, MAX_NUM);
- 		atomic64_set(&cg->res[i].usage, 0);
-+		if (parent_cg->res[i].alloc) {
-+			ret = parent_cg->res[i].alloc(cg);
-+			if (ret)
-+				goto alloc_err;
-+		}
- 	}
- 
- 	return &cg->css;
-+
-+alloc_err:
-+	for (i = 0; i < MISC_CG_RES_TYPES; i++)
-+		if (parent_cg->res[i].free)
-+			cg->res[i].free(cg);
-+	kfree(cg);
-+	return ERR_PTR(ret);
- }
- 
- /**
-@@ -410,7 +429,14 @@ misc_cg_alloc(struct cgroup_subsys_state *parent_css)
+ /*
+  * These variables are part of the state of the reclaimer, and must be accessed
+- * with sgx_reclaimer_lock acquired.
++ * with sgx_global_lru.lock acquired.
   */
- static void misc_cg_free(struct cgroup_subsys_state *css)
+-static LIST_HEAD(sgx_active_page_list);
+-static DEFINE_SPINLOCK(sgx_reclaimer_lock);
++static struct sgx_epc_lru_lists sgx_global_lru;
+ 
+ static atomic_long_t sgx_nr_free_pages = ATOMIC_LONG_INIT(0);
+ 
+@@ -304,13 +303,13 @@ static void sgx_reclaim_pages(void)
+ 	int ret;
+ 	int i;
+ 
+-	spin_lock(&sgx_reclaimer_lock);
++	spin_lock(&sgx_global_lru.lock);
+ 	for (i = 0; i < SGX_NR_TO_SCAN; i++) {
+-		if (list_empty(&sgx_active_page_list))
++		epc_page = list_first_entry_or_null(&sgx_global_lru.reclaimable,
++						    struct sgx_epc_page, list);
++		if (!epc_page)
+ 			break;
+ 
+-		epc_page = list_first_entry(&sgx_active_page_list,
+-					    struct sgx_epc_page, list);
+ 		list_del_init(&epc_page->list);
+ 		encl_page = epc_page->owner;
+ 
+@@ -322,7 +321,7 @@ static void sgx_reclaim_pages(void)
+ 			 */
+ 			epc_page->flags &= ~SGX_EPC_PAGE_RECLAIMER_TRACKED;
+ 	}
+-	spin_unlock(&sgx_reclaimer_lock);
++	spin_unlock(&sgx_global_lru.lock);
+ 
+ 	for (i = 0; i < cnt; i++) {
+ 		epc_page = chunk[i];
+@@ -345,9 +344,9 @@ static void sgx_reclaim_pages(void)
+ 		continue;
+ 
+ skip:
+-		spin_lock(&sgx_reclaimer_lock);
+-		list_add_tail(&epc_page->list, &sgx_active_page_list);
+-		spin_unlock(&sgx_reclaimer_lock);
++		spin_lock(&sgx_global_lru.lock);
++		list_add_tail(&epc_page->list, &sgx_global_lru.reclaimable);
++		spin_unlock(&sgx_global_lru.lock);
+ 
+ 		kref_put(&encl_page->encl->refcount, sgx_encl_release);
+ 
+@@ -378,7 +377,7 @@ static void sgx_reclaim_pages(void)
+ static bool sgx_should_reclaim(unsigned long watermark)
  {
--	kfree(css_misc(css));
-+	struct misc_cg *cg = css_misc(css);
-+	enum misc_res_type i;
-+
-+	for (i = 0; i < MISC_CG_RES_TYPES; i++)
-+		if (cg->res[i].free)
-+			cg->res[i].free(cg);
-+
-+	kfree(cg);
+ 	return atomic_long_read(&sgx_nr_free_pages) < watermark &&
+-	       !list_empty(&sgx_active_page_list);
++	       !list_empty(&sgx_global_lru.reclaimable);
  }
  
- /* Cgroup controller callbacks */
+ /*
+@@ -430,6 +429,8 @@ static bool __init sgx_page_reclaimer_init(void)
+ 
+ 	ksgxd_tsk = tsk;
+ 
++	sgx_lru_init(&sgx_global_lru);
++
+ 	return true;
+ }
+ 
+@@ -505,10 +506,10 @@ struct sgx_epc_page *__sgx_alloc_epc_page(void)
+  */
+ void sgx_mark_page_reclaimable(struct sgx_epc_page *page)
+ {
+-	spin_lock(&sgx_reclaimer_lock);
++	spin_lock(&sgx_global_lru.lock);
+ 	page->flags |= SGX_EPC_PAGE_RECLAIMER_TRACKED;
+-	list_add_tail(&page->list, &sgx_active_page_list);
+-	spin_unlock(&sgx_reclaimer_lock);
++	list_add_tail(&page->list, &sgx_global_lru.reclaimable);
++	spin_unlock(&sgx_global_lru.lock);
+ }
+ 
+ /**
+@@ -523,18 +524,18 @@ void sgx_mark_page_reclaimable(struct sgx_epc_page *page)
+  */
+ int sgx_unmark_page_reclaimable(struct sgx_epc_page *page)
+ {
+-	spin_lock(&sgx_reclaimer_lock);
++	spin_lock(&sgx_global_lru.lock);
+ 	if (page->flags & SGX_EPC_PAGE_RECLAIMER_TRACKED) {
+ 		/* The page is being reclaimed. */
+ 		if (list_empty(&page->list)) {
+-			spin_unlock(&sgx_reclaimer_lock);
++			spin_unlock(&sgx_global_lru.lock);
+ 			return -EBUSY;
+ 		}
+ 
+ 		list_del(&page->list);
+ 		page->flags &= ~SGX_EPC_PAGE_RECLAIMER_TRACKED;
+ 	}
+-	spin_unlock(&sgx_reclaimer_lock);
++	spin_unlock(&sgx_global_lru.lock);
+ 
+ 	return 0;
+ }
+@@ -567,7 +568,7 @@ struct sgx_epc_page *sgx_alloc_epc_page(void *owner, bool reclaim)
+ 			break;
+ 		}
+ 
+-		if (list_empty(&sgx_active_page_list))
++		if (list_empty(&sgx_global_lru.reclaimable))
+ 			return ERR_PTR(-ENOMEM);
+ 
+ 		if (!reclaim) {
 -- 
 2.25.1
 
