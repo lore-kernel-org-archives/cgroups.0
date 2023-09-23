@@ -1,23 +1,23 @@
 From: Haitao Huang <haitao.huang-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
-Subject: [PATCH v5 10/18] x86/sgx: Add EPC page flags to identify owner types
-Date: Fri, 22 Sep 2023 20:06:49 -0700
-Message-ID: <20230923030657.16148-11-haitao.huang@linux.intel.com>
+Subject: [PATCH v5 07/18] x86/sgx: Introduce RECLAIM_IN_PROGRESS state
+Date: Fri, 22 Sep 2023 20:06:46 -0700
+Message-ID: <20230923030657.16148-8-haitao.huang@linux.intel.com>
 References: <20230923030657.16148-1-haitao.huang@linux.intel.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1695438426; x=1726974426;
+  t=1695438424; x=1726974424;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=6rGwrEe4Ukw7FcCDvhuspXyNUODXLObGeH1s03Sjd5k=;
-  b=NQAKpaPCKs6WV2O14ecofFZZ9esdSnu0asaZdOVT+XQageN1ztqicilL
-   rzAY1Oc6Dj3M1jWLYOwxjOf003wyh9gJpnluU4FkJiYW5BPqxk9+TVxpI
-   Uyukf/dregEBk1zKYgAO1z//YfiwxErw/Si3OBB/C9mBM64Ht/Yernpur
-   HDErU2BNxrok2XAhulmiKK7Y8dL+xGUCwVSG9gEJOn2GMNzgdjvswrEU1
-   avvk1vtjlIOzvXABdLE2yrt07Jhu8RPC0f8CwtJyO4cZ7swcDqY33gc2m
-   3ohVt24lWqYDZrkNv/JFTWdTwaoeU47on21VzB/EkYFlGnQpnRv1CQCLX
+  bh=6gXh1rHtrkHSzkPHJy21La79GKdM/hChwBw4+Gb9Byg=;
+  b=az+qzZHSkN9xnfdSF71mjpM2TUPQN0TGexiyvj4zL+WcE6kRFBwSOY1x
+   bDU+ZLFwz0NEEQ0y0tbdeZglo5kInAk8tYe3j8PFw47LS0P8Q8JseTUk6
+   2WZHQybn2y7ISBSgkyDPbnlRgv08CT865sWRTvH59hGOtunMyY2dEzs6X
+   /8Ky8jzwrirtx4lquAJLsM2F12ekoI5hleeHLrfkqylgosCoU1fvbprrB
+   wLertwiScRz7zQu/SVId8G8eVBD/myYC16jwg6pgKt+xgQ23IKt1hwVhA
+   ea8pFbeOkQiCZznr9jNEd4ipGx5FBmPMtVdmr6EfNXJ0vG8IPSSarC1x0
    A==;
 In-Reply-To: <20230923030657.16148-1-haitao.huang-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
@@ -27,12 +27,20 @@ Cc: zhiquan1.li-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org, kristen-VuQAYsv1563Yd54
 
 From: Sean Christopherson <sean.j.christopherson-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
 
-Two types of owners of struct sgx_epc_page, 'sgx_encl' for VA pages and
-'sgx_encl_page' can be stored in the previously introduced union field.
+Add RECLAIM_IN_PROGRESS state to not rely on list_empty(&epc_page->list)
+to determine if an EPC page is selected as a reclaiming candidate.
 
-OOM support for cgroups requires that the owner needs to be identified
-when selecting pages from the unreclaimable list. Address this by adding
-flags for the owner type.
+When a page is being reclaimed from the page pool (sgx_global_lru),
+there is an intermediate stage where a page may have been identified as
+a candidate for reclaiming, but has not yet been reclaimed.  Currently
+such pages are list_del_init()'d from the global LRU list, and stored in
+a an array on stack. To prevent another thread from dropping the same
+page in the middle of reclaiming, sgx_drop_epc_page() checks for
+list_empty(&epc_page->list).
+
+A later patch will replace the array on stack with a temporary list to
+store the candidate pages, so list_empty() should no longer be used for
+this purpose.
 
 Signed-off-by: Sean Christopherson <sean.j.christopherson-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
 Co-developed-by: Kristen Carlson Accardi <kristen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
@@ -42,104 +50,103 @@ Signed-off-by: Haitao Huang <haitao.huang-VuQAYsv1563Yd54FQh9/CA@public.gmane.or
 Cc: Sean Christopherson <seanjc-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 ---
 V4:
-- Updates for patch reordering.
-- Rename SGX_EPC_OWNER_ENCL_PAGE to SGX_EPC_OWNER_PAGE. (Jarkko)
-- Commit message changes. (Jarkko)
----
- arch/x86/kernel/cpu/sgx/encl.c  | 9 +++++----
- arch/x86/kernel/cpu/sgx/ioctl.c | 6 ++++--
- arch/x86/kernel/cpu/sgx/sgx.h   | 6 ++++++
- 3 files changed, 15 insertions(+), 6 deletions(-)
+- Fixed some typos.
+- Revised commit message.
 
-diff --git a/arch/x86/kernel/cpu/sgx/encl.c b/arch/x86/kernel/cpu/sgx/encl.c
-index ec3402d41b63..da1657813fce 100644
---- a/arch/x86/kernel/cpu/sgx/encl.c
-+++ b/arch/x86/kernel/cpu/sgx/encl.c
-@@ -248,6 +248,7 @@ static struct sgx_epc_page *sgx_encl_load_secs(struct sgx_encl *encl)
- 		epc_page = sgx_encl_eldu(&encl->secs, NULL);
- 		if (!IS_ERR(epc_page))
- 			sgx_record_epc_page(epc_page,
-+					    SGX_EPC_OWNER_PAGE |
- 					    SGX_EPC_PAGE_UNRECLAIMABLE);
+V3:
+- Extend the sgx_epc_page_state enum introduced earlier to replace the
+flag based approach.
+---
+ arch/x86/kernel/cpu/sgx/main.c | 21 ++++++++++-----------
+ arch/x86/kernel/cpu/sgx/sgx.h  | 16 ++++++++++++++++
+ 2 files changed, 26 insertions(+), 11 deletions(-)
+
+diff --git a/arch/x86/kernel/cpu/sgx/main.c b/arch/x86/kernel/cpu/sgx/main.c
+index b26860399402..c1ae19a154d0 100644
+--- a/arch/x86/kernel/cpu/sgx/main.c
++++ b/arch/x86/kernel/cpu/sgx/main.c
+@@ -312,13 +312,15 @@ static void sgx_reclaim_pages(void)
+ 		list_del_init(&epc_page->list);
+ 		encl_page = epc_page->owner;
+ 
+-		if (kref_get_unless_zero(&encl_page->encl->refcount) != 0)
++		if (kref_get_unless_zero(&encl_page->encl->refcount) != 0) {
++			sgx_epc_page_set_state(epc_page, SGX_EPC_PAGE_RECLAIM_IN_PROGRESS);
+ 			chunk[cnt++] = epc_page;
+-		else
++		} else {
+ 			/* The owner is freeing the page. No need to add the
+ 			 * page back to the list of reclaimable pages.
+ 			 */
+ 			sgx_epc_page_reset_state(epc_page);
++		}
  	}
+ 	spin_unlock(&sgx_global_lru.lock);
  
-@@ -276,7 +277,7 @@ static struct sgx_encl_page *__sgx_encl_load_page(struct sgx_encl *encl,
- 		return ERR_CAST(epc_page);
- 
- 	encl->secs_child_cnt++;
--	sgx_record_epc_page(epc_page, SGX_EPC_PAGE_RECLAIMABLE);
-+	sgx_record_epc_page(epc_page, SGX_EPC_OWNER_PAGE | SGX_EPC_PAGE_RECLAIMABLE);
- 
- 	return entry;
- }
-@@ -402,7 +403,7 @@ static vm_fault_t sgx_encl_eaug_page(struct vm_area_struct *vma,
- 	encl_page->type = SGX_PAGE_TYPE_REG;
- 	encl->secs_child_cnt++;
- 
--	sgx_record_epc_page(epc_page, SGX_EPC_PAGE_RECLAIMABLE);
-+	sgx_record_epc_page(epc_page, SGX_EPC_OWNER_PAGE | SGX_EPC_PAGE_RECLAIMABLE);
- 
- 	phys_addr = sgx_get_epc_phys_addr(epc_page);
- 	/*
-@@ -1261,8 +1262,8 @@ struct sgx_epc_page *sgx_alloc_va_page(struct sgx_encl *encl, bool reclaim)
- 		sgx_encl_free_epc_page(epc_page);
- 		return ERR_PTR(-EFAULT);
+@@ -528,16 +530,13 @@ void sgx_record_epc_page(struct sgx_epc_page *page, unsigned long flags)
+ int sgx_drop_epc_page(struct sgx_epc_page *page)
+ {
+ 	spin_lock(&sgx_global_lru.lock);
+-	if (sgx_epc_page_reclaimable(page->flags)) {
+-		/* The page is being reclaimed. */
+-		if (list_empty(&page->list)) {
+-			spin_unlock(&sgx_global_lru.lock);
+-			return -EBUSY;
+-		}
+-
+-		list_del(&page->list);
+-		sgx_epc_page_reset_state(page);
++	if (sgx_epc_page_reclaim_in_progress(page->flags)) {
++		spin_unlock(&sgx_global_lru.lock);
++		return -EBUSY;
  	}
--	sgx_record_epc_page(epc_page,
--			    SGX_EPC_PAGE_UNRECLAIMABLE);
-+	sgx_record_epc_page(epc_page, SGX_EPC_OWNER_ENCL |
-+				      SGX_EPC_PAGE_UNRECLAIMABLE);
++
++	list_del(&page->list);
++	sgx_epc_page_reset_state(page);
+ 	spin_unlock(&sgx_global_lru.lock);
  
- 	return epc_page;
- }
-diff --git a/arch/x86/kernel/cpu/sgx/ioctl.c b/arch/x86/kernel/cpu/sgx/ioctl.c
-index 164256ea18d0..cd338e93acc1 100644
---- a/arch/x86/kernel/cpu/sgx/ioctl.c
-+++ b/arch/x86/kernel/cpu/sgx/ioctl.c
-@@ -114,6 +114,7 @@ static int sgx_encl_create(struct sgx_encl *encl, struct sgx_secs *secs)
- 	encl->attributes_mask = SGX_ATTR_UNPRIV_MASK;
- 
- 	sgx_record_epc_page(encl->secs.epc_page,
-+			    SGX_EPC_OWNER_PAGE |
- 			    SGX_EPC_PAGE_UNRECLAIMABLE);
- 
- 	/* Set only after completion, as encl->lock has not been taken. */
-@@ -325,7 +326,7 @@ static int sgx_encl_add_page(struct sgx_encl *encl, unsigned long src,
- 			goto err_out;
- 	}
- 
--	sgx_record_epc_page(epc_page, SGX_EPC_PAGE_RECLAIMABLE);
-+	sgx_record_epc_page(epc_page, SGX_EPC_OWNER_PAGE | SGX_EPC_PAGE_RECLAIMABLE);
- 	mutex_unlock(&encl->lock);
- 	mmap_read_unlock(current->mm);
- 	return ret;
-@@ -979,7 +980,8 @@ static long sgx_enclave_modify_types(struct sgx_encl *encl,
- 
- 			mutex_lock(&encl->lock);
- 
--			sgx_record_epc_page(entry->epc_page, SGX_EPC_PAGE_RECLAIMABLE);
-+			sgx_record_epc_page(entry->epc_page,
-+					    SGX_EPC_OWNER_PAGE | SGX_EPC_PAGE_RECLAIMABLE);
- 		}
- 
- 		/* Change EPC type */
+ 	return 0;
 diff --git a/arch/x86/kernel/cpu/sgx/sgx.h b/arch/x86/kernel/cpu/sgx/sgx.h
-index 5110dd433b80..51aba1cd1937 100644
+index 2faeb40b345f..764cec23f4e5 100644
 --- a/arch/x86/kernel/cpu/sgx/sgx.h
 +++ b/arch/x86/kernel/cpu/sgx/sgx.h
-@@ -64,6 +64,12 @@ enum sgx_epc_page_state {
+@@ -40,6 +40,8 @@ enum sgx_epc_page_state {
+ 
+ 	/* Page is in use and tracked in a reclaimable LRU list
+ 	 * Becomes NOT_TRACKED after sgx_drop_epc()
++	 * Becomes RECLAIM_IN_PROGRESS in sgx_reclaim_pages() when identified
++	 * for reclaiming
+ 	 */
+ 	SGX_EPC_PAGE_RECLAIMABLE = 2,
+ 
+@@ -50,6 +52,14 @@ enum sgx_epc_page_state {
+ 	 */
+ 	SGX_EPC_PAGE_UNRECLAIMABLE = 3,
+ 
++	/* Page is being prepared for reclamation, tracked in a temporary
++	 * isolated list by the reclaimer.
++	 * Changes in sgx_reclaim_pages() back to RECLAIMABLE if preparation
++	 * fails for any reason.
++	 * Becomes NOT_TRACKED if reclaimed successfully in sgx_reclaim_pages()
++	 * and immediately sgx_free_epc() is called to make it FREE.
++	 */
++	SGX_EPC_PAGE_RECLAIM_IN_PROGRESS = 4,
+ };
  
  #define SGX_EPC_PAGE_STATE_MASK GENMASK(2, 0)
+@@ -73,6 +83,12 @@ static inline void sgx_epc_page_set_state(struct sgx_epc_page *page, unsigned lo
+ 	page->flags |= (flags & SGX_EPC_PAGE_STATE_MASK);
+ }
  
-+/* flag for pages owned by a sgx_encl_page */
-+#define SGX_EPC_OWNER_PAGE		BIT(3)
++static inline bool sgx_epc_page_reclaim_in_progress(unsigned long flags)
++{
++	return SGX_EPC_PAGE_RECLAIM_IN_PROGRESS == (flags &
++						    SGX_EPC_PAGE_STATE_MASK);
++}
 +
-+/* flag for pages owned by a sgx_encl struct */
-+#define SGX_EPC_OWNER_ENCL		BIT(4)
-+
- struct sgx_epc_page {
- 	unsigned int section;
- 	u16 flags;
+ static inline bool sgx_epc_page_reclaimable(unsigned long flags)
+ {
+ 	return SGX_EPC_PAGE_RECLAIMABLE == (flags & SGX_EPC_PAGE_STATE_MASK);
 -- 
 2.25.1
 
