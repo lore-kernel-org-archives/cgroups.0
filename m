@@ -1,52 +1,82 @@
-From: Haifeng Xu <haifeng.xu-LL2PKPoSiP3QT0dZR+AlfA@public.gmane.org>
-Subject: [PATCH RESEND] memcg, oom: unmark under_oom after the oom killer is done
-Date: Sat, 23 Sep 2023 08:17:39 +0000
-Message-ID: <20230923081739.398912-1-haifeng.xu@shopee.com>
+From: Yafang Shao <laoar.shao-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Subject: Re: [RFC PATCH bpf-next 0/8] bpf, cgroup: Add bpf support for cgroup controller
+Date: Sun, 24 Sep 2023 14:32:14 +0800
+Message-ID: <CALOAHbA9-BT1daw-KXHtsrN=uRQyt-p6LU=BEpvF2Yk42A_Vxw@mail.gmail.com>
+References: <20230922112846.4265-1-laoar.shao@gmail.com> <ZQ3GQmYrYyKAg2uK@slm.duckdns.org>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: quoted-printable
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=shopee.com; s=shopee.com; t=1695457147; x=1696061947; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=53y+MSASX7iIoRiw0N0MaPINtyDxfHQ2/xhc/ZQOZdc=;
-        b=BAGk2HHKrLK2UGICWdY8buG7pDqs5uR9HbtIFuj4ToKGt9FTCzsPi4r3WdpoyH3EPE
-         xbpIBLRg3df4Ah9DMtpiRHE5kPyT/4jzpl+hwyum31gNAWGC9aU1LNDMOPFsHpd/ez2f
-         0Cqf1x+3+m3VJykXt/ed30ZmVzJD+ta8+CTSSaaFwx+O1qpBwmcJEc2jDErvGq9VN6XT
-         HQ5+ppYZGAI5M9SrPnjdhEinMC3S19d5bbrD/eF2e4ZAV35tgAXA9WUa4kZ6mnIB/19o
-         SQXDn6PI7qxJPNXXhuloHwV7J2CmlH2zPdzv6m2VQOOmqJRYTetQOc5WuuACkzXx9EA5
-         M9QA==
+        d=gmail.com; s=20230601; t=1695537172; x=1696141972; darn=vger.kernel.org;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=bpxJPlID+SCs56C8IjY5nt1fLBEKnY3cZH9wb2ckaP8=;
+        b=jL6NdW+nLX1RMVyTaV0poc9JFbgOZHEGMj8karfGXWD8NucfiM7Sd91vXaW5QyTYu2
+         Zy/oNYTkIdETP2EsmWq7aQTeoLh+AqYFkx5awPhM6iTMOMcY+BAbDWSI8ZytqFPlwX6t
+         gq5Sp6jjl77PlYmSzNseL+RAoVSwLEn85Iy1SPM+zUNHSOkSEBsBlPalFBlPCgDfkmsQ
+         lY2lQrF17VE2GLdB0gbFbESl4MEI9boMa4TZLo7eSUwguaLVZtdkub87qb+sP7s9NnQC
+         o/RufIPEXa25GPksYsFZAdOC2qoYxEiJ7YbC7ZyngHxF2maembS4KSs+C7nDsfQQaaxb
+         eN5A==
+In-Reply-To: <ZQ3GQmYrYyKAg2uK-NiLfg/pYEd1N0TnZuCh8vA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-To: roman.gushchin-fxUVXftIFDnyG1zEObXtfA@public.gmane.org
-Cc: mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Haifeng Xu <haifeng.xu-LL2PKPoSiP3QT0dZR+AlfA@public.gmane.org>
+Content-Type: text/plain; charset="windows-1254"
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: ast-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, daniel-FeC+5ew28dpmcu3hnIyYJQ@public.gmane.org, john.fastabend-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, andrii-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, martin.lau-fxUVXftIFDnyG1zEObXtfA@public.gmane.org, song-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, yonghong.song-fxUVXftIFDnyG1zEObXtfA@public.gmane.org, kpsingh-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, sdf-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, haoluo-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, jolsa-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, mkoutny-IBi9RG/b67k@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, bpf-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-When application in userland receives oom notification from kernel
-and reads the oom_control file, it's confusing that under_oom is 0
-though the omm killer hasn't finished. The reason is that under_oom
-is cleared before invoking mem_cgroup_out_of_memory(), so move the
-action that unmark under_oom after completing oom handler. Therefore
-the value of under_oom won't mislead users.
+On Sat, Sep 23, 2023 at 12:52=E2=80=AFAM Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org> wrote:
+>
+> Hello,
+>
+> On Fri, Sep 22, 2023 at 11:28:38AM +0000, Yafang Shao wrote:
+> > - bpf_cgroup_id_from_task_within_controller
+> >   Retrieves the cgroup ID from a task within a specific cgroup controll=
+er.
+> > - bpf_cgroup_acquire_from_id_within_controller
+> >   Acquires the cgroup from a cgroup ID within a specific cgroup control=
+ler.
+> > - bpf_cgroup_ancestor_id_from_task_within_controller
+> >   Retrieves the ancestor cgroup ID from a task within a specific cgroup
+> >   controller.
+> >
+> > The advantage of these new BPF kfuncs is their ability to abstract away=
+ the
+> > complexities of cgroup hierarchies, irrespective of whether they involv=
+e
+> > cgroup1 or cgroup2.
+>
+> I'm afraid this is more likely to bring the unnecessary complexities of
+> cgroup1 into cgroup2.
 
-Signed-off-by: Haifeng Xu <haifeng.xu-LL2PKPoSiP3QT0dZR+AlfA@public.gmane.org>
----
- mm/memcontrol.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+I concur with the idea that we should avoid introducing the
+complexities of cgroup1 into cgroup2. Which specific change do you
+believe might introduce these complexities into cgroup2? Is it the
+modification within task_under_cgroup_hierarchy() or
+cgroup_get_from_id()?
 
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index e8ca4bdcb03c..0b6ed63504ca 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -1970,8 +1970,8 @@ static bool mem_cgroup_oom(struct mem_cgroup *memcg, gfp_t mask, int order)
- 	if (locked)
- 		mem_cgroup_oom_notify(memcg);
- 
--	mem_cgroup_unmark_under_oom(memcg);
- 	ret = mem_cgroup_out_of_memory(memcg, mask, order);
-+	mem_cgroup_unmark_under_oom(memcg);
- 
- 	if (locked)
- 		mem_cgroup_oom_unlock(memcg);
--- 
-2.25.1
+In fact, we have the option to utilize
+bpf_cgroup_ancestor_id_from_task_within_controller() as a substitute
+for bpf_task_under_cgroup(), which allows us to sidestep the need for
+changes within task_under_cgroup_hierarchy() altogether.
 
+>
+> > In the future, we may expand controller-based support to other BPF
+> > functionalities, such as bpf_cgrp_storage, the attachment and detachmen=
+t
+> > of cgroups, skb_under_cgroup, and more.
+>
+> I'm okay with minor / trivial quality of life improvements to cgroup1 but
+> this goes much beyond that and is starting to complications to cgroup2
+> users, which I think is a pretty bad idea long term. I'm afraid I'm gonna
+> have to nack this approach.
+>
+> Thanks.
+>
+> --
+> tejun
+
+
+
+--=20
+Regards
+Yafang
