@@ -2,124 +2,190 @@ Return-Path: <cgroups-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 30EE1CE7AA8
-	for <cgroups@archiver.kernel.org>; Mon, 25 Sep 2023 17:11:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B42B4CE7AA9
+	for <cgroups@archiver.kernel.org>; Mon, 25 Sep 2023 17:13:12 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232981AbjIYRL7 (ORCPT <rfc822;cgroups@archiver.kernel.org>);
-        Mon, 25 Sep 2023 13:11:59 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40332 "EHLO
+        id S232844AbjIYRNQ (ORCPT <rfc822;cgroups@archiver.kernel.org>);
+        Mon, 25 Sep 2023 13:13:16 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49526 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232948AbjIYRL5 (ORCPT
-        <rfc822;cgroups@vger.kernel.org>); Mon, 25 Sep 2023 13:11:57 -0400
-Received: from mail-ej1-x631.google.com (mail-ej1-x631.google.com [IPv6:2a00:1450:4864:20::631])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 04E6E11F
-        for <cgroups@vger.kernel.org>; Mon, 25 Sep 2023 10:11:46 -0700 (PDT)
-Received: by mail-ej1-x631.google.com with SMTP id a640c23a62f3a-9a58dbd5daeso861448366b.2
-        for <cgroups@vger.kernel.org>; Mon, 25 Sep 2023 10:11:45 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20230601; t=1695661904; x=1696266704; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=g/hhWT30YqLg2rKDYw/SVPqxcdoluiD8cyVoB8LNRKU=;
-        b=BhbFLIYhbToxGSyNhmIR8RyXG8uDpP3SL/ihsVdl2fCTdoC/u3JkUu3jFcM8J9LOVR
-         D0IwmB8UB5VHnsFDTQ/cmCpvDwBTgJYK0ZhOno12xXmA8s+MK6OPB5D848e5PNSElx+Y
-         ptjSZDGTj7fx91tqgAz2vP1Di68wx5SYSOb/4blCBoY2M1w5lHoYqTQtvPHuolmbHfw1
-         BIApqzBaC/dLNjPS4UWVoNmjwOW7XC8tZjQj3Or/ADiCk/S5wezNBFfMEPRQqDu35vL0
-         mxxfPQpvZCylecGQZi+WKUyq2/9L+Tp6TVjNMwE+h50ji7lwrUuLuDKFIsetsQ90Me+e
-         nADg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1695661904; x=1696266704;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=g/hhWT30YqLg2rKDYw/SVPqxcdoluiD8cyVoB8LNRKU=;
-        b=Ecibd0NDhBP56BxHHtwDS9MTPoDvHmlS5G1kO+7eD9MJVJnZVLO4B4myNmR67Q0ilb
-         dVSOAqMaBh/CCybAB6Y3Hap3i+Ja/Je7f2sxH+/PUR9zehcIq8AoJO7Yr8j2h3/0hM9S
-         /LI8k8mdWcMOIu60LiOuq5jC43RMcz5KcPdlH/BZFOPjlxXDMKxRWtLMGPbbwBx+bvqV
-         yNmXQip3rMRr4+w5PQY3ueNpQl4kWjEk2MT3LqWTVVNUqmzCRhqaS5U1l+8J/UruBwpU
-         Iub33HMBHVkIUg+M/NyKof9MlMCbGHIwvQhUj50BK5tiGyRmYhruKerC1zCLCA6f8SgO
-         daSg==
-X-Gm-Message-State: AOJu0Yz/YCu7BzdV9Duftc4F+aEY8X7b0DKdxYGAhnZoi0huC/UHYFhi
-        bGSV4fl4O74mP/JNfzrMpFrsWfs/0WcWdMXTFLjgLQ==
-X-Google-Smtp-Source: AGHT+IHxGHsl4fbZlvFzA9O7Txe+gu98zwtJVfYdbeIxZvboXX+P0miQrKoiw4gPdaoz5mGEa0wc4CVeBercB/7xDI0=
-X-Received: by 2002:a17:906:25d:b0:9ae:587a:e5ce with SMTP id
- 29-20020a170906025d00b009ae587ae5cemr7423657ejl.27.1695661904205; Mon, 25 Sep
- 2023 10:11:44 -0700 (PDT)
-MIME-Version: 1.0
-References: <20230922175741.635002-1-yosryahmed@google.com> <ZRGQIhWF02SRzN4D@dhcp22.suse.cz>
-In-Reply-To: <ZRGQIhWF02SRzN4D@dhcp22.suse.cz>
-From:   Yosry Ahmed <yosryahmed@google.com>
-Date:   Mon, 25 Sep 2023 10:11:05 -0700
-Message-ID: <CAJD7tkbWz7mx6mUrvFQHP10ncqL-iVwD4ymHTm=oXW5qGgrZtA@mail.gmail.com>
-Subject: Re: [PATCH v2 0/2] mm: memcg: fix tracking of pending stats updates values
-To:     Michal Hocko <mhocko@suse.com>
-Cc:     Andrew Morton <akpm@linux-foundation.org>,
-        Shakeel Butt <shakeelb@google.com>,
-        Johannes Weiner <hannes@cmpxchg.org>,
-        Roman Gushchin <roman.gushchin@linux.dev>,
-        Muchun Song <muchun.song@linux.dev>,
-        =?UTF-8?Q?Michal_Koutn=C3=BD?= <mkoutny@suse.com>,
-        linux-mm@kvack.org, cgroups@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+        with ESMTP id S232800AbjIYRNP (ORCPT
+        <rfc822;cgroups@vger.kernel.org>); Mon, 25 Sep 2023 13:13:15 -0400
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1097610D;
+        Mon, 25 Sep 2023 10:13:09 -0700 (PDT)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E57CBC433C9;
+        Mon, 25 Sep 2023 17:13:04 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1695661988;
+        bh=A04TBKQ9EaZ8h6nIRrSl341lekUEgs14YQFeEcsK2sU=;
+        h=Date:Cc:Subject:From:To:References:In-Reply-To:From;
+        b=YqRXCpobNGI2ZvFXzm7bANtIUOLyp9bNBrNuO9g/koJG5URsJq2taXA/PmoViqcU9
+         kSSocwafEIGF8Xo2F/yaWq7uvk+UvsYmRWfBxJ/TcNF6dGTniPr7PGzKNP2oJys55d
+         znZpQNf7KQRQK13M8RN/QwBA3C68USXYe+OvwwW+yDTCVnB5Rc9Mox0BmGjkGZnMtg
+         FkDGeetsCD2psosUJxwl9Fyu2ZbOR2weZeHFk37DHE0IPfWnKbItE+xqc3NZe4bKiF
+         44jnRbHDL1BdwhsSH2KzQ7MHa7j4vv6I37UHxa3sEff4PuSTzqe57dHT1dv/sM7sfq
+         UIVvUvZ2Ruq/A==
+Mime-Version: 1.0
 Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=UTF-8
+Date:   Mon, 25 Sep 2023 20:13:02 +0300
+Message-ID: <CVS609055DZI.1VYY4JB3YLOIZ@suppilovahvero>
+Cc:     <zhiquan1.li@intel.com>, <kristen@linux.intel.com>,
+        <seanjc@google.com>, <zhanb@microsoft.com>,
+        <anakrish@microsoft.com>, <mikko.ylinen@linux.intel.com>,
+        <yangjie@microsoft.com>
+Subject: Re: [PATCH v5 07/18] x86/sgx: Introduce RECLAIM_IN_PROGRESS state
+From:   "Jarkko Sakkinen" <jarkko@kernel.org>
+To:     "Haitao Huang" <haitao.huang@linux.intel.com>,
+        <dave.hansen@linux.intel.com>, <tj@kernel.org>,
+        <linux-kernel@vger.kernel.org>, <linux-sgx@vger.kernel.org>,
+        <x86@kernel.org>, <cgroups@vger.kernel.org>, <tglx@linutronix.de>,
+        <mingo@redhat.com>, <bp@alien8.de>, <hpa@zytor.com>,
+        <sohil.mehta@intel.com>
+X-Mailer: aerc 0.14.0
+References: <20230923030657.16148-1-haitao.huang@linux.intel.com>
+ <20230923030657.16148-8-haitao.huang@linux.intel.com>
+In-Reply-To: <20230923030657.16148-8-haitao.huang@linux.intel.com>
 Precedence: bulk
 List-ID: <cgroups.vger.kernel.org>
 X-Mailing-List: cgroups@vger.kernel.org
-Message-ID: <20230925171105.eoOkYQ9QUC5FSj_f1leqk1v3nhrSQFREnhKGNlh9_Wk@z>
+Message-ID: <20230925171302.vDQBYnF5-Qo7RU94lYs6icBduN6DUzSMRv5SqR-wKiY@z>
 
-On Mon, Sep 25, 2023 at 6:50=E2=80=AFAM Michal Hocko <mhocko@suse.com> wrot=
-e:
+On Sat Sep 23, 2023 at 6:06 AM EEST, Haitao Huang wrote:
+> From: Sean Christopherson <sean.j.christopherson@intel.com>
 >
-> On Fri 22-09-23 17:57:38, Yosry Ahmed wrote:
-> > While working on adjacent code [1], I realized that the values passed
-> > into memcg_rstat_updated() to keep track of the magnitude of pending
-> > updates is consistent. It is mostly in pages, but sometimes it can be i=
-n
-> > bytes or KBs. Fix that.
+> Add RECLAIM_IN_PROGRESS state to not rely on list_empty(&epc_page->list)
+> to determine if an EPC page is selected as a reclaiming candidate.
 >
-> What kind of practical difference does this change make? Is it worth
-> additional code?
-
-As explained in patch 2's commit message, the value passed into
-memcg_rstat_updated() is used for the "flush only if not worth it"
-heuristic. As we have discussed in different threads in the past few
-weeks, unnecessary flushes can cause increased global lock contention
-and/or latency.
-
-Byte-sized paths (percpu, slab, zswap, ..) feed bytes into the
-heuristic, but those are interpreted as pages, which means we will
-flush earlier than we should. This was noticed by code inspection. How
-much does this matter in practice? I would say it depends on the
-workload: how many percpu/slab allocations are being made vs. how many
-flushes are requested.
-
-On a system with 100 cpus, 25M of stat updates are needed for a flush
-usually, but ~6K of slab/percpu updates will also (mistakenly) cause a
-flush.
-
+> When a page is being reclaimed from the page pool (sgx_global_lru),
+> there is an intermediate stage where a page may have been identified as
+> a candidate for reclaiming, but has not yet been reclaimed.  Currently
+> such pages are list_del_init()'d from the global LRU list, and stored in
+> a an array on stack. To prevent another thread from dropping the same
+> page in the middle of reclaiming, sgx_drop_epc_page() checks for
+> list_empty(&epc_page->list).
 >
-> > Patch 1 reworks memcg_page_state_unit() so that we can reuse it in patc=
+> A later patch will replace the array on stack with a temporary list to
+> store the candidate pages, so list_empty() should no longer be used for
+> this purpose.
+>
+> Signed-off-by: Sean Christopherson <sean.j.christopherson@intel.com>
+> Co-developed-by: Kristen Carlson Accardi <kristen@linux.intel.com>
+> Signed-off-by: Kristen Carlson Accardi <kristen@linux.intel.com>
+> Co-developed-by: Haitao Huang <haitao.huang@linux.intel.com>
+> Signed-off-by: Haitao Huang <haitao.huang@linux.intel.com>
+> Cc: Sean Christopherson <seanjc@google.com>
+> ---
+> V4:
+> - Fixed some typos.
+> - Revised commit message.
+>
+> V3:
+> - Extend the sgx_epc_page_state enum introduced earlier to replace the
+> flag based approach.
+> ---
+>  arch/x86/kernel/cpu/sgx/main.c | 21 ++++++++++-----------
+>  arch/x86/kernel/cpu/sgx/sgx.h  | 16 ++++++++++++++++
+>  2 files changed, 26 insertions(+), 11 deletions(-)
+>
+> diff --git a/arch/x86/kernel/cpu/sgx/main.c b/arch/x86/kernel/cpu/sgx/mai=
+n.c
+> index b26860399402..c1ae19a154d0 100644
+> --- a/arch/x86/kernel/cpu/sgx/main.c
+> +++ b/arch/x86/kernel/cpu/sgx/main.c
+> @@ -312,13 +312,15 @@ static void sgx_reclaim_pages(void)
+>  		list_del_init(&epc_page->list);
+>  		encl_page =3D epc_page->owner;
+> =20
+> -		if (kref_get_unless_zero(&encl_page->encl->refcount) !=3D 0)
+> +		if (kref_get_unless_zero(&encl_page->encl->refcount) !=3D 0) {
+> +			sgx_epc_page_set_state(epc_page, SGX_EPC_PAGE_RECLAIM_IN_PROGRESS);
+>  			chunk[cnt++] =3D epc_page;
+> -		else
+> +		} else {
+>  			/* The owner is freeing the page. No need to add the
+>  			 * page back to the list of reclaimable pages.
+>  			 */
+>  			sgx_epc_page_reset_state(epc_page);
+> +		}
+>  	}
+>  	spin_unlock(&sgx_global_lru.lock);
+> =20
+> @@ -528,16 +530,13 @@ void sgx_record_epc_page(struct sgx_epc_page *page,=
+ unsigned long flags)
+>  int sgx_drop_epc_page(struct sgx_epc_page *page)
+>  {
+>  	spin_lock(&sgx_global_lru.lock);
+> -	if (sgx_epc_page_reclaimable(page->flags)) {
+> -		/* The page is being reclaimed. */
+> -		if (list_empty(&page->list)) {
+> -			spin_unlock(&sgx_global_lru.lock);
+> -			return -EBUSY;
+> -		}
+> -
+> -		list_del(&page->list);
+> -		sgx_epc_page_reset_state(page);
+> +	if (sgx_epc_page_reclaim_in_progress(page->flags)) {
+> +		spin_unlock(&sgx_global_lru.lock);
+> +		return -EBUSY;
+>  	}
+> +
+> +	list_del(&page->list);
+> +	sgx_epc_page_reset_state(page);
+>  	spin_unlock(&sgx_global_lru.lock);
+> =20
+>  	return 0;
+> diff --git a/arch/x86/kernel/cpu/sgx/sgx.h b/arch/x86/kernel/cpu/sgx/sgx.=
 h
-> > 2 to check and normalize the units of state updates.
-> >
-> > [1]https://lore.kernel.org/lkml/20230921081057.3440885-1-yosryahmed@goo=
-gle.com/
-> >
-> > v1 -> v2:
-> > - Rebased on top of mm-unstable.
-> >
-> > Yosry Ahmed (2):
-> >   mm: memcg: refactor page state unit helpers
-> >   mm: memcg: normalize the value passed into memcg_rstat_updated()
-> >
-> >  mm/memcontrol.c | 64 +++++++++++++++++++++++++++++++++++++++----------
-> >  1 file changed, 51 insertions(+), 13 deletions(-)
-> >
-> > --
-> > 2.42.0.515.g380fc7ccd1-goog
->
-> --
-> Michal Hocko
-> SUSE Labs
+> index 2faeb40b345f..764cec23f4e5 100644
+> --- a/arch/x86/kernel/cpu/sgx/sgx.h
+> +++ b/arch/x86/kernel/cpu/sgx/sgx.h
+> @@ -40,6 +40,8 @@ enum sgx_epc_page_state {
+> =20
+>  	/* Page is in use and tracked in a reclaimable LRU list
+>  	 * Becomes NOT_TRACKED after sgx_drop_epc()
+> +	 * Becomes RECLAIM_IN_PROGRESS in sgx_reclaim_pages() when identified
+> +	 * for reclaiming
+>  	 */
+>  	SGX_EPC_PAGE_RECLAIMABLE =3D 2,
+> =20
+> @@ -50,6 +52,14 @@ enum sgx_epc_page_state {
+>  	 */
+>  	SGX_EPC_PAGE_UNRECLAIMABLE =3D 3,
+> =20
+> +	/* Page is being prepared for reclamation, tracked in a temporary
+> +	 * isolated list by the reclaimer.
+> +	 * Changes in sgx_reclaim_pages() back to RECLAIMABLE if preparation
+> +	 * fails for any reason.
+> +	 * Becomes NOT_TRACKED if reclaimed successfully in sgx_reclaim_pages()
+> +	 * and immediately sgx_free_epc() is called to make it FREE.
+> +	 */
+> +	SGX_EPC_PAGE_RECLAIM_IN_PROGRESS =3D 4,
+>  };
+> =20
+>  #define SGX_EPC_PAGE_STATE_MASK GENMASK(2, 0)
+> @@ -73,6 +83,12 @@ static inline void sgx_epc_page_set_state(struct sgx_e=
+pc_page *page, unsigned lo
+>  	page->flags |=3D (flags & SGX_EPC_PAGE_STATE_MASK);
+>  }
+> =20
+> +static inline bool sgx_epc_page_reclaim_in_progress(unsigned long flags)
+> +{
+> +	return SGX_EPC_PAGE_RECLAIM_IN_PROGRESS =3D=3D (flags &
+> +						    SGX_EPC_PAGE_STATE_MASK);
+> +}
+
+	return SGX_EPC_PAGE_RECLAIM_IN_PROGRESS =3D=3D (flags & SGX_EPC_PAGE_STATE=
+_MASK);
+
+> +
+>  static inline bool sgx_epc_page_reclaimable(unsigned long flags)
+>  {
+>  	return SGX_EPC_PAGE_RECLAIMABLE =3D=3D (flags & SGX_EPC_PAGE_STATE_MASK=
+);
+> --=20
+> 2.25.1
+
+
+BR, Jarkko
