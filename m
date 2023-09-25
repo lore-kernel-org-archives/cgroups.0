@@ -1,91 +1,63 @@
 From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [RFC PATCH bpf-next 0/8] bpf, cgroup: Add bpf support for cgroup
- controller
-Date: Mon, 25 Sep 2023 08:43:52 -1000
-Message-ID: <ZRHU6MfwqRxjBFUH@slm.duckdns.org>
-References: <20230922112846.4265-1-laoar.shao@gmail.com>
- <ZQ3GQmYrYyKAg2uK@slm.duckdns.org>
- <CALOAHbA9-BT1daw-KXHtsrN=uRQyt-p6LU=BEpvF2Yk42A_Vxw@mail.gmail.com>
+Subject: Re: [PATCH v5 02/18] cgroup/misc: Add SGX EPC resource type and
+ export APIs for SGX driver
+Date: Mon, 25 Sep 2023 08:50:17 -1000
+Message-ID: <ZRHWaZB5BeXt2EcY@slm.duckdns.org>
+References: <20230923030657.16148-1-haitao.huang@linux.intel.com>
+ <20230923030657.16148-3-haitao.huang@linux.intel.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1695667434; x=1696272234; darn=vger.kernel.org;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :mime-version:references:message-id:subject:cc:to:from:date:sender
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=4rW0kJ8enQ9kzrxneD0npJWJJ1FtuYSvDFI9OIwG44c=;
-        b=c5uvNahyMI19XMwjTFFCXW9FKvwQ1wDUZ/OisXPYKzwjelurwcIVILYwk0ZjgVu6M2
-         7jlyGwsPx4cnIYqzn1rm4sz8OnutNMsF1NzREQMPhjqbe4wThhIrvVY9wAeK/RYootmT
-         zJq2l19OXbIfpqgJG13eSjT016SxB2Y7BCXDjUpKhrFvpcgTMrnsg4ryw/2TIABzxIn7
-         t85tPuBVa7TuQ/ZDPwdWgBdcgLdeugjZoWhRireh6T5pujJtwymkucZ0x/IUzPz4K29X
-         inzQAOFlHzWMZaJzZ/NKUTbXY/jWSTX9ezE1vIbfKv1mPsGy4t6KNmDTC46zgRxRDzgg
-         GjAg==
+        d=gmail.com; s=20230601; t=1695667820; x=1696272620; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:sender:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=FS6Sm1WF5Sz2XYLA9mMdoZkfL6tjoxQpUMHovY5b5ok=;
+        b=WArYuSizFbQch4iYYOBhbeOvqWchppb5jh7GoQ/2nYKVSP++XKuZ3AeE9lsZ7ZxtoA
+         ZgsBp/IZ2sSKOuA3qFU7/IYaOdqOgGwcBNUQXhdUO3Tga5iHSsrceir8EOtZpzDHMv79
+         w8o1YI0MzecUKu2TmblpCGWqF51MlG04HchbGsMgSKhsNOftHfMrwa40mfxtwrApY9Tq
+         HHLt7Mas9OkbE3eBT91Bi/TXDIBOgjFS+1DTNV8Q18tBh7Lv4bHvekkPOJuglYXbMycG
+         LwGGoyJeYryzIgcNdlJs3DwAUJVB0aXwwGpMgzHyKENxTyRMmkMLFMc6om6fwTjJ+cmE
+         pUrQ==
 Sender: Tejun Heo <htejun-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 Content-Disposition: inline
-In-Reply-To: <CALOAHbA9-BT1daw-KXHtsrN=uRQyt-p6LU=BEpvF2Yk42A_Vxw-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+In-Reply-To: <20230923030657.16148-3-haitao.huang-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="windows-1252"
-To: Yafang Shao <laoar.shao-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Cc: ast-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, daniel-FeC+5ew28dpmcu3hnIyYJQ@public.gmane.org, john.fastabend-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, andrii-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, martin.lau-fxUVXftIFDnyG1zEObXtfA@public.gmane.org, song-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, yonghong.song-fxUVXftIFDnyG1zEObXtfA@public.gmane.org, kpsingh-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, sdf-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, haoluo-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, jolsa-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, yosryahmed-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, mkoutny-IBi9RG/b67k@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, bpf-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Haitao Huang <haitao.huang-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
+Cc: jarkko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, dave.hansen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-sgx-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, x86-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, tglx-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org, mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, bp-Gina5bIWoIWzQB+pC5nmwQ@public.gmane.org, hpa-YMNOUZJC4hwAvxtiuMwx3w@public.gmane.org, sohil.mehta-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org, zhiquan1.li-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org, kristen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org, seanjc-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, zhanb-0li6OtcxBFHby3iVrkZq2A@public.gmane.org, anakrish-0li6OtcxBFHby3iVrkZq2A@public.gmane.org, mikko.ylinen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org, yangjie-0li6OtcxBFHby3iVrkZq2A@public.gmane.org
 
-Hello,
+On Fri, Sep 22, 2023 at 08:06:41PM -0700, Haitao Huang wrote:
+> From: Kristen Carlson Accardi <kristen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
+> 
+> Add SGX EPC memory, MISC_CG_RES_SGX_EPC, to be a valid resource type
+> for the misc controller.
+> 
+> Add per resource type private data so that SGX can store additional per
+> cgroup data in misc_cg->misc_cg_res[MISC_CG_RES_SGX_EPC].
+> 
+> Export misc_cg_root() so the SGX driver can initialize and add those
+> additional structures to the root misc cgroup as part of initialization
+> for EPC cgroup support. This bootstraps the same additional
+> initialization for non-root cgroups in the 'alloc()' callback added in the
+> previous patch.
+> 
+> The SGX driver, as the EPC memory provider, will have a background
+> worker to reclaim EPC pages to make room for new allocations in the same
+> cgroup when its usage counter reaches near the limit controlled by the
+> cgroup and its ancestors. Therefore it needs to do a walk from the
+> current cgroup up to the root. To enable this walk, move parent_misc()
+> into misc_cgroup.h and make inline to make this function available to
+> SGX, rename it to misc_cg_parent(), and update kernel/cgroup/misc.c to
+> use the new name.
+> 
+> Signed-off-by: Kristen Carlson Accardi <kristen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
+> Signed-off-by: Haitao Huang <haitao.huang-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
 
-On Sun, Sep 24, 2023 at 02:32:14PM +0800, Yafang Shao wrote:
-> On Sat, Sep 23, 2023 at 12:52=E2=80=AFAM Tejun Heo <tj-DgEjT+Ai2ygdnm+yRO=
-fE0A@public.gmane.org> wrote:
-> >
-> > Hello,
-> >
-> > On Fri, Sep 22, 2023 at 11:28:38AM +0000, Yafang Shao wrote:
-> > > - bpf_cgroup_id_from_task_within_controller
-> > >   Retrieves the cgroup ID from a task within a specific cgroup contro=
-ller.
-> > > - bpf_cgroup_acquire_from_id_within_controller
-> > >   Acquires the cgroup from a cgroup ID within a specific cgroup contr=
-oller.
-> > > - bpf_cgroup_ancestor_id_from_task_within_controller
-> > >   Retrieves the ancestor cgroup ID from a task within a specific cgro=
-up
-> > >   controller.
-> > >
-> > > The advantage of these new BPF kfuncs is their ability to abstract aw=
-ay the
-> > > complexities of cgroup hierarchies, irrespective of whether they invo=
-lve
-> > > cgroup1 or cgroup2.
-> >
-> > I'm afraid this is more likely to bring the unnecessary complexities of
-> > cgroup1 into cgroup2.
->=20
-> I concur with the idea that we should avoid introducing the
-> complexities of cgroup1 into cgroup2. Which specific change do you
-> believe might introduce these complexities into cgroup2? Is it the
-> modification within task_under_cgroup_hierarchy() or
-> cgroup_get_from_id()?
-
-The helpers you are adding only makes sense for cgroup1. e.g.
-bpf_cgroup_ancestor_id_from_task_within_controller() makes no sense in
-cgroup2. The ancestor ids don't change according to controllers. The only
-thing you would ask in cgroup2 is the level at which a given controller is
-enabled at along with the straight-forward "where am I in the hierarchy?"
-questions. I really don't want to expose interfaces which assume that the
-hierarchies change according to the controller in question.
-
-Also, as pointed out before, this doesn't cover cgroup1 named hierarchies
-which leaves out a good potion of cgroup1 use cases.
-
-> In fact, we have the option to utilize
-> bpf_cgroup_ancestor_id_from_task_within_controller() as a substitute
-> for bpf_task_under_cgroup(), which allows us to sidestep the need for
-> changes within task_under_cgroup_hierarchy() altogether.
-
-I don't think this is the direction we should take. If you really want,
-please tie the interface directly to the hierarchies. Don't hitch hierarchy
-identificdation on the controllers. e.g. Introduce cgroup1 only interface
-which takes both hierarchy ID and cgroup ID to operate on them.
+Acked-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 
 Thanks.
 
---=20
+-- 
 tejun
