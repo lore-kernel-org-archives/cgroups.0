@@ -1,36 +1,60 @@
-From: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
-Subject: Re: [PATCH 03/19] fs: release anon dev_t in deactivate_locked_super
-Date: Tue, 26 Sep 2023 11:41:30 +0200
-Message-ID: <20230926094130.GC13806@lst.de>
-References: <20230913111013.77623-1-hch@lst.de> <20230913111013.77623-4-hch@lst.de> <20230913232712.GC800259@ZenIV> <20230914023705.GH800259@ZenIV> <20230914053843.GI800259@ZenIV>
+From: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH] selftests/cgroup: Fix awk usage in test_cpuset_prs.sh
+ that may cause error
+Date: Tue, 26 Sep 2023 08:18:17 -0400
+Message-ID: <ed2993f2-4bdc-19c5-5a0f-1e96da44fb24@redhat.com>
+References: <VI1P193MB07522BFC89B6B6DC5A89153999FCA@VI1P193MB0752.EURP193.PROD.OUTLOOK.COM>
 Mime-Version: 1.0
-Return-path: <linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <20230914053843.GI800259@ZenIV>
-List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Al Viro <viro-RmSDqhL/yNMiFSDQTTA3OLVCufUGDwFn@public.gmane.org>
-Cc: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>, Christian Brauner <brauner-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Heiko Carstens <hca-tEXmvtCZX7AybS5Ee8rs3A@public.gmane.org>, Vasily Gorbik <gor-tEXmvtCZX7AybS5Ee8rs3A@public.gmane.org>, Alexander Gordeev <agordeev-tEXmvtCZX7AybS5Ee8rs3A@public.gmane.org>, Fenghua Yu <fenghua.yu-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Reinette Chatre <reinette.chatre-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Miquel Raynal <miquel.raynal-LDxbnhwyfcJBDgjK7y7TUQ@public.gmane.org>, Richard Weinberger <richard-/L3Ra7n9ekc@public.gmane.org>, Vignesh Raghavendra <vigneshr-l0cyMroinI0@public.gmane.org>, Dennis Dalessandro <dennis.dalessandro-ntyVByD3zXaTtA8H5PvdGFaTQe2KTcn/@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Trond Myklebust <trond.myklebust-F/q8l9xzQnoyLce1RVWEUA@public.gmane.org>, Anna Schumaker <anna-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Kees Cook <keescook-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>, Damien Le Moal <dlemoal-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Naohiro Aota <naohiro.aota-Sjgp3cTcYWE@public.gmane.org>, Greg Kroah-Hartman <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>, linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-k
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1695730701;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=cFOa8v6HmzDuwfUtqIaAE2BKKG96nSYmL5UwcSOkLOQ=;
+        b=dlRnsQZYIX0+iGdU3x/cOsnO7QfyBQCAqjIsCBU2J04/RcKEhQEcikt78Z96qcMM1/VJ4g
+        MOTVG1CYXMvUtb86oVZ7usfR8OrkgR1Fo685vrbWWWtL5zQpfTqKqrgCnULjmmWgi+sHYU
+        cUIuGVQSQ+lxQ2f9u7lamQkSQ1SqpdA=
+Content-Language: en-US
+In-Reply-To: <VI1P193MB07522BFC89B6B6DC5A89153999FCA-9HhAp6SO9BapRHe3RqZtslvRl+Y042/giGd9ebBGJoev3QGu/rdwKA@public.gmane.org>
+List-ID: <cgroups.vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"; format="flowed"
+To: Juntong Deng <juntong.deng-1ViLX0X+lBJBDgjK7y7TUQ@public.gmane.org>, lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, shuah-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kselftest-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-mentees-cunTk1MwBs98uUxBSJOaYoYkZiVZrdSR2LY78lusg7I@public.gmane.org
 
-On Thu, Sep 14, 2023 at 06:38:43AM +0100, Al Viro wrote:
-> It's worse - look at the rationale for 2c18a63b760a "super: wait until
-> we passed kill super".  Basically, "don't remove from the lists
-> until after block device closing".  IOW, we have
+On 9/25/23 15:38, Juntong Deng wrote:
+> According to the awk manual, the -e option does not need to be specified
+> in front of 'program' (unless you need to mix program-file).
+>
+> The redundant -e option can cause error when users use awk tools other
+> than gawk (for example, mawk does not support the -e option).
+>
+> Error Example:
+> awk: not an option: -e
+> Cgroup v2 mount point not found!
+>
+> Signed-off-by: Juntong Deng <juntong.deng-1ViLX0X+lBJBDgjK7y7TUQ@public.gmane.org>
+> ---
+>   tools/testing/selftests/cgroup/test_cpuset_prs.sh | 2 +-
+>   1 file changed, 1 insertion(+), 1 deletion(-)
+>
+> diff --git a/tools/testing/selftests/cgroup/test_cpuset_prs.sh b/tools/testing/selftests/cgroup/test_cpuset_prs.sh
+> index 4afb132e4e4f..6820653e8432 100755
+> --- a/tools/testing/selftests/cgroup/test_cpuset_prs.sh
+> +++ b/tools/testing/selftests/cgroup/test_cpuset_prs.sh
+> @@ -20,7 +20,7 @@ skip_test() {
+>   WAIT_INOTIFY=$(cd $(dirname $0); pwd)/wait_inotify
+>   
+>   # Find cgroup v2 mount point
+> -CGROUP2=$(mount -t cgroup2 | head -1 | awk -e '{print $3}')
+> +CGROUP2=$(mount -t cgroup2 | head -1 | awk '{print $3}')
+>   [[ -n "$CGROUP2" ]] || skip_test "Cgroup v2 mount point not found!"
+>   
+>   CPUS=$(lscpu | grep "^CPU(s):" | sed -e "s/.*:[[:space:]]*//")
 
-As of this stage we don't even touch anything related to block devices..
+Yes, the -e option is redundant. Thanks for catching that.
 
-> That was *NOT* what a recent rework had done.  Block device closing had never
-> been inside ->put_super() - at no point since that (closing, that is) had been
-> introduced back in 0.97 ;-)  ->put_super() predates it (0.95c+).
-> 
-> The race is real, but the cause is not some kind of move of blkdev_put().
-> Your 2ea6f68932f7 "fs: use the super_block as holder when mounting file
-> systems" is where it actually came from.
-> 
-> Christoph, could you explain what the hell do we need that for?  It does
-> create the race in question and AFAICS 2c18a63b760a (and followups trying
-> to plug holes in it) had been nothing but headache.
+Acked-by: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 
-Because it allows us to actually get from the bdev to the holder directly,
-someting we've badly neeed for a while.
