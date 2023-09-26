@@ -1,50 +1,32 @@
-From: Yosry Ahmed <yosryahmed@google.com>
-Subject: Re: [PATCH] mm, memcg: expose swapcache stat for memcg v1
-Date: Tue, 26 Sep 2023 01:22:47 -0700
-Message-ID: <CAJD7tkYY7je3x-MRhayyrC0xCFvKZO8CuiEnQHanF5_ErZ2n6Q@mail.gmail.com>
-References: <20230902100728.3850149-1-liushixin2@huawei.com> <ZRKIdTE+4cm0KDCI@infradead.org>
+From: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
+Subject: Re: [PATCH 10/19] USB: gadget/legacy: remove sb_mutex
+Date: Tue, 26 Sep 2023 11:24:27 +0200
+Message-ID: <20230926092427.GC12504@lst.de>
+References: <20230913111013.77623-1-hch@lst.de> <20230913111013.77623-11-hch@lst.de> <7f839be1-4898-41ad-8eda-10d5a0350bdf@rowland.harvard.edu>
 Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-Return-path: <linux-doc-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20230601; t=1695716606; x=1696321406; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=j9tTw5sUAPOrchYqA3E5owwjKmHdzzHpZh+gEC9Bxy8=;
-        b=sIrkm5fnHq62gxdiLho0PUJxuyqiaaJhNCpRLVeRdyS3virxw6FMkSakOFNGstwHnS
-         IJPKspbKgEjUgDLxLHFXVYyiFL/JD7ZE2yYvv7Ibl8wXqFn5uhZBsESOhUXc4ABULXRk
-         1PFIQIPxPFZjjiWMloZICYiMEyArrl5WDO1WMb3G5tNUe3Eogh0p4bDqNqvIaarsa8Sb
-         tKf/UajuXwcYyjlO4N7Tm85kjCfeOJ/WDXs1+LWOD7a+p0IngBsXa0b0JX7jbS0qoHjA
-         OQw9rcWdDar/GyM9lN9X4vssT3B20Psu6yLOKtbZ9eS8g980fenMlTfo40+Ckbb3hC14
-         msrQ==
-In-Reply-To: <ZRKIdTE+4cm0KDCI@infradead.org>
+Return-path: <linux-nfs-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <7f839be1-4898-41ad-8eda-10d5a0350bdf-nwvwT67g6+6dFdvTe/nMLpVzexx5G7lz@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="windows-1252"
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Liu Shixin <liushixin2@huawei.com>, Tejun Heo <tj@kernel.org>, Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, Jonathan Corbet <corbet@lwn.net>, Michal Hocko <mhocko@kernel.org>, Roman Gushchin <roman.gushchin@linux.dev>, Shakeel Butt <shakeelb@google.com>, Muchun Song <muchun.song@linux.dev>, Kefeng Wang <wangkefeng.wang@huawei.com>, Andrew Morton <akpm@linux-foundation.org>, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Alan Stern <stern-nwvwT67g6+6dFdvTe/nMLpVzexx5G7lz@public.gmane.org>
+Cc: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>, Christian Brauner <brauner-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Al Viro <viro-RmSDqhL/yNMiFSDQTTA3OLVCufUGDwFn@public.gmane.org>, Heiko Carstens <hca-tEXmvtCZX7AybS5Ee8rs3A@public.gmane.org>, Vasily Gorbik <gor-tEXmvtCZX7AybS5Ee8rs3A@public.gmane.org>, Alexander Gordeev <agordeev-tEXmvtCZX7AybS5Ee8rs3A@public.gmane.org>, Fenghua Yu <fenghua.yu-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Reinette Chatre <reinette.chatre-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Miquel Raynal <miquel.raynal-LDxbnhwyfcJBDgjK7y7TUQ@public.gmane.org>, Richard Weinberger <richard-/L3Ra7n9ekc@public.gmane.org>, Vignesh Raghavendra <vigneshr-l0cyMroinI0@public.gmane.org>, Dennis Dalessandro <dennis.dalessandro-ntyVByD3zXaTtA8H5PvdGFaTQe2KTcn/@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Trond Myklebust <trond.myklebust-F/q8l9xzQnoyLce1RVWEUA@public.gmane.org>, Anna Schumaker <anna-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Kees Cook <keescook-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>, Damien Le Moal <dlemoal-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Naohiro Aota <naohiro.aota-Sjgp3cTcYWE@public.gmane.org>, Greg Kroah-Hartman <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>
 
-On Tue, Sep 26, 2023 at 12:30=E2=80=AFAM Christoph Hellwig <hch@infradead.o=
-rg> wrote:
->
-> On Sat, Sep 02, 2023 at 06:07:28PM +0800, Liu Shixin wrote:
-> > Since commit b6038942480e ("mm: memcg: add swapcache stat for memcg v2"=
-)
-> > adds swapcache stat for the cgroup v2, it seems there is no reason to
-> > hide it in memcg v1. Conversely, with swapcached it is more accurate to
-> > evaluate the available memory for memcg.
->
-> Why are we adding new features to the long deprecated cgroup v1?
->
+On Wed, Sep 13, 2023 at 12:10:56PM -0400, Alan Stern wrote:
+> On Wed, Sep 13, 2023 at 08:10:04AM -0300, Christoph Hellwig wrote:
+> > Creating new a new super_block vs freeing the old one for single instance
+> > file systems is serialized by the wait for SB_DEAD.
+> > 
+> > Remove the superfluous sb_mutex.
+> > 
+> > Signed-off-by: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
+> > ---
+> 
+> You might mention that this is essentially a reversion of commit 
+> d18dcfe9860e ("USB: gadgetfs: Fix race between mounting and 
+> unmounting").
 
-Technically this is not a new feature, we are just exposing a stat
-that the kernel is already tracking (for both cgroup v1 and v2).
+The difference we have now is that sb creation waits for the
+old one to go way, but I'll add a notice on all that.
 
-The reason I suggested to expose this for cgroup v1 is because a
-recent series [1] started using this stat in the kernel to make some
-reclaim decisions, for both cgroup v1 and v2. Exposing the stat in v1
-will make sure no one assumes the stat is only useful for v2 and break
-the tracking for v1 (which might cause some reclaim regressions then).
-
-[1]https://lore.kernel.org/lkml/20230915083417.3190512-1-liushixin2@huawei.=
-com/
