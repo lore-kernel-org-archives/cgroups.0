@@ -2,143 +2,140 @@ Return-Path: <cgroups-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AF03DE7F15B
-	for <cgroups@archiver.kernel.org>; Wed, 27 Sep 2023 03:42:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4FD19E80A9A
+	for <cgroups@archiver.kernel.org>; Wed, 27 Sep 2023 06:58:44 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229458AbjI0Dmv (ORCPT <rfc822;cgroups@archiver.kernel.org>);
-        Tue, 26 Sep 2023 23:42:51 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36230 "EHLO
+        id S229550AbjI0G6n (ORCPT <rfc822;cgroups@archiver.kernel.org>);
+        Wed, 27 Sep 2023 02:58:43 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57338 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230156AbjI0DgT (ORCPT
-        <rfc822;cgroups@vger.kernel.org>); Tue, 26 Sep 2023 23:36:19 -0400
-Received: from mgamail.intel.com (mgamail.intel.com [134.134.136.24])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E6C3A16E90;
-        Tue, 26 Sep 2023 18:56:46 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1695779807; x=1727315807;
-  h=to:cc:subject:references:date:mime-version:
-   content-transfer-encoding:from:message-id:in-reply-to;
-  bh=B4V8UJd1VttRqhaNTVjHfz83p7oeLXpMegVFKtP+eNI=;
-  b=UxZtPrFhuK534xBdP0e4E4LeFaPVRj7IZ8qoYMbOkc5f7KJguxJE2sCM
-   O1kilq1J4ZIbAmyX/EPVdEDAdehmKkwWuSCJNr6g2PmSqkQjX1mUXomnZ
-   Mva4bMlHKR171LZwDpFQymnGENaT/lcI7WK6bySsk/urxR803AeCg6XXQ
-   hV5ZUAhk2NBxGLRkw3oe/1tn2WGIhtGrnu51l5dN7WaE/sMHivf7Q23O0
-   pjml3dhCCltjIv/Uac334GapizwZkQMkyCZbSmOzlw7BzS0esBiyIpDbH
-   2vFX6VTVLIbs0swVKuiLWQq4bEkHVWbZZ1dXPSFgCNZoSftmN0W6E+EQE
-   w==;
-X-IronPort-AV: E=McAfee;i="6600,9927,10845"; a="384488449"
-X-IronPort-AV: E=Sophos;i="6.03,179,1694761200"; 
-   d="scan'208";a="384488449"
-Received: from orsmga001.jf.intel.com ([10.7.209.18])
-  by orsmga102.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 26 Sep 2023 18:56:46 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6600,9927,10845"; a="784156380"
-X-IronPort-AV: E=Sophos;i="6.03,179,1694761200"; 
-   d="scan'208";a="784156380"
-Received: from hhuan26-mobl.amr.corp.intel.com ([10.92.96.100])
-  by orsmga001-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-SHA; 26 Sep 2023 18:56:44 -0700
-Content-Type: text/plain; charset=iso-8859-15; format=flowed; delsp=yes
-To:     "Jarkko Sakkinen" <jarkko@kernel.org>, dave.hansen@linux.intel.com,
-        tj@kernel.org, linux-kernel@vger.kernel.org,
-        linux-sgx@vger.kernel.org, x86@kernel.org, cgroups@vger.kernel.org,
-        tglx@linutronix.de, mingo@redhat.com, bp@alien8.de, hpa@zytor.com,
-        sohil.mehta@intel.com
-Cc:     zhiquan1.li@intel.com, kristen@linux.intel.com, seanjc@google.com,
-        zhanb@microsoft.com, anakrish@microsoft.com,
-        mikko.ylinen@linux.intel.com, yangjie@microsoft.com
-Subject: Re: [PATCH v5 01/18] cgroup/misc: Add per resource callbacks for CSS
- events
-References: <20230923030657.16148-1-haitao.huang@linux.intel.com>
- <20230923030657.16148-2-haitao.huang@linux.intel.com>
- <CVS5XFKKTTUZ.XRMYK1ADHSPG@suppilovahvero>
- <op.2buytfetwjvjmi@hhuan26-mobl.amr.corp.intel.com>
- <CVSVH3ARQBRC.1QUTEQE3YNN5T@qgv27q77ld-mac>
- <CVSVJ8DYAME8.SMTH7VYG7ER@qgv27q77ld-mac>
-Date:   Tue, 26 Sep 2023 20:56:43 -0500
+        with ESMTP id S229757AbjI0G6m (ORCPT
+        <rfc822;cgroups@vger.kernel.org>); Wed, 27 Sep 2023 02:58:42 -0400
+Received: from mx0a-00069f02.pphosted.com (mx0a-00069f02.pphosted.com [205.220.165.32])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7E9B7D6;
+        Tue, 26 Sep 2023 23:58:41 -0700 (PDT)
+Received: from pps.filterd (m0333521.ppops.net [127.0.0.1])
+        by mx0b-00069f02.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 38QLTNqi006223;
+        Wed, 27 Sep 2023 06:58:07 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
+ subject : date : message-id : mime-version : content-transfer-encoding;
+ s=corp-2023-03-30; bh=1JPRMkBEdyKk7oKqtMorRqkKFZiq/eCbKVfKVWvw/8s=;
+ b=j4f7qUPE1xQaJtTa6nZl4W//hfXjWP5a2DFCPZl8T0jADiS8+vk+ZlihvKPLWcndWMDR
+ Io99PmShvV3XhYzlX9ToHqCUbz3Jbsk7DSwMOdZqem/pFY3tYzdT584CxVORSTojonz4
+ NB32mTuF0HPRr+J5G10VoYlxUDcF6l/J2GItREUnlJfN1puMP3GaH4cwQy84KxCeBZbM
+ omffYvkUO2xYO+AofidEXUfZ9qoBPZbSX9C4fkZ0kyOsn25EmBVNOCFsPCzaRMmimFYD
+ vBOJQAYCoj93OdOnBvpG+dacfNDwgplgn35foQRey2IleSHdCzuaJO6+swavPa1B7zYk dA== 
+Received: from iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta02.appoci.oracle.com [147.154.18.20])
+        by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3t9pxc0pjg-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Wed, 27 Sep 2023 06:58:07 +0000
+Received: from pps.filterd (iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
+        by iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com (8.17.1.19/8.17.1.19) with ESMTP id 38R6CI0V030811;
+        Wed, 27 Sep 2023 06:58:06 GMT
+Received: from pps.reinject (localhost [127.0.0.1])
+        by iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTPS id 3t9pfdd2yg-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Wed, 27 Sep 2023 06:58:05 +0000
+Received: from iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
+        by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 38R6u0dh023218;
+        Wed, 27 Sep 2023 06:58:05 GMT
+Received: from ca-dev112.us.oracle.com (ca-dev112.us.oracle.com [10.129.136.47])
+        by iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTP id 3t9pfdd2xb-1;
+        Wed, 27 Sep 2023 06:58:05 +0000
+From:   Harshit Mogalapalli <harshit.m.mogalapalli@oracle.com>
+To:     Waiman Long <longman@redhat.com>,
+        Zefan Li <lizefan.x@bytedance.com>, Tejun Heo <tj@kernel.org>,
+        Johannes Weiner <hannes@cmpxchg.org>, cgroups@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Cc:     dan.carpenter@linaro.org, kernel-janitors@vger.kernel.org,
+        error27@gmail.com, harshit.m.mogalapalli@oracle.com,
+        kamalesh.babulal@oracle.com, kernel test robot <lkp@intel.com>
+Subject: [PATCH next] cgroup/cpuset: Cleanup signedness issue in cpu_exclusive_check()
+Date:   Tue, 26 Sep 2023 23:58:01 -0700
+Message-ID: <20230927065801.2139969-1-harshit.m.mogalapalli@oracle.com>
+X-Mailer: git-send-email 2.41.0
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-From:   "Haitao Huang" <haitao.huang@linux.intel.com>
-Organization: Intel
-Message-ID: <op.2bwqct0rwjvjmi@hhuan26-mobl.amr.corp.intel.com>
-In-Reply-To: <CVSVJ8DYAME8.SMTH7VYG7ER@qgv27q77ld-mac>
-User-Agent: Opera Mail/1.0 (Win32)
+Content-Transfer-Encoding: 8bit
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.267,Aquarius:18.0.980,Hydra:6.0.619,FMLib:17.11.176.26
+ definitions=2023-09-27_03,2023-09-26_01,2023-05-22_02
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 spamscore=0 mlxscore=0
+ malwarescore=0 suspectscore=0 bulkscore=0 mlxlogscore=999 phishscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2309180000
+ definitions=main-2309270058
+X-Proofpoint-GUID: TdBcfUHpmIQ-MCe_6iUo7Dn4JgRp97J1
+X-Proofpoint-ORIG-GUID: TdBcfUHpmIQ-MCe_6iUo7Dn4JgRp97J1
 Precedence: bulk
 List-ID: <cgroups.vger.kernel.org>
 X-Mailing-List: cgroups@vger.kernel.org
 
-On Tue, 26 Sep 2023 08:13:18 -0500, Jarkko Sakkinen <jarkko@kernel.org>  
-wrote:
+Smatch complains about returning negative error codes from a type
+bool function.
 
-...
->> > >>  /**
->> > >> @@ -410,7 +429,14 @@ misc_cg_alloc(struct cgroup_subsys_state
->> > >> *parent_css)
->> > >>   */
->> > >>  static void misc_cg_free(struct cgroup_subsys_state *css)
->> > >>  {
->> > >> -	kfree(css_misc(css));
->> > >> +	struct misc_cg *cg = css_misc(css);
->> > >> +	enum misc_res_type i;
->> > >> +
->> > >> +	for (i = 0; i < MISC_CG_RES_TYPES; i++)
->> > >> +		if (cg->res[i].free)
->> > >> +			cg->res[i].free(cg);
->> > >> +
->> > >> +	kfree(cg);
->> > >>  }
->> > >>
->> > >>  /* Cgroup controller callbacks */
->> > >> --
->> > >> 2.25.1
->> > >
->> > > Since the only existing client feature requires all callbacks,  
->> should
->> > > this not have that as an invariant?
->> > >
->> > > I.e. it might be better to fail unless *all* ops are non-nil (e.g.  
->> to
->> > > catch issues in the kernel code).
->> > >
->> >
->> > These callbacks are chained from cgroup_subsys, and they are defined
->> > separately so it'd be better follow the same pattern.  Or change  
->> together
->> > with cgroup_subsys if we want to do that. Reasonable?
->>
->> I noticed this one later:
->>
->> It would better to create a separate ops struct and declare the instance
->> as const at minimum.
->>
->> Then there is no need for dynamic assigment of ops and all that is in
->> rodata. This is improves both security and also allows static analysis
->> bit better.
->>
->> Now you have to dynamically trace the struct instance, e.g. in case of
->> a bug. If this one done, it would be already in the vmlinux.
->I.e. then in the driver you can have static const struct declaration
-> with *all* pointers pre-assigned.
->
-> Not sure if cgroups follows this or not but it is *objectively*
-> better. Previous work is not always best possible work...
->
+kernel/cgroup/cpuset.c:705 cpu_exclusive_check() warn:
+	signedness bug returning '(-22)'
 
-IIUC, like vm_ops field in vma structs. Although function pointers in  
-vm_ops are assigned statically, but you still need dynamically assign  
-vm_ops for each instance of vma.
+The code works correctly, but it is confusing.  The current behavior is
+that cpu_exclusive_check() returns true if it's *NOT* exclusive.  Rename
+it to cpusets_are_exclusive() and reverse the returns so it returns true
+if it is exclusive and false if it's not.  Update both callers as well.
 
-So the code will look like this:
+Reported-by: kernel test robot <lkp@intel.com>
+Reported-by: Dan Carpenter <error27@gmail.com>
+Closes: https://lore.kernel.org/r/202309201706.2LhKdM6o-lkp@intel.com/
+Signed-off-by: Harshit Mogalapalli <harshit.m.mogalapalli@oracle.com>
+---
+This is based on sattic analysis, only compile tested
+---
+ kernel/cgroup/cpuset.c | 14 +++++++-------
+ 1 file changed, 7 insertions(+), 7 deletions(-)
 
-if (parent_cg->res[i].misc_ops && parent_cg->res[i].misc_ops->alloc)
-{
-...
-}
+diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
+index 15f399153a2e..afefddd33c3e 100644
+--- a/kernel/cgroup/cpuset.c
++++ b/kernel/cgroup/cpuset.c
+@@ -719,18 +719,18 @@ static inline struct cpumask *fetch_xcpus(struct cpuset *cs)
+ }
+ 
+ /*
+- * cpu_exclusive_check() - check if two cpusets are exclusive
++ * cpusets_are_exclusive() - check if two cpusets are exclusive
+  *
+- * Return 0 if exclusive, -EINVAL if not
++ * Return true if exclusive, false if not
+  */
+-static inline bool cpu_exclusive_check(struct cpuset *cs1, struct cpuset *cs2)
++static inline bool cpusets_are_exclusive(struct cpuset *cs1, struct cpuset *cs2)
+ {
+ 	struct cpumask *xcpus1 = fetch_xcpus(cs1);
+ 	struct cpumask *xcpus2 = fetch_xcpus(cs2);
+ 
+ 	if (cpumask_intersects(xcpus1, xcpus2))
+-		return -EINVAL;
+-	return 0;
++		return false;
++	return true;
+ }
+ 
+ /*
+@@ -833,7 +833,7 @@ static int validate_change(struct cpuset *cur, struct cpuset *trial)
+ 	cpuset_for_each_child(c, css, par) {
+ 		if ((is_cpu_exclusive(trial) || is_cpu_exclusive(c)) &&
+ 		    c != cur) {
+-			if (cpu_exclusive_check(trial, c))
++			if (!cpusets_are_exclusive(trial, c))
+ 				goto out;
+ 		}
+ 		if ((is_mem_exclusive(trial) || is_mem_exclusive(c)) &&
+@@ -1864,7 +1864,7 @@ static int update_parent_effective_cpumask(struct cpuset *cs, int cmd,
+ 			cpuset_for_each_child(child, css, parent) {
+ 				if (child == cs)
+ 					continue;
+-				if (cpu_exclusive_check(cs, child)) {
++				if (!cpusets_are_exclusive(cs, child)) {
+ 					exclusive = false;
+ 					break;
+ 				}
+-- 
+2.41.0
 
-I don't see this is the pattern used in cgroups and no strong opinion  
-either way.
-
-TJ, do you have preference on this?
-
-Thanks
-Haitao
