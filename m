@@ -2,141 +2,93 @@ Return-Path: <cgroups-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 88C32E7F14B
-	for <cgroups@archiver.kernel.org>; Wed, 27 Sep 2023 00:15:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1630AE7F153
+	for <cgroups@archiver.kernel.org>; Wed, 27 Sep 2023 03:12:29 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230319AbjI0APD (ORCPT <rfc822;cgroups@archiver.kernel.org>);
-        Tue, 26 Sep 2023 20:15:03 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50048 "EHLO
+        id S232388AbjI0DM2 (ORCPT <rfc822;cgroups@archiver.kernel.org>);
+        Tue, 26 Sep 2023 23:12:28 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45664 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232081AbjI0ANC (ORCPT
-        <rfc822;cgroups@vger.kernel.org>); Tue, 26 Sep 2023 20:13:02 -0400
-Received: from mail-oi1-x234.google.com (mail-oi1-x234.google.com [IPv6:2607:f8b0:4864:20::234])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 388031F9D0;
-        Tue, 26 Sep 2023 16:31:18 -0700 (PDT)
-Received: by mail-oi1-x234.google.com with SMTP id 5614622812f47-3ae5efefb89so696065b6e.1;
-        Tue, 26 Sep 2023 16:31:18 -0700 (PDT)
+        with ESMTP id S232692AbjI0DK1 (ORCPT
+        <rfc822;cgroups@vger.kernel.org>); Tue, 26 Sep 2023 23:10:27 -0400
+Received: from mail-qv1-xf2a.google.com (mail-qv1-xf2a.google.com [IPv6:2607:f8b0:4864:20::f2a])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7969830F1;
+        Tue, 26 Sep 2023 19:28:24 -0700 (PDT)
+Received: by mail-qv1-xf2a.google.com with SMTP id 6a1803df08f44-65cff6a6878so848366d6.1;
+        Tue, 26 Sep 2023 19:28:24 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1695771077; x=1696375877; darn=vger.kernel.org;
+        d=gmail.com; s=20230601; t=1695781703; x=1696386503; darn=vger.kernel.org;
         h=content-transfer-encoding:cc:to:subject:message-id:date:from
          :in-reply-to:references:mime-version:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=pAVAV1GBJCwxDDAyuqk5FEpmqUfp3B71TeVssBtQ3XY=;
-        b=In1w+jj8NlzUJNM5Bh3qtanmRjZLwlJfTLNKTOOM0CZZSz+RfAacHEMDbder3p7cmM
-         CxpDM3sqJL7sCxrR7wA3Swxf7ChD8mSXWc15sVzwfHlaOE6DikK3OkzN9ECBz0TmiVXB
-         TERZ/asHa6Mm5h3XHzjS7ad09AyFwkgXbOoZF/jJUdXEhZcO+6mtjMdOr3T3fkbiazW9
-         c6dGgVanZX1mINlAfgqo+Z3jrNbHu95BuMR0K7IGD7EbVFZvYyxaTbfdwuFDHUGSMPVM
-         PHHA2jwz74ZfSbaeE/e2TStt9UUvQBPQ5J2cYflb1sScYYWb4zVg5lXWpcS5Fn8C0vhh
-         23mA==
+        bh=JwhbVww0wcBV3klKpARDGOKUJ4usm35gWsWhGhKfqAc=;
+        b=bEOPxKLESruQ7xzgbp4Z7NcyhKdEcmW1e1/Z4pQyIgFe5OghrvVEKrOBnUrxtmPd6G
+         9UyB0jvJklOlQGiCYI/CTzlwbPFltSyI98e9y1ShnRDIjaCKDDdfHa2Lya/89FUrsDLC
+         G2357Naty0CXZ3kW05wXrApoZcyXrDqRwjQkqhbv+DqyUQosuj0AGMaCUiH3IrInkWh9
+         oUZmb07o0164x2kQADA5h0x+/3qCp6GhYQdK6DSY8BmV9FfAceC77fTVA3mZAWc8qocc
+         tcetejOCkQsqmMDpuTsUveS4zHIm51Npjb/Syzkuj2VKRcLrfclLgpSXJJ6Ksm8GuPKG
+         LP0g==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1695771077; x=1696375877;
+        d=1e100.net; s=20230601; t=1695781703; x=1696386503;
         h=content-transfer-encoding:cc:to:subject:message-id:date:from
          :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=pAVAV1GBJCwxDDAyuqk5FEpmqUfp3B71TeVssBtQ3XY=;
-        b=laZ53eIV9Qz31MkAwGa0mEvXmGNvwzVvbJ8QF9bIyZv8vMCsQtbYpKXnholCdU3JMK
-         Z1iMwSCvFDXt5GADKTpNfWzuKzXGQXx4ermJ9gH/Ggm2imPNQnK5nPlUBf9Uopef2Nj1
-         iYQcSfYPwqNgK0zX8O88GwLtfXomULaq27wyU65qcXJ5ZRMeE+GARwOnHTIrSAts9RbJ
-         7BUP19ST1MOB0X3f5FC6qp6edh8LvQ/Tgeomyz9rrj4ftrpNLQESS532OkyGN7BXvmBP
-         Nnmb4ISk0f2rHXIcSzPpEi0MoD9bPPRYQcv5PoH/+4tc3r6J6ACHu9eF96doeQ2mV5Vl
-         CRbQ==
-X-Gm-Message-State: AOJu0YxtmWq9BODqkCnE1sHHO0QiqNe1fH2451oSiVRIdFcY56+CZ+X3
-        dWaXhnWKdlbgm/Fi9ELAORKai4WP2SwIEJ7yiKzxAW0OJ4ZVU7DK
-X-Google-Smtp-Source: AGHT+IH1yQriWlZtGSXP4SNOcv9TqmZsi0jotr3syJyfbtTczeTQe9fBhqh5dFav+DCAFYTaiG+0pms8xgPC3IbLQZk=
-X-Received: by 2002:a05:6870:5baa:b0:1d5:a3b5:d89c with SMTP id
- em42-20020a0568705baa00b001d5a3b5d89cmr453138oab.3.1695771077390; Tue, 26 Sep
- 2023 16:31:17 -0700 (PDT)
+        bh=JwhbVww0wcBV3klKpARDGOKUJ4usm35gWsWhGhKfqAc=;
+        b=Ibc0PAJTT48OgFq0VEZoaWw+XiuXa4O2nAzf/JAU2xnGFc9Ty5w+pAfLWmNq+kdyfM
+         nA52xtdE7R4xxfyH9/csud5hfUxUPW1qCP8Ldq3QKDUkR9imncSAHK7CmSvLUQZT5RsA
+         0jghiN+qwajyhoX4B6xb0T2/RL7O8hcX8ia2DCMULHlVZllXKxMWpLnbRYwpk0zTypi6
+         80bajs3KHsyOvUPMBEnpTx+hHeArSKe2AoUoE6oCawcyGEsZUxGO7+VPTe8K1yz9R6SX
+         v+WPAQ5tyQTWjxkVRxQvnFwMX5Bh6QUOuzBn3Pu1/su/nYyX5EiFt11+h+3Efc9hr7f1
+         lWpQ==
+X-Gm-Message-State: AOJu0YwY+AYGdiWjzZgBA/W809zHRG39X9WJcNTyoBdKxpXdUgk8QolA
+        ZV0cmquwTOgJoV8jNty/nI7cAch15zl1OEMR0Ac=
+X-Google-Smtp-Source: AGHT+IGisiVyVc/yKQ9U3V+vdNt5CNfFKoG7T3Tb3+PoGa7BJbYwunMdqZqKFB9WBvPcsbkHB3Ye2s9ICk524NdF3JU=
+X-Received: by 2002:a0c:e185:0:b0:65a:4189:f0f7 with SMTP id
+ p5-20020a0ce185000000b0065a4189f0f7mr744041qvl.46.1695781703572; Tue, 26 Sep
+ 2023 19:28:23 -0700 (PDT)
 MIME-Version: 1.0
-References: <20230926194949.2637078-1-nphamcs@gmail.com> <CAPTztWY8eDSa1qKx35hTm5ef+e13SDnRHDrevc-1V1v7-pEP3w@mail.gmail.com>
-In-Reply-To: <CAPTztWY8eDSa1qKx35hTm5ef+e13SDnRHDrevc-1V1v7-pEP3w@mail.gmail.com>
-From:   Nhat Pham <nphamcs@gmail.com>
-Date:   Tue, 26 Sep 2023 16:31:06 -0700
-Message-ID: <CAKEwX=PjTH8RpRbKRqyHr5-W1LFUZQu_PJKsYU5Mry70-8Td-g@mail.gmail.com>
-Subject: Re: [PATCH 0/2] hugetlb memcg accounting
-To:     Frank van der Linden <fvdl@google.com>
-Cc:     akpm@linux-foundation.org, riel@surriel.com, hannes@cmpxchg.org,
-        mhocko@kernel.org, roman.gushchin@linux.dev, shakeelb@google.com,
-        muchun.song@linux.dev, tj@kernel.org, lizefan.x@bytedance.com,
-        shuah@kernel.org, mike.kravetz@oracle.com, yosryahmed@google.com,
-        linux-mm@kvack.org, kernel-team@meta.com,
-        linux-kernel@vger.kernel.org, cgroups@vger.kernel.org
+References: <20230922112846.4265-1-laoar.shao@gmail.com> <ZQ3GQmYrYyKAg2uK@slm.duckdns.org>
+ <CALOAHbA9-BT1daw-KXHtsrN=uRQyt-p6LU=BEpvF2Yk42A_Vxw@mail.gmail.com>
+ <ZRHU6MfwqRxjBFUH@slm.duckdns.org> <CALOAHbB3WPwz0iZNSFbQU9HyGBC9Kymhq2zV83PbEYhzmmvz4g@mail.gmail.com>
+ <ZRMiDwYF8yDookLf@slm.duckdns.org>
+In-Reply-To: <ZRMiDwYF8yDookLf@slm.duckdns.org>
+From:   Yafang Shao <laoar.shao@gmail.com>
+Date:   Wed, 27 Sep 2023 10:27:47 +0800
+Message-ID: <CALOAHbAkBxbAxXLBHuJo_6nJZAwnUv2258a5Rw9g=76bSoLe6Q@mail.gmail.com>
+Subject: Re: [RFC PATCH bpf-next 0/8] bpf, cgroup: Add bpf support for cgroup controller
+To:     Tejun Heo <tj@kernel.org>
+Cc:     ast@kernel.org, daniel@iogearbox.net, john.fastabend@gmail.com,
+        andrii@kernel.org, martin.lau@linux.dev, song@kernel.org,
+        yonghong.song@linux.dev, kpsingh@kernel.org, sdf@google.com,
+        haoluo@google.com, jolsa@kernel.org, lizefan.x@bytedance.com,
+        hannes@cmpxchg.org, yosryahmed@google.com, mkoutny@suse.com,
+        cgroups@vger.kernel.org, bpf@vger.kernel.org
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <cgroups.vger.kernel.org>
 X-Mailing-List: cgroups@vger.kernel.org
 
-On Tue, Sep 26, 2023 at 1:50=E2=80=AFPM Frank van der Linden <fvdl@google.c=
-om> wrote:
+On Wed, Sep 27, 2023 at 2:25=E2=80=AFAM Tejun Heo <tj@kernel.org> wrote:
 >
-> On Tue, Sep 26, 2023 at 12:49=E2=80=AFPM Nhat Pham <nphamcs@gmail.com> wr=
-ote:
-> >
-> > Currently, hugetlb memory usage is not acounted for in the memory
-> > controller, which could lead to memory overprotection for cgroups with
-> > hugetlb-backed memory. This has been observed in our production system.
-> >
-> > This patch series rectifies this issue by charging the memcg when the
-> > hugetlb folio is allocated, and uncharging when the folio is freed. In
-> > addition, a new selftest is added to demonstrate and verify this new
-> > behavior.
-> >
-> > Nhat Pham (2):
-> >   hugetlb: memcg: account hugetlb-backed memory in memory controller
-> >   selftests: add a selftest to verify hugetlb usage in memcg
-> >
-> >  MAINTAINERS                                   |   2 +
-> >  fs/hugetlbfs/inode.c                          |   2 +-
-> >  include/linux/hugetlb.h                       |   6 +-
-> >  include/linux/memcontrol.h                    |   8 +
-> >  mm/hugetlb.c                                  |  23 +-
-> >  mm/memcontrol.c                               |  40 ++++
-> >  tools/testing/selftests/cgroup/.gitignore     |   1 +
-> >  tools/testing/selftests/cgroup/Makefile       |   2 +
-> >  .../selftests/cgroup/test_hugetlb_memcg.c     | 222 ++++++++++++++++++
-> >  9 files changed, 297 insertions(+), 9 deletions(-)
-> >  create mode 100644 tools/testing/selftests/cgroup/test_hugetlb_memcg.c
-> >
-> > --
-> > 2.34.1
-> >
+> Hello,
 >
-> We've had this behavior at Google for a long time, and we're actually
-> getting rid of it. hugetlb pages are a precious resource that should
-> be accounted for separately. They are not just any memory, they are
-> physically contiguous memory, charging them the same as any other
-> region of the same size ended up not making sense, especially not for
-> larger hugetlb page sizes.
-
-I agree hugetlb is a special kind of resource. But as Johannes
-pointed out, it is still a form of memory. Semantically, its usage
-should be modulated by the memory controller.
-
-We do have the HugeTLB controller for hugetlb-specific
-restriction, and where appropriate we definitely should take
-advantage of it. But it does not fix the hole we have in memory
-usage reporting, as well as (over)protection and reclaim dynamics.
-Hence the need for the userspace hack (as Johannes described):
-manually adding/subtracting HugeTLB usage where applicable.
-This is not only inelegant, but also cumbersome and buggy.
-
+> On Tue, Sep 26, 2023 at 11:01:08AM +0800, Yafang Shao wrote:
+> > Thanks for your suggestion. I will think about it.
+> > BTW, I can't find the hierarchy ID of systemd (/sys/fs/cgroup/systemd)
+> > in /proc/cgroups. Is this intentional as part of the design, or might
+> > it be possible that we overlooked it?
+> > In the userspace, where can we find the hierarchy ID of a named hierarc=
+hy?
 >
-> Additionally, if this behavior is changed just like that, there will
-> be quite a few workloads that will break badly because they'll hit
-> their limits immediately - imagine a container that uses 1G hugetlb
-> pages to back something large (a database, a VM), and 'plain' memory
-> for control processes.
->
-> What do your workloads do? Is it not possible for you to account for
-> hugetlb pages separately? Sure, it can be annoying to have to deal
-> with 2 separate totals that you need to take into account, but again,
-> hugetlb pages are a resource that is best dealt with separately.
->
+> Yeah, /proc/cgroups only prints the hierarchies which have controllers
+> attached to them. The file is pretty sad in general. However,
+> /proc/PID/cgroup prints all existing hierarchies along with their IDs and
+> identifiers (controllers or names). Hopefully, that should be enough?
 
-Johannes beat me to it - he described our use case, and what we
-have hacked together to temporarily get around the issue.
+Right, /proc/self/cgroup can show the hierarchies. Thanks for your explanat=
+ion.
 
-A knob/flag to turn on/off this behavior sounds good to me.
-
-> - Frank
-Thanks for the comments, Frank!
+--=20
+Regards
+Yafang
