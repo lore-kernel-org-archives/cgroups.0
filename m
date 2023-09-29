@@ -2,201 +2,91 @@ Return-Path: <cgroups-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E54B5E728D7
-	for <cgroups@archiver.kernel.org>; Fri, 29 Sep 2023 18:01:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8EAC0E728D6
+	for <cgroups@archiver.kernel.org>; Fri, 29 Sep 2023 18:17:27 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233144AbjI2SBr (ORCPT <rfc822;cgroups@archiver.kernel.org>);
-        Fri, 29 Sep 2023 14:01:47 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56158 "EHLO
+        id S233798AbjI2SR1 (ORCPT <rfc822;cgroups@archiver.kernel.org>);
+        Fri, 29 Sep 2023 14:17:27 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53932 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233796AbjI2SBk (ORCPT
-        <rfc822;cgroups@vger.kernel.org>); Fri, 29 Sep 2023 14:01:40 -0400
-Received: from out-210.mta0.migadu.com (out-210.mta0.migadu.com [IPv6:2001:41d0:1004:224b::d2])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5DDFB1BF
-        for <cgroups@vger.kernel.org>; Fri, 29 Sep 2023 11:01:30 -0700 (PDT)
-X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
-        t=1696010485;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=O/HghY6af2rzSMfJ7xP4DH1sDr9DxTKbSixxOwxk1Wc=;
-        b=reulyu8BPJ63WGorYfZOnZ+y3TQQyJvBgiYOWl05pCLFalHnzIPEPs/r+T2JEd8zTAmV+5
-        xq4tlzloY5TTOTNFcVw0n7ImC8bEtRN2wTux41sKvpuWQw+ZJwVV9YgZkFzFehUsdj59fc
-        /cKiihLvc8ycwOyaCRkSf2htJ6JeWMI=
-From:   Roman Gushchin <roman.gushchin@linux.dev>
-To:     linux-mm@kvack.org
-Cc:     linux-kernel@vger.kernel.org, cgroups@vger.kernel.org,
-        Johannes Weiner <hannes@cmpxchg.org>,
-        Michal Hocko <mhocko@kernel.org>,
-        Shakeel Butt <shakeelb@google.com>,
-        Muchun Song <muchun.song@linux.dev>,
-        Dennis Zhou <dennis@kernel.org>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        David Rientjes <rientjes@google.com>,
-        Vlastimil Babka <vbabka@suse.cz>,
-        Roman Gushchin <roman.gushchin@linux.dev>
-Subject: [PATCH v1 4/5] mm: kmem: scoped objcg protection
-Date:   Fri, 29 Sep 2023 11:00:54 -0700
-Message-ID: <20230929180056.1122002-5-roman.gushchin@linux.dev>
-In-Reply-To: <20230929180056.1122002-1-roman.gushchin@linux.dev>
-References: <20230929180056.1122002-1-roman.gushchin@linux.dev>
+        with ESMTP id S233804AbjI2SR0 (ORCPT
+        <rfc822;cgroups@vger.kernel.org>); Fri, 29 Sep 2023 14:17:26 -0400
+Received: from mail-pf1-x433.google.com (mail-pf1-x433.google.com [IPv6:2607:f8b0:4864:20::433])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4F9331A5;
+        Fri, 29 Sep 2023 11:17:14 -0700 (PDT)
+Received: by mail-pf1-x433.google.com with SMTP id d2e1a72fcca58-69101022969so12987633b3a.3;
+        Fri, 29 Sep 2023 11:17:14 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1696011434; x=1696616234; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=S4L3CyM2KD+Bhc4bJOeMsRzzCpxEuAkcHebE0BFIhjE=;
+        b=jnNjkUJX9fh3CAyx9b9KmbLqYFBKyPxAkIp0FGPkfk1lzXdROpbxnonWzKIpQzJM5i
+         0e2GZWxBfyfYetWxBG3Oiwcg1V+7xYVoYTeLLPWfY+r4I3OSKWIPpoXjy3n8VZT87U3T
+         PxIX9fn2jHKUePJGki7Qx2aUvW4r+X8eDX5b08IsNnfTWgf7pVVzl+aKhH8ZDZfBJzoj
+         DjoWIRQXX4jWKfiIl3e2wj4n2rWYBxxSWeEjVEgEmQFkwC8MN5P6L2Q1lRradRXQ6kNA
+         jeY1AJzJusqBhVHuorSLjrgl3V4Yns2NlzaW0uG1KjwJ3xGTygByteasf3M53tre4UNv
+         51Rw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1696011434; x=1696616234;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=S4L3CyM2KD+Bhc4bJOeMsRzzCpxEuAkcHebE0BFIhjE=;
+        b=vmyJ68qED6d6yozaxQfhRFDzagWFAFX7X8z5YQDsLSCO9g6PGRbvSuX34W3i9wTTkO
+         w/tJra8SPVLqMEgf0voU1jFfXDOw6LBnpy7lN2ew5CajW5XcQsMH6FIvj2+cpcCBvhoY
+         u4Ca+OeEDD7sU9ffeQjcJeXtsD3cVe1KEMWEhJ7nZ2oLChrOOehtV5DPKZqqvt5tHjbN
+         EJ/rTHKl9POqPLCvMfHTKyKx3vpFtjAl1wm6LP4Qv+lWczQzOkFJ8QzdhTW3GUzLtafq
+         vrq//N0PNXDC1Jf/m5kGr1Y5yUMZAPUKBNpohmBKYE8vs+/vUhOiPE40zPl7wVBezPCh
+         BNNw==
+X-Gm-Message-State: AOJu0Ywkgm+5PaJqsP8bcVC2//hWzCc/gwCR79t510z/EOJ8RTsaajwa
+        swYcphrqQEvs64lzpiPJ9JQ=
+X-Google-Smtp-Source: AGHT+IHRn9NtuT89nl3ZXIHaQZ4qLfOhCqEnsf7Txzjq31uEbwhnFHCeEyskUB/5E4VwIq1/0vHdrg==
+X-Received: by 2002:a05:6a00:852:b0:691:da6:47a with SMTP id q18-20020a056a00085200b006910da6047amr5678328pfk.31.1696011433596;
+        Fri, 29 Sep 2023 11:17:13 -0700 (PDT)
+Received: from localhost (fwdproxy-prn-006.fbsv.net. [2a03:2880:ff:6::face:b00c])
+        by smtp.gmail.com with ESMTPSA id i14-20020aa787ce000000b006900cb919b8sm15326753pfo.53.2023.09.29.11.17.13
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 29 Sep 2023 11:17:13 -0700 (PDT)
+From:   Nhat Pham <nphamcs@gmail.com>
+To:     akpm@linux-foundation.org
+Cc:     riel@surriel.com, hannes@cmpxchg.org, mhocko@kernel.org,
+        roman.gushchin@linux.dev, shakeelb@google.com,
+        muchun.song@linux.dev, tj@kernel.org, lizefan.x@bytedance.com,
+        shuah@kernel.org, mike.kravetz@oracle.com, yosryahmed@google.com,
+        fvdl@google.com, linux-mm@kvack.org, kernel-team@meta.com,
+        linux-kernel@vger.kernel.org, cgroups@vger.kernel.org
+Subject: [PATCH v2 1/2] hugetlb: memcg: account hugetlb-backed memory in memory controller (fix)
+Date:   Fri, 29 Sep 2023 11:17:12 -0700
+Message-Id: <20230929181712.3723495-1-nphamcs@gmail.com>
+X-Mailer: git-send-email 2.34.1
+In-Reply-To: <20230928005723.1709119-2-nphamcs@gmail.com>
+References: <20230928005723.1709119-2-nphamcs@gmail.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-Migadu-Flow: FLOW_OUT
 Precedence: bulk
 List-ID: <cgroups.vger.kernel.org>
 X-Mailing-List: cgroups@vger.kernel.org
 
-Switch to a scope-based protection of the objcg pointer on slab/kmem
-allocation paths. Instead of using the get_() semantics in the
-pre-allocation hook and put the reference afterwards, let's rely
-on the fact that objcg is pinned by the scope.
+This fixlet disables the hugetlb memcg accounting behavior in cgroup v1.
 
-It's possible because:
-1) if the objcg is received from the current task struct, the task is
-   keeping a reference to the objcg.
-2) if the objcg is received from an active memcg (remote charging),
-   the memcg is pinned by the scope and has a reference to the
-   corresponding objcg.
-
-Signed-off-by: Roman Gushchin (Cruise) <roman.gushchin@linux.dev>
+Signed-off-by: Nhat Pham <nphamcs@gmail.com>
 ---
- include/linux/memcontrol.h |  6 +++++
- mm/memcontrol.c            | 46 ++++++++++++++++++++++++++++++++++++--
- mm/slab.h                  | 10 +++------
- 3 files changed, 53 insertions(+), 9 deletions(-)
+ mm/memcontrol.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
-index e59dea9d8666..5a52327ab09a 100644
---- a/include/linux/memcontrol.h
-+++ b/include/linux/memcontrol.h
-@@ -1779,6 +1779,12 @@ bool mem_cgroup_kmem_disabled(void);
- int __memcg_kmem_charge_page(struct page *page, gfp_t gfp, int order);
- void __memcg_kmem_uncharge_page(struct page *page, int order);
- 
-+/*
-+ * The returned objcg pointer is safe to use without additional
-+ * protection within a scope, refer to the implementation for the
-+ * additional details.
-+ */
-+struct obj_cgroup *current_obj_cgroup(void);
- struct obj_cgroup *get_obj_cgroup_from_current(void);
- struct obj_cgroup *get_obj_cgroup_from_folio(struct folio *folio);
- 
 diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index e9890f6e4da7..78ab36b5899f 100644
+index d5dfc9b36acb..de6bd8ca87f5 100644
 --- a/mm/memcontrol.c
 +++ b/mm/memcontrol.c
-@@ -3074,6 +3074,48 @@ __always_inline struct obj_cgroup *get_obj_cgroup_from_current(void)
- 	return objcg;
- }
+@@ -7081,6 +7081,7 @@ int mem_cgroup_hugetlb_charge_folio(struct folio *folio, gfp_t gfp)
+ 	int ret;
  
-+__always_inline struct obj_cgroup *current_obj_cgroup(void)
-+{
-+	struct mem_cgroup *memcg;
-+	struct obj_cgroup *objcg;
-+
-+	if (in_task()) {
-+		memcg = current->active_memcg;
-+		if (unlikely(memcg))
-+			goto from_memcg;
-+
-+		objcg = READ_ONCE(current->objcg);
-+		if (unlikely(current_objcg_needs_update(objcg)))
-+			objcg = current_objcg_update(objcg);
-+		/*
-+		 * Objcg reference is kept by the task, so it's safe
-+		 * to use the objcg by the current task.
-+		 */
-+		return objcg;
-+	} else {
-+		memcg = this_cpu_read(int_active_memcg);
-+		if (unlikely(memcg))
-+			goto from_memcg;
-+	}
-+	return NULL;
-+
-+from_memcg:
-+	for (; !mem_cgroup_is_root(memcg); memcg = parent_mem_cgroup(memcg)) {
-+		/*
-+		 * Memcg pointer is protected by scope (see set_active_memcg())
-+		 * and is pinning the corresponding objcg, so objcg can't go
-+		 * away and can be used within the scope without any additional
-+		 * protection.
-+		 */
-+		objcg = rcu_dereference_check(memcg->objcg, 1);
-+		if (likely(objcg))
-+			break;
-+		objcg = NULL;
-+	}
-+
-+	return objcg;
-+}
-+
- struct obj_cgroup *get_obj_cgroup_from_folio(struct folio *folio)
- {
- 	struct obj_cgroup *objcg;
-@@ -3168,15 +3210,15 @@ int __memcg_kmem_charge_page(struct page *page, gfp_t gfp, int order)
- 	struct obj_cgroup *objcg;
- 	int ret = 0;
+ 	if (mem_cgroup_disabled() ||
++		!cgroup_subsys_on_dfl(memory_cgrp_subsys) ||
+ 		!(cgrp_dfl_root.flags & CGRP_ROOT_MEMORY_HUGETLB_ACCOUNTING))
+ 		return 0;
  
--	objcg = get_obj_cgroup_from_current();
-+	objcg = current_obj_cgroup();
- 	if (objcg) {
- 		ret = obj_cgroup_charge_pages(objcg, gfp, 1 << order);
- 		if (!ret) {
-+			obj_cgroup_get(objcg);
- 			page->memcg_data = (unsigned long)objcg |
- 				MEMCG_DATA_KMEM;
- 			return 0;
- 		}
--		obj_cgroup_put(objcg);
- 	}
- 	return ret;
- }
-diff --git a/mm/slab.h b/mm/slab.h
-index 799a315695c6..8cd3294fedf5 100644
---- a/mm/slab.h
-+++ b/mm/slab.h
-@@ -484,7 +484,7 @@ static inline bool memcg_slab_pre_alloc_hook(struct kmem_cache *s,
- 	if (!(flags & __GFP_ACCOUNT) && !(s->flags & SLAB_ACCOUNT))
- 		return true;
- 
--	objcg = get_obj_cgroup_from_current();
-+	objcg = current_obj_cgroup();
- 	if (!objcg)
- 		return true;
- 
-@@ -497,17 +497,14 @@ static inline bool memcg_slab_pre_alloc_hook(struct kmem_cache *s,
- 		css_put(&memcg->css);
- 
- 		if (ret)
--			goto out;
-+			return false;
- 	}
- 
- 	if (obj_cgroup_charge(objcg, flags, objects * obj_full_size(s)))
--		goto out;
-+		return false;
- 
- 	*objcgp = objcg;
- 	return true;
--out:
--	obj_cgroup_put(objcg);
--	return false;
- }
- 
- static inline void memcg_slab_post_alloc_hook(struct kmem_cache *s,
-@@ -542,7 +539,6 @@ static inline void memcg_slab_post_alloc_hook(struct kmem_cache *s,
- 			obj_cgroup_uncharge(objcg, obj_full_size(s));
- 		}
- 	}
--	obj_cgroup_put(objcg);
- }
- 
- static inline void memcg_slab_free_hook(struct kmem_cache *s, struct slab *slab,
 -- 
-2.42.0
-
+2.34.1
