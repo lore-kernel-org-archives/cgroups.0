@@ -2,93 +2,86 @@ Return-Path: <cgroups-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D8981E7C4E9
-	for <cgroups@archiver.kernel.org>; Wed,  4 Oct 2023 19:10:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B414CE7C4ED
+	for <cgroups@archiver.kernel.org>; Wed,  4 Oct 2023 19:17:59 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S245641AbjJDTKb (ORCPT <rfc822;cgroups@archiver.kernel.org>);
-        Wed, 4 Oct 2023 15:10:31 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49788 "EHLO
+        id S233650AbjJDTR7 (ORCPT <rfc822;cgroups@archiver.kernel.org>);
+        Wed, 4 Oct 2023 15:17:59 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57910 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S245357AbjJDTKU (ORCPT
-        <rfc822;cgroups@vger.kernel.org>); Wed, 4 Oct 2023 15:10:20 -0400
-Received: from mail-pl1-x631.google.com (mail-pl1-x631.google.com [IPv6:2607:f8b0:4864:20::631])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 690FE729B;
-        Wed,  4 Oct 2023 11:59:24 -0700 (PDT)
-Received: by mail-pl1-x631.google.com with SMTP id d9443c01a7336-1c5ff5f858dso704975ad.2;
-        Wed, 04 Oct 2023 11:59:24 -0700 (PDT)
+        with ESMTP id S244630AbjJDTR5 (ORCPT
+        <rfc822;cgroups@vger.kernel.org>); Wed, 4 Oct 2023 15:17:57 -0400
+Received: from mail-pf1-x429.google.com (mail-pf1-x429.google.com [IPv6:2607:f8b0:4864:20::429])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B88A2CE;
+        Wed,  4 Oct 2023 12:17:53 -0700 (PDT)
+Received: by mail-pf1-x429.google.com with SMTP id d2e1a72fcca58-690fa0eea3cso144530b3a.0;
+        Wed, 04 Oct 2023 12:17:53 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1696445964; x=1697050764; darn=vger.kernel.org;
+        d=gmail.com; s=20230601; t=1696447073; x=1697051873; darn=vger.kernel.org;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:sender:from:to:cc:subject:date:message-id
          :reply-to;
-        bh=w1hvqdbML9jmUrBMXlybcpZa1pczZCR/HKc4A1lMQgY=;
-        b=EXj7eEauLHNRVgPNSHL+gIZiflgb0o3nF9Yix91EZSPGjQzOHJSk0QJonjOexxoi51
-         FCnUlG1hrb7r1EGPFx4mo2OzpFvjqXLuqwhSFMagbVilzov51KePeNeYKnTjXzXedeJG
-         eo9Q5z56moM3WP/zxoawmkjtOYPCiiwR3oyAk0CacLp6mKHQFTW2lkGjURUYW1D4OUDp
-         J0SKiyDbyBa7OwNTkCgTA4I5TsT27Up293x/5bBIa2/DUZElpL2YNfbEizrcBccty8t/
-         TMe+UOJvLjqjseVSp01wT37ada5k19Gd3LygWeizvVQfG0YoHMI7x9KPiG/ZmZNM9/WV
-         o3MQ==
+        bh=/ELgqsOMecsnfYY/Zh/7I2mC+TPNVeHWk4zwTLsS3gI=;
+        b=CUS6Jsm/DM9i5h+HagVzjdgzIICGkE4hcXX1nH3UJRz2ff6nYVCQjY5WCVUWWc8rbC
+         9FJs+zsYbmEtJCyFzheKlkrRbX8agTdypAagGgm60s+Dmw23Aaqt3GAq3odfy8OwBwNF
+         7X0EIFky4iJ1HOQF/43eEEbrhkpgCX5ocKMoBN4AiKoWwdC+yr6kjWUje2xIg6ojYCp3
+         mQ3BAmA3u6fx1m9MLoNv+wn8NHiAmvaaYPzaEX/sHcgjfcPHSfDZ4YsNVynTi0/Lp+aX
+         JU3yCza76pJzKgh/n96pi+mkUd4yDLWrqU9SKfUHrOiVgECrcYKyUjreoSqaAz2g+yEk
+         aAfQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1696445964; x=1697050764;
+        d=1e100.net; s=20230601; t=1696447073; x=1697051873;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:sender:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=w1hvqdbML9jmUrBMXlybcpZa1pczZCR/HKc4A1lMQgY=;
-        b=P5qD+VeBQU3bHXJqzdYcVZJ1EUXxqzCUYZO3aFA6GJieZs9+l9lw7rPkEXzjObPFgw
-         L1j2u4uiVNIPUJlRfZTSSVuQrvBj+MWlpcaB2SBuOWM/CbH/45TZCGso1ANiIYda2pVi
-         czSpQ47sTr9PXnCeLONNg5rAbfFoUurwlUwpIxT9KkV4v0vuDgv3CEm8TmAodOpbF2PE
-         ZijU++PPxrfcxdhl2BXUP8hLQ/WlGesDbi8A0Ki66m394nDx6PWVU7whnYxIfSNxu7Ei
-         M+3KlymH8zrTtXcY5GmlJPo1NXrvSkHEMVx4lhJQ0qSpE2r+JtIvpERfqcm6T0MFSdRY
-         ai9Q==
-X-Gm-Message-State: AOJu0YwpuZP47dfedcidOgJDGvM6TR052gbOeQg7gnPGiBsXG5Ujb1cP
-        68J2c7mrFCvheZcWNjtWb9o=
-X-Google-Smtp-Source: AGHT+IG75w5n02io1w2XgbjxayXe88gCBJkiBf/LNuRQyB6rWxM/VHoLwG47D/pBOW+f3fVlwp6+Wg==
-X-Received: by 2002:a17:902:c40a:b0:1c3:a4f2:7c92 with SMTP id k10-20020a170902c40a00b001c3a4f27c92mr3777226plk.65.1696445963644;
-        Wed, 04 Oct 2023 11:59:23 -0700 (PDT)
+        bh=/ELgqsOMecsnfYY/Zh/7I2mC+TPNVeHWk4zwTLsS3gI=;
+        b=LKU0qjpVyzwGr/DrfRZ1PEQrrp2vTy7aogQJ7k0uP6HerrvkEHWxsqOTxRPQdMNqys
+         yo/fERdDq358++30uh2ITPy1ZAdGOOjTBKK1s37MIj5YFpUZITtbl0v866kelYeq4jcA
+         5EdhlqFHUkHXtaEp3Vc4raQIzGUBGMac9OSLdiYNm8C2wMjhGZmKE45pvG7K+ENXLFka
+         u1VKLFNDi6wC6zD58tC5xTZD1sbQfTdX84w8GDeC2zrdlAGNZOrsoHTRKku3XCnTVf9h
+         D61qNIHiFVTMI9Zy10rnoKymR6hAmbPHcaNoBc+wUw8erA+6v0qM7Xtkt9UCboNwG4st
+         ckUg==
+X-Gm-Message-State: AOJu0Yxwo0n2EAFWn9A+JaT/W5vN+i/7fw9hgWaczCKeKsocZ40vATTt
+        Kq31ZipIGreq+kLo78k9KxA=
+X-Google-Smtp-Source: AGHT+IE8uyANwVGnLow9zSZiiFgN0i4GjAlKVChwj+E22AvWzl6KM/h8H/frIev3CXgVexUqtkCR0A==
+X-Received: by 2002:a05:6300:8095:b0:151:b96f:88b4 with SMTP id ap21-20020a056300809500b00151b96f88b4mr2832293pzc.23.1696447073054;
+        Wed, 04 Oct 2023 12:17:53 -0700 (PDT)
 Received: from localhost ([2620:10d:c090:400::4:cef])
-        by smtp.gmail.com with ESMTPSA id j2-20020a170902da8200b001b891259eddsm4071184plx.197.2023.10.04.11.59.22
+        by smtp.gmail.com with ESMTPSA id b20-20020aa78714000000b0068842ebfd10sm3564296pfo.160.2023.10.04.12.17.52
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 04 Oct 2023 11:59:23 -0700 (PDT)
+        Wed, 04 Oct 2023 12:17:52 -0700 (PDT)
 Sender: Tejun Heo <htejun@gmail.com>
-Date:   Wed, 4 Oct 2023 08:59:21 -1000
+Date:   Wed, 4 Oct 2023 09:17:51 -1000
 From:   Tejun Heo <tj@kernel.org>
-To:     Harshit Mogalapalli <harshit.m.mogalapalli@oracle.com>
-Cc:     Waiman Long <longman@redhat.com>,
-        Zefan Li <lizefan.x@bytedance.com>,
-        Johannes Weiner <hannes@cmpxchg.org>, cgroups@vger.kernel.org,
-        linux-kernel@vger.kernel.org, dan.carpenter@linaro.org,
-        kernel-janitors@vger.kernel.org, error27@gmail.com,
-        kamalesh.babulal@oracle.com, kernel test robot <lkp@intel.com>
-Subject: Re: [PATCH next] cgroup/cpuset: Cleanup signedness issue in
- cpu_exclusive_check()
-Message-ID: <ZR22CYkZCv52AmML@slm.duckdns.org>
-References: <20230927065801.2139969-1-harshit.m.mogalapalli@oracle.com>
+To:     Kamalesh Babulal <kamalesh.babulal@oracle.com>
+Cc:     Zefan Li <lizefan.x@bytedance.com>,
+        Johannes Weiner <hannes@cmpxchg.org>,
+        Tom Hromatka <tom.hromatka@oracle.com>,
+        cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] cgroup: In cgroup_no_v1() check v1 controllers only
+Message-ID: <ZR26X4EJaNgQP5Be@slm.duckdns.org>
+References: <20230920102513.55772-1-kamalesh.babulal@oracle.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20230927065801.2139969-1-harshit.m.mogalapalli@oracle.com>
+In-Reply-To: <20230920102513.55772-1-kamalesh.babulal@oracle.com>
 Precedence: bulk
 List-ID: <cgroups.vger.kernel.org>
 X-Mailing-List: cgroups@vger.kernel.org
 
-On Tue, Sep 26, 2023 at 11:58:01PM -0700, Harshit Mogalapalli wrote:
-> Smatch complains about returning negative error codes from a type
-> bool function.
+On Wed, Sep 20, 2023 at 03:55:12PM +0530, Kamalesh Babulal wrote:
+> cgroup v1 or v2 or both controller names can be passed as arguments to
+> the 'cgroup_no_v1' kernel parameter, though most of the controller's
+> names are the same for both cgroup versions. This can be confusing when
+> both versions are used interchangeably, i.e., passing cgroup_no_v1=io
 > 
-> kernel/cgroup/cpuset.c:705 cpu_exclusive_check() warn:
-> 	signedness bug returning '(-22)'
-> 
-> The code works correctly, but it is confusing.  The current behavior is
-> that cpu_exclusive_check() returns true if it's *NOT* exclusive.  Rename
-> it to cpusets_are_exclusive() and reverse the returns so it returns true
-> if it is exclusive and false if it's not.  Update both callers as well.
-> 
-> Reported-by: kernel test robot <lkp@intel.com>
-> Reported-by: Dan Carpenter <error27@gmail.com>
-> Closes: https://lore.kernel.org/r/202309201706.2LhKdM6o-lkp@intel.com/
-> Signed-off-by: Harshit Mogalapalli <harshit.m.mogalapalli@oracle.com>
+> $ sudo dmesg |grep cgroup
+> ...
+> cgroup: Disabling io control group subsystem in v1 mounts
+> cgroup: Disabled controller 'blkio'
 
-Applied to cgroup/for-6.7.
+So, making the printed names consistent makes sense but I'm not sure about
+not matching "io" anymore. That's gonna break users who already use them,
+right?
 
 Thanks.
 
