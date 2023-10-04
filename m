@@ -2,131 +2,104 @@ Return-Path: <cgroups-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6E957E8FDBF
-	for <cgroups@archiver.kernel.org>; Wed,  4 Oct 2023 00:02:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 99B17E8FDDB
+	for <cgroups@archiver.kernel.org>; Wed,  4 Oct 2023 09:02:17 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236548AbjJDACv (ORCPT <rfc822;cgroups@archiver.kernel.org>);
-        Tue, 3 Oct 2023 20:02:51 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50332 "EHLO
+        id S241828AbjJDJCS (ORCPT <rfc822;cgroups@archiver.kernel.org>);
+        Wed, 4 Oct 2023 05:02:18 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48548 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230503AbjJDACu (ORCPT
-        <rfc822;cgroups@vger.kernel.org>); Tue, 3 Oct 2023 20:02:50 -0400
-Received: from mail-io1-xd30.google.com (mail-io1-xd30.google.com [IPv6:2607:f8b0:4864:20::d30])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EFF519B;
-        Tue,  3 Oct 2023 17:02:47 -0700 (PDT)
-Received: by mail-io1-xd30.google.com with SMTP id ca18e2360f4ac-79fa416b7ffso61502539f.2;
-        Tue, 03 Oct 2023 17:02:47 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1696377767; x=1696982567; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=0lwvi14RsM0b+xzGuDXKW8wweEZca0TccO+tNNSAvQs=;
-        b=Q4COcqp4ZRg9Ob1v8JC630RX9zUQctK1/kHqT+HZ9iPX/UQ0ZQ4VWndB73EPgDTxi0
-         w+unVSkqDLj4BafHpu1CGfSLKCm0ixlyTGSbzcyzjSLZhuOWCMJKdi09LALRWeeqjdLy
-         TZiAmed8ehnOpv1pZpvpA10LMUHq5BMmJdWtFY0oVim5gxeN7aGhx3NC4oKDVgPwt4xH
-         RUsUO8HHDjGJoh6uNf/5uYkPG6f2GKErTWaAW+NL0kAbno+aSr3XFHKdtqU1dJ0XzM0q
-         BmFj6dDeKvNQdnCid+ThUBMUxbfBXa7EMehT+KHjNLeA2MhS93Uhrpz/mgopLd2OaNZ1
-         0xnQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1696377767; x=1696982567;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=0lwvi14RsM0b+xzGuDXKW8wweEZca0TccO+tNNSAvQs=;
-        b=tEcgjsywQSpZj5EsglPeUEPwXN23+5z7Gz3lPw29vUBOT5ohJfqyE1NqPnjwqnjyOn
-         RsHtc7Qv4nLFCLexg1FluE9Vk3g/Jci2Qd8DFgCyxYLsQx8S4BtvV7TkoY7GVjvxy4wg
-         VsvK9sHnYiAlfYFEFyVkHP0bxugYBxg6UR7uCh7CouWPoU2rwkIznaUDQlCEfH9iO/2h
-         X6peKru6JNKUIMa+A28Uw2OOK+R/HIn2M4aE4hvwfGzwP5VnQllbvbSB8v5LSHRp0XfE
-         K7wUTNIvJoJ2f3eGloCX5eyLM+X82hlBIuW94OtZflujAXBsXVBihwGH+aWQiOFORRp/
-         BYNw==
-X-Gm-Message-State: AOJu0YyTJDgifwEG/lQ12QLNK9memF3lzCB6H73j31qGPC6QDj4Lt62Z
-        E326950rrKXo12ywfwSJcCuSLqQXSlLTC/IJ0Ew=
-X-Google-Smtp-Source: AGHT+IHcMIAN4OhnLftpHP2fzQsi/adjXqQ2orkVpNfzXoJ5ibSH0Kn6foJOqL6FgXDTmUE3LdgpnXokJym0q1jdzEc=
-X-Received: by 2002:a6b:a12:0:b0:787:1c51:ff99 with SMTP id
- z18-20020a6b0a12000000b007871c51ff99mr1026524ioi.11.1696377767238; Tue, 03
- Oct 2023 17:02:47 -0700 (PDT)
-MIME-Version: 1.0
-References: <20231003171329.GB314430@monkey> <20231003231422.4046187-1-nphamcs@gmail.com>
- <CAJD7tkZRH5-y-ux2hDt70JpmL5=YwRwrg_otiTbAei09x-GAJQ@mail.gmail.com>
- <CAKEwX=M24ePo5CtLM6c9_APu9zaEgavDwWEDNTGKDRshkKp1PQ@mail.gmail.com> <CAJD7tkY=_32gFQP0S3me+N_qDPv4MykQ8Tmczsb6ewJSs2hsbg@mail.gmail.com>
-In-Reply-To: <CAJD7tkY=_32gFQP0S3me+N_qDPv4MykQ8Tmczsb6ewJSs2hsbg@mail.gmail.com>
-From:   Nhat Pham <nphamcs@gmail.com>
-Date:   Tue, 3 Oct 2023 17:02:34 -0700
-Message-ID: <CAKEwX=P6hRXzsrBHjAseMue=bejGFDDJKcrNV6+Z3hJA8Lb4MQ@mail.gmail.com>
-Subject: Re: [PATCH] memcontrol: only transfer the memcg data for migration
+        with ESMTP id S232554AbjJDJCR (ORCPT
+        <rfc822;cgroups@vger.kernel.org>); Wed, 4 Oct 2023 05:02:17 -0400
+Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.220.28])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6C2DCA6;
+        Wed,  4 Oct 2023 02:02:14 -0700 (PDT)
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by smtp-out1.suse.de (Postfix) with ESMTPS id 1EC6821845;
+        Wed,  4 Oct 2023 09:02:13 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
+        t=1696410133; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=8fknh9pTwUeNKMs0LwnDupSYiQbG9mDB9y4OA1iLV+0=;
+        b=tBwWk0kxxXHNsUHhG94DTvVeKkk9ha3EVwnEwDaUmOnwerKy83pzDptPvxHpBTPIx0S+I0
+        Wy4iTgY0F1eLpdhYgs11fOK9T1+SPm3NsL6Kn2BxxCAD57VHZcgCrPIh2MlfwmnDODpR1m
+        HI/lWm22+g4ED1aR2FZDZnUcf/efX4I=
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id D940C139F9;
+        Wed,  4 Oct 2023 09:02:12 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([192.168.254.65])
+        by imap2.suse-dmz.suse.de with ESMTPSA
+        id zCY1NBQqHWVPNQAAMHmgww
+        (envelope-from <mkoutny@suse.com>); Wed, 04 Oct 2023 09:02:12 +0000
+Date:   Wed, 4 Oct 2023 11:02:11 +0200
+From:   Michal =?utf-8?Q?Koutn=C3=BD?= <mkoutny@suse.com>
 To:     Yosry Ahmed <yosryahmed@google.com>
-Cc:     akpm@linux-foundation.org, riel@surriel.com, hannes@cmpxchg.org,
-        mhocko@kernel.org, roman.gushchin@linux.dev, shakeelb@google.com,
-        muchun.song@linux.dev, tj@kernel.org, lizefan.x@bytedance.com,
-        shuah@kernel.org, mike.kravetz@oracle.com, fvdl@google.com,
-        linux-mm@kvack.org, kernel-team@meta.com,
-        linux-kernel@vger.kernel.org, cgroups@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Cc:     Andrew Morton <akpm@linux-foundation.org>,
+        Shakeel Butt <shakeelb@google.com>,
+        Johannes Weiner <hannes@cmpxchg.org>,
+        Michal Hocko <mhocko@kernel.org>,
+        Roman Gushchin <roman.gushchin@linux.dev>,
+        Muchun Song <muchun.song@linux.dev>, linux-mm@kvack.org,
+        cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v2 1/2] mm: memcg: refactor page state unit helpers
+Message-ID: <vet5qmfj5xwge4ebznzihknxvpmrmkg6rndhani3fk75oo2rdm@lk3krzcresap>
+References: <20230922175741.635002-1-yosryahmed@google.com>
+ <20230922175741.635002-2-yosryahmed@google.com>
+ <lflzirgjvnodndnuncbulipka6qcif5yijtbqpvbcr3zp3532u@6b37ks523gnt>
+ <CAJD7tkbfq8P514-8Y1uZG9E0fMN2HwEaBmxEutBhjVtbtyEdCQ@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha512;
+        protocol="application/pgp-signature"; boundary="jrmj7bntvvlwev3j"
+Content-Disposition: inline
+In-Reply-To: <CAJD7tkbfq8P514-8Y1uZG9E0fMN2HwEaBmxEutBhjVtbtyEdCQ@mail.gmail.com>
 Precedence: bulk
 List-ID: <cgroups.vger.kernel.org>
 X-Mailing-List: cgroups@vger.kernel.org
 
-On Tue, Oct 3, 2023 at 4:54=E2=80=AFPM Yosry Ahmed <yosryahmed@google.com> =
-wrote:
->
-> On Tue, Oct 3, 2023 at 4:31=E2=80=AFPM Nhat Pham <nphamcs@gmail.com> wrot=
-e:
-> >
-> > On Tue, Oct 3, 2023 at 4:22=E2=80=AFPM Yosry Ahmed <yosryahmed@google.c=
-om> wrote:
-> > >
-> > > On Tue, Oct 3, 2023 at 4:14=E2=80=AFPM Nhat Pham <nphamcs@gmail.com> =
-wrote:
-> > > >
-> > > > For most migration use cases, only transfer the memcg data from the=
- old
-> > > > folio to the new folio, and clear the old folio's memcg data. No
-> > > > charging and uncharging will be done. These use cases include the n=
-ew
-> > > > hugetlb memcg accounting behavior (which was not previously handled=
-).
-> > > >
-> > > > This shaves off some work on the migration path, and avoids the
-> > > > temporary double charging of a folio during its migration.
-> > > >
-> > > > The only exception is replace_page_cache_folio(), which will use th=
-e old
-> > > > mem_cgroup_migrate() (now renamed to mem_cgroup_replace_folio). In =
-that
-> > > > context, the isolation of the old page isn't quite as thorough as w=
-ith
-> > > > migration, so we cannot use our new implementation directly.
-> > > >
-> > > > This patch is the result of the following discussion on the new hug=
-etlb
-> > > > memcg accounting behavior:
-> > > >
-> > > > https://lore.kernel.org/lkml/20231003171329.GB314430@monkey/
-> > > >
-> > > > Reported-by: Mike Kravetz <mike.kravetz@oracle.com>
-> > > > Closes: https://lore.kernel.org/lkml/20231003171329.GB314430@monkey=
-/
-> > > > Suggested-by: Johannes Weiner <hannes@cmpxchg.org>
-> > > > Signed-off-by: Nhat Pham <nphamcs@gmail.com>
-> > >
-> > > Does this patch fit before or after your series? In both cases I thin=
-k
-> > > there might be a problem for bisectability.
-> >
-> > Hmm my intention for this patch is as a fixlet.
-> > (i.e it should be eventually squashed to the second patch of that serie=
-s).
-> > I just include the extra context on the fixlet for review purposes.
-> >
-> > My apologies - should have been much clearer.
-> > (Perhaps I should just send out v4 at this point?)
-> >
->
-> It's really up to Andrew, just make it clear what the intention is.
 
-Thanks for reminding me! That was my oversight.
+--jrmj7bntvvlwev3j
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 
->
-> Thanks!
+On Tue, Oct 03, 2023 at 12:47:25PM -0700, Yosry Ahmed <yosryahmed@google.com> wrote:
+> Those constants are shared with code outside of memcg, namely enum
+> node_stat_item and enum vm_event_item, and IIUC they are used
+> differently outside of memcg. Did I miss something?
+
+The difference is not big, e.g.
+  mod_lruvec_state(lruvec, WORKINGSET_ACTIVATE_BASE + type, delta);
+could be
+  __count_memcg_events(
+    container_of(lruvec, struct mem_cgroup_per_node, lruvec)->memcg,
+    WORKINGSET_ACTIVATE_BASE + type, delta
+  );
+
+Yes, it would mean transferring WORKINGSET_* items from enum
+node_stat_item to enum vm_event_item.
+IOW, I don't know what is the effective difference between
+mod_memcg_lruvec_state() and count_memcg_events().
+Is it per-memcg vs per-memcg-per-node resolution?
+(Is _that_ read by workingset mechanism?)
+
+Thanks,
+Michal
+
+--jrmj7bntvvlwev3j
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iHUEABYKAB0WIQQpEWyjXuwGT2dDBqAGvrMr/1gcjgUCZR0qEAAKCRAGvrMr/1gc
+jslxAQCM0oIUUE2njzgV3hSlbhBKS89fDJ5yV5qkor2tfY81OQEA21DKpM1O90/m
+0H9Byin50ep97S6iK3v4kyckR54LzQ0=
+=TnaG
+-----END PGP SIGNATURE-----
+
+--jrmj7bntvvlwev3j--
