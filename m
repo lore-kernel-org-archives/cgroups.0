@@ -2,99 +2,78 @@ Return-Path: <cgroups-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AFA62E7C4EE
-	for <cgroups@archiver.kernel.org>; Wed,  4 Oct 2023 19:00:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 16D8EE7C4EC
+	for <cgroups@archiver.kernel.org>; Wed,  4 Oct 2023 19:07:29 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S245138AbjJDTAr (ORCPT <rfc822;cgroups@archiver.kernel.org>);
-        Wed, 4 Oct 2023 15:00:47 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45362 "EHLO
+        id S244883AbjJDTH2 (ORCPT <rfc822;cgroups@archiver.kernel.org>);
+        Wed, 4 Oct 2023 15:07:28 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49764 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S245140AbjJDS6q (ORCPT
-        <rfc822;cgroups@vger.kernel.org>); Wed, 4 Oct 2023 14:58:46 -0400
-Received: from mail-pf1-x433.google.com (mail-pf1-x433.google.com [IPv6:2607:f8b0:4864:20::433])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6A0C510CC;
-        Wed,  4 Oct 2023 11:55:11 -0700 (PDT)
-Received: by mail-pf1-x433.google.com with SMTP id d2e1a72fcca58-690fe10b6a4so91319b3a.3;
-        Wed, 04 Oct 2023 11:55:11 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1696445711; x=1697050511; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:sender:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=zRoTTT+olEk9QPCtVtm8UsKlLIAIQzhUpSB6cf5g+W4=;
-        b=ELKGviabcfJvis9/3KS2V7eQjvWzWrsNyBOPj6LS5q65IkXfFNWMaty9nwAHNT8huN
-         V4FEj/cUUihwgkTtnxvjHtIDb7BKFXUAeUtbEOLQak+t60omQx0G4fU+8srp2fZs0wk4
-         0qKfxxStyQYcJgUJp+3aUymMpt882f9ct2Gn1LJ5hd15piiVJ6sn2eIlHokOTUerdYrE
-         YhHg04zDhXCcWNBIjHNJQNJz+v1k2sLlA/nb6BYrTZmDj1yxYu8XwBCsWhWnjXJBDi49
-         ydpC9cIJ8n10ahbcTKZ7Zu+BYXBEDLwEwVHgJHvUtPqRQm8SL2uofG3ylkkoIMQvOpgA
-         uBpg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1696445711; x=1697050511;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:sender:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=zRoTTT+olEk9QPCtVtm8UsKlLIAIQzhUpSB6cf5g+W4=;
-        b=AfUQ8RyO12vb9cXZ0RfbIoAm2c5GhdRqq9a0prm+O0z+2qN0o1yZJYVZkDYHKjRsf9
-         rs0QExupDpD8fL/DZnIznARsQ0SJFQRbeljngYVeMQqeASGnKOjGFSep1EkTRf9F6JnM
-         Oeb9UOIRrkij3GISwPqvWgklzgjUQnDYgzH62gvLvfK0FnPxM3cbVajTlj4EW2mb2Mr+
-         gZKrKqXIq33KjSVweY0DI99LQIG/ndFrgx7YV1OJ8bB0TwyEFfJ439OcBhNZPhQsQmHs
-         bapaZ3Eg7bbVatsFNyVKWWoDJpPK/i/BqOOuljRi06inr5vkV7J55VIFXwqhVPikMhg/
-         ApZA==
-X-Gm-Message-State: AOJu0YytF14cvbCzS2uV32feGZdMoVzP34LGRGmB1sUj3esKTnyJwByr
-        EXGuHecJFWdETRuxicKYTfP2uryyRga3Fw==
-X-Google-Smtp-Source: AGHT+IGH8UOAeBNqXCXrrve+eWueFektU2xFOfxd9ExxG1b9dFbSOBg1Qrj4IRC8VsavCM7LocsfCw==
-X-Received: by 2002:a05:6a20:3d85:b0:133:f0b9:856d with SMTP id s5-20020a056a203d8500b00133f0b9856dmr3619962pzi.17.1696445711098;
-        Wed, 04 Oct 2023 11:55:11 -0700 (PDT)
-Received: from localhost ([2620:10d:c090:400::4:cef])
-        by smtp.gmail.com with ESMTPSA id d8-20020aa78688000000b0068fece22469sm3537444pfo.4.2023.10.04.11.55.10
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 04 Oct 2023 11:55:10 -0700 (PDT)
-Sender: Tejun Heo <htejun@gmail.com>
-Date:   Wed, 4 Oct 2023 08:55:08 -1000
-From:   Tejun Heo <tj@kernel.org>
-To:     Waiman Long <longman@redhat.com>
-Cc:     Zefan Li <lizefan.x@bytedance.com>,
-        Johannes Weiner <hannes@cmpxchg.org>,
-        Shuah Khan <shuah@kernel.org>, cgroups@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-kselftest@vger.kernel.org,
-        Pierre Gondois <pierre.gondois@arm.com>
-Subject: Re: [PATCH-cgroup v2] cgroup/cpuset: Enable invalid to valid local
- partition transition
-Message-ID: <ZR21DHx3oJJWs8AI@slm.duckdns.org>
-References: <20231003144420.2895515-1-longman@redhat.com>
+        with ESMTP id S1343809AbjJDTHU (ORCPT
+        <rfc822;cgroups@vger.kernel.org>); Wed, 4 Oct 2023 15:07:20 -0400
+Received: from out-201.mta1.migadu.com (out-201.mta1.migadu.com [95.215.58.201])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0F4D430DE
+        for <cgroups@vger.kernel.org>; Wed,  4 Oct 2023 12:02:44 -0700 (PDT)
+Date:   Wed, 4 Oct 2023 12:02:25 -0700
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
+        t=1696446162;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=jkCd19CwQrPmu8oeXBKgORvhKgKP0KURMRX76XbJ8X4=;
+        b=GPvMdCBdjfSQr376dX+S6ZkziYW6v58FjLd6pXRyRfIAjZwWPfOYUCigqgOEVLXM4Iq1CR
+        /E4fW+l2mj2UbQ0fEPjsPSl7MjKRgF4s5GrszkP2p0Pzb8/v8PFxTRuCLTw5MQVIJXbbtH
+        d/pR3EHSoW9yJY/LV7jLBB3swXFa09I=
+X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
+From:   Roman Gushchin <roman.gushchin@linux.dev>
+To:     Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny@suse.com>
+Cc:     linux-mm@kvack.org, linux-kernel@vger.kernel.org,
+        cgroups@vger.kernel.org, Johannes Weiner <hannes@cmpxchg.org>,
+        Michal Hocko <mhocko@kernel.org>,
+        Shakeel Butt <shakeelb@google.com>,
+        Muchun Song <muchun.song@linux.dev>,
+        Dennis Zhou <dennis@kernel.org>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        David Rientjes <rientjes@google.com>,
+        Vlastimil Babka <vbabka@suse.cz>
+Subject: Re: [PATCH v1 0/5] mm: improve performance of accounted kernel
+ memory allocations
+Message-ID: <ZR22wUtVq_vz3NJZ@P9FQF9L96D.corp.robot.car>
+References: <20230929180056.1122002-1-roman.gushchin@linux.dev>
+ <n3x64d2wk7qr42tvcmqisbbrntppcwe6omv6li67ui6rz6umyk@wativjrwvh5g>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=iso-8859-1
 Content-Disposition: inline
-In-Reply-To: <20231003144420.2895515-1-longman@redhat.com>
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <n3x64d2wk7qr42tvcmqisbbrntppcwe6omv6li67ui6rz6umyk@wativjrwvh5g>
+X-Migadu-Flow: FLOW_OUT
 Precedence: bulk
 List-ID: <cgroups.vger.kernel.org>
 X-Mailing-List: cgroups@vger.kernel.org
 
-On Tue, Oct 03, 2023 at 10:44:20AM -0400, Waiman Long wrote:
-> When a local partition becomes invalid, it won't transition back to
-> valid partition automatically if a proper "cpuset.cpus.exclusive" or
-> "cpuset.cpus" change is made. Instead, system administrators have to
-> explicitly echo "root" or "isolated" into the "cpuset.cpus.partition"
-> file at the partition root.
+On Wed, Oct 04, 2023 at 08:32:39PM +0200, Michal Koutný wrote:
+> On Fri, Sep 29, 2023 at 11:00:50AM -0700, Roman Gushchin <roman.gushchin@linux.dev> wrote:
+> > This patchset improves the performance of accounted kernel memory allocations
+> > by ~30% as measured by a micro-benchmark [1]. The benchmark is very
+> > straightforward: 1M of 64 bytes-large kmalloc() allocations.
 > 
-> This patch now enables the automatic transition of an invalid local
-> partition back to valid when there is a proper "cpuset.cpus.exclusive"
-> or "cpuset.cpus" change.
-> 
-> Automatic transition of an invalid remote partition to a valid one,
-> however, is not covered by this patch. They still need an explicit
-> write to "cpuset.cpus.partition" to become valid again.
-> 
-> The test_cpuset_prs.sh test script is updated to add new test cases to
-> test this automatic state transition.
-> 
-> Reported-by: Pierre Gondois <pierre.gondois@arm.com>
-> Link: https://lore.kernel.org/lkml/9777f0d2-2fdf-41cb-bd01-19c52939ef42@arm.com
-> Signed-off-by: Waiman Long <longman@redhat.com>
+> Nice.
 
-Applied to cgroup/for-6.7.
+Thanks!
 
-Thanks.
+> Have you tried how these +34% compose with -34% reported way back [1]
+> when file lock accounting was added (because your benchmark and lock1
+> sound quite similar)?
 
--- 
-tejun
+No, I haven't. I'm kindly waiting for an automatic report here :)
+But if someone can run these tests manually, I'll appreciate it a lot.
+
+> (BTW Is that your motivation (too)?)
+
+Not really, it was on my todo list for a long time and I just got some spare
+cycles to figure out missing parts (mostly around targeted/remote charging).
+
+Also plan to try similar approach to speed up generic memcg charging.
+
+Thanks!
