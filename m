@@ -2,124 +2,103 @@ Return-Path: <cgroups-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D6928E92705
-	for <cgroups@archiver.kernel.org>; Thu,  5 Oct 2023 14:17:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E3AD7E9270B
+	for <cgroups@archiver.kernel.org>; Thu,  5 Oct 2023 14:26:26 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231479AbjJEOQu (ORCPT <rfc822;cgroups@archiver.kernel.org>);
-        Thu, 5 Oct 2023 10:16:50 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43606 "EHLO
+        id S232475AbjJEOZ4 (ORCPT <rfc822;cgroups@archiver.kernel.org>);
+        Thu, 5 Oct 2023 10:25:56 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36798 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233825AbjJEOPE (ORCPT
-        <rfc822;cgroups@vger.kernel.org>); Thu, 5 Oct 2023 10:15:04 -0400
+        with ESMTP id S233729AbjJEOYM (ORCPT
+        <rfc822;cgroups@vger.kernel.org>); Thu, 5 Oct 2023 10:24:12 -0400
 Received: from smtp-out2.suse.de (smtp-out2.suse.de [IPv6:2001:67c:2178:6::1d])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BED969EE6;
-        Thu,  5 Oct 2023 02:06:34 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DDBEB8A7D
+        for <cgroups@vger.kernel.org>; Thu,  5 Oct 2023 01:35:23 -0700 (PDT)
 Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
         (No client certificate requested)
-        by smtp-out2.suse.de (Postfix) with ESMTPS id 5D0D91F892;
-        Thu,  5 Oct 2023 09:06:31 +0000 (UTC)
+        by smtp-out2.suse.de (Postfix) with ESMTPS id 2E77C1F74D;
+        Thu,  5 Oct 2023 08:35:19 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
-        t=1696496791; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+        t=1696494919; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
          mime-version:mime-version:content-type:content-type:
          in-reply-to:in-reply-to:references:references;
-        bh=I5mDtqn4ke7EOccXi4sHIRDZaPhR32uiSgJHqJga3Hg=;
-        b=Gb7qt86CRw4Q2hcmLffRyrjdC42UtFGR7X8XobT6nxzGeZd1VOa3nm/yNyp5QIqvIBoetq
-        WouqBXaum/wzpjeQ7kyDLPtsvqQOVgrVLp6sUQ9Lkg0DaXIx5lOlQKwx2ZjFWmnT74HH46
-        qlzfJnMjAXx/r9L0i3c+S+83QdscROA=
+        bh=M724WXv33Uc1wz4phQmuEdysQ357lwXIlbLevkMfpBo=;
+        b=uBI8wnNFohCCP2B0acvCAowQYgdGfXiLo6s56LDpN1qgMNnCxim/4gZbvbqfycHruYjbom
+        N5TP/okN1OANHQY2Bp9j+M8ymC/wAi5MWaOWP4S6BZLGExZauiGTZsG++n9Ptxe7N4Zeyo
+        IKJkl5FTO2VTwgeh4QPXFVbIyE/dUgU=
 Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
         (No client certificate requested)
-        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 22851139C2;
-        Thu,  5 Oct 2023 09:06:31 +0000 (UTC)
+        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 1CA4E13438;
+        Thu,  5 Oct 2023 08:35:19 +0000 (UTC)
 Received: from dovecot-director2.suse.de ([192.168.254.65])
         by imap2.suse-dmz.suse.de with ESMTPSA
-        id bbGdB5d8HmWVcgAAMHmgww
-        (envelope-from <mkoutny@suse.com>); Thu, 05 Oct 2023 09:06:31 +0000
-Date:   Thu, 5 Oct 2023 11:06:29 +0200
+        id MOctBkd1HmVoYAAAMHmgww
+        (envelope-from <mkoutny@suse.com>); Thu, 05 Oct 2023 08:35:19 +0000
+Date:   Thu, 5 Oct 2023 10:35:17 +0200
 From:   Michal =?utf-8?Q?Koutn=C3=BD?= <mkoutny@suse.com>
-To:     Johannes Weiner <hannes@cmpxchg.org>
-Cc:     Yosry Ahmed <yosryahmed@google.com>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        Shakeel Butt <shakeelb@google.com>,
-        Michal Hocko <mhocko@kernel.org>,
-        Roman Gushchin <roman.gushchin@linux.dev>,
-        Muchun Song <muchun.song@linux.dev>, linux-mm@kvack.org,
-        cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v2 1/2] mm: memcg: refactor page state unit helpers
-Message-ID: <542ggmgjc27yoosxg466c6n4mzcad2z63t3wdbzevzm43g7xlt@5l7qaepzbth6>
-References: <20230922175741.635002-1-yosryahmed@google.com>
- <20230922175741.635002-2-yosryahmed@google.com>
- <lflzirgjvnodndnuncbulipka6qcif5yijtbqpvbcr3zp3532u@6b37ks523gnt>
- <CAJD7tkbfq8P514-8Y1uZG9E0fMN2HwEaBmxEutBhjVtbtyEdCQ@mail.gmail.com>
- <vet5qmfj5xwge4ebznzihknxvpmrmkg6rndhani3fk75oo2rdm@lk3krzcresap>
- <20231004183619.GB39112@cmpxchg.org>
+To:     Felip Moll <lipixx@gmail.com>
+Cc:     cgroups@vger.kernel.org
+Subject: Re: VSZ from cgroup interfaces
+Message-ID: <ozgj2cg254fmse73rb2sv2pmexz3rx7r3yekztjnr7swpsxqtp@5zn7jdhhovc7>
+References: <CAOv3p80vCV1_FeynQ_sZhzYbif_-4k4odZHex9NbhzuZ204gLg@mail.gmail.com>
+ <ruokbytamh5n456ufqteijolzper3jhhhitjtwrhrguz3svkf2@ddszugmaypvz>
+ <CAOv3p83SCJEEK2Obh4s=-WPoqAuktYeAQxPF8E-c2QJD7pwtdQ@mail.gmail.com>
 MIME-Version: 1.0
 Content-Type: multipart/signed; micalg=pgp-sha512;
-        protocol="application/pgp-signature"; boundary="cdqoo3w6fdlwt4bn"
+        protocol="application/pgp-signature"; boundary="7sg54ruurvxfbxb6"
 Content-Disposition: inline
-In-Reply-To: <20231004183619.GB39112@cmpxchg.org>
+In-Reply-To: <CAOv3p83SCJEEK2Obh4s=-WPoqAuktYeAQxPF8E-c2QJD7pwtdQ@mail.gmail.com>
 Precedence: bulk
 List-ID: <cgroups.vger.kernel.org>
 X-Mailing-List: cgroups@vger.kernel.org
 
 
---cdqoo3w6fdlwt4bn
-Content-Type: text/plain; charset=utf-8
+--7sg54ruurvxfbxb6
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
 
-On Wed, Oct 04, 2023 at 02:36:19PM -0400, Johannes Weiner <hannes@cmpxchg.o=
-rg> wrote:
-> Yes, it's because of node resolution which event counters generally
-> don't have. Some of the refault events influence node-local reclaim
-> decisions, see mm/vmscan.c::snapshot_refaults().
->=20
-> There are a few other event counters in the stat array that people
-> thought would be useful to have split out in
-> /sys/devices/system/node/nodeN/vmstat to understand numa behavior
-> better.
->=20
-> It's a bit messy.
->=20
-> Some events would be useful to move to 'stats' for the numa awareness,
-> such as the allocator stats and reclaim activity.
->=20
-> Some events would be useful to move to 'stats' for the numa awareness,
-> but don't have the zone resolution required by them, such as
-> kswapd/kcompactd wakeups.
+On Wed, Oct 04, 2023 at 09:52:28PM +0200, Felip Moll <lipixx@gmail.com> wrote:
+> Well, I understand it is a per-process resource as any other field you
+> can check in /sys/fs/cgroup/../memory.stat.
 
-Thanks for the enlightenment.
+Those fields are machine (owned) resources consumed by processes (e.g.
+(anon) pages (but this file has a mixture of types of values)).
 
-> Some events aren't numa specific, such as oom kills, drop_pagecache.
+> Can you develop on why you say vsz of one process is not exclusive to
+> another's vsz?
 
-These are oddballs indeed. As with the normalization patchset these are
-counted as PAGE_SIZE^W 1 error but they should rather be an infinite
-error (to warrant a flush).
+One process can have a vaddrs in range say 1G..2G, that is 1G vsz (and
+can be much less of rss).
+Another process can have very same (nominal) range, 1G vsz again. That
+is 2G of vsz in total but nothing needs to be actually consumed (for
+backing pages, whose number can further vary depending on possible
+sharing).
 
-So my feedback to this series is:
-- patch 1/2 -- creating two classes of units is consequence of unclarity
-  between state and events (as in event=3D=CE=94state/=CE=94t) and resoluti=
-on
-  (global vs per-node), so the better approach would be to tidy this up,
-- patch 2/2 -- it could use the single unit class that exists,=20
-  it'll bound the error of printed numbers afterall (and can be changed
-  later depending on how it affects internal consumers).
+> Technically, the sum of all VSZ would give an estimation of how much
+> memory a set of processes might try to use. I think that's the same
+> idea of VSZ for a single process but just for a set of processes.
+> This could be useful to detect memleaks on a program before they
+> happen when you see a huge VSZ.
 
-My 0.02=E2=82=AC,
+Ah, now I see where you're coming from. That could be a new field in
+memory.stat.
+
+Regards,
 Michal
 
---cdqoo3w6fdlwt4bn
+--7sg54ruurvxfbxb6
 Content-Type: application/pgp-signature; name="signature.asc"
 
 -----BEGIN PGP SIGNATURE-----
 
-iHUEABYKAB0WIQQpEWyjXuwGT2dDBqAGvrMr/1gcjgUCZR58lAAKCRAGvrMr/1gc
-jrLvAP91rXrkJJRIRNaOZGR9o6ggxOXbwA7LGaBGQc6FSZyomAD/VZ3zJwOcG0uw
-rVioAhpVnfjLpk/ADrszcFpJ7FRPzQI=
-=s1VT
+iHUEABYKAB0WIQQpEWyjXuwGT2dDBqAGvrMr/1gcjgUCZR51RAAKCRAGvrMr/1gc
+jp2tAQD05Xhg5cBM35Er0iYwZqshe9G5SJKJhG5hjHyLla2LBgD+J0AalOXpb6Qn
+EVm+pM2nb1kzLZIRVkiB+c3P7m008Qc=
+=MPjK
 -----END PGP SIGNATURE-----
 
---cdqoo3w6fdlwt4bn--
+--7sg54ruurvxfbxb6--
