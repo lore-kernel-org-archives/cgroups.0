@@ -2,137 +2,197 @@ Return-Path: <cgroups-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BF541E92701
-	for <cgroups@archiver.kernel.org>; Thu,  5 Oct 2023 14:12:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7FC67E92706
+	for <cgroups@archiver.kernel.org>; Thu,  5 Oct 2023 14:15:14 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232959AbjJEOMB (ORCPT <rfc822;cgroups@archiver.kernel.org>);
-        Thu, 5 Oct 2023 10:12:01 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48406 "EHLO
+        id S232004AbjJEOOn (ORCPT <rfc822;cgroups@archiver.kernel.org>);
+        Thu, 5 Oct 2023 10:14:43 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59716 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231843AbjJEOKA (ORCPT
-        <rfc822;cgroups@vger.kernel.org>); Thu, 5 Oct 2023 10:10:00 -0400
-Received: from mail-ej1-x634.google.com (mail-ej1-x634.google.com [IPv6:2a00:1450:4864:20::634])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AEB8CA5CD
-        for <cgroups@vger.kernel.org>; Thu,  5 Oct 2023 02:31:43 -0700 (PDT)
-Received: by mail-ej1-x634.google.com with SMTP id a640c23a62f3a-9b9a494cc59so133449166b.3
-        for <cgroups@vger.kernel.org>; Thu, 05 Oct 2023 02:31:43 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20230601; t=1696498302; x=1697103102; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=cMC25rA2+eSQ38+uqF7hDw2RgHtjVxvyqr0ZVM2w5zc=;
-        b=urCzwFMJe05cCSlW73XRWfvdiutHWjaBFjQ/viZdyJ0fz1EIC1V142C2hCarmHoNUP
-         3L3YyLmlE6OkB3pQA2sjmkrp2+0kiPpoQd8YUL6q/S9XKvDZ2zFuAqUxyvQQXAiuotgZ
-         Id3IIuSW6A9NLSZnj0tS0X0u2YLyn6MRgWbBCu7UKyCnCrxhf6AIM+RP9QDi8xtqHwX6
-         Q/R08SxqkajKRTohyAxo5f1B2eHWJG5pjpcdmdcLRw2accLK3unelff8GO+3dcDvYcAl
-         x5Uz6U5aT/S9uaDMB1JjMcjK3qn2Pd/g2CLhNeK7XndamPZpe8e9I/yNC8+fv9emDZwK
-         sScg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1696498302; x=1697103102;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=cMC25rA2+eSQ38+uqF7hDw2RgHtjVxvyqr0ZVM2w5zc=;
-        b=TlnFTWmv6VNAmPYygQVmga18y661pRvMxgrhY3sIPJoW5oxllUDs82mFd4x+6Yibn+
-         Ttsn8OBuA2CqPREEPxM3idviDuAMPHtT+CI+fJWFORzcO411ATH/gd6PXb+F57wYMXT0
-         u5O3mYAtSK9ZXom9QQZYsKlttkhrzI/3CedGV8JGxz8rAwTxSGbVkOsB+folMJdtddQf
-         Drxi0l5Kc/PTxoTJEJ1eYhBsm+ma2gDVMhgAtR/ClGa4BUGfSzPHrKbO5KF7px6U8zBM
-         RRmhIj/9sOdVEg6eWfnv7eujQL6Ga8JBaVFLjQdZb20rXqQQlv3xjThL4dtvgeKMM0bp
-         WFOQ==
-X-Gm-Message-State: AOJu0YyHHwpFCW+k1G81cQbanuci7JhMC4GjVR5NNEQdetqcGbBX6J+J
-        9Wwc+I5YJNVKtctqxckpj+7p7CBLvxQFNHgMUvepWw==
-X-Google-Smtp-Source: AGHT+IFfvio8FkYu9A9VOWWLqGaexnYgvqW5wAR828Pr5q8lKiX9PTomSKqU1PWWRDMboEdpS7d26vLr+P42Oq0I+08=
-X-Received: by 2002:a17:906:196:b0:9ae:72b8:4a84 with SMTP id
- 22-20020a170906019600b009ae72b84a84mr4025671ejb.41.1696498301953; Thu, 05 Oct
- 2023 02:31:41 -0700 (PDT)
-MIME-Version: 1.0
-References: <20230922175741.635002-1-yosryahmed@google.com>
- <20230922175741.635002-2-yosryahmed@google.com> <lflzirgjvnodndnuncbulipka6qcif5yijtbqpvbcr3zp3532u@6b37ks523gnt>
- <CAJD7tkbfq8P514-8Y1uZG9E0fMN2HwEaBmxEutBhjVtbtyEdCQ@mail.gmail.com>
- <vet5qmfj5xwge4ebznzihknxvpmrmkg6rndhani3fk75oo2rdm@lk3krzcresap>
- <20231004183619.GB39112@cmpxchg.org> <542ggmgjc27yoosxg466c6n4mzcad2z63t3wdbzevzm43g7xlt@5l7qaepzbth6>
-In-Reply-To: <542ggmgjc27yoosxg466c6n4mzcad2z63t3wdbzevzm43g7xlt@5l7qaepzbth6>
-From:   Yosry Ahmed <yosryahmed@google.com>
-Date:   Thu, 5 Oct 2023 02:31:03 -0700
-Message-ID: <CAJD7tkbaTRu838U=e_A+89PY1t4K+t_G1qkYq84BSDO7wAEtEg@mail.gmail.com>
-Subject: Re: [PATCH v2 1/2] mm: memcg: refactor page state unit helpers
-To:     =?UTF-8?Q?Michal_Koutn=C3=BD?= <mkoutny@suse.com>
-Cc:     Johannes Weiner <hannes@cmpxchg.org>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        Shakeel Butt <shakeelb@google.com>,
-        Michal Hocko <mhocko@kernel.org>,
-        Roman Gushchin <roman.gushchin@linux.dev>,
-        Muchun Song <muchun.song@linux.dev>, linux-mm@kvack.org,
-        cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+        with ESMTP id S232447AbjJEOMd (ORCPT
+        <rfc822;cgroups@vger.kernel.org>); Thu, 5 Oct 2023 10:12:33 -0400
+Received: from mgamail.intel.com (mgamail.intel.com [134.134.136.65])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A029B28104
+        for <cgroups@vger.kernel.org>; Thu,  5 Oct 2023 06:44:34 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1696513474; x=1728049474;
+  h=date:from:to:cc:subject:message-id;
+  bh=M1N4b/K9ogqhP5YuKLs9hVi5Q/Cno9+SCjnibs847W0=;
+  b=CdScvP7FdAAycUlW9lLo3KrD2NUVLQMp8G/oG9SWVSkTWijjGhAD8vBg
+   gerbR5swAscHx3K11BYawkWQqMaAhFTSXjKc9VPFRf76vrccyVfApjC2J
+   ayn4IWzIoavAIfoUHCLW/Id8tJY7tJeL2pd3o5XD+Yj2cNP0KpdAaQ51G
+   THxRO4DAxwR40iX09lKgPUJ2q59IczAFrgOb6I4ZGNdsCNFxF2+lrC53J
+   gz/9C7lh20wLzodTh+zIwnq5+vz5hllHKqvVgZrMgChFuF6l+z8xxsuHH
+   liHY5JcKkkisjgQHyt80PMCO4yc33nn/hnRok4ed1tk9aEJLz8uEYT9eu
+   A==;
+X-IronPort-AV: E=McAfee;i="6600,9927,10854"; a="387355958"
+X-IronPort-AV: E=Sophos;i="6.03,203,1694761200"; 
+   d="scan'208";a="387355958"
+Received: from orsmga004.jf.intel.com ([10.7.209.38])
+  by orsmga103.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 05 Oct 2023 05:41:53 -0700
+X-ExtLoop1: 1
+X-IronPort-AV: E=McAfee;i="6600,9927,10854"; a="875548843"
+X-IronPort-AV: E=Sophos;i="6.03,203,1694761200"; 
+   d="scan'208";a="875548843"
+Received: from lkp-server02.sh.intel.com (HELO c3b01524d57c) ([10.239.97.151])
+  by orsmga004.jf.intel.com with ESMTP; 05 Oct 2023 05:41:52 -0700
+Received: from kbuild by c3b01524d57c with local (Exim 4.96)
+        (envelope-from <lkp@intel.com>)
+        id 1qoNfp-000LO6-16;
+        Thu, 05 Oct 2023 12:41:49 +0000
+Date:   Thu, 05 Oct 2023 20:41:34 +0800
+From:   kernel test robot <lkp@intel.com>
+To:     Tejun Heo <tj@kernel.org>
+Cc:     cgroups@vger.kernel.org
+Subject: [tj-cgroup:for-next] BUILD SUCCESS
+ 783a8334ec1cadefbb992ca2adbb459b0ee0f9f7
+Message-ID: <202310052031.XPKssxOz-lkp@intel.com>
+User-Agent: s-nail v14.9.24
 Precedence: bulk
 List-ID: <cgroups.vger.kernel.org>
 X-Mailing-List: cgroups@vger.kernel.org
 
-On Thu, Oct 5, 2023 at 2:06=E2=80=AFAM Michal Koutn=C3=BD <mkoutny@suse.com=
-> wrote:
->
-> On Wed, Oct 04, 2023 at 02:36:19PM -0400, Johannes Weiner <hannes@cmpxchg=
-.org> wrote:
-> > Yes, it's because of node resolution which event counters generally
-> > don't have. Some of the refault events influence node-local reclaim
-> > decisions, see mm/vmscan.c::snapshot_refaults().
-> >
-> > There are a few other event counters in the stat array that people
-> > thought would be useful to have split out in
-> > /sys/devices/system/node/nodeN/vmstat to understand numa behavior
-> > better.
-> >
-> > It's a bit messy.
-> >
-> > Some events would be useful to move to 'stats' for the numa awareness,
-> > such as the allocator stats and reclaim activity.
-> >
-> > Some events would be useful to move to 'stats' for the numa awareness,
-> > but don't have the zone resolution required by them, such as
-> > kswapd/kcompactd wakeups.
->
-> Thanks for the enlightenment.
->
-> > Some events aren't numa specific, such as oom kills, drop_pagecache.
->
-> These are oddballs indeed. As with the normalization patchset these are
-> counted as PAGE_SIZE^W 1 error but they should rather be an infinite
-> error (to warrant a flush).
->
-> So my feedback to this series is:
-> - patch 1/2 -- creating two classes of units is consequence of unclarity
->   between state and events (as in event=3D=CE=94state/=CE=94t) and resolu=
-tion
->   (global vs per-node), so the better approach would be to tidy this up,
+tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git for-next
+branch HEAD: 783a8334ec1cadefbb992ca2adbb459b0ee0f9f7  cgroup/cpuset: Cleanup signedness issue in cpu_exclusive_check()
 
-I am not really sure what you mean here. I understand that this series
-fixes the unit normalization for state but leaves events out of it.
-Looking at the event items tracked by memcg in memcg_vm_event_stat it
-looks to me that most of them correspond roughly to a page's worth of
-updates (all but the THP_* events). We don't track things like
-OOM_KILL and DROP_PAGECACHE per memcg as far as I can tell.
+elapsed time: 886m
 
-Do you mean that we should add something similar to
-memcg_page_state_unit() for events as well to get all of them right?
-If yes, I think that should be easy to add, it would only special case
-THP_* events.
+configs tested: 126
+configs skipped: 2
 
-Alternatively, I can add a comment above the call to
-memcg_rstat_updated() in __count_memcg_events() explaining why we
-don't normalize the event count for now.
+The following configs have been built successfully.
+More configs may be tested in the coming days.
 
-> - patch 2/2 -- it could use the single unit class that exists,
->   it'll bound the error of printed numbers afterall (and can be changed
->   later depending on how it affects internal consumers).
+tested configs:
+alpha                             allnoconfig   gcc  
+alpha                            allyesconfig   gcc  
+alpha                               defconfig   gcc  
+arc                              allmodconfig   gcc  
+arc                               allnoconfig   gcc  
+arc                              allyesconfig   gcc  
+arc                                 defconfig   gcc  
+arc                   randconfig-001-20231005   gcc  
+arm                              alldefconfig   clang
+arm                              allmodconfig   gcc  
+arm                               allnoconfig   gcc  
+arm                              allyesconfig   gcc  
+arm                         bcm2835_defconfig   clang
+arm                                 defconfig   gcc  
+arm                      footbridge_defconfig   gcc  
+arm                         orion5x_defconfig   clang
+arm                          pxa3xx_defconfig   gcc  
+arm                   randconfig-001-20231005   gcc  
+arm                         s5pv210_defconfig   clang
+arm                           sunxi_defconfig   gcc  
+arm64                            allmodconfig   gcc  
+arm64                             allnoconfig   gcc  
+arm64                            allyesconfig   gcc  
+arm64                               defconfig   gcc  
+csky                             allmodconfig   gcc  
+csky                              allnoconfig   gcc  
+csky                             allyesconfig   gcc  
+csky                                defconfig   gcc  
+i386                             allmodconfig   gcc  
+i386                              allnoconfig   gcc  
+i386                             allyesconfig   gcc  
+i386         buildonly-randconfig-001-20231005   gcc  
+i386         buildonly-randconfig-002-20231005   gcc  
+i386         buildonly-randconfig-003-20231005   gcc  
+i386         buildonly-randconfig-004-20231005   gcc  
+i386         buildonly-randconfig-005-20231005   gcc  
+i386         buildonly-randconfig-006-20231005   gcc  
+i386                              debian-10.3   gcc  
+i386                                defconfig   gcc  
+i386                  randconfig-001-20231005   gcc  
+i386                  randconfig-002-20231005   gcc  
+i386                  randconfig-003-20231005   gcc  
+i386                  randconfig-004-20231005   gcc  
+i386                  randconfig-005-20231005   gcc  
+i386                  randconfig-006-20231005   gcc  
+loongarch                        allmodconfig   gcc  
+loongarch                         allnoconfig   gcc  
+loongarch                        allyesconfig   gcc  
+loongarch                           defconfig   gcc  
+loongarch             randconfig-001-20231005   gcc  
+m68k                             allmodconfig   gcc  
+m68k                              allnoconfig   gcc  
+m68k                             allyesconfig   gcc  
+m68k                                defconfig   gcc  
+microblaze                       allmodconfig   gcc  
+microblaze                        allnoconfig   gcc  
+microblaze                       allyesconfig   gcc  
+microblaze                          defconfig   gcc  
+mips                             allmodconfig   gcc  
+mips                              allnoconfig   gcc  
+mips                             allyesconfig   gcc  
+mips                  decstation_64_defconfig   gcc  
+nios2                            allmodconfig   gcc  
+nios2                             allnoconfig   gcc  
+nios2                            allyesconfig   gcc  
+nios2                               defconfig   gcc  
+openrisc                         alldefconfig   gcc  
+openrisc                         allmodconfig   gcc  
+openrisc                          allnoconfig   gcc  
+openrisc                         allyesconfig   gcc  
+openrisc                            defconfig   gcc  
+parisc                           allmodconfig   gcc  
+parisc                            allnoconfig   gcc  
+parisc                           allyesconfig   gcc  
+parisc                              defconfig   gcc  
+parisc64                            defconfig   gcc  
+powerpc                      acadia_defconfig   clang
+powerpc                          allmodconfig   gcc  
+powerpc                           allnoconfig   gcc  
+powerpc                          allyesconfig   gcc  
+powerpc                    klondike_defconfig   gcc  
+powerpc                     ksi8560_defconfig   clang
+powerpc                  storcenter_defconfig   gcc  
+powerpc                         wii_defconfig   gcc  
+riscv                            allmodconfig   gcc  
+riscv                             allnoconfig   clang
+riscv                             allnoconfig   gcc  
+riscv                            allyesconfig   gcc  
+riscv                               defconfig   gcc  
+riscv                          rv32_defconfig   gcc  
+s390                             allmodconfig   gcc  
+s390                              allnoconfig   gcc  
+s390                             allyesconfig   gcc  
+s390                                defconfig   gcc  
+sh                               allmodconfig   gcc  
+sh                                allnoconfig   gcc  
+sh                               allyesconfig   gcc  
+sh                                  defconfig   gcc  
+sh                   rts7751r2dplus_defconfig   gcc  
+sh                             sh03_defconfig   gcc  
+sparc                            allmodconfig   gcc  
+sparc                             allnoconfig   gcc  
+sparc                            allyesconfig   gcc  
+sparc                               defconfig   gcc  
+sparc                       sparc32_defconfig   gcc  
+sparc64                          allmodconfig   gcc  
+sparc64                          allyesconfig   gcc  
+sparc64                             defconfig   gcc  
+um                               allmodconfig   clang
+um                                allnoconfig   clang
+um                               allyesconfig   clang
+um                                  defconfig   gcc  
+um                             i386_defconfig   gcc  
+um                           x86_64_defconfig   gcc  
+x86_64                            allnoconfig   gcc  
+x86_64                           allyesconfig   gcc  
+x86_64                              defconfig   gcc  
+x86_64                randconfig-001-20231005   gcc  
+x86_64                randconfig-002-20231005   gcc  
+x86_64                randconfig-003-20231005   gcc  
+x86_64                randconfig-004-20231005   gcc  
+x86_64                randconfig-005-20231005   gcc  
+x86_64                randconfig-006-20231005   gcc  
+x86_64                          rhel-8.3-rust   clang
+x86_64                               rhel-8.3   gcc  
+xtensa                            allnoconfig   gcc  
+xtensa                           allyesconfig   gcc  
 
-This will mean that WORKINGSET_* state will become more stale. We will
-need 4096 as many updates as today to get a flush. These are used by
-internal flushers (reclaim), and are exposed to userspace. I am not
-sure we want to do that.
-
->
-> My 0.02=E2=82=AC,
-> Michal
+-- 
+0-DAY CI Kernel Test Service
+https://github.com/intel/lkp-tests/wiki
