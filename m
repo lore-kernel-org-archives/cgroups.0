@@ -2,57 +2,56 @@ Return-Path: <cgroups-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C2E90CD68E3
-	for <cgroups@archiver.kernel.org>; Tue, 10 Oct 2023 03:21:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3C6DDCD68E4
+	for <cgroups@archiver.kernel.org>; Tue, 10 Oct 2023 03:21:40 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1441973AbjJJDVc (ORCPT <rfc822;cgroups@archiver.kernel.org>);
-        Mon, 9 Oct 2023 23:21:32 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37688 "EHLO
+        id S1441980AbjJJDVi (ORCPT <rfc822;cgroups@archiver.kernel.org>);
+        Mon, 9 Oct 2023 23:21:38 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37760 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1441970AbjJJDV1 (ORCPT
-        <rfc822;cgroups@vger.kernel.org>); Mon, 9 Oct 2023 23:21:27 -0400
+        with ESMTP id S1441981AbjJJDVb (ORCPT
+        <rfc822;cgroups@vger.kernel.org>); Mon, 9 Oct 2023 23:21:31 -0400
 Received: from mail-yw1-x1149.google.com (mail-yw1-x1149.google.com [IPv6:2607:f8b0:4864:20::1149])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id ADAA1A4
-        for <cgroups@vger.kernel.org>; Mon,  9 Oct 2023 20:21:24 -0700 (PDT)
-Received: by mail-yw1-x1149.google.com with SMTP id 00721157ae682-5a7af53bde4so13175957b3.0
-        for <cgroups@vger.kernel.org>; Mon, 09 Oct 2023 20:21:24 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1FE02B4
+        for <cgroups@vger.kernel.org>; Mon,  9 Oct 2023 20:21:28 -0700 (PDT)
+Received: by mail-yw1-x1149.google.com with SMTP id 00721157ae682-5a4f6729d16so90067057b3.0
+        for <cgroups@vger.kernel.org>; Mon, 09 Oct 2023 20:21:28 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20230601; t=1696908084; x=1697512884; darn=vger.kernel.org;
+        d=google.com; s=20230601; t=1696908087; x=1697512887; darn=vger.kernel.org;
         h=cc:to:from:subject:message-id:references:mime-version:in-reply-to
          :date:from:to:cc:subject:date:message-id:reply-to;
-        bh=hC1pWunCMBCtxVf3YGG9j/q6Xl3rVbI2nQig93EJD1c=;
-        b=yJL49vSJJ4IGXvINefEv9WQidpmtBVzYC6kKfAJ4r62g3i0soq5k5DBOcEv/Jfvg4b
-         PpiV7IkuaHNDFyvHkDdUOhhQbcXN/OkwnsgYpQ3xuCtLxKn0ObQWP+RiCgYwQXPPWH4m
-         42DZvp5VZQQpDhVbD3SQYoeHoAIknD8NcNYSyAOl31isjOMXEmozxbblWsrIFjirPfEI
-         lwBoTPshl2GSB5kxC6SPLir6nUQYpjMiVD1jW5taP2CmmJL5xTUMP3kG9IlSev42XwnQ
-         zONR2NHp8+QKb5+B3o4562VgWZkbU4aW54d0NKQNBYaZoJOUPjIfJnbZ3S5AhY14Jlen
-         MsTg==
+        bh=2uIMTmtGdqUKunPgdDdu073V0kaqxVUtvtbHday0wrc=;
+        b=Wlih9CQgTOSvCKOUzBNw+I6e5fdxI5H5mgw3wf4O4qOlCsNqIz8xShIwVneez9K8RU
+         74SQf01um+Dyv4V+JsZUgP72iakse/Girf5eZ3AyQAqUCgZYYWOyZ1pLcDzl5H9e3N7d
+         qlDN3G1NI7pyW1HNBmelKPSYtNtXbUGTE9LNIhOS2TQ86BPdXUrc2UCTOuY4EzjFyQVg
+         c+dFBYyoZ1/juzjX7gfMx3UHqGyVGLE7nPI2xNmZm0qkCJ70i0JTNjbWwLIGLNbRU940
+         QBg6TsdP29BH15jEjNz3jejJYb0BmZK/swihy6HmGBlS0XzZU4tPqhtXM7ZSMQUHhexa
+         Vz7A==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1696908084; x=1697512884;
+        d=1e100.net; s=20230601; t=1696908087; x=1697512887;
         h=cc:to:from:subject:message-id:references:mime-version:in-reply-to
          :date:x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=hC1pWunCMBCtxVf3YGG9j/q6Xl3rVbI2nQig93EJD1c=;
-        b=m9VgGEsiWY0ZGLyUjNx4RQfpDyxFF54ollsEsDZQMWg++gA8aQ44lphFX5rGznK2lt
-         eLpcZPfVDxyXpKxRpIHKF60nK7XCvu0/NGvCFl5c+Re7sRz8nKI9tg4HENw59OPv+hDW
-         N0IdQCsyW+UgY3HMhOJF2hZhUQoPP8dkUbjuPc9famWzsVjTSbKLBddFe/fhQCytq/0f
-         Gz2HxaGB0KViMCqT7YRVwyTPeEvitXgIJLUV8rwCOJqf1nQeBFmorYTmX5Rpkqr2Fse0
-         lzfjvGB7TbbX+GZ6jNdW6moAbFYmA7vuB+1ymp1EiuMZHarj5SI7i1fMJ8loCFGTmkqT
-         OGaA==
-X-Gm-Message-State: AOJu0Yx+sflLxvvi6bbLzn1S/S67zGeKiaDDCfpPGCEVzX1Avc3Bgz1f
-        HVTmtHpf4aa+FF8Z7UWV4Go2J4kXiKG9j93v
-X-Google-Smtp-Source: AGHT+IFIrbr9jnt8AKgjFXbiV/tkMci7vpdggI/qLBKz9UQMIl0xyavjRIGPF8xVVyjEs532DFKybC2OPjpal40i
+        bh=2uIMTmtGdqUKunPgdDdu073V0kaqxVUtvtbHday0wrc=;
+        b=So4H/V5wzRKBxqOm+JP3m1QfN0LFW360d/812Mippz3j1j/eV7EAwyCXoGMx2Ak3Y8
+         Q/Tfqb5GlPC34YNVq8vqgunEWIlfCFypxoaBAWb5qc7SMGjLxoFsNncnjrZG31nHWT5J
+         GcvbBZTuSXrhIcUrO8NrsuN+xvlpF7uHfY9DRrigAcOAN0zJOwGRIT7KLCQKNCTebkQF
+         shQroQe4mbiFbE3JZL/gJLcQ+nKlXSn8/nehVgd/Bv03GtiuAMv4piXyRPrS5i5L7AH2
+         sogpOhIMX1EAS/b9tZLvuGQLHo59svz/X2TCTlkq0m4gU4jVwptKNaKcMfrUSHmqn1Dt
+         arUg==
+X-Gm-Message-State: AOJu0YwOdD7b3LO44uhg7sT8EhvZYi/KPm0qb1+mLcI6zFgvmozyb8on
+        O5uQAgQDQS+aOiz1ipf9wl/UQoQNYx4u2pGU
+X-Google-Smtp-Source: AGHT+IH27StA7m2woHqh/tcnCp3uYnoxUCBEP5s+DN8GVWI1rrXovlh8AYsn+eA2pINcXrMN7noHvFZw+UL9M22y
 X-Received: from yosry.c.googlers.com ([fda3:e722:ac3:cc00:20:ed76:c0a8:29b4])
- (user=yosryahmed job=sendgmr) by 2002:a5b:b50:0:b0:d80:904d:c211 with SMTP id
- b16-20020a5b0b50000000b00d80904dc211mr250724ybr.7.1696908083837; Mon, 09 Oct
- 2023 20:21:23 -0700 (PDT)
-Date:   Tue, 10 Oct 2023 03:21:13 +0000
+ (user=yosryahmed job=sendgmr) by 2002:a81:c44c:0:b0:586:50cf:e13f with SMTP
+ id s12-20020a81c44c000000b0058650cfe13fmr286393ywj.1.1696908087335; Mon, 09
+ Oct 2023 20:21:27 -0700 (PDT)
+Date:   Tue, 10 Oct 2023 03:21:15 +0000
 In-Reply-To: <20231010032117.1577496-1-yosryahmed@google.com>
 Mime-Version: 1.0
 References: <20231010032117.1577496-1-yosryahmed@google.com>
 X-Mailer: git-send-email 2.42.0.609.gbb76f46606-goog
-Message-ID: <20231010032117.1577496-3-yosryahmed@google.com>
-Subject: [PATCH v2 2/5] mm: memcg: move vmstats structs definition above
- flushing code
+Message-ID: <20231010032117.1577496-5-yosryahmed@google.com>
+Subject: [PATCH v2 4/5] mm: workingset: move the stats flush into workingset_test_recent()
 From:   Yosry Ahmed <yosryahmed@google.com>
 To:     Andrew Morton <akpm@linux-foundation.org>
 Cc:     Johannes Weiner <hannes@cmpxchg.org>,
@@ -71,181 +70,122 @@ Precedence: bulk
 List-ID: <cgroups.vger.kernel.org>
 X-Mailing-List: cgroups@vger.kernel.org
 
-The following patch will make use of those structs in the flushing code,
-so move their definitions (and a few other dependencies) a little bit up
-to reduce the diff noise in the following patch.
+The workingset code flushes the stats in workingset_refault() to get
+accurate stats of the eviction memcg. In preparation for more scoped
+flushed and passing the eviction memcg to the flush call, move the call
+to workingset_test_recent() where we have a pointer to the eviction
+memcg.
+
+The flush call is sleepable, and cannot be made in an rcu read section.
+Hence, minimize the rcu read section by also moving it into
+workingset_test_recent(). Furthermore, instead of holding the rcu read
+lock throughout workingset_test_recent(), only hold it briefly to get a
+ref on the eviction memcg. This allows us to make the flush call after
+we get the eviction memcg.
+
+As for workingset_refault(), nothing else there appears to be protected
+by rcu. The memcg of the faulted folio (which is not necessarily the
+same as the eviction memcg) is protected by the folio lock, which is
+held from all callsites. Add a VM_BUG_ON() to make sure this doesn't
+change from under us.
 
 No functional change intended.
 
 Signed-off-by: Yosry Ahmed <yosryahmed@google.com>
 ---
- mm/memcontrol.c | 146 ++++++++++++++++++++++++------------------------
- 1 file changed, 73 insertions(+), 73 deletions(-)
+ mm/workingset.c | 36 ++++++++++++++++++++++++------------
+ 1 file changed, 24 insertions(+), 12 deletions(-)
 
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index 4a194fcc9533..a393f1399a2b 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -570,6 +570,79 @@ mem_cgroup_largest_soft_limit_node(struct mem_cgroup_tree_per_node *mctz)
- 	return mz;
+diff --git a/mm/workingset.c b/mm/workingset.c
+index b192e44a0e7c..a573be6c59fd 100644
+--- a/mm/workingset.c
++++ b/mm/workingset.c
+@@ -425,8 +425,16 @@ bool workingset_test_recent(void *shadow, bool file, bool *workingset)
+ 	struct pglist_data *pgdat;
+ 	unsigned long eviction;
+ 
+-	if (lru_gen_enabled())
+-		return lru_gen_test_recent(shadow, file, &eviction_lruvec, &eviction, workingset);
++	rcu_read_lock();
++
++	if (lru_gen_enabled()) {
++		bool recent = lru_gen_test_recent(shadow, file,
++				&eviction_lruvec, &eviction, workingset);
++
++		rcu_read_unlock();
++		return recent;
++	}
++
+ 
+ 	unpack_shadow(shadow, &memcgid, &pgdat, &eviction, workingset);
+ 	eviction <<= bucket_order;
+@@ -448,8 +456,16 @@ bool workingset_test_recent(void *shadow, bool file, bool *workingset)
+ 	 * configurations instead.
+ 	 */
+ 	eviction_memcg = mem_cgroup_from_id(memcgid);
+-	if (!mem_cgroup_disabled() && !eviction_memcg)
++	if (!mem_cgroup_disabled() &&
++	    (!eviction_memcg || !mem_cgroup_tryget(eviction_memcg))) {
++		rcu_read_unlock();
+ 		return false;
++	}
++
++	rcu_read_unlock();
++
++	/* Flush stats (and potentially sleep) outside the RCU read section */
++	mem_cgroup_flush_stats_ratelimited();
+ 
+ 	eviction_lruvec = mem_cgroup_lruvec(eviction_memcg, pgdat);
+ 	refault = atomic_long_read(&eviction_lruvec->nonresident_age);
+@@ -493,6 +509,7 @@ bool workingset_test_recent(void *shadow, bool file, bool *workingset)
+ 		}
+ 	}
+ 
++	mem_cgroup_put(eviction_memcg);
+ 	return refault_distance <= workingset_size;
  }
  
-+/* Subset of vm_event_item to report for memcg event stats */
-+static const unsigned int memcg_vm_event_stat[] = {
-+	PGPGIN,
-+	PGPGOUT,
-+	PGSCAN_KSWAPD,
-+	PGSCAN_DIRECT,
-+	PGSCAN_KHUGEPAGED,
-+	PGSTEAL_KSWAPD,
-+	PGSTEAL_DIRECT,
-+	PGSTEAL_KHUGEPAGED,
-+	PGFAULT,
-+	PGMAJFAULT,
-+	PGREFILL,
-+	PGACTIVATE,
-+	PGDEACTIVATE,
-+	PGLAZYFREE,
-+	PGLAZYFREED,
-+#if defined(CONFIG_MEMCG_KMEM) && defined(CONFIG_ZSWAP)
-+	ZSWPIN,
-+	ZSWPOUT,
-+#endif
-+#ifdef CONFIG_TRANSPARENT_HUGEPAGE
-+	THP_FAULT_ALLOC,
-+	THP_COLLAPSE_ALLOC,
-+	THP_SWPOUT,
-+	THP_SWPOUT_FALLBACK,
-+#endif
-+};
-+
-+#define NR_MEMCG_EVENTS ARRAY_SIZE(memcg_vm_event_stat)
-+static int mem_cgroup_events_index[NR_VM_EVENT_ITEMS] __read_mostly;
-+
-+static void init_memcg_events(void)
-+{
-+	int i;
-+
-+	for (i = 0; i < NR_MEMCG_EVENTS; ++i)
-+		mem_cgroup_events_index[memcg_vm_event_stat[i]] = i + 1;
-+}
-+
-+static inline int memcg_events_index(enum vm_event_item idx)
-+{
-+	return mem_cgroup_events_index[idx] - 1;
-+}
-+
-+struct memcg_vmstats_percpu {
-+	/* Local (CPU and cgroup) page state & events */
-+	long			state[MEMCG_NR_STAT];
-+	unsigned long		events[NR_MEMCG_EVENTS];
-+
-+	/* Delta calculation for lockless upward propagation */
-+	long			state_prev[MEMCG_NR_STAT];
-+	unsigned long		events_prev[NR_MEMCG_EVENTS];
-+
-+	/* Cgroup1: threshold notifications & softlimit tree updates */
-+	unsigned long		nr_page_events;
-+	unsigned long		targets[MEM_CGROUP_NTARGETS];
-+};
-+
-+struct memcg_vmstats {
-+	/* Aggregated (CPU and subtree) page state & events */
-+	long			state[MEMCG_NR_STAT];
-+	unsigned long		events[NR_MEMCG_EVENTS];
-+
-+	/* Non-hierarchical (CPU aggregated) page state & events */
-+	long			state_local[MEMCG_NR_STAT];
-+	unsigned long		events_local[NR_MEMCG_EVENTS];
-+
-+	/* Pending child counts during tree propagation */
-+	long			state_pending[MEMCG_NR_STAT];
-+	unsigned long		events_pending[NR_MEMCG_EVENTS];
-+};
-+
- /*
-  * memcg and lruvec stats flushing
-  *
-@@ -681,79 +754,6 @@ static void flush_memcg_stats_dwork(struct work_struct *w)
- 	queue_delayed_work(system_unbound_wq, &stats_flush_dwork, FLUSH_TIME);
+@@ -519,19 +536,16 @@ void workingset_refault(struct folio *folio, void *shadow)
+ 		return;
+ 	}
+ 
+-	/* Flush stats (and potentially sleep) before holding RCU read lock */
+-	mem_cgroup_flush_stats_ratelimited();
+-
+-	rcu_read_lock();
+-
+ 	/*
+ 	 * The activation decision for this folio is made at the level
+ 	 * where the eviction occurred, as that is where the LRU order
+ 	 * during folio reclaim is being determined.
+ 	 *
+ 	 * However, the cgroup that will own the folio is the one that
+-	 * is actually experiencing the refault event.
++	 * is actually experiencing the refault event. Make sure the folio is
++	 * locked to guarantee folio_memcg() stability throughout.
+ 	 */
++	VM_BUG_ON_FOLIO(!folio_test_locked(folio), folio);
+ 	nr = folio_nr_pages(folio);
+ 	memcg = folio_memcg(folio);
+ 	pgdat = folio_pgdat(folio);
+@@ -540,7 +554,7 @@ void workingset_refault(struct folio *folio, void *shadow)
+ 	mod_lruvec_state(lruvec, WORKINGSET_REFAULT_BASE + file, nr);
+ 
+ 	if (!workingset_test_recent(shadow, file, &workingset))
+-		goto out;
++		return;
+ 
+ 	folio_set_active(folio);
+ 	workingset_age_nonresident(lruvec, nr);
+@@ -556,8 +570,6 @@ void workingset_refault(struct folio *folio, void *shadow)
+ 		lru_note_cost_refault(folio);
+ 		mod_lruvec_state(lruvec, WORKINGSET_RESTORE_BASE + file, nr);
+ 	}
+-out:
+-	rcu_read_unlock();
  }
  
--/* Subset of vm_event_item to report for memcg event stats */
--static const unsigned int memcg_vm_event_stat[] = {
--	PGPGIN,
--	PGPGOUT,
--	PGSCAN_KSWAPD,
--	PGSCAN_DIRECT,
--	PGSCAN_KHUGEPAGED,
--	PGSTEAL_KSWAPD,
--	PGSTEAL_DIRECT,
--	PGSTEAL_KHUGEPAGED,
--	PGFAULT,
--	PGMAJFAULT,
--	PGREFILL,
--	PGACTIVATE,
--	PGDEACTIVATE,
--	PGLAZYFREE,
--	PGLAZYFREED,
--#if defined(CONFIG_MEMCG_KMEM) && defined(CONFIG_ZSWAP)
--	ZSWPIN,
--	ZSWPOUT,
--#endif
--#ifdef CONFIG_TRANSPARENT_HUGEPAGE
--	THP_FAULT_ALLOC,
--	THP_COLLAPSE_ALLOC,
--	THP_SWPOUT,
--	THP_SWPOUT_FALLBACK,
--#endif
--};
--
--#define NR_MEMCG_EVENTS ARRAY_SIZE(memcg_vm_event_stat)
--static int mem_cgroup_events_index[NR_VM_EVENT_ITEMS] __read_mostly;
--
--static void init_memcg_events(void)
--{
--	int i;
--
--	for (i = 0; i < NR_MEMCG_EVENTS; ++i)
--		mem_cgroup_events_index[memcg_vm_event_stat[i]] = i + 1;
--}
--
--static inline int memcg_events_index(enum vm_event_item idx)
--{
--	return mem_cgroup_events_index[idx] - 1;
--}
--
--struct memcg_vmstats_percpu {
--	/* Local (CPU and cgroup) page state & events */
--	long			state[MEMCG_NR_STAT];
--	unsigned long		events[NR_MEMCG_EVENTS];
--
--	/* Delta calculation for lockless upward propagation */
--	long			state_prev[MEMCG_NR_STAT];
--	unsigned long		events_prev[NR_MEMCG_EVENTS];
--
--	/* Cgroup1: threshold notifications & softlimit tree updates */
--	unsigned long		nr_page_events;
--	unsigned long		targets[MEM_CGROUP_NTARGETS];
--};
--
--struct memcg_vmstats {
--	/* Aggregated (CPU and subtree) page state & events */
--	long			state[MEMCG_NR_STAT];
--	unsigned long		events[NR_MEMCG_EVENTS];
--
--	/* Non-hierarchical (CPU aggregated) page state & events */
--	long			state_local[MEMCG_NR_STAT];
--	unsigned long		events_local[NR_MEMCG_EVENTS];
--
--	/* Pending child counts during tree propagation */
--	long			state_pending[MEMCG_NR_STAT];
--	unsigned long		events_pending[NR_MEMCG_EVENTS];
--};
--
- unsigned long memcg_page_state(struct mem_cgroup *memcg, int idx)
- {
- 	long x = READ_ONCE(memcg->vmstats->state[idx]);
+ /**
 -- 
 2.42.0.609.gbb76f46606-goog
 
