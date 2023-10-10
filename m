@@ -2,63 +2,63 @@ Return-Path: <cgroups-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DE41ACD8CB4
-	for <cgroups@archiver.kernel.org>; Tue, 10 Oct 2023 20:18:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 196A1CD8CB4
+	for <cgroups@archiver.kernel.org>; Tue, 10 Oct 2023 20:18:47 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234365AbjJJUSU (ORCPT <rfc822;cgroups@archiver.kernel.org>);
-        Tue, 10 Oct 2023 16:18:20 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59518 "EHLO
+        id S229437AbjJJUSq (ORCPT <rfc822;cgroups@archiver.kernel.org>);
+        Tue, 10 Oct 2023 16:18:46 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38096 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232064AbjJJURr (ORCPT
-        <rfc822;cgroups@vger.kernel.org>); Tue, 10 Oct 2023 16:17:47 -0400
-Received: from mgamail.intel.com (mgamail.intel.com [192.55.52.88])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7CB9B9D
-        for <cgroups@vger.kernel.org>; Tue, 10 Oct 2023 13:17:45 -0700 (PDT)
+        with ESMTP id S229483AbjJJUSp (ORCPT
+        <rfc822;cgroups@vger.kernel.org>); Tue, 10 Oct 2023 16:18:45 -0400
+Received: from mgamail.intel.com (mgamail.intel.com [192.55.52.93])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A327AAF
+        for <cgroups@vger.kernel.org>; Tue, 10 Oct 2023 13:18:43 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1696969065; x=1728505065;
+  t=1696969123; x=1728505123;
   h=date:from:to:cc:subject:message-id;
-  bh=qb6yd0JEGETb6fylrHSZstUj0PSb4EubHMELP5cDsfM=;
-  b=hFycSBRwo70WPbmH70xQlzpTRE2ICcG7DUHEaww0tDCjU94U9NJSYxIK
-   Us/gfvxE5awVd8QmLjjhPELwHhKwn9SeOzSec8w13RVHIy0z7DtvVK0mn
-   Bw8KaZGEiA8zD1Wz/RG1dYLIP1NOipb/HfGhkV8Qldj/PgwU6Pu06BIt0
-   Ji0ALppfzSIaTsc6uNYu2JzgdDc+nZDdV17Y8Li5Z+KcinYh8rarY1edJ
-   Io2lIIhTGIZruo2YfgH/e9x6qZaM1rnFkpiqixqqyhnBFNwCNNdARCKyA
-   6NX6dS63vaOIQhZRzWDR5R85N45osIzdkD1Mm9MAQ/uqkm+rec/nRysVl
-   A==;
-X-IronPort-AV: E=McAfee;i="6600,9927,10859"; a="415529379"
+  bh=lKwsQKIzun/IA3sgFHzbRoOhqXmiLSSuzQGd8rB8cko=;
+  b=XcxGfKQqnZdU5xj2UXspccG/DwWv9Nme8vKcQwBYkK0bDXW5RiHF4Sya
+   0a3rLnvjwKBGW9ekhmyPu5GM3oQeW9w2EoRNpPIPhgOsJ688c3UmIeWTt
+   ZcmqQmxvjoVcM+xJyNhT8AinNdR9QEde0Q+gU1WvA3u35ItrDOgSqT5PL
+   6AWFNwHvQctpDjm+1DibaWq3ld5DAu7ugg8m1TQiWELtSP6592GLDari9
+   C+67rW0tK53V9NvybSnXkCF8QIgTdhcL6Iqb+sau0023wt/wqEagQwFGX
+   P1t0ABAGJ5gQHYfDAQpa+ce2/a9Fktm2Hln8Utqe42rJWOHd/n8s9UFQ7
+   g==;
+X-IronPort-AV: E=McAfee;i="6600,9927,10859"; a="381750870"
 X-IronPort-AV: E=Sophos;i="6.03,213,1694761200"; 
-   d="scan'208";a="415529379"
-Received: from orsmga007.jf.intel.com ([10.7.209.58])
-  by fmsmga101.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 10 Oct 2023 13:17:41 -0700
+   d="scan'208";a="381750870"
+Received: from orsmga006.jf.intel.com ([10.7.209.51])
+  by fmsmga102.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 10 Oct 2023 13:18:41 -0700
 X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6600,9927,10859"; a="747175024"
+X-IronPort-AV: E=McAfee;i="6600,9927,10859"; a="730235449"
 X-IronPort-AV: E=Sophos;i="6.03,213,1694761200"; 
-   d="scan'208";a="747175024"
+   d="scan'208";a="730235449"
 Received: from lkp-server02.sh.intel.com (HELO f64821696465) ([10.239.97.151])
-  by orsmga007.jf.intel.com with ESMTP; 10 Oct 2023 13:17:38 -0700
+  by orsmga006.jf.intel.com with ESMTP; 10 Oct 2023 13:18:40 -0700
 Received: from kbuild by f64821696465 with local (Exim 4.96)
         (envelope-from <lkp@intel.com>)
-        id 1qqJAf-00011u-1m;
-        Tue, 10 Oct 2023 20:17:37 +0000
-Date:   Wed, 11 Oct 2023 04:16:42 +0800
+        id 1qqJBe-00012n-00;
+        Tue, 10 Oct 2023 20:18:38 +0000
+Date:   Wed, 11 Oct 2023 04:17:58 +0800
 From:   kernel test robot <lkp@intel.com>
 To:     Tejun Heo <tj@kernel.org>
 Cc:     cgroups@vger.kernel.org
-Subject: [tj-cgroup:for-next] BUILD SUCCESS
- 527731106f6158587f749e850d29d09e42ea7511
-Message-ID: <202310110438.Xn1mQaua-lkp@intel.com>
+Subject: [tj-cgroup:for-6.6-fixes] BUILD SUCCESS
+ 1ca0b605150501b7dc59f3016271da4eb3e96fce
+Message-ID: <202310110456.xcEPa5bo-lkp@intel.com>
 User-Agent: s-nail v14.9.24
 Precedence: bulk
 List-ID: <cgroups.vger.kernel.org>
 X-Mailing-List: cgroups@vger.kernel.org
 
-tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git for-next
-branch HEAD: 527731106f6158587f749e850d29d09e42ea7511  Merge branch 'for-6.7' into for-next
+tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git for-6.6-fixes
+branch HEAD: 1ca0b605150501b7dc59f3016271da4eb3e96fce  cgroup: Remove duplicates in cgroup v1 tasks file
 
-elapsed time: 1478m
+elapsed time: 1479m
 
-configs tested: 190
+configs tested: 185
 configs skipped: 2
 
 The following configs have been built successfully.
@@ -71,9 +71,7 @@ alpha                               defconfig   gcc
 arc                              allmodconfig   gcc  
 arc                               allnoconfig   gcc  
 arc                              allyesconfig   gcc  
-arc                      axs103_smp_defconfig   gcc  
 arc                                 defconfig   gcc  
-arc                            hsdk_defconfig   gcc  
 arc                   randconfig-001-20231010   gcc  
 arm                              allmodconfig   gcc  
 arm                               allnoconfig   gcc  
@@ -139,12 +137,9 @@ microblaze                        allnoconfig   gcc
 microblaze                       allyesconfig   gcc  
 microblaze                          defconfig   gcc  
 mips                             allmodconfig   gcc  
-mips                              allnoconfig   clang
 mips                              allnoconfig   gcc  
 mips                             allyesconfig   gcc  
 mips                         bigsur_defconfig   gcc  
-mips                  cavium_octeon_defconfig   clang
-mips                     decstation_defconfig   gcc  
 mips                           gcw0_defconfig   gcc  
 nios2                            allmodconfig   gcc  
 nios2                             allnoconfig   gcc  
@@ -183,7 +178,6 @@ sh                               allmodconfig   gcc
 sh                                allnoconfig   gcc  
 sh                               allyesconfig   gcc  
 sh                                  defconfig   gcc  
-sh                          landisk_defconfig   gcc  
 sh                        sh7763rdp_defconfig   gcc  
 sh                              ul2_defconfig   gcc  
 sparc                            allmodconfig   gcc  
