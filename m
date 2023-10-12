@@ -2,79 +2,101 @@ Return-Path: <cgroups-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 71F26CDB46E
-	for <cgroups@archiver.kernel.org>; Thu, 12 Oct 2023 17:10:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 11EB1CDB47E
+	for <cgroups@archiver.kernel.org>; Thu, 12 Oct 2023 17:31:14 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1344085AbjJLRKP (ORCPT <rfc822;cgroups@archiver.kernel.org>);
-        Thu, 12 Oct 2023 13:10:15 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39506 "EHLO
+        id S1344091AbjJLRbN (ORCPT <rfc822;cgroups@archiver.kernel.org>);
+        Thu, 12 Oct 2023 13:31:13 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45358 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1344032AbjJLRKO (ORCPT
-        <rfc822;cgroups@vger.kernel.org>); Thu, 12 Oct 2023 13:10:14 -0400
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F3759B7
-        for <cgroups@vger.kernel.org>; Thu, 12 Oct 2023 10:09:25 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1697130565;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:
-         content-transfer-encoding:content-transfer-encoding;
-        bh=SPP01noqv2eDjcek8c4pF//YWGN5uzha7P5McAWCFt4=;
-        b=QUmP1iIJFN25Nekussdl4C2v6hycWtVJxwTcjfqis3nDuco36P7GaNCmB62tSzgHG+dqhK
-        AHaGsGHxkF/vIh6LPLeknrMW+6bcvzNlkH2ycmidvB9qhEk0nBqWem/aWz/Xe62uxV+xnj
-        KDHSO3sxqDrBI/a55CjxN4qfFZaiZL8=
-Received: from mimecast-mx02.redhat.com (mimecast-mx02.redhat.com
- [66.187.233.88]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- us-mta-685-HpmUbWJdMzOBtusgr8f-Kw-1; Thu, 12 Oct 2023 13:09:19 -0400
-X-MC-Unique: HpmUbWJdMzOBtusgr8f-Kw-1
-Received: from smtp.corp.redhat.com (int-mx09.intmail.prod.int.rdu2.redhat.com [10.11.54.9])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx02.redhat.com (Postfix) with ESMTPS id DC737185A7B9;
-        Thu, 12 Oct 2023 17:09:18 +0000 (UTC)
-Received: from llong.com (unknown [10.22.32.234])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 6A9CE492B01;
-        Thu, 12 Oct 2023 17:09:18 +0000 (UTC)
-From:   Waiman Long <longman@redhat.com>
-To:     Tejun Heo <tj@kernel.org>, Zefan Li <lizefan.x@bytedance.com>,
-        Johannes Weiner <hannes@cmpxchg.org>
-Cc:     cgroups@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Waiman Long <longman@redhat.com>
-Subject: [PATCH] cgroup: Fix incorrect css_set_rwsem reference in comment
-Date:   Thu, 12 Oct 2023 13:09:02 -0400
-Message-Id: <20231012170902.3448834-1-longman@redhat.com>
+        with ESMTP id S1344166AbjJLRbL (ORCPT
+        <rfc822;cgroups@vger.kernel.org>); Thu, 12 Oct 2023 13:31:11 -0400
+Received: from mail-pl1-x62e.google.com (mail-pl1-x62e.google.com [IPv6:2607:f8b0:4864:20::62e])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 03249182;
+        Thu, 12 Oct 2023 10:31:10 -0700 (PDT)
+Received: by mail-pl1-x62e.google.com with SMTP id d9443c01a7336-1c9b95943beso10873895ad.1;
+        Thu, 12 Oct 2023 10:31:09 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1697131869; x=1697736669; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:sender:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=v1DANaDEHOucqubqJ4/b/aNrMNFhI1eFitx/RoQbRb8=;
+        b=F9JvIr2em32HFZF/djAEzFjgX4RuTj6a3ud4BBXRc3DkqduDSW+xW2HtzZ2vlUXNl7
+         nvo86Z2EHWPB5TMzSsPzhkEbDZeOBGP7pynRJZXA3u+A5VFYeuIdJwlCIiQw5d79idiN
+         T9jBPhGnlK0Z2ty4nG6jzv3id4JH5gUkUUUL7hkaz52XiSct542Ctlsfd2/d5WGJ4d1P
+         hPFbyTIIQDlbEK/vMJ9azlSAjfOJxke5krwgBKvVarV9Ty16hCSjYyEYHr2M93w4YCcC
+         hGjIyZpHVBUeu9kvAdnkAMg8O2AiE6XLL4rAnPPMkvuBU/fcT/N/Q5kMEMeo+8Tol1FX
+         3yDA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1697131869; x=1697736669;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:sender:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=v1DANaDEHOucqubqJ4/b/aNrMNFhI1eFitx/RoQbRb8=;
+        b=aaifymGcJoNPxj7QGFtNH/3Z1Lrx6UeWHl/00FiuIsYo6Bk6LVMQR859iX/qPmJMYL
+         P7fvorykLMd7xDTO+ube/51RExB/Gm7AChBo81+mE8Wo1CQwDDYdNdtFNSIbqqIuv+4+
+         8XmCW96GeUEd6fORcduAFxl7VQjgkc/tDokRcC9G7nmYHfa64IiUQ5tzP0GguHUbhWBb
+         W2T8Wv9uxK3NcjuOeKtomC4GN4kdUquwSQQZxGM8xq3rz/am+Ym3f7JPX6R53CqRJkhH
+         RyhyDFsUE4LP8kNiabyvwYYREHWvGz61v3CgQ01S5TRDIeRU4XgnaMuFgLWaejukkHB9
+         +Xww==
+X-Gm-Message-State: AOJu0YyLU0ZkwrLAOthTsAb2ftAdrfq4iz3ONYGpZ4qMfY1Ex+i4mj1V
+        iYmYH3LpEo/Le0dljwvlOkWv1NZGMSXMFw==
+X-Google-Smtp-Source: AGHT+IGq/d2q/qrQoh3AnyQyCl8AR4fKt3fghwW8Pm7f+T9b/MyONsNEnanxjJMz2+mJxVjMy0m/Cw==
+X-Received: by 2002:a17:902:c115:b0:1c5:e1b7:1c13 with SMTP id 21-20020a170902c11500b001c5e1b71c13mr22664289pli.3.1697131869277;
+        Thu, 12 Oct 2023 10:31:09 -0700 (PDT)
+Received: from localhost (dhcp-72-235-13-41.hawaiiantel.net. [72.235.13.41])
+        by smtp.gmail.com with ESMTPSA id b11-20020a170902d50b00b001c57aac6e5esm2278311plg.23.2023.10.12.10.31.08
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 12 Oct 2023 10:31:08 -0700 (PDT)
+Sender: Tejun Heo <htejun@gmail.com>
+Date:   Thu, 12 Oct 2023 07:31:07 -1000
+From:   Tejun Heo <tj@kernel.org>
+To:     Jingbo Xu <jefflexu@linux.alibaba.com>
+Cc:     guro@fb.com, lizefan.x@bytedance.com, hannes@cmpxchg.org,
+        cgroups@vger.kernel.org, jack@suse.cz,
+        linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        viro@zeniv.linux.org.uk, brauner@kernel.org, willy@infradead.org,
+        joseph.qi@linux.alibaba.com
+Subject: Re: [PATCH] writeback, cgroup: switch inodes with dirty timestamps
+ to release dying cgwbs
+Message-ID: <ZSgtW0wGZZ3N3oKl@slm.duckdns.org>
+References: <20231011084228.77615-1-jefflexu@linux.alibaba.com>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-Scanned-By: MIMEDefang 3.1 on 10.11.54.9
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20231011084228.77615-1-jefflexu@linux.alibaba.com>
 Precedence: bulk
 List-ID: <cgroups.vger.kernel.org>
 X-Mailing-List: cgroups@vger.kernel.org
 
-Since commit f0d9a5f17575 ("cgroup: make css_set_rwsem a spinlock
-and rename it to css_set_lock"), css_set_rwsem has been replaced by
-css_set_lock. That commit, however, missed the css_set_rwsem reference
-in include/linux/cgroup-defs.h. Fix that by changing it to css_set_lock
-as well.
+On Wed, Oct 11, 2023 at 04:42:28PM +0800, Jingbo Xu wrote:
+> The cgwb cleanup routine will try to release the dying cgwb by switching
+> the attached inodes.  It fetches the attached inodes from wb->b_attached
+> list, omitting the fact that inodes only with dirty timestamps reside in
+> wb->b_dirty_time list, which is the case when lazytime is enabled.  This
+> causes enormous zombie memory cgroup when lazytime is enabled, as inodes
+> with dirty timestamps can not be switched to a live cgwb for a long time.
+> 
+> It is reasonable not to switch cgwb for inodes with dirty data, as
+> otherwise it may break the bandwidth restrictions.  However since the
+> writeback of inode metadata is not accounted, let's also switch inodes
+> with dirty timestamps to avoid zombie memory and block cgroups when
+> laztytime is enabled.
+> 
+> Fixs: c22d70a162d3 ("writeback, cgroup: release dying cgwbs by switching attached inodes")
+> Signed-off-by: Jingbo Xu <jefflexu@linux.alibaba.com>
 
-Signed-off-by: Waiman Long <longman@redhat.com>
----
- include/linux/cgroup-defs.h | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+The patch looks fine to me.
 
-diff --git a/include/linux/cgroup-defs.h b/include/linux/cgroup-defs.h
-index f1b3151ac30b..265da00a1a8b 100644
---- a/include/linux/cgroup-defs.h
-+++ b/include/linux/cgroup-defs.h
-@@ -238,7 +238,7 @@ struct css_set {
- 	 * Lists running through all tasks using this cgroup group.
- 	 * mg_tasks lists tasks which belong to this cset but are in the
- 	 * process of being migrated out or in.  Protected by
--	 * css_set_rwsem, but, during migration, once tasks are moved to
-+	 * css_set_lock, but, during migration, once tasks are moved to
- 	 * mg_tasks, it can be read safely while holding cgroup_mutex.
- 	 */
- 	struct list_head tasks;
+...
+> +	restart = isw_prepare_wbs_switch(isw, &wb->b_attached, &nr);
+> +	if (!restart)
+> +		restart = isw_prepare_wbs_switch(isw, &wb->b_dirty_time, &nr);
+
+But can you add a comment explaining why we're also migrating b_dirty_time?
+
+Thanks.
+
 -- 
-2.39.3
-
+tejun
