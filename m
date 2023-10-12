@@ -2,83 +2,118 @@ Return-Path: <cgroups-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8CF82CDB46E
-	for <cgroups@archiver.kernel.org>; Thu, 12 Oct 2023 17:36:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 29521CDB46E
+	for <cgroups@archiver.kernel.org>; Thu, 12 Oct 2023 19:11:51 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1379616AbjJLRgd (ORCPT <rfc822;cgroups@archiver.kernel.org>);
-        Thu, 12 Oct 2023 13:36:33 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52826 "EHLO
+        id S1442046AbjJLTLu (ORCPT <rfc822;cgroups@archiver.kernel.org>);
+        Thu, 12 Oct 2023 15:11:50 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41290 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1347449AbjJLRgU (ORCPT
-        <rfc822;cgroups@vger.kernel.org>); Thu, 12 Oct 2023 13:36:20 -0400
-Received: from mail-pf1-x432.google.com (mail-pf1-x432.google.com [IPv6:2607:f8b0:4864:20::432])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A00061BD;
-        Thu, 12 Oct 2023 10:24:01 -0700 (PDT)
-Received: by mail-pf1-x432.google.com with SMTP id d2e1a72fcca58-692ada71d79so1036368b3a.1;
-        Thu, 12 Oct 2023 10:24:01 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1697131441; x=1697736241; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:sender:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=f6IdNqkJlQ5b34MhEcWXMstxhdqRUJGV879MZSa7cwM=;
-        b=U8xvm1GcLgVqTAarHA/Uo+VaQHjpUY6cNFP3AAFy39ASiP6z0DSg4VrbSI6VzfYBwd
-         Rcpt9vUq2SiQCaEMRU9UhPMZ59EGxb/WEOg8Xbj4qHyDXhoz0dR6iXqwEcDbnk+D5BSy
-         BmanzzrMsoOGQSQtPfw0MkVMeIfMteMg3fPp5DTiQvPbHE8lHkZ6gbmeAxF76OD3HBpS
-         4ElItdG2Nrhxf9TD/Kxwqmz6gfzA8hpTlSEaNLdZCKDz+Y1YpPA5rMvQVcJ/hxL5P0pw
-         IA5yfXov6v2YCjZIIjHscOEXpy3XwSXm9ArR+3Pd+nlMnMCCSJs57UyrO8Cd36qCbCsB
-         zYyQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1697131441; x=1697736241;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:sender:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=f6IdNqkJlQ5b34MhEcWXMstxhdqRUJGV879MZSa7cwM=;
-        b=aj671nF6xYakYjyhkermJg1H9Q2nEyHaKq5Kyl4eJCN4ba+GYTBpSfeXOHTE44tu96
-         ul9hO5RbUd3BujOzpgJTEFY327NtkkNGeK/y+xSqcMUSp6t95dnz8jG9xdZZ6yW0LybK
-         03NQHBIPjYR1IoS0ZSGa6TEkqc7OtiSoJvwpot9wYkdoq1OwWq8jZd7hCwO0Pw8qKyfg
-         aUcI9xS0w9QRfgVj2/YpAlcfeblg3r0vzz4JnvBW23CjDwhcrnqx7p2m/Q2JLri57UZU
-         yt6DxcY1MXlqjrNJhhGgBsYR0XJg4KcECK28XQdlM8Fch+22V/JVuZuL0M+XHeiYeYmh
-         99YQ==
-X-Gm-Message-State: AOJu0Yw/lPQ7xJGsrpXTmNUQfqZy3BLrtfqIegY7DRH2oXzQCuqHovwp
-        bbJANV47ieeWfU9ja9sYc8nTsBFi0xdTuw==
-X-Google-Smtp-Source: AGHT+IEoPLPZPNpn0PaF/1GkdqkaHVgyx4TX0K8LDk6dfofoi19xckq2FfD+ghEElOBNiMudTS8feQ==
-X-Received: by 2002:a05:6a00:1781:b0:690:2e46:aca3 with SMTP id s1-20020a056a00178100b006902e46aca3mr27681958pfg.25.1697131440758;
-        Thu, 12 Oct 2023 10:24:00 -0700 (PDT)
-Received: from localhost (dhcp-72-235-13-41.hawaiiantel.net. [72.235.13.41])
-        by smtp.gmail.com with ESMTPSA id u5-20020aa78385000000b0068c90e1ec84sm12110894pfm.167.2023.10.12.10.23.59
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 12 Oct 2023 10:24:00 -0700 (PDT)
-Sender: Tejun Heo <htejun@gmail.com>
-Date:   Thu, 12 Oct 2023 07:23:59 -1000
-From:   Tejun Heo <tj@kernel.org>
-To:     Waiman Long <longman@redhat.com>
-Cc:     Zefan Li <lizefan.x@bytedance.com>,
-        Johannes Weiner <hannes@cmpxchg.org>, cgroups@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] cgroup: Fix incorrect css_set_rwsem reference in comment
-Message-ID: <ZSgrr0uRZjQSD8de@slm.duckdns.org>
-References: <20231012170902.3448834-1-longman@redhat.com>
+        with ESMTP id S1441905AbjJLTLu (ORCPT
+        <rfc822;cgroups@vger.kernel.org>); Thu, 12 Oct 2023 15:11:50 -0400
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 185BAB7
+        for <cgroups@vger.kernel.org>; Thu, 12 Oct 2023 12:11:03 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1697137862;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=hQUSlWXqP7fdJBvIHewmJ/XbyH4Qojk9VyW+H5X9CBk=;
+        b=g80hw/d5qr3emEvUL5AgMLISrxJEYGBfoQr5ubYWXvZzkcI2IkfnFkfZ2niScLjGPvz9TV
+        zefSUbcpml1SQ7neidn6Xw0QDEWdNO4fDP9oBi4FTFtz2XTI7RJjfYiRa9/6cFH0wdzwp4
+        EMCjAziHM7kMMToUz/vbxiOvmvtCqXM=
+Received: from mimecast-mx02.redhat.com (mx-ext.redhat.com [66.187.233.73])
+ by relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ us-mta-478-7FqDobdUP-y8uDiXMGdhmg-1; Thu, 12 Oct 2023 15:10:48 -0400
+X-MC-Unique: 7FqDobdUP-y8uDiXMGdhmg-1
+Received: from smtp.corp.redhat.com (int-mx04.intmail.prod.int.rdu2.redhat.com [10.11.54.4])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx02.redhat.com (Postfix) with ESMTPS id 40359381079F;
+        Thu, 12 Oct 2023 19:10:48 +0000 (UTC)
+Received: from [10.22.32.234] (unknown [10.22.32.234])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 7E73B202701E;
+        Thu, 12 Oct 2023 19:10:47 +0000 (UTC)
+Message-ID: <f7c9b6a6-3c60-431d-3f91-3dc9b012adc6@redhat.com>
+Date:   Thu, 12 Oct 2023 15:10:46 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20231012170902.3448834-1-longman@redhat.com>
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.14.0
+Subject: Re: Question Regarding isolcpus
+Content-Language: en-US
+To:     Joseph Salisbury <joseph.salisbury@canonical.com>,
+        Sebastian Andrzej Siewior <bigeasy@linutronix.de>,
+        Frederic Weisbecker <frederic@kernel.org>
+Cc:     linux-rt-users@vger.kernel.org, cgroups@vger.kernel.org
+References: <5afe86b4-bae3-2fa8-ec33-9686d3c18255@canonical.com>
+ <20230928083909.KySJvo1d@linutronix.de>
+ <11efaeb8-eac1-4a12-8283-6e9ce168e809@canonical.com>
+From:   Waiman Long <longman@redhat.com>
+In-Reply-To: <11efaeb8-eac1-4a12-8283-6e9ce168e809@canonical.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
+X-Scanned-By: MIMEDefang 3.1 on 10.11.54.4
 Precedence: bulk
 List-ID: <cgroups.vger.kernel.org>
 X-Mailing-List: cgroups@vger.kernel.org
 
-On Thu, Oct 12, 2023 at 01:09:02PM -0400, Waiman Long wrote:
-> Since commit f0d9a5f17575 ("cgroup: make css_set_rwsem a spinlock
-> and rename it to css_set_lock"), css_set_rwsem has been replaced by
-> css_set_lock. That commit, however, missed the css_set_rwsem reference
-> in include/linux/cgroup-defs.h. Fix that by changing it to css_set_lock
-> as well.
-> 
-> Signed-off-by: Waiman Long <longman@redhat.com>
+On 10/12/23 13:27, Joseph Salisbury wrote:
+>
+>
+> On 9/28/23 04:39, Sebastian Andrzej Siewior wrote:
+>> On 2023-09-26 12:45:14 [-0400], Joseph Salisbury wrote:
+>>> Hi All,
+>> Hi,
+>>
+>>> I have a question regarding the isolcpus parameter.  I've been 
+>>> seeing this
+>>> parameter commonly used. However, in the kernel.org documentation[0],
+>>> isolcpus is listed as depreciated.
+>>>
+>>> Is it the case that isolcpus should not be used at all?  I've seen 
+>>> it used
+>>> in conjunction with taskset.  However, should we now be telling rt 
+>>> users to
+>>> use only cpusets in cgroups?  I see that CPUAffinity can be set in
+>>> /etc/systemd/system.conf.  Is that the preferred method, so the process
+>>> scheduler will automatically migrate processes between the cpusets 
+>>> in the
+>>> cgroup cpuset or the list set by CPUAffinity?
+>> Frederic might know if there is an actual timeline to remove it. The
+>> suggestions since then is to use cpusets which should be more flexible.
+>> There was also some work (which went into v6.1 I think) to be able to
+>> reconfigure the partitions at run-time while isolcpus= is a boot time
+>> option.
+>>  From what I remember, you have a default/system cpuset which all tasks
+>> use by default and then you can add another cpuset for the "isolated"
+>> CPUs. Based on the partition it can be either the default one or
+>> isolated [0]. The latter would exclude the CPUs from load balancing
+>> which is what isolcpus= does.
+>>
+>> [0] f28e22441f353 ("cgroup/cpuset: Add a new isolated cpus.partition 
+>> type")
+>
+> This question may be for the cgroups folks.  The kernel.org 
+> documentation has a WARNING which states: "cgroup2 doesn't yet support 
+> control of realtime processes and the cpu controller can only be 
+> enabled when all RT processes are in the root cgroup "[0]. Does this 
+> mean real-time processes are only supported on cgroupsV1?
+>
+> Also, this warning is stated for the "CPU" Controller, but there is no 
+> mention of this for a "cpuset" controller. Does this imply that 
+> real-time processes are supported with "cpuset" controllers?
 
-Applied to cgroup/for-6.6-fixes.
+Yes, the quoted description applies only to cpu controller. Even for v1 
+cpu controller, the realtime support is problematic and there is no easy 
+solution to that. That is why cgroup v2 doesn't support it.
 
-Thanks.
+For other controllers, whether the processes are RT or not are 
+irrelevant. They are equally supported.
 
--- 
-tejun
+Cheers,
+Longman
+
+
