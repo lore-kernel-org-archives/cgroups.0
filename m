@@ -2,448 +2,189 @@ Return-Path: <cgroups-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5F033CDB483
-	for <cgroups@archiver.kernel.org>; Fri, 13 Oct 2023 18:13:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 14EC7CDB47E
+	for <cgroups@archiver.kernel.org>; Fri, 13 Oct 2023 18:15:07 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231680AbjJMSNC (ORCPT <rfc822;cgroups@archiver.kernel.org>);
-        Fri, 13 Oct 2023 14:13:02 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50858 "EHLO
+        id S231459AbjJMSPG (ORCPT <rfc822;cgroups@archiver.kernel.org>);
+        Fri, 13 Oct 2023 14:15:06 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47976 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231703AbjJMSM6 (ORCPT
-        <rfc822;cgroups@vger.kernel.org>); Fri, 13 Oct 2023 14:12:58 -0400
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C450FE8
-        for <cgroups@vger.kernel.org>; Fri, 13 Oct 2023 11:12:06 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1697220726;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=2+Udgd9t+oJaMjSuWvjsOR91eGe6O+i8JtL7jWCC2do=;
-        b=hSexDSnxCjKf8AasJGgK3BJni4TVkC8/r2RxHIRT+kWQJ06xkJnrQjsQW4y2zC8QdVwOMR
-        23/QPxXJLiFplSlKdJxwMGrSd8Q+r5BNzMnR4FFaAKWlsag/btG7CO+q8Mnb9jHh0WThuF
-        ZbQ2pn0QzMxvo/obNzC4l92NY4uod1E=
-Received: from mimecast-mx02.redhat.com (mimecast-mx02.redhat.com
- [66.187.233.88]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- us-mta-381-82XO3FSgP_yZC25qtn8fYA-1; Fri, 13 Oct 2023 14:11:50 -0400
-X-MC-Unique: 82XO3FSgP_yZC25qtn8fYA-1
-Received: from smtp.corp.redhat.com (int-mx04.intmail.prod.int.rdu2.redhat.com [10.11.54.4])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx02.redhat.com (Postfix) with ESMTPS id 092B4946DC5;
-        Fri, 13 Oct 2023 18:11:50 +0000 (UTC)
-Received: from llong.com (unknown [10.22.17.138])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 7B5E320296DB;
-        Fri, 13 Oct 2023 18:11:49 +0000 (UTC)
-From:   Waiman Long <longman@redhat.com>
-To:     Tejun Heo <tj@kernel.org>, Zefan Li <lizefan.x@bytedance.com>,
-        Johannes Weiner <hannes@cmpxchg.org>,
-        Jonathan Corbet <corbet@lwn.net>,
-        Lai Jiangshan <jiangshanlai@gmail.com>,
-        Shuah Khan <shuah@kernel.org>
-Cc:     cgroups@vger.kernel.org, linux-doc@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-kselftest@vger.kernel.org,
-        Waiman Long <longman@redhat.com>
-Subject: [PATCH-cgroup 3/4] cgroup/cpuset: Keep track of CPUs in isolated partitions
-Date:   Fri, 13 Oct 2023 14:11:21 -0400
-Message-Id: <20231013181122.3518610-4-longman@redhat.com>
-In-Reply-To: <20231013181122.3518610-1-longman@redhat.com>
-References: <20231013181122.3518610-1-longman@redhat.com>
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-Scanned-By: MIMEDefang 3.1 on 10.11.54.4
+        with ESMTP id S231470AbjJMSPF (ORCPT
+        <rfc822;cgroups@vger.kernel.org>); Fri, 13 Oct 2023 14:15:05 -0400
+Received: from mgamail.intel.com (mgamail.intel.com [192.55.52.93])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C29C8D8
+        for <cgroups@vger.kernel.org>; Fri, 13 Oct 2023 11:15:03 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1697220903; x=1728756903;
+  h=date:from:to:cc:subject:message-id;
+  bh=5lLgNZWJ2joxgiMOXTbzVZNkhDi8I0VJ7otZHzh2Vsc=;
+  b=k5+NnD97h4m4jbgRzgxFUUF4yxhBkrCOBdJfTo4UeDyeqvY3RDRG9hTp
+   is970AHzfrRvjeB1VEQCku8Lck9OebQx0aZFZo1HwoouhJs0j1lNnnz+j
+   PZWkf05ZSDBo2ggVRD1PvIJEUj7chPKi4Ol3f9mzxIWdpVyH/WfBc3tAA
+   7UVj9DwiGSS3r3OlaPBZi3err2fPpSnmeH4QrTgOSmm2tscxmKlZMkWzN
+   c5e3Ud3L9bCy5vzZZUfHVJ4nDFVwH4AscGKUdxplN/Xdc5cSZikMhCtHD
+   JqbYbkl4R6RwhgtEkoLggeHn9OyZBGuwElAGKDPkr7+xeMBkS9oqlqFKh
+   A==;
+X-IronPort-AV: E=McAfee;i="6600,9927,10862"; a="382462562"
+X-IronPort-AV: E=Sophos;i="6.03,222,1694761200"; 
+   d="scan'208";a="382462562"
+Received: from fmsmga003.fm.intel.com ([10.253.24.29])
+  by fmsmga102.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 13 Oct 2023 11:15:03 -0700
+X-ExtLoop1: 1
+X-IronPort-AV: E=McAfee;i="6600,9927,10862"; a="845572365"
+X-IronPort-AV: E=Sophos;i="6.03,222,1694761200"; 
+   d="scan'208";a="845572365"
+Received: from lkp-server02.sh.intel.com (HELO f64821696465) ([10.239.97.151])
+  by FMSMGA003.fm.intel.com with ESMTP; 13 Oct 2023 11:15:02 -0700
+Received: from kbuild by f64821696465 with local (Exim 4.96)
+        (envelope-from <lkp@intel.com>)
+        id 1qrMgd-0005Er-2d;
+        Fri, 13 Oct 2023 18:14:59 +0000
+Date:   Sat, 14 Oct 2023 02:14:48 +0800
+From:   kernel test robot <lkp@intel.com>
+To:     Tejun Heo <tj@kernel.org>
+Cc:     cgroups@vger.kernel.org
+Subject: [tj-cgroup:for-next] BUILD SUCCESS
+ ca2332016d316c5652fa31093f8b570b3a67fdbb
+Message-ID: <202310140245.5JMLAKin-lkp@intel.com>
+User-Agent: s-nail v14.9.24
 Precedence: bulk
 List-ID: <cgroups.vger.kernel.org>
 X-Mailing-List: cgroups@vger.kernel.org
 
-Add a new internal isolated_cpus mask to keep track of the CPUs that
-are in isolated partitions. Expose that new cpumask as a new root-only
-control file ".__DEBUG__.cpuset.cpus.isolated" when cgroup_debug command
-line option is specified.
+tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git for-next
+branch HEAD: ca2332016d316c5652fa31093f8b570b3a67fdbb  Merge branch 'for-6.6-fixes' into for-next
 
-Signed-off-by: Waiman Long <longman@redhat.com>
----
- kernel/cgroup/cpuset.c | 190 +++++++++++++++++++++++++++--------------
- 1 file changed, 127 insertions(+), 63 deletions(-)
+elapsed time: 1468m
 
-diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
-index 615daaf87f1f..19c8779798fd 100644
---- a/kernel/cgroup/cpuset.c
-+++ b/kernel/cgroup/cpuset.c
-@@ -204,6 +204,11 @@ struct cpuset {
-  */
- static cpumask_var_t	subpartitions_cpus;
- 
-+/*
-+ * Exclusive CPUs in isolated partitions
-+ */
-+static cpumask_var_t	isolated_cpus;
-+
- /* List of remote partition root children */
- static struct list_head remote_children;
- 
-@@ -1317,6 +1322,7 @@ static void compute_effective_cpumask(struct cpumask *new_cpus,
-  */
- enum partition_cmd {
- 	partcmd_enable,		/* Enable partition root	  */
-+	partcmd_enablei,	/* Enable isolated partition root */
- 	partcmd_disable,	/* Disable partition root	  */
- 	partcmd_update,		/* Update parent's effective_cpus */
- 	partcmd_invalidate,	/* Make partition invalid	  */
-@@ -1418,6 +1424,74 @@ static void reset_partition_data(struct cpuset *cs)
- 	}
- }
- 
-+/*
-+ * partition_xcpus_newstate - Exclusive CPUs state change
-+ * @old_prs: old partition_root_state
-+ * @new_prs: new partition_root_state
-+ * @xcpus: exclusive CPUs with state change
-+ */
-+static void partition_xcpus_newstate(int old_prs, int new_prs, struct cpumask *xcpus)
-+{
-+	WARN_ON_ONCE(old_prs == new_prs);
-+	if (new_prs == PRS_ISOLATED)
-+		cpumask_or(isolated_cpus, isolated_cpus, xcpus);
-+	else
-+		cpumask_andnot(isolated_cpus, isolated_cpus, xcpus);
-+}
-+
-+/*
-+ * partition_xcpus_add - Add new exclusive CPUs to partition
-+ * @new_prs: new partition_root_state
-+ * @parent: parent cpuset
-+ * @xcpus: exclusive CPUs to be added
-+ *
-+ * Remote partition if parent == NULL
-+ */
-+static void partition_xcpus_add(int new_prs, struct cpuset *parent,
-+				struct cpumask *xcpus)
-+{
-+	WARN_ON_ONCE(new_prs < 0);
-+	lockdep_assert_held(&callback_lock);
-+	if (!parent)
-+		parent = &top_cpuset;
-+
-+	if (parent == &top_cpuset)
-+		cpumask_or(subpartitions_cpus, subpartitions_cpus, xcpus);
-+
-+	if (new_prs != parent->partition_root_state)
-+		partition_xcpus_newstate(parent->partition_root_state, new_prs,
-+					 xcpus);
-+
-+	cpumask_andnot(parent->effective_cpus, parent->effective_cpus, xcpus);
-+}
-+
-+/*
-+ * partition_xcpus_del - Remove exclusive CPUs from partition
-+ * @old_prs: old partition_root_state
-+ * @parent: parent cpuset
-+ * @xcpus: exclusive CPUs to be removed
-+ *
-+ * Remote partition if parent == NULL
-+ */
-+static void partition_xcpus_del(int old_prs, struct cpuset *parent,
-+				struct cpumask *xcpus)
-+{
-+	WARN_ON_ONCE(old_prs < 0);
-+	lockdep_assert_held(&callback_lock);
-+	if (!parent)
-+		parent = &top_cpuset;
-+
-+	if (parent == &top_cpuset)
-+		cpumask_andnot(subpartitions_cpus, subpartitions_cpus, xcpus);
-+
-+	if (old_prs != parent->partition_root_state)
-+		partition_xcpus_newstate(old_prs, parent->partition_root_state,
-+					 xcpus);
-+
-+	cpumask_and(xcpus, xcpus, cpu_active_mask);
-+	cpumask_or(parent->effective_cpus, parent->effective_cpus, xcpus);
-+}
-+
- /*
-  * compute_effective_exclusive_cpumask - compute effective exclusive CPUs
-  * @cs: cpuset
-@@ -1456,13 +1530,15 @@ static inline bool is_local_partition(struct cpuset *cs)
- /*
-  * remote_partition_enable - Enable current cpuset as a remote partition root
-  * @cs: the cpuset to update
-+ * @new_prs: new partition_root_state
-  * @tmp: temparary masks
-  * Return: 1 if successful, 0 if error
-  *
-  * Enable the current cpuset to become a remote partition root taking CPUs
-  * directly from the top cpuset. cpuset_mutex must be held by the caller.
-  */
--static int remote_partition_enable(struct cpuset *cs, struct tmpmasks *tmp)
-+static int remote_partition_enable(struct cpuset *cs, int new_prs,
-+				   struct tmpmasks *tmp)
- {
- 	/*
- 	 * The user must have sysadmin privilege.
-@@ -1485,18 +1561,14 @@ static int remote_partition_enable(struct cpuset *cs, struct tmpmasks *tmp)
- 		return 0;
- 
- 	spin_lock_irq(&callback_lock);
--	cpumask_andnot(top_cpuset.effective_cpus,
--		       top_cpuset.effective_cpus, tmp->new_cpus);
--	cpumask_or(subpartitions_cpus,
--		   subpartitions_cpus, tmp->new_cpus);
--
-+	partition_xcpus_add(new_prs, NULL, tmp->new_cpus);
-+	list_add(&cs->remote_sibling, &remote_children);
- 	if (cs->use_parent_ecpus) {
- 		struct cpuset *parent = parent_cs(cs);
- 
- 		cs->use_parent_ecpus = false;
- 		parent->child_ecpus_count--;
- 	}
--	list_add(&cs->remote_sibling, &remote_children);
- 	spin_unlock_irq(&callback_lock);
- 
- 	/*
-@@ -1524,13 +1596,8 @@ static void remote_partition_disable(struct cpuset *cs, struct tmpmasks *tmp)
- 	WARN_ON_ONCE(!cpumask_subset(tmp->new_cpus, subpartitions_cpus));
- 
- 	spin_lock_irq(&callback_lock);
--	cpumask_andnot(subpartitions_cpus,
--		       subpartitions_cpus, tmp->new_cpus);
--	cpumask_and(tmp->new_cpus,
--		    tmp->new_cpus, cpu_active_mask);
--	cpumask_or(top_cpuset.effective_cpus,
--		   top_cpuset.effective_cpus, tmp->new_cpus);
- 	list_del_init(&cs->remote_sibling);
-+	partition_xcpus_del(cs->partition_root_state, NULL, tmp->new_cpus);
- 	cs->partition_root_state = -cs->partition_root_state;
- 	if (!cs->prs_err)
- 		cs->prs_err = PERR_INVCPUS;
-@@ -1557,6 +1624,7 @@ static void remote_cpus_update(struct cpuset *cs, struct cpumask *newmask,
- 			       struct tmpmasks *tmp)
- {
- 	bool adding, deleting;
-+	int prs = cs->partition_root_state;
- 
- 	if (WARN_ON_ONCE(!is_remote_partition(cs)))
- 		return;
-@@ -1580,20 +1648,10 @@ static void remote_cpus_update(struct cpuset *cs, struct cpumask *newmask,
- 		goto invalidate;
- 
- 	spin_lock_irq(&callback_lock);
--	if (adding) {
--		cpumask_or(subpartitions_cpus,
--			   subpartitions_cpus, tmp->addmask);
--		cpumask_andnot(top_cpuset.effective_cpus,
--			       top_cpuset.effective_cpus, tmp->addmask);
--	}
--	if (deleting) {
--		cpumask_andnot(subpartitions_cpus,
--			       subpartitions_cpus, tmp->delmask);
--		cpumask_and(tmp->delmask,
--			    tmp->delmask, cpu_active_mask);
--		cpumask_or(top_cpuset.effective_cpus,
--			   top_cpuset.effective_cpus, tmp->delmask);
--	}
-+	if (adding)
-+		partition_xcpus_add(prs, NULL, tmp->addmask);
-+	if (deleting)
-+		partition_xcpus_del(prs, NULL, tmp->delmask);
- 	spin_unlock_irq(&callback_lock);
- 
- 	/*
-@@ -1676,11 +1734,11 @@ static bool prstate_housekeeping_conflict(int prstate, struct cpumask *new_cpus)
-  * @tmp:     Temporary addmask and delmask
-  * Return:   0 or a partition root state error code
-  *
-- * For partcmd_enable, the cpuset is being transformed from a non-partition
-- * root to a partition root. The effective_xcpus (cpus_allowed if effective_xcpus
-- * not set) mask of the given cpuset will be taken away from parent's
-- * effective_cpus. The function will return 0 if all the CPUs listed in
-- * effective_xcpus can be granted or an error code will be returned.
-+ * For partcmd_enable*, the cpuset is being transformed from a non-partition
-+ * root to a partition root. The effective_xcpus (cpus_allowed if
-+ * effective_xcpus not set) mask of the given cpuset will be taken away from
-+ * parent's effective_cpus. The function will return 0 if all the CPUs listed
-+ * in effective_xcpus can be granted or an error code will be returned.
-  *
-  * For partcmd_disable, the cpuset is being transformed from a partition
-  * root back to a non-partition root. Any CPUs in effective_xcpus will be
-@@ -1695,7 +1753,7 @@ static bool prstate_housekeeping_conflict(int prstate, struct cpumask *new_cpus)
-  *
-  * For partcmd_invalidate, the current partition will be made invalid.
-  *
-- * The partcmd_enable and partcmd_disable commands are used by
-+ * The partcmd_enable* and partcmd_disable commands are used by
-  * update_prstate(). An error code may be returned and the caller will check
-  * for error.
-  *
-@@ -1760,7 +1818,7 @@ static int update_parent_effective_cpumask(struct cpuset *cs, int cmd,
- 
- 	nocpu = tasks_nocpu_error(parent, cs, xcpus);
- 
--	if (cmd == partcmd_enable) {
-+	if ((cmd == partcmd_enable) || (cmd == partcmd_enablei)) {
- 		/*
- 		 * Enabling partition root is not allowed if its
- 		 * effective_xcpus is empty or doesn't overlap with
-@@ -1783,6 +1841,7 @@ static int update_parent_effective_cpumask(struct cpuset *cs, int cmd,
- 		cpumask_copy(tmp->delmask, xcpus);
- 		deleting = true;
- 		subparts_delta++;
-+		new_prs = (cmd == partcmd_enable) ? PRS_ROOT : PRS_ISOLATED;
- 	} else if (cmd == partcmd_disable) {
- 		/*
- 		 * May need to add cpus to parent's effective_cpus for
-@@ -1792,6 +1851,7 @@ static int update_parent_effective_cpumask(struct cpuset *cs, int cmd,
- 			  cpumask_and(tmp->addmask, xcpus, parent->effective_xcpus);
- 		if (adding)
- 			subparts_delta--;
-+		new_prs = PRS_MEMBER;
- 	} else if (newmask) {
- 		/*
- 		 * Empty cpumask is not allowed
-@@ -1940,37 +2000,24 @@ static int update_parent_effective_cpumask(struct cpuset *cs, int cmd,
- 	 * newly deleted ones will be added back to effective_cpus.
- 	 */
- 	spin_lock_irq(&callback_lock);
--	if (adding) {
--		if (parent == &top_cpuset)
--			cpumask_andnot(subpartitions_cpus,
--				       subpartitions_cpus, tmp->addmask);
--		/*
--		 * Some of the CPUs in effective_xcpus might have been offlined.
--		 */
--		cpumask_or(parent->effective_cpus,
--			   parent->effective_cpus, tmp->addmask);
--		cpumask_and(parent->effective_cpus,
--			    parent->effective_cpus, cpu_active_mask);
--	}
--	if (deleting) {
--		if (parent == &top_cpuset)
--			cpumask_or(subpartitions_cpus,
--				   subpartitions_cpus, tmp->delmask);
--		cpumask_andnot(parent->effective_cpus,
--			       parent->effective_cpus, tmp->delmask);
--	}
--
--	if (is_partition_valid(parent)) {
--		parent->nr_subparts += subparts_delta;
--		WARN_ON_ONCE(parent->nr_subparts < 0);
--	}
--
- 	if (old_prs != new_prs) {
- 		cs->partition_root_state = new_prs;
- 		if (new_prs <= 0)
- 			cs->nr_subparts = 0;
- 	}
-+	/*
-+	 * Adding to parent's effective_cpus means deletion CPUs from cs
-+	 * and vice versa.
-+	 */
-+	if (adding)
-+		partition_xcpus_del(old_prs, parent, tmp->addmask);
-+	if (deleting)
-+		partition_xcpus_add(new_prs, parent, tmp->delmask);
- 
-+	if (is_partition_valid(parent)) {
-+		parent->nr_subparts += subparts_delta;
-+		WARN_ON_ONCE(parent->nr_subparts < 0);
-+	}
- 	spin_unlock_irq(&callback_lock);
- 
- 	if ((old_prs != new_prs) && (cmd == partcmd_update))
-@@ -2948,6 +2995,7 @@ static int update_prstate(struct cpuset *cs, int new_prs)
- 	int err = PERR_NONE, old_prs = cs->partition_root_state;
- 	struct cpuset *parent = parent_cs(cs);
- 	struct tmpmasks tmpmask;
-+	bool new_xcpus_state = false;
- 
- 	if (old_prs == new_prs)
- 		return 0;
-@@ -2977,6 +3025,9 @@ static int update_prstate(struct cpuset *cs, int new_prs)
- 		goto out;
- 
- 	if (!old_prs) {
-+		enum partition_cmd cmd = (new_prs == PRS_ROOT)
-+				       ? partcmd_enable : partcmd_enablei;
-+
- 		/*
- 		 * cpus_allowed cannot be empty.
- 		 */
-@@ -2985,19 +3036,18 @@ static int update_prstate(struct cpuset *cs, int new_prs)
- 			goto out;
- 		}
- 
--		err = update_parent_effective_cpumask(cs, partcmd_enable,
--						      NULL, &tmpmask);
-+		err = update_parent_effective_cpumask(cs, cmd, NULL, &tmpmask);
- 		/*
- 		 * If an attempt to become local partition root fails,
- 		 * try to become a remote partition root instead.
- 		 */
--		if (err && remote_partition_enable(cs, &tmpmask))
-+		if (err && remote_partition_enable(cs, new_prs, &tmpmask))
- 			err = 0;
- 	} else if (old_prs && new_prs) {
- 		/*
- 		 * A change in load balance state only, no change in cpumasks.
- 		 */
--		;
-+		new_xcpus_state = true;
- 	} else {
- 		/*
- 		 * Switching back to member is always allowed even if it
-@@ -3029,6 +3079,8 @@ static int update_prstate(struct cpuset *cs, int new_prs)
- 	WRITE_ONCE(cs->prs_err, err);
- 	if (!is_partition_valid(cs))
- 		reset_partition_data(cs);
-+	else if (new_xcpus_state)
-+		partition_xcpus_newstate(old_prs, new_prs, cs->effective_xcpus);
- 	spin_unlock_irq(&callback_lock);
- 
- 	/* Force update if switching back to member */
-@@ -3386,6 +3438,7 @@ typedef enum {
- 	FILE_SUBPARTS_CPULIST,
- 	FILE_EXCLUSIVE_CPULIST,
- 	FILE_EFFECTIVE_XCPULIST,
-+	FILE_ISOLATED_CPULIST,
- 	FILE_CPU_EXCLUSIVE,
- 	FILE_MEM_EXCLUSIVE,
- 	FILE_MEM_HARDWALL,
-@@ -3582,6 +3635,9 @@ static int cpuset_common_seq_show(struct seq_file *sf, void *v)
- 	case FILE_SUBPARTS_CPULIST:
- 		seq_printf(sf, "%*pbl\n", cpumask_pr_args(subpartitions_cpus));
- 		break;
-+	case FILE_ISOLATED_CPULIST:
-+		seq_printf(sf, "%*pbl\n", cpumask_pr_args(isolated_cpus));
-+		break;
- 	default:
- 		ret = -EINVAL;
- 	}
-@@ -3875,6 +3931,13 @@ static struct cftype dfl_files[] = {
- 		.flags = CFTYPE_ONLY_ON_ROOT | CFTYPE_DEBUG,
- 	},
- 
-+	{
-+		.name = "cpus.isolated",
-+		.seq_show = cpuset_common_seq_show,
-+		.private = FILE_ISOLATED_CPULIST,
-+		.flags = CFTYPE_ONLY_ON_ROOT | CFTYPE_DEBUG,
-+	},
-+
- 	{ }	/* terminate */
- };
- 
-@@ -4194,6 +4257,7 @@ int __init cpuset_init(void)
- 	BUG_ON(!alloc_cpumask_var(&top_cpuset.effective_xcpus, GFP_KERNEL));
- 	BUG_ON(!alloc_cpumask_var(&top_cpuset.exclusive_cpus, GFP_KERNEL));
- 	BUG_ON(!zalloc_cpumask_var(&subpartitions_cpus, GFP_KERNEL));
-+	BUG_ON(!zalloc_cpumask_var(&isolated_cpus, GFP_KERNEL));
- 
- 	cpumask_setall(top_cpuset.cpus_allowed);
- 	nodes_setall(top_cpuset.mems_allowed);
+configs tested: 119
+configs skipped: 2
+
+The following configs have been built successfully.
+More configs may be tested in the coming days.
+
+tested configs:
+alpha                             allnoconfig   gcc  
+alpha                            allyesconfig   gcc  
+alpha                               defconfig   gcc  
+arc                              allmodconfig   gcc  
+arc                               allnoconfig   gcc  
+arc                              allyesconfig   gcc  
+arc                                 defconfig   gcc  
+arc                   randconfig-001-20231013   gcc  
+arm                              allmodconfig   gcc  
+arm                               allnoconfig   gcc  
+arm                              allyesconfig   gcc  
+arm                                 defconfig   gcc  
+arm                   randconfig-001-20231013   gcc  
+arm64                            allmodconfig   gcc  
+arm64                             allnoconfig   gcc  
+arm64                            allyesconfig   gcc  
+arm64                               defconfig   gcc  
+csky                             allmodconfig   gcc  
+csky                              allnoconfig   gcc  
+csky                             allyesconfig   gcc  
+csky                                defconfig   gcc  
+i386                             allmodconfig   gcc  
+i386                              allnoconfig   gcc  
+i386                             allyesconfig   gcc  
+i386                              debian-10.3   gcc  
+i386                                defconfig   gcc  
+i386                  randconfig-001-20231013   gcc  
+i386                  randconfig-002-20231013   gcc  
+i386                  randconfig-003-20231013   gcc  
+i386                  randconfig-004-20231013   gcc  
+i386                  randconfig-005-20231013   gcc  
+i386                  randconfig-006-20231013   gcc  
+loongarch                        allmodconfig   gcc  
+loongarch                         allnoconfig   gcc  
+loongarch                        allyesconfig   gcc  
+loongarch                           defconfig   gcc  
+loongarch             randconfig-001-20231013   gcc  
+m68k                             allmodconfig   gcc  
+m68k                              allnoconfig   gcc  
+m68k                             allyesconfig   gcc  
+m68k                                defconfig   gcc  
+microblaze                       allmodconfig   gcc  
+microblaze                        allnoconfig   gcc  
+microblaze                       allyesconfig   gcc  
+microblaze                          defconfig   gcc  
+mips                             allmodconfig   gcc  
+mips                              allnoconfig   gcc  
+mips                             allyesconfig   gcc  
+mips                        bcm63xx_defconfig   clang
+mips                           ip27_defconfig   clang
+mips                           rs90_defconfig   clang
+nios2                            allmodconfig   gcc  
+nios2                             allnoconfig   gcc  
+nios2                            allyesconfig   gcc  
+nios2                               defconfig   gcc  
+openrisc                         allmodconfig   gcc  
+openrisc                          allnoconfig   gcc  
+openrisc                         allyesconfig   gcc  
+openrisc                            defconfig   gcc  
+parisc                           allmodconfig   gcc  
+parisc                            allnoconfig   gcc  
+parisc                           allyesconfig   gcc  
+parisc                              defconfig   gcc  
+parisc64                            defconfig   gcc  
+powerpc                          allmodconfig   gcc  
+powerpc                           allnoconfig   gcc  
+powerpc                          allyesconfig   gcc  
+powerpc                      ppc6xx_defconfig   gcc  
+riscv                            allmodconfig   gcc  
+riscv                             allnoconfig   gcc  
+riscv                            allyesconfig   gcc  
+riscv                               defconfig   gcc  
+riscv                    nommu_virt_defconfig   clang
+riscv                 randconfig-001-20231013   gcc  
+riscv                          rv32_defconfig   gcc  
+s390                             allmodconfig   gcc  
+s390                              allnoconfig   gcc  
+s390                             allyesconfig   gcc  
+s390                                defconfig   gcc  
+s390                  randconfig-001-20231013   gcc  
+sh                               allmodconfig   gcc  
+sh                                allnoconfig   gcc  
+sh                               allyesconfig   gcc  
+sh                                  defconfig   gcc  
+sh                            migor_defconfig   gcc  
+sh                            shmin_defconfig   gcc  
+sparc                            allmodconfig   gcc  
+sparc                             allnoconfig   gcc  
+sparc                            allyesconfig   gcc  
+sparc                               defconfig   gcc  
+sparc                 randconfig-001-20231013   gcc  
+sparc64                          allmodconfig   gcc  
+sparc64                          allyesconfig   gcc  
+sparc64                             defconfig   gcc  
+um                               allmodconfig   clang
+um                                allnoconfig   clang
+um                               allyesconfig   clang
+um                                  defconfig   gcc  
+um                             i386_defconfig   gcc  
+um                           x86_64_defconfig   gcc  
+x86_64                            allnoconfig   gcc  
+x86_64                           allyesconfig   gcc  
+x86_64                              defconfig   gcc  
+x86_64                                  kexec   gcc  
+x86_64                randconfig-001-20231013   gcc  
+x86_64                randconfig-002-20231013   gcc  
+x86_64                randconfig-003-20231013   gcc  
+x86_64                randconfig-004-20231013   gcc  
+x86_64                randconfig-005-20231013   gcc  
+x86_64                randconfig-006-20231013   gcc  
+x86_64                           rhel-8.3-bpf   gcc  
+x86_64                          rhel-8.3-func   gcc  
+x86_64                    rhel-8.3-kselftests   gcc  
+x86_64                         rhel-8.3-kunit   gcc  
+x86_64                           rhel-8.3-ltp   gcc  
+x86_64                          rhel-8.3-rust   clang
+x86_64                               rhel-8.3   gcc  
+xtensa                            allnoconfig   gcc  
+xtensa                           allyesconfig   gcc  
+
 -- 
-2.39.3
-
+0-DAY CI Kernel Test Service
+https://github.com/intel/lkp-tests/wiki
