@@ -2,134 +2,193 @@ Return-Path: <cgroups-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 32FFDCDB47E
-	for <cgroups@archiver.kernel.org>; Fri, 13 Oct 2023 18:08:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8A8D1CDB482
+	for <cgroups@archiver.kernel.org>; Fri, 13 Oct 2023 18:12:36 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231248AbjJMSIr (ORCPT <rfc822;cgroups@archiver.kernel.org>);
-        Fri, 13 Oct 2023 14:08:47 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49146 "EHLO
+        id S229879AbjJMSMg (ORCPT <rfc822;cgroups@archiver.kernel.org>);
+        Fri, 13 Oct 2023 14:12:36 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39708 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229988AbjJMSIr (ORCPT
-        <rfc822;cgroups@vger.kernel.org>); Fri, 13 Oct 2023 14:08:47 -0400
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B96CDDE
-        for <cgroups@vger.kernel.org>; Fri, 13 Oct 2023 11:08:02 -0700 (PDT)
+        with ESMTP id S229704AbjJMSMf (ORCPT
+        <rfc822;cgroups@vger.kernel.org>); Fri, 13 Oct 2023 14:12:35 -0400
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2F41C83
+        for <cgroups@vger.kernel.org>; Fri, 13 Oct 2023 11:11:52 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1697220481;
+        s=mimecast20190719; t=1697220711;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         to:to:cc:cc:mime-version:mime-version:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=rxD3yLMaugMz9laL1n30S34EuHC+wt57e2tE4WPzG4Y=;
-        b=RPRnR0xI9H2Kouw4FDSjLBae2cQYoDsEPLaZxUkBfIXe0WqFktC1BgozglrrI25ya8dR23
-        nUKRRMogEcXTNb43kyLdUUW2u8DV9THwBsvg3DdD+WSWbxM6k9YUFjBl9CZkKCBaHXweZk
-        6u0iSpw1LsQ1tClnhMZW06gTasylv3c=
-Received: from mimecast-mx02.redhat.com (mx-ext.redhat.com [66.187.233.73])
- by relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- us-mta-281-LaywYfrTMtOfvvDJh-Eetg-1; Fri, 13 Oct 2023 14:07:56 -0400
-X-MC-Unique: LaywYfrTMtOfvvDJh-Eetg-1
-Received: from smtp.corp.redhat.com (int-mx03.intmail.prod.int.rdu2.redhat.com [10.11.54.3])
+        bh=nolWi3aqBikqVy187I9lW2xbSl+2rIWALGYPILniGBo=;
+        b=Gb4MlK5Y+7RdR+4PA7173EgEPskGd0tO0Wf844DyukZkwh0GD5dWX2Fmflgvt9EFq9T2XR
+        CjmhQODzv5HpgBQx3LB7vZHlWrWXo7xT4MvANqlQT1XJ52O3u0Tjs2WeKWRZoeGgbv921u
+        fg5MYdqz+X+YRAr0bOE0xr5g5GJVVlM=
+Received: from mimecast-mx02.redhat.com (mimecast-mx02.redhat.com
+ [66.187.233.88]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ us-mta-88-Ar3Y8fhFM3iF4CHeOZYpwQ-1; Fri, 13 Oct 2023 14:11:49 -0400
+X-MC-Unique: Ar3Y8fhFM3iF4CHeOZYpwQ-1
+Received: from smtp.corp.redhat.com (int-mx04.intmail.prod.int.rdu2.redhat.com [10.11.54.4])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by mimecast-mx02.redhat.com (Postfix) with ESMTPS id 0096B3C0DDA6;
-        Fri, 13 Oct 2023 18:07:56 +0000 (UTC)
-Received: from [10.22.17.138] (unknown [10.22.17.138])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id A55F911301CF;
-        Fri, 13 Oct 2023 18:07:55 +0000 (UTC)
-Message-ID: <38a0078f-c9f7-47cd-686c-025b0fa09c88@redhat.com>
-Date:   Fri, 13 Oct 2023 14:07:55 -0400
-MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.14.0
-Subject: Re: Question Regarding isolcpus
-Content-Language: en-US
-To:     Joseph Salisbury <joseph.salisbury@canonical.com>,
-        Sebastian Andrzej Siewior <bigeasy@linutronix.de>,
-        Frederic Weisbecker <frederic@kernel.org>
-Cc:     linux-rt-users@vger.kernel.org, cgroups@vger.kernel.org
-References: <5afe86b4-bae3-2fa8-ec33-9686d3c18255@canonical.com>
- <20230928083909.KySJvo1d@linutronix.de>
- <11efaeb8-eac1-4a12-8283-6e9ce168e809@canonical.com>
- <f7c9b6a6-3c60-431d-3f91-3dc9b012adc6@redhat.com>
- <f3604bef-6834-4b69-8708-7d3f6727a873@canonical.com>
+        by mimecast-mx02.redhat.com (Postfix) with ESMTPS id C94FC862DFD;
+        Fri, 13 Oct 2023 18:11:48 +0000 (UTC)
+Received: from llong.com (unknown [10.22.17.138])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 46A3020296DB;
+        Fri, 13 Oct 2023 18:11:48 +0000 (UTC)
 From:   Waiman Long <longman@redhat.com>
-In-Reply-To: <f3604bef-6834-4b69-8708-7d3f6727a873@canonical.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+To:     Tejun Heo <tj@kernel.org>, Zefan Li <lizefan.x@bytedance.com>,
+        Johannes Weiner <hannes@cmpxchg.org>,
+        Jonathan Corbet <corbet@lwn.net>,
+        Lai Jiangshan <jiangshanlai@gmail.com>,
+        Shuah Khan <shuah@kernel.org>
+Cc:     cgroups@vger.kernel.org, linux-doc@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-kselftest@vger.kernel.org,
+        Waiman Long <longman@redhat.com>
+Subject: [PATCH-cgroup 1/4] workqueue: Add workqueue_unbound_exclude_cpumask() to exclude CPUs from wq_unbound_cpumask
+Date:   Fri, 13 Oct 2023 14:11:19 -0400
+Message-Id: <20231013181122.3518610-2-longman@redhat.com>
+In-Reply-To: <20231013181122.3518610-1-longman@redhat.com>
+References: <20231013181122.3518610-1-longman@redhat.com>
+MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-Scanned-By: MIMEDefang 3.1 on 10.11.54.3
+X-Scanned-By: MIMEDefang 3.1 on 10.11.54.4
 Precedence: bulk
 List-ID: <cgroups.vger.kernel.org>
 X-Mailing-List: cgroups@vger.kernel.org
 
-On 10/12/23 15:23, Joseph Salisbury wrote:
->
->
-> On 10/12/23 15:10, Waiman Long wrote:
->> On 10/12/23 13:27, Joseph Salisbury wrote:
->>>
->>>
->>> On 9/28/23 04:39, Sebastian Andrzej Siewior wrote:
->>>> On 2023-09-26 12:45:14 [-0400], Joseph Salisbury wrote:
->>>>> Hi All,
->>>> Hi,
->>>>
->>>>> I have a question regarding the isolcpus parameter.  I've been 
->>>>> seeing this
->>>>> parameter commonly used. However, in the kernel.org documentation[0],
->>>>> isolcpus is listed as depreciated.
->>>>>
->>>>> Is it the case that isolcpus should not be used at all? I've seen 
->>>>> it used
->>>>> in conjunction with taskset.  However, should we now be telling rt 
->>>>> users to
->>>>> use only cpusets in cgroups?  I see that CPUAffinity can be set in
->>>>> /etc/systemd/system.conf.  Is that the preferred method, so the 
->>>>> process
->>>>> scheduler will automatically migrate processes between the cpusets 
->>>>> in the
->>>>> cgroup cpuset or the list set by CPUAffinity?
->>>> Frederic might know if there is an actual timeline to remove it. The
->>>> suggestions since then is to use cpusets which should be more 
->>>> flexible.
->>>> There was also some work (which went into v6.1 I think) to be able to
->>>> reconfigure the partitions at run-time while isolcpus= is a boot time
->>>> option.
->>>>  From what I remember, you have a default/system cpuset which all 
->>>> tasks
->>>> use by default and then you can add another cpuset for the "isolated"
->>>> CPUs. Based on the partition it can be either the default one or
->>>> isolated [0]. The latter would exclude the CPUs from load balancing
->>>> which is what isolcpus= does.
->>>>
->>>> [0] f28e22441f353 ("cgroup/cpuset: Add a new isolated 
->>>> cpus.partition type")
->>>
->>> This question may be for the cgroups folks.  The kernel.org 
->>> documentation has a WARNING which states: "cgroup2 doesn't yet 
->>> support control of realtime processes and the cpu controller can 
->>> only be enabled when all RT processes are in the root cgroup "[0]. 
->>> Does this mean real-time processes are only supported on cgroupsV1?
->>>
->>> Also, this warning is stated for the "CPU" Controller, but there is 
->>> no mention of this for a "cpuset" controller. Does this imply that 
->>> real-time processes are supported with "cpuset" controllers?
->>
->> Yes, the quoted description applies only to cpu controller. Even for 
->> v1 cpu controller, the realtime support is problematic and there is 
->> no easy solution to that. That is why cgroup v2 doesn't support it.
->>
->> For other controllers, whether the processes are RT or not are 
->> irrelevant. They are equally supported.
->>
->> Cheers,
->> Longman
-> Thanks for the feedback, Longman!
->
-One further tidbit is the fact that the deadline scheduling policy can 
-be used as a replacement of using cgroup v1 cpu controller RT knobs to 
-place a limit one how many RT tasks can run on a CPU.
+When the "isolcpus" boot command line option is used to add a set
+of isolated CPUs, those CPUs will be excluded automatically from
+wq_unbound_cpumask to avoid running work functions from unbound
+workqueues.
 
-Cheers,
-Longman
+Recently cpuset has been extended to allow the creation of partitions
+of isolated CPUs dynamically. To make it closer to the "isolcpus"
+in functionality, the CPUs in those isolated cpuset partitions should be
+excluded from wq_unbound_cpumask as well. This can be done currently by
+explicitly writing to the workqueue's cpumask sysfs file after creating
+the isolated partitions. However, this process can be error prone.
+Ideally, the cpuset code should be allowed to request the workqueue code
+to exclude those isolated CPUs from wq_unbound_cpumask so that this
+operation can be done automatically and the isolated CPUs will be returned
+back to wq_unbound_cpumask after the destructions of the isolated
+cpuset partitions.
+
+This patch adds a new workqueue_unbound_exclude_cpumask() to enable
+that. This new function will exclude the specified isolated CPUs
+from wq_unbound_cpumask. To be able to restore those isolated CPUs
+back after the destruction of isolated cpuset partitions, a new
+wq_user_unbound_cpumask is added to store the user provided unbound
+cpumask either from the boot command line options or from writing to
+the cpumask sysfs file. This new cpumask provides the basis for CPU
+exclusion.
+
+Signed-off-by: Waiman Long <longman@redhat.com>
+---
+ include/linux/workqueue.h |  2 +-
+ kernel/workqueue.c        | 42 ++++++++++++++++++++++++++++++++++++++-
+ 2 files changed, 42 insertions(+), 2 deletions(-)
+
+diff --git a/include/linux/workqueue.h b/include/linux/workqueue.h
+index 1c1d06804d45..a936460ccc7e 100644
+--- a/include/linux/workqueue.h
++++ b/include/linux/workqueue.h
+@@ -483,7 +483,7 @@ struct workqueue_attrs *alloc_workqueue_attrs(void);
+ void free_workqueue_attrs(struct workqueue_attrs *attrs);
+ int apply_workqueue_attrs(struct workqueue_struct *wq,
+ 			  const struct workqueue_attrs *attrs);
+-int workqueue_set_unbound_cpumask(cpumask_var_t cpumask);
++extern int workqueue_unbound_exclude_cpumask(cpumask_var_t cpumask);
+ 
+ extern bool queue_work_on(int cpu, struct workqueue_struct *wq,
+ 			struct work_struct *work);
+diff --git a/kernel/workqueue.c b/kernel/workqueue.c
+index 010b674b02a7..19d403aa41b0 100644
+--- a/kernel/workqueue.c
++++ b/kernel/workqueue.c
+@@ -381,6 +381,9 @@ static bool workqueue_freezing;		/* PL: have wqs started freezing? */
+ /* PL&A: allowable cpus for unbound wqs and work items */
+ static cpumask_var_t wq_unbound_cpumask;
+ 
++/* PL: user-provided unbound cpumask via sysfs */
++static cpumask_var_t wq_user_unbound_cpumask;
++
+ /* for further constrain wq_unbound_cpumask by cmdline parameter*/
+ static struct cpumask wq_cmdline_cpumask __initdata;
+ 
+@@ -5825,7 +5828,7 @@ static int workqueue_apply_unbound_cpumask(const cpumask_var_t unbound_cpumask)
+  *  		-EINVAL	- Invalid @cpumask
+  *  		-ENOMEM	- Failed to allocate memory for attrs or pwqs.
+  */
+-int workqueue_set_unbound_cpumask(cpumask_var_t cpumask)
++static int workqueue_set_unbound_cpumask(cpumask_var_t cpumask)
+ {
+ 	int ret = -EINVAL;
+ 
+@@ -5836,6 +5839,7 @@ int workqueue_set_unbound_cpumask(cpumask_var_t cpumask)
+ 	cpumask_and(cpumask, cpumask, cpu_possible_mask);
+ 	if (!cpumask_empty(cpumask)) {
+ 		apply_wqattrs_lock();
++		cpumask_copy(wq_user_unbound_cpumask, cpumask);
+ 		if (cpumask_equal(cpumask, wq_unbound_cpumask)) {
+ 			ret = 0;
+ 			goto out_unlock;
+@@ -5850,6 +5854,40 @@ int workqueue_set_unbound_cpumask(cpumask_var_t cpumask)
+ 	return ret;
+ }
+ 
++/**
++ * workqueue_unbound_exclude_cpumask - Exclude given CPUs from unbound cpumask
++ * @exclude_cpumask: the cpumask to be excluded from wq_unbound_cpumask
++ *
++ * This function can be called from cpuset code to provide a set of isolated
++ * CPUs that should be excluded from wq_unbound_cpumask.
++ */
++int workqueue_unbound_exclude_cpumask(cpumask_var_t exclude_cpumask)
++{
++	cpumask_var_t cpumask;
++	int ret = 0;
++
++	if (!zalloc_cpumask_var(&cpumask, GFP_KERNEL))
++		return -ENOMEM;
++
++	/*
++	 * The caller of this function may have called cpus_read_lock(),
++	 * use cpus_read_trylock() to avoid potential deadlock.
++	 */
++	if (!cpus_read_trylock())
++		return -EBUSY;
++	mutex_lock(&wq_pool_mutex);
++
++	if (!cpumask_andnot(cpumask, wq_user_unbound_cpumask, exclude_cpumask))
++		ret = -EINVAL;	/* The new cpumask can't be empty */
++	else if (!cpumask_equal(cpumask, wq_unbound_cpumask))
++		ret = workqueue_apply_unbound_cpumask(cpumask);
++
++	mutex_unlock(&wq_pool_mutex);
++	cpus_read_unlock();
++	free_cpumask_var(cpumask);
++	return ret;
++}
++
+ static int parse_affn_scope(const char *val)
+ {
+ 	int i;
+@@ -6520,11 +6558,13 @@ void __init workqueue_init_early(void)
+ 	BUILD_BUG_ON(__alignof__(struct pool_workqueue) < __alignof__(long long));
+ 
+ 	BUG_ON(!alloc_cpumask_var(&wq_unbound_cpumask, GFP_KERNEL));
++	BUG_ON(!alloc_cpumask_var(&wq_user_unbound_cpumask, GFP_KERNEL));
+ 	cpumask_copy(wq_unbound_cpumask, housekeeping_cpumask(HK_TYPE_WQ));
+ 	cpumask_and(wq_unbound_cpumask, wq_unbound_cpumask, housekeeping_cpumask(HK_TYPE_DOMAIN));
+ 
+ 	if (!cpumask_empty(&wq_cmdline_cpumask))
+ 		cpumask_and(wq_unbound_cpumask, wq_unbound_cpumask, &wq_cmdline_cpumask);
++	cpumask_copy(wq_user_unbound_cpumask, wq_unbound_cpumask);
+ 
+ 	pwq_cache = KMEM_CACHE(pool_workqueue, SLAB_PANIC);
+ 
+-- 
+2.39.3
 
