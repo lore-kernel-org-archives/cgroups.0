@@ -2,53 +2,53 @@ Return-Path: <cgroups-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A27E4CDB484
-	for <cgroups@archiver.kernel.org>; Tue, 17 Oct 2023 23:21:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5842DCDB487
+	for <cgroups@archiver.kernel.org>; Tue, 17 Oct 2023 23:21:59 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1344273AbjJQXV5 (ORCPT <rfc822;cgroups@archiver.kernel.org>);
-        Tue, 17 Oct 2023 19:21:57 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40354 "EHLO
+        id S1344296AbjJQXV6 (ORCPT <rfc822;cgroups@archiver.kernel.org>);
+        Tue, 17 Oct 2023 19:21:58 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50460 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230343AbjJQXV4 (ORCPT
-        <rfc822;cgroups@vger.kernel.org>); Tue, 17 Oct 2023 19:21:56 -0400
-Received: from mail-pl1-x629.google.com (mail-pl1-x629.google.com [IPv6:2607:f8b0:4864:20::629])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6C9D598;
-        Tue, 17 Oct 2023 16:21:54 -0700 (PDT)
-Received: by mail-pl1-x629.google.com with SMTP id d9443c01a7336-1c5cd27b1acso52523315ad.2;
-        Tue, 17 Oct 2023 16:21:54 -0700 (PDT)
+        with ESMTP id S1344285AbjJQXV5 (ORCPT
+        <rfc822;cgroups@vger.kernel.org>); Tue, 17 Oct 2023 19:21:57 -0400
+Received: from mail-pg1-x535.google.com (mail-pg1-x535.google.com [IPv6:2607:f8b0:4864:20::535])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4F3E4F1;
+        Tue, 17 Oct 2023 16:21:56 -0700 (PDT)
+Received: by mail-pg1-x535.google.com with SMTP id 41be03b00d2f7-565334377d0so4666227a12.2;
+        Tue, 17 Oct 2023 16:21:56 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1697584914; x=1698189714; darn=vger.kernel.org;
+        d=gmail.com; s=20230601; t=1697584916; x=1698189716; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=1B54c0LHR/V83+Kt54U5jvPsezVzBi7N33Dc1Oz6d2w=;
-        b=dTqken3nEAlQtJkoFoYvE06ZQRxOWd/E1HpTEvzXz+Y4/26+JlFkc5jTNXixUKf8aD
-         7Wzmlk4nY1mTdw373uz9I2Ommsa8LrdkcfW+4bsoXfXyLoCNbIluyX1R3hol/A9J3ZFB
-         diZDzywXx5j4Pfsf3sDDouQhrh9jzCNwuomcXl2MCLLprGY+m30FXz6TpcwAmbk14gTc
-         Gnaq63wgM6fiW6NGdDVCOJwhtE5Ua14BYpK6oOsLWJh7CXOsYn/kQ4tVNgztRbyh9/fL
-         Yc2pfuBXjcl/eeJAra67nQiu3rqyX7oHtSUNzZOkp04hisGebnTKIvGWYdT/cgitayHV
-         xUnQ==
+        bh=Z7v4RebQyJpdc4sQlri0EPJCRWGhgONmwRgz8BMi8es=;
+        b=FJjUrDVNM245FBw75PZq6BIDq4hDWljDViMTS48XAb4zWxhQ9/EfhBzRsXfegH7Zu9
+         zaISAdljETrWRwxggYurxfCsd05MpK1PAu/Zw/TgNqr0B1DVHfMeTbF+6mvgQqfIOOvy
+         SXeSOYvTtZPzmlierwpu+LlwWNC2vzBZpU/BYTcpE7bSejjB3TD2IZg4K7bqaj2Og1Go
+         sVqO1xtm1oOC6o5DHv/qaLgIvB+V9Dghs56iW8pggg3uR0nUjA0d6/G4JLzv91X6BtLZ
+         W8XipcmBeFmjJOFpCynkvcbjTKh/1PdFQq61+eJtvYc/g6txSZpSOp8p5Fyhpwj+qA8i
+         26nw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1697584914; x=1698189714;
+        d=1e100.net; s=20230601; t=1697584916; x=1698189716;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=1B54c0LHR/V83+Kt54U5jvPsezVzBi7N33Dc1Oz6d2w=;
-        b=sIkA8+cWfyrz3mnYEUVRDeksOaM4PV9yEZfxal0uaT28V7wTicGMBAueNZc6fGOjvc
-         CrfjkDy12c7mdt9QcWCl/v6toQiGwZI5i+Hk0nP7jdjokHo23U8igf11fnsLuLSdHgOg
-         jq4Hdf2i2EHb5e+bW/jzE2MHnojfIGfjenWE7bJ4s8+99leXNwWtnrotZGSKKK7hPaWd
-         GBVnOtTMB5iUrUfg9WLW3cYAUafcY2UfqNo60d7tcr7IUZ1IpcFIlIOWqkrMNEqAR8CS
-         199HvEZcbTgrokHnwTKMWcwYZR2+6ReZAcCZitRNxLp2pSVEBsZiTXp7fNaQQXehL7KM
-         /lRw==
-X-Gm-Message-State: AOJu0YzMOWQ3LzUwrTR4IeO3NEH3qttaXOOCI9zVb98I1NCRja2sfRB8
-        HSk5lteT5bU1SJWNG2T32VQ=
-X-Google-Smtp-Source: AGHT+IFlsuynVW7P3E7VqGOiwRobgD/7Wox9Yzl01kYjLi6Wndqfn1dtW4y8opjslMhleYXh+bTIaQ==
-X-Received: by 2002:a17:903:1388:b0:1c9:aac5:df1a with SMTP id jx8-20020a170903138800b001c9aac5df1amr3209709plb.51.1697584913825;
-        Tue, 17 Oct 2023 16:21:53 -0700 (PDT)
-Received: from localhost (fwdproxy-prn-013.fbsv.net. [2a03:2880:ff:d::face:b00c])
-        by smtp.gmail.com with ESMTPSA id u14-20020a170902e5ce00b001b86492d724sm2120023plf.223.2023.10.17.16.21.53
+        bh=Z7v4RebQyJpdc4sQlri0EPJCRWGhgONmwRgz8BMi8es=;
+        b=BE0hdc4f7iCzhJ1gYXxyaFHr7g7p6t9b7dvD+YxoF07hZwd+sjzokoZtRov9T7/T2t
+         KsvchtWC/m0sWN737G3gj0jmFyWqpZAHiLqDatbIC9OOGcVMpy+lJMxfiw1Z1LRUxJBr
+         C/LSBTknq2r/kjq3kCXi0UyUyQS2C3jA4JbwPsmt0YLRuXzrXPINWGqIV4czKiqKzqhC
+         XcCzYJl3b/cDf/FAOWUav87ms6qN7N5TVwz8dMJWnKbtSS8QJdsRryunGcMIrQzU+eQS
+         SZvpX5G6IEQ7ETrAOMIw9khn7BiKDuYTdddsa+ScM1MNPYgcxxfd0hm4jCsLblfJycK4
+         Fmzg==
+X-Gm-Message-State: AOJu0YyjDcNUr9x8Mrnoc1JYw6YuOK9muVMcTzyboN4u+CzMh7yXNOW8
+        TVhwzQG3yT+TYA/gDuQqDeU=
+X-Google-Smtp-Source: AGHT+IEfthOH1/vbuwx8GBxLp7AV5HAOVBnZLimkJePzXVxapwVFQUAgYitw91LLn8qQzfjU7hhxjw==
+X-Received: by 2002:a05:6a20:938b:b0:17a:284:de50 with SMTP id x11-20020a056a20938b00b0017a0284de50mr4589053pzh.6.1697584915727;
+        Tue, 17 Oct 2023 16:21:55 -0700 (PDT)
+Received: from localhost (fwdproxy-prn-008.fbsv.net. [2a03:2880:ff:8::face:b00c])
+        by smtp.gmail.com with ESMTPSA id e7-20020a170902b78700b001c735421215sm2116251pls.216.2023.10.17.16.21.55
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 17 Oct 2023 16:21:53 -0700 (PDT)
+        Tue, 17 Oct 2023 16:21:55 -0700 (PDT)
 From:   Nhat Pham <nphamcs@gmail.com>
 To:     akpm@linux-foundation.org
 Cc:     hannes@cmpxchg.org, cerasuolodomenico@gmail.com,
@@ -59,9 +59,9 @@ Cc:     hannes@cmpxchg.org, cerasuolodomenico@gmail.com,
         linux-kernel@vger.kernel.org, cgroups@vger.kernel.org,
         linux-doc@vger.kernel.org, linux-kselftest@vger.kernel.org,
         shuah@kernel.org
-Subject: [PATCH v3 1/5] mm: list_lru: allow external numa node and cgroup tracking
-Date:   Tue, 17 Oct 2023 16:21:48 -0700
-Message-Id: <20231017232152.2605440-2-nphamcs@gmail.com>
+Subject: [PATCH v3 3/5] mm: memcg: add per-memcg zswap writeback stat
+Date:   Tue, 17 Oct 2023 16:21:50 -0700
+Message-Id: <20231017232152.2605440-4-nphamcs@gmail.com>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20231017232152.2605440-1-nphamcs@gmail.com>
 References: <20231017232152.2605440-1-nphamcs@gmail.com>
@@ -71,170 +71,93 @@ Precedence: bulk
 List-ID: <cgroups.vger.kernel.org>
 X-Mailing-List: cgroups@vger.kernel.org
 
-The interface of list_lru is based on the assumption that objects are
-allocated on the correct node/memcg, with this change it is introduced the
-possibility to explicitly specify numa node and memcgroup when adding and
-removing objects. This is so that users of list_lru can track node/memcg
-of the items outside of the list_lru, like in zswap, where the allocations
-can be made by kswapd for data that's charged to a different cgroup.
+From: Domenico Cerasuolo <cerasuolodomenico@gmail.com>
 
+Since zswap now writes back pages from memcg-specific LRUs, we now need a
+new stat to show writebacks count for each memcg.
+
+Suggested-by: Nhat Pham <nphamcs@gmail.com>
+Signed-off-by: Domenico Cerasuolo <cerasuolodomenico@gmail.com>
 Signed-off-by: Nhat Pham <nphamcs@gmail.com>
 ---
- include/linux/list_lru.h | 38 +++++++++++++++++++++++++++++++++++
- mm/list_lru.c            | 43 +++++++++++++++++++++++++++++++++++-----
- 2 files changed, 76 insertions(+), 5 deletions(-)
+ include/linux/memcontrol.h |  2 ++
+ mm/memcontrol.c            | 15 +++++++++++++++
+ mm/zswap.c                 |  3 +++
+ 3 files changed, 20 insertions(+)
 
-diff --git a/include/linux/list_lru.h b/include/linux/list_lru.h
-index b35968ee9fb5..0f5f39cacbbb 100644
---- a/include/linux/list_lru.h
-+++ b/include/linux/list_lru.h
-@@ -89,6 +89,24 @@ void memcg_reparent_list_lrus(struct mem_cgroup *memcg, struct mem_cgroup *paren
-  */
- bool list_lru_add(struct list_lru *lru, struct list_head *item);
+diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
+index 3de10fabea0f..7868b1e00bf5 100644
+--- a/include/linux/memcontrol.h
++++ b/include/linux/memcontrol.h
+@@ -38,6 +38,7 @@ enum memcg_stat_item {
+ 	MEMCG_KMEM,
+ 	MEMCG_ZSWAP_B,
+ 	MEMCG_ZSWAPPED,
++	MEMCG_ZSWAP_WB,
+ 	MEMCG_NR_STAT,
+ };
  
-+/**
-+ * __list_lru_add: add an element to a specific sublist.
-+ * @list_lru: the lru pointer
-+ * @item: the item to be added.
-+ * @memcg: the cgroup of the sublist to add the item to.
-+ * @nid: the node id of the sublist to add the item to.
-+ *
-+ * This function is similar to list_lru_add(), but it allows the caller to
-+ * specify the sublist to which the item should be added. This can be useful
-+ * when the list_head node is not necessarily in the same cgroup and NUMA node
-+ * as the data it represents, such as zswap, where the list_head node could be
-+ * from kswapd and the data from a different cgroup altogether.
-+ *
-+ * Return value: true if the list was updated, false otherwise
-+ */
-+bool __list_lru_add(struct list_lru *lru, struct list_head *item, int nid,
-+		    struct mem_cgroup *memcg);
-+
- /**
-  * list_lru_del: delete an element to the lru list
-  * @list_lru: the lru pointer
-@@ -102,6 +120,18 @@ bool list_lru_add(struct list_lru *lru, struct list_head *item);
-  */
- bool list_lru_del(struct list_lru *lru, struct list_head *item);
- 
-+/**
-+ * __list_lru_del: delete an element from a specific sublist.
-+ * @list_lru: the lru pointer
-+ * @item: the item to be deleted.
-+ * @memcg: the cgroup of the sublist to delete the item from.
-+ * @nid: the node id of the sublist to delete the item from.
-+ *
-+ * Return value: true if the list was updated, false otherwise.
-+ */
-+bool __list_lru_del(struct list_lru *lru, struct list_head *item, int nid,
-+		    struct mem_cgroup *memcg);
-+
- /**
-  * list_lru_count_one: return the number of objects currently held by @lru
-  * @lru: the lru pointer.
-@@ -136,6 +166,14 @@ static inline unsigned long list_lru_count(struct list_lru *lru)
- void list_lru_isolate(struct list_lru_one *list, struct list_head *item);
- void list_lru_isolate_move(struct list_lru_one *list, struct list_head *item,
- 			   struct list_head *head);
-+/*
-+ * list_lru_putback: undo list_lru_isolate.
-+ *
-+ * Since we might have dropped the LRU lock in between, recompute list_lru_one
-+ * from the node's id and memcg.
-+ */
-+void list_lru_putback(struct list_lru *lru, struct list_head *item, int nid,
-+		      struct mem_cgroup *memcg);
- 
- typedef enum lru_status (*list_lru_walk_cb)(struct list_head *item,
- 		struct list_lru_one *list, spinlock_t *lock, void *cb_arg);
-diff --git a/mm/list_lru.c b/mm/list_lru.c
-index a05e5bef3b40..63b75163c6ad 100644
---- a/mm/list_lru.c
-+++ b/mm/list_lru.c
-@@ -119,13 +119,22 @@ list_lru_from_kmem(struct list_lru *lru, int nid, void *ptr,
- bool list_lru_add(struct list_lru *lru, struct list_head *item)
+@@ -1884,6 +1885,7 @@ static inline void count_objcg_event(struct obj_cgroup *objcg,
+ bool obj_cgroup_may_zswap(struct obj_cgroup *objcg);
+ void obj_cgroup_charge_zswap(struct obj_cgroup *objcg, size_t size);
+ void obj_cgroup_uncharge_zswap(struct obj_cgroup *objcg, size_t size);
++void obj_cgroup_report_zswap_wb(struct obj_cgroup *objcg);
+ #else
+ static inline bool obj_cgroup_may_zswap(struct obj_cgroup *objcg)
  {
- 	int nid = page_to_nid(virt_to_page(item));
-+	struct mem_cgroup *memcg = list_lru_memcg_aware(lru) ?
-+		mem_cgroup_from_slab_obj(item) : NULL;
-+
-+	return __list_lru_add(lru, item, nid, memcg);
-+}
-+EXPORT_SYMBOL_GPL(list_lru_add);
-+
-+bool __list_lru_add(struct list_lru *lru, struct list_head *item, int nid,
-+		    struct mem_cgroup *memcg)
-+{
- 	struct list_lru_node *nlru = &lru->node[nid];
--	struct mem_cgroup *memcg;
- 	struct list_lru_one *l;
- 
- 	spin_lock(&nlru->lock);
- 	if (list_empty(item)) {
--		l = list_lru_from_kmem(lru, nid, item, &memcg);
-+		l = list_lru_from_memcg_idx(lru, nid, memcg_kmem_id(memcg));
- 		list_add_tail(item, &l->list);
- 		/* Set shrinker bit if the first element was added */
- 		if (!l->nr_items++)
-@@ -138,17 +147,27 @@ bool list_lru_add(struct list_lru *lru, struct list_head *item)
- 	spin_unlock(&nlru->lock);
- 	return false;
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index 1bde67b29287..a9118871e5a6 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -1505,6 +1505,7 @@ static const struct memory_stat memory_stats[] = {
+ #if defined(CONFIG_MEMCG_KMEM) && defined(CONFIG_ZSWAP)
+ 	{ "zswap",			MEMCG_ZSWAP_B			},
+ 	{ "zswapped",			MEMCG_ZSWAPPED			},
++	{ "zswap_wb",			MEMCG_ZSWAP_WB			},
+ #endif
+ 	{ "file_mapped",		NR_FILE_MAPPED			},
+ 	{ "file_dirty",			NR_FILE_DIRTY			},
+@@ -1541,6 +1542,7 @@ static int memcg_page_state_unit(int item)
+ 	switch (item) {
+ 	case MEMCG_PERCPU_B:
+ 	case MEMCG_ZSWAP_B:
++	case MEMCG_ZSWAP_WB:
+ 	case NR_SLAB_RECLAIMABLE_B:
+ 	case NR_SLAB_UNRECLAIMABLE_B:
+ 	case WORKINGSET_REFAULT_ANON:
+@@ -7861,6 +7863,19 @@ void obj_cgroup_uncharge_zswap(struct obj_cgroup *objcg, size_t size)
+ 	rcu_read_unlock();
  }
--EXPORT_SYMBOL_GPL(list_lru_add);
-+EXPORT_SYMBOL_GPL(__list_lru_add);
  
- bool list_lru_del(struct list_lru *lru, struct list_head *item)
- {
- 	int nid = page_to_nid(virt_to_page(item));
-+	struct mem_cgroup *memcg = list_lru_memcg_aware(lru) ?
-+		mem_cgroup_from_slab_obj(item) : NULL;
-+
-+	return __list_lru_del(lru, item, nid, memcg);
-+}
-+EXPORT_SYMBOL_GPL(list_lru_del);
-+
-+bool __list_lru_del(struct list_lru *lru, struct list_head *item, int nid,
-+		    struct mem_cgroup *memcg)
++void obj_cgroup_report_zswap_wb(struct obj_cgroup *objcg)
 +{
- 	struct list_lru_node *nlru = &lru->node[nid];
- 	struct list_lru_one *l;
- 
- 	spin_lock(&nlru->lock);
- 	if (!list_empty(item)) {
--		l = list_lru_from_kmem(lru, nid, item, NULL);
-+		l = list_lru_from_memcg_idx(lru, nid, memcg_kmem_id(memcg));
- 		list_del_init(item);
- 		l->nr_items--;
- 		nlru->nr_items--;
-@@ -158,7 +177,7 @@ bool list_lru_del(struct list_lru *lru, struct list_head *item)
- 	spin_unlock(&nlru->lock);
- 	return false;
- }
--EXPORT_SYMBOL_GPL(list_lru_del);
-+EXPORT_SYMBOL_GPL(__list_lru_del);
- 
- void list_lru_isolate(struct list_lru_one *list, struct list_head *item)
- {
-@@ -175,6 +194,20 @@ void list_lru_isolate_move(struct list_lru_one *list, struct list_head *item,
- }
- EXPORT_SYMBOL_GPL(list_lru_isolate_move);
- 
-+void list_lru_putback(struct list_lru *lru, struct list_head *item, int nid,
-+		      struct mem_cgroup *memcg)
-+{
-+	struct list_lru_one *list =
-+		list_lru_from_memcg_idx(lru, nid, memcg_kmem_id(memcg));
++	struct mem_cgroup *memcg;
 +
-+	if (list_empty(item)) {
-+		list_add_tail(item, &list->list);
-+		if (!list->nr_items++)
-+			set_shrinker_bit(memcg, nid, lru_shrinker_id(lru));
-+	}
++	if (!cgroup_subsys_on_dfl(memory_cgrp_subsys))
++		return;
++
++	rcu_read_lock();
++	memcg = obj_cgroup_memcg(objcg);
++	mod_memcg_state(memcg, MEMCG_ZSWAP_WB, 1);
++	rcu_read_unlock();
 +}
-+EXPORT_SYMBOL_GPL(list_lru_putback);
 +
- unsigned long list_lru_count_one(struct list_lru *lru,
- 				 int nid, struct mem_cgroup *memcg)
+ static u64 zswap_current_read(struct cgroup_subsys_state *css,
+ 			      struct cftype *cft)
  {
+diff --git a/mm/zswap.c b/mm/zswap.c
+index d2989ad11814..15485427e3fa 100644
+--- a/mm/zswap.c
++++ b/mm/zswap.c
+@@ -704,6 +704,9 @@ static enum lru_status shrink_memcg_cb(struct list_head *item, struct list_lru_o
+ 	}
+ 	zswap_written_back_pages++;
+ 
++	if (entry->objcg)
++		obj_cgroup_report_zswap_wb(entry->objcg);
++
+ 	/*
+ 	 * Writeback started successfully, the page now belongs to the
+ 	 * swapcache. Drop the entry from zswap - unless invalidate already
 -- 
 2.34.1
