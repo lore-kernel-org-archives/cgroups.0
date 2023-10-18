@@ -2,141 +2,101 @@ Return-Path: <cgroups-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 39B5CCDB483
-	for <cgroups@archiver.kernel.org>; Wed, 18 Oct 2023 15:52:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2642DC41513
+	for <cgroups@archiver.kernel.org>; Wed, 18 Oct 2023 16:34:08 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232187AbjJRPw3 (ORCPT <rfc822;cgroups@archiver.kernel.org>);
-        Wed, 18 Oct 2023 11:52:29 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41840 "EHLO
+        id S229916AbjJRQeI (ORCPT <rfc822;cgroups@archiver.kernel.org>);
+        Wed, 18 Oct 2023 12:34:08 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44130 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231733AbjJRPw3 (ORCPT
-        <rfc822;cgroups@vger.kernel.org>); Wed, 18 Oct 2023 11:52:29 -0400
-Received: from smtp-out1.suse.de (smtp-out1.suse.de [IPv6:2001:67c:2178:6::1c])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3B0F89F;
-        Wed, 18 Oct 2023 08:52:27 -0700 (PDT)
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by smtp-out1.suse.de (Postfix) with ESMTPS id 7106821855;
-        Wed, 18 Oct 2023 15:52:25 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
-        t=1697644345; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=m3Va38a8sZL3iVjAWsTHHzZGt8WWZ+pcUoedGjqgQR0=;
-        b=g9UH8xytD9YucQsxopJFs9GuKq5iUz2a8QIb7sS/H33jKkzP3mmDW2TKVBZrgGO6yfOudr
-        sKHARkYPO34cJIoI6JqjFrRFRM0YTg5yQTMJOZ1vyW4tqcR2BJ+4biBpXzPQlUEzbtihgu
-        9AJEbM9oDqICRMHlLXdW26ErRDoS4fY=
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 1CC6213915;
-        Wed, 18 Oct 2023 15:52:25 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([192.168.254.65])
-        by imap2.suse-dmz.suse.de with ESMTPSA
-        id dSRSBjn/L2X7BgAAMHmgww
-        (envelope-from <mkoutny@suse.com>); Wed, 18 Oct 2023 15:52:25 +0000
-Date:   Wed, 18 Oct 2023 17:52:23 +0200
-From:   Michal =?utf-8?Q?Koutn=C3=BD?= <mkoutny@suse.com>
-To:     Dave Hansen <dave.hansen@intel.com>
-Cc:     Haitao Huang <haitao.huang@linux.intel.com>,
-        "Christopherson,, Sean" <seanjc@google.com>,
-        "Huang, Kai" <kai.huang@intel.com>,
-        "Zhang, Bo" <zhanb@microsoft.com>,
-        "linux-sgx@vger.kernel.org" <linux-sgx@vger.kernel.org>,
-        "cgroups@vger.kernel.org" <cgroups@vger.kernel.org>,
-        "yangjie@microsoft.com" <yangjie@microsoft.com>,
-        "dave.hansen@linux.intel.com" <dave.hansen@linux.intel.com>,
-        "Li, Zhiquan1" <zhiquan1.li@intel.com>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "mingo@redhat.com" <mingo@redhat.com>,
-        "tglx@linutronix.de" <tglx@linutronix.de>,
-        "tj@kernel.org" <tj@kernel.org>,
-        "anakrish@microsoft.com" <anakrish@microsoft.com>,
-        "jarkko@kernel.org" <jarkko@kernel.org>,
-        "hpa@zytor.com" <hpa@zytor.com>,
-        "mikko.ylinen@linux.intel.com" <mikko.ylinen@linux.intel.com>,
-        "Mehta, Sohil" <sohil.mehta@intel.com>,
-        "bp@alien8.de" <bp@alien8.de>, "x86@kernel.org" <x86@kernel.org>,
-        "kristen@linux.intel.com" <kristen@linux.intel.com>
-Subject: Re: [PATCH v5 12/18] x86/sgx: Add EPC OOM path to forcefully reclaim
- EPC
-Message-ID: <yz44wukoic3syy6s4fcrngagurkjhe2hzka6kvxbajdtro3fwu@zd2ilht7wcw3>
-References: <op.2cxatlafwjvjmi@hhuan26-mobl.amr.corp.intel.com>
- <35a7fde056037a40b3b4b170e2ecd45bf8c4ba9f.camel@intel.com>
- <op.2cxmq7c2wjvjmi@hhuan26-mobl.amr.corp.intel.com>
- <915907d56861ef4aa7f9f68e0eb8d136a60bee39.camel@intel.com>
- <op.2cyma0e9wjvjmi@hhuan26-mobl.amr.corp.intel.com>
- <6lrq4xmk42zteq6thpyah7jy25rmvkp7mqxtll6sl7z62m7n4m@vrbbedtgxeq4>
- <op.2cztslnpwjvjmi@hhuan26-mobl.amr.corp.intel.com>
- <11413ca0-a8a9-4f73-8006-2e1231dbb390@intel.com>
- <op.2c0nt109wjvjmi@hhuan26-mobl.amr.corp.intel.com>
- <7a1a5125-9da2-47b6-ba0f-cf24d84df16b@intel.com>
+        with ESMTP id S229562AbjJRQeH (ORCPT
+        <rfc822;cgroups@vger.kernel.org>); Wed, 18 Oct 2023 12:34:07 -0400
+Received: from mail-qt1-x82c.google.com (mail-qt1-x82c.google.com [IPv6:2607:f8b0:4864:20::82c])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 59973BD
+        for <cgroups@vger.kernel.org>; Wed, 18 Oct 2023 09:34:05 -0700 (PDT)
+Received: by mail-qt1-x82c.google.com with SMTP id d75a77b69052e-41cb7720579so297181cf.1
+        for <cgroups@vger.kernel.org>; Wed, 18 Oct 2023 09:34:05 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20230601; t=1697646844; x=1698251644; darn=vger.kernel.org;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=G+NGVJ7tldYjua0My5aXg+TSKmTtKYgS0JOgqef3/Ug=;
+        b=Ie5YlKlg0pWbcYWT7w269Ez+dcXC+umIwh6orGNa2REViLLwxpPeBD0lOlZpsnvbvt
+         SFBmIWU2lrwrFstw8/W+fQ/GfKgkWMRhmV5h3Nrwi1BUNAoQ730egOXykgsieF0EYMAI
+         tmtHVm2L3dvauehMdbY4CU20RPcJN3nRFftVwGu3mdTFDX4AMiBe1rIRv2j0ucOjHI7S
+         EdDXxzs2XWK9gDF8ThrFJxnOnfX35iKtzvS6Q0rZQylGmAMWswzeFYIbRjO6FeahBpT+
+         mL8+CCFpRXJPdAZMjECORDhnPOsB/7iPUOiWQ8ZlU3KXSdcJBRT+UNEFj+Mgc2W9mtID
+         vemQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1697646844; x=1698251644;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=G+NGVJ7tldYjua0My5aXg+TSKmTtKYgS0JOgqef3/Ug=;
+        b=SUc4hfalF/jSDyy0orVe88myGOPWdmxX3XN1M1P70tD9Ns9n98ONc/ETEBwwBUcGPW
+         YpdisYF7aKtoaJjW27JFeL774pUFvFbJ8OGCHT171jjBk08tIoEvW1QWd9NUUQCDYQu+
+         BKs1S20UMtbhk3WRZi+i8cAoyKiaGcL74IedVisgL4F8qlvI7uMFps0lUhZVIsD5IZ44
+         RVrd+k69Ri9S03/ktCl4wWlUEljfjfBctVUFIGfc8rQCQCpbxpjSAftRnFXzafKokbVI
+         wSOODUEBo9Tj0icw48iNpyijrYZztd1Dl8Uy7FUaRDvbCjBLTByt7EBOCg12xsP6rxc0
+         mipg==
+X-Gm-Message-State: AOJu0Yw3l8bkj3d8xyd4geLrn8eyMxH5Mk05vSjJWGJW9lo+J6D6XG71
+        t1vAwCvTlFGvNuzGDXeRbiqXNXm8O8O7OTNx8+MOag==
+X-Google-Smtp-Source: AGHT+IH+s6vAfX9E3nn5vxST3ihYiw3zu36XPDiF4BijlPTOxi2bUpAQeWFd+R64GLEUnoGrGTG2oJpXt7BxeZo2rBY=
+X-Received: by 2002:a05:622a:44c4:b0:41c:375b:81a3 with SMTP id
+ kc4-20020a05622a44c400b0041c375b81a3mr493qtb.18.1697646844229; Wed, 18 Oct
+ 2023 09:34:04 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha512;
-        protocol="application/pgp-signature"; boundary="sfycubn7gx2ldoil"
-Content-Disposition: inline
-In-Reply-To: <7a1a5125-9da2-47b6-ba0f-cf24d84df16b@intel.com>
-Authentication-Results: smtp-out1.suse.de;
-        none
-X-Spamd-Result: default: False [-12.53 / 50.00];
-         ARC_NA(0.00)[];
-         TO_DN_EQ_ADDR_SOME(0.00)[];
-         RCVD_VIA_SMTP_AUTH(0.00)[];
-         FROM_HAS_DN(0.00)[];
-         TO_DN_SOME(0.00)[];
-         TO_MATCH_ENVRCPT_ALL(0.00)[];
-         NEURAL_HAM_LONG(-3.00)[-1.000];
-         MIME_GOOD(-0.20)[multipart/signed,text/plain];
-         REPLY(-4.00)[];
-         DKIM_SIGNED(0.00)[suse.com:s=susede1];
-         NEURAL_HAM_SHORT(-1.00)[-1.000];
-         RCPT_COUNT_TWELVE(0.00)[22];
-         SIGNED_PGP(-2.00)[];
-         FROM_EQ_ENVFROM(0.00)[];
-         MIME_TRACE(0.00)[0:+,1:+,2:~];
-         MID_RHS_NOT_FQDN(0.50)[];
-         RCVD_COUNT_TWO(0.00)[2];
-         RCVD_TLS_ALL(0.00)[];
-         BAYES_HAM(-2.83)[99.27%]
+References: <20231009025726.5982-1-link@vivo.com>
+In-Reply-To: <20231009025726.5982-1-link@vivo.com>
+From:   Yu Zhao <yuzhao@google.com>
+Date:   Wed, 18 Oct 2023 10:33:28 -0600
+Message-ID: <CAOUHufaX35Y6MfwKj_XUWXJwdC=9M=g1gXpQpQghBZ2fXrkEAw@mail.gmail.com>
+Subject: Re: [PATCH 0/3 RESEND] Per memcg lru_gen node stat
+To:     Huan Yang <link@vivo.com>, "T.J. Mercier" <tjmercier@google.com>
+Cc:     Jonathan Corbet <corbet@lwn.net>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        Johannes Weiner <hannes@cmpxchg.org>,
+        Michal Hocko <mhocko@kernel.org>,
+        Roman Gushchin <roman.gushchin@linux.dev>,
+        Shakeel Butt <shakeelb@google.com>,
+        Muchun Song <muchun.song@linux.dev>,
+        Peter Xu <peterx@redhat.com>,
+        David Hildenbrand <david@redhat.com>,
+        "T.J. Alumbaugh" <talumbau@google.com>,
+        Axel Rasmussen <axelrasmussen@google.com>,
+        Ryan Roberts <ryan.roberts@arm.com>,
+        Kefeng Wang <wangkefeng.wang@huawei.com>,
+        Suren Baghdasaryan <surenb@google.com>,
+        "open list:DOCUMENTATION" <linux-doc@vger.kernel.org>,
+        open list <linux-kernel@vger.kernel.org>,
+        "open list:MEMORY MANAGEMENT" <linux-mm@kvack.org>,
+        "open list:CONTROL GROUP - MEMORY RESOURCE CONTROLLER (MEMCG)" 
+        <cgroups@vger.kernel.org>, opensource.kernel@vivo.com
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <cgroups.vger.kernel.org>
 X-Mailing-List: cgroups@vger.kernel.org
 
+On Sun, Oct 8, 2023 at 8:57=E2=80=AFPM Huan Yang <link@vivo.com> wrote:
+>
+> On original global lru_gen node in debugfs, it can all show each memcg's
+> lru gen info in "lru_gen" or "lru_gen_full", and can type cmd into lru_ge=
+n.
+> But which show info contains all memcg's info, and cmd need to
+> know memcg's id.
+>
+> This patchset add lru_gen node in per memcg, with this node, we can
+> get lru_gen info in each memcg.
+> Also, we can type cmd to control each memcg's lru_gen seq, but, this node
+> don't support multi cmd, single memcg just process one cmd once time.
 
---sfycubn7gx2ldoil
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Adding TJ from the Android team. (The other TJ you CC'ed is from the
+ChromeOS team.)
 
-On Wed, Oct 18, 2023 at 08:37:25AM -0700, Dave Hansen <dave.hansen@intel.co=
-m> wrote:
-> 1. Admin sets a limit
-> 2. Enclave is created
-> 3. Enclave hits limit, allocation fails
+This series introduced a new ABI, which has to be maintained forever.
+How exactly would it be used in *production*?
 
-I was actually about to suggest reorganizing the series to a part
-implementing this simple limiting and a subsequent part with the reclaim
-stuff for easier digestability.=20
-
-> Nothing else matters.
-
-If the latter part is an unncessary overkill, it's even better.
-
-Thanks,
-Michal
-
---sfycubn7gx2ldoil
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-
-iHUEABYKAB0WIQQpEWyjXuwGT2dDBqAGvrMr/1gcjgUCZS//NQAKCRAGvrMr/1gc
-jjuFAQD2xyk+E8YDQEiLZRkzZgLNNa9uj65olyt01GBofYgW0wD/WHDRxDomdgb3
-KyYKGF1P6hM7GDWbgwRHcCg5PSgE/gE=
-=+mep
------END PGP SIGNATURE-----
-
---sfycubn7gx2ldoil--
+Android doesn't officially support memcgs. So I want to understand the
+real-world use cases first.
