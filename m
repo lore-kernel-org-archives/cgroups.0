@@ -2,123 +2,146 @@ Return-Path: <cgroups-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9FBEAC46CA1
-	for <cgroups@archiver.kernel.org>; Wed, 18 Oct 2023 17:24:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E856DCDB47E
+	for <cgroups@archiver.kernel.org>; Wed, 18 Oct 2023 17:30:13 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229585AbjJRRYY (ORCPT <rfc822;cgroups@archiver.kernel.org>);
-        Wed, 18 Oct 2023 13:24:24 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44708 "EHLO
+        id S231897AbjJRRaM (ORCPT <rfc822;cgroups@archiver.kernel.org>);
+        Wed, 18 Oct 2023 13:30:12 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38256 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231754AbjJRQZh (ORCPT
-        <rfc822;cgroups@vger.kernel.org>); Wed, 18 Oct 2023 12:25:37 -0400
-Received: from mgamail.intel.com (mgamail.intel.com [192.55.52.151])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CEFD711D;
-        Wed, 18 Oct 2023 09:25:35 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1697646335; x=1729182335;
-  h=to:cc:subject:references:date:mime-version:
-   content-transfer-encoding:from:message-id:in-reply-to;
-  bh=3SzZhMSgWPufMQv3UDQZF8yioB50y/KqV65kuToF9No=;
-  b=JgmRUzClX6MKH0AEVqBGTXpTtU7/rKrOw/bMSsiMHE9Tz5bt5FcU8kiE
-   +vetL7brflYzmYNbgOqaO/9CCfRZs85bkDNMQvrvzSuIq7qmbb5sD239A
-   MrxKtI4stKJtbvaAiGaCejVDd0+hicAPruhDD2bI7ZZnrVQ45DxBMsaVM
-   KFTpMUubFMMsWJfSANPGHRAhvqEiVWA5/e5tyL6/KUQ6Iye7WVDEnv018
-   enPnsS0iRtTm2PnRVjccyTonw0OjUpMhbipbxV6QHTXSQVPIVYhx/ty5C
-   brp1J7+lPCQQOGXrhbDyvcNhc0AXdy05Zd/eGfsOf8Gsiqs4QyqZi8jCc
-   w==;
-X-IronPort-AV: E=McAfee;i="6600,9927,10867"; a="366306231"
-X-IronPort-AV: E=Sophos;i="6.03,235,1694761200"; 
-   d="scan'208";a="366306231"
-Received: from orsmga002.jf.intel.com ([10.7.209.21])
-  by fmsmga107.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 18 Oct 2023 09:25:35 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6600,9927,10867"; a="756643245"
-X-IronPort-AV: E=Sophos;i="6.03,235,1694761200"; 
-   d="scan'208";a="756643245"
-Received: from hhuan26-mobl.amr.corp.intel.com ([10.92.17.92])
-  by orsmga002-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-SHA; 18 Oct 2023 09:25:29 -0700
-Content-Type: text/plain; charset=iso-8859-15; format=flowed; delsp=yes
-To:     "Dave Hansen" <dave.hansen@intel.com>,
-        =?iso-8859-15?Q?Michal_Koutn=FD?= <mkoutny@suse.com>
-Cc:     "Christopherson,, Sean" <seanjc@google.com>,
-        "Huang, Kai" <kai.huang@intel.com>,
-        "Zhang, Bo" <zhanb@microsoft.com>,
-        "linux-sgx@vger.kernel.org" <linux-sgx@vger.kernel.org>,
-        "cgroups@vger.kernel.org" <cgroups@vger.kernel.org>,
-        "yangjie@microsoft.com" <yangjie@microsoft.com>,
-        "dave.hansen@linux.intel.com" <dave.hansen@linux.intel.com>,
-        "Li, Zhiquan1" <zhiquan1.li@intel.com>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "mingo@redhat.com" <mingo@redhat.com>,
-        "tglx@linutronix.de" <tglx@linutronix.de>,
-        "tj@kernel.org" <tj@kernel.org>,
-        "anakrish@microsoft.com" <anakrish@microsoft.com>,
-        "jarkko@kernel.org" <jarkko@kernel.org>,
-        "hpa@zytor.com" <hpa@zytor.com>,
-        "mikko.ylinen@linux.intel.com" <mikko.ylinen@linux.intel.com>,
-        "Mehta, Sohil" <sohil.mehta@intel.com>,
-        "bp@alien8.de" <bp@alien8.de>, "x86@kernel.org" <x86@kernel.org>,
-        "kristen@linux.intel.com" <kristen@linux.intel.com>
-Subject: Re: [PATCH v5 12/18] x86/sgx: Add EPC OOM path to forcefully reclaim
- EPC
-References: <op.2cxatlafwjvjmi@hhuan26-mobl.amr.corp.intel.com>
- <35a7fde056037a40b3b4b170e2ecd45bf8c4ba9f.camel@intel.com>
- <op.2cxmq7c2wjvjmi@hhuan26-mobl.amr.corp.intel.com>
- <915907d56861ef4aa7f9f68e0eb8d136a60bee39.camel@intel.com>
- <op.2cyma0e9wjvjmi@hhuan26-mobl.amr.corp.intel.com>
- <6lrq4xmk42zteq6thpyah7jy25rmvkp7mqxtll6sl7z62m7n4m@vrbbedtgxeq4>
- <op.2cztslnpwjvjmi@hhuan26-mobl.amr.corp.intel.com>
- <11413ca0-a8a9-4f73-8006-2e1231dbb390@intel.com>
- <op.2c0nt109wjvjmi@hhuan26-mobl.amr.corp.intel.com>
- <7a1a5125-9da2-47b6-ba0f-cf24d84df16b@intel.com>
- <yz44wukoic3syy6s4fcrngagurkjhe2hzka6kvxbajdtro3fwu@zd2ilht7wcw3>
-Date:   Wed, 18 Oct 2023 11:25:28 -0500
+        with ESMTP id S231222AbjJRR3s (ORCPT
+        <rfc822;cgroups@vger.kernel.org>); Wed, 18 Oct 2023 13:29:48 -0400
+Received: from out-200.mta0.migadu.com (out-200.mta0.migadu.com [IPv6:2001:41d0:1004:224b::c8])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5909B3C03
+        for <cgroups@vger.kernel.org>; Wed, 18 Oct 2023 10:22:40 -0700 (PDT)
+Date:   Wed, 18 Oct 2023 10:22:21 -0700
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
+        t=1697649756;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=+ZHjqgjJ0DJw5b20QDmJoc6vBigpsp2ZBEUURZnoLsI=;
+        b=GaTsb0RAXezus1Vlp+8lGAEICHr1ef9aRz8NOtZuHWbQyJ/aZCBv92T34FHPtPUwZXDY/u
+        w9iKSPUBX7e5vW9uGpTT0cLKiU+yCd07Pknzq0bCZdZ/qDG3KDpkKs2qgawTgbKrwuk2gq
+        DOEP/2oNVLZm88rFvJQFv0J9V5YGklU=
+X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
+From:   Roman Gushchin <roman.gushchin@linux.dev>
+To:     Vlastimil Babka <vbabka@suse.cz>
+Cc:     Andrew Morton <akpm@linux-foundation.org>,
+        linux-kernel@vger.kernel.org, cgroups@vger.kernel.org,
+        Johannes Weiner <hannes@cmpxchg.org>,
+        Michal Hocko <mhocko@kernel.org>, shakeelb@google.com,
+        Muchun Song <muchun.song@linux.dev>,
+        Dennis Zhou <dennis@kernel.org>,
+        David Rientjes <rientjes@google.com>,
+        Naresh Kamboju <naresh.kamboju@linaro.org>
+Subject: Re: [PATCH v3 2/5] mm: kmem: add direct objcg pointer to task_struct
+Message-ID: <ZTAUTWO2UfI0VoPL@P9FQF9L96D.corp.robot.car>
+References: <20231016221900.4031141-1-roman.gushchin@linux.dev>
+ <20231016221900.4031141-3-roman.gushchin@linux.dev>
+ <d698b8d0-1697-e336-bccb-592e633e8b98@suse.cz>
 MIME-Version: 1.0
-Content-Transfer-Encoding: Quoted-Printable
-From:   "Haitao Huang" <haitao.huang@linux.intel.com>
-Organization: Intel
-Message-ID: <op.2c0qkqrowjvjmi@hhuan26-mobl.amr.corp.intel.com>
-In-Reply-To: <yz44wukoic3syy6s4fcrngagurkjhe2hzka6kvxbajdtro3fwu@zd2ilht7wcw3>
-User-Agent: Opera Mail/1.0 (Win32)
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <d698b8d0-1697-e336-bccb-592e633e8b98@suse.cz>
+X-Migadu-Flow: FLOW_OUT
 Precedence: bulk
 List-ID: <cgroups.vger.kernel.org>
 X-Mailing-List: cgroups@vger.kernel.org
 
-On Wed, 18 Oct 2023 10:52:23 -0500, Michal Koutn=FD <mkoutny@suse.com> w=
-rote:
+On Wed, Oct 18, 2023 at 11:52:27AM +0200, Vlastimil Babka wrote:
+> On 10/17/23 00:18, Roman Gushchin wrote:
+> > To charge a freshly allocated kernel object to a memory cgroup, the
+> > kernel needs to obtain an objcg pointer. Currently it does it
+> > indirectly by obtaining the memcg pointer first and then calling to
+> > __get_obj_cgroup_from_memcg().
+> > 
+> > Usually tasks spend their entire life belonging to the same object
+> > cgroup. So it makes sense to save the objcg pointer on task_struct
+> > directly, so it can be obtained faster. It requires some work on fork,
+> > exit and cgroup migrate paths, but these paths are way colder.
+> > 
+> > To avoid any costly synchronization the following rules are applied:
+> > 1) A task sets it's objcg pointer itself.
+> > 
+> > 2) If a task is being migrated to another cgroup, the least
+> >    significant bit of the objcg pointer is set atomically.
+> > 
+> > 3) On the allocation path the objcg pointer is obtained locklessly
+> >    using the READ_ONCE() macro and the least significant bit is
+> >    checked. If it's set, the following procedure is used to update
+> >    it locklessly:
+> >        - task->objcg is zeroed using cmpxcg
+> >        - new objcg pointer is obtained
+> >        - task->objcg is updated using try_cmpxchg
+> >        - operation is repeated if try_cmpxcg fails
+> >    It guarantees that no updates will be lost if task migration
+> >    is racing against objcg pointer update. It also allows to keep
+> >    both read and write paths fully lockless.
+> > 
+> > Because the task is keeping a reference to the objcg, it can't go away
+> > while the task is alive.
+> > 
+> > This commit doesn't change the way the remote memcg charging works.
+> > 
+> > Signed-off-by: Roman Gushchin (Cruise) <roman.gushchin@linux.dev>
+> > Tested-by: Naresh Kamboju <naresh.kamboju@linaro.org>
+> > Acked-by: Johannes Weiner <hannes@cmpxchg.org>
+> > ---
+> >  include/linux/sched.h |   4 ++
+> >  mm/memcontrol.c       | 130 +++++++++++++++++++++++++++++++++++++++---
+> >  2 files changed, 125 insertions(+), 9 deletions(-)
+> > 
+> > diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+> > index 16ac2a5838fb..0605e45bd4a2 100644
+> > --- a/mm/memcontrol.c
+> > +++ b/mm/memcontrol.c
+> 
+> So IIUC here we increase objcg refcount.
+> 
+> > +				break;
+> > +			objcg = NULL;
+> > +		}
+> > +		rcu_read_unlock();
+> > +
+> > +		/*
+> > +		 * Try set up a new objcg pointer atomically. If it
+> > +		 * fails, it means the update flag was set concurrently, so
+> > +		 * the whole procedure should be repeated.
+> > +		 */
+> > +	} while (!try_cmpxchg(&current->objcg, &old, objcg));
+> 
+> And if this fails we throw objcg away and try again, but we should do
+> obj_cgroup_put(objcg) first, as otherwise it would cause a leak?
 
-> On Wed, Oct 18, 2023 at 08:37:25AM -0700, Dave Hansen  =
+Great catch! Thanks!
 
-> <dave.hansen@intel.com> wrote:
->> 1. Admin sets a limit
->> 2. Enclave is created
->> 3. Enclave hits limit, allocation fails
->
-> I was actually about to suggest reorganizing the series to a part
-> implementing this simple limiting and a subsequent part with the recla=
-im
-> stuff for easier digestability.
->
->> Nothing else matters.
->
-> If the latter part is an unncessary overkill, it's even better.
->
+> 
+> > +
+> > +	return objcg;
+> > +}
+> > +
+> >  __always_inline struct obj_cgroup *get_obj_cgroup_from_current(void)
+> >  {
+> >  	struct mem_cgroup *memcg;
+> > @@ -3008,19 +3054,26 @@ __always_inline struct obj_cgroup *get_obj_cgroup_from_current(void)
+> >  
+> >  	if (in_task()) {
+> >  		memcg = current->active_memcg;
+> > +		if (unlikely(memcg))
+> > +			goto from_memcg;
+> >  
+> > -		/* Memcg to charge can't be determined. */
+> > -		if (likely(!memcg) && (!current->mm || (current->flags & PF_KTHREAD)))
+> 
+> The checks for current->mm and PF_KTHREAD seem to be gone completely after
+> the patch, was that intended and why?
 
-Ok. I'll take out max_write() callback and only implement non-preemptive=
-  =
+There is no need for those anymore because it's as cheap or cheaper
+to check task->objcg for being NULL. Those were primarily used to rule out
+kernel threads allocations early.
 
-misc.max for EPC.
-I can also separate OOEPC_killing enclaves out, which is not needed if w=
-e  =
+I gonna fix the objcg ref leak, add the comment you asked above and post v4
+of this particular patch.
 
-only block allocation at limit, no need killing one enclave to make spac=
-e  =
-
-for another. This will simplify a lot.
-
-Thanks to all for your input!
-
-Haitao
- =
-
+Thank you for reviewing the series!
