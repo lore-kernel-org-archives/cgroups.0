@@ -2,29 +2,30 @@ Return-Path: <cgroups-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6F466C07480
-	for <cgroups@archiver.kernel.org>; Thu, 19 Oct 2023 22:54:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 79C94C00A98
+	for <cgroups@archiver.kernel.org>; Thu, 19 Oct 2023 22:54:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1346727AbjJSWyd (ORCPT <rfc822;cgroups@archiver.kernel.org>);
-        Thu, 19 Oct 2023 18:54:33 -0400
+        id S1346704AbjJSWy1 (ORCPT <rfc822;cgroups@archiver.kernel.org>);
+        Thu, 19 Oct 2023 18:54:27 -0400
 Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58874 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233286AbjJSWyb (ORCPT
-        <rfc822;cgroups@vger.kernel.org>); Thu, 19 Oct 2023 18:54:31 -0400
-Received: from out-206.mta0.migadu.com (out-206.mta0.migadu.com [IPv6:2001:41d0:1004:224b::ce])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2FE0E136
-        for <cgroups@vger.kernel.org>; Thu, 19 Oct 2023 15:54:28 -0700 (PDT)
+        with ESMTP id S1346702AbjJSWy0 (ORCPT
+        <rfc822;cgroups@vger.kernel.org>); Thu, 19 Oct 2023 18:54:26 -0400
+X-Greylist: delayed 106302 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Thu, 19 Oct 2023 15:54:20 PDT
+Received: from out-190.mta0.migadu.com (out-190.mta0.migadu.com [91.218.175.190])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C00DC98
+        for <cgroups@vger.kernel.org>; Thu, 19 Oct 2023 15:54:20 -0700 (PDT)
 X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
-        t=1697756066;
+        t=1697756059;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=dS7frJRdSMuPJ7DdWWAjQ+cQ8KaRwRE0njPFfiYUqhI=;
-        b=swiyjDzbwvO1ryyH0LOxBsG3sRDrHo8MwhzTCH/GhQa+yLHgJt9YruoXPCzep7ToRdRcIe
-        f2eQNq6gGnHGE7yLa7z373yvV6fk04/R4k49Aiuuzgl3U3AyV/OKYwgN/BLnwOmIAr+Hpk
-        tNxwryf0vISlCXMm0JNVfO9Q0ZShvgY=
+        bh=TjRbekCofEjC4WvfGU9ZZivZap7GfKCofqK2R8XbFtA=;
+        b=CSSCOtFvi7Ic1PfkshMhl604bLC9wtck8ncGfvc+CVnVI76s2gWESUbI5kqm+wkB4NEvbZ
+        f6YjpCeVY9hDbH+wgY8JXIJC3BqE3wtExzGADF2pr5NRWaoryj7dR2Vq4KjLwkGq+VQNHQ
+        phUAsoG9TN53NmVeOn9ebjkFEG27Nx4=
 From:   Roman Gushchin <roman.gushchin@linux.dev>
 To:     Andrew Morton <akpm@linux-foundation.org>
 Cc:     linux-kernel@vger.kernel.org, cgroups@vger.kernel.org,
@@ -37,9 +38,9 @@ Cc:     linux-kernel@vger.kernel.org, cgroups@vger.kernel.org,
         Vlastimil Babka <vbabka@suse.cz>,
         Naresh Kamboju <naresh.kamboju@linaro.org>,
         Roman Gushchin <roman.gushchin@linux.dev>
-Subject: [PATCH v5 6/6] mm: kmem: reimplement get_obj_cgroup_from_current()
-Date:   Thu, 19 Oct 2023 15:53:46 -0700
-Message-ID: <20231019225346.1822282-7-roman.gushchin@linux.dev>
+Subject: [PATCH v5 3/6] mm: kmem: make memcg keep a reference to the original objcg
+Date:   Thu, 19 Oct 2023 15:53:43 -0700
+Message-ID: <20231019225346.1822282-4-roman.gushchin@linux.dev>
 In-Reply-To: <20231019225346.1822282-1-roman.gushchin@linux.dev>
 References: <20231019225346.1822282-1-roman.gushchin@linux.dev>
 MIME-Version: 1.0
@@ -49,86 +50,68 @@ Precedence: bulk
 List-ID: <cgroups.vger.kernel.org>
 X-Mailing-List: cgroups@vger.kernel.org
 
-Reimplement get_obj_cgroup_from_current() using current_obj_cgroup().
-get_obj_cgroup_from_current() and current_obj_cgroup() share 80% of
-the code, so the new implementation is almost trivial.
+Keep a reference to the original objcg object for the entire life
+of a memcg structure.
 
-get_obj_cgroup_from_current() is a convenient function used by the
-bpf subsystem, so there is no reason to get rid of it completely.
+This allows to simplify the synchronization on the kernel memory
+allocation paths: pinning a (live) memcg will also pin the
+corresponding objcg.
+
+The memory overhead of this change is minimal because object cgroups
+usually outlive their corresponding memory cgroups even without this
+change, so it's only an additional pointer per memcg.
 
 Signed-off-by: Roman Gushchin (Cruise) <roman.gushchin@linux.dev>
+Tested-by: Naresh Kamboju <naresh.kamboju@linaro.org>
+Acked-by: Shakeel Butt <shakeelb@google.com>
+Reviewed-by: Vlastimil Babka <vbabka@suse.cz>
 ---
- include/linux/memcontrol.h | 11 ++++++++++-
- mm/memcontrol.c            | 32 --------------------------------
- 2 files changed, 10 insertions(+), 33 deletions(-)
+ include/linux/memcontrol.h | 8 +++++++-
+ mm/memcontrol.c            | 5 +++++
+ 2 files changed, 12 insertions(+), 1 deletion(-)
 
 diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
-index a89df289144d..ef26551a633f 100644
+index ab94ad4597d0..277690af383d 100644
 --- a/include/linux/memcontrol.h
 +++ b/include/linux/memcontrol.h
-@@ -1778,9 +1778,18 @@ void __memcg_kmem_uncharge_page(struct page *page, int order);
-  * needs to be used outside of the local scope.
-  */
- struct obj_cgroup *current_obj_cgroup(void);
--struct obj_cgroup *get_obj_cgroup_from_current(void);
- struct obj_cgroup *get_obj_cgroup_from_folio(struct folio *folio);
+@@ -299,7 +299,13 @@ struct mem_cgroup {
  
-+static inline struct obj_cgroup *get_obj_cgroup_from_current(void)
-+{
-+	struct obj_cgroup *objcg = current_obj_cgroup();
-+
-+	if (objcg)
-+		obj_cgroup_get(objcg);
-+
-+	return objcg;
-+}
-+
- int obj_cgroup_charge(struct obj_cgroup *objcg, gfp_t gfp, size_t size);
- void obj_cgroup_uncharge(struct obj_cgroup *objcg, size_t size);
- 
+ #ifdef CONFIG_MEMCG_KMEM
+ 	int kmemcg_id;
+-	struct obj_cgroup __rcu *objcg;
++	/*
++	 * memcg->objcg is wiped out as a part of the objcg repaprenting
++	 * process. memcg->orig_objcg preserves a pointer (and a reference)
++	 * to the original objcg until the end of live of memcg.
++	 */
++	struct obj_cgroup __rcu	*objcg;
++	struct obj_cgroup	*orig_objcg;
+ 	/* list of inherited objcgs, protected by objcg_lock */
+ 	struct list_head objcg_list;
+ #endif
 diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index e3d4b7fabb7d..e13c10912c16 100644
+index 4c4b1f85f939..d964b91f00c8 100644
 --- a/mm/memcontrol.c
 +++ b/mm/memcontrol.c
-@@ -3056,38 +3056,6 @@ static struct obj_cgroup *current_objcg_update(void)
- 	return objcg;
- }
+@@ -3817,6 +3817,8 @@ static int memcg_online_kmem(struct mem_cgroup *memcg)
  
--__always_inline struct obj_cgroup *get_obj_cgroup_from_current(void)
--{
--	struct mem_cgroup *memcg;
--	struct obj_cgroup *objcg;
--
--	if (in_task()) {
--		memcg = current->active_memcg;
--		if (unlikely(memcg))
--			goto from_memcg;
--
--		objcg = READ_ONCE(current->objcg);
--		if (unlikely((unsigned long)objcg & CURRENT_OBJCG_UPDATE_FLAG))
--			objcg = current_objcg_update();
--
--		if (objcg) {
--			obj_cgroup_get(objcg);
--			return objcg;
--		}
--	} else {
--		memcg = this_cpu_read(int_active_memcg);
--		if (unlikely(memcg))
--			goto from_memcg;
--	}
--	return NULL;
--
--from_memcg:
--	rcu_read_lock();
--	objcg = __get_obj_cgroup_from_memcg(memcg);
--	rcu_read_unlock();
--	return objcg;
--}
--
- __always_inline struct obj_cgroup *current_obj_cgroup(void)
+ 	objcg->memcg = memcg;
+ 	rcu_assign_pointer(memcg->objcg, objcg);
++	obj_cgroup_get(objcg);
++	memcg->orig_objcg = objcg;
+ 
+ 	static_branch_enable(&memcg_kmem_online_key);
+ 
+@@ -5311,6 +5313,9 @@ static void __mem_cgroup_free(struct mem_cgroup *memcg)
  {
- 	struct mem_cgroup *memcg;
+ 	int node;
+ 
++	if (memcg->orig_objcg)
++		obj_cgroup_put(memcg->orig_objcg);
++
+ 	for_each_node(node)
+ 		free_mem_cgroup_per_node_info(memcg, node);
+ 	kfree(memcg->vmstats);
 -- 
 2.42.0
 
