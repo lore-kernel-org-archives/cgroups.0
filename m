@@ -2,29 +2,29 @@ Return-Path: <cgroups-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E6503C004C0
-	for <cgroups@archiver.kernel.org>; Thu, 19 Oct 2023 22:54:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9B73CC00A98
+	for <cgroups@archiver.kernel.org>; Thu, 19 Oct 2023 22:54:29 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1346724AbjJSWy1 (ORCPT <rfc822;cgroups@archiver.kernel.org>);
-        Thu, 19 Oct 2023 18:54:27 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58860 "EHLO
+        id S1346743AbjJSWy3 (ORCPT <rfc822;cgroups@archiver.kernel.org>);
+        Thu, 19 Oct 2023 18:54:29 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33710 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1346713AbjJSWyV (ORCPT
-        <rfc822;cgroups@vger.kernel.org>); Thu, 19 Oct 2023 18:54:21 -0400
-Received: from out-203.mta0.migadu.com (out-203.mta0.migadu.com [IPv6:2001:41d0:1004:224b::cb])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6124D12D
-        for <cgroups@vger.kernel.org>; Thu, 19 Oct 2023 15:54:18 -0700 (PDT)
+        with ESMTP id S1346727AbjJSWy1 (ORCPT
+        <rfc822;cgroups@vger.kernel.org>); Thu, 19 Oct 2023 18:54:27 -0400
+Received: from out-206.mta0.migadu.com (out-206.mta0.migadu.com [IPv6:2001:41d0:1004:224b::ce])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9F9BA182
+        for <cgroups@vger.kernel.org>; Thu, 19 Oct 2023 15:54:23 -0700 (PDT)
 X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
-        t=1697756056;
+        t=1697756061;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=BDgQ0sTDZEWEeAci7LBUiUqwaAWQt9IHTOfrbC8DqQs=;
-        b=fL6Ma5oJS1yv97IrEAJ77mrasInr+A/crITevGQ0uLYteMKKaYIA/cYsV3yA8y96/XCBjG
-        U2IV9UTj9jUvPJfZSNBU/fXC8YCVyL6TuHNvxuu0KaDLplBsBCYB7rdJ2jGH0ZszM6YZoG
-        ScQD3a19KgfN3bbavvQaI7wwRLw/nfM=
+        bh=pDnnpwCoxO5+bFywRQVLc1PnF6OgSg7x79d5yFEGT34=;
+        b=sGeh2eLuqe4WxFhppV5sFaG5eq+hU2ncs7PB5wWtuwi9wuQ83DIpEfCWbmhaaM3Z0oorFh
+        Gywt8n3wZ9fPKg5gzb4CafmEc4yw2GFuunbhvb7QRbVJcJ8Ev4CMG8FjkPrPZ6tItPdg2l
+        6Qx9XK+gG2BpjvOuaf0sGgY6GvXiHHk=
 From:   Roman Gushchin <roman.gushchin@linux.dev>
 To:     Andrew Morton <akpm@linux-foundation.org>
 Cc:     linux-kernel@vger.kernel.org, cgroups@vger.kernel.org,
@@ -37,9 +37,9 @@ Cc:     linux-kernel@vger.kernel.org, cgroups@vger.kernel.org,
         Vlastimil Babka <vbabka@suse.cz>,
         Naresh Kamboju <naresh.kamboju@linaro.org>,
         Roman Gushchin <roman.gushchin@linux.dev>
-Subject: [PATCH v5 2/6] mm: kmem: add direct objcg pointer to task_struct
-Date:   Thu, 19 Oct 2023 15:53:42 -0700
-Message-ID: <20231019225346.1822282-3-roman.gushchin@linux.dev>
+Subject: [PATCH v5 4/6] mm: kmem: scoped objcg protection
+Date:   Thu, 19 Oct 2023 15:53:44 -0700
+Message-ID: <20231019225346.1822282-5-roman.gushchin@linux.dev>
 In-Reply-To: <20231019225346.1822282-1-roman.gushchin@linux.dev>
 References: <20231019225346.1822282-1-roman.gushchin@linux.dev>
 MIME-Version: 1.0
@@ -49,268 +49,182 @@ Precedence: bulk
 List-ID: <cgroups.vger.kernel.org>
 X-Mailing-List: cgroups@vger.kernel.org
 
-To charge a freshly allocated kernel object to a memory cgroup, the
-kernel needs to obtain an objcg pointer. Currently it does it
-indirectly by obtaining the memcg pointer first and then calling to
-__get_obj_cgroup_from_memcg().
+Switch to a scope-based protection of the objcg pointer on slab/kmem
+allocation paths. Instead of using the get_() semantics in the
+pre-allocation hook and put the reference afterwards, let's rely
+on the fact that objcg is pinned by the scope.
 
-Usually tasks spend their entire life belonging to the same object
-cgroup. So it makes sense to save the objcg pointer on task_struct
-directly, so it can be obtained faster. It requires some work on fork,
-exit and cgroup migrate paths, but these paths are way colder.
-
-To avoid any costly synchronization the following rules are applied:
-1) A task sets it's objcg pointer itself.
-
-2) If a task is being migrated to another cgroup, the least
-   significant bit of the objcg pointer is set atomically.
-
-3) On the allocation path the objcg pointer is obtained locklessly
-   using the READ_ONCE() macro and the least significant bit is
-   checked. If it's set, the following procedure is used to update
-   it locklessly:
-       - task->objcg is zeroed using cmpxcg
-       - new objcg pointer is obtained
-       - task->objcg is updated using try_cmpxchg
-       - operation is repeated if try_cmpxcg fails
-   It guarantees that no updates will be lost if task migration
-   is racing against objcg pointer update. It also allows to keep
-   both read and write paths fully lockless.
-
-Because the task is keeping a reference to the objcg, it can't go away
-while the task is alive.
-
-This commit doesn't change the way the remote memcg charging works.
+It's possible because:
+1) if the objcg is received from the current task struct, the task is
+   keeping a reference to the objcg.
+2) if the objcg is received from an active memcg (remote charging),
+   the memcg is pinned by the scope and has a reference to the
+   corresponding objcg.
 
 Signed-off-by: Roman Gushchin (Cruise) <roman.gushchin@linux.dev>
 Tested-by: Naresh Kamboju <naresh.kamboju@linaro.org>
-Acked-by: Johannes Weiner <hannes@cmpxchg.org>
 Acked-by: Shakeel Butt <shakeelb@google.com>
+Reviewed-by: Vlastimil Babka <vbabka@suse.cz>
 ---
- include/linux/sched.h |   4 ++
- mm/memcontrol.c       | 139 +++++++++++++++++++++++++++++++++++++++---
- 2 files changed, 134 insertions(+), 9 deletions(-)
+ include/linux/memcontrol.h |  9 ++++++++
+ include/linux/sched/mm.h   |  4 ++++
+ mm/memcontrol.c            | 47 ++++++++++++++++++++++++++++++++++++--
+ mm/slab.h                  | 15 ++++++------
+ 4 files changed, 66 insertions(+), 9 deletions(-)
 
-diff --git a/include/linux/sched.h b/include/linux/sched.h
-index 77f01ac385f7..60de42715b56 100644
---- a/include/linux/sched.h
-+++ b/include/linux/sched.h
-@@ -1443,6 +1443,10 @@ struct task_struct {
- 	struct mem_cgroup		*active_memcg;
- #endif
+diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
+index 277690af383d..a89df289144d 100644
+--- a/include/linux/memcontrol.h
++++ b/include/linux/memcontrol.h
+@@ -1769,6 +1769,15 @@ bool mem_cgroup_kmem_disabled(void);
+ int __memcg_kmem_charge_page(struct page *page, gfp_t gfp, int order);
+ void __memcg_kmem_uncharge_page(struct page *page, int order);
  
-+#ifdef CONFIG_MEMCG_KMEM
-+	struct obj_cgroup		*objcg;
-+#endif
-+
- #ifdef CONFIG_BLK_CGROUP
- 	struct gendisk			*throttle_disk;
- #endif
++/*
++ * The returned objcg pointer is safe to use without additional
++ * protection within a scope. The scope is defined either by
++ * the current task (similar to the "current" global variable)
++ * or by set_active_memcg() pair.
++ * Please, use obj_cgroup_get() to get a reference if the pointer
++ * needs to be used outside of the local scope.
++ */
++struct obj_cgroup *current_obj_cgroup(void);
+ struct obj_cgroup *get_obj_cgroup_from_current(void);
+ struct obj_cgroup *get_obj_cgroup_from_folio(struct folio *folio);
+ 
+diff --git a/include/linux/sched/mm.h b/include/linux/sched/mm.h
+index 8d89c8c4fac1..9a19f1b42f64 100644
+--- a/include/linux/sched/mm.h
++++ b/include/linux/sched/mm.h
+@@ -403,6 +403,10 @@ DECLARE_PER_CPU(struct mem_cgroup *, int_active_memcg);
+  * __GFP_ACCOUNT allocations till the end of the scope will be charged to the
+  * given memcg.
+  *
++ * Please, make sure that caller has a reference to the passed memcg structure,
++ * so its lifetime is guaranteed to exceed the scope between two
++ * set_active_memcg() calls.
++ *
+  * NOTE: This function can nest. Users must save the return value and
+  * reset the previous value after their own charging scope is over.
+  */
 diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index 16ac2a5838fb..4c4b1f85f939 100644
+index d964b91f00c8..e3d4b7fabb7d 100644
 --- a/mm/memcontrol.c
 +++ b/mm/memcontrol.c
-@@ -249,6 +249,9 @@ struct mem_cgroup *vmpressure_to_memcg(struct vmpressure *vmpr)
- 	return container_of(vmpr, struct mem_cgroup, vmpressure);
- }
- 
-+#define CURRENT_OBJCG_UPDATE_BIT 0
-+#define CURRENT_OBJCG_UPDATE_FLAG (1UL << CURRENT_OBJCG_UPDATE_BIT)
-+
- #ifdef CONFIG_MEMCG_KMEM
- static DEFINE_SPINLOCK(objcg_lock);
- 
-@@ -3001,6 +3004,58 @@ static struct obj_cgroup *__get_obj_cgroup_from_memcg(struct mem_cgroup *memcg)
+@@ -3088,6 +3088,49 @@ __always_inline struct obj_cgroup *get_obj_cgroup_from_current(void)
  	return objcg;
  }
  
-+static struct obj_cgroup *current_objcg_update(void)
++__always_inline struct obj_cgroup *current_obj_cgroup(void)
 +{
 +	struct mem_cgroup *memcg;
-+	struct obj_cgroup *old, *objcg = NULL;
++	struct obj_cgroup *objcg;
 +
-+	do {
-+		/* Atomically drop the update bit. */
-+		old = xchg(&current->objcg, NULL);
-+		if (old) {
-+			old = (struct obj_cgroup *)
-+				((unsigned long)old & ~CURRENT_OBJCG_UPDATE_FLAG);
-+			if (old)
-+				obj_cgroup_put(old);
++	if (in_task()) {
++		memcg = current->active_memcg;
++		if (unlikely(memcg))
++			goto from_memcg;
 +
-+			old = NULL;
-+		}
-+
-+		/* If new objcg is NULL, no reason for the second atomic update. */
-+		if (!current->mm || (current->flags & PF_KTHREAD))
-+			return NULL;
-+
++		objcg = READ_ONCE(current->objcg);
++		if (unlikely((unsigned long)objcg & CURRENT_OBJCG_UPDATE_FLAG))
++			objcg = current_objcg_update();
 +		/*
-+		 * Release the objcg pointer from the previous iteration,
-+		 * if try_cmpxcg() below fails.
++		 * Objcg reference is kept by the task, so it's safe
++		 * to use the objcg by the current task.
 +		 */
-+		if (unlikely(objcg)) {
-+			obj_cgroup_put(objcg);
-+			objcg = NULL;
-+		}
++		return objcg;
++	}
 +
++	memcg = this_cpu_read(int_active_memcg);
++	if (unlikely(memcg))
++		goto from_memcg;
++
++	return NULL;
++
++from_memcg:
++	for (; !mem_cgroup_is_root(memcg); memcg = parent_mem_cgroup(memcg)) {
 +		/*
-+		 * Obtain the new objcg pointer. The current task can be
-+		 * asynchronously moved to another memcg and the previous
-+		 * memcg can be offlined. So let's get the memcg pointer
-+		 * and try get a reference to objcg under a rcu read lock.
++		 * Memcg pointer is protected by scope (see set_active_memcg())
++		 * and is pinning the corresponding objcg, so objcg can't go
++		 * away and can be used within the scope without any additional
++		 * protection.
 +		 */
-+
-+		rcu_read_lock();
-+		memcg = mem_cgroup_from_task(current);
-+		objcg = __get_obj_cgroup_from_memcg(memcg);
-+		rcu_read_unlock();
-+
-+		/*
-+		 * Try set up a new objcg pointer atomically. If it
-+		 * fails, it means the update flag was set concurrently, so
-+		 * the whole procedure should be repeated.
-+		 */
-+	} while (!try_cmpxchg(&current->objcg, &old, objcg));
++		objcg = rcu_dereference_check(memcg->objcg, 1);
++		if (likely(objcg))
++			break;
++		objcg = NULL;
++	}
 +
 +	return objcg;
 +}
 +
- __always_inline struct obj_cgroup *get_obj_cgroup_from_current(void)
+ struct obj_cgroup *get_obj_cgroup_from_folio(struct folio *folio)
  {
- 	struct mem_cgroup *memcg;
-@@ -3008,19 +3063,26 @@ __always_inline struct obj_cgroup *get_obj_cgroup_from_current(void)
+ 	struct obj_cgroup *objcg;
+@@ -3182,15 +3225,15 @@ int __memcg_kmem_charge_page(struct page *page, gfp_t gfp, int order)
+ 	struct obj_cgroup *objcg;
+ 	int ret = 0;
  
- 	if (in_task()) {
- 		memcg = current->active_memcg;
-+		if (unlikely(memcg))
-+			goto from_memcg;
- 
--		/* Memcg to charge can't be determined. */
--		if (likely(!memcg) && (!current->mm || (current->flags & PF_KTHREAD)))
--			return NULL;
-+		objcg = READ_ONCE(current->objcg);
-+		if (unlikely((unsigned long)objcg & CURRENT_OBJCG_UPDATE_FLAG))
-+			objcg = current_objcg_update();
-+
-+		if (objcg) {
+-	objcg = get_obj_cgroup_from_current();
++	objcg = current_obj_cgroup();
+ 	if (objcg) {
+ 		ret = obj_cgroup_charge_pages(objcg, gfp, 1 << order);
+ 		if (!ret) {
 +			obj_cgroup_get(objcg);
-+			return objcg;
-+		}
- 	} else {
- 		memcg = this_cpu_read(int_active_memcg);
--		if (likely(!memcg))
--			return NULL;
-+		if (unlikely(memcg))
-+			goto from_memcg;
+ 			page->memcg_data = (unsigned long)objcg |
+ 				MEMCG_DATA_KMEM;
+ 			return 0;
+ 		}
+-		obj_cgroup_put(objcg);
  	}
-+	return NULL;
+ 	return ret;
+ }
+diff --git a/mm/slab.h b/mm/slab.h
+index 799a315695c6..3d07fb428393 100644
+--- a/mm/slab.h
++++ b/mm/slab.h
+@@ -484,7 +484,12 @@ static inline bool memcg_slab_pre_alloc_hook(struct kmem_cache *s,
+ 	if (!(flags & __GFP_ACCOUNT) && !(s->flags & SLAB_ACCOUNT))
+ 		return true;
  
-+from_memcg:
- 	rcu_read_lock();
--	if (!memcg)
--		memcg = mem_cgroup_from_task(current);
- 	objcg = __get_obj_cgroup_from_memcg(memcg);
- 	rcu_read_unlock();
- 	return objcg;
-@@ -6345,6 +6407,7 @@ static void mem_cgroup_move_task(void)
- 		mem_cgroup_clear_mc();
+-	objcg = get_obj_cgroup_from_current();
++	/*
++	 * The obtained objcg pointer is safe to use within the current scope,
++	 * defined by current task or set_active_memcg() pair.
++	 * obj_cgroup_get() is used to get a permanent reference.
++	 */
++	objcg = current_obj_cgroup();
+ 	if (!objcg)
+ 		return true;
+ 
+@@ -497,17 +502,14 @@ static inline bool memcg_slab_pre_alloc_hook(struct kmem_cache *s,
+ 		css_put(&memcg->css);
+ 
+ 		if (ret)
+-			goto out;
++			return false;
  	}
- }
-+
- #else	/* !CONFIG_MMU */
- static int mem_cgroup_can_attach(struct cgroup_taskset *tset)
- {
-@@ -6358,8 +6421,39 @@ static void mem_cgroup_move_task(void)
- }
- #endif
  
-+#ifdef CONFIG_MEMCG_KMEM
-+static void mem_cgroup_fork(struct task_struct *task)
-+{
-+	/*
-+	 * Set the update flag to cause task->objcg to be initialized lazily
-+	 * on the first allocation. It can be done without any synchronization
-+	 * because it's always performed on the current task, so does
-+	 * current_objcg_update().
-+	 */
-+	task->objcg = (struct obj_cgroup *)CURRENT_OBJCG_UPDATE_FLAG;
-+}
-+
-+static void mem_cgroup_exit(struct task_struct *task)
-+{
-+	struct obj_cgroup *objcg = task->objcg;
-+
-+	objcg = (struct obj_cgroup *)
-+		((unsigned long)objcg & ~CURRENT_OBJCG_UPDATE_FLAG);
-+	if (objcg)
-+		obj_cgroup_put(objcg);
-+
-+	/*
-+	 * Some kernel allocations can happen after this point,
-+	 * but let's ignore them. It can be done without any synchronization
-+	 * because it's always performed on the current task, so does
-+	 * current_objcg_update().
-+	 */
-+	task->objcg = NULL;
-+}
-+#endif
-+
- #ifdef CONFIG_LRU_GEN
--static void mem_cgroup_attach(struct cgroup_taskset *tset)
-+static void mem_cgroup_lru_gen_attach(struct cgroup_taskset *tset)
- {
- 	struct task_struct *task;
- 	struct cgroup_subsys_state *css;
-@@ -6377,10 +6471,31 @@ static void mem_cgroup_attach(struct cgroup_taskset *tset)
- 	task_unlock(task);
- }
- #else
-+static void mem_cgroup_lru_gen_attach(struct cgroup_taskset *tset) {}
-+#endif /* CONFIG_LRU_GEN */
-+
-+#ifdef CONFIG_MEMCG_KMEM
-+static void mem_cgroup_kmem_attach(struct cgroup_taskset *tset)
-+{
-+	struct task_struct *task;
-+	struct cgroup_subsys_state *css;
-+
-+	cgroup_taskset_for_each(task, css, tset) {
-+		/* atomically set the update bit */
-+		set_bit(CURRENT_OBJCG_UPDATE_BIT, (unsigned long *)&task->objcg);
-+	}
-+}
-+#else
-+static void mem_cgroup_kmem_attach(struct cgroup_taskset *tset) {}
-+#endif /* CONFIG_MEMCG_KMEM */
-+
-+#if defined(CONFIG_LRU_GEN) || defined(CONFIG_MEMCG_KMEM)
- static void mem_cgroup_attach(struct cgroup_taskset *tset)
- {
-+	mem_cgroup_lru_gen_attach(tset);
-+	mem_cgroup_kmem_attach(tset);
- }
--#endif /* CONFIG_LRU_GEN */
-+#endif
+ 	if (obj_cgroup_charge(objcg, flags, objects * obj_full_size(s)))
+-		goto out;
++		return false;
  
- static int seq_puts_memcg_tunable(struct seq_file *m, unsigned long value)
- {
-@@ -6824,9 +6939,15 @@ struct cgroup_subsys memory_cgrp_subsys = {
- 	.css_reset = mem_cgroup_css_reset,
- 	.css_rstat_flush = mem_cgroup_css_rstat_flush,
- 	.can_attach = mem_cgroup_can_attach,
-+#if defined(CONFIG_LRU_GEN) || defined(CONFIG_MEMCG_KMEM)
- 	.attach = mem_cgroup_attach,
-+#endif
- 	.cancel_attach = mem_cgroup_cancel_attach,
- 	.post_attach = mem_cgroup_move_task,
-+#ifdef CONFIG_MEMCG_KMEM
-+	.fork = mem_cgroup_fork,
-+	.exit = mem_cgroup_exit,
-+#endif
- 	.dfl_cftypes = memory_files,
- 	.legacy_cftypes = mem_cgroup_legacy_files,
- 	.early_init = 0,
+ 	*objcgp = objcg;
+ 	return true;
+-out:
+-	obj_cgroup_put(objcg);
+-	return false;
+ }
+ 
+ static inline void memcg_slab_post_alloc_hook(struct kmem_cache *s,
+@@ -542,7 +544,6 @@ static inline void memcg_slab_post_alloc_hook(struct kmem_cache *s,
+ 			obj_cgroup_uncharge(objcg, obj_full_size(s));
+ 		}
+ 	}
+-	obj_cgroup_put(objcg);
+ }
+ 
+ static inline void memcg_slab_free_hook(struct kmem_cache *s, struct slab *slab,
 -- 
 2.42.0
 
