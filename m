@@ -1,45 +1,45 @@
 Received: from lindbergh.monkeyblade.net (lindbergh.monkeyblade.net [23.128.96.19])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 782232B5CC
-	for <cgroups@vger.kernel.org>; Tue, 24 Oct 2023 13:47:33 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D2C41341A8
+	for <cgroups@vger.kernel.org>; Tue, 24 Oct 2023 13:47:36 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="RzHufcbg"
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="LTGRqr23"
 Received: from mail-yb1-xb49.google.com (mail-yb1-xb49.google.com [IPv6:2607:f8b0:4864:20::b49])
-	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 69EA51BC6
-	for <cgroups@vger.kernel.org>; Tue, 24 Oct 2023 06:47:23 -0700 (PDT)
-Received: by mail-yb1-xb49.google.com with SMTP id 3f1490d57ef6-d9b9f56489fso5394884276.1
-        for <cgroups@vger.kernel.org>; Tue, 24 Oct 2023 06:47:23 -0700 (PDT)
+	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 150541BDD
+	for <cgroups@vger.kernel.org>; Tue, 24 Oct 2023 06:47:27 -0700 (PDT)
+Received: by mail-yb1-xb49.google.com with SMTP id 3f1490d57ef6-d9cb79eb417so4173693276.2
+        for <cgroups@vger.kernel.org>; Tue, 24 Oct 2023 06:47:27 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20230601; t=1698155241; x=1698760041; darn=vger.kernel.org;
+        d=google.com; s=20230601; t=1698155246; x=1698760046; darn=vger.kernel.org;
         h=cc:to:from:subject:message-id:references:mime-version:in-reply-to
          :date:from:to:cc:subject:date:message-id:reply-to;
-        bh=zb+0nW/ZZ6NW74eJtanLAYQ/ebma3WHtobF3vZ6u4HE=;
-        b=RzHufcbgXx2cEN3yIVWU4PH1tEu/cLpKoxe7nA+zR5SLjN9VGaPP2vNr8vhDCax+4g
-         ax+h3usOj5cObP7vEmL5yTVFGZHxIM60QKZwhYNloIfizPp4BOW8mAcS//o4OX+q8rz0
-         mma8Di4JRbJT6PmY8K8R0XlTxllX6p08tgirWbxkMZaIlkrHn81JGU06qZHFvpAnL8XL
-         pNYvynIuCsq1H5vH1w/MfgVIO1GHIvY6qFBSvUFImn9urejhBSpKMGwRf4ZUtJYDU0yF
-         TElOrWWUZ7Db4OSv7KYCaz8rATN2Ycx+se30qBZwMr4Y0BsGN9eNRQJpv7CluAHAXyAi
-         PZyw==
+        bh=zhzOhwHQcxJuZ74GpFe9sYgSfMOEl4CWCuHOL/zyxyA=;
+        b=LTGRqr23GKhxcA936hbAdR0QYqb1rrH3OeGhcHCLNGBQlRhtbSBk6bF/K6O8kSes0t
+         tlWoCICmJVmTC+r9JvEgDShF0eHFub0fNpwBOiyo5BKL2+PXGPjkXuUMSEOaxS0KWJNx
+         WWOH1EYFtQgFKO/RUWUOE+X0OmJQ8UpoaPBPukzaJRxX3QkdyQ2nETpuxagwoB9vifGP
+         yyjrBHvnV9KsIw2545gjzUZHoj3zdjrNkVJEpRVOq5TU3BFKt4BjI3v26/ggFpUrC1ej
+         9SWEdUrtPhdwDM+MN9byluamoHrTFMHtcdBjJQ22G7WXFAg1EM5Mo2Sdkg7Zw6kM2lt4
+         fWmw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1698155241; x=1698760041;
+        d=1e100.net; s=20230601; t=1698155246; x=1698760046;
         h=cc:to:from:subject:message-id:references:mime-version:in-reply-to
          :date:x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=zb+0nW/ZZ6NW74eJtanLAYQ/ebma3WHtobF3vZ6u4HE=;
-        b=KWSDcA/DXIAE1JV0+dLlEkm3tcv68w11AvTc9K6DO3rLgGB3Y4mkrJxlQ9bxqjYbzz
-         ZKk8gE22lT1e3YRUJPlTcZjHr7Qo/zz93dcP+N6rKhlKZ13r2gcJTI0QR+WD8nHceOEz
-         ENp8zGXoPA1l7IA4/kH0PpF8Yu7TWPQ45vwpsR+ibb+wwrO+GGqlAPDo9IeSdCPbSJEa
-         RSE4J+t64y23AlNfNL3IadNfOiv2HjfdNmQCL4+HF55Uq+9RTHjKrMIlUMJKKjH8vpsJ
-         gb0WvuuCSdxngCdekfpaRXMKri2DmFQhGYPkcFXeILqwlCGI+YsrkXL0mvw6d8vn1dOW
-         f10Q==
-X-Gm-Message-State: AOJu0YxfqXISaesXdy8n6sysUSODlWO5sDSrHuWm0xbHJL5QM+98gVbR
-	gQ2AjH53wnxVBVQdVDvTuFxmL5Vieqs=
-X-Google-Smtp-Source: AGHT+IEpPcNXSaLopMEVj+acIv3rs50iHU0ea/y8V1UNdWnab+iEcPBoSFwF1WABxkknLPWrzIDF+i6tstI=
+        bh=zhzOhwHQcxJuZ74GpFe9sYgSfMOEl4CWCuHOL/zyxyA=;
+        b=CJSQo+/dML+Npumon/4BOG16MPxP0X68pfDyJBQvvc/CAMPTt7p0C9rbhls9Fljl9R
+         j0EeSHKiCUU0IssbssdftkRziYXIQrCoElS3nrHMaelmTsfXnSNMzXh9W5WyECLQrETN
+         QLeq8tBopoPgxcxHxr80VKfOuy4n2BRINGufU6ulhRKgBe+Rlp9zwukY14/yqTzW/PhR
+         u1dyWzGKvroAIbuf/kqomjgB+waQdnPJG1IDydmK/KJTLJU9qfH3ioIT57/VcuBvbo4U
+         XAhRSl8w9w+SUdQS5dESxhUDDh33OzbT9usTKoPuczh2cdXO0HV6MhTmHccrk1cFRSFD
+         wPaw==
+X-Gm-Message-State: AOJu0YxSkT369ZvfVhuTkKEudRIU9X4jDr51G0IH24DxSUhli0iOUCQP
+	zKeDl+VCrjQGVGHLpnIz9Hwxt8mGGTE=
+X-Google-Smtp-Source: AGHT+IGqbReHwIMnajbCAyyRpg4FWyctkHXB3WgJzXU7P7J0pPMsKbVadURacVWEffWX34fNon1x9kvs7DE=
 X-Received: from surenb-desktop.mtv.corp.google.com ([2620:15c:211:201:45ba:3318:d7a5:336a])
- (user=surenb job=sendgmr) by 2002:a05:6902:544:b0:d13:856b:c10a with SMTP id
- z4-20020a056902054400b00d13856bc10amr261040ybs.3.1698155241467; Tue, 24 Oct
- 2023 06:47:21 -0700 (PDT)
-Date: Tue, 24 Oct 2023 06:46:15 -0700
+ (user=surenb job=sendgmr) by 2002:a25:42c9:0:b0:d9a:bce6:acf3 with SMTP id
+ p192-20020a2542c9000000b00d9abce6acf3mr225566yba.0.1698155245951; Tue, 24 Oct
+ 2023 06:47:25 -0700 (PDT)
+Date: Tue, 24 Oct 2023 06:46:17 -0700
 In-Reply-To: <20231024134637.3120277-1-surenb@google.com>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
@@ -49,8 +49,8 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 Mime-Version: 1.0
 References: <20231024134637.3120277-1-surenb@google.com>
 X-Mailer: git-send-email 2.42.0.758.gaed0368e0e-goog
-Message-ID: <20231024134637.3120277-19-surenb@google.com>
-Subject: [PATCH v2 18/39] change alloc_pages name in ivpu_bo_ops to avoid conflicts
+Message-ID: <20231024134637.3120277-21-surenb@google.com>
+Subject: [PATCH v2 20/39] mm: create new codetag references during page splitting
 From: Suren Baghdasaryan <surenb@google.com>
 To: akpm@linux-foundation.org
 Cc: kent.overstreet@linux.dev, mhocko@suse.com, vbabka@suse.cz, 
@@ -80,72 +80,104 @@ Cc: kent.overstreet@linux.dev, mhocko@suse.com, vbabka@suse.cz,
 	cgroups@vger.kernel.org
 Content-Type: text/plain; charset="UTF-8"
 
-From: Kent Overstreet <kent.overstreet@linux.dev>
+When a high-order page is split into smaller ones, each newly split
+page should get its codetag. The original codetag is reused for these
+pages but it's recorded as 0-byte allocation because original codetag
+already accounts for the original high-order allocated page.
 
-After redefining alloc_pages, all uses of that name are being replaced.
-Change the conflicting names to prevent preprocessor from replacing them
-when it's not intended.
-
-Signed-off-by: Kent Overstreet <kent.overstreet@linux.dev>
 Signed-off-by: Suren Baghdasaryan <surenb@google.com>
 ---
- drivers/accel/ivpu/ivpu_gem.c | 8 ++++----
- drivers/accel/ivpu/ivpu_gem.h | 2 +-
- 2 files changed, 5 insertions(+), 5 deletions(-)
+ include/linux/pgalloc_tag.h | 30 ++++++++++++++++++++++++++++++
+ mm/huge_memory.c            |  2 ++
+ mm/page_alloc.c             |  2 ++
+ 3 files changed, 34 insertions(+)
 
-diff --git a/drivers/accel/ivpu/ivpu_gem.c b/drivers/accel/ivpu/ivpu_gem.c
-index d09f13b35902..d324eaf5bbe3 100644
---- a/drivers/accel/ivpu/ivpu_gem.c
-+++ b/drivers/accel/ivpu/ivpu_gem.c
-@@ -61,7 +61,7 @@ static void prime_unmap_pages_locked(struct ivpu_bo *bo)
- static const struct ivpu_bo_ops prime_ops = {
- 	.type = IVPU_BO_TYPE_PRIME,
- 	.name = "prime",
--	.alloc_pages = prime_alloc_pages_locked,
-+	.alloc_pages_op = prime_alloc_pages_locked,
- 	.free_pages = prime_free_pages_locked,
- 	.map_pages = prime_map_pages_locked,
- 	.unmap_pages = prime_unmap_pages_locked,
-@@ -134,7 +134,7 @@ static void ivpu_bo_unmap_pages_locked(struct ivpu_bo *bo)
- static const struct ivpu_bo_ops shmem_ops = {
- 	.type = IVPU_BO_TYPE_SHMEM,
- 	.name = "shmem",
--	.alloc_pages = shmem_alloc_pages_locked,
-+	.alloc_pages_op = shmem_alloc_pages_locked,
- 	.free_pages = shmem_free_pages_locked,
- 	.map_pages = ivpu_bo_map_pages_locked,
- 	.unmap_pages = ivpu_bo_unmap_pages_locked,
-@@ -186,7 +186,7 @@ static void internal_free_pages_locked(struct ivpu_bo *bo)
- static const struct ivpu_bo_ops internal_ops = {
- 	.type = IVPU_BO_TYPE_INTERNAL,
- 	.name = "internal",
--	.alloc_pages = internal_alloc_pages_locked,
-+	.alloc_pages_op = internal_alloc_pages_locked,
- 	.free_pages = internal_free_pages_locked,
- 	.map_pages = ivpu_bo_map_pages_locked,
- 	.unmap_pages = ivpu_bo_unmap_pages_locked,
-@@ -200,7 +200,7 @@ static int __must_check ivpu_bo_alloc_and_map_pages_locked(struct ivpu_bo *bo)
- 	lockdep_assert_held(&bo->lock);
- 	drm_WARN_ON(&vdev->drm, bo->sgt);
+diff --git a/include/linux/pgalloc_tag.h b/include/linux/pgalloc_tag.h
+index a060c26eb449..0174aff5e871 100644
+--- a/include/linux/pgalloc_tag.h
++++ b/include/linux/pgalloc_tag.h
+@@ -62,11 +62,41 @@ static inline void pgalloc_tag_sub(struct page *page, unsigned int order)
+ 	}
+ }
  
--	ret = bo->ops->alloc_pages(bo);
-+	ret = bo->ops->alloc_pages_op(bo);
- 	if (ret) {
- 		ivpu_err(vdev, "Failed to allocate pages for BO: %d", ret);
- 		return ret;
-diff --git a/drivers/accel/ivpu/ivpu_gem.h b/drivers/accel/ivpu/ivpu_gem.h
-index 6b0ceda5f253..b81cf2af0b2d 100644
---- a/drivers/accel/ivpu/ivpu_gem.h
-+++ b/drivers/accel/ivpu/ivpu_gem.h
-@@ -42,7 +42,7 @@ enum ivpu_bo_type {
- struct ivpu_bo_ops {
- 	enum ivpu_bo_type type;
- 	const char *name;
--	int (*alloc_pages)(struct ivpu_bo *bo);
-+	int (*alloc_pages_op)(struct ivpu_bo *bo);
- 	void (*free_pages)(struct ivpu_bo *bo);
- 	int (*map_pages)(struct ivpu_bo *bo);
- 	void (*unmap_pages)(struct ivpu_bo *bo);
++static inline void pgalloc_tag_split(struct page *page, unsigned int nr)
++{
++	int i;
++	struct page_ext *page_ext;
++	union codetag_ref *ref;
++	struct alloc_tag *tag;
++
++	if (!mem_alloc_profiling_enabled())
++		return;
++
++	page_ext = page_ext_get(page);
++	if (unlikely(!page_ext))
++		return;
++
++	ref = codetag_ref_from_page_ext(page_ext);
++	if (!ref->ct)
++		goto out;
++
++	tag = ct_to_alloc_tag(ref->ct);
++	page_ext = page_ext_next(page_ext);
++	for (i = 1; i < nr; i++) {
++		/* New reference with 0 bytes accounted */
++		alloc_tag_add(codetag_ref_from_page_ext(page_ext), tag, 0);
++		page_ext = page_ext_next(page_ext);
++	}
++out:
++	page_ext_put(page_ext);
++}
++
+ #else /* CONFIG_MEM_ALLOC_PROFILING */
+ 
+ static inline void pgalloc_tag_add(struct page *page, struct task_struct *task,
+ 				   unsigned int order) {}
+ static inline void pgalloc_tag_sub(struct page *page, unsigned int order) {}
++static inline void pgalloc_tag_split(struct page *page, unsigned int nr) {}
+ 
+ #endif /* CONFIG_MEM_ALLOC_PROFILING */
+ 
+diff --git a/mm/huge_memory.c b/mm/huge_memory.c
+index 064fbd90822b..392b6907d875 100644
+--- a/mm/huge_memory.c
++++ b/mm/huge_memory.c
+@@ -37,6 +37,7 @@
+ #include <linux/page_owner.h>
+ #include <linux/sched/sysctl.h>
+ #include <linux/memory-tiers.h>
++#include <linux/pgalloc_tag.h>
+ 
+ #include <asm/tlb.h>
+ #include <asm/pgalloc.h>
+@@ -2545,6 +2546,7 @@ static void __split_huge_page(struct page *page, struct list_head *list,
+ 	/* Caller disabled irqs, so they are still disabled here */
+ 
+ 	split_page_owner(head, nr);
++	pgalloc_tag_split(head, nr);
+ 
+ 	/* See comment in __split_huge_page_tail() */
+ 	if (PageAnon(head)) {
+diff --git a/mm/page_alloc.c b/mm/page_alloc.c
+index 63dc2f8c7901..c4f0cd127e14 100644
+--- a/mm/page_alloc.c
++++ b/mm/page_alloc.c
+@@ -2540,6 +2540,7 @@ void split_page(struct page *page, unsigned int order)
+ 	for (i = 1; i < (1 << order); i++)
+ 		set_page_refcounted(page + i);
+ 	split_page_owner(page, 1 << order);
++	pgalloc_tag_split(page, 1 << order);
+ 	split_page_memcg(page, 1 << order);
+ }
+ EXPORT_SYMBOL_GPL(split_page);
+@@ -4669,6 +4670,7 @@ static void *make_alloc_exact(unsigned long addr, unsigned int order,
+ 		struct page *last = page + nr;
+ 
+ 		split_page_owner(page, 1 << order);
++		pgalloc_tag_split(page, 1 << order);
+ 		split_page_memcg(page, 1 << order);
+ 		while (page < --last)
+ 			set_page_refcounted(last);
 -- 
 2.42.0.758.gaed0368e0e-goog
 
