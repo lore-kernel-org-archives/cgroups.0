@@ -1,45 +1,45 @@
 Received: from lindbergh.monkeyblade.net (lindbergh.monkeyblade.net [23.128.96.19])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8A38B374F6
-	for <cgroups@vger.kernel.org>; Tue, 24 Oct 2023 13:47:55 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0FE5938DED
+	for <cgroups@vger.kernel.org>; Tue, 24 Oct 2023 13:48:04 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="gK9u6FzT"
-Received: from mail-yb1-xb49.google.com (mail-yb1-xb49.google.com [IPv6:2607:f8b0:4864:20::b49])
-	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3E1C1171B
-	for <cgroups@vger.kernel.org>; Tue, 24 Oct 2023 06:47:45 -0700 (PDT)
-Received: by mail-yb1-xb49.google.com with SMTP id 3f1490d57ef6-d9cfec5e73dso4391994276.2
-        for <cgroups@vger.kernel.org>; Tue, 24 Oct 2023 06:47:45 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="HHIE4ELn"
+Received: from mail-yw1-x1149.google.com (mail-yw1-x1149.google.com [IPv6:2607:f8b0:4864:20::1149])
+	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 053102130
+	for <cgroups@vger.kernel.org>; Tue, 24 Oct 2023 06:47:53 -0700 (PDT)
+Received: by mail-yw1-x1149.google.com with SMTP id 00721157ae682-5a8ee6a1801so57884337b3.3
+        for <cgroups@vger.kernel.org>; Tue, 24 Oct 2023 06:47:53 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20230601; t=1698155264; x=1698760064; darn=vger.kernel.org;
+        d=google.com; s=20230601; t=1698155273; x=1698760073; darn=vger.kernel.org;
         h=cc:to:from:subject:message-id:references:mime-version:in-reply-to
          :date:from:to:cc:subject:date:message-id:reply-to;
-        bh=7C50BM7p5C+vJ0clcF+/KvirWmdIP5XWEnNLFYgTdS0=;
-        b=gK9u6FzTkX3K1iRG91cMEhTsKa38/L/46VIeL5Cn6DYQweSChvvaPKT0wYJ0zaulsS
-         v3oYyFfQejo+/Wlr216GpD4ugSM+ghhKGtEXQpALFywvMH6tbnnyyxR/m1LAwap3fTjC
-         ONpYfnq0a6ggqJqWWIIli0hiQxldIOngGtsYbIu3hYNk8OTYY6Gz7WJJjQPXQGC3sTqI
-         x5a4QRlosGPO5OTPL/77kJSu1rntALwABru6sjyXil4t0nYV92T9GTiRiHI/EsfnqQYK
-         sSWgmjuEN/WWQfiYUO6N0BOUY1Km1BDv/aRDg8P6FDhpvJIQTCUr27/77t94dWfLn9ht
-         0Bbg==
+        bh=XaYZQGGekpRYWKofo5TkfncjTV9EZU0daTUjtZ9a4ek=;
+        b=HHIE4ELn/5FDRwwPSu1FimOOlWIoBT0SXYAlapDwK696rYwJRqYYvP1VsY70F6KqG/
+         I9K7bwFQZHbeynjoDLosHrXkL/LdbOr7OrJ8e5XcBgqnqlpNjOdghs1kVayxc8LZs5ev
+         feVfAgz26vy8MwJTE1kubaG6vP1QWtwSDkTOoS7HRyUvlWDc8MJIY+op+dvxWJOBpyHD
+         XMM/SjC6js85yyZK/CiMBKD9iJGb7w4KqOQjcm9/k9zuUBK3LZKQNmlmgbAC94qMnT2S
+         l2pJhb57WwSKX7rnKyibQi1WhZHr4thOX4Njf/vE5SbshA4jOvwCNneOcvJSd0hVCKyZ
+         fnQQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1698155264; x=1698760064;
+        d=1e100.net; s=20230601; t=1698155273; x=1698760073;
         h=cc:to:from:subject:message-id:references:mime-version:in-reply-to
          :date:x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=7C50BM7p5C+vJ0clcF+/KvirWmdIP5XWEnNLFYgTdS0=;
-        b=Arc8aIBeSozjequ3CjiIhqJvnu3hajVY6TMU2bcWXyM7MOI87o4MsRz0CDyvIM9Rnp
-         u1nLg0uNqVPyNmwGHDnmoBrvW74TxaBUzJDFISDHCFFMB9nAILTB6kgNdiI2dL7frGZW
-         2R4a2cWGiv/vKsNoGFEOXarBA2KHcvxC/M1HPw26cb7EoVadjtSR6qQ7HlmnlQ3kAFi8
-         WxSj2pgwWSLcgPPgKUAVAup6HC6ql+1/IPWmk2HlDF19fL5wydm7QL8IPWrV10p7E/sf
-         8Fo2BzZM3Ag0Vpxkk61OJOOmRKI/juYqLWLpbUmG0peTdmmFHhMzn1zMtKiHlQPrbVG5
-         UuLQ==
-X-Gm-Message-State: AOJu0YyOU+WPT5PwHlvJd6L01r8Ip4wJPG3ouRozSKV/FAusMPFQET0E
-	wUIGxL/dXNubhK0MkX6wvCtLbHf0vz8=
-X-Google-Smtp-Source: AGHT+IFgQR1uDgRKslLBvCkBHAk0T4yEqB1Qvs6h4RCMdoan4Z+72V6WbgepeSBkK71dX/nU/j0JJWPs+jY=
+        bh=XaYZQGGekpRYWKofo5TkfncjTV9EZU0daTUjtZ9a4ek=;
+        b=Z1rHsqeLFL/YPy1lk0BDnjDlGXkXBbrrkYm9xeMNQ1k83Nr4FsfF87IB+fOiJYqiGV
+         x0uVb4rh8oLC2r8f5cFNgZv+noj/hPIG948TF6CupKKaq/8fchKrDQbiSFgU4qaD7suo
+         JRDrBa9xOVxdJqlUtPcanaSZNn/zuoKETW05idBZh8z8lt0T6zSacPutWocThqrb3SL+
+         j2/WJSthTYdu++QHkrxJm8YUUAGsugyplCALG8I0FpnGRfnOG0ESOcrKC81jB76rClhL
+         r6GdFSmZ/mcfqgcXGebISmiVngiq3F8e4G8PBM7M4rnoB+CnKg61tZCA8UMMJ7F381c+
+         HhVg==
+X-Gm-Message-State: AOJu0YzBFTB793vlgCL/+lU6fm0XA89oL9WfSL8N/rNlgdwae+JOgiqE
+	Vv8WO7+t+wO4GqO4HoLkzlHQYEvweGs=
+X-Google-Smtp-Source: AGHT+IH/jHMj6SPf+djqQdMpidZEKeSxKuOmMnfBX0O2HbLM+zTXwQbpAuHKC7+8B6veMY9hNUZcoYeVJwM=
 X-Received: from surenb-desktop.mtv.corp.google.com ([2620:15c:211:201:45ba:3318:d7a5:336a])
- (user=surenb job=sendgmr) by 2002:a25:d34e:0:b0:d9a:e3d9:99bd with SMTP id
- e75-20020a25d34e000000b00d9ae3d999bdmr212803ybf.5.1698155264079; Tue, 24 Oct
- 2023 06:47:44 -0700 (PDT)
-Date: Tue, 24 Oct 2023 06:46:25 -0700
+ (user=surenb job=sendgmr) by 2002:a05:6902:168c:b0:d9a:e6ae:ddb7 with SMTP id
+ bx12-20020a056902168c00b00d9ae6aeddb7mr221434ybb.7.1698155273022; Tue, 24 Oct
+ 2023 06:47:53 -0700 (PDT)
+Date: Tue, 24 Oct 2023 06:46:29 -0700
 In-Reply-To: <20231024134637.3120277-1-surenb@google.com>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
@@ -49,8 +49,8 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 Mime-Version: 1.0
 References: <20231024134637.3120277-1-surenb@google.com>
 X-Mailer: git-send-email 2.42.0.758.gaed0368e0e-goog
-Message-ID: <20231024134637.3120277-29-surenb@google.com>
-Subject: [PATCH v2 28/39] timekeeping: Fix a circular include dependency
+Message-ID: <20231024134637.3120277-33-surenb@google.com>
+Subject: [PATCH v2 32/39] arm64: Fix circular header dependency
 From: Suren Baghdasaryan <surenb@google.com>
 To: akpm@linux-foundation.org
 Cc: kent.overstreet@linux.dev, mhocko@suse.com, vbabka@suse.cz, 
@@ -82,43 +82,30 @@ Content-Type: text/plain; charset="UTF-8"
 
 From: Kent Overstreet <kent.overstreet@linux.dev>
 
-This avoids a circular header dependency in an upcoming patch by only
-making hrtimer.h depend on percpu-defs.h
+Replace linux/percpu.h include with asm/percpu.h to avoid circular
+dependency.
 
 Signed-off-by: Kent Overstreet <kent.overstreet@linux.dev>
 Signed-off-by: Suren Baghdasaryan <surenb@google.com>
-Cc: Thomas Gleixner <tglx@linutronix.de>
 ---
- include/linux/hrtimer.h        | 2 +-
- include/linux/time_namespace.h | 2 ++
- 2 files changed, 3 insertions(+), 1 deletion(-)
+ arch/arm64/include/asm/spectre.h | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/include/linux/hrtimer.h b/include/linux/hrtimer.h
-index 0ee140176f10..e67349e84364 100644
---- a/include/linux/hrtimer.h
-+++ b/include/linux/hrtimer.h
-@@ -16,7 +16,7 @@
- #include <linux/rbtree.h>
- #include <linux/init.h>
- #include <linux/list.h>
--#include <linux/percpu.h>
-+#include <linux/percpu-defs.h>
- #include <linux/seqlock.h>
- #include <linux/timer.h>
- #include <linux/timerqueue.h>
-diff --git a/include/linux/time_namespace.h b/include/linux/time_namespace.h
-index 03d9c5ac01d1..a9e61120d4e3 100644
---- a/include/linux/time_namespace.h
-+++ b/include/linux/time_namespace.h
-@@ -11,6 +11,8 @@
- struct user_namespace;
- extern struct user_namespace init_user_ns;
+diff --git a/arch/arm64/include/asm/spectre.h b/arch/arm64/include/asm/spectre.h
+index 9cc501450486..75e837753772 100644
+--- a/arch/arm64/include/asm/spectre.h
++++ b/arch/arm64/include/asm/spectre.h
+@@ -13,8 +13,8 @@
+ #define __BP_HARDEN_HYP_VECS_SZ	((BP_HARDEN_EL2_SLOTS - 1) * SZ_2K)
  
-+struct vm_area_struct;
-+
- struct timens_offsets {
- 	struct timespec64 monotonic;
- 	struct timespec64 boottime;
+ #ifndef __ASSEMBLY__
+-
+-#include <linux/percpu.h>
++#include <linux/smp.h>
++#include <asm/percpu.h>
+ 
+ #include <asm/cpufeature.h>
+ #include <asm/virt.h>
 -- 
 2.42.0.758.gaed0368e0e-goog
 
