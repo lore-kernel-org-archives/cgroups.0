@@ -1,144 +1,208 @@
 Received: from lindbergh.monkeyblade.net (lindbergh.monkeyblade.net [23.128.96.19])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5671F2B75E
-	for <cgroups@vger.kernel.org>; Tue, 24 Oct 2023 16:09:08 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8945324215
+	for <cgroups@vger.kernel.org>; Tue, 24 Oct 2023 16:12:00 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=cmpxchg-org.20230601.gappssmtp.com header.i=@cmpxchg-org.20230601.gappssmtp.com header.b="HnxUkBWN"
-Received: from mail-qk1-x72f.google.com (mail-qk1-x72f.google.com [IPv6:2607:f8b0:4864:20::72f])
-	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 41462A6
-	for <cgroups@vger.kernel.org>; Tue, 24 Oct 2023 09:09:06 -0700 (PDT)
-Received: by mail-qk1-x72f.google.com with SMTP id af79cd13be357-778a108ae49so428282085a.0
-        for <cgroups@vger.kernel.org>; Tue, 24 Oct 2023 09:09:06 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=cmpxchg-org.20230601.gappssmtp.com; s=20230601; t=1698163745; x=1698768545; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=VOgTqaWod2GIRMlQnZ21kgeA7fU4We2gZHXmH2gakWs=;
-        b=HnxUkBWN+fNe0/jn27fSEWXczaAvhrMLtG+uZiImetWKZhEDcOUzgTh8O/1YcJqPnp
-         nEUUQDEwok6hzsT4rdLO/+9a+kXx7pJWWQw2nlhAkMo51aKnxoI2q+NpOIgIMEC0hJog
-         Gmn79q3r8cwL4W6hHerFgFJQgXFpoTexI0UuiQbzW/o7bdEByShdf85fNneoQn9swLnk
-         S4diAq+8JY1jmc2g4T4v1tP0y3/g2Ta4o+f5Oj1qKGYP/572C4oUl7jJwG8nYY4Sf2ni
-         VBYr8BiEXVaHLITop5cQM6s5g1NpChFOfmv1qkjAnq5HzkIvEoUJJneFuj/gC00HXfCc
-         9mRA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1698163745; x=1698768545;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=VOgTqaWod2GIRMlQnZ21kgeA7fU4We2gZHXmH2gakWs=;
-        b=tT9Zy6+q3cBqTG6ylB3SrtD/SB4EO7oFj2aMcSjspJzUG9wC8ZPpishJS5kp0ZKx8F
-         EgKkiLf1Xqb0M8crOCbJ1hlcXL0IM7HNe86trF8Sd3FMh1wjdYd7JOurVZXHRDDFFJpu
-         gDj6PhX8QKyJu+R96T479mP6JV/2GJQ3w19lJN3BhZJgAGEqatkjrafDyXyOou1/2bTr
-         L7N3WcZPuNZStE2+9uRlTL4WAIzhvwN6raJY+yp3S6UQPa6xnALiubIxqhTGLutZJsyH
-         ga7BkWLQQC/OxIHINag7Y8YsXLHsKCKWq1TVnQyyDuqfKHZLmlzL0rutmKWUciTytLF2
-         MdAg==
-X-Gm-Message-State: AOJu0YzE7DdguD2Ywvi1KIWGiBFT6CE0JxtTyXMUmmeY8x0IjxrozHXn
-	z3ZdWyJo2AV0EdMcqfN9PcBn0w==
-X-Google-Smtp-Source: AGHT+IE4iOSeMFxlVe/rUGgAvUrIKN/iHb2FxiHseAUx3vVefnmIsABNiiFtr0ZTnpRstzIYxb6ysQ==
-X-Received: by 2002:a05:620a:448a:b0:773:ac84:3f57 with SMTP id x10-20020a05620a448a00b00773ac843f57mr17278800qkp.5.1698163745326;
-        Tue, 24 Oct 2023 09:09:05 -0700 (PDT)
-Received: from localhost (2603-7000-0c01-2716-3012-16a2-6bc2-2937.res6.spectrum.com. [2603:7000:c01:2716:3012:16a2:6bc2:2937])
-        by smtp.gmail.com with ESMTPSA id r16-20020a05620a299000b007756c8ce8f5sm3505539qkp.59.2023.10.24.09.09.04
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 24 Oct 2023 09:09:05 -0700 (PDT)
-Date: Tue, 24 Oct 2023 12:09:04 -0400
-From: Johannes Weiner <hannes@cmpxchg.org>
-To: Nhat Pham <nphamcs@gmail.com>
-Cc: akpm@linux-foundation.org, cerasuolodomenico@gmail.com,
-	yosryahmed@google.com, sjenning@redhat.com, ddstreet@ieee.org,
-	vitaly.wool@konsulko.com, mhocko@kernel.org,
-	roman.gushchin@linux.dev, shakeelb@google.com,
-	muchun.song@linux.dev, linux-mm@kvack.org, kernel-team@meta.com,
-	linux-kernel@vger.kernel.org, cgroups@vger.kernel.org
-Subject: Re: [PATCH] zswap: export more zswap store failure stats
-Message-ID: <20231024160904.GA1971738@cmpxchg.org>
-References: <20231024000702.1387130-1-nphamcs@gmail.com>
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="YznZcid9"
+Received: from mgamail.intel.com (mgamail.intel.com [134.134.136.31])
+	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D842112B;
+	Tue, 24 Oct 2023 09:11:57 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1698163917; x=1729699917;
+  h=from:to:cc:subject:date:message-id:in-reply-to:
+   references:mime-version:content-transfer-encoding;
+  bh=DDR9QYygtf/mqSlMDbJLfsleqL3tuJUQWKqqud2aweU=;
+  b=YznZcid9SWgjMY5SsTi46/61eC/yrKSeHKwWWw1mPIyaOgWraHGtV8I5
+   1QRcU4GVQW01IPLK2h+whOxblUgYgFGbamWFbg/OaJeECMUMP3gbUujTO
+   Q3e8UO4wHwAqHaYFB8NSyMAEKwvQo7bZfnxL3w3cYAx+XCEpn1LQXgWiP
+   j2Hr3j3NonznX+T8yUqs5aaPjVJ6G+bGRou0rZOI6oyw3Br+e962deQh+
+   7RfyaVFU06qeX67PfrZS28nK6WGeotntYFZeR+9Mz41bsbfGlqlI8P218
+   C7aIuQOygtKeoLEKofojnuDn6Mo/o1jsQiT6AJN/W55Ka/TdT/ECdKek3
+   w==;
+X-IronPort-AV: E=McAfee;i="6600,9927,10873"; a="451328086"
+X-IronPort-AV: E=Sophos;i="6.03,248,1694761200"; 
+   d="scan'208";a="451328086"
+Received: from fmsmga001.fm.intel.com ([10.253.24.23])
+  by orsmga104.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 24 Oct 2023 09:07:41 -0700
+X-ExtLoop1: 1
+X-IronPort-AV: E=McAfee;i="6600,9927,10873"; a="902237142"
+X-IronPort-AV: E=Sophos;i="6.03,248,1694761200"; 
+   d="scan'208";a="902237142"
+Received: from aidenbar-mobl.ger.corp.intel.com (HELO localhost.localdomain) ([10.213.219.125])
+  by fmsmga001-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 24 Oct 2023 09:05:16 -0700
+From: Tvrtko Ursulin <tvrtko.ursulin@linux.intel.com>
+To: Intel-gfx@lists.freedesktop.org,
+	dri-devel@lists.freedesktop.org
+Cc: cgroups@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Tejun Heo <tj@kernel.org>,
+	Johannes Weiner <hannes@cmpxchg.org>,
+	Zefan Li <lizefan.x@bytedance.com>,
+	Dave Airlie <airlied@redhat.com>,
+	Daniel Vetter <daniel.vetter@ffwll.ch>,
+	Rob Clark <robdclark@chromium.org>,
+	=?UTF-8?q?St=C3=A9phane=20Marchesin?= <marcheu@chromium.org>,
+	"T . J . Mercier" <tjmercier@google.com>,
+	Kenny.Ho@amd.com,
+	=?UTF-8?q?Christian=20K=C3=B6nig?= <christian.koenig@amd.com>,
+	Brian Welty <brian.welty@intel.com>,
+	Tvrtko Ursulin <tvrtko.ursulin@intel.com>
+Subject: [RFC 1/8] cgroup: Add the DRM cgroup controller
+Date: Tue, 24 Oct 2023 17:07:20 +0100
+Message-Id: <20231024160727.282960-2-tvrtko.ursulin@linux.intel.com>
+X-Mailer: git-send-email 2.39.2
+In-Reply-To: <20231024160727.282960-1-tvrtko.ursulin@linux.intel.com>
+References: <20231024160727.282960-1-tvrtko.ursulin@linux.intel.com>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20231024000702.1387130-1-nphamcs@gmail.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 
-On Mon, Oct 23, 2023 at 05:07:02PM -0700, Nhat Pham wrote:
-> Since:
-> 
-> "42c06a0e8ebe mm: kill frontswap"
-> 
-> we no longer have a counter to tracks the number of zswap store
-> failures. This makes it hard to investigate and monitor for zswap
-> issues.
-> 
-> This patch adds a global and a per-cgroup zswap store failure counter,
-> as well as a dedicated debugfs counter for compression algorithm failure
-> (which can happen for e.g when random data are passed to zswap).
-> 
-> Signed-off-by: Nhat Pham <nphamcs@gmail.com>
+From: Tvrtko Ursulin <tvrtko.ursulin@intel.com>
 
-I agree this is an issue.
+Skeleton controller without any functionality.
 
-> ---
->  include/linux/vm_event_item.h |  1 +
->  mm/memcontrol.c               |  1 +
->  mm/vmstat.c                   |  1 +
->  mm/zswap.c                    | 18 ++++++++++++++----
->  4 files changed, 17 insertions(+), 4 deletions(-)
-> 
-> diff --git a/include/linux/vm_event_item.h b/include/linux/vm_event_item.h
-> index 8abfa1240040..7b2b117b193d 100644
-> --- a/include/linux/vm_event_item.h
-> +++ b/include/linux/vm_event_item.h
-> @@ -145,6 +145,7 @@ enum vm_event_item { PGPGIN, PGPGOUT, PSWPIN, PSWPOUT,
->  #ifdef CONFIG_ZSWAP
->  		ZSWPIN,
->  		ZSWPOUT,
-> +		ZSWPOUT_FAIL,
+Signed-off-by: Tvrtko Ursulin <tvrtko.ursulin@intel.com>
+---
+ include/linux/cgroup_drm.h    |  9 ++++++
+ include/linux/cgroup_subsys.h |  4 +++
+ init/Kconfig                  |  7 ++++
+ kernel/cgroup/Makefile        |  1 +
+ kernel/cgroup/drm.c           | 60 +++++++++++++++++++++++++++++++++++
+ 5 files changed, 81 insertions(+)
+ create mode 100644 include/linux/cgroup_drm.h
+ create mode 100644 kernel/cgroup/drm.c
 
-Would the writeback stat be sufficient to determine this?
+diff --git a/include/linux/cgroup_drm.h b/include/linux/cgroup_drm.h
+new file mode 100644
+index 000000000000..8ef66a47619f
+--- /dev/null
++++ b/include/linux/cgroup_drm.h
+@@ -0,0 +1,9 @@
++/* SPDX-License-Identifier: MIT */
++/*
++ * Copyright © 2023 Intel Corporation
++ */
++
++#ifndef _CGROUP_DRM_H
++#define _CGROUP_DRM_H
++
++#endif	/* _CGROUP_DRM_H */
+diff --git a/include/linux/cgroup_subsys.h b/include/linux/cgroup_subsys.h
+index 445235487230..49460494a010 100644
+--- a/include/linux/cgroup_subsys.h
++++ b/include/linux/cgroup_subsys.h
+@@ -65,6 +65,10 @@ SUBSYS(rdma)
+ SUBSYS(misc)
+ #endif
+ 
++#if IS_ENABLED(CONFIG_CGROUP_DRM)
++SUBSYS(drm)
++#endif
++
+ /*
+  * The following subsystems are not supported on the default hierarchy.
+  */
+diff --git a/init/Kconfig b/init/Kconfig
+index 6d35728b94b2..ed8ffa444e37 100644
+--- a/init/Kconfig
++++ b/init/Kconfig
+@@ -1066,6 +1066,13 @@ config CGROUP_RDMA
+ 	  Attaching processes with active RDMA resources to the cgroup
+ 	  hierarchy is allowed even if can cross the hierarchy's limit.
+ 
++config CGROUP_DRM
++	bool "DRM controller"
++	help
++	  Provides the DRM subsystem controller.
++
++	  ...
++
+ config CGROUP_FREEZER
+ 	bool "Freezer controller"
+ 	help
+diff --git a/kernel/cgroup/Makefile b/kernel/cgroup/Makefile
+index 12f8457ad1f9..849bd2917477 100644
+--- a/kernel/cgroup/Makefile
++++ b/kernel/cgroup/Makefile
+@@ -6,4 +6,5 @@ obj-$(CONFIG_CGROUP_PIDS) += pids.o
+ obj-$(CONFIG_CGROUP_RDMA) += rdma.o
+ obj-$(CONFIG_CPUSETS) += cpuset.o
+ obj-$(CONFIG_CGROUP_MISC) += misc.o
++obj-$(CONFIG_CGROUP_DRM) += drm.o
+ obj-$(CONFIG_CGROUP_DEBUG) += debug.o
+diff --git a/kernel/cgroup/drm.c b/kernel/cgroup/drm.c
+new file mode 100644
+index 000000000000..02c8eaa633d3
+--- /dev/null
++++ b/kernel/cgroup/drm.c
+@@ -0,0 +1,60 @@
++/* SPDX-License-Identifier: MIT */
++/*
++ * Copyright © 2023 Intel Corporation
++ */
++
++#include <linux/cgroup.h>
++#include <linux/cgroup_drm.h>
++#include <linux/slab.h>
++
++struct drm_cgroup_state {
++	struct cgroup_subsys_state css;
++};
++
++struct drm_root_cgroup_state {
++	struct drm_cgroup_state drmcs;
++};
++
++static struct drm_root_cgroup_state root_drmcs;
++
++static inline struct drm_cgroup_state *
++css_to_drmcs(struct cgroup_subsys_state *css)
++{
++	return container_of(css, struct drm_cgroup_state, css);
++}
++
++static void drmcs_free(struct cgroup_subsys_state *css)
++{
++	struct drm_cgroup_state *drmcs = css_to_drmcs(css);
++
++	if (drmcs != &root_drmcs.drmcs)
++		kfree(drmcs);
++}
++
++static struct cgroup_subsys_state *
++drmcs_alloc(struct cgroup_subsys_state *parent_css)
++{
++	struct drm_cgroup_state *drmcs;
++
++	if (!parent_css) {
++		drmcs = &root_drmcs.drmcs;
++	} else {
++		drmcs = kzalloc(sizeof(*drmcs), GFP_KERNEL);
++		if (!drmcs)
++			return ERR_PTR(-ENOMEM);
++	}
++
++	return &drmcs->css;
++}
++
++struct cftype files[] = {
++	{ } /* Zero entry terminates. */
++};
++
++struct cgroup_subsys drm_cgrp_subsys = {
++	.css_alloc	= drmcs_alloc,
++	.css_free	= drmcs_free,
++	.early_init	= false,
++	.legacy_cftypes	= files,
++	.dfl_cftypes	= files,
++};
+-- 
+2.39.2
 
-Hear me out. We already have pswpout that shows when we're hitting
-disk swap. Right now we can't tell if this is because of a rejection
-or because of writeback. With a writeback counter we could.
-
-And I think we want the writeback counter anyway going forward in
-order to monitor and understand the dynamic shrinker's performance.
-
-Either way we go, one of the metrics needs to be derived from the
-other(s). But I think subtle and not so subtle shrinker issues are
-more concerning than outright configuration problems where zswap
-doesn't work at all. The latter is easier to catch before or during
-early deployment with simple functionality tests.
-
-Plus, rejections should be rare. They are now, and they should become
-even more rare or cease to exist going forward. Because every time
-they happen at scale, they represent problematic LRU inversions.  We
-have patched, have pending patches, or discussed changes to reduce
-every single one of them:
-
-	/* Store failed due to a reclaim failure after pool limit was reached */
-	static u64 zswap_reject_reclaim_fail;
-
-With the shrinker this becomes less relevant. There was also the
-proposal to disable the bypass to swap and just keep the page.
-
-	/* Compressed page was too big for the allocator to (optimally) store */
-	static u64 zswap_reject_compress_poor;
-
-You were working on eradicating this (with zsmalloc at least).
-
-	/* Store failed because underlying allocator could not get memory */
-	static u64 zswap_reject_alloc_fail;
-	/* Store failed because the entry metadata could not be allocated (rare) */
-	static u64 zswap_reject_kmemcache_fail;
-
-These shouldn't happen at all due to PF_MEMALLOC.
-
-IOW, the fail counter is expected to stay zero in healthy,
-well-configured systems. Rather than an MM event that needs counting,
-this strikes me as something that could be a WARN down the line...
-
-I agree with adding the debugfs counter though.
