@@ -1,37 +1,37 @@
 Received: from lindbergh.monkeyblade.net (lindbergh.monkeyblade.net [23.128.96.19])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6645319BBE
-	for <cgroups@vger.kernel.org>; Mon, 30 Oct 2023 18:20:38 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 639C019BB1
+	for <cgroups@vger.kernel.org>; Mon, 30 Oct 2023 18:20:40 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="kedlIRxl"
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="oIPxdGh2"
 Received: from mgamail.intel.com (mgamail.intel.com [192.55.52.136])
-	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2D638C9;
-	Mon, 30 Oct 2023 11:20:36 -0700 (PDT)
+	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 09D59E1;
+	Mon, 30 Oct 2023 11:20:38 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1698690036; x=1730226036;
+  t=1698690038; x=1730226038;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=XwIgULTxO8Z4Bp/SNgub1tcebqsaKXGrvzAz+ItDLZY=;
-  b=kedlIRxlUjelJSHdfjdLLpBFk0wVY3s/SBU37vmVxgjCthLOVvwK12Li
-   nrKpYs+cYINFBw7OFgQoCFfjUW0GWf9hzEbG4BJm23fZwRV1IJdKj/f8I
-   iXUxLfuBUKplkE74YsTDUC4H4D5PoRXAZ8dEUVTEnMLjW9E2ZAHMwKnBQ
-   mS3IZ1Nd2a2sQM1S2RqZXnNY4tMoCq6FWEAHHbasUChfv3VP8LAIG2rCw
-   6rdkdqIbYf67tUtNPJzgVS2TEE9hy+ff+U1hCHl4VYTJKQL2xNnflUWS2
-   ovvRgCIr6+KfJKrrz9olIOJYpTjzYfXKIzUNE6O8xkSIbeAAjwKStmpxj
+  bh=vwoNizkiHcFYzYVMWoNqF3D7lmeva/dKQ41pgY/Z5Eo=;
+  b=oIPxdGh2L7axnKHvFARPmeUYlAfGCBBp76ONANHG6iod16Vgykf5YmdT
+   jRhPPmhS3obzO+FKJ6NQ0jeV+IMAMe0jLVizCoY+wddaS+FbedQS6opF5
+   xFHkAmSkZ96bBNFSWZXVgqzu5frODhmv1oj0PmIxfUT1pmxQIx07fYD5r
+   ySHpVDLB2CcIA1WU+dwBhtab+P2QgBOKIZrHfSVM06i8jpgYnlUPiiZ/z
+   KqEHTIGv6m6i4R2e5+Yj20yiPQPkZr6j6a3o+e/M9KAYszAVH4JRbAVS7
+   gfsox4wImxFise3DadxLaDmE/jdoQ+c3IlAIQzvYaxPN/UbPHpnHnQVGF
    A==;
-X-IronPort-AV: E=McAfee;i="6600,9927,10879"; a="367479608"
+X-IronPort-AV: E=McAfee;i="6600,9927,10879"; a="367479647"
 X-IronPort-AV: E=Sophos;i="6.03,263,1694761200"; 
-   d="scan'208";a="367479608"
+   d="scan'208";a="367479647"
 Received: from orsmga008.jf.intel.com ([10.7.209.65])
-  by fmsmga106.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 30 Oct 2023 11:20:30 -0700
+  by fmsmga106.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 30 Oct 2023 11:20:31 -0700
 X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6600,9927,10879"; a="789529528"
+X-IronPort-AV: E=McAfee;i="6600,9927,10879"; a="789529539"
 X-IronPort-AV: E=Sophos;i="6.03,263,1694761200"; 
-   d="scan'208";a="789529528"
+   d="scan'208";a="789529539"
 Received: from b4969161e530.jf.intel.com ([10.165.56.46])
-  by orsmga008.jf.intel.com with ESMTP; 30 Oct 2023 11:20:29 -0700
+  by orsmga008.jf.intel.com with ESMTP; 30 Oct 2023 11:20:30 -0700
 From: Haitao Huang <haitao.huang@linux.intel.com>
 To: jarkko@kernel.org,
 	dave.hansen@linux.intel.com,
@@ -53,11 +53,10 @@ Cc: zhiquan1.li@intel.com,
 	anakrish@microsoft.com,
 	mikko.ylinen@linux.intel.com,
 	yangjie@microsoft.com,
-	Sean Christopherson <sean.j.christopherson@intel.com>,
 	Haitao Huang <haitao.huang@linux.intel.com>
-Subject: [PATCH v6 09/12] x86/sgx: Restructure top-level EPC reclaim function
-Date: Mon, 30 Oct 2023 11:20:10 -0700
-Message-Id: <20231030182013.40086-10-haitao.huang@linux.intel.com>
+Subject: [PATCH v6 12/12] selftests/sgx: Add scripts for EPC cgroup testing
+Date: Mon, 30 Oct 2023 11:20:13 -0700
+Message-Id: <20231030182013.40086-13-haitao.huang@linux.intel.com>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20231030182013.40086-1-haitao.huang@linux.intel.com>
 References: <20231030182013.40086-1-haitao.huang@linux.intel.com>
@@ -69,236 +68,274 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-From: Sean Christopherson <sean.j.christopherson@intel.com>
+The scripts rely on cgroup-tools package from libcgroup [1].
 
-To prepare for per-cgroup reclamation, separate the top-level reclaim
-function, sgx_reclaim_epc_pages(), into two separate functions:
+To run selftests for epc cgroup:
 
-- sgx_isolate_epc_pages() scans and isolates reclaimable pages from a given LRU list.
-- sgx_do_epc_reclamation() performs the real reclamation for the already isolated pages.
+sudo ./run_epc_cg_selftests.sh
 
-Create a new function, sgx_reclaim_epc_pages_global(), calling those two
-in succession, to replace the original sgx_reclaim_epc_pages(). The
-above two functions will serve as building blocks for the reclamation
-flows in later EPC cgroup implementation.
+With different cgroups, the script starts one or multiple concurrent SGX
+selftests, each to run one unclobbered_vdso_oversubscribed test.  Each
+of such test tries to load an enclave of EPC size equal to the EPC
+capacity available on the platform. The script checks results against
+the expectation set for each cgroup and reports success or failure.
 
-sgx_do_epc_reclamation() returns the number of reclaimed pages. The EPC
-cgroup will use the result to track reclaiming progress.
+The script creates 3 different cgroups at the beginning with following
+expectations:
 
-sgx_isolate_epc_pages() returns the additional number of pages to scan
-for current epoch of reclamation. The EPC cgroup will use the result to
-determine if more scanning to be done in LRUs in its children groups.
+1) SMALL - intentionally small enough to fail the test loading an
+enclave of size equal to the capacity.
+2) LARGE - large enough to run up to 4 concurrent tests but fail some if
+more than 4 concurrent tests are run. The script starts 4 expecting at
+least one test to pass, and then starts 5 expecting at least one test
+to fail.
+3) LARGER - limit is the same as the capacity, large enough to run lots of
+concurrent tests. The script starts 10 of them and expects all pass.
+Then it reruns the same test with one process randomly killed and
+usage checked to be zero after all process exit.
 
-Signed-off-by: Sean Christopherson <sean.j.christopherson@intel.com>
-Co-developed-by: Kristen Carlson Accardi <kristen@linux.intel.com>
-Signed-off-by: Kristen Carlson Accardi <kristen@linux.intel.com>
-Co-developed-by: Haitao Huang <haitao.huang@linux.intel.com>
+To watch misc cgroup 'current' changes during testing, run this in a
+separate terminal:
+
+./watch_misc_for_tests.sh current
+
+[1] https://github.com/libcgroup/libcgroup/blob/main/README
+
 Signed-off-by: Haitao Huang <haitao.huang@linux.intel.com>
-Cc: Sean Christopherson <seanjc@google.com>
 ---
-V6:
-- Restructure patches to make it easier to review. (Kai)
-- Fix unused nr_to_scan (Kai)
----
- arch/x86/kernel/cpu/sgx/main.c | 97 ++++++++++++++++++++++------------
- arch/x86/kernel/cpu/sgx/sgx.h  |  8 +++
- 2 files changed, 72 insertions(+), 33 deletions(-)
+V5:
 
-diff --git a/arch/x86/kernel/cpu/sgx/main.c b/arch/x86/kernel/cpu/sgx/main.c
-index 33bcba313d40..e8848b493eb7 100644
---- a/arch/x86/kernel/cpu/sgx/main.c
-+++ b/arch/x86/kernel/cpu/sgx/main.c
-@@ -281,33 +281,23 @@ static void sgx_reclaimer_write(struct sgx_epc_page *epc_page,
- 	mutex_unlock(&encl->lock);
- }
- 
--/*
-- * Take a fixed number of pages from the head of the active page pool and
-- * reclaim them to the enclave's private shmem files. Skip the pages, which have
-- * been accessed since the last scan. Move those pages to the tail of active
-- * page pool so that the pages get scanned in LRU like fashion.
-+/**
-+ * sgx_isolate_epc_pages() - Isolate pages from an LRU for reclaim
-+ * @lru:	LRU from which to reclaim
-+ * @nr_to_scan:	Number of pages to scan for reclaim
-+ * @dst:	Destination list to hold the isolated pages
-  *
-- * Batch process a chunk of pages (at the moment 16) in order to degrade amount
-- * of IPI's and ETRACK's potentially required. sgx_encl_ewb() does degrade a bit
-- * among the HW threads with three stage EWB pipeline (EWB, ETRACK + EWB and IPI
-- * + EWB) but not sufficiently. Reclaiming one page at a time would also be
-- * problematic as it would increase the lock contention too much, which would
-- * halt forward progress.
-+ * Return: remaining pages to scan, i.e, @nr_to_scan minus the number of pages scanned.
-  */
--static void sgx_reclaim_pages(void)
-+unsigned int  sgx_isolate_epc_pages(struct sgx_epc_lru_list *lru, unsigned int nr_to_scan,
-+				    struct list_head *dst)
- {
--	struct sgx_backing backing[SGX_NR_TO_SCAN];
--	struct sgx_epc_page *epc_page, *tmp;
- 	struct sgx_encl_page *encl_page;
--	pgoff_t page_index;
--	LIST_HEAD(iso);
--	int ret;
--	int i;
-+	struct sgx_epc_page *epc_page;
- 
--	spin_lock(&sgx_global_lru.lock);
--	for (i = 0; i < SGX_NR_TO_SCAN; i++) {
--		epc_page = list_first_entry_or_null(&sgx_global_lru.reclaimable,
--						    struct sgx_epc_page, list);
-+	spin_lock(&lru->lock);
-+	for (; nr_to_scan > 0; --nr_to_scan) {
-+		epc_page = list_first_entry_or_null(&lru->reclaimable, struct sgx_epc_page, list);
- 		if (!epc_page)
- 			break;
- 
-@@ -316,23 +306,53 @@ static void sgx_reclaim_pages(void)
- 
- 		if (kref_get_unless_zero(&encl_page->encl->refcount) != 0) {
- 			sgx_epc_page_set_state(epc_page, SGX_EPC_PAGE_RECLAIM_IN_PROGRESS);
--			list_move_tail(&epc_page->list, &iso);
-+			list_move_tail(&epc_page->list, dst);
- 		} else
- 			/* The owner is freeing the page. No need to add the
- 			 * page back to the list of reclaimable pages.
- 			 */
- 			sgx_epc_page_reset_state(epc_page);
- 	}
--	spin_unlock(&sgx_global_lru.lock);
-+	spin_unlock(&lru->lock);
+- Added script with automatic results checking, remove the interactive
+script.
+- The script can run independent from the series below.
+---
+ .../selftests/sgx/run_epc_cg_selftests.sh     | 196 ++++++++++++++++++
+ .../selftests/sgx/watch_misc_for_tests.sh     |  13 ++
+ 2 files changed, 209 insertions(+)
+ create mode 100755 tools/testing/selftests/sgx/run_epc_cg_selftests.sh
+ create mode 100755 tools/testing/selftests/sgx/watch_misc_for_tests.sh
+
+diff --git a/tools/testing/selftests/sgx/run_epc_cg_selftests.sh b/tools/testing/selftests/sgx/run_epc_cg_selftests.sh
+new file mode 100755
+index 000000000000..72b93f694753
+--- /dev/null
++++ b/tools/testing/selftests/sgx/run_epc_cg_selftests.sh
+@@ -0,0 +1,196 @@
++#!/bin/bash
++# SPDX-License-Identifier: GPL-2.0
++# Copyright(c) 2023 Intel Corporation.
 +
-+	return nr_to_scan;
-+}
++TEST_ROOT_CG=selftest
++cgcreate -g misc:$TEST_ROOT_CG
++if [ $? -ne 0 ]; then
++    echo "# Please make sure cgroup-tools is installed, and misc cgroup is mounted."
++    exit 1
++fi
++TEST_CG_SUB1=$TEST_ROOT_CG/test1
++TEST_CG_SUB2=$TEST_ROOT_CG/test2
++TEST_CG_SUB3=$TEST_ROOT_CG/test1/test3
++TEST_CG_SUB4=$TEST_ROOT_CG/test4
 +
-+/**
-+ * sgx_do_epc_reclamation() - Perform reclamation for isolated EPC pages.
-+ * @iso:		List of isolated pages for reclamation
-+ *
-+ * Take a list of EPC pages and reclaim them to the enclave's private shmem files.  Do not
-+ * reclaim the pages that have been accessed since the last scan, and move each of those pages
-+ * to the tail of its tracking LRU list.
-+ *
-+ * Limit the number of pages to be processed up to SGX_NR_TO_SCAN_MAX per call in order to
-+ * degrade amount of IPI's and ETRACK's potentially required. sgx_encl_ewb() does degrade a bit
-+ * among the HW threads with three stage EWB pipeline (EWB, ETRACK + EWB and IPI + EWB) but not
-+ * sufficiently. Reclaiming one page at a time would also be problematic as it would increase
-+ * the lock contention too much, which would halt forward progress.
-+ *
-+ * Extra pages in the list beyond the SGX_NR_TO_SCAN_MAX limit are skipped and returned back to
-+ * their tracking LRU lists.
-+ *
-+ * Return: number of pages successfully reclaimed.
-+ */
-+unsigned int sgx_do_epc_reclamation(struct list_head *iso)
-+{
-+	struct sgx_backing backing[SGX_NR_TO_SCAN_MAX];
-+	struct sgx_epc_page *epc_page, *tmp;
-+	struct sgx_encl_page *encl_page;
-+	pgoff_t page_index;
-+	size_t ret, i;
- 
--	if (list_empty(&iso))
--		return;
-+	if (list_empty(iso))
-+		return 0;
- 
- 	i = 0;
--	list_for_each_entry_safe(epc_page, tmp, &iso, list) {
-+	list_for_each_entry_safe(epc_page, tmp, iso, list) {
- 		encl_page = epc_page->owner;
- 
--		if (!sgx_reclaimer_age(epc_page))
-+		if (i == SGX_NR_TO_SCAN_MAX || !sgx_reclaimer_age(epc_page))
- 			goto skip;
- 
- 		page_index = PFN_DOWN(encl_page->desc - encl_page->encl->base);
-@@ -358,11 +378,11 @@ static void sgx_reclaim_pages(void)
- 		kref_put(&encl_page->encl->refcount, sgx_encl_release);
- 	}
- 
--	list_for_each_entry(epc_page, &iso, list)
-+	list_for_each_entry(epc_page, iso, list)
- 		sgx_reclaimer_block(epc_page);
- 
- 	i = 0;
--	list_for_each_entry_safe(epc_page, tmp, &iso, list) {
-+	list_for_each_entry_safe(epc_page, tmp, iso, list) {
- 		encl_page = epc_page->owner;
- 		sgx_reclaimer_write(epc_page, &backing[i++]);
- 
-@@ -371,6 +391,17 @@ static void sgx_reclaim_pages(void)
- 
- 		sgx_free_epc_page(epc_page);
- 	}
++cgcreate -g misc:$TEST_CG_SUB1
++cgcreate -g misc:$TEST_CG_SUB2
++cgcreate -g misc:$TEST_CG_SUB3
++cgcreate -g misc:$TEST_CG_SUB4
 +
-+	return i;
-+}
++# Default to V2
++CG_ROOT=/sys/fs/cgroup
++if [ ! -d "/sys/fs/cgroup/misc" ]; then
++    echo "# cgroup V2 is in use."
++else
++    echo "# cgroup V1 is in use."
++    CG_ROOT=/sys/fs/cgroup/misc
++fi
 +
-+static void sgx_reclaim_epc_pages_global(void)
-+{
-+	LIST_HEAD(iso);
++CAPACITY=$(grep "sgx_epc" "$CG_ROOT/misc.capacity" | awk '{print $2}')
++# This is below number of VA pages needed for enclave of capacity size. So
++# should fail oversubscribed cases
++SMALL=$(( CAPACITY / 512 ))
 +
-+	sgx_isolate_epc_pages(&sgx_global_lru, SGX_NR_TO_SCAN, &iso);
++# At least load one enclave of capacity size successfully, maybe up to 4.
++# But some may fail if we run more than 4 concurrent enclaves of capacity size.
++LARGE=$(( SMALL * 4 ))
 +
-+	sgx_do_epc_reclamation(&iso);
- }
- 
- static bool sgx_should_reclaim(unsigned long watermark)
-@@ -387,7 +418,7 @@ static bool sgx_should_reclaim(unsigned long watermark)
- void sgx_reclaim_direct(void)
- {
- 	if (sgx_should_reclaim(SGX_NR_LOW_PAGES))
--		sgx_reclaim_pages();
-+		sgx_reclaim_epc_pages_global();
- }
- 
- static int ksgxd(void *p)
-@@ -410,7 +441,7 @@ static int ksgxd(void *p)
- 				     sgx_should_reclaim(SGX_NR_HIGH_PAGES));
- 
- 		if (sgx_should_reclaim(SGX_NR_HIGH_PAGES))
--			sgx_reclaim_pages();
-+			sgx_reclaim_epc_pages_global();
- 
- 		cond_resched();
- 	}
-@@ -587,7 +618,7 @@ struct sgx_epc_page *sgx_alloc_epc_page(void *owner, bool reclaim)
- 		 * Need to do a global reclamation if cgroup was not full but free
- 		 * physical pages run out, causing __sgx_alloc_epc_page() to fail.
- 		 */
--		sgx_reclaim_pages();
-+		sgx_reclaim_epc_pages_global();
- 		cond_resched();
- 	}
- 
-diff --git a/arch/x86/kernel/cpu/sgx/sgx.h b/arch/x86/kernel/cpu/sgx/sgx.h
-index dd7ab65b5b27..6a40f70ed96f 100644
---- a/arch/x86/kernel/cpu/sgx/sgx.h
-+++ b/arch/x86/kernel/cpu/sgx/sgx.h
-@@ -19,6 +19,11 @@
- 
- #define SGX_MAX_EPC_SECTIONS		8
- #define SGX_EEXTEND_BLOCK_SIZE		256
++# Load lots of enclaves
++LARGER=$CAPACITY
++echo "# Setting up limits."
++echo "sgx_epc $SMALL" | tee $CG_ROOT/$TEST_CG_SUB1/misc.max
++echo "sgx_epc $LARGE" | tee $CG_ROOT/$TEST_CG_SUB2/misc.max
++echo "sgx_epc $LARGER" | tee $CG_ROOT/$TEST_CG_SUB4/misc.max
 +
-+/*
-+ * Maximum number of pages to scan for reclaiming.
-+ */
-+#define SGX_NR_TO_SCAN_MAX		32U
- #define SGX_NR_TO_SCAN			16
- #define SGX_NR_LOW_PAGES		32
- #define SGX_NR_HIGH_PAGES		64
-@@ -162,6 +167,9 @@ void sgx_reclaim_direct(void);
- void sgx_mark_page_reclaimable(struct sgx_epc_page *page);
- int sgx_unmark_page_reclaimable(struct sgx_epc_page *page);
- struct sgx_epc_page *sgx_alloc_epc_page(void *owner, bool reclaim);
-+unsigned int sgx_do_epc_reclamation(struct list_head *iso);
-+unsigned int sgx_isolate_epc_pages(struct sgx_epc_lru_list *lru, unsigned int nr_to_scan,
-+				   struct list_head *dst);
- 
- void sgx_ipi_cb(void *info);
- 
++timestamp=$(date +%Y%m%d_%H%M%S)
++
++test_cmd="./test_sgx -t unclobbered_vdso_oversubscribed"
++
++echo "# Start unclobbered_vdso_oversubscribed with SMALL limit, expecting failure..."
++# Always use leaf node of misc cgroups so it works for both v1 and v2
++# these may fail on OOM
++cgexec -g misc:$TEST_CG_SUB3 $test_cmd >cgtest_small_$timestamp.log 2>&1
++if [[ $? -eq 0 ]]; then
++    echo "# Fail on SMALL limit, not expecting any test passes."
++    cgdelete -r -g misc:$TEST_ROOT_CG
++    exit 1
++else
++    echo "# Test failed as expected."
++fi
++
++echo "# PASSED SMALL limit."
++
++echo "# Start 4 concurrent unclobbered_vdso_oversubscribed tests with LARGE limit,
++        expecting at least one success...."
++pids=()
++for i in {1..4}; do
++    (
++        cgexec -g misc:$TEST_CG_SUB2 $test_cmd >cgtest_large_positive_$timestamp.$i.log 2>&1
++    ) &
++    pids+=($!)
++done
++
++any_success=0
++for pid in "${pids[@]}"; do
++    wait "$pid"
++    status=$?
++    if [[ $status -eq 0 ]]; then
++        any_success=1
++	echo "# Process $pid returned successfully."
++    fi
++done
++
++if [[ $any_success -eq 0 ]]; then
++    echo "# Failed on LARGE limit positive testing, no test passes."
++    cgdelete -r -g misc:$TEST_ROOT_CG
++    exit 1
++fi
++
++echo "# PASSED LARGE limit positive testing."
++
++echo "# Start 5 concurrent unclobbered_vdso_oversubscribed tests with LARGE limit,
++        expecting at least one failure...."
++pids=()
++for i in {1..5}; do
++    (
++        cgexec -g misc:$TEST_CG_SUB2 $test_cmd >cgtest_large_negative_$timestamp.$i.log 2>&1
++    ) &
++    pids+=($!)
++done
++
++any_failure=0
++for pid in "${pids[@]}"; do
++    wait "$pid"
++    status=$?
++    if [[ $status -ne 0 ]]; then
++	echo "# Process $pid returned failure."
++        any_failure=1
++    fi
++done
++
++if [[ $any_failure -eq 0 ]]; then
++    echo "# Failed on LARGE limit negative testing, no test fails."
++    cgdelete -r -g misc:$TEST_ROOT_CG
++    exit 1
++fi
++
++echo "# PASSED LARGE limit negative testing."
++
++echo "# Start 10 concurrent unclobbered_vdso_oversubscribed tests with LARGER limit,
++        expecting no failure...."
++pids=()
++for i in {1..10}; do
++    (
++        cgexec -g misc:$TEST_CG_SUB4 $test_cmd >cgtest_larger_$timestamp.$i.log 2>&1
++    ) &
++    pids+=($!)
++done
++
++any_failure=0
++for pid in "${pids[@]}"; do
++    wait "$pid"
++    status=$?
++    if [[ $status -ne 0 ]]; then
++	echo "# Process $pid returned failure."
++        any_failure=1
++    fi
++done
++
++if [[ $any_failure -ne 0 ]]; then
++    echo "# Failed on LARGER limit, at least one test fails."
++    cgdelete -r -g misc:$TEST_ROOT_CG
++    exit 1
++fi
++
++echo "# PASSED LARGER limit tests."
++
++
++echo "# Start 10 concurrent unclobbered_vdso_oversubscribed tests with LARGER limit,
++      randomly kill one, expecting no failure...."
++pids=()
++for i in {1..10}; do
++    (
++        cgexec -g misc:$TEST_CG_SUB4 $test_cmd >cgtest_larger_$timestamp.$i.log 2>&1
++    ) &
++    pids+=($!)
++done
++
++sleep $((RANDOM % 10 + 5))
++
++# Randomly select a PID to kill
++RANDOM_INDEX=$((RANDOM % 10))
++PID_TO_KILL=${pids[RANDOM_INDEX]}
++
++kill $PID_TO_KILL
++echo "# Killed process with PID: $PID_TO_KILL"
++
++any_failure=0
++for pid in "${pids[@]}"; do
++    wait "$pid"
++    status=$?
++    if [ "$pid" != "$PID_TO_KILL" ]; then
++        if [[ $status -ne 0 ]]; then
++	    echo "# Process $pid returned failure."
++            any_failure=1
++        fi
++    fi
++done
++
++if [[ $any_failure -ne 0 ]]; then
++    echo "# Failed on random killing, at least one test fails."
++    cgdelete -r -g misc:$TEST_ROOT_CG
++    exit 1
++fi
++
++sleep 1
++
++USAGE=$(grep '^sgx_epc' "$CG_ROOT/$TEST_ROOT_CG/misc.current" | awk '{print $2}')
++if [ "$USAGE" -ne 0 ]; then
++    echo "# Failed: Final usage is $USAGE, not 0."
++else
++    echo "# PASSED leakage check."
++    echo "# PASSED ALL cgroup limit tests, cleanup cgroups..."
++fi
++cgdelete -r -g misc:$TEST_ROOT_CG
++echo "# done."
+diff --git a/tools/testing/selftests/sgx/watch_misc_for_tests.sh b/tools/testing/selftests/sgx/watch_misc_for_tests.sh
+new file mode 100755
+index 000000000000..dbd38f346e7b
+--- /dev/null
++++ b/tools/testing/selftests/sgx/watch_misc_for_tests.sh
+@@ -0,0 +1,13 @@
++#!/bin/bash
++# SPDX-License-Identifier: GPL-2.0
++# Copyright(c) 2023 Intel Corporation.
++
++if [ -z "$1" ]
++  then
++    echo "No argument supplied, please provide 'max', 'current' or 'events'"
++    exit 1
++fi
++
++watch -n 1 "find /sys/fs/cgroup -wholename */test*/misc.$1 -exec sh -c \
++    'echo \"\$1:\"; cat \"\$1\"' _ {} \;"
++
 -- 
 2.25.1
 
