@@ -1,35 +1,35 @@
 Received: from lindbergh.monkeyblade.net (lindbergh.monkeyblade.net [23.128.96.19])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7962619BA7
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E374419BA8
 	for <cgroups@vger.kernel.org>; Mon, 30 Oct 2023 18:20:33 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="m1sarAKo"
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="f8cwO1yQ"
 Received: from mgamail.intel.com (mgamail.intel.com [192.55.52.136])
-	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 32848C2;
-	Mon, 30 Oct 2023 11:20:30 -0700 (PDT)
+	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E6650D3;
+	Mon, 30 Oct 2023 11:20:31 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1698690030; x=1730226030;
+  t=1698690032; x=1730226032;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=530RSKYG0q88gdwnkVm1khu5QkPGWZ8B6AWmOKTXhCE=;
-  b=m1sarAKoduGVRWMmATKMuXdQxiZ3mLGqae29t6wqjr2Ha/sKk8rJ+JeQ
-   KuQKmBJjJqNDzstteoQVeBpYlvuDP/e4pW9VfqSnUrCg1Pk3yYuTC05C8
-   f2pSHYntvfgrHTXSPv+U03cCqBqPaPh5qfKRMWpETHYju6aw6mTq0GFOs
-   Keyi7qmB72Mdvz9Jvn/IkzHhXdQWuikbE31V+NZCdKIzZaQCqIPW6Q4I9
-   1UikWyzUaft832Sa6oE+nEiwS3Zrc+lcCmfd8n7ia/lB6x61wLho/aROn
-   T+grI1hBVIw7go/R3n1oQkAx35mya4fSVZo9tHn38JMWxI96QI/MtFxU5
-   g==;
-X-IronPort-AV: E=McAfee;i="6600,9927,10879"; a="367479523"
+  bh=5GmAti5pT59JXbFdfEtdxPlG/vuMlTMqJEpR0/hTUEE=;
+  b=f8cwO1yQUlpWvuzvVvzPEi7mNi+mvTT7xdK+LENuSuXEXUB6/1VnZh3y
+   lwmMqhrJ3OwCGA2K4H0C7Sa96U5n+3D9Ip+P+MU6UWIaRdUxQX4fCNZH7
+   4ITMCfaXEco7uKEdBW0qWuEp7QGP/YmWdGWSdM9t9Ten5UqECXecR37vS
+   WaMXJB1Q4d8Q11gKBVFSuyhA3ru/t5rtknGhpN3Nv84rZgV/pil3KteT1
+   8vybgFyfYWutZ1CtpgixEGMPx3Nra0XPAps3Ij6oHMtnzM0JbzBZZz89T
+   39kme88kaOxlWoGjKbGtZe9gWSNHG4UuHYrMZJv9Xv24xcvLwCzukPCUg
+   Q==;
+X-IronPort-AV: E=McAfee;i="6600,9927,10879"; a="367479542"
 X-IronPort-AV: E=Sophos;i="6.03,263,1694761200"; 
-   d="scan'208";a="367479523"
+   d="scan'208";a="367479542"
 Received: from orsmga008.jf.intel.com ([10.7.209.65])
   by fmsmga106.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 30 Oct 2023 11:20:28 -0700
 X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6600,9927,10879"; a="789529497"
+X-IronPort-AV: E=McAfee;i="6600,9927,10879"; a="789529504"
 X-IronPort-AV: E=Sophos;i="6.03,263,1694761200"; 
-   d="scan'208";a="789529497"
+   d="scan'208";a="789529504"
 Received: from b4969161e530.jf.intel.com ([10.165.56.46])
   by orsmga008.jf.intel.com with ESMTP; 30 Oct 2023 11:20:28 -0700
 From: Haitao Huang <haitao.huang@linux.intel.com>
@@ -54,9 +54,9 @@ Cc: zhiquan1.li@intel.com,
 	mikko.ylinen@linux.intel.com,
 	yangjie@microsoft.com,
 	Haitao Huang <haitao.huang@linux.intel.com>
-Subject: [PATCH v6 01/12] cgroup/misc: Add per resource callbacks for CSS events
-Date: Mon, 30 Oct 2023 11:20:02 -0700
-Message-Id: <20231030182013.40086-2-haitao.huang@linux.intel.com>
+Subject: [PATCH v6 03/12] cgroup/misc: Add SGX EPC resource type
+Date: Mon, 30 Oct 2023 11:20:04 -0700
+Message-Id: <20231030182013.40086-4-haitao.huang@linux.intel.com>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20231030182013.40086-1-haitao.huang@linux.intel.com>
 References: <20231030182013.40086-1-haitao.huang@linux.intel.com>
@@ -70,127 +70,50 @@ Content-Transfer-Encoding: 8bit
 
 From: Kristen Carlson Accardi <kristen@linux.intel.com>
 
-The misc cgroup controller (subsystem) currently does not perform
-resource type specific action for Cgroups Subsystem State (CSS) events:
-the 'css_alloc' event when a cgroup is created and the 'css_free' event
-when a cgroup is destroyed.
-
-Define callbacks for those events and allow resource providers to
-register the callbacks per resource type as needed. This will be
-utilized later by the EPC misc cgroup support implemented in the SGX
-driver.
-
-Also add per resource type private data for those callbacks to store and
-access resource specific data.
+Add SGX EPC memory, MISC_CG_RES_SGX_EPC, to be a valid resource type
+for the misc controller.
 
 Signed-off-by: Kristen Carlson Accardi <kristen@linux.intel.com>
 Co-developed-by: Haitao Huang <haitao.huang@linux.intel.com>
 Signed-off-by: Haitao Huang <haitao.huang@linux.intel.com>
 ---
 V6:
-- Create ops struct for per resource callbacks (Jarkko)
-- Drop max_write callback (Dave, Michal)
-- Style fixes (Kai)
+- Split the original patch into this and the preceding one (Kai)
 ---
- include/linux/misc_cgroup.h | 14 ++++++++++++++
- kernel/cgroup/misc.c        | 27 ++++++++++++++++++++++++---
- 2 files changed, 38 insertions(+), 3 deletions(-)
+ include/linux/misc_cgroup.h | 4 ++++
+ kernel/cgroup/misc.c        | 4 ++++
+ 2 files changed, 8 insertions(+)
 
 diff --git a/include/linux/misc_cgroup.h b/include/linux/misc_cgroup.h
-index e799b1f8d05b..5dc509c27c3d 100644
+index 2a3b1f8dc669..368f6c5fccae 100644
 --- a/include/linux/misc_cgroup.h
 +++ b/include/linux/misc_cgroup.h
-@@ -27,16 +27,30 @@ struct misc_cg;
- 
- #include <linux/cgroup.h>
- 
-+/**
-+ * struct misc_operations_struct: per resource callback ops.
-+ * @alloc: invoked for resource specific initialization when cgroup is allocated.
-+ * @free: invoked for resource specific cleanup when cgroup is deallocated.
-+ */
-+struct misc_operations_struct {
-+	int (*alloc)(struct misc_cg *cg);
-+	void (*free)(struct misc_cg *cg);
-+};
-+
- /**
-  * struct misc_res: Per cgroup per misc type resource
-  * @max: Maximum limit on the resource.
-  * @usage: Current usage of the resource.
-  * @events: Number of times, the resource limit exceeded.
-+ * @priv: resource specific data.
-+ * @misc_ops: resource specific operations.
-  */
- struct misc_res {
- 	u64 max;
- 	atomic64_t usage;
- 	atomic64_t events;
-+	void *priv;
-+	const struct misc_operations_struct *misc_ops;
+@@ -17,6 +17,10 @@ enum misc_res_type {
+ 	MISC_CG_RES_SEV,
+ 	/* AMD SEV-ES ASIDs resource */
+ 	MISC_CG_RES_SEV_ES,
++#endif
++#ifdef CONFIG_CGROUP_SGX_EPC
++	/* SGX EPC memory resource */
++	MISC_CG_RES_SGX_EPC,
+ #endif
+ 	MISC_CG_RES_TYPES
  };
- 
- /**
 diff --git a/kernel/cgroup/misc.c b/kernel/cgroup/misc.c
-index 79a3717a5803..d971ede44ebf 100644
+index fa464324ccf8..a22500851fe8 100644
 --- a/kernel/cgroup/misc.c
 +++ b/kernel/cgroup/misc.c
-@@ -383,23 +383,37 @@ static struct cftype misc_cg_files[] = {
- static struct cgroup_subsys_state *
- misc_cg_alloc(struct cgroup_subsys_state *parent_css)
- {
-+	struct misc_cg *parent_cg, *cg;
- 	enum misc_res_type i;
--	struct misc_cg *cg;
-+	int ret;
+@@ -24,6 +24,10 @@ static const char *const misc_res_name[] = {
+ 	/* AMD SEV-ES ASIDs resource */
+ 	"sev_es",
+ #endif
++#ifdef CONFIG_CGROUP_SGX_EPC
++	/* Intel SGX EPC memory bytes */
++	"sgx_epc",
++#endif
+ };
  
- 	if (!parent_css) {
--		cg = &root_cg;
-+		parent_cg = cg = &root_cg;
- 	} else {
- 		cg = kzalloc(sizeof(*cg), GFP_KERNEL);
- 		if (!cg)
- 			return ERR_PTR(-ENOMEM);
-+		parent_cg = css_misc(parent_css);
- 	}
- 
- 	for (i = 0; i < MISC_CG_RES_TYPES; i++) {
- 		WRITE_ONCE(cg->res[i].max, MAX_NUM);
- 		atomic64_set(&cg->res[i].usage, 0);
-+		if (parent_cg->res[i].misc_ops && parent_cg->res[i].misc_ops->alloc) {
-+			ret = parent_cg->res[i].misc_ops->alloc(cg);
-+			if (ret)
-+				goto alloc_err;
-+		}
- 	}
- 
- 	return &cg->css;
-+
-+alloc_err:
-+	for (i = 0; i < MISC_CG_RES_TYPES; i++)
-+		if (parent_cg->res[i].misc_ops && parent_cg->res[i].misc_ops->free)
-+			cg->res[i].misc_ops->free(cg);
-+	kfree(cg);
-+	return ERR_PTR(ret);
- }
- 
- /**
-@@ -410,7 +424,14 @@ misc_cg_alloc(struct cgroup_subsys_state *parent_css)
-  */
- static void misc_cg_free(struct cgroup_subsys_state *css)
- {
--	kfree(css_misc(css));
-+	struct misc_cg *cg = css_misc(css);
-+	enum misc_res_type i;
-+
-+	for (i = 0; i < MISC_CG_RES_TYPES; i++)
-+		if (cg->res[i].misc_ops && cg->res[i].misc_ops->free)
-+			cg->res[i].misc_ops->free(cg);
-+
-+	kfree(cg);
- }
- 
- /* Cgroup controller callbacks */
+ /* Root misc cgroup */
 -- 
 2.25.1
 
