@@ -1,137 +1,204 @@
 Received: from lindbergh.monkeyblade.net (lindbergh.monkeyblade.net [23.128.96.19])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 36D1E1C3C;
-	Fri, 10 Nov 2023 06:35:09 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 108F7187B;
+	Fri, 10 Nov 2023 07:11:23 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=arndb.de header.i=@arndb.de header.b="yieh30Rd";
-	dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b="vQJBwM/4"
-Received: from wout5-smtp.messagingengine.com (wout5-smtp.messagingengine.com [64.147.123.21])
-	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E9D72769A;
-	Thu,  9 Nov 2023 22:35:07 -0800 (PST)
-Received: from compute5.internal (compute5.nyi.internal [10.202.2.45])
-	by mailout.west.internal (Postfix) with ESMTP id 3FCF53200B06;
-	Fri, 10 Nov 2023 01:35:05 -0500 (EST)
-Received: from imap51 ([10.202.2.101])
-  by compute5.internal (MEProxy); Fri, 10 Nov 2023 01:35:07 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=arndb.de; h=cc
-	:cc:content-transfer-encoding:content-type:content-type:date
-	:date:from:from:in-reply-to:in-reply-to:message-id:mime-version
-	:references:reply-to:sender:subject:subject:to:to; s=fm3; t=
-	1699598104; x=1699684504; bh=b4ZzDDt0njYwoFJ2ZN/gcE0Je20siJqsd/U
-	27wOBtP8=; b=yieh30RdeUYv8s36J2LYyw95FKjfwwzzUE2OyJXZ/AZF2p0/Uub
-	Zffu82JE99/otcJpQYmFPAaaklJm05VkqiBA9T7AoLH8U0kRZQ7NwFmNtDlqUbW1
-	+wVMsXucgbhWOqOhtGuxUcGRzafHgZqUkc8ARde5cNZs/iHlMWc6thws39NJeK8r
-	MBlOIJqeTgWErECYLrO1Xx0hgKVmj8EOiBFjMTi/OcW+tF3ng3c4uA1ascqPXtOg
-	tZ7c/aKuG1X0bKEOUkCoXZ8mYDhtZn1XEcLd356LzzNPiVHxq2drZg+o9RKpM4hE
-	9C6nHmeae6bAJLgyOqpJXXmKbqJBzbybRRQ==
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
-	messagingengine.com; h=cc:cc:content-transfer-encoding
-	:content-type:content-type:date:date:feedback-id:feedback-id
-	:from:from:in-reply-to:in-reply-to:message-id:mime-version
-	:references:reply-to:sender:subject:subject:to:to:x-me-proxy
-	:x-me-proxy:x-me-sender:x-me-sender:x-sasl-enc; s=fm3; t=
-	1699598104; x=1699684504; bh=b4ZzDDt0njYwoFJ2ZN/gcE0Je20siJqsd/U
-	27wOBtP8=; b=vQJBwM/4Q+kiuhh5q5uiUBn984CL1QnaJYt/iL2VW0/ZrNgv7Dw
-	pt3ubFwjPXTzgDNLdhifo3Kl+e7YRhloFDFFBHVOgGPRfat/sKxCy4HdIn2cvyMS
-	GcANw8896OG+zqmhoVbMLFv7HLJXpZjdxEeikKeIXaP0glvJDBCZ/QqTFaJJpwg0
-	cK4w4oV89294SWZBr1HwOYHatbcbaaEofFIKgRBvBPPRv/mJfcewgFCOfDtKMfLX
-	M373LsUdUUR/hw81hlQUuMC1563FfZWLk57lva16tpHdQ49zb0+TGIhi7Jg9Oxcp
-	b2NzIk1s1DGyTuFfzSIVev3dyZk71Kyavsg==
-X-ME-Sender: <xms:F89NZZOWVmfxXzKrA54GMxWcixUCFA20aB-3rNHV7yVmxPUD9Eu7JQ>
-    <xme:F89NZb9KoFy1RHMb1tWn6hG6IlJCxUwFcwgmOfrFaNLDOF4UlUr-O950AJW9gwGXD
-    tsYBIPMD627JMrnMqc>
-X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgedvkedruddvvddgleegucetufdoteggodetrfdotf
-    fvucfrrhhofhhilhgvmecuhfgrshhtofgrihhlpdfqfgfvpdfurfetoffkrfgpnffqhgen
-    uceurghilhhouhhtmecufedttdenucesvcftvggtihhpihgvnhhtshculddquddttddmne
-    cujfgurhepofgfggfkjghffffhvfevufgtgfesthhqredtreerjeenucfhrhhomhepfdet
-    rhhnugcuuegvrhhgmhgrnhhnfdcuoegrrhhnugesrghrnhgusgdruggvqeenucggtffrrg
-    htthgvrhhnpefgkeeuleegieeghfduudeltdekfeffjeeuleehleefudettddtgfevueef
-    feeigeenucffohhmrghinhepkhgvrhhnvghlrdhorhhgnecuvehluhhsthgvrhfuihiivg
-    eptdenucfrrghrrghmpehmrghilhhfrhhomheprghrnhgusegrrhhnuggsrdguvg
-X-ME-Proxy: <xmx:F89NZYTF2_QtmymzjURWMjHCidNomPURzOfAobg3D7_6_dLQ9lNCRA>
-    <xmx:F89NZVsdm4c-2Z7K9yUctV8nf4P9Xg8U4wH5bY0ZI8uqMC_5jxBNeQ>
-    <xmx:F89NZRcGk09mmJO2SN9RRPnkw43vwqJFQBLo4KvAFMVa6QYOObXudA>
-    <xmx:GM9NZTeGNCC2WGrDNMPW-Sw0pb_IzNuhwOc4OZp1BK-ExtWnawmMWw>
-Feedback-ID: i56a14606:Fastmail
-Received: by mailuser.nyi.internal (Postfix, from userid 501)
-	id CF212B60089; Fri, 10 Nov 2023 01:35:03 -0500 (EST)
-X-Mailer: MessagingEngine.com Webmail Interface
-User-Agent: Cyrus-JMAP/3.9.0-alpha0-1108-g3a29173c6d-fm-20231031.005-g3a29173c
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="hq0RJ0Xh"
+Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.10])
+	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 850FB8260;
+	Thu,  9 Nov 2023 23:11:22 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1699600283; x=1731136283;
+  h=from:to:cc:subject:in-reply-to:references:date:
+   message-id:mime-version:content-transfer-encoding;
+  bh=CFrsyyYaC5+GirTFxIWyuSUnIgbvfSGgrSzOo8xJlhI=;
+  b=hq0RJ0Xh+cJQpi/CQZ9YvU70MztW/cMhyXPN+2VQ1LFWHE0rOsCmSEPw
+   5TfB+S1fueihwLTHWG+T1yZml2odEuoqnuj0bLdmQIlVVJliSm39i9HyB
+   sLSJZOVybHpCcf/9RkHVkZhU5w+dX13dG0Yiu/sJiObXMwsnXM6bjiX1A
+   sA8EpjMY687UvwWEtcPRLUQpD05DmgbH7wFtbIwYpGg1b6weWdgVGoRx/
+   cUk+QwE+lDeGxA4561/EHjoVKoKpj0O+NYq28bzc20LtPCvKprJpPx7V2
+   EJ4BzKzhZ9kPFQhpCLxTpOr2BvYiVD622L5xZaHmY/cK/zt5GuJJDvLKu
+   Q==;
+X-IronPort-AV: E=McAfee;i="6600,9927,10889"; a="3164315"
+X-IronPort-AV: E=Sophos;i="6.03,291,1694761200"; 
+   d="scan'208";a="3164315"
+Received: from fmsmga005.fm.intel.com ([10.253.24.32])
+  by orvoesa102.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 09 Nov 2023 20:02:07 -0800
+X-ExtLoop1: 1
+X-IronPort-AV: E=McAfee;i="6600,9927,10889"; a="1095079230"
+X-IronPort-AV: E=Sophos;i="6.03,291,1694761200"; 
+   d="scan'208";a="1095079230"
+Received: from yhuang6-desk2.sh.intel.com (HELO yhuang6-desk2.ccr.corp.intel.com) ([10.238.208.55])
+  by fmsmga005-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 09 Nov 2023 20:02:01 -0800
+From: "Huang, Ying" <ying.huang@intel.com>
+To: Huan Yang <link@vivo.com>
+Cc: Michal Hocko <mhocko@suse.com>,  Tejun Heo <tj@kernel.org>,  Zefan Li
+ <lizefan.x@bytedance.com>,  Johannes Weiner <hannes@cmpxchg.org>,
+  "Jonathan Corbet" <corbet@lwn.net>,  Roman Gushchin
+ <roman.gushchin@linux.dev>,  "Shakeel Butt" <shakeelb@google.com>,  Muchun
+ Song <muchun.song@linux.dev>,  "Andrew Morton"
+ <akpm@linux-foundation.org>,  David Hildenbrand <david@redhat.com>,
+  Matthew Wilcox <willy@infradead.org>,  Kefeng Wang
+ <wangkefeng.wang@huawei.com>,  Peter Xu <peterx@redhat.com>,  "Vishal
+ Moola (Oracle)" <vishal.moola@gmail.com>,  Yosry Ahmed
+ <yosryahmed@google.com>,  "Liu Shixin" <liushixin2@huawei.com>,  Hugh
+ Dickins <hughd@google.com>,  <cgroups@vger.kernel.org>,
+  <linux-doc@vger.kernel.org>,  <linux-kernel@vger.kernel.org>,
+  <linux-mm@kvack.org>,  <opensource.kernel@vivo.com>
+Subject: Re: [RFC 0/4] Introduce unbalance proactive reclaim
+In-Reply-To: <ab108b82-87a9-4927-9d29-f60713281e8a@vivo.com> (Huan Yang's
+	message of "Fri, 10 Nov 2023 10:44:45 +0800")
+References: <20231108065818.19932-1-link@vivo.com>
+	<ZUuV9xOZ5k7Ia_V2@tiehlicka>
+	<ccc4094a-54de-4ce4-b8f6-76ee46d8d02d@vivo.com>
+	<87msvniplj.fsf@yhuang6-desk2.ccr.corp.intel.com>
+	<1e699ff2-0841-490b-a8e7-bb87170d5604@vivo.com>
+	<ZUytB5lSwxeKkBW8@tiehlicka>
+	<6b539e16-c835-49ff-9fae-a65960567657@vivo.com>
+	<ZUy2-vrqDq7URzb6@tiehlicka>
+	<e8c0c069-a685-482d-afad-d1069c6a95ba@vivo.com>
+	<87a5rmiewp.fsf@yhuang6-desk2.ccr.corp.intel.com>
+	<ab108b82-87a9-4927-9d29-f60713281e8a@vivo.com>
+Date: Fri, 10 Nov 2023 12:00:00 +0800
+Message-ID: <878r76gsvz.fsf@yhuang6-desk2.ccr.corp.intel.com>
+User-Agent: Gnus/5.13 (Gnus v5.13)
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Message-Id: <98fe8917-9054-4a46-a777-613d8c640d36@app.fastmail.com>
-In-Reply-To: 
- <CAADnVQLDOEPmDyipHOH0E6QSg4aJtcHcfghoAQmQtROAMd=imQ@mail.gmail.com>
-References: <202311031651.A7crZEur-lkp@intel.com>
- <20231106031802.4188-1-laoar.shao@gmail.com>
- <CAADnVQLDOEPmDyipHOH0E6QSg4aJtcHcfghoAQmQtROAMd=imQ@mail.gmail.com>
-Date: Fri, 10 Nov 2023 07:34:43 +0100
-From: "Arnd Bergmann" <arnd@arndb.de>
-To: "Alexei Starovoitov" <alexei.starovoitov@gmail.com>,
- "Yafang Shao" <laoar.shao@gmail.com>
-Cc: "kernel test robot" <lkp@intel.com>,
- "Andrii Nakryiko" <andrii@kernel.org>, "Alexei Starovoitov" <ast@kernel.org>,
- bpf <bpf@vger.kernel.org>,
- "open list:CONTROL GROUP (CGROUP)" <cgroups@vger.kernel.org>,
- "Daniel Borkmann" <daniel@iogearbox.net>,
- "Johannes Weiner" <hannes@cmpxchg.org>, "Hao Luo" <haoluo@google.com>,
- "John Fastabend" <john.fastabend@gmail.com>, "Jiri Olsa" <jolsa@kernel.org>,
- "KP Singh" <kpsingh@kernel.org>, "Zefan Li" <lizefan.x@bytedance.com>,
- "Waiman Long" <longman@redhat.com>,
- "Martin KaFai Lau" <martin.lau@linux.dev>,
- =?UTF-8?Q?Michal_Koutn=C3=BD?= <mkoutny@suse.com>,
- oe-kbuild-all@lists.linux.dev, "kernel test robot" <oliver.sang@intel.com>,
- "Stanislav Fomichev" <sdf@google.com>, "Kui-Feng Lee" <sinquersw@gmail.com>,
- "Song Liu" <song@kernel.org>, "Tejun Heo" <tj@kernel.org>,
- "Yonghong Song" <yonghong.song@linux.dev>,
- "Yosry Ahmed" <yosryahmed@google.com>,
- "Kumar Kartikeya Dwivedi" <memxor@gmail.com>
-Subject: Re: [PATCH v2 bpf-next] compiler-gcc: Suppress -Wmissing-prototypes warning
- for all supported GCC
-Content-Type: text/plain;charset=utf-8
+Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
 
-On Thu, Nov 9, 2023, at 19:23, Alexei Starovoitov wrote:
-> On Sun, Nov 5, 2023 at 7:18=E2=80=AFPM Yafang Shao <laoar.shao@gmail.c=
-om> wrote:
->> In the future, if you wish to suppress warnings that are only support=
-ed on
->> higher GCC versions, it is advisable to explicitly use "__diag_ignore=
-" to
->> specify the GCC version you are targeting.
+Huan Yang <link@vivo.com> writes:
+
+> =E5=9C=A8 2023/11/10 9:19, Huang, Ying =E5=86=99=E9=81=93:
+>> [Some people who received this message don't often get email from ying.h=
+uang@intel.com. Learn why this is important at https://aka.ms/LearnAboutSen=
+derIdentification ]
 >>
->> Reported-by: kernel test robot <lkp@intel.com>
->> Closes: https://lore.kernel.org/oe-kbuild-all/202311031651.A7crZEur-l=
-kp@intel.com/
->> Suggested-by: Arnd Bergmann <arnd@arndb.de>
->> Signed-off-by: Yafang Shao <laoar.shao@gmail.com>
->> Cc: Kumar Kartikeya Dwivedi <memxor@gmail.com>
->> Cc: Arnd Bergmann <arnd@arndb.de>
->> ---
->>  include/linux/compiler-gcc.h | 2 +-
->>  1 file changed, 1 insertion(+), 1 deletion(-)
+>> Huan Yang <link@vivo.com> writes:
 >>
->> diff --git a/include/linux/compiler-gcc.h b/include/linux/compiler-gc=
-c.h
->> index 7af9e34..80918bd 100644
->> --- a/include/linux/compiler-gcc.h
->> +++ b/include/linux/compiler-gcc.h
->> @@ -138,7 +138,7 @@
->>  #endif
->>
->>  #define __diag_ignore_all(option, comment) \
->> -       __diag_GCC(8, ignore, option)
->> +       __diag(__diag_GCC_ignore option)
+>>> =E5=9C=A8 2023/11/9 18:39, Michal Hocko =E5=86=99=E9=81=93:
+>>>> [Some people who received this message don't often get email from mhoc=
+ko@suse.com. Learn why this is important at https://aka.ms/LearnAboutSender=
+Identification ]
+>>>>
+>>>> On Thu 09-11-23 18:29:03, Huan Yang wrote:
+>>>>> HI Michal Hocko,
+>>>>>
+>>>>> Thanks for your suggestion.
+>>>>>
+>>>>> =E5=9C=A8 2023/11/9 17:57, Michal Hocko =E5=86=99=E9=81=93:
+>>>>>> [Some people who received this message don't often get email from mh=
+ocko@suse.com. Learn why this is important at https://aka.ms/LearnAboutSend=
+erIdentification ]
+>>>>>>
+>>>>>> On Thu 09-11-23 11:38:56, Huan Yang wrote:
+>>>>>> [...]
+>>>>>>>> If so, is it better only to reclaim private anonymous pages explic=
+itly?
+>>>>>>> Yes, in practice, we only proactively compress anonymous pages and =
+do not
+>>>>>>> want to touch file pages.
+>>>>>> If that is the case and this is mostly application centric (which you
+>>>>>> seem to be suggesting) then why don't you use madvise(MADV_PAGEOUT)
+>>>>>> instead.
+>>>>> Madvise  may not be applicable in this scenario.(IMO)
+>>>>>
+>>>>> This feature is aimed at a core goal, which is to compress the anonym=
+ous
+>>>>> pages
+>>>>> of frozen applications.
+>>>>>
+>>>>> How to detect that an application is frozen and determine which pages=
+ can be
+>>>>> safely reclaimed is the responsibility of the policy part.
+>>>>>
+>>>>> Setting madvise for an application is an active behavior, while the a=
+bove
+>>>>> policy
+>>>>> is a passive approach.(If I misunderstood, please let me know if ther=
+e is a
+>>>>> better
+>>>>> way to set madvise.)
+>>>> You are proposing an extension to the pro-active reclaim interface so
+>>>> this is an active behavior pretty much by definition. So I am really n=
+ot
+>>>> following you here. Your agent can simply scan the address space of the
+>>>> application it is going to "freeze" and call pidfd_madvise(MADV_PAGEOU=
+T)
+>>>> on the private memory is that is really what you want/need.
+>>> There is a key point here. We want to use the grouping policy of memcg
+>>> to perform
+>>> proactive reclamation with certain tendencies. Your suggestion is to
+>>> reclaim memory
+>>> by scanning the task process space. However, in the mobile field,
+>>> memory is usually
+>>> viewed at the granularity of an APP.
+>>>
+>>> Therefore, after an APP is frozen, we hope to reclaim memory uniformly
+>>> according
+>>> to the pre-grouped APP processes.
+>>>
+>>> Of course, as you suggested, madvise can also achieve this, but
+>>> implementing it in
+>>> the agent may be more complex.(In terms of achieving the same goal,
+>>> using memcg
+>>> to group all the processes of an APP and perform proactive reclamation
+>>> is simpler
+>>> than using madvise and scanning multiple processes of an application
+>>> using an agent?)
+>> I still think that it's not too complex to use process_madvise() to do
+>> this.  For each process of the application, the agent can read
+>> /proc/PID/maps to get all anonymous address ranges, then call
+>> process_madvise(MADV_PAGEOUT) to reclaim pages.  This can even filter
+>> out shared anonymous pages.  Does this work for you?
 >
-> Arnd,
-> does this look good to you?
+> Thanks for this suggestion. This way can avoid touch shared anonymous, it=
+'s
+> pretty well. But, I have some doubts about this, CPU resources are
+> usually limited in
+> embedded devices, and power consumption must also be taken into
+> consideration.
+>
+> If this approach is adopted, the agent needs to periodically scan
+> frozen applications
+> and set pageout for the address space. Is the frequency of this active
+> operation more
+> complex and unsuitable for embedded devices compared to reclamation based=
+ on
+> memcg grouping features?
 
-Yes, this is good. We could do the same thing for=20
-clang already, but it doesn't make a huge difference.
+In memcg based solution, when will you start the proactive reclaiming?
+You can just replace the reclaiming part of the solution from memcg
+proactive reclaiming to process_madvise(MADV_PAGEOUT).  Because you can
+get PIDs in a memcg.  Is it possible?
 
-Acked-by: Arnd Bergmann <arnd@arndb.de>
+> In addition, without LRU, it is difficult to control the reclamation
+> of only partially cold
+> anonymous page data of frozen applications. For example, if I only
+> want to proactively
+> reclaim 100MB of anonymous pages and issue the proactive reclamation
+> interface,
+> we can use the LRU feature to only reclaim 100MB of cold anonymous pages.
+> However, this cannot be achieved through madvise.(If I have
+> misunderstood something,
+> please correct me.)
+
+IIUC, it should be OK to reclaim all private anonymous pages of an
+application in your specific use case?  If you really want to restrict
+the number of pages reclaimed, it's possible too.  You can restrict the
+size of address range to call process_madvise(MADV_PAGEOUT), and check
+the RSS of the application.  The accuracy of the number reclaimed isn't
+good.  But I think that it should OK in practice?
+
+BTW: how do you know the number of pages to be reclaimed proactively in
+memcg proactive reclaiming based solution?
+
+--
+Best Regards,
+Huang, Ying
