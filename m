@@ -1,48 +1,48 @@
 Received: from lindbergh.monkeyblade.net (lindbergh.monkeyblade.net [23.128.96.19])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 00B0B23760
-	for <cgroups@vger.kernel.org>; Mon, 13 Nov 2023 19:14:17 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4EBAE2377F
+	for <cgroups@vger.kernel.org>; Mon, 13 Nov 2023 19:14:19 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b="0Zk71Af4";
-	dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b="vAhtZGcq"
-Received: from smtp-out2.suse.de (smtp-out2.suse.de [IPv6:2001:67c:2178:6::1d])
-	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 416C01715;
-	Mon, 13 Nov 2023 11:14:13 -0800 (PST)
+	dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b="Cb9azOi+";
+	dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b="YZzAxb8Q"
+Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.220.28])
+	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F2AFB1735;
+	Mon, 13 Nov 2023 11:14:16 -0800 (PST)
 Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
 	(No client certificate requested)
-	by smtp-out2.suse.de (Postfix) with ESMTPS id AE5771F86B;
-	Mon, 13 Nov 2023 19:14:11 +0000 (UTC)
+	by smtp-out1.suse.de (Postfix) with ESMTPS id 893D52193C;
+	Mon, 13 Nov 2023 19:14:15 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
-	t=1699902851; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	t=1699902855; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
 	 mime-version:mime-version:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=lpvt5s4LImzllAEMKC9yyjTODPwLX4+6Y45s6lDAdck=;
-	b=0Zk71Af4/ksZViufYFLz4W466HBY9hZ6yjSoaHX3v3J6SOrEeTFMUha4Tk6TWp6ktjmlTY
-	tyWmx5ZTjAXIQL0It+uib+nO4jvjmUvBVn98fw84px5FDHOZc3q/N2qZVErz8XjjyZ8Rv3
-	nya3pgfa+YY7tev+CjDyBZ95Zxr+uDc=
+	bh=Yc0ydpEKadjGMZmR6AOilRcjjCaikOgVLMhJfLa5KNY=;
+	b=Cb9azOi+79RTNG1eEAaRK2qKO08RdjEozYg5VQaWSgjm9ZtEhKXDtBAnNZSXPOGfqbZ5Yx
+	zjyoWUbZWmftG6lgXdDLymTg9Eq0TbgJJoTL9ePBdM+V3LwH5TQf8gQMZUYvaz7iGhzAtV
+	Qnmt4KB+99CZs9Oky9jRP7dc8P9XkBY=
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
-	s=susede2_ed25519; t=1699902851;
+	s=susede2_ed25519; t=1699902855;
 	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
 	 mime-version:mime-version:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=lpvt5s4LImzllAEMKC9yyjTODPwLX4+6Y45s6lDAdck=;
-	b=vAhtZGcql9qIWxRJqKiLelqePVQm52ugRXQ7AXX20vnAKjBALODitlzRltKZ2qlT1HLVp2
-	tD2r1WHZoMl+fJAw==
+	bh=Yc0ydpEKadjGMZmR6AOilRcjjCaikOgVLMhJfLa5KNY=;
+	b=YZzAxb8QZCafpYhSWsUv7cmsWbx/IMh0AC7UrukpeAEDxfHnpnbLPFz7TSL4WQSuD7NdVi
+	vwsIBz9/OyMbwQCw==
 Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
 	(No client certificate requested)
-	by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 6270F13907;
-	Mon, 13 Nov 2023 19:14:11 +0000 (UTC)
+	by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 3EDFC13398;
+	Mon, 13 Nov 2023 19:14:15 +0000 (UTC)
 Received: from dovecot-director2.suse.de ([192.168.254.65])
 	by imap2.suse-dmz.suse.de with ESMTPSA
-	id +BNfF4N1UmVFOgAAMHmgww
-	(envelope-from <vbabka@suse.cz>); Mon, 13 Nov 2023 19:14:11 +0000
+	id eOW7Dod1UmVFOgAAMHmgww
+	(envelope-from <vbabka@suse.cz>); Mon, 13 Nov 2023 19:14:15 +0000
 From: Vlastimil Babka <vbabka@suse.cz>
 To: David Rientjes <rientjes@google.com>,
 	Christoph Lameter <cl@linux.com>,
@@ -68,9 +68,9 @@ Cc: Andrew Morton <akpm@linux-foundation.org>,
 	kasan-dev@googlegroups.com,
 	cgroups@vger.kernel.org,
 	Vlastimil Babka <vbabka@suse.cz>
-Subject: [PATCH 07/20] mm/mempool/dmapool: remove CONFIG_DEBUG_SLAB ifdefs
-Date: Mon, 13 Nov 2023 20:13:48 +0100
-Message-ID: <20231113191340.17482-29-vbabka@suse.cz>
+Subject: [PATCH 18/20] mm/slub: remove slab_alloc() and __kmem_cache_alloc_lru() wrappers
+Date: Mon, 13 Nov 2023 20:13:59 +0100
+Message-ID: <20231113191340.17482-40-vbabka@suse.cz>
 X-Mailer: git-send-email 2.42.1
 In-Reply-To: <20231113191340.17482-22-vbabka@suse.cz>
 References: <20231113191340.17482-22-vbabka@suse.cz>
@@ -82,58 +82,75 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-CONFIG_DEBUG_SLAB is going away with CONFIG_SLAB, so remove dead ifdefs
-in mempool and dmapool code.
+slab_alloc() is a thin wrapper around slab_alloc_node() with only one
+caller.  Replace with direct call of slab_alloc_node().
+__kmem_cache_alloc_lru() itself is a thin wrapper with two callers,
+so replace it with direct calls of slab_alloc_node() and
+trace_kmem_cache_alloc().
+
+This also makes sure _RET_IP_ has always the expected value and not
+depending on inlining decisions.
 
 Signed-off-by: Vlastimil Babka <vbabka@suse.cz>
 ---
- mm/dmapool.c | 2 +-
- mm/mempool.c | 6 +++---
- 2 files changed, 4 insertions(+), 4 deletions(-)
+ mm/slub.c | 28 +++++++++++-----------------
+ 1 file changed, 11 insertions(+), 17 deletions(-)
 
-diff --git a/mm/dmapool.c b/mm/dmapool.c
-index a151a21e571b..f0bfc6c490f4 100644
---- a/mm/dmapool.c
-+++ b/mm/dmapool.c
-@@ -36,7 +36,7 @@
- #include <linux/types.h>
- #include <linux/wait.h>
- 
--#if defined(CONFIG_DEBUG_SLAB) || defined(CONFIG_SLUB_DEBUG_ON)
-+#ifdef CONFIG_SLUB_DEBUG_ON
- #define DMAPOOL_DEBUG 1
- #endif
- 
-diff --git a/mm/mempool.c b/mm/mempool.c
-index 734bcf5afbb7..62dcbeb4c2a9 100644
---- a/mm/mempool.c
-+++ b/mm/mempool.c
-@@ -20,7 +20,7 @@
- #include <linux/writeback.h>
- #include "slab.h"
- 
--#if defined(CONFIG_DEBUG_SLAB) || defined(CONFIG_SLUB_DEBUG_ON)
-+#ifdef CONFIG_SLUB_DEBUG_ON
- static void poison_error(mempool_t *pool, void *element, size_t size,
- 			 size_t byte)
- {
-@@ -95,14 +95,14 @@ static void poison_element(mempool_t *pool, void *element)
- 		kunmap_atomic(addr);
- 	}
+diff --git a/mm/slub.c b/mm/slub.c
+index b44243e7cc5e..d2363b91d55c 100644
+--- a/mm/slub.c
++++ b/mm/slub.c
+@@ -3821,39 +3821,33 @@ static __fastpath_inline void *slab_alloc_node(struct kmem_cache *s, struct list
+ 	return object;
  }
--#else /* CONFIG_DEBUG_SLAB || CONFIG_SLUB_DEBUG_ON */
-+#else /* CONFIG_SLUB_DEBUG_ON */
- static inline void check_element(mempool_t *pool, void *element)
- {
- }
- static inline void poison_element(mempool_t *pool, void *element)
- {
- }
--#endif /* CONFIG_DEBUG_SLAB || CONFIG_SLUB_DEBUG_ON */
-+#endif /*CONFIG_SLUB_DEBUG_ON */
  
- static __always_inline void kasan_poison_element(mempool_t *pool, void *element)
+-static __fastpath_inline void *slab_alloc(struct kmem_cache *s, struct list_lru *lru,
+-		gfp_t gfpflags, unsigned long addr, size_t orig_size)
+-{
+-	return slab_alloc_node(s, lru, gfpflags, NUMA_NO_NODE, addr, orig_size);
+-}
+-
+-static __fastpath_inline
+-void *__kmem_cache_alloc_lru(struct kmem_cache *s, struct list_lru *lru,
+-			     gfp_t gfpflags)
++void *kmem_cache_alloc(struct kmem_cache *s, gfp_t gfpflags)
  {
+-	void *ret = slab_alloc(s, lru, gfpflags, _RET_IP_, s->object_size);
++	void *ret = slab_alloc_node(s, NULL, gfpflags, NUMA_NO_NODE, _RET_IP_,
++				    s->object_size);
+ 
+ 	trace_kmem_cache_alloc(_RET_IP_, ret, s, gfpflags, NUMA_NO_NODE);
+ 
+ 	return ret;
+ }
+-
+-void *kmem_cache_alloc(struct kmem_cache *s, gfp_t gfpflags)
+-{
+-	return __kmem_cache_alloc_lru(s, NULL, gfpflags);
+-}
+ EXPORT_SYMBOL(kmem_cache_alloc);
+ 
+ void *kmem_cache_alloc_lru(struct kmem_cache *s, struct list_lru *lru,
+ 			   gfp_t gfpflags)
+ {
+-	return __kmem_cache_alloc_lru(s, lru, gfpflags);
++	void *ret = slab_alloc_node(s, lru, gfpflags, NUMA_NO_NODE, _RET_IP_,
++				    s->object_size);
++
++	trace_kmem_cache_alloc(_RET_IP_, ret, s, gfpflags, NUMA_NO_NODE);
++
++	return ret;
+ }
+ EXPORT_SYMBOL(kmem_cache_alloc_lru);
+ 
+ void *kmem_cache_alloc_node(struct kmem_cache *s, gfp_t gfpflags, int node)
+ {
+-	void *ret = slab_alloc_node(s, NULL, gfpflags, node, _RET_IP_, s->object_size);
++	void *ret = slab_alloc_node(s, NULL, gfpflags, node, _RET_IP_,
++				    s->object_size);
+ 
+ 	trace_kmem_cache_alloc(_RET_IP_, ret, s, gfpflags, node);
+ 
 -- 
 2.42.1
 
