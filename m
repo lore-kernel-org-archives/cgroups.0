@@ -1,48 +1,48 @@
 Received: from lindbergh.monkeyblade.net (lindbergh.monkeyblade.net [23.128.96.19])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 26F7A2377D
-	for <cgroups@vger.kernel.org>; Mon, 13 Nov 2023 19:14:18 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 25C9222F1E
+	for <cgroups@vger.kernel.org>; Mon, 13 Nov 2023 19:14:23 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b="J/xXyVkR";
-	dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b="x7V0Kskh"
-Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.220.29])
-	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 208001728;
-	Mon, 13 Nov 2023 11:14:15 -0800 (PST)
+	dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b="LiNsUX0q";
+	dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b="5iBlhYbr"
+Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.220.28])
+	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D01AC10EC;
+	Mon, 13 Nov 2023 11:14:17 -0800 (PST)
 Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
 	(No client certificate requested)
-	by smtp-out2.suse.de (Postfix) with ESMTPS id DAF4D1F88C;
-	Mon, 13 Nov 2023 19:14:12 +0000 (UTC)
+	by smtp-out1.suse.de (Postfix) with ESMTPS id C8C7221940;
+	Mon, 13 Nov 2023 19:14:15 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
-	t=1699902852; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	t=1699902855; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
 	 mime-version:mime-version:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=cXA2SgJxJZfvYr5jQXRsm4AX40wbUd1muC5Hg9F2/Ho=;
-	b=J/xXyVkRwG9lSfoCJ0sf2qONquUSYGBcGDQOJ/KZqHp/2Ym7NKdEIeRsO1HMAF00YvGdpQ
-	++5uNeJdkS1dnWj3bfV85B7sWKeT1esox0SyGaMjRaFHxV5UzdaNlz0cFN4h27vUuLRdmi
-	b2xb85b9yRuj00ahmRBUZ1SvldtCpa0=
+	bh=Lj2Ybkc9bEyxzgjbB/gyBkYp7HC/f0D1F7NR5xIwYLA=;
+	b=LiNsUX0qC19DyvSVJKsLeb7BpuyU8EcyLm+7LbMe3HCx9f7yx1OTc9qGSsTNTzotRowJgh
+	+G5i4+E5s097LUo3M55sk40/xT2anALj7t96A59r0wrf9eYAkF2XP2qH22NA0yxRDtVkQO
+	/MhsRD+VgHPC8OqyzSbL8wp/mRU2lMQ=
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
-	s=susede2_ed25519; t=1699902852;
+	s=susede2_ed25519; t=1699902855;
 	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
 	 mime-version:mime-version:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=cXA2SgJxJZfvYr5jQXRsm4AX40wbUd1muC5Hg9F2/Ho=;
-	b=x7V0Kskh+UT6qgyWN1pbjlXOVG+wZu56XEQE1QMz53nsyEzacDIO/mco2BfSmDidoPDY3u
-	8ufLwRenOBSrIlAQ==
+	bh=Lj2Ybkc9bEyxzgjbB/gyBkYp7HC/f0D1F7NR5xIwYLA=;
+	b=5iBlhYbrFOrnn6k5t+01hBzwT103ynklcSqnl4VDF5Ghwmnpx6N/lFwpSbaZqtFnLx5SNK
+	kBQYxO2DtBxzWTAA==
 Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
 	(No client certificate requested)
-	by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 817BD13398;
-	Mon, 13 Nov 2023 19:14:12 +0000 (UTC)
+	by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 8757A13907;
+	Mon, 13 Nov 2023 19:14:15 +0000 (UTC)
 Received: from dovecot-director2.suse.de ([192.168.254.65])
 	by imap2.suse-dmz.suse.de with ESMTPSA
-	id iCnpHoR1UmVFOgAAMHmgww
-	(envelope-from <vbabka@suse.cz>); Mon, 13 Nov 2023 19:14:12 +0000
+	id +CJlIId1UmVFOgAAMHmgww
+	(envelope-from <vbabka@suse.cz>); Mon, 13 Nov 2023 19:14:15 +0000
 From: Vlastimil Babka <vbabka@suse.cz>
 To: David Rientjes <rientjes@google.com>,
 	Christoph Lameter <cl@linux.com>,
@@ -68,9 +68,9 @@ Cc: Andrew Morton <akpm@linux-foundation.org>,
 	kasan-dev@googlegroups.com,
 	cgroups@vger.kernel.org,
 	Vlastimil Babka <vbabka@suse.cz>
-Subject: [PATCH 10/20] mm/slab: move the rest of slub_def.h to mm/slab.h
-Date: Mon, 13 Nov 2023 20:13:51 +0100
-Message-ID: <20231113191340.17482-32-vbabka@suse.cz>
+Subject: [PATCH 19/20] mm/slub: optimize alloc fastpath code layout
+Date: Mon, 13 Nov 2023 20:14:00 +0100
+Message-ID: <20231113191340.17482-41-vbabka@suse.cz>
 X-Mailer: git-send-email 2.42.1
 In-Reply-To: <20231113191340.17482-22-vbabka@suse.cz>
 References: <20231113191340.17482-22-vbabka@suse.cz>
@@ -82,321 +82,216 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-mm/slab.h is the only place to include include/linux/slub_def.h which
-has allowed switching between SLAB and SLUB. Now we can simply move the
-contents over and remove slub_def.h.
+With allocation fastpaths no longer divided between two .c files, we
+have better inlining, however checking the disassembly of
+kmem_cache_alloc() reveals we can do better to make the fastpaths
+smaller and move the less common situations out of line or to separate
+functions, to reduce instruction cache pressure.
+
+- split memcg pre/post alloc hooks to inlined checks that use likely()
+  to assume there will be no objcg handling necessary, and non-inline
+  functions doing the actual handling
+
+- add some more likely/unlikely() to pre/post alloc hooks to indicate
+  which scenarios should be out of line
+
+- change gfp_allowed_mask handling in slab_post_alloc_hook() so the
+  code can be optimized away when kasan/kmsan/kmemleak is configured out
+
+bloat-o-meter shows:
+add/remove: 4/2 grow/shrink: 1/8 up/down: 521/-2924 (-2403)
+Function                                     old     new   delta
+__memcg_slab_post_alloc_hook                   -     461    +461
+kmem_cache_alloc_bulk                        775     791     +16
+__pfx_should_failslab.constprop                -      16     +16
+__pfx___memcg_slab_post_alloc_hook             -      16     +16
+should_failslab.constprop                      -      12     +12
+__pfx_memcg_slab_post_alloc_hook              16       -     -16
+kmem_cache_alloc_lru                        1295    1023    -272
+kmem_cache_alloc_node                       1118     817    -301
+kmem_cache_alloc                            1076     772    -304
+kmalloc_node_trace                          1149     838    -311
+kmalloc_trace                               1102     789    -313
+__kmalloc_node_track_caller                 1393    1080    -313
+__kmalloc_node                              1397    1082    -315
+__kmalloc                                   1374    1059    -315
+memcg_slab_post_alloc_hook                   464       -    -464
+
+Note that gcc still decided to inline __memcg_pre_alloc_hook(), but the
+code is out of line. Forcing noinline did not improve the results. As a
+result the fastpaths are shorter and overal code size is reduced.
 
 Signed-off-by: Vlastimil Babka <vbabka@suse.cz>
 ---
- include/linux/slub_def.h | 150 ---------------------------------------
- mm/slab.h                | 137 ++++++++++++++++++++++++++++++++++-
- 2 files changed, 136 insertions(+), 151 deletions(-)
- delete mode 100644 include/linux/slub_def.h
+ mm/slub.c | 89 +++++++++++++++++++++++++++++++++----------------------
+ 1 file changed, 54 insertions(+), 35 deletions(-)
 
-diff --git a/include/linux/slub_def.h b/include/linux/slub_def.h
-deleted file mode 100644
-index a0229ea42977..000000000000
---- a/include/linux/slub_def.h
-+++ /dev/null
-@@ -1,150 +0,0 @@
--/* SPDX-License-Identifier: GPL-2.0 */
--#ifndef _LINUX_SLUB_DEF_H
--#define _LINUX_SLUB_DEF_H
+diff --git a/mm/slub.c b/mm/slub.c
+index d2363b91d55c..7a40132b717a 100644
+--- a/mm/slub.c
++++ b/mm/slub.c
+@@ -1866,25 +1866,17 @@ static inline size_t obj_full_size(struct kmem_cache *s)
+ /*
+  * Returns false if the allocation should fail.
+  */
+-static inline bool memcg_slab_pre_alloc_hook(struct kmem_cache *s,
+-					     struct list_lru *lru,
+-					     struct obj_cgroup **objcgp,
+-					     size_t objects, gfp_t flags)
++static bool __memcg_slab_pre_alloc_hook(struct kmem_cache *s,
++					struct list_lru *lru,
++					struct obj_cgroup **objcgp,
++					size_t objects, gfp_t flags)
+ {
+-	struct obj_cgroup *objcg;
 -
--/*
-- * SLUB : A Slab allocator without object queues.
-- *
-- * (C) 2007 SGI, Christoph Lameter
-- */
--#include <linux/kfence.h>
--#include <linux/kobject.h>
--#include <linux/reciprocal_div.h>
--#include <linux/local_lock.h>
+-	if (!memcg_kmem_online())
+-		return true;
 -
--#ifdef CONFIG_SLUB_CPU_PARTIAL
--#define slub_percpu_partial(c)		((c)->partial)
+-	if (!(flags & __GFP_ACCOUNT) && !(s->flags & SLAB_ACCOUNT))
+-		return true;
 -
--#define slub_set_percpu_partial(c, p)		\
--({						\
--	slub_percpu_partial(c) = (p)->next;	\
--})
--
--#define slub_percpu_partial_read_once(c)     READ_ONCE(slub_percpu_partial(c))
--#else
--#define slub_percpu_partial(c)			NULL
--
--#define slub_set_percpu_partial(c, p)
--
--#define slub_percpu_partial_read_once(c)	NULL
--#endif // CONFIG_SLUB_CPU_PARTIAL
--
--/*
-- * Word size structure that can be atomically updated or read and that
-- * contains both the order and the number of objects that a slab of the
-- * given order would contain.
-- */
--struct kmem_cache_order_objects {
--	unsigned int x;
--};
--
--/*
-- * Slab cache management.
-- */
--struct kmem_cache {
--#ifndef CONFIG_SLUB_TINY
--	struct kmem_cache_cpu __percpu *cpu_slab;
--#endif
--	/* Used for retrieving partial slabs, etc. */
--	slab_flags_t flags;
--	unsigned long min_partial;
--	unsigned int size;	/* The size of an object including metadata */
--	unsigned int object_size;/* The size of an object without metadata */
--	struct reciprocal_value reciprocal_size;
--	unsigned int offset;	/* Free pointer offset */
--#ifdef CONFIG_SLUB_CPU_PARTIAL
--	/* Number of per cpu partial objects to keep around */
--	unsigned int cpu_partial;
--	/* Number of per cpu partial slabs to keep around */
--	unsigned int cpu_partial_slabs;
--#endif
--	struct kmem_cache_order_objects oo;
--
--	/* Allocation and freeing of slabs */
--	struct kmem_cache_order_objects min;
--	gfp_t allocflags;	/* gfp flags to use on each alloc */
--	int refcount;		/* Refcount for slab cache destroy */
--	void (*ctor)(void *);
--	unsigned int inuse;		/* Offset to metadata */
--	unsigned int align;		/* Alignment */
--	unsigned int red_left_pad;	/* Left redzone padding size */
--	const char *name;	/* Name (only for display!) */
--	struct list_head list;	/* List of slab caches */
--#ifdef CONFIG_SYSFS
--	struct kobject kobj;	/* For sysfs */
--#endif
--#ifdef CONFIG_SLAB_FREELIST_HARDENED
--	unsigned long random;
--#endif
--
--#ifdef CONFIG_NUMA
--	/*
--	 * Defragmentation by allocating from a remote node.
--	 */
--	unsigned int remote_node_defrag_ratio;
--#endif
--
--#ifdef CONFIG_SLAB_FREELIST_RANDOM
--	unsigned int *random_seq;
--#endif
--
--#ifdef CONFIG_KASAN_GENERIC
--	struct kasan_cache kasan_info;
--#endif
--
--#ifdef CONFIG_HARDENED_USERCOPY
--	unsigned int useroffset;	/* Usercopy region offset */
--	unsigned int usersize;		/* Usercopy region size */
--#endif
--
--	struct kmem_cache_node *node[MAX_NUMNODES];
--};
--
--#if defined(CONFIG_SYSFS) && !defined(CONFIG_SLUB_TINY)
--#define SLAB_SUPPORTS_SYSFS
--void sysfs_slab_unlink(struct kmem_cache *);
--void sysfs_slab_release(struct kmem_cache *);
--#else
--static inline void sysfs_slab_unlink(struct kmem_cache *s)
--{
--}
--static inline void sysfs_slab_release(struct kmem_cache *s)
--{
--}
--#endif
--
--void *fixup_red_left(struct kmem_cache *s, void *p);
--
--static inline void *nearest_obj(struct kmem_cache *cache, const struct slab *slab,
--				void *x) {
--	void *object = x - (x - slab_address(slab)) % cache->size;
--	void *last_object = slab_address(slab) +
--		(slab->objects - 1) * cache->size;
--	void *result = (unlikely(object > last_object)) ? last_object : object;
--
--	result = fixup_red_left(cache, result);
--	return result;
--}
--
--/* Determine object index from a given position */
--static inline unsigned int __obj_to_index(const struct kmem_cache *cache,
--					  void *addr, void *obj)
--{
--	return reciprocal_divide(kasan_reset_tag(obj) - addr,
--				 cache->reciprocal_size);
--}
--
--static inline unsigned int obj_to_index(const struct kmem_cache *cache,
--					const struct slab *slab, void *obj)
--{
--	if (is_kfence_address(obj))
--		return 0;
--	return __obj_to_index(cache, slab_address(slab), obj);
--}
--
--static inline int objs_per_slab(const struct kmem_cache *cache,
--				     const struct slab *slab)
--{
--	return slab->objects;
--}
--#endif /* _LINUX_SLUB_DEF_H */
-diff --git a/mm/slab.h b/mm/slab.h
-index 014c36ea51fa..6e76216ac74e 100644
---- a/mm/slab.h
-+++ b/mm/slab.h
-@@ -209,7 +209,142 @@ static inline size_t slab_size(const struct slab *slab)
- 	return PAGE_SIZE << slab_order(slab);
+ 	/*
+ 	 * The obtained objcg pointer is safe to use within the current scope,
+ 	 * defined by current task or set_active_memcg() pair.
+ 	 * obj_cgroup_get() is used to get a permanent reference.
+ 	 */
+-	objcg = current_obj_cgroup();
++	struct obj_cgroup *objcg = current_obj_cgroup();
+ 	if (!objcg)
+ 		return true;
+ 
+@@ -1907,17 +1899,34 @@ static inline bool memcg_slab_pre_alloc_hook(struct kmem_cache *s,
+ 	return true;
  }
  
--#include <linux/slub_def.h>
-+#include <linux/kfence.h>
-+#include <linux/kobject.h>
-+#include <linux/reciprocal_div.h>
-+#include <linux/local_lock.h>
-+
-+#ifdef CONFIG_SLUB_CPU_PARTIAL
-+#define slub_percpu_partial(c)		((c)->partial)
-+
-+#define slub_set_percpu_partial(c, p)		\
-+({						\
-+	slub_percpu_partial(c) = (p)->next;	\
-+})
-+
-+#define slub_percpu_partial_read_once(c)     READ_ONCE(slub_percpu_partial(c))
-+#else
-+#define slub_percpu_partial(c)			NULL
-+
-+#define slub_set_percpu_partial(c, p)
-+
-+#define slub_percpu_partial_read_once(c)	NULL
-+#endif // CONFIG_SLUB_CPU_PARTIAL
-+
+-static inline void memcg_slab_post_alloc_hook(struct kmem_cache *s,
+-					      struct obj_cgroup *objcg,
+-					      gfp_t flags, size_t size,
+-					      void **p)
 +/*
-+ * Word size structure that can be atomically updated or read and that
-+ * contains both the order and the number of objects that a slab of the
-+ * given order would contain.
++ * Returns false if the allocation should fail.
 + */
-+struct kmem_cache_order_objects {
-+	unsigned int x;
-+};
-+
-+/*
-+ * Slab cache management.
-+ */
-+struct kmem_cache {
-+#ifndef CONFIG_SLUB_TINY
-+	struct kmem_cache_cpu __percpu *cpu_slab;
-+#endif
-+	/* Used for retrieving partial slabs, etc. */
-+	slab_flags_t flags;
-+	unsigned long min_partial;
-+	unsigned int size;	/* The size of an object including metadata */
-+	unsigned int object_size;/* The size of an object without metadata */
-+	struct reciprocal_value reciprocal_size;
-+	unsigned int offset;	/* Free pointer offset */
-+#ifdef CONFIG_SLUB_CPU_PARTIAL
-+	/* Number of per cpu partial objects to keep around */
-+	unsigned int cpu_partial;
-+	/* Number of per cpu partial slabs to keep around */
-+	unsigned int cpu_partial_slabs;
-+#endif
-+	struct kmem_cache_order_objects oo;
-+
-+	/* Allocation and freeing of slabs */
-+	struct kmem_cache_order_objects min;
-+	gfp_t allocflags;	/* gfp flags to use on each alloc */
-+	int refcount;		/* Refcount for slab cache destroy */
-+	void (*ctor)(void *object);	/* Object constructor */
-+	unsigned int inuse;		/* Offset to metadata */
-+	unsigned int align;		/* Alignment */
-+	unsigned int red_left_pad;	/* Left redzone padding size */
-+	const char *name;	/* Name (only for display!) */
-+	struct list_head list;	/* List of slab caches */
-+#ifdef CONFIG_SYSFS
-+	struct kobject kobj;	/* For sysfs */
-+#endif
-+#ifdef CONFIG_SLAB_FREELIST_HARDENED
-+	unsigned long random;
-+#endif
-+
-+#ifdef CONFIG_NUMA
-+	/*
-+	 * Defragmentation by allocating from a remote node.
-+	 */
-+	unsigned int remote_node_defrag_ratio;
-+#endif
-+
-+#ifdef CONFIG_SLAB_FREELIST_RANDOM
-+	unsigned int *random_seq;
-+#endif
-+
-+#ifdef CONFIG_KASAN_GENERIC
-+	struct kasan_cache kasan_info;
-+#endif
-+
-+#ifdef CONFIG_HARDENED_USERCOPY
-+	unsigned int useroffset;	/* Usercopy region offset */
-+	unsigned int usersize;		/* Usercopy region size */
-+#endif
-+
-+	struct kmem_cache_node *node[MAX_NUMNODES];
-+};
-+
-+#if defined(CONFIG_SYSFS) && !defined(CONFIG_SLUB_TINY)
-+#define SLAB_SUPPORTS_SYSFS
-+void sysfs_slab_unlink(struct kmem_cache *s);
-+void sysfs_slab_release(struct kmem_cache *s);
-+#else
-+static inline void sysfs_slab_unlink(struct kmem_cache *s) { }
-+static inline void sysfs_slab_release(struct kmem_cache *s) { }
-+#endif
-+
-+void *fixup_red_left(struct kmem_cache *s, void *p);
-+
-+static inline void *nearest_obj(struct kmem_cache *cache,
-+				const struct slab *slab, void *x) {
-+	void *object = x - (x - slab_address(slab)) % cache->size;
-+	void *last_object = slab_address(slab) +
-+		(slab->objects - 1) * cache->size;
-+	void *result = (unlikely(object > last_object)) ? last_object : object;
-+
-+	result = fixup_red_left(cache, result);
-+	return result;
-+}
-+
-+/* Determine object index from a given position */
-+static inline unsigned int __obj_to_index(const struct kmem_cache *cache,
-+					  void *addr, void *obj)
++static __fastpath_inline
++bool memcg_slab_pre_alloc_hook(struct kmem_cache *s, struct list_lru *lru,
++			       struct obj_cgroup **objcgp, size_t objects,
++			       gfp_t flags)
 +{
-+	return reciprocal_divide(kasan_reset_tag(obj) - addr,
-+				 cache->reciprocal_size);
++	if (!memcg_kmem_online())
++		return true;
++
++	if (likely(!(flags & __GFP_ACCOUNT) && !(s->flags & SLAB_ACCOUNT)))
++		return true;
++
++	return likely(__memcg_slab_pre_alloc_hook(s, lru, objcgp, objects,
++						  flags));
 +}
 +
-+static inline unsigned int obj_to_index(const struct kmem_cache *cache,
-+					const struct slab *slab, void *obj)
-+{
-+	if (is_kfence_address(obj))
-+		return 0;
-+	return __obj_to_index(cache, slab_address(slab), obj);
-+}
-+
-+static inline int objs_per_slab(const struct kmem_cache *cache,
-+				const struct slab *slab)
-+{
-+	return slab->objects;
-+}
++static void __memcg_slab_post_alloc_hook(struct kmem_cache *s,
++					 struct obj_cgroup *objcg,
++					 gfp_t flags, size_t size,
++					 void **p)
+ {
+ 	struct slab *slab;
+ 	unsigned long off;
+ 	size_t i;
  
- #include <linux/memcontrol.h>
- #include <linux/fault-inject.h>
+-	if (!memcg_kmem_online() || !objcg)
+-		return;
++	flags &= gfp_allowed_mask;
+ 
+ 	for (i = 0; i < size; i++) {
+ 		if (likely(p[i])) {
+@@ -1940,6 +1949,16 @@ static inline void memcg_slab_post_alloc_hook(struct kmem_cache *s,
+ 	}
+ }
+ 
++static __fastpath_inline
++void memcg_slab_post_alloc_hook(struct kmem_cache *s, struct obj_cgroup *objcg,
++				gfp_t flags, size_t size, void **p)
++{
++	if (likely(!memcg_kmem_online() || !objcg))
++		return;
++
++	return __memcg_slab_post_alloc_hook(s, objcg, flags, size, p);
++}
++
+ static inline void memcg_slab_free_hook(struct kmem_cache *s, struct slab *slab,
+ 					void **p, int objects)
+ {
+@@ -3709,34 +3728,34 @@ noinline int should_failslab(struct kmem_cache *s, gfp_t gfpflags)
+ }
+ ALLOW_ERROR_INJECTION(should_failslab, ERRNO);
+ 
+-static inline struct kmem_cache *slab_pre_alloc_hook(struct kmem_cache *s,
+-						     struct list_lru *lru,
+-						     struct obj_cgroup **objcgp,
+-						     size_t size, gfp_t flags)
++static __fastpath_inline
++struct kmem_cache *slab_pre_alloc_hook(struct kmem_cache *s,
++				       struct list_lru *lru,
++				       struct obj_cgroup **objcgp,
++				       size_t size, gfp_t flags)
+ {
+ 	flags &= gfp_allowed_mask;
+ 
+ 	might_alloc(flags);
+ 
+-	if (should_failslab(s, flags))
++	if (unlikely(should_failslab(s, flags)))
+ 		return NULL;
+ 
+-	if (!memcg_slab_pre_alloc_hook(s, lru, objcgp, size, flags))
++	if (unlikely(!memcg_slab_pre_alloc_hook(s, lru, objcgp, size, flags)))
+ 		return NULL;
+ 
+ 	return s;
+ }
+ 
+-static inline void slab_post_alloc_hook(struct kmem_cache *s,
+-					struct obj_cgroup *objcg, gfp_t flags,
+-					size_t size, void **p, bool init,
+-					unsigned int orig_size)
++static __fastpath_inline
++void slab_post_alloc_hook(struct kmem_cache *s,	struct obj_cgroup *objcg,
++			  gfp_t flags, size_t size, void **p, bool init,
++			  unsigned int orig_size)
+ {
+ 	unsigned int zero_size = s->object_size;
+ 	bool kasan_init = init;
+ 	size_t i;
+-
+-	flags &= gfp_allowed_mask;
++	gfp_t init_flags = flags & gfp_allowed_mask;
+ 
+ 	/*
+ 	 * For kmalloc object, the allocated memory size(object_size) is likely
+@@ -3769,13 +3788,13 @@ static inline void slab_post_alloc_hook(struct kmem_cache *s,
+ 	 * As p[i] might get tagged, memset and kmemleak hook come after KASAN.
+ 	 */
+ 	for (i = 0; i < size; i++) {
+-		p[i] = kasan_slab_alloc(s, p[i], flags, kasan_init);
++		p[i] = kasan_slab_alloc(s, p[i], init_flags, kasan_init);
+ 		if (p[i] && init && (!kasan_init ||
+ 				     !kasan_has_integrated_init()))
+ 			memset(p[i], 0, zero_size);
+ 		kmemleak_alloc_recursive(p[i], s->object_size, 1,
+-					 s->flags, flags);
+-		kmsan_slab_alloc(s, p[i], flags);
++					 s->flags, init_flags);
++		kmsan_slab_alloc(s, p[i], init_flags);
+ 	}
+ 
+ 	memcg_slab_post_alloc_hook(s, objcg, flags, size, p);
+@@ -3799,7 +3818,7 @@ static __fastpath_inline void *slab_alloc_node(struct kmem_cache *s, struct list
+ 	bool init = false;
+ 
+ 	s = slab_pre_alloc_hook(s, lru, &objcg, 1, gfpflags);
+-	if (!s)
++	if (unlikely(!s))
+ 		return NULL;
+ 
+ 	object = kfence_alloc(s, orig_size, gfpflags);
 -- 
 2.42.1
 
