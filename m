@@ -1,37 +1,36 @@
 Received: from lindbergh.monkeyblade.net (lindbergh.monkeyblade.net [23.128.96.19])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 01AC63EA88
-	for <cgroups@vger.kernel.org>; Wed, 15 Nov 2023 17:04:22 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 628123FE44
+	for <cgroups@vger.kernel.org>; Wed, 15 Nov 2023 17:04:25 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="cvir/Jf0"
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
-	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5CB3C1B2
-	for <cgroups@vger.kernel.org>; Wed, 15 Nov 2023 09:04:20 -0800 (PST)
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="IvyEDXD9"
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F28A6D44
+	for <cgroups@vger.kernel.org>; Wed, 15 Nov 2023 09:04:21 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1700067859;
+	s=mimecast20190719; t=1700067861;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=nT8mn+CYHK0/rYux6OcfYs1wPw2RH0li5fDfUDzstNM=;
-	b=cvir/Jf0R1PdcJob6zajhoTyLyk/+1tfR9gw4j8DswFx2xPzpF6X8SlG1StFCThTV1A+OR
-	j/vMhrND76oeLuF2M0vz+68ot4GhmYD1vorrfozlpHSv63LP7XIIB21x2b7Ehxyd8d/Dhz
-	VII9xmxW5t1BPfqvGk78zPAevbMxUuw=
-Received: from mimecast-mx02.redhat.com (mimecast-mx02.redhat.com
- [66.187.233.88]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-465-fM9_B0zOOhmjiCp8CSg7IQ-1; Wed, 15 Nov 2023 12:04:16 -0500
-X-MC-Unique: fM9_B0zOOhmjiCp8CSg7IQ-1
+	 content-transfer-encoding:content-transfer-encoding;
+	bh=HRYEQpHqs33qVvt7P3DiUUYjLjVK3AoO1/pzgTrkPNE=;
+	b=IvyEDXD9WNvacrVYx/ifR7l5aV1DbGUjaEfBEyvC/GF850n8Jmnm+msKFUV4HpAoQAjPxH
+	fVpst/mVlq+KEtYhvT/YMp/XiWibtBUkkt/4lsraV3oUCL9J5ve0USx1+/E8SqoluxbCCa
+	GJPAtq3JhmxnsjKa9C1OlTNBy8ChjMk=
+Received: from mimecast-mx02.redhat.com (mx-ext.redhat.com [66.187.233.73])
+ by relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-550-YnyQKZPYPzuYztDmQCgvtQ-1; Wed,
+ 15 Nov 2023 12:04:15 -0500
+X-MC-Unique: YnyQKZPYPzuYztDmQCgvtQ-1
 Received: from smtp.corp.redhat.com (int-mx03.intmail.prod.int.rdu2.redhat.com [10.11.54.3])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
-	by mimecast-mx02.redhat.com (Postfix) with ESMTPS id 798E1101AA42;
-	Wed, 15 Nov 2023 17:04:15 +0000 (UTC)
+	by mimecast-mx02.redhat.com (Postfix) with ESMTPS id 537583C2364B;
+	Wed, 15 Nov 2023 17:04:14 +0000 (UTC)
 Received: from llong.com (unknown [10.22.9.37])
-	by smtp.corp.redhat.com (Postfix) with ESMTP id 25F9F1121308;
-	Wed, 15 Nov 2023 17:04:15 +0000 (UTC)
+	by smtp.corp.redhat.com (Postfix) with ESMTP id B1ED81121306;
+	Wed, 15 Nov 2023 17:04:13 +0000 (UTC)
 From: Waiman Long <longman@redhat.com>
 To: Tejun Heo <tj@kernel.org>,
 	Zefan Li <lizefan.x@bytedance.com>,
@@ -46,11 +45,9 @@ Cc: cgroups@vger.kernel.org,
 	Peter Hunt <pehunt@redhat.com>,
 	Frederic Weisbecker <frederic@kernel.org>,
 	Waiman Long <longman@redhat.com>
-Subject: [PATCH v3 3/5] selftests/cgroup: Minor code cleanup and reorganization of test_cpuset_prs.sh
-Date: Wed, 15 Nov 2023 12:03:57 -0500
-Message-Id: <20231115170359.163299-4-longman@redhat.com>
-In-Reply-To: <20231115170359.163299-1-longman@redhat.com>
-References: <20231115170359.163299-1-longman@redhat.com>
+Subject: [PATCH v3 0/5] cgroup/cpuset: Improve CPU isolation in isolated partitions
+Date: Wed, 15 Nov 2023 12:03:54 -0500
+Message-Id: <20231115170359.163299-1-longman@redhat.com>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
@@ -60,201 +57,63 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-Scanned-By: MIMEDefang 3.4.1 on 10.11.54.3
 
-Minor cleanup of test matrix and relocation of test_isolated() function
-to prepare for the next patch. There is no functional change.
+v3:
+ - Break out a separate patch to make workqueue_set_unbound_cpumask()
+   static and move it down to the CONFIG_SYSFS section.
+ - Remove the "__DEBUG__." prefix and the CFTYPE_DEBUG flag from the
+   new root only cpuset.cpus.isolated control files and update the
+   test accordingly.
 
-Signed-off-by: Waiman Long <longman@redhat.com>
----
- .../selftests/cgroup/test_cpuset_prs.sh       | 142 +++++++++---------
- 1 file changed, 71 insertions(+), 71 deletions(-)
+v2:
+ - Add 2 read-only workqueue sysfs files to expose the user requested
+   cpumask as well as the isolated CPUs to be excluded from
+   wq_unbound_cpumask.
+ - Ensure that caller of the new workqueue_unbound_exclude_cpumask()
+   hold cpus_read_lock.
+ - Update the cpuset code to make sure the cpus_read_lock is held
+   whenever workqueue_unbound_exclude_cpumask() may be called.
 
-diff --git a/tools/testing/selftests/cgroup/test_cpuset_prs.sh b/tools/testing/selftests/cgroup/test_cpuset_prs.sh
-index a6e9848189d6..2b825019f806 100755
---- a/tools/testing/selftests/cgroup/test_cpuset_prs.sh
-+++ b/tools/testing/selftests/cgroup/test_cpuset_prs.sh
-@@ -146,71 +146,6 @@ test_add_proc()
- 	echo $$ > $CGROUP2/cgroup.procs	# Move out the task
- }
- 
--#
--# Testing the new "isolated" partition root type
--#
--test_isolated()
--{
--	cd $CGROUP2/test
--	echo 2-3 > cpuset.cpus
--	TYPE=$(cat cpuset.cpus.partition)
--	[[ $TYPE = member ]] || echo member > cpuset.cpus.partition
--
--	console_msg "Change from member to root"
--	test_partition root
--
--	console_msg "Change from root to isolated"
--	test_partition isolated
--
--	console_msg "Change from isolated to member"
--	test_partition member
--
--	console_msg "Change from member to isolated"
--	test_partition isolated
--
--	console_msg "Change from isolated to root"
--	test_partition root
--
--	console_msg "Change from root to member"
--	test_partition member
--
--	#
--	# Testing partition root with no cpu
--	#
--	console_msg "Distribute all cpus to child partition"
--	echo +cpuset > cgroup.subtree_control
--	test_partition root
--
--	mkdir A1
--	cd A1
--	echo 2-3 > cpuset.cpus
--	test_partition root
--	test_effective_cpus 2-3
--	cd ..
--	test_effective_cpus ""
--
--	console_msg "Moving task to partition test"
--	test_add_proc "No space left"
--	cd A1
--	test_add_proc ""
--	cd ..
--
--	console_msg "Shrink and expand child partition"
--	cd A1
--	echo 2 > cpuset.cpus
--	cd ..
--	test_effective_cpus 3
--	cd A1
--	echo 2-3 > cpuset.cpus
--	cd ..
--	test_effective_cpus ""
--
--	# Cleaning up
--	console_msg "Cleaning up"
--	echo $$ > $CGROUP2/cgroup.procs
--	[[ -d A1 ]] && rmdir A1
--}
--
- #
- # Cpuset controller state transition test matrix.
- #
-@@ -304,7 +239,7 @@ TEST_MATRIX=(
- 								       A1:P0,A2:P2,A3:P1 2-4"
- 	" C0-4:X2-4:S+ C1-4:X2-4:S+:P2 C2-4:X4:P1 \
- 				   .      .      X5      .      .    0 A1:0-4,A2:1-4,A3:2-4 \
--								       A1:P0,A2:P-2,A3:P-1 ."
-+								       A1:P0,A2:P-2,A3:P-1"
- 	" C0-4:X2-4:S+ C1-4:X2-4:S+:P2 C2-4:X4:P1 \
- 				   .      .      .      X1      .    0 A1:0-1,A2:2-4,A3:2-4 \
- 								       A1:P0,A2:P2,A3:P-1 2-4"
-@@ -347,10 +282,10 @@ TEST_MATRIX=(
- 	# cpus_allowed/exclusive_cpus update tests
- 	" C0-3:X2-3:S+ C1-3:X2-3:S+ C2-3:X2-3 \
- 				   .     C4      .      P2     .     0 A1:4,A2:4,XA2:,XA3:,A3:4 \
--								       A1:P0,A3:P-2 ."
-+								       A1:P0,A3:P-2"
- 	" C0-3:X2-3:S+ C1-3:X2-3:S+ C2-3:X2-3 \
- 				   .     X1      .      P2     .     0 A1:0-3,A2:1-3,XA1:1,XA2:,XA3:,A3:2-3 \
--								       A1:P0,A3:P-2 ."
-+								       A1:P0,A3:P-2"
- 	" C0-3:X2-3:S+ C1-3:X2-3:S+ C2-3:X2-3 \
- 				   .      .     C3      P2     .     0 A1:0-2,A2:0-2,XA2:3,XA3:3,A3:3 \
- 								       A1:P0,A3:P2 3"
-@@ -359,13 +294,13 @@ TEST_MATRIX=(
- 								       A1:P0,A3:P2 3"
- 	" C0-3:X2-3:S+ C1-3:X2-3:S+ C2-3:X2-3:P2 \
- 				   .      .     X3      .      .     0 A1:0-3,A2:1-3,XA2:3,XA3:3,A3:2-3 \
--								       A1:P0,A3:P-2 ."
-+								       A1:P0,A3:P-2"
- 	" C0-3:X2-3:S+ C1-3:X2-3:S+ C2-3:X2-3:P2 \
- 				   .      .     C3      .      .     0 A1:0-3,A2:3,XA2:3,XA3:3,A3:3 \
--								       A1:P0,A3:P-2 ."
-+								       A1:P0,A3:P-2"
- 	" C0-3:X2-3:S+ C1-3:X2-3:S+ C2-3:X2-3:P2 \
- 				   .     C4      .      .      .     0 A1:4,A2:4,A3:4,XA1:,XA2:,XA3 \
--								       A1:P0,A3:P-2 ."
-+								       A1:P0,A3:P-2"
- 
- 	#  old-A1 old-A2 old-A3 old-B1 new-A1 new-A2 new-A3 new-B1 fail ECPUs Pstate ISOLCPUS
- 	#  ------ ------ ------ ------ ------ ------ ------ ------ ---- ----- ------ --------
-@@ -804,6 +739,71 @@ run_state_test()
- 	echo "All $I tests of $TEST PASSED."
- }
- 
-+#
-+# Testing the new "isolated" partition root type
-+#
-+test_isolated()
-+{
-+	cd $CGROUP2/test
-+	echo 2-3 > cpuset.cpus
-+	TYPE=$(cat cpuset.cpus.partition)
-+	[[ $TYPE = member ]] || echo member > cpuset.cpus.partition
-+
-+	console_msg "Change from member to root"
-+	test_partition root
-+
-+	console_msg "Change from root to isolated"
-+	test_partition isolated
-+
-+	console_msg "Change from isolated to member"
-+	test_partition member
-+
-+	console_msg "Change from member to isolated"
-+	test_partition isolated
-+
-+	console_msg "Change from isolated to root"
-+	test_partition root
-+
-+	console_msg "Change from root to member"
-+	test_partition member
-+
-+	#
-+	# Testing partition root with no cpu
-+	#
-+	console_msg "Distribute all cpus to child partition"
-+	echo +cpuset > cgroup.subtree_control
-+	test_partition root
-+
-+	mkdir A1
-+	cd A1
-+	echo 2-3 > cpuset.cpus
-+	test_partition root
-+	test_effective_cpus 2-3
-+	cd ..
-+	test_effective_cpus ""
-+
-+	console_msg "Moving task to partition test"
-+	test_add_proc "No space left"
-+	cd A1
-+	test_add_proc ""
-+	cd ..
-+
-+	console_msg "Shrink and expand child partition"
-+	cd A1
-+	echo 2 > cpuset.cpus
-+	cd ..
-+	test_effective_cpus 3
-+	cd A1
-+	echo 2-3 > cpuset.cpus
-+	cd ..
-+	test_effective_cpus ""
-+
-+	# Cleaning up
-+	console_msg "Cleaning up"
-+	echo $$ > $CGROUP2/cgroup.procs
-+	[[ -d A1 ]] && rmdir A1
-+}
-+
- #
- # Wait for inotify event for the given file and read it
- # $1: cgroup file to wait for
+Isolated cpuset partition can currently be created to contain an
+exclusive set of CPUs not used in other cgroups and with load balancing
+disabled to reduce interference from the scheduler.
+
+The main purpose of this isolated partition type is to dynamically
+emulate what can be done via the "isolcpus" boot command line option,
+specifically the default domain flag. One effect of the "isolcpus" option
+is to remove the isolated CPUs from the cpumasks of unbound workqueues
+since running work functions in an isolated CPU can be a major source
+of interference. Changing the unbound workqueue cpumasks can be done at
+run time by writing an appropriate cpumask without the isolated CPUs to
+/sys/devices/virtual/workqueue/cpumask. So one can set up an isolated
+cpuset partition and then write to the cpumask sysfs file to achieve
+similar level of CPU isolation. However, this manual process can be
+error prone.
+
+This patch series implements automatic exclusion of isolated CPUs from
+unbound workqueue cpumasks when an isolated cpuset partition is created
+and then adds those CPUs back when the isolated partition is destroyed.
+
+There are also other places in the kernel that look at the HK_FLAG_DOMAIN
+cpumask or other HK_FLAG_* cpumasks and exclude the isolated CPUs from
+certain actions to further reduce interference. CPUs in an isolated
+cpuset partition will not be able to avoid those interferences yet. That
+may change in the future as the need arises.
+Waiman Long (5):
+  workqueue: Make workqueue_set_unbound_cpumask() static
+  workqueue: Add workqueue_unbound_exclude_cpumask() to exclude CPUs
+    from wq_unbound_cpumask
+  selftests/cgroup: Minor code cleanup and reorganization of
+    test_cpuset_prs.sh
+  cgroup/cpuset: Keep track of CPUs in isolated partitions
+  cgroup/cpuset: Take isolated CPUs out of workqueue unbound cpumask
+
+ Documentation/admin-guide/cgroup-v2.rst       |  10 +-
+ include/linux/workqueue.h                     |   2 +-
+ kernel/cgroup/cpuset.c                        | 286 +++++++++++++-----
+ kernel/workqueue.c                            | 139 +++++++--
+ .../selftests/cgroup/test_cpuset_prs.sh       | 216 ++++++++-----
+ 5 files changed, 462 insertions(+), 191 deletions(-)
+
 -- 
 2.39.3
 
