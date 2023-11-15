@@ -1,56 +1,56 @@
 Received: from lindbergh.monkeyblade.net (lindbergh.monkeyblade.net [23.128.96.19])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 85933381C1
-	for <cgroups@vger.kernel.org>; Wed, 15 Nov 2023 16:21:03 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A29C83EA88
+	for <cgroups@vger.kernel.org>; Wed, 15 Nov 2023 17:04:20 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=chromium.org header.i=@chromium.org header.b="E3OXM9Is"
-Received: from mail-il1-x131.google.com (mail-il1-x131.google.com [IPv6:2607:f8b0:4864:20::131])
-	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 00D5A196
-	for <cgroups@vger.kernel.org>; Wed, 15 Nov 2023 08:21:00 -0800 (PST)
-Received: by mail-il1-x131.google.com with SMTP id e9e14a558f8ab-359974f4c7eso26794965ab.1
-        for <cgroups@vger.kernel.org>; Wed, 15 Nov 2023 08:21:00 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=chromium.org; s=google; t=1700065260; x=1700670060; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=VTFJnUE02Fl/erP4woMg7FCRUhqR44wUotjmE1ijPSg=;
-        b=E3OXM9IscpCbdG0whh1LM+tDmt9fJlxiGMSJXfrGUPZk//C0vc/o7Noe+uY6NHW40q
-         ltxQ0ZJBfuOCLWeZs3cs1YCfFvnI/FApGQoyXT6YvonCKuZ5Y8386X1CzDawAApBbLGn
-         dMYsemcdeO63NIcKS83GXHvreEys9e9fTUMgQ=
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1700065260; x=1700670060;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=VTFJnUE02Fl/erP4woMg7FCRUhqR44wUotjmE1ijPSg=;
-        b=J5edRRpwJ56qcgrX9mIaaLbWfsqVzwpXYThH3ee/pHHCaxRjb6ZODsd7vS/4LnTUZC
-         UzkThb4t+ko6oUfgNfamPDjRcqZgGodrpLh7i6cERZn2ll7Jf/YX21O72G0oKjo5hskx
-         pEtUrT1cVv+ltX/18SWpobIBuXrKzWm2/vOKhhLJBMMnato8vj2NupLzZ3dAMyIbPMOP
-         hugOygXLUEUAfCG8Mxecr8CbT6SIYaEatXKEAfXFo9oSs98c9YQurWit1AO74dTS3gk+
-         QdQ9j2NsH2wGy/hTfa5eKY3McQXrBEJh+Px4mZXogcScT+B/LfkthjDly8xsYGNikWve
-         Q2Og==
-X-Gm-Message-State: AOJu0Yw3ieHxAVg2jswA8BMBpYdwGTTWxKCXs/Vw6BMbcrrgEbRpaz8S
-	BrJleI4Zyeg3Zb43ol7NOgaAow==
-X-Google-Smtp-Source: AGHT+IEQfGCSbzgsXlVEtw+4pIN/s1f2VziN8iZBz3Kt/hFHx8nWNO7LKYqHriHT3La4Y7GhbMaaPw==
-X-Received: by 2002:a92:c24a:0:b0:35a:b0a5:23ab with SMTP id k10-20020a92c24a000000b0035ab0a523abmr13217526ilo.21.1700065260120;
-        Wed, 15 Nov 2023 08:21:00 -0800 (PST)
-Received: from timvp-p620-9115096.bld.corp.google.com ([2620:15c:183:200:31f9:945d:f7f2:bd55])
-        by smtp.gmail.com with ESMTPSA id r1-20020a92c501000000b003574cad1598sm1215050ilg.33.2023.11.15.08.20.59
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 15 Nov 2023 08:20:59 -0800 (PST)
-From: Tim Van Patten <timvp@chromium.org>
-To: LKML <linux-kernel@vger.kernel.org>
-Cc: markhas@google.com,
-	Tim Van Patten <timvp@google.com>,
-	Johannes Weiner <hannes@cmpxchg.org>,
-	Tejun Heo <tj@kernel.org>,
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="SPvKiP1Z"
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9EDE91A3
+	for <cgroups@vger.kernel.org>; Wed, 15 Nov 2023 09:04:18 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1700067857;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=Pt/uc3/sS3+KPK27UtScw6ZAU1P5p5ewZLM2SZmBAtw=;
+	b=SPvKiP1Z/EnSefwS1+YzIe21X4MWtkF1JdSfkqHIEz5DGh4byCBjuy0W3lIrVNUpCAbXL0
+	KXHspIcT1sMMJo7+HfdzvKZ15FQE0NQFUGVMFj+nbsMwdoL3uITBOHANnT+aw3+dq4wrtj
+	v1naGTNFSdD8c1qsaIcC0a0Fvwvq9DQ=
+Received: from mimecast-mx02.redhat.com (mimecast-mx02.redhat.com
+ [66.187.233.88]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-411-oDVOxx06MfCUcXt8xdUJZg-1; Wed, 15 Nov 2023 12:04:15 -0500
+X-MC-Unique: oDVOxx06MfCUcXt8xdUJZg-1
+Received: from smtp.corp.redhat.com (int-mx03.intmail.prod.int.rdu2.redhat.com [10.11.54.3])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mimecast-mx02.redhat.com (Postfix) with ESMTPS id ABD0385A58C;
+	Wed, 15 Nov 2023 17:04:14 +0000 (UTC)
+Received: from llong.com (unknown [10.22.9.37])
+	by smtp.corp.redhat.com (Postfix) with ESMTP id 5B6201121306;
+	Wed, 15 Nov 2023 17:04:14 +0000 (UTC)
+From: Waiman Long <longman@redhat.com>
+To: Tejun Heo <tj@kernel.org>,
 	Zefan Li <lizefan.x@bytedance.com>,
-	cgroups@vger.kernel.org
-Subject: [PATCH] cgroup_freezer: cgroup_freezing: Check if not frozen
-Date: Wed, 15 Nov 2023 09:20:43 -0700
-Message-ID: <20231115162054.2896748-1-timvp@chromium.org>
-X-Mailer: git-send-email 2.43.0.rc0.421.g78406f8d94-goog
+	Johannes Weiner <hannes@cmpxchg.org>,
+	Jonathan Corbet <corbet@lwn.net>,
+	Lai Jiangshan <jiangshanlai@gmail.com>,
+	Shuah Khan <shuah@kernel.org>
+Cc: cgroups@vger.kernel.org,
+	linux-doc@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	linux-kselftest@vger.kernel.org,
+	Peter Hunt <pehunt@redhat.com>,
+	Frederic Weisbecker <frederic@kernel.org>,
+	Waiman Long <longman@redhat.com>
+Subject: [PATCH v3 1/5] workqueue: Make workqueue_set_unbound_cpumask() static
+Date: Wed, 15 Nov 2023 12:03:55 -0500
+Message-Id: <20231115170359.163299-2-longman@redhat.com>
+In-Reply-To: <20231115170359.163299-1-longman@redhat.com>
+References: <20231115170359.163299-1-longman@redhat.com>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
@@ -58,60 +58,133 @@ List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
+X-Scanned-By: MIMEDefang 3.4.1 on 10.11.54.3
 
-From: Tim Van Patten <timvp@google.com>
+The workqueue_set_unbound_cpumask() function is only used inside
+workqueue.c with CONFIG_SYSFS. Make it static and move it down to within
+the ifdef CONFIG_SYSFS block. Also mark workqueue_apply_unbound_cpumask()
+as __maybe_unused for now as it will be used by another function
+introduced in a later commit. There is no functional change.
 
-__thaw_task() was recently updated to warn if the task being thawed was
-part of a freezer cgroup that is still currently freezing:
-
-	void __thaw_task(struct task_struct *p)
-	{
-	...
-		if (WARN_ON_ONCE(freezing(p)))
-			goto unlock;
-
-This has exposed a bug in cgroup1 freezing where when CGROUP_FROZEN is
-asserted, the CGROUP_FREEZING bits are not also cleared at the same
-time. Meaning, when a cgroup is marked FROZEN it continues to be marked
-FREEZING as well. This causes the WARNING to trigger, because
-cgroup_freezing() thinks the cgroup is still freezing.
-
-There are two ways to fix this:
-
-1. Whenever FROZEN is set, clear FREEZING for the cgroup and all
-children cgroups.
-2. Update cgroup_freezing() to also verify that FROZEN is not set.
-
-This patch implements option (2), since it's smaller and more
-straightforward.
-
-Signed-off-by: Tim Van Patten <timvp@google.com>
+Signed-off-by: Waiman Long <longman@redhat.com>
 ---
+ include/linux/workqueue.h |  1 -
+ kernel/workqueue.c        | 76 +++++++++++++++++++--------------------
+ 2 files changed, 38 insertions(+), 39 deletions(-)
 
- kernel/cgroup/legacy_freezer.c | 8 +++++++-
- 1 file changed, 7 insertions(+), 1 deletion(-)
-
-diff --git a/kernel/cgroup/legacy_freezer.c b/kernel/cgroup/legacy_freezer.c
-index 122dacb3a443..66d1708042a7 100644
---- a/kernel/cgroup/legacy_freezer.c
-+++ b/kernel/cgroup/legacy_freezer.c
-@@ -66,9 +66,15 @@ static struct freezer *parent_freezer(struct freezer *freezer)
- bool cgroup_freezing(struct task_struct *task)
+diff --git a/include/linux/workqueue.h b/include/linux/workqueue.h
+index 24b1e5070f4d..cf49b467bd57 100644
+--- a/include/linux/workqueue.h
++++ b/include/linux/workqueue.h
+@@ -491,7 +491,6 @@ struct workqueue_attrs *alloc_workqueue_attrs(void);
+ void free_workqueue_attrs(struct workqueue_attrs *attrs);
+ int apply_workqueue_attrs(struct workqueue_struct *wq,
+ 			  const struct workqueue_attrs *attrs);
+-int workqueue_set_unbound_cpumask(cpumask_var_t cpumask);
+ 
+ extern bool queue_work_on(int cpu, struct workqueue_struct *wq,
+ 			struct work_struct *work);
+diff --git a/kernel/workqueue.c b/kernel/workqueue.c
+index 6e578f576a6f..8996cdba8f07 100644
+--- a/kernel/workqueue.c
++++ b/kernel/workqueue.c
+@@ -5784,7 +5784,7 @@ void thaw_workqueues(void)
+ }
+ #endif /* CONFIG_FREEZER */
+ 
+-static int workqueue_apply_unbound_cpumask(const cpumask_var_t unbound_cpumask)
++static int __maybe_unused workqueue_apply_unbound_cpumask(const cpumask_var_t unbound_cpumask)
  {
- 	bool ret;
-+	unsigned int state;
- 
- 	rcu_read_lock();
--	ret = task_freezer(task)->state & CGROUP_FREEZING;
-+	/* Check if the cgroup is still FREEZING, but not FROZEN. The extra
-+	 * !FROZEN check is required, because the FREEZING bit is not cleared
-+	 * when the state FROZEN is reached.
-+	 */
-+	state = task_freezer(task)->state;
-+	ret = (state & CGROUP_FREEZING) && !(state & CGROUP_FROZEN);
- 	rcu_read_unlock();
- 
+ 	LIST_HEAD(ctxs);
+ 	int ret = 0;
+@@ -5827,43 +5827,6 @@ static int workqueue_apply_unbound_cpumask(const cpumask_var_t unbound_cpumask)
  	return ret;
+ }
+ 
+-/**
+- *  workqueue_set_unbound_cpumask - Set the low-level unbound cpumask
+- *  @cpumask: the cpumask to set
+- *
+- *  The low-level workqueues cpumask is a global cpumask that limits
+- *  the affinity of all unbound workqueues.  This function check the @cpumask
+- *  and apply it to all unbound workqueues and updates all pwqs of them.
+- *
+- *  Return:	0	- Success
+- *  		-EINVAL	- Invalid @cpumask
+- *  		-ENOMEM	- Failed to allocate memory for attrs or pwqs.
+- */
+-int workqueue_set_unbound_cpumask(cpumask_var_t cpumask)
+-{
+-	int ret = -EINVAL;
+-
+-	/*
+-	 * Not excluding isolated cpus on purpose.
+-	 * If the user wishes to include them, we allow that.
+-	 */
+-	cpumask_and(cpumask, cpumask, cpu_possible_mask);
+-	if (!cpumask_empty(cpumask)) {
+-		apply_wqattrs_lock();
+-		if (cpumask_equal(cpumask, wq_unbound_cpumask)) {
+-			ret = 0;
+-			goto out_unlock;
+-		}
+-
+-		ret = workqueue_apply_unbound_cpumask(cpumask);
+-
+-out_unlock:
+-		apply_wqattrs_unlock();
+-	}
+-
+-	return ret;
+-}
+-
+ static int parse_affn_scope(const char *val)
+ {
+ 	int i;
+@@ -6158,6 +6121,43 @@ static struct bus_type wq_subsys = {
+ 	.dev_groups			= wq_sysfs_groups,
+ };
+ 
++/**
++ *  workqueue_set_unbound_cpumask - Set the low-level unbound cpumask
++ *  @cpumask: the cpumask to set
++ *
++ *  The low-level workqueues cpumask is a global cpumask that limits
++ *  the affinity of all unbound workqueues.  This function check the @cpumask
++ *  and apply it to all unbound workqueues and updates all pwqs of them.
++ *
++ *  Return:	0	- Success
++ *		-EINVAL	- Invalid @cpumask
++ *		-ENOMEM	- Failed to allocate memory for attrs or pwqs.
++ */
++static int workqueue_set_unbound_cpumask(cpumask_var_t cpumask)
++{
++	int ret = -EINVAL;
++
++	/*
++	 * Not excluding isolated cpus on purpose.
++	 * If the user wishes to include them, we allow that.
++	 */
++	cpumask_and(cpumask, cpumask, cpu_possible_mask);
++	if (!cpumask_empty(cpumask)) {
++		apply_wqattrs_lock();
++		if (cpumask_equal(cpumask, wq_unbound_cpumask)) {
++			ret = 0;
++			goto out_unlock;
++		}
++
++		ret = workqueue_apply_unbound_cpumask(cpumask);
++
++out_unlock:
++		apply_wqattrs_unlock();
++	}
++
++	return ret;
++}
++
+ static ssize_t wq_unbound_cpumask_show(struct device *dev,
+ 		struct device_attribute *attr, char *buf)
+ {
 -- 
-2.43.0.rc0.421.g78406f8d94-goog
+2.39.3
 
