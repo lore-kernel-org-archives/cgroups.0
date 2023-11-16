@@ -1,124 +1,110 @@
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+	(No client certificate requested)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5257B49F61
+	for <cgroups@vger.kernel.org>; Thu, 16 Nov 2023 21:57:50 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=chromium.org header.i=@chromium.org header.b="Obwa6NhB"
-Received: from mail-pl1-x632.google.com (mail-pl1-x632.google.com [IPv6:2607:f8b0:4864:20::632])
-	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4981DD5A
-	for <cgroups@vger.kernel.org>; Thu, 16 Nov 2023 11:21:30 -0800 (PST)
-Received: by mail-pl1-x632.google.com with SMTP id d9443c01a7336-1cc34c3420bso10748575ad.3
-        for <cgroups@vger.kernel.org>; Thu, 16 Nov 2023 11:21:30 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=chromium.org; s=google; t=1700162489; x=1700767289; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=JcOGCvfEagiw1YdvVb5+RIJk8AKqAaDYL4V7FygIVew=;
-        b=Obwa6NhB3UvqEPYIY/eSPoywDnIy6qI94KyzaKOwFxO0bvBS8qUe28NohbTj6++iDz
-         kChhiWkx+A683O/yoCYMHL6z8K8RrRJIaBQfNOJOwI/njVXcAODwOCKfdy10liYXLQCN
-         bQQPOxHFJ/Kzudt9tTrE6JIeD4Jlz/yny339c=
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1700162489; x=1700767289;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=JcOGCvfEagiw1YdvVb5+RIJk8AKqAaDYL4V7FygIVew=;
-        b=XcmAw2+vecVyy5v53RzuF/cnwkCa6Yg7QBtj6kU/yRsIixa/Wvl6PafdHf63aiqt08
-         zp38msAsTAUZYlOYiKYqcjweLX9vgf7kMUXZnP8axloa2BqKASxW3bsBN2ZbYAsotDnK
-         mEyvUNQg58AeC3UJa6j7GVHNjk+TwGcr+a1XDrX1hFQhRef9hPL8mFYRuvGAbOhovC/7
-         HLnzIZW2XX92UxaqI+YtSBGOShb9zq29KHaOFe2J6+cW0D0VUGjKNOF6unsAj5YNQ1MF
-         NNOMLoJAPZbDAA7BZtebzkvAFjg+jj9UEf6FiWySHitx7745NW/Ft6bVDv8JR+/k34Yk
-         6U6g==
-X-Gm-Message-State: AOJu0YzJmp0g7W3sryLuexChS3CXhTcbg4lW6sB/Mxu7l5y5JBtd9ExR
-	G5Ci+8gu3D/hU9WmjDCAa4I8TQ==
-X-Google-Smtp-Source: AGHT+IGaGl07eSgYy3o8f6edP1SkNwCS66RrUaUOhWuRJ+oeJxlMHbJLhbzYWUfIGXmL8cR8NFc1fQ==
-X-Received: by 2002:a17:902:eccb:b0:1cc:3c2f:9c41 with SMTP id a11-20020a170902eccb00b001cc3c2f9c41mr11600739plh.23.1700162489608;
-        Thu, 16 Nov 2023 11:21:29 -0800 (PST)
-Received: from www.outflux.net (198-0-35-241-static.hfc.comcastbusiness.net. [198.0.35.241])
-        by smtp.gmail.com with ESMTPSA id c5-20020a170902c1c500b001c32fd9e412sm28083plc.58.2023.11.16.11.21.27
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 16 Nov 2023 11:21:28 -0800 (PST)
-From: Kees Cook <keescook@chromium.org>
-To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: Kees Cook <keescook@chromium.org>,
-	Tejun Heo <tj@kernel.org>,
-	Azeem Shaikh <azeemshaikh38@gmail.com>,
-	Zefan Li <lizefan.x@bytedance.com>,
-	Johannes Weiner <hannes@cmpxchg.org>,
-	Waiman Long <longman@redhat.com>,
-	Steven Rostedt <rostedt@goodmis.org>,
-	Masami Hiramatsu <mhiramat@kernel.org>,
-	linux-kernel@vger.kernel.org,
-	cgroups@vger.kernel.org,
-	linux-trace-kernel@vger.kernel.org,
-	bpf@vger.kernel.org,
-	linux-hardening@vger.kernel.org
-Subject: [PATCH 1/3] kernfs: Convert kernfs_walk_ns() from strlcpy() to strscpy()
-Date: Thu, 16 Nov 2023 11:21:23 -0800
-Message-Id: <20231116192127.1558276-1-keescook@chromium.org>
-X-Mailer: git-send-email 2.34.1
-In-Reply-To: <20231116191718.work.246-kees@kernel.org>
-References: <20231116191718.work.246-kees@kernel.org>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="WfIYorTm"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C7D9BC433CD
+	for <cgroups@vger.kernel.org>; Thu, 16 Nov 2023 21:57:50 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1700171870;
+	bh=Y5SKnI8KWiPUqCAShlWpsNDBct9rlzSkcftG0eIw8Fw=;
+	h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
+	b=WfIYorTmaGqkMmuIujqaLQj+nw8xPAOLshn000zNkpLE7nSf2lY32H6GrZhJrCwOR
+	 soSRotcmtvWJPSVe0cUWjY7M7abRuK2YXMNvczDxCNyBvj8HdFDcgWuzHuRIN384TD
+	 Vuhr1j0yNIeKTX7Xl1UIvq5gzio9pmYs01Knei3E5yGevNyx++GqrdMCEr0vvusuz4
+	 89zre5xFLS1ZvnJMTxAWcIuc7xoAjnUcLxbbROrxpSw6Z8VrD4HwtFOI1klXYu7RYp
+	 t199ipT9MnRXvBYTXRMrKo8zCTDa/Z+x23NBiB9rwXBStU2EDbywhcFocohpViKnzJ
+	 O4jXPMFhcdnfQ==
+Received: by mail-pj1-f51.google.com with SMTP id 98e67ed59e1d1-2809414efa9so1093271a91.1
+        for <cgroups@vger.kernel.org>; Thu, 16 Nov 2023 13:57:50 -0800 (PST)
+X-Gm-Message-State: AOJu0YzCUfDe/hpqOcCJyqtQipOYzEUq0Ry2eZf+Bu8uxXk53bvkIKJf
+	MCqFWWW1oHkMR/fOxW2sQzbm6KydjLPqYkx7FMHKww==
+X-Google-Smtp-Source: AGHT+IHQj9Vs+x71xRCK4U1CEmrgLgW3GcU2zfeirQPqpe+dAj0kYj5GZ49GtAN9LiWFuD3fPynnNTVXOQDoFvL1gj4=
+X-Received: by 2002:a17:90b:1e4c:b0:27d:5cca:9b69 with SMTP id
+ pi12-20020a17090b1e4c00b0027d5cca9b69mr17169313pjb.45.1700171870173; Thu, 16
+ Nov 2023 13:57:50 -0800 (PST)
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-Developer-Signature: v=1; a=openpgp-sha256; l=1547; i=keescook@chromium.org;
- h=from:subject; bh=RC/7LXkyyLguxbbh56shJCtsntlpj0v42+8lbCHyU+Q=;
- b=owEBbQKS/ZANAwAKAYly9N/cbcAmAcsmYgBlVmu1a6YGdzhkpS/cBY9OTj5JYo8XAMY6N0Jto
- saH/INeq++JAjMEAAEKAB0WIQSlw/aPIp3WD3I+bhOJcvTf3G3AJgUCZVZrtQAKCRCJcvTf3G3A
- JmvvD/4hr2r1X4hdNRSGjLQ0H9OzAANSFcbnzJfaOanKtWw5cPHnrunF87wYSMyErB4/oiEJRLs
- 0HkPFaj2BH5MXTVv4dNNPgNWv5sV7AbzxG+f3fdi3csPn3hTlnA4J8ugnwhU3piG8gYUOWP6vaT
- pf2p3JEknP9h4DK51GSgbULEBrBYo1PRWXKa2joQA3vkfWjunJoR0FEiNFlzm5LCYqb3YhBtws2
- qofYsgxWF2wfkKO5nKlGyFyarUQfJ2RVLsIi+UMDpBVzO42U3VZyQlhkTcg7EkmOtudofwdBXK4
- 0+Zm3jPk2zNGJfle1nY4jU9/mDukzZNJUhKagSnXYbf5JjntQ7n4HGFwaX9TsjyVmzhTrQ7gdqH
- krL0I5ky99HtHXMTUGWqyOUxwp1/VVdvp1umcCodYwkiptU0kKhbx96z/sFfT293wXWmcJHrilQ
- QVO4JiJSrQalFRzNYTvKQA+liozKhtf+rCDc7PfrRykroARPwmlXWBN8MXyEHTG8usj0LM/5lqE
- TLTHGNwFkf2LPoPdSdt1FYYpM+d8aCyWbqWuAryypw63HLRYP6tMyXNhMc36X9s3wo4404dXooj
- /EGJXy98yYJx8ykG85Ru2S1uYthlhKQQ2MpUBixq+dLxTB6qtI9vJoywzOpi3tqIINg3BntSh2t jIEaboOkD87aMGQ==
-X-Developer-Key: i=keescook@chromium.org; a=openpgp; fpr=A5C3F68F229DD60F723E6E138972F4DFDC6DC026
-Content-Transfer-Encoding: 8bit
+References: <20231106183159.3562879-1-nphamcs@gmail.com> <CAF8kJuMsXUm9=kiL8qPNVfYPzfyq-JWYSH3KraZadjF+myW-2A@mail.gmail.com>
+ <CAKEwX=MNKY0UHbxi6Zfwf0KkepYavFaZo8F6LGe5GyyE3U35Jg@mail.gmail.com>
+ <CAF8kJuMx4KT9z2RPy8z+snhM6YUtK=kZ1+BdHjKua2jhwFo-XQ@mail.gmail.com>
+ <CAKEwX=OpQZhDmCr-a+O0=c8LfPoO0r8y=abpQoKXWcOP+V6yYg@mail.gmail.com> <CAF8kJuNnM_0jDCaAueseiNA1264-MtA0QiQtfjEN1E6aY56MKQ@mail.gmail.com>
+In-Reply-To: <CAF8kJuNnM_0jDCaAueseiNA1264-MtA0QiQtfjEN1E6aY56MKQ@mail.gmail.com>
+From: Chris Li <chrisl@kernel.org>
+Date: Thu, 16 Nov 2023 13:57:39 -0800
+X-Gmail-Original-Message-ID: <CAF8kJuN5fBBmpOzmR72B5NBmjPNCNk4DALqz=+PKBwQrjvHH2w@mail.gmail.com>
+Message-ID: <CAF8kJuN5fBBmpOzmR72B5NBmjPNCNk4DALqz=+PKBwQrjvHH2w@mail.gmail.com>
+Subject: Re: [PATCH v5 0/6] workload-specific and memory pressure-driven zswap writeback
+To: Nhat Pham <nphamcs@gmail.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>, Johannes Weiner <hannes@cmpxchg.org>, 
+	Domenico Cerasuolo <cerasuolodomenico@gmail.com>, Yosry Ahmed <yosryahmed@google.com>, 
+	Seth Jennings <sjenning@redhat.com>, Dan Streetman <ddstreet@ieee.org>, 
+	Vitaly Wool <vitaly.wool@konsulko.com>, mhocko@kernel.org, roman.gushchin@linux.dev, 
+	Shakeel Butt <shakeelb@google.com>, muchun.song@linux.dev, linux-mm <linux-mm@kvack.org>, 
+	kernel-team@meta.com, LKML <linux-kernel@vger.kernel.org>, 
+	cgroups@vger.kernel.org, linux-doc@vger.kernel.org, 
+	linux-kselftest@vger.kernel.org, shuah@kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-strlcpy() reads the entire source buffer first. This read may exceed
-the destination size limit. This is both inefficient and can lead
-to linear read overflows if a source string is not NUL-terminated[1].
-Additionally, it returns the size of the source string, not the
-resulting size of the destination string. In an effort to remove strlcpy()
-completely[2], replace strlcpy() here with strscpy().
+Hi Nhat,
 
-Link: https://www.kernel.org/doc/html/latest/process/deprecated.html#strlcpy [1]
-Link: https://github.com/KSPP/linux/issues/89 [2]
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: Tejun Heo <tj@kernel.org>
-Cc: Azeem Shaikh <azeemshaikh38@gmail.com>
-Signed-off-by: Kees Cook <keescook@chromium.org>
----
- fs/kernfs/dir.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+I want want to share the high level feedback we discussed here in the
+mailing list as well.
 
-diff --git a/fs/kernfs/dir.c b/fs/kernfs/dir.c
-index 8b2bd65d70e7..37353901ede1 100644
---- a/fs/kernfs/dir.c
-+++ b/fs/kernfs/dir.c
-@@ -850,16 +850,16 @@ static struct kernfs_node *kernfs_walk_ns(struct kernfs_node *parent,
- 					  const unsigned char *path,
- 					  const void *ns)
- {
--	size_t len;
-+	ssize_t len;
- 	char *p, *name;
- 
- 	lockdep_assert_held_read(&kernfs_root(parent)->kernfs_rwsem);
- 
- 	spin_lock_irq(&kernfs_pr_cont_lock);
- 
--	len = strlcpy(kernfs_pr_cont_buf, path, sizeof(kernfs_pr_cont_buf));
-+	len = strscpy(kernfs_pr_cont_buf, path, sizeof(kernfs_pr_cont_buf));
- 
--	if (len >= sizeof(kernfs_pr_cont_buf)) {
-+	if (len < 0) {
- 		spin_unlock_irq(&kernfs_pr_cont_lock);
- 		return NULL;
- 	}
--- 
-2.34.1
+It is my observation that each memcg LRU list can't compare the page
+time order with other memcg.
+It works great when the leaf level memcg hits the memory limit and you
+want to reclaim from that memcg.
+It works less well on the global memory pressure you need to reclaim
+from all memcg. You kind of have to
+scan each all child memcg to find out the best page to shrink from. It
+is less effective to get to the most desirable page quickly.
 
+This can benefit from a design similar to MGLRU. This idea is
+suggested by Yu Zhao, credit goes to him not me.
+In other words, the current patch is similar to the memcg page list
+pre MGLRU world. We can have a MRLRU
+like per memcg zswap shrink list.
+
+
+Chris
+
+On Wed, Nov 8, 2023 at 6:10=E2=80=AFPM Chris Li <chrisl@kernel.org> wrote:
+>
+> On Wed, Nov 8, 2023 at 4:28=E2=80=AFPM Nhat Pham <nphamcs@gmail.com> wrot=
+e:
+> >
+> > Hmm my guess is that I probably sent this out based on an outdated
+> > mm-unstable. There has since been a new zswap selftest merged
+> > to mm-unstable (written by no other than myself - oh the irony), so
+> > maybe it does not apply cleanly anymore with git am.
+>
+> $ git am -3 patches/zswap-pool-lru/0005
+> Applying: selftests: cgroup: update per-memcg zswap writeback selftest
+> Using index info to reconstruct a base tree...
+> M       tools/testing/selftests/cgroup/test_zswap.c
+> Falling back to patching base and 3-way merge...
+> Auto-merging tools/testing/selftests/cgroup/test_zswap.c
+> $ git am -3 patches/zswap-pool-lru/0006
+> Applying: zswap: shrinks zswap pool based on memory pressure
+> error: sha1 information is lacking or useless (mm/zswap.c).
+> error: could not build fake ancestor
+> Patch failed at 0001 zswap: shrinks zswap pool based on memory pressure
+> hint: Use 'git am --show-current-patch=3Ddiff' to see the failed patch
+> When you have resolved this problem, run "git am --continue".
+> If you prefer to skip this patch, run "git am --skip" instead.
+> To restore the original branch and stop patching, run "git am --abort".
+>
+> I was able to resolve the conflict on patch 6 by hand though. So I am goo=
+d now.
+>
+> Thanks
+>
+> Chris
