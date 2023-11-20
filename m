@@ -1,47 +1,47 @@
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b="FPhfQvkV";
-	dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b="7Bn+lpV9"
-Received: from smtp-out2.suse.de (smtp-out2.suse.de [IPv6:2001:67c:2178:6::1d])
-	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EF680E7;
-	Mon, 20 Nov 2023 10:34:42 -0800 (PST)
+	dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b="Xi8x2Mai";
+	dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b="NeSKI17U"
+Received: from smtp-out1.suse.de (smtp-out1.suse.de [IPv6:2001:67c:2178:6::1c])
+	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3A4EDE8;
+	Mon, 20 Nov 2023 10:34:43 -0800 (PST)
 Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
 	(No client certificate requested)
-	by smtp-out2.suse.de (Postfix) with ESMTPS id 60AD51F8AA;
+	by smtp-out1.suse.de (Postfix) with ESMTPS id E026321923;
 	Mon, 20 Nov 2023 18:34:41 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
 	t=1700505281; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
 	 mime-version:mime-version:content-type:content-type:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=5GrBCfvjCtpiJqa8ygwZPoxY8exS+14FRB1r254RD0U=;
-	b=FPhfQvkViYNNlLlkqIEvH6iJhcWdFbB1ez85bYh8m3z0ThOtjlrGrlmkMjnw1bYrcZgkBZ
-	s6BizyqBVl8v6MFrHNRVozqNd5S2ikSD9cqJht54OgsPIAffS3/d1cwqTw3lAUtEvsWuJR
-	FLk+oJYbPTunJNoefJgvn9jcqiA5k9s=
+	bh=aVfRs6M7+9kPCQWxAD8DsCdbOnhN2KBENiJIM8UzvaI=;
+	b=Xi8x2Maic8BjPE4QHWuEuFpKZYbztsF04CB2NiqgaH23dD2MT4Ro0RlgXo8XkV19JMRS3M
+	kLV2BIpu8F2tbfaO+Npd2ISJJ1FcIHw/6VDU8pGbFyTEWNVHIGUaGvA4oI2mg4K6CscX/F
+	ufXvVdah3n+0pyOxq5cjF/9GgLrgbz0=
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
 	s=susede2_ed25519; t=1700505281;
 	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
 	 mime-version:mime-version:content-type:content-type:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=5GrBCfvjCtpiJqa8ygwZPoxY8exS+14FRB1r254RD0U=;
-	b=7Bn+lpV9eESttWXYK2/IDuDAs+80Cw4I8lxuhU97Ce0QM22jBm6pBGT4R79YoOPE2qKvAP
-	JIqClnPt2p9h8XCg==
+	bh=aVfRs6M7+9kPCQWxAD8DsCdbOnhN2KBENiJIM8UzvaI=;
+	b=NeSKI17UTjYFXjEdataz5u2wDntJlUIz5yfeaVqFzraVs+oCBTjWRv8IIO/zRECp8Uk9nN
+	2wRn3emISn9DplCQ==
 Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
 	(No client certificate requested)
-	by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 30A8113912;
+	by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 9F8C013912;
 	Mon, 20 Nov 2023 18:34:41 +0000 (UTC)
 Received: from dovecot-director2.suse.de ([192.168.254.65])
 	by imap2.suse-dmz.suse.de with ESMTPSA
-	id EAFrC8GmW2UUMgAAMHmgww
+	id KDB8JsGmW2UUMgAAMHmgww
 	(envelope-from <vbabka@suse.cz>); Mon, 20 Nov 2023 18:34:41 +0000
 From: Vlastimil Babka <vbabka@suse.cz>
-Date: Mon, 20 Nov 2023 19:34:19 +0100
-Subject: [PATCH v2 08/21] mm/mempool/dmapool: remove CONFIG_DEBUG_SLAB
- ifdefs
+Date: Mon, 20 Nov 2023 19:34:21 +0100
+Subject: [PATCH v2 10/21] mm/slab: move struct kmem_cache_cpu declaration
+ to slub.c
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
@@ -50,7 +50,7 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-Id: <20231120-slab-remove-slab-v2-8-9c9c70177183@suse.cz>
+Message-Id: <20231120-slab-remove-slab-v2-10-9c9c70177183@suse.cz>
 References: <20231120-slab-remove-slab-v2-0-9c9c70177183@suse.cz>
 In-Reply-To: <20231120-slab-remove-slab-v2-0-9c9c70177183@suse.cz>
 To: David Rientjes <rientjes@google.com>, Christoph Lameter <cl@linux.com>, 
@@ -69,7 +69,7 @@ Cc: Andrew Morton <akpm@linux-foundation.org>,
  kasan-dev@googlegroups.com, cgroups@vger.kernel.org, 
  linux-hardening@vger.kernel.org, Vlastimil Babka <vbabka@suse.cz>
 X-Mailer: b4 0.12.4
-Authentication-Results: smtp-out2.suse.de;
+Authentication-Results: smtp-out1.suse.de;
 	none
 X-Spam-Score: 1.30
 X-Spamd-Result: default: False [1.30 / 50.00];
@@ -97,59 +97,147 @@ X-Spamd-Result: default: False [1.30 / 50.00];
 	 RCVD_COUNT_TWO(0.00)[2];
 	 SUSPICIOUS_RECIPS(1.50)[]
 
-CONFIG_DEBUG_SLAB is going away with CONFIG_SLAB, so remove dead ifdefs
-in mempool and dmapool code.
+Nothing outside SLUB itself accesses the struct kmem_cache_cpu fields so
+it does not need to be declared in slub_def.h. This allows also to move
+enum stat_item.
 
 Reviewed-by: Kees Cook <keescook@chromium.org>
 Signed-off-by: Vlastimil Babka <vbabka@suse.cz>
 ---
- mm/dmapool.c | 2 +-
- mm/mempool.c | 6 +++---
- 2 files changed, 4 insertions(+), 4 deletions(-)
+ include/linux/slub_def.h | 54 ------------------------------------------------
+ mm/slub.c                | 54 ++++++++++++++++++++++++++++++++++++++++++++++++
+ 2 files changed, 54 insertions(+), 54 deletions(-)
 
-diff --git a/mm/dmapool.c b/mm/dmapool.c
-index a151a21e571b..f0bfc6c490f4 100644
---- a/mm/dmapool.c
-+++ b/mm/dmapool.c
-@@ -36,7 +36,7 @@
- #include <linux/types.h>
- #include <linux/wait.h>
+diff --git a/include/linux/slub_def.h b/include/linux/slub_def.h
+index deb90cf4bffb..a0229ea42977 100644
+--- a/include/linux/slub_def.h
++++ b/include/linux/slub_def.h
+@@ -12,60 +12,6 @@
+ #include <linux/reciprocal_div.h>
+ #include <linux/local_lock.h>
  
--#if defined(CONFIG_DEBUG_SLAB) || defined(CONFIG_SLUB_DEBUG_ON)
-+#ifdef CONFIG_SLUB_DEBUG_ON
- #define DMAPOOL_DEBUG 1
+-enum stat_item {
+-	ALLOC_FASTPATH,		/* Allocation from cpu slab */
+-	ALLOC_SLOWPATH,		/* Allocation by getting a new cpu slab */
+-	FREE_FASTPATH,		/* Free to cpu slab */
+-	FREE_SLOWPATH,		/* Freeing not to cpu slab */
+-	FREE_FROZEN,		/* Freeing to frozen slab */
+-	FREE_ADD_PARTIAL,	/* Freeing moves slab to partial list */
+-	FREE_REMOVE_PARTIAL,	/* Freeing removes last object */
+-	ALLOC_FROM_PARTIAL,	/* Cpu slab acquired from node partial list */
+-	ALLOC_SLAB,		/* Cpu slab acquired from page allocator */
+-	ALLOC_REFILL,		/* Refill cpu slab from slab freelist */
+-	ALLOC_NODE_MISMATCH,	/* Switching cpu slab */
+-	FREE_SLAB,		/* Slab freed to the page allocator */
+-	CPUSLAB_FLUSH,		/* Abandoning of the cpu slab */
+-	DEACTIVATE_FULL,	/* Cpu slab was full when deactivated */
+-	DEACTIVATE_EMPTY,	/* Cpu slab was empty when deactivated */
+-	DEACTIVATE_TO_HEAD,	/* Cpu slab was moved to the head of partials */
+-	DEACTIVATE_TO_TAIL,	/* Cpu slab was moved to the tail of partials */
+-	DEACTIVATE_REMOTE_FREES,/* Slab contained remotely freed objects */
+-	DEACTIVATE_BYPASS,	/* Implicit deactivation */
+-	ORDER_FALLBACK,		/* Number of times fallback was necessary */
+-	CMPXCHG_DOUBLE_CPU_FAIL,/* Failure of this_cpu_cmpxchg_double */
+-	CMPXCHG_DOUBLE_FAIL,	/* Number of times that cmpxchg double did not match */
+-	CPU_PARTIAL_ALLOC,	/* Used cpu partial on alloc */
+-	CPU_PARTIAL_FREE,	/* Refill cpu partial on free */
+-	CPU_PARTIAL_NODE,	/* Refill cpu partial from node partial */
+-	CPU_PARTIAL_DRAIN,	/* Drain cpu partial to node partial */
+-	NR_SLUB_STAT_ITEMS
+-};
+-
+-#ifndef CONFIG_SLUB_TINY
+-/*
+- * When changing the layout, make sure freelist and tid are still compatible
+- * with this_cpu_cmpxchg_double() alignment requirements.
+- */
+-struct kmem_cache_cpu {
+-	union {
+-		struct {
+-			void **freelist;	/* Pointer to next available object */
+-			unsigned long tid;	/* Globally unique transaction id */
+-		};
+-		freelist_aba_t freelist_tid;
+-	};
+-	struct slab *slab;	/* The slab from which we are allocating */
+-#ifdef CONFIG_SLUB_CPU_PARTIAL
+-	struct slab *partial;	/* Partially allocated frozen slabs */
+-#endif
+-	local_lock_t lock;	/* Protects the fields above */
+-#ifdef CONFIG_SLUB_STATS
+-	unsigned stat[NR_SLUB_STAT_ITEMS];
+-#endif
+-};
+-#endif /* CONFIG_SLUB_TINY */
+-
+ #ifdef CONFIG_SLUB_CPU_PARTIAL
+ #define slub_percpu_partial(c)		((c)->partial)
+ 
+diff --git a/mm/slub.c b/mm/slub.c
+index 3e01731783df..979932d046fd 100644
+--- a/mm/slub.c
++++ b/mm/slub.c
+@@ -330,6 +330,60 @@ static void debugfs_slab_add(struct kmem_cache *);
+ static inline void debugfs_slab_add(struct kmem_cache *s) { }
  #endif
  
-diff --git a/mm/mempool.c b/mm/mempool.c
-index 734bcf5afbb7..4759be0ff9de 100644
---- a/mm/mempool.c
-+++ b/mm/mempool.c
-@@ -20,7 +20,7 @@
- #include <linux/writeback.h>
- #include "slab.h"
- 
--#if defined(CONFIG_DEBUG_SLAB) || defined(CONFIG_SLUB_DEBUG_ON)
-+#ifdef CONFIG_SLUB_DEBUG_ON
- static void poison_error(mempool_t *pool, void *element, size_t size,
- 			 size_t byte)
++enum stat_item {
++	ALLOC_FASTPATH,		/* Allocation from cpu slab */
++	ALLOC_SLOWPATH,		/* Allocation by getting a new cpu slab */
++	FREE_FASTPATH,		/* Free to cpu slab */
++	FREE_SLOWPATH,		/* Freeing not to cpu slab */
++	FREE_FROZEN,		/* Freeing to frozen slab */
++	FREE_ADD_PARTIAL,	/* Freeing moves slab to partial list */
++	FREE_REMOVE_PARTIAL,	/* Freeing removes last object */
++	ALLOC_FROM_PARTIAL,	/* Cpu slab acquired from node partial list */
++	ALLOC_SLAB,		/* Cpu slab acquired from page allocator */
++	ALLOC_REFILL,		/* Refill cpu slab from slab freelist */
++	ALLOC_NODE_MISMATCH,	/* Switching cpu slab */
++	FREE_SLAB,		/* Slab freed to the page allocator */
++	CPUSLAB_FLUSH,		/* Abandoning of the cpu slab */
++	DEACTIVATE_FULL,	/* Cpu slab was full when deactivated */
++	DEACTIVATE_EMPTY,	/* Cpu slab was empty when deactivated */
++	DEACTIVATE_TO_HEAD,	/* Cpu slab was moved to the head of partials */
++	DEACTIVATE_TO_TAIL,	/* Cpu slab was moved to the tail of partials */
++	DEACTIVATE_REMOTE_FREES,/* Slab contained remotely freed objects */
++	DEACTIVATE_BYPASS,	/* Implicit deactivation */
++	ORDER_FALLBACK,		/* Number of times fallback was necessary */
++	CMPXCHG_DOUBLE_CPU_FAIL,/* Failures of this_cpu_cmpxchg_double */
++	CMPXCHG_DOUBLE_FAIL,	/* Failures of slab freelist update */
++	CPU_PARTIAL_ALLOC,	/* Used cpu partial on alloc */
++	CPU_PARTIAL_FREE,	/* Refill cpu partial on free */
++	CPU_PARTIAL_NODE,	/* Refill cpu partial from node partial */
++	CPU_PARTIAL_DRAIN,	/* Drain cpu partial to node partial */
++	NR_SLUB_STAT_ITEMS
++};
++
++#ifndef CONFIG_SLUB_TINY
++/*
++ * When changing the layout, make sure freelist and tid are still compatible
++ * with this_cpu_cmpxchg_double() alignment requirements.
++ */
++struct kmem_cache_cpu {
++	union {
++		struct {
++			void **freelist;	/* Pointer to next available object */
++			unsigned long tid;	/* Globally unique transaction id */
++		};
++		freelist_aba_t freelist_tid;
++	};
++	struct slab *slab;	/* The slab from which we are allocating */
++#ifdef CONFIG_SLUB_CPU_PARTIAL
++	struct slab *partial;	/* Partially allocated frozen slabs */
++#endif
++	local_lock_t lock;	/* Protects the fields above */
++#ifdef CONFIG_SLUB_STATS
++	unsigned int stat[NR_SLUB_STAT_ITEMS];
++#endif
++};
++#endif /* CONFIG_SLUB_TINY */
++
+ static inline void stat(const struct kmem_cache *s, enum stat_item si)
  {
-@@ -95,14 +95,14 @@ static void poison_element(mempool_t *pool, void *element)
- 		kunmap_atomic(addr);
- 	}
- }
--#else /* CONFIG_DEBUG_SLAB || CONFIG_SLUB_DEBUG_ON */
-+#else /* CONFIG_SLUB_DEBUG_ON */
- static inline void check_element(mempool_t *pool, void *element)
- {
- }
- static inline void poison_element(mempool_t *pool, void *element)
- {
- }
--#endif /* CONFIG_DEBUG_SLAB || CONFIG_SLUB_DEBUG_ON */
-+#endif /* CONFIG_SLUB_DEBUG_ON */
- 
- static __always_inline void kasan_poison_element(mempool_t *pool, void *element)
- {
+ #ifdef CONFIG_SLUB_STATS
 
 -- 
 2.42.1
