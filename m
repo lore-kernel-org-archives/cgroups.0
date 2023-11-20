@@ -1,46 +1,47 @@
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b="qNkpX3Or";
-	dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b="1F6OXLLw"
-Received: from smtp-out1.suse.de (smtp-out1.suse.de [IPv6:2001:67c:2178:6::1c])
-	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DF60CF5;
-	Mon, 20 Nov 2023 10:34:44 -0800 (PST)
+	dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b="UYk+nbOd";
+	dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b="q32ZDjRb"
+Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.220.29])
+	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A99CCD9;
+	Mon, 20 Nov 2023 10:34:42 -0800 (PST)
 Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
 	(No client certificate requested)
-	by smtp-out1.suse.de (Postfix) with ESMTPS id 8E3EE21979;
-	Mon, 20 Nov 2023 18:34:43 +0000 (UTC)
+	by smtp-out2.suse.de (Postfix) with ESMTPS id 2B5711F8A8;
+	Mon, 20 Nov 2023 18:34:41 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
-	t=1700505283; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	t=1700505281; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
 	 mime-version:mime-version:content-type:content-type:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=RPV7eFvOYqND65nC1EpsfH0qSohk6qGYOFkaS1IRDew=;
-	b=qNkpX3OrehFKN3IMjZB0hdxh2cOBxVTKyn/ennhzNMeRW+22upArxzVVUw9FireBsI2B+K
-	6o0AyP5tvtv0kA7cWeKrsQR8fW0MfWq4zne7jcB1kTLUt/2BKQeAVnEuNTYh2hYjrMch5Q
-	6ZhpqEnFb48mxwnLfpoRKgiL2/Kq5Ss=
+	bh=f1ToxzDptD57b6Vsib7GAjPh04DR/y9DB96sNqNT2KE=;
+	b=UYk+nbOdpwt7lTEROM4R9R/VybWxUsZNmkJ6xbBvRHIlibYVyjKf0xMYUUD5mRAxzZ1nYm
+	8YuyVrnDdN/4r8f2BpnRbBT9UOibhIk2oeEW/xMg4iUETJa6r240JQQlVhh/+wrO5nMNaz
+	GGaxETZpNTnVjpcdQee4/bZSKagO6iw=
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
-	s=susede2_ed25519; t=1700505283;
+	s=susede2_ed25519; t=1700505281;
 	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
 	 mime-version:mime-version:content-type:content-type:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=RPV7eFvOYqND65nC1EpsfH0qSohk6qGYOFkaS1IRDew=;
-	b=1F6OXLLwIavRartk+gk2uoy+BRwBlFG/rLZwTQtoS1o3P+Y7tzSJD4dvBrjFtpADghlRlM
-	YIShfD2DKmbSu8AQ==
+	bh=f1ToxzDptD57b6Vsib7GAjPh04DR/y9DB96sNqNT2KE=;
+	b=q32ZDjRbFefawcKstIaTcDIBwhSahPd7d0kPJGhClVzYjFjtGumHVTj08Yz7Fh3lMJpylO
+	PItDrslB5HufLZCw==
 Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
 	(No client certificate requested)
-	by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 3AD9213912;
-	Mon, 20 Nov 2023 18:34:43 +0000 (UTC)
+	by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id ED71413499;
+	Mon, 20 Nov 2023 18:34:40 +0000 (UTC)
 Received: from dovecot-director2.suse.de ([192.168.254.65])
 	by imap2.suse-dmz.suse.de with ESMTPSA
-	id QFS4DcOmW2UUMgAAMHmgww
-	(envelope-from <vbabka@suse.cz>); Mon, 20 Nov 2023 18:34:43 +0000
+	id mOKCOcCmW2UUMgAAMHmgww
+	(envelope-from <vbabka@suse.cz>); Mon, 20 Nov 2023 18:34:40 +0000
 From: Vlastimil Babka <vbabka@suse.cz>
-Date: Mon, 20 Nov 2023 19:34:28 +0100
-Subject: [PATCH v2 17/21] mm/slab: move kmalloc_slab() to mm/slab.h
+Date: Mon, 20 Nov 2023 19:34:18 +0100
+Subject: [PATCH v2 07/21] mm/slab: remove CONFIG_SLAB code from slab common
+ code
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
@@ -49,7 +50,7 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-Id: <20231120-slab-remove-slab-v2-17-9c9c70177183@suse.cz>
+Message-Id: <20231120-slab-remove-slab-v2-7-9c9c70177183@suse.cz>
 References: <20231120-slab-remove-slab-v2-0-9c9c70177183@suse.cz>
 In-Reply-To: <20231120-slab-remove-slab-v2-0-9c9c70177183@suse.cz>
 To: David Rientjes <rientjes@google.com>, Christoph Lameter <cl@linux.com>, 
@@ -68,11 +69,10 @@ Cc: Andrew Morton <akpm@linux-foundation.org>,
  kasan-dev@googlegroups.com, cgroups@vger.kernel.org, 
  linux-hardening@vger.kernel.org, Vlastimil Babka <vbabka@suse.cz>
 X-Mailer: b4 0.12.4
-Authentication-Results: smtp-out1.suse.de;
+Authentication-Results: smtp-out2.suse.de;
 	none
-X-Spam-Level: 
-X-Spam-Score: -6.80
-X-Spamd-Result: default: False [-6.80 / 50.00];
+X-Spam-Score: 1.30
+X-Spamd-Result: default: False [1.30 / 50.00];
 	 ARC_NA(0.00)[];
 	 RCVD_VIA_SMTP_AUTH(0.00)[];
 	 RCVD_TLS_ALL(0.00)[];
@@ -86,9 +86,9 @@ X-Spamd-Result: default: False [-6.80 / 50.00];
 	 MID_RHS_MATCH_FROM(0.00)[];
 	 NEURAL_HAM_LONG(-1.00)[-1.000];
 	 R_RATELIMIT(0.00)[to_ip_from(RL563rtnmcmc9sawm86hmgtctc)];
+	 BAYES_SPAM(5.10)[100.00%];
 	 DKIM_SIGNED(0.00)[suse.cz:s=susede2_rsa,suse.cz:s=susede2_ed25519];
 	 NEURAL_HAM_SHORT(-0.20)[-1.000];
-	 BAYES_HAM(-3.00)[100.00%];
 	 RCPT_COUNT_TWELVE(0.00)[24];
 	 FUZZY_BLOCKED(0.00)[rspamd.com];
 	 FROM_EQ_ENVFROM(0.00)[];
@@ -97,155 +97,285 @@ X-Spamd-Result: default: False [-6.80 / 50.00];
 	 RCVD_COUNT_TWO(0.00)[2];
 	 SUSPICIOUS_RECIPS(1.50)[]
 
-In preparation for the next patch, move the kmalloc_slab() function to
-the header, as it will have callers from two files, and make it inline.
-To avoid unnecessary bloat, remove all size checks/warnings from
-kmalloc_slab() as they just duplicate those in callers, especially after
-recent changes to kmalloc_size_roundup(). We just need to adjust handling
-of zero size in __do_kmalloc_node(). Also we can stop handling NULL
-result from kmalloc_slab() there as that now cannot happen (unless
-called too early during boot).
-
-The size_index array becomes visible so rename it to a more specific
-kmalloc_size_index.
+In slab_common.c and slab.h headers, we can now remove all code behind
+CONFIG_SLAB and CONFIG_DEBUG_SLAB ifdefs, and remove all CONFIG_SLUB
+ifdefs.
 
 Reviewed-by: Kees Cook <keescook@chromium.org>
 Signed-off-by: Vlastimil Babka <vbabka@suse.cz>
 ---
- mm/slab.h        | 28 ++++++++++++++++++++++++++--
- mm/slab_common.c | 43 ++++++++-----------------------------------
- 2 files changed, 34 insertions(+), 37 deletions(-)
+ include/linux/slab.h | 14 ++---------
+ mm/slab.h            | 69 ++++------------------------------------------------
+ mm/slab_common.c     | 22 ++---------------
+ 3 files changed, 9 insertions(+), 96 deletions(-)
 
+diff --git a/include/linux/slab.h b/include/linux/slab.h
+index 34e43cddc520..b2015d0e01ad 100644
+--- a/include/linux/slab.h
++++ b/include/linux/slab.h
+@@ -24,7 +24,7 @@
+ 
+ /*
+  * Flags to pass to kmem_cache_create().
+- * The ones marked DEBUG are only valid if CONFIG_DEBUG_SLAB is set.
++ * The ones marked DEBUG need CONFIG_SLUB_DEBUG enabled, otherwise are no-op
+  */
+ /* DEBUG: Perform (expensive) checks on alloc/free */
+ #define SLAB_CONSISTENCY_CHECKS	((slab_flags_t __force)0x00000100U)
+@@ -302,25 +302,15 @@ static inline unsigned int arch_slab_minalign(void)
+  * Kmalloc array related definitions
+  */
+ 
+-#ifdef CONFIG_SLAB
+ /*
+- * SLAB and SLUB directly allocates requests fitting in to an order-1 page
++ * SLUB directly allocates requests fitting in to an order-1 page
+  * (PAGE_SIZE*2).  Larger requests are passed to the page allocator.
+  */
+ #define KMALLOC_SHIFT_HIGH	(PAGE_SHIFT + 1)
+ #define KMALLOC_SHIFT_MAX	(MAX_ORDER + PAGE_SHIFT)
+ #ifndef KMALLOC_SHIFT_LOW
+-#define KMALLOC_SHIFT_LOW	5
+-#endif
+-#endif
+-
+-#ifdef CONFIG_SLUB
+-#define KMALLOC_SHIFT_HIGH	(PAGE_SHIFT + 1)
+-#define KMALLOC_SHIFT_MAX	(MAX_ORDER + PAGE_SHIFT)
+-#ifndef KMALLOC_SHIFT_LOW
+ #define KMALLOC_SHIFT_LOW	3
+ #endif
+-#endif
+ 
+ /* Maximum allocatable size */
+ #define KMALLOC_MAX_SIZE	(1UL << KMALLOC_SHIFT_MAX)
 diff --git a/mm/slab.h b/mm/slab.h
-index 35a55c4a407d..7d7cc7af614e 100644
+index 3d07fb428393..014c36ea51fa 100644
 --- a/mm/slab.h
 +++ b/mm/slab.h
-@@ -389,8 +389,32 @@ extern const struct kmalloc_info_struct {
- void setup_kmalloc_cache_index_table(void);
- void create_kmalloc_caches(slab_flags_t);
+@@ -42,21 +42,6 @@ typedef union {
+ struct slab {
+ 	unsigned long __page_flags;
  
--/* Find the kmalloc slab corresponding for a certain size */
--struct kmem_cache *kmalloc_slab(size_t size, gfp_t flags, unsigned long caller);
-+extern u8 kmalloc_size_index[24];
-+
-+static inline unsigned int size_index_elem(unsigned int bytes)
-+{
-+	return (bytes - 1) / 8;
-+}
-+
-+/*
-+ * Find the kmem_cache structure that serves a given size of
-+ * allocation
-+ *
-+ * This assumes size is larger than zero and not larger than
-+ * KMALLOC_MAX_CACHE_SIZE and the caller must check that.
-+ */
-+static inline struct kmem_cache *
-+kmalloc_slab(size_t size, gfp_t flags, unsigned long caller)
-+{
-+	unsigned int index;
-+
-+	if (size <= 192)
-+		index = kmalloc_size_index[size_index_elem(size)];
-+	else
-+		index = fls(size - 1);
-+
-+	return kmalloc_caches[kmalloc_type(flags, caller)][index];
-+}
- 
- void *__kmem_cache_alloc_node(struct kmem_cache *s, gfp_t gfpflags,
- 			      int node, size_t orig_size,
-diff --git a/mm/slab_common.c b/mm/slab_common.c
-index f4f275613d2a..31ade17a7ad9 100644
---- a/mm/slab_common.c
-+++ b/mm/slab_common.c
-@@ -665,7 +665,7 @@ EXPORT_SYMBOL(random_kmalloc_seed);
-  * of two cache sizes there. The size of larger slabs can be determined using
-  * fls.
-  */
--static u8 size_index[24] __ro_after_init = {
-+u8 kmalloc_size_index[24] __ro_after_init = {
- 	3,	/* 8 */
- 	4,	/* 16 */
- 	5,	/* 24 */
-@@ -692,33 +692,6 @@ static u8 size_index[24] __ro_after_init = {
- 	2	/* 192 */
- };
- 
--static inline unsigned int size_index_elem(unsigned int bytes)
--{
--	return (bytes - 1) / 8;
--}
+-#if defined(CONFIG_SLAB)
 -
--/*
-- * Find the kmem_cache structure that serves a given size of
-- * allocation
-- */
--struct kmem_cache *kmalloc_slab(size_t size, gfp_t flags, unsigned long caller)
--{
--	unsigned int index;
+-	struct kmem_cache *slab_cache;
+-	union {
+-		struct {
+-			struct list_head slab_list;
+-			void *freelist;	/* array of free object indexes */
+-			void *s_mem;	/* first object */
+-		};
+-		struct rcu_head rcu_head;
+-	};
+-	unsigned int active;
 -
--	if (size <= 192) {
--		if (!size)
--			return ZERO_SIZE_PTR;
+-#elif defined(CONFIG_SLUB)
 -
--		index = size_index[size_index_elem(size)];
--	} else {
--		if (WARN_ON_ONCE(size > KMALLOC_MAX_CACHE_SIZE))
--			return NULL;
--		index = fls(size - 1);
--	}
+ 	struct kmem_cache *slab_cache;
+ 	union {
+ 		struct {
+@@ -91,10 +76,6 @@ struct slab {
+ 	};
+ 	unsigned int __unused;
+ 
+-#else
+-#error "Unexpected slab allocator configured"
+-#endif
 -
--	return kmalloc_caches[kmalloc_type(flags, caller)][index];
--}
--
- size_t kmalloc_size_roundup(size_t size)
- {
- 	if (size && size <= KMALLOC_MAX_CACHE_SIZE) {
-@@ -843,9 +816,9 @@ void __init setup_kmalloc_cache_index_table(void)
- 	for (i = 8; i < KMALLOC_MIN_SIZE; i += 8) {
- 		unsigned int elem = size_index_elem(i);
+ 	atomic_t __page_refcount;
+ #ifdef CONFIG_MEMCG
+ 	unsigned long memcg_data;
+@@ -111,7 +92,7 @@ SLAB_MATCH(memcg_data, memcg_data);
+ #endif
+ #undef SLAB_MATCH
+ static_assert(sizeof(struct slab) <= sizeof(struct page));
+-#if defined(system_has_freelist_aba) && defined(CONFIG_SLUB)
++#if defined(system_has_freelist_aba)
+ static_assert(IS_ALIGNED(offsetof(struct slab, freelist), sizeof(freelist_aba_t)));
+ #endif
  
--		if (elem >= ARRAY_SIZE(size_index))
-+		if (elem >= ARRAY_SIZE(kmalloc_size_index))
- 			break;
--		size_index[elem] = KMALLOC_SHIFT_LOW;
-+		kmalloc_size_index[elem] = KMALLOC_SHIFT_LOW;
- 	}
- 
- 	if (KMALLOC_MIN_SIZE >= 64) {
-@@ -854,7 +827,7 @@ void __init setup_kmalloc_cache_index_table(void)
- 		 * is 64 byte.
- 		 */
- 		for (i = 64 + 8; i <= 96; i += 8)
--			size_index[size_index_elem(i)] = 7;
-+			kmalloc_size_index[size_index_elem(i)] = 7;
- 
- 	}
- 
-@@ -865,7 +838,7 @@ void __init setup_kmalloc_cache_index_table(void)
- 		 * instead.
- 		 */
- 		for (i = 128 + 8; i <= 192; i += 8)
--			size_index[size_index_elem(i)] = 8;
-+			kmalloc_size_index[size_index_elem(i)] = 8;
- 	}
+@@ -228,13 +209,7 @@ static inline size_t slab_size(const struct slab *slab)
+ 	return PAGE_SIZE << slab_order(slab);
  }
  
-@@ -977,10 +950,10 @@ void *__do_kmalloc_node(size_t size, gfp_t flags, int node, unsigned long caller
- 		return ret;
+-#ifdef CONFIG_SLAB
+-#include <linux/slab_def.h>
+-#endif
+-
+-#ifdef CONFIG_SLUB
+ #include <linux/slub_def.h>
+-#endif
+ 
+ #include <linux/memcontrol.h>
+ #include <linux/fault-inject.h>
+@@ -320,26 +295,16 @@ static inline bool is_kmalloc_cache(struct kmem_cache *s)
+ 			 SLAB_CACHE_DMA32 | SLAB_PANIC | \
+ 			 SLAB_TYPESAFE_BY_RCU | SLAB_DEBUG_OBJECTS )
+ 
+-#if defined(CONFIG_DEBUG_SLAB)
+-#define SLAB_DEBUG_FLAGS (SLAB_RED_ZONE | SLAB_POISON | SLAB_STORE_USER)
+-#elif defined(CONFIG_SLUB_DEBUG)
++#ifdef CONFIG_SLUB_DEBUG
+ #define SLAB_DEBUG_FLAGS (SLAB_RED_ZONE | SLAB_POISON | SLAB_STORE_USER | \
+ 			  SLAB_TRACE | SLAB_CONSISTENCY_CHECKS)
+ #else
+ #define SLAB_DEBUG_FLAGS (0)
+ #endif
+ 
+-#if defined(CONFIG_SLAB)
+-#define SLAB_CACHE_FLAGS (SLAB_MEM_SPREAD | SLAB_NOLEAKTRACE | \
+-			  SLAB_RECLAIM_ACCOUNT | SLAB_TEMPORARY | \
+-			  SLAB_ACCOUNT | SLAB_NO_MERGE)
+-#elif defined(CONFIG_SLUB)
+ #define SLAB_CACHE_FLAGS (SLAB_NOLEAKTRACE | SLAB_RECLAIM_ACCOUNT | \
+ 			  SLAB_TEMPORARY | SLAB_ACCOUNT | \
+ 			  SLAB_NO_USER_FLAGS | SLAB_KMALLOC | SLAB_NO_MERGE)
+-#else
+-#define SLAB_CACHE_FLAGS (SLAB_NOLEAKTRACE)
+-#endif
+ 
+ /* Common flags available with current configuration */
+ #define CACHE_CREATE_MASK (SLAB_CORE_FLAGS | SLAB_DEBUG_FLAGS | SLAB_CACHE_FLAGS)
+@@ -672,18 +637,14 @@ size_t __ksize(const void *objp);
+ 
+ static inline size_t slab_ksize(const struct kmem_cache *s)
+ {
+-#ifndef CONFIG_SLUB
+-	return s->object_size;
+-
+-#else /* CONFIG_SLUB */
+-# ifdef CONFIG_SLUB_DEBUG
++#ifdef CONFIG_SLUB_DEBUG
+ 	/*
+ 	 * Debugging requires use of the padding between object
+ 	 * and whatever may come after it.
+ 	 */
+ 	if (s->flags & (SLAB_RED_ZONE | SLAB_POISON))
+ 		return s->object_size;
+-# endif
++#endif
+ 	if (s->flags & SLAB_KASAN)
+ 		return s->object_size;
+ 	/*
+@@ -697,7 +658,6 @@ static inline size_t slab_ksize(const struct kmem_cache *s)
+ 	 * Else we can use all the padding etc for the allocation
+ 	 */
+ 	return s->size;
+-#endif
+ }
+ 
+ static inline struct kmem_cache *slab_pre_alloc_hook(struct kmem_cache *s,
+@@ -775,23 +735,6 @@ static inline void slab_post_alloc_hook(struct kmem_cache *s,
+  * The slab lists for all objects.
+  */
+ struct kmem_cache_node {
+-#ifdef CONFIG_SLAB
+-	raw_spinlock_t list_lock;
+-	struct list_head slabs_partial;	/* partial list first, better asm code */
+-	struct list_head slabs_full;
+-	struct list_head slabs_free;
+-	unsigned long total_slabs;	/* length of all slab lists */
+-	unsigned long free_slabs;	/* length of free slab list only */
+-	unsigned long free_objects;
+-	unsigned int free_limit;
+-	unsigned int colour_next;	/* Per-node cache coloring */
+-	struct array_cache *shared;	/* shared per node */
+-	struct alien_cache **alien;	/* on other nodes */
+-	unsigned long next_reap;	/* updated without locking */
+-	int free_touched;		/* updated without locking */
+-#endif
+-
+-#ifdef CONFIG_SLUB
+ 	spinlock_t list_lock;
+ 	unsigned long nr_partial;
+ 	struct list_head partial;
+@@ -800,8 +743,6 @@ struct kmem_cache_node {
+ 	atomic_long_t total_objects;
+ 	struct list_head full;
+ #endif
+-#endif
+-
+ };
+ 
+ static inline struct kmem_cache_node *get_node(struct kmem_cache *s, int node)
+@@ -818,7 +759,7 @@ static inline struct kmem_cache_node *get_node(struct kmem_cache *s, int node)
+ 		 if ((__n = get_node(__s, __node)))
+ 
+ 
+-#if defined(CONFIG_SLAB) || defined(CONFIG_SLUB_DEBUG)
++#ifdef CONFIG_SLUB_DEBUG
+ void dump_unreclaimable_slab(void);
+ #else
+ static inline void dump_unreclaimable_slab(void)
+diff --git a/mm/slab_common.c b/mm/slab_common.c
+index 8d431193c273..63b8411db7ce 100644
+--- a/mm/slab_common.c
++++ b/mm/slab_common.c
+@@ -71,10 +71,8 @@ static int __init setup_slab_merge(char *str)
+ 	return 1;
+ }
+ 
+-#ifdef CONFIG_SLUB
+ __setup_param("slub_nomerge", slub_nomerge, setup_slab_nomerge, 0);
+ __setup_param("slub_merge", slub_merge, setup_slab_merge, 0);
+-#endif
+ 
+ __setup("slab_nomerge", setup_slab_nomerge);
+ __setup("slab_merge", setup_slab_merge);
+@@ -197,10 +195,6 @@ struct kmem_cache *find_mergeable(unsigned int size, unsigned int align,
+ 		if (s->size - size >= sizeof(void *))
+ 			continue;
+ 
+-		if (IS_ENABLED(CONFIG_SLAB) && align &&
+-			(align > s->align || s->align % align))
+-			continue;
+-
+ 		return s;
  	}
+ 	return NULL;
+@@ -1222,12 +1216,8 @@ void cache_random_seq_destroy(struct kmem_cache *cachep)
+ }
+ #endif /* CONFIG_SLAB_FREELIST_RANDOM */
  
--	s = kmalloc_slab(size, flags, caller);
-+	if (unlikely(!size))
-+		return ZERO_SIZE_PTR;
+-#if defined(CONFIG_SLAB) || defined(CONFIG_SLUB_DEBUG)
+-#ifdef CONFIG_SLAB
+-#define SLABINFO_RIGHTS (0600)
+-#else
++#ifdef CONFIG_SLUB_DEBUG
+ #define SLABINFO_RIGHTS (0400)
+-#endif
  
--	if (unlikely(ZERO_OR_NULL_PTR(s)))
--		return s;
-+	s = kmalloc_slab(size, flags, caller);
+ static void print_slabinfo_header(struct seq_file *m)
+ {
+@@ -1235,18 +1225,10 @@ static void print_slabinfo_header(struct seq_file *m)
+ 	 * Output format version, so at least we can change it
+ 	 * without _too_ many complaints.
+ 	 */
+-#ifdef CONFIG_DEBUG_SLAB
+-	seq_puts(m, "slabinfo - version: 2.1 (statistics)\n");
+-#else
+ 	seq_puts(m, "slabinfo - version: 2.1\n");
+-#endif
+ 	seq_puts(m, "# name            <active_objs> <num_objs> <objsize> <objperslab> <pagesperslab>");
+ 	seq_puts(m, " : tunables <limit> <batchcount> <sharedfactor>");
+ 	seq_puts(m, " : slabdata <active_slabs> <num_slabs> <sharedavail>");
+-#ifdef CONFIG_DEBUG_SLAB
+-	seq_puts(m, " : globalstat <listallocs> <maxobjs> <grown> <reaped> <error> <maxfreeable> <nodeallocs> <remotefrees> <alienoverflow>");
+-	seq_puts(m, " : cpustat <allochit> <allocmiss> <freehit> <freemiss>");
+-#endif
+ 	seq_putc(m, '\n');
+ }
  
- 	ret = __kmem_cache_alloc_node(s, flags, node, size, caller);
- 	ret = kasan_kmalloc(s, ret, size, flags);
+@@ -1370,7 +1352,7 @@ static int __init slab_proc_init(void)
+ }
+ module_init(slab_proc_init);
+ 
+-#endif /* CONFIG_SLAB || CONFIG_SLUB_DEBUG */
++#endif /* CONFIG_SLUB_DEBUG */
+ 
+ static __always_inline __realloc_size(2) void *
+ __do_krealloc(const void *p, size_t new_size, gfp_t flags)
 
 -- 
 2.42.1
