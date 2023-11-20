@@ -1,47 +1,46 @@
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b="LCzJgngk";
-	dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b="dVVsCdgV"
-Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.220.29])
-	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A5EA4100;
-	Mon, 20 Nov 2023 10:34:45 -0800 (PST)
+	dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b="hwuFRol6";
+	dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b="YfZzeD4+"
+Received: from smtp-out2.suse.de (smtp-out2.suse.de [IPv6:2001:67c:2178:6::1d])
+	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0BA84112;
+	Mon, 20 Nov 2023 10:34:46 -0800 (PST)
 Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
 	(No client certificate requested)
-	by smtp-out2.suse.de (Postfix) with ESMTPS id C354A1F8B2;
-	Mon, 20 Nov 2023 18:34:43 +0000 (UTC)
+	by smtp-out2.suse.de (Postfix) with ESMTPS id 62AEA1F8B3;
+	Mon, 20 Nov 2023 18:34:44 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
-	t=1700505283; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	t=1700505284; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
 	 mime-version:mime-version:content-type:content-type:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=l41Jb+BHNYtQ2OIFgOGmX9WMKyvcGjadAJ7/ZFyre/E=;
-	b=LCzJgngkzITGb5Tf0wQOI+ebqHHcqa+GWs7cc+7WK7+jpNWwF/bcTQTNRVPXcGQ01CGICv
-	ncaCAQ/HZm06a64rnhjOXN3b9S9XNga/ibSht5pA2L6A5MWVv5JAM8bOo7CPnLv0WV56BW
-	q6exGNXv09TdutkEwyn0/rMlVEeaaPw=
+	bh=mirY2Hk97uPg9xiXuUhtPBwRnD0yXek2uhM+MkvFe9M=;
+	b=hwuFRol6oXcEWzuDdHFpAqjOeTYFxJUj4nJ61iKgOMub5bOZmoLsewrjU4j1fuVJ1OSXDm
+	CegBQ+7CW2HYU4fz4wV32EXvIfYNs3hsn6UnGU+jOyDE3WHEm3VUHEeqEbsI4YTrjUFbv5
+	+o9i6vFUMX5QJg7Us70hJbpp7UGaE/s=
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
-	s=susede2_ed25519; t=1700505283;
+	s=susede2_ed25519; t=1700505284;
 	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
 	 mime-version:mime-version:content-type:content-type:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=l41Jb+BHNYtQ2OIFgOGmX9WMKyvcGjadAJ7/ZFyre/E=;
-	b=dVVsCdgVXxLlGdzVI19fD3bgdu6SF1+kdlZ9nh7NFaxQIN/5XU0uCCQx033gY2PJHi2iYV
-	xCNf7qL+X9Mol2DQ==
+	bh=mirY2Hk97uPg9xiXuUhtPBwRnD0yXek2uhM+MkvFe9M=;
+	b=YfZzeD4+Rgm0cLt0ciF30u+ZuqPIvKG5rXL0BoDGzTctb5xvenFwHMkVqTBMDVZX+z8ZmD
+	z3n7hRGVcqZj3xBQ==
 Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
 	(No client certificate requested)
-	by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 8455213499;
-	Mon, 20 Nov 2023 18:34:43 +0000 (UTC)
+	by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 1AE0B13499;
+	Mon, 20 Nov 2023 18:34:44 +0000 (UTC)
 Received: from dovecot-director2.suse.de ([192.168.254.65])
 	by imap2.suse-dmz.suse.de with ESMTPSA
-	id OCGvH8OmW2UUMgAAMHmgww
-	(envelope-from <vbabka@suse.cz>); Mon, 20 Nov 2023 18:34:43 +0000
+	id 6JftBcSmW2UUMgAAMHmgww
+	(envelope-from <vbabka@suse.cz>); Mon, 20 Nov 2023 18:34:44 +0000
 From: Vlastimil Babka <vbabka@suse.cz>
-Date: Mon, 20 Nov 2023 19:34:29 +0100
-Subject: [PATCH v2 18/21] mm/slab: move kmalloc() functions from
- slab_common.c to slub.c
+Date: Mon, 20 Nov 2023 19:34:31 +0100
+Subject: [PATCH v2 20/21] mm/slub: optimize alloc fastpath code layout
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
@@ -50,7 +49,7 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-Id: <20231120-slab-remove-slab-v2-18-9c9c70177183@suse.cz>
+Message-Id: <20231120-slab-remove-slab-v2-20-9c9c70177183@suse.cz>
 References: <20231120-slab-remove-slab-v2-0-9c9c70177183@suse.cz>
 In-Reply-To: <20231120-slab-remove-slab-v2-0-9c9c70177183@suse.cz>
 To: David Rientjes <rientjes@google.com>, Christoph Lameter <cl@linux.com>, 
@@ -97,320 +96,216 @@ X-Spamd-Result: default: False [1.30 / 50.00];
 	 RCVD_COUNT_TWO(0.00)[2];
 	 SUSPICIOUS_RECIPS(1.50)[]
 
-This will eliminate a call between compilation units through
-__kmem_cache_alloc_node() and allow better inlining of the allocation
-fast path.
+With allocation fastpaths no longer divided between two .c files, we
+have better inlining, however checking the disassembly of
+kmem_cache_alloc() reveals we can do better to make the fastpaths
+smaller and move the less common situations out of line or to separate
+functions, to reduce instruction cache pressure.
 
-Reviewed-by: Kees Cook <keescook@chromium.org>
+- split memcg pre/post alloc hooks to inlined checks that use likely()
+  to assume there will be no objcg handling necessary, and non-inline
+  functions doing the actual handling
+
+- add some more likely/unlikely() to pre/post alloc hooks to indicate
+  which scenarios should be out of line
+
+- change gfp_allowed_mask handling in slab_post_alloc_hook() so the
+  code can be optimized away when kasan/kmsan/kmemleak is configured out
+
+bloat-o-meter shows:
+add/remove: 4/2 grow/shrink: 1/8 up/down: 521/-2924 (-2403)
+Function                                     old     new   delta
+__memcg_slab_post_alloc_hook                   -     461    +461
+kmem_cache_alloc_bulk                        775     791     +16
+__pfx_should_failslab.constprop                -      16     +16
+__pfx___memcg_slab_post_alloc_hook             -      16     +16
+should_failslab.constprop                      -      12     +12
+__pfx_memcg_slab_post_alloc_hook              16       -     -16
+kmem_cache_alloc_lru                        1295    1023    -272
+kmem_cache_alloc_node                       1118     817    -301
+kmem_cache_alloc                            1076     772    -304
+kmalloc_node_trace                          1149     838    -311
+kmalloc_trace                               1102     789    -313
+__kmalloc_node_track_caller                 1393    1080    -313
+__kmalloc_node                              1397    1082    -315
+__kmalloc                                   1374    1059    -315
+memcg_slab_post_alloc_hook                   464       -    -464
+
+Note that gcc still decided to inline __memcg_pre_alloc_hook(), but the
+code is out of line. Forcing noinline did not improve the results. As a
+result the fastpaths are shorter and overal code size is reduced.
+
 Signed-off-by: Vlastimil Babka <vbabka@suse.cz>
 ---
- mm/slab.h        |   3 --
- mm/slab_common.c | 119 ----------------------------------------------------
- mm/slub.c        | 126 +++++++++++++++++++++++++++++++++++++++++++++++++++----
- 3 files changed, 118 insertions(+), 130 deletions(-)
+ mm/slub.c | 89 ++++++++++++++++++++++++++++++++++++++-------------------------
+ 1 file changed, 54 insertions(+), 35 deletions(-)
 
-diff --git a/mm/slab.h b/mm/slab.h
-index 7d7cc7af614e..54deeb0428c6 100644
---- a/mm/slab.h
-+++ b/mm/slab.h
-@@ -416,9 +416,6 @@ kmalloc_slab(size_t size, gfp_t flags, unsigned long caller)
- 	return kmalloc_caches[kmalloc_type(flags, caller)][index];
- }
- 
--void *__kmem_cache_alloc_node(struct kmem_cache *s, gfp_t gfpflags,
--			      int node, size_t orig_size,
--			      unsigned long caller);
- gfp_t kmalloc_fix_flags(gfp_t flags);
- 
- /* Functions provided by the slab allocators */
-diff --git a/mm/slab_common.c b/mm/slab_common.c
-index 31ade17a7ad9..238293b1dbe1 100644
---- a/mm/slab_common.c
-+++ b/mm/slab_common.c
-@@ -936,50 +936,6 @@ void __init create_kmalloc_caches(slab_flags_t flags)
- 	slab_state = UP;
- }
- 
--static void *__kmalloc_large_node(size_t size, gfp_t flags, int node);
--static __always_inline
--void *__do_kmalloc_node(size_t size, gfp_t flags, int node, unsigned long caller)
--{
--	struct kmem_cache *s;
--	void *ret;
--
--	if (unlikely(size > KMALLOC_MAX_CACHE_SIZE)) {
--		ret = __kmalloc_large_node(size, flags, node);
--		trace_kmalloc(caller, ret, size,
--			      PAGE_SIZE << get_order(size), flags, node);
--		return ret;
--	}
--
--	if (unlikely(!size))
--		return ZERO_SIZE_PTR;
--
--	s = kmalloc_slab(size, flags, caller);
--
--	ret = __kmem_cache_alloc_node(s, flags, node, size, caller);
--	ret = kasan_kmalloc(s, ret, size, flags);
--	trace_kmalloc(caller, ret, size, s->size, flags, node);
--	return ret;
--}
--
--void *__kmalloc_node(size_t size, gfp_t flags, int node)
--{
--	return __do_kmalloc_node(size, flags, node, _RET_IP_);
--}
--EXPORT_SYMBOL(__kmalloc_node);
--
--void *__kmalloc(size_t size, gfp_t flags)
--{
--	return __do_kmalloc_node(size, flags, NUMA_NO_NODE, _RET_IP_);
--}
--EXPORT_SYMBOL(__kmalloc);
--
--void *__kmalloc_node_track_caller(size_t size, gfp_t flags,
--				  int node, unsigned long caller)
--{
--	return __do_kmalloc_node(size, flags, node, caller);
--}
--EXPORT_SYMBOL(__kmalloc_node_track_caller);
--
- /**
-  * __ksize -- Report full size of underlying allocation
-  * @object: pointer to the object
-@@ -1016,30 +972,6 @@ size_t __ksize(const void *object)
- 	return slab_ksize(folio_slab(folio)->slab_cache);
- }
- 
--void *kmalloc_trace(struct kmem_cache *s, gfp_t gfpflags, size_t size)
--{
--	void *ret = __kmem_cache_alloc_node(s, gfpflags, NUMA_NO_NODE,
--					    size, _RET_IP_);
--
--	trace_kmalloc(_RET_IP_, ret, size, s->size, gfpflags, NUMA_NO_NODE);
--
--	ret = kasan_kmalloc(s, ret, size, gfpflags);
--	return ret;
--}
--EXPORT_SYMBOL(kmalloc_trace);
--
--void *kmalloc_node_trace(struct kmem_cache *s, gfp_t gfpflags,
--			 int node, size_t size)
--{
--	void *ret = __kmem_cache_alloc_node(s, gfpflags, node, size, _RET_IP_);
--
--	trace_kmalloc(_RET_IP_, ret, size, s->size, gfpflags, node);
--
--	ret = kasan_kmalloc(s, ret, size, gfpflags);
--	return ret;
--}
--EXPORT_SYMBOL(kmalloc_node_trace);
--
- gfp_t kmalloc_fix_flags(gfp_t flags)
- {
- 	gfp_t invalid_mask = flags & GFP_SLAB_BUG_MASK;
-@@ -1052,57 +984,6 @@ gfp_t kmalloc_fix_flags(gfp_t flags)
- 	return flags;
- }
- 
--/*
-- * To avoid unnecessary overhead, we pass through large allocation requests
-- * directly to the page allocator. We use __GFP_COMP, because we will need to
-- * know the allocation order to free the pages properly in kfree.
-- */
--
--static void *__kmalloc_large_node(size_t size, gfp_t flags, int node)
--{
--	struct page *page;
--	void *ptr = NULL;
--	unsigned int order = get_order(size);
--
--	if (unlikely(flags & GFP_SLAB_BUG_MASK))
--		flags = kmalloc_fix_flags(flags);
--
--	flags |= __GFP_COMP;
--	page = alloc_pages_node(node, flags, order);
--	if (page) {
--		ptr = page_address(page);
--		mod_lruvec_page_state(page, NR_SLAB_UNRECLAIMABLE_B,
--				      PAGE_SIZE << order);
--	}
--
--	ptr = kasan_kmalloc_large(ptr, size, flags);
--	/* As ptr might get tagged, call kmemleak hook after KASAN. */
--	kmemleak_alloc(ptr, size, 1, flags);
--	kmsan_kmalloc_large(ptr, size, flags);
--
--	return ptr;
--}
--
--void *kmalloc_large(size_t size, gfp_t flags)
--{
--	void *ret = __kmalloc_large_node(size, flags, NUMA_NO_NODE);
--
--	trace_kmalloc(_RET_IP_, ret, size, PAGE_SIZE << get_order(size),
--		      flags, NUMA_NO_NODE);
--	return ret;
--}
--EXPORT_SYMBOL(kmalloc_large);
--
--void *kmalloc_large_node(size_t size, gfp_t flags, int node)
--{
--	void *ret = __kmalloc_large_node(size, flags, node);
--
--	trace_kmalloc(_RET_IP_, ret, size, PAGE_SIZE << get_order(size),
--		      flags, node);
--	return ret;
--}
--EXPORT_SYMBOL(kmalloc_large_node);
--
- #ifdef CONFIG_SLAB_FREELIST_RANDOM
- /* Randomize a generic freelist */
- static void freelist_randomize(unsigned int *list,
 diff --git a/mm/slub.c b/mm/slub.c
-index 2baa9e94d9df..d6bc15929d22 100644
+index 5683f1d02e4f..77d259f3d592 100644
 --- a/mm/slub.c
 +++ b/mm/slub.c
-@@ -3851,14 +3851,6 @@ void *kmem_cache_alloc_lru(struct kmem_cache *s, struct list_lru *lru,
- }
- EXPORT_SYMBOL(kmem_cache_alloc_lru);
- 
--void *__kmem_cache_alloc_node(struct kmem_cache *s, gfp_t gfpflags,
--			      int node, size_t orig_size,
--			      unsigned long caller)
--{
--	return slab_alloc_node(s, NULL, gfpflags, node,
--			       caller, orig_size);
--}
+@@ -1866,25 +1866,17 @@ static inline size_t obj_full_size(struct kmem_cache *s)
+ /*
+  * Returns false if the allocation should fail.
+  */
+-static inline bool memcg_slab_pre_alloc_hook(struct kmem_cache *s,
+-					     struct list_lru *lru,
+-					     struct obj_cgroup **objcgp,
+-					     size_t objects, gfp_t flags)
++static bool __memcg_slab_pre_alloc_hook(struct kmem_cache *s,
++					struct list_lru *lru,
++					struct obj_cgroup **objcgp,
++					size_t objects, gfp_t flags)
+ {
+-	struct obj_cgroup *objcg;
 -
- /**
-  * kmem_cache_alloc_node - Allocate an object on the specified node
-  * @s: The cache to allocate from.
-@@ -3882,6 +3874,124 @@ void *kmem_cache_alloc_node(struct kmem_cache *s, gfp_t gfpflags, int node)
- }
- EXPORT_SYMBOL(kmem_cache_alloc_node);
+-	if (!memcg_kmem_online())
+-		return true;
+-
+-	if (!(flags & __GFP_ACCOUNT) && !(s->flags & SLAB_ACCOUNT))
+-		return true;
+-
+ 	/*
+ 	 * The obtained objcg pointer is safe to use within the current scope,
+ 	 * defined by current task or set_active_memcg() pair.
+ 	 * obj_cgroup_get() is used to get a permanent reference.
+ 	 */
+-	objcg = current_obj_cgroup();
++	struct obj_cgroup *objcg = current_obj_cgroup();
+ 	if (!objcg)
+ 		return true;
  
+@@ -1907,17 +1899,34 @@ static inline bool memcg_slab_pre_alloc_hook(struct kmem_cache *s,
+ 	return true;
+ }
+ 
+-static inline void memcg_slab_post_alloc_hook(struct kmem_cache *s,
+-					      struct obj_cgroup *objcg,
+-					      gfp_t flags, size_t size,
+-					      void **p)
 +/*
-+ * To avoid unnecessary overhead, we pass through large allocation requests
-+ * directly to the page allocator. We use __GFP_COMP, because we will need to
-+ * know the allocation order to free the pages properly in kfree.
++ * Returns false if the allocation should fail.
 + */
-+static void *__kmalloc_large_node(size_t size, gfp_t flags, int node)
++static __fastpath_inline
++bool memcg_slab_pre_alloc_hook(struct kmem_cache *s, struct list_lru *lru,
++			       struct obj_cgroup **objcgp, size_t objects,
++			       gfp_t flags)
 +{
-+	struct page *page;
-+	void *ptr = NULL;
-+	unsigned int order = get_order(size);
++	if (!memcg_kmem_online())
++		return true;
 +
-+	if (unlikely(flags & GFP_SLAB_BUG_MASK))
-+		flags = kmalloc_fix_flags(flags);
++	if (likely(!(flags & __GFP_ACCOUNT) && !(s->flags & SLAB_ACCOUNT)))
++		return true;
 +
-+	flags |= __GFP_COMP;
-+	page = alloc_pages_node(node, flags, order);
-+	if (page) {
-+		ptr = page_address(page);
-+		mod_lruvec_page_state(page, NR_SLAB_UNRECLAIMABLE_B,
-+				      PAGE_SIZE << order);
-+	}
-+
-+	ptr = kasan_kmalloc_large(ptr, size, flags);
-+	/* As ptr might get tagged, call kmemleak hook after KASAN. */
-+	kmemleak_alloc(ptr, size, 1, flags);
-+	kmsan_kmalloc_large(ptr, size, flags);
-+
-+	return ptr;
++	return likely(__memcg_slab_pre_alloc_hook(s, lru, objcgp, objects,
++						  flags));
 +}
 +
-+void *kmalloc_large(size_t size, gfp_t flags)
++static void __memcg_slab_post_alloc_hook(struct kmem_cache *s,
++					 struct obj_cgroup *objcg,
++					 gfp_t flags, size_t size,
++					 void **p)
+ {
+ 	struct slab *slab;
+ 	unsigned long off;
+ 	size_t i;
+ 
+-	if (!memcg_kmem_online() || !objcg)
+-		return;
++	flags &= gfp_allowed_mask;
+ 
+ 	for (i = 0; i < size; i++) {
+ 		if (likely(p[i])) {
+@@ -1940,6 +1949,16 @@ static inline void memcg_slab_post_alloc_hook(struct kmem_cache *s,
+ 	}
+ }
+ 
++static __fastpath_inline
++void memcg_slab_post_alloc_hook(struct kmem_cache *s, struct obj_cgroup *objcg,
++				gfp_t flags, size_t size, void **p)
 +{
-+	void *ret = __kmalloc_large_node(size, flags, NUMA_NO_NODE);
++	if (likely(!memcg_kmem_online() || !objcg))
++		return;
 +
-+	trace_kmalloc(_RET_IP_, ret, size, PAGE_SIZE << get_order(size),
-+		      flags, NUMA_NO_NODE);
-+	return ret;
-+}
-+EXPORT_SYMBOL(kmalloc_large);
-+
-+void *kmalloc_large_node(size_t size, gfp_t flags, int node)
-+{
-+	void *ret = __kmalloc_large_node(size, flags, node);
-+
-+	trace_kmalloc(_RET_IP_, ret, size, PAGE_SIZE << get_order(size),
-+		      flags, node);
-+	return ret;
-+}
-+EXPORT_SYMBOL(kmalloc_large_node);
-+
-+static __always_inline
-+void *__do_kmalloc_node(size_t size, gfp_t flags, int node,
-+			unsigned long caller)
-+{
-+	struct kmem_cache *s;
-+	void *ret;
-+
-+	if (unlikely(size > KMALLOC_MAX_CACHE_SIZE)) {
-+		ret = __kmalloc_large_node(size, flags, node);
-+		trace_kmalloc(caller, ret, size,
-+			      PAGE_SIZE << get_order(size), flags, node);
-+		return ret;
-+	}
-+
-+	if (unlikely(!size))
-+		return ZERO_SIZE_PTR;
-+
-+	s = kmalloc_slab(size, flags, caller);
-+
-+	ret = slab_alloc_node(s, NULL, flags, node, caller, size);
-+	ret = kasan_kmalloc(s, ret, size, flags);
-+	trace_kmalloc(caller, ret, size, s->size, flags, node);
-+	return ret;
++	return __memcg_slab_post_alloc_hook(s, objcg, flags, size, p);
 +}
 +
-+void *__kmalloc_node(size_t size, gfp_t flags, int node)
-+{
-+	return __do_kmalloc_node(size, flags, node, _RET_IP_);
-+}
-+EXPORT_SYMBOL(__kmalloc_node);
-+
-+void *__kmalloc(size_t size, gfp_t flags)
-+{
-+	return __do_kmalloc_node(size, flags, NUMA_NO_NODE, _RET_IP_);
-+}
-+EXPORT_SYMBOL(__kmalloc);
-+
-+void *__kmalloc_node_track_caller(size_t size, gfp_t flags,
-+				  int node, unsigned long caller)
-+{
-+	return __do_kmalloc_node(size, flags, node, caller);
-+}
-+EXPORT_SYMBOL(__kmalloc_node_track_caller);
-+
-+void *kmalloc_trace(struct kmem_cache *s, gfp_t gfpflags, size_t size)
-+{
-+	void *ret = slab_alloc_node(s, NULL, gfpflags, NUMA_NO_NODE,
-+					    _RET_IP_, size);
-+
-+	trace_kmalloc(_RET_IP_, ret, size, s->size, gfpflags, NUMA_NO_NODE);
-+
-+	ret = kasan_kmalloc(s, ret, size, gfpflags);
-+	return ret;
-+}
-+EXPORT_SYMBOL(kmalloc_trace);
-+
-+void *kmalloc_node_trace(struct kmem_cache *s, gfp_t gfpflags,
-+			 int node, size_t size)
-+{
-+	void *ret = slab_alloc_node(s, NULL, gfpflags, node, _RET_IP_, size);
-+
-+	trace_kmalloc(_RET_IP_, ret, size, s->size, gfpflags, node);
-+
-+	ret = kasan_kmalloc(s, ret, size, gfpflags);
-+	return ret;
-+}
-+EXPORT_SYMBOL(kmalloc_node_trace);
-+
- static noinline void free_to_partial_list(
- 	struct kmem_cache *s, struct slab *slab,
- 	void *head, void *tail, int bulk_cnt,
+ static inline void memcg_slab_free_hook(struct kmem_cache *s, struct slab *slab,
+ 					void **p, int objects)
+ {
+@@ -3709,34 +3728,34 @@ noinline int should_failslab(struct kmem_cache *s, gfp_t gfpflags)
+ }
+ ALLOW_ERROR_INJECTION(should_failslab, ERRNO);
+ 
+-static inline struct kmem_cache *slab_pre_alloc_hook(struct kmem_cache *s,
+-						     struct list_lru *lru,
+-						     struct obj_cgroup **objcgp,
+-						     size_t size, gfp_t flags)
++static __fastpath_inline
++struct kmem_cache *slab_pre_alloc_hook(struct kmem_cache *s,
++				       struct list_lru *lru,
++				       struct obj_cgroup **objcgp,
++				       size_t size, gfp_t flags)
+ {
+ 	flags &= gfp_allowed_mask;
+ 
+ 	might_alloc(flags);
+ 
+-	if (should_failslab(s, flags))
++	if (unlikely(should_failslab(s, flags)))
+ 		return NULL;
+ 
+-	if (!memcg_slab_pre_alloc_hook(s, lru, objcgp, size, flags))
++	if (unlikely(!memcg_slab_pre_alloc_hook(s, lru, objcgp, size, flags)))
+ 		return NULL;
+ 
+ 	return s;
+ }
+ 
+-static inline void slab_post_alloc_hook(struct kmem_cache *s,
+-					struct obj_cgroup *objcg, gfp_t flags,
+-					size_t size, void **p, bool init,
+-					unsigned int orig_size)
++static __fastpath_inline
++void slab_post_alloc_hook(struct kmem_cache *s,	struct obj_cgroup *objcg,
++			  gfp_t flags, size_t size, void **p, bool init,
++			  unsigned int orig_size)
+ {
+ 	unsigned int zero_size = s->object_size;
+ 	bool kasan_init = init;
+ 	size_t i;
+-
+-	flags &= gfp_allowed_mask;
++	gfp_t init_flags = flags & gfp_allowed_mask;
+ 
+ 	/*
+ 	 * For kmalloc object, the allocated memory size(object_size) is likely
+@@ -3769,13 +3788,13 @@ static inline void slab_post_alloc_hook(struct kmem_cache *s,
+ 	 * As p[i] might get tagged, memset and kmemleak hook come after KASAN.
+ 	 */
+ 	for (i = 0; i < size; i++) {
+-		p[i] = kasan_slab_alloc(s, p[i], flags, kasan_init);
++		p[i] = kasan_slab_alloc(s, p[i], init_flags, kasan_init);
+ 		if (p[i] && init && (!kasan_init ||
+ 				     !kasan_has_integrated_init()))
+ 			memset(p[i], 0, zero_size);
+ 		kmemleak_alloc_recursive(p[i], s->object_size, 1,
+-					 s->flags, flags);
+-		kmsan_slab_alloc(s, p[i], flags);
++					 s->flags, init_flags);
++		kmsan_slab_alloc(s, p[i], init_flags);
+ 	}
+ 
+ 	memcg_slab_post_alloc_hook(s, objcg, flags, size, p);
+@@ -3799,7 +3818,7 @@ static __fastpath_inline void *slab_alloc_node(struct kmem_cache *s, struct list
+ 	bool init = false;
+ 
+ 	s = slab_pre_alloc_hook(s, lru, &objcg, 1, gfpflags);
+-	if (!s)
++	if (unlikely(!s))
+ 		return NULL;
+ 
+ 	object = kfence_alloc(s, orig_size, gfpflags);
 
 -- 
 2.42.1
