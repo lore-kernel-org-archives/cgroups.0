@@ -1,47 +1,46 @@
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b="A/zYVT7F";
-	dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b="OJDT17ry"
+	dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b="A6pk4gEk";
+	dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b="mh8c/jJx"
 Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.220.28])
-	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 36C94C4;
-	Mon, 20 Nov 2023 10:34:41 -0800 (PST)
+	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1BB51CB;
+	Mon, 20 Nov 2023 10:34:42 -0800 (PST)
 Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
 	(No client certificate requested)
-	by smtp-out1.suse.de (Postfix) with ESMTPS id C8EED218F8;
-	Mon, 20 Nov 2023 18:34:39 +0000 (UTC)
+	by smtp-out1.suse.de (Postfix) with ESMTPS id 4693A21907;
+	Mon, 20 Nov 2023 18:34:40 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
-	t=1700505279; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	t=1700505280; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
 	 mime-version:mime-version:content-type:content-type:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=XDePevE9GX1BKoA1NhlhcvLNyMlxXLyXeY5y95pZ5hE=;
-	b=A/zYVT7Fx820C4tzi8eSuAucdooX4h6FC927L+IjA54Qe9YvxrByaTCTlXa499SCJcpQDX
-	DCaaH924radXAEy2h8t6f0+s3rWY58/vJtLAuP2x1p6bn2FHQfgH3oiiHBXi7PxdwyXbtn
-	MGTGou1b3lHqR0DtoIePDQhuSYDJ/30=
+	bh=vcj9xI8buQN1G/rc5/jIHh6rM1KaznuLIHKBfsphrRU=;
+	b=A6pk4gEkvXgGbG5JHyYT2Bzkyi3by2QkL/UHE+Wk1ts8hf/IC0pBzq13xK3reyBKouglBG
+	57BC1vGB96eU+tgepj5w4PmY6bqABN6QMVWDBrjN/R11nMT5CKdv0/TBDXb+st8aO4WZS1
+	dshLAIHsoTHMmmH0K5OJHniF7PAiDXE=
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
-	s=susede2_ed25519; t=1700505279;
+	s=susede2_ed25519; t=1700505280;
 	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
 	 mime-version:mime-version:content-type:content-type:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=XDePevE9GX1BKoA1NhlhcvLNyMlxXLyXeY5y95pZ5hE=;
-	b=OJDT17ry6C/LwnJ27TILex6mGaKTCUp7y6Oix12iBRNVJTSAyohHfQY/cpHEPL9Av5Wgk1
-	F7BjUrQcvf9LrVDg==
+	bh=vcj9xI8buQN1G/rc5/jIHh6rM1KaznuLIHKBfsphrRU=;
+	b=mh8c/jJx8hhsHnhhgXP9hnsvmHVjr5nyg7lJ6LFF9i1+3jxBbWZYqKIJ1Wqm2lzBoUWf0A
+	rD2RUjMfd9VM7TCw==
 Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
 	(No client certificate requested)
-	by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 7F7D213912;
-	Mon, 20 Nov 2023 18:34:39 +0000 (UTC)
+	by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 042B713499;
+	Mon, 20 Nov 2023 18:34:40 +0000 (UTC)
 Received: from dovecot-director2.suse.de ([192.168.254.65])
 	by imap2.suse-dmz.suse.de with ESMTPSA
-	id +I10Hr+mW2UUMgAAMHmgww
-	(envelope-from <vbabka@suse.cz>); Mon, 20 Nov 2023 18:34:39 +0000
+	id OMF+AMCmW2UUMgAAMHmgww
+	(envelope-from <vbabka@suse.cz>); Mon, 20 Nov 2023 18:34:40 +0000
 From: Vlastimil Babka <vbabka@suse.cz>
-Date: Mon, 20 Nov 2023 19:34:12 +0100
-Subject: [PATCH v2 01/21] mm/slab, docs: switch mm-api docs generation from
- slab.c to slub.c
+Date: Mon, 20 Nov 2023 19:34:14 +0100
+Subject: [PATCH v2 03/21] KASAN: remove code paths guarded by CONFIG_SLAB
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
@@ -50,7 +49,7 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-Id: <20231120-slab-remove-slab-v2-1-9c9c70177183@suse.cz>
+Message-Id: <20231120-slab-remove-slab-v2-3-9c9c70177183@suse.cz>
 References: <20231120-slab-remove-slab-v2-0-9c9c70177183@suse.cz>
 In-Reply-To: <20231120-slab-remove-slab-v2-0-9c9c70177183@suse.cz>
 To: David Rientjes <rientjes@google.com>, Christoph Lameter <cl@linux.com>, 
@@ -71,9 +70,8 @@ Cc: Andrew Morton <akpm@linux-foundation.org>,
 X-Mailer: b4 0.12.4
 Authentication-Results: smtp-out1.suse.de;
 	none
-X-Spam-Level: 
-X-Spam-Score: -6.45
-X-Spamd-Result: default: False [-6.45 / 50.00];
+X-Spam-Score: 1.30
+X-Spamd-Result: default: False [1.30 / 50.00];
 	 ARC_NA(0.00)[];
 	 RCVD_VIA_SMTP_AUTH(0.00)[];
 	 RCVD_TLS_ALL(0.00)[];
@@ -87,9 +85,9 @@ X-Spamd-Result: default: False [-6.45 / 50.00];
 	 MID_RHS_MATCH_FROM(0.00)[];
 	 NEURAL_HAM_LONG(-1.00)[-1.000];
 	 R_RATELIMIT(0.00)[to_ip_from(RL563rtnmcmc9sawm86hmgtctc)];
+	 BAYES_SPAM(5.10)[100.00%];
 	 DKIM_SIGNED(0.00)[suse.cz:s=susede2_rsa,suse.cz:s=susede2_ed25519];
 	 NEURAL_HAM_SHORT(-0.20)[-1.000];
-	 BAYES_HAM(-2.65)[98.46%];
 	 RCPT_COUNT_TWELVE(0.00)[24];
 	 FUZZY_BLOCKED(0.00)[rspamd.com];
 	 FROM_EQ_ENVFROM(0.00)[];
@@ -98,111 +96,92 @@ X-Spamd-Result: default: False [-6.45 / 50.00];
 	 RCVD_COUNT_TWO(0.00)[2];
 	 SUSPICIOUS_RECIPS(1.50)[]
 
-The SLAB implementation is going to be removed, and mm-api.rst currently
-uses mm/slab.c to obtain kerneldocs for some API functions. Switch it to
-mm/slub.c and move the relevant kerneldocs of exported functions from
-one to the other. The rest of kerneldocs in slab.c is for static SLAB
-implementation-specific functions that don't have counterparts in slub.c
-and thus can be simply removed with the implementation.
+With SLAB removed and SLUB the only remaining allocator, we can clean up
+some code that was depending on the choice.
 
+Reviewed-by: Kees Cook <keescook@chromium.org>
+Reviewed-by: Marco Elver <elver@google.com>
 Signed-off-by: Vlastimil Babka <vbabka@suse.cz>
 ---
- Documentation/core-api/mm-api.rst |  2 +-
- mm/slab.c                         | 21 ---------------------
- mm/slub.c                         | 21 +++++++++++++++++++++
- 3 files changed, 22 insertions(+), 22 deletions(-)
+ mm/kasan/common.c     | 13 ++-----------
+ mm/kasan/kasan.h      |  3 +--
+ mm/kasan/quarantine.c |  7 -------
+ 3 files changed, 3 insertions(+), 20 deletions(-)
 
-diff --git a/Documentation/core-api/mm-api.rst b/Documentation/core-api/mm-api.rst
-index 2d091c873d1e..af8151db88b2 100644
---- a/Documentation/core-api/mm-api.rst
-+++ b/Documentation/core-api/mm-api.rst
-@@ -37,7 +37,7 @@ The Slab Cache
- .. kernel-doc:: include/linux/slab.h
-    :internal:
+diff --git a/mm/kasan/common.c b/mm/kasan/common.c
+index 256930da578a..5d95219e69d7 100644
+--- a/mm/kasan/common.c
++++ b/mm/kasan/common.c
+@@ -153,10 +153,6 @@ void __kasan_poison_object_data(struct kmem_cache *cache, void *object)
+  * 2. A cache might be SLAB_TYPESAFE_BY_RCU, which means objects can be
+  *    accessed after being freed. We preassign tags for objects in these
+  *    caches as well.
+- * 3. For SLAB allocator we can't preassign tags randomly since the freelist
+- *    is stored as an array of indexes instead of a linked list. Assign tags
+- *    based on objects indexes, so that objects that are next to each other
+- *    get different tags.
+  */
+ static inline u8 assign_tag(struct kmem_cache *cache,
+ 					const void *object, bool init)
+@@ -171,17 +167,12 @@ static inline u8 assign_tag(struct kmem_cache *cache,
+ 	if (!cache->ctor && !(cache->flags & SLAB_TYPESAFE_BY_RCU))
+ 		return init ? KASAN_TAG_KERNEL : kasan_random_tag();
  
--.. kernel-doc:: mm/slab.c
-+.. kernel-doc:: mm/slub.c
-    :export:
- 
- .. kernel-doc:: mm/slab_common.c
-diff --git a/mm/slab.c b/mm/slab.c
-index 9ad3d0f2d1a5..37efe3241f9c 100644
---- a/mm/slab.c
-+++ b/mm/slab.c
-@@ -3491,19 +3491,6 @@ int kmem_cache_alloc_bulk(struct kmem_cache *s, gfp_t flags, size_t size,
- }
- EXPORT_SYMBOL(kmem_cache_alloc_bulk);
- 
--/**
-- * kmem_cache_alloc_node - Allocate an object on the specified node
-- * @cachep: The cache to allocate from.
-- * @flags: See kmalloc().
-- * @nodeid: node number of the target node.
-- *
-- * Identical to kmem_cache_alloc but it will allocate memory on the given
-- * node, which can improve the performance for cpu bound structures.
-- *
-- * Fallback to other node is possible if __GFP_THISNODE is not set.
-- *
-- * Return: pointer to the new object or %NULL in case of error
-- */
- void *kmem_cache_alloc_node(struct kmem_cache *cachep, gfp_t flags, int nodeid)
- {
- 	void *ret = slab_alloc_node(cachep, NULL, flags, nodeid, cachep->object_size, _RET_IP_);
-@@ -3564,14 +3551,6 @@ void __kmem_cache_free(struct kmem_cache *cachep, void *objp,
- 	__do_kmem_cache_free(cachep, objp, caller);
+-	/* For caches that either have a constructor or SLAB_TYPESAFE_BY_RCU: */
+-#ifdef CONFIG_SLAB
+-	/* For SLAB assign tags based on the object index in the freelist. */
+-	return (u8)obj_to_index(cache, virt_to_slab(object), (void *)object);
+-#else
+ 	/*
+-	 * For SLUB assign a random tag during slab creation, otherwise reuse
++	 * For caches that either have a constructor or SLAB_TYPESAFE_BY_RCU,
++	 * assign a random tag during slab creation, otherwise reuse
+ 	 * the already assigned tag.
+ 	 */
+ 	return init ? kasan_random_tag() : get_tag(object);
+-#endif
  }
  
--/**
-- * kmem_cache_free - Deallocate an object
-- * @cachep: The cache the allocation was from.
-- * @objp: The previously allocated object.
-- *
-- * Free an object which was previously allocated from this
-- * cache.
-- */
- void kmem_cache_free(struct kmem_cache *cachep, void *objp)
+ void * __must_check __kasan_init_slab_obj(struct kmem_cache *cache,
+diff --git a/mm/kasan/kasan.h b/mm/kasan/kasan.h
+index 8b06bab5c406..eef50233640a 100644
+--- a/mm/kasan/kasan.h
++++ b/mm/kasan/kasan.h
+@@ -373,8 +373,7 @@ void kasan_set_track(struct kasan_track *track, gfp_t flags);
+ void kasan_save_alloc_info(struct kmem_cache *cache, void *object, gfp_t flags);
+ void kasan_save_free_info(struct kmem_cache *cache, void *object);
+ 
+-#if defined(CONFIG_KASAN_GENERIC) && \
+-	(defined(CONFIG_SLAB) || defined(CONFIG_SLUB))
++#ifdef CONFIG_KASAN_GENERIC
+ bool kasan_quarantine_put(struct kmem_cache *cache, void *object);
+ void kasan_quarantine_reduce(void);
+ void kasan_quarantine_remove_cache(struct kmem_cache *cache);
+diff --git a/mm/kasan/quarantine.c b/mm/kasan/quarantine.c
+index ca4529156735..138c57b836f2 100644
+--- a/mm/kasan/quarantine.c
++++ b/mm/kasan/quarantine.c
+@@ -144,10 +144,6 @@ static void qlink_free(struct qlist_node *qlink, struct kmem_cache *cache)
  {
- 	cachep = cache_from_obj(cachep, objp);
-diff --git a/mm/slub.c b/mm/slub.c
-index 63d281dfacdb..3e01731783df 100644
---- a/mm/slub.c
-+++ b/mm/slub.c
-@@ -3518,6 +3518,19 @@ void *__kmem_cache_alloc_node(struct kmem_cache *s, gfp_t gfpflags,
- 			       caller, orig_size);
+ 	void *object = qlink_to_object(qlink, cache);
+ 	struct kasan_free_meta *meta = kasan_get_free_meta(cache, object);
+-	unsigned long flags;
+-
+-	if (IS_ENABLED(CONFIG_SLAB))
+-		local_irq_save(flags);
+ 
+ 	/*
+ 	 * If init_on_free is enabled and KASAN's free metadata is stored in
+@@ -166,9 +162,6 @@ static void qlink_free(struct qlist_node *qlink, struct kmem_cache *cache)
+ 	*(u8 *)kasan_mem_to_shadow(object) = KASAN_SLAB_FREE;
+ 
+ 	___cache_free(cache, object, _THIS_IP_);
+-
+-	if (IS_ENABLED(CONFIG_SLAB))
+-		local_irq_restore(flags);
  }
  
-+/**
-+ * kmem_cache_alloc_node - Allocate an object on the specified node
-+ * @s: The cache to allocate from.
-+ * @gfpflags: See kmalloc().
-+ * @node: node number of the target node.
-+ *
-+ * Identical to kmem_cache_alloc but it will allocate memory on the given
-+ * node, which can improve the performance for cpu bound structures.
-+ *
-+ * Fallback to other node is possible if __GFP_THISNODE is not set.
-+ *
-+ * Return: pointer to the new object or %NULL in case of error
-+ */
- void *kmem_cache_alloc_node(struct kmem_cache *s, gfp_t gfpflags, int node)
- {
- 	void *ret = slab_alloc_node(s, NULL, gfpflags, node, _RET_IP_, s->object_size);
-@@ -3822,6 +3835,14 @@ void __kmem_cache_free(struct kmem_cache *s, void *x, unsigned long caller)
- 	slab_free(s, virt_to_slab(x), x, NULL, &x, 1, caller);
- }
- 
-+/**
-+ * kmem_cache_free - Deallocate an object
-+ * @s: The cache the allocation was from.
-+ * @x: The previously allocated object.
-+ *
-+ * Free an object which was previously allocated from this
-+ * cache.
-+ */
- void kmem_cache_free(struct kmem_cache *s, void *x)
- {
- 	s = cache_from_obj(s, x);
+ static void qlist_free_all(struct qlist_head *q, struct kmem_cache *cache)
 
 -- 
 2.42.1
