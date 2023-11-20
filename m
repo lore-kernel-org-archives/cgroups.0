@@ -1,46 +1,47 @@
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b="lskh8+Nj";
-	dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b="JQZpJQ9Q"
+	dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b="FPhfQvkV";
+	dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b="7Bn+lpV9"
 Received: from smtp-out2.suse.de (smtp-out2.suse.de [IPv6:2001:67c:2178:6::1d])
-	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8BDC5D8;
+	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EF680E7;
 	Mon, 20 Nov 2023 10:34:42 -0800 (PST)
 Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
 	(No client certificate requested)
-	by smtp-out2.suse.de (Postfix) with ESMTPS id E9DB51F8A6;
-	Mon, 20 Nov 2023 18:34:40 +0000 (UTC)
+	by smtp-out2.suse.de (Postfix) with ESMTPS id 60AD51F8AA;
+	Mon, 20 Nov 2023 18:34:41 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
 	t=1700505281; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
 	 mime-version:mime-version:content-type:content-type:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=Nuh5DWhwaSyo20acRrWx07FPXsn5IPuIhuzYTBlJYws=;
-	b=lskh8+NjK84cZG7SqKSCZ3eO/1MD4vKkfHBAshUThScOC2oN+kMYJ8x9sYozYLNmkzrd3A
-	LxQPABh9kQLuS0d+9TV0Q2NyivMyMU8lu39fMN/UrdjCZBe7zgHDJuSxiIyEYpyEqEHic4
-	Bw8gBimBBkAowKVXEpP+Gc+OyuPIHg4=
+	bh=5GrBCfvjCtpiJqa8ygwZPoxY8exS+14FRB1r254RD0U=;
+	b=FPhfQvkViYNNlLlkqIEvH6iJhcWdFbB1ez85bYh8m3z0ThOtjlrGrlmkMjnw1bYrcZgkBZ
+	s6BizyqBVl8v6MFrHNRVozqNd5S2ikSD9cqJht54OgsPIAffS3/d1cwqTw3lAUtEvsWuJR
+	FLk+oJYbPTunJNoefJgvn9jcqiA5k9s=
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
 	s=susede2_ed25519; t=1700505281;
 	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
 	 mime-version:mime-version:content-type:content-type:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=Nuh5DWhwaSyo20acRrWx07FPXsn5IPuIhuzYTBlJYws=;
-	b=JQZpJQ9QP2ykM79Wrgq2dvV7Adexjb5rfIKIGaG+WP3EYoAutlKPhZK2HTY7mb4eToR1YJ
-	af8qGS6UtGLnEjDQ==
+	bh=5GrBCfvjCtpiJqa8ygwZPoxY8exS+14FRB1r254RD0U=;
+	b=7Bn+lpV9eESttWXYK2/IDuDAs+80Cw4I8lxuhU97Ce0QM22jBm6pBGT4R79YoOPE2qKvAP
+	JIqClnPt2p9h8XCg==
 Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
 	(No client certificate requested)
-	by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id B55FE13912;
-	Mon, 20 Nov 2023 18:34:40 +0000 (UTC)
+	by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 30A8113912;
+	Mon, 20 Nov 2023 18:34:41 +0000 (UTC)
 Received: from dovecot-director2.suse.de ([192.168.254.65])
 	by imap2.suse-dmz.suse.de with ESMTPSA
-	id UAbTK8CmW2UUMgAAMHmgww
-	(envelope-from <vbabka@suse.cz>); Mon, 20 Nov 2023 18:34:40 +0000
+	id EAFrC8GmW2UUMgAAMHmgww
+	(envelope-from <vbabka@suse.cz>); Mon, 20 Nov 2023 18:34:41 +0000
 From: Vlastimil Babka <vbabka@suse.cz>
-Date: Mon, 20 Nov 2023 19:34:17 +0100
-Subject: [PATCH v2 06/21] cpu/hotplug: remove CPUHP_SLAB_PREPARE hooks
+Date: Mon, 20 Nov 2023 19:34:19 +0100
+Subject: [PATCH v2 08/21] mm/mempool/dmapool: remove CONFIG_DEBUG_SLAB
+ ifdefs
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
@@ -49,7 +50,7 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-Id: <20231120-slab-remove-slab-v2-6-9c9c70177183@suse.cz>
+Message-Id: <20231120-slab-remove-slab-v2-8-9c9c70177183@suse.cz>
 References: <20231120-slab-remove-slab-v2-0-9c9c70177183@suse.cz>
 In-Reply-To: <20231120-slab-remove-slab-v2-0-9c9c70177183@suse.cz>
 To: David Rientjes <rientjes@google.com>, Christoph Lameter <cl@linux.com>, 
@@ -70,9 +71,8 @@ Cc: Andrew Morton <akpm@linux-foundation.org>,
 X-Mailer: b4 0.12.4
 Authentication-Results: smtp-out2.suse.de;
 	none
-X-Spam-Level: 
-X-Spam-Score: -3.80
-X-Spamd-Result: default: False [-3.80 / 50.00];
+X-Spam-Score: 1.30
+X-Spamd-Result: default: False [1.30 / 50.00];
 	 ARC_NA(0.00)[];
 	 RCVD_VIA_SMTP_AUTH(0.00)[];
 	 RCVD_TLS_ALL(0.00)[];
@@ -86,9 +86,9 @@ X-Spamd-Result: default: False [-3.80 / 50.00];
 	 MID_RHS_MATCH_FROM(0.00)[];
 	 NEURAL_HAM_LONG(-1.00)[-1.000];
 	 R_RATELIMIT(0.00)[to_ip_from(RL563rtnmcmc9sawm86hmgtctc)];
+	 BAYES_SPAM(5.10)[100.00%];
 	 DKIM_SIGNED(0.00)[suse.cz:s=susede2_rsa,suse.cz:s=susede2_ed25519];
 	 NEURAL_HAM_SHORT(-0.20)[-1.000];
-	 BAYES_HAM(-0.00)[15.84%];
 	 RCPT_COUNT_TWELVE(0.00)[24];
 	 FUZZY_BLOCKED(0.00)[rspamd.com];
 	 FROM_EQ_ENVFROM(0.00)[];
@@ -97,61 +97,59 @@ X-Spamd-Result: default: False [-3.80 / 50.00];
 	 RCVD_COUNT_TWO(0.00)[2];
 	 SUSPICIOUS_RECIPS(1.50)[]
 
-The CPUHP_SLAB_PREPARE hooks are only used by SLAB which is removed.
-SLUB defines them as NULL, so we can remove those altogether.
+CONFIG_DEBUG_SLAB is going away with CONFIG_SLAB, so remove dead ifdefs
+in mempool and dmapool code.
 
+Reviewed-by: Kees Cook <keescook@chromium.org>
 Signed-off-by: Vlastimil Babka <vbabka@suse.cz>
 ---
- include/linux/cpuhotplug.h | 1 -
- include/linux/slab.h       | 8 --------
- kernel/cpu.c               | 5 -----
- 3 files changed, 14 deletions(-)
+ mm/dmapool.c | 2 +-
+ mm/mempool.c | 6 +++---
+ 2 files changed, 4 insertions(+), 4 deletions(-)
 
-diff --git a/include/linux/cpuhotplug.h b/include/linux/cpuhotplug.h
-index d305db70674b..07cb8f7030b6 100644
---- a/include/linux/cpuhotplug.h
-+++ b/include/linux/cpuhotplug.h
-@@ -108,7 +108,6 @@ enum cpuhp_state {
- 	CPUHP_X2APIC_PREPARE,
- 	CPUHP_SMPCFD_PREPARE,
- 	CPUHP_RELAY_PREPARE,
--	CPUHP_SLAB_PREPARE,
- 	CPUHP_MD_RAID5_PREPARE,
- 	CPUHP_RCUTREE_PREP,
- 	CPUHP_CPUIDLE_COUPLED_PREPARE,
-diff --git a/include/linux/slab.h b/include/linux/slab.h
-index d6d6ffeeb9a2..34e43cddc520 100644
---- a/include/linux/slab.h
-+++ b/include/linux/slab.h
-@@ -788,12 +788,4 @@ size_t kmalloc_size_roundup(size_t size);
+diff --git a/mm/dmapool.c b/mm/dmapool.c
+index a151a21e571b..f0bfc6c490f4 100644
+--- a/mm/dmapool.c
++++ b/mm/dmapool.c
+@@ -36,7 +36,7 @@
+ #include <linux/types.h>
+ #include <linux/wait.h>
  
- void __init kmem_cache_init_late(void);
+-#if defined(CONFIG_DEBUG_SLAB) || defined(CONFIG_SLUB_DEBUG_ON)
++#ifdef CONFIG_SLUB_DEBUG_ON
+ #define DMAPOOL_DEBUG 1
+ #endif
  
--#if defined(CONFIG_SMP) && defined(CONFIG_SLAB)
--int slab_prepare_cpu(unsigned int cpu);
--int slab_dead_cpu(unsigned int cpu);
--#else
--#define slab_prepare_cpu	NULL
--#define slab_dead_cpu		NULL
--#endif
--
- #endif	/* _LINUX_SLAB_H */
-diff --git a/kernel/cpu.c b/kernel/cpu.c
-index 9e4c6780adde..530b026d95a1 100644
---- a/kernel/cpu.c
-+++ b/kernel/cpu.c
-@@ -2125,11 +2125,6 @@ static struct cpuhp_step cpuhp_hp_states[] = {
- 		.startup.single		= relay_prepare_cpu,
- 		.teardown.single	= NULL,
- 	},
--	[CPUHP_SLAB_PREPARE] = {
--		.name			= "slab:prepare",
--		.startup.single		= slab_prepare_cpu,
--		.teardown.single	= slab_dead_cpu,
--	},
- 	[CPUHP_RCUTREE_PREP] = {
- 		.name			= "RCU/tree:prepare",
- 		.startup.single		= rcutree_prepare_cpu,
+diff --git a/mm/mempool.c b/mm/mempool.c
+index 734bcf5afbb7..4759be0ff9de 100644
+--- a/mm/mempool.c
++++ b/mm/mempool.c
+@@ -20,7 +20,7 @@
+ #include <linux/writeback.h>
+ #include "slab.h"
+ 
+-#if defined(CONFIG_DEBUG_SLAB) || defined(CONFIG_SLUB_DEBUG_ON)
++#ifdef CONFIG_SLUB_DEBUG_ON
+ static void poison_error(mempool_t *pool, void *element, size_t size,
+ 			 size_t byte)
+ {
+@@ -95,14 +95,14 @@ static void poison_element(mempool_t *pool, void *element)
+ 		kunmap_atomic(addr);
+ 	}
+ }
+-#else /* CONFIG_DEBUG_SLAB || CONFIG_SLUB_DEBUG_ON */
++#else /* CONFIG_SLUB_DEBUG_ON */
+ static inline void check_element(mempool_t *pool, void *element)
+ {
+ }
+ static inline void poison_element(mempool_t *pool, void *element)
+ {
+ }
+-#endif /* CONFIG_DEBUG_SLAB || CONFIG_SLUB_DEBUG_ON */
++#endif /* CONFIG_SLUB_DEBUG_ON */
+ 
+ static __always_inline void kasan_poison_element(mempool_t *pool, void *element)
+ {
 
 -- 
 2.42.1
