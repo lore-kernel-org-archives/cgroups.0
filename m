@@ -1,31 +1,31 @@
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=salutedevices.com header.i=@salutedevices.com header.b="dvmOZBOq"
+	dkim=pass (2048-bit key) header.d=salutedevices.com header.i=@salutedevices.com header.b="UDEGgq7W"
 Received: from mx1.sberdevices.ru (mx2.sberdevices.ru [45.89.224.132])
-	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 97CB1D43;
+	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BCF9FD5A;
 	Thu, 23 Nov 2023 11:39:47 -0800 (PST)
 Received: from p-infra-ksmg-sc-msk02 (localhost [127.0.0.1])
-	by mx1.sberdevices.ru (Postfix) with ESMTP id 8B11F120010;
-	Thu, 23 Nov 2023 22:39:44 +0300 (MSK)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mx1.sberdevices.ru 8B11F120010
+	by mx1.sberdevices.ru (Postfix) with ESMTP id 30808120011;
+	Thu, 23 Nov 2023 22:39:46 +0300 (MSK)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mx1.sberdevices.ru 30808120011
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=salutedevices.com;
-	s=mail; t=1700768384;
-	bh=3yNZRyHWMdnnlqHBz7P8oLgTMmMyWNxQ6iEoDg0G7sA=;
+	s=mail; t=1700768386;
+	bh=fGDBCiKmSTE+7SXnjipAsp+7eqI2bC5r1hZ9/0vsdks=;
 	h=From:To:Subject:Date:Message-ID:MIME-Version:Content-Type:From;
-	b=dvmOZBOqdWu3rS3gcaqdktBkeo0jLcSQM3wfFcsJheGAJUxm0HNz0wSIXCHXTOUad
-	 TKQ3dh8V4f3rZTWvFyy1vdvwTLoxVhkhp/WclxT8me8cF3FaI/KTH9MR4UZtATL9K1
-	 lMzlk7woD6o6eokd/aev2ytEPBlbRcbkvEtG8YdMeWKBGCgQg5pLppUTLTV7NFIzN0
-	 XRX5PnCLeFobjS87/I2mw2Qm2t0W5MxgoI6rC8yyRGuH2CKNHd1pjQUAVHUWqosAgK
-	 X023mS6oDLWKitT8ii1dEaCKQAPD+36KbNMpbuKNDMm/85MZkvSGRxsxevd8Qmp5HG
-	 tuMp2LOngGJeg==
+	b=UDEGgq7WizGwhy3OIZgsMiqkZLcTpueDXg7U2Imd1cfixaVQx4o6vVtmX9T1OzYn1
+	 T3A4mqAHGm9OWkx7niV8FtJqfMR2DJjvS6R9vZDw2KAfyfRXl5zmKpuNnJsdzRS5jF
+	 pFvpyVd4N7VZYKBl3OXBfLrJeuWt/DFIb1jSYICCO52ubgfO5r8HLBQ+JBvTtOVASw
+	 g4kI659Jm40D3Rymt6ELCvngjiSmu/QowWf0vNBZsdLvQpXVby0ndm3np0MKZOaNiU
+	 UlxVGJQk71a2iyk08KherA4MzmRSDRLJczMDB1C3zFxkE8dHfqpZCspqFBPmQAt2ut
+	 s7WQ4D7dm3bGg==
 Received: from p-i-exch-sc-m01.sberdevices.ru (p-i-exch-sc-m01.sberdevices.ru [172.16.192.107])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
 	by mx1.sberdevices.ru (Postfix) with ESMTPS;
-	Thu, 23 Nov 2023 22:39:44 +0300 (MSK)
+	Thu, 23 Nov 2023 22:39:46 +0300 (MSK)
 Received: from localhost.localdomain (100.64.160.123) by
  p-i-exch-sc-m01.sberdevices.ru (172.16.192.107) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1118.40; Thu, 23 Nov 2023 22:39:44 +0300
+ 15.2.1118.40; Thu, 23 Nov 2023 22:39:45 +0300
 From: Dmitry Rokosov <ddrokosov@salutedevices.com>
 To: <rostedt@goodmis.org>, <mhiramat@kernel.org>, <hannes@cmpxchg.org>,
 	<mhocko@kernel.org>, <roman.gushchin@linux.dev>, <shakeelb@google.com>,
@@ -33,10 +33,12 @@ To: <rostedt@goodmis.org>, <mhiramat@kernel.org>, <hannes@cmpxchg.org>,
 CC: <kernel@sberdevices.ru>, <rockosov@gmail.com>, <cgroups@vger.kernel.org>,
 	<linux-mm@kvack.org>, <linux-kernel@vger.kernel.org>, <bpf@vger.kernel.org>,
 	Dmitry Rokosov <ddrokosov@salutedevices.com>
-Subject: [PATCH v3 0/2] mm: memcg: improve vmscan tracepoints
-Date: Thu, 23 Nov 2023 22:39:35 +0300
-Message-ID: <20231123193937.11628-1-ddrokosov@salutedevices.com>
+Subject: [PATCH v3 2/2] mm: memcg: introduce new event to trace shrink_memcg
+Date: Thu, 23 Nov 2023 22:39:37 +0300
+Message-ID: <20231123193937.11628-3-ddrokosov@salutedevices.com>
 X-Mailer: git-send-email 2.36.0
+In-Reply-To: <20231123193937.11628-1-ddrokosov@salutedevices.com>
+References: <20231123193937.11628-1-ddrokosov@salutedevices.com>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
@@ -56,49 +58,107 @@ X-KSMG-AntiSpam-Rate: 0
 X-KSMG-AntiSpam-Status: not_detected
 X-KSMG-AntiSpam-Method: none
 X-KSMG-AntiSpam-Auth: dkim=none
-X-KSMG-AntiSpam-Info: LuaCore: 4 0.3.4 720d3c21819df9b72e78f051e300e232316d302a, {Tracking_uf_ne_domains}, {Tracking_from_domain_doesnt_match_to}, d41d8cd98f00b204e9800998ecf8427e.com:7.1.1;100.64.160.123:7.1.2;lore.kernel.org:7.1.1;salutedevices.com:7.1.1;127.0.0.199:7.1.2;p-i-exch-sc-m01.sberdevices.ru:7.1.1,5.0.1, FromAlignment: s, ApMailHostAddress: 100.64.160.123
+X-KSMG-AntiSpam-Info: LuaCore: 4 0.3.4 720d3c21819df9b72e78f051e300e232316d302a, {Tracking_from_domain_doesnt_match_to}, d41d8cd98f00b204e9800998ecf8427e.com:7.1.1;100.64.160.123:7.1.2;salutedevices.com:7.1.1;127.0.0.199:7.1.2;p-i-exch-sc-m01.sberdevices.ru:7.1.1,5.0.1, FromAlignment: s, ApMailHostAddress: 100.64.160.123
 X-MS-Exchange-Organization-SCL: -1
 X-KSMG-AntiSpam-Interceptor-Info: scan successful
-X-KSMG-AntiPhishing: Clean, bases: 2023/11/23 18:34:00
-X-KSMG-LinksScanning: Clean, bases: 2023/11/23 18:34:00
+X-KSMG-AntiPhishing: Clean
+X-KSMG-LinksScanning: Clean
 X-KSMG-AntiVirus: Kaspersky Secure Mail Gateway, version 2.0.1.6960, bases: 2023/11/23 17:02:00 #22509098
 X-KSMG-AntiVirus-Status: Clean, skipped
 
-The motivation behind this commit is to enhance the traceability and
-understanding of memcg events. By integrating the function cgroup_ino()
-into the existing memcg tracepoints, this patch series introduces a new
-tracepoint template for the begin() and end() events. It utilizes a new
-entry field ino to store the cgroup ino, enabling developers to easily
-identify the cgroup associated with a specific memcg tracepoint event.
+The shrink_memcg flow plays a crucial role in memcg reclamation.
+Currently, it is not possible to trace this point from non-direct
+reclaim paths. However, direct reclaim has its own tracepoint, so there
+is no issue there. In certain cases, when debugging memcg pressure,
+developers may need to identify all potential requests for memcg
+reclamation including kswapd(). The patchset introduces the tracepoints
+mm_vmscan_memcg_shrink_{begin|end}() to address this problem.
 
-Additionally, this patch series introduces new shrink_memcg tracepoints
-to facilitate non-direct memcg reclaim tracing and debugging.
+Example of output in the kswapd context (non-direct reclaim):
+    kswapd0-39      [001] .....   240.356378: mm_vmscan_memcg_shrink_begin: order=0 gfp_flags=GFP_KERNEL memcg=16
+    kswapd0-39      [001] .....   240.356396: mm_vmscan_memcg_shrink_end: nr_reclaimed=0 memcg=16
+    kswapd0-39      [001] .....   240.356420: mm_vmscan_memcg_shrink_begin: order=0 gfp_flags=GFP_KERNEL memcg=16
+    kswapd0-39      [001] .....   240.356454: mm_vmscan_memcg_shrink_end: nr_reclaimed=1 memcg=16
+    kswapd0-39      [001] .....   240.356479: mm_vmscan_memcg_shrink_begin: order=0 gfp_flags=GFP_KERNEL memcg=16
+    kswapd0-39      [001] .....   240.356506: mm_vmscan_memcg_shrink_end: nr_reclaimed=4 memcg=16
+    kswapd0-39      [001] .....   240.356525: mm_vmscan_memcg_shrink_begin: order=0 gfp_flags=GFP_KERNEL memcg=16
+    kswapd0-39      [001] .....   240.356593: mm_vmscan_memcg_shrink_end: nr_reclaimed=11 memcg=16
+    kswapd0-39      [001] .....   240.356614: mm_vmscan_memcg_shrink_begin: order=0 gfp_flags=GFP_KERNEL memcg=16
+    kswapd0-39      [001] .....   240.356738: mm_vmscan_memcg_shrink_end: nr_reclaimed=25 memcg=16
+    kswapd0-39      [001] .....   240.356790: mm_vmscan_memcg_shrink_begin: order=0 gfp_flags=GFP_KERNEL memcg=16
+    kswapd0-39      [001] .....   240.357125: mm_vmscan_memcg_shrink_end: nr_reclaimed=53 memcg=16
 
-Changes v3 since v2 at [2]:
-    - use cgroup_ino() instead of cgroup_name() for memcg tracepoints
-      because cgroup_name() acquires a global rw_lock, which can
-      potentially slow down the system
-    - introduce a stub macro for each shrink_memcg tracepoint to avoid
-      using ifdefs within the common vmscan code."
+Signed-off-by: Dmitry Rokosov <ddrokosov@salutedevices.com>
+---
+ include/trace/events/vmscan.h | 22 ++++++++++++++++++++++
+ mm/vmscan.c                   |  7 +++++++
+ 2 files changed, 29 insertions(+)
 
-Changes v2 since v1 at [1]:
-    - change the position of the "memcg" parameter to ensure backward
-      compatibility with userspace tools that use memcg tracepoints
-    - add additional CONFIG_MEMCG ifdefs to prevent the use of memcg
-      tracepoints when memcg is disabled
-
-Links:
-    [1] https://lore.kernel.org/all/20231101102837.25205-1-ddrokosov@salutedevices.com/
-    [2] https://lore.kernel.org/all/20231123071945.25811-1-ddrokosov@salutedevices.com/
-
-Dmitry Rokosov (2):
-  mm: memcg: print out cgroup ino in the memcg tracepoints
-  mm: memcg: introduce new event to trace shrink_memcg
-
- include/trace/events/vmscan.h | 95 ++++++++++++++++++++++++++++++-----
- mm/vmscan.c                   | 17 +++++--
- 2 files changed, 95 insertions(+), 17 deletions(-)
-
+diff --git a/include/trace/events/vmscan.h b/include/trace/events/vmscan.h
+index e9093fa1c924..a4686afe571d 100644
+--- a/include/trace/events/vmscan.h
++++ b/include/trace/events/vmscan.h
+@@ -180,6 +180,17 @@ DEFINE_EVENT(mm_vmscan_memcg_reclaim_begin_template, mm_vmscan_memcg_softlimit_r
+ 	TP_ARGS(order, gfp_flags, memcg)
+ );
+ 
++DEFINE_EVENT(mm_vmscan_memcg_reclaim_begin_template, mm_vmscan_memcg_shrink_begin,
++
++	TP_PROTO(int order, gfp_t gfp_flags, const struct mem_cgroup *memcg),
++
++	TP_ARGS(order, gfp_flags, memcg)
++);
++
++#else
++
++#define trace_mm_vmscan_memcg_shrink_begin(...)
++
+ #endif /* CONFIG_MEMCG */
+ 
+ DECLARE_EVENT_CLASS(mm_vmscan_direct_reclaim_end_template,
+@@ -243,6 +254,17 @@ DEFINE_EVENT(mm_vmscan_memcg_reclaim_end_template, mm_vmscan_memcg_softlimit_rec
+ 	TP_ARGS(nr_reclaimed, memcg)
+ );
+ 
++DEFINE_EVENT(mm_vmscan_memcg_reclaim_end_template, mm_vmscan_memcg_shrink_end,
++
++	TP_PROTO(unsigned long nr_reclaimed, const struct mem_cgroup *memcg),
++
++	TP_ARGS(nr_reclaimed, memcg)
++);
++
++#else
++
++#define trace_mm_vmscan_memcg_shrink_end(...)
++
+ #endif /* CONFIG_MEMCG */
+ 
+ TRACE_EVENT(mm_shrink_slab_start,
+diff --git a/mm/vmscan.c b/mm/vmscan.c
+index 45780952f4b5..f7e3ddc5a7ad 100644
+--- a/mm/vmscan.c
++++ b/mm/vmscan.c
+@@ -6461,6 +6461,10 @@ static void shrink_node_memcgs(pg_data_t *pgdat, struct scan_control *sc)
+ 		 */
+ 		cond_resched();
+ 
++		trace_mm_vmscan_memcg_shrink_begin(sc->order,
++						   sc->gfp_mask,
++						   memcg);
++
+ 		mem_cgroup_calculate_protection(target_memcg, memcg);
+ 
+ 		if (mem_cgroup_below_min(target_memcg, memcg)) {
+@@ -6491,6 +6495,9 @@ static void shrink_node_memcgs(pg_data_t *pgdat, struct scan_control *sc)
+ 		shrink_slab(sc->gfp_mask, pgdat->node_id, memcg,
+ 			    sc->priority);
+ 
++		trace_mm_vmscan_memcg_shrink_end(sc->nr_reclaimed - reclaimed,
++						 memcg);
++
+ 		/* Record the group's reclaim efficiency */
+ 		if (!sc->proactive)
+ 			vmpressure(sc->gfp_mask, memcg, false,
 -- 
 2.36.0
 
