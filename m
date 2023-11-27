@@ -1,43 +1,43 @@
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="AXqxPnMD"
-Received: from mail-pl1-x633.google.com (mail-pl1-x633.google.com [IPv6:2607:f8b0:4864:20::633])
-	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 901351B5;
-	Mon, 27 Nov 2023 15:46:02 -0800 (PST)
-Received: by mail-pl1-x633.google.com with SMTP id d9443c01a7336-1cfb83211b9so19228325ad.3;
-        Mon, 27 Nov 2023 15:46:02 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="j4lHvfQs"
+Received: from mail-pf1-x434.google.com (mail-pf1-x434.google.com [IPv6:2607:f8b0:4864:20::434])
+	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 774AA1B8;
+	Mon, 27 Nov 2023 15:46:04 -0800 (PST)
+Received: by mail-pf1-x434.google.com with SMTP id d2e1a72fcca58-6cb9dd2ab56so4190997b3a.3;
+        Mon, 27 Nov 2023 15:46:04 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1701128762; x=1701733562; darn=vger.kernel.org;
+        d=gmail.com; s=20230601; t=1701128764; x=1701733564; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=fNiCSzvNV1ziGwJa7LtT47VBl/50ZnVtPtDE/RNEfyE=;
-        b=AXqxPnMDNBlLfL6Eiv0exjzRMnPGTlg45oS1lKHnTNrPrByRqfCBPKKA48kZhWbgGf
-         WD2BqZZpJJxxDj0VymY9+vbEI0Ffkd8sA7Ew3xfuw+ERy21+GM5SDmWIt/rvreeAqiPB
-         MOB8kpu8qJ/nljN9TmS78nWq3A3kfCJGDG3cpiWbhEKhxrcIYRcX7Cu29jS7Ac8Eh91B
-         0Jp8k+gmrZWhp5mYOuXWkXYP5chd8CmIaPGRfDLXUQYCGzaUWZKKDNa0AVXkz/dP60Q5
-         3EMKxqrSiJ4T+r5VRUIEu7QmZelxqa9kbotp+2AEr/ELXOjDtWBojtPeBdx4Z3N13RuI
-         gPBw==
+        bh=bWOipUHj9Dmf0Z2DLTB1Rx67tTniBw2zqpEESxZom8o=;
+        b=j4lHvfQscAbzIEOa+w4ngA1mPcEFajGWril8GukmPjHMDHNxTsgW40eXoF1YGovfA+
+         vk1LqJ+9mTaoDLHhBABUiNi20FHIjGqXH4ajdntWy+kMp5saH8vfgn3fxT47bkK5ZUKM
+         Pp39svlwbelb1hvIqQ9yWJuc+cCCLwwcmc9phbRnvvfLei7K9Q/WJ+gvlnzlOS+xKfJ/
+         u0+xrlXHeZOCwZI81raV63sJFb9PFJd9qcGrBaJZbBo/mI1HAyHAMtIvKayGyYQlQgur
+         lan6e3bpUcxwf+k/tmIcPsc0uwo2coFm80FSeYwJyDA/wLfq05Ko/hrwSOLVkmpPQ3hQ
+         kLJg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1701128762; x=1701733562;
+        d=1e100.net; s=20230601; t=1701128764; x=1701733564;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=fNiCSzvNV1ziGwJa7LtT47VBl/50ZnVtPtDE/RNEfyE=;
-        b=c6lWzUTqK/iqgydA92E0WdAxsdq/pDLD1DbwNvXWipDT8q7YqWbNWYFo8E1xGNZEFt
-         /Hr616meo4RR3ivRdKrML6dnXc7jOxHb0RFrfO3BBhRc1TcQJ8K5wuMFrcwpvtOOp/ws
-         uTmTZ25EAF0+0W1XjVbKNsbcwjYvbQVQK18UNFCL/kzfNDwG0hYjFPhhSRmqO8u89zkF
-         MbjxfKN9L14AvtcG8DIcihYw/ulrozcjszOQUhEFW6wXHtbKA2w0wAVsbjpY83JlyvWk
-         yEm5OzIfCU9M7stCXWNXHudONyuvKtqcNsuYppJFWNEx57SMNGJOu22fTmV41NipWaaX
-         qwQw==
-X-Gm-Message-State: AOJu0YzKMqyOemEacumv3NefSQ8jJf2LsTI7JlI/ywuwaUYtk0MQp9t0
-	Rv3JaICfHOjgZ72kzPjO4kE=
-X-Google-Smtp-Source: AGHT+IGg0b2BurabLi4x78Yv3t0y3lEvWfl/iyf/uPgTp5xjo5vBmJ99c7oNP5NvYSoCjl7FotlyHQ==
-X-Received: by 2002:a17:902:ab94:b0:1cf:ba11:1adf with SMTP id f20-20020a170902ab9400b001cfba111adfmr7677488plr.67.1701128761804;
-        Mon, 27 Nov 2023 15:46:01 -0800 (PST)
-Received: from localhost (fwdproxy-prn-024.fbsv.net. [2a03:2880:ff:18::face:b00c])
-        by smtp.gmail.com with ESMTPSA id p18-20020a170902a41200b001c74df14e6fsm8818313plq.284.2023.11.27.15.46.01
+        bh=bWOipUHj9Dmf0Z2DLTB1Rx67tTniBw2zqpEESxZom8o=;
+        b=AMWEo4UZcqq6kb8JqDDNggwok4Iu0IipRzNue57Cr01M67TKIPWbt69FosA14ZBn8h
+         VC6/dqBeB+c48ycBTuRDJ/amnc8vAk45UrqeBPGZ49vLPnfjlx1dYsZS3wYsqudMI1bB
+         zOHeKY5WwmMSaXcGycTzmiFy7Mu+NB3igkWOz1XgvV5UH/V+hiZer44IpwlgjvDx3mVB
+         b+J4LYkBaj+eF5M/ac1vLDJLOunHAiMPHxu/a4W4sSQV8LfxJFhXQwlRaRKFtHsxz9CS
+         CfN7Nimv5sYx8B6RrBNtS4+vcCSnCYLhrjzIDhRAZzPLdYW1ZoSFqYQGpqn8WFYsbUfX
+         fXzQ==
+X-Gm-Message-State: AOJu0Yy2YOqSLqjl14IRQ1Y2X3ULOIriNyGteHa2ZNU4pGXhiNjBH7Dd
+	sd7gDkzmOYH7sa4cDSEyq64=
+X-Google-Smtp-Source: AGHT+IG53Y+4b9/tx63WaQc/soW/oe6BTGHF/9YP+H2NVQQsAKCCyAnoqhYfOg0JOJN+GQO7ctw/Dg==
+X-Received: by 2002:a05:6a00:984:b0:6cd:8870:bd1f with SMTP id u4-20020a056a00098400b006cd8870bd1fmr6937191pfg.0.1701128763715;
+        Mon, 27 Nov 2023 15:46:03 -0800 (PST)
+Received: from localhost (fwdproxy-prn-007.fbsv.net. [2a03:2880:ff:7::face:b00c])
+        by smtp.gmail.com with ESMTPSA id r16-20020a62e410000000b006933f504111sm7940946pfh.145.2023.11.27.15.46.03
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 27 Nov 2023 15:46:01 -0800 (PST)
+        Mon, 27 Nov 2023 15:46:03 -0800 (PST)
 From: Nhat Pham <nphamcs@gmail.com>
 To: akpm@linux-foundation.org
 Cc: hannes@cmpxchg.org,
@@ -58,9 +58,9 @@ Cc: hannes@cmpxchg.org,
 	linux-doc@vger.kernel.org,
 	linux-kselftest@vger.kernel.org,
 	shuah@kernel.org
-Subject: [PATCH v7 1/6] list_lru: allows explicit memcg and NUMA node selection
-Date: Mon, 27 Nov 2023 15:45:55 -0800
-Message-Id: <20231127234600.2971029-2-nphamcs@gmail.com>
+Subject: [PATCH v7 3/6] zswap: make shrinking memcg-aware
+Date: Mon, 27 Nov 2023 15:45:57 -0800
+Message-Id: <20231127234600.2971029-4-nphamcs@gmail.com>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20231127234600.2971029-1-nphamcs@gmail.com>
 References: <20231127234600.2971029-1-nphamcs@gmail.com>
@@ -72,487 +72,600 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-The interface of list_lru is based on the assumption that the list node
-and the data it represents belong to the same allocated on the correct
-node/memcg. While this assumption is valid for existing slab objects LRU
-such as dentries and inodes, it is undocumented, and rather inflexible
-for certain potential list_lru users (such as the upcoming zswap
-shrinker and the THP shrinker). It has caused us a lot of issues during
-our development.
+From: Domenico Cerasuolo <cerasuolodomenico@gmail.com>
 
-This patch changes list_lru interface so that the caller must explicitly
-specify numa node and memcg when adding and removing objects. The old
-list_lru_add() and list_lru_del() are renamed to list_lru_add_obj() and
-list_lru_del_obj(), respectively.
+Currently, we only have a single global LRU for zswap. This makes it
+impossible to perform worload-specific shrinking - an memcg cannot
+determine which pages in the pool it owns, and often ends up writing
+pages from other memcgs. This issue has been previously observed in
+practice and mitigated by simply disabling memcg-initiated shrinking:
 
-It also extends the list_lru API with a new function, list_lru_putback,
-which undoes a previous list_lru_isolate call. Unlike list_lru_add, it
-does not increment the LRU node count (as list_lru_isolate does not
-decrement the node count). list_lru_putback also allows for explicit
-memcg and NUMA node selection.
+https://lore.kernel.org/all/20230530232435.3097106-1-nphamcs@gmail.com/T/#u
 
-Suggested-by: Johannes Weiner <hannes@cmpxchg.org>
+This patch fully resolves the issue by replacing the global zswap LRU
+with memcg- and NUMA-specific LRUs, and modify the reclaim logic:
+
+a) When a store attempt hits an memcg limit, it now triggers a
+   synchronous reclaim attempt that, if successful, allows the new
+   hotter page to be accepted by zswap.
+b) If the store attempt instead hits the global zswap limit, it will
+   trigger an asynchronous reclaim attempt, in which an memcg is
+   selected for reclaim in a round-robin-like fashion.
+
+Signed-off-by: Domenico Cerasuolo <cerasuolodomenico@gmail.com>
+Co-developed-by: Nhat Pham <nphamcs@gmail.com>
 Signed-off-by: Nhat Pham <nphamcs@gmail.com>
 ---
- drivers/android/binder_alloc.c |  7 ++---
- fs/dcache.c                    |  8 +++--
- fs/gfs2/quota.c                |  6 ++--
- fs/inode.c                     |  4 +--
- fs/nfs/nfs42xattr.c            |  8 ++---
- fs/nfsd/filecache.c            |  4 +--
- fs/xfs/xfs_buf.c               |  6 ++--
- fs/xfs/xfs_dquot.c             |  2 +-
- fs/xfs/xfs_qm.c                |  2 +-
- include/linux/list_lru.h       | 54 ++++++++++++++++++++++++++++++++--
- mm/list_lru.c                  | 48 +++++++++++++++++++++++++-----
- mm/workingset.c                |  4 +--
- 12 files changed, 117 insertions(+), 36 deletions(-)
+ include/linux/memcontrol.h |   5 +
+ include/linux/zswap.h      |   2 +
+ mm/memcontrol.c            |   2 +
+ mm/swap.h                  |   3 +-
+ mm/swap_state.c            |  24 +++-
+ mm/zswap.c                 | 248 +++++++++++++++++++++++++++++--------
+ 6 files changed, 223 insertions(+), 61 deletions(-)
 
-diff --git a/drivers/android/binder_alloc.c b/drivers/android/binder_alloc.c
-index 138f6d43d13b..f69d30c9f50f 100644
---- a/drivers/android/binder_alloc.c
-+++ b/drivers/android/binder_alloc.c
-@@ -234,7 +234,7 @@ static int binder_update_page_range(struct binder_alloc *alloc, int allocate,
- 		if (page->page_ptr) {
- 			trace_binder_alloc_lru_start(alloc, index);
- 
--			on_lru = list_lru_del(&binder_alloc_lru, &page->lru);
-+			on_lru = list_lru_del_obj(&binder_alloc_lru, &page->lru);
- 			WARN_ON(!on_lru);
- 
- 			trace_binder_alloc_lru_end(alloc, index);
-@@ -285,7 +285,7 @@ static int binder_update_page_range(struct binder_alloc *alloc, int allocate,
- 
- 		trace_binder_free_lru_start(alloc, index);
- 
--		ret = list_lru_add(&binder_alloc_lru, &page->lru);
-+		ret = list_lru_add_obj(&binder_alloc_lru, &page->lru);
- 		WARN_ON(!ret);
- 
- 		trace_binder_free_lru_end(alloc, index);
-@@ -848,7 +848,7 @@ void binder_alloc_deferred_release(struct binder_alloc *alloc)
- 			if (!alloc->pages[i].page_ptr)
- 				continue;
- 
--			on_lru = list_lru_del(&binder_alloc_lru,
-+			on_lru = list_lru_del_obj(&binder_alloc_lru,
- 					      &alloc->pages[i].lru);
- 			page_addr = alloc->buffer + i * PAGE_SIZE;
- 			binder_alloc_debug(BINDER_DEBUG_BUFFER_ALLOC,
-@@ -1287,4 +1287,3 @@ int binder_alloc_copy_from_buffer(struct binder_alloc *alloc,
- 	return binder_alloc_do_buffer_copy(alloc, false, buffer, buffer_offset,
- 					   dest, bytes);
- }
--
-diff --git a/fs/dcache.c b/fs/dcache.c
-index c82ae731df9a..2ba37643b9c5 100644
---- a/fs/dcache.c
-+++ b/fs/dcache.c
-@@ -428,7 +428,8 @@ static void d_lru_add(struct dentry *dentry)
- 	this_cpu_inc(nr_dentry_unused);
- 	if (d_is_negative(dentry))
- 		this_cpu_inc(nr_dentry_negative);
--	WARN_ON_ONCE(!list_lru_add(&dentry->d_sb->s_dentry_lru, &dentry->d_lru));
-+	WARN_ON_ONCE(!list_lru_add_obj(
-+			&dentry->d_sb->s_dentry_lru, &dentry->d_lru));
+diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
+index 5bfe41840e80..a568f70a2677 100644
+--- a/include/linux/memcontrol.h
++++ b/include/linux/memcontrol.h
+@@ -1191,6 +1191,11 @@ static inline struct mem_cgroup *page_memcg_check(struct page *page)
+ 	return NULL;
  }
  
- static void d_lru_del(struct dentry *dentry)
-@@ -438,7 +439,8 @@ static void d_lru_del(struct dentry *dentry)
- 	this_cpu_dec(nr_dentry_unused);
- 	if (d_is_negative(dentry))
- 		this_cpu_dec(nr_dentry_negative);
--	WARN_ON_ONCE(!list_lru_del(&dentry->d_sb->s_dentry_lru, &dentry->d_lru));
-+	WARN_ON_ONCE(!list_lru_del_obj(
-+			&dentry->d_sb->s_dentry_lru, &dentry->d_lru));
- }
- 
- static void d_shrink_del(struct dentry *dentry)
-@@ -1240,7 +1242,7 @@ static enum lru_status dentry_lru_isolate(struct list_head *item,
- 		 *
- 		 * This is guaranteed by the fact that all LRU management
- 		 * functions are intermediated by the LRU API calls like
--		 * list_lru_add and list_lru_del. List movement in this file
-+		 * list_lru_add_obj and list_lru_del_obj. List movement in this file
- 		 * only ever occur through this functions or through callbacks
- 		 * like this one, that are called from the LRU API.
- 		 *
-diff --git a/fs/gfs2/quota.c b/fs/gfs2/quota.c
-index 95dae7838b4e..b57f8c7b35be 100644
---- a/fs/gfs2/quota.c
-+++ b/fs/gfs2/quota.c
-@@ -271,7 +271,7 @@ static struct gfs2_quota_data *gfs2_qd_search_bucket(unsigned int hash,
- 		if (qd->qd_sbd != sdp)
- 			continue;
- 		if (lockref_get_not_dead(&qd->qd_lockref)) {
--			list_lru_del(&gfs2_qd_lru, &qd->qd_lru);
-+			list_lru_del_obj(&gfs2_qd_lru, &qd->qd_lru);
- 			return qd;
- 		}
- 	}
-@@ -344,7 +344,7 @@ static void qd_put(struct gfs2_quota_data *qd)
- 	}
- 
- 	qd->qd_lockref.count = 0;
--	list_lru_add(&gfs2_qd_lru, &qd->qd_lru);
-+	list_lru_add_obj(&gfs2_qd_lru, &qd->qd_lru);
- 	spin_unlock(&qd->qd_lockref.lock);
- }
- 
-@@ -1517,7 +1517,7 @@ void gfs2_quota_cleanup(struct gfs2_sbd *sdp)
- 		lockref_mark_dead(&qd->qd_lockref);
- 		spin_unlock(&qd->qd_lockref.lock);
- 
--		list_lru_del(&gfs2_qd_lru, &qd->qd_lru);
-+		list_lru_del_obj(&gfs2_qd_lru, &qd->qd_lru);
- 		list_add(&qd->qd_lru, &dispose);
- 	}
- 	spin_unlock(&qd_lock);
-diff --git a/fs/inode.c b/fs/inode.c
-index f238d987dec9..ef2034a985e0 100644
---- a/fs/inode.c
-+++ b/fs/inode.c
-@@ -464,7 +464,7 @@ static void __inode_add_lru(struct inode *inode, bool rotate)
- 	if (!mapping_shrinkable(&inode->i_data))
- 		return;
- 
--	if (list_lru_add(&inode->i_sb->s_inode_lru, &inode->i_lru))
-+	if (list_lru_add_obj(&inode->i_sb->s_inode_lru, &inode->i_lru))
- 		this_cpu_inc(nr_unused);
- 	else if (rotate)
- 		inode->i_state |= I_REFERENCED;
-@@ -482,7 +482,7 @@ void inode_add_lru(struct inode *inode)
- 
- static void inode_lru_list_del(struct inode *inode)
++static inline struct mem_cgroup *get_mem_cgroup_from_objcg(struct obj_cgroup *objcg)
++{
++	return NULL;
++}
++
+ static inline bool folio_memcg_kmem(struct folio *folio)
  {
--	if (list_lru_del(&inode->i_sb->s_inode_lru, &inode->i_lru))
-+	if (list_lru_del_obj(&inode->i_sb->s_inode_lru, &inode->i_lru))
- 		this_cpu_dec(nr_unused);
- }
+ 	return false;
+diff --git a/include/linux/zswap.h b/include/linux/zswap.h
+index 2a60ce39cfde..e571e393669b 100644
+--- a/include/linux/zswap.h
++++ b/include/linux/zswap.h
+@@ -15,6 +15,7 @@ bool zswap_load(struct folio *folio);
+ void zswap_invalidate(int type, pgoff_t offset);
+ void zswap_swapon(int type);
+ void zswap_swapoff(int type);
++void zswap_memcg_offline_cleanup(struct mem_cgroup *memcg);
  
-diff --git a/fs/nfs/nfs42xattr.c b/fs/nfs/nfs42xattr.c
-index 2ad66a8922f4..49aaf28a6950 100644
---- a/fs/nfs/nfs42xattr.c
-+++ b/fs/nfs/nfs42xattr.c
-@@ -132,7 +132,7 @@ nfs4_xattr_entry_lru_add(struct nfs4_xattr_entry *entry)
- 	lru = (entry->flags & NFS4_XATTR_ENTRY_EXTVAL) ?
- 	    &nfs4_xattr_large_entry_lru : &nfs4_xattr_entry_lru;
+ #else
  
--	return list_lru_add(lru, &entry->lru);
-+	return list_lru_add_obj(lru, &entry->lru);
- }
+@@ -31,6 +32,7 @@ static inline bool zswap_load(struct folio *folio)
+ static inline void zswap_invalidate(int type, pgoff_t offset) {}
+ static inline void zswap_swapon(int type) {}
+ static inline void zswap_swapoff(int type) {}
++static inline void zswap_memcg_offline_cleanup(struct mem_cgroup *memcg) {}
  
- static bool
-@@ -143,7 +143,7 @@ nfs4_xattr_entry_lru_del(struct nfs4_xattr_entry *entry)
- 	lru = (entry->flags & NFS4_XATTR_ENTRY_EXTVAL) ?
- 	    &nfs4_xattr_large_entry_lru : &nfs4_xattr_entry_lru;
+ #endif
  
--	return list_lru_del(lru, &entry->lru);
-+	return list_lru_del_obj(lru, &entry->lru);
- }
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index b1fb96233fa1..8c0f3f971179 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -5635,6 +5635,8 @@ static void mem_cgroup_css_offline(struct cgroup_subsys_state *css)
+ 	page_counter_set_min(&memcg->memory, 0);
+ 	page_counter_set_low(&memcg->memory, 0);
+ 
++	zswap_memcg_offline_cleanup(memcg);
++
+ 	memcg_offline_kmem(memcg);
+ 	reparent_shrinker_deferred(memcg);
+ 	wb_memcg_offline(memcg);
+diff --git a/mm/swap.h b/mm/swap.h
+index 73c332ee4d91..c0dc73e10e91 100644
+--- a/mm/swap.h
++++ b/mm/swap.h
+@@ -51,7 +51,8 @@ struct page *read_swap_cache_async(swp_entry_t entry, gfp_t gfp_mask,
+ 				   struct swap_iocb **plug);
+ struct page *__read_swap_cache_async(swp_entry_t entry, gfp_t gfp_mask,
+ 				     struct mempolicy *mpol, pgoff_t ilx,
+-				     bool *new_page_allocated);
++				     bool *new_page_allocated,
++				     bool skip_if_exists);
+ struct page *swap_cluster_readahead(swp_entry_t entry, gfp_t flag,
+ 				    struct mempolicy *mpol, pgoff_t ilx);
+ struct page *swapin_readahead(swp_entry_t entry, gfp_t flag,
+diff --git a/mm/swap_state.c b/mm/swap_state.c
+index 85d9e5806a6a..6c84236382f3 100644
+--- a/mm/swap_state.c
++++ b/mm/swap_state.c
+@@ -412,7 +412,8 @@ struct folio *filemap_get_incore_folio(struct address_space *mapping,
+ 
+ struct page *__read_swap_cache_async(swp_entry_t entry, gfp_t gfp_mask,
+ 				     struct mempolicy *mpol, pgoff_t ilx,
+-				     bool *new_page_allocated)
++				     bool *new_page_allocated,
++				     bool skip_if_exists)
+ {
+ 	struct swap_info_struct *si;
+ 	struct folio *folio;
+@@ -470,6 +471,17 @@ struct page *__read_swap_cache_async(swp_entry_t entry, gfp_t gfp_mask,
+ 		if (err != -EEXIST)
+ 			goto fail_put_swap;
+ 
++		/*
++		 * Protect against a recursive call to __read_swap_cache_async()
++		 * on the same entry waiting forever here because SWAP_HAS_CACHE
++		 * is set but the folio is not the swap cache yet. This can
++		 * happen today if mem_cgroup_swapin_charge_folio() below
++		 * triggers reclaim through zswap, which may call
++		 * __read_swap_cache_async() in the writeback path.
++		 */
++		if (skip_if_exists)
++			goto fail_put_swap;
++
+ 		/*
+ 		 * We might race against __delete_from_swap_cache(), and
+ 		 * stumble across a swap_map entry whose SWAP_HAS_CACHE
+@@ -537,7 +549,7 @@ struct page *read_swap_cache_async(swp_entry_t entry, gfp_t gfp_mask,
+ 
+ 	mpol = get_vma_policy(vma, addr, 0, &ilx);
+ 	page = __read_swap_cache_async(entry, gfp_mask, mpol, ilx,
+-					&page_allocated);
++					&page_allocated, false);
+ 	mpol_cond_put(mpol);
+ 
+ 	if (page_allocated)
+@@ -654,7 +666,7 @@ struct page *swap_cluster_readahead(swp_entry_t entry, gfp_t gfp_mask,
+ 		/* Ok, do the async read-ahead now */
+ 		page = __read_swap_cache_async(
+ 				swp_entry(swp_type(entry), offset),
+-				gfp_mask, mpol, ilx, &page_allocated);
++				gfp_mask, mpol, ilx, &page_allocated, false);
+ 		if (!page)
+ 			continue;
+ 		if (page_allocated) {
+@@ -672,7 +684,7 @@ struct page *swap_cluster_readahead(swp_entry_t entry, gfp_t gfp_mask,
+ skip:
+ 	/* The page was likely read above, so no need for plugging here */
+ 	page = __read_swap_cache_async(entry, gfp_mask, mpol, ilx,
+-					&page_allocated);
++					&page_allocated, false);
+ 	if (unlikely(page_allocated))
+ 		swap_readpage(page, false, NULL);
+ 	return page;
+@@ -827,7 +839,7 @@ static struct page *swap_vma_readahead(swp_entry_t targ_entry, gfp_t gfp_mask,
+ 		pte_unmap(pte);
+ 		pte = NULL;
+ 		page = __read_swap_cache_async(entry, gfp_mask, mpol, ilx,
+-						&page_allocated);
++						&page_allocated, false);
+ 		if (!page)
+ 			continue;
+ 		if (page_allocated) {
+@@ -847,7 +859,7 @@ static struct page *swap_vma_readahead(swp_entry_t targ_entry, gfp_t gfp_mask,
+ skip:
+ 	/* The page was likely read above, so no need for plugging here */
+ 	page = __read_swap_cache_async(targ_entry, gfp_mask, mpol, targ_ilx,
+-					&page_allocated);
++					&page_allocated, false);
+ 	if (unlikely(page_allocated))
+ 		swap_readpage(page, false, NULL);
+ 	return page;
+diff --git a/mm/zswap.c b/mm/zswap.c
+index 4bdb2d83bb0d..5e397fc1f375 100644
+--- a/mm/zswap.c
++++ b/mm/zswap.c
+@@ -35,6 +35,7 @@
+ #include <linux/writeback.h>
+ #include <linux/pagemap.h>
+ #include <linux/workqueue.h>
++#include <linux/list_lru.h>
+ 
+ #include "swap.h"
+ #include "internal.h"
+@@ -174,8 +175,8 @@ struct zswap_pool {
+ 	struct work_struct shrink_work;
+ 	struct hlist_node node;
+ 	char tfm_name[CRYPTO_MAX_ALG_NAME];
+-	struct list_head lru;
+-	spinlock_t lru_lock;
++	struct list_lru list_lru;
++	struct mem_cgroup *next_shrink;
+ };
  
  /*
-@@ -349,7 +349,7 @@ nfs4_xattr_cache_unlink(struct inode *inode)
- 
- 	oldcache = nfsi->xattr_cache;
- 	if (oldcache != NULL) {
--		list_lru_del(&nfs4_xattr_cache_lru, &oldcache->lru);
-+		list_lru_del_obj(&nfs4_xattr_cache_lru, &oldcache->lru);
- 		oldcache->inode = NULL;
- 	}
- 	nfsi->xattr_cache = NULL;
-@@ -474,7 +474,7 @@ nfs4_xattr_get_cache(struct inode *inode, int add)
- 			kref_get(&cache->ref);
- 			nfsi->xattr_cache = cache;
- 			cache->inode = inode;
--			list_lru_add(&nfs4_xattr_cache_lru, &cache->lru);
-+			list_lru_add_obj(&nfs4_xattr_cache_lru, &cache->lru);
- 		}
- 
- 		spin_unlock(&inode->i_lock);
-diff --git a/fs/nfsd/filecache.c b/fs/nfsd/filecache.c
-index ef063f93fde9..6c2decfdeb4b 100644
---- a/fs/nfsd/filecache.c
-+++ b/fs/nfsd/filecache.c
-@@ -322,7 +322,7 @@ nfsd_file_check_writeback(struct nfsd_file *nf)
- static bool nfsd_file_lru_add(struct nfsd_file *nf)
- {
- 	set_bit(NFSD_FILE_REFERENCED, &nf->nf_flags);
--	if (list_lru_add(&nfsd_file_lru, &nf->nf_lru)) {
-+	if (list_lru_add_obj(&nfsd_file_lru, &nf->nf_lru)) {
- 		trace_nfsd_file_lru_add(nf);
- 		return true;
- 	}
-@@ -331,7 +331,7 @@ static bool nfsd_file_lru_add(struct nfsd_file *nf)
- 
- static bool nfsd_file_lru_remove(struct nfsd_file *nf)
- {
--	if (list_lru_del(&nfsd_file_lru, &nf->nf_lru)) {
-+	if (list_lru_del_obj(&nfsd_file_lru, &nf->nf_lru)) {
- 		trace_nfsd_file_lru_del(nf);
- 		return true;
- 	}
-diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
-index 545c7991b9b5..669332849680 100644
---- a/fs/xfs/xfs_buf.c
-+++ b/fs/xfs/xfs_buf.c
-@@ -169,7 +169,7 @@ xfs_buf_stale(
- 
- 	atomic_set(&bp->b_lru_ref, 0);
- 	if (!(bp->b_state & XFS_BSTATE_DISPOSE) &&
--	    (list_lru_del(&bp->b_target->bt_lru, &bp->b_lru)))
-+	    (list_lru_del_obj(&bp->b_target->bt_lru, &bp->b_lru)))
- 		atomic_dec(&bp->b_hold);
- 
- 	ASSERT(atomic_read(&bp->b_hold) >= 1);
-@@ -1047,7 +1047,7 @@ xfs_buf_rele(
- 		 * buffer for the LRU and clear the (now stale) dispose list
- 		 * state flag
- 		 */
--		if (list_lru_add(&bp->b_target->bt_lru, &bp->b_lru)) {
-+		if (list_lru_add_obj(&bp->b_target->bt_lru, &bp->b_lru)) {
- 			bp->b_state &= ~XFS_BSTATE_DISPOSE;
- 			atomic_inc(&bp->b_hold);
- 		}
-@@ -1060,7 +1060,7 @@ xfs_buf_rele(
- 		 * was on was the disposal list
- 		 */
- 		if (!(bp->b_state & XFS_BSTATE_DISPOSE)) {
--			list_lru_del(&bp->b_target->bt_lru, &bp->b_lru);
-+			list_lru_del_obj(&bp->b_target->bt_lru, &bp->b_lru);
- 		} else {
- 			ASSERT(list_empty(&bp->b_lru));
- 		}
-diff --git a/fs/xfs/xfs_dquot.c b/fs/xfs/xfs_dquot.c
-index ac6ba646624d..49f619f5aa96 100644
---- a/fs/xfs/xfs_dquot.c
-+++ b/fs/xfs/xfs_dquot.c
-@@ -1064,7 +1064,7 @@ xfs_qm_dqput(
- 		struct xfs_quotainfo	*qi = dqp->q_mount->m_quotainfo;
- 		trace_xfs_dqput_free(dqp);
- 
--		if (list_lru_add(&qi->qi_lru, &dqp->q_lru))
-+		if (list_lru_add_obj(&qi->qi_lru, &dqp->q_lru))
- 			XFS_STATS_INC(dqp->q_mount, xs_qm_dquot_unused);
- 	}
- 	xfs_dqunlock(dqp);
-diff --git a/fs/xfs/xfs_qm.c b/fs/xfs/xfs_qm.c
-index 94a7932ac570..67d0a8564ff3 100644
---- a/fs/xfs/xfs_qm.c
-+++ b/fs/xfs/xfs_qm.c
-@@ -171,7 +171,7 @@ xfs_qm_dqpurge(
- 	 * hits zero, so it really should be on the freelist here.
- 	 */
- 	ASSERT(!list_empty(&dqp->q_lru));
--	list_lru_del(&qi->qi_lru, &dqp->q_lru);
-+	list_lru_del_obj(&qi->qi_lru, &dqp->q_lru);
- 	XFS_STATS_DEC(dqp->q_mount, xs_qm_dquot_unused);
- 
- 	xfs_qm_dqdestroy(dqp);
-diff --git a/include/linux/list_lru.h b/include/linux/list_lru.h
-index db86ad78d428..7675a48a0701 100644
---- a/include/linux/list_lru.h
-+++ b/include/linux/list_lru.h
-@@ -75,6 +75,8 @@ void memcg_reparent_list_lrus(struct mem_cgroup *memcg, struct mem_cgroup *paren
-  * list_lru_add: add an element to the lru list's tail
-  * @lru: the lru pointer
-  * @item: the item to be added.
-+ * @nid: the node id of the sublist to add the item to.
-+ * @memcg: the cgroup of the sublist to add the item to.
-  *
-  * If the element is already part of a list, this function returns doing
-  * nothing. Therefore the caller does not need to keep state about whether or
-@@ -87,12 +89,28 @@ void memcg_reparent_list_lrus(struct mem_cgroup *memcg, struct mem_cgroup *paren
-  *
-  * Return: true if the list was updated, false otherwise
-  */
--bool list_lru_add(struct list_lru *lru, struct list_head *item);
-+bool list_lru_add(struct list_lru *lru, struct list_head *item, int nid,
-+		    struct mem_cgroup *memcg);
- 
- /**
-- * list_lru_del: delete an element to the lru list
-+ * list_lru_add_obj: add an element to the lru list's tail
-+ * @lru: the lru pointer
-+ * @item: the item to be added.
-+ *
-+ * This function is similar to list_lru_add(), but the NUMA node and the
-+ * memcg of the sublist is determined by @item list_head. This assumption is
-+ * valid for slab objects LRU such as dentries, inodes, etc.
-+ *
-+ * Return value: true if the list was updated, false otherwise
-+ */
-+bool list_lru_add_obj(struct list_lru *lru, struct list_head *item);
-+
-+/**
-+ * list_lru_del: delete an element from the lru list
-  * @lru: the lru pointer
-  * @item: the item to be deleted.
-+ * @nid: the node id of the sublist to delete the item from.
-+ * @memcg: the cgroup of the sublist to delete the item from.
-  *
-  * This function works analogously as list_lru_add() in terms of list
-  * manipulation. The comments about an element already pertaining to
-@@ -100,7 +118,21 @@ bool list_lru_add(struct list_lru *lru, struct list_head *item);
-  *
-  * Return: true if the list was updated, false otherwise
-  */
--bool list_lru_del(struct list_lru *lru, struct list_head *item);
-+bool list_lru_del(struct list_lru *lru, struct list_head *item, int nid,
-+		    struct mem_cgroup *memcg);
-+
-+/**
-+ * list_lru_del_obj: delete an element from the lru list
-+ * @lru: the lru pointer
-+ * @item: the item to be deleted.
-+ *
-+ * This function is similar to list_lru_del(), but the NUMA node and the
-+ * memcg of the sublist is determined by @item list_head. This assumption is
-+ * valid for slab objects LRU such as dentries, inodes, etc.
-+ *
-+ * Return value: true if the list was updated, false otherwise.
-+ */
-+bool list_lru_del_obj(struct list_lru *lru, struct list_head *item);
- 
- /**
-  * list_lru_count_one: return the number of objects currently held by @lru
-@@ -138,6 +170,22 @@ static inline unsigned long list_lru_count(struct list_lru *lru)
- void list_lru_isolate(struct list_lru_one *list, struct list_head *item);
- void list_lru_isolate_move(struct list_lru_one *list, struct list_head *item,
- 			   struct list_head *head);
-+/**
-+ * list_lru_putback: undo list_lru_isolate
-+ * @lru: the lru pointer.
-+ * @item: the item to put back.
-+ * @nid: the node id of the sublist to put the item back to.
-+ * @memcg: the cgroup of the sublist to put the item back to.
-+ *
-+ * Put back an isolated item into its original LRU. Note that unlike
-+ * list_lru_add, this does not increment the node LRU count (as
-+ * list_lru_isolate does not originally decrement this count).
-+ *
-+ * Since we might have dropped the LRU lock in between, recompute list_lru_one
-+ * from the node's id and memcg.
-+ */
-+void list_lru_putback(struct list_lru *lru, struct list_head *item, int nid,
-+		      struct mem_cgroup *memcg);
- 
- typedef enum lru_status (*list_lru_walk_cb)(struct list_head *item,
- 		struct list_lru_one *list, spinlock_t *lock, void *cb_arg);
-diff --git a/mm/list_lru.c b/mm/list_lru.c
-index a05e5bef3b40..fcca67ac26ec 100644
---- a/mm/list_lru.c
-+++ b/mm/list_lru.c
-@@ -116,21 +116,19 @@ list_lru_from_kmem(struct list_lru *lru, int nid, void *ptr,
+@@ -291,15 +292,40 @@ static void zswap_update_total_size(void)
+ 	zswap_pool_total_size = total;
  }
- #endif /* CONFIG_MEMCG_KMEM */
  
--bool list_lru_add(struct list_lru *lru, struct list_head *item)
-+bool list_lru_add(struct list_lru *lru, struct list_head *item, int nid,
-+		    struct mem_cgroup *memcg)
- {
--	int nid = page_to_nid(virt_to_page(item));
- 	struct list_lru_node *nlru = &lru->node[nid];
--	struct mem_cgroup *memcg;
- 	struct list_lru_one *l;
- 
- 	spin_lock(&nlru->lock);
- 	if (list_empty(item)) {
--		l = list_lru_from_kmem(lru, nid, item, &memcg);
-+		l = list_lru_from_memcg_idx(lru, nid, memcg_kmem_id(memcg));
- 		list_add_tail(item, &l->list);
- 		/* Set shrinker bit if the first element was added */
- 		if (!l->nr_items++)
--			set_shrinker_bit(memcg, nid,
--					 lru_shrinker_id(lru));
-+			set_shrinker_bit(memcg, nid, lru_shrinker_id(lru));
- 		nlru->nr_items++;
- 		spin_unlock(&nlru->lock);
- 		return true;
-@@ -140,15 +138,25 @@ bool list_lru_add(struct list_lru *lru, struct list_head *item)
- }
- EXPORT_SYMBOL_GPL(list_lru_add);
- 
--bool list_lru_del(struct list_lru *lru, struct list_head *item)
-+bool list_lru_add_obj(struct list_lru *lru, struct list_head *item)
- {
- 	int nid = page_to_nid(virt_to_page(item));
-+	struct mem_cgroup *memcg = list_lru_memcg_aware(lru) ?
-+		mem_cgroup_from_slab_obj(item) : NULL;
-+
-+	return list_lru_add(lru, item, nid, memcg);
++/* should be called under RCU */
++static inline struct mem_cgroup *mem_cgroup_from_entry(struct zswap_entry *entry)
++{
++	return entry->objcg ? obj_cgroup_memcg(entry->objcg) : NULL;
 +}
-+EXPORT_SYMBOL_GPL(list_lru_add_obj);
 +
-+bool list_lru_del(struct list_lru *lru, struct list_head *item, int nid,
-+		    struct mem_cgroup *memcg)
++static inline int entry_to_nid(struct zswap_entry *entry)
 +{
- 	struct list_lru_node *nlru = &lru->node[nid];
- 	struct list_lru_one *l;
- 
- 	spin_lock(&nlru->lock);
- 	if (!list_empty(item)) {
--		l = list_lru_from_kmem(lru, nid, item, NULL);
-+		l = list_lru_from_memcg_idx(lru, nid, memcg_kmem_id(memcg));
- 		list_del_init(item);
- 		l->nr_items--;
- 		nlru->nr_items--;
-@@ -160,6 +168,16 @@ bool list_lru_del(struct list_lru *lru, struct list_head *item)
- }
- EXPORT_SYMBOL_GPL(list_lru_del);
- 
-+bool list_lru_del_obj(struct list_lru *lru, struct list_head *item)
-+{
-+	int nid = page_to_nid(virt_to_page(item));
-+	struct mem_cgroup *memcg = list_lru_memcg_aware(lru) ?
-+		mem_cgroup_from_slab_obj(item) : NULL;
-+
-+	return list_lru_del(lru, item, nid, memcg);
++	return page_to_nid(virt_to_page(entry));
 +}
-+EXPORT_SYMBOL_GPL(list_lru_del_obj);
 +
- void list_lru_isolate(struct list_lru_one *list, struct list_head *item)
- {
- 	list_del_init(item);
-@@ -175,6 +193,20 @@ void list_lru_isolate_move(struct list_lru_one *list, struct list_head *item,
- }
- EXPORT_SYMBOL_GPL(list_lru_isolate_move);
- 
-+void list_lru_putback(struct list_lru *lru, struct list_head *item, int nid,
-+		      struct mem_cgroup *memcg)
++void zswap_memcg_offline_cleanup(struct mem_cgroup *memcg)
 +{
-+	struct list_lru_one *list =
-+		list_lru_from_memcg_idx(lru, nid, memcg_kmem_id(memcg));
++	struct zswap_pool *pool;
 +
-+	if (list_empty(item)) {
-+		list_add_tail(item, &list->list);
-+		if (!list->nr_items++)
-+			set_shrinker_bit(memcg, nid, lru_shrinker_id(lru));
++	/* lock out zswap pools list modification */
++	spin_lock(&zswap_pools_lock);
++	list_for_each_entry(pool, &zswap_pools, list) {
++		if (pool->next_shrink == memcg)
++			pool->next_shrink =
++				mem_cgroup_iter_online(NULL, pool->next_shrink, NULL, true);
 +	}
++	spin_unlock(&zswap_pools_lock);
 +}
-+EXPORT_SYMBOL_GPL(list_lru_putback);
 +
- unsigned long list_lru_count_one(struct list_lru *lru,
- 				 int nid, struct mem_cgroup *memcg)
- {
-diff --git a/mm/workingset.c b/mm/workingset.c
-index b192e44a0e7c..c17d45c6f29b 100644
---- a/mm/workingset.c
-+++ b/mm/workingset.c
-@@ -615,12 +615,12 @@ void workingset_update_node(struct xa_node *node)
+ /*********************************
+ * zswap entry functions
+ **********************************/
+ static struct kmem_cache *zswap_entry_cache;
  
- 	if (node->count && node->count == node->nr_values) {
- 		if (list_empty(&node->private_list)) {
--			list_lru_add(&shadow_nodes, &node->private_list);
-+			list_lru_add_obj(&shadow_nodes, &node->private_list);
- 			__inc_lruvec_kmem_state(node, WORKINGSET_NODES);
- 		}
- 	} else {
- 		if (!list_empty(&node->private_list)) {
--			list_lru_del(&shadow_nodes, &node->private_list);
-+			list_lru_del_obj(&shadow_nodes, &node->private_list);
- 			__dec_lruvec_kmem_state(node, WORKINGSET_NODES);
- 		}
+-static struct zswap_entry *zswap_entry_cache_alloc(gfp_t gfp)
++static struct zswap_entry *zswap_entry_cache_alloc(gfp_t gfp, int nid)
+ {
+ 	struct zswap_entry *entry;
+-	entry = kmem_cache_alloc(zswap_entry_cache, gfp);
++	entry = kmem_cache_alloc_node(zswap_entry_cache, gfp, nid);
+ 	if (!entry)
+ 		return NULL;
+ 	entry->refcount = 1;
+@@ -312,6 +338,61 @@ static void zswap_entry_cache_free(struct zswap_entry *entry)
+ 	kmem_cache_free(zswap_entry_cache, entry);
+ }
+ 
++/*********************************
++* lru functions
++**********************************/
++static void zswap_lru_add(struct list_lru *list_lru, struct zswap_entry *entry)
++{
++	int nid = entry_to_nid(entry);
++	struct mem_cgroup *memcg;
++
++	/*
++	 * Note that it is safe to use rcu_read_lock() here, even in the face of
++	 * concurrent memcg offlining. Thanks to the memcg->kmemcg_id indirection
++	 * used in list_lru lookup, only two scenarios are possible:
++	 *
++	 * 1. list_lru_add() is called before memcg->kmemcg_id is updated. The
++	 *    new entry will be reparented to memcg's parent's list_lru.
++	 * 2. list_lru_add() is called after memcg->kmemcg_id is updated. The
++	 *    new entry will be added directly to memcg's parent's list_lru.
++	 *
++	 * Similar reasoning holds for list_lru_del() and list_lru_putback().
++	 */
++	rcu_read_lock();
++	memcg = mem_cgroup_from_entry(entry);
++	/* will always succeed */
++	list_lru_add(list_lru, &entry->lru, nid, memcg);
++	rcu_read_unlock();
++}
++
++static void zswap_lru_del(struct list_lru *list_lru, struct zswap_entry *entry)
++{
++	int nid = entry_to_nid(entry);
++	struct mem_cgroup *memcg;
++
++	rcu_read_lock();
++	memcg = mem_cgroup_from_entry(entry);
++	/* will always succeed */
++	list_lru_del(list_lru, &entry->lru, nid, memcg);
++	rcu_read_unlock();
++}
++
++static void zswap_lru_putback(struct list_lru *list_lru,
++		struct zswap_entry *entry)
++{
++	int nid = entry_to_nid(entry);
++	spinlock_t *lock = &list_lru->node[nid].lock;
++	struct mem_cgroup *memcg;
++
++	rcu_read_lock();
++	memcg = mem_cgroup_from_entry(entry);
++	spin_lock(lock);
++	/* we cannot use list_lru_add here, because it increments node's lru count */
++	list_lru_putback(list_lru, &entry->lru, nid, memcg);
++	spin_unlock(lock);
++	rcu_read_unlock();
++}
++
+ /*********************************
+ * rbtree functions
+ **********************************/
+@@ -396,9 +477,7 @@ static void zswap_free_entry(struct zswap_entry *entry)
+ 	if (!entry->length)
+ 		atomic_dec(&zswap_same_filled_pages);
+ 	else {
+-		spin_lock(&entry->pool->lru_lock);
+-		list_del(&entry->lru);
+-		spin_unlock(&entry->pool->lru_lock);
++		zswap_lru_del(&entry->pool->list_lru, entry);
+ 		zpool_free(zswap_find_zpool(entry), entry->handle);
+ 		zswap_pool_put(entry->pool);
  	}
+@@ -632,21 +711,15 @@ static void zswap_invalidate_entry(struct zswap_tree *tree,
+ 		zswap_entry_put(tree, entry);
+ }
+ 
+-static int zswap_reclaim_entry(struct zswap_pool *pool)
++static enum lru_status shrink_memcg_cb(struct list_head *item, struct list_lru_one *l,
++				       spinlock_t *lock, void *arg)
+ {
+-	struct zswap_entry *entry;
++	struct zswap_entry *entry = container_of(item, struct zswap_entry, lru);
+ 	struct zswap_tree *tree;
+ 	pgoff_t swpoffset;
+-	int ret;
++	enum lru_status ret = LRU_REMOVED_RETRY;
++	int writeback_result;
+ 
+-	/* Get an entry off the LRU */
+-	spin_lock(&pool->lru_lock);
+-	if (list_empty(&pool->lru)) {
+-		spin_unlock(&pool->lru_lock);
+-		return -EINVAL;
+-	}
+-	entry = list_last_entry(&pool->lru, struct zswap_entry, lru);
+-	list_del_init(&entry->lru);
+ 	/*
+ 	 * Once the lru lock is dropped, the entry might get freed. The
+ 	 * swpoffset is copied to the stack, and entry isn't deref'd again
+@@ -654,28 +727,32 @@ static int zswap_reclaim_entry(struct zswap_pool *pool)
+ 	 */
+ 	swpoffset = swp_offset(entry->swpentry);
+ 	tree = zswap_trees[swp_type(entry->swpentry)];
+-	spin_unlock(&pool->lru_lock);
++	list_lru_isolate(l, item);
++	/*
++	 * It's safe to drop the lock here because we return either
++	 * LRU_REMOVED_RETRY or LRU_RETRY.
++	 */
++	spin_unlock(lock);
+ 
+ 	/* Check for invalidate() race */
+ 	spin_lock(&tree->lock);
+-	if (entry != zswap_rb_search(&tree->rbroot, swpoffset)) {
+-		ret = -EAGAIN;
++	if (entry != zswap_rb_search(&tree->rbroot, swpoffset))
+ 		goto unlock;
+-	}
++
+ 	/* Hold a reference to prevent a free during writeback */
+ 	zswap_entry_get(entry);
+ 	spin_unlock(&tree->lock);
+ 
+-	ret = zswap_writeback_entry(entry, tree);
++	writeback_result = zswap_writeback_entry(entry, tree);
+ 
+ 	spin_lock(&tree->lock);
+-	if (ret) {
+-		/* Writeback failed, put entry back on LRU */
+-		spin_lock(&pool->lru_lock);
+-		list_move(&entry->lru, &pool->lru);
+-		spin_unlock(&pool->lru_lock);
++	if (writeback_result) {
++		zswap_reject_reclaim_fail++;
++		zswap_lru_putback(&entry->pool->list_lru, entry);
++		ret = LRU_RETRY;
+ 		goto put_unlock;
+ 	}
++	zswap_written_back_pages++;
+ 
+ 	/*
+ 	 * Writeback started successfully, the page now belongs to the
+@@ -689,27 +766,76 @@ static int zswap_reclaim_entry(struct zswap_pool *pool)
+ 	zswap_entry_put(tree, entry);
+ unlock:
+ 	spin_unlock(&tree->lock);
+-	return ret ? -EAGAIN : 0;
++	spin_lock(lock);
++	return ret;
++}
++
++static int shrink_memcg(struct mem_cgroup *memcg)
++{
++	struct zswap_pool *pool;
++	int nid, shrunk = 0;
++
++	/*
++	 * Skip zombies because their LRUs are reparented and we would be
++	 * reclaiming from the parent instead of the dead memcg.
++	 */
++	if (memcg && !mem_cgroup_online(memcg))
++		return -ENOENT;
++
++	pool = zswap_pool_current_get();
++	if (!pool)
++		return -EINVAL;
++
++	for_each_node_state(nid, N_NORMAL_MEMORY) {
++		unsigned long nr_to_walk = 1;
++
++		shrunk += list_lru_walk_one(&pool->list_lru, nid, memcg,
++					    &shrink_memcg_cb, NULL, &nr_to_walk);
++	}
++	zswap_pool_put(pool);
++	return shrunk ? 0 : -EAGAIN;
+ }
+ 
+ static void shrink_worker(struct work_struct *w)
+ {
+ 	struct zswap_pool *pool = container_of(w, typeof(*pool),
+ 						shrink_work);
++	struct mem_cgroup *memcg;
+ 	int ret, failures = 0;
+ 
++	/* global reclaim will select cgroup in a round-robin fashion. */
+ 	do {
+-		ret = zswap_reclaim_entry(pool);
+-		if (ret) {
+-			zswap_reject_reclaim_fail++;
+-			if (ret != -EAGAIN)
+-				break;
++		spin_lock(&zswap_pools_lock);
++		memcg = pool->next_shrink =
++			mem_cgroup_iter_online(NULL, pool->next_shrink, NULL, true);
++
++		/* full round trip */
++		if (!memcg) {
++			spin_unlock(&zswap_pools_lock);
+ 			if (++failures == MAX_RECLAIM_RETRIES)
+ 				break;
++
++			goto resched;
+ 		}
++
++		/*
++		 * Acquire an extra reference to the iterated memcg in case the
++		 * original reference is dropped by the zswap offlining callback.
++		 */
++		css_get(&memcg->css);
++		spin_unlock(&zswap_pools_lock);
++
++		ret = shrink_memcg(memcg);
++		mem_cgroup_put(memcg);
++
++		if (ret == -EINVAL)
++			break;
++		if (ret && ++failures == MAX_RECLAIM_RETRIES)
++			break;
++
++resched:
+ 		cond_resched();
+ 	} while (!zswap_can_accept());
+-	zswap_pool_put(pool);
+ }
+ 
+ static struct zswap_pool *zswap_pool_create(char *type, char *compressor)
+@@ -767,8 +893,7 @@ static struct zswap_pool *zswap_pool_create(char *type, char *compressor)
+ 	 */
+ 	kref_init(&pool->kref);
+ 	INIT_LIST_HEAD(&pool->list);
+-	INIT_LIST_HEAD(&pool->lru);
+-	spin_lock_init(&pool->lru_lock);
++	list_lru_init_memcg(&pool->list_lru, NULL);
+ 	INIT_WORK(&pool->shrink_work, shrink_worker);
+ 
+ 	zswap_pool_debug("created", pool);
+@@ -834,6 +959,13 @@ static void zswap_pool_destroy(struct zswap_pool *pool)
+ 
+ 	cpuhp_state_remove_instance(CPUHP_MM_ZSWP_POOL_PREPARE, &pool->node);
+ 	free_percpu(pool->acomp_ctx);
++	list_lru_destroy(&pool->list_lru);
++
++	spin_lock(&zswap_pools_lock);
++	mem_cgroup_put(pool->next_shrink);
++	pool->next_shrink = NULL;
++	spin_unlock(&zswap_pools_lock);
++
+ 	for (i = 0; i < ZSWAP_NR_ZPOOLS; i++)
+ 		zpool_destroy_pool(pool->zpools[i]);
+ 	kfree(pool);
+@@ -1081,7 +1213,7 @@ static int zswap_writeback_entry(struct zswap_entry *entry,
+ 	/* try to allocate swap cache page */
+ 	mpol = get_task_policy(current);
+ 	page = __read_swap_cache_async(swpentry, GFP_KERNEL, mpol,
+-				NO_INTERLEAVE_INDEX, &page_was_allocated);
++				NO_INTERLEAVE_INDEX, &page_was_allocated, true);
+ 	if (!page) {
+ 		ret = -ENOMEM;
+ 		goto fail;
+@@ -1152,7 +1284,6 @@ static int zswap_writeback_entry(struct zswap_entry *entry,
+ 	/* start writeback */
+ 	__swap_writepage(page, &wbc);
+ 	put_page(page);
+-	zswap_written_back_pages++;
+ 
+ 	return ret;
+ 
+@@ -1209,6 +1340,7 @@ bool zswap_store(struct folio *folio)
+ 	struct scatterlist input, output;
+ 	struct crypto_acomp_ctx *acomp_ctx;
+ 	struct obj_cgroup *objcg = NULL;
++	struct mem_cgroup *memcg = NULL;
+ 	struct zswap_pool *pool;
+ 	struct zpool *zpool;
+ 	unsigned int dlen = PAGE_SIZE;
+@@ -1240,15 +1372,15 @@ bool zswap_store(struct folio *folio)
+ 		zswap_invalidate_entry(tree, dupentry);
+ 	}
+ 	spin_unlock(&tree->lock);
+-
+-	/*
+-	 * XXX: zswap reclaim does not work with cgroups yet. Without a
+-	 * cgroup-aware entry LRU, we will push out entries system-wide based on
+-	 * local cgroup limits.
+-	 */
+ 	objcg = get_obj_cgroup_from_folio(folio);
+-	if (objcg && !obj_cgroup_may_zswap(objcg))
+-		goto reject;
++	if (objcg && !obj_cgroup_may_zswap(objcg)) {
++		memcg = get_mem_cgroup_from_objcg(objcg);
++		if (shrink_memcg(memcg)) {
++			mem_cgroup_put(memcg);
++			goto reject;
++		}
++		mem_cgroup_put(memcg);
++	}
+ 
+ 	/* reclaim space if needed */
+ 	if (zswap_is_full()) {
+@@ -1265,7 +1397,7 @@ bool zswap_store(struct folio *folio)
+ 	}
+ 
+ 	/* allocate entry */
+-	entry = zswap_entry_cache_alloc(GFP_KERNEL);
++	entry = zswap_entry_cache_alloc(GFP_KERNEL, page_to_nid(page));
+ 	if (!entry) {
+ 		zswap_reject_kmemcache_fail++;
+ 		goto reject;
+@@ -1292,6 +1424,15 @@ bool zswap_store(struct folio *folio)
+ 	if (!entry->pool)
+ 		goto freepage;
+ 
++	if (objcg) {
++		memcg = get_mem_cgroup_from_objcg(objcg);
++		if (memcg_list_lru_alloc(memcg, &entry->pool->list_lru, GFP_KERNEL)) {
++			mem_cgroup_put(memcg);
++			goto put_pool;
++		}
++		mem_cgroup_put(memcg);
++	}
++
+ 	/* compress */
+ 	acomp_ctx = raw_cpu_ptr(entry->pool->acomp_ctx);
+ 
+@@ -1370,9 +1511,8 @@ bool zswap_store(struct folio *folio)
+ 		zswap_invalidate_entry(tree, dupentry);
+ 	}
+ 	if (entry->length) {
+-		spin_lock(&entry->pool->lru_lock);
+-		list_add(&entry->lru, &entry->pool->lru);
+-		spin_unlock(&entry->pool->lru_lock);
++		INIT_LIST_HEAD(&entry->lru);
++		zswap_lru_add(&entry->pool->list_lru, entry);
+ 	}
+ 	spin_unlock(&tree->lock);
+ 
+@@ -1385,6 +1525,7 @@ bool zswap_store(struct folio *folio)
+ 
+ put_dstmem:
+ 	mutex_unlock(acomp_ctx->mutex);
++put_pool:
+ 	zswap_pool_put(entry->pool);
+ freepage:
+ 	zswap_entry_cache_free(entry);
+@@ -1479,9 +1620,8 @@ bool zswap_load(struct folio *folio)
+ 		zswap_invalidate_entry(tree, entry);
+ 		folio_mark_dirty(folio);
+ 	} else if (entry->length) {
+-		spin_lock(&entry->pool->lru_lock);
+-		list_move(&entry->lru, &entry->pool->lru);
+-		spin_unlock(&entry->pool->lru_lock);
++		zswap_lru_del(&entry->pool->list_lru, entry);
++		zswap_lru_add(&entry->pool->list_lru, entry);
+ 	}
+ 	zswap_entry_put(tree, entry);
+ 	spin_unlock(&tree->lock);
 -- 
 2.34.1
