@@ -1,97 +1,122 @@
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="CLAfUB5Q"
-Received: from mail-io1-xd34.google.com (mail-io1-xd34.google.com [IPv6:2607:f8b0:4864:20::d34])
-	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0E91810F8;
-	Thu, 30 Nov 2023 12:07:53 -0800 (PST)
-Received: by mail-io1-xd34.google.com with SMTP id ca18e2360f4ac-7b34ec3e44fso38157139f.3;
-        Thu, 30 Nov 2023 12:07:53 -0800 (PST)
+	dkim=pass (1024-bit key) header.d=chromium.org header.i=@chromium.org header.b="OQ9rBmLH"
+Received: from mail-pl1-x62b.google.com (mail-pl1-x62b.google.com [IPv6:2607:f8b0:4864:20::62b])
+	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 290EFD5C
+	for <cgroups@vger.kernel.org>; Thu, 30 Nov 2023 12:12:24 -0800 (PST)
+Received: by mail-pl1-x62b.google.com with SMTP id d9443c01a7336-1cfc35090b0so12744635ad.1
+        for <cgroups@vger.kernel.org>; Thu, 30 Nov 2023 12:12:24 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1701374872; x=1701979672; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
+        d=chromium.org; s=google; t=1701375143; x=1701979943; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=f8JkjsLram/ejernmiCZTwmtwfg8aQ1F8JO+U2W+Xm0=;
-        b=CLAfUB5QSdKWH/Oc/3KQivo4dQmljeCGVFvMlqlgbggvJBCNH2mfvaJFy2hgzf7s0X
-         TXqKPkftGLUjoVbHrpgce85Db8MtQJI4bpB8uE5AYbAGV8DDoeOvJcpDW4n3/A6w1rZ3
-         P+fAb/sn6LjeKFy/u8QXQ5kP55dscZEsaPtRL75Y9LmLFWkH/N2haIK/tZrRGUvddYOL
-         aqgHiRl1b+WFUoGY27aHBSIbJJOQkqzK9nTCZxPWg+EHYiWd/dGb6pvM1uxZ0M0FiDBz
-         ENoEJ8JF+Jo2o6bFhQt+a1ZJX69QeqMiucX7agh/U/z2XiM17F5wBPbCCdsaxPXs/Dtq
-         a7jA==
+        bh=f0qCHVo7XzgiM/gOkeUKMtC009iJZbF6DLauLv10AR0=;
+        b=OQ9rBmLHsdjdQ294mwxh7moyfDaokLIaUc1KpfSs9Ja/kLPTTSyqzZHbJqhIK77DME
+         mC9T1C0MP5SECbGGKeeAMqq1fHoE2yJSxHoujE45USwHqx7NI2Wnpd6x3AyDEi9RUqxF
+         VoZd3HAMZ9ZUK9XGjSxdSwCzxOuqHNwH33k90=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1701374872; x=1701979672;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+        d=1e100.net; s=20230601; t=1701375143; x=1701979943;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=f8JkjsLram/ejernmiCZTwmtwfg8aQ1F8JO+U2W+Xm0=;
-        b=XGro2ZgtM86hlwFnzXks140OPk1IOgGaOcl9XVd9xwqJneoerOH9NmPOc4BgS/785u
-         HIYg/sMOtLh3EYBYC3kaeBe6etEFVQ4k3T4tWm1ayCUzFPp5AuRPNXuV6MMbvx4e60mP
-         QBCYYIhmBSqGxXHKwF9SIQOaKH4fRTt6hShAJUjS8OuIBV88sCRiBIJMe976MMbKY4gH
-         IXMX5uXpqNVKrEt4J2XxHxVJcx0ipuCeERuLDWxJpN4VwC5Aacmd9+PnoN8DmQl28fDE
-         3Wt6/3uZozHY1q8cCMfJySb/Aqvlnw8KBvBDFZ69vbtoU4Ux3dzhBG4s/F6qQ0mrb/x6
-         XFLg==
-X-Gm-Message-State: AOJu0YxdA0iJBcWHWXeOmKisv+MVT2LxkxT62wE0RxiwNo+1JYM8VIea
-	+h/R3UxLkbwf4fBFRCKcwnNFtbvYj1iuNlxOn+z0/CAbiRc=
-X-Google-Smtp-Source: AGHT+IHXvm1W++vVVPTk19ktbPl5ee74KU9mfyX1arK6KzKt6r5RD2ae1t2pmohDXRTROGj0LXeigfu6GOv6j0VuqSk=
-X-Received: by 2002:a6b:7506:0:b0:7b3:f55c:49a7 with SMTP id
- l6-20020a6b7506000000b007b3f55c49a7mr5185613ioh.3.1701374872357; Thu, 30 Nov
- 2023 12:07:52 -0800 (PST)
+        bh=f0qCHVo7XzgiM/gOkeUKMtC009iJZbF6DLauLv10AR0=;
+        b=aPvdF3z9t3LZr8AVxHx2VJXJ6HwlmXKRGmD8q+i7S1lsYgm+cfeQ4z+bopzkyuYXJO
+         oFXhGqC7EOWbMZMjBCKcc5GaMrKsDkt/6SntE55Jmw/E4t0ll/VQ3orWmckVazj1Im/W
+         cxl5pjkjJJC7wnxJwysQD843JQ7hX0dZtvfxQJMWGj94ea1r/3KCUmIG9WV0sAcrkbYi
+         q4JiFzqjeq2KmsL4lriPCb0uID3SwTuQEJpm7GJv4UWRjF8oEq1HARy9LFd3uaIDxRrb
+         oglVWuf+KTvp7OqUSU3M5u8NkpO4JeMedmUjKCqYZaYLS8hP/fE36dN5eqYyS1PyWg0I
+         +LjQ==
+X-Gm-Message-State: AOJu0Yx7Ae2Wb+J7Y4ollg4DO0jk2WL6awRNbNuNA+Rl2lCv//h23gUY
+	YMrFghTQOlzE74fAihuuUTpdIg==
+X-Google-Smtp-Source: AGHT+IG7GB1EAs6x6BGig4Qdnq8J7tH7U+ck4TUN97KpzMVewKtuS3lBCHehX3Fj143SB3P6el4zJA==
+X-Received: by 2002:a17:902:be12:b0:1cf:9e9f:fddf with SMTP id r18-20020a170902be1200b001cf9e9ffddfmr22774377pls.44.1701375143633;
+        Thu, 30 Nov 2023 12:12:23 -0800 (PST)
+Received: from www.outflux.net (198-0-35-241-static.hfc.comcastbusiness.net. [198.0.35.241])
+        by smtp.gmail.com with ESMTPSA id v1-20020a1709029a0100b001cfb573674fsm1800131plp.30.2023.11.30.12.12.23
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 30 Nov 2023 12:12:23 -0800 (PST)
+From: Kees Cook <keescook@chromium.org>
+To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: Kees Cook <keescook@chromium.org>,
+	Tejun Heo <tj@kernel.org>,
+	Azeem Shaikh <azeemshaikh38@gmail.com>,
+	Zefan Li <lizefan.x@bytedance.com>,
+	Johannes Weiner <hannes@cmpxchg.org>,
+	Waiman Long <longman@redhat.com>,
+	linux-kernel@vger.kernel.org,
+	cgroups@vger.kernel.org,
+	bpf@vger.kernel.org,
+	linux-hardening@vger.kernel.org
+Subject: [PATCH v2 1/3] kernfs: Convert kernfs_walk_ns() from strlcpy() to strscpy()
+Date: Thu, 30 Nov 2023 12:12:17 -0800
+Message-Id: <20231130201222.3613535-1-keescook@chromium.org>
+X-Mailer: git-send-email 2.34.1
+In-Reply-To: <20231130200937.it.424-kees@kernel.org>
+References: <20231130200937.it.424-kees@kernel.org>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20231130194023.4102148-1-nphamcs@gmail.com> <20231130194023.4102148-2-nphamcs@gmail.com>
- <ZWjpNr3ZzvU4TDC8@casper.infradead.org>
-In-Reply-To: <ZWjpNr3ZzvU4TDC8@casper.infradead.org>
-From: Nhat Pham <nphamcs@gmail.com>
-Date: Thu, 30 Nov 2023 12:07:41 -0800
-Message-ID: <CAKEwX=MV-F50i_=sZ0unfbgjrdxSTio00c4xTM19113BAN3-wA@mail.gmail.com>
-Subject: Re: [PATCH v8 1/6] list_lru: allows explicit memcg and NUMA node selection
-To: Matthew Wilcox <willy@infradead.org>
-Cc: akpm@linux-foundation.org, hannes@cmpxchg.org, cerasuolodomenico@gmail.com, 
-	yosryahmed@google.com, sjenning@redhat.com, ddstreet@ieee.org, 
-	vitaly.wool@konsulko.com, mhocko@kernel.org, roman.gushchin@linux.dev, 
-	shakeelb@google.com, muchun.song@linux.dev, chrisl@kernel.org, 
-	linux-mm@kvack.org, kernel-team@meta.com, linux-kernel@vger.kernel.org, 
-	cgroups@vger.kernel.org, linux-doc@vger.kernel.org, 
-	linux-kselftest@vger.kernel.org, shuah@kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+X-Developer-Signature: v=1; a=openpgp-sha256; l=1627; i=keescook@chromium.org;
+ h=from:subject; bh=KaMikVVf9IlMYxhWSymwvYJ80Grx9jhkkXD92Gcwols=;
+ b=owEBbQKS/ZANAwAKAYly9N/cbcAmAcsmYgBlaOyjg8fq+Kgz91M5MgN0iGKTEy9c1pTW6k2g3
+ Om7gwyq3vSJAjMEAAEKAB0WIQSlw/aPIp3WD3I+bhOJcvTf3G3AJgUCZWjsowAKCRCJcvTf3G3A
+ JvipD/9bZ1YWV76igC9fhSpnzKbHHp6551cCO3pInR0GeFHntgT5F19ANIOxgzmIBPsQZGJzh+S
+ YT33if7BAW5mJS6SW0/JwpmKCMt8jUN5Dw4H+uwr/lSO2v1JBLUv65KaJHbKxOuKYhf/K8m+KeC
+ G15UFTVEgDW8PCfT6tFshli/Pl5byyOhNZEAfR5ojzzeErfO0NoGkBPtn2kmyDnE1ttT+Eo1dZd
+ bYa7mFWYeoYxpu2W/8DvsErrwskB2vYVPqSDoJrl2frQE+xkzNZCO5ru8Vjw7GXgE+t0DiYt8hg
+ F7iw8uygmx11wG/5naWBwc/NsxsKeqPK6yeHqXtYWRU4ACZEC0D3eoa0n5sHaNjE9no1jRL5yub
+ Br09TCk7VxJLPDv+qbH2QMY/ebs2zICGc+P+E04Ee8r3TuzfEI1NARDnNLfY0s2n9g6qy2jZYfy
+ trVptzxRK9qS8DEBJtkRYr8LOD7nEwBM3xsmLANcgWYAcxDR4zGMlHRPuqg2YNHYqR5OGl4jEGq
+ Y/a19aWEub4yvainVlv8qmZzWncVUktEIvBYR8tKuVcO6HxIlp9LsRTeTfYZsOmM5/EN1piG0yR
+ RKr/6Sg6QBCZuCORc73txJPy9xzWq24oCIWbt3xq7SBvSQhoxYgbp9sJ/sTC4nO0ZlN0uBjgqTc gLWikxOalpnj9pA==
+X-Developer-Key: i=keescook@chromium.org; a=openpgp; fpr=A5C3F68F229DD60F723E6E138972F4DFDC6DC026
+Content-Transfer-Encoding: 8bit
 
-On Thu, Nov 30, 2023 at 11:57=E2=80=AFAM Matthew Wilcox <willy@infradead.or=
-g> wrote:
->
-> On Thu, Nov 30, 2023 at 11:40:18AM -0800, Nhat Pham wrote:
-> > This patch changes list_lru interface so that the caller must explicitl=
-y
-> > specify numa node and memcg when adding and removing objects. The old
-> > list_lru_add() and list_lru_del() are renamed to list_lru_add_obj() and
-> > list_lru_del_obj(), respectively.
->
-> Wouldn't it be better to add list_lru_add_memcg() and
-> list_lru_del_memcg() and have:
->
-> +bool list_lru_del(struct list_lru *lru, struct list_head *item)
-> +{
-> +       int nid =3D page_to_nid(virt_to_page(item));
-> +       struct mem_cgroup *memcg =3D list_lru_memcg_aware(lru) ?
-> +               mem_cgroup_from_slab_obj(item) : NULL;
-> +
-> +       return list_lru_del_memcg(lru, item, nid, memcg);
-> +}
->
-> Seems like _most_ callers will want the original versions and only
-> a few will want the explicit memcg/nid versions.  No?
->
+strlcpy() reads the entire source buffer first. This read may exceed
+the destination size limit. This is both inefficient and can lead
+to linear read overflows if a source string is not NUL-terminated[1].
+Additionally, it returns the size of the source string, not the
+resulting size of the destination string. In an effort to remove strlcpy()
+completely[2], replace strlcpy() here with strscpy().
 
-I actually did something along that line in earlier iterations of this
-patch series (albeit with poorer naming - __list_lru_add() instead of
-list_lru_add_memcg()). The consensus after some back and forth was
-that the original list_lru_add() was not a very good design (the
-better one was this new version that allows for explicit numa/memcg
-selection). So I agreed to fix it everywhere as a prep patch.
+Link: https://www.kernel.org/doc/html/latest/process/deprecated.html#strlcpy [1]
+Link: https://github.com/KSPP/linux/issues/89 [2]
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: Tejun Heo <tj@kernel.org>
+Cc: Azeem Shaikh <azeemshaikh38@gmail.com>
+Link: https://lore.kernel.org/r/20231116192127.1558276-1-keescook@chromium.org
+Signed-off-by: Kees Cook <keescook@chromium.org>
+---
+ fs/kernfs/dir.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-I don't have strong opinions here to be completely honest, but I do
-think this new API makes more sense (at the cost of quite a bit of
-elbow grease to fix every callsites and extra reviewing).
+diff --git a/fs/kernfs/dir.c b/fs/kernfs/dir.c
+index 8b2bd65d70e7..37353901ede1 100644
+--- a/fs/kernfs/dir.c
++++ b/fs/kernfs/dir.c
+@@ -850,16 +850,16 @@ static struct kernfs_node *kernfs_walk_ns(struct kernfs_node *parent,
+ 					  const unsigned char *path,
+ 					  const void *ns)
+ {
+-	size_t len;
++	ssize_t len;
+ 	char *p, *name;
+ 
+ 	lockdep_assert_held_read(&kernfs_root(parent)->kernfs_rwsem);
+ 
+ 	spin_lock_irq(&kernfs_pr_cont_lock);
+ 
+-	len = strlcpy(kernfs_pr_cont_buf, path, sizeof(kernfs_pr_cont_buf));
++	len = strscpy(kernfs_pr_cont_buf, path, sizeof(kernfs_pr_cont_buf));
+ 
+-	if (len >= sizeof(kernfs_pr_cont_buf)) {
++	if (len < 0) {
+ 		spin_unlock_irq(&kernfs_pr_cont_lock);
+ 		return NULL;
+ 	}
+-- 
+2.34.1
+
