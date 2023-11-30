@@ -1,41 +1,43 @@
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=soleen.com header.i=@soleen.com header.b="mUaVC/ga"
-Received: from mail-qv1-xf32.google.com (mail-qv1-xf32.google.com [IPv6:2607:f8b0:4864:20::f32])
-	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DC69F1708
-	for <cgroups@vger.kernel.org>; Thu, 30 Nov 2023 12:15:08 -0800 (PST)
-Received: by mail-qv1-xf32.google.com with SMTP id 6a1803df08f44-67a242c232eso7869656d6.0
-        for <cgroups@vger.kernel.org>; Thu, 30 Nov 2023 12:15:08 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=soleen.com header.i=@soleen.com header.b="N6+uoFB2"
+Received: from mail-ot1-x334.google.com (mail-ot1-x334.google.com [IPv6:2607:f8b0:4864:20::334])
+	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7711F1719
+	for <cgroups@vger.kernel.org>; Thu, 30 Nov 2023 12:15:11 -0800 (PST)
+Received: by mail-ot1-x334.google.com with SMTP id 46e09a7af769-6d7e51638e7so850630a34.1
+        for <cgroups@vger.kernel.org>; Thu, 30 Nov 2023 12:15:11 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=soleen.com; s=google; t=1701375308; x=1701980108; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:to
-         :from:from:to:cc:subject:date:message-id:reply-to;
-        bh=X5AMqGJYt6SEyyaxLyp7JmYGeHIyK2cLcP93CB0xsAo=;
-        b=mUaVC/gamRdj9qV4/WCNqD5F1p2LBWIHcnN/DlliTxfnZ7YW0GUoveVSmO8w+MTU7S
-         0C1ZJOKMnSR3+gA4xgdR75ON06IKP68Gzgus3OAsHnOo0S3S4MeSz0AsF7AdXjB3yeEk
-         ZgFrq86t/qxtYS147lcHR/tZW6VvlKlzlPD9W9E2FB52gHkY2u9mBkmEjyEqusWPx2HR
-         Rn5MzeBipy5/L02dPpgHNETqL8b44Qc+c5v2zrfm3asxHEIhyiT/lLPQjlL1XtQkPjaj
-         dHo4fWCxOUdEdStaoQuhb4qXZ4HldNQfLG/tLes/8aSjw6TeTpWW/NOUTejBlhbwZlKQ
-         VfkA==
+        d=soleen.com; s=google; t=1701375310; x=1701980110; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:to:from:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=agdpEgslqhHdhrn0hnWdDpIJa9Hen54IbPQiTYhpn3E=;
+        b=N6+uoFB2wt88WhLsaLWnOeoEQd2jH8fTA/iMZowZFS294h7F/spx51c583UWKmPscL
+         m49eKKtrGQEJdnIkqlWqWBmttRU1P+div9qVpIIG2VsB4jINxgBnpb/ChMo4qQUIYexn
+         ymowe4YYBglMpbxcTcv69h+2s3t6SjCxyirdLFQS4qVINbayKipgU+YtHYijpMduuTy9
+         /P0vP4JZQZzDsYFYD4L5p39M8q+hDM6BTbFW5q7ZLZxNGfaPL1je1q70+MxaEzGNlC81
+         hu27N8TGaiqsynCUv/0xod56P6UxAVdsoOrjPwWr+fx9wkJSUVd63OJwD/v70VRBSLRh
+         r1fA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1701375308; x=1701980108;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:to
-         :from:x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=X5AMqGJYt6SEyyaxLyp7JmYGeHIyK2cLcP93CB0xsAo=;
-        b=Kh7TQlgYOgPOuBqBOYY8m+cUTmIZimxChU51cDevAuMc5Un2jJbuw27eEV34KZDBsc
-         7Eoo21ShCcrjhn6PoEAj6Dy1t3MonFCGytXRV37WgWC8R7CsaN+rjJBuOLijlpm6TyBm
-         HNtfvp3PK1D3VZhNdZi/K2LFXiGZrffvcRk5PkvPBsGC9K4GUXFdvK+BZtIXKKuGeCwp
-         4Abkbf7UGeUolqBItBIL5gDqTWIF9LljtvZI40bkJXW4Msu3j99p59GFeyxQLiYzuTnZ
-         V4ij1fvjtdER5oWG7hxhUV69YmDbqcFEbgfdOcHsBYbhvkCZCr62lDUY/1bZa8zQfWSe
-         A65w==
-X-Gm-Message-State: AOJu0YwUbFv+knyc+Pqq4BcOluX9fXqyz2THEBnCOjvdTGWCbZEBdfoz
-	MQdHJruNmM9N5kyswfxg8E3xyg==
-X-Google-Smtp-Source: AGHT+IEJXctu9WcvSzFXt39rV8QEM3y7T1pFE0WiGQYLYtGfkA61KyCWh7Z0c00L3koHxXYwUBpejQ==
-X-Received: by 2002:ad4:41c8:0:b0:67a:45e5:4aed with SMTP id a8-20020ad441c8000000b0067a45e54aedmr13542036qvq.21.1701375307954;
-        Thu, 30 Nov 2023 12:15:07 -0800 (PST)
+        d=1e100.net; s=20230601; t=1701375310; x=1701980110;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:to:from:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=agdpEgslqhHdhrn0hnWdDpIJa9Hen54IbPQiTYhpn3E=;
+        b=jppEpcTquV0h5udE/KxYC9csgLcEgqcULyL2kpG7rlsdcbbj82yHL2obQ7K6dj/JFo
+         ACmxgs50FJVzh5paPpAATMY2TQfkGbbwobEq4E1DqPGP7Ws3RnJDiOO4sj0r/h7+w6Vy
+         E+3vR1oQaC2l5dJXa5nQRcXUAlh0O6t/QOEXp8zJRgH+bwLOx2ojmua7vjX+a565TQqT
+         P7tn7umbx2Kbu8x43EmnF+Ozdk9PmGbzSImKZ3uLah3Ni03XAdmJGjbhbG+eiMxGn8PG
+         FUm4HLKxF8t82iRuCzXtyjm6KffGjpqp3Bk9Q8pQn0PiHbUoV6G+lH9AL5FplL5hk9go
+         BrmQ==
+X-Gm-Message-State: AOJu0YzyN+H0cwDAU72Rf822rwQkzLZYSjeGTqN+HL1f8yfTccUAhGbA
+	Y5wpROcc1Jhc5Y57dO9MjYMuig==
+X-Google-Smtp-Source: AGHT+IGqd1nCfT5mpKZHzFpkRZAyFydlrTR6nVwlbdpa33SL4CJzD0tuFZYwet7aKrGY42Lko6YVCg==
+X-Received: by 2002:a05:6830:2644:b0:6d5:11f6:eec7 with SMTP id f4-20020a056830264400b006d511f6eec7mr794143otu.28.1701375310765;
+        Thu, 30 Nov 2023 12:15:10 -0800 (PST)
 Received: from soleen.c.googlers.com.com (55.87.194.35.bc.googleusercontent.com. [35.194.87.55])
-        by smtp.gmail.com with ESMTPSA id e1-20020a0cb441000000b0067a35608186sm795252qvf.28.2023.11.30.12.15.07
+        by smtp.gmail.com with ESMTPSA id e1-20020a0cb441000000b0067a35608186sm795252qvf.28.2023.11.30.12.15.09
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 30 Nov 2023 12:15:07 -0800 (PST)
+        Thu, 30 Nov 2023 12:15:10 -0800 (PST)
 From: Pasha Tatashin <pasha.tatashin@soleen.com>
 To: akpm@linux-foundation.org,
 	alim.akhtar@samsung.com,
@@ -80,10 +82,12 @@ To: akpm@linux-foundation.org,
 	wens@csie.org,
 	will@kernel.org,
 	yu-cheng.yu@intel.com
-Subject: [PATCH v2 00/10] IOMMU memory observability
-Date: Thu, 30 Nov 2023 20:14:54 +0000
-Message-ID: <20231130201504.2322355-1-pasha.tatashin@soleen.com>
+Subject: [PATCH v2 03/10] iommu/io-pgtable-arm: use page allocation function provided by iommu-pages.h
+Date: Thu, 30 Nov 2023 20:14:57 +0000
+Message-ID: <20231130201504.2322355-4-pasha.tatashin@soleen.com>
 X-Mailer: git-send-email 2.43.0.rc2.451.g8631bc7472-goog
+In-Reply-To: <20231130201504.2322355-1-pasha.tatashin@soleen.com>
+References: <20231130201504.2322355-1-pasha.tatashin@soleen.com>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
@@ -92,121 +96,53 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-From: Pasha Tatashin <tatashin@google.com>
+Convert iommu/io-pgtable-arm.c to use the new page allocation functions
+provided in iommu-pages.h.
 
-----------------------------------------------------------------------
-Changelog
-----------------------------------------------------------------------
-v2:
-- Added Reviewed-by Janne Grunau
-- Sync with 6.7.0-rc3, 3b47bc037bd44f142ac09848e8d3ecccc726be99
-- Separated form the series patches:
-vhost-vdpa: account iommu allocations
-https://lore.kernel.org/all/20231130200447.2319543-1-pasha.tatashin@soleen.com
-vfio: account iommu allocations
-https://lore.kernel.org/all/20231130200900.2320829-1-pasha.tatashin@soleen.com
-as suggested by Jason Gunthorpe
-- Fixed SPARC build issue detected by kernel test robot
-- Drop the following patches as they do account iommu page tables:
-iommu/dma: use page allocation function provided by iommu-pages.h
-iommu/fsl: use page allocation function provided by iommu-pages.h
-iommu/iommufd: use page allocation function provided by iommu-pages.h
-as suggested by Robin Murphy. These patches are not related to IOMMU
-page tables. We might need to do a separate work to support DMA
-observability.
-- Remove support iommu/io-pgtable-arm-v7s as the 2nd level pages are
-under a page size, thanks Robin Murphy for pointing this out.
+Signed-off-by: Pasha Tatashin <pasha.tatashin@soleen.com>
+---
+ drivers/iommu/io-pgtable-arm.c | 7 ++++---
+ 1 file changed, 4 insertions(+), 3 deletions(-)
 
-----------------------------------------------------------------------
-Description
-----------------------------------------------------------------------
-IOMMU subsystem may contain state that is in gigabytes. Majority of that
-state is iommu page tables. Yet, there is currently, no way to observe
-how much memory is actually used by the iommu subsystem.
-
-This patch series solves this problem by adding both observability to
-all pages that are allocated by IOMMU, and also accountability, so
-admins can limit the amount if via cgroups.
-
-The system-wide observability is using /proc/meminfo:
-SecPageTables:    438176 kB
-
-Contains IOMMU and KVM memory.
-
-Per-node observability:
-/sys/devices/system/node/nodeN/meminfo
-Node N SecPageTables:    422204 kB
-
-Contains IOMMU and KVM memory memory in the given NUMA node.
-
-Per-node IOMMU only observability:
-/sys/devices/system/node/nodeN/vmstat
-nr_iommu_pages 105555
-
-Contains number of pages IOMMU allocated in the given node.
-
-Accountability: using sec_pagetables cgroup-v2 memory.stat entry.
-
-With the change, iova_stress[1] stops as limit is reached:
-
-# ./iova_stress
-iova space:     0T      free memory:   497G
-iova space:     1T      free memory:   495G
-iova space:     2T      free memory:   493G
-iova space:     3T      free memory:   491G
-
-stops as limit is reached.
-
-This series encorporates suggestions that came from the discussion
-at LPC [2].
-----------------------------------------------------------------------
-[1] https://github.com/soleen/iova_stress
-[2] https://lpc.events/event/17/contributions/1466
-----------------------------------------------------------------------
-Previous versions
-v1: https://lore.kernel.org/all/20231128204938.1453583-1-pasha.tatashin@soleen.com
-----------------------------------------------------------------------
-
-Pasha Tatashin (10):
-  iommu/vt-d: add wrapper functions for page allocations
-  iommu/amd: use page allocation function provided by iommu-pages.h
-  iommu/io-pgtable-arm: use page allocation function provided by
-    iommu-pages.h
-  iommu/io-pgtable-dart: use page allocation function provided by
-    iommu-pages.h
-  iommu/exynos: use page allocation function provided by iommu-pages.h
-  iommu/rockchip: use page allocation function provided by iommu-pages.h
-  iommu/sun50i: use page allocation function provided by iommu-pages.h
-  iommu/tegra-smmu: use page allocation function provided by
-    iommu-pages.h
-  iommu: observability of the IOMMU allocations
-  iommu: account IOMMU allocated memory
-
- Documentation/admin-guide/cgroup-v2.rst |   2 +-
- Documentation/filesystems/proc.rst      |   4 +-
- drivers/iommu/amd/amd_iommu.h           |   8 -
- drivers/iommu/amd/init.c                |  91 +++++-----
- drivers/iommu/amd/io_pgtable.c          |  13 +-
- drivers/iommu/amd/io_pgtable_v2.c       |  20 +-
- drivers/iommu/amd/iommu.c               |  13 +-
- drivers/iommu/exynos-iommu.c            |  14 +-
- drivers/iommu/intel/dmar.c              |  10 +-
- drivers/iommu/intel/iommu.c             |  47 ++---
- drivers/iommu/intel/iommu.h             |   2 -
- drivers/iommu/intel/irq_remapping.c     |  10 +-
- drivers/iommu/intel/pasid.c             |  12 +-
- drivers/iommu/intel/svm.c               |   7 +-
- drivers/iommu/io-pgtable-arm.c          |   7 +-
- drivers/iommu/io-pgtable-dart.c         |  37 ++--
- drivers/iommu/iommu-pages.h             | 231 ++++++++++++++++++++++++
- drivers/iommu/rockchip-iommu.c          |  14 +-
- drivers/iommu/sun50i-iommu.c            |   7 +-
- drivers/iommu/tegra-smmu.c              |  18 +-
- include/linux/mmzone.h                  |   5 +-
- mm/vmstat.c                             |   3 +
- 22 files changed, 390 insertions(+), 185 deletions(-)
- create mode 100644 drivers/iommu/iommu-pages.h
-
+diff --git a/drivers/iommu/io-pgtable-arm.c b/drivers/iommu/io-pgtable-arm.c
+index 72dcdd468cf3..21d315151ad6 100644
+--- a/drivers/iommu/io-pgtable-arm.c
++++ b/drivers/iommu/io-pgtable-arm.c
+@@ -21,6 +21,7 @@
+ #include <asm/barrier.h>
+ 
+ #include "io-pgtable-arm.h"
++#include "iommu-pages.h"
+ 
+ #define ARM_LPAE_MAX_ADDR_BITS		52
+ #define ARM_LPAE_S2_MAX_CONCAT_PAGES	16
+@@ -197,7 +198,7 @@ static void *__arm_lpae_alloc_pages(size_t size, gfp_t gfp,
+ 	void *pages;
+ 
+ 	VM_BUG_ON((gfp & __GFP_HIGHMEM));
+-	p = alloc_pages_node(dev_to_node(dev), gfp | __GFP_ZERO, order);
++	p = __iommu_alloc_pages_node(dev_to_node(dev), gfp, order);
+ 	if (!p)
+ 		return NULL;
+ 
+@@ -221,7 +222,7 @@ static void *__arm_lpae_alloc_pages(size_t size, gfp_t gfp,
+ 	dev_err(dev, "Cannot accommodate DMA translation for IOMMU page tables\n");
+ 	dma_unmap_single(dev, dma, size, DMA_TO_DEVICE);
+ out_free:
+-	__free_pages(p, order);
++	__iommu_free_pages(p, order);
+ 	return NULL;
+ }
+ 
+@@ -231,7 +232,7 @@ static void __arm_lpae_free_pages(void *pages, size_t size,
+ 	if (!cfg->coherent_walk)
+ 		dma_unmap_single(cfg->iommu_dev, __arm_lpae_dma_addr(pages),
+ 				 size, DMA_TO_DEVICE);
+-	free_pages((unsigned long)pages, get_order(size));
++	iommu_free_pages(pages, get_order(size));
+ }
+ 
+ static void __arm_lpae_sync_pte(arm_lpae_iopte *ptep, int num_entries,
 -- 
 2.43.0.rc2.451.g8631bc7472-goog
 
