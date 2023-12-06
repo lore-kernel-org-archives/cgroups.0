@@ -1,65 +1,67 @@
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="VmSKk7RH"
-Received: from mail-il1-x135.google.com (mail-il1-x135.google.com [IPv6:2607:f8b0:4864:20::135])
-	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E94041BD7;
-	Wed,  6 Dec 2023 03:53:39 -0800 (PST)
-Received: by mail-il1-x135.google.com with SMTP id e9e14a558f8ab-35d57e88c1dso19129375ab.2;
-        Wed, 06 Dec 2023 03:53:39 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="ciSihS5X"
+Received: from mail-qk1-x735.google.com (mail-qk1-x735.google.com [IPv6:2607:f8b0:4864:20::735])
+	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4E4E2D47;
+	Wed,  6 Dec 2023 08:29:20 -0800 (PST)
+Received: by mail-qk1-x735.google.com with SMTP id af79cd13be357-77f3183f012so33369085a.0;
+        Wed, 06 Dec 2023 08:29:20 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1701863619; x=1702468419; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=4xIMBRdh82imgCh973bdcamdD/YLqs+vICvueMisFQc=;
-        b=VmSKk7RHxfAGfx0Yz/gvKA9tjufJMGJhEIftHn2WP3FXTmqzwEb66swj5VPirsLZlb
-         +j+VhUeupyHi7zf2CKPIQUSuODvN23dsst/1Oye36VWr6MA1mcYOxNbcCGhUrPJZhjCM
-         j52X6+0Y5pehWjmZzM0Xh6vJvIvxbQKD9pYPfm38pATQ1KoQ+5CwHdYnLEua0YtYNPUJ
-         fcC7ygogMiPLiObt9x4pNMkkZ7urpI2b2fzrUCAAU4TzkyRyWNBeIlslWFe6kvZ/Whvf
-         ld9LH+FOAiOeYI+0Zdq8xVGK8h+pGXzHBS1352JclLHXdK1cmJGPW6qAfuLw48ZQQoMT
-         ZimQ==
+        d=gmail.com; s=20230601; t=1701880159; x=1702484959; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=wd9dmNFWVV3wZN+V4jSJjxu24qyO9wHRcayLWIoq474=;
+        b=ciSihS5X1O8h4ci4GGguyECDBinXW/Kltvw4tF6hL5rhD22IZMjB5gclMaueuWlrkd
+         H/tgLZ8SXZZ5ORAPj3sThrgTaYLsg9WVdzTMV37VeUlq+Ar6mdVmbb0OKCEtSE1e9c9w
+         U1RCBARjuEJahKzPKTsKcfQHly3EIKb/WbeAzWj7EXNRvWADkFt/LeUsnP8eSUSJ6TXN
+         uParrsAvtxdeygcvhhKkvXZrrDgNP/jcdt+V/ua2hmh97aygLL0vhieOprPU1Rmak2+y
+         ApCfYxW7Mn7GYShkkBiFdLe895QSS5H2N3cP+hddoaPKkxjg1dOJ+RQvjl6uM/5MZwyH
+         Tfjg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1701863619; x=1702468419;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=4xIMBRdh82imgCh973bdcamdD/YLqs+vICvueMisFQc=;
-        b=jvD7z5Rh4eFpIi0KjWZ1w9k4wuDUTfyzCpdHOOl70SgwXccXYWDaSewQDfcwp9MK2v
-         s0MBTcXmkHgXhRiM2lg95G5h4qb/ohKCER0jP3JclRWrUg9Ru2vL9QBF6GadCcX17bf4
-         qDTk26fShCckK6swTjXSMFtgZqaPA8yAHpahpMdC/GQiar0s2j9E9QLV4Z/vUAMZ+s2y
-         nzloy6ghSPgR7RFYnp7l1tDah2zYsh6sp/ZzvA5B1C7XUTihdp5XCBcOawv8R/fIyE/i
-         BXxZK7qchBXBfD/FKLHspRbhVdJIMiL9U40kbTjPRNewWOSXf5R8sLnEI6OhtLgbm/Mh
-         rPTQ==
-X-Gm-Message-State: AOJu0Yy9LnS8DXTK+lBV5E56LiVl/LrVYC11SzmfKcjtXgzHzUI0BMso
-	41ELSfWhSyZ19q46Re2dDws=
-X-Google-Smtp-Source: AGHT+IFmyUtIFQyTLGY/estMEYNpl0cpZDFzVOq9R39UkG1aP5kdgy5VEaxsAaX//S/i35tj75ak7A==
-X-Received: by 2002:a92:d8c1:0:b0:35c:cc4c:e01f with SMTP id l1-20020a92d8c1000000b0035ccc4ce01fmr786066ilo.6.1701863619221;
-        Wed, 06 Dec 2023 03:53:39 -0800 (PST)
-Received: from vultr.guest ([149.28.194.201])
-        by smtp.gmail.com with ESMTPSA id n15-20020a638f0f000000b005c6801efa0fsm5484665pgd.28.2023.12.06.03.53.37
+        d=1e100.net; s=20230601; t=1701880159; x=1702484959;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=wd9dmNFWVV3wZN+V4jSJjxu24qyO9wHRcayLWIoq474=;
+        b=H+bqR7nrZffoGgfrWyl1bAUE5R+wfPhomI6fgJs0U0SA+YDH5edmwCmlpsDmqCdnTb
+         KqeEfKCseivRTu7YUC+qcMqUiSoZu+j+5gOJQnRxnubUqpZWgaAidaTix1Z2hBjjLTw8
+         CgHOKrJKCYF600SvrKxek4bGAqdwNMqXWLK8SAfI4BceQtGlZ5cw4x3KqygzkrUYz+cb
+         ETiq4hSk+LUsDp+ulPWQPpi6NfaUeMD80UdBmVE9ABQn3WBQpN3c5UcRCSCJFG81I5t4
+         He+eeolSRfWMWnkRLCNzwdFmaT005cLVTkfq67ZAbod3Qc6MZTJ+3ON5Xpsj6TdrTEPA
+         94aA==
+X-Gm-Message-State: AOJu0YxM2zNWAMs/PasvkI8k/zuz3jh62w85/iv7Cx1WuPu5A6Xu5ey3
+	YL2tWZ5PN054GOdVhVQU418=
+X-Google-Smtp-Source: AGHT+IHhiuALx2hZ1zKntduTCjGsG1MfwXfwX9syFNhffyevENPJR9W/FQbEfj2xzCDrmW4Gb0rfuA==
+X-Received: by 2002:a05:620a:3b07:b0:77f:37e7:bd6e with SMTP id tl7-20020a05620a3b0700b0077f37e7bd6emr396533qkn.121.1701880159169;
+        Wed, 06 Dec 2023 08:29:19 -0800 (PST)
+Received: from localhost ([2620:10d:c091:500::6:c65f])
+        by smtp.gmail.com with ESMTPSA id uw5-20020a05620a4d8500b007749dc7881dsm69759qkn.48.2023.12.06.08.29.18
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 06 Dec 2023 03:53:38 -0800 (PST)
-From: Yafang Shao <laoar.shao@gmail.com>
-To: ast@kernel.org,
-	daniel@iogearbox.net,
-	john.fastabend@gmail.com,
-	andrii@kernel.org,
-	martin.lau@linux.dev,
-	song@kernel.org,
-	yonghong.song@linux.dev,
-	kpsingh@kernel.org,
-	sdf@google.com,
-	haoluo@google.com,
-	jolsa@kernel.org,
-	tj@kernel.org
-Cc: bpf@vger.kernel.org,
+        Wed, 06 Dec 2023 08:29:18 -0800 (PST)
+From: Dan Schatzberg <schatzberg.dan@gmail.com>
+To: Johannes Weiner <hannes@cmpxchg.org>,
+	Roman Gushchin <roman.gushchin@linux.dev>,
+	Yosry Ahmed <yosryahmed@google.com>,
+	Huan Yang <link@vivo.com>
+Cc: linux-kernel@vger.kernel.org,
 	cgroups@vger.kernel.org,
-	Yafang Shao <laoar.shao@gmail.com>
-Subject: [PATCH bpf-next 2/3] selftests/bpf: Add a new cgroup helper open_classid()
-Date: Wed,  6 Dec 2023 11:53:25 +0000
-Message-Id: <20231206115326.4295-3-laoar.shao@gmail.com>
-X-Mailer: git-send-email 2.39.3
-In-Reply-To: <20231206115326.4295-1-laoar.shao@gmail.com>
-References: <20231206115326.4295-1-laoar.shao@gmail.com>
+	linux-mm@kvack.org,
+	Tejun Heo <tj@kernel.org>,
+	Zefan Li <lizefan.x@bytedance.com>,
+	Jonathan Corbet <corbet@lwn.net>,
+	Michal Hocko <mhocko@kernel.org>,
+	Shakeel Butt <shakeelb@google.com>,
+	Muchun Song <muchun.song@linux.dev>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	David Hildenbrand <david@redhat.com>,
+	Matthew Wilcox <willy@infradead.org>,
+	Kefeng Wang <wangkefeng.wang@huawei.com>,
+	"Vishal Moola (Oracle)" <vishal.moola@gmail.com>,
+	Yue Zhao <findns94@gmail.com>,
+	Hugh Dickins <hughd@google.com>
+Subject: [PATCH V2 0/1] Add swappiness argument to memory.reclaim
+Date: Wed,  6 Dec 2023 08:28:55 -0800
+Message-Id: <20231206162900.1571025-1-schatzberg.dan@gmail.com>
+X-Mailer: git-send-email 2.34.1
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
@@ -68,53 +70,88 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-This new helper allows us to obtain the fd of a net_cls cgroup, which will
-be utilized in the subsequent patch.
+Changes since V1:
+  * Added documentation
 
-Signed-off-by: Yafang Shao <laoar.shao@gmail.com>
-Acked-by: Tejun Heo <tj@kernel.org>
-Acked-by: Yonghong Song <yonghong.song@linux.dev>
----
- tools/testing/selftests/bpf/cgroup_helpers.c | 16 ++++++++++++++++
- tools/testing/selftests/bpf/cgroup_helpers.h |  1 +
- 2 files changed, 17 insertions(+)
+This patch proposes augmenting the memory.reclaim interface with a
+swappiness=<val> argument that overrides the swappiness value for that instance
+of proactive reclaim.
 
-diff --git a/tools/testing/selftests/bpf/cgroup_helpers.c b/tools/testing/selftests/bpf/cgroup_helpers.c
-index 5aa133b..19be9c6 100644
---- a/tools/testing/selftests/bpf/cgroup_helpers.c
-+++ b/tools/testing/selftests/bpf/cgroup_helpers.c
-@@ -689,3 +689,19 @@ int get_cgroup1_hierarchy_id(const char *subsys_name)
- 	fclose(file);
- 	return found ? id : -1;
- }
-+
-+/**
-+ * open_classid() - Open a cgroupv1 net_cls classid
-+ *
-+ * This function expects the cgroup work dir to be already created, as we
-+ * open it here.
-+ *
-+ * On success, it returns the file descriptor. On failure it returns -1.
-+ */
-+int open_classid(void)
-+{
-+	char cgroup_workdir[PATH_MAX + 1];
-+
-+	format_classid_path(cgroup_workdir);
-+	return open(cgroup_workdir, O_RDONLY);
-+}
-diff --git a/tools/testing/selftests/bpf/cgroup_helpers.h b/tools/testing/selftests/bpf/cgroup_helpers.h
-index ee05364..5028451 100644
---- a/tools/testing/selftests/bpf/cgroup_helpers.h
-+++ b/tools/testing/selftests/bpf/cgroup_helpers.h
-@@ -33,6 +33,7 @@ int write_cgroup_file_parent(const char *relative_path, const char *file,
- int set_classid(void);
- int join_classid(void);
- unsigned long long get_classid_cgroup_id(void);
-+int open_classid(void);
- 
- int setup_classid_environment(void);
- void cleanup_classid_environment(void);
+Userspace proactive reclaimers use the memory.reclaim interface to trigger
+reclaim. The memory.reclaim interface does not allow for any way to effect the
+balance of file vs anon during proactive reclaim. The only approach is to adjust
+the vm.swappiness setting. However, there are a few reasons we look to control
+the balance of file vs anon during proactive reclaim, separately from reactive
+reclaim:
+
+* Swapout should be limited to manage SSD write endurance. In near-OOM
+  situations we are fine with lots of swap-out to avoid OOMs. As these are
+  typically rare events, they have relatively little impact on write endurance.
+  However, proactive reclaim runs continuously and so its impact on SSD write
+  endurance is more significant. Therefore it is desireable to control swap-out
+  for proactive reclaim separately from reactive reclaim
+
+* Some userspace OOM killers like systemd-oomd[1] support OOM killing on swap
+  exhaustion. This makes sense if the swap exhaustion is triggered due to
+  reactive reclaim but less so if it is triggered due to proactive reclaim (e.g.
+  one could see OOMs when free memory is ample but anon is just particularly
+  cold). Therefore, it's desireable to have proactive reclaim reduce or stop
+  swap-out before the threshold at which OOM killing occurs.
+
+In the case of Meta's Senpai proactive reclaimer, we adjust vm.swappiness before
+writes to memory.reclaim[2]. This has been in production for nearly two years
+and has addressed our needs to control proactive vs reactive reclaim behavior
+but is still not ideal for a number of reasons:
+
+* vm.swappiness is a global setting, adjusting it can race/interfere with other
+  system administration that wishes to control vm.swappiness. In our case, we
+  need to disable Senpai before adjusting vm.swappiness.
+
+* vm.swappiness is stateful - so a crash or restart of Senpai can leave a
+  misconfigured setting. This requires some additional management to record the
+  "desired" setting and ensure Senpai always adjusts to it.
+
+With this patch, we avoid these downsides of adjusting vm.swappiness globally.
+
+Previously, this exact interface addition was proposed by Yosry[3]. In response,
+Roman proposed instead an interface to specify precise file/anon/slab reclaim
+amounts[4]. More recently Huan also proposed this as well[5] and others
+similarly questioned if this was the proper interface.
+
+Previous proposals sought to use this to allow proactive reclaimers to
+effectively perform a custom reclaim algorithm by issuing proactive reclaim with
+different settings to control file vs anon reclaim (e.g. to only reclaim anon
+from some applications). Responses argued that adjusting swappiness is a poor
+interface for custom reclaim.
+
+In contrast, I argue in favor of a swappiness setting not as a way to implement
+custom reclaim algorithms but rather to bias the balance of anon vs file due to
+differences of proactive vs reactive reclaim. In this context, swappiness is the
+existing interface for controlling this balance and this patch simply allows for
+it to be configured differently for proactive vs reactive reclaim.
+
+Specifying explicit amounts of anon vs file pages to reclaim feels inappropriate
+for this prupose. Proactive reclaimers are un-aware of the relative age of file
+vs anon for a cgroup which makes it difficult to manage proactive reclaim of
+different memory pools. A proactive reclaimer would need some amount of anon
+reclaim attempts separate from the amount of file reclaim attempts which seems
+brittle given that it's difficult to observe the impact.
+
+[1]https://www.freedesktop.org/software/systemd/man/latest/systemd-oomd.service.html
+[2]https://github.com/facebookincubator/oomd/blob/main/src/oomd/plugins/Senpai.cpp#L585-L598
+[3]https://lore.kernel.org/linux-mm/CAJD7tkbDpyoODveCsnaqBBMZEkDvshXJmNdbk51yKSNgD7aGdg@mail.gmail.com/
+[4]https://lore.kernel.org/linux-mm/YoPHtHXzpK51F%2F1Z@carbon/
+[5]https://lore.kernel.org/lkml/20231108065818.19932-1-link@vivo.com/
+
+Dan Schatzberg (1):
+  mm: add swapiness= arg to memory.reclaim
+
+ Documentation/admin-guide/cgroup-v2.rst | 15 ++++++-
+ include/linux/swap.h                    |  3 +-
+ mm/memcontrol.c                         | 55 ++++++++++++++++++++-----
+ mm/vmscan.c                             | 13 +++++-
+ 4 files changed, 70 insertions(+), 16 deletions(-)
+
 -- 
-1.8.3.1
+2.34.1
 
