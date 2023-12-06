@@ -1,43 +1,43 @@
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="nZF4Ux4a"
-Received: from mail-ot1-x334.google.com (mail-ot1-x334.google.com [IPv6:2607:f8b0:4864:20::334])
-	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BC04B1BD4;
-	Wed,  6 Dec 2023 03:53:38 -0800 (PST)
-Received: by mail-ot1-x334.google.com with SMTP id 46e09a7af769-6d855efb920so4008538a34.1;
-        Wed, 06 Dec 2023 03:53:38 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="KDP1DuQc"
+Received: from mail-pf1-x432.google.com (mail-pf1-x432.google.com [IPv6:2607:f8b0:4864:20::432])
+	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BE60910C7;
+	Wed,  6 Dec 2023 03:53:41 -0800 (PST)
+Received: by mail-pf1-x432.google.com with SMTP id d2e1a72fcca58-6ce6d926f76so590532b3a.1;
+        Wed, 06 Dec 2023 03:53:41 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1701863618; x=1702468418; darn=vger.kernel.org;
+        d=gmail.com; s=20230601; t=1701863621; x=1702468421; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=Ea4fx7tf3EdIdbvH8Aap6LzVpgikoR6v5si5mFB5mQA=;
-        b=nZF4Ux4aB4DQ9ay02QeGimqCd9aJWTte2j+eV6fFFMzurSy4mfMb2Tt3r2g+Ftlt/M
-         9DsvuZ9C0p960iyFx/mQBeey2AHBMrCEeEeCuKayeSv7XIKOmuyj+YDyy18j1aN4xsUX
-         B33WdNOGFjsn6ZC5tYaYrTDUGTodjtODPv9OP141zUZ1qp+u2hMZDRXlRVoFOf1alf3X
-         NrgqwonzKDbfJtPeyvgUawWWNxJifO4+aspSXgIYbsthf65CdWTEe1MaTAUL3MExGkq0
-         CQKxwMGR8NZSKNQTpjFv3Yq9JjotYAJlG9dpbcFyYFLTfXKwl5xseBoRRl6fPoWIBIc5
-         KdYg==
+        bh=s7mEvnvlfFVPbJKnG6vNfNJSUIO1dwSv0/95HJsiQ+Y=;
+        b=KDP1DuQcwYrY/sjjH02qGuN1AM89/+kiTfFGppbM4U+440Y3g0cjv8M2FPYu9uUGus
+         s8l7KmpY2au2aP1yB/LdaOU5eDtrvDu6splZ7nC/OOUpwO1KjWSJixLVSQxrqIJtQoJa
+         EYNih4FBXPpR6Jd8LfzlQ1r9r8X9U52krlv8OZMTuTuH+gxLJpK/Qir2Xv8DKGfO1vWQ
+         s2hf9/IYDZa46kq/sYytF9izqCIB+AWbSEW/w+BemDthv4yJd2l+ffdsQaGiRHUyHplo
+         QbVKtvHxKC8x0WCzKiCCv2nR7w/SH5FSR160bANhGFrUWkjwI16xJZFPZsiWr6OnWFfr
+         1xqw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1701863618; x=1702468418;
+        d=1e100.net; s=20230601; t=1701863621; x=1702468421;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=Ea4fx7tf3EdIdbvH8Aap6LzVpgikoR6v5si5mFB5mQA=;
-        b=perebvSntsxSNJnX+U3aGiE32WxMGHPIiKQMUKyzLXEAP8S9OB/3hdwlqXpgWXrgbN
-         MmL29L8MWDvuBLisYzNJWmgImc5BOACJjQrEQa5dsuKUylkakVKLPK52fkWrQGhzK1Cc
-         TmhBmjURJPUOYBXgwVNj8KWTkO+s32+VAnh2PZdYQOcf2RAtrG+84XO3MtX4vd+VxHOI
-         yq/s01DsfNdsNFkim7yKuV+lG3+8jaP/ivOIg5mrhyZzjsW0e7HpFMhGCmMuhETaij0r
-         YAizwM04B55soOCthgP2kYcKJacg+neDke1CqLvok6ZU9U/DlgkYdPkBrtGqRvQUEj9g
-         ez5g==
-X-Gm-Message-State: AOJu0YxrRs4e6+lZ6Qw/ASS1Ccp2eD9A0aW7BxZQbi9oOAD8kw4wlPr1
-	S3Kj+PEwJW50esRFENWnVj8cPnZCF6dnaEHx
-X-Google-Smtp-Source: AGHT+IFuSrtaxMLQeDaoWZZu5QFiRJJP5r/IgMZgt6tQnsGehWvCOQGz7EfNVBBpLQLoxUxs4mQoJA==
-X-Received: by 2002:a9d:4d88:0:b0:6d8:7820:aaf8 with SMTP id u8-20020a9d4d88000000b006d87820aaf8mr878411otk.21.1701863617853;
-        Wed, 06 Dec 2023 03:53:37 -0800 (PST)
+        bh=s7mEvnvlfFVPbJKnG6vNfNJSUIO1dwSv0/95HJsiQ+Y=;
+        b=Zcg3UuvcbXi8302ZhMF02aAaWpEJxB5CyFMGzX0uSdnT/hgkfHvV1OhQzh3uBMh5Xv
+         mK2EotVzrO4he3ePSqcrA/wAqOBXmf3P88mELmP1lU+Enx/rxgAzO/vR96nDc8YUQ3Nd
+         Wu3PVs9Myle/orxHrZiELzJKvuHa9XiTu6y9RzyjekEjZMFQCfkKkuThe2JiEKdKY4jf
+         NPyW7Dh8KhutqhGeohtQiAd3+JKYzQDSmugmveYGDWT06MxZYARZ6aBChNLj9W79ydDj
+         vdhhtRE1a+jVKKSz4VYlnPi8fKuWe3KZ/0RzX8x6Zvok23+XVTGQWnqmJJLopnTpGXaE
+         aXbw==
+X-Gm-Message-State: AOJu0Yx5sQALgGukoID9wRc0ncZ6UiKrNtAW5LXREHllyaPaVQdzZWP1
+	W5x/KGbwEOdugO88oaDn+KGtd7yFdZhYcTP2
+X-Google-Smtp-Source: AGHT+IEdEMolsVSDL0Wli5RFxzotcZlG8+Njukzpu1rCSwttR/IoNoO5Z8i8bsKpsLkHvcgij13UNQ==
+X-Received: by 2002:a05:6a20:8e1f:b0:18d:d16:e84 with SMTP id y31-20020a056a208e1f00b0018d0d160e84mr4014884pzj.7.1701863620645;
+        Wed, 06 Dec 2023 03:53:40 -0800 (PST)
 Received: from vultr.guest ([149.28.194.201])
-        by smtp.gmail.com with ESMTPSA id n15-20020a638f0f000000b005c6801efa0fsm5484665pgd.28.2023.12.06.03.53.36
+        by smtp.gmail.com with ESMTPSA id n15-20020a638f0f000000b005c6801efa0fsm5484665pgd.28.2023.12.06.03.53.39
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 06 Dec 2023 03:53:37 -0800 (PST)
+        Wed, 06 Dec 2023 03:53:40 -0800 (PST)
 From: Yafang Shao <laoar.shao@gmail.com>
 To: ast@kernel.org,
 	daniel@iogearbox.net,
@@ -54,9 +54,9 @@ To: ast@kernel.org,
 Cc: bpf@vger.kernel.org,
 	cgroups@vger.kernel.org,
 	Yafang Shao <laoar.shao@gmail.com>
-Subject: [PATCH bpf-next 1/3] bpf: Enable bpf_cgrp_storage for cgroup1 non-attach case
-Date: Wed,  6 Dec 2023 11:53:24 +0000
-Message-Id: <20231206115326.4295-2-laoar.shao@gmail.com>
+Subject: [PATCH bpf-next 3/3] selftests/bpf: Add selftests for cgroup1 local storage
+Date: Wed,  6 Dec 2023 11:53:26 +0000
+Message-Id: <20231206115326.4295-4-laoar.shao@gmail.com>
 X-Mailer: git-send-email 2.39.3
 In-Reply-To: <20231206115326.4295-1-laoar.shao@gmail.com>
 References: <20231206115326.4295-1-laoar.shao@gmail.com>
@@ -68,59 +68,548 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-In the current cgroup1 environment, associating operations between cgroups
-and applications in a BPF program requires storing a mapping of cgroup_id
-to application either in a hash map or maintaining it in userspace.
-However, by enabling bpf_cgrp_storage for cgroup1, it becomes possible to
-conveniently store application-specific information in cgroup-local storage
-and utilize it within BPF programs. Furthermore, enabling this feature for
-cgroup1 involves minor modifications for the non-attach case, streamlining
-the process.
+Expanding the test coverage from cgroup2 to include cgroup1. The result
+as follows,
 
-However, when it comes to enabling this functionality for the cgroup1
-attach case, it presents challenges. Therefore, the decision is to focus on
-enabling it solely for the cgroup1 non-attach case at present. If
-attempting to attach to a cgroup1 fd, the operation will simply fail with
-the error code -EBADF.
+Already existing test cases for cgroup2:
+  #48/1    cgrp_local_storage/tp_btf:OK
+  #48/2    cgrp_local_storage/attach_cgroup:OK
+  #48/3    cgrp_local_storage/recursion:OK
+  #48/4    cgrp_local_storage/negative:OK
+  #48/5    cgrp_local_storage/cgroup_iter_sleepable:OK
+  #48/6    cgrp_local_storage/yes_rcu_lock:OK
+  #48/7    cgrp_local_storage/no_rcu_lock:OK
+
+Expanded test cases for cgroup1:
+  #48/8    cgrp_local_storage/cgrp1_tp_btf:OK
+  #48/9    cgrp_local_storage/cgrp1_recursion:OK
+  #48/10   cgrp_local_storage/cgrp1_negative:OK
+  #48/11   cgrp_local_storage/cgrp1_iter_sleepable:OK
+  #48/12   cgrp_local_storage/cgrp1_yes_rcu_lock:OK
+  #48/13   cgrp_local_storage/cgrp1_no_rcu_lock:OK
+
+Summary:
+  #48      cgrp_local_storage:OK
+  Summary: 1/13 PASSED, 0 SKIPPED, 0 FAILED
 
 Signed-off-by: Yafang Shao <laoar.shao@gmail.com>
 Acked-by: Tejun Heo <tj@kernel.org>
 Acked-by: Yonghong Song <yonghong.song@linux.dev>
 ---
- kernel/bpf/bpf_cgrp_storage.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+ .../selftests/bpf/prog_tests/cgrp_local_storage.c  | 98 +++++++++++++++++++++-
+ .../selftests/bpf/progs/cgrp_ls_recursion.c        | 84 +++++++++++++++----
+ .../selftests/bpf/progs/cgrp_ls_sleepable.c        | 61 ++++++++++++--
+ tools/testing/selftests/bpf/progs/cgrp_ls_tp_btf.c | 82 +++++++++++++-----
+ 4 files changed, 278 insertions(+), 47 deletions(-)
 
-diff --git a/kernel/bpf/bpf_cgrp_storage.c b/kernel/bpf/bpf_cgrp_storage.c
-index d44fe8d..28efd0a3 100644
---- a/kernel/bpf/bpf_cgrp_storage.c
-+++ b/kernel/bpf/bpf_cgrp_storage.c
-@@ -82,7 +82,7 @@ static void *bpf_cgrp_storage_lookup_elem(struct bpf_map *map, void *key)
- 	int fd;
+diff --git a/tools/testing/selftests/bpf/prog_tests/cgrp_local_storage.c b/tools/testing/selftests/bpf/prog_tests/cgrp_local_storage.c
+index 63e776f..317da4d 100644
+--- a/tools/testing/selftests/bpf/prog_tests/cgrp_local_storage.c
++++ b/tools/testing/selftests/bpf/prog_tests/cgrp_local_storage.c
+@@ -19,6 +19,21 @@ struct socket_cookie {
+ 	__u64 cookie_value;
+ };
  
- 	fd = *(int *)key;
--	cgroup = cgroup_get_from_fd(fd);
-+	cgroup = cgroup_v1v2_get_from_fd(fd);
- 	if (IS_ERR(cgroup))
- 		return ERR_CAST(cgroup);
++bool is_cgroup1;
++int target_hid;
++
++#define CGROUP_MODE_SET(skel)			\
++{						\
++	skel->bss->is_cgroup1 = is_cgroup1;	\
++	skel->bss->target_hid = target_hid;	\
++}
++
++static void cgroup_mode_value_init(bool cgroup, int hid)
++{
++	is_cgroup1 = cgroup;
++	target_hid = hid;
++}
++
+ static void test_tp_btf(int cgroup_fd)
+ {
+ 	struct cgrp_ls_tp_btf *skel;
+@@ -29,6 +44,8 @@ static void test_tp_btf(int cgroup_fd)
+ 	if (!ASSERT_OK_PTR(skel, "skel_open_and_load"))
+ 		return;
  
-@@ -101,7 +101,7 @@ static long bpf_cgrp_storage_update_elem(struct bpf_map *map, void *key,
- 	int fd;
++	CGROUP_MODE_SET(skel);
++
+ 	/* populate a value in map_b */
+ 	err = bpf_map_update_elem(bpf_map__fd(skel->maps.map_b), &cgroup_fd, &val1, BPF_ANY);
+ 	if (!ASSERT_OK(err, "map_update_elem"))
+@@ -130,6 +147,8 @@ static void test_recursion(int cgroup_fd)
+ 	if (!ASSERT_OK_PTR(skel, "skel_open_and_load"))
+ 		return;
  
- 	fd = *(int *)key;
--	cgroup = cgroup_get_from_fd(fd);
-+	cgroup = cgroup_v1v2_get_from_fd(fd);
- 	if (IS_ERR(cgroup))
- 		return PTR_ERR(cgroup);
++	CGROUP_MODE_SET(skel);
++
+ 	err = cgrp_ls_recursion__attach(skel);
+ 	if (!ASSERT_OK(err, "skel_attach"))
+ 		goto out;
+@@ -165,6 +184,8 @@ static void test_cgroup_iter_sleepable(int cgroup_fd, __u64 cgroup_id)
+ 	if (!ASSERT_OK_PTR(skel, "skel_open"))
+ 		return;
  
-@@ -131,7 +131,7 @@ static long bpf_cgrp_storage_delete_elem(struct bpf_map *map, void *key)
- 	int err, fd;
++	CGROUP_MODE_SET(skel);
++
+ 	bpf_program__set_autoload(skel->progs.cgroup_iter, true);
+ 	err = cgrp_ls_sleepable__load(skel);
+ 	if (!ASSERT_OK(err, "skel_load"))
+@@ -202,6 +223,7 @@ static void test_yes_rcu_lock(__u64 cgroup_id)
+ 	if (!ASSERT_OK_PTR(skel, "skel_open"))
+ 		return;
  
- 	fd = *(int *)key;
--	cgroup = cgroup_get_from_fd(fd);
-+	cgroup = cgroup_v1v2_get_from_fd(fd);
- 	if (IS_ERR(cgroup))
- 		return PTR_ERR(cgroup);
++	CGROUP_MODE_SET(skel);
+ 	skel->bss->target_pid = syscall(SYS_gettid);
  
+ 	bpf_program__set_autoload(skel->progs.yes_rcu_lock, true);
+@@ -229,6 +251,8 @@ static void test_no_rcu_lock(void)
+ 	if (!ASSERT_OK_PTR(skel, "skel_open"))
+ 		return;
+ 
++	CGROUP_MODE_SET(skel);
++
+ 	bpf_program__set_autoload(skel->progs.no_rcu_lock, true);
+ 	err = cgrp_ls_sleepable__load(skel);
+ 	ASSERT_ERR(err, "skel_load");
+@@ -236,7 +260,25 @@ static void test_no_rcu_lock(void)
+ 	cgrp_ls_sleepable__destroy(skel);
+ }
+ 
+-void test_cgrp_local_storage(void)
++static void test_cgrp1_no_rcu_lock(void)
++{
++	struct cgrp_ls_sleepable *skel;
++	int err;
++
++	skel = cgrp_ls_sleepable__open();
++	if (!ASSERT_OK_PTR(skel, "skel_open"))
++		return;
++
++	CGROUP_MODE_SET(skel);
++
++	bpf_program__set_autoload(skel->progs.cgrp1_no_rcu_lock, true);
++	err = cgrp_ls_sleepable__load(skel);
++	ASSERT_OK(err, "skel_load");
++
++	cgrp_ls_sleepable__destroy(skel);
++}
++
++void cgrp2_local_storage(void)
+ {
+ 	__u64 cgroup_id;
+ 	int cgroup_fd;
+@@ -245,6 +287,8 @@ void test_cgrp_local_storage(void)
+ 	if (!ASSERT_GE(cgroup_fd, 0, "join_cgroup /cgrp_local_storage"))
+ 		return;
+ 
++	cgroup_mode_value_init(0, -1);
++
+ 	cgroup_id = get_cgroup_id("/cgrp_local_storage");
+ 	if (test__start_subtest("tp_btf"))
+ 		test_tp_btf(cgroup_fd);
+@@ -263,3 +307,55 @@ void test_cgrp_local_storage(void)
+ 
+ 	close(cgroup_fd);
+ }
++
++void cgrp1_local_storage(void)
++{
++	int cgrp1_fd, cgrp1_hid, cgrp1_id, err;
++
++	/* Setup cgroup1 hierarchy */
++	err = setup_classid_environment();
++	if (!ASSERT_OK(err, "setup_classid_environment"))
++		return;
++
++	err = join_classid();
++	if (!ASSERT_OK(err, "join_cgroup1"))
++		goto cleanup;
++
++	cgrp1_fd = open_classid();
++	if (!ASSERT_GE(cgrp1_fd, 0, "cgroup1 fd"))
++		goto cleanup;
++
++	cgrp1_id = get_classid_cgroup_id();
++	if (!ASSERT_GE(cgrp1_id, 0, "cgroup1 id"))
++		goto close_fd;
++
++	cgrp1_hid = get_cgroup1_hierarchy_id("net_cls");
++	if (!ASSERT_GE(cgrp1_hid, 0, "cgroup1 hid"))
++		goto close_fd;
++
++	cgroup_mode_value_init(1, cgrp1_hid);
++
++	if (test__start_subtest("cgrp1_tp_btf"))
++		test_tp_btf(cgrp1_fd);
++	if (test__start_subtest("cgrp1_recursion"))
++		test_recursion(cgrp1_fd);
++	if (test__start_subtest("cgrp1_negative"))
++		test_negative();
++	if (test__start_subtest("cgrp1_iter_sleepable"))
++		test_cgroup_iter_sleepable(cgrp1_fd, cgrp1_id);
++	if (test__start_subtest("cgrp1_yes_rcu_lock"))
++		test_yes_rcu_lock(cgrp1_id);
++	if (test__start_subtest("cgrp1_no_rcu_lock"))
++		test_cgrp1_no_rcu_lock();
++
++close_fd:
++	close(cgrp1_fd);
++cleanup:
++	cleanup_classid_environment();
++}
++
++void test_cgrp_local_storage(void)
++{
++	cgrp2_local_storage();
++	cgrp1_local_storage();
++}
+diff --git a/tools/testing/selftests/bpf/progs/cgrp_ls_recursion.c b/tools/testing/selftests/bpf/progs/cgrp_ls_recursion.c
+index a043d8f..610c2427 100644
+--- a/tools/testing/selftests/bpf/progs/cgrp_ls_recursion.c
++++ b/tools/testing/selftests/bpf/progs/cgrp_ls_recursion.c
+@@ -21,50 +21,100 @@ struct {
+ 	__type(value, long);
+ } map_b SEC(".maps");
+ 
++int target_hid = 0;
++bool is_cgroup1 = 0;
++
++struct cgroup *bpf_task_get_cgroup1(struct task_struct *task, int hierarchy_id) __ksym;
++void bpf_cgroup_release(struct cgroup *cgrp) __ksym;
++
++static void __on_lookup(struct cgroup *cgrp)
++{
++	bpf_cgrp_storage_delete(&map_a, cgrp);
++	bpf_cgrp_storage_delete(&map_b, cgrp);
++}
++
+ SEC("fentry/bpf_local_storage_lookup")
+ int BPF_PROG(on_lookup)
+ {
+ 	struct task_struct *task = bpf_get_current_task_btf();
++	struct cgroup *cgrp;
++
++	if (is_cgroup1) {
++		cgrp = bpf_task_get_cgroup1(task, target_hid);
++		if (!cgrp)
++			return 0;
+ 
+-	bpf_cgrp_storage_delete(&map_a, task->cgroups->dfl_cgrp);
+-	bpf_cgrp_storage_delete(&map_b, task->cgroups->dfl_cgrp);
++		__on_lookup(cgrp);
++		bpf_cgroup_release(cgrp);
++		return 0;
++	}
++
++	__on_lookup(task->cgroups->dfl_cgrp);
+ 	return 0;
+ }
+ 
+-SEC("fentry/bpf_local_storage_update")
+-int BPF_PROG(on_update)
++static void __on_update(struct cgroup *cgrp)
+ {
+-	struct task_struct *task = bpf_get_current_task_btf();
+ 	long *ptr;
+ 
+-	ptr = bpf_cgrp_storage_get(&map_a, task->cgroups->dfl_cgrp, 0,
+-				   BPF_LOCAL_STORAGE_GET_F_CREATE);
++	ptr = bpf_cgrp_storage_get(&map_a, cgrp, 0, BPF_LOCAL_STORAGE_GET_F_CREATE);
+ 	if (ptr)
+ 		*ptr += 1;
+ 
+-	ptr = bpf_cgrp_storage_get(&map_b, task->cgroups->dfl_cgrp, 0,
+-				   BPF_LOCAL_STORAGE_GET_F_CREATE);
++	ptr = bpf_cgrp_storage_get(&map_b, cgrp, 0, BPF_LOCAL_STORAGE_GET_F_CREATE);
+ 	if (ptr)
+ 		*ptr += 1;
++}
+ 
++SEC("fentry/bpf_local_storage_update")
++int BPF_PROG(on_update)
++{
++	struct task_struct *task = bpf_get_current_task_btf();
++	struct cgroup *cgrp;
++
++	if (is_cgroup1) {
++		cgrp = bpf_task_get_cgroup1(task, target_hid);
++		if (!cgrp)
++			return 0;
++
++		__on_update(cgrp);
++		bpf_cgroup_release(cgrp);
++		return 0;
++	}
++
++	__on_update(task->cgroups->dfl_cgrp);
+ 	return 0;
+ }
+ 
+-SEC("tp_btf/sys_enter")
+-int BPF_PROG(on_enter, struct pt_regs *regs, long id)
++static void __on_enter(struct pt_regs *regs, long id, struct cgroup *cgrp)
+ {
+-	struct task_struct *task;
+ 	long *ptr;
+ 
+-	task = bpf_get_current_task_btf();
+-	ptr = bpf_cgrp_storage_get(&map_a, task->cgroups->dfl_cgrp, 0,
+-				   BPF_LOCAL_STORAGE_GET_F_CREATE);
++	ptr = bpf_cgrp_storage_get(&map_a, cgrp, 0, BPF_LOCAL_STORAGE_GET_F_CREATE);
+ 	if (ptr)
+ 		*ptr = 200;
+ 
+-	ptr = bpf_cgrp_storage_get(&map_b, task->cgroups->dfl_cgrp, 0,
+-				   BPF_LOCAL_STORAGE_GET_F_CREATE);
++	ptr = bpf_cgrp_storage_get(&map_b, cgrp, 0, BPF_LOCAL_STORAGE_GET_F_CREATE);
+ 	if (ptr)
+ 		*ptr = 100;
++}
++
++SEC("tp_btf/sys_enter")
++int BPF_PROG(on_enter, struct pt_regs *regs, long id)
++{
++	struct task_struct *task = bpf_get_current_task_btf();
++	struct cgroup *cgrp;
++
++	if (is_cgroup1) {
++		cgrp = bpf_task_get_cgroup1(task, target_hid);
++		if (!cgrp)
++			return 0;
++
++		__on_enter(regs, id, cgrp);
++		bpf_cgroup_release(cgrp);
++		return 0;
++	}
++
++	__on_enter(regs, id, task->cgroups->dfl_cgrp);
+ 	return 0;
+ }
+diff --git a/tools/testing/selftests/bpf/progs/cgrp_ls_sleepable.c b/tools/testing/selftests/bpf/progs/cgrp_ls_sleepable.c
+index 4c7844e..facedd8 100644
+--- a/tools/testing/selftests/bpf/progs/cgrp_ls_sleepable.c
++++ b/tools/testing/selftests/bpf/progs/cgrp_ls_sleepable.c
+@@ -17,7 +17,11 @@ struct {
+ 
+ __u32 target_pid;
+ __u64 cgroup_id;
++int target_hid;
++bool is_cgroup1;
+ 
++struct cgroup *bpf_task_get_cgroup1(struct task_struct *task, int hierarchy_id) __ksym;
++void bpf_cgroup_release(struct cgroup *cgrp) __ksym;
+ void bpf_rcu_read_lock(void) __ksym;
+ void bpf_rcu_read_unlock(void) __ksym;
+ 
+@@ -37,23 +41,50 @@ int cgroup_iter(struct bpf_iter__cgroup *ctx)
+ 	return 0;
+ }
+ 
++static void __no_rcu_lock(struct cgroup *cgrp)
++{
++	long *ptr;
++
++	/* Note that trace rcu is held in sleepable prog, so we can use
++	 * bpf_cgrp_storage_get() in sleepable prog.
++	 */
++	ptr = bpf_cgrp_storage_get(&map_a, cgrp, 0,
++				   BPF_LOCAL_STORAGE_GET_F_CREATE);
++	if (ptr)
++		cgroup_id = cgrp->kn->id;
++}
++
+ SEC("?fentry.s/" SYS_PREFIX "sys_getpgid")
+-int no_rcu_lock(void *ctx)
++int cgrp1_no_rcu_lock(void *ctx)
+ {
+ 	struct task_struct *task;
+ 	struct cgroup *cgrp;
+-	long *ptr;
++
++	task = bpf_get_current_task_btf();
++	if (task->pid != target_pid)
++		return 0;
++
++	/* bpf_task_get_cgroup1 can work in sleepable prog */
++	cgrp = bpf_task_get_cgroup1(task, target_hid);
++	if (!cgrp)
++		return 0;
++
++	__no_rcu_lock(cgrp);
++	bpf_cgroup_release(cgrp);
++	return 0;
++}
++
++SEC("?fentry.s/" SYS_PREFIX "sys_getpgid")
++int no_rcu_lock(void *ctx)
++{
++	struct task_struct *task;
+ 
+ 	task = bpf_get_current_task_btf();
+ 	if (task->pid != target_pid)
+ 		return 0;
+ 
+ 	/* task->cgroups is untrusted in sleepable prog outside of RCU CS */
+-	cgrp = task->cgroups->dfl_cgrp;
+-	ptr = bpf_cgrp_storage_get(&map_a, cgrp, 0,
+-				   BPF_LOCAL_STORAGE_GET_F_CREATE);
+-	if (ptr)
+-		cgroup_id = cgrp->kn->id;
++	__no_rcu_lock(task->cgroups->dfl_cgrp);
+ 	return 0;
+ }
+ 
+@@ -68,6 +99,22 @@ int yes_rcu_lock(void *ctx)
+ 	if (task->pid != target_pid)
+ 		return 0;
+ 
++	if (is_cgroup1) {
++		bpf_rcu_read_lock();
++		cgrp = bpf_task_get_cgroup1(task, target_hid);
++		if (!cgrp) {
++			bpf_rcu_read_unlock();
++			return 0;
++		}
++
++		ptr = bpf_cgrp_storage_get(&map_a, cgrp, 0, BPF_LOCAL_STORAGE_GET_F_CREATE);
++		if (ptr)
++			cgroup_id = cgrp->kn->id;
++		bpf_cgroup_release(cgrp);
++		bpf_rcu_read_unlock();
++		return 0;
++	}
++
+ 	bpf_rcu_read_lock();
+ 	cgrp = task->cgroups->dfl_cgrp;
+ 	/* cgrp is trusted under RCU CS */
+diff --git a/tools/testing/selftests/bpf/progs/cgrp_ls_tp_btf.c b/tools/testing/selftests/bpf/progs/cgrp_ls_tp_btf.c
+index 9ebb8e2..1c348f0 100644
+--- a/tools/testing/selftests/bpf/progs/cgrp_ls_tp_btf.c
++++ b/tools/testing/selftests/bpf/progs/cgrp_ls_tp_btf.c
+@@ -27,62 +27,100 @@ struct {
+ int mismatch_cnt = 0;
+ int enter_cnt = 0;
+ int exit_cnt = 0;
++int target_hid = 0;
++bool is_cgroup1 = 0;
+ 
+-SEC("tp_btf/sys_enter")
+-int BPF_PROG(on_enter, struct pt_regs *regs, long id)
++struct cgroup *bpf_task_get_cgroup1(struct task_struct *task, int hierarchy_id) __ksym;
++void bpf_cgroup_release(struct cgroup *cgrp) __ksym;
++
++static void __on_enter(struct pt_regs *regs, long id, struct cgroup *cgrp)
+ {
+-	struct task_struct *task;
+ 	long *ptr;
+ 	int err;
+ 
+-	task = bpf_get_current_task_btf();
+-	if (task->pid != target_pid)
+-		return 0;
+-
+ 	/* populate value 0 */
+-	ptr = bpf_cgrp_storage_get(&map_a, task->cgroups->dfl_cgrp, 0,
++	ptr = bpf_cgrp_storage_get(&map_a, cgrp, 0,
+ 				   BPF_LOCAL_STORAGE_GET_F_CREATE);
+ 	if (!ptr)
+-		return 0;
++		return;
+ 
+ 	/* delete value 0 */
+-	err = bpf_cgrp_storage_delete(&map_a, task->cgroups->dfl_cgrp);
++	err = bpf_cgrp_storage_delete(&map_a, cgrp);
+ 	if (err)
+-		return 0;
++		return;
+ 
+ 	/* value is not available */
+-	ptr = bpf_cgrp_storage_get(&map_a, task->cgroups->dfl_cgrp, 0, 0);
++	ptr = bpf_cgrp_storage_get(&map_a, cgrp, 0, 0);
+ 	if (ptr)
+-		return 0;
++		return;
+ 
+ 	/* re-populate the value */
+-	ptr = bpf_cgrp_storage_get(&map_a, task->cgroups->dfl_cgrp, 0,
++	ptr = bpf_cgrp_storage_get(&map_a, cgrp, 0,
+ 				   BPF_LOCAL_STORAGE_GET_F_CREATE);
+ 	if (!ptr)
+-		return 0;
++		return;
+ 	__sync_fetch_and_add(&enter_cnt, 1);
+ 	*ptr = MAGIC_VALUE + enter_cnt;
+-
+-	return 0;
+ }
+ 
+-SEC("tp_btf/sys_exit")
+-int BPF_PROG(on_exit, struct pt_regs *regs, long id)
++SEC("tp_btf/sys_enter")
++int BPF_PROG(on_enter, struct pt_regs *regs, long id)
+ {
+ 	struct task_struct *task;
+-	long *ptr;
++	struct cgroup *cgrp;
+ 
+ 	task = bpf_get_current_task_btf();
+ 	if (task->pid != target_pid)
+ 		return 0;
+ 
+-	ptr = bpf_cgrp_storage_get(&map_a, task->cgroups->dfl_cgrp, 0,
++	if (is_cgroup1) {
++		cgrp = bpf_task_get_cgroup1(task, target_hid);
++		if (!cgrp)
++			return 0;
++
++		__on_enter(regs, id, cgrp);
++		bpf_cgroup_release(cgrp);
++		return 0;
++	}
++
++	__on_enter(regs, id, task->cgroups->dfl_cgrp);
++	return 0;
++}
++
++static void __on_exit(struct pt_regs *regs, long id, struct cgroup *cgrp)
++{
++	long *ptr;
++
++	ptr = bpf_cgrp_storage_get(&map_a, cgrp, 0,
+ 				   BPF_LOCAL_STORAGE_GET_F_CREATE);
+ 	if (!ptr)
+-		return 0;
++		return;
+ 
+ 	__sync_fetch_and_add(&exit_cnt, 1);
+ 	if (*ptr != MAGIC_VALUE + exit_cnt)
+ 		__sync_fetch_and_add(&mismatch_cnt, 1);
++}
++
++SEC("tp_btf/sys_exit")
++int BPF_PROG(on_exit, struct pt_regs *regs, long id)
++{
++	struct task_struct *task;
++	struct cgroup *cgrp;
++
++	task = bpf_get_current_task_btf();
++	if (task->pid != target_pid)
++		return 0;
++
++	if (is_cgroup1) {
++		cgrp = bpf_task_get_cgroup1(task, target_hid);
++		if (!cgrp)
++			return 0;
++
++		__on_exit(regs, id, cgrp);
++		bpf_cgroup_release(cgrp);
++		return 0;
++	}
++
++	__on_exit(regs, id, task->cgroups->dfl_cgrp);
+ 	return 0;
+ }
 -- 
 1.8.3.1
 
