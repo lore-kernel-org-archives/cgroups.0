@@ -1,104 +1,284 @@
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="LFusca8X"
-Received: from mail-ej1-x633.google.com (mail-ej1-x633.google.com [IPv6:2a00:1450:4864:20::633])
-	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6A0ED9B
-	for <cgroups@vger.kernel.org>; Tue, 12 Dec 2023 12:45:02 -0800 (PST)
-Received: by mail-ej1-x633.google.com with SMTP id a640c23a62f3a-a1ec87a7631so550666566b.0
-        for <cgroups@vger.kernel.org>; Tue, 12 Dec 2023 12:45:02 -0800 (PST)
+	dkim=pass (1024-bit key) header.d=chromium.org header.i=@chromium.org header.b="EBII8CWq"
+Received: from mail-pl1-x62f.google.com (mail-pl1-x62f.google.com [IPv6:2607:f8b0:4864:20::62f])
+	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C50E8A7
+	for <cgroups@vger.kernel.org>; Tue, 12 Dec 2023 13:17:42 -0800 (PST)
+Received: by mail-pl1-x62f.google.com with SMTP id d9443c01a7336-1d098b87eeeso54945325ad.0
+        for <cgroups@vger.kernel.org>; Tue, 12 Dec 2023 13:17:42 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20230601; t=1702413901; x=1703018701; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
+        d=chromium.org; s=google; t=1702415862; x=1703020662; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=kE8RZVsLlDqV/tHQsV0pBVubgKNBa3FvWZVPRZsHSAs=;
-        b=LFusca8XEG6vrc3V0kseEDVsm0MbUCjDN0LEI/ctRNOu2pVNuRhQOWy3mZHsoa3t+I
-         adrd2ru3IIB+y2uQMG1rHZVp/l1KHFDF5Z++MoHSE81mkunSvf4gENnnlT27Jwpot/RG
-         dEZB3MM63a1laGc0nDLEaUBqKz97rcHNwTYP8ZbidsVeRO1LjOuVLzIO2U6S2fyxRLiR
-         YctSEuzLUuvrJvn64LY/3uKRMNmI72fF7yYRvyL3jDSLbR+6nLjSr3Olat/YtcT7HZtz
-         iXKMU+eBQCN6hq1U3t5cOukwJpQTTz6x73eLXqQD2lnCRsOvjStapkMc8XRPm1mmYqJI
-         1Qgg==
+        bh=YgP6QDGYW90+EPtUKh6hhExTw/nr/8L1WXYuh71GNlI=;
+        b=EBII8CWqTewHCYUKQvaukG1zWeJjB2pl/RbMg+j8fFcvUq11md9ygurXaQ0F8RZJRd
+         QN9d/19YNp3UbZ8oh9br9LCWCn2S3HP6xRQ592cXogzBEjuqKMlAo7D2tjJgS0BmhQwY
+         x3edF44sbx8FhzObBflU+lF0Lssb3eOq3JnHc=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1702413901; x=1703018701;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+        d=1e100.net; s=20230601; t=1702415862; x=1703020662;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=kE8RZVsLlDqV/tHQsV0pBVubgKNBa3FvWZVPRZsHSAs=;
-        b=nn0wLf1jknYk5R9xiPzulpRnE4iFh4xyQWs9RNlQ/vnDEzpA4gu5kraMukvhl790Md
-         qDFo6xodnLaA9fYzrMRTCNrtX9Me+em60/J42qrWafy1zkKajRqPR30AE8vGT41amwQm
-         +pO4eMGYpf4+s+JweIO89qYJUIaDswyHzwYw/OtKap/kSV83f17DJux9aCBKRGcE3uSM
-         BjAo4xt9pEqqz8ujMNySBgiUuC5eNnzRjhNhZrbwQb7W1nBujIqP44wBgExH8db91brM
-         P6q+DCf+m/rWPQyNSchiFRwsPeIc8u7J84zEQs+A7MDIvRjOQ8K7n407tLj94V/5+e9h
-         /HMg==
-X-Gm-Message-State: AOJu0YwWvP8GIotdUFgxDg2hcO3wVL+Bf1qx/ZGS1xvbmuXExk4Fijb9
-	N4erqs9xRH2kgVgmnwyCRI5l/YPYd/Kfdf61c+byvQ==
-X-Google-Smtp-Source: AGHT+IFAT5lsVwBH0E1qAd8i6cYOV214omt1/uBJz3rz4Sjo68LKbG5FT2JF7Tj9rLm3fl0eLDj2fJFUKGMgaDUislQ=
-X-Received: by 2002:a17:906:5992:b0:9da:ee00:a023 with SMTP id
- m18-20020a170906599200b009daee00a023mr3752550ejs.30.1702413900702; Tue, 12
- Dec 2023 12:45:00 -0800 (PST)
+        bh=YgP6QDGYW90+EPtUKh6hhExTw/nr/8L1WXYuh71GNlI=;
+        b=gtIuIDQLA587xRYET9A929XDgPiQ4qQ6lJPOJGGwQMQfK8Or0kKrpE9es4zlE1zL8+
+         YvJDzC9qwdL/dtnNrksydShPWiuB8blsUNOy6pqrgU6neNWNVZv1l5DU1oRt1WFPffrj
+         x9ZBFmtUfgFmzCICFjWJGmQYiu3PH2XCfW7XoJnW2Z+mhufVZZ3fvLHq5+o1bql5VIXe
+         TK/YXG3zywQxUtI2xWx++XH1/6qtWIesn+DQMEDtMGO71b8TSEeZ9DlzTjioYKUnXeJS
+         ApIkDWRE9zzbUHd0b1sGURu2QaRN4XMjkxJeEhXSYM0acGl3aQVVBSuTsu+BMJlVfQKl
+         coow==
+X-Gm-Message-State: AOJu0Yyf3TVoxIm2MzS5E7f0bOERRXZm5NQv0Ugm/F6vYAj7Hv7vM9iw
+	de/SL+AIaNKxuUcmIR1bdo1XRA==
+X-Google-Smtp-Source: AGHT+IFjDgIDgEDyV0NYMtC7wrznCUmiU5/lWSweOP8HyZzQAO0+By9K4rXrnLgAr+Ii7qKKdIvgKg==
+X-Received: by 2002:a17:902:e74e:b0:1cc:5e1b:98b5 with SMTP id p14-20020a170902e74e00b001cc5e1b98b5mr7270093plf.66.1702415862230;
+        Tue, 12 Dec 2023 13:17:42 -0800 (PST)
+Received: from www.outflux.net (198-0-35-241-static.hfc.comcastbusiness.net. [198.0.35.241])
+        by smtp.gmail.com with ESMTPSA id g14-20020a1709029f8e00b001cf7c07be50sm9052322plq.58.2023.12.12.13.17.41
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 12 Dec 2023 13:17:41 -0800 (PST)
+From: Kees Cook <keescook@chromium.org>
+To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: Kees Cook <keescook@chromium.org>,
+	Tejun Heo <tj@kernel.org>,
+	Zefan Li <lizefan.x@bytedance.com>,
+	Johannes Weiner <hannes@cmpxchg.org>,
+	Waiman Long <longman@redhat.com>,
+	cgroups@vger.kernel.org,
+	Azeem Shaikh <azeemshaikh38@gmail.com>,
+	Christophe JAILLET <christophe.jaillet@wanadoo.fr>,
+	linux-kernel@vger.kernel.org,
+	bpf@vger.kernel.org,
+	linux-hardening@vger.kernel.org
+Subject: [PATCH v3 3/3] kernfs: Convert kernfs_path_from_node_locked() from strlcpy() to strscpy()
+Date: Tue, 12 Dec 2023 13:17:40 -0800
+Message-Id: <20231212211741.164376-3-keescook@chromium.org>
+X-Mailer: git-send-email 2.34.1
+In-Reply-To: <20231212211606.make.155-kees@kernel.org>
+References: <20231212211606.make.155-kees@kernel.org>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20231129032154.3710765-1-yosryahmed@google.com>
- <20231129032154.3710765-6-yosryahmed@google.com> <20231202083129.3pmds2cddy765szr@google.com>
- <CAJD7tkZPcBbvcK+Xj0edevemB+801wRvvcFDJEjk4ZcjNVoV_w@mail.gmail.com>
- <CAJD7tkY-YTj-4+A6zQT_SjbYyRYyiJHKc9pf1CMqqwU1VRzxvA@mail.gmail.com>
- <CALvZod5rPrFNLyOpUUbmo2T3zxtDjomDqv+Ba3KyFh=eRwNXjg@mail.gmail.com>
- <CAAPL-u-Futq5biNhQKTVi15vzihZxoan-dVORPqpov1saJ99=Q@mail.gmail.com>
- <CAJD7tkZgP3m-VVPn+fF_YuvXeQYK=tZZjJHj=dzD=CcSSpp2qg@mail.gmail.com>
- <20231204235856.k4izppfsrpg2rng7@google.com> <20231212104355.ba052748471e1e0ce5cc35a0@linux-foundation.org>
-In-Reply-To: <20231212104355.ba052748471e1e0ce5cc35a0@linux-foundation.org>
-From: Yosry Ahmed <yosryahmed@google.com>
-Date: Tue, 12 Dec 2023 12:44:21 -0800
-Message-ID: <CAJD7tkY-+2OzncG7kK=rkw3sAK6oAMHkoZuv8+vnxmt6N3ECgw@mail.gmail.com>
-Subject: Re: [mm-unstable v4 5/5] mm: memcg: restore subtree stats flushing
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: Shakeel Butt <shakeelb@google.com>, Wei Xu <weixugc@google.com>, 
-	Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, 
-	Roman Gushchin <roman.gushchin@linux.dev>, Muchun Song <muchun.song@linux.dev>, 
-	Ivan Babrou <ivan@cloudflare.com>, Tejun Heo <tj@kernel.org>, =?UTF-8?Q?Michal_Koutn=C3=BD?= <mkoutny@suse.com>, 
-	Waiman Long <longman@redhat.com>, kernel-team@cloudflare.com, 
-	Greg Thelen <gthelen@google.com>, Domenico Cerasuolo <cerasuolodomenico@gmail.com>, linux-mm@kvack.org, 
-	cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, 
-	Bagas Sanjaya <bagasdotme@gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+X-Developer-Signature: v=1; a=openpgp-sha256; l=8042; i=keescook@chromium.org;
+ h=from:subject; bh=shZXUYfHvcn83JB9rTJeaRzUZqZ1UgzjWRrQTVCVtxU=;
+ b=owEBbQKS/ZANAwAKAYly9N/cbcAmAcsmYgBleM30G+t8NV/vyHSFzjkC+K+Zj47yXA4kAs33K
+ S4H3DoxNmuJAjMEAAEKAB0WIQSlw/aPIp3WD3I+bhOJcvTf3G3AJgUCZXjN9AAKCRCJcvTf3G3A
+ JkyTEAConGhiBLHsocQ8sbSwq6RTnjeVAFv2A72J5kJK8MHW3sFiydk6ragXK0H4NjhddAT6k9R
+ Iwpc+sAMeXtC5LSHlbkxzwxmAmTpvdZ0+HkpGNofYnO1GRBS2tNZQBx2xovmaBZGLhI3uL1S2Mf
+ uFy1jEp7IRjwOUbM1zHWV4bM+TLIxRHQDtwtec7aUCS9kz92muBO+LZI8wOqu3//0chhPA/oJYK
+ OmIQjfULUR5a/IzcHJAYVXdcRoDKXwclSWSFPM/lbR+ZX7XOdatfwteancUB7mA3VqMASoK6jzD
+ /WWodvOyGvMywKDybb9iVwPwLdcDqi6f6YRwUsKHrO1PU0X/vaRreWv0AW+McpdjcGDDak159n5
+ dLG/EkNlTRggxw61NNRmjuUIplvXSnvWAMjv1qumw8iiEzajnLTxs+d3rF7yWOneFFWz8cuucBs
+ T6q984RP+2VM4dWIU9dRcdMhF4+sfRiXBnCq95xZcrcakrbEqaZ1G6JMiaKn+pTpTGFBrSw9CAT
+ 91oa2XERahlLlqpV8VMm0QS8tptziqLPqdU3+jQq45xdbDLw4g26B01O8G9PkgXEBkYxNXi2CfE
+ mc85dyxzgFB/wBjBPh0kEN9HaDc4FwRSQ25SkObRCYaStboeynzw51FRZV/pJz/aF6MJJlMUqNu aYQ0Cy79yRW6wZg==
+X-Developer-Key: i=keescook@chromium.org; a=openpgp; fpr=A5C3F68F229DD60F723E6E138972F4DFDC6DC026
+Content-Transfer-Encoding: 8bit
 
-On Tue, Dec 12, 2023 at 10:43=E2=80=AFAM Andrew Morton
-<akpm@linux-foundation.org> wrote:
->
-> On Mon, 4 Dec 2023 23:58:56 +0000 Shakeel Butt <shakeelb@google.com> wrot=
-e:
->
-> > On Mon, Dec 04, 2023 at 03:49:01PM -0800, Yosry Ahmed wrote:
-> > [...]
-> > >
-> > > From 19af26e01f93cbf0806d75a234b78e48c1ce9d80 Mon Sep 17 00:00:00 200=
-1
-> > > From: Yosry Ahmed <yosryahmed@google.com>
-> > > Date: Mon, 4 Dec 2023 23:43:29 +0000
-> > > Subject: [PATCH] mm: memcg: remove stats flushing mutex
-> > >
-> > > The mutex was intended to make the waiters sleep instead of spin, and
-> > > such that we can check the update thresholds again after acquiring th=
-e
-> > > mutex. However, the mutex has a risk of priority inversion, especiall=
-y
-> > > since the underlying rstat lock can de dropped while the mutex is hel=
-d.
-> > >
-> > > Synthetic testing with high concurrency of flushers shows no
-> > > regressions without the mutex, so remove it.
-> > >
-> > > Suggested-by: Shakeel Butt <shakeelb@google.com>
-> > > Signed-off-by: Yosry Ahmed <yosryahmed@google.com>
-> >
-> > Acked-by: Shakeel Butt <shakeelb@google.com>
-> >
->
-> I'd like to move this series into mm-stable soon.  Are we all OK with tha=
-t?
+One of the last remaining users of strlcpy() in the kernel is
+kernfs_path_from_node_locked(), which passes back the problematic "length
+we _would_ have copied" return value to indicate truncation.  Convert the
+chain of all callers to use the negative return value (some of which
+already doing this explicitly). All callers were already also checking
+for negative return values, so the risk to missed checks looks very low.
 
-Looking forward to that :)
+In this analysis, it was found that cgroup1_release_agent() actually
+didn't handle the "too large" condition, so this is technically also a
+bug fix. :)
+
+Here's the chain of callers, and resolution identifying each one as now
+handling the correct return value:
+
+kernfs_path_from_node_locked()
+        kernfs_path_from_node()
+                pr_cont_kernfs_path()
+                        returns void
+                kernfs_path()
+                        sysfs_warn_dup()
+                                return value ignored
+                        cgroup_path()
+                                blkg_path()
+                                        bfq_bic_update_cgroup()
+                                                return value ignored
+                                TRACE_IOCG_PATH()
+                                        return value ignored
+                                TRACE_CGROUP_PATH()
+                                        return value ignored
+                                perf_event_cgroup()
+                                        return value ignored
+                                task_group_path()
+                                        return value ignored
+                                damon_sysfs_memcg_path_eq()
+                                        return value ignored
+                                get_mm_memcg_path()
+                                        return value ignored
+                                lru_gen_seq_show()
+                                        return value ignored
+                        cgroup_path_from_kernfs_id()
+                                return value ignored
+                cgroup_show_path()
+                        already converted "too large" error to negative value
+                cgroup_path_ns_locked()
+                        cgroup_path_ns()
+                                bpf_iter_cgroup_show_fdinfo()
+                                        return value ignored
+                                cgroup1_release_agent()
+                                        wasn't checking "too large" error
+                        proc_cgroup_show()
+                                already converted "too large" to negative value
+
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: Tejun Heo <tj@kernel.org>
+Cc: Zefan Li <lizefan.x@bytedance.com>
+Cc: Johannes Weiner <hannes@cmpxchg.org>
+Cc: Waiman Long <longman@redhat.com>
+Cc: cgroups@vger.kernel.org
+Co-developed-by: Azeem Shaikh <azeemshaikh38@gmail.com>
+Signed-off-by: Azeem Shaikh <azeemshaikh38@gmail.com>
+Link: https://lore.kernel.org/r/20231116192127.1558276-3-keescook@chromium.org
+Signed-off-by: Kees Cook <keescook@chromium.org>
+---
+ fs/kernfs/dir.c           | 34 +++++++++++++++++-----------------
+ kernel/cgroup/cgroup-v1.c |  2 +-
+ kernel/cgroup/cgroup.c    |  4 ++--
+ kernel/cgroup/cpuset.c    |  2 +-
+ 4 files changed, 21 insertions(+), 21 deletions(-)
+
+diff --git a/fs/kernfs/dir.c b/fs/kernfs/dir.c
+index 8c0e5442597e..8ec73f6cf6ec 100644
+--- a/fs/kernfs/dir.c
++++ b/fs/kernfs/dir.c
+@@ -127,7 +127,7 @@ static struct kernfs_node *kernfs_common_ancestor(struct kernfs_node *a,
+  *
+  * [3] when @kn_to is %NULL result will be "(null)"
+  *
+- * Return: the length of the full path.  If the full length is equal to or
++ * Return: the length of the constructed path.  If the path would have been
+  * greater than @buflen, @buf contains the truncated path with the trailing
+  * '\0'.  On error, -errno is returned.
+  */
+@@ -138,16 +138,17 @@ static int kernfs_path_from_node_locked(struct kernfs_node *kn_to,
+ 	struct kernfs_node *kn, *common;
+ 	const char parent_str[] = "/..";
+ 	size_t depth_from, depth_to, len = 0;
++	ssize_t copied;
+ 	int i, j;
+ 
+ 	if (!kn_to)
+-		return strlcpy(buf, "(null)", buflen);
++		return strscpy(buf, "(null)", buflen);
+ 
+ 	if (!kn_from)
+ 		kn_from = kernfs_root(kn_to)->kn;
+ 
+ 	if (kn_from == kn_to)
+-		return strlcpy(buf, "/", buflen);
++		return strscpy(buf, "/", buflen);
+ 
+ 	common = kernfs_common_ancestor(kn_from, kn_to);
+ 	if (WARN_ON(!common))
+@@ -158,18 +159,19 @@ static int kernfs_path_from_node_locked(struct kernfs_node *kn_to,
+ 
+ 	buf[0] = '\0';
+ 
+-	for (i = 0; i < depth_from; i++)
+-		len += strlcpy(buf + len, parent_str,
+-			       len < buflen ? buflen - len : 0);
++	for (i = 0; i < depth_from; i++) {
++		copied = strscpy(buf + len, parent_str, buflen - len);
++		if (copied < 0)
++			return copied;
++		len += copied;
++	}
+ 
+ 	/* Calculate how many bytes we need for the rest */
+ 	for (i = depth_to - 1; i >= 0; i--) {
+ 		for (kn = kn_to, j = 0; j < i; j++)
+ 			kn = kn->parent;
+-		len += strlcpy(buf + len, "/",
+-			       len < buflen ? buflen - len : 0);
+-		len += strlcpy(buf + len, kn->name,
+-			       len < buflen ? buflen - len : 0);
++
++		len += scnprintf(buf + len, buflen - len, "/%s", kn->name);
+ 	}
+ 
+ 	return len;
+@@ -214,7 +216,7 @@ int kernfs_name(struct kernfs_node *kn, char *buf, size_t buflen)
+  * path (which includes '..'s) as needed to reach from @from to @to is
+  * returned.
+  *
+- * Return: the length of the full path.  If the full length is equal to or
++ * Return: the length of the constructed path.  If the path would have been
+  * greater than @buflen, @buf contains the truncated path with the trailing
+  * '\0'.  On error, -errno is returned.
+  */
+@@ -265,12 +267,10 @@ void pr_cont_kernfs_path(struct kernfs_node *kn)
+ 	sz = kernfs_path_from_node(kn, NULL, kernfs_pr_cont_buf,
+ 				   sizeof(kernfs_pr_cont_buf));
+ 	if (sz < 0) {
+-		pr_cont("(error)");
+-		goto out;
+-	}
+-
+-	if (sz >= sizeof(kernfs_pr_cont_buf)) {
+-		pr_cont("(name too long)");
++		if (sz == -E2BIG)
++			pr_cont("(name too long)");
++		else
++			pr_cont("(error)");
+ 		goto out;
+ 	}
+ 
+diff --git a/kernel/cgroup/cgroup-v1.c b/kernel/cgroup/cgroup-v1.c
+index 76db6c67e39a..9cb00ebe9ac6 100644
+--- a/kernel/cgroup/cgroup-v1.c
++++ b/kernel/cgroup/cgroup-v1.c
+@@ -802,7 +802,7 @@ void cgroup1_release_agent(struct work_struct *work)
+ 		goto out_free;
+ 
+ 	ret = cgroup_path_ns(cgrp, pathbuf, PATH_MAX, &init_cgroup_ns);
+-	if (ret < 0 || ret >= PATH_MAX)
++	if (ret < 0)
+ 		goto out_free;
+ 
+ 	argv[0] = agentbuf;
+diff --git a/kernel/cgroup/cgroup.c b/kernel/cgroup/cgroup.c
+index 4b9ff41ca603..8d2674c6aaef 100644
+--- a/kernel/cgroup/cgroup.c
++++ b/kernel/cgroup/cgroup.c
+@@ -1893,7 +1893,7 @@ int cgroup_show_path(struct seq_file *sf, struct kernfs_node *kf_node,
+ 	len = kernfs_path_from_node(kf_node, ns_cgroup->kn, buf, PATH_MAX);
+ 	spin_unlock_irq(&css_set_lock);
+ 
+-	if (len >= PATH_MAX)
++	if (len == -E2BIG)
+ 		len = -ERANGE;
+ 	else if (len > 0) {
+ 		seq_escape(sf, buf, " \t\n\\");
+@@ -6301,7 +6301,7 @@ int proc_cgroup_show(struct seq_file *m, struct pid_namespace *ns,
+ 		if (cgroup_on_dfl(cgrp) || !(tsk->flags & PF_EXITING)) {
+ 			retval = cgroup_path_ns_locked(cgrp, buf, PATH_MAX,
+ 						current->nsproxy->cgroup_ns);
+-			if (retval >= PATH_MAX)
++			if (retval == -E2BIG)
+ 				retval = -ENAMETOOLONG;
+ 			if (retval < 0)
+ 				goto out_unlock;
+diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
+index 615daaf87f1f..fb29158ae825 100644
+--- a/kernel/cgroup/cpuset.c
++++ b/kernel/cgroup/cpuset.c
+@@ -4941,7 +4941,7 @@ int proc_cpuset_show(struct seq_file *m, struct pid_namespace *ns,
+ 	retval = cgroup_path_ns(css->cgroup, buf, PATH_MAX,
+ 				current->nsproxy->cgroup_ns);
+ 	css_put(css);
+-	if (retval >= PATH_MAX)
++	if (retval == -E2BIG)
+ 		retval = -ENAMETOOLONG;
+ 	if (retval < 0)
+ 		goto out_free;
+-- 
+2.34.1
+
