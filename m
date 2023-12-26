@@ -1,47 +1,47 @@
-Received: from mail-qv1-f48.google.com (mail-qv1-f48.google.com [209.85.219.48])
+Received: from mail-qv1-f51.google.com (mail-qv1-f51.google.com [209.85.219.51])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 036D910A2B
-	for <cgroups@vger.kernel.org>; Tue, 26 Dec 2023 20:02:16 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8B3B8125B7
+	for <cgroups@vger.kernel.org>; Tue, 26 Dec 2023 20:02:18 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=soleen.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=soleen.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=soleen.com header.i=@soleen.com header.b="hD46YECB"
-Received: by mail-qv1-f48.google.com with SMTP id 6a1803df08f44-67f9f6caabcso34575776d6.3
-        for <cgroups@vger.kernel.org>; Tue, 26 Dec 2023 12:02:16 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=soleen.com header.i=@soleen.com header.b="fLxzjMjZ"
+Received: by mail-qv1-f51.google.com with SMTP id 6a1803df08f44-67f9fac086bso32336316d6.3
+        for <cgroups@vger.kernel.org>; Tue, 26 Dec 2023 12:02:18 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=soleen.com; s=google; t=1703620935; x=1704225735; darn=vger.kernel.org;
+        d=soleen.com; s=google; t=1703620937; x=1704225737; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:to:from:from:to:cc:subject:date:message-id
          :reply-to;
-        bh=DYpA5AoyDPqGEngVGgZPNQ1qp0VmBsjf7LHh4aHHikg=;
-        b=hD46YECBHg51wE0+GRkJojpKFdwjNY+JkC9Co2vGvZYUsea6RT60GI25pgcL3jSBki
-         hR2OfjI6eB7GNxxbYXiNY94EM0Cd7Nhb2IvBJEOWjMKCpiPergBeCOnzmfdE1rz+fnHm
-         MVevg4/s2Y/JoBmupEVBho8UEkyR+k9cRR9EAfDZckBR9PGUM3/JEgUdMNwJR/69gcWi
-         iY/C6//NuZETbdYxNONgbTlo2IKjZGeQa6rHcbksH2woyHDVn0tAcJsog22+rkvK3XsR
-         xBKudF76vkhircKHt76fxS16No+4noDjwaAZVemShUYbmR5uGUa7VaTzSWXu7Xg9awtS
-         y06A==
+        bh=BtxKf3FqZi0ydpudkf0bXoEdqlC2cPc9JiSI0VbRHzc=;
+        b=fLxzjMjZ3/6dZYApf1ia3Jhf82a3OiMW/a+ahz6Xz62kehsdgHIGgC+cyMVAqq0UCA
+         +vYFAm5WwArj/olKPcIuFmYIcVmvY2ZjbOKgaWnD8veSHpWE8qmahh14KxHfhsrWsKVN
+         BAh/Pla/3UJXzAkVQgJGzdO465M5D3yKn6BaZFzFUsWIgCJniBKvv/PRa4wWTRe09KmX
+         EvJEZ5dGienG3L0q1slgkC3rTHDlK2NyQXZ0WOS9S++oenlpScohOK+Uck9e6z8k+mnL
+         7AuyV3TjJz1dYv5v/5gcSFOywEd9QxKpvmAHMDalps0LCoEMxRkrdtxB/kQMm3jrNkZi
+         VC4Q==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1703620935; x=1704225735;
+        d=1e100.net; s=20230601; t=1703620937; x=1704225737;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:to:from:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=DYpA5AoyDPqGEngVGgZPNQ1qp0VmBsjf7LHh4aHHikg=;
-        b=rkxd9e6ff+SGr0ugj0lvWUxd8cFaSxwg5x6EeKwXCn3er1gXS8+xSd2sxGIopEGIrG
-         P+1rtZoTPEvMIFasSqt7SWUkPeugYa6cdQOcTbdGkS74PkeBu2aDTd4DB3DQFop8vyTB
-         T1uJaVOuNqoTVDt0uhLjbQICG2UUA6qTcujKlKZnWkTYsDMTRQHFPQppmabCoxE//2h1
-         2lJlSLZxs6x4rMGksCFdw0NPLysJ1CcIL8qMe0JDDo/S7Hy0izn8oIHfYPGklLVfhByX
-         CpyA7Uw3D03N2CSFPLX4yW4KbOK1IeRQz7I5u4Jx4ZHT8umzYd8Zn7q0WS5S9E8BPuTy
-         tsjg==
-X-Gm-Message-State: AOJu0YwoUXD4XCHhLm8bsoA+nSIbiESyNyQn6KI40mxDFMT06r2W5EVa
-	sT+xDFWRBfEcIpQ70dFJ6dXOm92Fm0Ix6g==
-X-Google-Smtp-Source: AGHT+IEHD5SgGbWwK85ao2UYnS0Sh88kCiwjBFDK6W+qd5C2eGRRvAW0T4zywkQC2m/uRIGxj913QQ==
-X-Received: by 2002:a05:6214:1fd3:b0:67f:bd9a:a4c0 with SMTP id jh19-20020a0562141fd300b0067fbd9aa4c0mr6481858qvb.108.1703620935668;
-        Tue, 26 Dec 2023 12:02:15 -0800 (PST)
+        bh=BtxKf3FqZi0ydpudkf0bXoEdqlC2cPc9JiSI0VbRHzc=;
+        b=MeEXkuNqNvOpo4btFj8kwxTsojw35HYuEqkEELNzx6MI7lxOe7mm0HdYvDJo+SXNb3
+         DeZ6kfwWILAv0RBMFz3dzLyWpa0ikhNvYUgjQRzSAnTLh6dhWtTD5eGwHi428iPs9bpO
+         vHjnroph2TV+ZfWyogRzhGeK5yNxoyKapv03LroxWC3e98F9WdVCqjKMwpAmXmvg+Ygs
+         gJXZreEyHrdu9fCgwsqL8P2IQyo8zn7ouEjMqDgBSYOcISzRN+DczuqhiK/lUHVgXBUW
+         bZYo2IHGSeAIRW9CdEn+nzIbJnjOwZdhu8r1iWvGfb9fSgy11NzyatZpEptHQzGEnnjT
+         FTBw==
+X-Gm-Message-State: AOJu0YwvcM2CtbF1uCJBdIvDtXLbrWdyzLDamFWqGHF4XDwqfZ7cWBy8
+	q1qq2Oeftmo4buNdJKUTkZAcArgs9qh/YQ==
+X-Google-Smtp-Source: AGHT+IF6SHRllSaxJq4UXQlu+eJlDbGhCpDAe3qqJtRfc6g3mN6rB4PyhEEN8AN1FQVjUmVdCTe1Ag==
+X-Received: by 2002:a0c:e90e:0:b0:67f:d69e:9c45 with SMTP id a14-20020a0ce90e000000b0067fd69e9c45mr6794763qvo.11.1703620937325;
+        Tue, 26 Dec 2023 12:02:17 -0800 (PST)
 Received: from soleen.c.googlers.com.com (55.87.194.35.bc.googleusercontent.com. [35.194.87.55])
-        by smtp.gmail.com with ESMTPSA id t5-20020a0cf985000000b0067f696f412esm4894539qvn.112.2023.12.26.12.02.14
+        by smtp.gmail.com with ESMTPSA id t5-20020a0cf985000000b0067f696f412esm4894539qvn.112.2023.12.26.12.02.16
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 26 Dec 2023 12:02:15 -0800 (PST)
+        Tue, 26 Dec 2023 12:02:17 -0800 (PST)
 From: Pasha Tatashin <pasha.tatashin@soleen.com>
 To: akpm@linux-foundation.org,
 	alim.akhtar@samsung.com,
@@ -87,9 +87,9 @@ To: akpm@linux-foundation.org,
 	will@kernel.org,
 	yu-cheng.yu@intel.com,
 	rientjes@google.com
-Subject: [PATCH v3 08/10] iommu/tegra-smmu: use page allocation function provided by iommu-pages.h
-Date: Tue, 26 Dec 2023 20:02:03 +0000
-Message-ID: <20231226200205.562565-9-pasha.tatashin@soleen.com>
+Subject: [PATCH v3 10/10] iommu: account IOMMU allocated memory
+Date: Tue, 26 Dec 2023 20:02:05 +0000
+Message-ID: <20231226200205.562565-11-pasha.tatashin@soleen.com>
 X-Mailer: git-send-email 2.43.0.472.g3155946c3a-goog
 In-Reply-To: <20231226200205.562565-1-pasha.tatashin@soleen.com>
 References: <20231226200205.562565-1-pasha.tatashin@soleen.com>
@@ -101,99 +101,84 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Convert iommu/tegra-smmu.c to use the new page allocation functions
-provided in iommu-pages.h.
+In order to be able to limit the amount of memory that is allocated
+by IOMMU subsystem, the memory must be accounted.
+
+Account IOMMU as part of the secondary pagetables as it was discussed
+at LPC.
+
+The value of SecPageTables now contains mmeory allocation by IOMMU
+and KVM.
 
 Signed-off-by: Pasha Tatashin <pasha.tatashin@soleen.com>
-Acked-by: David Rientjes <rientjes@google.com>
 ---
- drivers/iommu/tegra-smmu.c | 18 ++++++++++--------
- 1 file changed, 10 insertions(+), 8 deletions(-)
+ Documentation/admin-guide/cgroup-v2.rst | 2 +-
+ Documentation/filesystems/proc.rst      | 4 ++--
+ drivers/iommu/iommu-pages.h             | 2 ++
+ include/linux/mmzone.h                  | 2 +-
+ 4 files changed, 6 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/iommu/tegra-smmu.c b/drivers/iommu/tegra-smmu.c
-index 310871728ab4..5e0730dc1b0e 100644
---- a/drivers/iommu/tegra-smmu.c
-+++ b/drivers/iommu/tegra-smmu.c
-@@ -19,6 +19,8 @@
- #include <soc/tegra/ahb.h>
- #include <soc/tegra/mc.h>
+diff --git a/Documentation/admin-guide/cgroup-v2.rst b/Documentation/admin-guide/cgroup-v2.rst
+index 3f85254f3cef..e004e05a7cde 100644
+--- a/Documentation/admin-guide/cgroup-v2.rst
++++ b/Documentation/admin-guide/cgroup-v2.rst
+@@ -1418,7 +1418,7 @@ PAGE_SIZE multiple when read back.
+ 	  sec_pagetables
+ 		Amount of memory allocated for secondary page tables,
+ 		this currently includes KVM mmu allocations on x86
+-		and arm64.
++		and arm64 and IOMMU page tables.
  
-+#include "iommu-pages.h"
-+
- struct tegra_smmu_group {
- 	struct list_head list;
- 	struct tegra_smmu *smmu;
-@@ -282,7 +284,7 @@ static struct iommu_domain *tegra_smmu_domain_alloc_paging(struct device *dev)
+ 	  percpu (npn)
+ 		Amount of memory used for storing per-cpu kernel
+diff --git a/Documentation/filesystems/proc.rst b/Documentation/filesystems/proc.rst
+index 49ef12df631b..86f137a9b66b 100644
+--- a/Documentation/filesystems/proc.rst
++++ b/Documentation/filesystems/proc.rst
+@@ -1110,8 +1110,8 @@ KernelStack
+ PageTables
+               Memory consumed by userspace page tables
+ SecPageTables
+-              Memory consumed by secondary page tables, this currently
+-              currently includes KVM mmu allocations on x86 and arm64.
++              Memory consumed by secondary page tables, this currently includes
++              KVM mmu and IOMMU allocations on x86 and arm64.
+ NFS_Unstable
+               Always zero. Previous counted pages which had been written to
+               the server, but has not been committed to stable storage.
+diff --git a/drivers/iommu/iommu-pages.h b/drivers/iommu/iommu-pages.h
+index 4e70cdf7acac..b4289d577e2c 100644
+--- a/drivers/iommu/iommu-pages.h
++++ b/drivers/iommu/iommu-pages.h
+@@ -27,6 +27,7 @@ static inline void __iommu_alloc_account(struct page *page, int order)
+ 	const long pgcnt = 1l << order;
  
- 	as->attr = SMMU_PD_READABLE | SMMU_PD_WRITABLE | SMMU_PD_NONSECURE;
- 
--	as->pd = alloc_page(GFP_KERNEL | __GFP_DMA | __GFP_ZERO);
-+	as->pd = __iommu_alloc_page(GFP_KERNEL | __GFP_DMA);
- 	if (!as->pd) {
- 		kfree(as);
- 		return NULL;
-@@ -290,7 +292,7 @@ static struct iommu_domain *tegra_smmu_domain_alloc_paging(struct device *dev)
- 
- 	as->count = kcalloc(SMMU_NUM_PDE, sizeof(u32), GFP_KERNEL);
- 	if (!as->count) {
--		__free_page(as->pd);
-+		__iommu_free_page(as->pd);
- 		kfree(as);
- 		return NULL;
- 	}
-@@ -298,7 +300,7 @@ static struct iommu_domain *tegra_smmu_domain_alloc_paging(struct device *dev)
- 	as->pts = kcalloc(SMMU_NUM_PDE, sizeof(*as->pts), GFP_KERNEL);
- 	if (!as->pts) {
- 		kfree(as->count);
--		__free_page(as->pd);
-+		__iommu_free_page(as->pd);
- 		kfree(as);
- 		return NULL;
- 	}
-@@ -599,14 +601,14 @@ static u32 *as_get_pte(struct tegra_smmu_as *as, dma_addr_t iova,
- 		dma = dma_map_page(smmu->dev, page, 0, SMMU_SIZE_PT,
- 				   DMA_TO_DEVICE);
- 		if (dma_mapping_error(smmu->dev, dma)) {
--			__free_page(page);
-+			__iommu_free_page(page);
- 			return NULL;
- 		}
- 
- 		if (!smmu_dma_addr_valid(smmu, dma)) {
- 			dma_unmap_page(smmu->dev, dma, SMMU_SIZE_PT,
- 				       DMA_TO_DEVICE);
--			__free_page(page);
-+			__iommu_free_page(page);
- 			return NULL;
- 		}
- 
-@@ -649,7 +651,7 @@ static void tegra_smmu_pte_put_use(struct tegra_smmu_as *as, unsigned long iova)
- 		tegra_smmu_set_pde(as, iova, 0);
- 
- 		dma_unmap_page(smmu->dev, pte_dma, SMMU_SIZE_PT, DMA_TO_DEVICE);
--		__free_page(page);
-+		__iommu_free_page(page);
- 		as->pts[pde] = NULL;
- 	}
+ 	mod_node_page_state(page_pgdat(page), NR_IOMMU_PAGES, pgcnt);
++	mod_lruvec_page_state(page, NR_SECONDARY_PAGETABLE, pgcnt);
  }
-@@ -688,7 +690,7 @@ static struct page *as_get_pde_page(struct tegra_smmu_as *as,
- 	if (gfpflags_allow_blocking(gfp))
- 		spin_unlock_irqrestore(&as->lock, *flags);
  
--	page = alloc_page(gfp | __GFP_DMA | __GFP_ZERO);
-+	page = __iommu_alloc_page(gfp | __GFP_DMA);
+ /**
+@@ -39,6 +40,7 @@ static inline void __iommu_free_account(struct page *page, int order)
+ 	const long pgcnt = 1l << order;
  
- 	if (gfpflags_allow_blocking(gfp))
- 		spin_lock_irqsave(&as->lock, *flags);
-@@ -700,7 +702,7 @@ static struct page *as_get_pde_page(struct tegra_smmu_as *as,
- 	 */
- 	if (as->pts[pde]) {
- 		if (page)
--			__free_page(page);
-+			__iommu_free_page(page);
+ 	mod_node_page_state(page_pgdat(page), NR_IOMMU_PAGES, -pgcnt);
++	mod_lruvec_page_state(page, NR_SECONDARY_PAGETABLE, -pgcnt);
+ }
  
- 		page = as->pts[pde];
- 	}
+ /**
+diff --git a/include/linux/mmzone.h b/include/linux/mmzone.h
+index f0b54c752e22..da68f9977206 100644
+--- a/include/linux/mmzone.h
++++ b/include/linux/mmzone.h
+@@ -199,7 +199,7 @@ enum node_stat_item {
+ 	NR_KERNEL_SCS_KB,	/* measured in KiB */
+ #endif
+ 	NR_PAGETABLE,		/* used for pagetables */
+-	NR_SECONDARY_PAGETABLE, /* secondary pagetables, e.g. KVM pagetables */
++	NR_SECONDARY_PAGETABLE, /* secondary pagetables, KVM & IOMMU */
+ #ifdef CONFIG_IOMMU_SUPPORT
+ 	NR_IOMMU_PAGES,		/* # of pages allocated by IOMMU */
+ #endif
 -- 
 2.43.0.472.g3155946c3a-goog
 
