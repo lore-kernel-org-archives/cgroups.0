@@ -1,226 +1,86 @@
-Received: from mail-oi1-f173.google.com (mail-oi1-f173.google.com [209.85.167.173])
+Received: from mail-pl1-f181.google.com (mail-pl1-f181.google.com [209.85.214.181])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9B1841118E
-	for <cgroups@vger.kernel.org>; Tue, 26 Dec 2023 20:02:17 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=soleen.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=soleen.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 90E6C23D7
+	for <cgroups@vger.kernel.org>; Wed, 27 Dec 2023 00:25:32 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=soleen.com header.i=@soleen.com header.b="UHUAVpWt"
-Received: by mail-oi1-f173.google.com with SMTP id 5614622812f47-3bb968c02baso1737445b6e.0
-        for <cgroups@vger.kernel.org>; Tue, 26 Dec 2023 12:02:17 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="RNW16Zt2"
+Received: by mail-pl1-f181.google.com with SMTP id d9443c01a7336-1d47fae33e0so18645ad.0
+        for <cgroups@vger.kernel.org>; Tue, 26 Dec 2023 16:25:32 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=soleen.com; s=google; t=1703620936; x=1704225736; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:to:from:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=mxo16AeffIcUl0pfz0nlTIeaxJpBLQvEVDy59ntWJzo=;
-        b=UHUAVpWtpyn25vEAJZm0X9lVwVAm1yJFL5IZ/Qw7/4jQxvJmrSNLxbxEYHgmqOfR8y
-         AM8qxtN30r7N1Xij5+3kTrvi5aXfFW3xmXfzVBIVWG/sKt9mc2tYPxsLcl/TmIj7ZrPX
-         mZ6FyhdWhUPrHcvAnI17RNkoEv9L1C0vcP+8wsp8jRRZswVd8MSv1O6KuD4gTIWGz4K2
-         g0WIsNwVkmiKUIlfBIQVL2LFz+r3XSB7UdD/IF35xQoDT8xEUZwu++jpyuMdhwrz0xGZ
-         yF9KX3ma646jnjdrNHvOMOjRkflYjsSAMu13GVd7IVlRil5t30bDkH9dHETKH7y3jNps
-         xaIw==
+        d=google.com; s=20230601; t=1703636732; x=1704241532; darn=vger.kernel.org;
+        h=mime-version:references:message-id:in-reply-to:subject:cc:to:from
+         :date:from:to:cc:subject:date:message-id:reply-to;
+        bh=8yhvNEPy1OdHxiHajFepdZmy+iFIGCud+lbMtAIqjO0=;
+        b=RNW16Zt25HZlvdgAj3JTlgY7UzNeT6dqABvLneLoxoT6r5i93Tp0RrDipmAgUte3SH
+         Ohi9Ej4ZH6vkJw4CZbP6v6GnuFERbyT2Y1gR56FS1oZME3S7Gp5k2IKfzkR40+nO3YFb
+         vNbMsdkOGTcGcLZ3eqEUepvsO77lTXhIsTde5OteRPQ+/0UnxiqBcvQV+naL7GBMFw/Z
+         p5eXjpRwbmRch1E2QMFirvCZL/G9yKV34ZWGHeN5+8V6awa2rLLAHcqCM7GxiivyNVrs
+         MS8Nm6299+VSrfHnhN2vyKO89PE+Oj17n/JJtm8ZgLrSksFE83kHkj+GEyJ0+9dcNynj
+         3Znw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1703620936; x=1704225736;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:to:from:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=mxo16AeffIcUl0pfz0nlTIeaxJpBLQvEVDy59ntWJzo=;
-        b=Wn+LreTsSOjE6WbNwlfldJ/g2O5ES9znXeWCmw40loVuqj/aPkVEoVJKrKBdTIMtJV
-         wFg8JQ9f3aS1pl0i2YkqtctREvaSFrPKH1VmDDYkhT7jeoHolLg0t058Fx8wLDJRHIB1
-         KTwczVMx56A7PHGDCnRbB7Ila1GFj/OQvs+9/8bJ72O+nhs4qLRN7fY8nbf+JXle0NSZ
-         +EH0cZCPJDXkMdjHTpAfNrHsAbbRa4yKT2Fc3OxU2qnb8Pr2LEHcNhv4UxlqPRDoqjoE
-         KBxGtouzSIfP1HFEyO4rfPViPxUNuVWcRM8g1ohkbi5RCZ2yfC6nb1+ICJPVwBtnbxlG
-         ZlIA==
-X-Gm-Message-State: AOJu0YyXSsDaPSMv+D+4AqLg8tx+TqBqHFEC/lX0uLpINQ9FlZntnoro
-	1yCLfPXUQblo98R1+ko4VqJRLVepSMbeMA==
-X-Google-Smtp-Source: AGHT+IHrGAGi+32a17cjz4hMVcRXIy2GjdCBrEmS3N5kwjkJAZZsim1kCd/4+YrLV4TJHLLCVok4zA==
-X-Received: by 2002:a05:6808:448c:b0:3ae:5bf5:4ad1 with SMTP id eq12-20020a056808448c00b003ae5bf54ad1mr9246412oib.33.1703620936477;
-        Tue, 26 Dec 2023 12:02:16 -0800 (PST)
-Received: from soleen.c.googlers.com.com (55.87.194.35.bc.googleusercontent.com. [35.194.87.55])
-        by smtp.gmail.com with ESMTPSA id t5-20020a0cf985000000b0067f696f412esm4894539qvn.112.2023.12.26.12.02.15
+        d=1e100.net; s=20230601; t=1703636732; x=1704241532;
+        h=mime-version:references:message-id:in-reply-to:subject:cc:to:from
+         :date:x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=8yhvNEPy1OdHxiHajFepdZmy+iFIGCud+lbMtAIqjO0=;
+        b=v6tebdCxLrudPB9g5w69rTe+NU2n0vL8BSb/OrgscFbCnGTwzxs8YlRaUvjwlAJDNZ
+         0ozpZGUQY14arSExfhhnpMmPNzxrZs9c3gjPEf1FHuL/bmSgkrsabwvRnKnB2/FeF9pI
+         AqASZPlhF1KmCMqc16/IBqSg3IOtfReeH3AT+HuLmtu+OXxEvYcSqjeFGAiThM6U5hEo
+         F+K78M98iPWBmwW/ZVGoYtDoaRg1ZcHPUTZ6sb5MTZDToZCv9UJAbtpNmTpOrg58rXiJ
+         ow5hJFTybb8gpoSmK8G+qxS5ODCyoNpKvEXF6Nl6NJlfZSQ7uj36AoJxjIqPFiNp/FU8
+         +fsA==
+X-Gm-Message-State: AOJu0YzZJKeVpgcN+Mcrgk6SF9SZjHjrhzCSbOc30aovODwVhbElB669
+	pLJJXYRGX74eXeW/iP6fiOB7LiPxZhh8
+X-Google-Smtp-Source: AGHT+IHfrTTFDhOmLPe/BcyhT6xcBiwDnUGm4X46zMrKWUIrGhjoY17pKeWHle6/bW8eRgBmSHtD6g==
+X-Received: by 2002:a17:902:f684:b0:1d4:55b3:465f with SMTP id l4-20020a170902f68400b001d455b3465fmr239910plg.25.1703636731663;
+        Tue, 26 Dec 2023 16:25:31 -0800 (PST)
+Received: from [2620:0:1008:15:5a8c:89e6:ca2f:ea30] ([2620:0:1008:15:5a8c:89e6:ca2f:ea30])
+        by smtp.gmail.com with ESMTPSA id w7-20020a170902e88700b001d072365b87sm10636289plg.106.2023.12.26.16.25.30
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 26 Dec 2023 12:02:16 -0800 (PST)
-From: Pasha Tatashin <pasha.tatashin@soleen.com>
-To: akpm@linux-foundation.org,
-	alim.akhtar@samsung.com,
-	alyssa@rosenzweig.io,
-	asahi@lists.linux.dev,
-	baolu.lu@linux.intel.com,
-	bhelgaas@google.com,
-	cgroups@vger.kernel.org,
-	corbet@lwn.net,
-	david@redhat.com,
-	dwmw2@infradead.org,
-	hannes@cmpxchg.org,
-	heiko@sntech.de,
-	iommu@lists.linux.dev,
-	jernej.skrabec@gmail.com,
-	jonathanh@nvidia.com,
-	joro@8bytes.org,
-	krzysztof.kozlowski@linaro.org,
-	linux-doc@vger.kernel.org,
-	linux-fsdevel@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	linux-mm@kvack.org,
-	linux-rockchip@lists.infradead.org,
-	linux-samsung-soc@vger.kernel.org,
-	linux-sunxi@lists.linux.dev,
-	linux-tegra@vger.kernel.org,
-	lizefan.x@bytedance.com,
-	marcan@marcan.st,
-	mhiramat@kernel.org,
-	m.szyprowski@samsung.com,
-	pasha.tatashin@soleen.com,
-	paulmck@kernel.org,
-	rdunlap@infradead.org,
-	robin.murphy@arm.com,
-	samuel@sholland.org,
-	suravee.suthikulpanit@amd.com,
-	sven@svenpeter.dev,
-	thierry.reding@gmail.com,
-	tj@kernel.org,
-	tomas.mudrunka@gmail.com,
-	vdumpa@nvidia.com,
-	wens@csie.org,
-	will@kernel.org,
-	yu-cheng.yu@intel.com,
-	rientjes@google.com
-Subject: [PATCH v3 09/10] iommu: observability of the IOMMU allocations
-Date: Tue, 26 Dec 2023 20:02:04 +0000
-Message-ID: <20231226200205.562565-10-pasha.tatashin@soleen.com>
-X-Mailer: git-send-email 2.43.0.472.g3155946c3a-goog
-In-Reply-To: <20231226200205.562565-1-pasha.tatashin@soleen.com>
-References: <20231226200205.562565-1-pasha.tatashin@soleen.com>
+        Tue, 26 Dec 2023 16:25:31 -0800 (PST)
+Date: Tue, 26 Dec 2023 16:25:30 -0800 (PST)
+From: David Rientjes <rientjes@google.com>
+To: Pasha Tatashin <pasha.tatashin@soleen.com>
+cc: akpm@linux-foundation.org, alim.akhtar@samsung.com, alyssa@rosenzweig.io, 
+    asahi@lists.linux.dev, baolu.lu@linux.intel.com, bhelgaas@google.com, 
+    cgroups@vger.kernel.org, corbet@lwn.net, david@redhat.com, 
+    dwmw2@infradead.org, hannes@cmpxchg.org, heiko@sntech.de, 
+    iommu@lists.linux.dev, jernej.skrabec@gmail.com, jonathanh@nvidia.com, 
+    joro@8bytes.org, krzysztof.kozlowski@linaro.org, linux-doc@vger.kernel.org, 
+    linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, 
+    linux-mm@kvack.org, linux-rockchip@lists.infradead.org, 
+    linux-samsung-soc@vger.kernel.org, linux-sunxi@lists.linux.dev, 
+    linux-tegra@vger.kernel.org, lizefan.x@bytedance.com, marcan@marcan.st, 
+    mhiramat@kernel.org, m.szyprowski@samsung.com, paulmck@kernel.org, 
+    rdunlap@infradead.org, robin.murphy@arm.com, samuel@sholland.org, 
+    suravee.suthikulpanit@amd.com, sven@svenpeter.dev, 
+    thierry.reding@gmail.com, tj@kernel.org, tomas.mudrunka@gmail.com, 
+    vdumpa@nvidia.com, wens@csie.org, will@kernel.org, yu-cheng.yu@intel.com
+Subject: Re: [PATCH v3 10/10] iommu: account IOMMU allocated memory
+In-Reply-To: <20231226200205.562565-11-pasha.tatashin@soleen.com>
+Message-ID: <fc77b844-618d-1873-1588-15d59b8604e2@google.com>
+References: <20231226200205.562565-1-pasha.tatashin@soleen.com> <20231226200205.562565-11-pasha.tatashin@soleen.com>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=US-ASCII
 
-Add NR_IOMMU_PAGES into node_stat_item that counts number of pages
-that are allocated by the IOMMU subsystem.
+On Tue, 26 Dec 2023, Pasha Tatashin wrote:
 
-The allocations can be view per-node via:
-/sys/devices/system/node/nodeN/vmstat.
+> In order to be able to limit the amount of memory that is allocated
+> by IOMMU subsystem, the memory must be accounted.
+> 
+> Account IOMMU as part of the secondary pagetables as it was discussed
+> at LPC.
+> 
+> The value of SecPageTables now contains mmeory allocation by IOMMU
+> and KVM.
+> 
+> Signed-off-by: Pasha Tatashin <pasha.tatashin@soleen.com>
 
-For example:
-
-$ grep iommu /sys/devices/system/node/node*/vmstat
-/sys/devices/system/node/node0/vmstat:nr_iommu_pages 106025
-/sys/devices/system/node/node1/vmstat:nr_iommu_pages 3464
-
-The value is in page-count, therefore, in the above example
-the iommu allocations amount to ~428M.
-
-Signed-off-by: Pasha Tatashin <pasha.tatashin@soleen.com>
 Acked-by: David Rientjes <rientjes@google.com>
----
- drivers/iommu/iommu-pages.h | 30 ++++++++++++++++++++++++++++++
- include/linux/mmzone.h      |  3 +++
- mm/vmstat.c                 |  3 +++
- 3 files changed, 36 insertions(+)
-
-diff --git a/drivers/iommu/iommu-pages.h b/drivers/iommu/iommu-pages.h
-index 99105503b771..4e70cdf7acac 100644
---- a/drivers/iommu/iommu-pages.h
-+++ b/drivers/iommu/iommu-pages.h
-@@ -17,6 +17,30 @@
-  * state can be rather large, i.e. multiple gigabytes in size.
-  */
- 
-+/**
-+ * __iommu_alloc_account - account for newly allocated page.
-+ * @page: head struct page of the page.
-+ * @order: order of the page
-+ */
-+static inline void __iommu_alloc_account(struct page *page, int order)
-+{
-+	const long pgcnt = 1l << order;
-+
-+	mod_node_page_state(page_pgdat(page), NR_IOMMU_PAGES, pgcnt);
-+}
-+
-+/**
-+ * __iommu_free_account - account a page that is about to be freed.
-+ * @page: head struct page of the page.
-+ * @order: order of the page
-+ */
-+static inline void __iommu_free_account(struct page *page, int order)
-+{
-+	const long pgcnt = 1l << order;
-+
-+	mod_node_page_state(page_pgdat(page), NR_IOMMU_PAGES, -pgcnt);
-+}
-+
- /**
-  * __iommu_alloc_pages_node - allocate a zeroed page of a given order from
-  * specific NUMA node.
-@@ -35,6 +59,8 @@ static inline struct page *__iommu_alloc_pages_node(int nid, gfp_t gfp,
- 	if (unlikely(!page))
- 		return NULL;
- 
-+	__iommu_alloc_account(page, order);
-+
- 	return page;
- }
- 
-@@ -53,6 +79,8 @@ static inline struct page *__iommu_alloc_pages(gfp_t gfp, int order)
- 	if (unlikely(!page))
- 		return NULL;
- 
-+	__iommu_alloc_account(page, order);
-+
- 	return page;
- }
- 
-@@ -89,6 +117,7 @@ static inline void __iommu_free_pages(struct page *page, int order)
- 	if (!page)
- 		return;
- 
-+	__iommu_free_account(page, order);
- 	__free_pages(page, order);
- }
- 
-@@ -197,6 +226,7 @@ static inline void iommu_free_pages_list(struct list_head *page)
- 		struct page *p = list_entry(page->prev, struct page, lru);
- 
- 		list_del(&p->lru);
-+		__iommu_free_account(p, 0);
- 		put_page(p);
- 	}
- }
-diff --git a/include/linux/mmzone.h b/include/linux/mmzone.h
-index 9db36e197712..f0b54c752e22 100644
---- a/include/linux/mmzone.h
-+++ b/include/linux/mmzone.h
-@@ -200,6 +200,9 @@ enum node_stat_item {
- #endif
- 	NR_PAGETABLE,		/* used for pagetables */
- 	NR_SECONDARY_PAGETABLE, /* secondary pagetables, e.g. KVM pagetables */
-+#ifdef CONFIG_IOMMU_SUPPORT
-+	NR_IOMMU_PAGES,		/* # of pages allocated by IOMMU */
-+#endif
- #ifdef CONFIG_SWAP
- 	NR_SWAPCACHE,
- #endif
-diff --git a/mm/vmstat.c b/mm/vmstat.c
-index 359460deb377..801b58890b6c 100644
---- a/mm/vmstat.c
-+++ b/mm/vmstat.c
-@@ -1242,6 +1242,9 @@ const char * const vmstat_text[] = {
- #endif
- 	"nr_page_table_pages",
- 	"nr_sec_page_table_pages",
-+#ifdef CONFIG_IOMMU_SUPPORT
-+	"nr_iommu_pages",
-+#endif
- #ifdef CONFIG_SWAP
- 	"nr_swapcached",
- #endif
--- 
-2.43.0.472.g3155946c3a-goog
-
