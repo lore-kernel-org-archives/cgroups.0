@@ -1,24 +1,24 @@
 Received: from casper.infradead.org (casper.infradead.org [90.155.50.34])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C8B5854F9A
-	for <cgroups@vger.kernel.org>; Thu, 11 Jan 2024 18:12:31 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 20E27537FC
+	for <cgroups@vger.kernel.org>; Thu, 11 Jan 2024 18:12:34 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="Dly8SJF3"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="V8/B94yi"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=infradead.org; s=casper.20170209; h=Content-Transfer-Encoding:MIME-Version:
 	References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:
 	Content-Type:Content-ID:Content-Description;
-	bh=AS+uT7usg/s9J/TDR9k6OcZVDPC0GngCIBakXKVBtYw=; b=Dly8SJF3pkBydTQIAvm2nT5dA4
-	9Aq4dmuKHgGbPIE4kTwz6uoNMZl+DHU7IMGFPey88/uA1ij73+5/j0Ui5a43nr65m8kLyZ1LM7acB
-	R2b7rD/EoU7FfPOShDM472o4/xdGeLbM/29Hi/BZczIe5rnh3n4vU9ygevgY+uC6bZ0/B5iDq3Wya
-	QQmnVSFYLa+KRlGpgrVYbhkHDTZTnCp3ufFfm1yxTq68OiFZqYdwWuVUKxhpAJ6ve9B7heg0ghmhd
-	e3RIXQkaboHVKAyfuR+awVljhPAuXzoPlt6d/Z6GZC0ZScBFhO+Qf2RNxscxDgMzHwx0pUHD+tqjw
-	wF+oOoTg==;
+	bh=ckLkDfpTy5X71kCDKuO9wk6WU/1baQA9VkLceFKNXrc=; b=V8/B94yi0XWKJBeBSphEHnJnTP
+	OPrAAc6rjc8oO7WITgFGTDrIkp0HsGBGgRO91ipoC07vwDNLDpLV2ml06fcYpqsaCFqDexdsbtM6Z
+	vd+jcROAvdMoq045wg0zd7FjgflmQ0nvNj+HvVHo3lU/GzL6hAaQENEkYs2tIQbflrMb9oMsqdYif
+	kC6jG0PMTfe/DF1zm3H5Ke2jeYCSWlNoVvRU3KcuX3yqc3q1Lh991huh5e4kmgoDPCgCXbWKv8BiN
+	8otdL6KQiHaqZfrDiYhSAKo0nYrnLoO2BemF1JCQ2EKJVuFkjviVrJcxJ3gXXRf3ITzpdinrjHfrm
+	GPkj9dvw==;
 Received: from willy by casper.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
-	id 1rNzXR-00EWr4-NM; Thu, 11 Jan 2024 18:12:21 +0000
+	id 1rNzXR-00EWr0-Hx; Thu, 11 Jan 2024 18:12:21 +0000
 From: "Matthew Wilcox (Oracle)" <willy@infradead.org>
 To: Andrew Morton <akpm@linux-foundation.org>
 Cc: "Matthew Wilcox (Oracle)" <willy@infradead.org>,
@@ -29,9 +29,9 @@ Cc: "Matthew Wilcox (Oracle)" <willy@infradead.org>,
 	Muchun Song <muchun.song@linux.dev>,
 	cgroups@vger.kernel.org,
 	linux-mm@kvack.org
-Subject: [PATCH 4/4] memcg: Use a folio in get_mctgt_type_thp
-Date: Thu, 11 Jan 2024 18:12:19 +0000
-Message-Id: <20240111181219.3462852-5-willy@infradead.org>
+Subject: [PATCH 2/4] memcg: Return the folio in union mc_target
+Date: Thu, 11 Jan 2024 18:12:17 +0000
+Message-Id: <20240111181219.3462852-3-willy@infradead.org>
 X-Mailer: git-send-email 2.37.1
 In-Reply-To: <20240111181219.3462852-1-willy@infradead.org>
 References: <20240111181219.3462852-1-willy@infradead.org>
@@ -43,49 +43,81 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Replace five calls to compound_head() with one.
+All users of target.page convert it to the folio, so we can just return
+the folio directly and save a few calls to compound_head().
 
 Signed-off-by: Matthew Wilcox (Oracle) <willy@infradead.org>
 ---
- mm/memcontrol.c | 12 +++++++-----
- 1 file changed, 7 insertions(+), 5 deletions(-)
+ mm/memcontrol.c | 14 +++++++-------
+ 1 file changed, 7 insertions(+), 7 deletions(-)
 
 diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index b6096c34b3e4..935f48c4d399 100644
+index c04bda961165..d14fe0740b37 100644
 --- a/mm/memcontrol.c
 +++ b/mm/memcontrol.c
-@@ -6161,6 +6161,7 @@ static enum mc_target_type get_mctgt_type_thp(struct vm_area_struct *vma,
- 		unsigned long addr, pmd_t pmd, union mc_target *target)
- {
- 	struct page *page = NULL;
-+	struct folio *folio;
- 	enum mc_target_type ret = MC_TARGET_NONE;
+@@ -5840,7 +5840,7 @@ static int mem_cgroup_do_precharge(unsigned long count)
+ }
  
- 	if (unlikely(is_swap_pmd(pmd))) {
-@@ -6170,17 +6171,18 @@ static enum mc_target_type get_mctgt_type_thp(struct vm_area_struct *vma,
- 	}
- 	page = pmd_page(pmd);
- 	VM_BUG_ON_PAGE(!page || !PageHead(page), page);
-+	folio = page_folio(page);
- 	if (!(mc.flags & MOVE_ANON))
- 		return ret;
--	if (page_memcg(page) == mc.from) {
-+	if (folio_memcg(folio) == mc.from) {
- 		ret = MC_TARGET_PAGE;
- 		if (target) {
--			get_page(page);
--			if (!trylock_page(page)) {
--				put_page(page);
-+			folio_get(folio);
-+			if (!folio_trylock(folio)) {
-+				folio_put(folio);
+ union mc_target {
+-	struct page	*page;
++	struct folio	*folio;
+ 	swp_entry_t	ent;
+ };
+ 
+@@ -6062,7 +6062,7 @@ static int mem_cgroup_move_account(struct folio *folio,
+  * Return:
+  * * MC_TARGET_NONE - If the pte is not a target for move charge.
+  * * MC_TARGET_PAGE - If the page corresponding to this pte is a target for
+- *   move charge. If @target is not NULL, the page is stored in target->page
++ *   move charge. If @target is not NULL, the folio is stored in target->folio
+  *   with extra refcnt taken (Caller should release it).
+  * * MC_TARGET_SWAP - If the swap entry corresponding to this pte is a
+  *   target for charge migration.  If @target is not NULL, the entry is
+@@ -6127,7 +6127,7 @@ static enum mc_target_type get_mctgt_type(struct vm_area_struct *vma,
+ 			    is_device_coherent_page(page))
+ 				ret = MC_TARGET_DEVICE;
+ 			if (target)
+-				target->page = page;
++				target->folio = page_folio(page);
+ 		}
+ 		if (!ret || !target) {
+ 			if (target)
+@@ -6177,7 +6177,7 @@ static enum mc_target_type get_mctgt_type_thp(struct vm_area_struct *vma,
+ 				put_page(page);
  				return MC_TARGET_NONE;
  			}
--			target->folio = page_folio(page);
-+			target->folio = folio;
+-			target->page = page;
++			target->folio = page_folio(page);
  		}
  	}
  	return ret;
+@@ -6407,7 +6407,7 @@ static int mem_cgroup_move_charge_pte_range(pmd_t *pmd,
+ 		}
+ 		target_type = get_mctgt_type_thp(vma, addr, *pmd, &target);
+ 		if (target_type == MC_TARGET_PAGE) {
+-			folio = page_folio(target.page);
++			folio = target.folio;
+ 			if (folio_isolate_lru(folio)) {
+ 				if (!mem_cgroup_move_account(folio, true,
+ 							     mc.from, mc.to)) {
+@@ -6419,7 +6419,7 @@ static int mem_cgroup_move_charge_pte_range(pmd_t *pmd,
+ 			folio_unlock(folio);
+ 			folio_put(folio);
+ 		} else if (target_type == MC_TARGET_DEVICE) {
+-			folio = page_folio(target.page);
++			folio = target.folio;
+ 			if (!mem_cgroup_move_account(folio, true,
+ 						     mc.from, mc.to)) {
+ 				mc.precharge -= HPAGE_PMD_NR;
+@@ -6449,7 +6449,7 @@ static int mem_cgroup_move_charge_pte_range(pmd_t *pmd,
+ 			device = true;
+ 			fallthrough;
+ 		case MC_TARGET_PAGE:
+-			folio = page_folio(target.page);
++			folio = target.folio;
+ 			/*
+ 			 * We can have a part of the split pmd here. Moving it
+ 			 * can be done but it would be too convoluted so simply
 -- 
 2.43.0
 
