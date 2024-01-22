@@ -1,190 +1,183 @@
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.15])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pl1-f177.google.com (mail-pl1-f177.google.com [209.85.214.177])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D053B5FF1C;
-	Mon, 22 Jan 2024 17:20:59 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.15
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4C6CD405D4
+	for <cgroups@vger.kernel.org>; Mon, 22 Jan 2024 17:38:38 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.177
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1705944061; cv=none; b=LJfe1vF0inMiA6NiezKXz6fyHkZeIYJZq6ibK1u6OedoLYE73stVYR8gidpvFLxg9A6JmZY/jbTr2CRYGvLYVBbvSXGwrE79/NA3Qx3DBzhIL+vPvP2hzEk5kL6T0uwlM6a8yMqIqo4CbjHU9nAPk4Ziax0VnF8LtDsx0yNoXI8=
+	t=1705945119; cv=none; b=S3dbI2fo89QR7XQHvhMIHZKrM4IoUxuLcPQuNpxxfsr0eIDZITJKPAFShY3xrqx2iO/y4P3NkMtFDprxKHfXoBakB997bWZuZDLWsO3gXNDYqAj0aZy6GGLShPSC1xeN0pU+0jEtmLOSs4q4p5BRItfuJvPFjgZhwdqg9pLHwmM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1705944061; c=relaxed/simple;
-	bh=zF19XFFiqPbLLTSJfpDVbR2CVLpYKiYAcawYZXkE6BY=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=SkwHF9uBB9uqf1t0a33cz0domz3KN7Mo76tOJghgu7QPpHmYUVzkvKsVJ5G15yS8qIH71DcJP9BflVxi0zNMHZuZWgojchyqdZT1Vdz1EYInp380NGgIrpl7dBomUnUuDZJW24pggM8E1bK0/0HKQdDd4wpSl8wu9WKFx8fs7p4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=none smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=ek9+Spjy; arc=none smtp.client-ip=198.175.65.15
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=linux.intel.com
+	s=arc-20240116; t=1705945119; c=relaxed/simple;
+	bh=lx13kHG0tJJSdUreOeJdloyx12tNITbn9wmXA6Zx684=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=KWCgUIgmyYyKtCX25E42TnkD4XKSGT06QuuLPegrsxUM+2++QblGyUJ3TTc9Z2AXbD7rz/AK1jYbkVIBjKKYXf0Xu4wGPLdx5O5P/RgwaxijZMo+3mDsfHi6AII+TambC5GGknBIX8S9WLyPd8Nit7iG2X1Sb9ONTKdtGCTPHPs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=yPCF1fbJ; arc=none smtp.client-ip=209.85.214.177
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="ek9+Spjy"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1705944060; x=1737480060;
-  h=from:to:cc:subject:date:message-id:in-reply-to:
-   references:mime-version:content-transfer-encoding;
-  bh=zF19XFFiqPbLLTSJfpDVbR2CVLpYKiYAcawYZXkE6BY=;
-  b=ek9+Spjyg+ItTrpdrr4zw6x/YyHiJ36bDHL03LrnPGMvpbteOcRMvfKo
-   vmmM1oFL9GWnCugpmVa5rKgV37WunWJZDKPHykXPZv9XzqYr/Rjj3dVoE
-   A4Kv9E/mwfZ7V0nR3Y2HcU8WgqkfdqoDoCguhHs1XGY+jkZfQ77/Bx+jq
-   FQ1Dpr/UC/NcV9VwG8ER+OgwNaG27We+k0PQVgpFJFKlPxI35qTPrqVHR
-   huZTfJW0SXiK4dWZlz68QouOGEyVPPJmUUxZMGlyoGL434J3uCNL4M7nN
-   OMGasIkjrpw23BeliYe8LqXndtAaCJf7Z0JLFYovNlBwNi67nZ+hrxmSn
-   A==;
-X-IronPort-AV: E=McAfee;i="6600,9927,10961"; a="1150236"
-X-IronPort-AV: E=Sophos;i="6.05,211,1701158400"; 
-   d="scan'208";a="1150236"
-Received: from orviesa005.jf.intel.com ([10.64.159.145])
-  by orvoesa107.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 22 Jan 2024 09:20:51 -0800
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.05,211,1701158400"; 
-   d="scan'208";a="1262897"
-Received: from b4969161e530.jf.intel.com ([10.165.56.46])
-  by orviesa005.jf.intel.com with ESMTP; 22 Jan 2024 09:20:50 -0800
-From: Haitao Huang <haitao.huang@linux.intel.com>
-To: jarkko@kernel.org,
-	dave.hansen@linux.intel.com,
-	tj@kernel.org,
-	mkoutny@suse.com,
-	linux-kernel@vger.kernel.org,
-	linux-sgx@vger.kernel.org,
-	x86@kernel.org,
-	cgroups@vger.kernel.org,
-	tglx@linutronix.de,
-	mingo@redhat.com,
-	bp@alien8.de,
-	hpa@zytor.com,
-	sohil.mehta@intel.com
-Cc: zhiquan1.li@intel.com,
-	kristen@linux.intel.com,
-	seanjc@google.com,
-	zhanb@microsoft.com,
-	anakrish@microsoft.com,
-	mikko.ylinen@linux.intel.com,
-	yangjie@microsoft.com
-Subject: [PATCH v7 14/15] Docs/x86/sgx: Add description for cgroup support
-Date: Mon, 22 Jan 2024 09:20:47 -0800
-Message-Id: <20240122172048.11953-15-haitao.huang@linux.intel.com>
-X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20240122172048.11953-1-haitao.huang@linux.intel.com>
-References: <20240122172048.11953-1-haitao.huang@linux.intel.com>
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="yPCF1fbJ"
+Received: by mail-pl1-f177.google.com with SMTP id d9443c01a7336-1d72d240c69so253915ad.1
+        for <cgroups@vger.kernel.org>; Mon, 22 Jan 2024 09:38:38 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20230601; t=1705945117; x=1706549917; darn=vger.kernel.org;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=5UuQsVtmQQmr5HjqyMtyAk8R8Y84z4aC4k61fXm7dcc=;
+        b=yPCF1fbJt88udfi4IbYvyaXYX1RwZVyFK5gY8d4VgFcIHQfE23M7XwhosOmHMl7BSw
+         1f2ch0AVVFdaRvBeDfwm1Dx3LPBiol/n1wR7FJJuAo5L6FDFzvUlHz1gV6X5bPTy1Kmx
+         RKhjIETiDmyPys3CDehoYWfEpHESDMTCapSKiGdGka7ryTwq/zKsrJqHCsMbu+yVxXlA
+         49lYvZyMLr7jiTPTi/pmV/HGwBC+sOJv9BVuM2L3UTGKoH1ffNCyTzQfpoVteKAulTit
+         kiPRTYXLk7smW4XpMxCIX25uXX/RsApCHtPRHd7o4ihYa9OBLGk9EX7cdiupmcQmgTiK
+         DKJg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1705945117; x=1706549917;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=5UuQsVtmQQmr5HjqyMtyAk8R8Y84z4aC4k61fXm7dcc=;
+        b=rZFtwJzoYNrERGLkN+FDd3Sb9K+vCtu2QzsgjchCELPwok71xntFXjLQZqbpZ59hW/
+         k5QRvvNVeACqeSygfpW0aW+io0RR5h34vNp0hnMzlgeritV+ZLtLlZr3sNmiiPGaAMQ8
+         +5nD6KlAJOTocQw+g1BQrozwwrwoYiD7Kb50rqTS5gUSZ7Dft8/cAhOtLyB7kIGU0Y59
+         0tCMBeMleUIPf05L7TnkOTo7uVaTiqocpW5xNf+MNrpcC7fL0uspY/PBkTdiVR9NypY3
+         yiSWA6aUtEDHs8HzSntVfSQJtyGgHjNOz/P0a5YwCUgDGDuKx0QPwUR398Y+0UgS+obF
+         05kg==
+X-Gm-Message-State: AOJu0YzidtHClNSlsOqbLsr3fJmqhpBGckaYTYTxPJV/XrmUl7Ff+eXn
+	SmKI+Qgnl1+N1cPpct/43C3CW4wLYRnYzvJO1R6blfowruAKT+Y1A9fgKYFqmptPTfq5Y9gVUBH
+	yp/up2psX3hWx7gOyCOhf+U07IGqXqhq/ED/7
+X-Google-Smtp-Source: AGHT+IFYv5tHX1WQPl3UKkucHmsgclS/9mQvJ8BtkspQnHW8INm/bfJkBEp88NMt7Nyb4tbGmP3GUFNzcPfeUEN4+yY=
+X-Received: by 2002:a17:902:e747:b0:1d6:f66b:1057 with SMTP id
+ p7-20020a170902e74700b001d6f66b1057mr2985plf.28.1705945117286; Mon, 22 Jan
+ 2024 09:38:37 -0800 (PST)
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+References: <cover.1705507931.git.jpoimboe@kernel.org> <ac84a832feba5418e1b58d1c7f3fe6cc7bc1de58.1705507931.git.jpoimboe@kernel.org>
+ <6667b799702e1815bd4e4f7744eddbc0bd042bb7.camel@kernel.org>
+ <20240117193915.urwueineol7p4hg7@treble> <CAHk-=wg_CoTOfkREgaQQA6oJ5nM9ZKYrTn=E1r-JnvmQcgWpSg@mail.gmail.com>
+ <CALvZod6LgX-FQOGgNBmoRACMBK4GB+K=a+DYrtExcuGFH=J5zQ@mail.gmail.com>
+ <ZahSlnqw9yRo3d1v@P9FQF9L96D.corp.robot.car> <CALvZod4V3QTULTW5QxgqCbDpNtVO6fXzta33HR7GN=L2LUU26g@mail.gmail.com>
+ <CAHk-=whYOOdM7jWy5jdrAm8LxcgCMFyk2bt8fYYvZzM4U-zAQA@mail.gmail.com>
+In-Reply-To: <CAHk-=whYOOdM7jWy5jdrAm8LxcgCMFyk2bt8fYYvZzM4U-zAQA@mail.gmail.com>
+From: Shakeel Butt <shakeelb@google.com>
+Date: Mon, 22 Jan 2024 09:38:23 -0800
+Message-ID: <CALvZod6tCb=3+W18V7kntjJZBRMigGnyPQGjQK0no9Q1KmpcRQ@mail.gmail.com>
+Subject: Re: [PATCH RFC 1/4] fs/locks: Fix file lock cache accounting, again
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: Roman Gushchin <roman.gushchin@linux.dev>, Josh Poimboeuf <jpoimboe@kernel.org>, 
+	Vlastimil Babka <vbabka@suse.cz>, Jeff Layton <jlayton@kernel.org>, 
+	Chuck Lever <chuck.lever@oracle.com>, Johannes Weiner <hannes@cmpxchg.org>, 
+	Michal Hocko <mhocko@kernel.org>, linux-kernel@vger.kernel.org, 
+	Jens Axboe <axboe@kernel.dk>, Tejun Heo <tj@kernel.org>, Vasily Averin <vasily.averin@linux.dev>, 
+	Michal Koutny <mkoutny@suse.com>, Waiman Long <longman@redhat.com>, 
+	Muchun Song <muchun.song@linux.dev>, Jiri Kosina <jikos@kernel.org>, cgroups@vger.kernel.org, 
+	linux-mm@kvack.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-From: Sean Christopherson <sean.j.christopherson@intel.com>
+Hi Linus,
 
-Add initial documentation of how to regulate the distribution of
-SGX Enclave Page Cache (EPC) memory via the Miscellaneous cgroup
-controller.
+On Sun, Jan 21, 2024 at 9:16=E2=80=AFPM Linus Torvalds
+<torvalds@linux-foundation.org> wrote:
+>
+> On Wed, 17 Jan 2024 at 14:56, Shakeel Butt <shakeelb@google.com> wrote:
+> > >
+> > > So I don't see how we can make it really cheap (say, less than 5% ove=
+rhead)
+> > > without caching pre-accounted objects.
+> >
+> > Maybe this is what we want. Now we are down to just SLUB, maybe such
+> > caching of pre-accounted objects can be in SLUB layer and we can
+> > decide to keep this caching per-kmem-cache opt-in or always on.
+>
+> So it turns out that we have another case of SLAB_ACCOUNT being quite
+> a big expense, and it's actually the normal - but failed - open() or
+> execve() case.
+>
+> See the thread at
+>
+>     https://lore.kernel.org/all/CAHk-=3Dwhw936qzDLBQdUz-He5WK_0fRSWwKAjtb=
+VsMGfX70Nf_Q@mail.gmail.com/
+>
+> and to see the effect in profiles, you can use this EXTREMELY stupid
+> test program:
+>
+>     #include <fcntl.h>
+>
+>     int main(int argc, char **argv)
+>     {
+>         for (int i =3D 0; i < 10000000; i++)
+>                 open("nonexistent", O_RDONLY);
+>     }
+>
+> where the point of course is that the "nonexistent" pathname doesn't
+> actually exist (so don't create a file called that for the test).
+>
+> What happens is that open() allocates a 'struct file *' early from the
+> filp kmem_cache, which has SLAB_ACCOUNT set. So we'll do accounting
+> for it, failt the pathname open, and free it again, which uncharges
+> the accounting.
+>
+> Now, in this case, I actually have a suggestion: could we please just
+> make SLAB_ACCOUNT be something that we do *after* the allocation, kind
+> of the same way the zeroing works?
+>
+> IOW, I'd love to get rid of slab_pre_alloc_hook() entirely, and make
+> slab_post_alloc_hook() do all the "charge the memcg if required".
+>
+> Obviously that means that now a failure to charge the memcg would have
+> to then de-allocate things, but that's an uncommon path and would be
+> marked unlikely and not be in the hot path at all.
+>
+> Now, the reason I would prefer that is that the *second* step would be to
+>
+>  (a) expose a "kmem_cache_charge()" function that takes a
+> *non*-accounted slab allocation, and turns it into an accounted one
+> (and obviously this is why you want to do everything in the post-alloc
+> hook: just try to share this code)
+>
+>  (b) remote the SLAB_ACCOUNT from the filp_cachep, making all file
+> allocations start out unaccounted.
+>
+>  (c) when we have *actually* looked up the pathname and open the file
+> successfully, at *that* point we'd do a
+>
+>         error =3D kmem_cache_charge(filp_cachep, file);
+>
+>     in do_dentry_open() to turn the unaccounted file pointer into an
+> accounted one (and if that fails, we do the cleanup and free it, of
+> course, exactly like we do when file_get_write_access() fails)
+>
+> which means that now the failure case doesn't unnecessarily charge the
+> allocation that never ends up being finalized.
+>
+> NOTE! I think this would clean up mm/slub.c too, simply because it
+> would get rid of that memcg_slab_pre_alloc_hook() entirely, and get
+> rid of the need to carry the "struct obj_cgroup **objcgp" pointer
+> along until the post-alloc hook: everything would be done post-alloc.
+>
+> The actual kmem_cache_free() code already deals with "this slab hasn't
+> been accounted" because it obviously has to deal with allocations that
+> were done without __GFP_ACCOUNT anyway. So there's no change needed on
+> the freeing path, it already has to handle this all gracefully.
+>
+> I may be missing something, but it would seem to have very little
+> downside, and fix a case that actually is visible right now.
+>
 
-Signed-off-by: Sean Christopherson <sean.j.christopherson@intel.com>
-Co-developed-by: Kristen Carlson Accardi <kristen@linux.intel.com>
-Signed-off-by: Kristen Carlson Accardi <kristen@linux.intel.com>
-Co-developed-by: Haitao Huang<haitao.huang@linux.intel.com>
-Signed-off-by: Haitao Huang<haitao.huang@linux.intel.com>
-Cc: Sean Christopherson <seanjc@google.com>
----
-V6:
-- Remove mentioning of VMM specific behavior on handling SIGBUS
-- Remove statement of forced reclamation, add statement to specify
-ENOMEM returned when no reclamation possible.
-- Added statements on the non-preemptive nature for the max limit
-- Dropped Reviewed-by tag because of changes
+Thanks for the idea. Actually I had a discussion with Vlastimil at LPC
+'22 on a similar idea but for a different problem i.e. allocation in
+irq context or more specifically charging sockets for incoming TCP
+connections. If you see inet_csk_accept() we solved this for TCP
+memory by charging at accept() syscall but the kernel memory holding
+socket is still uncharged.
 
-V4:
-- Fix indentation (Randy)
-- Change misc.events file to be read-only
-- Fix a typo for 'subsystem'
-- Add behavior when VMM overcommit EPC with a cgroup (Mikko)
----
- Documentation/arch/x86/sgx.rst | 74 ++++++++++++++++++++++++++++++++++
- 1 file changed, 74 insertions(+)
+So, I think having the framework you suggested would help more
+use-cases. I will take a stab at this in the next couple of days
+(sorry stuck in some other stuff atm).
 
-diff --git a/Documentation/arch/x86/sgx.rst b/Documentation/arch/x86/sgx.rst
-index d90796adc2ec..dfc8fac13ab2 100644
---- a/Documentation/arch/x86/sgx.rst
-+++ b/Documentation/arch/x86/sgx.rst
-@@ -300,3 +300,77 @@ to expected failures and handle them as follows:
-    first call.  It indicates a bug in the kernel or the userspace client
-    if any of the second round of ``SGX_IOC_VEPC_REMOVE_ALL`` calls has
-    a return code other than 0.
-+
-+
-+Cgroup Support
-+==============
-+
-+The "sgx_epc" resource within the Miscellaneous cgroup controller regulates distribution of SGX
-+EPC memory, which is a subset of system RAM that is used to provide SGX-enabled applications
-+with protected memory, and is otherwise inaccessible, i.e. shows up as reserved in /proc/iomem
-+and cannot be read/written outside of an SGX enclave.
-+
-+Although current systems implement EPC by stealing memory from RAM, for all intents and
-+purposes the EPC is independent from normal system memory, e.g. must be reserved at boot from
-+RAM and cannot be converted between EPC and normal memory while the system is running.  The EPC
-+is managed by the SGX subsystem and is not accounted by the memory controller.  Note that this
-+is true only for EPC memory itself, i.e.  normal memory allocations related to SGX and EPC
-+memory, e.g. the backing memory for evicted EPC pages, are accounted, limited and protected by
-+the memory controller.
-+
-+Much like normal system memory, EPC memory can be overcommitted via virtual memory techniques
-+and pages can be swapped out of the EPC to their backing store (normal system memory allocated
-+via shmem).  The SGX EPC subsystem is analogous to the memory subsystem, and it implements
-+limit and protection models for EPC memory.
-+
-+SGX EPC Interface Files
-+-----------------------
-+
-+For a generic description of the Miscellaneous controller interface files, please see
-+Documentation/admin-guide/cgroup-v2.rst
-+
-+All SGX EPC memory amounts are in bytes unless explicitly stated otherwise.  If a value which
-+is not PAGE_SIZE aligned is written, the actual value used by the controller will be rounded
-+down to the closest PAGE_SIZE multiple.
-+
-+  misc.capacity
-+        A read-only flat-keyed file shown only in the root cgroup.  The sgx_epc resource will
-+        show the total amount of EPC memory available on the platform.
-+
-+  misc.current
-+        A read-only flat-keyed file shown in the non-root cgroups.  The sgx_epc resource will
-+        show the current active EPC memory usage of the cgroup and its descendants. EPC pages
-+        that are swapped out to backing RAM are not included in the current count.
-+
-+  misc.max
-+        A read-write single value file which exists on non-root cgroups. The sgx_epc resource
-+        will show the EPC usage hard limit. The default is "max".
-+
-+        If a cgroup's EPC usage reaches this limit, EPC allocations, e.g. for page fault
-+        handling, will be blocked until EPC can be reclaimed from the cgroup. If there are no
-+        pages left that are reclaimable within the same group, the kernel returns ENOMEM.
-+
-+        The EPC pages allocated for a guest VM by the virtual EPC driver are not reclaimable by
-+        the host kernel. In case the guest cgroup's limit is reached and no reclaimable pages
-+        left in the same cgroup, the virtual EPC driver returns SIGBUS to the user space
-+        process to indicate failure on new EPC allocation requests.
-+
-+        The misc.max limit is non-preemptive. If a user writes a limit lower than the current
-+        usage to this file, the cgroup will not preemptively deallocate pages currently in use,
-+        and will only start blocking the next allocation and reclaiming EPC at that time.
-+
-+  misc.events
-+        A read-only flat-keyed file which exists on non-root cgroups.
-+        A value change in this file generates a file modified event.
-+
-+          max
-+                The number of times the cgroup has triggered a reclaim
-+                due to its EPC usage approaching (or exceeding) its max
-+                EPC boundary.
-+
-+Migration
-+---------
-+
-+Once an EPC page is charged to a cgroup (during allocation), it remains charged to the original
-+cgroup until the page is released or reclaimed.  Migrating a process to a different cgroup
-+doesn't move the EPC charges that it incurred while in the previous cgroup to its new cgroup.
--- 
-2.25.1
-
+thanks,
+Shakeel
