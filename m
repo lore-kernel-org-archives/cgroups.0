@@ -1,44 +1,44 @@
 Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.12])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C362B1419AD;
-	Mon,  5 Feb 2024 21:06:43 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9FF4B1420AF;
+	Mon,  5 Feb 2024 21:06:44 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.12
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1707167205; cv=none; b=i9TKL4at3E8rwgWu0wwHGvyqg1ZUxYne8phLmO/cjF+OLPAGFHG42BH9FJwpS/0ph8SRz4Q+jYw7ZwKh2s/HsQOupp+ylXxrBpsYWBij2XwEXZw5L81WjJ809lFJW8jKmB49mrmx4xoMqSORIEo3doic7o1ZyHirTOt6UdYKAGc=
+	t=1707167206; cv=none; b=njntB9HB3fYkuH93iCmZNC97RkvirOK1SHyCCTySzeLhg75IJ3PbUcV5r3DWO7Fr/m7Hhx0iHRX8zLzz5thl07JlEC+Z1dQVTBevrOR1uqplz1qt2iKY3Cu7GkbZGMmVUYFBZWuSILJT14qOZyxbX5ZRlCEDiDWIh5l0wBC19Mc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1707167205; c=relaxed/simple;
-	bh=cWA9gob2e8+ICpFZe+WoA05IlSRb80tvhs1ZzJItqaU=;
+	s=arc-20240116; t=1707167206; c=relaxed/simple;
+	bh=CT/6JGPWjxMvj1JlVfSUdNt8xUVPb/vuGjvVCy3cR3A=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=gQz66TE+K0xyyQQzMu/ddG2hsWdLGpq5RRsED4ULsjhuwOE/0oxfpMzsohI4rdQU5qfNF34ucc2A1B7lIGbiqZ5b5ABGw+e1iKJM1pc4HgSV1OsAJxToHJ2yUHTXtx/ucplUyOVc7UmYGpO8F8nB+VUTloMN/kb+FYSe/0qbOTU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=none smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=aLZ/BPPu; arc=none smtp.client-ip=198.175.65.12
+	 MIME-Version; b=e4kjBPdEaOu8ZmrjmYFDGFUP87jKFHqhb5pviXMOzDN0q+jalTU/l1/wpIOVpLluvOXkU9F+BiUNaXjeX3syUh2mk4b2u7xZ2A1DB0ulqGrSsNlpVt5ZxQeGAZSd1fG5F5JjG/bYSaAW0sOX8aXdu1hsD+wS8+Ray6fRgcbnCVE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=none smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=bUwyv+Rn; arc=none smtp.client-ip=198.175.65.12
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="aLZ/BPPu"
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="bUwyv+Rn"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1707167204; x=1738703204;
+  t=1707167205; x=1738703205;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=cWA9gob2e8+ICpFZe+WoA05IlSRb80tvhs1ZzJItqaU=;
-  b=aLZ/BPPumJ6jOLFTAeOf+nDhnpClW1K3fHBoqpBz9mb2zhW2CqQiF9p1
-   3CFMGBdEOqAHj37vtwmrF+dY/iDkQkb19bo9+uOSGZ2b3oUWfPreChHYQ
-   rB/oDkEv8IRbK0VuCCXmIGmiMuMjfRQU2+lyt2njbrsJhGeoVebUILaxW
-   SiGXCebttNtnG9VozlDHrznUR/X9ZeLzuzQqQpwHM0zaeGTIwjbXCri5A
-   5a6krjB++E7IfzvZtFcdhtYNXhXpHBSyhZqyrzFGb/BKTFTNHERZ4SBfB
-   Ox54PMv4Zsy25kbBT3WJijlrSlNqtMkpGFTKzVNlT67GLNT1ik57SPYfw
-   Q==;
-X-IronPort-AV: E=McAfee;i="6600,9927,10975"; a="11960377"
+  bh=CT/6JGPWjxMvj1JlVfSUdNt8xUVPb/vuGjvVCy3cR3A=;
+  b=bUwyv+RnH+DRRmqLnpFZgHr+OfrwCta70LbJqLfCBMgZIECsc4X3BDc+
+   YHvOEVkbeBBB+86NdLhu5cpbQwQB2scLzHY8WYMDC7NCCWNMjhEwYKXEr
+   KAsH7fpFyaZOK09T02P9NubsprXkg/hbnyP5z3nqmPBBVs2nn1Hw8U9Wj
+   P+aJXMP+PoVQSLn5787psHlwWhQH1WDENgKuLQTw0QOGrD9GjurkL3HCk
+   Wt+xqm71yfK8U5igcGfoRj2TrTqGIpjGzxDkHQREO7Fh2mRr0h6hayvoW
+   nQfN/9ZyYZRzER8CJpDp7s+hbTBYDTTtZ0KqGaCjyS3YFj4EV3af+OLRX
+   A==;
+X-IronPort-AV: E=McAfee;i="6600,9927,10975"; a="11960403"
 X-IronPort-AV: E=Sophos;i="6.05,245,1701158400"; 
-   d="scan'208";a="11960377"
+   d="scan'208";a="11960403"
 Received: from orviesa001.jf.intel.com ([10.64.159.141])
   by orvoesa104.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 05 Feb 2024 13:06:42 -0800
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="6.05,245,1701158400"; 
-   d="scan'208";a="38245610"
+   d="scan'208";a="38245626"
 Received: from b4969161e530.jf.intel.com ([10.165.56.46])
-  by orviesa001.jf.intel.com with ESMTP; 05 Feb 2024 13:06:40 -0800
+  by orviesa001.jf.intel.com with ESMTP; 05 Feb 2024 13:06:41 -0800
 From: Haitao Huang <haitao.huang@linux.intel.com>
 To: jarkko@kernel.org,
 	dave.hansen@linux.intel.com,
@@ -62,9 +62,9 @@ Cc: zhiquan1.li@intel.com,
 	mikko.ylinen@linux.intel.com,
 	yangjie@microsoft.com,
 	chrisyan@microsoft.com
-Subject: [PATCH v9 02/15] cgroup/misc: Export APIs for SGX driver
-Date: Mon,  5 Feb 2024 13:06:25 -0800
-Message-Id: <20240205210638.157741-3-haitao.huang@linux.intel.com>
+Subject: [PATCH v9 06/15] x86/sgx: Abstract tracking reclaimable pages in LRU
+Date: Mon,  5 Feb 2024 13:06:29 -0800
+Message-Id: <20240205210638.157741-7-haitao.huang@linux.intel.com>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20240205210638.157741-1-haitao.huang@linux.intel.com>
 References: <20240205210638.157741-1-haitao.huang@linux.intel.com>
@@ -78,136 +78,110 @@ Content-Transfer-Encoding: 8bit
 
 From: Kristen Carlson Accardi <kristen@linux.intel.com>
 
-The SGX EPC cgroup will reclaim EPC pages when a usage in a cgroup
-reaches its or ancestor's limit. This requires a walk from the current
-cgroup up to the root similar to misc_cg_try_charge(). Export
-misc_cg_parent() to enable this walk.
+The functions, sgx_{mark,unmark}_page_reclaimable(), manage the tracking
+of reclaimable EPC pages: sgx_mark_page_reclaimable() adds a newly
+allocated page into the global LRU list while
+sgx_unmark_page_reclaimable() does the opposite. Abstract the hard coded
+global LRU references in these functions to make them reusable when
+pages are tracked in per-cgroup LRUs.
 
-The SGX driver may also need start a global level reclamation from the
-root. Export misc_cg_root() for the SGX driver to access.
+Create a helper, sgx_lru_list(), that returns the LRU that tracks a given
+EPC page. It simply returns the global LRU now, and will later return
+the LRU of the cgroup within which the EPC page was allocated. Replace
+the hard coded global LRU with a call to this helper.
 
+Next patches will first get the cgroup reclamation flow ready while
+keeping pages tracked in the global LRU and reclaimed by ksgxd before we
+make the switch in the end for sgx_lru_list() to return per-cgroup
+LRU.
+
+Co-developed-by: Sean Christopherson <sean.j.christopherson@intel.com>
+Signed-off-by: Sean Christopherson <sean.j.christopherson@intel.com>
 Signed-off-by: Kristen Carlson Accardi <kristen@linux.intel.com>
 Co-developed-by: Haitao Huang <haitao.huang@linux.intel.com>
 Signed-off-by: Haitao Huang <haitao.huang@linux.intel.com>
 Reviewed-by: Jarkko Sakkinen <jarkko@kernel.org>
-Reviewed-by: Tejun Heo <tj@kernel.org>
 ---
-V6:
-- Make commit messages more concise and split the original patch into two(Kai)
+V7:
+- Split this out from the big patch, #10 in V6. (Dave, Kai)
 ---
- include/linux/misc_cgroup.h | 24 ++++++++++++++++++++++++
- kernel/cgroup/misc.c        | 21 ++++++++-------------
- 2 files changed, 32 insertions(+), 13 deletions(-)
+ arch/x86/kernel/cpu/sgx/main.c | 30 ++++++++++++++++++------------
+ 1 file changed, 18 insertions(+), 12 deletions(-)
 
-diff --git a/include/linux/misc_cgroup.h b/include/linux/misc_cgroup.h
-index 0806d4436208..541a5611c597 100644
---- a/include/linux/misc_cgroup.h
-+++ b/include/linux/misc_cgroup.h
-@@ -64,6 +64,7 @@ struct misc_cg {
- 	struct misc_res res[MISC_CG_RES_TYPES];
- };
- 
-+struct misc_cg *misc_cg_root(void);
- u64 misc_cg_res_total_usage(enum misc_res_type type);
- int misc_cg_set_capacity(enum misc_res_type type, u64 capacity);
- int misc_cg_set_ops(enum misc_res_type type, const struct misc_res_ops *ops);
-@@ -84,6 +85,20 @@ static inline struct misc_cg *css_misc(struct cgroup_subsys_state *css)
- 	return css ? container_of(css, struct misc_cg, css) : NULL;
- }
- 
-+/**
-+ * misc_cg_parent() - Get the parent of the passed misc cgroup.
-+ * @cgroup: cgroup whose parent needs to be fetched.
-+ *
-+ * Context: Any context.
-+ * Return:
-+ * * struct misc_cg* - Parent of the @cgroup.
-+ * * %NULL - If @cgroup is null or the passed cgroup does not have a parent.
-+ */
-+static inline struct misc_cg *misc_cg_parent(struct misc_cg *cgroup)
-+{
-+	return cgroup ? css_misc(cgroup->css.parent) : NULL;
-+}
-+
- /*
-  * get_current_misc_cg() - Find and get the misc cgroup of the current task.
-  *
-@@ -108,6 +123,15 @@ static inline void put_misc_cg(struct misc_cg *cg)
- }
- 
- #else /* !CONFIG_CGROUP_MISC */
-+static inline struct misc_cg *misc_cg_root(void)
-+{
-+	return NULL;
-+}
-+
-+static inline struct misc_cg *misc_cg_parent(struct misc_cg *cg)
-+{
-+	return NULL;
-+}
- 
- static inline u64 misc_cg_res_total_usage(enum misc_res_type type)
- {
-diff --git a/kernel/cgroup/misc.c b/kernel/cgroup/misc.c
-index 14ab13ef3bc7..1f0d8e05b36c 100644
---- a/kernel/cgroup/misc.c
-+++ b/kernel/cgroup/misc.c
-@@ -43,18 +43,13 @@ static u64 misc_res_capacity[MISC_CG_RES_TYPES];
- static const struct misc_res_ops *misc_res_ops[MISC_CG_RES_TYPES];
- 
- /**
-- * parent_misc() - Get the parent of the passed misc cgroup.
-- * @cgroup: cgroup whose parent needs to be fetched.
-- *
-- * Context: Any context.
-- * Return:
-- * * struct misc_cg* - Parent of the @cgroup.
-- * * %NULL - If @cgroup is null or the passed cgroup does not have a parent.
-+ * misc_cg_root() - Return the root misc cgroup.
+diff --git a/arch/x86/kernel/cpu/sgx/main.c b/arch/x86/kernel/cpu/sgx/main.c
+index 912959c7ecc9..a131aa985c95 100644
+--- a/arch/x86/kernel/cpu/sgx/main.c
++++ b/arch/x86/kernel/cpu/sgx/main.c
+@@ -32,6 +32,11 @@ static DEFINE_XARRAY(sgx_epc_address_space);
   */
--static struct misc_cg *parent_misc(struct misc_cg *cgroup)
-+struct misc_cg *misc_cg_root(void)
- {
--	return cgroup ? css_misc(cgroup->css.parent) : NULL;
-+	return &root_cg;
+ static struct sgx_epc_lru_list sgx_global_lru;
+ 
++static inline struct sgx_epc_lru_list *sgx_lru_list(struct sgx_epc_page *epc_page)
++{
++	return &sgx_global_lru;
++}
++
+ static atomic_long_t sgx_nr_free_pages = ATOMIC_LONG_INIT(0);
+ 
+ /* Nodes with one or more EPC sections. */
+@@ -500,25 +505,24 @@ struct sgx_epc_page *__sgx_alloc_epc_page(void)
  }
-+EXPORT_SYMBOL_GPL(misc_cg_root);
  
  /**
-  * valid_type() - Check if @type is valid or not.
-@@ -183,7 +178,7 @@ int misc_cg_try_charge(enum misc_res_type type, struct misc_cg *cg, u64 amount)
- 	if (!amount)
- 		return 0;
- 
--	for (i = cg; i; i = parent_misc(i)) {
-+	for (i = cg; i; i = misc_cg_parent(i)) {
- 		res = &i->res[type];
- 
- 		new_usage = atomic64_add_return(amount, &res->usage);
-@@ -196,12 +191,12 @@ int misc_cg_try_charge(enum misc_res_type type, struct misc_cg *cg, u64 amount)
- 	return 0;
- 
- err_charge:
--	for (j = i; j; j = parent_misc(j)) {
-+	for (j = i; j; j = misc_cg_parent(j)) {
- 		atomic64_inc(&j->res[type].events);
- 		cgroup_file_notify(&j->events_file);
- 	}
- 
--	for (j = cg; j != i; j = parent_misc(j))
-+	for (j = cg; j != i; j = misc_cg_parent(j))
- 		misc_cg_cancel_charge(type, j, amount);
- 	misc_cg_cancel_charge(type, i, amount);
- 	return ret;
-@@ -223,7 +218,7 @@ void misc_cg_uncharge(enum misc_res_type type, struct misc_cg *cg, u64 amount)
- 	if (!(amount && valid_type(type) && cg))
- 		return;
- 
--	for (i = cg; i; i = parent_misc(i))
-+	for (i = cg; i; i = misc_cg_parent(i))
- 		misc_cg_cancel_charge(type, i, amount);
+- * sgx_mark_page_reclaimable() - Mark a page as reclaimable
++ * sgx_mark_page_reclaimable() - Mark a page as reclaimable and track it in a LRU.
+  * @page:	EPC page
+- *
+- * Mark a page as reclaimable and add it to the active page list. Pages
+- * are automatically removed from the active list when freed.
+  */
+ void sgx_mark_page_reclaimable(struct sgx_epc_page *page)
+ {
+-	spin_lock(&sgx_global_lru.lock);
++	struct sgx_epc_lru_list *lru = sgx_lru_list(page);
++
++	spin_lock(&lru->lock);
+ 	page->flags |= SGX_EPC_PAGE_RECLAIMER_TRACKED;
+-	list_add_tail(&page->list, &sgx_global_lru.reclaimable);
+-	spin_unlock(&sgx_global_lru.lock);
++	list_add_tail(&page->list, &lru->reclaimable);
++	spin_unlock(&lru->lock);
  }
- EXPORT_SYMBOL_GPL(misc_cg_uncharge);
+ 
+ /**
+- * sgx_unmark_page_reclaimable() - Remove a page from the reclaim list
++ * sgx_unmark_page_reclaimable() - Remove a page from its tracking LRU
+  * @page:	EPC page
+  *
+- * Clear the reclaimable flag and remove the page from the active page list.
++ * Clear the reclaimable flag if set and remove the page from its LRU.
+  *
+  * Return:
+  *   0 on success,
+@@ -526,18 +530,20 @@ void sgx_mark_page_reclaimable(struct sgx_epc_page *page)
+  */
+ int sgx_unmark_page_reclaimable(struct sgx_epc_page *page)
+ {
+-	spin_lock(&sgx_global_lru.lock);
++	struct sgx_epc_lru_list *lru = sgx_lru_list(page);
++
++	spin_lock(&lru->lock);
+ 	if (page->flags & SGX_EPC_PAGE_RECLAIMER_TRACKED) {
+ 		/* The page is being reclaimed. */
+ 		if (list_empty(&page->list)) {
+-			spin_unlock(&sgx_global_lru.lock);
++			spin_unlock(&lru->lock);
+ 			return -EBUSY;
+ 		}
+ 
+ 		list_del(&page->list);
+ 		page->flags &= ~SGX_EPC_PAGE_RECLAIMER_TRACKED;
+ 	}
+-	spin_unlock(&sgx_global_lru.lock);
++	spin_unlock(&lru->lock);
+ 
+ 	return 0;
+ }
 -- 
 2.25.1
 
