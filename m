@@ -1,159 +1,132 @@
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.12])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.223.130])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DE93814AD09;
-	Mon,  5 Feb 2024 21:06:51 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.12
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1E7451AB806;
+	Mon,  5 Feb 2024 21:16:36 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.130
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1707167213; cv=none; b=kdnFp+yCAIXHZv+aaEN7ZEDaZwy1EepSGzg/jf6I1ezXy0cxpjQeaROVpJRml14/CVMQFZbYI/X7xYGJeFQBE1rBdNW/isHD8EIC84nLzW0souYo8h5lzDY5el3P68L4M7sq/oNy/5vHnbrYvm8et8rruAF+y53LUN07Q/rkUss=
+	t=1707167799; cv=none; b=l55TFodvNvHpU+AIfFiBJdfyuY3NRr4x1sNPYz9cZdhHex0csTlMJQLqSs9eZIqE9tcRuY/+ahDGpnXKWNyQxxp0QGBZeyh+2J4EKrM0xHA/bl8jQFZCFT5ypfc6oUPXtl/vr0NkR689iDh6hFWPwr4hWosLUrAHfhaDiPm/tvQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1707167213; c=relaxed/simple;
-	bh=o1nFXrA5FX9ZZTIDA9Xh5KyH840bTq33YyyW8UGP2Gw=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=fUfxm1tCf6qdE3M5muPq1LBI0C9kgaoFpuvwjVUxz4lNYyyLiwCBTnshPTYk/OLduE02x4smFnk5o66wlabK8ZLzfVPQZxJGJIFOLXGQn2l7+gFJcLVauj4CSBkfnQlyGM4zPHQSe6p5hvG43UE7DqIAfwBx9sTWkAobtQlVY74=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=none smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=REXqdlQ3; arc=none smtp.client-ip=198.175.65.12
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=linux.intel.com
+	s=arc-20240116; t=1707167799; c=relaxed/simple;
+	bh=w+LuAn4eMxEN1OrwnjXfkUZofNi+HXJroO9FLryNtL4=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=D4v8WBqwuh/JcQzY9v/cCXx/sR9ShlmsxKgb9891QHFrk//HQMjc/kAkCucbYUow/5SIJt4SsEVzGneuzJp+yahnbrYEQ74KJFIIAJ3d0xh36IKnLdYs6LcmscWFxAoT1ELi9kMEk47vG1IOKYs2rCbGbJdPjWahcKmq5ao1BIs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com; spf=pass smtp.mailfrom=suse.com; dkim=pass (1024-bit key) header.d=suse.com header.i=@suse.com header.b=k2QTPAlp; dkim=pass (1024-bit key) header.d=suse.com header.i=@suse.com header.b=k2QTPAlp; arc=none smtp.client-ip=195.135.223.130
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="REXqdlQ3"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1707167212; x=1738703212;
-  h=from:to:cc:subject:date:message-id:in-reply-to:
-   references:mime-version:content-transfer-encoding;
-  bh=o1nFXrA5FX9ZZTIDA9Xh5KyH840bTq33YyyW8UGP2Gw=;
-  b=REXqdlQ3x7dMsXCacimJAXVu5Mcq10ZGshQvldcKqVrcK4VAS7DPP15P
-   jzq/fWr81XKugxXD4ZP9nMEcFJIjW9HgNi2BaTChO2OSgAs+WgTojrrPO
-   JXr3QNcLcmu7+91DOAOMqcTXMetOPdLqQIfHHn39FKVO9q9ocUV1JOccg
-   DAvY6PPu0fmlvY/eqqFXapINfJZNoG3Lef+DV6ndl+osCzilaLY1EdpUY
-   qn2DkCHk7Cq8R0wud0zOc2TAcRDFuIiY0EO2GRBGsH61xAwHDrInQ0gLS
-   dpsT9xCSZaoyI1LnLQ1yD4RfGA3s1i45kdFyLMrQbOgdKN5yaPj1L9/Oq
-   A==;
-X-IronPort-AV: E=McAfee;i="6600,9927,10975"; a="11960474"
-X-IronPort-AV: E=Sophos;i="6.05,245,1701158400"; 
-   d="scan'208";a="11960474"
-Received: from orviesa001.jf.intel.com ([10.64.159.141])
-  by orvoesa104.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 05 Feb 2024 13:06:43 -0800
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.05,245,1701158400"; 
-   d="scan'208";a="38245651"
-Received: from b4969161e530.jf.intel.com ([10.165.56.46])
-  by orviesa001.jf.intel.com with ESMTP; 05 Feb 2024 13:06:42 -0800
-From: Haitao Huang <haitao.huang@linux.intel.com>
-To: jarkko@kernel.org,
-	dave.hansen@linux.intel.com,
-	tj@kernel.org,
-	mkoutny@suse.com,
-	linux-kernel@vger.kernel.org,
-	linux-sgx@vger.kernel.org,
-	x86@kernel.org,
-	cgroups@vger.kernel.org,
-	tglx@linutronix.de,
-	mingo@redhat.com,
-	bp@alien8.de,
-	hpa@zytor.com,
-	sohil.mehta@intel.com,
-	tim.c.chen@linux.intel.com
-Cc: zhiquan1.li@intel.com,
-	kristen@linux.intel.com,
-	seanjc@google.com,
-	zhanb@microsoft.com,
-	anakrish@microsoft.com,
-	mikko.ylinen@linux.intel.com,
-	yangjie@microsoft.com,
-	chrisyan@microsoft.com
-Subject: [PATCH v9 13/15] x86/sgx: Turn on per-cgroup EPC reclamation
-Date: Mon,  5 Feb 2024 13:06:36 -0800
-Message-Id: <20240205210638.157741-14-haitao.huang@linux.intel.com>
-X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20240205210638.157741-1-haitao.huang@linux.intel.com>
-References: <20240205210638.157741-1-haitao.huang@linux.intel.com>
+	dkim=pass (1024-bit key) header.d=suse.com header.i=@suse.com header.b="k2QTPAlp";
+	dkim=pass (1024-bit key) header.d=suse.com header.i=@suse.com header.b="k2QTPAlp"
+Received: from imap1.dmz-prg2.suse.org (imap1.dmz-prg2.suse.org [10.150.64.97])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by smtp-out1.suse.de (Postfix) with ESMTPS id 52B1021FB3;
+	Mon,  5 Feb 2024 21:16:35 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
+	t=1707167795; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=UqjQ8uzPWkoXvaP3jSmRX0mX+6vg7iSnhNElmOf67RA=;
+	b=k2QTPAlpUZx9xWdcIwXtXXDq0RS18tpEXYVMAwgeXgBnBYJefWMYQ93JLDFkCalSq3ycUy
+	VZAEpeop+Dxd1H2y4UYD/k2bR0lxrH87nVnAGgfJdz4CSRW/671XL7U+K2ActeCA0IKwI6
+	nBokQeUPwfSSneyy/npR/ngpYbv+j+0=
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
+	t=1707167795; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=UqjQ8uzPWkoXvaP3jSmRX0mX+6vg7iSnhNElmOf67RA=;
+	b=k2QTPAlpUZx9xWdcIwXtXXDq0RS18tpEXYVMAwgeXgBnBYJefWMYQ93JLDFkCalSq3ycUy
+	VZAEpeop+Dxd1H2y4UYD/k2bR0lxrH87nVnAGgfJdz4CSRW/671XL7U+K2ActeCA0IKwI6
+	nBokQeUPwfSSneyy/npR/ngpYbv+j+0=
+Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id 2F00A132DD;
+	Mon,  5 Feb 2024 21:16:35 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
+	by imap1.dmz-prg2.suse.org with ESMTPSA
+	id tIwCCTNQwWWHUwAAD6G6ig
+	(envelope-from <mhocko@suse.com>); Mon, 05 Feb 2024 21:16:35 +0000
+Date: Mon, 5 Feb 2024 22:16:34 +0100
+From: Michal Hocko <mhocko@suse.com>
+To: "T.J. Mercier" <tjmercier@google.com>
+Cc: Johannes Weiner <hannes@cmpxchg.org>,
+	Roman Gushchin <roman.gushchin@linux.dev>,
+	Shakeel Butt <shakeelb@google.com>,
+	Muchun Song <muchun.song@linux.dev>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Efly Young <yangyifei03@kuaishou.com>, android-mm@google.com,
+	yuzhao@google.com, mkoutny@suse.com,
+	Yosry Ahmed <yosryahmed@google.com>, cgroups@vger.kernel.org,
+	linux-mm@kvack.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v3] mm: memcg: Use larger batches for proactive reclaim
+Message-ID: <ZcFQMru5_oATGbuP@tiehlicka>
+References: <20240202233855.1236422-1-tjmercier@google.com>
+ <ZcC7Kgew3GDFNIux@tiehlicka>
+ <CABdmKX3HbSxX6zLF4z3f+=Ybiq1bA71jckkeHv5QJxAjSexgaA@mail.gmail.com>
+ <ZcE5n9cTdTGJChmq@tiehlicka>
+ <CABdmKX0Du2F+bko=hjLBqdQO-bJSFcG3y1Bbuu2v6J8aVB39sw@mail.gmail.com>
+ <ZcFG2JoXI7i8XzQY@tiehlicka>
+ <CABdmKX0t1LXj80Awe20TrmY5gQB6v2E4bGfW8WXr2i84o+k6ow@mail.gmail.com>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
+In-Reply-To: <CABdmKX0t1LXj80Awe20TrmY5gQB6v2E4bGfW8WXr2i84o+k6ow@mail.gmail.com>
+Authentication-Results: smtp-out1.suse.de;
+	none
+X-Spamd-Result: default: False [0.28 / 50.00];
+	 RCVD_VIA_SMTP_AUTH(0.00)[];
+	 TO_DN_SOME(0.00)[];
+	 RCVD_COUNT_THREE(0.00)[3];
+	 FROM_EQ_ENVFROM(0.00)[];
+	 MIME_TRACE(0.00)[0:+];
+	 BAYES_HAM(-0.12)[66.62%];
+	 ARC_NA(0.00)[];
+	 FROM_HAS_DN(0.00)[];
+	 TO_MATCH_ENVRCPT_ALL(0.00)[];
+	 MIME_GOOD(-0.10)[text/plain];
+	 DKIM_SIGNED(0.00)[suse.com:s=susede1];
+	 RCPT_COUNT_TWELVE(0.00)[14];
+	 FUZZY_BLOCKED(0.00)[rspamd.com];
+	 MID_RHS_NOT_FQDN(0.50)[];
+	 RCVD_TLS_ALL(0.00)[]
+X-Spam-Level: 
+X-Spam-Flag: NO
+X-Spam-Score: 0.28
 
-From: Kristen Carlson Accardi <kristen@linux.intel.com>
+On Mon 05-02-24 12:47:47, T.J. Mercier wrote:
+> On Mon, Feb 5, 2024 at 12:36 PM Michal Hocko <mhocko@suse.com> wrote:
+[...]
+> > This of something like
+> > timeout $TIMEOUT echo $TARGET > $MEMCG_PATH/memory.reclaim
+> > where timeout acts as a stop gap if the reclaim cannot finish in
+> > TIMEOUT.
+> 
+> Yeah I get the desired behavior, but using sc->nr_reclaimed to achieve
+> it is what's bothering me.
 
-Previous patches have implemented all infrastructure needed for
-per-cgroup EPC page tracking and reclaiming. But all reclaimable EPC
-pages are still tracked in the global LRU as sgx_lru_list() returns hard
-coded reference to the global LRU.
+I am not really happy about this subtlety. If we have a better way then
+let's do it. Better in its own patch, though.
 
-Change sgx_lru_list() to return the LRU of the cgroup in which the given
-EPC page is allocated.
+> It's already wired up that way though, so if you want to make this
+> change now then I can try to test for the difference using really
+> large reclaim targets.
 
-This makes all EPC pages tracked in per-cgroup LRUs and the global
-reclaimer (ksgxd) will not be able to reclaim any pages from the global
-LRU. However, in cases of over-committing, i.e., sum of cgroup limits
-greater than the total capacity, cgroups may never reclaim but the total
-usage can still be near the capacity. Therefore global reclamation is
-still needed in those cases and it should reclaim from the root cgroup.
+Yes, please. If you want it a separate patch then no objection from me
+of course. If you do no like the nr_to_reclaim bailout then maybe we can
+go with a simple break out flag in scan_control.
 
-Modify sgx_reclaim_pages_global(), to reclaim from the root EPC cgroup
-when cgroup is enabled, otherwise from the global LRU.
-
-Similarly, modify sgx_can_reclaim(), to check emptiness of LRUs of all
-cgroups when EPC cgroup is enabled, otherwise only check the global LRU.
-
-With these changes, the global reclamation and per-cgroup reclamation
-both work properly with all pages tracked in per-cgroup LRUs.
-
-Co-developed-by: Sean Christopherson <sean.j.christopherson@intel.com>
-Signed-off-by: Sean Christopherson <sean.j.christopherson@intel.com>
-Signed-off-by: Kristen Carlson Accardi <kristen@linux.intel.com>
-Co-developed-by: Haitao Huang <haitao.huang@linux.intel.com>
-Signed-off-by: Haitao Huang <haitao.huang@linux.intel.com>
----
-V7:
-- Split this out from the big patch, #10 in V6. (Dave, Kai)
----
- arch/x86/kernel/cpu/sgx/main.c | 16 +++++++++++++++-
- 1 file changed, 15 insertions(+), 1 deletion(-)
-
-diff --git a/arch/x86/kernel/cpu/sgx/main.c b/arch/x86/kernel/cpu/sgx/main.c
-index 6b0c26cac621..d4265a390ba9 100644
---- a/arch/x86/kernel/cpu/sgx/main.c
-+++ b/arch/x86/kernel/cpu/sgx/main.c
-@@ -34,12 +34,23 @@ static struct sgx_epc_lru_list sgx_global_lru;
- 
- static inline struct sgx_epc_lru_list *sgx_lru_list(struct sgx_epc_page *epc_page)
- {
-+#ifdef CONFIG_CGROUP_SGX_EPC
-+	if (epc_page->epc_cg)
-+		return &epc_page->epc_cg->lru;
-+
-+	/* This should not happen if kernel is configured correctly */
-+	WARN_ON_ONCE(1);
-+#endif
- 	return &sgx_global_lru;
- }
- 
- static inline bool sgx_can_reclaim(void)
- {
-+#ifdef CONFIG_CGROUP_SGX_EPC
-+	return !sgx_epc_cgroup_lru_empty(misc_cg_root());
-+#else
- 	return !list_empty(&sgx_global_lru.reclaimable);
-+#endif
- }
- 
- static atomic_long_t sgx_nr_free_pages = ATOMIC_LONG_INIT(0);
-@@ -410,7 +421,10 @@ static void sgx_reclaim_pages_global(bool indirect)
- {
- 	unsigned int nr_to_scan = SGX_NR_TO_SCAN;
- 
--	sgx_reclaim_pages(&sgx_global_lru, &nr_to_scan, indirect);
-+	if (IS_ENABLED(CONFIG_CGROUP_SGX_EPC))
-+		sgx_epc_cgroup_reclaim_pages(misc_cg_root(), indirect);
-+	else
-+		sgx_reclaim_pages(&sgx_global_lru, &nr_to_scan, indirect);
- }
- 
- /*
+Thanks!
 -- 
-2.25.1
-
+Michal Hocko
+SUSE Labs
