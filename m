@@ -1,44 +1,44 @@
 Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.12])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 75A02144623;
-	Mon,  5 Feb 2024 21:06:46 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 33C1E145331;
+	Mon,  5 Feb 2024 21:06:47 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.12
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1707167208; cv=none; b=HleW/Ed9+nnNxOgcxs0g1QHTPpibngUMaqalcu9GgU+aecRIRBzuev/oL2TBa4En5d3ValGWdsdGAckCnnO2dYPcSVV8QrefAhLFfyQxuinS9SBxAVshgebDlhyvyazue/vZkK3wDUn4mj+Al4AG6Mv1N0t9zA1RIIT8niWKZno=
+	t=1707167209; cv=none; b=IQsCtQRJxCiPqFyuIN0TFtx8S8daG2Dfavg3Cq2Mbz9ppZ1qnrsOxH6FUXahq/4ndVMiKREmLG9b8ZL0mQR49BNadqEuCBcQdfuiGyegdMQcoKDycrhMG08yWjEoPiVB1HFwPJissLWC/WfdMhdOgNJ3XnlPMatTe3bX2T423+s=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1707167208; c=relaxed/simple;
-	bh=ZwhQ8rGrkYGE4Cq6ve+NL1Ph2G7gIbD0pcvXlPmoUGk=;
+	s=arc-20240116; t=1707167209; c=relaxed/simple;
+	bh=eUN2BjJJ5PxF/WozfC0mPnA7u1ZdTF/IwnovnwBHmEg=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=hWeMbXWm42akiC94f+xvjLDDS4mVmzHk7Yz4sIOKVatiOrwl0whz+1I7IcAuPFhbuBqN5L/jvK4bVqknIhGIX58fjCS1q1s4SEa1qaGN9INr+2zE9YHb4mtfRPAphZ2L3FAKxyvEWUmE2Bm5xeoaE8V+Gz+U9p8nR+qzXRD2PNY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=none smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=KTxT9ezv; arc=none smtp.client-ip=198.175.65.12
+	 MIME-Version; b=KveSYXHhvGbwTrLNLJpVO2K3x4JSkqlBSD14+sbq+kgfjjwS4PWr/Fy4Eh5qhIu/+LShjwtBWL9iIR64YPcx5C7BvuPVenSTbn+AUXQJAmkYQglwPofK+O8RiLKf5EgniDvu+2EBeOodIRDLPkBjDDywZnxg+dzkR4jtjiNkksc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=none smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=BU1Srz3E; arc=none smtp.client-ip=198.175.65.12
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="KTxT9ezv"
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="BU1Srz3E"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
   t=1707167207; x=1738703207;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=ZwhQ8rGrkYGE4Cq6ve+NL1Ph2G7gIbD0pcvXlPmoUGk=;
-  b=KTxT9ezvpZkqHitPMfWqbTTaF5hgBlYrBjMD89MSZgHAeRLrLr/Gs9xx
-   IZwTOD2fIEm+hdsKl9vZn4abwlB4mPHvCb4L7dVRC8AF2Lx2/fPaU3tg0
-   nEP2l4ymoKotnPDLlfKH4TwhtfKQTNO6UPvrSDbrJI8A9ebWERSlalaEC
-   r+dyjGBjXPz1/m2iPCtOqf+UDUWmacBXDTcnUnrE2rBZyzttgsqkx9u7/
-   yCzsD8ksXMWW9nLjAjn0/7+gfuSIv/T2ULSK8Os0IbPVW8E80oxq9iUH8
-   NVY0uiWp4Ms3JmRirtGx522w91FDoaaTTM53Y8KmNy0FUR8f9dZgF5IOA
-   w==;
-X-IronPort-AV: E=McAfee;i="6600,9927,10975"; a="11960418"
+  bh=eUN2BjJJ5PxF/WozfC0mPnA7u1ZdTF/IwnovnwBHmEg=;
+  b=BU1Srz3Eo3BLc/dR6SpnzRN0CKH4dbuyMgq/Ijbsko8cZJJ5eN7AatDn
+   THhYm5vUx5EDOfsz85ZML0lnTDSLxEp9Sh6F86UKu8VPoW6xkl05xM/OR
+   EcTJRZVUZvYH2B8q/FVgHZiLImKeuizZA1+Luee2SuZN4dwV3g92Q2BDU
+   G0HvEKFyD1Zuo/1a96dCuhH8hI+r7JCtz5Rlw/MXg8npOZQ3CfdCNNDcQ
+   cYWvvT7zOVQCczYKyErCQFRZuz/iwO/SrfDrqDzLidukrgCo5u8jKs3o2
+   nQPeoM25/lNtA7ox58F53i/VBCDcEmbI4R4n/+obahU+l0m2gUQmQpVdG
+   Q==;
+X-IronPort-AV: E=McAfee;i="6600,9927,10975"; a="11960432"
 X-IronPort-AV: E=Sophos;i="6.05,245,1701158400"; 
-   d="scan'208";a="11960418"
+   d="scan'208";a="11960432"
 Received: from orviesa001.jf.intel.com ([10.64.159.141])
   by orvoesa104.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 05 Feb 2024 13:06:42 -0800
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="6.05,245,1701158400"; 
-   d="scan'208";a="38245622"
+   d="scan'208";a="38245634"
 Received: from b4969161e530.jf.intel.com ([10.165.56.46])
-  by orviesa001.jf.intel.com with ESMTP; 05 Feb 2024 13:06:40 -0800
+  by orviesa001.jf.intel.com with ESMTP; 05 Feb 2024 13:06:41 -0800
 From: Haitao Huang <haitao.huang@linux.intel.com>
 To: jarkko@kernel.org,
 	dave.hansen@linux.intel.com,
@@ -62,9 +62,9 @@ Cc: zhiquan1.li@intel.com,
 	mikko.ylinen@linux.intel.com,
 	yangjie@microsoft.com,
 	chrisyan@microsoft.com
-Subject: [PATCH v9 05/15] x86/sgx: Add sgx_epc_lru_list to encapsulate LRU list
-Date: Mon,  5 Feb 2024 13:06:28 -0800
-Message-Id: <20240205210638.157741-6-haitao.huang@linux.intel.com>
+Subject: [PATCH v9 08/15] x86/sgx: Implement EPC reclamation flows for cgroup
+Date: Mon,  5 Feb 2024 13:06:31 -0800
+Message-Id: <20240205210638.157741-9-haitao.huang@linux.intel.com>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20240205210638.157741-1-haitao.huang@linux.intel.com>
 References: <20240205210638.157741-1-haitao.huang@linux.intel.com>
@@ -76,190 +76,277 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-From: Sean Christopherson <sean.j.christopherson@intel.com>
+From: Kristen Carlson Accardi <kristen@linux.intel.com>
 
-Introduce a data structure to wrap the existing reclaimable list and its
-spinlock. Each cgroup later will have one instance of this structure to
-track EPC pages allocated for processes associated with the same cgroup.
-Just like the global SGX reclaimer (ksgxd), an EPC cgroup reclaims pages
-from the reclaimable list in this structure when its usage reaches near
-its limit.
+Implement the reclamation flow for cgroup, encapsulated in the top-level
+function sgx_epc_cgroup_reclaim_pages(). It does a pre-order walk on its
+subtree, and make calls to sgx_reclaim_pages() at each node passing in
+the LRU of that node. It keeps track of total reclaimed pages, and pages
+left to attempt.  It stops the walk if desired number of pages are
+attempted.
 
-Use this structure to encapsulate the LRU list and its lock used by the
-global reclaimer.
+In some contexts, e.g. page fault handling, only asynchronous
+reclamation is allowed. Create a work-queue, corresponding work item and
+function definitions to support the asynchronous reclamation. Both
+synchronous and asynchronous flows invoke the same top level reclaim
+function, and will be triggered later by sgx_epc_cgroup_try_charge()
+when usage of the cgroup is at or near its limit.
 
+Co-developed-by: Sean Christopherson <sean.j.christopherson@intel.com>
 Signed-off-by: Sean Christopherson <sean.j.christopherson@intel.com>
-Co-developed-by: Kristen Carlson Accardi <kristen@linux.intel.com>
 Signed-off-by: Kristen Carlson Accardi <kristen@linux.intel.com>
 Co-developed-by: Haitao Huang <haitao.huang@linux.intel.com>
 Signed-off-by: Haitao Huang <haitao.huang@linux.intel.com>
-Cc: Sean Christopherson <seanjc@google.com>
-Reviewed-by: Jarkko Sakkinen <jarkko@kernel.org>
 ---
-V6:
-- removed introduction to unreclaimables in commit message.
+V9:
+- Add comments for static variables. (Jarkko)
 
-V4:
-- Removed unneeded comments for the spinlock and the non-reclaimables.
-(Kai, Jarkko)
-- Revised the commit to add introduction comments for unreclaimables and
-multiple LRU lists.(Kai)
-- Reordered the patches: delay all changes for unreclaimables to
-later, and this one becomes the first change in the SGX subsystem.
+V8:
+- Remove alignment for substructure variables. (Jarkko)
 
-V3:
-- Removed the helper functions and revised commit messages.
+V7:
+- Split this out from the big patch, #10 in V6. (Dave, Kai)
 ---
- arch/x86/kernel/cpu/sgx/main.c | 39 +++++++++++++++++-----------------
- arch/x86/kernel/cpu/sgx/sgx.h  | 15 +++++++++++++
- 2 files changed, 35 insertions(+), 19 deletions(-)
+ arch/x86/kernel/cpu/sgx/epc_cgroup.c | 181 ++++++++++++++++++++++++++-
+ arch/x86/kernel/cpu/sgx/epc_cgroup.h |   3 +
+ 2 files changed, 183 insertions(+), 1 deletion(-)
 
-diff --git a/arch/x86/kernel/cpu/sgx/main.c b/arch/x86/kernel/cpu/sgx/main.c
-index c32f18b70c73..912959c7ecc9 100644
---- a/arch/x86/kernel/cpu/sgx/main.c
-+++ b/arch/x86/kernel/cpu/sgx/main.c
-@@ -28,10 +28,9 @@ static DEFINE_XARRAY(sgx_epc_address_space);
- 
- /*
-  * These variables are part of the state of the reclaimer, and must be accessed
-- * with sgx_reclaimer_lock acquired.
-+ * with sgx_global_lru.lock acquired.
-  */
--static LIST_HEAD(sgx_active_page_list);
--static DEFINE_SPINLOCK(sgx_reclaimer_lock);
-+static struct sgx_epc_lru_list sgx_global_lru;
- 
- static atomic_long_t sgx_nr_free_pages = ATOMIC_LONG_INIT(0);
- 
-@@ -306,13 +305,13 @@ static void sgx_reclaim_pages(void)
- 	int ret;
- 	int i;
- 
--	spin_lock(&sgx_reclaimer_lock);
-+	spin_lock(&sgx_global_lru.lock);
- 	for (i = 0; i < SGX_NR_TO_SCAN; i++) {
--		if (list_empty(&sgx_active_page_list))
-+		epc_page = list_first_entry_or_null(&sgx_global_lru.reclaimable,
-+						    struct sgx_epc_page, list);
-+		if (!epc_page)
- 			break;
- 
--		epc_page = list_first_entry(&sgx_active_page_list,
--					    struct sgx_epc_page, list);
- 		list_del_init(&epc_page->list);
- 		encl_page = epc_page->owner;
- 
-@@ -324,7 +323,7 @@ static void sgx_reclaim_pages(void)
- 			 */
- 			epc_page->flags &= ~SGX_EPC_PAGE_RECLAIMER_TRACKED;
- 	}
--	spin_unlock(&sgx_reclaimer_lock);
-+	spin_unlock(&sgx_global_lru.lock);
- 
- 	for (i = 0; i < cnt; i++) {
- 		epc_page = chunk[i];
-@@ -347,9 +346,9 @@ static void sgx_reclaim_pages(void)
- 		continue;
- 
- skip:
--		spin_lock(&sgx_reclaimer_lock);
--		list_add_tail(&epc_page->list, &sgx_active_page_list);
--		spin_unlock(&sgx_reclaimer_lock);
-+		spin_lock(&sgx_global_lru.lock);
-+		list_add_tail(&epc_page->list, &sgx_global_lru.reclaimable);
-+		spin_unlock(&sgx_global_lru.lock);
- 
- 		kref_put(&encl_page->encl->refcount, sgx_encl_release);
- 
-@@ -380,7 +379,7 @@ static void sgx_reclaim_pages(void)
- static bool sgx_should_reclaim(unsigned long watermark)
- {
- 	return atomic_long_read(&sgx_nr_free_pages) < watermark &&
--	       !list_empty(&sgx_active_page_list);
-+	       !list_empty(&sgx_global_lru.reclaimable);
- }
- 
- /*
-@@ -432,6 +431,8 @@ static bool __init sgx_page_reclaimer_init(void)
- 
- 	ksgxd_tsk = tsk;
- 
-+	sgx_lru_init(&sgx_global_lru);
-+
- 	return true;
- }
- 
-@@ -507,10 +508,10 @@ struct sgx_epc_page *__sgx_alloc_epc_page(void)
-  */
- void sgx_mark_page_reclaimable(struct sgx_epc_page *page)
- {
--	spin_lock(&sgx_reclaimer_lock);
-+	spin_lock(&sgx_global_lru.lock);
- 	page->flags |= SGX_EPC_PAGE_RECLAIMER_TRACKED;
--	list_add_tail(&page->list, &sgx_active_page_list);
--	spin_unlock(&sgx_reclaimer_lock);
-+	list_add_tail(&page->list, &sgx_global_lru.reclaimable);
-+	spin_unlock(&sgx_global_lru.lock);
- }
- 
- /**
-@@ -525,18 +526,18 @@ void sgx_mark_page_reclaimable(struct sgx_epc_page *page)
-  */
- int sgx_unmark_page_reclaimable(struct sgx_epc_page *page)
- {
--	spin_lock(&sgx_reclaimer_lock);
-+	spin_lock(&sgx_global_lru.lock);
- 	if (page->flags & SGX_EPC_PAGE_RECLAIMER_TRACKED) {
- 		/* The page is being reclaimed. */
- 		if (list_empty(&page->list)) {
--			spin_unlock(&sgx_reclaimer_lock);
-+			spin_unlock(&sgx_global_lru.lock);
- 			return -EBUSY;
- 		}
- 
- 		list_del(&page->list);
- 		page->flags &= ~SGX_EPC_PAGE_RECLAIMER_TRACKED;
- 	}
--	spin_unlock(&sgx_reclaimer_lock);
-+	spin_unlock(&sgx_global_lru.lock);
- 
- 	return 0;
- }
-@@ -578,7 +579,7 @@ struct sgx_epc_page *sgx_alloc_epc_page(void *owner, bool reclaim)
- 			break;
- 		}
- 
--		if (list_empty(&sgx_active_page_list)) {
-+		if (list_empty(&sgx_global_lru.reclaimable)) {
- 			page = ERR_PTR(-ENOMEM);
- 			break;
- 		}
-diff --git a/arch/x86/kernel/cpu/sgx/sgx.h b/arch/x86/kernel/cpu/sgx/sgx.h
-index a898d86dead0..0e99e9ae3a67 100644
---- a/arch/x86/kernel/cpu/sgx/sgx.h
-+++ b/arch/x86/kernel/cpu/sgx/sgx.h
-@@ -88,6 +88,21 @@ static inline void *sgx_get_epc_virt_addr(struct sgx_epc_page *page)
- 	return section->virt_addr + index * PAGE_SIZE;
- }
+diff --git a/arch/x86/kernel/cpu/sgx/epc_cgroup.c b/arch/x86/kernel/cpu/sgx/epc_cgroup.c
+index f4a37ace67d7..16b6d9f909eb 100644
+--- a/arch/x86/kernel/cpu/sgx/epc_cgroup.c
++++ b/arch/x86/kernel/cpu/sgx/epc_cgroup.c
+@@ -8,9 +8,180 @@
+ /* The root EPC cgroup */
+ static struct sgx_epc_cgroup epc_cg_root;
  
 +/*
-+ * Contains EPC pages tracked by the global reclaimer (ksgxd) or an EPC
-+ * cgroup.
++ * The work queue that reclaims EPC pages in the background for cgroups.
++ *
++ * A cgroup schedules a work item into this queue to reclaim pages within the
++ * same cgroup when its usage limit is reached and synchronous reclamation is not
++ * an option, e.g., in a fault handler.
 + */
-+struct sgx_epc_lru_list {
-+	spinlock_t lock;
-+	struct list_head reclaimable;
-+};
++static struct workqueue_struct *sgx_epc_cg_wq;
 +
-+static inline void sgx_lru_init(struct sgx_epc_lru_list *lru)
++static inline u64 sgx_epc_cgroup_page_counter_read(struct sgx_epc_cgroup *epc_cg)
 +{
-+	spin_lock_init(&lru->lock);
-+	INIT_LIST_HEAD(&lru->reclaimable);
++	return atomic64_read(&epc_cg->cg->res[MISC_CG_RES_SGX_EPC].usage) / PAGE_SIZE;
 +}
 +
- struct sgx_epc_page *__sgx_alloc_epc_page(void);
- void sgx_free_epc_page(struct sgx_epc_page *page);
++static inline u64 sgx_epc_cgroup_max_pages(struct sgx_epc_cgroup *epc_cg)
++{
++	return READ_ONCE(epc_cg->cg->res[MISC_CG_RES_SGX_EPC].max) / PAGE_SIZE;
++}
++
++/*
++ * Get the lower bound of limits of a cgroup and its ancestors.  Used in
++ * sgx_epc_cgroup_reclaim_work_func() to determine if EPC usage of a cgroup is
++ * over its limit or its ancestors' hence reclamation is needed.
++ */
++static inline u64 sgx_epc_cgroup_max_pages_to_root(struct sgx_epc_cgroup *epc_cg)
++{
++	struct misc_cg *i = epc_cg->cg;
++	u64 m = U64_MAX;
++
++	while (i) {
++		m = min(m, READ_ONCE(i->res[MISC_CG_RES_SGX_EPC].max));
++		i = misc_cg_parent(i);
++	}
++
++	return m / PAGE_SIZE;
++}
++
+ /**
+- * sgx_epc_cgroup_try_charge() - try to charge cgroup for a single EPC page
++ * sgx_epc_cgroup_lru_empty() - check if a cgroup tree has no pages on its LRUs
++ * @root:	Root of the tree to check
+  *
++ * Return: %true if all cgroups under the specified root have empty LRU lists.
++ * Used to avoid livelocks due to a cgroup having a non-zero charge count but
++ * no pages on its LRUs, e.g. due to a dead enclave waiting to be released or
++ * because all pages in the cgroup are unreclaimable.
++ */
++bool sgx_epc_cgroup_lru_empty(struct misc_cg *root)
++{
++	struct cgroup_subsys_state *css_root;
++	struct cgroup_subsys_state *pos;
++	struct sgx_epc_cgroup *epc_cg;
++	bool ret = true;
++
++	/*
++	 * Caller ensure css_root ref acquired
++	 */
++	css_root = &root->css;
++
++	rcu_read_lock();
++	css_for_each_descendant_pre(pos, css_root) {
++		if (!css_tryget(pos))
++			break;
++
++		rcu_read_unlock();
++
++		epc_cg = sgx_epc_cgroup_from_misc_cg(css_misc(pos));
++
++		spin_lock(&epc_cg->lru.lock);
++		ret = list_empty(&epc_cg->lru.reclaimable);
++		spin_unlock(&epc_cg->lru.lock);
++
++		rcu_read_lock();
++		css_put(pos);
++		if (!ret)
++			break;
++	}
++
++	rcu_read_unlock();
++
++	return ret;
++}
++
++/**
++ * sgx_epc_cgroup_reclaim_pages() - walk a cgroup tree and scan LRUs to reclaim pages
++ * @root:	Root of the tree to start walking from.
++ * Return:	Number of pages reclaimed.
++ */
++unsigned int sgx_epc_cgroup_reclaim_pages(struct misc_cg *root)
++{
++	/*
++	 * Attempting to reclaim only a few pages will often fail and is
++	 * inefficient, while reclaiming a huge number of pages can result in
++	 * soft lockups due to holding various locks for an extended duration.
++	 */
++	unsigned int nr_to_scan = SGX_NR_TO_SCAN;
++	struct cgroup_subsys_state *css_root;
++	struct cgroup_subsys_state *pos;
++	struct sgx_epc_cgroup *epc_cg;
++	unsigned int cnt;
++
++	 /* Caller ensure css_root ref acquired */
++	css_root = &root->css;
++
++	cnt = 0;
++	rcu_read_lock();
++	css_for_each_descendant_pre(pos, css_root) {
++		if (!css_tryget(pos))
++			break;
++		rcu_read_unlock();
++
++		epc_cg = sgx_epc_cgroup_from_misc_cg(css_misc(pos));
++		cnt += sgx_reclaim_pages(&epc_cg->lru, &nr_to_scan);
++
++		rcu_read_lock();
++		css_put(pos);
++		if (!nr_to_scan)
++			break;
++	}
++
++	rcu_read_unlock();
++	return cnt;
++}
++
++/*
++ * Scheduled by sgx_epc_cgroup_try_charge() to reclaim pages from the cgroup
++ * when the cgroup is at/near its maximum capacity
++ */
++static void sgx_epc_cgroup_reclaim_work_func(struct work_struct *work)
++{
++	struct sgx_epc_cgroup *epc_cg;
++	u64 cur, max;
++
++	epc_cg = container_of(work, struct sgx_epc_cgroup, reclaim_work);
++
++	for (;;) {
++		max = sgx_epc_cgroup_max_pages_to_root(epc_cg);
++
++		/*
++		 * Adjust the limit down by one page, the goal is to free up
++		 * pages for fault allocations, not to simply obey the limit.
++		 * Conditionally decrementing max also means the cur vs. max
++		 * check will correctly handle the case where both are zero.
++		 */
++		if (max)
++			max--;
++
++		/*
++		 * Unless the limit is extremely low, in which case forcing
++		 * reclaim will likely cause thrashing, force the cgroup to
++		 * reclaim at least once if it's operating *near* its maximum
++		 * limit by adjusting @max down by half the min reclaim size.
++		 * This work func is scheduled by sgx_epc_cgroup_try_charge
++		 * when it cannot directly reclaim due to being in an atomic
++		 * context, e.g. EPC allocation in a fault handler.  Waiting
++		 * to reclaim until the cgroup is actually at its limit is less
++		 * performant as it means the faulting task is effectively
++		 * blocked until a worker makes its way through the global work
++		 * queue.
++		 */
++		if (max > SGX_NR_TO_SCAN * 2)
++			max -= (SGX_NR_TO_SCAN / 2);
++
++		cur = sgx_epc_cgroup_page_counter_read(epc_cg);
++
++		if (cur <= max || sgx_epc_cgroup_lru_empty(epc_cg->cg))
++			break;
++
++		/* Keep reclaiming until above condition is met. */
++		sgx_epc_cgroup_reclaim_pages(epc_cg->cg);
++	}
++}
++
++/**
++ * sgx_epc_cgroup_try_charge() - try to charge cgroup for a single EPC page
+  * @epc_cg:	The EPC cgroup to be charged for the page.
+  * Return:
+  * * %0 - If successfully charged.
+@@ -38,6 +209,7 @@ static void sgx_epc_cgroup_free(struct misc_cg *cg)
+ 	if (!epc_cg)
+ 		return;
  
++	cancel_work_sync(&epc_cg->reclaim_work);
+ 	kfree(epc_cg);
+ }
+ 
+@@ -50,6 +222,8 @@ const struct misc_res_ops sgx_epc_cgroup_ops = {
+ 
+ static void sgx_epc_misc_init(struct misc_cg *cg, struct sgx_epc_cgroup *epc_cg)
+ {
++	sgx_lru_init(&epc_cg->lru);
++	INIT_WORK(&epc_cg->reclaim_work, sgx_epc_cgroup_reclaim_work_func);
+ 	cg->res[MISC_CG_RES_SGX_EPC].priv = epc_cg;
+ 	epc_cg->cg = cg;
+ }
+@@ -69,6 +243,11 @@ static int sgx_epc_cgroup_alloc(struct misc_cg *cg)
+ 
+ void sgx_epc_cgroup_init(void)
+ {
++	sgx_epc_cg_wq = alloc_workqueue("sgx_epc_cg_wq",
++					WQ_UNBOUND | WQ_FREEZABLE,
++					WQ_UNBOUND_MAX_ACTIVE);
++	BUG_ON(!sgx_epc_cg_wq);
++
+ 	misc_cg_set_ops(MISC_CG_RES_SGX_EPC, &sgx_epc_cgroup_ops);
+ 	sgx_epc_misc_init(misc_cg_root(), &epc_cg_root);
+ }
+diff --git a/arch/x86/kernel/cpu/sgx/epc_cgroup.h b/arch/x86/kernel/cpu/sgx/epc_cgroup.h
+index 6b664b4c321f..e3c6a08f0ee8 100644
+--- a/arch/x86/kernel/cpu/sgx/epc_cgroup.h
++++ b/arch/x86/kernel/cpu/sgx/epc_cgroup.h
+@@ -34,6 +34,8 @@ static inline void sgx_epc_cgroup_init(void) { }
+ #else
+ struct sgx_epc_cgroup {
+ 	struct misc_cg *cg;
++	struct sgx_epc_lru_list lru;
++	struct work_struct reclaim_work;
+ };
+ 
+ static inline struct sgx_epc_cgroup *sgx_epc_cgroup_from_misc_cg(struct misc_cg *cg)
+@@ -66,6 +68,7 @@ static inline void sgx_put_epc_cg(struct sgx_epc_cgroup *epc_cg)
+ 
+ int sgx_epc_cgroup_try_charge(struct sgx_epc_cgroup *epc_cg);
+ void sgx_epc_cgroup_uncharge(struct sgx_epc_cgroup *epc_cg);
++bool sgx_epc_cgroup_lru_empty(struct misc_cg *root);
+ void sgx_epc_cgroup_init(void);
+ 
+ #endif
 -- 
 2.25.1
 
