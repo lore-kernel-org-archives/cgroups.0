@@ -1,204 +1,100 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-ot1-f52.google.com (mail-ot1-f52.google.com [209.85.210.52])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C08EC762C5
-	for <cgroups@vger.kernel.org>; Fri,  9 Feb 2024 16:09:10 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E664A80C18
+	for <cgroups@vger.kernel.org>; Fri,  9 Feb 2024 19:01:15 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.52
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1707494952; cv=none; b=l69qBMRw2QZKGmlNgI0/zOccizoGnu/4M26pNEUpcsSTFAEbdj/RjWnqgJtVCQ9PssFQwIFb+taElo1VK4YjGizUA5fln8XYMbeglIZ6+C3fj77GKw94c7f68VJ5JtLWy54F6fGNj1l3Ee/FAfd09oI13pve7nciuC1iOmWhthw=
+	t=1707505277; cv=none; b=ALYO9Nid8Ivg+yynlbK4P7ZIyAarawCawGEbBKfqTxDCUihkRf0UO5GASCY/EwVfQH5I46B8/6sgiP1Ci9ptE5pkoRx8CM4yjXntnPAjp60/oRKro+OOfStJKDABUTwrzlfbpoWYCzLWJP9nDfl9Sz7ENvir44mrRu725RaKpwY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1707494952; c=relaxed/simple;
-	bh=q6wyummIqcmZDUbzboQvNIEztcMivzauItQGnEHzm+k=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=nDnAVCF2sn4fQ6HKNjXcn4VeDxnq7H0M29iOJVhr0OcrJs8lQUkQssw8hnrsobn8JOGgk3CB6odeReL/AGVEz6cv1xsxcqVeVMq+dYxchzWYemEtFFtahn1idGF++lVqRnj2TMZBQMmBzyXoex8QQ1pKvHcsAPe3Mp7oHFU23mM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=FXYTYVEe; arc=none smtp.client-ip=170.10.133.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	s=arc-20240116; t=1707505277; c=relaxed/simple;
+	bh=A6nixm9+pytVx29gZ1u6InMe44RI3ah/j/zSFqY5qPg=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=DdivthW3pugWdJOlJ4TWDOkFDn/vYR5evsPJf8Xk+Rsu9Bf1Zp/jnxGMXZcxu89rN4zwsgP4epuskj9aJw6fEVsoYdJpYUt9c+VORUMexEDIljWCggOuV761+EsRMioDn3bgUq/a2T3aN0JmgoxsMa2QwIjOB4LkTY+uAXnlBL0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=soleen.com; spf=none smtp.mailfrom=soleen.com; dkim=fail (0-bit key) header.d=soleen.com header.i=@soleen.com header.b=QjH4Tz9d reason="key not found in DNS"; arc=none smtp.client-ip=209.85.210.52
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=soleen.com
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=soleen.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="FXYTYVEe"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1707494949;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=0KdzfFxuaAxTQegBPNRDPqdrZtFIwl4Nb3u77kWuWvE=;
-	b=FXYTYVEeGVWS/PyqgEe58ie2+ZxCaWokg3VDdXCIxkclNViDVMEYQ3e1weu4al6SYfOwed
-	4Xt23YYFdstJ5A0oxj3UZ0BF9WYotFQ6O2DH2p95IA0uaBPZoMKv5m/ryJ+aXMxFm1WRy+
-	MBeIgxfhyrELDlqQIqNEAgnkAHvlsus=
-Received: from mimecast-mx02.redhat.com (mx-ext.redhat.com [66.187.233.73])
- by relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-494-58nEO-BdNnKrOcjPFr-AOQ-1; Fri,
- 09 Feb 2024 11:09:06 -0500
-X-MC-Unique: 58nEO-BdNnKrOcjPFr-AOQ-1
-Received: from smtp.corp.redhat.com (int-mx02.intmail.prod.int.rdu2.redhat.com [10.11.54.2])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mimecast-mx02.redhat.com (Postfix) with ESMTPS id 8651D38116E7;
-	Fri,  9 Feb 2024 16:09:04 +0000 (UTC)
-Received: from tpad.localdomain (unknown [10.96.133.4])
-	by smtp.corp.redhat.com (Postfix) with ESMTPS id 6D61840C9444;
-	Fri,  9 Feb 2024 16:09:03 +0000 (UTC)
-Received: by tpad.localdomain (Postfix, from userid 1000)
-	id 81307400E52ED; Wed,  7 Feb 2024 11:59:21 -0300 (-03)
-Date: Wed, 7 Feb 2024 11:59:21 -0300
-From: Marcelo Tosatti <mtosatti@redhat.com>
-To: Frederic Weisbecker <frederic@kernel.org>
-Cc: Waiman Long <longman@redhat.com>, Tejun Heo <tj@kernel.org>,
-	Zefan Li <lizefan.x@bytedance.com>,
-	Johannes Weiner <hannes@cmpxchg.org>,
-	Jonathan Corbet <corbet@lwn.net>,
-	"Paul E. McKenney" <paulmck@kernel.org>,
-	Neeraj Upadhyay <quic_neeraju@quicinc.com>,
-	Joel Fernandes <joel@joelfernandes.org>,
-	Josh Triplett <josh@joshtriplett.org>,
-	Boqun Feng <boqun.feng@gmail.com>,
-	Steven Rostedt <rostedt@goodmis.org>,
-	Mathieu Desnoyers <mathieu.desnoyers@efficios.com>,
-	Lai Jiangshan <jiangshanlai@gmail.com>,
-	Zqiang <qiang.zhang1211@gmail.com>,
-	Davidlohr Bueso <dave@stgolabs.net>, Shuah Khan <shuah@kernel.org>,
-	cgroups@vger.kernel.org, linux-doc@vger.kernel.org,
-	linux-kernel@vger.kernel.org, rcu@vger.kernel.org,
-	linux-kselftest@vger.kernel.org, Mrunal Patel <mpatel@redhat.com>,
-	Ryan Phillips <rphillips@redhat.com>,
-	Brent Rowsell <browsell@redhat.com>, Peter Hunt <pehunt@redhat.com>,
-	Cestmir Kalina <ckalina@redhat.com>,
-	Nicolas Saenz Julienne <nsaenz@kernel.org>,
-	Alex Gladkov <agladkov@redhat.com>, Phil Auld <pauld@redhat.com>,
-	Paul Gortmaker <paul.gortmaker@windriver.com>,
-	Daniel Bristot de Oliveira <bristot@kernel.org>,
-	Juri Lelli <juri.lelli@redhat.com>,
-	Peter Zijlstra <peterz@infradead.org>,
-	Costa Shulyupin <cshulyup@redhat.com>
-Subject: Re: [RFC PATCH 0/8] cgroup/cpuset: Support RCU_NOCB on isolated
- partitions
-Message-ID: <ZcOaybEOJrpLsU/2@tpad>
-References: <20240117163511.88173-1-longman@redhat.com>
- <ZagJPoEsLZ6Dg-NG@mtj.duckdns.org>
- <5ee5bf79-6cdc-4d1b-a19f-f0d5165a5f16@redhat.com>
- <ZcIsd6fjgmsb2dxr@localhost.localdomain>
- <ZcKFRqrUh5tTbsaJ@tpad>
- <ZcOYEkHCoh75R-LA@localhost.localdomain>
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=soleen.com header.i=@soleen.com header.b="QjH4Tz9d"
+Received: by mail-ot1-f52.google.com with SMTP id 46e09a7af769-6e12d0af927so808527a34.0
+        for <cgroups@vger.kernel.org>; Fri, 09 Feb 2024 11:01:15 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=soleen.com; s=google; t=1707505275; x=1708110075; darn=vger.kernel.org;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=A6nixm9+pytVx29gZ1u6InMe44RI3ah/j/zSFqY5qPg=;
+        b=QjH4Tz9d+y5onMYkIxLLxqn0XMOp51rpc21fBqX/T6NMpHVrOFT1XCWvWjhnjozecp
+         KzxtI4L124U2yykx6Gav8jT2xv1InuoiBFEqYu7jqhNinpwz31qmcWSQMUMRMF329SQb
+         h25odb6c3n0zElyVXFZoI7QvoxbtNpjp0rcpYIRo6lGu0J0YsvKHXgy0D4/ir3xzRjph
+         J/3/AmMOOOXC74bOedxaT9rYBAByPbX/aeRxJmcqwm2ZGrBX110eZyPNMpjZHdzZl0Gf
+         bfHPVHb2nArw/o10GvwtEEbZi2LXNbBrxO5BAJrjYTCdXfz0HOsYOA5KDvYDvymflCIX
+         6w8A==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1707505275; x=1708110075;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=A6nixm9+pytVx29gZ1u6InMe44RI3ah/j/zSFqY5qPg=;
+        b=FLlsvQNSDqlpCHCvZSxS1XZdtyLmRwZcCo92UU7hC/4jnEtp/Jls36f55yPNI9SHFZ
+         mLXizTZE3GaCeAz84AwN8pvepYamfFGzJl2lNDV4QzPUs7ukG8c+9KsfGysgHbhDj4p/
+         3OoYJiFkxY4vVamg11hswN6vBoaf6B1PD33ojYqQeurvME/Egn5jAayAv9m9iW7fn6BS
+         EtPnhvIG2dAoAmf+cYQOYtyecY9s2LlmlGkypvcWwKCezJfZGpH1RQaT8e4N/mmb4RjE
+         rfkQFN2HwQA86/Cl9WtbpFg0qv0PAOIpPzmUc3kSf1FZhuwS0z59n3J066LnadE/gF0l
+         TtrQ==
+X-Gm-Message-State: AOJu0YwqZDracIHFBE3nJ9xNFYCEk3ZFq82j4FgXZy8ll0Wenm03Eu/c
+	bnsOs/r3ZLfv5tkHseQXBWt1rQNHyElPSPy66vhbJFeXZobcvxuZjKeZuCckbOkYF1Wmo/Pn7AR
+	D6/J5+iD8arJQmuWjrQvWaqWkAyuHy0leocHSFg==
+X-Google-Smtp-Source: AGHT+IFk85AK/GUYg3sBgSG/PbDJz6nuE4vk8ZoEGio36nkbZvD4VZo1ESUanwCzArrVosJa8bsMEnRS+HyilbasQKI=
+X-Received: by 2002:a05:6830:141a:b0:6e0:faab:cff4 with SMTP id
+ v26-20020a056830141a00b006e0faabcff4mr3036212otp.13.1707505274772; Fri, 09
+ Feb 2024 11:01:14 -0800 (PST)
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <ZcOYEkHCoh75R-LA@localhost.localdomain>
-X-Scanned-By: MIMEDefang 3.4.1 on 10.11.54.2
+References: <20240207174102.1486130-1-pasha.tatashin@soleen.com>
+ <CGME20240207174117eucas1p237865b0a39f3a6d1a6650150efe22e83@eucas1p2.samsung.com>
+ <20240207174102.1486130-6-pasha.tatashin@soleen.com> <a1c452f9-c265-4934-82c2-8c9278d087ec@samsung.com>
+In-Reply-To: <a1c452f9-c265-4934-82c2-8c9278d087ec@samsung.com>
+From: Pasha Tatashin <pasha.tatashin@soleen.com>
+Date: Fri, 9 Feb 2024 14:00:37 -0500
+Message-ID: <CA+CK2bCax2NVhVwiVdyWG0Fpj7W8gi2Tmz1guNKOFNf9O1tfng@mail.gmail.com>
+Subject: Re: [PATCH v4 05/10] iommu/exynos: use page allocation function
+ provided by iommu-pages.h
+To: Marek Szyprowski <m.szyprowski@samsung.com>
+Cc: akpm@linux-foundation.org, alim.akhtar@samsung.com, alyssa@rosenzweig.io, 
+	asahi@lists.linux.dev, baolu.lu@linux.intel.com, bhelgaas@google.com, 
+	cgroups@vger.kernel.org, corbet@lwn.net, david@redhat.com, 
+	dwmw2@infradead.org, hannes@cmpxchg.org, heiko@sntech.de, 
+	iommu@lists.linux.dev, jernej.skrabec@gmail.com, jonathanh@nvidia.com, 
+	joro@8bytes.org, krzysztof.kozlowski@linaro.org, linux-doc@vger.kernel.org, 
+	linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, 
+	linux-mm@kvack.org, linux-rockchip@lists.infradead.org, 
+	linux-samsung-soc@vger.kernel.org, linux-sunxi@lists.linux.dev, 
+	linux-tegra@vger.kernel.org, lizefan.x@bytedance.com, marcan@marcan.st, 
+	mhiramat@kernel.org, paulmck@kernel.org, rdunlap@infradead.org, 
+	robin.murphy@arm.com, samuel@sholland.org, suravee.suthikulpanit@amd.com, 
+	sven@svenpeter.dev, thierry.reding@gmail.com, tj@kernel.org, 
+	tomas.mudrunka@gmail.com, vdumpa@nvidia.com, wens@csie.org, will@kernel.org, 
+	yu-cheng.yu@intel.com, rientjes@google.com, bagasdotme@gmail.com, 
+	mkoutny@suse.com
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-On Wed, Feb 07, 2024 at 03:47:46PM +0100, Frederic Weisbecker wrote:
-> Le Tue, Feb 06, 2024 at 04:15:18PM -0300, Marcelo Tosatti a écrit :
-> > On Tue, Feb 06, 2024 at 01:56:23PM +0100, Frederic Weisbecker wrote:
-> > > Le Wed, Jan 17, 2024 at 12:15:07PM -0500, Waiman Long a écrit :
-> > > > 
-> > > > On 1/17/24 12:07, Tejun Heo wrote:
-> > > > > Hello,
-> > > > > 
-> > > > > On Wed, Jan 17, 2024 at 11:35:03AM -0500, Waiman Long wrote:
-> > > > > > The first 2 patches are adopted from Federic with minor twists to fix
-> > > > > > merge conflicts and compilation issue. The rests are for implementing
-> > > > > > the new cpuset.cpus.isolation_full interface which is essentially a flag
-> > > > > > to globally enable or disable full CPU isolation on isolated partitions.
-> > > > > I think the interface is a bit premature. The cpuset partition feature is
-> > > > > already pretty restrictive and makes it really clear that it's to isolate
-> > > > > the CPUs. I think it'd be better to just enable all the isolation features
-> > > > > by default. If there are valid use cases which can't be served without
-> > > > > disabling some isolation features, we can worry about adding the interface
-> > > > > at that point.
-> > > > 
-> > > > My current thought is to make isolated partitions act like isolcpus=domain,
-> > > > additional CPU isolation capabilities are optional and can be turned on
-> > > > using isolation_full. However, I am fine with making all these turned on by
-> > > > default if it is the consensus.
-> > > 
-> > > Right it was the consensus last time I tried. Along with the fact that mutating
-> > > this isolation_full set has to be done on offline CPUs to simplify the whole
-> > > picture.
-> > > 
-> > > So lemme try to summarize what needs to be done:
-> > > 
-> > > 1) An all-isolation feature file (that is, all the HK_TYPE_* things) on/off for
-> > >   now. And if it ever proves needed, provide a way later for more finegrained
-> > >   tuning.
-> > > 
-> > > 2) This file must only apply to offline CPUs because it avoids migrations and
-> > >   stuff.
-> > > 
-> > > 3) I need to make RCU NOCB tunable only on offline CPUs, which isn't that much
-> > >    changes.
-> > > 
-> > > 4) HK_TYPE_TIMER:
-> > >    * Wrt. timers in general, not much needs to be done, the CPUs are
-> > >      offline. But:
-> > >    * arch/x86/kvm/x86.c does something weird
-> > >    * drivers/char/random.c might need some care
-> > >    * watchdog needs to be (de-)activated
-> > >    
-> > > 5) HK_TYPE_DOMAIN:
-> > >    * This one I fear is not mutable, this is isolcpus...
-> > 
-> > Except for HK_TYPE_DOMAIN, i have never seen anyone use any of this
-> > flags.
-> 
-> HK_TYPE_DOMAIN is used by isolcpus=domain,....
+On Fri, Feb 9, 2024 at 6:26=E2=80=AFAM Marek Szyprowski
+<m.szyprowski@samsung.com> wrote:
+>
+> On 07.02.2024 18:40, Pasha Tatashin wrote:
+> > Convert iommu/exynos-iommu.c to use the new page allocation functions
+> > provided in iommu-pages.h.
+> >
+> > Signed-off-by: Pasha Tatashin <pasha.tatashin@soleen.com>
+> > Acked-by: David Rientjes <rientjes@google.com>
+> > Tested-by: Bagas Sanjaya <bagasdotme@gmail.com>
+> Acked-by: Marek Szyprowski <m.szyprowski@samsung.com>
 
-> HK_TYPE_MANAGED_IRQ is used by isolcpus=managed_irq,...
-> 
-> All the others (except HK_TYPE_SCHED) are used by nohz_full=
-
-I mean i've never seen any use of the individual flags being set.
-
-You either want full isolation (nohz_full and all the flags together,
-except for HK_TYPE_DOMAIN which is sometimes enabled/disabled), or not.
-
-So why not group them all together ?
-
-Do you know of any separate uses of these flags (except for
-HK_TYPE_DOMAIN).
-
-> Thanks.
-> 
-> > 
-> > > 
-> > > 6) HK_TYPE_MANAGED_IRQ:
-> > >    * I prefer not to think about it :-)
-> > > 
-> > > 7) HK_TYPE_TICK:
-> > >    * Maybe some tiny ticks internals to revisit, I'll check that.
-> > >    * There is a remote tick to take into consideration, but again the
-> > >      CPUs are offline so it shouldn't be too complicated.
-> > > 
-> > > 8) HK_TYPE_WQ:
-> > >    * Fortunately we already have all the mutable interface in place.
-> > >      But we must make it live nicely with the sysfs workqueue affinity
-> > >      files.
-> > > 
-> > > 9) HK_FLAG_SCHED:
-> > >    * Oops, this one is ignored by nohz_full/isolcpus, isn't it?
-> > >    Should be removed?
-> > > 
-> > > 10) HK_TYPE_RCU:
-> > >     * That's point 3) and also some kthreads to affine, which leads us
-> > >      to the following in HK_TYPE_KTHREAD:
-> > > 
-> > > 11) HK_FLAG_KTHREAD:
-> > >     * I'm guessing it's fine as long as isolation_full is also an
-> > >       isolated partition. Then unbound kthreads shouldn't run there.
-> > > 
-> > > 12) HK_TYPE_MISC:
-> > >     * Should be fine as ILB isn't running on offline CPUs.
-> > > 
-> > > Thanks.
-> > > 
-> > > 
-> > 
-> 
-> 
-
+Thank you,
+Pasha
