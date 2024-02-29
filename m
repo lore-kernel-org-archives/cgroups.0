@@ -1,247 +1,225 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.16])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5C51A36B11
-	for <cgroups@vger.kernel.org>; Thu, 29 Feb 2024 02:15:00 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4963747F50
+	for <cgroups@vger.kernel.org>; Thu, 29 Feb 2024 07:56:06 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.16
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1709172902; cv=none; b=EthnqR1jj5gxWZUNeDFzRCRNZQCSh7By2VdH75WllJ5wvTRNaTec43IqZBuibVCQE1aE4sFUdUTz0gwZljCnpZZz88cyGz65PKEN7jG7tMpIrh99LTqMMzVVlw3jZ5iANwKbVnbYxDBO5qfJ/l9DXuUtK/z+c641FmJ14Anwnbo=
+	t=1709193368; cv=none; b=VsKN/unDr87V1WZmbryZ1JfgpSaqstrY1PNK4HEEdcjEF2R20N2b9PTIS6Kd6CQ7IcQmLxKFbOPYAoueUrolW+Fl6mvD6w1gzuGI6oyKEif75Nm5stAJ0SRsMDp1zRNk2nd3qwxVvUKO14FQ3qB2qr5GVvui3j3opwB8i7klp20=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1709172902; c=relaxed/simple;
-	bh=ZJ/fljn/Qv75UAjs1VLdo2uoQDDup88nyCXUQF/cxT8=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=Y3v9z1fmjImHUS8WDGhxXlS0AzBTDeJHRniQZi0YrHI/ZaBcJAWGZJRzLjWyQYDxx2u+5/sTWjDEz4ZCenRlrrtR64moCkI2CeDHyzNWaG0KF2MjfBtTkfyXL57kCYHcPyWm63CNyluBoMQbFnqSh8+gVVIqgI70wIHUoLSC8i8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=IUP0xRFq; arc=none smtp.client-ip=170.10.133.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	s=arc-20240116; t=1709193368; c=relaxed/simple;
+	bh=rmGd5dVqA/3G2ckjG/srTyoigTsCbDShKz44iPFMB30=;
+	h=Date:From:To:Cc:Subject:Message-ID; b=Pts4hwpSroyJMZ8jKdimX9co86ckuI+uMXoxncjd1iowOG9P/OkspahLZV3cbeUKRVvbrCovnrBK5mZR5T/OT3Oc/e+6as6EqLAjhjTduLqKjQ+ihJfJyU6i/KfT/HU+RanDq9tXLSXfsCVJu293Ce1ChCkUB/cAwkxRTHYcZ2o=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=Dz2hfWfW; arc=none smtp.client-ip=198.175.65.16
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="IUP0xRFq"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1709172899;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=Iw2m/lgdJeZzD7aZQt9cEYEaJ4jQS/QQ20bKstBiolo=;
-	b=IUP0xRFqd/4KgkFEcQzuv/ptz1IWLhvcRvOg/z68rMD0jMkGAFK0IrkjS3k8xU1xHanspF
-	sdE5mBKQLiGotFuiW/KLLwluHxZxRIJw1pS+7Fb70bzJBvQigYmSPMZ/eSR+X/M3X2LuIJ
-	AAlS8f9D9qD+uAy2mzqIdX5n4P5Nl9k=
-Received: from mimecast-mx02.redhat.com (mimecast-mx02.redhat.com
- [66.187.233.88]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-616-SgMkZ3S1OoO-MwiCMniSfA-1; Wed, 28 Feb 2024 21:14:53 -0500
-X-MC-Unique: SgMkZ3S1OoO-MwiCMniSfA-1
-Received: from smtp.corp.redhat.com (int-mx10.intmail.prod.int.rdu2.redhat.com [10.11.54.10])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mimecast-mx02.redhat.com (Postfix) with ESMTPS id 4AB33863012;
-	Thu, 29 Feb 2024 02:14:52 +0000 (UTC)
-Received: from llong.com (unknown [10.22.9.68])
-	by smtp.corp.redhat.com (Postfix) with ESMTP id BDDBC492BE8;
-	Thu, 29 Feb 2024 02:14:50 +0000 (UTC)
-From: Waiman Long <longman@redhat.com>
-To: Zefan Li <lizefan.x@bytedance.com>,
-	Tejun Heo <tj@kernel.org>,
-	Johannes Weiner <hannes@cmpxchg.org>,
-	Ingo Molnar <mingo@redhat.com>,
-	Peter Zijlstra <peterz@infradead.org>,
-	Juri Lelli <juri.lelli@redhat.com>,
-	Vincent Guittot <vincent.guittot@linaro.org>,
-	Dietmar Eggemann <dietmar.eggemann@arm.com>,
-	Steven Rostedt <rostedt@goodmis.org>,
-	Ben Segall <bsegall@google.com>,
-	Mel Gorman <mgorman@suse.de>,
-	Daniel Bristot de Oliveira <bristot@redhat.com>,
-	Valentin Schneider <vschneid@redhat.com>,
-	Frederic Weisbecker <frederic@kernel.org>
-Cc: linux-kernel@vger.kernel.org,
-	cgroups@vger.kernel.org,
-	Cestmir Kalina <ckalina@redhat.com>,
-	Costa Shulyupin <cshulyup@redhat.com>,
-	Waiman Long <longman@redhat.com>
-Subject: [PATCH 1/2] sched/isolation: Exclude dynamically isolated CPUs from housekeeping masks
-Date: Wed, 28 Feb 2024 21:14:13 -0500
-Message-Id: <20240229021414.508972-2-longman@redhat.com>
-In-Reply-To: <20240229021414.508972-1-longman@redhat.com>
-References: <20240229021414.508972-1-longman@redhat.com>
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="Dz2hfWfW"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1709193366; x=1740729366;
+  h=date:from:to:cc:subject:message-id;
+  bh=rmGd5dVqA/3G2ckjG/srTyoigTsCbDShKz44iPFMB30=;
+  b=Dz2hfWfWgF85qOoT1d2yoh9qVILNc8tm1S/MdcrnP7oGLebA5fgLdUvX
+   90erF78RF5wQIejGGpXmRmYWnrvZ+AE17FIL5YVoBEQEnmWzmTt22c3cg
+   EqngCPwDf+aoIXxls6opU3obzif77be2+BoSVIDmtT8tth1+HrfdqVP6J
+   /IY1YgTNAqrZXh+QbUTlpTV97OD243pb9qQ1TfV9MvQX35LsbYJ/lyd8A
+   OWTTw6CqjW2qYRNO5RI/EihjZZXcxAu8H+C/1feawIRGeGr/XexkcR3z1
+   8r15gpcdK7m6QmFCpL3I9dRO97CqBHnVAUtzoY+SH9XdR9ygUeAiyK5NB
+   A==;
+X-IronPort-AV: E=McAfee;i="6600,9927,10998"; a="3760699"
+X-IronPort-AV: E=Sophos;i="6.06,192,1705392000"; 
+   d="scan'208";a="3760699"
+Received: from orviesa009.jf.intel.com ([10.64.159.149])
+  by orvoesa108.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 28 Feb 2024 23:56:06 -0800
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.06,192,1705392000"; 
+   d="scan'208";a="7775012"
+Received: from lkp-server02.sh.intel.com (HELO 3c78fa4d504c) ([10.239.97.151])
+  by orviesa009.jf.intel.com with ESMTP; 28 Feb 2024 23:56:05 -0800
+Received: from kbuild by 3c78fa4d504c with local (Exim 4.96)
+	(envelope-from <lkp@intel.com>)
+	id 1rfbGs-000Cl1-0i;
+	Thu, 29 Feb 2024 07:56:02 +0000
+Date: Thu, 29 Feb 2024 15:55:10 +0800
+From: kernel test robot <lkp@intel.com>
+To: Tejun Heo <tj@kernel.org>
+Cc: cgroups@vger.kernel.org
+Subject: [tj-cgroup:for-6.8-fixes] BUILD SUCCESS
+ 66f40b926dd249f74334a22162c09e7ec1ec5b07
+Message-ID: <202402291506.HOGBRY7a-lkp@intel.com>
+User-Agent: s-nail v14.9.24
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-Scanned-By: MIMEDefang 3.4.1 on 10.11.54.10
 
-The housekeeping CPU masks, set up by the "isolcpus" and "nohz_full"
-boot command line options, are used at boot time to exclude selected CPUs
-from running some kernel background processes to minimize disturbance
-to latency sensitive userspace applications. Some of housekeeping CPU
-masks are also checked at run time to avoid using those isolated CPUs.
+tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git for-6.8-fixes
+branch HEAD: 66f40b926dd249f74334a22162c09e7ec1ec5b07  cgroup/cpuset: Fix a memory leak in update_exclusive_cpumask()
 
-The cpuset subsystem is now able to dynamically create a set of isolated
-CPUs to be used in isolated cpuset partitions. The long term goal is
-to make the degree of isolation as close as possible to what can be
-done statically using those boot command line options.
+elapsed time: 818m
 
-This patch is a step in that direction by making the housekeeping CPU
-mask APIs exclude the dynamically isolated CPUs when they are called
-at run time. The housekeeping CPU masks will fall back to the bootup
-default when all the dynamically isolated CPUs are released.
+configs tested: 152
+configs skipped: 3
 
-A new housekeeping_exlude_isolcpus() function is added which is to be
-called by the cpuset subsystem to provide a list of isolated CPUs to
-be excluded.
+The following configs have been built successfully.
+More configs may be tested in the coming days.
 
-Signed-off-by: Waiman Long <longman@redhat.com>
----
- include/linux/sched/isolation.h |   8 +++
- kernel/sched/isolation.c        | 101 +++++++++++++++++++++++++++++++-
- 2 files changed, 108 insertions(+), 1 deletion(-)
+tested configs:
+alpha                             allnoconfig   gcc  
+alpha                            allyesconfig   gcc  
+alpha                               defconfig   gcc  
+arc                              allmodconfig   gcc  
+arc                               allnoconfig   gcc  
+arc                              allyesconfig   gcc  
+arc                      axs103_smp_defconfig   gcc  
+arc                                 defconfig   gcc  
+arc                     haps_hs_smp_defconfig   gcc  
+arc                        nsimosci_defconfig   gcc  
+arc                   randconfig-001-20240229   gcc  
+arc                   randconfig-002-20240229   gcc  
+arm                              allmodconfig   gcc  
+arm                               allnoconfig   clang
+arm                              allyesconfig   gcc  
+arm                                 defconfig   clang
+arm                            dove_defconfig   gcc  
+arm                             pxa_defconfig   gcc  
+arm                   randconfig-001-20240229   gcc  
+arm                   randconfig-002-20240229   gcc  
+arm                   randconfig-003-20240229   clang
+arm                   randconfig-004-20240229   gcc  
+arm64                            allmodconfig   clang
+arm64                             allnoconfig   gcc  
+arm64                               defconfig   gcc  
+arm64                 randconfig-001-20240229   clang
+arm64                 randconfig-002-20240229   gcc  
+arm64                 randconfig-003-20240229   clang
+arm64                 randconfig-004-20240229   clang
+csky                             allmodconfig   gcc  
+csky                              allnoconfig   gcc  
+csky                             allyesconfig   gcc  
+csky                                defconfig   gcc  
+csky                  randconfig-001-20240229   gcc  
+csky                  randconfig-002-20240229   gcc  
+hexagon                          allmodconfig   clang
+hexagon                           allnoconfig   clang
+hexagon                          allyesconfig   clang
+hexagon                             defconfig   clang
+hexagon               randconfig-001-20240229   clang
+hexagon               randconfig-002-20240229   clang
+i386                             allmodconfig   gcc  
+i386                              allnoconfig   gcc  
+i386                             allyesconfig   gcc  
+i386                                defconfig   clang
+loongarch                        allmodconfig   gcc  
+loongarch                         allnoconfig   gcc  
+loongarch                           defconfig   gcc  
+loongarch             randconfig-001-20240229   gcc  
+loongarch             randconfig-002-20240229   gcc  
+m68k                             allmodconfig   gcc  
+m68k                              allnoconfig   gcc  
+m68k                             allyesconfig   gcc  
+m68k                                defconfig   gcc  
+m68k                           virt_defconfig   gcc  
+microblaze                       allmodconfig   gcc  
+microblaze                        allnoconfig   gcc  
+microblaze                       allyesconfig   gcc  
+microblaze                          defconfig   gcc  
+microblaze                      mmu_defconfig   gcc  
+mips                              allnoconfig   gcc  
+mips                             allyesconfig   gcc  
+mips                  cavium_octeon_defconfig   gcc  
+mips                malta_qemu_32r6_defconfig   gcc  
+mips                       rbtx49xx_defconfig   gcc  
+mips                           rs90_defconfig   gcc  
+nios2                            alldefconfig   gcc  
+nios2                            allmodconfig   gcc  
+nios2                             allnoconfig   gcc  
+nios2                            allyesconfig   gcc  
+nios2                               defconfig   gcc  
+nios2                 randconfig-001-20240229   gcc  
+nios2                 randconfig-002-20240229   gcc  
+openrisc                          allnoconfig   gcc  
+openrisc                         allyesconfig   gcc  
+openrisc                            defconfig   gcc  
+openrisc                    or1ksim_defconfig   gcc  
+parisc                           allmodconfig   gcc  
+parisc                            allnoconfig   gcc  
+parisc                           allyesconfig   gcc  
+parisc                              defconfig   gcc  
+parisc                randconfig-001-20240229   gcc  
+parisc                randconfig-002-20240229   gcc  
+parisc64                            defconfig   gcc  
+powerpc                          allmodconfig   gcc  
+powerpc                           allnoconfig   gcc  
+powerpc                          allyesconfig   clang
+powerpc                        cell_defconfig   gcc  
+powerpc               randconfig-001-20240229   clang
+powerpc               randconfig-002-20240229   gcc  
+powerpc               randconfig-003-20240229   clang
+powerpc64             randconfig-001-20240229   gcc  
+powerpc64             randconfig-002-20240229   clang
+powerpc64             randconfig-003-20240229   clang
+riscv                            allmodconfig   clang
+riscv                             allnoconfig   gcc  
+riscv                            allyesconfig   clang
+riscv                               defconfig   clang
+riscv                 randconfig-001-20240229   clang
+riscv                 randconfig-002-20240229   clang
+s390                             allmodconfig   clang
+s390                              allnoconfig   clang
+s390                             allyesconfig   gcc  
+s390                                defconfig   clang
+s390                  randconfig-001-20240229   clang
+s390                  randconfig-002-20240229   gcc  
+sh                               allmodconfig   gcc  
+sh                                allnoconfig   gcc  
+sh                               allyesconfig   gcc  
+sh                                  defconfig   gcc  
+sh                        dreamcast_defconfig   gcc  
+sh                          kfr2r09_defconfig   gcc  
+sh                    randconfig-001-20240229   gcc  
+sh                    randconfig-002-20240229   gcc  
+sh                           se7705_defconfig   gcc  
+sparc                            allmodconfig   gcc  
+sparc                             allnoconfig   gcc  
+sparc                               defconfig   gcc  
+sparc                       sparc32_defconfig   gcc  
+sparc64                          allmodconfig   gcc  
+sparc64                          allyesconfig   gcc  
+sparc64                             defconfig   gcc  
+sparc64               randconfig-001-20240229   gcc  
+sparc64               randconfig-002-20240229   gcc  
+um                               allmodconfig   clang
+um                                allnoconfig   clang
+um                               allyesconfig   gcc  
+um                                  defconfig   clang
+um                             i386_defconfig   gcc  
+um                    randconfig-001-20240229   gcc  
+um                    randconfig-002-20240229   gcc  
+um                           x86_64_defconfig   clang
+x86_64                            allnoconfig   clang
+x86_64                           allyesconfig   clang
+x86_64       buildonly-randconfig-002-20240229   clang
+x86_64                              defconfig   gcc  
+x86_64                randconfig-001-20240229   clang
+x86_64                randconfig-002-20240229   clang
+x86_64                randconfig-003-20240229   clang
+x86_64                randconfig-004-20240229   clang
+x86_64                randconfig-005-20240229   clang
+x86_64                randconfig-006-20240229   clang
+x86_64                randconfig-071-20240229   clang
+x86_64                randconfig-072-20240229   clang
+x86_64                randconfig-073-20240229   clang
+x86_64                randconfig-074-20240229   clang
+x86_64                randconfig-076-20240229   clang
+x86_64                          rhel-8.3-rust   clang
+x86_64                               rhel-8.3   gcc  
+xtensa                            allnoconfig   gcc  
+xtensa                randconfig-001-20240229   gcc  
+xtensa                randconfig-002-20240229   gcc  
 
-diff --git a/include/linux/sched/isolation.h b/include/linux/sched/isolation.h
-index 2b461129d1fa..d64fa4e60138 100644
---- a/include/linux/sched/isolation.h
-+++ b/include/linux/sched/isolation.h
-@@ -27,6 +27,8 @@ extern bool housekeeping_enabled(enum hk_type type);
- extern void housekeeping_affine(struct task_struct *t, enum hk_type type);
- extern bool housekeeping_test_cpu(int cpu, enum hk_type type);
- extern void __init housekeeping_init(void);
-+extern int housekeeping_exlude_isolcpus(const struct cpumask *isolcpus,
-+					unsigned long flags);
- 
- #else
- 
-@@ -54,6 +56,12 @@ static inline bool housekeeping_test_cpu(int cpu, enum hk_type type)
- }
- 
- static inline void housekeeping_init(void) { }
-+
-+static inline int housekeeping_exlude_isolcpus(struct cpumask *isolcpus,
-+					       unsigned long flags)
-+{
-+	return -EOPNOTSUPP;
-+}
- #endif /* CONFIG_CPU_ISOLATION */
- 
- static inline bool housekeeping_cpu(int cpu, enum hk_type type)
-diff --git a/kernel/sched/isolation.c b/kernel/sched/isolation.c
-index 373d42c707bc..f47ff04ac77c 100644
---- a/kernel/sched/isolation.c
-+++ b/kernel/sched/isolation.c
-@@ -28,7 +28,8 @@ struct housekeeping {
- 	unsigned long flags;
- };
- 
--static struct housekeeping housekeeping;
-+static struct housekeeping housekeeping __read_mostly;
-+static struct housekeeping housekeeping_boot __read_mostly;
- 
- bool housekeeping_enabled(enum hk_type type)
- {
-@@ -239,3 +240,101 @@ static int __init housekeeping_isolcpus_setup(char *str)
- 	return housekeeping_setup(str, flags);
- }
- __setup("isolcpus=", housekeeping_isolcpus_setup);
-+
-+/*
-+ * Save init housekeeping masks to housekeeping_boot
-+ */
-+static int housekeeping_copy2_boot(void)
-+{
-+	enum hk_type type;
-+
-+	housekeeping_boot.flags = housekeeping.flags;
-+	for_each_set_bit(type, &housekeeping.flags, HK_TYPE_MAX) {
-+		if (!alloc_cpumask_var(&housekeeping_boot.cpumasks[type],
-+				       GFP_KERNEL))
-+			return -ENOMEM;
-+		cpumask_copy(housekeeping_boot.cpumasks[type],
-+			     housekeeping.cpumasks[type]);
-+	}
-+	return 0;
-+}
-+
-+/*
-+ * Exclude the given dynamically isolated CPUs from the housekeeping CPUs
-+ * External synchronization is required to make sure that concurrent call to
-+ * this function will not happen.
-+ *
-+ * Return: 0 if successful, an error code if not
-+ */
-+int housekeeping_exlude_isolcpus(const struct cpumask *isolcpus, unsigned long flags)
-+{
-+	static unsigned long alloc_flags;
-+	static cpumask_var_t tmp_mask;
-+	static bool excluded;	/* @true if some CPUs have been excluded */
-+	static bool inited;	/* @true if called before */
-+
-+	bool mask_empty = !isolcpus || cpumask_empty(isolcpus);
-+	enum hk_type type;
-+
-+	lockdep_assert_cpus_held();
-+
-+	if (mask_empty && (!inited || !excluded))
-+		return 0;
-+
-+	if (unlikely(!inited)) {
-+		if (!alloc_cpumask_var(&tmp_mask, GFP_KERNEL))
-+			return -ENOMEM;
-+		if (housekeeping.flags) {
-+			int err = housekeeping_copy2_boot();
-+
-+			if (err)
-+				return err;
-+		}
-+		alloc_flags = housekeeping.flags;
-+		inited = true;
-+	}
-+
-+	if (mask_empty) {
-+		excluded = false;
-+
-+		/*
-+		 * Reset housekeeping to bootup default
-+		 */
-+		for_each_set_bit(type, &housekeeping_boot.flags, HK_TYPE_MAX)
-+			cpumask_copy(housekeeping.cpumasks[type],
-+				     housekeeping_boot.cpumasks[type]);
-+
-+		WRITE_ONCE(housekeeping.flags, housekeeping_boot.flags);
-+		if (!housekeeping_boot.flags &&
-+		    static_branch_unlikely(&housekeeping_overridden))
-+			static_key_disable_cpuslocked(&housekeeping_overridden.key);
-+		return 0;
-+	}
-+
-+	/*
-+	 * Setting up the new housekeeping cpumasks
-+	 */
-+	for_each_set_bit(type, &flags, HK_TYPE_MAX) {
-+		const struct cpumask *src_mask;
-+
-+		if (!(BIT(type) & alloc_flags)) {
-+			if (!alloc_cpumask_var(&housekeeping.cpumasks[type], GFP_KERNEL))
-+				return -ENOMEM;
-+			alloc_flags |= BIT(type);
-+		}
-+		src_mask = (BIT(type) & housekeeping_boot.flags)
-+			 ? housekeeping_boot.cpumasks[type] : cpu_possible_mask;
-+		/*
-+		 * Make sure there is at least one online housekeeping CPU
-+		 */
-+		cpumask_andnot(tmp_mask, src_mask, isolcpus);
-+		if (!cpumask_intersects(tmp_mask, cpu_online_mask))
-+			return -EINVAL;	/* Invalid isolated CPUs */
-+		cpumask_copy(housekeeping.cpumasks[type], tmp_mask);
-+	}
-+	WRITE_ONCE(housekeeping.flags, housekeeping_boot.flags | flags);
-+	excluded = true;
-+	if (!static_branch_unlikely(&housekeeping_overridden))
-+		static_key_enable_cpuslocked(&housekeeping_overridden.key);
-+	return 0;
-+}
 -- 
-2.39.3
-
+0-DAY CI Kernel Test Service
+https://github.com/intel/lkp-tests/wiki
