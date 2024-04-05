@@ -1,57 +1,57 @@
 Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.223.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1EF20171659;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D2E1A171652;
 	Fri,  5 Apr 2024 17:05:53 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1712336756; cv=none; b=aM/VP/xxSxet3dj0IOaC6/39TSuFj+NEqBC9k6pHqNiJ79LnbZN4lEJDgLTmI8qImgElVGUIZdQVg2OmRAHj82mMuHOdNnGFi+4MGNUfWTJbQUGErcnT5NW8SWqHJdXQJnmN2FHg3W+W7XSUuzC9YulS8bSFLHdFSbJH5FEAM5s=
+	t=1712336756; cv=none; b=tGO5PLDxGroHAbJwVFS5LITkGhbqL1LNePrfvpyDS9whmSiSBEpuSDdjxTZf9Jb7YRIdJATFwrpFMMBtAsJFNZjJOyb+oMpvnb18h6FtLbO1DuDOHvFKcbqgp+E0nKMDoFxTujLfWW5tCFlq5UGTj3OWMFcHNdl+7PBKCaxC7Rc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1712336756; c=relaxed/simple;
-	bh=R9clZ8T2lcQlVApdxb/LCRn1Vu4EIS+rW6t2QJnF7cg=;
+	bh=wMulK/G+6RPSUybH7+ViBKiUepR9/Avresur9lAF0vs=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=F4qPRe6EMvPgDZAZ7ZWzd/c+977PzpOqCzQZJrxWJhlAv4SBqEkzKcfJnEhwez5lCFo9YfCzFOhjQ9IuMoc1+Q9Ott5g3sxcl6KUoPILoRpUqVm0ORRzTlUm7pMG6I/s3xq8s9PTiPiSZ0sGzHTX4+Jcy988QeCL3Cvs1kSihys=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com; spf=pass smtp.mailfrom=suse.com; dkim=pass (1024-bit key) header.d=suse.com header.i=@suse.com header.b=q1BBKm2O; dkim=pass (1024-bit key) header.d=suse.com header.i=@suse.com header.b=kUVI90Cy; arc=none smtp.client-ip=195.135.223.131
+	 MIME-Version:Content-Type; b=JMOcv0XEZ/KbzmCnrmHyMHQSVG4FDUZ+zPrK8jCRT06qWPS+fEs8PyZNqkjYWRRP7hNlW321Og6dZh3JRjXJQGWC1nbjwlQcEP5ReseB+t3HOtNnuxbC4LxQGI/dN4tipjgs/j3tuKwocCLn09S8AJOyBzimTMPZTJZ4NPig65k=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com; spf=pass smtp.mailfrom=suse.com; dkim=pass (1024-bit key) header.d=suse.com header.i=@suse.com header.b=vLvNRChO; dkim=pass (1024-bit key) header.d=suse.com header.i=@suse.com header.b=vLvNRChO; arc=none smtp.client-ip=195.135.223.131
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=suse.com header.i=@suse.com header.b="q1BBKm2O";
-	dkim=pass (1024-bit key) header.d=suse.com header.i=@suse.com header.b="kUVI90Cy"
-Received: from imap2.dmz-prg2.suse.org (imap2.dmz-prg2.suse.org [10.150.64.98])
+	dkim=pass (1024-bit key) header.d=suse.com header.i=@suse.com header.b="vLvNRChO";
+	dkim=pass (1024-bit key) header.d=suse.com header.i=@suse.com header.b="vLvNRChO"
+Received: from imap2.dmz-prg2.suse.org (imap2.dmz-prg2.suse.org [IPv6:2a07:de40:b281:104:10:150:64:98])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
 	(No client certificate requested)
-	by smtp-out2.suse.de (Postfix) with ESMTPS id 682DE1F7F1;
-	Fri,  5 Apr 2024 17:05:51 +0000 (UTC)
+	by smtp-out2.suse.de (Postfix) with ESMTPS id 345BC1F7F3;
+	Fri,  5 Apr 2024 17:05:52 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
 	t=1712336752; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
 	 mime-version:mime-version:content-type:content-type:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=xiwCnwZ2VAGhImKJnzUhLK6HmMDw3wHqFOMyEBth2+I=;
-	b=q1BBKm2Ohg1ChSMQbOtkX35oV4JI0PbODmE5JbnNDUVSZxjc05NiLDlByTdjyxQ4aiQ4Tb
-	1w3bsuHXeS3CYggkgPu04RU6CO27Ml4+WUmETNejRzjOV/J3E6k5w8PG0Ns6b2+06hrPOG
-	oW+Udpz0clzLfD+Ihn6iAIfNQEyar0Y=
+	bh=8zUqm5lIfGuNd8A8EKniU9Rq618E06v9L0Eq25l5kFU=;
+	b=vLvNRChO5/oY4AuD2uppLI5q3fvHax4KqhQw6bnqNTRJoWKDfNjMxPI2Drpb37Zh3rNzcB
+	NbR07Ev1/P1pO/tFFzY/0hK1L0uJmaTUCC5mTTpOPuQOrJnQsA4Nqlh2cNkoKPPTYI8kik
+	3g1GSgj9/oNghqjxBaH2jq22dPZynGI=
 Authentication-Results: smtp-out2.suse.de;
-	none
+	dkim=pass header.d=suse.com header.s=susede1 header.b=vLvNRChO
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
-	t=1712336751; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	t=1712336752; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
 	 mime-version:mime-version:content-type:content-type:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=xiwCnwZ2VAGhImKJnzUhLK6HmMDw3wHqFOMyEBth2+I=;
-	b=kUVI90CyKQQ5mjSMyvvVTGwi5A49BxXNj1a185RkECFsZMwifLCy8f9P9wzdPnuy6+Iqth
-	yJZRnHmMW6X46bDMq4al9gjUwYvJwMJG7z1Da/3M54nxPg3Pwa6S0HLCK+lbB0wzDXSyh3
-	hYXsTcv0dIcMZyDRIZUMMP5jCKmz6FI=
+	bh=8zUqm5lIfGuNd8A8EKniU9Rq618E06v9L0Eq25l5kFU=;
+	b=vLvNRChO5/oY4AuD2uppLI5q3fvHax4KqhQw6bnqNTRJoWKDfNjMxPI2Drpb37Zh3rNzcB
+	NbR07Ev1/P1pO/tFFzY/0hK1L0uJmaTUCC5mTTpOPuQOrJnQsA4Nqlh2cNkoKPPTYI8kik
+	3g1GSgj9/oNghqjxBaH2jq22dPZynGI=
 Received: from imap2.dmz-prg2.suse.org (localhost [127.0.0.1])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
 	(No client certificate requested)
-	by imap2.dmz-prg2.suse.org (Postfix) with ESMTPS id 3B2D913AAD;
+	by imap2.dmz-prg2.suse.org (Postfix) with ESMTPS id BD9C113AB0;
 	Fri,  5 Apr 2024 17:05:51 +0000 (UTC)
 Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
 	by imap2.dmz-prg2.suse.org with ESMTPSA
-	id QGa1DW8vEGYteAAAn2gu4w
+	id ePF8LW8vEGYteAAAn2gu4w
 	(envelope-from <mkoutny@suse.com>); Fri, 05 Apr 2024 17:05:51 +0000
 From: =?UTF-8?q?Michal=20Koutn=C3=BD?= <mkoutny@suse.com>
 To: cgroups@vger.kernel.org,
@@ -63,9 +63,9 @@ Cc: Tejun Heo <tj@kernel.org>,
 	Johannes Weiner <hannes@cmpxchg.org>,
 	Jonathan Corbet <corbet@lwn.net>,
 	Shuah Khan <shuah@kernel.org>
-Subject: [RFC PATCH v3 3/9] cgroup/pids: Make event counters hierarchical
-Date: Fri,  5 Apr 2024 19:05:42 +0200
-Message-ID: <20240405170548.15234-4-mkoutny@suse.com>
+Subject: [RFC PATCH v3 6/9] selftests: cgroup: Add basic tests for pids controller
+Date: Fri,  5 Apr 2024 19:05:45 +0200
+Message-ID: <20240405170548.15234-7-mkoutny@suse.com>
 X-Mailer: git-send-email 2.44.0
 In-Reply-To: <20240405170548.15234-1-mkoutny@suse.com>
 References: <20240405170548.15234-1-mkoutny@suse.com>
@@ -77,120 +77,258 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
-X-Spam-Flag: NO
-X-Spam-Score: -3.30
 X-Spam-Level: 
-X-Spamd-Result: default: False [-3.30 / 50.00];
+X-Spamd-Result: default: False [-3.51 / 50.00];
 	BAYES_HAM(-3.00)[100.00%];
 	MID_CONTAINS_FROM(1.00)[];
 	NEURAL_HAM_LONG(-1.00)[-1.000];
-	NEURAL_HAM_SHORT(-0.20)[-0.999];
+	R_DKIM_ALLOW(-0.20)[suse.com:s=susede1];
+	NEURAL_HAM_SHORT(-0.20)[-1.000];
 	MIME_GOOD(-0.10)[text/plain];
-	RCPT_COUNT_SEVEN(0.00)[9];
+	MX_GOOD(-0.01)[];
+	FUZZY_BLOCKED(0.00)[rspamd.com];
 	RCVD_VIA_SMTP_AUTH(0.00)[];
 	MIME_TRACE(0.00)[0:+];
-	TO_DN_SOME(0.00)[];
 	ARC_NA(0.00)[];
+	TO_DN_SOME(0.00)[];
+	RCPT_COUNT_SEVEN(0.00)[9];
 	RCVD_TLS_ALL(0.00)[];
 	DKIM_SIGNED(0.00)[suse.com:s=susede1];
-	FUZZY_BLOCKED(0.00)[rspamd.com];
-	FROM_HAS_DN(0.00)[];
-	R_RATELIMIT(0.00)[to_ip_from(RLqco6ghhk4ot65weiawc5nc38)];
 	FROM_EQ_ENVFROM(0.00)[];
-	TO_MATCH_ENVRCPT_ALL(0.00)[];
+	FROM_HAS_DN(0.00)[];
+	SPAMHAUS_XBL(0.00)[2a07:de40:b281:104:10:150:64:98:from];
 	RCVD_COUNT_TWO(0.00)[2];
-	DBL_BLOCKED_OPENRESOLVER(0.00)[suse.com:email,pids.events:url,imap2.dmz-prg2.suse.org:helo,imap2.dmz-prg2.suse.org:rdns]
+	TO_MATCH_ENVRCPT_ALL(0.00)[];
+	DBL_BLOCKED_OPENRESOLVER(0.00)[suse.com:dkim,suse.com:email,imap2.dmz-prg2.suse.org:helo,imap2.dmz-prg2.suse.org:rdns];
+	DKIM_TRACE(0.00)[suse.com:+]
+X-Rspamd-Action: no action
+X-Rspamd-Queue-Id: 345BC1F7F3
+X-Rspamd-Server: rspamd1.dmz-prg2.suse.org
+X-Spam-Flag: NO
+X-Spam-Score: -3.51
 
-The pids.events file should honor the hierarchy, so make the events
-propagate from their origin up to the root on the unified hierarchy. The
-v1 behavior remains non-hierarchical.
+This commit adds (and wires in) new test program for checking basic pids
+controller functionality -- restricting tasks in a cgroup and correct
+event counting.
 
 Signed-off-by: Michal Koutný <mkoutny@suse.com>
 ---
- Documentation/admin-guide/cgroup-v2.rst |  4 ++-
- kernel/cgroup/pids.c                    | 46 ++++++++++++++++---------
- 2 files changed, 33 insertions(+), 17 deletions(-)
+ tools/testing/selftests/cgroup/Makefile    |   2 +
+ tools/testing/selftests/cgroup/test_pids.c | 187 +++++++++++++++++++++
+ 2 files changed, 189 insertions(+)
+ create mode 100644 tools/testing/selftests/cgroup/test_pids.c
 
-diff --git a/Documentation/admin-guide/cgroup-v2.rst b/Documentation/admin-guide/cgroup-v2.rst
-index 4f04538d688c..5d4c505cae06 100644
---- a/Documentation/admin-guide/cgroup-v2.rst
-+++ b/Documentation/admin-guide/cgroup-v2.rst
-@@ -2189,7 +2189,9 @@ PID Interface Files
-   pids.events
- 	A read-only flat-keyed file which exists on non-root cgroups.  Unless
- 	specified otherwise, a value change in this file generates a file modified
--	event. The following entries are defined.
-+	event. Fields in this file are hierarchical and the file modified event
-+	can be generated due to an event down the hierarchy. The following
-+	entries are defined.
+diff --git a/tools/testing/selftests/cgroup/Makefile b/tools/testing/selftests/cgroup/Makefile
+index f3e1ef69e88d..f5f0886a2c4a 100644
+--- a/tools/testing/selftests/cgroup/Makefile
++++ b/tools/testing/selftests/cgroup/Makefile
+@@ -15,6 +15,7 @@ TEST_GEN_PROGS += test_hugetlb_memcg
+ TEST_GEN_PROGS += test_kill
+ TEST_GEN_PROGS += test_kmem
+ TEST_GEN_PROGS += test_memcontrol
++TEST_GEN_PROGS += test_pids
+ TEST_GEN_PROGS += test_zswap
  
- 	  max
- 		The number of times the limit of the cgroup was hit.
-diff --git a/kernel/cgroup/pids.c b/kernel/cgroup/pids.c
-index 471562609eef..76c0a97e42da 100644
---- a/kernel/cgroup/pids.c
-+++ b/kernel/cgroup/pids.c
-@@ -238,6 +238,34 @@ static void pids_cancel_attach(struct cgroup_taskset *tset)
- 	}
- }
- 
-+static void pids_event(struct pids_cgroup *pids_forking,
-+		       struct pids_cgroup *pids_over_limit)
+ LOCAL_HDRS += $(selfdir)/clone3/clone3_selftests.h $(selfdir)/pidfd/pidfd.h
+@@ -29,4 +30,5 @@ $(OUTPUT)/test_hugetlb_memcg: cgroup_util.c
+ $(OUTPUT)/test_kill: cgroup_util.c
+ $(OUTPUT)/test_kmem: cgroup_util.c
+ $(OUTPUT)/test_memcontrol: cgroup_util.c
++$(OUTPUT)/test_pids: cgroup_util.c
+ $(OUTPUT)/test_zswap: cgroup_util.c
+diff --git a/tools/testing/selftests/cgroup/test_pids.c b/tools/testing/selftests/cgroup/test_pids.c
+new file mode 100644
+index 000000000000..c1c3a3965624
+--- /dev/null
++++ b/tools/testing/selftests/cgroup/test_pids.c
+@@ -0,0 +1,187 @@
++// SPDX-License-Identifier: GPL-2.0
++#define _GNU_SOURCE
++
++#include <errno.h>
++#include <linux/limits.h>
++#include <signal.h>
++#include <string.h>
++#include <sys/stat.h>
++#include <sys/types.h>
++#include <unistd.h>
++
++#include "../kselftest.h"
++#include "cgroup_util.h"
++
++static int run_success(const char *cgroup, void *arg)
 +{
-+	struct pids_cgroup *p = pids_forking;
-+	bool limit = false;
-+
-+	/* Only log the first time limit is hit. */
-+	if (atomic64_inc_return(&p->events[PIDCG_MAX_IMPOSED]) == 1) {
-+		pr_info("cgroup: fork rejected by pids controller in ");
-+		pr_cont_cgroup_path(p->css.cgroup);
-+		pr_cont("\n");
-+	}
-+	/* Events are only notified in pids_forking on v1 */
-+	if (!cgroup_subsys_on_dfl(pids_cgrp_subsys))
-+		return;
-+
-+	for (; parent_pids(p); p = parent_pids(p)) {
-+		atomic64_inc(&p->events[PIDCG_MAX_IMPOSED]);
-+
-+		if (p == pids_over_limit)
-+			limit = true;
-+		if (limit)
-+			atomic64_inc(&p->events[PIDCG_MAX]);
-+
-+		cgroup_file_notify(&p->events_file);
-+	}
++	return 0;
 +}
 +
- /*
-  * task_css_check(true) in pids_can_fork() and pids_cancel_fork() relies
-  * on cgroup_threadgroup_change_begin() held by the copy_process().
-@@ -254,23 +282,9 @@ static int pids_can_fork(struct task_struct *task, struct css_set *cset)
- 		css = task_css_check(current, pids_cgrp_id, true);
- 	pids = css_pids(css);
- 	err = pids_try_charge(pids, 1, &pids_over_limit);
--	if (err) {
--		/* compatibility on v1 where events were notified in leaves. */
--		if (!cgroup_subsys_on_dfl(pids_cgrp_subsys))
--			pids_over_limit = pids;
--
--		/* Only log the first time limit is hit. */
--		if (atomic64_inc_return(&pids->events[PIDCG_MAX_IMPOSED]) == 1) {
--			pr_info("cgroup: fork rejected by pids controller in ");
--			pr_cont_cgroup_path(pids->css.cgroup);
--			pr_cont("\n");
--		}
--		atomic64_inc(&pids_over_limit->events[PIDCG_MAX]);
-+	if (err)
-+		pids_event(pids, pids_over_limit);
- 
--		cgroup_file_notify(&pids->events_file);
--		if (pids_over_limit != pids)
--			cgroup_file_notify(&pids_over_limit->events_file);
--	}
- 	return err;
- }
- 
++static int run_pause(const char *cgroup, void *arg)
++{
++	return pause();
++}
++
++/*
++ * This test checks that pids.max prevents forking new children above the
++ * specified limit in the cgroup.
++ */
++static int test_pids_max(const char *root)
++{
++	int ret = KSFT_FAIL;
++	char *cg_pids;
++	int pid;
++
++
++	cg_pids = cg_name(root, "pids_test");
++	if (!cg_pids)
++		goto cleanup;
++
++	if (cg_create(cg_pids))
++		goto cleanup;
++
++	if (cg_read_strcmp(cg_pids, "pids.max", "max\n"))
++		goto cleanup;
++
++	if (cg_write(cg_pids, "pids.max", "2"))
++		goto cleanup;
++
++	if (cg_enter_current(cg_pids))
++		goto cleanup;
++
++	pid = cg_run_nowait(cg_pids, run_pause, NULL);
++	if (pid < 0)
++		goto cleanup;
++
++	if (cg_run_nowait(cg_pids, run_success, NULL) != -1 || errno != EAGAIN)
++		goto cleanup;
++
++	if (kill(pid, SIGINT))
++		goto cleanup;
++
++	ret = KSFT_PASS;
++
++cleanup:
++	cg_enter_current(root);
++	cg_destroy(cg_pids);
++	free(cg_pids);
++
++	return ret;
++}
++
++/*
++ * This test checks that pids.max prevents forking new children above the
++ * specified limit in the cgroup.
++ */
++static int test_pids_events(const char *root)
++{
++	int ret = KSFT_FAIL;
++	char *cg_parent = NULL, *cg_child = NULL;
++	int pid;
++
++
++	cg_parent = cg_name(root, "pids_parent");
++	cg_child = cg_name(cg_parent, "pids_child");
++	if (!cg_parent || !cg_child)
++		goto cleanup;
++
++	if (cg_create(cg_parent))
++		goto cleanup;
++	if (cg_write(cg_parent, "cgroup.subtree_control", "+pids"))
++		goto cleanup;
++	if (cg_create(cg_child))
++		goto cleanup;
++
++	if (cg_write(cg_parent, "pids.max", "2"))
++		goto cleanup;
++
++	if (cg_read_strcmp(cg_child, "pids.max", "max\n"))
++		goto cleanup;
++
++	if (cg_enter_current(cg_child))
++		goto cleanup;
++
++	pid = cg_run_nowait(cg_child, run_pause, NULL);
++	if (pid < 0)
++		goto cleanup;
++
++	if (cg_run_nowait(cg_child, run_success, NULL) != -1 || errno != EAGAIN)
++		goto cleanup;
++
++	if (kill(pid, SIGINT))
++		goto cleanup;
++
++
++	if (cg_read_key_long(cg_child, "pids.events", "max ") != 0)
++		goto cleanup;
++	if (cg_read_key_long(cg_child, "pids.events", "max.imposed ") != 1)
++		goto cleanup;
++
++	if (cg_read_key_long(cg_parent, "pids.events", "max ") != 1)
++		goto cleanup;
++	if (cg_read_key_long(cg_parent, "pids.events", "max.imposed ") != 1)
++		goto cleanup;
++
++
++	ret = KSFT_PASS;
++
++cleanup:
++	cg_enter_current(root);
++	if (cg_child)
++		cg_destroy(cg_child);
++	if (cg_parent)
++		cg_destroy(cg_parent);
++	free(cg_child);
++	free(cg_parent);
++
++	return ret;
++}
++
++
++
++#define T(x) { x, #x }
++struct pids_test {
++	int (*fn)(const char *root);
++	const char *name;
++} tests[] = {
++	T(test_pids_max),
++	T(test_pids_events),
++};
++#undef T
++
++int main(int argc, char **argv)
++{
++	char root[PATH_MAX];
++	int i, ret = EXIT_SUCCESS;
++
++	if (cg_find_unified_root(root, sizeof(root)))
++		ksft_exit_skip("cgroup v2 isn't mounted\n");
++
++	/*
++	 * Check that pids controller is available:
++	 * pids is listed in cgroup.controllers
++	 */
++	if (cg_read_strstr(root, "cgroup.controllers", "pids"))
++		ksft_exit_skip("pids controller isn't available\n");
++
++	if (cg_read_strstr(root, "cgroup.subtree_control", "pids"))
++		if (cg_write(root, "cgroup.subtree_control", "+pids"))
++			ksft_exit_skip("Failed to set pids controller\n");
++
++	for (i = 0; i < ARRAY_SIZE(tests); i++) {
++		switch (tests[i].fn(root)) {
++		case KSFT_PASS:
++			ksft_test_result_pass("%s\n", tests[i].name);
++			break;
++		case KSFT_SKIP:
++			ksft_test_result_skip("%s\n", tests[i].name);
++			break;
++		default:
++			ret = EXIT_FAILURE;
++			ksft_test_result_fail("%s\n", tests[i].name);
++			break;
++		}
++	}
++
++	return ret;
++}
 -- 
 2.44.0
 
