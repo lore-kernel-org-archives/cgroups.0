@@ -1,107 +1,328 @@
-Received: from mail-io1-f49.google.com (mail-io1-f49.google.com [209.85.166.49])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from dggsgout11.his.huawei.com (unknown [45.249.212.51])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C3C27C8E1
-	for <cgroups@vger.kernel.org>; Sat,  6 Apr 2024 02:07:58 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.166.49
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B833F22EF8;
+	Sat,  6 Apr 2024 08:09:13 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.51
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1712369280; cv=none; b=SttRYHzBBBRZrhZb14x6hobrSndF5usVkbQ6bbEE/ZUd2lNjxmqQu9jCAeRx5gh7YgQUPCa44qFN2p8q4AL+IPNOpeGrnb697jM4BykPSgGLA31XCSvN63Rsjx9Jt135013Fz2FNDFrwNnVSuiIAkO+pscGYct3XSYcKBOntG7g=
+	t=1712390955; cv=none; b=SIC6imFsN3jBdC97M4X70HKAlLHvSnXgdSS8GD9Mmzv0u2gYip4DhZYUW11apoS1n2iqO00FFuipFIX0sxYFMliWxHyml0UBZdKmSEWwRJ3rMhsN5dSZc6boifmGE3OL3CLyR4JPz5P0wKlcETGfmslFxrGG4fxXlklp6PKup00=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1712369280; c=relaxed/simple;
-	bh=NRDSrd//lw3VipjgP/KmiM8Kzaxra2OkM66vbPYRZmY=;
-	h=From:To:Cc:In-Reply-To:References:Subject:Message-Id:Date:
-	 MIME-Version:Content-Type; b=q5IEg7IAi/YVdPi4s98+rdTyRDwiBkarO5r4grLp0dvZrtmfh/bvkfn/7IfLfXf6M0ZLFZcAmsX76tcbR8o7tnn8SVc26k9QfAt16nT1O5cn/623lrP6YuBtmwBC1Z1aZNd4nAAsghX1sIJBf/G8E34O2xt6i4so47gOtraYn4M=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kernel.dk; spf=pass smtp.mailfrom=kernel.dk; dkim=pass (2048-bit key) header.d=kernel-dk.20230601.gappssmtp.com header.i=@kernel-dk.20230601.gappssmtp.com header.b=kMDveTdA; arc=none smtp.client-ip=209.85.166.49
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kernel.dk
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=kernel.dk
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel-dk.20230601.gappssmtp.com header.i=@kernel-dk.20230601.gappssmtp.com header.b="kMDveTdA"
-Received: by mail-io1-f49.google.com with SMTP id ca18e2360f4ac-7c86e6f649aso27645139f.0
-        for <cgroups@vger.kernel.org>; Fri, 05 Apr 2024 19:07:58 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=kernel-dk.20230601.gappssmtp.com; s=20230601; t=1712369278; x=1712974078; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:date:message-id:subject
-         :references:in-reply-to:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=sfyeTnbUOHjE4JfMs0wGJdvVcv7mV0yWrczNYacKGfg=;
-        b=kMDveTdARaGNPMxjo/wgLDzNKK55H8YINc2kt5VgWqq6U0fbw9YT20kEtmCfjdQr0A
-         sDLgSXC4mVWvKO5aO1dp6LMkYCIpS17Zyao3612UoUYYkoZ+R0FapHF8v4I24LHzti+y
-         tsnJHSDOhXVFfoZ1sNRq1aXs0cPQIBaLiGwD7pFp9GhvrVucx8Fhg9OzW19wDEyu8Df2
-         SuLoxm5aSsQuaUkAlk0uce/MctYeiP5RX98KjGHg+goXS6ETe2fh8FOg6xHx1Uqviu5b
-         5Qk3CyMijFGt34L4JWzkXAS6diePL6Hx5gnj7FvoAptxDa0dlBvULwRlri5lqdS+C0PK
-         YcQw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1712369278; x=1712974078;
-        h=content-transfer-encoding:mime-version:date:message-id:subject
-         :references:in-reply-to:cc:to:from:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=sfyeTnbUOHjE4JfMs0wGJdvVcv7mV0yWrczNYacKGfg=;
-        b=vxrKISq5ONqdNXYwf62BAT28xA5t6x7RuQ0roEyMeZtjmvCTywIlNeDuX/VZiicnlK
-         Uw7bgqMlk+2PAm0jG9o0zpPRc1J+qY9kzEZQfC9P0eQRTp691f4BGDdbILkvC163dzEV
-         3aVeiKGNrtM3m21OWkvrbwGLObZL4Yz+9jwZ1Nw1ZiWprANsPIlbBEeruyyHf1c2YBYc
-         eSkz5xqZ+5t8JfZl8MmDdqf1R6SAB1lGHZ3QvAoUQhsHdNVtjAyiqlvbeJ70wxhEHk/a
-         pCOI+3BaCzP8h4qHTwk4XRICF9tlyMFaFIA42IhNcnHz0KU6xV6wTPEygb7GGOoIMruv
-         FokQ==
-X-Forwarded-Encrypted: i=1; AJvYcCWQENTnjwtyylr+tBFzJ/6nnFZ4fwkWciRqsiqBUcZFGKpitvcO+svFRtx+Cxe7GkowSEMGAhBEq0x/QwtSJBEa2ZoIs4iTzg==
-X-Gm-Message-State: AOJu0YwCF5y/DiyU8TZnwBQN5Z8Xm2ZVropOw2ws2tEV2Ycj5sDWNDsG
-	qNn8Hgz0l+ly3vM+gkHJeYiA+zg3llsdvb18caUmBZyYvzpcWPyinpRRnVJ8gps=
-X-Google-Smtp-Source: AGHT+IH/HsleWvwHw/pVrctaalvVy7+rmbzL5bu+lHTyu0TKoHSuajK+U2MSGalABMhK3FGF/GMHVA==
-X-Received: by 2002:a05:6602:1644:b0:7d5:cc9e:9d96 with SMTP id y4-20020a056602164400b007d5cc9e9d96mr501025iow.1.1712369277985;
-        Fri, 05 Apr 2024 19:07:57 -0700 (PDT)
-Received: from [127.0.0.1] ([99.196.135.167])
-        by smtp.gmail.com with ESMTPSA id jb6-20020a05663888c600b004827f5def6bsm28853jab.4.2024.04.05.19.07.51
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 05 Apr 2024 19:07:57 -0700 (PDT)
-From: Jens Axboe <axboe@kernel.dk>
-To: linux-kernel@vger.kernel.org, Rik van Riel <riel@surriel.com>
-Cc: kernel-team@meta.com, Tejun Heo <tj@kernel.org>, 
- Josef Bacik <josef@toxicpanda.com>, cgroups@vger.kernel.org, 
- linux-block@vger.kernel.org
-In-Reply-To: <20240404123253.0f58010f@imladris.surriel.com>
-References: <20240404123253.0f58010f@imladris.surriel.com>
-Subject: Re: [PATCH] blk-iocost: avoid out of bounds shift
-Message-Id: <171236927113.2455316.5665277976518467416.b4-ty@kernel.dk>
-Date: Fri, 05 Apr 2024 20:07:51 -0600
+	s=arc-20240116; t=1712390955; c=relaxed/simple;
+	bh=wTUt1zlSK0M746ZO+xcUeqwViG+nxeL9MF8pN5h8K7g=;
+	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
+	 MIME-Version; b=b0xTqTnoUFmPyUWFoVykcMYtupZcwowPuLZ3VxhPH3tWMl3kVch1jo8Z7yIJkrBKrV7rXKn1stLKstuXgn98uICZI+LNuoJzXftU6NOcQ/iVuWFGxr3xZBGz/QlmPw5q4r6NX3/0nfS4dWuE9SdlmJFT+iqgmwP/R6CgSeDcWk8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.51
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
+Received: from mail.maildlp.com (unknown [172.19.93.142])
+	by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4VBSg64v9fz4f3jqt;
+	Sat,  6 Apr 2024 16:09:06 +0800 (CST)
+Received: from mail02.huawei.com (unknown [10.116.40.112])
+	by mail.maildlp.com (Postfix) with ESMTP id F3D171A016E;
+	Sat,  6 Apr 2024 16:09:10 +0800 (CST)
+Received: from huaweicloud.com (unknown [10.175.104.67])
+	by APP1 (Coremail) with SMTP id cCh0CgDHlxAjAxFmnZTkJA--.2125S6;
+	Sat, 06 Apr 2024 16:09:10 +0800 (CST)
+From: Yu Kuai <yukuai1@huaweicloud.com>
+To: axboe@kernel.dk,
+	chenhuacai@kernel.org,
+	tj@kernel.org,
+	josef@toxicpanda.com,
+	jhs@mojatatu.com,
+	svenjoac@gmx.de,
+	raven@themaw.net,
+	pctammela@mojatatu.com,
+	yukuai3@huawei.com,
+	qde@naccy.de,
+	zhaotianrui@loongson.cn
+Cc: linux-block@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	loongarch@lists.linux.dev,
+	cgroups@vger.kernel.org,
+	yukuai1@huaweicloud.com,
+	yi.zhang@huawei.com,
+	yangerkun@huawei.com
+Subject: [PATCH RFC v2 2/6] blk-throttle: delay initialization until configuration
+Date: Sat,  6 Apr 2024 16:00:55 +0800
+Message-Id: <20240406080059.2248314-3-yukuai1@huaweicloud.com>
+X-Mailer: git-send-email 2.39.2
+In-Reply-To: <20240406080059.2248314-1-yukuai1@huaweicloud.com>
+References: <20240406080059.2248314-1-yukuai1@huaweicloud.com>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-X-Mailer: b4 0.12.5-dev-2aabd
+Content-Transfer-Encoding: 8bit
+X-CM-TRANSID:cCh0CgDHlxAjAxFmnZTkJA--.2125S6
+X-Coremail-Antispam: 1UD129KBjvJXoWxtF18Zr4kCF13GrWfXr4Utwb_yoWxuw43pF
+	W3ur45t3y0qrsF9F45tr45JFW3Kws7K34fC393GrWayr42vwn0qF1qvr18ZFZ5AFs7uF43
+	Ar4DJrs8KF18u3DanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDU0xBIdaVrnRJUUUPj14x267AKxVWrJVCq3wAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
+	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2048vs2IY020E87I2jVAFwI0_Jryl82xGYIkIc2
+	x26xkF7I0E14v26ryj6s0DM28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48ve4kI8wA2z4x0
+	Y4vE2Ix0cI8IcVAFwI0_Ar0_tr1l84ACjcxK6xIIjxv20xvEc7CjxVAFwI0_Gr1j6F4UJw
+	A2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x0267AKxVW0oVCq3wAS
+	0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG6I80ewAv7VC0I7IYx2
+	IY67AKxVWUJVWUGwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFVCjc4AY6r1j6r4UM4x0
+	Y48IcxkI7VAKI48JM4x0x7Aq67IIx4CEVc8vx2IErcIFxwACI402YVCY1x02628vn2kIc2
+	xKxwCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7xkEbVWUJVW8JwC20s026c02F40E14v2
+	6r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E67AF67kF1VAFwI0_GFv_WrylIxkGc2
+	Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUJVWUCwCI42IY6xIIjxv20xvEc7CjxVAFwI0_
+	Cr0_Gr1UMIIF0xvE42xK8VAvwI8IcIk0rVWUJVWUCwCI42IY6I8E87Iv67AKxVWUJVW8Jw
+	CI42IY6I8E87Iv6xkF7I0E14v26r4j6r4UJbIYCTnIWIevJa73UjIFyTuYvjfUOJPEUUUU
+	U
+X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
 
+From: Yu Kuai <yukuai3@huawei.com>
 
-On Thu, 04 Apr 2024 12:32:53 -0400, Rik van Riel wrote:
-> UBSAN catches undefined behavior in blk-iocost, where sometimes
-> iocg->delay is shifted right by a number that is too large,
-> resulting in undefined behavior on some architectures.
-> 
-> [  186.556576] ------------[ cut here ]------------
-> UBSAN: shift-out-of-bounds in block/blk-iocost.c:1366:23
-> shift exponent 64 is too large for 64-bit type 'u64' (aka 'unsigned long long')
-> CPU: 16 PID: 0 Comm: swapper/16 Tainted: G S          E    N 6.9.0-0_fbk700_debug_rc2_kbuilder_0_gc85af715cac0 #1
-> Hardware name: Quanta Twin Lakes MP/Twin Lakes Passive MP, BIOS F09_3A23 12/08/2020
-> Call Trace:
->  <IRQ>
->  dump_stack_lvl+0x8f/0xe0
->  __ubsan_handle_shift_out_of_bounds+0x22c/0x280
->  iocg_kick_delay+0x30b/0x310
->  ioc_timer_fn+0x2fb/0x1f80
->  __run_timer_base+0x1b6/0x250
-> ...
-> 
-> [...]
+Other cgroup policy like bfq, iocost are lazy-initialized when they are
+configured for the first time for the device, but blk-throttle is
+initialized unconditionally from blkcg_init_disk().
 
-Applied, thanks!
+Delay initialization of blk-throttle as well, to save some cpu and
+memory overhead if it's not configured.
 
-[1/1] blk-iocost: avoid out of bounds shift
-      commit: beaa51b36012fad5a4d3c18b88a617aea7a9b96d
+Noted that once it's initialized, it can't be destroyed until disk
+removal, even if it's disabled. And following patches will support
+to destroy blk-throttle after it's disabled.
 
-Best regards,
+Signed-off-by: Yu Kuai <yukuai3@huawei.com>
+---
+ block/blk-cgroup.c   |   6 ---
+ block/blk-sysfs.c    |   1 -
+ block/blk-throttle.c | 114 +++++++++++++++++++++++++++----------------
+ block/blk-throttle.h |  10 ++--
+ 4 files changed, 78 insertions(+), 53 deletions(-)
+
+diff --git a/block/blk-cgroup.c b/block/blk-cgroup.c
+index bdbb557feb5a..b5e626a16758 100644
+--- a/block/blk-cgroup.c
++++ b/block/blk-cgroup.c
+@@ -1441,14 +1441,8 @@ int blkcg_init_disk(struct gendisk *disk)
+ 	if (ret)
+ 		goto err_destroy_all;
+ 
+-	ret = blk_throtl_init(disk);
+-	if (ret)
+-		goto err_ioprio_exit;
+-
+ 	return 0;
+ 
+-err_ioprio_exit:
+-	blk_ioprio_exit(disk);
+ err_destroy_all:
+ 	blkg_destroy_all(disk);
+ 	return ret;
+diff --git a/block/blk-sysfs.c b/block/blk-sysfs.c
+index 674c5c602364..1e2a0b18360c 100644
+--- a/block/blk-sysfs.c
++++ b/block/blk-sysfs.c
+@@ -807,7 +807,6 @@ int blk_register_queue(struct gendisk *disk)
+ 
+ 	blk_queue_flag_set(QUEUE_FLAG_REGISTERED, q);
+ 	wbt_enable_default(disk);
+-	blk_throtl_register(disk);
+ 
+ 	/* Now everything is ready and send out KOBJ_ADD uevent */
+ 	kobject_uevent(&disk->queue_kobj, KOBJ_ADD);
+diff --git a/block/blk-throttle.c b/block/blk-throttle.c
+index 1e45e48564f4..acb2758f45ef 100644
+--- a/block/blk-throttle.c
++++ b/block/blk-throttle.c
+@@ -1213,6 +1213,53 @@ static void tg_conf_updated(struct throtl_grp *tg, bool global)
+ 	}
+ }
+ 
++static int blk_throtl_init(struct gendisk *disk)
++{
++	struct request_queue *q = disk->queue;
++	struct throtl_data *td;
++	int ret;
++
++	td = kzalloc_node(sizeof(*td), GFP_KERNEL, q->node);
++	if (!td)
++		return -ENOMEM;
++
++	INIT_WORK(&td->dispatch_work, blk_throtl_dispatch_work_fn);
++	throtl_service_queue_init(&td->service_queue);
++
++	/*
++	 * freeze queue before setting q->td, so that IO path won't see
++	 * q->td while policy is not activated yet.
++	 */
++	blk_mq_freeze_queue(disk->queue);
++	blk_mq_quiesce_queue(disk->queue);
++
++	q->td = td;
++	td->queue = q;
++
++	/* activate policy */
++	ret = blkcg_activate_policy(disk, &blkcg_policy_throtl);
++	if (ret) {
++		q->td = NULL;
++		kfree(td);
++		goto out;
++	}
++
++	if (blk_queue_nonrot(q))
++		td->throtl_slice = DFL_THROTL_SLICE_SSD;
++	else
++		td->throtl_slice = DFL_THROTL_SLICE_HD;
++	td->track_bio_latency = !queue_is_mq(q);
++	if (!td->track_bio_latency)
++		blk_stat_enable_accounting(q);
++
++out:
++	blk_mq_unquiesce_queue(disk->queue);
++	blk_mq_unfreeze_queue(disk->queue);
++
++	return ret;
++}
++
++
+ static ssize_t tg_set_conf(struct kernfs_open_file *of,
+ 			   char *buf, size_t nbytes, loff_t off, bool is_u64)
+ {
+@@ -1224,6 +1271,16 @@ static ssize_t tg_set_conf(struct kernfs_open_file *of,
+ 
+ 	blkg_conf_init(&ctx, buf);
+ 
++	ret = blkg_conf_open_bdev(&ctx);
++	if (ret)
++		goto out_finish;
++
++	if (!ctx.bdev->bd_queue->td) {
++		ret = blk_throtl_init(ctx.bdev->bd_disk);
++		if (ret)
++			goto out_finish;
++	}
++
+ 	ret = blkg_conf_prep(blkcg, &blkcg_policy_throtl, &ctx);
+ 	if (ret)
+ 		goto out_finish;
+@@ -1388,6 +1445,16 @@ static ssize_t tg_set_limit(struct kernfs_open_file *of,
+ 
+ 	blkg_conf_init(&ctx, buf);
+ 
++	ret = blkg_conf_open_bdev(&ctx);
++	if (ret)
++		goto out_finish;
++
++	if (!ctx.bdev->bd_queue->td) {
++		ret = blk_throtl_init(ctx.bdev->bd_disk);
++		if (ret)
++			goto out_finish;
++	}
++
+ 	ret = blkg_conf_prep(blkcg, &blkcg_policy_throtl, &ctx);
+ 	if (ret)
+ 		goto out_finish;
+@@ -1480,6 +1547,9 @@ void blk_throtl_cancel_bios(struct gendisk *disk)
+ 	struct cgroup_subsys_state *pos_css;
+ 	struct blkcg_gq *blkg;
+ 
++	if (!q->td)
++		return;
++
+ 	spin_lock_irq(&q->queue_lock);
+ 	/*
+ 	 * queue_lock is held, rcu lock is not needed here technically.
+@@ -1609,57 +1679,19 @@ bool __blk_throtl_bio(struct bio *bio)
+ 	return throttled;
+ }
+ 
+-int blk_throtl_init(struct gendisk *disk)
+-{
+-	struct request_queue *q = disk->queue;
+-	struct throtl_data *td;
+-	int ret;
+-
+-	td = kzalloc_node(sizeof(*td), GFP_KERNEL, q->node);
+-	if (!td)
+-		return -ENOMEM;
+-
+-	INIT_WORK(&td->dispatch_work, blk_throtl_dispatch_work_fn);
+-	throtl_service_queue_init(&td->service_queue);
+-
+-	q->td = td;
+-	td->queue = q;
+-
+-	/* activate policy */
+-	ret = blkcg_activate_policy(disk, &blkcg_policy_throtl);
+-	if (ret)
+-		kfree(td);
+-	return ret;
+-}
+-
+ void blk_throtl_exit(struct gendisk *disk)
+ {
+ 	struct request_queue *q = disk->queue;
+ 
+-	BUG_ON(!q->td);
++	if (!q->td)
++		return;
++
+ 	del_timer_sync(&q->td->service_queue.pending_timer);
+ 	throtl_shutdown_wq(q);
+ 	blkcg_deactivate_policy(disk, &blkcg_policy_throtl);
+ 	kfree(q->td);
+ }
+ 
+-void blk_throtl_register(struct gendisk *disk)
+-{
+-	struct request_queue *q = disk->queue;
+-	struct throtl_data *td;
+-
+-	td = q->td;
+-	BUG_ON(!td);
+-
+-	if (blk_queue_nonrot(q))
+-		td->throtl_slice = DFL_THROTL_SLICE_SSD;
+-	else
+-		td->throtl_slice = DFL_THROTL_SLICE_HD;
+-	td->track_bio_latency = !queue_is_mq(q);
+-	if (!td->track_bio_latency)
+-		blk_stat_enable_accounting(q);
+-}
+-
+ static int __init throtl_init(void)
+ {
+ 	kthrotld_workqueue = alloc_workqueue("kthrotld", WQ_MEM_RECLAIM, 0);
+diff --git a/block/blk-throttle.h b/block/blk-throttle.h
+index 32503fd83a84..e7f5562a32e9 100644
+--- a/block/blk-throttle.h
++++ b/block/blk-throttle.h
+@@ -150,23 +150,23 @@ static inline struct throtl_grp *blkg_to_tg(struct blkcg_gq *blkg)
+  * Internal throttling interface
+  */
+ #ifndef CONFIG_BLK_DEV_THROTTLING
+-static inline int blk_throtl_init(struct gendisk *disk) { return 0; }
+ static inline void blk_throtl_exit(struct gendisk *disk) { }
+-static inline void blk_throtl_register(struct gendisk *disk) { }
+ static inline bool blk_throtl_bio(struct bio *bio) { return false; }
+ static inline void blk_throtl_cancel_bios(struct gendisk *disk) { }
+ #else /* CONFIG_BLK_DEV_THROTTLING */
+-int blk_throtl_init(struct gendisk *disk);
+ void blk_throtl_exit(struct gendisk *disk);
+-void blk_throtl_register(struct gendisk *disk);
+ bool __blk_throtl_bio(struct bio *bio);
+ void blk_throtl_cancel_bios(struct gendisk *disk);
+ 
+ static inline bool blk_should_throtl(struct bio *bio)
+ {
+-	struct throtl_grp *tg = blkg_to_tg(bio->bi_blkg);
++	struct throtl_grp *tg;
+ 	int rw = bio_data_dir(bio);
+ 
++	if (!bio->bi_bdev->bd_queue->td)
++		return false;
++
++	tg = blkg_to_tg(bio->bi_blkg);
+ 	if (!cgroup_subsys_on_dfl(io_cgrp_subsys)) {
+ 		if (!bio_flagged(bio, BIO_CGROUP_ACCT)) {
+ 			bio_set_flag(bio, BIO_CGROUP_ACCT);
 -- 
-Jens Axboe
-
-
+2.39.2
 
