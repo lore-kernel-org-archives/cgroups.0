@@ -1,209 +1,159 @@
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.12])
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.9])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D106B1836E4;
-	Wed, 10 Apr 2024 18:26:09 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.12
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 88A731802BC;
+	Wed, 10 Apr 2024 18:28:10 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.9
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1712773571; cv=none; b=pW7sHq2d9m5XZCbKnDo8ePcIl+y1Kucwk/+QgR1UO6auIyFsKoVvv6h7G/Cd8soE0Zsq0AeWvEHj7LjjnfyFryM0AHUJ28DsRHXIJCeSjerjIq8mOPXHmGx2uOdKCOHwjNiau6DblyfhPgsITIavuZ4woJYmiFeFW+fvRUl1YKI=
+	t=1712773692; cv=none; b=oAIlpUoxZm+jTlMjBv36jm53ZaZRJ5UCl8p3AQ5NokynIq14jHNhSrX7NEVljQCCOHJEsRzMrDiHfPrGWbjU1NIrDsP35+bntrgxksTuHxTkDYYJwX9loHNWCP0ECddurMvLyx2sUxqly0KF7JwVN/rZBr8IUk32j78yKDewJvc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1712773571; c=relaxed/simple;
-	bh=9w5lQ2pOZdanN4uPSlw3FqAR9K1n/EpTv9COUE47BCo=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=OXSEiKDRAdwOQTCvDopQ22ozdL7LVu6/x2ZirWO0ke4nkQiZWVo8n5Zy6hxCd1UHV/FydwgSDcjAGRHEqRY/8HHTHycBB2hFBLrBMbzrUpXj19WTvuJ1TOXQaVoQVQhH5N+Dj0FzVqA8CTKiLsQnivEhT3VXmavLeMqvpTiKfqA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=none smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=K6QuenAq; arc=none smtp.client-ip=198.175.65.12
+	s=arc-20240116; t=1712773692; c=relaxed/simple;
+	bh=UZ42VS9dtADlg2+VEy0SyUfnbOwQEK+dXac4rGfc8xg=;
+	h=Content-Type:To:Cc:Subject:References:Date:MIME-Version:From:
+	 Message-ID:In-Reply-To; b=BwCp5vdMLnXQAaDGzK9jp8PozT5U///Xtiza6/CFbHfFhB5RJWejuuGUan4ESfnISgkZx0ODDtYg3s4hJQjd7dWWBXL3B8d28Xb3m63wCgrDnz1x/k+wLN9vF/0jgIDKQ6XhUetRqLD35OMefHlj12DPLuoK0bBK/mOGjJtXmHg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=none smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=GgK8ySu+; arc=none smtp.client-ip=192.198.163.9
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="K6QuenAq"
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="GgK8ySu+"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1712773570; x=1744309570;
-  h=from:to:cc:subject:date:message-id:in-reply-to:
-   references:mime-version:content-transfer-encoding;
-  bh=9w5lQ2pOZdanN4uPSlw3FqAR9K1n/EpTv9COUE47BCo=;
-  b=K6QuenAqq/8LNMcOursQiHEyDRCRdLgl20vyK9hWAlsi3vsisgrlNZPZ
-   mZrh2Imk4X6BWu/OEe2h6rhUNOCUzDSP4e38Uu1ofTV+KL8hepyXZgYRy
-   M1b3YJuAQZ4svDxLGpS9UWnaJ/zwvUoMFof8LApq4DoNUaAfdu0Eu7icq
-   uYnicfuvN7Sc+qX+8mVWTJHc1J2QiFSmL4qmy17KoqvQTzZwQiUi4arkW
-   5wicOqANvwRcbsqx6Hpr0MhxRpVSyfyhs1gRJfW8WK21dDO+j4xxpbqAV
-   kF19Bfd93dzrKBM+NBM5XSzy6f3nF6Igo6Gx7fdpOIYAgSjKPWmWE5waS
-   g==;
-X-CSE-ConnectionGUID: bDFXGoZeSyKjqh7PUwWCWg==
-X-CSE-MsgGUID: +HuQlZiURv2+UaABcCi3BA==
-X-IronPort-AV: E=McAfee;i="6600,9927,11039"; a="19583754"
+  t=1712773691; x=1744309691;
+  h=to:cc:subject:references:date:mime-version:
+   content-transfer-encoding:from:message-id:in-reply-to;
+  bh=UZ42VS9dtADlg2+VEy0SyUfnbOwQEK+dXac4rGfc8xg=;
+  b=GgK8ySu+LmK/AZndZkqBPgI3jjofqrk+Z6V/SxgFMtQhHpk8Sk1W/zAX
+   BLLEJHC+yeKLxh2WRpjNSTi73+UimWzIlJHs+MG2am41tJaADX18rXrFW
+   Hulp7k62CBHxkJXvSCFy/37ky3wbZZ2K8g9CNEBQLFQ3UhtNSEblsKq3O
+   lD7MsPTBnQcWdnNz0hnp2XodZA/o03zE7BSgpWnUgPLqrJ2XqdvPFb85C
+   2xfBJVLz8Pcr78mWJQZIGOuiecMeruynspPIiLPbjYJ5fC4hde7GEbl5S
+   Pv6dLiA8c9fvdiLdcgH9vMLVUFoYHnm+ZpL5n9843i1nAIB1nYBPsOF0M
+   w==;
+X-CSE-ConnectionGUID: e7AW/aTUQ1K2nBtc9bVW3Q==
+X-CSE-MsgGUID: xKrdm88KSMO/9Tli1OxfgQ==
+X-IronPort-AV: E=McAfee;i="6600,9927,11039"; a="18869346"
 X-IronPort-AV: E=Sophos;i="6.07,191,1708416000"; 
-   d="scan'208";a="19583754"
-Received: from orviesa008.jf.intel.com ([10.64.159.148])
-  by orvoesa104.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 10 Apr 2024 11:26:02 -0700
-X-CSE-ConnectionGUID: sgn5KqRlSZ24qhkTToe19g==
-X-CSE-MsgGUID: FXJzACm2RfixIf1ELGIidA==
+   d="scan'208";a="18869346"
+Received: from fmviesa009.fm.intel.com ([10.60.135.149])
+  by fmvoesa103.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 10 Apr 2024 11:28:10 -0700
+X-CSE-ConnectionGUID: x+/R/9nSQg6TSrvNc6m2cw==
+X-CSE-MsgGUID: zStVy4rMR+S1RH81HMv71g==
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="6.07,191,1708416000"; 
-   d="scan'208";a="21232455"
-Received: from b4969161e530.jf.intel.com ([10.165.56.46])
-  by orviesa008.jf.intel.com with ESMTP; 10 Apr 2024 11:26:01 -0700
-From: Haitao Huang <haitao.huang@linux.intel.com>
-To: jarkko@kernel.org,
-	dave.hansen@linux.intel.com,
-	kai.huang@intel.com,
-	tj@kernel.org,
-	mkoutny@suse.com,
-	linux-kernel@vger.kernel.org,
-	linux-sgx@vger.kernel.org,
-	x86@kernel.org,
-	cgroups@vger.kernel.org,
-	tglx@linutronix.de,
-	mingo@redhat.com,
-	bp@alien8.de,
-	hpa@zytor.com,
-	sohil.mehta@intel.com,
-	tim.c.chen@linux.intel.com
-Cc: zhiquan1.li@intel.com,
-	kristen@linux.intel.com,
-	seanjc@google.com,
-	zhanb@microsoft.com,
-	anakrish@microsoft.com,
-	mikko.ylinen@linux.intel.com,
-	yangjie@microsoft.com,
-	chrisyan@microsoft.com
-Subject: [PATCH v11 13/14] Docs/x86/sgx: Add description for cgroup support
-Date: Wed, 10 Apr 2024 11:25:57 -0700
-Message-Id: <20240410182558.41467-14-haitao.huang@linux.intel.com>
-X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20240410182558.41467-1-haitao.huang@linux.intel.com>
-References: <20240410182558.41467-1-haitao.huang@linux.intel.com>
+   d="scan'208";a="20682448"
+Received: from hhuan26-mobl.amr.corp.intel.com ([10.92.17.168])
+  by fmviesa009-auth.fm.intel.com with ESMTP/TLS/AES256-SHA; 10 Apr 2024 11:28:07 -0700
+Content-Type: text/plain; charset=iso-8859-15; format=flowed; delsp=yes
+To: =?iso-8859-15?Q?Michal_Koutn=FD?= <mkoutny@suse.com>, "Haitao Huang"
+ <haitao.huang@linux.intel.com>
+Cc: "hpa@zytor.com" <hpa@zytor.com>, "tim.c.chen@linux.intel.com"
+ <tim.c.chen@linux.intel.com>, "linux-sgx@vger.kernel.org"
+ <linux-sgx@vger.kernel.org>, "x86@kernel.org" <x86@kernel.org>,
+ "dave.hansen@linux.intel.com" <dave.hansen@linux.intel.com>,
+ "jarkko@kernel.org" <jarkko@kernel.org>, "cgroups@vger.kernel.org"
+ <cgroups@vger.kernel.org>, "linux-kernel@vger.kernel.org"
+ <linux-kernel@vger.kernel.org>, "tglx@linutronix.de" <tglx@linutronix.de>,
+ "Mehta, Sohil" <sohil.mehta@intel.com>, "tj@kernel.org" <tj@kernel.org>,
+ "mingo@redhat.com" <mingo@redhat.com>, "bp@alien8.de" <bp@alien8.de>, "Huang,
+ Kai" <kai.huang@intel.com>, "mikko.ylinen@linux.intel.com"
+ <mikko.ylinen@linux.intel.com>, "seanjc@google.com" <seanjc@google.com>,
+ "anakrish@microsoft.com" <anakrish@microsoft.com>, "Zhang, Bo"
+ <zhanb@microsoft.com>, "kristen@linux.intel.com" <kristen@linux.intel.com>,
+ "yangjie@microsoft.com" <yangjie@microsoft.com>, "Li, Zhiquan1"
+ <zhiquan1.li@intel.com>, "chrisyan@microsoft.com" <chrisyan@microsoft.com>
+Subject: Re: Re: [PATCH v10 12/14] x86/sgx: Turn on per-cgroup EPC reclamation
+References: <20240328002229.30264-1-haitao.huang@linux.intel.com>
+ <20240328002229.30264-13-haitao.huang@linux.intel.com>
+ <d25dbe76d48a0b6c74fa09b06f1ca3fdf234a190.camel@intel.com>
+ <op.2lw8gfg2wjvjmi@hhuan26-mobl.amr.corp.intel.com>
+ <7a21c0de-ba59-4e76-8d67-70957f9db581@intel.com>
+ <op.2lx047lrwjvjmi@hhuan26-mobl.amr.corp.intel.com>
+ <imqjuxgmm5updfnl75molzixlq52ttlufd6sn2vpcevaby5l7f@22j23whlbvux>
+ <op.2lyv641jwjvjmi@hhuan26-mobl.amr.corp.intel.com>
+Date: Wed, 10 Apr 2024 13:28:06 -0500
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: Quoted-Printable
+From: "Haitao Huang" <haitao.huang@linux.intel.com>
+Organization: Intel
+Message-ID: <op.2l0yw4vnwjvjmi@hhuan26-mobl.amr.corp.intel.com>
+In-Reply-To: <op.2lyv641jwjvjmi@hhuan26-mobl.amr.corp.intel.com>
+User-Agent: Opera Mail/1.0 (Win32)
 
-From: Sean Christopherson <sean.j.christopherson@intel.com>
+On Tue, 09 Apr 2024 10:34:06 -0500, Haitao Huang  =
 
-Add initial documentation of how to regulate the distribution of
-SGX Enclave Page Cache (EPC) memory via the Miscellaneous cgroup
-controller.
+<haitao.huang@linux.intel.com> wrote:
 
-Signed-off-by: Sean Christopherson <sean.j.christopherson@intel.com>
-Co-developed-by: Kristen Carlson Accardi <kristen@linux.intel.com>
-Signed-off-by: Kristen Carlson Accardi <kristen@linux.intel.com>
-Co-developed-by: Haitao Huang<haitao.huang@linux.intel.com>
-Signed-off-by: Haitao Huang<haitao.huang@linux.intel.com>
-Cc: Sean Christopherson <seanjc@google.com>
----
-V8:
-- Limit text width to 80 characters to be consistent.
+> On Tue, 09 Apr 2024 04:03:22 -0500, Michal Koutn=FD <mkoutny@suse.com>=
+  =
 
-V6:
-- Remove mentioning of VMM specific behavior on handling SIGBUS
-- Remove statement of forced reclamation, add statement to specify
-ENOMEM returned when no reclamation possible.
-- Added statements on the non-preemptive nature for the max limit
-- Dropped Reviewed-by tag because of changes
+> wrote:
+>
+>> On Mon, Apr 08, 2024 at 11:23:21PM -0500, Haitao Huang  =
 
-V4:
-- Fix indentation (Randy)
-- Change misc.events file to be read-only
-- Fix a typo for 'subsystem'
-- Add behavior when VMM overcommit EPC with a cgroup (Mikko)
----
- Documentation/arch/x86/sgx.rst | 83 ++++++++++++++++++++++++++++++++++
- 1 file changed, 83 insertions(+)
+>> <haitao.huang@linux.intel.com> wrote:
+>>> It's always non-NULL based on testing.
+>>>
+>>> It's hard for me to say definitely by reading the code. But IIUC
+>>> cgroup_disable command-line only blocks operations in /sys/fs/cgroup=
+  =
 
-diff --git a/Documentation/arch/x86/sgx.rst b/Documentation/arch/x86/sgx.rst
-index d90796adc2ec..c537e6a9aa65 100644
---- a/Documentation/arch/x86/sgx.rst
-+++ b/Documentation/arch/x86/sgx.rst
-@@ -300,3 +300,86 @@ to expected failures and handle them as follows:
-    first call.  It indicates a bug in the kernel or the userspace client
-    if any of the second round of ``SGX_IOC_VEPC_REMOVE_ALL`` calls has
-    a return code other than 0.
-+
-+
-+Cgroup Support
-+==============
-+
-+The "sgx_epc" resource within the Miscellaneous cgroup controller regulates
-+distribution of SGX EPC memory, which is a subset of system RAM that is used to
-+provide SGX-enabled applications with protected memory, and is otherwise
-+inaccessible, i.e. shows up as reserved in /proc/iomem and cannot be
-+read/written outside of an SGX enclave.
-+
-+Although current systems implement EPC by stealing memory from RAM, for all
-+intents and purposes the EPC is independent from normal system memory, e.g. must
-+be reserved at boot from RAM and cannot be converted between EPC and normal
-+memory while the system is running.  The EPC is managed by the SGX subsystem and
-+is not accounted by the memory controller.  Note that this is true only for EPC
-+memory itself, i.e.  normal memory allocations related to SGX and EPC memory,
-+e.g. the backing memory for evicted EPC pages, are accounted, limited and
-+protected by the memory controller.
-+
-+Much like normal system memory, EPC memory can be overcommitted via virtual
-+memory techniques and pages can be swapped out of the EPC to their backing store
-+(normal system memory allocated via shmem).  The SGX EPC subsystem is analogous
-+to the memory subsystem, and it implements limit and protection models for EPC
-+memory.
-+
-+SGX EPC Interface Files
-+-----------------------
-+
-+For a generic description of the Miscellaneous controller interface files,
-+please see Documentation/admin-guide/cgroup-v2.rst
-+
-+All SGX EPC memory amounts are in bytes unless explicitly stated otherwise. If
-+a value which is not PAGE_SIZE aligned is written, the actual value used by the
-+controller will be rounded down to the closest PAGE_SIZE multiple.
-+
-+  misc.capacity
-+        A read-only flat-keyed file shown only in the root cgroup. The sgx_epc
-+        resource will show the total amount of EPC memory available on the
-+        platform.
-+
-+  misc.current
-+        A read-only flat-keyed file shown in the non-root cgroups. The sgx_epc
-+        resource will show the current active EPC memory usage of the cgroup and
-+        its descendants. EPC pages that are swapped out to backing RAM are not
-+        included in the current count.
-+
-+  misc.max
-+        A read-write single value file which exists on non-root cgroups. The
-+        sgx_epc resource will show the EPC usage hard limit. The default is
-+        "max".
-+
-+        If a cgroup's EPC usage reaches this limit, EPC allocations, e.g., for
-+        page fault handling, will be blocked until EPC can be reclaimed from the
-+        cgroup. If there are no pages left that are reclaimable within the same
-+        group, the kernel returns ENOMEM.
-+
-+        The EPC pages allocated for a guest VM by the virtual EPC driver are not
-+        reclaimable by the host kernel. In case the guest cgroup's limit is
-+        reached and no reclaimable pages left in the same cgroup, the virtual
-+        EPC driver returns SIGBUS to the user space process to indicate failure
-+        on new EPC allocation requests.
-+
-+        The misc.max limit is non-preemptive. If a user writes a limit lower
-+        than the current usage to this file, the cgroup will not preemptively
-+        deallocate pages currently in use, and will only start blocking the next
-+        allocation and reclaiming EPC at that time.
-+
-+  misc.events
-+        A read-only flat-keyed file which exists on non-root cgroups.
-+        A value change in this file generates a file modified event.
-+
-+          max
-+                The number of times the cgroup has triggered a reclaim due to
-+                its EPC usage approaching (or exceeding) its max EPC boundary.
-+
-+Migration
-+---------
-+
-+Once an EPC page is charged to a cgroup (during allocation), it remains charged
-+to the original cgroup until the page is released or reclaimed. Migrating a
-+process to a different cgroup doesn't move the EPC charges that it incurred
-+while in the previous cgroup to its new cgroup.
--- 
-2.25.1
+>>> so user
+>>> space can't set up controllers and config limits, etc., for the  =
 
+>>> diasabled
+>>> ones. Each task->cgroups would still have a non-NULL pointer to the =
+ =
+
+>>> static
+>>> root object for each cgroup that is enabled by KConfig, so
+>>> get_current_misc_cg() thus  sgx_get_current_cg() should not return N=
+ULL
+>>> regardless 'cgroup_disable=3Dmisc'.
+>>>
+>>> Maybe @Michal or @tj can confirm?
+>>
+>> The current implementation creates root css object (see cgroup_init()=
+,
+>> cgroup_ssid_enabled() check is after cgroup_init_subsys()).
+>> I.e. it will look like all tasks are members of root cgroup wrt given=
+
+>> controller permanently and controller attribute files won't exist.
+>>
+>> (It is up to the controller implementation to do further optimization=
+
+>> based on the boot-time disablement (e.g. see uses of
+>> mem_cgroup_disabled()). Not sure if this is useful for misc controlle=
+r.)
+>>
+>> As for the WARN_ON(1), taking example from memcg -- NULL is best
+>> synonymous with root. It's a judgement call which of the values to st=
+ore
+>> and when to intepret it.
+>>
+>> HTH,
+>> Michal
+> Thanks for the info.
+>
+> The way I see it, misc does not have special handling like memcg so  =
+
+> every task at least belong to the root(default) group even if it's  =
+
+> disabled by command line parameter. So we would not get NULL from  =
+
+> get_current_misc_cg(). I think I'll keep the WARN_ON_ONCE for now as a=
+  =
+
+> reminder in case misc do have custom support for disabling in future.
+>
+Actually I think it makes more sense just add some comments instead of  =
+
+WARN.
+That's what I did in v11 now.
+
+Thanks
+Haitao
