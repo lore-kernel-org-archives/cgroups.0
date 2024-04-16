@@ -1,55 +1,58 @@
-Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.223.131])
+Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.223.130])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BC356130A4A;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D8C4B13175E;
 	Tue, 16 Apr 2024 14:20:17 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.131
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.130
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1713277219; cv=none; b=Fj/iYIIbsIJXvjzAhSs3nIGzo2j0XChDt5Y7ihv6d88WefwA7e/ffdnl++omZVJg3MLrwfppuGQ5HUtIsgSQwW0WL9DEAlB7U09IZXAiVuhbtc7D3yqYfpc6Yx7Zrljiiu1k6pZe6xCkNVbSYRRbBI7O9b4XQxD2XcEcW9rWTfU=
+	t=1713277219; cv=none; b=SNgAxbUpTkNURyT/GRKwgKBAcTX9Ih6z0/9Af9OFtO4v5+XCFN6frFuxGXwnNJf1tV2LIz/3tjXL9sZaeNy09f0FW3pCy8NHgKBS9ohF5Tja6StoQwW7tc6f3Pwp4Bdo0Aj9G4JJmWMT0MG2HTj7CJ9jScIVC7RzxH5sHxft4LE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1713277219; c=relaxed/simple;
-	bh=fnjq1zyVvQYgrXF/wl6IPhboOrjktoNVcF7GsyNF6J0=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version:Content-Type; b=rdh13cX4K7HqtxJDDAiR1zm/MGUJ0BiVhUx/dRNCb0GinBGEh+GWgM0ZWo+A1frFZMYZEnzKlwM+XXdSmSEIxcuEY7onI8ObQXd3/t/r6aa3oISpUtDzKJ1d61fV00mZbskbW2ZOKfixNLbM86sGCg1rRes2Ezlc1yp7BZ5OBgA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com; spf=pass smtp.mailfrom=suse.com; dkim=pass (1024-bit key) header.d=suse.com header.i=@suse.com header.b=thnaB9WR; dkim=pass (1024-bit key) header.d=suse.com header.i=@suse.com header.b=VxIn4lUJ; arc=none smtp.client-ip=195.135.223.131
+	bh=ubGo9+oTOS6QkbCEkb9Q6EFpn/e6bGuz7bkTFXxC8/0=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=Gex4OeG+nI4laQyeqcR950cXKaHLDa88XhbnYf9znEDhRxclbiWoMvt9rgmUru+yKXYtdOTDttOH0yluPc9+QjH3Zqw+4o+a5G2Ivi3y4Zt0uCblEmIEQmifx8FKdMhiOrT083cO5QTOzl2Wd48X5R+8JzodMyy3CXmCjcrx/Ok=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com; spf=pass smtp.mailfrom=suse.com; dkim=pass (1024-bit key) header.d=suse.com header.i=@suse.com header.b=VtMx5FyC; dkim=pass (1024-bit key) header.d=suse.com header.i=@suse.com header.b=VtMx5FyC; arc=none smtp.client-ip=195.135.223.130
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=suse.com header.i=@suse.com header.b="thnaB9WR";
-	dkim=pass (1024-bit key) header.d=suse.com header.i=@suse.com header.b="VxIn4lUJ"
+	dkim=pass (1024-bit key) header.d=suse.com header.i=@suse.com header.b="VtMx5FyC";
+	dkim=pass (1024-bit key) header.d=suse.com header.i=@suse.com header.b="VtMx5FyC"
 Received: from imap1.dmz-prg2.suse.org (imap1.dmz-prg2.suse.org [10.150.64.97])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
 	(No client certificate requested)
-	by smtp-out2.suse.de (Postfix) with ESMTPS id DD3F95F88B;
-	Tue, 16 Apr 2024 14:20:15 +0000 (UTC)
+	by smtp-out1.suse.de (Postfix) with ESMTPS id 4931B37BEF;
+	Tue, 16 Apr 2024 14:20:16 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
 	t=1713277216; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
 	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding;
-	bh=nm9OmMNv+yRwBNQE7fNDtbSWePhkSHjqXbgzKdCZ+YE=;
-	b=thnaB9WR0St7tGY09yQ+nPsqkuehI0QaZgj1S88dnqFAnY8adn5NtDz6dYVS4csShddw4e
-	auRQek7jlqpUxKY6oWpecJn7xqzYPYCRiXEgVKPKBCyOoQF4UZojM8+lhne1xQqUgeXrIN
-	hKBBoOzYOWWHnhkblat4cwn8LT/MRt0=
-Authentication-Results: smtp-out2.suse.de;
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=sEHppgTc66ahiza21E2iZYSu3pjbMVVB7MdpEadnVeQ=;
+	b=VtMx5FyCqqRb+Kz9dksJAxMjxwWJ2r6oNcRmiXT2Na3oem9yMhoepW19YbTFAX/hJuPiwl
+	NAR18es08he70+xqQpqpN+mztLOoh4G9b6P9wrfG10FpxTzq1/JArFZWyQMwAedD0UCa/Q
+	iBJP5Tm5f9ANhya0Gj/EpcQDf+cFP10=
+Authentication-Results: smtp-out1.suse.de;
 	none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
-	t=1713277215; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	t=1713277216; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
 	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding;
-	bh=nm9OmMNv+yRwBNQE7fNDtbSWePhkSHjqXbgzKdCZ+YE=;
-	b=VxIn4lUJa+KYM9eJosRsp5HmLK+riJ4QcV7BJd20Iqks4xoaHqJUuwOuigUFk5Sq1Q++7q
-	+F6ga5S/ogp+S6/bClh+qGtI21RTAox7WIt8g9wvnELHmNhAGIg8eMHQyn4LEqDbMH7sLo
-	t+L44TGsqSu90O/Weysd/u30WCQY4VQ=
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=sEHppgTc66ahiza21E2iZYSu3pjbMVVB7MdpEadnVeQ=;
+	b=VtMx5FyCqqRb+Kz9dksJAxMjxwWJ2r6oNcRmiXT2Na3oem9yMhoepW19YbTFAX/hJuPiwl
+	NAR18es08he70+xqQpqpN+mztLOoh4G9b6P9wrfG10FpxTzq1/JArFZWyQMwAedD0UCa/Q
+	iBJP5Tm5f9ANhya0Gj/EpcQDf+cFP10=
 Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
 	(No client certificate requested)
-	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id C1BD513931;
-	Tue, 16 Apr 2024 14:20:15 +0000 (UTC)
+	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id 2F41713942;
+	Tue, 16 Apr 2024 14:20:16 +0000 (UTC)
 Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
 	by imap1.dmz-prg2.suse.org with ESMTPSA
-	id fG4aLx+JHmbAbQAAD6G6ig
-	(envelope-from <mkoutny@suse.com>); Tue, 16 Apr 2024 14:20:15 +0000
+	id eGFmCyCJHmbAbQAAD6G6ig
+	(envelope-from <mkoutny@suse.com>); Tue, 16 Apr 2024 14:20:16 +0000
 From: =?UTF-8?q?Michal=20Koutn=C3=BD?= <mkoutny@suse.com>
 To: cgroups@vger.kernel.org,
 	linux-doc@vger.kernel.org,
@@ -61,10 +64,12 @@ Cc: Tejun Heo <tj@kernel.org>,
 	Jonathan Corbet <corbet@lwn.net>,
 	Shuah Khan <shuah@kernel.org>,
 	Muhammad Usama Anjum <usama.anjum@collabora.com>
-Subject: [PATCH v4 0/6] pids controller events rework
-Date: Tue, 16 Apr 2024 16:20:08 +0200
-Message-ID: <20240416142014.27630-1-mkoutny@suse.com>
+Subject: [PATCH v4 4/6] cgroup/pids: Add pids.events.local
+Date: Tue, 16 Apr 2024 16:20:12 +0200
+Message-ID: <20240416142014.27630-5-mkoutny@suse.com>
 X-Mailer: git-send-email 2.44.0
+In-Reply-To: <20240416142014.27630-1-mkoutny@suse.com>
+References: <20240416142014.27630-1-mkoutny@suse.com>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
@@ -74,72 +79,183 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 X-Spam-Level: 
-X-Spamd-Result: default: False [-2.08 / 50.00];
-	BAYES_HAM(-1.78)[93.67%];
+X-Spamd-Result: default: False [-3.30 / 50.00];
+	BAYES_HAM(-3.00)[100.00%];
 	MID_CONTAINS_FROM(1.00)[];
 	NEURAL_HAM_LONG(-1.00)[-1.000];
 	NEURAL_HAM_SHORT(-0.20)[-1.000];
 	MIME_GOOD(-0.10)[text/plain];
-	TO_MATCH_ENVRCPT_ALL(0.00)[];
-	FUZZY_BLOCKED(0.00)[rspamd.com];
-	DKIM_SIGNED(0.00)[suse.com:s=susede1];
-	MIME_TRACE(0.00)[0:+];
-	ARC_NA(0.00)[];
-	FROM_HAS_DN(0.00)[];
-	RCVD_TLS_ALL(0.00)[];
-	RCVD_VIA_SMTP_AUTH(0.00)[];
-	FROM_EQ_ENVFROM(0.00)[];
-	TO_DN_SOME(0.00)[];
-	RCVD_COUNT_TWO(0.00)[2];
 	RCPT_COUNT_SEVEN(0.00)[10];
-	DBL_BLOCKED_OPENRESOLVER(0.00)[imap1.dmz-prg2.suse.org:helo,imap1.dmz-prg2.suse.org:rdns]
-X-Spam-Score: -2.08
+	RCVD_VIA_SMTP_AUTH(0.00)[];
+	MIME_TRACE(0.00)[0:+];
+	TO_DN_SOME(0.00)[];
+	ARC_NA(0.00)[];
+	RCVD_TLS_ALL(0.00)[];
+	DKIM_SIGNED(0.00)[suse.com:s=susede1];
+	FUZZY_BLOCKED(0.00)[rspamd.com];
+	FROM_HAS_DN(0.00)[];
+	R_RATELIMIT(0.00)[to_ip_from(RL6j1h7wxugqfdyj8pnx7tibp9)];
+	FROM_EQ_ENVFROM(0.00)[];
+	TO_MATCH_ENVRCPT_ALL(0.00)[];
+	RCVD_COUNT_TWO(0.00)[2];
+	DBL_BLOCKED_OPENRESOLVER(0.00)[suse.com:email,imap1.dmz-prg2.suse.org:helo,imap1.dmz-prg2.suse.org:rdns]
+X-Spam-Score: -3.30
 X-Spam-Flag: NO
 
-This makes pids.events:max affine to pids.max limit.
+Hierarchical counting of events is not practical for watching when a
+particular pids.max is being hit. Therefore introduce .local flavor of
+events file (akin to memory controller) that collects only events
+relevant to given cgroup.
 
-How are the new events supposed to be useful?
+The file is only added to the default hierarchy.
 
-- pids.events.local:max
-  - tells that cgroup's limit is hit (too tight?)
-- pids.events:*
-  - "only" directs top-down search to cgroups of interest
+Signed-off-by: Michal Koutný <mkoutny@suse.com>
+---
+ kernel/cgroup/pids.c | 88 +++++++++++++++++++++++++++++++++++---------
+ 1 file changed, 71 insertions(+), 17 deletions(-)
 
-Changes from v3 (https://lore.kernel.org/r/20240405170548.15234-1-mkoutny@suse.com)
-- use existing functions for TAP output in selftest (Muhammad)
-- formatting in selftest (Muhammad)
-- remove pids.events:max.imposed event, keep it internal (Johannes)
-- allow legacy behavior with a mount option
-- detach migration charging patches
-- drop RFC prefix
-
-Changes from v2 (https://lore.kernel.org/r/20200205134426.10570-1-mkoutny@suse.com)
-- implemented pids.events.local (Tejun)
-- added migration charging
-
-[1] https://lore.kernel.org/r/20230202155626.1829121-1-hannes@cmpxchg.org/
-
-Michal Koutný (6):
-  cgroup/pids: Remove superfluous zeroing
-  cgroup/pids: Separate semantics of pids.events related to pids.max
-  cgroup/pids: Make event counters hierarchical
-  cgroup/pids: Add pids.events.local
-  selftests: cgroup: Lexicographic order in Makefile
-  selftests: cgroup: Add basic tests for pids controller
-
- Documentation/admin-guide/cgroup-v1/pids.rst |   3 +-
- Documentation/admin-guide/cgroup-v2.rst      |  12 ++
- include/linux/cgroup-defs.h                  |   7 +-
- kernel/cgroup/cgroup.c                       |  15 +-
- kernel/cgroup/pids.c                         | 131 +++++++++++---
- tools/testing/selftests/cgroup/.gitignore    |  11 +-
- tools/testing/selftests/cgroup/Makefile      |  25 +--
- tools/testing/selftests/cgroup/test_pids.c   | 178 +++++++++++++++++++
- 8 files changed, 341 insertions(+), 41 deletions(-)
- create mode 100644 tools/testing/selftests/cgroup/test_pids.c
-
-
-base-commit: 026e680b0a08a62b1d948e5a8ca78700bfac0e6e
+diff --git a/kernel/cgroup/pids.c b/kernel/cgroup/pids.c
+index 4ad28109c1c8..6cd15c3785d4 100644
+--- a/kernel/cgroup/pids.c
++++ b/kernel/cgroup/pids.c
+@@ -57,10 +57,12 @@ struct pids_cgroup {
+ 	atomic64_t			limit;
+ 	int64_t				watermark;
+ 
+-	/* Handle for "pids.events" */
++	/* Handles for pids.events[.local] */
+ 	struct cgroup_file		events_file;
++	struct cgroup_file		events_local_file;
+ 
+ 	atomic64_t			events[NR_PIDCG_EVENTS];
++	atomic64_t			events_local[NR_PIDCG_EVENTS];
+ };
+ 
+ static struct pids_cgroup *css_pids(struct cgroup_subsys_state *css)
+@@ -244,21 +246,23 @@ static void pids_event(struct pids_cgroup *pids_forking,
+ 	struct pids_cgroup *p = pids_forking;
+ 	bool limit = false;
+ 
+-	for (; parent_pids(p); p = parent_pids(p)) {
+-		/* Only log the first time limit is hit. */
+-		if (atomic64_inc_return(&p->events[PIDCG_FORKFAIL]) == 1) {
+-			pr_info("cgroup: fork rejected by pids controller in ");
+-			pr_cont_cgroup_path(p->css.cgroup);
+-			pr_cont("\n");
+-		}
+-		cgroup_file_notify(&p->events_file);
+-
+-		if (!cgroup_subsys_on_dfl(pids_cgrp_subsys) ||
+-		    cgrp_dfl_root.flags & CGRP_ROOT_PIDS_LOCAL_EVENTS)
+-			break;
++	/* Only log the first time limit is hit. */
++	if (atomic64_inc_return(&p->events_local[PIDCG_FORKFAIL]) == 1) {
++		pr_info("cgroup: fork rejected by pids controller in ");
++		pr_cont_cgroup_path(p->css.cgroup);
++		pr_cont("\n");
++	}
++	cgroup_file_notify(&p->events_local_file);
++	if (!cgroup_subsys_on_dfl(pids_cgrp_subsys) ||
++	    cgrp_dfl_root.flags & CGRP_ROOT_PIDS_LOCAL_EVENTS)
++		return;
+ 
+-		if (p == pids_over_limit)
++	for (; parent_pids(p); p = parent_pids(p)) {
++		if (p == pids_over_limit) {
+ 			limit = true;
++			atomic64_inc(&p->events_local[PIDCG_MAX]);
++			cgroup_file_notify(&p->events_local_file);
++		}
+ 		if (limit)
+ 			atomic64_inc(&p->events[PIDCG_MAX]);
+ 
+@@ -368,20 +372,68 @@ static s64 pids_peak_read(struct cgroup_subsys_state *css,
+ 	return READ_ONCE(pids->watermark);
+ }
+ 
+-static int pids_events_show(struct seq_file *sf, void *v)
++static int __pids_events_show(struct seq_file *sf, bool local)
+ {
+ 	struct pids_cgroup *pids = css_pids(seq_css(sf));
+ 	enum pidcg_event pe = PIDCG_MAX;
++	atomic64_t *events;
+ 
+ 	if (!cgroup_subsys_on_dfl(pids_cgrp_subsys) ||
+-	    cgrp_dfl_root.flags & CGRP_ROOT_PIDS_LOCAL_EVENTS)
++	    cgrp_dfl_root.flags & CGRP_ROOT_PIDS_LOCAL_EVENTS) {
+ 		pe = PIDCG_FORKFAIL;
++		local = true;
++	}
++	events = local ? pids->events_local : pids->events;
+ 
+-	seq_printf(sf, "max %lld\n", (s64)atomic64_read(&pids->events[pe]));
++	seq_printf(sf, "max %lld\n", (s64)atomic64_read(&events[pe]));
++	return 0;
++}
++
++static int pids_events_show(struct seq_file *sf, void *v)
++{
++	__pids_events_show(sf, false);
++	return 0;
++}
++
++static int pids_events_local_show(struct seq_file *sf, void *v)
++{
++	__pids_events_show(sf, true);
+ 	return 0;
+ }
+ 
+ static struct cftype pids_files[] = {
++	{
++		.name = "max",
++		.write = pids_max_write,
++		.seq_show = pids_max_show,
++		.flags = CFTYPE_NOT_ON_ROOT,
++	},
++	{
++		.name = "current",
++		.read_s64 = pids_current_read,
++		.flags = CFTYPE_NOT_ON_ROOT,
++	},
++	{
++		.name = "peak",
++		.flags = CFTYPE_NOT_ON_ROOT,
++		.read_s64 = pids_peak_read,
++	},
++	{
++		.name = "events",
++		.seq_show = pids_events_show,
++		.file_offset = offsetof(struct pids_cgroup, events_file),
++		.flags = CFTYPE_NOT_ON_ROOT,
++	},
++	{
++		.name = "events.local",
++		.seq_show = pids_events_local_show,
++		.file_offset = offsetof(struct pids_cgroup, events_local_file),
++		.flags = CFTYPE_NOT_ON_ROOT,
++	},
++	{ }	/* terminate */
++};
++
++static struct cftype pids_files_legacy[] = {
+ 	{
+ 		.name = "max",
+ 		.write = pids_max_write,
+@@ -407,6 +459,7 @@ static struct cftype pids_files[] = {
+ 	{ }	/* terminate */
+ };
+ 
++
+ struct cgroup_subsys pids_cgrp_subsys = {
+ 	.css_alloc	= pids_css_alloc,
+ 	.css_free	= pids_css_free,
+@@ -416,5 +469,6 @@ struct cgroup_subsys pids_cgrp_subsys = {
+ 	.cancel_fork	= pids_cancel_fork,
+ 	.release	= pids_release,
+ 	.dfl_cftypes	= pids_files,
++	.legacy_cftypes = pids_files_legacy,
+ 	.threaded	= true,
+ };
 -- 
 2.44.0
 
