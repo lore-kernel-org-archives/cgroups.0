@@ -1,37 +1,44 @@
-Received: from dggsgout11.his.huawei.com (unknown [45.249.212.51])
+Received: from dggsgout12.his.huawei.com (unknown [45.249.212.56])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B847D8F66;
-	Thu, 18 Apr 2024 02:46:31 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.51
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C33894EB45;
+	Thu, 18 Apr 2024 07:32:35 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.56
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1713408394; cv=none; b=PNfh/5JZV/08DSaReRe0039hr1JkKEgKvKp+5wLdAaoZn0YwJ9cNgHT4Cosyyt7V9Pq/7d5sQkwskAWN7369rXaxwbTEguN5ay0DDHXT9qZYg9DJJPPEVilHOCPao48eMGCzPE7sPxxqnDY3ts5QBz/rkICtxgy28oOvBLvd4Uc=
+	t=1713425557; cv=none; b=RDZowdvyT5tQ+r72HtqpbWoysihIxuynTU1Dg4/M10bCrbIy7do5vgG/4Zj24GMHwUwMkvATDbcO+DblC5XvTchYsydJ1Ss+KN705ZvXOPudXXid51qSnvxnXhe7AhutQoDSrZZyfm+cFjzme56gf362LwMeedNyV4Iu7FHLI/s=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1713408394; c=relaxed/simple;
-	bh=EWnyp9SNEcYCJoyKl94n+LgIAMCy5SuHVa2NQGvM52Y=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=ByRhi29vLJ0mAXsWlJTsjrS0x73WkfzI/0j3xyGPYMJWUTMNxTq/NT2ylPz35f/frynXbB4t7RJBzpcR1l3iLUXUkc+D0gb11t1AKhCfbsfJNfX1UpYdj0S+VI2F1pFTVwM9y70pwcLqN4Yu8EePBGPeShoXr8Bhuqdt7NscGb0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.51
+	s=arc-20240116; t=1713425557; c=relaxed/simple;
+	bh=h7PVw/s5YkA2E6D/+aBzDZKszhArG5Oeh3JVPlHIBSI=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=r3XEftZ7kDOOl90od4ifQE5nUYYmY4gcHUbNysmZUYwNMTxFnIFNSSGAK6wAfzyCNHxEakiFQDwwnpD4u1jwW+Z4KM9pIANLDg1oAC38/VTqgTqCoiv6q2qrwg5e65WdfKTpsHI83VoC6TpoEY0izMCdjXztV55+q1V9WxC8LiM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.56
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
-Received: from mail.maildlp.com (unknown [172.19.163.235])
-	by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4VKhV76GC3z4f3lfD;
-	Thu, 18 Apr 2024 10:26:23 +0800 (CST)
+Received: from mail.maildlp.com (unknown [172.19.93.142])
+	by dggsgout12.his.huawei.com (SkyGuard) with ESMTP id 4VKqHD6cJ3z4f3kFb;
+	Thu, 18 Apr 2024 15:32:24 +0800 (CST)
 Received: from mail02.huawei.com (unknown [10.116.40.112])
-	by mail.maildlp.com (Postfix) with ESMTP id CCA121A0572;
-	Thu, 18 Apr 2024 10:26:32 +0800 (CST)
-Received: from huaweicloud.com (unknown [10.67.174.26])
-	by APP1 (Coremail) with SMTP id cCh0CgCXaBHXhCBmsYwXKQ--.24960S4;
-	Thu, 18 Apr 2024 10:26:32 +0800 (CST)
-From: Xiu Jianfeng <xiujianfeng@huaweicloud.com>
+	by mail.maildlp.com (Postfix) with ESMTP id 27D831A0175;
+	Thu, 18 Apr 2024 15:32:32 +0800 (CST)
+Received: from huaweicloud.com (unknown [10.175.104.67])
+	by APP1 (Coremail) with SMTP id cCh0CgDHlxCOzCBmBygqKQ--.12535S4;
+	Thu, 18 Apr 2024 15:32:31 +0800 (CST)
+From: linan666@huaweicloud.com
 To: tj@kernel.org,
-	lizefan.x@bytedance.com,
-	hannes@cmpxchg.org
-Cc: cgroups@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH v2 -next] cgroup: don't call cgroup1_pidlist_destroy_all() for v2
-Date: Thu, 18 Apr 2024 02:19:30 +0000
-Message-Id: <20240418021930.914245-1-xiujianfeng@huaweicloud.com>
-X-Mailer: git-send-email 2.34.1
+	josef@toxicpanda.com,
+	axboe@kernel.dk
+Cc: hch@lst.de,
+	cgroups@vger.kernel.org,
+	linux-block@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	linan666@huaweicloud.com,
+	yukuai3@huawei.com,
+	yi.zhang@huawei.com,
+	houtao1@huawei.com,
+	yangerkun@huawei.com
+Subject: [PATCH] blk-iocost: do not WARNING if iocg has already offlined
+Date: Thu, 18 Apr 2024 15:23:40 +0800
+Message-Id: <20240418072340.2090877-1-linan666@huaweicloud.com>
+X-Mailer: git-send-email 2.39.2
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
@@ -39,52 +46,67 @@ List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:cCh0CgCXaBHXhCBmsYwXKQ--.24960S4
-X-Coremail-Antispam: 1UD129KBjvdXoW7JrWkXFWrArW8ZFWUWryUZFb_yoWfKFg_Ca
-	4jvFyvgrWxZ3yq9asI9FsavFWvkrZ0qryv9wn5KrW7JFyUtrn8Jwn3urn3ZrsrCFZ3Gr98
-	Cr9xCFyxtrn8KjkaLaAFLSUrUUUUUb8apTn2vfkv8UJUUUU8Yxn0WfASr-VFAUDa7-sFnT
-	9fnUUIcSsGvfJTRUUUbokYFVCjjxCrM7AC8VAFwI0_Gr0_Xr1l1xkIjI8I6I8E6xAIw20E
-	Y4v20xvaj40_Wr0E3s1l1IIY67AEw4v_Jr0_Jr4l8cAvFVAK0II2c7xJM28CjxkF64kEwV
-	A0rcxSw2x7M28EF7xvwVC0I7IYx2IY67AKxVWDJVCq3wA2z4x0Y4vE2Ix0cI8IcVCY1x02
-	67AKxVW8Jr0_Cr1UM28EF7xvwVC2z280aVAFwI0_GcCE3s1l84ACjcxK6I8E87Iv6xkF7I
-	0E14v26rxl6s0DM2AIxVAIcxkEcVAq07x20xvEncxIr21l5I8CrVACY4xI64kE6c02F40E
-	x7xfMcIj6xIIjxv20xvE14v26r1j6r18McIj6I8E87Iv67AKxVWUJVW8JwAm72CE4IkC6x
-	0Yz7v_Jr0_Gr1lF7xvr2IYc2Ij64vIr41l42xK82IYc2Ij64vIr41l4I8I3I0E4IkC6x0Y
-	z7v_Jr0_Gr1lx2IqxVAqx4xG67AKxVWUJVWUGwC20s026x8GjcxK67AKxVWUGVWUWwC2zV
-	AF1VAY17CE14v26r126r1DMIIYrxkI7VAKI48JMIIF0xvE2Ix0cI8IcVAFwI0_Jr0_JF4l
-	IxAIcVC0I7IYx2IY6xkF7I0E14v26r1j6r4UMIIF0xvE42xK8VAvwI8IcIk0rVWrZr1j6s
-	0DMIIF0xvEx4A2jsIE14v26r1j6r4UMIIF0xvEx4A2jsIEc7CjxVAFwI0_Jr0_GrUvcSsG
-	vfC2KfnxnUUI43ZEXa7IU1zuWJUUUUU==
-X-CM-SenderInfo: x0lxyxpdqiv03j6k3tpzhluzxrxghudrp/
+X-CM-TRANSID:cCh0CgDHlxCOzCBmBygqKQ--.12535S4
+X-Coremail-Antispam: 1UD129KBjvJXoW7WryxtrW3tryUXFWxJr4rGrg_yoW8WFWDpF
+	4agwnFkF1jqr13KF4kK3Z2q348uan5Wws3Jw4fWrZ8Za4fur1xX3Z7Zr4YyFySqrn5AFs3
+	ZF48G3y7Aa1UWaDanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDU0xBIdaVrnRJUUUBj14x267AKxVW8JVW5JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
+	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
+	1l84ACjcxK6xIIjxv20xvE14v26w1j6s0DM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26r4U
+	JVWxJr1l84ACjcxK6I8E87Iv67AKxVW0oVCq3wA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_Gc
+	CE3s1lnxkEFVAIw20F6cxK64vIFxWle2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xv
+	F2IEw4CE5I8CrVC2j2WlYx0E2Ix0cI8IcVAFwI0_Jr0_Jr4lYx0Ex4A2jsIE14v26r1j6r
+	4UMcvjeVCFs4IE7xkEbVWUJVW8JwACjcxG0xvY0x0EwIxGrwACjI8F5VA0II8E6IAqYI8I
+	648v4I1lFIxGxcIEc7CjxVA2Y2ka0xkIwI1lw4CEc2x0rVAKj4xxMxAIw28IcxkI7VAKI4
+	8JMxC20s026xCaFVCjc4AY6r1j6r4UMI8I3I0E5I8CrVAFwI0_Jr0_Jr4lx2IqxVCjr7xv
+	wVAFwI0_JrI_JrWlx4CE17CEb7AF67AKxVWUtVW8ZwCIc40Y0x0EwIxGrwCI42IY6xIIjx
+	v20xvE14v26r1j6r1xMIIF0xvE2Ix0cI8IcVCY1x0267AKxVW8JVWxJwCI42IY6xAIw20E
+	Y4v20xvaj40_Zr0_Wr1UMIIF0xvEx4A2jsIE14v26r1j6r4UMIIF0xvEx4A2jsIEc7CjxV
+	AFwI0_Gr0_Gr1UYxBIdaVFxhVjvjDU0xZFpf9x0JUBSoJUUUUU=
+X-CM-SenderInfo: polqt0awwwqx5xdzvxpfor3voofrz/
 
-From: Xiu Jianfeng <xiujianfeng@huawei.com>
+From: Li Nan <linan122@huawei.com>
 
-Currently cgroup1_pidlist_destroy_all() will be called when releasing
-cgroup even if the cgroup is on default hierarchy, however it doesn't
-make any sense for v2 to destroy pidlist of v1.
+In iocg_pay_debt(), warn is triggered if 'active_list' is empty, which
+is intended to confirm iocg is avitve when it has debt. However, warn
+can be triggered during removing cgroup controller, as
+iocg_waitq_timer_fn() is awakened at that time.
 
-Signed-off-by: Xiu Jianfeng <xiujianfeng@huawei.com>
+  WARNING: CPU: 0 PID: 2344971 at block/blk-iocost.c:1402 iocg_pay_debt+0x14c/0x190
+  Call trace:
+  iocg_pay_debt+0x14c/0x190
+  iocg_kick_waitq+0x438/0x4c0
+  iocg_waitq_timer_fn+0xd8/0x130
+  __run_hrtimer+0x144/0x45c
+  __hrtimer_run_queues+0x16c/0x244
+  hrtimer_interrupt+0x2cc/0x7b0
 
+The warn in this situation is meaningless. Since this iocg is being
+removed, the state of the 'active_list' is irrelevant, and 'waitq_timer'
+is canceled after removing 'active_list' in ioc_pd_free(), which ensure
+iocg is freed after iocg_waitq_timer_fn() returns.
+
+Therefore, add the check if iocg has already offlined to avoid warn
+when removing cgroup controller.
+
+Signed-off-by: Li Nan <linan122@huawei.com>
 ---
-v2: move the test to the caller
----
- kernel/cgroup/cgroup.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+ block/blk-iocost.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/kernel/cgroup/cgroup.c b/kernel/cgroup/cgroup.c
-index a66c088c851c..e32b6972c478 100644
---- a/kernel/cgroup/cgroup.c
-+++ b/kernel/cgroup/cgroup.c
-@@ -5368,7 +5368,8 @@ static void css_free_rwork_fn(struct work_struct *work)
- 	} else {
- 		/* cgroup free path */
- 		atomic_dec(&cgrp->root->nr_cgrps);
--		cgroup1_pidlist_destroy_all(cgrp);
-+		if (!cgroup_on_dfl(cgrp))
-+			cgroup1_pidlist_destroy_all(cgrp);
- 		cancel_work_sync(&cgrp->release_agent_work);
- 		bpf_cgrp_storage_free(cgrp);
+diff --git a/block/blk-iocost.c b/block/blk-iocost.c
+index baa20c85799d..2e109c016a39 100644
+--- a/block/blk-iocost.c
++++ b/block/blk-iocost.c
+@@ -1440,7 +1440,7 @@ static void iocg_pay_debt(struct ioc_gq *iocg, u64 abs_vpay,
+ 	lockdep_assert_held(&iocg->waitq.lock);
  
+ 	/* make sure that nobody messed with @iocg */
+-	WARN_ON_ONCE(list_empty(&iocg->active_list));
++	WARN_ON_ONCE(list_empty(&iocg->active_list) && iocg->pd.online);
+ 	WARN_ON_ONCE(iocg->inuse > 1);
+ 
+ 	iocg->abs_vdebt -= min(abs_vpay, iocg->abs_vdebt);
 -- 
-2.34.1
+2.39.2
 
