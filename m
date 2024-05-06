@@ -1,132 +1,150 @@
-Received: from mail-ej1-f50.google.com (mail-ej1-f50.google.com [209.85.218.50])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from out-183.mta1.migadu.com (out-183.mta1.migadu.com [95.215.58.183])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 22EE6155757
-	for <cgroups@vger.kernel.org>; Mon,  6 May 2024 16:13:30 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.218.50
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C06FC15575A
+	for <cgroups@vger.kernel.org>; Mon,  6 May 2024 16:22:18 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=95.215.58.183
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1715012012; cv=none; b=El9ki5N5M2Dh9B8PL/DgzoWJ33NEkQq56M2GAw3u+enjK/knTQG22Sg0j3+JW4U/P1n0GXXjSw7LIvKzs3qluoHyl+6OMijqdKw38WXetocFd0evrJseBf6mtH7XbFs1rbqjbBvnHq7TUB6Gs2uAYdZxnJLYAt4ZPOc8EVhLWXo=
+	t=1715012540; cv=none; b=ooLBV/OOiRtOPZFDAVPsAMvQ5OspR60Oy0LqgG3P8ZccbcV3NGgGFoQttQZZStYWu+fAhFSYNggTJoZvK+Hr1757XNoyK3YlqoBEWlNeN+J5GU0NUEZHxdW4NXlh9x7RDI21adIeLZpxOrlV3zn1rEPSrVV0u3WV8vQlkhydqog=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1715012012; c=relaxed/simple;
-	bh=7+2Zwg31lOd07Oa1eR/hleD9eYRFnRcCwEZgaNvKYb8=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=OWm2M2DL2K7KSfY3dPsSjspxMDY1QplNaPjKIyO10miEgc6gd2BKav08PeAir7VS9Gh/opmxcBzjzpQgEl9/XgzTUr3DJ/cOB386uePYVlqG/NUbttfsvpESoze7pAUqTfmp2C4oSfKyUgkyfVJGbntVKNKBVefd1fxX3TkkxF8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=0q8uZ/zt; arc=none smtp.client-ip=209.85.218.50
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
+	s=arc-20240116; t=1715012540; c=relaxed/simple;
+	bh=TFtwIvXQHRGTxyB6eoO0ffqHFpXtlLoYIuN3TZ2SrqQ=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=YTmgwKzZCCLvyqJLVv9I9UZWhVbh1Dd8EmIX1QwkwSuIWPU7PMHPAdwKC09dbDZs9Mlv7yaiaHr2Q2zUw95UGRuhIT2guOtwRCeAxi0sl2PEca2rhkUJlcti9j5cG7tmRx88QimJAQCfTG917E3VMcUxrqpXYitQahIlQkohdqE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=wKdUA9Ak; arc=none smtp.client-ip=95.215.58.183
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="0q8uZ/zt"
-Received: by mail-ej1-f50.google.com with SMTP id a640c23a62f3a-a59cdd185b9so178371066b.1
-        for <cgroups@vger.kernel.org>; Mon, 06 May 2024 09:13:30 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20230601; t=1715012009; x=1715616809; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=WCYAJR1IdgPjREP1tbDJpbumcoJvWIKDqFqpn65YT0o=;
-        b=0q8uZ/ztYZ+VXBBxCkCC74csBUt3IR6/hFFtBQeQptmiwZGrzv7ieaCtZ//Yv2n/uT
-         hxk6+oYs0E6aPMbZ0KTgOQLqCp8TVaXU04/Ayg+Rd9IkYzlYfjRERGrT4OrJu4ZtkUde
-         C6Uhf+2KH1BA4pbxLyiZMSYJ88RRicqdErRTg8uQw53shw1ExL5MI6BhOPu7gLqzQ919
-         z3QbuikdV5FDHhFNqp9vrTXM+hnUVK8fMAEjcZXDXNd5bQBrZq3c87ubss3dVORpK26D
-         70+xjpNT6XsyMeeM/51YqFZb/CrhgFpP+CulPraDuB55SXJnteecAzBJgGFiOhGt26Qj
-         9Ftw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1715012009; x=1715616809;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=WCYAJR1IdgPjREP1tbDJpbumcoJvWIKDqFqpn65YT0o=;
-        b=OijDVqoROibE+MqCCFO5WVv5ZrDflrRbfhiuO9oC05/dGyB4/OmqXjzbcuDpyhLzjK
-         Usqg67y4BJQQzKAnluSKvawufObC2CXHU1owD8BgK3TGzo0ym/sDT1e/x+dGD33Yd9ih
-         Vj9nDMU67uXEnuwaX/vWGBW6rAakZbnkqt+qz5TlhDSTAwOQfVJQN9pDfukxpKr36VdP
-         OJL+NTsTTVmYx+2q/Unrl6EFomhN6EjRM53CKfNyxdltglWMb29N4UpVFZZpxBYIpLT5
-         +q74PMyD0NSwk4a97a/Erfnf2wRdSBOeGg3ZB/gxXAI1sHs2uLvELZm8IoGuKPvGAqAy
-         FrEw==
-X-Forwarded-Encrypted: i=1; AJvYcCWhZS6AYO97mU4y/MehHN8Q8aWVDBT7tGl137DuI7tLGmxZeRwNWSOZ5yTGTAyUb3jCn+ihd4hXsFF9jmqN7qZho0Zx1OlV2A==
-X-Gm-Message-State: AOJu0Yystg7YXhVHo+Elb3/8IW9ugNHNV2xVJ2rtvTyS5VbLyJ7lSMPu
-	Pc4rAj60DM7Fbz2ckjYFh6kT5DK3GSySkrCTxs9MeY4MZNA1CZYqA3h4o2vBAmVfHnSNXqOedD0
-	pUkHWkMW2WRQNwXtGM38fxMop3aGBK2Iiw361
-X-Google-Smtp-Source: AGHT+IEl6O4ILNj9fQHQiZgV5xjHRsOzMtUZx6feBdBMRClUOE2LxlyQoEi9EaI8l5Y5k/bVp0avGFzlHE80pzDES6s=
-X-Received: by 2002:a17:906:2a98:b0:a59:c807:72d3 with SMTP id
- l24-20020a1709062a9800b00a59c80772d3mr89978eje.17.1715012009336; Mon, 06 May
- 2024 09:13:29 -0700 (PDT)
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="wKdUA9Ak"
+Date: Mon, 6 May 2024 09:22:11 -0700
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
+	t=1715012535;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=nALvQTtsxVLvBAYqOXvSZA/jQdEqOKOBP2on/4nFouA=;
+	b=wKdUA9AkInjNcG4oD11+YsIiuMvwDRcyDOrBFB+tws4xaHPMT5GEyIVnCqhYQomX6+Q8RG
+	0/bG7aJTnaiSyqsmhXq3FukgKGKjlh8cQNCiKmyZ7I7KjlvA9VLkx/xav4O7dGs7ILjZCO
+	XSVu6YOTxp/pmTh8sosgvF5N948eKF8=
+X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
+From: Shakeel Butt <shakeel.butt@linux.dev>
+To: Jesper Dangaard Brouer <hawk@kernel.org>
+Cc: Waiman Long <longman@redhat.com>, tj@kernel.org, hannes@cmpxchg.org, 
+	lizefan.x@bytedance.com, cgroups@vger.kernel.org, yosryahmed@google.com, 
+	netdev@vger.kernel.org, linux-mm@kvack.org, kernel-team@cloudflare.com, 
+	Arnaldo Carvalho de Melo <acme@kernel.org>, Sebastian Andrzej Siewior <bigeasy@linutronix.de>, 
+	Daniel Dao <dqminh@cloudflare.com>, Ivan Babrou <ivan@cloudflare.com>, jr@cloudflare.com
+Subject: Re: [PATCH v1] cgroup/rstat: add cgroup_rstat_cpu_lock helpers and
+ tracepoints
+Message-ID: <mnakwztmiskni3k6ia5mynqfllb3dw5kicuv4wp4e4ituaezwt@2pzkuuqg6r3e>
+References: <171457225108.4159924.12821205549807669839.stgit@firesoul>
+ <30d64e25-561a-41c6-ab95-f0820248e9b6@redhat.com>
+ <4a680b80-b296-4466-895a-13239b982c85@kernel.org>
+ <203fdb35-f4cf-4754-9709-3c024eecade9@redhat.com>
+ <b74c4e6b-82cc-4b26-b817-0b36fbfcc2bd@kernel.org>
+ <b161e21f-9d66-4aac-8cc1-83ed75f14025@redhat.com>
+ <42a6d218-206b-4f87-a8fa-ef42d107fb23@kernel.org>
+ <4gdfgo3njmej7a42x6x6x4b6tm267xmrfwedis4mq7f4mypfc7@4egtwzrfqkhp>
+ <55854a94-681e-4142-9160-98b22fa64d61@kernel.org>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <0000000000007545d00615188a03@google.com> <0000000000001b9d500617c8b23c@google.com>
- <ZjjlLcjHuQoV-7gh@google.com> <gbsy4rpt3fbcspuepstk6tzzwd3mrosuba7ufm7phopwor4pyb@ucxrvdw6nly3>
-In-Reply-To: <gbsy4rpt3fbcspuepstk6tzzwd3mrosuba7ufm7phopwor4pyb@ucxrvdw6nly3>
-From: Yosry Ahmed <yosryahmed@google.com>
-Date: Mon, 6 May 2024 09:12:53 -0700
-Message-ID: <CAJD7tkYVa5WQ=rSWYbm6EwAVJFjQE4iGsue8aOA80j6OHO6iQQ@mail.gmail.com>
-Subject: Re: [syzbot] [mm?] [cgroups?] WARNING in __mod_memcg_lruvec_state
-To: Shakeel Butt <shakeel.butt@linux.dev>
-Cc: syzbot <syzbot+9319a4268a640e26b72b@syzkaller.appspotmail.com>, 
-	akpm@linux-foundation.org, cgroups@vger.kernel.org, hannes@cmpxchg.org, 
-	linux-kernel@vger.kernel.org, linux-mm@kvack.org, mhocko@kernel.org, 
-	muchun.song@linux.dev, roman.gushchin@linux.dev, 
-	syzkaller-bugs@googlegroups.com, yuzhao@google.com
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <55854a94-681e-4142-9160-98b22fa64d61@kernel.org>
+X-Migadu-Flow: FLOW_OUT
 
-On Mon, May 6, 2024 at 8:59=E2=80=AFAM Shakeel Butt <shakeel.butt@linux.dev=
-> wrote:
->
-> On Mon, May 06, 2024 at 02:11:57PM +0000, Yosry Ahmed wrote:
-> > On Mon, May 06, 2024 at 06:03:29AM -0700, syzbot wrote:
-> > > syzbot has found a reproducer for the following issue on:
-> > >
-> > > HEAD commit:    2b84edefcad1 Add linux-next specific files for 202405=
-06
-> > > git tree:       linux-next
-> > > console+strace: https://syzkaller.appspot.com/x/log.txt?x=3D1164931f1=
-80000
-> > > kernel config:  https://syzkaller.appspot.com/x/.config?x=3Db499929e4=
-aaba1af
-> > > dashboard link: https://syzkaller.appspot.com/bug?extid=3D9319a4268a6=
-40e26b72b
-> > > compiler:       Debian clang version 15.0.6, GNU ld (GNU Binutils for=
- Debian) 2.40
-> > > syz repro:      https://syzkaller.appspot.com/x/repro.syz?x=3D123d5d1=
-f180000
-> > > C reproducer:   https://syzkaller.appspot.com/x/repro.c?x=3D165274509=
-80000
-> > >
-> > > Downloadable assets:
-> > > disk image: https://storage.googleapis.com/syzbot-assets/6a22cf95ee14=
-/disk-2b84edef.raw.xz
-> > > vmlinux: https://storage.googleapis.com/syzbot-assets/f5c45b515282/vm=
-linux-2b84edef.xz
-> > > kernel image: https://storage.googleapis.com/syzbot-assets/9bf98258a6=
-62/bzImage-2b84edef.xz
-> > >
-> > > IMPORTANT: if you fix the issue, please add the following tag to the =
-commit:
-> > > Reported-by: syzbot+9319a4268a640e26b72b@syzkaller.appspotmail.com
-> > >
-> > > ------------[ cut here ]------------
-> > > __mod_memcg_lruvec_state: missing stat item 25
-> > > WARNING: CPU: 0 PID: 5091 at mm/memcontrol.c:999 __mod_memcg_lruvec_s=
-tate+0x18c/0x430 mm/memcontrol.c:999
-> >
-> > This doesn't seem to be the same issue as the original one syzbot
-> > reported. It's the same function but a different warning. I am not sure
-> > how to tell syzbot that.
-> >
-> > Anyway, this warning is the one newly introduced by Shakeel. It is
-> > firing because NR_SHMEM_PMDMAPPED and/or NR_FILE_PMDMAPPED are being
-> > updated using __lruvec_stat_mod_folio(), which also updates the memcg
-> > stats. However, these stats are not exported per-memcg.
-> >
-> > I think the following should fix it.
-> >
->
-> Hey Yosry, can you please post your patch with the signoff? The patch
-> looks good and you can put my ack on it.
+On Mon, May 06, 2024 at 02:03:47PM +0200, Jesper Dangaard Brouer wrote:
+> 
+> 
+> On 03/05/2024 21.18, Shakeel Butt wrote:
+[...]
+> > 
+> > Hmm 128 usec is actually unexpectedly high.
+> 
+> > How does the cgroup hierarchy on your system looks like?
+> I didn't design this, so hopefully my co-workers can help me out here? (To
+> @Daniel or @Jon)
+> 
+> My low level view is that, there are 17 top-level directories in
+> /sys/fs/cgroup/.
+> There are 649 cgroups (counting occurrence of memory.stat).
+> There are two directories that contain the major part.
+>  - /sys/fs/cgroup/system.slice = 379
+>  - /sys/fs/cgroup/production.slice = 233
+>  - (production.slice have directory two levels)
+>  - remaining 37
+> 
+> We are open to changing this if you have any advice?
+> (@Daniel and @Jon are actually working on restructuring this)
+> 
+> > How many cgroups have actual workloads running?
+> Do you have a command line trick to determine this?
+> 
 
-Will do. I noticed we also update these stats from
-__folio_remove_rmap(). I will send a patch fixing these as well, so
-I'll not include your Ack for that as it will be different.
+The rstat infra maintains a per-cpu cgroup update tree to only flush
+stats of cgroups which have seen updates. So, even if you have large
+number of cgroups but the workload is active in small number of cgroups,
+the update tree should be much smaller. That is the reason I asked these
+questions. I don't have any advise yet. At the I am trying to understand
+the usage and then hopefully work on optimizing those.
+
+> 
+> > Can the network softirqs run on any cpus or smaller
+> > set of cpus? I am assuming these softirqs are processing packets from
+> > any or all cgroups and thus have larger cgroup update tree.
+> 
+> Softirq and specifically NET_RX is running half of the cores (e.g. 64).
+> (I'm looking at restructuring this allocation)
+> 
+> > I wonder if
+> > you comment out MEMCG_SOCK stat update and still see the same holding
+> > time.
+> > 
+> 
+> It doesn't look like MEMCG_SOCK is used.
+> 
+> I deduct you are asking:
+>  - What is the update count for different types of mod_memcg_state() calls?
+> 
+> // Dumped via BTF info
+> enum memcg_stat_item {
+>         MEMCG_SWAP = 43,
+>         MEMCG_SOCK = 44,
+>         MEMCG_PERCPU_B = 45,
+>         MEMCG_VMALLOC = 46,
+>         MEMCG_KMEM = 47,
+>         MEMCG_ZSWAP_B = 48,
+>         MEMCG_ZSWAPPED = 49,
+>         MEMCG_NR_STAT = 50,
+> };
+> 
+> sudo bpftrace -e 'kfunc:vmlinux:__mod_memcg_state{@[args->idx]=count()}
+> END{printf("\nEND time elapsed: %d sec\n", elapsed / 1000000000);}'
+> Attaching 2 probes...
+> ^C
+> END time elapsed: 99 sec
+> 
+> @[45]: 17996
+> @[46]: 18603
+> @[43]: 61858
+> @[47]: 21398919
+> 
+> It seems clear that MEMCG_KMEM = 47 is the main "user".
+>  - 21398919/99 = 216150 calls per sec
+> 
+> Could someone explain to me what this MEMCG_KMEM is used for?
+> 
+
+MEMCG_KMEM is the kernel memory charged to a cgroup. It also contains
+the untyped kernel memory which is not included in kernel_stack,
+pagetables, percpu, vmalloc, slab e.t.c.
+
+The reason I asked about MEMCG_SOCK was that it might be causing larger
+update trees (more cgroups) on CPUs processing the NET_RX.
+
+Anyways did the mutex change helped your production workload regarding
+latencies?
