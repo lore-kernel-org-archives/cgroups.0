@@ -1,62 +1,176 @@
-Received: from out-171.mta0.migadu.com (out-171.mta0.migadu.com [91.218.175.171])
+Received: from SHSQR01.spreadtrum.com (mx1.unisoc.com [222.66.158.135])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5989415FD19
-	for <cgroups@vger.kernel.org>; Tue,  7 May 2024 16:09:49 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.171
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BDB7614601F;
+	Thu,  9 May 2024 02:41:27 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=222.66.158.135
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1715098192; cv=none; b=CInD9CYgf27V21RNUHiStBCvkUS3QtSEGHH6NEsT7E2Vek0O4d3HbNOOlQmzfygNDe525nbZQK5mEwsRjmdtb7MCPchvQMrdMkaf0gq6CXi2f0Mkaj+JfUylHC+jqjnpbv3+BTQhF8ESj8xk9UM+c+y3YYNFFXpCinT6+dTy3vI=
+	t=1715222489; cv=none; b=fvnXqJAgQfbas+wayOm+oLQz6kemIGwc51iYGdTObawT/AF8WkPxvKpJ9rVFUPBm6k6uHGNpGYY7gDcxgmgwVZ2sSblhjGbYneo2feUArHmpJSoHhYnOkkBT31/zt6tXf+QSOX7Guk77ZYbD43CbSsfrASSKPlFWbmzi9myKw+o=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1715098192; c=relaxed/simple;
-	bh=gz4Jf3ondj4y4dpkh3Y5gyLp2dfD3A5nAdCohPabPh0=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=IQ+NqeyOx+8m2WgBMYEs4eqSrsyk2Tzzds9KO9QVesRqlQH9WCjCNUKG7C10W2svAYH93i4MxGCt6JWOO7ocmuPNaxChETGD4tqsUr/OWq6O+9tVr1P1avIBsesaCF1Bk75+u/HHGModU96KRPnrqq3am68RI8FdgNPIXTYOZZY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=GYgFcoZF; arc=none smtp.client-ip=91.218.175.171
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="GYgFcoZF"
-Date: Tue, 7 May 2024 09:09:33 -0700
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
-	t=1715098187;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=tgzIR0YD+S9uWGtbeF9+1URxHxfb+Er2kUk5GWowswQ=;
-	b=GYgFcoZFHdDT9O8zbQNUuBjwrw3TYPWDPuV7kfu2wxM2XY5R/zlVAaa7+/VEnmVBOaXaOb
-	Bd0uwhVVj08huf6sHJBxSAABdmpRTNwO1UiflcVyljF+6UECf8ZIY5GV0zvOtF8p1wxO/L
-	WOxNDSZLD9HnbXit5a7NqNimo/JxiqA=
-X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
-From: Roman Gushchin <roman.gushchin@linux.dev>
-To: Xiu Jianfeng <xiujianfeng@huawei.com>
-Cc: hannes@cmpxchg.org, mhocko@kernel.org, shakeel.butt@linux.dev,
-	muchun.song@linux.dev, akpm@linux-foundation.org,
-	cgroups@vger.kernel.org, linux-mm@kvack.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v2 -next] mm: memcg: make
- alloc_mem_cgroup_per_node_info() return bool
-Message-ID: <ZjpSPRn5kVErC6s2@P9FQF9L96D.corp.robot.car>
-References: <20240507110832.1128370-1-xiujianfeng@huawei.com>
+	s=arc-20240116; t=1715222489; c=relaxed/simple;
+	bh=yMMIUz7DubXFQXYpZ3HCVv1OQrz7GVWdZJEPrbTdrZU=;
+	h=From:To:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=kmJNBouEQqkZaZ/Uyz5xIwVdqbccj6bkukFaiWbB0NVZLddlaM0/rCPvrcuCsVIKplktL+HLmuV1Ec/ie5YRq5fMO3ctgCtXarv1xhIUCUHtVtqyIgI8AP8+GB66ApudH7sBesyXpRxwxL55S0RpRE4W8uLvVPLP9/w/de9vksk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=unisoc.com; spf=pass smtp.mailfrom=unisoc.com; arc=none smtp.client-ip=222.66.158.135
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=unisoc.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=unisoc.com
+Received: from dlp.unisoc.com ([10.29.3.86])
+	by SHSQR01.spreadtrum.com with ESMTP id 4492dpDj051905;
+	Thu, 9 May 2024 10:39:51 +0800 (+08)
+	(envelope-from zhaoyang.huang@unisoc.com)
+Received: from SHDLP.spreadtrum.com (bjmbx01.spreadtrum.com [10.0.64.7])
+	by dlp.unisoc.com (SkyGuard) with ESMTPS id 4VZbkN3NW5z2PGl6X;
+	Thu,  9 May 2024 10:36:44 +0800 (CST)
+Received: from bj03382pcu01.spreadtrum.com (10.0.73.40) by
+ BJMBX01.spreadtrum.com (10.0.64.7) with Microsoft SMTP Server (TLS) id
+ 15.0.1497.23; Thu, 9 May 2024 10:39:48 +0800
+From: "zhaoyang.huang" <zhaoyang.huang@unisoc.com>
+To: Andrew Morton <akpm@linux-foundation.org>,
+        Matthew Wilcox
+	<willy@infradead.org>, Jens Axboe <axboe@kernel.dk>,
+        Tejun Heo
+	<tj@kernel.org>, Josef Bacik <josef@toxicpanda.com>,
+        Baolin Wang
+	<baolin.wang@linux.alibaba.com>, <linux-mm@kvack.org>,
+        <linux-block@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        <cgroups@vger.kernel.org>, Zhaoyang Huang <huangzhaoyang@gmail.com>,
+        <steve.kang@unisoc.com>
+Subject: [RFC PATCH 2/2] mm: introduce budgt control in readahead
+Date: Thu, 9 May 2024 10:39:37 +0800
+Message-ID: <20240509023937.1090421-3-zhaoyang.huang@unisoc.com>
+X-Mailer: git-send-email 2.25.1
+In-Reply-To: <20240509023937.1090421-1-zhaoyang.huang@unisoc.com>
+References: <20240509023937.1090421-1-zhaoyang.huang@unisoc.com>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20240507110832.1128370-1-xiujianfeng@huawei.com>
-X-Migadu-Flow: FLOW_OUT
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-ClientProxiedBy: SHCAS03.spreadtrum.com (10.0.1.207) To
+ BJMBX01.spreadtrum.com (10.0.64.7)
+X-MAIL:SHSQR01.spreadtrum.com 4492dpDj051905
 
-On Tue, May 07, 2024 at 11:08:32AM +0000, Xiu Jianfeng wrote:
-> Currently alloc_mem_cgroup_per_node_info() returns 1 if failed,
-> make it return bool, false for failure and true for success.
-> 
-> Signed-off-by: Xiu Jianfeng <xiujianfeng@huawei.com>
+From: Zhaoyang Huang <zhaoyang.huang@unisoc.com>
 
-I actually liked the previous (ENOMEM) version slightly more,
-but this one works too.
+Currently, readahead's size is decided mainly by page cache's status
+like hit/miss or hole size which could lead to suspension of following
+bio which is over the size of blk-throttle allowed size when
+BLK_THROTTLING is on. Introduce the budgt value here to have the bio's
+size be within the legal size.
 
-Reviewed-by: Roman Gushchin <roman.gushchin@linux.dev>
+Signed-off-by: Zhaoyang Huang <zhaoyang.huang@unisoc.com>
+---
+ mm/readahead.c | 33 ++++++++++++++++++++++++---------
+ 1 file changed, 24 insertions(+), 9 deletions(-)
 
-Thanks!
+diff --git a/mm/readahead.c b/mm/readahead.c
+index 130c0e7df99f..2b6120ced6f9 100644
+--- a/mm/readahead.c
++++ b/mm/readahead.c
+@@ -128,6 +128,7 @@
+ #include <linux/blk-cgroup.h>
+ #include <linux/fadvise.h>
+ #include <linux/sched/mm.h>
++#include <linux/minmax.h>
+ 
+ #include "internal.h"
+ 
+@@ -358,16 +359,23 @@ static unsigned long get_init_ra_size(unsigned long size, unsigned long max)
+  *  Get the previous window size, ramp it up, and
+  *  return it as the new window size.
+  */
+-static unsigned long get_next_ra_size(struct file_ra_state *ra,
++static unsigned long get_next_ra_size(struct readahead_control *ractl,
+ 				      unsigned long max)
+ {
+-	unsigned long cur = ra->size;
++	unsigned long cur = ractl->ra->size;
++	struct inode *inode = ractl->mapping->host;
++	unsigned long budgt = inode->i_sb->s_bdev ?
++			blk_throttle_budgt(inode->i_sb->s_bdev) : 0;
++	unsigned long val = max;
+ 
+ 	if (cur < max / 16)
+-		return 4 * cur;
++		val = 4 * cur;
+ 	if (cur <= max / 2)
+-		return 2 * cur;
+-	return max;
++		val = 2 * cur;
++
++	val = budgt ? min(budgt / PAGE_SIZE, val) : val;
++
++	return val;
+ }
+ 
+ /*
+@@ -437,6 +445,8 @@ static int try_context_readahead(struct address_space *mapping,
+ 				 unsigned long max)
+ {
+ 	pgoff_t size;
++	unsigned long budgt = mapping->host->i_sb->s_bdev ?
++		blk_throttle_budgt(mapping->host->i_sb->s_bdev) : 0;
+ 
+ 	size = count_history_pages(mapping, index, max);
+ 
+@@ -455,7 +465,7 @@ static int try_context_readahead(struct address_space *mapping,
+ 		size *= 2;
+ 
+ 	ra->start = index;
+-	ra->size = min(size + req_size, max);
++	ra->size = min3(budgt / PAGE_SIZE, size + req_size, max);
+ 	ra->async_size = 1;
+ 
+ 	return 1;
+@@ -552,6 +562,8 @@ static void ondemand_readahead(struct readahead_control *ractl,
+ 	pgoff_t index = readahead_index(ractl);
+ 	pgoff_t expected, prev_index;
+ 	unsigned int order = folio ? folio_order(folio) : 0;
++	unsigned long budgt = ractl->mapping->host->i_sb->s_bdev ?
++		blk_throttle_budgt(ractl->mapping->host->i_sb->s_bdev) : 0;
+ 
+ 	/*
+ 	 * If the request exceeds the readahead window, allow the read to
+@@ -574,7 +586,7 @@ static void ondemand_readahead(struct readahead_control *ractl,
+ 			1UL << order);
+ 	if (index == expected || index == (ra->start + ra->size)) {
+ 		ra->start += ra->size;
+-		ra->size = get_next_ra_size(ra, max_pages);
++		ra->size = get_next_ra_size(ractl, max_pages);
+ 		ra->async_size = ra->size;
+ 		goto readit;
+ 	}
+@@ -599,7 +611,7 @@ static void ondemand_readahead(struct readahead_control *ractl,
+ 		ra->start = start;
+ 		ra->size = start - index;	/* old async_size */
+ 		ra->size += req_size;
+-		ra->size = get_next_ra_size(ra, max_pages);
++		ra->size = get_next_ra_size(ractl, max_pages);
+ 		ra->async_size = ra->size;
+ 		goto readit;
+ 	}
+@@ -631,6 +643,9 @@ static void ondemand_readahead(struct readahead_control *ractl,
+ 	 * standalone, small random read
+ 	 * Read as is, and do not pollute the readahead state.
+ 	 */
++	if (budgt)
++		req_size = min(budgt / PAGE_SIZE, req_size);
++
+ 	do_page_cache_ra(ractl, req_size, 0);
+ 	return;
+ 
+@@ -647,7 +662,7 @@ static void ondemand_readahead(struct readahead_control *ractl,
+ 	 * Take care of maximum IO pages as above.
+ 	 */
+ 	if (index == ra->start && ra->size == ra->async_size) {
+-		add_pages = get_next_ra_size(ra, max_pages);
++		add_pages = get_next_ra_size(ractl, max_pages);
+ 		if (ra->size + add_pages <= max_pages) {
+ 			ra->async_size = add_pages;
+ 			ra->size += add_pages;
+-- 
+2.25.1
+
