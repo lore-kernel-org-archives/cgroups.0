@@ -1,100 +1,165 @@
-Received: from out-175.mta1.migadu.com (out-175.mta1.migadu.com [95.215.58.175])
+Received: from SHSQR01.spreadtrum.com (mx1.unisoc.com [222.66.158.135])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C6DA6182C93
-	for <cgroups@vger.kernel.org>; Tue, 14 May 2024 23:36:56 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=95.215.58.175
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3140979C8;
+	Wed, 15 May 2024 01:25:15 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=222.66.158.135
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1715729819; cv=none; b=uSwB6wSS6xb1SuKc0u08gL/a/7ww78zdH+lUAQqrHfg1LA7JlPY3yk8TpQGjUMGOw9GC6Sl00xKG+g1wZ/OAbAS3Ng3rJXx+NPzYbXgAzDw+dCMU62x+DVSqpOYZ3HDibTL2JMQkAG2xagf91wGdUnAtngBuOrsC81hj7k9kGpw=
+	t=1715736317; cv=none; b=IwdCQw470jaGV+3kzuGSekIP5C/G/5wXRAaIYYrJ66PJb+oOd5Wd8bQycqA1gA86j8lc3hyuj6qnHl2x4faYP1RCby/+UCIf/cwtywtSY+jSiwcITljCIRv8YYS6tHH8ld1qrGlD0SJ+rDKTHme4XXwS/qHtOSM4sCrdlm4yHMw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1715729819; c=relaxed/simple;
-	bh=52SPuKOsw1lbaFiybwD05AI4uDArZnOo9RtFjz5jCFg=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=RS3sAt/oNQ0usiME7OG8uFwqyIYywu/9uLvpfdj2diJuBwtbAjUvTnY2OLOVKnJARSm/3wkdaqlFKFS5UeFmqUUKIjZXmnz4CRbWcTf7RGB/CqMOqZmnf9nx3ztep0wim7VI8nag0pVido2VA31FJkxvvOlZih+GzUCA90mwnbQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=ia9TWNR6; arc=none smtp.client-ip=95.215.58.175
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="ia9TWNR6"
-Date: Tue, 14 May 2024 16:36:49 -0700
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
-	t=1715729814;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=QGeu7E7YtU64Es+FXJxCc3GogLv/cEp8pF/frLRvsxw=;
-	b=ia9TWNR6cK0XgiL91oaEYNnsvY8LIynRf33KCN9kTNxOQLhTvTuZX6AIqh9dqUWc0SOO3D
-	lEn4JEcU1aa4TH6gewXNp/j53gmNvYEpXX3py4Wj7xtH0vXAut0Isjc0m7/48vWNgySInp
-	jVB+5339DuiYFwz1X9Xt6FK3oV/EerY=
-X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
-From: Roman Gushchin <roman.gushchin@linux.dev>
-To: Johannes Weiner <hannes@cmpxchg.org>
-Cc: Andrew Morton <akpm@linux-foundation.org>,
-	Michal Hocko <mhocko@kernel.org>,
-	Shakeel Butt <shakeel.butt@linux.dev>,
-	Rik van Riel <riel@surriel.com>, linux-mm@kvack.org,
-	cgroups@vger.kernel.org, linux-kernel@vger.kernel.org,
-	kernel-team@fb.com
-Subject: Re: [PATCH] mm: vmscan: restore incremental cgroup iteration
-Message-ID: <ZkP1kW_DZdCdTn7m@P9FQF9L96D>
-References: <20240514202641.2821494-1-hannes@cmpxchg.org>
+	s=arc-20240116; t=1715736317; c=relaxed/simple;
+	bh=cxIwpQSHcfuYZZ9GvvSMLZ3wG9q7rFvAlf9yitR+PVo=;
+	h=From:To:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=FvmOkqmofK3VTDrJkhHdi9IJNfGkRLg81dG1W6BtJwZiUEra2elIUeLq8tHge5MMsbgSPGVHsyJJPIoeSLe/RCqNG0dzq6PqDwf2El+TKtiX2fk/+rj7JflhI5TRUJofmKDEgQBxRgI8eHX1r5HLZKAb1SkW0oOkt0Z78xip74w=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=unisoc.com; spf=pass smtp.mailfrom=unisoc.com; arc=none smtp.client-ip=222.66.158.135
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=unisoc.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=unisoc.com
+Received: from dlp.unisoc.com ([10.29.3.86])
+	by SHSQR01.spreadtrum.com with ESMTP id 44F1O5Om051360;
+	Wed, 15 May 2024 09:24:05 +0800 (+08)
+	(envelope-from zhaoyang.huang@unisoc.com)
+Received: from SHDLP.spreadtrum.com (bjmbx01.spreadtrum.com [10.0.64.7])
+	by dlp.unisoc.com (SkyGuard) with ESMTPS id 4VfFly3fXQz2QDRDk;
+	Wed, 15 May 2024 09:20:46 +0800 (CST)
+Received: from bj03382pcu01.spreadtrum.com (10.0.73.40) by
+ BJMBX01.spreadtrum.com (10.0.64.7) with Microsoft SMTP Server (TLS) id
+ 15.0.1497.23; Wed, 15 May 2024 09:24:03 +0800
+From: "zhaoyang.huang" <zhaoyang.huang@unisoc.com>
+To: Andrew Morton <akpm@linux-foundation.org>,
+        Matthew Wilcox
+	<willy@infradead.org>, Jens Axboe <axboe@kernel.dk>,
+        Tejun Heo
+	<tj@kernel.org>, Josef Bacik <josef@toxicpanda.com>,
+        Baolin Wang
+	<baolin.wang@linux.alibaba.com>, <linux-mm@kvack.org>,
+        <linux-block@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        <cgroups@vger.kernel.org>, Zhaoyang Huang <huangzhaoyang@gmail.com>,
+        <steve.kang@unisoc.com>
+Subject: [RFC PATCH 1/2] block: introduce helper function to calculate bps budgt
+Date: Wed, 15 May 2024 09:23:49 +0800
+Message-ID: <20240515012350.1166350-2-zhaoyang.huang@unisoc.com>
+X-Mailer: git-send-email 2.25.1
+In-Reply-To: <20240515012350.1166350-1-zhaoyang.huang@unisoc.com>
+References: <20240515012350.1166350-1-zhaoyang.huang@unisoc.com>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20240514202641.2821494-1-hannes@cmpxchg.org>
-X-Migadu-Flow: FLOW_OUT
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-ClientProxiedBy: SHCAS03.spreadtrum.com (10.0.1.207) To
+ BJMBX01.spreadtrum.com (10.0.64.7)
+X-MAIL:SHSQR01.spreadtrum.com 44F1O5Om051360
 
-On Tue, May 14, 2024 at 04:26:41PM -0400, Johannes Weiner wrote:
-> Currently, reclaim always walks the entire cgroup tree in order to
-> ensure fairness between groups. While overreclaim is limited in
-> shrink_lruvec(), many of our systems have a sizable number of active
-> groups, and an even bigger number of idle cgroups with cache left
-> behind by previous jobs; the mere act of walking all these cgroups can
-> impose significant latency on direct reclaimers.
-> 
-> In the past, we've used a save-and-restore iterator that enabled
-> incremental tree walks over multiple reclaim invocations. This ensured
-> fairness, while keeping the work of individual reclaimers small.
-> 
-> However, in edge cases with a lot of reclaim concurrency, individual
-> reclaimers would sometimes not see enough of the cgroup tree to make
-> forward progress and (prematurely) declare OOM. Consequently we
-> switched to comprehensive walks in 1ba6fc9af35b ("mm: vmscan: do not
-> share cgroup iteration between reclaimers").
-> 
-> To address the latency problem without bringing back the premature OOM
-> issue, reinstate the shared iteration, but with a restart condition to
-> do the full walk in the OOM case - similar to what we do for
-> memory.low enforcement and active page protection.
-> 
-> In the worst case, we do one more full tree walk before declaring
-> OOM. But the vast majority of direct reclaim scans can then finish
-> much quicker, while fairness across the tree is maintained:
-> 
-> - Before this patch, we observed that direct reclaim always takes more
->   than 100us and most direct reclaim time is spent in reclaim cycles
->   lasting between 1ms and 1 second. Almost 40% of direct reclaim time
->   was spent on reclaim cycles exceeding 100ms.
-> 
-> - With this patch, almost all page reclaim cycles last less than 10ms,
->   and a good amount of direct page reclaim finishes in under 100us. No
->   page reclaim cycles lasting over 100ms were observed anymore.
-> 
-> The shared iterator state is maintaned inside the target cgroup, so
-> fair and incremental walks are performed during both global reclaim
-> and cgroup limit reclaim of complex subtrees.
-> 
-> Reported-by: Rik van Riel <riel@surriel.com>
-> Signed-off-by: Johannes Weiner <hannes@cmpxchg.org>
-> Signed-off-by: Rik van Riel <riel@surriel.com>
+From: Zhaoyang Huang <zhaoyang.huang@unisoc.com>
 
-Looks really solid.
+The 'over-sized' bio under blk throttle control will be delayed to
+launch which breaks original IO timing and have the immediate BW be
+not within the bps limit. Introduce a helper function to calculate block
+device's budgt which provide the allowed bytes for current bio.
 
-Reviewed-by: Roman Gushchin <roman.gushchin@linux.dev>
+Signed-off-by: Zhaoyang Huang <zhaoyang.huang@unisoc.com>
+---
+ block/blk-throttle.c       | 44 ++++++++++++++++++++++++++++++++++++++
+ include/linux/blk-cgroup.h | 10 +++++++++
+ 2 files changed, 54 insertions(+)
 
-Thanks!
+diff --git a/block/blk-throttle.c b/block/blk-throttle.c
+index f4850a6f860b..41c75258183d 100644
+--- a/block/blk-throttle.c
++++ b/block/blk-throttle.c
+@@ -10,6 +10,7 @@
+ #include <linux/blkdev.h>
+ #include <linux/bio.h>
+ #include <linux/blktrace_api.h>
++#include <linux/cgroup.h>
+ #include "blk.h"
+ #include "blk-cgroup-rwstat.h"
+ #include "blk-stat.h"
+@@ -2365,6 +2366,49 @@ void blk_throtl_bio_endio(struct bio *bio)
+ }
+ #endif
+ 
++unsigned long blk_throttle_budgt(struct block_device *bdev)
++{
++	struct request_queue *q = bdev_get_queue(bdev);
++	struct blkcg *blkcg;
++	struct blkcg_gq *blkg;
++	struct throtl_grp *tg;
++	long long bytes_allowed = 0;
++	unsigned long jiffy_elapsed, jiffy_elapsed_rnd;
++	u64 bps_limit;
++
++	if (!q)
++		return U64_MAX;
++
++	rcu_read_lock();
++	spin_lock_irq(&q->queue_lock);
++	blkcg =	css_to_blkcg(task_css(current, io_cgrp_id));
++	if (!blkcg)
++		goto out;
++
++	blkg = blkg_lookup(blkcg, q);
++	if (!blkg || !blkg_tryget(blkg))
++		goto out;
++
++	tg = blkg_to_tg(blkg);
++	bps_limit = tg_bps_limit(tg, READ);
++	if (bps_limit == U64_MAX)
++		goto out;
++
++	jiffy_elapsed = jiffy_elapsed_rnd = jiffies - tg->slice_start[READ];
++	if (!jiffy_elapsed)
++		jiffy_elapsed_rnd = tg->td->throtl_slice;
++
++	jiffy_elapsed_rnd = roundup(jiffy_elapsed_rnd, tg->td->throtl_slice);
++	bytes_allowed = calculate_bytes_allowed(bps_limit, jiffy_elapsed_rnd) +
++			tg->carryover_bytes[READ];
++	blkg_put(blkg);
++out:
++	spin_unlock_irq(&q->queue_lock);
++	rcu_read_unlock();
++	return bytes_allowed;
++}
++
++
+ int blk_throtl_init(struct gendisk *disk)
+ {
+ 	struct request_queue *q = disk->queue;
+diff --git a/include/linux/blk-cgroup.h b/include/linux/blk-cgroup.h
+index dd5841a42c33..ba79fa464e0a 100644
+--- a/include/linux/blk-cgroup.h
++++ b/include/linux/blk-cgroup.h
+@@ -15,10 +15,12 @@
+  */
+ 
+ #include <linux/types.h>
++#include <linux/limits.h>
+ 
+ struct bio;
+ struct cgroup_subsys_state;
+ struct gendisk;
++struct block_device;
+ 
+ #define FC_APPID_LEN              129
+ 
+@@ -45,6 +47,14 @@ static inline struct cgroup_subsys_state *bio_blkcg_css(struct bio *bio)
+ }
+ #endif	/* CONFIG_BLK_CGROUP */
+ 
++#ifdef CONFIG_BLK_DEV_THROTTLING
++unsigned long blk_throttle_budgt(struct block_device *bdev);
++#else
++static inline unsigned long blk_throttle_budgt(struct block_device *bdev)
++{
++	return U64_MAX;
++}
++#endif
+ int blkcg_set_fc_appid(char *app_id, u64 cgrp_id, size_t app_id_len);
+ char *blkcg_get_fc_appid(struct bio *bio);
+ 
+-- 
+2.25.1
+
