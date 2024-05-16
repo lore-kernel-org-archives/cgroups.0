@@ -1,43 +1,43 @@
-Received: from mail-wm1-f45.google.com (mail-wm1-f45.google.com [209.85.128.45])
+Received: from mail-wm1-f48.google.com (mail-wm1-f48.google.com [209.85.128.48])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5E60915B571;
-	Thu, 16 May 2024 19:08:31 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.45
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A92F26A003;
+	Thu, 16 May 2024 19:08:39 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.48
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1715886513; cv=none; b=JlRCxH0bGJYUZRz6RMbOMCY/WvrSUdn+eHq3qTDLxXpEVZPBTjUpTRNQ+gSguf+ijvt7I0VedMiQiCxdndR5zxJDV/9efOtxVZ9UCD2TfT9WgjQS54Jdx3PKhCHjd2yGJBnsEvY2obNifxi3/AvjHnELa0L/eo619/upLwDlwiA=
+	t=1715886521; cv=none; b=ApmzzFzWmzEwnmZfNGjYTIxJsLZFL/GzKNztlBmycpAD/V2QIvdAY05km7NOIjRcQjXmQzRWlFaJtCwPhC7lqc+jhheh2XxEdR602agfTKgmc73C+yIo+Veq+FWFrwYS2ibxgxA/vSBPZ8efHIVnp6RzccY2kRYNQ4YbWMoDmKA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1715886513; c=relaxed/simple;
-	bh=8kbqqHhC8hqJWztiJ4S0vBrzZ4vEVAmywhl/Drj8bP8=;
+	s=arc-20240116; t=1715886521; c=relaxed/simple;
+	bh=qStgHo+1zCUhiaWSXasLfZGf4XCdux/rCja3KMmaySw=;
 	h=From:To:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=U1DVRFsbszru4/RJYwuBXHclx0dxcTm3KpV4OXEjwPh6gpdVG6msW0H+HZvVa8LY2m/2HhsLBpKFMkCTLe/xrPmau49EnmG4RIqiX0r3ZuevlAoOMBqCIStMM+d2OsCcGZERXS6cyiJdt2DNO28vu5N0+eJTs6UxDhuy8LPRXnM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=gmail.com; arc=none smtp.client-ip=209.85.128.45
+	 MIME-Version; b=F2adltyfv+0cX5qCb7xdi1qDWlRT/IHBZVLJybRlKFCyhPrHNOjgu8qlLiy1tZcJ4f1tbAlvBlSl+zlnYv6kNvNkYUdWpB3GOsUPkNRjbfnda1F8R4DJ+c9u6Yfdygzv1NlnDfq0VD2SIYY+6mjobdcwz+YBKGgjc65+z8f8620=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=gmail.com; arc=none smtp.client-ip=209.85.128.48
 Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=redhat.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
-Received: by mail-wm1-f45.google.com with SMTP id 5b1f17b1804b1-420180b5897so34934195e9.3;
-        Thu, 16 May 2024 12:08:31 -0700 (PDT)
+Received: by mail-wm1-f48.google.com with SMTP id 5b1f17b1804b1-420180b59b7so31911075e9.0;
+        Thu, 16 May 2024 12:08:39 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1715886510; x=1716491310;
+        d=1e100.net; s=20230601; t=1715886518; x=1716491318;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:to:from:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=KKc3fp/jI+BvIXedy1D0TYqFMPTw9ko9fdbmFGrVOU8=;
-        b=drNowamVeICSyaeTWBAQUoIqHtkZGjREWEdR7cQi4lxBUB5vp8mqHNq+4t8Vv1pYtZ
-         GaV5qn1/vN12rQBax6ADaQYaY5oewd1i2nMu1rXjp63ei3NMpWaNpPQqw6kD1hcDX+zj
-         o1ECya54JQBs95HzjubTpeaFYYQpVzpUc5Q+raOW9jTuiwBa4ca3uzvj1bqFSXtlPmat
-         deNdFVFwPvTnpCfEvemp/eGICtY8kQd4t+jG7KdEb7YPZXjtLGx6o8HPGSvmaQpGqpXs
-         WHszNaKnh3geJHY2LGJBPDNkxw1RA0Bz64yJFEeqaBJTtpNr4btIE6+MQ9GQayphDWSv
-         XWVw==
-X-Forwarded-Encrypted: i=1; AJvYcCV59nIk/Lo9vlRb7WRyQEiaYU/pj2/6RgT9hBoZW0UrwP5LjJLIslEvLP4jmENKkqCem9I8PTLdeYapLPvTtLI9jwi22gYxPFJNqEN2VH+LzBfqeQbSCKs3AYO77vA4QELw2aVYoQ==
-X-Gm-Message-State: AOJu0YyFpdClXn4TJXLVAAW6T0Vvu7+LOAQJ7R1pzaAIS+Kjq9YxFsrk
-	y8BMCUUHYVTO8hEydGnaLWWhjXlUObbJUn+SZfapbfFAhtmmLNp+
-X-Google-Smtp-Source: AGHT+IE+8OzEl7GN/XD1Evd2s20T59JGOPsfzEjJ78E96nJYaDJAN5YoScVDZUfO86b85wduS8T3cQ==
-X-Received: by 2002:a05:600c:4a16:b0:41a:5d49:6143 with SMTP id 5b1f17b1804b1-41feaa3873dmr163546945e9.12.1715886509604;
-        Thu, 16 May 2024 12:08:29 -0700 (PDT)
+        bh=JIB+O4v6/5R1ePF27G37Z2akXQzewaP8o/SKYVuDf5E=;
+        b=sNxzzp44TYjX2koC1tBqP6NPYzwgTlXfjuF5q8NPMubv4r0E1mL94FDS2U1OSvXRkT
+         nwmUVdhUS2njFoOml1wRvi5ynmlV1nazFlFqdbRifpM1XDmKlyqageWi7/Up8dNeGHvj
+         xkuHPFVWh7OtrfXLPXtdjmp9P2jh5XrHzVsoyL7QJsA6yppXf67B0qzDK8QDwO+2vj4S
+         j54cpigr15P3aRJrYYgLdumU6SP65rMjmejupUa3aXDUhdwlSLR0cC18i0t1tQdZj/qV
+         AiWvDrz+EEVVPJUbwYbUeyRGmalehh0O40EXtcVw6ram9r/HB8F2BmV/K9+h541CA20b
+         malw==
+X-Forwarded-Encrypted: i=1; AJvYcCWZsKbRjrhxh39AilB5qF/fX6zwctFOmqdl3y0HQNZo8WYtDxIbzCCBNQaSy1xGXlfZOjAz3aZmTL7/X7/IhU6hii/llvbdL2Ogyi+aspMf+i/oWSdT+WXZeeKm5wwymio0RTXngA==
+X-Gm-Message-State: AOJu0YyYlIH2EFIxBnZq1SyO9R2xKyq4DLgnfehvuJZbgh3RBfolfE+6
+	CtHngpOCF6ZbxoTUmCYcVfPrvp6YnvtmQjQFhkgDTTocMCnJjE6K
+X-Google-Smtp-Source: AGHT+IFh+715UhOK52DQvslqbyTnIlzBxZSHjl77sULY7U9THXtl4Z4HXFLZN69E+KDzXhSAytm8BA==
+X-Received: by 2002:a05:600c:19c8:b0:41f:e720:eec9 with SMTP id 5b1f17b1804b1-41feac59c27mr148033985e9.25.1715886488140;
+        Thu, 16 May 2024 12:08:08 -0700 (PDT)
 Received: from costa-tp.redhat.com ([2a00:a040:1a3:c059:8b18:f13e:da9b:5a8e])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-41fccee9335sm275834155e9.29.2024.05.16.12.08.26
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-41fccee9335sm275834155e9.29.2024.05.16.12.08.05
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 16 May 2024 12:08:29 -0700 (PDT)
+        Thu, 16 May 2024 12:08:07 -0700 (PDT)
 From: Costa Shulyupin <costa.shul@redhat.com>
 To: longman@redhat.com,
 	pauld@redhat.com,
@@ -68,9 +68,9 @@ To: longman@redhat.com,
 	Costa Shulyupin <costa.shul@redhat.com>,
 	linux-kernel@vger.kernel.org,
 	cgroups@vger.kernel.org
-Subject: [PATCH v1 5/7] [NOT-FOR-MERGE] test timers affinity adjustment
-Date: Thu, 16 May 2024 22:04:35 +0300
-Message-ID: <20240516190437.3545310-6-costa.shul@redhat.com>
+Subject: [PATCH v1 3/7] sched/isolation: Adjust affinity of hrtimers according to change of housekeeping cpumask
+Date: Thu, 16 May 2024 22:04:33 +0300
+Message-ID: <20240516190437.3545310-4-costa.shul@redhat.com>
 X-Mailer: git-send-email 2.45.0
 In-Reply-To: <20240516190437.3545310-1-costa.shul@redhat.com>
 References: <20240516190437.3545310-1-costa.shul@redhat.com>
@@ -82,54 +82,171 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-There must be no timers on the specified cpu
-at the end of timers_resettle_from_cpu.
+Adjust affinity of watchdog_cpumask, hrtimers according to
+change of housekeeping.cpumasks[HK_TYPE_TIMER].
+
+Function migrate_hrtimer_list_except() is prototyped from
+migrate_hrtimer_list() and is more generic.
+
+Potentially it can be used instead of migrate_hrtimer_list.
+
+Function hrtimers_resettle_from_cpu() is blindly prototyped
+from hrtimers_cpu_dying(). local_irq_disable() is used because
+cpuhp_thread_fun() uses it before cpuhp_invoke_callback().
+
+Core test snippets without infrastructure:
+
+1. Create hrtimer on specific cpu with:
+
+        set_cpus_allowed_ptr(current, cpumask_of(test_cpu));
+        hrtimer_init(&test_hrtimer, CLOCK_MONOTONIC, HRTIMER_MODE_REL);
+        test_hrtimer.function = test_hrtimer_cb;
+        hrtimer_start(&test_hrtimer, -1,  HRTIMER_MODE_REL);
+
+2. Call housekeeping_update()
+
+3. Assure that there is only tick_nohz_handler on specified cpu
+in /proc/timer_list manually or with script:
+
+grep -E 'cpu| #[0-9]' /proc/timer_list | \
+	awk "/cpu:/{y=0};/cpu: $test_cpu\$/{y=1};y"
+
+Another alternative solution to migrate hrtimers:
+1. Use cpuhp to set sched_timer offline
+2. Resettle all hrtimers likewise migrate_hrtimer_list
+3. Use cpuhp to set sched_timer online
 
 Signed-off-by: Costa Shulyupin <costa.shul@redhat.com>
 ---
- kernel/time/timer.c | 22 ++++++++++++++++++++++
- 1 file changed, 22 insertions(+)
+ include/linux/hrtimer.h  |  2 +
+ kernel/sched/isolation.c |  2 +
+ kernel/time/hrtimer.c    | 81 ++++++++++++++++++++++++++++++++++++++++
+ 3 files changed, 85 insertions(+)
 
-diff --git a/kernel/time/timer.c b/kernel/time/timer.c
-index 2d15c0e7b0550..b7d253d230453 100644
---- a/kernel/time/timer.c
-+++ b/kernel/time/timer.c
-@@ -2658,6 +2658,27 @@ int timers_prepare_cpu(unsigned int cpu)
- 	return 0;
+diff --git a/include/linux/hrtimer.h b/include/linux/hrtimer.h
+index aa1e65ccb6158..004632fc7d643 100644
+--- a/include/linux/hrtimer.h
++++ b/include/linux/hrtimer.h
+@@ -381,8 +381,10 @@ extern void sysrq_timer_list_show(void);
+ int hrtimers_prepare_cpu(unsigned int cpu);
+ #ifdef CONFIG_HOTPLUG_CPU
+ int hrtimers_cpu_dying(unsigned int cpu);
++void hrtimers_resettle_from_cpu(unsigned int cpu);
+ #else
+ #define hrtimers_cpu_dying	NULL
++static inline void hrtimers_resettle_from_cpu(unsigned int cpu) { }
+ #endif
+ 
+ #endif
+diff --git a/kernel/sched/isolation.c b/kernel/sched/isolation.c
+index 3b63f0212887e..85a17d39d8bb0 100644
+--- a/kernel/sched/isolation.c
++++ b/kernel/sched/isolation.c
+@@ -126,10 +126,12 @@ static void resettle_all_timers(cpumask_var_t enable_mask, cpumask_var_t disable
+ 
+ 	for_each_cpu(cpu, enable_mask)	{
+ 		timers_prepare_cpu(cpu);
++		hrtimers_prepare_cpu(cpu);
+ 	}
+ 
+ 	for_each_cpu(cpu, disable_mask) {
+ 		timers_resettle_from_cpu(cpu);
++		hrtimers_resettle_from_cpu(cpu);
+ 	}
  }
  
-+static int count_timers(int cpu)
+diff --git a/kernel/time/hrtimer.c b/kernel/time/hrtimer.c
+index 492c14aac642b..7e71ebbb72348 100644
+--- a/kernel/time/hrtimer.c
++++ b/kernel/time/hrtimer.c
+@@ -2201,6 +2201,87 @@ static void migrate_hrtimer_list(struct hrtimer_clock_base *old_base,
+ 	}
+ }
+ 
++/*
++ * migrate_hrtimer_list_except - migrates hrtimers from one base to another,
++ * except specified one.
++ */
++static void migrate_hrtimer_list_except(struct hrtimer_clock_base *old_base,
++				struct hrtimer_clock_base *new_base, struct hrtimer *except)
 +{
-+	struct timer_base *base;
-+	int b, v, count = 0;
++	struct hrtimer *timer;
++	struct timerqueue_node *node;
 +
-+	for (b = 0; b < NR_BASES; b++) {
-+		base = per_cpu_ptr(&timer_bases[b], cpu);
-+		raw_spin_lock_irq(&base->lock);
++	node = timerqueue_getnext(&old_base->active);
++	while (node) {
++		timer = container_of(node, struct hrtimer, node);
++		node = timerqueue_iterate_next(node);
++		if (timer == except)
++			continue;
 +
-+		for (v = 0; v < WHEEL_SIZE; v++) {
-+			struct hlist_node *c;
++		BUG_ON(hrtimer_callback_running(timer));
++		debug_deactivate(timer);
 +
-+			hlist_for_each(c, base->vectors + v)
-+				count++;
-+		}
-+		raw_spin_unlock_irq(&base->lock);
++		/*
++		 * Mark it as ENQUEUED not INACTIVE otherwise the
++		 * timer could be seen as !active and just vanish away
++		 * under us on another CPU
++		 */
++		__remove_hrtimer(timer, old_base, HRTIMER_STATE_ENQUEUED, 0);
++		timer->base = new_base;
++		/*
++		 * Enqueue the timers on the new cpu. This does not
++		 * reprogram the event device in case the timer
++		 * expires before the earliest on this CPU, but we run
++		 * hrtimer_interrupt after we migrated everything to
++		 * sort out already expired timers and reprogram the
++		 * event device.
++		 */
++		enqueue_hrtimer(timer, new_base, HRTIMER_MODE_ABS);
 +	}
-+
-+	return count;
 +}
 +
- /**
-  * timers_resettle_from_cpu - resettles timers from
-  * specified cpu to housekeeping cpus.
-@@ -2697,6 +2718,7 @@ void timers_resettle_from_cpu(unsigned int cpu)
- 		raw_spin_unlock_irq(&new_base->lock);
- 	}
- 	local_irq_enable();
-+	WARN_ON(count_timers(cpu));
- }
- 
- int timers_dead_cpu(unsigned int cpu)
++/**
++ * hrtimers_resettle_from_cpu - resettles hrtimers from
++ * specified cpu to housekeeping cpus.
++ */
++void hrtimers_resettle_from_cpu(unsigned int isol_cpu)
++{
++	int ncpu, i;
++	struct tick_sched *ts = tick_get_tick_sched(isol_cpu);
++	struct hrtimer_cpu_base *old_base, *new_base;
++
++	local_irq_disable();
++	ncpu = cpumask_any_and(cpu_active_mask, housekeeping_cpumask(HK_TYPE_TIMER));
++
++	old_base = &per_cpu(hrtimer_bases, isol_cpu);
++	new_base = &per_cpu(hrtimer_bases, ncpu);
++
++	/*
++	 * The caller is globally serialized and nobody else
++	 * takes two locks at once, deadlock is not possible.
++	 */
++	raw_spin_lock(&old_base->lock);
++	raw_spin_lock_nested(&new_base->lock, SINGLE_DEPTH_NESTING);
++	for (i = 0; i < HRTIMER_MAX_CLOCK_BASES; i++) {
++		migrate_hrtimer_list_except(&old_base->clock_base[i],
++				     &new_base->clock_base[i],
++				     &ts->sched_timer);
++	}
++
++	/*
++	 * The migration might have changed the first expiring softirq
++	 * timer on this CPU. Update it.
++	 */
++	__hrtimer_get_next_event(new_base, HRTIMER_ACTIVE_SOFT);
++
++	raw_spin_unlock(&new_base->lock);
++	raw_spin_unlock(&old_base->lock);
++	local_irq_enable();
++
++	/* Tell the other CPU to retrigger the next event */
++	smp_call_function_single(ncpu, retrigger_next_event, NULL, 0);
++}
++
+ int hrtimers_cpu_dying(unsigned int dying_cpu)
+ {
+ 	int i, ncpu = cpumask_any_and(cpu_active_mask, housekeeping_cpumask(HK_TYPE_TIMER));
 -- 
 2.45.0
 
