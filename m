@@ -1,228 +1,264 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.13])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9032A139D05
-	for <cgroups@vger.kernel.org>; Wed,  5 Jun 2024 17:19:19 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1717607962; cv=none; b=i/RC3rgY3Qb/MO42C7JeIF4bF05O4KH3z+qXwYEa4/KtURIQVPMV3q6Vt/jMomyAez0v7YXz04COWg+lK7hCwTsLNevwdsfZAB4MlDd94o42vTn2545qq/kG8c9JjmEQcrbKFfCpybUH8gbH9A+dZbGXK45COaabk4hS3nR+zrY=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1717607962; c=relaxed/simple;
-	bh=BKxZRYhWTUP+ZwtfxFFfpIbGweia8FSOZExsleG1QNc=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=Uv8MfTrf6tHigv32NWtYSaHQkHFdC1IWNvjWD7IUETt4QL8ovP5vNrES6vFw2+YzoNjmbYPjA/te5Xllssr4hDb4mQWin38qVFp2CqoqWZ74c0ivhbeRVrLbpmKejFMNr5PuQ+y0d8S11LqVV6Z+IAzZS9CIn7jWpi9YaaPPMC8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=Ft0+F9aj; arc=none smtp.client-ip=170.10.133.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 48E2813A897;
+	Wed,  5 Jun 2024 22:31:22 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=192.198.163.13
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1717626685; cv=fail; b=UYgSrmjUHRbS9xhjZ9/tDYSg6tDmrs7DNdT/58hvU78hkFOOZZiKSlfDbuXPAXheAGxomyTYxNumkcRA62/xE0I7N+Cs3A8XA1e2qycVawjNB6iRvFTrY9MyvXg5/9uLvtfL4YCgOpM1zt8bO+Fkd0fcMjbWY3YJDYa762Ukhrs=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1717626685; c=relaxed/simple;
+	bh=94p861wg3+gU7/l4cMQ8BIIhtv8U7IRRjeUgPm3BeGM=;
+	h=Message-ID:Date:Subject:To:CC:References:From:In-Reply-To:
+	 Content-Type:MIME-Version; b=TdkSDSSFVifLKn4sVImI6C/gdCahsSGmFdNy6Quru0CJ6jmHkl3GYwU8/ANNfOQQcrsdLfCYJlxCxUQL17mPdq8oGuuhoJ9uiDnXv8oPKhyLSjv3u3d1WooCuOdUFG7pOpDKGfGY/Xz5UoimVD7PWpKvkv+wKGuoBInTykbrbUQ=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=E6yLO2Z8; arc=fail smtp.client-ip=192.198.163.13
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="Ft0+F9aj"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1717607958;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=YoV1XwOZ7Cwl9H/g9F44sqIaQzIwrjfnCXC0mFAkhaw=;
-	b=Ft0+F9aj7TFApzggX/zTPFUL8EJCVGeOPjhvB3UmdsxTRGasldSp4ENkIxhvN6OpAp0fve
-	+2+O50/Ho0MaKqxlaLwT4gd5Dh5O/Cj1iH/+StfjecatzwORR5v+/xbgeU+8j/xTuDsGf1
-	gmjCq5jeNxXevfMbPcsPi3j22w3NFug=
-Received: from mx-prod-mc-03.mail-002.prod.us-west-2.aws.redhat.com
- (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
- relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-86-1f_DfBYAM2CqQNOyI9fQYw-1; Wed,
- 05 Jun 2024 13:19:14 -0400
-X-MC-Unique: 1f_DfBYAM2CqQNOyI9fQYw-1
-Received: from mx-prod-int-04.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-04.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.40])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mx-prod-mc-03.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 4F6681954B07;
-	Wed,  5 Jun 2024 17:19:12 +0000 (UTC)
-Received: from llong.com (unknown [10.22.33.216])
-	by mx-prod-int-04.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id 951B5195606C;
-	Wed,  5 Jun 2024 17:19:10 +0000 (UTC)
-From: Waiman Long <longman@redhat.com>
-To: Tejun Heo <tj@kernel.org>,
-	Zefan Li <lizefan.x@bytedance.com>,
-	Johannes Weiner <hannes@cmpxchg.org>
-Cc: cgroups@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Xavier <ghostxavier@sina.com>,
-	Waiman Long <longman@redhat.com>
-Subject: [PATCH-cgroup 1/2] cgroup/cpuset: Fix remote root partition creation problem
-Date: Wed,  5 Jun 2024 13:18:57 -0400
-Message-Id: <20240605171858.1323464-2-longman@redhat.com>
-In-Reply-To: <20240605171858.1323464-1-longman@redhat.com>
-References: <20240605171858.1323464-1-longman@redhat.com>
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="E6yLO2Z8"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1717626683; x=1749162683;
+  h=message-id:date:subject:to:cc:references:from:
+   in-reply-to:content-transfer-encoding:mime-version;
+  bh=94p861wg3+gU7/l4cMQ8BIIhtv8U7IRRjeUgPm3BeGM=;
+  b=E6yLO2Z87DTRXTfpUVFYD//H2sZjQ13SIAir2b/vJAv8Ud6mep3Vm3Pw
+   fYRuW4wZ21Gd5ta14mJ/SzXYioCLmJhq0sBtu6PJAGOK0IY46M2A7bgQV
+   3YsMHK83S6ZcOcQmL3qKC8EIUfM0RT75v1Jf8X4XuIfy0zAckK7c1pzkz
+   5SMm15EEN9oJ0SXWHB9tM21AiGZZa4yjuFwjc1LX0HU7TK9fFR9E1O6Lw
+   ZG8pl3+EhQoGn1iACsYHMfU00k4h9wIa2ymG8sO1i72Osd4D/UPN0SngK
+   sVLsXdEOCYNC7Qui7j1GOXU4I+p0EY+GBwJk8PN4S1j2rg7HK1IrYC3LM
+   w==;
+X-CSE-ConnectionGUID: NvCT14PhRq+PlFDCvTvxAw==
+X-CSE-MsgGUID: hO4MOF3qQl2Mq9x22EyP9Q==
+X-IronPort-AV: E=McAfee;i="6600,9927,11094"; a="17203199"
+X-IronPort-AV: E=Sophos;i="6.08,217,1712646000"; 
+   d="scan'208";a="17203199"
+Received: from fmviesa010.fm.intel.com ([10.60.135.150])
+  by fmvoesa107.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 05 Jun 2024 15:30:27 -0700
+X-CSE-ConnectionGUID: uPLWv5KaTS6KfN5Wxg8/ww==
+X-CSE-MsgGUID: lay5yqjlTJmpBReXEeun1Q==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.08,217,1712646000"; 
+   d="scan'208";a="37851381"
+Received: from fmsmsx601.amr.corp.intel.com ([10.18.126.81])
+  by fmviesa010.fm.intel.com with ESMTP/TLS/AES256-GCM-SHA384; 05 Jun 2024 15:30:26 -0700
+Received: from fmsmsx601.amr.corp.intel.com (10.18.126.81) by
+ fmsmsx601.amr.corp.intel.com (10.18.126.81) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2507.39; Wed, 5 Jun 2024 15:30:26 -0700
+Received: from FMSEDG603.ED.cps.intel.com (10.1.192.133) by
+ fmsmsx601.amr.corp.intel.com (10.18.126.81) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2507.39 via Frontend Transport; Wed, 5 Jun 2024 15:30:26 -0700
+Received: from NAM11-CO1-obe.outbound.protection.outlook.com (104.47.56.169)
+ by edgegateway.intel.com (192.55.55.68) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.1.2507.39; Wed, 5 Jun 2024 15:30:25 -0700
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=T9aYyioxRCTEhdKeh8lOpxWn4CDB9N+tIjoNlvGUrS+HGLPaB0I+ToP4k4pBteU6ovmYNsAR41Tjbq3yrO1VOLjw6zCpUzqbw9OQ6Xe06QeUzmHFJ73GbtlQJIngsFLSsjA6cRtCt94dqCVw3uJk06LMNtBiHwbpgsY3UoZjU5G17QDTq5BnjA7NP+YKS4IGs+BYrNaZYHfpwoyGEcaGSUZwDHIxv77f+rUMB014tpqCXM8n7R/xpJShG+NBycvBzl1WYTKIP9Uk4EYRGEfBORA5TlcLTEIU6XvuRbAL7rGGto5iLCtGKq7I0LO0vRsa1iMw7xTkI95DehHXPNQolw==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=7+QCYgu80wuMPc3NGq85MVA+qSpDxhpCPWaJSQiWCjw=;
+ b=HRoyuDLuNs6vYJ6jmB0Vvudfi7YnOAhKGf9j5eQjZBsmXIdeYXtpEQpb7imuP80CBGqFNzdbHOiw5A9nfMQFvHosQDNu0M1zkcdUkmIq4kMDnMzbh9VxBpdmhhF8jIJJH0Q3jr24u2tYO7raiKYDFwmQIwTEV1UzPJAcu0Ry8AwMHgZ9WEZJhLgZkBGxQjTcJ4rcwoUXY5z18CKZOx7q7wcVohE5MWqeQCiXp14Pn030Qu5Ja5eOZ25hIumpLvW3y+TczgBhUW44zM1/7Fc8QZSqpwA3Snldl8TVfpQmd8QIV4lyuwaYe3YrfJU8gkh0troFi876MqsgyTPP3bbakg==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=intel.com; dmarc=pass action=none header.from=intel.com;
+ dkim=pass header.d=intel.com; arc=none
+Authentication-Results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=intel.com;
+Received: from BL1PR11MB5978.namprd11.prod.outlook.com (2603:10b6:208:385::18)
+ by CY8PR11MB6817.namprd11.prod.outlook.com (2603:10b6:930:63::14) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.7633.22; Wed, 5 Jun
+ 2024 22:30:23 +0000
+Received: from BL1PR11MB5978.namprd11.prod.outlook.com
+ ([fe80::fdb:309:3df9:a06b]) by BL1PR11MB5978.namprd11.prod.outlook.com
+ ([fe80::fdb:309:3df9:a06b%4]) with mapi id 15.20.7633.021; Wed, 5 Jun 2024
+ 22:30:23 +0000
+Message-ID: <7cbf3583-a23e-4437-afc2-1faeb4a1f436@intel.com>
+Date: Thu, 6 Jun 2024 10:30:10 +1200
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v14 14/14] selftests/sgx: Add scripts for EPC cgroup
+ testing
+To: Haitao Huang <haitao.huang@linux.intel.com>,
+	<dave.hansen@linux.intel.com>, <tj@kernel.org>, <mkoutny@suse.com>,
+	<linux-kernel@vger.kernel.org>, <linux-sgx@vger.kernel.org>,
+	<x86@kernel.org>, <cgroups@vger.kernel.org>, <tglx@linutronix.de>,
+	<mingo@redhat.com>, <bp@alien8.de>, <hpa@zytor.com>, <sohil.mehta@intel.com>,
+	<tim.c.chen@linux.intel.com>, Jarkko Sakkinen <jarkko@kernel.org>
+CC: <zhiquan1.li@intel.com>, <kristen@linux.intel.com>, <seanjc@google.com>,
+	<zhanb@microsoft.com>, <anakrish@microsoft.com>,
+	<mikko.ylinen@linux.intel.com>, <yangjie@microsoft.com>,
+	<chrisyan@microsoft.com>
+References: <20240531222630.4634-1-haitao.huang@linux.intel.com>
+ <20240531222630.4634-15-haitao.huang@linux.intel.com>
+ <D1RKK8CENNXI.1KMNDADV9C1YM@kernel.org>
+ <op.2owf5xiwwjvjmi@hhuan26-mobl.amr.corp.intel.com>
+Content-Language: en-US
+From: "Huang, Kai" <kai.huang@intel.com>
+In-Reply-To: <op.2owf5xiwwjvjmi@hhuan26-mobl.amr.corp.intel.com>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Transfer-Encoding: 8bit
+X-ClientProxiedBy: BYAPR07CA0015.namprd07.prod.outlook.com
+ (2603:10b6:a02:bc::28) To BL1PR11MB5978.namprd11.prod.outlook.com
+ (2603:10b6:208:385::18)
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-Scanned-By: MIMEDefang 3.0 on 10.30.177.40
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: BL1PR11MB5978:EE_|CY8PR11MB6817:EE_
+X-MS-Office365-Filtering-Correlation-Id: e5ced2f7-9a6c-4c91-7ad0-08dc85af16e9
+X-LD-Processed: 46c98d88-e344-4ed4-8496-4ed7712e255d,ExtAddr
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam: BCL:0;ARA:13230031|366007|376005|1800799015|7416005|921011;
+X-Microsoft-Antispam-Message-Info: =?utf-8?B?eTd0dXkyL2p1LzVFendRTDN0NEduOXRGOVhkWXUrUS9NVTg1a0pmNE51VUg3?=
+ =?utf-8?B?TnN0U3YvdHhmRzl1VWVRd21UR0VxWnFhUXA5M0wvWGxQQXN4TTlCaUwyM0Zp?=
+ =?utf-8?B?QzNGYW1qQ044QjJheFVpdmZWZDJmZ1UxczA5YlVqeDBZMmovRGVyazA4YW0y?=
+ =?utf-8?B?Z0ovQjZWVDFZQkYzTFV4cjdzdGJPR1NoMVZqcWZZR0xMbDJodzhJY29iaFgw?=
+ =?utf-8?B?QmtxWUtkcW1vWENqZ3lmbW1QdWUvMWRFVDZwdzRBNlVRdFltMlg4SysrM003?=
+ =?utf-8?B?Y0hzVzRSL3ZkQjZ2K3ppekFLWTFOSW8yUGtxRXRSVE5tVjl6eC9zcU9lalp1?=
+ =?utf-8?B?THlIRFhRK2RQSTJHRGI4ZWdQdWtwdGNXZkpxSG42YU5pSVV3bFoyL1ZMeXBu?=
+ =?utf-8?B?RzhOdmJ3elBPSlpyRW9nT3ZFQnVYRXlHY1ZqazBwUEQ1T1RDbytERWxnNkxI?=
+ =?utf-8?B?djRJRWU0OHBpK2JIM3VZVkk1QmxTRWNtOUtDdUNmMnRUczVVMlcvN2daeUJt?=
+ =?utf-8?B?czBEa2hQTXROV0tNZW5PcHI4aXcwZGU2RTRSTmM0ekZLNm5LV2l4NzNWMmI5?=
+ =?utf-8?B?N3JweG5ieXV2L1FJYml6Vnh2MEdzQ2NKR3BFZzRpSVFJSXdoeXhPc3VCa1Qv?=
+ =?utf-8?B?M2JpdmtHem5Da2VNVG1vSEVZc3g4WkJ2ay8yQUtoV0dWVU9DSWVxN1lwYW9B?=
+ =?utf-8?B?eURDbkphQUlMMmhrWFZjSGEzQm85RWVXVW5VY2Q2eU1KelEvbTRvRnJGVHox?=
+ =?utf-8?B?T3JQcnd2Wkg4SUFyb3pCQWNib2JBYkVJMEk5RW84dFY3MTcvc2JhK3lOQ2VI?=
+ =?utf-8?B?R0VRVTBjWmhoRUE5RU9qbDV5V2tsZlhMdzdlcldYWkJ4RjFIL0xUM3JJUmh5?=
+ =?utf-8?B?OFpUWnRhS2YwRStYd1QrSTRGaHNGc0h3ZUZWMk9vaWsxQURHaEdYM3JDaC9D?=
+ =?utf-8?B?L0hHTWx1ZHRQeDdTem5CMWprVmlOSHFzdy9TelVoeDZTZnk2b255Z1JDWith?=
+ =?utf-8?B?RzdQaHU3a1pNVW1uSHJicEhqYkJiaXU3NEdEakVseHBZTlZ4TW1KVE1JV1Ex?=
+ =?utf-8?B?T2xmYVhHMTBSbFQ0VEdnUVhvemhuVGY3YjkyY0ZVTGVPOUlRRWZGY1ZaVCtl?=
+ =?utf-8?B?UzYvQjdsUjZ3T3M1RkJObTMvaFFDbzE4Ym9nQWZ3OHlaWmtXRkQ1K25NMVo3?=
+ =?utf-8?B?b213Nml5NnBpc2tqbE1sWUdYckRBTnJ1NjRxOUVBNDRnb0gzSVVhajRCSUV3?=
+ =?utf-8?B?Z0V1M1ArTzVxeU1tckh3UFkwYjhEL25Rdm5zWE5zU05lVnRjdlllV2dSV1R4?=
+ =?utf-8?B?WVRSNUtWRTA5M2Y5WW9vTmQwMSt0bmJpRjR2N3NOWVhkd3pIQVZ5UkMyb2RH?=
+ =?utf-8?B?Z0V2ZUV1YWIzMFJmeE02UVdHMVY5OHd2TmhIeElYY2JLUGY5NWRlbnNkQkVu?=
+ =?utf-8?B?enZSZk1QZ0l5YjF0eldPNVhjcmYxeExzWllFeEpCYUg5V0ttcktWQ0JiZStX?=
+ =?utf-8?B?aDdNVXVERVNvb0VuVEcvNFMzT1JZb3hmb1BZTTlNSFBNRzV6b3ExQ3BNSS9H?=
+ =?utf-8?B?SWYvMFdLSStJRmg5RUlLaUYvZGUyWWFIYUNuRDNyY2xCSTBHSkZWNTJTN3J3?=
+ =?utf-8?B?TWxpMTI2RWdGQ0JuSm81WTg2S3lEWEZZZjB3aDVvMncydCt4NkpEZGtDcFVW?=
+ =?utf-8?B?TXB3WDkxakxERSt6ZTNKVlNKbUgyZ2g2NXErVFEyMDh4b1E0YU9YSEpuLzFY?=
+ =?utf-8?B?d3E2UXBvMDBlSGJUS04wVFEydE9oMlFjTEptVjd6M3FaWUk5SFMwYmczYkRh?=
+ =?utf-8?Q?cJqtk0wkLP05htZNa6x9xncBZMMSi+REeai7w=3D?=
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:BL1PR11MB5978.namprd11.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230031)(366007)(376005)(1800799015)(7416005)(921011);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0: =?utf-8?B?ajBqUzRvOVpBcXc1b0MrdDZyQmdVMG9aQ0F2enBSa2NSZzR1UXBxa3dCalps?=
+ =?utf-8?B?a0JRVkZ1MzZwdDJuczNJeitJUC9PQTBZNkc3dmtaVi9rMGxHN0wzUmhZdndN?=
+ =?utf-8?B?dHAwUWNrMGErTlU1ellHZk9mclNvMjZ0Zzh4YUFSOGlvc0h4OUVmM2ZXNFdH?=
+ =?utf-8?B?QS83WTBVTHhqTDhXc0hkaUJmL2ZWY0RwWEUxWHZBS0N5R1FXOW1BUjVBSjd0?=
+ =?utf-8?B?aDc0TEY1N1J6d2FKTFB5ME1SUnA4dWkrV3A4RXlmNFNIa2lLZjdYQXVYdU9R?=
+ =?utf-8?B?bk9DT2xDRzJON2JwQ2syaHgveW1HZ2FDOG1kVXRwL3FJZ2t2UndIb3NzdElR?=
+ =?utf-8?B?dS9oR3dua3V5bjIxOHRHYTlQSk1tUXhmUUYxNm81OE9NVzhSVHpudFZaVUpV?=
+ =?utf-8?B?VEt3SGkxKy9Sa2pJTCtpSjlBWUxWRG9SR0JMdDZHNkVaTDkyMFhZZkRSY3g3?=
+ =?utf-8?B?dmlJY2NPdktZM0hGbTFVWms4OTQvalNWZTJxUE53VGN4bEFSdDJ1ckFiKzUv?=
+ =?utf-8?B?UzNPZ3VtSVdLQmxjSHBTRDhzM1JvcmNIQW5IVkNOcGN3UHNnMFpvZlhyRWRa?=
+ =?utf-8?B?bkFmUTNSbW9mSEZCSzB6ekgvZk4yL3N5OGFXWFpteHU4V3l1U2MxZy9RUDVT?=
+ =?utf-8?B?L0NwOXIrdmlHaDV0dnRieUI0NDd1OGo0SXBITnQwS1k2azVrWWV1MDRIZUJp?=
+ =?utf-8?B?SVVzS29IUG9qS2tEKzc1S1d0NnhCeThLaVRmZXFPbEhxWXRyUGU0cW0wUEZv?=
+ =?utf-8?B?a1kvM1NYY2RneE5Dbkc0MEpZTFhxZkxKMEhFUHUrTXNFYU5yN3pKTEtGekd5?=
+ =?utf-8?B?VGJCelFZcW01Y2tPbFRyRTBLMzAzL29HTVM1TGdrdEtMdUpMR3J5ekhxSVNz?=
+ =?utf-8?B?bGlYYUxadWFSNjI2TVBmNk9KMkdGck9rV1RZd2RhUmNJQkVCSFNMK2lvcTlt?=
+ =?utf-8?B?UjB1MnUzNXpXNGN3T3dmVW5UY0JRY0tYRUNGbTRZbVVBK296SUs3QWJvRzB3?=
+ =?utf-8?B?K2xOZzRXanA4K1JPK0QrNjVPMWdGOUxDRktjeFFQbnpRNURRNGsxaTRzS1Bk?=
+ =?utf-8?B?emwvaEovQjh5dW9UdElYSlRGWDkzK2MwUmwzUUtLb1RKTFFjNGRnd3hCOXNY?=
+ =?utf-8?B?R1A3MGhLS1Y2b3hNZlRZUitoUU8vWWFFSFdPbnppRlk0ZGJaVUIxSzdsc2gr?=
+ =?utf-8?B?aEVCallRbWcxZkFMbVMvbkFWZlJwQWVCZ05zd2tpQ2lTdGR6b3lRNm55WnJl?=
+ =?utf-8?B?bXZrbUJFQVRJZmMvVHFFaE82WTU4MDlvdDlsdTVxK0dDR1YrREtaY0RXQ2Zk?=
+ =?utf-8?B?TlVUVGh0VFpTZGpCdzVWWEFQWFdNaVVZclg4bWJsQWIxcHM3N1J0eXNoRDd3?=
+ =?utf-8?B?c0lNUXZrYVZsVDVZU1RLSWV1dUt2MFRuUFpQVGl0OXFDSFlEbndqNWExQjB6?=
+ =?utf-8?B?Q2F2MndhclZYMENLSXMyaHVZaUtxalJvelFqbUJ4eStrT3JuU01zUnpWeFVu?=
+ =?utf-8?B?dmtqVGlOdVVEVGE5V3A5Vllydm5TcWpiSGI2MWk3Nng2SVBaUVY4S1RHZFp3?=
+ =?utf-8?B?MFF3ZFpYYzM5cmRxREd0eTJ3OWFTdlVBMmY0SjJsbkRsU0J0WTlCdkdQZEJv?=
+ =?utf-8?B?dXowRXBWdUZXNTlHOUgzQ1ZaN205cTlmOVdtd0Noei9aNzlyTHFoTEE4MU9n?=
+ =?utf-8?B?WTh4QzczOEp2eFdsRDhIZmxrdThSOWs0cm1jaDF4UVUwbnVmejVYUmk2bS9t?=
+ =?utf-8?B?ZktHM2FJOURlQWRLU2JYWWR4Ty9SMEJUcnNtaUpGMEpwM1h3VnNMZnRnTGE5?=
+ =?utf-8?B?YkRqejY2TVltYjh0M2ZxakUvZHRNcTdPNVU4aHdEZm8xWWJVclg0MDZTdkw5?=
+ =?utf-8?B?Nlo1L1ZWUGx3Q1NKeStsNWMwdVJ4Z09VbFNDN2J0RTJ2WDBYK1J1S2ZDN1dY?=
+ =?utf-8?B?THVVcW5zK1JOMEU5QmNhOElreHR2ZzNyNzBnL3B4bkIyTGlLdi9KeWZjTmtY?=
+ =?utf-8?B?a3dxVjlvODFGdTFDRUVpa2tFODVVS2NpNThRZnMrbGNnaStvU21IOG9WdEtQ?=
+ =?utf-8?B?TGZsOUNIWlMvL3VQcmtTSTU1VWVTeGovdEYwVW1wbTNheFZCOTg4S1Viamxy?=
+ =?utf-8?Q?dObxX6xKTxYOr/KkMPmI6+HB+?=
+X-MS-Exchange-CrossTenant-Network-Message-Id: e5ced2f7-9a6c-4c91-7ad0-08dc85af16e9
+X-MS-Exchange-CrossTenant-AuthSource: BL1PR11MB5978.namprd11.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 05 Jun 2024 22:30:23.1678
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 46c98d88-e344-4ed4-8496-4ed7712e255d
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: LpBkyIoovjIUnmO4trvNkiWQPqPppWp2VizaAordjL6UmNB3SoFVesdV5MeGsQNNbv+a2xA/1ZEUuecUeN+yyA==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: CY8PR11MB6817
+X-OriginatorOrg: intel.com
 
-Since commit 181c8e091aae ("cgroup/cpuset: Introduce remote partition"),
-a remote partition can be created underneath a non-partition root cpuset
-as long as its exclusive_cpus are set to distribute exclusive CPUs down
-to its children. The generate_sched_domains() function, however, doesn't
-take into account this new behavior and hence will fail to create the
-sched domain needed for a remote root (non-isolated) partition.
 
-There are two issues related to remote partition support. First of
-all, generate_sched_domains() has a fast path that is activated if
-root_load_balance is true and top_cpuset.nr_subparts is non-zero. The
-later condition isn't quite correct for remote partitions as nr_subparts
-just shows the number of local child partitions underneath it. There
-can be no local child partition under top_cpuset even if there are
-remote partitions further down the hierarchy. Fix that by checking
-for subpartitions_cpus which contains exclusive CPUs allocated to both
-local and remote partitions.
+>> Reorg:
+>>
+>> void sgx_cgroup_init(void)
+>> {
+>>     struct workqueue_struct *wq;
+>>
+>>     /* eagerly allocate the workqueue: */
+>>     wq = alloc_workqueue("sgx_cg_wq", wq_unbound | wq_freezable, 
+>> wq_unbound_max_active);
+>>     if (!wq) {
+>>         pr_warn("sgx_cg_wq creation failed\n");
+>>         return;
+> 
+> sgx_cgroup_try_charge() expects sgx_cg_wq, so it would break unless we 
+> check and return 0 which was the initially implemented in v12. But then 
+> Kai had some concern on that we expose all the interface files to allow 
+> user to set limits but we don't enforce. To keep it simple we settled 
+> down back to BUG_ON(). 
 
-Secondly, the valid partition check for subtree skipping in the csa[]
-generation loop isn't enough as remote partition does not need to
-have a partition root parent. Fix this problem by breaking csa[] array
-generation loop of generate_sched_domains() into v1 and v2 specific parts
-and checking a cpuset's exclusive_cpus before skipping its subtree in
-the v2 case.
+[...]
 
-Also simplify generate_sched_domains() for cgroup v2 as only
-non-isolating partition roots should be included in building the cpuset
-array and none of the v1 scheduling attributes other than a different
-way to create an isolated partition are supported.
+> This would only happen rarely and user can add 
+> command-line to disable SGX if s/he really wants to start kernel in this 
+> case, just can't do SGX.
 
-Fixes: 181c8e091aae ("cgroup/cpuset: Introduce remote partition")
-Signed-off-by: Waiman Long <longman@redhat.com>
----
- kernel/cgroup/cpuset.c | 55 ++++++++++++++++++++++++++++++++----------
- 1 file changed, 42 insertions(+), 13 deletions(-)
+Just to be clear that I don't like BUG_ON() either.  It's inevitable you 
+will get attention because of using it.
 
-diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
-index f9b97f65e204..fb71d710a603 100644
---- a/kernel/cgroup/cpuset.c
-+++ b/kernel/cgroup/cpuset.c
-@@ -169,7 +169,7 @@ struct cpuset {
- 	/* for custom sched domain */
- 	int relax_domain_level;
- 
--	/* number of valid sub-partitions */
-+	/* number of valid local child partitions */
- 	int nr_subparts;
- 
- 	/* partition root state */
-@@ -957,13 +957,14 @@ static int generate_sched_domains(cpumask_var_t **domains,
- 	int nslot;		/* next empty doms[] struct cpumask slot */
- 	struct cgroup_subsys_state *pos_css;
- 	bool root_load_balance = is_sched_load_balance(&top_cpuset);
-+	bool cgrpv2 = cgroup_subsys_on_dfl(cpuset_cgrp_subsys);
- 
- 	doms = NULL;
- 	dattr = NULL;
- 	csa = NULL;
- 
- 	/* Special case for the 99% of systems with one, full, sched domain */
--	if (root_load_balance && !top_cpuset.nr_subparts) {
-+	if (root_load_balance && cpumask_empty(subpartitions_cpus)) {
- single_root_domain:
- 		ndoms = 1;
- 		doms = alloc_sched_domains(ndoms);
-@@ -992,16 +993,18 @@ static int generate_sched_domains(cpumask_var_t **domains,
- 	cpuset_for_each_descendant_pre(cp, pos_css, &top_cpuset) {
- 		if (cp == &top_cpuset)
- 			continue;
-+
-+		if (cgrpv2)
-+			goto v2;
-+
- 		/*
-+		 * v1:
- 		 * Continue traversing beyond @cp iff @cp has some CPUs and
- 		 * isn't load balancing.  The former is obvious.  The
- 		 * latter: All child cpusets contain a subset of the
- 		 * parent's cpus, so just skip them, and then we call
- 		 * update_domain_attr_tree() to calc relax_domain_level of
- 		 * the corresponding sched domain.
--		 *
--		 * If root is load-balancing, we can skip @cp if it
--		 * is a subset of the root's effective_cpus.
- 		 */
- 		if (!cpumask_empty(cp->cpus_allowed) &&
- 		    !(is_sched_load_balance(cp) &&
-@@ -1009,16 +1012,28 @@ static int generate_sched_domains(cpumask_var_t **domains,
- 					 housekeeping_cpumask(HK_TYPE_DOMAIN))))
- 			continue;
- 
--		if (root_load_balance &&
--		    cpumask_subset(cp->cpus_allowed, top_cpuset.effective_cpus))
--			continue;
--
- 		if (is_sched_load_balance(cp) &&
- 		    !cpumask_empty(cp->effective_cpus))
- 			csa[csn++] = cp;
- 
--		/* skip @cp's subtree if not a partition root */
--		if (!is_partition_valid(cp))
-+		/* skip @cp's subtree */
-+		pos_css = css_rightmost_descendant(pos_css);
-+		continue;
-+
-+v2:
-+		/*
-+		 * Only valid partition roots that are not isolated and with
-+		 * non-empty effective_cpus will be saved into csn[].
-+		 */
-+		if ((cp->partition_root_state == PRS_ROOT) &&
-+		    !cpumask_empty(cp->effective_cpus))
-+			csa[csn++] = cp;
-+
-+		/*
-+		 * Skip @cp's subtree if not a partition root and has no
-+		 * exclusive CPUs to be granted to child cpusets.
-+		 */
-+		if (!is_partition_valid(cp) && cpumask_empty(cp->exclusive_cpus))
- 			pos_css = css_rightmost_descendant(pos_css);
- 	}
- 	rcu_read_unlock();
-@@ -1072,6 +1087,20 @@ static int generate_sched_domains(cpumask_var_t **domains,
- 	dattr = kmalloc_array(ndoms, sizeof(struct sched_domain_attr),
- 			      GFP_KERNEL);
- 
-+	/*
-+	 * Cgroup v2 doesn't support domain attributes, just set all of them
-+	 * to SD_ATTR_INIT. Also non-isolating partition root CPUs are a
-+	 * subset of HK_TYPE_DOMAIN housekeeping CPUs.
-+	 */
-+	if (cgrpv2) {
-+		for (i = 0; i < ndoms; i++) {
-+			cpumask_copy(doms[i], csa[i]->effective_cpus);
-+			if (dattr)
-+				dattr[i] = SD_ATTR_INIT;
-+		}
-+		goto done;
-+	}
-+
- 	for (nslot = 0, i = 0; i < csn; i++) {
- 		struct cpuset *a = csa[i];
- 		struct cpumask *dp;
-@@ -1231,7 +1260,7 @@ static void rebuild_sched_domains_locked(void)
- 	 * root should be only a subset of the active CPUs.  Since a CPU in any
- 	 * partition root could be offlined, all must be checked.
- 	 */
--	if (top_cpuset.nr_subparts) {
-+	if (!cpumask_empty(subpartitions_cpus)) {
- 		rcu_read_lock();
- 		cpuset_for_each_descendant_pre(cs, pos_css, &top_cpuset) {
- 			if (!is_partition_valid(cs)) {
-@@ -4575,7 +4604,7 @@ static void cpuset_handle_hotplug(void)
- 	 * In the rare case that hotplug removes all the cpus in
- 	 * subpartitions_cpus, we assumed that cpus are updated.
- 	 */
--	if (!cpus_updated && top_cpuset.nr_subparts)
-+	if (!cpus_updated && !cpumask_empty(subpartitions_cpus))
- 		cpus_updated = true;
- 
- 	/* For v1, synchronize cpus_allowed to cpu_active_mask */
--- 
-2.39.3
+This is a compromise that you don't want to reset "capacity" to 0 when 
+alloc_workqueue() fails.
 
+There are existing code where BUG_ON() is used during the kernel early 
+boot code when memory allocation fails (e.g., see cgroup_init_subsys()), 
+so it might be acceptable to use BUG_ON() here, but it's up to 
+maintainers to decide whether it is OK.
+
+[...]
+
+>> With "--strict" flag I also catched these:
+>>
+>> CHECK: spinlock_t definition without comment
+>> #1308: FILE: arch/x86/kernel/cpu/sgx/sgx.h:122:
+>> +    spinlock_t lock;
+>>
+> Yes I had a comment but Kai thought it was too obvious and I can't think 
+> of a better one that's not obvious so I removed:
+> 
+> https://lore.kernel.org/linux-sgx/9ffb02a3344807f2c173fe8c7cb000cd6c7843b6.camel@intel.com/
+>
+To be clear, my reply was really about the comment itself isn't useful, 
+but didn't say we shouldn't use a comment here.
+
+> 
+>> CHECK: multiple assignments should be avoided
+>> #444: FILE: kernel/cgroup/misc.c:450:
+>> +        parent_cg = cg = &root_cg;
+>>
+> 
+> This was also suggested by Kai a few versions back:
+> https://lore.kernel.org/linux-sgx/8f08f0b0f2b04b90d7cdb7b628f16f9080687c43.camel@intel.com/
+> 
+
+I didn't know checkpatch complains this.  Feel free to revert back as it 
+is trivial to me.
