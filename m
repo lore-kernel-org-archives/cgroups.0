@@ -1,131 +1,96 @@
-Received: from mail-ej1-f52.google.com (mail-ej1-f52.google.com [209.85.218.52])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from dggsgout11.his.huawei.com (unknown [45.249.212.51])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 01A0A10E3;
-	Wed, 12 Jun 2024 14:46:01 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.218.52
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 56F2015E83;
+	Thu, 13 Jun 2024 01:50:17 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.51
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1718203564; cv=none; b=lE4mhgp+C0uZXUoUV/7A1FuZcMawPkhtu+aW8bmIuh+F5MuJK733JjOEWrcbka8slmuUHOeH2jWkgbyhwckVX3U0cuYkU4gYrkYOVWnWR/rlvL7qJ1LYk6ksdiJv4pdcXiN4sTZhn59MfGn+ukCYNDO7dvsySN4NRLuAG+aJIGU=
+	t=1718243418; cv=none; b=p7dwCwf03L74kAGNA71fZjK4Mv+HL5GB8g9WJuZdLM0iD3YzzEU24qKWs8v8cU25JcbVob2TOfMuDEw9WvlQXdocmcxTKiLPj834+0KM2lkPgO78kieJvyFMZibRwMU8KQxLdeE/nZUyIs1W584wi3VHqVl7xNLh8YnF39T4hXg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1718203564; c=relaxed/simple;
-	bh=5AxXYH7nKTnTDISzs7OOMXqxrPovr+dh//GfJdFTR8k=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=gXVl3gytizSqzJWJLIs+RbQ7QaXLYCZp/oC7s2Rx5lDMMJQMHPikpaizdA9aJGYelfGoDU7WabRVoYpj526922txWzFEb3OSpMMDhkLh648iREb2/zVVI6uxYJuSzKQN3cFj9BUf3F6F6nKoZBcfGIOBLlkCZlstr/614G+YCv0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=aQ8P34F7; arc=none smtp.client-ip=209.85.218.52
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="aQ8P34F7"
-Received: by mail-ej1-f52.google.com with SMTP id a640c23a62f3a-a6f04afcce1so304723366b.2;
-        Wed, 12 Jun 2024 07:46:01 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1718203560; x=1718808360; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=5AxXYH7nKTnTDISzs7OOMXqxrPovr+dh//GfJdFTR8k=;
-        b=aQ8P34F7P6QvkYdFxgalqjIaH1D2++2VaFcDdpejbvCkFyPuFHQ208EgHNKjGW/HBR
-         iOI0GnF/6JRHvJ67wrmY/kCa8TquO/m2WNkqqMx9Pwe1RprYpuLiSl4BIjt6Gyr5Fnm8
-         oe75nEL76aIl7zZplwKJ/plVctywNZywXUdjCeNi3Cbg5e3K0bKL3XIAGIxozIwmDvyx
-         qc6oJWc7/PxDkcJEPhQdx1aXL3n+oSrE97m88KJ0TEIy37EnUM4RjT/7xaOXmrM50lJ6
-         YnTYtESvnJEc8fFtmxk7RQFH3I5oKkszaigacVCzERWjzQGmGUB2wEab3jXQyvQYg1Kf
-         Mq0w==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1718203560; x=1718808360;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=5AxXYH7nKTnTDISzs7OOMXqxrPovr+dh//GfJdFTR8k=;
-        b=GiBmMLEh3bf3jXwVgb/FcNHo09Z7fi77FzGg3SPMPLFJMhkRJulQK3yZ57W2uTjV6e
-         chxS2BH9LaoHjz71WuyBmWMFt7RerC0ONBF5vtkeBhAoED8VXoUgnoql4XeYfHTTjOXj
-         ctf8ndseyLknZGEv440eFnW3nNZsHSg8jDibgBmO9wAIpx9USXcmE6AwIM5UOQx5coJo
-         hHtzxxKTbYDNIC24rpYXzbCdfkVndYJMCwfpEZyQqSTPBfEH71+ts5xRiS0IF2gmax1O
-         QR6zNWY1hlNtd1+XG5g12JC8gqrswWD5Wuz724fwdpycfrTCsJtQZvqJ1vypVnr3h9v0
-         QncA==
-X-Forwarded-Encrypted: i=1; AJvYcCX6QD2T0M6q5KyZDAYfDYmkEbSmcgG/cVvCL7QR47MKtjZFm/A3mG4Gsj33D4XyPcwI89sKWTccXVZvRCtIxPAYm4SXWL0M0KfxKnsRQX/9jqcvXcOeRQ+o0sGEg3hisiEPdnb8t1K8Vghz6IvHDvzAjb+DBgrzn7HZdQ==
-X-Gm-Message-State: AOJu0YytyCywemBRDdJhjNdSIiXdexPs2EDM/+htXHjXwu8zpwRLGIx/
-	r9Vo+vef2Rxmju7fMeUMdTMDYwTohlAl3KIV5nlxDHj9nB2MoPQDZkgoUdIMheoxaUsV9CQY+D2
-	JPNFXS8jeyuPqnwFJ7Ma/rCsDOM0=
-X-Google-Smtp-Source: AGHT+IEl0JvRLUON6rkpWTuYeTJkOBLp2cxRobpfn23a+6NqNKZeRh/2J4mmduBxTKrwNFkPAbePHd1yLLmdOoT5X3A=
-X-Received: by 2002:a17:906:d8ab:b0:a6f:2d9a:c956 with SMTP id
- a640c23a62f3a-a6f47d4eefamr167552966b.3.1718203559979; Wed, 12 Jun 2024
- 07:45:59 -0700 (PDT)
+	s=arc-20240116; t=1718243418; c=relaxed/simple;
+	bh=YIvPD7brCk1ohgELzPqSstLRQ3OgyZ58vBlizoogkBY=;
+	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
+	 MIME-Version; b=fIvOELUzek3T6/mHl5AW7J/peTxTq9JR0bgzRgCvdLl7fU92J8YL69iliRoM2l5avYSHIOM6GiuZLyozECE+kuiikZUTm1Tx5PNZ5FVkYfSBQNvAKtedZISSV7cYMwykEasbKOVPObVyLNC2WSHEnxktgXyA2ZWEmxKgMAkAMF4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.51
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
+Received: from mail.maildlp.com (unknown [172.19.163.216])
+	by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4W052K2shGz4f3kKj;
+	Thu, 13 Jun 2024 09:50:01 +0800 (CST)
+Received: from mail02.huawei.com (unknown [10.116.40.112])
+	by mail.maildlp.com (Postfix) with ESMTP id 0253F1A0EFE;
+	Thu, 13 Jun 2024 09:50:08 +0800 (CST)
+Received: from huaweicloud.com (unknown [10.175.104.67])
+	by APP1 (Coremail) with SMTP id cCh0CgBXKBFNUGpm3eFSPQ--.6570S5;
+	Thu, 13 Jun 2024 09:50:07 +0800 (CST)
+From: Yu Kuai <yukuai1@huaweicloud.com>
+To: axboe@kernel.dk,
+	tj@kernel.org,
+	josef@toxicpanda.com,
+	gregkh@linuxfoundation.org,
+	lizefan.x@bytedance.com,
+	hannes@cmpxchg.org
+Cc: linux-block@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	cgroups@vger.kernel.org,
+	yukuai3@huawei.com,
+	yukuai1@huaweicloud.com,
+	yi.zhang@huawei.com,
+	yangerkun@huawei.com
+Subject: [PATCH RFC -next 1/7] kernfs: export pr_cont_kernfs_path()
+Date: Thu, 13 Jun 2024 09:49:31 +0800
+Message-Id: <20240613014937.1326020-2-yukuai1@huaweicloud.com>
+X-Mailer: git-send-email 2.39.2
+In-Reply-To: <20240613014937.1326020-1-yukuai1@huaweicloud.com>
+References: <20240613014937.1326020-1-yukuai1@huaweicloud.com>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20240610125713.86750-1-fgriffo@amazon.co.uk> <k4r7ngm7cyctnyjcwbbscvprhj3oid6wv3cqobkwt4p4j4ibfy@pvmb35lmvdlz>
-In-Reply-To: <k4r7ngm7cyctnyjcwbbscvprhj3oid6wv3cqobkwt4p4j4ibfy@pvmb35lmvdlz>
-From: Frederic Griffoul <griffoul@gmail.com>
-Date: Wed, 12 Jun 2024 15:45:48 +0100
-Message-ID: <CAF2vKzP0C1nEYTWRdWeAFKVUcuu3BkPD0FVA7yAS1rc-c=gs5A@mail.gmail.com>
-Subject: Re: [PATCH v5 0/2] vfio/pci: add msi interrupt affinity support
-To: =?UTF-8?Q?Michal_Koutn=C3=BD?= <mkoutny@suse.com>
-Cc: Fred Griffoul <fgriffo@amazon.co.uk>, Catalin Marinas <catalin.marinas@arm.com>, 
-	Will Deacon <will@kernel.org>, Alex Williamson <alex.williamson@redhat.com>, 
-	Waiman Long <longman@redhat.com>, Zefan Li <lizefan.x@bytedance.com>, Tejun Heo <tj@kernel.org>, 
-	Johannes Weiner <hannes@cmpxchg.org>, Mark Rutland <mark.rutland@arm.com>, Marc Zyngier <maz@kernel.org>, 
-	Oliver Upton <oliver.upton@linux.dev>, Mark Brown <broonie@kernel.org>, 
-	Ard Biesheuvel <ardb@kernel.org>, Joey Gouly <joey.gouly@arm.com>, 
-	Ryan Roberts <ryan.roberts@arm.com>, Jeremy Linton <jeremy.linton@arm.com>, 
-	Jason Gunthorpe <jgg@ziepe.ca>, Yi Liu <yi.l.liu@intel.com>, Kevin Tian <kevin.tian@intel.com>, 
-	Eric Auger <eric.auger@redhat.com>, Stefan Hajnoczi <stefanha@redhat.com>, 
-	Christian Brauner <brauner@kernel.org>, Ankit Agrawal <ankita@nvidia.com>, 
-	Reinette Chatre <reinette.chatre@intel.com>, Ye Bin <yebin10@huawei.com>, 
-	linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org, 
-	kvm@vger.kernel.org, cgroups@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 8bit
+X-CM-TRANSID:cCh0CgBXKBFNUGpm3eFSPQ--.6570S5
+X-Coremail-Antispam: 1UD129KBjvdXoWrXF1xXFyrJr1rZr47Zr1kKrg_yoWxGFc_JF
+	1kG348Kw13WFy7Arn8AwsxtryF9as3uF4Fyay3Ca90yFn0ya4rJrZay3Z8ZrnxWFyjg3s3
+	ZFn0grZFvrW2vjkaLaAFLSUrUUUUUb8apTn2vfkv8UJUUUU8Yxn0WfASr-VFAUDa7-sFnT
+	9fnUUIcSsGvfJTRUUUb6AFF20E14v26rWj6s0DM7CY07I20VC2zVCF04k26cxKx2IYs7xG
+	6rWj6s0DM7CIcVAFz4kK6r1j6r18M28IrcIa0xkI8VA2jI8067AKxVWUGwA2048vs2IY02
+	0Ec7CjxVAFwI0_Gr0_Xr1l8cAvFVAK0II2c7xJM28CjxkF64kEwVA0rcxSw2x7M28EF7xv
+	wVC0I7IYx2IY67AKxVWDJVCq3wA2z4x0Y4vE2Ix0cI8IcVCY1x0267AKxVW8Jr0_Cr1UM2
+	8EF7xvwVC2z280aVAFwI0_GcCE3s1l84ACjcxK6I8E87Iv6xkF7I0E14v26rxl6s0DM2AI
+	xVAIcxkEcVAq07x20xvEncxIr21l5I8CrVACY4xI64kE6c02F40Ex7xfMcIj6xIIjxv20x
+	vE14v26r1j6r18McIj6I8E87Iv67AKxVWUJVW8JwAm72CE4IkC6x0Yz7v_Jr0_Gr1lF7xv
+	r2IYc2Ij64vIr41lF7I21c0EjII2zVCS5cI20VAGYxC7M4IIrI8v6xkF7I0E8cxan2IY04
+	v7MxAIw28IcxkI7VAKI48JMxC20s026xCaFVCjc4AY6r1j6r4UMI8I3I0E5I8CrVAFwI0_
+	Jr0_Jr4lx2IqxVCjr7xvwVAFwI0_JrI_JrWlx4CE17CEb7AF67AKxVWUtVW8ZwCIc40Y0x
+	0EwIxGrwCI42IY6xIIjxv20xvE14v26r1j6r1xMIIF0xvE2Ix0cI8IcVCY1x0267AKxVW8
+	JVWxJwCI42IY6xAIw20EY4v20xvaj40_Jr0_JF4lIxAIcVC2z280aVAFwI0_Jr0_Gr1lIx
+	AIcVC2z280aVCY1x0267AKxVW8JVW8JrUvcSsGvfC2KfnxnUUI43ZEXa7VUjFdgJUUUUU=
+	=
+X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
 
-MIchal
+From: Yu Kuai <yukuai3@huawei.com>
 
-To be honest my initial idea was to store an affinity mask per vfio group, =
-which
-can be done in the privileged process setting the vfio group/device owner, =
-and
-later apply the mask to each interrupt of each device in the group.
+This helper is used in iocost, prepare to build iocost as kernel module.
 
-It would still require to fix the affinity of all the interrupts if
-the vfio group affinity is
-changed (or deliberately ignore this case). And it did not match
-exactly my use case
-where I need the process handling the interrupts to sometimes be able
-to change them
-but always within the cpuset. So I would still need the current patch,
-in addition to
-a new ioctl() to set the affinity mask of a vfio group.
+Signed-off-by: Yu Kuai <yukuai3@huawei.com>
+---
+ fs/kernfs/dir.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-Br,
+diff --git a/fs/kernfs/dir.c b/fs/kernfs/dir.c
+index 458519e416fe..84ad163a4281 100644
+--- a/fs/kernfs/dir.c
++++ b/fs/kernfs/dir.c
+@@ -279,6 +279,7 @@ void pr_cont_kernfs_path(struct kernfs_node *kn)
+ out:
+ 	spin_unlock_irqrestore(&kernfs_pr_cont_lock, flags);
+ }
++EXPORT_SYMBOL_GPL(pr_cont_kernfs_path);
+ 
+ /**
+  * kernfs_get_parent - determine the parent node and pin it
+-- 
+2.39.2
 
-Fred
-
-On Mon, Jun 10, 2024 at 5:31=E2=80=AFPM Michal Koutn=C3=BD <mkoutny@suse.co=
-m> wrote:
->
-> Hello Fred.
->
-> On Mon, Jun 10, 2024 at 12:57:06PM GMT, Fred Griffoul <fgriffo@amazon.co.=
-uk> wrote:
-> > The usual way to configure a device interrupt from userland is to write
-> > the /proc/irq/<irq>/smp_affinity or smp_affinity_list files. When using
-> > vfio to implement a device driver or a virtual machine monitor, this ma=
-y
-> > not be ideal: the process managing the vfio device interrupts may not b=
-e
-> > granted root privilege, for security reasons. Thus it cannot directly
-> > control the interrupt affinity and has to rely on an external command.
->
-> External commands something privileged? (I'm curious of an example how
-> this is setup.)
->
-> > The affinity argument must be a subset of the process cpuset, otherwise
-> > an error -EPERM is returned.
->
-> I'm not sure you want to look at task's cpuset mask for this purposes.
->
-> Consider setups without cpuset or a change of (cpuset) mask anytime
-> during lifetime of the task...
->
-> Michal
