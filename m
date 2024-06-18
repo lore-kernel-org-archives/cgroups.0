@@ -1,50 +1,44 @@
 Received: from dggsgout12.his.huawei.com (dggsgout12.his.huawei.com [45.249.212.56])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1B92A19B583;
-	Tue, 18 Jun 2024 03:18:48 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7C07119CD1F;
+	Tue, 18 Jun 2024 03:28:46 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.56
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1718680731; cv=none; b=rVzAb+a7231Z0n+8pazHQH6Yv5TxGuveDwbDlVixj1NckxSQEj/uvqEdTSQrM+ueK49tfFTV4QDn+KEnoROVoXYfo1WULU1/HaLrJiVKHxibsSv1czw5+4Tj3F7e6Y1Xh+DZeBp2csq7GJBUk2fvItmMDux86jKQoAPUMs+cXaE=
+	t=1718681330; cv=none; b=D8HpJ4T4G459Wq9wequ4ODGDc3c9sxmeFcErzXm0ZDY/0QGEaJQcHp2DaxER4g2kpsvXu37ixY0i6v6w3BY/CR6eXriWvb/J86P5qJoCko5wrphe6K5cETYF2m53bQyuWNYfiGXJQ+Pvmxt1Jyzd4PcxaV+BQy4hxDVkeaa2/o8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1718680731; c=relaxed/simple;
-	bh=8FkKb2IxhXKwp8e6NYIbRGJXuNHO73+pWQXAZFUWoA0=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=o5CHQP6/5z/qo9HXPuhxx8Nki82/tVy1ldeH5OGhVqVVEE0XUGNIN8uOyOOKN3MID2RGeDQkoteaNv0qDkd7LIK9sSY7t4Wrh8tilWpqNOhs/hD+uXIFxntNCXaUaHgk7jOazqZZoIYfd1/8IQvrktHaJKbfKKbqiHS+ICIEeCI=
+	s=arc-20240116; t=1718681330; c=relaxed/simple;
+	bh=E6v+KD9p8R6kimPj3jrgbH1H5pXJ3EeJibShbrpzaq8=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=N35l9x6F0ct8AwoivnYwCyE6uSOEDGJkgeW/sbxzO43eMMS+AfuvXizSBNusXyDCHmehDDhEw8HvpJK5LGQGzj1QD8oPQv65k66OJABzrehR2+aFF0vLKJn/McdGFPk4d/riz2+V9JV9nJ5YyszH/dHsWN9neS2qxuBie3zrc/s=
 ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.56
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
-Received: from mail.maildlp.com (unknown [172.19.163.235])
-	by dggsgout12.his.huawei.com (SkyGuard) with ESMTP id 4W3Bm74nVSz4f3jXb;
-	Tue, 18 Jun 2024 11:18:31 +0800 (CST)
+Received: from mail.maildlp.com (unknown [172.19.93.142])
+	by dggsgout12.his.huawei.com (SkyGuard) with ESMTP id 4W3Bzj3VfFz4f3jHh;
+	Tue, 18 Jun 2024 11:28:33 +0800 (CST)
 Received: from mail02.huawei.com (unknown [10.116.40.128])
-	by mail.maildlp.com (Postfix) with ESMTP id 04A0D1A0572;
-	Tue, 18 Jun 2024 11:18:42 +0800 (CST)
+	by mail.maildlp.com (Postfix) with ESMTP id CCB951A0181;
+	Tue, 18 Jun 2024 11:28:43 +0800 (CST)
 Received: from huaweicloud.com (unknown [10.175.104.67])
-	by APP4 (Coremail) with SMTP id gCh0CgCXAQ+N_HBmFJj8AA--.12964S8;
-	Tue, 18 Jun 2024 11:18:41 +0800 (CST)
+	by APP4 (Coremail) with SMTP id gCh0CgC3agjm_nBmV0P9AA--.2852S4;
+	Tue, 18 Jun 2024 11:28:43 +0800 (CST)
 From: Yu Kuai <yukuai1@huaweicloud.com>
-To: axboe@kernel.dk,
+To: jack@suse.cz,
+	paolo.valente@unimore.it,
+	axboe@kernel.dk,
 	tj@kernel.org,
-	gregkh@linuxfoundation.org,
-	bvanassche@acm.org,
-	hch@infradead.org,
-	josef@toxicpanda.com,
-	lizefan.x@bytedance.com,
-	hannes@cmpxchg.org
+	josef@toxicpanda.com
 Cc: linux-block@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
 	cgroups@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
 	yukuai3@huawei.com,
 	yukuai1@huaweicloud.com,
 	yi.zhang@huawei.com,
 	yangerkun@huawei.com
-Subject: [PATCH RFC v2 4/7] blk-iocost: factor out helpers to handle params from ioc_qos_write()
-Date: Tue, 18 Jun 2024 11:17:48 +0800
-Message-Id: <20240618031751.3470464-5-yukuai1@huaweicloud.com>
+Subject: [PATCH -next] block, bfq: remove blkg_path()
+Date: Tue, 18 Jun 2024 11:27:53 +0800
+Message-Id: <20240618032753.3502528-1-yukuai1@huaweicloud.com>
 X-Mailer: git-send-email 2.39.2
-In-Reply-To: <20240618031751.3470464-1-yukuai1@huaweicloud.com>
-References: <20240618031751.3470464-1-yukuai1@huaweicloud.com>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
@@ -52,284 +46,139 @@ List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:gCh0CgCXAQ+N_HBmFJj8AA--.12964S8
-X-Coremail-Antispam: 1UD129KBjvJXoW3JFy7Jr4DZw4xtFW7Cw1UAwb_yoWxGryxpF
-	Wru3sxt3y8Xrs29r1Iqr4xA3WYk397Wrs7GFWfGrySqr12yrnYq3W8CFy8uFWrJrZ3Gr1U
-	JFWrtF4DGrZ7CrJanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDU0xBIdaVrnRJUUUPF14x267AKxVWrJVCq3wAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
-	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2048vs2IY020E87I2jVAFwI0_JF0E3s1l82xGYI
-	kIc2x26xkF7I0E14v26ryj6s0DM28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48ve4kI8wA2
-	z4x0Y4vE2Ix0cI8IcVAFwI0_tr0E3s1l84ACjcxK6xIIjxv20xvEc7CjxVAFwI0_Gr1j6F
-	4UJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x0267AKxVW0oVCq
-	3wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG6I80ewAv7VC0I7
-	IYx2IY67AKxVWUJVWUGwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFVCjc4AY6r1j6r4U
-	M4x0Y48IcxkI7VAKI48JM4x0x7Aq67IIx4CEVc8vx2IErcIFxwACI402YVCY1x02628vn2
-	kIc2xKxwCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7xkEbVWUJVW8JwC20s026c02F40E
-	14v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E67AF67kF1VAFwI0_Jw0_GFylIx
-	kGc2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUJVWUCwCI42IY6xIIjxv20xvEc7CjxVAF
-	wI0_Cr0_Gr1UMIIF0xvE42xK8VAvwI8IcIk0rVWUJVWUCwCI42IY6I8E87Iv67AKxVWUJV
-	W8JwCI42IY6I8E87Iv6xkF7I0E14v26r4j6r4UJbIYCTnIWIevJa73UjIFyTuYvjfUOBTY
-	UUUUU
+X-CM-TRANSID:gCh0CgC3agjm_nBmV0P9AA--.2852S4
+X-Coremail-Antispam: 1UD129KBjvJXoWxGFyDZF13JFW3uw1fCF1DGFg_yoWrur1Dpa
+	sIgr17G3s8KF1Iqw10g340qryrAa1rZryUK3yjgrWFkryavrn2vF1Yyws5XFySvF9ayr42
+	vr1Y934UC3WqkFDanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDU0xBIdaVrnRJUUUva14x267AKxVW8JVW5JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
+	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
+	1l84ACjcxK6xIIjxv20xvE14v26w1j6s0DM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26r4U
+	JVWxJr1l84ACjcxK6I8E87Iv67AKxVW0oVCq3wA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_Gc
+	CE3s1le2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xvF2IEw4CE5I8CrVC2j2WlYx0E
+	2Ix0cI8IcVAFwI0_JrI_JrylYx0Ex4A2jsIE14v26r1j6r4UMcvjeVCFs4IE7xkEbVWUJV
+	W8JwACjcxG0xvY0x0EwIxGrwACjI8F5VA0II8E6IAqYI8I648v4I1lFIxGxcIEc7CjxVA2
+	Y2ka0xkIwI1l42xK82IYc2Ij64vIr41l4I8I3I0E4IkC6x0Yz7v_Jr0_Gr1lx2IqxVAqx4
+	xG67AKxVWUJVWUGwC20s026x8GjcxK67AKxVWUGVWUWwC2zVAF1VAY17CE14v26r1q6r43
+	MIIYrxkI7VAKI48JMIIF0xvE2Ix0cI8IcVAFwI0_JFI_Gr1lIxAIcVC0I7IYx2IY6xkF7I
+	0E14v26r4UJVWxJr1lIxAIcVCF04k26cxKx2IYs7xG6rWUJVWrZr1UMIIF0xvEx4A2jsIE
+	14v26r1j6r4UMIIF0xvEx4A2jsIEc7CjxVAFwI0_Gr1j6F4UJbIYCTnIWIevJa73UjIFyT
+	uYvjfUF9a9DUUUU
 X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
 
 From: Yu Kuai <yukuai3@huawei.com>
 
-Currently the procedures are:
-
-1) parse input disk and open the disk;
-2) get ioc, if this is the first writer, init iocost;
-3) init qos params, by copying from ioc;
-4) parse input qos params;
-5) update qos params to ioc;
-
-This patch just factor out step 3-5 into separate helpers, there are no
-functional changes, and prepare for fulture optimizations:
-
-- move step 3-4 before setp 2, and don't init iocost for invalid input
-  qos params;
-- add a new input, and support to free iocost after step 4;
-- support to build iocost as kernel module;
+After commit 35fe6d763229 ("block: use standard blktrace API to output
+cgroup info for debug notes"), the field 'bfqg->blkg_path' is not used
+and hence can be removed, and therefor blkg_path() is not used anymore
+and can be removed.
 
 Signed-off-by: Yu Kuai <yukuai3@huawei.com>
 ---
- block/blk-iocost.c | 155 ++++++++++++++++++++++++++-------------------
- 1 file changed, 91 insertions(+), 64 deletions(-)
+ block/bfq-cgroup.c  | 51 ---------------------------------------------
+ block/bfq-iosched.h |  3 ---
+ block/blk-cgroup.h  | 13 ------------
+ 3 files changed, 67 deletions(-)
 
-diff --git a/block/blk-iocost.c b/block/blk-iocost.c
-index ca72a62bc9c0..07f7f49b61b3 100644
---- a/block/blk-iocost.c
-+++ b/block/blk-iocost.c
-@@ -3206,45 +3206,24 @@ static const match_table_t qos_tokens = {
- 	{ NR_QOS_PARAMS,	NULL		},
- };
+diff --git a/block/bfq-cgroup.c b/block/bfq-cgroup.c
+index d442ee358fc2..b758693697c0 100644
+--- a/block/bfq-cgroup.c
++++ b/block/bfq-cgroup.c
+@@ -797,57 +797,6 @@ void bfq_bic_update_cgroup(struct bfq_io_cq *bic, struct bio *bio)
+ 	 */
+ 	bfq_link_bfqg(bfqd, bfqg);
+ 	__bfq_bic_change_cgroup(bfqd, bic, bfqg);
+-	/*
+-	 * Update blkg_path for bfq_log_* functions. We cache this
+-	 * path, and update it here, for the following
+-	 * reasons. Operations on blkg objects in blk-cgroup are
+-	 * protected with the request_queue lock, and not with the
+-	 * lock that protects the instances of this scheduler
+-	 * (bfqd->lock). This exposes BFQ to the following sort of
+-	 * race.
+-	 *
+-	 * The blkg_lookup performed in bfq_get_queue, protected
+-	 * through rcu, may happen to return the address of a copy of
+-	 * the original blkg. If this is the case, then the
+-	 * bfqg_and_blkg_get performed in bfq_get_queue, to pin down
+-	 * the blkg, is useless: it does not prevent blk-cgroup code
+-	 * from destroying both the original blkg and all objects
+-	 * directly or indirectly referred by the copy of the
+-	 * blkg.
+-	 *
+-	 * On the bright side, destroy operations on a blkg invoke, as
+-	 * a first step, hooks of the scheduler associated with the
+-	 * blkg. And these hooks are executed with bfqd->lock held for
+-	 * BFQ. As a consequence, for any blkg associated with the
+-	 * request queue this instance of the scheduler is attached
+-	 * to, we are guaranteed that such a blkg is not destroyed, and
+-	 * that all the pointers it contains are consistent, while we
+-	 * are holding bfqd->lock. A blkg_lookup performed with
+-	 * bfqd->lock held then returns a fully consistent blkg, which
+-	 * remains consistent until this lock is held.
+-	 *
+-	 * Thanks to the last fact, and to the fact that: (1) bfqg has
+-	 * been obtained through a blkg_lookup in the above
+-	 * assignment, and (2) bfqd->lock is being held, here we can
+-	 * safely use the policy data for the involved blkg (i.e., the
+-	 * field bfqg->pd) to get to the blkg associated with bfqg,
+-	 * and then we can safely use any field of blkg. After we
+-	 * release bfqd->lock, even just getting blkg through this
+-	 * bfqg may cause dangling references to be traversed, as
+-	 * bfqg->pd may not exist any more.
+-	 *
+-	 * In view of the above facts, here we cache, in the bfqg, any
+-	 * blkg data we may need for this bic, and for its associated
+-	 * bfq_queue. As of now, we need to cache only the path of the
+-	 * blkg, which is used in the bfq_log_* functions.
+-	 *
+-	 * Finally, note that bfqg itself needs to be protected from
+-	 * destruction on the blkg_free of the original blkg (which
+-	 * invokes bfq_pd_free). We use an additional private
+-	 * refcounter for bfqg, to let it disappear only after no
+-	 * bfq_queue refers to it any longer.
+-	 */
+-	blkg_path(bfqg_to_blkg(bfqg), bfqg->blkg_path, sizeof(bfqg->blkg_path));
+ 	bic->blkcg_serial_nr = serial_nr;
+ }
  
--static ssize_t ioc_qos_write(struct kernfs_open_file *of, char *input,
--			     size_t nbytes, loff_t off)
+diff --git a/block/bfq-iosched.h b/block/bfq-iosched.h
+index 467e8cfc41a2..08ddf2cfae5b 100644
+--- a/block/bfq-iosched.h
++++ b/block/bfq-iosched.h
+@@ -1003,9 +1003,6 @@ struct bfq_group {
+ 	/* must be the first member */
+ 	struct blkg_policy_data pd;
+ 
+-	/* cached path for this blkg (see comments in bfq_bic_update_cgroup) */
+-	char blkg_path[128];
+-
+ 	/* reference counter (see comments in bfq_bic_update_cgroup) */
+ 	refcount_t ref;
+ 
+diff --git a/block/blk-cgroup.h b/block/blk-cgroup.h
+index 25833221a12b..6dcaf63c560a 100644
+--- a/block/blk-cgroup.h
++++ b/block/blk-cgroup.h
+@@ -301,19 +301,6 @@ static inline struct blkcg *cpd_to_blkcg(struct blkcg_policy_data *cpd)
+ 	return cpd ? cpd->blkcg : NULL;
+ }
+ 
+-/**
+- * blkg_path - format cgroup path of blkg
+- * @blkg: blkg of interest
+- * @buf: target buffer
+- * @buflen: target buffer length
+- *
+- * Format the path of the cgroup of @blkg into @buf.
+- */
+-static inline int blkg_path(struct blkcg_gq *blkg, char *buf, int buflen)
 -{
--	struct blkg_conf_ctx ctx;
--	struct gendisk *disk;
--	struct ioc *ioc;
-+struct ioc_qos_params {
- 	u32 qos[NR_QOS_PARAMS];
--	bool enable, user;
--	char *body, *p;
--	int ret;
+-	return cgroup_path(blkg->blkcg->css.cgroup, buf, buflen);
+-}
 -
--	blkg_conf_init(&ctx, input);
--
--	ret = blkg_conf_open_bdev(&ctx);
--	if (ret)
--		goto err;
--
--	body = ctx.body;
--	disk = ctx.bdev->bd_disk;
--	if (!queue_is_mq(disk->queue)) {
--		ret = -EOPNOTSUPP;
--		goto err;
--	}
--
--	ioc = q_to_ioc(disk->queue);
--	if (!ioc) {
--		ret = blk_iocost_init(disk);
--		if (ret)
--			goto err;
--		ioc = q_to_ioc(disk->queue);
--	}
-+	bool enable;
-+	bool user;
-+};
- 
--	blk_mq_freeze_queue(disk->queue);
--	blk_mq_quiesce_queue(disk->queue);
-+static void ioc_qos_params_init(struct ioc *ioc, struct ioc_qos_params *params)
-+{
-+	memcpy(params->qos, ioc->params.qos, sizeof(params->qos));
-+	params->enable = ioc->enabled;
-+	params->user = ioc->user_qos_params;
-+}
- 
--	spin_lock_irq(&ioc->lock);
--	memcpy(qos, ioc->params.qos, sizeof(qos));
--	enable = ioc->enabled;
--	user = ioc->user_qos_params;
-+static int ioc_qos_params_parse(struct blkg_conf_ctx *ctx,
-+				struct ioc_qos_params *params)
-+{
-+	char *body = ctx->body;
-+	char *p;
- 
- 	while ((p = strsep(&body, " \t\n"))) {
- 		substring_t args[MAX_OPT_ARGS];
-@@ -3258,17 +3237,17 @@ static ssize_t ioc_qos_write(struct kernfs_open_file *of, char *input,
- 		switch (match_token(p, qos_ctrl_tokens, args)) {
- 		case QOS_ENABLE:
- 			if (match_u64(&args[0], &v))
--				goto einval;
--			enable = v;
-+				return -EINVAL;
-+			params->enable = v;
- 			continue;
- 		case QOS_CTRL:
- 			match_strlcpy(buf, &args[0], sizeof(buf));
- 			if (!strcmp(buf, "auto"))
--				user = false;
-+				params->user = false;
- 			else if (!strcmp(buf, "user"))
--				user = true;
-+				params->user = true;
- 			else
--				goto einval;
-+				return -EINVAL;
- 			continue;
- 		}
- 
-@@ -3278,61 +3257,110 @@ static ssize_t ioc_qos_write(struct kernfs_open_file *of, char *input,
- 		case QOS_WPPM:
- 			if (match_strlcpy(buf, &args[0], sizeof(buf)) >=
- 			    sizeof(buf))
--				goto einval;
-+				return -EINVAL;
- 			if (cgroup_parse_float(buf, 2, &v))
--				goto einval;
-+				return -EINVAL;
- 			if (v < 0 || v > 10000)
--				goto einval;
--			qos[tok] = v * 100;
-+				return -EINVAL;
-+			params->qos[tok] = v * 100;
- 			break;
- 		case QOS_RLAT:
- 		case QOS_WLAT:
- 			if (match_u64(&args[0], &v))
--				goto einval;
--			qos[tok] = v;
-+				return -EINVAL;
-+			params->qos[tok] = v;
- 			break;
- 		case QOS_MIN:
- 		case QOS_MAX:
- 			if (match_strlcpy(buf, &args[0], sizeof(buf)) >=
- 			    sizeof(buf))
--				goto einval;
-+				return -EINVAL;
- 			if (cgroup_parse_float(buf, 2, &v))
--				goto einval;
-+				return -EINVAL;
- 			if (v < 0)
--				goto einval;
--			qos[tok] = clamp_t(s64, v * 100,
--					   VRATE_MIN_PPM, VRATE_MAX_PPM);
-+				return -EINVAL;
-+			params->qos[tok] = clamp_t(s64, v * 100,
-+						   VRATE_MIN_PPM,
-+						   VRATE_MAX_PPM);
- 			break;
- 		default:
--			goto einval;
-+			return -EINVAL;
- 		}
--		user = true;
-+		params->user = true;
- 	}
- 
--	if (qos[QOS_MIN] > qos[QOS_MAX])
--		goto einval;
-+	if (params->qos[QOS_MIN] > params->qos[QOS_MAX])
-+		return -EINVAL;
-+
-+	return 0;
-+}
- 
--	if (enable && !ioc->enabled) {
-+static void ioc_qos_params_update(struct gendisk *disk, struct ioc *ioc,
-+				  struct ioc_qos_params *params)
-+{
-+	if (params->enable && !ioc->enabled) {
- 		blk_stat_enable_accounting(disk->queue);
- 		blk_queue_flag_set(QUEUE_FLAG_RQ_ALLOC_TIME, disk->queue);
- 		ioc->enabled = true;
--	} else if (!enable && ioc->enabled) {
-+	} else if (!params->enable && ioc->enabled) {
- 		blk_stat_disable_accounting(disk->queue);
- 		blk_queue_flag_clear(QUEUE_FLAG_RQ_ALLOC_TIME, disk->queue);
- 		ioc->enabled = false;
- 	}
- 
--	if (user) {
--		memcpy(ioc->params.qos, qos, sizeof(qos));
-+	if (params->user) {
-+		memcpy(ioc->params.qos, params->qos, sizeof(params->qos));
- 		ioc->user_qos_params = true;
- 	} else {
- 		ioc->user_qos_params = false;
- 	}
- 
- 	ioc_refresh_params(ioc, true);
-+}
-+
-+static ssize_t ioc_qos_write(struct kernfs_open_file *of, char *input,
-+			     size_t nbytes, loff_t off)
-+{
-+	struct ioc_qos_params params;
-+	struct blkg_conf_ctx ctx;
-+	struct gendisk *disk;
-+	struct ioc *ioc;
-+	int ret;
-+
-+	blkg_conf_init(&ctx, input);
-+
-+	ret = blkg_conf_open_bdev(&ctx);
-+	if (ret)
-+		goto err;
-+
-+	disk = ctx.bdev->bd_disk;
-+	if (!queue_is_mq(disk->queue)) {
-+		ret = -EOPNOTSUPP;
-+		goto err;
-+	}
-+
-+	ioc = q_to_ioc(disk->queue);
-+	if (!ioc) {
-+		ret = blk_iocost_init(disk);
-+		if (ret)
-+			goto err;
-+		ioc = q_to_ioc(disk->queue);
-+	}
-+
-+	blk_mq_freeze_queue(disk->queue);
-+	blk_mq_quiesce_queue(disk->queue);
-+
-+	spin_lock_irq(&ioc->lock);
-+	ioc_qos_params_init(ioc, &params);
-+
-+	ret = ioc_qos_params_parse(&ctx, &params);
-+	if (ret)
-+		goto err_parse;
-+
-+	ioc_qos_params_update(disk, ioc, &params);
- 	spin_unlock_irq(&ioc->lock);
- 
--	if (enable)
-+	if (params.enable)
- 		wbt_disable_default(disk);
- 	else
- 		wbt_enable_default(disk);
-@@ -3342,13 +3370,12 @@ static ssize_t ioc_qos_write(struct kernfs_open_file *of, char *input,
- 
- 	blkg_conf_exit(&ctx);
- 	return nbytes;
--einval:
-+
-+err_parse:
- 	spin_unlock_irq(&ioc->lock);
- 
- 	blk_mq_unquiesce_queue(disk->queue);
- 	blk_mq_unfreeze_queue(disk->queue);
--
--	ret = -EINVAL;
- err:
- 	blkg_conf_exit(&ctx);
- 	return ret;
+ /**
+  * blkg_get - get a blkg reference
+  * @blkg: blkg to get
 -- 
 2.39.2
 
