@@ -1,224 +1,440 @@
-Received: from mail-ua1-f45.google.com (mail-ua1-f45.google.com [209.85.222.45])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.20])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 28C111B0100
-	for <cgroups@vger.kernel.org>; Thu, 20 Jun 2024 15:39:54 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.222.45
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 297191AF68A;
+	Thu, 20 Jun 2024 16:05:54 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.20
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1718897997; cv=none; b=XeJaxTR/RIpfsdgjHHM+qPQe2SF7NGjYEk5ThUUWB3bouFkxWkstFBTNd1c4OwG1H5yh0IEvqoR7fNp5/cNTSkEDB0YviYmVXgPYqz1Lr+ZpLyy+afa33WvQkCyNz8nkPIqqYbXZpLtaAixH+AkMN726G1SZCsjaQjtAlgaDXhA=
+	t=1718899557; cv=none; b=ENwDMvV+vYGx2esnEbSX9dtyo8QnQFOPTmDvK1Y0VX0WiN7wsZNseEjzijd08yCt7uhB9AH123d0xWiG5CbuN3swJAHDwPp8cwX7uh7PWYPbUq7j21s1xd74cg52MJKTq6pTfI7SYJPSJPFT9b3E7+N2Jd3gQhWO8zIhFIoFDKU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1718897997; c=relaxed/simple;
-	bh=SAbg+wVYqph3TL90xOL1oynPwf5bkeyQps0mBCaXQX0=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=l8kUPn4ihVu/SjBXdsCxBIuS79U0SZPuGmrhuleFwc8W69/iD3ftq87fUdww+vx0T79A2Oohxb/nN9lTYS2N5ct8sOObiWCT0S2SoZx6B3LSsPlfgsHwUhvoc4P6JKDDKvE3rg3mvtVE6tUghLpjFpBXvHnD0AkkPNPfrC9wRi0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=DQvYqHcG; arc=none smtp.client-ip=209.85.222.45
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
+	s=arc-20240116; t=1718899557; c=relaxed/simple;
+	bh=2SDKW4L6Q15RBL23B70Zucrxs8TmimpdU68R6G9rQX0=;
+	h=Content-Type:To:Cc:Subject:References:Date:MIME-Version:From:
+	 Message-ID:In-Reply-To; b=rbsE8jrYGpGb+N6LtZ+eu+BQnOn7EMJ7ouPET/s5yOK0S/FeLWw5Ja1CCCimvr1N6HQm7kJ0AM5rQOwF+rLjxn55pEqL7v2VnAZ5FmtGu0qHNEZ0prqtpFqVxSipUx5aw4eGmPqFeAJAVaOJSFTFsbKCdIbrE8kk0E7i4p8HyiQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=none smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=RQhKw1Ls; arc=none smtp.client-ip=198.175.65.20
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="DQvYqHcG"
-Received: by mail-ua1-f45.google.com with SMTP id a1e0cc1a2514c-80f599697c1so296051241.1
-        for <cgroups@vger.kernel.org>; Thu, 20 Jun 2024 08:39:54 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1718897994; x=1719502794; darn=vger.kernel.org;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:from:to:cc:subject:date:message-id:reply-to;
-        bh=5GUJPV8yOp4RRoYY7LVY9TGkg0HQmwQOmVMKijpbR4g=;
-        b=DQvYqHcGu0hkpsU/dhS7E3LvMSbkBUnhrCSoJeS+ObyDgwHH7cJqOPtlEg7AHXI3wb
-         OtOdUalvFRJ58h5/r8Dr6JwD7HcASMlkVD0xzeGGW6+8UDE77sLAW7Kw2NUsradpfXci
-         Uo0OeaKaOfiRBptmQWlFVJiu9vVSMcUMVplONMqsYd3/TuDOpLBum46hTUHH8lQSKVx/
-         jdRvpKkFvsMGehmsnVZr1XeKtC/GKeFCjXIbyxBCEHjsIf79Hta+s+V3yA6l12tagDR7
-         YM23z2bTc8V1xgBAm0dT1aNaGfeiwSgU/F3JNQ/VLrN9q6tLW4Ana5D+AppVZQTklxXj
-         99nA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1718897994; x=1719502794;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=5GUJPV8yOp4RRoYY7LVY9TGkg0HQmwQOmVMKijpbR4g=;
-        b=pel3QCmFOMeN6tgMiJFtqOZ+67csGVd/r+0DyqgdZd8hz/JDE+8oorcQ5iJD33rcKg
-         /YuhEurDMLFbauWlpaGQcKiiVoTKUoY5CGT0vqEv5Bt7aUeTUvjJ+Xd8FTWjpXKqDXbv
-         TtxK3iwTAvpllaSiobw9eqkroUsR1UCSbPKDFaNn/FQI8tnj8z2lhLcw/T83+iS5tQGI
-         WW45PbMtc+hkXpHkH16U6YbaxBgP7BTdK6YQ1p5VwS6uLeTyRdZfoaZqjUBA9r4YIdK8
-         eb8Uvg/XxszkZxTTkZC+bFr2gOqugmLT36KKsEbmlwIvTYOC+dxGUwIMeSz0Ek6EGc2k
-         +FLQ==
-X-Forwarded-Encrypted: i=1; AJvYcCURg+Tq85VoMatDLnNmoHziy3iWC+6cQG4MwzH5YDnAKRBDp+r2MIs/MFm2NYy4MA3KdA9yp3aPCZ7JMjb9jhTYMVhc8t8aTA==
-X-Gm-Message-State: AOJu0YybOuLmzyfkLw7+zjGSov1k+2OAV9acupNcXRR04ptzWNrv0Cq9
-	J4BEnKtc761XV1YWDSzb3rjHGd0NeGsrvqgeBhKlAAg+4WUSh4KaVbSkLT8mDGcvoz1RD3KzA9v
-	FRAsvqZKUQCy5vIzfsIv54slZ0l5RptLMI2Up4A==
-X-Google-Smtp-Source: AGHT+IHACjMP5RzFgepii/qD9qtk0+p5mwa6jnpfKmdaSdmp8lLICvVkXdDPSiF9XM3Dus6YHP7t5X5+bwf7WLuWK+4=
-X-Received: by 2002:a05:6122:1346:b0:4ec:f27b:ee9c with SMTP id
- 71dfb90a1353d-4ef276c041bmr6506472e0c.5.1718897992229; Thu, 20 Jun 2024
- 08:39:52 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="RQhKw1Ls"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1718899556; x=1750435556;
+  h=to:cc:subject:references:date:mime-version:
+   content-transfer-encoding:from:message-id:in-reply-to;
+  bh=2SDKW4L6Q15RBL23B70Zucrxs8TmimpdU68R6G9rQX0=;
+  b=RQhKw1LsdVq3CZpldglGUfeckHpEByzOu/3xPh/7KK86d3tDOcZvKYGi
+   hVhM6NwSPwCaG3AtqYtqRyLtN6sIC8YD3sC0B9M9RzE5Dew/svi6MGNFW
+   W8NqeawYGKBK0PxC42w8aCm5es2ij0niBoph0tuzm7RFFqfLoBkqqUh39
+   nrkQu1yM9euBODqcP+F+zsV7UNUGBbp51Gfzcr5NliCHFQCPM/PVp8wkq
+   Y2VoPZB6z8Vl9xtklqMoWmf6AtU29d//m3h+XHaia2snPfvSZEd3vhINQ
+   zVZmsfmcr9k6fVJ9TVgv/vx8hR3R7IVI5LHeNLBjf9i69bg55EhiC+D/e
+   g==;
+X-CSE-ConnectionGUID: CJQZLSkVQ4qcz7aOVB4iVA==
+X-CSE-MsgGUID: Mv5TwVKaRGKnYsEOL/dSUw==
+X-IronPort-AV: E=McAfee;i="6700,10204,11109"; a="15725360"
+X-IronPort-AV: E=Sophos;i="6.08,252,1712646000"; 
+   d="scan'208";a="15725360"
+Received: from orviesa006.jf.intel.com ([10.64.159.146])
+  by orvoesa112.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 20 Jun 2024 09:05:41 -0700
+X-CSE-ConnectionGUID: NYLIaNUqT4G7hDfBMgCHWA==
+X-CSE-MsgGUID: IcQZEVWxSj+fYIlpW4HpRg==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.08,252,1712646000"; 
+   d="scan'208";a="42749926"
+Received: from hhuan26-mobl.amr.corp.intel.com ([10.246.119.97])
+  by orviesa006-auth.jf.intel.com with ESMTP/TLS/AES256-SHA; 20 Jun 2024 09:05:37 -0700
+Content-Type: text/plain; charset=iso-8859-15; format=flowed; delsp=yes
+To: "hpa@zytor.com" <hpa@zytor.com>, "tim.c.chen@linux.intel.com"
+ <tim.c.chen@linux.intel.com>, "linux-sgx@vger.kernel.org"
+ <linux-sgx@vger.kernel.org>, "x86@kernel.org" <x86@kernel.org>,
+ "dave.hansen@linux.intel.com" <dave.hansen@linux.intel.com>,
+ "jarkko@kernel.org" <jarkko@kernel.org>, "cgroups@vger.kernel.org"
+ <cgroups@vger.kernel.org>, "linux-kernel@vger.kernel.org"
+ <linux-kernel@vger.kernel.org>, "mkoutny@suse.com" <mkoutny@suse.com>,
+ "tglx@linutronix.de" <tglx@linutronix.de>, "Mehta, Sohil"
+ <sohil.mehta@intel.com>, "tj@kernel.org" <tj@kernel.org>, "mingo@redhat.com"
+ <mingo@redhat.com>, "bp@alien8.de" <bp@alien8.de>, "Huang, Kai"
+ <kai.huang@intel.com>
+Cc: "mikko.ylinen@linux.intel.com" <mikko.ylinen@linux.intel.com>,
+ "seanjc@google.com" <seanjc@google.com>, "anakrish@microsoft.com"
+ <anakrish@microsoft.com>, "Zhang, Bo" <zhanb@microsoft.com>,
+ "kristen@linux.intel.com" <kristen@linux.intel.com>, "yangjie@microsoft.com"
+ <yangjie@microsoft.com>, "Li, Zhiquan1" <zhiquan1.li@intel.com>,
+ "chrisyan@microsoft.com" <chrisyan@microsoft.com>
+Subject: Re: [PATCH v15 08/14] x86/sgx: Add basic EPC reclamation flow for
+ cgroup
+References: <20240617125321.36658-1-haitao.huang@linux.intel.com>
+ <20240617125321.36658-9-haitao.huang@linux.intel.com>
+ <ecaab6953b36adb278c98b01f5eb647ff0cc9aab.camel@intel.com>
+Date: Thu, 20 Jun 2024 11:05:35 -0500
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20240619125609.836313103@linuxfoundation.org> <CA+G9fYtPV3kskAyc4NQws68-CpBrV+ohxkt1EEaAN54Dh6J6Uw@mail.gmail.com>
- <2024062028-caloric-cost-2ab9@gregkh> <CA+G9fYsr0=_Yzew1uyUtrZ7ayZFYqmaNzAwFZJPjFnDXZEwYcQ@mail.gmail.com>
- <36a38846-0250-4ac2-b2d0-c72e00d6898d@redhat.com> <CA+G9fYv4fZiB-pL7=4SNfudh2Aqknf5+OXo1RFAFRhJFZMsEsg@mail.gmail.com>
- <3cd2cdca-5c89-447e-b6f1-f68112cf3f7b@redhat.com>
-In-Reply-To: <3cd2cdca-5c89-447e-b6f1-f68112cf3f7b@redhat.com>
-From: Naresh Kamboju <naresh.kamboju@linaro.org>
-Date: Thu, 20 Jun 2024 21:09:40 +0530
-Message-ID: <CA+G9fYutNa9ziuj7aayhukaMdxKFU9+81qKAjZbQ=dQa3fwYYg@mail.gmail.com>
-Subject: Re: [PATCH 6.9 000/281] 6.9.6-rc1 review
-To: David Hildenbrand <david@redhat.com>
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>, stable@vger.kernel.org, 
-	patches@lists.linux.dev, linux-kernel@vger.kernel.org, 
-	torvalds@linux-foundation.org, akpm@linux-foundation.org, linux@roeck-us.net, 
-	shuah@kernel.org, patches@kernelci.org, lkft-triage@lists.linaro.org, 
-	pavel@denx.de, jonathanh@nvidia.com, f.fainelli@gmail.com, 
-	sudipm.mukherjee@gmail.com, srw@sladewatkins.net, rwarsow@gmx.de, 
-	conor@kernel.org, allen.lkml@gmail.com, broonie@kernel.org, 
-	Miaohe Lin <linmiaohe@huawei.com>, Arnd Bergmann <arnd@arndb.de>, 
-	Dan Carpenter <dan.carpenter@linaro.org>, Cgroups <cgroups@vger.kernel.org>, 
-	linux-mm <linux-mm@kvack.org>, Baolin Wang <baolin.wang@linux.alibaba.com>, jbeulich@suse.com, 
-	LTP List <ltp@lists.linux.it>
-Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+From: "Haitao Huang" <haitao.huang@linux.intel.com>
+Organization: Intel
+Message-ID: <op.2pn9nlapwjvjmi@hhuan26-mobl.amr.corp.intel.com>
+In-Reply-To: <ecaab6953b36adb278c98b01f5eb647ff0cc9aab.camel@intel.com>
+User-Agent: Opera Mail/1.0 (Win32)
 
-On Thu, 20 Jun 2024 at 19:50, David Hildenbrand <david@redhat.com> wrote:
->
-> On 20.06.24 16:02, Naresh Kamboju wrote:
-> > On Thu, 20 Jun 2024 at 19:23, David Hildenbrand <david@redhat.com> wrote:
-> >>
-> >> On 20.06.24 15:14, Naresh Kamboju wrote:
-> >>> On Thu, 20 Jun 2024 at 17:59, Greg Kroah-Hartman
-> >>> <gregkh@linuxfoundation.org> wrote:
-> >>>>
-> >>>> On Thu, Jun 20, 2024 at 05:21:09PM +0530, Naresh Kamboju wrote:
-> >>>>> On Wed, 19 Jun 2024 at 18:41, Greg Kroah-Hartman
-> >>>>> <gregkh@linuxfoundation.org> wrote:
-> >>>>>>
-> >>>>>> This is the start of the stable review cycle for the 6.9.6 release.
-> >>>>>> There are 281 patches in this series, all will be posted as a response
-> >>>>>> to this one.  If anyone has any issues with these being applied, please
-> >>>>>> let me know.
-> >>>>>>
-> >>>>>> Responses should be made by Fri, 21 Jun 2024 12:55:11 +0000.
-> >>>>>> Anything received after that time might be too late.
-> >>>>>>
-> >>>>>> The whole patch series can be found in one patch at:
-> >>>>>>           https://www.kernel.org/pub/linux/kernel/v6.x/stable-review/patch-6.9.6-rc1.gz
-> >>>>>> or in the git tree and branch at:
-> >>>>>>           git://git.kernel.org/pub/scm/linux/kernel/git/stable/linux-stable-rc.git linux-6.9.y
-> >>>>>> and the diffstat can be found below.
-> >>>>>>
-> >>>>>> thanks,
-> >>>>>>
-> >>>>>> greg k-h
-> >>>>>
-> >>>>> There are two major issues on arm64 Juno-r2 on Linux stable-rc 6.9.6-rc1
-> >>>>>
-> >>>>> Reported-by: Linux Kernel Functional Testing <lkft@linaro.org>
-> >>>>>
-> >>>>> 1)
-> >>>>> The LTP controllers cgroup_fj_stress test cases causing kernel crash
-> >>>>> on arm64 Juno-r2 with
-> >>>>> compat mode testing with stable-rc 6.9 kernel.
-> >>>>>
-> >>>>> In the recent past I have reported this issues on Linux mainline.
-> >>>>>
-> >>>>> LTP: fork13: kernel panic on rk3399-rock-pi-4 running mainline 6.10.rc3
-> >>>>>     - https://lore.kernel.org/all/CA+G9fYvKmr84WzTArmfaypKM9+=Aw0uXCtuUKHQKFCNMGJyOgQ@mail.gmail.com/
-> >>>>>
-> >>>>> it goes like this,
-> >>>>>     Unable to handle kernel NULL pointer dereference at virtual address
-> >>>>>     ...
-> >>>>>     Insufficient stack space to handle exception!
-> >>>>>     end Kernel panic - not syncing: kernel stack overflow
-> >>>>>
-> >>
-> >> How is that related to 6.9.6-rc1? That report is from mainline (6.10.rc3).
-> >>
-> >> Can you share a similar kernel dmesg output from  the issue on 6.9.6-rc1?
-> >
-> > I request you to use this link for detailed boot log, test log and crash log.
-> >   - https://lkft.validation.linaro.org/scheduler/job/7687060#L23314
-> >
-> > Few more logs related to build artifacts links provided in the original
-> > email thread and bottom of this email.
-> >
-> > crash log:
-> > ---
-> >
 
-Thanks for investigating this crash report.
-
-> Thanks, so this is something different than the
->
-> "BUG: Bad page map in process fork13
->   BUG: Bad rss-counter state mm:"
->
-> stuff on mainline you referenced.
->
-> Looks like some recursive exception until we exhausted the stack.
-
-You are right !
-I see only one common case is, exhaust the stack.
+On Thu, 20 Jun 2024 08:28:57 -0500, Huang, Kai <kai.huang@intel.com> wrote:
 
 >
+> On 18/06/2024 12:53 am, Huang, Haitao wrote:
+>> From: Kristen Carlson Accardi <kristen@linux.intel.com>
+>>
+>> Currently in the EPC page allocation, the kernel simply fails the
+>> allocation when the current EPC cgroup fails to charge due to its usage
+>> reaching limit.  This is not ideal. When that happens, a better way is
+>> to reclaim EPC page(s) from the current EPC cgroup (and/or its
+>> descendants) to reduce its usage so the new allocation can succeed.
+>>
+>> Add the basic building blocks to support per-cgroup reclamation.
+>>
+>> Currently the kernel only has one place to reclaim EPC pages: the global
+>> EPC LRU list.  To support the "per-cgroup" EPC reclaim, maintain an LRU
+>> list for each EPC cgroup, and introduce a "cgroup" variant function to
+>> reclaim EPC pages from a given EPC cgroup and its descendants.
+>>
+>> Currently the kernel does the global EPC reclaim in sgx_reclaim_page().
+>> It always tries to reclaim EPC pages in batch of SGX_NR_TO_SCAN (16)
+>> pages.  Specifically, it always "scans", or "isolates" SGX_NR_TO_SCAN
+>> pages from the global LRU, and then tries to reclaim these pages at once
+>> for better performance.
+>>
+>> Implement the "cgroup" variant EPC reclaim in a similar way, but keep
+>> the implementation simple: 1) change sgx_reclaim_pages() to take an LRU
+>> as input, and return the pages that are "scanned" and attempted for
+>> reclamation (but not necessarily reclaimed successfully); 2) loop the
+>> given EPC cgroup and its descendants and do the new sgx_reclaim_pages()
+>> until SGX_NR_TO_SCAN pages are "scanned".
+>> This implementation, encapsulated in sgx_cgroup_reclaim_pages(), always
+>> tries to reclaim SGX_NR_TO_SCAN pages from the LRU of the given EPC
+>> cgroup, and only moves to its descendants when there's no enough
+>> reclaimable EPC pages to "scan" in its LRU.  It should be enough for
+>> most cases.
 >
-> Trying to connect the dots here, can you enlighten me how this is
-> related to the fork13 mainline report?
+> [...]
+>
+>> In other cases, the caller may invoke this function in a
+>> loop to ensure enough pages reclaimed for its usage. To ensure all
+>> descendant groups scanned in a round-robin fashion in those cases,
+>> sgx_cgroup_reclaim_pages() takes in a starting cgroup and returns the
+>> next cgroup that the caller can pass in as the new starting cgroup for a
+>> subsequent call.
+>
+>
+> AFAICT this part is new, and I believe this "round-robin" thing is just
+> for the "global reclaim"?  Or is it also for per-cgroup reclaim where  
+> more
+> than SGX_NR_TO_SCAN pages needs to be reclaimed?
+>
+> I wish the changelog should just point out what consumers will use this
+> new sgx_cgroup_reclaim_pages(), like:
+>
+> The sgx_cgroup_reclaim_pages() will be used in three cases:
+>
+>  1) direct/sync per-cgroup reclaim in try_charge()
+>  2) indirect/async per-cgroup reclaim triggered in try_charge()
+>  3) global reclaim
+>
+> And then describe how will they use sgx_cgroup_reclaim_pages():
+>
+> Both 1) and 2) can result in needing to reclaim more than SGX_NR_TO_SCAN
+> pages, in which case we should <fill in how to reclaim>.
+>
+> For 3), the new global reclaim should try tot match the existing global
+> reclaim behaviour, that is to try to treat all EPC pages equally.
+> <continue to explain how can sgx_cgroup_reclaim_pages() achieve this.>
+>
+> With above context, we can justify why to make sgx_cgroup_reclaim_pages()
+> in this form.
+>
+This new part is only to address the issue you raised in this thread:
+https://lore.kernel.org/lkml/op.2ndsydgywjvjmi@hhuan26-mobl.amr.corp.intel.com/
 
-I am not sure about the relation between these two reports.
-But as a common practice I have shared that report information.
+Really it has nothing to do whether global, direct/async, per-cgroup  
+contexts. They all should use the function the same way. This paragraph  
+describes the design and
+I thought the above new statements justify the reason we return 'next' so  
+it can reclaim into descedant in round-robin fashion?  No sure we need get  
+into details of different usages of the functions which are in code  
+actually?
 
-> > [ 0.000000] Booting Linux on physical CPU 0x0000000100 [0x410fd033]
-> > [ 0.000000] Linux version 6.9.6-rc1 (tuxmake@tuxmake)
-> > (aarch64-linux-gnu-gcc (Debian 13.2.0-12) 13.2.0, GNU ld (GNU Binutils
-> > for Debian) 2.42) #1 SMP PREEMPT @1718817000
-> > ...
-> > [ 1786.336761] Unable to handle kernel NULL pointer dereference at
-> > virtual address 0000000000000070
-> > [ 1786.345564] Mem abort info:
-> > [ 1786.348359]   ESR = 0x0000000096000004
-> > [ 1786.352112]   EC = 0x25: DABT (current EL), IL = 32 bits
-> > [ 1786.357434]   SET = 0, FnV = 0
-> > [ 1786.360492]   EA = 0, S1PTW = 0
-> > [ 1786.363637]   FSC = 0x04: level 0 translation fault
-> > [ 1786.368523] Data abort info:
-> > [ 1786.371405]   ISV = 0, ISS = 0x00000004, ISS2 = 0x00000000
-> > [ 1786.376900]   CM = 0, WnR = 0, TnD = 0, TagAccess = 0
-> > [ 1786.381960]   GCS = 0, Overlay = 0, DirtyBit = 0, Xs = 0
-> > [ 1786.387284] Unable to handle kernel NULL pointer dereference at
-> > virtual address 0000000000000070
-> > [ 1786.387293] Insufficient stack space to handle exception!
-> > [ 1786.387296] ESR: 0x0000000096000047 -- DABT (current EL)
-> > [ 1786.387302] FAR: 0xffff80008399ffe0
-> > [ 1786.387306] Task stack:     [0xffff8000839a0000..0xffff8000839a4000]
-> > [ 1786.387312] IRQ stack:      [0xffff8000837f8000..0xffff8000837fc000]
-> > [ 1786.387319] Overflow stack: [0xffff00097ec95320..0xffff00097ec96320]
-> > [ 1786.387327] CPU: 4 PID: 0 Comm: swapper/4 Not tainted 6.9.6-rc1 #1
-> > [ 1786.387338] Hardware name: ARM Juno development board (r2) (DT)
-> > [ 1786.387344] pstate: a00003c5 (NzCv DAIF -PAN -UAO -TCO -DIT -SSBS BTYPE=--)
-> > [ 1786.387355] pc : _prb_read_valid (kernel/printk/printk_ringbuffer.c:2109)
-> > [ 1786.387374] lr : prb_read_valid (kernel/printk/printk_ringbuffer.c:2183)
-> > [ 1786.387385] sp : ffff80008399ffe0
-> > [ 1786.387390] x29: ffff8000839a0030 x28: ffff000800365f00 x27: ffff800082530008
-> > [ 1786.387407] x26: ffff8000834e33b8 x25: ffff8000839a00b0 x24: 0000000000000001
-> > [ 1786.387423] x23: ffff8000839a00a8 x22: ffff8000830e3e40 x21: 0000000000001e9e
-> > [ 1786.387438] x20: 0000000000000000 x19: ffff8000839a01c8 x18: 0000000000000010
-> > [ 1786.387453] x17: 72646461206c6175 x16: 7472697620746120 x15: 65636e6572656665
-> > [ 1786.387468] x14: 726564207265746e x13: 3037303030303030 x12: 3030303030303030
-> > [ 1786.387483] x11: 2073736572646461 x10: ffff800083151ea0 x9 : ffff80008014273c
-> > [ 1786.387498] x8 : ffff8000839a0120 x7 : 0000000000000000 x6 : 0000000000000e9f
-> > [ 1786.387512] x5 : ffff8000839a00c8 x4 : ffff8000837157c0 x3 : 0000000000000000
-> > [ 1786.387526] x2 : ffff8000839a00b0 x1 : 0000000000000000 x0 : ffff8000830e3f58
-> > [ 1786.387542] Kernel panic - not syncing: kernel stack overflow
-> > [ 1786.387549] SMP: stopping secondary CPUs
-> > [ 1787.510055] SMP: failed to stop secondary CPUs 0,4
-> > [ 1787.510065] Kernel Offset: disabled
-> > [ 1787.510068] CPU features: 0x4,00001061,e0100000,0200421b
-> > [ 1787.510076] Memory Limit: none
-> > [ 1787.680436] ---[ end Kernel panic - not syncing: kernel stack overflow ]---
->
->
-> --
-> Cheers,
->
-> David / dhildenb
+I'll address the new global reclamation behavior later when this function  
+was actually used for that. And the difference really exists before and  
+not because of this change.
 
-- Naresh
+>>
+>> Note, this simple implementation doesn't _exactly_ mimic the current
+>> global EPC reclaim (which always tries to do the actual reclaim in batch
+>> of SGX_NR_TO_SCAN pages): when LRUs have less than SGX_NR_TO_SCAN
+>> reclaimable pages, the actual reclaim of EPC pages will be split into
+>> smaller batches _across_ multiple LRUs with each being smaller than
+>> SGX_NR_TO_SCAN pages.
+>>
+>> A more precise way to mimic the current global EPC reclaim would be to
+>> have a new function to only "scan" (or "isolate") SGX_NR_TO_SCAN pages
+>> _across_ the given EPC cgroup _AND_ its descendants, and then do the
+>> actual reclaim in one batch.  But this is unnecessarily complicated at
+>> this stage.
+>>
+>> Alternatively, the current sgx_reclaim_pages() could be changed to
+>> return the actual "reclaimed" pages, but not "scanned" pages. However,
+>> the reclamation is a lengthy process, forcing a successful reclamation
+>> of predetermined number of pages may block the caller for too long. And
+>> that may not be acceptable in some synchronous contexts, e.g., in
+>> serving an ioctl().
+>>
+>> With this building block in place, add synchronous reclamation support
+>> in sgx_cgroup_try_charge(): trigger a call to
+>> sgx_cgroup_reclaim_pages() if the cgroup reaches its limit and the
+>> caller allows synchronous reclaim as indicated by s newly added
+>> parameter.
+>>
+>> A later patch will add support for asynchronous reclamation reusing
+>> sgx_cgroup_reclaim_pages().
+>
+> It seems you also should mention the new global reclaim will also use
+> this sgx_cgroup_reclaim_pages()?
+>
+> [...]
+>
+>> +/**
+>> + * sgx_cgroup_reclaim_pages() - reclaim EPC from a cgroup tree
+>> + * @root:	The root of cgroup tree to reclaim from.
+>> + * @start:	The descendant cgroup from which to start the tree walking.
+>> + *
+>> + * This function performs a pre-order walk in the cgroup tree under  
+>> the given
+>> + * root, starting from the node %start, or from the root if %start is  
+>> NULL. The
+>> + * function will attempt to reclaim pages at each node until a fixed  
+>> number of
+>> + * pages (%SGX_NR_TO_SCAN) are attempted for reclamation. No guarantee  
+>> of
+>> + * success on the actual reclamation process. In extreme cases, if all  
+>> pages in
+>> + * front of the LRUs are recently accessed, i.e., considered "too  
+>> young" to
+>> + * reclaim, no page will actually be reclaimed after walking the whole  
+>> tree.
+>> + *
+>> + * In some cases, a caller may want to ensure enough reclamation until  
+>> its
+>> + * specific need is met. In those cases, the caller should invoke this  
+>> function
+>> + * in a loop, and at each iteration passes in the same root and the  
+>> next node
+>> + * returned from the previous call as the new %start.
+>> + *
+>> + * Return: The next misc cgroup in the subtree to continue the  
+>> scanning and
+>> + * attempt for more reclamation from this subtree if needed.
+>
+> [...]
+>
+>> Caller must
+>> + * release the reference if the returned is not used as %start for a  
+>> subsequent
+>> + * call.
+>>
+>
+> This sentence isn't clear to me.
+>
+> First of all, release the reference "of what"?  The %start, or the one
+> returned by this function?
+>
+
+will this be better?
+  * Return: A reference to next misc cgroup in the subtree to continue the
+  * scanning and attempt for more reclamation from this subtree if needed.
+  * Caller must release the returned reference if the returned is not used  
+as
+  * %start for a subsequent call.
+
+> And is it because of ...
+>
+>> + */
+>> +static struct misc_cg *sgx_cgroup_reclaim_pages(struct misc_cg *root,  
+>> struct misc_cg *start)
+>> +{
+>> +	struct cgroup_subsys_state *css_root, *pos;
+>> +	struct cgroup_subsys_state *next = NULL;
+>> +	struct sgx_cgroup *sgx_cg;
+>> +	unsigned int cnt = 0;
+>> +
+>> +	 /* Caller must ensure css_root and start ref's acquired */
+>
+> ... the caller must acquire the ref of both @css_root and @css_start, and
+> ...
+yes
+>
+>> +	css_root = &root->css;
+>> +	if (start)
+>> +		pos = &start->css;
+>> +	else
+>> +		pos = css_root;
+>> +
+>> +	while (cnt < SGX_NR_TO_SCAN) {
+>> +		sgx_cg = sgx_cgroup_from_misc_cg(css_misc(pos));
+>> +		cnt += sgx_reclaim_pages(&sgx_cg->lru);
+>> +
+>> +		rcu_read_lock();
+>> +
+>> +		next = css_next_descendant_pre(pos, css_root);
+>> +
+>> +		if (pos != css_root)
+>> +			css_put(pos);
+>
+> ... the ref is decreased internally?
+>
+
+Right.
+
+>> +
+>> +		if (!next || !css_tryget(next)) {
+>> +			/* We are done if next is NULL or not safe to continue
+>> +			 * the walk if next is dead. Return NULL and the caller
+>> +			 * determines whether to restart from root.
+>> +			 */
+>
+> Incorrect comment style.
+>
+Will fix
+>> +			rcu_read_unlock();
+>> +			return NULL;
+>> +		}
+>> +
+>> +		rcu_read_unlock();
+>> +		pos = next;
+>
+> There's no ref grab here, wouldn't the above ...
+>
+tryget() done to next
+
+> 		if (pos != css_root)
+> 			css_put(pos);
+>
+> ... decrease the ref w/o having it been increased?
+>
+>> +	}
+>> +
+>> +	return css_misc(next);
+>
+> Here AFAICT the ref isn't increased, but ...
+>
+We only return next when next && css_tryget(next), otherwise NULL.
+
+> [...]
+>
+>
+>> +/**
+>> + * sgx_cgroup_try_charge() - try to charge cgroup for a single EPC page
+>>    * @sgx_cg:	The EPC cgroup to be charged for the page.
+>> + * @reclaim:	Whether or not synchronous EPC reclaim is allowed.
+>>    * Return:
+>>    * * %0 - If successfully charged.
+>>    * * -errno - for failures.
+>>    */
+>> -int sgx_cgroup_try_charge(struct sgx_cgroup *sgx_cg)
+>> +int sgx_cgroup_try_charge(struct sgx_cgroup *sgx_cg, enum sgx_reclaim  
+>> reclaim)
+>>   {
+>> -	return misc_cg_try_charge(MISC_CG_RES_SGX_EPC, sgx_cg->cg, PAGE_SIZE);
+>> +	int ret;
+>> +	struct misc_cg *cg_next = NULL;
+>> +
+>> +	for (;;) {
+>> +		ret = __sgx_cgroup_try_charge(sgx_cg);
+>> +
+>> +		if (ret != -EBUSY)
+>> +			goto out;
+>> +
+>> +		if (reclaim == SGX_NO_RECLAIM) {
+>> +			ret = -ENOMEM;
+>> +			goto out;
+>> +		}
+>> +
+>> +		cg_next = sgx_cgroup_reclaim_pages(sgx_cg->cg, cg_next);
+>> +		cond_resched();
+>> +	}
+>> +
+>> +out:
+>> +	if (cg_next != sgx_cg->cg)
+>> +		put_misc_cg(cg_next);
+>
+> ... if I am reading correctly, here you does the put anyway.
+>
+cg_next ref is increased or it is NULL.
+Only puts the last one no longer to be passed back in to  
+sgx_cgroup_reclaim_page()
+
+>> +	return ret;
+>>   }
+>>
+>
+> And when there are more than SGX_NR_TO_SCAN pages that need to reclaim,
+> the above ...
+
+Note, all sgx_cgroup_reclaim_pages() guarantees is scanning SGX_NR_TO_SCAN  
+pages.
+>
+> 	for (;;) {
+> 		cg_next = sgx_cgroup_reclaim_pages(sgx_cg->cg, cg_next);
+> 	}
+>
+> ... actually tries to reclaim those pages from @sgx_cg _AND_ it's
+> descendants, and tries to do it _EQUALLY_.
+>
+> Is this desired, or should we always try to reclaim from the @sgx_cg
+> first, but only moves to the desendants when the @sgx_cg shouldn't be
+> reclaimed anymore?
+>
+
+we still reclaim in sgx_cg in first scan and attempt of reclaiming for  
+SGX_NR_TOS_CAN pages, but if it turns out that did not satisfy caller  
+needs, then caller goes on to reclaim from descendants by passing in  
+'next' as starting point.
+
+> Anyway, it's different from the previous behaviour.
+>
+Again, this is to fix the issue you raised. I consider it improved  
+behavior :-)
+> [...]
+>
+>> -static bool sgx_should_reclaim(unsigned long watermark)
+>> +static bool sgx_should_reclaim_global(unsigned long watermark)
+>>   {
+>>   	return atomic_long_read(&sgx_nr_free_pages) < watermark &&
+>>   	       !list_empty(&sgx_global_lru.reclaimable);
+>>   }
+>>
+>> +static void sgx_reclaim_pages_global(void)
+>> +{
+>> +	sgx_reclaim_pages(&sgx_global_lru);
+>> +}
+>> +
+>>   /*
+>>    * sgx_reclaim_direct() should be called (without enclave's mutex  
+>> held)
+>>    * in locations where SGX memory resources might be low and might be
+>> @@ -394,8 +405,8 @@ static bool sgx_should_reclaim(unsigned long  
+>> watermark)
+>>    */
+>>   void sgx_reclaim_direct(void)
+>>   {
+>> -	if (sgx_should_reclaim(SGX_NR_LOW_PAGES))
+>> -		sgx_reclaim_pages();
+>> +	if (sgx_should_reclaim_global(SGX_NR_LOW_PAGES))
+>> +		sgx_reclaim_pages_global();
+>>   }
+>>
+>
+> I wish the rename was mentioned in the changelog too.
+>
+OK
