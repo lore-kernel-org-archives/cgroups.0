@@ -1,28 +1,28 @@
 Received: from m16.mail.163.com (m16.mail.163.com [220.197.31.4])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id A2B6E16C856;
-	Fri, 21 Jun 2024 08:51:01 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id B2F5F18E20;
+	Fri, 21 Jun 2024 08:51:10 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=220.197.31.4
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1718959864; cv=none; b=ROeusKtlwqZO6N8mTRB0gK1pa4p0cXBGdgrKzOv0xxKNv37HWh1xSecQ6BM8K2LG+iNBJXtiLJm6QyN5KK15rKoOgz8e5bo/TT1IOsfUPoxAijeLAtc0qbDTXn3Dn85M9NMeVX6OHTl8nFWvseEI4m0x8MUKIMUnyMtkzaN2nFs=
+	t=1718959873; cv=none; b=HArHt2PB4q8r1Ypx40PWC4CGgUFcG93G4DwM9ePlkcUjFQmcE7tjDBrhIhb39zPjzNb+Sm8vPJKUSwvneQJbUiiuSOZtshl47VzdtPx6t1vQU74n3o1ErjxflRpmeH1NAw3s7iX7BY3sZsQvcOb7BJDspChGJr0KWMtUrlFlfu0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1718959864; c=relaxed/simple;
-	bh=5QYROOWaGcvbXXs7cTnbAtHbsH2oX4In9WLxiDZb1MY=;
+	s=arc-20240116; t=1718959873; c=relaxed/simple;
+	bh=Zte5JUNqWfYMzsUShAtYW3hHHTnmNIinQoLo7kExpMU=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=Afxmg7c6z9qp8ANBN5XaeaxHf0aGtP/pSl2Ki1w5r8HR9huFxQtXtVhN76eEO3lOVwVY+HCD11Ku6LtlEMUuVLBMsmSQ3HVHUpPbL/XqLNWELLiZ19Aij7kz9Y04BPixiDB1DsYfUMqXCdZUjbcRnnmgV0QRuhWe6py3vEwm4qk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=nDdB9LT7; arc=none smtp.client-ip=220.197.31.4
+	 MIME-Version; b=AYMnEnMOEbID4pS05uy7AWJ0suS8KdrYaHqkStCPPF21RuNoSYpt2sfRsE+rvMrIa9bq4B4H0sk5czAyWJh/5yDQ8Rtd0IQ2Q4d2Un2cI15al7eOdQzaUBLi/v1k2tB40WelaacNBQKz8lPkNQU2A5MCz4jG4CrFsG4XNsuitsM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=DkkytO23; arc=none smtp.client-ip=220.197.31.4
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="nDdB9LT7"
+	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="DkkytO23"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
-	s=s110527; h=From:Subject:Date:Message-Id:MIME-Version; bh=NEUI6
-	8AFczxDnCoNcvvy8d5kEzbCqj+XKf0377HnJrU=; b=nDdB9LT7lwwiJXN3nEyoc
-	MCcbCYxZPuVGfNXYMQ5NK/6n6duy+gkPv1HuoObd3Eekb+sWO7U/6QB8tKHJyUJ7
-	+2OhhBmiiSnucVa+PYnHx+xqqZq/Dl/1KHPmjLEdJemBPgbPCZtfq1y9n5v3uytM
-	cNRW7oxIsfsvdhVX1cSpf4=
+	s=s110527; h=From:Subject:Date:Message-Id:MIME-Version; bh=f4H86
+	bcCOfTgkY5Xt2BTUJ/8giKcEdQStQuqAfO5dp8=; b=DkkytO2327zAY8bmj4lwC
+	5ke/3qdWtvgw95FRwg+BqoKephRG3S3XlrlEWTD//NpIEyjJ+TZkjLXyKVFA+gxY
+	mc0kRwmiMrJLOyTlXt1rH4nGMS7N5Gzji4T2x1lvaSwYA3AECpELHxODk19k1wNU
+	daR7iYn87mHeEO8wS+G78E=
 Received: from localhost (unknown [101.132.132.191])
-	by gzga-smtp-mta-g2-4 (Coremail) with SMTP id _____wDnH6+xPnVmQz_YAw--.49218S2;
-	Fri, 21 Jun 2024 16:49:53 +0800 (CST)
+	by gzga-smtp-mta-g2-3 (Coremail) with SMTP id _____wDn_4O2PnVmSbjWEg--.56944S2;
+	Fri, 21 Jun 2024 16:49:59 +0800 (CST)
 From: Xavier <xavier_qy@163.com>
 To: longman@redhat.com,
 	mkoutny@suse.com
@@ -32,12 +32,13 @@ Cc: lizefan.x@bytedance.com,
 	cgroups@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
 	Xavier <xavier_qy@163.com>
-Subject: [PATCH-cpuset v5 0/2] cpuset: use Union-Find to optimize
-Date: Fri, 21 Jun 2024 16:49:50 +0800
-Message-Id: <20240621084952.209770-1-xavier_qy@163.com>
+Subject: [PATCH-cpuset v5 2/2] cpuset: use Union-Find to optimize the merging of cpumasks
+Date: Fri, 21 Jun 2024 16:49:52 +0800
+Message-Id: <20240621084952.209770-3-xavier_qy@163.com>
 X-Mailer: git-send-email 2.34.1
-In-Reply-To: <b511173c-53fe-4a93-8030-d99ed1b65bd6@redhat.com>
+In-Reply-To: <20240621084952.209770-1-xavier_qy@163.com>
 References: <b511173c-53fe-4a93-8030-d99ed1b65bd6@redhat.com>
+ <20240621084952.209770-1-xavier_qy@163.com>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
@@ -45,38 +46,185 @@ List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:_____wDnH6+xPnVmQz_YAw--.49218S2
-X-Coremail-Antispam: 1Uf129KBjvdXoWrKFyUWFWUXF43tF48XFy7Jrb_yoWfJrgE9r
-	4kuayjk3WxWF1IqayrCF95tFW29FWj9r9Yk3Z8tFZrXFsrArZrGrykXa4DX3yUXF4kAr45
-	GFyrtr4SqrnrXjkaLaAFLSUrUUUUjb8apTn2vfkv8UJUUUU8Yxn0WfASr-VFAUDa7-sFnT
-	9fnUUvcSsGvfC2KfnxnUUI43ZEXa7xREMKuUUUUUU==
-X-CM-SenderInfo: 50dyxvpubt5qqrwthudrp/xtbBchIFEGWXvvEkjAAAsg
+X-CM-TRANSID:_____wDn_4O2PnVmSbjWEg--.56944S2
+X-Coremail-Antispam: 1Uf129KBjvJXoWxAFWfur4kKFyUZFWUJrW3Awb_yoWrurW5pF
+	s3Cay2qrWrJryUGwsYk3y8Z34SkaykJa1Utw13Gw1fArnrA3Z29a40qFs5KayUuFyDCr1U
+	uF9xKr47Wr1UKFDanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x07U47K3UUUUU=
+X-CM-SenderInfo: 50dyxvpubt5qqrwthudrp/1tbiZR0FEGXAmib2rAAEsq
 
-Hi all,
+The process of constructing scheduling domains
+ involves multiple loops and repeated evaluations, leading to numerous
+ redundant and ineffective assessments that impact code efficiency.
 
-According to Longman's suggestion, I have added documentation describing Union-Find.
-Kindly review.
+Here, we use Union-Find to optimize the merging of cpumasks. By employing
+path compression and union by rank, we effectively reduce the number of
+lookups and merge comparisons.
 
-Best Regards,
-Xavier
+Signed-off-by: Xavier <xavier_qy@163.com>
+---
+ kernel/cgroup/cpuset.c | 95 +++++++++++++++---------------------------
+ 1 file changed, 34 insertions(+), 61 deletions(-)
 
-Xavier (2):
-  Union-Find: add a new module in kernel library
-  cpuset: use Union-Find to optimize the merging of cpumasks
-
- Documentation/core-api/union_find.rst         | 110 ++++++++++++++++++
- .../zh_CN/core-api/union_find.rst             |  87 ++++++++++++++
- MAINTAINERS                                   |   9 ++
- include/linux/union_find.h                    |  30 +++++
- kernel/cgroup/cpuset.c                        |  95 ++++++---------
- lib/Makefile                                  |   2 +-
- lib/union_find.c                              |  38 ++++++
- 7 files changed, 309 insertions(+), 62 deletions(-)
- create mode 100644 Documentation/core-api/union_find.rst
- create mode 100644 Documentation/translations/zh_CN/core-api/union_find.rst
- create mode 100644 include/linux/union_find.h
- create mode 100644 lib/union_find.c
-
+diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
+index fe76045aa5..7e527530f8 100644
+--- a/kernel/cgroup/cpuset.c
++++ b/kernel/cgroup/cpuset.c
+@@ -45,6 +45,7 @@
+ #include <linux/cgroup.h>
+ #include <linux/wait.h>
+ #include <linux/workqueue.h>
++#include <linux/union_find.h>
+ 
+ DEFINE_STATIC_KEY_FALSE(cpusets_pre_enable_key);
+ DEFINE_STATIC_KEY_FALSE(cpusets_enabled_key);
+@@ -172,9 +173,6 @@ struct cpuset {
+ 	 */
+ 	int attach_in_progress;
+ 
+-	/* partition number for rebuild_sched_domains() */
+-	int pn;
+-
+ 	/* for custom sched domain */
+ 	int relax_domain_level;
+ 
+@@ -1007,7 +1005,7 @@ static int generate_sched_domains(cpumask_var_t **domains,
+ 	struct cpuset *cp;	/* top-down scan of cpusets */
+ 	struct cpuset **csa;	/* array of all cpuset ptrs */
+ 	int csn;		/* how many cpuset ptrs in csa so far */
+-	int i, j, k;		/* indices for partition finding loops */
++	int i, j;		/* indices for partition finding loops */
+ 	cpumask_var_t *doms;	/* resulting partition; i.e. sched domains */
+ 	struct sched_domain_attr *dattr;  /* attributes for custom domains */
+ 	int ndoms = 0;		/* number of sched domains in result */
+@@ -1015,6 +1013,8 @@ static int generate_sched_domains(cpumask_var_t **domains,
+ 	struct cgroup_subsys_state *pos_css;
+ 	bool root_load_balance = is_sched_load_balance(&top_cpuset);
+ 	bool cgrpv2 = cgroup_subsys_on_dfl(cpuset_cgrp_subsys);
++	struct uf_node *nodes;
++	int nslot_update;
+ 
+ 	doms = NULL;
+ 	dattr = NULL;
+@@ -1102,40 +1102,31 @@ static int generate_sched_domains(cpumask_var_t **domains,
+ 	if (root_load_balance && (csn == 1))
+ 		goto single_root_domain;
+ 
+-	for (i = 0; i < csn; i++)
+-		csa[i]->pn = i;
+-	ndoms = csn;
++	nodes = uf_nodes_alloc(csn);
++	if (!nodes)
++		goto done;
+ 
+-restart:
+-	/* Find the best partition (set of sched domains) */
++	/* Merge overlapping cpusets */
+ 	for (i = 0; i < csn; i++) {
+-		struct cpuset *a = csa[i];
+-		int apn = a->pn;
+-
+-		for (j = 0; j < csn; j++) {
+-			struct cpuset *b = csa[j];
+-			int bpn = b->pn;
+-
+-			if (apn != bpn && cpusets_overlap(a, b)) {
+-				for (k = 0; k < csn; k++) {
+-					struct cpuset *c = csa[k];
+-
+-					if (c->pn == bpn)
+-						c->pn = apn;
+-				}
+-				ndoms--;	/* one less element */
+-				goto restart;
+-			}
++		for (j = i + 1; j < csn; j++) {
++			if (cpusets_overlap(csa[i], csa[j]))
++				uf_union(&nodes[i], &nodes[j]);
+ 		}
+ 	}
+ 
++	/* Count the total number of domains */
++	for (i = 0; i < csn; i++) {
++		if ((nodes[i].parent == &nodes[i]) || !nodes[i].parent)
++			ndoms++;
++	}
++
+ 	/*
+ 	 * Now we know how many domains to create.
+ 	 * Convert <csn, csa> to <ndoms, doms> and populate cpu masks.
+ 	 */
+ 	doms = alloc_sched_domains(ndoms);
+ 	if (!doms)
+-		goto done;
++		goto free;
+ 
+ 	/*
+ 	 * The rest of the code, including the scheduler, can deal with
+@@ -1159,47 +1150,29 @@ static int generate_sched_domains(cpumask_var_t **domains,
+ 	}
+ 
+ 	for (nslot = 0, i = 0; i < csn; i++) {
+-		struct cpuset *a = csa[i];
+-		struct cpumask *dp;
+-		int apn = a->pn;
+-
+-		if (apn < 0) {
+-			/* Skip completed partitions */
+-			continue;
+-		}
+-
+-		dp = doms[nslot];
+-
+-		if (nslot == ndoms) {
+-			static int warnings = 10;
+-			if (warnings) {
+-				pr_warn("rebuild_sched_domains confused: nslot %d, ndoms %d, csn %d, i %d, apn %d\n",
+-					nslot, ndoms, csn, i, apn);
+-				warnings--;
+-			}
+-			continue;
+-		}
+-
+-		cpumask_clear(dp);
+-		if (dattr)
+-			*(dattr + nslot) = SD_ATTR_INIT;
++		nslot_update = 0;
+ 		for (j = i; j < csn; j++) {
+-			struct cpuset *b = csa[j];
+-
+-			if (apn == b->pn) {
+-				cpumask_or(dp, dp, b->effective_cpus);
++			if (uf_find(&nodes[j]) == &nodes[i]) {
++				struct cpumask *dp = doms[nslot];
++
++				if (i == j) {
++					nslot_update = 1;
++					cpumask_clear(dp);
++					if (dattr)
++						*(dattr + nslot) = SD_ATTR_INIT;
++				}
++				cpumask_or(dp, dp, csa[j]->effective_cpus);
+ 				cpumask_and(dp, dp, housekeeping_cpumask(HK_TYPE_DOMAIN));
+ 				if (dattr)
+-					update_domain_attr_tree(dattr + nslot, b);
+-
+-				/* Done with this partition */
+-				b->pn = -1;
++					update_domain_attr_tree(dattr + nslot, csa[j]);
+ 			}
+ 		}
+-		nslot++;
++		if (nslot_update)
++			nslot++;
+ 	}
+ 	BUG_ON(nslot != ndoms);
+-
++free:
++	uf_nodes_free(nodes);
+ done:
+ 	kfree(csa);
+ 
 -- 
 2.45.2
 
