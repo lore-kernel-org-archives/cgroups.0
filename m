@@ -1,399 +1,174 @@
-Received: from m16.mail.163.com (m16.mail.163.com [117.135.210.2])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id 28CD616DEC9;
-	Fri, 21 Jun 2024 08:51:15 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=117.135.210.2
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+	(No client certificate requested)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 28D884436;
+	Fri, 21 Jun 2024 14:32:55 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1718959879; cv=none; b=LCOkY0QfEJjkWzmRvSk7TZvCnqmdcygdlVupVwUVs0Dh4k9beII64O26+0K5AVC1gk7vyXF0fy7JeMsfYlej9y6hJKoJGV+PU/2qzPSU1OTIMB857NnQbFnGbczJBObHj8/AULmgoW4ENWZ/SGnKEZg8axR866KcmTbIsto17Nc=
+	t=1718980376; cv=none; b=XSW+Bi+TKPav+ZAX8DvilZ0oUl+dJt3OkQcAk2giY4wKEwfPARryNbQRA9HxHbwoBrRt9V70cCp9zYu5HX4i8BfTznEtl1Uf7aHGWoOBe1yoH9XoHnuvhJTaLfkvaoh4BgFpdHKU5eNVCDUA/G4TkivKxzF4pX4Tcwm52ll0NrU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1718959879; c=relaxed/simple;
-	bh=MlEE5bP5mVqm0UBIC1nRtLKrlXm2KJOOePQCo0DUNiI=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=WQitcWZEd7UUmjg+auG5qk2HITIZgB5ZbLpRZORaiLXnK0S2xBMj9JoDXKKdXUxa5b1C8o97LRgrShwOa7txLxJjt+FW2Bd9H62aOLzAHXH0kpEJKEh6LwD/NQWeT6CpnhW+o4FEbZA7q5ex7aCS8g5jz7RBw7RH31XvQ2Fs5Cs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=ojlhpd9j; arc=none smtp.client-ip=117.135.210.2
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
+	s=arc-20240116; t=1718980376; c=relaxed/simple;
+	bh=ez03aVKBlqGthUjZy/ZRNjr5TOr2Y00yZXdbgrk//tQ=;
+	h=Subject:From:To:Cc:Date:Message-ID:MIME-Version:Content-Type; b=QiZciIcY8SYWvyPig7JlTWvHz+lx81PbIPg05p9wovC1DGUh0th/HhfTRDak/DBEH3T+92vkYhiRkpNoSgh5j9GleW+qFGnkYaqfH8hZmrU9FFcJoM/F24TOigzgDkxZN7hxWtZh93MpJb4X/qsABbsAiMv/u6mAsJO/ds+qKmk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Lw7RZSee; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="ojlhpd9j"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
-	s=s110527; h=From:Subject:Date:Message-Id:MIME-Version:
-	Content-Type; bh=7fK2nDbOPCfTVnFCT5bgdfJtFqNYEKbXiLXo72br+wo=;
-	b=ojlhpd9jbMHFwsXeF1MR4/h6K5zVSnjIwOkuzy4nimC3HEuErsMgUVRP5HHI/3
-	JUIDRErnEDVOLU8aYi/ZMQivvFw3Vmx/4QyNp+ilLmswzSdyrlCJojKXAOgNLLRZ
-	xmK6VjX4Xl6s9W1dQXJbP/jGiffVuuotxYDW1meRzNQK0=
-Received: from localhost (unknown [101.132.132.191])
-	by gzga-smtp-mta-g2-2 (Coremail) with SMTP id _____wD3H6SzPnVmZ4KwJA--.49714S2;
-	Fri, 21 Jun 2024 16:49:55 +0800 (CST)
-From: Xavier <xavier_qy@163.com>
-To: longman@redhat.com,
-	mkoutny@suse.com
-Cc: lizefan.x@bytedance.com,
-	tj@kernel.org,
-	hannes@cmpxchg.org,
-	cgroups@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Xavier <xavier_qy@163.com>
-Subject: [PATCH-cpuset v5 1/2] Union-Find: add a new module in kernel library
-Date: Fri, 21 Jun 2024 16:49:51 +0800
-Message-Id: <20240621084952.209770-2-xavier_qy@163.com>
-X-Mailer: git-send-email 2.34.1
-In-Reply-To: <20240621084952.209770-1-xavier_qy@163.com>
-References: <b511173c-53fe-4a93-8030-d99ed1b65bd6@redhat.com>
- <20240621084952.209770-1-xavier_qy@163.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Lw7RZSee"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 44796C4AF08;
+	Fri, 21 Jun 2024 14:32:53 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1718980375;
+	bh=ez03aVKBlqGthUjZy/ZRNjr5TOr2Y00yZXdbgrk//tQ=;
+	h=Subject:From:To:Cc:Date:From;
+	b=Lw7RZSeeaO9duH9TTQvuqZ1NRkCsIavqwGDeNGjGj1lPcgKSG1tMmPb86gwmYTBEp
+	 QBBUS9aGRHw3hTTB+q+2eYwpmJDQMr5koen1v0X0zEO0El95ER1+Qw41KR+GLGpYLH
+	 sYIm37RwkhMnY/w6GkRTYLy0ksOaHWIpS5eQePfEAFOs8S+5j5p4O2T/aUz8iegk9L
+	 GlIpFuIJahJkUbE3fXuQNmH2OCuAkCBhIveOnA9kPe+fAVwnAHo1cNUPV3oRjJx2Kq
+	 rn6/SfVxO8alI3p8CrTDRMxmrpJU2Lu286EXChTP3D3SoLcv/g0HpR1mk35X1FeK2b
+	 OOhC//SFZB/xQ==
+Subject: [PATCH v1] cgroup/rstat: Avoid thundering herd problem by kswapd
+ across NUMA nodes
+From: Jesper Dangaard Brouer <hawk@kernel.org>
+To: tj@kernel.org, cgroups@vger.kernel.org, yosryahmed@google.com,
+ shakeel.butt@linux.dev
+Cc: Jesper Dangaard Brouer <hawk@kernel.org>, hannes@cmpxchg.org,
+ lizefan.x@bytedance.com, longman@redhat.com, kernel-team@cloudflare.com,
+ linux-mm@kvack.org, linux-kernel@vger.kernel.org
+Date: Fri, 21 Jun 2024 16:32:50 +0200
+Message-ID: <171898037079.1222367.13467317484793748519.stgit@firesoul>
+User-Agent: StGit/1.5
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:_____wD3H6SzPnVmZ4KwJA--.49714S2
-X-Coremail-Antispam: 1Uf129KBjvJXoWfJw48ury7Gw1ftw4kuFyxuFg_yoWkAFyfpF
-	sxGryfZa1DJ34Uury0krW5Aw4Sva1rGrWUGayxG3W0yrnxAr10qF4jy34rtr95Gry2kF18
-	XF4agr15A3WUJ3DanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x07UfnYcUUUUU=
-X-CM-SenderInfo: 50dyxvpubt5qqrwthudrp/1tbiYxkFEGV4I3AuRQAAsK
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 
-This patch implements a union-find data structure in the kernel library,
-which includes operations for allocating nodes, freeing nodes,
-finding the root of a node, and merging two nodes.
+Avoid lock contention on the global cgroup rstat lock caused by kswapd
+starting on all NUMA nodes simultaneously. At Cloudflare, we observed
+massive issues due to kswapd and the specific mem_cgroup_flush_stats()
+call inlined in shrink_node, which takes the rstat lock.
 
-Signed-off-by: Xavier <xavier_qy@163.com>
+On our 12 NUMA node machines, each with a kswapd kthread per NUMA node,
+we noted severe lock contention on the rstat lock. This contention
+causes 12 CPUs to waste cycles spinning every time kswapd runs.
+Fleet-wide stats (/proc/N/schedstat) for kthreads revealed that we are
+burning an average of 20,000 CPU cores fleet-wide on kswapd, primarily
+due to spinning on the rstat lock.
+
+To help reviewer follow code: When the Per-CPU-Pages (PCP) freelist is
+empty, __alloc_pages_slowpath calls wake_all_kswapds(), causing all
+kswapdN threads to wake up simultaneously. The kswapd thread invokes
+shrink_node (via balance_pgdat) triggering the cgroup rstat flush
+operation as part of its work. This results in kernel self-induced rstat
+lock contention by waking up all kswapd threads simultaneously.
+Leveraging this detail: balance_pgdat() have NULL value in
+target_mem_cgroup, this cause mem_cgroup_flush_stats() to do flush with
+root_mem_cgroup.
+
+To resolve the kswapd issue, we generalized the "stats_flush_ongoing"
+concept to apply to all users of cgroup rstat, not just memcg. This
+concept was originally reverted in commit 7d7ef0a4686a ("mm: memcg:
+restore subtree stats flushing"). If there is an ongoing rstat flush,
+limited to the root cgroup, the flush is skipped. This is effective as
+kswapd operates on the root tree, sufficiently mitigating the thundering
+herd problem.
+
+This lowers contention on the global rstat lock, although limited to the
+root cgroup. Flushing cgroup subtree's can still lead to lock contention.
+
+Fixes: 7d7ef0a4686a ("mm: memcg: restore subtree stats flushing").
+Signed-off-by: Jesper Dangaard Brouer <hawk@kernel.org>
 ---
- Documentation/core-api/union_find.rst         | 110 ++++++++++++++++++
- .../zh_CN/core-api/union_find.rst             |  87 ++++++++++++++
- MAINTAINERS                                   |   9 ++
- include/linux/union_find.h                    |  30 +++++
- lib/Makefile                                  |   2 +-
- lib/union_find.c                              |  38 ++++++
- 6 files changed, 275 insertions(+), 1 deletion(-)
- create mode 100644 Documentation/core-api/union_find.rst
- create mode 100644 Documentation/translations/zh_CN/core-api/union_find.rst
- create mode 100644 include/linux/union_find.h
- create mode 100644 lib/union_find.c
+ include/linux/cgroup.h |    5 +++++
+ kernel/cgroup/rstat.c  |   28 ++++++++++++++++++++++++++++
+ 2 files changed, 33 insertions(+)
 
-diff --git a/Documentation/core-api/union_find.rst b/Documentation/core-api/union_find.rst
-new file mode 100644
-index 0000000000..7109ad608a
---- /dev/null
-+++ b/Documentation/core-api/union_find.rst
-@@ -0,0 +1,110 @@
-+.. SPDX-License-Identifier: GPL-2.0
-+
-+====================
-+Union-Find in Linux
-+====================
-+
-+
-+:Date: June 21, 2024
-+:Author: Xavier <xavier_qy@163.com>
-+
-+What is Union-Find, and what is it used for?
-+------------------------------------------------
-+
-+Union-Find is a data structure used to handle the merging and querying
-+of disjoint sets. The primary operations supported by Union-Find are:
-+
-+	Initialization: Resetting each element as an individual set, with
-+		each set's initial parent node pointing to itself.
-+	Find: Determine which set a particular element belongs to, usually by
-+		returning a “representative element” of that set. This operation
-+		is used to check if two elements are in the same set.
-+	Union: Merge two sets into one.
-+
-+As a data structure used to maintain sets (groups), Union-Find is commonly
-+utilized to solve problems related to offline queries, dynamic connectivity,
-+and graph theory. It is also a key component in Kruskal's algorithm for
-+computing the minimum spanning tree, which is crucial in scenarios like
-+network routing. Consequently, Union-Find is widely referenced. Additionally,
-+Union-Find has applications in symbolic computation, register allocation,
-+and more.
-+
-+Space Complexity: O(n), where n is the number of nodes.
-+
-+Time Complexity: Using path compression can reduce the time complexity of
-+the find operation, and using union by rank can reduce the time complexity
-+of the union operation. These optimizations reduce the average time
-+complexity of each find and union operation to O(α(n)), where α(n) is the
-+inverse Ackermann function. This can be roughly considered a constant time
-+complexity for practical purposes.
-+
-+This document covers use of the Linux union-find implementation.  For more
-+information on the nature and implementation of Union-Find,  see:
-+
-+  Wikipedia entry on union-find
-+    https://en.wikipedia.org/wiki/Disjoint-set_data_structure
-+
-+Linux implementation of union-find
-+-----------------------------------
-+
-+Linux's union-find implementation resides in the file "lib/union_find.c".
-+To use it, "#include <linux/union_find.h>".
-+
-+The Union-Find data structure is defined as follows::
-+
-+	struct uf_node {
-+		struct uf_node *parent;
-+		unsigned int rank;
-+	};
-+
-+In this structure, parent points to the parent node of the current node.
-+For efficiency, it is initialized to NULL and is assigned to point to itself
-+during the first find operation. The rank field represents the height of the
-+current tree. During a union operation, the tree with the smaller rank is
-+attached under the tree with the larger rank to maintain balance.
-+
-+Creating Union-Find
-+--------------------
-+
-+To create a Union-Find structure, you only need to pass the number of nodes in
-+the Union-Find. No additional initialization is required, and it returns a
-+pointer to the node array.
-+Example::
-+
-+	struct uf_node *my_node = uf_nodes_alloc(num);
-+
-+Destroying Union-Find
-+---------------------
-+
-+To destroy the Union-Find structure, just pass the node pointer that was
-+returned during creation.
-+Example::
-+
-+	uf_nodes_free(my_node);
-+
-+Find the Root Node of Union-Find
-+--------------------------------
-+
-+This operation is mainly used to determine whether two nodes belong to the same
-+set in the Union-Find. If they have the same root, they are in the same set.
-+During the find operation, path compression is performed to improve the
-+efficiency of subsequent find operations.
-+Example::
-+
-+	int connected;
-+	struct uf_node *root1 = uf_find(&my_node[0]);
-+	struct uf_node *root2 = uf_find(&my_node[1]);
-+	if (root1 == root2)
-+		connected = 1;
-+	else
-+		connected = 0;
-+
-+Union Two Sets in Union-Find
-+----------------------------
-+
-+To union two sets in the Union-Find, you first find their respective root nodes
-+and then link the smaller node to the larger node based on the rank of the root
-+nodes.
-+Example::
-+
-+	uf_union(&my_node[0], &my_node[1]);
-diff --git a/Documentation/translations/zh_CN/core-api/union_find.rst b/Documentation/translations/zh_CN/core-api/union_find.rst
-new file mode 100644
-index 0000000000..071818e7db
---- /dev/null
-+++ b/Documentation/translations/zh_CN/core-api/union_find.rst
-@@ -0,0 +1,87 @@
-+.. SPDX-License-Identifier: GPL-2.0
-+.. include:: ../disclaimer-zh_CN.rst
-+
-+:Original: Documentation/core-api/union_find.rst
-+
-+===========================
-+Linux中的并查集（Union-Find）
-+===========================
-+
-+
-+:日期: 2024年6月21日
-+:作者: Xavier <xavier_qy@163.com>
-+
-+何为并查集，它有什么用？
-+---------------------
-+
-+并查集是一种数据结构，用于处理一些不交集的合并及查询问题。并查集支持的主要操作：
-+	初始化：将每个元素初始化为单独的集合，每个集合的初始父节点指向自身
-+	查询：查询某个元素属于哪个集合，通常是返回集合中的一个“代表元素”。这个操作是为
-+		了判断两个元素是否在同一个集合之中。
-+	合并：将两个集合合并为一个。
-+
-+并查集作为一种用于维护集合（组）的数据结构，它通常用于解决一些离线查询、动态连通性和
-+图论等相关问题，同时也是用于计算最小生成树的克鲁斯克尔算法中的关键，由于最小生成树在
-+网络路由等场景下十分重要，并查集也得到了广泛的引用。此外，并查集在符号计算，寄存器分
-+配等方面也有应用。
-+
-+空间复杂度: O(n)，n为节点数。
-+
-+时间复杂度：使用路径压缩可以减少查找操作的时间复杂度，使用按秩合并可以减少合并操作的
-+时间复杂度，使得并查集每个查询和合并操作的平均时间复杂度仅为O(α(n))，其中α(n)是反阿
-+克曼函数，可以粗略地认为并查集的操作有常数的时间复杂度。
-+
-+本文档涵盖了对Linux并查集实现的使用方法。更多关于并查集的性质和实现的信息，参见：
-+
-+  维基百科并查集词条
-+    https://en.wikipedia.org/wiki/Disjoint-set_data_structure
-+
-+并查集的Linux实现
-+----------------
-+
-+Linux的并查集实现在文件“lib/union_find.c”中。要使用它，需要
-+“#include <linux/union_find.h>”。
-+
-+并查集的数据结构定义如下::
-+	struct uf_node {
-+		struct uf_node *parent;
-+		unsigned int rank;
-+	};
-+其中parent为当前节点的父节点，为了提高效率，初始化时为空，并在第一次查找时指向自身，
-+rank为当前树的高度，在合并时将rank小的节点接到rank大的节点下面以增加平衡性。
-+
-+创建并查集
-+---------
-+
-+创建并查集时只需要传入并查集的节点个数即可，无需额外初始化，返回节点数组指针。
-+示例::
-+	struct uf_node *my_node = uf_nodes_alloc(num);
-+
-+销毁并查集
-+---------
-+
-+销毁并查集时，只需传入创建时返回的节点数组指针即可。
-+示例::
-+	uf_nodes_free(my_node);
-+
-+查找并查集的根节点
-+----------------
-+
-+主要用于判断两个并查集是否属于一个集合，如果根相同，那么他们就是一个集合。在查找过程中
-+会对路径进行压缩，提高后续查找效率。
-+示例::
-+	int connected;
-+	struct uf_node *root1 = uf_find(&my_node[0]);
-+	struct uf_node *root2 = uf_find(&my_node[1]);
-+	if (root1 == root2)
-+		connected = 1;
-+	else
-+		connected = 0;
-+
-+合并两个并查集
-+-------------
-+
-+对于两个相交的并查集进行合并，会首先查找它们各自的根节点，然后根据根节点秩大小，将小的
-+节点连接到大的节点下面。
-+示例::
-+	uf_union(&my_node[0], &my_node[1]);
-diff --git a/MAINTAINERS b/MAINTAINERS
-index d6c90161c7..a1a467c591 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -23054,6 +23054,15 @@ F:	drivers/cdrom/cdrom.c
- F:	include/linux/cdrom.h
- F:	include/uapi/linux/cdrom.h
+diff --git a/include/linux/cgroup.h b/include/linux/cgroup.h
+index 2150ca60394b..ad41cca5c3b6 100644
+--- a/include/linux/cgroup.h
++++ b/include/linux/cgroup.h
+@@ -499,6 +499,11 @@ static inline struct cgroup *cgroup_parent(struct cgroup *cgrp)
+ 	return NULL;
+ }
  
-+UNION-FIND
-+M:	Xavier <xavier_qy@163.com>
-+L:	linux-kernel@vger.kernel.org
-+S:	Maintained
-+F:	Documentation/core-api/union_find.rst
-+F:	Documentation/translations/zh_CN/core-api/union_find.rst
-+F:	include/linux/union_find.h
-+F:	lib/union_find.c
-+
- UNIVERSAL FLASH STORAGE HOST CONTROLLER DRIVER
- R:	Alim Akhtar <alim.akhtar@samsung.com>
- R:	Avri Altman <avri.altman@wdc.com>
-diff --git a/include/linux/union_find.h b/include/linux/union_find.h
-new file mode 100644
-index 0000000000..67e9f62bb3
---- /dev/null
-+++ b/include/linux/union_find.h
-@@ -0,0 +1,30 @@
-+/* SPDX-License-Identifier: GPL-2.0 */
-+#ifndef __LINUX_UNION_FIND_H
-+#define __LINUX_UNION_FIND_H
-+#include <linux/slab.h>
-+
-+/* Define a union-find node struct */
-+struct uf_node {
-+	struct uf_node *parent;
-+	unsigned int rank;
-+};
-+
-+/* Allocate nodes and initialize to 0 */
-+static inline struct uf_node *uf_nodes_alloc(unsigned int node_num)
++static inline bool cgroup_is_root(struct cgroup *cgrp)
 +{
-+	return kzalloc(sizeof(struct uf_node) * node_num, GFP_KERNEL);
++	return cgroup_parent(cgrp) == NULL;
 +}
 +
-+/* Free nodes*/
-+static inline void uf_nodes_free(struct uf_node *nodes)
-+{
-+	kfree(nodes);
-+}
-+
-+/* find the root of a node*/
-+struct uf_node *uf_find(struct uf_node *node);
-+
-+/* Merge two intersecting nodes */
-+void uf_union(struct uf_node *node1, struct uf_node *node2);
-+
-+#endif /*__LINUX_UNION_FIND_H*/
-diff --git a/lib/Makefile b/lib/Makefile
-index 3b17690456..e1769e6f03 100644
---- a/lib/Makefile
-+++ b/lib/Makefile
-@@ -34,7 +34,7 @@ lib-y := ctype.o string.o vsprintf.o cmdline.o \
- 	 is_single_threaded.o plist.o decompress.o kobject_uevent.o \
- 	 earlycpio.o seq_buf.o siphash.o dec_and_lock.o \
- 	 nmi_backtrace.o win_minmax.o memcat_p.o \
--	 buildid.o objpool.o
-+	 buildid.o objpool.o union_find.o
+ /**
+  * cgroup_is_descendant - test ancestry
+  * @cgrp: the cgroup to be tested
+diff --git a/kernel/cgroup/rstat.c b/kernel/cgroup/rstat.c
+index fb8b49437573..5aba95e92d31 100644
+--- a/kernel/cgroup/rstat.c
++++ b/kernel/cgroup/rstat.c
+@@ -11,6 +11,7 @@
  
- lib-$(CONFIG_PRINTK) += dump_stack.o
- lib-$(CONFIG_SMP) += cpumask.o
-diff --git a/lib/union_find.c b/lib/union_find.c
-new file mode 100644
-index 0000000000..2f77bae1ca
---- /dev/null
-+++ b/lib/union_find.c
-@@ -0,0 +1,38 @@
-+// SPDX-License-Identifier: GPL-2.0
-+#include <linux/union_find.h>
+ static DEFINE_SPINLOCK(cgroup_rstat_lock);
+ static DEFINE_PER_CPU(raw_spinlock_t, cgroup_rstat_cpu_lock);
++static atomic_t root_rstat_flush_ongoing = ATOMIC_INIT(0);
+ 
+ static void cgroup_base_stat_flush(struct cgroup *cgrp, int cpu);
+ 
+@@ -350,8 +351,25 @@ __bpf_kfunc void cgroup_rstat_flush(struct cgroup *cgrp)
+ {
+ 	might_sleep();
+ 
++	/*
++	 * This avoids thundering herd problem on global rstat lock. When an
++	 * ongoing flush of the entire tree is in progress, then skip flush.
++	 */
++	if (atomic_read(&root_rstat_flush_ongoing))
++		return;
 +
-+struct uf_node *uf_find(struct uf_node *node)
-+{
-+	struct uf_node *parent;
++	/* Grab right to be ongoing flusher, return if loosing race */
++	if (cgroup_is_root(cgrp) &&
++	    atomic_xchg(&root_rstat_flush_ongoing, 1))
++		return;
 +
-+	if (!node->parent) {
-+		node->parent = node;
-+		return node;
-+	}
+ 	__cgroup_rstat_lock(cgrp, -1);
 +
-+	/*Find the root node and perform path compression at the same time*/
-+	while (node->parent != node) {
-+		parent = node->parent;
-+		node->parent = parent->parent;
-+		node = parent;
-+	}
-+	return node;
-+}
+ 	cgroup_rstat_flush_locked(cgrp);
 +
-+/*Function to merge two sets, using union by rank*/
-+void uf_union(struct uf_node *node1, struct uf_node *node2)
-+{
-+	struct uf_node *root1 = uf_find(node1);
-+	struct uf_node *root2 = uf_find(node2);
++	if (cgroup_is_root(cgrp))
++		atomic_set(&root_rstat_flush_ongoing, 0);
 +
-+	if (root1 != root2) {
-+		if (root1->rank < root2->rank) {
-+			root1->parent = root2;
-+		} else if (root1->rank > root2->rank) {
-+			root2->parent = root1;
-+		} else {
-+			root2->parent = root1;
-+			root1->rank++;
-+		}
-+	}
-+}
--- 
-2.45.2
+ 	__cgroup_rstat_unlock(cgrp, -1);
+ }
+ 
+@@ -362,13 +380,20 @@ __bpf_kfunc void cgroup_rstat_flush(struct cgroup *cgrp)
+  * Flush stats in @cgrp's subtree and prevent further flushes.  Must be
+  * paired with cgroup_rstat_flush_release().
+  *
++ * Current invariant, not called with root cgrp.
++ *
+  * This function may block.
+  */
+ void cgroup_rstat_flush_hold(struct cgroup *cgrp)
+ 	__acquires(&cgroup_rstat_lock)
+ {
+ 	might_sleep();
++
+ 	__cgroup_rstat_lock(cgrp, -1);
++
++	if (atomic_read(&root_rstat_flush_ongoing))
++		return;
++
+ 	cgroup_rstat_flush_locked(cgrp);
+ }
+ 
+@@ -379,6 +404,9 @@ void cgroup_rstat_flush_hold(struct cgroup *cgrp)
+ void cgroup_rstat_flush_release(struct cgroup *cgrp)
+ 	__releases(&cgroup_rstat_lock)
+ {
++	if (cgroup_is_root(cgrp))
++		atomic_set(&root_rstat_flush_ongoing, 0);
++
+ 	__cgroup_rstat_unlock(cgrp, -1);
+ }
+ 
+
 
