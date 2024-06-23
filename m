@@ -1,121 +1,380 @@
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.17])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1CE5AA23
-	for <cgroups@vger.kernel.org>; Sun, 23 Jun 2024 02:19:11 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.17
+Received: from m16.mail.163.com (m16.mail.163.com [220.197.31.5])
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id C0D82944D;
+	Sun, 23 Jun 2024 02:39:37 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=220.197.31.5
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1719109154; cv=none; b=l/b4hW02+go5Ib8omvXHMXb5nLDkXUtZKrAHhlMvF9frKHa9FcCQXcKz9qTR8K4/2FHZ3AQhEj01NONn/Gxgu1SaCpwNe/zi8Z51Acz8WYaeyvVTk8anBWXlkI54Ac1mb8BPTUyxJuTTHqTsjYMXdxK82f1LSTKyrBdFT8+GRRk=
+	t=1719110381; cv=none; b=Fu5j+xYfkP3AZIox1FRB4M2AE5u5Fktcc8Senf8XkVjV7kBemG6YfKnbH4Qi37R+bCTSla080zDLPWBjiGWXXQxT43nnVO7u+gCM1JSMeGyd2dpz80wSCWHiyEjtwnMEP8TAWTrSZ18Buf8op5egeby3dihrpGOQ7JSH9yOSKqs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1719109154; c=relaxed/simple;
-	bh=Q0yeRpTOXBlOKJ/7CP/TgpmD600GIfuaDQiVmFGGfVY=;
-	h=Date:From:To:Cc:Subject:Message-ID; b=DuUUpbkcQG5Toc6iNacFR2tNNcJ8kvprZZUSliFuvZkdu6AsC7IgHWX8TEemoIayjwRLr1LldsNaRo5tWa+oM1LV0IuFXoNsNlMD1Y0fCf4+VloclA6IHRbPIZMwrRrITjHqx6JiGXKpFPISoMZOgok/Zr7qWqpTU/1TW11xAZY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=hsh1qPf6; arc=none smtp.client-ip=192.198.163.17
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
+	s=arc-20240116; t=1719110381; c=relaxed/simple;
+	bh=yMhq2SDJ1qLLjWKd9KXFe93wdGSGYjFHF5/LdfzxFdU=;
+	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=p9bAhJlxq/tVDTsbggGN1m6c9H6dZxfZzyFehBbZzF79AE4DM3J2c9U6ZVP9kuaD1cGkXLTedb66xgSRwv+RE6YySMZ+cqJAYNjCUE79qF0t5ykC8LIFOYIl3PIqwEveWswMalZvXlUVdGvzV4up509pPwW3m7rU9BE3n/lRQ1w=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=GHPrs92U; arc=none smtp.client-ip=220.197.31.5
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="hsh1qPf6"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1719109152; x=1750645152;
-  h=date:from:to:cc:subject:message-id;
-  bh=Q0yeRpTOXBlOKJ/7CP/TgpmD600GIfuaDQiVmFGGfVY=;
-  b=hsh1qPf6Pc6cCpySNqN3rmT1bnRhyhLqT/2rQc7nwqHQYW0GD9mLcm3A
-   BbR/kb/R6q2Z1i7AxoGvvhsdFpDJHzxcmBlUo26E3xmiUWJr4i3noMXHB
-   IiF0EodsCvPveKoClo9PAZ0Wx73WYQhs8js7Jx7BIEQlqtLNpnNdp+4k1
-   9COawFehWGU89loG+3ndV0CTOUH9o6h824TbQraC1ig/mfK2NinT4JLqz
-   T/rM7DxPIQo75ATgJwTUy9Utazwwni+Qri9y4xlkL9dyC/OOfR9ZTHEbb
-   0TdSyRugCs66TgA2Ap2L8FJWo2xJR0lVocVW+woa1WGTVlLUlnhNu77p5
-   Q==;
-X-CSE-ConnectionGUID: syaiKZmcS4yw7Tn/O/gfxg==
-X-CSE-MsgGUID: 1VmNznBWTMKNq2gklXCCew==
-X-IronPort-AV: E=McAfee;i="6700,10204,11111"; a="15986234"
-X-IronPort-AV: E=Sophos;i="6.08,259,1712646000"; 
-   d="scan'208";a="15986234"
-Received: from orviesa007.jf.intel.com ([10.64.159.147])
-  by fmvoesa111.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 22 Jun 2024 19:19:11 -0700
-X-CSE-ConnectionGUID: 1HREaXLHTBKvy2ODdrNSlg==
-X-CSE-MsgGUID: Aqywzg67QuaQ2P0LkYFITA==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.08,259,1712646000"; 
-   d="scan'208";a="43630199"
-Received: from lkp-server01.sh.intel.com (HELO 68891e0c336b) ([10.239.97.150])
-  by orviesa007.jf.intel.com with ESMTP; 22 Jun 2024 19:19:10 -0700
-Received: from kbuild by 68891e0c336b with local (Exim 4.96)
-	(envelope-from <lkp@intel.com>)
-	id 1sLCou-000AAk-0a;
-	Sun, 23 Jun 2024 02:19:08 +0000
-Date: Sun, 23 Jun 2024 10:18:41 +0800
-From: kernel test robot <lkp@intel.com>
-To: Tejun Heo <tj@kernel.org>
-Cc: cgroups@vger.kernel.org
-Subject: [tj-cgroup:for-next] BUILD REGRESSION
- 1c0be3f7b2f0dcca5dd237233f02a44e7af8c23a
-Message-ID: <202406231037.8U7eyNva-lkp@intel.com>
-User-Agent: s-nail v14.9.24
+	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="GHPrs92U"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
+	s=s110527; h=From:Subject:Date:Message-Id:MIME-Version:
+	Content-Type; bh=iQtY+/cPfpxxvtGtgKD3kI9HftG16nZFejGaogukvxE=;
+	b=GHPrs92UU91pgnKqS2ebEkx/cOKqG2MRSpFdSQtRhdtSgAMXdTnf1C6eFjhLy7
+	WKYuDVtNktlcV93JmSp5B+Zg0x5EoACBbVGxj7OqWZj5liGNTj5SfDD4c9/+X0p8
+	cwMcV6E2lROW1p7Ib9D02o+3HQHIkUh54eAdLeldy4qdg=
+Received: from localhost (unknown [101.132.132.191])
+	by gzga-smtp-mta-g3-5 (Coremail) with SMTP id _____wD3Hy_HindmeLh_AA--.34610S2;
+	Sun, 23 Jun 2024 10:39:04 +0800 (CST)
+From: Xavier <xavier_qy@163.com>
+To: tj@kernel.org
+Cc: longman@redhat.com,
+	mkoutny@suse.com,
+	lizefan.x@bytedance.com,
+	hannes@cmpxchg.org,
+	cgroups@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	torvalds@linux-foundation.org,
+	akpm@linux-foundation.org,
+	Xavier <xavier_qy@163.com>
+Subject: [PATCH-cpuset v7 1/2] Union-Find: add a new module in kernel library
+Date: Sun, 23 Jun 2024 10:39:00 +0800
+Message-Id: <20240623023901.218892-2-xavier_qy@163.com>
+X-Mailer: git-send-email 2.34.1
+In-Reply-To: <20240623023901.218892-1-xavier_qy@163.com>
+References: <Znb4JBpJoGZ3LS1W@slm.duckdns.org>
+ <20240623023901.218892-1-xavier_qy@163.com>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+X-CM-TRANSID:_____wD3Hy_HindmeLh_AA--.34610S2
+X-Coremail-Antispam: 1Uf129KBjvJXoWfJw48ury7GFyUCw47Ww4Durg_yoWDKF13pF
+	ZxGryfZw4DJryUury0krW5Aw4SvayrGrWUGa1xJ3W0yrnIyr10qF4jy34rtr95Gry2kFy8
+	XF4agw1rZ3WUJ3DanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x07Uyv35UUUUU=
+X-CM-SenderInfo: 50dyxvpubt5qqrwthudrp/1tbiZQkHEGXAmkcMeQAAs2
 
-tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git for-next
-branch HEAD: 1c0be3f7b2f0dcca5dd237233f02a44e7af8c23a  selftest/cgroup: Update test_cpuset_prs.sh to match changes
+This patch implements a union-find data structure in the kernel library,
+which includes operations for allocating nodes, freeing nodes,
+finding the root of a node, and merging two nodes.
 
-Error/Warning ids grouped by kconfigs:
+Signed-off-by: Xavier <xavier_qy@163.com>
+---
+ Documentation/core-api/union_find.rst         | 101 ++++++++++++++++++
+ .../zh_CN/core-api/union_find.rst             |  86 +++++++++++++++
+ MAINTAINERS                                   |   9 ++
+ include/linux/union_find.h                    |  24 +++++
+ lib/Makefile                                  |   2 +-
+ lib/union_find.c                              |  33 ++++++
+ 6 files changed, 254 insertions(+), 1 deletion(-)
+ create mode 100644 Documentation/core-api/union_find.rst
+ create mode 100644 Documentation/translations/zh_CN/core-api/union_find.rst
+ create mode 100644 include/linux/union_find.h
+ create mode 100644 lib/union_find.c
 
-gcc_recent_errors
-`-- loongarch-defconfig
-    `-- kernel-cgroup-pids.o:warning:objtool:__jump_table:special:can-t-find-orig-instruction
-
-elapsed time: 4818m
-
-configs tested: 41
-configs skipped: 2
-
-tested configs:
-alpha                             allnoconfig   gcc-13.2.0
-alpha                               defconfig   gcc-13.2.0
-arc                               allnoconfig   gcc-13.2.0
-arc                                 defconfig   gcc-13.2.0
-arm                               allnoconfig   clang-19
-arm                                 defconfig   clang-14
-arm64                             allnoconfig   gcc-13.2.0
-arm64                               defconfig   gcc-13.2.0
-csky                              allnoconfig   gcc-13.2.0
-csky                                defconfig   gcc-13.2.0
-hexagon                           allnoconfig   clang-19
-hexagon                             defconfig   clang-19
-loongarch                         allnoconfig   gcc-13.2.0
-loongarch                           defconfig   gcc-13.2.0
-m68k                              allnoconfig   gcc-13.2.0
-m68k                                defconfig   gcc-13.2.0
-microblaze                        allnoconfig   gcc-13.2.0
-microblaze                          defconfig   gcc-13.2.0
-mips                              allnoconfig   gcc-13.2.0
-nios2                             allnoconfig   gcc-13.2.0
-nios2                               defconfig   gcc-13.2.0
-openrisc                          allnoconfig   gcc-13.2.0
-openrisc                            defconfig   gcc-13.2.0
-parisc                            allnoconfig   gcc-13.2.0
-parisc                              defconfig   gcc-13.2.0
-parisc64                            defconfig   gcc-13.2.0
-powerpc                           allnoconfig   gcc-13.2.0
-riscv                             allnoconfig   gcc-13.2.0
-riscv                               defconfig   clang-19
-s390                              allnoconfig   clang-19
-s390                                defconfig   clang-19
-sh                                allnoconfig   gcc-13.2.0
-sh                                  defconfig   gcc-13.2.0
-sparc                             allnoconfig   gcc-13.2.0
-sparc                               defconfig   gcc-13.2.0
-sparc64                             defconfig   gcc-13.2.0
-um                                allnoconfig   clang-17
-um                                  defconfig   clang-19
-um                             i386_defconfig   gcc-13
-um                           x86_64_defconfig   clang-15
-xtensa                            allnoconfig   gcc-13.2.0
-
+diff --git a/Documentation/core-api/union_find.rst b/Documentation/core-api/union_find.rst
+new file mode 100644
+index 0000000000..38d63b16e5
+--- /dev/null
++++ b/Documentation/core-api/union_find.rst
+@@ -0,0 +1,101 @@
++.. SPDX-License-Identifier: GPL-2.0
++
++====================
++Union-Find in Linux
++====================
++
++
++:Date: June 21, 2024
++:Author: Xavier <xavier_qy@163.com>
++
++What is Union-Find, and what is it used for?
++------------------------------------------------
++
++Union-Find is a data structure used to handle the merging and querying
++of disjoint sets. The primary operations supported by Union-Find are:
++
++	Initialization: Resetting each element as an individual set, with
++		each set's initial parent node pointing to itself.
++	Find: Determine which set a particular element belongs to, usually by
++		returning a “representative element” of that set. This operation
++		is used to check if two elements are in the same set.
++	Union: Merge two sets into one.
++
++As a data structure used to maintain sets (groups), Union-Find is commonly
++utilized to solve problems related to offline queries, dynamic connectivity,
++and graph theory. It is also a key component in Kruskal's algorithm for
++computing the minimum spanning tree, which is crucial in scenarios like
++network routing. Consequently, Union-Find is widely referenced. Additionally,
++Union-Find has applications in symbolic computation, register allocation,
++and more.
++
++Space Complexity: O(n), where n is the number of nodes.
++
++Time Complexity: Using path compression can reduce the time complexity of
++the find operation, and using union by rank can reduce the time complexity
++of the union operation. These optimizations reduce the average time
++complexity of each find and union operation to O(α(n)), where α(n) is the
++inverse Ackermann function. This can be roughly considered a constant time
++complexity for practical purposes.
++
++This document covers use of the Linux union-find implementation.  For more
++information on the nature and implementation of Union-Find,  see:
++
++  Wikipedia entry on union-find
++    https://en.wikipedia.org/wiki/Disjoint-set_data_structure
++
++Linux implementation of union-find
++-----------------------------------
++
++Linux's union-find implementation resides in the file "lib/union_find.c".
++To use it, "#include <linux/union_find.h>".
++
++The Union-Find data structure is defined as follows::
++
++	struct uf_node {
++		struct uf_node *parent;
++		unsigned int rank;
++	};
++
++In this structure, parent points to the parent node of the current node.
++The rank field represents the height of the current tree. During a union
++operation, the tree with the smaller rank is attached under the tree with the
++larger rank to maintain balance.
++
++Initializing Union-Find
++--------------------
++
++When initializing the Union-Find data structure, a single pointer to the
++Union-Find instance needs to be passed. Initialize the parent pointer to point
++to itself and set the rank to 0.
++Example::
++
++	struct uf_node *my_node = vzalloc(sizeof(struct uf_node));
++	uf_nodes_init(my_node);
++
++Find the Root Node of Union-Find
++--------------------------------
++
++This operation is mainly used to determine whether two nodes belong to the same
++set in the Union-Find. If they have the same root, they are in the same set.
++During the find operation, path compression is performed to improve the
++efficiency of subsequent find operations.
++Example::
++
++	int connected;
++	struct uf_node *root1 = uf_find(&my_node[0]);
++	struct uf_node *root2 = uf_find(&my_node[1]);
++	if (root1 == root2)
++		connected = 1;
++	else
++		connected = 0;
++
++Union Two Sets in Union-Find
++----------------------------
++
++To union two sets in the Union-Find, you first find their respective root nodes
++and then link the smaller node to the larger node based on the rank of the root
++nodes.
++Example::
++
++	uf_union(&my_node[0], &my_node[1]);
+diff --git a/Documentation/translations/zh_CN/core-api/union_find.rst b/Documentation/translations/zh_CN/core-api/union_find.rst
+new file mode 100644
+index 0000000000..e1b5ae88da
+--- /dev/null
++++ b/Documentation/translations/zh_CN/core-api/union_find.rst
+@@ -0,0 +1,86 @@
++.. SPDX-License-Identifier: GPL-2.0
++.. include:: ../disclaimer-zh_CN.rst
++
++:Original: Documentation/core-api/union_find.rst
++
++===========================
++Linux中的并查集（Union-Find）
++===========================
++
++
++:日期: 2024年6月21日
++:作者: Xavier <xavier_qy@163.com>
++
++何为并查集，它有什么用？
++---------------------
++
++并查集是一种数据结构，用于处理一些不交集的合并及查询问题。并查集支持的主要操作：
++	初始化：将每个元素初始化为单独的集合，每个集合的初始父节点指向自身
++	查询：查询某个元素属于哪个集合，通常是返回集合中的一个“代表元素”。这个操作是为
++		了判断两个元素是否在同一个集合之中。
++	合并：将两个集合合并为一个。
++
++并查集作为一种用于维护集合（组）的数据结构，它通常用于解决一些离线查询、动态连通性和
++图论等相关问题，同时也是用于计算最小生成树的克鲁斯克尔算法中的关键，由于最小生成树在
++网络路由等场景下十分重要，并查集也得到了广泛的引用。此外，并查集在符号计算，寄存器分
++配等方面也有应用。
++
++空间复杂度: O(n)，n为节点数。
++
++时间复杂度：使用路径压缩可以减少查找操作的时间复杂度，使用按秩合并可以减少合并操作的
++时间复杂度，使得并查集每个查询和合并操作的平均时间复杂度仅为O(α(n))，其中α(n)是反阿
++克曼函数，可以粗略地认为并查集的操作有常数的时间复杂度。
++
++本文档涵盖了对Linux并查集实现的使用方法。更多关于并查集的性质和实现的信息，参见：
++
++  维基百科并查集词条
++    https://en.wikipedia.org/wiki/Disjoint-set_data_structure
++
++并查集的Linux实现
++----------------
++
++Linux的并查集实现在文件“lib/union_find.c”中。要使用它，需要
++“#include <linux/union_find.h>”。
++
++并查集的数据结构定义如下::
++
++	struct uf_node {
++		struct uf_node *parent;
++		unsigned int rank;
++	};
++其中parent为当前节点的父节点，rank为当前树的高度，在合并时将rank小的节点接到rank大
++的节点下面以增加平衡性。
++
++初始化并查集
++---------
++
++初始化并查集时需要传入并查集实例的一个指针。初始化时，parent 指针指向自身，rank 设置
++为 0。
++示例::
++
++	struct uf_node *my_node = vzalloc(sizeof(struct uf_node));
++	uf_nodes_init(my_node);
++
++查找并查集的根节点
++----------------
++
++主要用于判断两个并查集是否属于一个集合，如果根相同，那么他们就是一个集合。在查找过程中
++会对路径进行压缩，提高后续查找效率。
++示例::
++
++	int connected;
++	struct uf_node *root1 = uf_find(&my_node[0]);
++	struct uf_node *root2 = uf_find(&my_node[1]);
++	if (root1 == root2)
++		connected = 1;
++	else
++		connected = 0;
++
++合并两个并查集
++-------------
++
++对于两个相交的并查集进行合并，会首先查找它们各自的根节点，然后根据根节点秩大小，将小的
++节点连接到大的节点下面。
++示例::
++
++	uf_union(&my_node[0], &my_node[1]);
+diff --git a/MAINTAINERS b/MAINTAINERS
+index d6c90161c7..a1a467c591 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -23054,6 +23054,15 @@ F:	drivers/cdrom/cdrom.c
+ F:	include/linux/cdrom.h
+ F:	include/uapi/linux/cdrom.h
+ 
++UNION-FIND
++M:	Xavier <xavier_qy@163.com>
++L:	linux-kernel@vger.kernel.org
++S:	Maintained
++F:	Documentation/core-api/union_find.rst
++F:	Documentation/translations/zh_CN/core-api/union_find.rst
++F:	include/linux/union_find.h
++F:	lib/union_find.c
++
+ UNIVERSAL FLASH STORAGE HOST CONTROLLER DRIVER
+ R:	Alim Akhtar <alim.akhtar@samsung.com>
+ R:	Avri Altman <avri.altman@wdc.com>
+diff --git a/include/linux/union_find.h b/include/linux/union_find.h
+new file mode 100644
+index 0000000000..56571c93a5
+--- /dev/null
++++ b/include/linux/union_find.h
+@@ -0,0 +1,24 @@
++/* SPDX-License-Identifier: GPL-2.0 */
++#ifndef __LINUX_UNION_FIND_H
++#define __LINUX_UNION_FIND_H
++
++/* Define a union-find node struct */
++struct uf_node {
++	struct uf_node *parent;
++	unsigned int rank;
++};
++
++/* Allocate nodes and initialize to 0 */
++static inline void uf_nodes_init(struct uf_node *node)
++{
++	node->parent = node;
++	node->rank = 0;
++}
++
++/* find the root of a node*/
++struct uf_node *uf_find(struct uf_node *node);
++
++/* Merge two intersecting nodes */
++void uf_union(struct uf_node *node1, struct uf_node *node2);
++
++#endif /*__LINUX_UNION_FIND_H*/
+diff --git a/lib/Makefile b/lib/Makefile
+index 3b17690456..e1769e6f03 100644
+--- a/lib/Makefile
++++ b/lib/Makefile
+@@ -34,7 +34,7 @@ lib-y := ctype.o string.o vsprintf.o cmdline.o \
+ 	 is_single_threaded.o plist.o decompress.o kobject_uevent.o \
+ 	 earlycpio.o seq_buf.o siphash.o dec_and_lock.o \
+ 	 nmi_backtrace.o win_minmax.o memcat_p.o \
+-	 buildid.o objpool.o
++	 buildid.o objpool.o union_find.o
+ 
+ lib-$(CONFIG_PRINTK) += dump_stack.o
+ lib-$(CONFIG_SMP) += cpumask.o
+diff --git a/lib/union_find.c b/lib/union_find.c
+new file mode 100644
+index 0000000000..bb48b4b129
+--- /dev/null
++++ b/lib/union_find.c
+@@ -0,0 +1,33 @@
++// SPDX-License-Identifier: GPL-2.0
++#include <linux/union_find.h>
++
++struct uf_node *uf_find(struct uf_node *node)
++{
++	struct uf_node *parent;
++
++	/*Find the root node and perform path compression at the same time*/
++	while (node->parent != node) {
++		parent = node->parent;
++		node->parent = parent->parent;
++		node = parent;
++	}
++	return node;
++}
++
++/*Function to merge two sets, using union by rank*/
++void uf_union(struct uf_node *node1, struct uf_node *node2)
++{
++	struct uf_node *root1 = uf_find(node1);
++	struct uf_node *root2 = uf_find(node2);
++
++	if (root1 != root2) {
++		if (root1->rank < root2->rank) {
++			root1->parent = root2;
++		} else if (root1->rank > root2->rank) {
++			root2->parent = root1;
++		} else {
++			root2->parent = root1;
++			root1->rank++;
++		}
++	}
++}
 -- 
-0-DAY CI Kernel Test Service
-https://github.com/intel/lkp-tests/wiki
+2.45.2
+
