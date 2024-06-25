@@ -1,32 +1,32 @@
-Received: from out-186.mta0.migadu.com (out-186.mta0.migadu.com [91.218.175.186])
+Received: from out-182.mta0.migadu.com (out-182.mta0.migadu.com [91.218.175.182])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6B95044C77
-	for <cgroups@vger.kernel.org>; Tue, 25 Jun 2024 00:59:47 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.186
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AB0554CB4E
+	for <cgroups@vger.kernel.org>; Tue, 25 Jun 2024 00:59:51 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.182
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1719277189; cv=none; b=kOsBhXNJBOL4sOFxmklrDyLo1+rJ3vPJWRyiSCZyh72QU7NVE4n19G/t7tr8DK+M+qIjH4uVc0J7MNweknbDsKxMK8yY2vrTiSTSszc8UgJwQWuf/nDHvjZ92pyheTRQlxUht3FPYebUoB+klPcJsSrhz9MNc3HbFFYDCaXiq94=
+	t=1719277193; cv=none; b=FR6geT+kq4Mpi4p+60tPUCBTJJ/wyV8lRIiSyUgxoEx9ym6sByF4FTY+ZsW9kXEs+qGqBxwjOBfxl1QMwxgR2N/UVxyXWNMuuFpseGy0zsJGRF1YrjU1pHNxPIez0TIn8urhQcFcG0BrF/wD8dmcp2eLXrnWLyuuFQmuNbdMO44=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1719277189; c=relaxed/simple;
-	bh=TeuSUGNM7krOR1ImWUbyFCeUYRReVvBXyseqinm1CaA=;
+	s=arc-20240116; t=1719277193; c=relaxed/simple;
+	bh=Pz7OL3KQbrtV83W/iSFgHROsNnyda+pJCYcSrpY3Zt8=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=dbPVPZHPZnqRFG9uj+EHBv0Coa9wBeTvPN2jLBZ26BGjbBrExZN88h9M0drnscPw2zy2ET74IqOIFlMoZXsRCArqWKImERCyicmsqLi2h4NPnzuiWIrz0obht0nXiFa/GGGagdlaqOxLkGW2TNRoylVPGyK/ACpc0kpbM89a/kY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=eV89MCas; arc=none smtp.client-ip=91.218.175.186
+	 MIME-Version; b=qJDwIJkU4DJuwn8Cqpw83vTxdbVTuZ2Moqilesnn9R8F1kclBtSi5zgogBe2MuvF/rHp8WW6nImX67IwoCJoO6wPfRh2yM+3ZqM2wh035dxE33j0ISn9PVUa+S/1hFMw6HNksUI0KZZzw3765zxMyc4puwF4eaUnmsI8/TSziDo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=PlGf6lnG; arc=none smtp.client-ip=91.218.175.182
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="eV89MCas"
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="PlGf6lnG"
 X-Envelope-To: akpm@linux-foundation.org
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
-	t=1719277185;
+	t=1719277190;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=fbzH39LFdgO7g4Zh8QO5WwcNo4wg+o7OIMv0JFj+P7c=;
-	b=eV89MCast7EgJhdesN7qSvQtr85YMmOO0k2w6ijFUtydlNQ78AauHRfRhUjsPEeOfbC5Gx
-	dtcK/V9nKa9SNmF/5FFvf0Xxi6O7J2yw96sE17lemuK/TV1CjppWoMQQb/mE6M7L50bNMj
-	8VHqifkS/V/BI3Pm3oEoZbviAukkS9Q=
+	bh=i6OtryeQEKVoJSpeL/4FN+6EUWrG1/pihifLngpHrqA=;
+	b=PlGf6lnGIQXNmfnq2Lb4Tkf4shhTkmXLgelP2ND3Ym1XBUrQgwU2RRuocobaKhgUDIawY9
+	y/qwRqVY0IWNNQJ78VvWbqijJuUQHx0Fx3ff0YC5Hnm0PZzzLh8G6Fp4u+r+ci0iSk4sBa
+	ygiGKYxBilotTIeiKryEUQaV54ffcHg=
 X-Envelope-To: hannes@cmpxchg.org
 X-Envelope-To: mhocko@kernel.org
 X-Envelope-To: shakeel.butt@linux.dev
@@ -46,9 +46,9 @@ Cc: Johannes Weiner <hannes@cmpxchg.org>,
 	cgroups@vger.kernel.org,
 	linux-mm@kvack.org,
 	Roman Gushchin <roman.gushchin@linux.dev>
-Subject: [PATCH v2 09/14] mm: memcg: rename memcg_oom_recover()
-Date: Mon, 24 Jun 2024 17:59:01 -0700
-Message-ID: <20240625005906.106920-10-roman.gushchin@linux.dev>
+Subject: [PATCH v2 11/14] mm: memcg: make memcg1_update_tree() static
+Date: Mon, 24 Jun 2024 17:59:03 -0700
+Message-ID: <20240625005906.106920-12-roman.gushchin@linux.dev>
 In-Reply-To: <20240625005906.106920-1-roman.gushchin@linux.dev>
 References: <20240625005906.106920-1-roman.gushchin@linux.dev>
 Precedence: bulk
@@ -60,93 +60,41 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-Migadu-Flow: FLOW_OUT
 
-Rename memcg_oom_recover() into memcg1_oom_recover() for consistency
-with other memory cgroup v1-related functions.
-
-Move the declaration in mm/memcontrol-v1.h to be nearby other
-memcg v1 oom handling functions.
+memcg1_update_tree() is not used outside of mm/memcontrol-v1.c
+anymore, define it as static and remove the declaration from
+the header file.
 
 Signed-off-by: Roman Gushchin <roman.gushchin@linux.dev>
 ---
- mm/memcontrol-v1.c | 6 +++---
- mm/memcontrol-v1.h | 2 +-
- mm/memcontrol.c    | 6 +++---
- 3 files changed, 7 insertions(+), 7 deletions(-)
+ mm/memcontrol-v1.c | 2 +-
+ mm/memcontrol-v1.h | 1 -
+ 2 files changed, 1 insertion(+), 2 deletions(-)
 
 diff --git a/mm/memcontrol-v1.c b/mm/memcontrol-v1.c
-index 253d49d5fb12..1d5608ee1606 100644
+index 1b7337d0170d..f89de413004b 100644
 --- a/mm/memcontrol-v1.c
 +++ b/mm/memcontrol-v1.c
-@@ -1090,8 +1090,8 @@ static void __mem_cgroup_clear_mc(void)
- 
- 		mc.moved_swap = 0;
- 	}
--	memcg_oom_recover(from);
--	memcg_oom_recover(to);
-+	memcg1_oom_recover(from);
-+	memcg1_oom_recover(to);
- 	wake_up_all(&mc.waitq);
+@@ -201,7 +201,7 @@ static unsigned long soft_limit_excess(struct mem_cgroup *memcg)
+ 	return excess;
  }
  
-@@ -2067,7 +2067,7 @@ static int memcg_oom_wake_function(wait_queue_entry_t *wait,
- 	return autoremove_wake_function(wait, mode, sync, arg);
- }
- 
--void memcg_oom_recover(struct mem_cgroup *memcg)
-+void memcg1_oom_recover(struct mem_cgroup *memcg)
+-void memcg1_update_tree(struct mem_cgroup *memcg, int nid)
++static void memcg1_update_tree(struct mem_cgroup *memcg, int nid)
  {
- 	/*
- 	 * For the following lockless ->under_oom test, the only required
+ 	unsigned long excess;
+ 	struct mem_cgroup_per_node *mz;
 diff --git a/mm/memcontrol-v1.h b/mm/memcontrol-v1.h
-index 3de956b2422f..972c493a8ae3 100644
+index 7be4670d9abb..7d6ac4a4fb36 100644
 --- a/mm/memcontrol-v1.h
 +++ b/mm/memcontrol-v1.h
-@@ -13,7 +13,6 @@ static inline void memcg1_soft_limit_reset(struct mem_cgroup *memcg)
+@@ -5,7 +5,6 @@
  
- void mem_cgroup_charge_statistics(struct mem_cgroup *memcg, int nr_pages);
- void memcg1_check_events(struct mem_cgroup *memcg, int nid);
--void memcg_oom_recover(struct mem_cgroup *memcg);
- int try_charge_memcg(struct mem_cgroup *memcg, gfp_t gfp_mask,
- 		     unsigned int nr_pages);
+ #include <linux/cgroup-defs.h>
  
-@@ -92,5 +91,6 @@ ssize_t memcg_write_event_control(struct kernfs_open_file *of,
+-void memcg1_update_tree(struct mem_cgroup *memcg, int nid);
+ void memcg1_remove_from_trees(struct mem_cgroup *memcg);
  
- bool memcg1_oom_prepare(struct mem_cgroup *memcg, bool *locked);
- void memcg1_oom_finish(struct mem_cgroup *memcg, bool locked);
-+void memcg1_oom_recover(struct mem_cgroup *memcg);
- 
- #endif	/* __MM_MEMCONTROL_V1_H */
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index 8abd364ac837..37e0af5b26f3 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -3167,7 +3167,7 @@ static int mem_cgroup_resize_max(struct mem_cgroup *memcg,
- 	} while (true);
- 
- 	if (!ret && enlarge)
--		memcg_oom_recover(memcg);
-+		memcg1_oom_recover(memcg);
- 
- 	return ret;
- }
-@@ -3752,7 +3752,7 @@ static int mem_cgroup_oom_control_write(struct cgroup_subsys_state *css,
- 
- 	WRITE_ONCE(memcg->oom_kill_disable, val);
- 	if (!val)
--		memcg_oom_recover(memcg);
-+		memcg1_oom_recover(memcg);
- 
- 	return 0;
- }
-@@ -5479,7 +5479,7 @@ static void uncharge_batch(const struct uncharge_gather *ug)
- 			page_counter_uncharge(&ug->memcg->memsw, ug->nr_memory);
- 		if (ug->nr_kmem)
- 			memcg_account_kmem(ug->memcg, -ug->nr_kmem);
--		memcg_oom_recover(ug->memcg);
-+		memcg1_oom_recover(ug->memcg);
- 	}
- 
- 	local_irq_save(flags);
+ static inline void memcg1_soft_limit_reset(struct mem_cgroup *memcg)
 -- 
 2.45.2
 
