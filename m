@@ -1,121 +1,127 @@
-Received: from mblankhorst.nl (lankhorst.se [141.105.120.124])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-qv1-f54.google.com (mail-qv1-f54.google.com [209.85.219.54])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BB2B8197A96;
-	Thu, 27 Jun 2024 15:57:52 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=141.105.120.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7415D18B1A
+	for <cgroups@vger.kernel.org>; Thu, 27 Jun 2024 16:31:07 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.219.54
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1719503875; cv=none; b=gybPn1kOp6lwAxhnda8W6bdeVZ513DNk6D2f2B9KlsZrhwM6PGu93tL6W8dE/ek+v22b2EhQ6w+TyD8dfBuQx/3BRJFKgdkGUSg0qKb/a+a81+//CgNEzt+sGwLpuRkY/qKRLz22jCx2ZNMr+POHZHyyt1L7M/CaJi1rSiYkS3Y=
+	t=1719505870; cv=none; b=fqZL5++tX9tNE4X+4vusWY9bD5xAwTfab1gCUQVtrXh10B/F+L49lRH63enpi9bW1FBWTF/B4/sGGEWakP71hFRZVJYsP1A67VSCGsDX2vJTZ642VQ9iHORZcUDvikWScOw1JJnKka41PactJuSezgAgFcrlPrp28Ayn0bgneo4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1719503875; c=relaxed/simple;
-	bh=mxgrYw11W6QuxrE8RNDk043FZWyPg/KkLmzOqrDcOiI=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=kgrofNkjLFqXo32v1kh5h98fTMiUxz9yxVh5kU5sxenAmQcrUCfJ9vcbevsC++EL4zNT9rGmfXIEHO9CtGLB1g2fz2ilsyGmrHRN/3mVZbPi9592uDfaRox2adYFNReM14biW8FjBBdS1uqSw16yFCmXCJT1fEdBp9wTvU02W2I=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=linux.intel.com; spf=none smtp.mailfrom=mblankhorst.nl; arc=none smtp.client-ip=141.105.120.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=linux.intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=mblankhorst.nl
-From: Maarten Lankhorst <maarten.lankhorst@linux.intel.com>
-To: intel-xe@lists.freedesktop.org,
-	linux-kernel@vger.kernel.org,
-	dri-devel@lists.freedesktop.org,
-	Tejun Heo <tj@kernel.org>,
-	Zefan Li <lizefan.x@bytedance.com>,
-	Johannes Weiner <hannes@cmpxchg.org>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Lucas De Marchi <lucas.demarchi@intel.com>,
-	=?UTF-8?q?Thomas=20Hellstr=C3=B6m?= <thomas.hellstrom@linux.intel.com>,
-	Rodrigo Vivi <rodrigo.vivi@intel.com>,
-	Maarten Lankhorst <maarten.lankhorst@linux.intel.com>,
-	Maxime Ripard <mripard@kernel.org>,
-	Thomas Zimmermann <tzimmermann@suse.de>,
-	David Airlie <airlied@gmail.com>,
-	Daniel Vetter <daniel@ffwll.ch>
-Cc: Friedrich Vock <friedrich.vock@gmx.de>,
-	cgroups@vger.kernel.org,
-	linux-mm@kvack.org
-Subject: [RFC PATCH 4/6] drm/xe: Implement cgroup for vram
-Date: Thu, 27 Jun 2024 17:47:23 +0200
-Message-ID: <20240627154754.74828-5-maarten.lankhorst@linux.intel.com>
-X-Mailer: git-send-email 2.45.2
-In-Reply-To: <20240627154754.74828-1-maarten.lankhorst@linux.intel.com>
-References: <20240627154754.74828-1-maarten.lankhorst@linux.intel.com>
+	s=arc-20240116; t=1719505870; c=relaxed/simple;
+	bh=rbPUP6fg+E+zMZem2W8dw06xr/P36TLLJcmmekBMiIA=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=nQ60PhlB2hfRBlvK2fhhjvDLNJuY5Zt+mPfJJnx7QSWs35xVgn+Uz1iFRftW5Do3lKQYRIUaOVhEZJeM6kBwL/EuKpYq6nXitAF+KsGXjUCroU3Am3D1WK6uL2xArtwg8uYFsWrUixe0z2qQhodJN/bJtV0M2qwZm0qDbFMaOGg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=cmpxchg.org; spf=pass smtp.mailfrom=cmpxchg.org; dkim=pass (2048-bit key) header.d=cmpxchg-org.20230601.gappssmtp.com header.i=@cmpxchg-org.20230601.gappssmtp.com header.b=Kx2k2th8; arc=none smtp.client-ip=209.85.219.54
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=cmpxchg.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=cmpxchg.org
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=cmpxchg-org.20230601.gappssmtp.com header.i=@cmpxchg-org.20230601.gappssmtp.com header.b="Kx2k2th8"
+Received: by mail-qv1-f54.google.com with SMTP id 6a1803df08f44-6b4fe2c79fdso34659166d6.0
+        for <cgroups@vger.kernel.org>; Thu, 27 Jun 2024 09:31:07 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=cmpxchg-org.20230601.gappssmtp.com; s=20230601; t=1719505866; x=1720110666; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=onH/xeAbXWJK2z25s3p7/oY6URlbYd6cQ3Fa4SiGD/Y=;
+        b=Kx2k2th8KZSzWS+6RSz1xvXCEYbUyl5meM+zUOT8zbx7tkOS4l7BxtDtoh9aI0GVkZ
+         7V3vxHE/ALElxHGr61+Dkfo1rYkZg4sd9A8S2OzG3HREhLEP9QU3uU1iUoQnu/lloULW
+         ny5NrMnJR5QgvKjK3UX+rTCiXWO5iHzLUU6S+dKXlr+lAo3WD12GOfewyxUFPeAXeqgI
+         ZwSTP3ns1qGtFU2QtH6saQ6RuBMfPxSz4W7K5sRoyZlF64UfXoNvXQHQXfB9cAZzdwyp
+         bhHtyBfOhMlsNP/VO18UG2LGyabgN49vLdfPZUND/oRLPcSgAF/eZbKRTm/SFnMqEmzL
+         YkZw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1719505866; x=1720110666;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=onH/xeAbXWJK2z25s3p7/oY6URlbYd6cQ3Fa4SiGD/Y=;
+        b=LwudsWuosUZr4EYShlAjVm//3rQazXZ3Mc37/pvkODVmpKxTHueQdxVqZUtIeWJR/3
+         hb/AWMnvErrGr9bohNJm+QUTyXqSwwprM0wH4eTLh4aHeniskqlLLnIHqCCjBsh58G/j
+         MfUqp20zzNso1q/GcxRRe9Y3WWlR5YDD/aGvFNWwZUBTg8ToyihLTl5FLkd6kr7SPX+4
+         I7ccvAqsw0lC/ZuDCm24kWkLG4etGQBRF8quvstXfObzw/ec94GXGMngEYel3TvMi0IV
+         /3MjcnDGs8a8qxTT/hMmbpE/YHSfPOVXCqUof/nfPlgUsMINfviZ+k7tf55K2QHJGSQj
+         HkwQ==
+X-Gm-Message-State: AOJu0Yw9mJhFjskI62XUyp08AW7mPgtRF57+j/SLKNIXMyVyoA62Jv9t
+	Djwy8GqGv4iqzxGgkc1ddRl5/PrTGJkCEBBrI1HKne8OOmlD9wtsqlX7v8EWqWi+AMwmfwC7gut
+	r
+X-Google-Smtp-Source: AGHT+IGUQGL0TI0zwDVxFsmJ+/DowNwtnZ+/+BkwzrbtB6PRJZSCdHijW9zCjMKIc/PiCtphBkeRug==
+X-Received: by 2002:ad4:5aad:0:b0:6b5:8f2e:376b with SMTP id 6a1803df08f44-6b58f2e3aa2mr33489886d6.48.1719505866099;
+        Thu, 27 Jun 2024 09:31:06 -0700 (PDT)
+Received: from localhost ([2603:7000:c01:2716:da5e:d3ff:fee7:26e7])
+        by smtp.gmail.com with ESMTPSA id 6a1803df08f44-6b592709b30sm6294836d6.130.2024.06.27.09.31.05
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 27 Jun 2024 09:31:05 -0700 (PDT)
+Date: Thu, 27 Jun 2024 12:31:00 -0400
+From: Johannes Weiner <hannes@cmpxchg.org>
+To: syzbot <syzbot+b7f13b2d0cc156edf61a@syzkaller.appspotmail.com>
+Cc: cgroups@vger.kernel.org, linux-kernel@vger.kernel.org,
+	lizefan.x@bytedance.com, syzkaller-bugs@googlegroups.com,
+	tj@kernel.org, Nhat Pham <nphamcs@gmail.com>
+Subject: Re: [syzbot] [cgroups?] BUG: sleeping function called from invalid
+ context in cgroup_rstat_flush
+Message-ID: <20240627163100.GC469122@cmpxchg.org>
+References: <000000000000f71227061bdf97e0@google.com>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <000000000000f71227061bdf97e0@google.com>
 
-Add vram based cgroup eviction to Xe.
-Most hardware with VRAM uses TTM for its management, and can be
-similarly trivially enabled.
+On Thu, Jun 27, 2024 at 07:03:21AM -0700, syzbot wrote:
+> Hello,
+> 
+> syzbot found the following issue on:
+> 
+> HEAD commit:    7c16f0a4ed1c Merge tag 'i2c-for-6.10-rc5' of git://git.ker..
+> git tree:       upstream
+> console output: https://syzkaller.appspot.com/x/log.txt?x=1511528e980000
+> kernel config:  https://syzkaller.appspot.com/x/.config?x=12f98862a3c0c799
+> dashboard link: https://syzkaller.appspot.com/bug?extid=b7f13b2d0cc156edf61a
+> compiler:       Debian clang version 15.0.6, GNU ld (GNU Binutils for Debian) 2.40
+> 
+> Unfortunately, I don't have any reproducer for this issue yet.
+> 
+> Downloadable assets:
+> disk image: https://storage.googleapis.com/syzbot-assets/50560e9024e5/disk-7c16f0a4.raw.xz
+> vmlinux: https://storage.googleapis.com/syzbot-assets/080c27daee72/vmlinux-7c16f0a4.xz
+> kernel image: https://storage.googleapis.com/syzbot-assets/c528e0da4544/bzImage-7c16f0a4.xz
+> 
+> IMPORTANT: if you fix the issue, please add the following tag to the commit:
+> Reported-by: syzbot+b7f13b2d0cc156edf61a@syzkaller.appspotmail.com
+> 
+> BUG: sleeping function called from invalid context at kernel/cgroup/rstat.c:351
+> in_atomic(): 0, irqs_disabled(): 0, non_block: 0, pid: 17332, name: syz-executor.4
+> preempt_count: 0, expected: 0
+> RCU nest depth: 1, expected: 0
+> 1 lock held by syz-executor.4/17332:
+>  #0: ffffffff8e333fa0 (rcu_read_lock){....}-{1:2}, at: rcu_lock_acquire include/linux/rcupdate.h:329 [inline]
+>  #0: ffffffff8e333fa0 (rcu_read_lock){....}-{1:2}, at: rcu_read_lock include/linux/rcupdate.h:781 [inline]
+>  #0: ffffffff8e333fa0 (rcu_read_lock){....}-{1:2}, at: filemap_cachestat mm/filemap.c:4251 [inline]
+>  #0: ffffffff8e333fa0 (rcu_read_lock){....}-{1:2}, at: __do_sys_cachestat mm/filemap.c:4407 [inline]
+>  #0: ffffffff8e333fa0 (rcu_read_lock){....}-{1:2}, at: __se_sys_cachestat+0x3ee/0xbb0 mm/filemap.c:4372
+> CPU: 1 PID: 17332 Comm: syz-executor.4 Not tainted 6.10.0-rc4-syzkaller-00330-g7c16f0a4ed1c #0
+> Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 06/07/2024
+> Call Trace:
+>  <TASK>
+>  __dump_stack lib/dump_stack.c:88 [inline]
+>  dump_stack_lvl+0x241/0x360 lib/dump_stack.c:114
+>  __might_resched+0x5d4/0x780 kernel/sched/core.c:10196
+>  cgroup_rstat_flush+0x1e/0x50 kernel/cgroup/rstat.c:351
+>  workingset_test_recent+0x48a/0xa90 mm/workingset.c:473
+>  filemap_cachestat mm/filemap.c:4314 [inline]
+>  __do_sys_cachestat mm/filemap.c:4407 [inline]
+>  __se_sys_cachestat+0x795/0xbb0 mm/filemap.c:4372
+>  do_syscall_x64 arch/x86/entry/common.c:52 [inline]
+>  do_syscall_64+0xf3/0x230 arch/x86/entry/common.c:83
+>  entry_SYSCALL_64_after_hwframe+0x77/0x7f
 
-Signed-off-by: Maarten Lankhorst <maarten.lankhorst@linux.intel.com>
----
- drivers/gpu/drm/xe/xe_device.c       |  4 ++++
- drivers/gpu/drm/xe/xe_device_types.h |  4 ++++
- drivers/gpu/drm/xe/xe_ttm_vram_mgr.c | 10 ++++++++++
- 3 files changed, 18 insertions(+)
+Ok yeah, cachestat() holds the rcu read lock, so
+workingset_test_recent() can't do a sleepable rstat flush.
 
-diff --git a/drivers/gpu/drm/xe/xe_device.c b/drivers/gpu/drm/xe/xe_device.c
-index 5ef9b50a20d0..6e630d67b13a 100644
---- a/drivers/gpu/drm/xe/xe_device.c
-+++ b/drivers/gpu/drm/xe/xe_device.c
-@@ -616,6 +616,10 @@ int xe_device_probe(struct xe_device *xe)
- 	/* Allocate and map stolen after potential VRAM resize */
- 	xe_ttm_stolen_mgr_init(xe);
- 
-+	err = drmmcg_register_device(&xe->drm, &xe->cg);
-+	if (err)
-+		goto err_irq_shutdown;
-+
- 	/*
- 	 * Now that GT is initialized (TTM in particular),
- 	 * we can try to init display, and inherit the initial fb.
-diff --git a/drivers/gpu/drm/xe/xe_device_types.h b/drivers/gpu/drm/xe/xe_device_types.h
-index 2e62450d86e1..6b60837d9090 100644
---- a/drivers/gpu/drm/xe/xe_device_types.h
-+++ b/drivers/gpu/drm/xe/xe_device_types.h
-@@ -7,6 +7,7 @@
- #define _XE_DEVICE_TYPES_H_
- 
- #include <linux/pci.h>
-+#include <linux/cgroup_drm.h>
- 
- #include <drm/drm_device.h>
- #include <drm/drm_file.h>
-@@ -216,6 +217,9 @@ struct xe_device {
- 	/** @devcoredump: device coredump */
- 	struct xe_devcoredump devcoredump;
- 
-+	/** @cg: drm cgroup bookkeeping */
-+	struct drmcgroup_device cg;
-+
- 	/** @info: device info */
- 	struct intel_device_info {
- 		/** @info.graphics_name: graphics IP name */
-diff --git a/drivers/gpu/drm/xe/xe_ttm_vram_mgr.c b/drivers/gpu/drm/xe/xe_ttm_vram_mgr.c
-index fe3779fdba2c..9a625b69fc52 100644
---- a/drivers/gpu/drm/xe/xe_ttm_vram_mgr.c
-+++ b/drivers/gpu/drm/xe/xe_ttm_vram_mgr.c
-@@ -339,6 +339,16 @@ int __xe_ttm_vram_mgr_init(struct xe_device *xe, struct xe_ttm_vram_mgr *mgr,
- 	struct ttm_resource_manager *man = &mgr->manager;
- 	int err;
- 
-+	if (mem_type != XE_PL_STOLEN) {
-+		int cgregion = xe->cg.num_regions++;
-+
-+		xe->cg.regions[cgregion].size = size;
-+		xe->cg.regions[cgregion].name =
-+			mem_type == XE_PL_VRAM0 ? "vram0" : "vram1";
-+		man->cgdev = &xe->cg;
-+		man->cgidx = cgregion;
-+	}
-+
- 	man->func = &xe_ttm_vram_mgr_func;
- 	mgr->mem_type = mem_type;
- 	mutex_init(&mgr->lock);
--- 
-2.45.2
-
+I think the easiest fix would be to flush rstat from the root down
+(NULL) in filemap_cachestat(), before the rcu section, and add a flag
+to workingset_test_recent() to forego it. Nhat?
