@@ -1,16 +1,15 @@
 Received: from mblankhorst.nl (lankhorst.se [141.105.120.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E62DF199249;
-	Thu, 27 Jun 2024 15:48:12 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BB3451991C9;
+	Thu, 27 Jun 2024 15:57:52 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=141.105.120.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1719503294; cv=none; b=fSy30mrVa4PicSRSUreAe2CVQMARQpz322AkqNaWnw1je5ptKc/8zfLigNbGqfTE1B23+CympKmq1RsXgsq07ZKcCaQ+djK7F0iThhXSc21Gqc4kXKXKK4UgB4zk0wzV4HeSL2GBQJomBmyANZi2XDKZcb2bC6kr13qm6K61JAY=
+	t=1719503874; cv=none; b=VnrAX87LHVBLxFJXt2kaLxwVKOJ6fXnpMHosyoEnSgROXIbmPJwrmEe3tNbV+d387A/AfmN+F6lqDnfVwPpAAhYPLykowUjuKUkSV82KIhKvG5Cj0LXu/xo8GRoDV9A7kT/XG0FoVdVMeAJ1KGrYykps6k1XH26OfBJbcRw+D6k=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1719503294; c=relaxed/simple;
-	bh=Ug7/0LSxnMXTm6BkMSSPHGcN/GxtqUHC2G1ZRj/ewGI=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=gjN6/3yYv/Wum7UpHRGV+6S6j2bQdrMF13LWPCVhY7gFf9VodD50zzhy7DoWnljU6LkJODuZOarImOM8PST7enm8R3Xnu5qNclMim4X2aOfeKNotIwsamyrRjc/NRnBtdRqZR37ds4JuxEhzej0ENQpwFjl7v8P+4+nsRV6ksv0=
+	s=arc-20240116; t=1719503874; c=relaxed/simple;
+	bh=fkv99D0lVc7kZeZmF+D68WSywx12m1T0X27+aOLqWVw=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=Nw2LPu08Z+cRYEb9jKUCtdz03tEZ0jLjdORJGKLjz4kNp6z6sj0iXbxvQA2E9B+FLdf9e0OFuOXzJB4tIbJSdAejuZFiFzjgOFmicNhOOcSVwtzLQhxn7slSuHLk8IJ7C/2BKYnju8g//+tfkS0wh0KzpxWqSTvK1fvzmedgJCI=
 ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=linux.intel.com; spf=none smtp.mailfrom=mblankhorst.nl; arc=none smtp.client-ip=141.105.120.124
 Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=mblankhorst.nl
@@ -21,24 +20,15 @@ To: intel-xe@lists.freedesktop.org,
 	Tejun Heo <tj@kernel.org>,
 	Zefan Li <lizefan.x@bytedance.com>,
 	Johannes Weiner <hannes@cmpxchg.org>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Lucas De Marchi <lucas.demarchi@intel.com>,
-	=?UTF-8?q?Thomas=20Hellstr=C3=B6m?= <thomas.hellstrom@linux.intel.com>,
-	Rodrigo Vivi <rodrigo.vivi@intel.com>,
-	Maarten Lankhorst <maarten.lankhorst@linux.intel.com>,
-	Maxime Ripard <mripard@kernel.org>,
-	Thomas Zimmermann <tzimmermann@suse.de>,
-	David Airlie <airlied@gmail.com>,
-	Daniel Vetter <daniel@ffwll.ch>
+	Andrew Morton <akpm@linux-foundation.org>
 Cc: Friedrich Vock <friedrich.vock@gmx.de>,
 	cgroups@vger.kernel.org,
-	linux-mm@kvack.org
-Subject: [RFC PATCH 6/6] drm/xe: Hack to test with mapped pages instead of vram.
-Date: Thu, 27 Jun 2024 17:47:25 +0200
-Message-ID: <20240627154754.74828-7-maarten.lankhorst@linux.intel.com>
+	linux-mm@kvack.org,
+	Maarten Lankhorst <maarten.lankhorst@linux.intel.com>
+Subject: [RFC PATCH 0/6] DRM resource management cgroup, try 2.
+Date: Thu, 27 Jun 2024 17:47:19 +0200
+Message-ID: <20240627154754.74828-1-maarten.lankhorst@linux.intel.com>
 X-Mailer: git-send-email 2.45.2
-In-Reply-To: <20240627154754.74828-1-maarten.lankhorst@linux.intel.com>
-References: <20240627154754.74828-1-maarten.lankhorst@linux.intel.com>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
@@ -47,48 +37,83 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-We will probably want to make this a proper region in TTM for
-everything, so that we can charge VRAM twice, once for mapped
-in sysmem, once for mapped in vram. That way we don't need to
-deal with evict failing from lack of available memory in mapped.
+Hey,
 
-Signed-off-by: Maarten Lankhorst <maarten.lankhorst@linux.intel.com>
----
- drivers/gpu/drm/xe/xe_ttm_sys_mgr.c | 14 ++++++++++++++
- 1 file changed, 14 insertions(+)
+A new version of my attempt at managing VRAM through cgroups.
+Even though it's called the DRM resource management cgroup, it would be trivial
+to rename it to devmem or whatever, since there is nothing DRM specific about it.
 
-diff --git a/drivers/gpu/drm/xe/xe_ttm_sys_mgr.c b/drivers/gpu/drm/xe/xe_ttm_sys_mgr.c
-index 9844a8edbfe1..20fa8ec8925e 100644
---- a/drivers/gpu/drm/xe/xe_ttm_sys_mgr.c
-+++ b/drivers/gpu/drm/xe/xe_ttm_sys_mgr.c
-@@ -101,6 +101,18 @@ static void ttm_sys_mgr_fini(struct drm_device *drm, void *arg)
- 	ttm_set_driver_manager(&xe->ttm, XE_PL_TT, NULL);
- }
- 
-+static inline void apply_cg(struct xe_device *xe,
-+			    struct ttm_resource_manager *man,
-+			    u64 gtt_size)
-+{
-+	int cgregion = xe->cg.num_regions++;
-+
-+	xe->cg.regions[cgregion].size = gtt_size;
-+	xe->cg.regions[cgregion].name = "mapped";
-+	man->cgdev = &xe->cg;
-+	man->cgidx = cgregion;
-+
-+}
- int xe_ttm_sys_mgr_init(struct xe_device *xe)
- {
- 	struct ttm_resource_manager *man = &xe->mem.sys_mgr;
-@@ -116,6 +128,8 @@ int xe_ttm_sys_mgr_init(struct xe_device *xe)
- 	man->func = &xe_ttm_sys_mgr_func;
- 	ttm_resource_manager_init(man, &xe->ttm, gtt_size >> PAGE_SHIFT);
- 	ttm_set_driver_manager(&xe->ttm, XE_PL_TT, man);
-+	apply_cg(xe, man, gtt_size);
-+
- 	ttm_resource_manager_set_used(man, true);
- 	return drmm_add_action_or_reset(&xe->drm, ttm_sys_mgr_fini, xe);
- }
+This series allows setting limits on VRAM similar to system memory,
+with min/low/max limits.
+This allows various cgroups to have their own limits for usage.
+
+It sounds very abstract, but it can be used to prioritise the foreground
+application (by setting low), or hard partition memory so multiple processes
+sharing a single GPU use a proportional amount of memory each in a fair way,
+or to prevent long running compute jobs from having their memory evicted.
+
+This is a minimal proof of concept to get discussion going again. It works,
+but it only tracks active use of VRAM. In the ideal world, we would track
+it better in a way that also integrates better with the memory cgroup
+controller. Ideally for every VRAM allocation, we would know we could push
+it out to swap if needed, charging the original process not the process evicting.
+
+I'm hoping to restart the discussion, so that we can plug the holes and finally move forward.
+
+New in this version:
+- Complete rewrite using page_counter.
+- Support setting min/low/max, respected in the same way as memory cgroup.
+  (Could be useful to add/allow high? To go over limit for temporary bindings
+   during eviction on GART.)
+- Locking reworked. Fastpath should now be lockless with RCU.
+- Add a second implementation for AMD, to show how easy it is to make it work.
+  (Should we completely move this to TTM instead?)
+- TTM now always respects min/low when evicting, bailing out with -ENOSPC instead
+  where required.
+
+I'm hoping for some good feedback on the path forward for upstreaming. I feel this
+version has a lot better chance of being upstreamed than the previous. It should
+be a lot more scalable thanks to the usage of RCU and page_counter.
+
+Cheers,
+Maarten
+
+Maarten Lankhorst (6):
+  mm/page_counter: Move calculating protection values to page_counter
+  drm/cgroup: Add memory accounting DRM cgroup
+  drm/ttm: Handle cgroup based eviction in TTM
+  drm/xe: Implement cgroup for vram
+  drm/amdgpu: Add cgroups implementation
+  drm/xe: Hack to test with mapped pages instead of vram.
+
+ Documentation/admin-guide/cgroup-v2.rst       |  51 ++
+ Documentation/gpu/drm-compute.rst             |  54 ++
+ drivers/gpu/drm/amd/amdgpu/amdgpu.h           |   2 +
+ drivers/gpu/drm/amd/amdgpu/amdgpu_ttm.c       |   6 +
+ drivers/gpu/drm/amd/amdgpu/amdgpu_vram_mgr.c  |   6 +
+ drivers/gpu/drm/ttm/tests/ttm_bo_test.c       |  18 +-
+ drivers/gpu/drm/ttm/tests/ttm_resource_test.c |   2 +-
+ drivers/gpu/drm/ttm/ttm_bo.c                  |  38 +-
+ drivers/gpu/drm/ttm/ttm_resource.c            |  28 +-
+ drivers/gpu/drm/xe/xe_device.c                |   4 +
+ drivers/gpu/drm/xe/xe_device_types.h          |   4 +
+ drivers/gpu/drm/xe/xe_ttm_sys_mgr.c           |  14 +
+ drivers/gpu/drm/xe/xe_ttm_vram_mgr.c          |  10 +
+ include/drm/ttm/ttm_bo.h                      |   3 +-
+ include/drm/ttm/ttm_resource.h                |  16 +-
+ include/linux/cgroup_drm.h                    | 115 +++
+ include/linux/cgroup_subsys.h                 |   4 +
+ include/linux/page_counter.h                  |   4 +
+ init/Kconfig                                  |   7 +
+ kernel/cgroup/Makefile                        |   1 +
+ kernel/cgroup/drm.c                           | 813 ++++++++++++++++++
+ mm/memcontrol.c                               | 154 +---
+ mm/page_counter.c                             | 173 ++++
+ 23 files changed, 1355 insertions(+), 172 deletions(-)
+ create mode 100644 Documentation/gpu/drm-compute.rst
+ create mode 100644 include/linux/cgroup_drm.h
+ create mode 100644 kernel/cgroup/drm.c
+
 -- 
 2.45.2
 
