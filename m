@@ -1,87 +1,82 @@
-Received: from m16.mail.163.com (m16.mail.163.com [117.135.210.4])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id 77A011C9ED6;
-	Fri, 28 Jun 2024 16:15:20 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=117.135.210.4
+Received: from mail-pf1-f179.google.com (mail-pf1-f179.google.com [209.85.210.179])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+	(No client certificate requested)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 368632263A;
+	Fri, 28 Jun 2024 17:11:41 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.179
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1719591323; cv=none; b=VmtvkwzGusnmy+2G45xolCEKPpLXklYbVLez4+PwxOwyTUpccLjdQ8oLyJ+cVR03GZ5BTF/VnuCNpvk/29FX/Arl6Wlcfxpbu3ci1WCcp5PKcdhFZm/6pgesAnpt+Pl9Dg27HGnmz2hpaXWJhOjpxav7AoS+LN3DfT1MXoykxds=
+	t=1719594703; cv=none; b=P0ORdJFqWCcbEdO6CtPfxzmTP6RcwhJJXKjhlNZm0TWavVWIQd4QGmlX3M5CF0Jk8WVu+qFZ7jgldSIOmjTCAqvG0jqb73LGaHQwk4eRBuw+Yz9BneSgptUdaTBu/Zf9P3s34bXjsJn/7DyGDcM7OpACgvVxrvR0qeyJRg6q7Lc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1719591323; c=relaxed/simple;
-	bh=bhI5kE4hAd1o3laQddk5jl4FZovXpusYq/ZppIDUcA0=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=gYhY6a2kxYKhXLBIEvcPIujzqxkB0535CllHDb0cDElNycX5uBSMafpD9daxAsr3up+dkJI7Hq8Ed3rtiiZgUiaZd5OhYFqCD6l2EOC6p3q2eu+lbXMG4NZBuE+bn7Dmb0BUmvC32tqWc9u6iaeSKS0GPT05toQJJBCDegt/2Z0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=YrcbyJAZ; arc=none smtp.client-ip=117.135.210.4
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
+	s=arc-20240116; t=1719594703; c=relaxed/simple;
+	bh=X85ngQ/EMGY54M7s9ym0z5iIYohmHn4ScybjJGQVeSI=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=SyXDIcbqxqfaWEVS64vAdwkEX3fbkRfWjbm/sUtCoFNBZu4ELHfqh4KAe63AnomPEFwRxUlS46wMr37Miz40v9v3QXVGPI4r3a0RmhKzn5ucY1cMiBRj9IO6NRvNDwfp9sG4/CE1j2z3WQhZ9t8ASIJFeyNcSTQEsJiQWBTmOXM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=kernel.org; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=a+D4lrrQ; arc=none smtp.client-ip=209.85.210.179
+Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=kernel.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="YrcbyJAZ"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
-	s=s110527; h=From:Subject:Date:Message-Id:MIME-Version; bh=p/G4v
-	yxvP45JZ+F3kYh7ClYPIcW38TqkgmgFskTyUuE=; b=YrcbyJAZKH9BIs9uT5J1g
-	VcxX154iBscXazc5XMFqsKEXVinyTS1Kr7SurHhOImVU2FGUOdIeCtSGniGs0if3
-	HcjTrgpFIuSLmUeXOw+VEu00wTSq7BGmAhbuaHBYzq1oqtO3Uj6mGZf9U7cnV4xw
-	wnVdPw9agqDZHl4XM0H4xo=
-Received: from localhost (unknown [101.132.132.191])
-	by gzga-smtp-mta-g2-1 (Coremail) with SMTP id _____wD3f0sP4X5mIE2ZAw--.25173S2;
-	Sat, 29 Jun 2024 00:13:03 +0800 (CST)
-From: Xavier <xavier_qy@163.com>
-To: tj@kernel.org
-Cc: longman@redhat.com,
-	mkoutny@suse.com,
-	lizefan.x@bytedance.com,
-	hannes@cmpxchg.org,
-	cgroups@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	torvalds@linux-foundation.org,
-	akpm@linux-foundation.org,
-	Xavier <xavier_qy@163.com>
-Subject: [PATCH-cpuset v8 0/2] Add Union-Find and use it to optimize cpuset
-Date: Sat, 29 Jun 2024 00:13:00 +0800
-Message-Id: <20240628161302.240043-1-xavier_qy@163.com>
-X-Mailer: git-send-email 2.34.1
-In-Reply-To: <Zn3UaMouBYYIMQr_@slm.duckdns.org>
-References: <Zn3UaMouBYYIMQr_@slm.duckdns.org>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="a+D4lrrQ"
+Received: by mail-pf1-f179.google.com with SMTP id d2e1a72fcca58-7066f68e22cso698319b3a.2;
+        Fri, 28 Jun 2024 10:11:41 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1719594701; x=1720199501; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:sender:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=q0SGdwC5uTjP4Trlz+k6ArDzPjnR77dSkAo7ukvOa7g=;
+        b=a+D4lrrQucaHJyYJUKyp83qDQrqnz/vS6E4rNnYBHPrqox55QjiD8JRM8NgMtOl+7l
+         3rzGlxOpqe6956Dy5kfmBLDIKG2ndUOD3WlQt/7fNUKjYnTg4S7cSy98f2g/6/WPgI++
+         UwOH94UdM0aRhzvUoeV8Wq1LmpLr2toovgR8E+EgALJVUcOGDvqHk5tqxXbJE+UZAhiA
+         vLyEHhRpVncZczbjIGsQ0FTaBKsw/SAEWJMhEGMJv8k5+wfDoFxCgxgeYOjdb/+MwIW1
+         3S+suES933PFYfXhAitaIM9VdGcQ4vusPWUQMmhBrL1K17iEd/E+dlPF9wyTmrVJ7cnp
+         0yjA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1719594701; x=1720199501;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:sender:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=q0SGdwC5uTjP4Trlz+k6ArDzPjnR77dSkAo7ukvOa7g=;
+        b=QUeeMwv+5DuIppxF7Tw2Mye7JcPAwJID0MwnH+VoqwSOXOWTjAvlCQbw1Muutu9EB+
+         KkTROo1wKCAHLbXiqLb6+uurATO+jm/SaZO2Kmy4FJ0ARmiyRvlwuk70S67ZGhTx8q/8
+         /2pzy0BbaKyOMvSaJNSxsUtHWiQBe4T9SRPw4/FP7H9O3KSuyGtvr8v8dt6fPF7wbh9H
+         72DiRy2Z+i0L4q6A3giGjfjGsA6IqEJIOafdF2d5WE3VAH0g2DcZZs74emwzcGXoRVOM
+         QzfkyqhXueTs4JPfTfwgctNZRdB7alvawrKH/JNpddQewCCwCt1FGJn4HuwM/1d5K7WL
+         MEpQ==
+X-Forwarded-Encrypted: i=1; AJvYcCUhDGgoRpslwwYJD/KAzEcRXHKVmsTGpmrtC1RDh+QdxrbaHbTZ4QAFc7bEog5BbpxS6A0/J1bvSsUHp4bLwyuwZDHxLTbTMGwrPumP+85vdsEHwGj1fD51vkGT/wDN87kVeNWnnQ==
+X-Gm-Message-State: AOJu0YyOYJh+hwO8gTWEBCXwoOiqxj1dq6M7ApqnwAOPGhmwNiLds75L
+	ewbYSwWX/2tBGcZCDtHjAKemAi0vArErwGJsuWRqjpmP9xKcSyXY
+X-Google-Smtp-Source: AGHT+IEWpm9rgTkImFSBsnGAXI4ejIR/0vVaoeddZt77pmzn2665cZur4JmljG33KGrixzxkJvjwTw==
+X-Received: by 2002:a05:6a20:b709:b0:1bd:fef5:ab0b with SMTP id adf61e73a8af0-1bdfef5ade4mr8505677637.8.1719594701296;
+        Fri, 28 Jun 2024 10:11:41 -0700 (PDT)
+Received: from localhost (dhcp-141-239-159-203.hawaiiantel.net. [141.239.159.203])
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-1fac1569f0bsm17702775ad.216.2024.06.28.10.11.40
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 28 Jun 2024 10:11:41 -0700 (PDT)
+Sender: Tejun Heo <htejun@gmail.com>
+Date: Fri, 28 Jun 2024 07:11:39 -1000
+From: Tejun Heo <tj@kernel.org>
+To: Chen Ridong <chenridong@huawei.com>
+Cc: lizefan.x@bytedance.com, hannes@cmpxchg.org, longman@redhat.com,
+	adityakali@google.com, sergeh@kernel.org, mkoutny@suse.com,
+	cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH V4] cgroup/cpuset: Prevent UAF in proc_cpuset_show()
+Message-ID: <Zn7uyzx-GdpUzaJ7@slm.duckdns.org>
+References: <20240628013604.573498-1-chenridong@huawei.com>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:_____wD3f0sP4X5mIE2ZAw--.25173S2
-X-Coremail-Antispam: 1Uf129KBjvdXoWrKF4xKFy5Ar4UJFW5JF4ruFg_yoWkZwcEgF
-	WkWa4ak3W8WF1xtFWxCFyftFZFvrWF934vk3WUtFZrXF1DJrZrGr1Dtas8X3y8XF4kJr43
-	GFyDtr4IvrnrZjkaLaAFLSUrUUUUjb8apTn2vfkv8UJUUUU8Yxn0WfASr-VFAUDa7-sFnT
-	9fnUUvcSsGvfC2KfnxnUUI43ZEXa7IUUO6pPUUUUU==
-X-CM-SenderInfo: 50dyxvpubt5qqrwthudrp/1tbiZRIMEGXAmsmNBwABsW
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20240628013604.573498-1-chenridong@huawei.com>
 
-Hi Tejun,
+Hello,
 
-Thank you for your suggestion. I agree with your point that it is indeed more
-appropriate to place it within the cpuset structure, and I have already made
-the modification. Additionally, I looked into the relevant modules of the
-kernel, and it seems that the union-find data structure may have optimization
-potential in network topology management and the Open vSwitch module. I will
-further investigate this in the future.
+Replaced the v3 patch in cgroup/for-6.10-fixes with this version.
 
-Kindly review.
-
-Xavier (2):
-  Union-Find: add a new module in kernel library
-  cpuset: use Union-Find to optimize the merging of cpumasks
-
- Documentation/core-api/union_find.rst         | 101 ++++++++++++++++++
- .../zh_CN/core-api/union_find.rst             |  86 +++++++++++++++
- MAINTAINERS                                   |   9 ++
- include/linux/union_find.h                    |  24 +++++
- kernel/cgroup/cpuset.c                        |  96 +++++++----------
- lib/Makefile                                  |   2 +-
- lib/union_find.c                              |  33 ++++++
- 7 files changed, 291 insertions(+), 60 deletions(-)
- create mode 100644 Documentation/core-api/union_find.rst
- create mode 100644 Documentation/translations/zh_CN/core-api/union_find.rst
- create mode 100644 include/linux/union_find.h
- create mode 100644 lib/union_find.c
+Thanks.
 
 -- 
-2.45.2
-
+tejun
