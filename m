@@ -1,185 +1,230 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DE7F71BF307;
-	Fri, 28 Jun 2024 14:04:55 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+Received: from m16.mail.163.com (m16.mail.163.com [220.197.31.5])
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id 1AD42158DDC;
+	Fri, 28 Jun 2024 16:14:08 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=220.197.31.5
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1719583496; cv=none; b=DOR/dwrscrxeyWzxT43Yd9MQRYRn1mw609QH1DC2MCsSnRW0U1rzZ5FUK/+c64enej5nUXuFTeDbrGvYGIpkELFhn2FHWkwcsIIcq0z9XsFZcIap2R0S7kcDVp6Bmdz8oEkiP3FLBzSXDGsWqpbC8HDoohHHNHX0Dfpyyk4/gc4=
+	t=1719591251; cv=none; b=bYOfqV8GFJc/WuoTqd1FcO/IZ6XR6vXG4xi2hWpE/7NjGye5Tl7+uPS1Lqt2OnMqnJ2Uojvf3F7MPwHt+sKVFkZHewh1gG/pbQg474nJH/oGBhH4D5Y8FHdCdJSedq7nmmQZLAQB8O+XS5jyhWLh9BR91X6v/ozTnckMKvjvUi4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1719583496; c=relaxed/simple;
-	bh=gPsBksBd9/r5KyiQkMqtaVzJ3Jnw9xxaAJaOJd1IL5A=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=Ilb2V4RRqJJZe8D6BRBLn0Ksj2DRI9kAXwa2Pn9s4FdQnkGmItVoROYnK3zlje7SHrdAmEteTr94yyCCw97XXwRG5HKr5dSgEAN6hYm/dmodlwEfIvEHZRfZZJVmALarqr4a/ZHd7WhzJHZZUQarM1vu9FjN3MRGcEgVvDRg4W8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=JrZl5nCo; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1719591251; c=relaxed/simple;
+	bh=/ZLjV4AtG6PE9RE64qHOYEVdhdNaKhQgUm25uI4izAI=;
+	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
+	 MIME-Version; b=q4snwVZLlMRNwz4vPt0Jy5hlYOu6vm4sjZ1UVXGZYQZr1SxjW/jOgvNCNUqXeajAG+WF52Bbvi3dqb5Pwvrwmo96VwdC47igZs3tV9zlp1q4f3PDZBltnA2+kOX3DwRZT79tknx1Yn9HlcjLchwLfaAMMfFYrY242dNJ0odHuG4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=pSQNcblq; arc=none smtp.client-ip=220.197.31.5
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="JrZl5nCo"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 22FC3C116B1;
-	Fri, 28 Jun 2024 14:04:54 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1719583495;
-	bh=gPsBksBd9/r5KyiQkMqtaVzJ3Jnw9xxaAJaOJd1IL5A=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=JrZl5nCoSOg1oFczaYNXOld1XvShBNSqpPU19+yaDf6ERI30kJ5Dorzs0krZKwCBX
-	 oETKiAlQbjACn116sCeEjTwKL5u4AH4m943lebVVjS8pc3ejDEUrBsFdc+0gXFgRm1
-	 vU2W/gzhdm9dudHQSSQpaPEew9f1v4vyUOOa4dPaQCx0PIMX13Sl2SF1rs+yZNCa/o
-	 PDHnlDCgSwVaGcAzxdt+Coft0zyfppm/k9KrjJ+aJoYnxsdJO7OFGeKc3mYsvBlavD
-	 unyIJDu9Xzf7TZiwSoHgPgGhF4XEdPdWJ/SAWYmEX404qo0FB/O8kkJoNSIX9xSyMU
-	 Jm+53XnRA8tKA==
-Date: Fri, 28 Jun 2024 16:04:53 +0200
-From: Maxime Ripard <mripard@kernel.org>
-To: Maarten Lankhorst <maarten.lankhorst@linux.intel.com>
-Cc: intel-xe@lists.freedesktop.org, linux-kernel@vger.kernel.org, 
-	dri-devel@lists.freedesktop.org, Tejun Heo <tj@kernel.org>, Zefan Li <lizefan.x@bytedance.com>, 
-	Johannes Weiner <hannes@cmpxchg.org>, Andrew Morton <akpm@linux-foundation.org>, 
-	Jonathan Corbet <corbet@lwn.net>, David Airlie <airlied@gmail.com>, 
-	Daniel Vetter <daniel@ffwll.ch>, Thomas Zimmermann <tzimmermann@suse.de>, 
-	Friedrich Vock <friedrich.vock@gmx.de>, cgroups@vger.kernel.org, linux-mm@kvack.org, 
-	linux-doc@vger.kernel.org
-Subject: Re: [RFC PATCH 2/6] drm/cgroup: Add memory accounting DRM cgroup
-Message-ID: <20240628-romantic-emerald-snake-7b26ca@houat>
-References: <20240627154754.74828-1-maarten.lankhorst@linux.intel.com>
- <20240627154754.74828-3-maarten.lankhorst@linux.intel.com>
- <20240627-paper-vicugna-of-fantasy-c549ed@houat>
- <6cb7c074-55cb-4825-9f80-5cf07bbd6745@linux.intel.com>
+	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="pSQNcblq"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
+	s=s110527; h=From:Subject:Date:Message-Id:MIME-Version; bh=e26+2
+	q+3hBU2DBzF5851MuqgEXt4Q/cdEKTEV/s7sag=; b=pSQNcblqjulPYUuVA1ewP
+	bWx080z7JFM3P2O9bxeinUlDmYzbrJrm5dLbggXVXuQeQ1wDWcw9ycoWKjAg1S/h
+	ChMqJ2UsMDooZJce0bHBm8jKxN9oFrlmXbOnsEoYelo5eVrJQgbaxHJcHdBKREbj
+	0J42/kHedGtk1ZAFIlCfR8=
+Received: from localhost (unknown [101.132.132.191])
+	by gzga-smtp-mta-g3-5 (Coremail) with SMTP id _____wDX_yoR4X5m0+qRAw--.37690S2;
+	Sat, 29 Jun 2024 00:13:05 +0800 (CST)
+From: Xavier <xavier_qy@163.com>
+To: tj@kernel.org
+Cc: longman@redhat.com,
+	mkoutny@suse.com,
+	lizefan.x@bytedance.com,
+	hannes@cmpxchg.org,
+	cgroups@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	torvalds@linux-foundation.org,
+	akpm@linux-foundation.org,
+	Xavier <xavier_qy@163.com>
+Subject: [PATCH-cpuset v8 2/2] cpuset: use Union-Find to optimize the merging of cpumasks
+Date: Sat, 29 Jun 2024 00:13:02 +0800
+Message-Id: <20240628161302.240043-3-xavier_qy@163.com>
+X-Mailer: git-send-email 2.34.1
+In-Reply-To: <20240628161302.240043-1-xavier_qy@163.com>
+References: <Zn3UaMouBYYIMQr_@slm.duckdns.org>
+ <20240628161302.240043-1-xavier_qy@163.com>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha512;
-	protocol="application/pgp-signature"; boundary="7fymz6tlpfxqxwqn"
-Content-Disposition: inline
-In-Reply-To: <6cb7c074-55cb-4825-9f80-5cf07bbd6745@linux.intel.com>
+Content-Transfer-Encoding: 8bit
+X-CM-TRANSID:_____wDX_yoR4X5m0+qRAw--.37690S2
+X-Coremail-Antispam: 1Uf129KBjvJXoWxAFWfur4kKFyUZFWUJrW3Awb_yoWruF1fpF
+	sakay2qrWrJryUGwsakay8Zw1ak3ykJayUtwnxGw1rtr17A3Z29a40qFs3KFWUZrWq9F1U
+	uF9Igr47Wr18KFJanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x07Ubo7tUUUUU=
+X-CM-SenderInfo: 50dyxvpubt5qqrwthudrp/xtbBchAMEGWXv5R4dgABso
 
+The process of constructing scheduling domains
+ involves multiple loops and repeated evaluations, leading to numerous
+ redundant and ineffective assessments that impact code efficiency.
 
---7fymz6tlpfxqxwqn
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Here, we use Union-Find to optimize the merging of cpumasks. By employing
+path compression and union by rank, we effectively reduce the number of
+lookups and merge comparisons.
 
-Hi,
+Signed-off-by: Xavier <xavier_qy@163.com>
+---
+ kernel/cgroup/cpuset.c | 96 ++++++++++++++++--------------------------
+ 1 file changed, 37 insertions(+), 59 deletions(-)
 
-On Thu, Jun 27, 2024 at 09:22:56PM GMT, Maarten Lankhorst wrote:
-> Den 2024-06-27 kl. 19:16, skrev Maxime Ripard:
-> > Hi,
-> >=20
-> > Thanks for working on this!
-> >=20
-> > On Thu, Jun 27, 2024 at 05:47:21PM GMT, Maarten Lankhorst wrote:
-> > > The initial version was based roughly on the rdma and misc cgroup
-> > > controllers, with a lot of the accounting code borrowed from rdma.
-> > >=20
-> > > The current version is a complete rewrite with page counter; it uses
-> > > the same min/low/max semantics as the memory cgroup as a result.
-> > >=20
-> > > There's a small mismatch as TTM uses u64, and page_counter long pages.
-> > > In practice it's not a problem. 32-bits systems don't really come with
-> > > > =3D4GB cards and as long as we're consistently wrong with units, it=
-'s
-> > > fine. The device page size may not be in the same units as kernel page
-> > > size, and each region might also have a different page size (VRAM vs =
-GART
-> > > for example).
-> > >=20
-> > > The interface is simple:
-> > > - populate drmcgroup_device->regions[..] name and size for each active
-> > >    region, set num_regions accordingly.
-> > > - Call drm(m)cg_register_device()
-> > > - Use drmcg_try_charge to check if you can allocate a chunk of memory,
-> > >    use drmcg_uncharge when freeing it. This may return an error code,
-> > >    or -EAGAIN when the cgroup limit is reached. In that case a refere=
-nce
-> > >    to the limiting pool is returned.
-> > > - The limiting cs can be used as compare function for
-> > >    drmcs_evict_valuable.
-> > > - After having evicted enough, drop reference to limiting cs with
-> > >    drmcs_pool_put.
-> > >=20
-> > > This API allows you to limit device resources with cgroups.
-> > > You can see the supported cards in /sys/fs/cgroup/drm.capacity
-> > > You need to echo +drm to cgroup.subtree_control, and then you can
-> > > partition memory.
-> > >=20
-> > > Signed-off-by: Maarten Lankhorst<maarten.lankhorst@linux.intel.com>
-> > > Co-developed-by: Friedrich Vock<friedrich.vock@gmx.de>
-> > I'm sorry, I should have wrote minutes on the discussion we had with TJ
-> > and Tvrtko the other day.
-> >=20
-> > We're all very interested in making this happen, but doing a "DRM"
-> > cgroup doesn't look like the right path to us.
-> >=20
-> > Indeed, we have a significant number of drivers that won't have a
-> > dedicated memory but will depend on DMA allocations one way or the
-> > other, and those pools are shared between multiple frameworks (DRM,
-> > V4L2, DMA-Buf Heaps, at least).
-> >=20
-> > This was also pointed out by Sima some time ago here:
-> > https://lore.kernel.org/amd-gfx/YCVOl8%2F87bqRSQei@phenom.ffwll.local/
-> >=20
-> > So we'll want that cgroup subsystem to be cross-framework. We settled on
-> > a "device" cgroup during the discussion, but I'm sure we'll have plenty
-> > of bikeshedding.
-> >=20
-> > The other thing we agreed on, based on the feedback TJ got on the last
-> > iterations of his series was to go for memcg for drivers not using DMA
-> > allocations.
-> >=20
-> > It's the part where I expect some discussion there too :)
-> >=20
-> > So we went back to a previous version of TJ's work, and I've started to
-> > work on:
-> >=20
-> >    - Integration of the cgroup in the GEM DMA and GEM VRAM helpers (this
-> >      works on tidss right now)
-> >=20
-> >    - Integration of all heaps into that cgroup but the system one
-> >      (working on this at the moment)
->=20
-> Should be similar to what I have then. I think you could use my work to
-> continue it.
->=20
-> I made nothing DRM specific except the name, if you renamed it the device
-> resource management cgroup and changed the init function signature to tak=
-e a
-> name instead of a drm pointer, nothing would change. This is exactly what
-> I'm hoping to accomplish, including reserving memory.
+diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
+index fe76045aa5..c435814ba8 100644
+--- a/kernel/cgroup/cpuset.c
++++ b/kernel/cgroup/cpuset.c
+@@ -45,6 +45,8 @@
+ #include <linux/cgroup.h>
+ #include <linux/wait.h>
+ #include <linux/workqueue.h>
++#include <linux/union_find.h>
++#include <linux/vmalloc.h>
+ 
+ DEFINE_STATIC_KEY_FALSE(cpusets_pre_enable_key);
+ DEFINE_STATIC_KEY_FALSE(cpusets_enabled_key);
+@@ -172,9 +174,6 @@ struct cpuset {
+ 	 */
+ 	int attach_in_progress;
+ 
+-	/* partition number for rebuild_sched_domains() */
+-	int pn;
+-
+ 	/* for custom sched domain */
+ 	int relax_domain_level;
+ 
+@@ -208,6 +207,9 @@ struct cpuset {
+ 
+ 	/* Remote partition silbling list anchored at remote_children */
+ 	struct list_head remote_sibling;
++
++	/* Used to merge intersecting subsets for generate_sched_domains*/
++	struct uf_node node;
+ };
+ 
+ /*
+@@ -1007,7 +1009,7 @@ static int generate_sched_domains(cpumask_var_t **domains,
+ 	struct cpuset *cp;	/* top-down scan of cpusets */
+ 	struct cpuset **csa;	/* array of all cpuset ptrs */
+ 	int csn;		/* how many cpuset ptrs in csa so far */
+-	int i, j, k;		/* indices for partition finding loops */
++	int i, j;		/* indices for partition finding loops */
+ 	cpumask_var_t *doms;	/* resulting partition; i.e. sched domains */
+ 	struct sched_domain_attr *dattr;  /* attributes for custom domains */
+ 	int ndoms = 0;		/* number of sched domains in result */
+@@ -1015,6 +1017,7 @@ static int generate_sched_domains(cpumask_var_t **domains,
+ 	struct cgroup_subsys_state *pos_css;
+ 	bool root_load_balance = is_sched_load_balance(&top_cpuset);
+ 	bool cgrpv2 = cgroup_subsys_on_dfl(cpuset_cgrp_subsys);
++	int nslot_update;
+ 
+ 	doms = NULL;
+ 	dattr = NULL;
+@@ -1102,31 +1105,25 @@ static int generate_sched_domains(cpumask_var_t **domains,
+ 	if (root_load_balance && (csn == 1))
+ 		goto single_root_domain;
+ 
+-	for (i = 0; i < csn; i++)
+-		csa[i]->pn = i;
+-	ndoms = csn;
+-
+-restart:
+-	/* Find the best partition (set of sched domains) */
+-	for (i = 0; i < csn; i++) {
+-		struct cpuset *a = csa[i];
+-		int apn = a->pn;
++	if (!cgrpv2) {
++		for (i = 0; i < csn; i++)
++			uf_nodes_init(&csa[i]->node);
+ 
+-		for (j = 0; j < csn; j++) {
+-			struct cpuset *b = csa[j];
+-			int bpn = b->pn;
+-
+-			if (apn != bpn && cpusets_overlap(a, b)) {
+-				for (k = 0; k < csn; k++) {
+-					struct cpuset *c = csa[k];
+-
+-					if (c->pn == bpn)
+-						c->pn = apn;
+-				}
+-				ndoms--;	/* one less element */
+-				goto restart;
++		/* Merge overlapping cpusets */
++		for (i = 0; i < csn; i++) {
++			for (j = i + 1; j < csn; j++) {
++				if (cpusets_overlap(csa[i], csa[j]))
++					uf_union(&csa[i]->node, &csa[j]->node);
+ 			}
+ 		}
++
++		/* Count the total number of domains */
++		for (i = 0; i < csn; i++) {
++			if (csa[i]->node.parent == &csa[i]->node)
++				ndoms++;
++		}
++	} else {
++		ndoms = csn;
+ 	}
+ 
+ 	/*
+@@ -1159,44 +1156,25 @@ static int generate_sched_domains(cpumask_var_t **domains,
+ 	}
+ 
+ 	for (nslot = 0, i = 0; i < csn; i++) {
+-		struct cpuset *a = csa[i];
+-		struct cpumask *dp;
+-		int apn = a->pn;
+-
+-		if (apn < 0) {
+-			/* Skip completed partitions */
+-			continue;
+-		}
+-
+-		dp = doms[nslot];
+-
+-		if (nslot == ndoms) {
+-			static int warnings = 10;
+-			if (warnings) {
+-				pr_warn("rebuild_sched_domains confused: nslot %d, ndoms %d, csn %d, i %d, apn %d\n",
+-					nslot, ndoms, csn, i, apn);
+-				warnings--;
+-			}
+-			continue;
+-		}
+-
+-		cpumask_clear(dp);
+-		if (dattr)
+-			*(dattr + nslot) = SD_ATTR_INIT;
++		nslot_update = 0;
+ 		for (j = i; j < csn; j++) {
+-			struct cpuset *b = csa[j];
+-
+-			if (apn == b->pn) {
+-				cpumask_or(dp, dp, b->effective_cpus);
++			if (uf_find(&csa[j]->node) == &csa[i]->node) {
++				struct cpumask *dp = doms[nslot];
++
++				if (i == j) {
++					nslot_update = 1;
++					cpumask_clear(dp);
++					if (dattr)
++						*(dattr + nslot) = SD_ATTR_INIT;
++				}
++				cpumask_or(dp, dp, csa[j]->effective_cpus);
+ 				cpumask_and(dp, dp, housekeeping_cpumask(HK_TYPE_DOMAIN));
+ 				if (dattr)
+-					update_domain_attr_tree(dattr + nslot, b);
+-
+-				/* Done with this partition */
+-				b->pn = -1;
++					update_domain_attr_tree(dattr + nslot, csa[j]);
+ 			}
+ 		}
+-		nslot++;
++		if (nslot_update)
++			nslot++;
+ 	}
+ 	BUG_ON(nslot != ndoms);
+ 
+-- 
+2.45.2
 
-I've started to work on rebasing my current work onto your series today,
-and I'm not entirely sure how what I described would best fit. Let's
-assume we have two KMS device, one using shmem, one using DMA
-allocations, two heaps, one using the page allocator, the other using
-CMA, and one v4l2 device using dma allocations.
-
-So we would have one KMS device and one heap using the page allocator,
-and one KMS device, one heap, and one v4l2 driver using the DMA
-allocator.
-
-Would these make different cgroup devices, or different cgroup regions?
-
-> The nice thing is that it should be similar to the memory cgroup controll=
-er
-> in semantics, so you would have the same memory behavior whether you use =
-the
-> device cgroup or memory cgroup.
->=20
-> I'm sad I missed the discussion, but hopefully we can coordinate more now
-> that we know we're both working on it. :)
-
-Yeah, definitely :)
-
-Maxime
-
---7fymz6tlpfxqxwqn
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-
-iHUEABYKAB0WIQRcEzekXsqa64kGDp7j7w1vZxhRxQUCZn7DBAAKCRDj7w1vZxhR
-xWlJAP0UNWQ0gcwWNN/Im1DgFf7X2Yi5sSP1W1uEZE9I0hrrPAEAuZ5tF02to94P
-dCchG/vB5gsWEnB2EerIOPqG6gW4tw4=
-=J4LC
------END PGP SIGNATURE-----
-
---7fymz6tlpfxqxwqn--
