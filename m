@@ -1,90 +1,131 @@
-Received: from m16.mail.163.com (m16.mail.163.com [117.135.210.3])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id 8803A1A073A;
-	Thu,  4 Jul 2024 06:28:17 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=117.135.210.3
+Received: from mail-ej1-f54.google.com (mail-ej1-f54.google.com [209.85.218.54])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+	(No client certificate requested)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 16B7319409E
+	for <cgroups@vger.kernel.org>; Thu,  4 Jul 2024 12:12:32 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.218.54
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1720074501; cv=none; b=IiDBT0aaOSJNywSF1WTFn9e0u99LBjeyTc02W0vdfsf3ZO7uppIvmkmy1ZH68eLNIiqKr0ybPJjy+4JCH3RuFPr7dZscd0J07gbUlFJiCOseArvFd8zaE+8rVsvPryzscfFSwfiS8U6jQWjaLuF3fz3e2lz7FUn+0GKVOT1kdzw=
+	t=1720095155; cv=none; b=fxVtfnh6bAcAKC2/aUgufe0ypDgZzp02+VJ0j9Y7Wf7GBDb8O+RPvzOqfFFlDzF27HHQxjRny0b/E8cJ1RgskBevUsnizW+msAhi149qE6UyUyZ4wiM8rARVq9Cp/yQUAm7NnhmVDtdFDQRAWSDazgNWv41y8+lKiSkQ5LL5xCo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1720074501; c=relaxed/simple;
-	bh=jmAGYAWvVFx29NTFX0+hp6ZS67rPGmxR57sTA7UFRoc=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=efMFjYrbsmB4I/mp1XnxlcgezTriLYgvcZgcsXC4WoZ9TYHt318754x2NV5wZmRsweMip3/VlPxZlFvev5YJGBTn8rXGihiLo77jGftLKvtYdTHU4yarpcdgB9P6ZezjpFoB8bIFSeRNzBQOarsO/am8q0Np7mqeEYG4dNsmBQk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=C0sdWI3e; arc=none smtp.client-ip=117.135.210.3
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
+	s=arc-20240116; t=1720095155; c=relaxed/simple;
+	bh=/L8RpMI0AIzYt3SDf5oEdlmD7357rNaV1BZH1go1oxg=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=NrB00BKW9roPhOD/hQwafknnFCH1mqNcuzo0pz8E3YHJHtJocCmf2yQKpBxMX2aTBt1CCb90a30gFXbIDdWOu7un9fKwmtyInK399uaqj6XXLyvH4zg0wVHgWqBOj9XEgC+UmIC/8c0kJ6Mc+ELlTz4B+cnE41ayTwmidZJe53Q=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com; spf=pass smtp.mailfrom=suse.com; dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b=SvnGp9fd; arc=none smtp.client-ip=209.85.218.54
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="C0sdWI3e"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
-	s=s110527; h=From:Subject:Date:Message-Id:MIME-Version; bh=/Cug2
-	j7MBohQB8bLgLOZuspJus1Qjeu0I4RhS1pDqn4=; b=C0sdWI3eNSX5q3mXkhJlr
-	oEDDbeEmJuS4dyaEFOdwfGZkIRTP18Mqr8Qm1SrREi6fd/NahHf87qM5iy6MdzN6
-	OMKBtojQYcuXVTKNB0/osm8t7i3zuTNMTKYQUweNbAKXYGb8V29iBtxcqPnjiIP3
-	8cdj8J7bNDaD/zgbcTkYfo=
-Received: from localhost (unknown [101.132.132.191])
-	by gzga-smtp-mta-g3-2 (Coremail) with SMTP id _____wD3ny8uQIZmhJgTAg--.15986S2;
-	Thu, 04 Jul 2024 14:24:46 +0800 (CST)
-From: Xavier <xavier_qy@163.com>
-To: tj@kernel.org,
-	longman@redhat.com,
-	mkoutny@suse.com
-Cc: akpm@linux-foundation.org,
-	lizefan.x@bytedance.com,
-	hannes@cmpxchg.org,
-	cgroups@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	torvalds@linux-foundation.org,
-	Xavier <xavier_qy@163.com>
-Subject: [PATCH-cpuset v11 0/2] Add Union-Find and use it to optimize cpuset
-Date: Thu,  4 Jul 2024 14:24:42 +0800
-Message-Id: <20240704062444.262211-1-xavier_qy@163.com>
-X-Mailer: git-send-email 2.34.1
-In-Reply-To: <f9e55eb8-82a8-45f2-a949-1db182e95fc8@redhat.com>
-References: <f9e55eb8-82a8-45f2-a949-1db182e95fc8@redhat.com>
+	dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b="SvnGp9fd"
+Received: by mail-ej1-f54.google.com with SMTP id a640c23a62f3a-a77af4cd570so36412966b.1
+        for <cgroups@vger.kernel.org>; Thu, 04 Jul 2024 05:12:32 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=suse.com; s=google; t=1720095151; x=1720699951; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=30WkcI2XN7ZKxp46jucJdLjj2rsE35KOzhzMbBHJY6M=;
+        b=SvnGp9fdeL9kjd89eXKPl6upfFXuEFx4d2Ckj7eRuOuJY7wPlbJq33ZTONCk0X3rm/
+         j0G0Qr9S+LKqj+Yp5ji2wpD1eNim6e8Q/oEv7QDaSFyJ+IxPrv5QDm4smJ8chl1jCMmZ
+         cy34uVeCXN3ffSU89Q/KDNN/3X/+X55v2knik/7tUtoRp5KIM12MI07OOH98ewckqIVX
+         EipgWpdAkmiNMmDRvQbQGgmXnTIMCEjyGsdX52LBhH60jPdyXCim1FZxbfP1ONyIMQOy
+         rRQxjTo7EwSQf6i3nfavJ7LzF/GUVj5s8q1kkbj+cc4UahgjPOcsQViK81cZmNZS+VK0
+         chyQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1720095151; x=1720699951;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=30WkcI2XN7ZKxp46jucJdLjj2rsE35KOzhzMbBHJY6M=;
+        b=w98wXSy8/Ve7BtMocq9C9RRcgpHjMNKNAa8jM7CcxuHtbTQXJj1Go2tA0us6nB9VGy
+         Rqo34ql5oaU4cMClgvPBFFboI/NpCn6svXDOHJcvGPUmevXiZJZxKv62G658gT4Yw0/Z
+         6Wo5VRFonYvMynnOKHgxQnhC7R1zFnJDpN1FG+NOZxWfrEDP03bJgalfPN6bmq3Hnt/i
+         wNvSkdEaLuURsXYuYH/INIW7uy6X42v0MKg598MIxdq+oqSOZ87JorjcqKS2IJ781hK3
+         E5BBz630pvPykdgYEsls84EQ1/Acyk5rgYS5nTPinNUlHe7cYMe2mzl2RDeEyvlQGxrW
+         WSNQ==
+X-Forwarded-Encrypted: i=1; AJvYcCWKkEIJz659pbOx1JHv26t1i/1iBtW46PZiGn0LoCwvR/Yk85bEmj4BFS1Ciial5D8uvYezHAagh5VvuTi4yaET1YalEHWLBQ==
+X-Gm-Message-State: AOJu0Yx4DlBkQBKosMzuE+vMAH2RAToR6LchwkTyd4ZlJHCbYIRp0HVK
+	+OER7+ZDU/JDBHsgB4RQKZAp09IYaYJOzzRYl3zNVbBUTbJvKNMQ/CFHbgvuyHHENkkwcwxoS8e
+	P37o=
+X-Google-Smtp-Source: AGHT+IFw/pQrCU942dv1/+ZVwuZjVBu1zYboDoTUa7dDrxssvyk1Ho3MZM3/M2ZDqxAaktRuo8S0DQ==
+X-Received: by 2002:a05:6402:2792:b0:578:638e:3683 with SMTP id 4fb4d7f45d1cf-58e5994e612mr1652698a12.5.1720095151366;
+        Thu, 04 Jul 2024 05:12:31 -0700 (PDT)
+Received: from blackdock.suse.cz ([193.86.92.181])
+        by smtp.gmail.com with ESMTPSA id 4fb4d7f45d1cf-58eeabbf108sm194512a12.93.2024.07.04.05.12.30
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 04 Jul 2024 05:12:30 -0700 (PDT)
+Date: Thu, 4 Jul 2024 14:12:29 +0200
+From: Michal =?utf-8?Q?Koutn=C3=BD?= <mkoutny@suse.com>
+To: Xavier <xavier_qy@163.com>
+Cc: tj@kernel.org, longman@redhat.com, akpm@linux-foundation.org, 
+	lizefan.x@bytedance.com, hannes@cmpxchg.org, cgroups@vger.kernel.org, 
+	linux-kernel@vger.kernel.org, torvalds@linux-foundation.org
+Subject: Re: [PATCH-cpuset v10 1/2] Union-Find: add a new module in kernel
+ library
+Message-ID: <ga4sohvmxgu4hr5o2l5uylb3ryjfqbn7z4nlqb7gryw5lk5rdo@lgqh5rndrfln>
+References: <ZoRThI4lcZLxBlwc@slm.duckdns.org>
+ <20240703063727.258722-1-xavier_qy@163.com>
+ <20240703063727.258722-2-xavier_qy@163.com>
+ <haimyc4y2trcyvbnkpw2gkfoiaunykb2q2d5ybr6qgt6upf3lm@afhcevtyjcjl>
+ <13bf9422.aeb4.1907852c7ce.Coremail.xavier_qy@163.com>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:_____wD3ny8uQIZmhJgTAg--.15986S2
-X-Coremail-Antispam: 1Uf129KBjvdXoW7Xw15uF1rWF18AF4UXFyrJFb_yoWkZFgEgw
-	4kXa4jkw1UZFn7WFWfCFyrtFW29rWj9ry0k3Z8tF47XF4DJwsrGrykJ3s8X3yUX3WDJr43
-	JF98tr4xtrnFgjkaLaAFLSUrUUUUjb8apTn2vfkv8UJUUUU8Yxn0WfASr-VFAUDa7-sFnT
-	9fnUUvcSsGvfC2KfnxnUUI43ZEXa7IUUcyCJUUUUU==
-X-CM-SenderInfo: 50dyxvpubt5qqrwthudrp/xtbBcg4REGWXwAGx3AABsi
+Content-Type: multipart/signed; micalg=pgp-sha512;
+	protocol="application/pgp-signature"; boundary="zwr5qrurnxwgzr3x"
+Content-Disposition: inline
+In-Reply-To: <13bf9422.aeb4.1907852c7ce.Coremail.xavier_qy@163.com>
 
-Hi all,
 
-Based on Michal's suggestion, the following changes were made:
-1. Changed Union-Find to union-find in all places except the title.
-2. Optimized the logic of the uf_union function.
-3. Modified places where csa[i]->node.parent was used directly.
+--zwr5qrurnxwgzr3x
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-To Longman,
-Regarding the modifications for supporting cpuset merging in both cgroup
-v1 and v2, do you mean that you will continue to complete them after my
-patch is merged?
+On Wed, Jul 03, 2024 at 07:20:09PM GMT, Xavier <xavier_qy@163.com> wrote:
+> >Xavier, not sure if you responded to my suggestion of considered zeroed
+> >object a valid initialized one. That could save some init work (and
+> >move it to alternative uf_find, see below).
+> >
+> >With uf_find body checking for NULL:
+> >
+> >	while (node->parent !=3D node) {
+> >		parent =3D node->parent;
+> >		node->parent =3D parent ? parent->parent : node;
+> >		node =3D node->parent;
+> >	}
+>=20
+> Yes, I noticed your suggestion. In patch v4, I implemented it by
+> initializing to 0 and adding a check for whether the parent is 0 in
+> uf_find.
 
-Kindly review.
+Ah, I didn't read all versions. (You may consider adding a short
+changelog when sending a new version of patches where main evolution
+points are summed up. ;-))
 
-Xavier (2):
-  Union-Find: add a new module in kernel library
-  cpuset: use Union-Find to optimize the merging of cpumasks
+> However, later, when I was reviewing the algorithm's documentation, I
+> noticed it requires initialization to itself.
 
- Documentation/core-api/union_find.rst         | 102 ++++++++++++++++
- .../zh_CN/core-api/union_find.rst             |  87 +++++++++++++
- MAINTAINERS                                   |   9 ++
- include/linux/union_find.h                    |  41 +++++++
- kernel/cgroup/cpuset.c                        | 114 +++++++-----------
- lib/Makefile                                  |   2 +-
- lib/union_find.c                              |  49 ++++++++
- 7 files changed, 333 insertions(+), 71 deletions(-)
- create mode 100644 Documentation/core-api/union_find.rst
- create mode 100644 Documentation/translations/zh_CN/core-api/union_find.rst
- create mode 100644 include/linux/union_find.h
- create mode 100644 lib/union_find.c
+Well, that's not a hard requirement.
 
--- 
-2.45.0
+> Moreover, uf_find is a high-frequency operation, if we add a parent
+> check within it, the efficiency impact each time would be more
+> significant than initializing once. Therefore, I adhered to the
+> initialization to itself approach.
 
+I see, thanks for the clarifications,
+Michal
+
+--zwr5qrurnxwgzr3x
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iHUEABYKAB0WIQTd6mfF2PbEZnpdoAkt3Wney77BSQUCZoaRqAAKCRAt3Wney77B
+SeeiAQCo1j0ve5vYgiced6AV3KscuwHWw54IB3C1CMEj1F6/yQEA8lXi8eFLlMl9
++injSP+dwCnJuw6bux4jE9pIkuF49AI=
+=TMIo
+-----END PGP SIGNATURE-----
+
+--zwr5qrurnxwgzr3x--
