@@ -1,47 +1,38 @@
-Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
+Received: from szxga03-in.huawei.com (szxga03-in.huawei.com [45.249.212.189])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DF36014F9E5;
-	Thu, 11 Jul 2024 09:03:19 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.51
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 267B72209B;
+	Thu, 11 Jul 2024 10:23:36 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.189
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1720688602; cv=none; b=kKWSJUTqMigLOb0JoknTircwCdYAej0wI25tOD4gr6OgUWA0xzXcqshE4VCqKdUzLRV5nG8NuOBkwFKBaZibmixTAQwUMdD4XvINMkE4Yectpx1d0oCDp6XG3GQkDv8awi+i3tWgbAPMNF14PpajG9Wjef6H0Bk/PVByjaiGmLQ=
+	t=1720693420; cv=none; b=vBzhHDp1B3LAWnSPygtl93n4lDDVElCT6+pjJhTJzRM/+LuuP2fL33sBeqajcivSQLffRCzOxurv1LDPSNc63pe/ZZWpceUVsJE30bzqStCPBja28HZ/zSFS565f4hpxcSOsOmknO+um6SfOacZ7maLQQeiM6Ad8wUn/fCVwMUA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1720688602; c=relaxed/simple;
-	bh=ayK7Av2eobw9Jb795Algcx8XW3pCGg96Jxv2WBIVM7k=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=AE22RGrAOFuQnG9Tx8KKoODyVvP8k1chR619/qazK/qJPN9YKMCipEvME9V56FUAt2f0QfVdiKLErks21+UJDaHtkXSufClLqI6od64/KX4c3y+ud3g+nkQIPvnbn7TTmkN0z/Yz7PRgSKKJoSjncQq+JbwuyeG7HO7RbUFaUFg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.51
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
-Received: from mail.maildlp.com (unknown [172.19.163.235])
-	by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4WKTK30K4xz4f3jtD;
-	Thu, 11 Jul 2024 17:03:03 +0800 (CST)
-Received: from mail02.huawei.com (unknown [10.116.40.75])
-	by mail.maildlp.com (Postfix) with ESMTP id B2CFC1A0568;
-	Thu, 11 Jul 2024 17:03:10 +0800 (CST)
-Received: from huaweicloud.com (unknown [10.175.104.67])
-	by APP2 (Coremail) with SMTP id Syh0CgB34YbMn49msI0qBw--.62219S5;
-	Thu, 11 Jul 2024 17:03:10 +0800 (CST)
-From: Yu Kuai <yukuai1@huaweicloud.com>
-To: tj@kernel.org,
-	josef@toxicpanda.com,
-	bvanassche@acm.org,
-	jack@suse.cz,
-	axboe@kernel.dk
-Cc: cgroups@vger.kernel.org,
-	linux-block@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	yukuai3@huawei.com,
-	yukuai1@huaweicloud.com,
-	yi.zhang@huawei.com,
-	yangerkun@huawei.com
-Subject: [PATCH 1/2] blk-ioprio: remove ioprio_blkcg_from_bio()
-Date: Thu, 11 Jul 2024 17:00:58 +0800
-Message-Id: <20240711090059.3998565-2-yukuai1@huaweicloud.com>
-X-Mailer: git-send-email 2.39.2
-In-Reply-To: <20240711090059.3998565-1-yukuai1@huaweicloud.com>
-References: <20240711090059.3998565-1-yukuai1@huaweicloud.com>
+	s=arc-20240116; t=1720693420; c=relaxed/simple;
+	bh=mRiJQf8HlUUGHS/Aw8yW+dJgWms8uN86w7mo04vnImw=;
+	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=NEKOBHygYjY0mjZUmRfpu0j6PZVd7suMg9bl3gH7j1/w9LXLeXXQMEKUd6M9thIyHBgLuZGJUKIUfPPCCRnu3ASJfULVNK0EuSYDeCdcrDwDJMVcCFPIoUcHOMFXbkqhhZ/aS4B8SXUJzTy+LeV6Cao4NrrJUAbKE0sBqRcPeXw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; arc=none smtp.client-ip=45.249.212.189
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
+Received: from mail.maildlp.com (unknown [172.19.88.194])
+	by szxga03-in.huawei.com (SkyGuard) with ESMTP id 4WKW1P1dvfzQkjL;
+	Thu, 11 Jul 2024 18:19:37 +0800 (CST)
+Received: from dggpeml500023.china.huawei.com (unknown [7.185.36.114])
+	by mail.maildlp.com (Postfix) with ESMTPS id 246CF1401E0;
+	Thu, 11 Jul 2024 18:23:34 +0800 (CST)
+Received: from hulk-vt.huawei.com (10.67.174.26) by
+ dggpeml500023.china.huawei.com (7.185.36.114) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.1.2507.39; Thu, 11 Jul 2024 18:23:33 +0800
+From: Xiu Jianfeng <xiujianfeng@huawei.com>
+To: <tj@kernel.org>, <lizefan.x@bytedance.com>, <hannes@cmpxchg.org>,
+	<corbet@lwn.net>, <haitao.huang@linux.intel.com>, <rdunlap@infradead.org>,
+	<kamalesh.babulal@oracle.com>
+CC: <cgroups@vger.kernel.org>, <linux-doc@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>
+Subject: [PATCH -next] cgroup/misc: Introduce misc.events.local
+Date: Thu, 11 Jul 2024 10:14:57 +0000
+Message-ID: <20240711101457.2963104-1-xiujianfeng@huawei.com>
+X-Mailer: git-send-email 2.34.1
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
@@ -49,68 +40,144 @@ List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:Syh0CgB34YbMn49msI0qBw--.62219S5
-X-Coremail-Antispam: 1UD129KBjvJXoW7tr43tFW7ArWDuF4rWF1kGrg_yoW8Gw4fpF
-	43Grs0kFWv9F4Iqr4DWa1xAr9akay7tr15J3s5Ka1Yvr4Uur98K3WrCrs3JFW8AFWUCrZx
-	uF1vqFyUJF4UCwUanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDU0xBIdaVrnRJUUUBE14x267AKxVWrJVCq3wAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
-	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2048vs2IY020E87I2jVAFwI0_Jr4l82xGYIkIc2
-	x26xkF7I0E14v26r4j6ryUM28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48ve4kI8wA2z4x0
-	Y4vE2Ix0cI8IcVAFwI0_Ar0_tr1l84ACjcxK6xIIjxv20xvEc7CjxVAFwI0_Gr1j6F4UJw
-	A2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x0267AKxVW0oVCq3wAS
-	0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG6I80ewAv7VC0I7IYx2
-	IY67AKxVWUJVWUGwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFVCjc4AY6r1j6r4UM4x0
-	Y48IcxkI7VAKI48JM4x0x7Aq67IIx4CEVc8vx2IErcIFxwACI402YVCY1x02628vn2kIc2
-	xKxwCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7xkEbVWUJVW8JwC20s026c02F40E14v2
-	6r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E67AF67kF1VAFwI0_Jw0_GFylIxkGc2
-	Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUJVWUCwCI42IY6xIIjxv20xvEc7CjxVAFwI0_
-	Gr0_Cr1lIxAIcVCF04k26cxKx2IYs7xG6r1j6r1xMIIF0xvEx4A2jsIE14v26r1j6r4UMI
-	IF0xvEx4A2jsIEc7CjxVAFwI0_Gr0_Gr1UYxBIdaVFxhVjvjDU0xZFpf9x0JU4T5dUUUUU
-	=
-X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
+Content-Type: text/plain
+X-ClientProxiedBy: dggems704-chm.china.huawei.com (10.3.19.181) To
+ dggpeml500023.china.huawei.com (7.185.36.114)
 
-From: Yu Kuai <yukuai3@huawei.com>
+Currently the event counting provided by misc.events is hierarchical,
+it's not practical if user is only concerned with events of a
+specified cgroup. Therefore, introduce misc.events.local collect events
+specific to the given cgroup.
 
-Currently, if config is enabled, then ioprio is always enabeld by
-default from blkcg_init_disk(), hence there is no point to check if
-the policy is enabled from blkg in ioprio_blkcg_from_bio(). Hence remove
-it and get blkcg directly from bio.
+This is analogous to memory.events.local and pids.events.local.
 
-Signed-off-by: Yu Kuai <yukuai3@huawei.com>
+Signed-off-by: Xiu Jianfeng <xiujianfeng@huawei.com>
 ---
- block/blk-ioprio.c | 12 +-----------
- 1 file changed, 1 insertion(+), 11 deletions(-)
+ Documentation/admin-guide/cgroup-v2.rst |  5 ++++
+ include/linux/misc_cgroup.h             |  3 ++
+ kernel/cgroup/misc.c                    | 39 +++++++++++++++++++++----
+ 3 files changed, 41 insertions(+), 6 deletions(-)
 
-diff --git a/block/blk-ioprio.c b/block/blk-ioprio.c
-index 4051fada01f1..ae52b418e984 100644
---- a/block/blk-ioprio.c
-+++ b/block/blk-ioprio.c
-@@ -84,16 +84,6 @@ ioprio_blkcg_from_css(struct cgroup_subsys_state *css)
- 	return blkcg_to_ioprio_blkcg(css_to_blkcg(css));
+diff --git a/Documentation/admin-guide/cgroup-v2.rst b/Documentation/admin-guide/cgroup-v2.rst
+index adf77ed92687..6c6075ed4aa5 100644
+--- a/Documentation/admin-guide/cgroup-v2.rst
++++ b/Documentation/admin-guide/cgroup-v2.rst
+@@ -2692,6 +2692,11 @@ Miscellaneous controller provides 3 interface files. If two misc resources (res_
+ 		The number of times the cgroup's resource usage was
+ 		about to go over the max boundary.
+ 
++  misc.events.local
++        Similar to misc.events but the fields in the file are local to the
++        cgroup i.e. not hierarchical. The file modified event generated on
++        this file reflects only the local events.
++
+ Migration and Ownership
+ ~~~~~~~~~~~~~~~~~~~~~~~
+ 
+diff --git a/include/linux/misc_cgroup.h b/include/linux/misc_cgroup.h
+index 618392d41975..49eef10c8e59 100644
+--- a/include/linux/misc_cgroup.h
++++ b/include/linux/misc_cgroup.h
+@@ -40,6 +40,7 @@ struct misc_res {
+ 	atomic64_t watermark;
+ 	atomic64_t usage;
+ 	atomic64_t events;
++	atomic64_t events_local;
+ };
+ 
+ /**
+@@ -53,6 +54,8 @@ struct misc_cg {
+ 
+ 	/* misc.events */
+ 	struct cgroup_file events_file;
++	/* misc.events.local */
++	struct cgroup_file events_local_file;
+ 
+ 	struct misc_res res[MISC_CG_RES_TYPES];
+ };
+diff --git a/kernel/cgroup/misc.c b/kernel/cgroup/misc.c
+index b92daf5d234d..0e26068995a6 100644
+--- a/kernel/cgroup/misc.c
++++ b/kernel/cgroup/misc.c
+@@ -134,6 +134,17 @@ static void misc_cg_update_watermark(struct misc_res *res, u64 new_usage)
+ 	}
  }
  
--static struct ioprio_blkcg *ioprio_blkcg_from_bio(struct bio *bio)
--{
--	struct blkg_policy_data *pd = blkg_to_pd(bio->bi_blkg, &ioprio_policy);
--
--	if (!pd)
--		return NULL;
--
--	return blkcg_to_ioprio_blkcg(pd->blkg->blkcg);
--}
--
- static int ioprio_show_prio_policy(struct seq_file *sf, void *v)
- {
- 	struct ioprio_blkcg *blkcg = ioprio_blkcg_from_css(seq_css(sf));
-@@ -186,7 +176,7 @@ static struct blkcg_policy ioprio_policy = {
++static void misc_cg_event(enum misc_res_type type, struct misc_cg *cg)
++{
++	atomic64_inc(&cg->res[type].events_local);
++	cgroup_file_notify(&cg->events_local_file);
++
++	for (; parent_misc(cg); cg = parent_misc(cg)) {
++		atomic64_inc(&cg->res[type].events);
++		cgroup_file_notify(&cg->events_file);
++	}
++}
++
+ /**
+  * misc_cg_try_charge() - Try charging the misc cgroup.
+  * @type: Misc res type to charge.
+@@ -177,10 +188,7 @@ int misc_cg_try_charge(enum misc_res_type type, struct misc_cg *cg, u64 amount)
+ 	return 0;
  
- void blkcg_set_ioprio(struct bio *bio)
- {
--	struct ioprio_blkcg *blkcg = ioprio_blkcg_from_bio(bio);
-+	struct ioprio_blkcg *blkcg = blkcg_to_ioprio_blkcg(bio->bi_blkg->blkcg);
- 	u16 prio;
+ err_charge:
+-	for (j = i; j; j = parent_misc(j)) {
+-		atomic64_inc(&j->res[type].events);
+-		cgroup_file_notify(&j->events_file);
+-	}
++	misc_cg_event(type, i);
  
- 	if (!blkcg || blkcg->prio_policy == POLICY_NO_CHANGE)
+ 	for (j = cg; j != i; j = parent_misc(j))
+ 		misc_cg_cancel_charge(type, j, amount);
+@@ -368,20 +376,33 @@ static int misc_cg_capacity_show(struct seq_file *sf, void *v)
+ 	return 0;
+ }
+ 
+-static int misc_events_show(struct seq_file *sf, void *v)
++static int __misc_events_show(struct seq_file *sf, bool local)
+ {
+ 	struct misc_cg *cg = css_misc(seq_css(sf));
+ 	u64 events;
+ 	int i;
+ 
+ 	for (i = 0; i < MISC_CG_RES_TYPES; i++) {
+-		events = atomic64_read(&cg->res[i].events);
++		if (local)
++			events = atomic64_read(&cg->res[i].events_local);
++		else
++			events = atomic64_read(&cg->res[i].events);
+ 		if (READ_ONCE(misc_res_capacity[i]) || events)
+ 			seq_printf(sf, "%s.max %llu\n", misc_res_name[i], events);
+ 	}
+ 	return 0;
+ }
+ 
++static int misc_events_show(struct seq_file *sf, void *v)
++{
++	return __misc_events_show(sf, false);
++}
++
++static int misc_events_local_show(struct seq_file *sf, void *v)
++{
++	return __misc_events_show(sf, true);
++}
++
+ /* Misc cgroup interface files */
+ static struct cftype misc_cg_files[] = {
+ 	{
+@@ -409,6 +430,12 @@ static struct cftype misc_cg_files[] = {
+ 		.file_offset = offsetof(struct misc_cg, events_file),
+ 		.seq_show = misc_events_show,
+ 	},
++	{
++		.name = "events.local",
++		.flags = CFTYPE_NOT_ON_ROOT,
++		.file_offset = offsetof(struct misc_cg, events_local_file),
++		.seq_show = misc_events_local_show,
++	},
+ 	{}
+ };
+ 
 -- 
-2.39.2
+2.34.1
 
