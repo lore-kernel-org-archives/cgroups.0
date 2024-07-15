@@ -1,145 +1,272 @@
-Received: from out-181.mta0.migadu.com (out-181.mta0.migadu.com [91.218.175.181])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8DCBB3BB2E
-	for <cgroups@vger.kernel.org>; Mon, 15 Jul 2024 17:30:54 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.181
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C4F3B6E61B
+	for <cgroups@vger.kernel.org>; Mon, 15 Jul 2024 19:18:02 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1721064656; cv=none; b=fHYSKx3XfIqlD/7Kz/xJUgWIk6WyBazyY+lmr0amZQoxet+3WyJR9EXBYpURIW07Nrz+u5kYIlNsa0sSAP+VvPcHHpj8zp9Ld0zcYVprDz5OuwqH6EAY7J7nC3WkvsfZXVfTk330Ru18xhfidfBaLHxNJQNqszbCTuhZxWh7GvA=
+	t=1721071084; cv=none; b=i9uHKmBwVhyqPnZdChzLav42lwCpD/9/3kuSQS7+eYHgOrC721aaBbuJT0loR2NjIUd0PkrC95OvcbeW/5/HiyCexYpp+F0/o9m9Qpe0BGGvvN1G90ofykxwt5s1HhV8DBHD6rghFeNr+QP3ROkJzSbS3zMemUeDHemjEpRogts=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1721064656; c=relaxed/simple;
-	bh=fuFomPvJjEWyq0rlb0WrUHt+YwwZeluRKdzkdP8nJAY=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=a5pGVN0+Z6sC4YkJsDEzLbCSTgRF9UkPYOL559L0PsF8XBUCmHVwI1q89PnMF7nbhefERvk1LsZSEy7X3IdJIuvygoKxDqflLzB/hFHIKySuauQTFzUTQcHQ+SWPKgSnZg7dS2G6t4mIAUaee4Nt38gcgOBCLIOLMOqywEzowtA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=uvvXtNFy; arc=none smtp.client-ip=91.218.175.181
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
+	s=arc-20240116; t=1721071084; c=relaxed/simple;
+	bh=FlJP6cQ93Ht9xaenF/ZPVLXhGWE9+r0LZIr/jJpJbKA=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=IqTqKUBmT8RYn2urXRNzFf/ZbxXP45ooSRdTOy8C82W8kDV+jitGjxOKQrdfkWHMDJD/wQuhrqSzA38hHXKpRfqv3GN0Sh0jWU0p8SCelstFicw2vMA5F3qLSs5jCRKuVfMU0yW+RTNcIT7VJZoHa3udVPSbj0PyQe95Dn16z5M=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=c1+eF4zl; arc=none smtp.client-ip=170.10.133.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="uvvXtNFy"
-X-Envelope-To: longman@redhat.com
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
-	t=1721064652;
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="c1+eF4zl"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1721071081;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=48LNjXEtpZ7HdIqiCDkMz54KvHv8Y9hqJYhmD6bl1e4=;
-	b=uvvXtNFyX8YfglFp7KW0c7WheJq834hIGYDnFgi1aHq9ZXcRN1DSMfwUrMXcDWueTS1HXR
-	rZEKQ01xtPmjcWDbCakRM9cSMfoPpDPbV21vxY49WDm1HgkHjDvLq8Ygg/VGgXqKs6E3jQ
-	sXpMIPGyv6RPrne82akxBSPw7Sa7p4I=
-X-Envelope-To: tj@kernel.org
-X-Envelope-To: lizefan.x@bytedance.com
-X-Envelope-To: hannes@cmpxchg.org
-X-Envelope-To: mkoutny@suse.com
-X-Envelope-To: corbet@lwn.net
-X-Envelope-To: cgroups@vger.kernel.org
-X-Envelope-To: linux-doc@vger.kernel.org
-X-Envelope-To: linux-kernel@vger.kernel.org
-X-Envelope-To: kamalesh.babulal@oracle.com
-Date: Mon, 15 Jul 2024 17:30:46 +0000
-X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
-From: Roman Gushchin <roman.gushchin@linux.dev>
-To: Waiman Long <longman@redhat.com>
-Cc: Tejun Heo <tj@kernel.org>, Zefan Li <lizefan.x@bytedance.com>,
-	Johannes Weiner <hannes@cmpxchg.org>,
-	Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny@suse.com>,
-	Jonathan Corbet <corbet@lwn.net>, cgroups@vger.kernel.org,
-	linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Kamalesh Babulal <kamalesh.babulal@oracle.com>
-Subject: Re: [PATCH-cgroup v7] cgroup: Show # of subsystem CSSes in
- cgroup.stat
-Message-ID: <ZpVcxlx1VR3FaoYI@google.com>
-References: <20240715150034.2583772-1-longman@redhat.com>
+	bh=z+7wzqu/n+rBhls7jS0HpDNowfWD9bZEGhHazVfPs+A=;
+	b=c1+eF4zlbwZbK7GfFrljffldrGepCOxa9GcKkWXIC3k0JXJCRZQnE+TLxdzEyga4wMW1NS
+	lrU6YOwgkkI2np3C6HySRawKI0eL9Z8e4xWe8Y1qBZ/kpVNFYRCUsY8yf/Cri1EwDcmhNT
+	6gRpyDpsZbtK6MPbQPSPNZlaKhkP+Mg=
+Received: from mx-prod-mc-03.mail-002.prod.us-west-2.aws.redhat.com
+ (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
+ relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-10-CAJcaEkYPWuXQXt0JtVqsQ-1; Mon,
+ 15 Jul 2024 15:17:57 -0400
+X-MC-Unique: CAJcaEkYPWuXQXt0JtVqsQ-1
+Received: from mx-prod-int-04.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-04.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.40])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mx-prod-mc-03.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 601431955D4F;
+	Mon, 15 Jul 2024 19:17:55 +0000 (UTC)
+Received: from [10.22.9.29] (unknown [10.22.9.29])
+	by mx-prod-int-04.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id 877591955D44;
+	Mon, 15 Jul 2024 19:17:52 +0000 (UTC)
+Message-ID: <e41a9286-8103-4897-83fc-f9185f4488e3@redhat.com>
+Date: Mon, 15 Jul 2024 15:17:51 -0400
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20240715150034.2583772-1-longman@redhat.com>
-X-Migadu-Flow: FLOW_OUT
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH-cgroup v2 4/5] cgroup/cpuset: Make cpuset.cpus.exclusive
+ independent of cpuset.cpus
+To: Petr Malat <oss@malat.biz>
+Cc: Tejun Heo <tj@kernel.org>, Zefan Li <lizefan.x@bytedance.com>,
+ Johannes Weiner <hannes@cmpxchg.org>, Jonathan Corbet <corbet@lwn.net>,
+ Shuah Khan <shuah@kernel.org>, cgroups@vger.kernel.org,
+ linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org,
+ linux-kselftest@vger.kernel.org, Xavier <ghostxavier@sina.com>,
+ Peter Hunt <pehunt@redhat.com>
+References: <20240617143945.454888-1-longman@redhat.com>
+ <20240617143945.454888-5-longman@redhat.com>
+ <CANMuvJkDjuPpcqMBM+zzNL3wA-1zVrshrMuy22kQKmLDxbsB7Q@mail.gmail.com>
+Content-Language: en-US
+From: Waiman Long <longman@redhat.com>
+In-Reply-To: <CANMuvJkDjuPpcqMBM+zzNL3wA-1zVrshrMuy22kQKmLDxbsB7Q@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+X-Scanned-By: MIMEDefang 3.0 on 10.30.177.40
 
-On Mon, Jul 15, 2024 at 11:00:34AM -0400, Waiman Long wrote:
-> Cgroup subsystem state (CSS) is an abstraction in the cgroup layer to
-> help manage different structures in various cgroup subsystems by being
-> an embedded element inside a larger structure like cpuset or mem_cgroup.
-> 
-> The /proc/cgroups file shows the number of cgroups for each of the
-> subsystems.  With cgroup v1, the number of CSSes is the same as the
-> number of cgroups.  That is not the case anymore with cgroup v2. The
-> /proc/cgroups file cannot show the actual number of CSSes for the
-> subsystems that are bound to cgroup v2.
-> 
-> So if a v2 cgroup subsystem is leaking cgroups (usually memory cgroup),
-> we can't tell by looking at /proc/cgroups which cgroup subsystems may
-> be responsible.
-> 
-> As cgroup v2 had deprecated the use of /proc/cgroups, the hierarchical
-> cgroup.stat file is now being extended to show the number of live and
-> dying CSSes associated with all the non-inhibited cgroup subsystems that
-> have been bound to cgroup v2. The number includes CSSes in the current
-> cgroup as well as in all the descendants underneath it.  This will help
-> us pinpoint which subsystems are responsible for the increasing number
-> of dying (nr_dying_descendants) cgroups.
-> 
-> The CSSes dying counts are stored in the cgroup structure itself
-> instead of inside the CSS as suggested by Johannes. This will allow
-> us to accurately track dying counts of cgroup subsystems that have
-> recently been disabled in a cgroup. It is now possible that a zero
-> subsystem number is coupled with a non-zero dying subsystem number.
-> 
-> The cgroup-v2.rst file is updated to discuss this new behavior.
-> 
-> With this patch applied, a sample output from root cgroup.stat file
-> was shown below.
-> 
-> 	nr_descendants 56
-> 	nr_subsys_cpuset 1
-> 	nr_subsys_cpu 43
-> 	nr_subsys_io 43
-> 	nr_subsys_memory 56
-> 	nr_subsys_perf_event 57
-> 	nr_subsys_hugetlb 1
-> 	nr_subsys_pids 56
-> 	nr_subsys_rdma 1
-> 	nr_subsys_misc 1
-> 	nr_dying_descendants 30
-> 	nr_dying_subsys_cpuset 0
-> 	nr_dying_subsys_cpu 0
-> 	nr_dying_subsys_io 0
-> 	nr_dying_subsys_memory 30
-> 	nr_dying_subsys_perf_event 0
-> 	nr_dying_subsys_hugetlb 0
-> 	nr_dying_subsys_pids 0
-> 	nr_dying_subsys_rdma 0
-> 	nr_dying_subsys_misc 0
-> 
-> Another sample output from system.slice/cgroup.stat was:
-> 
-> 	nr_descendants 34
-> 	nr_subsys_cpuset 0
-> 	nr_subsys_cpu 32
-> 	nr_subsys_io 32
-> 	nr_subsys_memory 34
-> 	nr_subsys_perf_event 35
-> 	nr_subsys_hugetlb 0
-> 	nr_subsys_pids 34
-> 	nr_subsys_rdma 0
-> 	nr_subsys_misc 0
-> 	nr_dying_descendants 30
-> 	nr_dying_subsys_cpuset 0
-> 	nr_dying_subsys_cpu 0
-> 	nr_dying_subsys_io 0
-> 	nr_dying_subsys_memory 30
-> 	nr_dying_subsys_perf_event 0
-> 	nr_dying_subsys_hugetlb 0
-> 	nr_dying_subsys_pids 0
-> 	nr_dying_subsys_rdma 0
-> 	nr_dying_subsys_misc 0
-> 
-> Signed-off-by: Waiman Long <longman@redhat.com>
+On 7/15/24 11:56, Petr Malat wrote:
+> Hi,
+> I finally got some time to test this and it works exactly as we needed it to.
+> Thanks a lot,
+>    Petr
 
-Acked-by: Roman Gushchin <roman.gushchin@linux.dev>
+Thanks for the verification.
 
-Thanks!
+Cheers,
+Longman
+
+> On Mon, Jun 17, 2024 at 10:39:44AM -0400, Waiman Long wrote:
+>> The "cpuset.cpus.exclusive.effective" value is currently limited to a
+>> subset of its "cpuset.cpus". This makes the exclusive CPUs distribution
+>> hierarchy subsumed within the larger "cpuset.cpus" hierarchy. We have to
+>> decide on what CPUs are used locally and what CPUs can be passed down as
+>> exclusive CPUs down the hierarchy and combine them into "cpuset.cpus".
+>>
+>> The advantage of the current scheme is to have only one hierarchy to
+>> worry about. However, it make it harder to use as all the "cpuset.cpus"
+>> values have to be properly set along the way down to the designated remote
+>> partition root. It also makes it more cumbersome to find out what CPUs
+>> can be used locally.
+>>
+>> Make creation of remote partition simpler by breaking the
+>> dependency of "cpuset.cpus.exclusive" on "cpuset.cpus" and make
+>> them independent entities. Now we have two separate hierarchies -
+>> one for setting "cpuset.cpus.effective" and the other one for setting
+>> "cpuset.cpus.exclusive.effective". We may not need to set "cpuset.cpus"
+>> when we activate a partition root anymore.
+>>
+>> Also update Documentation/admin-guide/cgroup-v2.rst and cpuset.c comment
+>> to document this change.
+>>
+>> Suggested-by: Petr Malat <oss@malat.biz>
+>> Signed-off-by: Waiman Long <longman@redhat.com>
+>> ---
+>>   Documentation/admin-guide/cgroup-v2.rst |  4 +-
+>>   kernel/cgroup/cpuset.c                  | 67 +++++++++++++++++--------
+>>   2 files changed, 49 insertions(+), 22 deletions(-)
+>>
+>> diff --git a/Documentation/admin-guide/cgroup-v2.rst b/Documentation/admin-guide/cgroup-v2.rst
+>> index 722e4762c4e0..2e4e74bea6ef 100644
+>> --- a/Documentation/admin-guide/cgroup-v2.rst
+>> +++ b/Documentation/admin-guide/cgroup-v2.rst
+>> @@ -2380,8 +2380,8 @@ Cpuset Interface Files
+>>   	cpuset-enabled cgroups.
+>>
+>>   	This file shows the effective set of exclusive CPUs that
+>> -	can be used to create a partition root.  The content of this
+>> -	file will always be a subset of "cpuset.cpus" and its parent's
+>> +	can be used to create a partition root.  The content
+>> +	of this file will always be a subset of its parent's
+>>   	"cpuset.cpus.exclusive.effective" if its parent is not the root
+>>   	cgroup.  It will also be a subset of "cpuset.cpus.exclusive"
+>>   	if it is set.  If "cpuset.cpus.exclusive" is not set, it is
+>> diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
+>> index 144bfc319809..fe76045aa528 100644
+>> --- a/kernel/cgroup/cpuset.c
+>> +++ b/kernel/cgroup/cpuset.c
+>> @@ -87,7 +87,7 @@ static const char * const perr_strings[] = {
+>>   	[PERR_NOTEXCL]   = "Cpu list in cpuset.cpus not exclusive",
+>>   	[PERR_NOCPUS]    = "Parent unable to distribute cpu downstream",
+>>   	[PERR_HOTPLUG]   = "No cpu available due to hotplug",
+>> -	[PERR_CPUSEMPTY] = "cpuset.cpus is empty",
+>> +	[PERR_CPUSEMPTY] = "cpuset.cpus and cpuset.cpus.exclusive are empty",
+>>   	[PERR_HKEEPING]  = "partition config conflicts with housekeeping setup",
+>>   };
+>>
+>> @@ -127,19 +127,28 @@ struct cpuset {
+>>   	/*
+>>   	 * Exclusive CPUs dedicated to current cgroup (default hierarchy only)
+>>   	 *
+>> -	 * This exclusive CPUs must be a subset of cpus_allowed. A parent
+>> -	 * cgroup can only grant exclusive CPUs to one of its children.
+>> +	 * The effective_cpus of a valid partition root comes solely from its
+>> +	 * effective_xcpus and some of the effective_xcpus may be distributed
+>> +	 * to sub-partitions below & hence excluded from its effective_cpus.
+>> +	 * For a valid partition root, its effective_cpus have no relationship
+>> +	 * with cpus_allowed unless its exclusive_cpus isn't set.
+>>   	 *
+>> -	 * When the cgroup becomes a valid partition root, effective_xcpus
+>> -	 * defaults to cpus_allowed if not set. The effective_cpus of a valid
+>> -	 * partition root comes solely from its effective_xcpus and some of the
+>> -	 * effective_xcpus may be distributed to sub-partitions below & hence
+>> -	 * excluded from its effective_cpus.
+>> +	 * This value will only be set if either exclusive_cpus is set or
+>> +	 * when this cpuset becomes a local partition root.
+>>   	 */
+>>   	cpumask_var_t effective_xcpus;
+>>
+>>   	/*
+>>   	 * Exclusive CPUs as requested by the user (default hierarchy only)
+>> +	 *
+>> +	 * Its value is independent of cpus_allowed and designates the set of
+>> +	 * CPUs that can be granted to the current cpuset or its children when
+>> +	 * it becomes a valid partition root. The effective set of exclusive
+>> +	 * CPUs granted (effective_xcpus) depends on whether those exclusive
+>> +	 * CPUs are passed down by its ancestors and not yet taken up by
+>> +	 * another sibling partition root along the way.
+>> +	 *
+>> +	 * If its value isn't set, it defaults to cpus_allowed.
+>>   	 */
+>>   	cpumask_var_t exclusive_cpus;
+>>
+>> @@ -230,6 +239,17 @@ static struct list_head remote_children;
+>>    *   2 - partition root without load balancing (isolated)
+>>    *  -1 - invalid partition root
+>>    *  -2 - invalid isolated partition root
+>> + *
+>> + *  There are 2 types of partitions - local or remote. Local partitions are
+>> + *  those whose parents are partition root themselves. Setting of
+>> + *  cpuset.cpus.exclusive are optional in setting up local partitions.
+>> + *  Remote partitions are those whose parents are not partition roots. Passing
+>> + *  down exclusive CPUs by setting cpuset.cpus.exclusive along its ancestor
+>> + *  nodes are mandatory in creating a remote partition.
+>> + *
+>> + *  For simplicity, a local partition can be created under a local or remote
+>> + *  partition but a remote partition cannot have any partition root in its
+>> + *  ancestor chain except the cgroup root.
+>>    */
+>>   #define PRS_MEMBER		0
+>>   #define PRS_ROOT		1
+>> @@ -709,6 +729,19 @@ static inline void free_cpuset(struct cpuset *cs)
+>>   	kfree(cs);
+>>   }
+>>
+>> +/* Return user specified exclusive CPUs */
+>> +static inline struct cpumask *user_xcpus(struct cpuset *cs)
+>> +{
+>> +	return cpumask_empty(cs->exclusive_cpus) ? cs->cpus_allowed
+>> +						 : cs->exclusive_cpus;
+>> +}
+>> +
+>> +static inline bool xcpus_empty(struct cpuset *cs)
+>> +{
+>> +	return cpumask_empty(cs->cpus_allowed) &&
+>> +	       cpumask_empty(cs->exclusive_cpus);
+>> +}
+>> +
+>>   static inline struct cpumask *fetch_xcpus(struct cpuset *cs)
+>>   {
+>>   	return !cpumask_empty(cs->exclusive_cpus) ? cs->exclusive_cpus :
+>> @@ -1593,7 +1626,7 @@ EXPORT_SYMBOL_GPL(cpuset_cpu_is_isolated);
+>>    * Return: true if xcpus is not empty, false otherwise.
+>>    *
+>>    * Starting with exclusive_cpus (cpus_allowed if exclusive_cpus is not set),
+>> - * it must be a subset of cpus_allowed and parent's effective_xcpus.
+>> + * it must be a subset of parent's effective_xcpus.
+>>    */
+>>   static bool compute_effective_exclusive_cpumask(struct cpuset *cs,
+>>   						struct cpumask *xcpus)
+>> @@ -1603,12 +1636,7 @@ static bool compute_effective_exclusive_cpumask(struct cpuset *cs,
+>>   	if (!xcpus)
+>>   		xcpus = cs->effective_xcpus;
+>>
+>> -	if (!cpumask_empty(cs->exclusive_cpus))
+>> -		cpumask_and(xcpus, cs->exclusive_cpus, cs->cpus_allowed);
+>> -	else
+>> -		cpumask_copy(xcpus, cs->cpus_allowed);
+>> -
+>> -	return cpumask_and(xcpus, xcpus, parent->effective_xcpus);
+>> +	return cpumask_and(xcpus, user_xcpus(cs), parent->effective_xcpus);
+>>   }
+>>
+>>   static inline bool is_remote_partition(struct cpuset *cs)
+>> @@ -1887,8 +1915,7 @@ static int update_parent_effective_cpumask(struct cpuset *cs, int cmd,
+>>   	 */
+>>   	adding = deleting = false;
+>>   	old_prs = new_prs = cs->partition_root_state;
+>> -	xcpus = !cpumask_empty(cs->exclusive_cpus)
+>> -		? cs->effective_xcpus : cs->cpus_allowed;
+>> +	xcpus = user_xcpus(cs);
+>>
+>>   	if (cmd == partcmd_invalidate) {
+>>   		if (is_prs_invalid(old_prs))
+>> @@ -1916,7 +1943,7 @@ static int update_parent_effective_cpumask(struct cpuset *cs, int cmd,
+>>   		return is_partition_invalid(parent)
+>>   		       ? PERR_INVPARENT : PERR_NOTPART;
+>>   	}
+>> -	if (!newmask && cpumask_empty(cs->cpus_allowed))
+>> +	if (!newmask && xcpus_empty(cs))
+>>   		return PERR_CPUSEMPTY;
+>>
+>>   	nocpu = tasks_nocpu_error(parent, cs, xcpus);
+>> @@ -3130,9 +3157,9 @@ static int update_prstate(struct cpuset *cs, int new_prs)
+>>   				       ? partcmd_enable : partcmd_enablei;
+>>
+>>   		/*
+>> -		 * cpus_allowed cannot be empty.
+>> +		 * cpus_allowed and exclusive_cpus cannot be both empty.
+>>   		 */
+>> -		if (cpumask_empty(cs->cpus_allowed)) {
+>> +		if (xcpus_empty(cs)) {
+>>   			err = PERR_CPUSEMPTY;
+>>   			goto out;
+>>   		}
+>> --
+>> 2.39.3
+>>
+
