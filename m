@@ -1,56 +1,138 @@
-Received: from smtp134-25.sina.com.cn (smtp134-25.sina.com.cn [180.149.134.25])
+Received: from szxga05-in.huawei.com (szxga05-in.huawei.com [45.249.212.191])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B1466198E63
-	for <cgroups@vger.kernel.org>; Thu, 25 Jul 2024 11:02:10 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=180.149.134.25
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 88B7F16D4C3;
+	Thu, 25 Jul 2024 11:40:20 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.191
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1721905340; cv=none; b=PufJAgfAvpnJWwqNcjnomeadkLTG7HDrJT1AYDxdNAAVKjtsocagDYBfYmM9q7YqMcaf9TYJhlXuuy+HZTPabXC3PQ+OSnkQDjqxmUvLVQkxZERAJn+AViIaXrful34DY27RRXJrZNgTN5QlgOJiY8+2cziVxDkkJl65UvoXsUg=
+	t=1721907623; cv=none; b=lL1V/8KbqsGxycLtPzqexYhvQJUKrA4wcETRZ6vij5UQk9nbRB6Kl7RuOU+0N748I5yS9sf6GzoVg7pYFlAf2ugzOjirFuEXUTe4zjQVhBanlCTdSy3EKuNOqYQt58qf9yVORAarPWmdGdopxl14V4n5iaeiKRdaiuXzupCPCP0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1721905340; c=relaxed/simple;
-	bh=uTEzl1DGTtt5PC7rNqFp3gSJItEkihIT3JivE6CRMMc=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=JG6chvE/9EBO7bTY/qbFtwU93kKZiLvKppgQGcA4m1HfO6s7fexdu6x59i9K531InzCdzqt/vUlwtOdX9eiOLO16rj6mAvP4nzZP7aJ55zx+DrubA01T3Q4i1K9xxKZ4cH/Yde9tH3WBODaL0czMt0x+4x/JYJVSsIdNkVA5Mps=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=sina.com; spf=pass smtp.mailfrom=sina.com; arc=none smtp.client-ip=180.149.134.25
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=sina.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sina.com
-X-SMAIL-HELO: localhost.localdomain
-Received: from unknown (HELO localhost.localdomain)([113.118.70.185])
-	by sina.com (10.185.250.21) with ESMTP
-	id 66A2307E00007549; Thu, 25 Jul 2024 19:01:22 +0800 (CST)
-X-Sender: hdanton@sina.com
-X-Auth-ID: hdanton@sina.com
-Authentication-Results: sina.com;
-	 spf=none smtp.mailfrom=hdanton@sina.com;
-	 dkim=none header.i=none;
-	 dmarc=none action=none header.from=hdanton@sina.com
-X-SMAIL-MID: 5484873408034
-X-SMAIL-UIID: 45E6E71375B7484FB64D4B461277FD71-20240725-190122-1
-From: Hillf Danton <hdanton@sina.com>
-To: Chen Ridong <chenridong@huawei.com>
-Cc: Roman Gushchin <roman.gushchin@linux.dev>,
-	tj@kernel.org,
-	bpf@vger.kernel.org,
-	cgroups@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH -v2] cgroup: fix deadlock caused by cgroup_mutex and cpu_hotplug_lock
-Date: Thu, 25 Jul 2024 19:01:11 +0800
-Message-Id: <20240725110111.2063-1-hdanton@sina.com>
-In-Reply-To: <53ed023b-c86c-498a-b1fc-2b442059f6af@huawei.com>
-References: 
+	s=arc-20240116; t=1721907623; c=relaxed/simple;
+	bh=x/jTSeOOMzGPoBXYqDy5bsmeArwSYudVrZXlX+289Yw=;
+	h=Message-ID:Date:MIME-Version:Subject:To:CC:References:From:
+	 In-Reply-To:Content-Type; b=kj6CN1HwIJT4pOVmPaeynAjrybi6tSzilEjDzDqo8lvFvGYGSQV5mkpazhQXZerm4wkwU9aWlHzBojmfrXSJUmPL5lNez2q4pftXgjm1gVDgg9tu+m6X+ZsdX3IyIScNewZiH65niKgReaPAwByfKaG25Bx0GcOV50k3GGEUDFE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; arc=none smtp.client-ip=45.249.212.191
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
+Received: from mail.maildlp.com (unknown [172.19.88.234])
+	by szxga05-in.huawei.com (SkyGuard) with ESMTP id 4WV84t68h0z1HFVZ;
+	Thu, 25 Jul 2024 19:37:34 +0800 (CST)
+Received: from kwepemd100013.china.huawei.com (unknown [7.221.188.163])
+	by mail.maildlp.com (Postfix) with ESMTPS id 2F56F140259;
+	Thu, 25 Jul 2024 19:40:17 +0800 (CST)
+Received: from [10.67.109.79] (10.67.109.79) by kwepemd100013.china.huawei.com
+ (7.221.188.163) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1258.34; Thu, 25 Jul
+ 2024 19:40:16 +0800
+Message-ID: <de6958aa-27f8-4baa-b76d-88266d009f81@huawei.com>
+Date: Thu, 25 Jul 2024 19:40:15 +0800
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH -next] cgroup/cpuset: add dec_attach_in_progress helper
+To: Kamalesh Babulal <kamalesh.babulal@oracle.com>, <tj@kernel.org>,
+	<lizefan.x@bytedance.com>, <hannes@cmpxchg.org>, <longman@redhat.com>,
+	<adityakali@google.com>, <sergeh@kernel.org>, <mkoutny@suse.com>
+CC: <cgroups@vger.kernel.org>, <linux-kernel@vger.kernel.org>
+References: <20240725015551.2221867-1-chenridong@huawei.com>
+ <e5c92f54-d767-4e71-9f57-9352923bd3e7@oracle.com>
+Content-Language: en-US
+From: chenridong <chenridong@huawei.com>
+In-Reply-To: <e5c92f54-d767-4e71-9f57-9352923bd3e7@oracle.com>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Transfer-Encoding: 7bit
+X-ClientProxiedBy: dggems702-chm.china.huawei.com (10.3.19.179) To
+ kwepemd100013.china.huawei.com (7.221.188.163)
 
-On Thu, 25 Jul 2024 09:48:36 +0800 Chen Ridong <chenridong@huawei.com>
->
-> did you mean to say this issue couldn't happen?
->
-1) It is deadlock if watchdog work can not complete before any cgroup work.
-2) It is not if you could not trigger it with no more than a dozen cgroup works.
 
-Not important, boy, spin with deadlock erased.
+
+On 2024/7/25 19:01, Kamalesh Babulal wrote:
+> 
+> 
+> On 7/25/24 7:25 AM, Chen Ridong wrote:
+>> There are several functions to decrease attach_in_progress, and they
+>> will wake up cpuset_attach_wq when attach_in_progress is zero. So,
+>> add a helper to make it concise.
+>>
+>> Signed-off-by: Chen Ridong <chenridong@huawei.com>
+>> ---
+>>   kernel/cgroup/cpuset.c | 28 +++++++++++++++-------------
+>>   1 file changed, 15 insertions(+), 13 deletions(-)
+>>
+>> diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
+>> index d4322619e59a..c241845694ac 100644
+>> --- a/kernel/cgroup/cpuset.c
+>> +++ b/kernel/cgroup/cpuset.c
+>> @@ -490,6 +490,17 @@ static inline void check_insane_mems_config(nodemask_t *nodes)
+>>   	}
+>>   }
+>>   
+>> +/*
+>> + * decrease cs->attach_in_progress.
+>> + * wake_up cpuset_attach_wq if cs->attach_in_progress==0.
+> 
+> In the description, adding locking constraint of cpuset_mutex would be helpful.
+> Something like "cpuset_mutex must be held by the caller."
+> 
+Thank you, I will to that.
+>> + */
+>> +static inline void dec_attach_in_progress(struct cpuset *cs)
+>> +{
+>> +	cs->attach_in_progress--;
+>> +	if (!cs->attach_in_progress)
+>> +		wake_up(&cpuset_attach_wq);
+>> +}
+>> +
+>>   /*
+>>    * Cgroup v2 behavior is used on the "cpus" and "mems" control files when
+>>    * on default hierarchy or when the cpuset_v2_mode flag is set by mounting
+>> @@ -3421,9 +3432,7 @@ static void cpuset_cancel_attach(struct cgroup_taskset *tset)
+>>   	cs = css_cs(css);
+>>   
+>>   	mutex_lock(&cpuset_mutex);
+>> -	cs->attach_in_progress--;
+>> -	if (!cs->attach_in_progress)
+>> -		wake_up(&cpuset_attach_wq);
+>> +	dec_attach_in_progress(cs);
+>>   
+>>   	if (cs->nr_migrate_dl_tasks) {
+>>   		int cpu = cpumask_any(cs->effective_cpus);
+>> @@ -3538,9 +3547,7 @@ static void cpuset_attach(struct cgroup_taskset *tset)
+>>   		reset_migrate_dl_data(cs);
+>>   	}
+>>   
+>> -	cs->attach_in_progress--;
+>> -	if (!cs->attach_in_progress)
+>> -		wake_up(&cpuset_attach_wq);
+>> +	dec_attach_in_progress(cs);
+>>   
+>>   	mutex_unlock(&cpuset_mutex);
+>>   }
+>> @@ -4284,9 +4291,7 @@ static void cpuset_cancel_fork(struct task_struct *task, struct css_set *cset)
+>>   		return;
+>>   
+>>   	mutex_lock(&cpuset_mutex);
+>> -	cs->attach_in_progress--;
+>> -	if (!cs->attach_in_progress)
+>> -		wake_up(&cpuset_attach_wq);
+>> +	dec_attach_in_progress(cs);
+>>   	mutex_unlock(&cpuset_mutex);
+>>   }
+>>   
+>> @@ -4319,10 +4324,7 @@ static void cpuset_fork(struct task_struct *task)
+>>   	guarantee_online_mems(cs, &cpuset_attach_nodemask_to);
+>>   	cpuset_attach_task(cs, task);
+>>   
+>> -	cs->attach_in_progress--;
+>> -	if (!cs->attach_in_progress)
+>> -		wake_up(&cpuset_attach_wq);
+>> -
+>> +	dec_attach_in_progress(cs);
+>>   	mutex_unlock(&cpuset_mutex);
+>>   }
+>>   
+> 
