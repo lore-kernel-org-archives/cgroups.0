@@ -1,132 +1,188 @@
-Received: from dggsgout12.his.huawei.com (dggsgout12.his.huawei.com [45.249.212.56])
+Received: from szxga08-in.huawei.com (szxga08-in.huawei.com [45.249.212.255])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 58AFB22315;
-	Tue, 30 Jul 2024 03:38:42 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.56
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0476FBE5D;
+	Tue, 30 Jul 2024 03:46:38 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.255
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1722310725; cv=none; b=Ix5esXufLE6r2zVW0j2fZdt1nA7GNLfrPITfg26kQk01LDQF8R04QIdPS7J0VKN5+9676VUKhhgvYglgA+0Opt81Jr5hlwqkrVNjmxT2D5u0Hxjqe/ItpqB9uDG+gStxu/CkxZ2PitnVMk4UXS5U9kis0qP5aSf1RJlO8a7iY6w=
+	t=1722311202; cv=none; b=lY3t8LvSzxIrfOuc3bCqFEYwcjrC+czCkhqJQ+sEFjqGLj40OGGtTqpAtjxmzbroyPWhTn3NphXpHL975wKSjz6Daf0CkM0lUcn4ABse5lKKuQaVSdxvxirAZlPR1moSpisy4HqMxUD+5QCLc3dzCKa+KZgveXHfFmNeCOmoNqA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1722310725; c=relaxed/simple;
-	bh=7hsn5NbG/L6xMNTJLxdCf7BBRU7+2YmtpZ/3e8jjYfU=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=XI4UFF8cEz+S4exI41MNMrHw/DOcO94CtaAv42Vaz2c2j1ev7lgj9OsTd0x2Pm9n1D1VmvEvl2mYnspLyAacVD/F1FS0AP3ZqSZ/8Ws33OqrIJJrzolatg0aW53w+/5Z5TZGHoB8FCROBrvQHLODLv5gD91BJmeMvW/F2zlsEy4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.56
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
-Received: from mail.maildlp.com (unknown [172.19.163.216])
-	by dggsgout12.his.huawei.com (SkyGuard) with ESMTP id 4WY1Ck5tDfz4f3jdM;
-	Tue, 30 Jul 2024 11:38:26 +0800 (CST)
-Received: from mail02.huawei.com (unknown [10.116.40.128])
-	by mail.maildlp.com (Postfix) with ESMTP id A475A1A174A;
-	Tue, 30 Jul 2024 11:38:39 +0800 (CST)
-Received: from huaweicloud.com (unknown [10.67.174.26])
-	by APP4 (Coremail) with SMTP id gCh0CgCnzYM+YKhmaDH_AA--.22804S2;
-	Tue, 30 Jul 2024 11:38:39 +0800 (CST)
-From: Xiu Jianfeng <xiujianfeng@huaweicloud.com>
-To: tj@kernel.org,
-	lizefan.x@bytedance.com,
-	hannes@cmpxchg.org,
-	mkoutny@suse.com
-Cc: cgroups@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	xiujianfeng@huawei.com
-Subject: [PATCH v2 -next] cgroup/pids: Avoid spurious event notification
-Date: Tue, 30 Jul 2024 03:29:20 +0000
-Message-Id: <20240730032920.3690263-1-xiujianfeng@huaweicloud.com>
-X-Mailer: git-send-email 2.34.1
+	s=arc-20240116; t=1722311202; c=relaxed/simple;
+	bh=RePeZ6R08jESN3zyMQsVV6ciDd415r7oFNYRuEApO5w=;
+	h=Message-ID:Date:MIME-Version:Subject:To:CC:References:From:
+	 In-Reply-To:Content-Type; b=ZqIvUoN+5g+uH86lOD4hUmd9mXe8TtW7e3b/Lk18ul9cNgyeFGBQ33/bobaU5wECjdRXe7rWTPcdPRbenOtkj5Zdn6rhKTm0PdrKr4/NC6tBagoxUs79gdUNBzQF+6EvyEY74VJh36KPIp3qdXZwf8v6P9si0idqBjcjQOUMjfo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; arc=none smtp.client-ip=45.249.212.255
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
+Received: from mail.maildlp.com (unknown [172.19.162.254])
+	by szxga08-in.huawei.com (SkyGuard) with ESMTP id 4WY1Ny5J05z1L99p;
+	Tue, 30 Jul 2024 11:46:26 +0800 (CST)
+Received: from kwepemd100013.china.huawei.com (unknown [7.221.188.163])
+	by mail.maildlp.com (Postfix) with ESMTPS id 5655F180100;
+	Tue, 30 Jul 2024 11:46:36 +0800 (CST)
+Received: from [10.67.109.79] (10.67.109.79) by kwepemd100013.china.huawei.com
+ (7.221.188.163) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1258.34; Tue, 30 Jul
+ 2024 11:46:35 +0800
+Message-ID: <a3ff05d8-3acd-4d7d-b2b5-3c512fe93cbf@huawei.com>
+Date: Tue, 30 Jul 2024 11:46:35 +0800
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH] cgroup/cpuset: fix panic caused by partcmd_update
+To: Waiman Long <longman@redhat.com>, <tj@kernel.org>,
+	<lizefan.x@bytedance.com>, <hannes@cmpxchg.org>, <adityakali@google.com>,
+	<sergeh@kernel.org>
+CC: <bpf@vger.kernel.org>, <cgroups@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>
+References: <20240730015316.2324188-1-chenridong@huawei.com>
+ <0ba00b7c-5292-4242-b648-4ca8d4a457c6@redhat.com>
+ <425f1151-14e6-43f6-810e-efe95f6f401e@huawei.com>
+ <a93a670c-27fa-4159-a910-ccb17066edc0@redhat.com>
+Content-Language: en-US
+From: chenridong <chenridong@huawei.com>
+In-Reply-To: <a93a670c-27fa-4159-a910-ccb17066edc0@redhat.com>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:gCh0CgCnzYM+YKhmaDH_AA--.22804S2
-X-Coremail-Antispam: 1UD129KBjvJXoWxCF15tw4kGr17JFyxJw15twb_yoW5GrW5p3
-	ZxAFyrK395J3ZI93Z3W3srZFyfWa93W398CF48A34fJw12kr15XanFkF18Zr1UZFy7u3sr
-	Xa1Yva45G34jyrDanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDU0xBIdaVrnRJUUUyEb4IE77IF4wAFF20E14v26r4j6ryUM7CY07I20VC2zVCF04k2
-	6cxKx2IYs7xG6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rwA2F7IY1VAKz4
-	vEj48ve4kI8wA2z4x0Y4vE2Ix0cI8IcVAFwI0_Ar0_tr1l84ACjcxK6xIIjxv20xvEc7Cj
-	xVAFwI0_Gr1j6F4UJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x
-	0267AKxVW0oVCq3wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG
-	6I80ewAv7VC0I7IYx2IY67AKxVWUJVWUGwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFV
-	Cjc4AY6r1j6r4UM4x0Y48IcxkI7VAKI48JMxkF7I0En4kS14v26r126r1DMxAIw28IcxkI
-	7VAKI48JMxC20s026xCaFVCjc4AY6r1j6r4UMI8I3I0E5I8CrVAFwI0_Jr0_Jr4lx2IqxV
-	Cjr7xvwVAFwI0_JrI_JrWlx4CE17CEb7AF67AKxVWUAVWUtwCIc40Y0x0EwIxGrwCI42IY
-	6xIIjxv20xvE14v26r1j6r1xMIIF0xvE2Ix0cI8IcVCY1x0267AKxVW8JVWxJwCI42IY6x
-	AIw20EY4v20xvaj40_Jr0_JF4lIxAIcVC2z280aVAFwI0_Jr0_Gr1lIxAIcVC2z280aVCY
-	1x0267AKxVW8JVW8JrUvcSsGvfC2KfnxnUUI43ZEXa7IU1veHDUUUUU==
-X-CM-SenderInfo: x0lxyxpdqiv03j6k3tpzhluzxrxghudrp/
+X-ClientProxiedBy: dggems702-chm.china.huawei.com (10.3.19.179) To
+ kwepemd100013.china.huawei.com (7.221.188.163)
 
-From: Xiu Jianfeng <xiujianfeng@huawei.com>
 
-Currently when a process in a group forks and fails due to it's
-parent's max restriction, all the cgroups from 'pids_forking' to root
-will generate event notifications but only the cgroups from
-'pids_over_limit' to root will increase the counter of PIDCG_MAX.
 
-Consider this scenario: there are 4 groups A, B, C,and D, the
-relationships are as follows, and user is watching on C.pids.events.
+On 2024/7/30 11:15, Waiman Long wrote:
+> On 7/29/24 22:55, chenridong wrote:
+>>
+>>
+>> On 2024/7/30 10:34, Waiman Long wrote:
+>>> On 7/29/24 21:53, Chen Ridong wrote:
+>>>> We find a bug as below:
+>>>> BUG: unable to handle page fault for address: 00000003
+>>>> PGD 0 P4D 0
+>>>> Oops: 0000 [#1] PREEMPT SMP NOPTI
+>>>> CPU: 3 PID: 358 Comm: bash Tainted: G        W I 6.6.0-10893-g60d6
+>>>> Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS 1.15.0-1 
+>>>> 04/4
+>>>> RIP: 0010:partition_sched_domains_locked+0x483/0x600
+>>>> Code: 01 48 85 d2 74 0d 48 83 05 29 3f f8 03 01 f3 48 0f bc c2 89 c0 
+>>>> 48 9
+>>>> RSP: 0018:ffffc90000fdbc58 EFLAGS: 00000202
+>>>> RAX: 0000000100000003 RBX: ffff888100b3dfa0 RCX: 0000000000000000
+>>>> RDX: 0000000000000000 RSI: 0000000000000000 RDI: 000000000002fe80
+>>>> RBP: ffff888100b3dfb0 R08: 0000000000000001 R09: 0000000000000000
+>>>> R10: ffffc90000fdbcb0 R11: 0000000000000004 R12: 0000000000000002
+>>>> R13: ffff888100a92b48 R14: 0000000000000000 R15: 0000000000000000
+>>>> FS:  00007f44a5425740(0000) GS:ffff888237d80000(0000) 
+>>>> knlGS:0000000000000
+>>>> CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+>>>> CR2: 0000000100030973 CR3: 000000010722c000 CR4: 00000000000006e0
+>>>> Call Trace:
+>>>>   <TASK>
+>>>>   ? show_regs+0x8c/0xa0
+>>>>   ? __die_body+0x23/0xa0
+>>>>   ? __die+0x3a/0x50
+>>>>   ? page_fault_oops+0x1d2/0x5c0
+>>>>   ? partition_sched_domains_locked+0x483/0x600
+>>>>   ? search_module_extables+0x2a/0xb0
+>>>>   ? search_exception_tables+0x67/0x90
+>>>>   ? kernelmode_fixup_or_oops+0x144/0x1b0
+>>>>   ? __bad_area_nosemaphore+0x211/0x360
+>>>>   ? up_read+0x3b/0x50
+>>>>   ? bad_area_nosemaphore+0x1a/0x30
+>>>>   ? exc_page_fault+0x890/0xd90
+>>>>   ? __lock_acquire.constprop.0+0x24f/0x8d0
+>>>>   ? __lock_acquire.constprop.0+0x24f/0x8d0
+>>>>   ? asm_exc_page_fault+0x26/0x30
+>>>>   ? partition_sched_domains_locked+0x483/0x600
+>>>>   ? partition_sched_domains_locked+0xf0/0x600
+>>>>   rebuild_sched_domains_locked+0x806/0xdc0
+>>>>   update_partition_sd_lb+0x118/0x130
+>>>>   cpuset_write_resmask+0xffc/0x1420
+>>>>   cgroup_file_write+0xb2/0x290
+>>>>   kernfs_fop_write_iter+0x194/0x290
+>>>>   new_sync_write+0xeb/0x160
+>>>>   vfs_write+0x16f/0x1d0
+>>>>   ksys_write+0x81/0x180
+>>>>   __x64_sys_write+0x21/0x30
+>>>>   x64_sys_call+0x2f25/0x4630
+>>>>   do_syscall_64+0x44/0xb0
+>>>>   entry_SYSCALL_64_after_hwframe+0x78/0xe2
+>>>> RIP: 0033:0x7f44a553c887
+>>>>
+>>>> It can be reproduced with cammands:
+>>>> cd /sys/fs/cgroup/
+>>>> mkdir test
+>>>> cd test/
+>>>> echo +cpuset > ../cgroup.subtree_control
+>>>> echo root > cpuset.cpus.partition
+>>>> echo 0-3 > cpuset.cpus // 3 is nproc
+>>> What do you mean by "3 is nproc"? Are there only 3 CPUs in the 
+>>> system? What are the value of /sys/fs/cgroup/cpuset.cpu*?
+>> Yes, I tested it with qemu, only 3 cpus are available.
+>> # cat /sys/fs/cgroup/cpuset.cpus.effective
+>> 0-3
+>> This case is taking all cpus away from root, test should fail to be a 
+>> valid root, it should not rebuild scheduling domains.
+> I see. So there are 4 CPUs in the systems. So nproc should be 4. That is 
+> why I got confused when you said nproc is 3. I think you should clarify 
+> this in your patch.
 
-root->A->B->C->D
+Sorry about that. Is it clear as below?
 
-When a process in D forks and fails due to B.max restriction, the
-user will get a spurious event notification because when he wakes up
-and reads C.pids.events, he will find that the content has not changed.
+It can be reproduced with cammands:
+cd /sys/fs/cgroup/
+mkdir test
+cd test/
+echo +cpuset > ../cgroup.subtree_control
+echo root > cpuset.cpus.partition
+# cat /sys/fs/cgroup/cpuset.cpus.effective
+0-3
+echo 0-3 > cpuset.cpus // taking away all cpus from root
 
-To address this issue, only the cgroups from 'pids_over_limit' to root
-will have their PIDCG_MAX counters increased and event notifications
-generated.
-
-Fixes: 385a635cacfe ("cgroup/pids: Make event counters hierarchical")
-Signed-off-by: Xiu Jianfeng <xiujianfeng@huawei.com>
----
-v2: add Fixes tag and fix a extra notification
----
- kernel/cgroup/pids.c | 18 +++++++-----------
- 1 file changed, 7 insertions(+), 11 deletions(-)
-
-diff --git a/kernel/cgroup/pids.c b/kernel/cgroup/pids.c
-index f5cb0ec45b9d..34aa63d7c9c6 100644
---- a/kernel/cgroup/pids.c
-+++ b/kernel/cgroup/pids.c
-@@ -244,7 +244,6 @@ static void pids_event(struct pids_cgroup *pids_forking,
- 		       struct pids_cgroup *pids_over_limit)
- {
- 	struct pids_cgroup *p = pids_forking;
--	bool limit = false;
- 
- 	/* Only log the first time limit is hit. */
- 	if (atomic64_inc_return(&p->events_local[PIDCG_FORKFAIL]) == 1) {
-@@ -252,20 +251,17 @@ static void pids_event(struct pids_cgroup *pids_forking,
- 		pr_cont_cgroup_path(p->css.cgroup);
- 		pr_cont("\n");
- 	}
--	cgroup_file_notify(&p->events_local_file);
- 	if (!cgroup_subsys_on_dfl(pids_cgrp_subsys) ||
--	    cgrp_dfl_root.flags & CGRP_ROOT_PIDS_LOCAL_EVENTS)
-+	    cgrp_dfl_root.flags & CGRP_ROOT_PIDS_LOCAL_EVENTS) {
-+		cgroup_file_notify(&p->events_local_file);
- 		return;
-+	}
- 
--	for (; parent_pids(p); p = parent_pids(p)) {
--		if (p == pids_over_limit) {
--			limit = true;
--			atomic64_inc(&p->events_local[PIDCG_MAX]);
--			cgroup_file_notify(&p->events_local_file);
--		}
--		if (limit)
--			atomic64_inc(&p->events[PIDCG_MAX]);
-+	atomic64_inc(&pids_over_limit->events_local[PIDCG_MAX]);
-+	cgroup_file_notify(&pids_over_limit->events_local_file);
- 
-+	for (p = pids_over_limit; parent_pids(p); p = parent_pids(p)) {
-+		atomic64_inc(&p->events[PIDCG_MAX]);
- 		cgroup_file_notify(&p->events_file);
- 	}
- }
--- 
-2.34.1
-
+Thanks
+Ridong
+>>
+>>>>
+>>>> This issue is caused by the incorrect rebuilding of scheduling domains.
+>>>> In this scenario, test/cpuset.cpus.partition should be an invalid root
+>>>> and should not trigger the rebuilding of scheduling domains. When 
+>>>> calling
+>>>> update_parent_effective_cpumask with partcmd_update, if newmask is not
+>>>> null, it should recheck newmask whether there are cpus is available
+>>>> for parect/cs that has tasks.
+>>>>
+>>>> Fixes: 0c7f293efc87 ("cgroup/cpuset: Add 
+>>>> cpuset.cpus.exclusive.effective for v2")
+>>>> Signed-off-by: Chen Ridong <chenridong@huawei.com>
+>>>> ---
+>>>>   kernel/cgroup/cpuset.c | 2 ++
+>>>>   1 file changed, 2 insertions(+)
+>>>>
+>>>> diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
+>>>> index 40ec4abaf440..a9b6d56eeffa 100644
+>>>> --- a/kernel/cgroup/cpuset.c
+>>>> +++ b/kernel/cgroup/cpuset.c
+>>>> @@ -1991,6 +1991,8 @@ static int 
+>>>> update_parent_effective_cpumask(struct cpuset *cs, int cmd,
+>>>>               part_error = PERR_CPUSEMPTY;
+>>>>               goto write_error;
+>>>>           }
+>>>> +        /* Check newmask again, whether cpus are available for 
+>>>> parent/cs */
+>>>> +        nocpu |= tasks_nocpu_error(parent, cs, newmask);
+>>>>           /*
+>>>>            * partcmd_update with newmask:
+>>>
+>>> The code change looks reasonable to me. However, I would like to know 
+>>> more about the reproduction steps.
+> 
+> I am OK with this patch other than missing some information in your 
+> reproduction step.
+> 
+> Cheers,
+> Longman
+> 
+> 
