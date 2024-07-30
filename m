@@ -1,274 +1,430 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A4D7929A2;
-	Tue, 30 Jul 2024 15:56:12 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EFEEE155CB3;
+	Tue, 30 Jul 2024 16:50:47 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1722354972; cv=none; b=QGI3EkBUDDmM2ImX4uGYWrU2nGn6JR5WEI/ZWlaXDDzx3ot7gYUr+0sIkFJ3/GnSwSqRfi3MMXPfZ6jRttCMnvFmqGxOj21rKAfmdv3kEtMZ5BLs97QvyvDT3KpBGJqULXRlDaEyhB+ZHFp4A17gLTz2QkgI6gBqqZfr23JAMJI=
+	t=1722358248; cv=none; b=UWMkCG31FKtCA7ffZtEz/qA4mimN8DfC4GfK3IrzMMDEOL7GpsM+7XebeyDZVD+ZF7ygvlw6uojFzCvnhy9NumZ7Y/iylnFKKtYWC7h3xjGmdFm+Tmin2vHRtysLkN84832pPnxV73gwb2Pn+9Gv7DczJ5xGuO1NnWj6jAnAqIk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1722354972; c=relaxed/simple;
-	bh=PjRtTbbW+GVUo6OT57LN1r5sPCY0ARseJxMTZS73blA=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=mVaKZ+Y5flzwbNfGB5TSy7FFMywcXdNs3J8qPhpQrj65cpGX/WBdABdAol9QK4BNzGx0u1Y+3lCcbcNYNUwHh9ju+d5lTvNRDEbHNoF0EFDX54r5AamohQPaLmaafY/S5uloW1zM7Hky5MPmDhiuMcih0k7wmePt7dOS1Q5AfKM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (1024-bit key) header.d=linuxfoundation.org header.i=@linuxfoundation.org header.b=yRxOyu/4; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1722358248; c=relaxed/simple;
+	bh=Lgbn3vkbb+BMChdfm+ori3tgqCyUMdjPnkHCLWyAxS0=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=XyRBSqk0T7rG6rjyrzWWjPHmoqnn0xDoDmdKKWsuqImxWrA3xktPsVnTDwu4FGUyZIxdrwkAS1o7HtOu6Fde4a05aIy6+TjkQT+pfxZVkpgEbhnPNMHGV6dPQUsJ1rMGVZN7eTciOKUhHHBxcG5XZL3IEUbBUqy/rKOZ2d3nY0I=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=blrOVJ+Q; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linuxfoundation.org header.i=@linuxfoundation.org header.b="yRxOyu/4"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2B33CC32782;
-	Tue, 30 Jul 2024 15:56:11 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linuxfoundation.org;
-	s=korg; t=1722354972;
-	bh=PjRtTbbW+GVUo6OT57LN1r5sPCY0ARseJxMTZS73blA=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=yRxOyu/4KkWCi5e+euUgyWgCCDLlx8AGBZ2qqsNkI5Pia8AF5gjxiHGIdOfjNyFtk
-	 Scj+iRowsHu81aI2jysI7uUGpWPMu6jGD4UK+OLuqNkoycYfcdNt+/mGdK0yWz6BNj
-	 0KkA3wrFzG/ObjaBa/511M6CqzJ6ehwUWrrjUCQc=
-From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-To: stable@vger.kernel.org
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	patches@lists.linux.dev,
-	Tejun Heo <tj@kernel.org>,
-	Zefan Li <lizefan.x@bytedance.com>,
-	Johannes Weiner <hannes@cmpxchg.org>,
-	Waiman Long <longman@redhat.com>,
-	cgroups@vger.kernel.org,
-	Azeem Shaikh <azeemshaikh38@gmail.com>,
-	Kees Cook <keescook@chromium.org>,
-	Sasha Levin <sashal@kernel.org>
-Subject: [PATCH 6.6 016/568] kernfs: Convert kernfs_path_from_node_locked() from strlcpy() to strscpy()
-Date: Tue, 30 Jul 2024 17:42:03 +0200
-Message-ID: <20240730151640.463898673@linuxfoundation.org>
-X-Mailer: git-send-email 2.45.2
-In-Reply-To: <20240730151639.792277039@linuxfoundation.org>
-References: <20240730151639.792277039@linuxfoundation.org>
-User-Agent: quilt/0.67
-X-stable: review
-X-Patchwork-Hint: ignore
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="blrOVJ+Q"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 84A91C4AF0E;
+	Tue, 30 Jul 2024 16:50:45 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1722358247;
+	bh=Lgbn3vkbb+BMChdfm+ori3tgqCyUMdjPnkHCLWyAxS0=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
+	b=blrOVJ+QuPZ2ZNEGGASgGP8DGggFMs3++3Du9ejHbfwFD/HeUxpTjvDbhBMvN0Z/I
+	 6UzguZqc/HA5Dj4ZeYQjUYRyq4Wif4Z1+VXZlOjQB0Sse5AdJRSfqhUwu/vRjwSbql
+	 sbwQeU38K/d9IH6UBrLOQNHAn/sMXhcbQOy9LlQp5OUwpx06cxMdLe3hod+MzRFrBZ
+	 r7hWIvemh0jRN0mwGkO/89FiwmluFTO++kz4UcmcA7Z1RhkRDO3tCXoNGBjQnTUdHy
+	 141XxIO8OAAIbd/C2bGRRp25zCGJkSBzHWc8mDnanS0/XwaGjqncPunuyTsNdRBWR0
+	 Tp2/8NfjMoqcQ==
+Message-ID: <c55f852b-39b7-4bf9-a054-0e7933912730@kernel.org>
+Date: Tue, 30 Jul 2024 18:50:43 +0200
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH V8 1/2] cgroup/rstat: Avoid flushing if there is an
+ ongoing overlapping flush
+To: Yosry Ahmed <yosryahmed@google.com>
+Cc: tj@kernel.org, cgroups@vger.kernel.org, shakeel.butt@linux.dev,
+ hannes@cmpxchg.org, lizefan.x@bytedance.com, longman@redhat.com,
+ kernel-team@cloudflare.com, linux-mm@kvack.org, linux-kernel@vger.kernel.org
+References: <172139415725.3084888.13770938453137383953.stgit@firesoul>
+ <CAJD7tkaVwpYWu_c+vgr7mJiWzFofq9jmx-hyOx1i5kkHWc62dg@mail.gmail.com>
+Content-Language: en-US
+From: Jesper Dangaard Brouer <hawk@kernel.org>
+In-Reply-To: <CAJD7tkaVwpYWu_c+vgr7mJiWzFofq9jmx-hyOx1i5kkHWc62dg@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
 
-6.6-stable review patch.  If anyone has any objections, please let me know.
-
-------------------
-
-From: Kees Cook <keescook@chromium.org>
-
-[ Upstream commit ff6d413b0b59466e5acf2e42f294b1842ae130a1 ]
-
-One of the last remaining users of strlcpy() in the kernel is
-kernfs_path_from_node_locked(), which passes back the problematic "length
-we _would_ have copied" return value to indicate truncation.  Convert the
-chain of all callers to use the negative return value (some of which
-already doing this explicitly). All callers were already also checking
-for negative return values, so the risk to missed checks looks very low.
-
-In this analysis, it was found that cgroup1_release_agent() actually
-didn't handle the "too large" condition, so this is technically also a
-bug fix. :)
-
-Here's the chain of callers, and resolution identifying each one as now
-handling the correct return value:
-
-kernfs_path_from_node_locked()
-        kernfs_path_from_node()
-                pr_cont_kernfs_path()
-                        returns void
-                kernfs_path()
-                        sysfs_warn_dup()
-                                return value ignored
-                        cgroup_path()
-                                blkg_path()
-                                        bfq_bic_update_cgroup()
-                                                return value ignored
-                                TRACE_IOCG_PATH()
-                                        return value ignored
-                                TRACE_CGROUP_PATH()
-                                        return value ignored
-                                perf_event_cgroup()
-                                        return value ignored
-                                task_group_path()
-                                        return value ignored
-                                damon_sysfs_memcg_path_eq()
-                                        return value ignored
-                                get_mm_memcg_path()
-                                        return value ignored
-                                lru_gen_seq_show()
-                                        return value ignored
-                        cgroup_path_from_kernfs_id()
-                                return value ignored
-                cgroup_show_path()
-                        already converted "too large" error to negative value
-                cgroup_path_ns_locked()
-                        cgroup_path_ns()
-                                bpf_iter_cgroup_show_fdinfo()
-                                        return value ignored
-                                cgroup1_release_agent()
-                                        wasn't checking "too large" error
-                        proc_cgroup_show()
-                                already converted "too large" to negative value
-
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: Tejun Heo <tj@kernel.org>
-Cc: Zefan Li <lizefan.x@bytedance.com>
-Cc: Johannes Weiner <hannes@cmpxchg.org>
-Cc: Waiman Long <longman@redhat.com>
-Cc: <cgroups@vger.kernel.org>
-Co-developed-by: Azeem Shaikh <azeemshaikh38@gmail.com>
-Signed-off-by: Azeem Shaikh <azeemshaikh38@gmail.com>
-Link: https://lore.kernel.org/r/20231116192127.1558276-3-keescook@chromium.org
-Signed-off-by: Kees Cook <keescook@chromium.org>
-Link: https://lore.kernel.org/r/20231212211741.164376-3-keescook@chromium.org
-Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Stable-dep-of: 1be59c97c83c ("cgroup/cpuset: Prevent UAF in proc_cpuset_show()")
-Signed-off-by: Sasha Levin <sashal@kernel.org>
----
- fs/kernfs/dir.c           | 34 +++++++++++++++++-----------------
- kernel/cgroup/cgroup-v1.c |  2 +-
- kernel/cgroup/cgroup.c    |  4 ++--
- kernel/cgroup/cpuset.c    |  2 +-
- 4 files changed, 21 insertions(+), 21 deletions(-)
-
-diff --git a/fs/kernfs/dir.c b/fs/kernfs/dir.c
-index 2405aeb39b9a2..b068ed32d7b32 100644
---- a/fs/kernfs/dir.c
-+++ b/fs/kernfs/dir.c
-@@ -127,7 +127,7 @@ static struct kernfs_node *kernfs_common_ancestor(struct kernfs_node *a,
-  *
-  * [3] when @kn_to is %NULL result will be "(null)"
-  *
-- * Return: the length of the full path.  If the full length is equal to or
-+ * Return: the length of the constructed path.  If the path would have been
-  * greater than @buflen, @buf contains the truncated path with the trailing
-  * '\0'.  On error, -errno is returned.
-  */
-@@ -138,16 +138,17 @@ static int kernfs_path_from_node_locked(struct kernfs_node *kn_to,
- 	struct kernfs_node *kn, *common;
- 	const char parent_str[] = "/..";
- 	size_t depth_from, depth_to, len = 0;
-+	ssize_t copied;
- 	int i, j;
- 
- 	if (!kn_to)
--		return strlcpy(buf, "(null)", buflen);
-+		return strscpy(buf, "(null)", buflen);
- 
- 	if (!kn_from)
- 		kn_from = kernfs_root(kn_to)->kn;
- 
- 	if (kn_from == kn_to)
--		return strlcpy(buf, "/", buflen);
-+		return strscpy(buf, "/", buflen);
- 
- 	common = kernfs_common_ancestor(kn_from, kn_to);
- 	if (WARN_ON(!common))
-@@ -158,18 +159,19 @@ static int kernfs_path_from_node_locked(struct kernfs_node *kn_to,
- 
- 	buf[0] = '\0';
- 
--	for (i = 0; i < depth_from; i++)
--		len += strlcpy(buf + len, parent_str,
--			       len < buflen ? buflen - len : 0);
-+	for (i = 0; i < depth_from; i++) {
-+		copied = strscpy(buf + len, parent_str, buflen - len);
-+		if (copied < 0)
-+			return copied;
-+		len += copied;
-+	}
- 
- 	/* Calculate how many bytes we need for the rest */
- 	for (i = depth_to - 1; i >= 0; i--) {
- 		for (kn = kn_to, j = 0; j < i; j++)
- 			kn = kn->parent;
--		len += strlcpy(buf + len, "/",
--			       len < buflen ? buflen - len : 0);
--		len += strlcpy(buf + len, kn->name,
--			       len < buflen ? buflen - len : 0);
-+
-+		len += scnprintf(buf + len, buflen - len, "/%s", kn->name);
- 	}
- 
- 	return len;
-@@ -214,7 +216,7 @@ int kernfs_name(struct kernfs_node *kn, char *buf, size_t buflen)
-  * path (which includes '..'s) as needed to reach from @from to @to is
-  * returned.
-  *
-- * Return: the length of the full path.  If the full length is equal to or
-+ * Return: the length of the constructed path.  If the path would have been
-  * greater than @buflen, @buf contains the truncated path with the trailing
-  * '\0'.  On error, -errno is returned.
-  */
-@@ -265,12 +267,10 @@ void pr_cont_kernfs_path(struct kernfs_node *kn)
- 	sz = kernfs_path_from_node(kn, NULL, kernfs_pr_cont_buf,
- 				   sizeof(kernfs_pr_cont_buf));
- 	if (sz < 0) {
--		pr_cont("(error)");
--		goto out;
--	}
--
--	if (sz >= sizeof(kernfs_pr_cont_buf)) {
--		pr_cont("(name too long)");
-+		if (sz == -E2BIG)
-+			pr_cont("(name too long)");
-+		else
-+			pr_cont("(error)");
- 		goto out;
- 	}
- 
-diff --git a/kernel/cgroup/cgroup-v1.c b/kernel/cgroup/cgroup-v1.c
-index 76db6c67e39a9..9cb00ebe9ac6d 100644
---- a/kernel/cgroup/cgroup-v1.c
-+++ b/kernel/cgroup/cgroup-v1.c
-@@ -802,7 +802,7 @@ void cgroup1_release_agent(struct work_struct *work)
- 		goto out_free;
- 
- 	ret = cgroup_path_ns(cgrp, pathbuf, PATH_MAX, &init_cgroup_ns);
--	if (ret < 0 || ret >= PATH_MAX)
-+	if (ret < 0)
- 		goto out_free;
- 
- 	argv[0] = agentbuf;
-diff --git a/kernel/cgroup/cgroup.c b/kernel/cgroup/cgroup.c
-index 518725b57200c..094f513319259 100644
---- a/kernel/cgroup/cgroup.c
-+++ b/kernel/cgroup/cgroup.c
-@@ -1887,7 +1887,7 @@ int cgroup_show_path(struct seq_file *sf, struct kernfs_node *kf_node,
- 	len = kernfs_path_from_node(kf_node, ns_cgroup->kn, buf, PATH_MAX);
- 	spin_unlock_irq(&css_set_lock);
- 
--	if (len >= PATH_MAX)
-+	if (len == -E2BIG)
- 		len = -ERANGE;
- 	else if (len > 0) {
- 		seq_escape(sf, buf, " \t\n\\");
-@@ -6277,7 +6277,7 @@ int proc_cgroup_show(struct seq_file *m, struct pid_namespace *ns,
- 		if (cgroup_on_dfl(cgrp) || !(tsk->flags & PF_EXITING)) {
- 			retval = cgroup_path_ns_locked(cgrp, buf, PATH_MAX,
- 						current->nsproxy->cgroup_ns);
--			if (retval >= PATH_MAX)
-+			if (retval == -E2BIG)
- 				retval = -ENAMETOOLONG;
- 			if (retval < 0)
- 				goto out_unlock;
-diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
-index 679460ebccfbf..f2025fa5a168d 100644
---- a/kernel/cgroup/cpuset.c
-+++ b/kernel/cgroup/cpuset.c
-@@ -4297,7 +4297,7 @@ int proc_cpuset_show(struct seq_file *m, struct pid_namespace *ns,
- 	retval = cgroup_path_ns(css->cgroup, buf, PATH_MAX,
- 				current->nsproxy->cgroup_ns);
- 	css_put(css);
--	if (retval >= PATH_MAX)
-+	if (retval == -E2BIG)
- 		retval = -ENAMETOOLONG;
- 	if (retval < 0)
- 		goto out_free;
--- 
-2.43.0
 
 
+On 22/07/2024 19.02, Yosry Ahmed wrote:
+> On Fri, Jul 19, 2024 at 6:06 AM Jesper Dangaard Brouer <hawk@kernel.org> wrote:
+>>
+>> This patch reintroduces and generalizes the "stats_flush_ongoing" concept
+>> to avoid redundant flushes if there is an ongoing flush, addressing lock
+>> contention issues on the global cgroup rstat lock.
+>>
+>> At Cloudflare, we observed significant performance degradation due to
+>> lock contention on the rstat lock, primarily caused by kswapd. The
+>> specific mem_cgroup_flush_stats() call inlined in shrink_node, which
+>> takes the rstat lock, is particularly problematic.
+>>
+>> On our 12 NUMA node machines, each with a kswapd kthread per NUMA node, we
+>> noted severe lock contention on the rstat lock, causing 12 CPUs to waste
+>> cycles spinning every time kswapd runs. Fleet-wide stats (/proc/N/schedstat)
+>> for kthreads revealed that we are burning an average of 20,000 CPU cores
+>> fleet-wide on kswapd, primarily due to spinning on the rstat lock.
+>>
+>> Here's a brief overview of the issue:
+>> - __alloc_pages_slowpath calls wake_all_kswapds, causing all kswapdN threads
+>>    to wake up simultaneously.
+>> - The kswapd thread invokes shrink_node (via balance_pgdat), triggering the
+>>    cgroup rstat flush operation as part of its work.
+>> - balance_pgdat() has a NULL value in target_mem_cgroup, causing
+>>    mem_cgroup_flush_stats() to flush with root_mem_cgroup.
+>>
+>> The kernel previously addressed this with a "stats_flush_ongoing" concept,
+>> which was removed in commit 7d7ef0a4686a ("mm: memcg: restore subtree stats
+>> flushing"). This patch reintroduces and generalizes the concept to apply to
+>> all users of cgroup rstat, not just memcg.
+>>
+>> If there is an ongoing rstat flush and the current cgroup is a descendant, a
+>> new flush is unnecessary. To ensure callers still receive updated stats,
+>> they wait for the ongoing flush to complete before returning, but with a
+>> timeout, as stats may already be inaccurate due to continuous updates.
+>>
+>> Lock yielding causes complications for ongoing flushers. Therefore, we limit
+>> which cgroup can become ongoing flusher to top-level, as lock yielding
+>> allows others to obtain the lock without being the ongoing flusher, leading
+>> to a situation where a cgroup that isn't a descendant obtains the lock via
+>> yielding. Thus, we prefer an ongoing flusher with many descendants. If and
+>> when the lock yielding is removed, such as when changing this to a mutex,
+>> we can simplify this code.
+>>
+>> This change significantly reduces lock contention, especially in
+>> environments with multiple NUMA nodes, thereby improving overall system
+>> performance.
+>>
+>> Fixes: 7d7ef0a4686a ("mm: memcg: restore subtree stats flushing").
+>> Signed-off-by: Jesper Dangaard Brouer <hawk@kernel.org>
+>> ---
+>> V8:
+>>   - Updated subject+desc based on Yosry's feedback
+>>   - Explain lock yielding challenges in comments
+>>   - Limit ongoing flushers to cgrp level 0 and 1
+>>
+>> V7: https://lore.kernel.org/all/172070450139.2992819.13210624094367257881.stgit@firesoul
+>> V6: https://lore.kernel.org/all/172052399087.2357901.4955042377343593447.stgit@firesoul/
+>> V5: https://lore.kernel.org/all/171956951930.1897969.8709279863947931285.stgit@firesoul/
+>> V4: https://lore.kernel.org/all/171952312320.1810550.13209360603489797077.stgit@firesoul/
+>> V3: https://lore.kernel.org/all/171943668946.1638606.1320095353103578332.stgit@firesoul/
+>> V2: https://lore.kernel.org/all/171923011608.1500238.3591002573732683639.stgit@firesoul/
+>> V1: https://lore.kernel.org/all/171898037079.1222367.13467317484793748519.stgit@firesoul/
+>> RFC: https://lore.kernel.org/all/171895533185.1084853.3033751561302228252.stgit@firesoul/
+>>
+>>   include/linux/cgroup-defs.h |    2 +
+>>   kernel/cgroup/rstat.c       |  114 ++++++++++++++++++++++++++++++++++++++-----
+>>   2 files changed, 104 insertions(+), 12 deletions(-)
+>>
+>> diff --git a/include/linux/cgroup-defs.h b/include/linux/cgroup-defs.h
+>> index b36690ca0d3f..a33b37514c29 100644
+>> --- a/include/linux/cgroup-defs.h
+>> +++ b/include/linux/cgroup-defs.h
+>> @@ -548,6 +548,8 @@ struct cgroup {
+>>   #ifdef CONFIG_BPF_SYSCALL
+>>          struct bpf_local_storage __rcu  *bpf_cgrp_storage;
+>>   #endif
+>> +       /* completion queue for cgrp_rstat_ongoing_flusher */
+>> +       struct completion flush_done;
+>>
+>>          /* All ancestors including self */
+>>          struct cgroup *ancestors[];
+>> diff --git a/kernel/cgroup/rstat.c b/kernel/cgroup/rstat.c
+>> index fb8b49437573..eaa138f2da2f 100644
+>> --- a/kernel/cgroup/rstat.c
+>> +++ b/kernel/cgroup/rstat.c
+>> @@ -2,6 +2,7 @@
+>>   #include "cgroup-internal.h"
+>>
+>>   #include <linux/sched/cputime.h>
+>> +#include <linux/completion.h>
+>>
+>>   #include <linux/bpf.h>
+>>   #include <linux/btf.h>
+>> @@ -11,6 +12,7 @@
+>>
+>>   static DEFINE_SPINLOCK(cgroup_rstat_lock);
+>>   static DEFINE_PER_CPU(raw_spinlock_t, cgroup_rstat_cpu_lock);
+>> +static struct cgroup *cgrp_rstat_ongoing_flusher = NULL;
+>>
+>>   static void cgroup_base_stat_flush(struct cgroup *cgrp, int cpu);
+>>
+>> @@ -279,17 +281,32 @@ __bpf_hook_end();
+>>    * value -1 is used when obtaining the main lock else this is the CPU
+>>    * number processed last.
+>>    */
+>> -static inline void __cgroup_rstat_lock(struct cgroup *cgrp, int cpu_in_loop)
+>> +static inline bool __cgroup_rstat_trylock(struct cgroup *cgrp, int cpu_in_loop)
+>> +{
+>> +       bool locked;
+>> +
+>> +       locked = spin_trylock_irq(&cgroup_rstat_lock);
+>> +       if (!locked)
+>> +               trace_cgroup_rstat_lock_contended(cgrp, cpu_in_loop, true);
+>> +       else
+>> +               trace_cgroup_rstat_locked(cgrp, cpu_in_loop, false);
+>> +
+>> +       return locked;
+>> +}
+>> +
+>> +static inline void __cgroup_rstat_lock(struct cgroup *cgrp, int cpu_in_loop,
+>> +                                      bool already_contended)
+>>          __acquires(&cgroup_rstat_lock)
+>>   {
+>> -       bool contended;
+>> +       bool locked = false;
+>>
+>> -       contended = !spin_trylock_irq(&cgroup_rstat_lock);
+>> -       if (contended) {
+>> -               trace_cgroup_rstat_lock_contended(cgrp, cpu_in_loop, contended);
+>> +       if (already_contended) /* Skip trylock if already contended */
+>> +               locked = __cgroup_rstat_trylock(cgrp, cpu_in_loop);
+> 
+> Should this be the other way around?
+> 
 
+I think it is correct, but I used it wrong in once place, in
+cgroup_rstat_flush_hold(), as cgroup_rstat_trylock_flusher() returning
+false doesn't mean it was already_contended, but that ongoing flusher
+"skipped" (and waited for) a flush.  I need to correct this.
+
+
+>> +
+>> +       if (!locked) {
+>>                  spin_lock_irq(&cgroup_rstat_lock);
+>> +               trace_cgroup_rstat_locked(cgrp, cpu_in_loop, true);
+>>          }
+>> -       trace_cgroup_rstat_locked(cgrp, cpu_in_loop, contended);
+>>   }
+>>
+>>   static inline void __cgroup_rstat_unlock(struct cgroup *cgrp, int cpu_in_loop)
+>> @@ -299,6 +316,72 @@ static inline void __cgroup_rstat_unlock(struct cgroup *cgrp, int cpu_in_loop)
+>>          spin_unlock_irq(&cgroup_rstat_lock);
+>>   }
+>>
+>> +#define MAX_WAIT       msecs_to_jiffies(100)
+>> +/**
+>> + * cgroup_rstat_trylock_flusher - Trylock that checks for on ongoing flusher
+>> + * @cgrp: target cgroup
+>> + *
+>> + * Function return value follow trylock semantics. Returning true when lock is
+>> + * obtained. Returning false when not locked and it detected flushing can be
+>> + * skipped as another ongoing flusher took care of the flush.
+>> + */
+>> +static bool cgroup_rstat_trylock_flusher(struct cgroup *cgrp)
+>> +{
+>> +       struct cgroup *ongoing;
+>> +       bool locked;
+>> +
+>> +       /*
+>> +        * Check if ongoing flusher is already taking care of this, if
+>> +        * we are a descendant skip work, but wait for ongoing flusher
+>> +        * to complete work.
+>> +        */
+>> +retry:
+>> +       ongoing = READ_ONCE(cgrp_rstat_ongoing_flusher);
+>> +       if (ongoing && cgroup_is_descendant(cgrp, ongoing)) {
+> 
+> The discussion about cgrp_rstat_ongoing_flusher possibly going away in
+> parallel never reached a conclusion AFAICT. Should we use
+> cgroup_tryget() here to get a ref on 'ongoing' until wait completes?
+
+I like the cgroup_tryget() idea, but I though we needed to do this on
+the 'cgrp' that will be waiting in the completion queue on 'ongoing'?
+
+> This shouldn't add much complexity AFAICT.
+
+> 
+> I think just using RCU here wouldn't be enough as we can flush rstat
+> after the RCU grace period when a cgroup is being freed.
+> 
+>> +               wait_for_completion_interruptible_timeout(
+>> +                       &ongoing->flush_done, MAX_WAIT);
+>> +               /* TODO: Add tracepoint here */
+>> +               return false;
+>> +       }
+>> +
+>> +       locked = __cgroup_rstat_trylock(cgrp, -1);
+>> +       if (!locked) {
+>> +               /* Contended: Handle losing race for ongoing flusher */
+>> +               if (!ongoing && READ_ONCE(cgrp_rstat_ongoing_flusher))
+>> +                       goto retry;
+>> +
+>> +               __cgroup_rstat_lock(cgrp, -1, true);
+>> +       }
+>> +       /*
+>> +        * Obtained lock, record this cgrp as the ongoing flusher.
+>> +        * Due to lock yielding, we might obtain lock while another
+>> +        * ongoing flusher (that isn't a parent) owns ongoing_flusher.
+>> +        */
+>> +       ongoing = READ_ONCE(cgrp_rstat_ongoing_flusher);
+>> +       if (!ongoing) {
+> 
+> I think we don't need protection here since we never dereference
+> 'cgrp_rstat_ongoing_flusher', but I think it may be clearer to
+> directly check it to make this obvious:
+> 
+> if (!READ_ONCE(cgrp_rstat_ongoing_flusher)) {
+> 
+
+Makes sense, but I use the 'ongoing' variable in the next patch in a
+tracepoint to diagnose this happening.
+
+> Perhaps we can also explicitly mention in the comment why we do not
+> need any protection here, but I am not sure how helpful that will be.
+> 
+>> +               /*
+>> +                * Limit to top-level as lock yielding allows others to obtain
+>> +                * lock without being ongoing_flusher. Leading to cgroup that
+>> +                * isn't descendant to obtain lock via yielding. So, prefer
+>> +                * ongoing_flusher with many descendants.
+>> +                */
+>> +               if (cgrp->level < 2) {
+> 
+> This covers roots and top-level cgroups under them, right? Did them
+> improve the numbers you were observing?
+> 
+
+The numbers from prod improved significantly, then cadvisor and kswapd
+collide.
+But cadvisor still flush a couple of level 1 cgroups, and can still
+cause lock contention for level 0 and other non-decendent cgroups.
+
+11:30:08 @ongoing_flusher_yield[0]: 68
+@ongoing_flusher_cnt[kswapd11]: 4
+@ongoing_flusher_cnt[kswapd2]: 4
+@ongoing_flusher_cnt[kswapd5]: 4
+@ongoing_flusher_cnt[handled_race]: 4
+@ongoing_flusher_cnt[kswapd9]: 5
+@ongoing_flusher_cnt[kswapd7]: 5
+@ongoing_flusher_cnt[kswapd4]: 5
+@ongoing_flusher_cnt[kswapd6]: 5
+@ongoing_flusher_cnt[kswapd1]: 5
+@ongoing_flusher_cnt[kswapd8]: 6
+@ongoing_flusher_cnt[kswapd10]: 6
+@ongoing_flusher_cnt[kswapd3]: 6
+@ongoing_flusher_cnt[kswapd0]: 6
+@ongoing_flusher_cnt[cadvisor]: 8
+@ongoing_flusher_cnt[all]: 65
+@cnt[tracepoint:cgroup:cgroup_ongoing_flusher_yield]: 4
+@cnt[tracepoint:cgroup:cgroup_rstat_lock_contended]: 26
+@cnt[tracepoint:cgroup:cgroup_ongoing_flusher_wait]: 60
+@cnt[kfunc:vmlinux:cgroup_rstat_flush_locked]: 475
+@cnt[tracepoint:cgroup:cgroup_rstat_locked]: 1953
+@lock_contended[normal, 1]: 2
+@lock_contended[normal, 3]: 8
+@lock_contended[normal, 0]: 16
+
+We see that level 0 observe lock_contended 16 times, but we should
+subtract 4 as that was "handled_race" cases. So 12 times, the root-cgrp
+was spinning on the lock. In total (26-4) 22 times flushers contented on
+the lock.  Given 475 flushes happen within this 1 sec period, every 2.1
+ms, then I do call it it a significant reduction for lock contention.
+
+
+> AFAICT, we can remove this restriction completely if/when we use a
+> mutex and support a single ongoing flusher. If so, let's explicitly
+> mention this, perhaps:
+> 
+
+Well... I'm still not convinced that it makes sense to have level >= 2
+be the ongoing flusher.
+
+E.g. if a level 2 cgroup becomes ongoing flusher, and kswapd starts 12
+NUMA flushes at the same time, then the code will have these 12 kswapd
+threads spin on the lock, until ongoing flusher finishes. That is likely
+what happened above (for a level 1).  These 12 spinning (root) flushers
+will not recheck ongoing_flusher and will all flush the root
+(unnecessarily 11 times).
+
+So, I don't think it is a good idea to have anything else that the root
+as the ongoing flusher.
+
+Can you explain/convince me why having sub-cgroups as ongoing flusher is
+an advantage?
+
+--Jesper
+
+> XXX: Remove this restriction if/when lock yielding is removed
+> 
+>> +                       reinit_completion(&cgrp->flush_done);
+>> +                       WRITE_ONCE(cgrp_rstat_ongoing_flusher, cgrp);
+>> +               }
+>> +       }
+>> +       return true;
+>> +}
+>> +
+>> +static void cgroup_rstat_unlock_flusher(struct cgroup *cgrp)
+>> +{
+>> +       if (cgrp == READ_ONCE(cgrp_rstat_ongoing_flusher)) {
+>> +               WRITE_ONCE(cgrp_rstat_ongoing_flusher, NULL);
+>> +               complete_all(&cgrp->flush_done);
+>> +       }
+>> +       __cgroup_rstat_unlock(cgrp, -1);
+>> +}
+>> +
+>>   /* see cgroup_rstat_flush() */
+>>   static void cgroup_rstat_flush_locked(struct cgroup *cgrp)
+>>          __releases(&cgroup_rstat_lock) __acquires(&cgroup_rstat_lock)
+>> @@ -328,7 +411,7 @@ static void cgroup_rstat_flush_locked(struct cgroup *cgrp)
+>>                          __cgroup_rstat_unlock(cgrp, cpu);
+>>                          if (!cond_resched())
+>>                                  cpu_relax();
+>> -                       __cgroup_rstat_lock(cgrp, cpu);
+>> +                       __cgroup_rstat_lock(cgrp, cpu, false);
+>>                  }
+>>          }
+>>   }
+>> @@ -350,9 +433,11 @@ __bpf_kfunc void cgroup_rstat_flush(struct cgroup *cgrp)
+>>   {
+>>          might_sleep();
+>>
+>> -       __cgroup_rstat_lock(cgrp, -1);
+>> +       if (!cgroup_rstat_trylock_flusher(cgrp))
+>> +               return;
+>> +
+>>          cgroup_rstat_flush_locked(cgrp);
+>> -       __cgroup_rstat_unlock(cgrp, -1);
+>> +       cgroup_rstat_unlock_flusher(cgrp);
+>>   }
+>>
+>>   /**
+>> @@ -368,8 +453,11 @@ void cgroup_rstat_flush_hold(struct cgroup *cgrp)
+>>          __acquires(&cgroup_rstat_lock)
+>>   {
+>>          might_sleep();
+>> -       __cgroup_rstat_lock(cgrp, -1);
+>> -       cgroup_rstat_flush_locked(cgrp);
+>> +
+>> +       if (cgroup_rstat_trylock_flusher(cgrp))
+>> +               cgroup_rstat_flush_locked(cgrp);
+>> +       else
+>> +               __cgroup_rstat_lock(cgrp, -1, true);
+>>   }
+>>
+>>   /**
+>> @@ -379,7 +467,7 @@ void cgroup_rstat_flush_hold(struct cgroup *cgrp)
+>>   void cgroup_rstat_flush_release(struct cgroup *cgrp)
+>>          __releases(&cgroup_rstat_lock)
+>>   {
+>> -       __cgroup_rstat_unlock(cgrp, -1);
+>> +       cgroup_rstat_unlock_flusher(cgrp);
+>>   }
+>>
+>>   int cgroup_rstat_init(struct cgroup *cgrp)
+>> @@ -401,6 +489,8 @@ int cgroup_rstat_init(struct cgroup *cgrp)
+>>                  u64_stats_init(&rstatc->bsync);
+>>          }
+>>
+>> +       init_completion(&cgrp->flush_done);
+>> +
+>>          return 0;
+>>   }
+>>
+>>
+>>
+>>
