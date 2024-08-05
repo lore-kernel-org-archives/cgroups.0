@@ -1,183 +1,110 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+Received: from out-175.mta1.migadu.com (out-175.mta1.migadu.com [95.215.58.175])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0121213CFAB
-	for <cgroups@vger.kernel.org>; Mon,  5 Aug 2024 01:31:32 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7E9CA2BCF7;
+	Mon,  5 Aug 2024 02:59:04 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=95.215.58.175
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1722821494; cv=none; b=JdXa7wbDSUYeouk+Iyjbih1triIL9iQFB2qw6HqT4LUZuXSVksIV4U90e9Eo5MuXxvx95ONOXKnXNWRvjuPnASX/+MfoZSC+pQ5O0ct40064dTRDlsfsOPVzsAYTCHMVgkjOQDaYoBHGyy62gIk5tfSaAPRD2j/1/NeKNTrqhPo=
+	t=1722826747; cv=none; b=htxch7lDJnPYpMowykWbYRRFXZOhTNNYvWX0xGxudn7VH7kRrevBsF++O1IAfe4wVzJqkVN9TEWmiFvZg08NHY+ja8A+rQRcigfjGI7n0JRY9z2ue3DHkoknUrCEvOdOOt9a81vrmdZVxEfKBp9neXYLC+rJhZA1Cln2IgiVnGc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1722821494; c=relaxed/simple;
-	bh=mxtcofD8yXEaAR/bV6+10SBjgxhGaO0FQnNefKPZM3g=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=PEnz1xSLrprfjufzsS+JYgKOQaIpzrIl2DsBwboYeMKHlGoYcCDPH6nKrEE6d2TRhn0o24oQfOH9Huwm8AuqGRxGzvhIXwecZ5EC7ZN5a1YZ7vDp3NueFspiMId3EpFn+183Z8Fj+v/lo4/s21DIwOYPOAID2D92GgLmVZWieVA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=fsvGmmxV; arc=none smtp.client-ip=170.10.129.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	s=arc-20240116; t=1722826747; c=relaxed/simple;
+	bh=V8wh6d6ZtqImE6AX90LtdmD9AzPtO3ZLthBz+nRGAa8=;
+	h=Content-Type:Mime-Version:Subject:From:In-Reply-To:Date:Cc:
+	 Message-Id:References:To; b=oRrIra3jqnEotbdOZMpFo47gJk+cqxDbbdNH0rn8Rz3fmbmqf1wcmjljS+i/5mMMSqzfaF6HbghcawGvNFVXavoldnziYmruJB+jI2+ZBQ2XwCrX+IHLxAHQM/leePFlxqWP1Gf5El9xkNUqGvG+iZ+Jv3D38E+jRiMsEwLoeEU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=fIVNCdaX; arc=none smtp.client-ip=95.215.58.175
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="fsvGmmxV"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1722821492;
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="fIVNCdaX"
+Content-Type: text/plain;
+	charset=us-ascii
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
+	t=1722826742;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=N2Qnd3fWt0i6b5mUAj4mng7D982ubzp7a0Vw45AxyrM=;
-	b=fsvGmmxV5HU17NJyuJF3QZeZGAtzD/oPywjRcvGaEyZddkxy1CfRuBhhZOR5l3MEMYstv5
-	KQGhnDHD5QxSTrhxXEnIu3Kg4Ixln6GaRq8tiLKvIqsB386CFiPFT5hzg9VBtWmxxd4mb1
-	UfZoryF1EGHBmBZ5V9EZzxXi3Zh5hBk=
-Received: from mx-prod-mc-05.mail-002.prod.us-west-2.aws.redhat.com
- (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
- relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-303-jiT3B-jtOT6E-BAjZNHBrw-1; Sun,
- 04 Aug 2024 21:30:56 -0400
-X-MC-Unique: jiT3B-jtOT6E-BAjZNHBrw-1
-Received: from mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.17])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mx-prod-mc-05.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 39266195609F;
-	Mon,  5 Aug 2024 01:30:55 +0000 (UTC)
-Received: from llong.com (unknown [10.2.16.2])
-	by mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id CEDC31955E80;
-	Mon,  5 Aug 2024 01:30:52 +0000 (UTC)
-From: Waiman Long <longman@redhat.com>
-To: Tejun Heo <tj@kernel.org>,
-	Zefan Li <lizefan.x@bytedance.com>,
-	Johannes Weiner <hannes@cmpxchg.org>,
-	=?UTF-8?q?Michal=20Koutn=C3=BD?= <mkoutny@suse.com>,
-	Shuah Khan <shuah@kernel.org>
-Cc: linux-kernel@vger.kernel.org,
-	cgroups@vger.kernel.org,
-	linux-kselftest@vger.kernel.org,
-	Chen Ridong <chenridong@huawei.com>,
-	Waiman Long <longman@redhat.com>
-Subject: [PATCH-cgroup 3/5] cgroup/cpuset: Eliminate unncessary sched domains rebuilds in hotplug
-Date: Sun,  4 Aug 2024 21:30:17 -0400
-Message-ID: <20240805013019.724300-4-longman@redhat.com>
-In-Reply-To: <20240805013019.724300-1-longman@redhat.com>
-References: <20240805013019.724300-1-longman@redhat.com>
+	bh=V8wh6d6ZtqImE6AX90LtdmD9AzPtO3ZLthBz+nRGAa8=;
+	b=fIVNCdaXXUpDe4+FzNILBIyzwEArX9OQvgfH+bkYslOyM6GDm7l8cR85XTISn4vG0d2yEi
+	kHxFWfENnLBK1J53XV8AVKizpJJv2b6SuvUjF/Zl6wTLmEj+uZkD9Y9enyrjduMJU0UHkQ
+	I3It5yLN0w2xExgM83mnMqgrVGQoj0U=
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-Scanned-By: MIMEDefang 3.0 on 10.30.177.17
+Mime-Version: 1.0 (Mac OS X Mail 16.0 \(3774.600.62\))
+Subject: Re: [PATCH] memcg: protect concurrent access to mem_cgroup_idr
+X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
+From: Muchun Song <muchun.song@linux.dev>
+In-Reply-To: <20240802235822.1830976-1-shakeel.butt@linux.dev>
+Date: Mon, 5 Aug 2024 10:58:22 +0800
+Cc: Andrew Morton <akpm@linux-foundation.org>,
+ Johannes Weiner <hannes@cmpxchg.org>,
+ Michal Hocko <mhocko@kernel.org>,
+ Roman Gushchin <roman.gushchin@linux.dev>,
+ Linux Memory Management List <linux-mm@kvack.org>,
+ Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+ Meta kernel team <kernel-team@meta.com>,
+ cgroups@vger.kernel.org
+Content-Transfer-Encoding: quoted-printable
+Message-Id: <39C19964-C74E-4479-AB21-74B7C603CAC8@linux.dev>
+References: <20240802235822.1830976-1-shakeel.butt@linux.dev>
+To: Shakeel Butt <shakeel.butt@linux.dev>
+X-Migadu-Flow: FLOW_OUT
 
-It was found that some hotplug operations may cause multiple
-rebuild_sched_domains_locked() calls. Some of those intermediate calls
-may use cpuset states not in the final correct form leading to incorrect
-sched domain setting.
 
-Fix this problem by using the existing force_rebuild flag to inhibit
-immediate rebuild_sched_domains_locked() calls if set and only doing
-one final call at the end. Also renaming the force_rebuild flag to
-force_sd_rebuild to make its meaning for clear.
 
-Signed-off-by: Waiman Long <longman@redhat.com>
----
- kernel/cgroup/cpuset.c | 33 +++++++++++++++++----------------
- 1 file changed, 17 insertions(+), 16 deletions(-)
+> On Aug 3, 2024, at 07:58, Shakeel Butt <shakeel.butt@linux.dev> wrote:
+>=20
+> The commit 73f576c04b94 ("mm: memcontrol: fix cgroup creation failure
+> after many small jobs") decoupled the memcg IDs from the CSS ID space =
+to
+> fix the cgroup creation failures. It introduced IDR to maintain the
+> memcg ID space. The IDR depends on external synchronization mechanisms
+> for modifications. For the mem_cgroup_idr, the idr_alloc() and
+> idr_replace() happen within css callback and thus are protected =
+through
+> cgroup_mutex from concurrent modifications. However idr_remove() for
+> mem_cgroup_idr was not protected against concurrency and can be run
+> concurrently for different memcgs when they hit their refcnt to zero.
+> Fix that.
+>=20
+> We have been seeing list_lru based kernel crashes at a low frequency =
+in
+> our fleet for a long time. These crashes were in different part of
+> list_lru code including list_lru_add(), list_lru_del() and reparenting
+> code. Upon further inspection, it looked like for a given object =
+(dentry
+> and inode), the super_block's list_lru didn't have list_lru_one for =
+the
+> memcg of that object. The initial suspicions were either the object is
+> not allocated through kmem_cache_alloc_lru() or somehow
+> memcg_list_lru_alloc() failed to allocate list_lru_one() for a memcg =
+but
+> returned success. No evidence were found for these cases.
+>=20
+> Looking more deeper, we started seeing situations where valid memcg's =
+id
+> is not present in mem_cgroup_idr and in some cases multiple valid =
+memcgs
+> have same id and mem_cgroup_idr is pointing to one of them. So, the =
+most
+> reasonable explanation is that these situations can happen due to race
+> between multiple idr_remove() calls or race between
+> idr_alloc()/idr_replace() and idr_remove(). These races are causing
+> multiple memcgs to acquire the same ID and then offlining of one of =
+them
+> would cleanup list_lrus on the system for all of them. Later access =
+from
+> other memcgs to the list_lru cause crashes due to missing =
+list_lru_one.
+>=20
+> Fixes: 73f576c04b94 ("mm: memcontrol: fix cgroup creation failure =
+after many small jobs")
+> Signed-off-by: Shakeel Butt <shakeel.butt@linux.dev>
 
-diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
-index 7287cecb27d1..e070e391d7a8 100644
---- a/kernel/cgroup/cpuset.c
-+++ b/kernel/cgroup/cpuset.c
-@@ -231,6 +231,13 @@ static cpumask_var_t	isolated_cpus;
- /* List of remote partition root children */
- static struct list_head remote_children;
- 
-+/*
-+ * A flag to force sched domain rebuild at the end of an operation while
-+ * inhibiting it in the intermediate stages when set. Currently it is only
-+ * set in hotplug code.
-+ */
-+static bool force_sd_rebuild;
-+
- /*
-  * Partition root states:
-  *
-@@ -1467,7 +1474,7 @@ static void update_partition_sd_lb(struct cpuset *cs, int old_prs)
- 			clear_bit(CS_SCHED_LOAD_BALANCE, &cs->flags);
- 	}
- 
--	if (rebuild_domains)
-+	if (rebuild_domains && !force_sd_rebuild)
- 		rebuild_sched_domains_locked();
- }
- 
-@@ -1820,7 +1827,7 @@ static void remote_partition_check(struct cpuset *cs, struct cpumask *newmask,
- 			remote_partition_disable(child, tmp);
- 			disable_cnt++;
- 		}
--	if (disable_cnt)
-+	if (disable_cnt && !force_sd_rebuild)
- 		rebuild_sched_domains_locked();
- }
- 
-@@ -2425,7 +2432,8 @@ static void update_cpumasks_hier(struct cpuset *cs, struct tmpmasks *tmp,
- 	}
- 	rcu_read_unlock();
- 
--	if (need_rebuild_sched_domains && !(flags & HIER_NO_SD_REBUILD))
-+	if (need_rebuild_sched_domains && !(flags & HIER_NO_SD_REBUILD) &&
-+	    !force_sd_rebuild)
- 		rebuild_sched_domains_locked();
- }
- 
-@@ -3087,7 +3095,8 @@ static int update_flag(cpuset_flagbits_t bit, struct cpuset *cs,
- 	cs->flags = trialcs->flags;
- 	spin_unlock_irq(&callback_lock);
- 
--	if (!cpumask_empty(trialcs->cpus_allowed) && balance_flag_changed)
-+	if (!cpumask_empty(trialcs->cpus_allowed) && balance_flag_changed &&
-+	    !force_sd_rebuild)
- 		rebuild_sched_domains_locked();
- 
- 	if (spread_flag_changed)
-@@ -4468,11 +4477,9 @@ hotplug_update_tasks(struct cpuset *cs,
- 		update_tasks_nodemask(cs);
- }
- 
--static bool force_rebuild;
--
- void cpuset_force_rebuild(void)
- {
--	force_rebuild = true;
-+	force_sd_rebuild = true;
- }
- 
- /**
-@@ -4620,15 +4627,9 @@ static void cpuset_handle_hotplug(void)
- 		       !cpumask_empty(subpartitions_cpus);
- 	mems_updated = !nodes_equal(top_cpuset.effective_mems, new_mems);
- 
--	/*
--	 * In the rare case that hotplug removes all the cpus in
--	 * subpartitions_cpus, we assumed that cpus are updated.
--	 */
--	if (!cpus_updated && !cpumask_empty(subpartitions_cpus))
--		cpus_updated = true;
--
- 	/* For v1, synchronize cpus_allowed to cpu_active_mask */
- 	if (cpus_updated) {
-+		cpuset_force_rebuild();
- 		spin_lock_irq(&callback_lock);
- 		if (!on_dfl)
- 			cpumask_copy(top_cpuset.cpus_allowed, &new_cpus);
-@@ -4684,8 +4685,8 @@ static void cpuset_handle_hotplug(void)
- 	}
- 
- 	/* rebuild sched domains if cpus_allowed has changed */
--	if (cpus_updated || force_rebuild) {
--		force_rebuild = false;
-+	if (force_sd_rebuild) {
-+		force_sd_rebuild = false;
- 		rebuild_sched_domains_cpuslocked();
- 	}
- 
--- 
-2.43.5
+Acked-by: Muchun Song <muchun.song@linux.dev>
+
+Thanks.
 
