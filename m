@@ -1,46 +1,46 @@
 Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7F52A13CA8D
-	for <cgroups@vger.kernel.org>; Mon,  5 Aug 2024 01:31:05 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0121213CFAB
+	for <cgroups@vger.kernel.org>; Mon,  5 Aug 2024 01:31:32 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1722821466; cv=none; b=SjgrAixijoTd/dNzTJqO5QD196bLxWsvXaZLxboO8jHJpkfL+O+DlKCJnQmCSeRxgQEoJOCdgkuwfCGIEaSWSyYAC9syy505tVNnFL86yAHH3TOLRUtUzGu2Vu7YAthtK933U8MSi9JiqNhNFHeP8e911CMjW5s2DBKSnZZCygE=
+	t=1722821494; cv=none; b=JdXa7wbDSUYeouk+Iyjbih1triIL9iQFB2qw6HqT4LUZuXSVksIV4U90e9Eo5MuXxvx95ONOXKnXNWRvjuPnASX/+MfoZSC+pQ5O0ct40064dTRDlsfsOPVzsAYTCHMVgkjOQDaYoBHGyy62gIk5tfSaAPRD2j/1/NeKNTrqhPo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1722821466; c=relaxed/simple;
-	bh=39sLqkK1hW5EV6YFEtmuk1YEgFv6Iqi71UFgllFK/p8=;
+	s=arc-20240116; t=1722821494; c=relaxed/simple;
+	bh=mxtcofD8yXEaAR/bV6+10SBjgxhGaO0FQnNefKPZM3g=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=dFobZyaDO7jsVtyHmU0d7g2orGhoxsxurzs3K5cyXI/f8VT9TSsxGXjO0TYtKy5H3Uu38m1Aknz0ZzBOSFxjPbIZ4ShO9HEv/ppxNcS9FdPdRN5kTZ5ECumHfs9MXfizoy5c96IIvbulpoaRASpGPCXqUuEaQgF/4NDLnGfiQb4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=abZ6vx6m; arc=none smtp.client-ip=170.10.129.124
+	 MIME-Version; b=PEnz1xSLrprfjufzsS+JYgKOQaIpzrIl2DsBwboYeMKHlGoYcCDPH6nKrEE6d2TRhn0o24oQfOH9Huwm8AuqGRxGzvhIXwecZ5EC7ZN5a1YZ7vDp3NueFspiMId3EpFn+183Z8Fj+v/lo4/s21DIwOYPOAID2D92GgLmVZWieVA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=fsvGmmxV; arc=none smtp.client-ip=170.10.129.124
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="abZ6vx6m"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="fsvGmmxV"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1722821464;
+	s=mimecast20190719; t=1722821492;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=URmVA8EbEW4iZr2WAUB//HEv0SoOzbHc2nBPlkzxeFI=;
-	b=abZ6vx6mbXC1BlzY/nqe53nRKPYCiQ76KUKFqjC4LLK0OZxA8YkUboy63IyumdoA6Uah+c
-	ueWHudyCzJu0nA5DZELT6U5FVYMbKSbM5VlFu2Dw9ztqE5wtNPkMOnHFiWd0MVcvUg1iYm
-	nwpbTIx65F1SJ7x7RzNUX6TWvrwDhmY=
-Received: from mx-prod-mc-03.mail-002.prod.us-west-2.aws.redhat.com
+	bh=N2Qnd3fWt0i6b5mUAj4mng7D982ubzp7a0Vw45AxyrM=;
+	b=fsvGmmxV5HU17NJyuJF3QZeZGAtzD/oPywjRcvGaEyZddkxy1CfRuBhhZOR5l3MEMYstv5
+	KQGhnDHD5QxSTrhxXEnIu3Kg4Ixln6GaRq8tiLKvIqsB386CFiPFT5hzg9VBtWmxxd4mb1
+	UfZoryF1EGHBmBZ5V9EZzxXi3Zh5hBk=
+Received: from mx-prod-mc-05.mail-002.prod.us-west-2.aws.redhat.com
  (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
  relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-553-tO7IIqb3Obu4ALm3Mbn3eA-1; Sun,
- 04 Aug 2024 21:31:01 -0400
-X-MC-Unique: tO7IIqb3Obu4ALm3Mbn3eA-1
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-303-jiT3B-jtOT6E-BAjZNHBrw-1; Sun,
+ 04 Aug 2024 21:30:56 -0400
+X-MC-Unique: jiT3B-jtOT6E-BAjZNHBrw-1
 Received: from mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.17])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
-	by mx-prod-mc-03.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id C25BD1955D50;
-	Mon,  5 Aug 2024 01:30:59 +0000 (UTC)
+	by mx-prod-mc-05.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 39266195609F;
+	Mon,  5 Aug 2024 01:30:55 +0000 (UTC)
 Received: from llong.com (unknown [10.2.16.2])
-	by mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id AEFA11955E80;
-	Mon,  5 Aug 2024 01:30:57 +0000 (UTC)
+	by mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id CEDC31955E80;
+	Mon,  5 Aug 2024 01:30:52 +0000 (UTC)
 From: Waiman Long <longman@redhat.com>
 To: Tejun Heo <tj@kernel.org>,
 	Zefan Li <lizefan.x@bytedance.com>,
@@ -52,9 +52,9 @@ Cc: linux-kernel@vger.kernel.org,
 	linux-kselftest@vger.kernel.org,
 	Chen Ridong <chenridong@huawei.com>,
 	Waiman Long <longman@redhat.com>
-Subject: [PATCH-cgroup 5/5] selftest/cgroup: Add new test cases to test_cpuset_prs.sh
-Date: Sun,  4 Aug 2024 21:30:19 -0400
-Message-ID: <20240805013019.724300-6-longman@redhat.com>
+Subject: [PATCH-cgroup 3/5] cgroup/cpuset: Eliminate unncessary sched domains rebuilds in hotplug
+Date: Sun,  4 Aug 2024 21:30:17 -0400
+Message-ID: <20240805013019.724300-4-longman@redhat.com>
 In-Reply-To: <20240805013019.724300-1-longman@redhat.com>
 References: <20240805013019.724300-1-longman@redhat.com>
 Precedence: bulk
@@ -66,44 +66,118 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-Scanned-By: MIMEDefang 3.0 on 10.30.177.17
 
-Add new test cases to test_cpuset_prs.sh to cover corner cases reported
-in previous fix commits.
+It was found that some hotplug operations may cause multiple
+rebuild_sched_domains_locked() calls. Some of those intermediate calls
+may use cpuset states not in the final correct form leading to incorrect
+sched domain setting.
+
+Fix this problem by using the existing force_rebuild flag to inhibit
+immediate rebuild_sched_domains_locked() calls if set and only doing
+one final call at the end. Also renaming the force_rebuild flag to
+force_sd_rebuild to make its meaning for clear.
 
 Signed-off-by: Waiman Long <longman@redhat.com>
 ---
- tools/testing/selftests/cgroup/test_cpuset_prs.sh | 12 +++++++++++-
- 1 file changed, 11 insertions(+), 1 deletion(-)
+ kernel/cgroup/cpuset.c | 33 +++++++++++++++++----------------
+ 1 file changed, 17 insertions(+), 16 deletions(-)
 
-diff --git a/tools/testing/selftests/cgroup/test_cpuset_prs.sh b/tools/testing/selftests/cgroup/test_cpuset_prs.sh
-index 7c08cc153367..7295424502b9 100755
---- a/tools/testing/selftests/cgroup/test_cpuset_prs.sh
-+++ b/tools/testing/selftests/cgroup/test_cpuset_prs.sh
-@@ -321,7 +321,7 @@ TEST_MATRIX=(
- 	#  old-A1 old-A2 old-A3 old-B1 new-A1 new-A2 new-A3 new-B1 fail ECPUs Pstate ISOLCPUS
- 	#  ------ ------ ------ ------ ------ ------ ------ ------ ---- ----- ------ --------
- 	#
--	# Incorrect change to cpuset.cpus invalidates partition root
-+	# Incorrect change to cpuset.cpus[.exclusive] invalidates partition root
- 	#
- 	# Adding CPUs to partition root that are not in parent's
- 	# cpuset.cpus is allowed, but those extra CPUs are ignored.
-@@ -365,6 +365,16 @@ TEST_MATRIX=(
- 	# cpuset.cpus can overlap with sibling cpuset.cpus.exclusive but not subsumed by it
- 	"   C0-3     .      .    C4-5     X5     .      .      .     0 A1:0-3,B1:4-5"
+diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
+index 7287cecb27d1..e070e391d7a8 100644
+--- a/kernel/cgroup/cpuset.c
++++ b/kernel/cgroup/cpuset.c
+@@ -231,6 +231,13 @@ static cpumask_var_t	isolated_cpus;
+ /* List of remote partition root children */
+ static struct list_head remote_children;
  
-+	# Child partition root that try to take all CPUs from parent partition
-+	# with tasks will remain invalid.
-+	" C1-4:P1:S+ P1     .      .       .     .      .      .     0 A1:1-4,A2:1-4 A1:P1,A2:P-1"
-+	" C1-4:P1:S+ P1     .      .       .   C1-4     .      .     0 A1,A2:1-4 A1:P1,A2:P1"
-+	" C1-4:P1:S+ P1     .      .       T   C1-4     .      .     0 A1:1-4,A2:1-4 A1:P1,A2:P-1"
++/*
++ * A flag to force sched domain rebuild at the end of an operation while
++ * inhibiting it in the intermediate stages when set. Currently it is only
++ * set in hotplug code.
++ */
++static bool force_sd_rebuild;
 +
-+	# Clearing of cpuset.cpus with a preset cpuset.cpus.exclusive shouldn't
-+	# affect cpuset.cpus.exclusive.effective.
-+	" C1-4:X3:S+ C1:X3  .      .       .     C      .      .     0 A2:1-4,XA2:3"
-+
- 	#  old-A1 old-A2 old-A3 old-B1 new-A1 new-A2 new-A3 new-B1 fail ECPUs Pstate ISOLCPUS
- 	#  ------ ------ ------ ------ ------ ------ ------ ------ ---- ----- ------ --------
- 	# Failure cases:
+ /*
+  * Partition root states:
+  *
+@@ -1467,7 +1474,7 @@ static void update_partition_sd_lb(struct cpuset *cs, int old_prs)
+ 			clear_bit(CS_SCHED_LOAD_BALANCE, &cs->flags);
+ 	}
+ 
+-	if (rebuild_domains)
++	if (rebuild_domains && !force_sd_rebuild)
+ 		rebuild_sched_domains_locked();
+ }
+ 
+@@ -1820,7 +1827,7 @@ static void remote_partition_check(struct cpuset *cs, struct cpumask *newmask,
+ 			remote_partition_disable(child, tmp);
+ 			disable_cnt++;
+ 		}
+-	if (disable_cnt)
++	if (disable_cnt && !force_sd_rebuild)
+ 		rebuild_sched_domains_locked();
+ }
+ 
+@@ -2425,7 +2432,8 @@ static void update_cpumasks_hier(struct cpuset *cs, struct tmpmasks *tmp,
+ 	}
+ 	rcu_read_unlock();
+ 
+-	if (need_rebuild_sched_domains && !(flags & HIER_NO_SD_REBUILD))
++	if (need_rebuild_sched_domains && !(flags & HIER_NO_SD_REBUILD) &&
++	    !force_sd_rebuild)
+ 		rebuild_sched_domains_locked();
+ }
+ 
+@@ -3087,7 +3095,8 @@ static int update_flag(cpuset_flagbits_t bit, struct cpuset *cs,
+ 	cs->flags = trialcs->flags;
+ 	spin_unlock_irq(&callback_lock);
+ 
+-	if (!cpumask_empty(trialcs->cpus_allowed) && balance_flag_changed)
++	if (!cpumask_empty(trialcs->cpus_allowed) && balance_flag_changed &&
++	    !force_sd_rebuild)
+ 		rebuild_sched_domains_locked();
+ 
+ 	if (spread_flag_changed)
+@@ -4468,11 +4477,9 @@ hotplug_update_tasks(struct cpuset *cs,
+ 		update_tasks_nodemask(cs);
+ }
+ 
+-static bool force_rebuild;
+-
+ void cpuset_force_rebuild(void)
+ {
+-	force_rebuild = true;
++	force_sd_rebuild = true;
+ }
+ 
+ /**
+@@ -4620,15 +4627,9 @@ static void cpuset_handle_hotplug(void)
+ 		       !cpumask_empty(subpartitions_cpus);
+ 	mems_updated = !nodes_equal(top_cpuset.effective_mems, new_mems);
+ 
+-	/*
+-	 * In the rare case that hotplug removes all the cpus in
+-	 * subpartitions_cpus, we assumed that cpus are updated.
+-	 */
+-	if (!cpus_updated && !cpumask_empty(subpartitions_cpus))
+-		cpus_updated = true;
+-
+ 	/* For v1, synchronize cpus_allowed to cpu_active_mask */
+ 	if (cpus_updated) {
++		cpuset_force_rebuild();
+ 		spin_lock_irq(&callback_lock);
+ 		if (!on_dfl)
+ 			cpumask_copy(top_cpuset.cpus_allowed, &new_cpus);
+@@ -4684,8 +4685,8 @@ static void cpuset_handle_hotplug(void)
+ 	}
+ 
+ 	/* rebuild sched domains if cpus_allowed has changed */
+-	if (cpus_updated || force_rebuild) {
+-		force_rebuild = false;
++	if (force_sd_rebuild) {
++		force_sd_rebuild = false;
+ 		rebuild_sched_domains_cpuslocked();
+ 	}
+ 
 -- 
 2.43.5
 
