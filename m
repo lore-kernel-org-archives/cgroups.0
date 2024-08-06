@@ -1,156 +1,124 @@
-Received: from mail-pj1-f43.google.com (mail-pj1-f43.google.com [209.85.216.43])
+Received: from mail-vk1-f171.google.com (mail-vk1-f171.google.com [209.85.221.171])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 567B31EB2A;
-	Tue,  6 Aug 2024 21:08:39 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.43
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 55F8F14C5A1;
+	Tue,  6 Aug 2024 21:36:22 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.171
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1722978520; cv=none; b=OiZPrGL2kz8fjKyz1aWxP3exkdf78CNvcj1O7OmhfFW2YSoWxlEUivpRhDhjuRSPnBiYxU3gQafQOXvX0NKmH/DsTYDkggHotNM5DnI1++CgUGjm6yjevPKq+FnqMTJMo+SEZMT+VKz6Hbt+ETuabP7XuTogeZIcNlRXwwnXnP8=
+	t=1722980183; cv=none; b=CXyWlovd3t7Y/jDt31HbnpJzWxSXW5XmVPVTDJfgPlgpWb7xakt6nl39PT6dfReiO2ZuuZYYiVd23vXHgKIdJqeswUQ/p92xZFCDYvtMSE/2s1SPxkyBE5FiXofYdFbfFs/PNQ5iXEqnjb26To0S/du5F7syunvzIZFOIaIKFjU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1722978520; c=relaxed/simple;
-	bh=U3DpBlQ40wWqHijbiteh/PUvq86D6Ojkqqerf+Lbke0=;
+	s=arc-20240116; t=1722980183; c=relaxed/simple;
+	bh=2t+WutVWb5K5+D7fiMz4bLOCIU3ZQR0TMlrkjEcV3Ec=;
 	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=QZD2p1I8zk4GwwhIUOUWbosJOs86fR6E8MoP2KreavnAd1ppwikSgB+Eb5AhWghrjwNFj4nKt1SADukuk9SDtHPvkZO85acMFRvVHllBNwciM2V5Cjs4lPYDu6isjJMnGuQ6/EF/1D4yH51cos4HjYFKJ1uMis87UwTngTaeJXU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=d98y//Cx; arc=none smtp.client-ip=209.85.216.43
+	 To:Cc:Content-Type; b=I/9UB2h+KdSvLbzneFhslfDMqYPWVrutFTuRCcr9phnabJ3rcvtw5U+kicPyRZBn4M6QLEVw62EtXQHRWb5TYfEzdrh1axhghxZX9xId1uxmkkYLmJam5CSDN4BaLNsbOeURUXQGepxfuKMvPrjB5bagaJjHDq/D5Yw1dFumrEY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=SemJxCq1; arc=none smtp.client-ip=209.85.221.171
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="d98y//Cx"
-Received: by mail-pj1-f43.google.com with SMTP id 98e67ed59e1d1-2cfdc4deeecso934748a91.3;
-        Tue, 06 Aug 2024 14:08:39 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="SemJxCq1"
+Received: by mail-vk1-f171.google.com with SMTP id 71dfb90a1353d-4f6ac1628dfso424924e0c.0;
+        Tue, 06 Aug 2024 14:36:22 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1722978518; x=1723583318; darn=vger.kernel.org;
+        d=gmail.com; s=20230601; t=1722980181; x=1723584981; darn=vger.kernel.org;
         h=content-transfer-encoding:cc:to:subject:message-id:date:from
          :in-reply-to:references:mime-version:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=LPDFztU8EEvGIRMjQoMfPc2pyQDFPqx9uMpc17voEHk=;
-        b=d98y//CxSYETCC/xWDUEVInPsgkzskpfPyMnN7w3aTHcuaeD8BBRdbNu0s+2kJtcJL
-         TuASUg9ps/Fs61yEaHGU9dACxp7DHMA+5p1JjNWmujkF7rfd3/XRwxfesR7TM0+k6ccr
-         A7bHWIcUNWWNdfziVYEErH/QS0gxcQa3DH0e1fSpGYlKzX+4MAwX7i1GJLlVCcuFeknw
-         aT5VDD8/IseG44cwIQLpSmWImJKKyLhBkFSIe95bgtRMvdxXWcC9uqHAbYM/35kCFkv4
-         lPpVIr6ceYeZ0lMhq06wS/rW/e2X7JEP4pIS9J+MBuwNrUsQs69k1AROwsoKcYfWEVp6
-         Y5Tg==
+        bh=Dh/CnSErYT7/6V79W9GXrn6y0woRRKH6f2DR4IxHNx8=;
+        b=SemJxCq1iiNIrRCHDZzGFroL2IyUfxTOy1ZQ+Ov3aAOMFSNH2UW/10MR3kGh/Pr/GZ
+         iMUlmcUCJVwUu9W0EcgWAXZIPmFmVVSgZlQuFk/8yLE+SeC1kghCi/FPDEEwFcKuTCog
+         XgB4n3bF2VNcpF7MJzRdwpmX2qt7RiG5J6S/Aze1IcTGF+d43uXyJghyaTdWlNbmuSuk
+         EfNPzhtM9HeCaPzgkZ8hT3is5zUgOkQb7/eQ0Nn9sF/Fksgktm+7T3yuH70+gcLTU41I
+         7JoSX2yO8j323tepfhKEziLbWhIywTznisnsNNYjdjULdbtzqly4AVFtTbHVZPeZh5Si
+         bCjg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1722978518; x=1723583318;
+        d=1e100.net; s=20230601; t=1722980181; x=1723584981;
         h=content-transfer-encoding:cc:to:subject:message-id:date:from
          :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=LPDFztU8EEvGIRMjQoMfPc2pyQDFPqx9uMpc17voEHk=;
-        b=kZseu9WIahrNJOGwPp5kdvKH05KMc5YgVFLZWvwa8QTq7mEmnxqwPGANruXTa6gPcp
-         +uUbSeq6STkagU1u9oq24cMi64dd40eRhuBHXZlIpDwKAXcF+ol7xso3t5+GsNRDTelB
-         /A2FLuot4K7aWr1AfSQIdn1FkF3B2jAYuiaEA91qDC5+xhF+Jusby3om7sPplnTDvQQk
-         CK430OFeVSJ/BRsbPEfg5xLI+5E6kcgr8EK//PpICgCnRRfCxRQ/H3DzZo5/bBV3cgEz
-         VIt4E3PUNTIedpqKGyLdoJHtSgSoNTKFAOMY7m3/lmQw57EHcJGCVNP9QZQ2qizA9yp/
-         PWPg==
-X-Forwarded-Encrypted: i=1; AJvYcCX/23h5DB4C0zDmB6OFv0lhNhB1KI/ONXQrA2dXutTkJtLy4Yzz/DmW/Eky3Wqq13AlAnB2HeyvAq8YUYA6jprtqv9UMn6pibfNBOn25B40ywbXJiThAXMZxMsZ+hcMyggsD+C8R6SApqYdJB9Ec7RZU0nCKpTcXvU80LVs9EPaSz6GZoI/Xh832w==
-X-Gm-Message-State: AOJu0YwX8CHzRgiGIQQDxl8eUKd9OaVsET46HP33g0RytMWIZZCPU611
-	rqklroSS8nnYkfGzD+Jk9It/9ZuTPoCLCLj22s13CIXeQYcqOaSV4TqqDbMZGHwXDHJCW0UmlLU
-	dWBHoSuBqWFuqmpZ+b/40xRVfgxx7YJ5T
-X-Google-Smtp-Source: AGHT+IFVHKrm49Cl+S3RHubuY1rqIQ/ciWyH53GdfgbOAbDUnn5faWGt9O2UUP44AAk5gslfMqpigc+h6smZoWk5nLI=
-X-Received: by 2002:a17:90a:7307:b0:2c9:6f06:8005 with SMTP id
- 98e67ed59e1d1-2cff9524412mr18387005a91.26.1722978518414; Tue, 06 Aug 2024
- 14:08:38 -0700 (PDT)
+        bh=Dh/CnSErYT7/6V79W9GXrn6y0woRRKH6f2DR4IxHNx8=;
+        b=Kc4YuB2okayI2sj2ETwL3N7wQTNF7oiBVjvn1r0/WuaSDynlDR8lKVEG2OTz9YPXus
+         V0IttrwuV6/5m5zpuUWVeUpQMnh99AFAJmp21AB4eU9b1l81+68LusD4Ax5TdIAoQMuQ
+         hWcrnbtTMj/wtjExzu4Ie47pEwu9Ozzwr8v9FuC7fXzhX3ZWZhcyb8LvE2V5ZdI1RVKI
+         kpj2ctFWaz87ytPQelmBm5pArTDibJC5ZEM6VWRkVAnvenTTaPaonoiqrxN9L9VyZY2/
+         q/kdmzqopMc6FBAy8eUtn92/BkA59F0AVn1Pv1zfiG9oqq1HenoK1VuCuYAmNixO0vyN
+         XPqA==
+X-Forwarded-Encrypted: i=1; AJvYcCW7cBLGUZQYgxMC6P/3KTVZgKAfPZvQfw9P3JgAchkkbA2YfSiMX04ABQQtRCIbABi9tN/e2qu7rVvavESmbu1YZTKZtQz1a45JbzdDRJ3fnH0doLrGiSpih9bLCmGUVytthevX9KXG7zXtG5raBXyNIxmRKRW3Altds/2kSQwWBv0=
+X-Gm-Message-State: AOJu0YyTYuAwSjWF3a7zxV4lqX85xNFuQZm3bU3tWV/S1Msr32kLSAPN
+	pJ8c/7QfyiFzOcb1ItO1YsghNxnNKWzQ3p1zwFtMYX+ZhWopSKyQ47nHYg0I3LpM3xy4x/9G7HF
+	6xSDJd1j2lt/eYjFbZri2f5B0M0Y=
+X-Google-Smtp-Source: AGHT+IFmUCpFy0ikEOsHVNcJ0/zIKB6zFAVRuMB81ZBEkWgUduwTajthzToYqvIUNMbqXOXZ0iKU7UA3pdcWrBARjqM=
+X-Received: by 2002:a05:6102:6d4:b0:492:a11f:a878 with SMTP id
+ ada2fe7eead31-4945bebdc3dmr20433130137.23.1722980181051; Tue, 06 Aug 2024
+ 14:36:21 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20240730050927.GC5334@ZenIV> <20240730051625.14349-1-viro@kernel.org>
- <20240730051625.14349-16-viro@kernel.org>
-In-Reply-To: <20240730051625.14349-16-viro@kernel.org>
-From: Andrii Nakryiko <andrii.nakryiko@gmail.com>
-Date: Tue, 6 Aug 2024 14:08:26 -0700
-Message-ID: <CAEf4BzasCg8o2qc14kYkChT78jdkVsYXhGW3zUWjhmoAgDkkKw@mail.gmail.com>
-Subject: Re: [PATCH 16/39] convert __bpf_prog_get() to CLASS(fd, ...)
-To: viro@kernel.org
-Cc: linux-fsdevel@vger.kernel.org, amir73il@gmail.com, bpf@vger.kernel.org, 
-	brauner@kernel.org, cgroups@vger.kernel.org, kvm@vger.kernel.org, 
-	netdev@vger.kernel.org, torvalds@linux-foundation.org
+References: <20240731133318.527-1-justinjiang@vivo.com> <20240731091715.b78969467c002fa3a120e034@linux-foundation.org>
+ <dbead7ca-e9a4-4ee8-9247-4e1ba9f6695c@vivo.com> <20240806133823.5cb3f27ef30c42dad5d0c3e8@linux-foundation.org>
+In-Reply-To: <20240806133823.5cb3f27ef30c42dad5d0c3e8@linux-foundation.org>
+From: Barry Song <21cnbao@gmail.com>
+Date: Wed, 7 Aug 2024 04:32:09 +0800
+Message-ID: <CAGsJ_4x1tLEmRFbnUYcNYtV73SyBYpBtAx_syjfcnjrom-R+4w@mail.gmail.com>
+Subject: Re: [PATCH v2 0/3] mm: tlb swap entries batch async release
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: zhiguojiang <justinjiang@vivo.com>, linux-mm@kvack.org, linux-kernel@vger.kernel.org, 
+	Will Deacon <will@kernel.org>, "Aneesh Kumar K.V" <aneesh.kumar@kernel.org>, 
+	Nick Piggin <npiggin@gmail.com>, Peter Zijlstra <peterz@infradead.org>, Arnd Bergmann <arnd@arndb.de>, 
+	Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, 
+	Roman Gushchin <roman.gushchin@linux.dev>, Shakeel Butt <shakeel.butt@linux.dev>, 
+	Muchun Song <muchun.song@linux.dev>, linux-arch@vger.kernel.org, cgroups@vger.kernel.org, 
+	kernel test robot <lkp@intel.com>, opensource.kernel@vivo.com
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 
-On Mon, Jul 29, 2024 at 10:19=E2=80=AFPM <viro@kernel.org> wrote:
+On Wed, Aug 7, 2024 at 4:38=E2=80=AFAM Andrew Morton <akpm@linux-foundation=
+.org> wrote:
 >
-> From: Al Viro <viro@zeniv.linux.org.uk>
+> On Thu, 1 Aug 2024 14:30:52 +0800 zhiguojiang <justinjiang@vivo.com> wrot=
+e:
 >
-> Irregularity here is fdput() not in the same scope as fdget();
-> just fold ____bpf_prog_get() into its (only) caller and that's
-> it...
+> > > Dumb question: why can't this be done in userspace?  The exiting
+> > > process does fork/exit and lets the child do all this asynchronous fr=
+eeing?
+> > The logic optimization for kernel releasing swap entries cannot be
+> > implemented in userspace. The multiple exiting processes here own
+> > their independent mm, rather than parent and child processes share the
+> > same mm. Therefore, when the kernel executes multiple exiting process
+> > simultaneously, they will definitely occupy multiple CPU core resources
+> > to complete it.
 >
-> Signed-off-by: Al Viro <viro@zeniv.linux.org.uk>
-> ---
->  kernel/bpf/syscall.c | 32 +++++++++++---------------------
->  1 file changed, 11 insertions(+), 21 deletions(-)
->
+> What I'm asking is why not change those userspace processes so that they
+> fork off a child process which shares the MM (shared mm_struct) and
+> then the original process exits, leaving the asynchronously-running
+> child to clean up the MM resources.
 
-Folding makes total sense, the logic lgtm (though I find CLASS(fd,
-f)(ufd) utterly non-intuitive naming-wise). Extra IS_ERR(prog) check
-should be dropped though, see below.
+Not Zhiguo. From my perspective as a phone engineer, this issue isn't relat=
+ed
+to the parent-child process or the wait() function. Phones rely heavily on
+mechanisms similar to the OOM killer to function efficiently. For instance,
+if you're using apps like YouTube, TikTok, and Facebook, and then you
+open the camera app to take a photo, the camera app becomes the foreground
+process and demands a lot of memory. In this scenario, the phone might
+decide to terminate the most memory-consuming and less important apps,
+such as TikTok or YouTube, to free up memory for the camera app. TikTok
+and YouTube become less important because they are no longer occupying
+the phone's screen and have moved to the background. The faster TikTok
+and YouTube can be unmapped, the quicker the camera app can launch,
+enhancing the user experience.
 
-Acked-by: Andrii Nakryiko <andrii@kernel.org>
+An important reason why apps can launch very slowly is due to the time late=
+ncy
+of alloc_pages(). That's why I'm quite interested in Zhiguo's patchset. On =
+the
+other hand, mTHP can help alleviate the situation by releasing swap slots t=
+hree
+times faster in my other patch:
+https://lore.kernel.org/linux-mm/20240806012409.61962-1-21cnbao@gmail.com/
 
-> diff --git a/kernel/bpf/syscall.c b/kernel/bpf/syscall.c
-> index 3093bf2cc266..c5b252c0faa8 100644
-> --- a/kernel/bpf/syscall.c
-> +++ b/kernel/bpf/syscall.c
-> @@ -2407,18 +2407,6 @@ int bpf_prog_new_fd(struct bpf_prog *prog)
->                                 O_RDWR | O_CLOEXEC);
->  }
->
-> -static struct bpf_prog *____bpf_prog_get(struct fd f)
-> -{
-> -       if (!fd_file(f))
-> -               return ERR_PTR(-EBADF);
-> -       if (fd_file(f)->f_op !=3D &bpf_prog_fops) {
-> -               fdput(f);
-> -               return ERR_PTR(-EINVAL);
-> -       }
-> -
-> -       return fd_file(f)->private_data;
-> -}
-> -
->  void bpf_prog_add(struct bpf_prog *prog, int i)
->  {
->         atomic64_add(i, &prog->aux->refcnt);
-> @@ -2474,20 +2462,22 @@ bool bpf_prog_get_ok(struct bpf_prog *prog,
->  static struct bpf_prog *__bpf_prog_get(u32 ufd, enum bpf_prog_type *atta=
-ch_type,
->                                        bool attach_drv)
->  {
-> -       struct fd f =3D fdget(ufd);
-> +       CLASS(fd, f)(ufd);
->         struct bpf_prog *prog;
->
-> -       prog =3D ____bpf_prog_get(f);
-> -       if (IS_ERR(prog))
-> +       if (fd_empty(f))
-> +               return ERR_PTR(-EBADF);
-> +       if (fd_file(f)->f_op !=3D &bpf_prog_fops)
-> +               return ERR_PTR(-EINVAL);
-> +
-> +       prog =3D fd_file(f)->private_data;
-> +       if (IS_ERR(prog))       // can that actually happen?
+This is likely another advantage of mTHP.
 
-no, it can't, private_data will always be a valid pointer, otherwise
-that file would never be successfully created
-
->                 return prog;
-> -       if (!bpf_prog_get_ok(prog, attach_type, attach_drv)) {
-> -               prog =3D ERR_PTR(-EINVAL);
-> -               goto out;
-> -       }
-> +
-> +       if (!bpf_prog_get_ok(prog, attach_type, attach_drv))
-> +               return ERR_PTR(-EINVAL);
->
->         bpf_prog_inc(prog);
-> -out:
-> -       fdput(f);
->         return prog;
->  }
->
-> --
-> 2.39.2
->
->
+Thanks
+Barry
