@@ -1,37 +1,37 @@
-Received: from szxga04-in.huawei.com (szxga04-in.huawei.com [45.249.212.190])
+Received: from szxga05-in.huawei.com (szxga05-in.huawei.com [45.249.212.191])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9592B76056;
-	Fri, 16 Aug 2024 08:35:05 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.190
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 76107136E21;
+	Fri, 16 Aug 2024 08:35:07 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.191
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1723797309; cv=none; b=N/jndNFNHXoifH3JCd2t0dao7o/5GhqgLdW61KuvGS/akaEMwe8ScMmtqTT+rtNmBTpW38mVoNuWqlVXeoNEFWsw2dNQbh9l343Y2CEr7wOhrWoXsp2Q5Qj+Bgw5fzs/qg2GVwvvrRZ73J49yRto9wrGGVOKTqxoLHYd1sQqUEA=
+	t=1723797310; cv=none; b=PfAgzbYktOM8I0rVXl5NGi0MJD+2alYdRbzprerHvapeUqF4bfBq5VFwBZPzyr7TlEnlF6IJpxeUxJd6BRU0fOvm6KAiOZEpXRnfUtRXFw0LnxDxSNPvD9+EnRQZD6yMI4NC2qkT5WWcJX9DkmWZhxG9YnVr6xkC2TYMXD1E3LI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1723797309; c=relaxed/simple;
-	bh=K0UEXoH/fXxsU2M6msDw9lrpONepQ8q4QEg68oanFc8=;
+	s=arc-20240116; t=1723797310; c=relaxed/simple;
+	bh=SCwFfgAFPR5wylSjlK+s1jBfcRqdchYZvSsCvVnfYPg=;
 	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=EeKASk3IKsGISfN0ZOVTen0ZiwlZy5WgV2YYYvbRioG96pIEwErYBDALER0+QR9YAfTHgrwYZsFUvdc2HOWZ90UvSf8jbLgyRdF6/zn0hGQjF3Yahf7Yg5lHU4LqDswsVeaI+HeDQos6csPWFNl8DwApsUnjNrDpxQ85NxhKF88=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; arc=none smtp.client-ip=45.249.212.190
+	 MIME-Version:Content-Type; b=VoPqmpTzqNxAK0nHt2/ptXEfMgJBYtiSWM9/lhL7ouyITTzjIEhNoV9GRp6rfhvKOcn4i/QXURx/ZZElB3fdduidV9vVqPLLCWxWzOJ3nwjBrCnuAhfiKVtvyYhx3GDEFeeTiD+8WSYAS/aiVB/kJX6d1obFXSAKmCfIP5Sly/Q=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; arc=none smtp.client-ip=45.249.212.191
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
 Received: from mail.maildlp.com (unknown [172.19.88.214])
-	by szxga04-in.huawei.com (SkyGuard) with ESMTP id 4WlZtp6mvcz20lrJ;
-	Fri, 16 Aug 2024 16:30:26 +0800 (CST)
+	by szxga05-in.huawei.com (SkyGuard) with ESMTP id 4WlZtT4cMTz1j6YG;
+	Fri, 16 Aug 2024 16:30:09 +0800 (CST)
 Received: from kwepemd100013.china.huawei.com (unknown [7.221.188.163])
-	by mail.maildlp.com (Postfix) with ESMTPS id 054FD1A016C;
+	by mail.maildlp.com (Postfix) with ESMTPS id E183C1A016C;
 	Fri, 16 Aug 2024 16:35:03 +0800 (CST)
 Received: from huawei.com (10.67.174.121) by kwepemd100013.china.huawei.com
  (7.221.188.163) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1258.34; Fri, 16 Aug
- 2024 16:35:02 +0800
+ 2024 16:35:03 +0800
 From: Chen Ridong <chenridong@huawei.com>
 To: <tj@kernel.org>, <lizefan.x@bytedance.com>, <hannes@cmpxchg.org>,
 	<longman@redhat.com>, <adityakali@google.com>, <sergeh@kernel.org>,
 	<mkoutny@suse.com>
 CC: <cgroups@vger.kernel.org>, <linux-kernel@vger.kernel.org>
-Subject: [PATCH -next 1/3] cgroup/cpuset: Correct invalid remote parition prs
-Date: Fri, 16 Aug 2024 08:27:25 +0000
-Message-ID: <20240816082727.2779-2-chenridong@huawei.com>
+Subject: [PATCH -next 3/3] cgroup/cpuset: remove use_parent_ecpus of cpuset
+Date: Fri, 16 Aug 2024 08:27:27 +0000
+Message-ID: <20240816082727.2779-4-chenridong@huawei.com>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20240816082727.2779-1-chenridong@huawei.com>
 References: <20240816082727.2779-1-chenridong@huawei.com>
@@ -46,117 +46,112 @@ Content-Type: text/plain
 X-ClientProxiedBy: dggems705-chm.china.huawei.com (10.3.19.182) To
  kwepemd100013.china.huawei.com (7.221.188.163)
 
-When enable a remote partition, I found that:
-
-cd /sys/fs/cgroup/
-mkdir test
-mkdir test/test1
-echo +cpuset > cgroup.subtree_control
-echo +cpuset >  test/cgroup.subtree_control
-echo 3 > test/test1/cpuset.cpus
-echo root > test/test1/cpuset.cpus.partition
-cat test/test1/cpuset.cpus.partition
-root invalid (Parent is not a partition root)
-
-The parent of a remote partition could not be a root. This is due to the
-emtpy effective_xcpus. It would be better to prompt the message "invalid
-cpu list in cpuset.cpus.exclusive".
+use_parent_ecpus is used to track whether the children are using the
+parent's effective_cpus. When a parent's effective_cpus is changed
+due to changes in a child partition's effective_xcpus, any child
+using parent'effective_cpus must call update_cpumasks_hier. However,
+if a child is not a valid partition, it is sufficient to determine
+whether to call update_cpumasks_hier based on whether the child's
+effective_cpus is going to change. To make the code more succinct,
+it is suggested to remove use_parent_ecpus.
 
 Signed-off-by: Chen Ridong <chenridong@huawei.com>
 ---
- kernel/cgroup/cpuset.c | 42 +++++++++++++++++++++++-------------------
- 1 file changed, 23 insertions(+), 19 deletions(-)
+ kernel/cgroup/cpuset.c | 30 ++++--------------------------
+ 1 file changed, 4 insertions(+), 26 deletions(-)
 
 diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
-index e34fd6108b06..fdd5346616d3 100644
+index 8be0259065f5..71c24542966b 100644
 --- a/kernel/cgroup/cpuset.c
 +++ b/kernel/cgroup/cpuset.c
-@@ -80,6 +80,7 @@ enum prs_errcode {
- 	PERR_HOTPLUG,
- 	PERR_CPUSEMPTY,
- 	PERR_HKEEPING,
-+	PERR_PMT,
- };
+@@ -185,12 +185,6 @@ struct cpuset {
+ 	/* partition root state */
+ 	int partition_root_state;
  
- static const char * const perr_strings[] = {
-@@ -91,6 +92,7 @@ static const char * const perr_strings[] = {
- 	[PERR_HOTPLUG]   = "No cpu available due to hotplug",
- 	[PERR_CPUSEMPTY] = "cpuset.cpus and cpuset.cpus.exclusive are empty",
- 	[PERR_HKEEPING]  = "partition config conflicts with housekeeping setup",
-+	[PERR_PMT]       = "Enable partition not permitted",
- };
- 
- struct cpuset {
-@@ -1669,7 +1671,7 @@ static int remote_partition_enable(struct cpuset *cs, int new_prs,
- 	 * The user must have sysadmin privilege.
- 	 */
- 	if (!capable(CAP_SYS_ADMIN))
--		return 0;
-+		return PERR_PMT;
- 
+-	/*
+-	 * Default hierarchy only:
+-	 * use_parent_ecpus - set if using parent's effective_cpus
+-	 */
+-	int use_parent_ecpus;
+-
  	/*
- 	 * The requested exclusive_cpus must not be allocated to other
-@@ -1683,7 +1685,7 @@ static int remote_partition_enable(struct cpuset *cs, int new_prs,
- 	if (cpumask_empty(tmp->new_cpus) ||
- 	    cpumask_intersects(tmp->new_cpus, subpartitions_cpus) ||
- 	    cpumask_subset(top_cpuset.effective_cpus, tmp->new_cpus))
--		return 0;
-+		return PERR_INVCPUS;
- 
- 	spin_lock_irq(&callback_lock);
- 	isolcpus_updated = partition_xcpus_add(new_prs, NULL, tmp->new_cpus);
-@@ -1698,7 +1700,7 @@ static int remote_partition_enable(struct cpuset *cs, int new_prs,
- 	 */
- 	update_tasks_cpumask(&top_cpuset, tmp->new_cpus);
- 	update_sibling_cpumasks(&top_cpuset, NULL, tmp);
--	return 1;
-+	return 0;
+ 	 * number of SCHED_DEADLINE tasks attached to this cpuset, so that we
+ 	 * know when to rebuild associated root domain bandwidth information.
+@@ -1505,11 +1499,8 @@ static void reset_partition_data(struct cpuset *cs)
+ 		if (is_cpu_exclusive(cs))
+ 			clear_bit(CS_CPU_EXCLUSIVE, &cs->flags);
+ 	}
+-	if (!cpumask_and(cs->effective_cpus,
+-			 parent->effective_cpus, cs->cpus_allowed)) {
+-		cs->use_parent_ecpus = true;
++	if (!cpumask_and(cs->effective_cpus, parent->effective_cpus, cs->cpus_allowed))
+ 		cpumask_copy(cs->effective_cpus, parent->effective_cpus);
+-	}
  }
  
  /*
-@@ -3151,24 +3153,26 @@ static int update_prstate(struct cpuset *cs, int new_prs)
- 		goto out;
+@@ -1683,8 +1674,6 @@ static int remote_partition_enable(struct cpuset *cs, int new_prs,
+ 	spin_lock_irq(&callback_lock);
+ 	isolcpus_updated = partition_xcpus_add(new_prs, NULL, tmp->new_cpus);
+ 	list_add(&cs->remote_sibling, &remote_children);
+-	if (cs->use_parent_ecpus)
+-		cs->use_parent_ecpus = false;
+ 	spin_unlock_irq(&callback_lock);
+ 	update_unbound_workqueue_cpumask(isolcpus_updated);
  
- 	if (!old_prs) {
--		enum partition_cmd cmd = (new_prs == PRS_ROOT)
--				       ? partcmd_enable : partcmd_enablei;
--
- 		/*
--		 * cpus_allowed and exclusive_cpus cannot be both empty.
--		 */
--		if (xcpus_empty(cs)) {
--			err = PERR_CPUSEMPTY;
--			goto out;
+@@ -2309,13 +2298,8 @@ static void update_cpumasks_hier(struct cpuset *cs, struct tmpmasks *tmp,
+ 		 * it is a partition root that has explicitly distributed
+ 		 * out all its CPUs.
+ 		 */
+-		if (is_in_v2_mode() && !remote && cpumask_empty(tmp->new_cpus)) {
++		if (is_in_v2_mode() && !remote && cpumask_empty(tmp->new_cpus))
+ 			cpumask_copy(tmp->new_cpus, parent->effective_cpus);
+-			if (!cp->use_parent_ecpus)
+-				cp->use_parent_ecpus = true;
+-		} else if (cp->use_parent_ecpus) {
+-			cp->use_parent_ecpus = false;
 -		}
-+		* If parent is valid partition, enable local partiion.
-+		* Otherwise, enable a remote partition.
-+		*/
-+		if (is_partition_valid(parent)) {
-+			enum partition_cmd cmd = (new_prs == PRS_ROOT)
-+					       ? partcmd_enable : partcmd_enablei;
  
--		err = update_parent_effective_cpumask(cs, cmd, NULL, &tmpmask);
--		/*
--		 * If an attempt to become local partition root fails,
--		 * try to become a remote partition root instead.
--		 */
--		if (err && remote_partition_enable(cs, new_prs, &tmpmask))
--			err = 0;
-+			/*
-+			 * cpus_allowed and exclusive_cpus cannot be both empty.
-+			 */
-+			if (xcpus_empty(cs)) {
-+				err = PERR_CPUSEMPTY;
-+				goto out;
-+			}
-+
-+			err = update_parent_effective_cpumask(cs, cmd, NULL, &tmpmask);
-+		} else {
-+			err = remote_partition_enable(cs, new_prs, &tmpmask);
-+		}
- 	} else if (old_prs && new_prs) {
- 		/*
- 		 * A change in load balance state only, no change in cpumasks.
+ 		if (remote)
+ 			goto get_css;
+@@ -2452,8 +2436,7 @@ static void update_sibling_cpumasks(struct cpuset *parent, struct cpuset *cs,
+ 	 * Check all its siblings and call update_cpumasks_hier()
+ 	 * if their effective_cpus will need to be changed.
+ 	 *
+-	 * With the addition of effective_xcpus which is a subset of
+-	 * cpus_allowed. It is possible a change in parent's effective_cpus
++	 * It is possible a change in parent's effective_cpus
+ 	 * due to a change in a child partition's effective_xcpus will impact
+ 	 * its siblings even if they do not inherit parent's effective_cpus
+ 	 * directly.
+@@ -2467,8 +2450,7 @@ static void update_sibling_cpumasks(struct cpuset *parent, struct cpuset *cs,
+ 	cpuset_for_each_child(sibling, pos_css, parent) {
+ 		if (sibling == cs)
+ 			continue;
+-		if (!sibling->use_parent_ecpus &&
+-		    !is_partition_valid(sibling)) {
++		if (!is_partition_valid(sibling)) {
+ 			compute_effective_cpumask(tmp->new_cpus, sibling,
+ 						  parent);
+ 			if (cpumask_equal(tmp->new_cpus, sibling->effective_cpus))
+@@ -4128,7 +4110,6 @@ static int cpuset_css_online(struct cgroup_subsys_state *css)
+ 	if (is_in_v2_mode()) {
+ 		cpumask_copy(cs->effective_cpus, parent->effective_cpus);
+ 		cs->effective_mems = parent->effective_mems;
+-		cs->use_parent_ecpus = true;
+ 	}
+ 	spin_unlock_irq(&callback_lock);
+ 
+@@ -4194,9 +4175,6 @@ static void cpuset_css_offline(struct cgroup_subsys_state *css)
+ 	    is_sched_load_balance(cs))
+ 		update_flag(CS_SCHED_LOAD_BALANCE, cs, 0);
+ 
+-	if (cs->use_parent_ecpus)
+-		cs->use_parent_ecpus = false;
+-
+ 	cpuset_dec();
+ 	clear_bit(CS_ONLINE, &cs->flags);
+ 
 -- 
 2.34.1
 
