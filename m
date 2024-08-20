@@ -1,37 +1,40 @@
 Received: from szxga04-in.huawei.com (szxga04-in.huawei.com [45.249.212.190])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4F6234C3D0;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 12E7050285;
 	Tue, 20 Aug 2024 03:09:14 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.190
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1724123356; cv=none; b=i0r5aiCzAABDV4rvngjKOuVfYXAzwHqgASQTpHjO0jB4CjvZLTOppuF+vUYyIm92t8QccbafHITHWTqqcYK22SEEFRLhR5wiabowSyV+JWP3lnPDxcBhyASo039wCX21y9CQbkOR1eifysK7KVPR7DfIXEZ4fCSGZf++hh822T4=
+	t=1724123356; cv=none; b=TiWcK2RGd5JOneL1QTi4p93paCBXt0X76XN2BSpiDX9nPk/INQAUuZgXTZMh0qOcubRz4qgYAiyNIFpQnCj01doNcIsI0IjBs1ceCU5+6l/52YZtRLrPEsBGTIKKUERUVSfEThgAzru4WH3autJUfmsBEyT0Ud8Sst3pB9FzH9o=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1724123356; c=relaxed/simple;
-	bh=bepKCGoqst6eH+DUZ7az0mUZRqS8C1/vgVf7Px2uuaw=;
-	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=g0DfTuFHmLX9hPG46+qu8ZpYyPXtAg9yrRKnwggMQzlcSAkLAnBkUV6qyjkRunP1pLyOC45GYKSZMOlGHauxjXZWeP7rimErJqOnD/pL9AjX4Zob9iLSi+M/vl9HYWOelJ0AOUZt4PcbqyzcVsYQ6zlPqE547g3htKRbBn1c03Q=
+	bh=x/dQjt+SI5PYEpMKAmX6f5FN1RZaX99JafDnT5L77gw=;
+	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=fgWpur8it3Y5MMo2viBeGj2B3A8FRHjithTDI2s2PXd14i24bjCS9J44QihNJesHva5quBzazOq8Bbw+AWKufBGX6vBDkDX03uajqwIsuLzzFsi8MKrUgoWKVRP1JTu9dd8djobZXcEJOE13vJddDywp6MqI6YqSCZZ2qXyjcck=
 ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; arc=none smtp.client-ip=45.249.212.190
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
-Received: from mail.maildlp.com (unknown [172.19.88.234])
-	by szxga04-in.huawei.com (SkyGuard) with ESMTP id 4WnvSQ1hqNz2Cn3q;
-	Tue, 20 Aug 2024 11:04:06 +0800 (CST)
+Received: from mail.maildlp.com (unknown [172.19.88.214])
+	by szxga04-in.huawei.com (SkyGuard) with ESMTP id 4WnvSp1vzyz20m1v;
+	Tue, 20 Aug 2024 11:04:26 +0800 (CST)
 Received: from kwepemd100013.china.huawei.com (unknown [7.221.188.163])
-	by mail.maildlp.com (Postfix) with ESMTPS id 87EB81402CD;
-	Tue, 20 Aug 2024 11:09:05 +0800 (CST)
+	by mail.maildlp.com (Postfix) with ESMTPS id 769C71A016C;
+	Tue, 20 Aug 2024 11:09:06 +0800 (CST)
 Received: from huawei.com (10.67.174.121) by kwepemd100013.china.huawei.com
  (7.221.188.163) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1258.34; Tue, 20 Aug
- 2024 11:09:04 +0800
+ 2024 11:09:05 +0800
 From: Chen Ridong <chenridong@huawei.com>
 To: <tj@kernel.org>, <lizefan.x@bytedance.com>, <hannes@cmpxchg.org>,
 	<longman@redhat.com>, <adityakali@google.com>, <sergeh@kernel.org>,
 	<mkoutny@suse.com>
 CC: <cgroups@vger.kernel.org>, <linux-kernel@vger.kernel.org>
-Subject: [PATCH v2 -next 0/3] Some optimizations about cpuset
-Date: Tue, 20 Aug 2024 03:01:23 +0000
-Message-ID: <20240820030126.236997-1-chenridong@huawei.com>
+Subject: [PATCH v2 -next 2/3] cgroup/cpuset: remove fetch_xcpus
+Date: Tue, 20 Aug 2024 03:01:25 +0000
+Message-ID: <20240820030126.236997-3-chenridong@huawei.com>
 X-Mailer: git-send-email 2.34.1
+In-Reply-To: <20240820030126.236997-1-chenridong@huawei.com>
+References: <20240820030126.236997-1-chenridong@huawei.com>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
@@ -43,22 +46,55 @@ Content-Type: text/plain
 X-ClientProxiedBy: dggems701-chm.china.huawei.com (10.3.19.178) To
  kwepemd100013.china.huawei.com (7.221.188.163)
 
-The first patch changes from v1:
-	Rename PERR_PMT to PERR_ACCESS, and update comments.
-	Move 'xcpus_empty() check' up for local and remote partition.
+Both fetch_xcpus and user_xcpus functions are used to retrieve the value
+of exclusive_cpus. If exclusive_cpus is not set, cpus_allowed is the
+implicit value used as exclusive in a local partition. I can not imagine
+a scenario where effective_xcpus is not empty when exclusive_cpus is
+empty. Therefore, I suggest removing the fetch_xcpus function.
 
-The follow patches have been reviewed by Longman.
-cgroup/cpuset: remove fetch_xcpus
-cgroup/cpuset: remove use_parent_ecpus of cpuset
+Signed-off-by: Chen Ridong <chenridong@huawei.com>
+---
+ kernel/cgroup/cpuset.c | 13 +++----------
+ 1 file changed, 3 insertions(+), 10 deletions(-)
 
-Chen Ridong (3):
-  cgroup/cpuset: Correct invalid remote parition prs
-  cgroup/cpuset: remove fetch_xcpus
-  cgroup/cpuset: remove use_parent_ecpus of cpuset
-
- kernel/cgroup/cpuset.c | 71 ++++++++++++++----------------------------
- 1 file changed, 23 insertions(+), 48 deletions(-)
-
+diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
+index 0ae68e0e5733..92e79ddc8188 100644
+--- a/kernel/cgroup/cpuset.c
++++ b/kernel/cgroup/cpuset.c
+@@ -771,13 +771,6 @@ static inline bool xcpus_empty(struct cpuset *cs)
+ 	       cpumask_empty(cs->exclusive_cpus);
+ }
+ 
+-static inline struct cpumask *fetch_xcpus(struct cpuset *cs)
+-{
+-	return !cpumask_empty(cs->exclusive_cpus) ? cs->exclusive_cpus :
+-	       cpumask_empty(cs->effective_xcpus) ? cs->cpus_allowed
+-						  : cs->effective_xcpus;
+-}
+-
+ /*
+  * cpusets_are_exclusive() - check if two cpusets are exclusive
+  *
+@@ -785,8 +778,8 @@ static inline struct cpumask *fetch_xcpus(struct cpuset *cs)
+  */
+ static inline bool cpusets_are_exclusive(struct cpuset *cs1, struct cpuset *cs2)
+ {
+-	struct cpumask *xcpus1 = fetch_xcpus(cs1);
+-	struct cpumask *xcpus2 = fetch_xcpus(cs2);
++	struct cpumask *xcpus1 = user_xcpus(cs1);
++	struct cpumask *xcpus2 = user_xcpus(cs2);
+ 
+ 	if (cpumask_intersects(xcpus1, xcpus2))
+ 		return false;
+@@ -2585,7 +2578,7 @@ static int update_cpumask(struct cpuset *cs, struct cpuset *trialcs,
+ 		invalidate = true;
+ 		rcu_read_lock();
+ 		cpuset_for_each_child(cp, css, parent) {
+-			struct cpumask *xcpus = fetch_xcpus(trialcs);
++			struct cpumask *xcpus = user_xcpus(trialcs);
+ 
+ 			if (is_partition_valid(cp) &&
+ 			    cpumask_intersects(xcpus, cp->effective_xcpus)) {
 -- 
 2.34.1
 
