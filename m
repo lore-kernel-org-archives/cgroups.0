@@ -1,80 +1,157 @@
-Received: from out-179.mta1.migadu.com (out-179.mta1.migadu.com [95.215.58.179])
+Received: from szxga01-in.huawei.com (szxga01-in.huawei.com [45.249.212.187])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 85B27EED8
-	for <cgroups@vger.kernel.org>; Tue, 20 Aug 2024 02:37:54 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=95.215.58.179
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 69EBF33F9;
+	Tue, 20 Aug 2024 03:09:09 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.187
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1724121476; cv=none; b=c86b1wpfHIv1IK9IAiag/0N7b42c+9YqOV4TIyKoOcu2uowxnqsWNXhhQPEQqqquux4uE3xpMnqrRIF1gAg15fwD2qYDDNIhtxS27nHzG0vphDEWuCK20O+xpaX5g+zsfYfrgS9gjm0z9UDmRuQMgSnS1DL+tBQHoE6h7/JkALE=
+	t=1724123353; cv=none; b=cXU876EjuP9dJr0oM7ajO3yXi7lNAxo4CSNRSBttW/rsVI3u4nQ8zFsHG+Jzey6hmKFxxUO2hHt5CN28faZfK8zoYoVjiHrYUASueGrbzLFpzsB+4VR2OX/QneaCdfbg1K/R7JEYzEtUyaZWPZSfp1BWpFqIpYftqc5SoB7PqxI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1724121476; c=relaxed/simple;
-	bh=hx04v2eQBOgTZVAZ7KON4hX+YpxEpVLGosF0ZgIZpQg=;
-	h=Content-Type:Mime-Version:Subject:From:In-Reply-To:Date:Cc:
-	 Message-Id:References:To; b=sc7wbukIfFEeesdQDryamJt3U5lRVCndQ964k52zNEIZExBSLpJf9pYy/6A3Ws/d6bR7qzuASM5Xwu0Lbocxdq5L1o5ANJURK9xFeIIiKM9q50vn6MW1U6sM5hybfvLftOM0yQMEWs8Bx/ADFW9rxBVho7A7ybU3K5penBwx52k=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=CMjjkQ5J; arc=none smtp.client-ip=95.215.58.179
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="CMjjkQ5J"
-Content-Type: text/plain;
-	charset=us-ascii
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
-	t=1724121472;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=YswQe8pDVgtxcv4I7cGkqok1RAga6VHIduWtMUdKToQ=;
-	b=CMjjkQ5Jpn/xysHdkNs8bPNCe+t1ermXgSMEq/Ub0O9ed0ZtFSPJctwnoc0lg3f657VsEr
-	WQ32d8QFoo6pm9b8SBy9E0PzY6ShZzjBuFUg9/Ff+NBfAd9wvBZAQBbF9jctE+K8oEau3s
-	aIgtL4aNLa06/61f2uNIP/6WOkfsrDQ=
+	s=arc-20240116; t=1724123353; c=relaxed/simple;
+	bh=8uC0HKt3gjBHQ0nISF578xaCgVaD8qkHzi7kUyXAEG0=;
+	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=Ll/lPsxFJ3uyzOPY30hj5FdsiKC+RJaGCFu+EObQ/nI8O4eH2H6iLzYp/c2HT4ecGH09DHlO7qgYWTS0F/TbmOXLZ60PYZ2lPWGCdZd5kqa1UuEp7mFBbKobFYjRkRq+p6OQfTMKLs2bYAlgWPKwCYDAsqmDoO/Lq4veRLUcox0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; arc=none smtp.client-ip=45.249.212.187
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
+Received: from mail.maildlp.com (unknown [172.19.163.48])
+	by szxga01-in.huawei.com (SkyGuard) with ESMTP id 4WnvYT3HDvzyQFW;
+	Tue, 20 Aug 2024 11:08:29 +0800 (CST)
+Received: from kwepemd100013.china.huawei.com (unknown [7.221.188.163])
+	by mail.maildlp.com (Postfix) with ESMTPS id EE25B1800A0;
+	Tue, 20 Aug 2024 11:09:06 +0800 (CST)
+Received: from huawei.com (10.67.174.121) by kwepemd100013.china.huawei.com
+ (7.221.188.163) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1258.34; Tue, 20 Aug
+ 2024 11:09:06 +0800
+From: Chen Ridong <chenridong@huawei.com>
+To: <tj@kernel.org>, <lizefan.x@bytedance.com>, <hannes@cmpxchg.org>,
+	<longman@redhat.com>, <adityakali@google.com>, <sergeh@kernel.org>,
+	<mkoutny@suse.com>
+CC: <cgroups@vger.kernel.org>, <linux-kernel@vger.kernel.org>
+Subject: [PATCH v2 -next 3/3] cgroup/cpuset: remove use_parent_ecpus of cpuset
+Date: Tue, 20 Aug 2024 03:01:26 +0000
+Message-ID: <20240820030126.236997-4-chenridong@huawei.com>
+X-Mailer: git-send-email 2.34.1
+In-Reply-To: <20240820030126.236997-1-chenridong@huawei.com>
+References: <20240820030126.236997-1-chenridong@huawei.com>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0 (Mac OS X Mail 16.0 \(3776.700.51\))
-Subject: Re: [PATCH] mm: kmem: fix split_page_memcg()
-X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
-From: Muchun Song <muchun.song@linux.dev>
-In-Reply-To: <wvsagtywkr5rjn3y6fjz4wewmsyymxulim4zabunonmtxe4q4c@i7fd6bnwrbwp>
-Date: Tue, 20 Aug 2024 10:37:12 +0800
-Cc: Muchun Song <songmuchun@bytedance.com>,
- Johannes Weiner <hannes@cmpxchg.org>,
- Michal Hocko <mhocko@kernel.org>,
- Roman Gushchin <roman.gushchin@linux.dev>,
- Andrew Morton <akpm@linux-foundation.org>,
- cgroups@vger.kernel.org,
- Linux Memory Management List <linux-mm@kvack.org>,
- Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
- syzbot <syzbot+ef4ecf7b6bdc4157bfa4@syzkaller.appspotmail.com>
-Content-Transfer-Encoding: 7bit
-Message-Id: <D5816457-E0F4-4571-A81F-DE46C27F8C3D@linux.dev>
-References: <20240819080415.44964-1-songmuchun@bytedance.com>
- <wvsagtywkr5rjn3y6fjz4wewmsyymxulim4zabunonmtxe4q4c@i7fd6bnwrbwp>
-To: Shakeel Butt <shakeel.butt@linux.dev>
-X-Migadu-Flow: FLOW_OUT
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-ClientProxiedBy: dggems701-chm.china.huawei.com (10.3.19.178) To
+ kwepemd100013.china.huawei.com (7.221.188.163)
 
+use_parent_ecpus is used to track whether the children are using the
+parent's effective_cpus. When a parent's effective_cpus is changed
+due to changes in a child partition's effective_xcpus, any child
+using parent'effective_cpus must call update_cpumasks_hier. However,
+if a child is not a valid partition, it is sufficient to determine
+whether to call update_cpumasks_hier based on whether the child's
+effective_cpus is going to change. To make the code more succinct,
+it is suggested to remove use_parent_ecpus.
 
+Signed-off-by: Chen Ridong <chenridong@huawei.com>
+---
+ kernel/cgroup/cpuset.c | 30 ++++--------------------------
+ 1 file changed, 4 insertions(+), 26 deletions(-)
 
-> On Aug 19, 2024, at 23:37, Shakeel Butt <shakeel.butt@linux.dev> wrote:
-> 
-> On Mon, Aug 19, 2024 at 04:04:15PM GMT, Muchun Song wrote:
->> split_page_memcg() does not care about the returned memcg for kmem
->> pages, so folio_memcg_charged() should be used, otherwise obj_cgroup_memcg
->> will complain about this.
-> 
-> Basically avoid calling folio_memcg() for folio_memcg_kmem(folio),
-> correct?
+diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
+index 92e79ddc8188..7db55eed63cf 100644
+--- a/kernel/cgroup/cpuset.c
++++ b/kernel/cgroup/cpuset.c
+@@ -185,12 +185,6 @@ struct cpuset {
+ 	/* partition root state */
+ 	int partition_root_state;
+ 
+-	/*
+-	 * Default hierarchy only:
+-	 * use_parent_ecpus - set if using parent's effective_cpus
+-	 */
+-	int use_parent_ecpus;
+-
+ 	/*
+ 	 * number of SCHED_DEADLINE tasks attached to this cpuset, so that we
+ 	 * know when to rebuild associated root domain bandwidth information.
+@@ -1505,11 +1499,8 @@ static void reset_partition_data(struct cpuset *cs)
+ 		if (is_cpu_exclusive(cs))
+ 			clear_bit(CS_CPU_EXCLUSIVE, &cs->flags);
+ 	}
+-	if (!cpumask_and(cs->effective_cpus,
+-			 parent->effective_cpus, cs->cpus_allowed)) {
+-		cs->use_parent_ecpus = true;
++	if (!cpumask_and(cs->effective_cpus, parent->effective_cpus, cs->cpus_allowed))
+ 		cpumask_copy(cs->effective_cpus, parent->effective_cpus);
+-	}
+ }
+ 
+ /*
+@@ -1683,8 +1674,6 @@ static int remote_partition_enable(struct cpuset *cs, int new_prs,
+ 	spin_lock_irq(&callback_lock);
+ 	isolcpus_updated = partition_xcpus_add(new_prs, NULL, tmp->new_cpus);
+ 	list_add(&cs->remote_sibling, &remote_children);
+-	if (cs->use_parent_ecpus)
+-		cs->use_parent_ecpus = false;
+ 	spin_unlock_irq(&callback_lock);
+ 	update_unbound_workqueue_cpumask(isolcpus_updated);
+ 
+@@ -2309,13 +2298,8 @@ static void update_cpumasks_hier(struct cpuset *cs, struct tmpmasks *tmp,
+ 		 * it is a partition root that has explicitly distributed
+ 		 * out all its CPUs.
+ 		 */
+-		if (is_in_v2_mode() && !remote && cpumask_empty(tmp->new_cpus)) {
++		if (is_in_v2_mode() && !remote && cpumask_empty(tmp->new_cpus))
+ 			cpumask_copy(tmp->new_cpus, parent->effective_cpus);
+-			if (!cp->use_parent_ecpus)
+-				cp->use_parent_ecpus = true;
+-		} else if (cp->use_parent_ecpus) {
+-			cp->use_parent_ecpus = false;
+-		}
+ 
+ 		if (remote)
+ 			goto get_css;
+@@ -2452,8 +2436,7 @@ static void update_sibling_cpumasks(struct cpuset *parent, struct cpuset *cs,
+ 	 * Check all its siblings and call update_cpumasks_hier()
+ 	 * if their effective_cpus will need to be changed.
+ 	 *
+-	 * With the addition of effective_xcpus which is a subset of
+-	 * cpus_allowed. It is possible a change in parent's effective_cpus
++	 * It is possible a change in parent's effective_cpus
+ 	 * due to a change in a child partition's effective_xcpus will impact
+ 	 * its siblings even if they do not inherit parent's effective_cpus
+ 	 * directly.
+@@ -2467,8 +2450,7 @@ static void update_sibling_cpumasks(struct cpuset *parent, struct cpuset *cs,
+ 	cpuset_for_each_child(sibling, pos_css, parent) {
+ 		if (sibling == cs)
+ 			continue;
+-		if (!sibling->use_parent_ecpus &&
+-		    !is_partition_valid(sibling)) {
++		if (!is_partition_valid(sibling)) {
+ 			compute_effective_cpumask(tmp->new_cpus, sibling,
+ 						  parent);
+ 			if (cpumask_equal(tmp->new_cpus, sibling->effective_cpus))
+@@ -4128,7 +4110,6 @@ static int cpuset_css_online(struct cgroup_subsys_state *css)
+ 	if (is_in_v2_mode()) {
+ 		cpumask_copy(cs->effective_cpus, parent->effective_cpus);
+ 		cs->effective_mems = parent->effective_mems;
+-		cs->use_parent_ecpus = true;
+ 	}
+ 	spin_unlock_irq(&callback_lock);
+ 
+@@ -4194,9 +4175,6 @@ static void cpuset_css_offline(struct cgroup_subsys_state *css)
+ 	    is_sched_load_balance(cs))
+ 		update_flag(CS_SCHED_LOAD_BALANCE, cs, 0);
+ 
+-	if (cs->use_parent_ecpus)
+-		cs->use_parent_ecpus = false;
+-
+ 	cpuset_dec();
+ 	clear_bit(CS_ONLINE, &cs->flags);
+ 
+-- 
+2.34.1
 
-Yes. Unless you hold rcu lock.
-
-> 
->> 
->> Reported-by: syzbot+ef4ecf7b6bdc4157bfa4@syzkaller.appspotmail.com
->> Signed-off-by: Muchun Song <songmuchun@bytedance.com>
-> 
-> Acked-by: Shakeel Butt <shakeel.butt@linux.dev>
-> 
-
-Thanks.
