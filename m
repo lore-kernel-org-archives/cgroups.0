@@ -1,113 +1,374 @@
-Received: from mail-ej1-f41.google.com (mail-ej1-f41.google.com [209.85.218.41])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from szxga04-in.huawei.com (szxga04-in.huawei.com [45.249.212.190])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 94DEE6F2F3
-	for <cgroups@vger.kernel.org>; Thu, 22 Aug 2024 17:49:38 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.218.41
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 046541BF3A;
+	Fri, 23 Aug 2024 10:08:57 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.190
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1724348980; cv=none; b=BVWQQeWJFZOPQcoTQERKrHVdKx3EgGBsh3OPuiRf73ze2MRPq+Ukzfu7bva2RbAYXFbNB0ZCPDoSXwdIT/5aOM9i4eTQTJmgNOg/quegb+z7Z7AaufrZTksR5mk3USwnhxYnqu7NROL2zA8yUuL+Y9xRnbfFJ25OPP9q04mTs5U=
+	t=1724407740; cv=none; b=o/mPwmnAVo+GpZnsGlzWGrFmwLZexci9NcN73NI/hyWJXKTc1zAB2qnjX+3q0shICjbpsOg9AZc75GYWmQ+GKOr3JJZywDLQM47sM66aHIJZv8MUBWCt/vsiPFOFJhpcOIc6DBUjbSWbSKR+Jk/hlUczrW41j3G+cYMWLSgYObw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1724348980; c=relaxed/simple;
-	bh=4DCNjjCKoSP4eyvhwLdjPqdqgDhehWVQKDeRIGJ9azU=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=nAPvt0yxCri/+ZGmTYHHxzboOfD4Ww5GL4OReP2I6NdAUOd1brjnuEcKLCoAzuM0T/yn+VbXCa9gKMcC8dWM6G0MGJgD8qZbBN6AtamPP1RCJlYzA75mVZ3IxJAd4va5+S8ASTlb8RJpglxXA4y0Q3dJqWi6G+oalBPZfjBYOOU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=IGdogpHO; arc=none smtp.client-ip=209.85.218.41
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="IGdogpHO"
-Received: by mail-ej1-f41.google.com with SMTP id a640c23a62f3a-a7b2dbd81e3so151106466b.1
-        for <cgroups@vger.kernel.org>; Thu, 22 Aug 2024 10:49:38 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20230601; t=1724348977; x=1724953777; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=4DCNjjCKoSP4eyvhwLdjPqdqgDhehWVQKDeRIGJ9azU=;
-        b=IGdogpHOjb5NzWbAEk3r9CZ7gj4xodI3StlT0ZC2Qz83u6oLAwEVZ3WtsQInH1jd8j
-         U3rGz7VqEuGAzWn0WsDHuZ3YCgt9kNgeBf3sqcHOMES6GBnk8IsGRdPRqr0dgB4TRozC
-         4iTiqZ+OTKhregxpggNrLfHTlfdqh1KcT6w0/4E/fGShSugr76WI/VoH0g4DziVxwELn
-         APbJx6vawZoD1ysLfp9nXa+72FbFvg0YFeXVyFVbCg6C4lh6L3i5hgN8UxUGfExqlvgH
-         cpyBk86yFRiH6tnTmGOC2pfeBivalnwKsll11x1qQZVeuPFxAvJHxRsb4jVeh44F8J9a
-         Rwbg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1724348977; x=1724953777;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=4DCNjjCKoSP4eyvhwLdjPqdqgDhehWVQKDeRIGJ9azU=;
-        b=QgbamyKTBLc1dYXJI/8Rugta2/dYdQBDrpER72GRuQ4VdzQOFLjG/sGFPjMWNh2GgT
-         ObpP8AXLPyLA22bmLpXyVHTSo7jYJqcRBxZHAvSJEtLgnLVWsxQM4oRWJJdsY8CxfTnP
-         SzgiiHpievj1kqfhw3/s8NajGs7rz+ucSKzT+vOmVK6iywNu0TSiFTJuweBacAfdZfZx
-         cw+fJiO7t8y5uRvc8DBxQMvHrtfkZgz7VDmvURCGWeonaDVbXKV7dtrtiiRXjhj849H4
-         /i4FePXOVk1dBt+ozXgc5UuGZvZ7bgS7NBAmN4F5pAVDgw8ytK2kR6vQV2GnSK/wp/AE
-         V2/w==
-X-Forwarded-Encrypted: i=1; AJvYcCUp1hZ6wjnpUNOT4csxmoMXiVMzJ7gMdIp3GEbf8A8orLWHkfPhEoa5la+ExsoGDPnz3YJiwz06@vger.kernel.org
-X-Gm-Message-State: AOJu0YwOedXmWkXq92xz9oNCRkCLatSIBOMCJ7oUyLd+g9o0gz/fDAVg
-	N2o/CRy+nw0n+t1CVGBYNyO36Vs3HbIHPL7Wy/nfXw7ugnwCAEJgZ21BsCkTn4mdoSaY6aOXMEB
-	/QOs6x8whCU7TOCWrk29nNN/qSk7G1vTyCn5L
-X-Google-Smtp-Source: AGHT+IE4IQPc9rbpt76DXkp3o0GnQk0sV4FVm/dLBBD+l2uTlPMrcgrYLjxXm0Xi/oBVM9Rz3LssTdd79gSz+FmJjI8=
-X-Received: by 2002:a17:907:944c:b0:a7a:a89e:e230 with SMTP id
- a640c23a62f3a-a866f3600b7mr421320966b.30.1724348976225; Thu, 22 Aug 2024
- 10:49:36 -0700 (PDT)
+	s=arc-20240116; t=1724407740; c=relaxed/simple;
+	bh=FBKQGEQD/pNFgchyqh4ENLTYory28/taic55pTHfxt4=;
+	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=uejjP8cXIMNK/7/8+FqD4OTLHrsQUGRvve3KjjOzHGwVBhJ5wsWpM23JD9cgnea9FuE2LllT8mLbdQIbWqOvz/TsNbPYNthmNoGhok/AHYIv9bQj9grjwFBu6xdGNvTEjSj1NzAAUlCiom7eVd3RyV4PXWOoMINRonbXaL2K+IQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; arc=none smtp.client-ip=45.249.212.190
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
+Received: from mail.maildlp.com (unknown [172.19.163.17])
+	by szxga04-in.huawei.com (SkyGuard) with ESMTP id 4Wqwl64Nwjz2Cmvt;
+	Fri, 23 Aug 2024 18:08:50 +0800 (CST)
+Received: from kwepemd100013.china.huawei.com (unknown [7.221.188.163])
+	by mail.maildlp.com (Postfix) with ESMTPS id 71B9E1A0188;
+	Fri, 23 Aug 2024 18:08:55 +0800 (CST)
+Received: from huawei.com (10.67.174.121) by kwepemd100013.china.huawei.com
+ (7.221.188.163) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1258.34; Fri, 23 Aug
+ 2024 18:08:54 +0800
+From: Chen Ridong <chenridong@huawei.com>
+To: <tj@kernel.org>, <lizefan.x@bytedance.com>, <hannes@cmpxchg.org>,
+	<longman@redhat.com>, <mkoutny@suse.com>, <chenridong@huawei.com>
+CC: <cgroups@vger.kernel.org>, <linux-kernel@vger.kernel.org>
+Subject: [PATCH v1 -next 03/11] cgroup/cpuset: move memory_pressure to cpuset-v1.c
+Date: Fri, 23 Aug 2024 10:01:02 +0000
+Message-ID: <20240823100110.472120-4-chenridong@huawei.com>
+X-Mailer: git-send-email 2.34.1
+In-Reply-To: <20240823100110.472120-1-chenridong@huawei.com>
+References: <20240823100110.472120-1-chenridong@huawei.com>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20240814171800.23558-1-me@yhndnzj.com> <CAKEwX=NrOBg0rKJnXGaiK9-PWeUDS+c3cFmaFFV0RrE8GkNZZA@mail.gmail.com>
- <CAJD7tkZ_jNuYQsGMyS1NgMf335Gi4_x5Ybkts_=+g5OyjtJQDQ@mail.gmail.com> <zsj4ilkso7p43qexiumk42bkzuqt5bxi3u5pys5arfpjodqszd@4jomnqwf4vim>
-In-Reply-To: <zsj4ilkso7p43qexiumk42bkzuqt5bxi3u5pys5arfpjodqszd@4jomnqwf4vim>
-From: Yosry Ahmed <yosryahmed@google.com>
-Date: Thu, 22 Aug 2024 10:49:00 -0700
-Message-ID: <CAJD7tkZ28FSKOmA4dzVdTzR05_Qge9EcYGZzwMNgP7EHJOJHWQ@mail.gmail.com>
-Subject: Re: [PATCH] mm/memcontrol: respect zswap.writeback setting from
- parent cg too
-To: =?UTF-8?Q?Michal_Koutn=C3=BD?= <mkoutny@suse.com>
-Cc: Nhat Pham <nphamcs@gmail.com>, Mike Yuan <me@yhndnzj.com>, linux-kernel@vger.kernel.org, 
-	linux-mm@kvack.org, cgroups@vger.kernel.org, 
-	Andrew Morton <akpm@linux-foundation.org>, Muchun Song <muchun.song@linux.dev>, 
-	Shakeel Butt <shakeel.butt@linux.dev>, Roman Gushchin <roman.gushchin@linux.dev>, 
-	Michal Hocko <mhocko@kernel.org>, Johannes Weiner <hannes@cmpxchg.org>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-ClientProxiedBy: dggems703-chm.china.huawei.com (10.3.19.180) To
+ kwepemd100013.china.huawei.com (7.221.188.163)
 
-On Wed, Aug 21, 2024 at 9:14=E2=80=AFAM Michal Koutn=C3=BD <mkoutny@suse.co=
-m> wrote:
->
-> On Wed, Aug 14, 2024 at 01:22:01PM GMT, Yosry Ahmed <yosryahmed@google.co=
-m> wrote:
-> > Anyway, both use cases make sense to me, disabling writeback
-> > system-wide or in an entire subtree, and disabling writeback on the
-> > root and then selectively enabling it. I am slightly inclined to the
-> > first one (what this patch does).
-> >
-> > Considering the hierarchical cgroup knobs work, we usually use the
-> > most restrictive limit among the ancestors. I guess it ultimately
-> > depends on how we define "most restrictive". Disabling writeback is
-> > restrictive in the sense that you don't have access to free some zswap
-> > space to reclaim more memory. OTOH, disabling writeback also means
-> > that your zswapped memory won't go to disk under memory pressure, so
-> > in that sense it would be restrictive to force writeback :)
-> >
-> > Usually, the "default" is the non-restrictive thing, and then you can
-> > set restrictions that apply to all children (e.g. no limits are set by
-> > default). Since writeback is enabled by default, it seems like the
-> > restriction would be disabling writeback. Hence, it would make sense
-> > to inherit zswap disabling (i.e. only writeback if all ancestors allow
-> > it, like this patch does).
-> >
-> > What we do today dismisses inheritance completely, so it seems to me
-> > like it should be changed anyway.
->
-> I subscribe to inheritance (at cgroup creation) not proving well (in
-> general). Here's the case of expecting hierarchical semantic of the
-> attribute.
->
-> With this change -- is there any point in keeping the inheritance
-> around? (Simply default to enabled.)
+Collection of memory_pressure can be enabled by writing 1 to the cpuset
+file 'memory_pressure_enabled', which is only for cpuset-v1. Therefore,
+move the corresponding code to cpuset-v1.c.
 
-Agreed, please feel free to include a patch in your next version that
-does that, and add "Fixes" tags and Cc:stable so that the changes are
-backported and users get these changes ASAP.
+Currently, the 'fmeter_init' and 'fmeter_getrate' functions are called
+at cpuset.c, so expose them to cpuset.c.
+
+Signed-off-by: Chen Ridong <chenridong@huawei.com>
+---
+ kernel/cgroup/cpuset-internal.h |   7 ++
+ kernel/cgroup/cpuset-v1.c       | 134 ++++++++++++++++++++++++++++++++
+ kernel/cgroup/cpuset.c          | 134 --------------------------------
+ 3 files changed, 141 insertions(+), 134 deletions(-)
+
+diff --git a/kernel/cgroup/cpuset-internal.h b/kernel/cgroup/cpuset-internal.h
+index 333666a7a947..83795873dac0 100644
+--- a/kernel/cgroup/cpuset-internal.h
++++ b/kernel/cgroup/cpuset-internal.h
+@@ -238,4 +238,11 @@ static inline int is_spread_slab(const struct cpuset *cs)
+ 	return test_bit(CS_SPREAD_SLAB, &cs->flags);
+ }
+ 
++/*
++ * cpuset-v1.c
++ */
++
++void fmeter_init(struct fmeter *fmp);
++int fmeter_getrate(struct fmeter *fmp);
++
+ #endif /* __CPUSET_INTERNAL_H */
+diff --git a/kernel/cgroup/cpuset-v1.c b/kernel/cgroup/cpuset-v1.c
+index ae166eb4f75d..f17ba44bc566 100644
+--- a/kernel/cgroup/cpuset-v1.c
++++ b/kernel/cgroup/cpuset-v1.c
+@@ -2,3 +2,137 @@
+ 
+ #include "cpuset-internal.h"
+ 
++/*
++ * Frequency meter - How fast is some event occurring?
++ *
++ * These routines manage a digitally filtered, constant time based,
++ * event frequency meter.  There are four routines:
++ *   fmeter_init() - initialize a frequency meter.
++ *   fmeter_markevent() - called each time the event happens.
++ *   fmeter_getrate() - returns the recent rate of such events.
++ *   fmeter_update() - internal routine used to update fmeter.
++ *
++ * A common data structure is passed to each of these routines,
++ * which is used to keep track of the state required to manage the
++ * frequency meter and its digital filter.
++ *
++ * The filter works on the number of events marked per unit time.
++ * The filter is single-pole low-pass recursive (IIR).  The time unit
++ * is 1 second.  Arithmetic is done using 32-bit integers scaled to
++ * simulate 3 decimal digits of precision (multiplied by 1000).
++ *
++ * With an FM_COEF of 933, and a time base of 1 second, the filter
++ * has a half-life of 10 seconds, meaning that if the events quit
++ * happening, then the rate returned from the fmeter_getrate()
++ * will be cut in half each 10 seconds, until it converges to zero.
++ *
++ * It is not worth doing a real infinitely recursive filter.  If more
++ * than FM_MAXTICKS ticks have elapsed since the last filter event,
++ * just compute FM_MAXTICKS ticks worth, by which point the level
++ * will be stable.
++ *
++ * Limit the count of unprocessed events to FM_MAXCNT, so as to avoid
++ * arithmetic overflow in the fmeter_update() routine.
++ *
++ * Given the simple 32 bit integer arithmetic used, this meter works
++ * best for reporting rates between one per millisecond (msec) and
++ * one per 32 (approx) seconds.  At constant rates faster than one
++ * per msec it maxes out at values just under 1,000,000.  At constant
++ * rates between one per msec, and one per second it will stabilize
++ * to a value N*1000, where N is the rate of events per second.
++ * At constant rates between one per second and one per 32 seconds,
++ * it will be choppy, moving up on the seconds that have an event,
++ * and then decaying until the next event.  At rates slower than
++ * about one in 32 seconds, it decays all the way back to zero between
++ * each event.
++ */
++
++#define FM_COEF 933		/* coefficient for half-life of 10 secs */
++#define FM_MAXTICKS ((u32)99)   /* useless computing more ticks than this */
++#define FM_MAXCNT 1000000	/* limit cnt to avoid overflow */
++#define FM_SCALE 1000		/* faux fixed point scale */
++
++/* Initialize a frequency meter */
++void fmeter_init(struct fmeter *fmp)
++{
++	fmp->cnt = 0;
++	fmp->val = 0;
++	fmp->time = 0;
++	spin_lock_init(&fmp->lock);
++}
++
++/* Internal meter update - process cnt events and update value */
++static void fmeter_update(struct fmeter *fmp)
++{
++	time64_t now;
++	u32 ticks;
++
++	now = ktime_get_seconds();
++	ticks = now - fmp->time;
++
++	if (ticks == 0)
++		return;
++
++	ticks = min(FM_MAXTICKS, ticks);
++	while (ticks-- > 0)
++		fmp->val = (FM_COEF * fmp->val) / FM_SCALE;
++	fmp->time = now;
++
++	fmp->val += ((FM_SCALE - FM_COEF) * fmp->cnt) / FM_SCALE;
++	fmp->cnt = 0;
++}
++
++/* Process any previous ticks, then bump cnt by one (times scale). */
++static void fmeter_markevent(struct fmeter *fmp)
++{
++	spin_lock(&fmp->lock);
++	fmeter_update(fmp);
++	fmp->cnt = min(FM_MAXCNT, fmp->cnt + FM_SCALE);
++	spin_unlock(&fmp->lock);
++}
++
++/* Process any previous ticks, then return current value. */
++int fmeter_getrate(struct fmeter *fmp)
++{
++	int val;
++
++	spin_lock(&fmp->lock);
++	fmeter_update(fmp);
++	val = fmp->val;
++	spin_unlock(&fmp->lock);
++	return val;
++}
++
++/*
++ * Collection of memory_pressure is suppressed unless
++ * this flag is enabled by writing "1" to the special
++ * cpuset file 'memory_pressure_enabled' in the root cpuset.
++ */
++
++int cpuset_memory_pressure_enabled __read_mostly;
++
++/*
++ * __cpuset_memory_pressure_bump - keep stats of per-cpuset reclaims.
++ *
++ * Keep a running average of the rate of synchronous (direct)
++ * page reclaim efforts initiated by tasks in each cpuset.
++ *
++ * This represents the rate at which some task in the cpuset
++ * ran low on memory on all nodes it was allowed to use, and
++ * had to enter the kernels page reclaim code in an effort to
++ * create more free memory by tossing clean pages or swapping
++ * or writing dirty pages.
++ *
++ * Display to user space in the per-cpuset read-only file
++ * "memory_pressure".  Value displayed is an integer
++ * representing the recent rate of entry into the synchronous
++ * (direct) page reclaim by any task attached to the cpuset.
++ */
++
++void __cpuset_memory_pressure_bump(void)
++{
++	rcu_read_lock();
++	fmeter_markevent(&task_cs(current)->fmeter);
++	rcu_read_unlock();
++}
++
+diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
+index b36050e39558..342ce34c8c6f 100644
+--- a/kernel/cgroup/cpuset.c
++++ b/kernel/cgroup/cpuset.c
+@@ -2990,107 +2990,6 @@ static int update_prstate(struct cpuset *cs, int new_prs)
+ 	return 0;
+ }
+ 
+-/*
+- * Frequency meter - How fast is some event occurring?
+- *
+- * These routines manage a digitally filtered, constant time based,
+- * event frequency meter.  There are four routines:
+- *   fmeter_init() - initialize a frequency meter.
+- *   fmeter_markevent() - called each time the event happens.
+- *   fmeter_getrate() - returns the recent rate of such events.
+- *   fmeter_update() - internal routine used to update fmeter.
+- *
+- * A common data structure is passed to each of these routines,
+- * which is used to keep track of the state required to manage the
+- * frequency meter and its digital filter.
+- *
+- * The filter works on the number of events marked per unit time.
+- * The filter is single-pole low-pass recursive (IIR).  The time unit
+- * is 1 second.  Arithmetic is done using 32-bit integers scaled to
+- * simulate 3 decimal digits of precision (multiplied by 1000).
+- *
+- * With an FM_COEF of 933, and a time base of 1 second, the filter
+- * has a half-life of 10 seconds, meaning that if the events quit
+- * happening, then the rate returned from the fmeter_getrate()
+- * will be cut in half each 10 seconds, until it converges to zero.
+- *
+- * It is not worth doing a real infinitely recursive filter.  If more
+- * than FM_MAXTICKS ticks have elapsed since the last filter event,
+- * just compute FM_MAXTICKS ticks worth, by which point the level
+- * will be stable.
+- *
+- * Limit the count of unprocessed events to FM_MAXCNT, so as to avoid
+- * arithmetic overflow in the fmeter_update() routine.
+- *
+- * Given the simple 32 bit integer arithmetic used, this meter works
+- * best for reporting rates between one per millisecond (msec) and
+- * one per 32 (approx) seconds.  At constant rates faster than one
+- * per msec it maxes out at values just under 1,000,000.  At constant
+- * rates between one per msec, and one per second it will stabilize
+- * to a value N*1000, where N is the rate of events per second.
+- * At constant rates between one per second and one per 32 seconds,
+- * it will be choppy, moving up on the seconds that have an event,
+- * and then decaying until the next event.  At rates slower than
+- * about one in 32 seconds, it decays all the way back to zero between
+- * each event.
+- */
+-
+-#define FM_COEF 933		/* coefficient for half-life of 10 secs */
+-#define FM_MAXTICKS ((u32)99)   /* useless computing more ticks than this */
+-#define FM_MAXCNT 1000000	/* limit cnt to avoid overflow */
+-#define FM_SCALE 1000		/* faux fixed point scale */
+-
+-/* Initialize a frequency meter */
+-static void fmeter_init(struct fmeter *fmp)
+-{
+-	fmp->cnt = 0;
+-	fmp->val = 0;
+-	fmp->time = 0;
+-	spin_lock_init(&fmp->lock);
+-}
+-
+-/* Internal meter update - process cnt events and update value */
+-static void fmeter_update(struct fmeter *fmp)
+-{
+-	time64_t now;
+-	u32 ticks;
+-
+-	now = ktime_get_seconds();
+-	ticks = now - fmp->time;
+-
+-	if (ticks == 0)
+-		return;
+-
+-	ticks = min(FM_MAXTICKS, ticks);
+-	while (ticks-- > 0)
+-		fmp->val = (FM_COEF * fmp->val) / FM_SCALE;
+-	fmp->time = now;
+-
+-	fmp->val += ((FM_SCALE - FM_COEF) * fmp->cnt) / FM_SCALE;
+-	fmp->cnt = 0;
+-}
+-
+-/* Process any previous ticks, then bump cnt by one (times scale). */
+-static void fmeter_markevent(struct fmeter *fmp)
+-{
+-	spin_lock(&fmp->lock);
+-	fmeter_update(fmp);
+-	fmp->cnt = min(FM_MAXCNT, fmp->cnt + FM_SCALE);
+-	spin_unlock(&fmp->lock);
+-}
+-
+-/* Process any previous ticks, then return current value. */
+-static int fmeter_getrate(struct fmeter *fmp)
+-{
+-	int val;
+-
+-	spin_lock(&fmp->lock);
+-	fmeter_update(fmp);
+-	val = fmp->val;
+-	spin_unlock(&fmp->lock);
+-	return val;
+-}
+-
+ static struct cpuset *cpuset_attach_old_cs;
+ 
+ /*
+@@ -4780,39 +4679,6 @@ void cpuset_print_current_mems_allowed(void)
+ 	rcu_read_unlock();
+ }
+ 
+-/*
+- * Collection of memory_pressure is suppressed unless
+- * this flag is enabled by writing "1" to the special
+- * cpuset file 'memory_pressure_enabled' in the root cpuset.
+- */
+-
+-int cpuset_memory_pressure_enabled __read_mostly;
+-
+-/*
+- * __cpuset_memory_pressure_bump - keep stats of per-cpuset reclaims.
+- *
+- * Keep a running average of the rate of synchronous (direct)
+- * page reclaim efforts initiated by tasks in each cpuset.
+- *
+- * This represents the rate at which some task in the cpuset
+- * ran low on memory on all nodes it was allowed to use, and
+- * had to enter the kernels page reclaim code in an effort to
+- * create more free memory by tossing clean pages or swapping
+- * or writing dirty pages.
+- *
+- * Display to user space in the per-cpuset read-only file
+- * "memory_pressure".  Value displayed is an integer
+- * representing the recent rate of entry into the synchronous
+- * (direct) page reclaim by any task attached to the cpuset.
+- */
+-
+-void __cpuset_memory_pressure_bump(void)
+-{
+-	rcu_read_lock();
+-	fmeter_markevent(&task_cs(current)->fmeter);
+-	rcu_read_unlock();
+-}
+-
+ #ifdef CONFIG_PROC_PID_CPUSET
+ /*
+  * proc_cpuset_show()
+-- 
+2.34.1
+
