@@ -1,36 +1,36 @@
-Received: from szxga07-in.huawei.com (szxga07-in.huawei.com [45.249.212.35])
+Received: from szxga04-in.huawei.com (szxga04-in.huawei.com [45.249.212.190])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 458D8165EFC;
-	Fri, 23 Aug 2024 10:08:58 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.35
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2043D183061;
+	Fri, 23 Aug 2024 10:08:59 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.190
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1724407741; cv=none; b=N2HG9MY33B0tpBUAXE4Nc7VkGutBveMhKrIZz8tSzEcsqjw6RDKSAWipbC3Jy05jGFQNp3aRySau0uXSddjQ9Bu9EPp7ZG7Eu631uXGavoZNAeXmlSccYfYR1yPtOor1EB6Ao39kxKwpMumTljIQvTJNmK8spmcy5qV4LLVXJHw=
+	t=1724407742; cv=none; b=HEIBcD3TB0UC5fmmyPMhBm8foFz+s3cn0wi9zTXPgUP1AAhcqj47htEgzK/96w6cNUGCjeSFGfKceoDPTq//VHtxWqFT7Z5qMHlNH5YE3iMt2Ef2EvuAOldKMBGV79PKUp+g4kXdnb+odF+z1oK+eBmFqrKXDgOgnvPBbAwaZ+A=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1724407741; c=relaxed/simple;
-	bh=6/SoN++fo5ORej63zogy1mpPqyffRKINXvmmm9qH9yk=;
+	s=arc-20240116; t=1724407742; c=relaxed/simple;
+	bh=VrBfp3g7SZTrWGg8jE2hHvpW3SVZ0+n3/LsJIdLGf5w=;
 	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=pUKVhXo5JkWiG691O+vIXkhGR7JZqxWRjMzUewJkTsUsXh34bFAaEV+jC19iDnMo8SdIYn3IAHI9Cei64dsM34Y7jWBTCsFmOFsTLSyqmdwo/ZynTTTD3Zql7kyP9ruKabS1qyUzhavpOg/AoaICeyTUX3qX+FNFvL6SEf6x1wM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; arc=none smtp.client-ip=45.249.212.35
+	 MIME-Version:Content-Type; b=Yev/s5MY5/87HMbMMoFxPg7h8n3JPk2fwC7TlyxVnlGa4TURUWCGvjxQbyz+Ojee6zK3qnejWl+8SUeV7rZnUeu/QWhvMkDx89osuysr/+sVp3Uz0biAm0kxs0B+L1jNRNhOIqhDcSpiFljWDDhdISuHcvtkMgk+G1lvaJ0BamU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; arc=none smtp.client-ip=45.249.212.190
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
-Received: from mail.maildlp.com (unknown [172.19.88.234])
-	by szxga07-in.huawei.com (SkyGuard) with ESMTP id 4Wqwl511gDz1S8cw;
-	Fri, 23 Aug 2024 18:08:49 +0800 (CST)
+Received: from mail.maildlp.com (unknown [172.19.88.163])
+	by szxga04-in.huawei.com (SkyGuard) with ESMTP id 4Wqwl76qv2z2CnB3;
+	Fri, 23 Aug 2024 18:08:51 +0800 (CST)
 Received: from kwepemd100013.china.huawei.com (unknown [7.221.188.163])
-	by mail.maildlp.com (Postfix) with ESMTPS id 8CC681401F1;
-	Fri, 23 Aug 2024 18:08:54 +0800 (CST)
+	by mail.maildlp.com (Postfix) with ESMTPS id C530818001B;
+	Fri, 23 Aug 2024 18:08:56 +0800 (CST)
 Received: from huawei.com (10.67.174.121) by kwepemd100013.china.huawei.com
  (7.221.188.163) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1258.34; Fri, 23 Aug
- 2024 18:08:53 +0800
+ 2024 18:08:56 +0800
 From: Chen Ridong <chenridong@huawei.com>
 To: <tj@kernel.org>, <lizefan.x@bytedance.com>, <hannes@cmpxchg.org>,
 	<longman@redhat.com>, <mkoutny@suse.com>, <chenridong@huawei.com>
 CC: <cgroups@vger.kernel.org>, <linux-kernel@vger.kernel.org>
-Subject: [PATCH v1 -next 01/11] cgroup/cpuset: introduce cpuset-v1.c
-Date: Fri, 23 Aug 2024 10:01:00 +0000
-Message-ID: <20240823100110.472120-2-chenridong@huawei.com>
+Subject: [PATCH v1 -next 06/11] cgroup/cpuset: add callback_lock helper
+Date: Fri, 23 Aug 2024 10:01:05 +0000
+Message-ID: <20240823100110.472120-7-chenridong@huawei.com>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20240823100110.472120-1-chenridong@huawei.com>
 References: <20240823100110.472120-1-chenridong@huawei.com>
@@ -45,73 +45,49 @@ Content-Type: text/plain
 X-ClientProxiedBy: dggems703-chm.china.huawei.com (10.3.19.180) To
  kwepemd100013.china.huawei.com (7.221.188.163)
 
-This patch introduces the cgroup/cpuset-v1.c source file which will be
-used for all legacy (cgroup v1) cpuset cgroup code. It also introduces
-cgroup/cpuset-internal.h to keep declarations shared between
-cgroup/cpuset.c and cpuset/cpuset-v1.c.
-
-As of now, let's compile it if CONFIG_CPUSET is set. Later on it can be
-switched to use a separate config option, so that the legacy code won't be
-compiled if not required.
+To modify cpuset, both cpuset_mutex and callback_lock are needed. Add
+helpers for cpuset-v1 to get callback_lock.
 
 Signed-off-by: Chen Ridong <chenridong@huawei.com>
 ---
- MAINTAINERS                     | 2 ++
- kernel/cgroup/Makefile          | 2 +-
- kernel/cgroup/cpuset-internal.h | 7 +++++++
- kernel/cgroup/cpuset-v1.c       | 4 ++++
- 4 files changed, 14 insertions(+), 1 deletion(-)
- create mode 100644 kernel/cgroup/cpuset-internal.h
- create mode 100644 kernel/cgroup/cpuset-v1.c
+ kernel/cgroup/cpuset-internal.h |  2 ++
+ kernel/cgroup/cpuset.c          | 10 ++++++++++
+ 2 files changed, 12 insertions(+)
 
-diff --git a/MAINTAINERS b/MAINTAINERS
-index d12ceaa9f426..7668f8577bc1 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -5767,6 +5767,8 @@ S:	Maintained
- T:	git git://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git
- F:	Documentation/admin-guide/cgroup-v1/cpusets.rst
- F:	include/linux/cpuset.h
-+F:	kernel/cgroup/cpuset-internal.h
-+F:	kernel/cgroup/cpuset-v1.c
- F:	kernel/cgroup/cpuset.c
- F:	tools/testing/selftests/cgroup/test_cpuset.c
- F:	tools/testing/selftests/cgroup/test_cpuset_prs.sh
-diff --git a/kernel/cgroup/Makefile b/kernel/cgroup/Makefile
-index 12f8457ad1f9..005ac4c675cb 100644
---- a/kernel/cgroup/Makefile
-+++ b/kernel/cgroup/Makefile
-@@ -4,6 +4,6 @@ obj-y := cgroup.o rstat.o namespace.o cgroup-v1.o freezer.o
- obj-$(CONFIG_CGROUP_FREEZER) += legacy_freezer.o
- obj-$(CONFIG_CGROUP_PIDS) += pids.o
- obj-$(CONFIG_CGROUP_RDMA) += rdma.o
--obj-$(CONFIG_CPUSETS) += cpuset.o
-+obj-$(CONFIG_CPUSETS) += cpuset.o cpuset-v1.o
- obj-$(CONFIG_CGROUP_MISC) += misc.o
- obj-$(CONFIG_CGROUP_DEBUG) += debug.o
 diff --git a/kernel/cgroup/cpuset-internal.h b/kernel/cgroup/cpuset-internal.h
-new file mode 100644
-index 000000000000..6605be417e32
---- /dev/null
+index e5ab71d9d06f..15d967e32d4c 100644
+--- a/kernel/cgroup/cpuset-internal.h
 +++ b/kernel/cgroup/cpuset-internal.h
-@@ -0,0 +1,7 @@
-+/* SPDX-License-Identifier: GPL-2.0-or-later */
+@@ -239,6 +239,8 @@ static inline int is_spread_slab(const struct cpuset *cs)
+ }
+ 
+ void rebuild_sched_domains_locked(void);
++void callback_lock_irq(void);
++void callback_unlock_irq(void);
+ 
+ /*
+  * cpuset-v1.c
+diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
+index 2b588ea47079..196cf618535d 100644
+--- a/kernel/cgroup/cpuset.c
++++ b/kernel/cgroup/cpuset.c
+@@ -269,6 +269,16 @@ void cpuset_unlock(void)
+ 
+ static DEFINE_SPINLOCK(callback_lock);
+ 
++void callback_lock_irq(void)
++{
++	spin_lock_irq(&callback_lock);
++}
 +
-+#ifndef __CPUSET_INTERNAL_H
-+#define __CPUSET_INTERNAL_H
++void callback_unlock_irq(void)
++{
++	spin_unlock_irq(&callback_lock);
++}
 +
-+#endif /* __CPUSET_INTERNAL_H */
-+
-diff --git a/kernel/cgroup/cpuset-v1.c b/kernel/cgroup/cpuset-v1.c
-new file mode 100644
-index 000000000000..ae166eb4f75d
---- /dev/null
-+++ b/kernel/cgroup/cpuset-v1.c
-@@ -0,0 +1,4 @@
-+// SPDX-License-Identifier: GPL-2.0-or-later
-+
-+#include "cpuset-internal.h"
-+
+ static struct workqueue_struct *cpuset_migrate_mm_wq;
+ 
+ static DECLARE_WAIT_QUEUE_HEAD(cpuset_attach_wq);
 -- 
 2.34.1
 
