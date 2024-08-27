@@ -1,37 +1,37 @@
-Received: from szxga01-in.huawei.com (szxga01-in.huawei.com [45.249.212.187])
+Received: from szxga02-in.huawei.com (szxga02-in.huawei.com [45.249.212.188])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 47798148853;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 55EF1148FF3;
 	Tue, 27 Aug 2024 06:29:01 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.187
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.188
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1724740143; cv=none; b=Ku6nJoqq7aB0Cylh7cs6uKMcOgQ0uEBSUJmFpt3uZ6Gf77mpG18DtwxX99tFsO7sGSnegZ+zNtRmiywMqBBULGTQ53IMmhuwv8BcVT6wEyzhejWTYeHRR4ZxkBOLX+14Di5ntKhJfVmVfTDo+2WlQQvILL6y7L+XbMakBnflqoY=
+	t=1724740143; cv=none; b=nNFAOXKGfmGhzqXKxHyJKNrLb1jEPjAiUBq/zt1M7Rgav66n5U5JkF4jBbbKsJYEqJBcjsk4wSbZF2zoOr+M2AegUgQH4lrp0rMCIC/eT2krQYhaEpGbneblCcFkqDLXuJwpBrA9woJ1QvCdmkdDVijiYcyy/fDQzTbvdRfXZDY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1724740143; c=relaxed/simple;
-	bh=/3RW9Jm8hCnuWorlqUbkb70RNWvHSm5Zd4o0IVNb+Q4=;
+	bh=Lq30TMTvq1nugXdlbEuSNodsHxxvnLeUppxtBC2RRCk=;
 	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=g53NGV3aBbQQpiKDrjtRmny2f1t3GUDGvdtYUKHdWxzxOYgcwOpvclMMpXY0aq9TNVlPDez7KWTKOG9e3E9RFfEQDIlIgZfiytO15ifelK8eEyvzlGJHZm2WWI4MZbnFpN+gGPPKpHjXLdAm2Zs5V1wPnu29YFs/0+MGrSoDf4M=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; arc=none smtp.client-ip=45.249.212.187
+	 MIME-Version:Content-Type; b=PPw7SWVsmleaylT29Pi11tfqbs5EewpCLvvLI1sGS1C5bdglrf1ndev+lk+683gq1OQQ0aS8zaQU0AixHP22ngYjUVNUqH67LKiQvWWKJfG1G/s3whGOkM/tkjLIw3FjRfQnt2W5dQAs/oXO+HwXKRMabviFFW1vhTY3bfdJ60c=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; arc=none smtp.client-ip=45.249.212.188
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
-Received: from mail.maildlp.com (unknown [172.19.163.48])
-	by szxga01-in.huawei.com (SkyGuard) with ESMTP id 4WtHfg0GwkzyQT3;
-	Tue, 27 Aug 2024 14:28:11 +0800 (CST)
+Received: from mail.maildlp.com (unknown [172.19.88.105])
+	by szxga02-in.huawei.com (SkyGuard) with ESMTP id 4WtHdf6nh1zpSw6;
+	Tue, 27 Aug 2024 14:27:18 +0800 (CST)
 Received: from kwepemd100013.china.huawei.com (unknown [7.221.188.163])
-	by mail.maildlp.com (Postfix) with ESMTPS id E5717180064;
-	Tue, 27 Aug 2024 14:28:57 +0800 (CST)
+	by mail.maildlp.com (Postfix) with ESMTPS id 2C806140137;
+	Tue, 27 Aug 2024 14:28:59 +0800 (CST)
 Received: from huawei.com (10.67.174.121) by kwepemd100013.china.huawei.com
  (7.221.188.163) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1258.34; Tue, 27 Aug
- 2024 14:28:57 +0800
+ 2024 14:28:58 +0800
 From: Chen Ridong <chenridong@huawei.com>
 To: <tj@kernel.org>, <lizefan.x@bytedance.com>, <hannes@cmpxchg.org>,
 	<longman@redhat.com>, <adityakali@google.com>, <sergeh@kernel.org>,
 	<mkoutny@suse.com>
 CC: <cgroups@vger.kernel.org>, <linux-kernel@vger.kernel.org>
-Subject: [PATCH v3 -next 01/12] cgroup/cpuset: introduce cpuset-v1.c
-Date: Tue, 27 Aug 2024 06:21:00 +0000
-Message-ID: <20240827062111.580296-2-chenridong@huawei.com>
+Subject: [PATCH v3 -next 04/12] cgroup/cpuset: move relax_domain_level to cpuset-v1.c
+Date: Tue, 27 Aug 2024 06:21:03 +0000
+Message-ID: <20240827062111.580296-5-chenridong@huawei.com>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20240827062111.580296-1-chenridong@huawei.com>
 References: <20240827062111.580296-1-chenridong@huawei.com>
@@ -46,71 +46,213 @@ Content-Type: text/plain
 X-ClientProxiedBy: dggems704-chm.china.huawei.com (10.3.19.181) To
  kwepemd100013.china.huawei.com (7.221.188.163)
 
-This patch introduces the cgroup/cpuset-v1.c source file which will be
-used for all legacy (cgroup v1) cpuset cgroup code. It also introduces
-cgroup/cpuset-internal.h to keep declarations shared between
-cgroup/cpuset.c and cpuset/cpuset-v1.c.
+Setting domain level is not supported at cpuset v2, so move corresponding
+code into cpuset-v1.c.
 
-As of now, let's compile it if CONFIG_CPUSET is set. Later on it can be
-switched to use a separate config option, so that the legacy code won't be
-compiled if not required.
+The 'cpuset_write_s64' and 'cpuset_read_s64' are only used for setting
+domain level, move them to cpuset-v1.c. Currently, expose to cpuset.c.
+After cpuset legacy interface files are move to cpuset-v1.c, they can
+be static. The 'rebuild_sched_domains_locked' is exposed to cpuset-v1.c.
+
+The change from original code is that using 'cpuset_lock' and
+'cpuset_unlock' functions to lock or unlock cpuset_mutex.
 
 Signed-off-by: Chen Ridong <chenridong@huawei.com>
 ---
- MAINTAINERS                     | 2 ++
- kernel/cgroup/Makefile          | 2 +-
- kernel/cgroup/cpuset-internal.h | 6 ++++++
- kernel/cgroup/cpuset-v1.c       | 3 +++
- 4 files changed, 12 insertions(+), 1 deletion(-)
- create mode 100644 kernel/cgroup/cpuset-internal.h
- create mode 100644 kernel/cgroup/cpuset-v1.c
+ kernel/cgroup/cpuset-internal.h |  6 +++-
+ kernel/cgroup/cpuset-v1.c       | 59 +++++++++++++++++++++++++++++++
+ kernel/cgroup/cpuset.c          | 62 ++-------------------------------
+ 3 files changed, 66 insertions(+), 61 deletions(-)
 
-diff --git a/MAINTAINERS b/MAINTAINERS
-index 82e3924816d2..3b5ec1cafd95 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -5698,6 +5698,8 @@ S:	Maintained
- T:	git git://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git
- F:	Documentation/admin-guide/cgroup-v1/cpusets.rst
- F:	include/linux/cpuset.h
-+F:	kernel/cgroup/cpuset-internal.h
-+F:	kernel/cgroup/cpuset-v1.c
- F:	kernel/cgroup/cpuset.c
- F:	tools/testing/selftests/cgroup/test_cpuset.c
- F:	tools/testing/selftests/cgroup/test_cpuset_prs.sh
-diff --git a/kernel/cgroup/Makefile b/kernel/cgroup/Makefile
-index 12f8457ad1f9..005ac4c675cb 100644
---- a/kernel/cgroup/Makefile
-+++ b/kernel/cgroup/Makefile
-@@ -4,6 +4,6 @@ obj-y := cgroup.o rstat.o namespace.o cgroup-v1.o freezer.o
- obj-$(CONFIG_CGROUP_FREEZER) += legacy_freezer.o
- obj-$(CONFIG_CGROUP_PIDS) += pids.o
- obj-$(CONFIG_CGROUP_RDMA) += rdma.o
--obj-$(CONFIG_CPUSETS) += cpuset.o
-+obj-$(CONFIG_CPUSETS) += cpuset.o cpuset-v1.o
- obj-$(CONFIG_CGROUP_MISC) += misc.o
- obj-$(CONFIG_CGROUP_DEBUG) += debug.o
 diff --git a/kernel/cgroup/cpuset-internal.h b/kernel/cgroup/cpuset-internal.h
-new file mode 100644
-index 000000000000..034de3cbf3ad
---- /dev/null
+index 7911c86bf012..1058a45f05ec 100644
+--- a/kernel/cgroup/cpuset-internal.h
 +++ b/kernel/cgroup/cpuset-internal.h
-@@ -0,0 +1,6 @@
-+/* SPDX-License-Identifier: GPL-2.0-or-later */
+@@ -238,11 +238,15 @@ static inline int is_spread_slab(const struct cpuset *cs)
+ 	return test_bit(CS_SPREAD_SLAB, &cs->flags);
+ }
+ 
++void rebuild_sched_domains_locked(void);
 +
-+#ifndef __CPUSET_INTERNAL_H
-+#define __CPUSET_INTERNAL_H
-+
-+#endif /* __CPUSET_INTERNAL_H */
+ /*
+  * cpuset-v1.c
+  */
+-
+ void fmeter_init(struct fmeter *fmp);
+ int fmeter_getrate(struct fmeter *fmp);
++int cpuset_write_s64(struct cgroup_subsys_state *css, struct cftype *cft,
++			    s64 val);
++s64 cpuset_read_s64(struct cgroup_subsys_state *css, struct cftype *cft);
+ 
+ #endif /* __CPUSET_INTERNAL_H */
 diff --git a/kernel/cgroup/cpuset-v1.c b/kernel/cgroup/cpuset-v1.c
-new file mode 100644
-index 000000000000..bdec4b196986
---- /dev/null
+index e7d137ff57cf..c7b321029cbb 100644
+--- a/kernel/cgroup/cpuset-v1.c
 +++ b/kernel/cgroup/cpuset-v1.c
-@@ -0,0 +1,3 @@
-+// SPDX-License-Identifier: GPL-2.0-or-later
+@@ -135,3 +135,62 @@ void __cpuset_memory_pressure_bump(void)
+ 	fmeter_markevent(&task_cs(current)->fmeter);
+ 	rcu_read_unlock();
+ }
 +
-+#include "cpuset-internal.h"
++static int update_relax_domain_level(struct cpuset *cs, s64 val)
++{
++#ifdef CONFIG_SMP
++	if (val < -1 || val > sched_domain_level_max + 1)
++		return -EINVAL;
++#endif
++
++	if (val != cs->relax_domain_level) {
++		cs->relax_domain_level = val;
++		if (!cpumask_empty(cs->cpus_allowed) &&
++		    is_sched_load_balance(cs))
++			rebuild_sched_domains_locked();
++	}
++
++	return 0;
++}
++
++int cpuset_write_s64(struct cgroup_subsys_state *css, struct cftype *cft,
++			    s64 val)
++{
++	struct cpuset *cs = css_cs(css);
++	cpuset_filetype_t type = cft->private;
++	int retval = -ENODEV;
++
++	cpus_read_lock();
++	cpuset_lock();
++	if (!is_cpuset_online(cs))
++		goto out_unlock;
++
++	switch (type) {
++	case FILE_SCHED_RELAX_DOMAIN_LEVEL:
++		retval = update_relax_domain_level(cs, val);
++		break;
++	default:
++		retval = -EINVAL;
++		break;
++	}
++out_unlock:
++	cpuset_unlock();
++	cpus_read_unlock();
++	return retval;
++}
++
++s64 cpuset_read_s64(struct cgroup_subsys_state *css, struct cftype *cft)
++{
++	struct cpuset *cs = css_cs(css);
++	cpuset_filetype_t type = cft->private;
++
++	switch (type) {
++	case FILE_SCHED_RELAX_DOMAIN_LEVEL:
++		return cs->relax_domain_level;
++	default:
++		BUG();
++	}
++
++	/* Unreachable but makes gcc happy */
++	return 0;
++}
+diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
+index 17f7984a41f5..45031a17e068 100644
+--- a/kernel/cgroup/cpuset.c
++++ b/kernel/cgroup/cpuset.c
+@@ -1069,7 +1069,7 @@ partition_and_rebuild_sched_domains(int ndoms_new, cpumask_var_t doms_new[],
+  *
+  * Call with cpuset_mutex held.  Takes cpus_read_lock().
+  */
+-static void rebuild_sched_domains_locked(void)
++void rebuild_sched_domains_locked(void)
+ {
+ 	struct cgroup_subsys_state *pos_css;
+ 	struct sched_domain_attr *attr;
+@@ -1121,7 +1121,7 @@ static void rebuild_sched_domains_locked(void)
+ 	partition_and_rebuild_sched_domains(ndoms, doms, attr);
+ }
+ #else /* !CONFIG_SMP */
+-static void rebuild_sched_domains_locked(void)
++void rebuild_sched_domains_locked(void)
+ {
+ }
+ #endif /* CONFIG_SMP */
+@@ -2788,23 +2788,6 @@ bool current_cpuset_is_being_rebound(void)
+ 	return ret;
+ }
+ 
+-static int update_relax_domain_level(struct cpuset *cs, s64 val)
+-{
+-#ifdef CONFIG_SMP
+-	if (val < -1 || val > sched_domain_level_max + 1)
+-		return -EINVAL;
+-#endif
+-
+-	if (val != cs->relax_domain_level) {
+-		cs->relax_domain_level = val;
+-		if (!cpumask_empty(cs->cpus_allowed) &&
+-		    is_sched_load_balance(cs))
+-			rebuild_sched_domains_locked();
+-	}
+-
+-	return 0;
+-}
+-
+ /**
+  * update_tasks_flags - update the spread flags of tasks in the cpuset.
+  * @cs: the cpuset in which each task's spread flags needs to be changed
+@@ -3267,32 +3250,6 @@ static int cpuset_write_u64(struct cgroup_subsys_state *css, struct cftype *cft,
+ 	return retval;
+ }
+ 
+-static int cpuset_write_s64(struct cgroup_subsys_state *css, struct cftype *cft,
+-			    s64 val)
+-{
+-	struct cpuset *cs = css_cs(css);
+-	cpuset_filetype_t type = cft->private;
+-	int retval = -ENODEV;
+-
+-	cpus_read_lock();
+-	mutex_lock(&cpuset_mutex);
+-	if (!is_cpuset_online(cs))
+-		goto out_unlock;
+-
+-	switch (type) {
+-	case FILE_SCHED_RELAX_DOMAIN_LEVEL:
+-		retval = update_relax_domain_level(cs, val);
+-		break;
+-	default:
+-		retval = -EINVAL;
+-		break;
+-	}
+-out_unlock:
+-	mutex_unlock(&cpuset_mutex);
+-	cpus_read_unlock();
+-	return retval;
+-}
+-
+ /*
+  * Common handling for a write to a "cpus" or "mems" file.
+  */
+@@ -3443,21 +3400,6 @@ static u64 cpuset_read_u64(struct cgroup_subsys_state *css, struct cftype *cft)
+ 	return 0;
+ }
+ 
+-static s64 cpuset_read_s64(struct cgroup_subsys_state *css, struct cftype *cft)
+-{
+-	struct cpuset *cs = css_cs(css);
+-	cpuset_filetype_t type = cft->private;
+-	switch (type) {
+-	case FILE_SCHED_RELAX_DOMAIN_LEVEL:
+-		return cs->relax_domain_level;
+-	default:
+-		BUG();
+-	}
+-
+-	/* Unreachable but makes gcc happy */
+-	return 0;
+-}
+-
+ static int sched_partition_show(struct seq_file *seq, void *v)
+ {
+ 	struct cpuset *cs = css_cs(seq_css(seq));
 -- 
 2.34.1
 
