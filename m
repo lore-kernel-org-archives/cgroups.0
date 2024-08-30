@@ -1,38 +1,41 @@
-Received: from szxga02-in.huawei.com (szxga02-in.huawei.com [45.249.212.188])
+Received: from szxga05-in.huawei.com (szxga05-in.huawei.com [45.249.212.191])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2C6A717B506;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9A3B517B501;
 	Fri, 30 Aug 2024 10:10:22 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.188
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.191
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1725012625; cv=none; b=dhNilFp48EOeqSp/wMZeGThjNfFyUfQ7yYVtx/0N22HMHTG5VqZgXBELbGOCVE6cJUDu4DIQHuJRiw5mkctrqtD3LvTZnn/FloUe2U3j0yvxW/PxP0z7+D40v3hOhdjNzLa9NGiO2ZGbxRPSASAdThlzun8LP0W0OIRKhMJCdb0=
+	t=1725012625; cv=none; b=FQMfiow/j5VbnJ+lwiCa6OVGrm7ox7pvqBzbbZqZjsbgzv0sOHAoP4a3GHKFZvX5SrTXS/ZBb4HZlQaYruTNIbQZdGD9sBGDxKW0F/UPjR4PsBCrinRqOQ5znuQGLEOoBpD4ceaEdQ2qzRkp/0Cr1WxJmC02N7XxhqrZkVcmdbo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1725012625; c=relaxed/simple;
-	bh=qS2Hn9IVe31ApnuSqkfxlL8kDdPzhguV+3WhVSCJLfg=;
-	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=OzqrB8hZbWsTKNaTXD/1IkqaLXMa1SIijmW/gUOT0CZFRKmDD/AfeourfSo1GTS24wqxzQVSu28nVi3EfJu/fdyoXwu9AnrNxv2eM9fA+P0fKUPoTyfIWtuCVVRlbdURZlw6VloQBCoJJQEcpfL2Go42EyNjnmKYf3+q9U5/S1A=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; arc=none smtp.client-ip=45.249.212.188
+	bh=ZLv1r7Ko4oryC4beQPJA/3rM14P+MXREEu4MrhZ6M+g=;
+	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=jz4/28SK3P/MdNpoOHFPV4wSQ+OSA99TS1NEnuJUh38X1/GdO9avlvy5qbAISyHZ5auVKo6fng3ceRnPgVTBlxEYwP9QHvPg7sG6nseFfQm8fDb4mlZWDNdx70NvBIEiOWchJAtnlBmI2C52IPD5tNjXStFoO9fI/EI0LxwE5BY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; arc=none smtp.client-ip=45.249.212.191
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
-Received: from mail.maildlp.com (unknown [172.19.163.252])
-	by szxga02-in.huawei.com (SkyGuard) with ESMTP id 4WwDPZ2LkhzpV7F;
-	Fri, 30 Aug 2024 18:08:34 +0800 (CST)
+Received: from mail.maildlp.com (unknown [172.19.163.17])
+	by szxga05-in.huawei.com (SkyGuard) with ESMTP id 4WwDMk2WnMz1HHgK;
+	Fri, 30 Aug 2024 18:06:58 +0800 (CST)
 Received: from kwepemd100013.china.huawei.com (unknown [7.221.188.163])
-	by mail.maildlp.com (Postfix) with ESMTPS id 55134180AE6;
-	Fri, 30 Aug 2024 18:10:19 +0800 (CST)
+	by mail.maildlp.com (Postfix) with ESMTPS id 42AA41A0188;
+	Fri, 30 Aug 2024 18:10:20 +0800 (CST)
 Received: from huawei.com (10.67.174.121) by kwepemd100013.china.huawei.com
  (7.221.188.163) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1258.34; Fri, 30 Aug
- 2024 18:10:18 +0800
+ 2024 18:10:19 +0800
 From: Chen Ridong <chenridong@huawei.com>
 To: <tj@kernel.org>, <lizefan.x@bytedance.com>, <hannes@cmpxchg.org>,
 	<longman@redhat.com>, <adityakali@google.com>, <sergeh@kernel.org>,
 	<mkoutny@suse.com>
 CC: <cgroups@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
 	<chenridong@huaweicloud.com>
-Subject: [PATCH v4 -next 00/12] cgroup:cpuset:separate legacy cgroup v1 code and put under config option
-Date: Fri, 30 Aug 2024 10:02:17 +0000
-Message-ID: <20240830100229.953012-1-chenridong@huawei.com>
+Subject: [PATCH v4 -next 02/12] cgroup/cpuset: move common code to cpuset-internal.h
+Date: Fri, 30 Aug 2024 10:02:19 +0000
+Message-ID: <20240830100229.953012-3-chenridong@huawei.com>
 X-Mailer: git-send-email 2.34.1
+In-Reply-To: <20240830100229.953012-1-chenridong@huawei.com>
+References: <20240830100229.953012-1-chenridong@huawei.com>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
@@ -44,64 +47,555 @@ Content-Type: text/plain
 X-ClientProxiedBy: dggems704-chm.china.huawei.com (10.3.19.181) To
  kwepemd100013.china.huawei.com (7.221.188.163)
 
-Cgroups v2 have been around for a while and many users have fully adopted
-them, so they never use cgroups v1 features and functionality. Yet they
-have to "pay" for the cgroup v1 support anyway:
-1) the kernel binary contains an unused cgroup v1 code,
-2) some code paths have additional checks which are not needed,
-3) some common structures like task_struct and mem_cgroup contain unused
-   cgroup v1-specific members.
+Move some declarations that will be used for cpuset v1 and v2,
+including 'cpuset struct', 'cpuset_flagbits_t', cpuset_filetype_t,etc.
+No logical change.
 
-Cgroup memory controller has already separated legacy code to
-memory-v1.c. So it is time to do the same thing for cpuset controller.
-
-This patchset aims to do:
-1) moving cgroup v1-specific cpuset code to the new cpuset-v1.c file,
-2) putting definitions shared by cpuset.c and cpuset-v1.c into the
-   cpuset-internal.h header,
-3) introducing the CONFIG_CPUSETS_V1 config option, turned off by default,
-4) making cpuset-v1.c to compile only if CONFIG_CPUSETS_V1 is set.
-
+Signed-off-by: Chen Ridong <chenridong@huawei.com>
 ---
-V4:
-- Rename legacy_files to cpuset1_files.
-- Revert rebuild_sched_domain and fmeter_init rename.
+ kernel/cgroup/cpuset-internal.h | 235 +++++++++++++++++++++++++++++++
+ kernel/cgroup/cpuset.c          | 236 +-------------------------------
+ 2 files changed, 236 insertions(+), 235 deletions(-)
 
-V3:
-- Delete blank line at the end of file.
-- Rename some generic functions name with cpuset_/cpuset1_ prefix.
-
-V2:
-- Update to base on the latest cgroup/for-6.12.
-- Add CONFIG_CPUSETS_V1 for cpuset_memory_pressure_bump.
-
-Chen Ridong (12):
-  cgroup/cpuset: introduce cpuset-v1.c
-  cgroup/cpuset: move common code to cpuset-internal.h
-  cgroup/cpuset: move memory_pressure to cpuset-v1.c
-  cgroup/cpuset: move relax_domain_level to cpuset-v1.c
-  cgroup/cpuset: move memory_spread to cpuset-v1.c
-  cgroup/cpuset: add callback_lock helper
-  cgroup/cpuset: move legacy hotplug update to cpuset-v1.c
-  cgroup/cpuset: move validate_change_legacy to cpuset-v1.c
-  cgroup/cpuset: move v1 interfaces to cpuset-v1.c
-  cgroup/cpuset: rename functions shared between v1 and v2
-  cgroup/cpuset: guard cpuset-v1 code under CONFIG_CPUSETS_V1
-  cgroup/cpuset: add sefltest for cpuset v1
-
- MAINTAINERS                                   |   3 +
- include/linux/cpuset.h                        |   4 +
- init/Kconfig                                  |  13 +
- kernel/cgroup/Makefile                        |   1 +
- kernel/cgroup/cpuset-internal.h               | 304 ++++++
- kernel/cgroup/cpuset-v1.c                     | 562 +++++++++++
- kernel/cgroup/cpuset.c                        | 892 +-----------------
- .../selftests/cgroup/test_cpuset_v1_base.sh   |  77 ++
- 8 files changed, 1005 insertions(+), 851 deletions(-)
- create mode 100644 kernel/cgroup/cpuset-internal.h
- create mode 100644 kernel/cgroup/cpuset-v1.c
- create mode 100755 tools/testing/selftests/cgroup/test_cpuset_v1_base.sh
-
+diff --git a/kernel/cgroup/cpuset-internal.h b/kernel/cgroup/cpuset-internal.h
+index 034de3cbf3ad..ffea3eefebdf 100644
+--- a/kernel/cgroup/cpuset-internal.h
++++ b/kernel/cgroup/cpuset-internal.h
+@@ -3,4 +3,239 @@
+ #ifndef __CPUSET_INTERNAL_H
+ #define __CPUSET_INTERNAL_H
+ 
++#include <linux/union_find.h>
++#include <linux/cpumask.h>
++#include <linux/spinlock.h>
++#include <linux/cpuset.h>
++#include <linux/cgroup.h>
++
++/* See "Frequency meter" comments, below. */
++
++struct fmeter {
++	int cnt;		/* unprocessed events count */
++	int val;		/* most recent output value */
++	time64_t time;		/* clock (secs) when val computed */
++	spinlock_t lock;	/* guards read or write of above */
++};
++
++/*
++ * Invalid partition error code
++ */
++enum prs_errcode {
++	PERR_NONE = 0,
++	PERR_INVCPUS,
++	PERR_INVPARENT,
++	PERR_NOTPART,
++	PERR_NOTEXCL,
++	PERR_NOCPUS,
++	PERR_HOTPLUG,
++	PERR_CPUSEMPTY,
++	PERR_HKEEPING,
++	PERR_ACCESS,
++};
++
++/* bits in struct cpuset flags field */
++typedef enum {
++	CS_ONLINE,
++	CS_CPU_EXCLUSIVE,
++	CS_MEM_EXCLUSIVE,
++	CS_MEM_HARDWALL,
++	CS_MEMORY_MIGRATE,
++	CS_SCHED_LOAD_BALANCE,
++	CS_SPREAD_PAGE,
++	CS_SPREAD_SLAB,
++} cpuset_flagbits_t;
++
++/* The various types of files and directories in a cpuset file system */
++
++typedef enum {
++	FILE_MEMORY_MIGRATE,
++	FILE_CPULIST,
++	FILE_MEMLIST,
++	FILE_EFFECTIVE_CPULIST,
++	FILE_EFFECTIVE_MEMLIST,
++	FILE_SUBPARTS_CPULIST,
++	FILE_EXCLUSIVE_CPULIST,
++	FILE_EFFECTIVE_XCPULIST,
++	FILE_ISOLATED_CPULIST,
++	FILE_CPU_EXCLUSIVE,
++	FILE_MEM_EXCLUSIVE,
++	FILE_MEM_HARDWALL,
++	FILE_SCHED_LOAD_BALANCE,
++	FILE_PARTITION_ROOT,
++	FILE_SCHED_RELAX_DOMAIN_LEVEL,
++	FILE_MEMORY_PRESSURE_ENABLED,
++	FILE_MEMORY_PRESSURE,
++	FILE_SPREAD_PAGE,
++	FILE_SPREAD_SLAB,
++} cpuset_filetype_t;
++
++struct cpuset {
++	struct cgroup_subsys_state css;
++
++	unsigned long flags;		/* "unsigned long" so bitops work */
++
++	/*
++	 * On default hierarchy:
++	 *
++	 * The user-configured masks can only be changed by writing to
++	 * cpuset.cpus and cpuset.mems, and won't be limited by the
++	 * parent masks.
++	 *
++	 * The effective masks is the real masks that apply to the tasks
++	 * in the cpuset. They may be changed if the configured masks are
++	 * changed or hotplug happens.
++	 *
++	 * effective_mask == configured_mask & parent's effective_mask,
++	 * and if it ends up empty, it will inherit the parent's mask.
++	 *
++	 *
++	 * On legacy hierarchy:
++	 *
++	 * The user-configured masks are always the same with effective masks.
++	 */
++
++	/* user-configured CPUs and Memory Nodes allow to tasks */
++	cpumask_var_t cpus_allowed;
++	nodemask_t mems_allowed;
++
++	/* effective CPUs and Memory Nodes allow to tasks */
++	cpumask_var_t effective_cpus;
++	nodemask_t effective_mems;
++
++	/*
++	 * Exclusive CPUs dedicated to current cgroup (default hierarchy only)
++	 *
++	 * The effective_cpus of a valid partition root comes solely from its
++	 * effective_xcpus and some of the effective_xcpus may be distributed
++	 * to sub-partitions below & hence excluded from its effective_cpus.
++	 * For a valid partition root, its effective_cpus have no relationship
++	 * with cpus_allowed unless its exclusive_cpus isn't set.
++	 *
++	 * This value will only be set if either exclusive_cpus is set or
++	 * when this cpuset becomes a local partition root.
++	 */
++	cpumask_var_t effective_xcpus;
++
++	/*
++	 * Exclusive CPUs as requested by the user (default hierarchy only)
++	 *
++	 * Its value is independent of cpus_allowed and designates the set of
++	 * CPUs that can be granted to the current cpuset or its children when
++	 * it becomes a valid partition root. The effective set of exclusive
++	 * CPUs granted (effective_xcpus) depends on whether those exclusive
++	 * CPUs are passed down by its ancestors and not yet taken up by
++	 * another sibling partition root along the way.
++	 *
++	 * If its value isn't set, it defaults to cpus_allowed.
++	 */
++	cpumask_var_t exclusive_cpus;
++
++	/*
++	 * This is old Memory Nodes tasks took on.
++	 *
++	 * - top_cpuset.old_mems_allowed is initialized to mems_allowed.
++	 * - A new cpuset's old_mems_allowed is initialized when some
++	 *   task is moved into it.
++	 * - old_mems_allowed is used in cpuset_migrate_mm() when we change
++	 *   cpuset.mems_allowed and have tasks' nodemask updated, and
++	 *   then old_mems_allowed is updated to mems_allowed.
++	 */
++	nodemask_t old_mems_allowed;
++
++	struct fmeter fmeter;		/* memory_pressure filter */
++
++	/*
++	 * Tasks are being attached to this cpuset.  Used to prevent
++	 * zeroing cpus/mems_allowed between ->can_attach() and ->attach().
++	 */
++	int attach_in_progress;
++
++	/* for custom sched domain */
++	int relax_domain_level;
++
++	/* number of valid local child partitions */
++	int nr_subparts;
++
++	/* partition root state */
++	int partition_root_state;
++
++	/*
++	 * number of SCHED_DEADLINE tasks attached to this cpuset, so that we
++	 * know when to rebuild associated root domain bandwidth information.
++	 */
++	int nr_deadline_tasks;
++	int nr_migrate_dl_tasks;
++	u64 sum_migrate_dl_bw;
++
++	/* Invalid partition error code, not lock protected */
++	enum prs_errcode prs_err;
++
++	/* Handle for cpuset.cpus.partition */
++	struct cgroup_file partition_file;
++
++	/* Remote partition silbling list anchored at remote_children */
++	struct list_head remote_sibling;
++
++	/* Used to merge intersecting subsets for generate_sched_domains */
++	struct uf_node node;
++};
++
++static inline struct cpuset *css_cs(struct cgroup_subsys_state *css)
++{
++	return css ? container_of(css, struct cpuset, css) : NULL;
++}
++
++/* Retrieve the cpuset for a task */
++static inline struct cpuset *task_cs(struct task_struct *task)
++{
++	return css_cs(task_css(task, cpuset_cgrp_id));
++}
++
++static inline struct cpuset *parent_cs(struct cpuset *cs)
++{
++	return css_cs(cs->css.parent);
++}
++
++/* convenient tests for these bits */
++static inline bool is_cpuset_online(struct cpuset *cs)
++{
++	return test_bit(CS_ONLINE, &cs->flags) && !css_is_dying(&cs->css);
++}
++
++static inline int is_cpu_exclusive(const struct cpuset *cs)
++{
++	return test_bit(CS_CPU_EXCLUSIVE, &cs->flags);
++}
++
++static inline int is_mem_exclusive(const struct cpuset *cs)
++{
++	return test_bit(CS_MEM_EXCLUSIVE, &cs->flags);
++}
++
++static inline int is_mem_hardwall(const struct cpuset *cs)
++{
++	return test_bit(CS_MEM_HARDWALL, &cs->flags);
++}
++
++static inline int is_sched_load_balance(const struct cpuset *cs)
++{
++	return test_bit(CS_SCHED_LOAD_BALANCE, &cs->flags);
++}
++
++static inline int is_memory_migrate(const struct cpuset *cs)
++{
++	return test_bit(CS_MEMORY_MIGRATE, &cs->flags);
++}
++
++static inline int is_spread_page(const struct cpuset *cs)
++{
++	return test_bit(CS_SPREAD_PAGE, &cs->flags);
++}
++
++static inline int is_spread_slab(const struct cpuset *cs)
++{
++	return test_bit(CS_SPREAD_SLAB, &cs->flags);
++}
++
+ #endif /* __CPUSET_INTERNAL_H */
+diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
+index 7db55eed63cf..61763dd70de5 100644
+--- a/kernel/cgroup/cpuset.c
++++ b/kernel/cgroup/cpuset.c
+@@ -22,11 +22,9 @@
+  *  distribution for more details.
+  */
+ #include "cgroup-internal.h"
++#include "cpuset-internal.h"
+ 
+ #include <linux/cpu.h>
+-#include <linux/cpumask.h>
+-#include <linux/cpuset.h>
+-#include <linux/delay.h>
+ #include <linux/init.h>
+ #include <linux/interrupt.h>
+ #include <linux/kernel.h>
+@@ -40,13 +38,10 @@
+ #include <linux/sched/mm.h>
+ #include <linux/sched/task.h>
+ #include <linux/security.h>
+-#include <linux/spinlock.h>
+ #include <linux/oom.h>
+ #include <linux/sched/isolation.h>
+-#include <linux/cgroup.h>
+ #include <linux/wait.h>
+ #include <linux/workqueue.h>
+-#include <linux/union_find.h>
+ 
+ DEFINE_STATIC_KEY_FALSE(cpusets_pre_enable_key);
+ DEFINE_STATIC_KEY_FALSE(cpusets_enabled_key);
+@@ -58,31 +53,6 @@ DEFINE_STATIC_KEY_FALSE(cpusets_enabled_key);
+  */
+ DEFINE_STATIC_KEY_FALSE(cpusets_insane_config_key);
+ 
+-/* See "Frequency meter" comments, below. */
+-
+-struct fmeter {
+-	int cnt;		/* unprocessed events count */
+-	int val;		/* most recent output value */
+-	time64_t time;		/* clock (secs) when val computed */
+-	spinlock_t lock;	/* guards read or write of above */
+-};
+-
+-/*
+- * Invalid partition error code
+- */
+-enum prs_errcode {
+-	PERR_NONE = 0,
+-	PERR_INVCPUS,
+-	PERR_INVPARENT,
+-	PERR_NOTPART,
+-	PERR_NOTEXCL,
+-	PERR_NOCPUS,
+-	PERR_HOTPLUG,
+-	PERR_CPUSEMPTY,
+-	PERR_HKEEPING,
+-	PERR_ACCESS,
+-};
+-
+ static const char * const perr_strings[] = {
+ 	[PERR_INVCPUS]   = "Invalid cpu list in cpuset.cpus.exclusive",
+ 	[PERR_INVPARENT] = "Parent is an invalid partition root",
+@@ -95,117 +65,6 @@ static const char * const perr_strings[] = {
+ 	[PERR_ACCESS]    = "Enable partition not permitted",
+ };
+ 
+-struct cpuset {
+-	struct cgroup_subsys_state css;
+-
+-	unsigned long flags;		/* "unsigned long" so bitops work */
+-
+-	/*
+-	 * On default hierarchy:
+-	 *
+-	 * The user-configured masks can only be changed by writing to
+-	 * cpuset.cpus and cpuset.mems, and won't be limited by the
+-	 * parent masks.
+-	 *
+-	 * The effective masks is the real masks that apply to the tasks
+-	 * in the cpuset. They may be changed if the configured masks are
+-	 * changed or hotplug happens.
+-	 *
+-	 * effective_mask == configured_mask & parent's effective_mask,
+-	 * and if it ends up empty, it will inherit the parent's mask.
+-	 *
+-	 *
+-	 * On legacy hierarchy:
+-	 *
+-	 * The user-configured masks are always the same with effective masks.
+-	 */
+-
+-	/* user-configured CPUs and Memory Nodes allow to tasks */
+-	cpumask_var_t cpus_allowed;
+-	nodemask_t mems_allowed;
+-
+-	/* effective CPUs and Memory Nodes allow to tasks */
+-	cpumask_var_t effective_cpus;
+-	nodemask_t effective_mems;
+-
+-	/*
+-	 * Exclusive CPUs dedicated to current cgroup (default hierarchy only)
+-	 *
+-	 * The effective_cpus of a valid partition root comes solely from its
+-	 * effective_xcpus and some of the effective_xcpus may be distributed
+-	 * to sub-partitions below & hence excluded from its effective_cpus.
+-	 * For a valid partition root, its effective_cpus have no relationship
+-	 * with cpus_allowed unless its exclusive_cpus isn't set.
+-	 *
+-	 * This value will only be set if either exclusive_cpus is set or
+-	 * when this cpuset becomes a local partition root.
+-	 */
+-	cpumask_var_t effective_xcpus;
+-
+-	/*
+-	 * Exclusive CPUs as requested by the user (default hierarchy only)
+-	 *
+-	 * Its value is independent of cpus_allowed and designates the set of
+-	 * CPUs that can be granted to the current cpuset or its children when
+-	 * it becomes a valid partition root. The effective set of exclusive
+-	 * CPUs granted (effective_xcpus) depends on whether those exclusive
+-	 * CPUs are passed down by its ancestors and not yet taken up by
+-	 * another sibling partition root along the way.
+-	 *
+-	 * If its value isn't set, it defaults to cpus_allowed.
+-	 */
+-	cpumask_var_t exclusive_cpus;
+-
+-	/*
+-	 * This is old Memory Nodes tasks took on.
+-	 *
+-	 * - top_cpuset.old_mems_allowed is initialized to mems_allowed.
+-	 * - A new cpuset's old_mems_allowed is initialized when some
+-	 *   task is moved into it.
+-	 * - old_mems_allowed is used in cpuset_migrate_mm() when we change
+-	 *   cpuset.mems_allowed and have tasks' nodemask updated, and
+-	 *   then old_mems_allowed is updated to mems_allowed.
+-	 */
+-	nodemask_t old_mems_allowed;
+-
+-	struct fmeter fmeter;		/* memory_pressure filter */
+-
+-	/*
+-	 * Tasks are being attached to this cpuset.  Used to prevent
+-	 * zeroing cpus/mems_allowed between ->can_attach() and ->attach().
+-	 */
+-	int attach_in_progress;
+-
+-	/* for custom sched domain */
+-	int relax_domain_level;
+-
+-	/* number of valid local child partitions */
+-	int nr_subparts;
+-
+-	/* partition root state */
+-	int partition_root_state;
+-
+-	/*
+-	 * number of SCHED_DEADLINE tasks attached to this cpuset, so that we
+-	 * know when to rebuild associated root domain bandwidth information.
+-	 */
+-	int nr_deadline_tasks;
+-	int nr_migrate_dl_tasks;
+-	u64 sum_migrate_dl_bw;
+-
+-	/* Invalid partition error code, not lock protected */
+-	enum prs_errcode prs_err;
+-
+-	/* Handle for cpuset.cpus.partition */
+-	struct cgroup_file partition_file;
+-
+-	/* Remote partition silbling list anchored at remote_children */
+-	struct list_head remote_sibling;
+-
+-	/* Used to merge intersecting subsets for generate_sched_domains */
+-	struct uf_node node;
+-};
+-
+ /*
+  * Legacy hierarchy call to cgroup_transfer_tasks() is handled asynchrously
+  */
+@@ -274,22 +133,6 @@ struct tmpmasks {
+ 	cpumask_var_t new_cpus;		/* For update_cpumasks_hier() */
+ };
+ 
+-static inline struct cpuset *css_cs(struct cgroup_subsys_state *css)
+-{
+-	return css ? container_of(css, struct cpuset, css) : NULL;
+-}
+-
+-/* Retrieve the cpuset for a task */
+-static inline struct cpuset *task_cs(struct task_struct *task)
+-{
+-	return css_cs(task_css(task, cpuset_cgrp_id));
+-}
+-
+-static inline struct cpuset *parent_cs(struct cpuset *cs)
+-{
+-	return css_cs(cs->css.parent);
+-}
+-
+ void inc_dl_tasks_cs(struct task_struct *p)
+ {
+ 	struct cpuset *cs = task_cs(p);
+@@ -304,59 +147,6 @@ void dec_dl_tasks_cs(struct task_struct *p)
+ 	cs->nr_deadline_tasks--;
+ }
+ 
+-/* bits in struct cpuset flags field */
+-typedef enum {
+-	CS_ONLINE,
+-	CS_CPU_EXCLUSIVE,
+-	CS_MEM_EXCLUSIVE,
+-	CS_MEM_HARDWALL,
+-	CS_MEMORY_MIGRATE,
+-	CS_SCHED_LOAD_BALANCE,
+-	CS_SPREAD_PAGE,
+-	CS_SPREAD_SLAB,
+-} cpuset_flagbits_t;
+-
+-/* convenient tests for these bits */
+-static inline bool is_cpuset_online(struct cpuset *cs)
+-{
+-	return test_bit(CS_ONLINE, &cs->flags) && !css_is_dying(&cs->css);
+-}
+-
+-static inline int is_cpu_exclusive(const struct cpuset *cs)
+-{
+-	return test_bit(CS_CPU_EXCLUSIVE, &cs->flags);
+-}
+-
+-static inline int is_mem_exclusive(const struct cpuset *cs)
+-{
+-	return test_bit(CS_MEM_EXCLUSIVE, &cs->flags);
+-}
+-
+-static inline int is_mem_hardwall(const struct cpuset *cs)
+-{
+-	return test_bit(CS_MEM_HARDWALL, &cs->flags);
+-}
+-
+-static inline int is_sched_load_balance(const struct cpuset *cs)
+-{
+-	return test_bit(CS_SCHED_LOAD_BALANCE, &cs->flags);
+-}
+-
+-static inline int is_memory_migrate(const struct cpuset *cs)
+-{
+-	return test_bit(CS_MEMORY_MIGRATE, &cs->flags);
+-}
+-
+-static inline int is_spread_page(const struct cpuset *cs)
+-{
+-	return test_bit(CS_SPREAD_PAGE, &cs->flags);
+-}
+-
+-static inline int is_spread_slab(const struct cpuset *cs)
+-{
+-	return test_bit(CS_SPREAD_SLAB, &cs->flags);
+-}
+-
+ static inline int is_partition_valid(const struct cpuset *cs)
+ {
+ 	return cs->partition_root_state > 0;
+@@ -3529,30 +3319,6 @@ static void cpuset_attach(struct cgroup_taskset *tset)
+ 	mutex_unlock(&cpuset_mutex);
+ }
+ 
+-/* The various types of files and directories in a cpuset file system */
+-
+-typedef enum {
+-	FILE_MEMORY_MIGRATE,
+-	FILE_CPULIST,
+-	FILE_MEMLIST,
+-	FILE_EFFECTIVE_CPULIST,
+-	FILE_EFFECTIVE_MEMLIST,
+-	FILE_SUBPARTS_CPULIST,
+-	FILE_EXCLUSIVE_CPULIST,
+-	FILE_EFFECTIVE_XCPULIST,
+-	FILE_ISOLATED_CPULIST,
+-	FILE_CPU_EXCLUSIVE,
+-	FILE_MEM_EXCLUSIVE,
+-	FILE_MEM_HARDWALL,
+-	FILE_SCHED_LOAD_BALANCE,
+-	FILE_PARTITION_ROOT,
+-	FILE_SCHED_RELAX_DOMAIN_LEVEL,
+-	FILE_MEMORY_PRESSURE_ENABLED,
+-	FILE_MEMORY_PRESSURE,
+-	FILE_SPREAD_PAGE,
+-	FILE_SPREAD_SLAB,
+-} cpuset_filetype_t;
+-
+ static int cpuset_write_u64(struct cgroup_subsys_state *css, struct cftype *cft,
+ 			    u64 val)
+ {
 -- 
 2.34.1
 
