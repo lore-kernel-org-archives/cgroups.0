@@ -1,215 +1,115 @@
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.11])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-yw1-f182.google.com (mail-yw1-f182.google.com [209.85.128.182])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 236001BE86F;
-	Fri, 30 Aug 2024 16:41:45 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.11
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9132C1BBBF0
+	for <cgroups@vger.kernel.org>; Fri, 30 Aug 2024 17:45:38 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.182
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1725036107; cv=none; b=t3aiZCfiiIRXMm1RpILeIPX7a7otb2r4ddjClLIxCgh5sy/n8xTQZcqHO57K2oR86JQrdxFNiPIMTKp+PCAw2NEBqrzUWEe+BDUp+FfKtZLDVl8gAU1KeZimlUDQyV/IZjFUqP2Y/K603v7VVJcv9Im4zXvG0aG5/+yvBbrc+vI=
+	t=1725039940; cv=none; b=LG2T4aktv5Nja/lWvtjlro7lk5mUEYW7bY5Cbih/tG9J8M0M7Y+cyFumES9etpL5yhNJHZI2xy5CP1VbgZSPNKvwUPc+iF+SbN4TiDfDhczrcLdVPb1incRbnLHWRPqIAP+9VtCvRzWGndWw75zy3h1mS/2Hvc/gXLHxpHqz35U=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1725036107; c=relaxed/simple;
-	bh=1yv03DejpjIhtoLqLThgUtevm5kwrLeq6sL2gn4HWZE=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=Qk8wb01H5D5g6GnOkWPWJiw+lm2aNdIuR4S62UAsHBthR2HCfWdJqVeLM7eA1Fh16zqzWBv1OtXG7ln6uEthwpki9tesRrkRJp7KDk9qWiyYPNQTvwxrhbUpvwvuLsms0g4Z16GwdmQaEgQKWKpW0hLvUNoxK0Z5t93oWWTC4jo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=none smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=akuSZ1rU; arc=none smtp.client-ip=192.198.163.11
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=linux.intel.com
+	s=arc-20240116; t=1725039940; c=relaxed/simple;
+	bh=ThNEZGKKRi+s1cs5hbQJ+xtVuVFcI/+4LwCoqRexnoo=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=qE/I+/cHEX4gMB6zVAig6oRrmd1/9EhYx2o7R8FcH1wE7wAYGseCOmOwzdw59CmY2iXOt3CJtKQYgfWLBzM+JAIc1Ur3St1f+gMTgtBC5u2qkV82OWUclE0FGl2UHT1TOCEUiebazDIPk3rBuu9t+FtYQw2loMbugIuM3TVXSHQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=TvjgDGnG; arc=none smtp.client-ip=209.85.128.182
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="akuSZ1rU"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1725036105; x=1756572105;
-  h=from:to:cc:subject:date:message-id:in-reply-to:
-   references:mime-version:content-transfer-encoding;
-  bh=1yv03DejpjIhtoLqLThgUtevm5kwrLeq6sL2gn4HWZE=;
-  b=akuSZ1rU88mg76s5NkB47/2lHriyREmCqBdELWd+KNXjvdfhYAbyOgnL
-   7dEr9UNRm/Q6zpOSrem34fLSxM+K5yc6gV1D+Xgfx7l5Di7Od22M5A9Ln
-   HCbXp7SGWFneHnToONc4nbwD3rdytOD3dVX0ielCbKlN6JXjaSfpOWwx3
-   dvQdaZR3k2NvWcVLaLgqSsi6SeiMQXDskgHHfF0eTvvDkKOf5A9NEmduW
-   106HIKoGalIgGZiAhk8xVhmi58QCMNqkqXMnZOrchcKyxbdEJkkHdMUrD
-   3Nk8P5W56AFYVmJL+/aNcxyCeKnO1XFbAkmdbxJ3LN+V+V3pmCO4L/Wlr
-   w==;
-X-CSE-ConnectionGUID: FLXBmN/wR9OGKaWZLOUYjw==
-X-CSE-MsgGUID: WzEFAseOTuSR4boLiR7DRA==
-X-IronPort-AV: E=McAfee;i="6700,10204,11180"; a="34300083"
-X-IronPort-AV: E=Sophos;i="6.10,189,1719903600"; 
-   d="scan'208";a="34300083"
-Received: from orviesa001.jf.intel.com ([10.64.159.141])
-  by fmvoesa105.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 30 Aug 2024 09:40:53 -0700
-X-CSE-ConnectionGUID: bIs4DxTyTRKm72XcuZt/qA==
-X-CSE-MsgGUID: 6mqIKI+hQN6R5h4dIbKN1Q==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.10,189,1719903600"; 
-   d="scan'208";a="101440497"
-Received: from b4969164b36c.jf.intel.com ([10.165.59.5])
-  by orviesa001.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 30 Aug 2024 09:40:53 -0700
-From: Haitao Huang <haitao.huang@linux.intel.com>
-To: jarkko@kernel.org,
-	dave.hansen@linux.intel.com,
-	kai.huang@intel.com,
-	tj@kernel.org,
-	mkoutny@suse.com,
-	chenridong@huawei.com,
-	linux-kernel@vger.kernel.org,
-	linux-sgx@vger.kernel.org,
-	x86@kernel.org,
-	cgroups@vger.kernel.org,
-	tglx@linutronix.de,
-	mingo@redhat.com,
-	bp@alien8.de,
-	hpa@zytor.com,
-	sohil.mehta@intel.com,
-	tim.c.chen@linux.intel.com
-Cc: zhiquan1.li@intel.com,
-	kristen@linux.intel.com,
-	seanjc@google.com,
-	zhanb@microsoft.com,
-	anakrish@microsoft.com,
-	mikko.ylinen@linux.intel.com,
-	yangjie@microsoft.com,
-	chrisyan@microsoft.com
-Subject: [PATCH v17 15/16] Docs/x86/sgx: Add description for cgroup support
-Date: Fri, 30 Aug 2024 09:40:36 -0700
-Message-ID: <20240830164038.39343-16-haitao.huang@linux.intel.com>
-X-Mailer: git-send-email 2.43.0
-In-Reply-To: <20240830164038.39343-1-haitao.huang@linux.intel.com>
-References: <20240830164038.39343-1-haitao.huang@linux.intel.com>
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="TvjgDGnG"
+Received: by mail-yw1-f182.google.com with SMTP id 00721157ae682-6b8d96aa4c3so17740107b3.1
+        for <cgroups@vger.kernel.org>; Fri, 30 Aug 2024 10:45:38 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20230601; t=1725039937; x=1725644737; darn=vger.kernel.org;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=azpsT0NFXGlhE8xUNNV5X8CWtenfsuPd8m4SIZciwf8=;
+        b=TvjgDGnGnkygOTHQQfp45SGKxD+VRNjQTmxP1wKMW+DbGSucIniW8v/eNgW58Ebxk4
+         2xFwJ4a0/jxGQwUZ8zzPF3p1X5X4V1sH/Xk3KkgbG3oisLpjuEOe61ZT1VpmHK67vcxi
+         Y2RirM8hXkMz/yniHOjf33iMzg6bfAhRXk0h3UpCdye+c37Vx2GCVmgKsxF7+u48UEIC
+         vUyEtwdd6PitHcA0eeuKlBFUuGQCfUb9skak9MdtWxZAaZiRMUjxeyJ6Pu3BCPgNlED1
+         eDuxBymM/VeOnR/hALggg9HnnjVmSrYdL1bW8PPBPYBxMKRH7vvEdh4lpvqHeaBScfPj
+         FO9g==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1725039937; x=1725644737;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=azpsT0NFXGlhE8xUNNV5X8CWtenfsuPd8m4SIZciwf8=;
+        b=d+aRJoOQjH9ZvfqeTJuD8TBub7GZj65/FXFo5dmIY3QyQ1/pGPSXc90uUSKHIKKe2C
+         KZI7weoVrneejfQpr/3o8fyuIlbWclNR75Gq88OtgybpDpDz5EFU2wATHvOfM+bBcu5F
+         i2kOnKKcNT/HD/KRepeVKyCbCr4mKuQYdX5jDyDOvtxHNAbR0cdiC2gR7RdLezYWmYZB
+         8OGFxZPR3/jE2Ne091AQBePfZQJMbpESqRjbQgtY1I4KDS8k0qVAjvejsT/NwclRpQop
+         SJFg/yZku2fZyfqZOE3/BD4OIZPul9TJp1BWNhx3AwrbYiCGbFyCzyUUJadkVOf5jCBc
+         fu0Q==
+X-Forwarded-Encrypted: i=1; AJvYcCU4ikuI1JbOv+90RmUwW/ub7vKAIKdWRF0jxdOBJ+sGtlmj3sa3QhjBUzAjRkDSI+2Ll3Vo01st@vger.kernel.org
+X-Gm-Message-State: AOJu0YxQaBOfn8BEHFcA7CxlkBHQ4vEl8bUG0IKkOXLXbiw2wlweuW/M
+	wi3sM8au/PsNlqoTSkWNthQCEDHLZ624CZiGcB6jI34pUljxbg92AuDWFIP5EUrMtS4Ig94cftF
+	VEzmZbivBfnrjN9nOlhh7vjSRnHecl2A7iEn2
+X-Google-Smtp-Source: AGHT+IGcp0wnQ/zRxm9VODIQ0aDlBP7iiV43CvMwVqxDtzhppwfs0wrOvC0f7zW4ryj5VbvgChaKEDTD7WmudZ/g0NQ=
+X-Received: by 2002:a05:690c:3386:b0:6ad:91df:8fad with SMTP id
+ 00721157ae682-6d40e689319mr34935327b3.26.1725039937243; Fri, 30 Aug 2024
+ 10:45:37 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+References: <20240827230753.2073580-1-kinseyho@google.com> <20240827230753.2073580-5-kinseyho@google.com>
+ <56d42242-37fe-b94f-d3cb-00673f1e5efb@google.com>
+In-Reply-To: <56d42242-37fe-b94f-d3cb-00673f1e5efb@google.com>
+From: Kinsey Ho <kinseyho@google.com>
+Date: Fri, 30 Aug 2024 10:45:00 -0700
+Message-ID: <CAF6N3nVWPJT+qrcz2jGw+sNoKge1qgDGSYg5f0Ur8a6O8ziUQg@mail.gmail.com>
+Subject: Re: [PATCH mm-unstable v3 4/5] mm: restart if multiple traversals raced
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: Hugh Dickins <hughd@google.com>, linux-mm@kvack.org, linux-kernel@vger.kernel.org, 
+	cgroups@vger.kernel.org, Yosry Ahmed <yosryahmed@google.com>, 
+	Roman Gushchin <roman.gushchin@linux.dev>, Johannes Weiner <hannes@cmpxchg.org>, 
+	Michal Hocko <mhocko@kernel.org>, Shakeel Butt <shakeel.butt@linux.dev>, 
+	Muchun Song <muchun.song@linux.dev>, Tejun Heo <tj@kernel.org>, 
+	Zefan Li <lizefan.x@bytedance.com>, mkoutny@suse.com, baolin.wang@linux.alibaba.com, 
+	tjmercier@google.com
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-From: Sean Christopherson <sean.j.christopherson@intel.com>
+On Fri, Aug 30, 2024 at 3:04=E2=80=AFAM Hugh Dickins <hughd@google.com> wro=
+te:
+>
+> mm-unstable commit 954dd0848c61 needs the fix below to be merged in;
+> but the commit after it (the 5/5) then renames "memcg" to "next",
+> so that one has to be adjusted too.
+>
+> [PATCH] mm: restart if multiple traversals raced: fix
+>
+> mem_cgroup_iter() reset memcg to NULL before the goto restart, so that
+> goto out_unlock does not then return an ungotten memcg, causing oopses
+> on stale memcg in many places (often in memcg_rstat_updated()).
+>
+> Signed-off-by: Hugh Dickins <hughd@google.com>
+> ---
+>  mm/memcontrol.c | 1 +
+>  1 file changed, 1 insertion(+)
+>
+> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+> index 6f66ac0ad4f0..dd82dd1e1f0a 100644
+> --- a/mm/memcontrol.c
+> +++ b/mm/memcontrol.c
+> @@ -1049,6 +1049,7 @@ struct mem_cgroup *mem_cgroup_iter(struct mem_cgrou=
+p *root,
+>                 if (cmpxchg(&iter->position, pos, memcg) !=3D pos) {
+>                         if (css && css !=3D &root->css)
+>                                 css_put(css);
+> +                       memcg =3D NULL;
+>                         goto restart;
+>                 }
+>
+> --
+> 2.35.3
 
-Add initial documentation of how to regulate the distribution of
-SGX Enclave Page Cache (EPC) memory via the Miscellaneous cgroup
-controller.
+Hi Andrew,
 
-Signed-off-by: Sean Christopherson <sean.j.christopherson@intel.com>
-Co-developed-by: Kristen Carlson Accardi <kristen@linux.intel.com>
-Signed-off-by: Kristen Carlson Accardi <kristen@linux.intel.com>
-Co-developed-by: Haitao Huang<haitao.huang@linux.intel.com>
-Signed-off-by: Haitao Huang<haitao.huang@linux.intel.com>
-Cc: Sean Christopherson <seanjc@google.com>
-Reviewed-by: Bagas Sanjaya <bagasdotme@gmail.com>
-Reviewed-by: Jarkko Sakkinen <jarkko@kernel.org>
-Acked-by: Kai Huang <kai.huang@intel.com>
-Tested-by: Mikko Ylinen <mikko.ylinen@linux.intel.com>
-Tested-by: Jarkko Sakkinen <jarkko@kernel.org>
----
-V8:
-- Limit text width to 80 characters to be consistent.
+Would you prefer that I resend the series with Hugh's fix inserted?
 
-V6:
-- Remove mentioning of VMM specific behavior on handling SIGBUS
-- Remove statement of forced reclamation, add statement to specify
-ENOMEM returned when no reclamation possible.
-- Added statements on the non-preemptive nature for the max limit
-- Dropped Reviewed-by tag because of changes
-
-V4:
-- Fix indentation (Randy)
-- Change misc.events file to be read-only
-- Fix a typo for 'subsystem'
-- Add behavior when VMM overcommit EPC with a cgroup (Mikko)
----
- Documentation/arch/x86/sgx.rst | 83 ++++++++++++++++++++++++++++++++++
- 1 file changed, 83 insertions(+)
-
-diff --git a/Documentation/arch/x86/sgx.rst b/Documentation/arch/x86/sgx.rst
-index d90796adc2ec..c537e6a9aa65 100644
---- a/Documentation/arch/x86/sgx.rst
-+++ b/Documentation/arch/x86/sgx.rst
-@@ -300,3 +300,86 @@ to expected failures and handle them as follows:
-    first call.  It indicates a bug in the kernel or the userspace client
-    if any of the second round of ``SGX_IOC_VEPC_REMOVE_ALL`` calls has
-    a return code other than 0.
-+
-+
-+Cgroup Support
-+==============
-+
-+The "sgx_epc" resource within the Miscellaneous cgroup controller regulates
-+distribution of SGX EPC memory, which is a subset of system RAM that is used to
-+provide SGX-enabled applications with protected memory, and is otherwise
-+inaccessible, i.e. shows up as reserved in /proc/iomem and cannot be
-+read/written outside of an SGX enclave.
-+
-+Although current systems implement EPC by stealing memory from RAM, for all
-+intents and purposes the EPC is independent from normal system memory, e.g. must
-+be reserved at boot from RAM and cannot be converted between EPC and normal
-+memory while the system is running.  The EPC is managed by the SGX subsystem and
-+is not accounted by the memory controller.  Note that this is true only for EPC
-+memory itself, i.e.  normal memory allocations related to SGX and EPC memory,
-+e.g. the backing memory for evicted EPC pages, are accounted, limited and
-+protected by the memory controller.
-+
-+Much like normal system memory, EPC memory can be overcommitted via virtual
-+memory techniques and pages can be swapped out of the EPC to their backing store
-+(normal system memory allocated via shmem).  The SGX EPC subsystem is analogous
-+to the memory subsystem, and it implements limit and protection models for EPC
-+memory.
-+
-+SGX EPC Interface Files
-+-----------------------
-+
-+For a generic description of the Miscellaneous controller interface files,
-+please see Documentation/admin-guide/cgroup-v2.rst
-+
-+All SGX EPC memory amounts are in bytes unless explicitly stated otherwise. If
-+a value which is not PAGE_SIZE aligned is written, the actual value used by the
-+controller will be rounded down to the closest PAGE_SIZE multiple.
-+
-+  misc.capacity
-+        A read-only flat-keyed file shown only in the root cgroup. The sgx_epc
-+        resource will show the total amount of EPC memory available on the
-+        platform.
-+
-+  misc.current
-+        A read-only flat-keyed file shown in the non-root cgroups. The sgx_epc
-+        resource will show the current active EPC memory usage of the cgroup and
-+        its descendants. EPC pages that are swapped out to backing RAM are not
-+        included in the current count.
-+
-+  misc.max
-+        A read-write single value file which exists on non-root cgroups. The
-+        sgx_epc resource will show the EPC usage hard limit. The default is
-+        "max".
-+
-+        If a cgroup's EPC usage reaches this limit, EPC allocations, e.g., for
-+        page fault handling, will be blocked until EPC can be reclaimed from the
-+        cgroup. If there are no pages left that are reclaimable within the same
-+        group, the kernel returns ENOMEM.
-+
-+        The EPC pages allocated for a guest VM by the virtual EPC driver are not
-+        reclaimable by the host kernel. In case the guest cgroup's limit is
-+        reached and no reclaimable pages left in the same cgroup, the virtual
-+        EPC driver returns SIGBUS to the user space process to indicate failure
-+        on new EPC allocation requests.
-+
-+        The misc.max limit is non-preemptive. If a user writes a limit lower
-+        than the current usage to this file, the cgroup will not preemptively
-+        deallocate pages currently in use, and will only start blocking the next
-+        allocation and reclaiming EPC at that time.
-+
-+  misc.events
-+        A read-only flat-keyed file which exists on non-root cgroups.
-+        A value change in this file generates a file modified event.
-+
-+          max
-+                The number of times the cgroup has triggered a reclaim due to
-+                its EPC usage approaching (or exceeding) its max EPC boundary.
-+
-+Migration
-+---------
-+
-+Once an EPC page is charged to a cgroup (during allocation), it remains charged
-+to the original cgroup until the page is released or reclaimed. Migrating a
-+process to a different cgroup doesn't move the EPC charges that it incurred
-+while in the previous cgroup to its new cgroup.
--- 
-2.43.0
-
+Acked-by: Kinsey Ho <kinseyho@google.com>
