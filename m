@@ -1,128 +1,104 @@
-Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pl1-f170.google.com (mail-pl1-f170.google.com [209.85.214.170])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5B6C42A1CF;
-	Tue,  3 Sep 2024 13:53:28 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.51
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 864762A1D6
+	for <cgroups@vger.kernel.org>; Tue,  3 Sep 2024 15:51:45 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.170
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1725371610; cv=none; b=tu1+d/O/m/DygR/2jm6ToDEgG2Nba3w/+s3bFLODL1itjHU92A8ooHY0GtEjthbybTKXI/NAu8YfxuT1CVLDaGwKBSx5lIs3G798gAwFs/nY1+N8ResmPnjk8M1bjof3J4EIpeenOaBFwIVaiolFlnqF2frO4j3H+ENHIGCa/X0=
+	t=1725378708; cv=none; b=fRtq0WlBOOY+4vPFHuUkYhj+J5ITS0+fk2a7H9CVsJlUCNePl0Ttxb5Q2UG+WUgTT5Q7DefgtYHoa+uM2nOq6UD4mciW0RocH6fpW0jxkaa6TZyxC/bVomTM2xEueBVe/roUgUVxujGIAZcegTbbbKdA7OWpfYDVTyEhAAQnqsA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1725371610; c=relaxed/simple;
-	bh=SywWaAkoHJBn/AQ4VxVGTwmoDhjxboRfFYtHiI5+Txk=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=BJq7nK0+Mdaop9IycGXYq2LvJY1K5Agn1WLLLW4gUkTHPTqGi2VRhgWX7CVSnNykIrJBLZh0OzFAjpwyexrDknwOWMLNDpdzdTJE1V19vhRHFuE1GC7Tj05pPfZsp7bJv0tGQJx3KRGZt0ACFCsH4fbJbl5EQYI394FXKe/VBJg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.51
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
-Received: from mail.maildlp.com (unknown [172.19.93.142])
-	by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4WynBs2s7jz4f3kpt;
-	Tue,  3 Sep 2024 21:53:09 +0800 (CST)
-Received: from mail02.huawei.com (unknown [10.116.40.128])
-	by mail.maildlp.com (Postfix) with ESMTP id A16751A07B6;
-	Tue,  3 Sep 2024 21:53:19 +0800 (CST)
-Received: from huaweicloud.com (unknown [10.175.104.67])
-	by APP4 (Coremail) with SMTP id gCh0CgDH+sbNFNdmiUgjAQ--.58276S5;
-	Tue, 03 Sep 2024 21:53:19 +0800 (CST)
-From: Yu Kuai <yukuai1@huaweicloud.com>
-To: tj@kernel.org,
-	josef@toxicpanda.com,
-	axboe@kernel.dk
-Cc: cgroups@vger.kernel.org,
-	linux-block@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	yukuai3@huawei.com,
-	yukuai1@huaweicloud.com,
-	yi.zhang@huawei.com,
-	yangerkun@huawei.com
-Subject: [PATCH for-6.12 1/2] blk-throttle: remove last_low_overflow_time
-Date: Tue,  3 Sep 2024 21:51:48 +0800
-Message-Id: <20240903135149.271857-2-yukuai1@huaweicloud.com>
-X-Mailer: git-send-email 2.39.2
-In-Reply-To: <20240903135149.271857-1-yukuai1@huaweicloud.com>
-References: <20240903135149.271857-1-yukuai1@huaweicloud.com>
+	s=arc-20240116; t=1725378708; c=relaxed/simple;
+	bh=dsBOFhgSQ20VWG9N7TaQ72g5Xti+njXE2CMMbkMUqhI=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=B8NmG7sANRQTHHCfWcMhgsPlfHXADMuPlPkbW/5EIf1R0N+4+Xf/KGYTE9nS6j8JISZ1fTQ/g0iXkTzGqaAFnedWX2zTbpseefO6xiM0E+oNp/2OpVBMWc+jnNrEIRLRVLM3cv8zVVEZkNeeQKybXH4IbeBWtpIX83CneO2lewM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kernel.dk; spf=pass smtp.mailfrom=kernel.dk; dkim=pass (2048-bit key) header.d=kernel-dk.20230601.gappssmtp.com header.i=@kernel-dk.20230601.gappssmtp.com header.b=cuoUFfXh; arc=none smtp.client-ip=209.85.214.170
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kernel.dk
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=kernel.dk
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel-dk.20230601.gappssmtp.com header.i=@kernel-dk.20230601.gappssmtp.com header.b="cuoUFfXh"
+Received: by mail-pl1-f170.google.com with SMTP id d9443c01a7336-2053a0bd0a6so32726165ad.3
+        for <cgroups@vger.kernel.org>; Tue, 03 Sep 2024 08:51:45 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=kernel-dk.20230601.gappssmtp.com; s=20230601; t=1725378705; x=1725983505; darn=vger.kernel.org;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=/CTJ70oGdDlKxwej4nIFhqzlt6kbdcbSl6hDfUkSTBo=;
+        b=cuoUFfXhzoQiaFGPCDhtSDbuKUF9c3ceGsJjLD1nylbp0aV7iDbQRcgJQ0Tw8r2wSU
+         oZ6bNKMWCimvLIp4Vlga5cday2rkJ9iB5sy7EwTwSnGBN+xH+B760XzzuQCTmmlEGoYv
+         8SUjc59rZ+mJKRKh1nFgXVq4P09945MtbtCUy99yJgbZneblxJOfbhm6QkZi+FdV1l1E
+         2ycXAAj0Yj3+7AwvOeGFOjwfWbhbX4Ccbyj8hc15mKy1mPUEXZYag2Tj/bnRsBTIhrDx
+         awQ9RI7ITLS8kI01Rp04gxg78rgchBBaPwMGSr54KR84vZWRsV5I/1So5B0gCUjyOMsF
+         9p0w==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1725378705; x=1725983505;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=/CTJ70oGdDlKxwej4nIFhqzlt6kbdcbSl6hDfUkSTBo=;
+        b=rKm3Mw0Vo/dTjZOPv1cDYf98zgf1koXFGxtkrpSIo1nbvZs2K2L5WHekMKdlI6Ut5b
+         Z2mN/JLk/flLP28jTELhdfrIWE3Mi9VzV9fzIDRmhiOfsby4gGxwN7CV4L8lqX81QVf7
+         UC7Tn8XeQy+Pei3sgwgdHDArdV7mHhJ36w79cIp2W2jQX1YwfQB75nTVeBPmbXnskJKL
+         rUznC//VneyUx0DjLei4Q2hwhaFnhy/4KVq90ItK/VQJjIpHQAYBKF/9V9RfMel9/8ot
+         OvrEKHJEsO5g1c3Pax8PWje8FSl8RRM7z2Yy++JQfZ70tw00rkJMqSU+XFk79hHOnFp2
+         /nDg==
+X-Gm-Message-State: AOJu0YwHNKZlUww12UdEWKZqhh7uEWGIFuRmhuo2TzD/CvXg0nodHV9N
+	OK/VcB8BOmfb3U+jHbf1G7UwWCZZckGvRRimYlvMz1FC7eE7QxJyp1ck3K3AIEw=
+X-Google-Smtp-Source: AGHT+IHNCkFTZ+tQgNCw5YR4zc40yXygu4dQL7fmOyGsHVTkN9zbIFM4qpX1e8RQjgG7bMszJHZFJg==
+X-Received: by 2002:a17:902:d4cd:b0:205:3e6d:9949 with SMTP id d9443c01a7336-20699b36168mr29065275ad.52.1725378704682;
+        Tue, 03 Sep 2024 08:51:44 -0700 (PDT)
+Received: from [192.168.1.150] ([198.8.77.157])
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-206aea384e1sm136775ad.145.2024.09.03.08.51.43
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Tue, 03 Sep 2024 08:51:44 -0700 (PDT)
+Message-ID: <2ee05037-fb4f-4697-958b-46f0ae7d9cdd@kernel.dk>
+Date: Tue, 3 Sep 2024 09:51:42 -0600
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:gCh0CgDH+sbNFNdmiUgjAQ--.58276S5
-X-Coremail-Antispam: 1UD129KBjvJXoW7AFWDJr4kKFW8GFWkZr1kZrb_yoW8AFyrpr
-	W7GF4UKws2qr4kKrZIq3W3XFyUJwsrJ3y3G395JF43Aay2v3sIgF1kur1rZ3y0vFsxCFWq
-	vryqqrykGF4UW37anT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDU0xBIdaVrnRJUUUQv14x267AKxVW5JVWrJwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
-	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2048vs2IY020E87I2jVAFwI0_Jr4l82xGYIkIc2
-	x26xkF7I0E14v26r1I6r4UM28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48ve4kI8wA2z4x0
-	Y4vE2Ix0cI8IcVAFwI0_Ar0_tr1l84ACjcxK6xIIjxv20xvEc7CjxVAFwI0_Gr1j6F4UJw
-	A2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x0267AKxVW0oVCq3wAS
-	0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG6I80ewAv7VC0I7IYx2
-	IY67AKxVWUJVWUGwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFVCjc4AY6r1j6r4UM4x0
-	Y48IcxkI7VAKI48JM4x0x7Aq67IIx4CEVc8vx2IErcIFxwACI402YVCY1x02628vn2kIc2
-	xKxwCY1x0262kKe7AKxVWUtVW8ZwCF04k20xvY0x0EwIxGrwCF54CYxVCY1x0262kKe7AK
-	xVWUtVW8ZwCFx2IqxVCFs4IE7xkEbVWUJVW8JwC20s026c02F40E14v26r1j6r18MI8I3I
-	0E7480Y4vE14v26r106r1rMI8E67AF67kF1VAFwI0_Jw0_GFylIxkGc2Ij64vIr41lIxAI
-	cVC0I7IYx2IY67AKxVWUJVWUCwCI42IY6xIIjxv20xvEc7CjxVAFwI0_Gr0_Cr1lIxAIcV
-	CF04k26cxKx2IYs7xG6r1j6r1xMIIF0xvEx4A2jsIE14v26r1j6r4UMIIF0xvEx4A2jsIE
-	c7CjxVAFwI0_Gr0_Gr1UYxBIdaVFxhVjvjDU0xZFpf9x0JUqkskUUUUU=
-X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH for-6.12 0/4] block, bfq: fix corner cases related to bfqq
+ merging
+To: Yu Kuai <yukuai1@huaweicloud.com>, jack@suse.cz, tj@kernel.org,
+ josef@toxicpanda.com, paolo.valente@unimore.it, mauro.andreolini@unimore.it,
+ avanzini.arianna@gmail.com
+Cc: cgroups@vger.kernel.org, linux-block@vger.kernel.org,
+ linux-kernel@vger.kernel.org, yukuai3@huawei.com, yi.zhang@huawei.com,
+ yangerkun@huawei.com
+References: <20240902130329.3787024-1-yukuai1@huaweicloud.com>
+Content-Language: en-US
+From: Jens Axboe <axboe@kernel.dk>
+In-Reply-To: <20240902130329.3787024-1-yukuai1@huaweicloud.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-From: Yu Kuai <yukuai3@huawei.com>
+On 9/2/24 7:03 AM, Yu Kuai wrote:
+> From: Yu Kuai <yukuai3@huawei.com>
+> 
+> Our syzkaller report a UAF problem(details in patch 1), however it can't
+> be reporduced. And this set are some corner cases fix that might be
+> related, and they are found by code review.
+> 
+> Yu Kuai (4):
+>   block, bfq: fix possible UAF for bfqq->bic with merge chain
+>   block, bfq: choose the last bfqq from merge chain in
+>     bfq_setup_cooperator()
+>   block, bfq: don't break merge chain in bfq_split_bfqq()
+>   block, bfq: use bfq_reassign_last_bfqq() in bfq_bfqq_move()
+> 
+>  block/bfq-cgroup.c  |  7 +------
+>  block/bfq-iosched.c | 17 +++++++++++------
+>  block/bfq-iosched.h |  2 ++
+>  3 files changed, 14 insertions(+), 12 deletions(-)
 
-last_low_overflow_time is not used anymore after commit bf20ab538c81
-("blk-throttle: remove CONFIG_BLK_DEV_THROTTLING_LOW").
+BFQ is effectively unmaintained, and has been for quite a while at
+this point. I'll apply these, thanks for looking into it, but I think we
+should move BFQ to an unmaintained state at this point.
 
-Signed-off-by: Yu Kuai <yukuai3@huawei.com>
----
- block/blk-throttle.c | 8 +-------
- block/blk-throttle.h | 2 --
- 2 files changed, 1 insertion(+), 9 deletions(-)
-
-diff --git a/block/blk-throttle.c b/block/blk-throttle.c
-index dc6140fa3de0..eb859c44c9f3 100644
---- a/block/blk-throttle.c
-+++ b/block/blk-throttle.c
-@@ -1611,17 +1611,13 @@ bool __blk_throtl_bio(struct bio *bio)
- 	sq = &tg->service_queue;
- 
- 	while (true) {
--		if (tg->last_low_overflow_time[rw] == 0)
--			tg->last_low_overflow_time[rw] = jiffies;
- 		/* throtl is FIFO - if bios are already queued, should queue */
- 		if (sq->nr_queued[rw])
- 			break;
- 
- 		/* if above limits, break to queue */
--		if (!tg_may_dispatch(tg, bio, NULL)) {
--			tg->last_low_overflow_time[rw] = jiffies;
-+		if (!tg_may_dispatch(tg, bio, NULL))
- 			break;
--		}
- 
- 		/* within limits, let's charge and dispatch directly */
- 		throtl_charge_bio(tg, bio);
-@@ -1661,8 +1657,6 @@ bool __blk_throtl_bio(struct bio *bio)
- 		   tg->io_disp[rw], tg_iops_limit(tg, rw),
- 		   sq->nr_queued[READ], sq->nr_queued[WRITE]);
- 
--	tg->last_low_overflow_time[rw] = jiffies;
--
- 	td->nr_queued[rw]++;
- 	throtl_add_bio_tg(bio, qn, tg);
- 	throttled = true;
-diff --git a/block/blk-throttle.h b/block/blk-throttle.h
-index 4d9ef5abdf21..1a36d1278eea 100644
---- a/block/blk-throttle.h
-+++ b/block/blk-throttle.h
-@@ -106,8 +106,6 @@ struct throtl_grp {
- 	/* Number of bio's dispatched in current slice */
- 	unsigned int io_disp[2];
- 
--	unsigned long last_low_overflow_time[2];
--
- 	uint64_t last_bytes_disp[2];
- 	unsigned int last_io_disp[2];
- 
 -- 
-2.39.2
+Jens Axboe
+
 
