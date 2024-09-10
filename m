@@ -1,120 +1,91 @@
-Received: from mta-64-227.siemens.flowmailer.net (mta-64-227.siemens.flowmailer.net [185.136.64.227])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-il1-f175.google.com (mail-il1-f175.google.com [209.85.166.175])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5A5C6190046
-	for <cgroups@vger.kernel.org>; Tue, 10 Sep 2024 15:45:50 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=185.136.64.227
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0778019EEDF
+	for <cgroups@vger.kernel.org>; Tue, 10 Sep 2024 16:06:19 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.166.175
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1725983154; cv=none; b=BOJIJxrThKlhyFsoNm2WnUdV7YoyTtJUaPi2dr+XL+Q0KLk6wlTfZb6SBj9/gmEp6AfT8UAg43188vncem60EBwOeJmekIGNIMiiczWuYO3yrb2Jw5tFWrm1u7tULEkVLJjHAdEKUamPJVr9RvfET37qCxAEekN7aKTbY/gq9wc=
+	t=1725984382; cv=none; b=aQl7N6mJAIUxLEDAUHghawE8MXViwpsbvkr+82xfFGHlly1mKGtTg5orbPBo6nOC2/tDCwoymJffaf/CzsvSJfzDRllBC/HHLO6dFlNJO0OoE2TpgFjA/WVMvbfg2gFOwKX51nEcoIxKSTvxiEmkEI7THjD1X6/G28lFpRjgMyY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1725983154; c=relaxed/simple;
-	bh=gEr1cCpObgM8xPbCaVvgWMgIX9dT3M9/NLL3bHUSkQ0=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=meLtpWhDKJ7EP7DO946cY+aVNcHPUal/LlUUt66sJyp0J3ipXnqPjjgHBtzFBqcvmOI6jIUQZNJ0fxNiPSWVM5dfsb8qzFPh4duXWQuRWdZ8zCFfFcIv6I10vfSpDqR62SRnC6UNPhBRi7wJk347A+w89sQggICWueDIIBjtDxg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=siemens.com; spf=pass smtp.mailfrom=rts-flowmailer.siemens.com; dkim=pass (2048-bit key) header.d=siemens.com header.i=felix.moessbauer@siemens.com header.b=fQIiUeoN; arc=none smtp.client-ip=185.136.64.227
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=siemens.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=rts-flowmailer.siemens.com
+	s=arc-20240116; t=1725984382; c=relaxed/simple;
+	bh=nWxhKnjkJZTFdW4bOUswy11ck0je6HBAn64rjghcv9k=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=Il7afNJpJM1WAsr0N834ghA+lCk3z5cW6W9MAU+6Q9X625kk8CE18SIAinxlRSTxj6XcnH4Ag5Lpnxb7KXNJhOdeH7uM1s8wPdZRh5UF8AGF3CYRqM9Nj3LTBEDTex3sEZdq8+eioeXmDhHdp33fKJGWm88GiGDUdNa15Ei7FqE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kernel.dk; spf=pass smtp.mailfrom=kernel.dk; dkim=pass (2048-bit key) header.d=kernel-dk.20230601.gappssmtp.com header.i=@kernel-dk.20230601.gappssmtp.com header.b=3GvOCpBv; arc=none smtp.client-ip=209.85.166.175
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kernel.dk
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=kernel.dk
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=siemens.com header.i=felix.moessbauer@siemens.com header.b="fQIiUeoN"
-Received: by mta-64-227.siemens.flowmailer.net with ESMTPSA id 202409101545484da2b333bf8881099e
-        for <cgroups@vger.kernel.org>;
-        Tue, 10 Sep 2024 17:45:49 +0200
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; s=fm1;
- d=siemens.com; i=felix.moessbauer@siemens.com;
- h=Date:From:Subject:To:Message-ID:MIME-Version:Content-Type:Content-Transfer-Encoding:Cc:References:In-Reply-To;
- bh=V02Mv7Qi+O8u5o24OCWYd+wHeSgI3uHzoIbW8MTflmc=;
- b=fQIiUeoNAW+Q6pb2ZUhgOnWMDuLe/QcfMkc7XUkr2GxbQ55+yc93eNRLxZ9Q24aXzU2MK6
- oICVy6iT+qAKJxtxFBYIpS0saomc5V53ErKuN2C6xXr5RqqRbYwuRH21z20fAJNTiCXOUdMp
- NOv5j+ZOaxPBynHlxKPlkl9EXoqI1SFHWrI38xuU+oeaMo5QqBLJSisZKRl7tJR4/0cb2hUx
- wMxaYKgGu0ZkENGw+ec5IVZRKTdLNhNe35RQN4IJse8XSaI1/CT/JJw2eSkz3w8VUchyaa+5
- xRMl8fJh4rq4cPvS9m8udbJ0QEWYXVuq6mUJ5ekVbYnEkMUi83zr0peQ==;
-From: Felix Moessbauer <felix.moessbauer@siemens.com>
-To: axboe@kernel.dk
-Cc: asml.silence@gmail.com,
-	linux-kernel@vger.kernel.org,
-	io-uring@vger.kernel.org,
-	cgroups@vger.kernel.org,
-	dqminh@cloudflare.com,
-	longman@redhat.com,
-	adriaan.schmidt@siemens.com,
-	florian.bezdeka@siemens.com,
-	Felix Moessbauer <felix.moessbauer@siemens.com>
-Subject: [PATCH v2 1/2] io_uring/io-wq: do not allow pinning outside of cpuset
-Date: Tue, 10 Sep 2024 17:45:34 +0200
-Message-Id: <20240910154535.140587-2-felix.moessbauer@siemens.com>
-In-Reply-To: <20240910154535.140587-1-felix.moessbauer@siemens.com>
-References: <20240910154535.140587-1-felix.moessbauer@siemens.com>
+	dkim=pass (2048-bit key) header.d=kernel-dk.20230601.gappssmtp.com header.i=@kernel-dk.20230601.gappssmtp.com header.b="3GvOCpBv"
+Received: by mail-il1-f175.google.com with SMTP id e9e14a558f8ab-39f4fed788bso22265045ab.3
+        for <cgroups@vger.kernel.org>; Tue, 10 Sep 2024 09:06:19 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=kernel-dk.20230601.gappssmtp.com; s=20230601; t=1725984379; x=1726589179; darn=vger.kernel.org;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=Bvqx2vUM4wd2hXHXQjB5hyTmP0TgEc86Le9MQ8ED+GE=;
+        b=3GvOCpBvNSixz2oivkKV8UQUxbeQLklaq5Xokw7Nkjw2uiXYNYWsRf8iTpitzZginM
+         GJ8YiknMOTessUI6LP+P+RuvptXj3/lz/uDso08U0OKByk4QGFs5J8sW99ODVAgLxxnQ
+         hMidSTQ2QcEv/B0KUKJgD6WM+WUpdcR6JeqSdvBDIPL9hcdjCDAmDZHybj6rm6rEE7bw
+         AIZO8dCbks6AsW5UYR4NgxTB8OtW0lCuTuLf9M+q0p1seR4287bGxna3xqP6lXv/hZAg
+         9q7dP34jdPaIceKZTM5SVx3IhxJf+KXXOpRiXkSQIRkiciYWfgc3RRtXKcTukDBoF2kx
+         Tc5Q==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1725984379; x=1726589179;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=Bvqx2vUM4wd2hXHXQjB5hyTmP0TgEc86Le9MQ8ED+GE=;
+        b=DrqvBnRffFFZAX83gFLZv0zlkI3lv0Yw24+/XMUehuUqHpczUSUpwroDLdyI0Fy4p3
+         1HcQHjCQUqsUI6PvksCumGkbQ3QPfw07kW1bl/NyiBB3//bBjR8Qsv3nnUV/OB+dFUM6
+         zc/dW6laO89JJxQU2dHBkOzQBPPfJ41tfiBGC9KbsWOwBJ5BQtxJBa3c7OF641S+jVo7
+         zTYCWFw+vxAOUwb0CHDYVKbGFvNlwclcnkbfUKRo2Zc4BYqW9CANPs1h6mpI/avg970n
+         qPu0n8DTA9RO9jGuAwALIDmrtk2RYiPGux3sqZ4EiawIQtqIMiLOiHaiyOLJq/7Sienq
+         hbmg==
+X-Forwarded-Encrypted: i=1; AJvYcCWWnZ4wQ2Ey583SNJKBkbZYl+b/FmyrYb67gZgppXtTKAGIntg+VggLBv+VeLHVhb3PvJK1KkKo@vger.kernel.org
+X-Gm-Message-State: AOJu0Yx4N95+di0n27s7lNlyZTC0YkRMX2n3Zr/lzD5LDOJ6o9VclASp
+	v1A2GJ9nlPugB6bzmlOKm43U2MjM8sMe7aA6tu3Tas09ZQn6PgDRfjALt5NKplo=
+X-Google-Smtp-Source: AGHT+IHX75F0Eqmzt177RZxt2H/sYXCSIl0I7Lx9d0azKek8qgV+BEFrXeK1FHTUf13yUcErwKBz9g==
+X-Received: by 2002:a05:6e02:148c:b0:397:75a:39b9 with SMTP id e9e14a558f8ab-3a04f0ce20fmr183706515ab.16.1725984378868;
+        Tue, 10 Sep 2024 09:06:18 -0700 (PDT)
+Received: from [192.168.1.116] ([96.43.243.2])
+        by smtp.gmail.com with ESMTPSA id e9e14a558f8ab-3a05900e618sm20608515ab.55.2024.09.10.09.06.18
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Tue, 10 Sep 2024 09:06:18 -0700 (PDT)
+Message-ID: <4c854271-3c5e-4549-81e6-dfa0a69bf9b6@kernel.dk>
+Date: Tue, 10 Sep 2024 10:06:17 -0600
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-Flowmailer-Platform: Siemens
-Feedback-ID: 519:519-1321639:519-21489:flowmailer
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v2 2/2] io_uring/io-wq: limit io poller cpuset to ambient
+ one
+To: Felix Moessbauer <felix.moessbauer@siemens.com>
+Cc: asml.silence@gmail.com, linux-kernel@vger.kernel.org,
+ io-uring@vger.kernel.org, cgroups@vger.kernel.org, dqminh@cloudflare.com,
+ longman@redhat.com, adriaan.schmidt@siemens.com, florian.bezdeka@siemens.com
+References: <20240910154535.140587-1-felix.moessbauer@siemens.com>
+ <20240910154535.140587-3-felix.moessbauer@siemens.com>
+Content-Language: en-US
+From: Jens Axboe <axboe@kernel.dk>
+In-Reply-To: <20240910154535.140587-3-felix.moessbauer@siemens.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-The io worker threads are userland threads that just never exit to the
-userland. By that, they are also assigned to a cgroup (the group of the
-creating task).
+On 9/10/24 9:45 AM, Felix Moessbauer wrote:
+> The io worker threads are userland threads that just never exit to the
+> userland. By that, they are also assigned to a cgroup (the group of the
+> creating task).
+> 
+> When creating a new io worker, this worker should inherit the cpuset
+> of the cgroup.
 
-When changing the affinity of the io_wq thread via syscall, we must only
-allow cpumasks within the limits defined by the cpuset controller of the
-cgroup (if enabled).
+This still has that same ambient usage in the title which I just
+cannot make sense of?
 
-Fixes: da64d6db3bd3 ("io_uring: One wqe per wq")
-Signed-off-by: Felix Moessbauer <felix.moessbauer@siemens.com>
----
- io_uring/io-wq.c | 23 ++++++++++++++++++-----
- 1 file changed, 18 insertions(+), 5 deletions(-)
-
-diff --git a/io_uring/io-wq.c b/io_uring/io-wq.c
-index f1e7c670add8..c7055a8895d7 100644
---- a/io_uring/io-wq.c
-+++ b/io_uring/io-wq.c
-@@ -13,6 +13,7 @@
- #include <linux/slab.h>
- #include <linux/rculist_nulls.h>
- #include <linux/cpu.h>
-+#include <linux/cpuset.h>
- #include <linux/task_work.h>
- #include <linux/audit.h>
- #include <linux/mmu_context.h>
-@@ -1322,17 +1323,29 @@ static int io_wq_cpu_offline(unsigned int cpu, struct hlist_node *node)
- 
- int io_wq_cpu_affinity(struct io_uring_task *tctx, cpumask_var_t mask)
- {
-+	cpumask_var_t allowed_mask;
-+	int ret = 0;
-+
- 	if (!tctx || !tctx->io_wq)
- 		return -EINVAL;
- 
-+	if (!alloc_cpumask_var(&allowed_mask, GFP_KERNEL))
-+		return -ENOMEM;
-+
- 	rcu_read_lock();
--	if (mask)
--		cpumask_copy(tctx->io_wq->cpu_mask, mask);
--	else
--		cpumask_copy(tctx->io_wq->cpu_mask, cpu_possible_mask);
-+	cpuset_cpus_allowed(tctx->io_wq->task, allowed_mask);
-+	if (mask) {
-+		if (cpumask_subset(mask, allowed_mask))
-+			cpumask_copy(tctx->io_wq->cpu_mask, mask);
-+		else
-+			ret = -EINVAL;
-+	} else {
-+		cpumask_copy(tctx->io_wq->cpu_mask, allowed_mask);
-+	}
- 	rcu_read_unlock();
- 
--	return 0;
-+	free_cpumask_var(allowed_mask);
-+	return ret;
- }
- 
- /*
 -- 
-2.39.2
+Jens Axboe
 
