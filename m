@@ -1,32 +1,33 @@
-Received: from mta-65-226.siemens.flowmailer.net (mta-65-226.siemens.flowmailer.net [185.136.65.226])
+Received: from mta-64-226.siemens.flowmailer.net (mta-64-226.siemens.flowmailer.net [185.136.64.226])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9E7E2154C03
-	for <cgroups@vger.kernel.org>; Wed, 11 Sep 2024 16:23:28 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=185.136.65.226
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 862FF1AE038
+	for <cgroups@vger.kernel.org>; Wed, 11 Sep 2024 16:23:30 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=185.136.64.226
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1726071813; cv=none; b=mViWdH3zyzxKyEMfNRzXgVW65OAN9AOFemAiN30z2wPFoF8kgm4Kxa6pWV+h/cXXq7dkV763uZ0cJCuxJLMD33aTI3W69NSS5xbutmc/7hQF8Fvugs/ENK3ouJtwGZEPH7ruXFYshd5NXtOaLPC1ofX2HRHsiyJFuhVI/77m82s=
+	t=1726071814; cv=none; b=UZ7TBzkFg6sZTSRkj5n9/d3njQCJL2hUXfxZUahLnoFHkqPSzGqvp3bgxgCztQ90NMhTrmCxYpjPDwOn6Rzd1GAvMkO3eEIOJFX/QjYzHZ1CUBTs7aXEZCvoY22JnnTkY6v2nNqKOqXuNOYTTevOZ1UzNs3Qoo63BREjbkS+otA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1726071813; c=relaxed/simple;
-	bh=DQ4/cLuEW5tcRqYwQZf/I4l9TuqIbQLDHOMgEpeUrxs=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=nwnxqMNkIX6EW/zBiGa1nkGx6l60b55cPY18duGkymhICD4SMDtACb6QV86ChOvkiSGur7aIj6HwNmr/pgdJsYitFNzzWguqcT/yPGc0soRkzQ6OqTGIT+/IH999zNI0ohKBxGn1/hjL4RTEUVgoyEkdKUCyH053ISKzaZQQl/c=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=siemens.com; spf=pass smtp.mailfrom=rts-flowmailer.siemens.com; dkim=pass (2048-bit key) header.d=siemens.com header.i=felix.moessbauer@siemens.com header.b=AcdymZsL; arc=none smtp.client-ip=185.136.65.226
+	s=arc-20240116; t=1726071814; c=relaxed/simple;
+	bh=bmnetQMbTu9hnH0bwUNDYDayE3gIdFC+cuiYFhpzl6o=;
+	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
+	 MIME-Version; b=deSddvhFh0pWWZoJDQ5ns6pEplQaSVRxl0LWHKX/KkUlkJ3xSHt7M4BBqo8vW1QvQ4QEbvaep3WtdUu+aNvHXSMireIo3etuVEiDTs32ciFClF4dS2UA73IMPUnN55hqQbY1Y0d466qd7p6c3fnc4IMFIkKJLWqKbCWzIk9dNFM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=siemens.com; spf=pass smtp.mailfrom=rts-flowmailer.siemens.com; dkim=pass (2048-bit key) header.d=siemens.com header.i=felix.moessbauer@siemens.com header.b=H/6NBs0R; arc=none smtp.client-ip=185.136.64.226
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=siemens.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=rts-flowmailer.siemens.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=siemens.com header.i=felix.moessbauer@siemens.com header.b="AcdymZsL"
-Received: by mta-65-226.siemens.flowmailer.net with ESMTPSA id 20240911162326b9d5fd2d5f4dbcb2b3
+	dkim=pass (2048-bit key) header.d=siemens.com header.i=felix.moessbauer@siemens.com header.b="H/6NBs0R"
+Received: by mta-64-226.siemens.flowmailer.net with ESMTPSA id 2024091116232798ba7f40e3880a3589
         for <cgroups@vger.kernel.org>;
-        Wed, 11 Sep 2024 18:23:26 +0200
+        Wed, 11 Sep 2024 18:23:28 +0200
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; s=fm1;
  d=siemens.com; i=felix.moessbauer@siemens.com;
- h=Date:From:Subject:To:Message-ID:MIME-Version:Content-Type:Content-Transfer-Encoding:Cc;
- bh=ZbAxDD40Km9oPWWOUlychunrfPvdHvgL52O1h9AsdFk=;
- b=AcdymZsLHnLeYRW2KJhr/G8jq+9fu1woqH9QglaZrO2E7M75jn0+0Yj7KeUBIDNi2gO57m
- 4mYKnCWyG8qUwxBiJUy/d59o+eooXY3fA3DyY1Yhqr2aH4snZ9adrYRaeXCdeMBSZwgThqS9
- AJjro2N1phkfznUBWIPNj4DxDKUg4kzt5E5sQROJxtBT7HPA4laqFIS2W5X4v0R5g8oYczBv
- BTeDHYigobpt6WA1XNO9ELg5NA3KCBo1g9mEP8wC1MwhBIc65arucOvkCwaNDmWedD8ipwxF
- Y/1+BEeXYDH/GvKYq0Ag4PERSxDb60iai4pcBUiyd5vNRRcpKkv0AGuQ==;
+ h=Date:From:Subject:To:Message-ID:MIME-Version:Content-Type:Content-Transfer-Encoding:Cc:References:In-Reply-To;
+ bh=7ZUSL9956dMTKl4lPB2nJCaF8a0We09ZgJjxtb1B5Vc=;
+ b=H/6NBs0R54sg0eiFuEVwndwNsW9dIT3HjAukgPWPFCL7xIZVR1ISXkwoqwGHWd+beGa9MP
+ 3dq3q24r3e9vrjdZD3y4oGVwyKyU/jgN66fKyJ/NB5JWEiNS+p7NEPPeeUYXoniXXIgty0Tz
+ ME3OW8jvApyseHuutT7Y5v4K7CsaZ7V3p4CYOFFgh8GxIm9GOWw7cIMIszK1bzABlvH4bwoQ
+ FHr+TJy3GIXpUHpLa7Gh6b+h8iKRpgFVutDQv3zUiKu/rFFOrCQzjXjd1GQ85BrgEJAEy8Xn
+ F/sZWxmwC7eXfCGmecwjcUjRSLjGiejwdTxq+71eknO87QOAT/wkMqyA==;
 From: Felix Moessbauer <felix.moessbauer@siemens.com>
 To: axboe@kernel.dk
 Cc: stable@vger.kernel.org,
@@ -39,9 +40,11 @@ Cc: stable@vger.kernel.org,
 	adriaan.schmidt@siemens.com,
 	florian.bezdeka@siemens.com,
 	Felix Moessbauer <felix.moessbauer@siemens.com>
-Subject: [PATCH 6.1 0/2] io_uring/io-wq: respect cgroup cpusets
-Date: Wed, 11 Sep 2024 18:23:14 +0200
-Message-Id: <20240911162316.516725-1-felix.moessbauer@siemens.com>
+Subject: [PATCH 6.1 2/2] io_uring/io-wq: inherit cpuset of cgroup in io worker
+Date: Wed, 11 Sep 2024 18:23:16 +0200
+Message-Id: <20240911162316.516725-3-felix.moessbauer@siemens.com>
+In-Reply-To: <20240911162316.516725-1-felix.moessbauer@siemens.com>
+References: <20240911162316.516725-1-felix.moessbauer@siemens.com>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
@@ -52,37 +55,61 @@ Content-Transfer-Encoding: 8bit
 X-Flowmailer-Platform: Siemens
 Feedback-ID: 519:519-1321639:519-21489:flowmailer
 
-Hi,
+commit 84eacf177faa605853c58e5b1c0d9544b88c16fd upstream.
 
-as discussed in [1], this is a manual backport of the remaining two
-patches to let the io worker threads respect the affinites defined by
-the cgroup of the process.
+The io worker threads are userland threads that just never exit to the
+userland. By that, they are also assigned to a cgroup (the group of the
+creating task).
 
-In 6.1 one worker is created per NUMA node, while in da64d6db3bd3
-("io_uring: One wqe per wq") this is changed to only have a single worker.
-As this patch is pretty invasive, Jens and me agreed to not backport it.
+When creating a new io worker, this worker should inherit the cpuset
+of the cgroup.
 
-Instead we now limit the workers cpuset to the cpus that are in the
-intersection between what the cgroup allows and what the NUMA node has.
-This leaves the question what to do in case the intersection is empty:
-To be backwarts compatible, we allow this case, but restrict the cpumask
-of the poller to the cpuset defined by the cgroup. We further believe
-this is a reasonable decision, as da64d6db3bd3 drops the NUMA awareness
-anyways.
+Fixes: da64d6db3bd3 ("io_uring: One wqe per wq")
+Signed-off-by: Felix Moessbauer <felix.moessbauer@siemens.com>
+---
+ io_uring/io-wq.c | 8 +++++++-
+ 1 file changed, 7 insertions(+), 1 deletion(-)
 
-[1] https://lore.kernel.org/lkml/ec01745a-b102-4f6e-abc9-abd636d36319@kernel.dk
-
-Best regards,
-Felix Moessbauer
-Siemens AG
-
-Felix Moessbauer (2):
-  io_uring/io-wq: do not allow pinning outside of cpuset
-  io_uring/io-wq: inherit cpuset of cgroup in io worker
-
- io_uring/io-wq.c | 33 ++++++++++++++++++++++++++-------
- 1 file changed, 26 insertions(+), 7 deletions(-)
-
+diff --git a/io_uring/io-wq.c b/io_uring/io-wq.c
+index c74bcc8d2f06..04265bf8d319 100644
+--- a/io_uring/io-wq.c
++++ b/io_uring/io-wq.c
+@@ -1157,6 +1157,7 @@ struct io_wq *io_wq_create(unsigned bounded, struct io_wq_data *data)
+ {
+ 	int ret, node, i;
+ 	struct io_wq *wq;
++	cpumask_var_t allowed_mask;
+ 
+ 	if (WARN_ON_ONCE(!data->free_work || !data->do_work))
+ 		return ERR_PTR(-EINVAL);
+@@ -1176,6 +1177,9 @@ struct io_wq *io_wq_create(unsigned bounded, struct io_wq_data *data)
+ 	wq->do_work = data->do_work;
+ 
+ 	ret = -ENOMEM;
++	if (!alloc_cpumask_var(&allowed_mask, GFP_KERNEL))
++		goto err;
++	cpuset_cpus_allowed(current, allowed_mask);
+ 	for_each_node(node) {
+ 		struct io_wqe *wqe;
+ 		int alloc_node = node;
+@@ -1188,7 +1192,8 @@ struct io_wq *io_wq_create(unsigned bounded, struct io_wq_data *data)
+ 		wq->wqes[node] = wqe;
+ 		if (!alloc_cpumask_var(&wqe->cpu_mask, GFP_KERNEL))
+ 			goto err;
+-		cpumask_copy(wqe->cpu_mask, cpumask_of_node(node));
++		if (!cpumask_and(wqe->cpu_mask, cpumask_of_node(node), allowed_mask))
++			cpumask_copy(wqe->cpu_mask, allowed_mask);
+ 		wqe->node = alloc_node;
+ 		wqe->acct[IO_WQ_ACCT_BOUND].max_workers = bounded;
+ 		wqe->acct[IO_WQ_ACCT_UNBOUND].max_workers =
+@@ -1222,6 +1227,7 @@ struct io_wq *io_wq_create(unsigned bounded, struct io_wq_data *data)
+ 		free_cpumask_var(wq->wqes[node]->cpu_mask);
+ 		kfree(wq->wqes[node]);
+ 	}
++	free_cpumask_var(allowed_mask);
+ err_wq:
+ 	kfree(wq);
+ 	return ERR_PTR(ret);
 -- 
 2.39.2
 
