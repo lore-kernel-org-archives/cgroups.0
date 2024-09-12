@@ -1,162 +1,103 @@
-Received: from szxga06-in.huawei.com (szxga06-in.huawei.com [45.249.212.32])
+Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C8ACE1D545
-	for <cgroups@vger.kernel.org>; Thu, 12 Sep 2024 01:28:51 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.32
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 684115684;
+	Thu, 12 Sep 2024 01:33:28 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.51
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1726104533; cv=none; b=C3i41T5sc0aGzas2fy/sh/IpYimBpcyFR61itta/p315EwEPgK6U++k4udiYM15nW8xHLygFg4ChLVqAgFrnNTsvM4+UlOhoNwX17O1bphYFRMm3YaoM3j46NOAAeNoZZMenLWtWKwj0AtRWlIorb9a+IPY/4uXz3hUoX8kg7TQ=
+	t=1726104810; cv=none; b=cfq75SxBPEPCpJWLSqjq8Ar8UHLUbp3/PN4DdRGLpiYGBIGeiNWmIenfmwrMZA/yH2xWkBxNpgwgJVtTxqjHAQXNzjUWSxSzH3VSDhHzOR6h2c8QyJItEdnYSPDQimfSQYlX73KGDTiCH3tql4qR1+bn0IIvtHRH0TfuUN8l/9E=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1726104533; c=relaxed/simple;
-	bh=56lBpuBtp28/uZNGFyulJ22rK3WOIREtNyNkVXYugCs=;
-	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=CxX8RrlghqCN/WbumVjrV8vmmr2HK0mvZOB1to7Q9mzSOHT/qkLCM23QbxuByhDIIjx705DTlg8NfIWirEz4vfz1hweAsR0O7SvBiWhHer6M5Fwjl+CxWtIMLsJzJOs/vExIqgVUz1EGHgHtncrTmChWETzryg5c7VUchB0QUsE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; arc=none smtp.client-ip=45.249.212.32
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
-Received: from mail.maildlp.com (unknown [172.19.162.112])
-	by szxga06-in.huawei.com (SkyGuard) with ESMTP id 4X40Fl2CdczjM9B;
-	Thu, 12 Sep 2024 09:28:43 +0800 (CST)
-Received: from kwepemd100013.china.huawei.com (unknown [7.221.188.163])
-	by mail.maildlp.com (Postfix) with ESMTPS id 64DC31401F2;
-	Thu, 12 Sep 2024 09:28:44 +0800 (CST)
-Received: from huawei.com (10.67.174.121) by kwepemd100013.china.huawei.com
- (7.221.188.163) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1258.34; Thu, 12 Sep
- 2024 09:28:43 +0800
-From: Chen Ridong <chenridong@huawei.com>
-To: <tj@kernel.org>, <lizefan.x@bytedance.com>, <hannes@cmpxchg.org>,
-	<longman@redhat.com>, <adityakali@google.com>, <sergeh@kernel.org>,
-	<mkoutny@suse.com>, <guro@fb.com>
-CC: <cgroups@vger.kernel.org>
-Subject: [PATCH v2 -next 2/3] cgroup/freezer: Add cgroup CGRP_FROZEN flag update helper
-Date: Thu, 12 Sep 2024 01:20:36 +0000
-Message-ID: <20240912012037.1324165-3-chenridong@huawei.com>
-X-Mailer: git-send-email 2.34.1
-In-Reply-To: <20240912012037.1324165-1-chenridong@huawei.com>
-References: <20240912012037.1324165-1-chenridong@huawei.com>
+	s=arc-20240116; t=1726104810; c=relaxed/simple;
+	bh=jHmJWTrEqPsqScYuqYapWqJNq9LsR2bNW6C0fjjRqJc=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=XZiFcrNAoJPSOVzs6Na6QIbvqenvelelvOaodDyC7BVFOp2wLZOB92etf0y2eZPdVCsOBUpe/Y8z4p/fC1KjgFIzMjCcQj7Z0wz7xsU0A6LqaIDe8W73DtBcuCR9JuxZwvE2nE5BGzTnewCnXoDSKR7ODO+jMXTHBcaEPP10Eu4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.51
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
+Received: from mail.maildlp.com (unknown [172.19.163.216])
+	by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4X40Ls0Tsyz4f3kvP;
+	Thu, 12 Sep 2024 09:33:09 +0800 (CST)
+Received: from mail02.huawei.com (unknown [10.116.40.128])
+	by mail.maildlp.com (Postfix) with ESMTP id 555221A172E;
+	Thu, 12 Sep 2024 09:33:25 +0800 (CST)
+Received: from [10.67.109.79] (unknown [10.67.109.79])
+	by APP4 (Coremail) with SMTP id gCh0CgDnHMnjROJmEMNLBA--.2713S2;
+	Thu, 12 Sep 2024 09:33:25 +0800 (CST)
+Message-ID: <83cea8c6-d2f8-42f2-990e-80412ebf296e@huaweicloud.com>
+Date: Thu, 12 Sep 2024 09:33:23 +0800
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-ClientProxiedBy: dggems706-chm.china.huawei.com (10.3.19.183) To
- kwepemd100013.china.huawei.com (7.221.188.163)
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v3 1/1] cgroup: fix deadlock caused by cgroup_mutex and
+ cpu_hotplug_lock
+To: Tejun Heo <tj@kernel.org>, Roman Gushchin <roman.gushchin@linux.dev>
+Cc: =?UTF-8?Q?Michal_Koutn=C3=BD?= <mkoutny@suse.com>,
+ Chen Ridong <chenridong@huawei.com>, martin.lau@linux.dev, ast@kernel.org,
+ daniel@iogearbox.net, andrii@kernel.org, eddyz87@gmail.com, song@kernel.org,
+ yonghong.song@linux.dev, john.fastabend@gmail.com, kpsingh@kernel.org,
+ sdf@google.com, haoluo@google.com, jolsa@kernel.org,
+ lizefan.x@bytedance.com, hannes@cmpxchg.org, bpf@vger.kernel.org,
+ cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
+References: <20240817093334.6062-1-chenridong@huawei.com>
+ <20240817093334.6062-2-chenridong@huawei.com>
+ <kz6e3oadkmrl7elk6z765t2hgbcqbd2fxvb2673vbjflbjxqck@suy4p2mm7dvw>
+ <07501c67-3b18-48e3-8929-e773d8d6920f@huaweicloud.com>
+ <ZuC0A98pxYc3TODM@google.com> <ZuC3femqBNufgX1D@slm.duckdns.org>
+Content-Language: en-US
+From: Chen Ridong <chenridong@huaweicloud.com>
+In-Reply-To: <ZuC3femqBNufgX1D@slm.duckdns.org>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+X-CM-TRANSID:gCh0CgDnHMnjROJmEMNLBA--.2713S2
+X-Coremail-Antispam: 1UD129KBjvdXoW7GFWDJry3tw4DGw4UXryUtrb_yoWDurb_W3
+	92vr1DC3yUGFW5uw1qkFZ3WFWxXrZY9r1DX34DJwnrWw1Yyr43CryDXFy3X3Z8WFWrJrnI
+	gF90q34qvasrZjkaLaAFLSUrUUUUjb8apTn2vfkv8UJUUUU8Yxn0WfASr-VFAUDa7-sFnT
+	9fnUUIcSsGvfJTRUUUbx8YFVCjjxCrM7AC8VAFwI0_Xr0_Wr1l1xkIjI8I6I8E6xAIw20E
+	Y4v20xvaj40_JFC_Wr1l1IIY67AEw4v_Jr0_Jr4l8cAvFVAK0II2c7xJM28CjxkF64kEwV
+	A0rcxSw2x7M28EF7xvwVC0I7IYx2IY67AKxVWDJVCq3wA2z4x0Y4vE2Ix0cI8IcVCY1x02
+	67AKxVWxJr0_GcWl84ACjcxK6I8E87Iv67AKxVW0oVCq3wA2z4x0Y4vEx4A2jsIEc7CjxV
+	AFwI0_GcCE3s1le2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xvF2IEw4CE5I8CrVC2
+	j2WlYx0E2Ix0cI8IcVAFwI0_Jr0_Jr4lYx0Ex4A2jsIE14v26r1j6r4UMcvjeVCFs4IE7x
+	kEbVWUJVW8JwACjcxG0xvEwIxGrwACI402YVCY1x02628vn2kIc2xKxwCY1x0262kKe7AK
+	xVW8ZVWrXwCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7xkEbVWUJVW8JwC20s026c02F4
+	0E14v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E67AF67kF1VAFwI0_GFv_Wryl
+	IxkGc2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUJVWUCwCI42IY6xIIjxv20xvEc7CjxV
+	AFwI0_Gr0_Cr1lIxAIcVCF04k26cxKx2IYs7xG6r1j6r1xMIIF0xvEx4A2jsIE14v26r1j
+	6r4UMIIF0xvEx4A2jsIEc7CjxVAFwI0_Gr0_Gr1UYxBIdaVFxhVjvjDU0xZFpf9x07jIks
+	gUUUUU=
+X-CM-SenderInfo: hfkh02xlgr0w46kxt4xhlfz01xgou0bp/
 
-Add help to update cgroup CGRP_FROZEN flag. Both cgroup_propagate_frozen
-and cgroup_update_frozen functions update CGRP_FROZEN flag, this makes
-code concise.
 
-Signed-off-by: Chen Ridong <chenridong@huawei.com>
----
- kernel/cgroup/freezer.c | 67 ++++++++++++++++++++---------------------
- 1 file changed, 32 insertions(+), 35 deletions(-)
 
-diff --git a/kernel/cgroup/freezer.c b/kernel/cgroup/freezer.c
-index 188d5f2aeb5a..bf1690a167dd 100644
---- a/kernel/cgroup/freezer.c
-+++ b/kernel/cgroup/freezer.c
-@@ -8,6 +8,28 @@
- 
- #include <trace/events/cgroup.h>
- 
-+/*
-+ * Update CGRP_FROZEN of cgroup.flag
-+ * Return true if flags is updated; false if flags has no change
-+ */
-+static bool cgroup_update_frozen_flag(struct cgroup *cgrp, bool frozen)
-+{
-+	lockdep_assert_held(&css_set_lock);
-+
-+	/* Already there? */
-+	if (test_bit(CGRP_FROZEN, &cgrp->flags) == frozen)
-+		return false;
-+
-+	if (frozen)
-+		set_bit(CGRP_FROZEN, &cgrp->flags);
-+	else
-+		clear_bit(CGRP_FROZEN, &cgrp->flags);
-+
-+	cgroup_file_notify(&cgrp->events_file);
-+	TRACE_CGROUP_PATH(notify_frozen, cgrp, frozen);
-+	return true;
-+}
-+
- /*
-  * Propagate the cgroup frozen state upwards by the cgroup tree.
-  */
-@@ -24,24 +46,16 @@ static void cgroup_propagate_frozen(struct cgroup *cgrp, bool frozen)
- 	while ((cgrp = cgroup_parent(cgrp))) {
- 		if (frozen) {
- 			cgrp->freezer.nr_frozen_descendants += desc;
--			if (!test_bit(CGRP_FROZEN, &cgrp->flags) &&
--			    test_bit(CGRP_FREEZE, &cgrp->flags) &&
--			    cgrp->freezer.nr_frozen_descendants ==
--			    cgrp->nr_descendants) {
--				set_bit(CGRP_FROZEN, &cgrp->flags);
--				cgroup_file_notify(&cgrp->events_file);
--				TRACE_CGROUP_PATH(notify_frozen, cgrp, 1);
--				desc++;
--			}
-+			if (!test_bit(CGRP_FREEZE, &cgrp->flags) ||
-+			    (cgrp->freezer.nr_frozen_descendants !=
-+			    cgrp->nr_descendants))
-+				continue;
- 		} else {
- 			cgrp->freezer.nr_frozen_descendants -= desc;
--			if (test_bit(CGRP_FROZEN, &cgrp->flags)) {
--				clear_bit(CGRP_FROZEN, &cgrp->flags);
--				cgroup_file_notify(&cgrp->events_file);
--				TRACE_CGROUP_PATH(notify_frozen, cgrp, 0);
--				desc++;
--			}
- 		}
-+
-+		if (cgroup_update_frozen_flag(cgrp, frozen))
-+			desc++;
- 	}
- }
- 
-@@ -53,8 +67,6 @@ void cgroup_update_frozen(struct cgroup *cgrp)
- {
- 	bool frozen;
- 
--	lockdep_assert_held(&css_set_lock);
--
- 	/*
- 	 * If the cgroup has to be frozen (CGRP_FREEZE bit set),
- 	 * and all tasks are frozen and/or stopped, let's consider
-@@ -63,24 +75,9 @@ void cgroup_update_frozen(struct cgroup *cgrp)
- 	frozen = test_bit(CGRP_FREEZE, &cgrp->flags) &&
- 		cgrp->freezer.nr_frozen_tasks == __cgroup_task_count(cgrp);
- 
--	if (frozen) {
--		/* Already there? */
--		if (test_bit(CGRP_FROZEN, &cgrp->flags))
--			return;
--
--		set_bit(CGRP_FROZEN, &cgrp->flags);
--	} else {
--		/* Already there? */
--		if (!test_bit(CGRP_FROZEN, &cgrp->flags))
--			return;
--
--		clear_bit(CGRP_FROZEN, &cgrp->flags);
--	}
--	cgroup_file_notify(&cgrp->events_file);
--	TRACE_CGROUP_PATH(notify_frozen, cgrp, frozen);
--
--	/* Update the state of ancestor cgroups. */
--	cgroup_propagate_frozen(cgrp, frozen);
-+	/* If flags is updated, update the state of ancestor cgroups. */
-+	if (cgroup_update_frozen_flag(cgrp, frozen))
-+		cgroup_propagate_frozen(cgrp, frozen);
- }
- 
- /*
--- 
-2.34.1
+On 2024/9/11 5:17, Tejun Heo wrote:
+> On Tue, Sep 10, 2024 at 09:02:59PM +0000, Roman Gushchin wrote:
+> ...
+>>>> By that reasoning any holder of cgroup_mutex on system_wq makes system
+>>>> susceptible to a deadlock (in presence of cpu_hotplug_lock waiting
+>>>> writers + cpuset operations). And the two work items must meet in same
+>>>> worker's processing hence probability is low (zero?) with less than
+>>>> WQ_DFL_ACTIVE items.
+>>
+>> Right, I'm on the same page. Should we document then somewhere that
+>> the cgroup mutex can't be locked from a system wq context?
+>>
+>> I think thus will also make the Fixes tag more meaningful.
+> 
+> I think that's completely fine. What's not fine is saturating system_wq.
+> Anything which creates a large number of concurrent work items should be
+> using its own workqueue. If anything, workqueue needs to add a warning for
+> saturation conditions and who are the offenders.
+> 
+> Thanks.
+> 
+
+I will add a patch do document that.
+Should we modify WQ_DFL_ACTIVE(256 now)? Maybe 1024 is acceptable?
+
+Best regards,
+Ridong
 
