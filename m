@@ -1,223 +1,334 @@
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.14])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-il1-f197.google.com (mail-il1-f197.google.com [209.85.166.197])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D2CF1155A4F;
-	Fri, 13 Sep 2024 21:54:35 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.14
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A143917BBF
+	for <cgroups@vger.kernel.org>; Sat, 14 Sep 2024 05:23:19 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.166.197
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1726264477; cv=none; b=FK7KTDP6vyb97FHkh94i5K3dT0cRjCIx9qICezSqRaQXYpuJfnm0NwJovF6QApaK/0C3DwsZ6inL3vhPH/BdokEcAONTmotdd+xzeN8HSZNHZj+g5Fd9BCJ5lEP1wL2M8ja1dT48BpxSDb2TMTbpp81eXrgEAlRrqhfX8W1WUgk=
+	t=1726291401; cv=none; b=BzwxrWhffV2ZQ5NZmv61nkbi1d3z8o5L/GOwKK2Q1y0q+P7u+pnQo/vtdtBGBbAHuvXwL16ts7jUvOitXtlAqXkwLNfPVqGLwEyIoUf5FYhkJ/vSzq3QjtHL2TOnsTy4SXKh7sf/AxgKtIaZYN+E5Gh4EfuVzB++s5yPBq/54mU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1726264477; c=relaxed/simple;
-	bh=zAwlk67tqKRq3ykb3Dq/lPmctb9a7uuG+dbiA68cadA=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=tiZbuGrbEVKahl+GXjPF7I5wtZdJ+FP70CU4saB1NKtGTEBKvpMOtl1S5CGit9jCqbrTiLFTcuhUhWVgARIHyzPc9lTdRu/wbBhHEfbaDbgCv2zGatoKFR2p8g1/w4UAKXojxfp7jTJvCCIPLApYvkdVsQ0slMvjXJexoroaXb0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=l+2wC8Fw; arc=none smtp.client-ip=198.175.65.14
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="l+2wC8Fw"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1726264476; x=1757800476;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:in-reply-to;
-  bh=zAwlk67tqKRq3ykb3Dq/lPmctb9a7uuG+dbiA68cadA=;
-  b=l+2wC8FwoUf4jv/m9AM4NRcj4YUfouCYP0vBIl3Vt6x3Ia4u41tFL51g
-   YUxgyNQ6s2DlUIu7RyRMBwVa/2RZuBiTVSC1Ww8QTM5e8OIsgEkZG16YV
-   v7H7r4GUsGO3ODDcmzIpec5+c6isY/8vZX0rm1VcWxg9upnwqXGsU3gmF
-   b2NX8LJ5o7ky4lHqR2YBCTCwTts1ebn3RW0FfGEaYh5rCTSxy5TL/DzJt
-   A3FRBnwv4FzMp+7aW6c4qfCEBOKdn0+UbJSWnlYqdgprBeb56adDSDMiC
-   SOH2CY4YFfVm5n4R0mVrVwrmSxPVBTsgE3PM5L/46LoGAewjO6H+icqM4
-   A==;
-X-CSE-ConnectionGUID: gCbj0OLlQCGNBssXS9LvyQ==
-X-CSE-MsgGUID: 66RUN85vSOWmVDkg05o5sA==
-X-IronPort-AV: E=McAfee;i="6700,10204,11194"; a="28964284"
-X-IronPort-AV: E=Sophos;i="6.10,227,1719903600"; 
-   d="scan'208";a="28964284"
-Received: from fmviesa004.fm.intel.com ([10.60.135.144])
-  by orvoesa106.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 13 Sep 2024 14:54:32 -0700
-X-CSE-ConnectionGUID: FOi80xTeS1Oe+X0B2eo2eQ==
-X-CSE-MsgGUID: XvYNeoeQRMufVwcHM+SBeA==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.10,227,1719903600"; 
-   d="scan'208";a="72802514"
-Received: from lkp-server01.sh.intel.com (HELO 53e96f405c61) ([10.239.97.150])
-  by fmviesa004.fm.intel.com with ESMTP; 13 Sep 2024 14:54:28 -0700
-Received: from kbuild by 53e96f405c61 with local (Exim 4.96)
-	(envelope-from <lkp@intel.com>)
-	id 1spEFF-00074a-1x;
-	Fri, 13 Sep 2024 21:54:25 +0000
-Date: Sat, 14 Sep 2024 05:53:55 +0800
-From: kernel test robot <lkp@intel.com>
-To: Jesper Dangaard Brouer <hawk@kernel.org>, tj@kernel.org,
-	cgroups@vger.kernel.org, yosryahmed@google.com,
-	shakeel.butt@linux.dev
-Cc: llvm@lists.linux.dev, oe-kbuild-all@lists.linux.dev,
-	Jesper Dangaard Brouer <hawk@kernel.org>, hannes@cmpxchg.org,
-	lizefan.x@bytedance.com, longman@redhat.com,
-	kernel-team@cloudflare.com, linux-mm@kvack.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH V11] cgroup/rstat: Avoid flushing if there is an ongoing
- root flush
-Message-ID: <202409140533.2vt8QPj8-lkp@intel.com>
-References: <172616070094.2055617.17676042522679701515.stgit@firesoul>
+	s=arc-20240116; t=1726291401; c=relaxed/simple;
+	bh=i33NVdGmhxMeJpPIx773VKdMN1cLXUnLKgeBZrGQR08=;
+	h=MIME-Version:Date:Message-ID:Subject:From:To:Content-Type; b=gNq4uiUQu9dwog3pn8RvGua3HLYfuOgdyyDfd14UIit1xnTrBWopyMZbrfKEqTuAb0E6LiBjq9j34oOnf+5roQAAhKyDO43W7loLLv2NjoWM0l14lL+Eo5J8STXdC4z2iCHzlBwqxnIK0Z2601vjH4zeBS/FtlvKGsAL8qSsfw8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com; arc=none smtp.client-ip=209.85.166.197
+Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com
+Received: by mail-il1-f197.google.com with SMTP id e9e14a558f8ab-39f5328fd5eso40656045ab.2
+        for <cgroups@vger.kernel.org>; Fri, 13 Sep 2024 22:23:19 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1726291398; x=1726896198;
+        h=to:from:subject:message-id:date:mime-version:x-gm-message-state
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=IuzhE3quXoWLaf8W8LHd6PqdLfaO1wjo2HTcmvuxTMs=;
+        b=SB8gEFsLTcrOAR3L/TCVMboKXsHDNBgVM/cQ0FO+Z+8iunzD7JbpBmrlPuxNDifSqR
+         V7VZiDwqcHUXJbot0SplSRLG+ZbbWn+TRzqoSQlxGC6WvJQi5pQaak8gdQOMU/QJyNiH
+         INBqmXtm0CHo+pw+xa6txdaPJrs5sEoz+J6NWYGADkYJT+iQjNz13OgCHm3nOVYLb5Qg
+         7qJGnrMVCDV/rfGvkvHWe2P7f+6KA+aCYcsfYMd8znVcVjd16xlzuMhxDHc5r2WK29gA
+         DceuoTOwX0ZXsYmsVsDuX83GFwocfCYqKMVOyBgFlJWptxDOcoAVtOXXjf8LZflz2K8n
+         tQjQ==
+X-Forwarded-Encrypted: i=1; AJvYcCWK5VFFwt3+1tssiq7D5SrqttqDFLTUwgAaRsWgDCwX5hFFvNGk02doYf/LsrtLtVYJz6CZ3aIJ@vger.kernel.org
+X-Gm-Message-State: AOJu0Yz+qIwuS3o89AN/yQDQPOnbmZoKCkHyILLkM5AehnOtX27stUC4
+	1zRuLvRPAw1eLNK32pTO+lKJ7hoP8L44dVobvVbPHvNtfNnuJRTDmctRBahgvP2UvIsgctqwVY0
+	Hn3vn5YwrH5C8ikLOU/KsJ+PYV0e/DSU4WLahNtxKihlSNPl7WteCiJw=
+X-Google-Smtp-Source: AGHT+IEbbFc37o2ptQHTdnWKtB/vdHibyHqRMZ8AaBxIxHXoQX9APBMTiZgUJxUiynqm2f+WNBOKabIpOX2h8lLapdkt2eshK99W
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <172616070094.2055617.17676042522679701515.stgit@firesoul>
+X-Received: by 2002:a92:c549:0:b0:383:4a12:b77c with SMTP id
+ e9e14a558f8ab-3a084902ac6mr97962545ab.8.1726291398627; Fri, 13 Sep 2024
+ 22:23:18 -0700 (PDT)
+Date: Fri, 13 Sep 2024 22:23:18 -0700
+X-Google-Appengine-App-Id: s~syzkaller
+X-Google-Appengine-App-Id-Alias: syzkaller
+Message-ID: <00000000000098231306220d8972@google.com>
+Subject: [syzbot] [mm?] [cgroups?] possible deadlock in refill_stock
+From: syzbot <syzbot+dfd0410e573d2afac470@syzkaller.appspotmail.com>
+To: akpm@linux-foundation.org, cgroups@vger.kernel.org, hannes@cmpxchg.org, 
+	linux-kernel@vger.kernel.org, linux-mm@kvack.org, mhocko@kernel.org, 
+	muchun.song@linux.dev, roman.gushchin@linux.dev, shakeel.butt@linux.dev, 
+	syzkaller-bugs@googlegroups.com
+Content-Type: text/plain; charset="UTF-8"
 
-Hi Jesper,
+Hello,
 
-kernel test robot noticed the following build errors:
+syzbot found the following issue on:
 
-[auto build test ERROR on tj-cgroup/for-next]
-[also build test ERROR on axboe-block/for-next linus/master v6.11-rc7]
-[cannot apply to akpm-mm/mm-everything next-20240913]
-[If your patch is applied to the wrong git tree, kindly drop us a note.
-And when submitting patch, we suggest to use '--base' as documented in
-https://git-scm.com/docs/git-format-patch#_base_tree_information]
+HEAD commit:    bc83b4d1f086 Merge tag 'bcachefs-2024-09-09' of git://evil..
+git tree:       upstream
+console output: https://syzkaller.appspot.com/x/log.txt?x=1781a807980000
+kernel config:  https://syzkaller.appspot.com/x/.config?x=61d235cb8d15001c
+dashboard link: https://syzkaller.appspot.com/bug?extid=dfd0410e573d2afac470
+compiler:       Debian clang version 15.0.6, GNU ld (GNU Binutils for Debian) 2.40
 
-url:    https://github.com/intel-lab-lkp/linux/commits/Jesper-Dangaard-Brouer/cgroup-rstat-Avoid-flushing-if-there-is-an-ongoing-root-flush/20240913-010800
-base:   https://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git for-next
-patch link:    https://lore.kernel.org/r/172616070094.2055617.17676042522679701515.stgit%40firesoul
-patch subject: [PATCH V11] cgroup/rstat: Avoid flushing if there is an ongoing root flush
-config: x86_64-allnoconfig (https://download.01.org/0day-ci/archive/20240914/202409140533.2vt8QPj8-lkp@intel.com/config)
-compiler: clang version 18.1.8 (https://github.com/llvm/llvm-project 3b5b5c1ec4a3095ab096dd780e84d7ab81f3d7ff)
-reproduce (this is a W=1 build): (https://download.01.org/0day-ci/archive/20240914/202409140533.2vt8QPj8-lkp@intel.com/reproduce)
+Unfortunately, I don't have any reproducer for this issue yet.
 
-If you fix the issue in a separate patch/commit (i.e. not just a new version of
-the same patch/commit), kindly add following tags
-| Reported-by: kernel test robot <lkp@intel.com>
-| Closes: https://lore.kernel.org/oe-kbuild-all/202409140533.2vt8QPj8-lkp@intel.com/
+Downloadable assets:
+disk image: https://storage.googleapis.com/syzbot-assets/beba571a2693/disk-bc83b4d1.raw.xz
+vmlinux: https://storage.googleapis.com/syzbot-assets/827e1dae7a22/vmlinux-bc83b4d1.xz
+kernel image: https://storage.googleapis.com/syzbot-assets/5a6d2fb15704/bzImage-bc83b4d1.xz
 
-All errors (new ones prefixed by >>):
+IMPORTANT: if you fix the issue, please add the following tag to the commit:
+Reported-by: syzbot+dfd0410e573d2afac470@syzkaller.appspotmail.com
 
->> mm/vmscan.c:2265:2: error: call to undeclared function 'mem_cgroup_flush_stats_relaxed'; ISO C99 and later do not support implicit function declarations [-Wimplicit-function-declaration]
-    2265 |         mem_cgroup_flush_stats_relaxed(sc->target_mem_cgroup);
-         |         ^
-   mm/vmscan.c:2265:2: note: did you mean 'mem_cgroup_flush_stats_ratelimited'?
-   include/linux/memcontrol.h:1429:20: note: 'mem_cgroup_flush_stats_ratelimited' declared here
-    1429 | static inline void mem_cgroup_flush_stats_ratelimited(struct mem_cgroup *memcg)
-         |                    ^
-   1 error generated.
+======================================================
+WARNING: possible circular locking dependency detected
+6.11.0-rc7-syzkaller-00017-gbc83b4d1f086 #0 Not tainted
+------------------------------------------------------
+syz-executor/5237 is trying to acquire lock:
+ffff8880b893e158 (&pool->lock){-.-.}-{2:2}, at: __queue_work+0x759/0xf50
+
+but task is already holding lock:
+ffff8880b89394f8 (stock_lock){..-.}-{2:2}, at: local_lock_acquire include/linux/local_lock_internal.h:29 [inline]
+ffff8880b89394f8 (stock_lock){..-.}-{2:2}, at: refill_stock+0x112/0x470 mm/memcontrol.c:1826
+
+which lock already depends on the new lock.
 
 
-vim +/mem_cgroup_flush_stats_relaxed +2265 mm/vmscan.c
+the existing dependency chain (in reverse order) is:
 
-  2250	
-  2251	static void prepare_scan_control(pg_data_t *pgdat, struct scan_control *sc)
-  2252	{
-  2253		unsigned long file;
-  2254		struct lruvec *target_lruvec;
-  2255	
-  2256		if (lru_gen_enabled())
-  2257			return;
-  2258	
-  2259		target_lruvec = mem_cgroup_lruvec(sc->target_mem_cgroup, pgdat);
-  2260	
-  2261		/*
-  2262		 * Flush the memory cgroup stats, so that we read accurate per-memcg
-  2263		 * lruvec stats for heuristics.
-  2264		 */
-> 2265		mem_cgroup_flush_stats_relaxed(sc->target_mem_cgroup);
-  2266	
-  2267		/*
-  2268		 * Determine the scan balance between anon and file LRUs.
-  2269		 */
-  2270		spin_lock_irq(&target_lruvec->lru_lock);
-  2271		sc->anon_cost = target_lruvec->anon_cost;
-  2272		sc->file_cost = target_lruvec->file_cost;
-  2273		spin_unlock_irq(&target_lruvec->lru_lock);
-  2274	
-  2275		/*
-  2276		 * Target desirable inactive:active list ratios for the anon
-  2277		 * and file LRU lists.
-  2278		 */
-  2279		if (!sc->force_deactivate) {
-  2280			unsigned long refaults;
-  2281	
-  2282			/*
-  2283			 * When refaults are being observed, it means a new
-  2284			 * workingset is being established. Deactivate to get
-  2285			 * rid of any stale active pages quickly.
-  2286			 */
-  2287			refaults = lruvec_page_state(target_lruvec,
-  2288					WORKINGSET_ACTIVATE_ANON);
-  2289			if (refaults != target_lruvec->refaults[WORKINGSET_ANON] ||
-  2290				inactive_is_low(target_lruvec, LRU_INACTIVE_ANON))
-  2291				sc->may_deactivate |= DEACTIVATE_ANON;
-  2292			else
-  2293				sc->may_deactivate &= ~DEACTIVATE_ANON;
-  2294	
-  2295			refaults = lruvec_page_state(target_lruvec,
-  2296					WORKINGSET_ACTIVATE_FILE);
-  2297			if (refaults != target_lruvec->refaults[WORKINGSET_FILE] ||
-  2298			    inactive_is_low(target_lruvec, LRU_INACTIVE_FILE))
-  2299				sc->may_deactivate |= DEACTIVATE_FILE;
-  2300			else
-  2301				sc->may_deactivate &= ~DEACTIVATE_FILE;
-  2302		} else
-  2303			sc->may_deactivate = DEACTIVATE_ANON | DEACTIVATE_FILE;
-  2304	
-  2305		/*
-  2306		 * If we have plenty of inactive file pages that aren't
-  2307		 * thrashing, try to reclaim those first before touching
-  2308		 * anonymous pages.
-  2309		 */
-  2310		file = lruvec_page_state(target_lruvec, NR_INACTIVE_FILE);
-  2311		if (file >> sc->priority && !(sc->may_deactivate & DEACTIVATE_FILE) &&
-  2312		    !sc->no_cache_trim_mode)
-  2313			sc->cache_trim_mode = 1;
-  2314		else
-  2315			sc->cache_trim_mode = 0;
-  2316	
-  2317		/*
-  2318		 * Prevent the reclaimer from falling into the cache trap: as
-  2319		 * cache pages start out inactive, every cache fault will tip
-  2320		 * the scan balance towards the file LRU.  And as the file LRU
-  2321		 * shrinks, so does the window for rotation from references.
-  2322		 * This means we have a runaway feedback loop where a tiny
-  2323		 * thrashing file LRU becomes infinitely more attractive than
-  2324		 * anon pages.  Try to detect this based on file LRU size.
-  2325		 */
-  2326		if (!cgroup_reclaim(sc)) {
-  2327			unsigned long total_high_wmark = 0;
-  2328			unsigned long free, anon;
-  2329			int z;
-  2330	
-  2331			free = sum_zone_node_page_state(pgdat->node_id, NR_FREE_PAGES);
-  2332			file = node_page_state(pgdat, NR_ACTIVE_FILE) +
-  2333				   node_page_state(pgdat, NR_INACTIVE_FILE);
-  2334	
-  2335			for (z = 0; z < MAX_NR_ZONES; z++) {
-  2336				struct zone *zone = &pgdat->node_zones[z];
-  2337	
-  2338				if (!managed_zone(zone))
-  2339					continue;
-  2340	
-  2341				total_high_wmark += high_wmark_pages(zone);
-  2342			}
-  2343	
-  2344			/*
-  2345			 * Consider anon: if that's low too, this isn't a
-  2346			 * runaway file reclaim problem, but rather just
-  2347			 * extreme pressure. Reclaim as per usual then.
-  2348			 */
-  2349			anon = node_page_state(pgdat, NR_INACTIVE_ANON);
-  2350	
-  2351			sc->file_is_tiny =
-  2352				file + free <= total_high_wmark &&
-  2353				!(sc->may_deactivate & DEACTIVATE_ANON) &&
-  2354				anon >> sc->priority;
-  2355		}
-  2356	}
-  2357	
+-> #4 (stock_lock){..-.}-{2:2}:
+       lock_acquire+0x1ed/0x550 kernel/locking/lockdep.c:5759
+       local_lock_acquire include/linux/local_lock_internal.h:29 [inline]
+       consume_stock mm/memcontrol.c:1741 [inline]
+       try_charge_memcg+0x27e/0x1170 mm/memcontrol.c:2171
+       obj_cgroup_charge_pages+0x91/0x230 mm/memcontrol.c:2660
+       __memcg_kmem_charge_page+0xc8/0x1d0 mm/memcontrol.c:2687
+       __alloc_pages_noprof+0x28c/0x6c0 mm/page_alloc.c:4719
+       __alloc_pages_node_noprof include/linux/gfp.h:269 [inline]
+       alloc_pages_node_noprof include/linux/gfp.h:296 [inline]
+       ___kmalloc_large_node+0x8b/0x1d0 mm/slub.c:4107
+       __kmalloc_large_node_noprof+0x1a/0x80 mm/slub.c:4134
+       __do_kmalloc_node mm/slub.c:4150 [inline]
+       __kmalloc_node_noprof+0x2d2/0x440 mm/slub.c:4168
+       kmalloc_node_noprof include/linux/slab.h:708 [inline]
+       bpf_map_kmalloc_node+0xd3/0x1c0 kernel/bpf/syscall.c:422
+       lpm_trie_node_alloc kernel/bpf/lpm_trie.c:299 [inline]
+       trie_update_elem+0x1cd/0xc00 kernel/bpf/lpm_trie.c:342
+       bpf_map_update_value+0x4d5/0x540 kernel/bpf/syscall.c:203
+       map_update_elem+0x53a/0x6f0 kernel/bpf/syscall.c:1654
+       __sys_bpf+0x76f/0x810 kernel/bpf/syscall.c:5698
+       __do_sys_bpf kernel/bpf/syscall.c:5817 [inline]
+       __se_sys_bpf kernel/bpf/syscall.c:5815 [inline]
+       __x64_sys_bpf+0x7c/0x90 kernel/bpf/syscall.c:5815
+       do_syscall_x64 arch/x86/entry/common.c:52 [inline]
+       do_syscall_64+0xf3/0x230 arch/x86/entry/common.c:83
+       entry_SYSCALL_64_after_hwframe+0x77/0x7f
 
--- 
-0-DAY CI Kernel Test Service
-https://github.com/intel/lkp-tests/wiki
+-> #3 (&trie->lock){....}-{2:2}:
+       lock_acquire+0x1ed/0x550 kernel/locking/lockdep.c:5759
+       __raw_spin_lock_irqsave include/linux/spinlock_api_smp.h:110 [inline]
+       _raw_spin_lock_irqsave+0xd5/0x120 kernel/locking/spinlock.c:162
+       trie_delete_elem+0x96/0x6a0 kernel/bpf/lpm_trie.c:462
+       0xffffffffa0000912
+       bpf_dispatcher_nop_func include/linux/bpf.h:1243 [inline]
+       __bpf_prog_run include/linux/filter.h:691 [inline]
+       bpf_prog_run include/linux/filter.h:698 [inline]
+       __bpf_trace_run kernel/trace/bpf_trace.c:2406 [inline]
+       bpf_trace_run4+0x336/0x590 kernel/trace/bpf_trace.c:2449
+       __traceiter_sched_switch+0x9a/0xd0 include/trace/events/sched.h:222
+       trace_sched_switch include/trace/events/sched.h:222 [inline]
+       __schedule+0x2591/0x4a60 kernel/sched/core.c:6526
+       __schedule_loop kernel/sched/core.c:6606 [inline]
+       schedule+0x14b/0x320 kernel/sched/core.c:6621
+       futex_wait_queue+0x14e/0x1d0 kernel/futex/waitwake.c:370
+       __futex_wait+0x17f/0x320 kernel/futex/waitwake.c:669
+       futex_wait+0x101/0x360 kernel/futex/waitwake.c:697
+       do_futex+0x33b/0x560 kernel/futex/syscalls.c:102
+       __do_sys_futex kernel/futex/syscalls.c:179 [inline]
+       __se_sys_futex+0x3f9/0x480 kernel/futex/syscalls.c:160
+       do_syscall_x64 arch/x86/entry/common.c:52 [inline]
+       do_syscall_64+0xf3/0x230 arch/x86/entry/common.c:83
+       entry_SYSCALL_64_after_hwframe+0x77/0x7f
+
+-> #2 (&rq->__lock){-.-.}-{2:2}:
+       lock_acquire+0x1ed/0x550 kernel/locking/lockdep.c:5759
+       _raw_spin_lock_nested+0x31/0x40 kernel/locking/spinlock.c:378
+       raw_spin_rq_lock_nested+0x2a/0x140 kernel/sched/core.c:560
+       raw_spin_rq_lock kernel/sched/sched.h:1415 [inline]
+       rq_lock kernel/sched/sched.h:1714 [inline]
+       task_fork_fair+0x61/0x1e0 kernel/sched/fair.c:12710
+       sched_cgroup_fork+0x37e/0x410 kernel/sched/core.c:4633
+       copy_process+0x2217/0x3dc0 kernel/fork.c:2483
+       kernel_clone+0x226/0x8f0 kernel/fork.c:2781
+       user_mode_thread+0x132/0x1a0 kernel/fork.c:2859
+       rest_init+0x23/0x300 init/main.c:712
+       start_kernel+0x47a/0x500 init/main.c:1103
+       x86_64_start_reservations+0x2a/0x30 arch/x86/kernel/head64.c:507
+       x86_64_start_kernel+0x9f/0xa0 arch/x86/kernel/head64.c:488
+       common_startup_64+0x13e/0x147
+
+-> #1 (&p->pi_lock){-.-.}-{2:2}:
+       lock_acquire+0x1ed/0x550 kernel/locking/lockdep.c:5759
+       __raw_spin_lock_irqsave include/linux/spinlock_api_smp.h:110 [inline]
+       _raw_spin_lock_irqsave+0xd5/0x120 kernel/locking/spinlock.c:162
+       class_raw_spinlock_irqsave_constructor include/linux/spinlock.h:551 [inline]
+       try_to_wake_up+0xb0/0x1470 kernel/sched/core.c:4051
+       create_worker+0x507/0x720 kernel/workqueue.c:2827
+       workqueue_init+0x520/0x8a0 kernel/workqueue.c:7841
+       kernel_init_freeable+0x3fe/0x5d0 init/main.c:1562
+       kernel_init+0x1d/0x2b0 init/main.c:1467
+       ret_from_fork+0x4d/0x80 arch/x86/kernel/process.c:147
+       ret_from_fork_asm+0x1a/0x30 arch/x86/entry/entry_64.S:244
+
+-> #0 (&pool->lock){-.-.}-{2:2}:
+       check_prev_add kernel/locking/lockdep.c:3133 [inline]
+       check_prevs_add kernel/locking/lockdep.c:3252 [inline]
+       validate_chain+0x18e0/0x5900 kernel/locking/lockdep.c:3868
+       __lock_acquire+0x137a/0x2040 kernel/locking/lockdep.c:5142
+       lock_acquire+0x1ed/0x550 kernel/locking/lockdep.c:5759
+       __raw_spin_lock include/linux/spinlock_api_smp.h:133 [inline]
+       _raw_spin_lock+0x2e/0x40 kernel/locking/spinlock.c:154
+       __queue_work+0x759/0xf50
+       queue_work_on+0x1c2/0x380 kernel/workqueue.c:2392
+       percpu_ref_put_many include/linux/percpu-refcount.h:335 [inline]
+       percpu_ref_put+0x178/0x180 include/linux/percpu-refcount.h:351
+       css_put include/linux/cgroup_refcnt.h:79 [inline]
+       drain_stock mm/memcontrol.c:1774 [inline]
+       __refill_stock+0x133/0x3e0 mm/memcontrol.c:1811
+       refill_stock+0x1ad/0x470 mm/memcontrol.c:1827
+       try_charge_memcg+0xd73/0x1170 mm/memcontrol.c:2294
+       obj_cgroup_charge_pages+0x91/0x230 mm/memcontrol.c:2660
+       __memcg_kmem_charge_page+0xc8/0x1d0 mm/memcontrol.c:2687
+       __alloc_pages_noprof+0x28c/0x6c0 mm/page_alloc.c:4719
+       alloc_pages_mpol_noprof+0x3e8/0x680 mm/mempolicy.c:2263
+       pagetable_alloc_noprof include/linux/mm.h:2872 [inline]
+       __pte_alloc_one_noprof include/asm-generic/pgalloc.h:70 [inline]
+       pte_alloc_one+0x88/0x5d0 arch/x86/mm/pgtable.c:33
+       __pte_alloc+0x79/0x3a0 mm/memory.c:448
+       copy_pte_range mm/memory.c:1106 [inline]
+       copy_pmd_range+0x7ccd/0x8500 mm/memory.c:1252
+       copy_pud_range mm/memory.c:1289 [inline]
+       copy_p4d_range mm/memory.c:1313 [inline]
+       copy_page_range+0x99f/0xe90 mm/memory.c:1411
+       dup_mmap kernel/fork.c:749 [inline]
+       dup_mm kernel/fork.c:1672 [inline]
+       copy_mm+0x11ea/0x1f30 kernel/fork.c:1721
+       copy_process+0x187a/0x3dc0 kernel/fork.c:2374
+       kernel_clone+0x226/0x8f0 kernel/fork.c:2781
+       __do_sys_clone kernel/fork.c:2924 [inline]
+       __se_sys_clone kernel/fork.c:2908 [inline]
+       __x64_sys_clone+0x258/0x2a0 kernel/fork.c:2908
+       do_syscall_x64 arch/x86/entry/common.c:52 [inline]
+       do_syscall_64+0xf3/0x230 arch/x86/entry/common.c:83
+       entry_SYSCALL_64_after_hwframe+0x77/0x7f
+
+other info that might help us debug this:
+
+Chain exists of:
+  &pool->lock --> &trie->lock --> stock_lock
+
+ Possible unsafe locking scenario:
+
+       CPU0                    CPU1
+       ----                    ----
+  lock(stock_lock);
+                               lock(&trie->lock);
+                               lock(stock_lock);
+  lock(&pool->lock);
+
+ *** DEADLOCK ***
+
+6 locks held by syz-executor/5237:
+ #0: ffffffff8e9e5390 (dup_mmap_sem){.+.+}-{0:0}, at: dup_mmap kernel/fork.c:635 [inline]
+ #0: ffffffff8e9e5390 (dup_mmap_sem){.+.+}-{0:0}, at: dup_mm kernel/fork.c:1672 [inline]
+ #0: ffffffff8e9e5390 (dup_mmap_sem){.+.+}-{0:0}, at: copy_mm+0x277/0x1f30 kernel/fork.c:1721
+ #1: ffff88803429b118 (&mm->mmap_lock){++++}-{3:3}, at: mmap_write_lock_killable include/linux/mmap_lock.h:122 [inline]
+ #1: ffff88803429b118 (&mm->mmap_lock){++++}-{3:3}, at: dup_mmap kernel/fork.c:636 [inline]
+ #1: ffff88803429b118 (&mm->mmap_lock){++++}-{3:3}, at: dup_mm kernel/fork.c:1672 [inline]
+ #1: ffff88803429b118 (&mm->mmap_lock){++++}-{3:3}, at: copy_mm+0x29a/0x1f30 kernel/fork.c:1721
+ #2: ffff88803429cd98 (&mm->mmap_lock/1){+.+.}-{3:3}, at: mmap_write_lock_nested include/linux/mmap_lock.h:113 [inline]
+ #2: ffff88803429cd98 (&mm->mmap_lock/1){+.+.}-{3:3}, at: dup_mmap kernel/fork.c:645 [inline]
+ #2: ffff88803429cd98 (&mm->mmap_lock/1){+.+.}-{3:3}, at: dup_mm kernel/fork.c:1672 [inline]
+ #2: ffff88803429cd98 (&mm->mmap_lock/1){+.+.}-{3:3}, at: copy_mm+0x3de/0x1f30 kernel/fork.c:1721
+ #3: ffff8880b89394f8 (stock_lock){..-.}-{2:2}, at: local_lock_acquire include/linux/local_lock_internal.h:29 [inline]
+ #3: ffff8880b89394f8 (stock_lock){..-.}-{2:2}, at: refill_stock+0x112/0x470 mm/memcontrol.c:1826
+ #4: ffffffff8e938320 (rcu_read_lock){....}-{1:2}, at: rcu_lock_acquire include/linux/rcupdate.h:326 [inline]
+ #4: ffffffff8e938320 (rcu_read_lock){....}-{1:2}, at: rcu_read_lock include/linux/rcupdate.h:838 [inline]
+ #4: ffffffff8e938320 (rcu_read_lock){....}-{1:2}, at: percpu_ref_put_many include/linux/percpu-refcount.h:330 [inline]
+ #4: ffffffff8e938320 (rcu_read_lock){....}-{1:2}, at: percpu_ref_put+0x19/0x180 include/linux/percpu-refcount.h:351
+ #5: ffffffff8e938320 (rcu_read_lock){....}-{1:2}, at: rcu_lock_acquire include/linux/rcupdate.h:326 [inline]
+ #5: ffffffff8e938320 (rcu_read_lock){....}-{1:2}, at: rcu_read_lock include/linux/rcupdate.h:838 [inline]
+ #5: ffffffff8e938320 (rcu_read_lock){....}-{1:2}, at: __queue_work+0x199/0xf50 kernel/workqueue.c:2261
+
+stack backtrace:
+CPU: 1 UID: 0 PID: 5237 Comm: syz-executor Not tainted 6.11.0-rc7-syzkaller-00017-gbc83b4d1f086 #0
+Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 08/06/2024
+Call Trace:
+ <TASK>
+ __dump_stack lib/dump_stack.c:93 [inline]
+ dump_stack_lvl+0x241/0x360 lib/dump_stack.c:119
+ check_noncircular+0x36a/0x4a0 kernel/locking/lockdep.c:2186
+ check_prev_add kernel/locking/lockdep.c:3133 [inline]
+ check_prevs_add kernel/locking/lockdep.c:3252 [inline]
+ validate_chain+0x18e0/0x5900 kernel/locking/lockdep.c:3868
+ __lock_acquire+0x137a/0x2040 kernel/locking/lockdep.c:5142
+ lock_acquire+0x1ed/0x550 kernel/locking/lockdep.c:5759
+ __raw_spin_lock include/linux/spinlock_api_smp.h:133 [inline]
+ _raw_spin_lock+0x2e/0x40 kernel/locking/spinlock.c:154
+ __queue_work+0x759/0xf50
+ queue_work_on+0x1c2/0x380 kernel/workqueue.c:2392
+ percpu_ref_put_many include/linux/percpu-refcount.h:335 [inline]
+ percpu_ref_put+0x178/0x180 include/linux/percpu-refcount.h:351
+ css_put include/linux/cgroup_refcnt.h:79 [inline]
+ drain_stock mm/memcontrol.c:1774 [inline]
+ __refill_stock+0x133/0x3e0 mm/memcontrol.c:1811
+ refill_stock+0x1ad/0x470 mm/memcontrol.c:1827
+ try_charge_memcg+0xd73/0x1170 mm/memcontrol.c:2294
+ obj_cgroup_charge_pages+0x91/0x230 mm/memcontrol.c:2660
+ __memcg_kmem_charge_page+0xc8/0x1d0 mm/memcontrol.c:2687
+ __alloc_pages_noprof+0x28c/0x6c0 mm/page_alloc.c:4719
+ alloc_pages_mpol_noprof+0x3e8/0x680 mm/mempolicy.c:2263
+ pagetable_alloc_noprof include/linux/mm.h:2872 [inline]
+ __pte_alloc_one_noprof include/asm-generic/pgalloc.h:70 [inline]
+ pte_alloc_one+0x88/0x5d0 arch/x86/mm/pgtable.c:33
+ __pte_alloc+0x79/0x3a0 mm/memory.c:448
+ copy_pte_range mm/memory.c:1106 [inline]
+ copy_pmd_range+0x7ccd/0x8500 mm/memory.c:1252
+ copy_pud_range mm/memory.c:1289 [inline]
+ copy_p4d_range mm/memory.c:1313 [inline]
+ copy_page_range+0x99f/0xe90 mm/memory.c:1411
+ dup_mmap kernel/fork.c:749 [inline]
+ dup_mm kernel/fork.c:1672 [inline]
+ copy_mm+0x11ea/0x1f30 kernel/fork.c:1721
+ copy_process+0x187a/0x3dc0 kernel/fork.c:2374
+ kernel_clone+0x226/0x8f0 kernel/fork.c:2781
+ __do_sys_clone kernel/fork.c:2924 [inline]
+ __se_sys_clone kernel/fork.c:2908 [inline]
+ __x64_sys_clone+0x258/0x2a0 kernel/fork.c:2908
+ do_syscall_x64 arch/x86/entry/common.c:52 [inline]
+ do_syscall_64+0xf3/0x230 arch/x86/entry/common.c:83
+ entry_SYSCALL_64_after_hwframe+0x77/0x7f
+RIP: 0033:0x7fc048174753
+Code: 1f 84 00 00 00 00 00 64 48 8b 04 25 10 00 00 00 45 31 c0 31 d2 31 f6 bf 11 00 20 01 4c 8d 90 d0 02 00 00 b8 38 00 00 00 0f 05 <48> 3d 00 f0 ff ff 77 35 89 c2 85 c0 75 2c 64 48 8b 04 25 10 00 00
+RSP: 002b:00007ffcadc92ad8 EFLAGS: 00000246 ORIG_RAX: 0000000000000038
+RAX: ffffffffffffffda RBX: 0000000000000000 RCX: 00007fc048174753
+RDX: 0000000000000000 RSI: 0000000000000000 RDI: 0000000001200011
+RBP: 0000000000000001 R08: 0000000000000000 R09: 0000000000000000
+R10: 000055557eebb7d0 R11: 0000000000000246 R12: 0000000000000000
+R13: 000000000003000d R14: 000000000002fe18 R15: 00007ffcadc92c60
+ </TASK>
+
+
+---
+This report is generated by a bot. It may contain errors.
+See https://goo.gl/tpsmEJ for more information about syzbot.
+syzbot engineers can be reached at syzkaller@googlegroups.com.
+
+syzbot will keep track of this issue. See:
+https://goo.gl/tpsmEJ#status for how to communicate with syzbot.
+
+If the report is already addressed, let syzbot know by replying with:
+#syz fix: exact-commit-title
+
+If you want to overwrite report's subsystems, reply with:
+#syz set subsystems: new-subsystem
+(See the list of subsystem names on the web dashboard)
+
+If the report is a duplicate of another one, reply with:
+#syz dup: exact-subject-of-another-report
+
+If you want to undo deduplication, reply with:
+#syz undup
