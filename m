@@ -1,157 +1,98 @@
-Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-io1-f54.google.com (mail-io1-f54.google.com [209.85.166.54])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 85197199FAB
-	for <cgroups@vger.kernel.org>; Tue, 22 Oct 2024 11:58:26 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.51
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ABEC81A257C
+	for <cgroups@vger.kernel.org>; Tue, 22 Oct 2024 14:47:46 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.166.54
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1729598309; cv=none; b=tpmSELR/y9Lh679YenY47BATzrYZM1U4tbxUEZR+CRVup1bVYSvlTheqJZ+Afg/lxRnQa6B+j6qPFk3K12AFgCNvpZ1YC9XTRAMDkrKL7eVRwsyLR9QX2/1V1YUYkfjWGtfCPdavQMOLNDKsFfpqfbm1dN5aYSmKGLhdcUOfgOc=
+	t=1729608468; cv=none; b=Ew28tosi0ABEAmc0qCx4Be2+l/3oW+jm3iwcGA+P0JVYnIyehGr9zVNLGbpJ21p2loYK305yBIjKIFK7wLkNPEnreRo3amPjJ3MZq/aGtRbCTg+VRyHB6tXNeYjz6qLheZ5wYGuqRAijfSBgY4UoGl7i/0ZJAxf+JAqllywr8ks=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1729598309; c=relaxed/simple;
-	bh=6MuDd/B9XBcnPGO518BpeVqNjeNv+vtDOUhDwn/aQaE=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=Wp2lQsy2QE4X/yIY5XXtC72+wgnBec7wgf0UTGwI7lT/yLafeI7rH3rbCix6azlvzYphNX2QuvjMiDpx1LEuZoVUJK+x8/dwOOxQwSFBoYdtsJYOoabkMT8Z93sD3Rx7L3DjoYIHYxS6virl0k3wR7NmNI8+jhcWmxM5I5whBGw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.51
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
-Received: from mail.maildlp.com (unknown [172.19.163.235])
-	by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4XXrKY2DGNz4f3l8B
-	for <cgroups@vger.kernel.org>; Tue, 22 Oct 2024 19:58:09 +0800 (CST)
-Received: from mail02.huawei.com (unknown [10.116.40.252])
-	by mail.maildlp.com (Postfix) with ESMTP id 89C521A0568
-	for <cgroups@vger.kernel.org>; Tue, 22 Oct 2024 19:58:21 +0800 (CST)
-Received: from hulk-vt.huawei.com (unknown [10.67.174.121])
-	by APP3 (Coremail) with SMTP id _Ch0CgAXtoJTkxdnHcucEg--.31107S3;
-	Tue, 22 Oct 2024 19:58:21 +0800 (CST)
-From: Chen Ridong <chenridong@huaweicloud.com>
-To: tj@kernel.org,
-	lizefan.x@bytedance.com,
-	hannes@cmpxchg.org,
-	longman@redhat.com,
-	adityakali@google.com,
-	sergeh@kernel.org,
-	mkoutny@suse.com,
-	guro@fb.com
-Cc: cgroups@vger.kernel.org,
-	chenridong@huawei.com,
-	wangweiyang2@huawei.com
-Subject: [PATCH -next v4 1/2] cgroup/freezer: Reduce redundant traversal for cgroup_freeze
-Date: Tue, 22 Oct 2024 11:49:45 +0000
-Message-Id: <20241022114946.811862-2-chenridong@huaweicloud.com>
-X-Mailer: git-send-email 2.34.1
-In-Reply-To: <20241022114946.811862-1-chenridong@huaweicloud.com>
-References: <20241022114946.811862-1-chenridong@huaweicloud.com>
+	s=arc-20240116; t=1729608468; c=relaxed/simple;
+	bh=AUnKd1M3xJOmg0hqJKHoR2GCQfujvFGd8uC2lbtp0O0=;
+	h=From:To:Cc:In-Reply-To:References:Subject:Message-Id:Date:
+	 MIME-Version:Content-Type; b=feRWF9WuNR0Lilucy52Y/0yXQUTdL7iuiVCQMztehU0AcL+SK9Fzdqyy4Vjgp7hnIZ6/ebXuoSCibzidrvmYayNyY3wGDLtDdygqWXOnbmhdoz/FxWYob5x2ozK2kGxFSh2K+AZIDGz2XJaYzIiy1wj3/qm2jleSp2rLlMtL5MI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kernel.dk; spf=pass smtp.mailfrom=kernel.dk; dkim=pass (2048-bit key) header.d=kernel-dk.20230601.gappssmtp.com header.i=@kernel-dk.20230601.gappssmtp.com header.b=QceEMfXL; arc=none smtp.client-ip=209.85.166.54
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kernel.dk
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=kernel.dk
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel-dk.20230601.gappssmtp.com header.i=@kernel-dk.20230601.gappssmtp.com header.b="QceEMfXL"
+Received: by mail-io1-f54.google.com with SMTP id ca18e2360f4ac-83ab21c26e5so219990039f.1
+        for <cgroups@vger.kernel.org>; Tue, 22 Oct 2024 07:47:46 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=kernel-dk.20230601.gappssmtp.com; s=20230601; t=1729608465; x=1730213265; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:date:message-id:subject
+         :references:in-reply-to:cc:to:from:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=uvAvvPqD8Vbc7iZ14dJm8AwQMGagAK8236HrKhSHbpU=;
+        b=QceEMfXLOui1NwL++tUN6xwq+ct9k0FdaM8IuzcaYfbowKPSrrVV1J17rUoqQBrk58
+         EO7Umbe7SbrPnupj5acuyQIQp9+TOKoy+poSoKICwCzkdSs6YWxVWAPD1SUriIbb1+gV
+         MOeR4hWmXIDXMjLHla4kdb0LoU8If/7ddP9OrE2ZrlXLHL3DoKpg75JpPQePQ5Fs8fnK
+         AkOwGFdQj+SQNVCxWyOnfkaDtCBEnxH9L2D7LYEvmS7JygxTWR5q5F+jN/BnPrx1Qrs4
+         YZakC9j7khvV5RwWXwaN8zZ6W0wt8DitxEClrKmnKwcTKOABzez3+E3+Ndm7SOAMwk3Y
+         Pc6w==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1729608465; x=1730213265;
+        h=content-transfer-encoding:mime-version:date:message-id:subject
+         :references:in-reply-to:cc:to:from:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=uvAvvPqD8Vbc7iZ14dJm8AwQMGagAK8236HrKhSHbpU=;
+        b=n9RGV/34NVz39W68NLbMjWuj7xtfz506FaAFP3jxp0bmeTirj8CIgdUI9wKz0mcx9h
+         kPbLBZa9olKWWWZdCu4twxee66VOF3/NohlWOGaTIDCO+QeivI9mQ+oEt4Zosx9aVi6O
+         KkRMisiZ8r2uRyViDkeqVHaF5lE8jMc1BlyjBlx5JatUijvOHdb/o8BdJtmE5ZZ1F0bw
+         XY8YiqkXTjIDUteDEM3eHUMDcTfJEpXCVORpTVxMJG9v36GrUkIA5R++oGEFA4LvZWmB
+         /+pssAUT7k1CDG3I69gyFbLYFr3AUKux3dMCM1PutyYVCp9H58NxeqjC4z0gLJyNU/j8
+         zDBQ==
+X-Gm-Message-State: AOJu0Yy5rptSrZBLuhPTDk0rireGMvgtxCC8FRMYXfTGrtMDQu31pBTz
+	QP8+o69SevEfTTZtB3dcffdRhtjG0s9AXZakLQNDb7QsGI0q/hga2C6LDFXFqhg=
+X-Google-Smtp-Source: AGHT+IFMA8/8XkeEa3fN1L/EdBNpDM5BgG5xlJL0Vg6Yh5CEnSh4WlfRGT4N951JDyO4WWAxrEdCjA==
+X-Received: by 2002:a05:6e02:1ca5:b0:3a3:b559:5b92 with SMTP id e9e14a558f8ab-3a3f4060be5mr155339825ab.14.1729608465688;
+        Tue, 22 Oct 2024 07:47:45 -0700 (PDT)
+Received: from [127.0.0.1] ([96.43.243.2])
+        by smtp.gmail.com with ESMTPSA id 8926c6da1cb9f-4dc2a52fc4fsm1600289173.22.2024.10.22.07.47.44
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 22 Oct 2024 07:47:45 -0700 (PDT)
+From: Jens Axboe <axboe@kernel.dk>
+To: tj@kernel.org, josef@toxicpanda.com, hch@lst.de, mkoutny@suse.com, 
+ Li Lingfeng <lilingfeng@huaweicloud.com>
+Cc: cgroups@vger.kernel.org, linux-block@vger.kernel.org, 
+ linux-kernel@vger.kernel.org, yukuai1@huaweicloud.com, houtao1@huawei.com, 
+ yi.zhang@huawei.com, yangerkun@huawei.com, yukuai3@huawei.com, 
+ lilingfeng3@huawei.com
+In-Reply-To: <20240817071108.1919729-1-lilingfeng@huaweicloud.com>
+References: <20240817071108.1919729-1-lilingfeng@huaweicloud.com>
+Subject: Re: [PATCH v3] block: flush all throttled bios when deleting the
+ cgroup
+Message-Id: <172960846463.861462.5399495567961070618.b4-ty@kernel.dk>
+Date: Tue, 22 Oct 2024 08:47:44 -0600
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:_Ch0CgAXtoJTkxdnHcucEg--.31107S3
-X-Coremail-Antispam: 1UD129KBjvJXoWxZF4xGw1xArWkAr4xZw15CFg_yoW5XFy3pr
-	ZIkrn7tw4rtr18Zrs8Ja4jq3Z3tw4fXa1UGFyUt34rJFs3Xa4vqrn7CF15Gw1jyFZFgrW3
-	t3WY9r48Cr1qyFDanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDU0xBIdaVrnRJUUUPFb4IE77IF4wAFF20E14v26ryj6rWUM7CY07I20VC2zVCF04k2
-	6cxKx2IYs7xG6rWj6s0DM7CIcVAFz4kK6r1j6r18M28IrcIa0xkI8VA2jI8067AKxVWUGw
-	A2048vs2IY020Ec7CjxVAFwI0_Gr0_Xr1l8cAvFVAK0II2c7xJM28CjxkF64kEwVA0rcxS
-	w2x7M28EF7xvwVC0I7IYx2IY67AKxVW7JVWDJwA2z4x0Y4vE2Ix0cI8IcVCY1x0267AKxV
-	W8Jr0_Cr1UM28EF7xvwVC2z280aVAFwI0_GcCE3s1l84ACjcxK6I8E87Iv6xkF7I0E14v2
-	6rxl6s0DM2AIxVAIcxkEcVAq07x20xvEncxIr21l5I8CrVACY4xI64kE6c02F40Ex7xfMc
-	Ij6xIIjxv20xvE14v26r106r15McIj6I8E87Iv67AKxVWUJVW8JwAm72CE4IkC6x0Yz7v_
-	Jr0_Gr1lF7xvr2IYc2Ij64vIr41lFIxGxcIEc7CjxVA2Y2ka0xkIwI1lc7CjxVAaw2AFwI
-	0_Jw0_GFyl42xK82IYc2Ij64vIr41l4I8I3I0E4IkC6x0Yz7v_Jr0_Gr1lx2IqxVAqx4xG
-	67AKxVWUJVWUGwC20s026x8GjcxK67AKxVWUGVWUWwC2zVAF1VAY17CE14v26r1q6r43MI
-	IYrxkI7VAKI48JMIIF0xvE2Ix0cI8IcVAFwI0_Jr0_JF4lIxAIcVC0I7IYx2IY6xkF7I0E
-	14v26r4j6F4UMIIF0xvE42xK8VAvwI8IcIk0rVWUJVWUCwCI42IY6I8E87Iv67AKxVWUJV
-	W8JwCI42IY6I8E87Iv6xkF7I0E14v26r4j6r4UJbIYCTnIWIevJa73UjIFyTuYvjxU7mLv
-	DUUUU
-X-CM-SenderInfo: hfkh02xlgr0w46kxt4xhlfz01xgou0bp/
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+X-Mailer: b4 0.14.2
 
-From: Chen Ridong <chenridong@huawei.com>
 
-Whether a cgroup is frozen is determined solely by whether it is set to
-to be frozen and whether its parent is frozen. Currently, when is cgroup
-is frozen or unfrozen, it iterates through the entire subtree to freeze
-or unfreeze its descentdants. However, this is unesessary for a cgroup
-that does not change its effective frozen status. This path aims to skip
-the subtree if its parent does not have a change in effective freeze.
+On Sat, 17 Aug 2024 15:11:08 +0800, Li Lingfeng wrote:
+> When a process migrates to another cgroup and the original cgroup is deleted,
+> the restrictions of throttled bios cannot be removed. If the restrictions
+> are set too low, it will take a long time to complete these bios.
+> 
+> Refer to the process of deleting a disk to remove the restrictions and
+> issue bios when deleting the cgroup.
+> 
+> [...]
 
-For an example, subtree like, a-b-c-d-e-f-g, when a is frozen, the
-entire tree is frozen. If we freeze b and c again, it is unesessary to
-iterate d, e, f and g. So does that If we unfreeze b/c.
+Applied, thanks!
 
-Reviewed-by: Michal Koutný <mkoutny@suse.com>
-Signed-off-by: Chen Ridong <chenridong@huawei.com>
----
- include/linux/cgroup-defs.h |  2 +-
- kernel/cgroup/freezer.c     | 30 ++++++++++++++----------------
- 2 files changed, 15 insertions(+), 17 deletions(-)
+[1/1] block: flush all throttled bios when deleting the cgroup
+      (no commit info)
 
-diff --git a/include/linux/cgroup-defs.h b/include/linux/cgroup-defs.h
-index 0a80ef9191a6..1b20d2d8ef7c 100644
---- a/include/linux/cgroup-defs.h
-+++ b/include/linux/cgroup-defs.h
-@@ -398,7 +398,7 @@ struct cgroup_freezer_state {
- 	bool freeze;
- 
- 	/* Should the cgroup actually be frozen? */
--	int e_freeze;
-+	bool e_freeze;
- 
- 	/* Fields below are protected by css_set_lock */
- 
-diff --git a/kernel/cgroup/freezer.c b/kernel/cgroup/freezer.c
-index 617861a54793..188d5f2aeb5a 100644
---- a/kernel/cgroup/freezer.c
-+++ b/kernel/cgroup/freezer.c
-@@ -260,8 +260,10 @@ void cgroup_freezer_migrate_task(struct task_struct *task,
- void cgroup_freeze(struct cgroup *cgrp, bool freeze)
- {
- 	struct cgroup_subsys_state *css;
-+	struct cgroup *parent;
- 	struct cgroup *dsct;
- 	bool applied = false;
-+	bool old_e;
- 
- 	lockdep_assert_held(&cgroup_mutex);
- 
-@@ -282,22 +284,18 @@ void cgroup_freeze(struct cgroup *cgrp, bool freeze)
- 		if (cgroup_is_dead(dsct))
- 			continue;
- 
--		if (freeze) {
--			dsct->freezer.e_freeze++;
--			/*
--			 * Already frozen because of ancestor's settings?
--			 */
--			if (dsct->freezer.e_freeze > 1)
--				continue;
--		} else {
--			dsct->freezer.e_freeze--;
--			/*
--			 * Still frozen because of ancestor's settings?
--			 */
--			if (dsct->freezer.e_freeze > 0)
--				continue;
--
--			WARN_ON_ONCE(dsct->freezer.e_freeze < 0);
-+		/*
-+		 * e_freeze is affected by parent's e_freeze and dst's freeze.
-+		 * If old e_freeze eq new e_freeze, no change, its children
-+		 * will not be affected. So do nothing and skip the subtree
-+		 */
-+		old_e = dsct->freezer.e_freeze;
-+		parent = cgroup_parent(dsct);
-+		dsct->freezer.e_freeze = (dsct->freezer.freeze ||
-+					  parent->freezer.e_freeze);
-+		if (dsct->freezer.e_freeze == old_e) {
-+			css = css_rightmost_descendant(css);
-+			continue;
- 		}
- 
- 		/*
+Best regards,
 -- 
-2.34.1
+Jens Axboe
+
+
 
