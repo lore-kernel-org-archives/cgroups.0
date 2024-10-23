@@ -1,16 +1,16 @@
 Received: from mblankhorst.nl (lankhorst.se [141.105.120.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DC0241553AB;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3673015573D;
 	Wed, 23 Oct 2024 07:53:11 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=141.105.120.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1729669993; cv=none; b=oHk9cHzjU9lfZZGuBg2QMxwpp/0tEUjyCguwRaS9iaePMKwPDiq5Ry7utx6CZXsq/h7lgBsZQZk+hYLbM0QJkdVHx7mraWgvFjUT+UkOLpLxHSi39G85iny4jQ4Wp1rB12PMU3LImkAyfyXrGPS7OnYa8WzHvLI4f43/8Js3SeQ=
+	t=1729669993; cv=none; b=k3qq3d11cj/NseqGRu+3u9LH3lO3tH5XaDKJGwddsFPs7zGxH6bTeXxUC2FxHGXFuA8mfIat72zbBddUCux9r1sor3tUt4kcnceJtWW8QHINR4kyrwCbcORGNVRgET6ZkvcCN7griMlItf4STLz3SNnGC8bUx4B05uBrTG0FQL8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1729669993; c=relaxed/simple;
-	bh=6wx6m7b3LpTq5cjrGt/P0vlcWWB/mVDETDZIq/SASZI=;
+	bh=4sV4iotAeTexeEPTmUVz0oUvaGYd93I9uUWC+RplqoQ=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=o4TDfXu8UCBMQja84i0ydJgcPZQNqb02IT2HepJfN40MHvtMaYR6f0SJOeBPiTg38LaOu8auijGx4Az4ZId6kBKtFDdQTIw6/MVXJPCVzGT0CUu5zGSXCThLX9LvZFeajWaUcN5uwaiU78pI2YVXd+Qj28S6X9tvFNHW7gDpP9E=
+	 MIME-Version; b=aB/JtOokxBMTxiCX25viA4zxmj7JDdndh6qEgNFnm0YDgyy2C8vHBMjH9TZ9uqwFLF1XmKdofv8uRhMnJWjKAsUaKNkbg8GLvMToCBANGr7KYjhBElLlbBLmR9fWLpsP/fsBQkKpEE8feahe7GMCOH2vdZB7DnbN84YkSAmOQ+U=
 ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=linux.intel.com; spf=none smtp.mailfrom=mblankhorst.nl; arc=none smtp.client-ip=141.105.120.124
 Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=mblankhorst.nl
@@ -27,9 +27,9 @@ Cc: Friedrich Vock <friedrich.vock@gmx.de>,
 	linux-mm@kvack.org,
 	Maxime Ripard <mripard@kernel.org>,
 	Maarten Lankhorst <maarten.lankhorst@linux.intel.com>
-Subject: [PATCH 5/7] drm/amdgpu: Add cgroups implementation
-Date: Wed, 23 Oct 2024 09:52:58 +0200
-Message-ID: <20241023075302.27194-6-maarten.lankhorst@linux.intel.com>
+Subject: [PATCH 7/7] [DISCUSSION] drm/gem: Add cgroup memory accounting
+Date: Wed, 23 Oct 2024 09:53:00 +0200
+Message-ID: <20241023075302.27194-8-maarten.lankhorst@linux.intel.com>
 X-Mailer: git-send-email 2.45.2
 In-Reply-To: <20241023075302.27194-1-maarten.lankhorst@linux.intel.com>
 References: <20241023075302.27194-1-maarten.lankhorst@linux.intel.com>
@@ -41,71 +41,135 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Similar to xe, enable some simple management of VRAM only.
+From: Maxime Ripard <mripard@kernel.org>
 
-Co-developed-by: Maxime Ripard <mripard@kernel.org>
+In order to support any device using the GEM support, let's register a
+dev cgroup device in the drm_dev_register path, and account for
+allocated buffers in the buffer allocation path.
+
+Marked discussion by Maarten Lankhorst:
+This is only implemented for drm_gem_dma_helper.c, and breaks the other
+drivers. It's still here for discussion, as we need to figure out how to
+make something like this work for both TTM and GEM drivers.
+
 Signed-off-by: Maxime Ripard <mripard@kernel.org>
 Signed-off-by: Maarten Lankhorst <maarten.lankhorst@linux.intel.com>
 ---
- drivers/gpu/drm/amd/amdgpu/amdgpu.h          | 2 ++
- drivers/gpu/drm/amd/amdgpu/amdgpu_ttm.c      | 6 ++++++
- drivers/gpu/drm/amd/amdgpu/amdgpu_vram_mgr.c | 6 ++++++
- 3 files changed, 14 insertions(+)
+ drivers/gpu/drm/drm_drv.c            | 11 ++++++++++-
+ drivers/gpu/drm/drm_gem.c            |  4 ++++
+ drivers/gpu/drm/drm_gem_dma_helper.c |  4 ++++
+ include/drm/drm_device.h             |  4 ++++
+ include/drm/drm_gem.h                |  2 ++
+ 5 files changed, 24 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/gpu/drm/amd/amdgpu/amdgpu.h b/drivers/gpu/drm/amd/amdgpu/amdgpu.h
-index 9b1e0ede05a45..27c11e43f8e9e 100644
---- a/drivers/gpu/drm/amd/amdgpu/amdgpu.h
-+++ b/drivers/gpu/drm/amd/amdgpu/amdgpu.h
-@@ -43,6 +43,7 @@
- #include "amdgpu_ctx.h"
+diff --git a/drivers/gpu/drm/drm_drv.c b/drivers/gpu/drm/drm_drv.c
+index 251d1d69b09c5..6b1cffd1f52c6 100644
+--- a/drivers/gpu/drm/drm_drv.c
++++ b/drivers/gpu/drm/drm_drv.c
+@@ -930,6 +930,12 @@ int drm_dev_register(struct drm_device *dev, unsigned long flags)
+ 	if (drm_dev_needs_global_mutex(dev))
+ 		mutex_lock(&drm_global_mutex);
  
- #include <linux/atomic.h>
-+#include <linux/cgroup_dev.h>
- #include <linux/wait.h>
- #include <linux/list.h>
- #include <linux/kref.h>
-@@ -835,6 +836,7 @@ struct amdgpu_device {
- 	struct device			*dev;
- 	struct pci_dev			*pdev;
- 	struct drm_device		ddev;
-+	struct dev_cgroup_device		cg;
- 
- #ifdef CONFIG_DRM_AMD_ACP
- 	struct amdgpu_acp		acp;
-diff --git a/drivers/gpu/drm/amd/amdgpu/amdgpu_ttm.c b/drivers/gpu/drm/amd/amdgpu/amdgpu_ttm.c
-index 74adb983ab03e..3f6554c7aac2f 100644
---- a/drivers/gpu/drm/amd/amdgpu/amdgpu_ttm.c
-+++ b/drivers/gpu/drm/amd/amdgpu/amdgpu_ttm.c
-@@ -1874,6 +1874,12 @@ int amdgpu_ttm_init(struct amdgpu_device *adev)
- 		return r;
- 	}
- 
-+	r = drmm_cgroup_register_device(adev_to_drm(adev), &adev->cg);
-+	if (r) {
-+		DRM_ERROR("Failed initializing cgroup allocator.\n");
-+		return r;
++	ret = drmm_cgroup_register_device(dev, &dev->cg);
++	if (ret) {
++		DRM_ERROR("Cannot create cgroup device.\n");
++		goto out_unlock;
 +	}
 +
- 	/* Change the size here instead of the init above so only lpfn is affected */
- 	amdgpu_ttm_set_buffer_funcs_status(adev, false);
- #ifdef CONFIG_64BIT
-diff --git a/drivers/gpu/drm/amd/amdgpu/amdgpu_vram_mgr.c b/drivers/gpu/drm/amd/amdgpu/amdgpu_vram_mgr.c
-index 7d26a962f811c..44d560bef5b7d 100644
---- a/drivers/gpu/drm/amd/amdgpu/amdgpu_vram_mgr.c
-+++ b/drivers/gpu/drm/amd/amdgpu/amdgpu_vram_mgr.c
-@@ -927,6 +927,12 @@ int amdgpu_vram_mgr_init(struct amdgpu_device *adev)
- 		DRM_INFO("Setup dummy vram mgr\n");
+ 	if (drm_core_check_feature(dev, DRIVER_COMPUTE_ACCEL))
+ 		accel_debugfs_register(dev);
+ 	else
+@@ -937,7 +943,7 @@ int drm_dev_register(struct drm_device *dev, unsigned long flags)
+ 
+ 	ret = drm_minor_register(dev, DRM_MINOR_RENDER);
+ 	if (ret)
+-		goto err_minors;
++		goto out_unregister_cgroup;
+ 
+ 	ret = drm_minor_register(dev, DRM_MINOR_PRIMARY);
+ 	if (ret)
+@@ -982,6 +988,8 @@ int drm_dev_register(struct drm_device *dev, unsigned long flags)
+ 	drm_minor_unregister(dev, DRM_MINOR_ACCEL);
+ 	drm_minor_unregister(dev, DRM_MINOR_PRIMARY);
+ 	drm_minor_unregister(dev, DRM_MINOR_RENDER);
++out_unregister_cgroup:
++	dev_cgroup_unregister_device(&dev->cg);
+ out_unlock:
+ 	if (drm_dev_needs_global_mutex(dev))
+ 		mutex_unlock(&drm_global_mutex);
+@@ -1024,6 +1032,7 @@ void drm_dev_unregister(struct drm_device *dev)
+ 	drm_minor_unregister(dev, DRM_MINOR_PRIMARY);
+ 	drm_minor_unregister(dev, DRM_MINOR_RENDER);
+ 	drm_debugfs_dev_fini(dev);
++	dev_cgroup_unregister_device(&dev->cg);
+ }
+ EXPORT_SYMBOL(drm_dev_unregister);
+ 
+diff --git a/drivers/gpu/drm/drm_gem.c b/drivers/gpu/drm/drm_gem.c
+index ee811764c3df4..95af268d9dd9b 100644
+--- a/drivers/gpu/drm/drm_gem.c
++++ b/drivers/gpu/drm/drm_gem.c
+@@ -110,6 +110,10 @@ drm_gem_init(struct drm_device *dev)
+ 				    DRM_FILE_PAGE_OFFSET_START,
+ 				    DRM_FILE_PAGE_OFFSET_SIZE);
+ 
++	dev->cg.regions[0].size = U64_MAX;
++	dev->cg.regions[0].name = "gem";
++	dev->cg.num_regions++;
++
+ 	return drmm_add_action(dev, drm_gem_init_release, NULL);
+ }
+ 
+diff --git a/drivers/gpu/drm/drm_gem_dma_helper.c b/drivers/gpu/drm/drm_gem_dma_helper.c
+index 870b90b78bc4e..32eafbf4aa814 100644
+--- a/drivers/gpu/drm/drm_gem_dma_helper.c
++++ b/drivers/gpu/drm/drm_gem_dma_helper.c
+@@ -106,6 +106,10 @@ __drm_gem_dma_create(struct drm_device *drm, size_t size, bool private)
+ 		goto error;
  	}
  
-+	adev->cg.regions[0].size = adev->gmc.real_vram_size;
-+	adev->cg.regions[0].name = "vram";
-+	adev->cg.num_regions++;
-+	man->cgdev = &adev->cg;
-+	man->cgidx = 0;
++	ret = dev_cgroup_try_charge(&drm->cg, 0, size, &dma_obj->base.cgroup_pool_state, NULL);
++	if (ret)
++		goto error;
 +
- 	ttm_set_driver_manager(&adev->mman.bdev, TTM_PL_VRAM, &mgr->manager);
- 	ttm_resource_manager_set_used(man, true);
- 	return 0;
+ 	return dma_obj;
+ 
+ error:
+diff --git a/include/drm/drm_device.h b/include/drm/drm_device.h
+index c91f87b5242d7..bdb7656e7db67 100644
+--- a/include/drm/drm_device.h
++++ b/include/drm/drm_device.h
+@@ -1,6 +1,7 @@
+ #ifndef _DRM_DEVICE_H_
+ #define _DRM_DEVICE_H_
+ 
++#include <linux/cgroup_dev.h>
+ #include <linux/list.h>
+ #include <linux/kref.h>
+ #include <linux/mutex.h>
+@@ -317,6 +318,9 @@ struct drm_device {
+ 	 * Root directory for debugfs files.
+ 	 */
+ 	struct dentry *debugfs_root;
++
++	/** @cg: device cgroup bookkeeping */
++	struct dev_cgroup_device cg;
+ };
+ 
+ #endif
+diff --git a/include/drm/drm_gem.h b/include/drm/drm_gem.h
+index 5b8b1b059d32c..cc998abea7924 100644
+--- a/include/drm/drm_gem.h
++++ b/include/drm/drm_gem.h
+@@ -430,6 +430,8 @@ struct drm_gem_object {
+ 	 * The current LRU list that the GEM object is on.
+ 	 */
+ 	struct drm_gem_lru *lru;
++
++	struct dev_cgroup_pool_state *cgroup_pool_state;
+ };
+ 
+ /**
 -- 
 2.45.2
 
