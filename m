@@ -1,16 +1,15 @@
 Received: from mblankhorst.nl (lankhorst.se [141.105.120.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D216E14B942;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D220515252D;
 	Wed, 23 Oct 2024 08:00:52 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=141.105.120.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1729670455; cv=none; b=H7povMqecI+3+U6n07CykpiSi7Y9uh894+YRaWrmRQf7vSQl0fmDldlT9VbodsZR4rucsTl5UMNaMQMfgGTeJ8M9xncUFDLbPa/oVOLkonIsJmGOlpMC7QhW2tLrdQIHBkjE3J7+tAuYnyudLD9VWGdjzbA0LMPqOn++K/9SgZs=
+	t=1729670455; cv=none; b=bF9z/GLRJGi+gd3Bhi/nAAl4i0rvPMYFZFp20XIbMcw+h8Ob9y7K+dBNHnN4cdOaK3goePMJ+gI0y23mGuEAO2DCAKuvAP0PqEaKh/49Tyzj0YnELxNaK8XTp5x69M+3q8qooNGFtFlQY6ANf17BWkZ2SrCcoyiHRBT97NbZo0E=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1729670455; c=relaxed/simple;
-	bh=JMkwaJv4IrV8z+C525gHQ1es4HpS+Ic0xUB0qeweI9g=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=LktNU31l1yq9bbAswNElhfw1gf2oTmYxDATqIg+vo4iSFykNtRfPnjNvLEZbLFe2ZRYEHV7brX/nS+Km8PQggUk0kPMnD/NMovrC4I67GXnE3aCbI32lgAwO1WMsGey+9FAL4bae00w/dJYXCPtTEa0qFcbIPQIksFjfK+p7vgk=
+	bh=+I1MpiSIGPrZm4UzkZXzNpXx59jNZA5bBmVOMC9xRvA=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=rVbnWKnnqPnbNJHEzQuP/m/Ixvb+yrv5OD9gTp3DEdOG8cppGPrCxwMNsa8j0ALH8/Y0BcMppJ/Muv88UdhlqeH0drqTru5UaO5q+ydCHs8/+7XfI7nJ9tVdIKNXtZKWQwZ+kdomKZNMmNXqabV8iR7XKnNF/zhIVZOedNK5oRk=
 ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=linux.intel.com; spf=none smtp.mailfrom=mblankhorst.nl; arc=none smtp.client-ip=141.105.120.124
 Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=mblankhorst.nl
@@ -27,12 +26,10 @@ Cc: Friedrich Vock <friedrich.vock@gmx.de>,
 	linux-mm@kvack.org,
 	Maxime Ripard <mripard@kernel.org>,
 	Maarten Lankhorst <maarten.lankhorst@linux.intel.com>
-Subject: [PATCH 2/7] drm/drv: Add drmm cgroup registration for dev cgroups.
-Date: Wed, 23 Oct 2024 09:52:55 +0200
-Message-ID: <20241023075302.27194-3-maarten.lankhorst@linux.intel.com>
+Subject: [PATCH 0/7] kernel/cgroups: Add "dev" memory accounting cgroup.
+Date: Wed, 23 Oct 2024 09:52:53 +0200
+Message-ID: <20241023075302.27194-1-maarten.lankhorst@linux.intel.com>
 X-Mailer: git-send-email 2.45.2
-In-Reply-To: <20241023075302.27194-1-maarten.lankhorst@linux.intel.com>
-References: <20241023075302.27194-1-maarten.lankhorst@linux.intel.com>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
@@ -41,79 +38,69 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-From: Maxime Ripard <mripard@kernel.org>
+New submission!
+I've added documentation for each call, and integrated the renaming from
+drm cgroup to dev cgroup, based on maxime ripard's work.
 
-Drivers will need to register a cgroup device at probe time, so let's
-give them a drm-managed helper.
+Maxime has been testing this with dma-buf heaps and v4l2 too, and it seems to work.
+In the initial submission, I've decided to only add the smallest enablement possible,
+to have less chance of breaking things.
 
-Signed-off-by: Maxime Ripard <mripard@kernel.org>
-Signed-off-by: Maarten Lankhorst <maarten.lankhorst@linux.intel.com>
----
- drivers/gpu/drm/drm_drv.c | 21 +++++++++++++++++++++
- include/drm/drm_drv.h     |  4 ++++
- 2 files changed, 25 insertions(+)
+The API has been changed slightly, from "$name region.$regionname=$limit" in a file called
+dev.min/low/max to "$subsystem/$name $regionname=$limit" in a file called dev.region.min/low/max.
 
-diff --git a/drivers/gpu/drm/drm_drv.c b/drivers/gpu/drm/drm_drv.c
-index c2c172eb25df7..251d1d69b09c5 100644
---- a/drivers/gpu/drm/drm_drv.c
-+++ b/drivers/gpu/drm/drm_drv.c
-@@ -26,6 +26,7 @@
-  * DEALINGS IN THE SOFTWARE.
-  */
- 
-+#include <linux/cgroup_dev.h>
- #include <linux/debugfs.h>
- #include <linux/fs.h>
- #include <linux/module.h>
-@@ -820,6 +821,26 @@ void drm_dev_put(struct drm_device *dev)
- }
- EXPORT_SYMBOL(drm_dev_put);
- 
-+static inline void drmm_cg_unregister_device(struct drm_device *dev, void *arg)
-+{
-+	dev_cgroup_unregister_device(arg);
-+}
-+
-+int drmm_cgroup_register_device(struct drm_device *dev,
-+				struct dev_cgroup_device *cgdev)
-+{
-+	int ret;
-+	char dev_name[32];
-+
-+	snprintf(dev_name, sizeof(dev_name), "drm/%s", dev->unique);
-+	ret = dev_cgroup_register_device(cgdev, dev_name);
-+	if (ret)
-+		return ret;
-+
-+	return drmm_add_action_or_reset(dev, drmm_cg_unregister_device, cgdev);
-+}
-+EXPORT_SYMBOL_GPL(drmm_cgroup_register_device);
-+
- static int create_compat_control_link(struct drm_device *dev)
- {
- 	struct drm_minor *minor;
-diff --git a/include/drm/drm_drv.h b/include/drm/drm_drv.h
-index 1bbbcb8e2d231..3e83c7ce7f2d0 100644
---- a/include/drm/drm_drv.h
-+++ b/include/drm/drm_drv.h
-@@ -34,6 +34,7 @@
- 
- #include <drm/drm_device.h>
- 
-+struct dev_cgroup_device;
- struct drm_fb_helper;
- struct drm_fb_helper_surface_size;
- struct drm_file;
-@@ -438,6 +439,9 @@ void *__devm_drm_dev_alloc(struct device *parent,
- 			   const struct drm_driver *driver,
- 			   size_t size, size_t offset);
- 
-+int drmm_cgroup_register_device(struct drm_device *dev,
-+				struct dev_cgroup_device *cgdev);
-+
- /**
-  * devm_drm_dev_alloc - Resource managed allocation of a &drm_device instance
-  * @parent: Parent device object
+This hopefully allows us to perhaps extend the API later on with the possibility to
+set scheduler weights on the device, like in
+
+https://blogs.igalia.com/tursulin/drm-scheduling-cgroup-controller/
+
+Maarten Lankhorst (5):
+  kernel/cgroup: Add "dev" memory accounting cgroup
+  drm/ttm: Handle cgroup based eviction in TTM
+  drm/xe: Implement cgroup for vram
+  drm/amdgpu: Add cgroups implementation
+  [HACK] drm/xe: Hack to test with mapped pages instead of vram.
+
+Maxime Ripard (2):
+  drm/drv: Add drmm cgroup registration for dev cgroups.
+  [DISCUSSION] drm/gem: Add cgroup memory accounting
+
+ Documentation/admin-guide/cgroup-v2.rst       |  51 +
+ Documentation/core-api/cgroup.rst             |   9 +
+ Documentation/core-api/index.rst              |   1 +
+ Documentation/gpu/drm-compute.rst             |  54 ++
+ drivers/gpu/drm/amd/amdgpu/amdgpu.h           |   2 +
+ drivers/gpu/drm/amd/amdgpu/amdgpu_ttm.c       |   6 +
+ drivers/gpu/drm/amd/amdgpu/amdgpu_vram_mgr.c  |   6 +
+ drivers/gpu/drm/drm_drv.c                     |  32 +-
+ drivers/gpu/drm/drm_gem.c                     |   4 +
+ drivers/gpu/drm/drm_gem_dma_helper.c          |   4 +
+ drivers/gpu/drm/ttm/tests/ttm_bo_test.c       |  18 +-
+ .../gpu/drm/ttm/tests/ttm_bo_validate_test.c  |   4 +-
+ drivers/gpu/drm/ttm/tests/ttm_resource_test.c |   2 +-
+ drivers/gpu/drm/ttm/ttm_bo.c                  |  57 +-
+ drivers/gpu/drm/ttm/ttm_resource.c            |  24 +-
+ drivers/gpu/drm/xe/xe_device.c                |   4 +
+ drivers/gpu/drm/xe/xe_device_types.h          |   4 +
+ drivers/gpu/drm/xe/xe_ttm_sys_mgr.c           |  14 +
+ drivers/gpu/drm/xe/xe_ttm_vram_mgr.c          |  10 +
+ include/drm/drm_device.h                      |   4 +
+ include/drm/drm_drv.h                         |   4 +
+ include/drm/drm_gem.h                         |   2 +
+ include/drm/ttm/ttm_resource.h                |  16 +-
+ include/linux/cgroup_dev.h                    |  91 ++
+ include/linux/cgroup_subsys.h                 |   4 +
+ include/linux/page_counter.h                  |   2 +-
+ init/Kconfig                                  |   7 +
+ kernel/cgroup/Makefile                        |   1 +
+ kernel/cgroup/dev.c                           | 893 ++++++++++++++++++
+ mm/page_counter.c                             |   4 +-
+ 30 files changed, 1307 insertions(+), 27 deletions(-)
+ create mode 100644 Documentation/core-api/cgroup.rst
+ create mode 100644 Documentation/gpu/drm-compute.rst
+ create mode 100644 include/linux/cgroup_dev.h
+ create mode 100644 kernel/cgroup/dev.c
+
 -- 
 2.45.2
 
