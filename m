@@ -1,164 +1,209 @@
-Received: from out-172.mta0.migadu.com (out-172.mta0.migadu.com [91.218.175.172])
+Received: from out-175.mta1.migadu.com (out-175.mta1.migadu.com [95.215.58.175])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C1F291C3030
-	for <cgroups@vger.kernel.org>; Wed, 23 Oct 2024 22:17:43 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.172
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 24E2E18A92E
+	for <cgroups@vger.kernel.org>; Thu, 24 Oct 2024 06:57:27 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=95.215.58.175
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1729721867; cv=none; b=FN7KmeWePmfaVNtYhBWitdCDxJzSB3RrtGozkUD7ECyDB7PPRaaJzL60guyAtGHf1ZlRj33T0ErnM390ObZhy/jOssVhNj1AGzQbHGx7yu923lArPu3Sji0NlPkhfzbpK4CC2/byqpJ7copY0P7EGaB+rIjZE8WsLMoLsaLnle4=
+	t=1729753050; cv=none; b=RpzyqYoA3OtoNnke1acgeHE49EVBODKfy5bJ1matR5ZfanLGCqdahW5AjhBrrX+i6P66uss7Cnq+Ljg5rztJ8xA5mWcYA1594a/WyuNRzmVD8yNOYn9GnP/y/yRNVSH+CngrynoO0C/fvOZq9efAXMHomU0nwAKqzMcNKMxkZ/0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1729721867; c=relaxed/simple;
-	bh=nl/Fi0lK9nRLwlnTm9n7IsKNCuE4JyFYoeygcP5Serc=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=lItQcQR8oLNn0+vWmxcUjCeNstado8REXMWr3h+v7poGqNaRYR1klxP2KSxJdRVBTAyaH5/NozREt0jU2WHv/LcmMCveRoSW311jXHtLxePJo2cYFJGWHikjAalz1mvIFrjCyxGSWCJZ9oYxCf9QvoxfEsIZ1WfZn6juUJux/3I=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=gxDbuDy3; arc=none smtp.client-ip=91.218.175.172
+	s=arc-20240116; t=1729753050; c=relaxed/simple;
+	bh=EGJzMDMe+0j7metEGVCFtC9+944ca/RANDlJZlL8+f4=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=HXgO0EQnV+N2hXk7N8Re7uUXj1XOHOebhlLL3lVJJ9xgwDDobTpsqeT5jF+7sQZHAFnltypfmdGaoOxJ5O10KaSPB6g522kMnP/WxBYHlJ0MNWrF0mWazfg6RUIbi9+Z5njaVMZvHBN3u/shDgLP260tdQPnGC0dLE4qhw6OjHQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=Kjf84Jp7; arc=none smtp.client-ip=95.215.58.175
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="gxDbuDy3"
-Date: Wed, 23 Oct 2024 15:17:34 -0700
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
-	t=1729721861;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=YbJ/667kHqyaQ1rF1n2BRQKGCbmZnDfhN6bBeCoJSXo=;
-	b=gxDbuDy3+4DK9t/omshSIxPKIxPYROTS3pLFzMSaXNZj//qFz+EPt5g2aFpstP0MASaQW9
-	BLTzY5DNoNTozy9+h4bxKjD+IIu7K6XuN+1f+NhhL41twZFwkcgcsLinBKsufgdRhXbyBh
-	HLcEM5jy053N7uDVgeq3NatAL4KvvqQ=
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="Kjf84Jp7"
 X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
+	t=1729753046;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=Mgr83r2IKcrYLJOy8T73HRhPqfYNucsjFTt8Ge3VU38=;
+	b=Kjf84Jp7OIqdpzZVceEWDUi0+bwEUOmndVPpmZE1fiaOTfTCdfeHWmTPGRpku1xwgY8bp8
+	U60q2aXQgrip6fBZ1ZVJImWWEZbroG3Iwi8NEQxuJGcqyR2Kvar9Vp7hYbCR8eFZY9lXDT
+	grcTd/KAaZVZ1samkosAq9DTt8eUDtA=
 From: Shakeel Butt <shakeel.butt@linux.dev>
-To: Joshua Hahn <joshua.hahnjy@gmail.com>
-Cc: hannes@cmpxchg.org, nphamcs@gmail.com, mhocko@kernel.org, 
-	roman.gushcin@linux.dev, muchun.song@linux.dev, lnyng@meta.com, akpm@linux-foundation.org, 
-	cgroups@vger.kernel.org
-Subject: Re: [PATCH v2 1/1] memcg/hugetlb: Adding hugeTLB counters to memcg
-Message-ID: <acaahpfoyy3rci6ekfw2l3i2k5jpww6uzmc7dintpird7b4ayq@6cgrsqyy3xg6>
-References: <20241023203433.1568323-1-joshua.hahnjy@gmail.com>
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: Johannes Weiner <hannes@cmpxchg.org>,
+	Michal Hocko <mhocko@kernel.org>,
+	Roman Gushchin <roman.gushchin@linux.dev>,
+	Muchun Song <muchun.song@linux.dev>,
+	Hugh Dickins <hughd@google.com>,
+	linux-mm@kvack.org,
+	cgroups@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	linux-fsdevel@vger.kernel.org,
+	linux-doc@vger.kernel.org,
+	Meta kernel team <kernel-team@meta.com>
+Subject: [RFC PATCH 1/3] memcg-v1: fully deprecate move_charge_at_immigrate
+Date: Wed, 23 Oct 2024 23:57:10 -0700
+Message-ID: <20241024065712.1274481-2-shakeel.butt@linux.dev>
+In-Reply-To: <20241024065712.1274481-1-shakeel.butt@linux.dev>
+References: <20241024065712.1274481-1-shakeel.butt@linux.dev>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20241023203433.1568323-1-joshua.hahnjy@gmail.com>
+Content-Transfer-Encoding: 8bit
 X-Migadu-Flow: FLOW_OUT
 
-On Wed, Oct 23, 2024 at 01:34:33PM GMT, Joshua Hahn wrote:
-> Changelog
-> v2:
->   * Enables the feature only if memcg accounts for hugeTLB usage
->   * Moves the counter from memcg_stat_item to node_stat_item
->   * Expands on motivation & justification in commitlog
->   * Added Suggested-by: Nhat Pham
-> 
-> This patch introduces a new counter to memory.stat that tracks hugeTLB
-> usage, only if hugeTLB accounting is done to memory.current. This
-> feature is enabled the same way hugeTLB accounting is enabled, via
-> the memory_hugetlb_accounting mount flag for cgroupsv2.
-> 
-> 1. Why is this patch necessary?
-> Currently, memcg hugeTLB accounting is an opt-in feature [1] that adds
-> hugeTLB usage to memory.current. However, the metric is not reported in
-> memory.stat. Given that users often interpret memory.stat as a breakdown
-> of the value reported in memory.current, the disparity between the two
-> reports can be confusing. This patch solves this problem by including
-> the metric in memory.stat as well, but only if it is also reported in
-> memory.current (it would also be confusing if the value was reported in
-> memory.stat, but not in memory.current)
-> 
-> Aside from the consistentcy between the two files, we also see benefits
-> in observability. Userspace might be interested in the hugeTLB footprint
-> of cgroups for many reasons. For instance, system admins might want to
-> verify that hugeTLB usage is distributed as expected across tasks: i.e.
-> memory-intensive tasks are using more hugeTLB pages than tasks that
-> don't consume a lot of memory, or is seen to fault frequently. Note that
-> this is separate from wanting to inspect the distribution for limiting
-> purposes (in which case, hugeTLB controller makes more sense).
-> 
-> 2. We already have a hugeTLB controller. Why not use that?
-> It is true that hugeTLB tracks the exact value that we want. In fact, by
-> enabling the hugeTLB controller, we get all of the observability
-> benefits that I mentioned above, and users can check the total hugeTLB
-> usage, verify if it is distributed as expected, etc.
-> 
-> With this said, there are 2 problems:
->   (a) They are still not reported in memory.stat, which means the
->       disparity between the memcg reports are still there.
->   (b) We cannot reasonably expect users to enable the hugeTLB controller
->       just for the sake of hugeTLB usage reporting, especially since
->       they don't have any use for hugeTLB usage enforcing [2].
-> 
-> [1] https://lore.kernel.org/all/20231006184629.155543-1-nphamcs@gmail.com/
-> [2] Of course, we can't make a new patch for every feature that can be
->     duplicated. However, since the exsting solution of enabling the
->     hugeTLB controller is an imperfect solution that still leaves a
->     discrepancy between memory.stat and memory.curent, I think that it
->     is reasonable to isolate the feature in this case.
-> 
-> Suggested-by: Nhat Pham <nphamcs@gmail.com>
-> Signed-off-by: Joshua Hahn <joshua.hahnjy@gmail.com>
-> 
-> ---
->  include/linux/mmzone.h |  3 +++
->  mm/hugetlb.c           |  4 ++++
->  mm/memcontrol.c        | 11 +++++++++++
->  mm/vmstat.c            |  3 +++
->  4 files changed, 21 insertions(+)
-> 
-> diff --git a/include/linux/mmzone.h b/include/linux/mmzone.h
-> index 17506e4a2835..d3ba49a974b2 100644
-> --- a/include/linux/mmzone.h
-> +++ b/include/linux/mmzone.h
-> @@ -215,6 +215,9 @@ enum node_stat_item {
->  #ifdef CONFIG_NUMA_BALANCING
->  	PGPROMOTE_SUCCESS,	/* promote successfully */
->  	PGPROMOTE_CANDIDATE,	/* candidate pages to promote */
-> +#endif
-> +#ifdef CONFIG_HUGETLB_PAGE
-> +	HUGETLB_B,
+Proceed with the complete deprecation of memcg v1's charge moving
+feature. The deprecation warning has been in the kernel for almost two
+years and has been ported to all stable kernel since. Now is the time to
+fully deprecate this feature.
 
-As Yosry pointed out, this is in pages, not bytes. There is already
-functionality to display this bin ytes for the readers of the memory
-stats.
+Signed-off-by: Shakeel Butt <shakeel.butt@linux.dev>
+---
+ .../admin-guide/cgroup-v1/memory.rst          | 82 +------------------
+ mm/memcontrol-v1.c                            | 14 +---
+ 2 files changed, 5 insertions(+), 91 deletions(-)
 
-Also you will need to update Documentation/admin-guide/cgroup-v2.rst to
-include the hugetlb stats.
+diff --git a/Documentation/admin-guide/cgroup-v1/memory.rst b/Documentation/admin-guide/cgroup-v1/memory.rst
+index 270501db9f4e..286d16fc22eb 100644
+--- a/Documentation/admin-guide/cgroup-v1/memory.rst
++++ b/Documentation/admin-guide/cgroup-v1/memory.rst
+@@ -90,9 +90,7 @@ Brief summary of control files.
+                                      used.
+  memory.swappiness		     set/show swappiness parameter of vmscan
+ 				     (See sysctl's vm.swappiness)
+- memory.move_charge_at_immigrate     set/show controls of moving charges
+-                                     This knob is deprecated and shouldn't be
+-                                     used.
++ memory.move_charge_at_immigrate     This knob is deprecated.
+  memory.oom_control		     set/show oom controls.
+                                      This knob is deprecated and shouldn't be
+                                      used.
+@@ -243,10 +241,6 @@ behind this approach is that a cgroup that aggressively uses a shared
+ page will eventually get charged for it (once it is uncharged from
+ the cgroup that brought it in -- this will happen on memory pressure).
+ 
+-But see :ref:`section 8.2 <cgroup-v1-memory-movable-charges>` when moving a
+-task to another cgroup, its pages may be recharged to the new cgroup, if
+-move_charge_at_immigrate has been chosen.
+-
+ 2.4 Swap Extension
+ --------------------------------------
+ 
+@@ -756,78 +750,8 @@ If we want to change this to 1G, we can at any time use::
+ 
+ THIS IS DEPRECATED!
+ 
+-It's expensive and unreliable! It's better practice to launch workload
+-tasks directly from inside their target cgroup. Use dedicated workload
+-cgroups to allow fine-grained policy adjustments without having to
+-move physical pages between control domains.
+-
+-Users can move charges associated with a task along with task migration, that
+-is, uncharge task's pages from the old cgroup and charge them to the new cgroup.
+-This feature is not supported in !CONFIG_MMU environments because of lack of
+-page tables.
+-
+-8.1 Interface
+--------------
+-
+-This feature is disabled by default. It can be enabled (and disabled again) by
+-writing to memory.move_charge_at_immigrate of the destination cgroup.
+-
+-If you want to enable it::
+-
+-	# echo (some positive value) > memory.move_charge_at_immigrate
+-
+-.. note::
+-      Each bits of move_charge_at_immigrate has its own meaning about what type
+-      of charges should be moved. See :ref:`section 8.2
+-      <cgroup-v1-memory-movable-charges>` for details.
+-
+-.. note::
+-      Charges are moved only when you move mm->owner, in other words,
+-      a leader of a thread group.
+-
+-.. note::
+-      If we cannot find enough space for the task in the destination cgroup, we
+-      try to make space by reclaiming memory. Task migration may fail if we
+-      cannot make enough space.
+-
+-.. note::
+-      It can take several seconds if you move charges much.
+-
+-And if you want disable it again::
+-
+-	# echo 0 > memory.move_charge_at_immigrate
+-
+-.. _cgroup-v1-memory-movable-charges:
+-
+-8.2 Type of charges which can be moved
+---------------------------------------
+-
+-Each bit in move_charge_at_immigrate has its own meaning about what type of
+-charges should be moved. But in any case, it must be noted that an account of
+-a page or a swap can be moved only when it is charged to the task's current
+-(old) memory cgroup.
+-
+-+---+--------------------------------------------------------------------------+
+-|bit| what type of charges would be moved ?                                    |
+-+===+==========================================================================+
+-| 0 | A charge of an anonymous page (or swap of it) used by the target task.   |
+-|   | You must enable Swap Extension (see 2.4) to enable move of swap charges. |
+-+---+--------------------------------------------------------------------------+
+-| 1 | A charge of file pages (normal file, tmpfs file (e.g. ipc shared memory) |
+-|   | and swaps of tmpfs file) mmapped by the target task. Unlike the case of  |
+-|   | anonymous pages, file pages (and swaps) in the range mmapped by the task |
+-|   | will be moved even if the task hasn't done page fault, i.e. they might   |
+-|   | not be the task's "RSS", but other task's "RSS" that maps the same file. |
+-|   | The mapcount of the page is ignored (the page can be moved independent   |
+-|   | of the mapcount). You must enable Swap Extension (see 2.4) to            |
+-|   | enable move of swap charges.                                             |
+-+---+--------------------------------------------------------------------------+
+-
+-8.3 TODO
+---------
+-
+-- All of moving charge operations are done under cgroup_mutex. It's not good
+-  behavior to hold the mutex too long, so we may need some trick.
++Reading memory.move_charge_at_immigrate will always return 0 and writing
++to it will always return -EINVAL.
+ 
+ 9. Memory thresholds
+ ====================
+diff --git a/mm/memcontrol-v1.c b/mm/memcontrol-v1.c
+index 81d8819f13cd..8f88540f0159 100644
+--- a/mm/memcontrol-v1.c
++++ b/mm/memcontrol-v1.c
+@@ -593,7 +593,7 @@ static inline int mem_cgroup_move_swap_account(swp_entry_t entry,
+ static u64 mem_cgroup_move_charge_read(struct cgroup_subsys_state *css,
+ 				struct cftype *cft)
+ {
+-	return mem_cgroup_from_css(css)->move_charge_at_immigrate;
++	return 0;
+ }
+ 
+ #ifdef CONFIG_MMU
+@@ -606,17 +606,7 @@ static int mem_cgroup_move_charge_write(struct cgroup_subsys_state *css,
+ 		     "Please report your usecase to linux-mm@kvack.org if you "
+ 		     "depend on this functionality.\n");
+ 
+-	if (val & ~MOVE_MASK)
+-		return -EINVAL;
+-
+-	/*
+-	 * No kind of locking is needed in here, because ->can_attach() will
+-	 * check this value once in the beginning of the process, and then carry
+-	 * on with stale data. This means that changes to this value will only
+-	 * affect task migrations starting after the change.
+-	 */
+-	memcg->move_charge_at_immigrate = val;
+-	return 0;
++	return -EINVAL;
+ }
+ #else
+ static int mem_cgroup_move_charge_write(struct cgroup_subsys_state *css,
+-- 
+2.43.5
 
->  #endif
->  	/* PGDEMOTE_*: pages demoted */
->  	PGDEMOTE_KSWAPD,
-> diff --git a/mm/hugetlb.c b/mm/hugetlb.c
-> index 190fa05635f4..055bc91858e4 100644
-> --- a/mm/hugetlb.c
-> +++ b/mm/hugetlb.c
-> @@ -1925,6 +1925,8 @@ void free_huge_folio(struct folio *folio)
->  				     pages_per_huge_page(h), folio);
->  	hugetlb_cgroup_uncharge_folio_rsvd(hstate_index(h),
->  					  pages_per_huge_page(h), folio);
-> +	if (cgrp_dfl_root.flags & CGRP_ROOT_MEMORY_HUGETLB_ACCOUNTING)
-> +		lruvec_stat_mod_folio(folio, HUGETLB_B, -pages_per_huge_page(h));
-
-Please note that by you are adding this stat not only in memcg but also
-in global and per-node vmstat. This check will break those interfaces
-when this mount option is not used. You only need the check at the
-charging time. The uncharging and stats update functions will do the
-right thing as they check memcg_data attached to the folio.
-
->  	mem_cgroup_uncharge(folio);
->  	if (restore_reserve)
->  		h->resv_huge_pages++;
-> @@ -3094,6 +3096,8 @@ struct folio *alloc_hugetlb_folio(struct vm_area_struct *vma,
->  	if (!memcg_charge_ret)
->  		mem_cgroup_commit_charge(folio, memcg);
->  	mem_cgroup_put(memcg);
-> +	if (cgrp_dfl_root.flags & CGRP_ROOT_MEMORY_HUGETLB_ACCOUNTING)
-
-Same here.
-
-> +		lruvec_stat_mod_folio(folio, HUGETLB_B, pages_per_huge_page(h));
->  
->  	return folio;
-  
