@@ -1,63 +1,67 @@
-Received: from mail-pj1-f73.google.com (mail-pj1-f73.google.com [209.85.216.73])
+Received: from mail-pg1-f201.google.com (mail-pg1-f201.google.com [209.85.215.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 05B0F13D8AC
-	for <cgroups@vger.kernel.org>; Thu, 31 Oct 2024 22:46:52 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.73
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 505FE1BBBED
+	for <cgroups@vger.kernel.org>; Thu, 31 Oct 2024 22:46:56 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1730414818; cv=none; b=LHnv9zPY3ImFviGf7dMCnTZxuosADkHuhsGoTG8kD2MVgZjlYjAYR5eo5geBJzwp+Cl2xR8NkxUV3/HIfj+ZdajCLqZl0m+4nm1MzsRUosTfIfAf80T01YFzR3AhFxXVF5QHZhQva2nOviwbBGRIuT+kikBMjllRHr9tDonkWYI=
+	t=1730414822; cv=none; b=NscH18umbHeE9k21ux4/KyuO8Fu0ARVJHMXvj+ZtmqU7yUNr74I9lHQs7c8odetIdl78oUKFVTLL3+XwH+Hy5Wd1JrSTCcTgux9l6cA1efe4Fqnm+n7Lrt4Cn4syu1IZZIst37BfhrER9GOiS6ZzKEOCNdxb9u27l0ioLZJ9H04=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1730414818; c=relaxed/simple;
-	bh=Z8tJTDavu88IoBsq3a64RtQ+t4O96S/lMc2DeVsidf0=;
-	h=Date:Mime-Version:Message-ID:Subject:From:To:Cc:Content-Type; b=oITsiGWfbRHWSchnsf8wRI+nHA7yqaT8EFeoKhZ7AXutDgA087GK6l8jfvCGzudHvOD12N9lIPYMJkzGnJOr7KqOT38ADl14aAVix7B+XySSNVGBkFB2ZJgZuEY6RMN/U4VDoJc8IEnUTz/OynjlKkGbNHhfL7Al4OgraBiyhoY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=flex--kinseyho.bounces.google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=peAe1Elf; arc=none smtp.client-ip=209.85.216.73
+	s=arc-20240116; t=1730414822; c=relaxed/simple;
+	bh=04KvvfgHt4U76Y7cMYLzYC1kJSgpABtfwHo8vWKZHTo=;
+	h=Date:In-Reply-To:Mime-Version:References:Message-ID:Subject:From:
+	 To:Cc:Content-Type; b=IEtiYbSjaNj4leZk+MubwZ6+eWXaB30u5Ef9m06QXPtqov4gt0LgsQY2D77j0g9udcOHBgFmw0blbDNkrHrG2aN3Xctcd2If25VYohlfuUOsGdCzoXZ1dFSVM5okhd7if3bDUCPZBg3cxo7g3y/X6LgWXpMQ44/7TyQNa+f7n5c=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=flex--kinseyho.bounces.google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=hrCEItuH; arc=none smtp.client-ip=209.85.215.201
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=flex--kinseyho.bounces.google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="peAe1Elf"
-Received: by mail-pj1-f73.google.com with SMTP id 98e67ed59e1d1-2e3984f50c3so1823332a91.1
-        for <cgroups@vger.kernel.org>; Thu, 31 Oct 2024 15:46:52 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="hrCEItuH"
+Received: by mail-pg1-f201.google.com with SMTP id 41be03b00d2f7-7ea0069a8b0so1490254a12.0
+        for <cgroups@vger.kernel.org>; Thu, 31 Oct 2024 15:46:56 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20230601; t=1730414812; x=1731019612; darn=vger.kernel.org;
-        h=cc:to:from:subject:message-id:mime-version:date:from:to:cc:subject
-         :date:message-id:reply-to;
-        bh=wWNqofTpO3McnA/xoHsMP4AewEwxFw4lNZTCusoRC/Q=;
-        b=peAe1Elf8cxw//DNRCpCGP8Lu+0+2G9VwAo0bN/q4LS4W0iT2+YgfphKfATEEP7s1w
-         grrIYZnd+Q18BbnSB0/IxOHsKs4edCrJs++SqoJJL8hS9/EaRb5Gg4rwyNUhBYEpHFt3
-         GmlxLLy2gXusmmOcysPDdXKrViClj2ShsCTeLXj/PQcSZ4l7Z16VLZp2CZ/yEkeIfxeC
-         IJi82jiNsZCZPNbs2KCgMG6Cw+CkGA9KcA/uy12X6Dnb1g2SwMNiQhXIBuEMHLitW2XN
-         E7l+V330M82dosfZET3X76q4iFObaeXdvWv1VrBnOqa1OpLW10h+MjF3eb0yOkS4wuGA
-         pWfg==
+        d=google.com; s=20230601; t=1730414816; x=1731019616; darn=vger.kernel.org;
+        h=cc:to:from:subject:message-id:references:mime-version:in-reply-to
+         :date:from:to:cc:subject:date:message-id:reply-to;
+        bh=xsh0ecj9Etn04xB/gBU/50JDS6BBsG2RgrIM+NKe2T8=;
+        b=hrCEItuHj0gaHJOSLsiz9a6G9n5EaeDUIgvd5SPoiX4w6CJ9UXgG7Mi7n3YsV2h1q/
+         izFcnd6/GKm1bvwXJzKe6WVoqsYdmPRtWY5nCIHJRNEWODloKh0mUEbEZW2afPPLGFWT
+         +R+YgSV8sWiwySx0wGUYOcL/Lgz4X4FL0UeFg7YjSW9gmOCxM1pIeiohYE8eAbtIk0GD
+         t7K4gRDtadQewUho6+/iGL1SeYg5nMQ/bKKSrIJM+2Wj+k5DFpBTZq/L3vMMymQARejf
+         DL+PTp9Ol/VIEo0ho9eFj8blJHYXI1csHvumfp0Tfn+IdhIht7gz/w0/DW5gk1DPlKjG
+         z5YA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1730414812; x=1731019612;
-        h=cc:to:from:subject:message-id:mime-version:date:x-gm-message-state
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=wWNqofTpO3McnA/xoHsMP4AewEwxFw4lNZTCusoRC/Q=;
-        b=IAzBSj8R2ppmDtbpbXh/PuyN2DYRs1T26RCUuS5TInk1BSuSDi1yENa/xupFIb9Pyu
-         ph42pi4tt3zU4icwhiFUpb6GBDkN4zrk00/U6QbpWsoH66r5u5qzS1hyYkn2lGby7Cjg
-         cf2HJjbpx2Zwr0rqpGoei5hoa0f7NoPiS8Ie7AOLtiMaI83SBLoN66WLkX8boBWVHN4y
-         3f5uKtOVEsOnI4SPzOu85NInqKaKBBHS0esxA6UlL4P/iK4GqcAB1QOdvWGYmK2NM8t+
-         Ru6p/eLKYrFYW4Z1tZdDmO0VpSWF9h5f2Ht0jM/LpYFo9Lx1N5i36LthUXJ7Du7WiBo8
-         Uo9w==
-X-Forwarded-Encrypted: i=1; AJvYcCWDI0FbH0E9pTLIeDQWSHIkqwrCoWzPJOKp/1niZfLckHWIgwbEvT0X9G9bOmySHNmK6t0rvawz@vger.kernel.org
-X-Gm-Message-State: AOJu0YxSn1PNgasdrUNVmM2zbYAlQ43Jl4C9sXJLzQju8buAc2tdho7H
-	GN1VAxmQhbYuLfZkR8RI7IUKSIcUNBPa/z2ByRa2gaMobAU/18qLMceAxRAITG3YKCN9DgqejoY
-	Dw3JvKUqqng==
-X-Google-Smtp-Source: AGHT+IGaJ2rgqbyyP31Xev0nRBvN2Idh0SQ5a+6516/dGsyioBAnn294ogITAzGgIXJXIh34+WTXqMYsm0jW5g==
+        d=1e100.net; s=20230601; t=1730414816; x=1731019616;
+        h=cc:to:from:subject:message-id:references:mime-version:in-reply-to
+         :date:x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=xsh0ecj9Etn04xB/gBU/50JDS6BBsG2RgrIM+NKe2T8=;
+        b=vjObUYW4XG2zGit2Yj5QsLO4egqZ6yn7NpGSgfShyENLOs/ONL9aqS/yksPxzX17LC
+         /Ae7vO+e8WS0Td6bs+5uXtv/VoiqXNe8Tfw2zx/lDszeORNOGQjbAQteuhM+UTT6+RUg
+         5fqWpkOzGDW2K7Pg2RQR/ZFrx6B8VnRSfrQrQP286OfKSvRGwR27iB/EVwH+cmL6nrfX
+         Dyz8BGTIAHpsWc2dM6+UpUNSz5yyZWTo+2FLY9H+V+PwMhgyljuQmP1aGKBcLhNE05KO
+         cYFE+MWf7orrGulfAcxG35KnbFVAiDl7r9UfhBzKMXpmXZDDs7Ug4DCfR2rvxQ9e1FsA
+         Y1Og==
+X-Forwarded-Encrypted: i=1; AJvYcCWdK2xazdLfRVzw1H1xpxz1zE0pk0x04tKDPlRMwvZM7n1zlAi8Vx/M3P+ojTUqXgJ5IbZuO2jt@vger.kernel.org
+X-Gm-Message-State: AOJu0YyCVS/GNjHgQmRAgk4vLI12HknVwqkwJ7pLK2KMKc1RvmIhP8oY
+	9T3zeFWyPcxcknWWQCYr9SDa9iUYiZAB5uvO9gr/UmyZlSZdq/9WAXBtYzr1w92qkLXY1d8ZdDG
+	lrWHZzKybUw==
+X-Google-Smtp-Source: AGHT+IHArSVwIyggeWsU6JRSK21WNKSRntcwjMdlKacSUh+G18VKzCn39+gQ7DKViVCf1aeNUXLCZjBpRJnC0A==
 X-Received: from kinseyct.c.googlers.com ([fda3:e722:ac3:cc00:a1:836b:ac13:31a5])
- (user=kinseyho job=sendgmr) by 2002:a17:90b:3e82:b0:2e9:4660:ac84 with SMTP
- id 98e67ed59e1d1-2e94c53ab03mr1455a91.8.1730414812264; Thu, 31 Oct 2024
- 15:46:52 -0700 (PDT)
-Date: Thu, 31 Oct 2024 22:45:49 +0000
+ (user=kinseyho job=sendgmr) by 2002:a63:34c1:0:b0:7ea:c554:d831 with SMTP id
+ 41be03b00d2f7-7ee290c2030mr8465a12.7.1730414815657; Thu, 31 Oct 2024 15:46:55
+ -0700 (PDT)
+Date: Thu, 31 Oct 2024 22:45:51 +0000
+In-Reply-To: <20241031224551.1736113-1-kinseyho@google.com>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 Mime-Version: 1.0
+References: <20241031224551.1736113-1-kinseyho@google.com>
 X-Mailer: git-send-email 2.47.0.163.g1226f6d8fa-goog
-Message-ID: <20241031224551.1736113-1-kinseyho@google.com>
-Subject: [PATCH mm-unstable v1 0/2] Track pages allocated for struct
+Message-ID: <20241031224551.1736113-3-kinseyho@google.com>
+Subject: [PATCH mm-unstable v1 2/2] mm, swap: add pages allocated for struct
+ swap_cgroup to vmstat
 From: Kinsey Ho <kinseyho@google.com>
 To: Andrew Morton <akpm@linux-foundation.org>
 Cc: Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, 
@@ -70,23 +74,65 @@ Cc: Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>,
 	cgroups@vger.kernel.org, linux-mm@kvack.org
 Content-Type: text/plain; charset="UTF-8"
 
-We noticed high overhead for pages allocated for struct swap_cgroup in
-our fleet. This patchset adds the number of pages allocated for struct
-swap_cgroup to vmstat. This can be a useful metric for identifying
-unneeded overhead on systems which configure swap.
+Export the number of pages allocated for storing struct swap_cgroup in
+vmstat using global system-wide counters.
 
-Before adding the new stat, Patch 1 introduces a generic system-wide
-counting interface. 
+Signed-off-by: Kinsey Ho <kinseyho@google.com>
+---
+ include/linux/vmstat.h | 3 +++
+ mm/swap_cgroup.c       | 3 +++
+ mm/vmstat.c            | 3 +++
+ 3 files changed, 9 insertions(+)
 
-Kinsey Ho (2):
-  mm: add generic system-wide page counters
-  mm, swap: add pages allocated for struct swap_cgroup to vmstat
-
- include/linux/vmstat.h | 11 +++++++++++
- mm/swap_cgroup.c       |  3 +++
- mm/vmstat.c            | 35 ++++++++++++++++++++++++++---------
- 3 files changed, 40 insertions(+), 9 deletions(-)
-
+diff --git a/include/linux/vmstat.h b/include/linux/vmstat.h
+index ac4d42c4fabd..227e951d1219 100644
+--- a/include/linux/vmstat.h
++++ b/include/linux/vmstat.h
+@@ -41,6 +41,9 @@ enum vm_stat_item {
+ 	NR_DIRTY_BG_THRESHOLD,
+ 	NR_MEMMAP_PAGES,	/* page metadata allocated through buddy allocator */
+ 	NR_MEMMAP_BOOT_PAGES,	/* page metadata allocated through boot allocator */
++#if defined(CONFIG_MEMCG) && defined(CONFIG_SWAP)
++	NR_SWAP_CGROUP_PAGES,	/* allocated to store struct swap_cgroup */
++#endif
+ 	NR_VM_STAT_ITEMS,
+ };
+ 
+diff --git a/mm/swap_cgroup.c b/mm/swap_cgroup.c
+index da1278f0563b..82eda8a3efe1 100644
+--- a/mm/swap_cgroup.c
++++ b/mm/swap_cgroup.c
+@@ -53,6 +53,8 @@ static int swap_cgroup_prepare(int type)
+ 		if (!(idx % SWAP_CLUSTER_MAX))
+ 			cond_resched();
+ 	}
++	mod_global_page_state(NR_SWAP_CGROUP_PAGES, ctrl->length);
++
+ 	return 0;
+ not_enough_page:
+ 	max = idx;
+@@ -228,6 +230,7 @@ void swap_cgroup_swapoff(int type)
+ 			if (!(i % SWAP_CLUSTER_MAX))
+ 				cond_resched();
+ 		}
++		mod_global_page_state(NR_SWAP_CGROUP_PAGES, -length);
+ 		vfree(map);
+ 	}
+ }
+diff --git a/mm/vmstat.c b/mm/vmstat.c
+index e5a6dd5106c2..259574261ec1 100644
+--- a/mm/vmstat.c
++++ b/mm/vmstat.c
+@@ -1295,6 +1295,9 @@ const char * const vmstat_text[] = {
+ 	"nr_dirty_background_threshold",
+ 	"nr_memmap_pages",
+ 	"nr_memmap_boot_pages",
++#if defined(CONFIG_MEMCG) && defined(CONFIG_SWAP)
++	"nr_swap_cgroup_pages",
++#endif
+ 
+ #if defined(CONFIG_VM_EVENT_COUNTERS) || defined(CONFIG_MEMCG)
+ 	/* enum vm_event_item counters */
 -- 
 2.47.0.163.g1226f6d8fa-goog
 
