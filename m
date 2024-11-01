@@ -1,92 +1,78 @@
-Received: from desiato.infradead.org (desiato.infradead.org [90.155.92.199])
+Received: from frasgout.his.huawei.com (frasgout.his.huawei.com [185.176.79.56])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6A4F52A1B2;
-	Fri,  1 Nov 2024 10:54:34 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=90.155.92.199
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CC9E319925B;
+	Fri,  1 Nov 2024 11:54:30 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=185.176.79.56
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1730458479; cv=none; b=iNbP0tBErdSsQqWdH9Yo6uzIgfXH8X2w3eZxo5himZX5N3TfwxfPOzEX6RaKwyOAOFOVDzZxHN7u3p/5ki3P7AyruEHJrZ+EE7Bv2wiwGRH84grypniatQtNN3IN4/B7DrtXNcApr7qP+iEUEYTrm8bzfyuFwhTZ8paqrYNgf7s=
+	t=1730462073; cv=none; b=YwBQGBMI2kYmV97vE3moNOtD9wPvjncONu6Tn0dECUcESWltbIaMulkZnPd0n8UVCnvwbDVDMi4i1zPKrgfeeZ9luunL5LDMbiEedmwvOUkmYMnkK9HlCpVLZNrZODZEGl5rAcrZDrRj2vXSfeZdD67ntHGIzHAPNOiJpuHMfFk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1730458479; c=relaxed/simple;
-	bh=cQcpOQMRfeJFrOwjc5JQJ1Pu8ZUGtxW8AYo9hH2Dr/E=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=s/NfsC4EjpbRuenjA/S6tQpFIzmLuM57ZFTWBvklGd7A4l3dlmg7g1OHSulic2HFdE0EQkrjpP0DWuJpDEO4fmflPh5gz21lLQns8ZKgrnlRekh5ZuChzNmdP4LewQixEXFvTmC6iiKH8BoIGmucInurpTepUPWHPIlzWvZtLEg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=H7IWqsM7; arc=none smtp.client-ip=90.155.92.199
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=infradead.org
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="H7IWqsM7"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=desiato.20200630; h=In-Reply-To:Content-Type:MIME-Version:
-	References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=cMU2PXMPWhHixiOJ4wxaJ5Wp1ljqAoRHxyXW2Ip72NA=; b=H7IWqsM7Msi4h7l+86uU0JCNPN
-	CAHPiALfedD/24CnJ+CZGFqg/RdTC/3BkVAW/lbIIbwL/j9sKNhG1pK/Bo/1Ctwx+OEn0XhVAIurb
-	W7ltywfkWOjCvU9gsz2y1iiZlH0CqiutH7WiUMaRxLXWfhN4hjQjISehTD0FU88gLMGAokECZ9L6J
-	LEUrb3R3zDZWOjNvOm0SM5SGTb2SR/gRr1K6L4+EiLuzT0B13dgyULRJ/uEmGbmY3b35/bhlC5T4A
-	/Y0jQkI9MUedmbjLOmx7Ra92LDsahwP2S/Vf3p4qbRg93YaPripru3Vyfu5ScO73N+jKTWB7kHCf2
-	IcGWjXmg==;
-Received: from j130084.upc-j.chello.nl ([24.132.130.84] helo=noisy.programming.kicks-ass.net)
-	by desiato.infradead.org with esmtpsa (Exim 4.98 #2 (Red Hat Linux))
-	id 1t6pIQ-0000000AfKW-4AIf;
-	Fri, 01 Nov 2024 10:54:27 +0000
-Received: by noisy.programming.kicks-ass.net (Postfix, from userid 1000)
-	id 5B74F300599; Fri,  1 Nov 2024 11:54:26 +0100 (CET)
-Date: Fri, 1 Nov 2024 11:54:26 +0100
-From: Peter Zijlstra <peterz@infradead.org>
-To: Yafang Shao <laoar.shao@gmail.com>
-Cc: mingo@redhat.com, juri.lelli@redhat.com, vincent.guittot@linaro.org,
-	dietmar.eggemann@arm.com, rostedt@goodmis.org, bsegall@google.com,
-	mgorman@suse.de, vschneid@redhat.com, hannes@cmpxchg.org,
-	surenb@google.com, cgroups@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v4 0/4] sched: Fix irq accounting for
- CONFIG_IRQ_TIME_ACCOUNTING
-Message-ID: <20241101105426.GX14555@noisy.programming.kicks-ass.net>
-References: <20241101031750.1471-1-laoar.shao@gmail.com>
+	s=arc-20240116; t=1730462073; c=relaxed/simple;
+	bh=bjZUQBIBMPaA1dMDMineNYwWt/HrO98ItObjJC3RPTs=;
+	h=Message-ID:Date:MIME-Version:Subject:To:CC:References:From:
+	 In-Reply-To:Content-Type; b=WqyfgTIMfxKo3lI8qTrQbsnJy5E60ePf6Z/8F/fKebwBlA0uf64N5SqnKYtKNp6VRnLAP1aSZ35GuiSWwfxrttG6L/gDASUflAnZ1b2wA5LgiEvEMJiqInZXAy/qxu/tM0lDbznOzLgu/gZOu8GBoaFDFBDxR/lQqUSApeqnZTw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; arc=none smtp.client-ip=185.176.79.56
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
+Received: from mail.maildlp.com (unknown [172.18.186.231])
+	by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4Xfzl4488Mz6JB6N;
+	Fri,  1 Nov 2024 19:53:04 +0800 (CST)
+Received: from mscpeml500003.china.huawei.com (unknown [7.188.49.51])
+	by mail.maildlp.com (Postfix) with ESMTPS id 3F418140B3C;
+	Fri,  1 Nov 2024 19:54:28 +0800 (CST)
+Received: from [10.123.123.226] (10.123.123.226) by
+ mscpeml500003.china.huawei.com (7.188.49.51) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.1258.34; Fri, 1 Nov 2024 14:54:27 +0300
+Message-ID: <274e1560-9f6c-4dd9-b27c-2fd0f0c54d03@huawei.com>
+Date: Fri, 1 Nov 2024 14:54:27 +0300
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20241101031750.1471-1-laoar.shao@gmail.com>
+User-Agent: Mozilla Thunderbird
+Subject: Re: [RFC PATCH 0/3] Cgroup-based THP control
+To: Michal Hocko <mhocko@suse.com>
+CC: Gutierrez Asier <gutierrez.asier@huawei-partners.com>,
+	<akpm@linux-foundation.org>, <david@redhat.com>, <ryan.roberts@arm.com>,
+	<baohua@kernel.org>, <willy@infradead.org>, <peterx@redhat.com>,
+	<hannes@cmpxchg.org>, <hocko@kernel.org>, <roman.gushchin@linux.dev>,
+	<shakeel.butt@linux.dev>, <muchun.song@linux.dev>, <cgroups@vger.kernel.org>,
+	<linux-mm@kvack.org>, <linux-kernel@vger.kernel.org>,
+	<alexander.kozhevnikov@huawei-partners.com>, <guohanjun@huawei.com>,
+	<weiyongjun1@huawei.com>, <wangkefeng.wang@huawei.com>,
+	<judy.chenhui@huawei.com>, <yusongping@huawei.com>, <artem.kuzin@huawei.com>,
+	<kang.sun@huawei.com>, <nikita.panov@huawei-partners.com>
+References: <20241030083311.965933-1-gutierrez.asier@huawei-partners.com>
+ <ZyHwgjK8t8kWkm9E@tiehlicka>
+ <770bf300-1dbb-42fc-8958-b9307486178e@huawei-partners.com>
+ <ZyI0LTV2YgC4CGfW@tiehlicka>
+ <b74b8995-3d24-47a9-8dff-6e163690621e@huawei-partners.com>
+ <ZyJNizBQ-h4feuJe@tiehlicka>
+ <d9bde9db-85b3-4efd-8b02-3a520bdcf539@huawei.com>
+ <ZyNAxnOqOfYvqxjc@tiehlicka>
+ <80d76bad-41d8-4108-ad74-f891e5180e47@huawei.com>
+ <ZySEvmfwpT_6N97I@tiehlicka>
+Content-Language: en-US
+From: Stepanov Anatoly <stepanov.anatoly@huawei.com>
+In-Reply-To: <ZySEvmfwpT_6N97I@tiehlicka>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+X-ClientProxiedBy: mscpeml500004.china.huawei.com (7.188.26.250) To
+ mscpeml500003.china.huawei.com (7.188.49.51)
 
-On Fri, Nov 01, 2024 at 11:17:46AM +0800, Yafang Shao wrote:
-> After enabling CONFIG_IRQ_TIME_ACCOUNTING to track IRQ pressure in our
-> container environment, we encountered several user-visible behavioral
-> changes:
+On 11/1/2024 10:35 AM, Michal Hocko wrote:
+> On Thu 31-10-24 17:37:12, Stepanov Anatoly wrote:
+>> If we consider the inheritance approach (prctl + launcher), it's fine until we need to change
+>> THP mode property for several tasks at once, in this case some batch-change approach needed.
 > 
-> - Interrupted IRQ/softirq time is not accounted for in the cpuacct cgroup
+> I do not follow. How is this any different from a single process? Or do
+> you mean to change the mode for an already running process?
 > 
->   This breaks userspace applications that rely on CPU usage data from
->   cgroups to monitor CPU pressure. This patchset resolves the issue by
->   ensuring that IRQ/softirq time is accounted for in the cgroup of the
->   interrupted tasks.
-> 
-> - getrusage(2) does not include time interrupted by IRQ/softirq
-> 
->   Some services use getrusage(2) to check if workloads are experiencing CPU
->   pressure. Since IRQ/softirq time is no longer charged to task runtime,
->   getrusage(2) can no longer reflect the CPU pressure caused by heavy
->   interrupts.
-> 
-> This patchset addresses the first issue, which is relatively
-> straightforward. 
-
-So I don't think it is. I think they're both the same issue. You cannot
-know for whom the work done by the (soft) interrupt is.
-
-For instance, if you were to create 2 cgroups, and have one cgroup do a
-while(1) loop, while you'd have that other cgroup do your netperf
-workload, I suspect you'll see significant (soft)irq load on the
-while(1) cgroup, even though it's guaranteed to not be from it.
-
-Same with rusage -- rusage is fully task centric, and the work done by
-(soft) irqs are not necessarily	related to the task they interrupt.
+yes, for already running set of processes
 
 
-So while you're trying to make the world conform to your legacy
-monitoring view, perhaps you should fix your view of things.
+-- 
+Anatoly Stepanov, Huawei
