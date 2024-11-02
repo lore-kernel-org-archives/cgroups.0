@@ -1,33 +1,33 @@
 Received: from zeniv.linux.org.uk (zeniv.linux.org.uk [62.89.141.173])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 74BB8156677;
-	Sat,  2 Nov 2024 05:08:38 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 87BAE156677;
+	Sat,  2 Nov 2024 05:08:41 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=62.89.141.173
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1730524119; cv=none; b=OpmKd1IcLI4kOESRPUqxZrTid0Df+t/vEIdK7MhWu5RKwCnzYeghBLk4yOBPEr8w4rmUSb7VUeOOLN0H3hG8dN3Xg3NFNhyfZYWksKlqhl6les1QkboZeTXdP2Xy9+xxlnD4Ym7NzZf0whTLjnSg6rri7oNs0qDWVH58xMvruLY=
+	t=1730524123; cv=none; b=LYEHciHt/Swd2ScDBPJNf/P7njj1Kflwtie681ymoSL/scbusT453Wf6UCydd1vSnfX8q7ofFhgJvoj78/eGR15OjQV03WN4fOQAD9WE25maAcTYks4IWaDwDPBs9mHM7ckbX12daLtChpqC74j56GhLFcs83mm48ENFjgJrjw4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1730524119; c=relaxed/simple;
-	bh=8n+a72F1MMgWJSpNM2jYjMQ0wNtQt8806+CMxamxLxA=;
+	s=arc-20240116; t=1730524123; c=relaxed/simple;
+	bh=IQsUsKxTYHR/UWSxnzKXVjsg4zRNBpAAmVoUHBiqT2s=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=rSsJc/w0JtfVaTH603+tEqpKvVXyui6dT1qRvxc1wvw0GnhR72nrVViTAnAaZoZ0wWZKS97vIEwopM1In+GzZxCp7P6T1/F86WsmZk3k4tvMbqFbZjIipCq17OKuLQFVTeRXNOo7tkuUltTyXMAZPuJ7Kq91d/jZ66xuDOXcVpI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=zeniv.linux.org.uk; spf=none smtp.mailfrom=ftp.linux.org.uk; dkim=pass (2048-bit key) header.d=linux.org.uk header.i=@linux.org.uk header.b=huNnOMtH; arc=none smtp.client-ip=62.89.141.173
+	 MIME-Version; b=jrgIuuoBayf0Pca48rH4lJbOKkDdInqQ7A2VJdpei5TG+PvMFgDj/ZeVy5Q2IlMAyRfAE75mil4ZuOzvxLzspPlN9cUJRhUKtjMrZBODDl+QAi8mc4zEDMQHpnU+jeNDpESGWDIf57gmC2eOicgHCyUdr1dWNh8kqh5Wme1KrgQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=zeniv.linux.org.uk; spf=none smtp.mailfrom=ftp.linux.org.uk; dkim=pass (2048-bit key) header.d=linux.org.uk header.i=@linux.org.uk header.b=bWJgUW5z; arc=none smtp.client-ip=62.89.141.173
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=zeniv.linux.org.uk
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=ftp.linux.org.uk
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=linux.org.uk header.i=@linux.org.uk header.b="huNnOMtH"
+	dkim=pass (2048-bit key) header.d=linux.org.uk header.i=@linux.org.uk header.b="bWJgUW5z"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=linux.org.uk; s=zeniv-20220401; h=Sender:Content-Transfer-Encoding:
 	MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:
 	Reply-To:Content-Type:Content-ID:Content-Description;
-	bh=88OljO2gswdjRnWBPxwVZr7JdO5DnVjrbylUMSLr6Xg=; b=huNnOMtHmFnF2wy3ZvgntP6Y4k
-	tlXioTWB81Or88deIrmGBxVuYQYIglP5EN7zDGMoWaiuOgzxiWvb2zCET92hor5yJaDAAFtMx7K2W
-	cJ9K0K/gzEFtHZIP3oqA39Skr9Dg8+JPa4z82nNsEtHpd642L0/BR+Vr6eZj2Q/0cIEu9exjab659
-	iCa8KdwdSm6qaqjum0QQ4Amien3kQXjnIujpnoLZGXPKDre5XDlX+LIG++GpWz2DHaYbgu1udiUP/
-	jVUeqh093msyHf//iW16V4TtH3qDurWGV2yTyCHsEFeIIM5uNHgu7x0gtZz/p6q1PmMNzYbkJf56X
-	qhSaPb0Q==;
+	bh=/ON4xfM/I52yPPOjnFJDfTb7C6U4u5Iw3hGLWaLbWO8=; b=bWJgUW5zQ5ZP2IgHiJnXgfGOlx
+	NrX92siEnSvGGWqQ55QdjRtH7qY0RiVgZp/CAyc86hZo05Aim0PoSuHmCb35Lp8hY4usCOvhVh1FZ
+	sQ8VMoimGh8U8xCYd8+jZ/tF81LWuefB12Hew1zlugZTU0hPNpHFDohPIhaBEe8FS5hv3tPyVVc5L
+	s/AHDxd0r7ikQf6WKp9b/0inya+Rb6prb9bd1wtG9LuMUuAeFM1M02d3sttmk7YDBobl5C1dJKHu1
+	f9CL6P4b5E24xxjKvzeQxJL0nS69gKoSVAe7KGbJ6qjo7QLVUZWLqkEZV5qAWhidw50a1LPMesFxl
+	ATvlB9pw==;
 Received: from viro by zeniv.linux.org.uk with local (Exim 4.98 #2 (Red Hat Linux))
-	id 1t76N9-0000000AHm4-1Qas;
+	id 1t76N9-0000000AHm8-2vHc;
 	Sat, 02 Nov 2024 05:08:27 +0000
 From: Al Viro <viro@zeniv.linux.org.uk>
 To: linux-fsdevel@vger.kernel.org
@@ -37,9 +37,9 @@ Cc: viro@zeniv.linux.org.uk,
 	kvm@vger.kernel.org,
 	netdev@vger.kernel.org,
 	torvalds@linux-foundation.org
-Subject: [PATCH v3 02/28] regularize emptiness checks in fini_module(2) and vfs_dedupe_file_range()
-Date: Sat,  2 Nov 2024 05:08:00 +0000
-Message-ID: <20241102050827.2451599-2-viro@zeniv.linux.org.uk>
+Subject: [PATCH v3 04/28] get rid of perf_fget_light(), convert kernel/events/core.c to CLASS(fd)
+Date: Sat,  2 Nov 2024 05:08:02 +0000
+Message-ID: <20241102050827.2451599-4-viro@zeniv.linux.org.uk>
 X-Mailer: git-send-email 2.47.0
 In-Reply-To: <20241102050827.2451599-1-viro@zeniv.linux.org.uk>
 References: <20241102050219.GA2450028@ZenIV>
@@ -53,70 +53,127 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Sender: Al Viro <viro@ftp.linux.org.uk>
 
-With few exceptions emptiness checks are done as fd_file(...) in boolean
-context (usually something like if (!fd_file(f))...); those will be
-taken care of later.
-
-However, there's a couple of places where we do those checks as
-'store fd_file(...) into a variable, then check if this variable is
-NULL' and those are harder to spot.
-
-Get rid of those now.
-
-use fd_empty() instead of extracting file and then checking it for NULL.
+Lift fdget() and fdput() out of perf_fget_light(), turning it into
+is_perf_file(struct fd f).  The life gets easier in both callers
+if we do fdget() unconditionally, including the case when we are
+given -1 instead of a descriptor - that avoids a reassignment in
+perf_event_open(2) and it avoids a nasty temptation in _perf_ioctl()
+where we must *not* lift output_event out of scope for output.
 
 Reviewed-by: Christian Brauner <brauner@kernel.org>
 Signed-off-by: Al Viro <viro@zeniv.linux.org.uk>
 ---
- fs/remap_range.c     | 5 ++---
- kernel/module/main.c | 4 +++-
- 2 files changed, 5 insertions(+), 4 deletions(-)
+ kernel/events/core.c | 49 +++++++++++++++-----------------------------
+ 1 file changed, 16 insertions(+), 33 deletions(-)
 
-diff --git a/fs/remap_range.c b/fs/remap_range.c
-index 4403d5c68fcb..017d0d1ea6c9 100644
---- a/fs/remap_range.c
-+++ b/fs/remap_range.c
-@@ -537,9 +537,8 @@ int vfs_dedupe_file_range(struct file *file, struct file_dedupe_range *same)
+diff --git a/kernel/events/core.c b/kernel/events/core.c
+index e3589c4287cb..85b209626dd7 100644
+--- a/kernel/events/core.c
++++ b/kernel/events/core.c
+@@ -5998,18 +5998,9 @@ EXPORT_SYMBOL_GPL(perf_event_period);
  
- 	for (i = 0, info = same->info; i < count; i++, info++) {
- 		struct fd dst_fd = fdget(info->dest_fd);
--		struct file *dst_file = fd_file(dst_fd);
+ static const struct file_operations perf_fops;
  
--		if (!dst_file) {
-+		if (fd_empty(dst_fd)) {
- 			info->status = -EBADF;
- 			goto next_loop;
- 		}
-@@ -549,7 +548,7 @@ int vfs_dedupe_file_range(struct file *file, struct file_dedupe_range *same)
- 			goto next_fdput;
- 		}
- 
--		deduped = vfs_dedupe_file_range_one(file, off, dst_file,
-+		deduped = vfs_dedupe_file_range_one(file, off, fd_file(dst_fd),
- 						    info->dest_offset, len,
- 						    REMAP_FILE_CAN_SHORTEN);
- 		if (deduped == -EBADE)
-diff --git a/kernel/module/main.c b/kernel/module/main.c
-index 49b9bca9de12..d785973d8a51 100644
---- a/kernel/module/main.c
-+++ b/kernel/module/main.c
-@@ -3202,7 +3202,7 @@ static int idempotent_init_module(struct file *f, const char __user * uargs, int
+-static inline int perf_fget_light(int fd, struct fd *p)
++static inline bool is_perf_file(struct fd f)
  {
- 	struct idempotent idem;
+-	struct fd f = fdget(fd);
+-	if (!fd_file(f))
+-		return -EBADF;
+-
+-	if (fd_file(f)->f_op != &perf_fops) {
+-		fdput(f);
+-		return -EBADF;
+-	}
+-	*p = f;
+-	return 0;
++	return !fd_empty(f) && fd_file(f)->f_op == &perf_fops;
+ }
  
--	if (!f || !(f->f_mode & FMODE_READ))
-+	if (!(f->f_mode & FMODE_READ))
- 		return -EBADF;
+ static int perf_event_set_output(struct perf_event *event,
+@@ -6057,20 +6048,14 @@ static long _perf_ioctl(struct perf_event *event, unsigned int cmd, unsigned lon
  
- 	/* Are we the winners of the race and get to do this? */
-@@ -3234,6 +3234,8 @@ SYSCALL_DEFINE3(finit_module, int, fd, const char __user *, uargs, int, flags)
- 		return -EINVAL;
+ 	case PERF_EVENT_IOC_SET_OUTPUT:
+ 	{
+-		int ret;
++		CLASS(fd, output)(arg);	     // arg == -1 => empty
++		struct perf_event *output_event = NULL;
+ 		if (arg != -1) {
+-			struct perf_event *output_event;
+-			struct fd output;
+-			ret = perf_fget_light(arg, &output);
+-			if (ret)
+-				return ret;
++			if (!is_perf_file(output))
++				return -EBADF;
+ 			output_event = fd_file(output)->private_data;
+-			ret = perf_event_set_output(event, output_event);
+-			fdput(output);
+-		} else {
+-			ret = perf_event_set_output(event, NULL);
+ 		}
+-		return ret;
++		return perf_event_set_output(event, output_event);
+ 	}
  
- 	f = fdget(fd);
-+	if (fd_empty(f))
-+		return -EBADF;
- 	err = idempotent_init_module(fd_file(f), uargs, flags);
- 	fdput(f);
+ 	case PERF_EVENT_IOC_SET_FILTER:
+@@ -12664,7 +12649,6 @@ SYSCALL_DEFINE5(perf_event_open,
+ 	struct perf_event_attr attr;
+ 	struct perf_event_context *ctx;
+ 	struct file *event_file = NULL;
+-	struct fd group = EMPTY_FD;
+ 	struct task_struct *task = NULL;
+ 	struct pmu *pmu;
+ 	int event_fd;
+@@ -12735,10 +12719,12 @@ SYSCALL_DEFINE5(perf_event_open,
+ 	if (event_fd < 0)
+ 		return event_fd;
+ 
++	CLASS(fd, group)(group_fd);     // group_fd == -1 => empty
+ 	if (group_fd != -1) {
+-		err = perf_fget_light(group_fd, &group);
+-		if (err)
++		if (!is_perf_file(group)) {
++			err = -EBADF;
+ 			goto err_fd;
++		}
+ 		group_leader = fd_file(group)->private_data;
+ 		if (flags & PERF_FLAG_FD_OUTPUT)
+ 			output_event = group_leader;
+@@ -12750,7 +12736,7 @@ SYSCALL_DEFINE5(perf_event_open,
+ 		task = find_lively_task_by_vpid(pid);
+ 		if (IS_ERR(task)) {
+ 			err = PTR_ERR(task);
+-			goto err_group_fd;
++			goto err_fd;
+ 		}
+ 	}
+ 
+@@ -13017,12 +13003,11 @@ SYSCALL_DEFINE5(perf_event_open,
+ 	mutex_unlock(&current->perf_event_mutex);
+ 
+ 	/*
+-	 * Drop the reference on the group_event after placing the
+-	 * new event on the sibling_list. This ensures destruction
+-	 * of the group leader will find the pointer to itself in
+-	 * perf_group_detach().
++	 * File reference in group guarantees that group_leader has been
++	 * kept alive until we place the new event on the sibling_list.
++	 * This ensures destruction of the group leader will find
++	 * the pointer to itself in perf_group_detach().
+ 	 */
+-	fdput(group);
+ 	fd_install(event_fd, event_file);
+ 	return event_fd;
+ 
+@@ -13041,8 +13026,6 @@ SYSCALL_DEFINE5(perf_event_open,
+ err_task:
+ 	if (task)
+ 		put_task_struct(task);
+-err_group_fd:
+-	fdput(group);
+ err_fd:
+ 	put_unused_fd(event_fd);
  	return err;
 -- 
 2.39.5
