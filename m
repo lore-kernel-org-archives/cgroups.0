@@ -1,34 +1,34 @@
 Received: from zeniv.linux.org.uk (zeniv.linux.org.uk [62.89.141.173])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E8033158DD8;
-	Sat,  2 Nov 2024 05:08:32 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2C152149E17;
+	Sat,  2 Nov 2024 05:08:31 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=62.89.141.173
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1730524116; cv=none; b=Akm+GC49SMlTYrs3XENsIctqVw5jKNRXosA+W6m01wI2qzSZ7kJc9GKw9JnyAq32oVmS+vl9TOqFZdm5GuBikKtH0vJQxsUQf9JHlqlnE14zaLPwxpbzR+CSn8qDvncua+gVwMrHQt10HJXku9OzHw7YOvUFBxdVNhJPusMu6hQ=
+	t=1730524116; cv=none; b=sg2i16gGfQ4pLR3sLogW19aHJdCieoeosu7DFugpRLG2g59CJu7HyGvDUSIlNnkGINHbfehBHHfK2YBsC3gUYHPKopgJ6EWNNtpqIk0VTGHXCNQV7ZliKglPLBbW+8mHTaBkwjj9MMkyGBvgzk5jEkzAH2sx6X9kd/olmGbQayw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1730524116; c=relaxed/simple;
-	bh=uyhGV8/aa7J8vd55zSJKXW39SXIpy1CmxRllgr4PuHE=;
+	bh=D4OvnR7bvGfyffyPknd4OovPSuNubSSDGJpRJWw+NKg=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=c+x5iLZmqRvXPw5/HL4Y7D79pBs//fXgtRvjYt5YKqy53xeMmS9AMgNE8JZ+6qdT2MeMWhJtqyf9Dww1jTWfiXlQ9LZ61zXgp9TfIzfbum5biNZrhyjmyLzvuP6VJlDd2hpax6o5Sdeo42keVkhUAgpVrjyK7RbubxLLxNnnFiE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=zeniv.linux.org.uk; spf=none smtp.mailfrom=ftp.linux.org.uk; dkim=pass (2048-bit key) header.d=linux.org.uk header.i=@linux.org.uk header.b=Ff1q850F; arc=none smtp.client-ip=62.89.141.173
+	 MIME-Version; b=fwO5BVUiqdIVzUMWuMjOzkPtrj7vUOCEbdlHgVrnYzHeaNZ9dUY83/XM4TbBptkVC/vR36rO5oZzscYyT3NBAMnE4Z3J1Egc7L8yH9jwJxU6UH0B5F2uxXn69hamfYwno+Z69T6TkFGo2dmiBM+UJHYN2CE1SXYAirzDJ7feYXs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=zeniv.linux.org.uk; spf=none smtp.mailfrom=ftp.linux.org.uk; dkim=pass (2048-bit key) header.d=linux.org.uk header.i=@linux.org.uk header.b=XHBop7Q0; arc=none smtp.client-ip=62.89.141.173
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=zeniv.linux.org.uk
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=ftp.linux.org.uk
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=linux.org.uk header.i=@linux.org.uk header.b="Ff1q850F"
+	dkim=pass (2048-bit key) header.d=linux.org.uk header.i=@linux.org.uk header.b="XHBop7Q0"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=linux.org.uk; s=zeniv-20220401; h=Sender:Content-Transfer-Encoding:
 	MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:
 	Reply-To:Content-Type:Content-ID:Content-Description;
-	bh=x2pCegbzwUsoMGPlduT/TiBDVwZvvFx02OPb7eHG2Yw=; b=Ff1q850FzDU9qU49eX+l6YkzOr
-	naF33BEh1Dit8X8hviiyTfEe/vqlmXduyvq52RqCHPhKYJnjKXLi8hRYoCya7XsIN/LjLmwNdkuWa
-	ogCOOcrUKetzweSjxOhfJoQ0ZtGheo8dAQAgMzgFwSPjDfQt8eHMc2qDHAbOr5WsTKDqEeMGj40Et
-	HPRkpFU7l7Fcg7yBg6LJfyeGbgPqPvUdsw56F4iAi8vc3hJGqiVFhbyF/+QvmBQD4YpKY3nMlmF3D
-	5tJ8Q164npUGNzxaoKuegX4r6uOYW495th98Hyzw4B0ILhAS+C6zYZZB/8bmTv1pQgd7BGl8FLHeF
-	7P85xzRw==;
+	bh=G3j2tuZKqezqznv2rlyENPKnz3THQjAkmHgi/G15VF0=; b=XHBop7Q07mCTMaITNn3hHCFzzX
+	fzpUK3ioUAvZ5GA7KVFKlvCcbHHvcFBdWnND5IQn9nqPuDBdK1wg8Co3HB3SSdYh5eXnxW1Z5qfYt
+	Gx+tretk9p1RKhcq3YqYwQW2U7ANMe7hgm7ts8b86t+gp+Mq8+Hruf2xqbSYbdQ7qlrMIJOgj34QS
+	mYscVk4vOktrYweKh8Yb0xc5fRENMtL846Qn/uFXNOhEgpCQJzvCtYY5g3IlAVESx2Cta43OqIEEh
+	GYjmK2Pdg9alNscCm31B11sPEH6xF/Px/WkQHH0cyV7CFhaMmtIKJTsZB5Fg21ai+aS9gzwlY1H6W
+	nUE8jGIg==;
 Received: from viro by zeniv.linux.org.uk with local (Exim 4.98 #2 (Red Hat Linux))
-	id 1t76ND-0000000AHoc-0pLo;
-	Sat, 02 Nov 2024 05:08:31 +0000
+	id 1t76NB-0000000AHnK-1oxE;
+	Sat, 02 Nov 2024 05:08:29 +0000
 From: Al Viro <viro@zeniv.linux.org.uk>
 To: linux-fsdevel@vger.kernel.org
 Cc: viro@zeniv.linux.org.uk,
@@ -37,9 +37,9 @@ Cc: viro@zeniv.linux.org.uk,
 	kvm@vger.kernel.org,
 	netdev@vger.kernel.org,
 	torvalds@linux-foundation.org
-Subject: [PATCH v3 28/28] deal with the last remaing boolean uses of fd_file()
-Date: Sat,  2 Nov 2024 05:08:26 +0000
-Message-ID: <20241102050827.2451599-28-viro@zeniv.linux.org.uk>
+Subject: [PATCH v3 16/28] convert do_preadv()/do_pwritev()
+Date: Sat,  2 Nov 2024 05:08:14 +0000
+Message-ID: <20241102050827.2451599-16-viro@zeniv.linux.org.uk>
 X-Mailer: git-send-email 2.47.0
 In-Reply-To: <20241102050827.2451599-1-viro@zeniv.linux.org.uk>
 References: <20241102050219.GA2450028@ZenIV>
@@ -53,73 +53,62 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Sender: Al Viro <viro@ftp.linux.org.uk>
 
+fdput() can be transposed with add_{r,w}char() and inc_sysc{r,w}();
+it's the same story as with do_readv()/do_writev(), only with
+fdput() instead of fdput_pos().
+
 Reviewed-by: Christian Brauner <brauner@kernel.org>
 Signed-off-by: Al Viro <viro@zeniv.linux.org.uk>
 ---
- drivers/infiniband/core/uverbs_cmd.c | 8 +++-----
- include/linux/cleanup.h              | 2 +-
- sound/core/pcm_native.c              | 2 +-
- 3 files changed, 5 insertions(+), 7 deletions(-)
+ fs/read_write.c | 12 ++++--------
+ 1 file changed, 4 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/infiniband/core/uverbs_cmd.c b/drivers/infiniband/core/uverbs_cmd.c
-index a4cce360df21..66b02fbf077a 100644
---- a/drivers/infiniband/core/uverbs_cmd.c
-+++ b/drivers/infiniband/core/uverbs_cmd.c
-@@ -584,7 +584,7 @@ static int ib_uverbs_open_xrcd(struct uverbs_attr_bundle *attrs)
- 	if (cmd.fd != -1) {
- 		/* search for file descriptor */
- 		f = fdget(cmd.fd);
--		if (!fd_file(f)) {
-+		if (fd_empty(f)) {
- 			ret = -EBADF;
- 			goto err_tree_mutex_unlock;
- 		}
-@@ -632,8 +632,7 @@ static int ib_uverbs_open_xrcd(struct uverbs_attr_bundle *attrs)
- 		atomic_inc(&xrcd->usecnt);
+diff --git a/fs/read_write.c b/fs/read_write.c
+index deb87457aa76..f6e9232eacd8 100644
+--- a/fs/read_write.c
++++ b/fs/read_write.c
+@@ -1113,18 +1113,16 @@ static inline loff_t pos_from_hilo(unsigned long high, unsigned long low)
+ static ssize_t do_preadv(unsigned long fd, const struct iovec __user *vec,
+ 			 unsigned long vlen, loff_t pos, rwf_t flags)
+ {
+-	struct fd f;
+ 	ssize_t ret = -EBADF;
+ 
+ 	if (pos < 0)
+ 		return -EINVAL;
+ 
+-	f = fdget(fd);
+-	if (fd_file(f)) {
++	CLASS(fd, f)(fd);
++	if (!fd_empty(f)) {
+ 		ret = -ESPIPE;
+ 		if (fd_file(f)->f_mode & FMODE_PREAD)
+ 			ret = vfs_readv(fd_file(f), vec, vlen, &pos, flags);
+-		fdput(f);
  	}
  
--	if (fd_file(f))
+ 	if (ret > 0)
+@@ -1136,18 +1134,16 @@ static ssize_t do_preadv(unsigned long fd, const struct iovec __user *vec,
+ static ssize_t do_pwritev(unsigned long fd, const struct iovec __user *vec,
+ 			  unsigned long vlen, loff_t pos, rwf_t flags)
+ {
+-	struct fd f;
+ 	ssize_t ret = -EBADF;
+ 
+ 	if (pos < 0)
+ 		return -EINVAL;
+ 
+-	f = fdget(fd);
+-	if (fd_file(f)) {
++	CLASS(fd, f)(fd);
++	if (!fd_empty(f)) {
+ 		ret = -ESPIPE;
+ 		if (fd_file(f)->f_mode & FMODE_PWRITE)
+ 			ret = vfs_writev(fd_file(f), vec, vlen, &pos, flags);
 -		fdput(f);
-+	fdput(f);
+ 	}
  
- 	mutex_unlock(&ibudev->xrcd_tree_mutex);
- 	uobj_finalize_uobj_create(&obj->uobject, attrs);
-@@ -648,8 +647,7 @@ static int ib_uverbs_open_xrcd(struct uverbs_attr_bundle *attrs)
- 	uobj_alloc_abort(&obj->uobject, attrs);
- 
- err_tree_mutex_unlock:
--	if (fd_file(f))
--		fdput(f);
-+	fdput(f);
- 
- 	mutex_unlock(&ibudev->xrcd_tree_mutex);
- 
-diff --git a/include/linux/cleanup.h b/include/linux/cleanup.h
-index 038b2d523bf8..875c998275c0 100644
---- a/include/linux/cleanup.h
-+++ b/include/linux/cleanup.h
-@@ -234,7 +234,7 @@ const volatile void * __must_check_fn(const volatile void *val)
-  * DEFINE_CLASS(fdget, struct fd, fdput(_T), fdget(fd), int fd)
-  *
-  *	CLASS(fdget, f)(fd);
-- *	if (!fd_file(f))
-+ *	if (fd_empty(f))
-  *		return -EBADF;
-  *
-  *	// use 'f' without concern
-diff --git a/sound/core/pcm_native.c b/sound/core/pcm_native.c
-index b465fb6e1f5f..3320cce35a03 100644
---- a/sound/core/pcm_native.c
-+++ b/sound/core/pcm_native.c
-@@ -2250,7 +2250,7 @@ static int snd_pcm_link(struct snd_pcm_substream *substream, int fd)
- 	bool nonatomic = substream->pcm->nonatomic;
- 	CLASS(fd, f)(fd);
- 
--	if (!fd_file(f))
-+	if (fd_empty(f))
- 		return -EBADFD;
- 	if (!is_pcm_file(fd_file(f)))
- 		return -EBADFD;
+ 	if (ret > 0)
 -- 
 2.39.5
 
