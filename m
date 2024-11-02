@@ -1,34 +1,34 @@
 Received: from zeniv.linux.org.uk (zeniv.linux.org.uk [62.89.141.173])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B0F0914831C;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 80EBF12C54B;
 	Sat,  2 Nov 2024 05:08:29 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=62.89.141.173
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1730524111; cv=none; b=dYHdtE7j5yh0zLjwrjTnYtfm/5ljs4R4ms7paF08nlY6h/JBKsvZUqJ9FYyA72wcVvDgy+Zys1bRFYxiF4R4dO+OPU5D39h4t1t+9zXqcTb2HQYV95KPwgGP/O04O1vFyupScq74j39m3HPCCJPBeFMj4qaTlxjdXUK6D40nMWU=
+	t=1730524111; cv=none; b=VC0Oy3dp1EEU+NnQ04n+FvSglgKVGuH513l1WwlzRob+36wst9c8iw6XvelGjRaBNm0dvSdmU4gAB+XlUyJdZcPYiHV9JOi4OKXM2RPBrqHQTAHqetRykD3waTTW1Vyjx+uFbttAj7AyuNa3sewafnDzQzLRRGixi9aWZiCCbqk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1730524111; c=relaxed/simple;
-	bh=ekmyQzoU1BKlanMG0cN3EVm6pNJn+h0ka3WKg7Nql7Q=;
+	bh=UqnvzOd5I7WOVm//QNX3k4MhlM20WbrTvfOuXDlE5C0=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=gvmP9m7fvIAuFCTyc8zdFYoDcpUcz93mN6uYOJ0OUCs3LmCkFTW5df3ch7pSbu/a5vnFVSBEfSZG/z/ExO7quAB0aP7i13E+Jl/TS1xa8TWIh8x+wzRXBTnwNDQ20Tj9g6sPFxFKDWM9GjJxxjzzHTzfzPV9CjR6Tpx+p5+eag0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=zeniv.linux.org.uk; spf=none smtp.mailfrom=ftp.linux.org.uk; dkim=pass (2048-bit key) header.d=linux.org.uk header.i=@linux.org.uk header.b=cvUJCh5q; arc=none smtp.client-ip=62.89.141.173
+	 MIME-Version; b=p7IdwUydtny/TobYKSkCJN57064PVPybWFAfhBy7cl2gHV1vR8D7PeA4af3MDwFn3BWoIJsRVpGtOAjYtbpYHGy9523r8yS4T7kQr0Y4b+aJMRfcsGp+mPGAbhN923eIJQqcYY7RG7nlGx2YXLUAbduPB5VBFtues77EOg8QFV4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=zeniv.linux.org.uk; spf=none smtp.mailfrom=ftp.linux.org.uk; dkim=pass (2048-bit key) header.d=linux.org.uk header.i=@linux.org.uk header.b=cXq+9iff; arc=none smtp.client-ip=62.89.141.173
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=zeniv.linux.org.uk
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=ftp.linux.org.uk
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=linux.org.uk header.i=@linux.org.uk header.b="cvUJCh5q"
+	dkim=pass (2048-bit key) header.d=linux.org.uk header.i=@linux.org.uk header.b="cXq+9iff"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=linux.org.uk; s=zeniv-20220401; h=Sender:Content-Transfer-Encoding:
 	MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:
 	Reply-To:Content-Type:Content-ID:Content-Description;
-	bh=DGLJxTIbvWrNXmEE+I4ltRrz0P0fdEjG8R5Y9QwgEm4=; b=cvUJCh5qlrX4+/9xLM6xlBaY/M
-	Kza777JqXV4SUht1Z0aW3Jh4l2Rbg9kad+v957IrsVlI7+eCHTteNleyOM2AtexrIA6Ijhb62qsk0
-	O361JX3ATByDxMQLTGkI311mDgKtcj/BZqa6eOgvSolfLXAY0YcR83DvozpDRQOjgVAY+v5dlCmy6
-	t0EsGjDTQygQxxzxLe5IEICF+sKHNisjPVW+6eEbzGD4gJ1KnVJV07rTbrn2onQKG9JwUSX7fgHm+
-	bzLv4XaZRP590EBLiXTLiS0gX8pWbT1+hVWtguLsJzaXMR/n10LBH/JmnkmNUKgORq4V4DiGfPCJM
-	RLngXe4A==;
+	bh=7lWz1glGDMtaZAgjM+sv2K64LrUeWXOaiYPOh1LexrE=; b=cXq+9iff69xH2JAUYzeykbuM24
+	HLGyk5lyu/NNkih8G6f3TDdaMHThHioZjqbpAZqdCm6+R8XLby1iKEkoAGWqmBvQyAYByMbzTITS7
+	qTZmtXa1jukAfJNwPxeUPqrRfR92W48gIhVix6Vc9KvnxXdF+RSwAwAbsDq/OhfAGhPP465uLHybI
+	tIqeJlEUGEQfImQEc/VgtdCsKYSEakVIHnnjlxwoVx1DbMmpnhbfPZVrfWfHvTyZyNEiqFQdliH1C
+	u+mnBc7XOQ5TBYyg1uldiOJm/UKaxeC5ZVSaql4sgZG36I2le5DmzABpvItpMvYJm3Rzg92GE//kG
+	NiWjuhQw==;
 Received: from viro by zeniv.linux.org.uk with local (Exim 4.98 #2 (Red Hat Linux))
-	id 1t76N9-0000000AHmE-426L;
-	Sat, 02 Nov 2024 05:08:28 +0000
+	id 1t76N9-0000000AHmA-3F0A;
+	Sat, 02 Nov 2024 05:08:27 +0000
 From: Al Viro <viro@zeniv.linux.org.uk>
 To: linux-fsdevel@vger.kernel.org
 Cc: viro@zeniv.linux.org.uk,
@@ -37,9 +37,9 @@ Cc: viro@zeniv.linux.org.uk,
 	kvm@vger.kernel.org,
 	netdev@vger.kernel.org,
 	torvalds@linux-foundation.org
-Subject: [PATCH v3 07/28] do_mq_notify(): switch to CLASS(fd)
-Date: Sat,  2 Nov 2024 05:08:05 +0000
-Message-ID: <20241102050827.2451599-7-viro@zeniv.linux.org.uk>
+Subject: [PATCH v3 05/28] switch netlink_getsockbyfilp() to taking descriptor
+Date: Sat,  2 Nov 2024 05:08:03 +0000
+Message-ID: <20241102050827.2451599-5-viro@zeniv.linux.org.uk>
 X-Mailer: git-send-email 2.47.0
 In-Reply-To: <20241102050827.2451599-1-viro@zeniv.linux.org.uk>
 References: <20241102050219.GA2450028@ZenIV>
@@ -53,56 +53,75 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Sender: Al Viro <viro@ftp.linux.org.uk>
 
-The only failure exit before fdget() is a return, the only thing done
-after fdput() is transposable with it.
+the only call site (in do_mq_notify()) obtains the argument
+from an immediately preceding fdget() and it is immediately
+followed by fdput(); might as well just replace it with
+a variant that would take a descriptor instead of struct file *
+and have file lookups handled inside that function.
 
 Reviewed-by: Christian Brauner <brauner@kernel.org>
 Signed-off-by: Al Viro <viro@zeniv.linux.org.uk>
 ---
- ipc/mqueue.c | 9 +++------
- 1 file changed, 3 insertions(+), 6 deletions(-)
+ include/linux/netlink.h  | 2 +-
+ ipc/mqueue.c             | 8 +-------
+ net/netlink/af_netlink.c | 9 +++++++--
+ 3 files changed, 9 insertions(+), 10 deletions(-)
 
+diff --git a/include/linux/netlink.h b/include/linux/netlink.h
+index b332c2048c75..a48a30842d84 100644
+--- a/include/linux/netlink.h
++++ b/include/linux/netlink.h
+@@ -239,7 +239,7 @@ int netlink_register_notifier(struct notifier_block *nb);
+ int netlink_unregister_notifier(struct notifier_block *nb);
+ 
+ /* finegrained unicast helpers: */
+-struct sock *netlink_getsockbyfilp(struct file *filp);
++struct sock *netlink_getsockbyfd(int fd);
+ int netlink_attachskb(struct sock *sk, struct sk_buff *skb,
+ 		      long *timeo, struct sock *ssk);
+ void netlink_detachskb(struct sock *sk, struct sk_buff *skb);
 diff --git a/ipc/mqueue.c b/ipc/mqueue.c
-index 48640a362637..4f1dec518fae 100644
+index 34fa0bd8bb11..fd05e3d4f7b6 100644
 --- a/ipc/mqueue.c
 +++ b/ipc/mqueue.c
-@@ -1317,7 +1317,6 @@ SYSCALL_DEFINE5(mq_timedreceive, mqd_t, mqdes, char __user *, u_msg_ptr,
- static int do_mq_notify(mqd_t mqdes, const struct sigevent *notification)
+@@ -1355,13 +1355,7 @@ static int do_mq_notify(mqd_t mqdes, const struct sigevent *notification)
+ 			skb_put(nc, NOTIFY_COOKIE_LEN);
+ 			/* and attach it to the socket */
+ retry:
+-			f = fdget(notification->sigev_signo);
+-			if (!fd_file(f)) {
+-				ret = -EBADF;
+-				goto out;
+-			}
+-			sock = netlink_getsockbyfilp(fd_file(f));
+-			fdput(f);
++			sock = netlink_getsockbyfd(notification->sigev_signo);
+ 			if (IS_ERR(sock)) {
+ 				ret = PTR_ERR(sock);
+ 				goto free_skb;
+diff --git a/net/netlink/af_netlink.c b/net/netlink/af_netlink.c
+index 0b7a89db3ab7..42451ac355d0 100644
+--- a/net/netlink/af_netlink.c
++++ b/net/netlink/af_netlink.c
+@@ -1180,11 +1180,16 @@ static struct sock *netlink_getsockbyportid(struct sock *ssk, u32 portid)
+ 	return sock;
+ }
+ 
+-struct sock *netlink_getsockbyfilp(struct file *filp)
++struct sock *netlink_getsockbyfd(int fd)
  {
- 	int ret;
--	struct fd f;
+-	struct inode *inode = file_inode(filp);
++	CLASS(fd, f)(fd);
++	struct inode *inode;
  	struct sock *sock;
- 	struct inode *inode;
- 	struct mqueue_inode_info *info;
-@@ -1370,8 +1369,8 @@ static int do_mq_notify(mqd_t mqdes, const struct sigevent *notification)
- 		}
- 	}
  
--	f = fdget(mqdes);
--	if (!fd_file(f)) {
-+	CLASS(fd, f)(mqdes);
-+	if (fd_empty(f)) {
- 		ret = -EBADF;
- 		goto out;
- 	}
-@@ -1379,7 +1378,7 @@ static int do_mq_notify(mqd_t mqdes, const struct sigevent *notification)
- 	inode = file_inode(fd_file(f));
- 	if (unlikely(fd_file(f)->f_op != &mqueue_file_operations)) {
- 		ret = -EBADF;
--		goto out_fput;
-+		goto out;
- 	}
- 	info = MQUEUE_I(inode);
++	if (fd_empty(f))
++		return ERR_PTR(-EBADF);
++
++	inode = file_inode(fd_file(f));
+ 	if (!S_ISSOCK(inode->i_mode))
+ 		return ERR_PTR(-ENOTSOCK);
  
-@@ -1418,8 +1417,6 @@ static int do_mq_notify(mqd_t mqdes, const struct sigevent *notification)
- 		inode_set_atime_to_ts(inode, inode_set_ctime_current(inode));
- 	}
- 	spin_unlock(&info->lock);
--out_fput:
--	fdput(f);
- out:
- 	if (sock)
- 		netlink_detachskb(sock, nc);
 -- 
 2.39.5
 
