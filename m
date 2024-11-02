@@ -1,33 +1,33 @@
 Received: from zeniv.linux.org.uk (zeniv.linux.org.uk [62.89.141.173])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DEB1414AD38;
-	Sat,  2 Nov 2024 05:08:31 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3F2CB153BF7;
+	Sat,  2 Nov 2024 05:08:32 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=62.89.141.173
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1730524114; cv=none; b=hf9Jlh9FgQZnWTqnV/bauxckMEsHAxo1OpivGylmr6L6LEafVkxa7tlVU/c9CK2M8SwXj94qeQ5QWmOI5buU/m6A8zK49Fmtk1n1vukuwwxt3z84rzqTXwTeuOiIMNv65p6xviTEAgouSCsxtDgkIIqYZun2BHl/9bAmbzDKhvE=
+	t=1730524114; cv=none; b=nDdOZpAK9trwbQ+xIYK2Q9iV4GA3KIYawwu6nC+vcurFw8yfOeYdb9vtgOJCbIvqwFY8YchtAFry6NED/xUQHTm1lhGrmLarMghU7KTicfRNdBq6fC9+pKyJskMZB5b5XyDZdZzDI9VF5RcxF/r5ZbwIPYsoj0XPVnOD9kQuuSQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1730524114; c=relaxed/simple;
-	bh=dm+OiAozS+p8UmpZe+U/PsxH/SYbVmjiUE+walBTZ3M=;
+	bh=yurPUE3BC0wRqLY1D8u4wRlLV+idEwKbpMZZ5rjuZWU=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=BiBZjrsCVMkZMW3+BqTGs1RYw5XGEbTdihoVyYa60v0iUuVOglBjzwqXiOBdDTvJwZPQPTfPiophM1wQRNSm/fQ0oigJH6HCwdI8SdPGr43jFz0ANPJmD6aAGT9IYjdrc515rXUT3AioHDVJ6HW9iTu0U2DrPfS6rtRvOsMfxYM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=zeniv.linux.org.uk; spf=none smtp.mailfrom=ftp.linux.org.uk; dkim=pass (2048-bit key) header.d=linux.org.uk header.i=@linux.org.uk header.b=JatZtsMv; arc=none smtp.client-ip=62.89.141.173
+	 MIME-Version; b=lFexZdq4hYYJYw5ePn1/BAeSswI25QS0Gihve9OySfJ11gj7/B/TdW0pYTG0fZ2Ponqg65xK/uZctyFqdwgfD096KZBDbW4HOgNU/AGfjbJaoHfUVjGmM/TUwHRAg6MJqSX51/cl3CnHdQregQUz/PHL7N3rv0EBkjkEnNOdYaU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=zeniv.linux.org.uk; spf=none smtp.mailfrom=ftp.linux.org.uk; dkim=pass (2048-bit key) header.d=linux.org.uk header.i=@linux.org.uk header.b=d8aabBWO; arc=none smtp.client-ip=62.89.141.173
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=zeniv.linux.org.uk
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=ftp.linux.org.uk
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=linux.org.uk header.i=@linux.org.uk header.b="JatZtsMv"
+	dkim=pass (2048-bit key) header.d=linux.org.uk header.i=@linux.org.uk header.b="d8aabBWO"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=linux.org.uk; s=zeniv-20220401; h=Sender:Content-Transfer-Encoding:
 	MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:
 	Reply-To:Content-Type:Content-ID:Content-Description;
-	bh=/K0BhcmjV+4n73u3iSBYsRpOEGKMqyoFmjj95TPWqvk=; b=JatZtsMvjHWvPoHucMRy1eqPM4
-	5pfZOU8AFr3Glh+EeQeKpwjMRInKOUemRq2iEZR5Jr+K3RyG8EfVpXTwLjrNWvE7R8EZUSpa1uabQ
-	uFXSCUvxjUsYPTzVB26dp0F5cLPQSGphuUlbDq6QyjvOeOAStvcKE93mmo+Ojx2ip9at5J6dxiFZN
-	2iPmCQjmH+MHjIN49b9NCw9ih/TokBlBlFkdD9EklFcYQjLx9d3dAy7D4CInYPRqOv+qPGASn3s60
-	TT+l/ArC5d3AkjE5CgNfVofTTkhSyi5MpDFB5KYQ08vAC9N6kRiZxvuvNadcw57+3Obr6l+ZYn6LQ
-	bO+cTIvg==;
+	bh=hxqFjXnH7BwPpg5y6pfARQakEFU/n1A9zdRfJDGPNUE=; b=d8aabBWOPN3NHgeyjx9apgquGh
+	5hSsBLQWfQtSokKSHnYccfabiHexKRN3g35ymSBsnDKvvGW6Dd7MZ2m2mMxVWB+4pvrrkQBUIStOS
+	R1NZrMnlXQoUy5vGiPi8SeTauF22/Uj6/vSH5fj1zN/mI7GswFWsQ/2gr++t3Bf9AN1WWCb/iswfn
+	qoxTU3Oj6OunR8gRckx6phVqRqXg1c8udvDKjCBBXDBnsKGAS5vjqlxZvL6EIxF7reMHo5f4M+5I/
+	iHkXzuqEdBo+ct6MKlcy52cFlb+OX2DbK07MjqcRs3pp583QU0UxzF9/DutFC67tP/BX3nTFunsJd
+	ocfjNgmA==;
 Received: from viro by zeniv.linux.org.uk with local (Exim 4.98 #2 (Red Hat Linux))
-	id 1t76NC-0000000AHnp-0XHv;
+	id 1t76NC-0000000AHoE-2WfP;
 	Sat, 02 Nov 2024 05:08:30 +0000
 From: Al Viro <viro@zeniv.linux.org.uk>
 To: linux-fsdevel@vger.kernel.org
@@ -37,9 +37,9 @@ Cc: viro@zeniv.linux.org.uk,
 	kvm@vger.kernel.org,
 	netdev@vger.kernel.org,
 	torvalds@linux-foundation.org
-Subject: [PATCH v3 21/28] convert cifs_ioctl_copychunk()
-Date: Sat,  2 Nov 2024 05:08:19 +0000
-Message-ID: <20241102050827.2451599-21-viro@zeniv.linux.org.uk>
+Subject: [PATCH v3 24/28] do_pollfd(): convert to CLASS(fd)
+Date: Sat,  2 Nov 2024 05:08:22 +0000
+Message-ID: <20241102050827.2451599-24-viro@zeniv.linux.org.uk>
 X-Mailer: git-send-email 2.47.0
 In-Reply-To: <20241102050827.2451599-1-viro@zeniv.linux.org.uk>
 References: <20241102050219.GA2450028@ZenIV>
@@ -53,62 +53,80 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Sender: Al Viro <viro@ftp.linux.org.uk>
 
-fdput() moved past mnt_drop_file_write(); harmless, if somewhat cringeworthy.
-Reordering could be avoided either by adding an explicit scope or by making
-mnt_drop_file_write() called via __cleanup.
+lift setting ->revents into the caller, so that failure exits (including
+the early one) would be plain returns.
+
+We need the scope of our struct fd to end before the store to ->revents,
+since that's shared with the failure exits prior to the point where we
+can do fdget().
 
 Reviewed-by: Christian Brauner <brauner@kernel.org>
 Signed-off-by: Al Viro <viro@zeniv.linux.org.uk>
 ---
- fs/smb/client/ioctl.c | 11 ++++-------
- 1 file changed, 4 insertions(+), 7 deletions(-)
+ fs/select.c | 27 +++++++++++----------------
+ 1 file changed, 11 insertions(+), 16 deletions(-)
 
-diff --git a/fs/smb/client/ioctl.c b/fs/smb/client/ioctl.c
-index 2ce193609d8b..56439da4f119 100644
---- a/fs/smb/client/ioctl.c
-+++ b/fs/smb/client/ioctl.c
-@@ -72,7 +72,6 @@ static long cifs_ioctl_copychunk(unsigned int xid, struct file *dst_file,
- 			unsigned long srcfd)
+diff --git a/fs/select.c b/fs/select.c
+index b41e2d651cc1..e223d1fe9d55 100644
+--- a/fs/select.c
++++ b/fs/select.c
+@@ -855,15 +855,14 @@ static inline __poll_t do_pollfd(struct pollfd *pollfd, poll_table *pwait,
+ 				     __poll_t busy_flag)
  {
- 	int rc;
--	struct fd src_file;
- 	struct inode *src_inode;
+ 	int fd = pollfd->fd;
+-	__poll_t mask = 0, filter;
+-	struct fd f;
++	__poll_t mask, filter;
  
- 	cifs_dbg(FYI, "ioctl copychunk range\n");
-@@ -89,8 +88,8 @@ static long cifs_ioctl_copychunk(unsigned int xid, struct file *dst_file,
- 		return rc;
- 	}
+ 	if (fd < 0)
+-		goto out;
+-	mask = EPOLLNVAL;
+-	f = fdget(fd);
+-	if (!fd_file(f))
+-		goto out;
++		return 0;
++
++	CLASS(fd, f)(fd);
++	if (fd_empty(f))
++		return EPOLLNVAL;
  
--	src_file = fdget(srcfd);
--	if (!fd_file(src_file)) {
-+	CLASS(fd, src_file)(srcfd);
-+	if (fd_empty(src_file)) {
- 		rc = -EBADF;
- 		goto out_drop_write;
- 	}
-@@ -98,20 +97,18 @@ static long cifs_ioctl_copychunk(unsigned int xid, struct file *dst_file,
- 	if (fd_file(src_file)->f_op->unlocked_ioctl != cifs_ioctl) {
- 		rc = -EBADF;
- 		cifs_dbg(VFS, "src file seems to be from a different filesystem type\n");
--		goto out_fput;
-+		goto out_drop_write;
- 	}
+ 	/* userland u16 ->events contains POLL... bitmap */
+ 	filter = demangle_poll(pollfd->events) | EPOLLERR | EPOLLHUP;
+@@ -871,13 +870,7 @@ static inline __poll_t do_pollfd(struct pollfd *pollfd, poll_table *pwait,
+ 	mask = vfs_poll(fd_file(f), pwait);
+ 	if (mask & busy_flag)
+ 		*can_busy_poll = true;
+-	mask &= filter;		/* Mask out unneeded events. */
+-	fdput(f);
+-
+-out:
+-	/* ... and so does ->revents */
+-	pollfd->revents = mangle_poll(mask);
+-	return mask;
++	return mask & filter;		/* Mask out unneeded events. */
+ }
  
- 	src_inode = file_inode(fd_file(src_file));
- 	rc = -EINVAL;
- 	if (S_ISDIR(src_inode->i_mode))
--		goto out_fput;
-+		goto out_drop_write;
- 
- 	rc = cifs_file_copychunk_range(xid, fd_file(src_file), 0, dst_file, 0,
- 					src_inode->i_size, 0);
- 	if (rc > 0)
- 		rc = 0;
--out_fput:
--	fdput(src_file);
- out_drop_write:
- 	mnt_drop_write_file(dst_file);
- 	return rc;
+ static int do_poll(struct poll_list *list, struct poll_wqueues *wait,
+@@ -909,6 +902,7 @@ static int do_poll(struct poll_list *list, struct poll_wqueues *wait,
+ 			pfd = walk->entries;
+ 			pfd_end = pfd + walk->len;
+ 			for (; pfd != pfd_end; pfd++) {
++				__poll_t mask;
+ 				/*
+ 				 * Fish for events. If we found one, record it
+ 				 * and kill poll_table->_qproc, so we don't
+@@ -916,8 +910,9 @@ static int do_poll(struct poll_list *list, struct poll_wqueues *wait,
+ 				 * this. They'll get immediately deregistered
+ 				 * when we break out and return.
+ 				 */
+-				if (do_pollfd(pfd, pt, &can_busy_loop,
+-					      busy_flag)) {
++				mask = do_pollfd(pfd, pt, &can_busy_loop, busy_flag);
++				pfd->revents = mangle_poll(mask);
++				if (mask) {
+ 					count++;
+ 					pt->_qproc = NULL;
+ 					/* found something, stop busy polling */
 -- 
 2.39.5
 
