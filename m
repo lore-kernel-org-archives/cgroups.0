@@ -1,47 +1,39 @@
-Received: from zeniv.linux.org.uk (zeniv.linux.org.uk [62.89.141.173])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7DE2A1AC8AE;
-	Sat,  2 Nov 2024 05:08:47 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=62.89.141.173
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 35528149E16;
+	Sat,  2 Nov 2024 12:21:42 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1730524129; cv=none; b=Sjn1mflHgxrifsPZ06j0PVB/2ekH5pwyIqJCHp+abE/QzAosF7JhjhVkghgArVCKlGOEPOwaOOckIHdakYfzj9CeV7z9BC0qxWxCyaXvqI4lqn2TwPZ9Yg6LrO04+n6Q6Ao87glHUqS4HX8YTC+DvrwyebgBhCjQn/IljctHwik=
+	t=1730550103; cv=none; b=e6woYNsd+pgVx/GvTZk6qAIF78k2IFJTR7kD2ll4Is5fcFkdJzNUEvdOt/ozA8kx7b+LVfictJmK3Vx5ZuEeqiO3eWP0UvPCrllMFGYPba2tinU8bqilVuvCqQLv6ZShpNf8slaoE5RSm74RTUqR/zvvZCUe34Ve4y9m5Md0WuE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1730524129; c=relaxed/simple;
-	bh=sIsbHOCdc77aqOwzZ9NdzfWbaJOX5esYl6OGr+8g17w=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=bs65So6NS46gMA01gAFBbNAmaIiEJ3BbahXTfGEA7FG4G+po29VYXZKA3bGZRPHuF7ld5cyrMgiXYMKivoXpYV3PVhTYQjMpNAz5LY6nOPsXJhF25r+MJLgwNOLiOjnGiQDgvCFE7ORIf40znZSytPxii1/n9jVtPqXmckyMjRc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=zeniv.linux.org.uk; spf=none smtp.mailfrom=ftp.linux.org.uk; dkim=pass (2048-bit key) header.d=linux.org.uk header.i=@linux.org.uk header.b=a4xaumWi; arc=none smtp.client-ip=62.89.141.173
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=zeniv.linux.org.uk
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=ftp.linux.org.uk
+	s=arc-20240116; t=1730550103; c=relaxed/simple;
+	bh=EUcbs1cSrphp8pI7Q6rosjx620b4eV5z/fHgLoriit4=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=qtR3R4tli8drkgUsrxbTM6yprme1vg2jOK5NtZL+mf6/EA+TATyxRI+TyfAVDfPRtYSVCLQM8ysCXeXoVhIo+n91IpwN2010cVYaca1fs3TkP/0vJFeNAGVcbCv4gOLBj4ylyi/oecSEuNHUkoxlcmsm1np5nVeqRmqlnXSyFLo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=eA1pol+o; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=linux.org.uk header.i=@linux.org.uk header.b="a4xaumWi"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=linux.org.uk; s=zeniv-20220401; h=Sender:Content-Transfer-Encoding:
-	MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:
-	Reply-To:Content-Type:Content-ID:Content-Description;
-	bh=EYGEzTbzCwoX59fmg/fy+A0M2cH27/fC1+I1UrCmDZc=; b=a4xaumWihzxkWK0sSVMGC09NKL
-	/EsiX3Dv1qIhCPhGLJUqveSVG6gtBNZ1U93ayc7VzB9EgmgXdfbFST0I3zU+9qpSPpj/EUeuXlqIx
-	Fnyp/bs4rZTmQ47+xzgW7rRAjr5j8FEseJlNADJiY/fv/BDNRH88f6gSL6KPdvBBzDlVBBsLyjzkk
-	fP/fibZTx0A/vhFAcheY5lQxujutQNbon/Mm236ocUpZruF+bKXt0TmhNhrHVYo7eVv/SeGQ8KH+4
-	g+uQWinRficKJPYDWd7Q4JFj+CvmXIztzmdlGYHSgtOgVi4dL5DA4p08buP+34xGVLU0PPh/KaS/U
-	hXCzdZ5Q==;
-Received: from viro by zeniv.linux.org.uk with local (Exim 4.98 #2 (Red Hat Linux))
-	id 1t76N9-0000000AHmC-3giW;
-	Sat, 02 Nov 2024 05:08:27 +0000
-From: Al Viro <viro@zeniv.linux.org.uk>
-To: linux-fsdevel@vger.kernel.org
-Cc: viro@zeniv.linux.org.uk,
-	brauner@kernel.org,
-	cgroups@vger.kernel.org,
-	kvm@vger.kernel.org,
-	netdev@vger.kernel.org,
-	torvalds@linux-foundation.org
-Subject: [PATCH v3 06/28] do_mq_notify(): saner skb freeing on failures
-Date: Sat,  2 Nov 2024 05:08:04 +0000
-Message-ID: <20241102050827.2451599-6-viro@zeniv.linux.org.uk>
-X-Mailer: git-send-email 2.47.0
-In-Reply-To: <20241102050827.2451599-1-viro@zeniv.linux.org.uk>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="eA1pol+o"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8D7F7C4CEC3;
+	Sat,  2 Nov 2024 12:21:40 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1730550102;
+	bh=EUcbs1cSrphp8pI7Q6rosjx620b4eV5z/fHgLoriit4=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=eA1pol+o0LuK3tzs+pdYsRUx47ng/osqRkSYRBzDArN+eNs/QJXVS/WJWFU4hqVfp
+	 wzXtp44VX1j8N2q3QvKziMTBI3xjlRp+Re4FSskzFkA8W2aGJ6/CPJB3FCyWN7EJKo
+	 Bi74c6aEVLz2nDzu/qlCoR1AXvJ599AqO/F7cOm9Od9Y8KzyNB9gvu+tCk/FEw307a
+	 1UzHi1f54zlnl0sehHIKu+RkDWsOeYExwpCm+iB7xT3upaAK20GPsL2G79UcgmV313
+	 +chh/jHmYRLr6+HRzqaVUu7+JVJNBu9EEkGK1C3tlg3cc6bIMYCt8K+GT3ZIneLAIL
+	 HgQTboIMoDFGA==
+Date: Sat, 2 Nov 2024 12:21:32 +0000
+From: Simon Horman <horms@kernel.org>
+To: Al Viro <viro@zeniv.linux.org.uk>
+Cc: linux-fsdevel@vger.kernel.org, brauner@kernel.org,
+	cgroups@vger.kernel.org, kvm@vger.kernel.org,
+	netdev@vger.kernel.org, torvalds@linux-foundation.org
+Subject: Re: [PATCH v3 01/28] net/socket.c: switch to CLASS(fd)
+Message-ID: <20241102122132.GH1838431@kernel.org>
 References: <20241102050219.GA2450028@ZenIV>
  <20241102050827.2451599-1-viro@zeniv.linux.org.uk>
 Precedence: bulk
@@ -50,64 +42,65 @@ List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Sender: Al Viro <viro@ftp.linux.org.uk>
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20241102050827.2451599-1-viro@zeniv.linux.org.uk>
 
-cleanup is convoluted enough as it is; it's easier to have early
-failure outs do explicit kfree_skb(nc), rather than going to
-contortions needed to reuse the cleanup from late failures.
+On Sat, Nov 02, 2024 at 05:07:59AM +0000, Al Viro wrote:
+> 	The important part in sockfd_lookup_light() is avoiding needless
+> file refcount operations, not the marginal reduction of the register
+> pressure from not keeping a struct file pointer in the caller.
+> 
+> 	Switch to use fdget()/fdpu(); with sane use of CLASS(fd) we can
+> get a better code generation...
+> 
+> 	Would be nice if somebody tested it on networking test suites
+> (including benchmarks)...
+> 
+> 	sockfd_lookup_light() does fdget(), uses sock_from_file() to
+> get the associated socket and returns the struct socket reference to
+> the caller, along with "do we need to fput()" flag.  No matching fdput(),
+> the caller does its equivalent manually, using the fact that sock->file
+> points to the struct file the socket has come from.
+> 
+> 	Get rid of that - have the callers do fdget()/fdput() and
+> use sock_from_file() directly.  That kills sockfd_lookup_light()
+> and fput_light() (no users left).
+> 
+> 	What's more, we can get rid of explicit fdget()/fdput() by
+> switching to CLASS(fd, ...) - code generation does not suffer, since
+> now fdput() inserted on "descriptor is not opened" failure exit
+> is recognized to be a no-op by compiler.
+> 
+> Reviewed-by: Christian Brauner <brauner@kernel.org>
+> Signed-off-by: Al Viro <viro@zeniv.linux.org.uk>
 
-Signed-off-by: Al Viro <viro@zeniv.linux.org.uk>
----
- ipc/mqueue.c | 16 +++++-----------
- 1 file changed, 5 insertions(+), 11 deletions(-)
+...
 
-diff --git a/ipc/mqueue.c b/ipc/mqueue.c
-index fd05e3d4f7b6..48640a362637 100644
---- a/ipc/mqueue.c
-+++ b/ipc/mqueue.c
-@@ -1347,8 +1347,8 @@ static int do_mq_notify(mqd_t mqdes, const struct sigevent *notification)
- 			if (copy_from_user(nc->data,
- 					notification->sigev_value.sival_ptr,
- 					NOTIFY_COOKIE_LEN)) {
--				ret = -EFAULT;
--				goto free_skb;
-+				kfree_skb(nc);
-+				return -EFAULT;
- 			}
- 
- 			/* TODO: add a header? */
-@@ -1357,16 +1357,14 @@ static int do_mq_notify(mqd_t mqdes, const struct sigevent *notification)
- retry:
- 			sock = netlink_getsockbyfd(notification->sigev_signo);
- 			if (IS_ERR(sock)) {
--				ret = PTR_ERR(sock);
--				goto free_skb;
-+				kfree_skb(nc);
-+				return PTR_ERR(sock);
- 			}
- 
- 			timeo = MAX_SCHEDULE_TIMEOUT;
- 			ret = netlink_attachskb(sock, nc, &timeo, NULL);
--			if (ret == 1) {
--				sock = NULL;
-+			if (ret == 1)
- 				goto retry;
--			}
- 			if (ret)
- 				return ret;
- 		}
-@@ -1425,10 +1423,6 @@ static int do_mq_notify(mqd_t mqdes, const struct sigevent *notification)
- out:
- 	if (sock)
- 		netlink_detachskb(sock, nc);
--	else
--free_skb:
--		dev_kfree_skb(nc);
--
- 	return ret;
- }
- 
--- 
-2.39.5
+> diff --git a/net/socket.c b/net/socket.c
 
+...
+
+> @@ -2926,16 +2900,18 @@ static int do_recvmmsg(int fd, struct mmsghdr __user *mmsg,
+>  
+>  	datagrams = 0;
+>  
+> -	sock = sockfd_lookup_light(fd, &err, &fput_needed);
+> -	if (!sock)
+> -		return err;
+> +	CLASS(fd, f)(fd);
+> +
+> +	if (fd_empty(f))
+> +		return -EBADF;
+> +	sock = sock_from_file(fd_file(f));
+> +	if (unlikely(!sock))
+> +		return -ENOTSOCK;
+
+Hi Al,
+
+There is an unconditional check on err down on line 2977.
+However, with the above change err is now only conditionally
+set before we reach that line. Are you sure that it will always
+be initialised by the time line 2977 is reached?
+
+...
