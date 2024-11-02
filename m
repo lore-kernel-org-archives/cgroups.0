@@ -1,33 +1,33 @@
 Received: from zeniv.linux.org.uk (zeniv.linux.org.uk [62.89.141.173])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4C7CE1B0F39;
-	Sat,  2 Nov 2024 05:08:44 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7DE2A1AC8AE;
+	Sat,  2 Nov 2024 05:08:47 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=62.89.141.173
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1730524125; cv=none; b=NOpLz9q33wn3rv3kYzN7dK0z+w7D4ciWIj98pQ6++xtm4JBQyJFWwDB1fckiQz3v7sR630sBX3XmKwKeLTN7Wmpa8naxWNnny7xsdj/CVCRMFVx4jJ3QptFOX2txc/leodOUuNtV1q7PAnzNJ+GmuXPQ6CTxVlKXuDwfMHcInp8=
+	t=1730524129; cv=none; b=Sjn1mflHgxrifsPZ06j0PVB/2ekH5pwyIqJCHp+abE/QzAosF7JhjhVkghgArVCKlGOEPOwaOOckIHdakYfzj9CeV7z9BC0qxWxCyaXvqI4lqn2TwPZ9Yg6LrO04+n6Q6Ao87glHUqS4HX8YTC+DvrwyebgBhCjQn/IljctHwik=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1730524125; c=relaxed/simple;
-	bh=gtp1ZSBxeGU9Vblx1bRvUwKk8xMGTtqyOTSc5GYHTGQ=;
+	s=arc-20240116; t=1730524129; c=relaxed/simple;
+	bh=sIsbHOCdc77aqOwzZ9NdzfWbaJOX5esYl6OGr+8g17w=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=k1kiNWLEtuNcmk/w8cAo6q46zzr35YbhiYjnUvje7Bm4hR65T9fvlKDMbYsAuVFHjhGGDorYPdrYTLymCyvLtYmE43BPpV33FqXfjZXOG22K6jfY8CF8oG7DTpdeuiizaj5fynK3lPJ1dxslNkn4HHRmaN/nmbV3o55IXv6F0+8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=zeniv.linux.org.uk; spf=none smtp.mailfrom=ftp.linux.org.uk; dkim=pass (2048-bit key) header.d=linux.org.uk header.i=@linux.org.uk header.b=JXadlhVs; arc=none smtp.client-ip=62.89.141.173
+	 MIME-Version; b=bs65So6NS46gMA01gAFBbNAmaIiEJ3BbahXTfGEA7FG4G+po29VYXZKA3bGZRPHuF7ld5cyrMgiXYMKivoXpYV3PVhTYQjMpNAz5LY6nOPsXJhF25r+MJLgwNOLiOjnGiQDgvCFE7ORIf40znZSytPxii1/n9jVtPqXmckyMjRc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=zeniv.linux.org.uk; spf=none smtp.mailfrom=ftp.linux.org.uk; dkim=pass (2048-bit key) header.d=linux.org.uk header.i=@linux.org.uk header.b=a4xaumWi; arc=none smtp.client-ip=62.89.141.173
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=zeniv.linux.org.uk
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=ftp.linux.org.uk
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=linux.org.uk header.i=@linux.org.uk header.b="JXadlhVs"
+	dkim=pass (2048-bit key) header.d=linux.org.uk header.i=@linux.org.uk header.b="a4xaumWi"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=linux.org.uk; s=zeniv-20220401; h=Sender:Content-Transfer-Encoding:
 	MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:
 	Reply-To:Content-Type:Content-ID:Content-Description;
-	bh=Dtt4wbggeVpgtxxdtCeoe0mu4Teq0ZJP7xJzTP09Hdc=; b=JXadlhVs2vcFA11ht9ZnXlT1+5
-	iRGJmaXUUx8TJ6LaQfzvVxPNU/zlNCPnjUZD+/JC3ocbKssz2BIqWVE3fILnBMdnJSlYB18OM+iBL
-	Nu0JAanGjBHPN5AdNQGPaqmK4GspRPzkKnZ+pYagC1hedFvFnbkMUEumvLSTbF5wNrKpqecS/jaoP
-	g5t3vA14ShAbWG9JyLHafNZEstjd6g4R4gI/dkC9uw/xc9P1v82iAy9G5ri7NLSL1J2IMY1zPvhae
-	AokjapiUKc5JBJThL1xiEqwU7BhRM76Eemaag81RyGKEDuw/I6kP9dhAj1Y3hJa56dceuBjGdg3Xd
-	yGiMWCKw==;
+	bh=EYGEzTbzCwoX59fmg/fy+A0M2cH27/fC1+I1UrCmDZc=; b=a4xaumWihzxkWK0sSVMGC09NKL
+	/EsiX3Dv1qIhCPhGLJUqveSVG6gtBNZ1U93ayc7VzB9EgmgXdfbFST0I3zU+9qpSPpj/EUeuXlqIx
+	Fnyp/bs4rZTmQ47+xzgW7rRAjr5j8FEseJlNADJiY/fv/BDNRH88f6gSL6KPdvBBzDlVBBsLyjzkk
+	fP/fibZTx0A/vhFAcheY5lQxujutQNbon/Mm236ocUpZruF+bKXt0TmhNhrHVYo7eVv/SeGQ8KH+4
+	g+uQWinRficKJPYDWd7Q4JFj+CvmXIztzmdlGYHSgtOgVi4dL5DA4p08buP+34xGVLU0PPh/KaS/U
+	hXCzdZ5Q==;
 Received: from viro by zeniv.linux.org.uk with local (Exim 4.98 #2 (Red Hat Linux))
-	id 1t76N9-0000000AHm6-2BF7;
+	id 1t76N9-0000000AHmC-3giW;
 	Sat, 02 Nov 2024 05:08:27 +0000
 From: Al Viro <viro@zeniv.linux.org.uk>
 To: linux-fsdevel@vger.kernel.org
@@ -37,9 +37,9 @@ Cc: viro@zeniv.linux.org.uk,
 	kvm@vger.kernel.org,
 	netdev@vger.kernel.org,
 	torvalds@linux-foundation.org
-Subject: [PATCH v3 03/28] timerfd: switch to CLASS(fd)
-Date: Sat,  2 Nov 2024 05:08:01 +0000
-Message-ID: <20241102050827.2451599-3-viro@zeniv.linux.org.uk>
+Subject: [PATCH v3 06/28] do_mq_notify(): saner skb freeing on failures
+Date: Sat,  2 Nov 2024 05:08:04 +0000
+Message-ID: <20241102050827.2451599-6-viro@zeniv.linux.org.uk>
 X-Mailer: git-send-email 2.47.0
 In-Reply-To: <20241102050827.2451599-1-viro@zeniv.linux.org.uk>
 References: <20241102050219.GA2450028@ZenIV>
@@ -53,102 +53,59 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Sender: Al Viro <viro@ftp.linux.org.uk>
 
-Fold timerfd_fget() into both callers to have fdget() and fdput() in
-the same scope.  Could be done in different ways, but this is probably
-the smallest solution.
+cleanup is convoluted enough as it is; it's easier to have early
+failure outs do explicit kfree_skb(nc), rather than going to
+contortions needed to reuse the cleanup from late failures.
 
-Reviewed-by: Christian Brauner <brauner@kernel.org>
 Signed-off-by: Al Viro <viro@zeniv.linux.org.uk>
 ---
- fs/timerfd.c | 40 ++++++++++++++--------------------------
- 1 file changed, 14 insertions(+), 26 deletions(-)
+ ipc/mqueue.c | 16 +++++-----------
+ 1 file changed, 5 insertions(+), 11 deletions(-)
 
-diff --git a/fs/timerfd.c b/fs/timerfd.c
-index 137523e0bb21..4c32244b0508 100644
---- a/fs/timerfd.c
-+++ b/fs/timerfd.c
-@@ -394,19 +394,6 @@ static const struct file_operations timerfd_fops = {
- 	.unlocked_ioctl	= timerfd_ioctl,
- };
+diff --git a/ipc/mqueue.c b/ipc/mqueue.c
+index fd05e3d4f7b6..48640a362637 100644
+--- a/ipc/mqueue.c
++++ b/ipc/mqueue.c
+@@ -1347,8 +1347,8 @@ static int do_mq_notify(mqd_t mqdes, const struct sigevent *notification)
+ 			if (copy_from_user(nc->data,
+ 					notification->sigev_value.sival_ptr,
+ 					NOTIFY_COOKIE_LEN)) {
+-				ret = -EFAULT;
+-				goto free_skb;
++				kfree_skb(nc);
++				return -EFAULT;
+ 			}
  
--static int timerfd_fget(int fd, struct fd *p)
--{
--	struct fd f = fdget(fd);
--	if (!fd_file(f))
--		return -EBADF;
--	if (fd_file(f)->f_op != &timerfd_fops) {
--		fdput(f);
--		return -EINVAL;
--	}
--	*p = f;
--	return 0;
--}
+ 			/* TODO: add a header? */
+@@ -1357,16 +1357,14 @@ static int do_mq_notify(mqd_t mqdes, const struct sigevent *notification)
+ retry:
+ 			sock = netlink_getsockbyfd(notification->sigev_signo);
+ 			if (IS_ERR(sock)) {
+-				ret = PTR_ERR(sock);
+-				goto free_skb;
++				kfree_skb(nc);
++				return PTR_ERR(sock);
+ 			}
+ 
+ 			timeo = MAX_SCHEDULE_TIMEOUT;
+ 			ret = netlink_attachskb(sock, nc, &timeo, NULL);
+-			if (ret == 1) {
+-				sock = NULL;
++			if (ret == 1)
+ 				goto retry;
+-			}
+ 			if (ret)
+ 				return ret;
+ 		}
+@@ -1425,10 +1423,6 @@ static int do_mq_notify(mqd_t mqdes, const struct sigevent *notification)
+ out:
+ 	if (sock)
+ 		netlink_detachskb(sock, nc);
+-	else
+-free_skb:
+-		dev_kfree_skb(nc);
 -
- SYSCALL_DEFINE2(timerfd_create, int, clockid, int, flags)
- {
- 	int ufd;
-@@ -471,7 +458,6 @@ static int do_timerfd_settime(int ufd, int flags,
- 		const struct itimerspec64 *new,
- 		struct itimerspec64 *old)
- {
--	struct fd f;
- 	struct timerfd_ctx *ctx;
- 	int ret;
- 
-@@ -479,15 +465,17 @@ static int do_timerfd_settime(int ufd, int flags,
- 		 !itimerspec64_valid(new))
- 		return -EINVAL;
- 
--	ret = timerfd_fget(ufd, &f);
--	if (ret)
--		return ret;
-+	CLASS(fd, f)(ufd);
-+	if (fd_empty(f))
-+		return -EBADF;
-+
-+	if (fd_file(f)->f_op != &timerfd_fops)
-+		return -EINVAL;
-+
- 	ctx = fd_file(f)->private_data;
- 
--	if (isalarm(ctx) && !capable(CAP_WAKE_ALARM)) {
--		fdput(f);
-+	if (isalarm(ctx) && !capable(CAP_WAKE_ALARM))
- 		return -EPERM;
--	}
- 
- 	timerfd_setup_cancel(ctx, flags);
- 
-@@ -535,17 +523,18 @@ static int do_timerfd_settime(int ufd, int flags,
- 	ret = timerfd_setup(ctx, flags, new);
- 
- 	spin_unlock_irq(&ctx->wqh.lock);
--	fdput(f);
  	return ret;
- }
- 
- static int do_timerfd_gettime(int ufd, struct itimerspec64 *t)
- {
--	struct fd f;
- 	struct timerfd_ctx *ctx;
--	int ret = timerfd_fget(ufd, &f);
--	if (ret)
--		return ret;
-+	CLASS(fd, f)(ufd);
-+
-+	if (fd_empty(f))
-+		return -EBADF;
-+	if (fd_file(f)->f_op != &timerfd_fops)
-+		return -EINVAL;
- 	ctx = fd_file(f)->private_data;
- 
- 	spin_lock_irq(&ctx->wqh.lock);
-@@ -567,7 +556,6 @@ static int do_timerfd_gettime(int ufd, struct itimerspec64 *t)
- 	t->it_value = ktime_to_timespec64(timerfd_get_remaining(ctx));
- 	t->it_interval = ktime_to_timespec64(ctx->tintv);
- 	spin_unlock_irq(&ctx->wqh.lock);
--	fdput(f);
- 	return 0;
  }
  
 -- 
