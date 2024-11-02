@@ -1,34 +1,34 @@
 Received: from zeniv.linux.org.uk (zeniv.linux.org.uk [62.89.141.173])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2C152149E17;
-	Sat,  2 Nov 2024 05:08:31 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C71C315852E;
+	Sat,  2 Nov 2024 05:08:32 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=62.89.141.173
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1730524116; cv=none; b=sg2i16gGfQ4pLR3sLogW19aHJdCieoeosu7DFugpRLG2g59CJu7HyGvDUSIlNnkGINHbfehBHHfK2YBsC3gUYHPKopgJ6EWNNtpqIk0VTGHXCNQV7ZliKglPLBbW+8mHTaBkwjj9MMkyGBvgzk5jEkzAH2sx6X9kd/olmGbQayw=
+	t=1730524116; cv=none; b=bQliGXqBnWT6E+OLUx+jS/ipubcohMUCtvxo65zfGrgFGnTPKoXCrWnVC4sZ6SjPYGbl2gEAqXTNo9zI/3Oo5dLTzaF2n1EOaRwaHT4zadrJfPp2gT8g8WnbxsSQajjVXvVQsiKg02RfJgGBL8kZ+ni32HR1UHjqWQzsSvpsXmk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1730524116; c=relaxed/simple;
-	bh=D4OvnR7bvGfyffyPknd4OovPSuNubSSDGJpRJWw+NKg=;
+	bh=gbkcLZ2oi9ZTyoWuRq/Wa/jw5/HxFtKeEWqYhZZiKXs=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=fwO5BVUiqdIVzUMWuMjOzkPtrj7vUOCEbdlHgVrnYzHeaNZ9dUY83/XM4TbBptkVC/vR36rO5oZzscYyT3NBAMnE4Z3J1Egc7L8yH9jwJxU6UH0B5F2uxXn69hamfYwno+Z69T6TkFGo2dmiBM+UJHYN2CE1SXYAirzDJ7feYXs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=zeniv.linux.org.uk; spf=none smtp.mailfrom=ftp.linux.org.uk; dkim=pass (2048-bit key) header.d=linux.org.uk header.i=@linux.org.uk header.b=XHBop7Q0; arc=none smtp.client-ip=62.89.141.173
+	 MIME-Version; b=FZnGJISP2N1jV1L/LuKcvV7PvqEJTTOe6HnlcMHp3vJcMq+h3DPTLzSMUQDhB2flbwAZL5Be7ZgKc3Rt3pTDR9ufFvlw4apzsjM8+QDaGNYiKCO8uoQww+gMOXtElF3objqHGif0riBFKbGte9rypYjvpyZbFtudIeUjo9ZXCV8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=zeniv.linux.org.uk; spf=none smtp.mailfrom=ftp.linux.org.uk; dkim=pass (2048-bit key) header.d=linux.org.uk header.i=@linux.org.uk header.b=LKniih2X; arc=none smtp.client-ip=62.89.141.173
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=zeniv.linux.org.uk
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=ftp.linux.org.uk
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=linux.org.uk header.i=@linux.org.uk header.b="XHBop7Q0"
+	dkim=pass (2048-bit key) header.d=linux.org.uk header.i=@linux.org.uk header.b="LKniih2X"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=linux.org.uk; s=zeniv-20220401; h=Sender:Content-Transfer-Encoding:
 	MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:
 	Reply-To:Content-Type:Content-ID:Content-Description;
-	bh=G3j2tuZKqezqznv2rlyENPKnz3THQjAkmHgi/G15VF0=; b=XHBop7Q07mCTMaITNn3hHCFzzX
-	fzpUK3ioUAvZ5GA7KVFKlvCcbHHvcFBdWnND5IQn9nqPuDBdK1wg8Co3HB3SSdYh5eXnxW1Z5qfYt
-	Gx+tretk9p1RKhcq3YqYwQW2U7ANMe7hgm7ts8b86t+gp+Mq8+Hruf2xqbSYbdQ7qlrMIJOgj34QS
-	mYscVk4vOktrYweKh8Yb0xc5fRENMtL846Qn/uFXNOhEgpCQJzvCtYY5g3IlAVESx2Cta43OqIEEh
-	GYjmK2Pdg9alNscCm31B11sPEH6xF/Px/WkQHH0cyV7CFhaMmtIKJTsZB5Fg21ai+aS9gzwlY1H6W
-	nUE8jGIg==;
+	bh=6hy/KqwBlFpcuKN8QvzGZavlerwPpGSpN7JrWMUa+QA=; b=LKniih2XOmlR2zkZ5FYnf38UVW
+	JPG5uBofVuxVZvqdAi8nPWCvrFDzIues0n2b/4rCb2bjja15GKag5XBh4nw6xFeihxnZ59tml+BN6
+	a47v+Cf/n/MXBJSHV/eJvdmHWyB/4QORULnDdxf/ElQYuEzovuVjAfh4W4Izr4hqMNd7kr8AYWRLs
+	3dzQF3YxqeWqTwi0wm3eDQhqjyiXxv1l5F3AV6e1FtQn+1LrYzx6x/FnHzDPON/LNInEjW2lJxaoP
+	a0Ns30Ktn0Eqf/UokaKDIDmwFeFPoAaB4kkuPxSWJaRfeaHRMly8bbyK98gF/jhBmLANYny6cTgLh
+	q4GvcM5w==;
 Received: from viro by zeniv.linux.org.uk with local (Exim 4.98 #2 (Red Hat Linux))
-	id 1t76NB-0000000AHnK-1oxE;
-	Sat, 02 Nov 2024 05:08:29 +0000
+	id 1t76ND-0000000AHoZ-0Rqz;
+	Sat, 02 Nov 2024 05:08:31 +0000
 From: Al Viro <viro@zeniv.linux.org.uk>
 To: linux-fsdevel@vger.kernel.org
 Cc: viro@zeniv.linux.org.uk,
@@ -37,9 +37,9 @@ Cc: viro@zeniv.linux.org.uk,
 	kvm@vger.kernel.org,
 	netdev@vger.kernel.org,
 	torvalds@linux-foundation.org
-Subject: [PATCH v3 16/28] convert do_preadv()/do_pwritev()
-Date: Sat,  2 Nov 2024 05:08:14 +0000
-Message-ID: <20241102050827.2451599-16-viro@zeniv.linux.org.uk>
+Subject: [PATCH v3 27/28] css_set_fork(): switch to CLASS(fd_raw, ...)
+Date: Sat,  2 Nov 2024 05:08:25 +0000
+Message-ID: <20241102050827.2451599-27-viro@zeniv.linux.org.uk>
 X-Mailer: git-send-email 2.47.0
 In-Reply-To: <20241102050827.2451599-1-viro@zeniv.linux.org.uk>
 References: <20241102050219.GA2450028@ZenIV>
@@ -53,62 +53,62 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Sender: Al Viro <viro@ftp.linux.org.uk>
 
-fdput() can be transposed with add_{r,w}char() and inc_sysc{r,w}();
-it's the same story as with do_readv()/do_writev(), only with
-fdput() instead of fdput_pos().
+reference acquired there by fget_raw() is not stashed anywhere -
+we could as well borrow instead.
 
 Reviewed-by: Christian Brauner <brauner@kernel.org>
 Signed-off-by: Al Viro <viro@zeniv.linux.org.uk>
 ---
- fs/read_write.c | 12 ++++--------
+ kernel/cgroup/cgroup.c | 12 ++++--------
  1 file changed, 4 insertions(+), 8 deletions(-)
 
-diff --git a/fs/read_write.c b/fs/read_write.c
-index deb87457aa76..f6e9232eacd8 100644
---- a/fs/read_write.c
-+++ b/fs/read_write.c
-@@ -1113,18 +1113,16 @@ static inline loff_t pos_from_hilo(unsigned long high, unsigned long low)
- static ssize_t do_preadv(unsigned long fd, const struct iovec __user *vec,
- 			 unsigned long vlen, loff_t pos, rwf_t flags)
- {
--	struct fd f;
- 	ssize_t ret = -EBADF;
+diff --git a/kernel/cgroup/cgroup.c b/kernel/cgroup/cgroup.c
+index 8305a67ea8d9..02acc2540c46 100644
+--- a/kernel/cgroup/cgroup.c
++++ b/kernel/cgroup/cgroup.c
+@@ -6476,7 +6476,6 @@ static int cgroup_css_set_fork(struct kernel_clone_args *kargs)
+ 	struct cgroup *dst_cgrp = NULL;
+ 	struct css_set *cset;
+ 	struct super_block *sb;
+-	struct file *f;
  
- 	if (pos < 0)
- 		return -EINVAL;
- 
--	f = fdget(fd);
--	if (fd_file(f)) {
-+	CLASS(fd, f)(fd);
-+	if (!fd_empty(f)) {
- 		ret = -ESPIPE;
- 		if (fd_file(f)->f_mode & FMODE_PREAD)
- 			ret = vfs_readv(fd_file(f), vec, vlen, &pos, flags);
--		fdput(f);
+ 	if (kargs->flags & CLONE_INTO_CGROUP)
+ 		cgroup_lock();
+@@ -6493,14 +6492,14 @@ static int cgroup_css_set_fork(struct kernel_clone_args *kargs)
+ 		return 0;
  	}
  
- 	if (ret > 0)
-@@ -1136,18 +1134,16 @@ static ssize_t do_preadv(unsigned long fd, const struct iovec __user *vec,
- static ssize_t do_pwritev(unsigned long fd, const struct iovec __user *vec,
- 			  unsigned long vlen, loff_t pos, rwf_t flags)
- {
--	struct fd f;
- 	ssize_t ret = -EBADF;
+-	f = fget_raw(kargs->cgroup);
+-	if (!f) {
++	CLASS(fd_raw, f)(kargs->cgroup);
++	if (fd_empty(f)) {
+ 		ret = -EBADF;
+ 		goto err;
+ 	}
+-	sb = f->f_path.dentry->d_sb;
++	sb = fd_file(f)->f_path.dentry->d_sb;
  
- 	if (pos < 0)
- 		return -EINVAL;
- 
--	f = fdget(fd);
--	if (fd_file(f)) {
-+	CLASS(fd, f)(fd);
-+	if (!fd_empty(f)) {
- 		ret = -ESPIPE;
- 		if (fd_file(f)->f_mode & FMODE_PWRITE)
- 			ret = vfs_writev(fd_file(f), vec, vlen, &pos, flags);
--		fdput(f);
+-	dst_cgrp = cgroup_get_from_file(f);
++	dst_cgrp = cgroup_get_from_file(fd_file(f));
+ 	if (IS_ERR(dst_cgrp)) {
+ 		ret = PTR_ERR(dst_cgrp);
+ 		dst_cgrp = NULL;
+@@ -6548,15 +6547,12 @@ static int cgroup_css_set_fork(struct kernel_clone_args *kargs)
  	}
  
- 	if (ret > 0)
+ 	put_css_set(cset);
+-	fput(f);
+ 	kargs->cgrp = dst_cgrp;
+ 	return ret;
+ 
+ err:
+ 	cgroup_threadgroup_change_end(current);
+ 	cgroup_unlock();
+-	if (f)
+-		fput(f);
+ 	if (dst_cgrp)
+ 		cgroup_put(dst_cgrp);
+ 	put_css_set(cset);
 -- 
 2.39.5
 
