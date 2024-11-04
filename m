@@ -1,155 +1,95 @@
-Received: from casper.infradead.org (casper.infradead.org [90.155.50.34])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CC3811FA260
-	for <cgroups@vger.kernel.org>; Mon,  4 Nov 2024 21:06:15 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=90.155.50.34
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E8F3A1CDFBE;
+	Mon,  4 Nov 2024 21:38:35 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1730754377; cv=none; b=M1/MJka6KtypPQK1z4AFPQ9UBx3/bgqAsmEfRx5p5fePgB1dJ9y2pzt/nfqgNlpevarKtS7+gNsue+HkifwMGpGgYs74DHZ6zcpFHeDAXiIfLc7tpsY5voYQLsXtpKL+dXqqbQcO80yeWJj5eLRddpXeKJoViWJY9X3mrGf9/qU=
+	t=1730756316; cv=none; b=FQXYbKuW6btAWukxhiU1QjWoelnQr1crrdyN55jc5iCso5RXjRbf31TgVsA7wRcZLSJ+cVoqo9RzYAaaTMaDW10dY6jhpW6gGnPxUKhfiWb4uuh1c/McFcPKOJPhrW7w7UpZK9u+J1PE4atlzaDrLVIg9FfryosV45Mei7N3XSw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1730754377; c=relaxed/simple;
-	bh=/gpCiFZ+vwDG0vBZ2Hxn9lJFwjNLB5hLVjj+xLi9T7w=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=f7RGOE9Vr+bh/uXNWoObIMZIoEEOGHy5rKxnmosKWKp1cXzyB9a0oNyLBuZvCEUeY/Pf4OpdtYF0BiMha57BM1FaXj/vc2T9vJZidRH/vmBiFP9NHx93SnYJRS38dabfgfsiuh0Km0Ps8D4PFfWmcD+bvD111TAAJr1E2t6Ajck=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=LBGDMQwO; arc=none smtp.client-ip=90.155.50.34
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=infradead.org
+	s=arc-20240116; t=1730756316; c=relaxed/simple;
+	bh=WwBZK0JB5bJHyGasmcj/L8/Envcc8v3532gInv1sJ/I=;
+	h=Date:From:To:Cc:Subject:Message-Id:In-Reply-To:References:
+	 Mime-Version:Content-Type; b=pwDzTdWbcC1d5iXanz8NpdgCWp0D/+75Lnt3HxI4dtXpMf//MxKg7ZODlguMMOt0fz3ePIlEE2m2O5kXOrRYg/c1yIhrgURL5wPQ64Mi1jhZY0R3LbvQjnpn7A84KPQ6Kr7kAwsUsF0yV+7XrrFuVV5XoPoH/340aUDmJEAigKM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (1024-bit key) header.d=linux-foundation.org header.i=@linux-foundation.org header.b=Co2uEtQt; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="LBGDMQwO"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=casper.20170209; h=Content-Transfer-Encoding:MIME-Version:
-	References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Sender:Reply-To:
-	Content-Type:Content-ID:Content-Description;
-	bh=n4HJqHIFL6KoDyu6o3HDh3SUN9SIibGS4LEHqczrBb0=; b=LBGDMQwOUt8tta8VHNMF+zE9ED
-	SVBWmfKJzxz+yptFcLR0vrOQCmdJ9MPFhP9i/N/OTwaUsy7KfnOY2V/QeD9deQuKfWrxakLdBbpRM
-	ddImJROE0Ug4pFwod2ux+4/ao6ATz71tF7RTeSGcQhoUz142XbT4FH5V750HdeGxhk4DBEqA5Y2KR
-	rGDqgBflCT1dpbTbiXe0X9lrMIgEMrouVA7GYw66o7sbQ7H94EFQsIuBho3ivKvCkGntqyzBPKnE9
-	nNS4KpMWfWmiHR16S9pzfqeBz4s3zNtRbkVKpE3rdm0PcQYUUSpKGhDdp0dMVkxzzezuuQ1jm+SdP
-	AIkfZaIQ==;
-Received: from willy by casper.infradead.org with local (Exim 4.98 #2 (Red Hat Linux))
-	id 1t84Gy-00000001ZYN-15RY;
-	Mon, 04 Nov 2024 21:06:04 +0000
-From: "Matthew Wilcox (Oracle)" <willy@infradead.org>
-To: Johannes Weiner <hannes@cmpxchg.org>,
-	Michal Hocko <mhocko@kernel.org>,
-	Roman Gushchin <roman.gushchin@linux.dev>,
-	Shakeel Butt <shakeel.butt@linux.dev>
-Cc: "Matthew Wilcox (Oracle)" <willy@infradead.org>,
-	Muchun Song <muchun.song@linux.dev>,
-	cgroups@vger.kernel.org,
-	linux-mm@kvack.org
-Subject: [PATCH 2/3] mm: Simplify split_page_memcg()
-Date: Mon,  4 Nov 2024 21:05:59 +0000
-Message-ID: <20241104210602.374975-3-willy@infradead.org>
-X-Mailer: git-send-email 2.46.0
-In-Reply-To: <20241104210602.374975-1-willy@infradead.org>
-References: <20241104210602.374975-1-willy@infradead.org>
+	dkim=pass (1024-bit key) header.d=linux-foundation.org header.i=@linux-foundation.org header.b="Co2uEtQt"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 10236C4CECE;
+	Mon,  4 Nov 2024 21:38:35 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linux-foundation.org;
+	s=korg; t=1730756315;
+	bh=WwBZK0JB5bJHyGasmcj/L8/Envcc8v3532gInv1sJ/I=;
+	h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
+	b=Co2uEtQt0SYWN/uVQ8wieRC7EHb2o4A0t5p5W8viVE7GGxZJMu4laOwivRh0DqQnk
+	 gewQq4bFlkQa/k+pWap14rQjNpT3cK2mzTskebMAZswHXL5zsbOTylRg7rDJO9DoSu
+	 ve1ju0QIq0U2PPofuCoqgwp5qdylE8rnkPFuEewY=
+Date: Mon, 4 Nov 2024 13:38:34 -0800
+From: Andrew Morton <akpm@linux-foundation.org>
+To: Yu Zhao <yuzhao@google.com>
+Cc: Shakeel Butt <shakeel.butt@linux.dev>, Johannes Weiner
+ <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, Roman Gushchin
+ <roman.gushchin@linux.dev>, Muchun Song <muchun.song@linux.dev>, Hugh
+ Dickins <hughd@google.com>, Yosry Ahmed <yosryahmed@google.com>,
+ linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org,
+ linux-fsdevel@vger.kernel.org, linux-doc@vger.kernel.org, Meta kernel team
+ <kernel-team@meta.com>
+Subject: Re: [PATCH v1 5/6] memcg-v1: no need for memcg locking for MGLRU
+Message-Id: <20241104133834.e0e138038a111c2b0d20bdde@linux-foundation.org>
+In-Reply-To: <ZykEtcHrQRq-KrBC@google.com>
+References: <20241025012304.2473312-1-shakeel.butt@linux.dev>
+	<20241025012304.2473312-6-shakeel.butt@linux.dev>
+	<iwmabnye3nl4merealrawt3bdvfii2pwavwrddrqpraoveet7h@ezrsdhjwwej7>
+	<CAOUHufZexpg-m5rqJXUvkCh5nS6RqJYcaS9b=xra--pVnHctPA@mail.gmail.com>
+	<ZykEtcHrQRq-KrBC@google.com>
+X-Mailer: Sylpheed 3.8.0beta1 (GTK+ 2.24.33; x86_64-pc-linux-gnu)
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
+Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
-The last argument to split_page_memcg() is now always 0, so remove it,
-effectively reverting commit b8791381d7ed.
+On Mon, 4 Nov 2024 10:30:29 -0700 Yu Zhao <yuzhao@google.com> wrote:
 
-Signed-off-by: Matthew Wilcox (Oracle) <willy@infradead.org>
----
- include/linux/memcontrol.h |  4 ++--
- mm/memcontrol.c            | 26 ++++++++++++++------------
- mm/page_alloc.c            |  4 ++--
- 3 files changed, 18 insertions(+), 16 deletions(-)
+> On Sat, Oct 26, 2024 at 09:26:04AM -0600, Yu Zhao wrote:
+> > On Sat, Oct 26, 2024 at 12:34 AM Shakeel Butt <shakeel.butt@linux.dev> wrote:
+> > >
+> > > On Thu, Oct 24, 2024 at 06:23:02PM GMT, Shakeel Butt wrote:
+> > > > While updating the generation of the folios, MGLRU requires that the
+> > > > folio's memcg association remains stable. With the charge migration
+> > > > deprecated, there is no need for MGLRU to acquire locks to keep the
+> > > > folio and memcg association stable.
+> > > >
+> > > > Signed-off-by: Shakeel Butt <shakeel.butt@linux.dev>
+> > >
+> > > Andrew, can you please apply the following fix to this patch after your
+> > > unused fixup?
+> > 
+> > Thanks!
+> 
+> syzbot caught the following:
+> 
+>   WARNING: CPU: 0 PID: 85 at mm/vmscan.c:3140 folio_update_gen+0x23d/0x250 mm/vmscan.c:3140
+>   ...
+> 
+> Andrew, can you please fix this in place?
 
-diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
-index 5502aa8e138e..a787080f814f 100644
---- a/include/linux/memcontrol.h
-+++ b/include/linux/memcontrol.h
-@@ -1044,7 +1044,7 @@ static inline void memcg_memory_event_mm(struct mm_struct *mm,
- 	rcu_read_unlock();
- }
- 
--void split_page_memcg(struct page *head, int old_order, int new_order);
-+void split_page_memcg(struct page *first, int order);
- 
- #else /* CONFIG_MEMCG */
- 
-@@ -1463,7 +1463,7 @@ void count_memcg_event_mm(struct mm_struct *mm, enum vm_event_item idx)
- {
- }
- 
--static inline void split_page_memcg(struct page *head, int old_order, int new_order)
-+static inline void split_page_memcg(struct page *first, int order)
- {
- }
- #endif /* CONFIG_MEMCG */
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index 5e44d6e7591e..506439a5dcfe 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -3034,25 +3034,27 @@ void __memcg_slab_free_hook(struct kmem_cache *s, struct slab *slab,
- }
- 
- /*
-- * Because folio_memcg(head) is not set on tails, set it now.
-+ * The memcg data is only set on the first page, now transfer it to all the
-+ * other pages.
-  */
--void split_page_memcg(struct page *head, int old_order, int new_order)
-+void split_page_memcg(struct page *first, int order)
- {
--	struct folio *folio = page_folio(head);
-+	unsigned long memcg_data = first->memcg_data;
-+	struct obj_cgroup *objcg;
- 	int i;
--	unsigned int old_nr = 1 << old_order;
--	unsigned int new_nr = 1 << new_order;
-+	unsigned int nr = 1 << order;
- 
--	if (mem_cgroup_disabled() || !folio_memcg_charged(folio))
-+	if (!memcg_data)
- 		return;
- 
--	for (i = new_nr; i < old_nr; i += new_nr)
--		folio_page(folio, i)->memcg_data = folio->memcg_data;
-+	VM_BUG_ON_PAGE((memcg_data & OBJEXTS_FLAGS_MASK) != MEMCG_DATA_KMEM,
-+			first);
-+	objcg = (void *)(memcg_data & ~OBJEXTS_FLAGS_MASK);
- 
--	if (folio_memcg_kmem(folio))
--		obj_cgroup_get_many(__folio_objcg(folio), old_nr / new_nr - 1);
--	else
--		css_get_many(&folio_memcg(folio)->css, old_nr / new_nr - 1);
-+	for (i = 1; i < nr; i++)
-+		first[i].memcg_data = memcg_data;
-+
-+	obj_cgroup_get_many(objcg, nr - 1);
- }
- 
- unsigned long mem_cgroup_usage(struct mem_cgroup *memcg, bool swap)
-diff --git a/mm/page_alloc.c b/mm/page_alloc.c
-index 47048b39b8ca..5523654c9759 100644
---- a/mm/page_alloc.c
-+++ b/mm/page_alloc.c
-@@ -2823,7 +2823,7 @@ void split_page(struct page *page, unsigned int order)
- 		set_page_refcounted(page + i);
- 	split_page_owner(page, order, 0);
- 	pgalloc_tag_split(page_folio(page), order, 0);
--	split_page_memcg(page, order, 0);
-+	split_page_memcg(page, order);
- }
- EXPORT_SYMBOL_GPL(split_page);
- 
-@@ -5020,7 +5020,7 @@ static void *make_alloc_exact(unsigned long addr, unsigned int order,
- 
- 		split_page_owner(page, order, 0);
- 		pgalloc_tag_split(page_folio(page), order, 0);
--		split_page_memcg(page, order, 0);
-+		split_page_memcg(page, order);
- 		while (page < --last)
- 			set_page_refcounted(last);
- 
--- 
-2.43.0
+OK, but...
 
+> --- a/mm/vmscan.c
+> +++ b/mm/vmscan.c
+> @@ -3138,7 +3138,6 @@ static int folio_update_gen(struct folio *folio, int gen)
+>  	unsigned long new_flags, old_flags = READ_ONCE(folio->flags);
+>  
+>  	VM_WARN_ON_ONCE(gen >= MAX_NR_GENS);
+> -	VM_WARN_ON_ONCE(!rcu_read_lock_held());
+>  
+>  	do {
+>  		/* lru_gen_del_folio() has isolated this page? */
+
+it would be good to know why this assertion is considered incorrect? 
+And a link to the sysbot report?
+
+Thanks.
