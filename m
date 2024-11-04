@@ -1,33 +1,32 @@
 Received: from casper.infradead.org (casper.infradead.org [90.155.50.34])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 031101FA262
-	for <cgroups@vger.kernel.org>; Mon,  4 Nov 2024 21:06:09 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DE1DC1FA262
+	for <cgroups@vger.kernel.org>; Mon,  4 Nov 2024 21:06:12 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=90.155.50.34
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1730754371; cv=none; b=gw9fPwaDg0cz65t7TS2gTYz7x1z1irDm/f82wLYRPPE089CygA+AKR1cPKjdtL/RCnvhdmD8NRuQkApylfGTZbHCVrzzMr5Uo8U+ccTorn43uXdGLN1POw3KDsEzuGiEopWwB7md/8L2O050BkIPZoCPL88eELV4O0fxAWrDCD8=
+	t=1730754374; cv=none; b=nSOobcoPOTGanJ3GhUlUGW+jvUKbVNQa47o23c8WLRQWlmZnj/q8d6r10jvge+ROlOI+W/Pe/+TBen0wauaOQwcMj0Yye95gP4LdMCsLe9g47NsChVgDRedmYYsuEFyy9zvWLUBsIas9Ui70x40mUeF+kCsmHQIbIyzCPeD4pdM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1730754371; c=relaxed/simple;
-	bh=ugmwMJCtGAtEfRuPyqj6Fj6ygslTiU+38HjWqdBEmVk=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=F2x1IIWXPZMlDRsc6rRpnHh7UdaX/s/UAQERpBx7d0vKw4eaKK2n9dSAfFh7GLMArsjRF+TawkZu10MILFMyhUojvefMK76JX+VESHZFg+kcwYXRDPCYSart+GvMvxUZM4TSS1NwnEISaf8++idVHreRrlJp2eLsNgArTRTdI5M=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=eKNcimCI; arc=none smtp.client-ip=90.155.50.34
+	s=arc-20240116; t=1730754374; c=relaxed/simple;
+	bh=bUGogHrGu2IE5RYC+uh2HwpqyDzawug5xUwgjF/YeVU=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=WKjSGDpo8c4yMqg5lX2k5KXSHCh+p0A1XWv9mR0D+a6INf3rr4bYJtHwiADaoP31N7O8HBNbe8IwpNWi9/Oi5avdR7RiVhBBFGbUce/YN8DPMxxwjRUznmLIR9RkTPkp52pGPZwwSVcRRNey8VtNV0w4PJrh8YhvN4cOIGI175g=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=cSOQ1Pu6; arc=none smtp.client-ip=90.155.50.34
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="eKNcimCI"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="cSOQ1Pu6"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=infradead.org; s=casper.20170209; h=Content-Transfer-Encoding:MIME-Version:
-	References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Sender:Reply-To:
-	Content-Type:Content-ID:Content-Description;
-	bh=gXYh3cqHcJHGeUBg4M162tqHpDf+n9+pJfHXppJVvX8=; b=eKNcimCIWz8r8AhbydXdSOF4Bm
-	vjAZ+AnNuSAHBM79pVcg8E3yOWxdhKZdrshxl64iYJae5w7OXaJpvjCZ+GDp/NXiTk/lfgPg+uLLy
-	9VoOx4HYikCSE8Cr4D39wxYFPf5onfG78FVxRtWXfeIUehak7qAO/SyfLDNDI2tbwqeJpgKpPRq6K
-	BUps+r8AUI3S4B+BlS14v+IHkT/esIZ7hRxJxR77qqLtVp18bSo+jggQWqdmxHdWzgL1MHgPz0GkT
-	QV5uDpMtMh4J+AYwWU5s32vATaIYTsVam9KW63kldO0sFODSr1Z24roYSwLalSZVoY0WwCKjhjMl/
-	r3a52hdQ==;
+	Message-ID:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:Content-ID:
+	Content-Description:In-Reply-To:References;
+	bh=IPUXcSba4hpDc7ZFq/hxzhhDKtMBom8UcmG+num2BO0=; b=cSOQ1Pu6GnAZ3ImVSgvtG+e6SU
+	rnBmGbx5pNW88okR/IXYaHGOG6KOVF2wKO9yra3Csq37veyeGMJOyuYvkLAfFDzdaWUk+/ochSu4x
+	MWCYL6RoMkQyigFTGxheL1GjuHOOQpHHZf4ORw5pH0kRnjMdnoWDM95TqHKuXX5Lb/KMxIJ8nwbr0
+	yJ3MyHcERJWj3TTcQPaojrgEed2gELSyomQxevh4iQdn6dE7IUKhSf6rGdGPK6JYYubAf0DXWQtai
+	XFNPcpU6z+vQBvZe7aS8VRK0uu3omII1KLCe/zRcdykJavOyq6PngM0dqlJT4qjh1+sGQ5lvoEXEQ
+	gJYJy4+g==;
 Received: from willy by casper.infradead.org with local (Exim 4.98 #2 (Red Hat Linux))
-	id 1t84Gy-00000001ZYK-0hmI;
+	id 1t84Gy-00000001ZYI-0DQB;
 	Mon, 04 Nov 2024 21:06:04 +0000
 From: "Matthew Wilcox (Oracle)" <willy@infradead.org>
 To: Johannes Weiner <hannes@cmpxchg.org>,
@@ -38,12 +37,10 @@ Cc: "Matthew Wilcox (Oracle)" <willy@infradead.org>,
 	Muchun Song <muchun.song@linux.dev>,
 	cgroups@vger.kernel.org,
 	linux-mm@kvack.org
-Subject: [PATCH 1/3] mm: Opencode split_page_memcg() in __split_huge_page()
-Date: Mon,  4 Nov 2024 21:05:58 +0000
-Message-ID: <20241104210602.374975-2-willy@infradead.org>
+Subject: [PATCH 0/3] Introduce acctmem
+Date: Mon,  4 Nov 2024 21:05:57 +0000
+Message-ID: <20241104210602.374975-1-willy@infradead.org>
 X-Mailer: git-send-email 2.46.0
-In-Reply-To: <20241104210602.374975-1-willy@infradead.org>
-References: <20241104210602.374975-1-willy@infradead.org>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
@@ -52,43 +49,30 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-This is in preparation for only handling kmem pages in
-__split_huge_page().
+As a step towards shrinking struct page, we need to remove all references
+to page->memcg_data.  The model I'm working towards is described at
+https://kernelnewbies.org/MatthewWilcox/Memdescs
 
-Signed-off-by: Matthew Wilcox (Oracle) <willy@infradead.org>
----
- mm/huge_memory.c | 11 +++++++++--
- 1 file changed, 9 insertions(+), 2 deletions(-)
+In working on this series, I'm dissatisfied with how much I've assumed
+that every page belongs to a folio.  There will need to be more changes
+in order to split struct acctmem from struct folio in the future.
+The first two patches take some steps in that direction, but I'm not
+going to do any more than that in this series.
 
-diff --git a/mm/huge_memory.c b/mm/huge_memory.c
-index f92068864469..44d25a74b611 100644
---- a/mm/huge_memory.c
-+++ b/mm/huge_memory.c
-@@ -3234,6 +3234,10 @@ static void __split_huge_page_tail(struct folio *folio, int tail,
- 		folio_set_large_rmappable(new_folio);
- 	}
- 
-+#ifdef CONFIG_MEMCG
-+	new_folio->memcg_data = folio->memcg_data;
-+#endif
-+
- 	/* Finally unfreeze refcount. Additional reference from page cache. */
- 	page_ref_unfreeze(page_tail,
- 		1 + ((!folio_test_anon(folio) || folio_test_swapcache(folio)) ?
-@@ -3267,8 +3271,11 @@ static void __split_huge_page(struct page *page, struct list_head *list,
- 	int order = folio_order(folio);
- 	unsigned int nr = 1 << order;
- 
--	/* complete memcg works before add pages to LRU */
--	split_page_memcg(head, order, new_order);
-+#ifdef CONFIG_MEMCG
-+	if (folio_memcg_charged(folio))
-+		css_get_many(&folio_memcg(folio)->css,
-+				(1 << (order - new_order)) - 1);
-+#endif
- 
- 	if (folio_test_anon(folio) && folio_test_swapcache(folio)) {
- 		offset = swap_cache_index(folio->swap);
+Matthew Wilcox (Oracle) (3):
+  mm: Opencode split_page_memcg() in __split_huge_page()
+  mm: Simplify split_page_memcg()
+  mm: Introduce acctmem
+
+ include/linux/memcontrol.h | 28 ++++++++++++++++++++++++++--
+ include/linux/mm_types.h   |  6 +++---
+ mm/huge_memory.c           | 11 +++++++++--
+ mm/memcontrol.c            | 29 ++++++++++++++++-------------
+ mm/page_alloc.c            |  8 ++++----
+ mm/page_owner.c            |  2 +-
+ mm/slab.h                  |  2 +-
+ 7 files changed, 60 insertions(+), 26 deletions(-)
+
 -- 
 2.43.0
 
