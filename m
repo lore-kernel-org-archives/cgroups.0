@@ -1,32 +1,32 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D6168217455;
-	Tue, 12 Nov 2024 18:52:12 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 67CF2217F47;
+	Tue, 12 Nov 2024 18:59:18 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1731437532; cv=none; b=n270ioK9e9kRYJBAGBQgZJgjuyqQzmH69TSCiLwk0yZ28rzYQ1muIYVH6rhQA2R1UuEyUEIr+s9uaYKmLwQPgLyCrV9RDsNDYuhCiTgDf0HuQNZc3I2Im8MAUA5OQQt/WSNN6eOFW2/785gVGl9bFWSQfrUDuZT298HS/qnvcnA=
+	t=1731437959; cv=none; b=bOpURvjSFHnZMJ6UwbWWgC5Fz+624o5eetnMWrJyDYt1r7+s4Q5Yefa3R+sDFY8c+uo3A1fqMjw72hdGN8vU79lg87iXvU/4rQUIz6TmgJL1CeCY68S2MHO1LqK9BcWi3EU0k+RQTZgSx3huKsgmH/7BCgQIlJu4mF3KoVlNlZc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1731437532; c=relaxed/simple;
-	bh=lKpYDs3gx8HV/ktP6SJhRTmHZUBnTT2faH7Jw5atD6I=;
+	s=arc-20240116; t=1731437959; c=relaxed/simple;
+	bh=XsivP3IDYZago+Kj/5QC40N14e4R7jSG15dl3Bzg7ac=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=p7n6RDL+Q6MQiLYmNm2KCj3cGWs0PxOmoHapVuHYPQ+vTmtSNhrZTXWL1Q9FubPNhRblFsQ1SPZTnSpe5hnKs+TZ08VXzUa6hUF7crAWh/XKFM4rzilJq/KRYlkRKcVCkuzhk3GKfO7wInezyCqv3njX4m+db/uVDR+bo7ru2gg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=axeVZoYn; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=b35ju5HwVVlyHXA1XII6keb2GQWJsc+b03x/fb8ZFmsrYcTCGi/Cfl8uYWLZYNUaCu+EtvJqLTDvyPti1CijHOWGdYTJIviOPCDU+vgbGYKB+nh4DEIJTQ3EWCV4/2zuRJ5t9/Yh2GcTGs+8A8uK6iy9+E4uxnro8PFgDA9f/Pc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=mG6f5wnL; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="axeVZoYn"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4EE55C4CECD;
-	Tue, 12 Nov 2024 18:52:12 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="mG6f5wnL"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C35BFC4CECD;
+	Tue, 12 Nov 2024 18:59:17 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1731437532;
-	bh=lKpYDs3gx8HV/ktP6SJhRTmHZUBnTT2faH7Jw5atD6I=;
+	s=k20201202; t=1731437958;
+	bh=XsivP3IDYZago+Kj/5QC40N14e4R7jSG15dl3Bzg7ac=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=axeVZoYnVhXVzTtc/qwb+dFMqZ92LqT9qo0W+++qcjEzaXdJcnzJ7WHvrGhqKtNbM
-	 Dd5FmIihyXANhHN8tZ7uAnuuG6JoHWc+J4+kz0wzGOzvUIinbnOkVbkzl+VZnLjujo
-	 RkUsr1mfwsgFNvVc+2ZG8bADzn5mR0qDQrg9XY6YTTyX3JJO8fF4u/a0SBQnNWDsco
-	 WFSKQzX2aAgbtNgMqM+uU8AkK8SNlaXqw0/4hOVSvBvXsbNmDY0HDRt7aSVJkBNxMj
-	 9bv5oFeGMPx10+8Rao+jJxColh096D/2Dek9NQ/rDlFebm+T0uOWj+y12qfyi5vPU1
-	 PHhwhAf0vWVOw==
-Date: Tue, 12 Nov 2024 08:52:11 -1000
+	b=mG6f5wnLG109pDTsCaZ4QERU9nRGxqcmPWHRSxCi3u61cpP4ZlEP0/qCItjYYVXOE
+	 6R97g1f2yApo9+ybbSpCxO3ZLWAT/I9b1gyIIrz9Vub7LAdUcQSSvsKOK3eb5pBBrC
+	 dh5H1mkuHzMiYtpugHYLtzInFPTC9KnKUSQeAjKWXuiBz1Zdp8pqbRLhaTTI3a2Au9
+	 ZG9b3cl8LvKvXOtrvFDVXpw1p5a5lffay+MOx/I3Sar+TodHjx0EX8TPVcQFLyd40t
+	 ITv72r93sWEmnDoCDlnt3fsJV3pqHBWmdbBIlJg22HPHwyKah3OJqXcEeVxcgeWy//
+	 sqIR+70rE/X+w==
+Date: Tue, 12 Nov 2024 08:59:16 -1000
 From: Tejun Heo <tj@kernel.org>
 To: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
 Cc: cgroups@vger.kernel.org, linux-kernel@vger.kernel.org,
@@ -37,12 +37,13 @@ Cc: cgroups@vger.kernel.org, linux-kernel@vger.kernel.org,
 	Hillf Danton <hdanton@sina.com>,
 	Johannes Weiner <hannes@cmpxchg.org>,
 	Marco Elver <elver@google.com>, Zefan Li <lizefan.x@bytedance.com>,
-	tglx@linutronix.de
-Subject: Re: [PATCH v2 1/2] kernfs: Make it possible to use RCU for
- kernfs_node::name lookup.
-Message-ID: <ZzOj2z4g7nzWnCBb@slm.duckdns.org>
+	tglx@linutronix.de,
+	syzbot+6ea37e2e6ffccf41a7e6@syzkaller.appspotmail.com
+Subject: Re: [PATCH v2 2/2] cgroup, kernfs: Move cgroup to the RCU interface
+ for name lookups
+Message-ID: <ZzOlhANLYxFaIix2@slm.duckdns.org>
 References: <20241112155713.269214-1-bigeasy@linutronix.de>
- <20241112155713.269214-2-bigeasy@linutronix.de>
+ <20241112155713.269214-3-bigeasy@linutronix.de>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
@@ -51,72 +52,29 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20241112155713.269214-2-bigeasy@linutronix.de>
+In-Reply-To: <20241112155713.269214-3-bigeasy@linutronix.de>
 
 Hello,
 
-On Tue, Nov 12, 2024 at 04:52:38PM +0100, Sebastian Andrzej Siewior wrote:
+On Tue, Nov 12, 2024 at 04:52:39PM +0100, Sebastian Andrzej Siewior wrote:
 ...
-> KERNFS_ROOT_SAME_PARENT is added to signal that the parent never
-
-Maybe KERNFS_ROOT_INVARIANT_PARENT captures it better?
-
-...
-> @@ -195,13 +191,47 @@ static int kernfs_path_from_node_locked(struct kernfs_node *kn_to,
+>  /**
+> - * pr_cont_kernfs_name - pr_cont name of a kernfs_node
+> + * pr_cont_kernfs_name_rcu - pr_cont name of a kernfs_node
+>   * @kn: kernfs_node of interest
+>   *
+> - * This function can be called from any context.
+> + * This function can be called from any context. The root node must be with
+> + * KERNFS_ROOT_SAME_PARENT.
 >   */
->  int kernfs_name(struct kernfs_node *kn, char *buf, size_t buflen)
->  {
-> +	struct kernfs_root *root;
->  
-> +	guard(read_lock_irqsave)(&kernfs_rename_lock);
-> +	if (kn) {
-> +		root = kernfs_root(kn);
-> +		if (WARN_ON_ONCE(root->flags & KERNFS_ROOT_SAME_PARENT))
-> +			kn = NULL;
+> -void pr_cont_kernfs_name(struct kernfs_node *kn)
+> +void pr_cont_kernfs_name_rcu(struct kernfs_node *kn)
 
-Hmm... does kn need to be set to NULL here?
-
-> +	}
-> +
-> +	if (!kn)
-> +		return strscpy(buf, "(null)", buflen);
-> +
-> +	return strscpy(buf, kn->parent ? kn->name : "/", buflen);
-...
-> +int kernfs_name_rcu(struct kernfs_node *kn, char *buf, size_t buflen)
-> +{
-> +	struct kernfs_root *root;
-> +
-> +	if (kn) {
-> +		root = kernfs_root(kn);
-> +		if (WARN_ON_ONCE(!(root->flags & KERNFS_ROOT_SAME_PARENT)))
-> +			kn = NULL;
-
-Ah, I suppose it's to keep things symmetric. That's fine.
-
-> +	}
-> +	if (!kn)
-> +		return strscpy(buf, "(null)", buflen);
-> +
-> +	guard(rcu)();
-
-Also, why are guards in different locations? Even when !SAME_PARENT, kn's
-can't jump across roots, so guard there can also be in the same location as
-this one?
-
-...
-> @@ -200,7 +205,10 @@ struct kernfs_node {
->  	 * parent directly.
->  	 */
->  	struct kernfs_node	*parent;
-> -	const char		*name;
-> +	union {
-> +		const char		__rcu *name_rcu;
-> +		const char		*name;
-> +	};
-
-Wouldn't it be simpler if ->name is always __rcu and !SAME_PARENT just
-requires further protection on the read side?
+Having to split the interface all the way up isn't great. While there are
+also downsides, I wonder whether a better approach here is just making the
+backend function (kernfs_path_from_node()) automatically use RCU locking if
+the flag is set rather than propagating the difference by splitting the
+interface. The distinction doesn't mean anything to most users after all.
 
 Thanks.
 
