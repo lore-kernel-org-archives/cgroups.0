@@ -1,72 +1,73 @@
-Received: from mail-wr1-f54.google.com (mail-wr1-f54.google.com [209.85.221.54])
+Received: from mail-wr1-f42.google.com (mail-wr1-f42.google.com [209.85.221.42])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6D9B71E009A
-	for <cgroups@vger.kernel.org>; Tue,  3 Dec 2024 10:01:55 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.54
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D25171DE4D7
+	for <cgroups@vger.kernel.org>; Tue,  3 Dec 2024 10:15:28 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.42
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1733220117; cv=none; b=KEMDZIiD890gOBUkRXpb4GwauppWROUlyb/5ZGxs3vTGqhJggxfczdVubPVuI2Y+sRma04NN/ngzuDLHp1EEi0BwRhMGEceqUHLrIyfWtfM9oXROUtTXETf71wrcpfNAfWSf8hTB4Hc2l61eiAI0mRIRqqkKGVMC2ukgGUbZowI=
+	t=1733220930; cv=none; b=R9MlOlyn3PIdF+C0hW3isozz34k8hzMxVjrxC00B9iGN+vTbmzFJLPPkIgB60vSUtH3O8GSsAAS5fCPYTCTL2BhGe64K7B4EMrk9RbJOEpFeI7rEUHGijh9SeGdxLopa1KDUbD1ZshGX2D0rQgaDLvW3vbSVzPUAO7fzVMNmqUg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1733220117; c=relaxed/simple;
-	bh=u3Jt9s6RfY+zcb5GxXzP8H7fgAopZDnLmuUt82FHZzg=;
+	s=arc-20240116; t=1733220930; c=relaxed/simple;
+	bh=G0sj8PY6ADW3aET+hb+E7GMb/SqAJl8FiJH7t0gVTnE=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=IhURd4p8h0XcFogEky0sTE2iTeTV3CL5pnfexMQHM34C9zSRkZG18agJZjJV30yQl7yogwbGXBScaeat1ET9VoS3vNIoyeamT4AwrLOrfExroRuFYsjGuIbbUdFiIjirMOzjos6BWOiljCYEBZs0RdtvsezOn/N7HGxJegwBKTk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com; spf=pass smtp.mailfrom=suse.com; dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b=InEn2InG; arc=none smtp.client-ip=209.85.221.54
+	 Content-Type:Content-Disposition:In-Reply-To; b=P8ghP8IZ857RcCPMgrC4MjKOTt6hEGHKYjvV9OIzIQO0J2vmmg5MXNfCB5/K01qM+qUj/8AvMU54XbIYymRPMGviFwomSpn9XXHYv93oUmDwdPYUMPx04vB+92hX/L07aMRIR+lPPxXF0rCr6qKii7f/1VZixOTxJoB3bqlk76Q=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com; spf=pass smtp.mailfrom=suse.com; dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b=YiyPPPMi; arc=none smtp.client-ip=209.85.221.42
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b="InEn2InG"
-Received: by mail-wr1-f54.google.com with SMTP id ffacd0b85a97d-385e3621518so2458897f8f.1
-        for <cgroups@vger.kernel.org>; Tue, 03 Dec 2024 02:01:55 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b="YiyPPPMi"
+Received: by mail-wr1-f42.google.com with SMTP id ffacd0b85a97d-385dfb168cbso2541450f8f.1
+        for <cgroups@vger.kernel.org>; Tue, 03 Dec 2024 02:15:28 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=suse.com; s=google; t=1733220114; x=1733824914; darn=vger.kernel.org;
+        d=suse.com; s=google; t=1733220927; x=1733825727; darn=vger.kernel.org;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=94lyGAg+T9h5Wb97mwGuy5lSICPbI04Wnq5QT8dG5h0=;
-        b=InEn2InG62x2fY6AlfXv4CTyh9FwgoXhLL+OJQ3YZ8CpFLK4eGhvz3dRW21wcgwpj6
-         yK1NvsgffgkPzws38Nbf6WuCgxIEB8LCcmFDlW7Lfb48kqvvikgrZk2/lbCE81CbUAW5
-         M8gv//IPnO5maaO19MTgGPC/BDCPYqAYJwfZetLWb6YKTMUKlZWWolWksesCw2nzPCuk
-         mnTLIqNzT1r2VZhUMw0m96sr2tcjmm1v29RG78JGUNskzIRG7jJw7rfw2EdF4WGreN4g
-         oGMpzHHaqPoVKfKMfKmlddar0LxYz4B2QhFB5G9QOOpD8Cld17UjAX1+VI+8lGibvaAl
-         sW5Q==
+        bh=1oL/Eu1oFnM7Lq/a9MADW9dd1D0ZuUMkh3bz7/dA41Y=;
+        b=YiyPPPMiYl2teojVGTnN3euHxVo3Ei0VTzhwP3CJBRoS/pvHiMPwEbS9NzToxJ5cjG
+         286vxWQmQUffhxvIpOQrpNbgAQ1QUFVh409diZRUfyRfVdYPrTSS6Ok6ML+TyxDgwjn9
+         456fT9A+d6UYdGXo8Wy6zV1SYxoQxnbtntZShuiNrcVtOAFBlF2iut0IXT7mGvHztPCU
+         ZIhdgKmlP8jHb+UoSMvzP+bhRYXoNlIz+SzGoJzgYLjZLnyVwXcHFyRT2iRMWsGkt45x
+         JslA1LiRvzNWaK7l4iWDn9tcjnEruJS0W1beRmAfuH214LvcSTFj08wM+RpvjFUXQpyz
+         ulDA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1733220114; x=1733824914;
+        d=1e100.net; s=20230601; t=1733220927; x=1733825727;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=94lyGAg+T9h5Wb97mwGuy5lSICPbI04Wnq5QT8dG5h0=;
-        b=skcy6MbKjXxnt6hIbUvUQ90QYhvXlw5FQlAlmB3WLa1KF82mgTUNhkxjN2ulDycQmY
-         SPnYlEO0V9QB6UJ/oVZ6TW8jlWTnBvKo/1Me9Y1f9HNovRNzbBCmQ5yq5TLwQWpKyxip
-         gRANwaY6eryI064d1vycC5G9beCzwaiNILzLWif/zoPHM5rjVpQziBPW9PIipP2Lt+gf
-         i+9yXTGAFgLvUYBEX9fV8+Gvha+Uc/T1yOtWwKM+jv/wChH3UlhwBayNF8cFjkqSL/1B
-         pU00nSACzcQt+66T6RrCdMIveEYsEjJUNlTRDli3yIyFiZ5Qk6QjrSjKbWvukvgEKSRE
-         OTLA==
-X-Forwarded-Encrypted: i=1; AJvYcCXayqQPgtl6gKA3lqpXe8SDRWeuaLF/0wpdteQyfn2ouXIm4Cw+hQyYqA6XPB8BVguTVKB4boW9@vger.kernel.org
-X-Gm-Message-State: AOJu0Yz9JVMy4tD/Qak7wkDGynhl7iOGJyfrV3j6Cik6YAcPAvnHYRvY
-	c0tafrUlapYH+HGlzoLW9l0Wfyow27F5Qpfvo2bwWo/iQBQgS08sDFw6dyMVQ3g=
-X-Gm-Gg: ASbGncs8wWrD2tFbHZoxAWVqXP5MOs1fnCt1tX5pMqQi8XoItLjbT2pOOeBrYygawvQ
-	3QGKlj80/Qc5PPfuMVOpcLuCeFpCryev+W6aKEE6ryGxJcjyFhx1tLcYgur8OkdOEg3XqWB74LL
-	Bg3SXRMneSNCu4KvLVM9zSRq2JOtoCPYa0bonDSNGosBvrqI+tWM0TPR0ycD5jwSgWYM1s5klAO
-	0+BeJSKQQjEM/FXIT4DTrJzrbm5AXmcmlNtjIUJ79VI2U1Bp1SL
-X-Google-Smtp-Source: AGHT+IG6NWJE5ZESoebm9qL5bEsfki5rqRtBotVn0tVzHvwLFMY/sHdnZP9ok9qHtBpSKQV8cQjtnQ==
-X-Received: by 2002:a5d:588a:0:b0:385:e328:890a with SMTP id ffacd0b85a97d-385fd54dba9mr1908620f8f.49.1733220113630;
-        Tue, 03 Dec 2024 02:01:53 -0800 (PST)
+        bh=1oL/Eu1oFnM7Lq/a9MADW9dd1D0ZuUMkh3bz7/dA41Y=;
+        b=C/bVr63Jyi3dWe39ColYrZXj9NRlilhXj2ALlgSAAi8/GUYTuLDQigG0zRCfS4fTT6
+         mi65esoILKelWCawTU2T/P9yzf7t+L2Umzzu1dpczfEKvEX1HZAmzXnrhZ1w8rZd++dh
+         avN3Nn4FFJH5pJazIBrUsVKlbsR3VysXJiisPgm++S1EQdafOw9czDbBP3FKtq/1FNLl
+         cR2hpuTTQ3Yb4AyMT84mlcxn4JTzMELHGQKB+WH7AjYmzKo3L18LRN9KetBeOQRkgC+k
+         QUKG6kuaPZu2ubw8z0laMtExh5cWDWNbik78boKQqbvWoankEU9fhuI6OReFXkl1NIE0
+         x1Gg==
+X-Forwarded-Encrypted: i=1; AJvYcCWiHFhYttYcs/3mybUHGMcidPbXCyt4wihZIWYXYXKIriHD76XeKl2lUHupJBlRKNYmzNMn+Qee@vger.kernel.org
+X-Gm-Message-State: AOJu0YzNZVeE8Tpgy+3BpgMSa7TJSsF/VIjpKLUH2J36F7A4OLuIk6Hj
+	vGJbaP07vV/TPJ5XeikiWRVfH6uPLhXZvBMkrh86P8figNfXbXXTMcTBzBGzZgw=
+X-Gm-Gg: ASbGncuYMEv73FTTu0pBejX7Gkeh4d7QFH4cm3GAtp/lNhDglQwkXPcjUowiXR4M1a5
+	qqWSk0hDq5wy2vSLhNWSyyOJ0HcWCKAQX5Z2HGyfgPTTOegeRBVEGsm+t0VEWk5VmZrdzB/j2Ga
+	+WOPjkIUgF3qmx/imWlPMycPSyYFfdfA+gYdHMisvqsgTZ8fHVBOd9yxyaNAQkhNWq/MSM4Dxar
+	RusudUiv6jlFPUnWiOsHfVZP1+Ox0AoPr3qAlyedgpWKx98PQCP
+X-Google-Smtp-Source: AGHT+IGP+wf/uT+o8vDXMwC1hvUzbUJpXqnj3ziNpYlS/jQFsv7zchrVLXRh0KKHa1usVlCFg2O3Cw==
+X-Received: by 2002:a05:6000:78d:b0:385:fd26:f6e0 with SMTP id ffacd0b85a97d-385fd3cd5c6mr1704607f8f.18.1733220927155;
+        Tue, 03 Dec 2024 02:15:27 -0800 (PST)
 Received: from blackdock.suse.cz ([193.86.92.181])
-        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-385e30c54bfsm9885091f8f.110.2024.12.03.02.01.53
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-434aa7d25c5sm214564325e9.28.2024.12.03.02.15.26
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 03 Dec 2024 02:01:53 -0800 (PST)
-Date: Tue, 3 Dec 2024 11:01:51 +0100
+        Tue, 03 Dec 2024 02:15:26 -0800 (PST)
+Date: Tue, 3 Dec 2024 11:15:24 +0100
 From: Michal =?utf-8?Q?Koutn=C3=BD?= <mkoutny@suse.com>
 To: Yafang Shao <laoar.shao@gmail.com>
 Cc: mingo@redhat.com, peterz@infradead.org, juri.lelli@redhat.com, 
 	vincent.guittot@linaro.org, dietmar.eggemann@arm.com, rostedt@goodmis.org, 
 	bsegall@google.com, mgorman@suse.de, vschneid@redhat.com, hannes@cmpxchg.org, 
 	surenb@google.com, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v5 4/4] sched: Fix cgroup irq time for
- CONFIG_IRQ_TIME_ACCOUNTING
-Message-ID: <os5wmuytn2hg2bhbb2x4j3zzj6cpqropgop6lhwlxwqh2ufise@2pbrsxjyt6ct>
+Subject: Re: [PATCH v5 3/4] sched, psi: Don't account irq time if
+ sched_clock_irqtime is disabled
+Message-ID: <ghu7irmizgbyso5hjemwsgscfoigdtzufpfckxkvdqibeo63uo@kvzncpy2rlit>
 References: <20241108132904.6932-1-laoar.shao@gmail.com>
- <20241108132904.6932-5-laoar.shao@gmail.com>
+ <20241108132904.6932-4-laoar.shao@gmail.com>
+ <7pad3qmmmy2hgr5yqwwytj3wyjm3d5ebbqy4ix6boxkd34fc7c@ebdjg75tfgiq>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
@@ -74,82 +75,51 @@ List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: multipart/signed; micalg=pgp-sha512;
-	protocol="application/pgp-signature"; boundary="o3rmhbonm4iv5daf"
+	protocol="application/pgp-signature"; boundary="efb3qc5jht7fzdid"
 Content-Disposition: inline
-In-Reply-To: <20241108132904.6932-5-laoar.shao@gmail.com>
+In-Reply-To: <7pad3qmmmy2hgr5yqwwytj3wyjm3d5ebbqy4ix6boxkd34fc7c@ebdjg75tfgiq>
 
 
---o3rmhbonm4iv5daf
-Content-Type: text/plain; charset=utf-8
+--efb3qc5jht7fzdid
+Content-Type: text/plain; charset=iso-8859-1
 Content-Disposition: inline
 Content-Transfer-Encoding: quoted-printable
 
-On Fri, Nov 08, 2024 at 09:29:04PM GMT, Yafang Shao <laoar.shao@gmail.com> =
+On Tue, Dec 03, 2024 at 11:01:41AM GMT, Michal Koutn=FD <mkoutny@suse.com> =
 wrote:
-> The system metric in cpuacct.stat is crucial in indicating whether a
-> container is under heavy system pressure, including IRQ/softirq activity.
-> Hence, IRQ/softirq time should be included in the cpuacct system usage,
-> which also applies to cgroup2=E2=80=99s rstat.
-
-(snipped from cover letter thread)
-
-On Mon, Nov 18, 2024 at 08:12:03PM GMT, Yafang Shao <laoar.shao@gmail.com> =
-wrote:
-> The key issue here is determining how to reliably get the IRQ. I don't
-> believe there is a dependable way to achieve this.
+> On Fri, Nov 08, 2024 at 09:29:03PM GMT, Yafang Shao <laoar.shao@gmail.com=
+> wrote:
+> > sched_clock_irqtime may be disabled due to the clock source. When disab=
+led,
+> > irq_time_read() won't change over time, so there is nothing to account.=
+ We
+> > can save iterating the whole hierarchy on every tick and context switch.
+> >=20
+> > Signed-off-by: Yafang Shao <laoar.shao@gmail.com>
+> > Acked-by: Johannes Weiner <hannes@cmpxchg.org>
+> > ---
+> >  kernel/sched/psi.c | 2 +-
+> >  1 file changed, 1 insertion(+), 1 deletion(-)
 >=20
-> For example, consider a server with 16 CPUs. My cgroup contains 4
-> threads that can freely migrate across CPUs, while other tasks are
-> also running on the system simultaneously. In this scenario, how can
-> we accurately determine the IRQ to subtract?
+> Reviewed-by: Michal Koutn=FD <mkoutny@suse.com>
 
-I understand there's some IRQ noise which is a property of CPU (noise is
-a function of cpu).
+On second thought, similar guard may be useful in psi_show() too. Since
+there's a difference between zero pressure and unmeasured pressure (it'd
+fail with EOPNOTSUPP).
 
-Then there're cgroup workloads, on a single CPU impact per-cgroup
-depends how much that given cgroup runs on the CPU (it's more exposed).
-Whole cgroup's impact is sum of these (i.e. it's kind of scalar product
-between that IRQ noise per-cpu and cgroup's CPU consuption per-cpu).
+(How common is it actually that tsc_init fails?)
 
-(In your usage, there's some correlation of IRQ noise with CPU
-consumption).
-
-> That is precisely what the user wants. If my tasks are frequently
-> interrupted by IRQs, it indicates that my service may be experiencing
-> poor quality. In response, I would likely reduce the traffic sent to
-> it. If the issue persists and IRQ interruptions remain high, I would
-> then consider migrating the service to other servers.
-
-If I look at
-	52b1364ba0b10 ("sched/psi: Add PSI_IRQ to track IRQ/SOFTIRQ pressure")
-(where it's clearer than after
-	ddae0ca2a8fe1 ("sched: Move psi_account_irqtime() out of update_rq_clock_t=
-ask() hotpath")
-)
-
-the IRQ pressure accounting takes into account the task (its cgroup) vs
-IRQ time (~multiplication) and then its summed a) over time
-(psi_account_irqtime()), b) over CPUs (collect_percpu_times()) so it's
-the scalar product (squinting) I mentioned above.
-
-Therefore I think irq.pressure provides exactly the information that's
-relevant for your scheduling decisions and the info cannot be fit into
-cpuacct.stat.
-
-Or what is irq.pressure missing or distorting for your scenario?
-
-HTH,
 Michal
 
---o3rmhbonm4iv5daf
+--efb3qc5jht7fzdid
 Content-Type: application/pgp-signature; name="signature.asc"
 
 -----BEGIN PGP SIGNATURE-----
 
-iHUEABYKAB0WIQTd6mfF2PbEZnpdoAkt3Wney77BSQUCZ07XDQAKCRAt3Wney77B
-Sd6IAP0dnUXEFZ3j/R5XpoNAHYnRX5ENYOqGuG1NB3+bwmP4QQD/XSfg6aRKZsyz
-x5GW03vpepgF5LsF5zhTzCVjSQd/ewU=
-=PzNP
+iHUEABYKAB0WIQTd6mfF2PbEZnpdoAkt3Wney77BSQUCZ07aOgAKCRAt3Wney77B
+SQp6AQDCofeL+RYVr6OoZ5Ku/ryrsGjAU/xUYeRLREz6RNOLswD+Mqy1fxDBv3bL
+jyX2QbOi3rrBurYl8eDsySO0VMuwIwk=
+=B8Jh
 -----END PGP SIGNATURE-----
 
---o3rmhbonm4iv5daf--
+--efb3qc5jht7fzdid--
