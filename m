@@ -1,16 +1,16 @@
 Received: from mblankhorst.nl (lankhorst.se [141.105.120.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B170B1DFE15;
-	Wed,  4 Dec 2024 13:44:24 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 917671F666A;
+	Wed,  4 Dec 2024 13:53:21 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=141.105.120.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1733319867; cv=none; b=gcrB6+SmKJG3FsMDzFBVPK4B8kG8hy26CpI1odhX8lQbcubRqKGC2kjAWBVEtCqJqv6VUzSQJaU+Zv7DDZiCrwmffheW9wMEYejhGGhkd3sA7fVv0XFaCRRj3A5x0h/10kQkXbKgybY7v5K4Pxn2efKwIeSDImYbfR2GZat+QFQ=
+	t=1733320403; cv=none; b=NUJa7QkD1oQTGcULkJTtvRMWhD80+/5XjehAAS8kl+PFAa9JffcGpMe6xp9D+rK3xjuWa5AlhW4Cz+HRjewSuNFGeGDRcYEAjaRuQejYW7/xF7ex1VBPga5LoLAoDv/xXcWQE06VwckDFsaOmwRrCo3bpW3ODedr5DuZ7aW8rNU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1733319867; c=relaxed/simple;
-	bh=Xak1XccIYr9xqA3K8i6quLqHM4KzCpvfAZWZO18WlM8=;
+	s=arc-20240116; t=1733320403; c=relaxed/simple;
+	bh=GIwdFJJPvtSLrhir3NZrvBk+WjaZYHX/SzE1gNK/0AQ=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=K3CRg15mo+iAj5GPQkCOMYWFVnY1nQWanZ2uQkU+E3JPjGG0FcJ0QezJz2n7Hq0XRpYbsKxq48e5rG1D/Z9akM4ew3VG//Su9MPcYKOStQfdTITTcr+J66upHGzNgeN8/DWx2polywnRoLTQFYw3WyoqvWI9pZbVUc40qr7sFcQ=
+	 MIME-Version; b=QSyBUZAEG92bxnjirhot4e0EqKpo23V9QDlvVH9OX9VSc+67v6skk2TVEsbDURlZf5C3E7eFsBMpBD1+m5pAOTlAxjwpDEzQ9OO5st29uWwC6QskRVGqt+FcFu5wqFl19/DJzF2sFrFv0KIMcTSpJVY2TQiQHqqjvvPaFFFh3kM=
 ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lankhorst.se; spf=none smtp.mailfrom=mblankhorst.nl; arc=none smtp.client-ip=141.105.120.124
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lankhorst.se
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=mblankhorst.nl
@@ -28,9 +28,9 @@ Cc: cgroups@vger.kernel.org,
 	linux-mm@kvack.org,
 	Maarten Lankhorst <maarten.lankhorst@linux.intel.com>,
 	Maarten Lankhorst <dev@lankhorst.se>
-Subject: [PATCH v2 6/7] drm/xe: Hack to test with mapped pages instead of vram.
-Date: Wed,  4 Dec 2024 14:44:06 +0100
-Message-ID: <20241204134410.1161769-7-dev@lankhorst.se>
+Subject: [PATCH v2 4/7] drm/xe: Implement cgroup for vram
+Date: Wed,  4 Dec 2024 14:44:04 +0100
+Message-ID: <20241204134410.1161769-5-dev@lankhorst.se>
 X-Mailer: git-send-email 2.43.0
 In-Reply-To: <20241204134410.1161769-1-dev@lankhorst.se>
 References: <20241204134410.1161769-1-dev@lankhorst.se>
@@ -42,40 +42,43 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-We will probably want to make this a proper region in TTM for
-everything, so that we can charge VRAM twice, once for mapped
-in sysmem, once for mapped in vram. That way we don't need to
-deal with evict failing from lack of available memory in mapped.
+Add vram based cgroup eviction to Xe.
+Most hardware with VRAM uses TTM for its management, and can be
+similarly trivially enabled.
 
+Co-developed-by: Maxime Ripard <mripard@kernel.org>
 Signed-off-by: Maxime Ripard <mripard@kernel.org>
 Signed-off-by: Maarten Lankhorst <dev@lankhorst.se>
 ---
- drivers/gpu/drm/xe/xe_ttm_sys_mgr.c | 5 +++++
- 1 file changed, 5 insertions(+)
+ drivers/gpu/drm/xe/xe_ttm_vram_mgr.c | 8 ++++++++
+ 1 file changed, 8 insertions(+)
 
-diff --git a/drivers/gpu/drm/xe/xe_ttm_sys_mgr.c b/drivers/gpu/drm/xe/xe_ttm_sys_mgr.c
-index 9844a8edbfe19..5450caaef52ad 100644
---- a/drivers/gpu/drm/xe/xe_ttm_sys_mgr.c
-+++ b/drivers/gpu/drm/xe/xe_ttm_sys_mgr.c
-@@ -11,6 +11,7 @@
- #include <drm/ttm/ttm_placement.h>
- #include <drm/ttm/ttm_range_manager.h>
- #include <drm/ttm/ttm_tt.h>
+diff --git a/drivers/gpu/drm/xe/xe_ttm_vram_mgr.c b/drivers/gpu/drm/xe/xe_ttm_vram_mgr.c
+index c95728c45ea48..f4a16e5fa7700 100644
+--- a/drivers/gpu/drm/xe/xe_ttm_vram_mgr.c
++++ b/drivers/gpu/drm/xe/xe_ttm_vram_mgr.c
+@@ -5,6 +5,7 @@
+  */
+ 
+ #include <drm/drm_managed.h>
 +#include <drm/drm_drv.h>
  
- #include "xe_bo.h"
- #include "xe_gt.h"
-@@ -112,6 +113,10 @@ int xe_ttm_sys_mgr_init(struct xe_device *xe)
- 	/* TTM limits allocation of all TTM devices by 50% of system memory */
- 	gtt_size /= 2;
+ #include <drm/ttm/ttm_placement.h>
+ #include <drm/ttm/ttm_range_manager.h>
+@@ -311,6 +312,13 @@ int __xe_ttm_vram_mgr_init(struct xe_device *xe, struct xe_ttm_vram_mgr *mgr,
+ 	struct ttm_resource_manager *man = &mgr->manager;
+ 	int err;
  
-+	man->cg = drmm_cgroup_register_region(&xe->drm, "mapped", gtt_size);
-+	if (IS_ERR(man->cg))
-+		return PTR_ERR(man->cg);
++	if (mem_type != XE_PL_STOLEN) {
++		const char *name = mem_type == XE_PL_VRAM0 ? "vram0" : "vram1";
++		man->cg = drmm_cgroup_register_region(&xe->drm, name, size);
++		if (IS_ERR(man->cg))
++			return PTR_ERR(man->cg);
++	}
 +
- 	man->use_tt = true;
- 	man->func = &xe_ttm_sys_mgr_func;
- 	ttm_resource_manager_init(man, &xe->ttm, gtt_size >> PAGE_SHIFT);
+ 	man->func = &xe_ttm_vram_mgr_func;
+ 	mgr->mem_type = mem_type;
+ 	mutex_init(&mgr->lock);
 -- 
 2.43.0
 
