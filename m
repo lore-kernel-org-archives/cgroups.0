@@ -1,16 +1,16 @@
 Received: from mblankhorst.nl (lankhorst.se [141.105.120.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 917671F666A;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 916771CCEF6;
 	Wed,  4 Dec 2024 13:53:21 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=141.105.120.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1733320403; cv=none; b=NUJa7QkD1oQTGcULkJTtvRMWhD80+/5XjehAAS8kl+PFAa9JffcGpMe6xp9D+rK3xjuWa5AlhW4Cz+HRjewSuNFGeGDRcYEAjaRuQejYW7/xF7ex1VBPga5LoLAoDv/xXcWQE06VwckDFsaOmwRrCo3bpW3ODedr5DuZ7aW8rNU=
+	t=1733320403; cv=none; b=DvkydvobNQX1xilQNkDjrZ/DI4QCBPqiwreelep6HaU5grdw1pNx0X/bYK2zN5/8yAm50SYXdhu67kKBqI5CkAPXfvp3jfKT+s9dRr/KnDK76WSqiqATkhZtZxHYQVNdr/kaOITclz4wpybh+KdheVIMJqKimeb4S9SUIWAXuuc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1733320403; c=relaxed/simple;
-	bh=GIwdFJJPvtSLrhir3NZrvBk+WjaZYHX/SzE1gNK/0AQ=;
+	bh=QelODbrUSKs3fbbbWhiWgqgeBvwKNSJxqDNPAxBWVOI=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=QSyBUZAEG92bxnjirhot4e0EqKpo23V9QDlvVH9OX9VSc+67v6skk2TVEsbDURlZf5C3E7eFsBMpBD1+m5pAOTlAxjwpDEzQ9OO5st29uWwC6QskRVGqt+FcFu5wqFl19/DJzF2sFrFv0KIMcTSpJVY2TQiQHqqjvvPaFFFh3kM=
+	 MIME-Version; b=r9bVhQbN2azzY969xRJMF5UQEQbFvyNgoekCetac6Tt36iklZe1ZPX8Fdn3aOvTqNhCrxrFS8xZSjLVxLkuyQi+oAaCKi7UVF1qvXuZIh7L315oyNKofm7kIWPVyvSA1ImMZaLCR36VyhJyNJiVneCnTbsveYyJN498Fz8jLc1k=
 ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lankhorst.se; spf=none smtp.mailfrom=mblankhorst.nl; arc=none smtp.client-ip=141.105.120.124
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lankhorst.se
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=mblankhorst.nl
@@ -28,9 +28,9 @@ Cc: cgroups@vger.kernel.org,
 	linux-mm@kvack.org,
 	Maarten Lankhorst <maarten.lankhorst@linux.intel.com>,
 	Maarten Lankhorst <dev@lankhorst.se>
-Subject: [PATCH v2 4/7] drm/xe: Implement cgroup for vram
-Date: Wed,  4 Dec 2024 14:44:04 +0100
-Message-ID: <20241204134410.1161769-5-dev@lankhorst.se>
+Subject: [PATCH v2 2/7] drm/drv: Add drmm managed registration helper for dmem cgroups.
+Date: Wed,  4 Dec 2024 14:44:02 +0100
+Message-ID: <20241204134410.1161769-3-dev@lankhorst.se>
 X-Mailer: git-send-email 2.43.0
 In-Reply-To: <20241204134410.1161769-1-dev@lankhorst.se>
 References: <20241204134410.1161769-1-dev@lankhorst.se>
@@ -42,43 +42,91 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Add vram based cgroup eviction to Xe.
-Most hardware with VRAM uses TTM for its management, and can be
-similarly trivially enabled.
+From: Maxime Ripard <mripard@kernel.org>
 
-Co-developed-by: Maxime Ripard <mripard@kernel.org>
+Drivers will need to register dmem regions at probe time, so let's
+give them a drm-managed helper.
+
 Signed-off-by: Maxime Ripard <mripard@kernel.org>
 Signed-off-by: Maarten Lankhorst <dev@lankhorst.se>
 ---
- drivers/gpu/drm/xe/xe_ttm_vram_mgr.c | 8 ++++++++
- 1 file changed, 8 insertions(+)
+ drivers/gpu/drm/drm_drv.c | 32 ++++++++++++++++++++++++++++++++
+ include/drm/drm_drv.h     |  5 +++++
+ 2 files changed, 37 insertions(+)
 
-diff --git a/drivers/gpu/drm/xe/xe_ttm_vram_mgr.c b/drivers/gpu/drm/xe/xe_ttm_vram_mgr.c
-index c95728c45ea48..f4a16e5fa7700 100644
---- a/drivers/gpu/drm/xe/xe_ttm_vram_mgr.c
-+++ b/drivers/gpu/drm/xe/xe_ttm_vram_mgr.c
-@@ -5,6 +5,7 @@
+diff --git a/drivers/gpu/drm/drm_drv.c b/drivers/gpu/drm/drm_drv.c
+index c2c172eb25df7..3cf440eee8a2a 100644
+--- a/drivers/gpu/drm/drm_drv.c
++++ b/drivers/gpu/drm/drm_drv.c
+@@ -26,6 +26,7 @@
+  * DEALINGS IN THE SOFTWARE.
   */
  
- #include <drm/drm_managed.h>
-+#include <drm/drm_drv.h>
++#include <linux/cgroup_dmem.h>
+ #include <linux/debugfs.h>
+ #include <linux/fs.h>
+ #include <linux/module.h>
+@@ -820,6 +821,37 @@ void drm_dev_put(struct drm_device *dev)
+ }
+ EXPORT_SYMBOL(drm_dev_put);
  
- #include <drm/ttm/ttm_placement.h>
- #include <drm/ttm/ttm_range_manager.h>
-@@ -311,6 +312,13 @@ int __xe_ttm_vram_mgr_init(struct xe_device *xe, struct xe_ttm_vram_mgr *mgr,
- 	struct ttm_resource_manager *man = &mgr->manager;
- 	int err;
- 
-+	if (mem_type != XE_PL_STOLEN) {
-+		const char *name = mem_type == XE_PL_VRAM0 ? "vram0" : "vram1";
-+		man->cg = drmm_cgroup_register_region(&xe->drm, name, size);
-+		if (IS_ERR(man->cg))
-+			return PTR_ERR(man->cg);
-+	}
++static void drmm_cg_unregister_region(struct drm_device *dev, void *arg)
++{
++	dmem_cgroup_unregister_region(arg);
++}
 +
- 	man->func = &xe_ttm_vram_mgr_func;
- 	mgr->mem_type = mem_type;
- 	mutex_init(&mgr->lock);
++/**
++ * drmm_cgroup_register_region - Register a region of a DRM device to cgroups
++ * @dev: device for region
++ * @region_name: Region name for registering
++ * @size: Size of region in bytes
++ *
++ * This decreases the ref-count of @dev by one. The device is destroyed if the
++ * ref-count drops to zero.
++ */
++struct dmem_cgroup_region *drmm_cgroup_register_region(struct drm_device *dev, const char *region_name, u64 size)
++{
++	struct dmem_cgroup_region *region;
++	int ret;
++
++	region = dmem_cgroup_register_region(size, "drm/%s/%s", dev->unique, region_name);
++	if (IS_ERR_OR_NULL(region))
++		return region;
++
++	ret = drmm_add_action_or_reset(dev, drmm_cg_unregister_region, region);
++	if (ret)
++		return ERR_PTR(ret);
++
++	return region;
++}
++EXPORT_SYMBOL_GPL(drmm_cgroup_register_region);
++
+ static int create_compat_control_link(struct drm_device *dev)
+ {
+ 	struct drm_minor *minor;
+diff --git a/include/drm/drm_drv.h b/include/drm/drm_drv.h
+index 1bbbcb8e2d231..7dd49d9ab5058 100644
+--- a/include/drm/drm_drv.h
++++ b/include/drm/drm_drv.h
+@@ -34,6 +34,7 @@
+ 
+ #include <drm/drm_device.h>
+ 
++struct dmem_cgroup_region;
+ struct drm_fb_helper;
+ struct drm_fb_helper_surface_size;
+ struct drm_file;
+@@ -438,6 +439,10 @@ void *__devm_drm_dev_alloc(struct device *parent,
+ 			   const struct drm_driver *driver,
+ 			   size_t size, size_t offset);
+ 
++struct dmem_cgroup_region *
++drmm_cgroup_register_region(struct drm_device *dev,
++			    const char *region_name, u64 size);
++
+ /**
+  * devm_drm_dev_alloc - Resource managed allocation of a &drm_device instance
+  * @parent: Parent device object
 -- 
 2.43.0
 
