@@ -1,16 +1,16 @@
 Received: from mblankhorst.nl (lankhorst.se [141.105.120.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B17621DFE1E;
-	Wed,  4 Dec 2024 13:44:24 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6EE4C8827;
+	Wed,  4 Dec 2024 13:44:25 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=141.105.120.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1733319866; cv=none; b=WS92T1ppHqU4cm+sLFu1E1BfqtxV56dD2ZM4kubmfJTuVqpvcOndeSutG25q+3rZrRRS15hQKtO5f7mojhmNoPluxv0TQVDnnvwwNSf/ndqKAUSZQOEM6tHeIKiou6rjnP7CTcR9rMrymMeeO1stnquTaz9hR73t9c6u7RQaT8I=
+	t=1733319867; cv=none; b=LfTZtSBn3/1nUJWq8sR15v/ZDim1rBDeE98/jzp38GVvTmvht4xahVl8aJ6KYmHM+wY9rsxjou57qTCpkKPYpoylhaN5hLltEF+rx+WGNUDK0xFcWMxWJFflw9x0KGBV2KCbDk7T1Lb7pV3uEFdHvabAbyoOUijllfAo24G/CeA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1733319866; c=relaxed/simple;
-	bh=GN3wl70fzI/9qRoIrW148xySg7joMZwESyLvaLXIApM=;
+	s=arc-20240116; t=1733319867; c=relaxed/simple;
+	bh=I9cRCosP71yDh0ePXjHoMCpw6t56q2zBrveZE7ey8wA=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=rtJLoOD5lE0ZxPRIvDsG7f2ejErNlbCtcrR47PbZBfJ4qmm61BuM+5VVFR8yNsjoZRzVR27yIQG4S+ShJysmer8163bbAtTB5zepdNf+mmSsbP28VhyOe7E81Ah9aLLyCtfqM3ApBjSSqC5lE9GHGapYhdohK59r8mIuGch3/9c=
+	 MIME-Version; b=pAKSbHcuIkuRf+HbODhzofXMnQ20NagRmhntEXCMvnj5zyrSZLZOcLDvtu9c3iYa9Pt5N4dwJkJ9MFTf9ArrNbEUvmuk4Y9ee8/s9rwWUKr8c9uWQA90Qa+EXZ8evn/lYxB5Fup0gjsBo7QuSt8HzzJPQpjfV1PAigmebmxVVhk=
 ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lankhorst.se; spf=none smtp.mailfrom=mblankhorst.nl; arc=none smtp.client-ip=141.105.120.124
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lankhorst.se
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=mblankhorst.nl
@@ -28,9 +28,9 @@ Cc: cgroups@vger.kernel.org,
 	linux-mm@kvack.org,
 	Maarten Lankhorst <maarten.lankhorst@linux.intel.com>,
 	Maarten Lankhorst <dev@lankhorst.se>
-Subject: [PATCH v2 5/7] drm/amdgpu: Add cgroups implementation
-Date: Wed,  4 Dec 2024 14:44:05 +0100
-Message-ID: <20241204134410.1161769-6-dev@lankhorst.se>
+Subject: [PATCH v2 7/7] drm/gem: Add cgroup memory accounting for VRAM helper.
+Date: Wed,  4 Dec 2024 14:44:07 +0100
+Message-ID: <20241204134410.1161769-8-dev@lankhorst.se>
 X-Mailer: git-send-email 2.43.0
 In-Reply-To: <20241204134410.1161769-1-dev@lankhorst.se>
 References: <20241204134410.1161769-1-dev@lankhorst.se>
@@ -42,37 +42,51 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Similar to xe, enable some simple management of VRAM only.
+From: Maxime Ripard <mripard@kernel.org>
 
-Co-developed-by: Maxime Ripard <mripard@kernel.org>
+This allows any driver using the VRAM helper to set limits on VRAM using
+cgroup.
+
 Signed-off-by: Maxime Ripard <mripard@kernel.org>
 Signed-off-by: Maarten Lankhorst <dev@lankhorst.se>
 ---
- drivers/gpu/drm/amd/amdgpu/amdgpu_vram_mgr.c | 4 ++++
- 1 file changed, 4 insertions(+)
+ drivers/gpu/drm/drm_gem_vram_helper.c | 15 ++++++++++++++-
+ 1 file changed, 14 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/gpu/drm/amd/amdgpu/amdgpu_vram_mgr.c b/drivers/gpu/drm/amd/amdgpu/amdgpu_vram_mgr.c
-index 7d26a962f811c..f1703a746cadd 100644
---- a/drivers/gpu/drm/amd/amdgpu/amdgpu_vram_mgr.c
-+++ b/drivers/gpu/drm/amd/amdgpu/amdgpu_vram_mgr.c
-@@ -24,6 +24,7 @@
+diff --git a/drivers/gpu/drm/drm_gem_vram_helper.c b/drivers/gpu/drm/drm_gem_vram_helper.c
+index 22b1fe9c03b81..70979523ee984 100644
+--- a/drivers/gpu/drm/drm_gem_vram_helper.c
++++ b/drivers/gpu/drm/drm_gem_vram_helper.c
+@@ -925,6 +925,7 @@ EXPORT_SYMBOL(drm_vram_mm_debugfs_init);
+ static int drm_vram_mm_init(struct drm_vram_mm *vmm, struct drm_device *dev,
+ 			    uint64_t vram_base, size_t vram_size)
+ {
++	struct ttm_resource_manager *man;
+ 	int ret;
  
- #include <linux/dma-mapping.h>
- #include <drm/ttm/ttm_range_manager.h>
-+#include <drm/drm_drv.h>
+ 	vmm->vram_base = vram_base;
+@@ -939,8 +940,20 @@ static int drm_vram_mm_init(struct drm_vram_mm *vmm, struct drm_device *dev,
  
- #include "amdgpu.h"
- #include "amdgpu_vm.h"
-@@ -908,6 +909,9 @@ int amdgpu_vram_mgr_init(struct amdgpu_device *adev)
- 	struct ttm_resource_manager *man = &mgr->manager;
- 	int err;
+ 	ret = ttm_range_man_init(&vmm->bdev, TTM_PL_VRAM,
+ 				 false, vram_size >> PAGE_SHIFT);
+-	if (ret)
++	if (ret) {
++		ttm_device_fini(&vmm->bdev);
+ 		return ret;
++	}
++
++	man = ttm_manager_type(&vmm->bdev, TTM_PL_VRAM);
++	man->cg = drmm_register_region(dev, "vram", size);
++	if (IS_ERR(man->cg)) {
++		ret = PTR_ERR(man->cg);
++
++		ttm_range_man_fini(&vmm->bdev, TTM_PL_VRAM);
++		ttm_device_fini(&vmm->bdev);
++		return ret;
++	}
  
-+	man->cg = drmm_cgroup_register_region(adev_to_drm(adev), "vram", adev->gmc.real_vram_size);
-+	if (IS_ERR(man->cg))
-+		return PTR_ERR(man->cg);
- 	ttm_resource_manager_init(man, &adev->mman.bdev,
- 				  adev->gmc.real_vram_size);
- 
+ 	return 0;
+ }
 -- 
 2.43.0
 
