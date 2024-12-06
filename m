@@ -1,27 +1,27 @@
 Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5B77214A604;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5B2AB13E043;
 	Fri,  6 Dec 2024 01:45:11 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.51
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1733449513; cv=none; b=dC8atcsZsyUlUKN/qGTQnfH6+x+WMyLZsHqgnRU+Lrfv/dln+ZSA5sMW6woFCbWtZe5f5tUm4oUVOnCIaFNpAyeW9V/ais3lS+fwOQpojH1Bq8qtqS5VVUP8wzj9a8ocJnSsdrvYQYUt3/3D1AcSYOOFrDMbxvvnSkJKo/6hTx4=
+	t=1733449513; cv=none; b=Z0sQKSVkqt49DZpD7nD/9mz0zbdT54NmwBlKGCRYvD1b8ISoKi7NkZoUqwc0oP91OgwGl+meWJrDTUOx0rPYv9egq1nETwtnwrhPVa7BvHz4iAFMi7NNG0Kva4EePKi3aoKBpOkLww479c6xtW8hzNMM0IsMOoKfvngdc7NXMnY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1733449513; c=relaxed/simple;
-	bh=5NIVHoNTYmy53iA2xRTjTNUa/52SwZ1MYgL3VSs7M1E=;
+	bh=+1Uzo8QBbVvMMf/lNOnX5i4R8V8ILVGxou4Yn+byWyU=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=N5n0c6ZpwklNIOFgIPiwMSuRqnJfLOYcFgOamOb8z4SdcMSMg3kPTwHUKbJkJzwUB41qFsDF77vdExpgcSAEBmB/0lhVau/HzRCAZc4M4Dg2vNrJLgMcZ95IcEAaHi59kcmvoUca8PMj0azxuiXOiaGle+Yoi+3kSrs7QcbUifI=
+	 MIME-Version; b=ZgCk+w3qC+WsHvjrguW+FqMxWKCo1wvzkOXhhLnuLCmvVIZjWpp8zOoyIZSsLlE7PprVW0iPiqIMtWbkC1Tx1QTe+hhhpsk91ZPKN2EUh5+N+yNQ0bYYf8QX5Cwv3enhj+1T1c6PGnv2wQTMb8RRXA6sbc6ohoCFPop8ACfp4rM=
 ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.51
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
 Received: from mail.maildlp.com (unknown [172.19.93.142])
-	by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4Y4Db45DVXz4f3jqx;
+	by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4Y4Db45yjjz4f3jsx;
 	Fri,  6 Dec 2024 09:44:48 +0800 (CST)
 Received: from mail02.huawei.com (unknown [10.116.40.128])
-	by mail.maildlp.com (Postfix) with ESMTP id C39491A07B6;
+	by mail.maildlp.com (Postfix) with ESMTP id D9B031A018D;
 	Fri,  6 Dec 2024 09:45:02 +0800 (CST)
 Received: from hulk-vt.huawei.com (unknown [10.67.174.121])
-	by APP4 (Coremail) with SMTP id gCh0CgD30oYKV1JnkkskDw--.31315S4;
+	by APP4 (Coremail) with SMTP id gCh0CgD30oYKV1JnkkskDw--.31315S7;
 	Fri, 06 Dec 2024 09:45:02 +0800 (CST)
 From: Chen Ridong <chenridong@huaweicloud.com>
 To: akpm@linux-foundation.org,
@@ -38,9 +38,9 @@ Cc: linux-mm@kvack.org,
 	cgroups@vger.kernel.org,
 	chenridong@huawei.com,
 	wangweiyang2@huawei.com
-Subject: [next -v1 2/5] memcg: call the free function when allocation of pn fails
-Date: Fri,  6 Dec 2024 01:35:09 +0000
-Message-Id: <20241206013512.2883617-3-chenridong@huaweicloud.com>
+Subject: [next -v1 5/5] memcg: factor out stat(event)/stat_local(event_local) reading functions
+Date: Fri,  6 Dec 2024 01:35:12 +0000
+Message-Id: <20241206013512.2883617-6-chenridong@huaweicloud.com>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20241206013512.2883617-1-chenridong@huaweicloud.com>
 References: <20241206013512.2883617-1-chenridong@huaweicloud.com>
@@ -51,94 +51,183 @@ List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:gCh0CgD30oYKV1JnkkskDw--.31315S4
-X-Coremail-Antispam: 1UD129KBjvJXoW7WFWUuFykKFWktw1xCr13CFg_yoW8uF13pa
-	nxta45Z3y5Jr4UWa1fKa4jva4rAa18Xw4UW34xtr1SkFnIqwnYqr12vw1S9ry5CFyfXrnr
-	tr98Aw1xK39FkrUanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDU0xBIdaVrnRJUUUmlb4IE77IF4wAFF20E14v26rWj6s0DM7CY07I20VC2zVCF04k2
-	6cxKx2IYs7xG6rWj6s0DM7CIcVAFz4kK6r1j6r18M28IrcIa0xkI8VA2jI8067AKxVWUXw
-	A2048vs2IY020Ec7CjxVAFwI0_Xr0E3s1l8cAvFVAK0II2c7xJM28CjxkF64kEwVA0rcxS
-	w2x7M28EF7xvwVC0I7IYx2IY67AKxVW7JVWDJwA2z4x0Y4vE2Ix0cI8IcVCY1x0267AKxV
-	W8Jr0_Cr1UM28EF7xvwVC2z280aVAFwI0_GcCE3s1l84ACjcxK6I8E87Iv6xkF7I0E14v2
-	6rxl6s0DM2AIxVAIcxkEcVAq07x20xvEncxIr21l5I8CrVACY4xI64kE6c02F40Ex7xfMc
-	Ij6xIIjxv20xvE14v26r106r15McIj6I8E87Iv67AKxVWUJVW8JwAm72CE4IkC6x0Yz7v_
-	Jr0_Gr1lF7xvr2IYc2Ij64vIr41lFIxGxcIEc7CjxVA2Y2ka0xkIwI1lc7CjxVAaw2AFwI
-	0_Jw0_GFyl42xK82IYc2Ij64vIr41l4c8EcI0Ec7CjxVAaw2AFwI0_Jw0_GFyl4I8I3I0E
-	4IkC6x0Yz7v_Jr0_Gr1lx2IqxVAqx4xG67AKxVWUJVWUGwC20s026x8GjcxK67AKxVWUGV
-	WUWwC2zVAF1VAY17CE14v26r1q6r43MIIYrxkI7VAKI48JMIIF0xvE2Ix0cI8IcVAFwI0_
-	Jr0_JF4lIxAIcVC0I7IYx2IY6xkF7I0E14v26r4j6F4UMIIF0xvE42xK8VAvwI8IcIk0rV
-	WUJVWUCwCI42IY6I8E87Iv67AKxVWUJVW8JwCI42IY6I8E87Iv6xkF7I0E14v26r4j6r4U
-	JbIYCTnIWIevJa73UjIFyTuYvjxUob18DUUUU
+X-CM-TRANSID:gCh0CgD30oYKV1JnkkskDw--.31315S7
+X-Coremail-Antispam: 1UD129KBjvJXoWxKw4kZFyrKw4rJr18tryxXwb_yoW7XFWUpF
+	sxKayY93y3Jw4F9r1ftFWjv34rA3WxX3yUJryxJ3ySvasxtw1Yg3ZxKF9rZrW5Cr95ZF13
+	Jayqyr1DJ3y2qa7anT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDU0xBIdaVrnRJUUUmEb4IE77IF4wAFF20E14v26rWj6s0DM7CY07I20VC2zVCF04k2
+	6cxKx2IYs7xG6rWj6s0DM7CIcVAFz4kK6r1j6r18M28IrcIa0xkI8VA2jI8067AKxVWUAV
+	Cq3wA2048vs2IY020Ec7CjxVAFwI0_Xr0E3s1l8cAvFVAK0II2c7xJM28CjxkF64kEwVA0
+	rcxSw2x7M28EF7xvwVC0I7IYx2IY67AKxVW7JVWDJwA2z4x0Y4vE2Ix0cI8IcVCY1x0267
+	AKxVW8Jr0_Cr1UM28EF7xvwVC2z280aVAFwI0_GcCE3s1l84ACjcxK6I8E87Iv6xkF7I0E
+	14v26rxl6s0DM2AIxVAIcxkEcVAq07x20xvEncxIr21l5I8CrVACY4xI64kE6c02F40Ex7
+	xfMcIj6xIIjxv20xvE14v26r106r15McIj6I8E87Iv67AKxVWUJVW8JwAm72CE4IkC6x0Y
+	z7v_Jr0_Gr1lF7xvr2IYc2Ij64vIr41lFIxGxcIEc7CjxVA2Y2ka0xkIwI1lc7CjxVAaw2
+	AFwI0_Jw0_GFyl42xK82IYc2Ij64vIr41l4c8EcI0Ec7CjxVAaw2AFwI0_Jw0_GFyl4I8I
+	3I0E4IkC6x0Yz7v_Jr0_Gr1lx2IqxVAqx4xG67AKxVWUJVWUGwC20s026x8GjcxK67AKxV
+	WUGVWUWwC2zVAF1VAY17CE14v26r1q6r43MIIYrxkI7VAKI48JMIIF0xvE2Ix0cI8IcVAF
+	wI0_JFI_Gr1lIxAIcVC0I7IYx2IY6xkF7I0E14v26F4j6r4UJwCI42IY6xAIw20EY4v20x
+	vaj40_Jr0_JF4lIxAIcVC2z280aVAFwI0_Jr0_Gr1lIxAIcVC2z280aVCY1x0267AKxVW8
+	JVW8JrUvcSsGvfC2KfnxnUUI43ZEXa7IUbXAw7UUUUU==
 X-CM-SenderInfo: hfkh02xlgr0w46kxt4xhlfz01xgou0bp/
 
 From: Chen Ridong <chenridong@huawei.com>
 
-The 'free_mem_cgroup_per_node_info' function is used to free
-the 'mem_cgroup_per_node' struct. Using 'pn' as the input for the
-free_mem_cgroup_per_node_info function will be much clearer.
-Call 'free_mem_cgroup_per_node_info' when 'alloc_mem_cgroup_per_node_info'
-fails, to free 'pn' as a whole, which makes the code more cohesive.
+The only difference between 'lruvec_page_state' and
+'lruvec_page_state_local' is that they read 'state' and 'state_local',
+respectively. Factor out an inner functions to make the code more concise.
+Do the same for reading 'memcg_page_stat' and 'memcg_events'.
 
 Signed-off-by: Chen Ridong <chenridong@huawei.com>
 ---
- mm/memcontrol.c | 27 ++++++++++++---------------
- 1 file changed, 12 insertions(+), 15 deletions(-)
+ mm/memcontrol.c | 72 +++++++++++++++++++++----------------------------
+ 1 file changed, 30 insertions(+), 42 deletions(-)
 
 diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index fc18633aba5d..da6e4e9bd0fa 100644
+index 0c9331d7b606..a1b1409a0dce 100644
 --- a/mm/memcontrol.c
 +++ b/mm/memcontrol.c
-@@ -3434,6 +3434,16 @@ struct mem_cgroup *mem_cgroup_get_from_ino(unsigned long ino)
- }
- #endif
+@@ -375,7 +375,8 @@ struct lruvec_stats {
+ 	long state_pending[NR_MEMCG_NODE_STAT_ITEMS];
+ };
  
-+static void free_mem_cgroup_per_node_info(struct mem_cgroup_per_node *pn)
-+{
-+	if (!pn)
-+		return;
-+
-+	free_percpu(pn->lruvec_stats_percpu);
-+	kfree(pn->lruvec_stats);
-+	kfree(pn);
-+}
-+
- static bool alloc_mem_cgroup_per_node_info(struct mem_cgroup *memcg, int node)
+-unsigned long lruvec_page_state(struct lruvec *lruvec, enum node_stat_item idx)
++static unsigned long __lruvec_page_state(struct lruvec *lruvec,
++		enum node_stat_item idx, bool local)
  {
  	struct mem_cgroup_per_node *pn;
-@@ -3458,23 +3468,10 @@ static bool alloc_mem_cgroup_per_node_info(struct mem_cgroup *memcg, int node)
- 	memcg->nodeinfo[node] = pn;
- 	return true;
- fail:
--	kfree(pn->lruvec_stats);
--	kfree(pn);
-+	free_mem_cgroup_per_node_info(pn);
- 	return false;
+ 	long x;
+@@ -389,7 +390,8 @@ unsigned long lruvec_page_state(struct lruvec *lruvec, enum node_stat_item idx)
+ 		return 0;
+ 
+ 	pn = container_of(lruvec, struct mem_cgroup_per_node, lruvec);
+-	x = READ_ONCE(pn->lruvec_stats->state[i]);
++	x = local ? READ_ONCE(pn->lruvec_stats->state_local[i]) :
++		    READ_ONCE(pn->lruvec_stats->state[i]);
+ #ifdef CONFIG_SMP
+ 	if (x < 0)
+ 		x = 0;
+@@ -397,27 +399,16 @@ unsigned long lruvec_page_state(struct lruvec *lruvec, enum node_stat_item idx)
+ 	return x;
  }
  
--static void free_mem_cgroup_per_node_info(struct mem_cgroup *memcg, int node)
--{
--	struct mem_cgroup_per_node *pn = memcg->nodeinfo[node];
--
--	if (!pn)
--		return;
--
--	free_percpu(pn->lruvec_stats_percpu);
--	kfree(pn->lruvec_stats);
--	kfree(pn);
--}
--
- static void __mem_cgroup_free(struct mem_cgroup *memcg)
++
++unsigned long lruvec_page_state(struct lruvec *lruvec, enum node_stat_item idx)
++{
++	return __lruvec_page_state(lruvec, idx, false);
++}
++
+ unsigned long lruvec_page_state_local(struct lruvec *lruvec,
+ 				      enum node_stat_item idx)
  {
- 	int node;
-@@ -3482,7 +3479,7 @@ static void __mem_cgroup_free(struct mem_cgroup *memcg)
- 	obj_cgroup_put(memcg->orig_objcg);
+-	struct mem_cgroup_per_node *pn;
+-	long x;
+-	int i;
+-
+-	if (mem_cgroup_disabled())
+-		return node_page_state(lruvec_pgdat(lruvec), idx);
+-
+-	i = memcg_stats_index(idx);
+-	if (WARN_ONCE(BAD_STAT_IDX(i), "%s: missing stat item %d\n", __func__, idx))
+-		return 0;
+-
+-	pn = container_of(lruvec, struct mem_cgroup_per_node, lruvec);
+-	x = READ_ONCE(pn->lruvec_stats->state_local[i]);
+-#ifdef CONFIG_SMP
+-	if (x < 0)
+-		x = 0;
+-#endif
+-	return x;
++	return __lruvec_page_state(lruvec, idx, true);
+ }
  
- 	for_each_node(node)
--		free_mem_cgroup_per_node_info(memcg, node);
-+		free_mem_cgroup_per_node_info(memcg->nodeinfo[node]);
- 	memcg1_free_events(memcg);
- 	kfree(memcg->vmstats);
- 	free_percpu(memcg->vmstats_percpu);
+ /* Subset of vm_event_item to report for memcg event stats */
+@@ -651,7 +642,7 @@ static void flush_memcg_stats_dwork(struct work_struct *w)
+ 	queue_delayed_work(system_unbound_wq, &stats_flush_dwork, FLUSH_TIME);
+ }
+ 
+-unsigned long memcg_page_state(struct mem_cgroup *memcg, int idx)
++static unsigned long __memcg_page_state(struct mem_cgroup *memcg, int idx, bool local)
+ {
+ 	long x;
+ 	int i = memcg_stats_index(idx);
+@@ -659,7 +650,9 @@ unsigned long memcg_page_state(struct mem_cgroup *memcg, int idx)
+ 	if (WARN_ONCE(BAD_STAT_IDX(i), "%s: missing stat item %d\n", __func__, idx))
+ 		return 0;
+ 
+-	x = READ_ONCE(memcg->vmstats->state[i]);
++	x = local ? READ_ONCE(memcg->vmstats->state_local[i]) :
++		    READ_ONCE(memcg->vmstats->state[i]);
++
+ #ifdef CONFIG_SMP
+ 	if (x < 0)
+ 		x = 0;
+@@ -667,6 +660,11 @@ unsigned long memcg_page_state(struct mem_cgroup *memcg, int idx)
+ 	return x;
+ }
+ 
++unsigned long memcg_page_state(struct mem_cgroup *memcg, int idx)
++{
++	return __memcg_page_state(memcg, idx, false);
++}
++
+ static int memcg_page_state_unit(int item);
+ 
+ /*
+@@ -709,18 +707,7 @@ void __mod_memcg_state(struct mem_cgroup *memcg, enum memcg_stat_item idx,
+ /* idx can be of type enum memcg_stat_item or node_stat_item. */
+ unsigned long memcg_page_state_local(struct mem_cgroup *memcg, int idx)
+ {
+-	long x;
+-	int i = memcg_stats_index(idx);
+-
+-	if (WARN_ONCE(BAD_STAT_IDX(i), "%s: missing stat item %d\n", __func__, idx))
+-		return 0;
+-
+-	x = READ_ONCE(memcg->vmstats->state_local[i]);
+-#ifdef CONFIG_SMP
+-	if (x < 0)
+-		x = 0;
+-#endif
+-	return x;
++	return __memcg_page_state(memcg, idx, true);
+ }
+ 
+ static void __mod_memcg_lruvec_state(struct lruvec *lruvec,
+@@ -859,24 +846,25 @@ void __count_memcg_events(struct mem_cgroup *memcg, enum vm_event_item idx,
+ 	memcg_stats_unlock();
+ }
+ 
+-unsigned long memcg_events(struct mem_cgroup *memcg, int event)
++static unsigned long __memcg_events(struct mem_cgroup *memcg, int event, bool local)
+ {
+ 	int i = memcg_events_index(event);
+ 
+ 	if (WARN_ONCE(BAD_STAT_IDX(i), "%s: missing stat item %d\n", __func__, event))
+ 		return 0;
+ 
+-	return READ_ONCE(memcg->vmstats->events[i]);
++	return local ? READ_ONCE(memcg->vmstats->events_local[i]) :
++		    READ_ONCE(memcg->vmstats->events[i]);
+ }
+ 
+-unsigned long memcg_events_local(struct mem_cgroup *memcg, int event)
++unsigned long memcg_events(struct mem_cgroup *memcg, int event)
+ {
+-	int i = memcg_events_index(event);
+-
+-	if (WARN_ONCE(BAD_STAT_IDX(i), "%s: missing stat item %d\n", __func__, event))
+-		return 0;
++	return __memcg_events(memcg, event, false);
++}
+ 
+-	return READ_ONCE(memcg->vmstats->events_local[i]);
++unsigned long memcg_events_local(struct mem_cgroup *memcg, int event)
++{
++	return __memcg_events(memcg, event, true);
+ }
+ 
+ struct mem_cgroup *mem_cgroup_from_task(struct task_struct *p)
 -- 
 2.34.1
 
