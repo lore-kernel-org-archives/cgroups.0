@@ -1,57 +1,49 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+Received: from dggsgout12.his.huawei.com (dggsgout12.his.huawei.com [45.249.212.56])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 11EDF22D4F1
-	for <cgroups@vger.kernel.org>; Thu,  5 Dec 2024 19:51:28 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E8FD313C677;
+	Fri,  6 Dec 2024 01:45:05 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.56
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1733428290; cv=none; b=VTKl1MZkmnCpsvnsmt9WbTt+gnVo/yiBX1LrIbuLa8Ht3w7Imw0cCpKYg2ulBk1cGthYZ5nJD/AC1MOhQGIzrIQ5Gc0rn5QwfubtLsgTGsDCOiaanw46MSRFJEmQ8aTQBILd9lQq1kATsgF4Gwq3C1Yll5zFs7XE+OBRwu6wCJM=
+	t=1733449509; cv=none; b=Z7UhNtc16ElIK+TN4Sz+RQ+POSUHhm4g9b6t9TfUpn/kTh6UKSUKUdl88y9NNIS/KUNtU7j2JjTXbm11w1yNwaqAWbIVmV9KmHAGgCNyBoZ2WzaXzheaPOPvDzzFUUK3CHf5msA90dw9WoMhvwRmrb05jyxkRNL6s5MhkeB85ZQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1733428290; c=relaxed/simple;
-	bh=aj/TDHD0CAOq7FGfGfcEU3eaakPg3oCuSNECP9NsCEw=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=NI+9U43TBtq346SqX16nCyrcjZDYDcHSaY2ogVtJ5uLKAYprTOqds5kthn2U8V7X+rO/HC+yThT9NDeIX2qrGUh9tpHc2Kmg1pOC7k1OuUW0HCXHcz+kP9f7vxVOHXs63nOoLRY10h4Br9+F3hOoNsffS5J7aX8h/FEGrCZ2Pxo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=SQII/k/2; arc=none smtp.client-ip=170.10.129.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="SQII/k/2"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1733428288;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:
-	 content-transfer-encoding:content-transfer-encoding;
-	bh=TGMa02p59Vq5W9KNHvnbrbM6563qeJi/DcjgzffieMg=;
-	b=SQII/k/2Bu38LYGthyE1EcCGcJTO4Y+QvtmiJia/DLqBdK6bh3bVQR/RBdraKhq1GKmYtS
-	kbUOZxr1iGs5XYU8KS/525ESS23GWpSUFn6c7WNzqCxw+n65cHAL0CpM9h06HrJYfWSp3l
-	q72Ce8V7H+PsMdErQUG8QeMhu0Fm91Y=
-Received: from mx-prod-mc-02.mail-002.prod.us-west-2.aws.redhat.com
- (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
- relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-161-HLV9w-mZOrajCjc8HTNz6A-1; Thu,
- 05 Dec 2024 14:51:23 -0500
-X-MC-Unique: HLV9w-mZOrajCjc8HTNz6A-1
-X-Mimecast-MFC-AGG-ID: HLV9w-mZOrajCjc8HTNz6A
-Received: from mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.12])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mx-prod-mc-02.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 657F41956046;
-	Thu,  5 Dec 2024 19:51:22 +0000 (UTC)
-Received: from llong-thinkpadp16vgen1.westford.csb (unknown [10.22.90.143])
-	by mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id 9E95E19560AD;
-	Thu,  5 Dec 2024 19:51:20 +0000 (UTC)
-From: Waiman Long <longman@redhat.com>
-To: Tejun Heo <tj@kernel.org>,
-	Johannes Weiner <hannes@cmpxchg.org>,
-	=?UTF-8?q?Michal=20Koutn=C3=BD?= <mkoutny@suse.com>,
-	Shuah Khan <shuah@kernel.org>
-Cc: cgroups@vger.kernel.org,
+	s=arc-20240116; t=1733449509; c=relaxed/simple;
+	bh=BVAAda1tLg5pIMwh4c9Z4Tb7TM1e9QabNLUmbZrnPNA=;
+	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
+	 MIME-Version; b=rXRKpCdpefW2mUikSv12CgGKgfXJZ+uQP1bhIybtRDc36NLJxBSGQq7aFiFT+tcO0Kt1n264YFJmc2QrABXwkperQHUVMhreKNBg6VPTeib0Bv0oWyr8ROyIR3hhm3vMBjtM07WPhgsbcoz54FaYXR8StkpdtWiTYfEqHecn8Yc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.56
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
+Received: from mail.maildlp.com (unknown [172.19.93.142])
+	by dggsgout12.his.huawei.com (SkyGuard) with ESMTP id 4Y4DZz5760z4f3jR1;
+	Fri,  6 Dec 2024 09:44:43 +0800 (CST)
+Received: from mail02.huawei.com (unknown [10.116.40.128])
+	by mail.maildlp.com (Postfix) with ESMTP id BBCAD1A018D;
+	Fri,  6 Dec 2024 09:45:02 +0800 (CST)
+Received: from hulk-vt.huawei.com (unknown [10.67.174.121])
+	by APP4 (Coremail) with SMTP id gCh0CgD30oYKV1JnkkskDw--.31315S5;
+	Fri, 06 Dec 2024 09:45:02 +0800 (CST)
+From: Chen Ridong <chenridong@huaweicloud.com>
+To: akpm@linux-foundation.org,
+	mhocko@kernel.org,
+	hannes@cmpxchg.org,
+	yosryahmed@google.com,
+	roman.gushchin@linux.dev,
+	shakeel.butt@linux.dev,
+	muchun.song@linux.dev,
+	davidf@vimeo.com,
+	vbabka@suse.cz
+Cc: linux-mm@kvack.org,
 	linux-kernel@vger.kernel.org,
-	linux-kselftest@vger.kernel.org,
-	Waiman Long <longman@redhat.com>
-Subject: [PATCH] cgroup/cpuset: Prevent leakage of isolated CPUs into sched domains
-Date: Thu,  5 Dec 2024 14:51:01 -0500
-Message-ID: <20241205195101.31108-1-longman@redhat.com>
+	cgroups@vger.kernel.org,
+	chenridong@huawei.com,
+	wangweiyang2@huawei.com
+Subject: [next -v1 3/5] memcg: simplify the mem_cgroup_update_lru_size function
+Date: Fri,  6 Dec 2024 01:35:10 +0000
+Message-Id: <20241206013512.2883617-4-chenridong@huaweicloud.com>
+X-Mailer: git-send-email 2.34.1
+In-Reply-To: <20241206013512.2883617-1-chenridong@huaweicloud.com>
+References: <20241206013512.2883617-1-chenridong@huaweicloud.com>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
@@ -59,126 +51,71 @@ List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-Scanned-By: MIMEDefang 3.0 on 10.30.177.12
+X-CM-TRANSID:gCh0CgD30oYKV1JnkkskDw--.31315S5
+X-Coremail-Antispam: 1UD129KBjvJXoWxJryftr4ruw4ftw4xGFWrGrg_yoW8Jw1Upw
+	srCa4Fya4rZry3XwnrtFn8uayfAa18tay8A343Xw13Jr13K340934DKrW8WFW7Xa4kCF43
+	XFWDJr4ft3yDZr7anT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDU0xBIdaVrnRJUUUmGb4IE77IF4wAFF20E14v26rWj6s0DM7CY07I20VC2zVCF04k2
+	6cxKx2IYs7xG6rWj6s0DM7CIcVAFz4kK6r1j6r18M28IrcIa0xkI8VA2jI8067AKxVWUWw
+	A2048vs2IY020Ec7CjxVAFwI0_Xr0E3s1l8cAvFVAK0II2c7xJM28CjxkF64kEwVA0rcxS
+	w2x7M28EF7xvwVC0I7IYx2IY67AKxVW7JVWDJwA2z4x0Y4vE2Ix0cI8IcVCY1x0267AKxV
+	W8Jr0_Cr1UM28EF7xvwVC2z280aVAFwI0_GcCE3s1l84ACjcxK6I8E87Iv6xkF7I0E14v2
+	6rxl6s0DM2AIxVAIcxkEcVAq07x20xvEncxIr21l5I8CrVACY4xI64kE6c02F40Ex7xfMc
+	Ij6xIIjxv20xvE14v26r106r15McIj6I8E87Iv67AKxVWUJVW8JwAm72CE4IkC6x0Yz7v_
+	Jr0_Gr1lF7xvr2IYc2Ij64vIr41lFIxGxcIEc7CjxVA2Y2ka0xkIwI1lc7CjxVAaw2AFwI
+	0_Jw0_GFyl42xK82IYc2Ij64vIr41l4c8EcI0Ec7CjxVAaw2AFwI0_Jw0_GFyl4I8I3I0E
+	4IkC6x0Yz7v_Jr0_Gr1lx2IqxVAqx4xG67AKxVWUJVWUGwC20s026x8GjcxK67AKxVWUGV
+	WUWwC2zVAF1VAY17CE14v26r1q6r43MIIYrxkI7VAKI48JMIIF0xvE2Ix0cI8IcVAFwI0_
+	Jr0_JF4lIxAIcVC0I7IYx2IY6xkF7I0E14v26F4j6r4UJwCI42IY6xAIw20EY4v20xvaj4
+	0_Jr0_JF4lIxAIcVC2z280aVAFwI0_Jr0_Gr1lIxAIcVC2z280aVCY1x0267AKxVW8JVW8
+	JrUvcSsGvfC2KfnxnUUI43ZEXa7IUbd-BtUUUUU==
+X-CM-SenderInfo: hfkh02xlgr0w46kxt4xhlfz01xgou0bp/
 
-Isolated CPUs are not allowed to be used in a non-isolated partition.
-The only exception is the top cpuset which is allowed to contain boot
-time isolated CPUs.
+From: Chen Ridong <chenridong@huawei.com>
 
-Commit ccac8e8de99c ("cgroup/cpuset: Fix remote root partition creation
-problem") introduces a simplified scheme of including only partition
-roots in sched domain generation. However, it does not properly account
-for this exception case. This can result in leakage of isolated CPUs
-into a sched domain.
+In the `mem_cgroup_update_lru_size` function, the `lru_size` should be
+updated by adding `nr_pages` regardless of whether `nr_pages` is greater
+than 0 or less than 0. To simplify this function, add a check for
+`nr_pages` == 0. When `nr_pages` is not equal to 0, perform the same
+actions.
 
-Fix it by making sure that isolated CPUs are excluded from the top
-cpuset before generating sched domains.
-
-Also update the way the boot time isolated CPUs are handled in
-test_cpuset_prs.sh to make sure that those isolated CPUs are really
-isolated instead of just skipping them in the tests.
-
-Fixes: ccac8e8de99c ("cgroup/cpuset: Fix remote root partition creation problem")
-Signed-off-by: Waiman Long <longman@redhat.com>
+Signed-off-by: Chen Ridong <chenridong@huawei.com>
 ---
- kernel/cgroup/cpuset.c                        | 10 +++++-
- .../selftests/cgroup/test_cpuset_prs.sh       | 33 +++++++++++--------
- 2 files changed, 28 insertions(+), 15 deletions(-)
+ mm/memcontrol.c | 8 ++------
+ 1 file changed, 2 insertions(+), 6 deletions(-)
 
-diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
-index f321ed515f3a..33b264c3e258 100644
---- a/kernel/cgroup/cpuset.c
-+++ b/kernel/cgroup/cpuset.c
-@@ -890,7 +890,15 @@ static int generate_sched_domains(cpumask_var_t **domains,
- 	 */
- 	if (cgrpv2) {
- 		for (i = 0; i < ndoms; i++) {
--			cpumask_copy(doms[i], csa[i]->effective_cpus);
-+			/*
-+			 * The top cpuset may contain some boot time isolated
-+			 * CPUs that need to be excluded from the sched domain.
-+			 */
-+			if (csa[i] == &top_cpuset)
-+				cpumask_and(doms[i], csa[i]->effective_cpus,
-+					    housekeeping_cpumask(HK_TYPE_DOMAIN));
-+			else
-+				cpumask_copy(doms[i], csa[i]->effective_cpus);
- 			if (dattr)
- 				dattr[i] = SD_ATTR_INIT;
- 		}
-diff --git a/tools/testing/selftests/cgroup/test_cpuset_prs.sh b/tools/testing/selftests/cgroup/test_cpuset_prs.sh
-index 03c1bdaed2c3..400a696a0d21 100755
---- a/tools/testing/selftests/cgroup/test_cpuset_prs.sh
-+++ b/tools/testing/selftests/cgroup/test_cpuset_prs.sh
-@@ -86,15 +86,15 @@ echo "" > test/cpuset.cpus
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index da6e4e9bd0fa..f977e0be1c04 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -1280,15 +1280,14 @@ void mem_cgroup_update_lru_size(struct lruvec *lruvec, enum lru_list lru,
+ 	unsigned long *lru_size;
+ 	long size;
  
- #
- # If isolated CPUs have been reserved at boot time (as shown in
--# cpuset.cpus.isolated), these isolated CPUs should be outside of CPUs 0-7
-+# cpuset.cpus.isolated), these isolated CPUs should be outside of CPUs 0-8
- # that will be used by this script for testing purpose. If not, some of
--# the tests may fail incorrectly. These isolated CPUs will also be removed
--# before being compared with the expected results.
-+# the tests may fail incorrectly. These pre-isolated CPUs should stay in
-+# an isolated state throughout the testing process for now.
- #
- BOOT_ISOLCPUS=$(cat $CGROUP2/cpuset.cpus.isolated)
- if [[ -n "$BOOT_ISOLCPUS" ]]
- then
--	[[ $(echo $BOOT_ISOLCPUS | sed -e "s/[,-].*//") -le 7 ]] &&
-+	[[ $(echo $BOOT_ISOLCPUS | sed -e "s/[,-].*//") -le 8 ]] &&
- 		skip_test "Pre-isolated CPUs ($BOOT_ISOLCPUS) overlap CPUs to be tested"
- 	echo "Pre-isolated CPUs: $BOOT_ISOLCPUS"
- fi
-@@ -683,15 +683,19 @@ check_isolcpus()
- 		EXPECT_VAL2=$EXPECT_VAL
- 	fi
+-	if (mem_cgroup_disabled())
++	if (mem_cgroup_disabled() || !nr_pages)
+ 		return;
  
-+	#
-+	# Appending pre-isolated CPUs
-+	# Even though CPU #8 isn't used for testing, it can't be pre-isolated
-+	# to make appending those CPUs easier.
-+	#
-+	[[ -n "$BOOT_ISOLCPUS" ]] && {
-+		EXPECT_VAL=${EXPECT_VAL:+${EXPECT_VAL},}${BOOT_ISOLCPUS}
-+		EXPECT_VAL2=${EXPECT_VAL2:+${EXPECT_VAL2},}${BOOT_ISOLCPUS}
-+	}
-+
- 	#
- 	# Check cpuset.cpus.isolated cpumask
- 	#
--	if [[ -z "$BOOT_ISOLCPUS" ]]
--	then
--		ISOLCPUS=$(cat $ISCPUS)
--	else
--		ISOLCPUS=$(cat $ISCPUS | sed -e "s/,*$BOOT_ISOLCPUS//")
--	fi
- 	[[ "$EXPECT_VAL2" != "$ISOLCPUS" ]] && {
- 		# Take a 50ms pause and try again
- 		pause 0.05
-@@ -731,8 +735,6 @@ check_isolcpus()
- 		fi
- 	done
- 	[[ "$ISOLCPUS" = *- ]] && ISOLCPUS=${ISOLCPUS}$LASTISOLCPU
--	[[ -n "BOOT_ISOLCPUS" ]] &&
--		ISOLCPUS=$(echo $ISOLCPUS | sed -e "s/,*$BOOT_ISOLCPUS//")
+ 	mz = container_of(lruvec, struct mem_cgroup_per_node, lruvec);
+ 	lru_size = &mz->lru_zone_size[zid][lru];
  
- 	[[ "$EXPECT_VAL" = "$ISOLCPUS" ]]
+-	if (nr_pages < 0)
+-		*lru_size += nr_pages;
+ 
++	*lru_size += nr_pages;
+ 	size = *lru_size;
+ 	if (WARN_ONCE(size < 0,
+ 		"%s(%p, %d, %d): lru_size %ld\n",
+@@ -1296,9 +1295,6 @@ void mem_cgroup_update_lru_size(struct lruvec *lruvec, enum lru_list lru,
+ 		VM_BUG_ON(1);
+ 		*lru_size = 0;
+ 	}
+-
+-	if (nr_pages > 0)
+-		*lru_size += nr_pages;
  }
-@@ -836,8 +838,11 @@ run_state_test()
- 		# if available
- 		[[ -n "$ICPUS" ]] && {
- 			check_isolcpus $ICPUS
--			[[ $? -ne 0 ]] && test_fail $I "isolated CPU" \
--				"Expect $ICPUS, get $ISOLCPUS instead"
-+			[[ $? -ne 0 ]] && {
-+				[[ -n "$BOOT_ISOLCPUS" ]] && ICPUS=${ICPUS},${BOOT_ISOLCPUS}
-+				test_fail $I "isolated CPU" \
-+					"Expect $ICPUS, get $ISOLCPUS instead"
-+			}
- 		}
- 		reset_cgroup_states
- 		#
+ 
+ /**
 -- 
-2.47.1
+2.34.1
 
