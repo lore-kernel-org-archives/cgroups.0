@@ -1,134 +1,103 @@
-Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-wr1-f48.google.com (mail-wr1-f48.google.com [209.85.221.48])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BED741E5708;
-	Tue, 17 Dec 2024 12:28:32 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.51
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AECAE1F131A
+	for <cgroups@vger.kernel.org>; Tue, 17 Dec 2024 12:54:37 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.48
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1734438515; cv=none; b=lp32YfWeTc+y/x1nWcgCJTPu6/he67CJ3tPoYQLQFMQh8oelpM3k9Dza4NMSCwMhyZCoG4BjQ5NvXSI4LC50XzjnsutELiYqdFMU+niF+Q4gt2N4vqRbZeDbu43lYleGv+qnB2VzR+UcUuBJpOjFsvBJ8ivV/slTN88fdtr8ccA=
+	t=1734440079; cv=none; b=iZE2JAoX6Nw2Z8pOSHfLKOHlTGkLgGQN/xNLGZa/+dwp7qlCK64cceu8U/n5hKXuCEihNookgT0iXYnEgB3cyzXlvU6jlcFRN6L0CNcHY7QgW01jUrhreowxbHLO5SCEmb1ADkivyMS82cPZ2it8KsRDzdRJulfIOsQolbiaqp8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1734438515; c=relaxed/simple;
-	bh=CHfOmaBZQdUOxtMJsOYujGK+LwClFGhBqbS1tursMms=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=l4X/twQgsPzk8MI03khTetDVawLZnDn8Z1rWrF29G8NYU8TXymQ9UVCKUSDd9zw75Z57TBvHxUb6cXJVwrWBg2cUHkNIWcZfKZyeDXv6vMDAoHY1rvpskcM4NlDLFb2Zs7V49gtdmvOekK6+5NRbJJ+vmni/pbs1szqa/U+QKrY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.51
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
-Received: from mail.maildlp.com (unknown [172.19.163.216])
-	by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4YCGLQ1rNbz4f3jqb;
-	Tue, 17 Dec 2024 20:28:14 +0800 (CST)
-Received: from mail02.huawei.com (unknown [10.116.40.128])
-	by mail.maildlp.com (Postfix) with ESMTP id A65971A018C;
-	Tue, 17 Dec 2024 20:28:28 +0800 (CST)
-Received: from hulk-vt.huawei.com (unknown [10.67.174.121])
-	by APP4 (Coremail) with SMTP id gCh0CgAX8oVebmFn4SNwEw--.64435S2;
-	Tue, 17 Dec 2024 20:28:28 +0800 (CST)
-From: Chen Ridong <chenridong@huaweicloud.com>
-To: akpm@linux-foundation.org,
-	mhocko@kernel.org,
-	hannes@cmpxchg.org,
-	yosryahmed@google.com,
-	roman.gushchin@linux.dev,
-	shakeel.butt@linux.dev,
-	muchun.song@linux.dev,
-	davidf@vimeo.com,
-	vbabka@suse.cz,
-	handai.szj@taobao.com,
-	rientjes@google.com,
-	kamezawa.hiroyu@jp.fujitsu.com
-Cc: linux-mm@kvack.org,
-	linux-kernel@vger.kernel.org,
-	cgroups@vger.kernel.org,
-	chenridong@huawei.com,
-	wangweiyang2@huawei.com
-Subject: [PATCH v1] memcg: fix soft lockup in the OOM process
-Date: Tue, 17 Dec 2024 12:18:28 +0000
-Message-Id: <20241217121828.3219752-1-chenridong@huaweicloud.com>
-X-Mailer: git-send-email 2.34.1
+	s=arc-20240116; t=1734440079; c=relaxed/simple;
+	bh=enEM7izX+IlEaXtIAqMApARsvSAxsklzletXgpXLJvU=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=jIxvkspt4dN90cvXlv2fHEYtcpfOdyWQRiWZ8Q7Vb4mvUm/1yOr2uvJNNyZsQU+EtESkHBtZ2IBZHQCm/5pbI6A9uAOnLxkEL3zo1MXLfvR0a2aZO0gwVaSX6rVH0I1GAEQTqbQcVC3by3vjVeFkKhitSFeuhOJ5mWGmtmlAiGw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com; spf=pass smtp.mailfrom=suse.com; dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b=aWn5r3Pg; arc=none smtp.client-ip=209.85.221.48
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b="aWn5r3Pg"
+Received: by mail-wr1-f48.google.com with SMTP id ffacd0b85a97d-385d7b4da2bso5012562f8f.1
+        for <cgroups@vger.kernel.org>; Tue, 17 Dec 2024 04:54:37 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=suse.com; s=google; t=1734440076; x=1735044876; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=wNJH0bZIRp/lLbJRiuys3BD3sasknh5mv0Tb1tCrHk4=;
+        b=aWn5r3PgcX+VuwKF1Qb4xaF3EGvbi5fUxCm2vWZOna3CZtgNfsNCOFduUlpkZYElkQ
+         SPdqDxqgv3AAdJUPSIkvm/t4MvFlla4Q18kVdtvJsy9cOtmdX2Z5DQOoGxIe6U8h1sf7
+         gDu5WHDdf2P0e3ePy+Zzx21sJG9Y2yNwDGLKc5YjTrHVKah18RE1oVSQkmqbkf4m2cf1
+         9MfPzcYKK0zjqNeZsc/MRYoPRA9UeFga+4Tox3unPEHp8BQHE4GG63eN1DUGHsObyI0M
+         yf+1QaSteR9vX1WeN7r/RT6Tktsg9Fc92G4QKM3sh92DmY744qe95yBocj5ZX41kOWNM
+         ihnw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1734440076; x=1735044876;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=wNJH0bZIRp/lLbJRiuys3BD3sasknh5mv0Tb1tCrHk4=;
+        b=mXdqz3pf0ERSpG7DJ7BPPwXOVHIayF6KjlBdPy8AKvCW3sR9K2oxpPEKIG8W6O3Pas
+         c/JZZxBWKxbKSyckufDcLt0j4D3frhCSpiIbIaUhF5jk8GbRQypg+LjexA5f1htUIEOV
+         Oq4uIdBhNeYcS1sR/SnwmP9tVHRy3KaFXnVKA2jrbtH5BmR2ql2ahWbYCpBqqX1ib+3F
+         GMBepsMmbfX1ioqGZUWu4iKSecSMOZH1ijzJz4evCiZWDO0utkyUpDLZPJHsAlCh4bZN
+         QzfEuNU6JOKg7wOiPkwA1KTOOIHkTNVPT6lv2OQW/KUzjw9/iU1mNa4iwaJu+aEPWlgl
+         Q33Q==
+X-Forwarded-Encrypted: i=1; AJvYcCVMULYYOSzfOmGglJRPE85At5S54xekbcSh3pRfCE3MpA/iFF6q3qxb4q/v8ZxpH98ZlAa0433w@vger.kernel.org
+X-Gm-Message-State: AOJu0YydmeEf1e1cyBcpKjeKBKxvpbFmVthIATd52qOeXSp+CI9fM3B0
+	zHbUeOx1n6E1s2DpQUcYe4btdPRREiebo24I2gjQcdx0SFvos3xOkAS8uKYbUaI=
+X-Gm-Gg: ASbGncuKE0oyAGWFAOTr5gDkfgsqb8g5SVQqoXVtizcEF82nZ8MYvf9XjYbHrdNai4u
+	8vyf8LIjwpbaiSCCkBrcNyIq9Qze8vquOWA3eAqokToCUM+/mPBiz/BHsYc3nOas+Q497q5wHGf
+	NDiWd6qZzpaTALk4BMBEKHvdbw+i9a5J1Zor9iMk1Y7SOs8BzsDleQgBv7UYUrR/P0HRbfEoI2m
+	Lhah6nUN0sCOHX86eSb0/bjM7epxo87B1kWoyVjru04AY1vkOzWEtRFMq5jaXtS/gk=
+X-Google-Smtp-Source: AGHT+IGIkCksbdZEfvo6ki5xx29/1TnH2HLfVEMtjsycZHejT40HWMLMjlwqoedRINBd6o/828MIhA==
+X-Received: by 2002:a5d:5886:0:b0:385:f66a:4271 with SMTP id ffacd0b85a97d-38880ac61f7mr14775811f8f.4.1734440076073;
+        Tue, 17 Dec 2024 04:54:36 -0800 (PST)
+Received: from localhost (109-81-89-64.rct.o2.cz. [109.81.89.64])
+        by smtp.gmail.com with ESMTPSA id a640c23a62f3a-aab963cdfa5sm442501466b.199.2024.12.17.04.54.35
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 17 Dec 2024 04:54:35 -0800 (PST)
+Date: Tue, 17 Dec 2024 13:54:35 +0100
+From: Michal Hocko <mhocko@suse.com>
+To: Chen Ridong <chenridong@huaweicloud.com>
+Cc: akpm@linux-foundation.org, hannes@cmpxchg.org, yosryahmed@google.com,
+	roman.gushchin@linux.dev, shakeel.butt@linux.dev,
+	muchun.song@linux.dev, davidf@vimeo.com, vbabka@suse.cz,
+	handai.szj@taobao.com, rientjes@google.com,
+	kamezawa.hiroyu@jp.fujitsu.com, linux-mm@kvack.org,
+	linux-kernel@vger.kernel.org, cgroups@vger.kernel.org,
+	chenridong@huawei.com, wangweiyang2@huawei.com
+Subject: Re: [PATCH v1] memcg: fix soft lockup in the OOM process
+Message-ID: <Z2F0ixNUW6kah1pQ@tiehlicka>
+References: <20241217121828.3219752-1-chenridong@huaweicloud.com>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:gCh0CgAX8oVebmFn4SNwEw--.64435S2
-X-Coremail-Antispam: 1UD129KBjvJXoW7Cr1fGF43CFWUXrW3Gr43Awb_yoW8KF45p3
-	ZrJFWUGw4rJr15Xr1xAr1Fgr15Ja17Aa1UXrsFvr1rJF17G3WUAry7JrWUtr1kGr4fZFy3
-	tFn0qw48tr1DZaUanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDU0xBIdaVrnRJUUUvFb4IE77IF4wAFF20E14v26ryj6rWUM7CY07I20VC2zVCF04k2
-	6cxKx2IYs7xG6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rwA2F7IY1VAKz4
-	vEj48ve4kI8wA2z4x0Y4vE2Ix0cI8IcVAFwI0_Xr0_Ar1l84ACjcxK6xIIjxv20xvEc7Cj
-	xVAFwI0_Cr0_Gr1UM28EF7xvwVC2z280aVAFwI0_GcCE3s1l84ACjcxK6I8E87Iv6xkF7I
-	0E14v26rxl6s0DM2AIxVAIcxkEcVAq07x20xvEncxIr21l5I8CrVACY4xI64kE6c02F40E
-	x7xfMcIj6xIIjxv20xvE14v26r106r15McIj6I8E87Iv67AKxVWUJVW8JwAm72CE4IkC6x
-	0Yz7v_Jr0_Gr1lF7xvr2IYc2Ij64vIr41lFIxGxcIEc7CjxVA2Y2ka0xkIwI1lc7CjxVAa
-	w2AFwI0_GFv_Wryl42xK82IYc2Ij64vIr41l4I8I3I0E4IkC6x0Yz7v_Jr0_Gr1lx2IqxV
-	Aqx4xG67AKxVWUJVWUGwC20s026x8GjcxK67AKxVWUGVWUWwC2zVAF1VAY17CE14v26r4a
-	6rW5MIIYrxkI7VAKI48JMIIF0xvE2Ix0cI8IcVAFwI0_Jr0_JF4lIxAIcVC0I7IYx2IY6x
-	kF7I0E14v26r4j6F4UMIIF0xvE42xK8VAvwI8IcIk0rVWUJVWUCwCI42IY6I8E87Iv67AK
-	xVWUJVW8JwCI42IY6I8E87Iv6xkF7I0E14v26r4j6r4UJbIYCTnIWIevJa73UjIFyTuYvj
-	xUxo7KDUUUU
-X-CM-SenderInfo: hfkh02xlgr0w46kxt4xhlfz01xgou0bp/
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20241217121828.3219752-1-chenridong@huaweicloud.com>
 
-From: Chen Ridong <chenridong@huawei.com>
+On Tue 17-12-24 12:18:28, Chen Ridong wrote:
+[...]
+> diff --git a/mm/oom_kill.c b/mm/oom_kill.c
+> index 1c485beb0b93..14260381cccc 100644
+> --- a/mm/oom_kill.c
+> +++ b/mm/oom_kill.c
+> @@ -390,6 +390,7 @@ static int dump_task(struct task_struct *p, void *arg)
+>  	if (!is_memcg_oom(oc) && !oom_cpuset_eligible(p, oc))
+>  		return 0;
+>  
+> +	cond_resched();
+>  	task = find_lock_task_mm(p);
+>  	if (!task) {
+>  		/*
 
-A soft lockup issue was found in the product with. About 56,000 tasks were
-in the OOM cgroup, it was traversing them when the soft lockup was
-triggered.
-
-watchdog: BUG: soft lockup - CPU#2 stuck for 23s! [VM Thread:1503066]
-CPU: 2 PID: 1503066 Comm: VM Thread Kdump: loaded Tainted: G
-Hardware name: Huawei Cloud OpenStack Nova, BIOS
-RIP: 0010:console_unlock+0x343/0x540
-RSP: 0000:ffffb751447db9a0 EFLAGS: 00000247 ORIG_RAX: ffffffffffffff13
-RAX: 0000000000000001 RBX: 0000000000000000 RCX: 00000000ffffffff
-RDX: 0000000000000000 RSI: 0000000000000004 RDI: 0000000000000247
-RBP: ffffffffafc71f90 R08: 0000000000000000 R09: 0000000000000040
-R10: 0000000000000080 R11: 0000000000000000 R12: ffffffffafc74bd0
-R13: ffffffffaf60a220 R14: 0000000000000247 R15: 0000000000000000
-CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-CR2: 00007f2fe6ad91f0 CR3: 00000004b2076003 CR4: 0000000000360ee0
-DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
-DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
-Call Trace:
- vprintk_emit+0x193/0x280
- printk+0x52/0x6e
- dump_task+0x114/0x130
- mem_cgroup_scan_tasks+0x76/0x100
- dump_header+0x1fe/0x210
- oom_kill_process+0xd1/0x100
- out_of_memory+0x125/0x570
- mem_cgroup_out_of_memory+0xb5/0xd0
- try_charge+0x720/0x770
- mem_cgroup_try_charge+0x86/0x180
- mem_cgroup_try_charge_delay+0x1c/0x40
- do_anonymous_page+0xb5/0x390
- handle_mm_fault+0xc4/0x1f0
-
-This is because thousands of processes are in the OOM cgroup, it takes a
-long time to traverse all of them. As a result, this lead to soft lockup
-in the OOM process.
-
-To fix this issue, add 'cond_resched' in the 'dump_task' function.
-
-Fixes: 9cbb78bb3143 ("mm, memcg: introduce own oom handler to iterate only over its own threads")
-Signed-off-by: Chen Ridong <chenridong@huawei.com>
----
- mm/oom_kill.c | 1 +
- 1 file changed, 1 insertion(+)
-
-diff --git a/mm/oom_kill.c b/mm/oom_kill.c
-index 1c485beb0b93..14260381cccc 100644
---- a/mm/oom_kill.c
-+++ b/mm/oom_kill.c
-@@ -390,6 +390,7 @@ static int dump_task(struct task_struct *p, void *arg)
- 	if (!is_memcg_oom(oc) && !oom_cpuset_eligible(p, oc))
- 		return 0;
- 
-+	cond_resched();
- 	task = find_lock_task_mm(p);
- 	if (!task) {
- 		/*
+This is called from RCU read lock for the global OOM killer path and I
+do not think you can schedule there. I do not remember specifics of task
+traversal for crgoup path but I guess that you might need to silence the
+soft lockup detector instead or come up with a different iteration
+scheme.
 -- 
-2.34.1
-
+Michal Hocko
+SUSE Labs
