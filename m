@@ -1,84 +1,111 @@
-Received: from casper.infradead.org (casper.infradead.org [90.155.50.34])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-wr1-f49.google.com (mail-wr1-f49.google.com [209.85.221.49])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1FE6D1EF0B7;
-	Tue, 17 Dec 2024 12:04:32 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=90.155.50.34
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B236B13A3ED
+	for <cgroups@vger.kernel.org>; Tue, 17 Dec 2024 12:27:50 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.49
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1734437074; cv=none; b=HPlQW8h7cVO4QboWhWHhHWTKU0JFcnFrXESHL64kPYbpVwQjx2tH/XcbKWVdu1V7s8CEq6SjBSpaXmb7SYa2QT7d/0JVQcTPppxWul2GwuxRzmGkMnh40APr/7PzTvKuOVWxudiIgazmwzGAuwOYfRLwsF80eAnjCEcOyz/EqOA=
+	t=1734438472; cv=none; b=im6ISdsbck8rXJJ31t7zWfga4DqUFeFKB340BQFghLB/LSnSVyovVUm3PIzNQKhMlA8fT+nPhll3+VkClxo3A7fcmCClhb+gq305DI/gTt96IqT0bX4aeY30iIu2qIfk2QaQmsAxJl7/QHFK160BX/KyJCDd6YYpcUCYbz6Ml0s=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1734437074; c=relaxed/simple;
-	bh=28IGf/B9Lm3ZvkS0yr+vRjT/zU6RdAuxFU3+rfuQFVc=;
+	s=arc-20240116; t=1734438472; c=relaxed/simple;
+	bh=mfOjG9fKcnZofTiP6EMJkP840fGyXQ0OaXOxdGVHwGA=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=L3+18J7HHchHbd50Xfb6EJhq+mDbqpsett+immIEAOjExzuPCp8BX0ullC74YF7Kn4U3RmGnNH1G4/3hWmQTT8/kUnoggOeaR4EDCQGFhHimF6tSuRHmyaVdAhko//tPjJWMXnHYFzHSYgWOSG+Q4YV1mY5u5aEdtkPpG8hvlFE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=gnzDw66N; arc=none smtp.client-ip=90.155.50.34
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=infradead.org
+	 Content-Type:Content-Disposition:In-Reply-To; b=DIEGRi/LJHXKS3T6LofyAov3b4V3onY4tlsuoIQrLU1k/Xsjrvn7JsKBbbLVMuxowQazkc9T8JC8VY7TuZ2ll1pRgMakN8A8whipRLLBP/cMakFoV3jrLjdR3Mz5dTvOjtuWmuAi1F/xV8hy9C/2ypGo/SH9L5fYLn/vHSVeCy0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com; spf=pass smtp.mailfrom=suse.com; dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b=gk9W7XSk; arc=none smtp.client-ip=209.85.221.49
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="gnzDw66N"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
-	References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=kysZcD5KVRfxeStNdXdTjnBhev+WbSWszsxJPlwD7Is=; b=gnzDw66NMjWD3Gt//cEkX3Jmqb
-	MLbpIuMfyX33wFirxYdAR2+BRxIHjJzOoMH1V3jE+sWi3Q/KGvOS2RbvbHJE877UsWxi7KRxzsw3e
-	4JHlpFrBAXS1ePUMZF8KNTEZC4Cw2aWZjgMF0ABulEz4NEIGZyLgiMIrB2Y1Q/9itFvYBYJp3mRcL
-	Bq4icLZw5gy/gzlaa9ihKWqzRSqdedH+Is9qS2xGM6pHDhYxcGv/e7xd4KRXvMxnlw3ZLg9I3HlCw
-	VqiAxCZ0s+lbOUYV6t3pih8pnvZMTR3O742j3vKWKApyYfa2Ll6n6YH1SFRkLC+osDdhCLb2TbJwC
-	Ga1SfPkw==;
-Received: from 77-249-17-89.cable.dynamic.v4.ziggo.nl ([77.249.17.89] helo=noisy.programming.kicks-ass.net)
-	by casper.infradead.org with esmtpsa (Exim 4.98 #2 (Red Hat Linux))
-	id 1tNWJI-00000006lWu-1r7S;
-	Tue, 17 Dec 2024 12:04:21 +0000
-Received: by noisy.programming.kicks-ass.net (Postfix, from userid 1000)
-	id 02FB630015F; Tue, 17 Dec 2024 13:04:20 +0100 (CET)
-Date: Tue, 17 Dec 2024 13:04:19 +0100
-From: Peter Zijlstra <peterz@infradead.org>
+	dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b="gk9W7XSk"
+Received: by mail-wr1-f49.google.com with SMTP id ffacd0b85a97d-38634c35129so4031849f8f.3
+        for <cgroups@vger.kernel.org>; Tue, 17 Dec 2024 04:27:50 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=suse.com; s=google; t=1734438469; x=1735043269; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=KUCaeAxyUqo8DWV52BpPxnODaaGmTXqNe/mUro311qA=;
+        b=gk9W7XSktOn6UrKpbmjEBVbXAzRkM+7PNKIhUKYmha9UVQL6fUs5igTWbgPCyaY+8U
+         ecVIT+cW4ISUJvvZ/9+ogXjFEjIX2isdprRz9xb93FQYxuZ1BKfjgMSMQ+fKVY0EbOGn
+         ZLqRrxpiEFdsKLSjzTHXHlW2B34kmMjwZUaFzWhPGtV51IfC4rn9GIEYMI70KgwSrxl+
+         aurwcrthzWowwHCaWjyxppS/FP7EIYx1mDHVbIL35AEm6wDTerojOULHoRJYX30WLycJ
+         NCIxAyau0735zkFQRQiAe36tRjsXa6n6VNHcLr5O4Aze3dtQ9hCqko3I1zWvIq8zBZMy
+         vk0A==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1734438469; x=1735043269;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=KUCaeAxyUqo8DWV52BpPxnODaaGmTXqNe/mUro311qA=;
+        b=PfnshgI3eRBiRbJLSGnh1zSB89zXDl1mILaOLGaEmafN9SfanEgjbCN/WaHenLwKk3
+         EogZZ4+6Fwin492ochMtxOmtg0zUkGbU6gn15CWwldKYaRwYo3fXMGJ8gF+3yvaQVyOk
+         JZhshjpUBlo7YG0VcU2Zz1xkwuqCuZAviy74d46VXCbXOK5CDUVyVGuY36YTUnMACF4q
+         C+omDlICRVTmJYtnxa5SQAFm3FOQlfvunuzkJ96Qey++Ma2kFnyjKRqNV3rC4kaN1oTL
+         /WlUkVwTR+GmjMc3lQQ702zEntLs1rmQhI9blHIhfWg+msTYOZVA0QYhgTsTShPCRzvC
+         Mq8Q==
+X-Forwarded-Encrypted: i=1; AJvYcCWkTt6X9kovQ6FBxrOoti6uInnWzBmML/ciDBcP/rMTZ93xq06xtiFl4pq0f/PzyiX0xEt4iVki@vger.kernel.org
+X-Gm-Message-State: AOJu0YyVob0KjMtjACOfVnx6/w+fVpBBnAolu70oex5aWHZAq7+AiekZ
+	MDgSHHzQHgeEZDbITFa0V1gVT/CBISVbfhY5envTSjQi/0piqnwF7JlyOsrZHis=
+X-Gm-Gg: ASbGncu0pip4ZORNiTmyf4EPm7czcYqj3Wt5iO+v72i4ZsZOaihyypNn+71UWL5GI3K
+	9Oijj10W2kiLkYlmHDkLjOeigNmzkbEg72rXaRD0KoPv573PDruP3yOLM+k8qflZyCiJFdNUUUi
+	5RaXmpmN55mzhnkns40stZkTIVMIPRS/t8OOLn3RTIQ2I5zxcar47sX/dDGdlXYBlWobMuRAnde
+	+wjut6uxo00Z18+rs7PrGGlpiKdrFvKpnjXJDOSQ5pIrR4qiODI2bAyj+8=
+X-Google-Smtp-Source: AGHT+IF4zzeWZiq5WUJV5p8HsJlkUkt0GdMreTu7qE4Nap/RX8z912EgQPfdHcKIxD5g1BK2weO3JA==
+X-Received: by 2002:a05:6000:1fae:b0:385:e013:73f0 with SMTP id ffacd0b85a97d-3888e0c23f8mr14120180f8f.59.1734438469092;
+        Tue, 17 Dec 2024 04:27:49 -0800 (PST)
+Received: from blackdock.suse.cz ([193.86.92.181])
+        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-388c8016427sm10821119f8f.30.2024.12.17.04.27.48
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 17 Dec 2024 04:27:48 -0800 (PST)
+Date: Tue, 17 Dec 2024 13:27:47 +0100
+From: Michal =?utf-8?Q?Koutn=C3=BD?= <mkoutny@suse.com>
 To: Chen Ridong <chenridong@huaweicloud.com>
-Cc: mingo@redhat.com, juri.lelli@redhat.com, vincent.guittot@linaro.org,
-	dietmar.eggemann@arm.com, rostedt@goodmis.org, bsegall@google.com,
-	mgorman@suse.de, vschneid@redhat.com, tj@kernel.org,
-	mkoutny@suse.com, roman.gushchin@linux.dev,
-	linux-kernel@vger.kernel.org, cgroups@vger.kernel.org,
-	chenridong@huawei.com, wangweiyang2@huawei.com
-Subject: Re: [PATCH v3] freezer, sched: report the frozen task stat as 'D'
-Message-ID: <20241217120419.GA2354@noisy.programming.kicks-ass.net>
-References: <20241217004818.3200515-1-chenridong@huaweicloud.com>
+Cc: akpm@linux-foundation.org, mhocko@kernel.org, hannes@cmpxchg.org, 
+	yosryahmed@google.com, roman.gushchin@linux.dev, shakeel.butt@linux.dev, 
+	muchun.song@linux.dev, davidf@vimeo.com, vbabka@suse.cz, linux-mm@kvack.org, 
+	linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, chenridong@huawei.com, 
+	wangweiyang2@huawei.com
+Subject: Re: [next -v1 1/5] memcg: use OFP_PEAK_UNSET instead of -1
+Message-ID: <eydeud7il4oe24xa4uvs2gistzrkphzq6bfiunwn73ipd2cxsx@kyisofhuivp6>
+References: <20241206013512.2883617-1-chenridong@huaweicloud.com>
+ <20241206013512.2883617-2-chenridong@huaweicloud.com>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: multipart/signed; micalg=pgp-sha512;
+	protocol="application/pgp-signature"; boundary="zjcz4prt7izdxoks"
 Content-Disposition: inline
-In-Reply-To: <20241217004818.3200515-1-chenridong@huaweicloud.com>
+In-Reply-To: <20241206013512.2883617-2-chenridong@huaweicloud.com>
 
-On Tue, Dec 17, 2024 at 12:48:18AM +0000, Chen Ridong wrote:
+
+--zjcz4prt7izdxoks
+Content-Type: text/plain; charset=iso-8859-1
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
+
+On Fri, Dec 06, 2024 at 01:35:08AM GMT, Chen Ridong <chenridong@huaweicloud=
+=2Ecom> wrote:
 > From: Chen Ridong <chenridong@huawei.com>
-> 
-> Before the commit f5d39b020809 ("freezer,sched: Rewrite core freezer
-> logic"), the frozen task stat was reported as 'D' in cgroup v1.
-> However, after rewriting core freezer logic, the frozen task stat is
-> reported as 'R'. This is confusing, especially when a task with stat of
-> 'S' is frozen.
-> 
-> This can be reproduced as bellow step:
-> cd /sys/fs/cgroup/freezer/
-> mkdir test
-> sleep 1000 &
-> [1] 739         // task whose stat is 'S'
-> echo 739 > test/cgroup.procs
-> echo FROZEN > test/freezer.state
-> ps -aux | grep 739
-> root     739  0.1  0.0   8376  1812 pts/0    R    10:56   0:00 sleep 1000
-> 
-> As shown above, a task whose stat is 'S' was changed to 'R' when it was
-> frozen. To solve this issue, simply maintain the same reported state as
-> before the rewrite.
-> 
-> Fixes: f5d39b020809 ("freezer,sched: Rewrite core freezer logic")
+>=20
+> The 'OFP_PEAK_UNSET' has been defined, use it instead of '-1'.
+>=20
 > Signed-off-by: Chen Ridong <chenridong@huawei.com>
-> Acked-by: Tejun Heo <tj@kernel.org>
+> ---
+>  mm/memcontrol.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
 
-Thanks!
+Reviewed-by: Michal Koutn=FD <mkoutny@suse.com>
+
+--zjcz4prt7izdxoks
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iHUEABYKAB0WIQTd6mfF2PbEZnpdoAkt3Wney77BSQUCZ2FuQQAKCRAt3Wney77B
+SQw0AQCgJ1ql+qt8nwjNYTOb4Vf53qsOaZQDbmj2GLjx7hNH6wEAt+mLSBFbt9Cj
+h2vOR8JL7AmC1u2ExaNce0CqcXuO1gI=
+=EZAl
+-----END PGP SIGNATURE-----
+
+--zjcz4prt7izdxoks--
