@@ -1,62 +1,62 @@
-Received: from mail-pl1-f172.google.com (mail-pl1-f172.google.com [209.85.214.172])
+Received: from mail-pl1-f182.google.com (mail-pl1-f182.google.com [209.85.214.182])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 00E32D517
-	for <cgroups@vger.kernel.org>; Tue, 24 Dec 2024 01:14:20 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.172
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 31517D299
+	for <cgroups@vger.kernel.org>; Tue, 24 Dec 2024 01:14:17 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.182
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1735002862; cv=none; b=GEQ1OgPlEmQQ4zOX2IwSVx23klNIJVXNgYM1H7IpxD1aYYgujWZJ/taIVc2nsPUASXMhgBLmYXNyskEeC01SU85aSl1ziQHdX3L78xhVxU2fwcZ6KHp8svOtfFvd2XI/zNjYvtRL3lPeD5cdPV+HSd9CeSd65mhs49qlKI0fCqU=
+	t=1735002863; cv=none; b=eaAQR3JcGRWciwqRZsdEYdmU7ReGj6XQCOH9t0GH7dBXcsOokYgmf6C8cgKBDxjaQsSXUZAGBfYgQcxAMHB7hGLkMQiekKzQnf9uFfnHlA054NpSbl9LPcqlHiel5k/xCraZ5rGuSEg6cy0tt+ayD2wdbWVr6a7lOeKndqsG1ls=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1735002862; c=relaxed/simple;
-	bh=u3AFtbyljxy8wxiuzvEeYEmO9yp/zIyp3Z2K9/iujNQ=;
+	s=arc-20240116; t=1735002863; c=relaxed/simple;
+	bh=VFEeIpBNH9iGwvMWic0tCdbGa0GeUXb8dNk6YvO7jWY=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=keVgozeOmoQGW4e/P8JgZrJAJEEh0wqb1O7qCLSWoW121pEE14pvSCNT+O1+5hDo0VWIeD5eTWhmtSXXr5YQ0u7wRAPGozZBUoPxJsAwriEUHX9q1jJ/Qb3ZyQ5FlGQ9JQGBqMHS/trQ/SicY9VLilV9kD9FejkA5XxjGtW/Lso=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=UuJa838T; arc=none smtp.client-ip=209.85.214.172
+	 MIME-Version; b=Xoicq8t+HKRxVQRXv3JbNFmiE/HkeQ0IzXvKHnY3dRsR6xm0Ngpgu8EwzZGLnZGcNtq74r1gSbVgJZzSPXOSOwDMZgDIy85X18RoN+Nqe1fCxaraDtAWZciOd0jjqBDSh2v4T3jPq0OjBmGujdPNd09IQTGdupY9371xypj+Xpc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=QX3bPFoe; arc=none smtp.client-ip=209.85.214.182
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="UuJa838T"
-Received: by mail-pl1-f172.google.com with SMTP id d9443c01a7336-21636268e43so56086085ad.2
-        for <cgroups@vger.kernel.org>; Mon, 23 Dec 2024 17:14:20 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="QX3bPFoe"
+Received: by mail-pl1-f182.google.com with SMTP id d9443c01a7336-2166022c5caso40021915ad.2
+        for <cgroups@vger.kernel.org>; Mon, 23 Dec 2024 17:14:17 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1735002860; x=1735607660; darn=vger.kernel.org;
+        d=gmail.com; s=20230601; t=1735002857; x=1735607657; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=EpQSbn6C6AIKp7YKs7miT4jgNyhtNHCB16iSRmc/g1c=;
-        b=UuJa838TZE+JMLTVV2uObY9blzz/Ti7eBn7hsV8SNiYHpzEU3W4sTfH2r2qpYWh8xm
-         fzLhO1mRplSso946kiBYAAu0PTNGgYBwFqm7mbbNoihJ5eAtTI6fzeMnkP0lQjrwEAhY
-         GmdbEJiaO5cC+stWh2wRNgfFMyG7s+V5EBSe6hhZd1J8TsNxzGuTCGx35x3ioHQJwWaD
-         UMYbdngfKhKxnmHrbkgFWkMJg8oN+E5wZ1Fe0AdZZxgCm3LqhQ0B62d/39K2GUhowP1l
-         ImpkIkPbGYOcjXdfeEAAFWhagiEdLFOF6f4bHOeJqE7jWYcHAJDjtN0uxjV6q0ffJEjo
-         CDMg==
+        bh=JL2jgd7riB8bL0/y/2MxSvAIl3x85Oo9zvXWGx0Vk6k=;
+        b=QX3bPFoeI2OJk6BtE/HyHKPoVV/UFYBFdHgookXUvxkpbgaVatCxkU9xOMpvhtuek5
+         Mt4dpkETTUkZQhgqO1RYoRrbpDU4vifWOXPMF4IFoguloGBux0HsLzMb1IsYWp80ir4W
+         nOrgTs2F9LTmaBGmuhoOsF45YG+Ng0aex26d+Uyfko1fLBTH+63Trr0+/U7G2FfsH3HN
+         cYTq0YoMb6NQIq9iLQKjN5bmsbMNYQ6JRYM25Lfj89YjVnVRcpdAzCNP9pZD+lJfROe9
+         NDh9WqQeWF55lyTsAMt0AN8zZsbK90GkR2XmK4kq7ZHx6zyP74KRzs1TcEwojByiRSN1
+         saHg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1735002860; x=1735607660;
+        d=1e100.net; s=20230601; t=1735002857; x=1735607657;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=EpQSbn6C6AIKp7YKs7miT4jgNyhtNHCB16iSRmc/g1c=;
-        b=NddMUN/wqQNKH6VC39HwxH2bWQ864lDC9ePcHKVgrDdFpI2XoLD5ARUzppcsGAVn6a
-         lRhOUnNhSSlzEz33P+H1wNzSjlx2Z7WZmja/tQkXD0f9GYwY49F4e22oTZmt0G2dYenz
-         yHYJNlFMDIbLEMHLq8DXu8Eyco5EeqxD632XBabqMTFZJDfVTqWBrpEDX1RJYshAnMWq
-         z9vBfhDIQXeRw/b6yQCIv2TAOHRTvnrc+/UQCPYK+m2pz9TL3bJFl1v92MtOoQfiOt54
-         8OqI2lXh4RXf0Vz6wFKVm6MjKOunHM8MdC88392lEJFfs0CUZ/lO2+YQeLityVl2JcEB
-         di4A==
-X-Forwarded-Encrypted: i=1; AJvYcCXwyecp1TJ2cpBdvm91Hm+ZJZ4oyGAe1M5igWk2PjtyWrcTnOPJAj2K5Sq51SSOHWcxgVS+m7se@vger.kernel.org
-X-Gm-Message-State: AOJu0YwdDV+giRNETC+t6OLEZP8A3DPHYlkvReeHesoERSv/rMTzX04/
-	lbxMbUIcAJTmfzbNjGkPtxZwS90L7KMRnF72YMHL6mOaKAdyypIG
-X-Gm-Gg: ASbGncsOWCwkUV1buh+lwqaUSiH28UBIxxiQQzDLHpSdEYq6q0tey+hHSQEooAarCBn
-	EhCs/aoKwMH2pS7xHjNIRq5eTnaZ8OvfFNiD3Td0/MNNjEsEJ4E3/FqoL3+ofa0s5L8bY5ucUUv
-	eCFlF6HCiCwOwjhfDPdPV3QHzPyivi2nKPo8sDtjLjraK8PIb78m4dAb8OxSqv6HwYHq1QaWedM
-	5hJwGm+oq8Z64cMJBNhiUr0upghN/NzpF9A5dTiGDi0gfe3ojxSP90vlG7ZACHeGAlanjAvWscH
-	dVPAOryGh9Uauo8Rkw==
-X-Google-Smtp-Source: AGHT+IFwR7wXxhzrgfdQceACkEtKrEhPAYVpgAqlRJPF2+jNIw5EIHwhSSCWtl13waEhVD43uo5AMQ==
-X-Received: by 2002:a17:902:c943:b0:215:72aa:693f with SMTP id d9443c01a7336-219e6e8bb89mr229405165ad.9.1735002860313;
-        Mon, 23 Dec 2024 17:14:20 -0800 (PST)
+        bh=JL2jgd7riB8bL0/y/2MxSvAIl3x85Oo9zvXWGx0Vk6k=;
+        b=S3feTHLBRuuLH1CiH6rSioliyoC+XwpUF6dkHL43kVufF2dh0BPv9MvtJe2PV0E2gk
+         CWoCpieReujm3GIsny25tjFj4tOMQvt8TE8OaO0UAcRICNh2nw2oBthMdR4wAavYNmVi
+         naNJHEOOBKl98aDXOSjNmbc3xBOu96LIhOchmZsv82S2/KzbBKgFIr6A+o3nYrSfsYif
+         rhgrBetU9QcE/ZzjxSSBIb4HRc5bEqeWZ0qY1uJiA3jAwjQn/ykt36FnklCFvzMXRN9G
+         diTUbGflpeGBodcnEjPAAgAQGJHgmOaAEpvRsG0Ol7rkA2jxDmJEkfbmhsASu6OAMtAV
+         j3gg==
+X-Forwarded-Encrypted: i=1; AJvYcCUzr9o8Mb6wILnuSRl/dXX6gYzvYV10gJiYEhYkFVyrF877A1XvF/S3BPMhmHIB2Q84X7mDzubL@vger.kernel.org
+X-Gm-Message-State: AOJu0Ywsg64VxVUzFPhDIF0Y8+DWGcx1m55mncSpsy1uqvjYNegN31vl
+	knK+xoSFBWc0HACFy4jFbvrHEF+T2ZdzOMYzxaq4EBFpZSUr71s5
+X-Gm-Gg: ASbGncumSsCUQVTBpUzQmZFem0sPZKjngnNrXnZRyaDuThhv/7MTI7KIcO03I2QUu9d
+	vn1IhGuS0xqsqyWSefZ+tcmrjdiYaX1HBtHktHh+h6w0DYwZMrp6nUjH+Ubsi0yVBI8kYR1cfW9
+	NdJyUVd6olX5RfmXJQ0BcbO3ALar5Wn7v4h/Y69PvkewvyyQK+dKYAJ+GFrg8DE2EwhQBjWZG6P
+	UC1pvchTdYsMWrHQXnl4vzfSAuLprknfBLi9yUClEnbaPv1VIej2UAyk+ypfUu0upJR9VNOn5dy
+	JcsIb8m3vaBgJGZEhQ==
+X-Google-Smtp-Source: AGHT+IE3QHLwg9ReNpugqbcBsAF2fSOEsH+CCNMaVbUB+N1MFpxZaa07QtuA97SwYcItxeQb83M4Xw==
+X-Received: by 2002:a17:902:c943:b0:216:6d48:9177 with SMTP id d9443c01a7336-219e6e8c7e8mr225018355ad.11.1735002857492;
+        Mon, 23 Dec 2024 17:14:17 -0800 (PST)
 Received: from saturn.. (c-67-188-127-15.hsd1.ca.comcast.net. [67.188.127.15])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-219dc970c84sm79541255ad.58.2024.12.23.17.14.19
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-219dc970c84sm79541255ad.58.2024.12.23.17.14.16
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 23 Dec 2024 17:14:19 -0800 (PST)
+        Mon, 23 Dec 2024 17:14:16 -0800 (PST)
 From: JP Kobryn <inwardvessel@gmail.com>
 To: shakeel.butt@linux.dev,
 	hannes@cmpxchg.org,
@@ -64,9 +64,9 @@ To: shakeel.butt@linux.dev,
 	akpm@linux-foundation.org
 Cc: linux-mm@kvack.org,
 	cgroups@vger.kernel.org
-Subject: [PATCH 5/9 RFC] cgroup: separate locking between base css and others
-Date: Mon, 23 Dec 2024 17:13:58 -0800
-Message-ID: <20241224011402.134009-6-inwardvessel@gmail.com>
+Subject: [PATCH 3/9 RFC] cgroup: change cgroup to css in rstat init and exit api
+Date: Mon, 23 Dec 2024 17:13:56 -0800
+Message-ID: <20241224011402.134009-4-inwardvessel@gmail.com>
 X-Mailer: git-send-email 2.47.1
 In-Reply-To: <20241224011402.134009-1-inwardvessel@gmail.com>
 References: <20241224011402.134009-1-inwardvessel@gmail.com>
@@ -78,242 +78,118 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Separate locks can be used to eliminate contention across subsystems that make
-use of rstat. The base stats also get their own lock. Where applicable, check
-for the existence of a subsystem pointer to determine if the given
-cgroup_subsys_state is the base css or not.
+Change API calls to accept a cgroup_subsys_state instead of a cgroup.
 
 Signed-off-by: JP Kobryn <inwardvessel@gmail.com>
 ---
- include/linux/cgroup-defs.h |  2 +
- kernel/cgroup/rstat.c       | 92 +++++++++++++++++++++++++------------
- 2 files changed, 65 insertions(+), 29 deletions(-)
+ kernel/cgroup/cgroup-internal.h |  4 ++--
+ kernel/cgroup/cgroup.c          | 16 ++++++++++------
+ kernel/cgroup/rstat.c           |  6 ++++--
+ 3 files changed, 16 insertions(+), 10 deletions(-)
 
-diff --git a/include/linux/cgroup-defs.h b/include/linux/cgroup-defs.h
-index 1932f8ae7995..4d87519ff023 100644
---- a/include/linux/cgroup-defs.h
-+++ b/include/linux/cgroup-defs.h
-@@ -790,6 +790,8 @@ struct cgroup_subsys {
- 	 * specifies the mask of subsystems that this one depends on.
- 	 */
- 	unsigned int depends_on;
-+
-+	spinlock_t rstat_lock;
- };
+diff --git a/kernel/cgroup/cgroup-internal.h b/kernel/cgroup/cgroup-internal.h
+index c964dd7ff967..87d062baff90 100644
+--- a/kernel/cgroup/cgroup-internal.h
++++ b/kernel/cgroup/cgroup-internal.h
+@@ -269,8 +269,8 @@ int cgroup_task_count(const struct cgroup *cgrp);
+ /*
+  * rstat.c
+  */
+-int cgroup_rstat_init(struct cgroup *cgrp);
+-void cgroup_rstat_exit(struct cgroup *cgrp);
++int cgroup_rstat_init(struct cgroup_subsys_state *css);
++void cgroup_rstat_exit(struct cgroup_subsys_state *css);
+ void cgroup_rstat_boot(void);
+ void cgroup_base_stat_cputime_show(struct seq_file *seq);
  
- extern struct percpu_rw_semaphore cgroup_threadgroup_rwsem;
+diff --git a/kernel/cgroup/cgroup.c b/kernel/cgroup/cgroup.c
+index fdddd5ec5f3c..848e09f433c0 100644
+--- a/kernel/cgroup/cgroup.c
++++ b/kernel/cgroup/cgroup.c
+@@ -1358,7 +1358,7 @@ static void cgroup_destroy_root(struct cgroup_root *root)
+ 
+ 	cgroup_unlock();
+ 
+-	cgroup_rstat_exit(cgrp);
++	cgroup_rstat_exit(&cgrp->self);
+ 	kernfs_destroy_root(root->kf_root);
+ 	cgroup_free_root(root);
+ }
+@@ -2132,7 +2132,7 @@ int cgroup_setup_root(struct cgroup_root *root, u16 ss_mask)
+ 	if (ret)
+ 		goto destroy_root;
+ 
+-	ret = cgroup_rstat_init(root_cgrp);
++	ret = cgroup_rstat_init(&root_cgrp->self);
+ 	if (ret)
+ 		goto destroy_root;
+ 
+@@ -2174,7 +2174,7 @@ int cgroup_setup_root(struct cgroup_root *root, u16 ss_mask)
+ 	goto out;
+ 
+ exit_stats:
+-	cgroup_rstat_exit(root_cgrp);
++	cgroup_rstat_exit(&root_cgrp->self);
+ destroy_root:
+ 	kernfs_destroy_root(root->kf_root);
+ 	root->kf_root = NULL;
+@@ -5435,7 +5435,7 @@ static void css_free_rwork_fn(struct work_struct *work)
+ 			cgroup_put(cgroup_parent(cgrp));
+ 			kernfs_put(cgrp->kn);
+ 			psi_cgroup_free(cgrp);
+-			cgroup_rstat_exit(cgrp);
++			cgroup_rstat_exit(css);
+ 			kfree(cgrp);
+ 		} else {
+ 			/*
+@@ -5686,7 +5686,11 @@ static struct cgroup *cgroup_create(struct cgroup *parent, const char *name,
+ 	if (ret)
+ 		goto out_free_cgrp;
+ 
+-	ret = cgroup_rstat_init(cgrp);
++	/* init self cgroup early so css->cgroup is valid within cgroup_rstat_init()
++	 * note that this will go away in a subsequent patch in this series
++	 */
++	cgrp->self.cgroup = cgrp;
++	ret = cgroup_rstat_init(&cgrp->self);
+ 	if (ret)
+ 		goto out_cancel_ref;
+ 
+@@ -5779,7 +5783,7 @@ static struct cgroup *cgroup_create(struct cgroup *parent, const char *name,
+ out_kernfs_remove:
+ 	kernfs_remove(cgrp->kn);
+ out_stat_exit:
+-	cgroup_rstat_exit(cgrp);
++	cgroup_rstat_exit(&cgrp->self);
+ out_cancel_ref:
+ 	percpu_ref_exit(&cgrp->self.refcnt);
+ out_free_cgrp:
 diff --git a/kernel/cgroup/rstat.c b/kernel/cgroup/rstat.c
-index 4381eb9ac426..958bdccf0359 100644
+index 1b7ef8690a09..01a5c185b02a 100644
 --- a/kernel/cgroup/rstat.c
 +++ b/kernel/cgroup/rstat.c
-@@ -9,8 +9,9 @@
- 
- #include <trace/events/cgroup.h>
- 
--static DEFINE_SPINLOCK(cgroup_rstat_lock);
--static DEFINE_PER_CPU(raw_spinlock_t, cgroup_rstat_cpu_lock);
-+static DEFINE_SPINLOCK(cgroup_rstat_base_lock);
-+static DEFINE_PER_CPU(raw_spinlock_t, cgroup_rstat_base_cpu_lock);
-+static DEFINE_PER_CPU(raw_spinlock_t, cgroup_rstat_cpu_lock[CGROUP_SUBSYS_COUNT]);
- 
- static void cgroup_base_stat_flush(struct cgroup *cgrp, int cpu);
- 
-@@ -86,7 +87,7 @@ void _cgroup_rstat_cpu_unlock(raw_spinlock_t *cpu_lock, int cpu,
- __bpf_kfunc void cgroup_rstat_updated(struct cgroup_subsys_state *css, int cpu)
- {
- 	struct cgroup *cgrp = css->cgroup;
--	raw_spinlock_t *cpu_lock = per_cpu_ptr(&cgroup_rstat_cpu_lock, cpu);
-+	raw_spinlock_t *cpu_lock;
- 	unsigned long flags;
- 
- 	/*
-@@ -100,6 +101,11 @@ __bpf_kfunc void cgroup_rstat_updated(struct cgroup_subsys_state *css, int cpu)
- 	if (data_race(css_rstat_cpu(css, cpu)->updated_next))
- 		return;
- 
-+	if (css->ss)
-+		cpu_lock = per_cpu_ptr(&cgroup_rstat_cpu_lock[css->ss->id], cpu);
-+	else
-+		cpu_lock = per_cpu_ptr(&cgroup_rstat_base_cpu_lock, cpu);
-+
- 	flags = _cgroup_rstat_cpu_lock(cpu_lock, cpu, cgrp, true);
- 
- 	/* put @cgrp and all ancestors on the corresponding updated lists */
-@@ -207,11 +213,16 @@ static struct cgroup_subsys_state *cgroup_rstat_push_children(
- static struct cgroup_subsys_state *cgroup_rstat_updated_list(
- 				struct cgroup_subsys_state *root, int cpu)
- {
--	raw_spinlock_t *cpu_lock = per_cpu_ptr(&cgroup_rstat_cpu_lock, cpu);
- 	struct cgroup_rstat_cpu *rstatc = css_rstat_cpu(root, cpu);
- 	struct cgroup_subsys_state *head = NULL, *parent, *child;
-+	raw_spinlock_t *cpu_lock;
- 	unsigned long flags;
- 
-+	if (root->ss)
-+		cpu_lock = per_cpu_ptr(&cgroup_rstat_cpu_lock[root->ss->id], cpu);
-+	else
-+		cpu_lock = per_cpu_ptr(&cgroup_rstat_base_cpu_lock, cpu);
-+
- 	flags = _cgroup_rstat_cpu_lock(cpu_lock, cpu, root->cgroup, false);
- 
- 	/* Return NULL if this subtree is not on-list */
-@@ -285,37 +296,44 @@ __bpf_hook_end();
-  * number processed last.
-  */
- static inline void __cgroup_rstat_lock(struct cgroup_subsys_state *css,
--				int cpu_in_loop)
--	__acquires(&cgroup_rstat_lock)
-+				spinlock_t *lock, int cpu_in_loop)
-+	__acquires(lock)
- {
- 	struct cgroup *cgrp = css->cgroup;
- 	bool contended;
- 
--	contended = !spin_trylock_irq(&cgroup_rstat_lock);
-+	contended = !spin_trylock_irq(lock);
- 	if (contended) {
- 		trace_cgroup_rstat_lock_contended(cgrp, cpu_in_loop, contended);
--		spin_lock_irq(&cgroup_rstat_lock);
-+		spin_lock_irq(lock);
- 	}
- 	trace_cgroup_rstat_locked(cgrp, cpu_in_loop, contended);
+@@ -390,8 +390,9 @@ void cgroup_rstat_flush_release(struct cgroup_subsys_state *css)
+ 	__cgroup_rstat_unlock(css, -1);
  }
  
- static inline void __cgroup_rstat_unlock(struct cgroup_subsys_state *css,
--				int cpu_in_loop)
--	__releases(&cgroup_rstat_lock)
-+				spinlock_t *lock, int cpu_in_loop)
-+	__releases(lock)
+-int cgroup_rstat_init(struct cgroup *cgrp)
++int cgroup_rstat_init(struct cgroup_subsys_state *css)
  {
- 	struct cgroup *cgrp = css->cgroup;
- 
- 	trace_cgroup_rstat_unlock(cgrp, cpu_in_loop, false);
--	spin_unlock_irq(&cgroup_rstat_lock);
-+	spin_unlock_irq(lock);
- }
- 
- /* see cgroup_rstat_flush() */
- static void cgroup_rstat_flush_locked(struct cgroup_subsys_state *css)
--	__releases(&cgroup_rstat_lock) __acquires(&cgroup_rstat_lock)
-+	__releases(&css->ss->rstat_lock) __acquires(&css->ss->rstat_lock)
- {
-+	spinlock_t *lock;
++	struct cgroup *cgrp = css->cgroup;
  	int cpu;
  
--	lockdep_assert_held(&cgroup_rstat_lock);
-+	if (!css->ss) {
-+		pr_warn("cannot use generic flush on base subsystem\n");
-+		return;
-+	}
-+
-+	lock = &css->ss->rstat_lock;
-+	lockdep_assert_held(lock);
- 
- 	for_each_possible_cpu(cpu) {
- 		struct cgroup_subsys_state *pos = cgroup_rstat_updated_list(css, cpu);
-@@ -334,11 +352,11 @@ static void cgroup_rstat_flush_locked(struct cgroup_subsys_state *css)
- 		}
- 
- 		/* play nice and yield if necessary */
--		if (need_resched() || spin_needbreak(&cgroup_rstat_lock)) {
--			__cgroup_rstat_unlock(css, cpu);
-+		if (need_resched() || spin_needbreak(lock)) {
-+			__cgroup_rstat_unlock(css, lock, cpu);
- 			if (!cond_resched())
- 				cpu_relax();
--			__cgroup_rstat_lock(css, cpu);
-+			__cgroup_rstat_lock(css, lock, cpu);
- 		}
- 	}
+ 	/* the root cgrp has rstat_cpu preallocated */
+@@ -412,8 +413,9 @@ int cgroup_rstat_init(struct cgroup *cgrp)
+ 	return 0;
  }
-@@ -358,11 +376,22 @@ static void cgroup_rstat_flush_locked(struct cgroup_subsys_state *css)
-  */
- __bpf_kfunc void cgroup_rstat_flush(struct cgroup_subsys_state *css)
+ 
+-void cgroup_rstat_exit(struct cgroup *cgrp)
++void cgroup_rstat_exit(struct cgroup_subsys_state *css)
  {
-+	spinlock_t *lock;
-+
-+	if (!css->ss) {
-+		int cpu;
-+
-+		for_each_possible_cpu(cpu)
-+			cgroup_base_stat_flush(css->cgroup, cpu);
-+		return;
-+	}
-+
- 	might_sleep();
++	struct cgroup *cgrp = css->cgroup;
+ 	int cpu;
  
--	__cgroup_rstat_lock(css, -1);
-+	lock = &css->ss->rstat_lock;
-+	__cgroup_rstat_lock(css, lock, -1);
- 	cgroup_rstat_flush_locked(css);
--	__cgroup_rstat_unlock(css, -1);
-+	__cgroup_rstat_unlock(css, lock, -1);
- }
- 
- /**
-@@ -374,11 +403,11 @@ __bpf_kfunc void cgroup_rstat_flush(struct cgroup_subsys_state *css)
-  *
-  * This function may block.
-  */
--void cgroup_rstat_flush_hold(struct cgroup_subsys_state *css)
--	__acquires(&cgroup_rstat_lock)
-+static void cgroup_rstat_base_flush_hold(struct cgroup_subsys_state *css)
-+	__acquires(&cgroup_rstat_base_lock)
- {
- 	might_sleep();
--	__cgroup_rstat_lock(css, -1);
-+	__cgroup_rstat_lock(css, &cgroup_rstat_base_lock, -1);
- 	cgroup_rstat_flush_locked(css);
- }
- 
-@@ -386,10 +415,10 @@ void cgroup_rstat_flush_hold(struct cgroup_subsys_state *css)
-  * cgroup_rstat_flush_release - release cgroup_rstat_flush_hold()
-  * @cgrp: cgroup used by tracepoint
-  */
--void cgroup_rstat_flush_release(struct cgroup_subsys_state *css)
--	__releases(&cgroup_rstat_lock)
-+static void cgroup_rstat_base_flush_release(struct cgroup_subsys_state *css)
-+	__releases(&cgroup_rstat_base_lock)
- {
--	__cgroup_rstat_unlock(css, -1);
-+	__cgroup_rstat_unlock(css, &cgroup_rstat_base_lock, -1);
- }
- 
- int cgroup_rstat_init(struct cgroup_subsys_state *css)
-@@ -435,10 +464,15 @@ void cgroup_rstat_exit(struct cgroup_subsys_state *css)
- 
- void __init cgroup_rstat_boot(void)
- {
--	int cpu;
-+	struct cgroup_subsys *ss;
-+	int cpu, ssid;
-+
-+	for_each_possible_cpu(cpu) {
-+		raw_spin_lock_init(per_cpu_ptr(&cgroup_rstat_base_cpu_lock, cpu));
- 
--	for_each_possible_cpu(cpu)
--		raw_spin_lock_init(per_cpu_ptr(&cgroup_rstat_cpu_lock, cpu));
-+		for_each_subsys(ss, ssid)
-+			raw_spin_lock_init(per_cpu_ptr(&cgroup_rstat_cpu_lock[ssid], cpu));
-+	}
- }
- 
- /*
-@@ -629,12 +663,12 @@ void cgroup_base_stat_cputime_show(struct seq_file *seq)
- 	u64 usage, utime, stime, ntime;
- 
- 	if (cgroup_parent(cgrp)) {
--		cgroup_rstat_flush_hold(css);
-+		cgroup_rstat_base_flush_hold(css);
- 		usage = cgrp->bstat.cputime.sum_exec_runtime;
- 		cputime_adjust(&cgrp->bstat.cputime, &cgrp->prev_cputime,
- 			       &utime, &stime);
- 		ntime = cgrp->bstat.ntime;
--		cgroup_rstat_flush_release(css);
-+		cgroup_rstat_base_flush_release(css);
- 	} else {
- 		/* cgrp->bstat of root is not actually used, reuse it */
- 		root_cgroup_cputime(&cgrp->bstat);
+ 	cgroup_rstat_flush(&cgrp->self);
 -- 
 2.47.1
 
