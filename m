@@ -1,16 +1,16 @@
 Received: from shelob.surriel.com (shelob.surriel.com [96.67.55.147])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BC83C14AD2E;
-	Tue, 14 Jan 2025 17:01:22 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3EAFB1BD9E7;
+	Tue, 14 Jan 2025 17:12:06 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=96.67.55.147
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1736874086; cv=none; b=ngoAClRhE2TsVxeLQMqshJRloC2+g3+xp9K89I9lEc1pBQoIdpttyOk1KQENqgwYFSTVLamu/5HBmgU3CcjwZ09HVmYwCaN/5yi1BuPGATr0hPchNY4h3xqbcZ+PC4hI/uW/POcKavgy8IyOjtj8kWZQZdRpfOInTXy6Md83cDo=
+	t=1736874727; cv=none; b=bP51WdgkuHP9Pk68JjSEl+mUze+1cQasRlzLm7mxF9D1S6ExeGb8TQ65ghZyvHXj0G31HNnaUxEmkSqYxQJnIyKD4xgyMGLNrdEfqzSS5a/jgzzZ6KS6kWZCx062oN5akJ+py97Sw4UV2WJiF3Efe7tztkHtYruwuuSFASgZpYQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1736874086; c=relaxed/simple;
-	bh=R88i/iRzxO2ixybo41pWF1KELxLSXSWNqc/8wXFSIqE=;
+	s=arc-20240116; t=1736874727; c=relaxed/simple;
+	bh=f2U7tOnZPuRxU/wb1Bm7gMMLy4PIWvSH0mVGFR0Al1Y=;
 	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=i1LlmwaYyFjcL1wyMql6In5FHpXdV7h0eUeoyaBjWnFfg/u3ZoF99e5Ho8GW6rp2Gz0m5J85RoJuqGJHDYf1FpU1wlUxft66/9GFRDjCut99FNmdDTBE+F/shEvSsS9qWYsOfUpJMTkFockMlRyxkotXgqsYCjdpnQR/lf6nPXk=
+	 Content-Type:MIME-Version; b=TwKJxbm0QKPV5+a06QfG9xoQuQMTfNiW0NFBRW7TbnVKz8BPct47jfMlRkKQ+oD+ajWKk8kA/AkwoQAWNZi7SQcoBwK4kwNIEgHjtpkgo3o98U2E4KINUQQj99SU3Kb2BPfhNRKjZAwNaJQhYVyn6Y+NSxNzfwXv5BreJ39lseE=
 ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=surriel.com; spf=pass smtp.mailfrom=shelob.surriel.com; arc=none smtp.client-ip=96.67.55.147
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=surriel.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=shelob.surriel.com
@@ -18,25 +18,26 @@ Received: from fangorn.home.surriel.com ([10.0.13.7])
 	by shelob.surriel.com with esmtpsa  (TLS1.2) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
 	(Exim 4.97.1)
 	(envelope-from <riel@shelob.surriel.com>)
-	id 1tXkDf-0000000008F-0ZN1;
-	Tue, 14 Jan 2025 11:56:47 -0500
-Message-ID: <298822027ef468c290a67fe98e228348e2b389de.camel@surriel.com>
+	id 1tXkSI-000000000XQ-3kHZ;
+	Tue, 14 Jan 2025 12:11:54 -0500
+Message-ID: <193d98b0d5d2b14da1b96953fcb5d91b2a35bf21.camel@surriel.com>
 Subject: Re: [PATCH v2] memcg: allow exiting tasks to write back data to swap
 From: Rik van Riel <riel@surriel.com>
-To: Michal Hocko <mhocko@suse.com>, Johannes Weiner <hannes@cmpxchg.org>
-Cc: Yosry Ahmed <yosryahmed@google.com>, Balbir Singh <balbirs@nvidia.com>, 
- Roman Gushchin <roman.gushchin@linux.dev>, hakeel Butt
- <shakeel.butt@linux.dev>, Muchun Song	 <muchun.song@linux.dev>, Andrew
- Morton <akpm@linux-foundation.org>, 	cgroups@vger.kernel.org,
- linux-mm@kvack.org, linux-kernel@vger.kernel.org, 	kernel-team@meta.com,
- Nhat Pham <nphamcs@gmail.com>
-Date: Tue, 14 Jan 2025 11:56:47 -0500
-In-Reply-To: <Z4aWuD_-BkcEjvj7@tiehlicka>
+To: Michal Hocko <mhocko@suse.com>
+Cc: Johannes Weiner <hannes@cmpxchg.org>, Yosry Ahmed
+ <yosryahmed@google.com>,  Balbir Singh <balbirs@nvidia.com>, Roman Gushchin
+ <roman.gushchin@linux.dev>, hakeel Butt	 <shakeel.butt@linux.dev>, Muchun
+ Song <muchun.song@linux.dev>, Andrew Morton	 <akpm@linux-foundation.org>,
+ cgroups@vger.kernel.org, linux-mm@kvack.org, 	linux-kernel@vger.kernel.org,
+ kernel-team@meta.com, Nhat Pham <nphamcs@gmail.com>
+Date: Tue, 14 Jan 2025 12:11:54 -0500
+In-Reply-To: <Z4aYSdEamukBGAZi@tiehlicka>
 References: <20241212115754.38f798b3@fangorn>
 	 <CAJD7tkY=bHv0obOpRiOg4aLMYNkbEjfOtpVSSzNJgVSwkzaNpA@mail.gmail.com>
 	 <20241212183012.GB1026@cmpxchg.org> <Z2BJoDsMeKi4LQGe@tiehlicka>
 	 <20250114160955.GA1115056@cmpxchg.org> <Z4aU7dn_TKeeTmP_@tiehlicka>
-	 <Z4aWuD_-BkcEjvj7@tiehlicka>
+	 <af6b1cb66253ad045c9af7c954c94ad91230e449.camel@surriel.com>
+	 <Z4aYSdEamukBGAZi@tiehlicka>
 Autocrypt: addr=riel@surriel.com; prefer-encrypt=mutual;
  keydata=mQENBFIt3aUBCADCK0LicyCYyMa0E1lodCDUBf6G+6C5UXKG1jEYwQu49cc/gUBTTk33A
  eo2hjn4JinVaPF3zfZprnKMEGGv4dHvEOCPWiNhlz5RtqH3SKJllq2dpeMS9RqbMvDA36rlJIIo47
@@ -72,35 +73,48 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Sender: riel@surriel.com
 
-On Tue, 2025-01-14 at 17:54 +0100, Michal Hocko wrote:
-> O
-> Btw. is there any actual reason why we cannot go nomem without going
-> to the oom killer (just to bail out) and go through the whole cycle
-> again? That seems arbitrary and simply burning a lot of cycle without
-> much chances to make any better outcome
+On Tue, 2025-01-14 at 18:00 +0100, Michal Hocko wrote:
+> On Tue 14-01-25 11:51:18, Rik van Riel wrote:
+> > On Tue, 2025-01-14 at 17:46 +0100, Michal Hocko wrote:
+> > > On Tue 14-01-25 11:09:55, Johannes Weiner wrote:
+> > >=20
+> > > > charge_memcg
+> > > > mem_cgroup_swapin_charge_folio
+> > > > __read_swap_cache_async
+> > > > swapin_readahead
+> > > > do_swap_page
+> > > > handle_mm_fault
+> > > > do_user_addr_fault
+> > > > exc_page_fault
+> > > > asm_exc_page_fault
+> > > > __get_user
+> > >=20
+> > > All the way here and return the failure to futex_cleanup which
+> > > doesn't
+> > > retry __get_user on the failure AFAICS (exit_robust_list). But I
+> > > might
+> > > be missing something, it's been quite some time since I've looked
+> > > into
+> > > futex code.
+> >=20
+> > Can you explain how -ENOMEM would get propagated down
+> > past the page fault handler?
+> >=20
+> > This isn't get_user_pages(), which can just pass
+> > -ENOMEM on to the caller.
+> >=20
+> > If there is code to pass -ENOMEM on past the page
+> > fault exception handler, I have not been able to
+> > find it. How does this work?
 >=20
-> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-> index 7b3503d12aaf..eb45eaf0acfc 100644
-> --- a/mm/memcontrol.c
-> +++ b/mm/memcontrol.c
-> @@ -2268,8 +2268,7 @@ int try_charge_memcg(struct mem_cgroup *memcg,
-> gfp_t gfp_mask,
-> =C2=A0	if (gfp_mask & __GFP_RETRY_MAYFAIL)
-> =C2=A0		goto nomem;
-> =C2=A0
-> -	/* Avoid endless loop for tasks bypassed by the oom killer
-> */
-> -	if (passed_oom && task_is_dying())
-> +	if (task_is_dying())
-> =C2=A0		goto nomem;
-> =C2=A0
-> =C2=A0	/*
+> This might be me misunderstading get_user machinery but doesn't it
+> return a failure on PF handler returing ENOMEM?
 
-When we return from the page fault handler, we
-restart the instruction that faulted.
+I believe __get_user simply does a memcpy, and ends
+up in the page fault handler.
 
-That means we could just end up repeating the
-same fault over and over again.
+It does not access userspace explicitly like we do
+with functions like get_user_pages.
 
 --=20
 All Rights Reversed.
