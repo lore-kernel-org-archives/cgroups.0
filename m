@@ -1,277 +1,234 @@
-Received: from dggsgout12.his.huawei.com (dggsgout12.his.huawei.com [45.249.212.56])
+Received: from esa15.fujitsucc.c3s2.iphmx.com (esa15.fujitsucc.c3s2.iphmx.com [68.232.156.107])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E4AEE1DED6D;
-	Fri, 17 Jan 2025 02:16:20 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.56
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1737080183; cv=none; b=GFN8LsIZFmAbWWLZU67jAatB7288QpmZUFoT2EwCESdjyE8CR8QoeJtqo440rkeYsSS01rVWSJn7o7GFtpwmFXPrYenfQ/vGlib9NDamechwjc8BVpXndDou6ah1xa77nYHN+RhthajLej/SN0E/CeHgRfvDdPVXBIEi39VbYVU=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1737080183; c=relaxed/simple;
-	bh=uYFeOQXjO62U2XhsRsH7z3Oi0OppiBwQPhPzSOnj+NI=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=rxPItICuk4zZ8CRGM7uaZnRqsRxXG1N42E9zZQMl3qc5eS55AsHQqrE2JEmmeriqtdx5arOr51WB14cELs6yaXHsQvYbxlTClAoi2c+/ZwoYWNe9dM53X3Bvn1g0svwGecrww8X8Or2NtOkzlKkh699UXQZMTP8dn+H7GsMCF8g=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.56
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
-Received: from mail.maildlp.com (unknown [172.19.93.142])
-	by dggsgout12.his.huawei.com (SkyGuard) with ESMTP id 4YZ2t16sRBz4f3l72;
-	Fri, 17 Jan 2025 09:57:13 +0800 (CST)
-Received: from mail02.huawei.com (unknown [10.116.40.75])
-	by mail.maildlp.com (Postfix) with ESMTP id 677CA1A0F72;
-	Fri, 17 Jan 2025 09:57:34 +0800 (CST)
-Received: from hulk-vt.huawei.com (unknown [10.67.174.121])
-	by APP2 (Coremail) with SMTP id Syh0CgCnsWT7uIln8NWrBA--.20802S6;
-	Fri, 17 Jan 2025 09:57:34 +0800 (CST)
-From: Chen Ridong <chenridong@huaweicloud.com>
-To: akpm@linux-foundation.org,
-	mhocko@kernel.org,
-	hannes@cmpxchg.org,
-	yosryahmed@google.com,
-	roman.gushchin@linux.dev,
-	shakeel.butt@linux.dev,
-	muchun.song@linux.dev,
-	davidf@vimeo.com,
-	vbabka@suse.cz,
-	mkoutny@suse.com
-Cc: linux-mm@kvack.org,
-	linux-kernel@vger.kernel.org,
-	cgroups@vger.kernel.org,
-	chenridong@huawei.com,
-	wangweiyang2@huawei.com
-Subject: [PATCH v3 next 4/5] memcg: factor out stat(event)/stat_local(event_local) reading functions
-Date: Fri, 17 Jan 2025 01:46:44 +0000
-Message-Id: <20250117014645.1673127-5-chenridong@huaweicloud.com>
-X-Mailer: git-send-email 2.34.1
-In-Reply-To: <20250117014645.1673127-1-chenridong@huaweicloud.com>
-References: <20250117014645.1673127-1-chenridong@huaweicloud.com>
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 952431E2007;
+	Fri, 17 Jan 2025 03:11:21 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=68.232.156.107
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1737083484; cv=fail; b=XAa1/bbieK9c2QxUgrOmPvm4loJ962UwhsjhItUHDbUw5CTDUYledr8yHRdffppDBTRJug2TqLOY0bk7e3x2zYFaquyx9KQmXJ4ubKfE/ypEHY0TG6guDOL09uTp1JUGVMa0nrI8biP4GoObpfgcHtACWxAEMOIBmXQqjBur238=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1737083484; c=relaxed/simple;
+	bh=Ee0O/1rGrS9YO+hnd2uxa/bY9erPHoARcSeu4j++1m0=;
+	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
+	 Content-Type:MIME-Version; b=U02+k7ysV88KLk8rtxyKztkxZNXf8R7cYC/he6kvmXPk9k9xEeC9OfQfVtfMotZIW1U01wTK9C1WYGm1qpmW32rDPuUgEvowyE9btpklIhh12g+kCSP6UvG4lu/LvdZs6QbytpmA397qT99WYij29PpZZ8FrGi99COv8vemxWm4=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=fujitsu.com; spf=pass smtp.mailfrom=fujitsu.com; dkim=pass (2048-bit key) header.d=fujitsu.com header.i=@fujitsu.com header.b=wvYia7mT; arc=fail smtp.client-ip=68.232.156.107
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=fujitsu.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fujitsu.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=fujitsu.com header.i=@fujitsu.com header.b="wvYia7mT"
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=fujitsu.com; i=@fujitsu.com; q=dns/txt; s=fj1;
+  t=1737083481; x=1768619481;
+  h=from:to:cc:subject:date:message-id:references:
+   in-reply-to:content-id:content-transfer-encoding:
+   mime-version;
+  bh=Ee0O/1rGrS9YO+hnd2uxa/bY9erPHoARcSeu4j++1m0=;
+  b=wvYia7mThPHf4r4dTQs7b66ENYhabP1Jn/1iIZDuxjf95y1fmwJM3FFd
+   V8l3Dpp0vuckSu/sD9M07wxyk4Ombl09IR0OcqYNEy3/cuckDmXR6JHdV
+   b6FEp4mctpX/wiHSIycZD43aCI7+ZNy41BLdaEzajdl9LY9xH+Voy4+9r
+   3lpPa3/cFipysxuNrZ9+hTOCAGPHQn2jfUNwvg87zcJLh2ds1Cb6FBI46
+   O7BC2QkxtRmVNLzlRHcZw7vzX/yb2Z+TMhxJ9wa6LLFPXPzWP29NIHNwe
+   woUvT+dw/3u2qMFzmje+S0Z3Gu62UOKMJmX/2nABXnFNA66c84JaMXKpG
+   A==;
+X-CSE-ConnectionGUID: XWJsXYawSUa+0HaY2gT2mg==
+X-CSE-MsgGUID: wxXd9JoNTEaX857AuLb8ZQ==
+X-IronPort-AV: E=McAfee;i="6700,10204,11317"; a="143658020"
+X-IronPort-AV: E=Sophos;i="6.13,211,1732546800"; 
+   d="scan'208";a="143658020"
+Received: from mail-japanwestazlp17010003.outbound.protection.outlook.com (HELO OS0P286CU011.outbound.protection.outlook.com) ([40.93.130.3])
+  by ob1.fujitsucc.c3s2.iphmx.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 17 Jan 2025 12:10:02 +0900
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=ePjQxUi/pNqsqpRD6e55asI470ZcAHyXzurCM+7EVNPqcln+g74VEdZKrfK+pcEWS53X7+SW0lB+RIdUr5CXi2wUBezxomwXJEDEuLjRrlWfZbJVjaMecVWJa/LB6LknizSfZ/RygAOC8xWPRRlReX//G7GDUIrjUZMA7j/Du37MMnwN3121eF1DCwGL4rWB1n5EqFpsGVOP5VRUmOoKma3MVKi6lovBd81i/2m6XvCGI3EHohmSSs1io/bTg5UX31GaRSqOK75pXTn4pf0zTQNwVTg/DxQCVuZbDBmxbacHilihW9vV79s/MoKOWU9nHzcXKt1HG7TmIiC3rW9yzA==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=Ee0O/1rGrS9YO+hnd2uxa/bY9erPHoARcSeu4j++1m0=;
+ b=A0NtrGe5w/95MGvn8+c4d5iBcrTDG23ZjyF0jRjvs7VH/LkNRr+B3U7lwrxvPWwio/TFk1tUArAB2+2qRj8OljVBsxdyZiUWdu1Gf5yZxXkTu2V6Q/IxsA1COfdk4CHR7GcPyYiCA99H8MthvobDBgW5ExDSS+n51m8Bsgxth4z+nTLdSQkVyMgL7bPR3n8Su9DETIFo3aqGDbFE4h4cWsfnXakFicNmmXHXffCeTckXXwGWpmv89sMeD0qMPB/9wr19T2F4cwYmmPaKNMG+n8R4tNhyHafB5M/rHwOBeIFWf8gs7R2tctJJy9/96PRpOH5r8UEQemvgCB7eRO9qhg==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=fujitsu.com; dmarc=pass action=none header.from=fujitsu.com;
+ dkim=pass header.d=fujitsu.com; arc=none
+Received: from TY1PR01MB1562.jpnprd01.prod.outlook.com (2603:1096:403:6::12)
+ by TYRPR01MB13107.jpnprd01.prod.outlook.com (2603:1096:405:1cc::13) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.8356.16; Fri, 17 Jan
+ 2025 03:09:59 +0000
+Received: from TY1PR01MB1562.jpnprd01.prod.outlook.com
+ ([fe80::d9ba:425a:7044:6377]) by TY1PR01MB1562.jpnprd01.prod.outlook.com
+ ([fe80::d9ba:425a:7044:6377%4]) with mapi id 15.20.8356.010; Fri, 17 Jan 2025
+ 03:09:59 +0000
+From: "Zhijian Li (Fujitsu)" <lizhijian@fujitsu.com>
+To: Tejun Heo <tj@kernel.org>
+CC: Jonathan Corbet <corbet@lwn.net>, "linux-doc@vger.kernel.org"
+	<linux-doc@vger.kernel.org>, Johannes Weiner <hannes@cmpxchg.org>,
+	"mkoutny@suse.com" <mkoutny@suse.com>, "cgroups@vger.kernel.org"
+	<cgroups@vger.kernel.org>, "linux-kernel@vger.kernel.org"
+	<linux-kernel@vger.kernel.org>, Waiman Long <llong@redhat.com>
+Subject: Re: [PATCH v2] Documentation/cgroup-v2: Update
+ memory.{stat,numa_stat} description to reflect possible units
+Thread-Topic: [PATCH v2] Documentation/cgroup-v2: Update
+ memory.{stat,numa_stat} description to reflect possible units
+Thread-Index: AQHbZVca7HnVju8RR0uYmYTVv8vbIrMU/FsAgAPuKYCAAMBTAIAApQ2A
+Date: Fri, 17 Jan 2025 03:09:59 +0000
+Message-ID: <8d2d3903-aab2-4f38-b3ad-6adf7b0fc9ad@fujitsu.com>
+References: <20250110123019.423725-1-lizhijian@fujitsu.com>
+ <20250113010530.432396-1-lizhijian@fujitsu.com>
+ <871px6bo3v.fsf@trenco.lwn.net>
+ <4e96a241-a996-4289-9ac5-dc1ff65cbff8@fujitsu.com>
+ <Z4k_kLW_a_D50v1I@slm.duckdns.org>
+In-Reply-To: <Z4k_kLW_a_D50v1I@slm.duckdns.org>
+Accept-Language: en-US, zh-CN
+Content-Language: en-US
+X-MS-Has-Attach:
+X-MS-TNEF-Correlator:
+user-agent: Mozilla Thunderbird
+authentication-results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=fujitsu.com;
+x-ms-publictraffictype: Email
+x-ms-traffictypediagnostic: TY1PR01MB1562:EE_|TYRPR01MB13107:EE_
+x-ms-office365-filtering-correlation-id: a7af8df2-0613-4d7b-b684-08dd36a46d71
+x-ms-exchange-senderadcheck: 1
+x-ms-exchange-antispam-relay: 0
+x-microsoft-antispam:
+ BCL:0;ARA:13230040|366016|1800799024|376014|38070700018|1580799027;
+x-microsoft-antispam-message-info:
+ =?utf-8?B?TWJkeHNEZGhQb1NzemVHeHA2ZlBGb09TdzJBc2RLako0UG1ZU2NINlhMN3VN?=
+ =?utf-8?B?TnNETEs4djI1OTdOenlQcWpReDFZdnM4blNhaCs2YjRDMG5ydFBJTlhCcTRw?=
+ =?utf-8?B?ZVppSUhLT2o1ZW1iTUZqbncvaEIzeU4vWS81Wm9hamRMYkRiM3A4dGV2QTdP?=
+ =?utf-8?B?dUVaZG1qT3o2aEo4cXR1M2l3eXZQSnJQblJQZHJwaG5adm5BNFhHSG51QXpU?=
+ =?utf-8?B?Y0IrYmIxbGdvb05XU3NmUjlsR01IT3o2bzdjUmN1OEgybVFHWmJtOHZKSkQ1?=
+ =?utf-8?B?cGhISHA5enYvUjdhdjNES3RCTHZyM3UzNGRVSFVDdS9lcjkyRzJ0UnJHc1By?=
+ =?utf-8?B?TUhVMXJrQ3NPdG9ONHVUYmowS1phZFhEd0dabUE0WmxYRENmaUVYNWZGcnkr?=
+ =?utf-8?B?NTBXRWwwdkdEWEZVQlVHQWE1Uzk1ODRIdWlvTVdBK2ZXR2ZpajRBellVMTQw?=
+ =?utf-8?B?NnR2UDRLSys0eVNsRUhEcU8waGx3dTJaRkNmbGlUNVViRFJOSlZuWkVZMVdr?=
+ =?utf-8?B?MHIrcXVsWUw1WDJZcUR4bnhZajBMNDk0WkNUbkRHUlR3NE1uRFNQaUZYb0xm?=
+ =?utf-8?B?c3dLUXVCZk5QaWpCQkhZdW9mSDBST2xoQVVTRG9GeUQyWERKQXlYQzdSTm9B?=
+ =?utf-8?B?b3Y3TFNJSjk1cHY0RW85YXR6eG83K2R0Z0RhRytwN1Z0UFhLWUdDMUd5SU1i?=
+ =?utf-8?B?OXhKRW5MV3FLelNvT2FWazFLSlN4RSt4aENubVREaVVyZDhQQktBQW9kakFU?=
+ =?utf-8?B?Yjh6czFSaEpQUU1wSWpUUFpMdVpqVkRmYitRcWQ3eU51VVVOMGU4WEZaemZC?=
+ =?utf-8?B?L2RaVk1NM1BrcVBjdkJiZzhGaWtaVTQxalNUSnhkV0FDOVBvUUVBMlBPcU96?=
+ =?utf-8?B?NWVIVldybmp1dkI0KzV4TUxJbjgrTUpXMVFlRWtVcm1GcytrWHJkdkU5WSsr?=
+ =?utf-8?B?UW00d1BxaDVCbFE3RkV1Tm42UmlnM1oyS2R1S3lkRkVaUlhJVWhtMm41MGhR?=
+ =?utf-8?B?d0N5QSt2ME5nMzdxajJiemtwblp3eWVrWjFTbVllN0UrZGtNL2J6N2dZMEk2?=
+ =?utf-8?B?M01RM3hxZUJ1M3FYZVVmb0pxOWk3Z0VNbjA4Qm16amdzS3cwbVh3WHczRzEw?=
+ =?utf-8?B?cmJPdGxaZ0w3c0FPSjhub2lMallyeE81ZkYxM2c4eEtITlJNdFVtYkoxT2h3?=
+ =?utf-8?B?NHY0dmMxUlZCZHk5dzcwRWY3WHNwYVJOc2V3cC92YWFUTXRWaDNpVWhoVVZl?=
+ =?utf-8?B?eFlUOHUrckF5S1ppdkJrSGRkYkFxbG5nUU80b29NWWxuTGdma1M2N2lqQmJO?=
+ =?utf-8?B?aVBWSkluVHlKUEZjK0JNU3ZoT3dlMWQvTTVLYXJ0VlNXdUdHNEIvUmtFblZr?=
+ =?utf-8?B?bTE4T25iSWZWV0lEUEN3eHNrVGlvUE4xb0p3SmVYaDNXODFCZ3RCSzlZZFhT?=
+ =?utf-8?B?bkswRWU3WHBnNGIyZkk3bm8rMCtqRmoxY0FuVmVuVmcxdXB2T1FRY2Q0ZjNt?=
+ =?utf-8?B?Sm1GdWZzRWZmSVdOTWFzaXlxbk9XMnZOdXRRTDJjOFNGd29YN0lKMGRwOUVF?=
+ =?utf-8?B?LzhJdFBYNmJkeDFZRUtBeEV1OFdsWEFuenVLdkthZnBwYlZWYk9zZ3M5S1Z2?=
+ =?utf-8?B?R09tK2hrZHVpZ0lVdkhiekZoRDBCdlR4elJpYTZ3dkJpTWh5K0RuaGFWdEhP?=
+ =?utf-8?B?QUdOQlRPNW5MY1pZak94TTltTVdUWkUrOE0rU0JtV0tQaC8xQ3N0bzR1SVpW?=
+ =?utf-8?B?SXV1YlpMQXhZWkF6ajVXOEhTVERHVlpZWVdBeTFDZ3EyN09ZNmdoOUhjQmxB?=
+ =?utf-8?B?TU1haG5ndnQ5Mmp3M0QyQjFTdDVQQjhEUmp5RStBYlhoZzVzV3pPMU1Tek9H?=
+ =?utf-8?B?czYvUWJFN2RuU2V3TGZlSE1aOU1XVFVGZjh1c1R1azNwTUFLWjlSTWNlRm1Y?=
+ =?utf-8?B?cFNnb0Iyd2ZtdnRnU1kreEMzeCtCN2pEQzU4eXphYWIyLzlDRW1yOSt3cGtS?=
+ =?utf-8?B?QzllMVlzcUlRPT0=?=
+x-forefront-antispam-report:
+ CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:TY1PR01MB1562.jpnprd01.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(366016)(1800799024)(376014)(38070700018)(1580799027);DIR:OUT;SFP:1101;
+x-ms-exchange-antispam-messagedata-chunkcount: 1
+x-ms-exchange-antispam-messagedata-0:
+ =?utf-8?B?dEdLY2VTRjJPL0RXVHNJdkZTblV0elRkZTFUSDI3U0ZLUGlMRVBJcUtVL0pw?=
+ =?utf-8?B?TjQwQXQzU1lDbHVNRDFjQzNqWDEybzkvUUxrdmxrVTBhdnNjRjlMUW5qUURM?=
+ =?utf-8?B?dnFPMDJhYis2M01yWjU5SFJvM3pQQmdHWWZ5ajF4OHM5V204VmtXZ2FIVVQ2?=
+ =?utf-8?B?bitZc25VbnVmU1lScVhocXZlMGt5c3RVUnF0cnJaYjZYWjE2d0VIQzNWM21a?=
+ =?utf-8?B?bzdWLzd5dGlMNVd5OUhLVGRMYjlBOTA2ejZLSlphV25DNGludkJUaFl6eXln?=
+ =?utf-8?B?VHJFcWEvaFNpRy9rQ0RaNXR2OTMvRytYU2VRRGdjMEZGWWppT2Z6ZzF2MTND?=
+ =?utf-8?B?TWVGWWxpYjBDZC9lWlhGTTVubWFmUjdydlBEQklzMGwvRm1RSlNkUTVTK0Ew?=
+ =?utf-8?B?bzZ3a205VHNKYVlCZXJwbzlycDJlWWZvMVhMem5MMTNua21ESFo0Qmt2UGVH?=
+ =?utf-8?B?NzhobHYwVzJ2UHRScDJpYmtWWElsTS9OajdRVFQrbnBCbStONDFncUd4WXBr?=
+ =?utf-8?B?UC83KytvRFg3RlBPN1FMeVlwWDBQSEY1TTBJR1lXaUJIeUZHL2MyZVByNTFm?=
+ =?utf-8?B?WTBQQW5McGNZUktzVjUwSGtkeWl2SkpPMGJCWHRiUzRFNDNMSDZpWU1NZnFC?=
+ =?utf-8?B?cjlNcjNrb3cxaXh2c0loYzcvZk1NV2VZUGZRMi94eUFrZ0JMRFBNaTkxVzlK?=
+ =?utf-8?B?ZG9HOUlNM3dIN3VjQkZud3FWNDRTR25sM3dJdER4OEZsWHRoVnVSRDVuL0Nu?=
+ =?utf-8?B?QTBMQW5oWmpBY29Mc2tHc295WjJON3JOOHJIZkRGMEQ5ZkJkdnhpOGxzQUIx?=
+ =?utf-8?B?c2srOWtJYUNZL2lCZ0NjNjArUG1oM0tjS2wyKy9wS3ZQa2pJb0lyMk0rTjZT?=
+ =?utf-8?B?djVzWEd0WFFHNDN1TVV4bXlnOFFJT0xBR3Z0WThEYUtCekpCekt1U3hhK0M1?=
+ =?utf-8?B?bktCRi9nMytNdTEvZjdkRDVRMjF4RHppdzBEY2FUYWFhQzNxNEN4REpmems4?=
+ =?utf-8?B?ZU5aN2NvTEY1ZWhEby9hU212UGJOY2h6ZE5UK01kZ05ZWE10Um1Ibi9CZW54?=
+ =?utf-8?B?MUJ0TXcrU0JxazNNQkZscUhKTXN5M2E5NjY5SHZKd1JDd3prUVp4K2VycmVC?=
+ =?utf-8?B?T1ZXSUZqWkJabWkySjFadzl6RFdQN0pPa0xjclpLMVVYM2kzc1BabzRpckhT?=
+ =?utf-8?B?ZjdJTjdoZStKYlZoN242UmtRWEhCdi9Da1ZISlJSWmpUL0cyNW10VWdFVlNZ?=
+ =?utf-8?B?T05uVksxQmpRLzBsWXI2dytpbnBEMTVNWkViREJ5dUdjMmNJVTIzcVZKd01z?=
+ =?utf-8?B?OGNqVENuZGZweFFWWmxnbU1MeGY5WDlXVy92bHE4dm5TR1BhdVRVSVI3QXUz?=
+ =?utf-8?B?bXRsdzdEdllJVkhuUDZHWStubHVHTkhURGZKRGZ3TFJFbFc2NU0yU0RON3du?=
+ =?utf-8?B?bHpOQkZlQVl5Wm8zaEdRTjNWUjFnZFI3WllCMlNsSUFLZUhBdk83bWM3V1Z6?=
+ =?utf-8?B?bHNEZzBEblVibDVQZllzYlBpN1Q1by9rMldTZ3pBdXJFNTZiSnRRYkc2bTZN?=
+ =?utf-8?B?M1VnTHNZM24zVDVwaTlGVHd5MlRsQ2Z2ZmNKNnd3VjdQa2hzUmhLR1pVZWc0?=
+ =?utf-8?B?MElrQ1RXNFFMYXRqeUhkSDA5V0FwQlV2dU9pOUkzWDFwSE5rYTNuRlVZam9s?=
+ =?utf-8?B?ZmJtYTZ1MzN3VlVVZjVOVlk3cklOcmdjandQTExLQ3R1TVdNNGd5Um8wZUYz?=
+ =?utf-8?B?TFhFOUR4dmVWc2Q3OWduLzVTR3k3YnMxaTdYbjFjWXZFc2J2T21CWVB2T055?=
+ =?utf-8?B?V2pObEMvQmlpYVNxV0QvOUppQUh1MDNQNGRxV2pRbHBjSmF0K08vWU1DVTdp?=
+ =?utf-8?B?ZkJCQkhHUnNxa2t0dFNpMGhQbW9SZjcrRUwxVmJQVXpBMCtCMWpWSGNnYklH?=
+ =?utf-8?B?V0g5bmthZmQrZ1A2SVltZ0FhaDlwbUVCdUJnbTkwelczeDVXS1ZiY1d3Nmw3?=
+ =?utf-8?B?ZVdpU2FvekZUelB3MnF1MHBIYXdmT2U3UWFBaWNtdXlHd3E5QUpLeTRQQXEx?=
+ =?utf-8?B?WnRoUVhCNjV6TVdYSjVlWDZvRnUxby9ORmg0MHpvaGgwUVl5UkE5V09wMlIr?=
+ =?utf-8?B?NStCdEtFajFTUTdQclVMcWdJNnJhc292cjJDcHZ1aFFyQ0ZGSnVUWjBiY2Uv?=
+ =?utf-8?B?c1E9PQ==?=
+Content-Type: text/plain; charset="utf-8"
+Content-ID: <F2F872B77EEB0C44A22282D7A8FC4F10@jpnprd01.prod.outlook.com>
+Content-Transfer-Encoding: base64
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:Syh0CgCnsWT7uIln8NWrBA--.20802S6
-X-Coremail-Antispam: 1UD129KBjvJXoWxKw4Dtw4kKrWDAw4fZFW3trb_yoWxtFy7pF
-	sxtayY93y3J3yFgr13KFWUZ34rAw1xX3y5JrWxJ3yfZasxt3W5W3ZxKFW7ZrW5Cr95XF13
-	Jayqyr1DJ3y2qa7anT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDU0xBIdaVrnRJUUUPSb4IE77IF4wAFF20E14v26rWj6s0DM7CY07I20VC2zVCF04k2
-	6cxKx2IYs7xG6rWj6s0DM7CIcVAFz4kK6r1j6r18M28IrcIa0xkI8VA2jI8067AKxVWUAV
-	Cq3wA2048vs2IY020Ec7CjxVAFwI0_Xr0E3s1l8cAvFVAK0II2c7xJM28CjxkF64kEwVA0
-	rcxSw2x7M28EF7xvwVC0I7IYx2IY67AKxVW5JVW7JwA2z4x0Y4vE2Ix0cI8IcVCY1x0267
-	AKxVW8Jr0_Cr1UM28EF7xvwVC2z280aVAFwI0_GcCE3s1l84ACjcxK6I8E87Iv6xkF7I0E
-	14v26rxl6s0DM2AIxVAIcxkEcVAq07x20xvEncxIr21l5I8CrVACY4xI64kE6c02F40Ex7
-	xfMcIj6xIIjxv20xvE14v26r106r15McIj6I8E87Iv67AKxVWUJVW8JwAm72CE4IkC6x0Y
-	z7v_Jr0_Gr1lF7xvr2IYc2Ij64vIr41lFIxGxcIEc7CjxVA2Y2ka0xkIwI1lc7CjxVAaw2
-	AFwI0_Jw0_GFyl42xK82IYc2Ij64vIr41l4I8I3I0E4IkC6x0Yz7v_Jr0_Gr1lx2IqxVAq
-	x4xG67AKxVWUJVWUGwC20s026x8GjcxK67AKxVWUGVWUWwC2zVAF1VAY17CE14v26r1q6r
-	43MIIYrxkI7VAKI48JMIIF0xvE2Ix0cI8IcVAFwI0_Jr0_JF4lIxAIcVC0I7IYx2IY6xkF
-	7I0E14v26F4j6r4UJwCI42IY6xAIw20EY4v20xvaj40_Jr0_JF4lIxAIcVC2z280aVAFwI
-	0_Jr0_Gr1lIxAIcVC2z280aVCY1x0267AKxVW8JVW8JrUvcSsGvfC2KfnxnUUI43ZEXa7I
-	UbXAw7UUUUU==
-X-CM-SenderInfo: hfkh02xlgr0w46kxt4xhlfz01xgou0bp/
+X-MS-Exchange-AntiSpam-ExternalHop-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0:
+	vti1B4hfYURQkSZj3VjsK1R5wR75GtRTS5Zfra7myC3Fbu589An4qRDr8rVbG9OCBAUPXfjOeY7+sUqvI/0CNaNEXudlz+QLTgIhne+HlvC4JyMUBAueNHmXoxngAOjO+9gNnkzjDoH0qcec6MIBaW6eYCTbSZItWM9fhag7YUqDzwlMHwVSd0aY4tAEwmObL24vGzGTpQNIaP61U2fdaLUpOL1L+JEbrk/g3Z2p394neYNq8vusK9yN7U1Yz/9RRoy+V0E/HsXRV/Wd4lTSKB/cM1uTIZPzGAxLdFWubZydLwgdZdKIiKjMUjR1OvmrFWAthZJR343364VQFvY9vRWmKAcRhQki1NqgbjXcCaQZmvWAZZzKspjKp74Yx3uOZAN6dR4jSf+SchrgsLlcwwDwUHkiToVnvaujRhHG/vu12s/tnpyDT0hSjcZGzccRvhAaOsb6bDfZCquGmCixkDj3HgSxwwkpBCTxrpaDoo0jJF9MxktmRhCrTRrFCjiwj8RTgLvE8+Qsb8G5M+R9OX/6rAa5g3g+k7RGJx388+A4S82Q/rG7KG2bfcNBVh1h//FQGgsY60V76QEgnR4ly83XR+LqgUSLNReDrGwV28KPFJloWyexQ/GdQi+YS/Gl
+X-OriginatorOrg: fujitsu.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-AuthSource: TY1PR01MB1562.jpnprd01.prod.outlook.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: a7af8df2-0613-4d7b-b684-08dd36a46d71
+X-MS-Exchange-CrossTenant-originalarrivaltime: 17 Jan 2025 03:09:59.4931
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: a19f121d-81e1-4858-a9d8-736e267fd4c7
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: QZLJn06SokGrlTG2lpbhBjxFBlF+tpyo/MTyzzzbCYAf/HyCJ8Zzy5o64xQAn/yeONF0zyMfM78pt3nbhoHY/Q==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: TYRPR01MB13107
 
-From: Chen Ridong <chenridong@huawei.com>
-
-The only difference between 'lruvec_page_state' and
-'lruvec_page_state_local' is that they read 'state' and 'state_local',
-respectively. Factor out an inner functions to make the code more concise.
-Do the same for reading 'memcg_page_stat' and 'memcg_events'.
-
-Signed-off-by: Chen Ridong <chenridong@huawei.com>
----
- include/linux/memcontrol.h | 31 +++++++++++++++---
- mm/memcontrol-v1.h         | 14 ++++++--
- mm/memcontrol.c            | 67 +++++++-------------------------------
- 3 files changed, 49 insertions(+), 63 deletions(-)
-
-diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
-index 6e74b8254d9b..ec469c5f7491 100644
---- a/include/linux/memcontrol.h
-+++ b/include/linux/memcontrol.h
-@@ -936,10 +936,33 @@ static inline void mod_memcg_page_state(struct page *page,
- 	rcu_read_unlock();
- }
- 
--unsigned long memcg_page_state(struct mem_cgroup *memcg, int idx);
--unsigned long lruvec_page_state(struct lruvec *lruvec, enum node_stat_item idx);
--unsigned long lruvec_page_state_local(struct lruvec *lruvec,
--				      enum node_stat_item idx);
-+unsigned long __memcg_page_state(struct mem_cgroup *memcg, int idx, bool local);
-+
-+/* idx can be of type enum memcg_stat_item or node_stat_item. */
-+static inline unsigned long memcg_page_state_local(struct mem_cgroup *memcg, int idx)
-+{
-+	return __memcg_page_state(memcg, idx, true);
-+}
-+
-+static inline unsigned long memcg_page_state(struct mem_cgroup *memcg, int idx)
-+{
-+	return __memcg_page_state(memcg, idx, false);
-+}
-+
-+unsigned long __lruvec_page_state(struct lruvec *lruvec,
-+		enum node_stat_item idx, bool local);
-+
-+static inline unsigned long lruvec_page_state(struct lruvec *lruvec,
-+					      enum node_stat_item idx)
-+{
-+	return __lruvec_page_state(lruvec, idx, false);
-+}
-+
-+static inline unsigned long lruvec_page_state_local(struct lruvec *lruvec,
-+						    enum node_stat_item idx)
-+{
-+	return __lruvec_page_state(lruvec, idx, true);
-+}
- 
- void mem_cgroup_flush_stats(struct mem_cgroup *memcg);
- void mem_cgroup_flush_stats_ratelimited(struct mem_cgroup *memcg);
-diff --git a/mm/memcontrol-v1.h b/mm/memcontrol-v1.h
-index 144d71b65907..f68c0064d674 100644
---- a/mm/memcontrol-v1.h
-+++ b/mm/memcontrol-v1.h
-@@ -59,9 +59,17 @@ unsigned long mem_cgroup_usage(struct mem_cgroup *memcg, bool swap);
- 
- void drain_all_stock(struct mem_cgroup *root_memcg);
- 
--unsigned long memcg_events(struct mem_cgroup *memcg, int event);
--unsigned long memcg_events_local(struct mem_cgroup *memcg, int event);
--unsigned long memcg_page_state_local(struct mem_cgroup *memcg, int idx);
-+unsigned long __memcg_events(struct mem_cgroup *memcg, int event, bool local);
-+static inline unsigned long memcg_events(struct mem_cgroup *memcg, int event)
-+{
-+	return __memcg_events(memcg, event, false);
-+}
-+
-+static inline unsigned long memcg_events_local(struct mem_cgroup *memcg, int event)
-+{
-+	return __memcg_events(memcg, event, true);
-+}
-+
- unsigned long memcg_page_state_output(struct mem_cgroup *memcg, int item);
- unsigned long memcg_page_state_local_output(struct mem_cgroup *memcg, int item);
- int memory_stat_show(struct seq_file *m, void *v);
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index b10e0a8f3375..404bbdfa352f 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -375,7 +375,8 @@ struct lruvec_stats {
- 	long state_pending[NR_MEMCG_NODE_STAT_ITEMS];
- };
- 
--unsigned long lruvec_page_state(struct lruvec *lruvec, enum node_stat_item idx)
-+unsigned long __lruvec_page_state(struct lruvec *lruvec,
-+		enum node_stat_item idx, bool local)
- {
- 	struct mem_cgroup_per_node *pn;
- 	long x;
-@@ -389,30 +390,8 @@ unsigned long lruvec_page_state(struct lruvec *lruvec, enum node_stat_item idx)
- 		return 0;
- 
- 	pn = container_of(lruvec, struct mem_cgroup_per_node, lruvec);
--	x = READ_ONCE(pn->lruvec_stats->state[i]);
--#ifdef CONFIG_SMP
--	if (x < 0)
--		x = 0;
--#endif
--	return x;
--}
--
--unsigned long lruvec_page_state_local(struct lruvec *lruvec,
--				      enum node_stat_item idx)
--{
--	struct mem_cgroup_per_node *pn;
--	long x;
--	int i;
--
--	if (mem_cgroup_disabled())
--		return node_page_state(lruvec_pgdat(lruvec), idx);
--
--	i = memcg_stats_index(idx);
--	if (WARN_ONCE(BAD_STAT_IDX(i), "%s: missing stat item %d\n", __func__, idx))
--		return 0;
--
--	pn = container_of(lruvec, struct mem_cgroup_per_node, lruvec);
--	x = READ_ONCE(pn->lruvec_stats->state_local[i]);
-+	x = local ? READ_ONCE(pn->lruvec_stats->state_local[i]) :
-+		    READ_ONCE(pn->lruvec_stats->state[i]);
- #ifdef CONFIG_SMP
- 	if (x < 0)
- 		x = 0;
-@@ -651,7 +630,7 @@ static void flush_memcg_stats_dwork(struct work_struct *w)
- 	queue_delayed_work(system_unbound_wq, &stats_flush_dwork, FLUSH_TIME);
- }
- 
--unsigned long memcg_page_state(struct mem_cgroup *memcg, int idx)
-+unsigned long __memcg_page_state(struct mem_cgroup *memcg, int idx, bool local)
- {
- 	long x;
- 	int i = memcg_stats_index(idx);
-@@ -659,7 +638,9 @@ unsigned long memcg_page_state(struct mem_cgroup *memcg, int idx)
- 	if (WARN_ONCE(BAD_STAT_IDX(i), "%s: missing stat item %d\n", __func__, idx))
- 		return 0;
- 
--	x = READ_ONCE(memcg->vmstats->state[i]);
-+	x = local ? READ_ONCE(memcg->vmstats->state_local[i]) :
-+		    READ_ONCE(memcg->vmstats->state[i]);
-+
- #ifdef CONFIG_SMP
- 	if (x < 0)
- 		x = 0;
-@@ -706,23 +687,6 @@ void __mod_memcg_state(struct mem_cgroup *memcg, enum memcg_stat_item idx,
- 	trace_mod_memcg_state(memcg, idx, val);
- }
- 
--/* idx can be of type enum memcg_stat_item or node_stat_item. */
--unsigned long memcg_page_state_local(struct mem_cgroup *memcg, int idx)
--{
--	long x;
--	int i = memcg_stats_index(idx);
--
--	if (WARN_ONCE(BAD_STAT_IDX(i), "%s: missing stat item %d\n", __func__, idx))
--		return 0;
--
--	x = READ_ONCE(memcg->vmstats->state_local[i]);
--#ifdef CONFIG_SMP
--	if (x < 0)
--		x = 0;
--#endif
--	return x;
--}
--
- static void __mod_memcg_lruvec_state(struct lruvec *lruvec,
- 				     enum node_stat_item idx,
- 				     int val)
-@@ -859,24 +823,15 @@ void __count_memcg_events(struct mem_cgroup *memcg, enum vm_event_item idx,
- 	memcg_stats_unlock();
- }
- 
--unsigned long memcg_events(struct mem_cgroup *memcg, int event)
--{
--	int i = memcg_events_index(event);
--
--	if (WARN_ONCE(BAD_STAT_IDX(i), "%s: missing stat item %d\n", __func__, event))
--		return 0;
--
--	return READ_ONCE(memcg->vmstats->events[i]);
--}
--
--unsigned long memcg_events_local(struct mem_cgroup *memcg, int event)
-+unsigned long __memcg_events(struct mem_cgroup *memcg, int event, bool local)
- {
- 	int i = memcg_events_index(event);
- 
- 	if (WARN_ONCE(BAD_STAT_IDX(i), "%s: missing stat item %d\n", __func__, event))
- 		return 0;
- 
--	return READ_ONCE(memcg->vmstats->events_local[i]);
-+	return local ? READ_ONCE(memcg->vmstats->events_local[i]) :
-+		    READ_ONCE(memcg->vmstats->events[i]);
- }
- 
- struct mem_cgroup *mem_cgroup_from_task(struct task_struct *p)
--- 
-2.34.1
-
+Kw0KDQpPbiAxNy8wMS8yMDI1IDAxOjE5LCBUZWp1biBIZW8gd3JvdGU6DQo+IEhlbGxvLA0KPiAN
+Cj4gT24gVGh1LCBKYW4gMTYsIDIwMjUgYXQgMDU6NTA6NTRBTSArMDAwMCwgWmhpamlhbiBMaSAo
+RnVqaXRzdSkgd3JvdGU6DQo+IC4uLg0KPj4gTGV0IG1lIHF1b3RlIGEgcGllY2Ugb2YgdGhlIG51
+bWEuc3RhdDoNCj4+DQo+PiBJbiBwYWdlczoNCj4+PiAgICAgICAgICAgcGdkZW1vdGVfa2h1Z2Vw
+YWdlZA0KPj4+ICAgICAgICAgICAgICAgICBOdW1iZXIgb2YgcGFnZXMgZGVtb3RlZCBieSBraHVn
+ZXBhZ2VkLg0KPiANCj4gSWYgdGhpcyBpcyB0aGUgb25seSBlbnRyeSBpbiBwYWdlcywgSSdtIG5v
+dCBzdXJlIHRoZSBwcm9wb3NlZCBkb2N1bWVudA0KPiB1cGRhdGUgaXMgdGhlIGJlc3Qgb25lLiAN
+Cg0KSSBhc2tlZCB0aGUgQ2hhdEdQVCB3aXRoIHRoZSBjb250ZW50cyBpbiBtZW1vcnkuc3RhdCwg
+dGhlIENoYXRHUFQgYW5zd2VyZWQ6DQpJbiBzaG9ydCwgVGhlcmUgYXJlIDI4IGVudHJpZXMgaW4g
+Ynl0ZXMgYW5kIDM3IGVudHJpZXMgaW4gcGFnZXMuDQoNCmBgYA0KQmFzZWQgb24gdGhlIGxpc3Qg
+cHJvdmlkZWQsIGhlcmUgYXJlIHRoZSBjb3VudHMgZm9yIGVhY2g6DQoNCiMjIyBFbnRyaWVzIGlu
+IEJ5dGVzDQoNClRoZXJlIGFyZSAyOCBlbnRyaWVzIGluIGJ5dGVzOg0KDQoxLiBhbm9uDQoyLiBm
+aWxlDQozLiBrZXJuZWwNCjQuIGtlcm5lbF9zdGFjaw0KNS4gcGFnZXRhYmxlcw0KNi4gc2VjX3Bh
+Z2V0YWJsZXMNCjcuIHBlcmNwdQ0KOC4gc29jaw0KOS4gdm1hbGxvYw0KMTAuIHNobWVtDQoxMS4g
+enN3YXANCjEyLiB6c3dhcHBlZA0KMTMuIGZpbGVfbWFwcGVkDQoxNC4gZmlsZV9kaXJ0eQ0KMTUu
+IGZpbGVfd3JpdGViYWNrDQoxNi4gc3dhcGNhY2hlZA0KMTcuIGFub25fdGhwDQoxOC4gZmlsZV90
+aHANCjE5LiBzaG1lbV90aHANCjIwLiBpbmFjdGl2ZV9hbm9uDQoyMS4gYWN0aXZlX2Fub24NCjIy
+LiBpbmFjdGl2ZV9maWxlDQoyMy4gYWN0aXZlX2ZpbGUNCjI0LiB1bmV2aWN0YWJsZQ0KMjUuIHNs
+YWJfcmVjbGFpbWFibGUNCjI2LiBzbGFiX3VucmVjbGFpbWFibGUNCjI3LiBzbGFiDQoyOC4gaHVn
+ZXRsYg0KDQojIyMgRW50cmllcyBpbiBQYWdlcw0KDQpUaGVyZSBhcmUgMzcgZW50cmllcyBpbiBw
+YWdlczoNCg0KMS4gd29ya2luZ3NldF9yZWZhdWx0X2Fub24NCjIuIHdvcmtpbmdzZXRfcmVmYXVs
+dF9maWxlDQozLiB3b3JraW5nc2V0X2FjdGl2YXRlX2Fub24NCjQuIHdvcmtpbmdzZXRfYWN0aXZh
+dGVfZmlsZQ0KNS4gd29ya2luZ3NldF9yZXN0b3JlX2Fub24NCjYuIHdvcmtpbmdzZXRfcmVzdG9y
+ZV9maWxlDQo3LiB3b3JraW5nc2V0X25vZGVyZWNsYWltDQo4LiBwZ3NjYW4NCjkuIHBnc3RlYWwN
+CjEwLiBwZ3NjYW5fa3N3YXBkDQoxMS4gcGdzY2FuX2RpcmVjdA0KMTIuIHBnc2Nhbl9raHVnZXBh
+Z2VkDQoxMy4gcGdzdGVhbF9rc3dhcGQNCjE0LiBwZ3N0ZWFsX2RpcmVjdA0KMTUuIHBnc3RlYWxf
+a2h1Z2VwYWdlZA0KMTYuIHBnZmF1bHQNCjE3LiBwZ21hamZhdWx0DQoxOC4gcGdyZWZpbGwNCjE5
+LiBwZ2FjdGl2YXRlDQoyMC4gcGdkZWFjdGl2YXRlDQoyMS4gcGdsYXp5ZnJlZQ0KMjIuIHBnbGF6
+eWZyZWVkDQoyMy4gc3dwaW5femVybw0KMjQuIHN3cG91dF96ZXJvDQoyNS4genN3cGluDQoyNi4g
+enN3cG91dA0KMjcuIHpzd3B3Yg0KMjguIHRocF9mYXVsdF9hbGxvYw0KMjkuIHRocF9jb2xsYXBz
+ZV9hbGxvYw0KMzAuIHRocF9zd3BvdXQNCjMxLiB0aHBfc3dwb3V0X2ZhbGxiYWNrDQozMi4gbnVt
+YV9wYWdlc19taWdyYXRlZA0KMzMuIG51bWFfcHRlX3VwZGF0ZXMNCjM0LiBudW1hX2hpbnRfZmF1
+bHRzDQozNS4gcGdkZW1vdGVfa3N3YXBkDQozNi4gcGdkZW1vdGVfZGlyZWN0DQozNy4gcGdkZW1v
+dGVfa2h1Z2VwYWdlZA0KDQpgYGANCg0KDQpUaGUgYWJvdmUgY2FuIGhhdmUgYW4gZWFzeSBhbHRl
+cm5hdGl2ZSBkZXNjcmlwdGlvbg0KPiAidGhlIG51bWJlciBvZiB0aW1lcyBraHVnZXBhZ2VkIGRl
+bW90ZWQgYSBodWdlIHBhZ2UiIC0gaWUuIGluZGljYXRlIHRoYXQgaXQNCj4gaXMgYW4gZXZlbnQg
+Y291bnRlciBpbnN0ZWFkLCB3aGljaCBpcyBhIHBsYXVzaWJsZSBhbmQgbGlrZWx5IG1vcmUgaW50
+dWl0aXZlDQo+IGRlZmluaXRpb24gYW55d2F5IGdpdmVuIHRoYXQgYSAiaHVnZSBwYWdlIiBjYW4g
+cGxhdXNpYmx5IGJlIG9mIGRpZmZlcmVudA0KPiBzaXplcy4gV2l0aCB0aGUga2V5IG5hbWUgYW5k
+IG1hdGNoaW5nIGRlc2NyaXB0aW9uLCBJJ20gbm90IHN1cmUgaXQncw0KPiB2aW9sYXRpbmcgdGhl
+IHJ1bGUgdGhhdCBhbGwgKnNpemVzKiBhcmUgZXhwcmVzc2VkIGluIGJ5dGVzLg0KPiANCj4gVGhh
+bmtzLg0KPiA=
