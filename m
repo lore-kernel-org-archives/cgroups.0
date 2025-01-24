@@ -1,93 +1,103 @@
-Received: from mail-qv1-f45.google.com (mail-qv1-f45.google.com [209.85.219.45])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from galois.linutronix.de (Galois.linutronix.de [193.142.43.55])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9D30F157485
-	for <cgroups@vger.kernel.org>; Fri, 24 Jan 2025 15:59:19 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.219.45
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6394B1AA783;
+	Fri, 24 Jan 2025 17:46:21 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=193.142.43.55
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1737734361; cv=none; b=m6tWJwu9lyxQs6jgj0Oq+Za/M5Zz7W+oY2hB5MxzFA+lEFRJkbtmNJhT2H1YLH7DOHsA+ydpA6XGYO9Bzjcs+z9j1El1mKF5GJcFWYamj+rB2wBu3ZC4H7BFB/g32LUigMYEirJaBJdYEmH7B7Qlroql+yG0m6cCGL3EVM9DjCk=
+	t=1737740783; cv=none; b=FVEX2VCoRVrNRbAm/76vnDDZ1aTbEkSTnt2ing3JPxYXV71cPw4cU8oIwpPojfIoIHiNFe8r/DumBKGedn0s8LWYy+D8CMYwDkOkEnsrgXt/usv6YdKDwxpTi3yc+ttw9lsDNJaVjeCIIi1UrVxiEhphoEPfFoJdiIXijvVevCo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1737734361; c=relaxed/simple;
-	bh=6P4I/lgwjAC6gvYc44nBStz7raI7WB7D+vk8Kt8bSaI=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=mDxtutrBxKIbBVhBu/GegKTpmVhzvYd2q/AjJcFeJW1aqn7zDwsDFRDuNL4YjyWODqFgWKa7DHiwHTrJrhXSTTXzLOXK0f69tM+LPJGrWyABtI1RQ0bNv8p+Q53WVMyBsTlWIlOcyocy8s9g5i+pOWW6nm9zCw330tbDmNTGkTg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=cmpxchg.org; spf=pass smtp.mailfrom=cmpxchg.org; dkim=pass (2048-bit key) header.d=cmpxchg-org.20230601.gappssmtp.com header.i=@cmpxchg-org.20230601.gappssmtp.com header.b=zcATQE1D; arc=none smtp.client-ip=209.85.219.45
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=cmpxchg.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=cmpxchg.org
+	s=arc-20240116; t=1737740783; c=relaxed/simple;
+	bh=GepP28W9cyVD8WbDWXe/YZNICtsJls4kPV+lj7kQT8U=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=e7hY9MBNn7gHIPK0/09FlRNwkd37OTdS5AcYG/4ji8fz38vGxcU4wEWTO5na80wxKpap8kK1D9lM6ab9XEWp0n3jMG/YXDpdJ7fAXYG3NyVqpUlIQy2JI4b+Sixxtkl8uVBp/STJ8RltOKbLmDgLVKCk5WI4CG/VFANj+tq54I0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linutronix.de; spf=pass smtp.mailfrom=linutronix.de; dkim=pass (2048-bit key) header.d=linutronix.de header.i=@linutronix.de header.b=LjhIY8va; dkim=permerror (0-bit key) header.d=linutronix.de header.i=@linutronix.de header.b=k01i2bGm; arc=none smtp.client-ip=193.142.43.55
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linutronix.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linutronix.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=cmpxchg-org.20230601.gappssmtp.com header.i=@cmpxchg-org.20230601.gappssmtp.com header.b="zcATQE1D"
-Received: by mail-qv1-f45.google.com with SMTP id 6a1803df08f44-6d8ece4937fso19400926d6.2
-        for <cgroups@vger.kernel.org>; Fri, 24 Jan 2025 07:59:19 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=cmpxchg-org.20230601.gappssmtp.com; s=20230601; t=1737734358; x=1738339158; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=jvtxMicx5gjN2JYPX7vs5+nnPf5Ib5DrIqnu6h+drcE=;
-        b=zcATQE1DW21SxsMnBS/8nPJPkN91xHgpEu8gvjklkL2rcK/E8V0mDToWLQgHm6qLBc
-         4opa/3Xazd7CFf0D8ZUyCIeiKZ+HhfAhjNWkKczN1Cjo7JyqMdXwRfG2rQEPOyVDwER0
-         WoZ3t7RSUM0L/7yziAgetHatHykb5NKyG4nlQSn1YsgQEvb8RFVQ+hQ/l5Vp150jUpDY
-         Haur1kZ6wmd75H2WiwqlAU7X77L0EPe9VCICzUyOb3H/r3MIMILItvJC7LqBDHh6dkih
-         3mnhBfW3BpgbRaP5h0DEKoT/JhlWm2S2owwtIdxZ7r6BfUdCgNFGT7u9Wi3CyCDC6AE0
-         gJfA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1737734358; x=1738339158;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=jvtxMicx5gjN2JYPX7vs5+nnPf5Ib5DrIqnu6h+drcE=;
-        b=req8kC3VHSic0t0R2F+c9FDD3AeM/CQYMpQy8Egh2fLqskjBlTGJpWiwD8jriV7Jq2
-         k6GfgY4R7MTZuY50gAVW3LQzHm2xGlEzNwS0HXeCBQ+VpbvVU7YO2d5y0Rwcvt5ol5yi
-         DDenQ/b2bPz8yqFOiSStV2Fhw4I37AHh0r2Fuh1EFX3z3CWmTSzhhKEYbF2ll9EiXETi
-         13AgowVvvCGTPvabHO0fLsL0eTQd0o/L0NQNGlg2CxdYO9eMMwl+5KEunrMxFJO9Y689
-         +iIi52Ph2WLaHT00vXNHRYS4QcUXu1rPyCIxr3vDBlWeySPwfzjUfBBZaZDM0HY9mtDD
-         WADw==
-X-Forwarded-Encrypted: i=1; AJvYcCWXtJyBK6QHYGGU41HHl8YlpyUiZq9HbncdKUFm/aKJHQeyARUKagBu7bzWFe7jI4diCRs6xfQU@vger.kernel.org
-X-Gm-Message-State: AOJu0YwiOjnsd26c/gmCNrACJ63InxfrWqEYQocI1N/EwwaK3oBde7RH
-	cBJVfIeM0u11VCxJ3OSpKldxLFPQIWwMZqjmMazuH3yo9KRD26D5h0gRjKf9tRU=
-X-Gm-Gg: ASbGncuhAKIYEbkC1r0uS/Ong6dTJgcz1/6eQxYT20PKsapMl+c53OLIZaDR+ubBLhZ
-	XU//YWK41Wg5Qer7cpmzyA+g3hOYLVNhh9mQmlTBBOiQZcXKSx3MhqbxJAn5vCXXDxuWbbhLc6p
-	1j6dFgmflBcZMhbbAriALF2T7+LtyF3GTen9Ljl6IkAfTHt0h5FSzq9e7ahEzM91w+fa0gd+1vq
-	ENsj/E1aPm2flRXwSmy6KhnzWodSReYVqCzyQK9us54tCuWiVMwlTvTD3HSgwv9bOvCYEqwvAsU
-	GhU=
-X-Google-Smtp-Source: AGHT+IGEQ+V00ad4O0gxW0aBqYJrI/4yv7/W+3SmB2pTE0ctGdvjABs3b/VwSqMo8hM0XOHOuwQtPA==
-X-Received: by 2002:a05:6214:54c9:b0:6d8:916b:1caa with SMTP id 6a1803df08f44-6e1b21ef52fmr520246016d6.27.1737734358487;
-        Fri, 24 Jan 2025 07:59:18 -0800 (PST)
-Received: from localhost ([2603:7000:c01:2716:cbb0:8ad0:a429:60f5])
-        by smtp.gmail.com with UTF8SMTPSA id 6a1803df08f44-6e205ac48dcsm9709696d6.123.2025.01.24.07.59.17
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 24 Jan 2025 07:59:17 -0800 (PST)
-Date: Fri, 24 Jan 2025 10:59:16 -0500
-From: Johannes Weiner <hannes@cmpxchg.org>
-To: Chen Ridong <chenridong@huaweicloud.com>
-Cc: akpm@linux-foundation.org, mhocko@kernel.org, yosryahmed@google.com,
-	roman.gushchin@linux.dev, shakeel.butt@linux.dev,
-	muchun.song@linux.dev, davidf@vimeo.com, vbabka@suse.cz,
-	mkoutny@suse.com, linux-mm@kvack.org, linux-kernel@vger.kernel.org,
-	cgroups@vger.kernel.org, chenridong@huawei.com,
-	wangweiyang2@huawei.com
-Subject: Re: [PATCH -v4 next 4/4] memcg: add CONFIG_MEMCG_V1 for 'local'
- functions
-Message-ID: <20250124155916.GB1222@cmpxchg.org>
-References: <20250124073514.2375622-1-chenridong@huaweicloud.com>
- <20250124073514.2375622-5-chenridong@huaweicloud.com>
+	dkim=pass (2048-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="LjhIY8va";
+	dkim=permerror (0-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="k01i2bGm"
+From: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
+	s=2020; t=1737740779;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=SsYnIiRzwQW4pUiqIHZPl2wEkZ43XLUECQj8EV72lrY=;
+	b=LjhIY8valzlSbr1brdgVK4PZ1SksWYsd1ga8m020baOT8BpNSSL+3lpeCfRRXcwj7NmwJw
+	10MFvccn6kPKDES5WFpbUtH/WZxoOGgH96QG9bxd7zeYk/bW4fMZhZ6j4CU/HXj6n+T8R9
+	PaVNId6Yj4B6TKPSj1y6TOFxMU5aOpLNp8qUqO6IE4rklC1WGdJ+3ATmc6+W8kASY8rF0H
+	NyJ+nGMFls2wEdTFC/ARGSJvPwGyLGJXZFx315/eoKqhEK3Q09nkUSTujRG1RW+xwslv2o
+	moRG0ea3fSIe4g8aeoRNhRvfXPQaCxeS98rwuIonxil6Tou4p52JYRdxOQn1Gw==
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
+	s=2020e; t=1737740779;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=SsYnIiRzwQW4pUiqIHZPl2wEkZ43XLUECQj8EV72lrY=;
+	b=k01i2bGm6dpXUDMPdqNx/O11Negj43GKcrOv6Tpk56rguIGaKLvkqt8cfJD2S99oJlHi9x
+	7lqH881Ayv+u08AQ==
+To: cgroups@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Cc: =?UTF-8?q?Michal=20Koutn=C3=BD?= <mkoutny@suse.com>,
+	"Paul E. McKenney" <paulmck@kernel.org>,
+	Boqun Feng <boqun.feng@gmail.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Hillf Danton <hdanton@sina.com>,
+	Johannes Weiner <hannes@cmpxchg.org>,
+	Marco Elver <elver@google.com>,
+	Tejun Heo <tj@kernel.org>,
+	Zefan Li <lizefan.x@bytedance.com>,
+	tglx@linutronix.de,
+	Sebastian Andrzej Siewior <bigeasy@linutronix.de>
+Subject: [PATCH v4 1/6] kernfs: Acquire kernfs_rwsem in kernfs_notify_workfn().
+Date: Fri, 24 Jan 2025 18:46:09 +0100
+Message-ID: <20250124174614.866884-2-bigeasy@linutronix.de>
+In-Reply-To: <20250124174614.866884-1-bigeasy@linutronix.de>
+References: <20250124174614.866884-1-bigeasy@linutronix.de>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20250124073514.2375622-5-chenridong@huaweicloud.com>
+Content-Transfer-Encoding: quoted-printable
 
-On Fri, Jan 24, 2025 at 07:35:14AM +0000, Chen Ridong wrote:
-> From: Chen Ridong <chenridong@huawei.com>
-> 
-> Add CONFIG_MEMCG_V1 for the 'local' functions, which are only used in
-> memcg v1, so that they won't be built for v2.
-> 
-> Signed-off-by: Chen Ridong <chenridong@huawei.com>
+kernfs_notify_workfn() dereferences kernfs_node::name and passes it
+later to fsnotify(). If the node is renamed then the previously observed
+name pointer becomes invalid.
 
-Acked-by: Johannes Weiner <hannes@cmpxchg.org>
+Acquire kernfs_root::kernfs_rwsem to block renames of the node.
 
-Thanks!
+Signed-off-by: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
+---
+ fs/kernfs/file.c | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/fs/kernfs/file.c b/fs/kernfs/file.c
+index 8502ef68459b9..38033caeaea51 100644
+--- a/fs/kernfs/file.c
++++ b/fs/kernfs/file.c
+@@ -911,6 +911,7 @@ static void kernfs_notify_workfn(struct work_struct *wo=
+rk)
+ 	/* kick fsnotify */
+=20
+ 	down_read(&root->kernfs_supers_rwsem);
++	down_read(&root->kernfs_rwsem);
+ 	list_for_each_entry(info, &kernfs_root(kn)->supers, node) {
+ 		struct kernfs_node *parent;
+ 		struct inode *p_inode =3D NULL;
+@@ -948,6 +949,7 @@ static void kernfs_notify_workfn(struct work_struct *wo=
+rk)
+ 	}
+=20
+ 	up_read(&root->kernfs_supers_rwsem);
++	up_read(&root->kernfs_rwsem);
+ 	kernfs_put(kn);
+ 	goto repeat;
+ }
+--=20
+2.47.2
+
