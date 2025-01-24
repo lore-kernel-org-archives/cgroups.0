@@ -1,140 +1,149 @@
-Received: from mail-pj1-f42.google.com (mail-pj1-f42.google.com [209.85.216.42])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from dggsgout12.his.huawei.com (dggsgout12.his.huawei.com [45.249.212.56])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C2D2E1D95BE
-	for <cgroups@vger.kernel.org>; Fri, 24 Jan 2025 07:49:26 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.42
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 675E23C00;
+	Fri, 24 Jan 2025 08:01:21 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.56
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1737704969; cv=none; b=uiNlN9x8G3YMw75xGKGAAuToOaUbb4wXbaY8R6eDDXflm5SNA7OjoOdVE7OohE35yDH2cHfKuQ0RZHnDtkYjhETwVvjBvDCFxRF1ROUbmkVS+Zf9zw+HLUpEGPdY7HPOdeazw4AqMoZkQdjcddrA4p3x0dncUlTGWGfp5jSQK1A=
+	t=1737705684; cv=none; b=SFlqfwIO3rkh6+msWRQ4rQwxv3MZb+Isx4A//YoeWgNbHYsDGsLgj1HTm3NtX2KkmK/QsgaKPcCC8DcU2L8sEB2G4LeXnoqLa+FFrSxZxGKWey3uYwd42PImbftvl49YVMBGOcTu9eGBiKVs5dJXwJX8xxk5Qz5Vi1vmr3HSDVU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1737704969; c=relaxed/simple;
-	bh=Awy505UaJPkp48e9y2lfNPkRKflzoPa5yjo9vK5w14k=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=gOacDoyZA1KpKojW5VUOQb8sQ1tmBbp/WWztumlQunDBldJHnJ8vlbu+/zM22sQML5TEHKkJsgmiqez5S8OqO236/CSKzrmUqfawiitjsvAtTXns0F8EvMGceXpYitg9pjtugPatY/PRiLKNXmnDc+hx5+9ASKdCpyI7c1Ren3U=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=bytedance.com; spf=pass smtp.mailfrom=bytedance.com; dkim=pass (2048-bit key) header.d=bytedance.com header.i=@bytedance.com header.b=fuzhoy4v; arc=none smtp.client-ip=209.85.216.42
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=bytedance.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=bytedance.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=bytedance.com header.i=@bytedance.com header.b="fuzhoy4v"
-Received: by mail-pj1-f42.google.com with SMTP id 98e67ed59e1d1-2f74e6c6cbcso400240a91.2
-        for <cgroups@vger.kernel.org>; Thu, 23 Jan 2025 23:49:26 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=bytedance.com; s=google; t=1737704966; x=1738309766; darn=vger.kernel.org;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=uws+ehspnEbk0q5oAsWqCHUTLRfxlLuAIbCiJ7MZofs=;
-        b=fuzhoy4vXPA51vYuY7HJCUOZwXpEZNi/OlOcckgVfDhSFWssvRSLH60pPxagdml84e
-         Zs6/oNQm9j3KZlx09kvqr8Kg91BBL+cOBARHOpIg+8CYdt9Al2X8rbx5w3wNAd7b9sUW
-         fwVIudEbRp8u7YnC+HQqyWDSPwNbEnlsVg7hxNGdd/Hcz+e5x0WE0TIiiqBbLSn5AU+y
-         xwGyqGBvi1x/yDQNExKXZ+VWgzm8nDBoIqjG52XC0RqQlbGba859N33Gfe5NOWwrR96v
-         QGvv2U4CJwJXyZdFFzE2TU1a0MBSHKFUGefmoarziTFCPlvpT4P6xhq5el2Q8twWwkkh
-         VmYQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1737704966; x=1738309766;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=uws+ehspnEbk0q5oAsWqCHUTLRfxlLuAIbCiJ7MZofs=;
-        b=mj7iiC8TeILe0821lY2WCzQH0qcMrU4kG0TWPAHBfJ1RRw3Ew+8URfPljVVHrwXHEE
-         hObimQFw4X95gl9Rl62RNABbwmpgyKobvkGQ1RZ0JZblUghnmtfcL4A+fcjfQh4lVK/g
-         mOuB+2OjEIHMzNUjikFnWVU8gBNco54sB/slTgieWySInymZJItJj7p81fSIwqHjG0Fq
-         n7yG2Nbo3VMTdlJauXL12gdYCQ69O/T3y9IC8mKqajSBGJNcw8TQvlLhchH1GAxsL43N
-         HDtmBMAqyzrthK3l+9F3qHQ/jlzYLugBJXspnDthJEs9InNuSvo2H4iWlUdoJBUazjWJ
-         2WNQ==
-X-Gm-Message-State: AOJu0YwKapphbdw1GqNB7fP4ETOaN5WbNp5GL2A4ivAu6h/IESDJYMGA
-	hU0cfT1IZxwJqaOb4dxSoEw6e9HGE52PxmbQYXKJE6tRtCzz8K+43/5CDGnByQg=
-X-Gm-Gg: ASbGnctbYoaXeuiDl+LxSdhzXuqSsSJ3IVw5I5AgSbh6X9jjhF+dI4zpOJkIZzKNVt2
-	f57kXwL6i1EgHkDIxE6qe1L1/XPWCjTzeHPHrd90+7DFA5VHc5XWOGqmFygD2JfLYyDkMReBBB5
-	udFMZb4B2HCw27WcqQHn3NiZe+FBoAiLN9b4SkqX5YnQGFCLY/f5wrimUTkUyhQjo+iSM98RZEK
-	xiSSiiXFCxPklKRL+Y0KqhpMniNPql2mRrnColSyEDHrd4CC7NfW+OzGM5LttjG8aqhgMZFMYgh
-	tfhZBU6noF6WEhFYJW/ZsHrLqjG40w==
-X-Google-Smtp-Source: AGHT+IEEJ+74un4tMKpaPeLW04njmN5HnJ938utpDTqTFM2Z68P/2bjYtoGBIV/UH9qBePmOk/E0og==
-X-Received: by 2002:a05:6a00:1894:b0:725:e499:5b94 with SMTP id d2e1a72fcca58-72dafa6b3a7mr13902096b3a.4.1737704965963;
-        Thu, 23 Jan 2025 23:49:25 -0800 (PST)
-Received: from [10.254.144.106] ([139.177.225.251])
-        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-72f8a69f5fdsm1208111b3a.5.2025.01.23.23.49.18
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 23 Jan 2025 23:49:25 -0800 (PST)
-Message-ID: <2bba87cf-69aa-4fac-ae1a-c50e2f376e2a@bytedance.com>
-Date: Fri, 24 Jan 2025 15:49:16 +0800
+	s=arc-20240116; t=1737705684; c=relaxed/simple;
+	bh=eOHmb09sH2a9/rqxIJ7w0VEhhv8OHaHsr8Nrp23O0VM=;
+	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=MTHl9+6knMsE0XusMef+CKVaGKXtujESxS98eYhUNOCN5tH2z4LBEfMfIOJdR+UzwE/mUiFh7BMyI49M6bw1XcYPPFF3uOrrFTSNSh8UwhjZKjMxFIZHB2tgoHbJ61VD31B+T/HsVVuyYq0mj6i+9Fi9JHmVH7a9YJNjEHXymgs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.56
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
+Received: from mail.maildlp.com (unknown [172.19.93.142])
+	by dggsgout12.his.huawei.com (SkyGuard) with ESMTP id 4YfVH03S0sz4f3jdX;
+	Fri, 24 Jan 2025 15:45:48 +0800 (CST)
+Received: from mail02.huawei.com (unknown [10.116.40.112])
+	by mail.maildlp.com (Postfix) with ESMTP id 308AF1A135F;
+	Fri, 24 Jan 2025 15:46:09 +0800 (CST)
+Received: from hulk-vt.huawei.com (unknown [10.67.174.121])
+	by APP1 (Coremail) with SMTP id cCh0CgBHqnozRZNn89xFBw--.58969S4;
+	Fri, 24 Jan 2025 15:46:08 +0800 (CST)
+From: Chen Ridong <chenridong@huaweicloud.com>
+To: akpm@linux-foundation.org,
+	mhocko@kernel.org,
+	hannes@cmpxchg.org,
+	yosryahmed@google.com,
+	roman.gushchin@linux.dev,
+	shakeel.butt@linux.dev,
+	muchun.song@linux.dev,
+	davidf@vimeo.com,
+	vbabka@suse.cz,
+	mkoutny@suse.com
+Cc: linux-mm@kvack.org,
+	linux-kernel@vger.kernel.org,
+	cgroups@vger.kernel.org,
+	chenridong@huawei.com,
+	wangweiyang2@huawei.com
+Subject: [PATCH -v4 next 2/4] memcg: call the free function when allocation of pn fails
+Date: Fri, 24 Jan 2025 07:35:12 +0000
+Message-Id: <20250124073514.2375622-3-chenridong@huaweicloud.com>
+X-Mailer: git-send-email 2.34.1
+In-Reply-To: <20250124073514.2375622-1-chenridong@huaweicloud.com>
+References: <20250124073514.2375622-1-chenridong@huaweicloud.com>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: Re: [PATCH 1/3] cgroup/rstat: Fix forceidle time in cpu.stat
-Content-Language: en-US
-To: chenridong <chenridong@huawei.com>, Tejun Heo <tj@kernel.org>,
- Johannes Weiner <hannes@cmpxchg.org>, =?UTF-8?Q?Michal_Koutn=C3=BD?=
- <mkoutny@suse.com>, Jonathan Corbet <corbet@lwn.net>,
- Ingo Molnar <mingo@redhat.com>, Peter Zijlstra <peterz@infradead.org>,
- Juri Lelli <juri.lelli@redhat.com>,
- Vincent Guittot <vincent.guittot@linaro.org>,
- Dietmar Eggemann <dietmar.eggemann@arm.com>,
- Steven Rostedt <rostedt@goodmis.org>, Ben Segall <bsegall@google.com>,
- Mel Gorman <mgorman@suse.de>, Valentin Schneider <vschneid@redhat.com>,
- Thomas Gleixner <tglx@linutronix.de>, Yury Norov <yury.norov@gmail.com>,
- Andrew Morton <akpm@linux-foundation.org>, Bitao Hu <yaoma@linux.alibaba.com>
-Cc: "open list:CONTROL GROUP (CGROUP)" <cgroups@vger.kernel.org>,
- "open list:DOCUMENTATION" <linux-doc@vger.kernel.org>,
- open list <linux-kernel@vger.kernel.org>
-References: <20250123174713.25570-1-wuyun.abel@bytedance.com>
- <20250123174713.25570-2-wuyun.abel@bytedance.com>
- <853d2669-e05b-435e-9ac1-86311ead56e5@huawei.com>
-From: Abel Wu <wuyun.abel@bytedance.com>
-In-Reply-To: <853d2669-e05b-435e-9ac1-86311ead56e5@huawei.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+X-CM-TRANSID:cCh0CgBHqnozRZNn89xFBw--.58969S4
+X-Coremail-Antispam: 1UD129KBjvJXoW7WFWUXFWUuF45JF1UKF17ZFb_yoW8tFW3pa
+	nxKa45Z3y5Ar4UWa1fKa4jva4rZa18Xw4UWryxXw1IkF1aqwnYqr12yw1F9r98CFWfXrnr
+	trn8Aw1xK39FkrUanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDU0xBIdaVrnRJUUUP2b4IE77IF4wAFF20E14v26rWj6s0DM7CY07I20VC2zVCF04k2
+	6cxKx2IYs7xG6rWj6s0DM7CIcVAFz4kK6r1j6r18M28IrcIa0xkI8VA2jI8067AKxVWUXw
+	A2048vs2IY020Ec7CjxVAFwI0_Xr0E3s1l8cAvFVAK0II2c7xJM28CjxkF64kEwVA0rcxS
+	w2x7M28EF7xvwVC0I7IYx2IY67AKxVW7JVWDJwA2z4x0Y4vE2Ix0cI8IcVCY1x0267AKxV
+	W8Jr0_Cr1UM28EF7xvwVC2z280aVAFwI0_GcCE3s1l84ACjcxK6I8E87Iv6xkF7I0E14v2
+	6rxl6s0DM2AIxVAIcxkEcVAq07x20xvEncxIr21l5I8CrVACY4xI64kE6c02F40Ex7xfMc
+	Ij6xIIjxv20xvE14v26r106r15McIj6I8E87Iv67AKxVWUJVW8JwAm72CE4IkC6x0Yz7v_
+	Jr0_Gr1lF7xvr2IYc2Ij64vIr41lFIxGxcIEc7CjxVA2Y2ka0xkIwI1lc7CjxVAaw2AFwI
+	0_Jw0_GFyl42xK82IYc2Ij64vIr41l4I8I3I0E4IkC6x0Yz7v_Jr0_Gr1lx2IqxVAqx4xG
+	67AKxVWUJVWUGwC20s026x8GjcxK67AKxVWUGVWUWwC2zVAF1VAY17CE14v26r1q6r43MI
+	IYrxkI7VAKI48JMIIF0xvE2Ix0cI8IcVAFwI0_Jr0_JF4lIxAIcVC0I7IYx2IY6xkF7I0E
+	14v26F4j6r4UJwCI42IY6xAIw20EY4v20xvaj40_Jr0_JF4lIxAIcVC2z280aVAFwI0_Jr
+	0_Gr1lIxAIcVC2z280aVCY1x0267AKxVW8JVW8JrUvcSsGvfC2KfnxnUUI43ZEXa7IUbJD
+	G5UUUUU==
+X-CM-SenderInfo: hfkh02xlgr0w46kxt4xhlfz01xgou0bp/
 
-On 1/24/25 9:47 AM, chenridong Wrote:
-> 
-> 
-> On 2025/1/24 1:47, Abel Wu wrote:
->> The commit b824766504e4 ("cgroup/rstat: add force idle show helper")
->> retrieves forceidle_time outside cgroup_rstat_lock for non-root cgroups
->> which can be potentially inconsistent with other stats.
->>
->> Rather than reverting that commit, fix it in a way that retains the
->> effort of cleaning up the ifdef-messes.
->>
->> Fixes: b824766504e4 ("cgroup/rstat: add force idle show helper")
->> Signed-off-by: Abel Wu <wuyun.abel@bytedance.com>
->> ---
->>   kernel/cgroup/rstat.c | 29 +++++++++++++----------------
->>   1 file changed, 13 insertions(+), 16 deletions(-)
->>
->> diff --git a/kernel/cgroup/rstat.c b/kernel/cgroup/rstat.c
->> index 5877974ece92..c2784c317cdd 100644
->> --- a/kernel/cgroup/rstat.c
->> +++ b/kernel/cgroup/rstat.c
->> @@ -613,36 +613,33 @@ static void cgroup_force_idle_show(struct seq_file *seq, struct cgroup_base_stat
->>   void cgroup_base_stat_cputime_show(struct seq_file *seq)
->>   {
->>   	struct cgroup *cgrp = seq_css(seq)->cgroup;
->> -	u64 usage, utime, stime, ntime;
->> +	struct cgroup_base_stat bstat;
->>   
->>   	if (cgroup_parent(cgrp)) {
->>   		cgroup_rstat_flush_hold(cgrp);
->> -		usage = cgrp->bstat.cputime.sum_exec_runtime;
->> +		bstat = cgrp->bstat;
-> 
-> Thank you for finding that.
-> In my version 2, I used to assign cgrp->bstat to bstat.
-> This is Tj's comment:
-> https://lore.kernel.org/linux-kernel/ZoQ2ti7nnz9EJSc3@slm.duckdns.org/
+From: Chen Ridong <chenridong@huawei.com>
 
-Thanks for pointing out. Using memcpy() is fine for me, but I see
-cgroup_base_stat_flush() is using the same pattern, and if we don't
-want copy like this, it would be better unify them in a separate
-patch.
+The 'free_mem_cgroup_per_node_info' function is used to free
+the 'mem_cgroup_per_node' struct. Using 'pn' as the input for the
+free_mem_cgroup_per_node_info function will be much clearer.
+Call 'free_mem_cgroup_per_node_info' when 'alloc_mem_cgroup_per_node_info'
+fails, to free 'pn' as a whole, which makes the code more cohesive.
 
-But IMHO in either way, I don't think reading forceidle time outside
-cgroup_rstat_lock is the right thing to do.
+Signed-off-by: Chen Ridong <chenridong@huawei.com>
+Reviewed-by: Michal Koutný <mkoutny@suse.com>
+Acked-by: Shakeel Butt <shakeel.butt@linux.dev>
+Acked-by: Johannes Weiner <hannes@cmpxchg.org>
+---
+ mm/memcontrol.c | 27 ++++++++++++---------------
+ 1 file changed, 12 insertions(+), 15 deletions(-)
 
-Best Regards,
-	Abel
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index 05a32c860554..98f84a9fa228 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -3424,6 +3424,16 @@ struct mem_cgroup *mem_cgroup_get_from_ino(unsigned long ino)
+ }
+ #endif
+ 
++static void free_mem_cgroup_per_node_info(struct mem_cgroup_per_node *pn)
++{
++	if (!pn)
++		return;
++
++	free_percpu(pn->lruvec_stats_percpu);
++	kfree(pn->lruvec_stats);
++	kfree(pn);
++}
++
+ static bool alloc_mem_cgroup_per_node_info(struct mem_cgroup *memcg, int node)
+ {
+ 	struct mem_cgroup_per_node *pn;
+@@ -3448,23 +3458,10 @@ static bool alloc_mem_cgroup_per_node_info(struct mem_cgroup *memcg, int node)
+ 	memcg->nodeinfo[node] = pn;
+ 	return true;
+ fail:
+-	kfree(pn->lruvec_stats);
+-	kfree(pn);
++	free_mem_cgroup_per_node_info(pn);
+ 	return false;
+ }
+ 
+-static void free_mem_cgroup_per_node_info(struct mem_cgroup *memcg, int node)
+-{
+-	struct mem_cgroup_per_node *pn = memcg->nodeinfo[node];
+-
+-	if (!pn)
+-		return;
+-
+-	free_percpu(pn->lruvec_stats_percpu);
+-	kfree(pn->lruvec_stats);
+-	kfree(pn);
+-}
+-
+ static void __mem_cgroup_free(struct mem_cgroup *memcg)
+ {
+ 	int node;
+@@ -3472,7 +3469,7 @@ static void __mem_cgroup_free(struct mem_cgroup *memcg)
+ 	obj_cgroup_put(memcg->orig_objcg);
+ 
+ 	for_each_node(node)
+-		free_mem_cgroup_per_node_info(memcg, node);
++		free_mem_cgroup_per_node_info(memcg->nodeinfo[node]);
+ 	memcg1_free_events(memcg);
+ 	kfree(memcg->vmstats);
+ 	free_percpu(memcg->vmstats_percpu);
+-- 
+2.34.1
 
