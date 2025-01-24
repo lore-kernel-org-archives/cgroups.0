@@ -1,132 +1,106 @@
 Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 502261DA10A;
-	Fri, 24 Jan 2025 07:42:13 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 363801D95BE;
+	Fri, 24 Jan 2025 07:46:12 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.51
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1737704536; cv=none; b=DgLsdyz2R8dZDxZNEISoty853kQzw/0MSf43EN4gzdMbVjpcQFf6TC8p3SPReE59AbaV+Eot9Abn7BVJ+PeLHbvgJsXYJKwwXc2ww1bCoSZC5HkEQB06vepEfOs4AF9v0xGeIksZmwtgt7IV6po3inYU4Coxybsg9mvq7s7uqi4=
+	t=1737704773; cv=none; b=BpYzefaKnTJP+SE+lOJue/xwNvrPaFMG+nizw4UIc+KqTHN/xYn7UAWsy5qQkw6mmK6YW2GJzXKkk2dStQVgvwKyYwNCn25IkeqHl4MltbnyCqjmWRvX4Q6iit4xd9Rr5KLK/U3iIU60+/tvOeXqWRzt2IiMU2LmNabtTZIIeGg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1737704536; c=relaxed/simple;
-	bh=nkwoPcdjj71lkE4dlzCAt5xGDy19DizgBrAjSXBFVac=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=df18pYczMHpN/JJYw9MFEUe7WG3cscsQHzgNU+K9gIXfX6ZA0wxIEOFrPzW2zkAlO7qTFBGuquXOuJmv2KdOmEBg54hkU8QCn8uglkVsygjDnStoAXHvztR/y+0wo4sUDlknh6Vea7JAC5P3U/8REStOK9edk928kBJJgOni8IY=
+	s=arc-20240116; t=1737704773; c=relaxed/simple;
+	bh=xOnQw+BtHC71i6Cc8tDcU9OM6ahlZFaLrJXfpYqoOQw=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=eKGALPJEWLBFSK1aKeAQXJkLA9uCYGSV68/BsMf3QGXjcJ92/rwv7huaQ2ok27MhZw1V7ncz2xTUOoO/Ss2dLYPCHZrcxpUJgR0WI9KXei31pAgnX7tl66iV3QJmZ0KHsvYbhNd70OsUCEkbim2HYoA0/juZwequ3l7AuTyfE5o=
 ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.51
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
-Received: from mail.maildlp.com (unknown [172.19.163.235])
-	by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4YfVBL4gvtz4f3jQP;
-	Fri, 24 Jan 2025 15:41:46 +0800 (CST)
-Received: from mail02.huawei.com (unknown [10.116.40.252])
-	by mail.maildlp.com (Postfix) with ESMTP id 9B7F71A0A31;
-	Fri, 24 Jan 2025 15:42:08 +0800 (CST)
-Received: from [10.67.109.79] (unknown [10.67.109.79])
-	by APP3 (Coremail) with SMTP id _Ch0CgC3V8JPRJNnZMJABw--.54478S2;
-	Fri, 24 Jan 2025 15:42:08 +0800 (CST)
-Message-ID: <50927192-67ac-4fb5-b41f-d11cdcd4e0e3@huaweicloud.com>
-Date: Fri, 24 Jan 2025 15:42:07 +0800
+Received: from mail.maildlp.com (unknown [172.19.93.142])
+	by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4YfVH53pYgz4f3jsv;
+	Fri, 24 Jan 2025 15:45:53 +0800 (CST)
+Received: from mail02.huawei.com (unknown [10.116.40.112])
+	by mail.maildlp.com (Postfix) with ESMTP id 0E2D11A0F8D;
+	Fri, 24 Jan 2025 15:46:09 +0800 (CST)
+Received: from hulk-vt.huawei.com (unknown [10.67.174.121])
+	by APP1 (Coremail) with SMTP id cCh0CgBHqnozRZNn89xFBw--.58969S2;
+	Fri, 24 Jan 2025 15:46:08 +0800 (CST)
+From: Chen Ridong <chenridong@huaweicloud.com>
+To: akpm@linux-foundation.org,
+	mhocko@kernel.org,
+	hannes@cmpxchg.org,
+	yosryahmed@google.com,
+	roman.gushchin@linux.dev,
+	shakeel.butt@linux.dev,
+	muchun.song@linux.dev,
+	davidf@vimeo.com,
+	vbabka@suse.cz,
+	mkoutny@suse.com
+Cc: linux-mm@kvack.org,
+	linux-kernel@vger.kernel.org,
+	cgroups@vger.kernel.org,
+	chenridong@huawei.com,
+	wangweiyang2@huawei.com
+Subject: [PATCH -v4 next 0/4] Some cleanup for memcg
+Date: Fri, 24 Jan 2025 07:35:10 +0000
+Message-Id: <20250124073514.2375622-1-chenridong@huaweicloud.com>
+X-Mailer: git-send-email 2.34.1
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v3 next 4/5] memcg: factor out
- stat(event)/stat_local(event_local) reading functions
-To: Johannes Weiner <hannes@cmpxchg.org>
-Cc: Yosry Ahmed <yosryahmed@google.com>, akpm@linux-foundation.org,
- mhocko@kernel.org, roman.gushchin@linux.dev, shakeel.butt@linux.dev,
- muchun.song@linux.dev, davidf@vimeo.com, vbabka@suse.cz, mkoutny@suse.com,
- linux-mm@kvack.org, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org,
- chenridong@huawei.com, wangweiyang2@huawei.com
-References: <20250117014645.1673127-1-chenridong@huaweicloud.com>
- <20250117014645.1673127-5-chenridong@huaweicloud.com>
- <20250117165615.GF182896@cmpxchg.org>
- <CAJD7tkYahASkO+4VkwSL0QnL3fFY4pgvnN84moip4tzLcvQ_yQ@mail.gmail.com>
- <20250117180238.GI182896@cmpxchg.org>
- <6daaf853-1283-42e6-bb0f-55d951edc925@huaweicloud.com>
- <20250124042302.GA5581@cmpxchg.org>
-Content-Language: en-US
-From: Chen Ridong <chenridong@huaweicloud.com>
-In-Reply-To: <20250124042302.GA5581@cmpxchg.org>
-Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:_Ch0CgC3V8JPRJNnZMJABw--.54478S2
-X-Coremail-Antispam: 1UD129KBjvJXoW7Zw1kGFy3Cw13Kw43WF4kZwb_yoW8Kr1kpr
-	W2yFyjkayDGrWrAF12ya15Ww1S9r93JrW5X34qvryIqr9Fqwn7try2kr45uFy5Jr4xXr1Y
-	yr4Yqry2vF45AaUanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDU0xBIdaVrnRJUUUv0b4IE77IF4wAFF20E14v26r4j6ryUM7CY07I20VC2zVCF04k2
-	6cxKx2IYs7xG6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rwA2F7IY1VAKz4
-	vEj48ve4kI8wA2z4x0Y4vE2Ix0cI8IcVAFwI0_Ar0_tr1l84ACjcxK6xIIjxv20xvEc7Cj
-	xVAFwI0_Gr1j6F4UJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x
-	0267AKxVW0oVCq3wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG
-	6I80ewAv7VC0I7IYx2IY67AKxVWUJVWUGwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFV
-	Cjc4AY6r1j6r4UM4x0Y48IcVAKI48JM4IIrI8v6xkF7I0E8cxan2IY04v7MxkF7I0En4kS
-	14v26r1q6r43MxAIw28IcxkI7VAKI48JMxC20s026xCaFVCjc4AY6r1j6r4UMI8I3I0E5I
-	8CrVAFwI0_Jr0_Jr4lx2IqxVCjr7xvwVAFwI0_JrI_JrWlx4CE17CEb7AF67AKxVWUtVW8
-	ZwCIc40Y0x0EwIxGrwCI42IY6xIIjxv20xvE14v26r1j6r1xMIIF0xvE2Ix0cI8IcVCY1x
-	0267AKxVW8JVWxJwCI42IY6xAIw20EY4v20xvaj40_Jr0_JF4lIxAIcVC2z280aVAFwI0_
-	Jr0_Gr1lIxAIcVC2z280aVCY1x0267AKxVW8JVW8JrUvcSsGvfC2KfnxnUUI43ZEXa7IU1
-	7KsUUUUUU==
+X-CM-TRANSID:cCh0CgBHqnozRZNn89xFBw--.58969S2
+X-Coremail-Antispam: 1UD129KBjvdXoWruF43XrWDKFW7tryUZF18Xwb_yoWDuFg_KF
+	Z7ZFy7Kw1jgFWUXFW2kr48JFW2kw45Zry5GF1jqr43ta43tw1qvFsrWrWrZr1rZwsIkF45
+	Ary5J397CwnFyjkaLaAFLSUrUUUUjb8apTn2vfkv8UJUUUU8Yxn0WfASr-VFAUDa7-sFnT
+	9fnUUIcSsGvfJTRUUUbxAYFVCjjxCrM7AC8VAFwI0_Gr0_Xr1l1xkIjI8I6I8E6xAIw20E
+	Y4v20xvaj40_Wr0E3s1l1IIY67AEw4v_Jr0_Jr4l8cAvFVAK0II2c7xJM28CjxkF64kEwV
+	A0rcxSw2x7M28EF7xvwVC0I7IYx2IY67AKxVW7JVWDJwA2z4x0Y4vE2Ix0cI8IcVCY1x02
+	67AKxVWxJVW8Jr1l84ACjcxK6I8E87Iv67AKxVW0oVCq3wA2z4x0Y4vEx4A2jsIEc7CjxV
+	AFwI0_GcCE3s1le2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xvF2IEw4CE5I8CrVC2
+	j2WlYx0E2Ix0cI8IcVAFwI0_JrI_JrylYx0Ex4A2jsIE14v26r1j6r4UMcvjeVCFs4IE7x
+	kEbVWUJVW8JwACjcxG0xvY0x0EwIxGrwACI402YVCY1x02628vn2kIc2xKxwCY1x0262kK
+	e7AKxVWUtVW8ZwCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7xkEbVWUJVW8JwC20s026c
+	02F40E14v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E67AF67kF1VAFwI0_Jw0_
+	GFylIxkGc2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUJVWUCwCI42IY6xIIjxv20xvEc7
+	CjxVAFwI0_Gr0_Cr1lIxAIcVCF04k26cxKx2IYs7xG6r1j6r1xMIIF0xvEx4A2jsIE14v2
+	6r1j6r4UMIIF0xvEx4A2jsIEc7CjxVAFwI0_Gr0_Gr1UYxBIdaVFxhVjvjDU0xZFpf9x07
+	UQ6p9UUUUU=
 X-CM-SenderInfo: hfkh02xlgr0w46kxt4xhlfz01xgou0bp/
 
+From: Chen Ridong <chenridong@huawei.com>
 
+Some cleanup for memcg.
 
-On 2025/1/24 12:23, Johannes Weiner wrote:
-> On Tue, Jan 21, 2025 at 10:15:00PM +0800, Chen Ridong wrote:
->>
->>
->> On 2025/1/18 2:02, Johannes Weiner wrote:
->>> On Fri, Jan 17, 2025 at 09:01:59AM -0800, Yosry Ahmed wrote:
->>>> On Fri, Jan 17, 2025 at 8:56 AM Johannes Weiner <hannes@cmpxchg.org> wrote:
->>>>>
->>>>> On Fri, Jan 17, 2025 at 01:46:44AM +0000, Chen Ridong wrote:
->>>>>> From: Chen Ridong <chenridong@huawei.com>
->>>>>>
->>>>>> The only difference between 'lruvec_page_state' and
->>>>>> 'lruvec_page_state_local' is that they read 'state' and 'state_local',
->>>>>> respectively. Factor out an inner functions to make the code more concise.
->>>>>> Do the same for reading 'memcg_page_stat' and 'memcg_events'.
->>>>>>
->>>>>> Signed-off-by: Chen Ridong <chenridong@huawei.com>
->>>>>
->>>>> bool parameters make for poor readability at the callsites :(
->>>>>
->>>>> With the next patch moving most of the duplication to memcontrol-v1.c,
->>>>> I think it's probably not worth refactoring this.
->>>>
->>>> Arguably the duplication would now be across two different files,
->>>> making it more difficult to notice and keep the implementations in
->>>> sync.
->>>
->>> Dependencies between the files is a bigger pain. E.g. try_charge()
->>> being defined in memcontrol-v1.h makes memcontrol.c more difficult to
->>> work with. That shared state also immediately bitrotted when charge
->>> moving was removed and the last cgroup1 caller disappeared.
->>>
->>> The whole point of the cgroup1 split was to simplify cgroup2 code. The
->>> tiny amount of duplication in this case doesn't warrant further
->>> entanglement between the codebases.
->>
->> Thank you for your review.
->>
->> I agree with that. However, If I just move the 'local' functions to
->> memcontrol-v1.c, I have to move some dependent declarations to the
->> memcontrol-v1.h.
->> E.g. struct memcg_vmstats, MEMCG_VMSTAT_SIZE and so on.
->>
->> Is this worth doing?
-> 
-> Ah, right. No, that's not worth it.
-> 
-> The easiest way is to slap CONFIG_MEMCG_V1 guards around the local
-> functions but leave them in memcontrol.c for now. We already have a
-> few of those ifdefs for where splitting/sharing wasn't practical. At
-> least then it's clearly marked and they won't get built.
+In this series, patches 1-3 have been reviewed.
+Patch 4 is new, which adds CONFIG_MEMCG_V1 for the local functions,
+suggested by Johannes Weiner.
 
-Thank you, will do that.
+---
 
-Best regards,
-Ridong
+v3->v4:
+ - keep the 'local' functions in the memcontrol-v1.c and add
+   CONFIG_MEMCG_V1 for them.
+
+v2->v3:
+ - move the wrapper function definitions to header files.
+ - add a patch to move the 'local' functions to the memcontrol-v1.c.
+
+v1->v2:
+ - drop the patch 'simplify the mem_cgroup_update_lru_size function'.
+ - for patch 3, rename '__refill_obj_stock' to replace_stock_objcg, and
+   keep the 'objcg equal' check in the calling functions.
+
+Chen Ridong (4):
+  memcg: use OFP_PEAK_UNSET instead of -1
+  memcg: call the free function when allocation of pn fails
+  memcg: factor out the replace_stock_objcg function
+  memcg: add CONFIG_MEMCG_V1 for 'local' functions
+
+ mm/memcontrol-v1.h |  6 ++---
+ mm/memcontrol.c    | 61 ++++++++++++++++++++++++++--------------------
+ 2 files changed, 38 insertions(+), 29 deletions(-)
+
+-- 
+2.34.1
 
