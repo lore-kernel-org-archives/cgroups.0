@@ -1,28 +1,28 @@
-Received: from dggsgout12.his.huawei.com (dggsgout12.his.huawei.com [45.249.212.56])
+Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 85C801D9A6E;
-	Fri, 24 Jan 2025 07:46:12 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.56
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 363221D95A2;
+	Fri, 24 Jan 2025 07:46:11 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.51
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1737704774; cv=none; b=Jb0pTgJLSvn7bT8nsAI5d8OhisdTZOO1N8dimTj+V+V/flMokcWDTxETjiMmSINFnL4hMRZ6bjbxj4kSabJCdbcnKgruiDvoFOJZgSpaRat74Ug7WxkFVbGb30Ox71Qr5PAyl3pqqWdLDBhSqL/MuKVM30avbKfRvSHkmgsH/XA=
+	t=1737704775; cv=none; b=fPTmtRQlRK8ULc0v6QCMGWbookHOurhqWeJEcMO5Au8sZUBfzsJeva73wtAu4yizDgka2j5VDFY0k3Ml2XsSZ/V+ZNEw362ZtntVFIJ6sVHwTx6YeQ/G1Z1Ko7t73qLeagqQtupA6iFrFRQutxv+wpRHkw5Ybj5iuGjkZiXQqMw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1737704774; c=relaxed/simple;
-	bh=/n8xGYAV0lo3e3m/M1f+T71ATzlfER8hP+5EADjB3kg=;
+	s=arc-20240116; t=1737704775; c=relaxed/simple;
+	bh=AR4ZUw8RpKeHv++cxZ2Ul+KgFdKxYEAEMHVkN7hmS9Y=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=ugc7FVejeLfw3VnOxNxxAtHW6wIjh9B2TM4Cd7llhHCIl4Zhd9YlgxM5Be2ZRg7fEp5Na0ozpp6wbUcq7eueYiYcPRlb3WQY4ADY+6QPJfLDSEzW2OaC5+soWX6FU1VYO1Oz7pa24jKRxGNpDZo/RfepuLXRceyS68HpWCkIQIg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.56
+	 MIME-Version:Content-Type; b=rUTvLvoGtd98yY5agp1kkH6gczOhazoMdh7h+BtYOuX0r6e+KHcx3CQDTSgpzmqWkVGVRC4QK2gJYFEZFfDC27/GMWRPlUBj1m2B7n3oyUY9gnblm4rNLeRmVLOxz0v9ds/tk0zW3Er/iR2CpuhGDnMkbVaXsuKlVPp/g6B66co=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.51
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
-Received: from mail.maildlp.com (unknown [172.19.163.235])
-	by dggsgout12.his.huawei.com (SkyGuard) with ESMTP id 4YfVH04DJHz4f3jdc;
-	Fri, 24 Jan 2025 15:45:48 +0800 (CST)
+Received: from mail.maildlp.com (unknown [172.19.93.142])
+	by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4YfVGz1KJNz4f3l22;
+	Fri, 24 Jan 2025 15:45:47 +0800 (CST)
 Received: from mail02.huawei.com (unknown [10.116.40.112])
-	by mail.maildlp.com (Postfix) with ESMTP id 4819E1A1020;
+	by mail.maildlp.com (Postfix) with ESMTP id 281591A0F00;
 	Fri, 24 Jan 2025 15:46:09 +0800 (CST)
 Received: from hulk-vt.huawei.com (unknown [10.67.174.121])
-	by APP1 (Coremail) with SMTP id cCh0CgBHqnozRZNn89xFBw--.58969S5;
-	Fri, 24 Jan 2025 15:46:09 +0800 (CST)
+	by APP1 (Coremail) with SMTP id cCh0CgBHqnozRZNn89xFBw--.58969S3;
+	Fri, 24 Jan 2025 15:46:08 +0800 (CST)
 From: Chen Ridong <chenridong@huaweicloud.com>
 To: akpm@linux-foundation.org,
 	mhocko@kernel.org,
@@ -39,9 +39,9 @@ Cc: linux-mm@kvack.org,
 	cgroups@vger.kernel.org,
 	chenridong@huawei.com,
 	wangweiyang2@huawei.com
-Subject: [PATCH -v4 next 3/4] memcg: factor out the replace_stock_objcg function
-Date: Fri, 24 Jan 2025 07:35:13 +0000
-Message-Id: <20250124073514.2375622-4-chenridong@huaweicloud.com>
+Subject: [PATCH -v4 next 1/4] memcg: use OFP_PEAK_UNSET instead of -1
+Date: Fri, 24 Jan 2025 07:35:11 +0000
+Message-Id: <20250124073514.2375622-2-chenridong@huaweicloud.com>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20250124073514.2375622-1-chenridong@huaweicloud.com>
 References: <20250124073514.2375622-1-chenridong@huaweicloud.com>
@@ -51,91 +51,54 @@ List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:cCh0CgBHqnozRZNn89xFBw--.58969S5
-X-Coremail-Antispam: 1UD129KBjvJXoW7trykJFWUuF1fWryrKF4UJwb_yoW5JF1fpa
-	9rKas8Jr48AFW2gan8Ga17Zr1fXF4vvFnFkr4Iqw1xCFnIgFn0q342yFyjya4kJr93tF4x
-	Jr4qyFsFkayUJ37anT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDU0xBIdaVrnRJUUUP2b4IE77IF4wAFF20E14v26rWj6s0DM7CY07I20VC2zVCF04k2
-	6cxKx2IYs7xG6rWj6s0DM7CIcVAFz4kK6r1j6r18M28IrcIa0xkI8VA2jI8067AKxVWUWw
-	A2048vs2IY020Ec7CjxVAFwI0_Xr0E3s1l8cAvFVAK0II2c7xJM28CjxkF64kEwVA0rcxS
-	w2x7M28EF7xvwVC0I7IYx2IY67AKxVW7JVWDJwA2z4x0Y4vE2Ix0cI8IcVCY1x0267AKxV
-	W8Jr0_Cr1UM28EF7xvwVC2z280aVAFwI0_GcCE3s1l84ACjcxK6I8E87Iv6xkF7I0E14v2
-	6rxl6s0DM2AIxVAIcxkEcVAq07x20xvEncxIr21l5I8CrVACY4xI64kE6c02F40Ex7xfMc
-	Ij6xIIjxv20xvE14v26r106r15McIj6I8E87Iv67AKxVWUJVW8JwAm72CE4IkC6x0Yz7v_
-	Jr0_Gr1lF7xvr2IYc2Ij64vIr41lFIxGxcIEc7CjxVA2Y2ka0xkIwI1lc7CjxVAaw2AFwI
-	0_Jw0_GFyl42xK82IYc2Ij64vIr41l4I8I3I0E4IkC6x0Yz7v_Jr0_Gr1lx2IqxVAqx4xG
-	67AKxVWUJVWUGwC20s026x8GjcxK67AKxVWUGVWUWwC2zVAF1VAY17CE14v26r1q6r43MI
-	IYrxkI7VAKI48JMIIF0xvE2Ix0cI8IcVAFwI0_Jr0_JF4lIxAIcVC0I7IYx2IY6xkF7I0E
-	14v26F4j6r4UJwCI42IY6xAIw20EY4v20xvaj40_Jr0_JF4lIxAIcVC2z280aVAFwI0_Jr
-	0_Gr1lIxAIcVC2z280aVCY1x0267AKxVW8JVW8JrUvcSsGvfC2KfnxnUUI43ZEXa7IUbd-
-	BtUUUUU==
+X-CM-TRANSID:cCh0CgBHqnozRZNn89xFBw--.58969S3
+X-Coremail-Antispam: 1UD129KBjvdXoWrZFWrJF43Cw1xWrW5WrW8Crg_yoWfZrbE9F
+	WkKr1DZF15J3yakw1FyrySvrsYkF1UGa43Kw45tw13AFyDtasYvF1vqrsY9w1kuFsxtry3
+	Cwnaqayqgw12gjkaLaAFLSUrUUUUjb8apTn2vfkv8UJUUUU8Yxn0WfASr-VFAUDa7-sFnT
+	9fnUUIcSsGvfJTRUUUbDkYFVCjjxCrM7AC8VAFwI0_Wr0E3s1l1xkIjI8I6I8E6xAIw20E
+	Y4v20xvaj40_Wr0E3s1l1IIY67AEw4v_Jr0_Jr4l82xGYIkIc2x26280x7IE14v26r18M2
+	8IrcIa0xkI8VCY1x0267AKxVW8JVW5JwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK
+	021l84ACjcxK6xIIjxv20xvE14v26F1j6w1UM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26F
+	4j6r4UJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x0267AKxVW0
+	oVCq3wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG6I80ewAv7V
+	C0I7IYx2IY67AKxVWUGVWUXwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFVCjc4AY6r1j
+	6r4UM4x0Y48IcxkI7VAKI48JM4IIrI8v6xkF7I0E8cxan2IY04v7MxkF7I0En4kS14v26r
+	1q6r43MxAIw28IcxkI7VAKI48JMxC20s026xCaFVCjc4AY6r1j6r4UMI8I3I0E5I8CrVAF
+	wI0_Jr0_Jr4lx2IqxVCjr7xvwVAFwI0_JrI_JrWlx4CE17CEb7AF67AKxVWUtVW8ZwCIc4
+	0Y0x0EwIxGrwCI42IY6xIIjxv20xvE14v26r1j6r1xMIIF0xvE2Ix0cI8IcVCY1x0267AK
+	xVW8JVWxJwCI42IY6xAIw20EY4v20xvaj40_Jr0_JF4lIxAIcVC2z280aVAFwI0_Jr0_Gr
+	1lIxAIcVC2z280aVCY1x0267AKxVW8JVW8JrUvcSsGvfC2KfnxnUUI43ZEXa7IU8e6wJUU
+	UUU==
 X-CM-SenderInfo: hfkh02xlgr0w46kxt4xhlfz01xgou0bp/
 
 From: Chen Ridong <chenridong@huawei.com>
 
-Factor out the 'replace_stock_objcg' function to make the code more
-cohesive.
+The 'OFP_PEAK_UNSET' has been defined, use it instead of '-1'.
 
 Signed-off-by: Chen Ridong <chenridong@huawei.com>
-Reviewed-by: Roman Gushchin <roman.gushchin@linux.dev>
+Reviewed-by: Michal Koutný <mkoutny@suse.com>
+Acked-by: David Finkel <davidf@vimeo.com>
 Acked-by: Shakeel Butt <shakeel.butt@linux.dev>
 Acked-by: Johannes Weiner <hannes@cmpxchg.org>
 ---
- mm/memcontrol.c | 26 ++++++++++++++++----------
- 1 file changed, 16 insertions(+), 10 deletions(-)
+ mm/memcontrol.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index 98f84a9fa228..b10e0a8f3375 100644
+index 46f8b372d212..05a32c860554 100644
 --- a/mm/memcontrol.c
 +++ b/mm/memcontrol.c
-@@ -2691,6 +2691,20 @@ void __memcg_kmem_uncharge_page(struct page *page, int order)
- 	obj_cgroup_put(objcg);
- }
+@@ -4004,7 +4004,7 @@ static ssize_t peak_write(struct kernfs_open_file *of, char *buf, size_t nbytes,
+ 			WRITE_ONCE(peer_ctx->value, usage);
  
-+/* Replace the stock objcg with objcg, return the old objcg */
-+static struct obj_cgroup *replace_stock_objcg(struct memcg_stock_pcp *stock,
-+					     struct obj_cgroup *objcg)
-+{
-+	struct obj_cgroup *old = NULL;
-+
-+	old = drain_obj_stock(stock);
-+	obj_cgroup_get(objcg);
-+	stock->nr_bytes = atomic_read(&objcg->nr_charged_bytes)
-+			? atomic_xchg(&objcg->nr_charged_bytes, 0) : 0;
-+	WRITE_ONCE(stock->cached_objcg, objcg);
-+	return old;
-+}
-+
- static void mod_objcg_state(struct obj_cgroup *objcg, struct pglist_data *pgdat,
- 		     enum node_stat_item idx, int nr)
- {
-@@ -2708,11 +2722,7 @@ static void mod_objcg_state(struct obj_cgroup *objcg, struct pglist_data *pgdat,
- 	 * changes.
- 	 */
- 	if (READ_ONCE(stock->cached_objcg) != objcg) {
--		old = drain_obj_stock(stock);
--		obj_cgroup_get(objcg);
--		stock->nr_bytes = atomic_read(&objcg->nr_charged_bytes)
--				? atomic_xchg(&objcg->nr_charged_bytes, 0) : 0;
--		WRITE_ONCE(stock->cached_objcg, objcg);
-+		old = replace_stock_objcg(stock, objcg);
- 		stock->cached_pgdat = pgdat;
- 	} else if (stock->cached_pgdat != pgdat) {
- 		/* Flush the existing cached vmstat data */
-@@ -2866,11 +2876,7 @@ static void refill_obj_stock(struct obj_cgroup *objcg, unsigned int nr_bytes,
+ 	/* initial write, register watcher */
+-	if (ofp->value == -1)
++	if (ofp->value == OFP_PEAK_UNSET)
+ 		list_add(&ofp->list, watchers);
  
- 	stock = this_cpu_ptr(&memcg_stock);
- 	if (READ_ONCE(stock->cached_objcg) != objcg) { /* reset if necessary */
--		old = drain_obj_stock(stock);
--		obj_cgroup_get(objcg);
--		WRITE_ONCE(stock->cached_objcg, objcg);
--		stock->nr_bytes = atomic_read(&objcg->nr_charged_bytes)
--				? atomic_xchg(&objcg->nr_charged_bytes, 0) : 0;
-+		old = replace_stock_objcg(stock, objcg);
- 		allow_uncharge = true;	/* Allow uncharge when objcg changes */
- 	}
- 	stock->nr_bytes += nr_bytes;
+ 	WRITE_ONCE(ofp->value, usage);
 -- 
 2.34.1
 
