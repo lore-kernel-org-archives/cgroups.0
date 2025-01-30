@@ -1,44 +1,44 @@
 Received: from galois.linutronix.de (Galois.linutronix.de [193.142.43.55])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 094811E47A8;
-	Thu, 30 Jan 2025 14:02:22 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F20431E5708;
+	Thu, 30 Jan 2025 14:02:23 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=193.142.43.55
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1738245745; cv=none; b=jPrbAd0JZAubNEYUEiLQK4gaKlmR5aZxPyDP6SN9TIqIR5YgfyRnX02zYm+fHkdT9RyBnR08E/9YEVUKwXgFvCJiC2au8Wfo9k9Zfmr9VTjcR+1xLjsEgkFzM5g/xHU/jtcFWicDctlXKfPwMoR6URg87K5lomCi0Ummf3evdhI=
+	t=1738245745; cv=none; b=p7a8foP7+BlaVVw9mQ2pgI14p+CDOkjnX8EsflAZ+sVXVnatfxFVpZxLByVrocr9skq71YXAQDTkX7HkuWjba1TY3sRAK3Wo2X36OGTokfTosK8iIEtHofRXiUU/UVv8IzUsqh1SbScDLQdGAY7RSsIdxjF+9U1jWbWQAZgBGCU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1738245745; c=relaxed/simple;
-	bh=O7QYnNqtfos+KX02uWpBSuTC6KY2eysR/3Ql446iBi8=;
+	bh=tR45VY94czRZPH94WmhYPOQ1mLEIOTHPhxsX88grZxc=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=t/yeHB8scygmE60aRqrH7irOfXMbfU9vs65hSboYAWsxJwO8QGJNKIUVePesirTXqlDEySkn00S7cpe7AAz2kit0llgUBS5+4XTK1YomU02VNsZYM9xKAfPvpIFUXOuzF72DR3FtG1Zb1QMxSxajDtUHqzCWWLU7jkNcDabdexs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linutronix.de; spf=pass smtp.mailfrom=linutronix.de; dkim=pass (2048-bit key) header.d=linutronix.de header.i=@linutronix.de header.b=4MVxrfsV; dkim=permerror (0-bit key) header.d=linutronix.de header.i=@linutronix.de header.b=W9TSPIjc; arc=none smtp.client-ip=193.142.43.55
+	 MIME-Version; b=U5Az2P5uvMHz6549XDi2XC8B3zaoDR761QsR/vrx0/WEPRUk7BqqrHyXZlJKrxzozvJjUk3BQsJfgwSAN1qhbE7HGLdX3LZaBWgfXp2GLwCMhJNvFB/mntGBL8fLlT8038jy3blDWWQtKk8qNYSaoWpSgLxLbxBCFA0CliuUmrA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linutronix.de; spf=pass smtp.mailfrom=linutronix.de; dkim=pass (2048-bit key) header.d=linutronix.de header.i=@linutronix.de header.b=4zRZPAtI; dkim=permerror (0-bit key) header.d=linutronix.de header.i=@linutronix.de header.b=ML2h1YCO; arc=none smtp.client-ip=193.142.43.55
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linutronix.de
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linutronix.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="4MVxrfsV";
-	dkim=permerror (0-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="W9TSPIjc"
+	dkim=pass (2048-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="4zRZPAtI";
+	dkim=permerror (0-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="ML2h1YCO"
 From: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
-	s=2020; t=1738245740;
+	s=2020; t=1738245742;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=70ZpbL95PFOkiQLvqaDhiqcr9y/+An7eazJ7AAHJWk4=;
-	b=4MVxrfsVb/ICLvfgYkKOYuniUttYeCBlLD3tTImyU1lf6qQ4R17AziiCaRm/01AVgOO2SD
-	vp2FUVREWPuYEspdzRDuAUd11Da5lQUlAR5AwoJ5nrtw6KjcKvqrkkpvAboSMqysWdEuyM
-	n7EfwdHLBpgrzRSSCMtUrjtfPQFGDB3+N3rCnFCzUWp4YUwA150xNT8VwP+0jFQkNBKXPk
-	RfAJ4tHRp+IzU6nuGQ6vWQ1OiAi14GekNlv1nOdEXpSiH0z+uEVCVBSuIJ33dsUdUGLbRI
-	bBBOa1eKkQ5xzj+JA7fJx0i6ZqNKQ59PbKoboTG2yXPzbiShELogl1NkOlY0Wg==
+	bh=jHJX6bEa0XtyQR0u+s3KZKeiU8ZuhShX3XwcYletJb0=;
+	b=4zRZPAtIeO/x9K1DBs5KAd3WjZJpPtk0HIOubjPy8m7LuABXg8vveFTPogzknIrSRlpJSf
+	q4R7le1MIEwlTJ+ETnVlN/YR8AHGeeXQ51guLWYKVz5qkMUnfm9mqIxvLe/JrsBZdT+V9G
+	yt6YwBcMnbC1eMGqNSkGa6C3Q0LhUoGFOnBY/N5YO+zOqW+Plak+qgRs9DdO9kLnLOoW1q
+	ri3HpeRRthLvXN0EXiPZPsKvsqNqbNYJG6YSTlwa2aPj7s16Pm64QJYXiDxHiGdm8QYpWq
+	qWNmvWqyOpOh2OSMIgZY5FIow43fC6/YjzUEaAK65FJTamG9BnB7078NRSakNw==
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
-	s=2020e; t=1738245740;
+	s=2020e; t=1738245742;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=70ZpbL95PFOkiQLvqaDhiqcr9y/+An7eazJ7AAHJWk4=;
-	b=W9TSPIjcBLi9aETBv++4QlOLE8YvTahtIxwszNpSuGB+k8zoQHKvv/h+hjvrSDcQiedMgm
-	SofkwFALJJX/K4Cg==
+	bh=jHJX6bEa0XtyQR0u+s3KZKeiU8ZuhShX3XwcYletJb0=;
+	b=ML2h1YCOl7yzvYuj3oEcDEJu6ZGrbjpb+uUyIdWu5CUaxxdYTJf90Edb674sPSL6C4BmLL
+	ZRfym3wHCZHC7OCA==
 To: cgroups@vger.kernel.org,
 	linux-kernel@vger.kernel.org
 Cc: =?UTF-8?q?Michal=20Koutn=C3=BD?= <mkoutny@suse.com>,
@@ -51,9 +51,9 @@ Cc: =?UTF-8?q?Michal=20Koutn=C3=BD?= <mkoutny@suse.com>,
 	Tejun Heo <tj@kernel.org>,
 	tglx@linutronix.de,
 	Sebastian Andrzej Siewior <bigeasy@linutronix.de>
-Subject: [PATCH v6 1/6] kernfs: Acquire kernfs_rwsem in kernfs_notify_workfn().
-Date: Thu, 30 Jan 2025 15:02:02 +0100
-Message-ID: <20250130140207.1914339-2-bigeasy@linutronix.de>
+Subject: [PATCH v6 4/6] kernfs: Don't re-lock kernfs_root::kernfs_rwsem in kernfs_fop_readdir().
+Date: Thu, 30 Jan 2025 15:02:05 +0100
+Message-ID: <20250130140207.1914339-5-bigeasy@linutronix.de>
 In-Reply-To: <20250130140207.1914339-1-bigeasy@linutronix.de>
 References: <20250130140207.1914339-1-bigeasy@linutronix.de>
 Precedence: bulk
@@ -64,40 +64,48 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: quoted-printable
 
-kernfs_notify_workfn() dereferences kernfs_node::name and passes it
-later to fsnotify(). If the node is renamed then the previously observed
-name pointer becomes invalid.
+The readdir operation iterates over all entries and invokes dir_emit()
+for every entry passing kernfs_node::name as argument.
+Since the name argument can change, and become invalid, the
+kernfs_root::kernfs_rwsem lock should not be dropped to prevent renames
+during the operation.
 
-Acquire kernfs_root::kernfs_rwsem to block renames of the node.
+The lock drop around dir_emit() has been initially introduced in commit
+   1e5289c97bba2 ("sysfs: Cache the last sysfs_dirent to improve readdir sc=
+alability v2")
+
+to avoid holding a global lock during a page fault. The lock drop is
+wrong since the support of renames and not a big burden since the lock
+is no longer global.
+
+Don't re-acquire kernfs_root::kernfs_rwsem while copying the name to the
+userpace buffer.
 
 Acked-by: Tejun Heo <tj@kernel.org>
 Signed-off-by: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
 ---
- fs/kernfs/file.c | 2 ++
- 1 file changed, 2 insertions(+)
+ fs/kernfs/dir.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/fs/kernfs/file.c b/fs/kernfs/file.c
-index 8502ef68459b9..165d8e37976ba 100644
---- a/fs/kernfs/file.c
-+++ b/fs/kernfs/file.c
-@@ -911,6 +911,7 @@ static void kernfs_notify_workfn(struct work_struct *wo=
-rk)
- 	/* kick fsnotify */
+diff --git a/fs/kernfs/dir.c b/fs/kernfs/dir.c
+index 458519e416fe7..5a1fea414996e 100644
+--- a/fs/kernfs/dir.c
++++ b/fs/kernfs/dir.c
+@@ -1868,10 +1868,10 @@ static int kernfs_fop_readdir(struct file *file, st=
+ruct dir_context *ctx)
+ 		file->private_data =3D pos;
+ 		kernfs_get(pos);
 =20
- 	down_read(&root->kernfs_supers_rwsem);
-+	down_read(&root->kernfs_rwsem);
- 	list_for_each_entry(info, &kernfs_root(kn)->supers, node) {
- 		struct kernfs_node *parent;
- 		struct inode *p_inode =3D NULL;
-@@ -947,6 +948,7 @@ static void kernfs_notify_workfn(struct work_struct *wo=
-rk)
- 		iput(inode);
+-		up_read(&root->kernfs_rwsem);
+-		if (!dir_emit(ctx, name, len, ino, type))
++		if (!dir_emit(ctx, name, len, ino, type)) {
++			up_read(&root->kernfs_rwsem);
+ 			return 0;
+-		down_read(&root->kernfs_rwsem);
++		}
  	}
-=20
-+	up_read(&root->kernfs_rwsem);
- 	up_read(&root->kernfs_supers_rwsem);
- 	kernfs_put(kn);
- 	goto repeat;
+ 	up_read(&root->kernfs_rwsem);
+ 	file->private_data =3D NULL;
 --=20
 2.47.2
 
