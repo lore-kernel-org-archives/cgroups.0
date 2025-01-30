@@ -1,44 +1,44 @@
 Received: from galois.linutronix.de (Galois.linutronix.de [193.142.43.55])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F20431E5708;
-	Thu, 30 Jan 2025 14:02:23 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 094F81E5018;
+	Thu, 30 Jan 2025 14:02:22 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=193.142.43.55
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1738245745; cv=none; b=p7a8foP7+BlaVVw9mQ2pgI14p+CDOkjnX8EsflAZ+sVXVnatfxFVpZxLByVrocr9skq71YXAQDTkX7HkuWjba1TY3sRAK3Wo2X36OGTokfTosK8iIEtHofRXiUU/UVv8IzUsqh1SbScDLQdGAY7RSsIdxjF+9U1jWbWQAZgBGCU=
+	t=1738245745; cv=none; b=n0kmm7w5dYmQ4n1wkJG8I9hOAbQ8VihaQj0uYbxZNqsYhHNkRwDFYQ7pqMzXVWwIi8KCsNQz4oraCkuGwaGOzNubUNPvJGdYABK5ge5ZtIsfO7ZQ1+Px/6vnF5Gojj62gMiAorD/yKKnClmLwfhsOF4OKr0fitJSUR17B4ToyV4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1738245745; c=relaxed/simple;
-	bh=tR45VY94czRZPH94WmhYPOQ1mLEIOTHPhxsX88grZxc=;
+	bh=DGTpLamWHUkgj5xFOJwd0o2/wv8b1YO9QjSjYXScsrs=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=U5Az2P5uvMHz6549XDi2XC8B3zaoDR761QsR/vrx0/WEPRUk7BqqrHyXZlJKrxzozvJjUk3BQsJfgwSAN1qhbE7HGLdX3LZaBWgfXp2GLwCMhJNvFB/mntGBL8fLlT8038jy3blDWWQtKk8qNYSaoWpSgLxLbxBCFA0CliuUmrA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linutronix.de; spf=pass smtp.mailfrom=linutronix.de; dkim=pass (2048-bit key) header.d=linutronix.de header.i=@linutronix.de header.b=4zRZPAtI; dkim=permerror (0-bit key) header.d=linutronix.de header.i=@linutronix.de header.b=ML2h1YCO; arc=none smtp.client-ip=193.142.43.55
+	 MIME-Version; b=jjUJKGb0JESy34elLlKHKGxKqIroaljl8xBOWTrOHAr8iWqH82fyqsfzOJGsfETJePTVa9osXmqoRyFVBR+bUqkuYbwJDu3nJJjUY4eqqAgrzRlZ/68mv8wKVw9HwY2Kd2WliLGGIo7rO8tQ23TH8BFAgUnXS85B8SHf7rAk3tc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linutronix.de; spf=pass smtp.mailfrom=linutronix.de; dkim=pass (2048-bit key) header.d=linutronix.de header.i=@linutronix.de header.b=SXGnefmM; dkim=permerror (0-bit key) header.d=linutronix.de header.i=@linutronix.de header.b=ZSgAretx; arc=none smtp.client-ip=193.142.43.55
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linutronix.de
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linutronix.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="4zRZPAtI";
-	dkim=permerror (0-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="ML2h1YCO"
+	dkim=pass (2048-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="SXGnefmM";
+	dkim=permerror (0-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="ZSgAretx"
 From: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
-	s=2020; t=1738245742;
+	s=2020; t=1738245741;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=jHJX6bEa0XtyQR0u+s3KZKeiU8ZuhShX3XwcYletJb0=;
-	b=4zRZPAtIeO/x9K1DBs5KAd3WjZJpPtk0HIOubjPy8m7LuABXg8vveFTPogzknIrSRlpJSf
-	q4R7le1MIEwlTJ+ETnVlN/YR8AHGeeXQ51guLWYKVz5qkMUnfm9mqIxvLe/JrsBZdT+V9G
-	yt6YwBcMnbC1eMGqNSkGa6C3Q0LhUoGFOnBY/N5YO+zOqW+Plak+qgRs9DdO9kLnLOoW1q
-	ri3HpeRRthLvXN0EXiPZPsKvsqNqbNYJG6YSTlwa2aPj7s16Pm64QJYXiDxHiGdm8QYpWq
-	qWNmvWqyOpOh2OSMIgZY5FIow43fC6/YjzUEaAK65FJTamG9BnB7078NRSakNw==
+	bh=oAwgdfGiuXTUsdwQtdHn2gNdWY/bb3vNi/5j2k4yIQY=;
+	b=SXGnefmMgESGOm30DzwBHGv2EZW0bV2PgPREtNOongoOVxqyUS99zBD8Si/hFjB0QIFyGo
+	jwnpsinzxyQsLm2DVicGHg1T07t4RimxxJxDOCgfb9oqkoMTPl5wxFZNwfCCjD1dXVWXtU
+	b5frPMzvgsDft3APlrJY2eG3F+WqExJht7SmecCZ+wKSZE0ozhByuiORVslYKVd6iegX7S
+	kbAeaLLT7Z80a+sTzVYS2S9iX1qJf5hCt21pe8zuuDBwVqXMI6LHnPRYhD1g7haIK339Nl
+	YNpV8BSB5//93yQoGeSUnN//IKsQaD57upG+MpJvaTnwbNK5BVdhqAMD/NLqYg==
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
-	s=2020e; t=1738245742;
+	s=2020e; t=1738245741;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=jHJX6bEa0XtyQR0u+s3KZKeiU8ZuhShX3XwcYletJb0=;
-	b=ML2h1YCOl7yzvYuj3oEcDEJu6ZGrbjpb+uUyIdWu5CUaxxdYTJf90Edb674sPSL6C4BmLL
-	ZRfym3wHCZHC7OCA==
+	bh=oAwgdfGiuXTUsdwQtdHn2gNdWY/bb3vNi/5j2k4yIQY=;
+	b=ZSgAretxAisJDKpgZuUU/D4F3XJQkJGlv1k8KigMd8gju8rT2DnD2I2a7KqafIyyvH357n
+	lN6Ql94sMDLhk3Ag==
 To: cgroups@vger.kernel.org,
 	linux-kernel@vger.kernel.org
 Cc: =?UTF-8?q?Michal=20Koutn=C3=BD?= <mkoutny@suse.com>,
@@ -51,9 +51,9 @@ Cc: =?UTF-8?q?Michal=20Koutn=C3=BD?= <mkoutny@suse.com>,
 	Tejun Heo <tj@kernel.org>,
 	tglx@linutronix.de,
 	Sebastian Andrzej Siewior <bigeasy@linutronix.de>
-Subject: [PATCH v6 4/6] kernfs: Don't re-lock kernfs_root::kernfs_rwsem in kernfs_fop_readdir().
-Date: Thu, 30 Jan 2025 15:02:05 +0100
-Message-ID: <20250130140207.1914339-5-bigeasy@linutronix.de>
+Subject: [PATCH v6 2/6] kernfs: Acquire kernfs_rwsem in kernfs_get_parent_dentry().
+Date: Thu, 30 Jan 2025 15:02:03 +0100
+Message-ID: <20250130140207.1914339-3-bigeasy@linutronix.de>
 In-Reply-To: <20250130140207.1914339-1-bigeasy@linutronix.de>
 References: <20250130140207.1914339-1-bigeasy@linutronix.de>
 Precedence: bulk
@@ -64,48 +64,33 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: quoted-printable
 
-The readdir operation iterates over all entries and invokes dir_emit()
-for every entry passing kernfs_node::name as argument.
-Since the name argument can change, and become invalid, the
-kernfs_root::kernfs_rwsem lock should not be dropped to prevent renames
-during the operation.
+kernfs_get_parent_dentry() passes kernfs_node::parent to
+kernfs_get_inode().
 
-The lock drop around dir_emit() has been initially introduced in commit
-   1e5289c97bba2 ("sysfs: Cache the last sysfs_dirent to improve readdir sc=
-alability v2")
-
-to avoid holding a global lock during a page fault. The lock drop is
-wrong since the support of renames and not a big burden since the lock
-is no longer global.
-
-Don't re-acquire kernfs_root::kernfs_rwsem while copying the name to the
-userpace buffer.
+Acquire kernfs_root::kernfs_rwsem to ensure kernfs_node::parent isn't
+replaced during the operation.
 
 Acked-by: Tejun Heo <tj@kernel.org>
 Signed-off-by: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
 ---
- fs/kernfs/dir.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+ fs/kernfs/mount.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-diff --git a/fs/kernfs/dir.c b/fs/kernfs/dir.c
-index 458519e416fe7..5a1fea414996e 100644
---- a/fs/kernfs/dir.c
-+++ b/fs/kernfs/dir.c
-@@ -1868,10 +1868,10 @@ static int kernfs_fop_readdir(struct file *file, st=
-ruct dir_context *ctx)
- 		file->private_data =3D pos;
- 		kernfs_get(pos);
+diff --git a/fs/kernfs/mount.c b/fs/kernfs/mount.c
+index 1358c21837f1a..b9b16e97bff18 100644
+--- a/fs/kernfs/mount.c
++++ b/fs/kernfs/mount.c
+@@ -145,7 +145,9 @@ static struct dentry *kernfs_fh_to_parent(struct super_=
+block *sb,
+ static struct dentry *kernfs_get_parent_dentry(struct dentry *child)
+ {
+ 	struct kernfs_node *kn =3D kernfs_dentry_node(child);
++	struct kernfs_root *root =3D kernfs_root(kn);
 =20
--		up_read(&root->kernfs_rwsem);
--		if (!dir_emit(ctx, name, len, ino, type))
-+		if (!dir_emit(ctx, name, len, ino, type)) {
-+			up_read(&root->kernfs_rwsem);
- 			return 0;
--		down_read(&root->kernfs_rwsem);
-+		}
- 	}
- 	up_read(&root->kernfs_rwsem);
- 	file->private_data =3D NULL;
++	guard(rwsem_read)(&root->kernfs_rwsem);
+ 	return d_obtain_alias(kernfs_get_inode(child->d_sb, kn->parent));
+ }
+=20
 --=20
 2.47.2
 
