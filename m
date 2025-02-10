@@ -1,60 +1,62 @@
-Received: from mail-ej1-f42.google.com (mail-ej1-f42.google.com [209.85.218.42])
+Received: from mail-ed1-f42.google.com (mail-ed1-f42.google.com [209.85.208.42])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 54047204861
-	for <cgroups@vger.kernel.org>; Mon, 10 Feb 2025 15:12:56 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.218.42
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 84432204866
+	for <cgroups@vger.kernel.org>; Mon, 10 Feb 2025 15:12:58 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.42
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1739200378; cv=none; b=U0Y1hR5P8IMbEXuI3a4C7a7xJqiWMsq0f50L3K+6SVg9pzuaII0XCnYm2Kf7wV+lEg8p6h6m9BJoacN1rMGpDtzHTqgvkYKMawDPhufyGFzfgOHdjIIoFpbMl6uIrNSbLXevdirWsaXJl3Ou5fo/4X7Uhj8wmmlf1o6sg1F0XbM=
+	t=1739200380; cv=none; b=ob2Bw0tOySRPKBkJyZPkojXBtXXthSIBjiI9y+mCP9tKIbw7cSsGgToH8W1+wIe6FtU6AhWXBbSI8OWuC0ALa0LhQVQwwjXzaf/PYE4l6KoiiT2Rt54jriH/ZKTCAUP6aTwo6DkmXIOG2aBtR+LkNqILkM7LkypDPfh5BlgykgM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1739200378; c=relaxed/simple;
-	bh=Do0H0cxpcbgv7snc7/zxpc0UAqgTdXWl2YEFyV50OgQ=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version:Content-Type; b=VsVRkKHY2Z0xbSzqSOyGb9FI8GnqrYMLRtdPQekjA7Q/1WLfWgipf/8QC4oc948m/9v3aWt7bUxS/j5IY0k6T/E1MTjsjGU/oG/Q2X/2JY6dcUPF98Fu9bxfcjqH8A4n9IKpPQIUQx+iop2j2KQJMjUOZ3qLlImmCy4f0qLy42A=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com; spf=pass smtp.mailfrom=suse.com; dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b=PQtmH1nF; arc=none smtp.client-ip=209.85.218.42
+	s=arc-20240116; t=1739200380; c=relaxed/simple;
+	bh=xj17MFlJulz5p0jdPBcalKowBvoJHFJ9677WrwPHzAk=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=JbsMBeJ/f8aDSB9BojKdL64/hg4/34CnVVPm3h8NUk7hkY3WaWgBpSX9MvzyC9yAn9OHHFYRx18eqgRwWdM4xaLBP7aoL99acFJRhRr/8OgL4lHzml2wDq6rby7p+xjuv8MP9JR/fiLkPGHhucbB0wgD0IrwrBdUmmRaOxR3++8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com; spf=pass smtp.mailfrom=suse.com; dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b=O+vU7twm; arc=none smtp.client-ip=209.85.208.42
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b="PQtmH1nF"
-Received: by mail-ej1-f42.google.com with SMTP id a640c23a62f3a-ab7a342ef4eso431377866b.0
-        for <cgroups@vger.kernel.org>; Mon, 10 Feb 2025 07:12:55 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b="O+vU7twm"
+Received: by mail-ed1-f42.google.com with SMTP id 4fb4d7f45d1cf-5de6ff9643fso2777569a12.3
+        for <cgroups@vger.kernel.org>; Mon, 10 Feb 2025 07:12:58 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=suse.com; s=google; t=1739200374; x=1739805174; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=z4wKGfGTnsXTtvaKeBweQpHfiqMKnwO7EBbd/dYuuZM=;
-        b=PQtmH1nF2F08/w2ZLHSoGYGPY3frlPkStJNcHSHt8g032kQCLcjRJd+htXyocC7QSW
-         Ib0QKkf2CRDcc0DQRSsvZYnsxolgjSESnnVnb3Fvm8/8zqQzixFP30RgCL6VdevW5ioX
-         Bdc2RruROcRWqqzidT3dzFuvxiDsyTfTsY7kS2aG4dJtASX5dxgV34HfTHye3cLKktNH
-         5LF1qhBO1leJ/c3G4ls01HL70c6xxYoukjdMPgJz9ZdVAp0y1S7Rq3nXToX2klNqc9X1
-         My3qIbI4hLwzD/1yshcl1/YHOoZ2VfCkZOGjp4BwoO5PRiqZ7l00pHWwyf366y06l2P9
-         ruRQ==
+        d=suse.com; s=google; t=1739200377; x=1739805177; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=friAMnSjLY0+SGaIxPPMR2wFL3NaVBwarbQhTRSR7xY=;
+        b=O+vU7twmNJ0IUZ6ed++VpYIoENxMTlmNYdzPZ6i0zkQpPir7iFBwyfJIndN3L2H/mb
+         r6B9f6p3CVSi6aCed+h59QxurfNyrT0QoMCI+ksSHI9QzJXz++nIl2QtujYwQVFLHfVb
+         fwWrHpZeclvF2arj/9xIPHR/CLSnvV+qmSD3J4ANjVB2orciGly2HhXmquADDHfrrBQ/
+         gpExhRX7wRDkt2BDgIXaqLy60afi4vJ5UtnI5M0VG0ylZ/bJXB+e8Hge0PsWo0X3gZSm
+         1AM63z2zkxGKxx4mFSmCab0qUa7BJoipAmQ5rCjYd2PD8gRVyr/pU9WO+RHW0zlr1KvW
+         Qdtw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1739200374; x=1739805174;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=z4wKGfGTnsXTtvaKeBweQpHfiqMKnwO7EBbd/dYuuZM=;
-        b=gYO61WGae+evM+GfskYAe90t160VshH/QacnHTz04rdwxoiIcH+Y2hg5LJ0GrLpVU1
-         a3cDOscspC6bAc2con5UZwT1lp2KG4aIXZkb2Sjshg5Au1oYWPzu18aCdJt164fF8nym
-         /zKEmFOw1SqzJTMFh4cmhnvP0muPN+Yuf9nGAhEjuvavjwpMEA0srh5EW3B7tlfOEN2g
-         TNYNvm7FaiTTPdDXMmAdc5YWc8ldwFDsaAt+KTWCJLwld5Esx0NLVNGngD1bObt0NwiN
-         3VakJWpi1YQAvZXKGvBJImvHf9B3+cjs/i5ViXxge1entwpYI9R8qR2BcahWGR/FA9gb
-         qNrg==
-X-Gm-Message-State: AOJu0YxBzgAgZTowYIVgGkVgmM1Mtuhn+CD8RdYJ3Ju0gv+2yUgRoTi7
-	MfatJog6s1fcLUKDl2oDJnzI+XBLikHA4mCxi3V6DcMlc3zW6bFkQv5acDJS+bl/8nStsRHIN2d
-	Y
-X-Gm-Gg: ASbGncu/HknU99LdcKK+sFPIApvcTP5U3saClagVUF8bhiWw77sUXut65W40Y6qKhcL
-	c7Rp0oYNx2b+ETUyzLopABb/P3GCrg5wtX84pULKvra3jeJY5CSbz+rrY7YJq7AIudjqFDoMWMU
-	r41IQTpxVBwwlni2n5IWH0+kEXRYz/hnGO1xGEu3OS4eyhzacMMTm6kt4jz49n84zAsxixt1aJ/
-	F2ZyJPV7dI+9Jcw0BWgJ36IObBpiymOjNJs9Y32qQ2w4l5S62bspEdTaPO7xdjVzbPpJ3qY1ZFZ
-	1PzVc+KNxe9q+Vnflw==
-X-Google-Smtp-Source: AGHT+IEK70Eq5qB/82U2DF9U8xS5b4ZB61X1lgZd7HvA4AyJf7apGUEqkW/Plc8FI5WzSe9hQgSQUQ==
-X-Received: by 2002:a17:906:9c8d:b0:ab3:9923:ef46 with SMTP id a640c23a62f3a-ab789aa088bmr1590639766b.11.1739200374380;
-        Mon, 10 Feb 2025 07:12:54 -0800 (PST)
+        d=1e100.net; s=20230601; t=1739200377; x=1739805177;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=friAMnSjLY0+SGaIxPPMR2wFL3NaVBwarbQhTRSR7xY=;
+        b=IuHTtSVtQnZRxw16bssFiwBT/apgtiiBmNkAojua2v4bmDp+chf5iJIqZoW2OhhYDP
+         cBD56SU3eA/zTORYVjoHWGKGbejITvOxpn9O8F8qRsat9VJGL+wbbAeBR55117goqf8f
+         ESL0D5jltvy3coXWHzghWxr1aGkOb7nZa0ySoZ4MaT1Qzr9UriGGowj+hINvoOa0AChz
+         ouul77D1avnZkFlkg09XtgiUqQm6IPSHxW6PDeFZxCGcN5MV2Siaroe/JiP0VCEcQrFe
+         ycMQQaF4bHc/S5w46TJommRv0wF44LtVYH60dp7D66kH4zMDqSpLZPWeNkMbTjWSfntw
+         fKGw==
+X-Gm-Message-State: AOJu0YwTf7wfDKzbSPpuAlBk3oNSqXxj+6bMw+8S2zdTxt//q+E0JCcM
+	V64YLDAljY6P+oWzcI4P7Mnrr9W9HukrS201D0PXMRgxZ6w/GwtzkhWvnz06EI72fv5Fxfx4XwD
+	v
+X-Gm-Gg: ASbGncu1DjXDUPdQjU2g810HXXfQxnCABfRY70aidIw08h5UPg/bKImCYm+3TOSkgeh
+	QSdWAOE0kOQ3W8rON8RxecJm+CL618aana2uPnZQ/pUhsvXwmSY8qlQEtdrLRTXaWzFbjSoa/l4
+	4XYhwbsfSpuNoaYjeUnCPaTMTRbuqTyyFnUzVji8VXI3b/9IzhkwKYgmryiQrikPbyJBBOsUHKv
+	pc732xsnrCoVHZx8829wHMoaAM7681ikrKFs/b/2aLlHoH0bdsjaz4sxfDrHWNtVEOfLVol1aow
+	mQq1wf9GACiyu3Pslw==
+X-Google-Smtp-Source: AGHT+IG/vCz02gYL/LIB5SscWC32zJnOpctVQAJXvp5QEx6eAgb2yHXEDLpqT66quaqHwD+vieK5PA==
+X-Received: by 2002:a17:907:d01:b0:ab6:d59b:614d with SMTP id a640c23a62f3a-ab789b395a1mr1619973666b.23.1739200376665;
+        Mon, 10 Feb 2025 07:12:56 -0800 (PST)
 Received: from blackdock.suse.cz ([193.86.92.181])
-        by smtp.gmail.com with ESMTPSA id a640c23a62f3a-ab773339e82sm895192866b.143.2025.02.10.07.12.53
+        by smtp.gmail.com with ESMTPSA id a640c23a62f3a-ab773339e82sm895192866b.143.2025.02.10.07.12.56
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 10 Feb 2025 07:12:54 -0800 (PST)
+        Mon, 10 Feb 2025 07:12:56 -0800 (PST)
 From: =?UTF-8?q?Michal=20Koutn=C3=BD?= <mkoutny@suse.com>
 To: cgroups@vger.kernel.org,
 	linux-kernel@vger.kernel.org
@@ -68,10 +70,12 @@ Cc: Ingo Molnar <mingo@redhat.com>,
 	Mel Gorman <mgorman@suse.de>,
 	Valentin Schneider <vschneid@redhat.com>,
 	Frederic Weisbecker <fweisbecker@suse.com>
-Subject: [PATCH 0/9] Add kernel cmdline option for rt_group_sched
-Date: Mon, 10 Feb 2025 16:12:30 +0100
-Message-ID: <20250210151239.50055-1-mkoutny@suse.com>
+Subject: [PATCH 3/9] sched: Always initialize rt_rq's task_group
+Date: Mon, 10 Feb 2025 16:12:33 +0100
+Message-ID: <20250210151239.50055-4-mkoutny@suse.com>
 X-Mailer: git-send-email 2.48.1
+In-Reply-To: <20250210151239.50055-1-mkoutny@suse.com>
+References: <20250210151239.50055-1-mkoutny@suse.com>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
@@ -81,80 +85,67 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
-Despite RT_GROUP_SCHED is only available on cgroup v1, there are still
-some (v1-bound) users of this feature. General purpose distros (e.g.
-[1][2][3][4]) cannot enable CONFIG_RT_GROUP_SCHED easily:
-- since it prevents creation of RT tasks unless RT runtime is determined
-  and distributed into cgroup tree,
-- grouping of RT threads is not what is desired by default on such
-  systems,
-- it prevents use of cgroup v2 with RT tasks.
+rt_rq->tg may be NULL which denotes the root task_group.
+Store the pointer to root_task_group directly so that callers may use
+rt_rq->tg homogenously.
 
-This changeset aims at deferring the decision whether to have
-CONFIG_RT_GROUP_SCHED or not up until the boot time.
-By default RT groups are available as originally but the user can
-pass rt_group_sched=0 kernel cmdline parameter that disables the
-grouping and behavior is like with !CONFIG_RT_GROUP_SCHED (with certain
-runtime overhead).
+root_task_group exists always with CONFIG_CGROUPS_SCHED,
+CONFIG_RT_GROUP_SCHED depends on that.
 
-The series is organized as follows:
+This changes root level rt_rq's default limit from infinity to the
+value of (originally) global RT throttling.
 
-1) generic ifdefs cleanup, no functional changes,
-2) preparing root_task_group to be used in places that take shortcuts in
-   the case of !CONFIG_RT_GROUP_SCHED,
-3) boot cmdline option that controls cgroup (v1) attributes,
-4) conditional bypass of non-root task groups,
-5) checks and comments refresh.
+Signed-off-by: Michal Koutný <mkoutny@suse.com>
+---
+ kernel/sched/rt.c    | 7 ++-----
+ kernel/sched/sched.h | 2 ++
+ 2 files changed, 4 insertions(+), 5 deletions(-)
 
-The crux are patches:
-  sched: Skip non-root task_groups with disabled RT_GROUP
-  sched: Bypass bandwitdh checks with runtime disabled RT_GROUP_SCHED
-
-Further notes:
-- it is not sched_feat() flag because that can be flipped any time
-- runtime disablement is not implemented as infinite per-cgroup RT limit
-  since that'd still employ group scheduling which is unlike
-  !CONFIG_RT_GROUP_SCHED
-- there remain two variants of various functions for
-  CONFIG_RT_GROUP_SCHED and !CONFIG_RT_GROUP_SCHED, those could be
-  folded into one and runtime evaluated guards in the folded functions
-  could be used (I haven't posted it yet due to unclear performance
-  benefit)
-- I noticed some lockdep issues over rt_runtime_lock but those are also
-  in an unpatched kernel (and they seem to have been present since a
-  long time with CONFIG_RT_GROUP_SCHED)
-
-Changes from RFC (https://lore.kernel.org/r/20241216201305.19761-1-mkoutny@suse.com/):
-- fix macro CONFIG_RT_GROUP_SCHED_DEFAULT_DISABLED invocation
-- rebase on torvalds/master
-
-[1] Debian (https://salsa.debian.org/kernel-team/linux/-/blob/debian/latest/debian/config/kernelarch-x86/config),
-[2] ArchLinux (https://gitlab.archlinux.org/archlinux/packaging/packages/linux/-/blob/main/config),
-[3] Fedora (https://src.fedoraproject.org/rpms/kernel/blob/rawhide/f/kernel-x86_64-fedora.config)
-[4] openSUSE TW (https://github.com/SUSE/kernel-source/blob/stable/config/x86_64/default)
-
-Michal Koutný (9):
-  sched: Convert CONFIG_RT_GROUP_SCHED macros to code conditions
-  sched: Remove unneeed macro wrap
-  sched: Always initialize rt_rq's task_group
-  sched: Add commadline option for RT_GROUP_SCHED toggling
-  sched: Skip non-root task_groups with disabled RT_GROUP_SCHED
-  sched: Bypass bandwitdh checks with runtime disabled RT_GROUP_SCHED
-  sched: Do not construct nor expose RT_GROUP_SCHED structures if
-    disabled
-  sched: Add RT_GROUP WARN checks for non-root task_groups
-  sched: Add annotations to RT_GROUP_SCHED fields
-
- .../admin-guide/kernel-parameters.txt         |  5 ++
- init/Kconfig                                  | 11 +++
- kernel/sched/core.c                           | 69 +++++++++++++++----
- kernel/sched/rt.c                             | 51 +++++++++-----
- kernel/sched/sched.h                          | 34 +++++++--
- kernel/sched/syscalls.c                       |  5 +-
- 6 files changed, 137 insertions(+), 38 deletions(-)
-
-
-base-commit: 69e858e0b8b2ea07759e995aa383e8780d9d140c
+diff --git a/kernel/sched/rt.c b/kernel/sched/rt.c
+index 17b1fd0bac1d9..dabb26b438e88 100644
+--- a/kernel/sched/rt.c
++++ b/kernel/sched/rt.c
+@@ -89,6 +89,7 @@ void init_rt_rq(struct rt_rq *rt_rq)
+ 	rt_rq->rt_throttled = 0;
+ 	rt_rq->rt_runtime = 0;
+ 	raw_spin_lock_init(&rt_rq->rt_runtime_lock);
++	rt_rq->tg = &root_task_group;
+ #endif
+ }
+ 
+@@ -484,9 +485,6 @@ static inline bool rt_task_fits_capacity(struct task_struct *p, int cpu)
+ 
+ static inline u64 sched_rt_runtime(struct rt_rq *rt_rq)
+ {
+-	if (!rt_rq->tg)
+-		return RUNTIME_INF;
+-
+ 	return rt_rq->rt_runtime;
+ }
+ 
+@@ -1156,8 +1154,7 @@ inc_rt_group(struct sched_rt_entity *rt_se, struct rt_rq *rt_rq)
+ 	if (rt_se_boosted(rt_se))
+ 		rt_rq->rt_nr_boosted++;
+ 
+-	if (rt_rq->tg)
+-		start_rt_bandwidth(&rt_rq->tg->rt_bandwidth);
++	start_rt_bandwidth(&rt_rq->tg->rt_bandwidth);
+ }
+ 
+ static void
+diff --git a/kernel/sched/sched.h b/kernel/sched/sched.h
+index 38e0e323dda26..4453e79ff65a3 100644
+--- a/kernel/sched/sched.h
++++ b/kernel/sched/sched.h
+@@ -827,6 +827,8 @@ struct rt_rq {
+ 	unsigned int		rt_nr_boosted;
+ 
+ 	struct rq		*rq;
++#endif
++#ifdef CONFIG_CGROUP_SCHED
+ 	struct task_group	*tg;
+ #endif
+ };
 -- 
 2.48.1
 
