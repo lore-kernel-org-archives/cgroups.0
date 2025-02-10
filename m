@@ -1,62 +1,62 @@
-Received: from mail-ej1-f41.google.com (mail-ej1-f41.google.com [209.85.218.41])
+Received: from mail-ej1-f53.google.com (mail-ej1-f53.google.com [209.85.218.53])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DAAB22528E1
-	for <cgroups@vger.kernel.org>; Mon, 10 Feb 2025 15:12:56 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.218.41
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CB721204876
+	for <cgroups@vger.kernel.org>; Mon, 10 Feb 2025 15:12:57 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.218.53
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1739200380; cv=none; b=u04iDy3EnBlUTMMzgXPtmU6j8zOPI2J/oxFTy+TyjXuDqvXZxBWgVxYbH6nclksZtvbvCeBxicDoKAqmYWS9kdM8bkEJujuFRJTtEmqjQ6cIoheWrPbaahMf4RRrwunttlmRm7Yo4CXaBMNEf61QQCsdP8c+AG2cVhO/edS/1pA=
+	t=1739200380; cv=none; b=Xj/SjJoqkOa25evSeZEyXtJud677igh+9bPjbohjMShIZczP6WsLXqJ+/Uvsk8w1wjiU+dIZIYOZ3MhLhxH4ghCwONInfZODapQ7wEruE5fY+/raLBXf9E4kzkJFOfcKemV/2CBaX7OuILIQLbkuBdoE29E7uh/h3jANcMlZTkM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1739200380; c=relaxed/simple;
-	bh=+0+OTGy/IlZfe8fbfVCeZWpUYt2alRVziCCdrmZbW30=;
+	bh=ulHvHm4ifWHwuLhPFEPjoFTZbkUUcsP0tD9oetZXMyo=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=ApLnQaW+6EVjq6yMAVMZW/orgiO/0QSrMetsqD+fIYoLEBF9aHyckvkO8HjrPKc88QKB7vi/n4N8zzYfooCVJV+zaOOPnPHMC3RqwnYmwA5NG+WVPyAQ/Sz1FQYb+r7MBDDYw2xQzPids8BGmFmjgmdQtIXWhUqt9gwHPrAs6N8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com; spf=pass smtp.mailfrom=suse.com; dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b=bAWZkfOu; arc=none smtp.client-ip=209.85.218.41
+	 MIME-Version:Content-Type; b=YIc5MkWtj8OnArNH+ZNveMmEzmy9cBkh5ywtNHHCOKbxecYxe7u1VXISxoWB4aWn9vCH4OXH0zZaO8sdlnG70433NtVGFYZbpyhZv6BM3ipmZLCME7ZmDKhwy0n9QrZASN95spBB0UUBLlyF9xj9VNk/0olUlncfMJBmhZcWPFU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com; spf=pass smtp.mailfrom=suse.com; dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b=McNG672j; arc=none smtp.client-ip=209.85.218.53
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b="bAWZkfOu"
-Received: by mail-ej1-f41.google.com with SMTP id a640c23a62f3a-aaec111762bso1086845666b.2
-        for <cgroups@vger.kernel.org>; Mon, 10 Feb 2025 07:12:56 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b="McNG672j"
+Received: by mail-ej1-f53.google.com with SMTP id a640c23a62f3a-aaecf50578eso889297566b.2
+        for <cgroups@vger.kernel.org>; Mon, 10 Feb 2025 07:12:57 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=suse.com; s=google; t=1739200375; x=1739805175; darn=vger.kernel.org;
+        d=suse.com; s=google; t=1739200376; x=1739805176; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=LHPvs5h0lN5qcRjT7tnplrDlfrX3Yssy64qHxvPIi1w=;
-        b=bAWZkfOuJYPgN8oSyv5kk9kNLMHhI2QytCT4UlwY0q/lc0OTtiUJGGtQ7vFGLw+THX
-         IxUbUReEknQxZZsU4dWzhWqU3jQeVvYBm3vrQDuy+3ggPo4qH2sgFydZhrfNaRpv+EBt
-         O/GIJVyUuLUp6+Abqnq9IAVbcQmBT21LVqj26jS0G1On1KR6lmPPgu1jQ+P1vEKoUd6x
-         C1i120JGZl3m/iOeLSIg21i3i/ClRVCU6lHBpk97ym9TJOyRZp2w04C4X1pAuGjECl29
-         lfCb5wUGYvQgi/wJboagn0jXOzOHa3pKJWyn9MCoOtTMrW5NsnmXqtFdbXpeJR4q3ZKY
-         BMQw==
+        bh=+1XVXoywLqfki7vGasTJjryB1AUnkPOTgHHVt4Rbtn8=;
+        b=McNG672j6sqqp+IGQiZuENkWW6y7g2R68sks8diMZd4Lx3i2VXluYNlXHRoKwt2bZj
+         gcY4xW9aaFk8y358uMqU0yq0KkifjeWr5sHc/TfoGA+6WFhOvDicZQJ57QXixNw3ZAFp
+         pKH3yA4uJ2uiEdsvFiQ8g7eGs0evi2PQM9bEKiJP5WHrqoWGKRjQKjuqfcOnjaeI5W4I
+         gbG+AoXlzaK8DBGvBeq9/RHOXRup8k8ARtyDBiwFvMdiadIPhYaR3lIQzR7W4Lp8X1tU
+         uMSz0YV+V59NnyMVe1iaKapzeTIRoPJYO9Js3BWZRhxmvyxz1B07yCQBrXY7gWtrLJtO
+         9acA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1739200375; x=1739805175;
+        d=1e100.net; s=20230601; t=1739200376; x=1739805176;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=LHPvs5h0lN5qcRjT7tnplrDlfrX3Yssy64qHxvPIi1w=;
-        b=frlGYnzZSxiaqLySs0WAgFJtHjPGLlfMXZOzov4ZYEGvuH9mnXVfZrpi5MZSggMfYj
-         2aGu9bcIOxUaelnkDZv0vzerakX+OFQI6gUItgjmpE+5V3mCYVXs1p6nbHUd1lxtS+Ih
-         I0NZ+Uj/zXO/n+wml8aJoOhJ9mg4tL0a9zFpcIidabj8RJSqhB0RQKLhzr2CMrTCcKf/
-         j8nTwIp2JC5p452eCzEW0iyBRWGis0zRhxMvR6IQsrVTJE97aMNaAUgqM3WCPmV8RVMM
-         b7k++b7YhznbjSDMURu6Xg+sHiFq1z/VwSDC/Nk99O72UlDaVpfxBlU6fha+rxIbeeOs
-         fA6g==
-X-Gm-Message-State: AOJu0YzAMramrrru3P6SLVJJdFWdevGeljnhwnP1Hp7qTWAxw5y1DPoL
-	7OSRRCzacsDJXKLXIcVTMBDJe8F6CUkZGCZmemhwIXJZyyBah9MMTPOcIdtSoHcuvRYBwBsvqfX
-	3
-X-Gm-Gg: ASbGncvXMW5djvmcEzKuwplKA1j4Ut2JwYLBLvFSTRduKWFfq6Hj/QXym0y/gkrk50K
-	Lo6soxL4gwRhRM6KrP7cF16W7u77d2fmyeVB6v/bmtUFk/lEO8dLB1K59A+2Tz4IgyELL82WM+y
-	OWmGyRdSmgqSGGPVVTPsbt/Cds2P8a5ICEVRs5FKH/fi/6c34b4PPV3YxWsgX3MgRMXzJ2OBr9W
-	Gv5ujaetoMfT4bM4Pg/C9EfBIr7e3lfroDklPLxwgDF2dIUrMEDqM3StY49afVQ11NimaUu3cSH
-	/Cd3//H+Zbj3dT6sDQ==
-X-Google-Smtp-Source: AGHT+IEqT2HqyEU97xbfdsBL84h2jKrpMtkd/2pq59J3hPZeDg9i4UwQ1Su0OfZqBDIMGK/V+nmmOw==
-X-Received: by 2002:a17:907:748:b0:ab7:a39:db4 with SMTP id a640c23a62f3a-ab789cfaef4mr1355751566b.57.1739200375206;
+        bh=+1XVXoywLqfki7vGasTJjryB1AUnkPOTgHHVt4Rbtn8=;
+        b=SPbry/Pt1J1CM16QwAJvCd4P5SGqS89toefAXuCpIsJHUxUG0ajUUOqKVbNvZwOcg3
+         xDcR+uk9tAuK/qrnj3YGD6crln/VjWhKYhNm+W/n5YECKUPI/PA6e/juFCJfrMosTDY+
+         Lkff99FztzFGB9HqEPTOTHVifYBNuwyWX6NTBMAHnxfo5Tf8Vc+Yjx3jI72cKq3Q9k8j
+         xUvwpGUac7k1QI0m6hgWHF4a+UAJX9iTkbnWl+kt3xWDJvlOHIBFNWa/O7IJpaG0Io7z
+         ZXbCzyTkqn8zUh3qfUXVPJnETfOLuTG2PMHd4V4+/KrZhZ5pxJkiVv/1cjf2X4TqWle0
+         9X3w==
+X-Gm-Message-State: AOJu0YxV5tD30e8aqsvX/jLTS6Qk5QB0RvZdAhASBaGuZpKP7W2bI+qK
+	sujudLUlnBh+CsVjRwBPiEbsbBVPwzHUI1dtZ6lDQ3MZwDPmHosf1si6t6jd2fOUD/2/vWZCkwV
+	s
+X-Gm-Gg: ASbGncskKygzzDlAMawVuVewvrWvgl48VDvEHc+UTCEQGLE7g3utrWfiEwwLuUJBuZF
+	KaISYM36DFeEVxvpu/7Iw3HuHPue2ri/f1L+V3LC68/RV8s5KQSxL49EXBWRVJ/q1tBUcEV2KVJ
+	Um7/vXB8x9F2cacs2Yui+Mla+wgWualmjARzNU5cwPm8mZ+e/OB31REVnZJFaQe7HH7GKIAz0OI
+	UmfZ9jh4jZo99O7mFFfpOFvyrqe2z/4G9WctEl1Za847zaKg5lszakZgp4mYz3UWarLtGxFoh53
+	R87RJH2tHjUWlFa2TQ==
+X-Google-Smtp-Source: AGHT+IHsHQFc3X6Y/WpOuje7/im6oWOB0bQqY28XRbEOckOEoxISoOotX0WPyGhk1EP1KQLT3TLonA==
+X-Received: by 2002:a17:907:6eac:b0:ab7:d6c:5781 with SMTP id a640c23a62f3a-ab789b1e3bamr1456428866b.24.1739200375951;
         Mon, 10 Feb 2025 07:12:55 -0800 (PST)
 Received: from blackdock.suse.cz ([193.86.92.181])
-        by smtp.gmail.com with ESMTPSA id a640c23a62f3a-ab773339e82sm895192866b.143.2025.02.10.07.12.54
+        by smtp.gmail.com with ESMTPSA id a640c23a62f3a-ab773339e82sm895192866b.143.2025.02.10.07.12.55
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 10 Feb 2025 07:12:54 -0800 (PST)
+        Mon, 10 Feb 2025 07:12:55 -0800 (PST)
 From: =?UTF-8?q?Michal=20Koutn=C3=BD?= <mkoutny@suse.com>
 To: cgroups@vger.kernel.org,
 	linux-kernel@vger.kernel.org
@@ -70,9 +70,9 @@ Cc: Ingo Molnar <mingo@redhat.com>,
 	Mel Gorman <mgorman@suse.de>,
 	Valentin Schneider <vschneid@redhat.com>,
 	Frederic Weisbecker <fweisbecker@suse.com>
-Subject: [PATCH 1/9] sched: Convert CONFIG_RT_GROUP_SCHED macros to code conditions
-Date: Mon, 10 Feb 2025 16:12:31 +0100
-Message-ID: <20250210151239.50055-2-mkoutny@suse.com>
+Subject: [PATCH 2/9] sched: Remove unneeed macro wrap
+Date: Mon, 10 Feb 2025 16:12:32 +0100
+Message-ID: <20250210151239.50055-3-mkoutny@suse.com>
 X-Mailer: git-send-email 2.48.1
 In-Reply-To: <20250210151239.50055-1-mkoutny@suse.com>
 References: <20250210151239.50055-1-mkoutny@suse.com>
@@ -85,66 +85,30 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
-Convert the blocks guarded by macros to regular code so that the RT
-group code gets more compile validation. Reasoning is in
-Documentation/process/coding-style.rst 21) Conditional Compilation.
-With that, no functional change is expected.
+rt_entity_is_task has split definitions based on CONFIG_RT_GROUP_SCHED,
+therefore we can use it always. No functional change intended.
 
 Signed-off-by: Michal Koutný <mkoutny@suse.com>
 ---
- kernel/sched/rt.c       | 10 ++++------
- kernel/sched/syscalls.c |  2 +-
- 2 files changed, 5 insertions(+), 7 deletions(-)
+ kernel/sched/rt.c | 2 --
+ 1 file changed, 2 deletions(-)
 
 diff --git a/kernel/sched/rt.c b/kernel/sched/rt.c
-index 4b8e33c615b12..3116745be304b 100644
+index 3116745be304b..17b1fd0bac1d9 100644
 --- a/kernel/sched/rt.c
 +++ b/kernel/sched/rt.c
-@@ -1068,13 +1068,12 @@ inc_rt_prio_smp(struct rt_rq *rt_rq, int prio, int prev_prio)
+@@ -1257,11 +1257,9 @@ static void __delist_rt_entity(struct sched_rt_entity *rt_se, struct rt_prio_arr
+ static inline struct sched_statistics *
+ __schedstats_from_rt_se(struct sched_rt_entity *rt_se)
  {
- 	struct rq *rq = rq_of_rt_rq(rt_rq);
- 
 -#ifdef CONFIG_RT_GROUP_SCHED
- 	/*
- 	 * Change rq's cpupri only if rt_rq is the top queue.
- 	 */
--	if (&rq->rt != rt_rq)
-+	if (IS_ENABLED(CONFIG_RT_GROUP_SCHED) && &rq->rt != rt_rq)
- 		return;
+ 	/* schedstats is not supported for rt group. */
+ 	if (!rt_entity_is_task(rt_se))
+ 		return NULL;
 -#endif
-+
- 	if (rq->online && prio < prev_prio)
- 		cpupri_set(&rq->rd->cpupri, rq->cpu, prio);
- }
-@@ -1084,13 +1083,12 @@ dec_rt_prio_smp(struct rt_rq *rt_rq, int prio, int prev_prio)
- {
- 	struct rq *rq = rq_of_rt_rq(rt_rq);
  
--#ifdef CONFIG_RT_GROUP_SCHED
- 	/*
- 	 * Change rq's cpupri only if rt_rq is the top queue.
- 	 */
--	if (&rq->rt != rt_rq)
-+	if (IS_ENABLED(CONFIG_RT_GROUP_SCHED) && &rq->rt != rt_rq)
- 		return;
--#endif
-+
- 	if (rq->online && rt_rq->highest_prio.curr != prev_prio)
- 		cpupri_set(&rq->rd->cpupri, rq->cpu, rt_rq->highest_prio.curr);
+ 	return &rt_task_of(rt_se)->stats;
  }
-diff --git a/kernel/sched/syscalls.c b/kernel/sched/syscalls.c
-index 456d339be98fb..8629a87628ebf 100644
---- a/kernel/sched/syscalls.c
-+++ b/kernel/sched/syscalls.c
-@@ -640,7 +640,7 @@ int __sched_setscheduler(struct task_struct *p,
- 			retval = -EPERM;
- 			goto unlock;
- 		}
--#endif
-+#endif /* CONFIG_RT_GROUP_SCHED */
- #ifdef CONFIG_SMP
- 		if (dl_bandwidth_enabled() && dl_policy(policy) &&
- 				!(attr->sched_flags & SCHED_FLAG_SUGOV)) {
 -- 
 2.48.1
 
