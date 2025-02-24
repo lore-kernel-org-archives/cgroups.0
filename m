@@ -1,69 +1,69 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D6CEA267B86
-	for <cgroups@vger.kernel.org>; Mon, 24 Feb 2025 16:56:46 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E07F1267B9F
+	for <cgroups@vger.kernel.org>; Mon, 24 Feb 2025 16:56:47 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1740416208; cv=none; b=YznPt2HD48vGugrAjuCqcC4qC0R2uem/tbvW/KYzjXULBPtzTCisHr5VTcV0Ku2K4UHkZkG8EzwkKv5VyMvUGNUVhcRzhDkWtOZ4CgfMyKZjQ9PkGX3aCgaYCVuh/0Mxjh0uFRZNn2o+tKRCS9oHJAwVW1MoDWH6YKUaq1530GA=
+	t=1740416210; cv=none; b=EUe4KQ3vsuXUKTDscRfBTSKbQHVVhptfxTQDsFHjpaNnpDp8tGIrRhKHjCZpEwWkM32FO2Vog0zWXekHO4D3eqhCJvA1MyPcT6keje2gzFIBuuKwyy4kSuhWSVjE1HYRnRAyAY9M72kov4p5x3oRtq64HxoaMo2+4jl9MGXo+O0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1740416208; c=relaxed/simple;
-	bh=y7rnQn4atWG4y4XI5Y3ZUk4Khub4cSbzFIEKIR0LMHc=;
+	s=arc-20240116; t=1740416210; c=relaxed/simple;
+	bh=qpkZkgDQSCpDOrawHj8ee8It7p8kTmPkI0TP7miUP/A=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=XkqpscOJtM332W+rP0oci+Bq0bGaNQvs4yyPiQ485629fF7WBq0Zk4/gbgzHO/qmwNiCZGC4lfLK6IhcYMYVwVbfp6ey3b9KVUAa7bRbJHKVZVSjf7YXszoMJS7dsySjIjDP4iXC/9cH9rz50VloFzAnWekkf/g5fFn1Kp1t9IY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=XdaJyw22; arc=none smtp.client-ip=170.10.129.124
+	 MIME-Version; b=bPmf6o1995JMGAeeAluG2Ikg9iu4XIYxkL5TznFQ9t+33eecfyoNcir7uo/lRx62a2wWE+S07OWB25I+T6UgG3hJBQGmCCfMk6o8cfI1iEsCDebac8itdfrPm+89UfmkenliRpRt0GHcPWMpD4wucf2EMEhSsRQmjiqhQdQwShw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=K51PjnkB; arc=none smtp.client-ip=170.10.133.124
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="XdaJyw22"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="K51PjnkB"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1740416205;
+	s=mimecast20190719; t=1740416206;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=qrzeSAQepC6qjgZK5hS618fC1aWLshwTFA4Bvic/TRg=;
-	b=XdaJyw22qn1YI1B67eVRlYv8jfBqTaRUSs5mAZw22xdTKf5jDI3Pj5Yy7Tme9K6NKvlleP
-	OYZZRXvT+hB97Pb/rix9520a7IBVTcJLfv88Ty99dZLiBCgAAFldgih6BVa3d8WbxE/4HU
-	ZDVlcNxTfCQ1ljj/MbMYxBjcTRS1FM8=
+	bh=4IIiK38txs39RTm2yNSD9uzsg2Epj+W/QUBXdJN6a7s=;
+	b=K51PjnkBDK9AvOSH4NkFDDdNw0hDO3FlKi9FH6vLn2UDFFhm+yADFC8S6KSB8dlEb1et6+
+	SqR+nLZBQKaP1hsvKtzBuZb34mWa94DiyoI4h5544KQp+tQLapv7hhbpQ3wRqsdL+bsLBN
+	V8AV8O5G2q0UZzdxmHPLAvXMveUWPRM=
 Received: from mail-wr1-f69.google.com (mail-wr1-f69.google.com
  [209.85.221.69]) by relay.mimecast.com with ESMTP with STARTTLS
  (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-461--4iOgDCwNlSjCe6JmXUvrw-1; Mon, 24 Feb 2025 11:56:43 -0500
-X-MC-Unique: -4iOgDCwNlSjCe6JmXUvrw-1
-X-Mimecast-MFC-AGG-ID: -4iOgDCwNlSjCe6JmXUvrw_1740416202
-Received: by mail-wr1-f69.google.com with SMTP id ffacd0b85a97d-38f34b3f9f1so3474979f8f.0
-        for <cgroups@vger.kernel.org>; Mon, 24 Feb 2025 08:56:43 -0800 (PST)
+ us-mta-192-8EmWBOC1NQibZiw_t4ICOQ-1; Mon, 24 Feb 2025 11:56:45 -0500
+X-MC-Unique: 8EmWBOC1NQibZiw_t4ICOQ-1
+X-Mimecast-MFC-AGG-ID: 8EmWBOC1NQibZiw_t4ICOQ_1740416204
+Received: by mail-wr1-f69.google.com with SMTP id ffacd0b85a97d-38f2c0aa6d6so2512398f8f.0
+        for <cgroups@vger.kernel.org>; Mon, 24 Feb 2025 08:56:45 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1740416202; x=1741021002;
+        d=1e100.net; s=20230601; t=1740416204; x=1741021004;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=qrzeSAQepC6qjgZK5hS618fC1aWLshwTFA4Bvic/TRg=;
-        b=na5fXAz3lKOMqyKA2NZpJ+dRMkzfV56y9Ait8f083ZRkeCgh0ylqIXdpzjqmk3H2Pq
-         jX0sooh4BKHF/Oz57dZ4EAEqOVxxxQ6kvo72u7MpU3yMDHNsvtFf4f8J/AAr+zRflkdj
-         28J7Q7m8tLVRoxNGiwR9mOOnfyLQDQx0SaOFqFigPPNv1ZuZfoeW1bCQZpvLUlN/T+St
-         p/XojEQw57NjBc6dIxuWu2XV5nJq2u9ahQ9zWOLNlL4PaRSH0puv98Hyh/5lX6AI0SzF
-         9LCOy1DbeE63eZsnyYRQFruRYrve1OwhXJqv8CBova85n8vXcrOGuceTGtfo2v31jVFL
-         mbZw==
-X-Forwarded-Encrypted: i=1; AJvYcCWZP+3janbKIwQTp/M7jSHNaUhBdXx4SF3jDPV6PPj6GbZbNEIIcb/YCncj9wht6h5ZRDnPnKNY@vger.kernel.org
-X-Gm-Message-State: AOJu0YwKaw9S5alweYKtX2YMpsJD6n4Mv0H7/k3uf04DheywLF1kCOXQ
-	calUCs+X2Uxur3pcjIAWyZO0NF9g5b0eVSdcpWNklJEvsBjlCU3L1j5SXgAWar2Tr8N3LhQDwRA
-	51L2ZCjGvgho8Ek13RxbdpXcfaO89z/ihUbDQpcqr97LwYL9+ogvUwcs=
-X-Gm-Gg: ASbGncsawHlQzVc1cEJPK4rGVS7NyR+LwrwQyNZ7k+3FcQOjCr7vCpxfEzr5gte0ngV
-	8OtlXnso52Y1B3SNWiz9vb9Q1ok5PfJ2AWX0lqPKkFx+AIdrLIwXqBhgFvYcJZTNhyAvuFf1y5P
-	bsbU6dPm+t0Z1r3l6Nx471CLvjCe+SZKTp1rTaoFnDZkK6558Bi5WUtq9s3//DaTsgcZ1nYjJLu
-	JSg69Xm7UBMEtUcvUYfhf25dHc3ho0mXkzD2QPTxsXdeveAju9vcrh60ag6Jm0CCphthz3wiV8i
-	iuUK2YTivdvL+tT6lVMcyeav+5dFoHk62Z4sG4ThoA==
-X-Received: by 2002:a5d:588d:0:b0:38f:330a:acbc with SMTP id ffacd0b85a97d-38f6f0c743bmr12450070f8f.54.1740416202175;
-        Mon, 24 Feb 2025 08:56:42 -0800 (PST)
-X-Google-Smtp-Source: AGHT+IHB6f6br0E5FryNlZozgeR2JsRbAfPcg+xWwWdf/YpxK+ukwffc3aXIkqUDyRFtyhNU8GNoFQ==
-X-Received: by 2002:a5d:588d:0:b0:38f:330a:acbc with SMTP id ffacd0b85a97d-38f6f0c743bmr12450037f8f.54.1740416201773;
-        Mon, 24 Feb 2025 08:56:41 -0800 (PST)
+        bh=4IIiK38txs39RTm2yNSD9uzsg2Epj+W/QUBXdJN6a7s=;
+        b=IETv9F2rUe0Mpiz7/amYkG2MN0zNKHLTDYJQ46l8CU++y1zlphXMzz52pXdmnez1tZ
+         OExxJOHhwYZShlT/2R+2kbzTjn43LCj+M8ys8q63qh8zdpETr55HVneLOKjeW7jfvhIG
+         OAAWnnXmVauy0uVBo04PWd2xKa2++VgaX3K8X4oim+DkmN5ubGlm79Pt5UgTiiap2hn2
+         JTRydqnXKuG8wgoGoKl+Jex1VP0kiw+CcSd6k2vxtaNuMaCe4VP+N2DJJqRbXpn/HiTE
+         71ApU4dBVupIZ4O2ntLYrc0Q3buYe5cR6P7wxlFU1Qj65QQd1PIEVqGmFIDBAiV0HkkW
+         ImHg==
+X-Forwarded-Encrypted: i=1; AJvYcCVAOUiTPFzfV9z179iqbTCfgwpAUq5VHGuHRVctaeb5xPJD1EIdtKxeNRudGcnRxmhMzF1VRqL2@vger.kernel.org
+X-Gm-Message-State: AOJu0Yw4qNBSC2PS9dRpBkKYyHe0knhjR3wYxV6+0EN27OiWr3BV9xnv
+	bae2pZDUDM3EzgTcphqi44vlfvn3acla/BJ2zwATGkYkCYRJ1aVQzXqnEcmj50EOTxk1/Jy1pDE
+	4/PQieda1EABhV8aJLvgRnBekgmlwNn+TNa2osOrNUWSNk9L0rAREJ/A=
+X-Gm-Gg: ASbGncsPuvhjXNJQ2CoXPqVUSQlABircI34woysZFcP0uFliQRMs6IWLLOoj58DDUY+
+	bFOX8sKgi166Ig6jtZBMI26rNM/1KStIRxeq0/Aycz2yIPhJKct/BlT0nmYv/zrCOAZInIshG+/
+	nmuiYruF4MkkjgvSzJNXCNSMfi9bdlamgya156JyZm30sefaDZIQc0Lu7G88HP4SRT3Q+1TAanf
+	KZubU4lRlD0ZwboCSynGnaSMLSJR1Vw0GfoJaI1ZISd/1ocTwHgXge75awbW37pqhjwATtJuZTz
+	bqNRQkzlm7cfVfeSDmUatpa3KJ0oa/Iu0Rl5J3jaWg==
+X-Received: by 2002:a5d:5f90:0:b0:38d:c6b8:9fe1 with SMTP id ffacd0b85a97d-38f6f51d885mr12699085f8f.24.1740416204128;
+        Mon, 24 Feb 2025 08:56:44 -0800 (PST)
+X-Google-Smtp-Source: AGHT+IHr48iDkbeT3BD6T31jawE7AoIz4aDQ8fc4EtI1CIkHNhBzvnREnXgHgZXA/JhJC2+PnfKZ2A==
+X-Received: by 2002:a5d:5f90:0:b0:38d:c6b8:9fe1 with SMTP id ffacd0b85a97d-38f6f51d885mr12699040f8f.24.1740416203760;
+        Mon, 24 Feb 2025 08:56:43 -0800 (PST)
 Received: from localhost (p4ff234b6.dip0.t-ipconnect.de. [79.242.52.182])
-        by smtp.gmail.com with UTF8SMTPSA id ffacd0b85a97d-38f259f8602sm32962279f8f.94.2025.02.24.08.56.40
+        by smtp.gmail.com with UTF8SMTPSA id ffacd0b85a97d-38f25914171sm32572475f8f.53.2025.02.24.08.56.42
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 24 Feb 2025 08:56:41 -0800 (PST)
+        Mon, 24 Feb 2025 08:56:43 -0800 (PST)
 From: David Hildenbrand <david@redhat.com>
 To: linux-kernel@vger.kernel.org
 Cc: linux-doc@vger.kernel.org,
@@ -89,9 +89,9 @@ Cc: linux-doc@vger.kernel.org,
 	Lorenzo Stoakes <lorenzo.stoakes@oracle.com>,
 	Vlastimil Babka <vbabka@suse.cz>,
 	Jann Horn <jannh@google.com>
-Subject: [PATCH v2 17/20] fs/proc/task_mmu: remove per-page mapcount dependency for PM_MMAP_EXCLUSIVE (CONFIG_NO_PAGE_MAPCOUNT)
-Date: Mon, 24 Feb 2025 17:55:59 +0100
-Message-ID: <20250224165603.1434404-18-david@redhat.com>
+Subject: [PATCH v2 18/20] fs/proc/task_mmu: remove per-page mapcount dependency for "mapmax" (CONFIG_NO_PAGE_MAPCOUNT)
+Date: Mon, 24 Feb 2025 17:56:00 +0100
+Message-ID: <20250224165603.1434404-19-david@redhat.com>
 X-Mailer: git-send-email 2.48.1
 In-Reply-To: <20250224165603.1434404-1-david@redhat.com>
 References: <20250224165603.1434404-1-david@redhat.com>
@@ -106,80 +106,57 @@ Content-Transfer-Encoding: 8bit
 Let's implement an alternative when per-page mapcounts in large folios are
 no longer maintained -- soon with CONFIG_NO_PAGE_MAPCOUNT.
 
-PM_MMAP_EXCLUSIVE will now be set if folio_likely_mapped_shared() is
-true -- when the folio is considered "mapped shared", including when
-it once was "mapped shared" but no longer is, as documented.
+For calculating "mapmax", we now use the average per-page mapcount in
+a large folio instead of the per-page mapcount.
 
-This might result in and under-indication of "exclusively mapped", which
-is considered better than over-indicating it: under-estimating the USS
-(Unique Set Size) is better than over-estimating it.
+For hugetlb folios and folios that are not partially mapped into MMs,
+there is no change.
 
-As an alternative, we could simply remove that flag with
-CONFIG_NO_PAGE_MAPCOUNT completely, but there might be value to it. So,
-let's keep it like that and document the behavior.
+Likely, this change will not matter much in practice, and an alternative
+might be to simple remove this stat with CONFIG_NO_PAGE_MAPCOUNT.
+However, there might be value to it, so let's keep it like that and
+document the behavior.
 
 Signed-off-by: David Hildenbrand <david@redhat.com>
 ---
- Documentation/admin-guide/mm/pagemap.rst |  9 +++++++++
- fs/proc/task_mmu.c                       | 11 +++++++++--
- 2 files changed, 18 insertions(+), 2 deletions(-)
+ Documentation/filesystems/proc.rst | 5 +++++
+ fs/proc/task_mmu.c                 | 7 ++++++-
+ 2 files changed, 11 insertions(+), 1 deletion(-)
 
-diff --git a/Documentation/admin-guide/mm/pagemap.rst b/Documentation/admin-guide/mm/pagemap.rst
-index 49590306c61a0..131c86574c39a 100644
---- a/Documentation/admin-guide/mm/pagemap.rst
-+++ b/Documentation/admin-guide/mm/pagemap.rst
-@@ -37,6 +37,15 @@ There are four components to pagemap:
-    precisely which pages are mapped (or in swap) and comparing mapped
-    pages between processes.
+diff --git a/Documentation/filesystems/proc.rst b/Documentation/filesystems/proc.rst
+index 09f0aed5a08ba..1aa190017f796 100644
+--- a/Documentation/filesystems/proc.rst
++++ b/Documentation/filesystems/proc.rst
+@@ -686,6 +686,11 @@ Where:
+ node locality page counters (N0 == node0, N1 == node1, ...) and the kernel page
+ size, in KB, that is backing the mapping up.
  
-+   Note that in some kernel configurations, all pages part of a larger
-+   allocation (e.g., THP) might be considered "mapped shared" if the large
-+   allocation is considered "mapped shared": if not all pages are exclusive to
-+   the same process. Further, some kernel configurations might consider larger
-+   allocations "mapped shared", if they were at one point considered
-+   "mapped shared", even if they would now be considered "exclusively mapped".
-+   Consequently, in these kernel configurations, bit 56 might be set although
-+   the page is actually "exclusively mapped"
++Note that some kernel configurations do not track the precise number of times
++a page part of a larger allocation (e.g., THP) is mapped. In these
++configurations, "mapmax" might corresponds to the average number of mappings
++per page in such a larger allocation instead.
 +
-    Efficient users of this interface will use ``/proc/pid/maps`` to
-    determine which areas of memory are actually mapped and llseek to
-    skip over unmapped regions.
+ 1.2 Kernel data
+ ---------------
+ 
 diff --git a/fs/proc/task_mmu.c b/fs/proc/task_mmu.c
-index 2bddcea65cbf1..80839bbf9657f 100644
+index 80839bbf9657f..d7ee842367f0f 100644
 --- a/fs/proc/task_mmu.c
 +++ b/fs/proc/task_mmu.c
-@@ -1651,6 +1651,13 @@ static int add_to_pagemap(pagemap_entry_t *pme, struct pagemapread *pm)
- 	return 0;
- }
- 
-+static bool __folio_page_mapped_exclusively(struct folio *folio, struct page *page)
-+{
-+	if (IS_ENABLED(CONFIG_PAGE_MAPCOUNT))
-+		return folio_precise_page_mapcount(folio, page) == 1;
-+	return !folio_maybe_mapped_shared(folio);
-+}
-+
- static int pagemap_pte_hole(unsigned long start, unsigned long end,
- 			    __always_unused int depth, struct mm_walk *walk)
+@@ -2862,7 +2862,12 @@ static void gather_stats(struct page *page, struct numa_maps *md, int pte_dirty,
+ 			unsigned long nr_pages)
  {
-@@ -1739,7 +1746,7 @@ static pagemap_entry_t pte_to_pagemap_entry(struct pagemapread *pm,
- 		if (!folio_test_anon(folio))
- 			flags |= PM_FILE;
- 		if ((flags & PM_PRESENT) &&
--		    folio_precise_page_mapcount(folio, page) == 1)
-+		    __folio_page_mapped_exclusively(folio, page))
- 			flags |= PM_MMAP_EXCLUSIVE;
- 	}
- 	if (vma->vm_flags & VM_SOFTDIRTY)
-@@ -1814,7 +1821,7 @@ static int pagemap_pmd_range(pmd_t *pmdp, unsigned long addr, unsigned long end,
- 			pagemap_entry_t pme;
+ 	struct folio *folio = page_folio(page);
+-	int count = folio_precise_page_mapcount(folio, page);
++	int count;
++
++	if (IS_ENABLED(CONFIG_PAGE_MAPCOUNT))
++		count = folio_precise_page_mapcount(folio, page);
++	else
++		count = min_t(int, folio_average_page_mapcount(folio), 1);
  
- 			if (folio && (flags & PM_PRESENT) &&
--			    folio_precise_page_mapcount(folio, page + idx) == 1)
-+			    __folio_page_mapped_exclusively(folio, page))
- 				cur_flags |= PM_MMAP_EXCLUSIVE;
- 
- 			pme = make_pme(frame, cur_flags);
+ 	md->pages += nr_pages;
+ 	if (pte_dirty || folio_test_dirty(folio))
 -- 
 2.48.1
 
