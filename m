@@ -1,243 +1,81 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+Received: from out-184.mta0.migadu.com (out-184.mta0.migadu.com [91.218.175.184])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EF58019CCFA
-	for <cgroups@vger.kernel.org>; Mon,  3 Mar 2025 16:31:14 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9346F1F0E5C
+	for <cgroups@vger.kernel.org>; Mon,  3 Mar 2025 18:18:40 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.184
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1741019476; cv=none; b=lbTe+yFF9qa2Rv5TdTGcNxYkTCxahMlXJMMXF8cbjEmDnj1csGpwt15k5wktqUh5hmIQWAXDWz5ODtG/ieSrxhvV2IOVrGKsq1ckQfErUWH7eIBqdW6RSfMNT8Mm537sYX+A80ARv5C8gG9l9bRVOhxe/XHW2ETHPM7TmhDPBL4=
+	t=1741025924; cv=none; b=rtO56D9ekYAvMN6g2xPR1fbYAih11dE7TX1p8u3LnPQcufgXxMftRTXjliI3FFaxWDB9KrLdfm1XL/O59n0J+RdcWPd4SZodrGCJAzQudi20rphPgZhoaz8JjfFMPhzuD/Mg2g8x5fDV1rN3al79hLGIJ0u+e0sA+li7DMD6Fpo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1741019476; c=relaxed/simple;
-	bh=cTe4VsxVSEBfasQmvi03CXqpkl+gzCOnVs4Cfv//8Bo=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=PfWzXRknSdarCtiCIqp9lJvj031xwR/dWJNRHH9Ho2OyAvhuFrykJoCt6juPuVDFw2lHjwiSMJKh4vlVLd//SowwxIzCC12gCE2D6SVWShhoQhqdKlEqnjef7YpaeBH3Z/u5PWPnJmLbnrB+wYJlgh2kS8y1HbWdj1VdLTREI5M=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=IyzNEvZ2; arc=none smtp.client-ip=170.10.133.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	s=arc-20240116; t=1741025924; c=relaxed/simple;
+	bh=v2nf8hjUJxa2lBLFshXXyOm93RuOZDHUgrjnvfi1tj4=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=JP+JlXGStb/W9duaY2MeunUr9bSzgISkbt2Oeq9425et5nNQB3jaIH34cZTkvp7axaV8WvY0f9Jp/NcikXSQWYCE01bi8od2yEeL+CHzFOYDNwmjSEeoNETQSzj+/qj8xKGmM8tlhHV/ZNIErqPYdPiNVSFRz31efPUv7a7FsoI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=l95/pFGx; arc=none smtp.client-ip=91.218.175.184
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="IyzNEvZ2"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1741019474;
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="l95/pFGx"
+Date: Mon, 3 Mar 2025 10:18:33 -0800
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
+	t=1741025918;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:
-	 content-transfer-encoding:content-transfer-encoding:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
 	 in-reply-to:in-reply-to:references:references;
-	bh=d6h5undxasqJ0N3FiNJqqgjSewvjkbEXc2mo8LWFs/U=;
-	b=IyzNEvZ2U7hpwZ1wKGzdLV0TLxQJODF3lYKTQlGohpjojDYwUCyBOxKK4t6U+Ep5oi/Gq4
-	axBSC7wjtG3LQDsAdZKJx7rwLkfQBtLl0xh9xs+aKeAUnJRimGEm/N2c13HIGQFwlEWstP
-	KjKqcU9DWfVXKwIkPg48r/WPPY6zi/w=
-Received: from mail-wm1-f70.google.com (mail-wm1-f70.google.com
- [209.85.128.70]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-204-ZhdZ2bkONvGcM_yayBH9iA-1; Mon, 03 Mar 2025 11:31:01 -0500
-X-MC-Unique: ZhdZ2bkONvGcM_yayBH9iA-1
-X-Mimecast-MFC-AGG-ID: ZhdZ2bkONvGcM_yayBH9iA_1741019460
-Received: by mail-wm1-f70.google.com with SMTP id 5b1f17b1804b1-43bc5a18c52so4622985e9.3
-        for <cgroups@vger.kernel.org>; Mon, 03 Mar 2025 08:31:01 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1741019460; x=1741624260;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=d6h5undxasqJ0N3FiNJqqgjSewvjkbEXc2mo8LWFs/U=;
-        b=C4hzVXa6IOpo0C7Deqy/CPklR0THCwlwjU2sx7Xrr3roqtOA9HYoeVxKpwMJydBOCz
-         NgkQT2y0Dhy9m9NRJVe47hu1mcbDM1D6JUSbTQ9dacc19a3IRUk4BPVzj64najY12nf9
-         TQ0Be6wYtiQt8CQ9i1P61ptFdkzz9s1k7juSHwUzL+oEsmHytaYegIjxN7fZDS8qEjHr
-         nChb21alN21dTwa8Gi2JgYrYrFkvYXKlqUJC7GyxxVMmeJ16cjrUwCziElJlGuPWJnj4
-         2h0XLrkN1DbAopp3K43bLbxRTFh9x6Zh4vaaCsQgZYhKTHUKaGJvl0F0DqE4SuSl+FZy
-         jjVA==
-X-Forwarded-Encrypted: i=1; AJvYcCVZyKCd7yBn8M4tOtxswoVnH5TScjAMqQLE6QLIf4Vl7pUVL5Ytzz8tn/LDPaxJurgojjEdkQBl@vger.kernel.org
-X-Gm-Message-State: AOJu0YyqFjlJ6KDcSMkvuVCqK+2MJFeK7qE9UPuchcASNO+PavTMwf1q
-	ZO1EaN/KVESo+iLoSSq8DI31LDLaPLxbHT7amj+kQYM55z+HwwfkpYAwmh4qVsvEE9pUnqGJ37w
-	6XGYoOvsCP34fHTsdocWlTCu0b1v5Q6AOFLxLwp3a4Q2NIUBss/ZgNDU=
-X-Gm-Gg: ASbGncteOSixK4miVwinAnLvFYwiHMJJ8JfqIus1tSobAsThhjybZq6Z7c7vklXojg0
-	vxqOnl286TLariewp2szYRchBHtWTRxVdtThLvxvEvYoVjCO2qDBEMvuScnpXtwHM+nGQ0Zou7O
-	HVSqnH09XJxYRf7mHIOE3G/MHspSnDfZK9vqcyDRB3gEvi9HK32aMNplVRibEw8A7goJ5gFE2xb
-	VXfMse3GpppEDF4ABPXdQ8uaUa5kP+5SCGDi8AJbSXPBlZAWVhMkZQ0X+4Qkb+PYdD3aoBer4QZ
-	kVOBN4DkJr75d4etJIHLkvQwyLynAPNbttOlNjhCVViEKAfQLrzV85yf3UK3q+pQiltpWkc5U61
-	U
-X-Received: by 2002:a05:600c:1387:b0:439:a138:20 with SMTP id 5b1f17b1804b1-43ba675d737mr104551545e9.20.1741019460128;
-        Mon, 03 Mar 2025 08:31:00 -0800 (PST)
-X-Google-Smtp-Source: AGHT+IF077jzHsKl488EfYl1BqdHJTJ6b3kDjSKQKMSwBjouvZD2J29Qu4rXpeiVOA7Tvc80mUiuyg==
-X-Received: by 2002:a05:600c:1387:b0:439:a138:20 with SMTP id 5b1f17b1804b1-43ba675d737mr104551065e9.20.1741019459654;
-        Mon, 03 Mar 2025 08:30:59 -0800 (PST)
-Received: from localhost (p200300cbc7349600af274326a2162bfb.dip0.t-ipconnect.de. [2003:cb:c734:9600:af27:4326:a216:2bfb])
-        by smtp.gmail.com with UTF8SMTPSA id 5b1f17b1804b1-43bca3df658sm4293845e9.9.2025.03.03.08.30.58
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 03 Mar 2025 08:30:59 -0800 (PST)
-From: David Hildenbrand <david@redhat.com>
-To: linux-kernel@vger.kernel.org
-Cc: linux-doc@vger.kernel.org,
-	cgroups@vger.kernel.org,
-	linux-mm@kvack.org,
-	linux-fsdevel@vger.kernel.org,
-	linux-api@vger.kernel.org,
-	David Hildenbrand <david@redhat.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	"Matthew Wilcox (Oracle)" <willy@infradead.org>,
-	Tejun Heo <tj@kernel.org>,
-	Zefan Li <lizefan.x@bytedance.com>,
-	Johannes Weiner <hannes@cmpxchg.org>,
-	=?UTF-8?q?Michal=20Koutn=C3=BD?= <mkoutny@suse.com>,
-	Jonathan Corbet <corbet@lwn.net>,
-	Andy Lutomirski <luto@kernel.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	Borislav Petkov <bp@alien8.de>,
-	Dave Hansen <dave.hansen@linux.intel.com>,
-	Muchun Song <muchun.song@linux.dev>,
-	"Liam R. Howlett" <Liam.Howlett@oracle.com>,
-	Lorenzo Stoakes <lorenzo.stoakes@oracle.com>,
-	Vlastimil Babka <vbabka@suse.cz>,
-	Jann Horn <jannh@google.com>
-Subject: [PATCH v3 19/20] fs/proc/task_mmu: remove per-page mapcount dependency for smaps/smaps_rollup (CONFIG_NO_PAGE_MAPCOUNT)
-Date: Mon,  3 Mar 2025 17:30:12 +0100
-Message-ID: <20250303163014.1128035-20-david@redhat.com>
-X-Mailer: git-send-email 2.48.1
-In-Reply-To: <20250303163014.1128035-1-david@redhat.com>
-References: <20250303163014.1128035-1-david@redhat.com>
+	bh=m21XiXDRbYhaCVEZyslTuWSdbjFHYn+/oFGQbkqyFGc=;
+	b=l95/pFGxkxbLDqIZ2cVIX4HU/3uSV7rt8YP649hRQD0vB7O72eS8QKuNkb5UHQMBZhyGx8
+	+1lnrWl3hkPnKy6pAkNjO2+RP6MThqTFM5nLvy0FMZi8QF1bdCD9/q1BcgJGlk2PZcAdss
+	KlkDxF1xZ8ttUBD5pKECffcn5m4ksak=
+X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
+From: Shakeel Butt <shakeel.butt@linux.dev>
+To: Yosry Ahmed <yosry.ahmed@linux.dev>
+Cc: JP Kobryn <inwardvessel@gmail.com>, tj@kernel.org, mhocko@kernel.org, 
+	hannes@cmpxchg.org, akpm@linux-foundation.org, linux-mm@kvack.org, 
+	cgroups@vger.kernel.org, kernel-team@meta.com
+Subject: Re: [PATCH 1/4 v2] cgroup: move cgroup_rstat from cgroup to
+ cgroup_subsys_state
+Message-ID: <dyo5iygnln27eqo4wlgcwbuepzb55ks2ddlqg6ijyie5ugxmr5@b4mamkjocqj7>
+References: <20250227215543.49928-1-inwardvessel@gmail.com>
+ <20250227215543.49928-2-inwardvessel@gmail.com>
+ <Z8IIxUdRpqxZyIHO@google.com>
+ <bd45e4df-266e-4b67-abd5-680808a40d4f@gmail.com>
+ <Z8Jh7-lN_qltU7WD@google.com>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <Z8Jh7-lN_qltU7WD@google.com>
+X-Migadu-Flow: FLOW_OUT
 
-Let's implement an alternative when per-page mapcounts in large folios are
-no longer maintained -- soon with CONFIG_NO_PAGE_MAPCOUNT.
+On Sat, Mar 01, 2025 at 01:25:03AM +0000, Yosry Ahmed wrote:
+> On Fri, Feb 28, 2025 at 05:06:23PM -0800, JP Kobryn wrote:
+[...]
+> > > 
+> > > We should call bpf_rstat_flush() only if (!pos->ss) as well, right?
+> > > Otherwise we will call BPF rstat flush whenever any subsystem is
+> > > flushed.
+> > > 
+> > > I guess it's because BPF can now pass any subsystem to
+> > > cgroup_rstat_flush(), and we don't keep track. I think it would be
+> > > better if we do not allow BPF programs to select a css and always make
+> > > them flush the self css.
+> > > 
+> > > We can perhaps introduce a bpf_cgroup_rstat_flush() wrapper that takes
+> > > in a cgroup and passes cgroup->self internally to cgroup_rstat_flush().
+> > 
+> > I'm fine with this if others are in agreement. A similar concept was
+> > done in v1.
+> 
+> Let's wait for Shakeel to chime in here since he suggested removing this
+> hook, but I am not sure if he intended to actually do it or not. Better
+> not to waste effort if this will be gone soon anyway.
+> 
 
-When computing the output for smaps / smaps_rollups, in particular when
-calculating the USS (Unique Set Size) and the PSS (Proportional Set Size),
-we still rely on per-page mapcounts.
-
-To determine private vs. shared, we'll use folio_likely_mapped_shared(),
-similar to how we handle PM_MMAP_EXCLUSIVE. Similarly, we might now
-under-estimate the USS and count pages towards "shared" that are
-actually "private" ("exclusively mapped").
-
-When calculating the PSS, we'll now also use the average per-page
-mapcount for large folios: this can result in both, an over-estimation
-and an under-estimation of the PSS. The difference is not expected to
-matter much in practice, but we'll have to learn as we go.
-
-We can now provide folio_precise_page_mapcount() only with
-CONFIG_PAGE_MAPCOUNT, and remove one of the last users of per-page
-mapcounts when CONFIG_NO_PAGE_MAPCOUNT is enabled.
-
-Document the new behavior.
-
-Signed-off-by: David Hildenbrand <david@redhat.com>
----
- Documentation/filesystems/proc.rst | 22 +++++++++++++++++++---
- fs/proc/internal.h                 |  8 ++++++++
- fs/proc/task_mmu.c                 | 17 +++++++++++++++--
- 3 files changed, 42 insertions(+), 5 deletions(-)
-
-diff --git a/Documentation/filesystems/proc.rst b/Documentation/filesystems/proc.rst
-index 1aa190017f796..c9e62e8e0685e 100644
---- a/Documentation/filesystems/proc.rst
-+++ b/Documentation/filesystems/proc.rst
-@@ -502,9 +502,25 @@ process, its PSS will be 1500.  "Pss_Dirty" is the portion of PSS which
- consists of dirty pages.  ("Pss_Clean" is not included, but it can be
- calculated by subtracting "Pss_Dirty" from "Pss".)
- 
--Note that even a page which is part of a MAP_SHARED mapping, but has only
--a single pte mapped, i.e.  is currently used by only one process, is accounted
--as private and not as shared.
-+Traditionally, a page is accounted as "private" if it is mapped exactly once,
-+and a page is accounted as "shared" when mapped multiple times, even when
-+mapped in the same process multiple times. Note that this accounting is
-+independent of MAP_SHARED.
-+
-+In some kernel configurations, the semantics of pages part of a larger
-+allocation (e.g., THP) can differ: a page is accounted as "private" if all
-+pages part of the corresponding large allocation are *certainly* mapped in the
-+same process, even if the page is mapped multiple times in that process. A
-+page is accounted as "shared" if any page page of the larger allocation
-+is *maybe* mapped in a different process. In some cases, a large allocation
-+might be treated as "maybe mapped by multiple processes" even though this
-+is no longer the case.
-+
-+Some kernel configurations do not track the precise number of times a page part
-+of a larger allocation is mapped. In this case, when calculating the PSS, the
-+average number of mappings per page in this larger allocation might be used
-+as an approximation for the number of mappings of a page. The PSS calculation
-+will be imprecise in this case.
- 
- "Referenced" indicates the amount of memory currently marked as referenced or
- accessed.
-diff --git a/fs/proc/internal.h b/fs/proc/internal.h
-index 96ea58e843114..8c921bc8652d9 100644
---- a/fs/proc/internal.h
-+++ b/fs/proc/internal.h
-@@ -143,6 +143,7 @@ unsigned name_to_int(const struct qstr *qstr);
- /* Worst case buffer size needed for holding an integer. */
- #define PROC_NUMBUF 13
- 
-+#ifdef CONFIG_PAGE_MAPCOUNT
- /**
-  * folio_precise_page_mapcount() - Number of mappings of this folio page.
-  * @folio: The folio.
-@@ -173,6 +174,13 @@ static inline int folio_precise_page_mapcount(struct folio *folio,
- 
- 	return mapcount;
- }
-+#else /* !CONFIG_PAGE_MAPCOUNT */
-+static inline int folio_precise_page_mapcount(struct folio *folio,
-+		struct page *page)
-+{
-+	BUILD_BUG();
-+}
-+#endif /* CONFIG_PAGE_MAPCOUNT */
- 
- /**
-  * folio_average_page_mapcount() - Average number of mappings per page in this
-diff --git a/fs/proc/task_mmu.c b/fs/proc/task_mmu.c
-index 5043376ebd476..061f16b767118 100644
---- a/fs/proc/task_mmu.c
-+++ b/fs/proc/task_mmu.c
-@@ -707,6 +707,8 @@ static void smaps_account(struct mem_size_stats *mss, struct page *page,
- 	struct folio *folio = page_folio(page);
- 	int i, nr = compound ? compound_nr(page) : 1;
- 	unsigned long size = nr * PAGE_SIZE;
-+	bool exclusive;
-+	int mapcount;
- 
- 	/*
- 	 * First accumulate quantities that depend only on |size| and the type
-@@ -747,18 +749,29 @@ static void smaps_account(struct mem_size_stats *mss, struct page *page,
- 				      dirty, locked, present);
- 		return;
- 	}
-+
-+	if (IS_ENABLED(CONFIG_NO_PAGE_MAPCOUNT)) {
-+		mapcount = folio_average_page_mapcount(folio);
-+		exclusive = !folio_maybe_mapped_shared(folio);
-+	}
-+
- 	/*
- 	 * We obtain a snapshot of the mapcount. Without holding the folio lock
- 	 * this snapshot can be slightly wrong as we cannot always read the
- 	 * mapcount atomically.
- 	 */
- 	for (i = 0; i < nr; i++, page++) {
--		int mapcount = folio_precise_page_mapcount(folio, page);
- 		unsigned long pss = PAGE_SIZE << PSS_SHIFT;
-+
-+		if (IS_ENABLED(CONFIG_PAGE_MAPCOUNT)) {
-+			mapcount = folio_precise_page_mapcount(folio, page);
-+			exclusive = mapcount < 2;
-+		}
-+
- 		if (mapcount >= 2)
- 			pss /= mapcount;
- 		smaps_page_accumulate(mss, folio, PAGE_SIZE, pss,
--				dirty, locked, mapcount < 2);
-+				dirty, locked, exclusive);
- 	}
- }
- 
--- 
-2.48.1
-
+Yes, let's remove this unused hook. JP, can you please followup after
+this series with the removal/deprecation of this? One thing we might
+want to careful about is if in future someone to add this functionality
+again, that would not be a clean revert but what Yosry is asking for.
