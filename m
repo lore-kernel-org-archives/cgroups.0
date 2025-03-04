@@ -1,73 +1,73 @@
 Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 845FF255237
-	for <cgroups@vger.kernel.org>; Tue,  4 Mar 2025 16:01:13 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4E12028FFF5
+	for <cgroups@vger.kernel.org>; Tue,  4 Mar 2025 16:19:04 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1741104076; cv=none; b=u2EyI2qMHE2mxnfoC6u4rTBw7D5mRI3b47VNugsTyB8DhDE3n6IBWcqdYDk+nGUAMQLmimRHVyvs7/A4l0O1fzn6ue8ZVjNNxAlxpRo1S2WtY77/ozHrDHvx3PY2l9gMfdD2PiIZbroKMbeMsJ0MFbu7+izsySa1NWsGV5afoC8=
+	t=1741105147; cv=none; b=EW4Uet7NCZSA2q754+7ZWQ4yoqqB0H6K/ew1GbOZENtZwSwLy8CY2JwXqwcQJIMg5MjtNYHUy9M8Nc0dG316UQw7kuW5ULc8j86Vbja7i6xG34tpZ0yyPypT3QUFeKdpyCsN6wtuZnLGM8Fe7YiEbJ3kyuq1WRFURxtv6uhKDfc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1741104076; c=relaxed/simple;
-	bh=FYclQRW5qOKM3uda9/7c+NE0xSw7K7rC9el4vjYb+QY=;
+	s=arc-20240116; t=1741105147; c=relaxed/simple;
+	bh=Y6IhqAMyuypLmPTH+Xshl5PBsPx3QPOHwZtDka96QGE=;
 	h=From:Message-ID:Date:MIME-Version:Subject:To:Cc:References:
-	 In-Reply-To:Content-Type; b=MNfV7+st5UX/OfZSWKvhoa+RU+BEwbND3mDp680wrR0Vt6xaz48gdbAHLekNYfoG3hpVC76bbFajHrhbnV2kpLSMQ9sqCT/gm2JkEqIWCqnSc/n/fibHLkRWu2fIAUoKmWtFbB4mWYP0Nzs0XOgU6XBYywCTGBy5cxyE9jnH7/w=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=bHyHEwAf; arc=none smtp.client-ip=170.10.133.124
+	 In-Reply-To:Content-Type; b=Pql1AgqxtZQlbiJsr4gmt+dS2G85wPLtG6jdKO84w53Q4a0ZpAYw5N1E+BqOO41EPALk73g8bM6DmdgxY1b9Ef8mCX7iZsTc0mGtKpDH15/7VET0V9w6MJt2mhhf4TV0SUotmQK621Iwj+SwQ6BGWcooEO6UdfOzY50vWUnYhRU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=IBAF3P6j; arc=none smtp.client-ip=170.10.133.124
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="bHyHEwAf"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="IBAF3P6j"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1741104072;
+	s=mimecast20190719; t=1741105144;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=SrjcmiuE/a0WYPzM1Vs1HXuhCSj0v+fU7DwLGVL8lzg=;
-	b=bHyHEwAfr59DRz11K+3BBBKJJaB/2McDhSbybQh7ojDJsYsxaKohRZOEw5WzdB44h5YDBY
-	jvabLd6v5rS9+1dHhbBwrcgYm7KFiNT5i7IMrD6RoxZ42CUrWAOnb+vA5lejrZeYey9ahb
-	nrdMemeDZtsGgRH2wEqP9tP7w+fosgE=
-Received: from mail-qk1-f198.google.com (mail-qk1-f198.google.com
- [209.85.222.198]) by relay.mimecast.com with ESMTP with STARTTLS
+	bh=LkY1q4GVy/AgzNXZlr3UCoSg7uwWVuhY86KyHkjXAyU=;
+	b=IBAF3P6jST2LlBK6PNJiDrAsSJjEqbRhJygjKVm0NbYc070OWWGpDhJB2MuyTFYSgAS4XO
+	n1t5ey42f2Gk3wKAT+ek/B1SV0QPjtwPcZnkmtQG4xohh3wqf23njQJb6hHLlrjpDzJ7aA
+	VkrtZZ0is7/isDNYUi/77ao0aWpZDGc=
+Received: from mail-qv1-f72.google.com (mail-qv1-f72.google.com
+ [209.85.219.72]) by relay.mimecast.com with ESMTP with STARTTLS
  (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-266-R-47OiGzOMSf4PTdRoSb1w-1; Tue, 04 Mar 2025 11:01:11 -0500
-X-MC-Unique: R-47OiGzOMSf4PTdRoSb1w-1
-X-Mimecast-MFC-AGG-ID: R-47OiGzOMSf4PTdRoSb1w_1741104070
-Received: by mail-qk1-f198.google.com with SMTP id af79cd13be357-7c3b53373f7so650114585a.0
-        for <cgroups@vger.kernel.org>; Tue, 04 Mar 2025 08:01:11 -0800 (PST)
+ us-mta-668-VD2oU0CePKKqKwPlBHvmPA-1; Tue, 04 Mar 2025 11:19:03 -0500
+X-MC-Unique: VD2oU0CePKKqKwPlBHvmPA-1
+X-Mimecast-MFC-AGG-ID: VD2oU0CePKKqKwPlBHvmPA_1741105142
+Received: by mail-qv1-f72.google.com with SMTP id 6a1803df08f44-6e8a1eb7148so90318526d6.1
+        for <cgroups@vger.kernel.org>; Tue, 04 Mar 2025 08:19:02 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1741104070; x=1741708870;
+        d=1e100.net; s=20230601; t=1741105142; x=1741709942;
         h=content-transfer-encoding:in-reply-to:content-language:references
          :cc:to:subject:user-agent:mime-version:date:message-id:from
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=SrjcmiuE/a0WYPzM1Vs1HXuhCSj0v+fU7DwLGVL8lzg=;
-        b=BPWLapiOfSimk+DT4DjPrqIL9vhrRSB9OdrY1m+QjekMy5ZicgPKushTjLjf/PHSvF
-         zWP3bG6YzyUObRXmQHEtG7YxuyIrSaPf9jHH+c+5V5V1eqs+8qlgXUYJNz2/5FrGE8Ry
-         Fv5ZuiKJZ4GNXuWN/KLA9JiSzB+QYXkZhminV1hKJxzqqCIhdFZpgy8g4ckGJbsghKwS
-         RhXI5zmAedc9qv0wUkIvDKwjcuc+G3g+mvYgC9QsSU1XLeJ8bxW3IiYOREDs/Ewv1ftW
-         mc0ZxPEQIuO9nCS+pMNatpPNb3ZnXV41owAV0i0RUJGChg1parFCdZfEWK1cjh4iTxEX
-         sz6g==
-X-Forwarded-Encrypted: i=1; AJvYcCVPn0GJrKxjWpKMY9pMjnwTItbEoktciisTY7VJXmT5G76xBdSAX1SaXRY4sS7LFVoJkTre6KND@vger.kernel.org
-X-Gm-Message-State: AOJu0YxRpC5d630LBPUEcuU069rfXdEfw/ggwOVFMvuKq2H8D0oQmeQ/
-	dfrlY4nLfsSlBULcREvpUeXP/LQ3EEXEg5q2TgeKO4FdN35sqXGbI0kKR4m11PmD3u6hxDr6DC/
-	pFJ/GFen+KgBu2JaNZlAPrVMzjCOKb4NpA+207NXYfIPR4njda/lQJhc=
-X-Gm-Gg: ASbGncuS9RCwUas7PvGfOTyXpCN08lSohhCPZZ8DQNpPDGbKrGcIlZR2/IpOR+YApni
-	3kltjW36U99zPzh3SSpib87KoaipFMaVr/9A683UvQt2oKfv5m1Mpr8zIf4IWxTBFv5d9JntghV
-	JCJk7pSDhmnCGWGYlfXa6a7HHOySAiMPnHsN0/er9XTaKXL1LukSc40oCyLFCituMPTDwEFWsd7
-	oNzhJVdz3rpYTOQy0g4WGPm4R81IpekcyNYrPF9YBmGm0QZ3K8G0GJnKfvRKx53z5UgLs+6Mj7k
-	0haBiqQCfxAFmaGsZhEvebT4kvi25r/TjxSQ0Fof6Kfdmcre+MInuWDf8ek=
-X-Received: by 2002:a05:620a:2621:b0:7c3:cfec:39e2 with SMTP id af79cd13be357-7c3cfec3ce9mr341170385a.52.1741104070543;
-        Tue, 04 Mar 2025 08:01:10 -0800 (PST)
-X-Google-Smtp-Source: AGHT+IFc4HXnFNztvW7EARLEgRj3YiE0qxm0boB8v7867SgoymPm/GNIxFOmiKNGytZyj04ASUctKQ==
-X-Received: by 2002:a05:620a:2621:b0:7c3:cfec:39e2 with SMTP id af79cd13be357-7c3cfec3ce9mr341166185a.52.1741104070181;
-        Tue, 04 Mar 2025 08:01:10 -0800 (PST)
+        bh=LkY1q4GVy/AgzNXZlr3UCoSg7uwWVuhY86KyHkjXAyU=;
+        b=O1iEu3mIEGh34xzqnIDSwHmioqxHa/CA7PH+eiBh+n4BYnd/bL9YGxL48D8Et9te3A
+         iWDi1hQckWNpqyHs+alrHdZnYUXaJoq8aJ1dN+h6iOF5tiGIIiC2oCWeb8CeTMru9HZt
+         3/FnKHnly9nqPL75MNeux6EzWu8SrVvAqnPMHTPmvTbFfC/1t9VOzvLnkf4j1Y8q/RxT
+         UPigFdMVw6u5wtBVwoGDLwCZC97ZdiHh/WDR5XGNvxiEYR71AN2Vsp0WarSQDqLMGY0Q
+         uXDAM5LO3nwORA464oWAHkzG/JEoummZM/5826x+MDlK+F8/PPiG9HnjfJTEQzLy2z9a
+         ot1A==
+X-Forwarded-Encrypted: i=1; AJvYcCWIMBs+W5BdAFJtyHmZVHYcecbiq5zj8uA3BrhZjB7Nes9LCNha7oD6rEAr1lzfv5W6SainkIDZ@vger.kernel.org
+X-Gm-Message-State: AOJu0YwF05Z9FgH6z27tMioRVS0pUHcio3kVKP2eUOIDBHmf26fp9TGu
+	73OJW17y2cXPQ9tViKkfOABDv8AchpW+3+K14ENyrINYvlmGNFxgz19jdVg5MeGNXVCceC5Ryyj
+	wgUUgdd8HcuoUGKRaepXAl9u8DYHxjgDfZB1kOoXsqbudAfu3H548MJI=
+X-Gm-Gg: ASbGncswy3zaEphL1qdDBThCEC7/ZddYK0iXHsk67iJkRK1QntDAWJC1VFFXX9yU+Gs
+	NtFvaP0Hx/7iyu446j00I535xAKc3zHs+iJEXWW+GeHgUgeeba7EppybQRldivC9P5EOYuVasNh
+	S3OETY2zMkK/BKCEwz9ANSXPB9RbYVW7vhKNESu1eo3TAbbP/uxWyEC6ALjQvpCC1OilByZCpuB
+	ma5/W6+nU7MuBAWU9DhNMVDKWsyJxspSvW65WuNeDiiGwMq+KNxUpKGGhlVY51x9dej3qNcFS13
+	7b82XcTc6pDfXyT0YYRJfAzhSH/G6ggv5lNfzarz72zF58wwmPL0JsofYDQ=
+X-Received: by 2002:a05:6214:d0a:b0:6e2:4da9:4e2d with SMTP id 6a1803df08f44-6e8da86c4e6mr54175536d6.9.1741105142536;
+        Tue, 04 Mar 2025 08:19:02 -0800 (PST)
+X-Google-Smtp-Source: AGHT+IGf9Lkg6ASc/ykDXkK6Oa+0eE2cY96omReERphGYblNYllL/ZY1FB1NRS0/OnykdtBdUDLs1Q==
+X-Received: by 2002:a05:6214:d0a:b0:6e2:4da9:4e2d with SMTP id 6a1803df08f44-6e8da86c4e6mr54175276d6.9.1741105142174;
+        Tue, 04 Mar 2025 08:19:02 -0800 (PST)
 Received: from ?IPV6:2601:188:c100:5710:627d:9ff:fe85:9ade? ([2601:188:c100:5710:627d:9ff:fe85:9ade])
-        by smtp.gmail.com with ESMTPSA id af79cd13be357-7c378d9e2d5sm755254485a.68.2025.03.04.08.01.08
+        by smtp.gmail.com with ESMTPSA id 6a1803df08f44-6e8976608e7sm67966136d6.51.2025.03.04.08.19.01
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 04 Mar 2025 08:01:09 -0800 (PST)
+        Tue, 04 Mar 2025 08:19:01 -0800 (PST)
 From: Waiman Long <llong@redhat.com>
 X-Google-Original-From: Waiman Long <longman@redhat.com>
-Message-ID: <0abc29ee-df9c-4c00-a7f9-d55ab5dd90c4@redhat.com>
-Date: Tue, 4 Mar 2025 11:01:08 -0500
+Message-ID: <8b8f0f99-6d42-4c6f-9c43-d0224bdedf9e@redhat.com>
+Date: Tue, 4 Mar 2025 11:19:00 -0500
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
@@ -75,70 +75,52 @@ List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 2/5] sched/topology: Wrappers for sched_domains_mutex
-To: Juri Lelli <juri.lelli@redhat.com>, linux-kernel@vger.kernel.org,
- cgroups@vger.kernel.org
-Cc: Ingo Molnar <mingo@redhat.com>, Peter Zijlstra <peterz@infradead.org>,
- Vincent Guittot <vincent.guittot@linaro.org>,
- Dietmar Eggemann <dietmar.eggemann@arm.com>,
- Steven Rostedt <rostedt@goodmis.org>, Ben Segall <bsegall@google.com>,
- Mel Gorman <mgorman@suse.de>, Valentin Schneider <vschneid@redhat.com>,
- Tejun Heo <tj@kernel.org>, Johannes Weiner <hannes@cmpxchg.org>,
- =?UTF-8?Q?Michal_Koutn=C3=BD?= <mkoutny@suse.com>,
- Qais Yousef <qyousef@layalina.io>,
- Sebastian Andrzej Siewior <bigeasy@linutronix.de>,
- Swapnil Sapkal <swapnil.sapkal@amd.com>,
- Shrikanth Hegde <sshegde@linux.ibm.com>, Phil Auld <pauld@redhat.com>,
- luca.abeni@santannapisa.it, tommaso.cucinotta@santannapisa.it,
- Jon Hunter <jonathanh@nvidia.com>
-References: <20250304084045.62554-1-juri.lelli@redhat.com>
- <20250304084045.62554-3-juri.lelli@redhat.com>
- <c02dd563-7cfc-404d-80d1-cec934117caf@redhat.com>
+Subject: Re: [PATCH 1/9] cgroup/cpuset-v1: Add deprecation warnings to
+ sched_load_balance and memory_pressure_enabled
+To: =?UTF-8?Q?Michal_Koutn=C3=BD?= <mkoutny@suse.com>,
+ cgroups@vger.kernel.org, linux-block@vger.kernel.org,
+ linux-kernel@vger.kernel.org
+Cc: Tejun Heo <tj@kernel.org>, Josef Bacik <josef@toxicpanda.com>,
+ Jens Axboe <axboe@kernel.dk>, Johannes Weiner <hannes@cmpxchg.org>
+References: <20250304153801.597907-1-mkoutny@suse.com>
+ <20250304153801.597907-2-mkoutny@suse.com>
 Content-Language: en-US
-In-Reply-To: <c02dd563-7cfc-404d-80d1-cec934117caf@redhat.com>
+In-Reply-To: <20250304153801.597907-2-mkoutny@suse.com>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
 
-On 3/4/25 10:05 AM, Waiman Long wrote:
->> --- a/kernel/sched/topology.c
->> +++ b/kernel/sched/topology.c
->> @@ -6,6 +6,19 @@
->>   #include <linux/bsearch.h>
->>     DEFINE_MUTEX(sched_domains_mutex);
->> +#ifdef CONFIG_SMP
->> +void sched_domains_mutex_lock(void)
->> +{
->> +    mutex_lock(&sched_domains_mutex);
->> +}
->> +void sched_domains_mutex_unlock(void)
->> +{
->> +    mutex_unlock(&sched_domains_mutex);
->> +}
->> +#else
->> +void sched_domains_mutex_lock(void) { }
->> +void sched_domains_mutex_unlock(void) { }
->> +#endif
->>     /* Protected by sched_domains_mutex: */
->>   static cpumask_var_t sched_domains_tmpmask;
->> @@ -2791,7 +2804,7 @@ void partition_sched_domains_locked(int 
->> ndoms_new, cpumask_var_t doms_new[],
->>   void partition_sched_domains(int ndoms_new, cpumask_var_t doms_new[],
->>                    struct sched_domain_attr *dattr_new)
->>   {
->> -    mutex_lock(&sched_domains_mutex);
->> +    sched_domains_mutex_lock();
->>       partition_sched_domains_locked(ndoms_new, doms_new, dattr_new);
->> -    mutex_unlock(&sched_domains_mutex);
->> +    sched_domains_mutex_unlock();
->>   }
->
-> There are two "lockdep_assert_held(&sched_domains_mutex);" statements 
-> in topology.c file and one in cpuset.c. That can be problematic in the 
-> non-SMP case. Maybe another wrapper to do the assert?
 
-Ignore that as both topology.c and cpuset.c will only be compiled if 
-CONFIG_SMP is defined. IOW, you don't need the the "#ifdef CONFIG_SMP" 
-above.
+On 3/4/25 10:37 AM, Michal Koutný wrote:
+> These two v1 feature have analogues in cgroup v2.
+>
+> Signed-off-by: Michal Koutný <mkoutny@suse.com>
+> ---
+>   kernel/cgroup/cpuset-v1.c | 2 ++
+>   1 file changed, 2 insertions(+)
+>
+> diff --git a/kernel/cgroup/cpuset-v1.c b/kernel/cgroup/cpuset-v1.c
+> index 25c1d7b77e2f2..3e81ac76578c7 100644
+> --- a/kernel/cgroup/cpuset-v1.c
+> +++ b/kernel/cgroup/cpuset-v1.c
+> @@ -430,12 +430,14 @@ static int cpuset_write_u64(struct cgroup_subsys_state *css, struct cftype *cft,
+>   		retval = cpuset_update_flag(CS_MEM_HARDWALL, cs, val);
+>   		break;
+>   	case FILE_SCHED_LOAD_BALANCE:
+> +		pr_warn_once("cpuset.%s is deprecated, use cpus.partition instead\n", cft->name);
+Should you use the full name "cpuset.cpus.partition" instead?
+>   		retval = cpuset_update_flag(CS_SCHED_LOAD_BALANCE, cs, val);
+>   		break;
+>   	case FILE_MEMORY_MIGRATE:
+>   		retval = cpuset_update_flag(CS_MEMORY_MIGRATE, cs, val);
+>   		break;
+>   	case FILE_MEMORY_PRESSURE_ENABLED:
+> +		pr_warn_once("cpuset.%s is deprecated, use memory.pressure instead\n", cft->name);
+
+memory.pressure depends on CONFIG_PSI, so it may not available in some 
+cases. My suggestion is to add a "if available" suffix.
+
+I do have some concern with the use of pr_warn*() because some users may 
+attempt to use the panic_on_warn command line option.
 
 Cheers,
 Longman
