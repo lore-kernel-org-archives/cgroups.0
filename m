@@ -1,73 +1,73 @@
-Received: from mail-wm1-f47.google.com (mail-wm1-f47.google.com [209.85.128.47])
+Received: from mail-wr1-f45.google.com (mail-wr1-f45.google.com [209.85.221.45])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7F03C258CF1
-	for <cgroups@vger.kernel.org>; Tue, 11 Mar 2025 12:37:03 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.47
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1FC4425A2DA
+	for <cgroups@vger.kernel.org>; Tue, 11 Mar 2025 12:37:06 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.45
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1741696625; cv=none; b=VfkjxWU0BaGQthslTyVgTeaw+fD6ifoDXit05aX2e1S17Pvsn4al8BFPPztPbeI47GKbqtbtlNzbQEovkrJc4Deyv/Tq5oTGyBgFi3WT6W7GyEss/FVda0qJPs0nIcdXy9D/DoT4Qgt6Q+kkpg+qdd8JvCl/BE664WvCv3ypAP0=
+	t=1741696628; cv=none; b=j7ksMlQ1pfCkfaflphZD97VYLW9HzhdVd+dtHBdSKw/utT/LtlUsO8vo5If4CISNP+/KQfBtKlnbjFLCpZ1CPQuiWrvCum0ogFsihBvj3Ts84G7fHsKF5dCmi1HE2yaOr31HsftDWs0qsFumVUoHbTFwxL+o1ERfEUXLocV049w=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1741696625; c=relaxed/simple;
-	bh=MqY2KO9WFCYLClgF1yhx+Km7fVQosUJ2IZ/gkLOrhQY=;
+	s=arc-20240116; t=1741696628; c=relaxed/simple;
+	bh=zNk+oVMzTrxJrAV3YPS/mCKpQLRaGo/5NfuNYVLO0DA=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=lVD9KLom1lVmdKBP/XOZNPrhr+eNMwy7p0CIA2cxNK7mZi+U/RgFcg4oaRwA0Qqodq2JJn29pUSPDUp3WiD6ByroDAUoC+kNem6sK2QfMzsQVU9SS0bwCC08U5zxlZBOKS+wM1T2a9AI60sKtAYKaelR/g4Uo+rbml/BFiMSLyQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com; spf=pass smtp.mailfrom=suse.com; dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b=Q8NXow3A; arc=none smtp.client-ip=209.85.128.47
+	 MIME-Version:Content-Type; b=s5zEZg1kN+qt+dyjl8cKCKS91NTpJnj17CISIgsFEIG0E3MSt0BNn3bO9pcQZycev13TCb0MLDsOlzzqYa22NBPeTCZykNZskZuwXC56G26K3i6fsHdksha01iXUyQrLTjGRfFQ9TqzMAI7BOro8Uwpl7l1eVoayy/pt/jejkrI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com; spf=pass smtp.mailfrom=suse.com; dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b=NsLYiDJZ; arc=none smtp.client-ip=209.85.221.45
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b="Q8NXow3A"
-Received: by mail-wm1-f47.google.com with SMTP id 5b1f17b1804b1-43ce71582e9so19116255e9.1
-        for <cgroups@vger.kernel.org>; Tue, 11 Mar 2025 05:37:03 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b="NsLYiDJZ"
+Received: by mail-wr1-f45.google.com with SMTP id ffacd0b85a97d-3913d45a148so2068499f8f.3
+        for <cgroups@vger.kernel.org>; Tue, 11 Mar 2025 05:37:05 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=suse.com; s=google; t=1741696622; x=1742301422; darn=vger.kernel.org;
+        d=suse.com; s=google; t=1741696624; x=1742301424; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=wmehWFdzIB0bfRGHhBlCvzGcb5DNPkGCVygY64B4O+Y=;
-        b=Q8NXow3AVH47SlOlfAmZSBtlXy6x9jvtXwJVTpUFiBBJ3wxPBHdp/AWXnF+gbWsev7
-         TYekw+ZjGQ97eWdnD7d833+u3vQQTANkSwAq9mREgxq9tr6oBrqjNwapa0pj63/+A8Ot
-         hMYlcLmnBlDH+rlYDu0rrcI3hrny3yYOpU2Cr05+7127MT3mTtO1HWnq/kktA/Nkn9dj
-         OFRy8F+lqFU9SrMEiA/AVpk2OwH3iR1lEw24FrQ8vw8ytmYIVj+1lV1f9XTQCnoZrfKL
-         pf6Ach7/zwYwwJ7jtFuLuMbeyog9E8JD1cLpEjmfAYuwaE7wkhfWZmSvh8JSbVV0iXlQ
-         ekSA==
+        bh=YOohSrQvPqKoJS058lh6ERBfYfFVZu79WxTYWxna9iQ=;
+        b=NsLYiDJZXlp7X/saeDGXIS/Eaf+BKJNGesltZPBd8n7nt3ewjAG1USbmbfviciduEl
+         sKGNWnhT1w4L1QLII2a2/uDNltVybXrv5eki9+Y4wEEAsqX0oyOgIJZcL8A6mmydItE2
+         9UzKt3FhDdPAJUvm2sdwVV/ehIcVTRHtYe/MGvsT1qYtivvYqkXCsNnE95qUt1P1uVjW
+         IO8+aTFlGyAJdW6n/SjUE5wOzTHxZUrUfHoRsyrNzuJVaVkm3GtJ4XDh04/VhzlwgpYR
+         oA5LIMjNm0Jpat1DUiLsFg/bjQZQrPd0ddW9KQDbxc5bRDE3rfyCEf0n/2JX3yMhaZnf
+         7yQA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1741696622; x=1742301422;
+        d=1e100.net; s=20230601; t=1741696624; x=1742301424;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=wmehWFdzIB0bfRGHhBlCvzGcb5DNPkGCVygY64B4O+Y=;
-        b=PwdASCjf8gW2BJ6J2zjCPyKf4SsGiEiJZKLLn3uy40A06Mi3HF4uNvHaqEyrpEpOzy
-         aIa6xyKQU1aYqD4TQ8zBFecgcLi1EmCmZl3U0x4OfWSgxCWEHgJhembhJTRj8YKY1plL
-         S5/mxQRzkEHMzMVgQljFvpEYV6A/c1Cebwmm6+u85mPLsfF5z3vREmTLfyYlnIpBZgjL
-         eN7q1der9EBaSoni7GYNB93TozONN0G6wq8k3joptOMgj/1ESbZthho7nkeYRSeVYXBr
-         Q0nUCayxRnv+naxHsjqrKhfT7s/3db53FKdFfVFEuETmFF3JLOZUdo+TMAVNWroaCy91
-         SSIg==
-X-Gm-Message-State: AOJu0Yxw3317MRx6LvcGRSpdkEbkILErawGFB0mXGLgZhZyvjXie18Ds
-	d7PskImnMmD05EFbcoMKAl21u1dXUKDNWoHlOwFUG7FwUnD3IGqDOwehICc3UKsSRw7k6QeDCzw
-	MWFQ=
-X-Gm-Gg: ASbGnctkloI4v13WdyypGLQX+aeZLNIi9h81aAUOm+t/EATIdp4lGA0KPmnmWgnTOEZ
-	h+9Haxqu9PgcJD0Tyk0vHq3rPMfHxI7dHdm7u6Xlm6dliBfoyya+Xm1FRZAbq1M7N3HRn3yTlvj
-	uzUsYdn0j/712kq2UmFrzy+Qs3LZmix5BmWhcKoU9rvWgZ2nOhFbHr8QjuxzLE8tk1v7OHu22j1
-	HePCGaop/u/txGDLz9b4S/YoyVcKgQqBrTEGdcr/MTuXbRkgtZBcLTCFMzlL2JAm3jGb+inZvLU
-	fLnZu0tjxAOs4pvwxJUGmzEDKtJu8UUSIWfaElOgvd4QhZc=
-X-Google-Smtp-Source: AGHT+IFyEdeBz1Rifp6cQSjWl1jGeQOUXsDtQFNdmUPRDmr3dzDqr692D54ub6bRfUME40ARS9pcrA==
-X-Received: by 2002:a05:600c:5251:b0:43c:fc04:6d34 with SMTP id 5b1f17b1804b1-43cfc046e90mr65471275e9.20.1741696621937;
-        Tue, 11 Mar 2025 05:37:01 -0700 (PDT)
+        bh=YOohSrQvPqKoJS058lh6ERBfYfFVZu79WxTYWxna9iQ=;
+        b=ETxVULutRH5KTspLXpjMWyoczsEFfG+Tp5XMw6wl6ONkJsihFcicQUBJ2T/hle8sH4
+         GkL9Cd+B11+k1+KbAk9R8MX2AM15KrX0B16pfFDs0Jsz149NF0lhObOp9Xklj+ODWvTS
+         UXrw313qSIDDraVDkuSWOHI99tyFjVYXg9kvia60uZju2S6wi/dD/FH2hGssQ/GLlrt2
+         7mE9/QAtSpSQP7J9WVe4v7O57D9xSi3oDe+e2ItjG5ulU8Ghv2zyS8NvS+SnJseLP8Ob
+         QFYTA3P5G1+Fqb3GDv1v2O92F3Cz/0oUK6XWkz1r/H699v+EfVxL9wXxCb6TD0y2RL6P
+         uA6A==
+X-Gm-Message-State: AOJu0YxmIG39LohG0DzIgxhVTwylNOubT0S2LF1KSbhLSdfyG4OgqzDQ
+	963ZK0KeAxA7ld6Ebfp+h3kttwIzF/2Mdu6A27DN6iTrJy0/NcsUXOVgGrBRVnFd3Vo5nzpk+qQ
+	tHIk=
+X-Gm-Gg: ASbGncuzfgT38CReO9XDzlXUbvSggxnXwgLaMOr0ncvURmi3r1aGxut2kDGuPpxigQU
+	mTreZEhud32jYZd0BryFic9OAlJVdR/xzceTEYXaDJ0NTaFBJLwfnEPU72DZycR6IvZyXQbh8Qw
+	vQwdK2r2hMJvfeBKqDfOGrxJsLj8DSGKzqJAgrkVQq3hDQ7XUd6NVLDWGgxg779yzfZG7AAVxm2
+	89HP0faTcS2Z+gpJvMfXqPr+8uiBcsbxE76HUlMEDbiDW/oHdAleu6HouNVkbEjAecCQoYOhsYF
+	qu6efcyMM6ktAr5SxUcjgV4nq2KZMOTj9Mej8wbgC/QVrZBBWm+o+og58Q==
+X-Google-Smtp-Source: AGHT+IHTfCuQAPhrYhY9GiB9gvVm9rN3p4h2znVxLV21KfH9P21dIalFWV0Oc3AwmyqXz7qhPMYuCg==
+X-Received: by 2002:a05:6000:144d:b0:391:139f:61af with SMTP id ffacd0b85a97d-39132d8c768mr12227318f8f.32.1741696624554;
+        Tue, 11 Mar 2025 05:37:04 -0700 (PDT)
 Received: from blackdock.suse.cz ([193.86.92.181])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-43d04004240sm9742265e9.3.2025.03.11.05.37.01
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-43d04004240sm9742265e9.3.2025.03.11.05.37.03
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 11 Mar 2025 05:37:01 -0700 (PDT)
+        Tue, 11 Mar 2025 05:37:04 -0700 (PDT)
 From: =?UTF-8?q?Michal=20Koutn=C3=BD?= <mkoutny@suse.com>
 To: cgroups@vger.kernel.org,
+	linux-doc@vger.kernel.org,
 	linux-kernel@vger.kernel.org
 Cc: =?UTF-8?q?Michal=20Koutn=C3=BD?= <mkoutny@suse.com>,
-	Hidetoshi Seto <seto.hidetoshi@jp.fujitsu.com>,
-	Waiman Long <longman@redhat.com>,
 	Tejun Heo <tj@kernel.org>,
-	Johannes Weiner <hannes@cmpxchg.org>
-Subject: [PATCH v2 07/11] RFC cgroup/cpuset-v1: Add deprecation messages to sched_relax_domain_level
-Date: Tue, 11 Mar 2025 13:36:24 +0100
-Message-ID: <20250311123640.530377-8-mkoutny@suse.com>
+	Johannes Weiner <hannes@cmpxchg.org>,
+	Jonathan Corbet <corbet@lwn.net>
+Subject: [PATCH v2 09/11] cgroup: Add deprecation message to legacy freezer controller
+Date: Tue, 11 Mar 2025 13:36:26 +0100
+Message-ID: <20250311123640.530377-10-mkoutny@suse.com>
 X-Mailer: git-send-email 2.48.1
 In-Reply-To: <20250311123640.530377-1-mkoutny@suse.com>
 References: <20250311123640.530377-1-mkoutny@suse.com>
@@ -80,27 +80,47 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
-This is not a properly hierarchical resource, it might be better
-implemented based on a sched_attr.
+As explained in the commit 76f969e8948d8 ("cgroup: cgroup v2 freezer"),
+the original freezer is imperfect, some users may unwittingly rely on it
+when there exists the alternative of v2. Print a message when it happens
+and explain that in the docs.
 
-Cc: Hidetoshi Seto <seto.hidetoshi@jp.fujitsu.com>
 Signed-off-by: Michal Koutný <mkoutny@suse.com>
 ---
- kernel/cgroup/cpuset-v1.c | 1 +
- 1 file changed, 1 insertion(+)
+ Documentation/admin-guide/cgroup-v1/freezer-subsystem.rst | 4 ++++
+ kernel/cgroup/legacy_freezer.c                            | 6 ++++--
+ 2 files changed, 8 insertions(+), 2 deletions(-)
 
-diff --git a/kernel/cgroup/cpuset-v1.c b/kernel/cgroup/cpuset-v1.c
-index 7c37fabcf0ba8..5516df307d520 100644
---- a/kernel/cgroup/cpuset-v1.c
-+++ b/kernel/cgroup/cpuset-v1.c
-@@ -175,6 +175,7 @@ static int cpuset_write_s64(struct cgroup_subsys_state *css, struct cftype *cft,
+diff --git a/Documentation/admin-guide/cgroup-v1/freezer-subsystem.rst b/Documentation/admin-guide/cgroup-v1/freezer-subsystem.rst
+index 582d3427de3f8..a964aff373b19 100644
+--- a/Documentation/admin-guide/cgroup-v1/freezer-subsystem.rst
++++ b/Documentation/admin-guide/cgroup-v1/freezer-subsystem.rst
+@@ -125,3 +125,7 @@ to unfreeze all tasks in the container::
  
- 	switch (type) {
- 	case FILE_SCHED_RELAX_DOMAIN_LEVEL:
-+		pr_info_once("cpuset.%s is deprecated\n", cft->name);
- 		retval = update_relax_domain_level(cs, val);
- 		break;
- 	default:
+ This is the basic mechanism which should do the right thing for user space task
+ in a simple scenario.
++
++This freezer implementation is affected by shortcomings (see commit
++76f969e8948d8 ("cgroup: cgroup v2 freezer")) and cgroup v2 freezer is
++recommended.
+diff --git a/kernel/cgroup/legacy_freezer.c b/kernel/cgroup/legacy_freezer.c
+index 074653f964c1d..039d1eb2f215b 100644
+--- a/kernel/cgroup/legacy_freezer.c
++++ b/kernel/cgroup/legacy_freezer.c
+@@ -430,9 +430,11 @@ static ssize_t freezer_write(struct kernfs_open_file *of,
+ 
+ 	if (strcmp(buf, freezer_state_strs(0)) == 0)
+ 		freeze = false;
+-	else if (strcmp(buf, freezer_state_strs(CGROUP_FROZEN)) == 0)
++	else if (strcmp(buf, freezer_state_strs(CGROUP_FROZEN)) == 0) {
++		pr_info_once("Freezing with imperfect legacy cgroup freezer. "
++			     "See cgroup.freeze of cgroup v2\n");
+ 		freeze = true;
+-	else
++	} else
+ 		return -EINVAL;
+ 
+ 	freezer_change_state(css_freezer(of_css(of)), freeze);
 -- 
 2.48.1
 
