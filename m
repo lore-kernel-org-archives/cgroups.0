@@ -1,164 +1,110 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-wm1-f52.google.com (mail-wm1-f52.google.com [209.85.128.52])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CA6FF24168A
-	for <cgroups@vger.kernel.org>; Tue, 11 Mar 2025 12:34:57 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3793A23645F
+	for <cgroups@vger.kernel.org>; Tue, 11 Mar 2025 12:36:55 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.52
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1741696499; cv=none; b=EqLupNvlqAYGEtI8uYVhkGKldbgvwuq7Seb+YUAl+AgmhtMRKnDGfUtE32ur5osxMsxXrSd4Cvgv2QU2OkhnqvJEg6kBOr84YZnciGXXOvHV1GWvAiaHkzQMgQ2YjTxUAe0QzGYfLfk/aB8BA2ixp+iVRn7WDQP9AL28cuAWC9Q=
+	t=1741696618; cv=none; b=QoSeOaV4py/di5QK7F3g6K7R54utbw2ssYqM7sXqxPlUH2rr8UkDWsU6z7Fj9APBACpCIsBVrVqw4nxTiqaKhXoVbqpTKmyev/EXN7/PjC5ZyDSlR5rC1eCoFmDDD465Op6Gk34Qq8OSWHPMi8ifHZl3o7/7XKbdTVr+yAyff70=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1741696499; c=relaxed/simple;
-	bh=aKiGzqdBbxcc/5cbLnhvQZp99FQc9SzjEqGyeRvi3UI=;
-	h=From:Message-ID:Date:MIME-Version:Subject:To:Cc:References:
-	 In-Reply-To:Content-Type; b=fmHF47anVWtxiGKp++lvt2e7NFTXplOcsJNeYuGWzB/1+Tr/wr3UDlqs40TN8zYO+CCv6ab1wB3IicPy+OXsOgAvo7eV05x4Z9jDfS9NMwXW6nFt7bgvNJdWUE5rNGXqRccA8pWjqBnR5nnM/4xIdLFccLlks0k48NbAp5YiSU8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=FjigpOD+; arc=none smtp.client-ip=170.10.129.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	s=arc-20240116; t=1741696618; c=relaxed/simple;
+	bh=nW4jLdG4pxSPugL4mUyzgVTHJ6J8k0id4IG/O948Mcc=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=O5DYF+5ok4B6A7g1cLoHKsm59IqjKwsuiFKwHy6j/BEwIbW2MIXMrXrqmPcxfnRHJyWQd198kQNk++rSUx8ebeE8FvxA/qchAV3dU9Cqj4UbFZZhHuJfGoQ1KC6zO1Kn2d0dLS+c426fgfZc9xJXd8DiMeKjjVcDCA4mFhkkEmE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com; spf=pass smtp.mailfrom=suse.com; dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b=ZjFO4j4u; arc=none smtp.client-ip=209.85.128.52
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="FjigpOD+"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1741696496;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=YVRBGKiRGPzk/Nusnk5D+UYIhSnWxiHi8h1c+qO5IMs=;
-	b=FjigpOD+g66gTxqEwtNnbsvXhGPOA4CRfkux2UAFCtKYue3HMq1e15gtiNED2IHzl5Eg64
-	kBaQMevvc6OX00YuU+7F2i3wOTosd2JoUN9fDhftuVBPUlNU8Qj+BdAWhzPIETrgQF+ZBx
-	1MXmIbPBismByINn+lPNjd1+VRNC9xE=
-Received: from mail-qv1-f71.google.com (mail-qv1-f71.google.com
- [209.85.219.71]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-573-us_NFqHqPZmpPWdJrd-52A-1; Tue, 11 Mar 2025 08:34:55 -0400
-X-MC-Unique: us_NFqHqPZmpPWdJrd-52A-1
-X-Mimecast-MFC-AGG-ID: us_NFqHqPZmpPWdJrd-52A_1741696495
-Received: by mail-qv1-f71.google.com with SMTP id 6a1803df08f44-6e19e09cc20so90787496d6.2
-        for <cgroups@vger.kernel.org>; Tue, 11 Mar 2025 05:34:55 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b="ZjFO4j4u"
+Received: by mail-wm1-f52.google.com with SMTP id 5b1f17b1804b1-43d04ea9d9aso3638595e9.3
+        for <cgroups@vger.kernel.org>; Tue, 11 Mar 2025 05:36:55 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=suse.com; s=google; t=1741696614; x=1742301414; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=854zdfjcN/UDCoKW38CZ3IaEk9swBTCN45qjV2gxt8s=;
+        b=ZjFO4j4u0e14NtQ4mw5lf7R42p6et1J8GgDSBlGuj+n6sDQJVkYOyWvOWuhbKVonUX
+         1iUhv5fTdQ8Kgm1iDsKFgeE5LHVpHazOt4V1O1gOvFW4aKkSZGHcL1VfZGoflOlNIUFU
+         +r0kA56m08H+GJkpV1V1x8F297uI6neNkLQdiLZQ5+UDf8dRwdyRgKbu6wL2f1YJiPBG
+         jpryfT4JWga7KgYvrr5MsPQZ9NWPIbva160PBeElJsTyiOtdNcKkFuq3K3gyXh3M6E+5
+         Vq2NCVHzyyobJTWnhwKQrszyCqG13/tRNdFF7b0QyUU3D7oqFKiQPyJ/e/SIO1c8aDVL
+         cFWA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1741696494; x=1742301294;
-        h=content-transfer-encoding:in-reply-to:content-language:references
-         :cc:to:subject:user-agent:mime-version:date:message-id:from
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=YVRBGKiRGPzk/Nusnk5D+UYIhSnWxiHi8h1c+qO5IMs=;
-        b=ZRCVbukpPX12KCgZKrVvm2TEcbGdZFWhPFgKsB2I00ozH6DHb8EatAfOPZNJ+gK2XB
-         HLVoEDgea5S+w/ZqjUHdq+VqUpXMYV8bRw51sploERjprocP/jZQf1twLkPMYDtWYU4J
-         kyyz05EKExtkOpSyOGNt+f7SwRskNGpcqnuSZBZALyIY7WIAPnlkPXWxmgk+dEEJtGZ7
-         mfMKn5BydtHmBUz+44DY6eFGbJnPG2eHBatlDhB4FmXlP7xbdAajbqJJhe4o4WnTFEyY
-         4KGgBVciuNcnsDIV1l0LFF2R5QVH8B7nq/5a7AmuyOhRTRsDR3GreZVxrO70M4vkHeOy
-         I0BA==
-X-Forwarded-Encrypted: i=1; AJvYcCV+8bk3/MhKygvemNFILi21b3XARsjpagW5xMZ20Bc8EhysgsbdpSJS0JdCU23asRwd6Q7VW3Ka@vger.kernel.org
-X-Gm-Message-State: AOJu0YyMxu+XHNku+dogkkyAbBI/FSgH7CuotSVDOMEPzrRiZ4rbb1VG
-	e2hu+yQw7q/c/GOw6CXBZG4Rlwm1YAaBiF1HR1ShiYzj83/k8WDAZeQgBhqjBPTLYUnoD5k2e2y
-	JyZ+KTBo1EJSumU2YG+QGhBPp9Q+tPOynmPtae9joZWKUdVNDUM3IT48=
-X-Gm-Gg: ASbGncsteB0qqWbFyoiQKIvKXUIxdzi124GVCwov/LlyAGWS7jcc7tqSL9rafirdT+E
-	upgTy7NtUlAPs1Vkl5wVPJeCUXUx+vgSprngbdgnpCcG0RDaaOLCCG85Rug2GLlMfLRaimTr/bZ
-	ejuwRuAhUnnkh1px6KY2Dn5P7pYnIFEcHvPUYLK1fugNqtjlM8usU1UMp5dkAzrYXB4EEbwvkEq
-	HORzgM0+/o3UkyPAiTT2p5N9WbDWJrsd4MCaMFatrmsPZPdEz4mROy9qf/TCck61bSNANsi9wS6
-	b9qujnQuWy9XGTDjZ0xXIFnUnrUSZbBAFkJTOzdZr8St03Z7BYpszfXD4KFw6Q==
-X-Received: by 2002:a05:6214:230b:b0:6e8:c713:321f with SMTP id 6a1803df08f44-6e9006ad612mr249639616d6.35.1741696494688;
-        Tue, 11 Mar 2025 05:34:54 -0700 (PDT)
-X-Google-Smtp-Source: AGHT+IG1X/5pNm8jSwSPWY9K6moKHuVMLqYbTwchEAI60r4jNa2+YfXoHa7A8T5XAznABUUEwfsmcg==
-X-Received: by 2002:a05:6214:230b:b0:6e8:c713:321f with SMTP id 6a1803df08f44-6e9006ad612mr249639246d6.35.1741696494346;
-        Tue, 11 Mar 2025 05:34:54 -0700 (PDT)
-Received: from ?IPV6:2601:188:c100:5710:315f:57b3:b997:5fca? ([2601:188:c100:5710:315f:57b3:b997:5fca])
-        by smtp.gmail.com with ESMTPSA id 6a1803df08f44-6e8f7170312sm71580526d6.114.2025.03.11.05.34.52
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 11 Mar 2025 05:34:53 -0700 (PDT)
-From: Waiman Long <llong@redhat.com>
-X-Google-Original-From: Waiman Long <longman@redhat.com>
-Message-ID: <be2c47b8-a5e4-4591-ac4d-3cbc92e2ce5d@redhat.com>
-Date: Tue, 11 Mar 2025 08:34:52 -0400
+        d=1e100.net; s=20230601; t=1741696614; x=1742301414;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=854zdfjcN/UDCoKW38CZ3IaEk9swBTCN45qjV2gxt8s=;
+        b=G+U72BuKKzwlSvXzPF1erqRhFZpX28159aJBIAYRkMtVDXmjDTovA0/Z04fHC8JOL1
+         WhkJAVGtm3yGXB3UbkXW/EgbDEnPX5R4rand5/NCM8Vts0ooUI7Zve5ydx4i3aXTsfrp
+         oOUbwtPhSo5ahHTBMxCE1pGdsu9zYBLxzOui3l/xxqr/1jZd+ID53tu/7GZO3BuafLQe
+         8/eOVYYPNo/bLYaPtQQliXGW5Q65A9/NwdZuN+HfOJkS0qRgSk70T7GOi/TmneAq/OjC
+         19PBoh3BH78Y20RfvQhReEOFroNYLFlv3mnHHlAabXFhKJlZEq/FNXSSClnokkUClWX7
+         owrw==
+X-Gm-Message-State: AOJu0YwEFZaCgPWdHp7eFIYKqcODZADGfaNHCZIpLeyW7xQ4JBmvmB8J
+	nPmpuET4rH6crg4aDp0ewugZm6Zcj29uQ7GXzkMrJN61MUmTp3f/zTt0gty+0AFJ1i+GGg/si7b
+	3mkU=
+X-Gm-Gg: ASbGncsnWZ+uE3QPFJ6uC8+5cgSeGZYwZEMiopGP9JmcokuAxu0vEif0sCYRQUCA5Ps
+	1hj4cjAq6eZIA6O3U+gMi2DbGC/YGM/nTHfIFoKfOVNyK6IW/ftZp6Cd3KZ8biQKNDhGzYE1b7o
+	EMwRLgsEkP5dmi1uAGvHJ+DhxOcjPfDpVe6o3HBBsJuus+b1xqG330qIIPe0MlkhA/TRNCM2LwJ
+	Ed9f99sVr2A9An5yZnZc9AvOOW3WY1K2m69oBKeuqO0HiJWjIsaqlrI2xy7hIxitM2hqT6ThLk1
+	eIovtz+6EigofpCXEB2ORgyjJCYzsq1t4dG6IeqsOoWRzv8=
+X-Google-Smtp-Source: AGHT+IEWMHT7CvjCWIzlXfslrA0NNHfMmwLfEld4qci+NoRLiOZKAENxmwF8nz0PqnnF8QUx9HYXpw==
+X-Received: by 2002:a05:600c:510c:b0:43d:45a:8fca with SMTP id 5b1f17b1804b1-43d045a9259mr31387195e9.30.1741696614492;
+        Tue, 11 Mar 2025 05:36:54 -0700 (PDT)
+Received: from blackdock.suse.cz ([193.86.92.181])
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-43d04004240sm9742265e9.3.2025.03.11.05.36.53
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 11 Mar 2025 05:36:53 -0700 (PDT)
+From: =?UTF-8?q?Michal=20Koutn=C3=BD?= <mkoutny@suse.com>
+To: cgroups@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Cc: =?UTF-8?q?Michal=20Koutn=C3=BD?= <mkoutny@suse.com>,
+	Waiman Long <longman@redhat.com>,
+	Tejun Heo <tj@kernel.org>,
+	Johannes Weiner <hannes@cmpxchg.org>
+Subject: [PATCH v2 01/11] cgroup/cpuset-v1: Add deprecation messages to sched_load_balance and memory_pressure_enabled
+Date: Tue, 11 Mar 2025 13:36:18 +0100
+Message-ID: <20250311123640.530377-2-mkoutny@suse.com>
+X-Mailer: git-send-email 2.48.1
+In-Reply-To: <20250311123640.530377-1-mkoutny@suse.com>
+References: <20250311123640.530377-1-mkoutny@suse.com>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v3 4/8] sched/deadline: Rebuild root domain accounting
- after every update
-To: Juri Lelli <juri.lelli@redhat.com>, Waiman Long <llong@redhat.com>
-Cc: Dietmar Eggemann <dietmar.eggemann@arm.com>,
- linux-kernel@vger.kernel.org, cgroups@vger.kernel.org,
- Ingo Molnar <mingo@redhat.com>, Peter Zijlstra <peterz@infradead.org>,
- Vincent Guittot <vincent.guittot@linaro.org>,
- Steven Rostedt <rostedt@goodmis.org>, Ben Segall <bsegall@google.com>,
- Mel Gorman <mgorman@suse.de>, Valentin Schneider <vschneid@redhat.com>,
- Tejun Heo <tj@kernel.org>, Johannes Weiner <hannes@cmpxchg.org>,
- =?UTF-8?Q?Michal_Koutn=C3=BD?= <mkoutny@suse.com>,
- Qais Yousef <qyousef@layalina.io>,
- Sebastian Andrzej Siewior <bigeasy@linutronix.de>,
- Swapnil Sapkal <swapnil.sapkal@amd.com>,
- Shrikanth Hegde <sshegde@linux.ibm.com>, Phil Auld <pauld@redhat.com>,
- luca.abeni@santannapisa.it, tommaso.cucinotta@santannapisa.it,
- Jon Hunter <jonathanh@nvidia.com>
-References: <20250310091935.22923-1-juri.lelli@redhat.com>
- <Z86yxn12saDHLSy3@jlelli-thinkpadt14gen4.remote.csb>
- <797146a4-97d6-442e-b2d3-f7c4f438d209@arm.com>
- <398c710f-2e4e-4b35-a8a3-4c8d64f2fe68@redhat.com>
- <fd4d6143-9bd2-4a7c-80dc-1e19e4d1b2d1@redhat.com>
- <Z9Alq55RpuFqWT--@jlelli-thinkpadt14gen4.remote.csb>
-Content-Language: en-US
-In-Reply-To: <Z9Alq55RpuFqWT--@jlelli-thinkpadt14gen4.remote.csb>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
-On 3/11/25 7:59 AM, Juri Lelli wrote:
-> On 10/03/25 20:16, Waiman Long wrote:
->> On 3/10/25 3:18 PM, Waiman Long wrote:
->>> On 3/10/25 2:54 PM, Dietmar Eggemann wrote:
->>>> On 10/03/2025 10:37, Juri Lelli wrote:
->>>>> Rebuilding of root domains accounting information (total_bw) is
->>>>> currently broken on some cases, e.g. suspend/resume on aarch64. Problem
->>>> Nit: Couldn't spot any arch dependency here. I guess it was just tested
->>>> on Arm64 platforms so far.
->>>>
->>>> [...]
->>>>
->>>>> diff --git a/kernel/sched/topology.c b/kernel/sched/topology.c
->>>>> index 44093339761c..363ad268a25b 100644
->>>>> --- a/kernel/sched/topology.c
->>>>> +++ b/kernel/sched/topology.c
->>>>> @@ -2791,6 +2791,7 @@ void partition_sched_domains_locked(int
->>>>> ndoms_new, cpumask_var_t doms_new[],
->>>>>        ndoms_cur = ndoms_new;
->>>>>          update_sched_domain_debugfs();
->>>>> +    dl_rebuild_rd_accounting();
->>>> Won't dl_rebuild_rd_accounting()'s lockdep_assert_held(&cpuset_mutex)
->>>> barf when called via cpuhp's:
->>>>
->>>> sched_cpu_deactivate()
->>>>
->>>>     cpuset_cpu_inactive()
->>>>
->>>>       partition_sched_domains()
->>>>
->>>>         partition_sched_domains_locked()
->>>>
->>>>           dl_rebuild_rd_accounting()
->>>>
->>>> ?
-> Good catch. Guess I didn't notice while testing with LOCKDEP as I was
-> never able to hit this call path on my systems.
->
->>> Right. If cpuhp_tasks_frozen is true, partition_sched_domains() will be
->>> called without holding cpuset mutex.
->>>
->>> Well, I think we will need an additional wrapper in cpuset.c that
->>> acquires the cpuset_mutex first before calling partition_sched_domains()
->>> and use the new wrapper in these cases.
->> Actually, partition_sched_domains() is called with the special arguments (1,
->> NULL, NULL) to reset the domain to a single one. So perhaps something like
->> the following will be enough to avoid this problem.
-> I think this would work, as we will still rebuild the accounting after
-> last CPU comes back from suspend. The thing I am still not sure about is
-> what we want to do in case we have DEADLINE tasks around, since with
-> this I belive we would be ignoring them and let suspend proceed.
+These two v1 feature have analogues in cgroup v2.
 
-That is the current behavior. You can certainly create a test case to 
-trigger such condition and see what to do about it. Alternatively, you 
-can document that and come up with a follow-up patch later on.
+Signed-off-by: Michal Koutný <mkoutny@suse.com>
+---
+ kernel/cgroup/cpuset-v1.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-Cheers,
-Longman
+diff --git a/kernel/cgroup/cpuset-v1.c b/kernel/cgroup/cpuset-v1.c
+index 25c1d7b77e2f2..9d47b20c03c4b 100644
+--- a/kernel/cgroup/cpuset-v1.c
++++ b/kernel/cgroup/cpuset-v1.c
+@@ -430,12 +430,14 @@ static int cpuset_write_u64(struct cgroup_subsys_state *css, struct cftype *cft,
+ 		retval = cpuset_update_flag(CS_MEM_HARDWALL, cs, val);
+ 		break;
+ 	case FILE_SCHED_LOAD_BALANCE:
++		pr_info_once("cpuset.%s is deprecated, use cpuset.cpus.partition instead\n", cft->name);
+ 		retval = cpuset_update_flag(CS_SCHED_LOAD_BALANCE, cs, val);
+ 		break;
+ 	case FILE_MEMORY_MIGRATE:
+ 		retval = cpuset_update_flag(CS_MEMORY_MIGRATE, cs, val);
+ 		break;
+ 	case FILE_MEMORY_PRESSURE_ENABLED:
++		pr_info_once("cpuset.%s is deprecated, use memory.pressure with CONFIG_PSI instead\n", cft->name);
+ 		cpuset_memory_pressure_enabled = !!val;
+ 		break;
+ 	case FILE_SPREAD_PAGE:
+-- 
+2.48.1
 
