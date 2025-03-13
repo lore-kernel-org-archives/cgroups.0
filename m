@@ -1,95 +1,136 @@
-Received: from mail-qk1-f171.google.com (mail-qk1-f171.google.com [209.85.222.171])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B9EFA269B0F
-	for <cgroups@vger.kernel.org>; Thu, 13 Mar 2025 15:39:16 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.222.171
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C9EFD15747D
+	for <cgroups@vger.kernel.org>; Thu, 13 Mar 2025 17:00:22 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1741880360; cv=none; b=SMy1aZJD7LZkz9/DwTba9RxU85Zma+gP6bvJArcOsB6zoY9z2SCz9QvjMXV5DhQkNLijynmAOhyaXqtcWoJcziShJGKlwqyVeH85d3FJzV+ir9Pm7aGiWY7yQCud9qpFOBVEnphBAZEIRdr4paQXk8rwG1vjq3LTRpccbQEb63U=
+	t=1741885224; cv=none; b=qolfEkmbXUH/WjjrFcpLFAvYbO8ra5vlh6C3h6lZCIW4rtiXnnNb3aVD/iVy+D93ZEd+qeCgDyw0FVXsRQhXSAKsY6dxilmztT9ZOHTeFh+cidZzZg2DjxZuaJOKiHUlCGBZ8VSj52fBDhP1qw3HaWMH9WgTQNHGSyOvzpNVe3o=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1741880360; c=relaxed/simple;
-	bh=AR08GzHkg4EOEhm5hqQkERNAecmAfz4v0HsYwbyhxgw=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=W/4d3RRuFk2SqKFd1QxKwWoV7GMhbcBN3eCXUqOrxVStIPWKwQpphIww+YOCiHZR4kBWWqlYGJiVEPXwqUgQsRZdaMzBO2FxrytRszK5KhbtPWTC1b84bi9zC8KI0FMNYFQ0i69T36BLqgOf6rr0MHIUIQrQeYYrfJZwaDaIDlk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=cmpxchg.org; spf=pass smtp.mailfrom=cmpxchg.org; dkim=pass (2048-bit key) header.d=cmpxchg-org.20230601.gappssmtp.com header.i=@cmpxchg-org.20230601.gappssmtp.com header.b=HLiOYxiE; arc=none smtp.client-ip=209.85.222.171
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=cmpxchg.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=cmpxchg.org
+	s=arc-20240116; t=1741885224; c=relaxed/simple;
+	bh=hPgfIteAKRae6Xb9DtmO3KzHb+o6HvFeO+EvqotCUBk=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=AqAAfxXrhQJxtgYp5fIjzPqKQYBoUxF99KWYMR92WLP4F8oK1kUGKGEpPkZUGv230z48QeSWWvINj+lYErG7EaycXPygjLuDC0IQkZHRbE41R+rISP9qAHPabqvG+EtcRNibMvg6ysXu118GT2+TijhIE3m3TO54eTPFijPZzQE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=UHQdVYU2; arc=none smtp.client-ip=170.10.129.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=cmpxchg-org.20230601.gappssmtp.com header.i=@cmpxchg-org.20230601.gappssmtp.com header.b="HLiOYxiE"
-Received: by mail-qk1-f171.google.com with SMTP id af79cd13be357-7c560c55bc1so107447885a.1
-        for <cgroups@vger.kernel.org>; Thu, 13 Mar 2025 08:39:16 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=cmpxchg-org.20230601.gappssmtp.com; s=20230601; t=1741880355; x=1742485155; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=ZOmUK0wijuW6dxDYXHnP7n0DJ9/LVG75PLhj+DBDca0=;
-        b=HLiOYxiEJhBTGVn0ZG/7cENuniguCrLozlad0dnFx//60Vy5N4mFoIw2u1CaRc4lz9
-         hn7VlOqkvr6a6/XjUDJsrGf3HOqoKZoeQjq1opakugmUBO2C9Evw3IyT/OgUKfciZqT6
-         XxvkZsMsNxd8VxJxlXjB0KVE/OuismGz/FO/Au+lmjm4uso1h9d+vfbWTsC4u3lbfslM
-         wYxIfTF8yxK6VqwPjUWc4E29UKHjjEcNZh2g3snSl6pqQHZtj9uU9TlImUpuviBRksOi
-         Lou9vgdG671zTjdSb8AOvrR3BLC2p1JoOActdAyMl+JeYqIi0LJTK/rkdVtqJ3Sun959
-         vDpQ==
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="UHQdVYU2"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1741885221;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=j8YjG5ItqH/53cxab3vJ+AAYA8I/sog4WfKqtRusAYQ=;
+	b=UHQdVYU2HSTRVWz4Y0NUctcJlJxYde96LUWoQgMwYJh1epkTMwiIPef9/MIpGo2zd6zhvF
+	XaJ5sf7Au5rt7NPyTvfvA9iXRQ45PX3REMKPEMa1t87XkiWJJD0wjrqTfoztBMeiLPoVfy
+	X96HF0VonvJ94NaE3uPqfm3Vxw0c2Do=
+Received: from mail-wr1-f72.google.com (mail-wr1-f72.google.com
+ [209.85.221.72]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-497-J39TLX8JPDqR0mSCCwvdbw-1; Thu, 13 Mar 2025 13:00:17 -0400
+X-MC-Unique: J39TLX8JPDqR0mSCCwvdbw-1
+X-Mimecast-MFC-AGG-ID: J39TLX8JPDqR0mSCCwvdbw_1741885217
+Received: by mail-wr1-f72.google.com with SMTP id ffacd0b85a97d-3913b2d355fso513948f8f.1
+        for <cgroups@vger.kernel.org>; Thu, 13 Mar 2025 10:00:17 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1741880355; x=1742485155;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=ZOmUK0wijuW6dxDYXHnP7n0DJ9/LVG75PLhj+DBDca0=;
-        b=Wur+ZDx9zwHliTM4THNMbKT4kfma9aVAJ+nBGDMmwZXCo3loTyUa+n14+2sua/It67
-         3fBzw8Lt+S1/gFoFL4LoOerGQR4xwHl9Uc6fWuyTZiy0X9cl5hdhsCULY5wxuFLoLTht
-         GJv6XbLflgYv4S70RhwXUJWWJ1FZ17XldP6SSAe5E49an+tle2FgqNUXcOTX9Oh+nKDR
-         8id7CXsR7ybRfeitx7ihmtFjlIZaBh8EvykZPbN/Aay49rQC4hJzhDfQYAmSnSHETm6s
-         CiUFgb4E8ilwedRLvhSGvsgdXhUzm3okv3wPCmGiYFr/BbJp4yB0gWHNWYAy0cAbU8s/
-         drRw==
-X-Forwarded-Encrypted: i=1; AJvYcCXUnlxFduGsf93Cq0MhaHJHwAy/FEsnWjx0c5Tl6YnJ/ORV4Mi+Ix/itE9PN43KaENnjsDvVDZi@vger.kernel.org
-X-Gm-Message-State: AOJu0Yz075oY0wP0JAkLmsyG8sJkb4rK0dB9HPRKepSIxYWw+6QCQL5z
-	C7yre7kQ+pxHaoE3eA5e1gVySALhtjgPphcNO8DMnl+FavSIW25soGZ6zZLUZNU=
-X-Gm-Gg: ASbGncuma+dcACFfniP3DiYZAjpeKEVsFbWGVn9EMux/uOvbWxlaI0CRTt6ZUqVJ5BU
-	RrdkJc2WGhV/XTxLPt8j0jv0mIhil9iUZNU9F6I5mdmAXsRuhPIEt1fMaGYn4xN2TTvICPw/Td8
-	IKVDgA4Ch7m5pYdSYuo2M2/WsZfPmHrXpxDG+FskTTD8Omvb5QnUZp3Jf3+hPaKXACCWgniEMHZ
-	85S6uXPpmp3IEBCdwelz+j5wdvuU/3gWFuqBfehWWusT4thU50PvNGDQ0XwZ4rDH+2zM2aSWMDi
-	uOt2CXLz5a66r83Gnzi8kixyswwlIoo67kE9Wc1Gsms=
-X-Google-Smtp-Source: AGHT+IEiYv06z0yUVO5Elmd+9XLszQ3RCIp0amxxCA0d7ujTwAY295Ym5fJosAtLaTmWL2hWKTZtMw==
-X-Received: by 2002:ae9:e014:0:b0:7c5:3d60:7f8d with SMTP id af79cd13be357-7c55e85c500mr1443206085a.19.1741880355445;
-        Thu, 13 Mar 2025 08:39:15 -0700 (PDT)
-Received: from localhost ([2603:7000:c01:2716:da5e:d3ff:fee7:26e7])
-        by smtp.gmail.com with UTF8SMTPSA id af79cd13be357-7c573d89ad6sm110209985a.102.2025.03.13.08.39.14
+        d=1e100.net; s=20230601; t=1741885217; x=1742490017;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=j8YjG5ItqH/53cxab3vJ+AAYA8I/sog4WfKqtRusAYQ=;
+        b=iBgXXBUGBAiYhW0Ith+5V11NnJcROlHV6IhWyh4KeWasLekZPrCrwovWrkZvTGXP9b
+         SjEiFNvqpY4XO/h/yN5KgvenaOhnJFRCMMg0hiR58tdw2BUy7T6VsngnYt7s+AuKI876
+         dJFnqXUKt5gcS6GbO4+ZwQRl2Oe8M6l8FkfGv/4EA5Zuh95eEgGIwtH0+muVo4zU0fLg
+         YNCQ0wY947ZdCPNv0wrhcb7IFqOlPFEPIVQPDLgSpFB50Yvg9P6D8SAhO7g4WSbqek0t
+         dEf/9h5aVVSedYe5ynDUCEU65EbTFO77y0qWcFgE9I3tzfeARwEBSyJNlD5cNevBun8E
+         QMlg==
+X-Forwarded-Encrypted: i=1; AJvYcCVSrZJKicfYkOp2oc8IICUcjIdu+Xge6QSP/WqaKDnFZPCpVTwKDXgKt/nc2VMEjvc8NJU/RA9e@vger.kernel.org
+X-Gm-Message-State: AOJu0YxF7gOaikQrGInzTarIZE72zR+wgLtS07qYSOEfVE0mgXsHPC6y
+	kZ2hfKLDPmui3/Mk9wQMUDP9plg+8pjdXJvrUg1O8M/yGJzw+oS+jyJhbtabpDUSO8cdA37CmME
+	Lns25r9ROPG+iOdFoCgFBSPyvKJMdlcyzJFBafXhxfmXmeUw3IczFqJA=
+X-Gm-Gg: ASbGncsOtt2/FHDRlJGe3Iy/I1mKK5O6RcFZ5w3fNiSADv8AFn4zXbd4zD2irQAZfvL
+	hmEQWmxRoeBYQ+h4gDpzTjfzmKs3ZmVlBnGN73fv+Z2dIFrcJW+kirmFjEEQMKQYmJmlqfTxg76
+	jG/VkpLz9o7UjEnnZSpU9RUNbXo6A+dCNZuS/L2V9WocB5Cl7KOM2YptQTrVVD7Vojqi3PAZ+eT
+	53Pf+Pe453MPP0M45RktiyEWWXQIq2gNVn0fH0Yy3l8YNmwQ2Gwmea3Gn19zZQDfFYr+Hw6FCV6
+	2psOWaxzJ8fgAO929xAGDlqkH/9A2PlFWF3EXEPk2W4=
+X-Received: by 2002:a05:6000:23c2:b0:391:122c:8ab with SMTP id ffacd0b85a97d-396c1c207bcmr188037f8f.22.1741885216747;
+        Thu, 13 Mar 2025 10:00:16 -0700 (PDT)
+X-Google-Smtp-Source: AGHT+IGkUvqQ4kZQgkVidzMwhKp3X0BWVh24OqT8ruMci31YdZKf7dZODGUNpYgkn2DkAYcJwNHbWw==
+X-Received: by 2002:a05:6000:23c2:b0:391:122c:8ab with SMTP id ffacd0b85a97d-396c1c207bcmr188002f8f.22.1741885216374;
+        Thu, 13 Mar 2025 10:00:16 -0700 (PDT)
+Received: from jlelli-thinkpadt14gen4.remote.csb ([151.29.49.7])
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-43d18a2aaa6sm25912475e9.25.2025.03.13.10.00.15
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 13 Mar 2025 08:39:14 -0700 (PDT)
-Date: Thu, 13 Mar 2025 11:39:10 -0400
-From: Johannes Weiner <hannes@cmpxchg.org>
-To: Shakeel Butt <shakeel.butt@linux.dev>
-Cc: Andrew Morton <akpm@linux-foundation.org>,
-	Michal Hocko <mhocko@kernel.org>,
-	Roman Gushchin <roman.gushchin@linux.dev>,
-	Muchun Song <muchun.song@linux.dev>, linux-mm@kvack.org,
-	cgroups@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Meta kernel team <kernel-team@meta.com>
-Subject: Re: [PATCH] memcg: avoid refill_stock for root memcg
-Message-ID: <20250313153910.GA1252169@cmpxchg.org>
-References: <20250313054812.2185900-1-shakeel.butt@linux.dev>
+        Thu, 13 Mar 2025 10:00:16 -0700 (PDT)
+From: Juri Lelli <juri.lelli@redhat.com>
+To: linux-kernel@vger.kernel.org,
+	cgroups@vger.kernel.org
+Cc: Ingo Molnar <mingo@redhat.com>,
+	Peter Zijlstra <peterz@infradead.org>,
+	Juri Lelli <juri.lelli@redhat.com>,
+	Vincent Guittot <vincent.guittot@linaro.org>,
+	Dietmar Eggemann <dietmar.eggemann@arm.com>,
+	Steven Rostedt <rostedt@goodmis.org>,
+	Ben Segall <bsegall@google.com>,
+	Mel Gorman <mgorman@suse.de>,
+	Valentin Schneider <vschneid@redhat.com>,
+	Waiman Long <longman@redhat.com>,
+	Tejun Heo <tj@kernel.org>,
+	Johannes Weiner <hannes@cmpxchg.org>,
+	=?UTF-8?q?Michal=20Koutn=C3=BD?= <mkoutny@suse.com>,
+	Qais Yousef <qyousef@layalina.io>,
+	Sebastian Andrzej Siewior <bigeasy@linutronix.de>,
+	Swapnil Sapkal <swapnil.sapkal@amd.com>,
+	Shrikanth Hegde <sshegde@linux.ibm.com>,
+	Phil Auld <pauld@redhat.com>,
+	luca.abeni@santannapisa.it,
+	tommaso.cucinotta@santannapisa.it,
+	Jon Hunter <jonathanh@nvidia.com>
+Subject: [PATCH v4 1/8] sched/deadline: Ignore special tasks when rebuilding domains
+Date: Thu, 13 Mar 2025 18:00:04 +0100
+Message-ID: <20250313170011.357208-2-juri.lelli@redhat.com>
+X-Mailer: git-send-email 2.48.1
+In-Reply-To: <20250313170011.357208-1-juri.lelli@redhat.com>
+References: <20250313170011.357208-1-juri.lelli@redhat.com>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20250313054812.2185900-1-shakeel.butt@linux.dev>
+Content-Transfer-Encoding: 8bit
 
-On Wed, Mar 12, 2025 at 10:48:12PM -0700, Shakeel Butt wrote:
-> We never charge the page counters of root memcg, so there is no need to
-> put root memcg in the memcg stock. At the moment, refill_stock() can be
-> called from try_charge_memcg(), obj_cgroup_uncharge_pages() and
-> mem_cgroup_uncharge_skmem().
-> 
-> The try_charge_memcg() and mem_cgroup_uncharge_skmem() are never called
-> with root memcg, so those are fine. However obj_cgroup_uncharge_pages()
-> can potentially call refill_stock() with root memcg if the objcg object
-> has been reparented over to the root memcg. Let's just avoid
-> refill_stock() from obj_cgroup_uncharge_pages() for root memcg.
-> 
-> Signed-off-by: Shakeel Butt <shakeel.butt@linux.dev>
+SCHED_DEADLINE special tasks get a fake bandwidth that is only used to
+make sure sleeping and priority inheritance 'work', but it is ignored
+for runtime enforcement and admission control.
 
-Acked-by: Johannes Weiner <hannes@cmpxchg.org>
+Be consistent with it also when rebuilding root domains.
+
+Reported-by: Jon Hunter <jonathanh@nvidia.com>
+Fixes: 53916d5fd3c0 ("sched/deadline: Check bandwidth overflow earlier for hotplug")
+Tested-by: Waiman Long <longman@redhat.com>
+Tested-by: Jon Hunter <jonathanh@nvidia.com>
+Reviewed-by: Valentin Schneider <vschneid@redhat.com>
+Signed-off-by: Juri Lelli <juri.lelli@redhat.com>
+---
+ kernel/sched/deadline.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/kernel/sched/deadline.c b/kernel/sched/deadline.c
+index ff4df16b5186..1a041c1fc0d1 100644
+--- a/kernel/sched/deadline.c
++++ b/kernel/sched/deadline.c
+@@ -2956,7 +2956,7 @@ void dl_add_task_root_domain(struct task_struct *p)
+ 	struct dl_bw *dl_b;
+ 
+ 	raw_spin_lock_irqsave(&p->pi_lock, rf.flags);
+-	if (!dl_task(p)) {
++	if (!dl_task(p) || dl_entity_is_special(&p->dl)) {
+ 		raw_spin_unlock_irqrestore(&p->pi_lock, rf.flags);
+ 		return;
+ 	}
+-- 
+2.48.1
+
