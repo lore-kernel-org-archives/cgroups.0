@@ -1,261 +1,200 @@
-Received: from mail-vk1-f202.google.com (mail-vk1-f202.google.com [209.85.221.202])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6A7831EDA1D
-	for <cgroups@vger.kernel.org>; Fri, 28 Mar 2025 21:26:30 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.202
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 046F6158DD8
+	for <cgroups@vger.kernel.org>; Sun, 30 Mar 2025 21:53:48 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1743197192; cv=none; b=L1r1cWgcEaenZ+2kTmK3sgCYNLP5iB7C8ic5zpAc6xgP9odGIQWoktqYCU+0NAMqzLAL6m7kel5at4QQ0McalD37gAfLFN/CrMZh4/PutUoiQUKH7NjKpWuQKBhHx3FHQwCx0QJDvY3PUhzgVZylXWjNXhTrnzWpIdcwI/KIywo=
+	t=1743371630; cv=none; b=rziDuJJyoHQuMj7fxtIh6CZFYHB+5jStvSnZxuLEtWJC6Nkgj+ie90JQv2MZ7LagQlxEUBqmQi/KIPplBFxcjUG+S3/aUfc6cZ5Kd8med+2IPHV1g+ceoRID/lM5fUxRi1eaVnLDOyEQWWMyGRumb8txaP5UjtLyoqXXSf/mg6s=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1743197192; c=relaxed/simple;
-	bh=yecGsCrsQo1B4hn5+/Mj4gFgydWrhHzcrGDbHTeB4/o=;
-	h=Date:In-Reply-To:Mime-Version:References:Message-ID:Subject:From:
-	 To:Cc:Content-Type; b=FG0eKwT+BL7cuZOEIh5EAXAJ5ekH0mo+cFBVFrzI6fGcrTpaPaWQXH2lwwHm/nO7pDWCkAFiNd9ffNK6zLH3llLnQGXqBrEH+U/Nl1nbR8Q9NXqqgN3YU2nvsPnZ55c/UOP13tqKpc6Vdz2cE40DMyOL6fb3JRqkIrA68cvz4Sw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=flex--jthoughton.bounces.google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=29auB3hB; arc=none smtp.client-ip=209.85.221.202
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=flex--jthoughton.bounces.google.com
+	s=arc-20240116; t=1743371630; c=relaxed/simple;
+	bh=Ox8I+KsHJM/Hp9i+72vOxpoGY/J+Vg/IxtAIFoY2xws=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=ViWzcVsijJZKOHWawImzjL6jSSFbwkr+73SnCKz88ISdvbQfkDFWDepTbhulP63xQu18+aWDXeyXLFexidn8JH6IelB2EQRvkVoY5sjXVmoSbTWE2IiIIJJCZ3wr+MPwT4IhjVkV4FTNrDP5uw6rNWL1jx5p9PZyh+Jey1I5+Ww=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=UQBfEads; arc=none smtp.client-ip=170.10.129.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="29auB3hB"
-Received: by mail-vk1-f202.google.com with SMTP id 71dfb90a1353d-5240516c616so705564e0c.3
-        for <cgroups@vger.kernel.org>; Fri, 28 Mar 2025 14:26:30 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20230601; t=1743197189; x=1743801989; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:from:subject:message-id:references
-         :mime-version:in-reply-to:date:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=w8m4zXBwsuwd+TpPXsReUYFUJslyYnLsiTdphFGmuAI=;
-        b=29auB3hBnNZwvt2CpP7mpIlJ3yiLPYxnhdknHktsQQP01L9LADwDkTXZLpQdp+4bdC
-         xnKBfiHZj87QEqz244UHmflYnh9TClFQFCjnMONdUWw/3e63JMrgjA0zw3pM0iPZAwNt
-         qMYStrKlodgr+YM5yFEGkAXk0R5pHHZAy39kmxPZlVcaHSN6Hf/tN9jPyf7Xl0Yu58kM
-         yzVn5ZTL1SGs9UVZcQnKHS9Cl+yND0acER7nTgIg549Zm5uz2AyIq/jr/uBvbk/NfNfX
-         dHTklJa2l3mvX2TNt831NOTQSWnwzL1jqMM3BXi32sQFnJ6bcJfAAnNeEf52DXEnDQDI
-         MoaQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1743197189; x=1743801989;
-        h=content-transfer-encoding:cc:to:from:subject:message-id:references
-         :mime-version:in-reply-to:date:x-gm-message-state:from:to:cc:subject
-         :date:message-id:reply-to;
-        bh=w8m4zXBwsuwd+TpPXsReUYFUJslyYnLsiTdphFGmuAI=;
-        b=sie9eHS9lLyKKLgnWBUFK+k/FYetFybwOwFmR68cmEJKXqdPlLykPJ7V7x7x1IwEWa
-         2j2B4My93fd1VV3+8/inao1rGTGkGtGlcpA3Rgb7QaAVxaLQhatM7qACTvHL2Ba4q/o2
-         ZDDg55e8p/oUTKiqNzIopPOmCmICMVWmXfHW8Cb97nQebCDSLcYC9uwggOqDHs+DVO1D
-         VU6BnkOWDhWKUO3icUytXECPEQUcYpFNvdK7ehM/6fih2TvSSnH6nGzQhmoA7dOZkghK
-         k96SoTGBeT7oVeA1r/FFvk7ruLV5qok4RA+uoRGx+ytuwAu6YQrPVdReVO5yucwINygd
-         Z45A==
-X-Forwarded-Encrypted: i=1; AJvYcCXY/9/tXcYNX79Xs2FqFOXVNsYh8rxaw0YGRteCOzceenSnfEsgwaXUH6v0oQsiLxqfee32mrIO@vger.kernel.org
-X-Gm-Message-State: AOJu0YyKL9dJuvleDd1ujv0Mn9ACDeV9TEG917kskSYwMoCpO1pk5ogB
-	ROvw7GCTMTuLoNcTJaUOsykm+wJTTf8Zfdk2UE7xHKhiYVHkTQOL9pJOTKcXIwv+aX3qbYbHE4A
-	UNXpDrfMLURHfbfE4tQ==
-X-Google-Smtp-Source: AGHT+IHivVsC++z1BFup0tqwkOd7GYrq8moTlRg/GpRhWDoE3Ghyz4O+IMFvuK9BuVDldT8TyVBFOBtgde1ZgIOF
-X-Received: from vkbfs2.prod.google.com ([2002:a05:6122:3b82:b0:523:87b6:c79a])
- (user=jthoughton job=prod-delivery.src-stubby-dispatcher) by
- 2002:a05:6122:328c:b0:523:dd87:fe86 with SMTP id 71dfb90a1353d-5261d46ad97mr1034796e0c.6.1743197189310;
- Fri, 28 Mar 2025 14:26:29 -0700 (PDT)
-Date: Fri, 28 Mar 2025 21:26:27 +0000
-In-Reply-To: <c04233d3c35e2bad5a864ab72d0f55b3919100f3.camel@redhat.com>
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="UQBfEads"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1743371627;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=Vw65CPhHbDV9z4RzImsAKCyoHA3C3OtcQYbmcYf66vQ=;
+	b=UQBfEads9Vyq2mNBjGjT9Lshpix6BLIEEmV6xFJ0F5n0Dj9hznSWd39WEYBXm3xuHB4l4U
+	1K5dYbpnUHgJS4HSc6pCzgg4U1x44vh2CvRoB/pTLRr0c3VcAeT5jGgVWm05fcRAV8bK8r
+	3kNvNLdJvDTZERN0R+HCmUZDZVtc3WM=
+Received: from mx-prod-mc-06.mail-002.prod.us-west-2.aws.redhat.com
+ (ec2-35-165-154-97.us-west-2.compute.amazonaws.com [35.165.154.97]) by
+ relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-447-K47zeyw9OzKpuPV2LR1woQ-1; Sun,
+ 30 Mar 2025 17:53:44 -0400
+X-MC-Unique: K47zeyw9OzKpuPV2LR1woQ-1
+X-Mimecast-MFC-AGG-ID: K47zeyw9OzKpuPV2LR1woQ_1743371623
+Received: from mx-prod-int-08.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-08.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.111])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mx-prod-mc-06.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id D1AB41800349;
+	Sun, 30 Mar 2025 21:53:42 +0000 (UTC)
+Received: from llong-thinkpadp16vgen1.westford.csb (unknown [10.22.64.34])
+	by mx-prod-int-08.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id 1BC9D180175A;
+	Sun, 30 Mar 2025 21:53:40 +0000 (UTC)
+From: Waiman Long <longman@redhat.com>
+To: Tejun Heo <tj@kernel.org>,
+	Johannes Weiner <hannes@cmpxchg.org>,
+	=?UTF-8?q?Michal=20Koutn=C3=BD?= <mkoutny@suse.com>,
+	Shuah Khan <shuah@kernel.org>
+Cc: cgroups@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	linux-kselftest@vger.kernel.org,
+	Waiman Long <longman@redhat.com>
+Subject: [PATCH 01/10] cgroup/cpuset: Fix race between newly created partition and dying one
+Date: Sun, 30 Mar 2025 17:52:39 -0400
+Message-ID: <20250330215248.3620801-2-longman@redhat.com>
+In-Reply-To: <20250330215248.3620801-1-longman@redhat.com>
+References: <20250330215248.3620801-1-longman@redhat.com>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0
-References: <c04233d3c35e2bad5a864ab72d0f55b3919100f3.camel@redhat.com>
-X-Mailer: git-send-email 2.49.0.472.ge94155a9ec-goog
-Message-ID: <20250328212628.2235898-1-jthoughton@google.com>
-Subject: Re: [PATCH 2/5] KVM: selftests: access_tracking_perf_test: Add option
- to skip the sanity check
-From: James Houghton <jthoughton@google.com>
-To: mlevitsk@redhat.com
-Cc: axelrasmussen@google.com, cgroups@vger.kernel.org, hannes@cmpxchg.org, 
-	jthoughton@google.com, kvm@vger.kernel.org, linux-kernel@vger.kernel.org, 
-	mkoutny@suse.com, seanjc@google.com, tj@kernel.org, yuzhao@google.com
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
+X-Scanned-By: MIMEDefang 3.4.1 on 10.30.177.111
 
-On Fri, Mar 28, 2025 at 12:32=E2=80=AFPM Maxim Levitsky <mlevitsk@redhat.co=
-m> wrote:
->
-> On Thu, 2025-03-27 at 01:23 +0000, James Houghton wrote:
-> > From: Maxim Levitsky <mlevitsk@redhat.com>
-> >
-> > Add an option to skip sanity check of number of still idle pages,
-> > and set it by default to skip, in case hypervisor or NUMA balancing
-> > is detected.
-> >
-> > Signed-off-by: Maxim Levitsky <mlevitsk@redhat.com>
-> > Co-developed-by: James Houghton <jthoughton@google.com>
-> > Signed-off-by: James Houghton <jthoughton@google.com>
-> > ---
-> > =C2=A0.../selftests/kvm/access_tracking_perf_test.c | 61 ++++++++++++++=
-++---
-> > =C2=A0.../testing/selftests/kvm/include/test_util.h | =C2=A01 +
-> > =C2=A0tools/testing/selftests/kvm/lib/test_util.c =C2=A0 | =C2=A07 +++
-> > =C2=A03 files changed, 60 insertions(+), 9 deletions(-)
-> >
-> > diff --git a/tools/testing/selftests/kvm/access_tracking_perf_test.c b/=
-tools/testing/selftests/kvm/access_tracking_perf_test.c
-> > index 447e619cf856e..0e594883ec13e 100644
-> > --- a/tools/testing/selftests/kvm/access_tracking_perf_test.c
-> > +++ b/tools/testing/selftests/kvm/access_tracking_perf_test.c
-> > @@ -65,6 +65,16 @@ static int vcpu_last_completed_iteration[KVM_MAX_VCP=
-US];
-> > =C2=A0/* Whether to overlap the regions of memory vCPUs access. */
-> > =C2=A0static bool overlap_memory_access;
-> >=20
-> > +/*
-> > + * If the test should only warn if there are too many idle pages (i.e.=
-, it is
-> > + * expected).
-> > + * -1: Not yet set.
-> > + * =C2=A00: We do not expect too many idle pages, so FAIL if too many =
-idle pages.
-> > + * =C2=A01: Having too many idle pages is expected, so merely print a =
-warning if
-> > + * =C2=A0 =C2=A0 too many idle pages are found.
-> > + */
-> > +static int idle_pages_warn_only =3D -1;
-> > +
-> > =C2=A0struct test_params {
-> > =C2=A0 =C2=A0 =C2=A0 /* The backing source for the region of memory. */
-> > =C2=A0 =C2=A0 =C2=A0 enum vm_mem_backing_src_type backing_src;
-> > @@ -177,18 +187,12 @@ static void mark_vcpu_memory_idle(struct kvm_vm *=
-vm,
-> > =C2=A0 =C2=A0 =C2=A0 =C2=A0* arbitrary; high enough that we ensure most=
- memory access went through
-> > =C2=A0 =C2=A0 =C2=A0 =C2=A0* access tracking but low enough as to not m=
-ake the test too brittle
-> > =C2=A0 =C2=A0 =C2=A0 =C2=A0* over time and across architectures.
-> > - =C2=A0 =C2=A0 =C2=A0*
-> > - =C2=A0 =C2=A0 =C2=A0* When running the guest as a nested VM, "warn" i=
-nstead of asserting
-> > - =C2=A0 =C2=A0 =C2=A0* as the TLB size is effectively unlimited and th=
-e KVM doesn't
-> > - =C2=A0 =C2=A0 =C2=A0* explicitly flush the TLB when aging SPTEs. =C2=
-=A0As a result, more pages
-> > - =C2=A0 =C2=A0 =C2=A0* are cached and the guest won't see the "idle" b=
-it cleared.
-> > =C2=A0 =C2=A0 =C2=A0 =C2=A0*/
-> > =C2=A0 =C2=A0 =C2=A0 if (still_idle >=3D pages / 10) {
-> > -#ifdef __x86_64__
-> > - =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 TEST_ASSERT(this_cpu_has(X8=
-6_FEATURE_HYPERVISOR),
-> > + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 TEST_ASSERT(idle_pages_warn=
-_only,
-> > =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =
-=C2=A0 =C2=A0 =C2=A0 "vCPU%d: Too many pages still idle (%lu out of %lu)",
-> > =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =
-=C2=A0 =C2=A0 =C2=A0 vcpu_idx, still_idle, pages);
-> > -#endif
-> > +
-> > =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 printf("WARNING: vCPU%=
-d: Too many pages still idle (%lu out of %lu), "
-> > =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =
-=C2=A0"this will affect performance results.\n",
-> > =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =
-=C2=A0vcpu_idx, still_idle, pages);
-> > @@ -328,6 +332,31 @@ static void run_test(enum vm_guest_mode mode, void=
- *arg)
-> > =C2=A0 =C2=A0 =C2=A0 memstress_destroy_vm(vm);
-> > =C2=A0}
-> >=20
-> > +static int access_tracking_unreliable(void)
-> > +{
-> > +#ifdef __x86_64__
-> > + =C2=A0 =C2=A0 /*
-> > + =C2=A0 =C2=A0 =C2=A0* When running nested, the TLB size is effectivel=
-y unlimited and the
-> > + =C2=A0 =C2=A0 =C2=A0* KVM doesn't explicitly flush the TLB when aging=
- SPTEs. =C2=A0As a result,
-> > + =C2=A0 =C2=A0 =C2=A0* more pages are cached and the guest won't see t=
-he "idle" bit cleared.
-> > + =C2=A0 =C2=A0 =C2=A0*/
-> Tiny nitpick: nested on KVM, because on other hypervisors it might work d=
-ifferently,
-> but overall most of them probably suffer from the same problem,
-> so its probably better to say something like that:
->
-> 'When running nested, the TLB size might be effectively unlimited,
-> for example this is the case when running on top of KVM L0'
+There is a possible race between removing a cgroup diectory that is
+a partition root and the creation of a new partition.  The partition
+to be removed can be dying but still online, it doesn't not currently
+participate in checking for exclusive CPUs conflict, but the exclusive
+CPUs are still there in subpartitions_cpus and isolated_cpus. These
+two cpumasks are global states that affect the operation of cpuset
+partitions. The exclusive CPUs in dying cpusets will only be removed
+when cpuset_css_offline() function is called after an RCU delay.
 
-Added this clarification (see below), thanks!
+As a result, it is possible that a new partition can be created with
+exclusive CPUs that overlap with those of a dying one. When that dying
+partition is finally offlined, it removes those overlapping exclusive
+CPUs from subpartitions_cpus and maybe isolated_cpus resulting in an
+incorrect CPU configuration.
 
-This wording was left as-is from before, but I agree that it could be bette=
-r.
+This bug was found when a warning was triggered in
+remote_partition_disable() during testing because the subpartitions_cpus
+mask was empty.
 
->
->
-> > + =C2=A0 =C2=A0 if (this_cpu_has(X86_FEATURE_HYPERVISOR)) {
-> > + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 puts("Skipping idle page co=
-unt sanity check, because the test is run nested");
-> > + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 return 1;
-> > + =C2=A0 =C2=A0 }
-> > +#endif
-> > + =C2=A0 =C2=A0 /*
-> > + =C2=A0 =C2=A0 =C2=A0* When NUMA balancing is enabled, guest memory ca=
-n be mapped
-> > + =C2=A0 =C2=A0 =C2=A0* PROT_NONE, and the Accessed bits won't be queri=
-able.
->
-> Tiny nitpick: the accessed bit in this case are lost, because KVM no long=
-er propagates
-> it from secondary to primary paging, and the secondary mapping might be l=
-ost due to zapping,
-> and the biggest offender of this is NUMA balancing.
+One possible way to fix this is to iterate the dying cpusets as well and
+avoid using the exclusive CPUs in those dying cpusets. However, this
+can still cause random partition creation failures or other anomalies
+due to racing. A better way to fix this race is to reset the partition
+state at the moment when a cpuset is being killed.
 
-Reworded this bit. The current wording is indeed misleading.
+Introduce a new css_killed() CSS function pointer and call it, if
+defined, before setting CSS_DYING flag in kill_css(). Also update the
+css_is_dying() helper to use the CSS_DYING flag introduced by commit
+33c35aa48178 ("cgroup: Prevent kill_css() from being called more than
+once") for proper synchronization.
 
-> > + =C2=A0 =C2=A0 =C2=A0*/
-> > + =C2=A0 =C2=A0 if (is_numa_balancing_enabled()) {
-> > + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 puts("Skipping idle page co=
-unt sanity check, because NUMA balancing is enabled");
-> > + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 return 1;
-> > + =C2=A0 =C2=A0 }
-> > +
-> > + =C2=A0 =C2=A0 return 0;
-> > +}
->
-> Very good idea of extracting this logic into a function and documenting i=
-t.
+Add a new cpuset_css_killed() function to reset the partition state of
+a valid partition root if it is being killed.
 
-:)
+Fixes: ee8dde0cd2ce ("cpuset: Add new v2 cpuset.sched.partition flag")
+Signed-off-by: Waiman Long <longman@redhat.com>
+---
+ include/linux/cgroup-defs.h |  1 +
+ include/linux/cgroup.h      |  2 +-
+ kernel/cgroup/cgroup.c      |  6 ++++++
+ kernel/cgroup/cpuset.c      | 20 +++++++++++++++++---
+ 4 files changed, 25 insertions(+), 4 deletions(-)
 
-> Reviewed-by: Maxim Levitsky <mlevitsk@redhat.com>
-
-Thanks, though I've already included your Signed-off-by. I'll just keep you=
-r
-Signed-off-by and From:.
-
-I'm applying the following diff for the next version:
-
-diff --git a/tools/testing/selftests/kvm/access_tracking_perf_test.c b/tool=
-s/testing/selftests/kvm/access_tracking_perf_test.c
-index 0e594883ec13e..1770998c7675b 100644
---- a/tools/testing/selftests/kvm/access_tracking_perf_test.c
-+++ b/tools/testing/selftests/kvm/access_tracking_perf_test.c
-@@ -336,9 +336,10 @@ static int access_tracking_unreliable(void)
+diff --git a/include/linux/cgroup-defs.h b/include/linux/cgroup-defs.h
+index 485b651869d9..5bc8f55c8cca 100644
+--- a/include/linux/cgroup-defs.h
++++ b/include/linux/cgroup-defs.h
+@@ -710,6 +710,7 @@ struct cgroup_subsys {
+ 	void (*css_released)(struct cgroup_subsys_state *css);
+ 	void (*css_free)(struct cgroup_subsys_state *css);
+ 	void (*css_reset)(struct cgroup_subsys_state *css);
++	void (*css_killed)(struct cgroup_subsys_state *css);
+ 	void (*css_rstat_flush)(struct cgroup_subsys_state *css, int cpu);
+ 	int (*css_extra_stat_show)(struct seq_file *seq,
+ 				   struct cgroup_subsys_state *css);
+diff --git a/include/linux/cgroup.h b/include/linux/cgroup.h
+index 28e999f2c642..e7da3c3b098b 100644
+--- a/include/linux/cgroup.h
++++ b/include/linux/cgroup.h
+@@ -344,7 +344,7 @@ static inline u64 cgroup_id(const struct cgroup *cgrp)
+  */
+ static inline bool css_is_dying(struct cgroup_subsys_state *css)
  {
- #ifdef __x86_64__
+-	return !(css->flags & CSS_NO_REF) && percpu_ref_is_dying(&css->refcnt);
++	return css->flags & CSS_DYING;
+ }
+ 
+ static inline void cgroup_get(struct cgroup *cgrp)
+diff --git a/kernel/cgroup/cgroup.c b/kernel/cgroup/cgroup.c
+index f231fe3a0744..49d622205997 100644
+--- a/kernel/cgroup/cgroup.c
++++ b/kernel/cgroup/cgroup.c
+@@ -5909,6 +5909,12 @@ static void kill_css(struct cgroup_subsys_state *css)
+ 	if (css->flags & CSS_DYING)
+ 		return;
+ 
++	/*
++	 * Call css_killed(), if defined, before setting the CSS_DYING flag
++	 */
++	if (css->ss->css_killed)
++		css->ss->css_killed(css);
++
+ 	css->flags |= CSS_DYING;
+ 
  	/*
--	 * When running nested, the TLB size is effectively unlimited and the
--	 * KVM doesn't explicitly flush the TLB when aging SPTEs.  As a result,
--	 * more pages are cached and the guest won't see the "idle" bit cleared.
-+	 * When running nested, the TLB size may be effectively unlimited (for
-+	 * example, this is the case when running on KVM L0), and KVM doesn't
-+	 * explicitly flush the TLB when aging SPTEs.  As a result, more pages
-+	 * are cached and the guest won't see the "idle" bit cleared.
- 	 */
- 	if (this_cpu_has(X86_FEATURE_HYPERVISOR)) {
- 		puts("Skipping idle page count sanity check, because the test is run nes=
-ted");
-@@ -346,8 +347,8 @@ static int access_tracking_unreliable(void)
- 	}
- #endif
- 	/*
--	 * When NUMA balancing is enabled, guest memory can be mapped
--	 * PROT_NONE, and the Accessed bits won't be queriable.
-+	 * When NUMA balancing is enabled, guest memory will be unmapped to get
-+	 * NUMA faults, dropping the Accessed bits.
- 	 */
- 	if (is_numa_balancing_enabled()) {
- 		puts("Skipping idle page count sanity check, because NUMA balancing is e=
-nabled");
+diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
+index 39c1fc643d77..749994312d47 100644
+--- a/kernel/cgroup/cpuset.c
++++ b/kernel/cgroup/cpuset.c
+@@ -3475,9 +3475,6 @@ static void cpuset_css_offline(struct cgroup_subsys_state *css)
+ 	cpus_read_lock();
+ 	mutex_lock(&cpuset_mutex);
+ 
+-	if (is_partition_valid(cs))
+-		update_prstate(cs, 0);
+-
+ 	if (!cpuset_v2() && is_sched_load_balance(cs))
+ 		cpuset_update_flag(CS_SCHED_LOAD_BALANCE, cs, 0);
+ 
+@@ -3488,6 +3485,22 @@ static void cpuset_css_offline(struct cgroup_subsys_state *css)
+ 	cpus_read_unlock();
+ }
+ 
++static void cpuset_css_killed(struct cgroup_subsys_state *css)
++{
++	struct cpuset *cs = css_cs(css);
++
++	cpus_read_lock();
++	mutex_lock(&cpuset_mutex);
++
++	/* Reset valid partition back to member */
++	if (is_partition_valid(cs))
++		update_prstate(cs, PRS_MEMBER);
++
++	mutex_unlock(&cpuset_mutex);
++	cpus_read_unlock();
++
++}
++
+ static void cpuset_css_free(struct cgroup_subsys_state *css)
+ {
+ 	struct cpuset *cs = css_cs(css);
+@@ -3609,6 +3622,7 @@ struct cgroup_subsys cpuset_cgrp_subsys = {
+ 	.css_alloc	= cpuset_css_alloc,
+ 	.css_online	= cpuset_css_online,
+ 	.css_offline	= cpuset_css_offline,
++	.css_killed	= cpuset_css_killed,
+ 	.css_free	= cpuset_css_free,
+ 	.can_attach	= cpuset_can_attach,
+ 	.cancel_attach	= cpuset_cancel_attach,
+-- 
+2.48.1
+
