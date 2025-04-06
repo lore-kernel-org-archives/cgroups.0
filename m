@@ -1,197 +1,150 @@
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.15])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E4DB31C27
-	for <cgroups@vger.kernel.org>; Sat,  5 Apr 2025 21:32:01 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.15
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6EC0B38DEC
+	for <cgroups@vger.kernel.org>; Sun,  6 Apr 2025 02:40:36 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1743888723; cv=none; b=mjRv21H3PjZ6hZa8knBXNtwtOjbvePPVQZ1TRmYxHwadBif3tdLLSyXy9K3qrN/IZUc1eMd6vs+epmpnJNwZ+I1szhDQRPiPgsH/vzMMaJsIEDP+lmaxz/BTnDvukPGOlFP6I7mhyY4FDa8gZnB8YXOSdup0VQMADjWCZqNhw30=
+	t=1743907238; cv=none; b=pbY8bju/aoDVrVtOHOvx4FK/856G9QpTbPctBkzEEUXLMq+Qqr3W8zLm6mAebdYwXYfDuQQWqARTlKeXEKecl2+PcCvHM4WuV+C7boSNoaaPIRCxMt9cVWGs0sn75GleCYjL2GuBIezzaY+FF7V8YDaE3qEbriOl2oCkD2j+Vb0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1743888723; c=relaxed/simple;
-	bh=Y5d2oQmxI9DQ/BR5onZHnD3uqrqmi52v1B8K0IxlB+U=;
-	h=Date:From:To:Cc:Subject:Message-ID; b=aZFKEJ/Ocy6h8kpt60wDXYm5zrCge6SFIlAHmmoeIWKzvfldk5o74ptdpgwmhR950iT7YdE6HYBJfOKGUfd8gUBrsBLjL79yMYSGhyJH0HlC4vO9vZ0xEMduHLyoojK1XC3bfxCdfWGp/If32Kw3LXsJUuWbHAj3I1vzc0292Ug=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=m3aQ1XG8; arc=none smtp.client-ip=192.198.163.15
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
+	s=arc-20240116; t=1743907238; c=relaxed/simple;
+	bh=vpzdut+HYv8zVhTu0FchDFYKUL8Hg8coS54tnu7QPTc=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=iUQvXNUxTUC0oJp/nlZQlT4qvapL9+vCFG8Q77AXymahp+2rVCq/xijgeX2k9/FhxTEYdGgdghk7LjHWAnyyzm2yObV6d6UxoNj3nPxGUO/Yh/9s+6eqi8QTk/SfxUv7HC3WyKdrniwDIGsrVmHJa2LrMbIz0HyO3pyZ+ERrWPs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=XiLHxWLs; arc=none smtp.client-ip=170.10.133.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="m3aQ1XG8"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1743888722; x=1775424722;
-  h=date:from:to:cc:subject:message-id;
-  bh=Y5d2oQmxI9DQ/BR5onZHnD3uqrqmi52v1B8K0IxlB+U=;
-  b=m3aQ1XG84Zpp7r+m2nVaBasqmybMAlMSgMD1mhuZAGwPhEKoIsv4Gzn3
-   T0X62U/soFhQI2yykdlO3rRw/om0DsSNea49xoJLr5C94OreJbaU494Kk
-   GyhVZd20XJFj0XaVjSxjkzfJmHrv1N05hjfNzl9Q0CrUUQZLCDDVR8/Kj
-   0V/sUSX+nmPweRBSOeEXV+a693DxjO1yRNsQLS/9uHwbjIe6F6UBhDCuJ
-   qOUgDSEiYsFm20yKZoavzIjctTN2y1TXyoJnqu6mpjU4IhzeUIz8kYDyQ
-   M4OOIAiFW39/x8Pa5Zs/8xkBIUV6axSjO7NQvPVIrZVPP1L9OkkhjiXGw
-   w==;
-X-CSE-ConnectionGUID: oQfn2TRcQ++PZVau/iGs0w==
-X-CSE-MsgGUID: oH6JVZjrTtaUPIvyJqZz/Q==
-X-IronPort-AV: E=McAfee;i="6700,10204,11395"; a="45426297"
-X-IronPort-AV: E=Sophos;i="6.15,192,1739865600"; 
-   d="scan'208";a="45426297"
-Received: from fmviesa003.fm.intel.com ([10.60.135.143])
-  by fmvoesa109.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 05 Apr 2025 14:32:01 -0700
-X-CSE-ConnectionGUID: 4A8jR8uKSIOtWAqvrgm2Qw==
-X-CSE-MsgGUID: tQeA/1cqSyatxbiSx/7EuA==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.15,192,1739865600"; 
-   d="scan'208";a="131739012"
-Received: from lkp-server01.sh.intel.com (HELO b207828170a5) ([10.239.97.150])
-  by fmviesa003.fm.intel.com with ESMTP; 05 Apr 2025 14:32:00 -0700
-Received: from kbuild by b207828170a5 with local (Exim 4.96)
-	(envelope-from <lkp@intel.com>)
-	id 1u1B7O-0002Il-1U;
-	Sat, 05 Apr 2025 21:31:58 +0000
-Date: Sun, 06 Apr 2025 05:31:39 +0800
-From: kernel test robot <lkp@intel.com>
-To: Tejun Heo <tj@kernel.org>
-Cc: cgroups@vger.kernel.org
-Subject: [tj-cgroup:for-6.16] BUILD SUCCESS
- a97915559f5c5ff1972d678b94fd460c72a3b5f2
-Message-ID: <202504060530.KOZtEUKA-lkp@intel.com>
-User-Agent: s-nail v14.9.24
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="XiLHxWLs"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1743907235;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=B5YDLmhSbrpf/aebgnSWHj5blPXWvVGMTpTVQlCY6Io=;
+	b=XiLHxWLsDcNOrPU1zsNz/GMgh2BdJ95kqMfzMBPgPQSkFDPwDv0THT+Hp5LHDlfOWmyRdH
+	Svsb4KKEwQ5xsFtSsyhYtLnBVHnoH9wz20lM+AEnEz0mlC53fqhUaGXLu5IYLVtYOu3KSu
+	dHxbm9kauQUqSo6WQGjBo8DT76bD3wA=
+Received: from mx-prod-mc-08.mail-002.prod.us-west-2.aws.redhat.com
+ (ec2-35-165-154-97.us-west-2.compute.amazonaws.com [35.165.154.97]) by
+ relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-338-L5K0I2a_NX67Xvs9u3r51g-1; Sat,
+ 05 Apr 2025 22:40:30 -0400
+X-MC-Unique: L5K0I2a_NX67Xvs9u3r51g-1
+X-Mimecast-MFC-AGG-ID: L5K0I2a_NX67Xvs9u3r51g_1743907228
+Received: from mx-prod-int-08.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-08.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.111])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mx-prod-mc-08.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 94A3C18004A9;
+	Sun,  6 Apr 2025 02:40:27 +0000 (UTC)
+Received: from llong-thinkpadp16vgen1.westford.csb (unknown [10.22.64.19])
+	by mx-prod-int-08.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id DDA331801766;
+	Sun,  6 Apr 2025 02:40:24 +0000 (UTC)
+From: Waiman Long <longman@redhat.com>
+To: Johannes Weiner <hannes@cmpxchg.org>,
+	Michal Hocko <mhocko@kernel.org>,
+	Roman Gushchin <roman.gushchin@linux.dev>,
+	Shakeel Butt <shakeel.butt@linux.dev>,
+	Muchun Song <muchun.song@linux.dev>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tejun Heo <tj@kernel.org>,
+	=?UTF-8?q?Michal=20Koutn=C3=BD?= <mkoutny@suse.com>,
+	Shuah Khan <shuah@kernel.org>
+Cc: linux-kernel@vger.kernel.org,
+	cgroups@vger.kernel.org,
+	linux-mm@kvack.org,
+	linux-kselftest@vger.kernel.org,
+	Waiman Long <longman@redhat.com>
+Subject: [PATCH v3 1/2] mm/vmscan: Skip memcg with !usage in shrink_node_memcgs()
+Date: Sat,  5 Apr 2025 22:40:09 -0400
+Message-ID: <20250406024010.1177927-2-longman@redhat.com>
+In-Reply-To: <20250406024010.1177927-1-longman@redhat.com>
+References: <20250406024010.1177927-1-longman@redhat.com>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
+X-Scanned-By: MIMEDefang 3.4.1 on 10.30.177.111
 
-tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git for-6.16
-branch HEAD: a97915559f5c5ff1972d678b94fd460c72a3b5f2  cgroup: change rstat function signatures from cgroup-based to css-based
+The test_memcontrol selftest consistently fails its test_memcg_low
+sub-test due to the fact that two of its test child cgroups which
+have a memmory.low of 0 or an effective memory.low of 0 still have low
+events generated for them since mem_cgroup_below_low() use the ">="
+operator when comparing to elow.
 
-elapsed time: 1450m
+The two failed use cases are as follows:
 
-configs tested: 120
-configs skipped: 5
+1) memory.low is set to 0, but low events can still be triggered and
+   so the cgroup may have a non-zero low event count. I doubt users are
+   looking for that as they didn't set memory.low at all.
 
-The following configs have been built successfully.
-More configs may be tested in the coming days.
+2) memory.low is set to a non-zero value but the cgroup has no task in
+   it so that it has an effective low value of 0. Again it may have a
+   non-zero low event count if memory reclaim happens. This is probably
+   not a result expected by the users and it is really doubtful that
+   users will check an empty cgroup with no task in it and expecting
+   some non-zero event counts.
 
-tested configs:
-alpha                             allnoconfig    gcc-14.2.0
-alpha                            allyesconfig    gcc-14.2.0
-arc                              allmodconfig    gcc-14.2.0
-arc                               allnoconfig    gcc-14.2.0
-arc                              allyesconfig    gcc-14.2.0
-arc                   randconfig-001-20250405    gcc-14.2.0
-arc                   randconfig-002-20250405    gcc-14.2.0
-arm                              allmodconfig    gcc-14.2.0
-arm                               allnoconfig    clang-21
-arm                              allyesconfig    gcc-14.2.0
-arm                           h3600_defconfig    gcc-14.2.0
-arm                        keystone_defconfig    gcc-14.2.0
-arm                        neponset_defconfig    gcc-14.2.0
-arm                   randconfig-001-20250405    clang-18
-arm                   randconfig-002-20250405    gcc-7.5.0
-arm                   randconfig-003-20250405    gcc-8.5.0
-arm                   randconfig-004-20250405    clang-21
-arm64                            allmodconfig    clang-19
-arm64                             allnoconfig    gcc-14.2.0
-arm64                 randconfig-001-20250405    clang-19
-arm64                 randconfig-002-20250405    gcc-8.5.0
-arm64                 randconfig-003-20250405    gcc-8.5.0
-arm64                 randconfig-004-20250405    gcc-6.5.0
-csky                             alldefconfig    gcc-14.2.0
-csky                              allnoconfig    gcc-14.2.0
-csky                  randconfig-001-20250405    gcc-14.2.0
-csky                  randconfig-002-20250405    gcc-10.5.0
-hexagon                          allmodconfig    clang-17
-hexagon                           allnoconfig    clang-21
-hexagon                          allyesconfig    clang-21
-hexagon               randconfig-001-20250405    clang-21
-hexagon               randconfig-002-20250405    clang-21
-i386                             allmodconfig    gcc-12
-i386                              allnoconfig    gcc-12
-i386                             allyesconfig    gcc-12
-i386        buildonly-randconfig-001-20250405    gcc-12
-i386        buildonly-randconfig-002-20250405    clang-20
-i386        buildonly-randconfig-003-20250405    clang-20
-i386        buildonly-randconfig-004-20250405    clang-20
-i386        buildonly-randconfig-005-20250405    clang-20
-i386        buildonly-randconfig-006-20250405    gcc-12
-i386                                defconfig    clang-20
-loongarch                         allnoconfig    gcc-14.2.0
-loongarch             randconfig-001-20250405    gcc-14.2.0
-loongarch             randconfig-002-20250405    gcc-14.2.0
-m68k                             allmodconfig    gcc-14.2.0
-m68k                              allnoconfig    gcc-14.2.0
-m68k                             allyesconfig    gcc-14.2.0
-microblaze                       allmodconfig    gcc-14.2.0
-microblaze                        allnoconfig    gcc-14.2.0
-microblaze                       allyesconfig    gcc-14.2.0
-mips                              allnoconfig    gcc-14.2.0
-mips                          eyeq6_defconfig    clang-21
-mips                       rbtx49xx_defconfig    gcc-14.2.0
-mips                         rt305x_defconfig    clang-15
-nios2                             allnoconfig    gcc-14.2.0
-nios2                 randconfig-001-20250405    gcc-12.4.0
-nios2                 randconfig-002-20250405    gcc-6.5.0
-openrisc                          allnoconfig    gcc-14.2.0
-openrisc                         allyesconfig    gcc-14.2.0
-openrisc                            defconfig    gcc-14.2.0
-parisc                           allmodconfig    gcc-14.2.0
-parisc                            allnoconfig    gcc-14.2.0
-parisc                           allyesconfig    gcc-14.2.0
-parisc                              defconfig    gcc-14.2.0
-parisc                randconfig-001-20250405    gcc-11.5.0
-parisc                randconfig-002-20250405    gcc-9.3.0
-powerpc                          allmodconfig    gcc-14.2.0
-powerpc                           allnoconfig    gcc-14.2.0
-powerpc                          allyesconfig    clang-21
-powerpc                      bamboo_defconfig    clang-21
-powerpc                 linkstation_defconfig    clang-20
-powerpc               randconfig-001-20250405    gcc-8.5.0
-powerpc               randconfig-002-20250405    gcc-8.5.0
-powerpc               randconfig-003-20250405    gcc-8.5.0
-powerpc                     taishan_defconfig    clang-17
-powerpc64             randconfig-001-20250405    clang-21
-powerpc64             randconfig-002-20250405    clang-21
-powerpc64             randconfig-003-20250405    clang-18
-riscv                            allmodconfig    clang-21
-riscv                             allnoconfig    gcc-14.2.0
-riscv                            allyesconfig    clang-16
-riscv                 randconfig-001-20250405    clang-21
-riscv                 randconfig-002-20250405    clang-16
-s390                             allmodconfig    clang-18
-s390                              allnoconfig    clang-15
-s390                             allyesconfig    gcc-14.2.0
-s390                          debug_defconfig    gcc-14.2.0
-s390                  randconfig-001-20250405    clang-15
-s390                  randconfig-002-20250405    clang-15
-sh                               allmodconfig    gcc-14.2.0
-sh                                allnoconfig    gcc-14.2.0
-sh                               allyesconfig    gcc-14.2.0
-sh                          lboxre2_defconfig    gcc-14.2.0
-sh                    randconfig-001-20250405    gcc-14.2.0
-sh                    randconfig-002-20250405    gcc-14.2.0
-sparc                            allmodconfig    gcc-14.2.0
-sparc                             allnoconfig    gcc-14.2.0
-sparc                 randconfig-001-20250405    gcc-11.5.0
-sparc                 randconfig-002-20250405    gcc-10.3.0
-sparc64               randconfig-001-20250405    gcc-9.3.0
-sparc64               randconfig-002-20250405    gcc-11.5.0
-um                               allmodconfig    clang-19
-um                                allnoconfig    clang-21
-um                               allyesconfig    gcc-12
-um                    randconfig-001-20250405    clang-17
-um                    randconfig-002-20250405    clang-21
-x86_64                            allnoconfig    clang-20
-x86_64                           allyesconfig    clang-20
-x86_64      buildonly-randconfig-001-20250405    gcc-12
-x86_64      buildonly-randconfig-002-20250405    clang-20
-x86_64      buildonly-randconfig-003-20250405    clang-20
-x86_64      buildonly-randconfig-004-20250405    clang-20
-x86_64      buildonly-randconfig-005-20250405    gcc-12
-x86_64      buildonly-randconfig-006-20250405    clang-20
-x86_64                              defconfig    gcc-11
-xtensa                            allnoconfig    gcc-14.2.0
-xtensa                  cadence_csp_defconfig    gcc-14.2.0
-xtensa                randconfig-001-20250405    gcc-11.5.0
-xtensa                randconfig-002-20250405    gcc-13.3.0
+In the first case, even though memory.low isn't set, it may still have
+some low protection if memory.low is set in the parent. So low event may
+still be recorded. The test_memcontrol.c test has to be modified to
+account for that.
 
---
-0-DAY CI Kernel Test Service
-https://github.com/intel/lkp-tests/wiki
+For the second case, it really doesn't make sense to have non-zero low
+event if the cgroup has 0 usage. So we need to skip this corner case
+in shrink_node_memcgs().
+
+With this patch applied, the test_memcg_low sub-test finishes
+successfully without failure in most cases. Though both test_memcg_low
+and test_memcg_min sub-tests may still fail occasionally if the
+memory.current values fall outside of the expected ranges.
+
+Suggested-by: Johannes Weiner <hannes@cmpxchg.org>
+Signed-off-by: Waiman Long <longman@redhat.com>
+---
+ mm/vmscan.c                                      | 4 ++++
+ tools/testing/selftests/cgroup/test_memcontrol.c | 7 ++++++-
+ 2 files changed, 10 insertions(+), 1 deletion(-)
+
+diff --git a/mm/vmscan.c b/mm/vmscan.c
+index b620d74b0f66..2a2957b9dc99 100644
+--- a/mm/vmscan.c
++++ b/mm/vmscan.c
+@@ -5963,6 +5963,10 @@ static void shrink_node_memcgs(pg_data_t *pgdat, struct scan_control *sc)
+ 
+ 		mem_cgroup_calculate_protection(target_memcg, memcg);
+ 
++		/* Skip memcg with no usage */
++		if (!page_counter_read(&memcg->memory))
++			continue;
++
+ 		if (mem_cgroup_below_min(target_memcg, memcg)) {
+ 			/*
+ 			 * Hard protection.
+diff --git a/tools/testing/selftests/cgroup/test_memcontrol.c b/tools/testing/selftests/cgroup/test_memcontrol.c
+index 16f5d74ae762..bab826b6b7b0 100644
+--- a/tools/testing/selftests/cgroup/test_memcontrol.c
++++ b/tools/testing/selftests/cgroup/test_memcontrol.c
+@@ -525,8 +525,13 @@ static int test_memcg_protection(const char *root, bool min)
+ 		goto cleanup;
+ 	}
+ 
++	/*
++	 * Child 2 has memory.low=0, but some low protection is still being
++	 * distributed down from its parent with memory.low=50M. So the low
++	 * event count will be non-zero.
++	 */
+ 	for (i = 0; i < ARRAY_SIZE(children); i++) {
+-		int no_low_events_index = 1;
++		int no_low_events_index = 2;
+ 		long low, oom;
+ 
+ 		oom = cg_read_key_long(children[i], "memory.events", "oom ");
+-- 
+2.48.1
+
