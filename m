@@ -1,94 +1,257 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C39F721B1AB;
-	Mon,  7 Apr 2025 17:34:32 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 833E7259CAE
+	for <cgroups@vger.kernel.org>; Mon,  7 Apr 2025 18:21:17 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1744047272; cv=none; b=aiTqj/4X5F0XxCc2YZUMaZIYmfJPFe/wulixQVaQd+ypslj6hk7YY3CM9hKuL8RrF0FcgdE3Va2ftJZdh4EBYs7t5Pm3gSxoxhaCimeIIHRKTR7GH2wKQ4juJgJwwyI6ok8NC72yzRaMg1KXyww5orZnQiX5izXFKFPGnkn7TKk=
+	t=1744050080; cv=none; b=pAlqHQdXn+YflWXjQTLkQXxVARDlk4f+kderqBrbTLvfTFx08c+OhHKbIqvFIzzaQVbF1luWJGYbtbVNkkTHFCgbIELCFXqDxyeAWOYCgkv2fHXtEtIka2sZqFcKypnY4V+rJyUqYKRS1bP4Q6TbQ+xEXkZ0UTV3uPx2rk2y2Ag=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1744047272; c=relaxed/simple;
-	bh=o63Kr8wHNE3EOi+oVha6nVGxp6Yoorpa1gflUrhu3J0=;
-	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition; b=lrOjQ2+GpfEyOtpGpOHF7c1F0AVK+uW6rgTfslcH4YcG3e4n2jPbe774fBGsGEYxKo9Y+un+4GW4IpA5wyE6YleU9pAKUpwB0gBD1Uhsq4CP/LuwgQQmNjjU7jkoQKABg6B3+PSil0vCMUQTGkZ+DiNdwmgo1PBGkGdo3IvlQdU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=AIvM9G9K; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1744050080; c=relaxed/simple;
+	bh=Fz/XDtdulRxQ3oKljNvKc4VMr4rk0YKdQk3hA5O+D7U=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=ngkSrqpCKwy/zRcSBq76acaAUkryPbHe+QhoU76TVmub8z0ITcmzufP6eewzVlyslVkHmWweqqYIMeEg/VPM3MjWfWK0oOxr1NS6TUztcqDi1DLr3QOdDxQWMXbcKPp1Ca4RE/bUWB7Dm/KkgQVjWJnZFvO/jJnFBBTWz8yE1ds=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=hZoS+mw6; arc=none smtp.client-ip=170.10.133.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="AIvM9G9K"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0D753C4CEDD;
-	Mon,  7 Apr 2025 17:34:31 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1744047272;
-	bh=o63Kr8wHNE3EOi+oVha6nVGxp6Yoorpa1gflUrhu3J0=;
-	h=Date:From:To:Cc:Subject:From;
-	b=AIvM9G9KtpnXpve51JFF+dO41kdErgyup6M1biPljJfC7vmEl8MjpousOzbV1gO2E
-	 A8CVidrgrX6diPFz7sZau3F8VS1Zno9Kzjhz95lNVA5WX7bbilMG/DALG/3AK9YNht
-	 SzYkGhGBUSxVaJAOHYHXc/2bVDTLy7lqzOKcYB5PEqK3wO6mcgY+FFavLePnBIv8U/
-	 Esgi8xocqAGLMdzhmjJ2k3MNAfoO5G0FpVfqIkbnozdCHRoVF9bK0VvvNTGmiCpUNx
-	 mug97U3IaFYJXmgbGxhsR8WR/vD5BpDVG9onn+JwRLACkyGjqfKGRqylhUsHv1EWfY
-	 Mu0P+Co0aizzg==
-Date: Mon, 7 Apr 2025 07:34:31 -1000
-From: Tejun Heo <tj@kernel.org>
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: linux-kernel@vger.kernel.org, Waiman Long <longman@redhat.com>,
-	cgroups@vger.kernel.org, Johannes Weiner <hannes@cmpxchg.org>,
-	Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny@suse.com>
-Subject: [GIT PULL] cgroup: Fixes for v6.15-rc1
-Message-ID: <Z_QMp_w1wVoU5A2w@slm.duckdns.org>
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="hZoS+mw6"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1744050076;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=AKqSZoUpU0uzACYZM5pmj6GRgcBtXZsWwsDTZhVURtA=;
+	b=hZoS+mw6qzQDz0UtfzltnekLqv1XzBKrWGBhulqOvE9THWuvTDh0yc01TWxv9cYWlFud2L
+	jIsMPssydURxQ70sGQFoSlRqp+m9tEZU/EWPQr6/2K5U2WoEcIcD4uG5oR9nIJgtQ34pNV
+	e0m00wLrfIpe4sfY+XXReUOS+jZyZZY=
+Received: from mx-prod-mc-03.mail-002.prod.us-west-2.aws.redhat.com
+ (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
+ relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-630-_jQ5k9ceMQ6hbE5jbl7neQ-1; Mon,
+ 07 Apr 2025 14:21:14 -0400
+X-MC-Unique: _jQ5k9ceMQ6hbE5jbl7neQ-1
+X-Mimecast-MFC-AGG-ID: _jQ5k9ceMQ6hbE5jbl7neQ_1744050073
+Received: from mx-prod-int-06.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-06.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.93])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mx-prod-mc-03.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id B2EBA19560BC;
+	Mon,  7 Apr 2025 18:21:12 +0000 (UTC)
+Received: from pasta.fast.eng.rdu2.dc.redhat.com (unknown [10.45.224.15])
+	by mx-prod-int-06.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id 86B0D180A803;
+	Mon,  7 Apr 2025 18:21:09 +0000 (UTC)
+From: Andreas Gruenbacher <agruenba@redhat.com>
+To: cgroups@vger.kernel.org
+Cc: Andreas Gruenbacher <agruenba@redhat.com>,
+	Tetsuo Handa <penguin-kernel@i-love.sakura.ne.jp>,
+	Jan Kara <jack@suse.cz>,
+	Rafael Aquini <aquini@redhat.com>,
+	gfs2@lists.linux.dev,
+	linux-mm@kvack.org,
+	linux-fsdevel@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: [RFC 1/2] gfs2: replace sd_aspace with sd_inode
+Date: Mon,  7 Apr 2025 20:21:01 +0200
+Message-ID: <20250407182104.716631-2-agruenba@redhat.com>
+In-Reply-To: <20250407182104.716631-1-agruenba@redhat.com>
+References: <20250407182104.716631-1-agruenba@redhat.com>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+X-Scanned-By: MIMEDefang 3.4.1 on 10.30.177.93
 
-The following changes since commit 1e7857b28020ba57ca7fdafae7ac855ba326c697:
+Use a dummy inode as mapping->host of the address spaces for global as
+well as per-inode metadata.  The global metadata address space is now
+accessed as gfs2_aspace(sdp) instead of sdp->sd_aspace.  The per-inode
+metadata address spaces are still accessed as
+gfs2_glock2aspace(GFS2_I(inode)->i_gl).
 
-  x86: don't re-generate cpufeaturemasks.h so eagerly (2025-03-31 14:19:55 -0700)
+Based on a previous version from Bob Peterson from several years ago.
 
-are available in the Git repository at:
+Signed-off-by: Andreas Gruenbacher <agruenba@redhat.com>
+---
+ fs/gfs2/glock.c      |  3 +--
+ fs/gfs2/glops.c      |  4 ++--
+ fs/gfs2/incore.h     |  9 ++++++++-
+ fs/gfs2/meta_io.c    |  2 +-
+ fs/gfs2/meta_io.h    |  4 +---
+ fs/gfs2/ops_fstype.c | 24 +++++++++++++-----------
+ fs/gfs2/super.c      |  2 +-
+ 7 files changed, 27 insertions(+), 21 deletions(-)
 
-  git://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git/ tags/cgroup-for-6.15-rc1-fixes
-
-for you to fetch changes up to a22b3d54de94f82ca057cc2ebf9496fa91ebf698:
-
-  cgroup/cpuset: Fix race between newly created partition and dying one (2025-04-01 21:46:22 -1000)
-
-----------------------------------------------------------------
-cgroup: Fixes for v6.15-rc1
-
-- A number of cpuset remote partition related fixes and cleanups along with
-  selftest updates.
-
-- A change from this merge window made cgroup_rstat_updated_list() called
-  outside cgroup_rstat_lock leading to list corruptions. Fix it by
-  relocating the call inside the lock.
-
-----------------------------------------------------------------
-Shakeel Butt (1):
-      cgroup: rstat: call cgroup_rstat_updated_list with cgroup_rstat_lock
-
-Waiman Long (10):
-      cgroup/cpuset: Fix incorrect isolated_cpus update in update_parent_effective_cpumask()
-      cgroup/cpuset: Fix error handling in remote_partition_disable()
-      cgroup/cpuset: Remove remote_partition_check() & make update_cpumasks_hier() handle remote partition
-      cgroup/cpuset: Don't allow creation of local partition over a remote one
-      cgroup/cpuset: Code cleanup and comment update
-      cgroup/cpuset: Remove unneeded goto in sched_partition_write() and rename it
-      selftest/cgroup: Update test_cpuset_prs.sh to use | as effective CPUs and state separator
-      selftest/cgroup: Clean up and restructure test_cpuset_prs.sh
-      selftest/cgroup: Add a remote partition transition test to test_cpuset_prs.sh
-      cgroup/cpuset: Fix race between newly created partition and dying one
-
- include/linux/cgroup-defs.h                       |   1 +
- include/linux/cgroup.h                            |   2 +-
- kernel/cgroup/cgroup.c                            |   6 +
- kernel/cgroup/cpuset-internal.h                   |   1 +
- kernel/cgroup/cpuset.c                            | 401 ++++++++------
- kernel/cgroup/rstat.c                             |   3 +-
- tools/testing/selftests/cgroup/test_cpuset_prs.sh | 617 ++++++++++++++--------
- 7 files changed, 651 insertions(+), 380 deletions(-)
-
+diff --git a/fs/gfs2/glock.c b/fs/gfs2/glock.c
+index d7220a6fe8f5..ba25b884169e 100644
+--- a/fs/gfs2/glock.c
++++ b/fs/gfs2/glock.c
+@@ -1166,7 +1166,6 @@ int gfs2_glock_get(struct gfs2_sbd *sdp, u64 number,
+ 		   const struct gfs2_glock_operations *glops, int create,
+ 		   struct gfs2_glock **glp)
+ {
+-	struct super_block *s = sdp->sd_vfs;
+ 	struct lm_lockname name = { .ln_number = number,
+ 				    .ln_type = glops->go_type,
+ 				    .ln_sbd = sdp };
+@@ -1229,7 +1228,7 @@ int gfs2_glock_get(struct gfs2_sbd *sdp, u64 number,
+ 	mapping = gfs2_glock2aspace(gl);
+ 	if (mapping) {
+                 mapping->a_ops = &gfs2_meta_aops;
+-		mapping->host = s->s_bdev->bd_mapping->host;
++		mapping->host = sdp->sd_inode;
+ 		mapping->flags = 0;
+ 		mapping_set_gfp_mask(mapping, GFP_NOFS);
+ 		mapping->i_private_data = NULL;
+diff --git a/fs/gfs2/glops.c b/fs/gfs2/glops.c
+index eb4714f299ef..116efe335c32 100644
+--- a/fs/gfs2/glops.c
++++ b/fs/gfs2/glops.c
+@@ -168,7 +168,7 @@ void gfs2_ail_flush(struct gfs2_glock *gl, bool fsync)
+ static int gfs2_rgrp_metasync(struct gfs2_glock *gl)
+ {
+ 	struct gfs2_sbd *sdp = gl->gl_name.ln_sbd;
+-	struct address_space *metamapping = &sdp->sd_aspace;
++	struct address_space *metamapping = gfs2_aspace(sdp);
+ 	struct gfs2_rgrpd *rgd = gfs2_glock2rgrp(gl);
+ 	const unsigned bsize = sdp->sd_sb.sb_bsize;
+ 	loff_t start = (rgd->rd_addr * bsize) & PAGE_MASK;
+@@ -225,7 +225,7 @@ static int rgrp_go_sync(struct gfs2_glock *gl)
+ static void rgrp_go_inval(struct gfs2_glock *gl, int flags)
+ {
+ 	struct gfs2_sbd *sdp = gl->gl_name.ln_sbd;
+-	struct address_space *mapping = &sdp->sd_aspace;
++	struct address_space *mapping = gfs2_aspace(sdp);
+ 	struct gfs2_rgrpd *rgd = gfs2_glock2rgrp(gl);
+ 	const unsigned bsize = sdp->sd_sb.sb_bsize;
+ 	loff_t start, end;
+diff --git a/fs/gfs2/incore.h b/fs/gfs2/incore.h
+index 74abbd4970f8..0a41c4e76b32 100644
+--- a/fs/gfs2/incore.h
++++ b/fs/gfs2/incore.h
+@@ -795,7 +795,7 @@ struct gfs2_sbd {
+ 
+ 	/* Log stuff */
+ 
+-	struct address_space sd_aspace;
++	struct inode *sd_inode;
+ 
+ 	spinlock_t sd_log_lock;
+ 
+@@ -851,6 +851,13 @@ struct gfs2_sbd {
+ 	unsigned long sd_glock_dqs_held;
+ };
+ 
++#define GFS2_BAD_INO 1
++
++static inline struct address_space *gfs2_aspace(struct gfs2_sbd *sdp)
++{
++	return sdp->sd_inode->i_mapping;
++}
++
+ static inline void gfs2_glstats_inc(struct gfs2_glock *gl, int which)
+ {
+ 	gl->gl_stats.stats[which]++;
+diff --git a/fs/gfs2/meta_io.c b/fs/gfs2/meta_io.c
+index 198cc7056637..9dc8885c95d0 100644
+--- a/fs/gfs2/meta_io.c
++++ b/fs/gfs2/meta_io.c
+@@ -132,7 +132,7 @@ struct buffer_head *gfs2_getbuf(struct gfs2_glock *gl, u64 blkno, int create)
+ 	unsigned int bufnum;
+ 
+ 	if (mapping == NULL)
+-		mapping = &sdp->sd_aspace;
++		mapping = gfs2_aspace(sdp);
+ 
+ 	shift = PAGE_SHIFT - sdp->sd_sb.sb_bsize_shift;
+ 	index = blkno >> shift;             /* convert block to page */
+diff --git a/fs/gfs2/meta_io.h b/fs/gfs2/meta_io.h
+index 831d988c2ceb..b7c8a6684d02 100644
+--- a/fs/gfs2/meta_io.h
++++ b/fs/gfs2/meta_io.h
+@@ -44,9 +44,7 @@ static inline struct gfs2_sbd *gfs2_mapping2sbd(struct address_space *mapping)
+ 		struct gfs2_glock_aspace *gla =
+ 			container_of(mapping, struct gfs2_glock_aspace, mapping);
+ 		return gla->glock.gl_name.ln_sbd;
+-	} else if (mapping->a_ops == &gfs2_rgrp_aops)
+-		return container_of(mapping, struct gfs2_sbd, sd_aspace);
+-	else
++	} else
+ 		return inode->i_sb->s_fs_info;
+ }
+ 
+diff --git a/fs/gfs2/ops_fstype.c b/fs/gfs2/ops_fstype.c
+index e83d293c3614..ce6ee494ffc4 100644
+--- a/fs/gfs2/ops_fstype.c
++++ b/fs/gfs2/ops_fstype.c
+@@ -72,7 +72,6 @@ void free_sbd(struct gfs2_sbd *sdp)
+ static struct gfs2_sbd *init_sbd(struct super_block *sb)
+ {
+ 	struct gfs2_sbd *sdp;
+-	struct address_space *mapping;
+ 
+ 	sdp = kzalloc(sizeof(struct gfs2_sbd), GFP_KERNEL);
+ 	if (!sdp)
+@@ -109,16 +108,6 @@ static struct gfs2_sbd *init_sbd(struct super_block *sb)
+ 
+ 	INIT_LIST_HEAD(&sdp->sd_sc_inodes_list);
+ 
+-	mapping = &sdp->sd_aspace;
+-
+-	address_space_init_once(mapping);
+-	mapping->a_ops = &gfs2_rgrp_aops;
+-	mapping->host = sb->s_bdev->bd_mapping->host;
+-	mapping->flags = 0;
+-	mapping_set_gfp_mask(mapping, GFP_NOFS);
+-	mapping->i_private_data = NULL;
+-	mapping->writeback_index = 0;
+-
+ 	spin_lock_init(&sdp->sd_log_lock);
+ 	atomic_set(&sdp->sd_log_pinned, 0);
+ 	INIT_LIST_HEAD(&sdp->sd_log_revokes);
+@@ -1135,6 +1124,7 @@ static int gfs2_fill_super(struct super_block *sb, struct fs_context *fc)
+ 	int silent = fc->sb_flags & SB_SILENT;
+ 	struct gfs2_sbd *sdp;
+ 	struct gfs2_holder mount_gh;
++	struct address_space *mapping;
+ 	int error;
+ 
+ 	sdp = init_sbd(sb);
+@@ -1156,6 +1146,18 @@ static int gfs2_fill_super(struct super_block *sb, struct fs_context *fc)
+ 	sb->s_flags |= SB_NOSEC;
+ 	sb->s_magic = GFS2_MAGIC;
+ 	sb->s_op = &gfs2_super_ops;
++
++	/* Set up an address space for metadata writes */
++	sdp->sd_inode = new_inode(sb);
++	if (!sdp->sd_inode)
++		goto fail_free;
++	sdp->sd_inode->i_ino = GFS2_BAD_INO;
++	sdp->sd_inode->i_size = OFFSET_MAX;
++
++	mapping = gfs2_aspace(sdp);
++	mapping->a_ops = &gfs2_rgrp_aops;
++	mapping_set_gfp_mask(mapping, GFP_NOFS);
++
+ 	sb->s_d_op = &gfs2_dops;
+ 	sb->s_export_op = &gfs2_export_ops;
+ 	sb->s_qcop = &gfs2_quotactl_ops;
+diff --git a/fs/gfs2/super.c b/fs/gfs2/super.c
+index 44e5658b896c..4529b7dda8ca 100644
+--- a/fs/gfs2/super.c
++++ b/fs/gfs2/super.c
+@@ -648,7 +648,7 @@ static void gfs2_put_super(struct super_block *sb)
+ 	gfs2_jindex_free(sdp);
+ 	/*  Take apart glock structures and buffer lists  */
+ 	gfs2_gl_hash_clear(sdp);
+-	truncate_inode_pages_final(&sdp->sd_aspace);
++	iput(sdp->sd_inode);
+ 	gfs2_delete_debugfs_file(sdp);
+ 
+ 	gfs2_sys_fs_del(sdp);
 -- 
-tejun
+2.48.1
+
