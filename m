@@ -1,62 +1,62 @@
-Received: from mail-yb1-f181.google.com (mail-yb1-f181.google.com [209.85.219.181])
+Received: from mail-yb1-f171.google.com (mail-yb1-f171.google.com [209.85.219.171])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A180F254AE7;
-	Mon,  7 Apr 2025 23:42:33 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.219.181
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D9D772550C4;
+	Mon,  7 Apr 2025 23:42:34 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.219.171
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1744069356; cv=none; b=YTqhWzmbyfYfKBNeZej6SSTB2bPKYcgYIZfD0y3XQ3GVrk8Juo4pudy5CgRk4aEz6pfZBNMo3bdkW3Q6JVp399tRvQ1vnA78gMusLNqfX1sZ2dg+wru8bkGz0F/UVSEdTn3jl8pdOPRGPVdeXDaI0Hnh6/PZ91kmmXVLaQXD4kE=
+	t=1744069357; cv=none; b=OPguwdWgYb5iYkw2/44K+wjYYjU0SH8HnUdKyQ/ujHRAN2esiTjqcPctudJztZnYbPGWSAFCUuXsbiwbXPqG9ixlYUBf9pGl2c22hudF5QyDMJGcXpsDglQB+qOKSHSSTVETS7nbIbs3LW01sZII3srx4UcfFeI5wxmFPwXbBKw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1744069356; c=relaxed/simple;
-	bh=2YQkjhUo7WUNeYTKn8u9eXhw+WcOSVKddEOQJrQYcSE=;
+	s=arc-20240116; t=1744069357; c=relaxed/simple;
+	bh=Er3hegLgwCFhC/Ruck5UgO4+9V5jnr65pYLNSjYW1MQ=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=ZKztQhP6NHt5kiYqFixFXomEaj9JuUEyHTlLJWnvRA48ZDGplI3H57SWRmxIVRQr0glyQ7bL8H9fmGN7QJk14X1q6RRqiL6mc3EsQQDC2FnPasTLcdEDwHOLI2DJJfFlu0/v14jZ9gc8/LYS8VXuKvpliubn5pX/rxITQzR8eX8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=gbbpSh0P; arc=none smtp.client-ip=209.85.219.181
+	 MIME-Version; b=FzZwJmYXWfVWQTtTqsKNU4KcHAwHvUq/FAAKHRm5y7ao8PaWtGXOuD/WItf01MTvztFa4fYJ16sORVG/ceSD9yTpEbM/wuV1ZF8eMl+VXKYobQFHk+MDl5VUE8GgwMKHnv4IRTEnTWpLlXRfPvhlBnghzUOfzgmYR4vK5ErloMw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=Ti61MM7H; arc=none smtp.client-ip=209.85.219.171
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="gbbpSh0P"
-Received: by mail-yb1-f181.google.com with SMTP id 3f1490d57ef6-e6e1cd3f1c5so3251114276.0;
-        Mon, 07 Apr 2025 16:42:33 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Ti61MM7H"
+Received: by mail-yb1-f171.google.com with SMTP id 3f1490d57ef6-e53ef7462b6so4814441276.3;
+        Mon, 07 Apr 2025 16:42:34 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1744069352; x=1744674152; darn=vger.kernel.org;
+        d=gmail.com; s=20230601; t=1744069354; x=1744674154; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=mLJdhqYj+zTYLwyNRCW52GVf6fq8/yyGxPtSSQksBmE=;
-        b=gbbpSh0PJ4EeOQ+oVjsmpTDbg1uZ6SDuBcOjpZiv9G9Dn02t6RNq06CCYqohy81mSj
-         AgTwl1CUarADAT8pg8aB2ka2TNBaUO2L1NOe6UBdI7ndzQPxBPT1iVczcHKZXJHS1Ve+
-         9w+R52DoW7H6hK7oj0PihI39mfdYJpY5HPWbIIyCnx8ZMyV5knxxANEHV2/2S6yO33wJ
-         2MZy1txN/HHNcABbAPcIkxkbjqFXh+aRZHRuiAEShj9Pi0XuWcv1hOtZXWN/40jGcxCS
-         Fgrwp2rNOqZ88KcjBd7X8d2IMru683Xy3fcTQiN2JPn0/lURUFfXDLml+0/eMBF9UIME
-         PtPQ==
+        bh=rEZyehd4zLYWxImC6V7ghpPr92k+M9DC2r20TkQaMas=;
+        b=Ti61MM7HWNyWGxAGkK+rdoqDbhonstrgswtIPK/sJ33RR48soOjZdyxRQnTvG+NlWM
+         Gf/2/Go2X+r3QfiyWtGoVRVlkcRMG7lvpxedO1fmHGz4JqkR2JxiZyG3JAZGbS7jFZYq
+         ZkDpCk6AqmU1sW2doh99GqpGO9MwU9vo1HVP5qPqyFhQZagcsv1L27PH1AKbtgLbtCFC
+         ublMWZ0f9phdDG75OIP/IoSYAn9tBcw9RcJ2rkL6KGs7uzCQ7A0XB+pc2A3/3xGx3NB9
+         zOVYvT6I0DkBAw8NIzHo5/dMFdVf5oZCUlYbC4rK9CbZB1Du47UCHIE0EUKyqV3d8Vtz
+         Pi6w==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1744069352; x=1744674152;
+        d=1e100.net; s=20230601; t=1744069354; x=1744674154;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=mLJdhqYj+zTYLwyNRCW52GVf6fq8/yyGxPtSSQksBmE=;
-        b=NNzC3fHIR/g5L4gT9q7nhkbXt8vqyS7Pc5umehdOfA9R9srqFtohBzriduRcYMe9GH
-         CJpVhkJVFhkLiRdvJ7r1cHCXCdm4mi4pnm7XAih4i8He5y5q0BK0fhVABnL39rrQrDN0
-         J3xP89FyhZcOowPjuezSqq75nBnElTv6bYm5coVhvPyVr/W/+VYfC9sPMZdla7UdG3xd
-         U8v5R5kuHtSCYb+BY/5NmsuQ//MFwbnSzMHYgjZDLZ1by1TbWIZJurQMJRE4ZXQ63SeD
-         TXDP0ZeP8rDGiHS3EI1Y+qzcKcJD+DAdOmtjPZlhd7y5Yt17vGQ3oO52Hlrio7X+ecd7
-         dHzg==
-X-Forwarded-Encrypted: i=1; AJvYcCW3bRSASg0wOnf0sQDCNImMvT+xeGfXUYmxeB6svBN70PbhBorByZZSigspKg+8Ix0twRuK0vqoCDi+yzqP@vger.kernel.org, AJvYcCWFIQ6a2s3TKUeGqyXWdJM8IzsRRCFI4v5SfKEJM/C1ZWdxHtIoNJci5kKYRWGQjdtrMq8zkddLUfU=@vger.kernel.org, AJvYcCWUFHfsfIPKhk4RDwLl/ISTZIoeDk4qSgAx0sLV5L05X0PFSsDXRJN0AFEWM+arApgUb0pfn8mY@vger.kernel.org
-X-Gm-Message-State: AOJu0YwPKcstZ7DVERq4wMelVkRoL3qOQnnf/KAo4aeJa8EmF3yiO2fi
-	lOuFl53y9PaPczxbnQ7qRa+DDfKutvRiNdqSTpScnOXIGyIbQFNB
-X-Gm-Gg: ASbGnct+pMAW0byV0/uT1p03irWS69Hnu8ddWh2SlPwvz/61RmchlwfYFHjXG8wIB93
-	35T6DCWKcAk1eNAyA/Kcw6IksZx92vHDtmehXjAkJsDvDLR8YOORvFIZ00gSCU5wVO0eECxFK64
-	A28LZZ2/9YY6iJ6pzfwIJZroWynHQKTVME3wyA3635MybyE6KsmogSedE4+nfSyQ9mi2nBztjjY
-	nS82Z/2lC7kG01+SfhtFKGkTUvrmzklXQF2ffnQ1SWmHo68jkZunQxPwC1WiF7wvpmuKGrQ/fOl
-	tsLi1kgRBQh/M51iUa7VMC8Id7rhrbnK3KVU
-X-Google-Smtp-Source: AGHT+IFYT4abdql8kqgVGeGYJ9Wg2G43qD5+sFoTbpPfUBUetFZ6KN/IufxrelAcp5w2iktxFkJT+Q==
-X-Received: by 2002:a05:690c:7207:b0:6f9:7ec7:386a with SMTP id 00721157ae682-703f41bbb6cmr186335597b3.21.1744069352322;
-        Mon, 07 Apr 2025 16:42:32 -0700 (PDT)
-Received: from localhost ([2a03:2880:25ff:73::])
-        by smtp.gmail.com with ESMTPSA id 00721157ae682-703d1e7731fsm28302937b3.58.2025.04.07.16.42.31
+        bh=rEZyehd4zLYWxImC6V7ghpPr92k+M9DC2r20TkQaMas=;
+        b=p+turHNdpdPl9mvW6lttIxZvY47TgumlkQZqtfe5cB6CX2Xni8g370gETDVAKuojzj
+         WIrGKgHn/xJNYuHjF7E1jcinGqvMslgvRptEajs8EC0YLWnCUMsCd9e0E2GGPGpK3C5+
+         TnHRc7oiA5CfVcxzqx5BfjUFy3Pf8+FCXmwU+0Lhe85E+1xlxxazXT+pBDqGuaPHeoEH
+         v/uecBZyR95P0cyNmJENSafzz5g0CsB1ApnJfwga9xdWKLjCD/SMPv05AlbQSt+KDlfN
+         pK7UU4X+tVG+mbYyq6BRg87nZerxAJJYt6uNuNUfJ+Z8LHUkNP50966u3Zdg0aFHZmYm
+         5xbA==
+X-Forwarded-Encrypted: i=1; AJvYcCV5C2GoZLX3clRCJlvngpqQttVm4edTGTy0BIgHe/bvOzC4fGMVFvEHq2ThH011QkGhltKq0LKw@vger.kernel.org, AJvYcCWbNfDUg+mH7ordX9CHaj7j9vlpPDZRO7ZP8V/0g/Ahu2QtQV/OX9r53gP9mtFDUSQ+UGgNmvMXSW+lF2IE@vger.kernel.org, AJvYcCXHaKP7XkVpgU4Q4oZP7Xo/CQ3GST96yBQLjkrrGU6Dm3Ta9UN9EHb2hv4jx6dcOPVBIOfLqs34lmE=@vger.kernel.org
+X-Gm-Message-State: AOJu0YxRoWBbrWFufbUt8wJzKMjcOU+ezVPf09Fc0GR7rYheTrXPLBfM
+	P3/lIR5cxXya5nkPRypM4p29lKr14IJQTDF/yaS8n+Cj6NDWF9vL
+X-Gm-Gg: ASbGncuemmYSTcW2BngIxlk6rTr5xwbc7QxcXCD0aQk40vd08BqglPiJ9ws9VH7HXb0
+	LbTqwL347jPx5u4GQqJYf96yQjj3oEzjZLXlCxQlJL8AZGdfWdp8WACo8rHeBQFfMqEe54+lc3q
+	urRPRtjP5MzpCVqT3hh+ZSjO+Atd5K817uNLoilGqkrzyYYQn4ZNyLuQpzZoF+XA+nrFMzZ0FGU
+	80zMyP+qBy9AQHm3bbwyiC3vcQ00us6vbfqnuQi2z0uWrp+BrndBulGV8Q1ZFr7NvaeghQOdcjo
+	LTEtgrRtDIX5ZQ653wlo3P+WEfteUYZoK5Jl
+X-Google-Smtp-Source: AGHT+IE5QNAfFkOFKjfUYz3+47925/olDBVlwaEQV+A5zw8RcFXQs1h3huSyPi7xSOcPqQJx6E0RTA==
+X-Received: by 2002:a05:6902:480e:b0:e6d:deb9:6381 with SMTP id 3f1490d57ef6-e6e1c2dc239mr23407047276.43.1744069353752;
+        Mon, 07 Apr 2025 16:42:33 -0700 (PDT)
+Received: from localhost ([2a03:2880:25ff:74::])
+        by smtp.gmail.com with ESMTPSA id 3f1490d57ef6-e6e0c8cf2d7sm2583871276.14.2025.04.07.16.42.33
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 07 Apr 2025 16:42:32 -0700 (PDT)
+        Mon, 07 Apr 2025 16:42:33 -0700 (PDT)
 From: Nhat Pham <nphamcs@gmail.com>
 To: linux-mm@kvack.org
 Cc: akpm@linux-foundation.org,
@@ -83,9 +83,9 @@ Cc: akpm@linux-foundation.org,
 	linux-kernel@vger.kernel.org,
 	cgroups@vger.kernel.org,
 	linux-pm@vger.kernel.org
-Subject: [RFC PATCH 12/14] vswap: support THP swapin and batch free_swap_and_cache
-Date: Mon,  7 Apr 2025 16:42:13 -0700
-Message-ID: <20250407234223.1059191-13-nphamcs@gmail.com>
+Subject: [RFC PATCH 14/14] zswap: do not start zswap shrinker if there is no physical swap slots
+Date: Mon,  7 Apr 2025 16:42:15 -0700
+Message-ID: <20250407234223.1059191-15-nphamcs@gmail.com>
 X-Mailer: git-send-email 2.47.1
 In-Reply-To: <20250407234223.1059191-1-nphamcs@gmail.com>
 References: <20250407234223.1059191-1-nphamcs@gmail.com>
@@ -97,235 +97,34 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-This patch implements the required functionalities for THP swapin and
-batched free_swap_and_cache() in the virtual swap space design.
-
-The central requirement is the range of entries we are working with must
-have no mixed backing states:
-
-1. For now, zswap-backed entries are not supported for these batched
-   operations.
-2. All the entries must be backed by the same type.
-3. If the swap entries in the batch are backed by in-memory folio, it
-   must be the same folio (i.e they correspond to the subpages of that
-   folio).
-4. If the swap entries in the batch are backed by slots on swapfiles, it
-   must be the same swapfile, and these physical swap slots must also be
-   contiguous.
+When swap is virtualized, we no longer pre-allocate a slot on swapfile
+for each zswap entry. Do not start the zswap shrinker if there is no
+physical swap slots available.
 
 Signed-off-by: Nhat Pham <nphamcs@gmail.com>
 ---
- include/linux/swap.h |  6 +++
- mm/internal.h        | 14 +------
- mm/memory.c          | 16 ++++++--
- mm/vswap.c           | 89 ++++++++++++++++++++++++++++++++++++++++++++
- 4 files changed, 109 insertions(+), 16 deletions(-)
+ mm/zswap.c | 8 ++++++++
+ 1 file changed, 8 insertions(+)
 
-diff --git a/include/linux/swap.h b/include/linux/swap.h
-index 98cdfe0c1da7..c3a10c952116 100644
---- a/include/linux/swap.h
-+++ b/include/linux/swap.h
-@@ -763,6 +763,7 @@ bool vswap_folio_backed(swp_entry_t entry, int nr);
- void vswap_store_folio(swp_entry_t entry, struct folio *folio);
- void swap_zeromap_folio_set(struct folio *folio);
- void vswap_assoc_zswap(swp_entry_t entry, struct zswap_entry *zswap_entry);
-+bool vswap_can_swapin_thp(swp_entry_t entry, int nr);
+diff --git a/mm/zswap.c b/mm/zswap.c
+index 15429825d667..f2f412cc1911 100644
+--- a/mm/zswap.c
++++ b/mm/zswap.c
+@@ -1277,6 +1277,14 @@ static unsigned long zswap_shrinker_count(struct shrinker *shrinker,
+ 	if (!zswap_shrinker_enabled || !mem_cgroup_zswap_writeback_enabled(memcg))
+ 		return 0;
  
- static inline bool trylock_swapoff(swp_entry_t entry,
- 				struct swap_info_struct **si)
-@@ -862,6 +863,11 @@ static inline void vswap_assoc_zswap(swp_entry_t entry,
- {
- }
- 
-+static inline bool vswap_can_swapin_thp(swp_entry_t entry, int nr)
-+{
-+	return true;
-+}
++	/*
++	 * When swap is virtualized, we do not have any swap slots on swapfile
++	 * preallocated for zswap objects. If there is no slot available, we
++	 * cannot writeback and should just bail out here.
++	 */
++	if (IS_ENABLED(CONFIG_VIRTUAL_SWAP) && !get_nr_swap_pages())
++		return 0;
 +
- static inline bool trylock_swapoff(swp_entry_t entry,
- 				struct swap_info_struct **si)
- {
-diff --git a/mm/internal.h b/mm/internal.h
-index 51061691a731..6694e7a14745 100644
---- a/mm/internal.h
-+++ b/mm/internal.h
-@@ -268,14 +268,7 @@ static inline swp_entry_t swap_nth(swp_entry_t entry, long n)
- 	return (swp_entry_t) { entry.val + n };
- }
- 
--/* temporary disallow batched swap operations */
--static inline swp_entry_t swap_move(swp_entry_t entry, long delta)
--{
--	swp_entry_t next_entry;
--
--	next_entry.val = 0;
--	return next_entry;
--}
-+swp_entry_t swap_move(swp_entry_t entry, long delta);
- #else
- static inline swp_entry_t swap_nth(swp_entry_t entry, long n)
- {
-@@ -344,8 +337,6 @@ static inline pte_t pte_next_swp_offset(pte_t pte)
-  * max_nr must be at least one and must be limited by the caller so scanning
-  * cannot exceed a single page table.
-  *
-- * Note that for virtual swap space, we will not batch anything for now.
-- *
-  * Return: the number of table entries in the batch.
-  */
- static inline int swap_pte_batch(pte_t *start_ptep, int max_nr, pte_t pte)
-@@ -360,9 +351,6 @@ static inline int swap_pte_batch(pte_t *start_ptep, int max_nr, pte_t pte)
- 	VM_WARN_ON(!is_swap_pte(pte));
- 	VM_WARN_ON(non_swap_entry(entry));
- 
--	if (IS_ENABLED(CONFIG_VIRTUAL_SWAP))
--		return 1;
--
- 	cgroup_id = lookup_swap_cgroup_id(entry);
- 	while (ptep < end_ptep) {
- 		pte = ptep_get(ptep);
-diff --git a/mm/memory.c b/mm/memory.c
-index c5c34efafa81..5abb464913ef 100644
---- a/mm/memory.c
-+++ b/mm/memory.c
-@@ -4226,10 +4226,8 @@ static struct folio *alloc_swap_folio(struct vm_fault *vmf)
- 	 * A large swapped out folio could be partially or fully in zswap. We
- 	 * lack handling for such cases, so fallback to swapping in order-0
- 	 * folio.
--	 *
--	 * We also disable THP swapin on the virtual swap implementation, for now.
- 	 */
--	if (!zswap_never_enabled() || IS_ENABLED(CONFIG_VIRTUAL_SWAP))
-+	if (!zswap_never_enabled())
- 		goto fallback;
- 
- 	entry = pte_to_swp_entry(vmf->orig_pte);
-@@ -4419,6 +4417,18 @@ vm_fault_t do_swap_page(struct vm_fault *vmf)
- 				}
- 				need_clear_cache = true;
- 
-+				/*
-+				 * Recheck to make sure the entire range is still
-+				 * THP-swapin-able. Note that before we call
-+				 * swapcache_prepare(), entries in the range can
-+				 * still have their backing status changed.
-+				 */
-+				if (IS_ENABLED(CONFIG_VIRTUAL_SWAP) &&
-+						!vswap_can_swapin_thp(entry, nr_pages)) {
-+					schedule_timeout_uninterruptible(1);
-+					goto out_page;
-+				}
-+
- 				mem_cgroup_swapin_uncharge_swap(entry, nr_pages);
- 
- 				shadow = get_shadow_from_swap_cache(entry);
-diff --git a/mm/vswap.c b/mm/vswap.c
-index fcc7807ba89b..c09a7efc2aeb 100644
---- a/mm/vswap.c
-+++ b/mm/vswap.c
-@@ -9,6 +9,7 @@
- #include <linux/swap.h>
- #include <linux/swapops.h>
- #include <linux/swap_cgroup.h>
-+#include "internal.h"
- #include "swap.h"
- 
- /*
-@@ -1104,6 +1105,94 @@ bool vswap_folio_backed(swp_entry_t entry, int nr)
- 				&& type == VSWAP_FOLIO;
- }
- 
-+/**
-+ * vswap_can_swapin_thp - check if the swap entries can be swapped in as a THP.
-+ * @entry: the first virtual swap slot in the range.
-+ * @nr: the number of slots in the range.
-+ *
-+ * For now, we can only swap in a THP if the entire range is zero-filled, or if
-+ * the entire range is backed by a contiguous range of physical swap slots on a
-+ * swapfile.
-+ */
-+bool vswap_can_swapin_thp(swp_entry_t entry, int nr)
-+{
-+	enum swap_type type;
-+
-+	return vswap_check_backing(entry, &type, nr) == nr &&
-+		(type == VSWAP_ZERO || type == VSWAP_SWAPFILE);
-+}
-+
-+/**
-+ * swap_move - increment the swap slot by delta, checking the backing state and
-+ *             return 0 if the backing state does not match (i.e wrong backing
-+ *             state type, or wrong offset on the backing stores).
-+ * @entry: the original virtual swap slot.
-+ * @delta: the offset to increment the original slot.
-+ *
-+ * Note that this function is racy unless we can pin the backing state of these
-+ * swap slots down with swapcache_prepare().
-+ *
-+ * Caller should only rely on this function as a best-effort hint otherwise,
-+ * and should double-check after ensuring the whole range is pinned down.
-+ *
-+ * Return: the incremented virtual swap slot if the backing state matches, or
-+ *         0 if the backing state does not match.
-+ */
-+swp_entry_t swap_move(swp_entry_t entry, long delta)
-+{
-+	struct swp_desc *desc, *next_desc;
-+	swp_entry_t next_entry;
-+	bool invalid = true;
-+	struct folio *folio;
-+	enum swap_type type;
-+	swp_slot_t slot;
-+
-+	next_entry.val = entry.val + delta;
-+
-+	rcu_read_lock();
-+	desc = xa_load(&vswap_map, entry.val);
-+	next_desc = xa_load(&vswap_map, next_entry.val);
-+
-+	if (!desc || !next_desc) {
-+		rcu_read_unlock();
-+		return (swp_entry_t){0};
-+	}
-+
-+	read_lock(&desc->lock);
-+	if (desc->type == VSWAP_ZSWAP) {
-+		read_unlock(&desc->lock);
-+		goto rcu_unlock;
-+	}
-+
-+	type = desc->type;
-+	if (type == VSWAP_FOLIO)
-+		folio = desc->folio;
-+
-+	if (type == VSWAP_SWAPFILE)
-+		slot = desc->slot;
-+	read_unlock(&desc->lock);
-+
-+	read_lock(&next_desc->lock);
-+	if (next_desc->type != type)
-+		goto next_unlock;
-+
-+	if (type == VSWAP_SWAPFILE &&
-+			(swp_slot_type(next_desc->slot) != swp_slot_type(slot) ||
-+				swp_slot_offset(next_desc->slot) !=
-+							swp_slot_offset(slot) + delta))
-+		goto next_unlock;
-+
-+	if (type == VSWAP_FOLIO && next_desc->folio != folio)
-+		goto next_unlock;
-+
-+	invalid = false;
-+next_unlock:
-+	read_unlock(&next_desc->lock);
-+rcu_unlock:
-+	rcu_read_unlock();
-+	return invalid ? (swp_entry_t){0} : next_entry;
-+}
-+
- /*
-  * Return the count of contiguous swap entries that share the same
-  * VSWAP_ZERO status as the starting entry. If is_zeromap is not NULL,
+ 	/*
+ 	 * The shrinker resumes swap writeback, which will enter block
+ 	 * and may enter fs. XXX: Harmonize with vmscan.c __GFP_FS
 -- 
 2.47.1
 
