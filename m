@@ -1,31 +1,31 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8D92F247281;
-	Mon, 14 Apr 2025 13:26:20 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 77CD128B4E4;
+	Mon, 14 Apr 2025 13:27:39 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1744637180; cv=none; b=fA9hr39lNgBcisZzdFEtJj0EHHCMqraOkDm5jFI/mxy25ud+ClYvmtpqzs8k1DFhCCONTWa7fSVfUJc8oM41sHD+SfR3nCA+d1HPfsA0yw6fw9RasYecLtlZtiNfbEEtm0imyMPrmuuV60uA1lDVAvXx8RkPF+ZtVjR+591gBLg=
+	t=1744637259; cv=none; b=dQSbRra0AQsBzbUN8GcSo75s37CszinAg9sd2PKrL0MORZV3J1hOOf1eL+d+IdvhcXQBd4jYi449OObz2hixBmJd3Yzupxp+5GKuiHPJfGf1lEvE5UqjEKSQoHf71fUB9NQu1j8s9t0SXPVajqPdtSM6dhVTGSiyNVl9trA7LMw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1744637180; c=relaxed/simple;
-	bh=4aEI6CDGFpgHvtFi3lsTYpnDyZrFCuvFzrpoO3MmAoA=;
+	s=arc-20240116; t=1744637259; c=relaxed/simple;
+	bh=/2zqRkxAlAw/uJ1J6jZx9l7WcbB1OHfrAqcIyUXNnTw=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=sKUpHDaN+Wj4YgGo0rVjiOzFLM7P7czz2znlKBmn3oxlMaF+xUOHaTPMDVdxU5dH7tNR4iRfCsoPY20S5O8etEYu7sWihM9VoYHqG4YCAAfhDL8tjTeu7T3p5oyUjT5gk0l6fEMj/KVj2ZWV0cTFDY1lOuS3HAFZZlspe/qd+7U=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=GpnEiNnA; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version; b=WLSa4ropNuKbiusjfjh4mhFYQTEOXbM+bu25YbrDu9AAM3tNY3UHj/Ap8k0ggihuoS4GV0V+A9kwScSsqLhOT7WoJqc7QZ5LL+MoCn74h71g92eBfYlpQRKBYSfstdISQ1RAv8fQbN365cElPw3SSJ1ORObUHgR+rk5jQ6vPxAc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=T7mPHtH/; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="GpnEiNnA"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id DFC83C4CEE9;
-	Mon, 14 Apr 2025 13:26:18 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="T7mPHtH/"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id BF8E6C4CEEB;
+	Mon, 14 Apr 2025 13:27:37 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1744637180;
-	bh=4aEI6CDGFpgHvtFi3lsTYpnDyZrFCuvFzrpoO3MmAoA=;
+	s=k20201202; t=1744637259;
+	bh=/2zqRkxAlAw/uJ1J6jZx9l7WcbB1OHfrAqcIyUXNnTw=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=GpnEiNnAKxxY7Ln8fDGFLcjuEazv4azV7jasQ7RygRrC6Yzpm+SXa9jzGffvi5E+p
-	 gMyflxkxGKClPR3Vhn0tfXKDE7aBdBXms1zHKI6jKBX2vvXWYS39s1XLwKebjiH6xF
-	 uAxytyUfFqxd40C3wyj9wgIBR213H9DZJ9m5syikCrcF/Q+SxogKQ/TEfEAxQaOX5G
-	 1B/GfRIriAsNJ+w8H7gvthFhtd9Zo2PBifdI3XXIq+rFlFzGcr4zist1T5A+ZK9AoS
-	 19hx9cg5oIUaECcL/NOUhd6UhXNvZXEs0l1olGqgEYc5iDn0f7xp03a0ktGw/9J9Fi
-	 aVORHagKsVedw==
+	b=T7mPHtH/9P3WxyLADwtb64qlL8TqrfUOYdWXFCn/dyI0pj70sLmy1Xg+mL7ppjR34
+	 Z5X5FEcFMOGrL0iAZdqup602Y2hvO7U31fkHXIdA9D5ofTdsy7Fxqg6u1ETW7DEBCJ
+	 m7fEGjx37IlI2IMW7yUgQT355TXqLPoDbViPf0B60JxrvR+NtNqTugxvxuCouDzuzC
+	 IWedsYYdCsadDbsl2HMtB7I7zngB4POgToODWIUQnRXocLDn5o7eA8xclUPLqLXpdD
+	 in50MUnF4ZSgM25xom+42Ld1j6FSqNVNnQi3SRX5xWv1Z4q8UZmyGn5UC//9fX6Xxl
+	 Q1Nbxk/UOCSHg==
 From: Sasha Levin <sashal@kernel.org>
 To: linux-kernel@vger.kernel.org,
 	stable@vger.kernel.org
@@ -35,12 +35,12 @@ Cc: Waiman Long <longman@redhat.com>,
 	hannes@cmpxchg.org,
 	mkoutny@suse.com,
 	cgroups@vger.kernel.org
-Subject: [PATCH AUTOSEL 6.14 04/34] cgroup/cpuset: Don't allow creation of local partition over a remote one
-Date: Mon, 14 Apr 2025 09:25:40 -0400
-Message-Id: <20250414132610.677644-4-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 6.13 04/34] cgroup/cpuset: Don't allow creation of local partition over a remote one
+Date: Mon, 14 Apr 2025 09:26:58 -0400
+Message-Id: <20250414132729.679254-4-sashal@kernel.org>
 X-Mailer: git-send-email 2.39.5
-In-Reply-To: <20250414132610.677644-1-sashal@kernel.org>
-References: <20250414132610.677644-1-sashal@kernel.org>
+In-Reply-To: <20250414132729.679254-1-sashal@kernel.org>
+References: <20250414132729.679254-1-sashal@kernel.org>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
@@ -49,7 +49,7 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
-X-stable-base: Linux 6.14.2
+X-stable-base: Linux 6.13.11
 Content-Transfer-Encoding: 8bit
 
 From: Waiman Long <longman@redhat.com>
@@ -90,7 +90,7 @@ index 976a8bc3ff603..383963e28ac69 100644
  
  /* bits in struct cpuset flags field */
 diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
-index 1892dc8cd2119..df58760be03ad 100644
+index 0f910c828973a..01e1745957534 100644
 --- a/kernel/cgroup/cpuset.c
 +++ b/kernel/cgroup/cpuset.c
 @@ -62,6 +62,7 @@ static const char * const perr_strings[] = {
@@ -101,7 +101,7 @@ index 1892dc8cd2119..df58760be03ad 100644
  };
  
  /*
-@@ -2830,6 +2831,19 @@ static int update_prstate(struct cpuset *cs, int new_prs)
+@@ -2821,6 +2822,19 @@ static int update_prstate(struct cpuset *cs, int new_prs)
  			goto out;
  		}
  
