@@ -1,43 +1,43 @@
-Received: from us-smtp-delivery-44.mimecast.com (us-smtp-delivery-44.mimecast.com [205.139.111.44])
+Received: from us-smtp-delivery-44.mimecast.com (us-smtp-delivery-44.mimecast.com [207.211.30.44])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6C6CB1EBFEB
-	for <cgroups@vger.kernel.org>; Wed, 23 Apr 2025 21:45:02 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.139.111.44
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EA8297464
+	for <cgroups@vger.kernel.org>; Wed, 23 Apr 2025 21:45:25 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=207.211.30.44
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1745444704; cv=none; b=bU7KtGjGZjR7KYqH9Ev3J1EDdwSVK2Etu19QpFl0gmE/lwukgHItIcUTfFGI6GaM8QkToMeXtyiMlrYrxOynWRdW0ZxsWRQSKqkP/vwA7RYsUjgfIWIRACW1R/IAj2UQYae9CiK2Ht2dqNX4+NC0UvgaBe57Ci0s+HBZIcXwAFM=
+	t=1745444727; cv=none; b=stSw6O/Vi23101tYTD8xJBY+A9WQ3RaOb3Nfur+je0gL9ShcO++ngvdVV6xR+rb3h42kajutGCPh6nXg+OfxTpeqGDMoLCg2Lxmt3Ei1L1x4W6Hjuvxc/VXk6DKd3fgB9J2KzvzLR7INldA3vZacnVDL+54ILiI0YwPkA1GoFL0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1745444704; c=relaxed/simple;
-	bh=cwPSFGZCGQgYUz3qEcOtcFPBuD80brv7+/UaXLNSHm8=;
+	s=arc-20240116; t=1745444727; c=relaxed/simple;
+	bh=29S2t/KimgqnemCE7Wl0zt7lxgF0ycoQyGUa6S2iKgA=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:content-type; b=Xuy70o+yVoz8qhpmVppsqkn/83ANfgW1Siw+besJ10a54X96eJRx3hzU4CUxv8UVc789sIQXjAND8x+pl7RbAY4gJca9heN2zqNeuZYUYPxHNMJCnaLq2mNAOFCwggFgv3CUHpkRxxbnttIHM/bkv9LbLs5dQ9EYI745Zhdiuv0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=gmail.com; spf=fail smtp.mailfrom=gmail.com; arc=none smtp.client-ip=205.139.111.44
+	 MIME-Version:content-type; b=LaKrU/yfjCyyISejsEKq0FnW9byuO79Lcql+jC2x3s5+q1qSNQBt9zXybDOczJYxbn9QY3wCyiFDShMDplnc/PoSdu3SkyRGcdEeKCUFeBBjePzAMK8gRs1udnpl6D9ChPxu//ymTG+wQO1HoMz0fN5qagLxAnzkGHvYB9PcNjI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=gmail.com; spf=fail smtp.mailfrom=gmail.com; arc=none smtp.client-ip=207.211.30.44
 Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=gmail.com
-Received: from mx-prod-mc-06.mail-002.prod.us-west-2.aws.redhat.com
- (ec2-35-165-154-97.us-west-2.compute.amazonaws.com [35.165.154.97]) by
+Received: from mx-prod-mc-04.mail-002.prod.us-west-2.aws.redhat.com
+ (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
  relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-272-WPrkCWAuMLSumlBMeXytRA-1; Wed,
- 23 Apr 2025 17:43:41 -0400
-X-MC-Unique: WPrkCWAuMLSumlBMeXytRA-1
-X-Mimecast-MFC-AGG-ID: WPrkCWAuMLSumlBMeXytRA_1745444620
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-689-pS5T3CCONA-dS2iGmLhz_Q-1; Wed,
+ 23 Apr 2025 17:43:32 -0400
+X-MC-Unique: pS5T3CCONA-dS2iGmLhz_Q-1
+X-Mimecast-MFC-AGG-ID: pS5T3CCONA-dS2iGmLhz_Q_1745444611
 Received: from mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.12])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
-	by mx-prod-mc-06.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id D93E3180010A;
-	Wed, 23 Apr 2025 21:43:39 +0000 (UTC)
+	by mx-prod-mc-04.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 48B9B19560BB;
+	Wed, 23 Apr 2025 21:43:31 +0000 (UTC)
 Received: from dreadlord.redhat.com (unknown [10.64.136.98])
-	by mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id A19B219560A3;
-	Wed, 23 Apr 2025 21:43:37 +0000 (UTC)
+	by mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id 244DB19560A3;
+	Wed, 23 Apr 2025 21:43:28 +0000 (UTC)
 From: Dave Airlie <airlied@gmail.com>
 To: dri-devel@lists.freedesktop.org,
 	tj@kernel.org,
 	christian.koenig@amd.com
 Cc: cgroups@vger.kernel.org
-Subject: [PATCH 4/5] amdgpu: add support for memcg integration
-Date: Thu, 24 Apr 2025 07:37:06 +1000
-Message-ID: <20250423214321.100440-5-airlied@gmail.com>
+Subject: [PATCH 1/5] memcg: add GPU statistic
+Date: Thu, 24 Apr 2025 07:37:03 +1000
+Message-ID: <20250423214321.100440-2-airlied@gmail.com>
 In-Reply-To: <20250423214321.100440-1-airlied@gmail.com>
 References: <20250423214321.100440-1-airlied@gmail.com>
 Precedence: bulk
@@ -48,138 +48,75 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 X-Scanned-By: MIMEDefang 3.0 on 10.30.177.12
 X-Mimecast-Spam-Score: 0
-X-Mimecast-MFC-PROC-ID: 1xB4GAIvgeeQhA_oGovs_McprAP6w4LaAtUD_9YqS74_1745444620
+X-Mimecast-MFC-PROC-ID: 80e57cE3uabIgkCqPm0jhQiv4Y2tbH7iEldN3Bg4Szs_1745444611
 X-Mimecast-Originator: gmail.com
 Content-Transfer-Encoding: quoted-printable
 content-type: text/plain; charset=WINDOWS-1252; x-default=true
 
 From: Dave Airlie <airlied@redhat.com>
 
-This adds the memcg object for any user allocated object,
-and adds account_op to necessary paths which might populate
-a tt object.
+Discrete and Integrated GPUs can use system RAM instead of
+VRAM for all or some allocations. These allocations happen
+via drm/ttm subsystem and are currently not accounted for
+in cgroups.
+
+Add a gpu statistic to allow a place to visualise allocations
+once they are supported.
 
 Signed-off-by: Dave Airlie <airlied@redhat.com>
 ---
- drivers/gpu/drm/amd/amdgpu/amdgpu_cs.c     |  7 ++++++-
- drivers/gpu/drm/amd/amdgpu/amdgpu_gem.c    |  2 ++
- drivers/gpu/drm/amd/amdgpu/amdgpu_object.c | 14 +++++++++++---
- drivers/gpu/drm/amd/amdgpu/amdgpu_object.h |  1 +
- 4 files changed, 20 insertions(+), 4 deletions(-)
+ Documentation/admin-guide/cgroup-v2.rst | 3 +++
+ include/linux/memcontrol.h              | 1 +
+ mm/memcontrol.c                         | 2 ++
+ 3 files changed, 6 insertions(+)
 
-diff --git a/drivers/gpu/drm/amd/amdgpu/amdgpu_cs.c b/drivers/gpu/drm/amd/a=
-mdgpu/amdgpu_cs.c
-index 82df06a72ee0..1a275224b4a6 100644
---- a/drivers/gpu/drm/amd/amdgpu/amdgpu_cs.c
-+++ b/drivers/gpu/drm/amd/amdgpu/amdgpu_cs.c
-@@ -787,6 +787,7 @@ static int amdgpu_cs_bo_validate(void *param, struct am=
-dgpu_bo *bo)
- =09struct ttm_operation_ctx ctx =3D {
- =09=09.interruptible =3D true,
- =09=09.no_wait_gpu =3D false,
-+=09=09.account_op =3D true,
- =09=09.resv =3D bo->tbo.base.resv
- =09};
- =09uint32_t domain;
-@@ -839,7 +840,11 @@ static int amdgpu_cs_parser_bos(struct amdgpu_cs_parse=
-r *p,
- =09=09=09=09union drm_amdgpu_cs *cs)
- {
- =09struct amdgpu_fpriv *fpriv =3D p->filp->driver_priv;
--=09struct ttm_operation_ctx ctx =3D { true, false };
-+=09struct ttm_operation_ctx ctx =3D {
-+=09=09.interruptible =3D true,
-+=09=09.no_wait_gpu =3D false,
-+=09=09.account_op =3D true,
-+=09};
- =09struct amdgpu_vm *vm =3D &fpriv->vm;
- =09struct amdgpu_bo_list_entry *e;
- =09struct drm_gem_object *obj;
-diff --git a/drivers/gpu/drm/amd/amdgpu/amdgpu_gem.c b/drivers/gpu/drm/amd/=
-amdgpu/amdgpu_gem.c
-index 69429df09477..bdad9a862ed3 100644
---- a/drivers/gpu/drm/amd/amdgpu/amdgpu_gem.c
-+++ b/drivers/gpu/drm/amd/amdgpu/amdgpu_gem.c
-@@ -89,6 +89,7 @@ static void amdgpu_gem_object_free(struct drm_gem_object =
-*gobj)
- =09struct amdgpu_bo *aobj =3D gem_to_amdgpu_bo(gobj);
+diff --git a/Documentation/admin-guide/cgroup-v2.rst b/Documentation/admin-=
+guide/cgroup-v2.rst
+index 1a16ce68a4d7..e10a1dfa6051 100644
+--- a/Documentation/admin-guide/cgroup-v2.rst
++++ b/Documentation/admin-guide/cgroup-v2.rst
+@@ -1480,6 +1480,9 @@ The following nested keys are defined.
+ =09  vmalloc (npn)
+ =09=09Amount of memory used for vmap backed memory.
 =20
- =09amdgpu_hmm_unregister(aobj);
-+=09mem_cgroup_put(aobj->tbo.memcg);
- =09ttm_bo_put(&aobj->tbo);
- }
-=20
-@@ -116,6 +117,7 @@ int amdgpu_gem_object_create(struct amdgpu_device *adev=
-, unsigned long size,
- =09bp.domain =3D initial_domain;
- =09bp.bo_ptr_size =3D sizeof(struct amdgpu_bo);
- =09bp.xcp_id_plus1 =3D xcp_id_plus1;
-+=09bp.memcg =3D get_mem_cgroup_from_mm(current->mm);
-=20
- =09r =3D amdgpu_bo_create_user(adev, &bp, &ubo);
- =09if (r)
-diff --git a/drivers/gpu/drm/amd/amdgpu/amdgpu_object.c b/drivers/gpu/drm/a=
-md/amdgpu/amdgpu_object.c
-index 0b9987781f76..777cf05ebac8 100644
---- a/drivers/gpu/drm/amd/amdgpu/amdgpu_object.c
-+++ b/drivers/gpu/drm/amd/amdgpu/amdgpu_object.c
-@@ -632,6 +632,7 @@ int amdgpu_bo_create(struct amdgpu_device *adev,
- =09struct ttm_operation_ctx ctx =3D {
- =09=09.interruptible =3D (bp->type !=3D ttm_bo_type_kernel),
- =09=09.no_wait_gpu =3D bp->no_wait_gpu,
-+=09=09.account_op =3D true,
- =09=09/* We opt to avoid OOM on system pages allocations */
- =09=09.gfp_retry_mayfail =3D true,
- =09=09.allow_res_evict =3D bp->type !=3D ttm_bo_type_kernel,
-@@ -657,16 +658,21 @@ int amdgpu_bo_create(struct amdgpu_device *adev,
- =09=09size =3D ALIGN(size, PAGE_SIZE);
- =09}
-=20
--=09if (!amdgpu_bo_validate_size(adev, size, bp->domain))
-+=09if (!amdgpu_bo_validate_size(adev, size, bp->domain)) {
-+=09=09mem_cgroup_put(bp->memcg);
- =09=09return -ENOMEM;
-+=09}
-=20
- =09BUG_ON(bp->bo_ptr_size < sizeof(struct amdgpu_bo));
-=20
- =09*bo_ptr =3D NULL;
- =09bo =3D kvzalloc(bp->bo_ptr_size, GFP_KERNEL);
--=09if (bo =3D=3D NULL)
-+=09if (bo =3D=3D NULL) {
-+=09=09mem_cgroup_put(bp->memcg);
- =09=09return -ENOMEM;
-+=09}
- =09drm_gem_private_object_init(adev_to_drm(adev), &bo->tbo.base, size);
-+=09bo->tbo.memcg =3D bp->memcg;
- =09bo->tbo.base.funcs =3D &amdgpu_gem_object_funcs;
- =09bo->vm_bo =3D NULL;
- =09bo->preferred_domains =3D bp->preferred_domain ? bp->preferred_domain :
-@@ -1341,7 +1347,9 @@ void amdgpu_bo_release_notify(struct ttm_buffer_objec=
-t *bo)
- vm_fault_t amdgpu_bo_fault_reserve_notify(struct ttm_buffer_object *bo)
- {
- =09struct amdgpu_device *adev =3D amdgpu_ttm_adev(bo->bdev);
--=09struct ttm_operation_ctx ctx =3D { false, false };
-+=09struct ttm_operation_ctx ctx =3D { .interruptible =3D false,
-+=09=09=09=09=09 .no_wait_gpu =3D false,
-+=09=09=09=09=09 .account_op =3D true };
- =09struct amdgpu_bo *abo =3D ttm_to_amdgpu_bo(bo);
- =09int r;
-=20
-diff --git a/drivers/gpu/drm/amd/amdgpu/amdgpu_object.h b/drivers/gpu/drm/a=
-md/amdgpu/amdgpu_object.h
-index 375448627f7b..9a4c506cfb76 100644
---- a/drivers/gpu/drm/amd/amdgpu/amdgpu_object.h
-+++ b/drivers/gpu/drm/amd/amdgpu/amdgpu_object.h
-@@ -55,6 +55,7 @@ struct amdgpu_bo_param {
- =09enum ttm_bo_type=09=09type;
- =09bool=09=09=09=09no_wait_gpu;
- =09struct dma_resv=09=09=09*resv;
-+=09struct mem_cgroup               *memcg;
- =09void=09=09=09=09(*destroy)(struct ttm_buffer_object *bo);
- =09/* xcp partition number plus 1, 0 means any partition */
- =09int8_t=09=09=09=09xcp_id_plus1;
++=09  gpu (npn)
++=09=09Amount of memory used for GPU device system RAM.
++
+ =09  shmem
+ =09=09Amount of cached filesystem data that is swap-backed,
+ =09=09such as tmpfs, shm segments, shared anonymous mmap()s
+diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
+index 53364526d877..4058d4bd94ed 100644
+--- a/include/linux/memcontrol.h
++++ b/include/linux/memcontrol.h
+@@ -36,6 +36,7 @@ enum memcg_stat_item {
+ =09MEMCG_SOCK,
+ =09MEMCG_PERCPU_B,
+ =09MEMCG_VMALLOC,
++=09MEMCG_GPU,
+ =09MEMCG_KMEM,
+ =09MEMCG_ZSWAP_B,
+ =09MEMCG_ZSWAPPED,
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index c96c1f2b9cf5..25471a0fd0be 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -326,6 +326,7 @@ static const unsigned int memcg_stat_items[] =3D {
+ =09MEMCG_SOCK,
+ =09MEMCG_PERCPU_B,
+ =09MEMCG_VMALLOC,
++=09MEMCG_GPU,
+ =09MEMCG_KMEM,
+ =09MEMCG_ZSWAP_B,
+ =09MEMCG_ZSWAPPED,
+@@ -1358,6 +1359,7 @@ static const struct memory_stat memory_stats[] =3D {
+ =09{ "percpu",=09=09=09MEMCG_PERCPU_B=09=09=09},
+ =09{ "sock",=09=09=09MEMCG_SOCK=09=09=09},
+ =09{ "vmalloc",=09=09=09MEMCG_VMALLOC=09=09=09},
++=09{ "gpu",=09=09=09MEMCG_GPU=09=09=09},
+ =09{ "shmem",=09=09=09NR_SHMEM=09=09=09},
+ #ifdef CONFIG_ZSWAP
+ =09{ "zswap",=09=09=09MEMCG_ZSWAP_B=09=09=09},
 --=20
 2.49.0
 
