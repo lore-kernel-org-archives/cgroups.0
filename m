@@ -1,42 +1,45 @@
 Received: from us-smtp-delivery-44.mimecast.com (us-smtp-delivery-44.mimecast.com [205.139.111.44])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9E6BE46447
-	for <cgroups@vger.kernel.org>; Wed, 23 Apr 2025 21:44:43 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7E0B746447
+	for <cgroups@vger.kernel.org>; Wed, 23 Apr 2025 21:44:46 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.139.111.44
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1745444685; cv=none; b=B/Be/O4kyzxyBt8udaI7e/Dm0fzS3+6cukJ+kp8qyhFDA95e9yZAh8xdonyATrB/DWjuLIv6WQr1EYVtzTAuF6tzbDYHmzgz58MAj2E416g5BKVTGXe73oV9fYlEDTeUoxvOAITs3XM1znZvoIyvf24QJ/n0Kvn5vwYsUWRtUzE=
+	t=1745444688; cv=none; b=GXlnJxhznTXddk8OxLfdGXJdDrVATXLfu+SwQazRLsK1W6rdkP31MFbykMZdaRRjyDd5GFQ7up6rpH7kCbVd1r1JmVaHKdIttBQ2TUXjB8sR9lBDf2G3s96RAJJhtV+grz7aipgVi+9w7LIp4WxVpLtEKpUrGEa0LG1NoxIbL7Y=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1745444685; c=relaxed/simple;
-	bh=UdVx3MTKaG4DDfew+tj+fXDm/1EsUNQQ9VmmljgciNM=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version:content-type; b=Q+thgJTjpC+vX2M719RfT5U8coFPqlk/FKqrIlYN2b9EITDMlnUeNs+1G9i3L5FNSuafQOZi0EYqwKrmjSFCWhU0ukFMu7S0rSc17RF5ZaqJSO8A9PtowEeQH5qor5/xckY4Xp96G6QWBGGrz9vr38DHEmqEjEgn6LYdvY9ay8I=
+	s=arc-20240116; t=1745444688; c=relaxed/simple;
+	bh=jxLscFll5ou80mA0BMFJvzDQZALjQF4EPl/6IaallLQ=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:content-type; b=d+AyjXMd9dl0UaEjDJqdsua1SVDSXvZXJs0RCslD5mP6t3IZXq5GBLmc6XcYMdWSvoAW7krarkBxFITWdfZnlRklWCgZu3T0O47QlzjuuwsGMTaFLtwwffFEHzw8Zxg7LkgeNjwDnfW0T/Wj6ZzJjQCCjiffXi11P0SUhrACZME=
 ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=gmail.com; spf=fail smtp.mailfrom=gmail.com; arc=none smtp.client-ip=205.139.111.44
 Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=gmail.com
 Received: from mx-prod-mc-08.mail-002.prod.us-west-2.aws.redhat.com
  (ec2-35-165-154-97.us-west-2.compute.amazonaws.com [35.165.154.97]) by
  relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-635-6vVTT7RnMV-wBLkCJW9S6g-1; Wed,
- 23 Apr 2025 17:43:29 -0400
-X-MC-Unique: 6vVTT7RnMV-wBLkCJW9S6g-1
-X-Mimecast-MFC-AGG-ID: 6vVTT7RnMV-wBLkCJW9S6g_1745444608
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-29-NCx2YT8_M9m2dr-sRLWJhA-1; Wed,
+ 23 Apr 2025 17:43:35 -0400
+X-MC-Unique: NCx2YT8_M9m2dr-sRLWJhA-1
+X-Mimecast-MFC-AGG-ID: NCx2YT8_M9m2dr-sRLWJhA_1745444614
 Received: from mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.12])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
-	by mx-prod-mc-08.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 6A8DF1800570;
-	Wed, 23 Apr 2025 21:43:28 +0000 (UTC)
+	by mx-prod-mc-08.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 249F41800368;
+	Wed, 23 Apr 2025 21:43:34 +0000 (UTC)
 Received: from dreadlord.redhat.com (unknown [10.64.136.98])
-	by mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id 37B9D19560A3;
-	Wed, 23 Apr 2025 21:43:25 +0000 (UTC)
+	by mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id EF83B19560A3;
+	Wed, 23 Apr 2025 21:43:31 +0000 (UTC)
 From: Dave Airlie <airlied@gmail.com>
 To: dri-devel@lists.freedesktop.org,
 	tj@kernel.org,
 	christian.koenig@amd.com
 Cc: cgroups@vger.kernel.org
-Subject: [rfc] drm/ttm/memcg: simplest initial memcg/ttm integration
-Date: Thu, 24 Apr 2025 07:37:02 +1000
-Message-ID: <20250423214321.100440-1-airlied@gmail.com>
+Subject: [PATCH 2/5] memcg: export stat change function
+Date: Thu, 24 Apr 2025 07:37:04 +1000
+Message-ID: <20250423214321.100440-3-airlied@gmail.com>
+In-Reply-To: <20250423214321.100440-1-airlied@gmail.com>
+References: <20250423214321.100440-1-airlied@gmail.com>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
@@ -45,37 +48,34 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 X-Scanned-By: MIMEDefang 3.0 on 10.30.177.12
 X-Mimecast-Spam-Score: 0
-X-Mimecast-MFC-PROC-ID: FDKX1XKSHuR1bi_hkE0X19er1locMsuHn-EmUDSBfTM_1745444608
+X-Mimecast-MFC-PROC-ID: 2r27G9b78CaxDwpuatQDv-sGnWiWffzSpb8BMNNrHB0_1745444614
 X-Mimecast-Originator: gmail.com
 Content-Transfer-Encoding: quoted-printable
 content-type: text/plain; charset=WINDOWS-1252; x-default=true
 
-Hey,
+From: Dave Airlie <airlied@redhat.com>
 
-I've been tasked to look into this, and I'm going start from hopeless
-naivety and see how far I can get. This is an initial attempt to hook
-TTM system memory allocations into memcg and account for them.
+In order for modular GPU memory mgmt TTM to adjust the GPU
+statistic we need to export the stat change functionality.
 
-It does:
-1. Adds memcg GPU statistic,
-2. Adds TTM memcg pointer for drivers to set on their user object
-allocation paths
-3. Adds a singular path where we account for memory in TTM on cached
-non-pooled non-dma allocations. Cached memory allocations used to be
-pooled but we dropped that a while back which makes them the best target
-to start attacking this from.
-4. It only accounts for memory that is allocated directly from a userspace
-TTM operation (like page faults or validation). It *doesn't* account for
-memory allocated in eviction paths due to device memory pressure.
+Signed-off-by: Dave Airlie <airlied@redhat.com>
+---
+ mm/memcontrol.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-This seems to work for me here on my hacked up tests systems at least, I
-can see the GPU stats moving and they look sane.
-
-Future work:
-Account for pooled non-cached
-Account for pooled dma allocations (no idea how that looks)
-Figure out if accounting for eviction is possible, and what it might look
-like.
-
-Dave.
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index 25471a0fd0be..68b23a03d2a6 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -709,6 +709,7 @@ void __mod_memcg_state(struct mem_cgroup *memcg, enum m=
+emcg_stat_item idx,
+ =09memcg_rstat_updated(memcg, val);
+ =09trace_mod_memcg_state(memcg, idx, val);
+ }
++EXPORT_SYMBOL_GPL(__mod_memcg_state);
+=20
+ #ifdef CONFIG_MEMCG_V1
+ /* idx can be of type enum memcg_stat_item or node_stat_item. */
+--=20
+2.49.0
 
