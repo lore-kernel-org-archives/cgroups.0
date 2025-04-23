@@ -1,122 +1,75 @@
-Received: from us-smtp-delivery-44.mimecast.com (us-smtp-delivery-44.mimecast.com [207.211.30.44])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EA8297464
-	for <cgroups@vger.kernel.org>; Wed, 23 Apr 2025 21:45:25 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=207.211.30.44
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 489D82701CA;
+	Wed, 23 Apr 2025 21:59:13 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1745444727; cv=none; b=stSw6O/Vi23101tYTD8xJBY+A9WQ3RaOb3Nfur+je0gL9ShcO++ngvdVV6xR+rb3h42kajutGCPh6nXg+OfxTpeqGDMoLCg2Lxmt3Ei1L1x4W6Hjuvxc/VXk6DKd3fgB9J2KzvzLR7INldA3vZacnVDL+54ILiI0YwPkA1GoFL0=
+	t=1745445554; cv=none; b=EMUA1UEuMQBD/G5uEA7i0bvZCWK6qYcpXfhou4lSih0Xqk2vuApolFkjcwbDidAbaKWZgDVZSynaN8L2kQyiO+rbhVOOK/+BEIHd/w1oKsNlbm88TDA2hW+XLPu2mjqJdh85f+qfTV68Ogzuka/ajyWvLUrTP6V5JDTWd4wW+Mg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1745444727; c=relaxed/simple;
-	bh=29S2t/KimgqnemCE7Wl0zt7lxgF0ycoQyGUa6S2iKgA=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:content-type; b=LaKrU/yfjCyyISejsEKq0FnW9byuO79Lcql+jC2x3s5+q1qSNQBt9zXybDOczJYxbn9QY3wCyiFDShMDplnc/PoSdu3SkyRGcdEeKCUFeBBjePzAMK8gRs1udnpl6D9ChPxu//ymTG+wQO1HoMz0fN5qagLxAnzkGHvYB9PcNjI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=gmail.com; spf=fail smtp.mailfrom=gmail.com; arc=none smtp.client-ip=207.211.30.44
-Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=gmail.com
-Received: from mx-prod-mc-04.mail-002.prod.us-west-2.aws.redhat.com
- (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
- relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-689-pS5T3CCONA-dS2iGmLhz_Q-1; Wed,
- 23 Apr 2025 17:43:32 -0400
-X-MC-Unique: pS5T3CCONA-dS2iGmLhz_Q-1
-X-Mimecast-MFC-AGG-ID: pS5T3CCONA-dS2iGmLhz_Q_1745444611
-Received: from mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.12])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mx-prod-mc-04.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 48B9B19560BB;
-	Wed, 23 Apr 2025 21:43:31 +0000 (UTC)
-Received: from dreadlord.redhat.com (unknown [10.64.136.98])
-	by mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id 244DB19560A3;
-	Wed, 23 Apr 2025 21:43:28 +0000 (UTC)
-From: Dave Airlie <airlied@gmail.com>
-To: dri-devel@lists.freedesktop.org,
-	tj@kernel.org,
-	christian.koenig@amd.com
-Cc: cgroups@vger.kernel.org
-Subject: [PATCH 1/5] memcg: add GPU statistic
-Date: Thu, 24 Apr 2025 07:37:03 +1000
-Message-ID: <20250423214321.100440-2-airlied@gmail.com>
-In-Reply-To: <20250423214321.100440-1-airlied@gmail.com>
-References: <20250423214321.100440-1-airlied@gmail.com>
+	s=arc-20240116; t=1745445554; c=relaxed/simple;
+	bh=Miz9NzWnAK/CmNDcN+idx6rTUbeCo5M/yRi7KWMyvNo=;
+	h=Date:From:To:Cc:Subject:Message-Id:In-Reply-To:References:
+	 Mime-Version:Content-Type; b=QWDGw4+7CKe0XhSzh9h4IQzHNKnDuA5tUWAZPiD4rIHhVeEIxN0V0kUu6NuJhc3P7vU1ZeUQhWMB4SGoDQDNpA4ER3aKEaNy713TLGVwloKYlXWRn+THYBa0iOoUSW+nUouzfo2mVE4KHUvrsCjeBPONWJRlD8DltTmmRjEgq8c=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (1024-bit key) header.d=linux-foundation.org header.i=@linux-foundation.org header.b=a8b0MZA8; arc=none smtp.client-ip=10.30.226.201
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (1024-bit key) header.d=linux-foundation.org header.i=@linux-foundation.org header.b="a8b0MZA8"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 47B2FC4CEE2;
+	Wed, 23 Apr 2025 21:59:13 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linux-foundation.org;
+	s=korg; t=1745445553;
+	bh=Miz9NzWnAK/CmNDcN+idx6rTUbeCo5M/yRi7KWMyvNo=;
+	h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
+	b=a8b0MZA8XSIoNLMnm+Ac5ypsUHn8EM7NNXSX+bVAWtewvIavk7rAlPbeurLfchJfB
+	 3HSdgyJjsG3+NvIZtYC/T95BvvbKz5jqOxaOYTQgwRbAinynQAQelaf1UTaoevSNOE
+	 WsBgGp1yw7GGL68uNUm8hN0x/9wUEuU8uTCRRPAk=
+Date: Wed, 23 Apr 2025 14:59:12 -0700
+From: Andrew Morton <akpm@linux-foundation.org>
+To: Huan Yang <link@vivo.com>
+Cc: Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>,
+ Roman Gushchin <roman.gushchin@linux.dev>, Shakeel Butt
+ <shakeel.butt@linux.dev>, Muchun Song <muchun.song@linux.dev>,
+ cgroups@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org,
+ opensource.kernel@vivo.com
+Subject: Re: [PATCH 1/2] mm/memcg: use kmem_cache when alloc memcg
+Message-Id: <20250423145912.3e0062864b6969b3623c8ff6@linux-foundation.org>
+In-Reply-To: <20250423084306.65706-2-link@vivo.com>
+References: <20250423084306.65706-1-link@vivo.com>
+	<20250423084306.65706-2-link@vivo.com>
+X-Mailer: Sylpheed 3.7.0 (GTK+ 2.24.33; x86_64-pc-linux-gnu)
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-X-Scanned-By: MIMEDefang 3.0 on 10.30.177.12
-X-Mimecast-Spam-Score: 0
-X-Mimecast-MFC-PROC-ID: 80e57cE3uabIgkCqPm0jhQiv4Y2tbH7iEldN3Bg4Szs_1745444611
-X-Mimecast-Originator: gmail.com
-Content-Transfer-Encoding: quoted-printable
-content-type: text/plain; charset=WINDOWS-1252; x-default=true
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 
-From: Dave Airlie <airlied@redhat.com>
+On Wed, 23 Apr 2025 16:43:04 +0800 Huan Yang <link@vivo.com> wrote:
 
-Discrete and Integrated GPUs can use system RAM instead of
-VRAM for all or some allocations. These allocations happen
-via drm/ttm subsystem and are currently not accounted for
-in cgroups.
+> @@ -3652,7 +3654,10 @@ static struct mem_cgroup *mem_cgroup_alloc(struct mem_cgroup *parent)
+>  	int __maybe_unused i;
+>  	long error;
+>  
+> -	memcg = kzalloc(struct_size(memcg, nodeinfo, nr_node_ids), GFP_KERNEL);
+> +	memcg = likely(memcg_cachep) ?
+> +			kmem_cache_zalloc(memcg_cachep, GFP_KERNEL) :
+> +			kzalloc(struct_size(memcg, nodeinfo, nr_node_ids),
+> +				GFP_KERNEL);
 
-Add a gpu statistic to allow a place to visualise allocations
-once they are supported.
+Why are we testing for memcg_cachep=NULL?
 
-Signed-off-by: Dave Airlie <airlied@redhat.com>
----
- Documentation/admin-guide/cgroup-v2.rst | 3 +++
- include/linux/memcontrol.h              | 1 +
- mm/memcontrol.c                         | 2 ++
- 3 files changed, 6 insertions(+)
+> @@ -5055,6 +5061,10 @@ static int __init mem_cgroup_init(void)
+>  		INIT_WORK(&per_cpu_ptr(&memcg_stock, cpu)->work,
+>  			  drain_local_stock);
+>  
+> +	memcg_size = struct_size_t(struct mem_cgroup, nodeinfo, nr_node_ids);
+> +	memcg_cachep = kmem_cache_create("mem_cgroup", memcg_size, 0,
+> +					 SLAB_PANIC | SLAB_HWCACHE_ALIGN, NULL);
 
-diff --git a/Documentation/admin-guide/cgroup-v2.rst b/Documentation/admin-=
-guide/cgroup-v2.rst
-index 1a16ce68a4d7..e10a1dfa6051 100644
---- a/Documentation/admin-guide/cgroup-v2.rst
-+++ b/Documentation/admin-guide/cgroup-v2.rst
-@@ -1480,6 +1480,9 @@ The following nested keys are defined.
- =09  vmalloc (npn)
- =09=09Amount of memory used for vmap backed memory.
-=20
-+=09  gpu (npn)
-+=09=09Amount of memory used for GPU device system RAM.
-+
- =09  shmem
- =09=09Amount of cached filesystem data that is swap-backed,
- =09=09such as tmpfs, shm segments, shared anonymous mmap()s
-diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
-index 53364526d877..4058d4bd94ed 100644
---- a/include/linux/memcontrol.h
-+++ b/include/linux/memcontrol.h
-@@ -36,6 +36,7 @@ enum memcg_stat_item {
- =09MEMCG_SOCK,
- =09MEMCG_PERCPU_B,
- =09MEMCG_VMALLOC,
-+=09MEMCG_GPU,
- =09MEMCG_KMEM,
- =09MEMCG_ZSWAP_B,
- =09MEMCG_ZSWAPPED,
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index c96c1f2b9cf5..25471a0fd0be 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -326,6 +326,7 @@ static const unsigned int memcg_stat_items[] =3D {
- =09MEMCG_SOCK,
- =09MEMCG_PERCPU_B,
- =09MEMCG_VMALLOC,
-+=09MEMCG_GPU,
- =09MEMCG_KMEM,
- =09MEMCG_ZSWAP_B,
- =09MEMCG_ZSWAPPED,
-@@ -1358,6 +1359,7 @@ static const struct memory_stat memory_stats[] =3D {
- =09{ "percpu",=09=09=09MEMCG_PERCPU_B=09=09=09},
- =09{ "sock",=09=09=09MEMCG_SOCK=09=09=09},
- =09{ "vmalloc",=09=09=09MEMCG_VMALLOC=09=09=09},
-+=09{ "gpu",=09=09=09MEMCG_GPU=09=09=09},
- =09{ "shmem",=09=09=09NR_SHMEM=09=09=09},
- #ifdef CONFIG_ZSWAP
- =09{ "zswap",=09=09=09MEMCG_ZSWAP_B=09=09=09},
---=20
-2.49.0
+If it's because this allocation might have failed then let's not
+bother.  If an __init-time allocation failed, this kernel is unusable
+anyway.
+
 
