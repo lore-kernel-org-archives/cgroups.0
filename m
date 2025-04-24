@@ -1,87 +1,122 @@
-Received: from out-178.mta1.migadu.com (out-178.mta1.migadu.com [95.215.58.178])
+Received: from mx0a-00069f02.pphosted.com (mx0a-00069f02.pphosted.com [205.220.165.32])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ADCAC2701CE
-	for <cgroups@vger.kernel.org>; Wed, 23 Apr 2025 23:14:51 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=95.215.58.178
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B49C817D2;
+	Thu, 24 Apr 2025 00:02:16 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.165.32
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1745450093; cv=none; b=S0B1UYWA9aaYwI1a1wffwmkluaonjcNg9R4u8ddhjK9OzkPNJ+cR8Q/L154pxMLzoMvgSa2xqbgPjnHm4b8/khU1E+2MJ/wb6n4VweK7Jje3eNMgz7oqD4r1mQ8VlIGHfXhKCOCeBdWiko47tfXupO4YasF/ijcjcjNnxNDXX00=
+	t=1745452938; cv=none; b=hmASyx1t9u5e3s4qqAMbtKSR/aSZEfL57ZnTfDzAZfgOvvfYKKngealQHWaDe+XW770OZXyqzLp2t0oh42/xB28a+ipvgOboKqdgS3PylVpMrtYvQtL4oqCX1HI7B9y1XEgL8lv3I4cIYuAR3NbMhvp0IVqL4ZNt/qIi4BDKDfw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1745450093; c=relaxed/simple;
-	bh=AcwVzUr6pE9bCY23yNLgHQDCmdVftwicqQIJmHKGyDA=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=LUns0Aw7LZB5WZ5Pg+ItyZrAbiQfxliqeFVc/UL628lUNZXPNR8YUMcX/0nDPvHoYrhvrkDP1BXpL3h4DfUHzksvzuW8R9I4SYvYqs2RbnqMHAnFV78c7cbiPdh2Jtv4q8H1nLB4tTYEU0ueE1ykanyJpxdDyNpjxMhzKXIQ8kM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=dC83HcUN; arc=none smtp.client-ip=95.215.58.178
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
+	s=arc-20240116; t=1745452938; c=relaxed/simple;
+	bh=NYUWSLy6QpMvRrzAdRxpnbaZep79ljUxsyBdwOU4Jwo=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=GJueuKfLuZJCs4puxEHYwDWwkJOj7K2UKF6gXfoSqw0wQtp+ipg3700TycKLk++VkeIhLTYAiwXmJKUuQBVC0t19eHeg/TFV94H2kaWtD+GMiGLbqf0AIegYsdYCxUUQb0zCaWUGmezgaULJFhbVY1i27355w6ToJ1Eqx1u32t4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=NQAR9p/2; arc=none smtp.client-ip=205.220.165.32
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oracle.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="dC83HcUN"
-Date: Wed, 23 Apr 2025 16:14:33 -0700
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
-	t=1745450079;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=LDDbX7bPNdKQ1x+LjPkSgx3kPvorivXURC3759U0Hwc=;
-	b=dC83HcUNXbOPHMnABNyrAUBKas+oUXCQMM8lCYq/T45+uP9FP7na4/9OFo799pMnTXs3bP
-	WGFUHBWlVfLY2ARD0TTwqPgoL7P+W2vBGXFV4GJ+fKzmSyEYjYfsU9RvWv4OczuO824l3u
-	vvavC7aHQOLC18z/S3YNlQAJGiIf8zo=
-X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
-From: Shakeel Butt <shakeel.butt@linux.dev>
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, 
-	Roman Gushchin <roman.gushchin@linux.dev>, Muchun Song <muchun.song@linux.dev>, 
-	Vlastimil Babka <vbabka@suse.cz>, Jakub Kicinski <kuba@kernel.org>, 
-	Eric Dumazet <edumazet@google.com>, Soheil Hassas Yeganeh <soheil@google.com>, linux-mm@kvack.org, 
-	cgroups@vger.kernel.org, netdev@vger.kernel.org, linux-kernel@vger.kernel.org, 
-	Meta kernel team <kernel-team@meta.com>
-Subject: Re: [PATCH] memcg: multi-memcg percpu charge cache
-Message-ID: <rlsgeosg3j7v5nihhbxxxbv3xfy4ejvigihj7lkkbt3n6imyne@2apxx2jm2e57>
-References: <20250416180229.2902751-1-shakeel.butt@linux.dev>
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="NQAR9p/2"
+Received: from pps.filterd (m0333521.ppops.net [127.0.0.1])
+	by mx0b-00069f02.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 53NLMLH2017449;
+	Thu, 24 Apr 2025 00:01:54 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=cc
+	:content-transfer-encoding:date:from:in-reply-to:message-id
+	:mime-version:references:subject:to; s=corp-2023-11-20; bh=pokXB
+	CX5Ded9Lnz+unOijz8gr7rZOR1qtecYySzC12Y=; b=NQAR9p/2W/KkC+/L86oEl
+	gp2W1r13YQ5gUWtRnqdGRHu/EP4RnbmQcs/w4RbsnlgFTMUe7OcFHWJIpW6wd1TY
+	zS6WIuNE4JhdpFNN+5GL11vuqnCeWkn94gm7q8ybtRzRfYO17fmKLO6EFfKsmpk/
+	y/kMP+QLxjHID9Lkkx/rE/r6N808PTNxf5DMebIh3Aazf5nbGDbT+37tAVzuI7xW
+	tEALVMCnOL8NPWicfjB8svv4dxoYIB/7rxlM6hYziDaWzmvngOeeG+e7aa7Itp74
+	DF5tc5fUBu+asxuQb0cz1ui6IWYFBAngdFSVrCR0rMYuHouFesnqwsKSTB6iaAUV
+	w==
+Received: from phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta02.appoci.oracle.com [147.154.114.232])
+	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 466jh9jj2u-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Thu, 24 Apr 2025 00:01:54 +0000 (GMT)
+Received: from pps.filterd (phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
+	by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (8.18.1.2/8.18.1.2) with ESMTP id 53NMSOma030859;
+	Thu, 24 Apr 2025 00:01:53 GMT
+Received: from pps.reinject (localhost [127.0.0.1])
+	by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTPS id 466k06jr0y-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Thu, 24 Apr 2025 00:01:53 +0000
+Received: from phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
+	by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 53O01oOm004345;
+	Thu, 24 Apr 2025 00:01:52 GMT
+Received: from clb-2-bm-ad2.osdevelopmeniad.oraclevcn.com (clb-2-bm-ad2.allregionaliads.osdevelopmeniad.oraclevcn.com [100.100.254.172])
+	by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTP id 466k06jqsh-2;
+	Thu, 24 Apr 2025 00:01:52 +0000
+From: Libo Chen <libo.chen@oracle.com>
+To: akpm@linux-foundation.org, rostedt@goodmis.org, peterz@infradead.org,
+        mgorman@suse.de, mingo@redhat.com, juri.lelli@redhat.com,
+        vincent.guittot@linaro.org, tj@kernel.org, llong@redhat.com
+Cc: sraithal@amd.com, venkat88@linux.ibm.com, kprateek.nayak@amd.com,
+        raghavendra.kt@amd.com, yu.c.chen@intel.com, tim.c.chen@intel.com,
+        vineethr@linux.ibm.com, chris.hyser@oracle.com,
+        daniel.m.jordan@oracle.com, lorenzo.stoakes@oracle.com,
+        mkoutny@suse.com, linux-mm@kvack.org, cgroups@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: [PATCH v4 1/2] sched/numa: Skip VMA scanning on memory pinned to one NUMA node via cpuset.mems
+Date: Wed, 23 Apr 2025 17:01:45 -0700
+Message-ID: <20250424000146.1197285-2-libo.chen@oracle.com>
+X-Mailer: git-send-email 2.43.5
+In-Reply-To: <20250424000146.1197285-1-libo.chen@oracle.com>
+References: <20250424000146.1197285-1-libo.chen@oracle.com>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20250416180229.2902751-1-shakeel.butt@linux.dev>
-X-Migadu-Flow: FLOW_OUT
+Content-Transfer-Encoding: 8bit
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1099,Hydra:6.0.680,FMLib:17.12.80.40
+ definitions=2025-04-23_12,2025-04-22_01,2025-02-21_01
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 phishscore=0 bulkscore=0 mlxscore=0
+ spamscore=0 malwarescore=0 mlxlogscore=999 suspectscore=0 adultscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2504070000
+ definitions=main-2504230161
+X-Proofpoint-GUID: QJa0f7b4SHhahwcbDcCBKNa-1K40sAWG
+X-Proofpoint-ORIG-GUID: QJa0f7b4SHhahwcbDcCBKNa-1K40sAWG
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjUwNDIzMDE2MSBTYWx0ZWRfXwDMISqLfLQot 5Y4msvxMFdbe+59/FcmyfBMPDCvmg5uq0tg8SQg5FHLqn66fO3y+IHLv61qH2ws58bGLHZJXMnv 71OKxolwbYBQzvmyFOLL+HRlTpJeZ2XCbsn37E/TwiZcgJ1IltDfks8jJKl/GTzrz/r2/40otO5
+ igpd3KO+8JdVLSadOQoXBO4MYj0bYx+xungzI2Zxa7myTmqgsePSlvsRmW7/7ZHoaavcZqlVDnM kKL+zEasxUu2YiEK7CmoQeXkSnSNtXdTVbHgiK+tOA+PlJdn/baI4OxnTICJA2ZSZcyU/BrI7bO f3sPjdbuGQnmEjTN4ZRfyUaNb5fd3fLCh5iLXazMj18A6X96sZl4wIw/OT3USn+NHH7r80kLCMA QKeKJUVB
 
-Hi Andrew,
+When the memory of the current task is pinned to one NUMA node by cgroup,
+there is no point in continuing the rest of VMA scanning and hinting page
+faults as they will just be overhead. With this change, there will be no
+more unnecessary PTE updates or page faults in this scenario.
 
-Can you please squash the following patch in this one?
+We have seen up to a 6x improvement on a typical java workload running on
+VMs with memory and CPU pinned to one NUMA node via cpuset in a two-socket
+AARCH64 system. With the same pinning, on a 18-cores-per-socket Intel
+platform, we have seen 20% improvment in a microbench that creates a
+30-vCPU selftest KVM guest with 4GB memory, where each vCPU reads 4KB
+pages in a fixed number of loops.
 
-From: Shakeel Butt <shakeel.butt@linux.dev>
-Date: Wed, 23 Apr 2025 15:41:18 -0700
-Subject: [PATCH] memcg: multi-memcg percpu charge cache - fix
-
-Add BUILD_BUG_ON() for MEMCG_CHARGE_BATCH
-
-Signed-off-by: Shakeel Butt <shakeel.butt@linux.dev>
+Signed-off-by: Libo Chen <libo.chen@oracle.com>
+Tested-by: Chen Yu <yu.c.chen@intel.com>
 ---
- mm/memcontrol.c | 7 +++++++
+ kernel/sched/fair.c | 7 +++++++
  1 file changed, 7 insertions(+)
 
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index 23894e60c3c0..80ff002b0259 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -1909,6 +1909,13 @@ static void refill_stock(struct mem_cgroup *memcg, unsigned int nr_pages)
- 	bool evict = true;
- 	int i;
+diff --git a/kernel/sched/fair.c b/kernel/sched/fair.c
+index e43993a4e580..c9903b1b3948 100644
+--- a/kernel/sched/fair.c
++++ b/kernel/sched/fair.c
+@@ -3329,6 +3329,13 @@ static void task_numa_work(struct callback_head *work)
+ 	if (p->flags & PF_EXITING)
+ 		return;
  
 +	/*
-+	 * For now limit MEMCG_CHARGE_BATCH to 127 and less. In future if we
-+	 * decide to increase it more than 127 then we will need more careful
-+	 * handling of nr_pages[] in struct memcg_stock_pcp.
++	 * Memory is pinned to only one NUMA node via cpuset.mems, naturally
++	 * no page can be migrated.
 +	 */
-+	BUILD_BUG_ON(MEMCG_CHARGE_BATCH > S8_MAX);
++	if (cpusets_enabled() && nodes_weight(cpuset_current_mems_allowed) == 1)
++		return;
 +
- 	VM_WARN_ON_ONCE(mem_cgroup_is_root(memcg));
- 
- 	if (nr_pages > MEMCG_CHARGE_BATCH ||
+ 	if (!mm->numa_next_scan) {
+ 		mm->numa_next_scan = now +
+ 			msecs_to_jiffies(sysctl_numa_balancing_scan_delay);
 -- 
-2.47.1
+2.43.5
 
