@@ -1,49 +1,51 @@
 Received: from mx0a-00069f02.pphosted.com (mx0a-00069f02.pphosted.com [205.220.165.32])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C3E7879D0;
-	Thu, 24 Apr 2025 02:46:19 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 626CB19CD16;
+	Thu, 24 Apr 2025 02:46:24 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.165.32
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1745462782; cv=none; b=pWt3XNFaTDglZdPL2gVVNiDfSSli6CjlGiWaKafr33DX5FFbazKW8gk3c75UNZCwRVvHf8k2j3gTmByf6JWFvwFSNZXIn/1bD3mlDa7pTbqFOu/2SZakJVo1VbGP6grOTNn9ijuoUiJA/bFMbNFkflfncyy2GmBfF1GOZs5KuEA=
+	t=1745462785; cv=none; b=kdn0PGwNzKvmOD1ilnQMr1aIQ5eldzZO+B148xN+sk68wyr6soW4ZX/CyEZ3vwFca7k2UWgypYJvbvhVqg8Ey0PnBV9ynjfLLrku0RahxzD7WW8wrQmtzEFQK44gBU3C59A6h+lnM9Y0PPyTjkd4l0dTV8NYl59jwrD20RAK+j4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1745462782; c=relaxed/simple;
-	bh=ga0/xUO+Mwi+DnTzYFYtvcQ3uYaWRcKYGQXMiyVoiwA=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=MTjFRjpxPkQ4Z+/e8BtpnAr7WgsRDNP0WqgLfelpYDZcWmbRVdRZCYbk9J3e+xcqQ9peClA52qC27rR2zuHvayorDIOOaCf+F4xXIQz0F+3QbihIsJmLaUX6Q0iByxiHwNrod1mtJeYN6V0PkPKL75q4P+aY7EHj//S4KCZl2r8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=aNqYcQj3; arc=none smtp.client-ip=205.220.165.32
+	s=arc-20240116; t=1745462785; c=relaxed/simple;
+	bh=Cogpddh8rHZuYXSXacYjBxtq1MmshXR/AYf1FJv6fbo=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=B9rEQ/84oEc5MI0j/wSVrIPQhFURCW23fxzqY7ne/QuicCej53QLVAK9VvqtkHLNPy1QaZpnSLSAYJ+kb9Nmnxrp9feY7UUkWHFZXAGQkXQKjMWPlW3obvI7BrLBXYgJ+yxsuyLMj0FPpM6L9V+6+z99vicYvxdZDQZKcfZaRJY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=AT40zU61; arc=none smtp.client-ip=205.220.165.32
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oracle.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="aNqYcQj3"
-Received: from pps.filterd (m0246627.ppops.net [127.0.0.1])
-	by mx0b-00069f02.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 53NLMJdJ017500;
-	Thu, 24 Apr 2025 02:45:29 GMT
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="AT40zU61"
+Received: from pps.filterd (m0246617.ppops.net [127.0.0.1])
+	by mx0b-00069f02.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 53NLNA0C018126;
+	Thu, 24 Apr 2025 02:45:33 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=cc
-	:content-transfer-encoding:date:from:message-id:mime-version
-	:subject:to; s=corp-2023-11-20; bh=mj0YAlP6jI+YDoTyfoEygAzSYoSo+
-	UXTFc/An4e8d2U=; b=aNqYcQj3TpllrskBJYcDIs6XySXxxszOJneVG/miaGKJ8
-	RRmAWROd4oB1wgC6zygkJW6owdmkv8ctriUw1dDXn5p1V+lFn+y9NRj3trErcPyU
-	4FLgrWXIH/CSlJ1335M7BObv+7pZHVYSM/ahJLKdRxH+33+X4+URx7FHawblqB04
-	MiPcAKKdrgG4ehGyIlHQfEr9nMRR+YDwdH5MYUiVADs6FOYSlXcTs2KYGCJ/hb0m
-	4zla5lf1YR0XoWD2NqEHW8/MKrvFq4zKMICKPbAGTMDHKenidCoW+8rtFsnpP1+d
-	q4ic/eYsBH146kiIm2uhLWXllN8QtN1OOjFqTo1bQ==
+	:content-transfer-encoding:date:from:in-reply-to:message-id
+	:mime-version:references:subject:to; s=corp-2023-11-20; bh=Jfi9W
+	scH0qLUANjDVKHfTqmq+k7m7mKeWTnbq5WqGO8=; b=AT40zU610csFqG+AzOG2D
+	p8gCLX9z6uShmEYlLRJJ7P/h+pg1oACEXNoValFx0lVdhL897NCl2HB7a7Rdg4Ks
+	rxNmxJFIvzS5WeUF0Pjm2i1/OQdoClzsCmnhs7tlaPIny0Nd1ZWG91no6Y33OXYR
+	01QRxTFa8VtmpUq7EfrbC2DofXK/9lMJ1EDdB1zu5y6RVjq2n3NhM4LCBNEf/jsA
+	hQNiWuCobwMYJsn66FCL8I7KN4dkw4HIncQ6fTzhO2RZzHMDB8JfpJ/oSqrGe+nZ
+	vyTd+zkkx9JgqxLZdlsjp67z601AQoINOqKeKOBWkjWsaUbVgV3W/xLDKlFaVumP
+	Q==
 Received: from phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta03.appoci.oracle.com [138.1.37.129])
-	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 466jha2xj4-1
+	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 466jkjjx76-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Thu, 24 Apr 2025 02:45:28 +0000 (GMT)
+	Thu, 24 Apr 2025 02:45:33 +0000 (GMT)
 Received: from pps.filterd (phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
-	by phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (8.18.1.2/8.18.1.2) with ESMTP id 53O1jR5e028470;
-	Thu, 24 Apr 2025 02:45:27 GMT
+	by phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (8.18.1.2/8.18.1.2) with ESMTP id 53O0PRJO028392;
+	Thu, 24 Apr 2025 02:45:32 GMT
 Received: from pps.reinject (localhost [127.0.0.1])
-	by phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTPS id 466jx6xryt-1
+	by phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTPS id 466jx6xs1m-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Thu, 24 Apr 2025 02:45:27 +0000
+	Thu, 24 Apr 2025 02:45:32 +0000
 Received: from phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
-	by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 53O2jQBF033048;
-	Thu, 24 Apr 2025 02:45:26 GMT
+	by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 53O2jQBJ033048;
+	Thu, 24 Apr 2025 02:45:31 GMT
 Received: from clb-2-bm-ad2.osdevelopmeniad.oraclevcn.com (clb-2-bm-ad2.allregionaliads.osdevelopmeniad.oraclevcn.com [100.100.254.172])
-	by phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTP id 466jx6xrxs-1;
-	Thu, 24 Apr 2025 02:45:26 +0000
+	by phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTP id 466jx6xrxs-3;
+	Thu, 24 Apr 2025 02:45:31 +0000
 From: Libo Chen <libo.chen@oracle.com>
 To: akpm@linux-foundation.org, rostedt@goodmis.org, peterz@infradead.org,
         mgorman@suse.de, mingo@redhat.com, juri.lelli@redhat.com,
@@ -54,10 +56,12 @@ Cc: sraithal@amd.com, venkat88@linux.ibm.com, kprateek.nayak@amd.com,
         daniel.m.jordan@oracle.com, lorenzo.stoakes@oracle.com,
         mkoutny@suse.com, linux-mm@kvack.org, cgroups@vger.kernel.org,
         linux-kernel@vger.kernel.org
-Subject: [PATCH v5 0/2] sched/numa: Skip VMA scanning on memory pinned to one NUMA node via cpuset.mems
-Date: Wed, 23 Apr 2025 19:45:21 -0700
-Message-ID: <20250424024523.2298272-1-libo.chen@oracle.com>
+Subject: [PATCH v5 2/2] sched/numa: Add tracepoint that tracks the skipping of numa balancing due to cpuset memory pinning
+Date: Wed, 23 Apr 2025 19:45:23 -0700
+Message-ID: <20250424024523.2298272-3-libo.chen@oracle.com>
 X-Mailer: git-send-email 2.43.5
+In-Reply-To: <20250424024523.2298272-1-libo.chen@oracle.com>
+References: <20250424024523.2298272-1-libo.chen@oracle.com>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
@@ -72,43 +76,81 @@ X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 bulkscore=0 malwa
  suspectscore=0 mlxlogscore=999 adultscore=0 mlxscore=0 spamscore=0
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2504070000
  definitions=main-2504240015
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjUwNDI0MDAxNSBTYWx0ZWRfX0Jq4zBrCb/c8 L/Lw6nUNZ9aCsztEZvc5aJUjpWfZ070O0eLESrFnI0LqLkGCq3CGVfYBjZyKWU4aezaz1KDFHvk 8ZQRMmAbxmZWrEXWu+G0k+SRdpvUVTx8tPMs68u/vuL3llG3ZQ4E8H9uO4J7Z/BTcoN07mc8ky5
- YDIVrbo8iE5YiOEuF/Yos+1Zr2PsGOpNVlWawLtgrX+S/7VFJxrDd8LlG9vb57MGsPDfUcTFV4Z 1rICkpaEjlGKw6lDpo1n2OUl8+H+GVgXwU+u43PghK0CyiM/fZRy7h5bU18bvw5qT6Hno00/1aG oz0VlZuW3u4IRXNEtdFGTTgpDRTZknYtlafUOX6JQwQGv09jAQlvt9M0bfB9t27YDnLk5Oymo1S 1Yki2wXx
-X-Proofpoint-GUID: H9VvxBcZaftlAR9Nwb5vyKh6TAXsm9Hz
-X-Proofpoint-ORIG-GUID: H9VvxBcZaftlAR9Nwb5vyKh6TAXsm9Hz
+X-Proofpoint-GUID: YrgbO1E1Q_jUOnOXG6PcmF1dYKwo32ZK
+X-Proofpoint-ORIG-GUID: YrgbO1E1Q_jUOnOXG6PcmF1dYKwo32ZK
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjUwNDI0MDAxNSBTYWx0ZWRfX8dIR9yw8bpy9 c0LC0QHXzTrdODkEDOAKnqPISHngM5Fsg4AHxbfBQl6TF60xJqJInowMf4R6VyB2f07NYwmXNj4 ncH34QhqenxIDY/YF8ACC5CdE2bRAm2WOu2EU857V7uy7ENICejPwsjMsWlsyH9W0HEX2+sltkH
+ wapMiAoWX+bhNvRDSVIbamcyoWAdPbLIDlqEONuo1zpR/fXYUVeFKk2vZ1HObbvy0/EdlFF6Mck dlGLxmGUR/iwloRqZOz6hvMyeVdHj8Hf8zrDP9sSR88NTwzXlx9EErA+kfr+3YVo45p0ZxkCSGB sX1CdCrOMgMUNArI2Q58htmmQyb458EyOWqhI8kIBC0hEcz/p035ToUSXBoS0A7vSKqz6p49+1w 0XbuUUqs
 
-v1->v2:
-1. add perf improvment numbers in commit log. Yet to find perf diff on
-will-it-scale, so not included here. Plan to run more workloads.
-2. add tracepoint.
-3. To peterz's comment, this will make it impossible to attract tasks to
-those memory just like other VMA skippings. This is the current
-implementation, I think we can improve that in the future, but at the
-moment it's probabaly better to keep it consistent.
+Unlike sched_skip_vma_numa tracepoint which tracks skipped VMAs, this
+tracks the task subjected to cpuset.mems pinning and prints out its
+allowed memory node mask.
 
-v2->v3:
-1. add enable_cpuset() based on Mel's suggestion but again I think it's
-redundant.
-2. print out nodemask with %*p.. format in the tracepoint.
-
-v3->v4:
-1. fix an unsafe dereference of a pointer to content not on ring buffer,
-namely mem_allowed_ptr in the tracepoint.
-
-v4->v5:
-1. add BUILD_BUG_ON() in TP_fast_assign() to guard against future
-changes (particularly in size) in nodemask_t.
-
-Libo Chen (2):
-  sched/numa: Skip VMA scanning on memory pinned to one NUMA node via
-    cpuset.mems
-  sched/numa: Add tracepoint that tracks the skipping of numa balancing
-    due to cpuset memory pinning
-
+Signed-off-by: Libo Chen <libo.chen@oracle.com>
+---
  include/trace/events/sched.h | 33 +++++++++++++++++++++++++++++++++
- kernel/sched/fair.c          |  9 +++++++++
- 2 files changed, 42 insertions(+)
+ kernel/sched/fair.c          |  4 +++-
+ 2 files changed, 36 insertions(+), 1 deletion(-)
 
+diff --git a/include/trace/events/sched.h b/include/trace/events/sched.h
+index 8994e97d86c1..ff3990318aec 100644
+--- a/include/trace/events/sched.h
++++ b/include/trace/events/sched.h
+@@ -745,6 +745,39 @@ TRACE_EVENT(sched_skip_vma_numa,
+ 		  __entry->vm_end,
+ 		  __print_symbolic(__entry->reason, NUMAB_SKIP_REASON))
+ );
++
++TRACE_EVENT(sched_skip_cpuset_numa,
++
++	TP_PROTO(struct task_struct *tsk, nodemask_t *mem_allowed_ptr),
++
++	TP_ARGS(tsk, mem_allowed_ptr),
++
++	TP_STRUCT__entry(
++		__array( char,		comm,		TASK_COMM_LEN		)
++		__field( pid_t,		pid					)
++		__field( pid_t,		tgid					)
++		__field( pid_t,		ngid					)
++		__array( unsigned long, mem_allowed, BITS_TO_LONGS(MAX_NUMNODES))
++	),
++
++	TP_fast_assign(
++		memcpy(__entry->comm, tsk->comm, TASK_COMM_LEN);
++		__entry->pid		 = task_pid_nr(tsk);
++		__entry->tgid		 = task_tgid_nr(tsk);
++		__entry->ngid		 = task_numa_group_id(tsk);
++		BUILD_BUG_ON(sizeof(nodemask_t) != \
++			     BITS_TO_LONGS(MAX_NUMNODES) * sizeof(long));
++		memcpy(__entry->mem_allowed, mem_allowed_ptr->bits,
++		       sizeof(__entry->mem_allowed));
++	),
++
++	TP_printk("comm=%s pid=%d tgid=%d ngid=%d mem_nodes_allowed=%*pbl",
++		  __entry->comm,
++		  __entry->pid,
++		  __entry->tgid,
++		  __entry->ngid,
++		  MAX_NUMNODES, __entry->mem_allowed)
++);
+ #endif /* CONFIG_NUMA_BALANCING */
+ 
+ /*
+diff --git a/kernel/sched/fair.c b/kernel/sched/fair.c
+index c9903b1b3948..cc892961ce15 100644
+--- a/kernel/sched/fair.c
++++ b/kernel/sched/fair.c
+@@ -3333,8 +3333,10 @@ static void task_numa_work(struct callback_head *work)
+ 	 * Memory is pinned to only one NUMA node via cpuset.mems, naturally
+ 	 * no page can be migrated.
+ 	 */
+-	if (cpusets_enabled() && nodes_weight(cpuset_current_mems_allowed) == 1)
++	if (cpusets_enabled() && nodes_weight(cpuset_current_mems_allowed) == 1) {
++		trace_sched_skip_cpuset_numa(current, &cpuset_current_mems_allowed);
+ 		return;
++	}
+ 
+ 	if (!mm->numa_next_scan) {
+ 		mm->numa_next_scan = now +
 -- 
 2.43.5
 
