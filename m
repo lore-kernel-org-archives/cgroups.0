@@ -1,62 +1,62 @@
-Received: from mail-yw1-f171.google.com (mail-yw1-f171.google.com [209.85.128.171])
+Received: from mail-yw1-f174.google.com (mail-yw1-f174.google.com [209.85.128.174])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 52E7E2DCB7A;
-	Tue, 29 Apr 2025 23:38:54 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.171
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6F9402DEB86;
+	Tue, 29 Apr 2025 23:38:56 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.174
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1745969936; cv=none; b=i0nrcqlnH6cW1UmL2f/nSGuEefq2bfHIHqhx2Dwl32MRf7odirWTNCTQfEssTRUARiNdViJmBUjdQIrQGXtEKlgM81l8oYp9IThV+TxbrNu1/HHnc6kyln2ts1YKtoEeaC8NMn2fT8gLGD7aLbpwC4Ncs/paTsZGexYxu1C4zSI=
+	t=1745969938; cv=none; b=eo3cHgl3ozyoGDutJW4340HBEcq8tWN3hq6BxzIOgwGEn+DS2tzOgNDEzvwgVHG/MEmeSzI92jwldFm3HXT5kZvZVK9c8ctb6/yzrgIcJSY8gr8riqjRfhH+094UI37IBIY8GWdqIS9y5QGsptuiDQjP3nPRoWnp8bYIplJmUVg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1745969936; c=relaxed/simple;
-	bh=6lu4oF39SEcXcDQcSnvnULT5GeUPSdpjuo9d07J7rEE=;
+	s=arc-20240116; t=1745969938; c=relaxed/simple;
+	bh=x8e+MEX/qcRiV4ForD6Sd+jZ2RFE/w1McwyxXE9bSbk=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=O/4liRd12lXc3crmj363JLSaMaCFu3SolskvKZ+mX/USnuhBTO07gVtgwQQMBGtdQ9zDYl6i2OOSFwobNvRDtlPJD/529X0RVKNhvpuqlTmoExCsjEEMEK1848aQaimngYktOJyAtDW3qrMpgNc/CvEFK0RLKuZXxZ+zv9gx9z4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=VZHfA0mO; arc=none smtp.client-ip=209.85.128.171
+	 MIME-Version; b=czUQaTdZra5trH40f0gm8YrFWGOJM+dJ/gT9bdIfknxVMcMYME3WyaHq7NeWIhqTwSJMZk1rgLgGRGTP2j2hk0BzjS4iqeaZHt8TCHKm8E8AEOfPLCceml5zHlp9aI/qhQrdbDoF11otG/KY7eJjlZd5nLsn3kudSzQ1aMnY5IY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=FSO3QXz2; arc=none smtp.client-ip=209.85.128.174
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="VZHfA0mO"
-Received: by mail-yw1-f171.google.com with SMTP id 00721157ae682-70427fb838cso55256907b3.2;
-        Tue, 29 Apr 2025 16:38:53 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="FSO3QXz2"
+Received: by mail-yw1-f174.google.com with SMTP id 00721157ae682-70814384238so57315207b3.0;
+        Tue, 29 Apr 2025 16:38:56 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1745969933; x=1746574733; darn=vger.kernel.org;
+        d=gmail.com; s=20230601; t=1745969935; x=1746574735; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=fKE37L6euvcRArGqI2WCdwnU49QgVd0+WJwqbTjSGfU=;
-        b=VZHfA0mOypSbyP/7KjOi+WCRZg2L1pgSEC68x+apyOGN8qCxYma2DlR4vaW1cOo4Tw
-         y3AVg8bNWecMQBnD8gUbs2eASJMF3thfJ117cVZwaljxevHY/zxwtB7f+i+hv1qcseL0
-         oQSko+Ypgeo2h4Mu9yPJR1khyoH0ZUljfadvSWOqOsevEr0tnhAJ9EaMkiOVYx7d0CJt
-         H354rcmlx4SPFxABVCmLSK1INv6g/D4I/DYIPlN4BLRlhuemLe1oBRc9rhspyOlbsMs2
-         U+i7cge7YRRnphA9aCE748WjX0I2Dx9cwpnX9WgrK1v8MnOaTGXV8Noa+smZDltpGqPZ
-         2gLg==
+        bh=BlPKsWIQtTq0kXJAAHxIhR2EL0TtNwMyl7VzV0J4eyc=;
+        b=FSO3QXz2G4NkhsyPqE0faskxOpQTwcAYUadcCBMGQ6Kh4cyWO0ekLPiDCKTROanJwZ
+         x+fVHjr4yIjYkFJbvMqKCth2GrE1qAMYb8OuXCi2QG4t2cUSOkjwxWSzUvkvur7GKi9m
+         D32cqb16DKcxNychDi075k8FGcPdstMu9fyGymlpJ1eW2KgAHB/AbEMsTnP6JvZfE9gW
+         eo38vHBZny/CLEbKSVghEm6Fsx1p7z+gKd6NLEpfy5vCMfBeEd4cOfhpLb52dxPKF3fw
+         UW87Y83ROKiwzXE7RZSShcopnVve4tgI2AS+yjYxzdN86ic6t2eDMIJwpoYidKhiNA/K
+         zS0Q==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1745969933; x=1746574733;
+        d=1e100.net; s=20230601; t=1745969935; x=1746574735;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=fKE37L6euvcRArGqI2WCdwnU49QgVd0+WJwqbTjSGfU=;
-        b=m0nqRcXiV6hzMehGRCl8lgd//E9uTHziDFPf+G/epv5/o6iD74rDbp/8Ps+QKEuCLo
-         +FzrA4krZ/ZvKpnDWI1PNE4wZpHHs/6w429alU1eZjXUvkyqKhACHLFJEcI7XmzOe+mt
-         Igc5nfcgsjTFDSB75QvpLE2q2rG26l7VEa08RvqYAgz42BQxoLoE+HDNnsym4BUXF/gT
-         vI0lJNb3gL/CD4SZl713BScuJQNFQuJCvdTnwr1h3DP0+CSLgPKBzJPZhawlKXVv0tgn
-         2zgYlzvSSEMvxphFP0CzgdfLFvDmBxW1jVBexbRTO5YpstkGQUkfVvjuQ7Fywopbsbu+
-         wt1w==
-X-Forwarded-Encrypted: i=1; AJvYcCU01+Cb9IQvFbE37Mnuw+1AJP9S3ax/ZJ0l/jPvERqy1CG+2U/tpuuAaSptYh9+q1HgJN693VGz@vger.kernel.org, AJvYcCVKNWf/x7xHv7RXHSLeo5nNCYU0rqkpOq3AXppLfUvOMuaoZMb9FJ9VDsjc7VI/OSCJwVTJsd0t6I/4fIVQ@vger.kernel.org, AJvYcCXd3vIfXP6OD0FK8AHAYXku5noTWa2GyaZ6mKzMwIaMCDMKzAiLRbYy00qWr+/2pScn5iaUrevr+V8=@vger.kernel.org
-X-Gm-Message-State: AOJu0YwwNMWSOmCy2ibGw4yobslEa+QiOpwKb3IYJOdcBxzMFnCu2Hgi
-	WaBLwWDfNa+iAxzpRqH8+u+b3zNSE2XnVmL/tZiPbD8dkV4wiw1K
-X-Gm-Gg: ASbGncuRtXcR5ZT2AKJ1PJOUCU0ag8bPVEgeAzJT+JT/uLkC9z1H3igZwvXFB+jO0zL
-	6h4dBj6YK7W4gwu5tE/wEeDTamsT64YqxVY3gTrlGNs1UcFpfhP0oAzSJ9h4po2CMWf8QJWOUOk
-	3oTCVXUCzCRmJeXa1RsJM+xG29sSo6XKAo8boqKKvdWThyWkLeh2G0VrBGH5YZYs3nOV0Dkjlgl
-	91ewYKiHgR8afIoyyr1sDrYF7KhUR5Q+hiiw7CH2hp8OITw42bSHv5BM2EC0MLYcn/WK+mJy6OF
-	m0Ze1OuTWTLQf2UMIgLu0JMDTe+mzyU=
-X-Google-Smtp-Source: AGHT+IFO87ET7RNKrk3UF1PEUh15ufHAa0Xuh+MHK1ieSEIT7Rz22UvQkjilBKaStSwIpkQPF5GxvQ==
-X-Received: by 2002:a05:690c:7304:b0:6f9:7a3c:1fe with SMTP id 00721157ae682-708abe2046emr20914727b3.23.1745969933102;
-        Tue, 29 Apr 2025 16:38:53 -0700 (PDT)
-Received: from localhost ([2a03:2880:25ff:4::])
-        by smtp.gmail.com with ESMTPSA id 00721157ae682-708ae1edd01sm700967b3.115.2025.04.29.16.38.52
+        bh=BlPKsWIQtTq0kXJAAHxIhR2EL0TtNwMyl7VzV0J4eyc=;
+        b=nmDdSadPcQfxOQK0Mssi5fnSKhTFBv9uVwtXE9JOGAQwWU09ddgCgeQhXE68t0cobl
+         kHbau0keh6gAYcsPzeqkP3z761zIrfyAEIhCH8hevGPPRA6rZ57cOw2HNu7HGA0E8BdP
+         UIQvBeonxoM43oguxmymbodc994xjagpRPJy33NLnxbdiaaCJApRmUx62gDnlSSsWq4V
+         pRuF1LcMxlrVEgg1G3xJ6mCxn38BBlGVcTKfmexJ4JvFWzaZkBIkBwfpMVNcEKxOhP9Y
+         L/GMsyp7I9chhfAAJgLiT6ISe3pZtKsjlYcOtsFO7I2s97SSlkVxOc9MhtFJIm3DePL8
+         RViw==
+X-Forwarded-Encrypted: i=1; AJvYcCU5pehxTPxwAHCdi72J8D7BD3DhNlhOIt9g1HEuQaHvCmspUhm54RKbuKaed48SudV8yRo5Q3KR@vger.kernel.org, AJvYcCV2WcjJQeDnk+nD89lsFDXjMGrS3i9BMmDSjwawUZZDvvx7mAEIr03I17pvqVk7ZEDWH2gq6FeY6SI=@vger.kernel.org, AJvYcCVyaUW0zS/6ZRmwvXxtvr5rNbDmo8pJzwv9qYeaLR2Puuhe5mz0TIKhbxvFTQJdNGclBzq0agvEibQX6fnu@vger.kernel.org
+X-Gm-Message-State: AOJu0YwrlOBijuxQYhdo+NqI55wlc7ju6bcremH/0T1eSjyUkBgsqbfB
+	QyVI39FsAsf8u15hilOMAGWzik8OANemVy+I1K2O71Tsz6m0V1MR
+X-Gm-Gg: ASbGncuvBDfavZrGtsr8n1idEIzKZOBflI0y23AGe5V4Yf6oAEjBTs17BxqPRW3uVsy
+	U8yMkzfQDcZThBlnZt2XC7yKfCtM+BcSJd5kfSOFmq2DOM7sHsQIYh69/aNqvQA+3T/0phZN9Yi
+	sRaBPi+4bUZLCm6hc3El2BsZ4u9rwRzbewKJVCnBr4JGH4qdy9ruKRuiE9AEd1X8kcRQ86YAaIP
+	po7SULWjfaLlpWBLwLMBaXI+qELk7eQVA3ZNQFG3N290rb5q2ZBVhZP1veIf1wum1CPPCoBi/gW
+	so+Zo6CKkUs+97sk7wBupnH6phC/
+X-Google-Smtp-Source: AGHT+IGONTd8guxRHJvy647hbI7ZqJLCliUkJVI8P7gVTtEIytul7Gg3vq/OHI3N/2vGVT3C4NylUg==
+X-Received: by 2002:a05:690c:63c7:b0:702:72e3:1cb6 with SMTP id 00721157ae682-708abe0bab9mr20919227b3.26.1745969935407;
+        Tue, 29 Apr 2025 16:38:55 -0700 (PDT)
+Received: from localhost ([2a03:2880:25ff::])
+        by smtp.gmail.com with ESMTPSA id 00721157ae682-708adfc8160sm778457b3.6.2025.04.29.16.38.54
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 29 Apr 2025 16:38:52 -0700 (PDT)
+        Tue, 29 Apr 2025 16:38:54 -0700 (PDT)
 From: Nhat Pham <nphamcs@gmail.com>
 To: linux-mm@kvack.org
 Cc: akpm@linux-foundation.org,
@@ -84,9 +84,9 @@ Cc: akpm@linux-foundation.org,
 	cgroups@vger.kernel.org,
 	linux-pm@vger.kernel.org,
 	peterx@redhat.com
-Subject: [RFC PATCH v2 04/18] mm: swap: add an abstract API for locking out swapoff
-Date: Tue, 29 Apr 2025 16:38:32 -0700
-Message-ID: <20250429233848.3093350-5-nphamcs@gmail.com>
+Subject: [RFC PATCH v2 06/18] mm: create scaffolds for the new virtual swap implementation
+Date: Tue, 29 Apr 2025 16:38:34 -0700
+Message-ID: <20250429233848.3093350-7-nphamcs@gmail.com>
 X-Mailer: git-send-email 2.47.1
 In-Reply-To: <20250429233848.3093350-1-nphamcs@gmail.com>
 References: <20250429233848.3093350-1-nphamcs@gmail.com>
@@ -98,204 +98,179 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Currently, we get a reference to the backing swap device in order to
-lock out swapoff and ensure its validity. This does not make sense in
-the new virtual swap design, especially after the swap backends are
-decoupled - a swap entry might not have any backing swap device at all,
-and its backend might change at any time during its lifetime.
+In prepration for the implementation of swap virtualization, add new
+scaffolds for the new code:
 
-In preparation for this, abstract away the swapoff locking out behavior
-into a generic API.
+1. Add a new mm/vswap.c source file, which currently only holds the
+   logic to set up the (for now, empty) vswap debugfs directory. Hook
+   this up in the swap setup step in mm/swap_state.c. Add a new
+   maintainer entry for the new source file.
+
+2. Add a new config option (CONFIG_VIRTUAL_SWAP). We will only get new
+   behavior when the kernel is built with this config option. The entry
+   for the config option in mm/Kconfig summarizes the pros and cons of
+   the new virtual swap design, which the remainder of the patch series
+   will implement.
+
+3. Set up vswap compilation in the Makefile.
+
+Other than the debugfs directory, no behavioral change intended.
 
 Signed-off-by: Nhat Pham <nphamcs@gmail.com>
 ---
- include/linux/swap.h | 12 ++++++++++++
- mm/memory.c          | 13 +++++++------
- mm/shmem.c           |  7 +++----
- mm/swap_state.c      | 10 ++++------
- mm/userfaultfd.c     | 11 ++++++-----
- 5 files changed, 32 insertions(+), 21 deletions(-)
+ MAINTAINERS          |  7 +++++++
+ include/linux/swap.h |  9 +++++++++
+ mm/Kconfig           | 25 +++++++++++++++++++++++++
+ mm/Makefile          |  1 +
+ mm/swap_state.c      |  6 ++++++
+ mm/vswap.c           | 35 +++++++++++++++++++++++++++++++++++
+ 6 files changed, 83 insertions(+)
+ create mode 100644 mm/vswap.c
 
+diff --git a/MAINTAINERS b/MAINTAINERS
+index 00e94bec401e..65108bf2a5f1 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -25290,6 +25290,13 @@ S:	Maintained
+ F:	Documentation/devicetree/bindings/iio/light/vishay,veml6030.yaml
+ F:	drivers/iio/light/veml6030.c
+ 
++VIRTUAL SWAP SPACE
++M:	Nhat Pham <nphamcs@gmail.com>
++M:	Johannes Weiner <hannes@cmpxchg.org>
++L:	linux-mm@kvack.org
++S:	Maintained
++F:	mm/vswap.c
++
+ VISHAY VEML6075 UVA AND UVB LIGHT SENSOR DRIVER
+ M:	Javier Carrasco <javier.carrasco.cruz@gmail.com>
+ S:	Maintained
 diff --git a/include/linux/swap.h b/include/linux/swap.h
-index 8b8c10356a5c..23eaf44791d4 100644
+index 567fd2ebb0d3..328f6aec9313 100644
 --- a/include/linux/swap.h
 +++ b/include/linux/swap.h
-@@ -709,5 +709,17 @@ static inline bool mem_cgroup_swap_full(struct folio *folio)
+@@ -726,6 +726,15 @@ static inline bool mem_cgroup_swap_full(struct folio *folio)
  }
  #endif
  
-+static inline bool trylock_swapoff(swp_entry_t entry,
-+				struct swap_info_struct **si)
++#ifdef CONFIG_VIRTUAL_SWAP
++int vswap_init(void);
++#else /* CONFIG_VIRTUAL_SWAP */
++static inline int vswap_init(void)
 +{
-+	return get_swap_device(entry);
++	return 0;
 +}
++#endif /* CONFIG_VIRTUAL_SWAP */
 +
-+static inline void unlock_swapoff(swp_entry_t entry,
-+				struct swap_info_struct *si)
-+{
-+	put_swap_device(si);
-+}
+ /**
+  * swp_entry_to_swp_slot - look up the physical swap slot corresponding to a
+  *                         virtual swap slot.
+diff --git a/mm/Kconfig b/mm/Kconfig
+index 1b501db06417..2e8eb66c5888 100644
+--- a/mm/Kconfig
++++ b/mm/Kconfig
+@@ -22,6 +22,31 @@ menuconfig SWAP
+ 	  used to provide more virtual memory than the actual RAM present
+ 	  in your computer.  If unsure say Y.
+ 
++config VIRTUAL_SWAP
++	bool "Swap space virtualization"
++	depends on SWAP
++	default n
++	help
++		When this is selected, the kernel is built with the new swap
++		design, where each swap entry is associated with a virtual swap
++		slot that is decoupled from a specific physical backing storage
++		location. As a result, swap entries that are:
 +
- #endif /* __KERNEL__*/
- #endif /* _LINUX_SWAP_H */
-diff --git a/mm/memory.c b/mm/memory.c
-index fb7b8dc75167..e92914df5ca7 100644
---- a/mm/memory.c
-+++ b/mm/memory.c
-@@ -4305,6 +4305,7 @@ vm_fault_t do_swap_page(struct vm_fault *vmf)
- 	struct swap_info_struct *si = NULL;
- 	rmap_t rmap_flags = RMAP_NONE;
- 	bool need_clear_cache = false;
-+	bool swapoff_locked = false;
- 	bool exclusive = false;
- 	swp_entry_t entry;
- 	pte_t pte;
-@@ -4365,8 +4366,8 @@ vm_fault_t do_swap_page(struct vm_fault *vmf)
- 	}
++		1. Zero-filled
++
++		2. Stored in the zswap pool.
++
++		3. Rejected by zswap/zram but cannot be written back to a
++		   backing swap device.
++
++		no longer take up any disk storage (i.e they do not occupy any
++		slot in the backing swap device).
++
++		Swapoff is also more efficient.
++
++		There might be more lock contentions with heavy swap use, since
++		the swap cache is no longer range partitioned.
++
+ config ZSWAP
+ 	bool "Compressed cache for swap pages"
+ 	depends on SWAP
+diff --git a/mm/Makefile b/mm/Makefile
+index 850386a67b3e..b7216c714fa1 100644
+--- a/mm/Makefile
++++ b/mm/Makefile
+@@ -76,6 +76,7 @@ ifdef CONFIG_MMU
+ endif
  
- 	/* Prevent swapoff from happening to us. */
--	si = get_swap_device(entry);
--	if (unlikely(!si))
-+	swapoff_locked = trylock_swapoff(entry, &si);
-+	if (unlikely(!swapoff_locked))
- 		goto out;
- 
- 	folio = swap_cache_get_folio(entry, vma, vmf->address);
-@@ -4713,8 +4714,8 @@ vm_fault_t do_swap_page(struct vm_fault *vmf)
- 		if (waitqueue_active(&swapcache_wq))
- 			wake_up(&swapcache_wq);
- 	}
--	if (si)
--		put_swap_device(si);
-+	if (swapoff_locked)
-+		unlock_swapoff(entry, si);
- 	return ret;
- out_nomap:
- 	if (vmf->pte)
-@@ -4732,8 +4733,8 @@ vm_fault_t do_swap_page(struct vm_fault *vmf)
- 		if (waitqueue_active(&swapcache_wq))
- 			wake_up(&swapcache_wq);
- 	}
--	if (si)
--		put_swap_device(si);
-+	if (swapoff_locked)
-+		unlock_swapoff(entry, si);
- 	return ret;
- }
- 
-diff --git a/mm/shmem.c b/mm/shmem.c
-index 1ede0800e846..8ef72dcc592e 100644
---- a/mm/shmem.c
-+++ b/mm/shmem.c
-@@ -2262,8 +2262,7 @@ static int shmem_swapin_folio(struct inode *inode, pgoff_t index,
- 	if (is_poisoned_swp_entry(swap))
- 		return -EIO;
- 
--	si = get_swap_device(swap);
--	if (!si) {
-+	if (!trylock_swapoff(swap, &si)) {
- 		if (!shmem_confirm_swap(mapping, index, swap))
- 			return -EEXIST;
- 		else
-@@ -2411,7 +2410,7 @@ static int shmem_swapin_folio(struct inode *inode, pgoff_t index,
- 	}
- 	folio_mark_dirty(folio);
- 	swap_free_nr(swap, nr_pages);
--	put_swap_device(si);
-+	unlock_swapoff(swap, si);
- 
- 	*foliop = folio;
- 	return 0;
-@@ -2428,7 +2427,7 @@ static int shmem_swapin_folio(struct inode *inode, pgoff_t index,
- 		folio_unlock(folio);
- 		folio_put(folio);
- 	}
--	put_swap_device(si);
-+	unlock_swapoff(swap, si);
- 
- 	return error;
- }
+ obj-$(CONFIG_SWAP)	+= page_io.o swap_state.o swapfile.o swap_slots.o
++obj-$(CONFIG_VIRTUAL_SWAP)	+= vswap.o
+ obj-$(CONFIG_ZSWAP)	+= zswap.o
+ obj-$(CONFIG_HAS_DMA)	+= dmapool.o
+ obj-$(CONFIG_HUGETLBFS)	+= hugetlb.o
 diff --git a/mm/swap_state.c b/mm/swap_state.c
-index ca42b2be64d9..81f69b2df550 100644
+index cbd1532b6b24..1607d23a3d7b 100644
 --- a/mm/swap_state.c
 +++ b/mm/swap_state.c
-@@ -419,12 +419,11 @@ struct folio *filemap_get_incore_folio(struct address_space *mapping,
- 	if (non_swap_entry(swp))
- 		return ERR_PTR(-ENOENT);
- 	/* Prevent swapoff from happening to us */
--	si = get_swap_device(swp);
--	if (!si)
-+	if (!trylock_swapoff(swp, &si))
- 		return ERR_PTR(-ENOENT);
- 	index = swap_cache_index(swp);
- 	folio = filemap_get_folio(swap_address_space(swp), index);
--	put_swap_device(si);
-+	unlock_swapoff(swp, si);
- 	return folio;
- }
+@@ -930,6 +930,12 @@ static int __init swap_init_sysfs(void)
+ 	int err;
+ 	struct kobject *swap_kobj;
  
-@@ -439,8 +438,7 @@ struct folio *__read_swap_cache_async(swp_entry_t entry, gfp_t gfp_mask,
- 	void *shadow = NULL;
- 
- 	*new_page_allocated = false;
--	si = get_swap_device(entry);
--	if (!si)
-+	if (!trylock_swapoff(entry, &si))
- 		return NULL;
- 
- 	for (;;) {
-@@ -538,7 +536,7 @@ struct folio *__read_swap_cache_async(swp_entry_t entry, gfp_t gfp_mask,
- 	put_swap_folio(new_folio, entry);
- 	folio_unlock(new_folio);
- put_and_return:
--	put_swap_device(si);
-+	unlock_swapoff(entry, si);
- 	if (!(*new_page_allocated) && new_folio)
- 		folio_put(new_folio);
- 	return result;
-diff --git a/mm/userfaultfd.c b/mm/userfaultfd.c
-index d06453fa8aba..f40bbfd09fd5 100644
---- a/mm/userfaultfd.c
-+++ b/mm/userfaultfd.c
-@@ -1161,6 +1161,7 @@ static int move_pages_pte(struct mm_struct *mm, pmd_t *dst_pmd, pmd_t *src_pmd,
- 	struct folio *src_folio = NULL;
- 	struct anon_vma *src_anon_vma = NULL;
- 	struct mmu_notifier_range range;
-+	bool swapoff_locked = false;
- 	int err = 0;
- 
- 	flush_cache_range(src_vma, src_addr, src_addr + PAGE_SIZE);
-@@ -1367,8 +1368,8 @@ static int move_pages_pte(struct mm_struct *mm, pmd_t *dst_pmd, pmd_t *src_pmd,
- 			goto out;
- 		}
- 
--		si = get_swap_device(entry);
--		if (unlikely(!si)) {
-+		swapoff_locked = trylock_swapoff(entry, &si);
-+		if (unlikely(!swapoff_locked)) {
- 			err = -EAGAIN;
- 			goto out;
- 		}
-@@ -1399,7 +1400,7 @@ static int move_pages_pte(struct mm_struct *mm, pmd_t *dst_pmd, pmd_t *src_pmd,
- 				pte_unmap(src_pte);
- 				pte_unmap(dst_pte);
- 				src_pte = dst_pte = NULL;
--				put_swap_device(si);
-+				unlock_swapoff(entry, si);
- 				si = NULL;
- 				/* now we can block and wait */
- 				folio_lock(src_folio);
-@@ -1425,8 +1426,8 @@ static int move_pages_pte(struct mm_struct *mm, pmd_t *dst_pmd, pmd_t *src_pmd,
- 	if (src_pte)
- 		pte_unmap(src_pte);
- 	mmu_notifier_invalidate_range_end(&range);
--	if (si)
--		put_swap_device(si);
-+	if (swapoff_locked)
-+		unlock_swapoff(entry, si);
- 
- 	return err;
- }
++	err = vswap_init();
++	if (err) {
++		pr_err("failed to initialize virtual swap space\n");
++		return err;
++	}
++
+ 	swap_kobj = kobject_create_and_add("swap", mm_kobj);
+ 	if (!swap_kobj) {
+ 		pr_err("failed to create swap kobject\n");
+diff --git a/mm/vswap.c b/mm/vswap.c
+new file mode 100644
+index 000000000000..b9c28e819cca
+--- /dev/null
++++ b/mm/vswap.c
+@@ -0,0 +1,35 @@
++// SPDX-License-Identifier: GPL-2.0
++/*
++ * Virtual swap space
++ *
++ * Copyright (C) 2024 Meta Platforms, Inc., Nhat Pham
++ */
++ #include <linux/swap.h>
++
++#ifdef CONFIG_DEBUG_FS
++#include <linux/debugfs.h>
++
++static struct dentry *vswap_debugfs_root;
++
++static int vswap_debug_fs_init(void)
++{
++	if (!debugfs_initialized())
++		return -ENODEV;
++
++	vswap_debugfs_root = debugfs_create_dir("vswap", NULL);
++	return 0;
++}
++#else
++static int vswap_debug_fs_init(void)
++{
++	return 0;
++}
++#endif
++
++int vswap_init(void)
++{
++	if (vswap_debug_fs_init())
++		pr_warn("Failed to initialize vswap debugfs\n");
++
++	return 0;
++}
 -- 
 2.47.1
 
