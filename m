@@ -1,31 +1,31 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C00B02D1105;
-	Tue, 29 Apr 2025 23:52:57 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0B68D2D5D12;
+	Tue, 29 Apr 2025 23:53:25 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1745970777; cv=none; b=uY/vhIY8wqRJuGbnwrkUB6utSKHW2VC4TTuhw0hTAWWEGarAK+Hq3+psOnypG/LVosc9+RG5bTFa6kEiRgnY+RyzhiFbEPXg1y3QxGlJrOXJV+QmeBEfaXpz9stK9x7lMJLg9cahXgT4gKOX3fZ6F9JRJu4PwZM00koUGj81Z7g=
+	t=1745970806; cv=none; b=IItczr6gCOoEGc9YX/t6dNVgMtH4oi1h6K680Mbw0hFPF5L1PjEPXRFZQ1F06AI0I5CAV/wO4bBoSMHQQTr3Xz68hD7he15USjZ79g6YG9FGzOauKQLMX8pj8pQVk7fJwb3DglLINkpJEvBIadLZ0BEX10akAGpJ8V02fOxrXrg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1745970777; c=relaxed/simple;
-	bh=lYO/Gq8uLAbwQcpJ9QV4HsIzvvt0sYaJinIwMBIkZuU=;
+	s=arc-20240116; t=1745970806; c=relaxed/simple;
+	bh=in/YBg3OeimiyFQdWpdgoLoC3y0Tz/o5kRhFyHpGEIY=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=aJZ5UwAe7urqB8KCAgaL5S90UlYeO5Eorbv+5g3scQLFJFwJotqK9wpYKizVTwPfcPVIa2N2KQe4HcZg0q1QF5zTHU3gmVbolZatrMzdItvSuHoMBIFNiociQJfN8jfh4V/c0XRoidQipLeaQQ47fOhrltMIbDMwn0LPse1rj9U=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=uoSjNA0m; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=YbS6zV5aazx5lIIwae9sBGARG+4Dc4a/ZV5+hg5Gtt/5r7ED9SRz6kQBAZMaCdjoXD5GHBDDNguSW01nRsk5XRnx7vsSM7FBgVMvqmlu41SnIbURCLdaOWpa4+77Ha8Mh/MzQrq9Q2f1hMje6He1pl2APj3u0/K+DbGSpvXXA4A=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=mH+BsWJv; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="uoSjNA0m"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B02C7C4CEE3;
-	Tue, 29 Apr 2025 23:52:56 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="mH+BsWJv"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7EE51C4CEEB;
+	Tue, 29 Apr 2025 23:53:24 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1745970777;
-	bh=lYO/Gq8uLAbwQcpJ9QV4HsIzvvt0sYaJinIwMBIkZuU=;
+	s=k20201202; t=1745970805;
+	bh=in/YBg3OeimiyFQdWpdgoLoC3y0Tz/o5kRhFyHpGEIY=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=uoSjNA0mk/XD05/ndrWAiGdT21oIKt+ol3L2/VpHAuLQauLnN5pq0+Qr+P/RTFIuT
-	 B1wNyfGgqyugeVaMzqWyoR/fbxWkfOKP8PDw2xMoI24aYgsz5oFYXw9QR7wDNEKhYI
-	 OM1OUMk9C3XHKt93dCVhci90J23xdkN6fy/a6NzuPOirv5SNt8VPp3hWlEaiWtaZKz
-	 /5pYOxibRHm60yCCAwagun3//SXd0NpxxFhlgbxpJpDNpQsf6yahA1CWExSvs739bO
-	 uBZ+h5jamGD/jH/+3mExinlH2sReUk/2n+WTShwpSI6TqbmGsuPeifr+0av+J6PnaI
-	 Uj4Wq3aH1zkGg==
+	b=mH+BsWJvOA4P+9xQW0UhsODr6UN5YYFpXpuNZkQwjgnTl/LIbb/CHxVGEiHPoS8oc
+	 /6AkOekv6Znq2jrQoSy8p9dqVj7Ph1AsxB/awdYhpStMrCB0/wyNTz0UmabibQqVdg
+	 1QO/lKEP/FWzwXFHoAGgexH/THGDWG1QEjkPIYDpSlWANh+78yCIaLov9gkALHk5iT
+	 Hl0Fl8HHPUi2qZ1RN2OvgmnFHGNyS5zPye9fMLWy+sjWx7rmwxUMx76z+4Sq2frjBz
+	 kKyuK4n2q52I8Ilw4NYb1MIVSh+NxCX8UJzu6xwehnMSBi2wGYEYoYlWweCPP0CUQF
+	 iq8aivcSHlwwg==
 From: Sasha Levin <sashal@kernel.org>
 To: linux-kernel@vger.kernel.org,
 	stable@vger.kernel.org
@@ -35,12 +35,12 @@ Cc: gaoxu <gaoxu2@honor.com>,
 	Sasha Levin <sashal@kernel.org>,
 	hannes@cmpxchg.org,
 	cgroups@vger.kernel.org
-Subject: [PATCH AUTOSEL 6.6 12/21] cgroup: Fix compilation issue due to cgroup_mutex not being exported
-Date: Tue, 29 Apr 2025 19:52:24 -0400
-Message-Id: <20250429235233.537828-12-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 6.1 04/10] cgroup: Fix compilation issue due to cgroup_mutex not being exported
+Date: Tue, 29 Apr 2025 19:53:09 -0400
+Message-Id: <20250429235316.538129-4-sashal@kernel.org>
 X-Mailer: git-send-email 2.39.5
-In-Reply-To: <20250429235233.537828-1-sashal@kernel.org>
-References: <20250429235233.537828-1-sashal@kernel.org>
+In-Reply-To: <20250429235316.538129-1-sashal@kernel.org>
+References: <20250429235316.538129-1-sashal@kernel.org>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
@@ -50,7 +50,7 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 X-stable: review
 X-Patchwork-Hint: Ignore
-X-stable-base: Linux 6.6.88
+X-stable-base: Linux 6.1.135
 Content-Transfer-Encoding: 8bit
 
 From: gaoxu <gaoxu2@honor.com>
@@ -78,7 +78,7 @@ Signed-off-by: Sasha Levin <sashal@kernel.org>
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/kernel/cgroup/cgroup.c b/kernel/cgroup/cgroup.c
-index 3ccf80dfa587a..e8ef062f6ca05 100644
+index 6e54f0daebeff..7997c8021b62f 100644
 --- a/kernel/cgroup/cgroup.c
 +++ b/kernel/cgroup/cgroup.c
 @@ -90,7 +90,7 @@
