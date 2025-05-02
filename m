@@ -1,35 +1,35 @@
 Received: from us-smtp-delivery-44.mimecast.com (us-smtp-delivery-44.mimecast.com [207.211.30.44])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 65BBD4400
-	for <cgroups@vger.kernel.org>; Fri,  2 May 2025 03:41:37 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8FB7A4400
+	for <cgroups@vger.kernel.org>; Fri,  2 May 2025 03:42:22 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=207.211.30.44
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1746157299; cv=none; b=AwHXHjEQIks5yQD2wrSsrtapQWTyTIHeXY7hJW19jiRWQU2/L02Mea7mCQZyguWkzDrKOYvf8Pg6kBxhz1pDTjn+2JqjFJG5zsvxEIxH8f3oohTx65/u260r1zZnVMrXSbVNrEwU7vz+40eu2JsYy/03emSaVpB9qRZLvRs82Do=
+	t=1746157344; cv=none; b=il/18sRsD2wZJAYh+88AkwCfznbEzAe9RivP/ogKqoeHJjwXkdjdYQebD3wEjWSIvNRzSvxIyLyQJ0JjZSTrpOk4oFbBLGRTjA/4F0xlQ/4nFjgZI0HLIS3KsTOMwMLe2OmMrfB/iSNxlvIo8oX0eg7ghG6Bo5iBg3tcrnt6jrc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1746157299; c=relaxed/simple;
-	bh=iM+Ehssksiwqs3V/UXzissQZ3lgYVY7hEZ/rM9UC73Y=;
+	s=arc-20240116; t=1746157344; c=relaxed/simple;
+	bh=29S2t/KimgqnemCE7Wl0zt7lxgF0ycoQyGUa6S2iKgA=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:content-type; b=ON504I3UNAp9AUdQ2PlWNw9/eQvyQeRl9B9L89SeO6EsbOkSxtWsYP5fUT17ccSa+eN0v02++AatTFGnOyRiIp9uRXzbq3wVja9XN55BoGF5UujCvVYFzZNXUDnx5DvvY0XzZht9TAjSzq9pBiROK5KVmIjv2rztGuGBlq71zag=
+	 MIME-Version:content-type; b=US0cL+e0eiHNhlKUvTgavJNBYPuH85yeueOLSyQeNmkXl9zAV0pu6Qvk81prTJw3NEgyCXX8nkGYYiQ3ijQAPzuXLeJzYCV9JujlvnnwqPjm34/iZX/USmpUA0lpLkJu7CwXdB/hcLxFDmrAh1Z9VaoImjCfjW3Pw1HYJNSELxY=
 ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=gmail.com; spf=fail smtp.mailfrom=gmail.com; arc=none smtp.client-ip=207.211.30.44
 Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=gmail.com
-Received: from mx-prod-mc-04.mail-002.prod.us-west-2.aws.redhat.com
+Received: from mx-prod-mc-03.mail-002.prod.us-west-2.aws.redhat.com
  (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
  relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-183-gq6agVSPMkmwvGK2n9Sfiw-1; Thu,
- 01 May 2025 23:41:32 -0400
-X-MC-Unique: gq6agVSPMkmwvGK2n9Sfiw-1
-X-Mimecast-MFC-AGG-ID: gq6agVSPMkmwvGK2n9Sfiw_1746157291
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-54-fwUZUgPpN7Sv2ssGXTfRWg-1; Thu,
+ 01 May 2025 23:41:10 -0400
+X-MC-Unique: fwUZUgPpN7Sv2ssGXTfRWg-1
+X-Mimecast-MFC-AGG-ID: fwUZUgPpN7Sv2ssGXTfRWg_1746157269
 Received: from mx-prod-int-06.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-06.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.93])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
-	by mx-prod-mc-04.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id E510D1955DCC;
-	Fri,  2 May 2025 03:41:30 +0000 (UTC)
+	by mx-prod-mc-03.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id CBE611955D82;
+	Fri,  2 May 2025 03:41:08 +0000 (UTC)
 Received: from dreadlord.redhat.com (unknown [10.64.136.70])
-	by mx-prod-int-06.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id 202661800871;
-	Fri,  2 May 2025 03:41:25 +0000 (UTC)
+	by mx-prod-int-06.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id D53751800871;
+	Fri,  2 May 2025 03:41:03 +0000 (UTC)
 From: Dave Airlie <airlied@gmail.com>
 To: dri-devel@lists.freedesktop.org,
 	tj@kernel.org,
@@ -42,9 +42,9 @@ To: dri-devel@lists.freedesktop.org,
 Cc: cgroups@vger.kernel.org,
 	Waiman Long <longman@redhat.com>,
 	simona@ffwll.ch
-Subject: [PATCH 5/5] nouveau: add memcg integration
-Date: Fri,  2 May 2025 13:36:04 +1000
-Message-ID: <20250502034046.1625896-6-airlied@gmail.com>
+Subject: [PATCH 1/5] memcg: add GPU statistic
+Date: Fri,  2 May 2025 13:36:00 +1000
+Message-ID: <20250502034046.1625896-2-airlied@gmail.com>
 In-Reply-To: <20250502034046.1625896-1-airlied@gmail.com>
 References: <20250502034046.1625896-1-airlied@gmail.com>
 Precedence: bulk
@@ -55,57 +55,75 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 X-Scanned-By: MIMEDefang 3.4.1 on 10.30.177.93
 X-Mimecast-Spam-Score: 0
-X-Mimecast-MFC-PROC-ID: BVIRV4Jrg_iZDPn_Bzt2nIGN1MQIhMNsc020Aq3pJ48_1746157291
+X-Mimecast-MFC-PROC-ID: JthHulkBMQqOQY4bXDeUFGd7PQrGMNtkST0URggktTI_1746157269
 X-Mimecast-Originator: gmail.com
 Content-Transfer-Encoding: quoted-printable
 content-type: text/plain; charset=WINDOWS-1252; x-default=true
 
 From: Dave Airlie <airlied@redhat.com>
 
-This just adds the memcg init and account_op support.
+Discrete and Integrated GPUs can use system RAM instead of
+VRAM for all or some allocations. These allocations happen
+via drm/ttm subsystem and are currently not accounted for
+in cgroups.
+
+Add a gpu statistic to allow a place to visualise allocations
+once they are supported.
 
 Signed-off-by: Dave Airlie <airlied@redhat.com>
 ---
- drivers/gpu/drm/nouveau/nouveau_bo.c  | 1 +
- drivers/gpu/drm/nouveau/nouveau_gem.c | 2 ++
- 2 files changed, 3 insertions(+)
+ Documentation/admin-guide/cgroup-v2.rst | 3 +++
+ include/linux/memcontrol.h              | 1 +
+ mm/memcontrol.c                         | 2 ++
+ 3 files changed, 6 insertions(+)
 
-diff --git a/drivers/gpu/drm/nouveau/nouveau_bo.c b/drivers/gpu/drm/nouveau=
-/nouveau_bo.c
-index 2016c1e7242f..8e2da4d48ce3 100644
---- a/drivers/gpu/drm/nouveau/nouveau_bo.c
-+++ b/drivers/gpu/drm/nouveau/nouveau_bo.c
-@@ -350,6 +350,7 @@ nouveau_bo_init(struct nouveau_bo *nvbo, u64 size, int =
-align, u32 domain,
- =09struct ttm_operation_ctx ctx =3D {
- =09=09.interruptible =3D false,
- =09=09.no_wait_gpu =3D false,
-+=09=09.account_op =3D true,
- =09=09.resv =3D robj,
- =09};
+diff --git a/Documentation/admin-guide/cgroup-v2.rst b/Documentation/admin-=
+guide/cgroup-v2.rst
+index 1a16ce68a4d7..e10a1dfa6051 100644
+--- a/Documentation/admin-guide/cgroup-v2.rst
++++ b/Documentation/admin-guide/cgroup-v2.rst
+@@ -1480,6 +1480,9 @@ The following nested keys are defined.
+ =09  vmalloc (npn)
+ =09=09Amount of memory used for vmap backed memory.
 =20
-diff --git a/drivers/gpu/drm/nouveau/nouveau_gem.c b/drivers/gpu/drm/nouvea=
-u/nouveau_gem.c
-index 67e3c99de73a..56899c89bdd8 100644
---- a/drivers/gpu/drm/nouveau/nouveau_gem.c
-+++ b/drivers/gpu/drm/nouveau/nouveau_gem.c
-@@ -87,6 +87,7 @@ nouveau_gem_object_del(struct drm_gem_object *gem)
- =09=09return;
- =09}
-=20
-+=09mem_cgroup_put(nvbo->bo.memcg);
- =09ttm_bo_put(&nvbo->bo);
-=20
- =09pm_runtime_mark_last_busy(dev);
-@@ -254,6 +255,7 @@ nouveau_gem_new(struct nouveau_cli *cli, u64 size, int =
-align, uint32_t domain,
- =09if (IS_ERR(nvbo))
- =09=09return PTR_ERR(nvbo);
-=20
-+=09nvbo->bo.memcg =3D get_mem_cgroup_from_mm(current->mm);
- =09nvbo->bo.base.funcs =3D &nouveau_gem_object_funcs;
- =09nvbo->no_share =3D domain & NOUVEAU_GEM_DOMAIN_NO_SHARE;
-=20
++=09  gpu (npn)
++=09=09Amount of memory used for GPU device system RAM.
++
+ =09  shmem
+ =09=09Amount of cached filesystem data that is swap-backed,
+ =09=09such as tmpfs, shm segments, shared anonymous mmap()s
+diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
+index 53364526d877..4058d4bd94ed 100644
+--- a/include/linux/memcontrol.h
++++ b/include/linux/memcontrol.h
+@@ -36,6 +36,7 @@ enum memcg_stat_item {
+ =09MEMCG_SOCK,
+ =09MEMCG_PERCPU_B,
+ =09MEMCG_VMALLOC,
++=09MEMCG_GPU,
+ =09MEMCG_KMEM,
+ =09MEMCG_ZSWAP_B,
+ =09MEMCG_ZSWAPPED,
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index c96c1f2b9cf5..25471a0fd0be 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -326,6 +326,7 @@ static const unsigned int memcg_stat_items[] =3D {
+ =09MEMCG_SOCK,
+ =09MEMCG_PERCPU_B,
+ =09MEMCG_VMALLOC,
++=09MEMCG_GPU,
+ =09MEMCG_KMEM,
+ =09MEMCG_ZSWAP_B,
+ =09MEMCG_ZSWAPPED,
+@@ -1358,6 +1359,7 @@ static const struct memory_stat memory_stats[] =3D {
+ =09{ "percpu",=09=09=09MEMCG_PERCPU_B=09=09=09},
+ =09{ "sock",=09=09=09MEMCG_SOCK=09=09=09},
+ =09{ "vmalloc",=09=09=09MEMCG_VMALLOC=09=09=09},
++=09{ "gpu",=09=09=09MEMCG_GPU=09=09=09},
+ =09{ "shmem",=09=09=09NR_SHMEM=09=09=09},
+ #ifdef CONFIG_ZSWAP
+ =09{ "zswap",=09=09=09MEMCG_ZSWAP_B=09=09=09},
 --=20
 2.49.0
 
