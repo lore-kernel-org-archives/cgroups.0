@@ -1,35 +1,34 @@
-Received: from us-smtp-delivery-44.mimecast.com (us-smtp-delivery-44.mimecast.com [205.139.111.44])
+Received: from us-smtp-delivery-44.mimecast.com (us-smtp-delivery-44.mimecast.com [207.211.30.44])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AFEDB2550C4
-	for <cgroups@vger.kernel.org>; Mon, 12 May 2025 06:20:08 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.139.111.44
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B81872550C4
+	for <cgroups@vger.kernel.org>; Mon, 12 May 2025 06:20:40 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=207.211.30.44
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1747030810; cv=none; b=eX4Y5s+jiN3o1K7MjTp2SgMIN2O93Tv2gYeCP3BWhNG0fXOXGBhGZ7SwtcYjMKcDMhvFomgCMb97umiti+SsBhNpyXOrUT94VC/tEROY99J2rz/Rgmsg+X4FrgbtsE0xAwNuEHcQOHrlcXw/wjQug2tWFhtZWl4Gat/6uazE1/8=
+	t=1747030842; cv=none; b=cewlWS5MUpg/lKi4vQhLnXWVvMz2sZdW0CFPodUmOdjneIT9d37HmOTXnBXOFmOdmtLF9xegVwIbxS5+LBckrZWRdxtCgs4dKIeeSt75/ByIcgXLAtv9+i7uq6FB2AiFlWXmxhD75Bp1+q39t1I8LOl2sQesYWU27BFCpsPrW70=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1747030810; c=relaxed/simple;
-	bh=RMa2aGQLrgbuSaXj2azVB4aNiDBLk8KujJjVzt9KLDw=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:content-type; b=mGCbqmTLGkvEOzBmMW0+oDlPjwMiPv9io+HSufB66qYBVOcPU2wlWVCbH7J6erbiLoyydcc0dGA9ep6LgXxEbknEuANlPjQUoLYmQMgug+xNaw3ZT6u3obkRUMV0qHk3ZXef9H52EpuXx5klqK4tcOis0XBs2AN7PGjAKYEZJiA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=gmail.com; spf=fail smtp.mailfrom=gmail.com; arc=none smtp.client-ip=205.139.111.44
+	s=arc-20240116; t=1747030842; c=relaxed/simple;
+	bh=GgRr7EQvOf4xJonpu4t5PALoaGC1+8Rwm1kf5s/v4bY=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version:content-type; b=tpgf2M2PXSJX059AjkDXVRByUJtzT8Cb7YEMZvN916IZxGsL9ZBgWN7nPTZ/t3qKR6gm+3I8BXs6rT2SaXp1GspNUBVuhBL23EXy/2OAg8J3MBgy4AuWRYFfdQewMa2cGyDX8wBIaCQ79D9FwCaEiJFmpD1xy265IKYsUoJGeCA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=gmail.com; spf=fail smtp.mailfrom=gmail.com; arc=none smtp.client-ip=207.211.30.44
 Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=gmail.com
-Received: from mx-prod-mc-08.mail-002.prod.us-west-2.aws.redhat.com
- (ec2-35-165-154-97.us-west-2.compute.amazonaws.com [35.165.154.97]) by
+Received: from mx-prod-mc-03.mail-002.prod.us-west-2.aws.redhat.com
+ (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
  relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-610-8ZdlnH7lPFugSdi1PgcIOw-1; Mon,
- 12 May 2025 02:20:04 -0400
-X-MC-Unique: 8ZdlnH7lPFugSdi1PgcIOw-1
-X-Mimecast-MFC-AGG-ID: 8ZdlnH7lPFugSdi1PgcIOw_1747030802
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-650-4WutLAkXMKOEofd8dd3e8A-1; Mon,
+ 12 May 2025 02:19:25 -0400
+X-MC-Unique: 4WutLAkXMKOEofd8dd3e8A-1
+X-Mimecast-MFC-AGG-ID: 4WutLAkXMKOEofd8dd3e8A_1747030763
 Received: from mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.12])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
-	by mx-prod-mc-08.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id BFD601800877;
-	Mon, 12 May 2025 06:20:02 +0000 (UTC)
+	by mx-prod-mc-03.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id F0D3319560AA;
+	Mon, 12 May 2025 06:19:22 +0000 (UTC)
 Received: from dreadlord.redhat.com (unknown [10.64.136.70])
-	by mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id EB28519560B0;
-	Mon, 12 May 2025 06:19:57 +0000 (UTC)
+	by mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id 844AD19560B0;
+	Mon, 12 May 2025 06:19:17 +0000 (UTC)
 From: Dave Airlie <airlied@gmail.com>
 To: dri-devel@lists.freedesktop.org,
 	tj@kernel.org,
@@ -42,11 +41,9 @@ To: dri-devel@lists.freedesktop.org,
 Cc: cgroups@vger.kernel.org,
 	Waiman Long <longman@redhat.com>,
 	simona@ffwll.ch
-Subject: [PATCH 7/7] nouveau: add memcg integration
-Date: Mon, 12 May 2025 16:12:13 +1000
-Message-ID: <20250512061913.3522902-8-airlied@gmail.com>
-In-Reply-To: <20250512061913.3522902-1-airlied@gmail.com>
-References: <20250512061913.3522902-1-airlied@gmail.com>
+Subject: [rfc] drm/ttm/memcg: simplest initial memcg/ttm integration (series v3)
+Date: Mon, 12 May 2025 16:12:06 +1000
+Message-ID: <20250512061913.3522902-1-airlied@gmail.com>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
@@ -55,74 +52,42 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 X-Scanned-By: MIMEDefang 3.0 on 10.30.177.12
 X-Mimecast-Spam-Score: 0
-X-Mimecast-MFC-PROC-ID: JlURSiX6IiIlwhJnA2pXoHr8XkyMcYXzwO5pFlOaeS4_1747030802
+X-Mimecast-MFC-PROC-ID: E39OAwRLf3_DA-DiPowBLyeCJBzFh2qIY7rzPyoX9vs_1747030763
 X-Mimecast-Originator: gmail.com
 Content-Transfer-Encoding: quoted-printable
 content-type: text/plain; charset=WINDOWS-1252; x-default=true
 
-From: Dave Airlie <airlied@redhat.com>
+Hey,
 
-This just adds the memcg init and memcg placement flag support.
+This is my 3rd attempt to try and integrate ttm and memcg accounting.
 
-Signed-off-by: Dave Airlie <airlied@redhat.com>
----
- drivers/gpu/drm/nouveau/nouveau_bo.c  | 5 +++--
- drivers/gpu/drm/nouveau/nouveau_gem.c | 2 ++
- 2 files changed, 5 insertions(+), 2 deletions(-)
+I've tried to take on board the feedback given on the last series, and
+made some compromises to try and close in on the solution.
 
-diff --git a/drivers/gpu/drm/nouveau/nouveau_bo.c b/drivers/gpu/drm/nouveau=
-/nouveau_bo.c
-index 2016c1e7242f..6bd8d9ed9f35 100644
---- a/drivers/gpu/drm/nouveau/nouveau_bo.c
-+++ b/drivers/gpu/drm/nouveau/nouveau_bo.c
-@@ -450,13 +450,13 @@ nouveau_bo_placement_set(struct nouveau_bo *nvbo, uin=
-t32_t domain,
- =09if (domain & NOUVEAU_GEM_DOMAIN_GART) {
- =09=09pl[*n].mem_type =3D TTM_PL_TT;
- =09=09pl[*n].flags =3D busy & NOUVEAU_GEM_DOMAIN_GART ?
--=09=09=09TTM_PL_FLAG_FALLBACK : 0;
-+=09=09=09TTM_PL_FLAG_FALLBACK : TTM_PL_FLAG_MEMCG;
- =09=09(*n)++;
- =09}
- =09if (domain & NOUVEAU_GEM_DOMAIN_CPU) {
- =09=09pl[*n].mem_type =3D TTM_PL_SYSTEM;
- =09=09pl[*n].flags =3D busy & NOUVEAU_GEM_DOMAIN_CPU ?
--=09=09=09TTM_PL_FLAG_FALLBACK : 0;
-+=09=09=09TTM_PL_FLAG_FALLBACK : TTM_PL_FLAG_MEMCG;
- =09=09(*n)++;
- =09}
-=20
-@@ -814,6 +814,7 @@ nouveau_bo_evict_flags(struct ttm_buffer_object *bo, st=
-ruct ttm_placement *pl)
- =09case TTM_PL_VRAM:
- =09=09nouveau_bo_placement_set(nvbo, NOUVEAU_GEM_DOMAIN_GART,
- =09=09=09=09=09 NOUVEAU_GEM_DOMAIN_CPU);
-+=09=09nvbo->placements[0].flags &=3D ~TTM_PL_FLAG_MEMCG;
- =09=09break;
- =09default:
- =09=09nouveau_bo_placement_set(nvbo, NOUVEAU_GEM_DOMAIN_CPU, 0);
-diff --git a/drivers/gpu/drm/nouveau/nouveau_gem.c b/drivers/gpu/drm/nouvea=
-u/nouveau_gem.c
-index 67e3c99de73a..56899c89bdd8 100644
---- a/drivers/gpu/drm/nouveau/nouveau_gem.c
-+++ b/drivers/gpu/drm/nouveau/nouveau_gem.c
-@@ -87,6 +87,7 @@ nouveau_gem_object_del(struct drm_gem_object *gem)
- =09=09return;
- =09}
-=20
-+=09mem_cgroup_put(nvbo->bo.memcg);
- =09ttm_bo_put(&nvbo->bo);
-=20
- =09pm_runtime_mark_last_busy(dev);
-@@ -254,6 +255,7 @@ nouveau_gem_new(struct nouveau_cli *cli, u64 size, int =
-align, uint32_t domain,
- =09if (IS_ERR(nvbo))
- =09=09return PTR_ERR(nvbo);
-=20
-+=09nvbo->bo.memcg =3D get_mem_cgroup_from_mm(current->mm);
- =09nvbo->bo.base.funcs =3D &nouveau_gem_object_funcs;
- =09nvbo->no_share =3D domain & NOUVEAU_GEM_DOMAIN_NO_SHARE;
-=20
---=20
-2.49.0
+Feedback:
+1. memcg folks didn't really like the gpu specific stats due to a lack
+of global stats being exposed.
+2. After consideration of the resource level memcg accounting, I tried
+to reason about swap evictions a bit and couldn't come up with a good
+way to make it work, so I moved back down to ttm.
+3. Use a placement flag instead of ctx flag.
+
+This series starts by adding two per-node stats to the mm layers,
+to track memory allocated to the gpu in active use, and memory sitting
+in the reclaimable ttm pools.
+Then it adds the memcg stat for active gpu as before,=20
+(reclaimable is not accounted to a memcg at all).
+I didn't go back to use __GFP_ACCOUNT and manual stat tweaking, because
+kmem is definitely not the correct place to account this memory. This
+memory is never used by the kernel, it's used by userspace and the GPU
+in nearly all cases, so I think accounting it under kmem is very wrong.
+I'm hoping adding the global stats might alleviate any concerns.
+
+I had to move back to ttm_tt accounting instead of ttm_resource, as
+when a resource gets evicted to swap, the memory is freed and the memcg
+accounting should be updated correctly, as such I ended up going back
+to adding the accounting in ttm_tt population paths.
+
+Regards,
+Dave.
 
