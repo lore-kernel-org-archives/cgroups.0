@@ -1,32 +1,32 @@
-Received: from out-177.mta0.migadu.com (out-177.mta0.migadu.com [91.218.175.177])
+Received: from out-188.mta1.migadu.com (out-188.mta1.migadu.com [95.215.58.188])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F1E4C1E5B7A
-	for <cgroups@vger.kernel.org>; Tue, 13 May 2025 03:14:03 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.177
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CBFDE1E3DD0
+	for <cgroups@vger.kernel.org>; Tue, 13 May 2025 03:14:19 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=95.215.58.188
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1747106046; cv=none; b=LRf6LzI+mUqTyjOIsGfNf7zeAhocZ6buHdxns68zJ4K9QSplj1dp2Sb6jNuoPhcQhwEUE5PpbG+FlhAeeDEji6Vr9Ek9GY8IUXVQSCtMiGqCb0BEBs40jBhbeo/xzqos7OTWtcH0cwofgmA0SRbKHRfsBTrf+9RFtTzGQdSMxu4=
+	t=1747106061; cv=none; b=jKuebzxELl0RPFGsK2kc4wro8roHq4eb1aD5+Kl7JQ0DfJlp/fGlAOLOc79BmEW+F3IngR4Jd5LrrNzmxi1xuUuofE4CUjAxDtqsf0ipeqsRCqxQnCmwzY0CRrpTPdch9iN+fqilfa2OBqAp78Xg126L0LLmUPIxBF/Z2N/kA2w=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1747106046; c=relaxed/simple;
-	bh=e5zcqxXqQpR2JMymlF/KWPHcfisuz8s1WaeQLc69vnQ=;
+	s=arc-20240116; t=1747106061; c=relaxed/simple;
+	bh=7sONA/V33xpobgeSmyIE5zKaplWdxKZgqzaN0mo3UjE=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=EBxOFhvEpsTJXGxW8Mq5HfIwlnjJCrJ4/G1god5s5UUvgWrQTLzdVvzwXCR07xyhMRg0sARgdq1hd3LoqnaBd7qPVlgtRzzA9wn8XC9ujVAqMaMXylaeG63Qhrj+8W2zkgmvWwXb/QW9J5lHaUxSJQ5SqxCYbtxKJgrAwSSLsL4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=ooSsm/BG; arc=none smtp.client-ip=91.218.175.177
+	 MIME-Version; b=RGfz5lOV7XmHRE9t3e9YTiDsoLAaiy/pIbMF9sEpFU53VoaYfTGAMS2NzB5yg9gKDrS5vM/kz4OvMr2k/g3X6Z1eS9a5UgKBHEIajxHrlM8m/eEWdeZEnUdY/Dj+sREij1JrgtFhUJ9ZB3tc/+R167XqBlhS+bAkD4J4wOC70Mo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=nMEpv0pa; arc=none smtp.client-ip=95.215.58.188
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="ooSsm/BG"
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="nMEpv0pa"
 X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
-	t=1747106031;
+	t=1747106058;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=BPiRuCw/bD9XYJlwvKtjg4J90L1EW0IfWXzhcocLuzg=;
-	b=ooSsm/BGkm7jLt7WeCVzcIeXfSfmLTTxu3NEHROcON2zE6dLycnVCdS6+Pirr61u6vkq4u
-	euHpiYkfCAx2oacQVM//UVnoD5lrLUEW6o3iX/cgHCN3dSAZ0N3CB7eKx5dyzXrhUClRXc
-	QwDnQ1oHgBA0T+GBQDkE5Eg074eoGKI=
+	bh=AODqjUq8YBPAVfDEVDBp4w1/avIi3o3A3GYYWWucdOg=;
+	b=nMEpv0paVndzE8CayYRfrJko55+hok+VSNUS4tnLfpg19zLqu/PvnMnIxqCvJWjK48L3bJ
+	pgdw7Iur+sFTvXj2v9Wm4AgeQIsJIFY5CJhHjQVZ5kZpIc7+TLNW/z16Mp1RmWkUmKZHQW
+	31iyv5GGYhMMXu1kJxlCeCI14I5l6pk=
 From: Shakeel Butt <shakeel.butt@linux.dev>
 To: Andrew Morton <akpm@linux-foundation.org>
 Cc: Johannes Weiner <hannes@cmpxchg.org>,
@@ -43,9 +43,9 @@ Cc: Johannes Weiner <hannes@cmpxchg.org>,
 	cgroups@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
 	Meta kernel team <kernel-team@meta.com>
-Subject: [RFC PATCH 3/7] memcg: make mod_memcg_state re-entrant safe against irqs
-Date: Mon, 12 May 2025 20:13:12 -0700
-Message-ID: <20250513031316.2147548-4-shakeel.butt@linux.dev>
+Subject: [RFC PATCH 5/7] memcg: make __mod_memcg_lruvec_state re-entrant safe against irqs
+Date: Mon, 12 May 2025 20:13:14 -0700
+Message-ID: <20250513031316.2147548-6-shakeel.butt@linux.dev>
 In-Reply-To: <20250513031316.2147548-1-shakeel.butt@linux.dev>
 References: <20250513031316.2147548-1-shakeel.butt@linux.dev>
 Precedence: bulk
@@ -57,78 +57,33 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-Migadu-Flow: FLOW_OUT
 
-Let's make mod_memcg_state re-entrant safe against irqs. The only thing
-needed is to convert the usage of __this_cpu_add() to this_cpu_add().
-In addition, with re-entrant safety, there is no need to disable irqs.
-
-mod_memcg_state() is not safe against nmi, so let's add warning if
-someone tries to call it in nmi context.
+Let's make __mod_memcg_lruvec_state re-entrant safe and name it
+mod_memcg_lruvec_state(). The only thing needed is to convert the usage
+of __this_cpu_add() to this_cpu_add(). There are two callers of
+mod_memcg_lruvec_state() and one of them i.e. __mod_objcg_mlstate() will
+be re-entrant safe as well, so, rename it mod_objcg_mlstate(). The last
+caller __mod_lruvec_state() still calls __mod_node_page_state() which is
+not re-entrant safe yet, so keep it as is.
 
 Signed-off-by: Shakeel Butt <shakeel.butt@linux.dev>
 ---
- include/linux/memcontrol.h | 20 ++------------------
- mm/memcontrol.c            | 12 ++++++++----
- 2 files changed, 10 insertions(+), 22 deletions(-)
+ mm/memcontrol.c | 28 ++++++++++++++++------------
+ 1 file changed, 16 insertions(+), 12 deletions(-)
 
-diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
-index ed9acb68652a..84e2cea7e666 100644
---- a/include/linux/memcontrol.h
-+++ b/include/linux/memcontrol.h
-@@ -911,19 +911,9 @@ struct mem_cgroup *mem_cgroup_get_oom_group(struct task_struct *victim,
- 					    struct mem_cgroup *oom_domain);
- void mem_cgroup_print_oom_group(struct mem_cgroup *memcg);
- 
--void __mod_memcg_state(struct mem_cgroup *memcg, enum memcg_stat_item idx,
--		       int val);
--
- /* idx can be of type enum memcg_stat_item or node_stat_item */
--static inline void mod_memcg_state(struct mem_cgroup *memcg,
--				   enum memcg_stat_item idx, int val)
--{
--	unsigned long flags;
--
--	local_irq_save(flags);
--	__mod_memcg_state(memcg, idx, val);
--	local_irq_restore(flags);
--}
-+void mod_memcg_state(struct mem_cgroup *memcg,
-+		     enum memcg_stat_item idx, int val);
- 
- static inline void mod_memcg_page_state(struct page *page,
- 					enum memcg_stat_item idx, int val)
-@@ -1390,12 +1380,6 @@ static inline void mem_cgroup_print_oom_group(struct mem_cgroup *memcg)
- {
- }
- 
--static inline void __mod_memcg_state(struct mem_cgroup *memcg,
--				     enum memcg_stat_item idx,
--				     int nr)
--{
--}
--
- static inline void mod_memcg_state(struct mem_cgroup *memcg,
- 				   enum memcg_stat_item idx,
- 				   int nr)
 diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index 62450e7991d8..373d36cae069 100644
+index 9e7dc90cc460..adf2f1922118 100644
 --- a/mm/memcontrol.c
 +++ b/mm/memcontrol.c
-@@ -681,12 +681,12 @@ static int memcg_state_val_in_pages(int idx, int val)
+@@ -731,7 +731,7 @@ unsigned long memcg_page_state_local(struct mem_cgroup *memcg, int idx)
  }
+ #endif
  
- /**
-- * __mod_memcg_state - update cgroup memory statistics
-+ * mod_memcg_state - update cgroup memory statistics
-  * @memcg: the memory cgroup
-  * @idx: the stat item - can be enum memcg_stat_item or enum node_stat_item
-  * @val: delta to add to the counter, can be negative
-  */
--void __mod_memcg_state(struct mem_cgroup *memcg, enum memcg_stat_item idx,
-+void mod_memcg_state(struct mem_cgroup *memcg, enum memcg_stat_item idx,
- 		       int val)
+-static void __mod_memcg_lruvec_state(struct lruvec *lruvec,
++static void mod_memcg_lruvec_state(struct lruvec *lruvec,
+ 				     enum node_stat_item idx,
+ 				     int val)
  {
- 	int i = memcg_stats_index(idx);
-@@ -698,9 +698,13 @@ void __mod_memcg_state(struct mem_cgroup *memcg, enum memcg_stat_item idx,
+@@ -743,16 +743,20 @@ static void __mod_memcg_lruvec_state(struct lruvec *lruvec,
  	if (WARN_ONCE(BAD_STAT_IDX(i), "%s: missing stat item %d\n", __func__, idx))
  		return;
  
@@ -136,22 +91,97 @@ index 62450e7991d8..373d36cae069 100644
 +		      __func__, idx))
 +		return;
 +
+ 	pn = container_of(lruvec, struct mem_cgroup_per_node, lruvec);
+ 	memcg = pn->memcg;
+ 
  	cpu = get_cpu();
  
+ 	/* Update memcg */
 -	__this_cpu_add(memcg->vmstats_percpu->state[i], val);
 +	this_cpu_add(memcg->vmstats_percpu->state[i], val);
+ 
+ 	/* Update lruvec */
+-	__this_cpu_add(pn->lruvec_stats_percpu->state[i], val);
++	this_cpu_add(pn->lruvec_stats_percpu->state[i], val);
+ 
  	val = memcg_state_val_in_pages(idx, val);
  	memcg_rstat_updated(memcg, val, cpu);
- 	trace_mod_memcg_state(memcg, idx, val);
-@@ -2969,7 +2973,7 @@ static void drain_obj_stock(struct obj_stock_pcp *stock)
+@@ -779,7 +783,7 @@ void __mod_lruvec_state(struct lruvec *lruvec, enum node_stat_item idx,
  
- 			memcg = get_mem_cgroup_from_objcg(old);
+ 	/* Update memcg and lruvec */
+ 	if (!mem_cgroup_disabled())
+-		__mod_memcg_lruvec_state(lruvec, idx, val);
++		mod_memcg_lruvec_state(lruvec, idx, val);
+ }
  
--			__mod_memcg_state(memcg, MEMCG_KMEM, -nr_pages);
-+			mod_memcg_state(memcg, MEMCG_KMEM, -nr_pages);
- 			memcg1_account_kmem(memcg, -nr_pages);
- 			if (!mem_cgroup_is_root(memcg))
- 				memcg_uncharge(memcg, nr_pages);
+ void __lruvec_stat_mod_folio(struct folio *folio, enum node_stat_item idx,
+@@ -2559,7 +2563,7 @@ static void commit_charge(struct folio *folio, struct mem_cgroup *memcg)
+ 	folio->memcg_data = (unsigned long)memcg;
+ }
+ 
+-static inline void __mod_objcg_mlstate(struct obj_cgroup *objcg,
++static inline void mod_objcg_mlstate(struct obj_cgroup *objcg,
+ 				       struct pglist_data *pgdat,
+ 				       enum node_stat_item idx, int nr)
+ {
+@@ -2570,7 +2574,7 @@ static inline void __mod_objcg_mlstate(struct obj_cgroup *objcg,
+ 	memcg = obj_cgroup_memcg(objcg);
+ 	if (likely(!in_nmi())) {
+ 		lruvec = mem_cgroup_lruvec(memcg, pgdat);
+-		__mod_memcg_lruvec_state(lruvec, idx, nr);
++		mod_memcg_lruvec_state(lruvec, idx, nr);
+ 	} else {
+ 		struct mem_cgroup_per_node *pn = memcg->nodeinfo[pgdat->node_id];
+ 
+@@ -2901,12 +2905,12 @@ static void __account_obj_stock(struct obj_cgroup *objcg,
+ 		struct pglist_data *oldpg = stock->cached_pgdat;
+ 
+ 		if (stock->nr_slab_reclaimable_b) {
+-			__mod_objcg_mlstate(objcg, oldpg, NR_SLAB_RECLAIMABLE_B,
++			mod_objcg_mlstate(objcg, oldpg, NR_SLAB_RECLAIMABLE_B,
+ 					  stock->nr_slab_reclaimable_b);
+ 			stock->nr_slab_reclaimable_b = 0;
+ 		}
+ 		if (stock->nr_slab_unreclaimable_b) {
+-			__mod_objcg_mlstate(objcg, oldpg, NR_SLAB_UNRECLAIMABLE_B,
++			mod_objcg_mlstate(objcg, oldpg, NR_SLAB_UNRECLAIMABLE_B,
+ 					  stock->nr_slab_unreclaimable_b);
+ 			stock->nr_slab_unreclaimable_b = 0;
+ 		}
+@@ -2932,7 +2936,7 @@ static void __account_obj_stock(struct obj_cgroup *objcg,
+ 		}
+ 	}
+ 	if (nr)
+-		__mod_objcg_mlstate(objcg, pgdat, idx, nr);
++		mod_objcg_mlstate(objcg, pgdat, idx, nr);
+ }
+ 
+ static bool consume_obj_stock(struct obj_cgroup *objcg, unsigned int nr_bytes,
+@@ -3004,13 +3008,13 @@ static void drain_obj_stock(struct obj_stock_pcp *stock)
+ 	 */
+ 	if (stock->nr_slab_reclaimable_b || stock->nr_slab_unreclaimable_b) {
+ 		if (stock->nr_slab_reclaimable_b) {
+-			__mod_objcg_mlstate(old, stock->cached_pgdat,
++			mod_objcg_mlstate(old, stock->cached_pgdat,
+ 					  NR_SLAB_RECLAIMABLE_B,
+ 					  stock->nr_slab_reclaimable_b);
+ 			stock->nr_slab_reclaimable_b = 0;
+ 		}
+ 		if (stock->nr_slab_unreclaimable_b) {
+-			__mod_objcg_mlstate(old, stock->cached_pgdat,
++			mod_objcg_mlstate(old, stock->cached_pgdat,
+ 					  NR_SLAB_UNRECLAIMABLE_B,
+ 					  stock->nr_slab_unreclaimable_b);
+ 			stock->nr_slab_unreclaimable_b = 0;
+@@ -3050,7 +3054,7 @@ static void refill_obj_stock(struct obj_cgroup *objcg, unsigned int nr_bytes,
+ 
+ 	if (unlikely(in_nmi())) {
+ 		if (pgdat)
+-			__mod_objcg_mlstate(objcg, pgdat, idx, nr_bytes);
++			mod_objcg_mlstate(objcg, pgdat, idx, nr_bytes);
+ 		nr_pages = nr_bytes >> PAGE_SHIFT;
+ 		nr_bytes = nr_bytes & (PAGE_SIZE - 1);
+ 		atomic_add(nr_bytes, &objcg->nr_charged_bytes);
 -- 
 2.47.1
 
