@@ -1,208 +1,161 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from out-171.mta0.migadu.com (out-171.mta0.migadu.com [91.218.175.171])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E258A101EE;
-	Wed, 14 May 2025 04:46:13 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8E6161F4169
+	for <cgroups@vger.kernel.org>; Wed, 14 May 2025 05:08:35 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.171
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1747197974; cv=none; b=UWtDKx9yzcosLsCORstf9oaOGx0eYaaV/6mDe5URArmhl+FxacVj3RxCcJR4dnvn7qJ31Mr3IyvUojVA+hAIAZhDjMb11nRex3qpOcPSGq9U13IOrflgDOecWMXEFknYCn730l+3hte91BgytAeMgMyApiwelowHuuZIIAZuRLw=
+	t=1747199318; cv=none; b=rrZdQSvSFg/XJr0BPujLi9gZQBWFbERkqM2/S2YXAtLGfs/1mY57VViMMtfQk4bFo5l+aJ+aerlr7Zshh37Q8kCIY6/nFoFStqrsv7cAbZkfFpGgnTpqZSuKdrAt07UxhKwEzJdIYZFaTfpWMo1rK+FrNDnxOaBzeFk2WfjN770=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1747197974; c=relaxed/simple;
-	bh=w19z6GWVSncZnVbjxFphyPXRA2BivxniQSnbDNhu5TI=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=eYn3lgMnYBAi1MeTNSirp5zFtoccJficAdiXnaaVqaJ6GPPXNdBwdRNAHOWag2nSFmoSs7/7U6UYvJLXlqqEXbPtfMXbAXl6tsHh3DvSgGYpTcFDGWM9gDoscZ2IqLCMysQ9lLhZnnduRGjyndDazm+8vDyXIzDyePpVii9GWdE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=WUHnn/X3; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1747199318; c=relaxed/simple;
+	bh=RG9eTvAXCp/BCxIURb/14CMPEMU/XhGJRwyRB7eMJ4Q=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=plIYA9Pz/KkGiPFemkMaT8TgJUPfeyjLfLBjXYu87JpejIacf0tTu9r+/yHZOOL9HKsNJB0XN57sooAH+4zDTneXcy9mUBBQM6amK9NYHFhT7DcKaubAnYYBSknSDmvgLDPgicT0BA05Xer7/gw9eHvtUnrC3UxU/O86hIqssIo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=clfLkUdZ; arc=none smtp.client-ip=91.218.175.171
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="WUHnn/X3"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 35ED5C4CEED;
-	Wed, 14 May 2025 04:46:13 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1747197973;
-	bh=w19z6GWVSncZnVbjxFphyPXRA2BivxniQSnbDNhu5TI=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=WUHnn/X3u3Vhp+MR2Fcs7zZCYyUEWA2YeDZVsVaYR/XuL27kCUnFAt1f0c/epLkHY
-	 k1yn/kvFdi08hrCLZKxf7K6YVbvfcBLQzrp+d+c8ng4P/uS8ILNbr8xbRNWy31Jx2S
-	 OkaJDu4FX2xXJIwsLBzhjLKBG66R8PtoUQeZZjkM4nfT3s9VocmE+2ECEgDinoyKFJ
-	 5STM89svBp29BMsZglvI9Q0D9nAtW7AoNVLnI0PN6+4hIJJhGJ+Rzq8GuOzKaSb4z4
-	 Tb78KMxiucR2dMj286Rw5E8KeAGpTJkFZqUJI8IkRq9bWKUEgLcbrliMZlPzis+37T
-	 E9aTFDXgqprKA==
-Date: Wed, 14 May 2025 00:46:12 -0400
-From: Tejun Heo <tj@kernel.org>
-To: Johannes Weiner <hannes@cmpxchg.org>,
-	Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny@suse.com>
-Cc: cgroups@vger.kernel.org, linux-kernel@vger.kernel.org,
-	bpf@vger.kernel.org
-Subject: [PATCH 3/3 cgroup/for-6.16] sched_ext: Convert cgroup BPF support to
- use cgroup_lifetime_notifier
-Message-ID: <aCQgFIxz82oxLf8v@mtj.duckdns.org>
-References: <aCQfffBvNpW3qMWN@mtj.duckdns.org>
- <aCQfvCuVWOYkv_X5@mtj.duckdns.org>
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="clfLkUdZ"
+X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
+	t=1747199313;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=zTCWWrV0l4ME9vJBQdx9lnHLC7UBjeIHK4sO6n82O0w=;
+	b=clfLkUdZQCeY4LqSnalnqCiuGz+eMS9VvbrRqDlJq//1jNxS3/xkzuZH0dAccVoNF2esh9
+	AoAfroMAbkmB8hJml6UIrG23bU6WvwkGvr/OeR1DT+8bEraK8BLD3NB2tddQZPLwAPo/7V
+	ddblr4d4JckNJE3bSKj7MOy1KgFTcPw=
+From: Shakeel Butt <shakeel.butt@linux.dev>
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: Johannes Weiner <hannes@cmpxchg.org>,
+	Michal Hocko <mhocko@kernel.org>,
+	Roman Gushchin <roman.gushchin@linux.dev>,
+	Muchun Song <muchun.song@linux.dev>,
+	Vlastimil Babka <vbabka@suse.cz>,
+	Alexei Starovoitov <ast@kernel.org>,
+	Sebastian Andrzej Siewior <bigeasy@linutronix.de>,
+	Harry Yoo <harry.yoo@oracle.com>,
+	Yosry Ahmed <yosry.ahmed@linux.dev>,
+	bpf@vger.kernel.org,
+	linux-mm@kvack.org,
+	cgroups@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Meta kernel team <kernel-team@meta.com>
+Subject: [PATCH 1/7] memcg: memcg_rstat_updated re-entrant safe against irqs
+Date: Tue, 13 May 2025 22:08:07 -0700
+Message-ID: <20250514050813.2526843-2-shakeel.butt@linux.dev>
+In-Reply-To: <20250514050813.2526843-1-shakeel.butt@linux.dev>
+References: <20250514050813.2526843-1-shakeel.butt@linux.dev>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <aCQfvCuVWOYkv_X5@mtj.duckdns.org>
+Content-Transfer-Encoding: 8bit
+X-Migadu-Flow: FLOW_OUT
 
-Replace explicit cgroup_bpf_inherit/offline() calls from cgroup
-creation/destruction paths with notification callback registered on
-cgroup_lifetime_notifier.
+The function memcg_rstat_updated() is used to track the memcg stats
+updates for optimizing the flushes. At the moment, it is not re-entrant
+safe and the callers disabled irqs before calling. However to achieve
+the goal of updating memcg stats without irqs, memcg_rstat_updated()
+needs to be re-entrant safe against irqs.
 
-Signed-off-by: Tejun Heo <tj@kernel.org>
+This patch makes memcg_rstat_updated() re-entrant safe using this_cpu_*
+ops. On archs with CONFIG_ARCH_HAS_NMI_SAFE_THIS_CPU_OPS, this patch is
+also making memcg_rstat_updated() nmi safe.
+
+Signed-off-by: Shakeel Butt <shakeel.butt@linux.dev>
 ---
- include/linux/bpf-cgroup.h |    9 +++++----
- kernel/bpf/cgroup.c        |   38 ++++++++++++++++++++++++++++++++++++--
- kernel/cgroup/cgroup.c     |   20 +++-----------------
- 3 files changed, 44 insertions(+), 23 deletions(-)
+ mm/memcontrol.c | 34 ++++++++++++++++++++--------------
+ 1 file changed, 20 insertions(+), 14 deletions(-)
 
---- a/include/linux/bpf-cgroup.h
-+++ b/include/linux/bpf-cgroup.h
-@@ -114,8 +114,7 @@ struct bpf_prog_list {
- 	u32 flags;
- };
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index a713f160d669..cb10bcd1028d 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -506,8 +506,8 @@ struct memcg_vmstats_percpu {
+ 	unsigned int			stats_updates;
  
--int cgroup_bpf_inherit(struct cgroup *cgrp);
--void cgroup_bpf_offline(struct cgroup *cgrp);
-+void __init cgroup_bpf_lifetime_notifier_init(void);
+ 	/* Cached pointers for fast iteration in memcg_rstat_updated() */
+-	struct memcg_vmstats_percpu	*parent;
+-	struct memcg_vmstats		*vmstats;
++	struct memcg_vmstats_percpu __percpu	*parent_pcpu;
++	struct memcg_vmstats			*vmstats;
  
- int __cgroup_bpf_run_filter_skb(struct sock *sk,
- 				struct sk_buff *skb,
-@@ -431,8 +430,10 @@ const struct bpf_func_proto *
- cgroup_current_func_proto(enum bpf_func_id func_id, const struct bpf_prog *prog);
- #else
+ 	/* The above should fit a single cacheline for memcg_rstat_updated() */
  
--static inline int cgroup_bpf_inherit(struct cgroup *cgrp) { return 0; }
--static inline void cgroup_bpf_offline(struct cgroup *cgrp) {}
-+static inline void cgroup_bpf_lifetime_notifier_init(void)
-+{
-+	return;
-+}
+@@ -589,32 +589,38 @@ static bool memcg_vmstats_needs_flush(struct memcg_vmstats *vmstats)
  
- static inline int cgroup_bpf_prog_attach(const union bpf_attr *attr,
- 					 enum bpf_prog_type ptype,
---- a/kernel/bpf/cgroup.c
-+++ b/kernel/bpf/cgroup.c
-@@ -41,6 +41,19 @@ static int __init cgroup_bpf_wq_init(voi
- }
- core_initcall(cgroup_bpf_wq_init);
- 
-+static int cgroup_bpf_lifetime_notify(struct notifier_block *nb,
-+				      unsigned long action, void *data);
-+
-+static struct notifier_block cgroup_bpf_lifetime_nb = {
-+	.notifier_call = cgroup_bpf_lifetime_notify,
-+};
-+
-+void __init cgroup_bpf_lifetime_notifier_init(void)
-+{
-+	BUG_ON(blocking_notifier_chain_register(&cgroup_lifetime_notifier,
-+						&cgroup_bpf_lifetime_nb));
-+}
-+
- /* __always_inline is necessary to prevent indirect call through run_prog
-  * function pointer.
-  */
-@@ -206,7 +219,7 @@ bpf_cgroup_atype_find(enum bpf_attach_ty
- }
- #endif /* CONFIG_BPF_LSM */
- 
--void cgroup_bpf_offline(struct cgroup *cgrp)
-+static void cgroup_bpf_offline(struct cgroup *cgrp)
+ static inline void memcg_rstat_updated(struct mem_cgroup *memcg, int val)
  {
- 	cgroup_get(cgrp);
- 	percpu_ref_kill(&cgrp->bpf.refcnt);
-@@ -491,7 +504,7 @@ static void activate_effective_progs(str
-  * cgroup_bpf_inherit() - inherit effective programs from parent
-  * @cgrp: the cgroup to modify
-  */
--int cgroup_bpf_inherit(struct cgroup *cgrp)
-+static int cgroup_bpf_inherit(struct cgroup *cgrp)
- {
- /* has to use marco instead of const int, since compiler thinks
-  * that array below is variable length
-@@ -534,6 +547,27 @@ cleanup:
- 	return -ENOMEM;
+-	struct memcg_vmstats_percpu *statc;
+-	int cpu = smp_processor_id();
++	struct memcg_vmstats_percpu __percpu *statc_pcpu;
++	int cpu;
+ 	unsigned int stats_updates;
+ 
+ 	if (!val)
+ 		return;
+ 
++	/* Don't assume callers have preemption disabled. */
++	cpu = get_cpu();
++
+ 	css_rstat_updated(&memcg->css, cpu);
+-	statc = this_cpu_ptr(memcg->vmstats_percpu);
+-	for (; statc; statc = statc->parent) {
++	statc_pcpu = memcg->vmstats_percpu;
++	for (; statc_pcpu; statc_pcpu = this_cpu_ptr(statc_pcpu)->parent_pcpu) {
+ 		/*
+ 		 * If @memcg is already flushable then all its ancestors are
+ 		 * flushable as well and also there is no need to increase
+ 		 * stats_updates.
+ 		 */
+-		if (memcg_vmstats_needs_flush(statc->vmstats))
++		if (memcg_vmstats_needs_flush(this_cpu_ptr(statc_pcpu)->vmstats))
+ 			break;
+ 
+-		stats_updates = READ_ONCE(statc->stats_updates) + abs(val);
+-		WRITE_ONCE(statc->stats_updates, stats_updates);
++		stats_updates = this_cpu_add_return(statc_pcpu->stats_updates,
++						    abs(val));
+ 		if (stats_updates < MEMCG_CHARGE_BATCH)
+ 			continue;
+ 
+-		atomic64_add(stats_updates, &statc->vmstats->stats_updates);
+-		WRITE_ONCE(statc->stats_updates, 0);
++		stats_updates = this_cpu_xchg(statc_pcpu->stats_updates, 0);
++		if (stats_updates)
++			atomic64_add(stats_updates,
++				&this_cpu_ptr(statc_pcpu)->vmstats->stats_updates);
+ 	}
++	put_cpu();
  }
  
-+static int cgroup_bpf_lifetime_notify(struct notifier_block *nb,
-+				      unsigned long action, void *data)
-+{
-+	struct cgroup *cgrp = data;
-+	int ret = 0;
-+
-+	if (cgrp->root != &cgrp_dfl_root)
-+		return NOTIFY_OK;
-+
-+	switch (action) {
-+	case CGROUP_LIFETIME_ONLINE:
-+		ret = cgroup_bpf_inherit(cgrp);
-+		break;
-+	case CGROUP_LIFETIME_OFFLINE:
-+		cgroup_bpf_offline(cgrp);
-+		break;
-+	}
-+
-+	return notifier_from_errno(ret);
-+}
-+
- static int update_effective_progs(struct cgroup *cgrp,
- 				  enum cgroup_bpf_attach_type atype)
+ static void __mem_cgroup_flush_stats(struct mem_cgroup *memcg, bool force)
+@@ -3716,7 +3722,7 @@ static void mem_cgroup_free(struct mem_cgroup *memcg)
+ 
+ static struct mem_cgroup *mem_cgroup_alloc(struct mem_cgroup *parent)
  {
---- a/kernel/cgroup/cgroup.c
-+++ b/kernel/cgroup/cgroup.c
-@@ -2162,11 +2162,6 @@ int cgroup_setup_root(struct cgroup_root
- 	if (ret)
- 		goto exit_stats;
+-	struct memcg_vmstats_percpu *statc, *pstatc;
++	struct memcg_vmstats_percpu *statc, __percpu *pstatc_pcpu;
+ 	struct mem_cgroup *memcg;
+ 	int node, cpu;
+ 	int __maybe_unused i;
+@@ -3747,9 +3753,9 @@ static struct mem_cgroup *mem_cgroup_alloc(struct mem_cgroup *parent)
  
--	if (root == &cgrp_dfl_root) {
--		ret = cgroup_bpf_inherit(root_cgrp);
--		WARN_ON_ONCE(ret);
--	}
--
- 	ret = blocking_notifier_call_chain(&cgroup_lifetime_notifier,
- 					   CGROUP_LIFETIME_ONLINE, root_cgrp);
- 	WARN_ON_ONCE(notifier_to_errno(ret));
-@@ -5759,20 +5754,12 @@ static struct cgroup *cgroup_create(stru
+ 	for_each_possible_cpu(cpu) {
+ 		if (parent)
+-			pstatc = per_cpu_ptr(parent->vmstats_percpu, cpu);
++			pstatc_pcpu = parent->vmstats_percpu;
+ 		statc = per_cpu_ptr(memcg->vmstats_percpu, cpu);
+-		statc->parent = parent ? pstatc : NULL;
++		statc->parent_pcpu = parent ? pstatc_pcpu : NULL;
+ 		statc->vmstats = memcg->vmstats;
+ 	}
  
- 	cgrp->self.serial_nr = css_serial_nr_next++;
- 
--	if (cgrp->root == &cgrp_dfl_root) {
--		ret = cgroup_bpf_inherit(cgrp);
--		if (ret)
--			goto out_psi_free;
--	}
--
- 	ret = blocking_notifier_call_chain_robust(&cgroup_lifetime_notifier,
- 						  CGROUP_LIFETIME_ONLINE,
- 						  CGROUP_LIFETIME_OFFLINE, cgrp);
- 	ret = notifier_to_errno(ret);
--	if (ret) {
--		cgroup_bpf_offline(cgrp);
-+	if (ret)
- 		goto out_psi_free;
--	}
- 
- 	/* allocation complete, commit to creation */
- 	spin_lock_irq(&css_set_lock);
-@@ -6059,9 +6046,6 @@ static int cgroup_destroy_locked(struct
- 
- 	cgroup1_check_for_release(parent);
- 
--	if (cgrp->root == &cgrp_dfl_root)
--		cgroup_bpf_offline(cgrp);
--
- 	ret = blocking_notifier_call_chain(&cgroup_lifetime_notifier,
- 					   CGROUP_LIFETIME_OFFLINE, cgrp);
- 	WARN_ON_ONCE(notifier_to_errno(ret));
-@@ -6215,6 +6199,8 @@ int __init cgroup_init(void)
- 	hash_add(css_set_table, &init_css_set.hlist,
- 		 css_set_hash(init_css_set.subsys));
- 
-+	cgroup_bpf_lifetime_notifier_init();
-+
- 	BUG_ON(cgroup_setup_root(&cgrp_dfl_root, 0));
- 
- 	cgroup_unlock();
+-- 
+2.47.1
+
