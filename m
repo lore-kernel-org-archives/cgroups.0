@@ -1,32 +1,32 @@
-Received: from out-173.mta1.migadu.com (out-173.mta1.migadu.com [95.215.58.173])
+Received: from out-189.mta0.migadu.com (out-189.mta0.migadu.com [91.218.175.189])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 46E5028A3E4
-	for <cgroups@vger.kernel.org>; Wed, 14 May 2025 18:42:29 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=95.215.58.173
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E0F5E28A1ED
+	for <cgroups@vger.kernel.org>; Wed, 14 May 2025 18:42:42 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.189
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1747248152; cv=none; b=aSi9EfDUbRHXezuDfj8Y15NKMsBrZ8VfD8lrBOKL6G28nqEGWWYGD8Axj+2+o4io4PIo2wLxgWO1N57EOWg/uY6+vpb1wi8+6hSMoRe2WyCVp3hTcqzJpzcMgOBAgX8gmrT6Yh2i0sFmPbzCc1zOULm/eHuP35Yysg3DDg8/zSE=
+	t=1747248165; cv=none; b=nJrR5lcuOm7Q8NoDLCX6TEHpXJJNN0JcZ0sh7ck7Usfh6MRa92g71RXM+eQFs0N2hJ29U2eID456SO21YOCyvyqFwrxskCZajFRply6Me0j93ahNhr3AIOGUsxTWmuf+bT+N4SzKgTMUaeRRGAYw++fTT8j0H+kRt2tIGhwmxw0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1747248152; c=relaxed/simple;
-	bh=+2HNtNHSyHe09aiFKC4uxM3PAH6DOJWNjNKEmVXT27I=;
+	s=arc-20240116; t=1747248165; c=relaxed/simple;
+	bh=9a9EAI7HjHhqk+KWb+uIby+4wcCto83ZQTHrDewpE5Q=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=sgBeY6l1UHIiH+cPd0yC2Eh7ExfzQlHiunS+pp1m/AgtXj4xK3s5DfLnXIPOVNLfLCq6PeeNwRTNhn/YUWBSFxMDcF1rDI9y8/n9Pus4iDLajzm5enhXPAQuW76JXGJFpOGuwp2QILcGScN4xkR2244n2D9cgJ1wyJiXtVwUTng=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=O82arQvG; arc=none smtp.client-ip=95.215.58.173
+	 MIME-Version; b=Mo7K//L2MYogqoqFw2e9dQx7CBWY1rCxkv6tcXXwJ6lLzqC7i857yPugcZWmIIpxiYJ7LOmVdxFK+5ZXtMpjrVmCS2tX7lxhZdK75p85IcULZVNvlqDY+36u059e0zzxt057KHOD5PAL74Dyob0srjjntlDlDOscDHm1smNElzo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=HPtxLwPj; arc=none smtp.client-ip=91.218.175.189
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="O82arQvG"
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="HPtxLwPj"
 X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
-	t=1747248148;
+	t=1747248160;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=pnF7krW2jVoclxTmKq2Rm1VmAZ/F/mXL38we6iUw/xE=;
-	b=O82arQvGzNDNLe5lnOtBcCE5uvdvACBYJ1PalJjlxxRDPRFgkRaG6x0Uchr66drqz47Jjr
-	PXA6t11IzYBcrVXHGHNqjFWOsEV5uJE2n3iLvDJ3zn0qpesRQJXDy2quVFbtLTIlVna6ae
-	XZZLZPbQIYDaDTrGf0FrrUl72yz+7IM=
+	bh=SUZYKygsw0cKUEN+JGdm3r/cNIBlAjnoiVTSGdy45nM=;
+	b=HPtxLwPjDj5tqjCFtwX92LOzUI2qCAAx7nVFvpOlYx50xbs4s/Fy13Y9s9Qvw+8xVxiY8H
+	V2WCjEYTPudskCJM673GcxuVhRiR162USn+/2ztfctd5+lkECGf8FDLJSGd2TjK79GGOBf
+	cCXBYez5Bq6M6ZySrPh5GHB1M/dPDqc=
 From: Shakeel Butt <shakeel.butt@linux.dev>
 To: Andrew Morton <akpm@linux-foundation.org>
 Cc: Johannes Weiner <hannes@cmpxchg.org>,
@@ -43,9 +43,9 @@ Cc: Johannes Weiner <hannes@cmpxchg.org>,
 	cgroups@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
 	Meta kernel team <kernel-team@meta.com>
-Subject: [PATCH v2 2/7] memcg: move preempt disable to callers of memcg_rstat_updated
-Date: Wed, 14 May 2025 11:41:53 -0700
-Message-ID: <20250514184158.3471331-3-shakeel.butt@linux.dev>
+Subject: [PATCH v2 4/7] memcg: make count_memcg_events re-entrant safe against irqs
+Date: Wed, 14 May 2025 11:41:55 -0700
+Message-ID: <20250514184158.3471331-5-shakeel.butt@linux.dev>
 In-Reply-To: <20250514184158.3471331-1-shakeel.butt@linux.dev>
 References: <20250514184158.3471331-1-shakeel.butt@linux.dev>
 Precedence: bulk
@@ -57,179 +57,214 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-Migadu-Flow: FLOW_OUT
 
-Let's move the explicit preempt disable code to the callers of
-memcg_rstat_updated and also remove the memcg_stats_lock and related
-functions which ensures the callers of stats update functions have
-disabled preemption because now the stats update functions are
-explicitly disabling preemption.
+Let's make count_memcg_events re-entrant safe against irqs. The only
+thing needed is to convert the usage of __this_cpu_add() to
+this_cpu_add(). In addition, with re-entrant safety, there is no need
+to disable irqs. Also add warnings for in_nmi() as it is not safe
+against nmi context.
 
 Signed-off-by: Shakeel Butt <shakeel.butt@linux.dev>
 Acked-by: Vlastimil Babka <vbabka@suse.cz>
 ---
- mm/memcontrol.c | 74 +++++++++++++------------------------------------
- 1 file changed, 19 insertions(+), 55 deletions(-)
+ include/linux/memcontrol.h | 21 ++-------------------
+ mm/memcontrol-v1.c         |  6 +++---
+ mm/memcontrol.c            |  6 +++---
+ mm/swap.c                  |  8 ++++----
+ mm/vmscan.c                | 14 +++++++-------
+ 5 files changed, 19 insertions(+), 36 deletions(-)
 
+diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
+index 92861ff3c43f..f7848f73f41c 100644
+--- a/include/linux/memcontrol.h
++++ b/include/linux/memcontrol.h
+@@ -942,19 +942,8 @@ static inline void mod_lruvec_kmem_state(void *p, enum node_stat_item idx,
+ 	local_irq_restore(flags);
+ }
+ 
+-void __count_memcg_events(struct mem_cgroup *memcg, enum vm_event_item idx,
+-			  unsigned long count);
+-
+-static inline void count_memcg_events(struct mem_cgroup *memcg,
+-				      enum vm_event_item idx,
+-				      unsigned long count)
+-{
+-	unsigned long flags;
+-
+-	local_irq_save(flags);
+-	__count_memcg_events(memcg, idx, count);
+-	local_irq_restore(flags);
+-}
++void count_memcg_events(struct mem_cgroup *memcg, enum vm_event_item idx,
++			unsigned long count);
+ 
+ static inline void count_memcg_folio_events(struct folio *folio,
+ 		enum vm_event_item idx, unsigned long nr)
+@@ -1418,12 +1407,6 @@ static inline void mod_lruvec_kmem_state(void *p, enum node_stat_item idx,
+ }
+ 
+ static inline void count_memcg_events(struct mem_cgroup *memcg,
+-				      enum vm_event_item idx,
+-				      unsigned long count)
+-{
+-}
+-
+-static inline void __count_memcg_events(struct mem_cgroup *memcg,
+ 					enum vm_event_item idx,
+ 					unsigned long count)
+ {
+diff --git a/mm/memcontrol-v1.c b/mm/memcontrol-v1.c
+index 54c49cbfc968..4b94731305b9 100644
+--- a/mm/memcontrol-v1.c
++++ b/mm/memcontrol-v1.c
+@@ -512,9 +512,9 @@ static void memcg1_charge_statistics(struct mem_cgroup *memcg, int nr_pages)
+ {
+ 	/* pagein of a big page is an event. So, ignore page size */
+ 	if (nr_pages > 0)
+-		__count_memcg_events(memcg, PGPGIN, 1);
++		count_memcg_events(memcg, PGPGIN, 1);
+ 	else {
+-		__count_memcg_events(memcg, PGPGOUT, 1);
++		count_memcg_events(memcg, PGPGOUT, 1);
+ 		nr_pages = -nr_pages; /* for event */
+ 	}
+ 
+@@ -689,7 +689,7 @@ void memcg1_uncharge_batch(struct mem_cgroup *memcg, unsigned long pgpgout,
+ 	unsigned long flags;
+ 
+ 	local_irq_save(flags);
+-	__count_memcg_events(memcg, PGPGOUT, pgpgout);
++	count_memcg_events(memcg, PGPGOUT, pgpgout);
+ 	__this_cpu_add(memcg->events_percpu->nr_page_events, nr_memory);
+ 	memcg1_check_events(memcg, nid);
+ 	local_irq_restore(flags);
 diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index 2464a58fbf17..1750d86012f3 100644
+index c5a835071610..0923072386c2 100644
 --- a/mm/memcontrol.c
 +++ b/mm/memcontrol.c
-@@ -557,48 +557,22 @@ static u64 flush_last_time;
- 
- #define FLUSH_TIME (2UL*HZ)
- 
--/*
-- * Accessors to ensure that preemption is disabled on PREEMPT_RT because it can
-- * not rely on this as part of an acquired spinlock_t lock. These functions are
-- * never used in hardirq context on PREEMPT_RT and therefore disabling preemtion
-- * is sufficient.
-- */
--static void memcg_stats_lock(void)
--{
--	preempt_disable_nested();
--	VM_WARN_ON_IRQS_ENABLED();
--}
--
--static void __memcg_stats_lock(void)
--{
--	preempt_disable_nested();
--}
--
--static void memcg_stats_unlock(void)
--{
--	preempt_enable_nested();
--}
--
--
- static bool memcg_vmstats_needs_flush(struct memcg_vmstats *vmstats)
- {
- 	return atomic64_read(&vmstats->stats_updates) >
- 		MEMCG_CHARGE_BATCH * num_online_cpus();
- }
- 
--static inline void memcg_rstat_updated(struct mem_cgroup *memcg, int val)
-+static inline void memcg_rstat_updated(struct mem_cgroup *memcg, int val,
-+				       int cpu)
- {
- 	struct memcg_vmstats_percpu __percpu *statc_pcpu;
- 	struct memcg_vmstats_percpu *statc;
--	int cpu;
- 	unsigned int stats_updates;
- 
- 	if (!val)
- 		return;
- 
--	/* Don't assume callers have preemption disabled. */
--	cpu = get_cpu();
--
- 	cgroup_rstat_updated(memcg->css.cgroup, cpu);
- 	statc_pcpu = memcg->vmstats_percpu;
- 	for (; statc_pcpu; statc_pcpu = statc->parent_pcpu) {
-@@ -619,7 +593,6 @@ static inline void memcg_rstat_updated(struct mem_cgroup *memcg, int val)
- 		stats_updates = this_cpu_xchg(statc_pcpu->stats_updates, 0);
- 		atomic64_add(stats_updates, &statc->vmstats->stats_updates);
- 	}
--	put_cpu();
- }
- 
- static void __mem_cgroup_flush_stats(struct mem_cgroup *memcg, bool force)
-@@ -717,6 +690,7 @@ void __mod_memcg_state(struct mem_cgroup *memcg, enum memcg_stat_item idx,
- 		       int val)
- {
- 	int i = memcg_stats_index(idx);
-+	int cpu;
- 
- 	if (mem_cgroup_disabled())
- 		return;
-@@ -724,12 +698,14 @@ void __mod_memcg_state(struct mem_cgroup *memcg, enum memcg_stat_item idx,
- 	if (WARN_ONCE(BAD_STAT_IDX(i), "%s: missing stat item %d\n", __func__, idx))
- 		return;
- 
--	memcg_stats_lock();
-+	cpu = get_cpu();
-+
- 	__this_cpu_add(memcg->vmstats_percpu->state[i], val);
- 	val = memcg_state_val_in_pages(idx, val);
--	memcg_rstat_updated(memcg, val);
-+	memcg_rstat_updated(memcg, val, cpu);
- 	trace_mod_memcg_state(memcg, idx, val);
--	memcg_stats_unlock();
-+
-+	put_cpu();
- }
- 
- #ifdef CONFIG_MEMCG_V1
-@@ -758,6 +734,7 @@ static void __mod_memcg_lruvec_state(struct lruvec *lruvec,
- 	struct mem_cgroup_per_node *pn;
- 	struct mem_cgroup *memcg;
- 	int i = memcg_stats_index(idx);
-+	int cpu;
- 
- 	if (WARN_ONCE(BAD_STAT_IDX(i), "%s: missing stat item %d\n", __func__, idx))
- 		return;
-@@ -765,24 +742,7 @@ static void __mod_memcg_lruvec_state(struct lruvec *lruvec,
- 	pn = container_of(lruvec, struct mem_cgroup_per_node, lruvec);
- 	memcg = pn->memcg;
- 
--	/*
--	 * The caller from rmap relies on disabled preemption because they never
--	 * update their counter from in-interrupt context. For these two
--	 * counters we check that the update is never performed from an
--	 * interrupt context while other caller need to have disabled interrupt.
--	 */
--	__memcg_stats_lock();
--	if (IS_ENABLED(CONFIG_DEBUG_VM)) {
--		switch (idx) {
--		case NR_ANON_MAPPED:
--		case NR_FILE_MAPPED:
--		case NR_ANON_THPS:
--			WARN_ON_ONCE(!in_task());
--			break;
--		default:
--			VM_WARN_ON_IRQS_ENABLED();
--		}
--	}
-+	cpu = get_cpu();
- 
- 	/* Update memcg */
- 	__this_cpu_add(memcg->vmstats_percpu->state[i], val);
-@@ -791,9 +751,10 @@ static void __mod_memcg_lruvec_state(struct lruvec *lruvec,
- 	__this_cpu_add(pn->lruvec_stats_percpu->state[i], val);
- 
- 	val = memcg_state_val_in_pages(idx, val);
--	memcg_rstat_updated(memcg, val);
-+	memcg_rstat_updated(memcg, val, cpu);
- 	trace_mod_memcg_lruvec_state(memcg, idx, val);
--	memcg_stats_unlock();
-+
-+	put_cpu();
+@@ -825,12 +825,12 @@ void __mod_lruvec_kmem_state(void *p, enum node_stat_item idx, int val)
  }
  
  /**
-@@ -873,6 +834,7 @@ void __count_memcg_events(struct mem_cgroup *memcg, enum vm_event_item idx,
+- * __count_memcg_events - account VM events in a cgroup
++ * count_memcg_events - account VM events in a cgroup
+  * @memcg: the memory cgroup
+  * @idx: the event item
+  * @count: the number of events that occurred
+  */
+-void __count_memcg_events(struct mem_cgroup *memcg, enum vm_event_item idx,
++void count_memcg_events(struct mem_cgroup *memcg, enum vm_event_item idx,
  			  unsigned long count)
  {
  	int i = memcg_events_index(idx);
-+	int cpu;
+@@ -844,7 +844,7 @@ void __count_memcg_events(struct mem_cgroup *memcg, enum vm_event_item idx,
  
- 	if (mem_cgroup_disabled())
- 		return;
-@@ -880,11 +842,13 @@ void __count_memcg_events(struct mem_cgroup *memcg, enum vm_event_item idx,
- 	if (WARN_ONCE(BAD_STAT_IDX(i), "%s: missing stat item %d\n", __func__, idx))
- 		return;
+ 	cpu = get_cpu();
  
--	memcg_stats_lock();
-+	cpu = get_cpu();
-+
- 	__this_cpu_add(memcg->vmstats_percpu->events[i], count);
--	memcg_rstat_updated(memcg, count);
-+	memcg_rstat_updated(memcg, count, cpu);
+-	__this_cpu_add(memcg->vmstats_percpu->events[i], count);
++	this_cpu_add(memcg->vmstats_percpu->events[i], count);
+ 	memcg_rstat_updated(memcg, count, cpu);
  	trace_count_memcg_events(memcg, idx, count);
--	memcg_stats_unlock();
-+
-+	put_cpu();
+ 
+diff --git a/mm/swap.c b/mm/swap.c
+index 77b2d5997873..4fc322f7111a 100644
+--- a/mm/swap.c
++++ b/mm/swap.c
+@@ -309,7 +309,7 @@ static void lru_activate(struct lruvec *lruvec, struct folio *folio)
+ 	trace_mm_lru_activate(folio);
+ 
+ 	__count_vm_events(PGACTIVATE, nr_pages);
+-	__count_memcg_events(lruvec_memcg(lruvec), PGACTIVATE, nr_pages);
++	count_memcg_events(lruvec_memcg(lruvec), PGACTIVATE, nr_pages);
  }
  
- unsigned long memcg_events(struct mem_cgroup *memcg, int event)
+ #ifdef CONFIG_SMP
+@@ -581,7 +581,7 @@ static void lru_deactivate_file(struct lruvec *lruvec, struct folio *folio)
+ 
+ 	if (active) {
+ 		__count_vm_events(PGDEACTIVATE, nr_pages);
+-		__count_memcg_events(lruvec_memcg(lruvec), PGDEACTIVATE,
++		count_memcg_events(lruvec_memcg(lruvec), PGDEACTIVATE,
+ 				     nr_pages);
+ 	}
+ }
+@@ -599,7 +599,7 @@ static void lru_deactivate(struct lruvec *lruvec, struct folio *folio)
+ 	lruvec_add_folio(lruvec, folio);
+ 
+ 	__count_vm_events(PGDEACTIVATE, nr_pages);
+-	__count_memcg_events(lruvec_memcg(lruvec), PGDEACTIVATE, nr_pages);
++	count_memcg_events(lruvec_memcg(lruvec), PGDEACTIVATE, nr_pages);
+ }
+ 
+ static void lru_lazyfree(struct lruvec *lruvec, struct folio *folio)
+@@ -625,7 +625,7 @@ static void lru_lazyfree(struct lruvec *lruvec, struct folio *folio)
+ 	lruvec_add_folio(lruvec, folio);
+ 
+ 	__count_vm_events(PGLAZYFREE, nr_pages);
+-	__count_memcg_events(lruvec_memcg(lruvec), PGLAZYFREE, nr_pages);
++	count_memcg_events(lruvec_memcg(lruvec), PGLAZYFREE, nr_pages);
+ }
+ 
+ /*
+diff --git a/mm/vmscan.c b/mm/vmscan.c
+index 5efd939d8c76..f86d264558f5 100644
+--- a/mm/vmscan.c
++++ b/mm/vmscan.c
+@@ -2028,7 +2028,7 @@ static unsigned long shrink_inactive_list(unsigned long nr_to_scan,
+ 	item = PGSCAN_KSWAPD + reclaimer_offset(sc);
+ 	if (!cgroup_reclaim(sc))
+ 		__count_vm_events(item, nr_scanned);
+-	__count_memcg_events(lruvec_memcg(lruvec), item, nr_scanned);
++	count_memcg_events(lruvec_memcg(lruvec), item, nr_scanned);
+ 	__count_vm_events(PGSCAN_ANON + file, nr_scanned);
+ 
+ 	spin_unlock_irq(&lruvec->lru_lock);
+@@ -2048,7 +2048,7 @@ static unsigned long shrink_inactive_list(unsigned long nr_to_scan,
+ 	item = PGSTEAL_KSWAPD + reclaimer_offset(sc);
+ 	if (!cgroup_reclaim(sc))
+ 		__count_vm_events(item, nr_reclaimed);
+-	__count_memcg_events(lruvec_memcg(lruvec), item, nr_reclaimed);
++	count_memcg_events(lruvec_memcg(lruvec), item, nr_reclaimed);
+ 	__count_vm_events(PGSTEAL_ANON + file, nr_reclaimed);
+ 	spin_unlock_irq(&lruvec->lru_lock);
+ 
+@@ -2138,7 +2138,7 @@ static void shrink_active_list(unsigned long nr_to_scan,
+ 
+ 	if (!cgroup_reclaim(sc))
+ 		__count_vm_events(PGREFILL, nr_scanned);
+-	__count_memcg_events(lruvec_memcg(lruvec), PGREFILL, nr_scanned);
++	count_memcg_events(lruvec_memcg(lruvec), PGREFILL, nr_scanned);
+ 
+ 	spin_unlock_irq(&lruvec->lru_lock);
+ 
+@@ -2195,7 +2195,7 @@ static void shrink_active_list(unsigned long nr_to_scan,
+ 	nr_deactivate = move_folios_to_lru(lruvec, &l_inactive);
+ 
+ 	__count_vm_events(PGDEACTIVATE, nr_deactivate);
+-	__count_memcg_events(lruvec_memcg(lruvec), PGDEACTIVATE, nr_deactivate);
++	count_memcg_events(lruvec_memcg(lruvec), PGDEACTIVATE, nr_deactivate);
+ 
+ 	__mod_node_page_state(pgdat, NR_ISOLATED_ANON + file, -nr_taken);
+ 	spin_unlock_irq(&lruvec->lru_lock);
+@@ -4616,8 +4616,8 @@ static int scan_folios(unsigned long nr_to_scan, struct lruvec *lruvec,
+ 		__count_vm_events(item, isolated);
+ 		__count_vm_events(PGREFILL, sorted);
+ 	}
+-	__count_memcg_events(memcg, item, isolated);
+-	__count_memcg_events(memcg, PGREFILL, sorted);
++	count_memcg_events(memcg, item, isolated);
++	count_memcg_events(memcg, PGREFILL, sorted);
+ 	__count_vm_events(PGSCAN_ANON + type, isolated);
+ 	trace_mm_vmscan_lru_isolate(sc->reclaim_idx, sc->order, MAX_LRU_BATCH,
+ 				scanned, skipped, isolated,
+@@ -4769,7 +4769,7 @@ static int evict_folios(unsigned long nr_to_scan, struct lruvec *lruvec,
+ 	item = PGSTEAL_KSWAPD + reclaimer_offset(sc);
+ 	if (!cgroup_reclaim(sc))
+ 		__count_vm_events(item, reclaimed);
+-	__count_memcg_events(memcg, item, reclaimed);
++	count_memcg_events(memcg, item, reclaimed);
+ 	__count_vm_events(PGSTEAL_ANON + type, reclaimed);
+ 
+ 	spin_unlock_irq(&lruvec->lru_lock);
 -- 
 2.47.1
 
