@@ -1,32 +1,32 @@
-Received: from out-183.mta0.migadu.com (out-183.mta0.migadu.com [91.218.175.183])
+Received: from out-181.mta0.migadu.com (out-181.mta0.migadu.com [91.218.175.181])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AD381288504;
-	Wed, 14 May 2025 18:42:48 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.183
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CC18628C5B8
+	for <cgroups@vger.kernel.org>; Wed, 14 May 2025 18:42:49 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.181
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1747248170; cv=none; b=WR+ZqGXo9b9w3zAdeDhGWm64C2znaFPp2arht8BrBz0zr8m84LenqUhmbrG364ZJAj0SeYL7b0J2m8ssTaog4GIl4T06vt+ZRPRjz7vKzSD7McUcYV1YJnsIMk0M78Tujym/eHNTLucD3Ykh58PpTis9WD35cBc36Hh4EYgbLZY=
+	t=1747248171; cv=none; b=GIWy9Ma3pC7I3LBjubOIETy/m+OU0RLZRHd3W1q1sIZF+B3Z/4bofPr1f0sZxHvfniN3PAgR3G69MKPTRjzGRXOPs8z6wa6XK54sxy1W3XKEGSWTyHy6v2L0PLxsenHiW1ircKiTLpo5aw7N9nH0ETnZQKlFUbL7PuCceTre4xo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1747248170; c=relaxed/simple;
-	bh=mTNNAhXxTmuKIpiWZywIQ/5hY9vcPCNEi5pwe+i0vF4=;
+	s=arc-20240116; t=1747248171; c=relaxed/simple;
+	bh=F3WEBTPiQLWz9cCb+hjP8Ux7u/ANXbxtzcyn85cfhmw=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=E8+we3yalAd4uTMrJYCRqlzviDuq8zshfK2sSophmw9SVEA6xuu4KMc/0J5ll680fMNWsIaZcwN/Lrf7j1Yt8tGfQElVDIfuLEtUomth0S8fLqoaUmufJIvluGvp9wc3H7JyCXQ9q6eLZWIEg5VMjz+QC2U+LaDRJeia8wDqfiM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=AeGHYahc; arc=none smtp.client-ip=91.218.175.183
+	 MIME-Version; b=Sb0yatj5dzMu439A++76SXXUu/R9u6W1rZzOAUehqWRRfyydNMhS3tUsjg9ZCAlCKNGuOSWfFiVdnyeI4NKe92aa43dprk7w3dUK54sRp5L9eFu03w0yE3w5oMxqQLmGuX2KtTuQ7AqnfkDjWCkd1y8Hh+NdIuueVEH62n5l6QI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=XsH+sSP2; arc=none smtp.client-ip=91.218.175.181
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="AeGHYahc"
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="XsH+sSP2"
 X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
-	t=1747248156;
+	t=1747248167;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=0hq3oSPGOoYcep4MVQZiDjVHKcY+KXmN8QcGYtIe92g=;
-	b=AeGHYahcQD4nY/SaOCUvLSzBipLtoKpoNJa3KmuL+Uo+M+Zi3uVoBSjGWm8N3I8w3dhhLm
-	pVJt8eREwCiR9EwSHIxX2Se2gB4i3bxdgu7u+wT0Uk9+iso2cJpcHXF8fWaulJAe1jO0Ft
-	CFTHhmUOmtjMi82XHcOkaTc1OZslUCs=
+	bh=tl4rUg93LkTokTk1IS4m9ISxrd6enFA07YnhN9En2KU=;
+	b=XsH+sSP2IqgV4b7JFzKmne3RJ7B8fs6sll5nB5jaO2ynnf01GgAFSgEyNXGG86e9Z7QQ1C
+	xAVYpXslEoie+4agb0gtbili30uXYuaShK5I8zmCyUoS39PXhQWaMMqSpDmDEFLEr7kO7A
+	tKA3XPMFfwrhihunQK+imHxFUbmwrx0=
 From: Shakeel Butt <shakeel.butt@linux.dev>
 To: Andrew Morton <akpm@linux-foundation.org>
 Cc: Johannes Weiner <hannes@cmpxchg.org>,
@@ -43,9 +43,9 @@ Cc: Johannes Weiner <hannes@cmpxchg.org>,
 	cgroups@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
 	Meta kernel team <kernel-team@meta.com>
-Subject: [PATCH v2 3/7] memcg: make mod_memcg_state re-entrant safe against irqs
-Date: Wed, 14 May 2025 11:41:54 -0700
-Message-ID: <20250514184158.3471331-4-shakeel.butt@linux.dev>
+Subject: [PATCH v2 6/7] memcg: no stock lock for cpu hot-unplug
+Date: Wed, 14 May 2025 11:41:57 -0700
+Message-ID: <20250514184158.3471331-7-shakeel.butt@linux.dev>
 In-Reply-To: <20250514184158.3471331-1-shakeel.butt@linux.dev>
 References: <20250514184158.3471331-1-shakeel.butt@linux.dev>
 Precedence: bulk
@@ -57,96 +57,43 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-Migadu-Flow: FLOW_OUT
 
-Let's make mod_memcg_state re-entrant safe against irqs. The only thing
-needed is to convert the usage of __this_cpu_add() to this_cpu_add().
-In addition, with re-entrant safety, there is no need to disable irqs.
-
-mod_memcg_state() is not safe against nmi, so let's add warning if
-someone tries to call it in nmi context.
+Previously on the cpu hot-unplug, the kernel would call
+drain_obj_stock() with objcg local lock. However local lock was not
+needed as the stock which was accessed belongs to a dead cpu but we kept
+it there to disable irqs as drain_obj_stock() may call
+mod_objcg_mlstate() which required irqs disabled. However there is no
+need to disable irqs now for mod_objcg_mlstate(), so we can remove the
+local lock altogether from cpu hot-unplug path.
 
 Signed-off-by: Shakeel Butt <shakeel.butt@linux.dev>
 Acked-by: Vlastimil Babka <vbabka@suse.cz>
 ---
- include/linux/memcontrol.h | 20 ++------------------
- mm/memcontrol.c            |  8 ++++----
- 2 files changed, 6 insertions(+), 22 deletions(-)
+ mm/memcontrol.c | 11 +----------
+ 1 file changed, 1 insertion(+), 10 deletions(-)
 
-diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
-index 9ed75f82b858..92861ff3c43f 100644
---- a/include/linux/memcontrol.h
-+++ b/include/linux/memcontrol.h
-@@ -903,19 +903,9 @@ struct mem_cgroup *mem_cgroup_get_oom_group(struct task_struct *victim,
- 					    struct mem_cgroup *oom_domain);
- void mem_cgroup_print_oom_group(struct mem_cgroup *memcg);
- 
--void __mod_memcg_state(struct mem_cgroup *memcg, enum memcg_stat_item idx,
--		       int val);
--
- /* idx can be of type enum memcg_stat_item or node_stat_item */
--static inline void mod_memcg_state(struct mem_cgroup *memcg,
--				   enum memcg_stat_item idx, int val)
--{
--	unsigned long flags;
--
--	local_irq_save(flags);
--	__mod_memcg_state(memcg, idx, val);
--	local_irq_restore(flags);
--}
-+void mod_memcg_state(struct mem_cgroup *memcg,
-+		     enum memcg_stat_item idx, int val);
- 
- static inline void mod_memcg_page_state(struct page *page,
- 					enum memcg_stat_item idx, int val)
-@@ -1375,12 +1365,6 @@ static inline void mem_cgroup_print_oom_group(struct mem_cgroup *memcg)
- {
- }
- 
--static inline void __mod_memcg_state(struct mem_cgroup *memcg,
--				     enum memcg_stat_item idx,
--				     int nr)
--{
--}
--
- static inline void mod_memcg_state(struct mem_cgroup *memcg,
- 				   enum memcg_stat_item idx,
- 				   int nr)
 diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index 1750d86012f3..c5a835071610 100644
+index 1071db0b1df8..04d756be708b 100644
 --- a/mm/memcontrol.c
 +++ b/mm/memcontrol.c
-@@ -681,12 +681,12 @@ static int memcg_state_val_in_pages(int idx, int val)
- }
+@@ -2025,17 +2025,8 @@ void drain_all_stock(struct mem_cgroup *root_memcg)
  
- /**
-- * __mod_memcg_state - update cgroup memory statistics
-+ * mod_memcg_state - update cgroup memory statistics
-  * @memcg: the memory cgroup
-  * @idx: the stat item - can be enum memcg_stat_item or enum node_stat_item
-  * @val: delta to add to the counter, can be negative
-  */
--void __mod_memcg_state(struct mem_cgroup *memcg, enum memcg_stat_item idx,
-+void mod_memcg_state(struct mem_cgroup *memcg, enum memcg_stat_item idx,
- 		       int val)
+ static int memcg_hotplug_cpu_dead(unsigned int cpu)
  {
- 	int i = memcg_stats_index(idx);
-@@ -700,7 +700,7 @@ void __mod_memcg_state(struct mem_cgroup *memcg, enum memcg_stat_item idx,
+-	struct obj_stock_pcp *obj_st;
+-	unsigned long flags;
+-
+-	obj_st = &per_cpu(obj_stock, cpu);
+-
+-	/* drain_obj_stock requires objstock.lock */
+-	local_lock_irqsave(&obj_stock.lock, flags);
+-	drain_obj_stock(obj_st);
+-	local_unlock_irqrestore(&obj_stock.lock, flags);
+-
+ 	/* no need for the local lock */
++	drain_obj_stock(&per_cpu(obj_stock, cpu));
+ 	drain_stock_fully(&per_cpu(memcg_stock, cpu));
  
- 	cpu = get_cpu();
- 
--	__this_cpu_add(memcg->vmstats_percpu->state[i], val);
-+	this_cpu_add(memcg->vmstats_percpu->state[i], val);
- 	val = memcg_state_val_in_pages(idx, val);
- 	memcg_rstat_updated(memcg, val, cpu);
- 	trace_mod_memcg_state(memcg, idx, val);
-@@ -2920,7 +2920,7 @@ static void drain_obj_stock(struct obj_stock_pcp *stock)
- 
- 			memcg = get_mem_cgroup_from_objcg(old);
- 
--			__mod_memcg_state(memcg, MEMCG_KMEM, -nr_pages);
-+			mod_memcg_state(memcg, MEMCG_KMEM, -nr_pages);
- 			memcg1_account_kmem(memcg, -nr_pages);
- 			if (!mem_cgroup_is_root(memcg))
- 				memcg_uncharge(memcg, nr_pages);
+ 	return 0;
 -- 
 2.47.1
 
