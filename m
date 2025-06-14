@@ -1,28 +1,28 @@
 Received: from dggsgout12.his.huawei.com (dggsgout12.his.huawei.com [45.249.212.56])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 09F1E186E2E;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5EA8A3594F;
 	Sat, 14 Jun 2025 09:31:45 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.56
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1749893508; cv=none; b=D//tfCbQFig0907k/7zjGmKCPjhMK/irU8ARkMB1fXh+J18h9TxWkpovqSFO0AIOEJzrE8jZ9g4qjp3qcnWEUEhHieW+QqXpe4DccVoCsZBYKtbfycaoWnTwp+MhsCtr5Zu/oq7IxTJNwlrtaeD7jnsLxJRfp31RLURjqTd7UMY=
+	t=1749893509; cv=none; b=ksTjpcg31S4SkYU8FEvUNqQdnZr4aCSfNPCRvjhiH5xzLUsCVkKL+zYbI0TWGLRayw2yc+9EfkTSb8h6KesmJUeWFMxiyISL7Qto68TJKcbIR0n4HvhqV5e9lludOiMEsZTeJUGCSR4exD2pg+xD2rNfL2eOh8vB71N4ani2P1Q=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1749893508; c=relaxed/simple;
-	bh=cj1lp7miltldS+zIRF7ZF/Uu0o9BFCo4+/taIQ0homk=;
+	s=arc-20240116; t=1749893509; c=relaxed/simple;
+	bh=wEQGdWGsmpfrovUYNN+akxZhK07M41/34FemLEAhQbE=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=K4/lScdWgFc0kC7SeO/MBhS0rdZvW+25HS6xbXK7LrDcxEUhfv/0uofS91Swh/iKOUpqvz3Rvn0aGrqQIuJF6ryWOzseK7TkWfLC1Fs6sTbqnUVP7KoRJUkRITcidY8Lv5KQQarvU21Hsr6Tg5Oc7wTnGT3uj62DIH5rMU9546A=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=none smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.56
+	 MIME-Version; b=LAXGq4dki7NiYCC9ftx5IgS/JOVWPNkMf4YbmM2uZPMjZk3apIgtk0k1D71Z2p87qkky7zWr/RK+/B5t7D10FVqXTK3ssXl7NgwcxRJqm4K03MRnWRXwM+Yt3WINN6Kpk2s/mLFo4rgoBQ2gkHjH7g5KJNe6MX6XXrWR2op5ygg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.56
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=huaweicloud.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
 Received: from mail.maildlp.com (unknown [172.19.93.142])
-	by dggsgout12.his.huawei.com (SkyGuard) with ESMTPS id 4bK9y96F6fzKHNYL;
-	Sat, 14 Jun 2025 17:31:45 +0800 (CST)
+	by dggsgout12.his.huawei.com (SkyGuard) with ESMTPS id 4bK9y82Tg6zKHNQy;
+	Sat, 14 Jun 2025 17:31:44 +0800 (CST)
 Received: from mail02.huawei.com (unknown [10.116.40.128])
-	by mail.maildlp.com (Postfix) with ESMTP id 3A1BD1A179F;
-	Sat, 14 Jun 2025 17:31:44 +0800 (CST)
+	by mail.maildlp.com (Postfix) with ESMTP id AA8AC1A0DEE;
+	Sat, 14 Jun 2025 17:31:42 +0800 (CST)
 Received: from huaweicloud.com (unknown [10.175.104.67])
-	by APP4 (Coremail) with SMTP id gCh0CgAni19zQU1oHxfvPQ--.9099S8;
-	Sat, 14 Jun 2025 17:31:44 +0800 (CST)
+	by APP4 (Coremail) with SMTP id gCh0CgAni19zQU1oHxfvPQ--.9099S5;
+	Sat, 14 Jun 2025 17:31:42 +0800 (CST)
 From: Yu Kuai <yukuai1@huaweicloud.com>
 To: ming.lei@redhat.com,
 	yukuai3@huawei.com,
@@ -36,9 +36,9 @@ Cc: linux-block@vger.kernel.org,
 	yi.zhang@huawei.com,
 	yangerkun@huawei.com,
 	johnny.chenyi@huawei.com
-Subject: [PATCH RFC v2 4/5] blk-mq-sched: refactor __blk_mq_do_dispatch_sched()
-Date: Sat, 14 Jun 2025 17:25:27 +0800
-Message-Id: <20250614092528.2352680-5-yukuai1@huaweicloud.com>
+Subject: [PATCH RFC v2 1/5] elevator: introduce global lock for sq_shared elevator
+Date: Sat, 14 Jun 2025 17:25:24 +0800
+Message-Id: <20250614092528.2352680-2-yukuai1@huaweicloud.com>
 X-Mailer: git-send-email 2.39.2
 In-Reply-To: <20250614092528.2352680-1-yukuai1@huaweicloud.com>
 References: <20250614092528.2352680-1-yukuai1@huaweicloud.com>
@@ -49,256 +49,178 @@ List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:gCh0CgAni19zQU1oHxfvPQ--.9099S8
-X-Coremail-Antispam: 1UD129KBjvJXoW3Wr45uw17CF1xtrW5try8uFg_yoWxZr48pF
-	4fGa13J395XF4jqFyI9w43Jw1Sy3yxWasrWryrKr4fJws8Zrs5Jrn5JFyUAFs7JrZ5uFW2
-	9r4DWr98AFs2qFDanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDU0xBIdaVrnRJUUUmI14x267AKxVWrJVCq3wAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
-	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2048vs2IY020E87I2jVAFwI0_JF0E3s1l82xGYI
-	kIc2x26xkF7I0E14v26ryj6s0DM28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48ve4kI8wA2
-	z4x0Y4vE2Ix0cI8IcVAFwI0_Ar0_tr1l84ACjcxK6xIIjxv20xvEc7CjxVAFwI0_Gr1j6F
-	4UJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x0267AKxVW0oVCq
-	3wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG6I80ewAv7VC0I7
-	IYx2IY67AKxVWUXVWUAwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFVCjc4AY6r1j6r4U
-	M4x0Y48IcxkI7VAKI48JM4x0x7Aq67IIx4CEVc8vx2IErcIFxwACI402YVCY1x02628vn2
-	kIc2xKxwCY1x0262kKe7AKxVWUtVW8ZwCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7xkE
-	bVWUJVW8JwC20s026c02F40E14v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E67
-	AF67kF1VAFwI0_Jw0_GFylIxkGc2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUJVWUCwCI
-	42IY6xIIjxv20xvEc7CjxVAFwI0_Cr0_Gr1UMIIF0xvE42xK8VAvwI8IcIk0rVWUJVWUCw
-	CI42IY6I8E87Iv67AKxVWUJVW8JwCI42IY6I8E87Iv6xkF7I0E14v26r4j6r4UJbIYCTnI
-	WIevJa73UjIFyTuYvjfUo73vUUUUU
+X-CM-TRANSID:gCh0CgAni19zQU1oHxfvPQ--.9099S5
+X-Coremail-Antispam: 1UD129KBjvJXoWxCF45GF4fuF48AF4xtrWDurg_yoWrtF4kpF
+	45Jan0kr4qqr47Za4xAa17Jw43t3929ry3ZrWfAw45tFyxGrWxXF18GFy8ZF4xZrs3CFsF
+	qr4ktFZ8WFyIg3DanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDU0xBIdaVrnRJUUUm014x267AKxVWrJVCq3wAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
+	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2048vs2IY020E87I2jVAFwI0_Jr4l82xGYIkIc2
+	x26xkF7I0E14v26r4j6ryUM28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48ve4kI8wA2z4x0
+	Y4vE2Ix0cI8IcVAFwI0_Ar0_tr1l84ACjcxK6xIIjxv20xvEc7CjxVAFwI0_Gr1j6F4UJw
+	A2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x0267AKxVW0oVCq3wAS
+	0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG6I80ewAv7VC0I7IYx2
+	IY67AKxVWUXVWUAwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFVCjc4AY6r1j6r4UM4x0
+	Y48IcxkI7VAKI48JM4x0x7Aq67IIx4CEVc8vx2IErcIFxwACI402YVCY1x02628vn2kIc2
+	xKxwCY1x0262kKe7AKxVWUtVW8ZwCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7xkEbVWU
+	JVW8JwC20s026c02F40E14v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E67AF67
+	kF1VAFwI0_Jw0_GFylIxkGc2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUJVWUCwCI42IY
+	6xIIjxv20xvEc7CjxVAFwI0_Gr0_Cr1lIxAIcVCF04k26cxKx2IYs7xG6r1j6r1xMIIF0x
+	vEx4A2jsIE14v26r1j6r4UMIIF0xvEx4A2jsIEc7CjxVAFwI0_Gr0_Gr1UYxBIdaVFxhVj
+	vjDU0xZFpf9x0JUIiiDUUUUU=
 X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
 
 From: Yu Kuai <yukuai3@huawei.com>
 
-Introduce struct sched_dispatch_ctx, and split the helper into
-elevator_dispatch_one_request() and elevator_finish_dispatch(). Make
-code cleaner and prepare to support request batch dispatching.
+Currently, both mq-deadline and bfq have internal global lock, prepare
+to convert them to use this high level lock and support batch request
+dispatching.
 
 Signed-off-by: Yu Kuai <yukuai3@huawei.com>
 ---
- block/blk-mq-sched.c | 181 ++++++++++++++++++++++++++-----------------
- 1 file changed, 109 insertions(+), 72 deletions(-)
+ block/blk-mq-sched.c |  4 +--
+ block/blk-mq.c       |  5 ++--
+ block/elevator.c     |  1 +
+ block/elevator.h     | 61 ++++++++++++++++++++++++++++++++++++++++++--
+ 4 files changed, 64 insertions(+), 7 deletions(-)
 
 diff --git a/block/blk-mq-sched.c b/block/blk-mq-sched.c
-index c1390d3e6381..990d0f19594a 100644
+index 55a0fd105147..c1390d3e6381 100644
 --- a/block/blk-mq-sched.c
 +++ b/block/blk-mq-sched.c
-@@ -74,85 +74,88 @@ static bool blk_mq_dispatch_hctx_list(struct list_head *rq_list)
+@@ -113,7 +113,7 @@ static int __blk_mq_do_dispatch_sched(struct blk_mq_hw_ctx *hctx)
+ 		if (budget_token < 0)
+ 			break;
  
- #define BLK_MQ_BUDGET_DELAY	3		/* ms units */
+-		rq = e->type->ops.dispatch_request(hctx);
++		rq = elevator_dispatch_request(hctx);
+ 		if (!rq) {
+ 			blk_mq_put_dispatch_budget(q, budget_token);
+ 			/*
+@@ -342,7 +342,7 @@ bool blk_mq_sched_bio_merge(struct request_queue *q, struct bio *bio,
+ 	enum hctx_type type;
  
--/*
-- * Only SCSI implements .get_budget and .put_budget, and SCSI restarts
-- * its queue by itself in its completion handler, so we don't need to
-- * restart queue if .get_budget() fails to get the budget.
-- *
-- * Returns -EAGAIN if hctx->dispatch was found non-empty and run_work has to
-- * be run again.  This is necessary to avoid starving flushes.
-- */
--static int __blk_mq_do_dispatch_sched(struct blk_mq_hw_ctx *hctx)
--{
--	struct request_queue *q = hctx->queue;
--	struct elevator_queue *e = q->elevator;
--	bool multi_hctxs = false, run_queue = false;
--	bool dispatched = false, busy = false;
--	unsigned int max_dispatch;
--	LIST_HEAD(rq_list);
--	int count = 0;
-+struct sched_dispatch_ctx {
-+	struct blk_mq_hw_ctx *hctx;
-+	struct elevator_queue *e;
-+	struct request_queue *q;
- 
--	if (hctx->dispatch_busy)
--		max_dispatch = 1;
--	else
--		max_dispatch = hctx->queue->nr_requests;
-+	struct list_head rq_list;
-+	int count;
- 
--	do {
--		struct request *rq;
--		int budget_token;
-+	bool multi_hctxs;
-+	bool run_queue;
-+	bool busy;
-+};
- 
--		if (e->type->ops.has_work && !e->type->ops.has_work(hctx))
--			break;
-+static bool elevator_can_dispatch(struct sched_dispatch_ctx *ctx)
-+{
-+	if (ctx->e->type->ops.has_work &&
-+	    !ctx->e->type->ops.has_work(ctx->hctx))
-+		return false;
- 
--		if (!list_empty_careful(&hctx->dispatch)) {
--			busy = true;
--			break;
--		}
-+	if (!list_empty_careful(&ctx->hctx->dispatch)) {
-+		ctx->busy = true;
-+		return false;
-+	}
- 
--		budget_token = blk_mq_get_dispatch_budget(q);
--		if (budget_token < 0)
--			break;
-+	return true;
-+}
- 
--		rq = elevator_dispatch_request(hctx);
--		if (!rq) {
--			blk_mq_put_dispatch_budget(q, budget_token);
--			/*
--			 * We're releasing without dispatching. Holding the
--			 * budget could have blocked any "hctx"s with the
--			 * same queue and if we didn't dispatch then there's
--			 * no guarantee anyone will kick the queue.  Kick it
--			 * ourselves.
--			 */
--			run_queue = true;
--			break;
--		}
-+static bool elevator_dispatch_one_request(struct sched_dispatch_ctx *ctx)
-+{
-+	struct request *rq;
-+	int budget_token;
- 
--		blk_mq_set_rq_budget_token(rq, budget_token);
-+	if (!elevator_can_dispatch(ctx))
-+		return false;
- 
--		/*
--		 * Now this rq owns the budget which has to be released
--		 * if this rq won't be queued to driver via .queue_rq()
--		 * in blk_mq_dispatch_rq_list().
--		 */
--		list_add_tail(&rq->queuelist, &rq_list);
--		count++;
--		if (rq->mq_hctx != hctx)
--			multi_hctxs = true;
-+	budget_token = blk_mq_get_dispatch_budget(ctx->q);
-+	if (budget_token < 0)
-+		return false;
- 
-+	rq = elevator_dispatch_request(ctx->hctx);
-+	if (!rq) {
-+		blk_mq_put_dispatch_budget(ctx->q, budget_token);
- 		/*
--		 * If we cannot get tag for the request, stop dequeueing
--		 * requests from the IO scheduler. We are unlikely to be able
--		 * to submit them anyway and it creates false impression for
--		 * scheduling heuristics that the device can take more IO.
-+		 * We're releasing without dispatching. Holding the
-+		 * budget could have blocked any "hctx"s with the
-+		 * same queue and if we didn't dispatch then there's
-+		 * no guarantee anyone will kick the queue.  Kick it
-+		 * ourselves.
- 		 */
--		if (!blk_mq_get_driver_tag(rq))
--			break;
--	} while (count < max_dispatch);
-+		ctx->run_queue = true;
-+		return false;
-+	}
- 
--	if (!count) {
--		if (run_queue)
--			blk_mq_delay_run_hw_queues(q, BLK_MQ_BUDGET_DELAY);
--	} else if (multi_hctxs) {
-+	blk_mq_set_rq_budget_token(rq, budget_token);
-+
-+	/*
-+	 * Now this rq owns the budget which has to be released
-+	 * if this rq won't be queued to driver via .queue_rq()
-+	 * in blk_mq_dispatch_rq_list().
-+	 */
-+	list_add_tail(&rq->queuelist, &ctx->rq_list);
-+	ctx->count++;
-+	if (rq->mq_hctx != ctx->hctx)
-+		ctx->multi_hctxs = true;
-+
-+	/*
-+	 * If we cannot get tag for the request, stop dequeueing
-+	 * requests from the IO scheduler. We are unlikely to be able
-+	 * to submit them anyway and it creates false impression for
-+	 * scheduling heuristics that the device can take more IO.
-+	 */
-+	return blk_mq_get_driver_tag(rq);
-+}
-+
-+static int elevator_finish_dispatch(struct sched_dispatch_ctx *ctx)
-+{
-+	bool dispatched = false;
-+
-+	if (!ctx->count) {
-+		if (ctx->run_queue)
-+			blk_mq_delay_run_hw_queues(ctx->q, BLK_MQ_BUDGET_DELAY);
-+	} else if (ctx->multi_hctxs) {
- 		/*
- 		 * Requests from different hctx may be dequeued from some
- 		 * schedulers, such as bfq and deadline.
-@@ -160,19 +163,53 @@ static int __blk_mq_do_dispatch_sched(struct blk_mq_hw_ctx *hctx)
- 		 * Sort the requests in the list according to their hctx,
- 		 * dispatch batching requests from same hctx at a time.
- 		 */
--		list_sort(NULL, &rq_list, sched_rq_cmp);
-+		list_sort(NULL, &ctx->rq_list, sched_rq_cmp);
- 		do {
--			dispatched |= blk_mq_dispatch_hctx_list(&rq_list);
--		} while (!list_empty(&rq_list));
-+			dispatched |= blk_mq_dispatch_hctx_list(&ctx->rq_list);
-+		} while (!list_empty(&ctx->rq_list));
- 	} else {
--		dispatched = blk_mq_dispatch_rq_list(hctx, &rq_list, false);
-+		dispatched = blk_mq_dispatch_rq_list(ctx->hctx, &ctx->rq_list,
-+						     false);
+ 	if (e && e->type->ops.bio_merge) {
+-		ret = e->type->ops.bio_merge(q, bio, nr_segs);
++		ret = elevator_bio_merge(q, bio, nr_segs);
+ 		goto out_put;
  	}
  
--	if (busy)
-+	if (ctx->busy)
- 		return -EAGAIN;
-+
- 	return !!dispatched;
- }
+diff --git a/block/blk-mq.c b/block/blk-mq.c
+index 4806b867e37d..2650b7b28d1e 100644
+--- a/block/blk-mq.c
++++ b/block/blk-mq.c
+@@ -2637,7 +2637,7 @@ static void blk_mq_insert_request(struct request *rq, blk_insert_t flags)
+ 		WARN_ON_ONCE(rq->tag != BLK_MQ_NO_TAG);
  
-+/*
-+ * Only SCSI implements .get_budget and .put_budget, and SCSI restarts
-+ * its queue by itself in its completion handler, so we don't need to
-+ * restart queue if .get_budget() fails to get the budget.
-+ *
-+ * Returns -EAGAIN if hctx->dispatch was found non-empty and run_work has to
-+ * be run again.  This is necessary to avoid starving flushes.
-+ */
-+static int __blk_mq_do_dispatch_sched(struct blk_mq_hw_ctx *hctx)
+ 		list_add(&rq->queuelist, &list);
+-		q->elevator->type->ops.insert_requests(hctx, &list, flags);
++		elevator_insert_requests(hctx, &list, flags);
+ 	} else {
+ 		trace_block_rq_insert(rq);
+ 
+@@ -2912,8 +2912,7 @@ static void blk_mq_dispatch_list(struct rq_list *rqs, bool from_sched)
+ 		spin_unlock(&this_hctx->lock);
+ 		blk_mq_run_hw_queue(this_hctx, from_sched);
+ 	} else if (this_hctx->queue->elevator) {
+-		this_hctx->queue->elevator->type->ops.insert_requests(this_hctx,
+-				&list, 0);
++		elevator_insert_requests(this_hctx, &list, 0);
+ 		blk_mq_run_hw_queue(this_hctx, from_sched);
+ 	} else {
+ 		blk_mq_insert_requests(this_hctx, this_ctx, &list, from_sched);
+diff --git a/block/elevator.c b/block/elevator.c
+index ab22542e6cf0..91df270d9d91 100644
+--- a/block/elevator.c
++++ b/block/elevator.c
+@@ -144,6 +144,7 @@ struct elevator_queue *elevator_alloc(struct request_queue *q,
+ 	eq->type = e;
+ 	kobject_init(&eq->kobj, &elv_ktype);
+ 	mutex_init(&eq->sysfs_lock);
++	spin_lock_init(&eq->lock);
+ 	hash_init(eq->hash);
+ 
+ 	return eq;
+diff --git a/block/elevator.h b/block/elevator.h
+index a07ce773a38f..8399dfe5c3b6 100644
+--- a/block/elevator.h
++++ b/block/elevator.h
+@@ -110,12 +110,12 @@ struct request *elv_rqhash_find(struct request_queue *q, sector_t offset);
+ /*
+  * each queue has an elevator_queue associated with it
+  */
+-struct elevator_queue
+-{
++struct elevator_queue {
+ 	struct elevator_type *type;
+ 	void *elevator_data;
+ 	struct kobject kobj;
+ 	struct mutex sysfs_lock;
++	spinlock_t lock;
+ 	unsigned long flags;
+ 	DECLARE_HASHTABLE(hash, ELV_HASH_BITS);
+ };
+@@ -186,4 +186,61 @@ extern struct request *elv_rb_find(struct rb_root *, sector_t);
+ void blk_mq_sched_reg_debugfs(struct request_queue *q);
+ void blk_mq_sched_unreg_debugfs(struct request_queue *q);
+ 
++#define elevator_lock(e)	spin_lock_irq(&(e)->lock)
++#define elevator_unlock(e)	spin_unlock_irq(&(e)->lock)
++
++static inline struct request *elevator_dispatch_request(
++		struct blk_mq_hw_ctx *hctx)
 +{
-+	unsigned int max_dispatch;
-+	struct sched_dispatch_ctx ctx = {
-+		.hctx	= hctx,
-+		.q	= hctx->queue,
-+		.e	= hctx->queue->elevator,
-+	};
++	struct request_queue *q = hctx->queue;
++	struct elevator_queue *e = q->elevator;
++	bool sq_shared = blk_queue_sq_sched(q);
++	struct request *rq;
 +
-+	INIT_LIST_HEAD(&ctx.rq_list);
++	if (sq_shared)
++		elevator_lock(e);
 +
-+	if (hctx->dispatch_busy)
-+		max_dispatch = 1;
-+	else
-+		max_dispatch = hctx->queue->nr_requests;
++	rq = e->type->ops.dispatch_request(hctx);
 +
-+	do {
-+		if (!elevator_dispatch_one_request(&ctx))
-+			break;
-+	} while (ctx.count < max_dispatch);
++	if (sq_shared)
++		elevator_unlock(e);
 +
-+	return elevator_finish_dispatch(&ctx);
++	return rq;
 +}
 +
- static int blk_mq_do_dispatch_sched(struct blk_mq_hw_ctx *hctx)
- {
- 	unsigned long end = jiffies + HZ;
++static inline void elevator_insert_requests(struct blk_mq_hw_ctx *hctx,
++					    struct list_head *list,
++					    blk_insert_t flags)
++{
++	struct request_queue *q = hctx->queue;
++	struct elevator_queue *e = q->elevator;
++	bool sq_shared = blk_queue_sq_sched(q);
++
++	if (sq_shared)
++		elevator_lock(e);
++
++	e->type->ops.insert_requests(hctx, list, flags);
++
++	if (sq_shared)
++		elevator_unlock(e);
++}
++
++static inline bool elevator_bio_merge(struct request_queue *q, struct bio *bio,
++				      unsigned int nr_segs)
++{
++	struct elevator_queue *e = q->elevator;
++	bool sq_shared = blk_queue_sq_sched(q);
++	bool ret;
++
++	if (sq_shared)
++		elevator_lock(e);
++
++	ret = e->type->ops.bio_merge(q, bio, nr_segs);
++
++	if (sq_shared)
++		elevator_unlock(e);
++
++	return ret;
++}
++
+ #endif /* _ELEVATOR_H */
 -- 
 2.39.2
 
