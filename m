@@ -1,28 +1,28 @@
 Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 998D231A60;
-	Sat, 14 Jun 2025 09:31:45 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A13C3155CBD;
+	Sat, 14 Jun 2025 09:31:46 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.51
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1749893509; cv=none; b=RSkx3dPcRn/o9V3u0Qtd4s1OG8re/GrDgF6JaPAUCn8BTWklxcNgIbpJ7ETfnpCaoNskNZ4452oubVqRl+sn5lyZoGygoCyfAGBOaIxb/2Dw/gMK/SWGbReuyMVaKNTEvJcmmGHUUbGvbENlXUk5AyEc/syP2XdCZqKnWH6Twg4=
+	t=1749893509; cv=none; b=GTO9hPFcCoCQEE7Fwd2rpEiJw00yLQIaOobCdoYvvZ2Dk240C9roxiIdwZCNvKHjqLzdHFrn4tx/UrzvuFIhRujSSgySX+rAQu2EiEjhg7NBhtkM1u5o0Kk0/zyxflV6mbPN5Gu2a6p9b5qpr0yyQqHpU1HrW8v5G282sLLtVQs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1749893509; c=relaxed/simple;
-	bh=qeh1+fR1IImcil0TG6swzubXA9h57FNZibCbV9JWoDU=;
+	bh=m157EbdqaysdWSxG7epQ+w2dupFLoeJrQFDqv9WR4ww=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=Vm/dixEq4uu/xBEotTLts/UyONnQ0Cd29pJhahYKegvIMXtPDDiT9zz5BbxqcGJTJmZxiwC7jjXKN3vRfHYh3dL6wsmqCQGkVDYx9zW8eTJ3G2Skf9V43PlE7zcV7Ecpn/z9w8q57dGrTjfQpzauKShY4ts2Ct2v0zImmtqmOeY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.51
+	 MIME-Version; b=s8YK7mzduUhILdOnSr98HDEwSI/mVOozIbJ6IEM9o/ulp4VcHCmnCZbCKECczACbVL2y0WQg+tg5+DFx5dg0w3cVMWtwob9Td3MlkPj0d9c0MHCtqIKfoHL6RO39RQZC19MuDJa48+zAlm65kGsXBQfl5sJQrckwEUPQi6lwWCs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=none smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.51
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
-Received: from mail.maildlp.com (unknown [172.19.163.235])
-	by dggsgout11.his.huawei.com (SkyGuard) with ESMTPS id 4bK9y81TTLzYQtw1;
-	Sat, 14 Jun 2025 17:31:44 +0800 (CST)
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=huaweicloud.com
+Received: from mail.maildlp.com (unknown [172.19.93.142])
+	by dggsgout11.his.huawei.com (SkyGuard) with ESMTPS id 4bK9y95WlrzYQvP4;
+	Sat, 14 Jun 2025 17:31:45 +0800 (CST)
 Received: from mail02.huawei.com (unknown [10.116.40.128])
-	by mail.maildlp.com (Postfix) with ESMTP id 2FF931A089E;
-	Sat, 14 Jun 2025 17:31:43 +0800 (CST)
+	by mail.maildlp.com (Postfix) with ESMTP id B95C51A17A7;
+	Sat, 14 Jun 2025 17:31:44 +0800 (CST)
 Received: from huaweicloud.com (unknown [10.175.104.67])
-	by APP4 (Coremail) with SMTP id gCh0CgAni19zQU1oHxfvPQ--.9099S6;
-	Sat, 14 Jun 2025 17:31:43 +0800 (CST)
+	by APP4 (Coremail) with SMTP id gCh0CgAni19zQU1oHxfvPQ--.9099S9;
+	Sat, 14 Jun 2025 17:31:44 +0800 (CST)
 From: Yu Kuai <yukuai1@huaweicloud.com>
 To: ming.lei@redhat.com,
 	yukuai3@huawei.com,
@@ -36,9 +36,9 @@ Cc: linux-block@vger.kernel.org,
 	yi.zhang@huawei.com,
 	yangerkun@huawei.com,
 	johnny.chenyi@huawei.com
-Subject: [PATCH RFC v2 2/5] mq-deadline: switch to use elevator lock
-Date: Sat, 14 Jun 2025 17:25:25 +0800
-Message-Id: <20250614092528.2352680-3-yukuai1@huaweicloud.com>
+Subject: [PATCH RFC v2 5/5] blk-mq-sched: support request batch dispatching for sq elevator
+Date: Sat, 14 Jun 2025 17:25:28 +0800
+Message-Id: <20250614092528.2352680-6-yukuai1@huaweicloud.com>
 X-Mailer: git-send-email 2.39.2
 In-Reply-To: <20250614092528.2352680-1-yukuai1@huaweicloud.com>
 References: <20250614092528.2352680-1-yukuai1@huaweicloud.com>
@@ -49,271 +49,156 @@ List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:gCh0CgAni19zQU1oHxfvPQ--.9099S6
-X-Coremail-Antispam: 1UD129KBjvJXoW3XryrGFyfKFWrZFW8ZF18Zrb_yoW3CFyrpF
-	W5Ka1ayw4rXFsrXF1DJayDZr4agw4Iv347tr93Gw4fKF1DAr9ruF1UGF1Fvrs3Ar97CFsI
-	gF4qqa98JF17JwUanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDU0xBIdaVrnRJUUUm014x267AKxVWrJVCq3wAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
-	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2048vs2IY020E87I2jVAFwI0_Jryl82xGYIkIc2
-	x26xkF7I0E14v26ryj6s0DM28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48ve4kI8wA2z4x0
-	Y4vE2Ix0cI8IcVAFwI0_Ar0_tr1l84ACjcxK6xIIjxv20xvEc7CjxVAFwI0_Gr1j6F4UJw
-	A2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x0267AKxVW0oVCq3wAS
-	0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG6I80ewAv7VC0I7IYx2
-	IY67AKxVWUXVWUAwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFVCjc4AY6r1j6r4UM4x0
-	Y48IcxkI7VAKI48JM4x0x7Aq67IIx4CEVc8vx2IErcIFxwACI402YVCY1x02628vn2kIc2
-	xKxwCY1x0262kKe7AKxVWUtVW8ZwCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7xkEbVWU
-	JVW8JwC20s026c02F40E14v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E67AF67
-	kF1VAFwI0_Jw0_GFylIxkGc2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUJVWUCwCI42IY
-	6xIIjxv20xvEc7CjxVAFwI0_Gr0_Cr1lIxAIcVCF04k26cxKx2IYs7xG6r1j6r1xMIIF0x
-	vEx4A2jsIE14v26r1j6r4UMIIF0xvEx4A2jsIEc7CjxVAFwI0_Gr0_Gr1UYxBIdaVFxhVj
-	vjDU0xZFpf9x0JUl9a9UUUUU=
+X-CM-TRANSID:gCh0CgAni19zQU1oHxfvPQ--.9099S9
+X-Coremail-Antispam: 1UD129KBjvJXoWxCF45Cr43KrW3tFW3Zr1DJrb_yoW5ur45pF
+	4rGa1YkryqqFnFqFy3Aw47J3W5J3yI9r9rWrW3Kr43JFs7Xrsxt3WrJa4UJF4xJr4rCFsr
+	ur4DWFyDuF1Iva7anT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDU0xBIdaVrnRJUUUmI14x267AKxVWrJVCq3wAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
+	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2048vs2IY020E87I2jVAFwI0_JF0E3s1l82xGYI
+	kIc2x26xkF7I0E14v26ryj6s0DM28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48ve4kI8wA2
+	z4x0Y4vE2Ix0cI8IcVAFwI0_Ar0_tr1l84ACjcxK6xIIjxv20xvEc7CjxVAFwI0_Gr1j6F
+	4UJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x0267AKxVW0oVCq
+	3wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG6I80ewAv7VC0I7
+	IYx2IY67AKxVWUXVWUAwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFVCjc4AY6r1j6r4U
+	M4x0Y48IcxkI7VAKI48JM4x0x7Aq67IIx4CEVc8vx2IErcIFxwACI402YVCY1x02628vn2
+	kIc2xKxwCY1x0262kKe7AKxVWUtVW8ZwCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7xkE
+	bVWUJVW8JwC20s026c02F40E14v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E67
+	AF67kF1VAFwI0_Jw0_GFylIxkGc2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUCVW8JwCI
+	42IY6xIIjxv20xvEc7CjxVAFwI0_Cr0_Gr1UMIIF0xvE42xK8VAvwI8IcIk0rVWUJVWUCw
+	CI42IY6I8E87Iv67AKxVWUJVW8JwCI42IY6I8E87Iv6xkF7I0E14v26r4j6r4UJbIYCTnI
+	WIevJa73UjIFyTuYvjfUo73vUUUUU
 X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
 
 From: Yu Kuai <yukuai3@huawei.com>
 
-Convert 'dd->lock' to high level 'q->elevator->lock', prepare to support
-batch requests dispatching.
+Before this patch, each context will hold a global lock to dispatch one
+request at a time, which introduce intense lock competition:
+
+lock
+ops.dispatch_request
+unlock
+
+Hence support dispatch a batch of requests while holding the lock to
+reduce lock contention.
 
 Signed-off-by: Yu Kuai <yukuai3@huawei.com>
 ---
- block/mq-deadline.c | 58 ++++++++++++++++++---------------------------
- 1 file changed, 23 insertions(+), 35 deletions(-)
+ block/blk-mq-sched.c | 55 ++++++++++++++++++++++++++++++++++++++++----
+ block/blk-mq.h       | 21 +++++++++++++++++
+ 2 files changed, 72 insertions(+), 4 deletions(-)
 
-diff --git a/block/mq-deadline.c b/block/mq-deadline.c
-index 2edf1cac06d5..6b993a5bf69f 100644
---- a/block/mq-deadline.c
-+++ b/block/mq-deadline.c
-@@ -101,7 +101,7 @@ struct deadline_data {
- 	u32 async_depth;
- 	int prio_aging_expire;
+diff --git a/block/blk-mq-sched.c b/block/blk-mq-sched.c
+index 990d0f19594a..d7cb88c8e8c7 100644
+--- a/block/blk-mq-sched.c
++++ b/block/blk-mq-sched.c
+@@ -101,6 +101,49 @@ static bool elevator_can_dispatch(struct sched_dispatch_ctx *ctx)
+ 	return true;
+ }
  
--	spinlock_t lock;
-+	spinlock_t *lock;
++static void elevator_dispatch_requests(struct sched_dispatch_ctx *ctx)
++{
++	struct request *rq;
++	int budget_token[BUDGET_TOKEN_BATCH];
++	int count;
++	int i;
++
++	while (true) {
++		if (!elevator_can_dispatch(ctx))
++			return;
++
++		count = blk_mq_get_dispatch_budgets(ctx->q, budget_token);
++		if (count <= 0)
++			return;
++
++		elevator_lock(ctx->e);
++		for (i = 0; i < count; ++i) {
++			rq = ctx->e->type->ops.dispatch_request(ctx->hctx);
++			if (!rq) {
++				ctx->run_queue = true;
++				goto err_free_budgets;
++			}
++
++			blk_mq_set_rq_budget_token(rq, budget_token[i]);
++			list_add_tail(&rq->queuelist, &ctx->rq_list);
++			ctx->count++;
++			if (rq->mq_hctx != ctx->hctx)
++				ctx->multi_hctxs = true;
++
++			if (!blk_mq_get_driver_tag(rq)) {
++				i++;
++				goto err_free_budgets;
++			}
++		}
++		elevator_unlock(ctx->e);
++	}
++
++err_free_budgets:
++	elevator_unlock(ctx->e);
++	for (; i < count; ++i)
++		blk_mq_put_dispatch_budget(ctx->q, budget_token[i]);
++}
++
+ static bool elevator_dispatch_one_request(struct sched_dispatch_ctx *ctx)
+ {
+ 	struct request *rq;
+@@ -202,10 +245,14 @@ static int __blk_mq_do_dispatch_sched(struct blk_mq_hw_ctx *hctx)
+ 	else
+ 		max_dispatch = hctx->queue->nr_requests;
+ 
+-	do {
+-		if (!elevator_dispatch_one_request(&ctx))
+-			break;
+-	} while (ctx.count < max_dispatch);
++	if (!hctx->dispatch_busy && blk_queue_sq_sched(ctx.q))
++		elevator_dispatch_requests(&ctx);
++	else {
++		do {
++			if (!elevator_dispatch_one_request(&ctx))
++				break;
++		} while (ctx.count < max_dispatch);
++	}
+ 
+ 	return elevator_finish_dispatch(&ctx);
+ }
+diff --git a/block/blk-mq.h b/block/blk-mq.h
+index affb2e14b56e..450c16a07841 100644
+--- a/block/blk-mq.h
++++ b/block/blk-mq.h
+@@ -37,6 +37,7 @@ enum {
  };
  
- /* Maps an I/O priority class to a deadline scheduler priority. */
-@@ -213,7 +213,7 @@ static void dd_merged_requests(struct request_queue *q, struct request *req,
- 	const u8 ioprio_class = dd_rq_ioclass(next);
- 	const enum dd_prio prio = ioprio_class_to_prio[ioprio_class];
+ #define BLK_MQ_CPU_WORK_BATCH	(8)
++#define BUDGET_TOKEN_BATCH	(8)
  
--	lockdep_assert_held(&dd->lock);
-+	lockdep_assert_held(dd->lock);
- 
- 	dd->per_prio[prio].stats.merged++;
- 
-@@ -253,7 +253,7 @@ static u32 dd_queued(struct deadline_data *dd, enum dd_prio prio)
- {
- 	const struct io_stats_per_prio *stats = &dd->per_prio[prio].stats;
- 
--	lockdep_assert_held(&dd->lock);
-+	lockdep_assert_held(dd->lock);
- 
- 	return stats->inserted - atomic_read(&stats->completed);
- }
-@@ -323,7 +323,7 @@ static struct request *__dd_dispatch_request(struct deadline_data *dd,
- 	enum dd_prio prio;
- 	u8 ioprio_class;
- 
--	lockdep_assert_held(&dd->lock);
-+	lockdep_assert_held(dd->lock);
- 
- 	if (!list_empty(&per_prio->dispatch)) {
- 		rq = list_first_entry(&per_prio->dispatch, struct request,
-@@ -434,7 +434,7 @@ static struct request *dd_dispatch_prio_aged_requests(struct deadline_data *dd,
- 	enum dd_prio prio;
- 	int prio_cnt;
- 
--	lockdep_assert_held(&dd->lock);
-+	lockdep_assert_held(dd->lock);
- 
- 	prio_cnt = !!dd_queued(dd, DD_RT_PRIO) + !!dd_queued(dd, DD_BE_PRIO) +
- 		   !!dd_queued(dd, DD_IDLE_PRIO);
-@@ -466,10 +466,9 @@ static struct request *dd_dispatch_request(struct blk_mq_hw_ctx *hctx)
- 	struct request *rq;
- 	enum dd_prio prio;
- 
--	spin_lock(&dd->lock);
- 	rq = dd_dispatch_prio_aged_requests(dd, now);
- 	if (rq)
--		goto unlock;
-+		return rq;
- 
- 	/*
- 	 * Next, dispatch requests in priority order. Ignore lower priority
-@@ -481,9 +480,6 @@ static struct request *dd_dispatch_request(struct blk_mq_hw_ctx *hctx)
- 			break;
- 	}
- 
--unlock:
--	spin_unlock(&dd->lock);
--
- 	return rq;
+ typedef unsigned int __bitwise blk_insert_t;
+ #define BLK_MQ_INSERT_AT_HEAD		((__force blk_insert_t)0x01)
+@@ -262,6 +263,26 @@ static inline int blk_mq_get_dispatch_budget(struct request_queue *q)
+ 	return 0;
  }
  
-@@ -552,9 +548,9 @@ static void dd_exit_sched(struct elevator_queue *e)
- 		WARN_ON_ONCE(!list_empty(&per_prio->fifo_list[DD_READ]));
- 		WARN_ON_ONCE(!list_empty(&per_prio->fifo_list[DD_WRITE]));
- 
--		spin_lock(&dd->lock);
-+		spin_lock(dd->lock);
- 		queued = dd_queued(dd, prio);
--		spin_unlock(&dd->lock);
-+		spin_unlock(dd->lock);
- 
- 		WARN_ONCE(queued != 0,
- 			  "statistics for priority %d: i %u m %u d %u c %u\n",
-@@ -601,7 +597,7 @@ static int dd_init_sched(struct request_queue *q, struct elevator_type *e)
- 	dd->last_dir = DD_WRITE;
- 	dd->fifo_batch = fifo_batch;
- 	dd->prio_aging_expire = prio_aging_expire;
--	spin_lock_init(&dd->lock);
-+	dd->lock = &eq->lock;
- 
- 	/* We dispatch from request queue wide instead of hw queue */
- 	blk_queue_flag_set(QUEUE_FLAG_SQ_SCHED, q);
-@@ -653,14 +649,10 @@ static int dd_request_merge(struct request_queue *q, struct request **rq,
- static bool dd_bio_merge(struct request_queue *q, struct bio *bio,
- 		unsigned int nr_segs)
++static inline int blk_mq_get_dispatch_budgets(struct request_queue *q,
++					      int *budget_token)
++{
++	int count = 0;
++
++	while (count < BUDGET_TOKEN_BATCH) {
++		int token = 0;
++
++		if (q->mq_ops->get_budget)
++			token = q->mq_ops->get_budget(q);
++
++		if (token < 0)
++			return count;
++
++		budget_token[count++] = token;
++	}
++
++	return count;
++}
++
+ static inline void blk_mq_set_rq_budget_token(struct request *rq, int token)
  {
--	struct deadline_data *dd = q->elevator->elevator_data;
- 	struct request *free = NULL;
- 	bool ret;
- 
--	spin_lock(&dd->lock);
- 	ret = blk_mq_sched_try_merge(q, bio, nr_segs, &free);
--	spin_unlock(&dd->lock);
--
- 	if (free)
- 		blk_mq_free_request(free);
- 
-@@ -681,7 +673,7 @@ static void dd_insert_request(struct blk_mq_hw_ctx *hctx, struct request *rq,
- 	struct dd_per_prio *per_prio;
- 	enum dd_prio prio;
- 
--	lockdep_assert_held(&dd->lock);
-+	lockdep_assert_held(dd->lock);
- 
- 	prio = ioprio_class_to_prio[ioprio_class];
- 	per_prio = &dd->per_prio[prio];
-@@ -721,11 +713,8 @@ static void dd_insert_requests(struct blk_mq_hw_ctx *hctx,
- 			       struct list_head *list,
- 			       blk_insert_t flags)
- {
--	struct request_queue *q = hctx->queue;
--	struct deadline_data *dd = q->elevator->elevator_data;
- 	LIST_HEAD(free);
- 
--	spin_lock(&dd->lock);
- 	while (!list_empty(list)) {
- 		struct request *rq;
- 
-@@ -733,7 +722,6 @@ static void dd_insert_requests(struct blk_mq_hw_ctx *hctx,
- 		list_del_init(&rq->queuelist);
- 		dd_insert_request(hctx, rq, flags, &free);
- 	}
--	spin_unlock(&dd->lock);
- 
- 	blk_mq_free_requests(&free);
- }
-@@ -849,13 +837,13 @@ static const struct elv_fs_entry deadline_attrs[] = {
- #define DEADLINE_DEBUGFS_DDIR_ATTRS(prio, data_dir, name)		\
- static void *deadline_##name##_fifo_start(struct seq_file *m,		\
- 					  loff_t *pos)			\
--	__acquires(&dd->lock)						\
-+	__acquires(dd->lock)						\
- {									\
- 	struct request_queue *q = m->private;				\
- 	struct deadline_data *dd = q->elevator->elevator_data;		\
- 	struct dd_per_prio *per_prio = &dd->per_prio[prio];		\
- 									\
--	spin_lock(&dd->lock);						\
-+	spin_lock(dd->lock);						\
- 	return seq_list_start(&per_prio->fifo_list[data_dir], *pos);	\
- }									\
- 									\
-@@ -870,12 +858,12 @@ static void *deadline_##name##_fifo_next(struct seq_file *m, void *v,	\
- }									\
- 									\
- static void deadline_##name##_fifo_stop(struct seq_file *m, void *v)	\
--	__releases(&dd->lock)						\
-+	__releases(dd->lock)						\
- {									\
- 	struct request_queue *q = m->private;				\
- 	struct deadline_data *dd = q->elevator->elevator_data;		\
- 									\
--	spin_unlock(&dd->lock);						\
-+	spin_unlock(dd->lock);						\
- }									\
- 									\
- static const struct seq_operations deadline_##name##_fifo_seq_ops = {	\
-@@ -941,11 +929,11 @@ static int dd_queued_show(void *data, struct seq_file *m)
- 	struct deadline_data *dd = q->elevator->elevator_data;
- 	u32 rt, be, idle;
- 
--	spin_lock(&dd->lock);
-+	spin_lock(dd->lock);
- 	rt = dd_queued(dd, DD_RT_PRIO);
- 	be = dd_queued(dd, DD_BE_PRIO);
- 	idle = dd_queued(dd, DD_IDLE_PRIO);
--	spin_unlock(&dd->lock);
-+	spin_unlock(dd->lock);
- 
- 	seq_printf(m, "%u %u %u\n", rt, be, idle);
- 
-@@ -957,7 +945,7 @@ static u32 dd_owned_by_driver(struct deadline_data *dd, enum dd_prio prio)
- {
- 	const struct io_stats_per_prio *stats = &dd->per_prio[prio].stats;
- 
--	lockdep_assert_held(&dd->lock);
-+	lockdep_assert_held(dd->lock);
- 
- 	return stats->dispatched + stats->merged -
- 		atomic_read(&stats->completed);
-@@ -969,11 +957,11 @@ static int dd_owned_by_driver_show(void *data, struct seq_file *m)
- 	struct deadline_data *dd = q->elevator->elevator_data;
- 	u32 rt, be, idle;
- 
--	spin_lock(&dd->lock);
-+	spin_lock(dd->lock);
- 	rt = dd_owned_by_driver(dd, DD_RT_PRIO);
- 	be = dd_owned_by_driver(dd, DD_BE_PRIO);
- 	idle = dd_owned_by_driver(dd, DD_IDLE_PRIO);
--	spin_unlock(&dd->lock);
-+	spin_unlock(dd->lock);
- 
- 	seq_printf(m, "%u %u %u\n", rt, be, idle);
- 
-@@ -983,13 +971,13 @@ static int dd_owned_by_driver_show(void *data, struct seq_file *m)
- #define DEADLINE_DISPATCH_ATTR(prio)					\
- static void *deadline_dispatch##prio##_start(struct seq_file *m,	\
- 					     loff_t *pos)		\
--	__acquires(&dd->lock)						\
-+	__acquires(dd->lock)						\
- {									\
- 	struct request_queue *q = m->private;				\
- 	struct deadline_data *dd = q->elevator->elevator_data;		\
- 	struct dd_per_prio *per_prio = &dd->per_prio[prio];		\
- 									\
--	spin_lock(&dd->lock);						\
-+	spin_lock(dd->lock);						\
- 	return seq_list_start(&per_prio->dispatch, *pos);		\
- }									\
- 									\
-@@ -1004,12 +992,12 @@ static void *deadline_dispatch##prio##_next(struct seq_file *m,		\
- }									\
- 									\
- static void deadline_dispatch##prio##_stop(struct seq_file *m, void *v)	\
--	__releases(&dd->lock)						\
-+	__releases(dd->lock)						\
- {									\
- 	struct request_queue *q = m->private;				\
- 	struct deadline_data *dd = q->elevator->elevator_data;		\
- 									\
--	spin_unlock(&dd->lock);						\
-+	spin_unlock(dd->lock);						\
- }									\
- 									\
- static const struct seq_operations deadline_dispatch##prio##_seq_ops = { \
+ 	if (token < 0)
 -- 
 2.39.2
 
