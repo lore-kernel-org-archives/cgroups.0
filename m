@@ -1,63 +1,63 @@
-Received: from mail-wm1-f50.google.com (mail-wm1-f50.google.com [209.85.128.50])
+Received: from mail-wm1-f54.google.com (mail-wm1-f54.google.com [209.85.128.54])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2DF212DE215
-	for <cgroups@vger.kernel.org>; Tue, 17 Jun 2025 13:37:17 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.50
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5EDB12E3AE2
+	for <cgroups@vger.kernel.org>; Tue, 17 Jun 2025 13:37:19 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.54
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1750167439; cv=none; b=IUvXLRp2l/rgx1IOxAW+f6ARIqOayja/cK2xwz7gkqnc1wjehMNm4F+I8s7qi6UUWMnMvTuqm3+iBySpYeaU4q4WVtUcmn3l8oxbuG6SuGiFSqNYGIOxbyK4wNqibgHAGdFIsBI6U42qhwBzRao+Feh7feimy90ffJC4uvaGE5c=
+	t=1750167442; cv=none; b=DSwgzVLnpCM+OILVa1rWr8E3/ztK28J4vERrxWS1N7jAnalv0OApIi9JQttioZMrn+eZhbxLC95Wn9RKYELyIHdDf/MVYVrpt1SCL9w2dav7pPMSwBC01OmfRZ2oE27osK8NFVOrLouKY4yP7oOGoy6bR2z8m0eGZbgnBHny2Xk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1750167439; c=relaxed/simple;
-	bh=rSH5gK1fIkc3yCi10jUMhm+yvhNwSkp/JROUVa650dM=;
+	s=arc-20240116; t=1750167442; c=relaxed/simple;
+	bh=xtt2rNThOOd0Ch0ay5t/SRPt0e7QyIQa+1AuoLWf+2A=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=dKFBIt6uAP7MMIAdIeWmKQVg4lBYM+edfXiOqcwmBZbQLV2pXql46ygxl2QNCXRg4RXwVmXXRIHf1sW/Q/51EfsaEQ0n+QZ1+p6BZFbjxm7Hc2Ze9Qf5nqfzaT1jgmg8H4TXzfZ5zQHsMxjXQiFqbRD6L0X8iYqONezLHkVFEzQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com; spf=pass smtp.mailfrom=suse.com; dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b=Y7lQxTXL; arc=none smtp.client-ip=209.85.128.50
+	 MIME-Version:Content-Type; b=W1FIURvZrfBcBPMPpbyopsEL6KE8VTF9WDflmrxpHnob0jswIRr5SVlnVQB5tyj+GcbR4Llj7vrAque2erc1PPjuKD82BjYWugwrnQTS2/BQcqU2JKZb8a8s24YRpXluohOPfAIouoT2C0qbGx6UBx59a9773ojNG/PKgfaLta8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com; spf=pass smtp.mailfrom=suse.com; dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b=ZcK8urI6; arc=none smtp.client-ip=209.85.128.54
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b="Y7lQxTXL"
-Received: by mail-wm1-f50.google.com with SMTP id 5b1f17b1804b1-450cf214200so49187905e9.1
-        for <cgroups@vger.kernel.org>; Tue, 17 Jun 2025 06:37:17 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b="ZcK8urI6"
+Received: by mail-wm1-f54.google.com with SMTP id 5b1f17b1804b1-450d668c2a1so45648915e9.0
+        for <cgroups@vger.kernel.org>; Tue, 17 Jun 2025 06:37:19 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=suse.com; s=google; t=1750167436; x=1750772236; darn=vger.kernel.org;
+        d=suse.com; s=google; t=1750167438; x=1750772238; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=0Cwa1eZzqX2/leDkDIYGlKmwMA4P+ywGvHcq/aUim7E=;
-        b=Y7lQxTXLZWCFbO4Qd9hLPoQunlBpG9xId7JfQpy2iTqlXEm/NFiQy0ccZEvTUte9jB
-         V8L2Bv5EXlUyvcEdlZwA/P9LceOo+3FDBQyfX75nq3KIHFnseL2MsbIptT1EIsvLP9IR
-         uh8ktUtX26GQyRVEhX+loqNPPjT9Fzj7Cb6SSygKIWec/OZRreHWAfffx+g767amMOOx
-         dmbJare+U7g3ZmjVpCtcJFVkdGeA+XeOHjGhSzdk2bBRzLAN8VgY4/VrtdbjoAPfqwtL
-         zEpaTNuPo5xMVcvW1OL0kMvQZL5xiUL85qtNuPlQQlmx7mp22fHTZycPMu1rdvwWilLJ
-         x1hA==
+        bh=/IirAviWa54+DB/4fGXki7ILuYvAogeRyMVXvAl7uRo=;
+        b=ZcK8urI6w0HZat+W0ETrhst7YwkcpUv2RNrOMD4e51q9NcdtuCa8LB1WZylPwpgd2B
+         bSpseIJDU1r2cJ2GlZ0j4MjwBa7n6sDdDoKxrAu7Tq4dC+0vYIAFLrkeznw/hQXHPrTh
+         KBtGAwMekGhwBmCPEKW4sZ1W7hN7/D/4ZmndrmXvsfnhOLhOAr5YcRAtMOUzooPLAifJ
+         TD6gI1ImQ381LaXyPLL87o04QrQWuTiRKqvQctth9IJB+zM/LNUlYScY/xolpjhGWJEZ
+         BB5iaONU6ouovoVBnR0PGzVU7u+ADE2Hj7uQ3GzgmVskyDdD+EXzqnfkt8xkwPpxpjIV
+         mgLw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1750167436; x=1750772236;
+        d=1e100.net; s=20230601; t=1750167438; x=1750772238;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=0Cwa1eZzqX2/leDkDIYGlKmwMA4P+ywGvHcq/aUim7E=;
-        b=eAkqAOVQ6bw+YX06mCvHCj++CoSGRVZZsQYRGzQRww8UFhlGm1ppaUdQp5xaHsoRqO
-         Fl+g0PbT5rwR15I61GopQmRsNJouJIdyfUAwEr+Ifs3lXcisL09meFjdjX0XyA53syAk
-         XYGqTRYSg7evP0I8kMsBTyfnw5+rhXi4f3oSejrplFHshPtByORovp0MfqOkA24yWLnK
-         995cO6DF3XsEmcFO2CT9dLZuYUEv+sInBhBAk1oAvJ4QOsx3gYvNQmX+NOuEw+7Pd095
-         hoNBpqv07rLz4gk/5EV+hs9XKRjzvURfKZC7HvvyL3HLsXdfcJFfHufJOSXC/YK5Eq+l
-         pBlw==
-X-Gm-Message-State: AOJu0Yx6oJG59zApQ954qWJQtkcQzgN2+SVvrEiP3ArdkF5IIFNJi43N
-	n28vt4A7vcaBYDL992K+F33cI93h9iZX9p0JLSazVjCt4nHVTkDseMIBdpmuV6cRgbyjbOHejDd
-	MvRC5fjQ=
-X-Gm-Gg: ASbGnct1sq3f1ynmYzDNccq/wrwzsMYloKi7ff+L08/d54zV01KyFtIIO+X/m5JDuuc
-	fXIY2aALlGGwj/ZwcrQGUAoiXjaKkA9z4ESF37bdIUdnWQEkjVFlPPclHKn59MWQlnI40OPeJch
-	iL8ZVN1zohQ/G+tnfrDpAxCJ7YtthNduMhaf4cvzOKNanl5Wcy3wPVRPpdvMhwC+Y0XZWtnJRtC
-	TqG/A/SAQSIjRpfB/6f+O8Jj/QQnEvPiZqqkmQ2a8HzYqFLcI3eR4hjENkgdCIQgT0PGafNtiMx
-	z8rsNisb1nwbiBrrRCDk6JtEHQBatC1vN2UQYvsHdh9PVpeFYVJChos2+ip9FVaT8dwdPpcfNRY
+        bh=/IirAviWa54+DB/4fGXki7ILuYvAogeRyMVXvAl7uRo=;
+        b=XeP22jKjslDkHfwp76R6nMu1/YA9wg0hggB3BuNvkSGRm5ypU+MCCqQ1uK5h1e8aob
+         DBT0i5w+paroNn8XjJ9RPKlmhcWlxJfA4oG4nz1qHNwzpX157hROPAf9v91cPpZekxLt
+         iWj124MjWGsnFsICUzyrahCKpQpQmkuyyk08t7pn2Svxm7/Skx0XOE3VaPaFpixWb6SB
+         RxpKIRf4Q/hMjPrK9cXliJuCmwtjQhitiks/0HVtr46PXqBII3P7mAz/xus5VYnKKTi2
+         jp0SKaE8AEzvwk6/j4voB0kWtOXTvy1zl4HmtcOIgVSexsRwNkZvCXx4ifLmczb9QyBf
+         A2CA==
+X-Gm-Message-State: AOJu0YwVtOzoDNZG772EMiUYHtDsMsYH4LG6Vo+HIOG1owrYBtzUeSXS
+	CjIs+8QscevoOesg1SffL/xFnPwOHqilpUGYI4fuC/2ZRQ3kIdc8KuroK9Bd3rOommIgc5PSrSB
+	8NGqMsSM=
+X-Gm-Gg: ASbGncuyyzZx8ymoX8zFRRPNWEVSverT4F+URK3xZvRPXDQkau+82cu+cE80hiwVs6U
+	lxOSh/mcpUr212R0+2Dg1B84QHiw00DSUMWmNKP9ELw3Y2XZZeEqnfMEmFtTkyE0Vp1qj+hMha4
+	VQuUpFPXp9OwO47SiDxuGqJtDCkhlQ+pUHP9d0O0ENKSn0zop1LzX7WPSads8FhjU+Iq3e45G1D
+	ZYPbIp4Mh/uKe39JD077reK5IJxgv29pshoWpVUfQxS4+yy/SNHPDz+B1/bTz+sWMUXgSkPT7jC
+	wjRwh+KzRZVquvYaacfY0W+5vCziZu3/RpugnGJZJBZtEP0xCMxJfeCcSfPG3Zi+g5nCM00zXxs
 	=
-X-Google-Smtp-Source: AGHT+IHu5Zs1DYnyygk8kqdnLgNMGefyGQi3YXLTpFpVjd2SefB+BljZFx/TaAfAHa8CxRgcfYTSMw==
-X-Received: by 2002:a05:600c:528e:b0:450:cabd:b4a9 with SMTP id 5b1f17b1804b1-4533cacb7dcmr114989205e9.29.1750167435624;
-        Tue, 17 Jun 2025 06:37:15 -0700 (PDT)
+X-Google-Smtp-Source: AGHT+IGrwE0n8xObbXy+xwulox5ORPMmG9dF8KEQ/VAwCkDtHw6tIijP1d7NSitWFCIxbglfxPVesg==
+X-Received: by 2002:a05:600c:5908:b0:453:827:d0b1 with SMTP id 5b1f17b1804b1-4533b235e16mr90149065e9.2.1750167437646;
+        Tue, 17 Jun 2025 06:37:17 -0700 (PDT)
 Received: from blackdock.suse.cz ([193.86.92.181])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-4532e224888sm179494365e9.1.2025.06.17.06.37.15
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-4532e224888sm179494365e9.1.2025.06.17.06.37.17
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 17 Jun 2025 06:37:15 -0700 (PDT)
+        Tue, 17 Jun 2025 06:37:17 -0700 (PDT)
 From: =?UTF-8?q?Michal=20Koutn=C3=BD?= <mkoutny@suse.com>
 To: cgroups@vger.kernel.org,
 	linux-kselftest@vger.kernel.org,
@@ -66,9 +66,9 @@ Cc: =?UTF-8?q?Michal=20Koutn=C3=BD?= <mkoutny@suse.com>,
 	Tejun Heo <tj@kernel.org>,
 	Johannes Weiner <hannes@cmpxchg.org>,
 	Shuah Khan <shuah@kernel.org>
-Subject: [PATCH 2/4] selftests: cgroup: Add support for named v1 hierarchies in test_core
-Date: Tue, 17 Jun 2025 15:36:54 +0200
-Message-ID: <20250617133701.400095-3-mkoutny@suse.com>
+Subject: [PATCH 4/4] selftests: cgroup: Fix compilation on pre-cgroupns kernels
+Date: Tue, 17 Jun 2025 15:36:56 +0200
+Message-ID: <20250617133701.400095-5-mkoutny@suse.com>
 X-Mailer: git-send-email 2.49.0
 In-Reply-To: <20250617133701.400095-1-mkoutny@suse.com>
 References: <20250617133701.400095-1-mkoutny@suse.com>
@@ -81,121 +81,28 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
-This comes useful when using selftests from mainline on older
-kernels/setups that still rely on cgroup v1.
-The core tests that rely on v2 specific features are skipped, the
-remaining ones are adjusted to work with a v1 hierarchy.
-
-The expected output on v1 system:
-	ok 1 # SKIP test_cgcore_internal_process_constraint
-	ok 2 # SKIP test_cgcore_top_down_constraint_enable
-	ok 3 # SKIP test_cgcore_top_down_constraint_disable
-	ok 4 # SKIP test_cgcore_no_internal_process_constraint_on_threads
-	ok 5 # SKIP test_cgcore_parent_becomes_threaded
-	ok 6 # SKIP test_cgcore_invalid_domain
-	ok 7 # SKIP test_cgcore_populated
-	ok 8 test_cgcore_proc_migration
-	ok 9 test_cgcore_thread_migration
-	ok 10 test_cgcore_destroy
-	ok 11 test_cgcore_lesser_euid_open
-	ok 12 # SKIP test_cgcore_lesser_ns_open
+The test would be skipped because of nsdelegate, so the defined value is
+not used (0 is always acceptable).
 
 Signed-off-by: Michal Koutný <mkoutny@suse.com>
 ---
- tools/testing/selftests/cgroup/test_core.c | 31 ++++++++++++++++++----
- 1 file changed, 26 insertions(+), 5 deletions(-)
+ tools/testing/selftests/cgroup/test_core.c | 3 +++
+ 1 file changed, 3 insertions(+)
 
 diff --git a/tools/testing/selftests/cgroup/test_core.c b/tools/testing/selftests/cgroup/test_core.c
-index 0c4cc4e5fc8c2..338e276aae5da 100644
+index 452c2abf9794e..a360e2eb2eefd 100644
 --- a/tools/testing/selftests/cgroup/test_core.c
 +++ b/tools/testing/selftests/cgroup/test_core.c
-@@ -148,6 +148,9 @@ static int test_cgcore_populated(const char *root)
- 	int cgroup_fd = -EBADF;
- 	pid_t pid;
+@@ -21,6 +21,9 @@
+ #include "cgroup_util.h"
  
-+	if (cg_test_v1_named)
-+		return KSFT_SKIP;
-+
- 	cg_test_a = cg_name(root, "cg_test_a");
- 	cg_test_b = cg_name(root, "cg_test_a/cg_test_b");
- 	cg_test_c = cg_name(root, "cg_test_a/cg_test_b/cg_test_c");
-@@ -277,6 +280,9 @@ static int test_cgcore_invalid_domain(const char *root)
- 	int ret = KSFT_FAIL;
- 	char *grandparent = NULL, *parent = NULL, *child = NULL;
+ static bool nsdelegate;
++#ifndef CLONE_NEWCGROUP
++#define CLONE_NEWCGROUP 0
++#endif
  
-+	if (cg_test_v1_named)
-+		return KSFT_SKIP;
-+
- 	grandparent = cg_name(root, "cg_test_grandparent");
- 	parent = cg_name(root, "cg_test_grandparent/cg_test_parent");
- 	child = cg_name(root, "cg_test_grandparent/cg_test_parent/cg_test_child");
-@@ -339,6 +345,9 @@ static int test_cgcore_parent_becomes_threaded(const char *root)
- 	int ret = KSFT_FAIL;
- 	char *parent = NULL, *child = NULL;
- 
-+	if (cg_test_v1_named)
-+		return KSFT_SKIP;
-+
- 	parent = cg_name(root, "cg_test_parent");
- 	child = cg_name(root, "cg_test_parent/cg_test_child");
- 	if (!parent || !child)
-@@ -378,7 +387,8 @@ static int test_cgcore_no_internal_process_constraint_on_threads(const char *roo
- 	int ret = KSFT_FAIL;
- 	char *parent = NULL, *child = NULL;
- 
--	if (cg_read_strstr(root, "cgroup.controllers", "cpu") ||
-+	if (cg_test_v1_named ||
-+	    cg_read_strstr(root, "cgroup.controllers", "cpu") ||
- 	    cg_write(root, "cgroup.subtree_control", "+cpu")) {
- 		ret = KSFT_SKIP;
- 		goto cleanup;
-@@ -430,6 +440,9 @@ static int test_cgcore_top_down_constraint_enable(const char *root)
- 	int ret = KSFT_FAIL;
- 	char *parent = NULL, *child = NULL;
- 
-+	if (cg_test_v1_named)
-+		return KSFT_SKIP;
-+
- 	parent = cg_name(root, "cg_test_parent");
- 	child = cg_name(root, "cg_test_parent/cg_test_child");
- 	if (!parent || !child)
-@@ -465,6 +478,9 @@ static int test_cgcore_top_down_constraint_disable(const char *root)
- 	int ret = KSFT_FAIL;
- 	char *parent = NULL, *child = NULL;
- 
-+	if (cg_test_v1_named)
-+		return KSFT_SKIP;
-+
- 	parent = cg_name(root, "cg_test_parent");
- 	child = cg_name(root, "cg_test_parent/cg_test_child");
- 	if (!parent || !child)
-@@ -506,6 +522,9 @@ static int test_cgcore_internal_process_constraint(const char *root)
- 	int ret = KSFT_FAIL;
- 	char *parent = NULL, *child = NULL;
- 
-+	if (cg_test_v1_named)
-+		return KSFT_SKIP;
-+
- 	parent = cg_name(root, "cg_test_parent");
- 	child = cg_name(root, "cg_test_parent/cg_test_child");
- 	if (!parent || !child)
-@@ -642,10 +661,12 @@ static int test_cgcore_thread_migration(const char *root)
- 	if (cg_create(grps[2]))
- 		goto cleanup;
- 
--	if (cg_write(grps[1], "cgroup.type", "threaded"))
--		goto cleanup;
--	if (cg_write(grps[2], "cgroup.type", "threaded"))
--		goto cleanup;
-+	if (!cg_test_v1_named) {
-+		if (cg_write(grps[1], "cgroup.type", "threaded"))
-+			goto cleanup;
-+		if (cg_write(grps[2], "cgroup.type", "threaded"))
-+			goto cleanup;
-+	}
- 
- 	if (cg_enter_current(grps[1]))
- 		goto cleanup;
+ static int touch_anon(char *buf, size_t size)
+ {
 -- 
 2.49.0
 
