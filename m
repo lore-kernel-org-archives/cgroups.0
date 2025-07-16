@@ -1,21 +1,20 @@
 Received: from lgeamrelo07.lge.com (lgeamrelo07.lge.com [156.147.51.103])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A71AC2D94A8
-	for <cgroups@vger.kernel.org>; Wed, 16 Jul 2025 20:21:32 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F220126E6E8
+	for <cgroups@vger.kernel.org>; Wed, 16 Jul 2025 20:35:34 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=156.147.51.103
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1752697296; cv=none; b=qBVah4d9Kc90+fLYam297GbjivI1Aa1hid7kgvnzHEbwFEdibBoK37guYwMwKMbwlalTAhRcEpcbjT7+rUTWTDPFZ8ZT0ncIvOYMbkj16Qxp+Vis5R2KeLe2kBXmF3LoI+oA4tQ74++HIjtnqXjszKX8SA3nbzXNgArg1bUR1Dc=
+	t=1752698137; cv=none; b=cHsVeplLy1JSFtW9BY2kC59mNyPCgfOrmVGkwFFIswmv2aIxKCea+AIjArB6FCTVINNo0/032YBLzYC3NEtQd14UPLuRziaPa+ZT7g0N9b4NsbadIacVWgjMioMTKaP0ZXTq6PwLo4QNl/i2afuaVAh8kHdmV+SsRl24SXn2frU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1752697296; c=relaxed/simple;
-	bh=6k6oMKVv3MY8X4J/+oRu1DGCe8pTbKfA1bjBy+xbDMQ=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=dGOepKP4eDfEtZMIj75krAciy27TgvInaNk7F8omhK2OVhdAvTLlgtz1yQSsAx+T34WwmLcXjPuwb7OuPv0/NcUc0W1MVVQ8wHSsKe+bOcaSlfsMRwPJUdYxjoW87jwfZtugHvKvvTmUChWBw75UP93dXhxlfJSOJH/IGGj+OSU=
+	s=arc-20240116; t=1752698137; c=relaxed/simple;
+	bh=fz24MBZaP1rGDz+9ge5+8SdQD7a1z0k1BNiy0BvaXmo=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version:Content-Type; b=Ldz54dHslMbL0pdsbYKHcOwCA0FI31Xb7LK0XKWc05DH7snH2HxY47Xj0eeuXoBBIGPTKoATukHY1UEX4UGp1ptfu6LK12JyMo1GYXqWrhl/T3eME/x5GCqgRYEpZMo6RcbxhqUVDmnKIyIcpBqDZ8bTVZ+d6cTrKrpPpP1H97w=
 ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lge.com; spf=pass smtp.mailfrom=lge.com; arc=none smtp.client-ip=156.147.51.103
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lge.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lge.com
 Received: from unknown (HELO yjaykim-PowerEdge-T330.lge.net) (10.177.112.156)
-	by 156.147.51.103 with ESMTP; 17 Jul 2025 05:21:27 +0900
+	by 156.147.51.103 with ESMTP; 17 Jul 2025 05:20:32 +0900
 X-Original-SENDERIP: 10.177.112.156
 X-Original-MAILFROM: youngjun.park@lge.com
 From: Youngjun Park <youngjun.park@lge.com>
@@ -38,12 +37,10 @@ Cc: mhocko@kernel.org,
 	iamjoonsoo.kim@lge.com,
 	taejoon.song@lge.com,
 	Youngjun Park <youngjun.park@lge.com>
-Subject: [PATCH 4/4] mm: swap: Per-cgroup per-CPU swap device cache with shared clusters
-Date: Thu, 17 Jul 2025 05:20:06 +0900
-Message-Id: <20250716202006.3640584-5-youngjun.park@lge.com>
+Subject: [PATCH 0/4] mm/swap, memcg: Support per-cgroup swap device priorities
+Date: Thu, 17 Jul 2025 05:20:02 +0900
+Message-Id: <20250716202006.3640584-1-youngjun.park@lge.com>
 X-Mailer: git-send-email 2.34.1
-In-Reply-To: <20250716202006.3640584-1-youngjun.park@lge.com>
-References: <20250716202006.3640584-1-youngjun.park@lge.com>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
@@ -53,473 +50,231 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
-This patch introduces a new swap allocation mechanism that supports
-per-cgroup per-CPU swap device caches, combined with per-device per-CPU
-cluster management.
+This patchset introduces a mechanism to assign swap device priorities
+per cgroup.
 
-The existing global swap allocator uses a per-CPU device cache and
-cluster, shared by all cgroups. Under this model, per-cgroup swap
-priorities cannot be effectively honored on the fast path, as allocations
-do not distinguish between cgroups.
+It is an evolution of a previously submitted RFC [1], with revised
+semantics, interfaces, and implementation based on community feedback.
 
-To address this, we introduce per-cgroup per-CPU swap device caches.
-This allows fast-path swap allocations to respect each cgroup’s
-individual priority settings.
+======================================================================
+I. MOTIVATION
+======================================================================
 
-To avoid an explosion of cluster structures proportional to the number
-of cgroups, clusters remain per-device and are shared across cgroups.
-This strikes a balance between performance and memory overhead.
+Core requirement was to improve application responsiveness and loading
+time, especially for latency-critical applications, without increasing
+RAM or storage hardware resources.
 
-Suggested-by: Nhat Pham <nphamcs@gmail.com>
-Suggested-by: Kairui Song <kasong@tencent.com>
-Signed-off-by: Youngjun Park <youngjun.park@lge.com>
+Device constraints:
+  - Linux-based embedded platform
+  - Limited system RAM
+  - Small local swap
+  - No option to expand RAM or local swap
+
+To mitigate this, we explored utilizing idle RAM and storage from nearby
+devices as remote swap space. To maximize its effectiveness, we needed
+per-cgroup control over swap device selection:
+
+  - Assign faster local swap devices to latency-critical apps
+  - Assign remote swap devices to background apps
+
+However, current kernel swap infrastructure does not support per-cgroup
+swap device assignment.
+
+======================================================================
+II. EVALUATED ALTERNATIVES
+======================================================================
+
+**II-1. Per-cgroup Dedicated Swap Devices**
+
+- Proposed upstream [2]
+- Difficult to maintain consistent global vs per-cgroup swap state
+- Hard to reconcile with memory.max and swap.max semantics
+
+**II-2. Multi-backend Swap Device with Cgroup-aware Routing**
+
+- Breaks layering abstraction (block device cgroup awareness)
+- Swap devices treated as physical storage
+- Related ideas discussed in [3]
+
+**II-3. Per-cgroup Swap Enable/Disable with Usage Control**
+
+- Could expand swap.max via zswap writeback [4]
+- Cannot express flexible device orderings
+- Less expressive than per-device priorities
+
+**Conclusion:** Per-cgroup swap priority configuration is the most natural and
+least invasive extension to existing kernel mechanisms.
+
+======================================================================
+III. DESIGN OVERVIEW
+======================================================================
+
+**III-1. Per-Cgroup Swap Priority**
+
+Semantics:
+- Configure swap priorities per device via the `memory.swap.priority` interface.
+- If a value is specified, it overrides the global priority for that cgroup.
+- Priority semantics follow the global swap behavior:
+  - Higher numeric values are preferred
+  - Devices with equal priority are used round-robin
+  - Negative priorities follow NUMA-aware fallback [5]
+- If no value is given, the global swap priority is used.
+- Default settings influence swap device propagation on swapon/swapoff events.
+- At `swapon`, these settings determine whether and how newly added devices
+  are included for the cgroup.
+
+Each cgroup exposes a readable and writable file:
+
+  memory.swap.priority
+
+This file accepts one `<id> <priority>` pair per line, where `<id>` is the
+numeric ID of a swap device as shown in `/proc/swaps`:
+
+  Filename       Type        Size   Used  Priority  Id
+  /dev/sda2      partition   ...    ...   20        1
+  /dev/sdb2      partition   ...    ...   -2        2
+
+The following defaults can be set:
+
+- `default none`:
+  Use global priority (implicit default)
+
+- `default disabled`:
+  Exclude swap devices from use in this cgroup
+
+These defaults determine how new devices are handled at `swapon` time.
+
+Special keywords can also be specified per device:
+- `<id> none`: use global priority (clears override)
+- `<id> disabled`: exclude the device from this cgroup's swap allocation
+
+Reading this file shows the current configuration. Devices not explicitly set
+may still appear if their effective priority differs from the global value due
+to NUMA fallback or internal normalization.
+
+**Example**
+
+  echo "1 -2" > memory.swap.priority
+
+May result in:
+
+  1 -2
+  2 -3
+
+To revert both devices to global priority:
+
+  echo "1 none" > memory.swap.priority
+  echo "2 none" > memory.swap.priority
+
+To disable device 1 while allowing device 2:
+
+  echo "1 disabled" > memory.swap.priority
+
+**III-2. Inheritance**
+
+Inheritance semantics:
+
+- Each cgroup inherits from the **highest** ancestor with a setting
+- Intermediate ancestors are ignored
+- If no ancestor is configured, the local setting is used
+- If the inherited ancestor configuration is removed or absent, the cgroup
+  falls back to its local setting. If none exists, the global priority is used.
+
+The effective configuration after inheritance is visible via:
+
+  memory.swap.priority.effective
+
+If `default disabled` is active, it is shown explicitly.  
+If `default none` is used, it is applied silently and not shown.
+
+======================================================================
+IV. TESTING
+======================================================================
+
+This patchset was tested on x86_64 under QEMU using `stress-ng` to generate
+swap I/O while toggling swap devices and updating `memory.swap.priority`.
+
+The kernel was instrumented with KASAN, lockdep, and other
+`CONFIG_DEBUG_*` options to increase debugging coverage and help identify
+potential issues under stress.
+
+======================================================================
+V. CHANGE HISTORY
+======================================================================
+
+== RFC → v1 ==
+
+[1] Changed interface from flat `1:10,2:-1` to line-based flat key format,
+    following cgroup v2 interface conventions where each swap device is
+    configured independently.
+    - Suggested by: Michal Koutný
+
+[2] Added `memory.swap.priority.effective` to expose the final applied
+    priority, reflecting cgroup inheritance rules.
+
+[3] Clarified default semantics: `default none`, `default disabled`
+    - Suggested by: Michal Koutný
+
+[4] Implemented per-cgroup percpu swap device cache and used per-device
+    shared clusters to avoid scalability issues
+    - Suggested by: Kairui Song
+
+[5] Exposed swap device id via /proc/swaps for introspection
+
+[6] Introduced swap_cgroup_priority.h to define the main interface and declare
+    symbols shared with swapfile.c.
+
+[7] Aligned the number of swap_cgroup_priority_pnode instances with nr_swapfiles
+    to ensure consistency during swap device changes.
+
+[8] Removed the explicit delete interface, now handled implicitly by dynamic tracking.
+
+======================================================================
+VI. REFERENCES
+======================================================================
+
+[1] RFC: Per-cgroup swap device prioritization  
+    https://lore.kernel.org/linux-mm/aEvLjEInMQC7hEyh@yjaykim-PowerEdge-T330/T/#mbbb6a5e9e30843097e1f5f65fb98f31d582b973d  
+[2] Cgroup-specific swap devices (2014)  
+    https://lkml.iu.edu/hypermail/linux/kernel/1404.0/02530.html  
+[3] Swap redirection and zswap writeback discussions  
+    https://lore.kernel.org/linux-mm/CAMgjq7DGMS5A4t6nOQmwyLy5Px96aoejBkiwFHgy9uMk-F8Y-w@mail.gmail.com  
+[4] Per-cgroup zswap writeback  
+    https://lore.kernel.org/lkml/CAF8kJuN-4UE0skVHvjUzpGefavkLULMonjgkXUZSBVJrcGFXCA@mail.gmail.com  
+[5] Swap NUMA fallback  
+    https://docs.kernel.org/vm/swap_numa.html
 ---
- include/linux/swap.h      |   7 ++
- mm/swap_cgroup_priority.c | 156 +++++++++++++++++++++++++++++++++++++-
- mm/swap_cgroup_priority.h |  39 ++++++++++
- mm/swapfile.c             |  47 +++++++-----
- 4 files changed, 228 insertions(+), 21 deletions(-)
 
-diff --git a/include/linux/swap.h b/include/linux/swap.h
-index bfddbec2ee28..ab15f4c103a1 100644
---- a/include/linux/swap.h
-+++ b/include/linux/swap.h
-@@ -283,6 +283,12 @@ enum swap_cluster_flags {
- #define SWAP_NR_ORDERS		1
- #endif
- 
-+#ifdef CONFIG_SWAP_CGROUP_PRIORITY
-+struct percpu_cluster {
-+	unsigned int next[SWAP_NR_ORDERS]; /* Likely next allocation offset */
-+};
-+#endif
-+
- /*
-  * We keep using same cluster for rotational device so IO will be sequential.
-  * The purpose is to optimize SWAP throughput on these device.
-@@ -341,6 +347,7 @@ struct swap_info_struct {
- 	struct list_head discard_clusters; /* discard clusters list */
- #ifdef CONFIG_SWAP_CGROUP_PRIORITY
- 	u64 id;
-+	struct percpu_cluster __percpu *percpu_cluster; /* per cpu's swap location */
- #endif
- 	struct plist_node avail_lists[]; /*
- 					   * entries in swap_avail_heads, one
-diff --git a/mm/swap_cgroup_priority.c b/mm/swap_cgroup_priority.c
-index 84e876b77f01..f960c3dcab48 100644
---- a/mm/swap_cgroup_priority.c
-+++ b/mm/swap_cgroup_priority.c
-@@ -21,6 +21,17 @@
- #include "swap_cgroup_priority.h"
- #include "memcontrol-v1.h"
- 
-+/*
-+ * We do maintain a cache on a per-cgroup-per-swap-device basis.
-+ * However, the underlying cluster cache itself is managed
-+ * per-swap-device. This design prevents each individual
-+ * swap_cgroup_priority entry from caching its own cluster data,
-+ * even as the number of such entries increases.
-+ */
-+struct percpu_swap_device {
-+	struct swap_info_struct *si[SWAP_NR_ORDERS];
-+};
-+
- static DEFINE_MUTEX(swap_cgroup_priority_inherit_lck);
- static LIST_HEAD(swap_cgroup_priority_list);
- 
-@@ -49,6 +60,7 @@ static LIST_HEAD(swap_cgroup_priority_list);
-  * least_priority - Current lowest priority.
-  * distance - Priority differences from global swap priority.
-  * default_prio - Default priority for this cgroup.
-+ * pcpu_swapdev - Per-CPU swap device.
-  * plist - Priority list head.
-  */
- struct swap_cgroup_priority {
-@@ -64,6 +76,7 @@ struct swap_cgroup_priority {
- 	int least_priority;
- 	s8 distance;
- 	int default_prio;
-+	struct percpu_swap_device __percpu *pcpu_swapdev;
- 	struct plist_head plist[];
- };
- 
-@@ -132,6 +145,21 @@ static struct swap_cgroup_priority *get_effective_swap_cgroup_priority(
- 	return swap_priority->effective;
- }
- 
-+static struct swap_cgroup_priority *get_effective_swap_cgroup_priority_rcu(
-+	struct mem_cgroup *memcg)
-+{
-+	struct swap_cgroup_priority *swap_priority;
-+
-+	if (!memcg)
-+		return NULL;
-+
-+	swap_priority = rcu_dereference(memcg->swap_priority);
-+	if (!swap_priority)
-+		return NULL;
-+
-+	return rcu_dereference(swap_priority->effective);
-+}
-+
- static bool validate_effective_swap_cgroup_priority(
- 	struct mem_cgroup *memcg,
- 	struct swap_cgroup_priority **swap_priority)
-@@ -172,6 +200,9 @@ static void free_swap_cgroup_priority_pnode(
- static void free_swap_cgroup_priority(
- 	struct swap_cgroup_priority *swap_priority)
- {
-+	if (swap_priority->pcpu_swapdev)
-+		free_percpu(swap_priority->pcpu_swapdev);
-+
- 	for (int i = 0; i < MAX_SWAPFILES; i++)
- 		free_swap_cgroup_priority_pnode(swap_priority->pnode[i]);
- 
-@@ -187,6 +218,12 @@ static struct swap_cgroup_priority *alloc_swap_cgroup_priority(void)
- 	if (!swap_priority)
- 		return NULL;
- 
-+	swap_priority->pcpu_swapdev = alloc_percpu(struct percpu_swap_device);
-+	if (!swap_priority->pcpu_swapdev) {
-+		kvfree(swap_priority);
-+		return NULL;
-+	}
-+
- 	/*
- 	 * Pre-allocates pnode array up to nr_swapfiles at init.
- 	 * Individual pnodes are assigned on swapon, but not freed
-@@ -326,10 +363,34 @@ bool swap_alloc_cgroup_priority(struct mem_cgroup *memcg,
- 	unsigned long offset;
- 	int node;
- 
--	/*
--	 * TODO: Per-cpu swap cluster cache can't be used directly
--	 * as cgroup-specific priorities may select different devices.
--	 */
-+	rcu_read_lock();
-+	if (!(swap_priority = get_effective_swap_cgroup_priority_rcu(memcg))) {
-+		rcu_read_unlock();
-+		return false;
-+	}
-+
-+	/* Fast path */
-+	si = this_cpu_read(swap_priority->pcpu_swapdev->si[order]);
-+	if (si && get_swap_device_info(si)) {
-+		offset = cluster_alloc_swap_entry(si, order, SWAP_HAS_CACHE);
-+		if (offset) {
-+			*entry = swp_entry(si->type, offset);
-+			/*
-+			 * Protected by 'percpu_swap_cluster' local_lock;
-+			 * CPU migration is disabled during this operation.
-+			 */
-+			this_cpu_write(swap_priority->pcpu_swapdev->si[order],
-+				       si);
-+			put_swap_device(si);
-+			rcu_read_unlock();
-+
-+			return true;
-+		}
-+		put_swap_device(si);
-+	}
-+	rcu_read_unlock();
-+
-+	/* Slow path */
- 	spin_lock(&swap_avail_lock);
- 	node = numa_node_id();
- 
-@@ -350,6 +411,14 @@ bool swap_alloc_cgroup_priority(struct mem_cgroup *memcg,
- 		if (get_swap_device_info(si)) {
- 			offset = cluster_alloc_swap_entry(si, order,
- 							  SWAP_HAS_CACHE);
-+			/*
-+			 * Protected by 'percpu_swap_cluster' local_lock;
-+			 * CPU migration is disabled during this operation.
-+			 */
-+			if (memcg->swap_priority == swap_priority)
-+				this_cpu_write(
-+					swap_priority->pcpu_swapdev->si[order],
-+					si);
- 			put_swap_device(si);
- 			if (offset) {
- 				*entry = swp_entry(si->type, offset);
-@@ -687,6 +756,21 @@ static int __apply_swap_cgroup_priority(
- 	return 0;
- }
- 
-+static int init_swap_cgroup_priority_pcpu_swapdev_cache(
-+	struct swap_cgroup_priority *swap_priority)
-+{
-+	int cpu;
-+
-+	for_each_possible_cpu(cpu) {
-+		struct percpu_swap_device *pcp_swap_dev =
-+			per_cpu_ptr(swap_priority->pcpu_swapdev, cpu);
-+		for (int i = 0; i < SWAP_NR_ORDERS; i++)
-+			pcp_swap_dev->si[i] = NULL;
-+	}
-+
-+	return 0;
-+}
-+
- /*
-  * If this is the top-level swap_cgroup_priority, propagation is needed.
-  * We traverse the 'mem_cgroup_tree' using 'for_each_mem_cgroup_tree'.
-@@ -795,6 +879,8 @@ int apply_swap_cgroup_priority(struct mem_cgroup *memcg, u64 id, int prio)
- 	for_each_node(nid)
- 		plist_head_init(&swap_priority->plist[nid]);
- 
-+	init_swap_cgroup_priority_pcpu_swapdev_cache(swap_priority);
-+
- prio_set:
- 	spin_lock(&swap_lock);
- 	spin_lock(&swap_avail_lock);
-@@ -843,6 +929,23 @@ int apply_swap_cgroup_priority(struct mem_cgroup *memcg, u64 id, int prio)
- 
- 	spin_unlock(&swap_avail_lock);
- 	spin_unlock(&swap_lock);
-+	/*
-+	 * XXX: We cannot fully synchronize with swap_alloc_cgroup_priority
-+	 * when updating the next si.
-+	 * Still, we ensure that flush operations inside swap_priority
-+	 * are performed as reliably as possible.
-+	 */
-+	if (id != DEFAULT_ID &&
-+	    swap_priority == swap_priority->effective && !new) {
-+		int cpu;
-+		struct swap_info_struct **pcp_si;
-+		for_each_possible_cpu(cpu) {
-+			pcp_si = per_cpu_ptr(
-+				swap_priority->pcpu_swapdev->si, cpu);
-+			for (int i = 0; i < SWAP_NR_ORDERS; i++)
-+				pcp_si[i] = NULL;
-+		}
-+	}
- 	mutex_unlock(&swap_cgroup_priority_inherit_lck);
- 	return 0;
- 
-@@ -886,3 +989,48 @@ void delete_swap_cgroup_priority(struct mem_cgroup *memcg)
- 	spin_unlock(&swap_avail_lock);
- 	mutex_unlock(&swap_cgroup_priority_inherit_lck);
- }
-+
-+void flush_swap_cgroup_priority_percpu_swapdev(struct swap_info_struct *si)
-+{
-+	int cpu, i;
-+	struct swap_info_struct **pcp_si;
-+	struct swap_cgroup_priority *swap_priority;
-+
-+	rcu_read_lock();
-+	list_for_each_entry_rcu(swap_priority,
-+				&swap_cgroup_priority_list, link) {
-+		for_each_possible_cpu(cpu) {
-+			pcp_si = per_cpu_ptr(
-+					swap_priority->pcpu_swapdev->si, cpu);
-+
-+			for (i = 0; i < SWAP_NR_ORDERS; i++)
-+				cmpxchg(&pcp_si[i], si, NULL);
-+		}
-+	}
-+	rcu_read_unlock();
-+}
-+
-+bool alloc_percpu_swap_cluster(struct swap_info_struct *si)
-+{
-+	si->percpu_cluster = alloc_percpu(struct percpu_cluster);
-+	if (!si->percpu_cluster)
-+		return false;
-+
-+	int cpu;
-+	int i;
-+	for_each_possible_cpu(cpu) {
-+		struct percpu_cluster *cluster;
-+
-+		cluster = per_cpu_ptr(si->percpu_cluster, cpu);
-+		for (i = 0; i < SWAP_NR_ORDERS; i++)
-+			cluster->next[i] = SWAP_ENTRY_INVALID;
-+	}
-+
-+	return true;
-+}
-+
-+void free_percpu_swap_cluster(struct swap_info_struct *si)
-+{
-+	free_percpu(si->percpu_cluster);
-+	si->percpu_cluster = NULL;
-+}
-diff --git a/mm/swap_cgroup_priority.h b/mm/swap_cgroup_priority.h
-index 5d16b63d12e0..815822ebd0d1 100644
---- a/mm/swap_cgroup_priority.h
-+++ b/mm/swap_cgroup_priority.h
-@@ -47,6 +47,22 @@ struct swap_cgroup_priority *inherit_swap_cgroup_priority(
- bool swap_alloc_cgroup_priority(struct mem_cgroup *memcg, swp_entry_t *entry,
- 				int order);
- void delete_swap_cgroup_priority(struct mem_cgroup *memcg);
-+void flush_swap_cgroup_priority_percpu_swapdev(struct swap_info_struct *si);
-+
-+bool alloc_percpu_swap_cluster(struct swap_info_struct *si);
-+void free_percpu_swap_cluster(struct swap_info_struct *si);
-+static inline void write_percpu_swap_cluster_next(struct swap_info_struct *si,
-+						  int order,
-+						  unsigned int next)
-+{
-+	this_cpu_write(si->percpu_cluster->next[order], next);
-+}
-+
-+static inline unsigned int read_percpu_swap_cluster_next(
-+	struct swap_info_struct *si, int order)
-+{
-+        return __this_cpu_read(si->percpu_cluster->next[order]);
-+}
- #else
- int swap_node(struct swap_info_struct *si);
- unsigned long cluster_alloc_swap_entry(struct swap_info_struct *si, int order,
-@@ -85,5 +101,28 @@ static inline bool swap_alloc_cgroup_priority(struct mem_cgroup *memcg,
- static inline void delete_swap_cgroup_priority(struct mem_cgroup *memcg)
- {
- }
-+static inline void flush_swap_cgroup_priority_percpu_swapdev(
-+	struct swap_info_struct *si)
-+{
-+}
-+static inline bool alloc_percpu_swap_cluster(struct swap_info_struct *si)
-+{
-+	return true;
-+}
-+static inline void free_percpu_swap_cluster(struct swap_info_struct *si)
-+{
-+}
-+static inline void write_percpu_swap_cluster_next(struct swap_info_struct *si,
-+						  int order,
-+						  unsigned int next)
-+{
-+	return;
-+}
-+
-+static inline unsigned int read_percpu_swap_cluster_next(
-+	struct swap_info_struct *si, int order)
-+{
-+	return SWAP_ENTRY_INVALID;
-+}
- #endif
- #endif
-diff --git a/mm/swapfile.c b/mm/swapfile.c
-index bfd0532ad250..6a5ac9962e9f 100644
---- a/mm/swapfile.c
-+++ b/mm/swapfile.c
-@@ -817,12 +817,15 @@ static unsigned int alloc_swap_scan_cluster(struct swap_info_struct *si,
- out:
- 	relocate_cluster(si, ci);
- 	unlock_cluster(ci);
-+
- 	if (si->flags & SWP_SOLIDSTATE) {
- 		this_cpu_write(percpu_swap_cluster.offset[order], next);
- 		this_cpu_write(percpu_swap_cluster.si[order], si);
-+		write_percpu_swap_cluster_next(si, order, next);
- 	} else {
- 		si->global_cluster->next[order] = next;
- 	}
-+
- 	return found;
- }
- 
-@@ -892,26 +895,29 @@ unsigned long cluster_alloc_swap_entry(struct swap_info_struct *si, int order,
- 	if (order && !(si->flags & SWP_BLKDEV))
- 		return 0;
- 
--	if (!(si->flags & SWP_SOLIDSTATE)) {
-+	if (si->flags & SWP_SOLIDSTATE) {
-+		offset = read_percpu_swap_cluster_next(si, order);
-+	} else {
- 		/* Serialize HDD SWAP allocation for each device. */
- 		spin_lock(&si->global_cluster_lock);
- 		offset = si->global_cluster->next[order];
--		if (offset == SWAP_ENTRY_INVALID)
--			goto new_cluster;
-+	}
- 
--		ci = lock_cluster(si, offset);
--		/* Cluster could have been used by another order */
--		if (cluster_is_usable(ci, order)) {
--			if (cluster_is_empty(ci))
--				offset = cluster_offset(si, ci);
--			found = alloc_swap_scan_cluster(si, ci, offset,
--							order, usage);
--		} else {
--			unlock_cluster(ci);
--		}
--		if (found)
--			goto done;
-+	if (offset == SWAP_ENTRY_INVALID)
-+		goto new_cluster;
-+
-+	ci = lock_cluster(si, offset);
-+	/* Cluster could have been used by another order */
-+	if (cluster_is_usable(ci, order)) {
-+		if (cluster_is_empty(ci))
-+			offset = cluster_offset(si, ci);
-+		found = alloc_swap_scan_cluster(si, ci, offset,
-+						order, usage);
-+	} else {
-+		unlock_cluster(ci);
- 	}
-+	if (found)
-+		goto done;
- 
- new_cluster:
- 	ci = isolate_lock_cluster(si, &si->free_clusters);
-@@ -991,6 +997,7 @@ unsigned long cluster_alloc_swap_entry(struct swap_info_struct *si, int order,
- done:
- 	if (!(si->flags & SWP_SOLIDSTATE))
- 		spin_unlock(&si->global_cluster_lock);
-+
- 	return found;
- }
- 
-@@ -2674,6 +2681,8 @@ static void flush_percpu_swap_cluster(struct swap_info_struct *si)
- 		for (i = 0; i < SWAP_NR_ORDERS; i++)
- 			cmpxchg(&pcp_si[i], si, NULL);
- 	}
-+
-+	flush_swap_cgroup_priority_percpu_swapdev(si);
- }
- 
- 
-@@ -2802,6 +2811,7 @@ SYSCALL_DEFINE1(swapoff, const char __user *, specialfile)
- 	arch_swap_invalidate_area(p->type);
- 	zswap_swapoff(p->type);
- 	mutex_unlock(&swapon_mutex);
-+	free_percpu_swap_cluster(p);
- 	kfree(p->global_cluster);
- 	p->global_cluster = NULL;
- 	vfree(swap_map);
-@@ -2900,7 +2910,6 @@ static void swap_stop(struct seq_file *swap, void *v)
- 	mutex_unlock(&swapon_mutex);
- }
- 
--
- #ifndef CONFIG_SWAP_CGROUP_PRIORITY
- static int swap_show(struct seq_file *swap, void *v)
- {
-@@ -3239,7 +3248,10 @@ static struct swap_cluster_info *setup_clusters(struct swap_info_struct *si,
- 	for (i = 0; i < nr_clusters; i++)
- 		spin_lock_init(&cluster_info[i].lock);
- 
--	if (!(si->flags & SWP_SOLIDSTATE)) {
-+	if (si->flags & SWP_SOLIDSTATE) {
-+		if (!alloc_percpu_swap_cluster(si))
-+			goto err_free;
-+	} else {
- 		si->global_cluster = kmalloc(sizeof(*si->global_cluster),
- 				     GFP_KERNEL);
- 		if (!si->global_cluster)
-@@ -3532,6 +3544,7 @@ SYSCALL_DEFINE2(swapon, const char __user *, specialfile, int, swap_flags)
- bad_swap_unlock_inode:
- 	inode_unlock(inode);
- bad_swap:
-+	free_percpu_swap_cluster(si);
- 	kfree(si->global_cluster);
- 	si->global_cluster = NULL;
- 	inode = NULL;
+This feature is marked **EXPERIMENTAL** in Kconfig, as it has not yet undergone
+extensive real-world testing. The implementation is functional and reflects
+feedback from prior RFC discussions, but further testing and review are welcome.
+I’m happy to iterate based on community feedback.
+
+Thanks,
+Youngjun Park
+
+Youngjun Park (4):
+  mm/swap, memcg: Introduce infrastructure for cgroup-based swap
+    priority
+  mm: swap: Apply per-cgroup swap priority mechanism to swap layer
+  mm: memcg: Add swap cgroup priority inheritance mechanism
+  mm: swap: Per-cgroup per-CPU swap device cache with shared clusters
+
+ Documentation/admin-guide/cgroup-v2.rst |   76 ++
+ MAINTAINERS                             |    2 +
+ include/linux/memcontrol.h              |    3 +
+ include/linux/swap.h                    |   10 +
+ mm/Kconfig                              |   14 +
+ mm/Makefile                             |    1 +
+ mm/memcontrol.c                         |  105 ++-
+ mm/swap_cgroup_priority.c               | 1036 +++++++++++++++++++++++
+ mm/swap_cgroup_priority.h               |  128 +++
+ mm/swapfile.c                           |  108 ++-
+ 10 files changed, 1456 insertions(+), 27 deletions(-)
+ create mode 100644 mm/swap_cgroup_priority.c
+ create mode 100644 mm/swap_cgroup_priority.h
+
+base-commit: 347e9f5043c89695b01e66b3ed111755afcf1911
 -- 
 2.34.1
 
