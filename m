@@ -1,280 +1,129 @@
-Received: from lgeamrelo07.lge.com (lgeamrelo07.lge.com [156.147.51.103])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-ed1-f50.google.com (mail-ed1-f50.google.com [209.85.208.50])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F220126E6E8
-	for <cgroups@vger.kernel.org>; Wed, 16 Jul 2025 20:35:34 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=156.147.51.103
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 25163288CA3
+	for <cgroups@vger.kernel.org>; Thu, 17 Jul 2025 09:03:20 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.50
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1752698137; cv=none; b=cHsVeplLy1JSFtW9BY2kC59mNyPCgfOrmVGkwFFIswmv2aIxKCea+AIjArB6FCTVINNo0/032YBLzYC3NEtQd14UPLuRziaPa+ZT7g0N9b4NsbadIacVWgjMioMTKaP0ZXTq6PwLo4QNl/i2afuaVAh8kHdmV+SsRl24SXn2frU=
+	t=1752743003; cv=none; b=fHF8xEECCdS4Q4wrRSpUVeHtWQF+z5EaaEuq3XhKFLh6i7i9hbQw7YxiJtpH6a6DKGx0sSqvb9TGyVwlA0f0q/zOzh5/tT0iJsQdJVDwze129k3G3oz4IHqbPrO6zpNaetYgj/fAIqbLeUg+oOkodmtuzSEz//DqPTRN2Trbuoc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1752698137; c=relaxed/simple;
-	bh=fz24MBZaP1rGDz+9ge5+8SdQD7a1z0k1BNiy0BvaXmo=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version:Content-Type; b=Ldz54dHslMbL0pdsbYKHcOwCA0FI31Xb7LK0XKWc05DH7snH2HxY47Xj0eeuXoBBIGPTKoATukHY1UEX4UGp1ptfu6LK12JyMo1GYXqWrhl/T3eME/x5GCqgRYEpZMo6RcbxhqUVDmnKIyIcpBqDZ8bTVZ+d6cTrKrpPpP1H97w=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lge.com; spf=pass smtp.mailfrom=lge.com; arc=none smtp.client-ip=156.147.51.103
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lge.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lge.com
-Received: from unknown (HELO yjaykim-PowerEdge-T330.lge.net) (10.177.112.156)
-	by 156.147.51.103 with ESMTP; 17 Jul 2025 05:20:32 +0900
-X-Original-SENDERIP: 10.177.112.156
-X-Original-MAILFROM: youngjun.park@lge.com
-From: Youngjun Park <youngjun.park@lge.com>
-To: akpm@linux-foundation.org,
-	hannes@cmpxchg.org
-Cc: mhocko@kernel.org,
-	roman.gushchin@linux.dev,
-	shakeel.butt@linux.dev,
-	muchun.song@linux.dev,
-	shikemeng@huaweicloud.com,
-	kasong@tencent.com,
-	nphamcs@gmail.com,
-	bhe@redhat.com,
-	baohua@kernel.org,
-	chrisl@kernel.org,
-	cgroups@vger.kernel.org,
-	linux-mm@kvack.org,
-	linux-kernel@vger.kernel.org,
-	gunho.lee@lge.com,
-	iamjoonsoo.kim@lge.com,
-	taejoon.song@lge.com,
-	Youngjun Park <youngjun.park@lge.com>
-Subject: [PATCH 0/4] mm/swap, memcg: Support per-cgroup swap device priorities
-Date: Thu, 17 Jul 2025 05:20:02 +0900
-Message-Id: <20250716202006.3640584-1-youngjun.park@lge.com>
-X-Mailer: git-send-email 2.34.1
+	s=arc-20240116; t=1752743003; c=relaxed/simple;
+	bh=Z5nzWSuaRPisfayNMOK/rRJBdS6Apn8ClY5PeebPILc=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=sKViHFzv4rrxj81z8hsqP3FcSoaPzpCjQdtWmQxeggaT/2SNKL3WGDmD3CpScAAGH3iIzoicvpv5XoYCriTWinZIA08N7YSAfQjqBJ7c6mVPR0ud3R6wIvP/8KSfahUc139LrhqnA1oOkQVD7hTEe9i6Vrvr6dMGZ492yMGJ9IQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com; spf=pass smtp.mailfrom=suse.com; dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b=MGizRLMW; arc=none smtp.client-ip=209.85.208.50
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b="MGizRLMW"
+Received: by mail-ed1-f50.google.com with SMTP id 4fb4d7f45d1cf-60bfcada295so1075726a12.1
+        for <cgroups@vger.kernel.org>; Thu, 17 Jul 2025 02:03:20 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=suse.com; s=google; t=1752742999; x=1753347799; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=NtJBS2lEjHHaRhpVxxSRBXYFYmBr3Ltbr/mf09JOLRE=;
+        b=MGizRLMWaee8kvvVF4Jz8FxTVbJFoksfTZI3e+XPGDcnNBj/UyrEK7EVCMHSO1zYyW
+         a5FfcidMwNR0LqJgm0HtL3d4YAx6Ymg2P8CUYZmq2OXeseeRB1KP/OjHJwYJISIAagiN
+         MAVS/1DJsRrWVqRzhcy0gwwMUBJ/Ocu57lEXNoYIWilV8Ekl3pP0DkICDEAoyuxMhfQK
+         Jdk1WbXukXZwB1U1GEt7+PIMxRokucH7NQYurUUyWFFthJO+BV642sbnyOIJz09dDqub
+         AIunaqN673OiUES447CHDjKDszRAx+NbcVeH4XJLeI1qau8B+FlDxXwVLoKyUfsMXSoO
+         6NtA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1752742999; x=1753347799;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=NtJBS2lEjHHaRhpVxxSRBXYFYmBr3Ltbr/mf09JOLRE=;
+        b=DYrO74szKGIYgz3TXOxFE5GLpkc+cGu5ihE0sq375gwe6ur4SXzbZPH+65qVdGi1OJ
+         DEWNxrwHM94zOY7hxBzUqVDivoI5nJiX3f8JayRAnLfIvJxLsFPv0G1gjaRfqmvj/PB/
+         wgXwo1l4quUq8KExxq3ac22CiBFolKNpwcyzES8n5wJYEfL5NIuh4rR4ChgPl3y96kGu
+         OW5QoeHsAzbSCDm9PZdhsCqaqJ330gynewagaVM5ziBA9v267VXBiCGsUqTITpYkWtvb
+         YB+kBUj6bu3R+SgkXTWchLda9RliBxSEd1FQyALbBU5tF8SYdvL4kOmaZ90Ye9AXMOV+
+         zHIA==
+X-Forwarded-Encrypted: i=1; AJvYcCWLJN3kk5jWV+Z9dDvRQZOKMXfI+UEkdxHDrEOfE29OPq7xsF/dGB3Yjp0qwvTgoW5kpdurOxXS@vger.kernel.org
+X-Gm-Message-State: AOJu0YypwjyWKl5jT/g6+YDVb1QvbuZRAFInk21sF6dj3BnYbL6C+BmY
+	vG22xoYFUornvELBD64qMKMM8Omfvo0Twitx7+Rw/Rbox8u8Qvw7r7tLqBIlD4pZW16c5PUcScI
+	6g0z9
+X-Gm-Gg: ASbGncs/KNz7+Yi4KZ28ZKgbpy6iqReB83dtDsVEpT39lPvmubyHqXApI0rdi2yBqU0
+	bmGkRuPoCICFYJQfIH51cr2h7o6s22GbVPOhpAwDM06fANglgUOd3r7AFBD8zkBzYsQVpd1tztS
+	pJl44PFwJbipH5wTqxIeMBAxiIlbnqsNjzUQxyO9PV3DOUUqvaejUW5KTO8X9NvOZyQQotaVpoO
+	ho+uLQbyjnhHZhv1qhPh0R1iwYcQbeCrk10EnzLoUozYCpjwE1QurTkb0Ph6ABYM2Fa6Fdy/cXu
+	QTgZDyj/MWy6lG/fVgXRk6n6RYIRivpaUXcaLsJS/CK7H89xKSVzaxHDREnhZ6Wa305JWXGuTs2
+	OHn+i5Zj6upVv8Wy8vOp7jJSUZmAdver/IDKidanF1A==
+X-Google-Smtp-Source: AGHT+IHtm4KCrQuR9JbK9MgY5VxWRCkv31xXdyq+Qhq5kWG3gk6gKkGV+hb2neJpu+S9WLS12s2D7w==
+X-Received: by 2002:a17:907:a588:b0:ae1:f1e0:8730 with SMTP id a640c23a62f3a-ae9ce1c2d25mr665972866b.57.1752742999384;
+        Thu, 17 Jul 2025 02:03:19 -0700 (PDT)
+Received: from blackdock.suse.cz (nat2.prg.suse.com. [195.250.132.146])
+        by smtp.gmail.com with ESMTPSA id a640c23a62f3a-ae9cabc0b6dsm297466266b.111.2025.07.17.02.03.18
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 17 Jul 2025 02:03:18 -0700 (PDT)
+Date: Thu, 17 Jul 2025 11:03:17 +0200
+From: Michal =?utf-8?Q?Koutn=C3=BD?= <mkoutny@suse.com>
+To: Xuancong Wang <xuancong84@gmail.com>
+Cc: Chen Ridong <chenridong@huaweicloud.com>, cgroups@vger.kernel.org
+Subject: Re: kernel defect causing "freezing user space tasks failed after 20
+ seconds" upon deep sleep
+Message-ID: <3bcpr5mq4fnlg2ezwzion5mmlsqaloovuqweky7bwma2tpuarq@dovpsotdxi7s>
+References: <CA+prNOqAG31+AfgmchEMbeA=JpegKM946MZPm4TG0hEXDDRUag@mail.gmail.com>
+ <b9a3d8da-9fd8-4ffe-b01e-4b3ecef5e7a6@huaweicloud.com>
+ <CA+prNOqPXJUHV4fM9NR991=zySXhLhbYFjCSDevq7Yz4opjf0A@mail.gmail.com>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
+Content-Type: multipart/signed; micalg=pgp-sha512;
+	protocol="application/pgp-signature"; boundary="icijpnvywbxpultt"
+Content-Disposition: inline
+In-Reply-To: <CA+prNOqPXJUHV4fM9NR991=zySXhLhbYFjCSDevq7Yz4opjf0A@mail.gmail.com>
 
-This patchset introduces a mechanism to assign swap device priorities
-per cgroup.
 
-It is an evolution of a previously submitted RFC [1], with revised
-semantics, interfaces, and implementation based on community feedback.
+--icijpnvywbxpultt
+Content-Type: text/plain; protected-headers=v1; charset=us-ascii
+Content-Disposition: inline
+Subject: Re: kernel defect causing "freezing user space tasks failed after 20
+ seconds" upon deep sleep
+MIME-Version: 1.0
 
-======================================================================
-I. MOTIVATION
-======================================================================
+Hello.
 
-Core requirement was to improve application responsiveness and loading
-time, especially for latency-critical applications, without increasing
-RAM or storage hardware resources.
+On Mon, Jul 14, 2025 at 12:10:03PM +0800, Xuancong Wang <xuancong84@gmail.com> wrote:
+> Linux wxc-moht-aero 6.8.0-60-generic #63~22.04.1-Ubuntu SMP
+> PREEMPT_DYNAMIC Tue Apr 22 19:00:15 UTC 2 x86_64 x86_64 x86_64
+> GNU/Linux
+> ~$ lsb_release -a
+> No LSB modules are available.
+> Distributor ID:    Ubuntu
+> Description:    Ubuntu 22.04.5 LTS
+> Release:    22.04
+> Codename:    jammy
 
-Device constraints:
-  - Linux-based embedded platform
-  - Limited system RAM
-  - Small local swap
-  - No option to expand RAM or local swap
+So this Ubuntu uses systemd version v249 and user session (cgroup)
+freezing was introduced only in 256.
+Xuguang, with this piece of information, I'd say your bug is not related
+to cgroups (which the [1] is originally about).
 
-To mitigate this, we explored utilizing idle RAM and storage from nearby
-devices as remote swap space. To maximize its effectiveness, we needed
-per-cgroup control over swap device selection:
-
-  - Assign faster local swap devices to latency-critical apps
-  - Assign remote swap devices to background apps
-
-However, current kernel swap infrastructure does not support per-cgroup
-swap device assignment.
-
-======================================================================
-II. EVALUATED ALTERNATIVES
-======================================================================
-
-**II-1. Per-cgroup Dedicated Swap Devices**
-
-- Proposed upstream [2]
-- Difficult to maintain consistent global vs per-cgroup swap state
-- Hard to reconcile with memory.max and swap.max semantics
-
-**II-2. Multi-backend Swap Device with Cgroup-aware Routing**
-
-- Breaks layering abstraction (block device cgroup awareness)
-- Swap devices treated as physical storage
-- Related ideas discussed in [3]
-
-**II-3. Per-cgroup Swap Enable/Disable with Usage Control**
-
-- Could expand swap.max via zswap writeback [4]
-- Cannot express flexible device orderings
-- Less expressive than per-device priorities
-
-**Conclusion:** Per-cgroup swap priority configuration is the most natural and
-least invasive extension to existing kernel mechanisms.
-
-======================================================================
-III. DESIGN OVERVIEW
-======================================================================
-
-**III-1. Per-Cgroup Swap Priority**
-
-Semantics:
-- Configure swap priorities per device via the `memory.swap.priority` interface.
-- If a value is specified, it overrides the global priority for that cgroup.
-- Priority semantics follow the global swap behavior:
-  - Higher numeric values are preferred
-  - Devices with equal priority are used round-robin
-  - Negative priorities follow NUMA-aware fallback [5]
-- If no value is given, the global swap priority is used.
-- Default settings influence swap device propagation on swapon/swapoff events.
-- At `swapon`, these settings determine whether and how newly added devices
-  are included for the cgroup.
-
-Each cgroup exposes a readable and writable file:
-
-  memory.swap.priority
-
-This file accepts one `<id> <priority>` pair per line, where `<id>` is the
-numeric ID of a swap device as shown in `/proc/swaps`:
-
-  Filename       Type        Size   Used  Priority  Id
-  /dev/sda2      partition   ...    ...   20        1
-  /dev/sdb2      partition   ...    ...   -2        2
-
-The following defaults can be set:
-
-- `default none`:
-  Use global priority (implicit default)
-
-- `default disabled`:
-  Exclude swap devices from use in this cgroup
-
-These defaults determine how new devices are handled at `swapon` time.
-
-Special keywords can also be specified per device:
-- `<id> none`: use global priority (clears override)
-- `<id> disabled`: exclude the device from this cgroup's swap allocation
-
-Reading this file shows the current configuration. Devices not explicitly set
-may still appear if their effective priority differs from the global value due
-to NUMA fallback or internal normalization.
-
-**Example**
-
-  echo "1 -2" > memory.swap.priority
-
-May result in:
-
-  1 -2
-  2 -3
-
-To revert both devices to global priority:
-
-  echo "1 none" > memory.swap.priority
-  echo "2 none" > memory.swap.priority
-
-To disable device 1 while allowing device 2:
-
-  echo "1 disabled" > memory.swap.priority
-
-**III-2. Inheritance**
-
-Inheritance semantics:
-
-- Each cgroup inherits from the **highest** ancestor with a setting
-- Intermediate ancestors are ignored
-- If no ancestor is configured, the local setting is used
-- If the inherited ancestor configuration is removed or absent, the cgroup
-  falls back to its local setting. If none exists, the global priority is used.
-
-The effective configuration after inheritance is visible via:
-
-  memory.swap.priority.effective
-
-If `default disabled` is active, it is shown explicitly.  
-If `default none` is used, it is applied silently and not shown.
-
-======================================================================
-IV. TESTING
-======================================================================
-
-This patchset was tested on x86_64 under QEMU using `stress-ng` to generate
-swap I/O while toggling swap devices and updating `memory.swap.priority`.
-
-The kernel was instrumented with KASAN, lockdep, and other
-`CONFIG_DEBUG_*` options to increase debugging coverage and help identify
-potential issues under stress.
-
-======================================================================
-V. CHANGE HISTORY
-======================================================================
-
-== RFC → v1 ==
-
-[1] Changed interface from flat `1:10,2:-1` to line-based flat key format,
-    following cgroup v2 interface conventions where each swap device is
-    configured independently.
-    - Suggested by: Michal Koutný
-
-[2] Added `memory.swap.priority.effective` to expose the final applied
-    priority, reflecting cgroup inheritance rules.
-
-[3] Clarified default semantics: `default none`, `default disabled`
-    - Suggested by: Michal Koutný
-
-[4] Implemented per-cgroup percpu swap device cache and used per-device
-    shared clusters to avoid scalability issues
-    - Suggested by: Kairui Song
-
-[5] Exposed swap device id via /proc/swaps for introspection
-
-[6] Introduced swap_cgroup_priority.h to define the main interface and declare
-    symbols shared with swapfile.c.
-
-[7] Aligned the number of swap_cgroup_priority_pnode instances with nr_swapfiles
-    to ensure consistency during swap device changes.
-
-[8] Removed the explicit delete interface, now handled implicitly by dynamic tracking.
-
-======================================================================
-VI. REFERENCES
-======================================================================
-
-[1] RFC: Per-cgroup swap device prioritization  
-    https://lore.kernel.org/linux-mm/aEvLjEInMQC7hEyh@yjaykim-PowerEdge-T330/T/#mbbb6a5e9e30843097e1f5f65fb98f31d582b973d  
-[2] Cgroup-specific swap devices (2014)  
-    https://lkml.iu.edu/hypermail/linux/kernel/1404.0/02530.html  
-[3] Swap redirection and zswap writeback discussions  
-    https://lore.kernel.org/linux-mm/CAMgjq7DGMS5A4t6nOQmwyLy5Px96aoejBkiwFHgy9uMk-F8Y-w@mail.gmail.com  
-[4] Per-cgroup zswap writeback  
-    https://lore.kernel.org/lkml/CAF8kJuN-4UE0skVHvjUzpGefavkLULMonjgkXUZSBVJrcGFXCA@mail.gmail.com  
-[5] Swap NUMA fallback  
-    https://docs.kernel.org/vm/swap_numa.html
----
-
-This feature is marked **EXPERIMENTAL** in Kconfig, as it has not yet undergone
-extensive real-world testing. The implementation is functional and reflects
-feedback from prior RFC discussions, but further testing and review are welcome.
-I’m happy to iterate based on community feedback.
+Do you have full message "Freezing user space processes failed after"
+including number and list of refusing processes? (If cgroup freezing
+isn't involved, this would IMO be some generic freezer/FS/FUSE
+deadlock.)
 
 Thanks,
-Youngjun Park
+Michal
 
-Youngjun Park (4):
-  mm/swap, memcg: Introduce infrastructure for cgroup-based swap
-    priority
-  mm: swap: Apply per-cgroup swap priority mechanism to swap layer
-  mm: memcg: Add swap cgroup priority inheritance mechanism
-  mm: swap: Per-cgroup per-CPU swap device cache with shared clusters
+[1] https://github.com/systemd/systemd/issues/37590
 
- Documentation/admin-guide/cgroup-v2.rst |   76 ++
- MAINTAINERS                             |    2 +
- include/linux/memcontrol.h              |    3 +
- include/linux/swap.h                    |   10 +
- mm/Kconfig                              |   14 +
- mm/Makefile                             |    1 +
- mm/memcontrol.c                         |  105 ++-
- mm/swap_cgroup_priority.c               | 1036 +++++++++++++++++++++++
- mm/swap_cgroup_priority.h               |  128 +++
- mm/swapfile.c                           |  108 ++-
- 10 files changed, 1456 insertions(+), 27 deletions(-)
- create mode 100644 mm/swap_cgroup_priority.c
- create mode 100644 mm/swap_cgroup_priority.h
+--icijpnvywbxpultt
+Content-Type: application/pgp-signature; name="signature.asc"
 
-base-commit: 347e9f5043c89695b01e66b3ed111755afcf1911
--- 
-2.34.1
+-----BEGIN PGP SIGNATURE-----
 
+iHUEABYKAB0WIQRCE24Fn/AcRjnLivR+PQLnlNv4CAUCaHi8UwAKCRB+PQLnlNv4
+CKu1AQDg5sKtwsuP3ov+wSgcD+C+U46lmoX3RUt9nUgB5rsAFQEA4VceMkerprAV
+l/+Ov0HcOYPMPhA/mS39qXuBFq/W6wA=
+=v92i
+-----END PGP SIGNATURE-----
+
+--icijpnvywbxpultt--
