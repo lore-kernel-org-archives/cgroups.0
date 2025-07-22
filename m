@@ -1,98 +1,135 @@
 Received: from lgeamrelo03.lge.com (lgeamrelo03.lge.com [156.147.51.102])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5B7CE2EB5D5
-	for <cgroups@vger.kernel.org>; Tue, 22 Jul 2025 14:14:18 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2B89B2E49AF
+	for <cgroups@vger.kernel.org>; Tue, 22 Jul 2025 14:20:25 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=156.147.51.102
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1753193660; cv=none; b=V+DfDAjYVb/LFLnKHSyXovJnC+OeT1S5DfmJhz8ZnIxe4nSy2xYxpSO8EGSFyjNLbp9GLW3ZoD23zwSMO6klvTuwmIYGxCvw7VrK2A6kDcX3zurq+s/MsNUfgLae+hbcV8BRQQzPgSYozah/A/4JcRqJOKm9QfPIGVWLsvCE/rM=
+	t=1753194028; cv=none; b=ITqHdMqVSpTDgKiiSKbPQjCfZGzFRe/lbLuq602/l6X1D1FYbQu4dcotoJHUjJ5jeYVrh2HfpQvyeXvxgmWXpOT86JRcI6f0kGSAjmTKqyQz4+RJ/yjC3pxlOTZEtHh4Bk5/g/76IWiG7xrvpZHjJzQ8A4N5c0haw59c07xnQdc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1753193660; c=relaxed/simple;
-	bh=YbZj6IAnk6i1IGZYhFj9C06BbWO/yAXaTN7raclAZtM=;
+	s=arc-20240116; t=1753194028; c=relaxed/simple;
+	bh=9Bl9q5Duw5lVvDQl/Wh9TmXqCYoIAncNLJVb/L/J4gU=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=Lx1ovFLl5G7NVNiiVCA0Gp9s8r3txSfcMRyFNZ+i7TFDraIuK8XGc4i/EVqYmm4BMRScxic8LVmO7XE99k34MzxJbSCls7he9KXVuiezKkIKmfdQViJ6TU+F4ytgpx4l7uf1ToOY4ML5RpoDfAVUp787mZdKiSLa1UkKi394xuQ=
+	 Content-Type:Content-Disposition:In-Reply-To; b=GXv85s3owEIiUIUZvyh6M3DwRcstLoRbD56mhepBVT3MKwcD95MXnD0SXNmRfh0NC3tpuHzrzs3fQuJgdRpbH4ua/8l14gPlGGzxsm7xSIYcq4+B2ytjRzEGS0dIyXMv1hYDUOFJPQz6I8sGk+pP3GtId74fgb5OSltbWA+uOuM=
 ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lge.com; spf=pass smtp.mailfrom=lge.com; arc=none smtp.client-ip=156.147.51.102
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lge.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lge.com
 Received: from unknown (HELO yjaykim-PowerEdge-T330) (10.177.112.156)
-	by 156.147.51.102 with ESMTP; 22 Jul 2025 23:14:16 +0900
+	by 156.147.51.102 with ESMTP; 22 Jul 2025 23:05:24 +0900
 X-Original-SENDERIP: 10.177.112.156
 X-Original-MAILFROM: youngjun.park@lge.com
-Date: Tue, 22 Jul 2025 23:14:09 +0900
+Date: Tue, 22 Jul 2025 23:05:24 +0900
 From: YoungJun Park <youngjun.park@lge.com>
-To: kernel test robot <lkp@intel.com>
-Cc: akpm@linux-foundation.org, hannes@cmpxchg.org,
-	oe-kbuild-all@lists.linux.dev, mhocko@kernel.org,
+To: Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny@suse.com>
+Cc: akpm@linux-foundation.org, hannes@cmpxchg.org, mhocko@kernel.org,
 	roman.gushchin@linux.dev, shakeel.butt@linux.dev,
 	muchun.song@linux.dev, shikemeng@huaweicloud.com,
 	kasong@tencent.com, nphamcs@gmail.com, bhe@redhat.com,
 	baohua@kernel.org, chrisl@kernel.org, cgroups@vger.kernel.org,
 	linux-mm@kvack.org, linux-kernel@vger.kernel.org, gunho.lee@lge.com,
-	iamjoonsoo.kim@lge.com, taejoon.song@lge.com,
-	Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny@suse.com>
+	iamjoonsoo.kim@lge.com, taejoon.song@lge.com
 Subject: Re: [PATCH 1/4] mm/swap, memcg: Introduce infrastructure for
  cgroup-based swap priority
-Message-ID: <aH+csQxNcCmQMgZa@yjaykim-PowerEdge-T330>
-References: <20250716202006.3640584-2-youngjun.park@lge.com>
- <202507212243.Lf8fSo0T-lkp@intel.com>
+Message-ID: <aH+apAbBCmkMGPlO@yjaykim-PowerEdge-T330>
+References: <20250716202006.3640584-1-youngjun.park@lge.com>
+ <20250716202006.3640584-2-youngjun.park@lge.com>
+ <jrkh2jy2pkoxgsxgsstpmijyhbzzyige6ubltvmvwl6fwkp3s7@kzc24pj2tcko>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <202507212243.Lf8fSo0T-lkp@intel.com>
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <jrkh2jy2pkoxgsxgsstpmijyhbzzyige6ubltvmvwl6fwkp3s7@kzc24pj2tcko>
 
-On Mon, Jul 21, 2025 at 11:13:24PM +0800, kernel test robot wrote:
-> Hi Youngjun,
+On Tue, Jul 22, 2025 at 10:41:20AM +0200, Michal Koutný wrote:
+> On Thu, Jul 17, 2025 at 05:20:03AM +0900, Youngjun Park <youngjun.park@lge.com> wrote:
+> > +  memory.swap.priority
+> > +    A read-write flat-keyed file which exists on non-root cgroups.
+> > +    This interface allows you to set per-swap-device priorities for the current
+> > +    cgroup and to define how they differ from the global swap system.
+> > +
+> > +    To assign priorities or define specific behaviors for swap devices
+> > +    in the current cgroup, write one or more lines in the following
+> > +    formats:
+> > +
+> > +     - <swap_device_id> <priority>
+> > +     - <swap_device_id> disabled
+> > +     - <swap_device_id> none
+> > +     - default none
+> > +     - default disabled
+> > +
+> > +    Each <swap_device_id> refers to a unique swap device registered
+> > +    in the system. You can check the ID, device path, and current
+> > +    priority of active swap devices through the `/proc/swaps` file.
 > 
-> kernel test robot noticed the following build warnings:
-> 
-> [auto build test WARNING on 347e9f5043c89695b01e66b3ed111755afcf1911]
-> 
-> url:    https://github.com/intel-lab-lkp/linux/commits/Youngjun-Park/mm-swap-memcg-Introduce-infrastructure-for-cgroup-based-swap-priority/20250717-042648
-> base:   347e9f5043c89695b01e66b3ed111755afcf1911
-> patch link:    https://lore.kernel.org/r/20250716202006.3640584-2-youngjun.park%40lge.com
-> patch subject: [PATCH 1/4] mm/swap, memcg: Introduce infrastructure for cgroup-based swap priority
-> config: loongarch-randconfig-r123-20250721 (https://download.01.org/0day-ci/archive/20250721/202507212243.Lf8fSo0T-lkp@intel.com/config)
-> compiler: clang version 19.1.7 (https://github.com/llvm/llvm-project cd708029e0b2869e80abe31ddb175f7c35361f90)
-> reproduce: (https://download.01.org/0day-ci/archive/20250721/202507212243.Lf8fSo0T-lkp@intel.com/reproduce)
-> 
-> If you fix the issue in a separate patch/commit (i.e. not just a new version of
-> the same patch/commit), kindly add following tags
-> | Reported-by: kernel test robot <lkp@intel.com>
-> | Closes: https://lore.kernel.org/oe-kbuild-all/202507212243.Lf8fSo0T-lkp@intel.com/
-> 
-> sparse warnings: (new ones prefixed by >>)
-> >> mm/swap_cgroup_priority.c:115:16: sparse: sparse: incompatible types in comparison expression (different address spaces):
->    mm/swap_cgroup_priority.c:115:16: sparse:    struct swap_cgroup_priority [noderef] __rcu *
->    mm/swap_cgroup_priority.c:115:16: sparse:    struct swap_cgroup_priority *
->    mm/swap_cgroup_priority.c:729:9: sparse: sparse: incompatible types in comparison expression (different address spaces):
->    mm/swap_cgroup_priority.c:729:9: sparse:    struct swap_cgroup_priority [noderef] __rcu *
->    mm/swap_cgroup_priority.c:729:9: sparse:    struct swap_cgroup_priority *
->    mm/swap_cgroup_priority.c:638:25: sparse: sparse: incompatible types in comparison expression (different address spaces):
->    mm/swap_cgroup_priority.c:638:25: sparse:    struct swap_cgroup_priority [noderef] __rcu *
->    mm/swap_cgroup_priority.c:638:25: sparse:    struct swap_cgroup_priority *
-> 
-> vim +115 mm/swap_cgroup_priority.c
-> 
->    108	
->    109	static struct swap_cgroup_priority *get_swap_cgroup_priority(
->    110		struct mem_cgroup *memcg)
->    111	{
->    112		if (!memcg)
->    113			return NULL;
->    114	
->  > 115		return rcu_dereference(memcg->swap_priority);
->    116	}
->    117	
-> 
+> Do you mean row number as the ID? Or does this depend on some other
+> patches or API?
 
-This part of the code, which retrieves the object, 
-is expected to be properly updated in a subsequent patch series. 
-Therefore, I believe it's reasonable to leave it as-is for now.
+You're right to ask for clarification. The `<swap_device_id>` refers
+to a unique identifier added to each swap device entry in `/proc/swaps`.
+I will revise the documentation to make this clearer.
 
-Best Regard,
+As a side note, I initially had concerns about breaking the existing ABI.
+However, the additional ID column does not significantly change the
+current output format and is gated behind `CONFIG_SWAP_CGROUP_PRIORITY`,
+so it should be safe and intuitive to expose it through `/proc/swaps
+
+> > +    This provides a clear mapping between swap devices and the IDs
+> > +    used in this interface.
+> > +
+> > +    The 'default' keyword sets the fallback priority behavior rule for
+> > +    this cgroup. If no specific entry matches a swap device, this default
+> > +    applies.
+> > +
+> > +    * 'default none': This is the default if no configuration
+> > +      is explicitly written. Swap devices follow the system-wide
+> > +      swap priorities.
+> > +
+> > +    * 'default disabled': All swap devices are excluded from this cgroup’s
+> > +      swap priority list and will not be used by this cgroup.
+> 
+> This duplicates memory.swap.max=0. I'm not sure it's thus necessary.
+> At the same time you don't accept 'default <priority>' (that's sane).
+
+That's a valid observation. While `memory.swap.max=0` controls the overall
+swap usage limit, the `default disabled` entry is intended to disable
+specific swap devices within the scope of this cgroup interface. The
+motivation was to offer more granular control over device selection
+rather than total swap usage.
+
+> > +
+> > +    The priority semantics are consistent with the global swap system:
+> > +
+> > +      - Higher numerical values indicate higher preference.
+> > +      - See Documentation/admin-guide/mm/swap_numa.rst for details on
+> > +        swap NUMA autobinding and negative priority rules.
+> > +
+> > +    The handling of negative priorities in this cgroup interface
+> > +    has specific behaviors for assignment and restoration:
+> > +
+> > +    * Negative Priority Assignment
+> 
+> Even in Documentation/admin-guide/mm/swap_numa.rst it's part of "Implementation details".
+> I admit I'm daunted by this paragraphs. Is it important for this interface?
+
+Thank you for pointing this out. My original philosophy was to preserve
+as much of the existing swap functionality as possible, including
+NUMA-aware behaviors.
+
+However, I agree that the explanation is complex and also not be
+necessary for my proposed usage. After some reflection, I believe the
+implementation (and documentation) will be clearer and simpler without
+supporting negative priorities here. 
+
+Unless further objections arise, I plan to drop this behavior in the next
+version of the patch, as you suggested. If compelling use cases emerge in
+the future, we can consider reintroducing the support at that time.
+
+Thanks again for your helpful review!
+
+Best regards,
 Youngjun Park
