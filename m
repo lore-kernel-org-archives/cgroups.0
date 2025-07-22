@@ -1,145 +1,178 @@
-Received: from mail-internal.sh.cz (mail-internal.sh.cz [95.168.196.40])
+Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BDC3128C00C;
-	Tue, 22 Jul 2025 07:27:07 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=95.168.196.40
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 58F441EFF8E;
+	Tue, 22 Jul 2025 07:30:57 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.51
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1753169230; cv=none; b=rgCxLccyP7Uqja9+gxRK1Bah3Pj7KPQd6imGSWpMiK1of8VNG3v6sun30HY1Ywvjt709xR8rmgOzJkF6OHNIt3ycy5Kl5i9D+dCAh3VjB+UIq9FILbS+MqoEcUSPFcXrbQ9GQNYHGI+U1v7VL4YcMIwqci5QCTpX42CvIvWNG3I=
+	t=1753169459; cv=none; b=RR4eR0MA45hc0/2u7BdGo1NTocYZHd79R+wOuk3LYDD7PxJBJg+hHv3tRJ92ZStUYcmpcSXANLfCki44WIdJ67fUI502WxNkTeSLtP6z6QaOK8NiZhg6mSipQSj3KaCyQrEyU4HLMkKhnq/XoN4GNzzgOsdwezHoJtx3ibbUMIg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1753169230; c=relaxed/simple;
-	bh=oW0fsdZpkuDnvUCPp9hj4ntdifZc1tSLSdUkaNgn7C0=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=h4DgVzUoGAIfsMdonsmyruRfCTpMF8/0lCZLl31/VDEWM5N9OZCxrvI3COQ4gF+rFWisGGBk4Wu5fyJ1ffNnef312MOQukHnSI5K/G60lZw27LJxFQPFtTAyWEPeIhOfCAZfR+bB2E6Ug6dFoyic2xJVRo+IACu3jhWcU2QryDI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=cdn77.com; spf=pass smtp.mailfrom=cdn77.com; dkim=pass (1024-bit key) header.d=cdn77.com header.i=@cdn77.com header.b=pC+ynV3W; arc=none smtp.client-ip=95.168.196.40
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=cdn77.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=cdn77.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=cdn77.com header.i=@cdn77.com header.b="pC+ynV3W"
-DKIM-Signature: a=rsa-sha256; t=1753169223; x=1753774023; s=dkim2019; d=cdn77.com; c=relaxed/relaxed; v=1; bh=ugX0/5WzJEWczB5ILEP+4F4o+n6UggNVK+OdbQ/Pz+Q=; h=From:Subject:Date:Message-ID:To:Cc:MIME-Version:Content-Type:Content-Transfer-Encoding:In-Reply-To:References;
-   b=pC+ynV3WDz3blBMgxiWi5zE0GR69FRJ8BbStpwr8yhq8Uo43covZlsXTNM333REQhI0Hf5F3EMW2WloK+B7KbJUGFcKc1A6NQ+6/Ydwu5fXkE979cUfmKkh3B3hqWzj7pNQ+sTFL5l7t8gINZ0JtUhNK6EGwFAuPYUGTQC3B13w=
-Received: from [10.26.3.151] ([80.250.18.198])
-        by mail.sh.cz (14.1.0 build 16 ) with ASMTP (SSL) id 202507220927014709;
-        Tue, 22 Jul 2025 09:27:01 +0200
-Message-ID: <42f7889e-7f7e-4056-9d3a-424298e7df87@cdn77.com>
-Date: Tue, 22 Jul 2025 09:27:01 +0200
+	s=arc-20240116; t=1753169459; c=relaxed/simple;
+	bh=YYrzu0UgQGrSG+tVmoBikBDkz5Rif7zRQbOxhwE28NY=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=GPAlnTtNm/3IF9J5wsfIhj67kO0U8WhuXNsfslHb7BLCTkt/faHhSNp80MqjIpayCH0b5bFhiz6cvsnEApIC2vgdkgyYO+bB9Vw2cO2/IT6jrdnjgLqIQx6OU3O0DtE9UZsKkQjT8dvL4yBDd/10VkIM++E4T5l2uY7FaF+aFLA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.51
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
+Received: from mail.maildlp.com (unknown [172.19.163.216])
+	by dggsgout11.his.huawei.com (SkyGuard) with ESMTPS id 4bmTTB6kQZzYQvJS;
+	Tue, 22 Jul 2025 15:30:54 +0800 (CST)
+Received: from mail02.huawei.com (unknown [10.116.40.128])
+	by mail.maildlp.com (Postfix) with ESMTP id A52501A1939;
+	Tue, 22 Jul 2025 15:30:53 +0800 (CST)
+Received: from huaweicloud.com (unknown [10.175.104.67])
+	by APP4 (Coremail) with SMTP id gCh0CgDnYhMrPn9ovjJdBA--.52549S4;
+	Tue, 22 Jul 2025 15:30:53 +0800 (CST)
+From: Yu Kuai <yukuai1@huaweicloud.com>
+To: dlemoal@kernel.org,
+	hare@suse.de,
+	tj@kernel.org,
+	josef@toxicpanda.com,
+	axboe@kernel.dk,
+	yukuai3@huawei.com
+Cc: cgroups@vger.kernel.org,
+	linux-block@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	yukuai1@huaweicloud.com,
+	yi.zhang@huawei.com,
+	yangerkun@huawei.com,
+	johnny.chenyi@huawei.com
+Subject: [PATCH 0/6] blk-mq-sched: support request batch dispatching for sq elevator
+Date: Tue, 22 Jul 2025 15:24:25 +0800
+Message-Id: <20250722072431.610354-1-yukuai1@huaweicloud.com>
+X-Mailer: git-send-email 2.39.2
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v3] memcg: expose socket memory pressure in a cgroup
-To: Eric Dumazet <edumazet@google.com>
-Cc: "David S. Miller" <davem@davemloft.net>, Jakub Kicinski
- <kuba@kernel.org>, Paolo Abeni <pabeni@redhat.com>,
- Simon Horman <horms@kernel.org>, Jonathan Corbet <corbet@lwn.net>,
- Neal Cardwell <ncardwell@google.com>, Kuniyuki Iwashima <kuniyu@google.com>,
- David Ahern <dsahern@kernel.org>, Andrew Morton <akpm@linux-foundation.org>,
- Shakeel Butt <shakeel.butt@linux.dev>, Yosry Ahmed <yosry.ahmed@linux.dev>,
- linux-mm@kvack.org, netdev@vger.kernel.org,
- Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>,
- Roman Gushchin <roman.gushchin@linux.dev>,
- Muchun Song <muchun.song@linux.dev>, cgroups@vger.kernel.org,
- Matyas Hurtik <matyas.hurtik@cdn77.com>
-References: <20250722071146.48616-1-daniel.sedlak@cdn77.com>
- <CANn89i+sAgVOOoowNfqxv7+NrAa+8EzkWTVMP8LeGDJ23sFQpg@mail.gmail.com>
-Content-Language: en-US
-From: Daniel Sedlak <daniel.sedlak@cdn77.com>
-In-Reply-To: <CANn89i+sAgVOOoowNfqxv7+NrAa+8EzkWTVMP8LeGDJ23sFQpg@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
-X-CTCH: RefID="str=0001.0A002112.687F3D42.0054,ss=1,re=0.000,recu=0.000,reip=0.000,cl=1,cld=1,fgs=0"; Spam="Unknown"; VOD="Unknown"
+X-CM-TRANSID:gCh0CgDnYhMrPn9ovjJdBA--.52549S4
+X-Coremail-Antispam: 1UD129KBjvJXoWxXw1UJw47Gr1fGr1xAryxKrg_yoW5AFyDpF
+	WfGanIyF4DW3WaqFna9w1UJw1rGw4xZry3Grnxtr4SqwnrAr47AFn5Ja48ZFW7AryfWFsr
+	Wr1kXrykWa4UWaDanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDU0xBIdaVrnRJUUU9Y14x267AKxVW8JVW5JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
+	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
+	1l84ACjcxK6xIIjxv20xvE14v26w1j6s0DM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26r4U
+	JVWxJr1l84ACjcxK6I8E87Iv67AKxVW0oVCq3wA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_Gc
+	CE3s1le2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xvF2IEw4CE5I8CrVC2j2WlYx0E
+	2Ix0cI8IcVAFwI0_Jr0_Jr4lYx0Ex4A2jsIE14v26r1j6r4UMcvjeVCFs4IE7xkEbVWUJV
+	W8JwACjcxG0xvY0x0EwIxGrwACjI8F5VA0II8E6IAqYI8I648v4I1lFIxGxcIEc7CjxVA2
+	Y2ka0xkIwI1lc7CjxVAaw2AFwI0_Jw0_GFyl42xK82IYc2Ij64vIr41l4I8I3I0E4IkC6x
+	0Yz7v_Jr0_Gr1lx2IqxVAqx4xG67AKxVWUJVWUGwC20s026x8GjcxK67AKxVWUGVWUWwC2
+	zVAF1VAY17CE14v26r1q6r43MIIYrxkI7VAKI48JMIIF0xvE2Ix0cI8IcVAFwI0_Jr0_JF
+	4lIxAIcVC0I7IYx2IY6xkF7I0E14v26r4j6F4UMIIF0xvE42xK8VAvwI8IcIk0rVWUJVWU
+	CwCI42IY6I8E87Iv67AKxVWUJVW8JwCI42IY6I8E87Iv6xkF7I0E14v26r4j6r4UJbIYCT
+	nIWIevJa73UjIFyTuYvjfUonmRUUUUU
+X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
 
-On 7/22/25 9:17 AM, Eric Dumazet wrote:
-> On Tue, Jul 22, 2025 at 12:12 AM Daniel Sedlak <daniel.sedlak@cdn77.com> wrote:
->>
->> This patch is a result of our long-standing debug sessions, where it all
->> started as "networking is slow", and TCP network throughput suddenly
->> dropped from tens of Gbps to few Mbps, and we could not see anything in
->> the kernel log or netstat counters.
->>
->> Currently, we have two memory pressure counters for TCP sockets [1],
->> which we manipulate only when the memory pressure is signalled through
->> the proto struct [2]. However, the memory pressure can also be signaled
->> through the cgroup memory subsystem, which we do not reflect in the
->> netstat counters. In the end, when the cgroup memory subsystem signals
->> that it is under pressure, we silently reduce the advertised TCP window
->> with tcp_adjust_rcv_ssthresh() to 4*advmss, which causes a significant
->> throughput reduction.
->>
->> Keep in mind that when the cgroup memory subsystem signals the socket
->> memory pressure, it affects all sockets used in that cgroup.
->>
->> This patch exposes a new file for each cgroup in sysfs which signals
->> the cgroup socket memory pressure. The file is accessible in
->> the following path.
->>
->>    /sys/fs/cgroup/**/<cgroup name>/memory.net.socket_pressure
->>
->> The output value is an integer matching the internal semantics of the
->> struct mem_cgroup for socket_pressure. It is a periodic re-arm clock,
->> representing the end of the said socket memory pressure, and once the
->> clock is re-armed it is set to jiffies + HZ.
->>
->> Link: https://elixir.bootlin.com/linux/v6.15.4/source/include/uapi/linux/snmp.h#L231-L232 [1]
->> Link: https://elixir.bootlin.com/linux/v6.15.4/source/include/net/sock.h#L1300-L1301 [2]
->> Co-developed-by: Matyas Hurtik <matyas.hurtik@cdn77.com>
->> Signed-off-by: Matyas Hurtik <matyas.hurtik@cdn77.com>
->> Signed-off-by: Daniel Sedlak <daniel.sedlak@cdn77.com>
->> ---
->> Changes:
->> v2 -> v3:
->> - Expose the socket memory pressure on the cgroups instead of netstat
->> - Split patch
->> - Link: https://lore.kernel.org/netdev/20250714143613.42184-1-daniel.sedlak@cdn77.com/
->>
->> v1 -> v2:
->> - Add tracepoint
->> - Link: https://lore.kernel.org/netdev/20250707105205.222558-1-daniel.sedlak@cdn77.com/
->>
->>
->>   mm/memcontrol.c | 14 ++++++++++++++
->>   1 file changed, 14 insertions(+)
->>
->> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
->> index 902da8a9c643..8e8808fb2d7a 100644
->> --- a/mm/memcontrol.c
->> +++ b/mm/memcontrol.c
->> @@ -4647,6 +4647,15 @@ static ssize_t memory_reclaim(struct kernfs_open_file *of, char *buf,
->>          return nbytes;
->>   }
->>
->> +static int memory_socket_pressure_show(struct seq_file *m, void *v)
->> +{
->> +       struct mem_cgroup *memcg = mem_cgroup_from_seq(m);
->> +
->> +       seq_printf(m, "%lu\n", READ_ONCE(memcg->socket_pressure));
->> +
->> +       return 0;
->> +}
->> +
->>   static struct cftype memory_files[] = {
->>          {
->>                  .name = "current",
->> @@ -4718,6 +4727,11 @@ static struct cftype memory_files[] = {
->>                  .flags = CFTYPE_NS_DELEGATABLE,
->>                  .write = memory_reclaim,
->>          },
->> +       {
->> +               .name = "net.socket_pressure",
->> +               .flags = CFTYPE_NOT_ON_ROOT,
->> +               .seq_show = memory_socket_pressure_show,
->> +       },
->>          { }     /* terminate */
->>   };
->>
-> 
-> It seems you forgot to update Documentation/admin-guide/cgroup-v2.rst
+From: Yu Kuai <yukuai3@huawei.com>
 
-Oops, missed that. I will add it to the v4.
+Currently, both mq-deadline and bfq have global spin lock that will be
+grabbed inside elevator methods like dispatch_request, insert_requests,
+and bio_merge. And the global lock is the main reason mq-deadline and
+bfq can't scale very well.
 
-Thanks!
-Daniel
+For dispatch_request method, current behavior is dispatching one request at
+a time. In the case of multiple dispatching contexts, This behavior, on the
+one hand, introduce intense lock contention:
+
+t1:                     t2:                     t3:
+lock                    lock                    lock
+// grab lock
+ops.dispatch_request
+unlock
+                        // grab lock
+                        ops.dispatch_request
+                        unlock
+                                                // grab lock
+                                                ops.dispatch_request
+                                                unlock
+
+on the other hand, messing up the requests dispatching order:
+t1:
+
+lock
+rq1 = ops.dispatch_request
+unlock
+                        t2:
+                        lock
+                        rq2 = ops.dispatch_request
+                        unlock
+
+lock
+rq3 = ops.dispatch_request
+unlock
+
+                        lock
+                        rq4 = ops.dispatch_request
+                        unlock
+
+//rq1,rq3 issue to disk
+                        // rq2, rq4 issue to disk
+
+In this case, the elevator dispatch order is rq 1-2-3-4, however,
+such order in disk is rq 1-3-2-4, the order for rq2 and rq3 is inversed.
+
+While dispatching request, blk_mq_get_disatpch_budget() and
+blk_mq_get_driver_tag() must be called, and they are not ready to be
+called inside elevator methods, hence introduce a new method like
+dispatch_requests is not possible.
+
+In conclusion, this set factor the global lock out of dispatch_request
+method, and support request batch dispatch by calling the methods
+multiple time while holding the lock.
+
+nullblk setup:
+modprobe null_blk nr_devices=0 &&
+    udevadm settle &&
+    cd /sys/kernel/config/nullb &&
+    mkdir nullb0 &&
+    cd nullb0 &&
+    echo 0 > completion_nsec &&
+    echo 512 > blocksize &&
+    echo 0 > home_node &&
+    echo 0 > irqmode &&
+    echo 128 > submit_queues &&
+    echo 1024 > hw_queue_depth &&
+    echo 1024 > size &&
+    echo 0 > memory_backed &&
+    echo 2 > queue_mode &&
+    echo 1 > power ||
+    exit $?
+
+Test script:
+fio -filename=/dev/$disk -name=test -rw=randwrite -bs=4k -iodepth=32 \
+  -numjobs=16 --iodepth_batch_submit=8 --iodepth_batch_complete=8 \
+  -direct=1 -ioengine=io_uring -group_reporting -time_based -runtime=30
+
+Test result: iops
+
+|                 | deadline | bfq      |
+| --------------- | -------- | -------- |
+| before this set | 263k     | 124k     |
+| after this set  | 475k     | 292k     |
+
+Yu Kuai (6):
+  mq-deadline: switch to use high layer elevator lock
+  block, bfq: don't grab queue_lock from io path
+  block, bfq: switch to use elevator lock
+  elevator: factor elevator lock out of dispatch_request method
+  blk-mq-sched: refactor __blk_mq_do_dispatch_sched()
+  blk-mq-sched: support request batch dispatching for sq elevator
+
+ block/bfq-cgroup.c   |   4 +-
+ block/bfq-iosched.c  |  73 ++++++-------
+ block/bfq-iosched.h  |   2 +-
+ block/blk-ioc.c      |  43 +++++++-
+ block/blk-mq-sched.c | 240 ++++++++++++++++++++++++++++++-------------
+ block/blk-mq.h       |  21 ++++
+ block/blk.h          |   2 +-
+ block/elevator.c     |   1 +
+ block/elevator.h     |   4 +-
+ block/mq-deadline.c  |  58 +++++------
+ 10 files changed, 293 insertions(+), 155 deletions(-)
+
+-- 
+2.39.2
 
