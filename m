@@ -1,27 +1,28 @@
 Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 58F441EFF8E;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 703592206BE;
 	Tue, 22 Jul 2025 07:30:57 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.51
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1753169459; cv=none; b=RR4eR0MA45hc0/2u7BdGo1NTocYZHd79R+wOuk3LYDD7PxJBJg+hHv3tRJ92ZStUYcmpcSXANLfCki44WIdJ67fUI502WxNkTeSLtP6z6QaOK8NiZhg6mSipQSj3KaCyQrEyU4HLMkKhnq/XoN4GNzzgOsdwezHoJtx3ibbUMIg=
+	t=1753169459; cv=none; b=jH3DLEqixprZCIzu++YQJ6xpn8j2f9pZcGmTqVTHYdz+1wXX8mepYpPc7gyp48oeLSfbVTi2MMzBjhz25DCRL36Z31QG8a9no+fmXQxV/YZF4TlRxBdtCRgRgjypDth3tFoS8Usr/aMHVghpxls0Q2smy91RhsxmVLHixe19544=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1753169459; c=relaxed/simple;
-	bh=YYrzu0UgQGrSG+tVmoBikBDkz5Rif7zRQbOxhwE28NY=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=GPAlnTtNm/3IF9J5wsfIhj67kO0U8WhuXNsfslHb7BLCTkt/faHhSNp80MqjIpayCH0b5bFhiz6cvsnEApIC2vgdkgyYO+bB9Vw2cO2/IT6jrdnjgLqIQx6OU3O0DtE9UZsKkQjT8dvL4yBDd/10VkIM++E4T5l2uY7FaF+aFLA=
+	bh=/RaYqj3j98hCwzssoKdXSriKns4zIZSdelvog1GUyOY=;
+	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
+	 MIME-Version; b=jo1rGsXbHOyYfT6z1a/Z/sXQXWUPfZ93UG4QKRxWWbz1Yvj5tKUhxP/dANdByDL8F6X7Fm0L3nWwG7kynGsJHb/lu01VWvoksnENIbwURntQuG7aYyU5OuXaOLub+6JfSAtdOUA/P6MntYCtvGmXs0ljIproNc+1KrwFxDAr5r4=
 ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.51
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
 Received: from mail.maildlp.com (unknown [172.19.163.216])
-	by dggsgout11.his.huawei.com (SkyGuard) with ESMTPS id 4bmTTB6kQZzYQvJS;
-	Tue, 22 Jul 2025 15:30:54 +0800 (CST)
+	by dggsgout11.his.huawei.com (SkyGuard) with ESMTPS id 4bmTTD0FRXzYQvJY;
+	Tue, 22 Jul 2025 15:30:56 +0800 (CST)
 Received: from mail02.huawei.com (unknown [10.116.40.128])
-	by mail.maildlp.com (Postfix) with ESMTP id A52501A1939;
-	Tue, 22 Jul 2025 15:30:53 +0800 (CST)
+	by mail.maildlp.com (Postfix) with ESMTP id BC95C1A1949;
+	Tue, 22 Jul 2025 15:30:54 +0800 (CST)
 Received: from huaweicloud.com (unknown [10.175.104.67])
-	by APP4 (Coremail) with SMTP id gCh0CgDnYhMrPn9ovjJdBA--.52549S4;
-	Tue, 22 Jul 2025 15:30:53 +0800 (CST)
+	by APP4 (Coremail) with SMTP id gCh0CgDnYhMrPn9ovjJdBA--.52549S6;
+	Tue, 22 Jul 2025 15:30:54 +0800 (CST)
 From: Yu Kuai <yukuai1@huaweicloud.com>
 To: dlemoal@kernel.org,
 	hare@suse.de,
@@ -36,10 +37,12 @@ Cc: cgroups@vger.kernel.org,
 	yi.zhang@huawei.com,
 	yangerkun@huawei.com,
 	johnny.chenyi@huawei.com
-Subject: [PATCH 0/6] blk-mq-sched: support request batch dispatching for sq elevator
-Date: Tue, 22 Jul 2025 15:24:25 +0800
-Message-Id: <20250722072431.610354-1-yukuai1@huaweicloud.com>
+Subject: [PATCH 2/6] block, bfq: don't grab queue_lock from io path
+Date: Tue, 22 Jul 2025 15:24:27 +0800
+Message-Id: <20250722072431.610354-3-yukuai1@huaweicloud.com>
 X-Mailer: git-send-email 2.39.2
+In-Reply-To: <20250722072431.610354-1-yukuai1@huaweicloud.com>
+References: <20250722072431.610354-1-yukuai1@huaweicloud.com>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
@@ -47,132 +50,177 @@ List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:gCh0CgDnYhMrPn9ovjJdBA--.52549S4
-X-Coremail-Antispam: 1UD129KBjvJXoWxXw1UJw47Gr1fGr1xAryxKrg_yoW5AFyDpF
-	WfGanIyF4DW3WaqFna9w1UJw1rGw4xZry3Grnxtr4SqwnrAr47AFn5Ja48ZFW7AryfWFsr
-	Wr1kXrykWa4UWaDanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDU0xBIdaVrnRJUUU9Y14x267AKxVW8JVW5JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
-	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
-	1l84ACjcxK6xIIjxv20xvE14v26w1j6s0DM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26r4U
-	JVWxJr1l84ACjcxK6I8E87Iv67AKxVW0oVCq3wA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_Gc
-	CE3s1le2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xvF2IEw4CE5I8CrVC2j2WlYx0E
-	2Ix0cI8IcVAFwI0_Jr0_Jr4lYx0Ex4A2jsIE14v26r1j6r4UMcvjeVCFs4IE7xkEbVWUJV
-	W8JwACjcxG0xvY0x0EwIxGrwACjI8F5VA0II8E6IAqYI8I648v4I1lFIxGxcIEc7CjxVA2
-	Y2ka0xkIwI1lc7CjxVAaw2AFwI0_Jw0_GFyl42xK82IYc2Ij64vIr41l4I8I3I0E4IkC6x
-	0Yz7v_Jr0_Gr1lx2IqxVAqx4xG67AKxVWUJVWUGwC20s026x8GjcxK67AKxVWUGVWUWwC2
-	zVAF1VAY17CE14v26r1q6r43MIIYrxkI7VAKI48JMIIF0xvE2Ix0cI8IcVAFwI0_Jr0_JF
-	4lIxAIcVC0I7IYx2IY6xkF7I0E14v26r4j6F4UMIIF0xvE42xK8VAvwI8IcIk0rVWUJVWU
-	CwCI42IY6I8E87Iv67AKxVWUJVW8JwCI42IY6I8E87Iv6xkF7I0E14v26r4j6r4UJbIYCT
-	nIWIevJa73UjIFyTuYvjfUonmRUUUUU
+X-CM-TRANSID:gCh0CgDnYhMrPn9ovjJdBA--.52549S6
+X-Coremail-Antispam: 1UD129KBjvJXoWxZF1rArWrKw43JrWxJFW7CFg_yoW7JryDpF
+	WaqanIyr10gr47uryfJ3ZrZrn3W3W8ursrta93tw4Fkr92yrnav3Wjyry2vF1S9rWkAFsF
+	vr4UK3ykAr48uaDanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDU0xBIdaVrnRJUUUm014x267AKxVWrJVCq3wAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
+	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2048vs2IY020E87I2jVAFwI0_Jryl82xGYIkIc2
+	x26xkF7I0E14v26ryj6s0DM28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48ve4kI8wA2z4x0
+	Y4vE2Ix0cI8IcVAFwI0_tr0E3s1l84ACjcxK6xIIjxv20xvEc7CjxVAFwI0_Gr1j6F4UJw
+	A2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x0267AKxVW0oVCq3wAS
+	0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG6I80ewAv7VC0I7IYx2
+	IY67AKxVWUJVWUGwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFVCjc4AY6r1j6r4UM4x0
+	Y48IcxkI7VAKI48JM4x0x7Aq67IIx4CEVc8vx2IErcIFxwACI402YVCY1x02628vn2kIc2
+	xKxwCY1x0262kKe7AKxVWUtVW8ZwCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7xkEbVWU
+	JVW8JwC20s026c02F40E14v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E67AF67
+	kF1VAFwI0_Jw0_GFylIxkGc2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUJVWUCwCI42IY
+	6xIIjxv20xvEc7CjxVAFwI0_Gr0_Cr1lIxAIcVCF04k26cxKx2IYs7xG6r1j6r1xMIIF0x
+	vEx4A2jsIE14v26r1j6r4UMIIF0xvEx4A2jsIEc7CjxVAFwI0_Gr0_Gr1UYxBIdaVFxhVj
+	vjDU0xZFpf9x0JUQXo7UUUUU=
 X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
 
 From: Yu Kuai <yukuai3@huawei.com>
 
-Currently, both mq-deadline and bfq have global spin lock that will be
-grabbed inside elevator methods like dispatch_request, insert_requests,
-and bio_merge. And the global lock is the main reason mq-deadline and
-bfq can't scale very well.
+Currently issue io can grab queue_lock three times from bfq_bio_merge(),
+bfq_limit_depth() and bfq_prepare_request(), the queue_lock is not
+necessary if icq is already created:
 
-For dispatch_request method, current behavior is dispatching one request at
-a time. In the case of multiple dispatching contexts, This behavior, on the
-one hand, introduce intense lock contention:
+- queue_usage_counter is already grabbed and queue won't exist;
+- current thread won't exist;
+- if other thread is allocating and inserting new icq to ioc->icq_tree,
+  rcu can be used to protect lookup icq from the raidx tree, it's safe
+  to use extracted icq until queue or current thread exit;
 
-t1:                     t2:                     t3:
-lock                    lock                    lock
-// grab lock
-ops.dispatch_request
-unlock
-                        // grab lock
-                        ops.dispatch_request
-                        unlock
-                                                // grab lock
-                                                ops.dispatch_request
-                                                unlock
+If ioc or icq is not created, then bfq_prepare_request() will create it,
+which means the task is issuing io to queue the first time, this can
+consider a slow path and queue_lock will still be held to protect
+inserting allocated icq to ioc->icq_tree.
 
-on the other hand, messing up the requests dispatching order:
-t1:
+Signed-off-by: Yu Kuai <yukuai3@huawei.com>
+---
+ block/bfq-iosched.c | 24 +++++++-----------------
+ block/blk-ioc.c     | 43 ++++++++++++++++++++++++++++++++++++++-----
+ block/blk.h         |  2 +-
+ 3 files changed, 46 insertions(+), 23 deletions(-)
 
-lock
-rq1 = ops.dispatch_request
-unlock
-                        t2:
-                        lock
-                        rq2 = ops.dispatch_request
-                        unlock
-
-lock
-rq3 = ops.dispatch_request
-unlock
-
-                        lock
-                        rq4 = ops.dispatch_request
-                        unlock
-
-//rq1,rq3 issue to disk
-                        // rq2, rq4 issue to disk
-
-In this case, the elevator dispatch order is rq 1-2-3-4, however,
-such order in disk is rq 1-3-2-4, the order for rq2 and rq3 is inversed.
-
-While dispatching request, blk_mq_get_disatpch_budget() and
-blk_mq_get_driver_tag() must be called, and they are not ready to be
-called inside elevator methods, hence introduce a new method like
-dispatch_requests is not possible.
-
-In conclusion, this set factor the global lock out of dispatch_request
-method, and support request batch dispatch by calling the methods
-multiple time while holding the lock.
-
-nullblk setup:
-modprobe null_blk nr_devices=0 &&
-    udevadm settle &&
-    cd /sys/kernel/config/nullb &&
-    mkdir nullb0 &&
-    cd nullb0 &&
-    echo 0 > completion_nsec &&
-    echo 512 > blocksize &&
-    echo 0 > home_node &&
-    echo 0 > irqmode &&
-    echo 128 > submit_queues &&
-    echo 1024 > hw_queue_depth &&
-    echo 1024 > size &&
-    echo 0 > memory_backed &&
-    echo 2 > queue_mode &&
-    echo 1 > power ||
-    exit $?
-
-Test script:
-fio -filename=/dev/$disk -name=test -rw=randwrite -bs=4k -iodepth=32 \
-  -numjobs=16 --iodepth_batch_submit=8 --iodepth_batch_complete=8 \
-  -direct=1 -ioengine=io_uring -group_reporting -time_based -runtime=30
-
-Test result: iops
-
-|                 | deadline | bfq      |
-| --------------- | -------- | -------- |
-| before this set | 263k     | 124k     |
-| after this set  | 475k     | 292k     |
-
-Yu Kuai (6):
-  mq-deadline: switch to use high layer elevator lock
-  block, bfq: don't grab queue_lock from io path
-  block, bfq: switch to use elevator lock
-  elevator: factor elevator lock out of dispatch_request method
-  blk-mq-sched: refactor __blk_mq_do_dispatch_sched()
-  blk-mq-sched: support request batch dispatching for sq elevator
-
- block/bfq-cgroup.c   |   4 +-
- block/bfq-iosched.c  |  73 ++++++-------
- block/bfq-iosched.h  |   2 +-
- block/blk-ioc.c      |  43 +++++++-
- block/blk-mq-sched.c | 240 ++++++++++++++++++++++++++++++-------------
- block/blk-mq.h       |  21 ++++
- block/blk.h          |   2 +-
- block/elevator.c     |   1 +
- block/elevator.h     |   4 +-
- block/mq-deadline.c  |  58 +++++------
- 10 files changed, 293 insertions(+), 155 deletions(-)
-
+diff --git a/block/bfq-iosched.c b/block/bfq-iosched.c
+index 0cb1e9873aab..58d57c482acd 100644
+--- a/block/bfq-iosched.c
++++ b/block/bfq-iosched.c
+@@ -454,17 +454,13 @@ static struct bfq_io_cq *icq_to_bic(struct io_cq *icq)
+  */
+ static struct bfq_io_cq *bfq_bic_lookup(struct request_queue *q)
+ {
+-	struct bfq_io_cq *icq;
+-	unsigned long flags;
+-
+-	if (!current->io_context)
+-		return NULL;
++	struct io_cq *icq;
+ 
+-	spin_lock_irqsave(&q->queue_lock, flags);
+-	icq = icq_to_bic(ioc_lookup_icq(q));
+-	spin_unlock_irqrestore(&q->queue_lock, flags);
++	rcu_read_lock();
++	icq = ioc_lookup_icq_rcu(q);
++	rcu_read_unlock();
+ 
+-	return icq;
++	return icq_to_bic(icq);
+ }
+ 
+ /*
+@@ -2456,16 +2452,10 @@ static void bfq_remove_request(struct request_queue *q,
+ static bool bfq_bio_merge(struct request_queue *q, struct bio *bio,
+ 		unsigned int nr_segs)
+ {
++	/* bic will not be freed until current or elevator exit */
++	struct bfq_io_cq *bic = bfq_bic_lookup(q);
+ 	struct bfq_data *bfqd = q->elevator->elevator_data;
+ 	struct request *free = NULL;
+-	/*
+-	 * bfq_bic_lookup grabs the queue_lock: invoke it now and
+-	 * store its return value for later use, to avoid nesting
+-	 * queue_lock inside the bfqd->lock. We assume that the bic
+-	 * returned by bfq_bic_lookup does not go away before
+-	 * bfqd->lock is taken.
+-	 */
+-	struct bfq_io_cq *bic = bfq_bic_lookup(q);
+ 	bool ret;
+ 
+ 	spin_lock_irq(&bfqd->lock);
+diff --git a/block/blk-ioc.c b/block/blk-ioc.c
+index ce82770c72ab..0be097a37e22 100644
+--- a/block/blk-ioc.c
++++ b/block/blk-ioc.c
+@@ -314,7 +314,7 @@ int __copy_io(unsigned long clone_flags, struct task_struct *tsk)
+  * Look up io_cq associated with @ioc - @q pair from @ioc.  Must be called
+  * with @q->queue_lock held.
+  */
+-struct io_cq *ioc_lookup_icq(struct request_queue *q)
++static struct io_cq *ioc_lookup_icq(struct request_queue *q)
+ {
+ 	struct io_context *ioc = current->io_context;
+ 	struct io_cq *icq;
+@@ -341,7 +341,40 @@ struct io_cq *ioc_lookup_icq(struct request_queue *q)
+ 	rcu_read_unlock();
+ 	return icq;
+ }
+-EXPORT_SYMBOL(ioc_lookup_icq);
++
++/**
++ * ioc_lookup_icq_rcu - lookup io_cq from ioc in io path
++ * @q: the associated request_queue
++ *
++ * Look up io_cq associated with @ioc - @q pair from @ioc.  Must be called
++ * from io path, either return NULL if current issue io to @q for the first
++ * time, or return a valid icq.
++ */
++struct io_cq *ioc_lookup_icq_rcu(struct request_queue *q)
++{
++	struct io_context *ioc = current->io_context;
++	struct io_cq *icq;
++
++	WARN_ON_ONCE(percpu_ref_is_zero(&q->q_usage_counter));
++
++	if (!ioc)
++		return NULL;
++
++	icq = rcu_dereference(ioc->icq_hint);
++	if (icq && icq->q == q)
++		return icq;
++
++	icq = radix_tree_lookup(&ioc->icq_tree, q->id);
++	if (!icq)
++		return NULL;
++
++	if (WARN_ON_ONCE(icq->q != q))
++		return NULL;
++
++	rcu_assign_pointer(ioc->icq_hint, icq);
++	return icq;
++}
++EXPORT_SYMBOL(ioc_lookup_icq_rcu);
+ 
+ /**
+  * ioc_create_icq - create and link io_cq
+@@ -420,9 +453,9 @@ struct io_cq *ioc_find_get_icq(struct request_queue *q)
+ 	} else {
+ 		get_io_context(ioc);
+ 
+-		spin_lock_irq(&q->queue_lock);
+-		icq = ioc_lookup_icq(q);
+-		spin_unlock_irq(&q->queue_lock);
++		rcu_read_lock();
++		icq = ioc_lookup_icq_rcu(q);
++		rcu_read_unlock();
+ 	}
+ 
+ 	if (!icq) {
+diff --git a/block/blk.h b/block/blk.h
+index 468aa83c5a22..3c078e517d59 100644
+--- a/block/blk.h
++++ b/block/blk.h
+@@ -460,7 +460,7 @@ static inline void req_set_nomerge(struct request_queue *q, struct request *req)
+  * Internal io_context interface
+  */
+ struct io_cq *ioc_find_get_icq(struct request_queue *q);
+-struct io_cq *ioc_lookup_icq(struct request_queue *q);
++struct io_cq *ioc_lookup_icq_rcu(struct request_queue *q);
+ #ifdef CONFIG_BLK_ICQ
+ void ioc_clear_queue(struct request_queue *q);
+ #else
 -- 
 2.39.2
 
