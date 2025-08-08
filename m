@@ -1,53 +1,37 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5FBA628505F
-	for <cgroups@vger.kernel.org>; Fri,  8 Aug 2025 15:21:26 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 644CA277016;
+	Fri,  8 Aug 2025 15:50:12 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1754666491; cv=none; b=OCa1pgQbvuuCU6y4ftXjgEhPgPCEFrNzjXqXjmt9kk4y0lmsS4XHmw2Ma7EKDxKua+Ap/tPLmTtuuRgZsZiDo0Ky45ofy1RnQdk59nju6rAK+SJc5wQ0/HFhV4bWL31DM2F/t+KujBIaww464w3VH1aGI14JQ8UpQitubexIe+Q=
+	t=1754668212; cv=none; b=CHsG/ayag951KpNL96tWepuQY3/xZrH21vR4jBBzJumj1bhENTv1PaRy/lVX36FRcDeKDjad9iimAecQOfBiNvZ5lSyz/qZabAq8bSXlUj319oX72LB2we/spIg3iRLCjgq5yUrJ5/il9RYIxpVdwHbI8Y9ewPNcUxoja/x4D4I=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1754666491; c=relaxed/simple;
-	bh=G+SuqHYYBtyqlrzLWONaD/8ACPafYoU76CpsPRv+ZDo=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=bSMylC1o+3Us02JmCs9TM3+GAT3nE7zBvnn6FsXkL3XWATDrxazbYAOtd8AxQCD3IDhSWrIyPbPqiGv6QIORq7bmDDHgKtCOzJy3Om3N+qa+Ssa7mMB3nGOj+EZYMxrbxPseGoSdR6P+e13Pr36ztVuAq/z8HtTwH4s4NhygSuw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=CkTL74UG; arc=none smtp.client-ip=170.10.133.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	s=arc-20240116; t=1754668212; c=relaxed/simple;
+	bh=Fn13LnOkMLX97otRtesVk7OTraqlk5v2xVlghm+sXjQ=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=P+mZDKYEATchViSfLZhg5hClJxv2FrOhMKVD1LUwkVR1IWtrul7SbMA5H+mOsj+8j4i+qIFuQ3sxzrBP1zmzWbmt8wZDfWStC44cvrjxeY3j4A73wCtjUW2YE8hjLSAHZogp6lnaTunjh7hC2zRTv7KeCJZJ+IOP3SUvVEHCH4k=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=G3N08WGA; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="CkTL74UG"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1754666485;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=s3IrWf1FQMKxHSbm6lytMXnYB7oM2ZZ+ln1x5eRMpdA=;
-	b=CkTL74UG0MqqF3Jl/aZdTLIYUF75EHFLhk1jaYH+DWQyIQ/Rb7ZUAN2pTVw2RXCuNhjs3i
-	iJ8ph/Ok7JvwtW/+96hkQWjdiT2JGE90Vu5wGW2IicVcrSuyvBHmRwewpk7ZBMQgWpriVS
-	dG+2NP3OHOnFR9vzACGkn3n1vkukNSo=
-Received: from mx-prod-mc-06.mail-002.prod.us-west-2.aws.redhat.com
- (ec2-35-165-154-97.us-west-2.compute.amazonaws.com [35.165.154.97]) by
- relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-158-sptsYpEoMveUvnkJBZ77Hw-1; Fri,
- 08 Aug 2025 11:21:20 -0400
-X-MC-Unique: sptsYpEoMveUvnkJBZ77Hw-1
-X-Mimecast-MFC-AGG-ID: sptsYpEoMveUvnkJBZ77Hw_1754666442
-Received: from mx-prod-int-06.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-06.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.93])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mx-prod-mc-06.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 91B6F180034A;
-	Fri,  8 Aug 2025 15:20:41 +0000 (UTC)
-Received: from llong-thinkpadp16vgen1.westford.csb (unknown [10.22.65.37])
-	by mx-prod-int-06.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id DB7921800294;
-	Fri,  8 Aug 2025 15:20:34 +0000 (UTC)
-From: Waiman Long <longman@redhat.com>
-To: Tejun Heo <tj@kernel.org>,
-	Johannes Weiner <hannes@cmpxchg.org>,
-	=?UTF-8?q?Michal=20Koutn=C3=BD?= <mkoutny@suse.com>,
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="G3N08WGA"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6F73EC4CEED;
+	Fri,  8 Aug 2025 15:50:11 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1754668211;
+	bh=Fn13LnOkMLX97otRtesVk7OTraqlk5v2xVlghm+sXjQ=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=G3N08WGAjIBlgU8eYjkiXU4FoSp9IQUU06tvK1XaWuYpVwRsqsttAs+659bFTPuXS
+	 +auLx87cNatKO5EzQ0I9q5/k1ih0wlMU3MwUYYP3uf1+SJ0XeYnfT2k8Sa/FpZhdDU
+	 z+9Yp47zXwejNZm+gIwsLY0ReTmY8eRwC3FdkHXXMvUQNg3o9cEtQqEkYwamwTwE96
+	 GED6qrhP4zbsQeXOf/kf/CiUraKjA3WghO80D2v7GEbTa7WoPlQ1Y4jH1LUUClaNK4
+	 Jg0Rzff93HXLu3AWlyJRY8Ph6O/RmMgpcSJbIEYZk2jNSDZ0Trq0FBGxTSqgVkjuq9
+	 UHUWIgdWk08mA==
+Date: Fri, 8 Aug 2025 17:50:09 +0200
+From: Frederic Weisbecker <frederic@kernel.org>
+To: Waiman Long <longman@redhat.com>
+Cc: Tejun Heo <tj@kernel.org>, Johannes Weiner <hannes@cmpxchg.org>,
+	Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny@suse.com>,
 	Jonathan Corbet <corbet@lwn.net>,
-	Frederic Weisbecker <frederic@kernel.org>,
 	"Paul E. McKenney" <paulmck@kernel.org>,
 	Neeraj Upadhyay <neeraj.upadhyay@kernel.org>,
 	Joel Fernandes <joelagnelf@nvidia.com>,
@@ -65,24 +49,17 @@ To: Tejun Heo <tj@kernel.org>,
 	Juri Lelli <juri.lelli@redhat.com>,
 	Vincent Guittot <vincent.guittot@linaro.org>,
 	Dietmar Eggemann <dietmar.eggemann@arm.com>,
-	Ben Segall <bsegall@google.com>,
-	Mel Gorman <mgorman@suse.de>,
+	Ben Segall <bsegall@google.com>, Mel Gorman <mgorman@suse.de>,
 	Valentin Schneider <vschneid@redhat.com>,
-	Shuah Khan <shuah@kernel.org>
-Cc: cgroups@vger.kernel.org,
-	linux-doc@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	rcu@vger.kernel.org,
-	linux-kselftest@vger.kernel.org,
+	Shuah Khan <shuah@kernel.org>, cgroups@vger.kernel.org,
+	linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org,
+	rcu@vger.kernel.org, linux-kselftest@vger.kernel.org,
 	Phil Auld <pauld@redhat.com>,
 	Costa Shulyupin <costa.shul@redhat.com>,
 	Gabriele Monaco <gmonaco@redhat.com>,
-	Cestmir Kalina <ckalina@redhat.com>,
-	Waiman Long <longman@redhat.com>
-Subject: [RFC PATCH 13/18] tick/nohz: Allow runtime changes in full dynticks CPUs
-Date: Fri,  8 Aug 2025 11:19:56 -0400
-Message-ID: <20250808152001.20245-4-longman@redhat.com>
-In-Reply-To: <20250808151053.19777-1-longman@redhat.com>
+	Cestmir Kalina <ckalina@redhat.com>
+Subject: Re: [RFC PATCH 00/18] cgroup/cpuset: Enable runtime modification of
+Message-ID: <aJYcsXEiFmCmDAjz@localhost.localdomain>
 References: <20250808151053.19777-1-longman@redhat.com>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
@@ -90,169 +67,54 @@ List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
+Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-X-Scanned-By: MIMEDefang 3.4.1 on 10.30.177.93
+In-Reply-To: <20250808151053.19777-1-longman@redhat.com>
 
-Full dynticks can only be enabled if "nohz_full" boot option has been
-been specified with or without parameter. Any change in the list of
-nohz_full CPUs have to be reflected in tick_nohz_full_mask. So the newly
-introduced tick_nohz_full_update_cpus() will be called to update the
-mask.
+Le Fri, Aug 08, 2025 at 11:10:44AM -0400, Waiman Long a écrit :
+> The "nohz_full" and "rcu_nocbs" boot command parameters can be used to
+> remove a lot of kernel overhead on a specific set of isolated CPUs which
+> can be used to run some latency/bandwidth sensitive workloads with as
+> little kernel disturbance/noise as possible. The problem with this mode
+> of operation is the fact that it is a static configuration which cannot
+> be changed after boot to adjust for changes in application loading.
+> 
+> There is always a desire to enable runtime modification of the number
+> of isolated CPUs that can be dedicated to this type of demanding
+> workloads. This patchset is an attempt to do just that with an amount of
+> CPU isolation close to what can be done with the nohz_full and rcu_nocbs
+> boot kernel parameters.
+> 
+> This patch series provides the ability to change the set of housekeeping
+> CPUs at run time via the cpuset isolated partition functionality.
+> Currently, the cpuset isolated partition is able to disable scheduler
+> load balancing and the CPU affinity of the unbound workqueue to avoid the
+> isolated CPUs. This patch series will extend that with other kernel noises
+> associated with the nohz_full boot command line parameter which has the
+> following sub-categories:
+>   - tick
+>   - timer
+>   - RCU
+>   - MISC
+>   - WQ
+>   - kthread
 
-We also need to enable CPU context tracking for those CPUs that
-are in tick_nohz_full_mask. So remove __init from tick_nohz_init()
-and ct_cpu_track_user() so that they be called later when an isolated
-cpuset partition is being created. The __ro_after_init attribute is
-taken away from context_tracking_key as well.
+Thanks for working on that, I'm about to leave for 2 weeks vacation so I
+won't have the time to check this until I'm back.
 
-Also add a new ct_cpu_untrack_user() function to reverse the action of
-ct_cpu_track_user() in case we need to disable the nohz_full mode of
-a CPU.
+However this series is highly conflicting with mine (cpuset/isolation: Honour
+kthreads preferred affinity). Your patchset even redoes things I'm doing
+(housekeeping cpumask update, RCU synchronization, HK_TYPE_DOMAIN to include
+cpusets, etc...)
 
-With nohz_full enabled, the boot CPU (typically CPU 0) will be the
-tick CPU which cannot be shut down easily. So the boot CPU should not
-be used in an isolated cpuset partition.
+I have a v2 that is almost ready to post.
 
-With runtime modification of nohz_full CPUs, tick_do_timer_cpu can become
-TICK_DO_TIMER_NONE. So remove the two TICK_DO_TIMER_NONE WARN_ON_ONCE()
-calls in tick-sched.c to avoid unnecessary warnings.
+Wouldn't it be better to wait for it and its infrastructure changes before
+proceeding with nohz_full?
 
-Signed-off-by: Waiman Long <longman@redhat.com>
----
- include/linux/context_tracking.h |  1 +
- kernel/cgroup/cpuset.c           | 23 ++++++++++++++++++++++-
- kernel/context_tracking.c        | 17 ++++++++++++++---
- kernel/time/tick-sched.c         |  7 -------
- 4 files changed, 37 insertions(+), 11 deletions(-)
+Thanks.
 
-diff --git a/include/linux/context_tracking.h b/include/linux/context_tracking.h
-index a3fea7f9fef6..1a6b816f1ad6 100644
---- a/include/linux/context_tracking.h
-+++ b/include/linux/context_tracking.h
-@@ -17,6 +17,7 @@
- #define CONTEXT_TRACKING_FORCE_ENABLE	(-1)
- 
- extern void ct_cpu_track_user(int cpu);
-+extern void ct_cpu_untrack_user(int cpu);
- 
- /* Called with interrupts disabled.  */
- extern void __ct_user_enter(enum ctx_state state);
-diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
-index 6308bb14e018..45c82c18bec4 100644
---- a/kernel/cgroup/cpuset.c
-+++ b/kernel/cgroup/cpuset.c
-@@ -23,6 +23,7 @@
-  */
- #include "cpuset-internal.h"
- 
-+#include <linux/context_tracking.h>
- #include <linux/init.h>
- #include <linux/interrupt.h>
- #include <linux/kernel.h>
-@@ -1361,7 +1362,7 @@ static void partition_xcpus_del(int old_prs, struct cpuset *parent,
-  */
- static int do_housekeeping_exclude_cpumask(void *arg __maybe_unused)
- {
--	int ret;
-+	int cpu, ret;
- 	struct cpumask *icpus = isolated_cpus;
- 	unsigned long flags = BIT(HK_TYPE_DOMAIN) | BIT(HK_TYPE_KERNEL_NOISE);
- 
-@@ -1395,6 +1396,26 @@ static int do_housekeeping_exclude_cpumask(void *arg __maybe_unused)
- 	ret = housekeeping_exclude_cpumask(icpus, flags);
- 	WARN_ON_ONCE((ret < 0) && (ret != -EOPNOTSUPP));
- 
-+#ifdef CONFIG_NO_HZ_FULL
-+	/*
-+	 * To properly enable/disable nohz_full dynticks for the affected CPUs,
-+	 * the new nohz_full CPUs have to be copied to tick_nohz_full_mask and
-+	 * ct_cpu_track_user/ct_cpu_untrack_user() will have to be called
-+	 * for those CPUs that have their states changed.
-+	 */
-+	if (tick_nohz_full_enabled()) {
-+		tick_nohz_full_update_cpus(icpus);
-+		for_each_cpu(cpu, isolcpus_update_state.cpus) {
-+			if (cpumask_test_cpu(cpu, icpus))
-+				ct_cpu_track_user(cpu);
-+			else
-+				ct_cpu_untrack_user(cpu);
-+		}
-+	} else {
-+		pr_warn_once("Full dynticks cannot be enabled without the nohz_full kernel boot parameter!\n");
-+	}
-+#endif
-+
- 	if (icpus != isolated_cpus)
- 		kfree(icpus);
- 	return ret;
-diff --git a/kernel/context_tracking.c b/kernel/context_tracking.c
-index 734354bbfdbb..ed5653a3d6f7 100644
---- a/kernel/context_tracking.c
-+++ b/kernel/context_tracking.c
-@@ -431,7 +431,7 @@ static __always_inline void ct_kernel_enter(bool user, int offset) { }
- #define CREATE_TRACE_POINTS
- #include <trace/events/context_tracking.h>
- 
--DEFINE_STATIC_KEY_FALSE_RO(context_tracking_key);
-+DEFINE_STATIC_KEY_FALSE(context_tracking_key);
- EXPORT_SYMBOL_GPL(context_tracking_key);
- 
- static noinstr bool context_tracking_recursion_enter(void)
-@@ -694,9 +694,9 @@ void user_exit_callable(void)
- }
- NOKPROBE_SYMBOL(user_exit_callable);
- 
--void __init ct_cpu_track_user(int cpu)
-+void ct_cpu_track_user(int cpu)
- {
--	static __initdata bool initialized = false;
-+	static bool initialized;
- 
- 	if (cpu == CONTEXT_TRACKING_FORCE_ENABLE) {
- 		static_branch_inc(&context_tracking_key);
-@@ -720,6 +720,17 @@ void __init ct_cpu_track_user(int cpu)
- 	initialized = true;
- }
- 
-+void ct_cpu_untrack_user(int cpu)
-+{
-+#ifndef CONFIG_CONTEXT_TRACKING_USER_FORCE
-+	if (!per_cpu(context_tracking.active, cpu))
-+		return;
-+
-+	per_cpu(context_tracking.active, cpu) = false;
-+	static_branch_dec(&context_tracking_key);
-+#endif
-+}
-+
- #ifdef CONFIG_CONTEXT_TRACKING_USER_FORCE
- void __init context_tracking_init(void)
- {
-diff --git a/kernel/time/tick-sched.c b/kernel/time/tick-sched.c
-index 9204808b7a55..c16250c6a79f 100644
---- a/kernel/time/tick-sched.c
-+++ b/kernel/time/tick-sched.c
-@@ -220,9 +220,6 @@ static void tick_sched_do_timer(struct tick_sched *ts, ktime_t now)
- 	tick_cpu = READ_ONCE(tick_do_timer_cpu);
- 
- 	if (IS_ENABLED(CONFIG_NO_HZ_COMMON) && unlikely(tick_cpu == TICK_DO_TIMER_NONE)) {
--#ifdef CONFIG_NO_HZ_FULL
--		WARN_ON_ONCE(tick_nohz_full_running);
--#endif
- 		WRITE_ONCE(tick_do_timer_cpu, cpu);
- 		tick_cpu = cpu;
- 	}
-@@ -1201,10 +1198,6 @@ static bool can_stop_idle_tick(int cpu, struct tick_sched *ts)
- 		 */
- 		if (tick_cpu == cpu)
- 			return false;
--
--		/* Should not happen for nohz-full */
--		if (WARN_ON_ONCE(tick_cpu == TICK_DO_TIMER_NONE))
--			return false;
- 	}
- 
- 	return true;
 -- 
-2.50.0
-
+Frederic Weisbecker
+SUSE Labs
