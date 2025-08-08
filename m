@@ -1,47 +1,47 @@
 Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7671E28506E
-	for <cgroups@vger.kernel.org>; Fri,  8 Aug 2025 15:21:26 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2F430284690
+	for <cgroups@vger.kernel.org>; Fri,  8 Aug 2025 15:21:27 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1754666491; cv=none; b=t5j14LbWvXhuahf9+5kgat+T4V/OyfSLmqNTvrslxZRiro9wkzdSCL2t6EWwd4HELsgY5ztnmPFyLGskR0pkQiDIHkNGe3+3q8IHlCkAH3DRJwwJ3g+7IL7Kr5HbD8hzkcUTT4qfz0pd8h8UOT6RJDw//Luf0wmcKRnNesnTxFo=
+	t=1754666491; cv=none; b=h3egvPnfYPq69EXSQBR5Qyqqk4P6vfmV99p3BloUa0OPpaLjUjgajUm+MeweEK0rqvFHISC9OdLcas2LTA/tlpqP8Kwc2PCEHoyBELjLIBs3tQivpuqXgf/UpmQpHQGa80eJb2D4bHMXV+rLeV44ys/5RUBje35Eg4s9FGikeVI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1754666491; c=relaxed/simple;
-	bh=1eqN4fGhzGayU80/Ck4ie8EzmZzXnviR7/KkMsLuG4w=;
+	bh=ZncYki1KL4ndbu/cEBgE3ithy3n1MacpG1Kddz8qY/A=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=LRi6uaJBm/QBL5Ukrynmglo3t0FHdzVH1Vjd6VE08TEZ1FK5xDPVNhmRxabXe8Qh64sMEtt/1kDyniY/bUmAQPsg1VlcmCeUrC0JTEFN2XFIuFtBjVQ7DpPehCg/4L0h3tKiyq9jkciNjUZIRvMuD7Bl6YGFL6G1xqVTTAi+Eu0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=dOsDR9IR; arc=none smtp.client-ip=170.10.133.124
+	 MIME-Version; b=Y/X0sMKhVAzglqS6/DaQOhAGX2FhkKA5G9Qh+mN/TVA37e0kvd+oK6pTYx94Y9whMO2VBawaxpw98K/DHh43xyKDgg2wGXrmUlA+yBY1yzV8NeMX9nIhIZz/JuRzmtcZkvqWBaYjjBwtE/2ivgVfB8T8zjulMybJpuTdCYFx/rc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=PC/H9Say; arc=none smtp.client-ip=170.10.133.124
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="dOsDR9IR"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="PC/H9Say"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1754666485;
+	s=mimecast20190719; t=1754666486;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=Trb4QHyh4VHqbF76osaAgQ0EsfsRdUKQSiAhsHdLVCE=;
-	b=dOsDR9IR1flHPLpENIFx5ypC3bwzEVLgOHd7Rlgu+bEQfdxvZxsyasw6Okkj+JLy3LobFC
-	kqEg7s2g4CR5NsqZQHYlM1Rm/y+DPF9ECYLqNdL6HnH3LV6NjviXLFEIAOeDH23x7BqHmN
-	XMiV+EHO7VUPdLWwvmaH7c0KmJR0/yU=
-Received: from mx-prod-mc-06.mail-002.prod.us-west-2.aws.redhat.com
- (ec2-35-165-154-97.us-west-2.compute.amazonaws.com [35.165.154.97]) by
+	bh=OkInnKItN1D64SESBQnElXZy3eYPYkSB5pXAhM/lfjA=;
+	b=PC/H9SayD/FfXdiclMJWunqQqsVfRkgkpR/du9L6/CF33MKONaitGHup6HlKYVBPy1n2AZ
+	52mNbdDLkuIXIa2Rjmw7MPInJ0JZ4gW293ZOVW/Auezolq7pNGI+9eOdDkYavOkuUXgHO8
+	cGgeHtzMZBa7qEarXpLfrwNCKSbF8UA=
+Received: from mx-prod-mc-05.mail-002.prod.us-west-2.aws.redhat.com
+ (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
  relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-650-kb5xsjiRPEqGouRI64KuyQ-1; Fri,
- 08 Aug 2025 11:21:19 -0400
-X-MC-Unique: kb5xsjiRPEqGouRI64KuyQ-1
-X-Mimecast-MFC-AGG-ID: kb5xsjiRPEqGouRI64KuyQ_1754666462
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-596-a8ijxvpuNdOkYZYzaCQICw-1; Fri,
+ 08 Aug 2025 11:21:22 -0400
+X-MC-Unique: a8ijxvpuNdOkYZYzaCQICw-1
+X-Mimecast-MFC-AGG-ID: a8ijxvpuNdOkYZYzaCQICw_1754666474
 Received: from mx-prod-int-06.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-06.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.93])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
-	by mx-prod-mc-06.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id CBC5C1800286;
-	Fri,  8 Aug 2025 15:21:01 +0000 (UTC)
+	by mx-prod-mc-05.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 17E4919560B1;
+	Fri,  8 Aug 2025 15:21:14 +0000 (UTC)
 Received: from llong-thinkpadp16vgen1.westford.csb (unknown [10.22.65.37])
-	by mx-prod-int-06.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id 26001180029B;
-	Fri,  8 Aug 2025 15:20:55 +0000 (UTC)
+	by mx-prod-int-06.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id 3D1D51800294;
+	Fri,  8 Aug 2025 15:21:08 +0000 (UTC)
 From: Waiman Long <longman@redhat.com>
 To: Tejun Heo <tj@kernel.org>,
 	Johannes Weiner <hannes@cmpxchg.org>,
@@ -79,9 +79,9 @@ Cc: cgroups@vger.kernel.org,
 	Gabriele Monaco <gmonaco@redhat.com>,
 	Cestmir Kalina <ckalina@redhat.com>,
 	Waiman Long <longman@redhat.com>
-Subject: [RFC PATCH 16/18] cgroup/cpuset: Don't set have_boot_nohz_full without any boot time nohz_full CPU
-Date: Fri,  8 Aug 2025 11:19:59 -0400
-Message-ID: <20250808152001.20245-7-longman@redhat.com>
+Subject: [RFC PATCH 18/18] cgroup/cpuset: Add pr_debug() statements for cpuhp_offline_cb() call
+Date: Fri,  8 Aug 2025 11:20:01 -0400
+Message-ID: <20250808152001.20245-9-longman@redhat.com>
 In-Reply-To: <20250808151053.19777-1-longman@redhat.com>
 References: <20250808151053.19777-1-longman@redhat.com>
 Precedence: bulk
@@ -93,32 +93,101 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-Scanned-By: MIMEDefang 3.4.1 on 10.30.177.93
 
-As HK_TYPE_KERNEL_NOISE bit can now be set without any nohz_full CPU
-specified at boot time, don't set have_boot_nohz_full in this case.
+Add some pr_debug() statements to actions performed related to the
+cpuhp_offline_cb() call to aid debugging. Since rcu_nocb_cpu_offload()
+and rcu_nocb_cpu_deoffload() will print out some info text, there is
+no need to add pr_debug() statements for them.
+
+Also update test_cpuset_prs.sh test script to enable printing of dynamic
+debug messages for the kernel/cgroup/cpuset.c file when loglevel is 7
+(debug).
 
 Signed-off-by: Waiman Long <longman@redhat.com>
 ---
- kernel/cgroup/cpuset.c | 7 ++++++-
- 1 file changed, 6 insertions(+), 1 deletion(-)
+ kernel/cgroup/cpuset.c                         | 18 +++++++++++++-----
+ .../selftests/cgroup/test_cpuset_prs.sh        |  7 +++++++
+ 2 files changed, 20 insertions(+), 5 deletions(-)
 
 diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
-index de9cb92a0fc7..489708f4e096 100644
+index 489708f4e096..30632e4b5899 100644
 --- a/kernel/cgroup/cpuset.c
 +++ b/kernel/cgroup/cpuset.c
-@@ -3871,7 +3871,12 @@ int __init cpuset_init(void)
+@@ -21,6 +21,7 @@
+  *  License.  See the file COPYING in the main directory of the Linux
+  *  distribution for more details.
+  */
++#define pr_fmt(fmt) "cpuset: " fmt
+ #include "cpuset-internal.h"
  
- 	BUG_ON(!alloc_cpumask_var(&cpus_attach, GFP_KERNEL));
+ #include <linux/context_tracking.h>
+@@ -1406,10 +1407,13 @@ static int do_housekeeping_exclude_cpumask(void *arg __maybe_unused)
+ 	if (tick_nohz_full_enabled()) {
+ 		tick_nohz_full_update_cpus(icpus);
+ 		for_each_cpu(cpu, isolcpus_update_state.cpus) {
+-			if (cpumask_test_cpu(cpu, icpus))
++			if (cpumask_test_cpu(cpu, icpus)) {
++				pr_debug("Add CPU %d to nohz_full\n", cpu);
+ 				ct_cpu_track_user(cpu);
+-			else
++			} else {
++				pr_debug("Remove CPU %d from nohz_full\n", cpu);
+ 				ct_cpu_untrack_user(cpu);
++			}
+ 		}
+ 	} else {
+ 		pr_warn_once("Full dynticks cannot be enabled without the nohz_full kernel boot parameter!\n");
+@@ -1425,6 +1429,7 @@ static int do_housekeeping_exclude_cpumask(void *arg __maybe_unused)
+ 				ret = rcu_nocb_cpu_offload(cpu);
+ 			else
+ 				ret = rcu_nocb_cpu_deoffload(cpu);
++
+ 			if (WARN_ON_ONCE(ret))
+ 				break;
+ 		}
+@@ -1468,11 +1473,14 @@ static void update_isolation_cpumasks(void)
+ 	 * Without any change in the set of nohz_full CPUs, we don't really
+ 	 * need to use CPU hotplug for making change in HK cpumasks.
+ 	 */
+-	if (cpumask_empty(isolcpus_update_state.cpus))
++	if (cpumask_empty(isolcpus_update_state.cpus)) {
+ 		ret = do_housekeeping_exclude_cpumask(NULL);
+-	else
++	} else {
++		pr_debug("cpuhp_offline_cb() called for CPUs %*pbl\n",
++			 cpumask_pr_args(isolcpus_update_state.cpus));
+ 		ret = cpuhp_offline_cb(isolcpus_update_state.cpus,
+ 				       do_housekeeping_exclude_cpumask, NULL);
++	}
+ 	/*
+ 	 * A errno value of -EPERM may be returned from cpuhp_offline_cb() if
+ 	 * any one of the CPUs in isolcpus_update_state.cpus can't be brought
+@@ -1481,7 +1489,7 @@ static void update_isolation_cpumasks(void)
+ 	 * isolated partition.
+ 	 */
+ 	if (ret == -EPERM)
+-		pr_warn_once("cpuset: The boot CPU shouldn't be used for isolated partition\n");
++		pr_warn_once("The boot CPU shouldn't be used for isolated partition\n");
+ 	else
+ 		WARN_ON_ONCE(ret < 0);
  
--	have_boot_nohz_full = housekeeping_enabled(HK_TYPE_KERNEL_NOISE);
-+	/*
-+	 * HK_TYPE_KERNEL_NOISE bit can be set without any nohz_full CPU
-+	 */
-+	have_boot_nohz_full = housekeeping_enabled(HK_TYPE_KERNEL_NOISE) &&
-+			      !cpumask_equal(cpu_possible_mask,
-+					     housekeeping_cpumask(HK_TYPE_KERNEL_NOISE));
- 	have_boot_isolcpus  = housekeeping_enabled(HK_TYPE_DOMAIN);
- 	if (have_boot_nohz_full) {
- 		BUG_ON(!alloc_cpumask_var(&boot_nohz_full_hk_cpus, GFP_KERNEL));
+diff --git a/tools/testing/selftests/cgroup/test_cpuset_prs.sh b/tools/testing/selftests/cgroup/test_cpuset_prs.sh
+index f61369be8bf6..43a12690775e 100755
+--- a/tools/testing/selftests/cgroup/test_cpuset_prs.sh
++++ b/tools/testing/selftests/cgroup/test_cpuset_prs.sh
+@@ -67,6 +67,13 @@ then
+ 	echo Y > /sys/kernel/debug/sched/verbose
+ fi
+ 
++# Enable dynamic debug messages for cpuset only
++DYN_DEBUG=/sys/kernel/debug/dynamic_debug/control
++[[ -f $DYN_DEBUG ]] && {
++	echo "-p" > $DYN_DEBUG
++	echo "file kernel/cgroup/cpuset.c +p" > $DYN_DEBUG
++}
++
+ cd $CGROUP2
+ echo +cpuset > cgroup.subtree_control
+ 
 -- 
 2.50.0
 
