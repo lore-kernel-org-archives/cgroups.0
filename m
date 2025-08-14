@@ -1,55 +1,55 @@
-Received: from mail-pj1-f74.google.com (mail-pj1-f74.google.com [209.85.216.74])
+Received: from mail-pl1-f201.google.com (mail-pl1-f201.google.com [209.85.214.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C1F99252917
-	for <cgroups@vger.kernel.org>; Thu, 14 Aug 2025 20:09:18 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.74
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C6BEB2494FF
+	for <cgroups@vger.kernel.org>; Thu, 14 Aug 2025 20:09:21 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1755202161; cv=none; b=Qr7RIpR0Yd3Y5r2y6NrPVit212c0jISPDxRgG/qWuhnaKXYIk/rhaTE2DnzU83pluPW1ys/pB885zc0mFiTVJyD13Rm++z4bDSBLWmdzO0Qz4f4Y+6V1EXJ8PrMV/jGgHD1X8ltV92uFAbZxABn5/gMdArYGk/FDyCRoJbciK5w=
+	t=1755202163; cv=none; b=eKRpJ+TmyhdEAJwWBbENw8Hotyv52JcozG58oTb3C4uHYdoKrrfqDmzkHekheJ7xcNbgQcJi7Ko+fYcO2Q+BAuSqYuwKw7rFDKvA3HN8GF11b3/80EsAgXtpW86verJm5RdV51cSd2YKHEZvlzCdF+pxL/VR/5Ut6X7vkrS6pNU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1755202161; c=relaxed/simple;
-	bh=XyVZJFZzKfSSIkf/pvmLmwKjraQN8W4KgjzemH/XGU0=;
+	s=arc-20240116; t=1755202163; c=relaxed/simple;
+	bh=Vk6bFDmVR0eydWLS78TqNF3dMof+YgbdfAs4lP1WhE0=;
 	h=Date:In-Reply-To:Mime-Version:References:Message-ID:Subject:From:
-	 To:Cc:Content-Type; b=g3eUym5978Q7ByrrsfpMzCXDtFzDN1kiM76aF/mVDDkcyq2PBaJ+hnd3fg6eSenbBZt0+6nsZyqo05tdyNADP9WK8hBJsOVlo2W32WXdSaOlb33rIi/PBmbrdc3aWykIjq8bXzix0in4dT+tKwrPtLBwvh2ldXRiSZC5XoVnUmM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=flex--kuniyu.bounces.google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=QOoGuS6P; arc=none smtp.client-ip=209.85.216.74
+	 To:Cc:Content-Type; b=j02SPKlUacsyAwD+4YajjDr2lIw8CzTMwh9ltFL+6rPGQCnJv72OOwPGZJqjp6M09MSacW/r1bUSO0OfMpoE1XhKd9ZeDGhci33hClhsz45otSG+MJHEBzQObkGop5utQwjRCHzpsHgXWfsIBZ6+P/quQrHaLgaRYTRnl2ih40s=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=flex--kuniyu.bounces.google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=1KOOMnwD; arc=none smtp.client-ip=209.85.214.201
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=flex--kuniyu.bounces.google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="QOoGuS6P"
-Received: by mail-pj1-f74.google.com with SMTP id 98e67ed59e1d1-32326de9344so2552535a91.2
-        for <cgroups@vger.kernel.org>; Thu, 14 Aug 2025 13:09:18 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="1KOOMnwD"
+Received: by mail-pl1-f201.google.com with SMTP id d9443c01a7336-2445820337cso13305215ad.3
+        for <cgroups@vger.kernel.org>; Thu, 14 Aug 2025 13:09:21 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20230601; t=1755202158; x=1755806958; darn=vger.kernel.org;
+        d=google.com; s=20230601; t=1755202161; x=1755806961; darn=vger.kernel.org;
         h=cc:to:from:subject:message-id:references:mime-version:in-reply-to
          :date:from:to:cc:subject:date:message-id:reply-to;
-        bh=RJ4QavREfrxYYp51rWZ/EL+zSiE81x3iM7eRADON/+o=;
-        b=QOoGuS6PLrLVYEOtlKI5T8eNQHyAcMh4cBChobGXzGzXqcMo42bibIH/zHtjNpWm0/
-         NLd2AEf40k8u9dXeSXewYnszWSnRJeSr21q7ltZ83imxyyTHfMaKC8RKsN7773MstMR2
-         9wDF+ayEtVzrn+CQwuCfzcJxjBOUgqDhzBIVynAvkUmAgRjoxfQwvgoyyZP79jyJGVee
-         Diy/O9W72+HxlcIBaMY5RILlKNXLScdY5JG0kTYsTjCEctRdITEV552N3YzVwxap3bJq
-         kjJQSIScTCa8jkxGbTRcKiosLIuP219FEMheWVpWDYXGQc+uWGhraH4W03OKkl/T2VlT
-         3Nlw==
+        bh=UCan40y/zjv6ovcMCtQie3VVVYhwoaYNuUUlLHYJCrc=;
+        b=1KOOMnwD9qf3JJMbtLeSsgmlpqKiUvgcHdZbWPxcWFr1VfLgP3Yy0STR3b4hOpmw1k
+         L7Q7kk+Z/JQDlz6zit7ZbRHw3dDsky70nnmTIXacB82s+5hk7ov1PMMCvfALUAcBYRk5
+         Pgrp2Fjh53O6BsYYG7PdhwhJ3O8sa4LMy5c4tshnyrirh7ZOlbduqM21tzLcn4XHCSCa
+         21URosIhOcNNk6zcz8ZGHi9zTUn3K8AjzpgjqNh3AEuhUgGDY6/THuYaAC5teBe0qrUT
+         QiU++FmjvmGvbPryNHOBKSJW/10WWPIsUM7X5MjRnnpK2XTEqbtFLr+yK3tf16NVTkME
+         o1gw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1755202158; x=1755806958;
+        d=1e100.net; s=20230601; t=1755202161; x=1755806961;
         h=cc:to:from:subject:message-id:references:mime-version:in-reply-to
          :date:x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=RJ4QavREfrxYYp51rWZ/EL+zSiE81x3iM7eRADON/+o=;
-        b=mE/vnvBg9H713I2SYPb0+CtAH7eYqRwgRxxCj6DWk+XlFeuF3geWdB7iF1TxrBDaF4
-         m1F6avlJplmCD24d+VyzAhKEQyLIRrS7HuVPXDzuR9tokBznP4i8NhYk1BcaahmgNJYJ
-         XPnWNpkDWm7NaQodmm88P53jI+rsr8UmtUWnQBCetOZkNdYyrPTgoS53ppqhtOBf8Z+g
-         GZA8oBuXqDRv2PCd4sshQyepcLNkaca3FBYPWytssL2M4r1vgGPDquj9ebstS1+QkN0V
-         YtwutIyVa5yky93zdOBsj6+eTqFzjNDrneWFC09eZf0622fTVH24/rl4a95CGpENnZog
-         fHQw==
-X-Forwarded-Encrypted: i=1; AJvYcCWc26ydwQgiswTe+dKsO1nmuJV4ppBMFZr5hwinYUF0s5LmYZ4cnH57X+Xz0KEFlXX6+5s7UY/2@vger.kernel.org
-X-Gm-Message-State: AOJu0Yz11tZaUAksl/zsSMroyjwgInkOKL/YhXB3r5jjphYKYhTvlpXf
-	05lqYtJ9S8li6Jcy6fjxd8ElVGLugnDyZT2hzhcTnjXAvDHOLpyLLZP3oCcOQCwfNlg7SjDOtlb
-	BoFhy1g==
-X-Google-Smtp-Source: AGHT+IHJqj8OCBO957elyCb7Tb9EvqaiAKT/a7fghGIK2eeAw95lJXxXFobtfukkiYu1/mXizBdvqnwNOyA=
-X-Received: from pjbqb16.prod.google.com ([2002:a17:90b:2810:b0:321:c300:9aac])
- (user=kuniyu job=prod-delivery.src-stubby-dispatcher) by 2002:a17:90b:1e0e:b0:31f:16ee:5dcc
- with SMTP id 98e67ed59e1d1-323279cec2fmr7690481a91.14.1755202157953; Thu, 14
- Aug 2025 13:09:17 -0700 (PDT)
-Date: Thu, 14 Aug 2025 20:08:34 +0000
+        bh=UCan40y/zjv6ovcMCtQie3VVVYhwoaYNuUUlLHYJCrc=;
+        b=d5EwEneYB9JV4hjK/LUPBb7SlO9qyvYBs4uEihLu0FZNtpCkMQuy8+nwj24f+i+ddt
+         /+2IbXAxHRy/ZxfpZcZ9SXE+9+2jSwCPXZJucrcgCMfEJAhmWv9VUakyJN+IBORBD85q
+         Z9++sNrZUIhir+qkQ0IkxNvA9MpPdksD0jsRqhppdZtUHEJ0hTifgaMXn7FQXAee4ER2
+         wDq4vjNUJkuPqSaCsVxboL15+D2I0g1x8wGv8qldVqKApdqVEwC5V+mVfrwJ29y79Dee
+         E3W4/vcCf2taKmcnKJkc8i007sWvqeNcbTTkWyruN3F3gZ4SdKoPDs2LqNfgRMNuNeCj
+         hhuQ==
+X-Forwarded-Encrypted: i=1; AJvYcCX7G1cfKBeAPpWJvwTQ2BPjEnmspZAj9Zzt46hyrAATRWxes43MLgTQXQYwMLkeo3eKOxvllfW6@vger.kernel.org
+X-Gm-Message-State: AOJu0Yw+SA2EqhFZFtGPRuQXzmrb4CNqyneHcM8WtfvdNSzldb78Weej
+	3yiiTYNOtt6ozWM5ULBaKGbmUW8hnkBrqS2TUTYaOgR5F8Avn54AzoYISvibE4OfgEZeQm3FPBg
+	8HDSECw==
+X-Google-Smtp-Source: AGHT+IFZG58mv+xFex5I3IvbaYDViC565d/Zaj2y0+6TxgO46lJTn88mwWlXmxsJcHxyM0rDApPblLTIl7c=
+X-Received: from pjbpl10.prod.google.com ([2002:a17:90b:268a:b0:321:370d:cae5])
+ (user=kuniyu job=prod-delivery.src-stubby-dispatcher) by 2002:a17:902:d488:b0:240:92cc:8fcf
+ with SMTP id d9443c01a7336-24458b58443mr83319395ad.49.1755202160983; Thu, 14
+ Aug 2025 13:09:20 -0700 (PDT)
+Date: Thu, 14 Aug 2025 20:08:36 +0000
 In-Reply-To: <20250814200912.1040628-1-kuniyu@google.com>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
@@ -59,8 +59,9 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 Mime-Version: 1.0
 References: <20250814200912.1040628-1-kuniyu@google.com>
 X-Mailer: git-send-email 2.51.0.rc1.163.g2494970778-goog
-Message-ID: <20250814200912.1040628-3-kuniyu@google.com>
-Subject: [PATCH v4 net-next 02/10] mptcp: Use tcp_under_memory_pressure() in mptcp_epollin_ready().
+Message-ID: <20250814200912.1040628-5-kuniyu@google.com>
+Subject: [PATCH v4 net-next 04/10] net: Call trace_sock_exceed_buf_limit() for
+ memcg failure with SK_MEM_RECV.
 From: Kuniyuki Iwashima <kuniyu@google.com>
 To: "David S. Miller" <davem@davemloft.net>, Eric Dumazet <edumazet@google.com>, 
 	Jakub Kicinski <kuba@kernel.org>, Neal Cardwell <ncardwell@google.com>, Paolo Abeni <pabeni@redhat.com>, 
@@ -75,35 +76,37 @@ Cc: Simon Horman <horms@kernel.org>, Geliang Tang <geliang@kernel.org>,
 	mptcp@lists.linux.dev, cgroups@vger.kernel.org, linux-mm@kvack.org
 Content-Type: text/plain; charset="UTF-8"
 
-Some conditions used in mptcp_epollin_ready() are the same as
-tcp_under_memory_pressure().
+Initially, trace_sock_exceed_buf_limit() was invoked when
+__sk_mem_raise_allocated() failed due to the memcg limit or the
+global limit.
 
-We will modify tcp_under_memory_pressure() in the later patch.
+However, commit d6f19938eb031 ("net: expose sk wmem in
+sock_exceed_buf_limit tracepoint") somehow suppressed the event
+only when memcg failed to charge for SK_MEM_RECV, although the
+memcg failure for SK_MEM_SEND still triggers the event.
 
-Let's use tcp_under_memory_pressure() instead.
+Let's restore the event for SK_MEM_RECV.
 
 Signed-off-by: Kuniyuki Iwashima <kuniyu@google.com>
 Reviewed-by: Eric Dumazet <edumazet@google.com>
-Reviewed-by: Matthieu Baerts (NGI0) <matttbe@kernel.org>
 ---
- net/mptcp/protocol.h | 4 +---
- 1 file changed, 1 insertion(+), 3 deletions(-)
+ net/core/sock.c | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
 
-diff --git a/net/mptcp/protocol.h b/net/mptcp/protocol.h
-index b15d7fab5c4b..a1787a1344ac 100644
---- a/net/mptcp/protocol.h
-+++ b/net/mptcp/protocol.h
-@@ -788,9 +788,7 @@ static inline bool mptcp_epollin_ready(const struct sock *sk)
- 	 * as it can always coalesce them
- 	 */
- 	return (data_avail >= sk->sk_rcvlowat) ||
--	       (mem_cgroup_sockets_enabled && sk->sk_memcg &&
--		mem_cgroup_under_socket_pressure(sk->sk_memcg)) ||
--	       READ_ONCE(tcp_memory_pressure);
-+		tcp_under_memory_pressure(sk);
- }
+diff --git a/net/core/sock.c b/net/core/sock.c
+index 7c26ec8dce63..380bc1aa6982 100644
+--- a/net/core/sock.c
++++ b/net/core/sock.c
+@@ -3354,8 +3354,7 @@ int __sk_mem_raise_allocated(struct sock *sk, int size, int amt, int kind)
+ 		}
+ 	}
  
- int mptcp_set_rcvlowat(struct sock *sk, int val);
+-	if (kind == SK_MEM_SEND || (kind == SK_MEM_RECV && charged))
+-		trace_sock_exceed_buf_limit(sk, prot, allocated, kind);
++	trace_sock_exceed_buf_limit(sk, prot, allocated, kind);
+ 
+ 	sk_memory_allocated_sub(sk, amt);
+ 
 -- 
 2.51.0.rc1.163.g2494970778-goog
 
