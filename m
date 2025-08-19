@@ -1,15 +1,16 @@
 Received: from lankhorst.se (lankhorst.se [141.105.120.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 03DBA335BBC;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 03CA8335BB1;
 	Tue, 19 Aug 2025 11:56:40 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=141.105.120.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1755604602; cv=none; b=MhIyxWD75rRrXGTLT7wZ/1vgiU+DX7u1auTqbVugd7nR4HXvGQ7d+ylbipOPYNDM/WnPyPrOJzPpr8wg1gmrCt7CcOXziaiA4m5m7nkFOs/+8BKutM73r98bu+1hwD0s86dNwtmcLnLsyfd1+kATM0YWTuXXViedIa/WKsmLns0=
+	t=1755604602; cv=none; b=GQAeQRxWq5+2qWEif4asrv8C8a/RGo9WPIpe2XvyOMHOcRfeY2CLd2TpOHPf9hYZ9KSMrckJnT4C40tiE+AUp5Gc+r5iaV1XIQ8u5kp52jB9HZrVU/8zLd4qV1iXqDQoLQS+R0MOp0lCsPV+Xjiu8ib6Ta5ZnMQEdDqCI4ELqXw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1755604602; c=relaxed/simple;
-	bh=GIISownnYtCgjery2+EEV+uJeLjYClQqLzwwUwlCxJg=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=neX40R6Ei1+dpPNH8SLSBNAN2RiVvOpdJElsdlkid1p3TOH2Tblm3D7Hc0yX8HcznCUDABbTXVCCpTJ7Tt/st2gHos02hVK1UttQcqEL2mtC0v9hGHm5G71FxAYKlNeu21nHZ6mw5Ww9W+K7wec3VeFeAE/gVKCO4my0BE2KMYs=
+	bh=BBc4qktafzeeoB3et84zl/DrK/MKQK1W4gtygBAL5d8=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=N+bMJEyIg3vdfzA2cwETdyG8l8KluUdJX1dYjMa8acD/kWthmVdA2dJMoYAAxDmOhLGztfVGqmfI9Zw+4vAeL0lSwHX7sQwgn4gQXOd8PadiwP8bNtjTw+S5HaPfB9VuiRdhB64ZhVDX/D/cB9Z0T5jblkipLfHEE2uVIAkoYlI=
 ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lankhorst.se; spf=pass smtp.mailfrom=lankhorst.se; arc=none smtp.client-ip=141.105.120.124
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lankhorst.se
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lankhorst.se
@@ -43,10 +44,12 @@ Cc: Michal Hocko <mhocko@suse.com>,
 	linux-kernel@vger.kernel.org,
 	cgroups@vger.kernel.org,
 	linux-mm@kvack.org
-Subject: [RFC 0/3] cgroups: Add support for pinned device memory
-Date: Tue, 19 Aug 2025 13:49:33 +0200
-Message-ID: <20250819114932.597600-5-dev@lankhorst.se>
+Subject: [RFC 2/3] cgroup/dmem: Implement pinning device memory
+Date: Tue, 19 Aug 2025 13:49:35 +0200
+Message-ID: <20250819114932.597600-7-dev@lankhorst.se>
 X-Mailer: git-send-email 2.50.0
+In-Reply-To: <20250819114932.597600-5-dev@lankhorst.se>
+References: <20250819114932.597600-5-dev@lankhorst.se>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
@@ -55,53 +58,139 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-When exporting dma-bufs to other devices, even when it is allowed to use
-move_notify in some drivers, performance will degrade severely when
-eviction happens.
+Add a function to pin, and to unipn memory and adjust the calculations
+in dmem_cgroup_state_evict_valuable().
 
-A perticular example where this can happen is in a multi-card setup,
-where PCI-E peer-to-peer is used to prevent using access to system memory.
+Signed-off-by: Maarten Lankhorst <dev@lankhorst.se>
+---
+ include/linux/cgroup_dmem.h |  2 ++
+ kernel/cgroup/dmem.c        | 57 +++++++++++++++++++++++++++++++++++--
+ 2 files changed, 56 insertions(+), 3 deletions(-)
 
-If the buffer is evicted to system memory, not only the evicting GPU wher
-the buffer resided is affected, but it will also stall the GPU that is
-waiting on the buffer.
-
-It also makes sense for long running jobs not to be preempted by having
-its buffers evicted, so it will make sense to have the ability to pin
-from system memory too.
-
-This is dependant on patches by Dave Airlie, so it's not part of this
-series yet. But I'm planning on extending pinning to the memory cgroup
-controller in the future to handle this case.
-
-Implementation details:
-
-For each cgroup up until the root cgroup, the 'min' limit is checked
-against currently effectively pinned value. If the value will go above
-'min', the pinning attempt is rejected.
-
-Pinned memory is handled slightly different and affects calculating
-effective min/low values. Pinned memory is subtracted from both,
-and needs to be added afterwards when calculating.
-
-This is because increasing the amount of pinned memory, the amount of
-free min/low memory decreases for all cgroups that are part of the
-hierarchy.
-
-Maarten Lankhorst (3):
-  page_counter: Allow for pinning some amount of memory
-  cgroup/dmem: Implement pinning device memory
-  drm/xe: Add DRM_XE_GEM_CREATE_FLAG_PINNED flag and implementation
-
- drivers/gpu/drm/xe/xe_bo.c      | 66 +++++++++++++++++++++-
- drivers/gpu/drm/xe/xe_dma_buf.c | 10 +++-
- include/linux/cgroup_dmem.h     |  2 +
- include/linux/page_counter.h    |  8 +++
- include/uapi/drm/xe_drm.h       | 10 +++-
- kernel/cgroup/dmem.c            | 57 ++++++++++++++++++-
- mm/page_counter.c               | 98 ++++++++++++++++++++++++++++++---
- 7 files changed, 237 insertions(+), 14 deletions(-)
-
+diff --git a/include/linux/cgroup_dmem.h b/include/linux/cgroup_dmem.h
+index dd4869f1d736e..a981bb692ba22 100644
+--- a/include/linux/cgroup_dmem.h
++++ b/include/linux/cgroup_dmem.h
+@@ -21,6 +21,8 @@ int dmem_cgroup_try_charge(struct dmem_cgroup_region *region, u64 size,
+ 			   struct dmem_cgroup_pool_state **ret_pool,
+ 			   struct dmem_cgroup_pool_state **ret_limit_pool);
+ void dmem_cgroup_uncharge(struct dmem_cgroup_pool_state *pool, u64 size);
++int dmem_cgroup_try_pin(struct dmem_cgroup_pool_state *pool, u64 size);
++void dmem_cgroup_unpin(struct dmem_cgroup_pool_state *pool, u64 size);
+ bool dmem_cgroup_state_evict_valuable(struct dmem_cgroup_pool_state *limit_pool,
+ 				      struct dmem_cgroup_pool_state *test_pool,
+ 				      bool ignore_low, bool *ret_hit_low);
+diff --git a/kernel/cgroup/dmem.c b/kernel/cgroup/dmem.c
+index 10b63433f0573..ec8b1ffec78de 100644
+--- a/kernel/cgroup/dmem.c
++++ b/kernel/cgroup/dmem.c
+@@ -147,6 +147,11 @@ static u64 get_resource_current(struct dmem_cgroup_pool_state *pool)
+ 	return pool ? page_counter_read(&pool->cnt) : 0;
+ }
+ 
++static u64 get_resource_pinned(struct dmem_cgroup_pool_state *pool)
++{
++	return pool ? page_counter_pinned(&pool->cnt) : 0;
++}
++
+ static void reset_all_resource_limits(struct dmem_cgroup_pool_state *rpool)
+ {
+ 	set_resource_min(rpool, 0);
+@@ -270,7 +275,7 @@ bool dmem_cgroup_state_evict_valuable(struct dmem_cgroup_pool_state *limit_pool,
+ {
+ 	struct dmem_cgroup_pool_state *pool = test_pool;
+ 	struct page_counter *ctest;
+-	u64 used, min, low;
++	u64 used, min, low, pinned;
+ 
+ 	/* Can always evict from current pool, despite limits */
+ 	if (limit_pool == test_pool)
+@@ -296,16 +301,18 @@ bool dmem_cgroup_state_evict_valuable(struct dmem_cgroup_pool_state *limit_pool,
+ 
+ 	ctest = &test_pool->cnt;
+ 
++	/* Protection is calculated without pinned memory */
+ 	dmem_cgroup_calculate_protection(limit_pool, test_pool);
+ 
+ 	used = page_counter_read(ctest);
+-	min = READ_ONCE(ctest->emin);
++	pinned = page_counter_pinned(ctest);
++	min = READ_ONCE(ctest->emin) + pinned;
+ 
+ 	if (used <= min)
+ 		return false;
+ 
+ 	if (!ignore_low) {
+-		low = READ_ONCE(ctest->elow);
++		low = READ_ONCE(ctest->elow) + pinned;
+ 		if (used > low)
+ 			return true;
+ 
+@@ -641,6 +648,41 @@ int dmem_cgroup_try_charge(struct dmem_cgroup_region *region, u64 size,
+ }
+ EXPORT_SYMBOL_GPL(dmem_cgroup_try_charge);
+ 
++/**
++ * dmem_cgroup_unpin() - Unpin from a pool.
++ * @pool: Pool to unpin.
++ * @size: Size to unpin.
++ *
++ * Undoes the effects of dmem_cgroup_try_pin.
++ * Must be called with the returned pool as argument,
++ * and same @index and @size.
++ */
++void dmem_cgroup_unpin(struct dmem_cgroup_pool_state *pool, u64 size)
++{
++	if (pool)
++		page_counter_unpin(&pool->cnt, size);
++}
++EXPORT_SYMBOL_GPL(dmem_cgroup_unpin);
++
++/**
++ * dmem_cgroup_try_pin() - Try pinning an existing allocation to a region.
++ * @pool: dmem region to pin
++ * @size: Size (in bytes) to pin.
++ *
++ * This function pins in @pool for a size of @size bytes.
++ *
++ * If the function succeeds, the memory is succesfully accounted as being pinned.
++ * The memory may not be uncharged before unpin is called.
++ *
++ * Return: 0 on success, -EAGAIN on hitting a limit, or a negative errno on failure.
++ */
++int dmem_cgroup_try_pin(struct dmem_cgroup_pool_state *pool, u64 size)
++{
++	return page_counter_try_pin(&pool->cnt, size) ? 0 : -EAGAIN;
++
++}
++EXPORT_SYMBOL_GPL(dmem_cgroup_try_pin);
++
+ static int dmem_cgroup_region_capacity_show(struct seq_file *sf, void *v)
+ {
+ 	struct dmem_cgroup_region *region;
+@@ -756,6 +798,11 @@ static int dmem_cgroup_region_current_show(struct seq_file *sf, void *v)
+ 	return dmemcg_limit_show(sf, v, get_resource_current);
+ }
+ 
++static int dmem_cgroup_region_pinned_show(struct seq_file *sf, void *v)
++{
++	return dmemcg_limit_show(sf, v, get_resource_pinned);
++}
++
+ static int dmem_cgroup_region_min_show(struct seq_file *sf, void *v)
+ {
+ 	return dmemcg_limit_show(sf, v, get_resource_min);
+@@ -799,6 +846,10 @@ static struct cftype files[] = {
+ 		.name = "current",
+ 		.seq_show = dmem_cgroup_region_current_show,
+ 	},
++	{
++		.name = "pinned",
++		.seq_show = dmem_cgroup_region_pinned_show,
++	},
+ 	{
+ 		.name = "min",
+ 		.write = dmem_cgroup_region_min_write,
 -- 
 2.50.0
 
