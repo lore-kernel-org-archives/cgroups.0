@@ -1,75 +1,48 @@
-Received: from mail-pf1-f180.google.com (mail-pf1-f180.google.com [209.85.210.180])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2CFCE2D0C9D
-	for <cgroups@vger.kernel.org>; Mon, 25 Aug 2025 09:51:12 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.180
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BAE4F2DAFDA;
+	Mon, 25 Aug 2025 10:53:32 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1756115474; cv=none; b=eWCxlV6rUerfnMmz07xmzV+Ws5SHH/KCdH27LoVVd+TrCJQTPfpVvEUBU1jphCNlM2dt6MuGHw1QoBGO3JOhL2zoHxV1EMr1AbRZCqzZ8qAWmTekIIxZbb1NVMh7O8e9e74/RhB3WwD30CVcqer35XayNcK+Qa/9NaWt3KxD2fA=
+	t=1756119214; cv=none; b=Ool3I920kaRY8foN1oEL1zbVFlAz7B3MaBBe1/BYfWSFjN/cosGR2BXWa0rUtlcct4tPAciJ+jl1iH5w1rT/EWFhq1eoZlToyLX3iv3nX6GoHw4JdaZJB4A91F5HXsu3F/1LxySXBEaNooLA+OOGlODpgFc6vs+3YcxheHpyv7A=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1756115474; c=relaxed/simple;
-	bh=B8eCYEono40PCIy16xmaC4Aox2ZtXZbrtkZF8FCENiM=;
+	s=arc-20240116; t=1756119214; c=relaxed/simple;
+	bh=9i23GRRPAeysHMcSzhzEMBkwiF4+rOhXgj7ZsUmqrnc=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=m0t93ZT6LkmXf0E9D7MJ6VhgN8R5kB0keuCunN24l1Q1ksyHY3dO+vOQmZ9ujvLOf37m9bmsjt5xv4SQmBO9chKQ1fh6UzdC/AtMG6q9omFLLuhtDyhC+Lg/7EM8n/CXkxylNVObcyXspT/+05NSckF319Yy12G4zmfZqZioHl4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=bytedance.com; spf=pass smtp.mailfrom=bytedance.com; dkim=pass (2048-bit key) header.d=bytedance.com header.i=@bytedance.com header.b=E1YSSVrl; arc=none smtp.client-ip=209.85.210.180
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=bytedance.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=bytedance.com
+	 Content-Type:Content-Disposition:In-Reply-To; b=GB8qKGJLa9mcr744yqYRLWv4VnXeahuXlBIBjqLvZbBr5koBFn5/T7+CwysC9NOKK1OCuu5SBA0rsZb+mRFmzaAsD1wF9rGDH6l7ScOryQ1NtQonDg0I+L2zioM/+pu1eeoBG6sQNqtbkOx3Cny95nFxrOgYFgJ2AX+yZJG4/lw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=0gqOi4ZW; arc=none smtp.client-ip=198.137.202.133
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=bytedance.com header.i=@bytedance.com header.b="E1YSSVrl"
-Received: by mail-pf1-f180.google.com with SMTP id d2e1a72fcca58-770530175b2so897786b3a.3
-        for <cgroups@vger.kernel.org>; Mon, 25 Aug 2025 02:51:12 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=bytedance.com; s=google; t=1756115472; x=1756720272; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=91s1cIGRQAxrumxrJ8ni6aEx18e/r1sz4gPLC81PIgY=;
-        b=E1YSSVrl8O1J/DGQWQkRBjERagRt0CuIMoYZFNRkgUW2Y9BQf3qFeYQRmUqFSaHT6O
-         bFkk/QetwGsQXg8DKAjBdYNpQycSlMQ2De0vvYOVRfRu7Gv9HyNMwtWlMXH66KFoyevZ
-         F9um6xbXyAkHdC9p3Mx1m10vpMTfmoz+3BohjFROf2HSDHY+3Daqr+kLdTE22bhx95V9
-         ExkFTB8d+eEmMphg+c5cjrbHv8aTtiC2dRztLHWxEnQcLWk/yX+zGK/MGq1BIlkkosYt
-         THlG0bmrm8+pEKSmXcfNTCapzIo3fsPZfN67EeBEs+qkUjj6aOV7wQmd8EOwyEFnVRpo
-         Edxw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1756115472; x=1756720272;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=91s1cIGRQAxrumxrJ8ni6aEx18e/r1sz4gPLC81PIgY=;
-        b=XKOenuvHWM0FAvmmQII+BNPSi2kH+IqqSljqNQZ8rE9LAEla/5bDdcfWP3tEMywa3x
-         dcSAWprQgrCS5wrQ/eKmDQ+lmRRXjFdkPJiAgSl1FMH69zMTcNda1Q8Vs4b7p7Au9vou
-         28lmMcQe/W4xKd2Uvf+RMnw1omW6qnK6cHuCZpTKWJ5QSguaKyhDgOcl0m2xVD/sIoeZ
-         pPRZfw/624DbC5I2EtQJex1m1J7P45ZkqfawqKDVjciNbaEcFns6PRaGL8ISlV4cTkC+
-         +qo1jQwff3vfjmvve6iddWLlo1BvpTjsOsMgVkhXjmbfthQvn47+trmi1lk6f0REFT5F
-         57iA==
-X-Forwarded-Encrypted: i=1; AJvYcCX20essYBFbiVwB3Ws1Zs8wPZNoy52LOe5rTRXEVxkah8W9enTKJa3weC06g/r5v87EsGXkmDxE@vger.kernel.org
-X-Gm-Message-State: AOJu0YyS53fLJXWEpFuOCbXtdqN+BB9fmFQpYjAm9OBOh/gF0gUOJ/go
-	ACU0bNbNlEwDchT3dlpgFcR/xvjK2j3Hq84eLSP3cOVGFhInPCCGYVVhFsJbNOrfVQ==
-X-Gm-Gg: ASbGnctB3XLN2Pt7RSYZFh5+3wlAb2No0uV8eipbAkfGVRKZZUj6K5slUnyeU+jTNVb
-	JGQh6Hpti4AQAF0xdbKcgf9+sOKKS5xobiNXjjDw7SokkPpp0N+iAo4HWkJYXybRsp6ki5bIDJp
-	wVocTawwI8ha2Ak0barqRA+dLCguItnOE1oScyfamVzamdnFc0fO2xdqTfeVLWAWlOyjZMKkW3k
-	VjKkuBPE24Iql23G3pob6gukyFIsh/169+9+uLCnt3rbtfa99u9F9Wpyvgewa+m0g5n6K8ejwUE
-	w02E//9VQ9MaOXAaelN/7RLoF6Bir+33+VpdWmHGkgpP4JKyf7u/ZyspBfv2yahqtlFueci4OlP
-	Ge8B9VPhgs/iAAfbdMzNGK9xtk8M2NJEVQhp5ncx5QEFuH2I=
-X-Google-Smtp-Source: AGHT+IFKmShdsyMlmj4cT5JRWT7LwYbqWBv7GzkGKLvpKSJg5ombkdXo91DBer2NpWN+oCdJY5Gk/A==
-X-Received: by 2002:a05:6a00:2288:b0:770:3064:78fa with SMTP id d2e1a72fcca58-77030647984mr14107031b3a.2.1756115472294;
-        Mon, 25 Aug 2025 02:51:12 -0700 (PDT)
-Received: from bytedance ([61.213.176.56])
-        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-770b5bed408sm3213674b3a.18.2025.08.25.02.51.07
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 25 Aug 2025 02:51:11 -0700 (PDT)
-Date: Mon, 25 Aug 2025 17:50:56 +0800
-From: Aaron Lu <ziqianlu@bytedance.com>
-To: xupengbo <xupengbo@oppo.com>
-Cc: bsegall@google.com, cgroups@vger.kernel.org, dietmar.eggemann@arm.com,
-	juri.lelli@redhat.com, linux-kernel@vger.kernel.org,
-	mgorman@suse.de, mingo@redhat.com, peterz@infradead.org,
-	rostedt@goodmis.org, vincent.guittot@linaro.org,
-	vschneid@redhat.com
-Subject: Re: [PATCH v2] sched/fair: Fix unfairness caused by stalled
- tg_load_avg_contrib when the last task migrates out.
-Message-ID: <20250825095056.GA87@bytedance>
-References: <20250806071848.GA629@bytedance>
- <20250806083810.27678-1-xupengbo@oppo.com>
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="0gqOi4ZW"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
+	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+	Content-Transfer-Encoding:Content-ID:Content-Description;
+	bh=6XFPlhRGrLMbqZYr/NESjliKO8yOhmaJETTR2cZFYRc=; b=0gqOi4ZWPzv3qDc2urheKfPrP8
+	NgJHLMvH9YtxWytJQ7Yj2Qiujhk6E8e0TKVNUeQbe2zZFOIIEk4xRjMaiMCDDq1uWvcMlYxtmritE
+	pdh4sqylWH9juncEihbHIlDFxBrpezxPV4ZhcLYGqTqk4V0ARUPjgNWyvNACu3NQ3f6Y223zaALW3
+	vPo2MxIFtsyPkRBvl1l8viYFWyNVZ2DG6bAX0faPVEVsijxlfNl16S7ZRtrQuE5Pkat9fsIfmXuCe
+	OZdpSn0d9sYrh2qX/HNQfv+VBuT5N5Um0vjwR5eQhIwJ0hbaWytOYB3CImmZwBfWYd21c4k6lTpkx
+	suF8tXbg==;
+Received: from hch by bombadil.infradead.org with local (Exim 4.98.2 #2 (Red Hat Linux))
+	id 1uqUpK-00000007gNK-1g1J;
+	Mon, 25 Aug 2025 10:53:26 +0000
+Date: Mon, 25 Aug 2025 03:53:26 -0700
+From: Christoph Hellwig <hch@infradead.org>
+To: Yu Kuai <yukuai1@huaweicloud.com>
+Cc: hch@infradead.org, colyli@kernel.org, hare@suse.de, tieren@fnnas.com,
+	axboe@kernel.dk, tj@kernel.org, josef@toxicpanda.com,
+	song@kernel.org, yukuai3@huawei.com, akpm@linux-foundation.org,
+	neil@brown.name, linux-block@vger.kernel.org,
+	linux-kernel@vger.kernel.org, cgroups@vger.kernel.org,
+	linux-raid@vger.kernel.org, yi.zhang@huawei.com,
+	yangerkun@huawei.com, johnny.chenyi@huawei.com
+Subject: Re: [PATCH RFC 1/7] block: export helper bio_submit_split()
+Message-ID: <aKxApo1u8j-ZNOaI@infradead.org>
+References: <20250825093700.3731633-1-yukuai1@huaweicloud.com>
+ <20250825093700.3731633-2-yukuai1@huaweicloud.com>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
@@ -78,36 +51,45 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20250806083810.27678-1-xupengbo@oppo.com>
+In-Reply-To: <20250825093700.3731633-2-yukuai1@huaweicloud.com>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-Hi xupengbo,
-
-On Wed, Aug 06, 2025 at 04:38:10PM +0800, xupengbo wrote:
-... ... 
+On Mon, Aug 25, 2025 at 05:36:54PM +0800, Yu Kuai wrote:
+> From: Yu Kuai <yukuai3@huawei.com>
 > 
-> It actually becomes:
->     if (cfs_rq->tg_load_avg_contrib > 0)
-> if cfs_rq->tg_load_avg_contrib == 0 , it will be false. As it is an unsigned
-> long, this condition is equivalent to :
->     if (cfs_rq->tg_load_avg_contrib)
+> No functional changes are intended, some drivers like mdraid will split
+> bio by internal processing, prepare to unify bio split codes.
 
-I suppose we have reached a conclusion that the right fix is to add a
-check of cfs_rq->tg_load_avg_contrib in cfs_rq_is_decayed()? Something
-like below:
+Maybe name the exported helper bio_submit_split_bioset and keep
+bio_submit_split() as a wrapper that passes the default split
+bioset to keep the code a bit tidyer in blk-merge.c?
 
-diff --git a/kernel/sched/fair.c b/kernel/sched/fair.c
-index af33d107d8034..3ebcb683063f0 100644
---- a/kernel/sched/fair.c
-+++ b/kernel/sched/fair.c
-@@ -4056,6 +4056,9 @@ static inline bool cfs_rq_is_decayed(struct cfs_rq *cfs_rq)
- 	if (child_cfs_rq_on_list(cfs_rq))
- 		return false;
- 
-+	if (cfs_rq->tg_load_avg_contrib)
-+		return false;
-+
- 	return true;
- }
- 
-If you also agree, can you send an updated patch to fix this problem?
-Thanks.
+> +struct bio *bio_submit_split(struct bio *bio, int split_sectors,
+> +			     struct bio_set *bs)
+>  {
+> +	struct bio *split;
+> +
+>  	if (unlikely(split_sectors < 0))
+>  		goto error;
+>  
+> -	if (split_sectors) {
+> -		struct bio *split;
+> +	if (!split_sectors)
+> +		return bio;
+>  
+> -		split = bio_split(bio, split_sectors, GFP_NOIO,
+> -				&bio->bi_bdev->bd_disk->bio_split);
+> -		if (IS_ERR(split)) {
+> -			split_sectors = PTR_ERR(split);
+> -			goto error;
+> -		}
+> -		split->bi_opf |= REQ_NOMERGE;
+> -		blkcg_bio_issue_init(split);
+> -		bio_chain(split, bio);
+> -		trace_block_split(split, bio->bi_iter.bi_sector);
+> -		WARN_ON_ONCE(bio_zone_write_plugging(bio));
+> -		submit_bio_noacct(bio);
+
+Maybe skip the reformatting which makes this much harder to read?
+If you think it is useful it can be done in a separate patch.
+
