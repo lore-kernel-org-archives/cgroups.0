@@ -1,122 +1,166 @@
-Received: from dggsgout12.his.huawei.com (dggsgout12.his.huawei.com [45.249.212.56])
+Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 80CB67081C;
-	Mon, 25 Aug 2025 00:52:29 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.56
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 27E3F23A58E;
+	Mon, 25 Aug 2025 03:38:44 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.51
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1756083152; cv=none; b=COqnc4tdiP2pvae7aFLjPN66/rlHoMi0wgvPPwyr5cSkeoa1K1ol6KqGtQZqUfYz5WF+ExAfksjUmfW3EmjzVw0r0Cg2LEOHSxreDW9HDl7DLSHNYzewdsc5v+GAl5xrqVXshwCNGkkKc56rmlXLosneRC7BbWeE/wxKTbcNJfA=
+	t=1756093126; cv=none; b=kOrSTSLebipQAnnEI9F9McXjMTkVuBMKZPZ4pf5W7woZFNF0X7bUQzWmwYvjBbmG+WHiTDo8x7tuYBKVnOj7OOjUJg74a5b0bgIzzW1LUDKBJ2QXr/xCM9xWfEVgHCckulpleDd5XsLC1t1mAgTPGuX51rC5KmBHixmXElEbrVE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1756083152; c=relaxed/simple;
-	bh=eR+0UlJHgVRlInzosX/W0UU2V0Hl86UYTCNUVWzoaHI=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=TKM2sTEgsKRm839MD+mo6xj7ArauteV1AUDzFK32Dr+gljbhT6BIBQQ56ib8e2M9UuwF+03pLWU7ytroxYKhr/Ea/MT8njSPSvf98LkkXve+OQors3kMmxvxKkNkPSGlt/ncpcrq3t0Y2ImXiLEtPPXHye4tLq7NCS5Rrzx5Bfg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.56
+	s=arc-20240116; t=1756093126; c=relaxed/simple;
+	bh=QsyqL6zDhHD1q1OZyRW3s6b6V7xYtyBss/zgtHWR5w4=;
+	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
+	 MIME-Version; b=Jz73z4K/xAk8kxMNy2Pla/YPKLIPidNFRMai1aCJmTgWcigMjnz39Rp/+pk9lp/fEc7c8gX2td2ygq11oP5CE22znsCbkW4HikkC3oqr60TGkIjaaePOLzuYYfHkE81tjTMXLLiWWJm4+tUjIrQ1J9ez//ezgU62kzm+7eX5Y60=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.51
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
-Received: from mail.maildlp.com (unknown [172.19.163.216])
-	by dggsgout12.his.huawei.com (SkyGuard) with ESMTPS id 4c9C1c6RkxzKHMSl;
-	Mon, 25 Aug 2025 08:52:20 +0800 (CST)
-Received: from mail02.huawei.com (unknown [10.116.40.112])
-	by mail.maildlp.com (Postfix) with ESMTP id 7B7C01A1A0F;
-	Mon, 25 Aug 2025 08:52:20 +0800 (CST)
-Received: from [10.67.109.79] (unknown [10.67.109.79])
-	by APP1 (Coremail) with SMTP id cCh0CgDHhXvDs6to1mLDAA--.34254S2;
-	Mon, 25 Aug 2025 08:52:20 +0800 (CST)
-Message-ID: <abec1bda-82bf-430e-9747-5aa4fa6ccacd@huaweicloud.com>
-Date: Mon, 25 Aug 2025 08:52:18 +0800
+Received: from mail.maildlp.com (unknown [172.19.93.142])
+	by dggsgout11.his.huawei.com (SkyGuard) with ESMTPS id 4c9Gjb1YFtzYQvGp;
+	Mon, 25 Aug 2025 11:38:43 +0800 (CST)
+Received: from mail02.huawei.com (unknown [10.116.40.128])
+	by mail.maildlp.com (Postfix) with ESMTP id BAE8C1A1267;
+	Mon, 25 Aug 2025 11:38:41 +0800 (CST)
+Received: from hulk-vt.huawei.com (unknown [10.67.174.121])
+	by APP4 (Coremail) with SMTP id gCh0CgDXII2x2qtoTBLUAA--.30877S3;
+	Mon, 25 Aug 2025 11:38:41 +0800 (CST)
+From: Chen Ridong <chenridong@huaweicloud.com>
+To: longman@redhat.com,
+	tj@kernel.org,
+	hannes@cmpxchg.org,
+	mkoutny@suse.com
+Cc: cgroups@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	lujialin4@huawei.com,
+	chenridong@huawei.com
+Subject: [PATCH -next v5 1/3] cpuset: decouple tmpmasks and cpumasks freeing in cgroup
+Date: Mon, 25 Aug 2025 03:23:50 +0000
+Message-Id: <20250825032352.1703602-2-chenridong@huaweicloud.com>
+X-Mailer: git-send-email 2.34.1
+In-Reply-To: <20250825032352.1703602-1-chenridong@huaweicloud.com>
+References: <20250825032352.1703602-1-chenridong@huaweicloud.com>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH -next v4 2/3] cpuset: separate tmpmasks and cpuset
- allocation logic
-To: Waiman Long <llong@redhat.com>, tj@kernel.org, hannes@cmpxchg.org,
- mkoutny@suse.com
-Cc: cgroups@vger.kernel.org, linux-kernel@vger.kernel.org,
- lujialin4@huawei.com, chenridong@huawei.com
-References: <20250818064141.1334859-1-chenridong@huaweicloud.com>
- <20250818064141.1334859-3-chenridong@huaweicloud.com>
- <0b918f11-d850-4cdb-b9af-ffa436b8fd1e@redhat.com>
-Content-Language: en-US
-From: Chen Ridong <chenridong@huaweicloud.com>
-In-Reply-To: <0b918f11-d850-4cdb-b9af-ffa436b8fd1e@redhat.com>
-Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:cCh0CgDHhXvDs6to1mLDAA--.34254S2
-X-Coremail-Antispam: 1UD129KBjvJXoW7tF4kCFyfuw1ktw4ktF1xGrg_yoW8uF4xpF
-	ZIgFy5t3y5Kr1xGa43X3Z7WF1S9a18tF1DK3WDtryFvFWak3W0gF1DZa4FqF1UAFykuF15
-	JF90vF429a4kAFUanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDU0xBIdaVrnRJUUUymb4IE77IF4wAFF20E14v26r4j6ryUM7CY07I20VC2zVCF04k2
-	6cxKx2IYs7xG6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rwA2F7IY1VAKz4
-	vEj48ve4kI8wA2z4x0Y4vE2Ix0cI8IcVAFwI0_Ar0_tr1l84ACjcxK6xIIjxv20xvEc7Cj
-	xVAFwI0_Cr0_Gr1UM28EF7xvwVC2z280aVAFwI0_GcCE3s1l84ACjcxK6I8E87Iv6xkF7I
-	0E14v26rxl6s0DM2AIxVAIcxkEcVAq07x20xvEncxIr21l5I8CrVACY4xI64kE6c02F40E
-	x7xfMcIj6xIIjxv20xvE14v26r1j6r18McIj6I8E87Iv67AKxVWUJVW8JwAm72CE4IkC6x
-	0Yz7v_Jr0_Gr1lF7xvr2IY64vIr41lc7CjxVAaw2AFwI0_JF0_Jw1l42xK82IYc2Ij64vI
-	r41l4I8I3I0E4IkC6x0Yz7v_Jr0_Gr1lx2IqxVAqx4xG67AKxVWUJVWUGwC20s026x8Gjc
-	xK67AKxVWUGVWUWwC2zVAF1VAY17CE14v26r1q6r43MIIYrxkI7VAKI48JMIIF0xvE2Ix0
-	cI8IcVAFwI0_Jr0_JF4lIxAIcVC0I7IYx2IY6xkF7I0E14v26r1j6r4UMIIF0xvE42xK8V
-	AvwI8IcIk0rVWUJVWUCwCI42IY6I8E87Iv67AKxVWUJVW8JwCI42IY6I8E87Iv6xkF7I0E
-	14v26r1j6r4UYxBIdaVFxhVjvjDU0xZFpf9x07UK2NtUUUUU=
+X-CM-TRANSID:gCh0CgDXII2x2qtoTBLUAA--.30877S3
+X-Coremail-Antispam: 1UD129KBjvJXoWxJF1kGFy7Gr47XrWUWF4rKrg_yoW5CrWrpF
+	WYkFWUG3yUJr18W34DJ3Z7Xr1Skaykt34kK3sxJ34rGFyay3y0vFy7Z3sYqw4UKF97WF13
+	JFWqyr4IgFyUtrUanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDU0xBIdaVrnRJUUU9Kb4IE77IF4wAFF20E14v26ryj6rWUM7CY07I20VC2zVCF04k2
+	6cxKx2IYs7xG6rWj6s0DM7CIcVAFz4kK6r1j6r18M28IrcIa0xkI8VA2jI8067AKxVWUGw
+	A2048vs2IY020Ec7CjxVAFwI0_JFI_Gr1l8cAvFVAK0II2c7xJM28CjxkF64kEwVA0rcxS
+	w2x7M28EF7xvwVC0I7IYx2IY67AKxVWDJVCq3wA2z4x0Y4vE2Ix0cI8IcVCY1x0267AKxV
+	W8Jr0_Cr1UM28EF7xvwVC2z280aVAFwI0_GcCE3s1l84ACjcxK6I8E87Iv6xkF7I0E14v2
+	6rxl6s0DM2AIxVAIcxkEcVAq07x20xvEncxIr21l5I8CrVACY4xI64kE6c02F40Ex7xfMc
+	Ij6xIIjxv20xvE14v26r106r15McIj6I8E87Iv67AKxVWUJVW8JwAm72CE4IkC6x0Yz7v_
+	Jr0_Gr1lF7xvr2IYc2Ij64vIr41lc7CjxVAaw2AFwI0_JF0_Jw1l42xK82IYc2Ij64vIr4
+	1l4I8I3I0E4IkC6x0Yz7v_Jr0_Gr1lx2IqxVAqx4xG67AKxVWUJVWUGwC20s026x8GjcxK
+	67AKxVWUGVWUWwC2zVAF1VAY17CE14v26r1q6r43MIIYrxkI7VAKI48JMIIF0xvE2Ix0cI
+	8IcVAFwI0_Jr0_JF4lIxAIcVC0I7IYx2IY6xkF7I0E14v26r4j6F4UMIIF0xvE42xK8VAv
+	wI8IcIk0rVWUJVWUCwCI42IY6I8E87Iv67AKxVWUJVW8JwCI42IY6I8E87Iv6xkF7I0E14
+	v26r4j6r4UJbIYCTnIWIevJa73UjIFyTuYvjxUw9a9UUUUU
 X-CM-SenderInfo: hfkh02xlgr0w46kxt4xhlfz01xgou0bp/
 
+From: Chen Ridong <chenridong@huawei.com>
 
+Currently, free_cpumasks() can free both tmpmasks and cpumasks of a cpuset
+(cs). However, these two operations are not logically coupled. To improve
+code clarity:
+1. Move cpumask freeing to free_cpuset()
+2. Rename free_cpumasks() to free_tmpmasks()
 
-On 2025/8/25 1:05, Waiman Long wrote:
-> 
-> On 8/18/25 2:41 AM, Chen Ridong wrote:
->> From: Chen Ridong <chenridong@huawei.com>
->>
->> The original alloc_cpumasks() served dual purposes: allocating cpumasks
->> for both temporary masks (tmpmasks) and cpuset structures. This patch:
->>
->> 1. Decouples these allocation paths for better code clarity
->> 2. Introduces dedicated alloc_tmpmasks() and dup_or_alloc_cpuset()
->>     functions
->> 3. Maintains symmetric pairing:
->>     - alloc_tmpmasks() ↔ free_tmpmasks()
->>     - dup_or_alloc_cpuset() ↔ free_cpuset()
->>
->> Signed-off-by: Chen Ridong <chenridong@huawei.com>
->> ---
->>   kernel/cgroup/cpuset.c | 128 ++++++++++++++++++++++-------------------
->>   1 file changed, 69 insertions(+), 59 deletions(-)
->>
->> diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
->> index aebda14cc67f..d5588a1fef60 100644
->> --- a/kernel/cgroup/cpuset.c
->> +++ b/kernel/cgroup/cpuset.c
->> @@ -411,51 +411,46 @@ static void guarantee_online_mems(struct cpuset *cs, nodemask_t *pmask)
->>   }
->>     /**
->> - * alloc_cpumasks - allocate three cpumasks for cpuset
->> - * @cs:  the cpuset that have cpumasks to be allocated.
->> - * @tmp: the tmpmasks structure pointer
->> - * Return: 0 if successful, -ENOMEM otherwise.
->> + * alloc_cpumasks - Allocate an array of cpumask variables
->> + * @pmasks: Pointer to array of cpumask_var_t pointers
->> + * @size: Number of cpumasks to allocate
->>    *
->> - * Only one of the two input arguments should be non-NULL.
->> + * Allocates @size cpumasks and initializes them to empty. Returns 0 on
->> + * success, -ENOMEM on allocation failure. On failure, any previously
->> + * allocated cpumasks are freed.
-> 
-> The convention for the kernel-doc is to have a "Return:" tag if the function has a returned value.
-> That "Return:" tag is deleted by this change. Your description does describe the returned value and
-> no test robot failure was reported. Other than that, the rest of the patch looks good to me.
-> 
-> Cheers,
-> Longman
-> 
+This change enforces the single responsibility principle.
 
-Thank you Longman, will update.
+Signed-off-by: Chen Ridong <chenridong@huawei.com>
+Reviewed-by: Waiman Long <longman@redhat.com>
+---
+ kernel/cgroup/cpuset.c | 32 +++++++++++++-------------------
+ 1 file changed, 13 insertions(+), 19 deletions(-)
 
+diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
+index 3466ebbf1016..aebda14cc67f 100644
+--- a/kernel/cgroup/cpuset.c
++++ b/kernel/cgroup/cpuset.c
+@@ -459,23 +459,14 @@ static inline int alloc_cpumasks(struct cpuset *cs, struct tmpmasks *tmp)
+ }
+ 
+ /**
+- * free_cpumasks - free cpumasks in a tmpmasks structure
+- * @cs:  the cpuset that have cpumasks to be free.
++ * free_tmpmasks - free cpumasks in a tmpmasks structure
+  * @tmp: the tmpmasks structure pointer
+  */
+-static inline void free_cpumasks(struct cpuset *cs, struct tmpmasks *tmp)
++static inline void free_tmpmasks(struct tmpmasks *tmp)
+ {
+-	if (cs) {
+-		free_cpumask_var(cs->cpus_allowed);
+-		free_cpumask_var(cs->effective_cpus);
+-		free_cpumask_var(cs->effective_xcpus);
+-		free_cpumask_var(cs->exclusive_cpus);
+-	}
+-	if (tmp) {
+-		free_cpumask_var(tmp->new_cpus);
+-		free_cpumask_var(tmp->addmask);
+-		free_cpumask_var(tmp->delmask);
+-	}
++	free_cpumask_var(tmp->new_cpus);
++	free_cpumask_var(tmp->addmask);
++	free_cpumask_var(tmp->delmask);
+ }
+ 
+ /**
+@@ -508,7 +499,10 @@ static struct cpuset *alloc_trial_cpuset(struct cpuset *cs)
+  */
+ static inline void free_cpuset(struct cpuset *cs)
+ {
+-	free_cpumasks(cs, NULL);
++	free_cpumask_var(cs->cpus_allowed);
++	free_cpumask_var(cs->effective_cpus);
++	free_cpumask_var(cs->effective_xcpus);
++	free_cpumask_var(cs->exclusive_cpus);
+ 	kfree(cs);
+ }
+ 
+@@ -2427,7 +2421,7 @@ static int update_cpumask(struct cpuset *cs, struct cpuset *trialcs,
+ 	if (cs->partition_root_state)
+ 		update_partition_sd_lb(cs, old_prs);
+ out_free:
+-	free_cpumasks(NULL, &tmp);
++	free_tmpmasks(&tmp);
+ 	return retval;
+ }
+ 
+@@ -2530,7 +2524,7 @@ static int update_exclusive_cpumask(struct cpuset *cs, struct cpuset *trialcs,
+ 	if (cs->partition_root_state)
+ 		update_partition_sd_lb(cs, old_prs);
+ 
+-	free_cpumasks(NULL, &tmp);
++	free_tmpmasks(&tmp);
+ 	return 0;
+ }
+ 
+@@ -2983,7 +2977,7 @@ static int update_prstate(struct cpuset *cs, int new_prs)
+ 	notify_partition_change(cs, old_prs);
+ 	if (force_sd_rebuild)
+ 		rebuild_sched_domains_locked();
+-	free_cpumasks(NULL, &tmpmask);
++	free_tmpmasks(&tmpmask);
+ 	return 0;
+ }
+ 
+@@ -4006,7 +4000,7 @@ static void cpuset_handle_hotplug(void)
+ 	if (force_sd_rebuild)
+ 		rebuild_sched_domains_cpuslocked();
+ 
+-	free_cpumasks(NULL, ptmp);
++	free_tmpmasks(ptmp);
+ }
+ 
+ void cpuset_update_active_cpus(void)
 -- 
-Best regards,
-Ridong
+2.34.1
 
