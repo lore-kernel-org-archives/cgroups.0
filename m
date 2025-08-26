@@ -1,77 +1,162 @@
-Received: from smtp.hosts.co.uk (smtp.hosts.co.uk [85.233.160.19])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-yw1-f172.google.com (mail-yw1-f172.google.com [209.85.128.172])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8BBD42F745D;
-	Tue, 26 Aug 2025 21:07:43 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=85.233.160.19
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3C2B01F2382;
+	Tue, 26 Aug 2025 23:27:19 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.172
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1756242467; cv=none; b=GLAm+n28FcGgQdAfhE8Yx4MjNb3GL82N3eOHUh5kP1ZYxLY8yOP+95rjpddcLMSb8VN+zht23Vtfbb611pcYCWJkE6U/B+9KC7/k4t5DLwrRwQhbZ/pOouIHvfC6yzA2Stp7+TY2hGzT6RRY4SntVlrTa7yVgQE6C1uyNKL1yy8=
+	t=1756250841; cv=none; b=s4nl8uX3ZJe62PD3BJtSaXfB8DCLlKLsvQtx2xHQstmznobb5UZgDGYqkSvpALcm46t8oj6Z1YzbMjvBn43Pc97iHe3GijBTgxMwnFL4DdNhpCK6UdlMCBKOKJQnGOEueP2btrHX/R/f2W4qAubF8m++NaUCqvKz9tKSkFddbt4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1756242467; c=relaxed/simple;
-	bh=RQTsYZ1AgxLFnb7VlUK+eaCnvDmS7ejPqAXLXKB0OIM=;
+	s=arc-20240116; t=1756250841; c=relaxed/simple;
+	bh=YqpZF0H5BKgoOr4E+576H5jlNQDB9O+lyTKYsc74AhY=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=kkP1bz1rNN/Sz83ffRoJOsVDGy+kh3Ta5xd7UIWQJZwx+HuanPHy0nKZF6d+Wx6AkWJQbSp4goZ7LM1TKCV8eFuAAckXJAtmuiVCrdPGcFX8hOl/AJxSo2cb4g3qyZOUpjIfdfrIRYHDUXDrueFVEpax3LN2RzKj6vQJq3/GLfA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=youngman.org.uk; spf=fail smtp.mailfrom=youngman.org.uk; arc=none smtp.client-ip=85.233.160.19
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=youngman.org.uk
-Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=youngman.org.uk
-Received: from host86-131-189-159.range86-131.btcentralplus.com ([86.131.189.159] helo=[192.168.1.65])
-	by smtp.hosts.co.uk with esmtpa (Exim)
-	(envelope-from <antmbox@youngman.org.uk>)
-	id 1uqxZl-000000004ck-2zC9;
-	Tue, 26 Aug 2025 18:35:17 +0100
-Message-ID: <835fe512-4cff-4130-8b67-d30b91d95099@youngman.org.uk>
-Date: Tue, 26 Aug 2025 18:35:10 +0100
+	 In-Reply-To:Content-Type; b=mTB6G3KC677dSNc/rwENRIjP7jX5AXC+yf4mzNnvnMrmDA7Q89zXzmB+LoN+wA+yI4lkwnHS7OS6AKVDn5yzZPgPlZllcBm+kFVJFkn8O+NczXdMhKxb0Xo68UZFrGLUP57Cf9C8IwSQbdzylnJTRmp3wWvhS5zeB941yzHesB4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=RiiwNQrG; arc=none smtp.client-ip=209.85.128.172
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="RiiwNQrG"
+Received: by mail-yw1-f172.google.com with SMTP id 00721157ae682-71d603cebd9so67372477b3.1;
+        Tue, 26 Aug 2025 16:27:19 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1756250839; x=1756855639; darn=vger.kernel.org;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:mime-version:date:message-id:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=QRxd/UONu/TxowmunJ9/kcrGECFWZAfk75E2ggirveM=;
+        b=RiiwNQrGA/QVTvKI1Wgd2ECZK5sxyxKBgXqyshOB2Tge2TItgwL6krT3nsPhubIslP
+         lgQ7qLnr4FHkQvS9q/WPF+zoCyqTFKZmhlHFL2yOX6ovGKP2Vq+BzaAOVfwz5gG1kCdx
+         LohUg4AQD3dasM2D6zkGKVWsABhk3kbJPF1N5q+LEwjEbSC+SI2piYLdOX22ys3+NV7Y
+         kdzdXgCEsMwlgFBPdbXFTA1Us0o/8BJfxydtdol4OKA5lJ1Ijvd99XRVivOknoI0OuWL
+         TFekJlrRhomQwRn0H5hE+2KjfKJpVm68jsd2B/gbLUPv+dNgYm8dY+n+gjd4p78k4JZF
+         aFCA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1756250839; x=1756855639;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=QRxd/UONu/TxowmunJ9/kcrGECFWZAfk75E2ggirveM=;
+        b=VoEs/5E7UBXd4MsWukQsBiUHoJRyT518cGcQmEDz1RO1y4YeqSarJJ3hjOWsSDXCIx
+         KKXl1FYzwnsJ1n3GAeU/wS9d+4jQd3UJ+VWYv/q0rL6MoOLB/houK9nL9XAU3nk82Ul2
+         uMPjhZU9Zgwebq/sibrQ7aBpPsGjT0H/KMYDm098ozLoVp0apZGOBG7cfv9jStiEQCx+
+         xr1S2WUKJFWgiso3MtnenbC3thjodM8AKJrwnvitTBQDyZ8xAZDq2H7K9vBwIs6Qku4K
+         TV+tFvyJXZQNera3ST6ttfPBZTrwGJd1AnEgRCG+hkH4kDYAMSd64LpxNLDIOF5Y2iZb
+         wKgQ==
+X-Forwarded-Encrypted: i=1; AJvYcCUjp5w9yHtVDgN9uc7S/KzBNK8gzqCVS0lhlAErUiGapSGvkbwCQHeXM3QVlQymJVrQvZ0=@vger.kernel.org, AJvYcCWSKMg8Rqt2w726L3pF1ML12TO5bzcKwik1fvSaiun6rmXSJHPpdU6QmekO6yP97pbfMcaALvLr30ywU6/gW2kc@vger.kernel.org, AJvYcCXGFPjodoc6/aXrSwRPSKD93vmHhH+fCO1DTFiuAmTs3zfrj3Pr5SBRCVdBlgjkMMnSijzMeNS+ug==@vger.kernel.org
+X-Gm-Message-State: AOJu0YwYI5xvWWOXd7htGPOYWQDMo+bDfuVE7wlIFVtCwpTCJO7+x3xP
+	VlFKz4nz1QkTHCACJMEa/4aZiZFmL/OcKHgW0aH8WI3md5UvonM9hDMh
+X-Gm-Gg: ASbGncuvG/jgANc/c3J1F1iFugxZm2XCh/AHlINVUu4pvIBaBMjEMW74MV+WW83jZfe
+	KW+OkvS4DGpSMfh8jXgvWzz5kYkPrIU7d6TBGbxOJoB+IXjgJL5C9ol9szHRYLukNmmqyynWjGF
+	T7lHlEFgDxkeifBtAx0bRDq7wj0Bl5zWYsAPPOH5+gxXWSq6aZKztKSUv2GmbvuhH5wm1pM4Yno
+	BaxLuGwwv6/nYQfktU6sgJs88xOIu2KQgV7q94MCkIg2a/NFJwpZ2f7bcZAfI4mQZs6kcKQJJpr
+	D9nz3nOm7ljL8h5cf+7ygFFBH3DZKt0X13p2Y07/rbegnvtxeNGGDyitcRo+2xvtzTawztb52Fa
+	lLo6YLmpOQ6VV13e4skJ325vKYg==
+X-Google-Smtp-Source: AGHT+IFw3BlR2Hf8WSyUz5irV6lWRXvSHxBFpWDj313UXZZMH8r/Cja7Q5XA12Zq/MQgR04f9fhENg==
+X-Received: by 2002:a05:690c:368d:b0:71c:1754:26a5 with SMTP id 00721157ae682-71fdc52ffb2mr205251567b3.30.1756250839051;
+        Tue, 26 Aug 2025 16:27:19 -0700 (PDT)
+Received: from [10.2.0.2] ([146.70.98.190])
+        by smtp.gmail.com with ESMTPSA id 00721157ae682-7212005f70dsm11426677b3.40.2025.08.26.16.27.12
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Tue, 26 Aug 2025 16:27:18 -0700 (PDT)
+Message-ID: <0e78be6f-ef48-4fcc-b0c7-48bc14fdfc7f@gmail.com>
+Date: Wed, 27 Aug 2025 00:27:08 +0100
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH RFC 4/7] md/raid10: convert read/write to use
- bio_submit_split()
-To: Yu Kuai <yukuai1@huaweicloud.com>, Christoph Hellwig <hch@infradead.org>
-Cc: colyli@kernel.org, hare@suse.de, tieren@fnnas.com, axboe@kernel.dk,
- tj@kernel.org, josef@toxicpanda.com, song@kernel.org,
- akpm@linux-foundation.org, neil@brown.name, linux-block@vger.kernel.org,
- linux-kernel@vger.kernel.org, cgroups@vger.kernel.org,
- linux-raid@vger.kernel.org, yi.zhang@huawei.com, yangerkun@huawei.com,
- johnny.chenyi@huawei.com, John Garry <john.g.garry@oracle.com>,
- "yukuai (C)" <yukuai3@huawei.com>
-References: <20250825093700.3731633-1-yukuai1@huaweicloud.com>
- <20250825093700.3731633-5-yukuai1@huaweicloud.com>
- <aKxCJT6ul_WC94-x@infradead.org>
- <6c6b183a-bce7-b01c-8749-6e0b5a078384@huaweicloud.com>
- <aK1ocfvjLrIR_Xf2@infradead.org>
- <fe595b6a-8653-d1aa-0ae3-af559107ac5d@huaweicloud.com>
-Content-Language: en-GB
-From: anthony <antmbox@youngman.org.uk>
-In-Reply-To: <fe595b6a-8653-d1aa-0ae3-af559107ac5d@huaweicloud.com>
+Subject: Re: [RFC PATCH v2 bpf-next 0/3] bpf: cgroup: support writing and
+ freezing cgroups from BPF
+To: =?UTF-8?Q?Michal_Koutn=C3=BD?= <mkoutny@suse.com>
+Cc: tj@kernel.org, hannes@cmpxchg.org, ast@kernel.org, daniel@iogearbox.net,
+ andrii@kernel.org, martin.lau@linux.dev, eddyz87@gmail.com, song@kernel.org,
+ yonghong.song@linux.dev, john.fastabend@gmail.com, kpsingh@kernel.org,
+ sdf@fomichev.me, haoluo@google.com, jolsa@kernel.org, mykolal@fb.com,
+ shuah@kernel.org, cgroups@vger.kernel.org, bpf@vger.kernel.org,
+ linux-kselftest@vger.kernel.org, tixxdz@opendz.org
+References: <20250818090424.90458-1-tixxdz@gmail.com>
+ <356xekrj6vqsmtcvbd3rnh7vg6ey7l6sd6f4v3dv4jxidxfd6m@cepwozvwucda>
+Content-Language: en-US
+From: Djalal Harouni <tixxdz@gmail.com>
+In-Reply-To: <356xekrj6vqsmtcvbd3rnh7vg6ey7l6sd6f4v3dv4jxidxfd6m@cepwozvwucda>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
 
-On 26/08/2025 10:14, Yu Kuai wrote:
->> Umm, that's actually a red flag.  If a device guarantees atomic behavior
->> it can't just fail it.  So I think REQ_ATOMIC should be disallowed
->> for md raid with bad block tracking.
->>
+Hi Michal,
+
+On 8/26/25 15:18, Michal Koutný wrote:
+> Hi Djalal.
 > 
-> I agree that do not look good, however, John explained while adding this
-> that user should retry and fallback without REQ_ATOMIC to make things
-> work as usual.
+> On Mon, Aug 18, 2025 at 10:04:21AM +0100, Djalal Harouni <tixxdz@gmail.com> wrote:
+>> This patch series add support to write cgroup interfaces from BPF.
+>>
+>> It is useful to freeze a cgroup hierarchy on suspicious activity for
+>> a more thorough analysis before killing it. Planned users of this
+>> feature are: systemd and BPF tools where the cgroup hierarchy could
+>> be a system service, user session, k8s pod or a container.
+> 
+> Could you please give more specific example of the "suspicious
+> activity"? The last time (v1) it was referring to LSM hooks where such
+> asynchronous approach wasn't ideal.
 
-Whether a device promises atomic write is orthogonal to whether that 
-write succeeds - it could fail for a whole host of reasons, so why can't 
-"this is too big to be atomic" just be another reason for failing?
+It solves the case perfectly, you detect something you fail the
+security hook return -EPERM and optionally freeze the cgroup,
+snapshot the runtime state.
 
-Yes you want to know *why* the write failed, if you can't pass that 
-back, then you have a problem, but if you can pass back the error "too 
-big for atomic write" then the caller can sort it out.
+Oh I thought the attached example is an obvious one, customers want to
+restrict bpf() usage per cgroup specific container/pod, so when
+we detect bpf() that's not per allowed cgroup we fail it and freeze
+it.
 
-That then allows the driver - if it knows the block size of the device - 
-to manage atomic writes (in the sense that it can refuse writes that are 
-too large), even if the device doesn't claim to support it. It can just 
-force the caller to submit small enough blocks.
+Take this and build on top, detect bash/shell exec or any other new
+dropped binaries, fail and freeze the exec early at linux_bprm object
+checks.
 
-Cheers,
-Wol
+
+> Also why couldn't all these tools execute the cgroup actions themselves
+> through traditional userspace API?
+
+- Freezing at BPF is obviously better, less race since you don't need
+   access to the corresponding cgroup fs and namespace. Not all tools run
+   as supervisor/container manager.
+- The bpf_send_signal in some cases is not enough, what if you race with
+   a task clone as an example? however freezing the cgroup hierarchy or
+   the one above is a catch all...
+
+
+> One more point (for possible interference with lifecycles) -- what is
+> the relation between cgroup in which the BPF code "runs" and cgroup
+> that's target of the operation? (I hope this isn't supposed to run from
+> BPF without process context.)
+
+The feature is supposed to be used by sleepable BPF programs, I don't
+think we need extra checks here?
+
+It could be that this BPF code runs in a process that is under
+pod-x/container-y/cgroup-z/  and maybe you want to freeze "cgroup-z"
+or "container-y" and so on... or in case of delegated hierarchies,
+freezing the parent is a catch all.
+
+
+>   
+>> Todo:
+>> * Limit size of data to be written.
+>> * Further tests.
+>> * Add cgroup kill support.
+> 
+> I'm missing the retrieval of freeze result in this plan :) cgroup kill
+
+Indeed you are right a small kfunc to read back, yes ;) !
+
+> would be simpler for PoC (and maybe even sufficient for your use case?).
+> 
+
+I think both are useful cases.
+
+Thank you!
+
+
+> Regards,
+> Michal
+
