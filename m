@@ -1,161 +1,211 @@
-Received: from mail-ed1-f48.google.com (mail-ed1-f48.google.com [209.85.208.48])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.14])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 58F681C4609
-	for <cgroups@vger.kernel.org>; Tue, 26 Aug 2025 17:07:23 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.48
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 087CE2F4A1F
+	for <cgroups@vger.kernel.org>; Tue, 26 Aug 2025 18:49:26 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.14
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1756228046; cv=none; b=k4PpMu7aNMa9fccBUalRyKcX0n7FaIaoAfUkLoWh34/EftlXY3bCsG4IQmRNcPZRJq1qUFqk+gq2oKc4XOJZpkfjdhG0+ejhnbHGURlR6ACnQl3p8zYQM+XWbdXfjau+k+DUfk/bHy6yeMFGwtyQgMuef26kJMO7zvAQm5VTXfA=
+	t=1756234170; cv=none; b=UoY5VUoDqe7KdgyMYlbN7gsw9CAlrO+Kbhm5vY2VYQNqJzYWR3jwIkLjUT38oFSm2XNLZ5vtIfVlvY1F8qnOEJRBl9HQLwfcZXUsagASnIpxsGdSiMgpHP/my0RJSlgerJHKRoesBPQnpV0P+w0fUrWvbxTVAjPc9yncrRZtEk0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1756228046; c=relaxed/simple;
-	bh=+GzVzamkuKNwIJ6WvUw9cgc5JdUfyThfIW8HQ2cqMAs=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=tbLrznIiyr6WDGHP8tJlVq2KSaz6WYUP8ykH3Ijg5huWUNwpJYaLxuDsQqMR3Epl21/KxORIzrYYUGP0GewEO3nQAo7Fqcsj5AyHUpY2+39jyQp6uWfLA0JZh+6jb6baHUOGCVNUKplOlZNJQ++QlvqaOCVjlBldiqsaiH3m+bg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=eClFM8BX; arc=none smtp.client-ip=209.85.208.48
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
+	s=arc-20240116; t=1756234170; c=relaxed/simple;
+	bh=tgmfGxNYOnQXqsWA4w1OrpzKvga9aqkj/exTAy3qGIs=;
+	h=Date:From:To:Cc:Subject:Message-ID; b=hQoSQCofcfZx4ikm4AZVP4uYl0MRo1c5uHkYwhQFU6DGGxMVacTQwmK47y4Jmt2QphRWuaCCwhpU9O/bpAZH08THtZuSgkiBqZJHbYjAFurfaI9WMLLonH0jg2JQKVYlOCMEv1UCWDuQeRbGDF2N6rDjEeEF9fPjz6WEMjDuduc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=IhbCxlws; arc=none smtp.client-ip=198.175.65.14
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="eClFM8BX"
-Received: by mail-ed1-f48.google.com with SMTP id 4fb4d7f45d1cf-61c266e81caso4993298a12.3
-        for <cgroups@vger.kernel.org>; Tue, 26 Aug 2025 10:07:23 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1756228042; x=1756832842; darn=vger.kernel.org;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:from:to:cc:subject:date:message-id:reply-to;
-        bh=ZlLO2MjP0/NuaFssKev7jUfZlE2+YuCvYt9+3w8bnLY=;
-        b=eClFM8BXuhjdIRJnSN0v2XgHqICc8MSZojMs14l029M7cPke+rkAj40PMcGg/XzIuS
-         CyK0pFwMS0HRW06fYlXsdXO1EyOjn6QWLGzBO98zG6xxyxmZoMdZOvKQwJ4P8r/kfpYa
-         4woICf3NQ8eAXdK5ayAyU4gOGu7YlFr7fwkMNZpR5Xxx5SPAzbRqhSGxbCrjhubSxQMf
-         h5p7mNDucxgsHeV+619UhI1u1yEmlNLGsYFb26UPuNZ1QZTYaBEh40TgoXK2Zbcr5KQ8
-         ey4HqlUs11oF0kLzr/7hNd5zOGXRDR/7qefIOcYx3KVnsv45pWOW0t/5F+pLyAU3cf1/
-         Jqfg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1756228042; x=1756832842;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=ZlLO2MjP0/NuaFssKev7jUfZlE2+YuCvYt9+3w8bnLY=;
-        b=ewpDlUHKMjG3XmRwv/jr4um08+O58jdVKoxNm/oGiOJJRREdYi+WJ8jFJDZSrO/JOb
-         e1xM7QIkNU+07gtilwMinflqpDCtf0BdxgbfUlf/CTQ1KVZmArRofD9usXo8+InkmNpi
-         m0gmqfyUCOUGMmP8N81aLdOiVlZmOm8UxEcYLkYx9pL7EBXHmJs5mBNdd8K6fNzc60Zw
-         nr5Ev17qcSs1op/s9yG7A/p+eU1t2pzyt1CHe63/TXIfsW66FRBGqEmNpEGgzX+rjDVk
-         mQbkdmQfBm354raasFTEBIyPIcc49rh9pNpDsKboP6pUZCsg5hZ3vb0CcOqb14jjDC5j
-         jzng==
-X-Forwarded-Encrypted: i=1; AJvYcCVKrjGp51OysctBFUj4FOKTM6ZpCYzJe1RECVWG8OWvXrcTFR69kyv/SOB6JdBnjpzO7s7SjPF2@vger.kernel.org
-X-Gm-Message-State: AOJu0YyvTZme2z7YDr3CTzjTQG1r4mv925MqSWwsK5KfDbTRmNPXxUSv
-	9rQtqpJKpEOD1HVFGPk6qmPEVPIwjtC7elGHaaEtyRPwZOgh1sbD00p9VtiM8ELVOfXXhivrNGT
-	vmpuJfYh7jyhbEUXyU5+S5XgJ2T42a375IsaoCXEBPA==
-X-Gm-Gg: ASbGncsRNScEfjS2YOoiEf3k5sjXSHXZVCcDTB7mg3/5DuSRTsRGs3It+4b1CyP8od6
-	maPB3fJt6w8zoRFtvfQW7Kn6iGA3qmSBZqkC+cw72t8qL6Y9ypRO17i6REwlklIqNKDL8vcFVcR
-	DJFox4qcYtBJaiYeZCDy5q/97gTS3gyt/JpM1rc6SNYhDYie6zmHjrKqhlTEJe0/9cTQ05PqmA2
-	YszDJn3D79Ehm6XOAO19TjK1BjE49wJuUpc
-X-Google-Smtp-Source: AGHT+IHsOpctQgmVCjjq5dHlSjInR6A/ntZmhGPHMrs80BhSJMw+bnBIclGQfPF1IClLrpJt//57iI/CKy4Pr+clCuc=
-X-Received: by 2002:a05:6402:1e93:b0:61c:374e:d4ac with SMTP id
- 4fb4d7f45d1cf-61c374ee1bemr10746613a12.5.1756228041612; Tue, 26 Aug 2025
- 10:07:21 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="IhbCxlws"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1756234168; x=1787770168;
+  h=date:from:to:cc:subject:message-id;
+  bh=tgmfGxNYOnQXqsWA4w1OrpzKvga9aqkj/exTAy3qGIs=;
+  b=IhbCxlws7kopnL4GunZ0Hl2w3I8+dEh8daKHpwA//NzQo9BMD0iAJi4F
+   uZe9DA5RQSCVcupSP9toaGW7i9dl70xcGAQbrd5D8alCxquJpOS1hXGzn
+   BvGFLRKeiZWb6694RhITk/M5VBSDIcuKExjMgSr6vlIzea/omnpa+Wwx5
+   EOak5JIyTNlL4/ziwkQvLnMeL6qVNRiRbVYTuYk5ngpVE/dqI8yElKmzQ
+   d6M5Lq4OmqULRsHlk/MaKBgeHlVZdxER8crJbVHXtcRW1sOr3IOiyHPZV
+   tdm6IkWa1pGvkfx7KVv4VGizvdSA2/ruIWmIKkXFD0jzEMrwkzhBw8B+i
+   Q==;
+X-CSE-ConnectionGUID: jlovIzXTS7eGhPXOZ59dvQ==
+X-CSE-MsgGUID: 9oarvD9eTqKjZChOHb9VIw==
+X-IronPort-AV: E=McAfee;i="6800,10657,11531"; a="62317076"
+X-IronPort-AV: E=Sophos;i="6.17,312,1747724400"; 
+   d="scan'208";a="62317076"
+Received: from orviesa007.jf.intel.com ([10.64.159.147])
+  by orvoesa106.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 26 Aug 2025 11:49:26 -0700
+X-CSE-ConnectionGUID: JgKqEleQQgWTaQjEJYx6Vw==
+X-CSE-MsgGUID: 0ihj6SrYSIaJRiobY2k8Qw==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.18,214,1751266800"; 
+   d="scan'208";a="169560969"
+Received: from lkp-server02.sh.intel.com (HELO 4ea60e6ab079) ([10.239.97.151])
+  by orviesa007.jf.intel.com with ESMTP; 26 Aug 2025 11:49:25 -0700
+Received: from kbuild by 4ea60e6ab079 with local (Exim 4.96)
+	(envelope-from <lkp@intel.com>)
+	id 1uqyjT-000SJV-0J;
+	Tue, 26 Aug 2025 18:49:23 +0000
+Date: Wed, 27 Aug 2025 02:47:39 +0800
+From: kernel test robot <lkp@intel.com>
+To: Tejun Heo <tj@kernel.org>
+Cc: cgroups@vger.kernel.org
+Subject: [tj-cgroup:for-6.18] BUILD REGRESSION
+ 2c98144fc832b35c4e9293a3bfc518608d6f5145
+Message-ID: <202508270231.vxwsiua4-lkp@intel.com>
+User-Agent: s-nail v14.9.24
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-References: <20250826084854.25956-1-xupengbo@oppo.com>
-In-Reply-To: <20250826084854.25956-1-xupengbo@oppo.com>
-From: Vincent Guittot <vincent.guittot@linaro.org>
-Date: Tue, 26 Aug 2025 19:07:08 +0200
-X-Gm-Features: Ac12FXz41DqtuNy56jAsyjKtPS-SaWIN6JtQzjR4zynSsHstIU9Ay5tJmjPW_Yw
-Message-ID: <CAKfTPtAnXdFp0VTSiOSucU_E4Xj2emjRNn0ySCrgD7hiXP=1sw@mail.gmail.com>
-Subject: Re: [PATCH v4] sched/fair: Fix unfairness caused by stalled
- tg_load_avg_contrib when the last task migrates out.
-To: xupengbo <xupengbo@oppo.com>
-Cc: ziqianlu@bytedance.com, Ingo Molnar <mingo@redhat.com>, 
-	Peter Zijlstra <peterz@infradead.org>, Juri Lelli <juri.lelli@redhat.com>, 
-	Dietmar Eggemann <dietmar.eggemann@arm.com>, Steven Rostedt <rostedt@goodmis.org>, 
-	Ben Segall <bsegall@google.com>, Mel Gorman <mgorman@suse.de>, 
-	Valentin Schneider <vschneid@redhat.com>, Aaron Lu <aaron.lu@intel.com>, 
-	David Vernet <void@manifault.com>, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, 
-	xupengbo1029@163.com
-Content-Type: text/plain; charset="UTF-8"
 
-On Tue, 26 Aug 2025 at 10:49, xupengbo <xupengbo@oppo.com> wrote:
->
-> When a task is migrated out, there is a probability that the tg->load_avg
-> value will become abnormal. The reason is as follows.
->
-> 1. Due to the 1ms update period limitation in update_tg_load_avg(), there
-> is a possibility that the reduced load_avg is not updated to tg->load_avg
-> when a task migrates out.
-> 2. Even though __update_blocked_fair() traverses the leaf_cfs_rq_list and
-> calls update_tg_load_avg() for cfs_rqs that are not fully decayed, the key
-> function cfs_rq_is_decayed() does not check whether
-> cfs->tg_load_avg_contrib is null. Consequently, in some cases,
-> __update_blocked_fair() removes cfs_rqs whose avg.load_avg has not been
-> updated to tg->load_avg.
->
-> I added a check of cfs_rq->tg_load_avg_contrib in cfs_rq_is_decayed(),
+tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git for-6.18
+branch HEAD: 2c98144fc832b35c4e9293a3bfc518608d6f5145  cpuset: add helpers for cpus read and cpuset_mutex locks
 
-s/I added /Add/
+Error/Warning ids grouped by kconfigs:
 
-> which blocks the case (2.) mentioned above.
+recent_errors
+`-- mips-allyesconfig
+    |-- (.head.text):relocation-truncated-to-fit:R_MIPS_26-against-kernel_entry
+    `-- (.ref.text):relocation-truncated-to-fit:R_MIPS_26-against-start_secondary
 
-s/blocks/ fixes/
+elapsed time: 1449m
 
-> After some preliminary discussion and analysis, I think it is feasible to
-> directly check if cfs_rq->tg_load_avg_contrib is 0 in cfs_rq_is_decay().
-> So patch v3 was submitted.
+configs tested: 130
+configs skipped: 7
 
-You can remove the 3 lines above from the commit message. They should
-have been put below with the version Changes.
+tested configs:
+alpha                             allnoconfig    gcc-15.1.0
+alpha                            allyesconfig    gcc-15.1.0
+alpha                               defconfig    gcc-15.1.0
+arc                              allmodconfig    gcc-15.1.0
+arc                               allnoconfig    gcc-15.1.0
+arc                              allyesconfig    gcc-15.1.0
+arc                      axs103_smp_defconfig    gcc-15.1.0
+arc                                 defconfig    gcc-15.1.0
+arc                   randconfig-001-20250826    gcc-11.5.0
+arc                   randconfig-002-20250826    gcc-8.5.0
+arm                              alldefconfig    gcc-15.1.0
+arm                               allnoconfig    clang-22
+arm                                 defconfig    clang-22
+arm                   milbeaut_m10v_defconfig    clang-19
+arm                   randconfig-001-20250826    gcc-12.5.0
+arm                   randconfig-002-20250826    gcc-13.4.0
+arm                   randconfig-003-20250826    gcc-8.5.0
+arm                   randconfig-004-20250826    gcc-10.5.0
+arm                       versatile_defconfig    gcc-15.1.0
+arm                        vexpress_defconfig    gcc-15.1.0
+arm64                             allnoconfig    gcc-15.1.0
+arm64                               defconfig    gcc-15.1.0
+arm64                 randconfig-001-20250826    clang-22
+arm64                 randconfig-002-20250826    gcc-8.5.0
+arm64                 randconfig-003-20250826    clang-22
+arm64                 randconfig-004-20250826    gcc-8.5.0
+csky                              allnoconfig    gcc-15.1.0
+csky                                defconfig    gcc-15.1.0
+csky                  randconfig-001-20250826    gcc-15.1.0
+csky                  randconfig-002-20250826    gcc-11.5.0
+hexagon                           allnoconfig    clang-22
+hexagon                          allyesconfig    clang-22
+hexagon                             defconfig    clang-22
+hexagon               randconfig-001-20250826    clang-19
+hexagon               randconfig-002-20250826    clang-22
+i386                             allmodconfig    gcc-12
+i386                              allnoconfig    gcc-12
+i386                             allyesconfig    gcc-12
+i386        buildonly-randconfig-001-20250826    gcc-12
+i386        buildonly-randconfig-002-20250826    gcc-12
+i386        buildonly-randconfig-003-20250826    clang-20
+i386        buildonly-randconfig-004-20250826    gcc-12
+i386        buildonly-randconfig-005-20250826    clang-20
+i386        buildonly-randconfig-006-20250826    gcc-12
+i386                                defconfig    clang-20
+loongarch                        allmodconfig    clang-19
+loongarch                         allnoconfig    clang-22
+loongarch                           defconfig    clang-19
+loongarch             randconfig-001-20250826    gcc-14.3.0
+loongarch             randconfig-002-20250826    gcc-14.3.0
+m68k                             allmodconfig    gcc-15.1.0
+m68k                              allnoconfig    gcc-15.1.0
+m68k                             allyesconfig    gcc-15.1.0
+m68k                                defconfig    gcc-15.1.0
+microblaze                       allmodconfig    gcc-15.1.0
+microblaze                        allnoconfig    gcc-15.1.0
+microblaze                       allyesconfig    gcc-15.1.0
+microblaze                          defconfig    gcc-15.1.0
+mips                              allnoconfig    gcc-15.1.0
+mips                           ip30_defconfig    gcc-15.1.0
+nios2                             allnoconfig    gcc-11.5.0
+nios2                               defconfig    gcc-11.5.0
+nios2                 randconfig-001-20250826    gcc-8.5.0
+nios2                 randconfig-002-20250826    gcc-10.5.0
+openrisc                          allnoconfig    gcc-15.1.0
+openrisc                         allyesconfig    gcc-15.1.0
+openrisc                            defconfig    gcc-15.1.0
+parisc                           allmodconfig    gcc-15.1.0
+parisc                            allnoconfig    gcc-15.1.0
+parisc                           allyesconfig    gcc-15.1.0
+parisc                              defconfig    gcc-15.1.0
+parisc                randconfig-001-20250826    gcc-8.5.0
+parisc                randconfig-002-20250826    gcc-15.1.0
+parisc64                            defconfig    gcc-15.1.0
+powerpc                           allnoconfig    gcc-15.1.0
+powerpc                          allyesconfig    clang-22
+powerpc               randconfig-001-20250826    gcc-8.5.0
+powerpc               randconfig-002-20250826    clang-22
+powerpc               randconfig-003-20250826    gcc-13.4.0
+powerpc                      tqm8xx_defconfig    clang-19
+powerpc64             randconfig-001-20250826    gcc-10.5.0
+powerpc64             randconfig-002-20250826    gcc-11.5.0
+powerpc64             randconfig-003-20250826    gcc-14.3.0
+riscv                            allmodconfig    clang-22
+riscv                             allnoconfig    gcc-15.1.0
+riscv                            allyesconfig    clang-16
+riscv                               defconfig    clang-22
+riscv                 randconfig-001-20250826    gcc-8.5.0
+riscv                 randconfig-002-20250826    gcc-11.5.0
+s390                             allmodconfig    clang-18
+s390                              allnoconfig    clang-22
+s390                             allyesconfig    gcc-15.1.0
+s390                                defconfig    clang-22
+s390                  randconfig-001-20250826    clang-22
+s390                  randconfig-002-20250826    clang-18
+sh                               allmodconfig    gcc-15.1.0
+sh                                allnoconfig    gcc-15.1.0
+sh                               allyesconfig    gcc-15.1.0
+sh                                  defconfig    gcc-15.1.0
+sh                    randconfig-001-20250826    gcc-11.5.0
+sh                    randconfig-002-20250826    gcc-9.5.0
+sparc                            allmodconfig    gcc-15.1.0
+sparc                             allnoconfig    gcc-15.1.0
+sparc                               defconfig    gcc-15.1.0
+sparc                 randconfig-001-20250826    gcc-13.4.0
+sparc                 randconfig-002-20250826    gcc-8.5.0
+sparc64                             defconfig    clang-20
+sparc64               randconfig-001-20250826    gcc-8.5.0
+sparc64               randconfig-002-20250826    clang-22
+um                               allmodconfig    clang-19
+um                                allnoconfig    clang-22
+um                               allyesconfig    gcc-12
+um                                  defconfig    clang-22
+um                             i386_defconfig    gcc-12
+um                    randconfig-001-20250826    gcc-12
+um                    randconfig-002-20250826    clang-17
+um                           x86_64_defconfig    clang-22
+x86_64                            allnoconfig    clang-20
+x86_64                           allyesconfig    clang-20
+x86_64      buildonly-randconfig-001-20250826    clang-20
+x86_64      buildonly-randconfig-002-20250826    clang-20
+x86_64      buildonly-randconfig-003-20250826    gcc-12
+x86_64      buildonly-randconfig-004-20250826    clang-20
+x86_64      buildonly-randconfig-005-20250826    gcc-12
+x86_64      buildonly-randconfig-006-20250826    gcc-12
+x86_64                              defconfig    gcc-11
+x86_64                          rhel-9.4-rust    clang-20
+xtensa                            allnoconfig    gcc-15.1.0
+xtensa                randconfig-001-20250826    gcc-11.5.0
+xtensa                randconfig-002-20250826    gcc-8.5.0
 
->
-> Fixes: 1528c661c24b ("sched/fair: Ratelimit update to tg->load_avg")
-> Tested-by: Aaron Lu <ziqianlu@bytedance.com>
-> Reviewed-by: Aaron Lu <ziqianlu@bytedance.com>
-> Signed-off-by: xupengbo <xupengbo@oppo.com>
-
-With the minor comments above
-
-Reviewed-by: Vincent Guittot <vincent.guittot@linaro.org>
-
-> ---
-> Changes:
-> v1 -> v2:
-> - Another option to fix the bug. Check cfs_rq->tg_load_avg_contrib in
-> cfs_rq_is_decayed() to avoid early removal from the leaf_cfs_rq_list.
-> - Link to v1 : https://lore.kernel.org/cgroups/20250804130326.57523-1-xupengbo@oppo.com/
-> v2 -> v3:
-> - Check if cfs_rq->tg_load_avg_contrib is 0 derectly.
-> - Link to v2 : https://lore.kernel.org/cgroups/20250805144121.14871-1-xupengbo@oppo.com/
-> v3 -> v4:
-> - fix typo
-> - Link to v3 : https://lore.kernel.org/cgroups/20250826075743.19106-1-xupengbo@oppo.com/
->
-> Please send emails to a different email address <xupengbo1029@163.com>
-> after September 3, 2025, after that date <xupengbo@oppo.com> will expire
-> for personal reasons.
->
-> Thanks,
-> Xu Pengbo
->
->  kernel/sched/fair.c | 3 +++
->  1 file changed, 3 insertions(+)
->
-> diff --git a/kernel/sched/fair.c b/kernel/sched/fair.c
-> index b173a059315c..81b7df87f1ce 100644
-> --- a/kernel/sched/fair.c
-> +++ b/kernel/sched/fair.c
-> @@ -4062,6 +4062,9 @@ static inline bool cfs_rq_is_decayed(struct cfs_rq *cfs_rq)
->         if (child_cfs_rq_on_list(cfs_rq))
->                 return false;
->
-> +       if (cfs_rq->tg_load_avg_contrib)
-> +               return false;
-> +
->         return true;
->  }
->
->
-> base-commit: fab1beda7597fac1cecc01707d55eadb6bbe773c
-> --
-> 2.43.0
->
+--
+0-DAY CI Kernel Test Service
+https://github.com/intel/lkp-tests/wiki
