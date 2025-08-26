@@ -1,28 +1,28 @@
 Received: from dggsgout12.his.huawei.com (dggsgout12.his.huawei.com [45.249.212.56])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E6BB69460;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E6BEBE571;
 	Tue, 26 Aug 2025 03:55:18 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.56
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1756180520; cv=none; b=fnZXMndmw5msrfklVvmnVgSf/WdrkSmDLVq0eu+EF+jyrCb7iyWQruOWji9QnU9vFCAiCk7Trep222awagQ8IDTvJ0ecexWXsDWT54OkEgkKOauQRSnbyTLfFgBGTc+TvQkG0TUjpU3sdiTzChuxgDiK7ljLZM9tjSu5ojAAP+Q=
+	t=1756180521; cv=none; b=ZrKp9F8X7gOJWuNUze/992jp9NVo0MjWheeiWi1+ryyqK/kGGFDDrX+yhwsOdVcBm1WCdE/hs5hv65NsuL2Q6CJETNmpn/XQsgsTS0iqgGSEh1MRHvhaSriYAwAnohFuhCDcxfCGvfUdWbLxvntaxsaqea3A4+nKJ1wQHCrlxsg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1756180520; c=relaxed/simple;
-	bh=Oh4h5BQmXD8YR7KU2yvzzrjC4/3l+EXXXiAFAjMo0lM=;
+	s=arc-20240116; t=1756180521; c=relaxed/simple;
+	bh=ten0Lr96KhbpXoPXjw0B6qY68FXSiotUZ/FF9blsbzA=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=k3jePXYJSdEBLaA1W26Wq50is0D4vl7A5+F0Arq1K420hAIFl8AlJbG4A4FuO0o6wtbohCK9geObOy91mdRX5/yEuwQC9NT8p4DCjvruecjBXiiItV8MtpUj3C3i9nudxxOCetFqL1untN5nxmKvyaepjtR5a1eGGab1l3yYRjw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=none smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.56
+	 MIME-Version; b=ZKWdGcssu3Hozq84VhPmk0rvbo/gymWBS9HxNWMo5RUDg3OUuouA3wd6yEXb/Lybyu+1AH3VfdM5UVWrkwxCPbnWbYwl1stcz68mlKpgAu9ijM6ntUK/NnVoBM9d970WtorsmiZ2r/1nJWEEH/ZvlVZ8Phk/qU5vw9J4R0s2eVU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.56
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=huaweicloud.com
-Received: from mail.maildlp.com (unknown [172.19.163.216])
-	by dggsgout12.his.huawei.com (SkyGuard) with ESMTPS id 4c9v2D3FWgzKHMrK;
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
+Received: from mail.maildlp.com (unknown [172.19.93.142])
+	by dggsgout12.his.huawei.com (SkyGuard) with ESMTPS id 4c9v2D4NzqzKHMq5;
 	Tue, 26 Aug 2025 11:55:16 +0800 (CST)
 Received: from mail02.huawei.com (unknown [10.116.40.75])
-	by mail.maildlp.com (Postfix) with ESMTP id 16FFA1A1327;
+	by mail.maildlp.com (Postfix) with ESMTP id 3C7BC1A0E0B;
 	Tue, 26 Aug 2025 11:55:16 +0800 (CST)
 Received: from hulk-vt.huawei.com (unknown [10.67.174.121])
-	by APP2 (Coremail) with SMTP id Syh0CgCHsJcQMK1o1ZJFAQ--.52077S3;
-	Tue, 26 Aug 2025 11:55:15 +0800 (CST)
+	by APP2 (Coremail) with SMTP id Syh0CgCHsJcQMK1o1ZJFAQ--.52077S5;
+	Tue, 26 Aug 2025 11:55:16 +0800 (CST)
 From: Chen Ridong <chenridong@huaweicloud.com>
 To: tj@kernel.org,
 	hannes@cmpxchg.org,
@@ -31,9 +31,9 @@ Cc: cgroups@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
 	lujialin4@huawei.com,
 	chenridong@huawei.com
-Subject: [PATCH cgroup/for-next 1/3] cgroup: remove redundancy online_cnt
-Date: Tue, 26 Aug 2025 03:40:20 +0000
-Message-Id: <20250826034022.1736249-2-chenridong@huaweicloud.com>
+Subject: [PATCH cgroup/for-next 3/3] cgroup: rename css offline related functions
+Date: Tue, 26 Aug 2025 03:40:22 +0000
+Message-Id: <20250826034022.1736249-4-chenridong@huaweicloud.com>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20250826034022.1736249-1-chenridong@huaweicloud.com>
 References: <20250826034022.1736249-1-chenridong@huaweicloud.com>
@@ -44,13 +44,13 @@ List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:Syh0CgCHsJcQMK1o1ZJFAQ--.52077S3
-X-Coremail-Antispam: 1UD129KBjvJXoWxWrWrKFy5Gw17AFWfZry3twb_yoW5CFykpF
-	n5Za47tw45GFy5G34qy34qgr1Sgr4F934UK3y8G3WfXrW3tF1Iqr18AFy5tF1rAFZa9ry3
-	AF4Yv34jkw17trJanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDU0xBIdaVrnRJUUU9Kb4IE77IF4wAFF20E14v26r4j6ryUM7CY07I20VC2zVCF04k2
-	6cxKx2IYs7xG6rWj6s0DM7CIcVAFz4kK6r1j6r18M28IrcIa0xkI8VA2jI8067AKxVWUGw
-	A2048vs2IY020Ec7CjxVAFwI0_JFI_Gr1l8cAvFVAK0II2c7xJM28CjxkF64kEwVA0rcxS
+X-CM-TRANSID:Syh0CgCHsJcQMK1o1ZJFAQ--.52077S5
+X-Coremail-Antispam: 1UD129KBjvJXoWxZw4fuF4rAFWDCryUurWfXwb_yoWrtw4fpF
+	ZxA3sxtan5GaykW39aq3409FySgFs5J34UK3yxG34Syr43JFyUtF42vr1jyFW5GrZ7ur4f
+	ArsYvr1fCw1jyrJanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDU0xBIdaVrnRJUUU9Kb4IE77IF4wAFF20E14v26rWj6s0DM7CY07I20VC2zVCF04k2
+	6cxKx2IYs7xG6rWj6s0DM7CIcVAFz4kK6r1j6r18M28IrcIa0xkI8VA2jI8067AKxVWUWw
+	A2048vs2IY020Ec7CjxVAFwI0_Xr0E3s1l8cAvFVAK0II2c7xJM28CjxkF64kEwVA0rcxS
 	w2x7M28EF7xvwVC0I7IYx2IY67AKxVWDJVCq3wA2z4x0Y4vE2Ix0cI8IcVCY1x0267AKxV
 	W8Jr0_Cr1UM28EF7xvwVC2z280aVAFwI0_GcCE3s1l84ACjcxK6I8E87Iv6xkF7I0E14v2
 	6rxl6s0DM2AIxVAIcxkEcVAq07x20xvEncxIr21l5I8CrVACY4xI64kE6c02F40Ex7xfMc
@@ -60,97 +60,120 @@ X-Coremail-Antispam: 1UD129KBjvJXoWxWrWrKFy5Gw17AFWfZry3twb_yoW5CFykpF
 	67AKxVWUGVWUWwC2zVAF1VAY17CE14v26r126r1DMIIYrxkI7VAKI48JMIIF0xvE2Ix0cI
 	8IcVAFwI0_Jr0_JF4lIxAIcVC0I7IYx2IY6xkF7I0E14v26r4j6F4UMIIF0xvE42xK8VAv
 	wI8IcIk0rVWUJVWUCwCI42IY6I8E87Iv67AKxVWUJVW8JwCI42IY6I8E87Iv6xkF7I0E14
-	v26r4j6r4UJbIYCTnIWIevJa73UjIFyTuYvjxU773kDUUUU
+	v26r4j6r4UJbIYCTnIWIevJa73UjIFyTuYvjxUwhFxUUUUU
 X-CM-SenderInfo: hfkh02xlgr0w46kxt4xhlfz01xgou0bp/
 
 From: Chen Ridong <chenridong@huawei.com>
 
-Both online_cnt and nr_descendants can indicate whether acitive
-descendants exist. To make code simple, remove redundancy online_cnt,
-use nr_descendants instead.
+The cgroup_destroy_wq has been split into three separate workqueues:
+cgroup_offline_wq, cgroup_release_wq, and cgroup_free_wq. The cgroup
+destroy work is now enqueued sequentially into these queues. To clarify
+the three distinct stages of the destruction process, it will introduce
+helper functions or rename existing ones accordingly. The resulting
+structure is as follows:
+
+work            workqueue               work_fn
+css_offline     cgroup_offline_wq       css_offline_work_fn
+css_release     cgroup_release_wq       css_release_work_fn
+css_free        cgroup_free_wq          css_free_rwork_fn
+
+This patch renames css_killed_ref_fn to css_offline_work_fn and
+css_killed_work_fn to css_offline_work_fn to align with the new
+multi-phase destruction workflow.
 
 Signed-off-by: Chen Ridong <chenridong@huawei.com>
 ---
- include/linux/cgroup-defs.h |  6 ------
- kernel/cgroup/cgroup.c      | 13 ++++---------
- kernel/cgroup/debug.c       |  2 +-
- 3 files changed, 5 insertions(+), 16 deletions(-)
+ kernel/cgroup/cgroup.c | 34 +++++++++++++++++-----------------
+ 1 file changed, 17 insertions(+), 17 deletions(-)
 
-diff --git a/include/linux/cgroup-defs.h b/include/linux/cgroup-defs.h
-index 6b93a64115fe..d084c5c34c09 100644
---- a/include/linux/cgroup-defs.h
-+++ b/include/linux/cgroup-defs.h
-@@ -210,12 +210,6 @@ struct cgroup_subsys_state {
- 	 */
- 	u64 serial_nr;
- 
--	/*
--	 * Incremented by online self and children.  Used to guarantee that
--	 * parents are not offlined before their children.
--	 */
--	atomic_t online_cnt;
--
- 	/* percpu_ref killing and RCU release */
- 	struct work_struct destroy_work;
- 	struct rcu_work destroy_rwork;
 diff --git a/kernel/cgroup/cgroup.c b/kernel/cgroup/cgroup.c
-index 79b1d79f86a3..5eb747a038f7 100644
+index ad1f6a59a27b..1c75ebad7a88 100644
 --- a/kernel/cgroup/cgroup.c
 +++ b/kernel/cgroup/cgroup.c
-@@ -5607,7 +5607,6 @@ static void init_and_link_css(struct cgroup_subsys_state *css,
- 	INIT_LIST_HEAD(&css->sibling);
- 	INIT_LIST_HEAD(&css->children);
- 	css->serial_nr = css_serial_nr_next++;
--	atomic_set(&css->online_cnt, 0);
- 
- 	if (cgroup_parent(cgrp)) {
- 		css->parent = cgroup_css(cgroup_parent(cgrp), ss);
-@@ -5631,12 +5630,8 @@ static int online_css(struct cgroup_subsys_state *css)
- 		css->flags |= CSS_ONLINE;
- 		rcu_assign_pointer(css->cgroup->subsys[ss->id], css);
- 
--		atomic_inc(&css->online_cnt);
--		if (css->parent) {
--			atomic_inc(&css->parent->online_cnt);
--			while ((css = css->parent))
--				css->nr_descendants++;
--		}
-+		while ((css = css->parent))
-+			css->nr_descendants++;
- 	}
- 	return ret;
+@@ -5447,20 +5447,20 @@ static struct cftype cgroup_psi_files[] = {
+ /*
+  * css destruction is four-stage process.
+  *
+- * 1. Destruction starts.  Killing of the percpu_ref is initiated.
+- *    Implemented in kill_css().
++ * 1. kill_css: Destruction starts.  Killing of the percpu_ref is
++ *    initiated. Implemented in kill_css().
+  *
+- * 2. When the percpu_ref is confirmed to be visible as killed on all CPUs
+- *    and thus css_tryget_online() is guaranteed to fail, the css can be
+- *    offlined by invoking offline_css().  After offlining, the base ref is
+- *    put.  Implemented in css_killed_work_fn().
++ * 2. css_offline: When the percpu_ref is confirmed to be visible as
++ *    killed on all CPUs and thus css_tryget_online() is guaranteed to
++ *    fail, the css can be offlined by invoking __css_offline(). After
++ *    offlining, the base ref is put. Implemented in css_offline_work_fn().
+  *
+- * 3. When the percpu_ref reaches zero, the only possible remaining
+- *    accessors are inside RCU read sections.  css_release() schedules the
+- *    RCU callback.
++ * 3. css_release: When the percpu_ref reaches zero, the only possible
++ *    remaining accessors are inside RCU read sections. css_release()
++ *    schedules the RCU callback.
+  *
+- * 4. After the grace period, the css can be freed.  Implemented in
+- *    css_free_rwork_fn().
++ * 4. css_free: After the grace period, the css can be freed. Implemented
++ *    in css_free_rwork_fn().
+  *
+  * It is actually hairier because both step 2 and 4 require process context
+  * and thus involve punting to css->destroy_work adding two additional
+@@ -5642,7 +5642,7 @@ static int online_css(struct cgroup_subsys_state *css)
  }
-@@ -5949,7 +5944,7 @@ static void css_killed_work_fn(struct work_struct *work)
+ 
+ /* if the CSS is online, invoke ->css_offline() on it and mark it offline */
+-static void offline_css(struct cgroup_subsys_state *css)
++static void __css_offline(struct cgroup_subsys_state *css)
+ {
+ 	struct cgroup_subsys *ss = css->ss;
+ 
+@@ -5936,7 +5936,7 @@ int cgroup_mkdir(struct kernfs_node *parent_kn, const char *name, umode_t mode)
+  * css_tryget_online() is now guaranteed to fail.  Tell the subsystem to
+  * initiate destruction and put the css ref from kill_css().
+  */
+-static void css_killed_work_fn(struct work_struct *work)
++static void css_offline_work_fn(struct work_struct *work)
+ {
+ 	struct cgroup_subsys_state *css =
+ 		container_of(work, struct cgroup_subsys_state, destroy_work);
+@@ -5944,7 +5944,7 @@ static void css_killed_work_fn(struct work_struct *work)
+ 	cgroup_lock();
+ 
+ 	do {
+-		offline_css(css);
++		__css_offline(css);
  		css_put(css);
  		/* @css can't go away while we're holding cgroup_mutex */
  		css = css->parent;
--	} while (css && atomic_dec_and_test(&css->online_cnt));
-+	} while (css && css_is_dying(css) && !css->nr_descendants);
- 
- 	cgroup_unlock();
+@@ -5954,13 +5954,13 @@ static void css_killed_work_fn(struct work_struct *work)
  }
-@@ -5960,7 +5955,7 @@ static void css_killed_ref_fn(struct percpu_ref *ref)
+ 
+ /* css kill confirmation processing requires process context, bounce */
+-static void css_killed_ref_fn(struct percpu_ref *ref)
++static void css_offline(struct percpu_ref *ref)
+ {
  	struct cgroup_subsys_state *css =
  		container_of(ref, struct cgroup_subsys_state, refcnt);
  
--	if (atomic_dec_and_test(&css->online_cnt)) {
-+	if (!css->nr_descendants) {
- 		INIT_WORK(&css->destroy_work, css_killed_work_fn);
+ 	if (!css->nr_descendants) {
+-		INIT_WORK(&css->destroy_work, css_killed_work_fn);
++		INIT_WORK(&css->destroy_work, css_offline_work_fn);
  		queue_work(cgroup_offline_wq, &css->destroy_work);
  	}
-diff --git a/kernel/cgroup/debug.c b/kernel/cgroup/debug.c
-index 80aa3f027ac3..fc2f3216173a 100644
---- a/kernel/cgroup/debug.c
-+++ b/kernel/cgroup/debug.c
-@@ -226,7 +226,7 @@ static int cgroup_subsys_states_read(struct seq_file *seq, void *v)
- 				 css->parent->id);
- 		seq_printf(seq, "%2d: %-4s\t- %p[%d] %d%s\n", ss->id, ss->name,
- 			  css, css->id,
--			  atomic_read(&css->online_cnt), pbuf);
-+			  css->nr_descendants, pbuf);
- 	}
+ }
+@@ -6011,7 +6011,7 @@ static void kill_css(struct cgroup_subsys_state *css)
+ 	 * Use percpu_ref_kill_and_confirm() to get notifications as each
+ 	 * css is confirmed to be seen as killed on all CPUs.
+ 	 */
+-	percpu_ref_kill_and_confirm(&css->refcnt, css_killed_ref_fn);
++	percpu_ref_kill_and_confirm(&css->refcnt, css_offline);
+ }
  
- 	cgroup_kn_unlock(of->kn);
+ /**
 -- 
 2.34.1
 
