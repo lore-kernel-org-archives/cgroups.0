@@ -1,98 +1,122 @@
-Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-wr1-f46.google.com (mail-wr1-f46.google.com [209.85.221.46])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 73EF4A92E;
-	Tue, 26 Aug 2025 01:20:38 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.51
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E1EDB2D3A74;
+	Tue, 26 Aug 2025 03:45:17 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.46
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1756171243; cv=none; b=srdaV3QPuPPTirs3J4xLGRdoAGEM5GbXxqyuQqgioA/4i9cItv0KDTZyRWfJU10U8QTa49Mj7MFSVtLL/0hAUXGIYQWRC2Xk4+9x86C/lW9n8W+d3IBSmGWOl9Bh76QCPYLquCfKa6ggofb3x5Fz24PlQW1jK5RYu1zODzFDld0=
+	t=1756179919; cv=none; b=FOmMwjxph9KHEt5/cjJh+kes10iNF7R3Z6vFzf7uo1pHxkEMWMOSKZxDM2Utt2GjDkE6YVGSwkt4SvzBOojWEVmMuav+/QYBlAV7gywZJluWKHETF91fQ1udeFZQ81GdKmdr32wFK9dhltf1qoKtvS7NDX4getJ88qAYxyK/CV0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1756171243; c=relaxed/simple;
-	bh=XYr2L+cpBUoKitOBNDZKLdj36nYteIK4cLflgZ1XGr0=;
-	h=Subject:To:Cc:References:From:Message-ID:Date:MIME-Version:
-	 In-Reply-To:Content-Type; b=as5r0brxK32fG5uHQxAIJQE/NF7U0JtDO6kSuuwkKsxH8v8HrKfYUZ9DC3GvUudCjsdgwhDD3r76mw8olpAVAcJjFC95tylKfXbKvH5//bK/E9s9HWyZTeGkW2L0vPqPBBfuFRzx+p3lqDVm5xufrLYYbRlXvTMZZLVPWKMx9n8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.51
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
-Received: from mail.maildlp.com (unknown [172.19.93.142])
-	by dggsgout11.his.huawei.com (SkyGuard) with ESMTPS id 4c9qbp1j2fzYQvQX;
-	Tue, 26 Aug 2025 09:20:38 +0800 (CST)
-Received: from mail02.huawei.com (unknown [10.116.40.128])
-	by mail.maildlp.com (Postfix) with ESMTP id BDCC51A1306;
-	Tue, 26 Aug 2025 09:20:36 +0800 (CST)
-Received: from [10.174.179.143] (unknown [10.174.179.143])
-	by APP4 (Coremail) with SMTP id gCh0CgCn8IziC61oXkA8AQ--.14585S3;
-	Tue, 26 Aug 2025 09:20:36 +0800 (CST)
-Subject: Re: [PATCH RFC 7/7] block: fix disordered IO in the case recursive
- split
-To: Christoph Hellwig <hch@infradead.org>, Yu Kuai <yukuai1@huaweicloud.com>
-Cc: colyli@kernel.org, hare@suse.de, tieren@fnnas.com, axboe@kernel.dk,
- tj@kernel.org, josef@toxicpanda.com, song@kernel.org,
- akpm@linux-foundation.org, neil@brown.name, linux-block@vger.kernel.org,
- linux-kernel@vger.kernel.org, cgroups@vger.kernel.org,
- linux-raid@vger.kernel.org, yi.zhang@huawei.com, yangerkun@huawei.com,
- johnny.chenyi@huawei.com, "yukuai (C)" <yukuai3@huawei.com>
-References: <20250825093700.3731633-1-yukuai1@huaweicloud.com>
- <20250825093700.3731633-8-yukuai1@huaweicloud.com>
- <aKxD2hdsUpZrtqOy@infradead.org>
-From: Yu Kuai <yukuai1@huaweicloud.com>
-Message-ID: <ac0ea34d-4572-43a6-c32d-11e0fba71f56@huaweicloud.com>
-Date: Tue, 26 Aug 2025 09:20:34 +0800
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
- Thunderbird/60.9.1
+	s=arc-20240116; t=1756179919; c=relaxed/simple;
+	bh=utj6oSW5ZUEG4vl432KrCTGsP3IUgv0f8EZL2SJZn+4=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=CYq0JQprPPYWWm+/cp2JyFfTxDruGjooxiboUP08OpTXnNe5bDbJYVT64p8yi7hogQHMc3YjHZpvfaRGYMavYYzsNPnYS6+BPBDAFe5l1VhMEXmdgzUhhI0SZIiLtk+PfAZL/Lt93a/RRM49BG1pqlgkJRfoQBk8yB9xnj0agQI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=UM4H15Lt; arc=none smtp.client-ip=209.85.221.46
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="UM4H15Lt"
+Received: by mail-wr1-f46.google.com with SMTP id ffacd0b85a97d-3c68ac7e2bdso2142192f8f.2;
+        Mon, 25 Aug 2025 20:45:17 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1756179916; x=1756784716; darn=vger.kernel.org;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=utj6oSW5ZUEG4vl432KrCTGsP3IUgv0f8EZL2SJZn+4=;
+        b=UM4H15Lt83y6wfTihF2h8kOYdMiuY7+ttGdRMouqPVt00ttXSZPr7zQX//eHE23IJX
+         DB8HQYp6hk29auAAfnAJtTUhTmA0fkknti8t7fWpOeNl9iCm19/y8djqcfoQ+MLRVUvY
+         NMk7pv+rZMqEIgQKiFm5JMHRzfYsPcOqSJPZHE7xvC4w5aIudYaBd+Wzjr7cU6lMmvc4
+         UKD2UHyv8s+6VhZN8grTUj78wPc2SKFy2uXDo4CUJ8gM3y0LH6GoPSXk7FMbMX+91cKY
+         +oGWp1hKN/lInlCuAnocg9Ma+PTRsziX6ngjHLY/Z4Hrwsu9tU9vP2zf/+0K64/22xFg
+         +NDg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1756179916; x=1756784716;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=utj6oSW5ZUEG4vl432KrCTGsP3IUgv0f8EZL2SJZn+4=;
+        b=ToUz0/PlowRaFNRH6AhtvB+0m4Rs54qaH33GZEw+ib4Ei5N5hsTzWhsQ1MmgPVzHSV
+         Tl4L79PLS6HxSyZ6CmukfcO+e3icaDIsuOK3ZSFp8YNK/enHKMrzbguuIGYBN/vPhiJ3
+         mAMqE8n5zzdygJNHtC8V6BcAwf3gj8sYF+jqlLseRMY3Y1/gy4JJi1UOpp6/AP3Djbh2
+         ijca1ur4blBmXaqVtKuBBv74g8X/2qLNAFVxYZfCY3lIkmScr1F+6nPGtsHoG5166d5N
+         RHw/HHg7GUl54Ihd2DM2lIArLVOsCvgLIcrl1Cy0K2x+ZOgdFOlNRX8kNVv3BE1hOK1e
+         4xsw==
+X-Forwarded-Encrypted: i=1; AJvYcCUlabPY6DxQRF57tSw2R9ZU/aZthjMN3xqtH+m7jEbMcXI3UivN/rQl3ZmRrgbOtUVbCC2TC7cwJF71waF3PCn/@vger.kernel.org, AJvYcCWko5o+B5+E1UJEmoRN6dwcEhqZevQmIh+0a2033wKpZ98FCyXnE8AIYkkg9dyTGpQ/3GKNs8GRmA==@vger.kernel.org, AJvYcCXZR+jyMaD5lK4+ZLfqGgSbSKqbNeWVvQXhUG+Ns/fbpJowtpbfcN80soaRCVIQZDghxEg=@vger.kernel.org
+X-Gm-Message-State: AOJu0Yx3wIZsh44rLJ+4NJtj03tzUYOtg376DgAhT3E4KfaQ7kW3CFqQ
+	5IMcvhuRNVApPRBsTZ9dZD0sdyENfrNiy8UkZ13W9mCHFAyIiLrep5Gr5RfCUigPe/Q1EFpZSXW
+	WL6nvtoNFVBL9+m9GKbOV13QEmviR/bI=
+X-Gm-Gg: ASbGncu3k2OshdaeHsqoAhkunrBHkHNlif5xIf4UdPE8Kzvvk12ZyjclXY+8AHPlEUQ
+	MBnNBPleU063mkQokBN+wKTKHxIwhJAFHqdG31kcOBqttKJld0LsZsjN41Wjk+RSyPC5XriwyY3
+	77gVsEE82XOOvdhLphbmL2jEHrDmf8q8zuY6JlDb2Rs373KB2Ckra1Xkyfj6JtG6uVM3R+unZEw
+	VOn7cRfLDpSBpygeKR2NVPMmnrqqsO1hUo6
+X-Google-Smtp-Source: AGHT+IE8tAERy66ebNFyetXswIwytXMj5tlMnn6E3Bk3RgvAAqw155HhAxfdkCJZhRl67xjXw5S2DOxFATpXvb3zLro=
+X-Received: by 2002:a05:6000:1a86:b0:3c9:8600:9a65 with SMTP id
+ ffacd0b85a97d-3c98600a509mr4199606f8f.28.1756179915903; Mon, 25 Aug 2025
+ 20:45:15 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <aKxD2hdsUpZrtqOy@infradead.org>
-Content-Type: text/plain; charset=gbk; format=flowed
-Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:gCh0CgCn8IziC61oXkA8AQ--.14585S3
-X-Coremail-Antispam: 1UD129KBjvdXoW7Jr1ftF4DGw1rur4kWw4rXwb_yoWfWwbEg3
-	sayFWDGw17CF97K3ZrKF1kArWqyFy2gry5u3yfW3ZrAa47XFWDGr1UZ39Iv39aq3y8XrnI
-	vFs5t340yF4a9jkaLaAFLSUrUUUUjb8apTn2vfkv8UJUUUU8Yxn0WfASr-VFAUDa7-sFnT
-	9fnUUIcSsGvfJTRUUUbSxFF20E14v26ryj6rWUM7CY07I20VC2zVCF04k26cxKx2IYs7xG
-	6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48ve4kI8w
-	A2z4x0Y4vE2Ix0cI8IcVAFwI0_tr0E3s1l84ACjcxK6xIIjxv20xvEc7CjxVAFwI0_Gr1j
-	6F4UJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x0267AKxVW0oV
-	Cq3wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG6I80ewAv7VC0
-	I7IYx2IY67AKxVWUAVWUtwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFVCjc4AY6r1j6r
-	4UM4x0Y48IcVAKI48JM4x0x7Aq67IIx4CEVc8vx2IErcIFxwACI402YVCY1x02628vn2kI
-	c2xKxwCYjI0SjxkI62AI1cAE67vIY487MxkF7I0En4kS14v26r4a6rW5MxAIw28IcxkI7V
-	AKI48JMxC20s026xCaFVCjc4AY6r1j6r4UMI8I3I0E5I8CrVAFwI0_Jr0_Jr4lx2IqxVCj
-	r7xvwVAFwI0_JrI_JrWlx4CE17CEb7AF67AKxVW8ZVWrXwCIc40Y0x0EwIxGrwCI42IY6x
-	IIjxv20xvE14v26r1j6r1xMIIF0xvE2Ix0cI8IcVCY1x0267AKxVWxJVW8Jr1lIxAIcVCF
-	04k26cxKx2IYs7xG6r1j6r1xMIIF0xvEx4A2jsIE14v26r1j6r4UMIIF0xvEx4A2jsIEc7
-	CjxVAFwI0_Gr1j6F4UJbIYCTnIWIevJa73UjIFyTuYvjTRMv31DUUUU
-X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
+References: <20250818090424.90458-1-tixxdz@gmail.com> <aKNjkp5vR2ES-2Xw@slm.duckdns.org>
+ <7d8af2a3-0649-44fa-abc5-17f2911b941b@gmail.com> <aKUhkIdCEsIqmvvV@slm.duckdns.org>
+ <efa7d1ed-9cfc-4e32-936c-a2f7827da1c9@gmail.com> <aKywEsqVAHdgasZw@slm.duckdns.org>
+In-Reply-To: <aKywEsqVAHdgasZw@slm.duckdns.org>
+From: Alexei Starovoitov <alexei.starovoitov@gmail.com>
+Date: Mon, 25 Aug 2025 20:45:03 -0700
+X-Gm-Features: Ac12FXz924wbgTHCTCL7hp8RP3qerz0FLZF7ncUo2N46yPEDEoRtgpi5W3ZnC6U
+Message-ID: <CAADnVQL7Ps9u41jYSVEd0+u4M01q90jJCW6Op1H6Ypsc0ht18A@mail.gmail.com>
+Subject: Re: [RFC PATCH v2 bpf-next 0/3] bpf: cgroup: support writing and
+ freezing cgroups from BPF
+To: Tejun Heo <tj@kernel.org>
+Cc: Djalal Harouni <tixxdz@gmail.com>, Johannes Weiner <hannes@cmpxchg.org>, 
+	=?UTF-8?Q?Michal_Koutn=C3=BD?= <mkoutny@suse.com>, 
+	Alexei Starovoitov <ast@kernel.org>, Daniel Borkmann <daniel@iogearbox.net>, 
+	Andrii Nakryiko <andrii@kernel.org>, Martin KaFai Lau <martin.lau@linux.dev>, Eduard <eddyz87@gmail.com>, 
+	Song Liu <song@kernel.org>, Yonghong Song <yonghong.song@linux.dev>, 
+	John Fastabend <john.fastabend@gmail.com>, KP Singh <kpsingh@kernel.org>, 
+	Stanislav Fomichev <sdf@fomichev.me>, Hao Luo <haoluo@google.com>, Jiri Olsa <jolsa@kernel.org>, 
+	Mykola Lysenko <mykolal@fb.com>, Shuah Khan <shuah@kernel.org>, 
+	"open list:CONTROL GROUP (CGROUP)" <cgroups@vger.kernel.org>, bpf <bpf@vger.kernel.org>, 
+	"open list:KERNEL SELFTEST FRAMEWORK" <linux-kselftest@vger.kernel.org>, tixxdz@opendz.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-Hi,
+On Mon, Aug 25, 2025 at 11:48=E2=80=AFAM Tejun Heo <tj@kernel.org> wrote:
+>
+> Hello,
+>
+> On Fri, Aug 22, 2025 at 07:16:15PM +0100, Djalal Harouni wrote:
+> ...
+> > I do realize taking the same usual path with write is the obvious thing=
+,
+> > but we don't have the corresponding open context, and faking it seems
+> > more trouble than calling directly cgroup backends...
+> >
+> > Allow me please to do it again directly on cgroup_base_file[] assuming
+> > it was Alexei suggestion and see how it looks.
 
-ÔÚ 2025/08/25 19:07, Christoph Hellwig Ð´µÀ:
-> On Mon, Aug 25, 2025 at 05:37:00PM +0800, Yu Kuai wrote:
->> +void submit_bio_noacct(struct bio *bio)
-> 
-> Maybe just have version of submit_bio_noacct that takes the split
-> argument, and make submit_bio_noacct a tiny wrapper around it?  That
-> should create less churns than this version I think.  In fact I suspect
-> we can actually bypass submit_bio_noacct entirely, all the checks and
-> accounting in it were already done when submitting the origin bio, so
-> the bio split helper could just call into submit_bio_noacct_nocheck
-> directly.
-> 
+It's been 1.5 year since v1. It's safe to assume that all opinions
+have changed, including mine.
 
-I can do this, I was trying to avoid touching submit_bio_noacct()
-because there are many many callers, a tiny wrapper sounds good!
+> I'm probably missing something but what prevents you from getting a dentr=
+y
+> from kernfs_node and then calling vfs_open() on it and then do vfs_write(=
+)
+> on the returned file?
 
-And for bypassing submit_bio_noacct(), I think it's ok, just
-blk_throtl_bio() should be called seperately. Perhaps we can do
-this later.
+Generic vfs ops from kfunc feels like a can of worms.
+It will require a lot more thinking and coordination with vfs folks.
+I'd rather keep things simple especially, since this thread
+might continue in 2026.
 
-Thanks,
-Kuai
+> If there are some fundamental reasons that we can't do something like tha=
+t,
+> let's go back to the simple approach where we just have bpf helpers for
+> freezing and unfreezing cgroups outside of fs interface.
 
-> .
-> 
-
+I'd just do whatever version of cgroup_lock*() is necessary
+from kfunc followed by cgroup_freeze(),
+and limit kfunc to sleepable progs, of course.
