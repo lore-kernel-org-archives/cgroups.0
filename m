@@ -1,122 +1,126 @@
-Received: from mail-wr1-f46.google.com (mail-wr1-f46.google.com [209.85.221.46])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from dggsgout12.his.huawei.com (dggsgout12.his.huawei.com [45.249.212.56])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E1EDB2D3A74;
-	Tue, 26 Aug 2025 03:45:17 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.46
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E6B7029A2;
+	Tue, 26 Aug 2025 03:55:18 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.56
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1756179919; cv=none; b=FOmMwjxph9KHEt5/cjJh+kes10iNF7R3Z6vFzf7uo1pHxkEMWMOSKZxDM2Utt2GjDkE6YVGSwkt4SvzBOojWEVmMuav+/QYBlAV7gywZJluWKHETF91fQ1udeFZQ81GdKmdr32wFK9dhltf1qoKtvS7NDX4getJ88qAYxyK/CV0=
+	t=1756180520; cv=none; b=JsfN03QtrtFjue11Ut0ixRqR+HUiKywbs1dTGfJvQxbZVsAkhL20mLP9IXgIiy5NEWxOYmf95SxhC7sEz3UOAo0f368tkE0PQeBd2qWfsXjo9xDmGIB9NYzQDBP1OK0G4gitt/CrokwlQIx/UU/qn47d7rFGXHe32+6JLLMZcxA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1756179919; c=relaxed/simple;
-	bh=utj6oSW5ZUEG4vl432KrCTGsP3IUgv0f8EZL2SJZn+4=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=CYq0JQprPPYWWm+/cp2JyFfTxDruGjooxiboUP08OpTXnNe5bDbJYVT64p8yi7hogQHMc3YjHZpvfaRGYMavYYzsNPnYS6+BPBDAFe5l1VhMEXmdgzUhhI0SZIiLtk+PfAZL/Lt93a/RRM49BG1pqlgkJRfoQBk8yB9xnj0agQI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=UM4H15Lt; arc=none smtp.client-ip=209.85.221.46
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="UM4H15Lt"
-Received: by mail-wr1-f46.google.com with SMTP id ffacd0b85a97d-3c68ac7e2bdso2142192f8f.2;
-        Mon, 25 Aug 2025 20:45:17 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1756179916; x=1756784716; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=utj6oSW5ZUEG4vl432KrCTGsP3IUgv0f8EZL2SJZn+4=;
-        b=UM4H15Lt83y6wfTihF2h8kOYdMiuY7+ttGdRMouqPVt00ttXSZPr7zQX//eHE23IJX
-         DB8HQYp6hk29auAAfnAJtTUhTmA0fkknti8t7fWpOeNl9iCm19/y8djqcfoQ+MLRVUvY
-         NMk7pv+rZMqEIgQKiFm5JMHRzfYsPcOqSJPZHE7xvC4w5aIudYaBd+Wzjr7cU6lMmvc4
-         UKD2UHyv8s+6VhZN8grTUj78wPc2SKFy2uXDo4CUJ8gM3y0LH6GoPSXk7FMbMX+91cKY
-         +oGWp1hKN/lInlCuAnocg9Ma+PTRsziX6ngjHLY/Z4Hrwsu9tU9vP2zf/+0K64/22xFg
-         +NDg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1756179916; x=1756784716;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=utj6oSW5ZUEG4vl432KrCTGsP3IUgv0f8EZL2SJZn+4=;
-        b=ToUz0/PlowRaFNRH6AhtvB+0m4Rs54qaH33GZEw+ib4Ei5N5hsTzWhsQ1MmgPVzHSV
-         Tl4L79PLS6HxSyZ6CmukfcO+e3icaDIsuOK3ZSFp8YNK/enHKMrzbguuIGYBN/vPhiJ3
-         mAMqE8n5zzdygJNHtC8V6BcAwf3gj8sYF+jqlLseRMY3Y1/gy4JJi1UOpp6/AP3Djbh2
-         ijca1ur4blBmXaqVtKuBBv74g8X/2qLNAFVxYZfCY3lIkmScr1F+6nPGtsHoG5166d5N
-         RHw/HHg7GUl54Ihd2DM2lIArLVOsCvgLIcrl1Cy0K2x+ZOgdFOlNRX8kNVv3BE1hOK1e
-         4xsw==
-X-Forwarded-Encrypted: i=1; AJvYcCUlabPY6DxQRF57tSw2R9ZU/aZthjMN3xqtH+m7jEbMcXI3UivN/rQl3ZmRrgbOtUVbCC2TC7cwJF71waF3PCn/@vger.kernel.org, AJvYcCWko5o+B5+E1UJEmoRN6dwcEhqZevQmIh+0a2033wKpZ98FCyXnE8AIYkkg9dyTGpQ/3GKNs8GRmA==@vger.kernel.org, AJvYcCXZR+jyMaD5lK4+ZLfqGgSbSKqbNeWVvQXhUG+Ns/fbpJowtpbfcN80soaRCVIQZDghxEg=@vger.kernel.org
-X-Gm-Message-State: AOJu0Yx3wIZsh44rLJ+4NJtj03tzUYOtg376DgAhT3E4KfaQ7kW3CFqQ
-	5IMcvhuRNVApPRBsTZ9dZD0sdyENfrNiy8UkZ13W9mCHFAyIiLrep5Gr5RfCUigPe/Q1EFpZSXW
-	WL6nvtoNFVBL9+m9GKbOV13QEmviR/bI=
-X-Gm-Gg: ASbGncu3k2OshdaeHsqoAhkunrBHkHNlif5xIf4UdPE8Kzvvk12ZyjclXY+8AHPlEUQ
-	MBnNBPleU063mkQokBN+wKTKHxIwhJAFHqdG31kcOBqttKJld0LsZsjN41Wjk+RSyPC5XriwyY3
-	77gVsEE82XOOvdhLphbmL2jEHrDmf8q8zuY6JlDb2Rs373KB2Ckra1Xkyfj6JtG6uVM3R+unZEw
-	VOn7cRfLDpSBpygeKR2NVPMmnrqqsO1hUo6
-X-Google-Smtp-Source: AGHT+IE8tAERy66ebNFyetXswIwytXMj5tlMnn6E3Bk3RgvAAqw155HhAxfdkCJZhRl67xjXw5S2DOxFATpXvb3zLro=
-X-Received: by 2002:a05:6000:1a86:b0:3c9:8600:9a65 with SMTP id
- ffacd0b85a97d-3c98600a509mr4199606f8f.28.1756179915903; Mon, 25 Aug 2025
- 20:45:15 -0700 (PDT)
+	s=arc-20240116; t=1756180520; c=relaxed/simple;
+	bh=d6xAZ85XEU+kuFKR/t3HJtQ52J9tdjaLF4zCsAYSxjc=;
+	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
+	 MIME-Version; b=FbtyGHJbPRxYnxDW/qRZx2tNorq7RWfqxmeu4VJnXO7OD0vDFdhXmC3c1sCei4ds6CJBDnf7OFlyriyen3ciqk6LxFAB1lunRSYXiMEsW7Pa3fstQPi0XraEBELZcCfqmE2CIFffPTC57CD1shhakghSkIfqgjewIsHnDAPMduk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.56
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
+Received: from mail.maildlp.com (unknown [172.19.93.142])
+	by dggsgout12.his.huawei.com (SkyGuard) with ESMTPS id 4c9v2D40tRzKHMq5;
+	Tue, 26 Aug 2025 11:55:16 +0800 (CST)
+Received: from mail02.huawei.com (unknown [10.116.40.75])
+	by mail.maildlp.com (Postfix) with ESMTP id 2BF851A0CC0;
+	Tue, 26 Aug 2025 11:55:16 +0800 (CST)
+Received: from hulk-vt.huawei.com (unknown [10.67.174.121])
+	by APP2 (Coremail) with SMTP id Syh0CgCHsJcQMK1o1ZJFAQ--.52077S4;
+	Tue, 26 Aug 2025 11:55:16 +0800 (CST)
+From: Chen Ridong <chenridong@huaweicloud.com>
+To: tj@kernel.org,
+	hannes@cmpxchg.org,
+	mkoutny@suse.com
+Cc: cgroups@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	lujialin4@huawei.com,
+	chenridong@huawei.com
+Subject: [PATCH cgroup/for-next 2/3] cgroup: add css_free helper
+Date: Tue, 26 Aug 2025 03:40:21 +0000
+Message-Id: <20250826034022.1736249-3-chenridong@huaweicloud.com>
+X-Mailer: git-send-email 2.34.1
+In-Reply-To: <20250826034022.1736249-1-chenridong@huaweicloud.com>
+References: <20250826034022.1736249-1-chenridong@huaweicloud.com>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20250818090424.90458-1-tixxdz@gmail.com> <aKNjkp5vR2ES-2Xw@slm.duckdns.org>
- <7d8af2a3-0649-44fa-abc5-17f2911b941b@gmail.com> <aKUhkIdCEsIqmvvV@slm.duckdns.org>
- <efa7d1ed-9cfc-4e32-936c-a2f7827da1c9@gmail.com> <aKywEsqVAHdgasZw@slm.duckdns.org>
-In-Reply-To: <aKywEsqVAHdgasZw@slm.duckdns.org>
-From: Alexei Starovoitov <alexei.starovoitov@gmail.com>
-Date: Mon, 25 Aug 2025 20:45:03 -0700
-X-Gm-Features: Ac12FXz924wbgTHCTCL7hp8RP3qerz0FLZF7ncUo2N46yPEDEoRtgpi5W3ZnC6U
-Message-ID: <CAADnVQL7Ps9u41jYSVEd0+u4M01q90jJCW6Op1H6Ypsc0ht18A@mail.gmail.com>
-Subject: Re: [RFC PATCH v2 bpf-next 0/3] bpf: cgroup: support writing and
- freezing cgroups from BPF
-To: Tejun Heo <tj@kernel.org>
-Cc: Djalal Harouni <tixxdz@gmail.com>, Johannes Weiner <hannes@cmpxchg.org>, 
-	=?UTF-8?Q?Michal_Koutn=C3=BD?= <mkoutny@suse.com>, 
-	Alexei Starovoitov <ast@kernel.org>, Daniel Borkmann <daniel@iogearbox.net>, 
-	Andrii Nakryiko <andrii@kernel.org>, Martin KaFai Lau <martin.lau@linux.dev>, Eduard <eddyz87@gmail.com>, 
-	Song Liu <song@kernel.org>, Yonghong Song <yonghong.song@linux.dev>, 
-	John Fastabend <john.fastabend@gmail.com>, KP Singh <kpsingh@kernel.org>, 
-	Stanislav Fomichev <sdf@fomichev.me>, Hao Luo <haoluo@google.com>, Jiri Olsa <jolsa@kernel.org>, 
-	Mykola Lysenko <mykolal@fb.com>, Shuah Khan <shuah@kernel.org>, 
-	"open list:CONTROL GROUP (CGROUP)" <cgroups@vger.kernel.org>, bpf <bpf@vger.kernel.org>, 
-	"open list:KERNEL SELFTEST FRAMEWORK" <linux-kselftest@vger.kernel.org>, tixxdz@opendz.org
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 8bit
+X-CM-TRANSID:Syh0CgCHsJcQMK1o1ZJFAQ--.52077S4
+X-Coremail-Antispam: 1UD129KBjvJXoW7Kr4Utr1kGw4xJw48Xw1kZrb_yoW8ZFW7pF
+	s5Aw1Uta1rCF4kG39IvayjgFyfKF4Fqw1UGrW8G34rAr43Jryqqa1UZryjgF15AF93Wr1f
+	ZFs09r42kF12krJanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDU0xBIdaVrnRJUUU9Kb4IE77IF4wAFF20E14v26ryj6rWUM7CY07I20VC2zVCF04k2
+	6cxKx2IYs7xG6rWj6s0DM7CIcVAFz4kK6r1j6r18M28IrcIa0xkI8VA2jI8067AKxVWUXw
+	A2048vs2IY020Ec7CjxVAFwI0_Gr0_Xr1l8cAvFVAK0II2c7xJM28CjxkF64kEwVA0rcxS
+	w2x7M28EF7xvwVC0I7IYx2IY67AKxVWDJVCq3wA2z4x0Y4vE2Ix0cI8IcVCY1x0267AKxV
+	W8Jr0_Cr1UM28EF7xvwVC2z280aVAFwI0_GcCE3s1l84ACjcxK6I8E87Iv6xkF7I0E14v2
+	6rxl6s0DM2AIxVAIcxkEcVAq07x20xvEncxIr21l5I8CrVACY4xI64kE6c02F40Ex7xfMc
+	Ij6xIIjxv20xvE14v26r1j6r18McIj6I8E87Iv67AKxVWUJVW8JwAm72CE4IkC6x0Yz7v_
+	Jr0_Gr1lF7xvr2IYc2Ij64vIr41lc7CjxVAaw2AFwI0_JF0_Jw1l42xK82IYc2Ij64vIr4
+	1l4I8I3I0E4IkC6x0Yz7v_Jr0_Gr1lx2IqxVAqx4xG67AKxVWUJVWUGwC20s026x8GjcxK
+	67AKxVWUGVWUWwC2zVAF1VAY17CE14v26r126r1DMIIYrxkI7VAKI48JMIIF0xvE2Ix0cI
+	8IcVAFwI0_Jr0_JF4lIxAIcVC0I7IYx2IY6xkF7I0E14v26r4j6F4UMIIF0xvE42xK8VAv
+	wI8IcIk0rVWUJVWUCwCI42IY6I8E87Iv67AKxVWUJVW8JwCI42IY6I8E87Iv6xkF7I0E14
+	v26r4j6r4UJbIYCTnIWIevJa73UjIFyTuYvjxUcBT5DUUUU
+X-CM-SenderInfo: hfkh02xlgr0w46kxt4xhlfz01xgou0bp/
 
-On Mon, Aug 25, 2025 at 11:48=E2=80=AFAM Tejun Heo <tj@kernel.org> wrote:
->
-> Hello,
->
-> On Fri, Aug 22, 2025 at 07:16:15PM +0100, Djalal Harouni wrote:
-> ...
-> > I do realize taking the same usual path with write is the obvious thing=
-,
-> > but we don't have the corresponding open context, and faking it seems
-> > more trouble than calling directly cgroup backends...
-> >
-> > Allow me please to do it again directly on cgroup_base_file[] assuming
-> > it was Alexei suggestion and see how it looks.
+From: Chen Ridong <chenridong@huawei.com>
 
-It's been 1.5 year since v1. It's safe to assume that all opinions
-have changed, including mine.
+The cgroup_destroy_wq has been split into three separate workqueues:
+cgroup_offline_wq, cgroup_release_wq, and cgroup_free_wq. The cgroup
+destroy work is now enqueued sequentially into these queues. To clarify
+the three distinct stages of the destruction process, it will introduce
+helper functions or rename existing ones accordingly. The resulting
+structure is as follows:
 
-> I'm probably missing something but what prevents you from getting a dentr=
-y
-> from kernfs_node and then calling vfs_open() on it and then do vfs_write(=
-)
-> on the returned file?
+work		workqueue		work_fn
+css_offline	cgroup_offline_wq	css_offline_work_fn
+css_release	cgroup_release_wq	css_release_work_fn
+css_free	cgroup_free_wq		css_free_rwork_fn
 
-Generic vfs ops from kfunc feels like a can of worms.
-It will require a lot more thinking and coordination with vfs folks.
-I'd rather keep things simple especially, since this thread
-might continue in 2026.
+This patch is to add css_free helper.
 
-> If there are some fundamental reasons that we can't do something like tha=
-t,
-> let's go back to the simple approach where we just have bpf helpers for
-> freezing and unfreezing cgroups outside of fs interface.
+Signed-off-by: Chen Ridong <chenridong@huawei.com>
+---
+ kernel/cgroup/cgroup.c | 12 ++++++++----
+ 1 file changed, 8 insertions(+), 4 deletions(-)
 
-I'd just do whatever version of cgroup_lock*() is necessary
-from kfunc followed by cgroup_freeze(),
-and limit kfunc to sleepable progs, of course.
+diff --git a/kernel/cgroup/cgroup.c b/kernel/cgroup/cgroup.c
+index 5eb747a038f7..ad1f6a59a27b 100644
+--- a/kernel/cgroup/cgroup.c
++++ b/kernel/cgroup/cgroup.c
+@@ -5517,6 +5517,12 @@ static void css_free_rwork_fn(struct work_struct *work)
+ 	}
+ }
+ 
++static void css_free(struct cgroup_subsys_state *css)
++{
++	INIT_RCU_WORK(&css->destroy_rwork, css_free_rwork_fn);
++	queue_rcu_work(cgroup_free_wq, &css->destroy_rwork);
++}
++
+ static void css_release_work_fn(struct work_struct *work)
+ {
+ 	struct cgroup_subsys_state *css =
+@@ -5580,8 +5586,7 @@ static void css_release_work_fn(struct work_struct *work)
+ 
+ 	cgroup_unlock();
+ 
+-	INIT_RCU_WORK(&css->destroy_rwork, css_free_rwork_fn);
+-	queue_rcu_work(cgroup_free_wq, &css->destroy_rwork);
++	css_free(css);
+ }
+ 
+ static void css_release(struct percpu_ref *ref)
+@@ -5718,8 +5723,7 @@ static struct cgroup_subsys_state *css_create(struct cgroup *cgrp,
+ err_list_del:
+ 	list_del_rcu(&css->sibling);
+ err_free_css:
+-	INIT_RCU_WORK(&css->destroy_rwork, css_free_rwork_fn);
+-	queue_rcu_work(cgroup_free_wq, &css->destroy_rwork);
++	css_free(css);
+ 	return ERR_PTR(err);
+ }
+ 
+-- 
+2.34.1
+
