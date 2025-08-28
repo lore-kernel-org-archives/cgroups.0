@@ -1,27 +1,26 @@
 Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8C26931062E;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8C3503112BF;
 	Thu, 28 Aug 2025 13:11:33 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.51
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1756386695; cv=none; b=aTOZHAxZuKNT9hknFqL2qI8TYWQVsCPKTJJhJz2oVRF6fcBC2wBbnuNRAHJMaTQErUBgz44HFtlKxkN1fi4LQpfN6q+iq4knEoTzQSeRKWrGidkBU3KTHLwRprPY7mD33ZBcOxpj/r7h0gPrnEAXiRFG//x8e9xAZwlMrZZGvhc=
+	t=1756386695; cv=none; b=uhcm+Mt264XurcaFlNk1RAXM3oxjlkJHvsx7daa9ifrR/ZdhX16p2KUcsu9ee2IIf4+gLdlXqBq1XO1uJ+gHZzX4lyg3eLgeLB1meoRtc8dK4UhIda2+znAf3eZS3MAwKBfL84Jiu4HLkVwXhYvFIlLvKfN/TLp0tSDOs7rsgBs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1756386695; c=relaxed/simple;
-	bh=pgBYejQdPa2RYEbJe136R8xKzNDZouzo9WfGZd6NNcg=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=sCQx44IIhvgcgYb3g480e6ESNlBH6PRYXni6RR1sf6IaT2FkMY7Vz5fB65zzhs/ZmaLbq/ytqo/0UGOJAbC4ubC2ccPusW7Ek0QZRaDGhvcAnMEUUHBgNJoc7R4mXQrRA73f5fI8BeUsSfboGHLyjxdx9UYsXk7NfH0dAxmhJqg=
+	bh=M/NChHRMz1EubjxSqT312/k/skbF330zOVG9sCmDxEo=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=CiOUfoqKzYGv7Nae8pg2Zhq3EH50FW2E96SoCpxjDwlWetP00YB10jb9l2MvbjDztB2r7BUzLTp3+iECLy2JFm1CUylbo8Qg9dZgi7/BZIWbZ6gdCytpepoR7tmsqqhVcj3Yg04/uiIJ4WLrn5wXSJQm1UuoPw9IXN2eNhGMM1A=
 ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.51
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
 Received: from mail.maildlp.com (unknown [172.19.93.142])
-	by dggsgout11.his.huawei.com (SkyGuard) with ESMTPS id 4cCMH86jLBzYQvgx;
+	by dggsgout11.his.huawei.com (SkyGuard) with ESMTPS id 4cCMH85wSwzYQvdM;
 	Thu, 28 Aug 2025 21:11:32 +0800 (CST)
 Received: from mail02.huawei.com (unknown [10.116.40.252])
-	by mail.maildlp.com (Postfix) with ESMTP id 74F481A135F;
+	by mail.maildlp.com (Postfix) with ESMTP id 5A0C71A1356;
 	Thu, 28 Aug 2025 21:11:31 +0800 (CST)
 Received: from hulk-vt.huawei.com (unknown [10.67.174.121])
-	by APP3 (Coremail) with SMTP id _Ch0CgBX8mlsVbBoQsxPAg--.40352S4;
+	by APP3 (Coremail) with SMTP id _Ch0CgBX8mlsVbBoQsxPAg--.40352S2;
 	Thu, 28 Aug 2025 21:11:31 +0800 (CST)
 From: Chen Ridong <chenridong@huaweicloud.com>
 To: longman@redhat.com,
@@ -32,12 +31,10 @@ Cc: cgroups@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
 	lujialin4@huawei.com,
 	chenridong@huawei.com
-Subject: [PATCH -next RFC 02/11] cpuset: remove unused assignment to trialcs->partition_root_state
-Date: Thu, 28 Aug 2025 12:56:22 +0000
-Message-Id: <20250828125631.1978176-3-chenridong@huaweicloud.com>
+Subject: [PATCH -next RFC 00/11] Refactor cpus mask setting
+Date: Thu, 28 Aug 2025 12:56:20 +0000
+Message-Id: <20250828125631.1978176-1-chenridong@huaweicloud.com>
 X-Mailer: git-send-email 2.34.1
-In-Reply-To: <20250828125631.1978176-1-chenridong@huaweicloud.com>
-References: <20250828125631.1978176-1-chenridong@huaweicloud.com>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
@@ -45,56 +42,60 @@ List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:_Ch0CgBX8mlsVbBoQsxPAg--.40352S4
-X-Coremail-Antispam: 1UD129KBjvJXoWrKFW8ur47GFWkurW8CryfZwb_yoW8Jr45pF
-	WDGa1UJay5Wryjk3yDKrsrWryrKw4DXayDtwnxt34rGFy7Z3WqyFyqv3sxZw1xt39rCF18
-	JasIvrWS9a92yrUanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDU0xBIdaVrnRJUUU9Kb4IE77IF4wAFF20E14v26rWj6s0DM7CY07I20VC2zVCF04k2
-	6cxKx2IYs7xG6rWj6s0DM7CIcVAFz4kK6r1j6r18M28IrcIa0xkI8VA2jI8067AKxVWUXw
-	A2048vs2IY020Ec7CjxVAFwI0_Gr0_Xr1l8cAvFVAK0II2c7xJM28CjxkF64kEwVA0rcxS
-	w2x7M28EF7xvwVC0I7IYx2IY67AKxVWDJVCq3wA2z4x0Y4vE2Ix0cI8IcVCY1x0267AKxV
-	W8Jr0_Cr1UM28EF7xvwVC2z280aVAFwI0_GcCE3s1l84ACjcxK6I8E87Iv6xkF7I0E14v2
-	6rxl6s0DM2AIxVAIcxkEcVAq07x20xvEncxIr21l5I8CrVACY4xI64kE6c02F40Ex7xfMc
-	Ij6xIIjxv20xvE14v26r1j6r18McIj6I8E87Iv67AKxVWUJVW8JwAm72CE4IkC6x0Yz7v_
-	Jr0_Gr1lF7xvr2IYc2Ij64vIr41lc7CjxVAaw2AFwI0_JF0_Jw1l42xK82IYc2Ij64vIr4
-	1l4I8I3I0E4IkC6x0Yz7v_Jr0_Gr1lx2IqxVAqx4xG67AKxVWUJVWUGwC20s026x8GjcxK
-	67AKxVWUGVWUWwC2zVAF1VAY17CE14v26r1q6r43MIIYrxkI7VAKI48JMIIF0xvE2Ix0cI
-	8IcVAFwI0_Jr0_JF4lIxAIcVC0I7IYx2IY6xkF7I0E14v26r4j6F4UMIIF0xvE42xK8VAv
-	wI8IcIk0rVWUJVWUCwCI42IY6I8E87Iv67AKxVWUJVW8JwCI42IY6I8E87Iv6xkF7I0E14
-	v26r4j6r4UJbIYCTnIWIevJa73UjIFyTuYvjxUcTmhUUUUU
+X-CM-TRANSID:_Ch0CgBX8mlsVbBoQsxPAg--.40352S2
+X-Coremail-Antispam: 1UD129KBjvJXoW7Ar4kZF1UJw18uw1kCF45ZFb_yoW8Ww15pF
+	yakF13Ary8Gr1akanxJ397Wr4Yga1ktF47tFy3K34xKry7ZF1qyryvyasxuFy3GF9xCw1U
+	XanIqFs29FnrA37anT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDU0xBIdaVrnRJUUUyKb4IE77IF4wAFF20E14v26r4j6ryUM7CY07I20VC2zVCF04k2
+	6cxKx2IYs7xG6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rwA2F7IY1VAKz4
+	vEj48ve4kI8wA2z4x0Y4vE2Ix0cI8IcVAFwI0_tr0E3s1l84ACjcxK6xIIjxv20xvEc7Cj
+	xVAFwI0_Gr1j6F4UJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x
+	0267AKxVW0oVCq3wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG
+	6I80ewAv7VC0I7IYx2IY67AKxVWUJVWUGwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFV
+	Cjc4AY6r1j6r4UM4x0Y48IcxkI7VAKI48JMxkF7I0En4kS14v26r126r1DMxAIw28IcxkI
+	7VAKI48JMxC20s026xCaFVCjc4AY6r1j6r4UMI8I3I0E5I8CrVAFwI0_Jr0_Jr4lx2IqxV
+	Cjr7xvwVAFwI0_JrI_JrWlx4CE17CEb7AF67AKxVWUtVW8ZwCIc40Y0x0EwIxGrwCI42IY
+	6xIIjxv20xvE14v26r1j6r1xMIIF0xvE2Ix0cI8IcVCY1x0267AKxVWUJVW8JwCI42IY6x
+	AIw20EY4v20xvaj40_Jr0_JF4lIxAIcVC2z280aVAFwI0_Jr0_Gr1lIxAIcVC2z280aVCY
+	1x0267AKxVWUJVW8JbIYCTnIWIevJa73UjIFyTuYvjxUwxhLUUUUU
 X-CM-SenderInfo: hfkh02xlgr0w46kxt4xhlfz01xgou0bp/
 
 From: Chen Ridong <chenridong@huawei.com>
 
-The trialcs->partition_root_state field is not used during the
-configuration of 'cpuset.cpus' or 'cpuset.cpus.exclusive'. Therefore,
-the assignment of values to this field can be safely removed.
+This patch series refactors the CPU mask configuration logic for both
+cpuset.cpus and cpuset.cpus.exclusive settings. The primary goal is to
+improve code readability through comprehensive function restructuring.
 
-Signed-off-by: Chen Ridong <chenridong@huawei.com>
----
- kernel/cgroup/cpuset.c | 2 --
- 1 file changed, 2 deletions(-)
+The CPU mask update process follows these steps:
+1. Parse user input
+2. Skip processing if no actual change to CPU mask
+3. Compute trial cpuset's effective exclusive CPUs
+4. Validate changes and return error if invalid
+5. Handle partition state changes resulting from CPU mask modifications
+6. Apply new CPU mask to the cpuset
+7. Propagate changes through the hierarchy
 
-diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
-index 7e6a40e361ea..6fc25fd2300b 100644
---- a/kernel/cgroup/cpuset.c
-+++ b/kernel/cgroup/cpuset.c
-@@ -2364,7 +2364,6 @@ static int update_cpumask(struct cpuset *cs, struct cpuset *trialcs,
- 		 * trialcs->effective_xcpus is used as a temporary cpumask
- 		 * for checking validity of the partition root.
- 		 */
--		trialcs->partition_root_state = PRS_MEMBER;
- 		if (!cpumask_empty(trialcs->exclusive_cpus) || is_partition_valid(cs))
- 			compute_effective_exclusive_cpumask(trialcs, NULL, cs);
- 	}
-@@ -2498,7 +2497,6 @@ static int update_exclusive_cpumask(struct cpuset *cs, struct cpuset *trialcs,
- 		return 0;
- 
- 	if (*buf) {
--		trialcs->partition_root_state = PRS_MEMBER;
- 		/*
- 		 * Reject the change if there is exclusive CPUs conflict with
- 		 * the siblings.
+The series is organized as follows:
+patches 1-3: Code cleanup and preparation for refactoring
+patches 4-9: Refactoring of cpuset.cpus configuration logic
+patches 10-11: Refactoring of cpuset.cpus.exclusive configuration logic
+
+Chen Ridong (11):
+  cpuset: move the root cpuset write check earlier
+  cpuset: remove unused assignment to trialcs->partition_root_state
+  cpuset: change return type of is_partition_[in]valid to bool
+  cpuset: Refactor exclusive CPU mask computation logic
+  cpuset: refactor CPU mask buffer parsing logic
+  cpuset: introduce cpus_excl_conflict and mems_excl_conflict helpers
+  cpuset: refactor out invalidate_cs_partition
+  cpuset: refactor acpus_validate_change
+  cpuset: refactor partition_cpus_change
+  cpuset: use parse_cpulist for setting cpus.exclusive
+  cpuset: use partition_cpus_change for setting exclusive cpus
+
+ kernel/cgroup/cpuset.c | 443 ++++++++++++++++++++++-------------------
+ 1 file changed, 239 insertions(+), 204 deletions(-)
+
 -- 
 2.34.1
 
