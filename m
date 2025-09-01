@@ -1,28 +1,28 @@
 Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DEFF71D86D6;
-	Mon,  1 Sep 2025 03:41:16 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C2AF820C461;
+	Mon,  1 Sep 2025 03:41:18 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.51
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1756698080; cv=none; b=R+FUdpOTze7IhEpBj9K0pODjRCrU0Fg63HKaKBAAiNQQmrLr9R5pVSU9zn4rhe+gSoFzdfpXhpLdUj8utOXekh96c7EEBUSYNP+H9IZObw6aFtzHK/c71Q4Sa9icpaTsMCoPKDkPlFd97P1L/2cvuOxMRFlUq3N7OEK0Dd4FAHc=
+	t=1756698080; cv=none; b=ECFUp93t4zBnFz5YX/fezkK1qruWi4V54kgPv1k5ygKb4NXRgwRw9g4pI8urwm0ci+jX7XXlKu4BBycONf+4gWi3BpBdhLWO3an0tq/u80sIAQCagULyBNhtK8KCt3T3sBbTACF2RtpxX3VJk91QJGYhE7jO3sl+MgbGvAsBQCo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1756698080; c=relaxed/simple;
-	bh=K03xm8emqUDdQ2Z/2v0DO7MbLus3XmLP4QvPyM5H3mA=;
+	bh=WocAxZYZxzHYr79diAFydaY6JXd45C/1I3t8kuUpdBI=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=C/W0C2jLbDJ+5QS56QdHkEcnT0Ily46MI+RW7fCOv8hkfzRYrPpDRAM3ukJx0LkbDKH1aA0K2GlY6lAvTyrttPWU5tRh6wAYFjGjvOuZzUPzYPmr9aK7ucicWCCujzcet8W5Aknb0l8/6AToS2bTkzvWj5j1g7Ghh3GjB8w84i4=
+	 MIME-Version; b=iO4lJ7a6hRfUsh2tiJXXmEz0PqiSBw6WdZN8393SQalqzyFiqEsd+YTgw4Ctrop18s3XZXSQkOgaxLRJW1G/N5luxq0L33r0GtAqIanmIeZ7DdOr6HiuGYuhqwFx6/h20edHwd/CAgf8UH3UEuMLPvBy2j+XUfYk3LNtYJPNi80=
 ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.51
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
-Received: from mail.maildlp.com (unknown [172.19.163.235])
-	by dggsgout11.his.huawei.com (SkyGuard) with ESMTPS id 4cFZRH4lsszYQvDd;
-	Mon,  1 Sep 2025 11:41:15 +0800 (CST)
+Received: from mail.maildlp.com (unknown [172.19.93.142])
+	by dggsgout11.his.huawei.com (SkyGuard) with ESMTPS id 4cFZRL0kPNzYQvQH;
+	Mon,  1 Sep 2025 11:41:18 +0800 (CST)
 Received: from mail02.huawei.com (unknown [10.116.40.128])
-	by mail.maildlp.com (Postfix) with ESMTP id 29A2A1A0B1B;
-	Mon,  1 Sep 2025 11:41:14 +0800 (CST)
+	by mail.maildlp.com (Postfix) with ESMTP id 93BC61A0E64;
+	Mon,  1 Sep 2025 11:41:16 +0800 (CST)
 Received: from huaweicloud.com (unknown [10.175.104.67])
-	by APP4 (Coremail) with SMTP id gCh0CgAncIzWFbVotmf1Aw--.38057S5;
-	Mon, 01 Sep 2025 11:41:13 +0800 (CST)
+	by APP4 (Coremail) with SMTP id gCh0CgAncIzWFbVotmf1Aw--.38057S8;
+	Mon, 01 Sep 2025 11:41:16 +0800 (CST)
 From: Yu Kuai <yukuai1@huaweicloud.com>
 To: hch@infradead.org,
 	colyli@kernel.org,
@@ -47,9 +47,9 @@ Cc: linux-block@vger.kernel.org,
 	yi.zhang@huawei.com,
 	yangerkun@huawei.com,
 	johnny.chenyi@huawei.com
-Subject: [PATCH RFC v3 01/15] block: cleanup bio_issue
-Date: Mon,  1 Sep 2025 11:32:06 +0800
-Message-Id: <20250901033220.42982-2-yukuai1@huaweicloud.com>
+Subject: [PATCH RFC v3 04/15] blk-crypto: fix missing processing for split bio
+Date: Mon,  1 Sep 2025 11:32:09 +0800
+Message-Id: <20250901033220.42982-5-yukuai1@huaweicloud.com>
 X-Mailer: git-send-email 2.39.2
 In-Reply-To: <20250901033220.42982-1-yukuai1@huaweicloud.com>
 References: <20250901033220.42982-1-yukuai1@huaweicloud.com>
@@ -60,180 +60,53 @@ List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:gCh0CgAncIzWFbVotmf1Aw--.38057S5
-X-Coremail-Antispam: 1UD129KBjvJXoW3WFWkZrWfGF4ftr13uF4Uurg_yoW7GF48pr
-	4fJr93Gr93tFsrWr4kta1DA34rGrs5Cry3G398uwsaya1I9ryxJF1kZF40qFykCFZ5CFZ8
-	XF18t3yYkw4Yk3DanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDU0xBIdaVrnRJUUUm014x267AKxVWrJVCq3wAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
-	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2048vs2IY020E87I2jVAFwI0_Jr4l82xGYIkIc2
-	x26xkF7I0E14v26ryj6s0DM28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48ve4kI8wA2z4x0
-	Y4vE2Ix0cI8IcVAFwI0_tr0E3s1l84ACjcxK6xIIjxv20xvEc7CjxVAFwI0_Gr1j6F4UJw
-	A2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x0267AKxVW0oVCq3wAS
-	0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG6I80ewAv7VC0I7IYx2
-	IY67AKxVWUGVWUXwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFVCjc4AY6r1j6r4UM4x0
-	Y48IcxkI7VAKI48JM4x0x7Aq67IIx4CEVc8vx2IErcIFxwACI402YVCY1x02628vn2kIc2
-	xKxwCY1x0262kKe7AKxVW8ZVWrXwCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7xkEbVWU
-	JVW8JwC20s026c02F40E14v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E67AF67
-	kF1VAFwI0_GFv_WrylIxkGc2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUJVWUCwCI42IY
-	6xIIjxv20xvEc7CjxVAFwI0_Gr0_Cr1lIxAIcVCF04k26cxKx2IYs7xG6r1j6r1xMIIF0x
-	vEx4A2jsIE14v26r1j6r4UMIIF0xvEx4A2jsIEc7CjxVAFwI0_Gr0_Gr1UYxBIdaVFxhVj
-	vjDU0xZFpf9x0JUU9N3UUUUU=
+X-CM-TRANSID:gCh0CgAncIzWFbVotmf1Aw--.38057S8
+X-Coremail-Antispam: 1UD129KBjvdXoWrtFWkCF4xCF47Gw48urWruFg_yoWDJrX_WF
+	WfWr1kJrWkG3Z7CFnYkFyvyw4kK34rZryUWFW7Ja4UAF4fGFWvkF43WFZ8urs2kFWxWa43
+	Ca1DZFy8Kw1SqjkaLaAFLSUrUUUUjb8apTn2vfkv8UJUUUU8Yxn0WfASr-VFAUDa7-sFnT
+	9fnUUIcSsGvfJTRUUUbvAFF20E14v26rWj6s0DM7CY07I20VC2zVCF04k26cxKx2IYs7xG
+	6rWj6s0DM7CIcVAFz4kK6r1j6r18M28IrcIa0xkI8VA2jI8067AKxVWUAVCq3wA2048vs2
+	IY020Ec7CjxVAFwI0_Xr0E3s1l8cAvFVAK0II2c7xJM28CjxkF64kEwVA0rcxSw2x7M28E
+	F7xvwVC0I7IYx2IY67AKxVWDJVCq3wA2z4x0Y4vE2Ix0cI8IcVCY1x0267AKxVW8Jr0_Cr
+	1UM28EF7xvwVC2z280aVAFwI0_GcCE3s1l84ACjcxK6I8E87Iv6xkF7I0E14v26rxl6s0D
+	M2AIxVAIcxkEcVAq07x20xvEncxIr21l5I8CrVACY4xI64kE6c02F40Ex7xfMcIj6xIIjx
+	v20xvE14v26r106r15McIj6I8E87Iv67AKxVWUJVW8JwAm72CE4IkC6x0Yz7v_Jr0_Gr1l
+	F7xvr2IYc2Ij64vIr41lF7I21c0EjII2zVCS5cI20VAGYxC7M4IIrI8v6xkF7I0E8cxan2
+	IY04v7MxkF7I0En4kS14v26r4a6rW5MxAIw28IcxkI7VAKI48JMxC20s026xCaFVCjc4AY
+	6r1j6r4UMI8I3I0E5I8CrVAFwI0_Jr0_Jr4lx2IqxVCjr7xvwVAFwI0_JrI_JrWlx4CE17
+	CEb7AF67AKxVW8ZVWrXwCIc40Y0x0EwIxGrwCI42IY6xIIjxv20xvE14v26r1j6r1xMIIF
+	0xvE2Ix0cI8IcVCY1x0267AKxVW8Jr0_Cr1UMIIF0xvE42xK8VAvwI8IcIk0rVWUJVWUCw
+	CI42IY6I8E87Iv67AKxVWUJVW8JwCI42IY6I8E87Iv6xkF7I0E14v26r4UJVWxJrUvcSsG
+	vfC2KfnxnUUI43ZEXa7sRRtCztUUUUU==
 X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
 
 From: Yu Kuai <yukuai3@huawei.com>
 
-Now that bio->bi_issue is only used by io-latency to get bio issue time,
-replace bio_issue with u64 time directly and remove bio_issue to make
-code cleaner.
+1) trace_block_split() is missing and blktrace can't catch split events;
+2) blkcg_bio_issue_init() is missing, and io-latency will not work
+   correctly for split bio.
 
+Fixes: 488f6682c832 ("block: blk-crypto-fallback for Inline Encryption")
 Signed-off-by: Yu Kuai <yukuai3@huawei.com>
 ---
- block/bio.c               |  2 +-
- block/blk-cgroup.h        |  2 +-
- block/blk-iolatency.c     | 14 +++----------
- block/blk.h               | 42 ---------------------------------------
- include/linux/blk_types.h |  7 ++-----
- 5 files changed, 7 insertions(+), 60 deletions(-)
+ block/blk-crypto-fallback.c | 3 +++
+ 1 file changed, 3 insertions(+)
 
-diff --git a/block/bio.c b/block/bio.c
-index 44c43b970387..c8fce0d6e332 100644
---- a/block/bio.c
-+++ b/block/bio.c
-@@ -261,7 +261,7 @@ void bio_init(struct bio *bio, struct block_device *bdev, struct bio_vec *table,
- 	bio->bi_private = NULL;
- #ifdef CONFIG_BLK_CGROUP
- 	bio->bi_blkg = NULL;
--	bio->bi_issue.value = 0;
-+	bio->issue_time_ns = 0;
- 	if (bdev)
- 		bio_associate_blkg(bio);
- #ifdef CONFIG_BLK_CGROUP_IOCOST
-diff --git a/block/blk-cgroup.h b/block/blk-cgroup.h
-index 81868ad86330..d73204d27d72 100644
---- a/block/blk-cgroup.h
-+++ b/block/blk-cgroup.h
-@@ -372,7 +372,7 @@ static inline void blkg_put(struct blkcg_gq *blkg)
- 
- static inline void blkcg_bio_issue_init(struct bio *bio)
- {
--	bio_issue_init(&bio->bi_issue, bio_sectors(bio));
-+	bio->issue_time_ns = blk_time_get_ns();
- }
- 
- static inline void blkcg_use_delay(struct blkcg_gq *blkg)
-diff --git a/block/blk-iolatency.c b/block/blk-iolatency.c
-index 2f8fdecdd7a9..554b191a6892 100644
---- a/block/blk-iolatency.c
-+++ b/block/blk-iolatency.c
-@@ -485,19 +485,11 @@ static void blkcg_iolatency_throttle(struct rq_qos *rqos, struct bio *bio)
- 		mod_timer(&blkiolat->timer, jiffies + HZ);
- }
- 
--static void iolatency_record_time(struct iolatency_grp *iolat,
--				  struct bio_issue *issue, u64 now,
--				  bool issue_as_root)
-+static void iolatency_record_time(struct iolatency_grp *iolat, u64 start,
-+				  u64 now, bool issue_as_root)
- {
--	u64 start = bio_issue_time(issue);
- 	u64 req_time;
- 
--	/*
--	 * Have to do this so we are truncated to the correct time that our
--	 * issue is truncated to.
--	 */
--	now = __bio_issue_time(now);
--
- 	if (now <= start)
- 		return;
- 
-@@ -625,7 +617,7 @@ static void blkcg_iolatency_done_bio(struct rq_qos *rqos, struct bio *bio)
- 		 * submitted, so do not account for it.
- 		 */
- 		if (iolat->min_lat_nsec && bio->bi_status != BLK_STS_AGAIN) {
--			iolatency_record_time(iolat, &bio->bi_issue, now,
-+			iolatency_record_time(iolat, bio->issue_time_ns, now,
- 					      issue_as_root);
- 			window_start = atomic64_read(&iolat->window_start);
- 			if (now > window_start &&
-diff --git a/block/blk.h b/block/blk.h
-index 46f566f9b126..0268deb22268 100644
---- a/block/blk.h
-+++ b/block/blk.h
-@@ -680,48 +680,6 @@ static inline ktime_t blk_time_get(void)
- 	return ns_to_ktime(blk_time_get_ns());
- }
- 
--/*
-- * From most significant bit:
-- * 1 bit: reserved for other usage, see below
-- * 12 bits: original size of bio
-- * 51 bits: issue time of bio
-- */
--#define BIO_ISSUE_RES_BITS      1
--#define BIO_ISSUE_SIZE_BITS     12
--#define BIO_ISSUE_RES_SHIFT     (64 - BIO_ISSUE_RES_BITS)
--#define BIO_ISSUE_SIZE_SHIFT    (BIO_ISSUE_RES_SHIFT - BIO_ISSUE_SIZE_BITS)
--#define BIO_ISSUE_TIME_MASK     ((1ULL << BIO_ISSUE_SIZE_SHIFT) - 1)
--#define BIO_ISSUE_SIZE_MASK     \
--	(((1ULL << BIO_ISSUE_SIZE_BITS) - 1) << BIO_ISSUE_SIZE_SHIFT)
--#define BIO_ISSUE_RES_MASK      (~((1ULL << BIO_ISSUE_RES_SHIFT) - 1))
--
--/* Reserved bit for blk-throtl */
--#define BIO_ISSUE_THROTL_SKIP_LATENCY (1ULL << 63)
--
--static inline u64 __bio_issue_time(u64 time)
--{
--	return time & BIO_ISSUE_TIME_MASK;
--}
--
--static inline u64 bio_issue_time(struct bio_issue *issue)
--{
--	return __bio_issue_time(issue->value);
--}
--
--static inline sector_t bio_issue_size(struct bio_issue *issue)
--{
--	return ((issue->value & BIO_ISSUE_SIZE_MASK) >> BIO_ISSUE_SIZE_SHIFT);
--}
--
--static inline void bio_issue_init(struct bio_issue *issue,
--				       sector_t size)
--{
--	size &= (1ULL << BIO_ISSUE_SIZE_BITS) - 1;
--	issue->value = ((issue->value & BIO_ISSUE_RES_MASK) |
--			(blk_time_get_ns() & BIO_ISSUE_TIME_MASK) |
--			((u64)size << BIO_ISSUE_SIZE_SHIFT));
--}
--
- void bdev_release(struct file *bdev_file);
- int bdev_open(struct block_device *bdev, blk_mode_t mode, void *holder,
- 	      const struct blk_holder_ops *hops, struct file *bdev_file);
-diff --git a/include/linux/blk_types.h b/include/linux/blk_types.h
-index 930daff207df..b8be751e16fc 100644
---- a/include/linux/blk_types.h
-+++ b/include/linux/blk_types.h
-@@ -198,10 +198,6 @@ static inline bool blk_path_error(blk_status_t error)
- 	return true;
- }
- 
--struct bio_issue {
--	u64 value;
--};
--
- typedef __u32 __bitwise blk_opf_t;
- 
- typedef unsigned int blk_qc_t;
-@@ -242,7 +238,8 @@ struct bio {
- 	 * on release of the bio.
- 	 */
- 	struct blkcg_gq		*bi_blkg;
--	struct bio_issue	bi_issue;
-+	/* Time that this bio was issued. */
-+	u64			issue_time_ns;
- #ifdef CONFIG_BLK_CGROUP_IOCOST
- 	u64			bi_iocost_cost;
- #endif
+diff --git a/block/blk-crypto-fallback.c b/block/blk-crypto-fallback.c
+index 005c9157ffb3..cae11c2f96c5 100644
+--- a/block/blk-crypto-fallback.c
++++ b/block/blk-crypto-fallback.c
+@@ -231,7 +231,10 @@ static bool blk_crypto_fallback_split_bio_if_needed(struct bio **bio_ptr)
+ 			bio->bi_status = BLK_STS_RESOURCE;
+ 			return false;
+ 		}
++
++		blkcg_bio_issue_init(split_bio);
+ 		bio_chain(split_bio, bio);
++		trace_block_split(split_bio, bio->bi_iter.bi_sector);
+ 		submit_bio_noacct(bio);
+ 		*bio_ptr = split_bio;
+ 	}
 -- 
 2.39.2
 
