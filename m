@@ -1,28 +1,28 @@
-Received: from dggsgout12.his.huawei.com (dggsgout12.his.huawei.com [45.249.212.56])
+Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E241F1FF1C8;
-	Mon,  1 Sep 2025 03:41:17 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.56
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DEFF71D86D6;
+	Mon,  1 Sep 2025 03:41:16 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.51
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1756698080; cv=none; b=IRTSaVxqKBL/TUrvWYH8juwcj8uS3Vgx5wxpWUx+lsjq4ZPdIuXOfy67/QPEkrCYtf6KSEZjmkODIPdivc588jWYLGvxa3zIF0xDRe15CanNpddOdFl8S6lbr8M4ToWz0t6GJKH+DJR4LKzjRibTrZvBAhjNLCAesT3JrLzZA1M=
+	t=1756698080; cv=none; b=R+FUdpOTze7IhEpBj9K0pODjRCrU0Fg63HKaKBAAiNQQmrLr9R5pVSU9zn4rhe+gSoFzdfpXhpLdUj8utOXekh96c7EEBUSYNP+H9IZObw6aFtzHK/c71Q4Sa9icpaTsMCoPKDkPlFd97P1L/2cvuOxMRFlUq3N7OEK0Dd4FAHc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1756698080; c=relaxed/simple;
-	bh=SLTencwmD7KZGOqNFldxB3Nku4h5ITGXVISVmFbcQIs=;
+	bh=K03xm8emqUDdQ2Z/2v0DO7MbLus3XmLP4QvPyM5H3mA=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=KW+qVMQcwxVf7dGfvO7k022UpIqGwfYstoaphSS+TzLOzMFY26Nvf23WyHM2GPNNXiOyI5GU8UJ9h3x5Qdy1zaFh+IM0ssxpmA2SLG4hFmVyf+KTEowIgja37SVdSh5ED97mvA82icTHr1F06m4Ooqz+Cfo2Io2Fbjo7BJNrXKI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.56
+	 MIME-Version; b=C/W0C2jLbDJ+5QS56QdHkEcnT0Ily46MI+RW7fCOv8hkfzRYrPpDRAM3ukJx0LkbDKH1aA0K2GlY6lAvTyrttPWU5tRh6wAYFjGjvOuZzUPzYPmr9aK7ucicWCCujzcet8W5Aknb0l8/6AToS2bTkzvWj5j1g7Ghh3GjB8w84i4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.51
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
 Received: from mail.maildlp.com (unknown [172.19.163.235])
-	by dggsgout12.his.huawei.com (SkyGuard) with ESMTPS id 4cFZRJ017dzKHN7D;
+	by dggsgout11.his.huawei.com (SkyGuard) with ESMTPS id 4cFZRH4lsszYQvDd;
 	Mon,  1 Sep 2025 11:41:15 +0800 (CST)
 Received: from mail02.huawei.com (unknown [10.116.40.128])
-	by mail.maildlp.com (Postfix) with ESMTP id C2E001A0F85;
-	Mon,  1 Sep 2025 11:41:15 +0800 (CST)
+	by mail.maildlp.com (Postfix) with ESMTP id 29A2A1A0B1B;
+	Mon,  1 Sep 2025 11:41:14 +0800 (CST)
 Received: from huaweicloud.com (unknown [10.175.104.67])
-	by APP4 (Coremail) with SMTP id gCh0CgAncIzWFbVotmf1Aw--.38057S7;
-	Mon, 01 Sep 2025 11:41:15 +0800 (CST)
+	by APP4 (Coremail) with SMTP id gCh0CgAncIzWFbVotmf1Aw--.38057S5;
+	Mon, 01 Sep 2025 11:41:13 +0800 (CST)
 From: Yu Kuai <yukuai1@huaweicloud.com>
 To: hch@infradead.org,
 	colyli@kernel.org,
@@ -47,9 +47,9 @@ Cc: linux-block@vger.kernel.org,
 	yi.zhang@huawei.com,
 	yangerkun@huawei.com,
 	johnny.chenyi@huawei.com
-Subject: [PATCH RFC v3 03/15] md: fix mssing blktrace bio split events
-Date: Mon,  1 Sep 2025 11:32:08 +0800
-Message-Id: <20250901033220.42982-4-yukuai1@huaweicloud.com>
+Subject: [PATCH RFC v3 01/15] block: cleanup bio_issue
+Date: Mon,  1 Sep 2025 11:32:06 +0800
+Message-Id: <20250901033220.42982-2-yukuai1@huaweicloud.com>
 X-Mailer: git-send-email 2.39.2
 In-Reply-To: <20250901033220.42982-1-yukuai1@huaweicloud.com>
 References: <20250901033220.42982-1-yukuai1@huaweicloud.com>
@@ -60,12 +60,12 @@ List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:gCh0CgAncIzWFbVotmf1Aw--.38057S7
-X-Coremail-Antispam: 1UD129KBjvJXoWxWFy5ZFykGryUXr1DCF1ftFb_yoWrCw1fpw
-	4jvFy3Z3y5GrZ09wsrZFZFkas5J3WqgrWUCFWxJws3ZasrZF9rKa18XFWFqr909F15Wa47
-	Jr1kC3y3Cw1jqr7anT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDU0xBIdaVrnRJUUUmF14x267AKxVWrJVCq3wAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
-	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2048vs2IY020E87I2jVAFwI0_JrWl82xGYIkIc2
+X-CM-TRANSID:gCh0CgAncIzWFbVotmf1Aw--.38057S5
+X-Coremail-Antispam: 1UD129KBjvJXoW3WFWkZrWfGF4ftr13uF4Uurg_yoW7GF48pr
+	4fJr93Gr93tFsrWr4kta1DA34rGrs5Cry3G398uwsaya1I9ryxJF1kZF40qFykCFZ5CFZ8
+	XF18t3yYkw4Yk3DanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDU0xBIdaVrnRJUUUm014x267AKxVWrJVCq3wAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
+	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2048vs2IY020E87I2jVAFwI0_Jr4l82xGYIkIc2
 	x26xkF7I0E14v26ryj6s0DM28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48ve4kI8wA2z4x0
 	Y4vE2Ix0cI8IcVAFwI0_tr0E3s1l84ACjcxK6xIIjxv20xvEc7CjxVAFwI0_Gr1j6F4UJw
 	A2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x0267AKxVW0oVCq3wAS
@@ -75,146 +75,165 @@ X-Coremail-Antispam: 1UD129KBjvJXoWxWFy5ZFykGryUXr1DCF1ftFb_yoWrCw1fpw
 	xKxwCY1x0262kKe7AKxVW8ZVWrXwCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7xkEbVWU
 	JVW8JwC20s026c02F40E14v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E67AF67
 	kF1VAFwI0_GFv_WrylIxkGc2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUJVWUCwCI42IY
-	6xIIjxv20xvEc7CjxVAFwI0_Cr0_Gr1UMIIF0xvE42xK8VAvwI8IcIk0rVWUJVWUCwCI42
-	IY6I8E87Iv67AKxVWUJVW8JwCI42IY6I8E87Iv6xkF7I0E14v26r4UJVWxJrUvcSsGvfC2
-	KfnxnUUI43ZEXa7VUUbAw7UUUUU==
+	6xIIjxv20xvEc7CjxVAFwI0_Gr0_Cr1lIxAIcVCF04k26cxKx2IYs7xG6r1j6r1xMIIF0x
+	vEx4A2jsIE14v26r1j6r4UMIIF0xvEx4A2jsIEc7CjxVAFwI0_Gr0_Gr1UYxBIdaVFxhVj
+	vjDU0xZFpf9x0JUU9N3UUUUU=
 X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
 
 From: Yu Kuai <yukuai3@huawei.com>
 
-If bio is split by internal chunksize of badblocks, the corresponding
-trace_block_split() is missing, causing blktrace can't catch the split
-events and make it hader to analyze IO behavior.
+Now that bio->bi_issue is only used by io-latency to get bio issue time,
+replace bio_issue with u64 time directly and remove bio_issue to make
+code cleaner.
 
-Fixes: 4b1faf931650 ("block: Kill bio_pair_split()")
 Signed-off-by: Yu Kuai <yukuai3@huawei.com>
 ---
- drivers/md/md-linear.c | 1 +
- drivers/md/raid0.c     | 4 ++++
- drivers/md/raid1.c     | 4 ++++
- drivers/md/raid10.c    | 8 ++++++++
- drivers/md/raid5.c     | 2 ++
- 5 files changed, 19 insertions(+)
+ block/bio.c               |  2 +-
+ block/blk-cgroup.h        |  2 +-
+ block/blk-iolatency.c     | 14 +++----------
+ block/blk.h               | 42 ---------------------------------------
+ include/linux/blk_types.h |  7 ++-----
+ 5 files changed, 7 insertions(+), 60 deletions(-)
 
-diff --git a/drivers/md/md-linear.c b/drivers/md/md-linear.c
-index 5d9b08115375..59d7963c7843 100644
---- a/drivers/md/md-linear.c
-+++ b/drivers/md/md-linear.c
-@@ -266,6 +266,7 @@ static bool linear_make_request(struct mddev *mddev, struct bio *bio)
- 		}
+diff --git a/block/bio.c b/block/bio.c
+index 44c43b970387..c8fce0d6e332 100644
+--- a/block/bio.c
++++ b/block/bio.c
+@@ -261,7 +261,7 @@ void bio_init(struct bio *bio, struct block_device *bdev, struct bio_vec *table,
+ 	bio->bi_private = NULL;
+ #ifdef CONFIG_BLK_CGROUP
+ 	bio->bi_blkg = NULL;
+-	bio->bi_issue.value = 0;
++	bio->issue_time_ns = 0;
+ 	if (bdev)
+ 		bio_associate_blkg(bio);
+ #ifdef CONFIG_BLK_CGROUP_IOCOST
+diff --git a/block/blk-cgroup.h b/block/blk-cgroup.h
+index 81868ad86330..d73204d27d72 100644
+--- a/block/blk-cgroup.h
++++ b/block/blk-cgroup.h
+@@ -372,7 +372,7 @@ static inline void blkg_put(struct blkcg_gq *blkg)
  
- 		bio_chain(split, bio);
-+		trace_block_split(split, bio->bi_iter.bi_sector);
- 		submit_bio_noacct(bio);
- 		bio = split;
- 	}
-diff --git a/drivers/md/raid0.c b/drivers/md/raid0.c
-index f1d8811a542a..1ba7d0c090f7 100644
---- a/drivers/md/raid0.c
-+++ b/drivers/md/raid0.c
-@@ -472,7 +472,9 @@ static void raid0_handle_discard(struct mddev *mddev, struct bio *bio)
- 			bio_endio(bio);
- 			return;
- 		}
-+
- 		bio_chain(split, bio);
-+		trace_block_split(split, bio->bi_iter.bi_sector);
- 		submit_bio_noacct(bio);
- 		bio = split;
- 		end = zone->zone_end;
-@@ -620,7 +622,9 @@ static bool raid0_make_request(struct mddev *mddev, struct bio *bio)
- 			bio_endio(bio);
- 			return true;
- 		}
-+
- 		bio_chain(split, bio);
-+		trace_block_split(split, bio->bi_iter.bi_sector);
- 		raid0_map_submit_bio(mddev, bio);
- 		bio = split;
- 	}
-diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
-index 408c26398321..29edb7b548f3 100644
---- a/drivers/md/raid1.c
-+++ b/drivers/md/raid1.c
-@@ -1383,7 +1383,9 @@ static void raid1_read_request(struct mddev *mddev, struct bio *bio,
- 			error = PTR_ERR(split);
- 			goto err_handle;
- 		}
-+
- 		bio_chain(split, bio);
-+		trace_block_split(split, bio->bi_iter.bi_sector);
- 		submit_bio_noacct(bio);
- 		bio = split;
- 		r1_bio->master_bio = bio;
-@@ -1591,7 +1593,9 @@ static void raid1_write_request(struct mddev *mddev, struct bio *bio,
- 			error = PTR_ERR(split);
- 			goto err_handle;
- 		}
-+
- 		bio_chain(split, bio);
-+		trace_block_split(split, bio->bi_iter.bi_sector);
- 		submit_bio_noacct(bio);
- 		bio = split;
- 		r1_bio->master_bio = bio;
-diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
-index b60c30bfb6c7..859c40a5ecf4 100644
---- a/drivers/md/raid10.c
-+++ b/drivers/md/raid10.c
-@@ -1209,7 +1209,9 @@ static void raid10_read_request(struct mddev *mddev, struct bio *bio,
- 			error = PTR_ERR(split);
- 			goto err_handle;
- 		}
-+
- 		bio_chain(split, bio);
-+		trace_block_split(split, bio->bi_iter.bi_sector);
- 		allow_barrier(conf);
- 		submit_bio_noacct(bio);
- 		wait_barrier(conf, false);
-@@ -1495,7 +1497,9 @@ static void raid10_write_request(struct mddev *mddev, struct bio *bio,
- 			error = PTR_ERR(split);
- 			goto err_handle;
- 		}
-+
- 		bio_chain(split, bio);
-+		trace_block_split(split, bio->bi_iter.bi_sector);
- 		allow_barrier(conf);
- 		submit_bio_noacct(bio);
- 		wait_barrier(conf, false);
-@@ -1679,7 +1683,9 @@ static int raid10_handle_discard(struct mddev *mddev, struct bio *bio)
- 			bio_endio(bio);
- 			return 0;
- 		}
-+
- 		bio_chain(split, bio);
-+		trace_block_split(split, bio->bi_iter.bi_sector);
- 		allow_barrier(conf);
- 		/* Resend the fist split part */
- 		submit_bio_noacct(split);
-@@ -1694,7 +1700,9 @@ static int raid10_handle_discard(struct mddev *mddev, struct bio *bio)
- 			bio_endio(bio);
- 			return 0;
- 		}
-+
- 		bio_chain(split, bio);
-+		trace_block_split(split, bio->bi_iter.bi_sector);
- 		allow_barrier(conf);
- 		/* Resend the second split part */
- 		submit_bio_noacct(bio);
-diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-index 023649fe2476..0fb838879844 100644
---- a/drivers/md/raid5.c
-+++ b/drivers/md/raid5.c
-@@ -5475,8 +5475,10 @@ static struct bio *chunk_aligned_read(struct mddev *mddev, struct bio *raid_bio)
+ static inline void blkcg_bio_issue_init(struct bio *bio)
+ {
+-	bio_issue_init(&bio->bi_issue, bio_sectors(bio));
++	bio->issue_time_ns = blk_time_get_ns();
+ }
  
- 	if (sectors < bio_sectors(raid_bio)) {
- 		struct r5conf *conf = mddev->private;
-+
- 		split = bio_split(raid_bio, sectors, GFP_NOIO, &conf->bio_split);
- 		bio_chain(split, raid_bio);
-+		trace_block_split(split, raid_bio->bi_iter.bi_sector);
- 		submit_bio_noacct(raid_bio);
- 		raid_bio = split;
- 	}
+ static inline void blkcg_use_delay(struct blkcg_gq *blkg)
+diff --git a/block/blk-iolatency.c b/block/blk-iolatency.c
+index 2f8fdecdd7a9..554b191a6892 100644
+--- a/block/blk-iolatency.c
++++ b/block/blk-iolatency.c
+@@ -485,19 +485,11 @@ static void blkcg_iolatency_throttle(struct rq_qos *rqos, struct bio *bio)
+ 		mod_timer(&blkiolat->timer, jiffies + HZ);
+ }
+ 
+-static void iolatency_record_time(struct iolatency_grp *iolat,
+-				  struct bio_issue *issue, u64 now,
+-				  bool issue_as_root)
++static void iolatency_record_time(struct iolatency_grp *iolat, u64 start,
++				  u64 now, bool issue_as_root)
+ {
+-	u64 start = bio_issue_time(issue);
+ 	u64 req_time;
+ 
+-	/*
+-	 * Have to do this so we are truncated to the correct time that our
+-	 * issue is truncated to.
+-	 */
+-	now = __bio_issue_time(now);
+-
+ 	if (now <= start)
+ 		return;
+ 
+@@ -625,7 +617,7 @@ static void blkcg_iolatency_done_bio(struct rq_qos *rqos, struct bio *bio)
+ 		 * submitted, so do not account for it.
+ 		 */
+ 		if (iolat->min_lat_nsec && bio->bi_status != BLK_STS_AGAIN) {
+-			iolatency_record_time(iolat, &bio->bi_issue, now,
++			iolatency_record_time(iolat, bio->issue_time_ns, now,
+ 					      issue_as_root);
+ 			window_start = atomic64_read(&iolat->window_start);
+ 			if (now > window_start &&
+diff --git a/block/blk.h b/block/blk.h
+index 46f566f9b126..0268deb22268 100644
+--- a/block/blk.h
++++ b/block/blk.h
+@@ -680,48 +680,6 @@ static inline ktime_t blk_time_get(void)
+ 	return ns_to_ktime(blk_time_get_ns());
+ }
+ 
+-/*
+- * From most significant bit:
+- * 1 bit: reserved for other usage, see below
+- * 12 bits: original size of bio
+- * 51 bits: issue time of bio
+- */
+-#define BIO_ISSUE_RES_BITS      1
+-#define BIO_ISSUE_SIZE_BITS     12
+-#define BIO_ISSUE_RES_SHIFT     (64 - BIO_ISSUE_RES_BITS)
+-#define BIO_ISSUE_SIZE_SHIFT    (BIO_ISSUE_RES_SHIFT - BIO_ISSUE_SIZE_BITS)
+-#define BIO_ISSUE_TIME_MASK     ((1ULL << BIO_ISSUE_SIZE_SHIFT) - 1)
+-#define BIO_ISSUE_SIZE_MASK     \
+-	(((1ULL << BIO_ISSUE_SIZE_BITS) - 1) << BIO_ISSUE_SIZE_SHIFT)
+-#define BIO_ISSUE_RES_MASK      (~((1ULL << BIO_ISSUE_RES_SHIFT) - 1))
+-
+-/* Reserved bit for blk-throtl */
+-#define BIO_ISSUE_THROTL_SKIP_LATENCY (1ULL << 63)
+-
+-static inline u64 __bio_issue_time(u64 time)
+-{
+-	return time & BIO_ISSUE_TIME_MASK;
+-}
+-
+-static inline u64 bio_issue_time(struct bio_issue *issue)
+-{
+-	return __bio_issue_time(issue->value);
+-}
+-
+-static inline sector_t bio_issue_size(struct bio_issue *issue)
+-{
+-	return ((issue->value & BIO_ISSUE_SIZE_MASK) >> BIO_ISSUE_SIZE_SHIFT);
+-}
+-
+-static inline void bio_issue_init(struct bio_issue *issue,
+-				       sector_t size)
+-{
+-	size &= (1ULL << BIO_ISSUE_SIZE_BITS) - 1;
+-	issue->value = ((issue->value & BIO_ISSUE_RES_MASK) |
+-			(blk_time_get_ns() & BIO_ISSUE_TIME_MASK) |
+-			((u64)size << BIO_ISSUE_SIZE_SHIFT));
+-}
+-
+ void bdev_release(struct file *bdev_file);
+ int bdev_open(struct block_device *bdev, blk_mode_t mode, void *holder,
+ 	      const struct blk_holder_ops *hops, struct file *bdev_file);
+diff --git a/include/linux/blk_types.h b/include/linux/blk_types.h
+index 930daff207df..b8be751e16fc 100644
+--- a/include/linux/blk_types.h
++++ b/include/linux/blk_types.h
+@@ -198,10 +198,6 @@ static inline bool blk_path_error(blk_status_t error)
+ 	return true;
+ }
+ 
+-struct bio_issue {
+-	u64 value;
+-};
+-
+ typedef __u32 __bitwise blk_opf_t;
+ 
+ typedef unsigned int blk_qc_t;
+@@ -242,7 +238,8 @@ struct bio {
+ 	 * on release of the bio.
+ 	 */
+ 	struct blkcg_gq		*bi_blkg;
+-	struct bio_issue	bi_issue;
++	/* Time that this bio was issued. */
++	u64			issue_time_ns;
+ #ifdef CONFIG_BLK_CGROUP_IOCOST
+ 	u64			bi_iocost_cost;
+ #endif
 -- 
 2.39.2
 
