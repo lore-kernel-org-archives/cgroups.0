@@ -1,37 +1,37 @@
 Received: from fanzine2.igalia.com (fanzine2.igalia.com [213.97.179.56])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7220325C821;
-	Wed,  3 Sep 2025 15:23:46 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DFD34267B90;
+	Wed,  3 Sep 2025 15:23:47 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.97.179.56
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1756913028; cv=none; b=SuBMvZmUyHcF/qomL/8WeP2GQ7cxnOVfBDAAfzf3efV24IbT4slkorjFv5Q/ploLF7Rc6OhT+t7R02lJ8h74hoUThMkXEH+zFobWIVdX2GFwo0mvzR6yA1ThuwOHhLsP51W7gcLDWwSYnzzuE99ip6EygMcRmmF05lqgDS2Sr5Q=
+	t=1756913030; cv=none; b=DZrJTnnX2uzJqX+mapaQh6VnhFghbirWmsUWxC313w8cg6vdoyXdO1v0B3AxYkJwykqULO7DAHOtA8sU2jCrD2cGO7WMAWhZEfvqmALfs5A1W0YIEaGL7lC0KgFxZZj9yIwvVlHhdE8WfGPcogIhib6px1cvf+1XHkH/Pmr6pEY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1756913028; c=relaxed/simple;
-	bh=4fH/ts4g4HJjx2RLLc+zwkP2xOAlzJAZFUBs+gTCWB4=;
+	s=arc-20240116; t=1756913030; c=relaxed/simple;
+	bh=IjIRNCIG10ceuJrXGZ+pP546TYoi0mrpn7n8IynCxMA=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=kd9ZaUkbqvsKUbgamLegT38XaHyu2jSV5SuoMAHTP4hGoofkI3hSYJOhQbO0MCWpqQhaNcqPLFlrKtVz81Vs41p6kerGpMtTp9IhvQcDZLQNG5i7zVVZzGEQg1asCcnG7avsnFYgwfKgskf8deRngsVw2Ffz8/vx5tZewYzZF9g=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=igalia.com; spf=pass smtp.mailfrom=igalia.com; dkim=pass (2048-bit key) header.d=igalia.com header.i=@igalia.com header.b=AJ09Flzy; arc=none smtp.client-ip=213.97.179.56
+	 MIME-Version; b=UXIgmUtBiLvVIu2tqgQxRk5drm9f7kezMWuXrgb2wZyuIRjCWECN3rIiyC+JbsrHPiNMgoDSVVQQK7HalsqxieHu94AZmPUjv/WufxpytsPYjwVLYxn0dmo/K1gPdrzyU+9WHF8OBmhsxZAhSs/PGhO0+xRN2RLJ7sbfFTD+hCA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=igalia.com; spf=pass smtp.mailfrom=igalia.com; dkim=pass (2048-bit key) header.d=igalia.com header.i=@igalia.com header.b=cb2GoSA0; arc=none smtp.client-ip=213.97.179.56
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=igalia.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=igalia.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=igalia.com header.i=@igalia.com header.b="AJ09Flzy"
+	dkim=pass (2048-bit key) header.d=igalia.com header.i=@igalia.com header.b="cb2GoSA0"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=igalia.com;
 	s=20170329; h=Content-Transfer-Encoding:MIME-Version:References:In-Reply-To:
 	Message-ID:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:Content-ID:
 	Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
 	:Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
 	List-Post:List-Owner:List-Archive;
-	bh=IsWnQWYQd8ok9z9F0TOX6bOGhUkIh9EKIXSKlJoEGYg=; b=AJ09FlzyVT9eal4yJ2y7P5g9IO
-	w1f+9cHgbGl3iRDscUhAp0lbLfjExAOnXkIlUf2NlB3GGCaJQSx3efglfKiR+b+S56Sivu7WH44uP
-	SUWaEv4spcoWUj0WJWDK5NbfGkcZhl6RonhveEVKddZMpGtjN+78NnM+DCRm5ot5gwOMbzDlOhXId
-	DrPhG5xiNFlzXXwD67XjoBxDszQV5SzZubF3TxFxPvCSX/NR0OBWP2iMYlqV3n0ES62vlRmdKi9GY
-	KDzC3mUPFeQC04i0WAFAOZaRiltFDelLdQVPc1ljAKjymgjKLii/k+f0+Z/831tzVTa32ffconV75
-	yoPX4ZGQ==;
+	bh=wQnaZgS1dP3EwPvhkT/qy9guMTMDTS2EnDU2CurSO/o=; b=cb2GoSA0h9vmlZKNsEQqf3QO/+
+	aevSkBxDtQ2i6k8g5KdUDwOLWMj0Ee7R8Zhh/Hdp3aywUWNsRk8JRcwWx0vOhBF8XiRfdsiqTu+Kq
+	3WAj3d3zhkafrTR6bzzrvKr28XCTZGUPuDRzHPcKi2SiyW5ultmxzha4xiD9mComwHj9VzlgvEgV7
+	i4AhXG9lTug0Ew1Rxjp2hQw+czTb+dqpsIneAmytpwjg7/Ne6YxkMcGJ7URyQOWIB4f35c7yhBlt2
+	YSE9qi5cVl/KHiQ5hhWt9KwoOrwkm0VR77m+y6lxT285xNrZ1Qk2IysKsw5BIhr9zjJlmCQPzRuQR
+	StMa8pkg==;
 Received: from [84.66.36.92] (helo=localhost)
 	by fanzine2.igalia.com with esmtpsa 
 	(Cipher TLS1.3:ECDHE_SECP256R1__RSA_PSS_RSAE_SHA256__AES_256_GCM:256) (Exim)
-	id 1utpKo-006Gak-6i; Wed, 03 Sep 2025 17:23:42 +0200
+	id 1utpKp-006GbC-Kg; Wed, 03 Sep 2025 17:23:43 +0200
 From: Tvrtko Ursulin <tvrtko.ursulin@igalia.com>
 To: dri-devel@lists.freedesktop.org
 Cc: amd-gfx@lists.freedesktop.org,
@@ -40,9 +40,9 @@ Cc: amd-gfx@lists.freedesktop.org,
 	cgroups@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
 	Tvrtko Ursulin <tvrtko.ursulin@igalia.com>
-Subject: [RFC 15/21] cgroup/drm: Add scheduling weight callback
-Date: Wed,  3 Sep 2025 16:23:21 +0100
-Message-ID: <20250903152327.66002-16-tvrtko.ursulin@igalia.com>
+Subject: [RFC 17/21] drm/sched: Add helper for tracking entities per client
+Date: Wed,  3 Sep 2025 16:23:23 +0100
+Message-ID: <20250903152327.66002-18-tvrtko.ursulin@igalia.com>
 X-Mailer: git-send-email 2.48.0
 In-Reply-To: <20250903152327.66002-1-tvrtko.ursulin@igalia.com>
 References: <20250903152327.66002-1-tvrtko.ursulin@igalia.com>
@@ -54,130 +54,161 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Add a new callback via which the drm cgroup controller will be notifying
-clients about their scheduling weight.
+To enable adding DRM cgroup support to the DRM scheduler we need a way for
+updating the relative scheduling weights per entity at the point the
+controller invokes a call-back notifying the driver of a new relative
+scheduling weight for a client.
 
-At the same time, in order to reduce the amount of tracking with drivers
-which will not support any sort of control from the drm cgroup controller
-side, lets express the funcionality as opt-in and use the presence of
-drm_cgroup_ops as an activation criteria.
+We add two helpers which will allow drivers to opt-in into the tracking
+and they are responsible to call them at the correct times respective to
+the entity lifetime.
 
 Signed-off-by: Tvrtko Ursulin <tvrtko.ursulin@igalia.com>
 ---
- include/drm/drm_drv.h | 26 ++++++++++++++++++++++++++
- kernel/cgroup/drm.c   | 27 +++++++++++++++++++++++++++
- 2 files changed, 53 insertions(+)
+ drivers/gpu/drm/drm_file.c               |  3 ++
+ drivers/gpu/drm/scheduler/sched_entity.c | 25 ++++++++++++++++
+ include/drm/drm_file.h                   |  5 ++++
+ include/drm/gpu_scheduler.h              | 38 ++++++++++++++++++++++++
+ 4 files changed, 71 insertions(+)
 
-diff --git a/include/drm/drm_drv.h b/include/drm/drm_drv.h
-index 42fc085f986d..5aa905187723 100644
---- a/include/drm/drm_drv.h
-+++ b/include/drm/drm_drv.h
-@@ -169,6 +169,22 @@ enum drm_driver_feature {
- 	DRIVER_HAVE_IRQ			= BIT(30),
- };
+diff --git a/drivers/gpu/drm/drm_file.c b/drivers/gpu/drm/drm_file.c
+index 1520436c5491..c584d97e5f6c 100644
+--- a/drivers/gpu/drm/drm_file.c
++++ b/drivers/gpu/drm/drm_file.c
+@@ -48,6 +48,7 @@
+ #include <drm/drm_gem.h>
+ #include <drm/drm_print.h>
+ #include <drm/drm_debugfs.h>
++#include <drm/gpu_scheduler.h>
  
-+/**
-+ * struct drm_cgroup_ops
-+ *
-+ * This structure contains callbacks that drivers can provide if they are able
-+ * support the functionalities implemented by the DRM cgroup controller.
-+ */
-+struct drm_cgroup_ops {
-+	/**
-+	 * @notify_weight:
-+	 *
-+	 * Optional callback used by the DRM core to notify clients of their
-+	 * scheduling weight.
-+	 */
-+	void (*notify_weight) (struct drm_file *, unsigned int weight);
-+};
+ #include "drm_crtc_internal.h"
+ #include "drm_internal.h"
+@@ -162,6 +163,8 @@ struct drm_file *drm_file_alloc(struct drm_minor *minor)
+ 	mutex_init(&file->event_read_lock);
+ 	mutex_init(&file->client_name_lock);
+ 
++	drm_sched_cgroup_init_drm_file(file);
 +
- /**
-  * struct drm_driver - DRM driver structure
-  *
-@@ -431,6 +447,16 @@ struct drm_driver {
- 	 * some examples.
+ 	if (drm_core_check_feature(dev, DRIVER_GEM))
+ 		drm_gem_open(dev, file);
+ 
+diff --git a/drivers/gpu/drm/scheduler/sched_entity.c b/drivers/gpu/drm/scheduler/sched_entity.c
+index ba290143c95d..e0c748c4c10f 100644
+--- a/drivers/gpu/drm/scheduler/sched_entity.c
++++ b/drivers/gpu/drm/scheduler/sched_entity.c
+@@ -25,6 +25,7 @@
+ #include <linux/slab.h>
+ #include <linux/completion.h>
+ 
++#include <drm/drm_file.h>
+ #include <drm/drm_print.h>
+ #include <drm/gpu_scheduler.h>
+ 
+@@ -131,6 +132,10 @@ int drm_sched_entity_init(struct drm_sched_entity *entity,
+ 	atomic_set(&entity->fence_seq, 0);
+ 	entity->fence_context = dma_fence_context_alloc(2);
+ 
++#if IS_ENABLED(CONFIG_CGROUP_DRM)
++	INIT_LIST_HEAD(&entity->drm_file_link);
++#endif
++
+ 	return 0;
+ }
+ EXPORT_SYMBOL(drm_sched_entity_init);
+@@ -606,3 +611,23 @@ void drm_sched_entity_push_job(struct drm_sched_job *sched_job)
+ 	}
+ }
+ EXPORT_SYMBOL(drm_sched_entity_push_job);
++
++#if IS_ENABLED(CONFIG_CGROUP_DRM)
++void drm_sched_cgroup_track_sched_entity(struct drm_file *file_priv,
++					 struct drm_sched_entity *entity)
++{
++	spin_lock(&file_priv->sched_entities.lock);
++	list_add_tail(&entity->drm_file_link, &file_priv->sched_entities.list);
++	spin_unlock(&file_priv->sched_entities.lock);
++}
++EXPORT_SYMBOL(drm_sched_cgroup_track_sched_entity);
++
++void drm_sched_cgroup_untrack_sched_entity(struct drm_file *file_priv,
++					   struct drm_sched_entity *entity)
++{
++	spin_lock(&file_priv->sched_entities.lock);
++	list_del(&entity->drm_file_link);
++	spin_unlock(&file_priv->sched_entities.lock);
++}
++EXPORT_SYMBOL(drm_sched_cgroup_untrack_sched_entity);
++#endif
+diff --git a/include/drm/drm_file.h b/include/drm/drm_file.h
+index 3326246a2f06..04cad0c61513 100644
+--- a/include/drm/drm_file.h
++++ b/include/drm/drm_file.h
+@@ -299,6 +299,11 @@ struct drm_file {
+ #if IS_ENABLED(CONFIG_CGROUP_DRM)
+ 	struct cgroup_subsys_state *__css;
+ 	struct list_head clink;
++
++	struct {
++		spinlock_t		lock;
++		struct list_head	list;
++	} sched_entities;
+ #endif
+ 
+ 	/**
+diff --git a/include/drm/gpu_scheduler.h b/include/drm/gpu_scheduler.h
+index 7fbcd121a6d3..003b5904927f 100644
+--- a/include/drm/gpu_scheduler.h
++++ b/include/drm/gpu_scheduler.h
+@@ -240,6 +240,9 @@ struct drm_sched_entity {
  	 */
- 	const struct file_operations *fops;
-+
-+#ifdef CONFIG_CGROUP_DRM
-+	/**
-+	 * @cg_ops:
-+	 *
-+	 * Optional pointer to driver callbacks facilitating integration with
-+	 * the DRM cgroup controller.
-+	 */
-+	const struct drm_cgroup_ops *cg_ops;
+ 	struct rb_node			rb_tree_node;
+ 
++#if IS_ENABLED(CONFIG_CGROUP_DRM)
++	struct list_head	drm_file_link;
 +#endif
  };
  
- void *__devm_drm_dev_alloc(struct device *parent,
-diff --git a/kernel/cgroup/drm.c b/kernel/cgroup/drm.c
-index e9dc1e7cc4a4..ea7655edf86a 100644
---- a/kernel/cgroup/drm.c
-+++ b/kernel/cgroup/drm.c
-@@ -7,6 +7,8 @@
- #include <linux/mutex.h>
- #include <linux/slab.h>
+ /**
+@@ -700,4 +703,39 @@ void drm_sched_entity_modify_sched(struct drm_sched_entity *entity,
+ 				   struct drm_gpu_scheduler **sched_list,
+ 				   unsigned int num_sched_list);
  
-+#include <drm/drm_drv.h>
++#if IS_ENABLED(CONFIG_CGROUP_DRM)
++#include <linux/list.h>
++#include <linux/spinlock.h>
 +
- struct drm_cgroup_state {
- 	struct cgroup_subsys_state css;
- 
-@@ -29,6 +31,22 @@ css_to_drmcs(struct cgroup_subsys_state *css)
- 	return container_of(css, struct drm_cgroup_state, css);
- }
- 
-+static void __maybe_unused
-+drmcs_notify_weight(struct drm_cgroup_state *drmcs)
++#include <drm/drm_file.h>
++
++/* Static inline to allow drm.ko and gpu-sched.ko as modules. */
++static inline void drm_sched_cgroup_init_drm_file(struct drm_file *file_priv)
 +{
-+	struct drm_file *fpriv;
-+
-+	lockdep_assert_held(&drmcg_mutex);
-+
-+	list_for_each_entry(fpriv, &drmcs->clients, clink) {
-+		const struct drm_cgroup_ops *cg_ops =
-+			fpriv->minor->dev->driver->cg_ops;
-+
-+		if (cg_ops && cg_ops->notify_weight)
-+			cg_ops->notify_weight(fpriv, 0);
-+	}
++	spin_lock_init(&file_priv->sched_entities.lock);
++	INIT_LIST_HEAD(&file_priv->sched_entities.list);
 +}
 +
- static void drmcs_free(struct cgroup_subsys_state *css)
- {
- 	struct drm_cgroup_state *drmcs = css_to_drmcs(css);
-@@ -59,6 +77,9 @@ void drmcgroup_client_open(struct drm_file *file_priv)
- {
- 	struct drm_cgroup_state *drmcs;
- 
-+	if (!file_priv->minor->dev->driver->cg_ops)
-+		return;
++void drm_sched_cgroup_track_sched_entity(struct drm_file *file_priv,
++				  struct drm_sched_entity *entity);
++void drm_sched_cgroup_untrack_sched_entity(struct drm_file *file_priv,
++				    struct drm_sched_entity *entity);
++#else
++static inline void drm_sched_cgroup_init_drm_file(struct drm_file *file_priv)
++{
++}
 +
- 	drmcs = css_to_drmcs(task_get_css(current, drm_cgrp_id));
- 
- 	mutex_lock(&drmcg_mutex);
-@@ -74,6 +95,9 @@ void drmcgroup_client_close(struct drm_file *file_priv)
- 
- 	drmcs = css_to_drmcs(file_priv->__css);
- 
-+	if (!file_priv->minor->dev->driver->cg_ops)
-+		return;
++static inline void
++drm_sched_cgroup_track_sched_entity(struct drm_file *file_priv,
++				    struct drm_sched_entity *entity)
++{
++}
 +
- 	mutex_lock(&drmcg_mutex);
- 	list_del(&file_priv->clink);
- 	file_priv->__css = NULL;
-@@ -88,6 +112,9 @@ void drmcgroup_client_migrate(struct drm_file *file_priv)
- 	struct drm_cgroup_state *src, *dst;
- 	struct cgroup_subsys_state *old;
- 
-+	if (!file_priv->minor->dev->driver->cg_ops)
-+		return;
++static inline void
++drm_sched_cgroup_untrack_sched_entity(struct drm_file *file_priv,
++				      struct drm_sched_entity *entity)
++{
++}
++#endif
 +
- 	mutex_lock(&drmcg_mutex);
- 
- 	old = file_priv->__css;
+ #endif
 -- 
 2.48.0
 
