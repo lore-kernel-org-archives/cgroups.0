@@ -1,58 +1,80 @@
-Received: from dggsgout12.his.huawei.com (dggsgout12.his.huawei.com [45.249.212.56])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-wr1-f49.google.com (mail-wr1-f49.google.com [209.85.221.49])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 33D2B1DE4E5;
-	Fri,  5 Sep 2025 07:35:55 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.56
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4F2CF27E05B
+	for <cgroups@vger.kernel.org>; Fri,  5 Sep 2025 08:55:20 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.49
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1757057760; cv=none; b=kwygCBTjV5o6V8BKPFwW067Q8DO3O3CM1pfxSKOWtlK7hQBI1WKGmAYBKazWTrxGaM6sD+vleRgpkx4CmDuW8C3QCdEvxwnzqJV+FmJW/SnKBXYPLfAvGqalrE3igZ9wjVPspsYEl+ZdhmnrNivPutaGOfFw2SldbhrQllHxrCc=
+	t=1757062522; cv=none; b=YAd/9iDDvGMhklumOG+yBjTPIE2cj9S9mHq48igk+izXVWTQbQZ1j3oK71gxdYqv3KEe9zioBPwpAn8hqltKyIbrMxGGfpUI19WvDaJlw+S72F9uNy97iewcS/ZGPo1kDgXldY3H/lDZDL6vLetcyzOjQUfTTLc7WVjnkM1iAW4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1757057760; c=relaxed/simple;
-	bh=nPPTfxRSkXNleuMU0NjjkuvGPoT2zGvquDtml6qPd4U=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=YqVkm/xw2nqYtZkLEgrFY5KK1R0oTAbH38doSMpEjV5agT1jAwNbFuUL2YEr7FC/X/9wq12ELz6MSN7EWt8r6Awha55E8siGdQnAwBdOpbbm93P+qaw5YKW20wg+8EF+Jl6TnQSYUkR9qW3j1ylhqsjtQERev3pavmf2/qepqow=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.56
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
-Received: from mail.maildlp.com (unknown [172.19.93.142])
-	by dggsgout12.his.huawei.com (SkyGuard) with ESMTPS id 4cJ71F5T9xzKHMbR;
-	Fri,  5 Sep 2025 15:16:01 +0800 (CST)
-Received: from mail02.huawei.com (unknown [10.116.40.128])
-	by mail.maildlp.com (Postfix) with ESMTP id B19A61A1367;
-	Fri,  5 Sep 2025 15:16:01 +0800 (CST)
-Received: from huaweicloud.com (unknown [10.175.104.67])
-	by APP4 (Coremail) with SMTP id gCh0CgAncIwkjrpowYbQBQ--.23573S16;
-	Fri, 05 Sep 2025 15:16:01 +0800 (CST)
-From: Yu Kuai <yukuai1@huaweicloud.com>
-To: hch@infradead.org,
-	colyli@kernel.org,
-	hare@suse.de,
-	dlemoal@kernel.org,
-	tieren@fnnas.com,
-	bvanassche@acm.org,
-	axboe@kernel.dk,
-	tj@kernel.org,
-	josef@toxicpanda.com,
-	song@kernel.org,
-	yukuai3@huawei.com,
-	satyat@google.com,
-	ebiggers@google.com,
-	kmo@daterainc.com,
-	akpm@linux-foundation.org,
-	neil@brown.name
-Cc: linux-block@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	cgroups@vger.kernel.org,
-	linux-raid@vger.kernel.org,
-	yi.zhang@huawei.com,
-	yangerkun@huawei.com,
-	johnny.chenyi@huawei.com
-Subject: [PATCH for-6.18/block 12/16] md/md-linear: convert to use bio_submit_split_bioset()
-Date: Fri,  5 Sep 2025 15:06:39 +0800
-Message-Id: <20250905070643.2533483-13-yukuai1@huaweicloud.com>
-X-Mailer: git-send-email 2.39.2
-In-Reply-To: <20250905070643.2533483-1-yukuai1@huaweicloud.com>
-References: <20250905070643.2533483-1-yukuai1@huaweicloud.com>
+	s=arc-20240116; t=1757062522; c=relaxed/simple;
+	bh=rPqk/i8FHiso17+h8HR95Fljzg9ubNSYBKvqESikwFM=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=HwHmi7ywXA6p7hmhRyp/dphz/XHZC36Kr3toBjBqTPv6hvrnGd8vYyqeZFeBM5H2DjXUfpw4vAKMcR0wObCfCFCgTsRZZcCeGeLHbNxDksRBxKZuy0Ge1/NWjw2w+8YzA8DZBLmtZoMQilRm7++tN01EzLzbWwSh17j52Qb16pQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com; spf=pass smtp.mailfrom=suse.com; dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b=M/0j53tF; arc=none smtp.client-ip=209.85.221.49
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b="M/0j53tF"
+Received: by mail-wr1-f49.google.com with SMTP id ffacd0b85a97d-3df3be0e098so1016441f8f.1
+        for <cgroups@vger.kernel.org>; Fri, 05 Sep 2025 01:55:19 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=suse.com; s=google; t=1757062518; x=1757667318; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=QAGsQ/32s/KKYkZau8Rby6xoFYH4N+/s1hCU9vRuvK8=;
+        b=M/0j53tF/wAPQ7/tLbaOR8uKHqPRRnpGXcmgg8wiOT3BrO++pDCR0ZW5Yujlt3JFMb
+         E0StLcNHgxYol00GNOAQIjBKEyFah2rMs4usckGCya87qHhR4DnKYID0KpPo1sTN6lkB
+         bSRF1CjjW+qBeelfXySXMGjybezase9/H+w4j+JtIElR93L7nqZVoXLKpURsu9vlxu8j
+         wXKZ8FjN8/6kNjTDzB9isn6P0SEfXnrtQMDtO1kw8nhVxKQKEW9x9JsIxNKfOAOSdo3r
+         VFlEccQ5zqWkwk0HlPyuQpS7qNGIT3II4oHU3nJ4PTQ2Ofs5WN2KBjlvRjmcq2KFltD7
+         0JvA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1757062518; x=1757667318;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=QAGsQ/32s/KKYkZau8Rby6xoFYH4N+/s1hCU9vRuvK8=;
+        b=Bry+V/HBmIzFxRO0GGJ5s2b0Xv6R+ENmOjSGyhaJEZEqvRDWRIRXnc05Lxrt1aKv2U
+         19W6yg/V3U6xsZAt26xfxsVZsCfdeMhJeibIilUUuyvs/CPtcuKF90YTB39HGJqdij/g
+         WqD2k6TWSs8HuuaHwaj4N0R5mF5WgCjL2YMxLX9KxTPqXDVx3USOaiWax3FSD3XzUKnH
+         tSDLg7qBfIYrzVuFXEs+X1xxMqOR3H3jAo8PGL7u7J84YyF5HRkkwQy5KFe+IxrwIIIO
+         Bb44d+PYr52njDITlmkTlizcilSeYUfov/UWXQdodP3FdZ0za0KJwahsaJJGpMiQaQIG
+         cA2Q==
+X-Forwarded-Encrypted: i=1; AJvYcCV6NJj/C4G21s/5bQa3G6cQk49qQRSt/LfZXosO/IyyTxFHhjzy3fKXmDfM9Bk3PZiteinQPDb4@vger.kernel.org
+X-Gm-Message-State: AOJu0Yyp2Pi3qujGIizcr2yzlX32587G4fVnCrKlA6w9jVjgTmAjLKLl
+	0/vSi1/tb9qrvLG8WdAcVYUIeld6ZyD0hhvwK+G4nMiiKfrXPwAXqVLeEL3mPhmqkl8=
+X-Gm-Gg: ASbGnctyX1X3L7491t2XN4ysFe8L3RfHuz8ba1eB5wB4Cx7nmunYHgCDWCVzgjT4eTB
+	KDZlSiEJh/GuunM/6EkiIEUN8WXq2aDkQY5tgsyLX3GwspZ9Q2RfZGq0EqLCeXBUWMEJoieCgFa
+	D5hnik8WI2CxXGLLGRZ+F4qnT0U3/MLn9yv8fHL+YeAeXzsMAHa2HMsi1aWOyEWOiWfJadNLLq6
+	mg9Wc5h9Pl0T7by7lLmINPuvnmUWjboZZW5DyjxmpIazHYY3PlmNTEoY4xHTF/F3lWougSjFX2J
+	EKkErY+8FdO4n8YnLL+XcAwCHRxy/vEv+XGtfyH3ZXOb2OEPe2VDL0yh+NZYR+WNwgaBBTeTgbV
+	bac8wWdPVWPd9K1LCwEzT86agtPYtH7YyJr/ij3vi7znW5go3EGwbMGI5QA==
+X-Google-Smtp-Source: AGHT+IEIeeWlv5Y1zYgVrT7F52IJeE+DGSxWfwj/+Ab75L8oWqb439G29fc+gz412+/+BrWVo8S3uQ==
+X-Received: by 2002:a05:6000:3111:b0:3dd:6101:4efb with SMTP id ffacd0b85a97d-3dd61015026mr8283880f8f.11.1757062518456;
+        Fri, 05 Sep 2025 01:55:18 -0700 (PDT)
+Received: from localhost.localdomain ([2a00:6d43:105:c401:e307:1a37:2e76:ce91])
+        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-3d21a32dbc5sm28178346f8f.11.2025.09.05.01.55.17
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 05 Sep 2025 01:55:18 -0700 (PDT)
+From: Marco Crivellari <marco.crivellari@suse.com>
+To: linux-kernel@vger.kernel.org,
+	cgroups@vger.kernel.org
+Cc: Tejun Heo <tj@kernel.org>,
+	Lai Jiangshan <jiangshanlai@gmail.com>,
+	Frederic Weisbecker <frederic@kernel.org>,
+	Sebastian Andrzej Siewior <bigeasy@linutronix.de>,
+	Marco Crivellari <marco.crivellari@suse.com>,
+	Michal Hocko <mhocko@suse.com>,
+	Johannes Weiner <hannes@cmpxchg.org>,
+	Michal Koutny <mkoutny@suse.com>
+Subject: [PATCH 1/2] cgroup: replace use of system_wq with system_percpu_wq
+Date: Fri,  5 Sep 2025 10:54:35 +0200
+Message-ID: <20250905085436.95863-2-marco.crivellari@suse.com>
+X-Mailer: git-send-email 2.51.0
+In-Reply-To: <20250905085436.95863-1-marco.crivellari@suse.com>
+References: <20250905085436.95863-1-marco.crivellari@suse.com>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
@@ -60,62 +82,47 @@ List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:gCh0CgAncIwkjrpowYbQBQ--.23573S16
-X-Coremail-Antispam: 1UD129KBjvdXoWrur1xWrWxtw1UZF4Dtr43Jrb_yoWkWrX_Wa
-	4ruFykWr1UK397tr1Yqws0v39Yvwn8Wry8uFyjqa13A3WfAwn7Arn5Xw43X34xXFWxXa45
-	tr47GryftF1UJjkaLaAFLSUrUUUUjb8apTn2vfkv8UJUUUU8Yxn0WfASr-VFAUDa7-sFnT
-	9fnUUIcSsGvfJTRUUUbgxYFVCjjxCrM7AC8VAFwI0_Wr0E3s1l1xkIjI8I6I8E6xAIw20E
-	Y4v20xvaj40_Wr0E3s1l1IIY67AEw4v_Jr0_Jr4l82xGYIkIc2x26280x7IE14v26r126s
-	0DM28IrcIa0xkI8VCY1x0267AKxVW5JVCq3wA2ocxC64kIII0Yj41l84x0c7CEw4AK67xG
-	Y2AK021l84ACjcxK6xIIjxv20xvE14v26w1j6s0DM28EF7xvwVC0I7IYx2IY6xkF7I0E14
-	v26r4UJVWxJr1l84ACjcxK6I8E87Iv67AKxVW0oVCq3wA2z4x0Y4vEx4A2jsIEc7CjxVAF
-	wI0_GcCE3s1le2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xvF2IEw4CE5I8CrVC2j2
-	WlYx0E2Ix0cI8IcVAFwI0_Jr0_Jr4lYx0Ex4A2jsIE14v26r1j6r4UMcvjeVCFs4IE7xkE
-	bVWUJVW8JwACjcxG0xvY0x0EwIxGrwACI402YVCY1x02628vn2kIc2xKxwCY1x0262kKe7
-	AKxVW8ZVWrXwCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7xkEbVWUJVW8JwC20s026c02
-	F40E14v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E67AF67kF1VAFwI0_GFv_Wr
-	ylIxkGc2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVW8JVW5JwCI42IY6xIIjxv20xvEc7Cj
-	xVAFwI0_Gr1j6F4UJwCI42IY6xAIw20EY4v20xvaj40_Jr0_JF4lIxAIcVC2z280aVAFwI
-	0_Gr0_Cr1lIxAIcVC2z280aVCY1x0267AKxVW8Jr0_Cr1UYxBIdaVFxhVjvjDU0xZFpf9x
-	07jIPfQUUUUU=
-X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
 
-From: Yu Kuai <yukuai3@huawei.com>
+Currently if a user enqueue a work item using schedule_delayed_work() the
+used wq is "system_wq" (per-cpu wq) while queue_delayed_work() use
+WORK_CPU_UNBOUND (used when a cpu is not specified). The same applies to
+schedule_work() that is using system_wq and queue_work(), that makes use
+again of WORK_CPU_UNBOUND.
 
-Unify bio split code, prepare to fix reordered split IO.
+This lack of consistentcy cannot be addressed without refactoring the API.
 
-Signed-off-by: Yu Kuai <yukuai3@huawei.com>
+system_wq is a per-CPU worqueue, yet nothing in its name tells about that
+CPU affinity constraint, which is very often not required by users. Make
+it clear by adding a system_percpu_wq.
+
+queue_work() / queue_delayed_work() mod_delayed_work() will now use the
+new per-cpu wq: whether the user still stick on the old name a warn will
+be printed along a wq redirect to the new one.
+
+This patch add the new system_percpu_wq except for mm, fs and net
+subsystem, whom are handled in separated patches.
+
+The old wq will be kept for a few release cylces.
+
+Suggested-by: Tejun Heo <tj@kernel.org>
+Signed-off-by: Marco Crivellari <marco.crivellari@suse.com>
 ---
- drivers/md/md-linear.c | 15 +++------------
- 1 file changed, 3 insertions(+), 12 deletions(-)
+ kernel/cgroup/cgroup.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/md/md-linear.c b/drivers/md/md-linear.c
-index 59d7963c7843..76f85cc32942 100644
---- a/drivers/md/md-linear.c
-+++ b/drivers/md/md-linear.c
-@@ -256,19 +256,10 @@ static bool linear_make_request(struct mddev *mddev, struct bio *bio)
- 
- 	if (unlikely(bio_end_sector(bio) > end_sector)) {
- 		/* This bio crosses a device boundary, so we have to split it */
--		struct bio *split = bio_split(bio, end_sector - bio_sector,
--					      GFP_NOIO, &mddev->bio_set);
--
--		if (IS_ERR(split)) {
--			bio->bi_status = errno_to_blk_status(PTR_ERR(split));
--			bio_endio(bio);
-+		bio = bio_submit_split_bioset(bio, end_sector - bio_sector,
-+					      &mddev->bio_set);
-+		if (!bio)
- 			return true;
--		}
--
--		bio_chain(split, bio);
--		trace_block_split(split, bio->bi_iter.bi_sector);
--		submit_bio_noacct(bio);
--		bio = split;
- 	}
- 
- 	md_account_bio(mddev, &bio);
+diff --git a/kernel/cgroup/cgroup.c b/kernel/cgroup/cgroup.c
+index 3caf2cd86e65..1e39355194fd 100644
+--- a/kernel/cgroup/cgroup.c
++++ b/kernel/cgroup/cgroup.c
+@@ -121,7 +121,7 @@ DEFINE_PERCPU_RWSEM(cgroup_threadgroup_rwsem);
+ /*
+  * cgroup destruction makes heavy use of work items and there can be a lot
+  * of concurrent destructions.  Use a separate workqueue so that cgroup
+- * destruction work items don't end up filling up max_active of system_wq
++ * destruction work items don't end up filling up max_active of system_percpu_wq
+  * which may lead to deadlock.
+  */
+ static struct workqueue_struct *cgroup_destroy_wq;
 -- 
-2.39.2
+2.51.0
 
