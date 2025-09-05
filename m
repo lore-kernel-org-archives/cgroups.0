@@ -1,232 +1,240 @@
-Received: from lgeamrelo03.lge.com (lgeamrelo03.lge.com [156.147.51.102])
+Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ABFBA1DA60F
-	for <cgroups@vger.kernel.org>; Fri,  5 Sep 2025 06:30:49 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=156.147.51.102
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CE6CD1A256E;
+	Fri,  5 Sep 2025 07:15:54 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.51
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1757053853; cv=none; b=ijJys86Wxl2LtfQGEnaPbIPzWEf8T6kBr8mnbaghVQdSJhBliNtzQ6mgc0MGPtIe+/7hR2Rtuz+6WvcWsVdfRnIMcEZVQ9bcrIuyiOcXmVAO+qn2JnUNIe4qODWfLS360vaDNK9LXp3YWUMNxah7C/KzvPyTytc1zjoME0Aobnw=
+	t=1757056557; cv=none; b=uqPS9E2osOg9ufhQQXHGgjCBLarOt/VyGvuMKbO/Xa3/yICM4lrSuzofrrdqw07MfesmEfZ6S9p5FYfYAm+t27r1ud2/H1ZziXTmazPO15HmKmg/FHiFSAKyZaoLsi/YdoaspW8Z+wN8mqUE2Nmg3x7xaTHlfltVxWLIiTKy4UI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1757053853; c=relaxed/simple;
-	bh=iXAyYs38ed5hZ71z4u1jPBV+remIZ+GjM5oilrzVLkQ=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=iFHLo8eUuzC48dPzCRjYOoT/WmuQm0Ybxmoy0X225SfulAzLulan4naJSNZibcP9m6ZNzkYiXWiwELymQPkUvy+BUb4HosCUF6FFV3K224nW6wCdu3C1w2xTrOAlxcBOMazBQ2VS//CFA8mY10k++Ca87GVAsrA6OviYESHfqJQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lge.com; spf=pass smtp.mailfrom=lge.com; arc=none smtp.client-ip=156.147.51.102
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lge.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lge.com
-Received: from unknown (HELO yjaykim-PowerEdge-T330) (10.177.112.156)
-	by 156.147.51.102 with ESMTP; 5 Sep 2025 15:30:42 +0900
-X-Original-SENDERIP: 10.177.112.156
-X-Original-MAILFROM: youngjun.park@lge.com
-Date: Fri, 5 Sep 2025 15:30:42 +0900
-From: YoungJun Park <youngjun.park@lge.com>
-To: Chris Li <chrisl@kernel.org>
-Cc: Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny@suse.com>,
-	akpm@linux-foundation.org, hannes@cmpxchg.org, mhocko@kernel.org,
-	roman.gushchin@linux.dev, shakeel.butt@linux.dev,
-	muchun.song@linux.dev, shikemeng@huaweicloud.com,
-	kasong@tencent.com, nphamcs@gmail.com, bhe@redhat.com,
-	baohua@kernel.org, cgroups@vger.kernel.org, linux-mm@kvack.org,
-	linux-kernel@vger.kernel.org, gunho.lee@lge.com,
-	iamjoonsoo.kim@lge.com, taejoon.song@lge.com,
-	Matthew Wilcox <willy@infradead.org>,
-	David Hildenbrand <david@redhat.com>,
-	Kairui Song <ryncsn@gmail.com>
-Subject: Re: [PATCH 1/4] mm/swap, memcg: Introduce infrastructure for
- cgroup-based swap priority
-Message-ID: <aLqDkpGr4psGFOcF@yjaykim-PowerEdge-T330>
-References: <aKsAES4cXWbDG1xn@yjaykim-PowerEdge-T330>
- <CACePvbV=OuxGTqoZvgwkx9D-1CycbDv7iQdKhqH1i2e8rTq9OQ@mail.gmail.com>
- <aK2vIdU0szcu7smP@yjaykim-PowerEdge-T330>
- <CACePvbUJSk23sH01msPcNiiiYw7JqWq_7xP1C7iBUN81nxJ36Q@mail.gmail.com>
- <aLJ4fEWo7V9Xsz15@yjaykim-PowerEdge-T330>
- <CACePvbW_Q6O2ppMG35gwj7OHCdbjja3qUCF1T7GFsm9VDr2e_g@mail.gmail.com>
- <aLRTyWJN60WEu/3q@yjaykim-PowerEdge-T330>
- <CACePvbVu7-s1BbXDD4Xk+vBk7my0hef5MBkecg1Vs6CBHMAm3g@mail.gmail.com>
- <aLXEkRAGmTlTGeQO@yjaykim-PowerEdge-T330>
- <CACePvbXAXbxqRi3_OoiSJKVs0dzuC-021AVaTkE3XOSx7FWvXQ@mail.gmail.com>
+	s=arc-20240116; t=1757056557; c=relaxed/simple;
+	bh=uKIzZZ04oGjo2pFl0rgtn6VsHczQSQ/lXNrRGTRUsu4=;
+	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
+	 MIME-Version; b=BiGTQAgplS2CdtJQs41KzUS96a+OjjL1NEOLaP5RCNySTW9ne0qiVIrij/wbVxArDS33ezhd7ULF/jo0SWW2R1c21CH7/UENyVZhnbau5NE2JT0W0QcYcV2QuLoHMYua5HZ2O8YvRL2RNZcyNQonyEBfeQB51zB2188Qg4QVo20=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.51
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
+Received: from mail.maildlp.com (unknown [172.19.93.142])
+	by dggsgout11.his.huawei.com (SkyGuard) with ESMTPS id 4cJ7155XBnzYQvZ4;
+	Fri,  5 Sep 2025 15:15:53 +0800 (CST)
+Received: from mail02.huawei.com (unknown [10.116.40.128])
+	by mail.maildlp.com (Postfix) with ESMTP id 415F01A1116;
+	Fri,  5 Sep 2025 15:15:52 +0800 (CST)
+Received: from huaweicloud.com (unknown [10.175.104.67])
+	by APP4 (Coremail) with SMTP id gCh0CgAncIwkjrpowYbQBQ--.23573S5;
+	Fri, 05 Sep 2025 15:15:51 +0800 (CST)
+From: Yu Kuai <yukuai1@huaweicloud.com>
+To: hch@infradead.org,
+	colyli@kernel.org,
+	hare@suse.de,
+	dlemoal@kernel.org,
+	tieren@fnnas.com,
+	bvanassche@acm.org,
+	axboe@kernel.dk,
+	tj@kernel.org,
+	josef@toxicpanda.com,
+	song@kernel.org,
+	yukuai3@huawei.com,
+	satyat@google.com,
+	ebiggers@google.com,
+	kmo@daterainc.com,
+	akpm@linux-foundation.org,
+	neil@brown.name
+Cc: linux-block@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	cgroups@vger.kernel.org,
+	linux-raid@vger.kernel.org,
+	yi.zhang@huawei.com,
+	yangerkun@huawei.com,
+	johnny.chenyi@huawei.com
+Subject: [PATCH for-6.18/block 01/16] block: cleanup bio_issue
+Date: Fri,  5 Sep 2025 15:06:28 +0800
+Message-Id: <20250905070643.2533483-2-yukuai1@huaweicloud.com>
+X-Mailer: git-send-email 2.39.2
+In-Reply-To: <20250905070643.2533483-1-yukuai1@huaweicloud.com>
+References: <20250905070643.2533483-1-yukuai1@huaweicloud.com>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <CACePvbXAXbxqRi3_OoiSJKVs0dzuC-021AVaTkE3XOSx7FWvXQ@mail.gmail.com>
+X-CM-TRANSID:gCh0CgAncIwkjrpowYbQBQ--.23573S5
+X-Coremail-Antispam: 1UD129KBjvJXoWxtFy8uryrXr1UZF4kGF1rZwb_yoW7Gw47pr
+	4fJr93Gr93tFsrWr4vya1DA34rGrs5Cry3G398uwsaya1I9ryxJF1kZF40qFykCFZ5CFZ8
+	XF18t3yYkw4Yk3DanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDU0xBIdaVrnRJUUUPFb4IE77IF4wAFF20E14v26rWj6s0DM7CY07I20VC2zVCF04k2
+	6cxKx2IYs7xG6rWj6s0DM7CIcVAFz4kK6r1j6r18M28IrcIa0xkI8VA2jI8067AKxVWUGw
+	A2048vs2IY020Ec7CjxVAFwI0_Xr0E3s1l8cAvFVAK0II2c7xJM28CjxkF64kEwVA0rcxS
+	w2x7M28EF7xvwVC0I7IYx2IY67AKxVWDJVCq3wA2z4x0Y4vE2Ix0cI8IcVCY1x0267AKxV
+	W8Jr0_Cr1UM28EF7xvwVC2z280aVAFwI0_GcCE3s1l84ACjcxK6I8E87Iv6xkF7I0E14v2
+	6rxl6s0DM2AIxVAIcxkEcVAq07x20xvEncxIr21l5I8CrVACY4xI64kE6c02F40Ex7xfMc
+	Ij6xIIjxv20xvE14v26r1j6r18McIj6I8E87Iv67AKxVWUJVW8JwAm72CE4IkC6x0Yz7v_
+	Jr0_Gr1lF7xvr2IYc2Ij64vIr41lFIxGxcIEc7CjxVA2Y2ka0xkIwI1lc7CjxVAaw2AFwI
+	0_GFv_Wryl42xK82IYc2Ij64vIr41l4I8I3I0E4IkC6x0Yz7v_Jr0_Gr1lx2IqxVAqx4xG
+	67AKxVWUJVWUGwC20s026x8GjcxK67AKxVWUGVWUWwC2zVAF1VAY17CE14v26r4a6rW5MI
+	IYrxkI7VAKI48JMIIF0xvE2Ix0cI8IcVAFwI0_Jr0_JF4lIxAIcVC0I7IYx2IY6xkF7I0E
+	14v26r4j6F4UMIIF0xvE42xK8VAvwI8IcIk0rVWUJVWUCwCI42IY6I8E87Iv67AKxVWUJV
+	W8JwCI42IY6I8E87Iv6xkF7I0E14v26r4j6r4UJbIYCTnIWIevJa73UjIFyTuYvjxUIw0e
+	DUUUU
+X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
 
-> Yes, that works. I would skip the "add" keyword.
-> Also I notice that we can allow " " in place of "," as a separator as well.
+From: Yu Kuai <yukuai3@huawei.com>
 
-Yes, supporting both " " and "," sounds convenient.
+Now that bio->bi_issue is only used by blk-iolatency to get bio issue
+time, replace bio_issue with u64 time directly and remove bio_issue to
+make code cleaner.
 
-> Maybe instead of "remove hdd", just "-hdd" which is similar to how to
-> operate on swap.tiers.
+Signed-off-by: Yu Kuai <yukuai3@huawei.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+---
+ block/bio.c               |  2 +-
+ block/blk-cgroup.h        |  2 +-
+ block/blk-iolatency.c     | 14 +++----------
+ block/blk.h               | 42 ---------------------------------------
+ include/linux/blk_types.h |  7 ++-----
+ 5 files changed, 7 insertions(+), 60 deletions(-)
 
-Agreed, "+" for add and "-" for remove is simpler.
+diff --git a/block/bio.c b/block/bio.c
+index 44c43b970387..c8fce0d6e332 100644
+--- a/block/bio.c
++++ b/block/bio.c
+@@ -261,7 +261,7 @@ void bio_init(struct bio *bio, struct block_device *bdev, struct bio_vec *table,
+ 	bio->bi_private = NULL;
+ #ifdef CONFIG_BLK_CGROUP
+ 	bio->bi_blkg = NULL;
+-	bio->bi_issue.value = 0;
++	bio->issue_time_ns = 0;
+ 	if (bdev)
+ 		bio_associate_blkg(bio);
+ #ifdef CONFIG_BLK_CGROUP_IOCOST
+diff --git a/block/blk-cgroup.h b/block/blk-cgroup.h
+index 81868ad86330..d73204d27d72 100644
+--- a/block/blk-cgroup.h
++++ b/block/blk-cgroup.h
+@@ -372,7 +372,7 @@ static inline void blkg_put(struct blkcg_gq *blkg)
+ 
+ static inline void blkcg_bio_issue_init(struct bio *bio)
+ {
+-	bio_issue_init(&bio->bi_issue, bio_sectors(bio));
++	bio->issue_time_ns = blk_time_get_ns();
+ }
+ 
+ static inline void blkcg_use_delay(struct blkcg_gq *blkg)
+diff --git a/block/blk-iolatency.c b/block/blk-iolatency.c
+index 2f8fdecdd7a9..554b191a6892 100644
+--- a/block/blk-iolatency.c
++++ b/block/blk-iolatency.c
+@@ -485,19 +485,11 @@ static void blkcg_iolatency_throttle(struct rq_qos *rqos, struct bio *bio)
+ 		mod_timer(&blkiolat->timer, jiffies + HZ);
+ }
+ 
+-static void iolatency_record_time(struct iolatency_grp *iolat,
+-				  struct bio_issue *issue, u64 now,
+-				  bool issue_as_root)
++static void iolatency_record_time(struct iolatency_grp *iolat, u64 start,
++				  u64 now, bool issue_as_root)
+ {
+-	u64 start = bio_issue_time(issue);
+ 	u64 req_time;
+ 
+-	/*
+-	 * Have to do this so we are truncated to the correct time that our
+-	 * issue is truncated to.
+-	 */
+-	now = __bio_issue_time(now);
+-
+ 	if (now <= start)
+ 		return;
+ 
+@@ -625,7 +617,7 @@ static void blkcg_iolatency_done_bio(struct rq_qos *rqos, struct bio *bio)
+ 		 * submitted, so do not account for it.
+ 		 */
+ 		if (iolat->min_lat_nsec && bio->bi_status != BLK_STS_AGAIN) {
+-			iolatency_record_time(iolat, &bio->bi_issue, now,
++			iolatency_record_time(iolat, bio->issue_time_ns, now,
+ 					      issue_as_root);
+ 			window_start = atomic64_read(&iolat->window_start);
+ 			if (now > window_start &&
+diff --git a/block/blk.h b/block/blk.h
+index 46f566f9b126..0268deb22268 100644
+--- a/block/blk.h
++++ b/block/blk.h
+@@ -680,48 +680,6 @@ static inline ktime_t blk_time_get(void)
+ 	return ns_to_ktime(blk_time_get_ns());
+ }
+ 
+-/*
+- * From most significant bit:
+- * 1 bit: reserved for other usage, see below
+- * 12 bits: original size of bio
+- * 51 bits: issue time of bio
+- */
+-#define BIO_ISSUE_RES_BITS      1
+-#define BIO_ISSUE_SIZE_BITS     12
+-#define BIO_ISSUE_RES_SHIFT     (64 - BIO_ISSUE_RES_BITS)
+-#define BIO_ISSUE_SIZE_SHIFT    (BIO_ISSUE_RES_SHIFT - BIO_ISSUE_SIZE_BITS)
+-#define BIO_ISSUE_TIME_MASK     ((1ULL << BIO_ISSUE_SIZE_SHIFT) - 1)
+-#define BIO_ISSUE_SIZE_MASK     \
+-	(((1ULL << BIO_ISSUE_SIZE_BITS) - 1) << BIO_ISSUE_SIZE_SHIFT)
+-#define BIO_ISSUE_RES_MASK      (~((1ULL << BIO_ISSUE_RES_SHIFT) - 1))
+-
+-/* Reserved bit for blk-throtl */
+-#define BIO_ISSUE_THROTL_SKIP_LATENCY (1ULL << 63)
+-
+-static inline u64 __bio_issue_time(u64 time)
+-{
+-	return time & BIO_ISSUE_TIME_MASK;
+-}
+-
+-static inline u64 bio_issue_time(struct bio_issue *issue)
+-{
+-	return __bio_issue_time(issue->value);
+-}
+-
+-static inline sector_t bio_issue_size(struct bio_issue *issue)
+-{
+-	return ((issue->value & BIO_ISSUE_SIZE_MASK) >> BIO_ISSUE_SIZE_SHIFT);
+-}
+-
+-static inline void bio_issue_init(struct bio_issue *issue,
+-				       sector_t size)
+-{
+-	size &= (1ULL << BIO_ISSUE_SIZE_BITS) - 1;
+-	issue->value = ((issue->value & BIO_ISSUE_RES_MASK) |
+-			(blk_time_get_ns() & BIO_ISSUE_TIME_MASK) |
+-			((u64)size << BIO_ISSUE_SIZE_SHIFT));
+-}
+-
+ void bdev_release(struct file *bdev_file);
+ int bdev_open(struct block_device *bdev, blk_mode_t mode, void *holder,
+ 	      const struct blk_holder_ops *hops, struct file *bdev_file);
+diff --git a/include/linux/blk_types.h b/include/linux/blk_types.h
+index 930daff207df..b8be751e16fc 100644
+--- a/include/linux/blk_types.h
++++ b/include/linux/blk_types.h
+@@ -198,10 +198,6 @@ static inline bool blk_path_error(blk_status_t error)
+ 	return true;
+ }
+ 
+-struct bio_issue {
+-	u64 value;
+-};
+-
+ typedef __u32 __bitwise blk_opf_t;
+ 
+ typedef unsigned int blk_qc_t;
+@@ -242,7 +238,8 @@ struct bio {
+ 	 * on release of the bio.
+ 	 */
+ 	struct blkcg_gq		*bi_blkg;
+-	struct bio_issue	bi_issue;
++	/* Time that this bio was issued. */
++	u64			issue_time_ns;
+ #ifdef CONFIG_BLK_CGROUP_IOCOST
+ 	u64			bi_iocost_cost;
+ #endif
+-- 
+2.39.2
 
-> Oh, you mean the tier not listed in the above will be deleted.
-> I prefer the above option 1) then.
-
-That makes sense. Option 1) looks simplest overall.
-
-> I don't understand what is this "removing" and "in stage"...
-> What is it trying to solve?
-
-That came from an idea to pre-add a new tier before removing another.
-But I now think returning an error on overlap is simpler, so staging is
-not needed.
-
-> What do you mean by "visible"? Previous discussions haven't defined
-> what is visible vs invisible.
-
-By “visible” I meant a staged state becoming active. I realize the term
-was confusing. and it is not needed as I already explained.
-
-> Trigger event to notify user space? Who consumes the event and what
-> can that user space tool do?
-
-I agree, sending user events is unnecessary. It is simpler to let tiers merge or
-be recreated and let the allocator handle it.
-
-> If you remove the
-> swap tier. the range of that tier merges to the neighbour tier.  That
-> way you don't need to worry about the swap file already having an
-> entry in this tier you swap out.
-
-Should the configured mask simply be left as-is,
-even if (a) the same key is later reintroduced with a different order (e.g.,
-first → third), or (b) a merge causes the cgroup to use a lower tier it did not
-explicitly select? 
-I infer that leaving the mask unchanged is acceptable and this concern
-may be unnecessary. if you consider this unnecessary, I am fine
-to follow the simpler direction you suggested.
-
-> If the fast path fails, it will go through the slow path. So the slow
-> path is actually a catch all.
-
-I think my intention may not have come across clearly. I was not trying
-to propose a new optimization, but to describe a direction that requires
-almost no changes from the current behavior. Looking back, I realize the
-ideas I presented may not have looked like small adjustments, even
-though that was my intent.
-
-As a simple approach I had in mind:
-- Fastpath can just skip clusters outside the selected tier.
-- Slowpath naturally respects the tier bitmask.
-- The open point is how to treat the per-CPU cache.
-
-If we insert clusters back, tiered and non-tiered cgroups may see
-low-priority clusters. If we skip insertion, tiered cgroups may lose
-caching benefits.
-
-Chris, do you have another workable approach in mind here, or is this
-close to what you were also thinking?
-
-> In my original proposal, if a parent removes ssd then the child will
-> automatically get it as well.
-
-I now see you mean the effective mask is built by walking parents with local
-settings taking precedence, top to bottom, preferring the nearest local
-setting. Conceptually this yields two data structures: a local-setting mask and
-a runtime/effective mask. Does the above capture your intention, or is there
-anything else I should mention?
-
-A few thoughts aligned with the above:
-- There is no separate “default setting” knob to control inheritance.
-- If unset locally, the effective value is derived by walking the cgroup
-  hierarchy from top to bottom.
-- Once set locally, the local setting overrides everything inherited.
-- There is no special “default tier” when tiers are absent.
-- If nothing is set anywhere in the hierarchy, the initial mask is treated as
-  fully set at configuration time (selecting all tiers; global swap behavior).
-  However, reading the local file should return an empty value to indicate
-  “not set”.
-
-One idea is to precompute the effective mask at interface write time, since
-writes are rarer than swap I/O. You may have intended runtime recomputation
-instead—which approach do you prefer? This implies two masks: a local
-configuration mask and a computed effective mask.
-
-And below is a spec summary I drafted, based on our discussion so far for
-note and alignment. 
-(Some points in this reply remain unresolved, and there are additional TBD items.)
-
-* **Tier specification**
-  - Priority >= 0 range is divided into intervals, each identified by a
-    tier name. The full 0+ range must be covered.
-  - NUMA autobind and tiering are mutually exclusive.
-  - Max number of tiers = MAX_SWAPFILES (single swap device can also be
-    assigned as a tier).
-  - A tier holds references when swap devices are assigned to its
-    priority range. Removal is only possible after swapoff clears the
-    references.
-  - Cgroups referencing a tier do not hold references. If the tier is
-    removed, the cgroup’s configured mask is dropped. (TBD)
-  - Each tier has an order (tier1 is highest priority) and an internal
-    bit for allocation logic.
-  - Until it is set, there is no default tier. 
-    (may internally conceptually used? but not exported)
-
-* **/sys/kernel/mm/swap/tiers**
-  - Read/write interface. Multiple entries allowed, delimiters: space or
-    comma.
-  - Format:
-      + "tier name":priority  → add (priority and above)
-      - "tier name"           → remove
-    Note: a space must follow "+" or "-" before the tier name.
-  - Edge cases:
-      * If not all ranges are specified: input is accepted, but cgroups
-        cannot use incomplete ranges. (TBD)
-	e.g) echo "hdd:50" > /sys/kernel/mm/swap/tiers. (0~49 not specifeid)
-      * Overlap with existing range: removal fails until all swap
-        devices in that range are swapped off.
-  - Output is sorted, showing tier order along with name, bit, and
-    priority range. (It may be more user-friendly to explicitly show
-    tier order. (TBD))
-
-* **Cgroup interface**
-  - New files (under memcg): memory.swap.tier, memory.swap.tier.effective
-    * Read/write: memory.swap.tier returns the local named set exactly
-      as configured (cpuset-like "+/-" tokens; space/comma preserved).
-    * Read-only: memory.swap.tier.effective is computed from the cgroup
-      hierarchy, with the nearest local setting taking precedence
-      (similar to cpuset.effective). (TBD)
-    * Example (named-set display, cpuset-like style)
-
-      Suppose tier order:
-        ssd (tier1), hdd (tier2), hdd2 (tier3), net (tier4)
-
-      Input:
-        echo "ssd-hdd, net" > memory.swap.tier
-
-      Readback:
-        cat memory.swap.tier
-          ssd-hdd, net     # exactly as configured (named set)
-
-        cat memory.swap.tier.effective
-          ssd-hdd, net     # same format; inherited/effective result
-
-  - Inheritance: effective mask built by walking from parent to child,
-    with local settings taking precedence.
-  - Mask computation: precompute at interface write-time vs runtime
-    recomputation. (TBD; preference?)
-  - Syntax modeled after cpuset:
-      echo "ssd-hdd,net" > memory.swap.tier
-    Here “-” specifies a range and must respect tier order. Items
-    separated by “,” do not need to follow order and may overlap; they
-    are handled appropriately (similar to cpuset semantics).
-
-* **Swap allocation**
-  - Simple, workable implementation (TBD; to be revisited with
-    measurements).
-
-I tried to summarize the discussion and my inline responses as clearly as
-possible. If anything is unclear or I misinterpreted something, please
-tell me and I’ll follow up promptly to clarify. If you have comments, I
-will be happy to continue the discussion. Hopefully this time our
-alignment will be clearer.
-
-Best regards,
-Youngjun Park
