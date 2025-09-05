@@ -1,28 +1,28 @@
-Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
+Received: from dggsgout12.his.huawei.com (dggsgout12.his.huawei.com [45.249.212.56])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2F59227A46E;
-	Fri,  5 Sep 2025 07:15:55 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.51
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AB3582D7DE2;
+	Fri,  5 Sep 2025 07:15:57 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.56
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1757056558; cv=none; b=i5D0F0AjZZP73vY1j9SHHmL1ijuumQHJVbbdWAJDGrAgYGvO51MP6x2FnaX96QB7qXSQekh5vNgO8rRxhrZ+6lzKD35CV9LiGlSnd51ig29Lit3TNEb7V6u3ZcWiRS6TfzrLs4wthDev5ZbUoynYoJuDqnJyxwdM7FaMICjKye0=
+	t=1757056559; cv=none; b=D8dJYiKwCDd6+1RBsZYctq8ugJlAtTUnalgP6brx9Er++s0Q1+dDqI1eueP76Y5/7Ww/AZZopTyX2lYn48lmRX3mYOTubK/AquFZ6W4l3SFRKW3tuqevvhiTVBU11DrDNxSxOQNctEzTiDpMNZ8q1j4LyeL1ppOn0q5d1potX0w=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1757056558; c=relaxed/simple;
-	bh=VYzVi/Ux+8GR0sfiDKmwI1xaxSC0ct186gPGpcyhj7g=;
+	s=arc-20240116; t=1757056559; c=relaxed/simple;
+	bh=Ni8PeR4nc8k1F9m1Y7D0zHHocn+Ij6QHDZEyFsB6SQU=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=buuCnFfqRx/KtPW3O/An+FxPP8hJP9If5WzwYO7cpW25RxVEcK+zuH7vasGKdSG9nGvKLvS07j9uxgeY8n0YIC1aat89iaOYVpuQilAUk9kqjIXBmn90u8ebIb/eUzM+Y66jVH00vOoYSq5i1fLY4u0mrCBlHbjZxH68O/spiLA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.51
+	 MIME-Version; b=YRjcLPTqIyL/T2qGweahsOO1QuFQs7JyGNuJ8NrvWpmXvJ6Gf4rpDoK6Z8VvGbiB3bqNFIAs64yRKMLnvkAVhnM5j6S9FSSfqSeQPOoh4uExx6ywkoMBZGzROXgCryaeUdE9nVN0/k/Epjadow87I6Evft2ZTsmpB74XsT6+CB0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.56
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
-Received: from mail.maildlp.com (unknown [172.19.163.235])
-	by dggsgout11.his.huawei.com (SkyGuard) with ESMTPS id 4cJ71733ZJzYQtpY;
+Received: from mail.maildlp.com (unknown [172.19.93.142])
+	by dggsgout12.his.huawei.com (SkyGuard) with ESMTPS id 4cJ7174tk5zKHMf5;
 	Fri,  5 Sep 2025 15:15:55 +0800 (CST)
 Received: from mail02.huawei.com (unknown [10.116.40.128])
-	by mail.maildlp.com (Postfix) with ESMTP id DF7F51A0D93;
-	Fri,  5 Sep 2025 15:15:53 +0800 (CST)
+	by mail.maildlp.com (Postfix) with ESMTP id 9CFDA1A132D;
+	Fri,  5 Sep 2025 15:15:55 +0800 (CST)
 Received: from huaweicloud.com (unknown [10.175.104.67])
-	by APP4 (Coremail) with SMTP id gCh0CgAncIwkjrpowYbQBQ--.23573S7;
-	Fri, 05 Sep 2025 15:15:53 +0800 (CST)
+	by APP4 (Coremail) with SMTP id gCh0CgAncIwkjrpowYbQBQ--.23573S9;
+	Fri, 05 Sep 2025 15:15:55 +0800 (CST)
 From: Yu Kuai <yukuai1@huaweicloud.com>
 To: hch@infradead.org,
 	colyli@kernel.org,
@@ -47,9 +47,9 @@ Cc: linux-block@vger.kernel.org,
 	yi.zhang@huawei.com,
 	yangerkun@huawei.com,
 	johnny.chenyi@huawei.com
-Subject: [PATCH for-6.18/block 03/16] blk-mq: add QUEUE_FLAG_BIO_ISSUE_TIME
-Date: Fri,  5 Sep 2025 15:06:30 +0800
-Message-Id: <20250905070643.2533483-4-yukuai1@huaweicloud.com>
+Subject: [PATCH for-6.18/block 05/16] blk-crypto: fix missing blktrace bio split events
+Date: Fri,  5 Sep 2025 15:06:32 +0800
+Message-Id: <20250905070643.2533483-6-yukuai1@huaweicloud.com>
 X-Mailer: git-send-email 2.39.2
 In-Reply-To: <20250905070643.2533483-1-yukuai1@huaweicloud.com>
 References: <20250905070643.2533483-1-yukuai1@huaweicloud.com>
@@ -60,100 +60,60 @@ List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:gCh0CgAncIwkjrpowYbQBQ--.23573S7
-X-Coremail-Antispam: 1UD129KBjvJXoWxAr1fZw4Dur17CF1xZw1kZrb_yoW5XryUpa
-	95KF92k342gr4xXF18ta13A3WUGws0gr17CFn0kw45Zw1xWr17Xr1vyF1UtaykursxArWY
-	qryxtFykWry5WrJanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDU0xBIdaVrnRJUUUPIb4IE77IF4wAFF20E14v26rWj6s0DM7CY07I20VC2zVCF04k2
-	6cxKx2IYs7xG6rWj6s0DM7CIcVAFz4kK6r1j6r18M28IrcIa0xkI8VA2jI8067AKxVWUWw
-	A2048vs2IY020Ec7CjxVAFwI0_Xr0E3s1l8cAvFVAK0II2c7xJM28CjxkF64kEwVA0rcxS
-	w2x7M28EF7xvwVC0I7IYx2IY67AKxVWDJVCq3wA2z4x0Y4vE2Ix0cI8IcVCY1x0267AKxV
-	W8Jr0_Cr1UM28EF7xvwVC2z280aVAFwI0_GcCE3s1l84ACjcxK6I8E87Iv6xkF7I0E14v2
-	6rxl6s0DM2AIxVAIcxkEcVAq07x20xvEncxIr21l5I8CrVACY4xI64kE6c02F40Ex7xfMc
-	Ij6xIIjxv20xvE14v26r1j6r18McIj6I8E87Iv67AKxVWUJVW8JwAm72CE4IkC6x0Yz7v_
-	Jr0_Gr1lF7xvr2IYc2Ij64vIr41lFIxGxcIEc7CjxVA2Y2ka0xkIwI1lc7CjxVAaw2AFwI
-	0_GFv_Wryl42xK82IYc2Ij64vIr41l4I8I3I0E4IkC6x0Yz7v_Jr0_Gr1lx2IqxVAqx4xG
-	67AKxVWUJVWUGwC20s026x8GjcxK67AKxVWUGVWUWwC2zVAF1VAY17CE14v26r4a6rW5MI
-	IYrxkI7VAKI48JMIIF0xvE2Ix0cI8IcVAFwI0_Jr0_JF4lIxAIcVC0I7IYx2IY6xkF7I0E
-	14v26F4j6r4UJwCI42IY6xAIw20EY4v20xvaj40_Jr0_JF4lIxAIcVC2z280aVAFwI0_Jr
-	0_Gr1lIxAIcVC2z280aVCY1x0267AKxVW8Jr0_Cr1UYxBIdaVFxhVjvjDU0xZFpf9x07jx
-	CztUUUUU=
+X-CM-TRANSID:gCh0CgAncIwkjrpowYbQBQ--.23573S9
+X-Coremail-Antispam: 1UD129KBjvdXoW7GryxJFy5uF4kZw4ftw18Zrb_yoWkAFg_ZF
+	yfGr18Wry8AFn7uF1SyFZ7Aw1j9345ZryUWa18Aa47AFs7JFZYkanxJFZ8GrsFkF97Ww13
+	G3WUZFy8G34SqjkaLaAFLSUrUUUUjb8apTn2vfkv8UJUUUU8Yxn0WfASr-VFAUDa7-sFnT
+	9fnUUIcSsGvfJTRUUUbgxYFVCjjxCrM7AC8VAFwI0_Wr0E3s1l1xkIjI8I6I8E6xAIw20E
+	Y4v20xvaj40_Wr0E3s1l1IIY67AEw4v_Jr0_Jr4l82xGYIkIc2x26280x7IE14v26r126s
+	0DM28IrcIa0xkI8VCY1x0267AKxVW5JVCq3wA2ocxC64kIII0Yj41l84x0c7CEw4AK67xG
+	Y2AK021l84ACjcxK6xIIjxv20xvE14v26w1j6s0DM28EF7xvwVC0I7IYx2IY6xkF7I0E14
+	v26r4UJVWxJr1l84ACjcxK6I8E87Iv67AKxVW0oVCq3wA2z4x0Y4vEx4A2jsIEc7CjxVAF
+	wI0_GcCE3s1le2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xvF2IEw4CE5I8CrVC2j2
+	WlYx0E2Ix0cI8IcVAFwI0_Jr0_Jr4lYx0Ex4A2jsIE14v26r1j6r4UMcvjeVCFs4IE7xkE
+	bVWUJVW8JwACjcxG0xvY0x0EwIxGrwACI402YVCY1x02628vn2kIc2xKxwCY1x0262kKe7
+	AKxVW8ZVWrXwCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7xkEbVWUJVW8JwC20s026c02
+	F40E14v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E67AF67kF1VAFwI0_GFv_Wr
+	ylIxkGc2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUCVW8JwCI42IY6xIIjxv20xvEc7Cj
+	xVAFwI0_Gr1j6F4UJwCI42IY6xAIw20EY4v20xvaj40_Jr0_JF4lIxAIcVC2z280aVAFwI
+	0_Jr0_Gr1lIxAIcVC2z280aVCY1x0267AKxVW8Jr0_Cr1UYxBIdaVFxhVjvjDU0xZFpf9x
+	07jIPfQUUUUU=
 X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
 
 From: Yu Kuai <yukuai3@huawei.com>
 
-bio->issue_time_ns is initialized for every bio, however, it's only used
-by blk-iolatency. Add a new queue_flag and only set this flag when
-blk-iolatency is enabled, so that extra blk_time_get_ns() can be saved
-for disks that blk-iolatency is not enabled.
+trace_block_split() is missing, resulting in blktrace inability to catch
+BIO split events and making it harder to analyze the BIO sequence.
 
+Cc: stable@vger.kernel.org
+Fixes: 488f6682c832 ("block: blk-crypto-fallback for Inline Encryption")
 Signed-off-by: Yu Kuai <yukuai3@huawei.com>
 ---
- block/blk-iolatency.c  | 5 +++++
- block/blk-mq-debugfs.c | 1 +
- block/blk-mq.c         | 4 +++-
- include/linux/blkdev.h | 1 +
- 4 files changed, 10 insertions(+), 1 deletion(-)
+ block/blk-crypto-fallback.c | 3 +++
+ 1 file changed, 3 insertions(+)
 
-diff --git a/block/blk-iolatency.c b/block/blk-iolatency.c
-index 554b191a6892..45bd18f68541 100644
---- a/block/blk-iolatency.c
-+++ b/block/blk-iolatency.c
-@@ -742,10 +742,15 @@ static void blkiolatency_enable_work_fn(struct work_struct *work)
- 	 */
- 	enabled = atomic_read(&blkiolat->enable_cnt);
- 	if (enabled != blkiolat->enabled) {
-+		struct request_queue *q = blkiolat->rqos.disk->queue;
- 		unsigned int memflags;
+diff --git a/block/blk-crypto-fallback.c b/block/blk-crypto-fallback.c
+index 005c9157ffb3..1f9a4c33d2bd 100644
+--- a/block/blk-crypto-fallback.c
++++ b/block/blk-crypto-fallback.c
+@@ -18,6 +18,7 @@
+ #include <linux/module.h>
+ #include <linux/random.h>
+ #include <linux/scatterlist.h>
++#include <trace/events/block.h>
  
- 		memflags = blk_mq_freeze_queue(blkiolat->rqos.disk->queue);
- 		blkiolat->enabled = enabled;
-+		if (enabled)
-+			blk_queue_flag_set(QUEUE_FLAG_BIO_ISSUE_TIME, q);
-+		else
-+			blk_queue_flag_clear(QUEUE_FLAG_BIO_ISSUE_TIME, q);
- 		blk_mq_unfreeze_queue(blkiolat->rqos.disk->queue, memflags);
- 	}
- }
-diff --git a/block/blk-mq-debugfs.c b/block/blk-mq-debugfs.c
-index 32c65efdda46..4896525b1c05 100644
---- a/block/blk-mq-debugfs.c
-+++ b/block/blk-mq-debugfs.c
-@@ -96,6 +96,7 @@ static const char *const blk_queue_flag_name[] = {
- 	QUEUE_FLAG_NAME(DISABLE_WBT_DEF),
- 	QUEUE_FLAG_NAME(NO_ELV_SWITCH),
- 	QUEUE_FLAG_NAME(QOS_ENABLED),
-+	QUEUE_FLAG_NAME(BIO_ISSUE_TIME),
- };
- #undef QUEUE_FLAG_NAME
- 
-diff --git a/block/blk-mq.c b/block/blk-mq.c
-index d2538683c83d..eaa18536333f 100644
---- a/block/blk-mq.c
-+++ b/block/blk-mq.c
-@@ -3168,7 +3168,9 @@ void blk_mq_submit_bio(struct bio *bio)
- 	if (!bio_integrity_prep(bio))
- 		goto queue_exit;
- 
--	bio->issue_time_ns = blk_time_get_ns();
-+	if (test_bit(QUEUE_FLAG_BIO_ISSUE_TIME, &q->queue_flags))
-+		bio->issue_time_ns = blk_time_get_ns();
+ #include "blk-cgroup.h"
+ #include "blk-crypto-internal.h"
+@@ -231,7 +232,9 @@ static bool blk_crypto_fallback_split_bio_if_needed(struct bio **bio_ptr)
+ 			bio->bi_status = BLK_STS_RESOURCE;
+ 			return false;
+ 		}
 +
- 	if (blk_mq_attempt_bio_merge(q, bio, nr_segs))
- 		goto queue_exit;
- 
-diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
-index 7709d55adc23..3c3b64684d14 100644
---- a/include/linux/blkdev.h
-+++ b/include/linux/blkdev.h
-@@ -657,6 +657,7 @@ enum {
- 	QUEUE_FLAG_DISABLE_WBT_DEF,	/* for sched to disable/enable wbt */
- 	QUEUE_FLAG_NO_ELV_SWITCH,	/* can't switch elevator any more */
- 	QUEUE_FLAG_QOS_ENABLED,		/* qos is enabled */
-+	QUEUE_FLAG_BIO_ISSUE_TIME,	/* record bio->issue_time_ns */
- 	QUEUE_FLAG_MAX
- };
- 
+ 		bio_chain(split_bio, bio);
++		trace_block_split(split_bio, bio->bi_iter.bi_sector);
+ 		submit_bio_noacct(bio);
+ 		*bio_ptr = split_bio;
+ 	}
 -- 
 2.39.2
 
