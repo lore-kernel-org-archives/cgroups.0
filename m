@@ -1,27 +1,26 @@
 Received: from dggsgout12.his.huawei.com (dggsgout12.his.huawei.com [45.249.212.56])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 21FAA261388;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 21EB82571DC;
 	Tue,  9 Sep 2025 03:47:58 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.56
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1757389680; cv=none; b=j2xDRzPx6ZsSO8BjD99wL3aQjJFMnDD4SkzTf5B1yjvpThi0X6WfVDorH4mS2s7komARBg+CWN1avHMOKA/+qU/n5KiEba0sOhn6Xkq5iAHpShTZz4mPjMHLwWl5mLrYItW7+4N/6q2MCiCQV8ID5rv2acnI1xg25d9r3HEyJeY=
+	t=1757389681; cv=none; b=gyIceIHZ7bPxOTt/22DYrSmjWTwrhk2PKn3R4u0ZUHHDA/Q8MpF/c2zNff8Ycmz4FvKRz7ua5IgW8G52wtTfut91stzrt0PUXS81ZxdNRLskYgo8q9c6JP2QBbhb3Y5R5jttvHXhw7MJT1HbwlX+NN32UThbixQW+HCjuRElTlg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1757389680; c=relaxed/simple;
-	bh=eDd+XzFIYhxKQRz923ZZMjnyv6R3/zLMpFQeFyk84dA=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=MygdkUExxyDI0+s6Sb+gMO1m7gCtVXe09pKVFMj4treH7KqQanTFVHy+gnxTD/3EirG8I7MFHtZc7+Uxs8D+VQvdEYhiV3gNpf2HO2luFK/LnlWHcfGP0SA5oKX/hVUtdc3Fi48J/rAYZmaYSMnJvQgRLBosY2iCya3wYFpq8IA=
+	s=arc-20240116; t=1757389681; c=relaxed/simple;
+	bh=fmitcViLjI9lShqiC0YptWK20Iw11nsSEgUdpLizCGo=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=lU93WmiPZ5AclMQmXpYl1Xx0ifqnZOUNBuESk+e8tRs+Zqw6WGrO8oB77NMBOMiSDgWFkSQ4e68soXXpxepyEMiMX8rht05SuHlPpeorCwZ01Vxx5STp6N76oMu9qzQlgZ+HrBuqWSH/MYbJprijw7pnqUtyUPAr1UE2yxPB+Vs=
 ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.56
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
 Received: from mail.maildlp.com (unknown [172.19.163.235])
-	by dggsgout12.his.huawei.com (SkyGuard) with ESMTPS id 4cLVCH4XCKzKHMlk;
+	by dggsgout12.his.huawei.com (SkyGuard) with ESMTPS id 4cLVCH3c37zKHMlJ;
 	Tue,  9 Sep 2025 11:47:55 +0800 (CST)
 Received: from mail02.huawei.com (unknown [10.116.40.112])
-	by mail.maildlp.com (Postfix) with ESMTP id C38E51A0BCD;
+	by mail.maildlp.com (Postfix) with ESMTP id A3C4A1A0BC9;
 	Tue,  9 Sep 2025 11:47:55 +0800 (CST)
 Received: from hulk-vt.huawei.com (unknown [10.67.174.121])
-	by APP1 (Coremail) with SMTP id cCh0CgAnM3lOo79oBVdmBw--.63383S7;
+	by APP1 (Coremail) with SMTP id cCh0CgAnM3lOo79oBVdmBw--.63383S2;
 	Tue, 09 Sep 2025 11:47:55 +0800 (CST)
 From: Chen Ridong <chenridong@huaweicloud.com>
 To: longman@redhat.com,
@@ -32,12 +31,10 @@ Cc: cgroups@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
 	lujialin4@huawei.com,
 	chenridong@huawei.com
-Subject: [PATCH -next RFC -v2 05/11] cpuset: refactor CPU mask buffer parsing logic
-Date: Tue,  9 Sep 2025 03:32:27 +0000
-Message-Id: <20250909033233.2731579-6-chenridong@huaweicloud.com>
+Subject: [PATCH -next RFC -v2 00/11] Refactor cpus mask setting
+Date: Tue,  9 Sep 2025 03:32:22 +0000
+Message-Id: <20250909033233.2731579-1-chenridong@huaweicloud.com>
 X-Mailer: git-send-email 2.34.1
-In-Reply-To: <20250909033233.2731579-1-chenridong@huaweicloud.com>
-References: <20250909033233.2731579-1-chenridong@huaweicloud.com>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
@@ -45,148 +42,71 @@ List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:cCh0CgAnM3lOo79oBVdmBw--.63383S7
-X-Coremail-Antispam: 1UD129KBjvJXoWxZF1xtFW5urW3KF1rtFy7Wrg_yoWruF4xpF
-	1fCrW7JrWUtr1Fk39xtrsrWrn8Kw1kXa4DtwnxJw1rCFy7C3Z2yF1DtasxZFyfG34DGFWU
-	Xa9IyrW29F9rArUanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDU0xBIdaVrnRJUUUB0b4IE77IF4wAFF20E14v26rWj6s0DM7CY07I20VC2zVCF04k2
-	6cxKx2IYs7xG6rWj6s0DM7CIcVAFz4kK6r1j6r18M28IrcIa0xkI8VA2jI8067AKxVWUAV
-	Cq3wA2048vs2IY020Ec7CjxVAFwI0_Xr0E3s1l8cAvFVAK0II2c7xJM28CjxkF64kEwVA0
-	rcxSw2x7M28EF7xvwVC0I7IYx2IY67AKxVW7JVWDJwA2z4x0Y4vE2Ix0cI8IcVCY1x0267
-	AKxVW8Jr0_Cr1UM28EF7xvwVC2z280aVAFwI0_GcCE3s1l84ACjcxK6I8E87Iv6xkF7I0E
-	14v26rxl6s0DM2AIxVAIcxkEcVAq07x20xvEncxIr21l5I8CrVACY4xI64kE6c02F40Ex7
-	xfMcIj6xIIjxv20xvE14v26r1j6r18McIj6I8E87Iv67AKxVWUJVW8JwAm72CE4IkC6x0Y
-	z7v_Jr0_Gr1lF7xvr2IYc2Ij64vIr41lc7CjxVAaw2AFwI0_JF0_Jw1l42xK82IYc2Ij64
-	vIr41l4I8I3I0E4IkC6x0Yz7v_Jr0_Gr1lx2IqxVAqx4xG67AKxVWUJVWUGwC20s026x8G
-	jcxK67AKxVWUGVWUWwC2zVAF1VAY17CE14v26r1q6r43MIIYrxkI7VAKI48JMIIF0xvE2I
-	x0cI8IcVAFwI0_JFI_Gr1lIxAIcVC0I7IYx2IY6xkF7I0E14v26r4j6F4UMIIF0xvE42xK
-	8VAvwI8IcIk0rVWUJVWUCwCI42IY6I8E87Iv67AKxVWUJVW8JwCI42IY6I8E87Iv6xkF7I
-	0E14v26r4j6r4UJbIYCTnIWIevJa73UjIFyTuYvjxUwuWlUUUUU
+X-CM-TRANSID:cCh0CgAnM3lOo79oBVdmBw--.63383S2
+X-Coremail-Antispam: 1UD129KBjvJXoW7Ar4kZF1UJw18uw1kCF45ZFb_yoW8uF1UpF
+	yakw13A348Gr13CanrJwn7Wr4Yga1kJ3W7tFnxtw1xKry293WqyryvyasxCFy3Gr9xCw1U
+	ZanIqFs7uF9rA37anT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDU0xBIdaVrnRJUUUyCb4IE77IF4wAFF20E14v26r4j6ryUM7CY07I20VC2zVCF04k2
+	6cxKx2IYs7xG6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rwA2F7IY1VAKz4
+	vEj48ve4kI8wA2z4x0Y4vE2Ix0cI8IcVAFwI0_Ar0_tr1l84ACjcxK6xIIjxv20xvEc7Cj
+	xVAFwI0_Cr0_Gr1UM28EF7xvwVC2z280aVAFwI0_GcCE3s1l84ACjcxK6I8E87Iv6xkF7I
+	0E14v26rxl6s0DM2AIxVAIcxkEcVAq07x20xvEncxIr21l5I8CrVACY4xI64kE6c02F40E
+	x7xfMcIj6xIIjxv20xvE14v26r1j6r18McIj6I8E87Iv67AKxVWUJVW8JwAm72CE4IkC6x
+	0Yz7v_Jr0_Gr1lF7xvr2IYc2Ij64vIr41lc7CjxVAaw2AFwI0_JF0_Jw1l42xK82IYc2Ij
+	64vIr41l4I8I3I0E4IkC6x0Yz7v_Jr0_Gr1lx2IqxVAqx4xG67AKxVWUJVWUGwC20s026x
+	8GjcxK67AKxVWUGVWUWwC2zVAF1VAY17CE14v26r1q6r43MIIYrxkI7VAKI48JMIIF0xvE
+	2Ix0cI8IcVAFwI0_Jr0_JF4lIxAIcVC0I7IYx2IY6xkF7I0E14v26r1j6r4UMIIF0xvE42
+	xK8VAvwI8IcIk0rVWUJVWUCwCI42IY6I8E87Iv67AKxVWUJVW8JwCI42IY6I8E87Iv6xkF
+	7I0E14v26r1j6r4UYxBIdaVFxhVjvjDU0xZFpf9x07UK2NtUUUUU=
 X-CM-SenderInfo: hfkh02xlgr0w46kxt4xhlfz01xgou0bp/
 
 From: Chen Ridong <chenridong@huawei.com>
 
-The current implementation contains redundant handling for empty mask
-inputs, as cpulist_parse() already properly handles these cases. This
-refactoring introduces a new helper function parse_cpuset_cpulist() to
-consolidate CPU list parsing logic and eliminate special-case checks for
-empty inputs.
+This patch series refactors the CPU mask configuration logic for both
+cpuset.cpus and cpuset.cpus.exclusive settings. The primary goal is to
+improve code readability through comprehensive function restructuring.
 
-Additionally, the effective_xcpus computation for trial cpusets has been
-simplified. Rather than computing effective_xcpus only when exclusive_cpus
-is set or when the cpuset forms a valid partition, we now recalculate it
-on every cpuset.cpus update. This approach ensures consistency and allows
-removal of redundant effective_xcpus logic in subsequent patches.
+The CPU mask update process follows these steps:
+1. Parse user input
+2. Skip processing if no actual change to CPU mask
+3. Compute trial cpuset's effective exclusive CPUs
+4. Validate changes and return error if invalid
+5. Handle partition state changes resulting from CPU mask modifications
+6. Apply new CPU mask to the cpuset
+7. Propagate changes through the hierarchy
 
-The trial cpuset's effective_xcpus calculation follows two distinct cases:
-1. For member cpusets: effective_xcpus is determined by the intersection
-   of cpuset->exclusive_cpus and the parent's effective_xcpus.
-2. For non-member cpusets: effective_xcpus is derived from the intersection
-   of user_xcpus and the parent's effective_xcpus.
+The series is organized as follows:
+patches 1-3: Code cleanup and preparation for refactoring
+patches 4-9: Refactoring of cpuset.cpus configuration logic
+patches 10-11: Refactoring of cpuset.cpus.exclusive configuration logic
 
-Signed-off-by: Chen Ridong <chenridong@huawei.com>
 ---
- kernel/cgroup/cpuset.c | 59 +++++++++++++++++++++---------------------
- 1 file changed, 30 insertions(+), 29 deletions(-)
 
-diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
-index 6015322a10ac..55674a5ad2f9 100644
---- a/kernel/cgroup/cpuset.c
-+++ b/kernel/cgroup/cpuset.c
-@@ -169,6 +169,11 @@ static inline bool is_partition_invalid(const struct cpuset *cs)
- 	return cs->partition_root_state < 0;
- }
- 
-+static inline bool cs_is_member(const struct cpuset *cs)
-+{
-+	return cs->partition_root_state == PRS_MEMBER;
-+}
-+
- /*
-  * Callers should hold callback_lock to modify partition_root_state.
-  */
-@@ -1478,7 +1483,13 @@ static int compute_trialcs_excpus(struct cpuset *trialcs, struct cpuset *cs)
- 	struct cpuset *parent = parent_cs(trialcs);
- 	struct cpumask *excpus = trialcs->effective_xcpus;
- 
--	cpumask_and(excpus, user_xcpus(trialcs), parent->effective_xcpus);
-+	/* trialcs is member, cpuset.cpus has no impact to excpus */
-+	if (cs_is_member(cs))
-+		cpumask_and(excpus, trialcs->exclusive_cpus,
-+				parent->effective_xcpus);
-+	else
-+		cpumask_and(excpus, user_xcpus(trialcs), parent->effective_xcpus);
-+
- 	return rm_siblings_excl_cpus(parent, cs, excpus);
- }
- 
-@@ -2348,6 +2359,19 @@ static void update_sibling_cpumasks(struct cpuset *parent, struct cpuset *cs,
- 	rcu_read_unlock();
- }
- 
-+static int parse_cpuset_cpulist(const char *buf, struct cpumask *out_mask)
-+{
-+	int retval;
-+
-+	retval = cpulist_parse(buf, out_mask);
-+	if (retval < 0)
-+		return retval;
-+	if (!cpumask_subset(out_mask, top_cpuset.cpus_allowed))
-+		return -EINVAL;
-+
-+	return 0;
-+}
-+
- /**
-  * update_cpumask - update the cpus_allowed mask of a cpuset and all tasks in it
-  * @cs: the cpuset to consider
-@@ -2364,34 +2388,9 @@ static int update_cpumask(struct cpuset *cs, struct cpuset *trialcs,
- 	bool force = false;
- 	int old_prs = cs->partition_root_state;
- 
--	/*
--	 * An empty cpus_allowed is ok only if the cpuset has no tasks.
--	 * Since cpulist_parse() fails on an empty mask, we special case
--	 * that parsing.  The validate_change() call ensures that cpusets
--	 * with tasks have cpus.
--	 */
--	if (!*buf) {
--		cpumask_clear(trialcs->cpus_allowed);
--		if (cpumask_empty(trialcs->exclusive_cpus))
--			cpumask_clear(trialcs->effective_xcpus);
--	} else {
--		retval = cpulist_parse(buf, trialcs->cpus_allowed);
--		if (retval < 0)
--			return retval;
--
--		if (!cpumask_subset(trialcs->cpus_allowed,
--				    top_cpuset.cpus_allowed))
--			return -EINVAL;
--
--		/*
--		 * When exclusive_cpus isn't explicitly set, it is constrained
--		 * by cpus_allowed and parent's effective_xcpus. Otherwise,
--		 * trialcs->effective_xcpus is used as a temporary cpumask
--		 * for checking validity of the partition root.
--		 */
--		if (!cpumask_empty(trialcs->exclusive_cpus) || is_partition_valid(cs))
--			compute_trialcs_excpus(trialcs, cs);
--	}
-+	retval = parse_cpuset_cpulist(buf, trialcs->cpus_allowed);
-+	if (retval < 0)
-+		return retval;
- 
- 	/* Nothing to do if the cpus didn't change */
- 	if (cpumask_equal(cs->cpus_allowed, trialcs->cpus_allowed))
-@@ -2400,6 +2399,8 @@ static int update_cpumask(struct cpuset *cs, struct cpuset *trialcs,
- 	if (alloc_tmpmasks(&tmp))
- 		return -ENOMEM;
- 
-+	compute_trialcs_excpus(trialcs, cs);
-+
- 	if (old_prs) {
- 		if (is_partition_valid(cs) &&
- 		    cpumask_empty(trialcs->effective_xcpus)) {
+Changes from v1:
+- Patch 1: Use direct comparison (cs == &top_cpuset) instead of the
+           cpuset_is_root() helper function
+- Patch 6: Updated comments for better clarity
+- Patch 7: Refactored validate_partition to replace the previous
+           invalidate_cs_partition implementation
+- Patch 8: Renamed acpus_validate_change to cpus_allowed_validate_change
+- Patch 9: Updated commit message with more detailed information
+
+Chen Ridong (11):
+  cpuset: move the root cpuset write check earlier
+  cpuset: remove unused assignment to trialcs->partition_root_state
+  cpuset: change return type of is_partition_[in]valid to bool
+  cpuset: Refactor exclusive CPU mask computation logic
+  cpuset: refactor CPU mask buffer parsing logic
+  cpuset: introduce cpus_excl_conflict and mems_excl_conflict helpers
+  cpuset: refactor out validate_partition
+  cpuset: refactor cpus_allowed_validate_change
+  cpuset: refactor partition_cpus_change
+  cpuset: use parse_cpulist for setting cpus.exclusive
+  cpuset: use partition_cpus_change for setting exclusive cpus
+
+ kernel/cgroup/cpuset.c | 451 ++++++++++++++++++++++-------------------
+ 1 file changed, 247 insertions(+), 204 deletions(-)
+
 -- 
 2.34.1
 
