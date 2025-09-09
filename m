@@ -1,27 +1,27 @@
 Received: from dggsgout12.his.huawei.com (dggsgout12.his.huawei.com [45.249.212.56])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 21DC4255F27;
-	Tue,  9 Sep 2025 03:47:58 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 27C482EB85E;
+	Tue,  9 Sep 2025 03:48:02 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.56
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1757389681; cv=none; b=P7pvQcs+LOOHJ23xABrwVoWCBNDymNUmGjRRaL90n6ph+4UOkI+VX5bbuAhu00LIOjDDvFp/GmIWk7IkMjG2WBOI6LazCootZNgTg3FpCiUsEE1hz0Ipw+zFQ2drbhF+FMMrYZ1VcU9dibtbNPZH9qqaAdNfghfVXCnwEo776iY=
+	t=1757389683; cv=none; b=CZEp+kg2903klR9ehdgBzVLwHPlU+I0abOjYZCfyMUjwrvv8yZHNqdbBkQRKvkUQvoX4jW5xjYJM5BoLshrKOKboU6Bfyq7C1OxP8rpKJGJXVaM5r1+DqIHpQ7FDhGfSwF94ujDztSp1qV+NmIZ8ZKg5XLNf7tbIPXu5OiEbXaA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1757389681; c=relaxed/simple;
-	bh=dzc6RvCW5eo2wK48G4pwGezcDDlbQcJQiGjs2Dsfo1w=;
+	s=arc-20240116; t=1757389683; c=relaxed/simple;
+	bh=AsmG3roivQLvBRC848CreYQSsomwmFUEaK6KeSIi7w0=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=eeBtfWrjkUXWUc9cLGWXjHNcNxW6EwXuiZudYHbWAYH1nPhjjZhVUWf6WnTrG0vdwvRaoCs88ttwYNJY0wWrLtyIRcKZV+YPujo0M7zXg7UBnVquYUZNeLEhsvT+KbBnHppA94zcuZ7ZownNO/6mjqbbthsh8ndo+MLDgdGaPmU=
+	 MIME-Version; b=ub7z3wzPuWlP4BDMZYjNvO0dy5bpIQJoG9SAuNSQn2Bd1/wnkzBrdQiUlLD6ANyY4Gqcsl/We92vJEP4sfx5flpPpIb/zmn+csDmcC8lWKNoxMc0aXdAmpUUo1PIEX35kkppKMPQm85m3/v7Fzpg0Q88uKvN/lTaj0yUXnxOUUo=
 ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.56
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
-Received: from mail.maildlp.com (unknown [172.19.93.142])
-	by dggsgout12.his.huawei.com (SkyGuard) with ESMTPS id 4cLVCH4c7dzKHMlg;
+Received: from mail.maildlp.com (unknown [172.19.163.216])
+	by dggsgout12.his.huawei.com (SkyGuard) with ESMTPS id 4cLVCH6T0TzKHMn8;
 	Tue,  9 Sep 2025 11:47:55 +0800 (CST)
 Received: from mail02.huawei.com (unknown [10.116.40.112])
-	by mail.maildlp.com (Postfix) with ESMTP id C3E501A1045;
-	Tue,  9 Sep 2025 11:47:55 +0800 (CST)
+	by mail.maildlp.com (Postfix) with ESMTP id 11C981A1A11;
+	Tue,  9 Sep 2025 11:47:56 +0800 (CST)
 Received: from hulk-vt.huawei.com (unknown [10.67.174.121])
-	by APP1 (Coremail) with SMTP id cCh0CgAnM3lOo79oBVdmBw--.63383S6;
+	by APP1 (Coremail) with SMTP id cCh0CgAnM3lOo79oBVdmBw--.63383S13;
 	Tue, 09 Sep 2025 11:47:55 +0800 (CST)
 From: Chen Ridong <chenridong@huaweicloud.com>
 To: longman@redhat.com,
@@ -32,9 +32,9 @@ Cc: cgroups@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
 	lujialin4@huawei.com,
 	chenridong@huawei.com
-Subject: [PATCH -next RFC -v2 04/11] cpuset: Refactor exclusive CPU mask computation logic
-Date: Tue,  9 Sep 2025 03:32:26 +0000
-Message-Id: <20250909033233.2731579-5-chenridong@huaweicloud.com>
+Subject: [PATCH -next RFC -v2 11/11] cpuset: use partition_cpus_change for setting exclusive cpus
+Date: Tue,  9 Sep 2025 03:32:33 +0000
+Message-Id: <20250909033233.2731579-12-chenridong@huaweicloud.com>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20250909033233.2731579-1-chenridong@huaweicloud.com>
 References: <20250909033233.2731579-1-chenridong@huaweicloud.com>
@@ -45,11 +45,11 @@ List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:cCh0CgAnM3lOo79oBVdmBw--.63383S6
-X-Coremail-Antispam: 1UD129KBjvJXoW3JFy8CF13tFykZryrAr1rCrg_yoWfXr17pF
-	18GFW7XFWjqryrC398twn7Wrn3K3ykt3ZFywnrt34rCFy3C3W0yF1DJa9xAFy5Gw4Du3W5
-	Aasxtr4SgasxCrUanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDU0xBIdaVrnRJUUUB0b4IE77IF4wAFF20E14v26rWj6s0DM7CY07I20VC2zVCF04k2
+X-CM-TRANSID:cCh0CgAnM3lOo79oBVdmBw--.63383S13
+X-Coremail-Antispam: 1UD129KBjvJXoW7KFW7WrWUGF4kZryfWFW3ZFb_yoW8Zw4rpF
+	1fCr42q3yYqr15G3yDK3sF9wn8KwsFq3ZrtwnrJ34fGFy2yanava4UWwsavFW5XasrGr1U
+	Za90yrW3Xa47CwUanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDU0xBIdaVrnRJUUUBYb4IE77IF4wAFF20E14v26rWj6s0DM7CY07I20VC2zVCF04k2
 	6cxKx2IYs7xG6rWj6s0DM7CIcVAFz4kK6r1j6r18M28IrcIa0xkI8VA2jI8067AKxVWUAV
 	Cq3wA2048vs2IY020Ec7CjxVAFwI0_Xr0E3s1l8cAvFVAK0II2c7xJM28CjxkF64kEwVA0
 	rcxSw2x7M28EF7xvwVC0I7IYx2IY67AKxVW7JVWDJwA2z4x0Y4vE2Ix0cI8IcVCY1x0267
@@ -59,233 +59,69 @@ X-Coremail-Antispam: 1UD129KBjvJXoW3JFy8CF13tFykZryrAr1rCrg_yoWfXr17pF
 	z7v_Jr0_Gr1lF7xvr2IYc2Ij64vIr41lc7CjxVAaw2AFwI0_JF0_Jw1l42xK82IYc2Ij64
 	vIr41l4I8I3I0E4IkC6x0Yz7v_Jr0_Gr1lx2IqxVAqx4xG67AKxVWUJVWUGwC20s026x8G
 	jcxK67AKxVWUGVWUWwC2zVAF1VAY17CE14v26r1q6r43MIIYrxkI7VAKI48JMIIF0xvE2I
-	x0cI8IcVAFwI0_Jr0_JF4lIxAIcVC0I7IYx2IY6xkF7I0E14v26r4j6F4UMIIF0xvE42xK
-	8VAvwI8IcIk0rVWUJVWUCwCI42IY6I8E87Iv67AKxVWUJVW8JwCI42IY6I8E87Iv6xkF7I
-	0E14v26r4j6r4UJbIYCTnIWIevJa73UjIFyTuYvjxUwuWlUUUUU
+	x0cI8IcVAFwI0_Gr0_Xr1lIxAIcVC0I7IYx2IY6xkF7I0E14v26F4j6r4UJwCI42IY6xAI
+	w20EY4v20xvaj40_Jr0_JF4lIxAIcVC2z280aVAFwI0_Gr0_Cr1lIxAIcVC2z280aVCY1x
+	0267AKxVW8JVW8JrUvcSsGvfC2KfnxnUUI43ZEXa7IU1l_M7UUUUU==
 X-CM-SenderInfo: hfkh02xlgr0w46kxt4xhlfz01xgou0bp/
 
 From: Chen Ridong <chenridong@huawei.com>
 
-The current compute_effective_exclusive_cpumask function handles multiple
-scenarios with different input parameters, making the code difficult to
-follow. This patch refactors it into two separate functions:
-compute_excpus and compute_trialcs_excpus.
-
-The compute_excpus function calculates the exclusive CPU mask for a given
-input and excludes exclusive CPUs from sibling cpusets when cs's
-exclusive_cpus is not explicitly set.
-
-The compute_trialcs_excpus function specifically handles exclusive CPU
-computation for trial cpusets used during CPU mask configuration updates,
-and always excludes exclusive CPUs from sibling cpusets.
-
-This refactoring significantly improves code readability and clarity,
-making it explicit which function to call for each use case and what
-parameters should be provided.
+Previous patches have refactored partition_cpus_change. Now replace the
+exclusive cpus setting logic with this helper function.
 
 Signed-off-by: Chen Ridong <chenridong@huawei.com>
 ---
- kernel/cgroup/cpuset.c | 103 ++++++++++++++++++++++++++---------------
- 1 file changed, 65 insertions(+), 38 deletions(-)
+ kernel/cgroup/cpuset.c | 29 ++---------------------------
+ 1 file changed, 2 insertions(+), 27 deletions(-)
 
 diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
-index a31b05f58e0e..6015322a10ac 100644
+index 785a2740b0ea..6a44dfabe9dd 100644
 --- a/kernel/cgroup/cpuset.c
 +++ b/kernel/cgroup/cpuset.c
-@@ -1400,38 +1400,25 @@ bool cpuset_cpu_is_isolated(int cpu)
- }
- EXPORT_SYMBOL_GPL(cpuset_cpu_is_isolated);
- 
--/*
-- * compute_effective_exclusive_cpumask - compute effective exclusive CPUs
-- * @cs: cpuset
-- * @xcpus: effective exclusive CPUs value to be set
-- * @real_cs: the real cpuset (can be NULL)
-- * Return: 0 if there is no sibling conflict, > 0 otherwise
-+/**
-+ * rm_siblings_excl_cpus - Remove exclusive CPUs that are used by sibling cpusets
-+ * @parent: Parent cpuset containing all siblings
-+ * @cs: Current cpuset (will be skipped)
-+ * @excpus:  exclusive effective CPU mask to modify
-  *
-- * If exclusive_cpus isn't explicitly set or a real_cs is provided, we have to
-- * scan the sibling cpusets and exclude their exclusive_cpus or effective_xcpus
-- * as well. The provision of real_cs means that a cpumask is being changed and
-- * the given cs is a trial one.
-+ * This function ensures the given @excpus mask doesn't include any CPUs that
-+ * are exclusively allocated to sibling cpusets. It walks through all siblings
-+ * of @cs under @parent and removes their exclusive CPUs from @excpus.
-  */
--static int compute_effective_exclusive_cpumask(struct cpuset *cs,
--					       struct cpumask *xcpus,
--					       struct cpuset *real_cs)
-+static int rm_siblings_excl_cpus(struct cpuset *parent, struct cpuset *cs,
-+					struct cpumask *excpus)
+@@ -2562,8 +2562,6 @@ static int update_exclusive_cpumask(struct cpuset *cs, struct cpuset *trialcs,
  {
- 	struct cgroup_subsys_state *css;
+ 	int retval;
+ 	struct tmpmasks tmp;
 -	struct cpuset *parent = parent_cs(cs);
- 	struct cpuset *sibling;
- 	int retval = 0;
+-	bool invalidate = false;
+ 	bool force = false;
+ 	int old_prs = cs->partition_root_state;
  
--	if (!xcpus)
--		xcpus = cs->effective_xcpus;
--
--	cpumask_and(xcpus, user_xcpus(cs), parent->effective_xcpus);
--
--	if (!real_cs) {
--		if (!cpumask_empty(cs->exclusive_cpus))
--			return 0;
--	} else {
--		cs = real_cs;
+@@ -2595,32 +2593,9 @@ static int update_exclusive_cpumask(struct cpuset *cs, struct cpuset *trialcs,
+ 	if (alloc_tmpmasks(&tmp))
+ 		return -ENOMEM;
+ 
+-	if (old_prs) {
+-		if (cpumask_empty(trialcs->effective_xcpus)) {
+-			invalidate = true;
+-			cs->prs_err = PERR_INVCPUS;
+-		} else if (prstate_housekeeping_conflict(old_prs, trialcs->effective_xcpus)) {
+-			invalidate = true;
+-			cs->prs_err = PERR_HKEEPING;
+-		} else if (tasks_nocpu_error(parent, cs, trialcs->effective_xcpus)) {
+-			invalidate = true;
+-			cs->prs_err = PERR_NOCPUS;
+-		}
++	trialcs->prs_err = PERR_NONE;
++	partition_cpus_change(cs, trialcs, &tmp);
+ 
+-		if (is_remote_partition(cs)) {
+-			if (invalidate)
+-				remote_partition_disable(cs, &tmp);
+-			else
+-				remote_cpus_update(cs, trialcs->exclusive_cpus,
+-						   trialcs->effective_xcpus, &tmp);
+-		} else if (invalidate) {
+-			update_parent_effective_cpumask(cs, partcmd_invalidate,
+-							NULL, &tmp);
+-		} else {
+-			update_parent_effective_cpumask(cs, partcmd_update,
+-						trialcs->effective_xcpus, &tmp);
+-		}
 -	}
-+	if (cpumask_empty(excpus))
-+		return retval;
- 
- 	/*
- 	 * Exclude exclusive CPUs from siblings
-@@ -1441,20 +1428,60 @@ static int compute_effective_exclusive_cpumask(struct cpuset *cs,
- 		if (sibling == cs)
- 			continue;
- 
--		if (cpumask_intersects(xcpus, sibling->exclusive_cpus)) {
--			cpumask_andnot(xcpus, xcpus, sibling->exclusive_cpus);
-+		if (cpumask_intersects(excpus, sibling->exclusive_cpus)) {
-+			cpumask_andnot(excpus, excpus, sibling->exclusive_cpus);
- 			retval++;
- 			continue;
- 		}
--		if (cpumask_intersects(xcpus, sibling->effective_xcpus)) {
--			cpumask_andnot(xcpus, xcpus, sibling->effective_xcpus);
-+		if (cpumask_intersects(excpus, sibling->effective_xcpus)) {
-+			cpumask_andnot(excpus, excpus, sibling->effective_xcpus);
- 			retval++;
- 		}
- 	}
- 	rcu_read_unlock();
-+
- 	return retval;
- }
- 
-+/*
-+ * compute_excpus - compute effective exclusive CPUs
-+ * @cs: cpuset
-+ * @xcpus: effective exclusive CPUs value to be set
-+ * Return: 0 if there is no sibling conflict, > 0 otherwise
-+ *
-+ * If exclusive_cpus isn't explicitly set , we have to scan the sibling cpusets
-+ * and exclude their exclusive_cpus or effective_xcpus as well.
-+ */
-+static int compute_excpus(struct cpuset *cs, struct cpumask *excpus)
-+{
-+	struct cpuset *parent = parent_cs(cs);
-+
-+	cpumask_and(excpus, user_xcpus(cs), parent->effective_xcpus);
-+
-+	if (!cpumask_empty(cs->exclusive_cpus))
-+		return 0;
-+
-+	return rm_siblings_excl_cpus(parent, cs, excpus);
-+}
-+
-+/*
-+ * compute_trialcs_excpus - Compute effective exclusive CPUs for a trial cpuset
-+ * @trialcs: The trial cpuset containing the proposed new configuration
-+ * @cs: The original cpuset that the trial configuration is based on
-+ * Return: 0 if successful with no sibling conflict, >0 if a conflict is found
-+ *
-+ * Computes the effective_xcpus for a trial configuration. @cs is provided to represent
-+ * the real cs.
-+ */
-+static int compute_trialcs_excpus(struct cpuset *trialcs, struct cpuset *cs)
-+{
-+	struct cpuset *parent = parent_cs(trialcs);
-+	struct cpumask *excpus = trialcs->effective_xcpus;
-+
-+	cpumask_and(excpus, user_xcpus(trialcs), parent->effective_xcpus);
-+	return rm_siblings_excl_cpus(parent, cs, excpus);
-+}
-+
- static inline bool is_remote_partition(struct cpuset *cs)
- {
- 	return !list_empty(&cs->remote_sibling);
-@@ -1496,7 +1523,7 @@ static int remote_partition_enable(struct cpuset *cs, int new_prs,
- 	 * Note that creating a remote partition with any local partition root
- 	 * above it or remote partition root underneath it is not allowed.
- 	 */
--	compute_effective_exclusive_cpumask(cs, tmp->new_cpus, NULL);
-+	compute_excpus(cs, tmp->new_cpus);
- 	WARN_ON_ONCE(cpumask_intersects(tmp->new_cpus, subpartitions_cpus));
- 	if (!cpumask_intersects(tmp->new_cpus, cpu_active_mask) ||
- 	    cpumask_subset(top_cpuset.effective_cpus, tmp->new_cpus))
-@@ -1545,7 +1572,7 @@ static void remote_partition_disable(struct cpuset *cs, struct tmpmasks *tmp)
- 		cs->partition_root_state = PRS_MEMBER;
- 
- 	/* effective_xcpus may need to be changed */
--	compute_effective_exclusive_cpumask(cs, NULL, NULL);
-+	compute_excpus(cs, cs->effective_xcpus);
- 	reset_partition_data(cs);
- 	spin_unlock_irq(&callback_lock);
- 	update_unbound_workqueue_cpumask(isolcpus_updated);
-@@ -1746,12 +1773,12 @@ static int update_parent_effective_cpumask(struct cpuset *cs, int cmd,
- 
- 	if ((cmd == partcmd_enable) || (cmd == partcmd_enablei)) {
- 		/*
--		 * Need to call compute_effective_exclusive_cpumask() in case
-+		 * Need to call compute_excpus() in case
- 		 * exclusive_cpus not set. Sibling conflict should only happen
- 		 * if exclusive_cpus isn't set.
- 		 */
- 		xcpus = tmp->delmask;
--		if (compute_effective_exclusive_cpumask(cs, xcpus, NULL))
-+		if (compute_excpus(cs, xcpus))
- 			WARN_ON_ONCE(!cpumask_empty(cs->exclusive_cpus));
- 
- 		/*
-@@ -2033,7 +2060,7 @@ static void compute_partition_effective_cpumask(struct cpuset *cs,
- 	 *  2) All the effective_cpus will be used up and cp
- 	 *     has tasks
- 	 */
--	compute_effective_exclusive_cpumask(cs, new_ecpus, NULL);
-+	compute_excpus(cs, new_ecpus);
- 	cpumask_and(new_ecpus, new_ecpus, cpu_active_mask);
- 
- 	rcu_read_lock();
-@@ -2112,7 +2139,7 @@ static void update_cpumasks_hier(struct cpuset *cs, struct tmpmasks *tmp,
- 		 * its value is being processed.
- 		 */
- 		if (remote && (cp != cs)) {
--			compute_effective_exclusive_cpumask(cp, tmp->new_cpus, NULL);
-+			compute_excpus(cp, tmp->new_cpus);
- 			if (cpumask_equal(cp->effective_xcpus, tmp->new_cpus)) {
- 				pos_css = css_rightmost_descendant(pos_css);
- 				continue;
-@@ -2214,7 +2241,7 @@ static void update_cpumasks_hier(struct cpuset *cs, struct tmpmasks *tmp,
- 		cpumask_copy(cp->effective_cpus, tmp->new_cpus);
- 		cp->partition_root_state = new_prs;
- 		if (!cpumask_empty(cp->exclusive_cpus) && (cp != cs))
--			compute_effective_exclusive_cpumask(cp, NULL, NULL);
-+			compute_excpus(cp, cp->effective_xcpus);
- 
- 		/*
- 		 * Make sure effective_xcpus is properly set for a valid
-@@ -2363,7 +2390,7 @@ static int update_cpumask(struct cpuset *cs, struct cpuset *trialcs,
- 		 * for checking validity of the partition root.
- 		 */
- 		if (!cpumask_empty(trialcs->exclusive_cpus) || is_partition_valid(cs))
--			compute_effective_exclusive_cpumask(trialcs, NULL, cs);
-+			compute_trialcs_excpus(trialcs, cs);
- 	}
- 
- 	/* Nothing to do if the cpus didn't change */
-@@ -2499,7 +2526,7 @@ static int update_exclusive_cpumask(struct cpuset *cs, struct cpuset *trialcs,
- 		 * Reject the change if there is exclusive CPUs conflict with
- 		 * the siblings.
- 		 */
--		if (compute_effective_exclusive_cpumask(trialcs, NULL, cs))
-+		if (compute_trialcs_excpus(trialcs, cs))
- 			return -EINVAL;
- 	}
- 
+ 	spin_lock_irq(&callback_lock);
+ 	cpumask_copy(cs->exclusive_cpus, trialcs->exclusive_cpus);
+ 	cpumask_copy(cs->effective_xcpus, trialcs->effective_xcpus);
 -- 
 2.34.1
 
