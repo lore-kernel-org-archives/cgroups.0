@@ -1,28 +1,28 @@
 Received: from dggsgout12.his.huawei.com (dggsgout12.his.huawei.com [45.249.212.56])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 47B43308F0A;
-	Wed, 10 Sep 2025 06:40:29 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 37CC7309EEB;
+	Wed, 10 Sep 2025 06:40:32 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.56
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1757486432; cv=none; b=P3nZQ5EhecbP9itTypHkeCwDeiSqNEnkXupOB5/L120u/RV1GuoaWY093oAesV4TFzOqh/809ALM7Ax8kiW82wqgDqyvs7hNmpVB+X0tRj1vrk/h38cotaKx2YXhhjOSdLudr8K0mePOsJQFQPqkp6hhiQygK/LRbI7tRGEV4eo=
+	t=1757486434; cv=none; b=J8ZNIYTap//LMCmoYF6zuBoNm8YZSRWUwZtn7DWyHmW35BsIpUwMzbpfbp422fGTR8nZfoBM/Y4FElM6zMNS/0mgXbPCfbsTDNI7P0Axnjz3gyiaba4dmWHXZqIlwoC7dNTQIoJ3RwCh/B27dRQrPjqK9pnXoCgmStorft5mJq4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1757486432; c=relaxed/simple;
-	bh=dVVOCUCHiJ1HkZBAEsIACEKMbxTEsrrZZkvvUsW4KgM=;
+	s=arc-20240116; t=1757486434; c=relaxed/simple;
+	bh=vnS0TNqb6L6MeFXaHVLwSc0rVZs/LyWCCkmhdzWVAnA=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=ovV39pMfhb3W9LawuwS0GSjVPNxEw1jX22dbky1Fm7LW71nYeLmmHXDhgW9A/8beaSDyOcDsqXVUAcHASzdZGghF08Mo3RUTsu3lRXequh+QUVTFZB/ye+SRZTPZHvJO91EU0mRaUd0g7rhazDtzIA6OlOn/HHD8WlieWgoiVj0=
+	 MIME-Version; b=C9ezvJl4aU+6FO/RpeOX16szIvf5oSXJtdg3uwWf2Brpak3FdrJc+C2b+SMi+fvNgpzMz3JJaKCVP0MQo0MRoyDf+QUVgoBM1D4314Iovd9mMOigtLzeIaG+5OAOIF/mAyYtjb5MdUt/INEF2maotm7JbbXepbOpGbNBsHfjHk0=
 ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.56
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
-Received: from mail.maildlp.com (unknown [172.19.93.142])
-	by dggsgout12.his.huawei.com (SkyGuard) with ESMTPS id 4cM9zt6gFxzKHN4P;
-	Wed, 10 Sep 2025 14:40:26 +0800 (CST)
+Received: from mail.maildlp.com (unknown [172.19.163.235])
+	by dggsgout12.his.huawei.com (SkyGuard) with ESMTPS id 4cM9zy1hxzzKHN4T;
+	Wed, 10 Sep 2025 14:40:30 +0800 (CST)
 Received: from mail02.huawei.com (unknown [10.116.40.128])
-	by mail.maildlp.com (Postfix) with ESMTP id 232431A1143;
-	Wed, 10 Sep 2025 14:40:27 +0800 (CST)
+	by mail.maildlp.com (Postfix) with ESMTP id 6ECF81A0838;
+	Wed, 10 Sep 2025 14:40:30 +0800 (CST)
 Received: from huaweicloud.com (unknown [10.175.104.67])
-	by APP4 (Coremail) with SMTP id gCh0CgB3wY1UHcFo3ZIJCA--.51912S9;
-	Wed, 10 Sep 2025 14:40:26 +0800 (CST)
+	by APP4 (Coremail) with SMTP id gCh0CgB3wY1UHcFo3ZIJCA--.51912S13;
+	Wed, 10 Sep 2025 14:40:30 +0800 (CST)
 From: Yu Kuai <yukuai1@huaweicloud.com>
 To: axboe@kernel.dk,
 	hch@infradead.org,
@@ -47,9 +47,9 @@ Cc: linux-block@vger.kernel.org,
 	yi.zhang@huawei.com,
 	yangerkun@huawei.com,
 	johnny.chenyi@huawei.com
-Subject: [PATCH v2 for-6.18/block 05/16] blk-crypto: fix missing blktrace bio split events
-Date: Wed, 10 Sep 2025 14:30:45 +0800
-Message-Id: <20250910063056.4159857-6-yukuai1@huaweicloud.com>
+Subject: [PATCH v2 for-6.18/block 09/16] md/raid10: add a new r10bio flag R10BIO_Returned
+Date: Wed, 10 Sep 2025 14:30:49 +0800
+Message-Id: <20250910063056.4159857-10-yukuai1@huaweicloud.com>
 X-Mailer: git-send-email 2.39.2
 In-Reply-To: <20250910063056.4159857-1-yukuai1@huaweicloud.com>
 References: <20250910063056.4159857-1-yukuai1@huaweicloud.com>
@@ -60,10 +60,10 @@ List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:gCh0CgB3wY1UHcFo3ZIJCA--.51912S9
-X-Coremail-Antispam: 1UD129KBjvJXoW7GryxJFy5uF4kZw4ftw18Zrb_yoW8JrW8pF
-	nxur4UGrZ5Gr17CFW293WSkF1DGan8XFy5JrWxGFnxAr12yr1Sgan2vryFqF10ya1akrZx
-	ZrsrArWfKr4Du37anT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+X-CM-TRANSID:gCh0CgB3wY1UHcFo3ZIJCA--.51912S13
+X-Coremail-Antispam: 1UD129KBjvJXoW7Ww43uF47XFWUGw1DWry3Arb_yoW8WrW8p3
+	9xWry3Z3yjkF47Zw1DXw4UAasYy3W7K3yYka4vk3yrZFy3XFZ0kF18JayUXrWDXFWS9a47
+	XF1jyrZrCF45tFJanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
 	9KBjDU0xBIdaVrnRJUUUPvb4IE77IF4wAFF20E14v26rWj6s0DM7CY07I20VC2zVCF04k2
 	6cxKx2IYs7xG6rWj6s0DM7CIcVAFz4kK6r1j6r18M28IrcIa0xkI8VA2jI8067AKxVWUAV
 	Cq3wA2048vs2IY020Ec7CjxVAFwI0_Xr0E3s1l8cAvFVAK0II2c7xJM28CjxkF64kEwVA0
@@ -82,40 +82,51 @@ X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
 
 From: Yu Kuai <yukuai3@huawei.com>
 
-trace_block_split() is missing, resulting in blktrace inability to catch
-BIO split events and making it harder to analyze the BIO sequence.
+The new helper bio_submit_split_bioset() can failed the orginal bio on
+split errors, prepare to handle this case in raid_end_bio_io().
 
-Cc: stable@vger.kernel.org
-Fixes: 488f6682c832 ("block: blk-crypto-fallback for Inline Encryption")
+The flag name is refer to the r1bio flag name.
+
 Signed-off-by: Yu Kuai <yukuai3@huawei.com>
-Reviewed-by: Bart Van Assche <bvanassche@acm.org>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- block/blk-crypto-fallback.c | 3 +++
- 1 file changed, 3 insertions(+)
+ drivers/md/raid10.c | 8 +++++---
+ drivers/md/raid10.h | 2 ++
+ 2 files changed, 7 insertions(+), 3 deletions(-)
 
-diff --git a/block/blk-crypto-fallback.c b/block/blk-crypto-fallback.c
-index dbc2d8784dab..27fa1ec4b264 100644
---- a/block/blk-crypto-fallback.c
-+++ b/block/blk-crypto-fallback.c
-@@ -18,6 +18,7 @@
- #include <linux/module.h>
- #include <linux/random.h>
- #include <linux/scatterlist.h>
-+#include <trace/events/block.h>
+diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
+index 3d7b24d6b4eb..cac5c6df75bb 100644
+--- a/drivers/md/raid10.c
++++ b/drivers/md/raid10.c
+@@ -322,10 +322,12 @@ static void raid_end_bio_io(struct r10bio *r10_bio)
+ 	struct bio *bio = r10_bio->master_bio;
+ 	struct r10conf *conf = r10_bio->mddev->private;
  
- #include "blk-cgroup.h"
- #include "blk-crypto-internal.h"
-@@ -230,7 +231,9 @@ static bool blk_crypto_fallback_split_bio_if_needed(struct bio **bio_ptr)
- 			bio->bi_status = BLK_STS_RESOURCE;
- 			return false;
- 		}
-+
- 		bio_chain(split_bio, bio);
-+		trace_block_split(split_bio, bio->bi_iter.bi_sector);
- 		submit_bio_noacct(bio);
- 		*bio_ptr = split_bio;
- 	}
+-	if (!test_bit(R10BIO_Uptodate, &r10_bio->state))
+-		bio->bi_status = BLK_STS_IOERR;
++	if (!test_and_set_bit(R10BIO_Returned, &r10_bio->state)) {
++		if (!test_bit(R10BIO_Uptodate, &r10_bio->state))
++			bio->bi_status = BLK_STS_IOERR;
++		bio_endio(bio);
++	}
+ 
+-	bio_endio(bio);
+ 	/*
+ 	 * Wake up any possible resync thread that waits for the device
+ 	 * to go idle.
+diff --git a/drivers/md/raid10.h b/drivers/md/raid10.h
+index 3f16ad6904a9..da00a55f7a55 100644
+--- a/drivers/md/raid10.h
++++ b/drivers/md/raid10.h
+@@ -165,6 +165,8 @@ enum r10bio_state {
+  * so that raid10d knows what to do with them.
+  */
+ 	R10BIO_ReadError,
++/* For bio_split errors, record that bi_end_io was called. */
++	R10BIO_Returned,
+ /* If a write for this request means we can clear some
+  * known-bad-block records, we set this flag.
+  */
 -- 
 2.39.2
 
