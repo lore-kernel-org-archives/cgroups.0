@@ -1,28 +1,28 @@
 Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5D69030CDBC;
-	Wed, 10 Sep 2025 06:40:37 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 384B1306D3E;
+	Wed, 10 Sep 2025 06:40:39 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.51
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1757486439; cv=none; b=N8wg1ZCYNPbqX117bC+0j4Rp+ppPizFE88nnfKZzlrFq03r8hVUNUhK8jSoMgIKKkxmciZo0pJb2YrrKSm6+xFEEvcfajIVmAOCkXf8+VgE5AcMoxZlRJKV58Iq9K90YuL3YMih8Nbso9/3JwrTGS+kA9vGDfySdcuNiharXSFM=
+	t=1757486442; cv=none; b=RN3SPcVxGVVEYRirEG/ueM1ttdIF0kg5eZw5QQCebIM7z1STuCVI/3W6+X8aGskDIW3ohzYF8UPGDIdedEMMatuDk82SPikIKo5lQwe9bNtPF1BpvUwEVWUC3XwFMB3Qjou5tlZifIZHWawKBnXG2t8ylVAbovwwacSgANmgrtI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1757486439; c=relaxed/simple;
-	bh=xcTrN9X5pjxRaIaKjTyZ0oPxHSNXymow2DoNfxEIlMU=;
+	s=arc-20240116; t=1757486442; c=relaxed/simple;
+	bh=68OlB+WvY98kMi4nX78zKpsc+QA2HOA2ahiB5u1I/bk=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=EG42rGp8nF16kgker6dTKxV1J+GBM+3xehYbmNPBzmX5PlxEGb0B/YmlQa+2jo/cNBII1n/Ac3bNRNEYlOjEs2h4QPZf+hiXmZ8G12BBbm0m3S3kCbJ/dcYwk0nVLQT/HZNQUwzAlaAiUcL1agSBE5UrCw8OB3PfTGs6c6+G7WE=
+	 MIME-Version; b=rad9QDSVXidjC0HtayDbRP7mwP1gB/Tpn2Ix9M0HFoGinqOwTOOXnUaw4jCT39dw7LPl3IXLdI3PFwTlglfj6QLM3IHlX0jlBkoKf+NkbCzCPjPlYLcDX/w+Tr+q3UX/CKUd+jqhb8CkkcNUkzNS7bx3QzDa6OHnT7ZfPjDVHCY=
 ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.51
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
 Received: from mail.maildlp.com (unknown [172.19.163.235])
-	by dggsgout11.his.huawei.com (SkyGuard) with ESMTPS id 4cM9zz1NwJzYQvQc;
-	Wed, 10 Sep 2025 14:40:31 +0800 (CST)
+	by dggsgout11.his.huawei.com (SkyGuard) with ESMTPS id 4cMB066sw4zYQvQT;
+	Wed, 10 Sep 2025 14:40:38 +0800 (CST)
 Received: from mail02.huawei.com (unknown [10.116.40.128])
-	by mail.maildlp.com (Postfix) with ESMTP id A8FED1A11BA;
-	Wed, 10 Sep 2025 14:40:29 +0800 (CST)
+	by mail.maildlp.com (Postfix) with ESMTP id 71E0E1A09EE;
+	Wed, 10 Sep 2025 14:40:37 +0800 (CST)
 Received: from huaweicloud.com (unknown [10.175.104.67])
-	by APP4 (Coremail) with SMTP id gCh0CgB3wY1UHcFo3ZIJCA--.51912S12;
-	Wed, 10 Sep 2025 14:40:29 +0800 (CST)
+	by APP4 (Coremail) with SMTP id gCh0CgB3wY1UHcFo3ZIJCA--.51912S19;
+	Wed, 10 Sep 2025 14:40:35 +0800 (CST)
 From: Yu Kuai <yukuai1@huaweicloud.com>
 To: axboe@kernel.dk,
 	hch@infradead.org,
@@ -47,9 +47,9 @@ Cc: linux-block@vger.kernel.org,
 	yi.zhang@huawei.com,
 	yangerkun@huawei.com,
 	johnny.chenyi@huawei.com
-Subject: [PATCH v2 for-6.18/block 08/16] md/raid1: convert to use bio_submit_split_bioset()
-Date: Wed, 10 Sep 2025 14:30:48 +0800
-Message-Id: <20250910063056.4159857-9-yukuai1@huaweicloud.com>
+Subject: [PATCH v2 for-6.18/block 15/16] block: fix ordering of recursive split IO
+Date: Wed, 10 Sep 2025 14:30:55 +0800
+Message-Id: <20250910063056.4159857-16-yukuai1@huaweicloud.com>
 X-Mailer: git-send-email 2.39.2
 In-Reply-To: <20250910063056.4159857-1-yukuai1@huaweicloud.com>
 References: <20250910063056.4159857-1-yukuai1@huaweicloud.com>
@@ -60,154 +60,243 @@ List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:gCh0CgB3wY1UHcFo3ZIJCA--.51912S12
-X-Coremail-Antispam: 1UD129KBjvJXoWxJFWUtr4UXFyDWw47CF17ZFb_yoWrXFWfpw
-	42gayIgrWUJFZY9w1DJayq9a4Fya4YgrW7CrWxJwn7WFnFv39xKF4UXrWFgF98uFWru3sr
-	Jw1kAr45u3W2qFUanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDU0xBIdaVrnRJUUUPvb4IE77IF4wAFF20E14v26rWj6s0DM7CY07I20VC2zVCF04k2
+X-CM-TRANSID:gCh0CgB3wY1UHcFo3ZIJCA--.51912S19
+X-Coremail-Antispam: 1UD129KBjvJXoW3Ary7uw47Jr45Zw18CrW3Jrb_yoW3Wr4kpr
+	W7Kw15CrsrKF47Xr4kJFW29F1ftFyDCr4rGay5C3yfArs09rnFqFnrAa40va95ArWrGrW5
+	Z3WkKry2gw4Iva7anT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDU0xBIdaVrnRJUUUPqb4IE77IF4wAFF20E14v26rWj6s0DM7CY07I20VC2zVCF04k2
 	6cxKx2IYs7xG6rWj6s0DM7CIcVAFz4kK6r1j6r18M28IrcIa0xkI8VA2jI8067AKxVWUAV
 	Cq3wA2048vs2IY020Ec7CjxVAFwI0_Xr0E3s1l8cAvFVAK0II2c7xJM28CjxkF64kEwVA0
 	rcxSw2x7M28EF7xvwVC0I7IYx2IY67AKxVWDJVCq3wA2z4x0Y4vE2Ix0cI8IcVCY1x0267
-	AKxVW8Jr0_Cr1UM28EF7xvwVC2z280aVAFwI0_GcCE3s1l84ACjcxK6I8E87Iv6xkF7I0E
-	14v26rxl6s0DM2AIxVAIcxkEcVAq07x20xvEncxIr21l5I8CrVACY4xI64kE6c02F40Ex7
-	xfMcIj6xIIjxv20xvE14v26r1j6r18McIj6I8E87Iv67AKxVWUJVW8JwAm72CE4IkC6x0Y
-	z7v_Jr0_Gr1lF7xvr2IYc2Ij64vIr41lFIxGxcIEc7CjxVA2Y2ka0xkIwI1lc7CjxVAaw2
-	AFwI0_GFv_Wryl42xK82IYc2Ij64vIr41l4I8I3I0E4IkC6x0Yz7v_Jr0_Gr1lx2IqxVAq
-	x4xG67AKxVWUJVWUGwC20s026x8GjcxK67AKxVWUGVWUWwC2zVAF1VAY17CE14v26r4a6r
-	W5MIIYrxkI7VAKI48JMIIF0xvE2Ix0cI8IcVAFwI0_JFI_Gr1lIxAIcVC0I7IYx2IY6xkF
-	7I0E14v26r4UJVWxJr1lIxAIcVCF04k26cxKx2IYs7xG6r1j6r1xMIIF0xvEx4A2jsIE14
-	v26r1j6r4UMIIF0xvEx4A2jsIEc7CjxVAFwI0_Gr1j6F4UJbIYCTnIWIevJa73UjIFyTuY
-	vjxUI-eODUUUU
+	AKxVWxJr0_GcWl84ACjcxK6I8E87Iv67AKxVW0oVCq3wA2z4x0Y4vEx4A2jsIEc7CjxVAF
+	wI0_GcCE3s1le2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xvF2IEw4CE5I8CrVC2j2
+	WlYx0E2Ix0cI8IcVAFwI0_Jr0_Jr4lYx0Ex4A2jsIE14v26r1j6r4UMcvjeVCFs4IE7xkE
+	bVWUJVW8JwACjcxG0xvY0x0EwIxGrwACI402YVCY1x02628vn2kIc2xKxwCY1x0262kKe7
+	AKxVW8ZVWrXwCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7xkEbVWUJVW8JwC20s026c02
+	F40E14v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E67AF67kF1VAFwI0_GFv_Wr
+	ylIxkGc2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVW8JVW5JwCI42IY6xIIjxv20xvEc7Cj
+	xVAFwI0_Gr1j6F4UJwCI42IY6xAIw20EY4v20xvaj40_Jr0_JF4lIxAIcVC2z280aVAFwI
+	0_Gr0_Cr1lIxAIcVC2z280aVCY1x0267AKxVW8Jr0_Cr1UYxBIdaVFxhVjvjDU0xZFpf9x
+	07jIPfQUUUUU=
 X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
 
 From: Yu Kuai <yukuai3@huawei.com>
 
-Unify bio split code, and prepare to fix ordering of split IO.
+Currently, split bio will be chained to original bio, and original bio
+will be resubmitted to the tail of current->bio_list, waiting for
+split bio to be issued. However, if split bio get split again, the IO
+order will be messed up. This problem, on the one hand, will cause
+performance degradation, especially for mdraid with large IO size; on
+the other hand, will cause write errors for zoned block devices[1].
 
-Noted that bio_submit_split_bioset() can fail the original bio directly
-by split error, set R1BIO_Returned in this case to notify raid_end_bio_io()
-that the original bio is returned already.
+For example, in raid456 IO will first be split by max_sector from
+md_submit_bio(), and then later be split again by chunksize for internal
+handling:
 
+For example, assume max_sectors is 1M, and chunksize is 512k
+
+1) issue a 2M IO:
+
+bio issuing: 0+2M
+current->bio_list: NULL
+
+2) md_submit_bio() split by max_sector:
+
+bio issuing: 0+1M
+current->bio_list: 1M+1M
+
+3) chunk_aligned_read() split by chunksize:
+
+bio issuing: 0+512k
+current->bio_list: 1M+1M -> 512k+512k
+
+4) after first bio issued, __submit_bio_noacct() will contuine issuing
+next bio:
+
+bio issuing: 1M+1M
+current->bio_list: 512k+512k
+bio issued: 0+512k
+
+5) chunk_aligned_read() split by chunksize:
+
+bio issuing: 1M+512k
+current->bio_list: 512k+512k -> 1536k+512k
+bio issued: 0+512k
+
+6) no split afterwards, finally the issue order is:
+
+0+512k -> 1M+512k -> 512k+512k -> 1536k+512k
+
+This behaviour will cause large IO read on raid456 endup to be small
+discontinuous IO in underlying disks. Fix this problem by placing split
+bio to the head of current->bio_list.
+
+Test script: test on 8 disk raid5 with 64k chunksize
+dd if=/dev/md0 of=/dev/null bs=4480k iflag=direct
+
+Test results:
+Before this patch
+1) iostat results:
+Device            r/s     rMB/s   rrqm/s  %rrqm r_await rareq-sz  aqu-sz  %util
+md0           52430.00   3276.87     0.00   0.00    0.62    64.00   32.60  80.10
+sd*           4487.00    409.00  2054.00  31.40    0.82    93.34    3.68  71.20
+2) blktrace G stage:
+  8,0    0   486445    11.357392936   843  G   R 14071424 + 128 [dd]
+  8,0    0   486451    11.357466360   843  G   R 14071168 + 128 [dd]
+  8,0    0   486454    11.357515868   843  G   R 14071296 + 128 [dd]
+  8,0    0   486468    11.357968099   843  G   R 14072192 + 128 [dd]
+  8,0    0   486474    11.358031320   843  G   R 14071936 + 128 [dd]
+  8,0    0   486480    11.358096298   843  G   R 14071552 + 128 [dd]
+  8,0    0   486490    11.358303858   843  G   R 14071808 + 128 [dd]
+3) io seek for sdx:
+Noted io seek is the result from blktrace D stage, statistic of:
+ABS((offset of next IO) - (offset + len of previous IO))
+
+Read|Write seek
+cnt 55175, zero cnt 25079
+    >=(KB) .. <(KB)     : count       ratio |distribution                            |
+         0 .. 1         : 25079       45.5% |########################################|
+         1 .. 2         : 0            0.0% |                                        |
+         2 .. 4         : 0            0.0% |                                        |
+         4 .. 8         : 0            0.0% |                                        |
+         8 .. 16        : 0            0.0% |                                        |
+        16 .. 32        : 0            0.0% |                                        |
+        32 .. 64        : 12540       22.7% |#####################                   |
+        64 .. 128       : 2508         4.5% |#####                                   |
+       128 .. 256       : 0            0.0% |                                        |
+       256 .. 512       : 10032       18.2% |#################                       |
+       512 .. 1024      : 5016         9.1% |#########                               |
+
+After this patch:
+1) iostat results:
+Device            r/s     rMB/s   rrqm/s  %rrqm r_await rareq-sz  aqu-sz  %util
+md0           87965.00   5271.88     0.00   0.00    0.16    61.37   14.03  90.60
+sd*           6020.00    658.44  5117.00  45.95    0.44   112.00    2.68  86.50
+2) blktrace G stage:
+  8,0    0   206296     5.354894072   664  G   R 7156992 + 128 [dd]
+  8,0    0   206305     5.355018179   664  G   R 7157248 + 128 [dd]
+  8,0    0   206316     5.355204438   664  G   R 7157504 + 128 [dd]
+  8,0    0   206319     5.355241048   664  G   R 7157760 + 128 [dd]
+  8,0    0   206333     5.355500923   664  G   R 7158016 + 128 [dd]
+  8,0    0   206344     5.355837806   664  G   R 7158272 + 128 [dd]
+  8,0    0   206353     5.355960395   664  G   R 7158528 + 128 [dd]
+  8,0    0   206357     5.356020772   664  G   R 7158784 + 128 [dd]
+3) io seek for sdx
+Read|Write seek
+cnt 28644, zero cnt 21483
+    >=(KB) .. <(KB)     : count       ratio |distribution                            |
+         0 .. 1         : 21483       75.0% |########################################|
+         1 .. 2         : 0            0.0% |                                        |
+         2 .. 4         : 0            0.0% |                                        |
+         4 .. 8         : 0            0.0% |                                        |
+         8 .. 16        : 0            0.0% |                                        |
+        16 .. 32        : 0            0.0% |                                        |
+        32 .. 64        : 7161        25.0% |##############                          |
+
+BTW, this looks like a long term problem from day one, and large
+sequential IO read is pretty common case like video playing.
+
+And even with this patch, in this test case IO is merged to at most 128k
+is due to block layer plug limit BLK_PLUG_FLUSH_SIZE, increase such
+limit can get even better performance. However, we'll figure out how to do
+this properly later.
+
+[1] https://lore.kernel.org/all/e40b076d-583d-406b-b223-005910a9f46f@acm.org/
+Fixes: d89d87965dcb ("When stacked block devices are in-use (e.g. md or dm), the recursive calls")
+Reported-by: Tie Ren <tieren@fnnas.com>
+Closes: https://lore.kernel.org/all/7dro5o7u5t64d6bgiansesjavxcuvkq5p2pok7dtwkav7b7ape@3isfr44b6352/
 Signed-off-by: Yu Kuai <yukuai3@huawei.com>
+Reviewed-by: Bart Van Assche <bvanassche@acm.org>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- drivers/md/raid1.c | 38 +++++++++++---------------------------
- drivers/md/raid1.h |  4 +++-
- 2 files changed, 14 insertions(+), 28 deletions(-)
+ block/blk-core.c     | 16 ++++++++++------
+ block/blk-merge.c    |  2 +-
+ block/blk-throttle.c |  2 +-
+ block/blk.h          |  2 +-
+ 4 files changed, 13 insertions(+), 9 deletions(-)
 
-diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
-index 64a1e0b47e87..3f4ed2272ac4 100644
---- a/drivers/md/raid1.c
-+++ b/drivers/md/raid1.c
-@@ -1317,7 +1317,7 @@ static void raid1_read_request(struct mddev *mddev, struct bio *bio,
- 	struct raid1_info *mirror;
- 	struct bio *read_bio;
- 	int max_sectors;
--	int rdisk, error;
-+	int rdisk;
- 	bool r1bio_existed = !!r1_bio;
- 
- 	/*
-@@ -1377,18 +1377,13 @@ static void raid1_read_request(struct mddev *mddev, struct bio *bio,
- 	}
- 
- 	if (max_sectors < bio_sectors(bio)) {
--		struct bio *split = bio_split(bio, max_sectors,
--					      gfp, &conf->bio_split);
--
--		if (IS_ERR(split)) {
--			error = PTR_ERR(split);
-+		bio = bio_submit_split_bioset(bio, max_sectors,
-+					      &conf->bio_split);
-+		if (!bio) {
-+			set_bit(R1BIO_Returned, &r1_bio->state);
- 			goto err_handle;
- 		}
- 
--		bio_chain(split, bio);
--		trace_block_split(split, bio->bi_iter.bi_sector);
--		submit_bio_noacct(bio);
--		bio = split;
- 		r1_bio->master_bio = bio;
- 		r1_bio->sectors = max_sectors;
- 	}
-@@ -1416,8 +1411,6 @@ static void raid1_read_request(struct mddev *mddev, struct bio *bio,
- 
- err_handle:
- 	atomic_dec(&mirror->rdev->nr_pending);
--	bio->bi_status = errno_to_blk_status(error);
--	set_bit(R1BIO_Uptodate, &r1_bio->state);
- 	raid_end_bio_io(r1_bio);
+diff --git a/block/blk-core.c b/block/blk-core.c
+index 1021a09c5958..dd39ff651095 100644
+--- a/block/blk-core.c
++++ b/block/blk-core.c
+@@ -725,7 +725,7 @@ static void __submit_bio_noacct_mq(struct bio *bio)
+ 	current->bio_list = NULL;
  }
  
-@@ -1484,7 +1477,7 @@ static void raid1_write_request(struct mddev *mddev, struct bio *bio,
+-void submit_bio_noacct_nocheck(struct bio *bio)
++void submit_bio_noacct_nocheck(struct bio *bio, bool split)
  {
- 	struct r1conf *conf = mddev->private;
- 	struct r1bio *r1_bio;
--	int i, disks, k, error;
-+	int i, disks, k;
- 	unsigned long flags;
- 	int first_clone;
- 	int max_sectors;
-@@ -1588,10 +1581,8 @@ static void raid1_write_request(struct mddev *mddev, struct bio *bio,
- 				 * complexity of supporting that is not worth
- 				 * the benefit.
- 				 */
--				if (bio->bi_opf & REQ_ATOMIC) {
--					error = -EIO;
-+				if (bio->bi_opf & REQ_ATOMIC)
- 					goto err_handle;
--				}
+ 	blk_cgroup_bio_start(bio);
  
- 				good_sectors = first_bad - r1_bio->sector;
- 				if (good_sectors < max_sectors)
-@@ -1611,18 +1602,13 @@ static void raid1_write_request(struct mddev *mddev, struct bio *bio,
- 		max_sectors = min_t(int, max_sectors,
- 				    BIO_MAX_VECS * (PAGE_SIZE >> 9));
- 	if (max_sectors < bio_sectors(bio)) {
--		struct bio *split = bio_split(bio, max_sectors,
--					      GFP_NOIO, &conf->bio_split);
--
--		if (IS_ERR(split)) {
--			error = PTR_ERR(split);
-+		bio = bio_submit_split_bioset(bio, max_sectors,
-+					      &conf->bio_split);
-+		if (!bio) {
-+			set_bit(R1BIO_Returned, &r1_bio->state);
- 			goto err_handle;
- 		}
- 
--		bio_chain(split, bio);
--		trace_block_split(split, bio->bi_iter.bi_sector);
--		submit_bio_noacct(bio);
--		bio = split;
- 		r1_bio->master_bio = bio;
- 		r1_bio->sectors = max_sectors;
- 	}
-@@ -1698,8 +1684,6 @@ static void raid1_write_request(struct mddev *mddev, struct bio *bio,
- 		}
- 	}
- 
--	bio->bi_status = errno_to_blk_status(error);
--	set_bit(R1BIO_Uptodate, &r1_bio->state);
- 	raid_end_bio_io(r1_bio);
+@@ -744,12 +744,16 @@ void submit_bio_noacct_nocheck(struct bio *bio)
+ 	 * to collect a list of requests submited by a ->submit_bio method while
+ 	 * it is active, and then process them after it returned.
+ 	 */
+-	if (current->bio_list)
+-		bio_list_add(&current->bio_list[0], bio);
+-	else if (!bdev_test_flag(bio->bi_bdev, BD_HAS_SUBMIT_BIO))
++	if (current->bio_list) {
++		if (split)
++			bio_list_add_head(&current->bio_list[0], bio);
++		else
++			bio_list_add(&current->bio_list[0], bio);
++	} else if (!bdev_test_flag(bio->bi_bdev, BD_HAS_SUBMIT_BIO)) {
+ 		__submit_bio_noacct_mq(bio);
+-	else
++	} else {
+ 		__submit_bio_noacct(bio);
++	}
  }
  
-diff --git a/drivers/md/raid1.h b/drivers/md/raid1.h
-index d236ef179cfb..2ebe35aaa534 100644
---- a/drivers/md/raid1.h
-+++ b/drivers/md/raid1.h
-@@ -178,7 +178,9 @@ enum r1bio_state {
-  * any write was successful.  Otherwise we call when
-  * any write-behind write succeeds, otherwise we call
-  * with failure when last write completes (and all failed).
-- * Record that bi_end_io was called with this flag...
-+ *
-+ * And for bio_split errors, record that bi_end_io was called
-+ * with this flag...
-  */
- 	R1BIO_Returned,
- /* If a write for this request means we can clear some
+ static blk_status_t blk_validate_atomic_write_op_size(struct request_queue *q,
+@@ -870,7 +874,7 @@ void submit_bio_noacct(struct bio *bio)
+ 
+ 	if (blk_throtl_bio(bio))
+ 		return;
+-	submit_bio_noacct_nocheck(bio);
++	submit_bio_noacct_nocheck(bio, false);
+ 	return;
+ 
+ not_supported:
+diff --git a/block/blk-merge.c b/block/blk-merge.c
+index c16f4bdf251f..37864c5d287e 100644
+--- a/block/blk-merge.c
++++ b/block/blk-merge.c
+@@ -134,7 +134,7 @@ struct bio *bio_submit_split_bioset(struct bio *bio, unsigned int split_sectors,
+ 	if (should_fail_bio(bio))
+ 		bio_io_error(bio);
+ 	else if (!blk_throtl_bio(bio))
+-		submit_bio_noacct_nocheck(bio);
++		submit_bio_noacct_nocheck(bio, true);
+ 
+ 	return split;
+ }
+diff --git a/block/blk-throttle.c b/block/blk-throttle.c
+index cfa1cd60d2c5..f510ae072868 100644
+--- a/block/blk-throttle.c
++++ b/block/blk-throttle.c
+@@ -1224,7 +1224,7 @@ static void blk_throtl_dispatch_work_fn(struct work_struct *work)
+ 	if (!bio_list_empty(&bio_list_on_stack)) {
+ 		blk_start_plug(&plug);
+ 		while ((bio = bio_list_pop(&bio_list_on_stack)))
+-			submit_bio_noacct_nocheck(bio);
++			submit_bio_noacct_nocheck(bio, false);
+ 		blk_finish_plug(&plug);
+ 	}
+ }
+diff --git a/block/blk.h b/block/blk.h
+index 694ae6c9bb0f..170794632135 100644
+--- a/block/blk.h
++++ b/block/blk.h
+@@ -55,7 +55,7 @@ bool blk_queue_start_drain(struct request_queue *q);
+ bool __blk_freeze_queue_start(struct request_queue *q,
+ 			      struct task_struct *owner);
+ int __bio_queue_enter(struct request_queue *q, struct bio *bio);
+-void submit_bio_noacct_nocheck(struct bio *bio);
++void submit_bio_noacct_nocheck(struct bio *bio, bool split);
+ void bio_await_chain(struct bio *bio);
+ 
+ static inline bool blk_try_enter_queue(struct request_queue *q, bool pm)
 -- 
 2.39.2
 
