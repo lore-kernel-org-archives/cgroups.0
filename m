@@ -1,28 +1,28 @@
-Received: from dggsgout12.his.huawei.com (dggsgout12.his.huawei.com [45.249.212.56])
+Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 574C630B511;
-	Wed, 10 Sep 2025 06:40:34 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.56
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AA67D30C351;
+	Wed, 10 Sep 2025 06:40:35 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.51
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1757486436; cv=none; b=NLyJVNBZ/Q4oMpk6PRl9BCvPzIcYioCtNBSqD0BVO1h1htzuhx3XVjItWebXDZ82mmudnlH4Fyf2Mc1v9g+A8i+dVprzzWl+q3RPDSZ8PLcfrA5HsQjvDLkgOSRQ5oJW1n+FsWxnyhiBD5DG9G6X27P01N+jlu2g4Ojv2tMo2bI=
+	t=1757486437; cv=none; b=Rvh4soq4iOQRfxfGI+W+RrO0AVyolzVxM9fOAfLhaOvJ8bDCmRlxgk8x/zHbxZeZbYgB3o60CB863wNNXRuTQPiA057NRVrKFSfddS3j+13kF6Yd9eojwRc6XBHIL4wIQNd6wvUCN+dq8SKY+MD+oaKbemAbcP5sgNIVcnoOtlg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1757486436; c=relaxed/simple;
-	bh=rp29yaBG4a7mXndILBElXKiHSk79HC7SKS34rcTW7KI=;
+	s=arc-20240116; t=1757486437; c=relaxed/simple;
+	bh=ExD4GIcsKa9pjnrAz2EHiIexUOEpjAQ6JkKhgLczW54=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=TTPtlbLEJk7i4RO+Rc3mW345BLfI6v2lHp/8Enpf6T2rAsdVSmlSOq3eIJwBcxa/X7C5IsglZoz00Ule9A1MvlqepSsI23HxjH0R3U1W+aG7vjOqOFO5z2h/gFJudkzKaKNQmQevHJPHR1aesJ1TKGEzVjTjnkr2ENgfwq5PQss=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.56
+	 MIME-Version; b=H0MXy7PrbMH8KP/GybxxktYXhfP72DXbT76uJlLuNqHrgfpIzp9cH4tsIaizpDurnxg7J9N+YEappSYBrsi/cEthn66W6qWZjZRkNzv09Gk4Wblk0Q0Mvfla5gZhoZZNJgS+BRyxyoNGSVeqdL+NWABspVKHwlJXez+TmHBi6W4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.51
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
-Received: from mail.maildlp.com (unknown [172.19.163.235])
-	by dggsgout12.his.huawei.com (SkyGuard) with ESMTPS id 4cM9zz6LRKzKHN64;
-	Wed, 10 Sep 2025 14:40:31 +0800 (CST)
+Received: from mail.maildlp.com (unknown [172.19.163.216])
+	by dggsgout11.his.huawei.com (SkyGuard) with ESMTPS id 4cM9zx2wbYzYQvQk;
+	Wed, 10 Sep 2025 14:40:29 +0800 (CST)
 Received: from mail02.huawei.com (unknown [10.116.40.128])
-	by mail.maildlp.com (Postfix) with ESMTP id 18DF11A0DDC;
-	Wed, 10 Sep 2025 14:40:32 +0800 (CST)
+	by mail.maildlp.com (Postfix) with ESMTP id E1E3E1A0E99;
+	Wed, 10 Sep 2025 14:40:27 +0800 (CST)
 Received: from huaweicloud.com (unknown [10.175.104.67])
-	by APP4 (Coremail) with SMTP id gCh0CgB3wY1UHcFo3ZIJCA--.51912S15;
-	Wed, 10 Sep 2025 14:40:31 +0800 (CST)
+	by APP4 (Coremail) with SMTP id gCh0CgB3wY1UHcFo3ZIJCA--.51912S10;
+	Wed, 10 Sep 2025 14:40:27 +0800 (CST)
 From: Yu Kuai <yukuai1@huaweicloud.com>
 To: axboe@kernel.dk,
 	hch@infradead.org,
@@ -47,9 +47,9 @@ Cc: linux-block@vger.kernel.org,
 	yi.zhang@huawei.com,
 	yangerkun@huawei.com,
 	johnny.chenyi@huawei.com
-Subject: [PATCH v2 for-6.18/block 11/16] md/raid5: convert to use bio_submit_split_bioset()
-Date: Wed, 10 Sep 2025 14:30:51 +0800
-Message-Id: <20250910063056.4159857-12-yukuai1@huaweicloud.com>
+Subject: [PATCH v2 for-6.18/block 06/16] block: factor out a helper bio_submit_split_bioset()
+Date: Wed, 10 Sep 2025 14:30:46 +0800
+Message-Id: <20250910063056.4159857-7-yukuai1@huaweicloud.com>
 X-Mailer: git-send-email 2.39.2
 In-Reply-To: <20250910063056.4159857-1-yukuai1@huaweicloud.com>
 References: <20250910063056.4159857-1-yukuai1@huaweicloud.com>
@@ -60,10 +60,10 @@ List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:gCh0CgB3wY1UHcFo3ZIJCA--.51912S15
-X-Coremail-Antispam: 1UD129KBjvJXoW7WFW7Zw4UCFWDurWxKr1ftFb_yoW8GFWUpw
-	sI9Fy7XrW5Jrs09anrt3yqkFyrKa4DXrZ7trWxXw1xK3Z2vFnrKa45XrWFqF15AFWrK347
-	Aw1kAr1YkF17KFJanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+X-CM-TRANSID:gCh0CgB3wY1UHcFo3ZIJCA--.51912S10
+X-Coremail-Antispam: 1UD129KBjvJXoWxZF47AFWxJr45tFWUCFyrtFb_yoW5Kw1rpr
+	429w17JrWkJFs29wnxJa17tas3KFZ0qrWUCay3J395JrnrtrnrKF1xtrWFvFyFkrW5C3y3
+	Jw1vkay5Cw4UArDanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
 	9KBjDU0xBIdaVrnRJUUUPvb4IE77IF4wAFF20E14v26rWj6s0DM7CY07I20VC2zVCF04k2
 	6cxKx2IYs7xG6rWj6s0DM7CIcVAFz4kK6r1j6r18M28IrcIa0xkI8VA2jI8067AKxVWUAV
 	Cq3wA2048vs2IY020Ec7CjxVAFwI0_Xr0E3s1l8cAvFVAK0II2c7xJM28CjxkF64kEwVA0
@@ -74,50 +74,116 @@ X-Coremail-Antispam: 1UD129KBjvJXoW7WFW7Zw4UCFWDurWxKr1ftFb_yoW8GFWUpw
 	z7v_Jr0_Gr1lF7xvr2IYc2Ij64vIr41lFIxGxcIEc7CjxVA2Y2ka0xkIwI1lc7CjxVAaw2
 	AFwI0_GFv_Wryl42xK82IYc2Ij64vIr41l4I8I3I0E4IkC6x0Yz7v_Jr0_Gr1lx2IqxVAq
 	x4xG67AKxVWUJVWUGwC20s026x8GjcxK67AKxVWUGVWUWwC2zVAF1VAY17CE14v26r4a6r
-	W5MIIYrxkI7VAKI48JMIIF0xvE2Ix0cI8IcVAFwI0_Gr0_Xr1lIxAIcVC0I7IYx2IY6xkF
+	W5MIIYrxkI7VAKI48JMIIF0xvE2Ix0cI8IcVAFwI0_JFI_Gr1lIxAIcVC0I7IYx2IY6xkF
 	7I0E14v26r4UJVWxJr1lIxAIcVCF04k26cxKx2IYs7xG6r1j6r1xMIIF0xvEx4A2jsIE14
-	v26r4j6F4UMIIF0xvEx4A2jsIEc7CjxVAFwI0_Gr1j6F4UJbIYCTnIWIevJa73UjIFyTuY
+	v26r1j6r4UMIIF0xvEx4A2jsIEc7CjxVAFwI0_Gr1j6F4UJbIYCTnIWIevJa73UjIFyTuY
 	vjxUI-eODUUUU
 X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
 
 From: Yu Kuai <yukuai3@huawei.com>
 
-Unify bio split code, prepare to fix ordering of split IO.
+No functional changes are intended, some drivers like mdraid will split
+bio by internal processing, prepare to unify bio split codes.
 
 Signed-off-by: Yu Kuai <yukuai3@huawei.com>
+Reviewed-by: Bart Van Assche <bvanassche@acm.org>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- drivers/md/raid5.c | 10 ++++------
- 1 file changed, 4 insertions(+), 6 deletions(-)
+ block/blk-merge.c      | 59 ++++++++++++++++++++++++++++--------------
+ include/linux/blkdev.h |  2 ++
+ 2 files changed, 42 insertions(+), 19 deletions(-)
 
-diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
-index 96a6d63b3d62..04add718be77 100644
---- a/drivers/md/raid5.c
-+++ b/drivers/md/raid5.c
-@@ -5486,7 +5486,6 @@ static int raid5_read_one_chunk(struct mddev *mddev, struct bio *raid_bio)
+diff --git a/block/blk-merge.c b/block/blk-merge.c
+index 354a3070e6a1..f680ccf81864 100644
+--- a/block/blk-merge.c
++++ b/block/blk-merge.c
+@@ -104,33 +104,54 @@ static unsigned int bio_allowed_max_sectors(const struct queue_limits *lim)
+ 	return round_down(UINT_MAX, lim->logical_block_size) >> SECTOR_SHIFT;
+ }
  
- static struct bio *chunk_aligned_read(struct mddev *mddev, struct bio *raid_bio)
++/*
++ * bio_submit_split_bioset - Submit a bio, splitting it at a designated sector
++ * @bio:		the original bio to be submitted and split
++ * @split_sectors:	the sector count at which to split
++ * @bs:			the bio set used for allocating the new split bio
++ *
++ * The original bio is modified to contain the remaining sectors and submitted.
++ * The caller is responsible for submitting the returned bio.
++ *
++ * If succeed, the newly allocated bio representing the initial part will be
++ * returned, on failure NULL will be returned and original bio will fail.
++ */
++struct bio *bio_submit_split_bioset(struct bio *bio, unsigned int split_sectors,
++				    struct bio_set *bs)
++{
++	struct bio *split = bio_split(bio, split_sectors, GFP_NOIO, bs);
++
++	if (IS_ERR(split)) {
++		bio->bi_status = errno_to_blk_status(PTR_ERR(split));
++		bio_endio(bio);
++		return NULL;
++	}
++
++	bio_chain(split, bio);
++	trace_block_split(split, bio->bi_iter.bi_sector);
++	WARN_ON_ONCE(bio_zone_write_plugging(bio));
++	submit_bio_noacct(bio);
++
++	return split;
++}
++EXPORT_SYMBOL_GPL(bio_submit_split_bioset);
++
+ static struct bio *bio_submit_split(struct bio *bio, int split_sectors)
  {
--	struct bio *split;
- 	sector_t sector = raid_bio->bi_iter.bi_sector;
- 	unsigned chunk_sects = mddev->chunk_sectors;
- 	unsigned sectors = chunk_sects - (sector & (chunk_sects-1));
-@@ -5494,11 +5493,10 @@ static struct bio *chunk_aligned_read(struct mddev *mddev, struct bio *raid_bio)
- 	if (sectors < bio_sectors(raid_bio)) {
- 		struct r5conf *conf = mddev->private;
+-	if (unlikely(split_sectors < 0))
+-		goto error;
++	if (unlikely(split_sectors < 0)) {
++		bio->bi_status = errno_to_blk_status(split_sectors);
++		bio_endio(bio);
++		return NULL;
++	}
  
--		split = bio_split(raid_bio, sectors, GFP_NOIO, &conf->bio_split);
--		bio_chain(split, raid_bio);
--		trace_block_split(split, raid_bio->bi_iter.bi_sector);
--		submit_bio_noacct(raid_bio);
--		raid_bio = split;
-+		raid_bio = bio_submit_split_bioset(raid_bio, sectors,
-+						   &conf->bio_split);
-+		if (!raid_bio)
-+			return NULL;
+ 	if (split_sectors) {
+-		struct bio *split;
+-
+-		split = bio_split(bio, split_sectors, GFP_NOIO,
++		bio = bio_submit_split_bioset(bio, split_sectors,
+ 				&bio->bi_bdev->bd_disk->bio_split);
+-		if (IS_ERR(split)) {
+-			split_sectors = PTR_ERR(split);
+-			goto error;
+-		}
+-		split->bi_opf |= REQ_NOMERGE;
+-		bio_chain(split, bio);
+-		trace_block_split(split, bio->bi_iter.bi_sector);
+-		WARN_ON_ONCE(bio_zone_write_plugging(bio));
+-		submit_bio_noacct(bio);
+-		return split;
++		if (bio)
++			bio->bi_opf |= REQ_NOMERGE;
  	}
  
- 	if (!raid5_read_one_chunk(mddev, raid_bio))
+ 	return bio;
+-error:
+-	bio->bi_status = errno_to_blk_status(split_sectors);
+-	bio_endio(bio);
+-	return NULL;
+ }
+ 
+ struct bio *bio_split_discard(struct bio *bio, const struct queue_limits *lim,
+diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
+index 7c542b1851fa..066e5309bd45 100644
+--- a/include/linux/blkdev.h
++++ b/include/linux/blkdev.h
+@@ -1000,6 +1000,8 @@ extern int blk_register_queue(struct gendisk *disk);
+ extern void blk_unregister_queue(struct gendisk *disk);
+ void submit_bio_noacct(struct bio *bio);
+ struct bio *bio_split_to_limits(struct bio *bio);
++struct bio *bio_submit_split_bioset(struct bio *bio, unsigned int split_sectors,
++				    struct bio_set *bs);
+ 
+ extern int blk_lld_busy(struct request_queue *q);
+ extern int blk_queue_enter(struct request_queue *q, blk_mq_req_flags_t flags);
 -- 
 2.39.2
 
