@@ -1,28 +1,28 @@
 Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0DFAD30C631;
-	Wed, 10 Sep 2025 06:40:36 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5D69030CDBC;
+	Wed, 10 Sep 2025 06:40:37 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.51
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1757486439; cv=none; b=Xwr06N3a3ig/tqWa/H3B8hZrUDh5lOt/+FPm00dQuWvOjR3ZoGW+SZl6umFpiMoGroHi7JOnQ89HbNycjYxuqsPymcpOnmMZIMi85TrOBfI+YTT8C1qzSKOxU/rPuwkGqO2A6OdUbTJUJVA61PKd5zi1GxW1I/fIXd7MYdfeMXI=
+	t=1757486439; cv=none; b=N8wg1ZCYNPbqX117bC+0j4Rp+ppPizFE88nnfKZzlrFq03r8hVUNUhK8jSoMgIKKkxmciZo0pJb2YrrKSm6+xFEEvcfajIVmAOCkXf8+VgE5AcMoxZlRJKV58Iq9K90YuL3YMih8Nbso9/3JwrTGS+kA9vGDfySdcuNiharXSFM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1757486439; c=relaxed/simple;
-	bh=2hN3wTON6wn2c/0wChGqgusqAmKBLB94eobibFCVrGE=;
+	bh=xcTrN9X5pjxRaIaKjTyZ0oPxHSNXymow2DoNfxEIlMU=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=tKYVYqFBwGhbfxNh+hwoHnc9wGX4dgNEQ20mskU/KPrAUWgQnKR8UJ7VKpDNIv0wmTCPOeyIa2t7sGX+nYsqF0f0bOTEurIauz8hs80EkZCY8WHpfzwRTyWvZxGlCbnwhEy2PAu7Jyq7WBV/ik46XiIedP7VkrSczcHJSZMdDkk=
+	 MIME-Version; b=EG42rGp8nF16kgker6dTKxV1J+GBM+3xehYbmNPBzmX5PlxEGb0B/YmlQa+2jo/cNBII1n/Ac3bNRNEYlOjEs2h4QPZf+hiXmZ8G12BBbm0m3S3kCbJ/dcYwk0nVLQT/HZNQUwzAlaAiUcL1agSBE5UrCw8OB3PfTGs6c6+G7WE=
 ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.51
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
 Received: from mail.maildlp.com (unknown [172.19.163.235])
-	by dggsgout11.his.huawei.com (SkyGuard) with ESMTPS id 4cMB040wJSzYQvRV;
-	Wed, 10 Sep 2025 14:40:36 +0800 (CST)
+	by dggsgout11.his.huawei.com (SkyGuard) with ESMTPS id 4cM9zz1NwJzYQvQc;
+	Wed, 10 Sep 2025 14:40:31 +0800 (CST)
 Received: from mail02.huawei.com (unknown [10.116.40.128])
-	by mail.maildlp.com (Postfix) with ESMTP id 963421A11D5;
-	Wed, 10 Sep 2025 14:40:34 +0800 (CST)
+	by mail.maildlp.com (Postfix) with ESMTP id A8FED1A11BA;
+	Wed, 10 Sep 2025 14:40:29 +0800 (CST)
 Received: from huaweicloud.com (unknown [10.175.104.67])
-	by APP4 (Coremail) with SMTP id gCh0CgB3wY1UHcFo3ZIJCA--.51912S18;
-	Wed, 10 Sep 2025 14:40:34 +0800 (CST)
+	by APP4 (Coremail) with SMTP id gCh0CgB3wY1UHcFo3ZIJCA--.51912S12;
+	Wed, 10 Sep 2025 14:40:29 +0800 (CST)
 From: Yu Kuai <yukuai1@huaweicloud.com>
 To: axboe@kernel.dk,
 	hch@infradead.org,
@@ -47,9 +47,9 @@ Cc: linux-block@vger.kernel.org,
 	yi.zhang@huawei.com,
 	yangerkun@huawei.com,
 	johnny.chenyi@huawei.com
-Subject: [PATCH v2 for-6.18/block 14/16] block: skip unnecessary checks for split bio
-Date: Wed, 10 Sep 2025 14:30:54 +0800
-Message-Id: <20250910063056.4159857-15-yukuai1@huaweicloud.com>
+Subject: [PATCH v2 for-6.18/block 08/16] md/raid1: convert to use bio_submit_split_bioset()
+Date: Wed, 10 Sep 2025 14:30:48 +0800
+Message-Id: <20250910063056.4159857-9-yukuai1@huaweicloud.com>
 X-Mailer: git-send-email 2.39.2
 In-Reply-To: <20250910063056.4159857-1-yukuai1@huaweicloud.com>
 References: <20250910063056.4159857-1-yukuai1@huaweicloud.com>
@@ -60,85 +60,154 @@ List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:gCh0CgB3wY1UHcFo3ZIJCA--.51912S18
-X-Coremail-Antispam: 1UD129KBjvJXoW7tr1kAF45KrW3Zw47Gr4Uurg_yoW8uF1Upr
-	W2g3WDCrW2gF4Y9ay5ta17Ja4F9a1DKr1ru3yfCrWayrnxur97KF4vvrW0vrna9r4fCrZ8
-	Zrn7K34UCr45uFDanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDU0xBIdaVrnRJUUUPqb4IE77IF4wAFF20E14v26rWj6s0DM7CY07I20VC2zVCF04k2
+X-CM-TRANSID:gCh0CgB3wY1UHcFo3ZIJCA--.51912S12
+X-Coremail-Antispam: 1UD129KBjvJXoWxJFWUtr4UXFyDWw47CF17ZFb_yoWrXFWfpw
+	42gayIgrWUJFZY9w1DJayq9a4Fya4YgrW7CrWxJwn7WFnFv39xKF4UXrWFgF98uFWru3sr
+	Jw1kAr45u3W2qFUanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDU0xBIdaVrnRJUUUPvb4IE77IF4wAFF20E14v26rWj6s0DM7CY07I20VC2zVCF04k2
 	6cxKx2IYs7xG6rWj6s0DM7CIcVAFz4kK6r1j6r18M28IrcIa0xkI8VA2jI8067AKxVWUAV
 	Cq3wA2048vs2IY020Ec7CjxVAFwI0_Xr0E3s1l8cAvFVAK0II2c7xJM28CjxkF64kEwVA0
 	rcxSw2x7M28EF7xvwVC0I7IYx2IY67AKxVWDJVCq3wA2z4x0Y4vE2Ix0cI8IcVCY1x0267
-	AKxVWxJr0_GcWl84ACjcxK6I8E87Iv67AKxVW0oVCq3wA2z4x0Y4vEx4A2jsIEc7CjxVAF
-	wI0_GcCE3s1le2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xvF2IEw4CE5I8CrVC2j2
-	WlYx0E2Ix0cI8IcVAFwI0_Jr0_Jr4lYx0Ex4A2jsIE14v26r1j6r4UMcvjeVCFs4IE7xkE
-	bVWUJVW8JwACjcxG0xvY0x0EwIxGrwACI402YVCY1x02628vn2kIc2xKxwCY1x0262kKe7
-	AKxVW8ZVWrXwCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7xkEbVWUJVW8JwC20s026c02
-	F40E14v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E67AF67kF1VAFwI0_GFv_Wr
-	ylIxkGc2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVW8JVW5JwCI42IY6xIIjxv20xvEc7Cj
-	xVAFwI0_Gr1j6F4UJwCI42IY6xAIw20EY4v20xvaj40_Jr0_JF4lIxAIcVC2z280aVAFwI
-	0_Gr0_Cr1lIxAIcVC2z280aVCY1x0267AKxVW8Jr0_Cr1UYxBIdaVFxhVjvjDU0xZFpf9x
-	07jIPfQUUUUU=
+	AKxVW8Jr0_Cr1UM28EF7xvwVC2z280aVAFwI0_GcCE3s1l84ACjcxK6I8E87Iv6xkF7I0E
+	14v26rxl6s0DM2AIxVAIcxkEcVAq07x20xvEncxIr21l5I8CrVACY4xI64kE6c02F40Ex7
+	xfMcIj6xIIjxv20xvE14v26r1j6r18McIj6I8E87Iv67AKxVWUJVW8JwAm72CE4IkC6x0Y
+	z7v_Jr0_Gr1lF7xvr2IYc2Ij64vIr41lFIxGxcIEc7CjxVA2Y2ka0xkIwI1lc7CjxVAaw2
+	AFwI0_GFv_Wryl42xK82IYc2Ij64vIr41l4I8I3I0E4IkC6x0Yz7v_Jr0_Gr1lx2IqxVAq
+	x4xG67AKxVWUJVWUGwC20s026x8GjcxK67AKxVWUGVWUWwC2zVAF1VAY17CE14v26r4a6r
+	W5MIIYrxkI7VAKI48JMIIF0xvE2Ix0cI8IcVAFwI0_JFI_Gr1lIxAIcVC0I7IYx2IY6xkF
+	7I0E14v26r4UJVWxJr1lIxAIcVCF04k26cxKx2IYs7xG6r1j6r1xMIIF0xvEx4A2jsIE14
+	v26r1j6r4UMIIF0xvEx4A2jsIEc7CjxVAFwI0_Gr1j6F4UJbIYCTnIWIevJa73UjIFyTuY
+	vjxUI-eODUUUU
 X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
 
 From: Yu Kuai <yukuai3@huawei.com>
 
-Lots of checks are already done while submitting this bio the first
-time, and there is no need to check them again when this bio is
-resubmitted after split.
+Unify bio split code, and prepare to fix ordering of split IO.
 
-Hence open code should_fail_bio() and blk_throtl_bio() that are still
-necessary from submit_bio_split_bioset().
+Noted that bio_submit_split_bioset() can fail the original bio directly
+by split error, set R1BIO_Returned in this case to notify raid_end_bio_io()
+that the original bio is returned already.
 
 Signed-off-by: Yu Kuai <yukuai3@huawei.com>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- block/blk-core.c  | 2 +-
- block/blk-merge.c | 6 +++++-
- block/blk.h       | 1 +
- 3 files changed, 7 insertions(+), 2 deletions(-)
+ drivers/md/raid1.c | 38 +++++++++++---------------------------
+ drivers/md/raid1.h |  4 +++-
+ 2 files changed, 14 insertions(+), 28 deletions(-)
 
-diff --git a/block/blk-core.c b/block/blk-core.c
-index 83c262a3dfd9..1021a09c5958 100644
---- a/block/blk-core.c
-+++ b/block/blk-core.c
-@@ -539,7 +539,7 @@ static inline void bio_check_ro(struct bio *bio)
+diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
+index 64a1e0b47e87..3f4ed2272ac4 100644
+--- a/drivers/md/raid1.c
++++ b/drivers/md/raid1.c
+@@ -1317,7 +1317,7 @@ static void raid1_read_request(struct mddev *mddev, struct bio *bio,
+ 	struct raid1_info *mirror;
+ 	struct bio *read_bio;
+ 	int max_sectors;
+-	int rdisk, error;
++	int rdisk;
+ 	bool r1bio_existed = !!r1_bio;
+ 
+ 	/*
+@@ -1377,18 +1377,13 @@ static void raid1_read_request(struct mddev *mddev, struct bio *bio,
  	}
+ 
+ 	if (max_sectors < bio_sectors(bio)) {
+-		struct bio *split = bio_split(bio, max_sectors,
+-					      gfp, &conf->bio_split);
+-
+-		if (IS_ERR(split)) {
+-			error = PTR_ERR(split);
++		bio = bio_submit_split_bioset(bio, max_sectors,
++					      &conf->bio_split);
++		if (!bio) {
++			set_bit(R1BIO_Returned, &r1_bio->state);
+ 			goto err_handle;
+ 		}
+ 
+-		bio_chain(split, bio);
+-		trace_block_split(split, bio->bi_iter.bi_sector);
+-		submit_bio_noacct(bio);
+-		bio = split;
+ 		r1_bio->master_bio = bio;
+ 		r1_bio->sectors = max_sectors;
+ 	}
+@@ -1416,8 +1411,6 @@ static void raid1_read_request(struct mddev *mddev, struct bio *bio,
+ 
+ err_handle:
+ 	atomic_dec(&mirror->rdev->nr_pending);
+-	bio->bi_status = errno_to_blk_status(error);
+-	set_bit(R1BIO_Uptodate, &r1_bio->state);
+ 	raid_end_bio_io(r1_bio);
  }
  
--static noinline int should_fail_bio(struct bio *bio)
-+int should_fail_bio(struct bio *bio)
+@@ -1484,7 +1477,7 @@ static void raid1_write_request(struct mddev *mddev, struct bio *bio,
  {
- 	if (should_fail_request(bdev_whole(bio->bi_bdev), bio->bi_iter.bi_size))
- 		return -EIO;
-diff --git a/block/blk-merge.c b/block/blk-merge.c
-index f680ccf81864..c16f4bdf251f 100644
---- a/block/blk-merge.c
-+++ b/block/blk-merge.c
-@@ -130,7 +130,11 @@ struct bio *bio_submit_split_bioset(struct bio *bio, unsigned int split_sectors,
- 	bio_chain(split, bio);
- 	trace_block_split(split, bio->bi_iter.bi_sector);
- 	WARN_ON_ONCE(bio_zone_write_plugging(bio));
--	submit_bio_noacct(bio);
-+
-+	if (should_fail_bio(bio))
-+		bio_io_error(bio);
-+	else if (!blk_throtl_bio(bio))
-+		submit_bio_noacct_nocheck(bio);
+ 	struct r1conf *conf = mddev->private;
+ 	struct r1bio *r1_bio;
+-	int i, disks, k, error;
++	int i, disks, k;
+ 	unsigned long flags;
+ 	int first_clone;
+ 	int max_sectors;
+@@ -1588,10 +1581,8 @@ static void raid1_write_request(struct mddev *mddev, struct bio *bio,
+ 				 * complexity of supporting that is not worth
+ 				 * the benefit.
+ 				 */
+-				if (bio->bi_opf & REQ_ATOMIC) {
+-					error = -EIO;
++				if (bio->bi_opf & REQ_ATOMIC)
+ 					goto err_handle;
+-				}
  
- 	return split;
+ 				good_sectors = first_bad - r1_bio->sector;
+ 				if (good_sectors < max_sectors)
+@@ -1611,18 +1602,13 @@ static void raid1_write_request(struct mddev *mddev, struct bio *bio,
+ 		max_sectors = min_t(int, max_sectors,
+ 				    BIO_MAX_VECS * (PAGE_SIZE >> 9));
+ 	if (max_sectors < bio_sectors(bio)) {
+-		struct bio *split = bio_split(bio, max_sectors,
+-					      GFP_NOIO, &conf->bio_split);
+-
+-		if (IS_ERR(split)) {
+-			error = PTR_ERR(split);
++		bio = bio_submit_split_bioset(bio, max_sectors,
++					      &conf->bio_split);
++		if (!bio) {
++			set_bit(R1BIO_Returned, &r1_bio->state);
+ 			goto err_handle;
+ 		}
+ 
+-		bio_chain(split, bio);
+-		trace_block_split(split, bio->bi_iter.bi_sector);
+-		submit_bio_noacct(bio);
+-		bio = split;
+ 		r1_bio->master_bio = bio;
+ 		r1_bio->sectors = max_sectors;
+ 	}
+@@ -1698,8 +1684,6 @@ static void raid1_write_request(struct mddev *mddev, struct bio *bio,
+ 		}
+ 	}
+ 
+-	bio->bi_status = errno_to_blk_status(error);
+-	set_bit(R1BIO_Uptodate, &r1_bio->state);
+ 	raid_end_bio_io(r1_bio);
  }
-diff --git a/block/blk.h b/block/blk.h
-index 41397688b941..694ae6c9bb0f 100644
---- a/block/blk.h
-+++ b/block/blk.h
-@@ -616,6 +616,7 @@ extern const struct address_space_operations def_blk_aops;
- int disk_register_independent_access_ranges(struct gendisk *disk);
- void disk_unregister_independent_access_ranges(struct gendisk *disk);
  
-+int should_fail_bio(struct bio *bio);
- #ifdef CONFIG_FAIL_MAKE_REQUEST
- bool should_fail_request(struct block_device *part, unsigned int bytes);
- #else /* CONFIG_FAIL_MAKE_REQUEST */
+diff --git a/drivers/md/raid1.h b/drivers/md/raid1.h
+index d236ef179cfb..2ebe35aaa534 100644
+--- a/drivers/md/raid1.h
++++ b/drivers/md/raid1.h
+@@ -178,7 +178,9 @@ enum r1bio_state {
+  * any write was successful.  Otherwise we call when
+  * any write-behind write succeeds, otherwise we call
+  * with failure when last write completes (and all failed).
+- * Record that bi_end_io was called with this flag...
++ *
++ * And for bio_split errors, record that bi_end_io was called
++ * with this flag...
+  */
+ 	R1BIO_Returned,
+ /* If a write for this request means we can clear some
 -- 
 2.39.2
 
