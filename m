@@ -1,63 +1,65 @@
-Received: from mail-pj1-f54.google.com (mail-pj1-f54.google.com [209.85.216.54])
+Received: from mail-pl1-f169.google.com (mail-pl1-f169.google.com [209.85.214.169])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A540F1E5219;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1B7E6238145;
 	Wed, 10 Sep 2025 07:31:55 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.54
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.169
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1757489517; cv=none; b=YM5bnx6maLg8Kqp2okyLVyXW4Oxu9HwiwxLL9xSWp4Lpi7zaQ2KBVPNZ+1Fb+Rm4ehm7dYNtvM3ys6cQVb3ImtORnXqL3KZNVUu3fL8iRwdLIP/ujwJu9dTQuu7BcgeQTa4AqykZiZHAkLR2Bpa1TrIsMQuim2OfCVwdf1xTIuc=
+	t=1757489517; cv=none; b=iQh9ay+kue/eV7dCSlm9p4ympo+W532WLZ/dJEX9xbxTauIBVkHTZGIwnfQZMtZOLj9FwseZpmaS4PIZw4lCZvAdxRh90+k+/5vJPblXaPRN+ZtWdclWzcJv7eNa2/8ulbLfggJK1gZlF8oT0hEwLYWi2mC/XzxTp4ibiZxgDMo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1757489517; c=relaxed/simple;
-	bh=Hdr2Tf1DBDM8PZbgIXMvuFC2zCTYQ3GcUj66ljSSZpU=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=PxcCtAXuYaVcUK2WECaJ7zmg+o2mbFXiCnsG1khzEJ6xQnrEHMxmGikyrMKIwhA7h4BMSjtS6Dz08q8ipOBalVtNvoal1hs+KK9P/P/3DxRpGeeE+h7NZWosYkojtj0HsMITEtlJ2FTzdN9jULufJa8tpoFRowVqUbLQYWdtnAo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=kqLacYC+; arc=none smtp.client-ip=209.85.216.54
+	bh=517lES9mNI5nQHHt62Kh9R3q1ysG2WiWVqH7C6hOTUM=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=GAVERE9OI+EuhND+wp18N6S6R8/l2jgsJ67SqaxtM8J6jq+yt5fGMW5pR3klnbLHiSAFMzDJP37q/5wAaWEhKLioM5eqxlfNTyIPDMm2o+GDh5QViLTcYSiPavFZP8Ev9pZeleHblD7IB0kP/49+g2ecmXvcvbuI8NtZEY9wC9A=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=C5FxztCV; arc=none smtp.client-ip=209.85.214.169
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="kqLacYC+"
-Received: by mail-pj1-f54.google.com with SMTP id 98e67ed59e1d1-32326e2f0b3so5417159a91.2;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="C5FxztCV"
+Received: by mail-pl1-f169.google.com with SMTP id d9443c01a7336-24c863e852aso58440775ad.1;
         Wed, 10 Sep 2025 00:31:55 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20230601; t=1757489515; x=1758094315; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=RYmCRSZ5YZDf6SRxvO9+byFu7D/FmsrW9LChG8eCQ4Q=;
-        b=kqLacYC+QwWu4pz42FE+Yi1WDIs6mqWlyIxXgf0iVbiGP1by9g/RKy3lY9uF4N0rr7
-         LK7bYTctmsy/Tz62Nn69EfF8V4X1m327+26iLSznXriOT+x3YCE7EH4mqpB5+sDdQrlz
-         sRNyfLPeqqShVf0YOQzwcJYlUyonmsS4UwPXASumE+wGxNM3YuWCYunsgoDtoymqvVaM
-         4isg9Jw96+qP1k2QpYcRnwNOoYWDIWCDQNLbBf3JafqIfHOH2T2Ob9p+dJ/U1x1tUKUY
-         tbSii5hf3qz8EBRcDpJCs9xYVA7e1prqA2q3c0ofGWYItWzWEiRyC16hPuEsmyevZ9cS
-         XKkw==
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=/cPDFlkA5LYY1usMEz3BdE47dhloUedaleJrVt+cZq4=;
+        b=C5FxztCVOQt3nL5KkJQBzSxZ0jHdeznc+64pBMlXiF0EkdvdxHP/C46AmT8pYK3Mc8
+         pMiZ5IW74nqooX9v98YCsBp0bim+b6VLqnrcTRD1k6mhV9XOYSmeJaMa4whhMKwC9jVG
+         2N1UslMHWAJ2sSBC5CDKphs9sap5gFLQIrvSC3NabJiMzDAVTVGmsZnRECAe/8PTM1CQ
+         ijUGvww/VqiqlyNkTqDkvVBIJpy/i6ICI4QJVuDzuFI0JW574CKEVM6ynVcxSOf86CtY
+         xlfEh9zEaEaAqdWgmtWL29FvFNhC9evg+04kPTADaP4IuEdARbYytNASub4jS2JoMHHj
+         w8ig==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20230601; t=1757489515; x=1758094315;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=RYmCRSZ5YZDf6SRxvO9+byFu7D/FmsrW9LChG8eCQ4Q=;
-        b=hyrLzzx2FCP6sz1L4tg+gHLcepTHMdiJ885ekEdHy+m/8uqY1KA5AE/AbzZK+OdZih
-         YrTxqUsa9AAchA9ngPQxpDo+1zVykEzgue4jRrbrqCzS12fq0WjRgkaOotgN2xv5WjVC
-         JXYCfhR6gX54maBrvxh7LgRhkWPqZcNcCtGKRtnsMrgog6G5MhHG2J2shI1XJdLvydJ5
-         lI2drZ56jNoxdbzCxWIqxF8ttMl3wI6b4zLl/30fDcBlJw9Midf/uNvRdnZHQ7TAezEp
-         VNufabpbVMq6t9jNrTYpP74QusfvyTwBwdGb673EFAPWO18oXMJQlqumWGM5BY869Ae4
-         6+Lw==
-X-Forwarded-Encrypted: i=1; AJvYcCWLsOLSu8ccuJlXwzGFuKviypHigcml9bubykFV8wItTYffEA1wvGIzqPnuht9iu2jIr963AH3s@vger.kernel.org, AJvYcCX84dPScY4UKOb1XHxcCmeowmVTSjlK7GlRbGzCTEmy92g59OjEXhFNt6y2nAds9trNgCqJC6WPNZjS@vger.kernel.org
-X-Gm-Message-State: AOJu0Yy76r8vEqqUh/v9aQCqlhE6wwh7zc50JrTzmDBE5mSQlWpkpVux
-	UXxRa+WytAfPKj8uaPZKEt4IUelN3DryUWOmTBLYwB7+BqhbHK0meEiU
-X-Gm-Gg: ASbGncsP5XQCEHo3vLhf2TlOH4Ql1d9Jn7ieyTuW5WAEfr4sGfRyq7gFzHKOgUkRt80
-	4C7BmATHIEow3yQyem3LwIEB85NebfVVyTEY48qnRFqMAYbAMMEhlUYfrgaK9BtEGj4yPEvPJb+
-	MOe82ouOzbCg17oSDBJSVsNy3O4WSKrI1lNO25wC/pMai6cRemP2ErolZlHe1Lm7UhpOKeiOzmP
-	pWaB5tvMIQlMaJhOyQf0iSd+e3kLmvvvaEZBO7rfsAfkL/5jCBmMKVPl2TnXAIW64SPqRZp9pDo
-	gHOPcWsLrJA3lLiUpKEnhsrZhUI/ni7qto2XD1wouKvqszOQ6jzv0Opa4s6lR5yewp2cIw3LR9t
-	OCcHS1ksZLYWycVSTMWa+CRpkCHXuawex/zLdHbWtRPD8GuE=
-X-Google-Smtp-Source: AGHT+IHtoW7yqTSs88VXQwkRKdpCydUh3MOHv9se5dsw4+ymAlEF2aSX7iGdkiRJRBgF07MhgCJ8GQ==
-X-Received: by 2002:a17:90b:1d8f:b0:329:e4d1:c20f with SMTP id 98e67ed59e1d1-32d43eff84dmr18391628a91.9.1757489514829;
-        Wed, 10 Sep 2025 00:31:54 -0700 (PDT)
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=/cPDFlkA5LYY1usMEz3BdE47dhloUedaleJrVt+cZq4=;
+        b=s0VESCKOW/Bb/cnmS0yjma9UixLKTTk6FZ8r4NZQLFqtx8UM1SBQ3u23oAsb5d9Xnv
+         uhDyeq+fUHPiO6SXGiRFMSesyJDVmN33xOBC5e8RgI06vKVtvGem8D/RNBxi6FT9MgeO
+         ShEuirh9QEOey7UxK8G+olkTjUK8jy+QbmicPDu/pO7wQOT1krACfO12odv8vYpRuHjF
+         FotiedRKHofyjK1+HqyrxhkaKEK/Y0HN6MA67FpV01pCwsCEvNfXzrwzYawGIEvs2bXr
+         nSdIcE3rq0QBaVlRc+akV8TucV1SMhMub5nY3TF2W9/7ZE60XHeNFeloZES4yVBu1ZjS
+         1gBA==
+X-Forwarded-Encrypted: i=1; AJvYcCUCnDAj2I+Yl4X1UdO0mtJQCQd04RLQV3c/XlgSU4+VMg+yDbBC4P27BAKmOwl38lu0QcU6CLVSDzln@vger.kernel.org, AJvYcCUFW/61Vfzdl05Un6epdItr4GI3EAOw558vO+mVx5Elq/gnphrJ6JmxWNGqEvIKChFcnicUuokk@vger.kernel.org
+X-Gm-Message-State: AOJu0Yy8jEznAzZ4l41abtzi18P0OJtWDEV6Q9J4Wryv7/y9fPX0YeiP
+	p8j/Vf+H3BvbLh4k8KD2tM59tVG465fjnoe/RezrdSW5IZNg05990qkV
+X-Gm-Gg: ASbGncu511eUf5SU6Qel7M5epOgEQ57VqPVkKP45QL9szHpWvYDDbQWlj2Joc1iEn1B
+	R1ipj60OQhXaZSFRCUb61VkSOMFdQgIsVQQ3dVurV9MLDEyReQaqY5FdEfClGIiT1omwge9F/In
+	MzLS1On4T9o6WbAX98z+TX1RDIVaLjr12cyy1Zr8ycUZUy9wTurgyZ3Ez7DLzhzWg8sLWazgSjI
+	RKpr0Kv8EKfkcgJuJB0nb9ewc77R5B5nnfLKHaclu6Zicsk94le8DdBA7/DEjFUFOAnujjMhILQ
+	MU9V04Q21geFigPLxfXZCeiQRoNnK87sM+Broxg//plIprVbNxrcMAY3svEQU/WI6EMbuhDayJK
+	fHLzaxoKm1MN9uIKoLKQZ3oIC1Q==
+X-Google-Smtp-Source: AGHT+IESCpAbPX2JHt9nEk4/NQCi5snL808PmAxfO09rt3WazNRz8Vkz6Y/KQ9TvmMhlDZg242DjGQ==
+X-Received: by 2002:a17:902:e541:b0:248:a406:c818 with SMTP id d9443c01a7336-25172a53eaamr199761735ad.42.1757489515267;
+        Wed, 10 Sep 2025 00:31:55 -0700 (PDT)
 Received: from archie.me ([103.124.138.155])
-        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-775f6b42023sm1296372b3a.87.2025.09.10.00.31.53
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-25a2a343dfcsm18372195ad.83.2025.09.10.00.31.53
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
         Wed, 10 Sep 2025 00:31:54 -0700 (PDT)
 Received: by archie.me (Postfix, from userid 1000)
-	id 7A42E41FA3A4; Wed, 10 Sep 2025 14:23:36 +0700 (WIB)
+	id 9B9B941F3D85; Wed, 10 Sep 2025 14:23:36 +0700 (WIB)
 From: Bagas Sanjaya <bagasdotme@gmail.com>
 To: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
 	Linux Documentation <linux-doc@vger.kernel.org>,
@@ -74,40 +76,125 @@ Cc: Jonathan Corbet <corbet@lwn.net>,
 	Ingo Molnar <mingo@kernel.org>,
 	Jake Rice <jake@jakerice.dev>,
 	Cengiz Can <cengiz@kernel.wtf>
-Subject: [PATCH 0/2] cgroup v2 docs update
-Date: Wed, 10 Sep 2025 14:23:32 +0700
-Message-ID: <20250910072334.30688-1-bagasdotme@gmail.com>
+Subject: [PATCH 2/2] Documentation: cgroup-v2: Replace manual table of contents with contents:: directive
+Date: Wed, 10 Sep 2025 14:23:34 +0700
+Message-ID: <20250910072334.30688-3-bagasdotme@gmail.com>
 X-Mailer: git-send-email 2.51.0
+In-Reply-To: <20250910072334.30688-1-bagasdotme@gmail.com>
+References: <20250910072334.30688-1-bagasdotme@gmail.com>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-Developer-Signature: v=1; a=openpgp-sha256; l=708; i=bagasdotme@gmail.com; h=from:subject; bh=Hdr2Tf1DBDM8PZbgIXMvuFC2zCTYQ3GcUj66ljSSZpU=; b=owGbwMvMwCX2bWenZ2ig32LG02pJDBkH1blXtcz0ipjsFmfSdjF+TlzwmrleOzrieD6LL/+3e 1ZF3emjHaUsDGJcDLJiiiyTEvmaTu8yErnQvtYRZg4rE8gQBi5OAZgIdw4jwwSmxT7PTgX5X74e vnJ/7IVItpkeC706JgQ9EFN4cOje/WZGhtvnGPQeHq68bpEvqj3Xh+tT4H/fr2eVDm4L+Wq1f9P tfewA
+X-Developer-Signature: v=1; a=openpgp-sha256; l=3521; i=bagasdotme@gmail.com; h=from:subject; bh=517lES9mNI5nQHHt62Kh9R3q1ysG2WiWVqH7C6hOTUM=; b=owGbwMvMwCX2bWenZ2ig32LG02pJDBkH1QUOBYjZ7GwsZyp4YcYUseZaRD5vjSnPDW1mlmyLv /z7vhzvKGVhEONikBVTZJmUyNd0epeRyIX2tY4wc1iZQIYwcHEKwEQO5TD8FawxipXXMS+zP759 2dk1OyfIzi7Z/bOIa/rytonH2G1k9jIybGw3Ojlhntbv/bf+pU1aHBb5rN/1Tbq6qE1o28+2lRV KLAA=
 X-Developer-Key: i=bagasdotme@gmail.com; a=openpgp; fpr=701B806FDCA5D3A58FFB8F7D7C276C64A5E44A1D
 Content-Transfer-Encoding: 8bit
 
-Hi,
+cgroup v2 docs is a lengthy single docs as compared to cgroup v1 which
+is split into several files. While new sections are continously added,
+manually-arranged table of contents (as reST comments) gets out-of-sync
+with actual toctree as not all of these are added to it.
 
-Just two independent docs update for cgroup v2. The shortlog below
-should be self-explanatory.
+Replace it with automatically-generated table of contents via contents::
+directive.
 
-Enjoy!
+Signed-off-by: Bagas Sanjaya <bagasdotme@gmail.com>
+---
+ Documentation/admin-guide/cgroup-v2.rst | 79 +------------------------
+ 1 file changed, 1 insertion(+), 78 deletions(-)
 
-Bagas Sanjaya (2):
-  Documentation: cgroup-v2: Use document path for cross-references
-  Documentation: cgroup-v2: Replace manual table of contents with
-    contents:: directive
-
- Documentation/accounting/psi.rst              |  2 -
- Documentation/admin-guide/cgroup-v1/index.rst |  2 -
- Documentation/admin-guide/cgroup-v2.rst       | 91 ++-----------------
- Documentation/scheduler/sched-ext.rst         |  2 -
- 4 files changed, 7 insertions(+), 90 deletions(-)
-
-
-base-commit: 8bfb4580b4be057b99256029ce4010dc63544777
+diff --git a/Documentation/admin-guide/cgroup-v2.rst b/Documentation/admin-guide/cgroup-v2.rst
+index 83bb69e3ab12a4..2bf24aa6c08ebe 100644
+--- a/Documentation/admin-guide/cgroup-v2.rst
++++ b/Documentation/admin-guide/cgroup-v2.rst
+@@ -13,84 +13,7 @@ of cgroup including core and specific controller behaviors.  All
+ future changes must be reflected in this document.  Documentation for
+ v1 is available under Documentation/admin-guide/cgroup-v1/index.rst.
+ 
+-.. CONTENTS
+-
+-   1. Introduction
+-     1-1. Terminology
+-     1-2. What is cgroup?
+-   2. Basic Operations
+-     2-1. Mounting
+-     2-2. Organizing Processes and Threads
+-       2-2-1. Processes
+-       2-2-2. Threads
+-     2-3. [Un]populated Notification
+-     2-4. Controlling Controllers
+-       2-4-1. Enabling and Disabling
+-       2-4-2. Top-down Constraint
+-       2-4-3. No Internal Process Constraint
+-     2-5. Delegation
+-       2-5-1. Model of Delegation
+-       2-5-2. Delegation Containment
+-     2-6. Guidelines
+-       2-6-1. Organize Once and Control
+-       2-6-2. Avoid Name Collisions
+-   3. Resource Distribution Models
+-     3-1. Weights
+-     3-2. Limits
+-     3-3. Protections
+-     3-4. Allocations
+-   4. Interface Files
+-     4-1. Format
+-     4-2. Conventions
+-     4-3. Core Interface Files
+-   5. Controllers
+-     5-1. CPU
+-       5-1-1. CPU Interface Files
+-     5-2. Memory
+-       5-2-1. Memory Interface Files
+-       5-2-2. Usage Guidelines
+-       5-2-3. Memory Ownership
+-     5-3. IO
+-       5-3-1. IO Interface Files
+-       5-3-2. Writeback
+-       5-3-3. IO Latency
+-         5-3-3-1. How IO Latency Throttling Works
+-         5-3-3-2. IO Latency Interface Files
+-       5-3-4. IO Priority
+-     5-4. PID
+-       5-4-1. PID Interface Files
+-     5-5. Cpuset
+-       5.5-1. Cpuset Interface Files
+-     5-6. Device
+-     5-7. RDMA
+-       5-7-1. RDMA Interface Files
+-     5-8. DMEM
+-     5-9. HugeTLB
+-       5.9-1. HugeTLB Interface Files
+-     5-10. Misc
+-       5.10-1 Miscellaneous cgroup Interface Files
+-       5.10-2 Migration and Ownership
+-     5-11. Others
+-       5-11-1. perf_event
+-     5-N. Non-normative information
+-       5-N-1. CPU controller root cgroup process behaviour
+-       5-N-2. IO controller root cgroup process behaviour
+-   6. Namespace
+-     6-1. Basics
+-     6-2. The Root and Views
+-     6-3. Migration and setns(2)
+-     6-4. Interaction with Other Namespaces
+-   P. Information on Kernel Programming
+-     P-1. Filesystem Support for Writeback
+-   D. Deprecated v1 Core Features
+-   R. Issues with v1 and Rationales for v2
+-     R-1. Multiple Hierarchies
+-     R-2. Thread Granularity
+-     R-3. Competition Between Inner Nodes and Threads
+-     R-4. Other Interface Issues
+-     R-5. Controller Issues and Remedies
+-       R-5-1. Memory
+-
++.. contents::
+ 
+ Introduction
+ ============
 -- 
 An old man doll... just what I always wanted! - Clara
 
