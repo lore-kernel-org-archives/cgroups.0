@@ -1,28 +1,28 @@
 Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7407C309EF8;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5EACF306494;
 	Wed, 10 Sep 2025 06:40:32 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.51
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1757486435; cv=none; b=A9Eew0f10LHLynnQwAtWoDgzSnXBZ6OEiLuxCdtG6Fxy1OmN8uUajRshS4tjZlXHOeAgZtEqP8/fhYhCmlUuHP4PfFeD8ft6BfkFDGM3DwuVXvug0eJFmWP28E7j7zYcRygmTNBS2q7s4Z5uz9x8dqV6XU/OFOrR9tA7qCN+SCE=
+	t=1757486436; cv=none; b=SSK0zIRQitm3dj2jeBfKamVFYi8aBUfYa/hLH2UQ8314e13E1ButYQSzrr/cPqpNyEVzYPX5Rqe/0F3ztB8lCumgX56n20BGMQcbIWJDJNQBEsIqfYQUs/UZvis4YQKAn98C4e8eHYgyidKK9FJBCz1eQtVZHfyy/X6R7vFKL/I=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1757486435; c=relaxed/simple;
-	bh=/zk+bxCb6Zb9hvBYssvYSJTRAViS8Qf5GjYQrRnB7hs=;
+	s=arc-20240116; t=1757486436; c=relaxed/simple;
+	bh=niGS6A6fx/rnq9blW1VUsKYjHDI5W7MxEpWl5kJ/3lA=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=HPmZB5TCH9btgnO074SI7CccJ7MMy64KXF7nvfbWwGYM6LEDUtIIEdJ5BAAxffRH1SmOZvEh+VQkErwwKtTU0+MX9f9BU8CsbMs6vOzOmvizZAUoH2H1fSuXa6/XiazkRKilxlkacIyYcYgxxIpKdO3Yccr4rmaXLkS2bJrOyGw=
+	 MIME-Version; b=HmlF1LKTH6IJnXre7i8t9CQqNpsi4cqjY7OcqETEVTJ1TsKintpas27KJmR4OOrL7EH6Sgmm0B/VVWo/oi9tQ9/RcxEUXJhY0JeJhFh4mUKKkKkK0RI5L1j6jl/p8w7BQqHBXptKHTrIAxkxhAgvz2gISGiLTg3uu300O6JuPJk=
 ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.51
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
 Received: from mail.maildlp.com (unknown [172.19.163.216])
-	by dggsgout11.his.huawei.com (SkyGuard) with ESMTPS id 4cM9zt6JPKzYQvRH;
-	Wed, 10 Sep 2025 14:40:26 +0800 (CST)
+	by dggsgout11.his.huawei.com (SkyGuard) with ESMTPS id 4cMB005RPYzYQvRr;
+	Wed, 10 Sep 2025 14:40:32 +0800 (CST)
 Received: from mail02.huawei.com (unknown [10.116.40.128])
-	by mail.maildlp.com (Postfix) with ESMTP id 5FE021A0E99;
-	Wed, 10 Sep 2025 14:40:25 +0800 (CST)
+	by mail.maildlp.com (Postfix) with ESMTP id 421461A1953;
+	Wed, 10 Sep 2025 14:40:31 +0800 (CST)
 Received: from huaweicloud.com (unknown [10.175.104.67])
-	by APP4 (Coremail) with SMTP id gCh0CgB3wY1UHcFo3ZIJCA--.51912S7;
-	Wed, 10 Sep 2025 14:40:25 +0800 (CST)
+	by APP4 (Coremail) with SMTP id gCh0CgB3wY1UHcFo3ZIJCA--.51912S14;
+	Wed, 10 Sep 2025 14:40:30 +0800 (CST)
 From: Yu Kuai <yukuai1@huaweicloud.com>
 To: axboe@kernel.dk,
 	hch@infradead.org,
@@ -47,9 +47,9 @@ Cc: linux-block@vger.kernel.org,
 	yi.zhang@huawei.com,
 	yangerkun@huawei.com,
 	johnny.chenyi@huawei.com
-Subject: [PATCH v2 for-6.18/block 03/16] blk-mq: add QUEUE_FLAG_BIO_ISSUE_TIME
-Date: Wed, 10 Sep 2025 14:30:43 +0800
-Message-Id: <20250910063056.4159857-4-yukuai1@huaweicloud.com>
+Subject: [PATCH v2 for-6.18/block 10/16] md/raid10: convert read/write to use bio_submit_split_bioset()
+Date: Wed, 10 Sep 2025 14:30:50 +0800
+Message-Id: <20250910063056.4159857-11-yukuai1@huaweicloud.com>
 X-Mailer: git-send-email 2.39.2
 In-Reply-To: <20250910063056.4159857-1-yukuai1@huaweicloud.com>
 References: <20250910063056.4159857-1-yukuai1@huaweicloud.com>
@@ -60,112 +60,149 @@ List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:gCh0CgB3wY1UHcFo3ZIJCA--.51912S7
-X-Coremail-Antispam: 1UD129KBjvJXoWxAr1kCry5AF1fCrWkJryDAwb_yoW5CrWfpa
-	95KF1Ik342gF4xWF48ta13A3WUGr4vgry7CF90k3yruw1Igr17XF1kAF1UtFWkurs7Ar45
-	Xr1xtF9Ygry5W3DanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDU0xBIdaVrnRJUUUP2b4IE77IF4wAFF20E14v26rWj6s0DM7CY07I20VC2zVCF04k2
-	6cxKx2IYs7xG6rWj6s0DM7CIcVAFz4kK6r1j6r18M28IrcIa0xkI8VA2jI8067AKxVWUWw
-	A2048vs2IY020Ec7CjxVAFwI0_Xr0E3s1l8cAvFVAK0II2c7xJM28CjxkF64kEwVA0rcxS
-	w2x7M28EF7xvwVC0I7IYx2IY67AKxVWDJVCq3wA2z4x0Y4vE2Ix0cI8IcVCY1x0267AKxV
-	W8Jr0_Cr1UM28EF7xvwVC2z280aVAFwI0_GcCE3s1l84ACjcxK6I8E87Iv6xkF7I0E14v2
-	6rxl6s0DM2AIxVAIcxkEcVAq07x20xvEncxIr21l5I8CrVACY4xI64kE6c02F40Ex7xfMc
-	Ij6xIIjxv20xvE14v26r1j6r18McIj6I8E87Iv67AKxVWUJVW8JwAm72CE4IkC6x0Yz7v_
-	Jr0_Gr1lF7xvr2IYc2Ij64vIr41lFIxGxcIEc7CjxVA2Y2ka0xkIwI1lc7CjxVAaw2AFwI
-	0_GFv_Wryl42xK82IYc2Ij64vIr41l4I8I3I0E4IkC6x0Yz7v_Jr0_Gr1lx2IqxVAqx4xG
-	67AKxVWUJVWUGwC20s026x8GjcxK67AKxVWUGVWUWwC2zVAF1VAY17CE14v26r4a6rW5MI
-	IYrxkI7VAKI48JMIIF0xvE2Ix0cI8IcVAFwI0_Jr0_JF4lIxAIcVC0I7IYx2IY6xkF7I0E
-	14v26F4j6r4UJwCI42IY6xAIw20EY4v20xvaj40_Jr0_JF4lIxAIcVC2z280aVAFwI0_Jr
-	0_Gr1lIxAIcVC2z280aVCY1x0267AKxVW8JVW8JrUvcSsGvfC2KfnxnUUI43ZEXa7IU04x
-	RDUUUUU==
+X-CM-TRANSID:gCh0CgB3wY1UHcFo3ZIJCA--.51912S14
+X-Coremail-Antispam: 1UD129KBjvJXoWxJFWUtr4UXF4fZr4xuryUKFg_yoWrXw4xpr
+	Waga1xKrW5JrsY9w4DJa9F9asYy34jgrW3A3yxJw1kWanFvrs8KF1UXrWFgFy5uFW5ury3
+	Xwn5CrWUCw4qqF7anT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDU0xBIdaVrnRJUUUPvb4IE77IF4wAFF20E14v26rWj6s0DM7CY07I20VC2zVCF04k2
+	6cxKx2IYs7xG6rWj6s0DM7CIcVAFz4kK6r1j6r18M28IrcIa0xkI8VA2jI8067AKxVWUAV
+	Cq3wA2048vs2IY020Ec7CjxVAFwI0_Xr0E3s1l8cAvFVAK0II2c7xJM28CjxkF64kEwVA0
+	rcxSw2x7M28EF7xvwVC0I7IYx2IY67AKxVWDJVCq3wA2z4x0Y4vE2Ix0cI8IcVCY1x0267
+	AKxVW8Jr0_Cr1UM28EF7xvwVC2z280aVAFwI0_GcCE3s1l84ACjcxK6I8E87Iv6xkF7I0E
+	14v26rxl6s0DM2AIxVAIcxkEcVAq07x20xvEncxIr21l5I8CrVACY4xI64kE6c02F40Ex7
+	xfMcIj6xIIjxv20xvE14v26r1j6r18McIj6I8E87Iv67AKxVWUJVW8JwAm72CE4IkC6x0Y
+	z7v_Jr0_Gr1lF7xvr2IYc2Ij64vIr41lFIxGxcIEc7CjxVA2Y2ka0xkIwI1lc7CjxVAaw2
+	AFwI0_GFv_Wryl42xK82IYc2Ij64vIr41l4I8I3I0E4IkC6x0Yz7v_Jr0_Gr1lx2IqxVAq
+	x4xG67AKxVWUJVWUGwC20s026x8GjcxK67AKxVWUGVWUWwC2zVAF1VAY17CE14v26r4a6r
+	W5MIIYrxkI7VAKI48JMIIF0xvE2Ix0cI8IcVAFwI0_Gr0_Xr1lIxAIcVC0I7IYx2IY6xkF
+	7I0E14v26r4UJVWxJr1lIxAIcVCF04k26cxKx2IYs7xG6r1j6r1xMIIF0xvEx4A2jsIE14
+	v26r4j6F4UMIIF0xvEx4A2jsIEc7CjxVAFwI0_Gr1j6F4UJbIYCTnIWIevJa73UjIFyTuY
+	vjxUI-eODUUUU
 X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
 
 From: Yu Kuai <yukuai3@huawei.com>
 
-bio->issue_time_ns is initialized for every bio, however, it's only used
-by blk-iolatency. Add a new queue_flag and only set this flag when
-blk-iolatency is enabled, so that extra blk_time_get_ns() can be saved
-for disks that blk-iolatency is not enabled.
+Unify bio split code, prepare to fix ordering of split IO, the error path
+is modified a bit, however no functional changes are intended:
+
+- bio_submit_split_bioset() can fail the original bio directly
+  by split error, set R10BIO_Uptodate in this case to notify
+  raid_end_bio_io() that the original bio is returned already.
+- set R10BIO_Uptodate and set error value to -EIO is useless now,
+  for r10_bio without R10BIO_Uptodate, -EIO will be returned for
+  original bio.
+
+And discard is not handled, because discard is only split for
+unaligned head and tail, and this can be considered slow path, the
+reorder here does not matter much.
 
 Signed-off-by: Yu Kuai <yukuai3@huawei.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- block/blk-iolatency.c  | 5 +++++
- block/blk-mq-debugfs.c | 1 +
- block/blk-mq.c         | 8 +++++---
- include/linux/blkdev.h | 1 +
- 4 files changed, 12 insertions(+), 3 deletions(-)
+ drivers/md/raid10.c | 42 +++++++++++++-----------------------------
+ 1 file changed, 13 insertions(+), 29 deletions(-)
 
-diff --git a/block/blk-iolatency.c b/block/blk-iolatency.c
-index 554b191a6892..45bd18f68541 100644
---- a/block/blk-iolatency.c
-+++ b/block/blk-iolatency.c
-@@ -742,10 +742,15 @@ static void blkiolatency_enable_work_fn(struct work_struct *work)
- 	 */
- 	enabled = atomic_read(&blkiolat->enable_cnt);
- 	if (enabled != blkiolat->enabled) {
-+		struct request_queue *q = blkiolat->rqos.disk->queue;
- 		unsigned int memflags;
+diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
+index cac5c6df75bb..8996fa0dff60 100644
+--- a/drivers/md/raid10.c
++++ b/drivers/md/raid10.c
+@@ -1156,7 +1156,6 @@ static void raid10_read_request(struct mddev *mddev, struct bio *bio,
+ 	int slot = r10_bio->read_slot;
+ 	struct md_rdev *err_rdev = NULL;
+ 	gfp_t gfp = GFP_NOIO;
+-	int error;
  
- 		memflags = blk_mq_freeze_queue(blkiolat->rqos.disk->queue);
- 		blkiolat->enabled = enabled;
-+		if (enabled)
-+			blk_queue_flag_set(QUEUE_FLAG_BIO_ISSUE_TIME, q);
-+		else
-+			blk_queue_flag_clear(QUEUE_FLAG_BIO_ISSUE_TIME, q);
- 		blk_mq_unfreeze_queue(blkiolat->rqos.disk->queue, memflags);
+ 	if (slot >= 0 && r10_bio->devs[slot].rdev) {
+ 		/*
+@@ -1205,19 +1204,15 @@ static void raid10_read_request(struct mddev *mddev, struct bio *bio,
+ 				   rdev->bdev,
+ 				   (unsigned long long)r10_bio->sector);
+ 	if (max_sectors < bio_sectors(bio)) {
+-		struct bio *split = bio_split(bio, max_sectors,
+-					      gfp, &conf->bio_split);
+-		if (IS_ERR(split)) {
+-			error = PTR_ERR(split);
++		allow_barrier(conf);
++		bio = bio_submit_split_bioset(bio, max_sectors,
++					      &conf->bio_split);
++		wait_barrier(conf, false);
++		if (!bio) {
++			set_bit(R10BIO_Returned, &r10_bio->state);
+ 			goto err_handle;
+ 		}
+ 
+-		bio_chain(split, bio);
+-		trace_block_split(split, bio->bi_iter.bi_sector);
+-		allow_barrier(conf);
+-		submit_bio_noacct(bio);
+-		wait_barrier(conf, false);
+-		bio = split;
+ 		r10_bio->master_bio = bio;
+ 		r10_bio->sectors = max_sectors;
  	}
- }
-diff --git a/block/blk-mq-debugfs.c b/block/blk-mq-debugfs.c
-index 32c65efdda46..4896525b1c05 100644
---- a/block/blk-mq-debugfs.c
-+++ b/block/blk-mq-debugfs.c
-@@ -96,6 +96,7 @@ static const char *const blk_queue_flag_name[] = {
- 	QUEUE_FLAG_NAME(DISABLE_WBT_DEF),
- 	QUEUE_FLAG_NAME(NO_ELV_SWITCH),
- 	QUEUE_FLAG_NAME(QOS_ENABLED),
-+	QUEUE_FLAG_NAME(BIO_ISSUE_TIME),
- };
- #undef QUEUE_FLAG_NAME
- 
-diff --git a/block/blk-mq.c b/block/blk-mq.c
-index 2c0c8ead7080..31cc743ffad7 100644
---- a/block/blk-mq.c
-+++ b/block/blk-mq.c
-@@ -396,10 +396,12 @@ static inline void blk_mq_rq_time_init(struct request *rq, u64 alloc_time_ns)
- #endif
+@@ -1245,8 +1240,6 @@ static void raid10_read_request(struct mddev *mddev, struct bio *bio,
+ 	return;
+ err_handle:
+ 	atomic_dec(&rdev->nr_pending);
+-	bio->bi_status = errno_to_blk_status(error);
+-	set_bit(R10BIO_Uptodate, &r10_bio->state);
+ 	raid_end_bio_io(r10_bio);
  }
  
--static inline void blk_mq_bio_issue_init(struct bio *bio)
-+static inline void blk_mq_bio_issue_init(struct request_queue *q,
-+					 struct bio *bio)
- {
- #ifdef CONFIG_BLK_CGROUP
--	bio->issue_time_ns = blk_time_get_ns();
-+	if (test_bit(QUEUE_FLAG_BIO_ISSUE_TIME, &q->queue_flags))
-+		bio->issue_time_ns = blk_time_get_ns();
- #endif
+@@ -1355,7 +1348,6 @@ static void raid10_write_request(struct mddev *mddev, struct bio *bio,
+ 	int i, k;
+ 	sector_t sectors;
+ 	int max_sectors;
+-	int error;
+ 
+ 	if ((mddev_is_clustered(mddev) &&
+ 	     mddev->cluster_ops->area_resyncing(mddev, WRITE,
+@@ -1469,10 +1461,8 @@ static void raid10_write_request(struct mddev *mddev, struct bio *bio,
+ 				 * complexity of supporting that is not worth
+ 				 * the benefit.
+ 				 */
+-				if (bio->bi_opf & REQ_ATOMIC) {
+-					error = -EIO;
++				if (bio->bi_opf & REQ_ATOMIC)
+ 					goto err_handle;
+-				}
+ 
+ 				good_sectors = first_bad - dev_sector;
+ 				if (good_sectors < max_sectors)
+@@ -1493,19 +1483,15 @@ static void raid10_write_request(struct mddev *mddev, struct bio *bio,
+ 		r10_bio->sectors = max_sectors;
+ 
+ 	if (r10_bio->sectors < bio_sectors(bio)) {
+-		struct bio *split = bio_split(bio, r10_bio->sectors,
+-					      GFP_NOIO, &conf->bio_split);
+-		if (IS_ERR(split)) {
+-			error = PTR_ERR(split);
++		allow_barrier(conf);
++		bio = bio_submit_split_bioset(bio, r10_bio->sectors,
++					      &conf->bio_split);
++		wait_barrier(conf, false);
++		if (!bio) {
++			set_bit(R10BIO_Returned, &r10_bio->state);
+ 			goto err_handle;
+ 		}
+ 
+-		bio_chain(split, bio);
+-		trace_block_split(split, bio->bi_iter.bi_sector);
+-		allow_barrier(conf);
+-		submit_bio_noacct(bio);
+-		wait_barrier(conf, false);
+-		bio = split;
+ 		r10_bio->master_bio = bio;
+ 	}
+ 
+@@ -1537,8 +1523,6 @@ static void raid10_write_request(struct mddev *mddev, struct bio *bio,
+ 		}
+ 	}
+ 
+-	bio->bi_status = errno_to_blk_status(error);
+-	set_bit(R10BIO_Uptodate, &r10_bio->state);
+ 	raid_end_bio_io(r10_bio);
  }
- 
-@@ -3175,7 +3177,7 @@ void blk_mq_submit_bio(struct bio *bio)
- 	if (!bio_integrity_prep(bio))
- 		goto queue_exit;
- 
--	blk_mq_bio_issue_init(bio);
-+	blk_mq_bio_issue_init(q, bio);
- 	if (blk_mq_attempt_bio_merge(q, bio, nr_segs))
- 		goto queue_exit;
- 
-diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
-index c8cb08b2ed29..7c542b1851fa 100644
---- a/include/linux/blkdev.h
-+++ b/include/linux/blkdev.h
-@@ -657,6 +657,7 @@ enum {
- 	QUEUE_FLAG_DISABLE_WBT_DEF,	/* for sched to disable/enable wbt */
- 	QUEUE_FLAG_NO_ELV_SWITCH,	/* can't switch elevator any more */
- 	QUEUE_FLAG_QOS_ENABLED,		/* qos is enabled */
-+	QUEUE_FLAG_BIO_ISSUE_TIME,	/* record bio->issue_time_ns */
- 	QUEUE_FLAG_MAX
- };
  
 -- 
 2.39.2
