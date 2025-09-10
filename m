@@ -1,40 +1,40 @@
 Received: from desiato.infradead.org (desiato.infradead.org [90.155.92.199])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7A7A033472C;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7C69E334733;
 	Wed, 10 Sep 2025 16:00:43 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=90.155.92.199
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1757520045; cv=none; b=NUckWFP7Z+HM397h5iMMBBYxOjMVNFxLPbmZaMaXfk+094dog6WXlMe51jxxnQuAKdAKCr80TK0CB/wXHBIv7CDjXzr5pHUQwYvOyQYaWKNH6Us4FqDrIBNdR/lLmRunWwyO3/xq2q/NnQtdj0HC1TGBPNwc6pVOfWlRK0AjFrc=
+	t=1757520045; cv=none; b=lUXAjEjVu8kKjRb+yaBdOL+OruwYUcsR/B178PsfTWUTvePfSf8hpEOB66s+gCA8xy9j1dqmVhdnrQxvB1w+mCvZPiIMPRLhL24mI4d8M2mAW+MqCAPiQjsTpESW80BxhK/Zf3pSOKhzsgG6fxv9l2f1uNu6YeD5jnP2Fct7vQ0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1757520045; c=relaxed/simple;
-	bh=+Xi+VxJz3QwD8xpd/CFUanD6QsGXGT7DYIQZlvWMsJ4=;
+	bh=IUCkWQ6wGqZwAbUmhFozAUW9M10IVL1wf8pIxmTstes=;
 	h=Message-ID:Date:From:To:Cc:Subject:References:MIME-Version:
-	 Content-Type; b=NjbqH619Ku2ItSKogXvjbVjkM5Iv3k2iRm86ZgUMkRiT35kqVwCd3Ta4V9UTEBeNtrPNct2mWIupMyvzHF+4LskEu9IFaWjpDdqiyX09K9FhG0deUHCQsMeatlVhon4ZZkS5qaPWSGpmiM1G1oed3ur4PodTH7v0pNgBiTtS/L8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=J6pLRmOQ; arc=none smtp.client-ip=90.155.92.199
+	 Content-Type; b=qDu3yHbiJ1EodNoXVbMrNicmCUzclZYAo2Ft/2WQZhik7lQCJHPl78E36I6Dd4OzXP9ngiA0/HAZTeOnkgK39p8lT5WL6kfhaS1dJpMroZu59Q9nwTX8sYzOpvWB6AsisWEpM83EhVv5Zwpv9bUfPkKuG46W1pWTk6bIKA9GZJU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=gSwRbE9B; arc=none smtp.client-ip=90.155.92.199
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="J6pLRmOQ"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="gSwRbE9B"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=infradead.org; s=desiato.20200630; h=Content-Type:MIME-Version:References:
 	Subject:Cc:To:From:Date:Message-ID:Sender:Reply-To:Content-Transfer-Encoding:
 	Content-ID:Content-Description:In-Reply-To;
-	bh=BchCbAovlKyHntSnrXPDYCJXjw7uOf9GlTgQLA3hUug=; b=J6pLRmOQ97lWeC8GkFItwrD3Pu
-	eIJ+08yCsKITPBZUebYJxIiwmZwG6V3aH9XmeQX/ZYAyR7ePRtHvzzVNeqOBFGtxpWOoeOnAkTa3O
-	YImGNowOQ98Rf/MP8dYDsbRPtNy3NkaBcLmpcvFLCaLW0i8ZA2FF16fUixKVB9CWqQ+Gv9PHkglJ6
-	+QpZUNAhsXo0qR+QMm2iD9Tv8pM4SYsjiq2y6OCASsr/aRD3T3q5jnzBN+ZoJ/DdLZfrWuFHl1Upq
-	fokmeZd9UNqbse16KWXvGKsrtfLY4URqO7u46Jcz5eWNlEOxomG6UtAD21mQwsJDq1yyND0UuEZo6
-	pJbJu26Q==;
+	bh=KROeO6ylt+iaOjtKwEutyUCejaZHIqUyNIxZI7cvLNw=; b=gSwRbE9BunXYI8CC6h6+QMoY7u
+	umuBf1guLbuHCBol2ESKhgjJ2bwMdBSEHi28ojadQHCZOn/r4/9imVOD0jh/Q6bUPwaN2gqjn45ut
+	mm5CiyfkwYJiJcCS+V1jBEtZzqeupc4vZ1w5WT+FxfiuDuH9CBqVIBBO71ydbbyTPJp0+U0yh2jde
+	aJmFD6uXOJIrxTh7zPbPubFFCQ8ANYztNd99zm0u2vmcqgDWdI54QLFpuhZxT0X4avUTivNHb2A85
+	hUALMCP310FoddZWfN8F2SC2SbJ2z3S6gPUL4A+o+q9/jm6TPxHEwCzOnaD3gmjzK6Hm5Cd2tH0UV
+	xZdnpT+A==;
 Received: from 77-249-17-252.cable.dynamic.v4.ziggo.nl ([77.249.17.252] helo=noisy.programming.kicks-ass.net)
 	by desiato.infradead.org with esmtpsa (Exim 4.98.2 #2 (Red Hat Linux))
-	id 1uwNFG-00000005ufE-0S6d;
+	id 1uwNFG-00000005ufD-0UXk;
 	Wed, 10 Sep 2025 16:00:30 +0000
 Received: by noisy.programming.kicks-ass.net (Postfix, from userid 0)
-	id 7EA7A302D42; Wed, 10 Sep 2025 18:00:28 +0200 (CEST)
-Message-ID: <20250910155808.536785976@infradead.org>
+	id 86FD6302E5F; Wed, 10 Sep 2025 18:00:28 +0200 (CEST)
+Message-ID: <20250910155808.764084708@infradead.org>
 User-Agent: quilt/0.68
-Date: Wed, 10 Sep 2025 17:44:11 +0200
+Date: Wed, 10 Sep 2025 17:44:13 +0200
 From: Peter Zijlstra <peterz@infradead.org>
 To: tj@kernel.org
 Cc: linux-kernel@vger.kernel.org,
@@ -57,7 +57,7 @@ Cc: linux-kernel@vger.kernel.org,
  sched-ext@lists.linux.dev,
  liuwenfang@honor.com,
  tglx@linutronix.de
-Subject: [PATCH 02/14] sched: Re-arrange the {EN,DE}QUEUE flags
+Subject: [PATCH 04/14] sched: Cleanup sched_delayed handling for class switches
 References: <20250910154409.446470175@infradead.org>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
@@ -67,67 +67,102 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 
-Ensure the matched flags are in the low word while the unmatched flags
-go into the second word.
+Use the new sched_class::switching_from() method to dequeue delayed
+tasks before switching to another class.
 
 Signed-off-by: Peter Zijlstra (Intel) <peterz@infradead.org>
 ---
- kernel/sched/sched.h |   45 ++++++++++++++++++++++++---------------------
- 1 file changed, 24 insertions(+), 21 deletions(-)
+ kernel/sched/core.c     |   12 ++++++++----
+ kernel/sched/ext.c      |    6 ------
+ kernel/sched/fair.c     |    7 +++++++
+ kernel/sched/syscalls.c |    3 ---
+ 4 files changed, 15 insertions(+), 13 deletions(-)
 
---- a/kernel/sched/sched.h
-+++ b/kernel/sched/sched.h
-@@ -2337,27 +2337,30 @@ extern const u32		sched_prio_to_wmult[40
-  *
-  */
+--- a/kernel/sched/core.c
++++ b/kernel/sched/core.c
+@@ -7403,9 +7403,6 @@ void rt_mutex_setprio(struct task_struct
+ 		queue_flag &= ~(DEQUEUE_SAVE | DEQUEUE_MOVE);
+ 	}
  
--#define DEQUEUE_SLEEP		0x01 /* Matches ENQUEUE_WAKEUP */
--#define DEQUEUE_SAVE		0x02 /* Matches ENQUEUE_RESTORE */
--#define DEQUEUE_MOVE		0x04 /* Matches ENQUEUE_MOVE */
--#define DEQUEUE_NOCLOCK		0x08 /* Matches ENQUEUE_NOCLOCK */
--#define DEQUEUE_SPECIAL		0x10
--#define DEQUEUE_MIGRATING	0x100 /* Matches ENQUEUE_MIGRATING */
--#define DEQUEUE_DELAYED		0x200 /* Matches ENQUEUE_DELAYED */
--#define DEQUEUE_THROTTLE	0x800
+-	if (prev_class != next_class && p->se.sched_delayed)
+-		dequeue_task(rq, p, DEQUEUE_SLEEP | DEQUEUE_DELAYED | DEQUEUE_NOCLOCK);
 -
--#define ENQUEUE_WAKEUP		0x01
--#define ENQUEUE_RESTORE		0x02
--#define ENQUEUE_MOVE		0x04
--#define ENQUEUE_NOCLOCK		0x08
+ 	scoped_guard (sched_change, p, queue_flag) {
+ 		/*
+ 		 * Boosting condition are:
+@@ -10879,8 +10876,15 @@ struct sched_change_ctx *sched_change_be
+ 		if (WARN_ON_ONCE(flags & (DEQUEUE_SAVE | DEQUEUE_MOVE)))
+ 			flags &= ~(DEQUEUE_SAVE | DEQUEUE_MOVE);
+ 
+-		if (p->sched_class->switching_from)
++		if (p->sched_class->switching_from) {
++			/*
++			 * switching_from_fair() assumes CLASS implies NOCLOCK;
++			 * fixing this assumption would mean switching_from()
++			 * would need to be able to change flags.
++			 */
++			WARN_ON(!(flags & DEQUEUE_NOCLOCK));
+ 			p->sched_class->switching_from(rq, p);
++		}
+ 	}
+ 
+ 	*ctx = (struct sched_change_ctx){
+--- a/kernel/sched/ext.c
++++ b/kernel/sched/ext.c
+@@ -5011,9 +5011,6 @@ static void scx_disable_workfn(struct kt
+ 			queue_flags &= ~(DEQUEUE_SAVE | DEQUEUE_MOVE);
+ 		}
+ 
+-		if (old_class != new_class && p->se.sched_delayed)
+-			dequeue_task(task_rq(p), p, DEQUEUE_SLEEP | DEQUEUE_DELAYED | DEQUEUE_NOCLOCK);
 -
--#define ENQUEUE_HEAD		0x10
--#define ENQUEUE_REPLENISH	0x20
--#define ENQUEUE_MIGRATED	0x40
--#define ENQUEUE_INITIAL		0x80
--#define ENQUEUE_MIGRATING	0x100
--#define ENQUEUE_DELAYED		0x200
--#define ENQUEUE_RQ_SELECTED	0x400
-+#define DEQUEUE_SLEEP		0x0001 /* Matches ENQUEUE_WAKEUP */
-+#define DEQUEUE_SAVE		0x0002 /* Matches ENQUEUE_RESTORE */
-+#define DEQUEUE_MOVE		0x0004 /* Matches ENQUEUE_MOVE */
-+#define DEQUEUE_NOCLOCK		0x0008 /* Matches ENQUEUE_NOCLOCK */
-+
-+#define DEQUEUE_MIGRATING	0x0010 /* Matches ENQUEUE_MIGRATING */
-+#define DEQUEUE_DELAYED		0x0020 /* Matches ENQUEUE_DELAYED */
-+
-+#define DEQUEUE_SPECIAL		0x00010000
-+#define DEQUEUE_THROTTLE	0x00020000
-+
-+#define ENQUEUE_WAKEUP		0x0001
-+#define ENQUEUE_RESTORE		0x0002
-+#define ENQUEUE_MOVE		0x0004
-+#define ENQUEUE_NOCLOCK		0x0008
-+
-+#define ENQUEUE_MIGRATING	0x0010
-+#define ENQUEUE_DELAYED		0x0020
-+
-+#define ENQUEUE_HEAD		0x00010000
-+#define ENQUEUE_REPLENISH	0x00020000
-+#define ENQUEUE_MIGRATED	0x00040000
-+#define ENQUEUE_INITIAL		0x00080000
-+#define ENQUEUE_RQ_SELECTED	0x00100000
+ 		scoped_guard (sched_change, p, queue_flags) {
+ 			p->sched_class = new_class;
+ 		}
+@@ -5764,9 +5761,6 @@ static int scx_enable(struct sched_ext_o
+ 			queue_flags &= ~(DEQUEUE_SAVE | DEQUEUE_MOVE);
+ 		}
  
- #define RETRY_TASK		((void *)-1UL)
+-		if (old_class != new_class && p->se.sched_delayed)
+-			dequeue_task(task_rq(p), p, DEQUEUE_SLEEP | DEQUEUE_DELAYED | DEQUEUE_NOCLOCK);
+-
+ 		scoped_guard (sched_change, p, queue_flags) {
+ 			p->scx.slice = SCX_SLICE_DFL;
+ 			p->sched_class = new_class;
+--- a/kernel/sched/fair.c
++++ b/kernel/sched/fair.c
+@@ -13221,6 +13221,12 @@ static void attach_task_cfs_rq(struct ta
+ 	attach_entity_cfs_rq(se);
+ }
  
++static void switching_from_fair(struct rq *rq, struct task_struct *p)
++{
++	if (p->se.sched_delayed)
++		dequeue_task(rq, p, DEQUEUE_SLEEP | DEQUEUE_DELAYED | DEQUEUE_NOCLOCK);
++}
++
+ static void switched_from_fair(struct rq *rq, struct task_struct *p)
+ {
+ 	detach_task_cfs_rq(p);
+@@ -13622,6 +13628,7 @@ DEFINE_SCHED_CLASS(fair) = {
+ 
+ 	.reweight_task		= reweight_task_fair,
+ 	.prio_changed		= prio_changed_fair,
++	.switching_from		= switching_from_fair,
+ 	.switched_from		= switched_from_fair,
+ 	.switched_to		= switched_to_fair,
+ 
+--- a/kernel/sched/syscalls.c
++++ b/kernel/sched/syscalls.c
+@@ -689,9 +689,6 @@ int __sched_setscheduler(struct task_str
+ 		queue_flags &= ~(DEQUEUE_SAVE | DEQUEUE_MOVE);
+ 	}
+ 
+-	if (prev_class != next_class && p->se.sched_delayed)
+-		dequeue_task(rq, p, DEQUEUE_SLEEP | DEQUEUE_DELAYED | DEQUEUE_NOCLOCK);
+-
+ 	scoped_guard (sched_change, p, queue_flags) {
+ 
+ 		if (!(attr->sched_flags & SCHED_FLAG_KEEP_PARAMS)) {
 
 
