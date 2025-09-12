@@ -1,116 +1,200 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from desiato.infradead.org (desiato.infradead.org [90.155.92.199])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CBEE7305E18;
-	Fri, 12 Sep 2025 11:55:08 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3BDDD305E18;
+	Fri, 12 Sep 2025 11:55:12 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=90.155.92.199
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1757678108; cv=none; b=mDJt6NQqiIpac1IRwigKJsyWZbJ6R4x8UBIBCuj9zgaHGavtd73senQzDaHjOmfk2pMOB6bt3aSnYkdsgad+fhyGu4UcDVKclarmnGgaKZ2dUc76LNAdk/HLQ6XSJy/vIwT3ngymHiumXpr0a94i756kpCAT8N5tQjh3veJ0Ow8=
+	t=1757678116; cv=none; b=coWteZQsJzGYnH/2Eza7XWyp7+i9ZHUmsP6481qDTB9NiErxlGHk40c1bDfLO7186ily1h626zpbrbB9X35hMbYfweCa8iKrgI0s1cJhBgNBPjqTyq2HMPvBBUu8q7MbbYV4us/cJTlG21ji/QNQeRpDY+6SMfbxvIpHBZCtec8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1757678108; c=relaxed/simple;
-	bh=gCV2nPR4wp5zQpsyw5ngD+ZgtV06MuY9BtDbhAzkVgE=;
-	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=o+VYB100LbOATlUJDgekutpc1EFEKlmdLnQfkdaOsHgjnKme3l/V8RC+Dlykm3rPqXGFap7df4JFol0+Qr9CTEDbhRrAEM9QlGglV+aixyncEB9PbuL4849RPVuJcKJTOk7dTrMIDm7rZlgyFvuoPs0w6I0nDRfdPR+bOQCyDPI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=JD4mlnij; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1757678116; c=relaxed/simple;
+	bh=OiQ8SyM9G4y6zAiNJBkbk8M1wMKgM7E09VklZ/S/SWs=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=c502bzDq+KQKBsKOK/gAgIhi7sXMQbhKFn3rOMKoGpW6naT64CJIIHB1yknV9zlRY+AWkdYVNjS7skaohSFezen8M5VO/YCJxJ+gaa+vys45kmIsdqvJFqCoxKRKiOjXTTK52oYn6ZIfhlCA3dMf0pXPCxUkIokFA4X2JOScOdI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=DdI/5owh; arc=none smtp.client-ip=90.155.92.199
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="JD4mlnij"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C50DCC4CEF4;
-	Fri, 12 Sep 2025 11:55:02 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1757678108;
-	bh=gCV2nPR4wp5zQpsyw5ngD+ZgtV06MuY9BtDbhAzkVgE=;
-	h=From:Date:Subject:References:In-Reply-To:To:Cc:From;
-	b=JD4mlnijy85fybGP4zk8zjGK33858wpp0SpS7Kkqycfm2RaAu1Tf/rfbRTiyDQ2/s
-	 5v4zlcTAntHqvDESMl7TdgUWNYh3BQ/zxYXsF5OGGerMhYlYr3dNo+qW/2nI34iNjw
-	 BjNBo2gXhYmmDu0xD1eckTYat8LrzlopiCxhA0J+UzH+vMi2lZfVa9N/uByx0YT8Lc
-	 21HtRAuglPTYKSXVkgdSDfQvidaHGT2J5+5tfHekjZjca4iMA1eEH7eQqUNAO/tXO/
-	 MTu5FerX/H2QfjXJ7rbYkCL3bxVJ+3IYqMbmpktvtbHhrr9oDfEdjURfgs3EuLockt
-	 yRLi6EQrqaJiQ==
-From: Christian Brauner <brauner@kernel.org>
-Date: Fri, 12 Sep 2025 13:52:45 +0200
-Subject: [PATCH v2 22/33] pid: support ns lookup
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="DdI/5owh"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=infradead.org; s=desiato.20200630; h=In-Reply-To:Content-Type:MIME-Version:
+	References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+	Content-Transfer-Encoding:Content-ID:Content-Description;
+	bh=oDG8dtRhhrV2tNzEwtCOQFio9vNLrGfgxupBP89t1G0=; b=DdI/5owhkl0FndydRJYM35RfUn
+	jPclTmuaFOH51f56kgqhyCHfnx5e5l2EsJfiqzxZLCStS1i9a4DPsfl0qCflW0Y3aS35AurZFYjxc
+	KlG2K04iYLMbE/pQH9Tmk2NvjLj4qvCxbBJqAbPR06dctiQP+iPIugq39jh7jdC1HD3yD3npnRn7Q
+	k1ptanAQnk6zK5Hu7FJPbL0gOjL4In4aKaNCQ1ZNEQkYg0a1VN3Z6Zq4jJWc9YqtuCYMvpnOdnTec
+	p0LNxdgdUwnjG34M/424rwyROB+rvXV0lrJefcubIAOxb/9FNR4ZnHIk8vBzKRd6yJd1metn62opr
+	yHehfYvw==;
+Received: from 77-249-17-252.cable.dynamic.v4.ziggo.nl ([77.249.17.252] helo=noisy.programming.kicks-ass.net)
+	by desiato.infradead.org with esmtpsa (Exim 4.98.2 #2 (Red Hat Linux))
+	id 1ux2Mn-00000006M9J-1ikE;
+	Fri, 12 Sep 2025 11:55:01 +0000
+Received: by noisy.programming.kicks-ass.net (Postfix, from userid 1000)
+	id EA81A300579; Fri, 12 Sep 2025 13:54:59 +0200 (CEST)
+Date: Fri, 12 Sep 2025 13:54:59 +0200
+From: Peter Zijlstra <peterz@infradead.org>
+To: Tejun Heo <tj@kernel.org>
+Cc: linux-kernel@vger.kernel.org, mingo@redhat.com, juri.lelli@redhat.com,
+	vincent.guittot@linaro.org, dietmar.eggemann@arm.com,
+	rostedt@goodmis.org, bsegall@google.com, mgorman@suse.de,
+	vschneid@redhat.com, longman@redhat.com, hannes@cmpxchg.org,
+	mkoutny@suse.com, void@manifault.com, arighi@nvidia.com,
+	changwoo@igalia.com, cgroups@vger.kernel.org,
+	sched-ext@lists.linux.dev, liuwenfang@honor.com, tglx@linutronix.de
+Subject: Re: [PATCH 12/14] sched: Add shared runqueue locking to
+ __task_rq_lock()
+Message-ID: <20250912115459.GZ3289052@noisy.programming.kicks-ass.net>
+References: <20250910154409.446470175@infradead.org>
+ <20250910155809.684653538@infradead.org>
+ <aMNnLenCytO_KEKg@slm.duckdns.org>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-Message-Id: <20250912-work-namespace-v2-22-1a247645cef5@kernel.org>
-References: <20250912-work-namespace-v2-0-1a247645cef5@kernel.org>
-In-Reply-To: <20250912-work-namespace-v2-0-1a247645cef5@kernel.org>
-To: Jan Kara <jack@suse.cz>, Amir Goldstein <amir73il@gmail.com>, 
- linux-fsdevel@vger.kernel.org
-Cc: Josef Bacik <josef@toxicpanda.com>, Jeff Layton <jlayton@kernel.org>, 
- Mike Yuan <me@yhndnzj.com>, 
- =?utf-8?q?Zbigniew_J=C4=99drzejewski-Szmek?= <zbyszek@in.waw.pl>, 
- Lennart Poettering <mzxreary@0pointer.de>, 
- Daan De Meyer <daan.j.demeyer@gmail.com>, Aleksa Sarai <cyphar@cyphar.com>, 
- Alexander Viro <viro@zeniv.linux.org.uk>, Jens Axboe <axboe@kernel.dk>, 
- Tejun Heo <tj@kernel.org>, Johannes Weiner <hannes@cmpxchg.org>, 
- =?utf-8?q?Michal_Koutn=C3=BD?= <mkoutny@suse.com>, 
- Eric Dumazet <edumazet@google.com>, Jakub Kicinski <kuba@kernel.org>, 
- Paolo Abeni <pabeni@redhat.com>, Simon Horman <horms@kernel.org>, 
- Chuck Lever <chuck.lever@oracle.com>, linux-nfs@vger.kernel.org, 
- linux-kselftest@vger.kernel.org, linux-block@vger.kernel.org, 
- linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, 
- netdev@vger.kernel.org, Christian Brauner <brauner@kernel.org>
-X-Mailer: b4 0.14.3-dev-385fa
-X-Developer-Signature: v=1; a=openpgp-sha256; l=1223; i=brauner@kernel.org;
- h=from:subject:message-id; bh=gCV2nPR4wp5zQpsyw5ngD+ZgtV06MuY9BtDbhAzkVgE=;
- b=owGbwMvMwCU28Zj0gdSKO4sYT6slMWQc4Zyq9f/1avs6hh27p+Td0X29q/BnTvOsK6eeLVgYJ
- OjH9t/aqaOUhUGMi0FWTJHFod0kXG45T8Vmo0wNmDmsTCBDGLg4BWAiUywZ/ntVrbp6o3PSitBf
- DLpWD7lt7yrK/BHIji0XlzyyveD22k6G//Gb9b88aFny//MngfQ7k+278i903tbbX6W4uUHz3K3
- rq9kB
-X-Developer-Key: i=brauner@kernel.org; a=openpgp;
- fpr=4880B8C9BD0E5106FC070F4F7B3C391EFEA93624
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <aMNnLenCytO_KEKg@slm.duckdns.org>
 
-Support the generic ns lookup infrastructure to support file handles for
-namespaces.
+On Thu, Sep 11, 2025 at 02:19:57PM -1000, Tejun Heo wrote:
+> Hello,
+> 
+> On Wed, Sep 10, 2025 at 05:44:21PM +0200, Peter Zijlstra wrote:
+> > @@ -703,17 +703,24 @@ void double_rq_lock(struct rq *rq1, stru
+> >  struct rq *__task_rq_lock(struct task_struct *p, struct rq_flags *rf)
+> >  	__acquires(rq->lock)
+> >  {
+> > +	raw_spinlock_t *slock;
+> >  	struct rq *rq;
+> >  
+> >  	lockdep_assert_held(&p->pi_lock);
+> >  
+> >  	for (;;) {
+> >  		rq = task_rq(p);
+> > +		slock = p->srq_lock;
+> >  		raw_spin_rq_lock(rq);
+> > -		if (likely(rq == task_rq(p) && !task_on_rq_migrating(p))) {
+> > +		if (slock)
+> > +			raw_spin_lock(slock);
+> > +		if (likely(rq == task_rq(p) && !task_on_rq_migrating(p) &&
+> > +			   (!slock || p->srq_lock == slock))) {
+> >  			rq_pin_lock(rq, rf);
+> >  			return rq;
+> >  		}
 
-Signed-off-by: Christian Brauner <brauner@kernel.org>
----
- kernel/pid_namespace.c | 4 ++++
- 1 file changed, 4 insertions(+)
+Yeah, I think that needs to change a little. Perhaps something like:
 
-diff --git a/kernel/pid_namespace.c b/kernel/pid_namespace.c
-index 20ce4052d1c5..228ae20299f9 100644
---- a/kernel/pid_namespace.c
-+++ b/kernel/pid_namespace.c
-@@ -23,6 +23,7 @@
- #include <linux/sched/task.h>
- #include <linux/sched/signal.h>
- #include <linux/idr.h>
-+#include <linux/nstree.h>
- #include <uapi/linux/wait.h>
- #include "pid_sysctl.h"
- 
-@@ -122,6 +123,7 @@ static struct pid_namespace *create_pid_namespace(struct user_namespace *user_ns
- 	ns->memfd_noexec_scope = pidns_memfd_noexec_scope(parent_pid_ns);
- #endif
- 
-+	ns_tree_add(ns);
- 	return ns;
- 
- out_free_inum:
-@@ -147,6 +149,7 @@ static void delayed_free_pidns(struct rcu_head *p)
- 
- static void destroy_pid_namespace(struct pid_namespace *ns)
- {
-+	ns_tree_remove(ns);
- 	unregister_pidns_sysctls(ns);
- 
- 	ns_free_inum(&ns->ns);
-@@ -473,6 +476,7 @@ static __init int pid_namespaces_init(void)
- #endif
- 
- 	register_pid_ns_sysctl_table_vm();
-+	ns_tree_add(&init_pid_ns);
- 	return 0;
- }
- 
+	slock2 = p->srq_lock;
+	if (... && (!slock2 || slock2 == slock))
 
--- 
-2.47.3
+> With the !slock condition, the following scenario is possible:
+> 
+>   __task_rq_lock()
+>      slock = p->srq_lock; /* NULL */
+>                                                 dispatch_enqueue()
+>                                                   p->srq_lock = &dsq->lock;
+>                                                 enqueue finishes
+>      raw_spin_rq_lock(rq);
+>      rq is the same, $slock is NULL, return
+>   do something assuming p is locked down        p gets dispatched to another rq
+> 
+> I'm unclear on when p->srq_lock would be safe to set and clear, so the goal
+> is that whoever does [__]task_rq_lock() ends up waiting on the dsq lock that
+> the task is queued on, and if we can exclude other sched operations that
+> way, we don't have to hold source rq lock when moving the task to another rq
+> for execution, right?
+
+Indeed. If !p->srq_lock then task_rq(p)->lock must be sufficient.
+
+So for enqueue, which sets p->srq_lock, this must be done while holding
+task_rq(p)->lock.
+
+So the above example should be serialized on task_rq(p)->lock, since
+__task_rq_lock() holds it, enqueue cannot happen. Conversely, if enqueue
+holds task_rq(p)->lock, then __task_rq_lock() will have to wait for
+that, and then observe the newly set p->srq_lock and cycle to take that.
+
+> In the last patch, it's set on dispatch_enqueue() and cleared when the task
+> leaves the DSQ. Let's consider a simple scenario where a task gets enqueued,
+> gets put on a non-local DSQ and then dispatched to a local DSQ, Assuming
+> everything works out and we don't have to lock the source rq for migration,
+> we'd be depending on task_rq_lock() reliably hitting p->srq_lock to avoid
+> races, but I'm not sure how this would work. Let's say p is currently
+> associated with CPU1 on a non-local DSQ w/ p->srq_lock set to its source
+> DSQ.
+> 
+>   pick_task_ext() on CPU0               task property change on CPU1
+>     locks the DSQ
+>     picks p      
+>     task_unlink_from_dsq()              task_rq_lock();
+>       p->srq_lock = NULL;                 lock rq on CPU1
+>     p is moved to local DSQ               sees p->src_lock == NULL
+>                                           return
+>   p starts running
+>   anything can happen
+>                                         proceed with property change
+
+Hmm, the thinking was that if !p->srq_lock then task_rq(p)->lock should
+be sufficient.
+
+We must do set_task_cpu(0) before task_unlink_from_dsq() (and I got this
+order wrong in yesterday's email).
+
+  pick_task_ext() on CPU0		
+    lock DSQ
+    pick p
+    set_task_cpu(0)			task_rq_lock()
+    task_unlink_from_dsq()		  if !p->srq_lock, then task_rq(p) == 0
+      p->srq_lock = NULL;
+    p is moved to local DSQ
+
+Perhaps the p->srq_lock store should be store-release, so that the cpu
+store is before.
+
+Then if we observe p->srq_lock, we'll serialize against DSQ and all is
+well, if we observe !p->srq_lock then we must also observe task_rq(p) ==
+0 and then we'll serialize on rq->lock.
+
+
+Now let me see if there isn't an ABA issue here, consider:
+
+pre: task_cpu(p) != 2, p->srq_lock = NULL
+
+  CPU0				CPU1				CPU2
+
+  __task_rq_lock()		enqueue_task_scx() 		pick_task_scx()
+
+				rq = task_rq(p);
+				LOCK rq->lock
+  rq = task_rq(p)
+  LOCK rq->lock
+    .. waits
+				LOCK dsq->lock
+				enqueue on dsq
+				p->srq_lock = &dsq->lock	
+				UNLOCK dsq->lock
+								LOCK dsq->lock
+								pick p
+				UNLOCK rq->lock
+								set_task_cpu(2)
+								task_unlink_from_dsq()
+								  p->srq_lock = NULL;
+								UNLOCK dsq->lock
+    .. resumes
+ 
+At this point our CPU0's __task_rq_lock():
+
+  - if it observes p->srq_lock, it will cycle taking that, only to then
+    find out p->srq_lock is no longer set, but then it must also see
+    task_rq() has changed, so the next cycle will block on CPU2's
+    rq->lock.
+
+  - if it observes !p->srq_lock, then it cannot be the initial NULL,
+    since the initial task_rq(p)->lock ordering prohibits this. So it
+    must be the second NULL, which then also mandates we see the CPU
+    change and we'll cycle to take CPU2's rq->lock.
+
+That is, I _think_ we're okay :-)
 
