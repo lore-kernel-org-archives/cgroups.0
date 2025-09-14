@@ -1,186 +1,126 @@
-Received: from mxct.zte.com.cn (mxct.zte.com.cn [58.251.27.85])
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.12])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CAC53223DDA;
-	Sun, 14 Sep 2025 10:09:49 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=58.251.27.85
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F3ED81BD9D0;
+	Sun, 14 Sep 2025 13:03:33 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.12
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1757844592; cv=none; b=YzCJkHcM4KDPJEUN99X3gdFwG8dAyxQ1Rzj/WrgMtBiJ2SrL2dOjiY1CuyB0OtDtbil6bnekRAqDYiSZgVDcq7rvRp9hHaXj0aZan5RiCNZKc4w7Qjbcx9VK9K8bL6VzCjNPW0b1wzgOe77wMc2yeinWEOmYQX+T457uIqnb4Ds=
+	t=1757855015; cv=none; b=J/Nb+xgHGiqseznbf7IzSdIsD/45WtthrRKVushURnEw/ufKZy8mTu+ckFgvPyGjw15GUIjjo7rh8uEoQMXlt6oXMerhBhAJfcZZAr2Vf0OCpxXIkbmul8bDovyCjMBROwxzyhN9zD1KfrYxLI2Cj/r/CaHYRe0fMXm64RWB5tE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1757844592; c=relaxed/simple;
-	bh=xZxsr5cwG6lEoaCjEFS9C2L4teN6L7b0Nz0PG3F/Lfk=;
-	h=Date:Message-ID:In-Reply-To:References:Mime-Version:From:To:Cc:
-	 Subject:Content-Type; b=AYHNOe+dIggQBsQwPeyWCukplJe3iTxfSx8xTfXlBpx20wrT14e4z1cqv7iEaN2zChNXltj0O3lMSaJKrNpG+MnYfuwwumfMu8tzNDRtWvWeqxkNJYs6IdWK4OTdJbvUSTkF/EPIb3ytPRc794jJTIqkTVijUy4qyHgydFg7o98=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=zte.com.cn; spf=pass smtp.mailfrom=zte.com.cn; arc=none smtp.client-ip=58.251.27.85
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=zte.com.cn
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=zte.com.cn
-Received: from mxde.zte.com.cn (unknown [10.35.20.121])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange x25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mxct.zte.com.cn (FangMail) with ESMTPS id 4cPkK81Zy7z1FhC;
-	Sun, 14 Sep 2025 18:04:12 +0800 (CST)
-Received: from mxhk.zte.com.cn (unknown [192.168.250.138])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange x25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mxde.zte.com.cn (FangMail) with ESMTPS id 4cPkK22jGqzBQkJn;
-	Sun, 14 Sep 2025 18:04:06 +0800 (CST)
-Received: from mse-fl2.zte.com.cn (unknown [10.5.228.133])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange x25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mxhk.zte.com.cn (FangMail) with ESMTPS id 4cPkJr6x1Bz5PM38;
-	Sun, 14 Sep 2025 18:03:56 +0800 (CST)
-Received: from xaxapp05.zte.com.cn ([10.99.98.109])
-	by mse-fl2.zte.com.cn with SMTP id 58EA3mCY092681;
-	Sun, 14 Sep 2025 18:03:49 +0800 (+08)
-	(envelope-from xu.xin16@zte.com.cn)
-Received: from mapi (xaxapp02[null])
-	by mapi (Zmail) with MAPI id mid32;
-	Sun, 14 Sep 2025 18:03:51 +0800 (CST)
-Date: Sun, 14 Sep 2025 18:03:51 +0800 (CST)
-X-Zmail-TransId: 2afa68c69307545-58a60
-X-Mailer: Zmail v1.0
-Message-ID: <20250914180351288rcLuZnPAMUej48nuTc7KV@zte.com.cn>
-In-Reply-To: <20250914180031197jk6ngo5pQjpXkNtNsjzSo@zte.com.cn>
-References: 20250914180031197jk6ngo5pQjpXkNtNsjzSo@zte.com.cn
+	s=arc-20240116; t=1757855015; c=relaxed/simple;
+	bh=YvQSGv3+ITrtWtqX0tQjYwlbtPwK+65J7QAVpMnWBSs=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=SOZ1620KNAj+i9SMdMvFmL4UlO54lNYclUY2u623vCXZHyf2DTV100etFaaKDv4EAPZW52PasyUE1yA3Npc6/WCnnWoaEk9iKLgydHPZ93AY51yavFow/zKSqs4uF13kPwApVkxHC+poHZNWKJ+qJnWb5eIeagxcMFKW4LLEAOQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=gYFpfuWd; arc=none smtp.client-ip=192.198.163.12
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="gYFpfuWd"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1757855014; x=1789391014;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:in-reply-to;
+  bh=YvQSGv3+ITrtWtqX0tQjYwlbtPwK+65J7QAVpMnWBSs=;
+  b=gYFpfuWdHSpDcl592Q5yDacAkuMkjeZG82MfvTKqaWmh8zaE82aQ3X7q
+   l3QLAa0y8xl8qgBs9fMm7c7GRcV7iu+rb1W+3i2H5VJu5f5iHOrxx+qmz
+   T1iDvMZxDEMSB0L9FdWHNB70id/gjP9PVElZ7v0/lJj332qj8S9WcMihi
+   /oNSD+WlVm2J/46qrbkpwgWcMM3rhipLAnypqS2yyr+BQ4jKMPBE4btlw
+   vrJaE0md0a9S1qI1s0XAncHNd4/rDPcqaYLPx2RFVkiaMY0tfXPyd49Jb
+   32T3SSKMrjImud/5+bVJCLqD6KwS6yhjgLSGtXxa+SLA2MEGnZA2gsjRN
+   A==;
+X-CSE-ConnectionGUID: r0cvCS0LRWipBpGKESpF3A==
+X-CSE-MsgGUID: CmA34tHHRKSjS3BqEk6UKw==
+X-IronPort-AV: E=McAfee;i="6800,10657,11553"; a="63950943"
+X-IronPort-AV: E=Sophos;i="6.18,264,1751266800"; 
+   d="scan'208";a="63950943"
+Received: from orviesa009.jf.intel.com ([10.64.159.149])
+  by fmvoesa106.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 14 Sep 2025 06:03:33 -0700
+X-CSE-ConnectionGUID: XsGtmFeASWi9vAkPUg6x/Q==
+X-CSE-MsgGUID: /KpYDJz7Tqulsy/cge9/1w==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.18,264,1751266800"; 
+   d="scan'208";a="173941581"
+Received: from lkp-server02.sh.intel.com (HELO eb5fdfb2a9b7) ([10.239.97.151])
+  by orviesa009.jf.intel.com with ESMTP; 14 Sep 2025 06:03:30 -0700
+Received: from kbuild by eb5fdfb2a9b7 with local (Exim 4.96)
+	(envelope-from <lkp@intel.com>)
+	id 1uxmO7-0002PM-1p;
+	Sun, 14 Sep 2025 13:03:27 +0000
+Date: Sun, 14 Sep 2025 21:02:38 +0800
+From: kernel test robot <lkp@intel.com>
+To: xu.xin16@zte.com.cn, akpm@linux-foundation.org
+Cc: llvm@lists.linux.dev, oe-kbuild-all@lists.linux.dev,
+	shakeel.butt@linux.dev, hannes@cmpxchg.org, mhocko@kernel.org,
+	roman.gushchin@linux.dev, david@redhat.com,
+	chengming.zhou@linux.dev, muchun.song@linux.dev,
+	linux-kernel@vger.kernel.org, linux-mm@kvack.org,
+	cgroups@vger.kernel.org, xu.xin16@zte.com.cn
+Subject: Re: [PATCH v2 4/5] memcg: add per-memcg ksm_profit
+Message-ID: <202509142046.QatEaTQV-lkp@intel.com>
+References: <20250914180750448qMRz3iTon78DoExPyZusD@zte.com.cn>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0
-From: <xu.xin16@zte.com.cn>
-To: <akpm@linux-foundation.org>
-Cc: <shakeel.butt@linux.dev>, <hannes@cmpxchg.org>, <mhocko@kernel.org>,
-        <roman.gushchin@linux.dev>, <david@redhat.com>,
-        <chengming.zhou@linux.dev>, <muchun.song@linux.dev>,
-        <linux-kernel@vger.kernel.org>, <linux-mm@kvack.org>,
-        <cgroups@vger.kernel.org>, <xu.xin16@zte.com.cn>
-Subject: =?UTF-8?B?W1BBVENIIHYyIDEvNV0gbWVtY2c6IGFkZCBwZXItbWVtY2cga3NtX3JtYXBfaXRlbXMgc3RhdA==?=
-Content-Type: text/plain;
-	charset="UTF-8"
-X-MAIL:mse-fl2.zte.com.cn 58EA3mCY092681
-X-TLS: YES
-X-SPF-DOMAIN: zte.com.cn
-X-ENVELOPE-SENDER: xu.xin16@zte.com.cn
-X-SPF: None
-X-SOURCE-IP: 10.35.20.121 unknown Sun, 14 Sep 2025 18:04:12 +0800
-X-Fangmail-Anti-Spam-Filtered: true
-X-Fangmail-MID-QID: 68C6931A.001/4cPkK81Zy7z1FhC
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20250914180750448qMRz3iTon78DoExPyZusD@zte.com.cn>
 
-From: xu xin <xu.xin16@zte.com.cn>
+Hi,
 
-With the enablement of container-level KSM (e.g., via prctl), there is
-a growing demand for container-level observability of KSM behavior.
+kernel test robot noticed the following build errors:
 
-The value of "ksm_rmap_items" indicates the total allocated ksm
-rmap_items of this memcg, which could be used to determine how
-unbeneficial the ksm-policy (like madvise), they are using brings,
-since the bigger the ratio of ksm_rmap_items over ksm_merging_pages,
-the more unbeneficial the ksm bring.
+[auto build test ERROR on akpm-mm/mm-everything]
+[also build test ERROR on tj-cgroup/for-next linus/master v6.17-rc5 next-20250912]
+[If your patch is applied to the wrong git tree, kindly drop us a note.
+And when submitting patch, we suggest to use '--base' as documented in
+https://git-scm.com/docs/git-format-patch#_base_tree_information]
 
-Add the counter in the existing memory.stat without adding a new interface.
-We traverse all processes of a memcg and summing the processes'
-ksm_rmap_items counters instead of adding enum item in memcg_stat_item
-or node_stat_item and updating the corresponding enum counter when
-ksmd manipulate pages.
+url:    https://github.com/intel-lab-lkp/linux/commits/xu-xin16-zte-com-cn/memcg-add-per-memcg-ksm_rmap_items-stat/20250914-181132
+base:   https://git.kernel.org/pub/scm/linux/kernel/git/akpm/mm.git mm-everything
+patch link:    https://lore.kernel.org/r/20250914180750448qMRz3iTon78DoExPyZusD%40zte.com.cn
+patch subject: [PATCH v2 4/5] memcg: add per-memcg ksm_profit
+config: um-randconfig-001-20250914 (https://download.01.org/0day-ci/archive/20250914/202509142046.QatEaTQV-lkp@intel.com/config)
+compiler: clang version 22.0.0git (https://github.com/llvm/llvm-project 21857ae337e0892a5522b6e7337899caa61de2a6)
+reproduce (this is a W=1 build): (https://download.01.org/0day-ci/archive/20250914/202509142046.QatEaTQV-lkp@intel.com/reproduce)
 
-Finally, we can look up ksm_rmap_items of per-memcg simply by:
+If you fix the issue in a separate patch/commit (i.e. not just a new version of
+the same patch/commit), kindly add following tags
+| Reported-by: kernel test robot <lkp@intel.com>
+| Closes: https://lore.kernel.org/oe-kbuild-all/202509142046.QatEaTQV-lkp@intel.com/
 
-    cat /sys/fs/cgroup/memory.stat | grep ksm_rmap_items
+All errors (new ones prefixed by >>):
 
-Signed-off-by: xu xin <xu.xin16@zte.com.cn>
----
- include/linux/ksm.h |  1 +
- mm/ksm.c            | 38 ++++++++++++++++++++++++++++++++++++++
- mm/memcontrol.c     |  5 +++++
- 3 files changed, 44 insertions(+)
+   /usr/bin/ld: warning: .tmp_vmlinux1 has a LOAD segment with RWX permissions
+   /usr/bin/ld: mm/ksm.o: in function `evaluate_memcg_ksm_stat':
+>> mm/ksm.c:3335:(.ltext+0x163d): undefined reference to `ksm_process_profit'
+   clang: error: linker command failed with exit code 1 (use -v to see invocation)
 
-diff --git a/include/linux/ksm.h b/include/linux/ksm.h
-index 22e67ca7cba3..a41ed503f152 100644
---- a/include/linux/ksm.h
-+++ b/include/linux/ksm.h
-@@ -94,6 +94,7 @@ void collect_procs_ksm(const struct folio *folio, const struct page *page,
- 		struct list_head *to_kill, int force_early);
- long ksm_process_profit(struct mm_struct *);
- bool ksm_process_mergeable(struct mm_struct *mm);
-+void memcg_stat_ksm_show(struct mem_cgroup *memcg, struct seq_buf *s);
 
- #else  /* !CONFIG_KSM */
+vim +3335 mm/ksm.c
 
-diff --git a/mm/ksm.c b/mm/ksm.c
-index 2ef29802a49b..b533f0edaf96 100644
---- a/mm/ksm.c
-+++ b/mm/ksm.c
-@@ -3308,6 +3308,44 @@ long ksm_process_profit(struct mm_struct *mm)
- }
- #endif /* CONFIG_PROC_FS */
+  3324	
+  3325	static int evaluate_memcg_ksm_stat(struct task_struct *task, void *arg)
+  3326	{
+  3327		struct mm_struct *mm;
+  3328		struct memcg_ksm_stat *ksm_stat = arg;
+  3329	
+  3330		mm = get_task_mm(task);
+  3331		if (mm) {
+  3332			ksm_stat->ksm_rmap_items += mm->ksm_rmap_items;
+  3333			ksm_stat->ksm_zero_pages += mm_ksm_zero_pages(mm);
+  3334			ksm_stat->ksm_merging_pages += mm->ksm_merging_pages;
+> 3335			ksm_stat->ksm_profit += ksm_process_profit(mm);
+  3336			mmput(mm);
+  3337		}
+  3338	
+  3339		return 0;
+  3340	}
+  3341	
 
-+#ifdef CONFIG_MEMCG
-+struct memcg_ksm_stat {
-+	unsigned long ksm_rmap_items;
-+};
-+
-+static int evaluate_memcg_ksm_stat(struct task_struct *task, void *arg)
-+{
-+	struct mm_struct *mm;
-+	struct memcg_ksm_stat *ksm_stat = arg;
-+
-+	mm = get_task_mm(task);
-+	if (mm) {
-+		ksm_stat->ksm_rmap_items += mm->ksm_rmap_items;
-+		mmput(mm);
-+	}
-+
-+	return 0;
-+}
-+
-+/* Show the ksm statistic count at memory.stat under cgroup mountpoint */
-+void memcg_stat_ksm_show(struct mem_cgroup *memcg, struct seq_buf *s)
-+{
-+	struct memcg_ksm_stat ksm_stat;
-+
-+	if (mem_cgroup_is_root(memcg)) {
-+		/* Just use the global counters when root memcg */
-+		ksm_stat.ksm_rmap_items = ksm_rmap_items;
-+	} else {
-+		/* Initialization */
-+		ksm_stat.ksm_rmap_items = 0;
-+		/* Summing all processes'ksm statistic items */
-+		mem_cgroup_scan_tasks(memcg, evaluate_memcg_ksm_stat, &ksm_stat);
-+	}
-+	/* Print memcg ksm statistic items */
-+	seq_buf_printf(s, "ksm_rmap_items %lu\n", ksm_stat.ksm_rmap_items);
-+}
-+#endif
-+
- #ifdef CONFIG_SYSFS
- /*
-  * This all compiles without CONFIG_SYSFS, but is a waste of space.
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index 257d2c76b730..9595b132c6c3 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -63,6 +63,7 @@
- #include <linux/seq_buf.h>
- #include <linux/sched/isolation.h>
- #include <linux/kmemleak.h>
-+#include <linux/ksm.h>
- #include "internal.h"
- #include <net/sock.h>
- #include <net/ip.h>
-@@ -1492,6 +1493,10 @@ static void memcg_stat_format(struct mem_cgroup *memcg, struct seq_buf *s)
- 		}
- 	}
-
-+#ifdef CONFIG_KSM
-+	memcg_stat_ksm_show(memcg, s);
-+#endif
-+
- 	/* Accumulated memory events */
- 	seq_buf_printf(s, "pgscan %lu\n",
- 		       memcg_events(memcg, PGSCAN_KSWAPD) +
 -- 
-2.25.1
+0-DAY CI Kernel Test Service
+https://github.com/intel/lkp-tests/wiki
