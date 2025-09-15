@@ -1,224 +1,133 @@
-Received: from mout.gmx.net (mout.gmx.net [212.227.15.18])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pl1-f169.google.com (mail-pl1-f169.google.com [209.85.214.169])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9E9C030ACEB
-	for <cgroups@vger.kernel.org>; Mon, 15 Sep 2025 12:37:25 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=212.227.15.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 628D5305945
+	for <cgroups@vger.kernel.org>; Mon, 15 Sep 2025 12:40:37 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.169
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1757939847; cv=none; b=PBUDnxKtVDW+0D+XGCOEDorhsSgyn2cNXsBM19DL902ziAwZWjG0+Ehzcd3Vzt5YSmLIXbrApe3MgmXmV5jlvwkcd4zaMJ6+lWmbtS/m+pZ49+7Qqb+dmzpPwTP4+QAOA9g+61+Vu+Ru1ZzenVtxdztY3WC+24oE1kjuLcZZ+XU=
+	t=1757940038; cv=none; b=MyfVF1WAqmNpGREtrG8Baeg7ZdJ/iWes5cC3FsYbaPkfydHQQyiL8WiHNKnPC5wrULvqQrg/uz6WwOkgEYId4DSmZ2pqRMdtkzwvlhys8CVDpCTKgVHFNcNWo3fN6LnvOmQEeCr7pC1dedVxXu2M+667Y+ysM9mDKL5t67F28ow=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1757939847; c=relaxed/simple;
-	bh=pONa5grEbBaJ8DHbOdslTdJijsBmkjYL4h5XrJ48be8=;
-	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=CaXIEcbSdMJqSyU6wa8JC1UjDHtwtGfEH0dCP4iHBgvGJmrREsprHzePuVHzA9IaGX7LZcui67XdfUXocFRkplv5pOqr0+6p9Nu8dH22GVaKjqlB5R7dkAg7aSKE7vaFeEU77NamBjLLxDrPdvooePNcI0iyhDUxw3oz9fsdU2o=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=gmx.de; spf=pass smtp.mailfrom=gmx.de; dkim=pass (2048-bit key) header.d=gmx.de header.i=natalie.vock@gmx.de header.b=eid3vW5N; arc=none smtp.client-ip=212.227.15.18
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=gmx.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmx.de
+	s=arc-20240116; t=1757940038; c=relaxed/simple;
+	bh=dNJnJsH0bwlUv9iv5mm0gr5b4wshCly50clBeI+rCXY=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=hpZvURD1e7+Bh+Ibk6IImb+B8ViCyKOMLetJAbIRuLPzvxey/TYzIbJ7b182fW7QALHFx0MdY9dYsa5z8wrtwAedHeU26y4YQZmCDSuXtepJUzBzpJWd8IMGWeEvdxuKtbp/7Emh5kJ9IAItwUnTNBXkYfXwBDMESe1l06uGxtE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=I2sISqCN; arc=none smtp.client-ip=209.85.214.169
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmx.de header.i=natalie.vock@gmx.de header.b="eid3vW5N"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gmx.de;
-	s=s31663417; t=1757939822; x=1758544622; i=natalie.vock@gmx.de;
-	bh=jUP3qCgF//ScbF5bFjG0nFq6Kt8z8eeKDh3pZNjxC5o=;
-	h=X-UI-Sender-Class:From:Date:Subject:MIME-Version:Content-Type:
-	 Content-Transfer-Encoding:Message-Id:References:In-Reply-To:To:Cc:
-	 cc:content-transfer-encoding:content-type:date:from:message-id:
-	 mime-version:reply-to:subject:to;
-	b=eid3vW5Ni4xTHQ67UiOfeubgNZzRb2AMnDhdG1RkhxtFCGGC7nLOO2BYsr5FV+jj
-	 8o+VGY/em4nskgWRy0nhFXkQ9lA55nOORHL6k4kZw8uPVxltR/TdwlPhmvXaJ1f+F
-	 Kp55Lwu7wbEA+5RflyHY9UGcAUfhEFjhwcc++r2FROrCUzSCK2V8cNrCB42yam50Q
-	 fNZkBXsV6VmnstxhdoiCyzSvw6raPl06u8fmYyEHb4DGPCrHgFYicOCgwYiKRLS+P
-	 EiDughjDftvIdRrMamXRuF4v4QtQiZ1sbda5o1LLUJHUKZ9kiltwq+wsiaRFcetvH
-	 u/aPz1PYUNDY/yw73g==
-X-UI-Sender-Class: 724b4f7f-cbec-4199-ad4e-598c01a50d3a
-Received: from [192.168.0.3] ([109.91.201.165]) by mail.gmx.net (mrgmx005
- [212.227.17.190]) with ESMTPSA (Nemesis) id 1MfYPi-1uRHfy0yyW-00qCU4; Mon, 15
- Sep 2025 14:37:02 +0200
-From: Natalie Vock <natalie.vock@gmx.de>
-Date: Mon, 15 Sep 2025 14:36:29 +0200
-Subject: [PATCH 2/4] cgroup/dmem: Add dmem_cgroup_common_ancestor helper
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="I2sISqCN"
+Received: by mail-pl1-f169.google.com with SMTP id d9443c01a7336-25d44908648so36535815ad.0
+        for <cgroups@vger.kernel.org>; Mon, 15 Sep 2025 05:40:37 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1757940036; x=1758544836; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=dNJnJsH0bwlUv9iv5mm0gr5b4wshCly50clBeI+rCXY=;
+        b=I2sISqCN0QdjPoe/B/DieEqe0D0/p/1imHlfUY3RxRhmq0g9CNuPr4BUWSUUI//aoj
+         mrFnXxolSZ3AKVPZxC8JvIocAep6zTzEA4Pj6FdLq4y6FQl4e6uJkIdKU/g6N26pQ4p+
+         v747gQot8tviWtnowB+/EfutA6Mp/9cOFvnWGO1POOjoZFnjeXqbd+r65aT0klJG3Mn2
+         JSsmHFqtbZT0Y3kKh/F9OASFUi7cZUrQFeDHpHCxol32NxwJZK1xOhG0KADaZD3NxkW5
+         PqWEE8mAf/suuN+l+opg7qBnuLiyRx6xsIhCQ7/KPWr/OgKGEJbX1ZwY708qKY4eAB1O
+         NfGQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1757940036; x=1758544836;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=dNJnJsH0bwlUv9iv5mm0gr5b4wshCly50clBeI+rCXY=;
+        b=rKScQQ6I3Xwzhd+b3uc2Fj9VoJEp3rB0A2+CpWFpwdq6zuGQZUl2YlJeaLxNtvuOYh
+         xlcatfcYxYX1ie+d2iZSDPGt0pI+RkidzT4KYFiHQK0NFXsT0noTD4wwwZKNP5PKr1aD
+         Lny2UNVzBabTPIYoX7Sh1yLkQ8iQvnhGiu+AJbwcC6hWLvvqWepiZvARBC1Y2fI+9f24
+         c3g+3JSJznNYTzv+l7oUIbFORds6GaHLstIKsM7NFdZGFyg8D4bpckTYKYNPPhq6R84b
+         k7i2fACUD/Q2d7/FFoUtpNwvrJY9x1bbrrd4/8weKKfMTuZUR5/V6dQBngDgercAnbkb
+         t3Ag==
+X-Forwarded-Encrypted: i=1; AJvYcCWuoVJ7GDNqJK1GLFcDKsPelo80wa4JQZ+bNzHdKID2p2GNPlkkMdu9ZHXPr/MK4QosjW5dqx4q@vger.kernel.org
+X-Gm-Message-State: AOJu0YyRAaqeN+zDLGqfMNWgDUOBHonJoOMxtWJONKJtKRcUCJlViAEA
+	W5NBFa2xtIe+7mSQMP//JAC0Asckms9FcQwkqhOuanaU8zObp3DtHDIz
+X-Gm-Gg: ASbGnctjA/IIHnKBDOHfS7Uzr+pfKKKVvt39dEkme0/tHo0LfDQJLTE0NLNAGnuKMwQ
+	ap6wOvAnOqtYyqr8+Egq1ClaxxufDnYN4rhw6t3OtlN5gomHLl7tC95keqEJdbIQfH/nRBGAkJA
+	uT+t0CiiC1HNOdivtYaasfDHKPNmEjntLbqSCJDEtEsNkFiXFRBXxaa6GiZgp+WWx9k8NTHFFqr
+	n77Qy3yibPVUlCS1ApCBTCvnSolfzi0pNa9CPMRRsCjDgLj1aBt/oq80Twl8JMcyheOaC6PLzPB
+	/XDZosZkb3Aej30iVyVQFcjek9Utd/2Pa55YIQWk6SWvgS+tzPAXmLxeSXCor4+bn3rAj927xeu
+	LNmBf6xvXXJPNyWqrPjFJOYzY6NqRCtmswXaY
+X-Google-Smtp-Source: AGHT+IHhTD9B3Sdd7GngwxsOkjj4gaAYEGinNPhIKE81JuyUWnx5sHsOsSR6QPKASvI6Pv3nndfZjQ==
+X-Received: by 2002:a17:902:ef46:b0:246:bce2:e837 with SMTP id d9443c01a7336-25d271485a2mr163639975ad.49.1757940036320;
+        Mon, 15 Sep 2025 05:40:36 -0700 (PDT)
+Received: from archie.me ([103.124.138.155])
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2635c79cd21sm55033945ad.49.2025.09.15.05.40.34
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 15 Sep 2025 05:40:35 -0700 (PDT)
+Received: by archie.me (Postfix, from userid 1000)
+	id CB28B420A6BD; Mon, 15 Sep 2025 19:40:29 +0700 (WIB)
+Date: Mon, 15 Sep 2025 19:40:29 +0700
+From: Bagas Sanjaya <bagasdotme@gmail.com>
+To: Michal =?utf-8?Q?Koutn=C3=BD?= <mkoutny@suse.com>
+Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Linux Documentation <linux-doc@vger.kernel.org>,
+	Linux cgroups <cgroups@vger.kernel.org>,
+	Jonathan Corbet <corbet@lwn.net>, Tejun Heo <tj@kernel.org>,
+	Johannes Weiner <hannes@cmpxchg.org>,
+	Andrea Righi <arighi@nvidia.com>,
+	Johannes Bechberger <me@mostlynerdless.de>,
+	Changwoo Min <changwoo@igalia.com>,
+	Shashank Balaji <shashank.mahadasyam@sony.com>,
+	Ingo Molnar <mingo@kernel.org>, Jake Rice <jake@jakerice.dev>,
+	Cengiz Can <cengiz@kernel.wtf>,
+	Mauro Carvalho Chehab <mchehab@kernel.org>
+Subject: Re: [PATCH v2 2/4] Documentation: cgroup-v2: Add section numbers
+Message-ID: <aMgJPWETGVt_AE9i@archie.me>
+References: <20250915081942.25077-1-bagasdotme@gmail.com>
+ <20250915081942.25077-3-bagasdotme@gmail.com>
+ <duppgeomaflt6fbymdk5443glmw7d3bgli2yu7gx6awb7q2dhn@syjq5mmia6pb>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: multipart/signed; micalg=pgp-sha512;
+	protocol="application/pgp-signature"; boundary="aPEdF1//wg19KKDS"
+Content-Disposition: inline
+In-Reply-To: <duppgeomaflt6fbymdk5443glmw7d3bgli2yu7gx6awb7q2dhn@syjq5mmia6pb>
+
+
+--aPEdF1//wg19KKDS
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
 Content-Transfer-Encoding: quoted-printable
-Message-Id: <20250915-dmemcg-aggressive-protect-v1-2-2f3353bfcdac@gmx.de>
-References: <20250915-dmemcg-aggressive-protect-v1-0-2f3353bfcdac@gmx.de>
-In-Reply-To: <20250915-dmemcg-aggressive-protect-v1-0-2f3353bfcdac@gmx.de>
-To: Maarten Lankhorst <dev@lankhorst.se>, 
- Maxime Ripard <mripard@kernel.org>, Tejun Heo <tj@kernel.org>, 
- Johannes Weiner <hannes@cmpxchg.org>, 
- =?utf-8?q?Michal_Koutn=C3=BD?= <mkoutny@suse.com>, 
- Christian Koenig <christian.koenig@amd.com>, Huang Rui <ray.huang@amd.com>, 
- Matthew Auld <matthew.auld@intel.com>, 
- Matthew Brost <matthew.brost@intel.com>, 
- Maarten Lankhorst <maarten.lankhorst@linux.intel.com>, 
- Thomas Zimmermann <tzimmermann@suse.de>, David Airlie <airlied@gmail.com>, 
- Simona Vetter <simona@ffwll.ch>
-Cc: cgroups@vger.kernel.org, dri-devel@lists.freedesktop.org
-X-Mailer: b4 0.14.2
-X-Provags-ID: V03:K1:Ips8OCnYVuvOjDqY9oSsrd7w0MeWkQEnljtBS1IMHFPSvCtzhQC
- txjlyr+W/au9D5tNSRIQOpSjbStLb7W8Lznp1f0qiITrMfK07PsPOdCsKt482wMtXDzUWHo
- t46gDNrIaS28PaftGA2+4PJgtH9hN4BFPkRZoqLOGuGwwsYxMWBC4ijNhz2aLRBZQhyo11R
- 64iVYdMl6NTToDF3/nC+A==
-X-Spam-Flag: NO
-UI-OutboundReport: notjunk:1;M01:P0:zIcGdHej02U=;MSuDlUKX2bNoEizTqu3tP+CdIEW
- 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
- Ehk2QR2ehy
 
-This helps to find a common subtree of two resources, which is important
-when determining whether it's helpful to evict one resource in favor of
-another.
+On Mon, Sep 15, 2025 at 02:20:59PM +0200, Michal Koutn=C3=BD wrote:
+> On Mon, Sep 15, 2025 at 03:19:25PM +0700, Bagas Sanjaya <bagasdotme@gmail=
+=2Ecom> wrote:
+> > Add section numbers, following the numbering scheme in the manual
+> > toctree. Note that sectnum:: directive cannot be used as it also
+> > numbers the docs title.
+>=20
+> Erm, so in addition to keeping manual ToC in sync, we'd also need to
+> maintain the section numbers manually?
 
-Signed-off-by: Natalie Vock <natalie.vock@gmx.de>
-=2D--
- include/linux/cgroup_dmem.h |  9 +++++++++
- kernel/cgroup/dmem.c        | 25 +++++++++++++++++++++++++
- 2 files changed, 34 insertions(+)
+Right.
 
-diff --git a/include/linux/cgroup_dmem.h b/include/linux/cgroup_dmem.h
-index 1a88cd0c9eb00409ddd07d1f06eb63d2e55e8805..444b84f4c253aded9e4e59d051=
-e3ac34a851b9d7 100644
-=2D-- a/include/linux/cgroup_dmem.h
-+++ b/include/linux/cgroup_dmem.h
-@@ -28,6 +28,8 @@ bool dmem_cgroup_below_min(struct dmem_cgroup_pool_state=
- *root,
- 			   struct dmem_cgroup_pool_state *test);
- bool dmem_cgroup_below_low(struct dmem_cgroup_pool_state *root,
- 			   struct dmem_cgroup_pool_state *test);
-+struct dmem_cgroup_pool_state *dmem_cgroup_common_ancestor(struct dmem_cg=
-roup_pool_state *a,
-+							   struct dmem_cgroup_pool_state *b);
-=20
- void dmem_cgroup_pool_state_put(struct dmem_cgroup_pool_state *pool);
- #else
-@@ -75,6 +77,13 @@ static inline bool dmem_cgroup_below_low(struct dmem_cg=
-roup_pool_state *root,
- 	return false;
- }
-=20
-+static inline
-+struct dmem_cgroup_pool_state *dmem_cgroup_common_ancestor(struct dmem_cg=
-roup_pool_state *a,
-+							   struct dmem_cgroup_pool_state *b)
-+{
-+	return NULL;
-+}
-+
- static inline void dmem_cgroup_pool_state_put(struct dmem_cgroup_pool_sta=
-te *pool)
- { }
-=20
-diff --git a/kernel/cgroup/dmem.c b/kernel/cgroup/dmem.c
-index ece23f77f197f1b2da3ee322ff176460801907c6..0914fc8fd97f49d246da0344ab=
-edaf9244e8fbad 100644
-=2D-- a/kernel/cgroup/dmem.c
-+++ b/kernel/cgroup/dmem.c
-@@ -689,6 +689,31 @@ bool dmem_cgroup_below_low(struct dmem_cgroup_pool_st=
-ate *root,
- }
- EXPORT_SYMBOL_GPL(dmem_cgroup_below_low);
-=20
-+/**
-+ * dmem_cgroup_common_ancestor(): Find the first common ancestor of two p=
-ools.
-+ * @a: First pool to find the common ancestor of.
-+ * @b: First pool to find the common ancestor of.
-+ *
-+ * Return: The first pool that is a parent of both @a and @b, or NULL if =
-either @a or @b are NULL.
-+ */
-+struct dmem_cgroup_pool_state *dmem_cgroup_common_ancestor(struct dmem_cg=
-roup_pool_state *a,
-+							   struct dmem_cgroup_pool_state *b)
-+{
-+	struct dmem_cgroup_pool_state *parent;
-+
-+	while (a) {
-+		parent =3D b;
-+		while (parent) {
-+			if (a =3D=3D parent)
-+				return a;
-+			parent =3D pool_parent(parent);
-+		}
-+		a =3D pool_parent(a);
-+	}
-+	return NULL;
-+}
-+EXPORT_SYMBOL_GPL(dmem_cgroup_common_ancestor);
-+
- static int dmem_cgroup_region_capacity_show(struct seq_file *sf, void *v)
- {
- 	struct dmem_cgroup_region *region;
+>=20
+> What about dropping the numbers from manual ToC and sections? (If manual
+> ToC is to be preserved.)
 
-=2D-=20
-2.51.0
+Nope. To be fair, we also want section numbers for htmldocs readers, though.
 
+Thanks.
+
+--=20
+An old man doll... just what I always wanted! - Clara
+
+--aPEdF1//wg19KKDS
+Content-Type: application/pgp-signature; name=signature.asc
+
+-----BEGIN PGP SIGNATURE-----
+
+iHUEABYKAB0WIQSSYQ6Cy7oyFNCHrUH2uYlJVVFOowUCaMgJNwAKCRD2uYlJVVFO
+owUWAQDOV37Jt9sGtdMfo9OFbV+SKpl+FM7rQVpTGqsGX5TCAgD/YCIODJf7QdFr
+0241ELSDVsy6ZHhshkKBKhCObdEmkgw=
+=Y3IF
+-----END PGP SIGNATURE-----
+
+--aPEdF1//wg19KKDS--
