@@ -1,27 +1,27 @@
 Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C28722EA14E;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C2E182EACFE;
 	Wed, 17 Sep 2025 06:20:13 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.51
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1758090015; cv=none; b=UOytzX+GRARZBRGlBv9jZAGIn4/DH/koP0jXluQXshpC4V4ukSHpo2KbmtqwZRoFcIjOsYH6G+RevGNFN7h/YbiwvA+9d+oxUj0fzit0tfPneYCwkqnVCyp9w8rZhXGs5luOvFkN7kCDvvp2fQysYYnkj+mOl/qELb0BqGjmZFE=
+	t=1758090015; cv=none; b=lLZRpxOrgwXYnt6moIcfBDP38zQz/7feDueTZrSX12hnaRqUVgj2ySoWbxAzNwdeKy719g2jQWBSxlUAfGALEYgX+MZoRB73NXNN/RDDDarLN5Lq4TVcBmVyPzv6cqD0APxnpQohwPrPv2BESct71GiMs8V6NPdt/eyFsrrd30o=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1758090015; c=relaxed/simple;
-	bh=YktGUToia4YkHyBKbzYhR1W4xyYUA2YG2fcypizzwXM=;
+	bh=nRCqZXpo8sh4KHuK33Ulzdpkt76iG1FAE1eD0XeNrt0=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=BAQomxh9kYVJbywwuNIXvHr4ab7RKdetnE/PgofeSFj2TbebrOb44nMRu/RHnoUY5vSOcr7TTJlbYO0uGlQK9kchBY91cdEUvFvO2KD+UprngeLHQb5C3wjuJQ/uT0d+gmng1mYPL1OGmcvVvQwYRzq40xw73Mf42/t6TdozqdY=
+	 MIME-Version; b=MS2Q7Vlc8eb8c5M0W9eoGadogtK1VeN1h3gOfpN0FLidKZgIPbIRPlouAtm5ZY1kQNVWS4xXRw8RWmIj5bqBvHCYxuYhMAewhsSg1kgk/1BlyvuD2b82WMsVT6Aq/i8KxHFidjz7sz+NlNaNYPWlKj9a4AqUrzZQApd6pKNiMPk=
 ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.51
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
 Received: from mail.maildlp.com (unknown [172.19.93.142])
-	by dggsgout11.his.huawei.com (SkyGuard) with ESMTPS id 4cRTCF06hKzYQvY5;
-	Wed, 17 Sep 2025 14:20:09 +0800 (CST)
+	by dggsgout11.his.huawei.com (SkyGuard) with ESMTPS id 4cRTCD698gzYQvXc;
+	Wed, 17 Sep 2025 14:20:08 +0800 (CST)
 Received: from mail02.huawei.com (unknown [10.116.40.128])
-	by mail.maildlp.com (Postfix) with ESMTP id 983171A1880;
+	by mail.maildlp.com (Postfix) with ESMTP id 767261A1878;
 	Wed, 17 Sep 2025 14:20:07 +0800 (CST)
 Received: from hulk-vt.huawei.com (unknown [10.67.174.121])
-	by APP4 (Coremail) with SMTP id gCh0CgCn74sNU8pos3slCw--.39134S11;
+	by APP4 (Coremail) with SMTP id gCh0CgCn74sNU8pos3slCw--.39134S8;
 	Wed, 17 Sep 2025 14:20:07 +0800 (CST)
 From: Chen Ridong <chenridong@huaweicloud.com>
 To: longman@redhat.com,
@@ -32,9 +32,9 @@ Cc: cgroups@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
 	lujialin4@huawei.com,
 	chenridong@huawei.com
-Subject: [PATCH -next 09/11] cpuset: introduce partition_cpus_change
-Date: Wed, 17 Sep 2025 06:04:52 +0000
-Message-Id: <20250917060454.2885698-10-chenridong@huaweicloud.com>
+Subject: [PATCH -next 06/11] cpuset: introduce cpus_excl_conflict and mems_excl_conflict helpers
+Date: Wed, 17 Sep 2025 06:04:49 +0000
+Message-Id: <20250917060454.2885698-7-chenridong@huaweicloud.com>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20250917060454.2885698-1-chenridong@huaweicloud.com>
 References: <20250917060454.2885698-1-chenridong@huaweicloud.com>
@@ -45,10 +45,10 @@ List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:gCh0CgCn74sNU8pos3slCw--.39134S11
-X-Coremail-Antispam: 1UD129KBjvJXoWxCw18KF1UuF4DtrW5tF15XFb_yoWrAr15pF
-	y7Cw42qrWUJryYka9xXrs29w45K3Z7X3WDtwnrJa4fWFy2q3sFvFy7t39avFy3Wr9ruFy8
-	Zan0qrZ7WFZrAFUanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+X-CM-TRANSID:gCh0CgCn74sNU8pos3slCw--.39134S8
+X-Coremail-Antispam: 1UD129KBjvJXoWxWFyrZw1rGF45Jr4DZw1DJrb_yoWrXF1xpF
+	WUGrWakayjgr13Gw43Gwn7WrsYgw40qFnFyw15Jr1rCry7GF12ywn5XwnxAFy5JrZ5Gw45
+	tFZxtw4S9F98J37anT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
 	9KBjDU0xBIdaVrnRJUUUBYb4IE77IF4wAFF20E14v26rWj6s0DM7CY07I20VC2zVCF04k2
 	6cxKx2IYs7xG6rWj6s0DM7CIcVAFz4kK6r1j6r18M28IrcIa0xkI8VA2jI8067AKxVWUAV
 	Cq3wA2048vs2IY020Ec7CjxVAFwI0_Xr0E3s1l8cAvFVAK0II2c7xJM28CjxkF64kEwVA0
@@ -66,117 +66,117 @@ X-CM-SenderInfo: hfkh02xlgr0w46kxt4xhlfz01xgou0bp/
 
 From: Chen Ridong <chenridong@huawei.com>
 
-Introduce the partition_cpus_change function to handle both regular CPU
-set updates and exclusive CPU modifications, either of which may trigger
-partition state changes. This generalized function will also be utilized
-for exclusive CPU updates in subsequent patches.
+This patch adds cpus_excl_conflict() and mems_excl_conflict() helper
+functions to improve code readability and maintainability. The exclusive
+conflict checking follows these rules:
 
-With the introduction of compute_trialcs_excpus in a previous patch,
-the trialcs->effective_xcpus field is now consistently computed and
-maintained. Consequently, the legacy logic which assigned
-**trialcs->allowed_cpus to a local 'xcpus' variable** when
-trialcs->effective_xcpus was empty has been removed.
-
-This removal is safe because when trialcs is not a partition member,
-trialcs->effective_xcpus is now correctly populated with the intersection
-of user_xcpus and the parent's effective_xcpus. This calculation inherently
-covers the scenario previously handled by the removed code.
+1. If either cpuset has the 'exclusive' flag set, their user_xcpus must
+   not have any overlap.
+2. If neither cpuset has the 'exclusive' flag set, their
+   'cpuset.cpus.exclusive' (only for v2) values must not intersect.
+3. The 'cpuset.cpus' of one cpuset must not form a subset of another
+   cpuset's 'cpuset.cpus.exclusive'.
 
 Signed-off-by: Chen Ridong <chenridong@huawei.com>
 Reviewed-by: Waiman Long <longman@redhat.com>
 ---
- kernel/cgroup/cpuset.c | 64 +++++++++++++++++++++++++-----------------
- 1 file changed, 38 insertions(+), 26 deletions(-)
+ kernel/cgroup/cpuset.c | 74 +++++++++++++++++++++++++-----------------
+ 1 file changed, 44 insertions(+), 30 deletions(-)
 
 diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
-index ab8572038fce..6107f657bf35 100644
+index a72b5eed4865..8e9727352a5d 100644
 --- a/kernel/cgroup/cpuset.c
 +++ b/kernel/cgroup/cpuset.c
-@@ -2454,6 +2454,43 @@ static int cpus_allowed_validate_change(struct cpuset *cs, struct cpuset *trialc
- 	return retval;
+@@ -583,6 +583,47 @@ static inline bool cpusets_are_exclusive(struct cpuset *cs1, struct cpuset *cs2)
+ 	return true;
  }
  
 +/**
-+ * partition_cpus_change - Handle partition state changes due to CPU mask updates
-+ * @cs: The target cpuset being modified
-+ * @trialcs: The trial cpuset containing proposed configuration changes
-+ * @tmp: Temporary masks for intermediate calculations
++ * cpus_excl_conflict - Check if two cpusets have exclusive CPU conflicts
++ * @cs1: first cpuset to check
++ * @cs2: second cpuset to check
 + *
-+ * This function handles partition state transitions triggered by CPU mask changes.
-+ * CPU modifications may cause a partition to be disabled or require state updates.
++ * Returns: true if CPU exclusivity conflict exists, false otherwise
++ *
++ * Conflict detection rules:
++ * 1. If either cpuset is CPU exclusive, they must be mutually exclusive
++ * 2. exclusive_cpus masks cannot intersect between cpusets
++ * 3. The allowed CPUs of one cpuset cannot be a subset of another's exclusive CPUs
 + */
-+static void partition_cpus_change(struct cpuset *cs, struct cpuset *trialcs,
-+					struct tmpmasks *tmp)
++static inline bool cpus_excl_conflict(struct cpuset *cs1, struct cpuset *cs2)
 +{
-+	enum prs_errcode prs_err;
++	/* If either cpuset is exclusive, check if they are mutually exclusive */
++	if (is_cpu_exclusive(cs1) || is_cpu_exclusive(cs2))
++		return !cpusets_are_exclusive(cs1, cs2);
 +
-+	if (cs_is_member(cs))
-+		return;
++	/* Exclusive_cpus cannot intersect */
++	if (cpumask_intersects(cs1->exclusive_cpus, cs2->exclusive_cpus))
++		return true;
 +
-+	prs_err = validate_partition(cs, trialcs);
-+	if (prs_err)
-+		trialcs->prs_err = cs->prs_err = prs_err;
++	/* The cpus_allowed of one cpuset cannot be a subset of another cpuset's exclusive_cpus */
++	if (!cpumask_empty(cs1->cpus_allowed) &&
++	    cpumask_subset(cs1->cpus_allowed, cs2->exclusive_cpus))
++		return true;
 +
-+	if (is_remote_partition(cs)) {
-+		if (trialcs->prs_err)
-+			remote_partition_disable(cs, tmp);
-+		else
-+			remote_cpus_update(cs, trialcs->exclusive_cpus,
-+					   trialcs->effective_xcpus, tmp);
-+	} else {
-+		if (trialcs->prs_err)
-+			update_parent_effective_cpumask(cs, partcmd_invalidate,
-+							NULL, tmp);
-+		else
-+			update_parent_effective_cpumask(cs, partcmd_update,
-+							trialcs->effective_xcpus, tmp);
-+	}
++	if (!cpumask_empty(cs2->cpus_allowed) &&
++	    cpumask_subset(cs2->cpus_allowed, cs1->exclusive_cpus))
++		return true;
++
++	return false;
 +}
 +
- /**
-  * update_cpumask - update the cpus_allowed mask of a cpuset and all tasks in it
-  * @cs: the cpuset to consider
-@@ -2467,7 +2504,6 @@ static int update_cpumask(struct cpuset *cs, struct cpuset *trialcs,
- 	struct tmpmasks tmp;
- 	bool force = false;
- 	int old_prs = cs->partition_root_state;
--	enum prs_errcode prs_err;
- 
- 	retval = parse_cpuset_cpulist(buf, trialcs->cpus_allowed);
- 	if (retval < 0)
-@@ -2492,31 +2528,7 @@ static int update_cpumask(struct cpuset *cs, struct cpuset *trialcs,
++static inline bool mems_excl_conflict(struct cpuset *cs1, struct cpuset *cs2)
++{
++	if ((is_mem_exclusive(cs1) || is_mem_exclusive(cs2)))
++		return nodes_intersects(cs1->mems_allowed, cs2->mems_allowed);
++	return false;
++}
++
+ /*
+  * validate_change() - Used to validate that any proposed cpuset change
+  *		       follows the structural rules for cpusets.
+@@ -664,38 +705,11 @@ static int validate_change(struct cpuset *cur, struct cpuset *trial)
  	 */
- 	force = !cpumask_equal(cs->effective_xcpus, trialcs->effective_xcpus);
+ 	ret = -EINVAL;
+ 	cpuset_for_each_child(c, css, par) {
+-		bool txset, cxset;	/* Are exclusive_cpus set? */
+-
+ 		if (c == cur)
+ 			continue;
+-
+-		txset = !cpumask_empty(trial->exclusive_cpus);
+-		cxset = !cpumask_empty(c->exclusive_cpus);
+-		if (is_cpu_exclusive(trial) || is_cpu_exclusive(c) ||
+-		    (txset && cxset)) {
+-			if (!cpusets_are_exclusive(trial, c))
+-				goto out;
+-		} else if (txset || cxset) {
+-			struct cpumask *xcpus, *acpus;
+-
+-			/*
+-			 * When just one of the exclusive_cpus's is set,
+-			 * cpus_allowed of the other cpuset, if set, cannot be
+-			 * a subset of it or none of those CPUs will be
+-			 * available if these exclusive CPUs are activated.
+-			 */
+-			if (txset) {
+-				xcpus = trial->exclusive_cpus;
+-				acpus = c->cpus_allowed;
+-			} else {
+-				xcpus = c->exclusive_cpus;
+-				acpus = trial->cpus_allowed;
+-			}
+-			if (!cpumask_empty(acpus) && cpumask_subset(acpus, xcpus))
+-				goto out;
+-		}
+-		if ((is_mem_exclusive(trial) || is_mem_exclusive(c)) &&
+-		    nodes_intersects(trial->mems_allowed, c->mems_allowed))
++		if (cpus_excl_conflict(trial, c))
++			goto out;
++		if (mems_excl_conflict(trial, c))
+ 			goto out;
+ 	}
  
--	prs_err = validate_partition(cs, trialcs);
--	if (prs_err) {
--		trialcs->prs_err = prs_err;
--		cs->prs_err = prs_err;
--	}
--
--	if (is_partition_valid(cs) ||
--	   (is_partition_invalid(cs) && !trialcs->prs_err)) {
--		struct cpumask *xcpus = trialcs->effective_xcpus;
--
--		if (cpumask_empty(xcpus) && is_partition_invalid(cs))
--			xcpus = trialcs->cpus_allowed;
--
--		/*
--		 * Call remote_cpus_update() to handle valid remote partition
--		 */
--		if (is_remote_partition(cs))
--			remote_cpus_update(cs, NULL, xcpus, &tmp);
--		else if (trialcs->prs_err)
--			update_parent_effective_cpumask(cs, partcmd_invalidate,
--							NULL, &tmp);
--		else
--			update_parent_effective_cpumask(cs, partcmd_update,
--							xcpus, &tmp);
--	}
-+	partition_cpus_change(cs, trialcs, &tmp);
- 
- 	spin_lock_irq(&callback_lock);
- 	cpumask_copy(cs->cpus_allowed, trialcs->cpus_allowed);
 -- 
 2.34.1
 
