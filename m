@@ -1,27 +1,27 @@
 Received: from dggsgout12.his.huawei.com (dggsgout12.his.huawei.com [45.249.212.56])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 00F4621B9FD;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 00F9E244681;
 	Wed, 17 Sep 2025 06:20:09 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.56
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1758090012; cv=none; b=rBNVN/AlUsDStyVjAmvjXHCTnY+LNDE3Jpc3GHEaGhd4zdnfzxgTN/ohnhIy35qxqWSLtD7zT6BEWdrjRRhnJqy28aIM+/10jbjLkI11WPz3XH7OyuJ8/nbmc28QorjR8KRFTxvpzlMsnp/4fVTVOenpdWE3wb6OXDv+3L+E1OQ=
+	t=1758090013; cv=none; b=Q4BZ2QJcZ1F+uf/hslCj2oQXULrWqnyaEIayoVjocy4Op1zk9rlfNWeO33k0Qb2F/1JHMZO+gASItOrEmTMsSl0xu3FENmz6DuGXp97NmBuJ1V0uNFOiPzgLKtHRjZZ45bCSktZFM5aFLsXkeeJQdDdBfJRymBQm909FRl2nvPk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1758090012; c=relaxed/simple;
-	bh=xGrjnkivB4XsiE5jj7oDHPkmb4r0RQcD2sk8/e5k6JM=;
+	s=arc-20240116; t=1758090013; c=relaxed/simple;
+	bh=GMBRMOA2p/PyuNseR2ex9BFzG79Tgd6ppzrNQ7iO2Zc=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=Hfe7KR8i6KJlzu0X+KktHe0gKfDh8hEjb8uFDPxO2GPwHCg35+uV/Ovx/Rvyktq62g0cAWvtpbuNKpxP1zc75e3eKBCT2AAjBHbDaaWrnCWm5G6PXok3s5qIxe3i5EyGtesUX3QKs7LQQ+bTT74d5RuSedxDrGBzZvwS7warWww=
+	 MIME-Version; b=gq3igK/idvHQbcvwED8qY4Jil0rGLky9KKOAyP80y/SwAXel/l22kvN0WUn7Dz9PaDxg7yVTRtyTXP7WcJV7XmsKc3QqHxaIHNzAsWI0q7QO3xlPpFHjSYtu5N/00YMC5EHlRpOf6ky/ga5vaE+F9dvtdcmtzJVdiraFoaYtZmU=
 ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.56
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
-Received: from mail.maildlp.com (unknown [172.19.163.216])
-	by dggsgout12.his.huawei.com (SkyGuard) with ESMTPS id 4cRTCB5jN5zKHN5m;
-	Wed, 17 Sep 2025 14:20:06 +0800 (CST)
+Received: from mail.maildlp.com (unknown [172.19.163.235])
+	by dggsgout12.his.huawei.com (SkyGuard) with ESMTPS id 4cRTCC04XWzKHN5q;
+	Wed, 17 Sep 2025 14:20:07 +0800 (CST)
 Received: from mail02.huawei.com (unknown [10.116.40.128])
-	by mail.maildlp.com (Postfix) with ESMTP id 81BD11A131C;
+	by mail.maildlp.com (Postfix) with ESMTP id B2E5D1A14C5;
 	Wed, 17 Sep 2025 14:20:07 +0800 (CST)
 Received: from hulk-vt.huawei.com (unknown [10.67.174.121])
-	by APP4 (Coremail) with SMTP id gCh0CgCn74sNU8pos3slCw--.39134S9;
+	by APP4 (Coremail) with SMTP id gCh0CgCn74sNU8pos3slCw--.39134S13;
 	Wed, 17 Sep 2025 14:20:07 +0800 (CST)
 From: Chen Ridong <chenridong@huaweicloud.com>
 To: longman@redhat.com,
@@ -32,9 +32,9 @@ Cc: cgroups@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
 	lujialin4@huawei.com,
 	chenridong@huawei.com
-Subject: [PATCH -next 07/11] cpuset: refactor out validate_partition
-Date: Wed, 17 Sep 2025 06:04:50 +0000
-Message-Id: <20250917060454.2885698-8-chenridong@huaweicloud.com>
+Subject: [PATCH -next 11/11] cpuset: use partition_cpus_change for setting exclusive cpus
+Date: Wed, 17 Sep 2025 06:04:54 +0000
+Message-Id: <20250917060454.2885698-12-chenridong@huaweicloud.com>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20250917060454.2885698-1-chenridong@huaweicloud.com>
 References: <20250917060454.2885698-1-chenridong@huaweicloud.com>
@@ -45,10 +45,10 @@ List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:gCh0CgCn74sNU8pos3slCw--.39134S9
-X-Coremail-Antispam: 1UD129KBjvJXoWxGFW5Xw13WFWDXrWfCr1kGrg_yoW5Wry8pF
-	W5Cr43W3y5try29393t397uw15Kwn7XasrtrnxJa4S9Fy7tF1qyF1jgwsIvr1fXr9xG3W8
-	Za9I9r4agF9FywUanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+X-CM-TRANSID:gCh0CgCn74sNU8pos3slCw--.39134S13
+X-Coremail-Antispam: 1UD129KBjvJXoW7KFW8Jw18CFyDZr48JF47Jwb_yoW8uF4rpF
+	yfCr42qrW5Xr15W3yqg3sF9wn8KwsFq3WDt3ZrJ34fGFy2yanava4UWwsavFy5XasrCr18
+	Za90vrWavF17CwUanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
 	9KBjDU0xBIdaVrnRJUUUBYb4IE77IF4wAFF20E14v26rWj6s0DM7CY07I20VC2zVCF04k2
 	6cxKx2IYs7xG6rWj6s0DM7CIcVAFz4kK6r1j6r18M28IrcIa0xkI8VA2jI8067AKxVWUAV
 	Cq3wA2048vs2IY020Ec7CjxVAFwI0_Xr0E3s1l8cAvFVAK0II2c7xJM28CjxkF64kEwVA0
@@ -59,81 +59,42 @@ X-Coremail-Antispam: 1UD129KBjvJXoWxGFW5Xw13WFWDXrWfCr1kGrg_yoW5Wry8pF
 	z7v_Jr0_Gr1lF7xvr2IYc2Ij64vIr41lc7CjxVAaw2AFwI0_JF0_Jw1l42xK82IYc2Ij64
 	vIr41l4I8I3I0E4IkC6x0Yz7v_Jr0_Gr1lx2IqxVAqx4xG67AKxVWUJVWUGwC20s026x8G
 	jcxK67AKxVWUGVWUWwC2zVAF1VAY17CE14v26r1q6r43MIIYrxkI7VAKI48JMIIF0xvE2I
-	x0cI8IcVAFwI0_JFI_Gr1lIxAIcVC0I7IYx2IY6xkF7I0E14v26F4j6r4UJwCI42IY6xAI
-	w20EY4v20xvaj40_Jr0_JF4lIxAIcVC2z280aVAFwI0_Jr0_Gr1lIxAIcVC2z280aVCY1x
+	x0cI8IcVAFwI0_Gr0_Xr1lIxAIcVC0I7IYx2IY6xkF7I0E14v26F4j6r4UJwCI42IY6xAI
+	w20EY4v20xvaj40_Jr0_JF4lIxAIcVC2z280aVAFwI0_Gr0_Cr1lIxAIcVC2z280aVCY1x
 	0267AKxVW8JVW8JrUvcSsGvfC2KfnxnUUI43ZEXa7IU1l_M7UUUUU==
 X-CM-SenderInfo: hfkh02xlgr0w46kxt4xhlfz01xgou0bp/
 
 From: Chen Ridong <chenridong@huawei.com>
 
-Refactor the validate_partition function to handle cpuset partition
-validation when modifying cpuset.cpus. This refactoring also makes the
-function reusable for handling cpuset.cpus.exclusive updates in subsequent
-patches.
+A previous patch has introduced a new helper function
+partition_cpus_change(). Now replace the exclusive cpus setting logic
+with this helper function.
 
 Signed-off-by: Chen Ridong <chenridong@huawei.com>
 Reviewed-by: Waiman Long <longman@redhat.com>
 ---
- kernel/cgroup/cpuset.c | 48 +++++++++++++++++++++++++++++++-----------
- 1 file changed, 36 insertions(+), 12 deletions(-)
+ kernel/cgroup/cpuset.c | 29 ++---------------------------
+ 1 file changed, 2 insertions(+), 27 deletions(-)
 
 diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
-index 8e9727352a5d..aaf8244b3cea 100644
+index c1eefbb7d941..5cfc960f7b15 100644
 --- a/kernel/cgroup/cpuset.c
 +++ b/kernel/cgroup/cpuset.c
-@@ -2387,6 +2387,37 @@ static int parse_cpuset_cpulist(const char *buf, struct cpumask *out_mask)
- 	return 0;
- }
- 
-+/**
-+ * validate_partition - Validate a cpuset partition configuration
-+ * @cs: The cpuset to validate
-+ * @trialcs: The trial cpuset containing proposed configuration changes
-+ *
-+ * If any validation check fails, the appropriate error code is set in the
-+ * cpuset's prs_err field.
-+ *
-+ * Return: PRS error code (0 if valid, non-zero error code if invalid)
-+ */
-+static enum prs_errcode validate_partition(struct cpuset *cs, struct cpuset *trialcs)
-+{
-+	struct cpuset *parent = parent_cs(cs);
-+
-+	if (cs_is_member(trialcs))
-+		return PERR_NONE;
-+
-+	if (cpumask_empty(trialcs->effective_xcpus))
-+		return PERR_INVCPUS;
-+
-+	if (prstate_housekeeping_conflict(trialcs->partition_root_state,
-+					  trialcs->effective_xcpus))
-+		return PERR_HKEEPING;
-+
-+	if (tasks_nocpu_error(parent, cs, trialcs->effective_xcpus))
-+		return PERR_NOCPUS;
-+
-+	return PERR_NONE;
-+}
-+
-+
- /**
-  * update_cpumask - update the cpus_allowed mask of a cpuset and all tasks in it
-  * @cs: the cpuset to consider
-@@ -2402,6 +2433,7 @@ static int update_cpumask(struct cpuset *cs, struct cpuset *trialcs,
- 	bool invalidate = false;
+@@ -2561,8 +2561,6 @@ static int update_exclusive_cpumask(struct cpuset *cs, struct cpuset *trialcs,
+ {
+ 	int retval;
+ 	struct tmpmasks tmp;
+-	struct cpuset *parent = parent_cs(cs);
+-	bool invalidate = false;
  	bool force = false;
  	int old_prs = cs->partition_root_state;
-+	enum prs_errcode prs_err;
  
- 	retval = parse_cpuset_cpulist(buf, trialcs->cpus_allowed);
- 	if (retval < 0)
-@@ -2416,18 +2448,10 @@ static int update_cpumask(struct cpuset *cs, struct cpuset *trialcs,
- 
- 	compute_trialcs_excpus(trialcs, cs);
+@@ -2594,32 +2592,9 @@ static int update_exclusive_cpumask(struct cpuset *cs, struct cpuset *trialcs,
+ 	if (alloc_tmpmasks(&tmp))
+ 		return -ENOMEM;
  
 -	if (old_prs) {
--		if (is_partition_valid(cs) &&
--		    cpumask_empty(trialcs->effective_xcpus)) {
+-		if (cpumask_empty(trialcs->effective_xcpus)) {
 -			invalidate = true;
 -			cs->prs_err = PERR_INVCPUS;
 -		} else if (prstate_housekeeping_conflict(old_prs, trialcs->effective_xcpus)) {
@@ -143,13 +104,26 @@ index 8e9727352a5d..aaf8244b3cea 100644
 -			invalidate = true;
 -			cs->prs_err = PERR_NOCPUS;
 -		}
-+	prs_err = validate_partition(cs, trialcs);
-+	if (prs_err) {
-+		invalidate = true;
-+		cs->prs_err = prs_err;
- 	}
++	trialcs->prs_err = PERR_NONE;
++	partition_cpus_change(cs, trialcs, &tmp);
  
- 	/*
+-		if (is_remote_partition(cs)) {
+-			if (invalidate)
+-				remote_partition_disable(cs, &tmp);
+-			else
+-				remote_cpus_update(cs, trialcs->exclusive_cpus,
+-						   trialcs->effective_xcpus, &tmp);
+-		} else if (invalidate) {
+-			update_parent_effective_cpumask(cs, partcmd_invalidate,
+-							NULL, &tmp);
+-		} else {
+-			update_parent_effective_cpumask(cs, partcmd_update,
+-						trialcs->effective_xcpus, &tmp);
+-		}
+-	}
+ 	spin_lock_irq(&callback_lock);
+ 	cpumask_copy(cs->exclusive_cpus, trialcs->exclusive_cpus);
+ 	cpumask_copy(cs->effective_xcpus, trialcs->effective_xcpus);
 -- 
 2.34.1
 
