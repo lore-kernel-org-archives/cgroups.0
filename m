@@ -1,26 +1,27 @@
-Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
+Received: from dggsgout12.his.huawei.com (dggsgout12.his.huawei.com [45.249.212.56])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 01371248F68;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 00EC5219A7E;
 	Wed, 17 Sep 2025 06:20:09 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.51
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.56
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1758090012; cv=none; b=fhFwGD2Yn5u0jusRlkp0el+ZFZxUek39eKWTzTzCi3InIdS75zI6Z3G5sVd+AHM9kYIovrKKdO0LGKgFhPR5wXhPuq65+IWOEMJrj1pHHDpsf77MT78KOccX1n8ImhffOtNI3LVI5k7xPNUvn1w2z3dmXrGiBaL0nAihfPAtKQk=
+	t=1758090012; cv=none; b=jKFN6p7RU8utDz3RdxiYKXTtftV33pg8vPjgNkBufgIWMmClKmOE8xq1joeBWT6loWL6hB5Fr5U5uCMFN8Im9NhmYuWD4PNjIj8tpzXW2foim2ULlvV0WDCJgzt2XXfl9kAiIcAkdQYkhptVRWPR3epS9/7EMnEm+xGCzbDQH8E=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1758090012; c=relaxed/simple;
-	bh=XH35xd54bQWolnMx3/rbZnOvCXlZug7r8NQNeEXeyCM=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=cFOfLClNYBfrPU/X+w4DmsDMLTeZZN81wnf84z0Q+9RgX1AzQzix4SOCAJAkFRb0IRyemVeoxCViab1/9spcOdpJx3qQix3h3jO8BcinpqeV/Ntho+NQlt8Om1K92RatK3G4Rtu3ZE5tDtXqczlA7AhKP8Izc3LMJ1EMqXriGV4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.51
+	bh=pSdW3uFdhr6m8eXQdRjNAGH1rMKcwnGPCjebQ0dhwZM=;
+	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
+	 MIME-Version; b=j+8XUTwhNmKGzakHenjvACOFbNLQcByb4G/9SliQIMa8MEXDGqtytAKVCKYjwZZOsHSMhkGe8QmiDj/zSBDyDgBLZodJfFGsRY92J9CJhI63EKpDE5jR8Y2lSuNU8noApryd4ifLH8cJaIjpcQ5BJArcl9xBt/mM563S2EjrwJM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.56
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
 Received: from mail.maildlp.com (unknown [172.19.93.142])
-	by dggsgout11.his.huawei.com (SkyGuard) with ESMTPS id 4cRTCD3xDQzYQvWX;
-	Wed, 17 Sep 2025 14:20:08 +0800 (CST)
+	by dggsgout12.his.huawei.com (SkyGuard) with ESMTPS id 4cRTCB6n8bzKHN6C;
+	Wed, 17 Sep 2025 14:20:06 +0800 (CST)
 Received: from mail02.huawei.com (unknown [10.116.40.128])
-	by mail.maildlp.com (Postfix) with ESMTP id 28ABF1A1863;
+	by mail.maildlp.com (Postfix) with ESMTP id A54DA1A1875;
 	Wed, 17 Sep 2025 14:20:07 +0800 (CST)
 Received: from hulk-vt.huawei.com (unknown [10.67.174.121])
-	by APP4 (Coremail) with SMTP id gCh0CgCn74sNU8pos3slCw--.39134S2;
+	by APP4 (Coremail) with SMTP id gCh0CgCn74sNU8pos3slCw--.39134S12;
 	Wed, 17 Sep 2025 14:20:07 +0800 (CST)
 From: Chen Ridong <chenridong@huaweicloud.com>
 To: longman@redhat.com,
@@ -31,10 +32,12 @@ Cc: cgroups@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
 	lujialin4@huawei.com,
 	chenridong@huawei.com
-Subject: [PATCH -next 00/11] Refactor cpus mask setting
-Date: Wed, 17 Sep 2025 06:04:43 +0000
-Message-Id: <20250917060454.2885698-1-chenridong@huaweicloud.com>
+Subject: [PATCH -next 10/11] cpuset: use parse_cpulist for setting cpus.exclusive
+Date: Wed, 17 Sep 2025 06:04:53 +0000
+Message-Id: <20250917060454.2885698-11-chenridong@huaweicloud.com>
 X-Mailer: git-send-email 2.34.1
+In-Reply-To: <20250917060454.2885698-1-chenridong@huaweicloud.com>
+References: <20250917060454.2885698-1-chenridong@huaweicloud.com>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
@@ -42,76 +45,78 @@ List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:gCh0CgCn74sNU8pos3slCw--.39134S2
-X-Coremail-Antispam: 1UD129KBjvJXoW7Ar4kZF1UJw18uw1kCF45ZFb_yoW8Kr4UpF
-	yYkw13A348Gr1akanxJwn7uF4Yga1kta17tF13t34Ikry293WqkryktasxCFy3Gr9xCw1U
-	ZanFqFs7uF9rC37anT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDU0xBIdaVrnRJUUUyKb4IE77IF4wAFF20E14v26r4j6ryUM7CY07I20VC2zVCF04k2
-	6cxKx2IYs7xG6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rwA2F7IY1VAKz4
-	vEj48ve4kI8wA2z4x0Y4vE2Ix0cI8IcVAFwI0_tr0E3s1l84ACjcxK6xIIjxv20xvEc7Cj
-	xVAFwI0_Gr1j6F4UJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x
-	0267AKxVW0oVCq3wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG
-	6I80ewAv7VC0I7IYx2IY67AKxVWUJVWUGwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFV
-	Cjc4AY6r1j6r4UM4x0Y48IcxkI7VAKI48JMxkF7I0En4kS14v26r126r1DMxAIw28IcxkI
-	7VAKI48JMxC20s026xCaFVCjc4AY6r1j6r4UMI8I3I0E5I8CrVAFwI0_Jr0_Jr4lx2IqxV
-	Cjr7xvwVAFwI0_JrI_JrWlx4CE17CEb7AF67AKxVWUtVW8ZwCIc40Y0x0EwIxGrwCI42IY
-	6xIIjxv20xvE14v26r1j6r1xMIIF0xvE2Ix0cI8IcVCY1x0267AKxVWUJVW8JwCI42IY6x
-	AIw20EY4v20xvaj40_Jr0_JF4lIxAIcVC2z280aVAFwI0_Jr0_Gr1lIxAIcVC2z280aVCY
-	1x0267AKxVWUJVW8JbIYCTnIWIevJa73UjIFyTuYvjxUwxhLUUUUU
+X-CM-TRANSID:gCh0CgCn74sNU8pos3slCw--.39134S12
+X-Coremail-Antispam: 1UD129KBjvJXoW7Ar4xWFW5Wr1rGw48ur4DArb_yoW8WFW8pF
+	W3GF43Z3yrWr1jk398KrsFgrn5Kw40qryDtanrtryrCFyaywsFkw1DWwnI9Fy8G39rWF1r
+	JFZIyrWS9a4ftrUanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDU0xBIdaVrnRJUUUBYb4IE77IF4wAFF20E14v26rWj6s0DM7CY07I20VC2zVCF04k2
+	6cxKx2IYs7xG6rWj6s0DM7CIcVAFz4kK6r1j6r18M28IrcIa0xkI8VA2jI8067AKxVWUAV
+	Cq3wA2048vs2IY020Ec7CjxVAFwI0_Xr0E3s1l8cAvFVAK0II2c7xJM28CjxkF64kEwVA0
+	rcxSw2x7M28EF7xvwVC0I7IYx2IY67AKxVWDJVCq3wA2z4x0Y4vE2Ix0cI8IcVCY1x0267
+	AKxVW8Jr0_Cr1UM28EF7xvwVC2z280aVAFwI0_GcCE3s1l84ACjcxK6I8E87Iv6xkF7I0E
+	14v26rxl6s0DM2AIxVAIcxkEcVAq07x20xvEncxIr21l5I8CrVACY4xI64kE6c02F40Ex7
+	xfMcIj6xIIjxv20xvE14v26r1j6r18McIj6I8E87Iv67AKxVWUJVW8JwAm72CE4IkC6x0Y
+	z7v_Jr0_Gr1lF7xvr2IYc2Ij64vIr41lc7CjxVAaw2AFwI0_JF0_Jw1l42xK82IYc2Ij64
+	vIr41l4I8I3I0E4IkC6x0Yz7v_Jr0_Gr1lx2IqxVAqx4xG67AKxVWUJVWUGwC20s026x8G
+	jcxK67AKxVWUGVWUWwC2zVAF1VAY17CE14v26r1q6r43MIIYrxkI7VAKI48JMIIF0xvE2I
+	x0cI8IcVAFwI0_Gr0_Xr1lIxAIcVC0I7IYx2IY6xkF7I0E14v26F4j6r4UJwCI42IY6xAI
+	w20EY4v20xvaj40_Jr0_JF4lIxAIcVC2z280aVAFwI0_Gr0_Cr1lIxAIcVC2z280aVCY1x
+	0267AKxVW8JVW8JrUvcSsGvfC2KfnxnUUI43ZEXa7IU1l_M7UUUUU==
 X-CM-SenderInfo: hfkh02xlgr0w46kxt4xhlfz01xgou0bp/
 
 From: Chen Ridong <chenridong@huawei.com>
 
-This patch series refactors the CPU mask configuration logic for both
-cpuset.cpus and cpuset.cpus.exclusive settings. The primary goal is to
-improve code readability through comprehensive function restructuring.
+Previous patches made parse_cpulist handle empty cpu mask input.
+Now use this helper for exclusive cpus setting. Also, compute_trialcs_xcpus
+can be called with empty cpus and handles it correctly.
 
-The CPU mask update process follows these steps:
-1. Parse user input
-2. Skip processing if no actual change to CPU mask
-3. Compute trial cpuset's effective exclusive CPUs
-4. Validate changes and return error if invalid
-5. Handle partition state changes resulting from CPU mask modifications
-6. Apply new CPU mask to the cpuset
-7. Propagate changes through the hierarchy
-
-The series is organized as follows:
-patches 1-3: Code cleanup and preparation for refactoring
-patches 4-9: Refactoring of cpuset.cpus configuration logic
-patches 10-11: Refactoring of cpuset.cpus.exclusive configuration logic
-
+Signed-off-by: Chen Ridong <chenridong@huawei.com>
+Reviewed-by: Waiman Long <longman@redhat.com>
 ---
+ kernel/cgroup/cpuset.c | 25 +++++++++----------------
+ 1 file changed, 9 insertions(+), 16 deletions(-)
 
-Changes from RFC v2:
-- Patch 6: Fix commit message suggested-by Longman.
-- Patch 9: Simplified assignment logic and revised commit message.
-- Patch 11: Update the commit message suggested-by Longman.
-
-Changes from v1:
-- Patch 1: Use direct comparison (cs == &top_cpuset) instead of the
-           cpuset_is_root() helper function
-- Patch 6: Updated comments for better clarity
-- Patch 7: Refactored validate_partition to replace the previous
-           invalidate_cs_partition implementation
-- Patch 8: Renamed acpus_validate_change to cpus_allowed_validate_change
-- Patch 9: Updated commit message with more detailed information
-
-Chen Ridong (11):
-  cpuset: move the root cpuset write check earlier
-  cpuset: remove unused assignment to trialcs->partition_root_state
-  cpuset: change return type of is_partition_[in]valid to bool
-  cpuset: Refactor exclusive CPU mask computation logic
-  cpuset: refactor CPU mask buffer parsing logic
-  cpuset: introduce cpus_excl_conflict and mems_excl_conflict helpers
-  cpuset: refactor out validate_partition
-  cpuset: refactor cpus_allowed_validate_change
-  cpuset: introduce partition_cpus_change
-  cpuset: use parse_cpulist for setting cpus.exclusive
-  cpuset: use partition_cpus_change for setting exclusive cpus
-
- kernel/cgroup/cpuset.c | 449 ++++++++++++++++++++++-------------------
- 1 file changed, 245 insertions(+), 204 deletions(-)
-
+diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
+index 6107f657bf35..c1eefbb7d941 100644
+--- a/kernel/cgroup/cpuset.c
++++ b/kernel/cgroup/cpuset.c
+@@ -2566,27 +2566,20 @@ static int update_exclusive_cpumask(struct cpuset *cs, struct cpuset *trialcs,
+ 	bool force = false;
+ 	int old_prs = cs->partition_root_state;
+ 
+-	if (!*buf) {
+-		cpumask_clear(trialcs->exclusive_cpus);
+-		cpumask_clear(trialcs->effective_xcpus);
+-	} else {
+-		retval = cpulist_parse(buf, trialcs->exclusive_cpus);
+-		if (retval < 0)
+-			return retval;
+-	}
++	retval = parse_cpuset_cpulist(buf, trialcs->exclusive_cpus);
++	if (retval < 0)
++		return retval;
+ 
+ 	/* Nothing to do if the CPUs didn't change */
+ 	if (cpumask_equal(cs->exclusive_cpus, trialcs->exclusive_cpus))
+ 		return 0;
+ 
+-	if (*buf) {
+-		/*
+-		 * Reject the change if there is exclusive CPUs conflict with
+-		 * the siblings.
+-		 */
+-		if (compute_trialcs_excpus(trialcs, cs))
+-			return -EINVAL;
+-	}
++	/*
++	 * Reject the change if there is exclusive CPUs conflict with
++	 * the siblings.
++	 */
++	if (compute_trialcs_excpus(trialcs, cs))
++		return -EINVAL;
+ 
+ 	/*
+ 	 * Check all the descendants in update_cpumasks_hier() if
 -- 
 2.34.1
 
