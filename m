@@ -1,137 +1,103 @@
-Received: from mail-wm1-f48.google.com (mail-wm1-f48.google.com [209.85.128.48])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BAB9A21C194
-	for <cgroups@vger.kernel.org>; Thu, 18 Sep 2025 12:12:47 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.48
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 220E82E3B11;
+	Thu, 18 Sep 2025 12:40:50 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.51
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1758197569; cv=none; b=ig8NyQx0kIm1ubgeULQTo5UlH16LtboAzxVyaXNf4MW9gzOE4zFuzgHWMCGhPUX6lHVeQuYTiLShhrKM9uyeuVwLng14UYGCtQu8OTpS/CGvq4NTP8kIXynabmYMJMKAowKICA3CjHWpzHh8HOuISNUlMeH5WiCI7mvUBAFWf3w=
+	t=1758199253; cv=none; b=mOWsAQcHQJzJQSwCWpVr5pdcA8XMsklDBEjuDRbEwBX+fqixhq/Ood4oaCmQhGkzEGSaBWLsKuaJTsSaTSnXVoQ2HBkyRc1ju5qwb4kDA3P9Oe09yVRHBXVh6EOpk8SQb8HBDk/9ern/SswgEO0Z4DtbcFkxdj1gzPkHZwzObl0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1758197569; c=relaxed/simple;
-	bh=3AuDQOb4x5iPQKA8fJMnmCnY++4xw9SzQPwxbDEjEO0=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=i03LflfNWMK6ObRBELFGGtgTfQSomezIKwSzwLkX55jOWrLNZJkCZ5Gd2bF71Cm6lAUd4DEja0DueZNzmhdodvBNZ0/25tVtgl/JKAH+atLjIdSYr+il7lSX1e4OxLKr6OpIQNYpQLss+S6RjvxXJ6F5xt8JePNMzAIvdXltqIg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com; spf=pass smtp.mailfrom=suse.com; dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b=g1iFMGLh; arc=none smtp.client-ip=209.85.128.48
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b="g1iFMGLh"
-Received: by mail-wm1-f48.google.com with SMTP id 5b1f17b1804b1-45df0cde41bso5486965e9.3
-        for <cgroups@vger.kernel.org>; Thu, 18 Sep 2025 05:12:47 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=suse.com; s=google; t=1758197566; x=1758802366; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=BWX04E2Uyfnl0/MdQ83kX9KCxuahZoS9QnFEedx1B1I=;
-        b=g1iFMGLhBdzHGXMZ9VMTjgBRnD2aLwTrP7nJSP3UY1F6DU5408sbnwbNfT/xgqjzNw
-         MQVDsNAwgLCtFT6scdmuM9eOhEu6Zlx+C51fbZvrMfis47p8Jux4KHldBDAVurlGB1lN
-         65Q36IxCSSI2+eMzv5bxpAzO3gPoFy/WcKb1BTphkOdIFTDvQhm8yOwbyT6Y2z69RiXJ
-         wB/chwaSD4krqOQcrbamo2uMJ+l6azrlt1i0XzlaejgsGWSD8I/rfcAFkuJVppxQOHRv
-         5+ZQy+i6lUeP9MOm6guBzzBI4R/KCUP0HEH/lK/3nr3OpwpqiyQHe6bvER4ei8UmlkH/
-         tD4A==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1758197566; x=1758802366;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=BWX04E2Uyfnl0/MdQ83kX9KCxuahZoS9QnFEedx1B1I=;
-        b=ikIWADEkM5q0Km/juqW0WxwpKvOjMlbpqOAf4nZkh0JPeZoXGSYk0sDONYFJ7EpT7z
-         mJN0TVN25ULU88kHFaqWmeHvAbdnmlFuDFuEzNB7xwYSW+uSflDMf90Qk4fWNH68tKrt
-         LZyW+4hJ9yS8JHiDbyXTPd10DwAjZw2K49yJe+OT52wqoNTsBOeEe3/GuDQ5Mx9+SMuN
-         +G3ylxqaLhLjUtqhE0WhoHbdVzIRERWsIXxThJbCfMQVY3lboJE710+LZmYEbHuCiwjA
-         QhmxEtyFoAdZKzYRQjAyFdRM/dtr3/pMqb9SiU3yUZRabO9CNLlk0MtKE1+weF1iPaMP
-         gmMA==
-X-Forwarded-Encrypted: i=1; AJvYcCVdWX2lOpsd4T49N5SLoPYQ+uqiZ5v0S4GEN8GPd7t7BvwNGoF3PuLuLwlc3ujO6fCif5oZLY9U@vger.kernel.org
-X-Gm-Message-State: AOJu0YzF2rU5EABYqonuvydBUPQMud3Y7VDhjsT0x53Az5MzNjbQWaDI
-	I9kBG5MMR9Q0kBtBRmEDyYQa76kqZW4z8/0JZ5tERxd952jVmebqQgquhlND+O4L1yY=
-X-Gm-Gg: ASbGncucvdkEjsGrUHQZg3oHy+QPo86s4JCh1/NQHu1jDPgS3EwgiTNHkoPv6LMuMSV
-	O9anagXxfUsc6lgljaqAniGaowc3h970RTyZDEjascUMrntAE4yDBbi/IPAZ7CAQNtCTkIYaa/G
-	xNP/HtoOyeih++AOCTWAhM8FtpNxln8ckaRJLd1ZUz/VyXmuxm77yr4W4hmPKf6B8erJBWakJC2
-	cQrgBlQQlncmFsMfu1XudWJIcIYC0TiNj/XeVkLSXTd0ONx/SnT7UuxfWMLCCKyWgcABQBW3dQK
-	b1wd2wVB8oAfZH6Tq5uVXf/0+scBQ+aX79Na1PEfgqKQxj9ZceuSYnxTpGVR4AoSO0llids6IhE
-	v+qC/YzP2bBhnAQIqwGO59vWdcJlDFnyi87ttAJOTwYW5ifeT2X8MW70JCtyYJXFReucWr2B+
-X-Google-Smtp-Source: AGHT+IFC0tUTZXRyDtSx9d5omtvQ0WqRKqIy7a/GY6qAoByd5UMfWoRhcJw9UPFcqNlY7Wi3YHh+QA==
-X-Received: by 2002:a05:600c:4692:b0:456:1824:4808 with SMTP id 5b1f17b1804b1-46206f04fa0mr48803915e9.32.1758197565947;
-        Thu, 18 Sep 2025 05:12:45 -0700 (PDT)
-Received: from blackdock.suse.cz (nat2.prg.suse.com. [195.250.132.146])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-45f3252260csm64513315e9.2.2025.09.18.05.12.45
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 18 Sep 2025 05:12:45 -0700 (PDT)
-Date: Thu, 18 Sep 2025 14:12:43 +0200
-From: Michal =?utf-8?Q?Koutn=C3=BD?= <mkoutny@suse.com>
-To: Christian Brauner <brauner@kernel.org>
-Cc: linux-fsdevel@vger.kernel.org, Amir Goldstein <amir73il@gmail.com>, 
-	Josef Bacik <josef@toxicpanda.com>, Jeff Layton <jlayton@kernel.org>, Mike Yuan <me@yhndnzj.com>, 
-	Zbigniew =?utf-8?Q?J=C4=99drzejewski-Szmek?= <zbyszek@in.waw.pl>, Lennart Poettering <mzxreary@0pointer.de>, 
-	Daan De Meyer <daan.j.demeyer@gmail.com>, Aleksa Sarai <cyphar@cyphar.com>, 
-	Alexander Viro <viro@zeniv.linux.org.uk>, Jan Kara <jack@suse.cz>, Tejun Heo <tj@kernel.org>, 
-	Johannes Weiner <hannes@cmpxchg.org>, Jakub Kicinski <kuba@kernel.org>, 
-	Anna-Maria Behnsen <anna-maria@linutronix.de>, Frederic Weisbecker <frederic@kernel.org>, 
-	Thomas Gleixner <tglx@linutronix.de>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, 
-	netdev@vger.kernel.org
-Subject: Re: [PATCH 14/14] ns: rename to __ns_ref
-Message-ID: <3hwzagok7cl3sz4x7wi7z4xwme54y3pyljfkqfjrbkjrbdlyih@rodvre2ii7f6>
-References: <20250918-work-namespace-ns_ref-v1-0-1b0a98ee041e@kernel.org>
- <20250918-work-namespace-ns_ref-v1-14-1b0a98ee041e@kernel.org>
+	s=arc-20240116; t=1758199253; c=relaxed/simple;
+	bh=wo4IV68DiBeTWlF/CeqKMffFhb3GLL52f47Dm+lxmjA=;
+	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
+	 MIME-Version; b=lu8P9QXkAC8kZIRxjm6lhVJaBRG+op2CKfVoVLmfZZq2HLt7V8nGxZAU8NdjpwipqpsoxYEQsQioKrIUSG3K2XHf7hXYMBtKXEzkvUo5TggvFCCIAmRQ0GNpYUfcwt79Xxu3P6Mrv3VGTrVdr8+/GjJe7Avn3WyGlpmNFA/iyEU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.51
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
+Received: from mail.maildlp.com (unknown [172.19.163.235])
+	by dggsgout11.his.huawei.com (SkyGuard) with ESMTPS id 4cSFc23yLmzYQtHb;
+	Thu, 18 Sep 2025 20:40:50 +0800 (CST)
+Received: from mail02.huawei.com (unknown [10.116.40.75])
+	by mail.maildlp.com (Postfix) with ESMTP id 308DA1A0F7F;
+	Thu, 18 Sep 2025 20:40:49 +0800 (CST)
+Received: from hulk-vt.huawei.com (unknown [10.67.174.121])
+	by APP2 (Coremail) with SMTP id Syh0CgCX4RXF_ctoY2EDAA--.7338S4;
+	Thu, 18 Sep 2025 20:40:49 +0800 (CST)
+From: Chen Ridong <chenridong@huaweicloud.com>
+To: longman@redhat.com,
+	tj@kernel.org,
+	hannes@cmpxchg.org,
+	mkoutny@suse.com
+Cc: cgroups@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	lujialin4@huawei.com,
+	chenridong@huawei.com
+Subject: [PATCH cgroup/for-next 2/2] cpuset: Use new excpus for nocpu error check when enabling root partition
+Date: Thu, 18 Sep 2025 12:25:32 +0000
+Message-Id: <20250918122532.2981503-3-chenridong@huaweicloud.com>
+X-Mailer: git-send-email 2.34.1
+In-Reply-To: <20250918122532.2981503-1-chenridong@huaweicloud.com>
+References: <20250918122532.2981503-1-chenridong@huaweicloud.com>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha512;
-	protocol="application/pgp-signature"; boundary="d2ckcju6bogfsla5"
-Content-Disposition: inline
-In-Reply-To: <20250918-work-namespace-ns_ref-v1-14-1b0a98ee041e@kernel.org>
+Content-Transfer-Encoding: 8bit
+X-CM-TRANSID:Syh0CgCX4RXF_ctoY2EDAA--.7338S4
+X-Coremail-Antispam: 1UD129KBjvJXoW7XF48KryxGFWkCry7GFyxGrg_yoW8Jr4xpF
+	WfGa1Ut3yYgF1UC3sFqa95Ww1rWws3JF1Ut3WkWayxZa43J3W0kryDuws0qryjqFZ3Cayj
+	qFsIvw4Svayqy37anT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDU0xBIdaVrnRJUUUPab4IE77IF4wAFF20E14v26rWj6s0DM7CY07I20VC2zVCF04k2
+	6cxKx2IYs7xG6rWj6s0DM7CIcVAFz4kK6r1j6r18M28IrcIa0xkI8VA2jI8067AKxVWUXw
+	A2048vs2IY020Ec7CjxVAFwI0_Gr0_Xr1l8cAvFVAK0II2c7xJM28CjxkF64kEwVA0rcxS
+	w2x7M28EF7xvwVC0I7IYx2IY67AKxVWDJVCq3wA2z4x0Y4vE2Ix0cI8IcVCY1x0267AKxV
+	W8Jr0_Cr1UM28EF7xvwVC2z280aVAFwI0_GcCE3s1l84ACjcxK6I8E87Iv6xkF7I0E14v2
+	6rxl6s0DM2AIxVAIcxkEcVAq07x20xvEncxIr21l5I8CrVACY4xI64kE6c02F40Ex7xfMc
+	Ij6xIIjxv20xvE14v26r1j6r18McIj6I8E87Iv67AKxVWUJVW8JwAm72CE4IkC6x0Yz7v_
+	Jr0_Gr1lF7xvr2IYc2Ij64vIr41lc7CjxVAaw2AFwI0_JF0_Jw1l42xK82IYc2Ij64vIr4
+	1l4c8EcI0Ec7CjxVAaw2AFwI0_JF0_Jw1l4I8I3I0E4IkC6x0Yz7v_Jr0_Gr1lx2IqxVAq
+	x4xG67AKxVWUJVWUGwC20s026x8GjcxK67AKxVWUGVWUWwC2zVAF1VAY17CE14v26r1q6r
+	43MIIYrxkI7VAKI48JMIIF0xvE2Ix0cI8IcVAFwI0_Jr0_JF4lIxAIcVC0I7IYx2IY6xkF
+	7I0E14v26r4j6F4UMIIF0xvE42xK8VAvwI8IcIk0rVWUJVWUCwCI42IY6I8E87Iv67AKxV
+	WUJVW8JwCI42IY6I8E87Iv6xkF7I0E14v26r4j6r4UJbIYCTnIWIevJa73UjIFyTuYvjxU
+	cTmhUUUUU
+X-CM-SenderInfo: hfkh02xlgr0w46kxt4xhlfz01xgou0bp/
 
+From: Chen Ridong <chenridong@huawei.com>
 
---d2ckcju6bogfsla5
-Content-Type: text/plain; protected-headers=v1; charset=us-ascii
-Content-Disposition: inline
-Subject: Re: [PATCH 14/14] ns: rename to __ns_ref
-MIME-Version: 1.0
+A previous patch fixed a bug where new_prs should be assigned before
+checking housekeeping conflicts. This patch addresses another potential
+issue: the nocpu error check currently uses the xcpus which is not updated.
+Although no issue has been observed so far, the check should be performed
+using the new effective exclusive cpus.
 
-Hi.
+The comment has been removed because the function returns an error if
+nocpu checking fails, which is unrelated to the parent.
 
-On Thu, Sep 18, 2025 at 12:11:59PM +0200, Christian Brauner <brauner@kernel.org> wrote:
-> --- a/include/linux/ns_common.h
-> +++ b/include/linux/ns_common.h
-> @@ -29,7 +29,7 @@ struct ns_common {
->  	struct dentry *stashed;
->  	const struct proc_ns_operations *ops;
->  	unsigned int inum;
-> -	refcount_t count;
-> +	refcount_t __ns_ref; /* do not use directly */
+Signed-off-by: Chen Ridong <chenridong@huawei.com>
+---
+ kernel/cgroup/cpuset.c | 6 +-----
+ 1 file changed, 1 insertion(+), 5 deletions(-)
 
-+	refcount_t __ns_ref; /* do not use directly unless initializing */
+diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
+index 2b7e2f17577e..44d65890326a 100644
+--- a/kernel/cgroup/cpuset.c
++++ b/kernel/cgroup/cpuset.c
+@@ -1818,11 +1818,7 @@ static int update_parent_effective_cpumask(struct cpuset *cs, int cmd,
+ 		if (prstate_housekeeping_conflict(new_prs, xcpus))
+ 			return PERR_HKEEPING;
+ 
+-		/*
+-		 * A parent can be left with no CPU as long as there is no
+-		 * task directly associated with the parent partition.
+-		 */
+-		if (nocpu)
++		if (tasks_nocpu_error(parent, cs, xcpus))
+ 			return PERR_NOCPUS;
+ 
+ 		/*
+-- 
+2.34.1
 
-Or a helper macro like
-#define NS_REFCOUNT_INIT(v)  .ns.__ns_ref = REFCOUNT_INIT((v))
-
->  /* cgroup namespace for init task */
->  struct cgroup_namespace init_cgroup_ns = {
-> -	.ns.count	= REFCOUNT_INIT(2),
-> +	.ns.__ns_ref	= REFCOUNT_INIT(2),
->  	.user_ns	= &init_user_ns,
->  	.ns.ops		= &cgroupns_operations,
->  	.ns.inum	= PROC_CGROUP_INIT_INO,
-
-The double underscore stands out here.
-
-Regards,
-Michal
-
-
---d2ckcju6bogfsla5
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-
-iJEEABYKADkWIQRCE24Fn/AcRjnLivR+PQLnlNv4CAUCaMv3ORsUgAAAAAAEAA5t
-YW51MiwyLjUrMS4xMSwyLDIACgkQfj0C55Tb+AiRfAEApv9CrJao8D2U3nthYItW
-n4Mj9Y9Wuj/jH8AzHvpRZR8BAPgIUuzR7g9w7rnCTqM8ybuEtlMzNEwUPf5cGz0m
-vFwK
-=DJVu
------END PGP SIGNATURE-----
-
---d2ckcju6bogfsla5--
