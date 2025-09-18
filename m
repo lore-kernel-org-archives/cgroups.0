@@ -1,133 +1,163 @@
-Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.223.131])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2206B2DF6E6;
-	Thu, 18 Sep 2025 12:40:50 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.51
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 28E2D2FF156
+	for <cgroups@vger.kernel.org>; Thu, 18 Sep 2025 13:18:04 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1758199254; cv=none; b=GDnJpV9HLPsOvqNQw3sdwcc7yWtbM25+urqAwcQGSVfvR1Y/yV/N7tuOogSRsdhW9LhzQ+dIDBAHP75rEPBTgfhXZwF5ufpsRbi7xPhPy3CpJZUEkGfaD3fX3t7n28kLQEZbIn2qMQXXUF4SP+ZE+VwkHxDEA3TxMO0sZPIzzq4=
+	t=1758201486; cv=none; b=ri7Pjw6sdutobgDTwCG5IFrFFZ7Q8ZFzRwa8chbEjbnQrTC4D6fkL+99EWJn3+ICkrkjpUiDze+jlcRzUMc0efCn7FUOD4zSYQLR5lPbCiyAdi6GCuj80oYZS5bCPRqiNXc8lCqcEXOloxzVHMeGKqDxbu79yc7rEPU/vSijGyU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1758199254; c=relaxed/simple;
-	bh=ZhlO110Q6q8JUkahnW9guMhMkWMo5MpIvsMtRhMIolk=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=pBxzqkZj8VtxDXIHWJhKgzMDz5I5brZKTrjodQ6U8OFSu49JQXoFzYtLCxSSuw3r0w1pdcwf7Qg+Uy2gsU0aULR+AqxQQ70dmGelkqgPSHKeTDNyVsroQu650cqE40gT4VwjU+J5oZDrjrAGxjrJjpoCh6Hgxi3h6rDA9gdyMP4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.51
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
-Received: from mail.maildlp.com (unknown [172.19.163.235])
-	by dggsgout11.his.huawei.com (SkyGuard) with ESMTPS id 4cSFc23fSxzYQtpK;
-	Thu, 18 Sep 2025 20:40:50 +0800 (CST)
-Received: from mail02.huawei.com (unknown [10.116.40.75])
-	by mail.maildlp.com (Postfix) with ESMTP id 2495F1A0F88;
-	Thu, 18 Sep 2025 20:40:49 +0800 (CST)
-Received: from hulk-vt.huawei.com (unknown [10.67.174.121])
-	by APP2 (Coremail) with SMTP id Syh0CgCX4RXF_ctoY2EDAA--.7338S3;
-	Thu, 18 Sep 2025 20:40:49 +0800 (CST)
-From: Chen Ridong <chenridong@huaweicloud.com>
-To: longman@redhat.com,
-	tj@kernel.org,
-	hannes@cmpxchg.org,
-	mkoutny@suse.com
-Cc: cgroups@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	lujialin4@huawei.com,
-	chenridong@huawei.com
-Subject: [PATCH cgroup/for-next 1/2] cpuset: fix failure to enable isolated partition when containing isolcpus
-Date: Thu, 18 Sep 2025 12:25:31 +0000
-Message-Id: <20250918122532.2981503-2-chenridong@huaweicloud.com>
-X-Mailer: git-send-email 2.34.1
-In-Reply-To: <20250918122532.2981503-1-chenridong@huaweicloud.com>
-References: <20250918122532.2981503-1-chenridong@huaweicloud.com>
+	s=arc-20240116; t=1758201486; c=relaxed/simple;
+	bh=Ur3gRiy1j/DCQASrWQRFq7NUf3cAF+cMtkmd/6TnNCg=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=oBiwOgcgJ/HJQiFci7Nj7KLFpxIDnzfT0gUdmXMUsQW2+N4eXkqez3cSGXd1i0vvn4qjyPw4EHOAWdey2LRrqn1L5CKZJYtIBon2yJT/P5xq+h5v1d35Yu9o+ar7lW2OZGvjqTPHnve/nrv3MAu8p9QZOsBdBudCZmmI3Zuhvuk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=suse.cz; spf=pass smtp.mailfrom=suse.cz; dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b=Sq0OZ9C7; dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b=3Xtdmabv; dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b=Sq0OZ9C7; dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b=3Xtdmabv; arc=none smtp.client-ip=195.135.223.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=suse.cz
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.cz
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b="Sq0OZ9C7";
+	dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b="3Xtdmabv";
+	dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b="Sq0OZ9C7";
+	dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b="3Xtdmabv"
+Received: from imap1.dmz-prg2.suse.org (imap1.dmz-prg2.suse.org [IPv6:2a07:de40:b281:104:10:150:64:97])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by smtp-out2.suse.de (Postfix) with ESMTPS id 058C01FB4E;
+	Thu, 18 Sep 2025 13:18:03 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
+	t=1758201483; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=81F1VhD1BCWbjrcHGBn6mjVM/rtHwBcVTNIVqbPn+9c=;
+	b=Sq0OZ9C7BfGy2gCccawpG99U1hWrAqWYGg/7R5ZWVqnAp6k9WMTW0/wEPoxpeRR/Gpi1Va
+	AhhiBLcO8BMsUsJCL5U4/Yrpv5FOmisSaSNOEaKrrw3OcCa0Sh0jEkf3E+9w5NK23BTXlf
+	9Q+kiaWdiuGy6TG5bjlIVvixTWF8wig=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
+	s=susede2_ed25519; t=1758201483;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=81F1VhD1BCWbjrcHGBn6mjVM/rtHwBcVTNIVqbPn+9c=;
+	b=3Xtdmabv45CD1bZaaxb7uvoZSjJ7kWVA7J5rS+Fz9DGG3aTYho6itZACIzsKOO08Jt6Qtr
+	HVsPw3xdkc8nkjBw==
+Authentication-Results: smtp-out2.suse.de;
+	dkim=pass header.d=suse.cz header.s=susede2_rsa header.b=Sq0OZ9C7;
+	dkim=pass header.d=suse.cz header.s=susede2_ed25519 header.b=3Xtdmabv
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
+	t=1758201483; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=81F1VhD1BCWbjrcHGBn6mjVM/rtHwBcVTNIVqbPn+9c=;
+	b=Sq0OZ9C7BfGy2gCccawpG99U1hWrAqWYGg/7R5ZWVqnAp6k9WMTW0/wEPoxpeRR/Gpi1Va
+	AhhiBLcO8BMsUsJCL5U4/Yrpv5FOmisSaSNOEaKrrw3OcCa0Sh0jEkf3E+9w5NK23BTXlf
+	9Q+kiaWdiuGy6TG5bjlIVvixTWF8wig=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
+	s=susede2_ed25519; t=1758201483;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=81F1VhD1BCWbjrcHGBn6mjVM/rtHwBcVTNIVqbPn+9c=;
+	b=3Xtdmabv45CD1bZaaxb7uvoZSjJ7kWVA7J5rS+Fz9DGG3aTYho6itZACIzsKOO08Jt6Qtr
+	HVsPw3xdkc8nkjBw==
+Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id E94CF13A39;
+	Thu, 18 Sep 2025 13:18:02 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
+	by imap1.dmz-prg2.suse.org with ESMTPSA
+	id XuTwOIoGzGgWLAAAD6G6ig
+	(envelope-from <jack@suse.cz>); Thu, 18 Sep 2025 13:18:02 +0000
+Received: by quack3.suse.cz (Postfix, from userid 1000)
+	id 8DF1CA09B1; Thu, 18 Sep 2025 15:17:54 +0200 (CEST)
+Date: Thu, 18 Sep 2025 15:17:54 +0200
+From: Jan Kara <jack@suse.cz>
+To: Christian Brauner <brauner@kernel.org>
+Cc: Mark Brown <broonie@kernel.org>, Jan Kara <jack@suse.cz>, 
+	Amir Goldstein <amir73il@gmail.com>, linux-fsdevel@vger.kernel.org, 
+	Josef Bacik <josef@toxicpanda.com>, Jeff Layton <jlayton@kernel.org>, Mike Yuan <me@yhndnzj.com>, 
+	Zbigniew =?utf-8?Q?J=C4=99drzejewski-Szmek?= <zbyszek@in.waw.pl>, Lennart Poettering <mzxreary@0pointer.de>, 
+	Daan De Meyer <daan.j.demeyer@gmail.com>, Aleksa Sarai <cyphar@cyphar.com>, 
+	Alexander Viro <viro@zeniv.linux.org.uk>, Jens Axboe <axboe@kernel.dk>, Tejun Heo <tj@kernel.org>, 
+	Johannes Weiner <hannes@cmpxchg.org>, Michal =?utf-8?Q?Koutn=C3=BD?= <mkoutny@suse.com>, 
+	Eric Dumazet <edumazet@google.com>, Jakub Kicinski <kuba@kernel.org>, 
+	Paolo Abeni <pabeni@redhat.com>, Simon Horman <horms@kernel.org>, 
+	Chuck Lever <chuck.lever@oracle.com>, linux-nfs@vger.kernel.org, linux-kselftest@vger.kernel.org, 
+	linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, 
+	netdev@vger.kernel.org, Dan Carpenter <dan.carpenter@linaro.org>
+Subject: Re: [PATCH v2 04/33] block: use extensible_ioctl_valid()
+Message-ID: <dg5xugicejwym44ibxl24st3xgicga6dzryoxvklqoix3an6js@qkcpc5ig7n56>
+References: <20250912-work-namespace-v2-0-1a247645cef5@kernel.org>
+ <20250912-work-namespace-v2-4-1a247645cef5@kernel.org>
+ <02da33e3-6583-4344-892f-a9784b9c5b1b@sirena.org.uk>
+ <aMlouk_55OXZv8w5@stanley.mountain>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:Syh0CgCX4RXF_ctoY2EDAA--.7338S3
-X-Coremail-Antispam: 1UD129KBjvJXoW7urW5ZFWDJw4xZF43JF4Dtwb_yoW8Kr1xpF
-	WUCry3J398ur15Cay2q3Z7u34YganrJF17t3ZxGw1xZFnrXa4vkFyjk39xJa45J3s5G345
-	ZFya9r4fWa4DAFUanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDU0xBIdaVrnRJUUUPab4IE77IF4wAFF20E14v26ryj6rWUM7CY07I20VC2zVCF04k2
-	6cxKx2IYs7xG6rWj6s0DM7CIcVAFz4kK6r1j6r18M28IrcIa0xkI8VA2jI8067AKxVWUGw
-	A2048vs2IY020Ec7CjxVAFwI0_JFI_Gr1l8cAvFVAK0II2c7xJM28CjxkF64kEwVA0rcxS
-	w2x7M28EF7xvwVC0I7IYx2IY67AKxVWDJVCq3wA2z4x0Y4vE2Ix0cI8IcVCY1x0267AKxV
-	W8Jr0_Cr1UM28EF7xvwVC2z280aVAFwI0_GcCE3s1l84ACjcxK6I8E87Iv6xkF7I0E14v2
-	6rxl6s0DM2AIxVAIcxkEcVAq07x20xvEncxIr21l5I8CrVACY4xI64kE6c02F40Ex7xfMc
-	Ij6xIIjxv20xvE14v26r1j6r18McIj6I8E87Iv67AKxVWUJVW8JwAm72CE4IkC6x0Yz7v_
-	Jr0_Gr1lF7xvr2IYc2Ij64vIr41lc7CjxVAaw2AFwI0_JF0_Jw1l42xK82IYc2Ij64vIr4
-	1l4c8EcI0Ec7CjxVAaw2AFwI0_JF0_Jw1l4I8I3I0E4IkC6x0Yz7v_Jr0_Gr1lx2IqxVAq
-	x4xG67AKxVWUJVWUGwC20s026x8GjcxK67AKxVWUGVWUWwC2zVAF1VAY17CE14v26r1q6r
-	43MIIYrxkI7VAKI48JMIIF0xvE2Ix0cI8IcVAFwI0_Jr0_JF4lIxAIcVC0I7IYx2IY6xkF
-	7I0E14v26r4j6F4UMIIF0xvE42xK8VAvwI8IcIk0rVWUJVWUCwCI42IY6I8E87Iv67AKxV
-	WUJVW8JwCI42IY6I8E87Iv6xkF7I0E14v26r4j6r4UJbIYCTnIWIevJa73UjIFyTuYvjxU
-	7qjgUUUUU
-X-CM-SenderInfo: hfkh02xlgr0w46kxt4xhlfz01xgou0bp/
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <aMlouk_55OXZv8w5@stanley.mountain>
+X-Spam-Level: 
+X-Spam-Flag: NO
+X-Rspamd-Queue-Id: 058C01FB4E
+X-Rspamd-Action: no action
+X-Rspamd-Server: rspamd1.dmz-prg2.suse.org
+X-Spamd-Result: default: False [-2.51 / 50.00];
+	BAYES_HAM(-3.00)[99.99%];
+	SUSPICIOUS_RECIPS(1.50)[];
+	NEURAL_HAM_LONG(-1.00)[-1.000];
+	MID_RHS_NOT_FQDN(0.50)[];
+	R_DKIM_ALLOW(-0.20)[suse.cz:s=susede2_rsa,suse.cz:s=susede2_ed25519];
+	NEURAL_HAM_SHORT(-0.20)[-1.000];
+	MIME_GOOD(-0.10)[text/plain];
+	MX_GOOD(-0.01)[];
+	RCVD_COUNT_THREE(0.00)[3];
+	DKIM_SIGNED(0.00)[suse.cz:s=susede2_rsa,suse.cz:s=susede2_ed25519];
+	RBL_SPAMHAUS_BLOCKED_OPENRESOLVER(0.00)[2a07:de40:b281:104:10:150:64:97:from];
+	ARC_NA(0.00)[];
+	RCPT_COUNT_TWELVE(0.00)[29];
+	FUZZY_RATELIMITED(0.00)[rspamd.com];
+	MIME_TRACE(0.00)[0:+];
+	SPAMHAUS_XBL(0.00)[2a07:de40:b281:104:10:150:64:97:from];
+	RCVD_TLS_LAST(0.00)[];
+	FREEMAIL_ENVRCPT(0.00)[gmail.com];
+	TO_DN_SOME(0.00)[];
+	DNSWL_BLOCKED(0.00)[2a07:de40:b281:104:10:150:64:97:from];
+	RECEIVED_SPAMHAUS_BLOCKED_OPENRESOLVER(0.00)[2a07:de40:b281:106:10:150:64:167:received];
+	FROM_EQ_ENVFROM(0.00)[];
+	FROM_HAS_DN(0.00)[];
+	TO_MATCH_ENVRCPT_ALL(0.00)[];
+	TAGGED_RCPT(0.00)[];
+	MISSING_XM_UA(0.00)[];
+	FREEMAIL_CC(0.00)[kernel.org,suse.cz,gmail.com,vger.kernel.org,toxicpanda.com,yhndnzj.com,in.waw.pl,0pointer.de,cyphar.com,zeniv.linux.org.uk,kernel.dk,cmpxchg.org,suse.com,google.com,redhat.com,oracle.com,linaro.org];
+	RCVD_VIA_SMTP_AUTH(0.00)[];
+	DKIM_TRACE(0.00)[suse.cz:+];
+	R_RATELIMIT(0.00)[to_ip_from(RL9r1cnt7e4118fjryeg1c95sa)];
+	DBL_BLOCKED_OPENRESOLVER(0.00)[suse.com:email,imap1.dmz-prg2.suse.org:rdns,imap1.dmz-prg2.suse.org:helo,suse.cz:dkim]
+X-Spam-Score: -2.51
 
-From: Chen Ridong <chenridong@huawei.com>
+Christian, this bug still seems to be present in your vfs.all branch. Can
+you please fix it up? Thanks!
 
-The 'isolcpus' parameter specified at boot time can be assigned to an
-isolated partition. While it is valid put the 'isolcpus' in an isolated
-partition, attempting to change a member cpuset to an isolated partition
-will fail if the cpuset contains any 'isolcpus'.
+								Honza
 
-For example, the system boots with 'isolcpus=9', and the following
-configuration works correctly:
-
-  # cd /sys/fs/cgroup/
-  # mkdir test
-  # echo 1 > test/cpuset.cpus
-  # echo isolated > test/cpuset.cpus.partition
-  # cat test/cpuset.cpus.partition
-  isolated
-  # echo 9 > test/cpuset.cpus
-  # cat test/cpuset.cpus.partition
-  isolated
-  # cat test/cpuset.cpus
-  9
-
-However, the following steps to convert a member cpuset to an isolated
-partition will fail:
-
-  # cd /sys/fs/cgroup/
-  # mkdir test
-  # echo 9 > test/cpuset.cpus
-  # echo isolated > test/cpuset.cpus.partition
-  # cat test/cpuset.cpus.partition
-  isolated invalid (partition config conflicts with housekeeping setup)
-
-The issue occurs because the new partition state (new_prs) is used for
-validation against housekeeping constraints before it has been properly
-updated. To resolve this, move the assignment of new_prs before the
-housekeeping validation check when enabling a root partition.
-
-Fixes: 11e5f407b64a ("cgroup/cpuset: Keep track of CPUs in isolated partitions")
-Signed-off-by: Chen Ridong <chenridong@huawei.com>
----
- kernel/cgroup/cpuset.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
-index 44231cb1d83f..2b7e2f17577e 100644
---- a/kernel/cgroup/cpuset.c
-+++ b/kernel/cgroup/cpuset.c
-@@ -1806,6 +1806,7 @@ static int update_parent_effective_cpumask(struct cpuset *cs, int cmd,
- 		xcpus = tmp->delmask;
- 		if (compute_excpus(cs, xcpus))
- 			WARN_ON_ONCE(!cpumask_empty(cs->exclusive_cpus));
-+		new_prs = (cmd == partcmd_enable) ? PRS_ROOT : PRS_ISOLATED;
- 
- 		/*
- 		 * Enabling partition root is not allowed if its
-@@ -1838,7 +1839,6 @@ static int update_parent_effective_cpumask(struct cpuset *cs, int cmd,
- 
- 		deleting = true;
- 		subparts_delta++;
--		new_prs = (cmd == partcmd_enable) ? PRS_ROOT : PRS_ISOLATED;
- 	} else if (cmd == partcmd_disable) {
- 		/*
- 		 * May need to add cpus back to parent's effective_cpus
+On Tue 16-09-25 16:40:10, Dan Carpenter wrote:
+> Yeah, the:
+> 
+> 	if (extensible_ioctl_valid(cmd, FS_IOC_GETLBMD_CAP, LBMD_SIZE_VER0))
+> 		return -ENOIOCTLCMD;
+> 
+> test is inverted...  It should be if (!valid) return instead of if (valid)
+> return;
+> 
+> regards,
+> dan carpenter
+> 
 -- 
-2.34.1
-
+Jan Kara <jack@suse.com>
+SUSE Labs, CR
