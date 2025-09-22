@@ -1,167 +1,94 @@
-Received: from out-180.mta0.migadu.com (out-180.mta0.migadu.com [91.218.175.180])
+Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A60F330EF96
-	for <cgroups@vger.kernel.org>; Mon, 22 Sep 2025 13:13:13 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.180
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0DF8930AAAD;
+	Mon, 22 Sep 2025 13:17:55 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.51
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1758546796; cv=none; b=N4SMzdBhmfUko1FrDHSRB6k+MU3SDG0PtLXusTJsu/bw5VJqCjwcC7KxMTDBChAcMIQ2Fb7I/+nNJlina/R/Tsha2JtnnOli+y4moh/ry5dw6PqwJw+YFggRo76Gu8FDTbnSneN5VoVZtgIKOjBipst7Zd4gWX6lkoMV7H9Kfuo=
+	t=1758547078; cv=none; b=FPPcPzz7JXTKQFJxHtK3sn4xdg8qZ5Zm0ceqXq+VY5Lq8OlLQy+/l+piHhVwWvIHNq7xSCjSvM36Gx886HLPNuFORVRZwEuF0eNEf8MXPBAGbb0vIHOtV6FECA5qgdZ8Q+YHfRifQIcATCRbcEUwzwYP7oy6RvXbCTasLhOEGz0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1758546796; c=relaxed/simple;
-	bh=5zHMOFXhLYcGYpuGqUAIQTZp9YNferhptwJkMmePypA=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=eVU7c1Tm+angg0hE7ErsqGFgmRFqBBZfSeZNwJXVpCp68MK5255WnLoi5PVMXqRTrGpGYfX36b9RMOxFLvMhkokIv+tFze/JAR75f+/oQDv2c2o9UGLwgYg/wmakkaZIo4rz7wKAxXVJz/3b7B2uEp+2J7FOxlXvtrp+3C65hi4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=dK/u7QIz; arc=none smtp.client-ip=91.218.175.180
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="dK/u7QIz"
-Message-ID: <9425363e-944f-4f37-bc5b-2586e44a5c5d@linux.dev>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
-	t=1758546791;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=raKb65psehcLkkOZdhfWHFNT0u/LqjfCnelD8FHHqRU=;
-	b=dK/u7QIzJQnY76REVPpeCUeC2oWFVGq323Sul50DUh0txZybhqW77dSdnDRqK/Zml0/844
-	QA70X3tulKj6HcRtdlmGpwmTopt7FkmyMWJ035Lu1mMDriOZG5p/w01OFM/a58ok9ppd2y
-	vPmMQcjAi2MHWJVWGkIsrZIbjT6GZbI=
-Date: Mon, 22 Sep 2025 21:12:44 +0800
+	s=arc-20240116; t=1758547078; c=relaxed/simple;
+	bh=1f75/jj8yXuydKD44yQ/iTFL38muEDMEqtTky3BdDB0=;
+	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
+	 MIME-Version; b=LbrJKkpipX3sKUr/cRViUCwftfn0rLH4OpmsWP7ZmvWw/xEkb+y5YfWw2BN54qUSCJhHXBvTHxvd8FJepGO7xLc5K3Rjewq5I+Qu9esqOEsRugh8UIzsVSVMq3eli7owAKuqXU26+JOcp1uSaegc7mFnyfTD2TLQ2woicK/7TNQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.51
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
+Received: from mail.maildlp.com (unknown [172.19.163.216])
+	by dggsgout11.his.huawei.com (SkyGuard) with ESMTPS id 4cVkDt04GVzYQvRl;
+	Mon, 22 Sep 2025 21:17:50 +0800 (CST)
+Received: from mail02.huawei.com (unknown [10.116.40.75])
+	by mail.maildlp.com (Postfix) with ESMTP id 4BF691A187E;
+	Mon, 22 Sep 2025 21:17:54 +0800 (CST)
+Received: from hulk-vt.huawei.com (unknown [10.67.174.121])
+	by APP2 (Coremail) with SMTP id Syh0CgCH0hZ3TNFoBhXHAQ--.54770S4;
+	Mon, 22 Sep 2025 21:17:54 +0800 (CST)
+From: Chen Ridong <chenridong@huaweicloud.com>
+To: longman@redhat.com,
+	tj@kernel.org,
+	hannes@cmpxchg.org,
+	mkoutny@suse.com
+Cc: cgroups@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	lujialin4@huawei.com,
+	chenridong@huawei.com
+Subject: [PATCH -next 2/3] cpuset: remove impossible warning in update_parent_effective_cpumask
+Date: Mon, 22 Sep 2025 13:02:32 +0000
+Message-Id: <20250922130233.3237521-3-chenridong@huaweicloud.com>
+X-Mailer: git-send-email 2.34.1
+In-Reply-To: <20250922130233.3237521-1-chenridong@huaweicloud.com>
+References: <20250922130233.3237521-1-chenridong@huaweicloud.com>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Subject: Re: [PATCH 0/3] Suppress undesirable hung task warnings.
-Content-Language: en-US
-To: Julian Sun <sunjunchao@bytedance.com>, mhiramat@kernel.org
-Cc: viro@zeniv.linux.org.uk, brauner@kernel.org, jack@suse.cz,
- mingo@redhat.com, peterz@infradead.org, juri.lelli@redhat.com,
- vincent.guittot@linaro.org, dietmar.eggemann@arm.com, rostedt@goodmis.org,
- bsegall@google.com, mgorman@suse.de, vschneid@redhat.com,
- akpm@linux-foundation.org, agruenba@redhat.com, hannes@cmpxchg.org,
- mhocko@kernel.org, roman.gushchin@linux.dev, shakeel.butt@linux.dev,
- muchun.song@linux.dev, linux-kernel@vger.kernel.org,
- cgroups@vger.kernel.org, linux-fsdevel@vger.kernel.org
-References: <20250922094146.708272-1-sunjunchao@bytedance.com>
- <b31a538a-c361-4e3e-a5b6-6a3d2083ef3b@linux.dev>
- <fd12dd70-5de8-43bb-a4d8-610b5f5251fa@bytedance.com>
-X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
-From: Lance Yang <lance.yang@linux.dev>
-In-Reply-To: <fd12dd70-5de8-43bb-a4d8-610b5f5251fa@bytedance.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
-X-Migadu-Flow: FLOW_OUT
+X-CM-TRANSID:Syh0CgCH0hZ3TNFoBhXHAQ--.54770S4
+X-Coremail-Antispam: 1UD129KBjvdXoW7Gw47Zr48GryDXFy3Jw1DKFg_yoWfCwc_Zw
+	40kw1jgr95AryIq3WYkanaqrWvk3WrAF1vy3Z0ya1YyF1jywn7Xwn09rn8trn8Zw1xZrnx
+	ur93GFWvvFsrXjkaLaAFLSUrUUUUjb8apTn2vfkv8UJUUUU8Yxn0WfASr-VFAUDa7-sFnT
+	9fnUUIcSsGvfJTRUUUbqkYFVCjjxCrM7AC8VAFwI0_Wr0E3s1l1xkIjI8I6I8E6xAIw20E
+	Y4v20xvaj40_Wr0E3s1l1IIY67AEw4v_Jr0_Jr4l82xGYIkIc2x26280x7IE14v26r15M2
+	8IrcIa0xkI8VCY1x0267AKxVW8JVW5JwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK
+	021l84ACjcxK6xIIjxv20xvE14v26F1j6w1UM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26r
+	4UJVWxJr1l84ACjcxK6I8E87Iv67AKxVW0oVCq3wA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_
+	GcCE3s1le2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xvF2IEw4CE5I8CrVC2j2WlYx
+	0E2Ix0cI8IcVAFwI0_Jr0_Jr4lYx0Ex4A2jsIE14v26r1j6r4UMcvjeVCFs4IE7xkEbVWU
+	JVW8JwACjcxG0xvY0x0EwIxGrwCY1x0262kKe7AKxVWUAVWUtwCF04k20xvY0x0EwIxGrw
+	CF54CYxVCY1x0262kKe7AKxVWUAVWUtwCFx2IqxVCFs4IE7xkEbVWUJVW8JwC20s026c02
+	F40E14v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E67AF67kF1VAFwI0_Jw0_GF
+	ylIxkGc2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUJVWUCwCI42IY6xIIjxv20xvEc7Cj
+	xVAFwI0_Gr0_Cr1lIxAIcVCF04k26cxKx2IYs7xG6r1j6r1xMIIF0xvEx4A2jsIE14v26r
+	1j6r4UMIIF0xvEx4A2jsIEc7CjxVAFwI0_Gr0_Gr1UYxBIdaVFxhVjvjDU0xZFpf9x07jY
+	LvtUUUUU=
+X-CM-SenderInfo: hfkh02xlgr0w46kxt4xhlfz01xgou0bp/
 
+From: Chen Ridong <chenridong@huawei.com>
 
+If the parent is not a valid partition, an error will be returned before
+any partition update command is processed. This means the
+WARN_ON_ONCE(!is_partition_valid(parent)) can never be triggered, so
+it is safe to remove.
 
-On 2025/9/22 20:40, Julian Sun wrote:
-> On 9/22/25 7:38 PM, Lance Yang wrote:
-> 
-> Hi, Lance
-> 
-> Thanks for your review and comments.
-> 
->> Hi Julian
->>
->> Thanks for the patch series!
->>
->> On 2025/9/22 17:41, Julian Sun wrote:
->>> As suggested by Andrew Morton in [1], we need a general mechanism
->>> that allows the hung task detector to ignore unnecessary hung
->>
->> Yep, I understand the goal is to suppress what can be a benign hung task
->> warning during memcg teardown.
->>
->>> tasks. This patch set implements this functionality.
->>>
->>> Patch 1 introduces a PF_DONT_HUNG flag. The hung task detector will
->>> ignores all tasks that have the PF_DONT_HUNG flag set.
->>
->> However, I'm concerned that the PF_DONT_HUNG flag is a bit too powerful
->> and might mask real, underlying hangs.
-> 
-> The flag takes effect only when wait_event_no_hung() or 
-> wb_wait_for_completion_no_hung() is called, and its effect is limited to 
-> a single wait event, without affecting subsequent wait events. So AFAICS 
-> it will not mask real hang warnings.>
+Signed-off-by: Chen Ridong <chenridong@huawei.com>
+---
+ kernel/cgroup/cpuset.c | 1 -
+ 1 file changed, 1 deletion(-)
 
-Emm... the risk of future misuse is what worries me. I would rather have
-call sites actively "pet the watchdog" by periodically calling a helper
-like touch_hung_task_detector(), instead of passively ignoring the detector.
-
->>>
->>> Patch 2 introduces wait_event_no_hung() and 
->>> wb_wait_for_completion_no_hung(),
->>> which enable the hung task detector to ignore hung tasks caused by these
->>> wait events.
->>
->> Instead of making the detector ignore the task, what if we just change
->> the waiting mechanism? Looking at wb_wait_for_completion(), we could
->> introduce a new helper that internally uses wait_event_timeout() in a
->> loop.
->>
->> Something simple like this:
->>
->> void wb_wait_for_completion_no_hung(struct wb_completion *done)
->> {
->>          atomic_dec(&done->cnt);
->>          while (atomic_read(&done->cnt))
->>                  wait_event_timeout(*done->waitq, !atomic_read(&done- 
->>  >cnt), timeout);
->> }
->>
->> The periodic wake-ups from wait_event_timeout() would naturally prevent
->> the detector from complaining about slow but eventually completing 
->> writeback.
-> 
-> Yeah, this could definitely eliminate the hung task warning complained 
-> here.
-> However what I aim to provide is a general mechanism for waiting on 
-> events. Of course, we could use code similar to the following, but this 
-> would introduce additional overhead from waking tasks and multiple 
-> operations on wq_head—something I don't want to introduce.
-
-Yeah, I agree there's some overhead with a polling approach, but
-mem_cgroup_css_free() should be an infrequent operation. So, I think it's
-an acceptable trade-off :)
-
-> 
-> +#define wait_event_no_hung(wq_head, condition) \
-> +do {                   \
-> +       while (!(condition))    \
-> +               wait_event_timeout(wq_head, condition, timeout); \
-> +}
-> 
-> But I can try this approach or do not introcude wait_event_no_hung() if 
-> you want.>
-
-Well, let's see what other folks think ;)
-
-Cheers,
-Lance
-
->>>
->>> Patch 3 uses wb_wait_for_completion_no_hung() in the final phase of 
->>> memcg
->>> teardown to eliminate the hung task warning.
->>>
->>> Julian Sun (3):
->>>    sched: Introduce a new flag PF_DONT_HUNG.
->>>    writeback: Introduce wb_wait_for_completion_no_hung().
->>>    memcg: Don't trigger hung task when memcg is releasing.
->>>
->>>   fs/fs-writeback.c           | 15 +++++++++++++++
->>>   include/linux/backing-dev.h |  1 +
->>>   include/linux/sched.h       | 12 +++++++++++-
->>>   include/linux/wait.h        | 15 +++++++++++++++
->>>   kernel/hung_task.c          |  6 ++++++
->>>   mm/memcontrol.c             |  2 +-
->>>   6 files changed, 49 insertions(+), 2 deletions(-)
->>>
->>
-> 
-> Thanks,
+diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
+index 20dface3c3e0..196645b38b24 100644
+--- a/kernel/cgroup/cpuset.c
++++ b/kernel/cgroup/cpuset.c
+@@ -1923,7 +1923,6 @@ static int update_parent_effective_cpumask(struct cpuset *cs, int cmd,
+ 		 * A partition error happens when parent has tasks and all
+ 		 * its effective CPUs will have to be distributed out.
+ 		 */
+-		WARN_ON_ONCE(!is_partition_valid(parent));
+ 		if (nocpu) {
+ 			part_error = PERR_NOCPUS;
+ 			if (is_partition_valid(cs))
+-- 
+2.34.1
 
