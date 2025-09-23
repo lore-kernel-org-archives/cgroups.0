@@ -1,194 +1,284 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pl1-f171.google.com (mail-pl1-f171.google.com [209.85.214.171])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4BD18320A24;
-	Tue, 23 Sep 2025 09:17:11 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 471883203BE
+	for <cgroups@vger.kernel.org>; Tue, 23 Sep 2025 09:17:13 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.171
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1758619031; cv=none; b=ouI/Q8qMkD2L3EesSpcx4V6Kk9zcPScUni3CcJCGXLHChxxrrOscFs60rnfKcDDZbFPD2t6Tg+p/bowQGIzG+NuWhCY3BNb/lMtdW+gddtOAxxB+VCJnDbbhFvkmaPeVjVYkOhgxHZFuBMQ4jf4ZHD2iwvwyTVWa5HdfTrswyIU=
+	t=1758619035; cv=none; b=ZsJ5HKup4+N/rDKcPdR79us1AeMV/TbS+lp3q1lXZP0fZGBkAjOlHLB0XtetunDH3lXQqrV85E8FryMKm61jA2idLErt/lobTpyfqtEQDc+m4HoTA0pU/u5EkLTIjw8bl04YH2MEkVxvLaQNnEjxcY9z7Kp+PLjIxYVJfRt19oo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1758619031; c=relaxed/simple;
-	bh=iJojMmqjXmNM1AROfZxDC8FC4oHqEBcWIRk8sn0CBs0=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=t5rkvgT7PNvYXA5lk8Vf0/cVxE2enIdM69JU416Wb6z2YSXNc5O2RK2n4Ayop8+LZmOBEEPDVaNao6H58sGMK/8gywWZvaZ4N71NLAdoerIGQ5pob472L/lRxqm+NAUTmjw8rB0obyW56TgB1YPh2zDvJOKKgm/jtPfXsIgCcdw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=o+Te11x9; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1758619035; c=relaxed/simple;
+	bh=KOXlbh25Gsetgl3GNjGe9VD0ySH162kovB3o+nlpoCM=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=o3vsaE/ElZlJPDNuNgfsP+NQvlPc/ww8lRP/qqTm7MOVgfFqfCCRdjGR12RcLDOTw4hQzp8iUqillVe9xovy3wPerUaNDbSztbxajMxIRYgaPVSP3pphjFhkk5rIteIxcT4fXx+lpCIv7j5TaRXoXMhuOiypi1xgnHP1aqDOYdE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=bytedance.com; spf=pass smtp.mailfrom=bytedance.com; dkim=pass (2048-bit key) header.d=bytedance.com header.i=@bytedance.com header.b=VmOvix5W; arc=none smtp.client-ip=209.85.214.171
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=bytedance.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=bytedance.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="o+Te11x9"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2E1B3C4CEF5;
-	Tue, 23 Sep 2025 09:17:09 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1758619030;
-	bh=iJojMmqjXmNM1AROfZxDC8FC4oHqEBcWIRk8sn0CBs0=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=o+Te11x9qAXZtTHxQtqwn2W2os6yeJS1u1MHlfUbnb+JQBNcrAoOgu1pUBHxpQ4Jh
-	 TOGRswcnPpBswcIIk8IhPzgSBlPEbA6s4WJzJxKjz/Pxqony/clyu6dEC+uxDfatmw
-	 eXgdkXqaA6s9ci7tmQbdYV1iz8cXNvzo1XXc/EPuZDK63ols59iHBFmXlbKCeDOSfE
-	 YsRFVtB1Fi017+eLcNEo4YSAM/oR/saka+wk2D7iN8tgzLuZWpZkwACYKGqI0gBv2L
-	 DZUM8VP/tDonbooBpL0gZ/6Px+oAsdIreQ6X95Wv6ehoL2i+G/b5XvLoXC2zWTGOZ/
-	 ueWWwGjX3BMZA==
-Date: Tue, 23 Sep 2025 11:17:07 +0200
-From: Frederic Weisbecker <frederic@kernel.org>
-To: Waiman Long <llong@redhat.com>
-Cc: LKML <linux-kernel@vger.kernel.org>,
-	Gabriele Monaco <gmonaco@redhat.com>,
-	Johannes Weiner <hannes@cmpxchg.org>,
-	Marco Crivellari <marco.crivellari@suse.com>,
-	Michal Hocko <mhocko@suse.com>,
-	Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny@suse.com>,
-	Peter Zijlstra <peterz@infradead.org>, Tejun Heo <tj@kernel.org>,
-	Thomas Gleixner <tglx@linutronix.de>, cgroups@vger.kernel.org
-Subject: Re: [PATCH 26/33] cgroup/cpuset: Fail if isolated and nohz_full
- don't leave any housekeeping
-Message-ID: <aNJlk7wcAsPF_j-z@2a01cb069018a810e4ede1071806178f.ipv6.abo.wanadoo.fr>
-References: <20250829154814.47015-1-frederic@kernel.org>
- <20250829154814.47015-27-frederic@kernel.org>
- <6457dd87-95cb-4c4d-aaab-6c9b65414a75@redhat.com>
+	dkim=pass (2048-bit key) header.d=bytedance.com header.i=@bytedance.com header.b="VmOvix5W"
+Received: by mail-pl1-f171.google.com with SMTP id d9443c01a7336-26c209802c0so37234325ad.0
+        for <cgroups@vger.kernel.org>; Tue, 23 Sep 2025 02:17:13 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=bytedance.com; s=google; t=1758619032; x=1759223832; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=BMEpf3Ea3B6J3gmDiquYNV20PPyPPv+3X/VUa2fqYkk=;
+        b=VmOvix5WwQ0bzDmNQBJtI0AX1II7E5Izcavu/qt0FOElCZwNnyJxsfRdKVeU1sjj7j
+         A2rlQr0kSxvqn34aW0UpJEYxfh6N+y/gybdhV5Tzy1zNRn4hBErHopH+tjgbIhsY/LVf
+         4veAJvD/smNLcZi5gjPf9CIMiOgG0+CTHE7n8HdnmYAhv1cOMKNQ6URB0pQAp497x3DQ
+         pCq+Dc/jofOXozrznKtluG/u/SqC+y325isPLk9YRO+nRbpITPVtCgOfwuEWGl/5PrFZ
+         7nuE5braFtHWhfQlOGH8jJH1LxZWoqfv0Fk+g4u3uhxT73tj5Pxnv/cZwQJzbipNcklb
+         DxkQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1758619032; x=1759223832;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=BMEpf3Ea3B6J3gmDiquYNV20PPyPPv+3X/VUa2fqYkk=;
+        b=foJDAukjKlQVsn6RF8y/DqttTmnrey0VBJ8g2VywXmpPo9CN+HOaRbYyl8P1cNkVda
+         8EuKvtiY22GZOWXjRn7DZ7BmZXDKUwo1WUalmr4ga3O8G72GMlhYo1RJCqn2uQqCl0tO
+         C/eLFywGaMj7e1zxjyuwMXHFiLhNyGv9XDMR6GEgRQS1/+CRKAQYZJ20NVufQgwoeFnG
+         xw0yoK3VldzJ3UbnB93XYPeK8ydmn5ARer3UWsbYL7ONiZ0nJF6zR/dfRIj2782C6cTQ
+         a2UWP3FP1fUxoDSu1bH85h5rHSolC1ad98XOUS5c3gxtcOfkc2vStOAB483KZ7bOErzA
+         MU+A==
+X-Forwarded-Encrypted: i=1; AJvYcCWemxzx+YmnArI7U0xDLsFIgJlXxbQc38gU6gqDszn3udSIE3XAJ7riowqsAQyrREhnhnFqRe6B@vger.kernel.org
+X-Gm-Message-State: AOJu0YxDjvLTM/fqxpQJwiQXkQ41sqom1Ve+Mi19vPktQghtknM2DXP4
+	fywSsswyRlS/8Em8GWs2hwwMcrdGYLX69xGzV1ivEjMRqe+og0ftL2Qr5a+3qum7sA4=
+X-Gm-Gg: ASbGnctagzv/U68hv5lkzn3dA9xc03WIk9BlrFE7WSxf+0MNeYsApBS9zl9Rdogjee1
+	KWhmheVzT3+LI0dhSK3fYOlDZn8D6vL7ikKTjTgSxhjbJkC3UM/5ed9/aD3KGyNMMhBx8qOSVal
+	6ndeG4NBpPP5YFUGbkd7MckxxHpeAY01jxgoP46CjH0jjYhbtEkk+VIrDa4gmvYRLNWsSk2/BCP
+	+JdP04O0kFRTqwYFWZVjlrvtMqHbuQMJqSJZe//433wy05+CDC5f1mwpgtWh/MjbTRPe0QWfhLT
+	eBM2ADqRchCaRuTDhPdF8qUZIw69H0nNVajFV6Qpc8TRVXdpwwip+BdecXJrGaiVIEX4CGIfv5a
+	Rz1Trra+hO0fxs9ZNQg2SsV1KIOfQOj6SL59CxPdje+Py8sADV2dnyNIDH4AMbbLBQDLTKDQ=
+X-Google-Smtp-Source: AGHT+IEjW7nlqMYtk1SjNV/LLbiGjcZcRqySo0SKeu4Hh2+wqVdplupwS9kqc4xr8VvvoRI+XMKetw==
+X-Received: by 2002:a17:902:ce01:b0:250:6d0e:1e40 with SMTP id d9443c01a7336-27cc1380e40mr22109715ad.7.1758619032483;
+        Tue, 23 Sep 2025 02:17:12 -0700 (PDT)
+Received: from G7HT0H2MK4.bytedance.net ([63.216.146.178])
+        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-32ed26a9993sm18724713a91.11.2025.09.23.02.17.04
+        (version=TLS1_3 cipher=TLS_CHACHA20_POLY1305_SHA256 bits=256/256);
+        Tue, 23 Sep 2025 02:17:11 -0700 (PDT)
+From: Qi Zheng <zhengqi.arch@bytedance.com>
+To: hannes@cmpxchg.org,
+	hughd@google.com,
+	mhocko@suse.com,
+	roman.gushchin@linux.dev,
+	shakeel.butt@linux.dev,
+	muchun.song@linux.dev,
+	david@redhat.com,
+	lorenzo.stoakes@oracle.com,
+	ziy@nvidia.com,
+	harry.yoo@oracle.com,
+	baolin.wang@linux.alibaba.com,
+	Liam.Howlett@oracle.com,
+	npache@redhat.com,
+	ryan.roberts@arm.com,
+	dev.jain@arm.com,
+	baohua@kernel.org,
+	lance.yang@linux.dev,
+	akpm@linux-foundation.org
+Cc: linux-mm@kvack.org,
+	linux-kernel@vger.kernel.org,
+	cgroups@vger.kernel.org,
+	Muchun Song <songmuchun@bytedance.com>,
+	Qi Zheng <zhengqi.arch@bytedance.com>
+Subject: [PATCH v2 3/4] mm: thp: use folio_batch to handle THP splitting in deferred_split_scan()
+Date: Tue, 23 Sep 2025 17:16:24 +0800
+Message-ID: <782da2d3eca63d9bf152c58c6733c4e16b06b740.1758618527.git.zhengqi.arch@bytedance.com>
+X-Mailer: git-send-email 2.48.1
+In-Reply-To: <cover.1758618527.git.zhengqi.arch@bytedance.com>
+References: <cover.1758618527.git.zhengqi.arch@bytedance.com>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <6457dd87-95cb-4c4d-aaab-6c9b65414a75@redhat.com>
 
-Le Tue, Sep 02, 2025 at 11:44:00AM -0400, Waiman Long a écrit :
-> 
-> On 8/29/25 11:48 AM, Frederic Weisbecker wrote:
-> > From: Gabriele Monaco <gmonaco@redhat.com>
-> > 
-> > Currently the user can set up isolated cpus via cpuset and nohz_full in
-> > such a way that leaves no housekeeping CPU (i.e. no CPU that is neither
-> > domain isolated nor nohz full). This can be a problem for other
-> > subsystems (e.g. the timer wheel imgration).
-> > 
-> > Prevent this configuration by blocking any assignation that would cause
-> > the union of domain isolated cpus and nohz_full to covers all CPUs.
-> > 
-> > Acked-by: Frederic Weisbecker <frederic@kernel.org>
-> > Signed-off-by: Gabriele Monaco <gmonaco@redhat.com>
-> > Signed-off-by: Frederic Weisbecker <frederic@kernel.org>
-> > ---
-> >   kernel/cgroup/cpuset.c | 57 ++++++++++++++++++++++++++++++++++++++++++
-> >   1 file changed, 57 insertions(+)
-> > 
-> > diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
-> > index df1dfacf5f9d..8260dd699fd8 100644
-> > --- a/kernel/cgroup/cpuset.c
-> > +++ b/kernel/cgroup/cpuset.c
-> > @@ -1275,6 +1275,19 @@ static void isolated_cpus_update(int old_prs, int new_prs, struct cpumask *xcpus
-> >   		cpumask_andnot(isolated_cpus, isolated_cpus, xcpus);
-> >   }
-> > +/*
-> > + * isolated_cpus_should_update - Returns if the isolated_cpus mask needs update
-> > + * @prs: new or old partition_root_state
-> > + * @parent: parent cpuset
-> > + * Return: true if isolated_cpus needs modification, false otherwise
-> > + */
-> > +static bool isolated_cpus_should_update(int prs, struct cpuset *parent)
-> > +{
-> > +	if (!parent)
-> > +		parent = &top_cpuset;
-> > +	return prs != parent->partition_root_state;
-> > +}
-> > +
-> >   /*
-> >    * partition_xcpus_add - Add new exclusive CPUs to partition
-> >    * @new_prs: new partition_root_state
-> > @@ -1339,6 +1352,36 @@ static bool partition_xcpus_del(int old_prs, struct cpuset *parent,
-> >   	return isolcpus_updated;
-> >   }
-> > +/*
-> > + * isolcpus_nohz_conflict - check for isolated & nohz_full conflicts
-> > + * @new_cpus: cpu mask for cpus that are going to be isolated
-> > + * Return: true if there is conflict, false otherwise
-> > + *
-> > + * If nohz_full is enabled and we have isolated CPUs, their combination must
-> > + * still leave housekeeping CPUs.
-> > + */
-> > +static bool isolcpus_nohz_conflict(struct cpumask *new_cpus)
-> > +{
-> > +	cpumask_var_t full_hk_cpus;
-> > +	int res = false;
-> > +
-> > +	if (!housekeeping_enabled(HK_TYPE_KERNEL_NOISE))
-> > +		return false;
-> > +
-> > +	if (!alloc_cpumask_var(&full_hk_cpus, GFP_KERNEL))
-> > +		return true;
-> > +
-> > +	cpumask_and(full_hk_cpus, housekeeping_cpumask(HK_TYPE_KERNEL_NOISE),
-> > +		    housekeeping_cpumask(HK_TYPE_DOMAIN));
-> > +	cpumask_andnot(full_hk_cpus, full_hk_cpus, isolated_cpus);
-> > +	cpumask_and(full_hk_cpus, full_hk_cpus, cpu_online_mask);
-> > +	if (!cpumask_weight_andnot(full_hk_cpus, new_cpus))
-> > +		res = true;
-> > +
-> > +	free_cpumask_var(full_hk_cpus);
-> > +	return res;
-> > +}
-> > +
-> >   static void update_housekeeping_cpumask(bool isolcpus_updated)
-> >   {
-> >   	int ret;
-> > @@ -1453,6 +1496,9 @@ static int remote_partition_enable(struct cpuset *cs, int new_prs,
-> >   	if (!cpumask_intersects(tmp->new_cpus, cpu_active_mask) ||
-> >   	    cpumask_subset(top_cpuset.effective_cpus, tmp->new_cpus))
-> >   		return PERR_INVCPUS;
-> > +	if (isolated_cpus_should_update(new_prs, NULL) &&
-> > +	    isolcpus_nohz_conflict(tmp->new_cpus))
-> > +		return PERR_HKEEPING;
-> >   	spin_lock_irq(&callback_lock);
-> >   	isolcpus_updated = partition_xcpus_add(new_prs, NULL, tmp->new_cpus);
-> > @@ -1552,6 +1598,9 @@ static void remote_cpus_update(struct cpuset *cs, struct cpumask *xcpus,
-> >   		else if (cpumask_intersects(tmp->addmask, subpartitions_cpus) ||
-> >   			 cpumask_subset(top_cpuset.effective_cpus, tmp->addmask))
-> >   			cs->prs_err = PERR_NOCPUS;
-> > +		else if (isolated_cpus_should_update(prs, NULL) &&
-> > +			 isolcpus_nohz_conflict(tmp->addmask))
-> > +			cs->prs_err = PERR_HKEEPING;
-> >   		if (cs->prs_err)
-> >   			goto invalidate;
-> >   	}
-> > @@ -1904,6 +1953,12 @@ static int update_parent_effective_cpumask(struct cpuset *cs, int cmd,
-> >   			return err;
-> >   	}
-> > +	if (deleting && isolated_cpus_should_update(new_prs, parent) &&
-> > +	    isolcpus_nohz_conflict(tmp->delmask)) {
-> > +		cs->prs_err = PERR_HKEEPING;
-> > +		return PERR_HKEEPING;
-> > +	}
-> > +
-> >   	/*
-> >   	 * Change the parent's effective_cpus & effective_xcpus (top cpuset
-> >   	 * only).
-> > @@ -2924,6 +2979,8 @@ static int update_prstate(struct cpuset *cs, int new_prs)
-> >   		 * Need to update isolated_cpus.
-> >   		 */
-> >   		isolcpus_updated = true;
-> > +		if (isolcpus_nohz_conflict(cs->effective_xcpus))
-> > +			err = PERR_HKEEPING;
-> >   	} else {
-> >   		/*
-> >   		 * Switching back to member is always allowed even if it
-> 
-> In both remote_cpus_update() and update_parent_effective_cpumask(), some new
-> CPUs can be added to the isolation list while other CPUs can be removed from
-> it. So isolcpus_nohz_conflict() should include both set in its analysis to
-> avoid false positive. Essentally, if the CPUs removed from the isolated_cpus
-> intersect with the nohz_full housekeeping mask, there is no conflict.
+From: Muchun Song <songmuchun@bytedance.com>
 
-I assume this was fixed in latest Gabriele posting?
+The maintenance of the folio->_deferred_list is intricate because it's
+reused in a local list.
 
-Thanks.
+Here are some peculiarities:
 
-> 
-> Cheers,
-> Longman
-> 
+   1) When a folio is removed from its split queue and added to a local
+      on-stack list in deferred_split_scan(), the ->split_queue_len isn't
+      updated, leading to an inconsistency between it and the actual
+      number of folios in the split queue.
 
+   2) When the folio is split via split_folio() later, it's removed from
+      the local list while holding the split queue lock. At this time,
+      this lock protects the local list, not the split queue.
+
+   3) To handle the race condition with a third-party freeing or migrating
+      the preceding folio, we must ensure there's always one safe (with
+      raised refcount) folio before by delaying its folio_put(). More
+      details can be found in commit e66f3185fa04 ("mm/thp: fix deferred
+      split queue not partially_mapped"). It's rather tricky.
+
+We can use the folio_batch infrastructure to handle this clearly. In this
+case, ->split_queue_len will be consistent with the real number of folios
+in the split queue. If list_empty(&folio->_deferred_list) returns false,
+it's clear the folio must be in its split queue (not in a local list
+anymore).
+
+In the future, we will reparent LRU folios during memcg offline to
+eliminate dying memory cgroups, which requires reparenting the split queue
+to its parent first. So this patch prepares for using
+folio_split_queue_lock_irqsave() as the memcg may change then.
+
+Signed-off-by: Muchun Song <songmuchun@bytedance.com>
+Signed-off-by: Qi Zheng <zhengqi.arch@bytedance.com>
+---
+ mm/huge_memory.c | 84 ++++++++++++++++++++++--------------------------
+ 1 file changed, 38 insertions(+), 46 deletions(-)
+
+diff --git a/mm/huge_memory.c b/mm/huge_memory.c
+index 2f41b8f0d4871..48b51e6230a67 100644
+--- a/mm/huge_memory.c
++++ b/mm/huge_memory.c
+@@ -3781,21 +3781,22 @@ static int __folio_split(struct folio *folio, unsigned int new_order,
+ 		struct lruvec *lruvec;
+ 		int expected_refs;
+ 
+-		if (folio_order(folio) > 1 &&
+-		    !list_empty(&folio->_deferred_list)) {
+-			ds_queue->split_queue_len--;
++		if (folio_order(folio) > 1) {
++			if (!list_empty(&folio->_deferred_list)) {
++				ds_queue->split_queue_len--;
++				/*
++				 * Reinitialize page_deferred_list after removing the
++				 * page from the split_queue, otherwise a subsequent
++				 * split will see list corruption when checking the
++				 * page_deferred_list.
++				 */
++				list_del_init(&folio->_deferred_list);
++			}
+ 			if (folio_test_partially_mapped(folio)) {
+ 				folio_clear_partially_mapped(folio);
+ 				mod_mthp_stat(folio_order(folio),
+ 					      MTHP_STAT_NR_ANON_PARTIALLY_MAPPED, -1);
+ 			}
+-			/*
+-			 * Reinitialize page_deferred_list after removing the
+-			 * page from the split_queue, otherwise a subsequent
+-			 * split will see list corruption when checking the
+-			 * page_deferred_list.
+-			 */
+-			list_del_init(&folio->_deferred_list);
+ 		}
+ 		split_queue_unlock(ds_queue);
+ 		if (mapping) {
+@@ -4194,40 +4195,44 @@ static unsigned long deferred_split_scan(struct shrinker *shrink,
+ 	struct pglist_data *pgdata = NODE_DATA(sc->nid);
+ 	struct deferred_split *ds_queue = &pgdata->deferred_split_queue;
+ 	unsigned long flags;
+-	LIST_HEAD(list);
+-	struct folio *folio, *next, *prev = NULL;
+-	int split = 0, removed = 0;
++	struct folio *folio, *next;
++	int split = 0, i;
++	struct folio_batch fbatch;
+ 
+ #ifdef CONFIG_MEMCG
+ 	if (sc->memcg)
+ 		ds_queue = &sc->memcg->deferred_split_queue;
+ #endif
+ 
++	folio_batch_init(&fbatch);
++retry:
+ 	spin_lock_irqsave(&ds_queue->split_queue_lock, flags);
+ 	/* Take pin on all head pages to avoid freeing them under us */
+ 	list_for_each_entry_safe(folio, next, &ds_queue->split_queue,
+ 							_deferred_list) {
+ 		if (folio_try_get(folio)) {
+-			list_move(&folio->_deferred_list, &list);
+-		} else {
++			folio_batch_add(&fbatch, folio);
++		} else if (folio_test_partially_mapped(folio)) {
+ 			/* We lost race with folio_put() */
+-			if (folio_test_partially_mapped(folio)) {
+-				folio_clear_partially_mapped(folio);
+-				mod_mthp_stat(folio_order(folio),
+-					      MTHP_STAT_NR_ANON_PARTIALLY_MAPPED, -1);
+-			}
+-			list_del_init(&folio->_deferred_list);
+-			ds_queue->split_queue_len--;
++			folio_clear_partially_mapped(folio);
++			mod_mthp_stat(folio_order(folio),
++				      MTHP_STAT_NR_ANON_PARTIALLY_MAPPED, -1);
+ 		}
++		list_del_init(&folio->_deferred_list);
++		ds_queue->split_queue_len--;
+ 		if (!--sc->nr_to_scan)
+ 			break;
++		if (!folio_batch_space(&fbatch))
++			break;
+ 	}
+ 	spin_unlock_irqrestore(&ds_queue->split_queue_lock, flags);
+ 
+-	list_for_each_entry_safe(folio, next, &list, _deferred_list) {
++	for (i = 0; i < folio_batch_count(&fbatch); i++) {
+ 		bool did_split = false;
+ 		bool underused = false;
++		struct deferred_split *fqueue;
+ 
++		folio = fbatch.folios[i];
+ 		if (!folio_test_partially_mapped(folio)) {
+ 			/*
+ 			 * See try_to_map_unused_to_zeropage(): we cannot
+@@ -4250,38 +4255,25 @@ static unsigned long deferred_split_scan(struct shrinker *shrink,
+ 		}
+ 		folio_unlock(folio);
+ next:
++		if (did_split || !folio_test_partially_mapped(folio))
++			continue;
+ 		/*
+-		 * split_folio() removes folio from list on success.
+ 		 * Only add back to the queue if folio is partially mapped.
+ 		 * If thp_underused returns false, or if split_folio fails
+ 		 * in the case it was underused, then consider it used and
+ 		 * don't add it back to split_queue.
+ 		 */
+-		if (did_split) {
+-			; /* folio already removed from list */
+-		} else if (!folio_test_partially_mapped(folio)) {
+-			list_del_init(&folio->_deferred_list);
+-			removed++;
+-		} else {
+-			/*
+-			 * That unlocked list_del_init() above would be unsafe,
+-			 * unless its folio is separated from any earlier folios
+-			 * left on the list (which may be concurrently unqueued)
+-			 * by one safe folio with refcount still raised.
+-			 */
+-			swap(folio, prev);
++		fqueue = folio_split_queue_lock_irqsave(folio, &flags);
++		if (list_empty(&folio->_deferred_list)) {
++			list_add_tail(&folio->_deferred_list, &fqueue->split_queue);
++			fqueue->split_queue_len++;
+ 		}
+-		if (folio)
+-			folio_put(folio);
++		split_queue_unlock_irqrestore(fqueue, flags);
+ 	}
++	folios_put(&fbatch);
+ 
+-	spin_lock_irqsave(&ds_queue->split_queue_lock, flags);
+-	list_splice_tail(&list, &ds_queue->split_queue);
+-	ds_queue->split_queue_len -= removed;
+-	spin_unlock_irqrestore(&ds_queue->split_queue_lock, flags);
+-
+-	if (prev)
+-		folio_put(prev);
++	if (sc->nr_to_scan)
++		goto retry;
+ 
+ 	/*
+ 	 * Stop shrinker if we didn't split any page, but the queue is empty.
 -- 
-Frederic Weisbecker
-SUSE Labs
+2.20.1
+
