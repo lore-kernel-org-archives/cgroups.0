@@ -1,253 +1,190 @@
-Received: from dggsgout12.his.huawei.com (dggsgout12.his.huawei.com [45.249.212.56])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DDE992E1746;
-	Tue, 23 Sep 2025 08:05:36 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.56
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 072B93164C4
+	for <cgroups@vger.kernel.org>; Tue, 23 Sep 2025 08:25:09 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1758614739; cv=none; b=MUQh3Y2+gkGVt/sPgnPfdR+gDva0mIX+eZ9AsPPXbHvB06dHZLdeY2r6z2lu869G3Snjtc23CyvhxUvdlsGoGQGyKqBFURJm+ysfpiEL/H02cCY188QvLGX5+fJcYqqB54qWsoIuENzqlJ2AxgDANDU9+ubuENpJZK+xZ9Mu8iA=
+	t=1758615911; cv=none; b=oWv1x/asrV33XwP6hmFmmgBv3DVVvk+vGyCv8tcDfXUzp3eIzyalwWhkmrCQem4rLMVEozwdTXeL7G9kLw+4n37G7CcQOAWiiaIuHdhMGzLm6XdT/p2T+Nkj1DzPJMLwOHxUudnIesHxredYLo3dZTrHQeDdJwMPHu1a5I8syGc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1758614739; c=relaxed/simple;
-	bh=T6BhKFVvxZM6CRbhNMqQFdJeF8w33ZSkSyUv/N7p0+0=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=iQ26QJv1T/1sbijYYe2jR6+cddyPIKSnCAZkXqQ4RTaDEP7vrCQItYJjh9s7pOS2AyMAa7pzhp2mU2Ae2oHDl5ZO9duGSnG6l5ew0iIL8cGTeV4XpuxwPa5ts7YMch2/nArPSwTvyu/QMR6pEeG2xL0foL38j523p2G5Fi/wiaw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.56
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
-Received: from mail.maildlp.com (unknown [172.19.163.216])
-	by dggsgout12.his.huawei.com (SkyGuard) with ESMTPS id 4cWCG171kCzKHN0p;
-	Tue, 23 Sep 2025 16:05:29 +0800 (CST)
-Received: from mail02.huawei.com (unknown [10.116.40.128])
-	by mail.maildlp.com (Postfix) with ESMTP id D9E081A1B52;
-	Tue, 23 Sep 2025 16:05:34 +0800 (CST)
-Received: from huaweicloud.com (unknown [10.175.104.67])
-	by APP4 (Coremail) with SMTP id gCh0CgDHjGTLVNJoHpMlAg--.40262S6;
-	Tue, 23 Sep 2025 16:05:34 +0800 (CST)
-From: Yu Kuai <yukuai1@huaweicloud.com>
-To: nilay@linux.ibm.com,
-	tj@kernel.org,
-	josef@toxicpanda.com,
-	axboe@kernel.dk
-Cc: cgroups@vger.kernel.org,
-	linux-block@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	yukuai3@huawei.com,
-	yukuai1@huaweicloud.com,
-	yi.zhang@huawei.com,
-	yangerkun@huawei.com,
-	johnny.chenyi@huawei.com
-Subject: [PATCH for-6.18/block 2/2] blk-cgroup: fix possible deadlock while configuring policy
-Date: Tue, 23 Sep 2025 15:55:20 +0800
-Message-Id: <20250923075520.3746244-3-yukuai1@huaweicloud.com>
-X-Mailer: git-send-email 2.39.2
-In-Reply-To: <20250923075520.3746244-1-yukuai1@huaweicloud.com>
-References: <20250923075520.3746244-1-yukuai1@huaweicloud.com>
+	s=arc-20240116; t=1758615911; c=relaxed/simple;
+	bh=RCqJ+Lp6KKFdVamgmAQ4xFm1iFaBi0fOBeZwXRcWz0I=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=hF8YSZAna7HYYTj3ALC/0rb/sUL7yXn71lLTEvAj307rP7f//zFW2ZNLyJ/6JMaxjYaz1eg96sAnci5GxColAihgb0tqiRDsOySqr1cr1FlWAGruvbQgnHrUQto4D45Pybo+trGUPSAVl+2MGvzmJT2uDutJDoFy8LLGkjaiSfg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=N7sSa4VW; arc=none smtp.client-ip=170.10.133.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="N7sSa4VW"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1758615908;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references:autocrypt:autocrypt;
+	bh=x97u53GTt2R3N2Pgwrhc5uqxe/T+rOMKjkl/kO4sN+M=;
+	b=N7sSa4VW8et4QpF05QRv+1M7iB5DHWvfEP/htfHRJAyAeu+KmazvU7hyc+JxN3T0SM7KYL
+	JElpFUXG8bmjC6MHmvUSnhI3bg2JUyHMj/HEVN3HGZG99fofc1cY3tn21s0z7o2MKwxl+v
+	N7/9Rs+Nj6NKRop/bKfMDK6LGe4KDg8=
+Received: from mail-wr1-f72.google.com (mail-wr1-f72.google.com
+ [209.85.221.72]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-650-Lv4PBftTNDOhYyPfBszKUA-1; Tue, 23 Sep 2025 04:25:07 -0400
+X-MC-Unique: Lv4PBftTNDOhYyPfBszKUA-1
+X-Mimecast-MFC-AGG-ID: Lv4PBftTNDOhYyPfBszKUA_1758615906
+Received: by mail-wr1-f72.google.com with SMTP id ffacd0b85a97d-3ef9218daf5so977858f8f.1
+        for <cgroups@vger.kernel.org>; Tue, 23 Sep 2025 01:25:06 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1758615906; x=1759220706;
+        h=content-transfer-encoding:in-reply-to:autocrypt:content-language
+         :from:references:cc:to:subject:user-agent:mime-version:date
+         :message-id:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=x97u53GTt2R3N2Pgwrhc5uqxe/T+rOMKjkl/kO4sN+M=;
+        b=wTLjwrxxzUbBi0ImnUzG/i+YZ2HbsXyYcU78BzYm7+vM92Mr2yd+i4zyFSxA1+65mM
+         1379E/XVkVBGP+JWDoA2LorsBw5xBddrI+pT/TWCZPIoFvq6ph3GemC5VG0fNCNFNf2B
+         qBSw3fdhQeRjdQ1+HAXXPMmDX6DAdovFt0zVG7o6a5TBEJgxRst2V/FGPEf1V+hfbGDG
+         oURM2MghwXDWXviIy8GDVY0XC73NFzm092SXFgi67yoIndYGjHWHHuTGkW1rboxmh6DR
+         LfTuUANKqtydQxZho+rhlxrASwrVCsrqM7LiL3DfepQbqMD+5Ul9VLCZFfac0De4oPBG
+         Fn8Q==
+X-Forwarded-Encrypted: i=1; AJvYcCX6W+eQOn/Dwk5J/i6pLqt8KiPcGcMTnFStCboEM+G9Dy3oUobKPKTpxXvsyU7JS6W7A01o1o5E@vger.kernel.org
+X-Gm-Message-State: AOJu0YwvVcOeJ7FeN3muzX3c+6yMCnWEJlkS3P1S+joPECmVDZe0JUTw
+	QbrhGNoMo7rn3kEbTTdb/uXTQDdn7fBBdjMLjcP7HWRM9ZwHtvRokPENhbDve7ckN/KNtb7dx0d
+	Sr6qbGsVOvdjMlhm5Eo4VN+H7+R6KZ6HmebVtazrBoQueHZc11t1SmVeKGZg=
+X-Gm-Gg: ASbGnctAYcfxOIHV1NgWzXwzmqpXLe8jye7IxYdTE2797xO6oJShj2gfRLAp8ATIECU
+	hmM+EzWaD2GZJcHy/oZLc14zWB75t2DZsuqRD9GkRPXYTUrTvf5anWJd5dtmbOf9OP0jwHhlBwG
+	lzvedsabi034+43noJ2UiohTnKyIjxT3unkTp4PTAro8TceO84047/blLtJMndBQrT1vWPbG4vl
+	MUAGI8XrwD6EqroeXKIPeuaSXYtxwkXU7kQKU5cj5qKSC7bli3PLh7lN09LvK/Uhz1dUG4usxI7
+	7IvL4TL+H7pp86ZNwXBt6eA1Hgeo3vGg63G46hpUA5OU2hUUSIseaZBOXzYYkatiD2lkIRRpGKH
+	H7PEfv/6X+4LOunrhAkx4yuEG3rFllVqlKeTuMT2iCsWHgpGp9OlNJoU67WQaUbnUzg==
+X-Received: by 2002:a5d:5f92:0:b0:3f9:6657:d05 with SMTP id ffacd0b85a97d-405c551a369mr1243713f8f.12.1758615905726;
+        Tue, 23 Sep 2025 01:25:05 -0700 (PDT)
+X-Google-Smtp-Source: AGHT+IECy5ZyUMi86SkAmY3UUEpYt+kdXd66GExl/asl5sc/9lT72Pm81eO5xU3dy52ferMCYaK/cg==
+X-Received: by 2002:a5d:5f92:0:b0:3f9:6657:d05 with SMTP id ffacd0b85a97d-405c551a369mr1243681f8f.12.1758615905225;
+        Tue, 23 Sep 2025 01:25:05 -0700 (PDT)
+Received: from ?IPV6:2003:d8:2f4f:700:c9db:579f:8b2b:717c? (p200300d82f4f0700c9db579f8b2b717c.dip0.t-ipconnect.de. [2003:d8:2f4f:700:c9db:579f:8b2b:717c])
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-46e1ce0f019sm10938525e9.0.2025.09.23.01.25.04
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Tue, 23 Sep 2025 01:25:04 -0700 (PDT)
+Message-ID: <9688edb5-f474-49a4-ac84-0702ed3af3a2@redhat.com>
+Date: Tue, 23 Sep 2025 10:25:03 +0200
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:gCh0CgDHjGTLVNJoHpMlAg--.40262S6
-X-Coremail-Antispam: 1UD129KBjvJXoW3XrWfXw1rtr47GF45AFW8JFb_yoW7uFWkpF
-	W3KF13Ary0gr4DZrWkGr17WryUtay8Kr45GrZ3GryS9F42vr1YgF1jyF10kFW8ArZrJFZ5
-	tF4FqayFkF4DCw7anT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDU0xBIdaVrnRJUUUQv14x267AKxVWrJVCq3wAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
-	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2048vs2IY020E87I2jVAFwI0_Jryl82xGYIkIc2
-	x26xkF7I0E14v26ryj6s0DM28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48ve4kI8wA2z4x0
-	Y4vE2Ix0cI8IcVAFwI0_tr0E3s1l84ACjcxK6xIIjxv20xvEc7CjxVAFwI0_Gr1j6F4UJw
-	A2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x0267AKxVW0oVCq3wAS
-	0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG6I80ewAv7VC0I7IYx2
-	IY67AKxVWUJVWUGwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFVCjc4AY6r1j6r4UM4x0
-	Y48IcxkI7VAKI48JM4x0x7Aq67IIx4CEVc8vx2IErcIFxwACI402YVCY1x02628vn2kIc2
-	xKxwCY1x0262kKe7AKxVWUtVW8ZwCF04k20xvY0x0EwIxGrwCF54CYxVCY1x0262kKe7AK
-	xVWUtVW8ZwCFx2IqxVCFs4IE7xkEbVWUJVW8JwC20s026c02F40E14v26r1j6r18MI8I3I
-	0E7480Y4vE14v26r106r1rMI8E67AF67kF1VAFwI0_Jw0_GFylIxkGc2Ij64vIr41lIxAI
-	cVC0I7IYx2IY67AKxVWUJVWUCwCI42IY6xIIjxv20xvEc7CjxVAFwI0_Gr0_Cr1lIxAIcV
-	CF04k26cxKx2IYs7xG6r1j6r1xMIIF0xvEx4A2jsIE14v26r1j6r4UMIIF0xvEx4A2jsIE
-	c7CjxVAFwI0_Gr0_Gr1UYxBIdaVFxhVjvjDU0xZFpf9x0JUQXo7UUUUU=
-X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH linux-next v3 4/6] ksm: make ksm_process_profit available
+ on CONFIG_PROCFS=n
+To: xu.xin16@zte.com.cn, akpm@linux-foundation.org
+Cc: shakeel.butt@linux.dev, hannes@cmpxchg.org, mhocko@kernel.org,
+ roman.gushchin@linux.dev, chengming.zhou@linux.dev, muchun.song@linux.dev,
+ linux-kernel@vger.kernel.org, linux-mm@kvack.org, cgroups@vger.kernel.org
+References: <20250921231334093OILrn169i655S8Pe0KMUC@zte.com.cn>
+From: David Hildenbrand <david@redhat.com>
+Content-Language: en-US
+Autocrypt: addr=david@redhat.com; keydata=
+ xsFNBFXLn5EBEAC+zYvAFJxCBY9Tr1xZgcESmxVNI/0ffzE/ZQOiHJl6mGkmA1R7/uUpiCjJ
+ dBrn+lhhOYjjNefFQou6478faXE6o2AhmebqT4KiQoUQFV4R7y1KMEKoSyy8hQaK1umALTdL
+ QZLQMzNE74ap+GDK0wnacPQFpcG1AE9RMq3aeErY5tujekBS32jfC/7AnH7I0v1v1TbbK3Gp
+ XNeiN4QroO+5qaSr0ID2sz5jtBLRb15RMre27E1ImpaIv2Jw8NJgW0k/D1RyKCwaTsgRdwuK
+ Kx/Y91XuSBdz0uOyU/S8kM1+ag0wvsGlpBVxRR/xw/E8M7TEwuCZQArqqTCmkG6HGcXFT0V9
+ PXFNNgV5jXMQRwU0O/ztJIQqsE5LsUomE//bLwzj9IVsaQpKDqW6TAPjcdBDPLHvriq7kGjt
+ WhVhdl0qEYB8lkBEU7V2Yb+SYhmhpDrti9Fq1EsmhiHSkxJcGREoMK/63r9WLZYI3+4W2rAc
+ UucZa4OT27U5ZISjNg3Ev0rxU5UH2/pT4wJCfxwocmqaRr6UYmrtZmND89X0KigoFD/XSeVv
+ jwBRNjPAubK9/k5NoRrYqztM9W6sJqrH8+UWZ1Idd/DdmogJh0gNC0+N42Za9yBRURfIdKSb
+ B3JfpUqcWwE7vUaYrHG1nw54pLUoPG6sAA7Mehl3nd4pZUALHwARAQABzSREYXZpZCBIaWxk
+ ZW5icmFuZCA8ZGF2aWRAcmVkaGF0LmNvbT7CwZoEEwEIAEQCGwMCF4ACGQEFCwkIBwICIgIG
+ FQoJCAsCBBYCAwECHgcWIQQb2cqtc1xMOkYN/MpN3hD3AP+DWgUCaJzangUJJlgIpAAKCRBN
+ 3hD3AP+DWhAxD/9wcL0A+2rtaAmutaKTfxhTP0b4AAp1r/eLxjrbfbCCmh4pqzBhmSX/4z11
+ opn2KqcOsueRF1t2ENLOWzQu3Roiny2HOU7DajqB4dm1BVMaXQya5ae2ghzlJN9SIoopTWlR
+ 0Af3hPj5E2PYvQhlcqeoehKlBo9rROJv/rjmr2x0yOM8qeTroH/ZzNlCtJ56AsE6Tvl+r7cW
+ 3x7/Jq5WvWeudKrhFh7/yQ7eRvHCjd9bBrZTlgAfiHmX9AnCCPRPpNGNedV9Yty2Jnxhfmbv
+ Pw37LA/jef8zlCDyUh2KCU1xVEOWqg15o1RtTyGV1nXV2O/mfuQJud5vIgzBvHhypc3p6VZJ
+ lEf8YmT+Ol5P7SfCs5/uGdWUYQEMqOlg6w9R4Pe8d+mk8KGvfE9/zTwGg0nRgKqlQXrWRERv
+ cuEwQbridlPAoQHrFWtwpgYMXx2TaZ3sihcIPo9uU5eBs0rf4mOERY75SK+Ekayv2ucTfjxr
+ Kf014py2aoRJHuvy85ee/zIyLmve5hngZTTe3Wg3TInT9UTFzTPhItam6dZ1xqdTGHZYGU0O
+ otRHcwLGt470grdiob6PfVTXoHlBvkWRadMhSuG4RORCDpq89vu5QralFNIf3EysNohoFy2A
+ LYg2/D53xbU/aa4DDzBb5b1Rkg/udO1gZocVQWrDh6I2K3+cCs7BTQRVy5+RARAA59fefSDR
+ 9nMGCb9LbMX+TFAoIQo/wgP5XPyzLYakO+94GrgfZjfhdaxPXMsl2+o8jhp/hlIzG56taNdt
+ VZtPp3ih1AgbR8rHgXw1xwOpuAd5lE1qNd54ndHuADO9a9A0vPimIes78Hi1/yy+ZEEvRkHk
+ /kDa6F3AtTc1m4rbbOk2fiKzzsE9YXweFjQvl9p+AMw6qd/iC4lUk9g0+FQXNdRs+o4o6Qvy
+ iOQJfGQ4UcBuOy1IrkJrd8qq5jet1fcM2j4QvsW8CLDWZS1L7kZ5gT5EycMKxUWb8LuRjxzZ
+ 3QY1aQH2kkzn6acigU3HLtgFyV1gBNV44ehjgvJpRY2cC8VhanTx0dZ9mj1YKIky5N+C0f21
+ zvntBqcxV0+3p8MrxRRcgEtDZNav+xAoT3G0W4SahAaUTWXpsZoOecwtxi74CyneQNPTDjNg
+ azHmvpdBVEfj7k3p4dmJp5i0U66Onmf6mMFpArvBRSMOKU9DlAzMi4IvhiNWjKVaIE2Se9BY
+ FdKVAJaZq85P2y20ZBd08ILnKcj7XKZkLU5FkoA0udEBvQ0f9QLNyyy3DZMCQWcwRuj1m73D
+ sq8DEFBdZ5eEkj1dCyx+t/ga6x2rHyc8Sl86oK1tvAkwBNsfKou3v+jP/l14a7DGBvrmlYjO
+ 59o3t6inu6H7pt7OL6u6BQj7DoMAEQEAAcLBfAQYAQgAJgIbDBYhBBvZyq1zXEw6Rg38yk3e
+ EPcA/4NaBQJonNqrBQkmWAihAAoJEE3eEPcA/4NaKtMQALAJ8PzprBEXbXcEXwDKQu+P/vts
+ IfUb1UNMfMV76BicGa5NCZnJNQASDP/+bFg6O3gx5NbhHHPeaWz/VxlOmYHokHodOvtL0WCC
+ 8A5PEP8tOk6029Z+J+xUcMrJClNVFpzVvOpb1lCbhjwAV465Hy+NUSbbUiRxdzNQtLtgZzOV
+ Zw7jxUCs4UUZLQTCuBpFgb15bBxYZ/BL9MbzxPxvfUQIPbnzQMcqtpUs21CMK2PdfCh5c4gS
+ sDci6D5/ZIBw94UQWmGpM/O1ilGXde2ZzzGYl64glmccD8e87OnEgKnH3FbnJnT4iJchtSvx
+ yJNi1+t0+qDti4m88+/9IuPqCKb6Stl+s2dnLtJNrjXBGJtsQG/sRpqsJz5x1/2nPJSRMsx9
+ 5YfqbdrJSOFXDzZ8/r82HgQEtUvlSXNaXCa95ez0UkOG7+bDm2b3s0XahBQeLVCH0mw3RAQg
+ r7xDAYKIrAwfHHmMTnBQDPJwVqxJjVNr7yBic4yfzVWGCGNE4DnOW0vcIeoyhy9vnIa3w1uZ
+ 3iyY2Nsd7JxfKu1PRhCGwXzRw5TlfEsoRI7V9A8isUCoqE2Dzh3FvYHVeX4Us+bRL/oqareJ
+ CIFqgYMyvHj7Q06kTKmauOe4Nf0l0qEkIuIzfoLJ3qr5UyXc2hLtWyT9Ir+lYlX9efqh7mOY
+ qIws/H2t
+In-Reply-To: <20250921231334093OILrn169i655S8Pe0KMUC@zte.com.cn>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-From: Yu Kuai <yukuai3@huawei.com>
+On 21.09.25 17:13, xu.xin16@zte.com.cn wrote:
+> From: xu xin <xu.xin16@zte.com.cn>
+> 
+> This remove the restriction CONFIG_PROCFS=y for the heler function
 
-Following deadlock can be triggered easily by lockdep:
+s/heler/helper.
 
-WARNING: possible circular locking dependency detected
-6.17.0-rc3-00124-ga12c2658ced0 #1665 Not tainted
-------------------------------------------------------
-check/1334 is trying to acquire lock:
-ff1100011d9d0678 (&q->sysfs_lock){+.+.}-{4:4}, at: blk_unregister_queue+0x53/0x180
+> ksm_process_profit(), then we can use it for the later patches on
+> CONFIG_PROCFS=n.
 
-but task is already holding lock:
-ff1100011d9d00e0 (&q->q_usage_counter(queue)#3){++++}-{0:0}, at: del_gendisk+0xba/0x110
 
-which lock already depends on the new lock.
+Better to something like this:
 
-the existing dependency chain (in reverse order) is:
+"Let's provide ksm_process_profit() also without CONFIG_PROCFS so we can 
+use it from memcg code next."
 
--> #2 (&q->q_usage_counter(queue)#3){++++}-{0:0}:
-       blk_queue_enter+0x40b/0x470
-       blkg_conf_prep+0x7b/0x3c0
-       tg_set_limit+0x10a/0x3e0
-       cgroup_file_write+0xc6/0x420
-       kernfs_fop_write_iter+0x189/0x280
-       vfs_write+0x256/0x490
-       ksys_write+0x83/0x190
-       __x64_sys_write+0x21/0x30
-       x64_sys_call+0x4608/0x4630
-       do_syscall_64+0xdb/0x6b0
-       entry_SYSCALL_64_after_hwframe+0x76/0x7e
+?
 
--> #1 (&q->rq_qos_mutex){+.+.}-{4:4}:
-       __mutex_lock+0xd8/0xf50
-       mutex_lock_nested+0x2b/0x40
-       wbt_init+0x17e/0x280
-       wbt_enable_default+0xe9/0x140
-       blk_register_queue+0x1da/0x2e0
-       __add_disk+0x38c/0x5d0
-       add_disk_fwnode+0x89/0x250
-       device_add_disk+0x18/0x30
-       virtblk_probe+0x13a3/0x1800
-       virtio_dev_probe+0x389/0x610
-       really_probe+0x136/0x620
-       __driver_probe_device+0xb3/0x230
-       driver_probe_device+0x2f/0xe0
-       __driver_attach+0x158/0x250
-       bus_for_each_dev+0xa9/0x130
-       driver_attach+0x26/0x40
-       bus_add_driver+0x178/0x3d0
-       driver_register+0x7d/0x1c0
-       __register_virtio_driver+0x2c/0x60
-       virtio_blk_init+0x6f/0xe0
-       do_one_initcall+0x94/0x540
-       kernel_init_freeable+0x56a/0x7b0
-       kernel_init+0x2b/0x270
-       ret_from_fork+0x268/0x4c0
-       ret_from_fork_asm+0x1a/0x30
+> 
+> Reported-by: kernel test robot <lkp@intel.com>
+> Closes: https://lore.kernel.org/all/202509142046.QatEaTQV-lkp@intel.com/
 
--> #0 (&q->sysfs_lock){+.+.}-{4:4}:
-       __lock_acquire+0x1835/0x2940
-       lock_acquire+0xf9/0x450
-       __mutex_lock+0xd8/0xf50
-       mutex_lock_nested+0x2b/0x40
-       blk_unregister_queue+0x53/0x180
-       __del_gendisk+0x226/0x690
-       del_gendisk+0xba/0x110
-       sd_remove+0x49/0xb0 [sd_mod]
-       device_remove+0x87/0xb0
-       device_release_driver_internal+0x11e/0x230
-       device_release_driver+0x1a/0x30
-       bus_remove_device+0x14d/0x220
-       device_del+0x1e1/0x5a0
-       __scsi_remove_device+0x1ff/0x2f0
-       scsi_remove_device+0x37/0x60
-       sdev_store_delete+0x77/0x100
-       dev_attr_store+0x1f/0x40
-       sysfs_kf_write+0x65/0x90
-       kernfs_fop_write_iter+0x189/0x280
-       vfs_write+0x256/0x490
-       ksys_write+0x83/0x190
-       __x64_sys_write+0x21/0x30
-       x64_sys_call+0x4608/0x4630
-       do_syscall_64+0xdb/0x6b0
-       entry_SYSCALL_64_after_hwframe+0x76/0x7e
+Both tags should be dropped as there is nothing fixed here.
 
-other info that might help us debug this:
+> Signed-off-by: xu xin <xu.xin16@zte.com.cn>
+> ---
+>   mm/ksm.c | 2 --
+>   1 file changed, 2 deletions(-)
+> 
+> diff --git a/mm/ksm.c b/mm/ksm.c
+> index e49f4b86ffb0..a68d4b37b503 100644
+> --- a/mm/ksm.c
+> +++ b/mm/ksm.c
+> @@ -3282,7 +3282,6 @@ static void wait_while_offlining(void)
+>   }
+>   #endif /* CONFIG_MEMORY_HOTREMOVE */
+> 
+> -#ifdef CONFIG_PROC_FS
+>   /*
+>    * The process is mergeable only if any VMA is currently
+>    * applicable to KSM.
+> @@ -3307,7 +3306,6 @@ long ksm_process_profit(struct mm_struct *mm)
+>   	return (long)(mm->ksm_merging_pages + mm_ksm_zero_pages(mm)) * PAGE_SIZE -
+>   		mm->ksm_rmap_items * sizeof(struct ksm_rmap_item);
+>   }
+> -#endif /* CONFIG_PROC_FS */
+> 
+>   #ifdef CONFIG_MEMCG
+>   struct memcg_ksm_stat {
 
-Chain exists of:
-  &q->sysfs_lock --> &q->rq_qos_mutex --> &q->q_usage_counter(queue)#3
 
- Possible unsafe locking scenario:
-
-       CPU0                    CPU1
-       ----                    ----
-  lock(&q->q_usage_counter(queue)#3);
-                               lock(&q->rq_qos_mutex);
-                               lock(&q->q_usage_counter(queue)#3);
-  lock(&q->sysfs_lock);
-
-Root cause is that queue_usage_counter is grabbed with rq_qos_mutex
-held in blkg_conf_prep(), while queue should be freezed before
-rq_qos_mutex from other context.
-
-The blk_queue_enter() from blkg_conf_prep() is used to protect against
-policy deactivation, which is already protected with blkcg_mutex, hence
-convert blk_queue_enter() to blkcg_mutex to fix this problem. Meanwhile,
-consider that blkcg_mutex is held after queue is freezed from policy
-deactivation, also convert blkg_alloc() to use GFP_NOIO.
-
-Signed-off-by: Yu Kuai <yukuai3@huawei.com>
----
-BTW, I'm not quite sure about the fix tag, when blk_queue_enter() and
-rq_qos_mutex are first introduced, queue is still freezed inside
-rq_qos_mutex.
-
- block/blk-cgroup.c | 23 ++++++++---------------
- 1 file changed, 8 insertions(+), 15 deletions(-)
-
-diff --git a/block/blk-cgroup.c b/block/blk-cgroup.c
-index 0c7b58696d3c..9f153f5f2ceb 100644
---- a/block/blk-cgroup.c
-+++ b/block/blk-cgroup.c
-@@ -877,14 +877,8 @@ int blkg_conf_prep(struct blkcg *blkcg, const struct blkcg_policy *pol,
- 	disk = ctx->bdev->bd_disk;
- 	q = disk->queue;
- 
--	/*
--	 * blkcg_deactivate_policy() requires queue to be frozen, we can grab
--	 * q_usage_counter to prevent concurrent with blkcg_deactivate_policy().
--	 */
--	ret = blk_queue_enter(q, 0);
--	if (ret)
--		goto fail;
--
-+	/* Prevent concurrent with blkcg_deactivate_policy() */
-+	mutex_lock(&q->blkcg_mutex);
- 	spin_lock_irq(&q->queue_lock);
- 
- 	if (!blkcg_policy_enabled(q, pol)) {
-@@ -914,16 +908,16 @@ int blkg_conf_prep(struct blkcg *blkcg, const struct blkcg_policy *pol,
- 		/* Drop locks to do new blkg allocation with GFP_KERNEL. */
- 		spin_unlock_irq(&q->queue_lock);
- 
--		new_blkg = blkg_alloc(pos, disk, GFP_KERNEL);
-+		new_blkg = blkg_alloc(pos, disk, GFP_NOIO);
- 		if (unlikely(!new_blkg)) {
- 			ret = -ENOMEM;
--			goto fail_exit_queue;
-+			goto fail_exit;
- 		}
- 
- 		if (radix_tree_preload(GFP_KERNEL)) {
- 			blkg_free(new_blkg);
- 			ret = -ENOMEM;
--			goto fail_exit_queue;
-+			goto fail_exit;
- 		}
- 
- 		spin_lock_irq(&q->queue_lock);
-@@ -951,7 +945,7 @@ int blkg_conf_prep(struct blkcg *blkcg, const struct blkcg_policy *pol,
- 			goto success;
- 	}
- success:
--	blk_queue_exit(q);
-+	mutex_unlock(&q->blkcg_mutex);
- 	ctx->blkg = blkg;
- 	return 0;
- 
-@@ -959,9 +953,8 @@ int blkg_conf_prep(struct blkcg *blkcg, const struct blkcg_policy *pol,
- 	radix_tree_preload_end();
- fail_unlock:
- 	spin_unlock_irq(&q->queue_lock);
--fail_exit_queue:
--	blk_queue_exit(q);
--fail:
-+fail_exit:
-+	mutex_unlock(&q->blkcg_mutex);
- 	/*
- 	 * If queue was bypassing, we should retry.  Do so after a
- 	 * short msleep().  It isn't strictly necessary but queue
 -- 
-2.39.2
+Cheers
+
+David / dhildenb
 
