@@ -1,28 +1,28 @@
-Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
+Received: from dggsgout12.his.huawei.com (dggsgout12.his.huawei.com [45.249.212.56])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 452162E9ECD;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8AE952EA16B;
 	Thu, 25 Sep 2025 08:25:55 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.51
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.56
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1758788757; cv=none; b=pzFCloOsHBHR01WZUKNSOZW4bKou4BUAoax7vn/QpYgQOK8CTBvYUT3+HUSA2LGzf9NMBNzIHXRCHDJFP4jcmu+bpqLcPCQwM+Wctgcz+R/ZFLgFldkuQ8pYfmuoZ9evrT5U9C/ze815LLhtlPcf+Xm7hXdS3xH67ljnlDiOhcA=
+	t=1758788757; cv=none; b=g0EVuSrG0Q7yfeDD2ilVelFJHHLm36pCJnIN+mQi6lYIgDGz5sJcbFzv6B+/p48A08m2NaSwV5HEME9x17W0ueKyMYBqCyGfD+l27+R8Y8mfIbJnxrjFFVDBUVTVBfuUTEUsorkW+ll1rhmtRxggzFVcmm6Xa32qRjyvkuj2b78=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1758788757; c=relaxed/simple;
-	bh=Fl9a4MsHebMDtNGOS5Be/a+/ahidA3Hd4d+Sh/lklow=;
+	bh=PGaKZ6FucL5IdPDlsTQSnKUo+ZzCSn9HJ5zp0+C+Mu0=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=QTqDOSB0jxy6j4d3laFQsXD/MkLsp4fQxmrGAP4pNAwJ4AlcjrZUz1ZFTq2mtTJExT0arpqsHtLl617eLjuUcEJ3r/El3xnF1Yyr8hEqSHpxcBLC9IFqaUuku9+ehWbXSSTWUftCRc4CHP0J3Q8ItjxjxVIa2TkDS0d1WRxaIZc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.51
+	 MIME-Version; b=mNgQN7BmA3LhS2fRVPdSrgO0krRR3U7w1qlUbLjKnjVyIzHxK2v/fJzrIT5wQbMpEzjqbUBCPNcs80vJd5r5Pl+YZCwerJ9xYcnUZ2Fwmx2HnoC+k19iDhLD4XrB4SC0t52axFsMei1vSi8/htK/XE7rQRKjyb61MC9rYEhenAA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.56
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
-Received: from mail.maildlp.com (unknown [172.19.163.216])
-	by dggsgout11.his.huawei.com (SkyGuard) with ESMTPS id 4cXRcK6sk9zYQvXb;
-	Thu, 25 Sep 2025 16:25:37 +0800 (CST)
+Received: from mail.maildlp.com (unknown [172.19.163.235])
+	by dggsgout12.his.huawei.com (SkyGuard) with ESMTPS id 4cXRcR4DSMzKHN7w;
+	Thu, 25 Sep 2025 16:25:43 +0800 (CST)
 Received: from mail02.huawei.com (unknown [10.116.40.128])
-	by mail.maildlp.com (Postfix) with ESMTP id E27011A0194;
-	Thu, 25 Sep 2025 16:25:46 +0800 (CST)
+	by mail.maildlp.com (Postfix) with ESMTP id 6F5A21A1068;
+	Thu, 25 Sep 2025 16:25:51 +0800 (CST)
 Received: from huaweicloud.com (unknown [10.175.104.67])
-	by APP4 (Coremail) with SMTP id gCh0CgCna2OH_NRodTcIAw--.12615S5;
-	Thu, 25 Sep 2025 16:25:46 +0800 (CST)
+	by APP4 (Coremail) with SMTP id gCh0CgCna2OH_NRodTcIAw--.12615S12;
+	Thu, 25 Sep 2025 16:25:51 +0800 (CST)
 From: Yu Kuai <yukuai1@huaweicloud.com>
 To: tj@kernel.org,
 	ming.lei@redhat.com,
@@ -41,9 +41,9 @@ Cc: cgroups@vger.kernel.org,
 	yi.zhang@huawei.com,
 	yangerkun@huawei.com,
 	johnny.chenyi@huawei.com
-Subject: [PATCH 01/10] blk-cgroup: use cgroup lock and rcu to protect iterating blkcg blkgs
-Date: Thu, 25 Sep 2025 16:15:16 +0800
-Message-Id: <20250925081525.700639-2-yukuai1@huaweicloud.com>
+Subject: [PATCH 08/10] blk-cgroup: remove radix_tree_preload()
+Date: Thu, 25 Sep 2025 16:15:23 +0800
+Message-Id: <20250925081525.700639-9-yukuai1@huaweicloud.com>
 X-Mailer: git-send-email 2.39.2
 In-Reply-To: <20250925081525.700639-1-yukuai1@huaweicloud.com>
 References: <20250925081525.700639-1-yukuai1@huaweicloud.com>
@@ -54,85 +54,111 @@ List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:gCh0CgCna2OH_NRodTcIAw--.12615S5
-X-Coremail-Antispam: 1UD129KBjvJXoW7ZF47CF1xCr1rWrWfJr1DZFb_yoW8tr45pr
-	sxKFW3J34v9F48ZF42g3Z0vrn5Wa1DKrW5J3ykXa1YkF17ZrnxZF1DAr9YqrWSvFWxAr4Y
-	qrWUtryYyr4UCwUanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDU0xBIdaVrnRJUUUmvb4IE77IF4wAFF20E14v26rWj6s0DM7CY07I20VC2zVCF04k2
-	6cxKx2IYs7xG6rWj6s0DM7CIcVAFz4kK6r1j6r18M28IrcIa0xkI8VA2jI8067AKxVWUGw
-	A2048vs2IY020Ec7CjxVAFwI0_Gr0_Xr1l8cAvFVAK0II2c7xJM28CjxkF64kEwVA0rcxS
-	w2x7M28EF7xvwVC0I7IYx2IY67AKxVW7JVWDJwA2z4x0Y4vE2Ix0cI8IcVCY1x0267AKxV
-	W8Jr0_Cr1UM28EF7xvwVC2z280aVAFwI0_GcCE3s1l84ACjcxK6I8E87Iv6xkF7I0E14v2
-	6rxl6s0DM2AIxVAIcxkEcVAq07x20xvEncxIr21l5I8CrVACY4xI64kE6c02F40Ex7xfMc
-	Ij6xIIjxv20xvE14v26r1j6r18McIj6I8E87Iv67AKxVWUJVW8JwAm72CE4IkC6x0Yz7v_
-	Jr0_Gr1lF7xvr2IYc2Ij64vIr41lF7I21c0EjII2zVCS5cI20VAGYxC7M4IIrI8v6xkF7I
-	0E8cxan2IY04v7MxkF7I0En4kS14v26r4a6rW5MxAIw28IcxkI7VAKI48JMxC20s026xCa
-	FVCjc4AY6r1j6r4UMI8I3I0E5I8CrVAFwI0_Jr0_Jr4lx2IqxVCjr7xvwVAFwI0_JrI_Jr
-	Wlx4CE17CEb7AF67AKxVW8ZVWrXwCIc40Y0x0EwIxGrwCI42IY6xIIjxv20xvE14v26r1j
-	6r1xMIIF0xvE2Ix0cI8IcVCY1x0267AKxVW8JVWxJwCI42IY6xAIw20EY4v20xvaj40_Jr
-	0_JF4lIxAIcVC2z280aVAFwI0_Jr0_Gr1lIxAIcVC2z280aVCY1x0267AKxVW8JVW8JrUv
-	cSsGvfC2KfnxnUUI43ZEXa7sRMv31JUUUUU==
+X-CM-TRANSID:gCh0CgCna2OH_NRodTcIAw--.12615S12
+X-Coremail-Antispam: 1UD129KBjvJXoW7WFy8Gry3AryrXr1UCry5XFb_yoW8uw1UpF
+	W3trZxG348KwnxZa45Xw17Ww10qa18X3yrGrZ3Gw1S9FW2vr1IgF10vr1kCayxAFZFvrs8
+	tr90qFyFyFyUCw7anT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDU0xBIdaVrnRJUUUmS14x267AKxVWrJVCq3wAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
+	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2048vs2IY020E87I2jVAFwI0_JF0E3s1l82xGYI
+	kIc2x26xkF7I0E14v26ryj6s0DM28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48ve4kI8wA2
+	z4x0Y4vE2Ix0cI8IcVAFwI0_Ar0_tr1l84ACjcxK6xIIjxv20xvEc7CjxVAFwI0_Gr1j6F
+	4UJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x0267AKxVW0oVCq
+	3wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG6I80ewAv7VC0I7
+	IYx2IY67AKxVWUJVWUGwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFVCjc4AY6r1j6r4U
+	M4x0Y48IcxkI7VAKI48JM4x0x7Aq67IIx4CEVc8vx2IErcIFxwACI402YVCY1x02628vn2
+	kIc2xKxwCY1x0262kKe7AKxVW8ZVWrXwCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7xkE
+	bVWUJVW8JwC20s026c02F40E14v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E67
+	AF67kF1VAFwI0_GFv_WrylIxkGc2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUCVW8JwCI
+	42IY6xIIjxv20xvEc7CjxVAFwI0_Gr1j6F4UJwCI42IY6xAIw20EY4v20xvaj40_Jr0_JF
+	4lIxAIcVC2z280aVAFwI0_Jr0_Gr1lIxAIcVC2z280aVCY1x0267AKxVW8Jr0_Cr1UYxBI
+	daVFxhVjvjDU0xZFpf9x0pRQJ5wUUUUU=
 X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
 
 From: Yu Kuai <yukuai3@huawei.com>
 
-It's safe to iterate blkgs with cgroup lock or rcu lock held, prevent
-nested queue_lock under rcu lock, and prepare to convert protecting
-blkcg with blkcg_mutex instead of queuelock.
+Now that blkcg_mutex is used to protect blkgs, memory allocation no
+longer need to be non-blocking, this is not needed.
 
 Signed-off-by: Yu Kuai <yukuai3@huawei.com>
 ---
- block/blk-cgroup-rwstat.c |  2 --
- block/blk-cgroup.c        | 16 +++++-----------
- 2 files changed, 5 insertions(+), 13 deletions(-)
+ block/blk-cgroup.c | 20 ++------------------
+ 1 file changed, 2 insertions(+), 18 deletions(-)
 
-diff --git a/block/blk-cgroup-rwstat.c b/block/blk-cgroup-rwstat.c
-index a55fb0c53558..d41ade993312 100644
---- a/block/blk-cgroup-rwstat.c
-+++ b/block/blk-cgroup-rwstat.c
-@@ -101,8 +101,6 @@ void blkg_rwstat_recursive_sum(struct blkcg_gq *blkg, struct blkcg_policy *pol,
- 	struct cgroup_subsys_state *pos_css;
- 	unsigned int i;
- 
--	lockdep_assert_held(&blkg->q->queue_lock);
--
- 	memset(sum, 0, sizeof(*sum));
- 	rcu_read_lock();
- 	blkg_for_each_descendant_pre(pos_blkg, pos_css, blkg) {
 diff --git a/block/blk-cgroup.c b/block/blk-cgroup.c
-index f93de34fe87d..2d767ae61d2f 100644
+index 280f29a713b6..bfc74cfebd3e 100644
 --- a/block/blk-cgroup.c
 +++ b/block/blk-cgroup.c
-@@ -712,12 +712,9 @@ void blkcg_print_blkgs(struct seq_file *sf, struct blkcg *blkcg,
- 	u64 total = 0;
+@@ -893,16 +893,10 @@ int blkg_conf_prep(struct blkcg *blkcg, const struct blkcg_policy *pol,
+ 			goto fail_unlock;
+ 		}
  
- 	rcu_read_lock();
--	hlist_for_each_entry_rcu(blkg, &blkcg->blkg_list, blkcg_node) {
--		spin_lock_irq(&blkg->q->queue_lock);
--		if (blkcg_policy_enabled(blkg->q, pol))
-+	hlist_for_each_entry_rcu(blkg, &blkcg->blkg_list, blkcg_node)
-+		if (blkcg_policy_enabled(blkg->q, pol) && blkg->online)
- 			total += prfill(sf, blkg->pd[pol->plid], data);
--		spin_unlock_irq(&blkg->q->queue_lock);
--	}
- 	rcu_read_unlock();
+-		if (radix_tree_preload(GFP_KERNEL)) {
+-			blkg_free(new_blkg);
+-			ret = -ENOMEM;
+-			goto fail_unlock;
+-		}
+-
+ 		if (!blkcg_policy_enabled(q, pol)) {
+ 			blkg_free(new_blkg);
+ 			ret = -EOPNOTSUPP;
+-			goto fail_preloaded;
++			goto fail_unlock;
+ 		}
  
- 	if (show_total)
-@@ -1242,13 +1239,10 @@ static int blkcg_print_stat(struct seq_file *sf, void *v)
- 	else
- 		css_rstat_flush(&blkcg->css);
+ 		blkg = blkg_lookup(pos, q);
+@@ -912,12 +906,10 @@ int blkg_conf_prep(struct blkcg *blkcg, const struct blkcg_policy *pol,
+ 			blkg = blkg_create(pos, disk, new_blkg);
+ 			if (IS_ERR(blkg)) {
+ 				ret = PTR_ERR(blkg);
+-				goto fail_preloaded;
++				goto fail_unlock;
+ 			}
+ 		}
  
--	rcu_read_lock();
--	hlist_for_each_entry_rcu(blkg, &blkcg->blkg_list, blkcg_node) {
--		spin_lock_irq(&blkg->q->queue_lock);
-+	spin_lock_irq(&blkcg->lock);
-+	hlist_for_each_entry(blkg, &blkcg->blkg_list, blkcg_node)
- 		blkcg_print_one_stat(blkg, sf);
--		spin_unlock_irq(&blkg->q->queue_lock);
--	}
--	rcu_read_unlock();
-+	spin_unlock_irq(&blkcg->lock);
+-		radix_tree_preload_end();
+-
+ 		if (pos == blkcg)
+ 			goto success;
+ 	}
+@@ -925,8 +917,6 @@ int blkg_conf_prep(struct blkcg *blkcg, const struct blkcg_policy *pol,
+ 	ctx->blkg = blkg;
  	return 0;
+ 
+-fail_preloaded:
+-	radix_tree_preload_end();
+ fail_unlock:
+ 	mutex_unlock(&q->blkcg_mutex);
+ 	/*
+@@ -1479,14 +1469,12 @@ int blkcg_init_disk(struct gendisk *disk)
+ {
+ 	struct request_queue *q = disk->queue;
+ 	struct blkcg_gq *new_blkg, *blkg;
+-	bool preloaded;
+ 
+ 	new_blkg = blkg_alloc(&blkcg_root, disk, GFP_KERNEL);
+ 	if (!new_blkg)
+ 		return -ENOMEM;
+ 
+ 	mutex_lock(&q->blkcg_mutex);
+-	preloaded = !radix_tree_preload(GFP_NOIO);
+ 
+ 	/* Make sure the root blkg exists. */
+ 	blkg = blkg_create(&blkcg_root, disk, new_blkg);
+@@ -1494,16 +1482,12 @@ int blkcg_init_disk(struct gendisk *disk)
+ 		goto err_unlock;
+ 	q->root_blkg = blkg;
+ 
+-	if (preloaded)
+-		radix_tree_preload_end();
+ 	mutex_unlock(&q->blkcg_mutex);
+ 
+ 	return 0;
+ 
+ err_unlock:
+ 	mutex_unlock(&q->blkcg_mutex);
+-	if (preloaded)
+-		radix_tree_preload_end();
+ 	return PTR_ERR(blkg);
  }
  
 -- 
