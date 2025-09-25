@@ -1,208 +1,123 @@
-Received: from mail-pf1-f174.google.com (mail-pf1-f174.google.com [209.85.210.174])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from dggsgout12.his.huawei.com (dggsgout12.his.huawei.com [45.249.212.56])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A20712EC57F
-	for <cgroups@vger.kernel.org>; Thu, 25 Sep 2025 06:29:45 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.174
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D283D28F4;
+	Thu, 25 Sep 2025 08:25:50 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.56
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1758781788; cv=none; b=Qu3hmvB6yqCXRjAN8CoUuyrvbvWm4qUWd6DVMCvDHHu/EBxPVdodZLKjXQL0rRttPwYCIsMgpAkd2NQJ8MAihx+l1B4K0RlSbTOtwmYw0Ex2LikU6ClkllNTv8T8fpC0GQg0T8Vk7Mas26lyiRJjkKieAucTHux1hxfbS9+rzYU=
+	t=1758788753; cv=none; b=QTMqqoX+JA+xqfMQq5tWNBdwgTUbyuzYTDLfnAFShK7IYnjZWBugGhV0wyvx6JDKSj/xffG6itSe+nKcWCoh/PLjgkji8TPSsu8T4IOuLEeUtR35RVtjJI9dPZZLWd8r0U0CnUD4E/PDyR4DRzh/NyVUM3L13ytQsARcISuIWfc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1758781788; c=relaxed/simple;
-	bh=ocfCkwFjc0I4FHV5WpKQR66vTwtaBg8ZxSR4+GATfs4=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=Ncq4Ag0vJ0T4zsqY3YHlFDW/bnX5xR5w96+270WtcsWA3SdmTuA6xC9Ed6M1fiEmoyjRdbQalTcNXYDaFTwb0+fJwxpqyceFmo8Ud2Oi5n8U8v5EEiqYxIXaH9fW6RtpCOku39eV5qeklyBwHUboNts9RznArE6kgkhvsB89E/c=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=bytedance.com; spf=pass smtp.mailfrom=bytedance.com; dkim=pass (2048-bit key) header.d=bytedance.com header.i=@bytedance.com header.b=FN3G5Ure; arc=none smtp.client-ip=209.85.210.174
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=bytedance.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=bytedance.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=bytedance.com header.i=@bytedance.com header.b="FN3G5Ure"
-Received: by mail-pf1-f174.google.com with SMTP id d2e1a72fcca58-780f6632e64so346474b3a.2
-        for <cgroups@vger.kernel.org>; Wed, 24 Sep 2025 23:29:45 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=bytedance.com; s=google; t=1758781785; x=1759386585; darn=vger.kernel.org;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to:subject
-         :user-agent:mime-version:date:message-id:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=8V0lwTpuXsxcfHaxZsvIL+kGsolkwkY6GPwdx3nz5yU=;
-        b=FN3G5Ure85ZtEYeDbkv9FedXs2pJw7g2ZLmenevZnB2LnRVbOoZdY+Juj1V+yIlxhi
-         n5FKxrBqNVqhCmR7UcwY8wBivXmbYqPj4NBoe2FicsmXe4d8gApsr9+ylzgON/FrS5fg
-         cEPW9p89vml0j6suBVkqePeQoPvg/BGlAWcYPKki8aergL7DlCnT5pA9vB+rxwZ/uhyy
-         WDryJz1cZNHomIsKYOFA1SzfMU30nk3vxDV5p1H2bEUQ8zqkHYcPjs9F8nXLaf8bk7za
-         hlAEctKAlVa+nhVP0g85fzDkIBKfn9Dzei55V6RydwISTS8/Mevvrj+hO44EK5pGbaq3
-         bnDw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1758781785; x=1759386585;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to:subject
-         :user-agent:mime-version:date:message-id:x-gm-message-state:from:to
-         :cc:subject:date:message-id:reply-to;
-        bh=8V0lwTpuXsxcfHaxZsvIL+kGsolkwkY6GPwdx3nz5yU=;
-        b=URA8HNNpJdda7qofHCY8jTPdj/H5AsRuZun3H+RZKsophoot4LudqFhf4zIcKUuR9c
-         v+ebJrT+7tb/58WJ+OC6JoeaI5vpbc3LT/rKIOfQS57T/hSNEGK8RQ4S3Fncx7OFsvSL
-         ur3fn4yyFZedPc2FAqv73vsc/Wt47uIXYh0yYLDliLJlIPvqowb2RRkaTcNIi7thj10b
-         xzhN0ZIHuq/nsAWmnWYtNCil/hjm7I0evLsKlSO3Fntba12VWwNwkTlcfgLbbJ24dKSM
-         w4fDhMoM0wdcbgRN+J/jFJq1jCIubutGXStny5p+Sv6ceeHAY7zi5yZG7ngI4pHcXOSs
-         KK/A==
-X-Forwarded-Encrypted: i=1; AJvYcCXEbFp7/QNkm5JHaIRhzA12JSUMeUNXUEDaOhD01cBTvuBT8aPfkWqEg23TiBi0LEEOYoJTF4Y1@vger.kernel.org
-X-Gm-Message-State: AOJu0YzA6FRZRw9R+mOPYbttLWRZFvF0i77ymU3YtRXwG1VOEzNgDysy
-	0wdLbcITn+Uk82+LngLdd9sRU8/AjLptrC1WwVUtRtdcvIX3GFnm/lT5q9f/A36exKobZX7/ouh
-	HlzvZ
-X-Gm-Gg: ASbGncv2FNVMPXIqfwKhP0gbaeWJVlIWmi4m0nzfV0uhhEbX2v5mYU8yyK8sj0uyDmi
-	7sqcGn03jgwVPnDwvlOlh+sHcNI2gkH2whWwYWiiMgLOKDezp28SfHwjr1tJ4aReovAy3waAtC1
-	T7U17yoV36OLoztOjbby8NR00BuUCHKjKH2S3/mGqRzodgOFoJTmXuA74p6zMZQRObetYcB112t
-	vNEKxYL1gl/skee9ssNhRcD9EXSBSZJmsL8dD+sXOXZ8RRgfmSoZ+iIsiIvfLFO/gDAbeX1Qr9d
-	nVlxyUBGF4fks0pa7jaTyNjfIe/cNsEj5FrBGjwJwamEXiyWDxZEFTdpNdLAvc7J1ISZ7TyhfWi
-	xWb8hSPwWJzTlkwI0WxnGc+Il32fXqjoYj6SpYXK9xmQF43lcs77RA/S1FQ==
-X-Google-Smtp-Source: AGHT+IG1LqAYu9jhNBG55xyv+UGKIWKzgZ4CKtKvlXs/Xd5vgIieh3XV27iBoLmTtXwYy9tOxqb0JQ==
-X-Received: by 2002:a05:6a20:3ca2:b0:2d5:e559:d23a with SMTP id adf61e73a8af0-2e7d3db6116mr3182046637.55.1758781784872;
-        Wed, 24 Sep 2025 23:29:44 -0700 (PDT)
-Received: from [100.82.90.25] ([63.216.146.178])
-        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-78102b2ec47sm961356b3a.50.2025.09.24.23.29.34
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 24 Sep 2025 23:29:44 -0700 (PDT)
-Message-ID: <77114896-5a7a-413d-afa1-7d0a17312c99@bytedance.com>
-Date: Thu, 25 Sep 2025 14:29:32 +0800
+	s=arc-20240116; t=1758788753; c=relaxed/simple;
+	bh=uyoC33L1mECK04nAwihRRbXpUtfFIt3Cv02wrL29ymk=;
+	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
+	 MIME-Version; b=nt+pGh9L0rGTeyJ0vL5mZVS101ZKGgdA6ZEpVb911gRBW4OFgNtcKK943itbYggP5rijov0QG4kB5MhIFuobuS+i3OaH2/qneB6x7dY8fraWSHhrIWh13Gpp9ACSdQN0pUvOryNYZJ1tcAfLo+GQKXphF8CcXB1mfbLPdK6gXNk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.56
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
+Received: from mail.maildlp.com (unknown [172.19.163.235])
+	by dggsgout12.his.huawei.com (SkyGuard) with ESMTPS id 4cXRcN2h7bzKHN4Q;
+	Thu, 25 Sep 2025 16:25:40 +0800 (CST)
+Received: from mail02.huawei.com (unknown [10.116.40.128])
+	by mail.maildlp.com (Postfix) with ESMTP id 3A3941A0B16;
+	Thu, 25 Sep 2025 16:25:48 +0800 (CST)
+Received: from huaweicloud.com (unknown [10.175.104.67])
+	by APP4 (Coremail) with SMTP id gCh0CgCna2OH_NRodTcIAw--.12615S7;
+	Thu, 25 Sep 2025 16:25:47 +0800 (CST)
+From: Yu Kuai <yukuai1@huaweicloud.com>
+To: tj@kernel.org,
+	ming.lei@redhat.com,
+	nilay@linux.ibm.com,
+	hch@lst.de,
+	josef@toxicpanda.com,
+	axboe@kernel.dk,
+	akpm@linux-foundation.org,
+	vgoyal@redhat.com
+Cc: cgroups@vger.kernel.org,
+	linux-block@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	linux-mm@kvack.org,
+	yukuai3@huawei.com,
+	yukuai1@huaweicloud.com,
+	yi.zhang@huawei.com,
+	yangerkun@huawei.com,
+	johnny.chenyi@huawei.com
+Subject: [PATCH 03/10] blk-cgroup: don't nest queu_lock under rcu in bio_associate_blkg()
+Date: Thu, 25 Sep 2025 16:15:18 +0800
+Message-Id: <20250925081525.700639-4-yukuai1@huaweicloud.com>
+X-Mailer: git-send-email 2.39.2
+In-Reply-To: <20250925081525.700639-1-yukuai1@huaweicloud.com>
+References: <20250925081525.700639-1-yukuai1@huaweicloud.com>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v2 4/4] mm: thp: reparent the split queue during memcg
- offline
-To: Harry Yoo <harry.yoo@oracle.com>
-Cc: hannes@cmpxchg.org, hughd@google.com, mhocko@suse.com,
- roman.gushchin@linux.dev, shakeel.butt@linux.dev, muchun.song@linux.dev,
- david@redhat.com, lorenzo.stoakes@oracle.com, ziy@nvidia.com,
- baolin.wang@linux.alibaba.com, Liam.Howlett@oracle.com, npache@redhat.com,
- ryan.roberts@arm.com, dev.jain@arm.com, baohua@kernel.org,
- lance.yang@linux.dev, akpm@linux-foundation.org, linux-mm@kvack.org,
- linux-kernel@vger.kernel.org, cgroups@vger.kernel.org
-References: <cover.1758618527.git.zhengqi.arch@bytedance.com>
- <55370bda7b2df617033ac12116c1712144bb7591.1758618527.git.zhengqi.arch@bytedance.com>
- <aNP-rT1neQB0EdyQ@hyeyoo>
-From: Qi Zheng <zhengqi.arch@bytedance.com>
-In-Reply-To: <aNP-rT1neQB0EdyQ@hyeyoo>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
+X-CM-TRANSID:gCh0CgCna2OH_NRodTcIAw--.12615S7
+X-Coremail-Antispam: 1UD129KBjvdXoWrKryrGry3KFWkur1rZF4kCrg_yoWkuFX_XF
+	1ku3sYgwn5A3W3try5ZF1YvFW8C3yqqr1qga4Y9a43Cry5AFZFgr9Fyw45ArW5Z3Z7Cryj
+	vrWDXr47Grn2gjkaLaAFLSUrUUUUjb8apTn2vfkv8UJUUUU8Yxn0WfASr-VFAUDa7-sFnT
+	9fnUUIcSsGvfJTRUUUbkkFF20E14v26rWj6s0DM7CY07I20VC2zVCF04k26cxKx2IYs7xG
+	6rWj6s0DM7CIcVAFz4kK6r1j6r18M28IrcIa0xkI8VA2jI8067AKxVWUWwA2048vs2IY02
+	0Ec7CjxVAFwI0_Xr0E3s1l8cAvFVAK0II2c7xJM28CjxkF64kEwVA0rcxSw2x7M28EF7xv
+	wVC0I7IYx2IY67AKxVW7JVWDJwA2z4x0Y4vE2Ix0cI8IcVCY1x0267AKxVW8Jr0_Cr1UM2
+	8EF7xvwVC2z280aVAFwI0_GcCE3s1l84ACjcxK6I8E87Iv6xkF7I0E14v26rxl6s0DM2AI
+	xVAIcxkEcVAq07x20xvEncxIr21l5I8CrVACY4xI64kE6c02F40Ex7xfMcIj6xIIjxv20x
+	vE14v26r1j6r18McIj6I8E87Iv67AKxVWUJVW8JwAm72CE4IkC6x0Yz7v_Jr0_Gr1lF7xv
+	r2IYc2Ij64vIr41lF7I21c0EjII2zVCS5cI20VAGYxC7M4IIrI8v6xkF7I0E8cxan2IY04
+	v7MxkF7I0En4kS14v26r4a6rW5MxAIw28IcxkI7VAKI48JMxC20s026xCaFVCjc4AY6r1j
+	6r4UMI8I3I0E5I8CrVAFwI0_Jr0_Jr4lx2IqxVCjr7xvwVAFwI0_JrI_JrWlx4CE17CEb7
+	AF67AKxVW8ZVWrXwCIc40Y0x0EwIxGrwCI42IY6xIIjxv20xvE14v26r1j6r1xMIIF0xvE
+	2Ix0cI8IcVCY1x0267AKxVWxJVW8Jr1lIxAIcVCF04k26cxKx2IYs7xG6r1j6r1xMIIF0x
+	vEx4A2jsIE14v26r1j6r4UMIIF0xvEx4A2jsIEc7CjxVAFwI0_Gr0_Gr1UYxBIdaVFxhVj
+	vjDU0xZFpf9x0pRl_MsUUUUU=
+X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
 
-Hi Harry,
+From: Yu Kuai <yukuai3@huawei.com>
 
-On 9/24/25 10:22 PM, Harry Yoo wrote:
-> On Tue, Sep 23, 2025 at 05:16:25PM +0800, Qi Zheng wrote:
->> In the future, we will reparent LRU folios during memcg offline to
->> eliminate dying memory cgroups, which requires reparenting the split queue
->> to its parent.
->>
->> Similar to list_lru, the split queue is relatively independent and does
->> not need to be reparented along with objcg and LRU folios (holding
->> objcg lock and lru lock). So let's apply the same mechanism as list_lru
->> to reparent the split queue separately when memcg is offine.
->>
->> Signed-off-by: Qi Zheng <zhengqi.arch@bytedance.com>
->> ---
->>   include/linux/huge_mm.h |  2 ++
->>   include/linux/mmzone.h  |  1 +
->>   mm/huge_memory.c        | 39 +++++++++++++++++++++++++++++++++++++++
->>   mm/memcontrol.c         |  1 +
->>   mm/mm_init.c            |  1 +
->>   5 files changed, 44 insertions(+)
->>
->> diff --git a/include/linux/huge_mm.h b/include/linux/huge_mm.h
->> index f327d62fc9852..a0d4b751974d2 100644
->> --- a/include/linux/huge_mm.h
->> +++ b/include/linux/huge_mm.h
->> @@ -417,6 +417,7 @@ static inline int split_huge_page(struct page *page)
->>   	return split_huge_page_to_list_to_order(page, NULL, ret);
->>   }
->>   void deferred_split_folio(struct folio *folio, bool partially_mapped);
->> +void reparent_deferred_split_queue(struct mem_cgroup *memcg);
->>   
->>   void __split_huge_pmd(struct vm_area_struct *vma, pmd_t *pmd,
->>   		unsigned long address, bool freeze);
->> @@ -611,6 +612,7 @@ static inline int try_folio_split(struct folio *folio, struct page *page,
->>   }
->>   
->>   static inline void deferred_split_folio(struct folio *folio, bool partially_mapped) {}
->> +static inline void reparent_deferred_split_queue(struct mem_cgroup *memcg) {}
->>   #define split_huge_pmd(__vma, __pmd, __address)	\
->>   	do { } while (0)
->>   
->> diff --git a/include/linux/mmzone.h b/include/linux/mmzone.h
->> index 7fb7331c57250..f3eb81fee056a 100644
->> --- a/include/linux/mmzone.h
->> +++ b/include/linux/mmzone.h
->> @@ -1346,6 +1346,7 @@ struct deferred_split {
->>   	spinlock_t split_queue_lock;
->>   	struct list_head split_queue;
->>   	unsigned long split_queue_len;
->> +	bool is_dying;
->>   };
->>   #endif
-> 
-> The scheme in Muchun's version was:
-> 
-> retry:
-> queue = folio_split_queue(folio);
-> spin_lock(&queue->split_queue_lock);
-> if (folio_memcg(folio) != folio_split_queue_memcg(folio, queue)) {
->      /* split queue was reparented, retry */
->      spin_unlock(&queue->split_queue_lock);
->      goto retry;
-> }
-> /* now we have a stable mapping between the folio and the split queue */
-> spin_unlock(&queue->split_queue_lock);
-> 
-> Oh, I see. We can't use this scheme yet because we don't reparent LRU
-> folios. (I was wondering why we're adding is_dying property)
+If bio is already associated with blkg, blkcg is already pinned until
+bio is done, no need for rcu protection; Otherwise protect blkcg_css()
+with rcu independently. Prepare to convert protecting blkcg with
+blkcg_mutex instead of queue_lock.
 
-Right. And reparenting THP split queue independently can avoid the
-following situations:
+Signed-off-by: Yu Kuai <yukuai3@huawei.com>
+---
+ block/blk-cgroup.c | 18 +++++++++++-------
+ 1 file changed, 11 insertions(+), 7 deletions(-)
 
-```
-acquire child and parent split_queue_lock
-acquire child and parent objcg_lock
-acquire child and parent lru lock
-
-reparent THP split queue
-reparent objcg
-reparent LRU folios
-
-release child and parent lru lock
-release child and parent objcg_lock
-release child and parent split_queue_lock
-```
-
-> 
->> diff --git a/mm/huge_memory.c b/mm/huge_memory.c
->> index 48b51e6230a67..de7806f759cba 100644
->> --- a/mm/huge_memory.c
->> +++ b/mm/huge_memory.c
->> @@ -1094,9 +1094,15 @@ static struct deferred_split *folio_split_queue_lock(struct folio *folio)
->>   	struct deferred_split *queue;
-> 
-> 
-> For now it's safe to not call rcu_read_lock() here because memcgs won't
-> disappear under us as long as there are folios to split (we don't reparent
-> LRU folios), right?
-
-Right. We will add rcu_read_lock() when reparenting LRU folios.
-
-Thanks,
-Qi
-
-> 
->>   	memcg = folio_memcg(folio);
->> +retry:
->>   	queue = memcg ? &memcg->deferred_split_queue :
->>   			&NODE_DATA(folio_nid(folio))->deferred_split_queue;
->>   	spin_lock(&queue->split_queue_lock);
->> +	if (unlikely(queue->is_dying == true)) {
->> +		spin_unlock(&queue->split_queue_lock);
->> +		memcg = parent_mem_cgroup(memcg);
->> +		goto retry;
->> +	}
->>   	return queue;
->>   }
-> 
+diff --git a/block/blk-cgroup.c b/block/blk-cgroup.c
+index 9ffc3195f7e4..53a64bfe4a24 100644
+--- a/block/blk-cgroup.c
++++ b/block/blk-cgroup.c
+@@ -2165,16 +2165,20 @@ void bio_associate_blkg(struct bio *bio)
+ 	if (blk_op_is_passthrough(bio->bi_opf))
+ 		return;
+ 
+-	rcu_read_lock();
+-
+-	if (bio->bi_blkg)
++	if (bio->bi_blkg) {
+ 		css = bio_blkcg_css(bio);
+-	else
++		bio_associate_blkg_from_css(bio, css);
++	} else {
++		rcu_read_lock();
+ 		css = blkcg_css();
++		if (!css_tryget_online(css))
++			css = NULL;
++		rcu_read_unlock();
+ 
+-	bio_associate_blkg_from_css(bio, css);
+-
+-	rcu_read_unlock();
++		bio_associate_blkg_from_css(bio, css);
++		if (css)
++			css_put(css);
++	}
+ }
+ EXPORT_SYMBOL_GPL(bio_associate_blkg);
+ 
+-- 
+2.39.2
 
