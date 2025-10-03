@@ -1,65 +1,100 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from out-179.mta1.migadu.com (out-179.mta1.migadu.com [95.215.58.179])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 73F8C26FD9A;
-	Fri,  3 Oct 2025 14:42:35 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 741EE2D5943
+	for <cgroups@vger.kernel.org>; Fri,  3 Oct 2025 16:54:03 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=95.215.58.179
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1759502555; cv=none; b=ei+LtKAgzlvdGLMnukhHfqm+zG4TZZjsMFB4by+AZcMc69ORUfaBKVBVFWAMU+nvTFXep709oJOAdsHdhRDFWJ7kGXMfk9D/8PXQISgiAlaZSpokhyvBEbNzx+S67eCEbOzV74jdjf+AMApFRE6wNhWVOOa7LhUjPEhcSYITtoA=
+	t=1759510445; cv=none; b=G4RtvffyDe2aPUyHLbqAJQw19udONZ7dsmfAdAgNf1IWb4rQLXRjly8xINWVO5fuC7kdSk+cvm7Ow2SqGV7c1I7iHdfsWWoR4LaKQPCtviCB9QKBWU1FFhKVbV1fPGTQ3YLTmk4PYhVD0fc7cmIX5VTFLE6y22esx1Mrw35KPT0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1759502555; c=relaxed/simple;
-	bh=TQw/bGbK3C7Gulzf952bPr+x4MS4cOjJGbDj8MAcYls=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=VmTZrGZPI7GYjXmu8WYBdHw4WOSkKJHP52SDlvae5b4s+drvQT5lMCA3cPOTOsVen9z6qYz0YQvjPv5GRocTk37QWbPwRAaHxB7A3ikt3xw/QN+rpSkhN0AHCPyaYgeIBCfly73llina200zVrgY2BPwJHbtaPYwaKMbybpTOds=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=vKZEvdLz; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1759510445; c=relaxed/simple;
+	bh=so7RJfeebSI74NMFkG2yWQ6L7+S2r5cp1MxkdrBK8Mo=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=cNtOd9B/G9mXzAtnHkY0Lj15pjF4c3jS7gLllH5Tyc/b4G8Ls84xAy6PQSOkFnvHTXX/ZH6FKlXdRPFFrZwH9EBX5Ayg7+ftNVFGDIv8kZbRZ80IX5qHfjUosjHsmW78ftxqwUTCB+ghUZo1C31+8X0OqruGqBagO4WHDalKOU4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=eCEknGtn; arc=none smtp.client-ip=95.215.58.179
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="vKZEvdLz"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D4C77C4CEF5;
-	Fri,  3 Oct 2025 14:42:34 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1759502555;
-	bh=TQw/bGbK3C7Gulzf952bPr+x4MS4cOjJGbDj8MAcYls=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=vKZEvdLzfjIxroXPgLKjY+qsOA0PRvyD9m7X3SC1ApSl04h08Jfd8Kej276024Wt8
-	 2MFarIdf7JWFSzvYkknZOcS6QuvUekP1tJOoLgtaFoUIjjgBxRt30/gALItqIhpPEz
-	 NX14LLrCNBzlHcZsK1rMYgcRs8FNBet2Yv7z8I7BXpn5GoE6wDHSHMOthdKFXbVmO3
-	 MHY728yOrCsKAntKyF2iTefdGXm4R2bnypNuCht7Jm8QauSPOzWXnbVP3uwPxhwe88
-	 hAA1rJ97uY/h4DoPlJkpL2wfFNTdmzZYLDwb1qtJrmVBlfu11Cs6HEs3poWvRkcK8u
-	 GpfiPpebpmL+g==
-Date: Fri, 3 Oct 2025 04:42:33 -1000
-From: Tejun Heo <tj@kernel.org>
-To: Kuniyuki Iwashima <kuniyu@google.com>
-Cc: Johannes Weiner <hannes@cmpxchg.org>,
-	Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny@suse.com>,
-	Sebastian Andrzej Siewior <bigeasy@linutronix.de>,
-	Clark Williams <clrkwllms@kernel.org>,
-	Steven Rostedt <rostedt@goodmis.org>,
-	Tiffany Yang <tiange@google.com>, cgroups@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] cgroup: Disable preemption for cgrp->freezer.freeze_seq
- when CONFIG_PREEMPT_RT=y.
-Message-ID: <aN_g2WO6R87DaaEN@slm.duckdns.org>
-References: <20251002052215.1433055-1-kuniyu@google.com>
- <58de560994011557adefca6b24ebe4e8@kernel.org>
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="eCEknGtn"
+X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
+	t=1759510441;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=LmuFZk4/UAW/wxAkzYqRFSTRE4mQotQ2IEfc61WTNZc=;
+	b=eCEknGtnpG1txOB/xuohDbik3Bh3/mtFYzYUJHnoMppqy0PbH9ce2dCt9hDtS3WpkkGqjG
+	IiWtXzrD2fA5/8OzbDiUi2/VtABzaS3OI4k7w5ComIG1Sw9goA7F3o0QggxvKWFb/R6Mdp
+	h58jJLc135v47IBEBxLD/LPWvNht2Ko=
+From: Qi Zheng <qi.zheng@linux.dev>
+To: hannes@cmpxchg.org,
+	hughd@google.com,
+	mhocko@suse.com,
+	roman.gushchin@linux.dev,
+	shakeel.butt@linux.dev,
+	muchun.song@linux.dev,
+	david@redhat.com,
+	lorenzo.stoakes@oracle.com,
+	ziy@nvidia.com,
+	harry.yoo@oracle.com,
+	baolin.wang@linux.alibaba.com,
+	Liam.Howlett@oracle.com,
+	npache@redhat.com,
+	ryan.roberts@arm.com,
+	dev.jain@arm.com,
+	baohua@kernel.org,
+	lance.yang@linux.dev,
+	akpm@linux-foundation.org
+Cc: linux-mm@kvack.org,
+	linux-kernel@vger.kernel.org,
+	cgroups@vger.kernel.org,
+	Muchun Song <songmuchun@bytedance.com>,
+	Qi Zheng <zhengqi.arch@bytedance.com>
+Subject: [PATCH v4 1/4] mm: thp: replace folio_memcg() with folio_memcg_charged()
+Date: Sat,  4 Oct 2025 00:53:15 +0800
+Message-ID: <7bb571c217c3c14c47e86706a50c1b792e88b4d6.1759510072.git.zhengqi.arch@bytedance.com>
+In-Reply-To: <cover.1759510072.git.zhengqi.arch@bytedance.com>
+References: <cover.1759510072.git.zhengqi.arch@bytedance.com>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <58de560994011557adefca6b24ebe4e8@kernel.org>
+Content-Transfer-Encoding: 8bit
+X-Migadu-Flow: FLOW_OUT
 
-On Thu, Oct 02, 2025 at 06:45:01AM -1000, Tejun Heo wrote:
-> Applied to cgroup/for-6.18-fixes.
+From: Muchun Song <songmuchun@bytedance.com>
 
-I applied the following patch and dropped this one per the discussion on
-this thread:
+folio_memcg_charged() is intended for use when the user is unconcerned
+about the returned memcg pointer. It is more efficient than folio_memcg().
+Therefore, replace folio_memcg() with folio_memcg_charged().
 
- http://lkml.kernel.org/r/20251003114555.413804-1-nirbhay.lkd@gmail.com
+Signed-off-by: Muchun Song <songmuchun@bytedance.com>
+Signed-off-by: Qi Zheng <zhengqi.arch@bytedance.com>
+Acked-by: Johannes Weiner <hannes@cmpxchg.org>
+Acked-by: Shakeel Butt <shakeel.butt@linux.dev>
+Acked-by: David Hildenbrand <david@redhat.com>
+Reviewed-by: Roman Gushchin <roman.gushchin@linux.dev>
+Reviewed-by: Harry Yoo <harry.yoo@oracle.com>
+---
+ mm/huge_memory.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Thanks.
-
+diff --git a/mm/huge_memory.c b/mm/huge_memory.c
+index 1b81680b4225f..6db24b3a57005 100644
+--- a/mm/huge_memory.c
++++ b/mm/huge_memory.c
+@@ -4014,7 +4014,7 @@ bool __folio_unqueue_deferred_split(struct folio *folio)
+ 	bool unqueued = false;
+ 
+ 	WARN_ON_ONCE(folio_ref_count(folio));
+-	WARN_ON_ONCE(!mem_cgroup_disabled() && !folio_memcg(folio));
++	WARN_ON_ONCE(!mem_cgroup_disabled() && !folio_memcg_charged(folio));
+ 
+ 	ds_queue = get_deferred_split_queue(folio);
+ 	spin_lock_irqsave(&ds_queue->split_queue_lock, flags);
 -- 
-tejun
+2.20.1
+
