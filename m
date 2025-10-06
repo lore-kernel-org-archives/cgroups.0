@@ -1,40 +1,40 @@
 Received: from desiato.infradead.org (desiato.infradead.org [90.155.92.199])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4BAA826A0F8;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4A41F26A0D5;
 	Mon,  6 Oct 2025 10:46:02 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=90.155.92.199
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1759747564; cv=none; b=p47f5KoaktD/zsxPJUbtJ4CMnswP2p7uRapbOjJXsVcapthC1hEBW36FhCCjzABnuXN4z3cUUTJUGM6OhfZtVmb/M3pc2IZSy6XAmKgZtydRwmDky7FTcpPGDN4YIbqqU7J1WOIy2gbDDurIPcrq3U3JpaTWSi4pz69kXdQ1wto=
+	t=1759747564; cv=none; b=iUaZYlTXouLJGtCr6O+ADvCCj14bgv3wS/OuxxEy8GvIOtb2ZIdKFGrMoDQDQ7Dz/dBWKZe9yhoe2d0cnJSaAK4PR7tq01czOXanrMwvEz1YUMIQiD+bEwcGeHbiQ/gZRwy6mWfjEPNCrzesxFwMtlZYyzXarNL5eCA8Oq+vWjw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1759747564; c=relaxed/simple;
-	bh=2jRxNfwlvsjHZBs8OKl5EwWe4QmjriuanSnkxBCGgok=;
+	bh=95IGUrX5ihHjj6Vu1vP5ruvAiYX5mwIcetO5Xw1Q9eI=;
 	h=Message-ID:Date:From:To:Cc:Subject:References:MIME-Version:
-	 Content-Type; b=G3BIGU2GyN1VOekQFZsXJkLJlchKRu64oAAn/fcKYaNdLMbJBDShoPiDmFxB1MJJiD1nJK67PDRSavbixIXzFKy4dTACXCOZ5yARx3RJpjeN2O68XcFVul1X930ek51yGzHcUHS4wS1xT53AeVLlGbuS18eT/6N+yDENgUzYMy4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=UlBzfxpF; arc=none smtp.client-ip=90.155.92.199
+	 Content-Type; b=CwLOH36RYVMvSGqebu3RnJl9DbEotcRXRT9oHo10IRPh5aPL+CWt1x9heT7+GyXWT720ZxIG3gVCh0jZIfC5buSHVA9eTkbInzkTwxAxbW7X/DHM2oyYlXhTwKl0OkHFz3GtPFdDNPP3lyvEw+U8G1i35aUUhrE0yb/MrkhHWtA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=hPW8CzD7; arc=none smtp.client-ip=90.155.92.199
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="UlBzfxpF"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="hPW8CzD7"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=infradead.org; s=desiato.20200630; h=Content-Type:MIME-Version:References:
 	Subject:Cc:To:From:Date:Message-ID:Sender:Reply-To:Content-Transfer-Encoding:
 	Content-ID:Content-Description:In-Reply-To;
-	bh=7IaiVVcZxMwyJAC7lakJaxXx69OYQoV3ZOcsSQpZ6Uc=; b=UlBzfxpFdxOIDttduGz2XGzKRK
-	MGLhdTEo/ek/vWaorsQg7oJ1oO5YYuXEZViQ0lw2dkBd2anXPVm2w9+zsqmM1Iblw5eZccLPMLT/s
-	jwttxli0sxWOXFLVhThL70V30CFMk8nu/nzaWWFtEGoEkwj5VoUVkRTLUNMxVXa4Uxi0wdvTZf/2v
-	fZZH7DRiDOUvpr1FExlRAgVYRGUrYCW1E2AhrQ+J8lfFbV/nilMwC9OVTSMiyKFBNOXQM1JjITeKp
-	7PxQRhVW2rUwdxTbSzQQIEGLaA6r+3qhblGB41CUPaOzYfmCro/0cD/bEG/pUmNMGmam5cDRsDc7V
-	Fs1lnwVg==;
+	bh=kgMb8FY5Ba7jk0kr0FcfqMV6B6P7o3R/ebzqbWBa26Y=; b=hPW8CzD7+VBryG7aAp4TmkWI6i
+	LCrzlpE4TJWFpiVI9Vw7TB4/g30OyI5K4ROvHjfLXiN6wn3EwG4eBdH8qstyXp2IOT9c6l5TywCNs
+	UbL7YzUPo4V6rAkK+xYdjY54CVQjPbWD3JXnTxL78BauQ8TvRJaWRrsGFP/1JDZE279vzR3fs26Qd
+	Nj0uxw/4QAu2GskTtGBUBZhi0dhPofHEsYFfzAPwtPAK05QzDqQRtqBb+fOZVY4uVr0TQn/4EpvSh
+	OoljFZUdg3wNI2KfJwo7kBpBNFxkYH2reW/g6BHR1cyr+X++ERfq+/t/v1Z6nZaKDwJtSXfPasjuJ
+	I6R76mvQ==;
 Received: from 77-249-17-252.cable.dynamic.v4.ziggo.nl ([77.249.17.252] helo=noisy.programming.kicks-ass.net)
 	by desiato.infradead.org with esmtpsa (Exim 4.98.2 #2 (Red Hat Linux))
-	id 1v5iiz-0000000Grdq-0HUJ;
+	id 1v5iiy-0000000Grdo-3KFb;
 	Mon, 06 Oct 2025 10:45:49 +0000
 Received: by noisy.programming.kicks-ass.net (Postfix, from userid 0)
-	id D08BD301142; Mon, 06 Oct 2025 12:45:47 +0200 (CEST)
-Message-ID: <20251006104527.083607521@infradead.org>
+	id C7703300462; Mon, 06 Oct 2025 12:45:47 +0200 (CEST)
+Message-ID: <20251006104526.861755244@infradead.org>
 User-Agent: quilt/0.68
-Date: Mon, 06 Oct 2025 12:44:07 +0200
+Date: Mon, 06 Oct 2025 12:44:05 +0200
 From: Peter Zijlstra <peterz@infradead.org>
 To: tj@kernel.org
 Cc: linux-kernel@vger.kernel.org,
@@ -57,7 +57,7 @@ Cc: linux-kernel@vger.kernel.org,
  sched-ext@lists.linux.dev,
  liuwenfang@honor.com,
  tglx@linutronix.de
-Subject: [PATCH 05/12] sched: Move sched_class::prio_changed() into the change pattern
+Subject: [PATCH 03/12] sched: Fold sched_class::switch{ing,ed}_{to,from}() into the change pattern
 References: <20251006104402.946760805@infradead.org>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
@@ -67,282 +67,360 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 
-Move sched_class::prio_changed() into the change pattern.
+Add {DE,EN}QUEUE_CLASS and fold the sched_class::switch* methods into
+the change pattern. This completes and makes the pattern more
+symmetric.
 
-And while there, extend it with sched_class::get_prio() in order to
-fix the deadline sitation.
+This changes the order of callbacks slightly:
 
-Suggested-by: Tejun Heo <tj@kernel.org>
+				|
+				|  switching_from()
+  dequeue_task();		|  dequeue_task()
+  put_prev_task();		|  put_prev_task()
+				|  switched_from()
+				|
+  ... change task ...		|  ... change task ...
+				|
+  switching_to();		|  switching_to()
+  enqueue_task();		|  enqueue_task()
+  set_next_task();		|  set_next_task()
+  prev_class->switched_from()	|
+  switched_to()			|  switched_to()
+				|
+
+Notably, it moves the switched_from() callback right after the
+dequeue/put. Existing implementations don't appear to be affected by
+this change in location -- specifically the task isn't enqueued on the
+class in question in either location.
+
+Make (CLASS)^(SAVE|MOVE), because there is nothing to save-restore
+when changing scheduling classes.
+
 Signed-off-by: Peter Zijlstra (Intel) <peterz@infradead.org>
 Acked-by: Tejun Heo <tj@kernel.org>
 ---
- kernel/sched/core.c      |   24 +++++++++++++-----------
- kernel/sched/deadline.c  |   20 +++++++++++---------
- kernel/sched/ext.c       |    8 +-------
- kernel/sched/fair.c      |    8 ++++++--
- kernel/sched/idle.c      |    5 ++++-
- kernel/sched/rt.c        |    5 ++++-
- kernel/sched/sched.h     |    7 ++++---
- kernel/sched/stop_task.c |    5 ++++-
- kernel/sched/syscalls.c  |    9 ---------
- 9 files changed, 47 insertions(+), 44 deletions(-)
+ kernel/sched/core.c      |   56 +++++++++++++++++++++--------------------------
+ kernel/sched/ext.c       |   26 ++++++++++++++++-----
+ kernel/sched/idle.c      |    4 +--
+ kernel/sched/rt.c        |    2 -
+ kernel/sched/sched.h     |   22 ++++++------------
+ kernel/sched/stop_task.c |    4 +--
+ kernel/sched/syscalls.c  |    9 +++++--
+ 7 files changed, 66 insertions(+), 57 deletions(-)
 
 --- a/kernel/sched/core.c
 +++ b/kernel/sched/core.c
-@@ -2169,12 +2169,6 @@ inline int task_curr(const struct task_s
+@@ -2169,34 +2169,9 @@ inline int task_curr(const struct task_s
  	return cpu_curr(task_cpu(p)) == p;
  }
  
--void check_prio_changed(struct rq *rq, struct task_struct *p, int oldprio)
--{
--	if (oldprio != p->prio || dl_task(p))
--		p->sched_class->prio_changed(rq, p, oldprio);
+-/*
+- * ->switching_to() is called with the pi_lock and rq_lock held and must not
+- * mess with locking.
+- */
+-void check_class_changing(struct rq *rq, struct task_struct *p,
+-			  const struct sched_class *prev_class)
++void check_prio_changed(struct rq *rq, struct task_struct *p, int oldprio)
+ {
+-	if (prev_class != p->sched_class && p->sched_class->switching_to)
+-		p->sched_class->switching_to(rq, p);
 -}
 -
- void wakeup_preempt(struct rq *rq, struct task_struct *p, int flags)
- {
- 	struct task_struct *donor = rq->donor;
-@@ -7402,9 +7396,6 @@ void rt_mutex_setprio(struct task_struct
+-/*
+- * switched_from, switched_to and prio_changed must _NOT_ drop rq->lock,
+- * use the balance_callback list if you want balancing.
+- *
+- * this means any call to check_class_changed() must be followed by a call to
+- * balance_callback().
+- */
+-void check_class_changed(struct rq *rq, struct task_struct *p,
+-			 const struct sched_class *prev_class,
+-			 int oldprio)
+-{
+-	if (prev_class != p->sched_class) {
+-		if (prev_class->switched_from)
+-			prev_class->switched_from(rq, p);
+-
+-		p->sched_class->switched_to(rq, p);
+-	} else if (oldprio != p->prio || dl_task(p))
++	if (oldprio != p->prio || dl_task(p))
+ 		p->sched_class->prio_changed(rq, p, oldprio);
+ }
+ 
+@@ -7388,6 +7363,11 @@ void rt_mutex_setprio(struct task_struct
+ 	prev_class = p->sched_class;
+ 	next_class = __setscheduler_class(p->policy, prio);
+ 
++	if (prev_class != next_class) {
++		queue_flag |= DEQUEUE_CLASS;
++		queue_flag &= ~(DEQUEUE_SAVE | DEQUEUE_MOVE);
++	}
++
+ 	if (prev_class != next_class && p->se.sched_delayed)
+ 		dequeue_task(rq, p, DEQUEUE_SLEEP | DEQUEUE_DELAYED | DEQUEUE_NOCLOCK);
+ 
+@@ -7424,11 +7404,10 @@ void rt_mutex_setprio(struct task_struct
+ 
  		p->sched_class = next_class;
  		p->prio = prio;
- 	}
 -
--	if (!(queue_flag & DEQUEUE_CLASS))
--		check_prio_changed(rq, p, oldprio);
+-		check_class_changing(rq, p, prev_class);
+ 	}
+ 
+-	check_class_changed(rq, p, prev_class, oldprio);
++	if (!(queue_flag & DEQUEUE_CLASS))
++		check_prio_changed(rq, p, oldprio);
  out_unlock:
  	/* Avoid rq from going away on us: */
  	preempt_disable();
-@@ -10860,6 +10851,13 @@ struct sched_change_ctx *sched_change_be
- 		.running = task_current(rq, p),
- 	};
+@@ -10862,6 +10841,14 @@ struct sched_change_ctx *sched_change_be
  
-+	if (!(flags & DEQUEUE_CLASS)) {
-+		if (p->sched_class->get_prio)
-+			ctx->prio = p->sched_class->get_prio(rq, p);
-+		else
-+			ctx->prio = p->prio;
+ 	lockdep_assert_rq_held(rq);
+ 
++	if (flags & DEQUEUE_CLASS) {
++		if (WARN_ON_ONCE(flags & (DEQUEUE_SAVE | DEQUEUE_MOVE)))
++			flags &= ~(DEQUEUE_SAVE | DEQUEUE_MOVE);
++
++		if (p->sched_class->switching_from)
++			p->sched_class->switching_from(rq, p);
 +	}
++
+ 	*ctx = (struct sched_change_ctx){
+ 		.p = p,
+ 		.flags = flags,
+@@ -10874,6 +10861,9 @@ struct sched_change_ctx *sched_change_be
+ 	if (ctx->running)
+ 		put_prev_task(rq, p);
+ 
++	if ((flags & DEQUEUE_CLASS) && p->sched_class->switched_from)
++		p->sched_class->switched_from(rq, p);
++
+ 	return ctx;
+ }
+ 
+@@ -10884,8 +10874,14 @@ void sched_change_end(struct sched_chang
+ 
+ 	lockdep_assert_rq_held(rq);
+ 
++	if ((ctx->flags & ENQUEUE_CLASS) && p->sched_class->switching_to)
++		p->sched_class->switching_to(rq, p);
 +
  	if (ctx->queued)
- 		dequeue_task(rq, p, flags);
- 	if (ctx->running)
-@@ -10886,6 +10884,10 @@ void sched_change_end(struct sched_chang
+ 		enqueue_task(rq, p, ctx->flags | ENQUEUE_NOCLOCK);
  	if (ctx->running)
  		set_next_task(rq, p);
- 
--	if ((ctx->flags & ENQUEUE_CLASS) && p->sched_class->switched_to)
--		p->sched_class->switched_to(rq, p);
-+	if (ctx->flags & ENQUEUE_CLASS) {
-+		if (p->sched_class->switched_to)
-+			p->sched_class->switched_to(rq, p);
-+	} else {
-+		p->sched_class->prio_changed(rq, p, ctx->prio);
-+	}
- }
---- a/kernel/sched/deadline.c
-+++ b/kernel/sched/deadline.c
-@@ -3042,23 +3042,24 @@ static void switched_to_dl(struct rq *rq
- 	}
- }
- 
-+static u64 get_prio_dl(struct rq *rq, struct task_struct *p)
-+{
-+	return p->dl.deadline;
-+}
 +
- /*
-  * If the scheduling parameters of a -deadline task changed,
-  * a push or pull operation might be needed.
-  */
--static void prio_changed_dl(struct rq *rq, struct task_struct *p,
--			    int oldprio)
-+static void prio_changed_dl(struct rq *rq, struct task_struct *p, u64 old_deadline)
- {
- 	if (!task_on_rq_queued(p))
- 		return;
- 
--	/*
--	 * This might be too much, but unfortunately
--	 * we don't have the old deadline value, and
--	 * we can't argue if the task is increasing
--	 * or lowering its prio, so...
--	 */
--	if (!rq->dl.overloaded)
-+	if (p->dl.deadline == old_deadline)
-+		return;
-+
-+	if (dl_time_before(old_deadline, p->dl.deadline))
- 		deadline_queue_pull_task(rq);
- 
- 	if (task_current_donor(rq, p)) {
-@@ -3113,6 +3114,7 @@ DEFINE_SCHED_CLASS(dl) = {
- 	.task_tick		= task_tick_dl,
- 	.task_fork              = task_fork_dl,
- 
-+	.get_prio		= get_prio_dl,
- 	.prio_changed           = prio_changed_dl,
- 	.switched_from		= switched_from_dl,
- 	.switched_to		= switched_to_dl,
++	if ((ctx->flags & ENQUEUE_CLASS) && p->sched_class->switched_to)
++		p->sched_class->switched_to(rq, p);
+ }
 --- a/kernel/sched/ext.c
 +++ b/kernel/sched/ext.c
-@@ -2961,7 +2961,7 @@ static void reweight_task_scx(struct rq
- 				 p, p->scx.weight);
- }
+@@ -3912,21 +3912,28 @@ static void scx_disable_workfn(struct kt
  
--static void prio_changed_scx(struct rq *rq, struct task_struct *p, int oldprio)
-+static void prio_changed_scx(struct rq *rq, struct task_struct *p, u64 oldprio)
- {
- }
+ 	scx_task_iter_start(&sti);
+ 	while ((p = scx_task_iter_next_locked(&sti))) {
++		unsigned int queue_flags = DEQUEUE_SAVE | DEQUEUE_MOVE | DEQUEUE_NOCLOCK;
+ 		const struct sched_class *old_class = p->sched_class;
+ 		const struct sched_class *new_class =
+ 			__setscheduler_class(p->policy, p->prio);
  
-@@ -3928,9 +3928,6 @@ static void scx_disable_workfn(struct kt
+ 		update_rq_clock(task_rq(p));
+ 
++		if (old_class != new_class) {
++			queue_flags |= DEQUEUE_CLASS;
++			queue_flags &= ~(DEQUEUE_SAVE | DEQUEUE_MOVE);
++		}
++
+ 		if (old_class != new_class && p->se.sched_delayed)
+ 			dequeue_task(task_rq(p), p, DEQUEUE_SLEEP | DEQUEUE_DELAYED | DEQUEUE_NOCLOCK);
+ 
+-		scoped_guard (sched_change, p, DEQUEUE_SAVE | DEQUEUE_MOVE | DEQUEUE_NOCLOCK) {
++		scoped_guard (sched_change, p, queue_flags) {
  			p->sched_class = new_class;
+-			check_class_changing(task_rq(p), p, old_class);
  		}
  
--		if (!(queue_flags & DEQUEUE_CLASS))
--			check_prio_changed(task_rq(p), p, p->prio);
--
+-		check_class_changed(task_rq(p), p, old_class, p->prio);
++		if (!(queue_flags & DEQUEUE_CLASS))
++			check_prio_changed(task_rq(p), p, p->prio);
++
  		scx_exit_task(p);
  	}
  	scx_task_iter_stop(&sti);
-@@ -4679,9 +4676,6 @@ static int scx_enable(struct sched_ext_o
+@@ -4655,6 +4662,7 @@ static int scx_enable(struct sched_ext_o
+ 	percpu_down_write(&scx_fork_rwsem);
+ 	scx_task_iter_start(&sti);
+ 	while ((p = scx_task_iter_next_locked(&sti))) {
++		unsigned int queue_flags = DEQUEUE_SAVE | DEQUEUE_MOVE | DEQUEUE_NOCLOCK;
+ 		const struct sched_class *old_class = p->sched_class;
+ 		const struct sched_class *new_class =
+ 			__setscheduler_class(p->policy, p->prio);
+@@ -4664,16 +4672,22 @@ static int scx_enable(struct sched_ext_o
+ 
+ 		update_rq_clock(task_rq(p));
+ 
++		if (old_class != new_class) {
++			queue_flags |= DEQUEUE_CLASS;
++			queue_flags &= ~(DEQUEUE_SAVE | DEQUEUE_MOVE);
++		}
++
+ 		if (old_class != new_class && p->se.sched_delayed)
+ 			dequeue_task(task_rq(p), p, DEQUEUE_SLEEP | DEQUEUE_DELAYED | DEQUEUE_NOCLOCK);
+ 
+-		scoped_guard (sched_change, p, DEQUEUE_SAVE | DEQUEUE_MOVE | DEQUEUE_NOCLOCK) {
++		scoped_guard (sched_change, p, queue_flags) {
+ 			p->scx.slice = SCX_SLICE_DFL;
  			p->sched_class = new_class;
+-			check_class_changing(task_rq(p), p, old_class);
  		}
  
--		if (!(queue_flags & DEQUEUE_CLASS))
--			check_prio_changed(task_rq(p), p, p->prio);
--
+-		check_class_changed(task_rq(p), p, old_class, p->prio);
++		if (!(queue_flags & DEQUEUE_CLASS))
++			check_prio_changed(task_rq(p), p, p->prio);
++
  		put_task_struct(p);
  	}
  	scx_task_iter_stop(&sti);
---- a/kernel/sched/fair.c
-+++ b/kernel/sched/fair.c
-@@ -13138,11 +13138,14 @@ static void task_fork_fair(struct task_s
-  * the current task.
-  */
- static void
--prio_changed_fair(struct rq *rq, struct task_struct *p, int oldprio)
-+prio_changed_fair(struct rq *rq, struct task_struct *p, u64 oldprio)
- {
- 	if (!task_on_rq_queued(p))
- 		return;
- 
-+	if (p->prio == oldprio)
-+		return;
-+
- 	if (rq->cfs.nr_queued == 1)
- 		return;
- 
-@@ -13154,8 +13157,9 @@ prio_changed_fair(struct rq *rq, struct
- 	if (task_current_donor(rq, p)) {
- 		if (p->prio > oldprio)
- 			resched_curr(rq);
--	} else
-+	} else {
- 		wakeup_preempt(rq, p, 0);
-+	}
- }
- 
- #ifdef CONFIG_FAIR_GROUP_SCHED
 --- a/kernel/sched/idle.c
 +++ b/kernel/sched/idle.c
-@@ -504,8 +504,11 @@ static void switching_to_idle(struct rq
+@@ -498,7 +498,7 @@ static void task_tick_idle(struct rq *rq
+ {
  }
  
- static void
--prio_changed_idle(struct rq *rq, struct task_struct *p, int oldprio)
-+prio_changed_idle(struct rq *rq, struct task_struct *p, u64 oldprio)
+-static void switched_to_idle(struct rq *rq, struct task_struct *p)
++static void switching_to_idle(struct rq *rq, struct task_struct *p)
  {
-+	if (p->prio == oldprio)
-+		return;
-+
  	BUG();
  }
+@@ -536,6 +536,6 @@ DEFINE_SCHED_CLASS(idle) = {
+ 	.task_tick		= task_tick_idle,
  
+ 	.prio_changed		= prio_changed_idle,
+-	.switched_to		= switched_to_idle,
++	.switching_to		= switching_to_idle,
+ 	.update_curr		= update_curr_idle,
+ };
 --- a/kernel/sched/rt.c
 +++ b/kernel/sched/rt.c
-@@ -2437,11 +2437,14 @@ static void switched_to_rt(struct rq *rq
-  * us to initiate a push or pull.
-  */
- static void
--prio_changed_rt(struct rq *rq, struct task_struct *p, int oldprio)
-+prio_changed_rt(struct rq *rq, struct task_struct *p, u64 oldprio)
- {
- 	if (!task_on_rq_queued(p))
- 		return;
+@@ -2589,8 +2589,8 @@ DEFINE_SCHED_CLASS(rt) = {
  
-+	if (p->prio == oldprio)
-+		return;
-+
- 	if (task_current_donor(rq, p)) {
- 		/*
- 		 * If our priority decreases while running, we
+ 	.get_rr_interval	= get_rr_interval_rt,
+ 
+-	.prio_changed		= prio_changed_rt,
+ 	.switched_to		= switched_to_rt,
++	.prio_changed		= prio_changed_rt,
+ 
+ 	.update_curr		= update_curr_rt,
+ 
 --- a/kernel/sched/sched.h
 +++ b/kernel/sched/sched.h
-@@ -2451,8 +2451,10 @@ struct sched_class {
+@@ -20,7 +20,6 @@
+ #include <linux/sched/task_flags.h>
+ #include <linux/sched/task.h>
+ #include <linux/sched/topology.h>
+-
+ #include <linux/atomic.h>
+ #include <linux/bitmap.h>
+ #include <linux/bug.h>
+@@ -2369,6 +2368,7 @@ extern const u32		sched_prio_to_wmult[40
  
+ #define DEQUEUE_MIGRATING	0x0010 /* Matches ENQUEUE_MIGRATING */
+ #define DEQUEUE_DELAYED		0x0020 /* Matches ENQUEUE_DELAYED */
++#define DEQUEUE_CLASS		0x0040 /* Matches ENQUEUE_CLASS */
+ 
+ #define DEQUEUE_SPECIAL		0x00010000
+ #define DEQUEUE_THROTTLE	0x00020000
+@@ -2380,6 +2380,7 @@ extern const u32		sched_prio_to_wmult[40
+ 
+ #define ENQUEUE_MIGRATING	0x0010
+ #define ENQUEUE_DELAYED		0x0020
++#define ENQUEUE_CLASS		0x0040
+ 
+ #define ENQUEUE_HEAD		0x00010000
+ #define ENQUEUE_REPLENISH	0x00020000
+@@ -2443,14 +2444,11 @@ struct sched_class {
+ 	void (*task_fork)(struct task_struct *p);
+ 	void (*task_dead)(struct task_struct *p);
+ 
+-	/*
+-	 * The switched_from() call is allowed to drop rq->lock, therefore we
+-	 * cannot assume the switched_from/switched_to pair is serialized by
+-	 * rq->lock. They are however serialized by p->pi_lock.
+-	 */
+-	void (*switching_to) (struct rq *this_rq, struct task_struct *task);
+-	void (*switched_from)(struct rq *this_rq, struct task_struct *task);
+-	void (*switched_to)  (struct rq *this_rq, struct task_struct *task);
++	void (*switching_from)(struct rq *this_rq, struct task_struct *task);
++	void (*switched_from) (struct rq *this_rq, struct task_struct *task);
++	void (*switching_to)  (struct rq *this_rq, struct task_struct *task);
++	void (*switched_to)   (struct rq *this_rq, struct task_struct *task);
++
  	void (*reweight_task)(struct rq *this_rq, struct task_struct *task,
  			      const struct load_weight *lw);
-+
-+	u64  (*get_prio)     (struct rq *this_rq, struct task_struct *task);
  	void (*prio_changed) (struct rq *this_rq, struct task_struct *task,
--			      int oldprio);
-+			      u64 oldprio);
- 
- 	unsigned int (*get_rr_interval)(struct rq *rq,
- 					struct task_struct *task);
-@@ -3877,12 +3879,11 @@ extern void set_load_weight(struct task_
+@@ -3879,11 +3877,7 @@ extern void set_load_weight(struct task_
  extern void enqueue_task(struct rq *rq, struct task_struct *p, int flags);
  extern bool dequeue_task(struct rq *rq, struct task_struct *p, int flags);
  
--extern void check_prio_changed(struct rq *rq, struct task_struct *p, int oldprio);
--
+-extern void check_class_changing(struct rq *rq, struct task_struct *p,
+-				 const struct sched_class *prev_class);
+-extern void check_class_changed(struct rq *rq, struct task_struct *p,
+-				const struct sched_class *prev_class,
+-				int oldprio);
++extern void check_prio_changed(struct rq *rq, struct task_struct *p, int oldprio);
+ 
  extern struct balance_callback *splice_balance_callbacks(struct rq *rq);
  extern void balance_callbacks(struct rq *rq, struct balance_callback *head);
- 
- struct sched_change_ctx {
-+	u64			prio;
- 	struct task_struct	*p;
- 	int			flags;
- 	bool			queued;
 --- a/kernel/sched/stop_task.c
 +++ b/kernel/sched/stop_task.c
-@@ -81,8 +81,11 @@ static void switching_to_stop(struct rq
- }
- 
- static void
--prio_changed_stop(struct rq *rq, struct task_struct *p, int oldprio)
-+prio_changed_stop(struct rq *rq, struct task_struct *p, u64 oldprio)
+@@ -75,7 +75,7 @@ static void task_tick_stop(struct rq *rq
  {
-+	if (p->prio == oldprio)
-+		return;
-+
- 	BUG(); /* how!?, what priority? */
  }
  
+-static void switched_to_stop(struct rq *rq, struct task_struct *p)
++static void switching_to_stop(struct rq *rq, struct task_struct *p)
+ {
+ 	BUG(); /* its impossible to change to this class */
+ }
+@@ -112,6 +112,6 @@ DEFINE_SCHED_CLASS(stop) = {
+ 	.task_tick		= task_tick_stop,
+ 
+ 	.prio_changed		= prio_changed_stop,
+-	.switched_to		= switched_to_stop,
++	.switching_to		= switching_to_stop,
+ 	.update_curr		= update_curr_stop,
+ };
 --- a/kernel/sched/syscalls.c
 +++ b/kernel/sched/syscalls.c
-@@ -95,12 +95,6 @@ void set_user_nice(struct task_struct *p
- 		old_prio = p->prio;
- 		p->prio = effective_prio(p);
- 	}
--
--	/*
--	 * If the task increased its priority or is running and
--	 * lowered its priority, then reschedule its CPU:
--	 */
--	p->sched_class->prio_changed(rq, p, old_prio);
- }
- EXPORT_SYMBOL(set_user_nice);
+@@ -684,6 +684,11 @@ int __sched_setscheduler(struct task_str
+ 	prev_class = p->sched_class;
+ 	next_class = __setscheduler_class(policy, newprio);
  
-@@ -708,9 +702,6 @@ int __sched_setscheduler(struct task_str
++	if (prev_class != next_class) {
++		queue_flags |= DEQUEUE_CLASS;
++		queue_flags &= ~(DEQUEUE_SAVE | DEQUEUE_MOVE);
++	}
++
+ 	if (prev_class != next_class && p->se.sched_delayed)
+ 		dequeue_task(rq, p, DEQUEUE_SLEEP | DEQUEUE_DELAYED | DEQUEUE_NOCLOCK);
+ 
+@@ -695,7 +700,6 @@ int __sched_setscheduler(struct task_str
+ 			p->prio = newprio;
+ 		}
+ 		__setscheduler_uclamp(p, attr);
+-		check_class_changing(rq, p, prev_class);
+ 
+ 		if (scope->queued) {
+ 			/*
+@@ -707,7 +711,8 @@ int __sched_setscheduler(struct task_str
  		}
  	}
  
--	if (!(queue_flags & DEQUEUE_CLASS))
--		check_prio_changed(rq, p, oldprio);
--
+-	check_class_changed(rq, p, prev_class, oldprio);
++	if (!(queue_flags & DEQUEUE_CLASS))
++		check_prio_changed(rq, p, oldprio);
+ 
  	/* Avoid rq from going away on us: */
  	preempt_disable();
- 	head = splice_balance_callbacks(rq);
 
 
