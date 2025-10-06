@@ -1,378 +1,161 @@
-Received: from desiato.infradead.org (desiato.infradead.org [90.155.92.199])
+Received: from mx0a-001b2d01.pphosted.com (mx0a-001b2d01.pphosted.com [148.163.156.1])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E5A772638B2;
-	Mon,  6 Oct 2025 10:57:10 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=90.155.92.199
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2DD87299927;
+	Mon,  6 Oct 2025 15:27:32 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.156.1
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1759748232; cv=none; b=IJiST+WqlO82lMNIqLhCNbPCfavHxdCUB5qfv3A/kUp06Vw5V+4hussBzEPmuGEx48cUmn8GfGr1/YMsPTLWNjT2oJDYRJcvjo5y1Pm8qZlNRXweIX0nWgHFV5O8UQ8QN/7yaJ2Du9/qhvM3qH4tOtgwoR0/ZUZqCJkmOBhIelA=
+	t=1759764454; cv=none; b=dbu48tRs17Zs82c9+RTwystO2WQ+vXAX3iH6v1T16AQ3ajXqxT5IBlGO9WsyNuZXHewkNnnRjm6QVXK+HkLZDI9EKvqwKII4YrBJJxmMqtKzZ0lp0RaTUa/o0svdT7AAVDNnAFfluAlyy7iltyuASGW6QBRsA7hAeNJkMMuVHvg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1759748232; c=relaxed/simple;
-	bh=S305arjsIN8bedo8fDXrbc1tCTzW1OktXvsWEmzEPRo=;
-	h=Message-ID:Date:From:To:Cc:Subject:References:MIME-Version:
-	 Content-Type; b=q/erCwNIoaMK03fuE4XhPSOscLa1SQGDuGLxgDRVDcZRtSDt/pW97KntUqSjyR3LVPeToa1bKwRMsfq8kb4INk7WcJ7ZxRp3D87WqXD3EWLNXLMAzoY1OluKJGOu8WFVyRbNPheCC/q8ixF+YrvVNKuk8m5YfXfRoiUfgQalnHU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=PvsGXnwS; arc=none smtp.client-ip=90.155.92.199
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=infradead.org
+	s=arc-20240116; t=1759764454; c=relaxed/simple;
+	bh=MoS6ImqYcoCG5XsgUemtdrS0YKZ+fPGBtCYoedZyEcw=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=lGm+WPgU1lon9DKJ61aNhtkQpwS9lDey3pRxbXBYTrvREMujGRcQUXBCSS49YzGPp3DW2rkh4FzhZ5Cpl02m1DDaf3Zjt54f+L5zhLmlBDyjtWiLx855o5m/HN4StPoAA/cD02t/wu4CVsiM6zlR7wbkZzO5FlBWOudwRi/+5Xc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com; spf=pass smtp.mailfrom=linux.ibm.com; dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b=eOe+6Rt5; arc=none smtp.client-ip=148.163.156.1
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.ibm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="PvsGXnwS"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=desiato.20200630; h=Content-Type:MIME-Version:References:
-	Subject:Cc:To:From:Date:Message-ID:Sender:Reply-To:Content-Transfer-Encoding:
-	Content-ID:Content-Description:In-Reply-To;
-	bh=1C2VdFRZu2PsJI4zgJ4CUAg7pUvXeT6mj9c9BOfbZBQ=; b=PvsGXnwSuIuvPnhex3Fcy7SnW+
-	iRDUvtDDc1k9vMiyAYa8SL3ltAqjpcx/oBoc0b8XoSEwgaREn3rxpCKo4uxERTUVsSWKus83P7QHf
-	fJor25csZE8ktO0W4aUtL27yplW2gvkaUFwd8VS3kIwr6Y1ooiU4wE6RlIQ3K9hpboic/NRgWR5l2
-	Uqumcy+6UvlqUzz+uXfrj1M+yye5KXGhOSSHdojEAz9HBU7EhgYZdvt+oj2wXylViSR5uDsW4IuET
-	YAiTwiv0/JX1irYzOQjgjh2CQNx8DXwFSFnqq4f8+leaaO1Mx89YIFQQW1Aitmv7mWeP67G+1giOG
-	74s6Alrw==;
-Received: from 77-249-17-252.cable.dynamic.v4.ziggo.nl ([77.249.17.252] helo=noisy.programming.kicks-ass.net)
-	by desiato.infradead.org with esmtpsa (Exim 4.98.2 #2 (Red Hat Linux))
-	id 1v5ito-0000000GrzG-3bk5;
-	Mon, 06 Oct 2025 10:57:01 +0000
-Received: by noisy.programming.kicks-ass.net (Postfix, from userid 0)
-	id 677D0300462; Mon, 06 Oct 2025 12:57:00 +0200 (CEST)
-Message-ID: <20251006105453.648473106@infradead.org>
-User-Agent: quilt/0.68
-Date: Mon, 06 Oct 2025 12:46:54 +0200
-From: Peter Zijlstra <peterz@infradead.org>
-To: tj@kernel.org
-Cc: linux-kernel@vger.kernel.org,
- peterz@infradead.org,
- mingo@kernel.org,
- juri.lelli@redhat.com,
- vincent.guittot@linaro.org,
- dietmar.eggemann@arm.com,
- rostedt@goodmis.org,
- bsegall@google.com,
- mgorman@suse.de,
- vschneid@redhat.com,
- longman@redhat.com,
- hannes@cmpxchg.org,
- mkoutny@suse.com,
- void@manifault.com,
- arighi@nvidia.com,
- changwoo@igalia.com,
- cgroups@vger.kernel.org,
- sched-ext@lists.linux.dev,
- liuwenfang@honor.com,
- tglx@linutronix.de,
- Joel Fernandes <joelagnelf@nvidia.com>
-Subject: [RFC][PATCH 2/3] sched: Add support to pick functions to take rf
-References: <20251006104652.630431579@infradead.org>
+	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="eOe+6Rt5"
+Received: from pps.filterd (m0360083.ppops.net [127.0.0.1])
+	by mx0a-001b2d01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 5968U6DD013752;
+	Mon, 6 Oct 2025 15:21:38 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=cc
+	:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=pp1; bh=BGTTua
+	/GjXQXBBYK78wLNyLke//ig1ARcXJHik9zE20=; b=eOe+6Rt5jf3NL5jroF+RYp
+	Pc6QINRrCb15aZFy4cfhBgkYsPtwVLQFt3gHGYz/VSBWarKcE4Qy17EtlM7V0luN
+	NzdmjIB+INSD7fnzyJb/IfNz9lEZvY7+9Gcv4kEmvHDPpa3MlmZhyjgxAeDJvOz/
+	YJKVT6yiJexnsX9zW2Dt6PN3XXet2TKShwFSJ7c7eFUzZESFqV5sNMVNMcl2+GL9
+	mIVwREEHR8DbpJHQheDIw0dFQrPfTC5LbkkSbgc6XSnrP3kI+IhRYABEax0fxyLL
+	nsaVPLiYX73WBmI/DnjEUTUEVHEtNMItMmt0E/h2UGZM/aSLYOtttnbHlbLQifqg
+	==
+Received: from pps.reinject (localhost [127.0.0.1])
+	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 49ju3gt6vx-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Mon, 06 Oct 2025 15:21:37 +0000 (GMT)
+Received: from m0360083.ppops.net (m0360083.ppops.net [127.0.0.1])
+	by pps.reinject (8.18.1.12/8.18.0.8) with ESMTP id 596Eqs69015698;
+	Mon, 6 Oct 2025 15:21:37 GMT
+Received: from ppma23.wdc07v.mail.ibm.com (5d.69.3da9.ip4.static.sl-reverse.com [169.61.105.93])
+	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 49ju3gt6vv-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Mon, 06 Oct 2025 15:21:37 +0000 (GMT)
+Received: from pps.filterd (ppma23.wdc07v.mail.ibm.com [127.0.0.1])
+	by ppma23.wdc07v.mail.ibm.com (8.18.1.2/8.18.1.2) with ESMTP id 596DSr6T031419;
+	Mon, 6 Oct 2025 15:21:35 GMT
+Received: from smtprelay06.fra02v.mail.ibm.com ([9.218.2.230])
+	by ppma23.wdc07v.mail.ibm.com (PPS) with ESMTPS id 49kfdjxkxy-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Mon, 06 Oct 2025 15:21:35 +0000
+Received: from smtpav02.fra02v.mail.ibm.com (smtpav02.fra02v.mail.ibm.com [10.20.54.101])
+	by smtprelay06.fra02v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 596FLXCR30999030
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Mon, 6 Oct 2025 15:21:33 GMT
+Received: from smtpav02.fra02v.mail.ibm.com (unknown [127.0.0.1])
+	by IMSVA (Postfix) with ESMTP id 8776720043;
+	Mon,  6 Oct 2025 15:21:33 +0000 (GMT)
+Received: from smtpav02.fra02v.mail.ibm.com (unknown [127.0.0.1])
+	by IMSVA (Postfix) with ESMTP id CBA7720040;
+	Mon,  6 Oct 2025 15:21:28 +0000 (GMT)
+Received: from [9.124.214.120] (unknown [9.124.214.120])
+	by smtpav02.fra02v.mail.ibm.com (Postfix) with ESMTP;
+	Mon,  6 Oct 2025 15:21:28 +0000 (GMT)
+Message-ID: <fee0edd5-86d1-4dff-9e07-70fd2208b073@linux.ibm.com>
+Date: Mon, 6 Oct 2025 20:51:27 +0530
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-
-From: Joel Fernandes <joelagnelf@nvidia.com>
-
-Some pick functions like the internal pick_next_task_fair() already take
-rf but some others dont. We need this for scx's server pick function.
-Prepare for this by having pick functions accept it.
-
-[peterz: - added RETRY_TASK handling
-         - removed pick_next_task_fair indirection]
-Signed-off-by: Joel Fernandes <joelagnelf@nvidia.com>
-Signed-off-by: Peter Zijlstra (Intel) <peterz@infradead.org>
----
-SubmissionLink: https://lkml.kernel.org/r/20250809184800.129831-6-joelagnelf@nvidia.com
----
- include/linux/sched.h    |    7 ++-----
- kernel/sched/core.c      |   35 ++++++++++++++++++++++++++---------
- kernel/sched/deadline.c  |    8 ++++----
- kernel/sched/ext.c       |    2 +-
- kernel/sched/fair.c      |   16 ++++++----------
- kernel/sched/idle.c      |    2 +-
- kernel/sched/rt.c        |    2 +-
- kernel/sched/sched.h     |   10 ++++++----
- kernel/sched/stop_task.c |    2 +-
- 9 files changed, 48 insertions(+), 36 deletions(-)
-
---- a/include/linux/sched.h
-+++ b/include/linux/sched.h
-@@ -637,8 +637,8 @@ struct sched_rt_entity {
- #endif
- } __randomize_layout;
- 
--typedef bool (*dl_server_has_tasks_f)(struct sched_dl_entity *);
--typedef struct task_struct *(*dl_server_pick_f)(struct sched_dl_entity *);
-+struct rq_flags;
-+typedef struct task_struct *(*dl_server_pick_f)(struct sched_dl_entity *, struct rq_flags *rf);
- 
- struct sched_dl_entity {
- 	struct rb_node			rb_node;
-@@ -730,9 +730,6 @@ struct sched_dl_entity {
- 	 * dl_server_update().
- 	 *
- 	 * @rq the runqueue this server is for
--	 *
--	 * @server_has_tasks() returns true if @server_pick return a
--	 * runnable task.
- 	 */
- 	struct rq			*rq;
- 	dl_server_pick_f		server_pick_task;
---- a/kernel/sched/core.c
-+++ b/kernel/sched/core.c
-@@ -5901,7 +5901,7 @@ __pick_next_task(struct rq *rq, struct t
- 
- 		/* Assume the next prioritized class is idle_sched_class */
- 		if (!p) {
--			p = pick_task_idle(rq);
-+			p = pick_task_idle(rq, rf);
- 			put_prev_set_next_task(rq, prev, p);
- 		}
- 
-@@ -5913,11 +5913,15 @@ __pick_next_task(struct rq *rq, struct t
- 
- 	for_each_active_class(class) {
- 		if (class->pick_next_task) {
--			p = class->pick_next_task(rq, prev);
-+			p = class->pick_next_task(rq, prev, rf);
-+			if (unlikely(p == RETRY_TASK))
-+				goto restart;
- 			if (p)
- 				return p;
- 		} else {
--			p = class->pick_task(rq);
-+			p = class->pick_task(rq, rf);
-+			if (unlikely(p == RETRY_TASK))
-+				goto restart;
- 			if (p) {
- 				put_prev_set_next_task(rq, prev, p);
- 				return p;
-@@ -5947,7 +5951,11 @@ static inline bool cookie_match(struct t
- 	return a->core_cookie == b->core_cookie;
- }
- 
--static inline struct task_struct *pick_task(struct rq *rq)
-+/*
-+ * Careful; this can return RETRY_TASK, it does not include the retry-loop
-+ * itself due to the whole SMT pick retry thing below.
-+ */
-+static inline struct task_struct *pick_task(struct rq *rq, struct rq_flags *rf)
- {
- 	const struct sched_class *class;
- 	struct task_struct *p;
-@@ -5955,7 +5963,7 @@ static inline struct task_struct *pick_t
- 	rq->dl_server = NULL;
- 
- 	for_each_active_class(class) {
--		p = class->pick_task(rq);
-+		p = class->pick_task(rq, rf);
- 		if (p)
- 			return p;
- 	}
-@@ -5970,7 +5978,7 @@ static void queue_core_balance(struct rq
- static struct task_struct *
- pick_next_task(struct rq *rq, struct task_struct *prev, struct rq_flags *rf)
- {
--	struct task_struct *next, *p, *max = NULL;
-+	struct task_struct *next, *p, *max;
- 	const struct cpumask *smt_mask;
- 	bool fi_before = false;
- 	bool core_clock_updated = (rq == rq->core);
-@@ -6055,7 +6063,10 @@ pick_next_task(struct rq *rq, struct tas
- 	 * and there are no cookied tasks running on siblings.
- 	 */
- 	if (!need_sync) {
--		next = pick_task(rq);
-+restart_single:
-+		next = pick_task(rq, rf);
-+		if (unlikely(next == RETRY_TASK))
-+			goto restart_single;
- 		if (!next->core_cookie) {
- 			rq->core_pick = NULL;
- 			rq->core_dl_server = NULL;
-@@ -6075,6 +6086,8 @@ pick_next_task(struct rq *rq, struct tas
- 	 *
- 	 * Tie-break prio towards the current CPU
- 	 */
-+restart_multi:
-+	max = NULL;
- 	for_each_cpu_wrap(i, smt_mask, cpu) {
- 		rq_i = cpu_rq(i);
- 
-@@ -6086,7 +6099,11 @@ pick_next_task(struct rq *rq, struct tas
- 		if (i != cpu && (rq_i != rq->core || !core_clock_updated))
- 			update_rq_clock(rq_i);
- 
--		rq_i->core_pick = p = pick_task(rq_i);
-+		p = pick_task(rq_i, rf);
-+		if (unlikely(p == RETRY_TASK))
-+			goto restart_multi;
-+
-+		rq_i->core_pick = p;
- 		rq_i->core_dl_server = rq_i->dl_server;
- 
- 		if (!max || prio_less(max, p, fi_before))
-@@ -6108,7 +6125,7 @@ pick_next_task(struct rq *rq, struct tas
- 			if (cookie)
- 				p = sched_core_find(rq_i, cookie);
- 			if (!p)
--				p = idle_sched_class.pick_task(rq_i);
-+				p = idle_sched_class.pick_task(rq_i, rf);
- 		}
- 
- 		rq_i->core_pick = p;
---- a/kernel/sched/deadline.c
-+++ b/kernel/sched/deadline.c
-@@ -2352,7 +2352,7 @@ static struct sched_dl_entity *pick_next
-  * __pick_next_task_dl - Helper to pick the next -deadline task to run.
-  * @rq: The runqueue to pick the next task from.
-  */
--static struct task_struct *__pick_task_dl(struct rq *rq)
-+static struct task_struct *__pick_task_dl(struct rq *rq, struct rq_flags *rf)
- {
- 	struct sched_dl_entity *dl_se;
- 	struct dl_rq *dl_rq = &rq->dl;
-@@ -2366,7 +2366,7 @@ static struct task_struct *__pick_task_d
- 	WARN_ON_ONCE(!dl_se);
- 
- 	if (dl_server(dl_se)) {
--		p = dl_se->server_pick_task(dl_se);
-+		p = dl_se->server_pick_task(dl_se, rf);
- 		if (!p) {
- 			dl_server_stop(dl_se);
- 			goto again;
-@@ -2379,9 +2379,9 @@ static struct task_struct *__pick_task_d
- 	return p;
- }
- 
--static struct task_struct *pick_task_dl(struct rq *rq)
-+static struct task_struct *pick_task_dl(struct rq *rq, struct rq_flags *rf)
- {
--	return __pick_task_dl(rq);
-+	return __pick_task_dl(rq, rf);
- }
- 
- static void put_prev_task_dl(struct rq *rq, struct task_struct *p, struct task_struct *next)
---- a/kernel/sched/ext.c
-+++ b/kernel/sched/ext.c
-@@ -2332,7 +2332,7 @@ static struct task_struct *first_local_t
- 					struct task_struct, scx.dsq_list.node);
- }
- 
--static struct task_struct *pick_task_scx(struct rq *rq)
-+static struct task_struct *pick_task_scx(struct rq *rq, struct rq_flags *rf)
- {
- 	struct task_struct *prev = rq->curr;
- 	struct task_struct *p;
---- a/kernel/sched/fair.c
-+++ b/kernel/sched/fair.c
-@@ -8822,7 +8822,7 @@ static void check_preempt_wakeup_fair(st
- 	resched_curr_lazy(rq);
- }
- 
--static struct task_struct *pick_task_fair(struct rq *rq)
-+static struct task_struct *pick_task_fair(struct rq *rq, struct rq_flags *rf)
- {
- 	struct sched_entity *se;
- 	struct cfs_rq *cfs_rq;
-@@ -8866,7 +8866,7 @@ pick_next_task_fair(struct rq *rq, struc
- 	int new_tasks;
- 
- again:
--	p = pick_task_fair(rq);
-+	p = pick_task_fair(rq, rf);
- 	if (!p)
- 		goto idle;
- 	se = &p->se;
-@@ -8945,14 +8945,10 @@ pick_next_task_fair(struct rq *rq, struc
- 	return NULL;
- }
- 
--static struct task_struct *__pick_next_task_fair(struct rq *rq, struct task_struct *prev)
-+static struct task_struct *
-+fair_server_pick_task(struct sched_dl_entity *dl_se, struct rq_flags *rf)
- {
--	return pick_next_task_fair(rq, prev, NULL);
--}
--
--static struct task_struct *fair_server_pick_task(struct sched_dl_entity *dl_se)
--{
--	return pick_task_fair(dl_se->rq);
-+	return pick_task_fair(dl_se->rq, rf);
- }
- 
- void fair_server_init(struct rq *rq)
-@@ -13632,7 +13628,7 @@ DEFINE_SCHED_CLASS(fair) = {
- 	.wakeup_preempt		= check_preempt_wakeup_fair,
- 
- 	.pick_task		= pick_task_fair,
--	.pick_next_task		= __pick_next_task_fair,
-+	.pick_next_task		= pick_next_task_fair,
- 	.put_prev_task		= put_prev_task_fair,
- 	.set_next_task          = set_next_task_fair,
- 
---- a/kernel/sched/idle.c
-+++ b/kernel/sched/idle.c
-@@ -466,7 +466,7 @@ static void set_next_task_idle(struct rq
- 	next->se.exec_start = rq_clock_task(rq);
- }
- 
--struct task_struct *pick_task_idle(struct rq *rq)
-+struct task_struct *pick_task_idle(struct rq *rq, struct rq_flags *rf)
- {
- 	scx_update_idle(rq, true, false);
- 	return rq->idle;
---- a/kernel/sched/rt.c
-+++ b/kernel/sched/rt.c
-@@ -1695,7 +1695,7 @@ static struct task_struct *_pick_next_ta
- 	return rt_task_of(rt_se);
- }
- 
--static struct task_struct *pick_task_rt(struct rq *rq)
-+static struct task_struct *pick_task_rt(struct rq *rq, struct rq_flags *rf)
- {
- 	struct task_struct *p;
- 
---- a/kernel/sched/sched.h
-+++ b/kernel/sched/sched.h
-@@ -2467,7 +2467,7 @@ struct sched_class {
- 	/*
- 	 * schedule/pick_next_task: rq->lock
- 	 */
--	struct task_struct *(*pick_task)(struct rq *rq);
-+	struct task_struct *(*pick_task)(struct rq *rq, struct rq_flags *rf);
- 	/*
- 	 * Optional! When implemented pick_next_task() should be equivalent to:
- 	 *
-@@ -2477,7 +2477,8 @@ struct sched_class {
- 	 *       set_next_task_first(next);
- 	 *   }
- 	 */
--	struct task_struct *(*pick_next_task)(struct rq *rq, struct task_struct *prev);
-+	struct task_struct *(*pick_next_task)(struct rq *rq, struct task_struct *prev,
-+					      struct rq_flags *rf);
- 
- 	/*
- 	 * sched_change:
-@@ -2690,8 +2691,9 @@ static inline bool sched_fair_runnable(s
- 	return rq->cfs.nr_queued > 0;
- }
- 
--extern struct task_struct *pick_next_task_fair(struct rq *rq, struct task_struct *prev, struct rq_flags *rf);
--extern struct task_struct *pick_task_idle(struct rq *rq);
-+extern struct task_struct *pick_next_task_fair(struct rq *rq, struct task_struct *prev,
-+					       struct rq_flags *rf);
-+extern struct task_struct *pick_task_idle(struct rq *rq, struct rq_flags *rf);
- 
- #define SCA_CHECK		0x01
- #define SCA_MIGRATE_DISABLE	0x02
---- a/kernel/sched/stop_task.c
-+++ b/kernel/sched/stop_task.c
-@@ -32,7 +32,7 @@ static void set_next_task_stop(struct rq
- 	stop->se.exec_start = rq_clock_task(rq);
- }
- 
--static struct task_struct *pick_task_stop(struct rq *rq)
-+static struct task_struct *pick_task_stop(struct rq *rq, struct rq_flags *rf)
- {
- 	if (!sched_stop_runnable(rq))
- 		return NULL;
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH 01/14] sched: Employ sched_change guards
+To: Peter Zijlstra <peterz@infradead.org>
+Cc: linux-kernel@vger.kernel.org, mingo@redhat.com, juri.lelli@redhat.com,
+        vincent.guittot@linaro.org, dietmar.eggemann@arm.com,
+        rostedt@goodmis.org, bsegall@google.com, mgorman@suse.de,
+        vschneid@redhat.com, longman@redhat.com, hannes@cmpxchg.org,
+        mkoutny@suse.com, void@manifault.com, arighi@nvidia.com,
+        changwoo@igalia.com, cgroups@vger.kernel.org,
+        sched-ext@lists.linux.dev, liuwenfang@honor.com, tglx@linutronix.de,
+        tj@kernel.org
+References: <20250910154409.446470175@infradead.org>
+ <20250910155808.415580225@infradead.org>
+Content-Language: en-US
+From: Shrikanth Hegde <sshegde@linux.ibm.com>
+In-Reply-To: <20250910155808.415580225@infradead.org>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+X-TM-AS-GCONF: 00
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjUxMDA0MDAxOCBTYWx0ZWRfX19dQ+iwBtKSY
+ RZYC63N/LKEDG4lvHmvFk4kqeUdiKTUkoeEydIQj0gERIPYb7wzu/dT3ruYfzf0tqk6hSEPnSJj
+ vAceTL/D9jZp5YcHo5/G2yjcE/7XmF1v6nE6NAkYgZ6tDoR0jpPyotWtdVuKa2+VLswggC2e5aM
+ wkOBU6yYwsfngbRIOOikjDuah2PY3FhN0G/RycWSMvphVFMQ2ydddJ0JrfDYoMfkl8NBoVhmP5a
+ B4bxump1C9JbRjLmdH28j2Hm+k8erlXktgMgwIhqZFW+ew57epmRULGEpyL0Q+vqyhgabfuvw/Y
+ 3OP2j05K18HHNX1Y69N+8Bmb7l9iAq77MpkwPey4rD80S0Wa5dDtdYAj/RkTbi8eGzwwD4M16TX
+ kCpJp80qt5/9NnlUxs1edOuughRksg==
+X-Authority-Analysis: v=2.4 cv=I4dohdgg c=1 sm=1 tr=0 ts=68e3de81 cx=c_pps
+ a=3Bg1Hr4SwmMryq2xdFQyZA==:117 a=3Bg1Hr4SwmMryq2xdFQyZA==:17
+ a=IkcTkHD0fZMA:10 a=x6icFKpwvdMA:10 a=hKsuor804cSa_We8IwkA:9
+ a=QEXdDO2ut3YA:10 a=nl4s5V0KI7Kw-pW0DWrs:22 a=pHzHmUro8NiASowvMSCR:22
+ a=xoEH_sTeL_Rfw54TyV31:22
+X-Proofpoint-GUID: 05FclDpPzSC4xn8YbrD0TJ5uabLK3hwr
+X-Proofpoint-ORIG-GUID: eWovQ_0FPZV6sBTIKMBJldvpkfSp2N_a
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1117,Hydra:6.1.9,FMLib:17.12.80.40
+ definitions=2025-10-06_05,2025-10-02_03,2025-03-28_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ impostorscore=0 lowpriorityscore=0 malwarescore=0 adultscore=0 spamscore=0
+ bulkscore=0 suspectscore=0 clxscore=1011 priorityscore=1501 phishscore=0
+ classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
+ reason=mlx scancount=1 engine=8.19.0-2509150000 definitions=main-2510040018
 
 
+
+On 9/10/25 9:14 PM, Peter Zijlstra wrote:
+> As proposed a long while ago -- and half done by scx -- wrap the
+> scheduler's 'change' pattern in a guard helper.
+> 
+[...]>   		put_task_struct(p);
+> --- a/kernel/sched/sched.h
+> +++ b/kernel/sched/sched.h
+> @@ -3860,23 +3860,22 @@ extern void check_class_changed(struct r
+>   extern struct balance_callback *splice_balance_callbacks(struct rq *rq);
+>   extern void balance_callbacks(struct rq *rq, struct balance_callback *head);
+>   
+> -#ifdef CONFIG_SCHED_CLASS_EXT
+> -/*
+> - * Used by SCX in the enable/disable paths to move tasks between sched_classes
+> - * and establish invariants.
+> - */
+> -struct sched_enq_and_set_ctx {
+> +struct sched_change_ctx {
+>   	struct task_struct	*p;
+> -	int			queue_flags;
+> +	int			flags;
+>   	bool			queued;
+>   	bool			running;
+>   };
+>   
+> -void sched_deq_and_put_task(struct task_struct *p, int queue_flags,
+> -			    struct sched_enq_and_set_ctx *ctx);
+> -void sched_enq_and_set_task(struct sched_enq_and_set_ctx *ctx);
+> +struct sched_change_ctx *sched_change_begin(struct task_struct *p, unsigned int flags);
+> +void sched_change_end(struct sched_change_ctx *ctx);
+>   
+> -#endif /* CONFIG_SCHED_CLASS_EXT */
+> +DEFINE_CLASS(sched_change, struct sched_change_ctx *,
+> +	     sched_change_end(_T),
+> +	     sched_change_begin(p, flags),
+> +	     struct task_struct *p, unsigned int flags)
+> +
+> +DEFINE_CLASS_IS_UNCONDITIONAL(sched_change)
+>   
+>   #include "ext.h"
+>   
+could you please add a comment on matching flags on dequeue/enqueue
+here?
+
+Since the ctx->flags don't get cleared, one could be left wondering how
+does the enqueue happens(exp: ENQUEUE_RESTORE) until they see it works 
+since flags match.
