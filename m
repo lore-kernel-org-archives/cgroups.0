@@ -1,153 +1,159 @@
-Received: from out-183.mta1.migadu.com (out-183.mta1.migadu.com [95.215.58.183])
+Received: from canpmsgout01.his.huawei.com (canpmsgout01.his.huawei.com [113.46.200.216])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AFCD56FC5
-	for <cgroups@vger.kernel.org>; Tue, 14 Oct 2025 01:43:59 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=95.215.58.183
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5B7F42E975E;
+	Tue, 14 Oct 2025 02:28:51 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=113.46.200.216
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1760406242; cv=none; b=XqEVlfmZFXhRcBtKrWgWbW77Qg2uwvhcPApaZgP1tztXs3HD1SPXlz21sZLye/uMFc/pgGfge2A6X6Y9HjSlIgnf+EmjNeu88NSd28p1Jp0r2T2O9KpPFSWnt1YU+WBWjjk18//dTh5y2emq+ja+QfPIj27ZEbc7H0o+i1wC2l0=
+	t=1760408933; cv=none; b=r0CHAlQpL3r1tQKm6PkmS/sKdzDK36GWgzyXl+qYOfOu1UfbGUMRiITbN2a6H4CJjNwqFm6TDXDkxeHYkTFBgUO7FLCXDzJ/QdJ48LeYVsOkb/Q3uBPhJFI2mbr8BecJCjpPbBeCUZj3Y7eqjObANpVT+zMaclxCvqi8wEGvf5Y=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1760406242; c=relaxed/simple;
-	bh=IyIx6WhWzH3QfEjg9TeTpMEVNRzJZtsFVjeIaWYGLdU=;
-	h=From:To:Cc:Subject:In-Reply-To:References:Date:Message-ID:
-	 MIME-Version:Content-Type; b=nQ7BwvdizfmPfOU99dZ8nGXvUnpaKdDqXxubqVsX3/uqv8hpex4hwjqkN7w1RXFUy1RW4US4rL9ZXgeAJjm418UEmxNC4kpuXDDbd6OmOwtWwkhmaHx3Tgt0R4xY28PywmPp+SpeP0F1oavt5IQH83SzjcBS/4tlOorB+Sdfm8I=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=FTfxEID/; arc=none smtp.client-ip=95.215.58.183
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
+	s=arc-20240116; t=1760408933; c=relaxed/simple;
+	bh=NPxRRzFtScXdG9auhMZ3j0+iJAE7hIaDhucri088R14=;
+	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=Ci6yjW9jBj6laJO++oRirE8IaEfaMaQGAhV6NWKKtVfzP4GzdXGZiWLwQ+Q/YbOnVSIlPqw13r0Q3srMZttVACivreF6kzs67WXYstGbdWe1WRwokF2sLEhL+gEEAydysMavrAfm45x/vUne0PYVCSfVCCn+bHBGHwR4V+0/tio=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; dkim=pass (1024-bit key) header.d=huawei.com header.i=@huawei.com header.b=DjaLYW3U; arc=none smtp.client-ip=113.46.200.216
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="FTfxEID/"
-X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
-	t=1760406237;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=vO/ZDB4TMtmLh64kPiFotXh5bUAaUBwq3BsPKySjreM=;
-	b=FTfxEID/GkjBTTNzzbc45gGoh12Ba6wQqrzY/bO5nzi4cY4mfksqWw34ZkxG1aUz4cnX5l
-	taZo3/Bi+V1OBjRFo9bvgPqAb9tbY0t0Dknl/C/QBjFoIbPjxAIWONbpk1/ahMJVoCvZBq
-	INPVlegL1EDnAvlD6y6JwifiV1O529E=
-From: Roman Gushchin <roman.gushchin@linux.dev>
-To: Daniel Sedlak <daniel.sedlak@cdn77.com>
-Cc: Shakeel Butt <shakeel.butt@linux.dev>,  "David S. Miller"
- <davem@davemloft.net>,  Eric Dumazet <edumazet@google.com>,  Jakub
- Kicinski <kuba@kernel.org>,  Paolo Abeni <pabeni@redhat.com>,  Simon
- Horman <horms@kernel.org>,  Jonathan Corbet <corbet@lwn.net>,  Neal
- Cardwell <ncardwell@google.com>,  Kuniyuki Iwashima <kuniyu@google.com>,
-  David Ahern <dsahern@kernel.org>,  Andrew Morton
- <akpm@linux-foundation.org>,  Yosry Ahmed <yosry.ahmed@linux.dev>,
-  linux-mm@kvack.org,  netdev@vger.kernel.org,  Johannes Weiner
- <hannes@cmpxchg.org>,  Michal Hocko <mhocko@kernel.org>,  Muchun Song
- <muchun.song@linux.dev>,  cgroups@vger.kernel.org,  Tejun Heo
- <tj@kernel.org>,  Michal =?utf-8?Q?Koutn=C3=BD?= <mkoutny@suse.com>,
-  Matyas Hurtik
- <matyas.hurtik@cdn77.com>
-Subject: Re: [PATCH v5] memcg: expose socket memory pressure in a cgroup
-In-Reply-To: <89618dcb-7fe3-4f15-931b-17929287c323@cdn77.com> (Daniel Sedlak's
-	message of "Mon, 13 Oct 2025 16:30:53 +0200")
-References: <20251007125056.115379-1-daniel.sedlak@cdn77.com>
-	<87qzvdqkyh.fsf@linux.dev>
-	<13b5aeb6-ee0a-4b5b-a33a-e1d1d6f7f60e@cdn77.com>
-	<87o6qgnl9w.fsf@linux.dev>
-	<tr7hsmxqqwpwconofyr2a6czorimltte5zp34sp6tasept3t4j@ij7acnr6dpjp>
-	<87a5205544.fsf@linux.dev>
-	<qdblzbalf3xqohvw2az3iogevzvgn3c3k64nsmyv2hsxyhw7r4@oo7yrgsume2h>
-	<875xcn526v.fsf@linux.dev>
-	<89618dcb-7fe3-4f15-931b-17929287c323@cdn77.com>
-Date: Mon, 13 Oct 2025 18:43:45 -0700
-Message-ID: <87h5w2w94e.fsf@linux.dev>
+	dkim=pass (1024-bit key) header.d=huawei.com header.i=@huawei.com header.b="DjaLYW3U"
+dkim-signature: v=1; a=rsa-sha256; d=huawei.com; s=dkim;
+	c=relaxed/relaxed; q=dns/txt;
+	h=From;
+	bh=U1hjB0qTtrdjgi/WXA5posceqyaZ4D57rjh6XcurGsw=;
+	b=DjaLYW3UfNLtiO0wkrTsZlMza+8vAf7L/7ez1+ObIkBe4xfIU+dtPLZbs6TNqON815iKa9nKe
+	MCfB0G5zr5pkYilRr6+Cf9rDKdoMTqRNPwLPKKPxk7KW3ajS9dk3VpUEhwOA+oS6OEKHWvJxvV/
+	x2U3YKqJ1BhlsH+phQv75MA=
+Received: from mail.maildlp.com (unknown [172.19.88.105])
+	by canpmsgout01.his.huawei.com (SkyGuard) with ESMTPS id 4clyn246wCz1T4Gl;
+	Tue, 14 Oct 2025 10:28:06 +0800 (CST)
+Received: from kwepemk500007.china.huawei.com (unknown [7.202.194.92])
+	by mail.maildlp.com (Postfix) with ESMTPS id 495A51402DA;
+	Tue, 14 Oct 2025 10:28:49 +0800 (CST)
+Received: from huawei.com (10.50.87.129) by kwepemk500007.china.huawei.com
+ (7.202.194.92) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1544.11; Tue, 14 Oct
+ 2025 10:28:48 +0800
+From: Yu Kuai <yukuai3@huawei.com>
+To: <nilay@linux.ibm.com>, <ming.lei@redhat.com>, <tj@kernel.org>,
+	<josef@toxicpanda.com>, <axboe@kernel.dk>
+CC: <cgroups@vger.kernel.org>, <linux-block@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>, <yukuai3@huawei.com>,
+	<yukuai1@huaweicloud.com>, <yi.zhang@huawei.com>, <yangerkun@huawei.com>,
+	<johnny.chenyi@huawei.com>
+Subject: [PATCH 3/4] blk-rq-qos: fix possible deadlock
+Date: Tue, 14 Oct 2025 10:21:48 +0800
+Message-ID: <20251014022149.947800-4-yukuai3@huawei.com>
+X-Mailer: git-send-email 2.39.2
+In-Reply-To: <20251014022149.947800-1-yukuai3@huawei.com>
+References: <20251014022149.947800-1-yukuai3@huawei.com>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 Content-Type: text/plain
-X-Migadu-Flow: FLOW_OUT
+X-ClientProxiedBy: kwepems100002.china.huawei.com (7.221.188.206) To
+ kwepemk500007.china.huawei.com (7.202.194.92)
 
-Daniel Sedlak <daniel.sedlak@cdn77.com> writes:
+Currently rq-qos debugfs entries is created from rq_qos_add(), while
+rq_qos_add() requires queue to be freezed. This can deadlock because
+creating new entries can trigger fs reclaim.
 
-> On 10/9/25 9:02 PM, Roman Gushchin wrote:
->> Shakeel Butt <shakeel.butt@linux.dev> writes:
->> 
->>> On Thu, Oct 09, 2025 at 10:58:51AM -0700, Roman Gushchin wrote:
->>>> Shakeel Butt <shakeel.butt@linux.dev> writes:
->>>>
->>>>> On Thu, Oct 09, 2025 at 08:32:27AM -0700, Roman Gushchin wrote:
->>>>>> Daniel Sedlak <daniel.sedlak@cdn77.com> writes:
->>>>>>
->>>>>>> Hi Roman,
->>>>>>>
->>>>>>> On 10/8/25 8:58 PM, Roman Gushchin wrote:
->>>>>>>>> This patch exposes a new file for each cgroup in sysfs which is a
->>>>>>>>> read-only single value file showing how many microseconds this cgroup
->>>>>>>>> contributed to throttling the throughput of network sockets. The file is
->>>>>>>>> accessible in the following path.
->>>>>>>>>
->>>>>>>>>     /sys/fs/cgroup/**/<cgroup name>/memory.net.throttled_usec
->>>>>>>> Hi Daniel!
->>>>>>>> How this value is going to be used? In other words, do you need an
->>>>>>>> exact number or something like memory.events::net_throttled would be
->>>>>>>> enough for your case?
->>>>>>>
->>>>>>> Just incrementing a counter each time the vmpressure() happens IMO
->>>>>>> provides bad semantics of what is actually happening, because it can
->>>>>>> hide important details, mainly the _time_ for how long the network
->>>>>>> traffic was slowed down.
->>>>>>>
->>>>>>> For example, when memory.events::net_throttled=1000, it can mean that
->>>>>>> the network was slowed down for 1 second or 1000 seconds or something
->>>>>>> between, and the memory.net.throttled_usec proposed by this patch
->>>>>>> disambiguates it.
->>>>>>>
->>>>>>> In addition, v1/v2 of this series started that way, then from v3 we
->>>>>>> rewrote it to calculate the duration instead, which proved to be
->>>>>>> better information for debugging, as it is easier to understand
->>>>>>> implications.
->>>>>>
->>>>>> But how are you planning to use this information? Is this just
->>>>>> "networking is under pressure for non-trivial amount of time ->
->>>>>> raise the memcg limit" or something more complicated?
->
-> We plan to use it mostly for observability purposes and to better
-> understand which traffic patterns affect the socket pressure the most
-> (so we can try to fix/delay/improve it). We do not know how commonly
-> this issue appears in other deployments, but in our deployment, many
-> of servers were affected by this slowdown, which varied in terms of
-> hardware and software configuration. Currently, it is very hard to
-> detect if the socket is under pressure without using tools like
-> bpftrace, so we would like to expose this metric in a more accessible
-> way. So in the end, we do not really care in which file this "socket
-> pressure happened" notification will be stored.
->>>>>> I totally get it from the debugging perspective, but not sure about
->>>>>> usefulness of it as a permanent metric. This is why I'm asking if there
->>>>>> are lighter alternatives, e.g. memory.events or maybe even tracepoints.
->
-> If the combination of memory.events(.local) and tracepoint hook(s) is
-> okay with you(?), we can use that and export the same information as
-> in the current patch version. We can incorporate that into the next
-> version.
+Fix this problem by delaying creating rq-qos debugfs entries until
+it's initialization is complete.
 
-In my opinion
-tracepoint > memory.events entry > memory.stat entry > new cgroupfs file.
+- For wbt, it can be initialized by default of by blk-sysfs, fix it by
+  calling blk_mq_debugfs_register_rq_qos() after wbt_init;
+- For other policies, they can only be initialized by blkg configuration,
+  fix it by calling blk_mq_debugfs_register_rq_qos() from
+  blkg_conf_end();
 
->
-> Also, would it be possible to make the socket pressure signal
-> configurable, e.g., allowing it to be configured via sysctl or per
-> cgroup not to trigger the socket pressure signal? I cannot find the
-> reasoning why this throttling cannot (maybe it can) be opt-out.
+Signed-off-by: Yu Kuai <yukuai3@huawei.com>
+---
+ block/blk-cgroup.c | 6 ++++++
+ block/blk-rq-qos.c | 7 -------
+ block/blk-sysfs.c  | 4 ++++
+ block/blk-wbt.c    | 7 ++++++-
+ 4 files changed, 16 insertions(+), 8 deletions(-)
 
-It's a good point.
+diff --git a/block/blk-cgroup.c b/block/blk-cgroup.c
+index d93654334854..e4ccabf132c0 100644
+--- a/block/blk-cgroup.c
++++ b/block/blk-cgroup.c
+@@ -33,6 +33,7 @@
+ #include "blk-cgroup.h"
+ #include "blk-ioprio.h"
+ #include "blk-throttle.h"
++#include "blk-mq-debugfs.h"
+ 
+ static void __blkcg_rstat_flush(struct blkcg *blkcg, int cpu);
+ 
+@@ -746,6 +747,11 @@ void blkg_conf_end(struct blkg_conf_ctx *ctx)
+ 	mutex_unlock(&q->elevator_lock);
+ 	blk_mq_unfreeze_queue(q, ctx->memflags);
+ 	blkdev_put_no_open(ctx->bdev);
++
++	mutex_lock(&q->debugfs_mutex);
++	blk_mq_debugfs_register_rq_qos(q);
++	mutex_unlock(&q->debugfs_mutex);
++
+ }
+ EXPORT_SYMBOL_GPL(blkg_conf_end);
+ 
+diff --git a/block/blk-rq-qos.c b/block/blk-rq-qos.c
+index 654478dfbc20..d7ce99ce2e80 100644
+--- a/block/blk-rq-qos.c
++++ b/block/blk-rq-qos.c
+@@ -347,13 +347,6 @@ int rq_qos_add(struct rq_qos *rqos, struct gendisk *disk, enum rq_qos_id id,
+ 	blk_queue_flag_set(QUEUE_FLAG_QOS_ENABLED, q);
+ 
+ 	blk_mq_unfreeze_queue(q, memflags);
+-
+-	if (rqos->ops->debugfs_attrs) {
+-		mutex_lock(&q->debugfs_mutex);
+-		blk_mq_debugfs_register_rqos(rqos);
+-		mutex_unlock(&q->debugfs_mutex);
+-	}
+-
+ 	return 0;
+ ebusy:
+ 	blk_mq_unfreeze_queue(q, memflags);
+diff --git a/block/blk-sysfs.c b/block/blk-sysfs.c
+index 76c47fe9b8d6..52bb4db25cf5 100644
+--- a/block/blk-sysfs.c
++++ b/block/blk-sysfs.c
+@@ -688,6 +688,10 @@ static ssize_t queue_wb_lat_store(struct gendisk *disk, const char *page,
+ 	mutex_unlock(&disk->rqos_state_mutex);
+ 
+ 	blk_mq_unquiesce_queue(q);
++
++	mutex_lock(&q->debugfs_mutex);
++	blk_mq_debugfs_register_rq_qos(q);
++	mutex_unlock(&q->debugfs_mutex);
+ out:
+ 	blk_mq_unfreeze_queue(q, memflags);
+ 
+diff --git a/block/blk-wbt.c b/block/blk-wbt.c
+index eb8037bae0bd..a120b5ba54db 100644
+--- a/block/blk-wbt.c
++++ b/block/blk-wbt.c
+@@ -724,8 +724,13 @@ void wbt_enable_default(struct gendisk *disk)
+ 	if (!blk_queue_registered(q))
+ 		return;
+ 
+-	if (queue_is_mq(q) && enable)
++	if (queue_is_mq(q) && enable) {
+ 		wbt_init(disk);
++
++		mutex_lock(&q->debugfs_mutex);
++		blk_mq_debugfs_register_rq_qos(q);
++		mutex_unlock(&q->debugfs_mutex);
++	}
+ }
+ EXPORT_SYMBOL_GPL(wbt_enable_default);
+ 
+-- 
+2.39.2
 
-First, I think that vmpressure implementation is not the best
-and we might want to switch to PSI (or something else) there.
-This is why I'm resistant to exposing implementation-specific
-metrics.
-
-That said, I believe that some level of customization here is justified.
-Maybe opting out completely is too much, but in the end it's hard for
-the kernel to balance the importance of e.g. page cache vs networking
-buffers as it might be really workload-dependent. Or some workloads
-would prefer to risk being oom-killed rather than to tolerate a sub-par
-networking performance.
-
-Thanks!
