@@ -1,34 +1,35 @@
 Received: from us-smtp-delivery-44.mimecast.com (us-smtp-delivery-44.mimecast.com [207.211.30.44])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2C1D2946C
-	for <cgroups@vger.kernel.org>; Thu, 16 Oct 2025 02:33:30 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6F4C1946C
+	for <cgroups@vger.kernel.org>; Thu, 16 Oct 2025 02:33:36 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=207.211.30.44
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1760582012; cv=none; b=jtVQxcKDLw7WpOAPJLPz9NIw1b4FtAxljRVCHs0xkxdymuNfNolpRbRjDwgwLT+auUK2XQgA9Wq6gk3UM4jBxOJwYf9j1y8RrHYmTDkEh1u2YFq5bFYLNJo6VaaF5gBTd5Bcpr9pTqjkfSCXSZVDeqK6GVSCLAI8Tei7CfY3fe4=
+	t=1760582019; cv=none; b=EjZCTIwBFC1v1GmskJcBPMQxRfWJZkohHRC/CvCCextyEzOMp2Kki7s03i4hyWrbgpUJHYjGFN13CYZG7aykqKuSdwpT9lL9X/dyJbKYZGkE08ixBSHnXP/snIitEi96pMudnIH2PBh+HOqp4CQSC6Yln+n2dDlE0nD/eTNfUsg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1760582012; c=relaxed/simple;
-	bh=tBDpHjWZUkOXItOSE0ED21+/ycTyXtxTYKmVIXYkmFI=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version:content-type; b=DXclTtGR3IMMjYWZg+pk1ViGW9XQ6NohDmukSAUKBhBWIJpVcdxgbwDV5jcaBAMME0aumAZ6fVwDI+HWdaDITMNNJ8PskU+qvstzk5qRayKBgmNjaTRqeA5aXWorCDum2Kx/AZzNf//nMNUx18yS1k2d03J42yW44Ecss/+fmMw=
+	s=arc-20240116; t=1760582019; c=relaxed/simple;
+	bh=hM/oBjkrbMs/LmCqt1Szgg4dCRuFbvlplanWfA3nOBo=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:content-type; b=FFsEQnKr4qXj+V0ITkl0/fE3aPJCShucBRSNmvZbDowHB+u9JaEG5Vllj2NqRBtZF5Z2L8MZAG9hINOfRdC10Oyz8CfJADt0+IYsN72wouNEEOOjjwZ9/tcFl2LkNVEo88pZ6RlbQqKsW9EA1hKun5iEJUaI/VhtxZ5WscE/M38=
 ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=gmail.com; spf=fail smtp.mailfrom=gmail.com; arc=none smtp.client-ip=207.211.30.44
 Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=gmail.com
-Received: from mx-prod-mc-08.mail-002.prod.us-west-2.aws.redhat.com
- (ec2-35-165-154-97.us-west-2.compute.amazonaws.com [35.165.154.97]) by
+Received: from mx-prod-mc-03.mail-002.prod.us-west-2.aws.redhat.com
+ (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
  relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-588-PmTr5S_wOAebkj-IuA69SQ-1; Wed,
- 15 Oct 2025 22:32:19 -0400
-X-MC-Unique: PmTr5S_wOAebkj-IuA69SQ-1
-X-Mimecast-MFC-AGG-ID: PmTr5S_wOAebkj-IuA69SQ_1760581937
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-605-myyh8p_XM4Sfp_MMbCxomw-1; Wed,
+ 15 Oct 2025 22:33:32 -0400
+X-MC-Unique: myyh8p_XM4Sfp_MMbCxomw-1
+X-Mimecast-MFC-AGG-ID: myyh8p_XM4Sfp_MMbCxomw_1760582011
 Received: from mx-prod-int-06.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-06.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.93])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
-	by mx-prod-mc-08.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 776EF18002E4;
-	Thu, 16 Oct 2025 02:32:16 +0000 (UTC)
+	by mx-prod-mc-03.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 3BB141956048;
+	Thu, 16 Oct 2025 02:33:31 +0000 (UTC)
 Received: from dreadlord.taild9177d.ts.net (unknown [10.67.32.64])
-	by mx-prod-int-06.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id 7FF541800579;
-	Thu, 16 Oct 2025 02:32:09 +0000 (UTC)
+	by mx-prod-int-06.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id 8959B1800579;
+	Thu, 16 Oct 2025 02:33:24 +0000 (UTC)
 From: Dave Airlie <airlied@gmail.com>
 To: dri-devel@lists.freedesktop.org,
 	tj@kernel.org,
@@ -42,9 +43,11 @@ Cc: cgroups@vger.kernel.org,
 	Dave Chinner <david@fromorbit.com>,
 	Waiman Long <longman@redhat.com>,
 	simona@ffwll.ch
-Subject: drm/ttm/memcg/lru: enable memcg tracking for ttm and amdgpu driver (complete series v4)
-Date: Thu, 16 Oct 2025 12:31:28 +1000
-Message-ID: <20251016023205.2303108-1-airlied@gmail.com>
+Subject: [PATCH 10/16] ttm: add objcg pointer to bo and tt (v2)
+Date: Thu, 16 Oct 2025 12:31:38 +1000
+Message-ID: <20251016023205.2303108-11-airlied@gmail.com>
+In-Reply-To: <20251016023205.2303108-1-airlied@gmail.com>
+References: <20251016023205.2303108-1-airlied@gmail.com>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
@@ -53,87 +56,111 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 X-Scanned-By: MIMEDefang 3.4.1 on 10.30.177.93
 X-Mimecast-Spam-Score: 0
-X-Mimecast-MFC-PROC-ID: dGSW35hSU9buoFzVePUWoS2Uyq90snzpvGfdLNGm9YE_1760581937
+X-Mimecast-MFC-PROC-ID: vvWLhEbCtTsTcJu3xJMZ6Ay8XOUs3qnSJ9kygDakfZ0_1760582011
 X-Mimecast-Originator: gmail.com
 Content-Transfer-Encoding: quoted-printable
 content-type: text/plain; charset=WINDOWS-1252; x-default=true
 
-Hi all,
+From: Dave Airlie <airlied@redhat.com>
 
-This is a another repost with some fixes and cleanups. I've added Christian=
-'s acks/reviews from the
-previous round. I've fixed the obj_cgroup_put into the core, instead of in =
-the drivers.
+This just adds the obj cgroup pointer to the bo and tt structs,
+and sets it between them.
 
-I'd really like to land this into drm-next, I've added Maarten xe support p=
-atch to this. I'd like
-to get any missing acks/reviews.
+Signed-off-by: Dave Airlie <airlied@redhat.com>
 
-Christian, I think you said patch 4 got lost last time, hopefully you get i=
-t this time.
+v2: add the put and a setter helper
+---
+ drivers/gpu/drm/ttm/ttm_bo.c |  2 ++
+ drivers/gpu/drm/ttm/ttm_tt.c |  1 +
+ include/drm/ttm/ttm_bo.h     | 20 ++++++++++++++++++++
+ include/drm/ttm/ttm_tt.h     |  2 ++
+ 4 files changed, 25 insertions(+)
 
-Patches still needing ack/review:
-ttm/pool: drop numa specific pools
-ttm/pool: track allocated_pages per numa node.
-ttm: add objcg pointer to bo and tt (v2)
-ttm/pool: enable memcg tracking and shrinker. (v2)
-amdgpu: add support for memory cgroups
-
-Differences since v1 posting:
-1. added ttm_bo_set_cgroup wrapper - the cgroup reference is passed to the =
-ttm object.
-2. put the cgroup reference in ttm object release
-3. rebase onto 6.19-rc1
-4. added xe support patch from Maarten.
-
-Differences since v2 posting:
-1. Squashed exports into where they are used (Shakeel)
-2. Fixed bug in uncharge path memcg
-3. Fixed config bug in the module option.
-
-Differences since 1st posting:
-1. Added patch 18: add a module option to allow pooled pages to not be stor=
-ed in the lru per-memcg
-   (Requested by Christian Konig)
-2. Converged the naming and stats between vmstat and memcg (Suggested by Sh=
-akeel Butt)
-3. Cleaned up the charge/uncharge code and some other bits.
-
-Dave.
-
-Original cover letter:
-tl;dr: start using list_lru/numa/memcg in GPU driver core and amdgpu driver=
- for now.
-
-This is a complete series of patches, some of which have been sent before a=
-nd reviewed,
-but I want to get the complete picture for others, and try to figure out ho=
-w best to land this.
-
-There are 3 pieces to this:
-01->02: add support for global gpu stat counters (previously posted, patch =
-2 is newer)
-03->06: port ttm pools to list_lru for numa awareness
-07->13: add memcg stats + gpu apis, then port ttm pools to memcg aware list=
-_lru and shrinker
-14: enable amdgpu to use new functionality.
-15: add a module option to turn it all off.
-
-The biggest difference in the memcg code from previously is I discovered wh=
-at
-obj cgroups were designed for and I'm reusing the page/objcg intergration t=
-hat=20
-already exists, to avoid reinventing that wheel right now.
-
-There are some igt-gpu-tools tests I've written at:
-https://gitlab.freedesktop.org/airlied/igt-gpu-tools/-/tree/amdgpu-cgroups?=
-ref_type=3Dheads
-
-One problem is there are a lot of delayed action, that probably means the t=
-esting
-needs a bit more robustness, but the tests validate all the basic paths.
-
-Regards,
-Dave.
-
+diff --git a/drivers/gpu/drm/ttm/ttm_bo.c b/drivers/gpu/drm/ttm/ttm_bo.c
+index 5d84af5e0d74..073a1840ed9d 100644
+--- a/drivers/gpu/drm/ttm/ttm_bo.c
++++ b/drivers/gpu/drm/ttm/ttm_bo.c
+@@ -45,6 +45,7 @@
+ #include <linux/atomic.h>
+ #include <linux/cgroup_dmem.h>
+ #include <linux/dma-resv.h>
++#include <linux/memcontrol.h>
+=20
+ #include "ttm_module.h"
+ #include "ttm_bo_internal.h"
+@@ -314,6 +315,7 @@ static void ttm_bo_release(struct kref *kref)
+ =09=09dma_resv_unlock(bo->base.resv);
+ =09}
+=20
++=09obj_cgroup_put(bo->objcg);
+ =09atomic_dec(&ttm_glob.bo_count);
+ =09bo->destroy(bo);
+ }
+diff --git a/drivers/gpu/drm/ttm/ttm_tt.c b/drivers/gpu/drm/ttm/ttm_tt.c
+index 8f38de3b2f1c..0c54d5e2bfdd 100644
+--- a/drivers/gpu/drm/ttm/ttm_tt.c
++++ b/drivers/gpu/drm/ttm/ttm_tt.c
+@@ -162,6 +162,7 @@ static void ttm_tt_init_fields(struct ttm_tt *ttm,
+ =09ttm->caching =3D caching;
+ =09ttm->restore =3D NULL;
+ =09ttm->backup =3D NULL;
++=09ttm->objcg =3D bo->objcg;
+ }
+=20
+ int ttm_tt_init(struct ttm_tt *ttm, struct ttm_buffer_object *bo,
+diff --git a/include/drm/ttm/ttm_bo.h b/include/drm/ttm/ttm_bo.h
+index 60676f2c1077..154805627065 100644
+--- a/include/drm/ttm/ttm_bo.h
++++ b/include/drm/ttm/ttm_bo.h
+@@ -135,6 +135,12 @@ struct ttm_buffer_object {
+ =09 * reservation lock.
+ =09 */
+ =09struct sg_table *sg;
++
++=09/**
++=09 * @objcg: object cgroup to charge this to if it ends up using system m=
+emory.
++=09 * NULL means don't charge.
++=09 */
++=09struct obj_cgroup *objcg;
+ };
+=20
+ #define TTM_BO_MAP_IOMEM_MASK 0x80
+@@ -334,6 +340,20 @@ ttm_bo_move_to_lru_tail_unlocked(struct ttm_buffer_obj=
+ect *bo)
+ =09spin_unlock(&bo->bdev->lru_lock);
+ }
+=20
++/**
++ * ttm_bo_set_cgroup - assign a cgroup to a buffer object.
++ * @bo: The bo to set the cgroup for
++ * @objcg: the cgroup to set.
++ *
++ * This transfers the cgroup reference to the bo. From this
++ * point on the cgroup reference is owned by the ttm bo.
++ */
++static inline void ttm_bo_set_cgroup(struct ttm_buffer_object *bo,
++=09=09=09=09     struct obj_cgroup *objcg)
++{
++=09bo->objcg =3D objcg;
++}
++
+ static inline void ttm_bo_assign_mem(struct ttm_buffer_object *bo,
+ =09=09=09=09     struct ttm_resource *new_mem)
+ {
+diff --git a/include/drm/ttm/ttm_tt.h b/include/drm/ttm/ttm_tt.h
+index 15d4019685f6..c13fea4c2915 100644
+--- a/include/drm/ttm/ttm_tt.h
++++ b/include/drm/ttm/ttm_tt.h
+@@ -126,6 +126,8 @@ struct ttm_tt {
+ =09enum ttm_caching caching;
+ =09/** @restore: Partial restoration from backup state. TTM private */
+ =09struct ttm_pool_tt_restore *restore;
++=09/** @objcg: Object cgroup for this TT allocation */
++=09struct obj_cgroup *objcg;
+ };
+=20
+ /**
+--=20
+2.51.0
 
