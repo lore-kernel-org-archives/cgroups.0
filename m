@@ -1,55 +1,55 @@
 Received: from mail-pj1-f74.google.com (mail-pj1-f74.google.com [209.85.216.74])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 62FD633343B
-	for <cgroups@vger.kernel.org>; Fri, 17 Oct 2025 20:13:20 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E7A1A345CC4
+	for <cgroups@vger.kernel.org>; Fri, 17 Oct 2025 20:13:24 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.74
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1760732007; cv=none; b=ejgNnrpezWC+qYfxHcm71K+hVI2HMe6+2sv8p4D6dCv91i2OcvDlzzlbVB3ovNhvr/TNZzpzdTR+C0cfK7v8i+ysc/2Aq48AkRJt2vnCw//Tgi6PTHHHe2kNi7pZfxOcPcYXDuFakIbSCIO27Jw7K0nyIqAtcN5qxRj0U89Xxys=
+	t=1760732011; cv=none; b=tNNvTp8RgO3BRCpEjaUiGmsq03R9HYEPQwHd1Its09Li4fKonGmpyl8ZwWF0zr3HMIwPl0QSwzEt6LqD7HtllbvSXM02XV4cwTg9+EVysgHMO0H5rOOrwbpGDg94HRtnklEdjWfifjKtDUsPxMMgM8pOe6MK+BycWsCm55w/eVk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1760732007; c=relaxed/simple;
-	bh=TrihwiuuxJ8YYrvlxOwVsirF8kMMYHFCCthbk+rVim0=;
+	s=arc-20240116; t=1760732011; c=relaxed/simple;
+	bh=30zQD4pjDiSn/+U/aldACY0mrFS2JuKzSnFZG7FjNQk=;
 	h=Date:In-Reply-To:Mime-Version:References:Message-ID:Subject:From:
-	 To:Cc:Content-Type; b=U/UvxqrFvMvuKtuHvC/5xDlWbjN5LyC9UQa8oXhGYtJip5DNTNOb3vYcyzQj6BQ9bCMqg1hbgPXawSeXJmTBeMw+I2/cJeDN5RKJ1lX/Z4KMPwMP2qYhQVByszwHLK1SjGoJ45tVhYhVfOOREXcKLpYSMwjt7ZBzk1LlgwNPWww=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=flex--ackerleytng.bounces.google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=zpt6Z4qo; arc=none smtp.client-ip=209.85.216.74
+	 To:Cc:Content-Type; b=MK79rt/0ceEwF0UmZRTKjj0F4MubVggCA4rtQPFpfoB6R53CYjqKn0r2bCxK8z+6w49XcIKObaNSViBIHmvOFjUp/sxCuJaiO0M0bJfvw1NioiMU5BMKC7CDCkOdnk6C836fDq+GZ7tTPITGiikgBfMyeaayWj1yJd3mD2CizSI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=flex--ackerleytng.bounces.google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=XUytqRWx; arc=none smtp.client-ip=209.85.216.74
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=flex--ackerleytng.bounces.google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="zpt6Z4qo"
-Received: by mail-pj1-f74.google.com with SMTP id 98e67ed59e1d1-334b0876195so2500179a91.1
-        for <cgroups@vger.kernel.org>; Fri, 17 Oct 2025 13:13:18 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="XUytqRWx"
+Received: by mail-pj1-f74.google.com with SMTP id 98e67ed59e1d1-32ee4998c50so1882625a91.3
+        for <cgroups@vger.kernel.org>; Fri, 17 Oct 2025 13:13:24 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20230601; t=1760731998; x=1761336798; darn=vger.kernel.org;
+        d=google.com; s=20230601; t=1760732003; x=1761336803; darn=vger.kernel.org;
         h=cc:to:from:subject:message-id:references:mime-version:in-reply-to
          :date:from:to:cc:subject:date:message-id:reply-to;
-        bh=Z/lNHI4Q/bFe7E7u1u54KO9h5F/sVs5DEw3rAt9A97U=;
-        b=zpt6Z4qobzPwmniKW2M1nf7i3iN5aQwRWiHOhOYY2lLisgMWGk7/3IE/tXK/IQ3wnZ
-         R3sMTAefNk49wGX7AnkPi1CBl+IPcaWT64HY+qFrzdm2gRDSw739DJiSkx9cQA7w8OoD
-         gOJGtM4DDxo8sehaDmPFHIHnbkMKICqcRRDX8RDke2WaV4N24tZ3kzt0Hqm+ag9usz+Y
-         nZb9jJ7pVa6k+Et5KzB512PFNGEYgNGcwOhQFlTWwGk9kjl6RIy3+8eSYVTEcKoASV4U
-         ck/0VHf58xF6Md9RVcEIkEtBhUnONV1TiD8K4gqrOXFHfZifFK+gPUr76GP1k1I8nHDu
-         hgSA==
+        bh=0mpVwCYbwMET7AecOcE2QimVcHIz1TOOFcfyLkjDeGo=;
+        b=XUytqRWxtoTgwAU4dT3J+xyQRO7ro4/x0eBKq2VTvRWPNbVRc6hnH+vNAsj/X66z1H
+         CT5ssaZ6uMILc2SGfH3486ZjnTggDcoPjliYmvwRw8SOsZGBPuJLGJ/L/4/ojA1vA0An
+         y8SCVv0U/QFnpGwWcWUmBSzcFPKFOMI283iC4/ovUMBI/QqI7iT1ZLk4X3OLxvixx4oE
+         4ksd72jNPT9IWCRVHijpIEwVU9WYEyMizQfG8RZ0Oh4rmC86JoiFL0L3JZ6pBExtqsRa
+         u8AaLZLgMiGHpt/GfBe/1tDEjZQj3tIIFTHkjzXI0hk0gYFFGoOiun1LOaFGJYiN7CTe
+         PRpA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1760731998; x=1761336798;
+        d=1e100.net; s=20230601; t=1760732003; x=1761336803;
         h=cc:to:from:subject:message-id:references:mime-version:in-reply-to
          :date:x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=Z/lNHI4Q/bFe7E7u1u54KO9h5F/sVs5DEw3rAt9A97U=;
-        b=DhOY1Uwi7Px3p2CZhsRU/fZhiA1qlSJMb77yIEkxljXKenTdZ6AtvOnwTmeqw9EezF
-         7nNBzikfQQeUCkNZVFMB2+Clnatw7kcH0R3uLnmEGBIWxRXuLy9drWigejDk0pWCHlme
-         ikKF8CGl5gWRsdMI3QzZU0KeMRTbZEZNTt5MkabeNWM5vykP7lECqgSo9Jnqu/BhEhUq
-         GfJa0uLzHpP7LKgkFZloCzUDGKVmunTtrL106VuX9WYkfKN8WTlv66qnK2o+Ni8wFbbh
-         6Tze4E5qM+DXYioByOyGxhAnlEKdOyjZUOjCaqbsdhK4YhFCFkZhsWKyMpcVVEEpk/Mu
-         2Ubw==
-X-Gm-Message-State: AOJu0YzTdqWxQ5Xf3/RCWYMHTM5uJGTAyGxe+BpUlydBDCSgMZriMAbV
-	bCpD3XMKGSTRxMeJewDZcJRbIKKHF++yIYCaPWd3qeOn+Dsq5N3hkpNwkghwXYcOBzy5diAT+xQ
-	jsP1TUQI1eLkEyKVjU1/6bcyk8XHYp/MU7Q1ad8sMzn2iZ4Gty1HD72DHOKVA1cyoAmjFKUjzcx
-	gCzA+tzhsnDvXU84o1/gviGROpGvIhctsdU8p2URtKC4X6y9VOSSzV8ct/Emiszuut
-X-Google-Smtp-Source: AGHT+IEJOmwwfA3Kaekqa8uydRah72/LLd/POEax3xDQXkYFm9XmuPnw9MNGeowIWx2EtPAAJiD//RyC47hEWG+7ug==
-X-Received: from pjbpa17.prod.google.com ([2002:a17:90b:2651:b0:33b:51fe:1a8c])
+        bh=0mpVwCYbwMET7AecOcE2QimVcHIz1TOOFcfyLkjDeGo=;
+        b=OCeGrT3gvn/CIhgzh9dlaEc5jY8xc6wSE8o4xnrj3/NCqCJSQWCcAZApoajv3H90NT
+         55li7zpCE2T2QZOil5nsRTFraCyGBCtUIQFI0MMKMVP0jZl1mT7NkqS5l2ixfW38p6rO
+         5joNaD5jcOYfqnP4mAJYRfOLRfNDGQ/Xw/iZLHV7qUATGFoySM3oknjj4Aj/mwq/xdEq
+         9yPOaOpZhhwB2HxncD8jYpNKgdY/LWvi+u0dZ0MJKKAbpr9rWvWyS+/HcKZij4YtDsLd
+         KnLcIw8Xkwokvd5ofWJaqSpV7dXAIgzFMX0ATy+KW6H1DagyAe95now+IkzWB+fJOc+4
+         Yc+g==
+X-Gm-Message-State: AOJu0YyZ10ZWbXFxRiIWRzWSaHrUV6WU+16x2OujSJFLbxEnhFp2wImR
+	2+Y424ZaBKt4XusQGoJPY3OOLjh0h8MGoBcRThqFB5lRH4GzKYGVudsAsNKJRNxPmZ9oM4uC5tH
+	ut20AO/E647DT+30sB6FKmeok4iIicxh6Vr9MGVyi8Lij6h9rdyqObeuV3JrTMO/Ovh4nBDNd44
+	ynqx6jzsJZaoza2j/XS/SjPOWfY/GPcxzPVOajpuHBzmiatPG1oQGQpMCnEMMg5SVs
+X-Google-Smtp-Source: AGHT+IHcO4NwxOJfZLNEBbx6WNz/S52BTLMchZETWWpFSftU3iw+fmFyD6t6Of9AgSIAzGHhdhWoKd+61TBtvxNmOQ==
+X-Received: from pjbfs17.prod.google.com ([2002:a17:90a:f291:b0:32e:bcc3:ea8e])
  (user=ackerleytng job=prod-delivery.src-stubby-dispatcher) by
- 2002:a17:90b:498f:b0:33b:da51:f05b with SMTP id 98e67ed59e1d1-33bda51f510mr5711640a91.26.1760731996748;
- Fri, 17 Oct 2025 13:13:16 -0700 (PDT)
-Date: Fri, 17 Oct 2025 13:12:10 -0700
+ 2002:a17:90b:3d87:b0:32b:baaa:21b0 with SMTP id 98e67ed59e1d1-33bcf853679mr6444234a91.6.1760732001959;
+ Fri, 17 Oct 2025 13:13:21 -0700 (PDT)
+Date: Fri, 17 Oct 2025 13:12:13 -0700
 In-Reply-To: <cover.1760731772.git.ackerleytng@google.com>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
@@ -59,9 +59,9 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 Mime-Version: 1.0
 References: <cover.1760731772.git.ackerleytng@google.com>
 X-Mailer: git-send-email 2.51.0.858.gf9c4a03a3a-goog
-Message-ID: <5656d432df1217c08da0cc2694fd79948bfd686f.1760731772.git.ackerleytng@google.com>
-Subject: [RFC PATCH v1 29/37] KVM: selftests: Add selftests global for guest
- memory attributes capability
+Message-ID: <a3126618d7cb353faad7b231e70c2b732498f449.1760731772.git.ackerleytng@google.com>
+Subject: [RFC PATCH v1 32/37] KVM: selftests: Check fd/flags provided to
+ mmap() when setting up memslot
 From: Ackerley Tng <ackerleytng@google.com>
 To: cgroups@vger.kernel.org, kvm@vger.kernel.org, linux-doc@vger.kernel.org, 
 	linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, 
@@ -99,56 +99,35 @@ Content-Type: text/plain; charset="UTF-8"
 
 From: Sean Christopherson <seanjc@google.com>
 
-Add a global variable, kvm_has_gmem_attributes, to make the result of
-checking for KVM_CAP_GUEST_MEMFD_MEMORY_ATTRIBUTES available to all tests.
+Check that a valid fd provided to mmap() must be accompanied by MAP_SHARED.
 
-kvm_has_gmem_attributes is true if KVM tracks memory attributes at the VM
-level, as opposed to per-guest_memfd tracking.
+With an invalid fd (usually used for anonymous mappings), there are no
+constraints on mmap() flags.
 
-This global variable is meant to be used by the host only.
+Add this check to make sure that when a guest_memfd is used as region->fd,
+the flag provided to mmap() will include MAP_SHARED.
 
 Signed-off-by: Sean Christopherson <seanjc@google.com>
+[Rephrase assertion message.]
 Signed-off-by: Ackerley Tng <ackerleytng@google.com>
 ---
- tools/testing/selftests/kvm/include/test_util.h | 2 ++
- tools/testing/selftests/kvm/lib/kvm_util.c      | 4 ++++
- 2 files changed, 6 insertions(+)
+ tools/testing/selftests/kvm/lib/kvm_util.c | 3 +++
+ 1 file changed, 3 insertions(+)
 
-diff --git a/tools/testing/selftests/kvm/include/test_util.h b/tools/testing/selftests/kvm/include/test_util.h
-index b4872ba8ed124..2871a42928471 100644
---- a/tools/testing/selftests/kvm/include/test_util.h
-+++ b/tools/testing/selftests/kvm/include/test_util.h
-@@ -113,6 +113,8 @@ struct guest_random_state {
- extern uint32_t guest_random_seed;
- extern struct guest_random_state guest_rng;
- 
-+extern bool kvm_has_gmem_attributes;
-+
- struct guest_random_state new_guest_random_state(uint32_t seed);
- uint32_t guest_random_u32(struct guest_random_state *state);
- 
 diff --git a/tools/testing/selftests/kvm/lib/kvm_util.c b/tools/testing/selftests/kvm/lib/kvm_util.c
-index 19c0445c0b296..c9c59f3ecd14f 100644
+index cb73566fdf153..8603bd5c705ed 100644
 --- a/tools/testing/selftests/kvm/lib/kvm_util.c
 +++ b/tools/testing/selftests/kvm/lib/kvm_util.c
-@@ -24,6 +24,8 @@ uint32_t guest_random_seed;
- struct guest_random_state guest_rng;
- static uint32_t last_guest_seed;
+@@ -1057,6 +1057,9 @@ void vm_mem_add(struct kvm_vm *vm, enum vm_mem_backing_src_type src_type,
+ 		region->fd = kvm_memfd_alloc(region->mmap_size,
+ 					     src_type == VM_MEM_SRC_SHARED_HUGETLB);
  
-+bool kvm_has_gmem_attributes;
++	TEST_ASSERT(region->fd == -1 || backing_src_is_shared(src_type),
++		    "A valid fd provided to mmap() must be accompanied by MAP_SHARED.");
 +
- static size_t vcpu_mmap_sz(void);
- 
- int __open_path_or_exit(const char *path, int flags, const char *enoent_help)
-@@ -2321,6 +2323,8 @@ void __attribute((constructor)) kvm_selftest_init(void)
- 	guest_random_seed = last_guest_seed = random();
- 	pr_info("Random seed: 0x%x\n", guest_random_seed);
- 
-+	kvm_has_gmem_attributes = kvm_has_cap(KVM_CAP_GUEST_MEMFD_MEMORY_ATTRIBUTES);
-+
- 	kvm_selftest_arch_init();
- }
- 
+ 	mmap_offset = flags & KVM_MEM_GUEST_MEMFD ? gmem_offset : 0;
+ 	region->mmap_start = __kvm_mmap(region->mmap_size, PROT_READ | PROT_WRITE,
+ 					vm_mem_backing_src_alias(src_type)->flag,
 -- 
 2.51.0.858.gf9c4a03a3a-goog
 
