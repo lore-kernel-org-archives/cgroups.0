@@ -1,43 +1,94 @@
-Received: from dggsgout12.his.huawei.com (dggsgout12.his.huawei.com [45.249.212.56])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pf1-f179.google.com (mail-pf1-f179.google.com [209.85.210.179])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7FCF03BB4A;
-	Sat, 25 Oct 2025 07:20:17 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.56
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3A6F472605
+	for <cgroups@vger.kernel.org>; Sun, 26 Oct 2025 01:05:22 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.179
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1761376820; cv=none; b=t9+tzZrpG9GxVSCbIcps8xmE6DNrbdO5jqPTFh6P2szjIkn7JN4rJgTdhQNyMKGGJU3jGCFBM5jfWpE+frtkvSXAUWgpnZwNxiXE8ZDLVg+KqoZgcBWjX6lfpPjRPWGlGResrgAmeKNfv5UNNBN8yyZOpC9vr+efu6MXDoFazuc=
+	t=1761440724; cv=none; b=ayRfHj+HDylDq78lTuMX2EEnfhR1fsPt2J22bEo30ei2s0/bB5vbdfH92OaUc17EMdEEqk+m4pv3oablnw0gSpTWWovhvizu7tt8RoNRuFrdzS3kRoGZUBSqf11rydtUb+8e5a+slB6vJqh1BBEkrDd3DxTpXw2wXE49MBFVd+0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1761376820; c=relaxed/simple;
-	bh=qC9HgPgwSeATOR3lNls7yTzE7d5jE2muIgPnJ2leiU0=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=YWwxl5V/2nacrnad9TvLY8FBgl7AO0tCqmhTvedEjgqqkOk/L+pn4HpeAk62mPXtbqviDek7Bgj9hPJV07k0jQ1MkxrONaC0wO0FTZ7rMD7GSLdYZFXFSdE8LXb32XwNcLtL+hMXHt5329UZo7UBocYtWs86uxZZgizb3gKzEaw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.56
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
-Received: from mail.maildlp.com (unknown [172.19.163.216])
-	by dggsgout12.his.huawei.com (SkyGuard) with ESMTPS id 4ctrM62jqHzKHMZ3;
-	Sat, 25 Oct 2025 15:02:58 +0800 (CST)
-Received: from mail02.huawei.com (unknown [10.116.40.75])
-	by mail.maildlp.com (Postfix) with ESMTP id 49F351A1562;
-	Sat, 25 Oct 2025 15:03:50 +0800 (CST)
-Received: from hulk-vt.huawei.com (unknown [10.67.174.121])
-	by APP2 (Coremail) with SMTP id Syh0CgCHKUJGdvxovSssBg--.49460S9;
-	Sat, 25 Oct 2025 15:03:50 +0800 (CST)
-From: Chen Ridong <chenridong@huaweicloud.com>
-To: longman@redhat.com,
+	s=arc-20240116; t=1761440724; c=relaxed/simple;
+	bh=KLqV75PcvEyUm05RQodatiEG/ugFMUNCSjZ4Fbo2bkQ=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=eGW1N2Za1Wq108oEOdGmejfbb8pcH0J7lrtIzUkG0+9r5Zh37WsympXSdS38YRAc4h9LRe9iXy6Ex/rR1KWr+ryVYQLe5V3x+yLZ3XooC4iQ3aZcpRsJaZ+0iqhwgcyeqvw1t0hiBJVMn2EkMSqR2CfVm6beBSREYmeEEOII+gM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=MWe5OMOe; arc=none smtp.client-ip=209.85.210.179
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="MWe5OMOe"
+Received: by mail-pf1-f179.google.com with SMTP id d2e1a72fcca58-781010ff051so2147526b3a.0
+        for <cgroups@vger.kernel.org>; Sat, 25 Oct 2025 18:05:22 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1761440722; x=1762045522; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=yS34+uhylNdFYNWrvgsPGh1bBy7nTRn8Y42YGAOkzr0=;
+        b=MWe5OMOe824Tdw6FcQvWhgeBq0xyEAepk3Q4yOtpcfeHIoNGUzCF1uEh0/FD2ZPudz
+         u6luLV2YhOzvd7Sks8zL2aHXJLykn8klOFH5TnXf724gSlLB+QGkJyyTHGLNRpTyBGCX
+         L0Qscld6K5t3wYu22El5xRsirPCb0fTf6myS8yr4uqJIyefWFddKxeI2D6BjKamAC0t5
+         bOe2yyUqRlX80THK0F6r7+TzO2k/PoKx9rHMkJ7WKPM9oBTVPBb4sgL/Vk3zsE2gdeb5
+         CnWqvXnpDN9nWif+3aiBSUy3sZsQBLclDn9w9z+Eweq6mVo3D3iVkUA/++dcreZKwJVV
+         VT9A==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1761440722; x=1762045522;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=yS34+uhylNdFYNWrvgsPGh1bBy7nTRn8Y42YGAOkzr0=;
+        b=KPFNfA++1fjQ1E9VSONuqOPX62W6k79u353mkZWPQUMbbzG4JSzBuA+GpinLrYa5pm
+         1SCvVuroarpx0JZljd1IYF6ZQnuZLjt1VwGBnsiYlvvoxT4LivCSfJwsHArFpyzDXjk6
+         THOuF0xG3rOLZFKyp8adVAUqQoCDJwDl9dQcNKSYMmQgqsktVLaEqkCqvoG5r9KXg3Eb
+         rYp4PVmVfVjkYSSaWZ3x52Ks+Oqh5Jjfu48D1gphf7INDnB9Q3/d2/nd5vLFotI8QtMx
+         z1oOTlEosKc3Zbtc3VwHKX+o2E3lbwCPpTnmzNVUCve1omDRQtyG8TKRnGWPKhTBxUSI
+         l6uA==
+X-Forwarded-Encrypted: i=1; AJvYcCUrFy9E6B0CT0Lwrmt5Jm0W96RtVlZC43lDDIqPW8GtXVTmrhEz6qRJFRae9p32YBCREt5M+Wcr@vger.kernel.org
+X-Gm-Message-State: AOJu0YxocKvEJc0yBZ/Xkcvd+M5V7khLatoWyGbvz7HL2cjWGHdgP1vO
+	7GI0JjD3HA9OiUOF0++jXmTLKncjEI/7CUYlVJ6pl5bTRMYsxuCUvHFO
+X-Gm-Gg: ASbGncszCvdUfAStMBxsp3/4HUKZzx/fhiPaaMTZDYrl9pzsI6oG4hD+EJR6wPwIqcz
+	NkONBv7Mbtq10ZaGLBXTqkKarcsTRzaYIKdFLrVwEw0UCPttka323RLJBb9NEn1K5BL9TUHbrhB
+	V1HVbMlx3S3bIy96Qpqpv2C219N6qlNEpWhEQ1hvfM0f8piPCGa5boUqlsWfSsrWI3IdHv7xXFu
+	ohtFkuEtBKfvUKDlDAVHHJwapXxmxwXuoCPDBBJyZb6wswY4/rKHVJn5lv8w/oE1mpzjmiKOXYi
+	Yjo9xszRFkTDi4s3P2+hMFccZEYbvrrf7Y/e3hAQMiPzmveY+u/O5ZzepI106McLZ5RSCOnRQLb
+	W59GSKRDEYEVGwdrH6rNoTyj90nHpYbiHsK/PAUrp/Ye3eEI2QKb40MquybRWvPUnwhh4so8tT5
+	OEzJmoF98v123Ltw==
+X-Google-Smtp-Source: AGHT+IGqJ3fK980blF3S2OhDDl1kPCFC3PDx3uiV6lRR9MlLGgQ+c3xMg89feF4XpI76Z2y7cP/wYQ==
+X-Received: by 2002:a05:6a00:23c2:b0:780:f758:4133 with SMTP id d2e1a72fcca58-7a274ba91d9mr12147230b3a.10.1761440722260;
+        Sat, 25 Oct 2025 18:05:22 -0700 (PDT)
+Received: from daniel.. ([221.218.137.209])
+        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-7a41404987esm3371597b3a.36.2025.10.25.18.05.15
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Sat, 25 Oct 2025 18:05:21 -0700 (PDT)
+From: jinji zhong <jinji.z.zhong@gmail.com>
+To: minchan@kernel.org,
+	senozhatsky@chromium.org,
+	philipp.reisner@linbit.com,
+	lars.ellenberg@linbit.com,
+	christoph.boehmwalder@linbit.com,
+	corbet@lwn.net,
 	tj@kernel.org,
 	hannes@cmpxchg.org,
-	mkoutny@suse.com
-Cc: cgroups@vger.kernel.org,
+	mkoutny@suse.com,
+	axboe@kernel.dk,
+	mhocko@kernel.org,
+	roman.gushchin@linux.dev,
+	shakeel.butt@linux.dev,
+	akpm@linux-foundation.org,
+	terrelln@fb.com,
+	dsterba@suse.com
+Cc: muchun.song@linux.dev,
 	linux-kernel@vger.kernel.org,
-	lujialin4@huawei.com,
-	chenridong@huawei.com
-Subject: [PATCH RFC v2 07/22] cpuset: use partition_enable() for remote partition enablement
-Date: Sat, 25 Oct 2025 06:48:29 +0000
-Message-Id: <20251025064844.495525-8-chenridong@huaweicloud.com>
-X-Mailer: git-send-email 2.34.1
-In-Reply-To: <20251025064844.495525-1-chenridong@huaweicloud.com>
-References: <20251025064844.495525-1-chenridong@huaweicloud.com>
+	drbd-dev@lists.linbit.com,
+	linux-doc@vger.kernel.org,
+	cgroups@vger.kernel.org,
+	linux-block@vger.kernel.org,
+	linux-mm@kvack.org,
+	zhongjinji@honor.com,
+	liulu.liu@honor.com,
+	feng.han@honor.com,
+	jinji zhong <jinji.z.zhong@gmail.com>
+Subject: [RFC PATCH 0/3] Introduce per-cgroup compression priority
+Date: Sun, 26 Oct 2025 01:05:07 +0000
+Message-ID: <cover.1761439133.git.jinji.z.zhong@gmail.com>
+X-Mailer: git-send-email 2.48.1
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
@@ -45,66 +96,49 @@ List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:Syh0CgCHKUJGdvxovSssBg--.49460S9
-X-Coremail-Antispam: 1UD129KBjvJXoW7WrWxCFy3KFWfGF4UCw4fGrg_yoW8Xw4xpF
-	y3Cr47KayUXa45ua9FqFs29wn7Kw4DKFy2yasxW34rZa42y34DKa4jk390q3WYqasrGrW5
-	X3Z0qF4UtFy7A37anT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDU0xBIdaVrnRJUUUBYb4IE77IF4wAFF20E14v26rWj6s0DM7CY07I20VC2zVCF04k2
-	6cxKx2IYs7xG6rWj6s0DM7CIcVAFz4kK6r1j6r18M28IrcIa0xkI8VA2jI8067AKxVWUAV
-	Cq3wA2048vs2IY020Ec7CjxVAFwI0_Xr0E3s1l8cAvFVAK0II2c7xJM28CjxkF64kEwVA0
-	rcxSw2x7M28EF7xvwVC0I7IYx2IY67AKxVWDJVCq3wA2z4x0Y4vE2Ix0cI8IcVCY1x0267
-	AKxVW8Jr0_Cr1UM28EF7xvwVC2z280aVAFwI0_GcCE3s1l84ACjcxK6I8E87Iv6xkF7I0E
-	14v26rxl6s0DM2AIxVAIcxkEcVAq07x20xvEncxIr21l5I8CrVACY4xI64kE6c02F40Ex7
-	xfMcIj6xIIjxv20xvE14v26r1j6r18McIj6I8E87Iv67AKxVWUJVW8JwAm72CE4IkC6x0Y
-	z7v_Jr0_Gr1lF7xvr2IYc2Ij64vIr41lc7CjxVAaw2AFwI0_JF0_Jw1l42xK82IYc2Ij64
-	vIr41l4I8I3I0E4IkC6x0Yz7v_Jr0_Gr1lx2IqxVAqx4xG67AKxVWUJVWUGwC20s026x8G
-	jcxK67AKxVWUGVWUWwC2zVAF1VAY17CE14v26r1q6r43MIIYrxkI7VAKI48JMIIF0xvE2I
-	x0cI8IcVAFwI0_JFI_Gr1lIxAIcVC0I7IYx2IY6xkF7I0E14v26F4j6r4UJwCI42IY6xAI
-	w20EY4v20xvaj40_Jr0_JF4lIxAIcVC2z280aVAFwI0_Jr0_Gr1lIxAIcVC2z280aVCY1x
-	0267AKxVW8JVW8JrUvcSsGvfC2KfnxnUUI43ZEXa7IU1l_M7UUUUU==
-X-CM-SenderInfo: hfkh02xlgr0w46kxt4xhlfz01xgou0bp/
 
-From: Chen Ridong <chenridong@huawei.com>
+Hello everyone,
 
-Now that the partition_enable() helper is available, replace the
-existing implementation for remote partition enablement with this
-centralized function to unify the enablement logic.
+On Android, different applications have varying tolerance for
+decompression latency. Applications with higher tolerance for
+decompression latency are better suited for algorithms like ZSTD,
+which provides high compression ratio but slower decompression
+speed. Conversely, applications with lower tolerance for
+decompression latency can use algorithms like LZ4 or LZO that
+offer faster decompression but lower compression ratios. For example,
+lightweight applications (with few anonymous pages) or applications
+without foreground UI typically have higher tolerance for decompression
+latency.
 
-Signed-off-by: Chen Ridong <chenridong@huawei.com>
----
- kernel/cgroup/cpuset.c | 12 +-----------
- 1 file changed, 1 insertion(+), 11 deletions(-)
+Similarly, in memory allocation slow paths or under high CPU
+pressure, using algorithms with faster compression speeds might
+be more appropriate.
 
-diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
-index 3e414e19ae31..ee1140cf45b9 100644
---- a/kernel/cgroup/cpuset.c
-+++ b/kernel/cgroup/cpuset.c
-@@ -1712,8 +1712,6 @@ static enum prs_errcode validate_partition(struct cpuset *cs, int new_prs,
- static int remote_partition_enable(struct cpuset *cs, int new_prs,
- 				   struct tmpmasks *tmp)
- {
--	bool isolcpus_updated;
--
- 	/*
- 	 * The user must have sysadmin privilege.
- 	 */
-@@ -1736,15 +1734,7 @@ static int remote_partition_enable(struct cpuset *cs, int new_prs,
- 	    cpumask_subset(top_cpuset.effective_cpus, tmp->new_cpus))
- 		return PERR_INVCPUS;
- 
--	spin_lock_irq(&callback_lock);
--	isolcpus_updated = partition_xcpus_add(new_prs, NULL, tmp->new_cpus);
--	list_add(&cs->remote_sibling, &remote_children);
--	cpumask_copy(cs->effective_xcpus, tmp->new_cpus);
--	spin_unlock_irq(&callback_lock);
--	update_unbound_workqueue_cpumask(isolcpus_updated);
--	cpuset_force_rebuild();
--	cs->prs_err = 0;
--
-+	partition_enable(cs, NULL, new_prs, tmp->new_cpus);
- 	/*
- 	 * Propagate changes in top_cpuset's effective_cpus down the hierarchy.
- 	 */
+This patch introduces a per-cgroup compression priority mechanism,
+where different compression priorities map to different algorithms.
+This allows administrators to select appropriate compression
+algorithms on a per-cgroup basis.
+
+Currently, this patch is experimental and we would greatly
+appreciate community feedback. I'm uncertain whether obtaining
+compression priority via get_cgroup_comp_priority in zram is the
+best approach. While this implementation is convenient, it seems
+somewhat unusual. Perhaps the next step should be to pass
+compression priority through page->private.
+
+jinji zhong (3):
+  mm/memcontrol: Introduce per-cgroup compression priority
+  zram: Zram supports per-cgroup compression priority
+  Doc: Update documentation for per-cgroup compression priority
+
+ Documentation/admin-guide/blockdev/zram.rst | 18 +++--
+ Documentation/admin-guide/cgroup-v2.rst     |  7 ++
+ drivers/block/zram/zram_drv.c               | 74 ++++++++++++++++++---
+ drivers/block/zram/zram_drv.h               |  2 +
+ include/linux/memcontrol.h                  | 19 ++++++
+ mm/memcontrol.c                             | 31 +++++++++
+ 6 files changed, 139 insertions(+), 12 deletions(-)
+
 -- 
-2.34.1
+2.48.1
 
