@@ -1,251 +1,134 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.11])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 142EE36E364;
-	Wed, 29 Oct 2025 12:26:44 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A30862BEC30;
+	Wed, 29 Oct 2025 14:46:16 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.11
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1761740804; cv=none; b=dUmlNxkuZ2nlMcAtr5LpA03TKpna64U/GnolDi9fYx3/j2BwELeO8suRxa5GIwJ8pMh9AhYZ4jOyQjihty19GCFCTqqqG7qAnxxtpE8O/r+noVGnVgOdjwO0MS8tM1iW2AKJCnfa1AUOn8c3BpasmkXfqHR2d9pU7BfrnZmOX08=
+	t=1761749178; cv=none; b=KuIK2i/+Ebhlttf1jzc/hwiOH5r/wkPyu8NURO6ro2buZ6GfFUKxeMzfz+2OOE1DXYEy3XtKAKmUNoXMxONY2Tw5bAzIVA9ex26shfha9j11dxAw370n5Cy6tbDZRQk+5CSSrzaksYXNDsL3oAT9LNHWjOoEGDxZ6odiwdCIrTs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1761740804; c=relaxed/simple;
-	bh=QwDkSH3kLhu9Ya7BrIayv5fawfziMOL3Z/w1iCrFClA=;
-	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=kgnelzXUPcVlxlSI7qSUeg5IWGVj4exXoycE66qhMr2t5kWuA57SPUL+buhxzIhm7HPnsFZNq5mdtrbbogR2El/pA328n+n22Qk5gkT+rWhywcXvaxNAe5bDCwGGj6ZgWF11vwUDwOu0Sy82GwGgZVcup2UMHAVzrx2H6GrWmo4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=efcNJ+8u; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1761749178; c=relaxed/simple;
+	bh=aP4SRqzhIO34pea2vImSc5uKj7MEAAvxWjOUF/PMYV0=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=ruLvGcXSqoEbobEOnHp0olYq64OsRdGqJmP0+XWtMJx7CE34Q3Ekyx8vk7iEo+Zz9M5gKEDf/7PODB0BbABRmmAzXkOqmk4Yb+uUIJHf5XlD277f0bhqJ3KDGB1sSLS2juiFtxsvFEE7ed4TVQNxCtfQ0uqm7cnVd06VEU9cMTw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=VuH9sMo3; arc=none smtp.client-ip=192.198.163.11
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="efcNJ+8u"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 81FF3C4CEFD;
-	Wed, 29 Oct 2025 12:26:39 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1761740803;
-	bh=QwDkSH3kLhu9Ya7BrIayv5fawfziMOL3Z/w1iCrFClA=;
-	h=From:Date:Subject:References:In-Reply-To:To:Cc:From;
-	b=efcNJ+8uAGYgVJbZ2+NBccn0ZQjG0fPIeB9bz8Nq0SvOmbsmZbWL2tJv0RmtWuAcT
-	 6zjksw5gEJUS3CTWxDoMFibgLEB6AUF2Q7gb2xiMSUXtFtWn/R23M4jOL7ltrbeb/u
-	 ol8T5k8j2uI36alxuWbyjFpN2yh7nG2YVvLZ2jnHaycmO1CiR3Mgvg7JyP2LGmIYiG
-	 +rZ9q07n80+XgXbYUo7iiqhpAueRLthbXqwJfOlMJ3cZZDTiz5X3Rv/FWRu7/ys5fc
-	 plACgDT26f5t1kqpEDGrpKLNv9NHobqbxbvmjqzWpAzf61uvI7d9JY44s3T43Yd6fv
-	 x+fe2AFckhDvw==
-From: Christian Brauner <brauner@kernel.org>
-Date: Wed, 29 Oct 2025 13:21:25 +0100
-Subject: [PATCH v4 72/72] selftests/namespace: test listns() pagination
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="VuH9sMo3"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1761749176; x=1793285176;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:in-reply-to;
+  bh=aP4SRqzhIO34pea2vImSc5uKj7MEAAvxWjOUF/PMYV0=;
+  b=VuH9sMo3aGw8/lXVbh6sJSS8TdqLg814VhkS+Bh+0LnqLll+dNJ0TpRq
+   fRdVmxLJ4UJs/n2u7qdjm87/ojUhzCNmuC2Zjd1o2vbNFza/5CHZIi6n/
+   qxudfNVFI5WBb2soBeOf9HmG55TC4G2zbl1M2aSh52zBGJCgVOcg1tDKn
+   uR1h15aqnyktQNWanHW7jTRils22fsqfBPBSQhyry+ygc2/s7YunKBlmo
+   UhbyHLUejxwEGx1xrHrHPjyJDlTrXpM0tCwCKsOaStJfwaayr5z/my30a
+   uWs+AeuoA7+VHi9GS0h1YxRE1nBPI0XiU6PABQiw12ZRi0zWYQlKdnil+
+   w==;
+X-CSE-ConnectionGUID: JKLML0W5T8uqTDAv35TM0A==
+X-CSE-MsgGUID: matE8uiiRyqwxvwcuN7+tQ==
+X-IronPort-AV: E=McAfee;i="6800,10657,11597"; a="74471903"
+X-IronPort-AV: E=Sophos;i="6.19,264,1754982000"; 
+   d="scan'208";a="74471903"
+Received: from orviesa009.jf.intel.com ([10.64.159.149])
+  by fmvoesa105.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 29 Oct 2025 07:46:16 -0700
+X-CSE-ConnectionGUID: y7+oPJ0FT2eMMEpgfAyiIw==
+X-CSE-MsgGUID: Cjs2nBxMRSawNbM/GhMaWQ==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.19,264,1754982000"; 
+   d="scan'208";a="185323418"
+Received: from lkp-server02.sh.intel.com (HELO 66d7546c76b2) ([10.239.97.151])
+  by orviesa009.jf.intel.com with ESMTP; 29 Oct 2025 07:46:10 -0700
+Received: from kbuild by 66d7546c76b2 with local (Exim 4.96)
+	(envelope-from <lkp@intel.com>)
+	id 1vE7Qo-000Khd-0U;
+	Wed, 29 Oct 2025 14:45:55 +0000
+Date: Wed, 29 Oct 2025 22:44:57 +0800
+From: kernel test robot <lkp@intel.com>
+To: Christian Brauner <brauner@kernel.org>, linux-fsdevel@vger.kernel.org,
+	Josef Bacik <josef@toxicpanda.com>,
+	Jeff Layton <jlayton@kernel.org>
+Cc: llvm@lists.linux.dev, oe-kbuild-all@lists.linux.dev,
+	Jann Horn <jannh@google.com>, Mike Yuan <me@yhndnzj.com>,
+	Zbigniew =?utf-8?Q?J=C4=99drzejewski-Szmek?= <zbyszek@in.waw.pl>,
+	Lennart Poettering <mzxreary@0pointer.de>,
+	Daan De Meyer <daan.j.demeyer@gmail.com>,
+	Aleksa Sarai <cyphar@cyphar.com>,
+	Amir Goldstein <amir73il@gmail.com>, Tejun Heo <tj@kernel.org>,
+	Johannes Weiner <hannes@cmpxchg.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Alexander Viro <viro@zeniv.linux.org.uk>, Jan Kara <jack@suse.cz>,
+	linux-kernel@vger.kernel.org, cgroups@vger.kernel.org,
+	bpf@vger.kernel.org, Eric Dumazet <edumazet@google.com>,
+	Jakub Kicinski <kuba@kernel.org>, netdev@vger.kernel.org,
+	Arnd Bergmann <arnd@arndb.de>,
+	Christian Brauner <brauner@kernel.org>
+Subject: Re: [PATCH v4 13/72] nstree: introduce a unified tree
+Message-ID: <202510292247.swX8RW4u-lkp@intel.com>
+References: <20251029-work-namespace-nstree-listns-v4-13-2e6f823ebdc0@kernel.org>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-Message-Id: <20251029-work-namespace-nstree-listns-v4-72-2e6f823ebdc0@kernel.org>
-References: <20251029-work-namespace-nstree-listns-v4-0-2e6f823ebdc0@kernel.org>
-In-Reply-To: <20251029-work-namespace-nstree-listns-v4-0-2e6f823ebdc0@kernel.org>
-To: linux-fsdevel@vger.kernel.org, Josef Bacik <josef@toxicpanda.com>, 
- Jeff Layton <jlayton@kernel.org>
-Cc: Jann Horn <jannh@google.com>, Mike Yuan <me@yhndnzj.com>, 
- =?utf-8?q?Zbigniew_J=C4=99drzejewski-Szmek?= <zbyszek@in.waw.pl>, 
- Lennart Poettering <mzxreary@0pointer.de>, 
- Daan De Meyer <daan.j.demeyer@gmail.com>, Aleksa Sarai <cyphar@cyphar.com>, 
- Amir Goldstein <amir73il@gmail.com>, Tejun Heo <tj@kernel.org>, 
- Johannes Weiner <hannes@cmpxchg.org>, Thomas Gleixner <tglx@linutronix.de>, 
- Alexander Viro <viro@zeniv.linux.org.uk>, Jan Kara <jack@suse.cz>, 
- linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, bpf@vger.kernel.org, 
- Eric Dumazet <edumazet@google.com>, Jakub Kicinski <kuba@kernel.org>, 
- netdev@vger.kernel.org, Arnd Bergmann <arnd@arndb.de>, 
- Christian Brauner <brauner@kernel.org>
-X-Mailer: b4 0.15-dev-96507
-X-Developer-Signature: v=1; a=openpgp-sha256; l=5137; i=brauner@kernel.org;
- h=from:subject:message-id; bh=QwDkSH3kLhu9Ya7BrIayv5fawfziMOL3Z/w1iCrFClA=;
- b=owGbwMvMwCU28Zj0gdSKO4sYT6slMWQysU2Q6TYOOrAk4Uqv2a6PU97OSDk4V3iXc2lF9qw7V
- 9bLNs/f0VHKwiDGxSArpsji0G4SLrecp2KzUaYGzBxWJpAhDFycAjCRr7cY/ns7ZRsJZzbwPppe
- 8cv9zwKpRUsNd3+Z+mvKtucPDonOmLybkWGV8ufIx7KLt98y1tn/RHRfXY2bu71myPa+d+eblx/
- 4ncAFAA==
-X-Developer-Key: i=brauner@kernel.org; a=openpgp;
- fpr=4880B8C9BD0E5106FC070F4F7B3C391EFEA93624
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20251029-work-namespace-nstree-listns-v4-13-2e6f823ebdc0@kernel.org>
 
-Minimal test case to reproduce KASAN out-of-bounds in listns pagination.
+Hi Christian,
 
-Signed-off-by: Christian Brauner <brauner@kernel.org>
----
- tools/testing/selftests/namespaces/.gitignore      |   1 +
- tools/testing/selftests/namespaces/Makefile        |   4 +-
- .../selftests/namespaces/listns_pagination_bug.c   | 138 +++++++++++++++++++++
- 3 files changed, 142 insertions(+), 1 deletion(-)
+kernel test robot noticed the following build errors:
 
-diff --git a/tools/testing/selftests/namespaces/.gitignore b/tools/testing/selftests/namespaces/.gitignore
-index f6dcf769f150..f4d2209ca4e4 100644
---- a/tools/testing/selftests/namespaces/.gitignore
-+++ b/tools/testing/selftests/namespaces/.gitignore
-@@ -7,3 +7,4 @@ listns_permissions_test
- siocgskns_test
- cred_change_test
- stress_test
-+listns_pagination_bug
-diff --git a/tools/testing/selftests/namespaces/Makefile b/tools/testing/selftests/namespaces/Makefile
-index 3c776740f3ac..01569e0abbdb 100644
---- a/tools/testing/selftests/namespaces/Makefile
-+++ b/tools/testing/selftests/namespaces/Makefile
-@@ -10,7 +10,8 @@ TEST_GEN_PROGS := nsid_test \
- 		  listns_permissions_test \
- 		  siocgskns_test \
- 		  cred_change_test \
--		  stress_test
-+		  stress_test \
-+		  listns_pagination_bug
- 
- include ../lib.mk
- 
-@@ -20,4 +21,5 @@ $(OUTPUT)/listns_permissions_test: ../filesystems/utils.c
- $(OUTPUT)/siocgskns_test: ../filesystems/utils.c
- $(OUTPUT)/cred_change_test: ../filesystems/utils.c
- $(OUTPUT)/stress_test: ../filesystems/utils.c
-+$(OUTPUT)/listns_pagination_bug: ../filesystems/utils.c
- 
-diff --git a/tools/testing/selftests/namespaces/listns_pagination_bug.c b/tools/testing/selftests/namespaces/listns_pagination_bug.c
-new file mode 100644
-index 000000000000..da7d33f96397
---- /dev/null
-+++ b/tools/testing/selftests/namespaces/listns_pagination_bug.c
-@@ -0,0 +1,138 @@
-+// SPDX-License-Identifier: GPL-2.0
-+#define _GNU_SOURCE
-+#include <errno.h>
-+#include <sched.h>
-+#include <stdio.h>
-+#include <stdlib.h>
-+#include <sys/socket.h>
-+#include <sys/wait.h>
-+#include <unistd.h>
-+#include "../kselftest_harness.h"
-+#include "../filesystems/utils.h"
-+#include "wrappers.h"
-+
-+/*
-+ * Minimal test case to reproduce KASAN out-of-bounds in listns pagination.
-+ *
-+ * The bug occurs when:
-+ * 1. Filtering by a specific namespace type (e.g., CLONE_NEWUSER)
-+ * 2. Using pagination (req.ns_id != 0)
-+ * 3. The lookup_ns_id_at() call in do_listns() passes ns_type=0 instead of
-+ *    the filtered type, causing it to search the unified tree and potentially
-+ *    return a namespace of the wrong type.
-+ */
-+TEST(pagination_with_type_filter)
-+{
-+	struct ns_id_req req = {
-+		.size = sizeof(req),
-+		.spare = 0,
-+		.ns_id = 0,
-+		.ns_type = CLONE_NEWUSER,  /* Filter by user namespace */
-+		.spare2 = 0,
-+		.user_ns_id = 0,
-+	};
-+	pid_t pids[10];
-+	int num_children = 10;
-+	int i;
-+	int sv[2];
-+	__u64 first_batch[3];
-+	ssize_t ret;
-+
-+	ASSERT_EQ(socketpair(AF_UNIX, SOCK_STREAM, 0, sv), 0);
-+
-+	/* Create children with user namespaces */
-+	for (i = 0; i < num_children; i++) {
-+		pids[i] = fork();
-+		ASSERT_GE(pids[i], 0);
-+
-+		if (pids[i] == 0) {
-+			char c;
-+			close(sv[0]);
-+
-+			if (setup_userns() < 0) {
-+				close(sv[1]);
-+				exit(1);
-+			}
-+
-+			/* Signal parent we're ready */
-+			if (write(sv[1], &c, 1) != 1) {
-+				close(sv[1]);
-+				exit(1);
-+			}
-+
-+			/* Wait for parent signal to exit */
-+			if (read(sv[1], &c, 1) != 1) {
-+				close(sv[1]);
-+				exit(1);
-+			}
-+
-+			close(sv[1]);
-+			exit(0);
-+		}
-+	}
-+
-+	close(sv[1]);
-+
-+	/* Wait for all children to signal ready */
-+	for (i = 0; i < num_children; i++) {
-+		char c;
-+		if (read(sv[0], &c, 1) != 1) {
-+			close(sv[0]);
-+			for (int j = 0; j < num_children; j++)
-+				kill(pids[j], SIGKILL);
-+			for (int j = 0; j < num_children; j++)
-+				waitpid(pids[j], NULL, 0);
-+			ASSERT_TRUE(false);
-+		}
-+	}
-+
-+	/* First batch - this should work */
-+	ret = sys_listns(&req, first_batch, 3, 0);
-+	if (ret < 0) {
-+		if (errno == ENOSYS) {
-+			close(sv[0]);
-+			for (i = 0; i < num_children; i++)
-+				kill(pids[i], SIGKILL);
-+			for (i = 0; i < num_children; i++)
-+				waitpid(pids[i], NULL, 0);
-+			SKIP(return, "listns() not supported");
-+		}
-+		ASSERT_GE(ret, 0);
-+	}
-+
-+	TH_LOG("First batch returned %zd entries", ret);
-+
-+	if (ret == 3) {
-+		__u64 second_batch[3];
-+
-+		/* Second batch - pagination triggers the bug */
-+		req.ns_id = first_batch[2];  /* Continue from last ID */
-+		ret = sys_listns(&req, second_batch, 3, 0);
-+
-+		TH_LOG("Second batch returned %zd entries", ret);
-+		ASSERT_GE(ret, 0);
-+	}
-+
-+	/* Signal all children to exit */
-+	for (i = 0; i < num_children; i++) {
-+		char c = 'X';
-+		if (write(sv[0], &c, 1) != 1) {
-+			close(sv[0]);
-+			for (int j = i; j < num_children; j++)
-+				kill(pids[j], SIGKILL);
-+			for (int j = 0; j < num_children; j++)
-+				waitpid(pids[j], NULL, 0);
-+			ASSERT_TRUE(false);
-+		}
-+	}
-+
-+	close(sv[0]);
-+
-+	/* Cleanup */
-+	for (i = 0; i < num_children; i++) {
-+		int status;
-+		waitpid(pids[i], &status, 0);
-+	}
-+}
-+
-+TEST_HARNESS_MAIN
+[auto build test ERROR on 3a8660878839faadb4f1a6dd72c3179c1df56787]
+
+url:    https://github.com/intel-lab-lkp/linux/commits/Christian-Brauner/libfs-allow-to-specify-s_d_flags/20251029-205841
+base:   3a8660878839faadb4f1a6dd72c3179c1df56787
+patch link:    https://lore.kernel.org/r/20251029-work-namespace-nstree-listns-v4-13-2e6f823ebdc0%40kernel.org
+patch subject: [PATCH v4 13/72] nstree: introduce a unified tree
+config: loongarch-allnoconfig (https://download.01.org/0day-ci/archive/20251029/202510292247.swX8RW4u-lkp@intel.com/config)
+compiler: clang version 22.0.0git (https://github.com/llvm/llvm-project d1c086e82af239b245fe8d7832f2753436634990)
+reproduce (this is a W=1 build): (https://download.01.org/0day-ci/archive/20251029/202510292247.swX8RW4u-lkp@intel.com/reproduce)
+
+If you fix the issue in a separate patch/commit (i.e. not just a new version of
+the same patch/commit), kindly add following tags
+| Reported-by: kernel test robot <lkp@intel.com>
+| Closes: https://lore.kernel.org/oe-kbuild-all/202510292247.swX8RW4u-lkp@intel.com/
+
+All errors (new ones prefixed by >>):
+
+>> kernel/nstree.c:170:43: error: no member named 'type' in 'struct ns_tree'
+     170 |         VFS_WARN_ON_ONCE(ns->ns_type != ns_tree->type);
+         |                                         ~~~~~~~  ^
+   kernel/nstree.c:297:93: error: no member named 'type' in 'struct ns_tree'
+     297 |         VFS_WARN_ON_ONCE(list_entry_rcu(list, struct ns_common, ns_list_node)->ns_type != ns_tree->type);
+         |                                                                                           ~~~~~~~  ^
+   2 errors generated.
+
+
+vim +170 kernel/nstree.c
+
+885fc8ac0a4dc70 Christian Brauner 2025-09-12  165  
+885fc8ac0a4dc70 Christian Brauner 2025-09-12  166  void __ns_tree_remove(struct ns_common *ns, struct ns_tree *ns_tree)
+885fc8ac0a4dc70 Christian Brauner 2025-09-12  167  {
+885fc8ac0a4dc70 Christian Brauner 2025-09-12  168  	VFS_WARN_ON_ONCE(RB_EMPTY_NODE(&ns->ns_tree_node));
+885fc8ac0a4dc70 Christian Brauner 2025-09-12  169  	VFS_WARN_ON_ONCE(list_empty(&ns->ns_list_node));
+4055526d35746ce Christian Brauner 2025-09-24 @170  	VFS_WARN_ON_ONCE(ns->ns_type != ns_tree->type);
+885fc8ac0a4dc70 Christian Brauner 2025-09-12  171  
+01da9c6ec4269ba Christian Brauner 2025-10-29  172  	write_seqlock(&ns_tree_lock);
+885fc8ac0a4dc70 Christian Brauner 2025-09-12  173  	rb_erase(&ns->ns_tree_node, &ns_tree->ns_tree);
+01da9c6ec4269ba Christian Brauner 2025-10-29  174  	rb_erase(&ns->ns_unified_tree_node, &ns_unified_tree);
+885fc8ac0a4dc70 Christian Brauner 2025-09-12  175  	list_bidir_del_rcu(&ns->ns_list_node);
+885fc8ac0a4dc70 Christian Brauner 2025-09-12  176  	RB_CLEAR_NODE(&ns->ns_tree_node);
+01da9c6ec4269ba Christian Brauner 2025-10-29  177  	write_sequnlock(&ns_tree_lock);
+885fc8ac0a4dc70 Christian Brauner 2025-09-12  178  }
+885fc8ac0a4dc70 Christian Brauner 2025-09-12  179  EXPORT_SYMBOL_GPL(__ns_tree_remove);
+885fc8ac0a4dc70 Christian Brauner 2025-09-12  180  
 
 -- 
-2.47.3
-
+0-DAY CI Kernel Test Service
+https://github.com/intel/lkp-tests/wiki
