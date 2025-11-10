@@ -1,177 +1,343 @@
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.20])
+Received: from mout.gmx.net (mout.gmx.net [212.227.15.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A68AE30BF59;
-	Mon, 10 Nov 2025 12:12:43 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.20
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C3E4730F55C
+	for <cgroups@vger.kernel.org>; Mon, 10 Nov 2025 12:39:16 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=212.227.15.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1762776765; cv=none; b=cxq4XembnqxQnF8j636G8guiZ5uIfr70p1hd/XyVREsZVOraBuij1iexToRAzXh+4KY5B3hxu4bXfGXEdZYODE6+TqPeWySuAS8C/Lar4rKs/UHOAhaVZ1dEE5i/V1RzmxA9AMGGzj4O/NFl7OIBxuZwYgRAyDK8TaT7/5H8Mts=
+	t=1762778359; cv=none; b=YuciGPYMJHHzDTJK8m7L4HLPKPYDM9KgQsmba+el7sgTJZXERdSli7DmlrR4jFfUhq5BLJ5dEXEaTtChvMsVfL4e8NXqRRQXd9somfFuQEBiCZjJEiDJW6BGwQE7BlRpDimBj1Yxxbiw3TT3YKdgRvIB3eVPe7Not5mb8bweljY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1762776765; c=relaxed/simple;
-	bh=7baM59UhgLs3PzSYxMxfS0Nqh+LcBS+GPLi8CsvzC/w=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=uzrqHJ9Fxd6/1JLRHPZ4Vwo3ekpSQcFfu4eYuZ0ICgv2OxMkCmnsxeUMuGHE5zF1/r0SNG5Dq6YRqkxa8RGZHbfatSLMzY2bCNKxFhlWYnoDuNmv/9xMxnuCp6T7rpKK+tzdRTL5Mp3/V96nAdHYLtAkrJjsHBrCa3bXWzTAWmM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=AQICwdgv; arc=none smtp.client-ip=198.175.65.20
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
+	s=arc-20240116; t=1762778359; c=relaxed/simple;
+	bh=wD6g6PoHK6jxAuD3A+WFrtc9aV1PhCm8DtzuUwPuOxo=;
+	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
+	 In-Reply-To:To:Cc; b=LgDas1q0KB8X5FqhSIvyWsIF0kc2ZOWHJH0HolZl+0EOWIigPI0cgGy4XubjJjQDmYinlmk71tvOJ2g6T9fh8wCrD89VKa5PLyMMUrP/h3kr4rWWmL7+iwYIJhnbgN/iTLzi3TxZo5qR530Wc3VtUluepkfSUa8QXqbSceGnjkM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=gmx.de; spf=pass smtp.mailfrom=gmx.de; dkim=pass (2048-bit key) header.d=gmx.de header.i=natalie.vock@gmx.de header.b=fv9q1E5C; arc=none smtp.client-ip=212.227.15.18
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=gmx.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmx.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="AQICwdgv"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1762776764; x=1794312764;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:in-reply-to;
-  bh=7baM59UhgLs3PzSYxMxfS0Nqh+LcBS+GPLi8CsvzC/w=;
-  b=AQICwdgvvOfQQrJ+dIuTFnziWQJ7hjgJtuSfneqFWMLgDPs0uGR2j525
-   lN6QuzV8MD6tmf2FUn9nHHUOQhhnle8+wblWo/7RiangAdO87W6dWDF6n
-   rJZacWvScKSfbHezNfci6DciGdKtcJrBmwmldZVJxXgxesDa4S3aV22DF
-   rLRZ9Zte4TNdLXAmfKID5RXNHdzZuuL3aMgDFh8F/38Fwz3FLH7nO6aEA
-   neRMeBL/0YF/tJyAyHo7hpJlUA/MmKnJlC5naxoKuzOiLLmR+HWmHNDyp
-   05BM35aB3qLChGdG8M0IJDVC4l8N1BN2gFdKdpG3Pp9wNS/WkdgoY6yy5
-   Q==;
-X-CSE-ConnectionGUID: Q3hs3ptIREGZ+y43NHxb7g==
-X-CSE-MsgGUID: 1fMCF16mTXy6d4gzp1EZMg==
-X-IronPort-AV: E=McAfee;i="6800,10657,11608"; a="64524598"
-X-IronPort-AV: E=Sophos;i="6.19,293,1754982000"; 
-   d="scan'208";a="64524598"
-Received: from orviesa010.jf.intel.com ([10.64.159.150])
-  by orvoesa112.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 10 Nov 2025 04:12:43 -0800
-X-CSE-ConnectionGUID: FSWuZslwQh+TRlCS3ZmSZA==
-X-CSE-MsgGUID: WnKB7LmvS+yM8IUXxmgQBA==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.19,293,1754982000"; 
-   d="scan'208";a="187966765"
-Received: from lkp-server01.sh.intel.com (HELO 7b01c990427b) ([10.239.97.150])
-  by orviesa010.jf.intel.com with ESMTP; 10 Nov 2025 04:12:39 -0800
-Received: from kbuild by 7b01c990427b with local (Exim 4.96)
-	(envelope-from <lkp@intel.com>)
-	id 1vIQlA-0000Or-2S;
-	Mon, 10 Nov 2025 12:12:36 +0000
-Date: Mon, 10 Nov 2025 20:12:34 +0800
-From: kernel test robot <lkp@intel.com>
-To: Youngjun Park <youngjun.park@lge.com>, akpm@linux-foundation.org,
-	linux-mm@kvack.org
-Cc: oe-kbuild-all@lists.linux.dev, cgroups@vger.kernel.org,
-	linux-kernel@vger.kernel.org, chrisl@kernel.org, kasong@tencent.com,
-	hannes@cmpxchg.org, mhocko@kernel.org, roman.gushchin@linux.dev,
-	shakeel.butt@linux.dev, muchun.song@linux.dev,
-	shikemeng@huaweicloud.com, nphamcs@gmail.com, bhe@redhat.com,
-	baohua@kernel.org, youngjun.park@lge.com, gunho.lee@lge.com,
-	taejoon.song@lge.com
-Subject: Re: [PATCH 3/3] mm/swap: integrate swap tier infrastructure into
- swap subsystem
-Message-ID: <202511102053.StJy9JAB-lkp@intel.com>
-References: <20251109124947.1101520-4-youngjun.park@lge.com>
+	dkim=pass (2048-bit key) header.d=gmx.de header.i=natalie.vock@gmx.de header.b="fv9q1E5C"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gmx.de;
+	s=s31663417; t=1762778349; x=1763383149; i=natalie.vock@gmx.de;
+	bh=0Kc8zBhmv61GNFKms8woUXkDZaIzdqdGo8mxhO+VZVs=;
+	h=X-UI-Sender-Class:From:Date:Subject:MIME-Version:Content-Type:
+	 Content-Transfer-Encoding:Message-Id:References:In-Reply-To:To:Cc:
+	 cc:content-transfer-encoding:content-type:date:from:message-id:
+	 mime-version:reply-to:subject:to;
+	b=fv9q1E5ClHKqNiRR0j+1XhUhnQoQdfCODSOVMWYh98Cp+UlklEELVVqZZP2j00kV
+	 sx7xo4RvpAjVkIc+aNS6PGRZ5yaqJOZ+fPhZelU0d/LA6O4gs/9fSPKUHsgl5nW6A
+	 PMGnjsFxbuY3WRJeZzK3arpmxYLPpQvb2J42yT6V4Oi8h/PtLfCA44v/E2s6RuWvX
+	 gL2w4usUUVey+ojlKNArmQLQDtskNf5qzxVGJWbBUjFiggflUkJnGkCFXIOocLiBB
+	 6ziOo2iLXN27CShWs+yUgLSogziWPRE7WF57BQL6/Jth84qM4C4bCCfC5gXzBMOuV
+	 jBU2q9mxugu2nlwWxQ==
+X-UI-Sender-Class: 724b4f7f-cbec-4199-ad4e-598c01a50d3a
+Received: from [192.168.0.3] ([109.42.49.68]) by mail.gmx.net (mrgmx005
+ [212.227.17.190]) with ESMTPSA (Nemesis) id 1M8QWA-1vE1KW44PI-00BEAP; Mon, 10
+ Nov 2025 13:39:09 +0100
+From: Natalie Vock <natalie.vock@gmx.de>
+Date: Mon, 10 Nov 2025 13:37:32 +0100
+Subject: [PATCH v3 3/5] drm/ttm: Make a helper for attempting allocation in
+ a place
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20251109124947.1101520-4-youngjun.park@lge.com>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: quoted-printable
+Message-Id: <20251110-dmemcg-aggressive-protect-v3-3-219ffcfc54e9@gmx.de>
+References: <20251110-dmemcg-aggressive-protect-v3-0-219ffcfc54e9@gmx.de>
+In-Reply-To: <20251110-dmemcg-aggressive-protect-v3-0-219ffcfc54e9@gmx.de>
+To: Maarten Lankhorst <dev@lankhorst.se>, 
+ Maxime Ripard <mripard@kernel.org>, Tejun Heo <tj@kernel.org>, 
+ Johannes Weiner <hannes@cmpxchg.org>, 
+ =?utf-8?q?Michal_Koutn=C3=BD?= <mkoutny@suse.com>, 
+ Christian Koenig <christian.koenig@amd.com>, Huang Rui <ray.huang@amd.com>, 
+ Matthew Auld <matthew.auld@intel.com>, 
+ Matthew Brost <matthew.brost@intel.com>, 
+ Maarten Lankhorst <maarten.lankhorst@linux.intel.com>, 
+ Thomas Zimmermann <tzimmermann@suse.de>, David Airlie <airlied@gmail.com>, 
+ Simona Vetter <simona@ffwll.ch>
+Cc: cgroups@vger.kernel.org, dri-devel@lists.freedesktop.org
+X-Mailer: b4 0.14.3
+X-Provags-ID: V03:K1:NymmWpQXkFIGXZWfuIXpA4fDD+aOUp1/qFN5UEF2ipqBi5k6Af4
+ l8+lH2d3XuktMtFcvcVVBBxnwSA7P/Xa9iJ61F8QUCmFXdqnLYhbkPhU6DIIyKNRoPguBhx
+ 0iMnIoi19urVReHXcTOsvEJnUZFpdpvaW/ClHkdp67OSPIEjp6k24rScHyfyN6c7jJVuFaE
+ RGWv70Xu3Xh/U0ld+YHPA==
+X-Spam-Flag: NO
+UI-OutboundReport: notjunk:1;M01:P0:f7sJB+Ooofs=;7SspkXziE0/7gct46veU68sgxBz
+ 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
 
-Hi Youngjun,
+ttm_bo_alloc_place is a new helper function to make an attempt at
+allocating a bo's resource in a specific place. It also makes decisions
+on whether eviction should be attempted: If -ENOSPC is returned,
+allocation should not be retried.
 
-kernel test robot noticed the following build errors:
+Signed-off-by: Natalie Vock <natalie.vock@gmx.de>
+=2D--
+ drivers/gpu/drm/ttm/ttm_bo.c | 98 +++++++++++++++++++++++++++++++++------=
+=2D----
+ 1 file changed, 73 insertions(+), 25 deletions(-)
 
-[auto build test ERROR on akpm-mm/mm-everything]
+diff --git a/drivers/gpu/drm/ttm/ttm_bo.c b/drivers/gpu/drm/ttm/ttm_bo.c
+index f4d9e68b21e70..829d994798835 100644
+=2D-- a/drivers/gpu/drm/ttm/ttm_bo.c
++++ b/drivers/gpu/drm/ttm/ttm_bo.c
+@@ -489,6 +489,11 @@ int ttm_bo_evict_first(struct ttm_device *bdev, struc=
+t ttm_resource_manager *man
+ 	return ret;
+ }
+=20
++struct ttm_bo_alloc_state {
++	/** @limit_pool: Which pool limit we should test against */
++	struct dmem_cgroup_pool_state *limit_pool;
++};
++
+ /**
+  * struct ttm_bo_evict_walk - Parameters for the evict walk.
+  */
+@@ -504,12 +509,13 @@ struct ttm_bo_evict_walk {
+ 	/** @evicted: Number of successful evictions. */
+ 	unsigned long evicted;
+=20
+-	/** @limit_pool: Which pool limit we should test against */
+-	struct dmem_cgroup_pool_state *limit_pool;
+ 	/** @try_low: Whether we should attempt to evict BO's with low watermark=
+ threshold */
+ 	bool try_low;
+ 	/** @hit_low: If we cannot evict a bo when @try_low is false (first pass=
+) */
+ 	bool hit_low;
++
++	/** @alloc_state: */
++	struct ttm_bo_alloc_state *alloc_state;
+ };
+=20
+ static s64 ttm_bo_evict_cb(struct ttm_lru_walk *walk, struct ttm_buffer_o=
+bject *bo)
+@@ -518,8 +524,9 @@ static s64 ttm_bo_evict_cb(struct ttm_lru_walk *walk, =
+struct ttm_buffer_object *
+ 		container_of(walk, typeof(*evict_walk), walk);
+ 	s64 lret;
+=20
+-	if (!dmem_cgroup_state_evict_valuable(evict_walk->limit_pool, bo->resour=
+ce->css,
+-					      evict_walk->try_low, &evict_walk->hit_low))
++	if (!dmem_cgroup_state_evict_valuable(evict_walk->alloc_state->limit_poo=
+l,
++					      bo->resource->css, evict_walk->try_low,
++					      &evict_walk->hit_low))
+ 		return 0;
+=20
+ 	if (bo->pin_count || !bo->bdev->funcs->eviction_valuable(bo, evict_walk-=
+>place))
+@@ -561,7 +568,7 @@ static int ttm_bo_evict_alloc(struct ttm_device *bdev,
+ 			      struct ttm_operation_ctx *ctx,
+ 			      struct ww_acquire_ctx *ticket,
+ 			      struct ttm_resource **res,
+-			      struct dmem_cgroup_pool_state *limit_pool)
++			      struct ttm_bo_alloc_state *state)
+ {
+ 	struct ttm_bo_evict_walk evict_walk =3D {
+ 		.walk =3D {
+@@ -574,7 +581,7 @@ static int ttm_bo_evict_alloc(struct ttm_device *bdev,
+ 		.place =3D place,
+ 		.evictor =3D evictor,
+ 		.res =3D res,
+-		.limit_pool =3D limit_pool,
++		.alloc_state =3D state,
+ 	};
+ 	s64 lret;
+=20
+@@ -688,6 +695,47 @@ static int ttm_bo_add_move_fence(struct ttm_buffer_ob=
+ject *bo,
+ 	return ret;
+ }
+=20
++
++/**
++ * ttm_bo_alloc_at_place - Attempt allocating a BO's backing store in a p=
+lace
++ *
++ * @bo: The buffer to allocate the backing store of
++ * @place: The place to attempt allocation in
++ * @ctx: ttm_operation_ctx associated with this allocation
++ * @force_space: If we should evict buffers to force space
++ * @res: On allocation success, the resulting struct ttm_resource.
++ * @alloc_state: Object holding allocation state such as charged cgroups.
++ *
++ * Returns:
++ * -EBUSY: No space available, but allocation should be retried with evic=
+tion.
++ * -ENOSPC: No space available, allocation should not be retried.
++ * -ERESTARTSYS: An interruptible sleep was interrupted by a signal.
++ *
++ */
++static int ttm_bo_alloc_at_place(struct ttm_buffer_object *bo,
++				 const struct ttm_place *place,
++				 struct ttm_operation_ctx *ctx,
++				 bool force_space,
++				 struct ttm_resource **res,
++				 struct ttm_bo_alloc_state *alloc_state)
++{
++	bool may_evict;
++	int ret;
++
++	may_evict =3D (force_space && place->mem_type !=3D TTM_PL_SYSTEM);
++
++	ret =3D ttm_resource_alloc(bo, place, res,
++				 force_space ? &alloc_state->limit_pool : NULL);
++
++	if (ret) {
++		if ((ret =3D=3D -ENOSPC || ret =3D=3D -EAGAIN) && may_evict)
++			ret =3D -EBUSY;
++		return ret;
++	}
++
++	return 0;
++}
++
+ /**
+  * ttm_bo_alloc_resource - Allocate backing store for a BO
+  *
+@@ -713,7 +761,9 @@ static int ttm_bo_alloc_resource(struct ttm_buffer_obj=
+ect *bo,
+ 				 bool force_space,
+ 				 struct ttm_resource **res)
+ {
++	struct ttm_bo_alloc_state alloc_state =3D {0};
+ 	struct ttm_device *bdev =3D bo->bdev;
++	struct ttm_resource_manager *man;
+ 	struct ww_acquire_ctx *ticket;
+ 	int i, ret;
+=20
+@@ -724,9 +774,6 @@ static int ttm_bo_alloc_resource(struct ttm_buffer_obj=
+ect *bo,
+=20
+ 	for (i =3D 0; i < placement->num_placement; ++i) {
+ 		const struct ttm_place *place =3D &placement->placement[i];
+-		struct dmem_cgroup_pool_state *limit_pool =3D NULL;
+-		struct ttm_resource_manager *man;
+-		bool may_evict;
+=20
+ 		man =3D ttm_manager_type(bdev, place->mem_type);
+ 		if (!man || !ttm_resource_manager_used(man))
+@@ -736,25 +783,26 @@ static int ttm_bo_alloc_resource(struct ttm_buffer_o=
+bject *bo,
+ 				    TTM_PL_FLAG_FALLBACK))
+ 			continue;
+=20
+-		may_evict =3D (force_space && place->mem_type !=3D TTM_PL_SYSTEM);
+-		ret =3D ttm_resource_alloc(bo, place, res, force_space ? &limit_pool : =
+NULL);
+-		if (ret) {
+-			if (ret !=3D -ENOSPC && ret !=3D -EAGAIN) {
+-				dmem_cgroup_pool_state_put(limit_pool);
+-				return ret;
+-			}
+-			if (!may_evict) {
+-				dmem_cgroup_pool_state_put(limit_pool);
+-				continue;
+-			}
++		ret =3D ttm_bo_alloc_at_place(bo, place, ctx, force_space,
++				res, &alloc_state);
+=20
++		if (ret =3D=3D -ENOSPC) {
++			dmem_cgroup_pool_state_put(alloc_state.limit_pool);
++			continue;
++		} else if (ret =3D=3D -EBUSY) {
+ 			ret =3D ttm_bo_evict_alloc(bdev, man, place, bo, ctx,
+-						 ticket, res, limit_pool);
+-			dmem_cgroup_pool_state_put(limit_pool);
+-			if (ret =3D=3D -EBUSY)
++						 ticket, res, &alloc_state);
++
++			dmem_cgroup_pool_state_put(alloc_state.limit_pool);
++
++			if (ret) {
++				if (ret !=3D -ENOSPC && ret !=3D -EBUSY)
++					return ret;
+ 				continue;
+-			if (ret)
+-				return ret;
++			}
++		} else if (ret) {
++			dmem_cgroup_pool_state_put(alloc_state.limit_pool);
++			return ret;
+ 		}
+=20
+ 		ret =3D ttm_bo_add_move_fence(bo, man, ctx->no_wait_gpu);
 
-url:    https://github.com/intel-lab-lkp/linux/commits/Youngjun-Park/mm-swap-introduce-swap-tier-infrastructure/20251109-215033
-base:   https://git.kernel.org/pub/scm/linux/kernel/git/akpm/mm.git mm-everything
-patch link:    https://lore.kernel.org/r/20251109124947.1101520-4-youngjun.park%40lge.com
-patch subject: [PATCH 3/3] mm/swap: integrate swap tier infrastructure into swap subsystem
-config: s390-randconfig-001-20251110 (https://download.01.org/0day-ci/archive/20251110/202511102053.StJy9JAB-lkp@intel.com/config)
-compiler: s390-linux-gcc (GCC) 8.5.0
-reproduce (this is a W=1 build): (https://download.01.org/0day-ci/archive/20251110/202511102053.StJy9JAB-lkp@intel.com/reproduce)
+=2D-=20
+2.51.2
 
-If you fix the issue in a separate patch/commit (i.e. not just a new version of
-the same patch/commit), kindly add following tags
-| Reported-by: kernel test robot <lkp@intel.com>
-| Closes: https://lore.kernel.org/oe-kbuild-all/202511102053.StJy9JAB-lkp@intel.com/
-
-All errors (new ones prefixed by >>):
-
-   In file included from mm/page_io.c:29:
->> mm/swap_tier.h:71:1: error: expected identifier or '(' before '{' token
-    {
-    ^
-   mm/swap_tier.h:70:19: warning: 'swap_tiers_collect_compare_mask' declared 'static' but never defined [-Wunused-function]
-    static inline int swap_tiers_collect_compare_mask(struct mem_cgroup *memcg);
-                      ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
---
-   In file included from mm/swapfile.c:52:
->> mm/swap_tier.h:71:1: error: expected identifier or '(' before '{' token
-    {
-    ^
-   mm/swapfile.c: In function 'swap_alloc_entry':
->> mm/swapfile.c:1309:29: error: 'struct swap_info_struct' has no member named 'tier_idx'
-      if (swap_tiers_test_off(si->tier_idx, mask))
-                                ^~
-   In file included from mm/swapfile.c:52:
-   mm/swapfile.c: At top level:
-   mm/swap_tier.h:70:19: warning: 'swap_tiers_collect_compare_mask' used but never defined
-    static inline int swap_tiers_collect_compare_mask(struct mem_cgroup *memcg);
-                      ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
---
-   In file included from mm/memcontrol.c:71:
->> mm/swap_tier.h:71:1: error: expected identifier or '(' before '{' token
-    {
-    ^
-   mm/memcontrol.c: In function 'mem_cgroup_free':
->> mm/memcontrol.c:3734:2: error: implicit declaration of function 'swap_tiers_put_mask'; did you mean 'swap_tiers_release'? [-Werror=implicit-function-declaration]
-     swap_tiers_put_mask(memcg);
-     ^~~~~~~~~~~~~~~~~~~
-     swap_tiers_release
-   In file included from mm/memcontrol.c:71:
-   mm/memcontrol.c: At top level:
-   mm/swap_tier.h:70:19: warning: 'swap_tiers_collect_compare_mask' declared 'static' but never defined [-Wunused-function]
-    static inline int swap_tiers_collect_compare_mask(struct mem_cgroup *memcg);
-                      ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-   cc1: some warnings being treated as errors
-
-Kconfig warnings: (for reference only)
-   WARNING: unmet direct dependencies detected for OF_GPIO
-   Depends on [n]: GPIOLIB [=y] && OF [=y] && HAS_IOMEM [=n]
-   Selected by [y]:
-   - REGULATOR_RT5133 [=y] && REGULATOR [=y] && I2C [=y] && GPIOLIB [=y] && OF [=y]
-
-
-vim +71 mm/swap_tier.h
-
-c17fe68325c921 Youngjun Park 2025-11-09  41  
-c17fe68325c921 Youngjun Park 2025-11-09  42  void swap_tiers_init(void);
-c17fe68325c921 Youngjun Park 2025-11-09  43  int swap_tiers_add(struct tiers_desc desc[], int nr);
-c17fe68325c921 Youngjun Park 2025-11-09  44  int swap_tiers_remove(struct tiers_desc desc[], int nr);
-c17fe68325c921 Youngjun Park 2025-11-09  45  ssize_t swap_tiers_show_sysfs(char *buf);
-c17fe68325c921 Youngjun Park 2025-11-09  46  void swap_tiers_show_memcg(struct seq_file *m, struct mem_cgroup *memcg);
-c17fe68325c921 Youngjun Park 2025-11-09  47  void swap_tiers_assign(struct swap_info_struct *swp);
-c17fe68325c921 Youngjun Park 2025-11-09  48  void swap_tiers_release(struct swap_info_struct *swp);
-c17fe68325c921 Youngjun Park 2025-11-09  49  int swap_tiers_get_mask(struct tiers_desc *desc, int nr, struct mem_cgroup *memcg);
-c17fe68325c921 Youngjun Park 2025-11-09  50  void swap_tiers_put_mask(struct mem_cgroup *memcg);
-c17fe68325c921 Youngjun Park 2025-11-09  51  static inline bool swap_tiers_test_off(int tier_idx, int mask)
-c17fe68325c921 Youngjun Park 2025-11-09  52  {
-c17fe68325c921 Youngjun Park 2025-11-09  53  	return TIER_MASK(tier_idx, TIER_OFF_MASK) & mask;
-c17fe68325c921 Youngjun Park 2025-11-09  54  }
-c17fe68325c921 Youngjun Park 2025-11-09  55  int swap_tiers_collect_compare_mask(struct mem_cgroup *memcg);
-c17fe68325c921 Youngjun Park 2025-11-09  56  #else
-c17fe68325c921 Youngjun Park 2025-11-09  57  static inline void swap_tiers_init(void)
-c17fe68325c921 Youngjun Park 2025-11-09  58  {
-c17fe68325c921 Youngjun Park 2025-11-09  59  }
-c17fe68325c921 Youngjun Park 2025-11-09  60  static inline void swap_tiers_assign(struct swap_info_struct *swp)
-c17fe68325c921 Youngjun Park 2025-11-09  61  {
-c17fe68325c921 Youngjun Park 2025-11-09  62  }
-c17fe68325c921 Youngjun Park 2025-11-09  63  static inline void swap_tiers_release(struct swap_info_struct *swp)
-c17fe68325c921 Youngjun Park 2025-11-09  64  {
-c17fe68325c921 Youngjun Park 2025-11-09  65  }
-c17fe68325c921 Youngjun Park 2025-11-09  66  static inline bool swap_tiers_test_off(int tier_off_mask, int mask)
-c17fe68325c921 Youngjun Park 2025-11-09  67  {
-c17fe68325c921 Youngjun Park 2025-11-09  68  	return false;
-c17fe68325c921 Youngjun Park 2025-11-09  69  }
-c17fe68325c921 Youngjun Park 2025-11-09  70  static inline int swap_tiers_collect_compare_mask(struct mem_cgroup *memcg);
-c17fe68325c921 Youngjun Park 2025-11-09 @71  {
-
--- 
-0-DAY CI Kernel Test Service
-https://github.com/intel/lkp-tests/wiki
