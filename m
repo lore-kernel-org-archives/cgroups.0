@@ -1,88 +1,109 @@
-Received: from out-187.mta1.migadu.com (out-187.mta1.migadu.com [95.215.58.187])
+Received: from out-171.mta0.migadu.com (out-171.mta0.migadu.com [91.218.175.171])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7B3FF303CB4
-	for <cgroups@vger.kernel.org>; Tue, 11 Nov 2025 03:04:38 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=95.215.58.187
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 208B731353A
+	for <cgroups@vger.kernel.org>; Tue, 11 Nov 2025 03:07:18 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.171
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1762830280; cv=none; b=QAirZ5z3GRSLaug7QQM8b7ApEm1ScjSTUG0lzV64l9jYaqV7PyZ2VoC73Fy2zLXZ70HjVv/x2ULVgStfjq5p46sWtQ2G5x9JN2E6znxe3Q+LWDhUooBwySBZ9ovsHvIWoExrVxuSBEdjn86svNEnCggLXyOrvd9h+Cf1ODa6Rko=
+	t=1762830440; cv=none; b=qdhA7qJih9SW/tMV8V2mrN3wVJ5YlxGiLTRpHUAW/aiiB4fx1HRLK2Q++6hj30YGElv9yBPgLI9W+Fv7GNagOl+zn+0wBauu29lZYQV2a9KJiRcFBWScy2J6KKvwtw2Ih6WD9/tZGzv8s21QFjqBCb2mz9NC0sMCvthT9P21TLY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1762830280; c=relaxed/simple;
-	bh=54lsAScodbRTpR1bH6qMs5x+FVqbnXjPhe6PWB9xz3c=;
+	s=arc-20240116; t=1762830440; c=relaxed/simple;
+	bh=C9MTaUCT55ut547f01PQNb6jRUKY3GznxjeXK2vW3mU=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=NcFuELv59G+Pc1UK4ZwlclP+En8oi6o2P/dY3bal6pYq8V0TcGgk/w/anfMJUonaYck4yEzd2HwswDd1VN8m0lyF8/qGPdKN2Y1WsmNLCiqR+UmkYbE5Mv8fMYovhPB8LGi4o5EJPoJOFln0UnWI1LVBHv0wafSe0KK4A0fv5vI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=m1VOnbj0; arc=none smtp.client-ip=95.215.58.187
+	 In-Reply-To:Content-Type; b=n4+OJLhMFhmYsoZ4SVg1ZTu5uteHdkRX3XjfJVbp3Ewk840ie61wC3cEVUxHAmwXa3nk3Tf/WHBG30ukiNOhRw/kQVvWUuxC1lFkuqK8u9hJ1UhED4QZtYBCjbbnnWh0bP1deir//ki1Ym4gBve/cyydZfotOQFSnjKxf9fMrkA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=i2VXkTwr; arc=none smtp.client-ip=91.218.175.171
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="m1VOnbj0"
-Message-ID: <8d6655f8-2756-45bb-85c1-223c3a5e656c@linux.dev>
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="i2VXkTwr"
+Message-ID: <982d6b8c-53e7-46f3-9357-afb85319d0a3@linux.dev>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
-	t=1762830265;
+	t=1762830437;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=V5c8zazQymbCh3EJOF0KTydVfHgB+HL63txNkj2DBcg=;
-	b=m1VOnbj0B52FF5eqkgvxn2ibcAZ2AlUdQ2OpPrHQmPQeylgDhQJZc44smuZ/tFwxYYmsLz
-	MO94ShQBlC2V/Nu2D3aYvij6xrHH3NeUozTm0MkGI8F9M9YBE2vzLtaW4CW2d3AV3LqiNx
-	ieAfXns9GSZy2EFyQl44C+OKbFBoyNc=
-Date: Tue, 11 Nov 2025 11:04:09 +0800
+	bh=coZlxvjouzIp2H+RXwQcczehI/L+km+mWX+nuQHuLuc=;
+	b=i2VXkTwrEj122SnmJM/kZ5RGpk+CzulkvQbubkractg6E7mfog6AeRcXLOdWG1K07xKKJo
+	3PSATPpRhFOSR6pWC2IQHDdfj13x4O+rsoI9YBNN/lzT8Lwd9xqxAJvLM96rPpnDJcphP/
+	tfysCV3NdMZAEmDE402Rr8RVOpryFAA=
+Date: Tue, 11 Nov 2025 11:07:09 +0800
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Subject: Re: [PATCH v1 04/26] mm: vmscan: refactor move_folios_to_lru()
-To: Shakeel Butt <shakeel.butt@linux.dev>, Harry Yoo <harry.yoo@oracle.com>
-Cc: hannes@cmpxchg.org, hughd@google.com, mhocko@suse.com,
- roman.gushchin@linux.dev, muchun.song@linux.dev, david@redhat.com,
- lorenzo.stoakes@oracle.com, ziy@nvidia.com, imran.f.khan@oracle.com,
- kamalesh.babulal@oracle.com, axelrasmussen@google.com, yuanchu@google.com,
- weixugc@google.com, akpm@linux-foundation.org, linux-mm@kvack.org,
- linux-kernel@vger.kernel.org, cgroups@vger.kernel.org,
- Muchun Song <songmuchun@bytedance.com>, Qi Zheng
- <zhengqi.arch@bytedance.com>,
- Sebastian Andrzej Siewior <bigeasy@linutronix.de>,
- Clark Williams <clrkwllms@kernel.org>, Steven Rostedt <rostedt@goodmis.org>,
- linux-rt-devel@lists.linux.dev
-References: <cover.1761658310.git.zhengqi.arch@bytedance.com>
- <97ea4728568459f501ddcab6c378c29064630bb9.1761658310.git.zhengqi.arch@bytedance.com>
- <aQ1_f_6KPRZknUGS@harry> <366385a3-ed0e-440b-a08b-9cf14165ee8f@linux.dev>
- <aQ3yLER4C4jY70BH@harry>
- <hfutmuh4g5jtmrgeemq2aqr2tvxz6mnqaxo5l5vddqnjasyagi@gcscu5khrjxm>
- <aRFKY5VGEujVOqBc@hyeyoo> <2a68bddf-e6e6-4960-b5bc-1a39d747ea9b@linux.dev>
- <aRF7eYlBKmG3hEFF@hyeyoo>
- <aqdvjyzfk6vpespzcszfkmx522iy7hvddefcjgusrysglpdykt@uqedtngotzmy>
+Subject: Re: [PATCH 0/4] memcg: cleanup the memcg stats interfaces
+To: Shakeel Butt <shakeel.butt@linux.dev>
+Cc: Harry Yoo <harry.yoo@oracle.com>,
+ Andrew Morton <akpm@linux-foundation.org>,
+ Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>,
+ Roman Gushchin <roman.gushchin@linux.dev>,
+ Muchun Song <muchun.song@linux.dev>, Vlastimil Babka <vbabka@suse.cz>,
+ linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org,
+ Meta kernel team <kernel-team@meta.com>
+References: <20251110232008.1352063-1-shakeel.butt@linux.dev>
+ <aRKKfdN3B68wxFvN@hyeyoo> <24969292-7543-456f-8b80-09c4521507e2@linux.dev>
+ <gsew67sciieqxbcczp5mzx4lj6pvvclfrxn6or3pzjqmj7eeic@7bxuwqgnqaum>
+ <99429fb8-dcec-43e7-a23b-bee54b8ed6e6@linux.dev>
+ <hgf4uciz7rp2mpxalcuingafs5ktmsgvom2pefjv3yogel5dh3@7kkwtrnqotnc>
 X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
 From: Qi Zheng <qi.zheng@linux.dev>
-In-Reply-To: <aqdvjyzfk6vpespzcszfkmx522iy7hvddefcjgusrysglpdykt@uqedtngotzmy>
+In-Reply-To: <hgf4uciz7rp2mpxalcuingafs5ktmsgvom2pefjv3yogel5dh3@7kkwtrnqotnc>
 Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 X-Migadu-Flow: FLOW_OUT
 
 
-On 11/11/25 12:47 AM, Shakeel Butt wrote:
-> On Mon, Nov 10, 2025 at 02:43:21PM +0900, Harry Yoo wrote:
->> On Mon, Nov 10, 2025 at 12:30:06PM +0800, Qi Zheng wrote:
->>>> Maybe we could make it safe against re-entrant IRQ handlers by using
->>>> read-modify-write operations?
->>>
->>> Isn't it because of the RMW operation that we need to use IRQ to
->>> guarantee atomicity? Or have I misunderstood something?
+
+On 11/11/25 11:00 AM, Shakeel Butt wrote:
+> On Tue, Nov 11, 2025 at 10:48:18AM +0800, Qi Zheng wrote:
+>> Hi Shakeel,
 >>
->> I meant using atomic operations instead of disabling IRQs, like, by
->> using this_cpu_add() or cmpxchg() instead.
+>> On 11/11/25 10:39 AM, Shakeel Butt wrote:
+>>> On Tue, Nov 11, 2025 at 10:23:15AM +0800, Qi Zheng wrote:
+>>>> Hi,
+>>>>
+>>> [...]
+>>>>>
+>>>>> Are you or Qi planning a follow-up that converts spin_lock_irq() to
+>>>>> spin_lock() in places where they disabled IRQs was just to update vmstat?
+>>>>
+>>>> Perhaps this change could be implemented together in [PATCH 1/4]?
+>>>>
+>>>> Of course, it's also reasonable to make it a separate patch. If we
+>>>> choose this method, I’m fine with either me or Shakeel doing it.
+>>>>
+>>>
+>>> Let's do it separately as I wanted to keep the memcg related changes
+>>> self-contained.
+>>
+>> OK.
+>>
+>>>
+>>> Qi, can you please take a stab at that?
+>>
+>> Sure, I will do it.
+>>
+>>>
+>>>>>
+>>>>> Qi's zombie memcg series will depends on that work I guess..
+>>>>
+>>>> Yes, and there are other places that also need to be converted, such as
+>>>> __folio_migrate_mapping().
+>>>
+>>> I see __mod_zone_page_state() usage in __folio_migrate_mapping() and
+>>> using the same reasoning we can convert it to use mod_zone_page_state().
+>>> Where else do you need to do these conversions (other than
+>>> __folio_migrate_mapping)?
+>>
+>> I mean converting these places to use spin_lock() instead of
+>> spin_lock_irq().
 > 
-> We already have mod_node_page_state() which is safe from IRQs and is
-> optimized to not disable IRQs for archs with HAVE_CMPXCHG_LOCAL which
-> includes x86 and arm64.
+> For only stats, right?
 
-However, in the !CONFIG_HAVE_CMPXCHG_LOCAL case, mod_node_page_state()
-still calls local_irq_save(). Is this feasible in the PREEMPT_RT kernel?
+Right, for thoes places where they disabled IRQs was just to update
+vmstat.
 
-> 
-> Let me send the patch to cleanup the memcg code which uses
-> __mod_node_page_state.
 
