@@ -1,285 +1,225 @@
-Received: from lgeamrelo03.lge.com (lgeamrelo03.lge.com [156.147.51.102])
+Received: from dggsgout12.his.huawei.com (dggsgout12.his.huawei.com [45.249.212.56])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4168C2F3C07
-	for <cgroups@vger.kernel.org>; Thu, 13 Nov 2025 02:16:35 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=156.147.51.102
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CA1AA1D5ADE;
+	Thu, 13 Nov 2025 02:49:57 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.56
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1763000199; cv=none; b=oHW3AQCMK8z79bdaqKPU2TSUpqcEhAd3NSxYhfGJGMFqtlPRaUtipe7IeTm3LALMvCWMNKehcUkHiEcwoY8PAMYcEl6+Ta3uBnLNnMfn57UI8SSET+1+KHFMrawmem00Sw0eq1Rd0wenJUVgTzk/665yM5iYMFwS3ACOUicLmxw=
+	t=1763002200; cv=none; b=M/AI4TC16fTPOcyb6lidCyLa3pdiyL2Girx80n+8EJN4x9lEy/eEx/BSf3kEZupkSY/6a7N9R0zR4c/vaoo3+FYdIuTwTG53H6DHSOON7IP5PoXh8t3mb4SQFc/AM53sAl6oyV46dlr5fprDAwbaGQQs8Bx4xYy1aiVESZ0gmGk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1763000199; c=relaxed/simple;
-	bh=Bt1uXlZPw/nKh5/JP2JGfg9HYD7gdM8IVXfmkIuY4OM=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=NBfgQA+ShHTzIe8ejuADgIlHjCQNc1DFFGe2EZVr6erGN3y+TSuDhJp3iOLh0dojxdS32rAzOqgUDSeqFDeJOZKej2I5qVbHdKv49jriGiKgeqkTS6RgZy66o4TGcSavrGChGYwz6PseVAab67goz/IGstJXuNBsr3in3IooODs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lge.com; spf=pass smtp.mailfrom=lge.com; arc=none smtp.client-ip=156.147.51.102
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lge.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lge.com
-Received: from unknown (HELO yjaykim-PowerEdge-T330) (10.177.112.156)
-	by 156.147.51.102 with ESMTP; 13 Nov 2025 11:01:34 +0900
-X-Original-SENDERIP: 10.177.112.156
-X-Original-MAILFROM: youngjun.park@lge.com
-Date: Thu, 13 Nov 2025 11:01:34 +0900
-From: YoungJun Park <youngjun.park@lge.com>
-To: Chris Li <chrisl@kernel.org>
-Cc: akpm@linux-foundation.org, linux-mm@kvack.org, cgroups@vger.kernel.org,
-	linux-kernel@vger.kernel.org, kasong@tencent.com,
-	hannes@cmpxchg.org, mhocko@kernel.org, roman.gushchin@linux.dev,
-	shakeel.butt@linux.dev, muchun.song@linux.dev,
-	shikemeng@huaweicloud.com, nphamcs@gmail.com, bhe@redhat.com,
-	baohua@kernel.org, gunho.lee@lge.com, taejoon.song@lge.com
-Subject: Re: [PATCH 2/3] mm: swap: introduce swap tier infrastructure
-Message-ID: <aRU7/ibyrPTn93qV@yjaykim-PowerEdge-T330>
-References: <20251109124947.1101520-1-youngjun.park@lge.com>
- <20251109124947.1101520-3-youngjun.park@lge.com>
- <CACePvbUvDfZgDx-sXkZ+Oa7DwtKg6b1t=owQ1sRZ_FpFrGxA3g@mail.gmail.com>
+	s=arc-20240116; t=1763002200; c=relaxed/simple;
+	bh=xCebPx/DTTumY++I8/5MsUa5fN4CVr48wYQ7/7nwxIc=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=CXpZ15wTBzCJor5meVCBUGQUFdCRZYj+Jb44fGkpcApNEFMsRuAJm3ggLjUJ2DDKoz0DJRtA+PVGk73WzrvsSr8YQO4mggv8WVhcwe/3h/eFw4qaGAHEAoDX6Q0kb61vFn+9e3iH0QW+G5N0cTbflvs2fe2TZS6ePzGBPIH/5yU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.56
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
+Received: from mail.maildlp.com (unknown [172.19.163.216])
+	by dggsgout12.his.huawei.com (SkyGuard) with ESMTPS id 4d6Pqz5GpPzKHMWr;
+	Thu, 13 Nov 2025 10:49:35 +0800 (CST)
+Received: from mail02.huawei.com (unknown [10.116.40.128])
+	by mail.maildlp.com (Postfix) with ESMTP id 32BDD1A13E6;
+	Thu, 13 Nov 2025 10:49:54 +0800 (CST)
+Received: from [10.67.111.176] (unknown [10.67.111.176])
+	by APP4 (Coremail) with SMTP id gCh0CgBXf1xQRxVpsWU6Ag--.29421S2;
+	Thu, 13 Nov 2025 10:49:54 +0800 (CST)
+Message-ID: <47c20c78-9f7f-4134-8835-3c4f5bff4c30@huaweicloud.com>
+Date: Thu, 13 Nov 2025 10:49:52 +0800
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <CACePvbUvDfZgDx-sXkZ+Oa7DwtKg6b1t=owQ1sRZ_FpFrGxA3g@mail.gmail.com>
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH RFC v2 10/22] cpuset: introduce local_partition_enable()
+To: Waiman Long <llong@redhat.com>, tj@kernel.org, hannes@cmpxchg.org,
+ mkoutny@suse.com
+Cc: cgroups@vger.kernel.org, linux-kernel@vger.kernel.org,
+ lujialin4@huawei.com, chenridong@huawei.com
+References: <20251025064844.495525-1-chenridong@huaweicloud.com>
+ <20251025064844.495525-11-chenridong@huaweicloud.com>
+ <71121d12-0cb2-4ffe-92e5-caf25bf4596e@redhat.com>
+Content-Language: en-US
+From: Chen Ridong <chenridong@huaweicloud.com>
+In-Reply-To: <71121d12-0cb2-4ffe-92e5-caf25bf4596e@redhat.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+X-CM-TRANSID:gCh0CgBXf1xQRxVpsWU6Ag--.29421S2
+X-Coremail-Antispam: 1UD129KBjvJXoW3XFy7ArWfAr4UKF4kCr1rWFg_yoWxKw15pF
+	1kJrWUJrWUJr1rC347JFnrGryrGw4DJ3WDtw1kX3WrXr17Ar10gr1jq3yqgr1UJrWkJr15
+	Xr1UXrsruF13ArUanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDU0xBIdaVrnRJUUUyGb4IE77IF4wAFF20E14v26r4j6ryUM7CY07I20VC2zVCF04k2
+	6cxKx2IYs7xG6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rwA2F7IY1VAKz4
+	vEj48ve4kI8wA2z4x0Y4vE2Ix0cI8IcVAFwI0_Ar0_tr1l84ACjcxK6xIIjxv20xvEc7Cj
+	xVAFwI0_Gr1j6F4UJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x
+	0267AKxVW0oVCq3wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG
+	6I80ewAv7VC0I7IYx2IY67AKxVWUJVWUGwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFV
+	Cjc4AY6r1j6r4UM4x0Y48IcVAKI48JMxkF7I0En4kS14v26r126r1DMxAIw28IcxkI7VAK
+	I48JMxC20s026xCaFVCjc4AY6r1j6r4UMI8I3I0E5I8CrVAFwI0_Jr0_Jr4lx2IqxVCjr7
+	xvwVAFwI0_JrI_JrWlx4CE17CEb7AF67AKxVWUtVW8ZwCIc40Y0x0EwIxGrwCI42IY6xII
+	jxv20xvE14v26r1j6r1xMIIF0xvE2Ix0cI8IcVCY1x0267AKxVWUJVW8JwCI42IY6xAIw2
+	0EY4v20xvaj40_Jr0_JF4lIxAIcVC2z280aVAFwI0_Jr0_Gr1lIxAIcVC2z280aVCY1x02
+	67AKxVW8JVW8JrUvcSsGvfC2KfnxnUUI43ZEXa7IU1veHDUUUUU==
+X-CM-SenderInfo: hfkh02xlgr0w46kxt4xhlfz01xgou0bp/
 
-On Wed, Nov 12, 2025 at 06:20:22AM -0800, Chris Li wrote:
-> First of all, for RFC series, please include RFC in each patch subject as well.
+
+
+On 2025/11/13 5:47, Waiman Long wrote:
+> On 10/25/25 2:48 AM, Chen Ridong wrote:
+>> From: Chen Ridong <chenridong@huawei.com>
+>>
+>> The partition_enable() function introduced in the previous patch can be
+>> reused to enable local partitions.
+>>
+>> The local_partition_enable() function is introduced, which factors out the
+>> local partition enablement logic from update_parent_effective_cpumask().
+>> After passing local partition validation checks, it delegates to
+>> partition_enable() to complete the partition setup.
+>>
+>> This refactoring creates a clear separation between local and remote
+>> partition operations while maintaining code reuse through the shared
+>> partition_enable() infrastructure.
+>>
+>> Signed-off-by: Chen Ridong <chenridong@huawei.com>
+>> ---
+>>   kernel/cgroup/cpuset.c | 94 ++++++++++++++++++++++++++----------------
+>>   1 file changed, 59 insertions(+), 35 deletions(-)
+>>
+>> diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
+>> index 5b57c5370641..b308d9f80eef 100644
+>> --- a/kernel/cgroup/cpuset.c
+>> +++ b/kernel/cgroup/cpuset.c
+>> @@ -1822,6 +1822,61 @@ static void remote_cpus_update(struct cpuset *cs, struct cpumask *xcpus,
+>>       remote_partition_disable(cs, tmp);
+>>   }
+>>   +/**
+>> + * local_partition_enable - Enable local partition for a cpuset
+>> + * @cs: Target cpuset to become a local partition root
+>> + * @new_prs: New partition root state to apply
+>> + * @tmp: Temporary masks for CPU calculations
+>> + *
+>> + * This function enables local partition root capability for a cpuset by
+>> + * validating prerequisites, computing exclusive CPUs, and updating the
+>> + * partition hierarchy.
+>> + *
+>> + * Return: 0 on success, error code on failure
+>> + */
+>> +static int local_partition_enable(struct cpuset *cs,
+>> +                int new_prs, struct tmpmasks *tmp)
+>> +{
+>> +    struct cpuset *parent = parent_cs(cs);
+>> +    enum prs_errcode part_error;
+>> +    bool cpumask_updated = false;
+>> +
+>> +    lockdep_assert_held(&cpuset_mutex);
+>> +    WARN_ON_ONCE(is_remote_partition(cs));    /* For local partition only */
+>> +
+>> +    /*
+>> +     * The parent must be a partition root.
+>> +     * The new cpumask, if present, or the current cpus_allowed must
+>> +     * not be empty.
+>> +     */
+>> +    if (!is_partition_valid(parent)) {
+>> +        return is_partition_invalid(parent)
+>> +            ? PERR_INVPARENT : PERR_NOTPART;
+>> +    }
+>> +
+>> +    /*
+>> +     * Need to call compute_excpus() in case
+>> +     * exclusive_cpus not set. Sibling conflict should only happen
+>> +     * if exclusive_cpus isn't set.
+>> +     */
+>> +    if (compute_excpus(cs, tmp->new_cpus))
+>> +        WARN_ON_ONCE(!cpumask_empty(cs->exclusive_cpus));
+>> +
+>> +    part_error = validate_partition(cs, new_prs, tmp->new_cpus);
+>> +    if (part_error)
+>> +        return part_error;
+>> +
+>> +    cpumask_updated = cpumask_andnot(tmp->addmask, tmp->new_cpus,
+>> +                     parent->effective_cpus);
 > 
-> For the real patch submission, please consider split it into smaller
-> chunks and have incremental milestones.
-> Only introduce the function needed for each milestone, not define them
-> all together then use it in later patches.
+> What is the purpose of this cpumask_andnot() operation? Is it just to create the cpumask_updated
+> boolean? At this point, cpumask_updated should always be true. If not, we have to add validation
+> check to return an error.
 > 
-> See some feedback as follows.
+> Cheers,
+> Longman
 > 
-> This patch is too big, to be continued.
+
+I want to support switching the root partition’s state between "root" and "isolated"—for example, an
+isolated partition switching to root without changing its CPU mask.
+
+Adding a comment to clarify this behavior would be helpful.
+
+>> +    partition_enable(cs, parent, new_prs, tmp->new_cpus);
+>> +
+>> +    if (cpumask_updated) {
+>> +        cpuset_update_tasks_cpumask(parent, tmp->addmask);
+>> +        update_sibling_cpumasks(parent, cs, tmp);
+>> +    }
+>> +    return 0;
+>> +}
+>> +
+>>   /**
+>>    * update_parent_effective_cpumask - update effective_cpus mask of parent cpuset
+>>    * @cs:      The cpuset that requests change in partition root state
+>> @@ -1912,34 +1967,7 @@ static int update_parent_effective_cpumask(struct cpuset *cs, int cmd,
+>>         nocpu = tasks_nocpu_error(parent, cs, xcpus);
+>>   -    if ((cmd == partcmd_enable) || (cmd == partcmd_enablei)) {
+>> -        /*
+>> -         * Need to call compute_excpus() in case
+>> -         * exclusive_cpus not set. Sibling conflict should only happen
+>> -         * if exclusive_cpus isn't set.
+>> -         */
+>> -        xcpus = tmp->delmask;
+>> -        if (compute_excpus(cs, xcpus))
+>> -            WARN_ON_ONCE(!cpumask_empty(cs->exclusive_cpus));
+>> -        new_prs = (cmd == partcmd_enable) ? PRS_ROOT : PRS_ISOLATED;
+>> -
+>> -        part_error = validate_partition(cs, new_prs, xcpus);
+>> -        if (part_error)
+>> -            return part_error;
+>> -        /*
+>> -         * This function will only be called when all the preliminary
+>> -         * checks have passed. At this point, the following condition
+>> -         * should hold.
+>> -         *
+>> -         * (cs->effective_xcpus & cpu_active_mask) ⊆ parent->effective_cpus
+>> -         *
+>> -         * Warn if it is not the case.
+>> -         */
+>> -        cpumask_and(tmp->new_cpus, xcpus, cpu_active_mask);
+>> -        WARN_ON_ONCE(!cpumask_subset(tmp->new_cpus, parent->effective_cpus));
+>> -
+>> -        deleting = true;
+>> -    } else if (cmd == partcmd_disable) {
+>> +    if (cmd == partcmd_disable) {
+>>           /*
+>>            * May need to add cpus back to parent's effective_cpus
+>>            * (and maybe removed from subpartitions_cpus/isolated_cpus)
+>> @@ -3062,14 +3090,10 @@ static int update_prstate(struct cpuset *cs, int new_prs)
+>>            * If parent is valid partition, enable local partiion.
+>>            * Otherwise, enable a remote partition.
+>>            */
+>> -        if (is_partition_valid(parent)) {
+>> -            enum partition_cmd cmd = (new_prs == PRS_ROOT)
+>> -                           ? partcmd_enable : partcmd_enablei;
+>> -
+>> -            err = update_parent_effective_cpumask(cs, cmd, NULL, &tmpmask);
+>> -        } else {
+>> +        if (is_partition_valid(parent))
+>> +            err = local_partition_enable(cs, new_prs, &tmpmask);
+>> +        else
+>>               err = remote_partition_enable(cs, new_prs, &tmpmask);
+>> -        }
+>>       } else if (old_prs && new_prs) {
+>>           /*
+>>            * A change in load balance state only, no change in cpumasks.
 > 
-> Chris
 
-Sure, I will take care of it. will make better on real patch submissions.
+-- 
+Best regards,
+Ridong
 
-> > diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
-> > index 966f7c1a0128..1224029620ed 100644
-> > --- a/include/linux/memcontrol.h
-> > +++ b/include/linux/memcontrol.h
-> > @@ -283,6 +283,10 @@ struct mem_cgroup {
-> >         /* per-memcg mm_struct list */
-> >         struct lru_gen_mm_list mm_list;
-> >  #endif
-> > +#ifdef CONFIG_SWAP_TIER
-> 
-> I think we don't need this CONFIG_SWAP_TIER. Making it part of the
-> default swap is fine.
-> By default the memory.swap.tiers is empty and matches the previous
-> swap behavior. The user doesn't need to do anything if they are not
-> using swap tiers. I see no reason to have a separate config option.
-
-Okay I will change it to default kernel option.
-
-> > +       int tiers_onoff;
-> > +       int tiers_mask;
-> > +#endif
-> >
-> >  #ifdef CONFIG_MEMCG_V1
-> >         /* Legacy consumer-oriented counters */
-> > diff --git a/include/linux/swap.h b/include/linux/swap.h
-> > index 90fa27bb7796..8911eff9d37a 100644
-> > --- a/include/linux/swap.h
-> > +++ b/include/linux/swap.h
-> > @@ -271,6 +271,9 @@ struct swap_info_struct {
-> >         struct percpu_ref users;        /* indicate and keep swap device valid. */
-> >         unsigned long   flags;          /* SWP_USED etc: see above */
-> >         signed short    prio;           /* swap priority of this type */
-> > +#ifdef CONFIG_SWAP_TIER
-> > +       int tier_idx;
-> > +#endif
-> >         struct plist_node list;         /* entry in swap_active_head */
-> >         signed char     type;           /* strange name for an index */
-> >         unsigned int    max;            /* extent of the swap_map */
-> > diff --git a/mm/Kconfig b/mm/Kconfig
-> > index e1fb11f36ede..78173ffe65d6 100644
-> > --- a/mm/Kconfig
-> > +++ b/mm/Kconfig
-> > @@ -163,6 +163,19 @@ endmenu
-> >
-> >  endif
-> >
-> > +config SWAP_TIER
-> Same, I think we can remove the SWAP_TIER, just turn it on when swap is enabled.
-
-Ack
-
-> > diff --git a/mm/swap.h b/mm/swap.h
-> > index d034c13d8dd2..b116282690c8 100644
-> > --- a/mm/swap.h
-> > +++ b/mm/swap.h
-> > @@ -16,6 +16,10 @@ extern int page_cluster;
-> >  #define swap_entry_order(order)        0
-> >  #endif
-> >
-> > +#define DEF_SWAP_PRIO  -1
-> > +
-> > +extern spinlock_t swap_lock;
-> > +extern struct plist_head swap_active_head;
-> >  extern struct swap_info_struct *swap_info[];
-> >
-> >  /*
-> > diff --git a/mm/swap_tier.c b/mm/swap_tier.c
-> > new file mode 100644
-> > index 000000000000..4301e3c766b9
-> > --- /dev/null
-> > +++ b/mm/swap_tier.c
-> > @@ -0,0 +1,602 @@
-> > +// SPDX-License-Identifier: GPL-2.0
-> > +#include <linux/swap.h>
-> > +#include <linux/rcupdate.h>
-> > +#include <linux/memcontrol.h>
-> > +#include <linux/plist.h>
-> > +#include <linux/sysfs.h>
-> > +#include <linux/sort.h>
-> > +
-> > +#include "swap_tier.h"
-> > +
-> > +/*
-> > + * struct swap_tier - Structure representing a swap tier.
-> > + *
-> > + * @name:              Name of the swap_tier.
-> > + * @prio_st:           Starting value of priority.
-> > + * @prio_end:          Ending value of priority.
-> > + * @list:              Linked list of active tiers.
-> > + * @inactive_list:     Linked list of inactive tiers.
-> > + * @kref:              Reference count (held by swap device and memory cgroup).
-> > + */
-> > +static struct swap_tier {
-> > +       char name[MAX_TIERNAME];
-> > +       short prio_st;
-> > +       short prio_end;
-> 
-> I see a lot of complexity of the code come from this priority range.
-> Having both start and end.
-> We should be able to just keep just one of the start and end,  e.g.
-> high end of the priority, then keep all tier in a sorted list or
-> array. Then use the next tier's priority to indicate the other end of
-> the current tier.
-
-After checking my code, I decide to remove st or end.
-
-> > +       union {
-> > +               struct plist_node list;
-> > +               struct list_head inactive_list;
-> > +       };
-> 
-> Is this the list of swapfiles?
-> Why union, how does it indicate which field of the union is valid?
-
-It is swap_tier itself. The 'list' maintains active tiers, and
-'inactive_list' maintains inactive tiers. One tier exists on either
-'list' or 'inactive_list'. The code ensures that a tier must be on one
-of them.
-
-> > +
-> > +/* swap_tiers initialization */
-> > +void swap_tiers_init(void)
-> > +{
-> > +       struct swap_tier *tier;
-> > +       int idx;
-> > +
-> > +       BUILD_BUG_ON(BITS_PER_TYPE(int) < MAX_SWAPTIER * 2);
-> > +
-> > +       for_each_tier(tier, idx) {
-> > +               if (idx < SWAP_TIER_RESERVED_CNT) {
-> > +                       /* for display fisrt */
-> > +                       plist_node_init(&tier->list, -SHRT_MAX);
-> > +                       plist_add(&tier->list, &swap_tier_active_list);
-> > +                       kref_init(&tier->ref);
-> > +               } else {
-> > +                       INIT_LIST_HEAD(&tier->inactive_list);
-> > +                       list_add_tail(&tier->inactive_list, &swap_tier_inactive_list);
-> > +               }
-> > +       }
-> > +
-> > +       strscpy(swap_tiers[SWAP_TIER_DEFAULT].name, DEFAULT_TIER_NAME);
-> 
-> The default tier is not a real tier. It shouldn't show up in the
-> swap_tiers array.
-> The default tier is only a wide cast for memory.swap.tiers to select
-> tiers to turn on/off swap tiers. It is a wide cast pattern, not an
-> actual tier.
-
-Yeah, as I commented in the previous mail, I will change it to a
-logical concept.
-
-> > +void swap_tiers_show_memcg(struct seq_file *m, struct mem_cgroup *memcg)
-> > +{
-> > +       spin_lock(&swap_tier_lock);
-> > +       if (memcg->tiers_onoff)
-> > +               swap_tier_show_mask(m, memcg->tiers_onoff);
-> > +       else
-> > +               seq_puts(m, "\n");
-> > +       swap_tier_show_mask(m, swap_tier_collect_mask(memcg));
-> > +       spin_unlock(&swap_tier_lock);
-> > +}
-> > +
-> > +void swap_tiers_assign(struct swap_info_struct *swp)
-> > +{
-> > +       struct swap_tier *tier;
-> > +
-> > +       spin_lock(&swap_tier_lock);
-> > +       swp->tier_idx = NULL_TIER;
-> > +
-> > +       for_each_active_tier(tier) {
-> > +               if (swap_tier_is_default(tier))
-> > +                       continue;
-> > +               if (swap_tier_prio_in_range(tier, swp->prio)) {
-> > +                       swp->tier_idx = TIER_IDX(tier);
-> > +                       swap_tier_get(tier);
-> > +                       break;
-> > +               }
-> > +       }
-> > +       spin_unlock(&swap_tier_lock);
-> > +}
-> > +
-> > +void swap_tiers_release(struct swap_info_struct *swp)
-> > +{
-> > +       spin_lock(&swap_tier_lock);
-> > +       if (swp->tier_idx != NULL_TIER)
-> > +               swap_tier_put(&swap_tiers[swp->tier_idx]);
-> > +       spin_unlock(&swap_tier_lock);
-> > +}
-> > +
-> > +/* not incremental, but reset. */
-> > +int swap_tiers_get_mask(struct tiers_desc *desc, int nr, struct mem_cgroup *memcg)
-> 
-> Who is using this function? I can't find the user of this function in
-> this patch.
-> Please introduce this function together with the patch that uses it.
-> Don't introduce a function without a user.
-
-swapoff calls swap_tiers_release. I must improve the readability of my
-RFC patch series.
-
-> 
-> > +{
-> > +       struct swap_tier *tier;
-> > +       int ret = 0;
-> > +       int tiers_mask = 0;
-> > +       int tiers_onoff = 0;
-> > +       int cnt = 0;
-> > +
-> > +       for (int i = 0; i < nr; i++) {
-> > +               for (int j = i+1; j < nr; j++) {
-> > +                       if (!strcmp(desc[i].name, desc[j].name))
-> 
-> These two nested for loops look suspicious. Again because I don't see
-
-For assuring, unique tier name input.
-I will think of making simple.
-
-> the caller, I can't reason what it is doing here.
-
-When a swap tier is designated by the memcg sys interface, it is
-called. I will introduce this logic together with the caller
-implementation.
-
-Best Regards,
-Youngjun Park
