@@ -1,28 +1,28 @@
-Received: from dggsgout12.his.huawei.com (dggsgout12.his.huawei.com [45.249.212.56])
+Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 37E86241695;
-	Mon, 17 Nov 2025 03:01:46 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.56
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 88CAE270569;
+	Mon, 17 Nov 2025 03:01:49 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.51
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1763348509; cv=none; b=CG2rmAoDzWfhDnSBHuxuWa5HRSze8SyOvheipjtwG7GebbhuFpJo/A45/FRm/itq3K8VlZwFx6Ys4RKlT15t2kr2Ba+hHDKQgTjSoeFFk1b+NCKONk5zeXwHqBWlz4ytFa6urfex/wUTIkOXm2g1XWGxBuW0q1UdsmP3EnI/ymA=
+	t=1763348511; cv=none; b=H0IXlrq9wsfdQzVU/79Q3NwqF+zBy4SXxEpJLHtkirjOsm/mxAbhNTfrdMqJSb4pLZ0LDTtP6XE6IzjQlpuf+o8dLGG1lJTJHqHItujSOyu9zWeYanXf/T6nojhitC/Cb7FM0+jIWYeshfgvwfB41s6VX1AwejxVjRlGJyo6viU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1763348509; c=relaxed/simple;
-	bh=4lB97ZpdlsEoc5IRIjC3KTpVgYeFKUaNHSdlOk91siI=;
+	s=arc-20240116; t=1763348511; c=relaxed/simple;
+	bh=+MTjgW3oiXqbHxXyX2uSjCuWJtWPdG2cCHx8FLdGw3k=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=Z5nsDqwQ/mTHnav2lpj00dg9R32iTNw2d76wLk8Eq/3J4hChp2gmOsCWREShRin5RQ9V3ftKg3CJ51bH/eRPYIjKGBIs+houcd6IiBQn3ZFXDPq1OJ0hz68cm8c6G1+m2QODa2PWlUb7MXbjPK2kQP2O4rnlN3VZjUiwTYtLsxc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.56
+	 MIME-Version; b=RxPgR2RtoK1Izupi/otOfu+IFD4kvy2tm/5QULwkH3Pa1wzyYXYeEQbH/AxgJRlxVPhcQ81R+GRikNFwtA/vr2sXwmga5WgahzrGQ00ozf8t0DY+YUeszsQiNbLPFOaWExHTZCljHafW0IjtAql+sHIU1HullmHWjGzBYcQzC+I=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.51
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
-Received: from mail.maildlp.com (unknown [172.19.93.142])
-	by dggsgout12.his.huawei.com (SkyGuard) with ESMTPS id 4d8svY0FjKzKHMR8;
-	Mon, 17 Nov 2025 11:01:13 +0800 (CST)
+Received: from mail.maildlp.com (unknown [172.19.163.235])
+	by dggsgout11.his.huawei.com (SkyGuard) with ESMTPS id 4d8svL1R33zYQtxV;
+	Mon, 17 Nov 2025 11:01:02 +0800 (CST)
 Received: from mail02.huawei.com (unknown [10.116.40.75])
-	by mail.maildlp.com (Postfix) with ESMTP id 8949D1A07C0;
-	Mon, 17 Nov 2025 11:01:37 +0800 (CST)
+	by mail.maildlp.com (Postfix) with ESMTP id 534041A13FA;
+	Mon, 17 Nov 2025 11:01:38 +0800 (CST)
 Received: from hulk-vt.huawei.com (unknown [10.67.174.121])
-	by APP2 (Coremail) with SMTP id Syh0CgA3lHr5jxpp+kwRBA--.27716S6;
-	Mon, 17 Nov 2025 11:01:37 +0800 (CST)
+	by APP2 (Coremail) with SMTP id Syh0CgA3lHr5jxpp+kwRBA--.27716S22;
+	Mon, 17 Nov 2025 11:01:38 +0800 (CST)
 From: Chen Ridong <chenridong@huaweicloud.com>
 To: longman@redhat.com,
 	tj@kernel.org,
@@ -32,9 +32,9 @@ Cc: cgroups@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
 	lujialin4@huawei.com,
 	chenridong@huawei.com
-Subject: [PATCH -next 04/21] cpuset: introduce partition_disable()
-Date: Mon, 17 Nov 2025 02:46:10 +0000
-Message-Id: <20251117024627.1128037-5-chenridong@huaweicloud.com>
+Subject: [PATCH -next 20/21] cpuset: remove prs_err clear when notify_partition_change
+Date: Mon, 17 Nov 2025 02:46:26 +0000
+Message-Id: <20251117024627.1128037-21-chenridong@huaweicloud.com>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20251117024627.1128037-1-chenridong@huaweicloud.com>
 References: <20251117024627.1128037-1-chenridong@huaweicloud.com>
@@ -45,92 +45,50 @@ List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:Syh0CgA3lHr5jxpp+kwRBA--.27716S6
-X-Coremail-Antispam: 1UD129KBjvJXoW7CryUtryUuF13Zr1kJF4fXwb_yoW8Kw43pF
-	1kCr43G3yYgr13u3sxJan7uw4rKa1kXFy7tw17Xw1rJFy7Aa4qva4vk39Iv3WUXrWDW345
-	ZanIqr4xWF17A3JanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDU0xBIdaVrnRJUUUBjb4IE77IF4wAFF20E14v26rWj6s0DM7CY07I20VC2zVCF04k2
-	6cxKx2IYs7xG6rWj6s0DM7CIcVAFz4kK6r1j6r18M28IrcIa0xkI8VA2jI8067AKxVWUAV
-	Cq3wA2048vs2IY020Ec7CjxVAFwI0_Xr0E3s1l8cAvFVAK0II2c7xJM28CjxkF64kEwVA0
-	rcxSw2x7M28EF7xvwVC0I7IYx2IY67AKxVWDJVCq3wA2z4x0Y4vE2Ix0cI8IcVCY1x0267
-	AKxVWxJr0_GcWl84ACjcxK6I8E87Iv67AKxVW0oVCq3wA2z4x0Y4vEx4A2jsIEc7CjxVAF
-	wI0_GcCE3s1le2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xvF2IEw4CE5I8CrVC2j2
-	WlYx0E2Ix0cI8IcVAFwI0_Jr0_Jr4lYx0Ex4A2jsIE14v26r1j6r4UMcvjeVCFs4IE7xkE
-	bVWUJVW8JwACjcxG0xvY0x0EwIxGrwCY1x0262kKe7AKxVWUAVWUtwCF04k20xvY0x0EwI
-	xGrwCFx2IqxVCFs4IE7xkEbVWUJVW8JwC20s026c02F40E14v26r1j6r18MI8I3I0E7480
-	Y4vE14v26r106r1rMI8E67AF67kF1VAFwI0_Jw0_GFylIxkGc2Ij64vIr41lIxAIcVC0I7
-	IYx2IY67AKxVWUJVWUCwCI42IY6xIIjxv20xvEc7CjxVAFwI0_Gr0_Cr1lIxAIcVCF04k2
-	6cxKx2IYs7xG6r1j6r1xMIIF0xvEx4A2jsIE14v26r1j6r4UMIIF0xvEx4A2jsIEc7CjxV
-	AFwI0_Gr0_Gr1UYxBIdaVFxhVjvjDU0xZFpf9x07UM6wAUUUUU=
+X-CM-TRANSID:Syh0CgA3lHr5jxpp+kwRBA--.27716S22
+X-Coremail-Antispam: 1UD129KBjvdXoWrtFyfCw48uryktw4fWry3Jwb_yoW3uFc_Z3
+	y0gr1vqryrXryIg3Z0ka1SqrWvya15ArnYyas0qrW5AF129wn3WwnFgF98trnxZa1xXrnx
+	AF93GFZI9FnFgjkaLaAFLSUrUUUUjb8apTn2vfkv8UJUUUU8Yxn0WfASr-VFAUDa7-sFnT
+	9fnUUIcSsGvfJTRUUUbfAYFVCjjxCrM7AC8VAFwI0_Wr0E3s1l1xkIjI8I6I8E6xAIw20E
+	Y4v20xvaj40_Wr0E3s1l1IIY67AEw4v_Jr0_Jr4l82xGYIkIc2x26280x7IE14v26r126s
+	0DM28IrcIa0xkI8VCY1x0267AKxVW5JVCq3wA2ocxC64kIII0Yj41l84x0c7CEw4AK67xG
+	Y2AK021l84ACjcxK6xIIjxv20xvE14v26w1j6s0DM28EF7xvwVC0I7IYx2IY6xkF7I0E14
+	v26F4UJVW0owA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x0267AK
+	xVW0oVCq3wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG6I80ew
+	Av7VC0I7IYx2IY67AKxVWUJVWUGwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFVCjc4AY
+	6r1j6r4UM4x0Y48IcxkI7VAKI48JMxkF7I0En4kS14v26r126r1DMxAIw28IcxkI7VAKI4
+	8JMxC20s026xCaFVCjc4AY6r1j6r4UMI8I3I0E5I8CrVAFwI0_Jr0_Jr4lx2IqxVCjr7xv
+	wVAFwI0_JrI_JrWlx4CE17CEb7AF67AKxVWUtVW8ZwCIc40Y0x0EwIxGrwCI42IY6xIIjx
+	v20xvE14v26ryj6F1UMIIF0xvE2Ix0cI8IcVCY1x0267AKxVW8Jr0_Cr1UMIIF0xvE42xK
+	8VAvwI8IcIk0rVWUJVWUCwCI42IY6I8E87Iv67AKxVW8JVWxJwCI42IY6I8E87Iv6xkF7I
+	0E14v26r4UJVWxJrUvcSsGvfC2KfnxnUUI43ZEXa7IU1l_M7UUUUU==
 X-CM-SenderInfo: hfkh02xlgr0w46kxt4xhlfz01xgou0bp/
 
 From: Chen Ridong <chenridong@huawei.com>
 
-Add partition_disable() to consolidate updates to key cpuset structures
-during partition disablement, including:
-1. remote_partition
-2. effective_xcpus
-3. partition_root_state
-4. prs_err
-
-Key operations performed:
-1. Cleaning up remote_partition
-2. Removing exclusive CPUs via partition_xcpus_del()
-3. Recomputing effective exclusive CPUs mask
-4. Updating partition state and error status
-5. Triggering required scheduler domain rebuilds
-6. Clear exclusive flag.
-7. Sends partition change notifications
+The prs_err should be properly set when partition state is set, it
+does't have to reset in the notify_partition_change, just remove it.
 
 Signed-off-by: Chen Ridong <chenridong@huawei.com>
 ---
- kernel/cgroup/cpuset.c | 33 +++++++++++++++++++++++++++++++++
- 1 file changed, 33 insertions(+)
+ kernel/cgroup/cpuset.c | 4 ----
+ 1 file changed, 4 deletions(-)
 
 diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
-index b917f2c55767..a85f9619c982 100644
+index 333bd6476370..b795af41eff8 100644
 --- a/kernel/cgroup/cpuset.c
 +++ b/kernel/cgroup/cpuset.c
-@@ -1686,6 +1686,39 @@ static void partition_enable(struct cpuset *cs, struct cpuset *parent,
- 	notify_partition_change(cs, old_prs);
+@@ -182,10 +182,6 @@ static inline void notify_partition_change(struct cpuset *cs, int old_prs)
+ 	if (old_prs == cs->partition_root_state)
+ 		return;
+ 	cgroup_file_notify(&cs->partition_file);
+-
+-	/* Reset prs_err if not invalid */
+-	if (is_partition_valid(cs))
+-		WRITE_ONCE(cs->prs_err, PERR_NONE);
  }
  
-+/**
-+ * partition_disable - Disable partition root state for a cpuset
-+ * @cs: The cpuset to disable partition for
-+ * @parent: Parent cpuset of @cs, NULL for remote parent
-+ * @new_prs: New partition root state (should be non-positive)
-+ * @prs_err: Error code to set if disabling due to validation failure
-+ */
-+static void partition_disable(struct cpuset *cs, struct cpuset *parent,
-+			      int new_prs, enum prs_errcode prs_err)
-+{
-+	int old_prs;
-+
-+	lockdep_assert_held(&cpuset_mutex);
-+	WARN_ON_ONCE(new_prs > 0);
-+	WARN_ON_ONCE(!cpuset_v2());
-+
-+	old_prs = cs->partition_root_state;
-+	spin_lock_irq(&callback_lock);
-+	cs->remote_partition = false;
-+	/* disable a partition should only delete exclusive cpus */
-+	partition_xcpus_del(cs->partition_root_state,
-+			    parent, cs->effective_xcpus);
-+	/* effective_xcpus may need to be changed */
-+	compute_excpus(cs, cs->effective_xcpus);
-+	partition_state_update(cs, new_prs, prs_err);
-+	spin_unlock_irq(&callback_lock);
-+	update_isolation_cpumasks();
-+	cpuset_force_rebuild();
-+	/* Clear exclusive flag; no errors are expected */
-+	update_partition_exclusive_flag(cs, new_prs);
-+	notify_partition_change(cs, old_prs);
-+}
-+
  /*
-  * remote_partition_enable - Enable current cpuset as a remote partition root
-  * @cs: the cpuset to update
 -- 
 2.34.1
 
