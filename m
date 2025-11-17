@@ -1,27 +1,27 @@
 Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CE1AE179A3;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CE2D91EA7F4;
 	Mon, 17 Nov 2025 03:01:45 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.51
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1763348507; cv=none; b=d6JUtBC5L56+ZxPfYHMug121Nli148pt8B5PtxExIrIn8QkRBJZXrPBK49FkYcxa4mi5WUubMh0dqMdBAaNvzZ6HjjyKfjrZPQmm0AoJnBsWNKZfjQCb5/5xfJ3eO5Xlhhm9bfF/ptrd4P/hRKvzTklu3ywLeLP5bKtJE5D34vg=
+	t=1763348507; cv=none; b=P+SeE4TyozUNIyzc4nhb1zBQWH1j6YzUndxMkfVMgP9C6hF310nmp7ZKkLra9zNLhFdA7TcZ9GuqsW6IInKCMWkZXYpYNoXneQVVStIq4nW0a7Xqjl3UEq2XbcDDloF+Xlavc+rsjzXknbKoQPXtXwYaTi91Z4KonytY/h1iFvs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1763348507; c=relaxed/simple;
-	bh=BEoipafK8RLDszVwEQpnD8k3dI1W74qAy62LePVOd5s=;
+	bh=RrDtb6Bbquayle/Po4rYuFiZEQjEXJbk+L3eNeuYwlA=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=XEnNdWuCEe+WYuu/i/8gfP6Ae+CK9cWoJIo/diXs5gGDFqZhCUn3CGXRb2c7WC/YFYXV05fiaxCOeMM1G8LG8opwneftqckhnHXFFuoH24jJaQzD9mRLW1e5wS0KjdY4nZdFFnvvMhG0OU7fJRA2a8+BYTekmXW6ehwRLv1pYBQ=
+	 MIME-Version; b=Y+BtvfIUd75js8cEAYhdWTHm+NS1U/gkJ/b/Z3K2afz+/rkM1p7xvsLozWVNmT919bXVoL7RZM37uvMI3Zvhy2y9uo//Esl0X5tWqKjv2AUA6tC7lVUFb/GKj/AqL7UNAfQocdiFU554ifteVwngoA6PEtsoQxcy2Gjltt0pONA=
 ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.51
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
-Received: from mail.maildlp.com (unknown [172.19.93.142])
-	by dggsgout11.his.huawei.com (SkyGuard) with ESMTPS id 4d8svK3sF6zYQtx4;
+Received: from mail.maildlp.com (unknown [172.19.163.216])
+	by dggsgout11.his.huawei.com (SkyGuard) with ESMTPS id 4d8svK6LdVzYQtx5;
 	Mon, 17 Nov 2025 11:01:01 +0800 (CST)
 Received: from mail02.huawei.com (unknown [10.116.40.75])
-	by mail.maildlp.com (Postfix) with ESMTP id A996A1A07BD;
-	Mon, 17 Nov 2025 11:01:37 +0800 (CST)
+	by mail.maildlp.com (Postfix) with ESMTP id 0D2E11A1F3E;
+	Mon, 17 Nov 2025 11:01:38 +0800 (CST)
 Received: from hulk-vt.huawei.com (unknown [10.67.174.121])
-	by APP2 (Coremail) with SMTP id Syh0CgA3lHr5jxpp+kwRBA--.27716S9;
+	by APP2 (Coremail) with SMTP id Syh0CgA3lHr5jxpp+kwRBA--.27716S16;
 	Mon, 17 Nov 2025 11:01:37 +0800 (CST)
 From: Chen Ridong <chenridong@huaweicloud.com>
 To: longman@redhat.com,
@@ -32,9 +32,9 @@ Cc: cgroups@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
 	lujialin4@huawei.com,
 	chenridong@huawei.com
-Subject: [PATCH -next 07/21] cpuset: use partition_disable() for remote partition disablement
-Date: Mon, 17 Nov 2025 02:46:13 +0000
-Message-Id: <20251117024627.1128037-8-chenridong@huaweicloud.com>
+Subject: [PATCH -next 14/21] cpuset: remove redundant partition field updates
+Date: Mon, 17 Nov 2025 02:46:20 +0000
+Message-Id: <20251117024627.1128037-15-chenridong@huaweicloud.com>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20251117024627.1128037-1-chenridong@huaweicloud.com>
 References: <20251117024627.1128037-1-chenridong@huaweicloud.com>
@@ -45,11 +45,11 @@ List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:Syh0CgA3lHr5jxpp+kwRBA--.27716S9
-X-Coremail-Antispam: 1UD129KBjvJXoW7WrWxCFyxJryDtFyfKr43trb_yoW8WFyDpF
-	13Cr47GFy5X3W5ua9rJFsF9w1rKanrXa9rt3srWw1rXF17Aa4q9a42k39Yq34jgFWDW345
-	Z3Z09r48XF12ywUanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDU0xBIdaVrnRJUUUB0b4IE77IF4wAFF20E14v26rWj6s0DM7CY07I20VC2zVCF04k2
+X-CM-TRANSID:Syh0CgA3lHr5jxpp+kwRBA--.27716S16
+X-Coremail-Antispam: 1UD129KBjvJXoW7Zw18JF47CFy3KF1rCw4xCrg_yoW8CF1rpF
+	yDurW7trWYgryrC39rGan2grs8KanFqayDtFnrJw1ruFy2k3Wq9ryvq390vF1jq3srCr4U
+	Z3Z0vrWSv3ZrCrDanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDU0xBIdaVrnRJUUUBFb4IE77IF4wAFF20E14v26rWj6s0DM7CY07I20VC2zVCF04k2
 	6cxKx2IYs7xG6rWj6s0DM7CIcVAFz4kK6r1j6r18M28IrcIa0xkI8VA2jI8067AKxVWUAV
 	Cq3wA2048vs2IY020Ec7CjxVAFwI0_Xr0E3s1l8cAvFVAK0II2c7xJM28CjxkF64kEwVA0
 	rcxSw2x7M28EF7xvwVC0I7IYx2IY67AKxVWDJVCq3wA2z4x0Y4vE2Ix0cI8IcVCY1x0267
@@ -59,54 +59,53 @@ X-Coremail-Antispam: 1UD129KBjvJXoW7WrWxCFyxJryDtFyfKr43trb_yoW8WFyDpF
 	bVWUJVW8JwACjcxG0xvY0x0EwIxGrwCY1x0262kKe7AKxVWUAVWUtwCF04k20xvY0x0EwI
 	xGrwCFx2IqxVCFs4IE7xkEbVWUJVW8JwC20s026c02F40E14v26r1j6r18MI8I3I0E7480
 	Y4vE14v26r106r1rMI8E67AF67kF1VAFwI0_Jw0_GFylIxkGc2Ij64vIr41lIxAIcVC0I7
-	IYx2IY67AKxVWUCVW8JwCI42IY6xIIjxv20xvEc7CjxVAFwI0_Cr0_Gr1UMIIF0xvE42xK
-	8VAvwI8IcIk0rVWUJVWUCwCI42IY6I8E87Iv67AKxVWUJVW8JwCI42IY6I8E87Iv6xkF7I
-	0E14v26r4j6r4UJbIYCTnIWIevJa73UjIFyTuYvjxUwuWlUUUUU
+	IYx2IY67AKxVW8JVW5JwCI42IY6xIIjxv20xvEc7CjxVAFwI0_Gr1j6F4UJwCI42IY6xAI
+	w20EY4v20xvaj40_Jr0_JF4lIxAIcVC2z280aVAFwI0_Gr0_Cr1lIxAIcVC2z280aVCY1x
+	0267AKxVW8Jr0_Cr1UYxBIdaVFxhVjvjDU0xZFpf9x07UM6wAUUUUU=
 X-CM-SenderInfo: hfkh02xlgr0w46kxt4xhlfz01xgou0bp/
 
 From: Chen Ridong <chenridong@huawei.com>
 
-Now that the partition_disable() helper is available, replace the
-existing implementation for remote partition disablement with this
-centralized function to unify the disablement logic.
+With the previous patch series, partition-related fields are now properly
+managed during partition enable, disable, and update operations. There
+should be no need to set these fields outside of these dedicated partition
+operations.
+
+This patch removes the redundant partition field updates from the cpumask
+setting code path. However, one exception remains: when setting
+cpuset.cpus.exclusive on a non-partition cpuset, update_exclusive_cpumask()
+must still set effective_xcpus directly. This is necessary because no
+partition operation is invoked in this scenario, yet effective_xcpus needs
+to be properly initialized.
 
 Signed-off-by: Chen Ridong <chenridong@huawei.com>
 ---
- kernel/cgroup/cpuset.c | 18 ++++--------------
- 1 file changed, 4 insertions(+), 14 deletions(-)
+ kernel/cgroup/cpuset.c | 5 -----
+ 1 file changed, 5 deletions(-)
 
 diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
-index 31c7b967c81d..1482c501a49c 100644
+index 65430e12b58f..43d5ea7d84a4 100644
 --- a/kernel/cgroup/cpuset.c
 +++ b/kernel/cgroup/cpuset.c
-@@ -1823,23 +1823,13 @@ static int remote_partition_enable(struct cpuset *cs, int new_prs,
-  */
- static void remote_partition_disable(struct cpuset *cs, struct tmpmasks *tmp)
- {
-+	int new_prs;
-+
- 	WARN_ON_ONCE(!is_remote_partition(cs));
- 	WARN_ON_ONCE(!cpumask_subset(cs->effective_xcpus, subpartitions_cpus));
+@@ -2551,9 +2551,6 @@ static int update_cpumask(struct cpuset *cs, struct cpuset *trialcs,
  
--	spin_lock_irq(&callback_lock);
--	cs->remote_partition = false;
--	partition_xcpus_del(cs->partition_root_state, NULL, cs->effective_xcpus);
--	if (cs->prs_err)
--		cs->partition_root_state = -cs->partition_root_state;
--	else
--		cs->partition_root_state = PRS_MEMBER;
--
--	/* effective_xcpus may need to be changed */
--	compute_excpus(cs, cs->effective_xcpus);
--	reset_partition_data(cs);
--	spin_unlock_irq(&callback_lock);
--	update_isolation_cpumasks();
--	cpuset_force_rebuild();
-+	new_prs = cs->prs_err ? -cs->partition_root_state : PRS_MEMBER;
-+	partition_disable(cs, NULL, new_prs, cs->prs_err);
+ 	spin_lock_irq(&callback_lock);
+ 	cpumask_copy(cs->cpus_allowed, trialcs->cpus_allowed);
+-	cpumask_copy(cs->effective_xcpus, trialcs->effective_xcpus);
+-	if ((old_prs > 0) && !is_partition_valid(cs))
+-		reset_partition_data(cs);
+ 	spin_unlock_irq(&callback_lock);
+ 
+ 	/* effective_cpus/effective_xcpus will be updated here */
+@@ -2617,8 +2614,6 @@ static int update_exclusive_cpumask(struct cpuset *cs, struct cpuset *trialcs,
+ 	spin_lock_irq(&callback_lock);
+ 	cpumask_copy(cs->exclusive_cpus, trialcs->exclusive_cpus);
+ 	cpumask_copy(cs->effective_xcpus, trialcs->effective_xcpus);
+-	if ((old_prs > 0) && !is_partition_valid(cs))
+-		reset_partition_data(cs);
+ 	spin_unlock_irq(&callback_lock);
  
  	/*
- 	 * Propagate changes in top_cpuset's effective_cpus down the hierarchy.
 -- 
 2.34.1
 
