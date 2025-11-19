@@ -1,30 +1,32 @@
-Received: from out-189.mta1.migadu.com (out-189.mta1.migadu.com [95.215.58.189])
+Received: from out-188.mta1.migadu.com (out-188.mta1.migadu.com [95.215.58.188])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 31F2A2475CF
-	for <cgroups@vger.kernel.org>; Wed, 19 Nov 2025 01:35:02 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=95.215.58.189
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4AE3C255E43
+	for <cgroups@vger.kernel.org>; Wed, 19 Nov 2025 01:35:08 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=95.215.58.188
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1763516104; cv=none; b=OfweJDHHLplVTXGkC6Qu15Fdg94uLZDhGuJag35n/xJ1oVY4MU6MjlkIvKiOk/cViIsI8ArHwUxymnAS2kM+bOn5MYlt2AwdWRkXHWYjt55zmuyg5PMoc4cfKuoHjKhDTM/kERE0kaCrYV+k477MC7L4R9pLH0ZjW+3kPWrR7cg=
+	t=1763516110; cv=none; b=PYolgBHY4Api0s9cfr/Mc8W/YL49nbYx+EHtK3WA3NgVOexKzwIES7W4V0LMkhBUqms1m5zvXfnA5S3qcLkfgRnf0As7WGGKpOYb7xPdFt1gzb76epGxpkROoTvF2t5xwqueYXnX0hY328eNcvQtnRS4V76w+Lst2rF4LYyUOao=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1763516104; c=relaxed/simple;
-	bh=CiQKBJl4/m9pEbLGKBsYnyhtXzDO2PTe408naUKLZXs=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=kKeFZlBHJ28+Ws152o4oUgOKf99q6LjIzbJKSyrjZmqY+gxz0nreTh6XsHX2Wj/w//sLXDbv9edZ3Yagw1AAvbVeC/+N26+biTSfl4oQLuKS6C4oZTQ6mPoq74oR5dJc+Do1PyidwyBQORujS+M1t0aRLsM2hsGLxU7pVdxlKW4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=wcb6zxRs; arc=none smtp.client-ip=95.215.58.189
+	s=arc-20240116; t=1763516110; c=relaxed/simple;
+	bh=maViTfMIiS5GM7CVEAxKybSytdqSGW1ndoj9TRtUw1M=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=WRvGYjIHuCva0wyvROYs7q0ahLORaowWA0SP9ZxMaMX1EIYvOOxYt/FrYsYQXaqdlOqHE/Ru6v7pO+YAc+9XEXjaDfru89qscs11nsDaJaO7ySiPkwUwdSD1f1ybsD6gMCPEUW98TKWBJSMtKQie0gBJBreKhf269cL8zi5gLdE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=rJKJXVPq; arc=none smtp.client-ip=95.215.58.188
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="wcb6zxRs"
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="rJKJXVPq"
 X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
-	t=1763516090;
+	t=1763516106;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:
-	 content-transfer-encoding:content-transfer-encoding;
-	bh=e2EGDBgBbdB4DgQO2TbLGho5UNAFXwK5TbGKkRJZcyU=;
-	b=wcb6zxRs7rat5F88XagPhY4x0Gw6BsMRBqudFzDvtr+kZdAQ0HdzJZFIb28U+8FqJ1g6fk
-	PCpOQ+BrIEmrHEjQWL0JuK73P4sDppwutql3YXl4jyMJ4V/mBADmnshAVBNvNgRBojSew9
-	Tt1POrat12cH3TSDmK+a4CnxIQdAPgU=
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=APzUbJ1xJcLTN15RzI5Lt/FDUDhgt5Fbd2bTLMIMyeQ=;
+	b=rJKJXVPqyQq5HjlvFiXrkhuluS7KlJTVwnsZHRW4cmL0e5TInZS9YpTGeQLiVFuBFboxuL
+	ynaA07biE0TPd906lyYl19JS1eZgGAw6GuDGTYR+8SWz6fWPft/9epr8XY8KxPK63+d2Wu
+	LDoZxauP/e5JFtJEM9a4z7HJVLmupOc=
 From: Hui Zhu <hui.zhu@linux.dev>
 To: Andrew Morton <akpm@linux-foundation.org>,
 	Johannes Weiner <hannes@cmpxchg.org>,
@@ -62,10 +64,13 @@ To: Andrew Morton <akpm@linux-foundation.org>,
 	cgroups@vger.kernel.org,
 	bpf@vger.kernel.org,
 	linux-kselftest@vger.kernel.org
-Cc: Hui Zhu <zhuhui@kylinos.cn>
-Subject: [RFC PATCH 0/3] Memory Controller eBPF support
-Date: Wed, 19 Nov 2025 09:34:05 +0800
-Message-ID: <cover.1763457705.git.zhuhui@kylinos.cn>
+Cc: Hui Zhu <zhuhui@kylinos.cn>,
+	Geliang Tang <geliang@kernel.org>
+Subject: [RFC PATCH 2/3] selftests/bpf: add memcg eBPF struct ops test
+Date: Wed, 19 Nov 2025 09:34:07 +0800
+Message-ID: <0017945a4297a296c87a65d62cc4bd9948f6c20c.1763457705.git.zhuhui@kylinos.cn>
+In-Reply-To: <cover.1763457705.git.zhuhui@kylinos.cn>
+References: <cover.1763457705.git.zhuhui@kylinos.cn>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
@@ -77,139 +82,207 @@ X-Migadu-Flow: FLOW_OUT
 
 From: Hui Zhu <zhuhui@kylinos.cn>
 
-This series proposes adding eBPF support to the Linux memory
-controller, enabling dynamic and extensible memory management
-policies at runtime.
+Add comprehensive selftest suite for memory controller eBPF
+support. The tests validate the core functionality of the
+memcg_ops struct ops implementation.
 
-Background
+Test coverage includes:
 
-The memory controller (memcg) currently provides fixed memory
-accounting and reclamation policies through static kernel code.
-This limits flexibility for specialized workloads and use cases
-that require custom memory management strategies.
+1. test_memcg_ops_load: Validates that the eBPF object file
+   can be successfully loaded by libbpf.
 
-By enabling eBPF programs to hook into key memory control
-operations, administrators can implement custom policies without
-recompiling the kernel, while maintaining the safety guarantees
-provided by the BPF verifier.
+2. test_memcg_ops_attach: Tests attaching the memcg_ops struct
+   ops to the kernel, verifying the basic attachment mechanism
+   works correctly.
 
-Use Cases
+3. test_memcg_ops_double_attach: Validates that only one
+   memcg_ops instance can be attached at a time. Attempts to
+   attach a second program should fail, ensuring the
+   single-handler design constraint is enforced.
 
-1. Custom memory reclamation strategies for specialized workloads
-2. Dynamic memory pressure monitoring and telemetry
-3. Memory accounting adjustments based on runtime conditions
-4. Integration with container orchestration systems for
-   intelligent resource management
-5. Research and experimentation with novel memory management
-   algorithms
+The test suite includes:
 
-Design Overview
+- prog_tests/memcg_ops.c: Test entry point with individual
+  test functions using standard BPF test framework helpers
+  like ASSERT_OK_PTR and ASSERT_ERR_PTR
+- progs/memcg_ops.bpf.c: Simple eBPF program implementing
+  the struct ops interface
 
-This series introduces:
+Uses standard test_progs framework macros for consistent error
+reporting and handling. All tests properly clean up resources
+in error paths.
 
-1. A new BPF struct ops type (`memcg_ops`) that allows eBPF
-   programs to implement custom behavior for memory charging
-   operations.
-
-2. A hook point in the `try_charge_memcg()` fast path that
-   invokes registered eBPF programs to determine if custom
-   memory management should be applied.
-
-3. The eBPF handler can inspect memory cgroup context and
-   optionally modify certain parameters (e.g., `nr_pages` for
-   reclamation size).
-
-4. A reference counting mechanism using `percpu_ref` to safely
-   manage the lifecycle of registered eBPF struct ops instances.
-
-5. Configuration via `CONFIG_MEMCG_BPF` to allow disabling this
-   feature at build time.
-
-Implementation Details
-
-- Uses BPF struct ops for a cleaner integration model
-- Leverages static branch keys for minimal overhead when feature
-  is unused
-- RCU synchronization ensures safe replacement of handlers
-- Sample eBPF program demonstrates monitoring capabilities
-- Comprehensive selftest suite validates core functionality
-
-Performance Considerations
-
-- Zero overhead when feature is disabled or no eBPF program is
-  loaded (static branch is disabled)
-- Minimal overhead when enabled: one indirect function call per
-  charge attempt
-- eBPF programs run under the restrictions of the BPF verifier
-
-Patch Overview
-
-PATCH 1/3: Core kernel implementation
-  - Adds eBPF struct ops support to memcg
-  - Introduces CONFIG_MEMCG_BPF option
-  - Implements safe registration/unregistration mechanism
-
-PATCH 2/3: Selftest suite
-  - prog_tests/memcg_ops.c: Test entry points
-  - progs/memcg_ops.bpf.c: Test eBPF program
-  - Validates load, attach, and single-handler constraints
-
-PATCH 3/3: Sample userspace program
-  - samples/bpf/memcg_printk.bpf.c: Monitoring eBPF program
-  - samples/bpf/memcg_printk.c: Userspace loader
-  - Demonstrates real-world usage and debugging capabilities
-
-Open Questions & Discussion Points
-
-1. Should the eBPF handler have access to additional memory
-   cgroup state? Current design exposes minimal context to
-   reduce attack surface.
-
-2. Are there other memory control operations that would benefit
-   from eBPF extensibility (e.g., uncharge, reclaim)?
-
-3. Should there be permission checks or restrictions on who can
-   load memcg eBPF programs? Currently inherits BPF's
-   CAP_PERFMON/CAP_SYS_ADMIN requirements.
-
-4. How should we handle multiple eBPF programs trying to
-   register? Current implementation allows only one active
-   handler.
-
-5. Is the current exposed context in `try_charge_memcg` struct
-   sufficient, or should additional fields be added?
-
-Testing
-
-The selftests provide comprehensive coverage of the core
-functionality. The sample program can be used for manual
-testing and as a reference for implementing additional
-monitoring tools.
-
-Hui Zhu (3):
-  memcg: add eBPF struct ops support for memory charging
-  selftests/bpf: add memcg eBPF struct ops test
-  samples/bpf: add example memcg eBPF program
-
- MAINTAINERS                                   |   5 +
- init/Kconfig                                  |  38 ++++
- mm/Makefile                                   |   1 +
- mm/memcontrol.c                               |  26 ++-
- mm/memcontrol_bpf.c                           | 200 ++++++++++++++++++
- mm/memcontrol_bpf.h                           | 103 +++++++++
- samples/bpf/Makefile                          |   2 +
- samples/bpf/memcg_printk.bpf.c                |  30 +++
- samples/bpf/memcg_printk.c                    |  82 +++++++
- .../selftests/bpf/prog_tests/memcg_ops.c      | 117 ++++++++++
- tools/testing/selftests/bpf/progs/memcg_ops.c |  20 ++
- 11 files changed, 617 insertions(+), 7 deletions(-)
- create mode 100644 mm/memcontrol_bpf.c
- create mode 100644 mm/memcontrol_bpf.h
- create mode 100644 samples/bpf/memcg_printk.bpf.c
- create mode 100644 samples/bpf/memcg_printk.c
+Signed-off-by: Geliang Tang <geliang@kernel.org>
+Signed-off-by: Hui Zhu <zhuhui@kylinos.cn>
+---
+ MAINTAINERS                                   |   1 +
+ .../selftests/bpf/prog_tests/memcg_ops.c      | 117 ++++++++++++++++++
+ tools/testing/selftests/bpf/progs/memcg_ops.c |  20 +++
+ 3 files changed, 138 insertions(+)
  create mode 100644 tools/testing/selftests/bpf/prog_tests/memcg_ops.c
  create mode 100644 tools/testing/selftests/bpf/progs/memcg_ops.c
 
+diff --git a/MAINTAINERS b/MAINTAINERS
+index 498d01c9a48e..dc3aa53d2346 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -6356,6 +6356,7 @@ F:	mm/memcontrol_bpf.h
+ F:	mm/page_counter.c
+ F:	mm/swap_cgroup.c
+ F:	samples/cgroup/*
++F:	tools/testing/selftests/bpf/*/memcg_ops.c
+ F:	tools/testing/selftests/cgroup/memcg_protection.m
+ F:	tools/testing/selftests/cgroup/test_hugetlb_memcg.c
+ F:	tools/testing/selftests/cgroup/test_kmem.c
+diff --git a/tools/testing/selftests/bpf/prog_tests/memcg_ops.c b/tools/testing/selftests/bpf/prog_tests/memcg_ops.c
+new file mode 100644
+index 000000000000..3f989bcfb8c4
+--- /dev/null
++++ b/tools/testing/selftests/bpf/prog_tests/memcg_ops.c
+@@ -0,0 +1,117 @@
++// SPDX-License-Identifier: GPL-2.0
++/*
++ * Memory controller eBPF struct ops test
++ */
++
++#include <test_progs.h>
++#include <bpf/btf.h>
++
++void test_memcg_ops_load(void)
++{
++	struct bpf_object *obj;
++	int err;
++
++	obj = bpf_object__open_file("memcg_ops.bpf.o", NULL);
++	err = libbpf_get_error(obj);
++	if (CHECK_FAIL(err)) {
++		obj = NULL;
++		goto out;
++	}
++
++	err = bpf_object__load(obj);
++	if (CHECK_FAIL(err))
++		goto out;
++
++out:
++	if (obj)
++		bpf_object__close(obj);
++}
++
++void test_memcg_ops_attach(void)
++{
++	struct bpf_object *obj;
++	struct bpf_map *map;
++	struct bpf_link *link = NULL;
++	int err;
++
++	obj = bpf_object__open_file("memcg_ops.bpf.o", NULL);
++	err = libbpf_get_error(obj);
++	if (CHECK_FAIL(err)) {
++		obj = NULL;
++		goto out;
++	}
++
++	err = bpf_object__load(obj);
++	if (CHECK_FAIL(err))
++		goto out;
++
++	map = bpf_object__find_map_by_name(obj, "mcg_ops");
++	if (!ASSERT_OK_PTR(map, "bpf_object__find_map_by_name"))
++		goto out;
++
++	link = bpf_map__attach_struct_ops(map);
++	if (!ASSERT_OK_PTR(link, "bpf_map__attach_struct_ops"))
++		goto out;
++
++out:
++	if (link)
++		bpf_link__destroy(link);
++	if (obj)
++		bpf_object__close(obj);
++}
++
++void test_memcg_ops_double_attach(void)
++{
++	struct bpf_object *obj, *obj2;
++	struct bpf_map *map, *map2;
++	struct bpf_link *link = NULL, *link2 = NULL;
++	int err;
++
++	obj = bpf_object__open_file("memcg_ops.bpf.o", NULL);
++	err = libbpf_get_error(obj);
++	if (CHECK_FAIL(err)) {
++		obj = NULL;
++		goto out;
++	}
++
++	err = bpf_object__load(obj);
++	if (CHECK_FAIL(err))
++		goto out;
++
++	map = bpf_object__find_map_by_name(obj, "mcg_ops");
++	if (!ASSERT_OK_PTR(map, "bpf_object__find_map_by_name"))
++		goto out;
++
++	link = bpf_map__attach_struct_ops(map);
++	if (!ASSERT_OK_PTR(link, "bpf_map__attach_struct_ops"))
++		goto out;
++
++	obj2 = bpf_object__open_file("memcg_ops.bpf.o", NULL);
++	err = libbpf_get_error(obj2);
++	if (CHECK_FAIL(err)) {
++		obj2 = NULL;
++		goto out;
++	}
++
++	err = bpf_object__load(obj2);
++	if (CHECK_FAIL(err))
++		goto out;
++
++	map2 = bpf_object__find_map_by_name(obj2, "mcg_ops");
++	if (!ASSERT_OK_PTR(map, "bpf_object__find_map_by_name"))
++		goto out;
++
++	link2 = bpf_map__attach_struct_ops(map2);
++	if (!ASSERT_ERR_PTR(link2, "bpf_map__attach_struct_ops")) {
++		bpf_link__destroy(link2);
++		goto out;
++	}
++
++out:
++	if (link)
++		bpf_link__destroy(link);
++	if (obj)
++		bpf_object__close(obj);
++	if (obj2)
++		bpf_object__close(obj2);
++}
+diff --git a/tools/testing/selftests/bpf/progs/memcg_ops.c b/tools/testing/selftests/bpf/progs/memcg_ops.c
+new file mode 100644
+index 000000000000..a21fbe859fd3
+--- /dev/null
++++ b/tools/testing/selftests/bpf/progs/memcg_ops.c
+@@ -0,0 +1,20 @@
++// SPDX-License-Identifier: GPL-2.0
++
++#include "vmlinux.h"
++
++#include <bpf/bpf_helpers.h>
++#include <bpf/bpf_tracing.h>
++
++char _license[] SEC("license") = "GPL";
++
++SEC("struct_ops/try_charge_memcg")
++int BPF_PROG(test_try_charge_memcg,
++	     struct try_charge_memcg *tcm)
++{
++	return 0;
++}
++
++SEC(".struct_ops")
++struct memcg_ops mcg_ops = {
++	.try_charge_memcg = (void *)test_try_charge_memcg,
++};
 -- 
 2.43.0
 
