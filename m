@@ -1,94 +1,108 @@
-Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
+Received: from out-181.mta0.migadu.com (out-181.mta0.migadu.com [91.218.175.181])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 91E7C3F9D2;
-	Tue,  2 Dec 2025 01:12:47 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.51
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 007FD2AEE1;
+	Tue,  2 Dec 2025 03:05:01 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.181
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1764637970; cv=none; b=hL/NS65r5lHscJqNqBlq7y7CAfQ6vlCnGelJ71pfcxPWtq4ILIppxutAO+UcLb6UhSlhPWRuRHAj2dMuvbpdglo09E78aZqCK7HJFc0se2SLKyMm7bLLDhQNShYjYY5bSGq2eNnOYMa6TGLWkZmdqhCawN8D9m4sPTUnVOhLDMU=
+	t=1764644704; cv=none; b=K6yy+P09D3M6AgGt2keNwPV24YhR59k3zJHeNjLrpPpKSdZBm0OSuP2+OYc3U6v35C0bLNMaJkbFcvtxnGEoIqqZsWRFOXWYYPcYLSMmf8vQUFsai46BB6Ox8yK2T2RPBK7jm1hZHYWE3lLgM8SqJM4nx9ZTMN00lvrVFqeJ374=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1764637970; c=relaxed/simple;
-	bh=HOwPBcBA7eOyjeOqXZXNLeCQaq6wBNlpqLA/c/ujtNY=;
-	h=Message-ID:Date:MIME-Version:Subject:From:To:Cc:References:
-	 In-Reply-To:Content-Type; b=ixQj+Lp9Xezb7O9z19FiMDgRoQelDpmXR3pdsmgA/vDgoks5s3SA71+yiN91yvxm1eR9T31i7kfNYKRjtwhP8ETcp7KdxmWHJLCPZEs2awzHzHfrOal4IaWamPcxP4s6L/S7OYpzL0hVUjO2PHVeg5keH6ApzD3wevejTH462pk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.51
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
-Received: from mail.maildlp.com (unknown [172.19.93.142])
-	by dggsgout11.his.huawei.com (SkyGuard) with ESMTPS id 4dL2nS3DnczYQtfp;
-	Tue,  2 Dec 2025 09:12:44 +0800 (CST)
-Received: from mail02.huawei.com (unknown [10.116.40.75])
-	by mail.maildlp.com (Postfix) with ESMTP id 52D291A018D;
-	Tue,  2 Dec 2025 09:12:45 +0800 (CST)
-Received: from [10.67.111.176] (unknown [10.67.111.176])
-	by APP2 (Coremail) with SMTP id Syh0CgAH51AMPS5p0y0pAQ--.24140S2;
-	Tue, 02 Dec 2025 09:12:45 +0800 (CST)
-Message-ID: <101c5f3a-5614-47aa-8d62-c0b7d6baea5b@huaweicloud.com>
-Date: Tue, 2 Dec 2025 09:12:43 +0800
+	s=arc-20240116; t=1764644704; c=relaxed/simple;
+	bh=/wad86lebxN88ArXRVT9vxEPrc4CJhtj2Bwv8PYKg04=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=kUxvtj7vZHIyNpMOAP0foBhvV+a3peA8mw9LW5ugM+oLovDsvsmfqJzK53GM37qK78Di3ssVKnQD80CJwvVMJGWUvkZ86LnhFdc7p4t+yopu/PRWMWqADDVHiA6Usv7gpK1gThI35naLRfImSwVaO8p3n3TZYUPz7NUr9Zkrk6A=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=eBxIFDjk; arc=none smtp.client-ip=91.218.175.181
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="eBxIFDjk"
+Message-ID: <3595bfda-d7a6-44a1-bc0a-414c890e00c2@linux.dev>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
+	t=1764644699;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=1TMOXL6yAIfCfUfBfRhzLBPkFL4/fzP/8gLyV27jj8k=;
+	b=eBxIFDjkFXnkO1qpCt2R9+AuPQyxVxruuEBuSgndZvMd8I/255bYj4MMMs5hsQzlI9niuu
+	mhtlxmUI1YFtjV5YyvPH1LbOGMCgiABiVppQ3n7+GVnQ8r2DZdLZFe4HGHk8JcqGv1XQ8E
+	b+UxsouADo3ix9LQtltlTUT9cmtjmFE=
+Date: Tue, 2 Dec 2025 11:04:02 +0800
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH -next] cgroup: Use descriptor table to unify mount flag
- management
-From: Chen Ridong <chenridong@huaweicloud.com>
-To: tj@kernel.org, hannes@cmpxchg.org, mkoutny@suse.com
-Cc: cgroups@vger.kernel.org, linux-kernel@vger.kernel.org,
- lujialin4@huawei.com, chenridong@huawei.com
-References: <20251126020825.1511671-1-chenridong@huaweicloud.com>
-Content-Language: en-US
-In-Reply-To: <20251126020825.1511671-1-chenridong@huaweicloud.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-X-CM-TRANSID:Syh0CgAH51AMPS5p0y0pAQ--.24140S2
-X-Coremail-Antispam: 1UD129KBjvdXoWrtr45Xw48Kry3tw1fGw1DAwb_yoWDCwbEgw
-	4S9w4qkayjvrnxKrs09FZ8uFZa9ay7Cr1xGrykXryUKw4UXFWDuFsavFy5Ar17A3ZrAFnx
-	CrnIyrs5uFW2gjkaLaAFLSUrUUUUjb8apTn2vfkv8UJUUUU8Yxn0WfASr-VFAUDa7-sFnT
-	9fnUUIcSsGvfJTRUUUbz8YFVCjjxCrM7AC8VAFwI0_Gr0_Xr1l1xkIjI8I6I8E6xAIw20E
-	Y4v20xvaj40_Wr0E3s1l1IIY67AEw4v_Jr0_Jr4l8cAvFVAK0II2c7xJM28CjxkF64kEwV
-	A0rcxSw2x7M28EF7xvwVC0I7IYx2IY67AKxVWDJVCq3wA2z4x0Y4vE2Ix0cI8IcVCY1x02
-	67AKxVW8Jr0_Cr1UM28EF7xvwVC2z280aVAFwI0_GcCE3s1l84ACjcxK6I8E87Iv6xkF7I
-	0E14v26rxl6s0DM2AIxVAIcxkEcVAq07x20xvEncxIr21l5I8CrVACY4xI64kE6c02F40E
-	x7xfMcIj6xIIjxv20xvE14v26r1j6r18McIj6I8E87Iv67AKxVWUJVW8JwAm72CE4IkC6x
-	0Yz7v_Jr0_Gr1lF7xvr2IY64vIr41lc7CjxVAaw2AFwI0_JF0_Jw1l42xK82IYc2Ij64vI
-	r41l4I8I3I0E4IkC6x0Yz7v_Jr0_Gr1lx2IqxVAqx4xG67AKxVWUJVWUGwC20s026x8Gjc
-	xK67AKxVWUGVWUWwC2zVAF1VAY17CE14v26r126r1DMIIYrxkI7VAKI48JMIIF0xvE2Ix0
-	cI8IcVAFwI0_Jr0_JF4lIxAIcVC0I7IYx2IY6xkF7I0E14v26r1j6r4UMIIF0xvE42xK8V
-	AvwI8IcIk0rVWUJVWUCwCI42IY6I8E87Iv67AKxVWUJVW8JwCI42IY6I8E87Iv6xkF7I0E
-	14v26r4j6r4UJbIYCTnIWIevJa73UjIFyTuYvjxUwxhLUUUUU
-X-CM-SenderInfo: hfkh02xlgr0w46kxt4xhlfz01xgou0bp/
+Subject: Re: [PATCH v1 23/26] mm: vmscan: prepare for reparenting MGLRU folios
+To: Yuanchu Xie <yuanchu@google.com>
+Cc: Harry Yoo <harry.yoo@oracle.com>, hannes@cmpxchg.org, hughd@google.com,
+ mhocko@suse.com, roman.gushchin@linux.dev, shakeel.butt@linux.dev,
+ muchun.song@linux.dev, david@redhat.com, lorenzo.stoakes@oracle.com,
+ ziy@nvidia.com, imran.f.khan@oracle.com, kamalesh.babulal@oracle.com,
+ axelrasmussen@google.com, weixugc@google.com, akpm@linux-foundation.org,
+ linux-mm@kvack.org, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org,
+ Qi Zheng <zhengqi.arch@bytedance.com>
+References: <cover.1761658310.git.zhengqi.arch@bytedance.com>
+ <cdcedd284f5706c557bb6f53858b8c2ac2815ecb.1761658311.git.zhengqi.arch@bytedance.com>
+ <aScFNZjGficdjnvD@hyeyoo> <d94fe146-5cc6-4aa2-bd7f-8ca2a12e5457@linux.dev>
+ <CAJj2-QHu3u1RQpkBw8uV9P+-xop+bJvxt+s-ZB_cj=u6ia+tbg@mail.gmail.com>
+X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
+From: Qi Zheng <qi.zheng@linux.dev>
+In-Reply-To: <CAJj2-QHu3u1RQpkBw8uV9P+-xop+bJvxt+s-ZB_cj=u6ia+tbg@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
+X-Migadu-Flow: FLOW_OUT
 
 
 
-On 2025/11/26 10:08, Chen Ridong wrote:
-> From: Chen Ridong <chenridong@huawei.com>
+On 12/2/25 5:50 AM, Yuanchu Xie wrote:
+> On Mon, Dec 1, 2025 at 9:41 AM Qi Zheng <qi.zheng@linux.dev> wrote:
+>>> Warning 1) Here we increment max_seq but we skip updating mm_state->seq.
+>>> (try_to_inc_max_seq() iterates the mm list and update mm_state->seq after
+>>> an iteration, but since we directly call inc_max_seq(), we don't update it)
+>>>
+>>> When mm_state->seq is more than one generation behind walk->seq, a warning is
+>>> triggered in iterate_mm_list():
+>>>
+>>>           VM_WARN_ON_ONCE(mm_state->seq + 1 < walk->max_seq);
+>>
+>> The mm_state->seq is just to record the completion of a full traversal
+>> of mm_list. If we simply delete this warning, it may cause this judgment
+>> in iterate_mm_list to become invalid:
+>>
+>>           if (walk->seq <= mm_state->seq)
+>>                  goto done;
+>>
+>> So it seems we can manually increase mm_state->seq during reparenting to
+>> avoid this warning.
+> Agreed, don't get rid of the warning as this check is supposed to make
+> stale walkers exit early.
+
+OK, will incease mm_state->seq during reparenting in the next version.
+
 > 
-> The cgroup2 mount flags (e.g. nsdelegate, favordynmods) were previously
-> handled via scattered switch-case and conditional checks across
-> parameter parsing, flag application, and option display paths. This
-> leads to redundant code and increased maintenance cost when adding/removing
-> flags.
+>>
+>> However, we cannot directly call iterate_mm_list_nowalk() because we do
+>> not want to reset mm_state->head and mm_state->tail to NULL. Otherwise,
+>> we wouldn't be able to continue iterating over the mm_list.
+>>
 > 
-> Introduce a `cgroup_mount_flag_desc` descriptor table to centralize the
-> mapping between flag bits, names, and apply functions. Refactor the
-> relevant paths to use this table for unified management:
-> 1. cgroup2_parse_param: Replace switch-case with table lookup
-> 2. apply_cgroup_root_flags: Replace multiple conditionals with table
->    iteration
-> 3. cgroup_show_options: Replace hardcoded seq_puts with table-driven output
-> 
-> No functional change intended, and the mount option output format remains
-> compatible with the original implementation.
-> 
+>  From the original posting:
+>> Of course, the same generation has different meanings in the parent and
+>> child memcg, this will cause confusion in the hot and cold information of
+>> folios. But other than that, this method is simple enough, the lru size
+>> is correct, and there is no need to consider some concurrency issues (such
+>> as lru_gen_del_folio()).
+> One way to solve this is to map generations based on
+> lrugen->timestamp, but of course this runs into the reading
+> folio->flags issue you described. I think the current method is a good
+> compromise, but the splicing of generations doesn't much make semantic
+> sense. It would be good to leave a comment somewhere in
+> __lru_gen_reparent_memcg to note this weirdness.
 
-Hi all,
+OK, will do.
 
-Would anyone be interested?
+Thanks!
 
--- 
-Best regards,
-Ridong
 
