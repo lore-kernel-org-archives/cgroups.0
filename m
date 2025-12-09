@@ -1,110 +1,293 @@
-Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
+Received: from dggsgout12.his.huawei.com (dggsgout12.his.huawei.com [45.249.212.56])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9D916271468;
-	Tue,  9 Dec 2025 01:14:33 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.51
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 12EDF2FF144;
+	Tue,  9 Dec 2025 01:41:12 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.56
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1765242878; cv=none; b=vCoQrkPybhaSr1tU0OhjuwOUv+Vh+gMetr9u9+8UjOyeJ/O/i/xD49gXp95BVoqX3Bt6zl0Bg40FUtgCmIOhSeaGmKqzZqEwWuw97WVTXY1gzBvzyJWrB7rnLgY2QJACB5D27J1K96w75Egec3uE4+qqhG8QWyy9y8IUp84nDpY=
+	t=1765244475; cv=none; b=kyTbAQo0XFIXMDSia73+7tvvd0CP4Q0rTPsFK+wSvjr5ASJ6QGRwbGnxN+3XKXnhNFNJrArxfm3RCvZL4MoeKVkVfKtqZXkYkPBSYD3deqxICzqyhRGTF1YYFTy+6w6BnzNHYWmlwUHF2oJtwqQViAfP8YegV21OHmaFMep3oBk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1765242878; c=relaxed/simple;
-	bh=aX8V7idETexZpGgf8tvxn2ukSJ5VSRQBjo5sL5Fn5zs=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=u7MKgSytM93XkQzYKQ4IBmpyWJXbX23MAwFeKRRjCnkZGH064VUHOc5m/erpEgOWwitithOP0tnyXO6pFQiFWxwalx9Tgf5eC0cpRFIuEYtqnAzCY0PMP2hvOxWsJE65D6nl9Sm0CVqK5OkqpdiPJf6QDP9Xh89hRzpz6IMjn/g=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.51
+	s=arc-20240116; t=1765244475; c=relaxed/simple;
+	bh=rfNi7zzZbosLRNd0zqdVXj/xUzuZBqXhhGN5VHAKbio=;
+	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
+	 MIME-Version; b=JEEYMACgZTVxvX1o7Yxro4tVIAWOXiYg9Y84EUU+qm/7NXAweWTf0zFFXAqbIAY5DQvhIz/OKPIrDDixp4km175hmKcx7fhOiQmVYEDJnskR9V6GtZzq950EengGZzU3wJ/dvwbjV+p4dhAv5jHZBJ02KFjfWyFElp7wcKwOXxM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.56
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
-Received: from mail.maildlp.com (unknown [172.19.163.216])
-	by dggsgout11.his.huawei.com (SkyGuard) with ESMTPS id 4dQL7l4z2xzYQtgf;
-	Tue,  9 Dec 2025 08:58:27 +0800 (CST)
+Received: from mail.maildlp.com (unknown [172.19.163.235])
+	by dggsgout12.his.huawei.com (SkyGuard) with ESMTPS id 4dQM3x1C0QzKHMKB;
+	Tue,  9 Dec 2025 09:40:13 +0800 (CST)
 Received: from mail02.huawei.com (unknown [10.116.40.75])
-	by mail.maildlp.com (Postfix) with ESMTP id 4E8FF1A175C;
-	Tue,  9 Dec 2025 08:58:40 +0800 (CST)
-Received: from [10.67.111.176] (unknown [10.67.111.176])
-	by APP2 (Coremail) with SMTP id Syh0CgBHJlA+dDdpiONbBA--.18208S2;
-	Tue, 09 Dec 2025 08:58:40 +0800 (CST)
-Message-ID: <075ad534-9a76-4067-97a1-a3219fa4c60e@huaweicloud.com>
-Date: Tue, 9 Dec 2025 08:58:37 +0800
+	by mail.maildlp.com (Postfix) with ESMTP id F0A1D1A06DE;
+	Tue,  9 Dec 2025 09:41:10 +0800 (CST)
+Received: from hulk-vt.huawei.com (unknown [10.67.174.121])
+	by APP2 (Coremail) with SMTP id Syh0CgBnRlAafjdpkF9fBA--.23909S3;
+	Tue, 09 Dec 2025 09:41:10 +0800 (CST)
+From: Chen Ridong <chenridong@huaweicloud.com>
+To: akpm@linux-foundation.org,
+	axelrasmussen@google.com,
+	yuanchu@google.com,
+	weixugc@google.com,
+	david@kernel.org,
+	lorenzo.stoakes@oracle.com,
+	Liam.Howlett@oracle.com,
+	vbabka@suse.cz,
+	rppt@kernel.org,
+	surenb@google.com,
+	mhocko@suse.com,
+	corbet@lwn.net,
+	hannes@cmpxchg.org,
+	roman.gushchin@linux.dev,
+	shakeel.butt@linux.dev,
+	muchun.song@linux.dev,
+	zhengqi.arch@bytedance.com
+Cc: linux-mm@kvack.org,
+	linux-doc@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	cgroups@vger.kernel.org,
+	lujialin4@huawei.com,
+	chenridong@huaweicloud.com,
+	zhongjinji@honor.com
+Subject: [PATCH -next 1/5] mm/mglru: use mem_cgroup_iter for global reclaim
+Date: Tue,  9 Dec 2025 01:25:53 +0000
+Message-Id: <20251209012557.1949239-2-chenridong@huaweicloud.com>
+X-Mailer: git-send-email 2.34.1
+In-Reply-To: <20251209012557.1949239-1-chenridong@huaweicloud.com>
+References: <20251209012557.1949239-1-chenridong@huaweicloud.com>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 0/3] cgroup/misc: Add hwcap masks to the misc controller
-To: =?UTF-8?Q?Michal_Koutn=C3=BD?= <mkoutny@suse.com>,
- Andrei Vagin <avagin@gmail.com>
-Cc: Andrei Vagin <avagin@google.com>, Kees Cook <kees@kernel.org>,
- linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org,
- linux-mm@kvack.org, cgroups@vger.kernel.org, criu@lists.linux.dev,
- Tejun Heo <tj@kernel.org>, Johannes Weiner <hannes@cmpxchg.org>,
- Vipin Sharma <vipinsh@google.com>, Jonathan Corbet <corbet@lwn.net>
-References: <20251205005841.3942668-1-avagin@google.com>
- <57a7d8c3-a911-4729-bc39-ba3a1d810990@huaweicloud.com>
- <CANaxB-x5qVv_yYR7aYYdrd26uFRk=Zsd243+TeBWMn47wi++eA@mail.gmail.com>
- <bc10cdcb-840f-400e-85b8-3e8ae904f763@huaweicloud.com>
- <CANaxB-yOfS1KPZaZJ_4WG8XeZnB9M_shtWOOONTXQ2CW4mqsSA@mail.gmail.com>
- <6dmgfe5vbbuqw7ycsm4l2ecpv4eppdsau4t22kitjcjglg2gna@dyjlwhfhviif>
-Content-Language: en-US
-From: Chen Ridong <chenridong@huaweicloud.com>
-In-Reply-To: <6dmgfe5vbbuqw7ycsm4l2ecpv4eppdsau4t22kitjcjglg2gna@dyjlwhfhviif>
-Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:Syh0CgBHJlA+dDdpiONbBA--.18208S2
-X-Coremail-Antispam: 1UD129KBjvJXoW7Zw4rAr1fJr4DAr1fGrykZrb_yoW8GF1xpF
-	WkC3W7Gw4kJ347ZaykZ392qF4FvFW8AFy7Jr15K3s3AFW7u3W8Ar4ftrW5WFsxXr9xC3W2
-	vw1YvrWfuan0vaUanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDU0xBIdaVrnRJUUUvjb4IE77IF4wAFF20E14v26r4j6ryUM7CY07I20VC2zVCF04k2
-	6cxKx2IYs7xG6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rwA2F7IY1VAKz4
-	vEj48ve4kI8wA2z4x0Y4vE2Ix0cI8IcVAFwI0_Ar0_tr1l84ACjcxK6xIIjxv20xvEc7Cj
-	xVAFwI0_Cr0_Gr1UM28EF7xvwVC2z280aVAFwI0_GcCE3s1l84ACjcxK6I8E87Iv6xkF7I
-	0E14v26rxl6s0DM2AIxVAIcxkEcVAq07x20xvEncxIr21l5I8CrVACY4xI64kE6c02F40E
-	x7xfMcIj6xIIjxv20xvE14v26r1j6r18McIj6I8E87Iv67AKxVWUJVW8JwAm72CE4IkC6x
-	0Yz7v_Jr0_Gr1lF7xvr2IY64vIr41lFIxGxcIEc7CjxVA2Y2ka0xkIwI1lc7CjxVAaw2AF
-	wI0_Jw0_GFyl42xK82IYc2Ij64vIr41l4I8I3I0E4IkC6x0Yz7v_Jr0_Gr1lx2IqxVAqx4
-	xG67AKxVWUJVWUGwC20s026x8GjcxK67AKxVWUGVWUWwC2zVAF1VAY17CE14v26r1q6r43
-	MIIYrxkI7VAKI48JMIIF0xvE2Ix0cI8IcVAFwI0_Jr0_JF4lIxAIcVC0I7IYx2IY6xkF7I
-	0E14v26r4j6F4UMIIF0xvE42xK8VAvwI8IcIk0rVWUJVWUCwCI42IY6I8E87Iv67AKxVWU
-	JVW8JwCI42IY6I8E87Iv6xkF7I0E14v26r4j6r4UJbIYCTnIWIevJa73UjIFyTuYvjxUF1
-	v3UUUUU
+X-CM-TRANSID:Syh0CgBnRlAafjdpkF9fBA--.23909S3
+X-Coremail-Antispam: 1UD129KBjvJXoW3Jw1rJFyrtryUKF15Xr1DJrb_yoWxXF1fpF
+	ZxJ3yay3yrJr1agF4fKF4Dua4rA3y8Jr45Jryxtw1xAF1fK34Fg342kr1xXFW5uFZ5Zr17
+	GFyYyw1UW3yjvFJanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDU0xBIdaVrnRJUUUm014x267AKxVWrJVCq3wAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
+	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2048vs2IY020E87I2jVAFwI0_Jr4l82xGYIkIc2
+	x26xkF7I0E14v26ryj6s0DM28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48ve4kI8wA2z4x0
+	Y4vE2Ix0cI8IcVAFwI0_tr0E3s1l84ACjcxK6xIIjxv20xvEc7CjxVAFwI0_Gr1j6F4UJw
+	A2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x0267AKxVW0oVCq3wAS
+	0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG6I80ewAv7VC0I7IYx2
+	IY67AKxVWUJVWUGwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFVCjc4AY6r1j6r4UM4x0
+	Y48IcxkI7VAKI48JM4x0x7Aq67IIx4CEVc8vx2IErcIFxwACI402YVCY1x02628vn2kIc2
+	xKxwCY1x0262kKe7AKxVW8ZVWrXwCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7xkEbVWU
+	JVW8JwC20s026c02F40E14v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E67AF67
+	kF1VAFwI0_GFv_WrylIxkGc2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUJVWUCwCI42IY
+	6xIIjxv20xvEc7CjxVAFwI0_Gr0_Cr1lIxAIcVCF04k26cxKx2IYs7xG6r1j6r1xMIIF0x
+	vEx4A2jsIE14v26r1j6r4UMIIF0xvEx4A2jsIEc7CjxVAFwI0_Gr0_Gr1UYxBIdaVFxhVj
+	vjDU0xZFpf9x0pRlJPiUUUUU=
 X-CM-SenderInfo: hfkh02xlgr0w46kxt4xhlfz01xgou0bp/
 
+From: Chen Ridong <chenridong@huawei.com>
 
+The memcg LRU was originally introduced for global reclaim to enhance
+scalability. However, its implementation complexity has led to performance
+regressions when dealing with a large number of memory cgroups [1].
 
-On 2025/12/9 0:48, Michal Koutný wrote:
-> Hello Andrei.
-> 
-> On Fri, Dec 05, 2025 at 12:19:04PM -0800, Andrei Vagin <avagin@gmail.com> wrote:
->> If we are talking about C/R use cases, it should be configured when
->> container is started. It can be adjusted dynamically, but all changes
->> will affect only new processes. The auxiliary vectors are set on execve.
-> 
-> The questions by Ridong are getting at the reasons why cgroup API
-> doesn't sound like a good match for these values.
+As suggested by Johannes [1], this patch adopts mem_cgroup_iter with
+cookie-based iteration for global reclaim, aligning with the approach
+already used in shrink_node_memcgs. This simplification removes the
+dedicated memcg LRU tracking while maintaining the core functionality.
 
-Eh, The statement "it can be adjusted dynamically, but all changes will affect only new processes"
-means that processes created within the same cgroup could end up with different capabilities. This
-does not sound like how cgroups typically operate;
+It performed a stress test based on Yu Zhao's methodology [2] on a
+1 TB, 4-node NUMA system. The results are summarized below:
 
-> I understand it's tempting to implement this by simply copying some
-> masks from the enclosing cgroup but since there's little to be done upon
-> (dynamic) change or a process migration it's overkill.
-> 
-> So I'd look at how other [1] adjustments between fork-exec are done and
-> fit it with them. I guess prctl would be an option as a substitute for
-> non-existent setauxval().
-> 
-> Thanks,
-> Michal
-> 
-> [1] Yes, I admit cgroup migration is among them too. Another one is
-> setns(2) which is IMO a closer concept for this modified view of HW, I'm
-> not sure whether hardware namespaces had been brought up (and rejected)
-> in the past.
-> 
+	pgsteal:
+						memcg LRU    memcg iter
+	stddev(pgsteal) / mean(pgsteal)		106.03%		93.20%
+	sum(pgsteal) / sum(requested)		98.10%		99.28%
 
+	workingset_refault_anon:
+						memcg LRU    memcg iter
+	stddev(refault) / mean(refault)		193.97%		134.67%
+	sum(refault)				1963229		2027567
+
+The new implementation shows a clear fairness improvement, reducing the
+standard deviation relative to the mean by 12.8 percentage points. The
+pgsteal ratio is also closer to 100%. Refault counts increased by 3.2%
+(from 1,963,229 to 2,027,567).
+
+The primary benefits of this change are:
+1. Simplified codebase by removing custom memcg LRU infrastructure
+2. Improved fairness in memory reclaim across multiple cgroups
+3. Better performance when creating many memory cgroups
+
+[1] https://lore.kernel.org/r/20251126171513.GC135004@cmpxchg.org
+[2] https://lore.kernel.org/r/20221222041905.2431096-7-yuzhao@google.com
+Suggested-by: Johannes Weiner <hannes@cmxpchg.org>
+Signed-off-by: Chen Ridong <chenridong@huawei.com>
+Acked-by: Johannes Weiner <hannes@cmxpchg.org>
+---
+ mm/vmscan.c | 117 ++++++++++++++++------------------------------------
+ 1 file changed, 36 insertions(+), 81 deletions(-)
+
+diff --git a/mm/vmscan.c b/mm/vmscan.c
+index fddd168a9737..70b0e7e5393c 100644
+--- a/mm/vmscan.c
++++ b/mm/vmscan.c
+@@ -4895,27 +4895,14 @@ static bool try_to_shrink_lruvec(struct lruvec *lruvec, struct scan_control *sc)
+ 	return nr_to_scan < 0;
+ }
+ 
+-static int shrink_one(struct lruvec *lruvec, struct scan_control *sc)
++static void shrink_one(struct lruvec *lruvec, struct scan_control *sc)
+ {
+-	bool success;
+ 	unsigned long scanned = sc->nr_scanned;
+ 	unsigned long reclaimed = sc->nr_reclaimed;
+-	struct mem_cgroup *memcg = lruvec_memcg(lruvec);
+ 	struct pglist_data *pgdat = lruvec_pgdat(lruvec);
++	struct mem_cgroup *memcg = lruvec_memcg(lruvec);
+ 
+-	/* lru_gen_age_node() called mem_cgroup_calculate_protection() */
+-	if (mem_cgroup_below_min(NULL, memcg))
+-		return MEMCG_LRU_YOUNG;
+-
+-	if (mem_cgroup_below_low(NULL, memcg)) {
+-		/* see the comment on MEMCG_NR_GENS */
+-		if (READ_ONCE(lruvec->lrugen.seg) != MEMCG_LRU_TAIL)
+-			return MEMCG_LRU_TAIL;
+-
+-		memcg_memory_event(memcg, MEMCG_LOW);
+-	}
+-
+-	success = try_to_shrink_lruvec(lruvec, sc);
++	try_to_shrink_lruvec(lruvec, sc);
+ 
+ 	shrink_slab(sc->gfp_mask, pgdat->node_id, memcg, sc->priority);
+ 
+@@ -4924,86 +4911,55 @@ static int shrink_one(struct lruvec *lruvec, struct scan_control *sc)
+ 			   sc->nr_reclaimed - reclaimed);
+ 
+ 	flush_reclaim_state(sc);
+-
+-	if (success && mem_cgroup_online(memcg))
+-		return MEMCG_LRU_YOUNG;
+-
+-	if (!success && lruvec_is_sizable(lruvec, sc))
+-		return 0;
+-
+-	/* one retry if offlined or too small */
+-	return READ_ONCE(lruvec->lrugen.seg) != MEMCG_LRU_TAIL ?
+-	       MEMCG_LRU_TAIL : MEMCG_LRU_YOUNG;
+ }
+ 
+ static void shrink_many(struct pglist_data *pgdat, struct scan_control *sc)
+ {
+-	int op;
+-	int gen;
+-	int bin;
+-	int first_bin;
+-	struct lruvec *lruvec;
+-	struct lru_gen_folio *lrugen;
++	struct mem_cgroup *target = sc->target_mem_cgroup;
++	struct mem_cgroup_reclaim_cookie reclaim = {
++		.pgdat = pgdat,
++	};
++	struct mem_cgroup_reclaim_cookie *cookie = &reclaim;
+ 	struct mem_cgroup *memcg;
+-	struct hlist_nulls_node *pos;
+ 
+-	gen = get_memcg_gen(READ_ONCE(pgdat->memcg_lru.seq));
+-	bin = first_bin = get_random_u32_below(MEMCG_NR_BINS);
+-restart:
+-	op = 0;
+-	memcg = NULL;
+-
+-	rcu_read_lock();
++	if (current_is_kswapd() || sc->memcg_full_walk)
++		cookie = NULL;
+ 
+-	hlist_nulls_for_each_entry_rcu(lrugen, pos, &pgdat->memcg_lru.fifo[gen][bin], list) {
+-		if (op) {
+-			lru_gen_rotate_memcg(lruvec, op);
+-			op = 0;
+-		}
++	memcg = mem_cgroup_iter(target, NULL, cookie);
++	while (memcg) {
++		struct lruvec *lruvec = mem_cgroup_lruvec(memcg, pgdat);
+ 
+-		mem_cgroup_put(memcg);
+-		memcg = NULL;
++		cond_resched();
+ 
+-		if (gen != READ_ONCE(lrugen->gen))
+-			continue;
++		mem_cgroup_calculate_protection(target, memcg);
+ 
+-		lruvec = container_of(lrugen, struct lruvec, lrugen);
+-		memcg = lruvec_memcg(lruvec);
++		if (mem_cgroup_below_min(target, memcg))
++			goto next;
+ 
+-		if (!mem_cgroup_tryget(memcg)) {
+-			lru_gen_release_memcg(memcg);
+-			memcg = NULL;
+-			continue;
++		if (mem_cgroup_below_low(target, memcg)) {
++			if (!sc->memcg_low_reclaim) {
++				sc->memcg_low_skipped = 1;
++				goto next;
++			}
++			memcg_memory_event(memcg, MEMCG_LOW);
+ 		}
+ 
+-		rcu_read_unlock();
++		shrink_one(lruvec, sc);
+ 
+-		op = shrink_one(lruvec, sc);
+-
+-		rcu_read_lock();
+-
+-		if (should_abort_scan(lruvec, sc))
++		if (should_abort_scan(lruvec, sc)) {
++			if (cookie)
++				mem_cgroup_iter_break(target, memcg);
+ 			break;
+-	}
+-
+-	rcu_read_unlock();
+-
+-	if (op)
+-		lru_gen_rotate_memcg(lruvec, op);
+-
+-	mem_cgroup_put(memcg);
+-
+-	if (!is_a_nulls(pos))
+-		return;
++		}
+ 
+-	/* restart if raced with lru_gen_rotate_memcg() */
+-	if (gen != get_nulls_value(pos))
+-		goto restart;
++next:
++		if (cookie && sc->nr_reclaimed >= sc->nr_to_reclaim) {
++			mem_cgroup_iter_break(target, memcg);
++			break;
++		}
+ 
+-	/* try the rest of the bins of the current generation */
+-	bin = get_memcg_bin(bin + 1);
+-	if (bin != first_bin)
+-		goto restart;
++		memcg = mem_cgroup_iter(target, memcg, cookie);
++	}
+ }
+ 
+ static void lru_gen_shrink_lruvec(struct lruvec *lruvec, struct scan_control *sc)
+@@ -5019,8 +4975,7 @@ static void lru_gen_shrink_lruvec(struct lruvec *lruvec, struct scan_control *sc
+ 
+ 	set_mm_walk(NULL, sc->proactive);
+ 
+-	if (try_to_shrink_lruvec(lruvec, sc))
+-		lru_gen_rotate_memcg(lruvec, MEMCG_LRU_YOUNG);
++	try_to_shrink_lruvec(lruvec, sc);
+ 
+ 	clear_mm_walk();
+ 
 -- 
-Best regards,
-Ridong
+2.34.1
 
