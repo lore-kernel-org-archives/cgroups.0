@@ -1,27 +1,28 @@
 Received: from dggsgout12.his.huawei.com (dggsgout12.his.huawei.com [45.249.212.56])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 12E6D2FE59C;
-	Tue,  9 Dec 2025 01:41:12 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 560EC2FF151;
+	Tue,  9 Dec 2025 01:41:13 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.56
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1765244475; cv=none; b=mWQeeYHA2u+/H+WlKP+PXQ+l/80mClhOCljZKi1npVhwhywV16/X995tKETe+Da3GzUp0SgyjR7SbGzmmgh4LRAq25ZPBEIjjhENly/vgVwvtQHlLc+ANfifF2pxk1epuFHdf/IpC+149RTAsu/wH9b+lZdQThkmg5+yVVYMB2Q=
+	t=1765244475; cv=none; b=oHaRoX0ycSgAyfS3HbnSVIMSgyrS0vWbi0Uoi6KbmY2CaTdkfqZ3GrIBivoijbVYJpAghYb6XTismYZOaRYiEzg9qJABEjENWkPJ19zuF8C3bPKIRkUy3M4VCxG2EM2p89u0xAB7gd/cl6E3fLJImLhdyqeTOI80YjCsSV0LnaU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1765244475; c=relaxed/simple;
-	bh=0105pBY1ohCG8qmHrwhoXva//9/RsKnAMwO8OytJUU0=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version:Content-Type; b=M0KFdENMAWKig/X4jsrbbnKXJGyij4G4V7wYNbrypMVmPz6hZg4bWBItBrMWs9raJDMdAH72wUw/hPWW5PkmewCcsSdX6qqdZ5sa/PeYvQx19TPCznMhkdOQU3p2fveU3brZaPF4z6V/G+fy1Nd4AxFKNseX4gvYsl7ZpA57so4=
+	bh=oGyGsrhl+bT6RvC4sisJDQxidB4pVVdXpZbBrZRHauQ=;
+	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
+	 MIME-Version; b=tXM4bRA3/tAM5PNUif/+Za6BcKzn/SBu5dcoh11H1b5qzSgDvSgfsgsk4PDiXf6sHYIOBVDtE/3kNB1tsEkKSGuQ72IvLWdrVn9q6mAtuospb+UQgYJ6IPVGGHpX0cvLykO6UMjRFkLwFlixJVKHHA+BnwzLHIPXmx8ZbMHHR+c=
 ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.56
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
 Received: from mail.maildlp.com (unknown [172.19.163.216])
-	by dggsgout12.his.huawei.com (SkyGuard) with ESMTPS id 4dQM3w6wpzzKHMHr;
-	Tue,  9 Dec 2025 09:40:12 +0800 (CST)
+	by dggsgout12.his.huawei.com (SkyGuard) with ESMTPS id 4dQM3x4nV0zKHMMf;
+	Tue,  9 Dec 2025 09:40:13 +0800 (CST)
 Received: from mail02.huawei.com (unknown [10.116.40.75])
-	by mail.maildlp.com (Postfix) with ESMTP id C974F1A1537;
-	Tue,  9 Dec 2025 09:41:10 +0800 (CST)
+	by mail.maildlp.com (Postfix) with ESMTP id 7A2581A15CB;
+	Tue,  9 Dec 2025 09:41:11 +0800 (CST)
 Received: from hulk-vt.huawei.com (unknown [10.67.174.121])
-	by APP2 (Coremail) with SMTP id Syh0CgBnRlAafjdpkF9fBA--.23909S2;
-	Tue, 09 Dec 2025 09:41:08 +0800 (CST)
+	by APP2 (Coremail) with SMTP id Syh0CgBnRlAafjdpkF9fBA--.23909S7;
+	Tue, 09 Dec 2025 09:41:11 +0800 (CST)
 From: Chen Ridong <chenridong@huaweicloud.com>
 To: akpm@linux-foundation.org,
 	axelrasmussen@google.com,
@@ -47,96 +48,100 @@ Cc: linux-mm@kvack.org,
 	lujialin4@huawei.com,
 	chenridong@huaweicloud.com,
 	zhongjinji@honor.com
-Subject: [PATCH -next 0/5] mm/mglru: remove memcg lru
-Date: Tue,  9 Dec 2025 01:25:52 +0000
-Message-Id: <20251209012557.1949239-1-chenridong@huaweicloud.com>
+Subject: [PATCH -next 5/5] mm/mglru: factor lrugen state out of shrink_lruvec
+Date: Tue,  9 Dec 2025 01:25:57 +0000
+Message-Id: <20251209012557.1949239-6-chenridong@huaweicloud.com>
 X-Mailer: git-send-email 2.34.1
+In-Reply-To: <20251209012557.1949239-1-chenridong@huaweicloud.com>
+References: <20251209012557.1949239-1-chenridong@huaweicloud.com>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:Syh0CgBnRlAafjdpkF9fBA--.23909S2
-X-Coremail-Antispam: 1UD129KBjvJXoW7tFW3Kr4rAF43Xr4rtw4rGrg_yoW8tFWxpF
-	Z3ua47Kw4rCr47GFs7Ka4Uu34fZF4rAw47Wr1vg34fAr9IyFyqvr4xtw4rZFW8CrWSqry3
-	Xr1q93W8XF4DAFJanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDU0xBIdaVrnRJUUU9Y14x267AKxVW5JVWrJwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
-	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
-	1l84ACjcxK6xIIjxv20xvE14v26w1j6s0DM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26r4U
-	JVWxJr1l84ACjcxK6I8E87Iv67AKxVW0oVCq3wA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_Gc
-	CE3s1le2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xvF2IEw4CE5I8CrVC2j2WlYx0E
-	2Ix0cI8IcVAFwI0_Jr0_Jr4lYx0Ex4A2jsIE14v26r1j6r4UMcvjeVCFs4IE7xkEbVWUJV
-	W8JwACjcxG0xvY0x0EwIxGrwACjI8F5VA0II8E6IAqYI8I648v4I1lFIxGxcIEc7CjxVA2
-	Y2ka0xkIwI1lc7CjxVAaw2AFwI0_GFv_Wryl42xK82IYc2Ij64vIr41l4I8I3I0E4IkC6x
-	0Yz7v_Jr0_Gr1lx2IqxVAqx4xG67AKxVWUJVWUGwC20s026x8GjcxK67AKxVWUGVWUWwC2
-	zVAF1VAY17CE14v26r4a6rW5MIIYrxkI7VAKI48JMIIF0xvE2Ix0cI8IcVAFwI0_Jr0_JF
-	4lIxAIcVC0I7IYx2IY6xkF7I0E14v26r4j6F4UMIIF0xvE42xK8VAvwI8IcIk0rVWUJVWU
-	CwCI42IY6I8E87Iv67AKxVWUJVW8JwCI42IY6I8E87Iv6xkF7I0E14v26r4j6r4UJbIYCT
-	nIWIevJa73UjIFyTuYvjTRNJ5oDUUUU
+X-CM-TRANSID:Syh0CgBnRlAafjdpkF9fBA--.23909S7
+X-Coremail-Antispam: 1UD129KBjvJXoW7tw1UurW8Aw1rCFy5XFWUurg_yoW8try5pa
+	9xG3yUZa4FyFn0qr9xJF4DWa45ur4UtrWxJr9rWw18CF4Sqa4rK347Cr4Uury5Z3ykZr13
+	Xry5Gr17Ww1jvFJanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDU0xBIdaVrnRJUUUmS14x267AKxVWrJVCq3wAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
+	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2048vs2IY020E87I2jVAFwI0_JF0E3s1l82xGYI
+	kIc2x26xkF7I0E14v26ryj6s0DM28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48ve4kI8wA2
+	z4x0Y4vE2Ix0cI8IcVAFwI0_tr0E3s1l84ACjcxK6xIIjxv20xvEc7CjxVAFwI0_Gr1j6F
+	4UJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x0267AKxVW0oVCq
+	3wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG6I80ewAv7VC0I7
+	IYx2IY67AKxVWUJVWUGwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFVCjc4AY6r1j6r4U
+	M4x0Y48IcxkI7VAKI48JM4x0x7Aq67IIx4CEVc8vx2IErcIFxwACI402YVCY1x02628vn2
+	kIc2xKxwCY1x0262kKe7AKxVW8ZVWrXwCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7xkE
+	bVWUJVW8JwC20s026c02F40E14v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E67
+	AF67kF1VAFwI0_GFv_WrylIxkGc2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUCVW8JwCI
+	42IY6xIIjxv20xvEc7CjxVAFwI0_Gr1j6F4UJwCI42IY6xAIw20EY4v20xvaj40_Jr0_JF
+	4lIxAIcVC2z280aVAFwI0_Jr0_Gr1lIxAIcVC2z280aVCY1x0267AKxVW8Jr0_Cr1UYxBI
+	daVFxhVjvjDU0xZFpf9x0pRQJ5wUUUUU=
 X-CM-SenderInfo: hfkh02xlgr0w46kxt4xhlfz01xgou0bp/
 
 From: Chen Ridong <chenridong@huawei.com>
 
-The memcg LRU was introduced to improve scalability in global reclaim,
-but its implementation has grown complex and can cause performance
-regressions when creating many memory cgroups [1].
+A previous patch updated shrink_node_memcgs to handle lrugen root reclaim
+and extended shrink_one to support both lrugen and non-lrugen. However,
+in shrink_one, lrugen non-root reclaim still invokes shrink_lruvec, which
+should only be used for non-lrugen reclaim.
 
-This series implements mem_cgroup_iter with a reclaim cookie in
-shrink_many() for global reclaim, following the pattern already used in
-shrink_node_memcgs(), an approach suggested by Johannes [1]. The new
-design maintains good fairness across cgroups by preserving iteration
-state between reclaim passes.
+To clarify the semantics, this patch moves the lrugen-specific logic out of
+shrink_lruvec, leaving shrink_lruvec exclusively for non-lrugen reclaim.
 
-Testing was performed using the original stress test from Yu Zhao [2] on a
-1 TB, 4-node NUMA system. The results show:
+Now for lrugen, shrink_one invokes lru_gen_shrink_lruvec, which calls
+try_to_shrink_lruvec directly, without extra handling for root reclaim, as
+that processing is already done in lru_gen_shrink_node. Non-root reclaim
+behavior remains unchanged.
 
-    pgsteal:
-                                        memcg LRU    memcg iter
-    stddev(pgsteal) / mean(pgsteal)     106.03%       93.20%
-    sum(pgsteal) / sum(requested)        98.10%       99.28%
-    
-    workingset_refault_anon:
-                                        memcg LRU    memcg iter
-    stddev(refault) / mean(refault)     193.97%      134.67%
-    sum(refault)                       1,963,229    2,027,567
-
-The new implementation shows clear fairness improvements, reducing the
-standard deviation relative to the mean by 12.8 percentage points for
-pgsteal and bringing the pgsteal ratio closer to 100%. Refault counts
-increased by 3.2% (from 1,963,229 to 2,027,567).
-
-To simplify review:
-1. Patch 1 uses mem_cgroup_iter with reclaim cookie in shrink_many()
-2. Patch 2 removes the now-unused memcg LRU code
-3. Patches 3–5 combine shrink_many and shrink_node_memcgs
-   (This reorganization is clearer after switching to mem_cgroup_iter)
-
+Signed-off-by: Chen Ridong <chenridong@huawei.com>
 ---
+ mm/vmscan.c | 16 ++++++++--------
+ 1 file changed, 8 insertions(+), 8 deletions(-)
 
-Changes from RFC series:
-1. Updated the test result data.
-2. Added patches 3–5 to combine shrink_many and shrink_node_memcgs.
-
-RFC: https://lore.kernel.org/all/20251204123124.1822965-1-chenridong@huaweicloud.com/
-
-Chen Ridong (5):
-  mm/mglru: use mem_cgroup_iter for global reclaim
-  mm/mglru: remove memcg lru
-  mm/mglru: extend shrink_one for both lrugen and non-lrugen
-  mm/mglru: combine shrink_many into shrink_node_memcgs
-  mm/mglru: factor lrugen state out of shrink_lruvec
-
- Documentation/mm/multigen_lru.rst |  30 ---
- include/linux/mmzone.h            |  89 --------
- mm/memcontrol-v1.c                |   6 -
- mm/memcontrol.c                   |   4 -
- mm/mm_init.c                      |   1 -
- mm/vmscan.c                       | 332 ++++--------------------------
- 6 files changed, 44 insertions(+), 418 deletions(-)
-
+diff --git a/mm/vmscan.c b/mm/vmscan.c
+index dbf2cfbe3243..c5f517ec52a7 100644
+--- a/mm/vmscan.c
++++ b/mm/vmscan.c
+@@ -4762,7 +4762,12 @@ static void lru_gen_shrink_lruvec(struct lruvec *lruvec, struct scan_control *sc
+ {
+ 	struct blk_plug plug;
+ 
+-	VM_WARN_ON_ONCE(root_reclaim(sc));
++	/* Root reclaim has finished other extra work outside, just shrink. */
++	if (root_reclaim(sc)) {
++		try_to_shrink_lruvec(lruvec, sc);
++		return;
++	}
++
+ 	VM_WARN_ON_ONCE(!sc->may_writepage || !sc->may_unmap);
+ 
+ 	lru_add_drain();
+@@ -5524,11 +5529,6 @@ static void shrink_lruvec(struct lruvec *lruvec, struct scan_control *sc)
+ 	bool proportional_reclaim;
+ 	struct blk_plug plug;
+ 
+-	if (lru_gen_enabled() && !root_reclaim(sc)) {
+-		lru_gen_shrink_lruvec(lruvec, sc);
+-		return;
+-	}
+-
+ 	get_scan_count(lruvec, sc, nr);
+ 
+ 	/* Record the original scan target for proportional adjustments later */
+@@ -5708,8 +5708,8 @@ static void shrink_one(struct lruvec *lruvec, struct scan_control *sc)
+ 	struct pglist_data *pgdat = lruvec_pgdat(lruvec);
+ 	struct mem_cgroup *memcg = lruvec_memcg(lruvec);
+ 
+-	if (lru_gen_enabled() && root_reclaim(sc))
+-		try_to_shrink_lruvec(lruvec, sc);
++	if (lru_gen_enabled())
++		lru_gen_shrink_lruvec(lruvec, sc);
+ 	else
+ 		shrink_lruvec(lruvec, sc);
+ 
 -- 
 2.34.1
 
