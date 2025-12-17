@@ -1,228 +1,194 @@
-Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.223.130])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4458333B946;
-	Wed, 17 Dec 2025 09:04:51 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.51
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3AC4D33B979
+	for <cgroups@vger.kernel.org>; Wed, 17 Dec 2025 09:08:46 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.130
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1765962295; cv=none; b=bxyEfwMvRBdbvJG0XlHqHcytO7XdweCx5VSleuUebX9XM5X+oEtpAwZo6nXYQtVCMV1uB3heQS4BQR+bU8U280GKmUZnPkXC4QGXc/L2SJM8YDAwcBXZ05bo6CDus7NchEDmUmxvNddjqIFKhzKMutwBuXBCPJW9+FqsOMR/ZK8=
+	t=1765962528; cv=none; b=m91qXgabg2MKMEIdCzsX6QplxuC7t8Vkf0O0tl90mS2+lP1RCF0Eo/jxX7W5LHjd1Ei6Ux2RoP9IY8URLGOeLLLwlX15c0joPFBFvyKPCbC6v6KvAPlvCXoyHBTa21JFZogWL9JleQwkvbeuagJ5ccyLiklXpaA3laoslXgSLG8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1765962295; c=relaxed/simple;
-	bh=VSjEwdY4vzNo1Y266cmO1BQbbnv5YMwl6/zbRswQrBU=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=Nzzbl9dSmJu6J31km7qgKNNZS8hDhgjPD0YrDISfRaknC6uapSdQDiPhe5f/t5HdbQgLy3qol0I+StVExngSgOyena9tG4HdeYgIKU1uECtTKBoUJxINBZTG9q4m/Xoo0pcyPDcQanbyVKuVJegeUwHYeSDcGFnbJRjqvQqoN8o=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=none smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.51
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=huaweicloud.com
-Received: from mail.maildlp.com (unknown [172.19.163.170])
-	by dggsgout11.his.huawei.com (SkyGuard) with ESMTPS id 4dWSXd387BzYQvFr;
-	Wed, 17 Dec 2025 17:04:17 +0800 (CST)
-Received: from mail02.huawei.com (unknown [10.116.40.128])
-	by mail.maildlp.com (Postfix) with ESMTP id 15B9E4056F;
-	Wed, 17 Dec 2025 17:04:44 +0800 (CST)
-Received: from hulk-vt.huawei.com (unknown [10.67.174.121])
-	by APP4 (Coremail) with SMTP id gCh0CgCHNvcackJp5AL6AQ--.18103S4;
-	Wed, 17 Dec 2025 17:04:43 +0800 (CST)
-From: Chen Ridong <chenridong@huaweicloud.com>
-To: longman@redhat.com,
-	tj@kernel.org,
-	hannes@cmpxchg.org,
-	mkoutny@suse.com
-Cc: cgroups@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	lujialin4@huawei.com,
-	chenridong@huaweicloud.com
-Subject: [PATCH -next 2/6] cpuset: add cpuset1_online_css helper for v1-specific operations
-Date: Wed, 17 Dec 2025 08:49:38 +0000
-Message-Id: <20251217084942.2666405-3-chenridong@huaweicloud.com>
-X-Mailer: git-send-email 2.34.1
-In-Reply-To: <20251217084942.2666405-1-chenridong@huaweicloud.com>
-References: <20251217084942.2666405-1-chenridong@huaweicloud.com>
+	s=arc-20240116; t=1765962528; c=relaxed/simple;
+	bh=isu9y3NLPgRZYmA9fVKND9CB3s7DWU0jt1koEIDoL1Q=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=PjhCCwKmKVUlLS+h7rycdmP/VH2nypIZ+mids4bJq6J7sFtcnsJPmUygdulcUcA5egCgkpeD6ecWlXZ4ftH0OU7UXeorrAudf+Indig89jXpgqg25s9uciuhPZvheEL0hPzEDkrFdjSr+kNQZjRx2yenRosqLypt0QbCRUBSvaE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=suse.cz; spf=pass smtp.mailfrom=suse.cz; dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b=vNtMBhb8; dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b=RLEi5ltn; dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b=ouloy7it; dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b=yruZhnva; arc=none smtp.client-ip=195.135.223.130
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=suse.cz
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.cz
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b="vNtMBhb8";
+	dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b="RLEi5ltn";
+	dkim=pass (1024-bit key) header.d=suse.cz header.i=@suse.cz header.b="ouloy7it";
+	dkim=permerror (0-bit key) header.d=suse.cz header.i=@suse.cz header.b="yruZhnva"
+Received: from imap1.dmz-prg2.suse.org (unknown [10.150.64.97])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by smtp-out1.suse.de (Postfix) with ESMTPS id 0E10E336C7;
+	Wed, 17 Dec 2025 09:08:43 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
+	t=1765962524; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references:autocrypt:autocrypt;
+	bh=7xUSD3NVSUMMY86ve39obxcZQZV68mWQy0htU5+nkkA=;
+	b=vNtMBhb8JakSzLAl4z2d65neHE1Q6fzdAEZCLFZqAuNIj4PlOdo48+KmW8zgV88aEglP9z
+	rasI4L78ImWUk07uRx1+gN8+vuQ78n4ZYdDhkpi2nv3ZfBmg+HluIfphmD3YTRYVdKu4oK
+	rh6a2R9ld2c7vsnFJcNbKjPvboyLK+A=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
+	s=susede2_ed25519; t=1765962524;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references:autocrypt:autocrypt;
+	bh=7xUSD3NVSUMMY86ve39obxcZQZV68mWQy0htU5+nkkA=;
+	b=RLEi5ltnjPu3N/A6Jm8i9JNLcBBkZoY3C7oA/k/wCxvd90boWk6hc2zLyLwroQCc2RkGO9
+	4mqqQKMSJgG9/fBw==
+Authentication-Results: smtp-out1.suse.de;
+	none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
+	t=1765962523; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references:autocrypt:autocrypt;
+	bh=7xUSD3NVSUMMY86ve39obxcZQZV68mWQy0htU5+nkkA=;
+	b=ouloy7itfLqbeTSPCDeY/VXjBvp3x+rjq8HaAzQsxpMyNI+qsuyPWYF0c5j19xOe5WyA7d
+	iRZz8woLt1hEm2Rt0Tm67+pZh4I3msEtWf550MC96LQFd9NCIPUCZPN2w1em1FPlRXR1Rw
+	WMbLX4j6R8MRZsTTnU4928BiwH5LiU4=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
+	s=susede2_ed25519; t=1765962523;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references:autocrypt:autocrypt;
+	bh=7xUSD3NVSUMMY86ve39obxcZQZV68mWQy0htU5+nkkA=;
+	b=yruZhnvayZ9WYcztQ9wyXlW5aPlm/W5nOQ77mZ1IAnTAy39hLqiDCwpX6PyU8JQtu0jhRm
+	1AsoRIs8rwrDMWAA==
+Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id 9C3663EA65;
+	Wed, 17 Dec 2025 09:08:42 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
+	by imap1.dmz-prg2.suse.org with ESMTPSA
+	id J4qtJRpzQmmtUgAAD6G6ig
+	(envelope-from <vbabka@suse.cz>); Wed, 17 Dec 2025 09:08:42 +0000
+Message-ID: <a3676b26-feca-474a-b09e-33986f53c998@suse.cz>
+Date: Wed, 17 Dec 2025 10:08:42 +0100
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:gCh0CgCHNvcackJp5AL6AQ--.18103S4
-X-Coremail-Antispam: 1UD129KBjvJXoWxtr1UtFWkKFy5JFWUZryUGFg_yoWxJr4kpF
-	18CFy5JayUJFyUu3yfJa4DWrZ3Kw40qa15tF95Ca4rJFy3AF1j9F1kZas8XFy5JFyDCrWU
-	Xan0y3yS9a4qkrJanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDU0xBIdaVrnRJUUUBG14x267AKxVWrJVCq3wAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
-	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2048vs2IY020E87I2jVAFwI0_Jryl82xGYIkIc2
-	x26xkF7I0E14v26r4j6ryUM28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48ve4kI8wA2z4x0
-	Y4vE2Ix0cI8IcVAFwI0_tr0E3s1l84ACjcxK6xIIjxv20xvEc7CjxVAFwI0_Gr1j6F4UJw
-	A2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x0267AKxVW0oVCq3wAS
-	0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG6I80ewAv7VC0I7IYx2
-	IY67AKxVWUJVWUGwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFVCjc4AY6r1j6r4UM4x0
-	Y48IcxkI7VAKI48JM4x0x7Aq67IIx4CEVc8vx2IErcIFxwCY1x0262kKe7AKxVWUAVWUtw
-	CF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7xkEbVWUJVW8JwC20s026c02F40E14v26r1j
-	6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E67AF67kF1VAFwI0_Jw0_GFylIxkGc2Ij64
-	vIr41lIxAIcVC0I7IYx2IY67AKxVWUJVWUCwCI42IY6xIIjxv20xvEc7CjxVAFwI0_Gr0_
-	Cr1lIxAIcVCF04k26cxKx2IYs7xG6r1j6r1xMIIF0xvEx4A2jsIE14v26r1j6r4UMIIF0x
-	vEx4A2jsIEc7CjxVAFwI0_Gr0_Gr1UYxBIdaVFxhVjvjDU0xZFpf9x0JUFoGdUUUUU=
-X-CM-SenderInfo: hfkh02xlgr0w46kxt4xhlfz01xgou0bp/
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH] mm: memcg: fix unit conversion for K() macro in OOM log
+Content-Language: en-US
+To: Shakeel Butt <shakeel.butt@linux.dev>,
+ Andrew Morton <akpm@linux-foundation.org>
+Cc: Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>,
+ Roman Gushchin <roman.gushchin@linux.dev>,
+ Muchun Song <muchun.song@linux.dev>, Meta kernel team
+ <kernel-team@meta.com>, cgroups@vger.kernel.org, linux-mm@kvack.org,
+ linux-kernel@vger.kernel.org, Chris Mason <clm@fb.com>
+References: <20251216212054.484079-1-shakeel.butt@linux.dev>
+From: Vlastimil Babka <vbabka@suse.cz>
+Autocrypt: addr=vbabka@suse.cz; keydata=
+ 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
+ m6M14QORSWTLRg==
+In-Reply-To: <20251216212054.484079-1-shakeel.butt@linux.dev>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+X-Spam-Flag: NO
+X-Spam-Score: -4.26
+X-Spam-Level: 
+X-Spamd-Result: default: False [-4.26 / 50.00];
+	BAYES_HAM(-3.00)[99.99%];
+	NEURAL_HAM_LONG(-1.00)[-1.000];
+	NEURAL_HAM_SHORT(-0.16)[-0.802];
+	MIME_GOOD(-0.10)[text/plain];
+	FUZZY_RATELIMITED(0.00)[rspamd.com];
+	RCVD_VIA_SMTP_AUTH(0.00)[];
+	ARC_NA(0.00)[];
+	RCPT_COUNT_SEVEN(0.00)[11];
+	MID_RHS_MATCH_FROM(0.00)[];
+	RCVD_TLS_ALL(0.00)[];
+	DKIM_SIGNED(0.00)[suse.cz:s=susede2_rsa,suse.cz:s=susede2_ed25519];
+	FROM_HAS_DN(0.00)[];
+	MIME_TRACE(0.00)[0:+];
+	FROM_EQ_ENVFROM(0.00)[];
+	TO_MATCH_ENVRCPT_ALL(0.00)[];
+	RCVD_COUNT_TWO(0.00)[2];
+	TO_DN_SOME(0.00)[]
 
-From: Chen Ridong <chenridong@huawei.com>
+On 12/16/25 22:20, Shakeel Butt wrote:
+> The commit bc8e51c05ad5 ("mm: memcg: dump memcg protection info on oom
+> or alloc failures") added functionality to dump memcg protections on OOM
+> or allocation failures. It uses K() macro to dump the information and
+> passes bytes to the macro. However the macro take number of pages
+> instead of bytes. It is defined as:
+> 
+>  #define K(x) ((x) << (PAGE_SHIFT-10))
+> 
+> Let's fix this.
+> 
+> Signed-off-by: Shakeel Butt <shakeel.butt@linux.dev>
+> Reported-by: Chris Mason <clm@fb.com>
+> Fixes: bc8e51c05ad5 ("mm: memcg: dump memcg protection info on oom or alloc failures")
 
-This commit introduces the cpuset1_online_css helper to centralize
-v1-specific handling during cpuset online. It performs operations such as
-updating the CS_SPREAD_PAGE, CS_SPREAD_SLAB, and CGRP_CPUSET_CLONE_CHILDREN
-flags, which are unique to the cpuset v1 control group interface.
+Acked-by: Vlastimil Babka <vbabka@suse.cz>
 
-The helper is now placed in cpuset-v1.c to maintain clear separation
-between v1 and v2 logic.
-
-Signed-off-by: Chen Ridong <chenridong@huawei.com>
----
- kernel/cgroup/cpuset-internal.h |  2 ++
- kernel/cgroup/cpuset-v1.c       | 48 +++++++++++++++++++++++++++++++++
- kernel/cgroup/cpuset.c          | 39 +--------------------------
- 3 files changed, 51 insertions(+), 38 deletions(-)
-
-diff --git a/kernel/cgroup/cpuset-internal.h b/kernel/cgroup/cpuset-internal.h
-index 01976c8e7d49..6c03cad02302 100644
---- a/kernel/cgroup/cpuset-internal.h
-+++ b/kernel/cgroup/cpuset-internal.h
-@@ -293,6 +293,7 @@ void cpuset1_hotplug_update_tasks(struct cpuset *cs,
- 			    struct cpumask *new_cpus, nodemask_t *new_mems,
- 			    bool cpus_updated, bool mems_updated);
- int cpuset1_validate_change(struct cpuset *cur, struct cpuset *trial);
-+void cpuset1_online_css(struct cgroup_subsys_state *css);
- #else
- static inline void fmeter_init(struct fmeter *fmp) {}
- static inline void cpuset1_update_task_spread_flags(struct cpuset *cs,
-@@ -303,6 +304,7 @@ static inline void cpuset1_hotplug_update_tasks(struct cpuset *cs,
- 			    bool cpus_updated, bool mems_updated) {}
- static inline int cpuset1_validate_change(struct cpuset *cur,
- 				struct cpuset *trial) { return 0; }
-+static inline void cpuset1_online_css(struct cgroup_subsys_state *css) {}
- #endif /* CONFIG_CPUSETS_V1 */
- 
- #endif /* __CPUSET_INTERNAL_H */
-diff --git a/kernel/cgroup/cpuset-v1.c b/kernel/cgroup/cpuset-v1.c
-index 12e76774c75b..650028ee250b 100644
---- a/kernel/cgroup/cpuset-v1.c
-+++ b/kernel/cgroup/cpuset-v1.c
-@@ -499,6 +499,54 @@ static int cpuset_write_u64(struct cgroup_subsys_state *css, struct cftype *cft,
- 	return retval;
- }
- 
-+void cpuset1_online_css(struct cgroup_subsys_state *css)
-+{
-+	struct cpuset *tmp_cs;
-+	struct cgroup_subsys_state *pos_css;
-+	struct cpuset *cs = css_cs(css);
-+	struct cpuset *parent = parent_cs(cs);
-+
-+	lockdep_assert_cpus_held();
-+	assert_cpuset_lock_held();
-+
-+	if (is_spread_page(parent))
-+		set_bit(CS_SPREAD_PAGE, &cs->flags);
-+	if (is_spread_slab(parent))
-+		set_bit(CS_SPREAD_SLAB, &cs->flags);
-+
-+	if (!test_bit(CGRP_CPUSET_CLONE_CHILDREN, &css->cgroup->flags))
-+		return;
-+
-+	/*
-+	 * Clone @parent's configuration if CGRP_CPUSET_CLONE_CHILDREN is
-+	 * set.  This flag handling is implemented in cgroup core for
-+	 * historical reasons - the flag may be specified during mount.
-+	 *
-+	 * Currently, if any sibling cpusets have exclusive cpus or mem, we
-+	 * refuse to clone the configuration - thereby refusing the task to
-+	 * be entered, and as a result refusing the sys_unshare() or
-+	 * clone() which initiated it.  If this becomes a problem for some
-+	 * users who wish to allow that scenario, then this could be
-+	 * changed to grant parent->cpus_allowed-sibling_cpus_exclusive
-+	 * (and likewise for mems) to the new cgroup.
-+	 */
-+	rcu_read_lock();
-+	cpuset_for_each_child(tmp_cs, pos_css, parent) {
-+		if (is_mem_exclusive(tmp_cs) || is_cpu_exclusive(tmp_cs)) {
-+			rcu_read_unlock();
-+			return;
-+		}
-+	}
-+	rcu_read_unlock();
-+
-+	cpuset_callback_lock_irq();
-+	cs->mems_allowed = parent->mems_allowed;
-+	cs->effective_mems = parent->mems_allowed;
-+	cpumask_copy(cs->cpus_allowed, parent->cpus_allowed);
-+	cpumask_copy(cs->effective_cpus, parent->cpus_allowed);
-+	cpuset_callback_unlock_irq();
-+}
-+
- /*
-  * for the common functions, 'private' gives the type of file
-  */
-diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
-index a5ad124ea1cf..f74da3086120 100644
---- a/kernel/cgroup/cpuset.c
-+++ b/kernel/cgroup/cpuset.c
-@@ -3616,17 +3616,11 @@ static int cpuset_css_online(struct cgroup_subsys_state *css)
- {
- 	struct cpuset *cs = css_cs(css);
- 	struct cpuset *parent = parent_cs(cs);
--	struct cpuset *tmp_cs;
--	struct cgroup_subsys_state *pos_css;
- 
- 	if (!parent)
- 		return 0;
- 
- 	cpuset_full_lock();
--	if (is_spread_page(parent))
--		set_bit(CS_SPREAD_PAGE, &cs->flags);
--	if (is_spread_slab(parent))
--		set_bit(CS_SPREAD_SLAB, &cs->flags);
- 	/*
- 	 * For v2, clear CS_SCHED_LOAD_BALANCE if parent is isolated
- 	 */
-@@ -3641,39 +3635,8 @@ static int cpuset_css_online(struct cgroup_subsys_state *css)
- 		cs->effective_mems = parent->effective_mems;
- 	}
- 	spin_unlock_irq(&callback_lock);
-+	cpuset1_online_css(css);
- 
--	if (!test_bit(CGRP_CPUSET_CLONE_CHILDREN, &css->cgroup->flags))
--		goto out_unlock;
--
--	/*
--	 * Clone @parent's configuration if CGRP_CPUSET_CLONE_CHILDREN is
--	 * set.  This flag handling is implemented in cgroup core for
--	 * historical reasons - the flag may be specified during mount.
--	 *
--	 * Currently, if any sibling cpusets have exclusive cpus or mem, we
--	 * refuse to clone the configuration - thereby refusing the task to
--	 * be entered, and as a result refusing the sys_unshare() or
--	 * clone() which initiated it.  If this becomes a problem for some
--	 * users who wish to allow that scenario, then this could be
--	 * changed to grant parent->cpus_allowed-sibling_cpus_exclusive
--	 * (and likewise for mems) to the new cgroup.
--	 */
--	rcu_read_lock();
--	cpuset_for_each_child(tmp_cs, pos_css, parent) {
--		if (is_mem_exclusive(tmp_cs) || is_cpu_exclusive(tmp_cs)) {
--			rcu_read_unlock();
--			goto out_unlock;
--		}
--	}
--	rcu_read_unlock();
--
--	spin_lock_irq(&callback_lock);
--	cs->mems_allowed = parent->mems_allowed;
--	cs->effective_mems = parent->mems_allowed;
--	cpumask_copy(cs->cpus_allowed, parent->cpus_allowed);
--	cpumask_copy(cs->effective_cpus, parent->cpus_allowed);
--	spin_unlock_irq(&callback_lock);
--out_unlock:
- 	cpuset_full_unlock();
- 	return 0;
- }
--- 
-2.34.1
+> ---
+>  mm/memcontrol.c | 4 ++--
+>  1 file changed, 2 insertions(+), 2 deletions(-)
+> 
+> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+> index e2e49f4ec9e0..6f000f0e76d2 100644
+> --- a/mm/memcontrol.c
+> +++ b/mm/memcontrol.c
+> @@ -5638,6 +5638,6 @@ void mem_cgroup_show_protected_memory(struct mem_cgroup *memcg)
+>  		memcg = root_mem_cgroup;
+>  
+>  	pr_warn("Memory cgroup min protection %lukB -- low protection %lukB",
+> -		K(atomic_long_read(&memcg->memory.children_min_usage)*PAGE_SIZE),
+> -		K(atomic_long_read(&memcg->memory.children_low_usage)*PAGE_SIZE));
+> +		K(atomic_long_read(&memcg->memory.children_min_usage)),
+> +		K(atomic_long_read(&memcg->memory.children_low_usage)));
+>  }
 
