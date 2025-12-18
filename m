@@ -1,129 +1,108 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from dggsgout12.his.huawei.com (dggsgout12.his.huawei.com [45.249.212.56])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 642192F49F6;
-	Thu, 18 Dec 2025 09:43:35 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2F44130F93D;
+	Thu, 18 Dec 2025 09:46:39 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.56
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1766051015; cv=none; b=fOPGtrOiyZl7wEv4B0dT9Gqu860pQ3RS3+MPuSRRoig12+3NjO1dCGMZMYfG4P2kcmv4W2YQNs+Pn6pXyEphyJwnxiJWsqwClvie2zUGZhfLu8XxD1JhguHGdVVeKTBgiYmFTgmg8pVpebsIlwdnTiu6oY6JzPkqEuI0/jlBog8=
+	t=1766051201; cv=none; b=VmlJjMPnjYQXtkpiF8TShxSy0yZKDGwaaL5EcQfEy5i4Qi5a4XuQpDTKHljyUrqt8B5xybHxo85ecEr/1KDEc+FctMkcLYnd+1wNF9QY8oGlw4nPVrzFoqf9yzj/yQ652nfLMnl7z6F9nOtl1UoEhebvbKj+lj3qYLXybbj+xX8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1766051015; c=relaxed/simple;
-	bh=W/qmYeDxG0g6wORIz29Z78deE874oJ9pDVm2KieOcss=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=DeDVjAaH9wgtjTILrLgQSqXxUKZgewjswoas9gR9st5ISdSBx9W57HjPVYhVn0cjlqcwCHqx2T0ae2xliDNPNw6FZMUtiWu3PZ5DGP7XwukacAe1wdfR8YTfpaXLVZ816uk5DneujRIszwCKrIqgj2hxnwexcogGl6t95RFK6wk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=tlt0+kyk; arc=none smtp.client-ip=10.30.226.201
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="tlt0+kyk"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 69A44C4CEFB;
-	Thu, 18 Dec 2025 09:43:29 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1766051015;
-	bh=W/qmYeDxG0g6wORIz29Z78deE874oJ9pDVm2KieOcss=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=tlt0+kykzbzNIp2VLjkAWLd8XB2fRlfNJebkBDgtbtPLc+fvA1vLkUg/zJDXt/TLD
-	 QI9RUNoB4lF6pvQHRDeHFH5HJg1+IzLMk7ze3bNCPy3zJy9sSSF8LrKTXtCM2rsexN
-	 kuGb+KZDBWSktM4WisGBulWXNxViRzSowPPYmfEXlmZFqP+YAdjNdKoeMDblYvIVOq
-	 FJXO1MUyvyRz5L30D+5VvFGm1hfRYsRo5JyitC5OcF0vKcKhi+yPWOx7uK19zkMlmL
-	 opi8nNkCdB2lBMri+A2x17UXa3kofOQbirzivRvlvxMF3UV0MkWq0sv+9Uhx7VqoJj
-	 Rk/Kdz1JGTutw==
-Message-ID: <d62756d4-c249-474e-ae80-478d3c7cf34d@kernel.org>
-Date: Thu, 18 Dec 2025 10:43:27 +0100
+	s=arc-20240116; t=1766051201; c=relaxed/simple;
+	bh=iGlWuQNOsBjwjVrz/y/m4l9JTIs5vu0A6APQ0ZuGMyk=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=GIb/PSzJKbZmcZYm53XiKSgG9oJTWd5Z/5d0es0eWlAA7kQMKdvkJB2tR/y6+GZulats5A9Y7ocn577mWIiy/zTmv+bK8CRGKzGDoyv4iyLjEcAFztGEnOYQmy134w3fXDAeYbX3t7EZlqMCb/qgvuljejMUvgnGRDZszAFWiPg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.56
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
+Received: from mail.maildlp.com (unknown [172.19.163.198])
+	by dggsgout12.his.huawei.com (SkyGuard) with ESMTPS id 4dX5Qp25SNzKHM02;
+	Thu, 18 Dec 2025 17:46:26 +0800 (CST)
+Received: from mail02.huawei.com (unknown [10.116.40.128])
+	by mail.maildlp.com (Postfix) with ESMTP id B5C9140575;
+	Thu, 18 Dec 2025 17:46:36 +0800 (CST)
+Received: from hulk-vt.huawei.com (unknown [10.67.174.121])
+	by APP4 (Coremail) with SMTP id gCh0CgA35vZxzUNpHcJzAg--.22754S2;
+	Thu, 18 Dec 2025 17:46:36 +0800 (CST)
+From: Chen Ridong <chenridong@huaweicloud.com>
+To: longman@redhat.com,
+	tj@kernel.org,
+	hannes@cmpxchg.org,
+	mkoutny@suse.com
+Cc: cgroups@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	lujialin4@huawei.com,
+	chenridong@huaweicloud.com
+Subject: [PATCH -next v2 0/6] cpuset: further separate v1 and v2 implementations
+Date: Thu, 18 Dec 2025 09:31:35 +0000
+Message-Id: <20251218093141.2687291-1-chenridong@huaweicloud.com>
+X-Mailer: git-send-email 2.34.1
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v2 13/28] mm: migrate: prevent memory cgroup release in
- folio_migrate_mapping()
-To: Qi Zheng <qi.zheng@linux.dev>, hannes@cmpxchg.org, hughd@google.com,
- mhocko@suse.com, roman.gushchin@linux.dev, shakeel.butt@linux.dev,
- muchun.song@linux.dev, lorenzo.stoakes@oracle.com, ziy@nvidia.com,
- harry.yoo@oracle.com, imran.f.khan@oracle.com, kamalesh.babulal@oracle.com,
- axelrasmussen@google.com, yuanchu@google.com, weixugc@google.com,
- chenridong@huaweicloud.com, mkoutny@suse.com, akpm@linux-foundation.org,
- hamzamahfooz@linux.microsoft.com, apais@linux.microsoft.com,
- lance.yang@linux.dev
-Cc: linux-mm@kvack.org, linux-kernel@vger.kernel.org,
- cgroups@vger.kernel.org, Muchun Song <songmuchun@bytedance.com>,
- Qi Zheng <zhengqi.arch@bytedance.com>
-References: <cover.1765956025.git.zhengqi.arch@bytedance.com>
- <1554459c705a46324b83799ede617b670b9e22fb.1765956025.git.zhengqi.arch@bytedance.com>
- <3a6ab69e-a2cc-4c61-9de1-9b0958c72dda@kernel.org>
- <02c3be32-4826-408d-8b96-1db51dcababf@linux.dev>
-From: "David Hildenbrand (Red Hat)" <david@kernel.org>
-Content-Language: en-US
-In-Reply-To: <02c3be32-4826-408d-8b96-1db51dcababf@linux.dev>
-Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
+X-CM-TRANSID:gCh0CgA35vZxzUNpHcJzAg--.22754S2
+X-Coremail-Antispam: 1UD129KBjvJXoW7uFyDJFyUXw1kGw13CFWUXFb_yoW8CF45pF
+	93GFW3Xr1UCr1xuwnavw4UZrySqw4xJFWUtF13KryxAFsrA3WUCry293Z3ZryUuFy2krWj
+	qF47tr4YgFyqyaDanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDU0xBIdaVrnRJUUUkC14x267AKxVW8JVW5JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
+	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
+	1l84ACjcxK6xIIjxv20xvE14v26w1j6s0DM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26r4U
+	JVWxJr1l84ACjcxK6I8E87Iv67AKxVW0oVCq3wA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_Gc
+	CE3s1le2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xvF2IEw4CE5I8CrVC2j2WlYx0E
+	2Ix0cI8IcVAFwI0_Jr0_Jr4lYx0Ex4A2jsIE14v26r1j6r4UMcvjeVCFs4IE7xkEbVWUJV
+	W8JwACjcxG0xvY0x0EwIxGrwACjI8F5VA0II8E6IAqYI8I648v4I1lc7CjxVAaw2AFwI0_
+	JF0_Jw1l42xK82IYc2Ij64vIr41l4I8I3I0E4IkC6x0Yz7v_Jr0_Gr1lx2IqxVAqx4xG67
+	AKxVWUJVWUGwC20s026x8GjcxK67AKxVWUGVWUWwC2zVAF1VAY17CE14v26r1q6r43MIIY
+	rxkI7VAKI48JMIIF0xvE2Ix0cI8IcVAFwI0_Jr0_JF4lIxAIcVC0I7IYx2IY6xkF7I0E14
+	v26r1j6r4UMIIF0xvE42xK8VAvwI8IcIk0rVWUJVWUCwCI42IY6I8E87Iv67AKxVW8JVWx
+	JwCI42IY6I8E87Iv6xkF7I0E14v26r4j6r4UJbIYCTnIWIevJa73UjIFyTuYvjfUYCJmUU
+	UUU
+X-CM-SenderInfo: hfkh02xlgr0w46kxt4xhlfz01xgou0bp/
 
-On 12/18/25 10:36, Qi Zheng wrote:
-> 
-> 
-> On 12/18/25 5:09 PM, David Hildenbrand (Red Hat) wrote:
->> On 12/17/25 08:27, Qi Zheng wrote:
->>> From: Muchun Song <songmuchun@bytedance.com>
->>>
->>> In the near future, a folio will no longer pin its corresponding
->>> memory cgroup. To ensure safety, it will only be appropriate to
->>> hold the rcu read lock or acquire a reference to the memory cgroup
->>> returned by folio_memcg(), thereby preventing it from being released.
->>>
->>> In the current patch, the rcu read lock is employed to safeguard
->>> against the release of the memory cgroup in folio_migrate_mapping().
->>
->> We usually avoid talking about "patches".
-> 
-> Got it.
-> 
->>
->> In __folio_migrate_mapping(), the rcu read lock ...
-> 
-> Will do.
-> 
->>
->>>
->>> This serves as a preparatory measure for the reparenting of the
->>> LRU pages.
->>>
->>> Signed-off-by: Muchun Song <songmuchun@bytedance.com>
->>> Signed-off-by: Qi Zheng <zhengqi.arch@bytedance.com>
->>> Reviewed-by: Harry Yoo <harry.yoo@oracle.com>
->>> ---
->>>    mm/migrate.c | 2 ++
->>>    1 file changed, 2 insertions(+)
->>>
->>> diff --git a/mm/migrate.c b/mm/migrate.c
->>> index 5169f9717f606..8bcd588c083ca 100644
->>> --- a/mm/migrate.c
->>> +++ b/mm/migrate.c
->>> @@ -671,6 +671,7 @@ static int __folio_migrate_mapping(struct
->>> address_space *mapping,
->>>            struct lruvec *old_lruvec, *new_lruvec;
->>>            struct mem_cgroup *memcg;
->>> +        rcu_read_lock();
->>>            memcg = folio_memcg(folio);
->>
->> In general, LGTM
->>
->> I wonder, though, whether we should embed that in the ABI.
->>
->> Like "lock RCU and get the memcg" in one operation, to the "return memcg
->> and unock rcu" in another operation.
-> 
-> Do you mean adding a helper function like get_mem_cgroup_from_folio()?
+From: Chen Ridong <chenridong@huawei.com>
 
-Right, something like
+Most of the v1-specific code has already been moved to cpuset-v1.c, but
+some parts remain in cpuset.c, such as the handling of CS_SPREAD_PAGE,
+CS_SPREAD_SLAB, and CGRP_CPUSET_CLONE_CHILDREN. These can also be moved
+to cpuset-v1.c.
 
-memcg = folio_memcg_begin(folio);
-folio_memcg_end(memcg);
+Additionally, several cpuset members are specific to v1, including
+fmeter, relax_domain_level, and the uf_node node. These should only be
+visible when v1 support is enabled (CONFIG_CPUSETS_V1).
 
-Maybe someone reading along has a better idea. Then you can nicely 
-document the requirements in the kerneldocs, and it is clear why the RCU 
-lock is used (internally).
+This series relocates the remaining v1-specific code to cpuset-v1.c and
+guards v1-only members with CONFIG_CPUSETS_V1.
+
+The most significant change is the separation of generate_sched_domains()
+into v1 and v2 versions. For v1, the original function is preserved
+with v2-specific code removed, keeping it largely unchanged since v1 is
+deprecated and receives minimal future updates. For v2, all v1-specific
+code has been removed, resulting in a much simpler and more maintainable
+implementation.
+
+---
+
+v2:
+patch1: remame assert_cpuset_lock_held to lockdep_assert_cpuset_lock_held.
+patch5: remove some unnecessary v1 code.
+patch6: add comment before the goto generate_doms label in the v2 version.
+
+Chen Ridong (6):
+  cpuset: add lockdep_assert_cpuset_lock_held helper
+  cpuset: add cpuset1_online_css helper for v1-specific operations
+  cpuset: add cpuset1_init helper for v1 initialization
+  cpuset: move update_domain_attr_tree to cpuset_v1.c
+  cpuset: separate generate_sched_domains for v1 and v2
+  cpuset: remove v1-specific code from generate_sched_domains
+
+ include/linux/cpuset.h          |   2 +
+ kernel/cgroup/cpuset-internal.h |  42 +++++-
+ kernel/cgroup/cpuset-v1.c       | 241 +++++++++++++++++++++++++++++-
+ kernel/cgroup/cpuset.c          | 253 +++++---------------------------
+ 4 files changed, 312 insertions(+), 226 deletions(-)
 
 -- 
-Cheers
+2.34.1
 
-David
