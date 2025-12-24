@@ -1,28 +1,27 @@
 Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3B7E3241663;
-	Wed, 24 Dec 2025 07:45:37 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 100B11D9A5F;
+	Wed, 24 Dec 2025 07:45:36 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.51
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1766562339; cv=none; b=rkBDcMYPopMDWKuUXc6EsBFELTYiBb8grru48155AWEg2zFeGaTmaC+f8Qz6f4nimbi288goo5mFKEibiL60VOKZSrOd2MAHhiQZ7JjxU0Vr/YgIP3Yc+pA3T9pNDsHT6t8IhSoACsuSJYYaxFtaW2QiZ7MlLRUB4LLgGGHqrCQ=
+	t=1766562339; cv=none; b=jAna2kPFwcb22OSC82joqvXj3MzVuwaEtAdGVNW8fHBz5mpJPAeEjSEejwSZr9gNpdirTsHsnqUN7bfY7+4xQWC2ahJo01s4QanKmwp0XBeTvAgH6CvgHcOHLokpnY1qVKZo+iqUMYKp79HfVEDtDQ4NTF/JojCEpwJNb688b6Q=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1766562339; c=relaxed/simple;
-	bh=af/sk98zsUM4g+eqRJUDh8CH/q9VRnBLA99zr4H3VD0=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=PIwZXRekth0A7XvcMieMKj4Ey5YiMvtXNcQk4Z4tpxOToLrXgukC9a1Pa4GbiQ+KJ7na8hWkBmzJtqjJFvd2VLIzE0ooEmQkz1KR3rlAbg7sFE7ndjrftXV7MxVzgnx3jGwwMNe5KWtwOqeWsSW3xrJs6EGth1m9dlPOgLvy7cQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=none smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.51
+	bh=hWW9931UVpm4wcQiwuBsR3ACkuXKyiGAX5Wgol6YIzY=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version:Content-Type; b=hoPxvcv1zwsc/JQpZlaRnXum9y3dYCprind/6tktQ9/xnIjuHVLbDKLtoiqwoq9Tm+1mdEHrdEKX7R6D+//vRu4qJXGg5RAWZQmTzbDvT7QAaOf7GXtO9vrWPkyQZfNmKOwnXeDI64NLpVOVW91+/ZYA/QMu0wPeLM8VphewQbg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.51
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=huaweicloud.com
-Received: from mail.maildlp.com (unknown [172.19.163.198])
-	by dggsgout11.his.huawei.com (SkyGuard) with ESMTPS id 4dbkRr6RSkzYQtpR;
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
+Received: from mail.maildlp.com (unknown [172.19.163.170])
+	by dggsgout11.his.huawei.com (SkyGuard) with ESMTPS id 4dbkRr2GN6zYQtmq;
 	Wed, 24 Dec 2025 15:44:56 +0800 (CST)
 Received: from mail02.huawei.com (unknown [10.116.40.128])
-	by mail.maildlp.com (Postfix) with ESMTP id 34B4C40576;
-	Wed, 24 Dec 2025 15:45:35 +0800 (CST)
-Received: from hulk-vt.huawei.com (unknown [10.67.174.121])
-	by APP4 (Coremail) with SMTP id gCh0CgA3l_cMmktp9pcvBQ--.63051S7;
+	by mail.maildlp.com (Postfix) with ESMTP id 95D114056C;
 	Wed, 24 Dec 2025 15:45:34 +0800 (CST)
+Received: from hulk-vt.huawei.com (unknown [10.67.174.121])
+	by APP4 (Coremail) with SMTP id gCh0CgA3l_cMmktp9pcvBQ--.63051S2;
+	Wed, 24 Dec 2025 15:45:33 +0800 (CST)
 From: Chen Ridong <chenridong@huaweicloud.com>
 To: akpm@linux-foundation.org,
 	axelrasmussen@google.com,
@@ -48,75 +47,105 @@ Cc: linux-mm@kvack.org,
 	cgroups@vger.kernel.org,
 	lujialin4@huawei.com,
 	chenridong@huaweicloud.com
-Subject: [PATCH -next v2 5/7] mm/mglru: extend lru_gen_shrink_lruvec to support root reclaim
-Date: Wed, 24 Dec 2025 07:30:30 +0000
-Message-Id: <20251224073032.161911-6-chenridong@huaweicloud.com>
+Subject: [PATCH -next v2 0/7] mm/mglru: remove memcg lru
+Date: Wed, 24 Dec 2025 07:30:25 +0000
+Message-Id: <20251224073032.161911-1-chenridong@huaweicloud.com>
 X-Mailer: git-send-email 2.34.1
-In-Reply-To: <20251224073032.161911-1-chenridong@huaweicloud.com>
-References: <20251224073032.161911-1-chenridong@huaweicloud.com>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:gCh0CgA3l_cMmktp9pcvBQ--.63051S7
-X-Coremail-Antispam: 1UD129KBjvJXoWrKF4xKF1rJrWUWFWrWw4kJFb_yoW8Jr1rpa
-	9xG3yUZa4rAr4ag3Z3Xa1kWa4ruw48JF1xJrZrXry8AF4fXFy5K3y2kr4UCrW5Aw4kXrya
-	qryYgryUW3WUZFJanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDU0xBIdaVrnRJUUUmS14x267AKxVWrJVCq3wAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
-	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2048vs2IY020E87I2jVAFwI0_JF0E3s1l82xGYI
-	kIc2x26xkF7I0E14v26ryj6s0DM28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48ve4kI8wA2
-	z4x0Y4vE2Ix0cI8IcVAFwI0_tr0E3s1l84ACjcxK6xIIjxv20xvEc7CjxVAFwI0_Gr1j6F
-	4UJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x0267AKxVW0oVCq
-	3wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG6I80ewAv7VC0I7
-	IYx2IY67AKxVWUJVWUGwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFVCjc4AY6r1j6r4U
-	M4x0Y48IcxkI7VAKI48JM4x0x7Aq67IIx4CEVc8vx2IErcIFxwACI402YVCY1x02628vn2
-	kIc2xKxwCY1x0262kKe7AKxVW8ZVWrXwCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7xkE
-	bVWUJVW8JwC20s026c02F40E14v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E67
-	AF67kF1VAFwI0_GFv_WrylIxkGc2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUCVW8JwCI
-	42IY6xIIjxv20xvEc7CjxVAFwI0_Gr1j6F4UJwCI42IY6xAIw20EY4v20xvaj40_Jr0_JF
-	4lIxAIcVC2z280aVAFwI0_Jr0_Gr1lIxAIcVC2z280aVCY1x0267AKxVW8Jr0_Cr1UYxBI
-	daVFxhVjvjDU0xZFpf9x0pRQJ5wUUUUU=
+X-CM-TRANSID:gCh0CgA3l_cMmktp9pcvBQ--.63051S2
+X-Coremail-Antispam: 1UD129KBjvJXoWxZw18JF4rXFyfKF48Xr48Crg_yoW5XF4xpF
+	Z3Wasrtw4rAFWUXFs7K3W7u34fZa18Aw47WrZYg34fArs0y3WDZr4xtw4ruFW8CrWSqr17
+	Xrn8C3W8XF4UAFJanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDU0xBIdaVrnRJUUU9Y14x267AKxVW5JVWrJwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
+	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
+	1l84ACjcxK6xIIjxv20xvE14v26w1j6s0DM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26r4U
+	JVWxJr1l84ACjcxK6I8E87Iv67AKxVW0oVCq3wA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_Gc
+	CE3s1le2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xvF2IEw4CE5I8CrVC2j2WlYx0E
+	2Ix0cI8IcVAFwI0_Jr0_Jr4lYx0Ex4A2jsIE14v26r1j6r4UMcvjeVCFs4IE7xkEbVWUJV
+	W8JwACjcxG0xvY0x0EwIxGrwACjI8F5VA0II8E6IAqYI8I648v4I1lFIxGxcIEc7CjxVA2
+	Y2ka0xkIwI1lc7CjxVAaw2AFwI0_GFv_Wryl42xK82IYc2Ij64vIr41l4I8I3I0E4IkC6x
+	0Yz7v_Jr0_Gr1lx2IqxVAqx4xG67AKxVWUJVWUGwC20s026x8GjcxK67AKxVWUGVWUWwC2
+	zVAF1VAY17CE14v26r4a6rW5MIIYrxkI7VAKI48JMIIF0xvE2Ix0cI8IcVAFwI0_Jr0_JF
+	4lIxAIcVC0I7IYx2IY6xkF7I0E14v26r4j6F4UMIIF0xvE42xK8VAvwI8IcIk0rVWUJVWU
+	CwCI42IY6I8E87Iv67AKxVWUJVW8JwCI42IY6I8E87Iv6xkF7I0E14v26r4j6r4UJbIYCT
+	nIWIevJa73UjIFyTuYvjTRNJ5oDUUUU
 X-CM-SenderInfo: hfkh02xlgr0w46kxt4xhlfz01xgou0bp/
 
 From: Chen Ridong <chenridong@huawei.com>
 
-The upcoming patch will integrate shrink_many and shrink_node_memcgs.
-Currently, lru_gen_shrink_lruvec only supports non-root reclaim invoked
-from shrink_node_memcgs. This patch extends it to also handle root reclaim.
+The memcg LRU was introduced to improve scalability in global reclaim,
+but its implementation has grown complex and can cause performance
+regressions when creating many memory cgroups [1].
 
-Since the initial setup for root reclaim is already completed in
-lru_gen_shrink_node, we can simply call try_to_shrink_lruvec within
-lru_gen_shrink_lruvec for root reclaim.
+This series implements mem_cgroup_iter with a reclaim cookie in
+shrink_many() for global reclaim, following the pattern already used in
+shrink_node_memcgs(), an approach suggested by Johannes [1]. The new
+design maintains good fairness across cgroups by preserving iteration
+state between reclaim passes.
 
-Signed-off-by: Chen Ridong <chenridong@huawei.com>
+Testing was performed using the original stress test from Yu Zhao [2] on a
+1 TB, 4-node NUMA system. The results show:
+
+    pgsteal:
+                                        memcg LRU    memcg iter
+    stddev(pgsteal) / mean(pgsteal)     106.03%       93.20%
+    sum(pgsteal) / sum(requested)        98.10%       99.28%
+    
+    workingset_refault_anon:
+                                        memcg LRU    memcg iter
+    stddev(refault) / mean(refault)     193.97%      134.67%
+    sum(refault)                       1,963,229    2,027,567
+
+The new implementation shows clear fairness improvements, reducing the
+standard deviation relative to the mean by 12.8 percentage points for
+pgsteal and bringing the pgsteal ratio closer to 100%. Refault counts
+increased by 3.2% (from 1,963,229 to 2,027,567).
+
+To simplify review:
+1. Patch 1 uses mem_cgroup_iter with reclaim cookie in shrink_many()
+2. Patch 2 removes the now-unused memcg LRU code
+3. Patches 3–7 combine shrink_many and shrink_node_memcgs
+   (This reorganization is clearer after switching to mem_cgroup_iter)
+
+[1] https://lore.kernel.org/r/20251126171513.GC135004@cmpxchg.org
+[2] https://lore.kernel.org/r/20221222041905.2431096-7-yuzhao@google.com
+
 ---
- mm/vmscan.c | 10 +++++++++-
- 1 file changed, 9 insertions(+), 1 deletion(-)
 
-diff --git a/mm/vmscan.c b/mm/vmscan.c
-index e55c7835cab5..3a266f6456af 100644
---- a/mm/vmscan.c
-+++ b/mm/vmscan.c
-@@ -4820,7 +4820,15 @@ static void lru_gen_shrink_lruvec(struct lruvec *lruvec, struct scan_control *sc
- {
- 	struct blk_plug plug;
- 
--	VM_WARN_ON_ONCE(root_reclaim(sc));
-+	/*
-+	 * For root reclaim, the initial setup has already been completed externally;
-+	 * proceed directly with the shrinking operation.
-+	 */
-+	if (root_reclaim(sc)) {
-+		try_to_shrink_lruvec(lruvec, sc);
-+		return;
-+	}
-+
- 	VM_WARN_ON_ONCE(!sc->may_writepage || !sc->may_unmap);
- 
- 	lru_add_drain();
+Changes in v2:
+1. Patch 1 now aligns more closely with shrink_node_memcgs
+2. Patch 3 separates the flush_reclaim_state() changes into its own patch
+3. Incorporated feedback/suggestions from Johannes and Shakeel.
+
+Changes from RFC series:
+1. Updated the test result data.
+2. Added patches 3–5 to combine shrink_many and shrink_node_memcgs.
+
+Chen Ridong (7):
+  mm/mglru: use mem_cgroup_iter for global reclaim
+  mm/mglru: remove memcg lru
+  mm/mglru: make calls to flush_reclaim_state() similar for MGLRU and
+    non-MGLRU
+  mm/mglru: rename should_abort_scan to lru_gen_should_abort_scan
+  mm/mglru: extend lru_gen_shrink_lruvec to support root reclaim
+  mm/mglru: combine shrink_many into shrink_node_memcgs
+  mm/mglru: remove memcg disable handling from lru_gen_shrink_node
+
+ Documentation/mm/multigen_lru.rst |  30 ---
+ include/linux/mmzone.h            |  89 ---------
+ mm/memcontrol-v1.c                |   6 -
+ mm/memcontrol.c                   |   4 -
+ mm/mm_init.c                      |   1 -
+ mm/vmscan.c                       | 313 +++---------------------------
+ 6 files changed, 31 insertions(+), 412 deletions(-)
+
 -- 
 2.34.1
 
