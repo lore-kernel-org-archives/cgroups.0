@@ -1,293 +1,92 @@
-Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from va-2-29.ptr.blmpb.com (va-2-29.ptr.blmpb.com [209.127.231.29])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 485ED19D8AC;
-	Thu, 25 Dec 2025 12:45:57 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.51
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9F46726C38C
+	for <cgroups@vger.kernel.org>; Thu, 25 Dec 2025 16:45:26 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.127.231.29
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1766666763; cv=none; b=tgZ8v93UpRzWM/VQvwXkPv4GRXJIF1BWb+J20khZlTRuVVbhifC1HBBk8RW2wWqjXf2vqPeaSUxdBDdYgfrjdD1NMq5skDv3o3rsS7Vj+sdUGT6/OjtuCxC7U3pUskzrqI5q1OY6ZJKsvYnmEWZQuYKqDbFAWqhaW9hIBC2bMg4=
+	t=1766681128; cv=none; b=YLaxZI6oJqKZpj/JI6oSwmt7I9GLNH88MEPyk73VKCIFuhHyzLnddsyb7HO89OAVoHPyihG7HXl2knf1Nx6lvcwnFPIIcdnRPZ4LNAk5o8NlqEMRqXLSscliwxfvOl65Ga0qhJ5kFu9/+RUDHtDtSx14pU73FUVwDxT2DrA5QkM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1766666763; c=relaxed/simple;
-	bh=jIoHEZruMC6rQrpAdDaA2ixzAXbwvcARUL0amQaZ/Qk=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=rpXHOblgAnvkQAfHXnQ9H0uDabcc6BsUSN8OLJc2khFvoe2ceBNpcY6bKQhOIeJnmGRBRRun65zkzq46g54qoi2frnCskPdKxj5XpfpSHiy1rAE3dXuYmsLAevBqlEMmSe4alt2ncp5wRCSK8GCbzjLJ/NhPA4pLkT/Pz/NENRc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=none smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.51
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=huaweicloud.com
-Received: from mail.maildlp.com (unknown [172.19.163.170])
-	by dggsgout11.his.huawei.com (SkyGuard) with ESMTPS id 4dcT3q5FTjzYQv6s;
-	Thu, 25 Dec 2025 20:45:11 +0800 (CST)
-Received: from mail02.huawei.com (unknown [10.116.40.128])
-	by mail.maildlp.com (Postfix) with ESMTP id 159634056E;
-	Thu, 25 Dec 2025 20:45:52 +0800 (CST)
-Received: from hulk-vt.huawei.com (unknown [10.67.174.121])
-	by APP4 (Coremail) with SMTP id gCh0CgDHdfb1MU1pT76_BQ--.27441S20;
-	Thu, 25 Dec 2025 20:45:51 +0800 (CST)
-From: Chen Ridong <chenridong@huaweicloud.com>
-To: longman@redhat.com,
-	tj@kernel.org,
-	hannes@cmpxchg.org,
-	mkoutny@suse.com
-Cc: cgroups@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	lujialin4@huawei.com,
-	chenridong@huaweicloud.com
-Subject: [PATCH RESEND -next 18/21] cpuset: introduce validate_remote_partition
-Date: Thu, 25 Dec 2025 12:30:55 +0000
-Message-Id: <20251225123058.231765-19-chenridong@huaweicloud.com>
-X-Mailer: git-send-email 2.34.1
-In-Reply-To: <20251225123058.231765-1-chenridong@huaweicloud.com>
-References: <20251225123058.231765-1-chenridong@huaweicloud.com>
+	s=arc-20240116; t=1766681128; c=relaxed/simple;
+	bh=LZp7Rn7KVq7rL6RB3F9iQeNPCeJPLJqWhm4LFj+xDLc=;
+	h=References:To:From:Date:Mime-Version:Content-Type:Cc:Subject:
+	 Message-Id:In-Reply-To; b=KT6jJYteJfDcLEvonM/p5l/3kKTjy05QmlKqsGuXOBjpvbQMT2JISqWWzygbdOOzGc9GVbR7c/KMGDG7iaB8Bt+gYWBMeu1lAZrPwaPdX2UtHld0nWMTuN1QS5okRe5F6Itpow23lJnUcl91xZS0XdrOw/mBs8KI8IAzAZCVVTU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=fnnas.com; spf=none smtp.mailfrom=fnnas.com; dkim=pass (2048-bit key) header.d=fnnas-com.20200927.dkim.feishu.cn header.i=@fnnas-com.20200927.dkim.feishu.cn header.b=aDI56EEt; arc=none smtp.client-ip=209.127.231.29
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=fnnas.com
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=fnnas.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=fnnas-com.20200927.dkim.feishu.cn header.i=@fnnas-com.20200927.dkim.feishu.cn header.b="aDI56EEt"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+ s=s1; d=fnnas-com.20200927.dkim.feishu.cn; t=1766681082;
+  h=from:subject:mime-version:from:date:message-id:subject:to:cc:
+ reply-to:content-type:mime-version:in-reply-to:message-id;
+ bh=+ORxIbZHc36hCwJDvGUay9Dhj9NZj8XTOZ7wTnOOdzg=;
+ b=aDI56EEtAvGpFlO5cNqCauzl5TsFiB+EI2BONjHIyO0sgqGkUncZ1Xs15ayPDepqrMnqwW
+ YKWbZSejU9SDB/g8C/NO8TW3FnTd1S2S6mHkrtgiryGMLOYcZUtgu6WODm4qfeUkjH2W3+
+ n3TnrtIbbWdcKQEbWyxAwkV2YlFdGXEsoak2Fny/hHY845g7hWoMnV6x9tZJiApBi+Y7ko
+ 1N0PKRS1hdvAdvLdHiGzo8V/GhdQkuxqmIYGmmhdjDJX1uSK7awsXp0jZ7HFnt00hZYxdH
+ zqso6RYvvrSagAq7Bgv3BoOGL4IRshc8sMsNsGV/VpqCCugX4D/1kNZWg9BsMg==
+References: <20251222021937.1280-1-shechenglong@xfusion.com>
+Reply-To: yukuai@fnnas.com
+To: "shechenglong" <shechenglong@xfusion.com>, <tj@kernel.org>, 
+	<josef@toxicpanda.com>, <axboe@kernel.dk>
+From: "Yu Kuai" <yukuai@fnnas.com>
+Date: Fri, 26 Dec 2025 00:44:37 +0800
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:gCh0CgDHdfb1MU1pT76_BQ--.27441S20
-X-Coremail-Antispam: 1UD129KBjvJXoW3XF4rtr15Gr4UuryxtF17Awb_yoW3Kw1xpF
-	y7Gr4xKFWUJr15C34UJan7uwn5KwsrtF9Fyw13X3ySvFy7A34vyFyjk390ya4UW3srW345
-	Za90gr47WFy7AwUanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDU0xBIdaVrnRJUUUPY14x267AKxVWrJVCq3wAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
-	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2048vs2IY020E87I2jVAFwI0_JF0E3s1l82xGYI
-	kIc2x26xkF7I0E14v26ryj6s0DM28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48ve4kI8wA2
-	z4x0Y4vE2Ix0cI8IcVAFwI0_tr0E3s1l84ACjcxK6xIIjxv20xvEc7CjxVAFwI0_Gr1j6F
-	4UJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x0267AKxVW0oVCq
-	3wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG6I80ewAv7VC0I7
-	IYx2IY67AKxVWUJVWUGwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFVCjc4AY6r1j6r4U
-	M4x0Y48IcxkI7VAKI48JM4x0x7Aq67IIx4CEVc8vx2IErcIFxwCY1x0262kKe7AKxVWUAV
-	WUtwCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7xkEbVWUJVW8JwC20s026c02F40E14v2
-	6r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E67AF67kF1VAFwI0_Jw0_GFylIxkGc2
-	Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVW8JVW5JwCI42IY6xIIjxv20xvEc7CjxVAFwI0_
-	Gr1j6F4UJwCI42IY6xAIw20EY4v20xvaj40_Jr0_JF4lIxAIcVC2z280aVAFwI0_Gr0_Cr
-	1lIxAIcVC2z280aVCY1x0267AKxVW8Jr0_Cr1UYxBIdaVFxhVjvjDU0xZFpf9x0JUvYLPU
-	UUUU=
-X-CM-SenderInfo: hfkh02xlgr0w46kxt4xhlfz01xgou0bp/
+Mime-Version: 1.0
+Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=UTF-8
+X-Original-From: Yu Kuai <yukuai@fnnas.com>
+Received: from [192.168.1.104] ([39.182.0.136]) by smtp.feishu.cn with ESMTPS; Fri, 26 Dec 2025 00:44:39 +0800
+Content-Language: en-US
+Cc: <cgroups@vger.kernel.org>, <linux-block@vger.kernel.org>, 
+	<linux-kernel@vger.kernel.org>, <stone.xulei@xfusion.com>, 
+	<chenjialong@xfusion.com>, <yukuai@fnnas.com>
+Subject: Re: [PATCH] block: fix aux stat accumulation destination
+Message-Id: <71df89fb-1766-40d5-8dd5-5d0c6f49519e@fnnas.com>
+X-Lms-Return-Path: <lba+2694d69f8+5a9340+vger.kernel.org+yukuai@fnnas.com>
+In-Reply-To: <20251222021937.1280-1-shechenglong@xfusion.com>
+User-Agent: Mozilla Thunderbird
 
-From: Chen Ridong <chenridong@huawei.com>
+Hi,
 
-This introduces validate_remote_partition() to consolidate validation
-logic for remote partition operations. It will be used by both
-remote_partition_enable() and remote_partition_disable().
+=E5=9C=A8 2025/12/22 10:19, shechenglong =E5=86=99=E9=81=93:
+> Route bfqg_stats_add_aux() time accumulation into the destination
+> stats object instead of the source, aligning with other stat fields.
+>
+> Signed-off-by: shechenglong <shechenglong@xfusion.com>
+> ---
+>   block/bfq-cgroup.c | 2 +-
+>   1 file changed, 1 insertion(+), 1 deletion(-)
 
-The new function performs the following checks:
-1. Privilege requirement: only CAP_SYS_ADMIN can add CPUs to a
-   remote partition.
-2. Conflict check: ensure added CPUs are not in any existing
-   sub-partitions and that there is at least one online CPU in the
-   excluded mask.
-3. Resource check: prevent allocating all top cpuset's effective CPUs
-   to remote partitions.
-4. Common partition validation.
+Please change the title and follow existing prefix:
 
-Additionally, this patch adds error handling for remote_partition_disable()
-so that cs->prs_err can be updated centrally.
+block, bfq: fix aux stat accumulation destination
 
-Signed-off-by: Chen Ridong <chenridong@huawei.com>
----
- kernel/cgroup/cpuset.c | 118 +++++++++++++++++++++--------------------
- 1 file changed, 60 insertions(+), 58 deletions(-)
+Otherwise, feel free to add:
 
-diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
-index 183975c86d0c..9a7b02d79fee 100644
---- a/kernel/cgroup/cpuset.c
-+++ b/kernel/cgroup/cpuset.c
-@@ -1583,6 +1583,47 @@ static void partition_update(struct cpuset *cs, int prs, struct cpumask *xcpus,
- 	notify_partition_change(cs, old_prs);
- }
- 
-+/**
-+ * validate_remote_partition - Validate for remote partition
-+ * @cs: Target cpuset to validate
-+ * @new_prs: New partition root state to validate
-+ * @excpus: New exclusive effectuve CPUs mask to validate
-+ * @add: exclusive CPUs to be added
-+ * @del: exclusive CPUs to be deleted, can be NULL
-+ *
-+ * Return: PERR_NONE if validation passes, appropriate error code otherwise
-+ */
-+static enum prs_errcode validate_remote_partition(struct cpuset *cs,
-+	int new_prs, struct cpumask *excpus, struct cpumask *add, struct cpumask *del)
-+{
-+	/*
-+	 * The user must have sysadmin privilege.
-+	 */
-+	if (!cpumask_empty(add) && !capable(CAP_SYS_ADMIN))
-+		return PERR_ACCESS;
-+
-+	/*
-+	 * Additions of remote CPUs is only allowed if those CPUs are
-+	 * not allocated to other partitions and there are effective_cpus
-+	 * left in the top cpuset.
-+	 *
-+	 * The effective_xcpus mask can contain offline CPUs, but there must
-+	 * be at least one or more online CPUs present before it can be enabled.
-+	 */
-+	if (cpumask_intersects(add, subpartitions_cpus) ||
-+	    !cpumask_intersects(excpus, cpu_active_mask))
-+		return PERR_INVCPUS;
-+
-+	/*
-+	 * It is not allowed that all effective_cpus of top_cpuset are
-+	 * distributed remote partition
-+	 */
-+	if (cpumask_subset(top_cpuset.effective_cpus, excpus))
-+		return PERR_NOCPUS;
-+
-+	return validate_partition(cs, new_prs, excpus, add, del);
-+}
-+
- /*
-  * remote_partition_enable - Enable current cpuset as a remote partition root
-  * @cs: the cpuset to update
-@@ -1596,31 +1637,15 @@ static void partition_update(struct cpuset *cs, int prs, struct cpumask *xcpus,
- static int remote_partition_enable(struct cpuset *cs, int new_prs,
- 				   struct tmpmasks *tmp)
- {
--	/*
--	 * The user must have sysadmin privilege.
--	 */
--	if (!capable(CAP_SYS_ADMIN))
--		return PERR_ACCESS;
- 
--	/*
--	 * The requested exclusive_cpus must not be allocated to other
--	 * partitions and it can't use up all the root's effective_cpus.
--	 *
--	 * The effective_xcpus mask can contain offline CPUs, but there must
--	 * be at least one or more online CPUs present before it can be enabled.
--	 *
--	 * Note that creating a remote partition with any local partition root
--	 * above it or remote partition root underneath it is not allowed.
--	 */
-+	enum prs_errcode err;
-+
- 	compute_excpus(cs, tmp->new_cpus);
- 	WARN_ON_ONCE(cpumask_intersects(tmp->new_cpus, subpartitions_cpus));
--	if (!cpumask_intersects(tmp->new_cpus, cpu_active_mask) ||
--	    cpumask_subset(top_cpuset.effective_cpus, tmp->new_cpus))
--		return PERR_INVCPUS;
--	if (((new_prs == PRS_ISOLATED) &&
--	     !isolated_cpus_can_update(tmp->new_cpus, NULL)) ||
--	    prstate_housekeeping_conflict(new_prs, tmp->new_cpus))
--		return PERR_HKEEPING;
-+	err = validate_remote_partition(cs, new_prs, tmp->new_cpus,
-+					tmp->new_cpus, NULL);
-+	if (err)
-+		return err;
- 
- 	partition_enable(cs, NULL, new_prs, tmp->new_cpus);
- 	/*
-@@ -1640,7 +1665,8 @@ static int remote_partition_enable(struct cpuset *cs, int new_prs,
-  *
-  * cpuset_mutex must be held by the caller.
-  */
--static void remote_partition_disable(struct cpuset *cs, struct tmpmasks *tmp)
-+static void remote_partition_disable(struct cpuset *cs,
-+		enum prs_errcode prs_err, struct tmpmasks *tmp)
- {
- 	int new_prs;
- 
-@@ -1654,8 +1680,8 @@ static void remote_partition_disable(struct cpuset *cs, struct tmpmasks *tmp)
- 	WARN_ON_ONCE(!cpumask_subset(cs->effective_xcpus, subpartitions_cpus) &&
- 		     !cpumask_empty(subpartitions_cpus));
- 
--	new_prs = cs->prs_err ? -cs->partition_root_state : PRS_MEMBER;
--	partition_disable(cs, NULL, new_prs, cs->prs_err);
-+	new_prs = prs_err ? -cs->partition_root_state : PRS_MEMBER;
-+	partition_disable(cs, NULL, new_prs, prs_err);
- 
- 	/*
- 	 * Propagate changes in top_cpuset's effective_cpus down the hierarchy.
-@@ -1677,39 +1703,19 @@ static void remote_partition_disable(struct cpuset *cs, struct tmpmasks *tmp)
- static void remote_cpus_update(struct cpuset *cs, struct cpumask *xcpus,
- 			       struct cpumask *excpus, struct tmpmasks *tmp)
- {
--	int prs = cs->partition_root_state;
-+	enum prs_errcode err;
- 
- 	if (WARN_ON_ONCE(!is_remote_partition(cs)))
- 		return;
- 
- 	WARN_ON_ONCE(!cpumask_subset(cs->effective_xcpus, subpartitions_cpus));
--
--	if (cpumask_empty(excpus)) {
--		cs->prs_err = PERR_CPUSEMPTY;
--		goto invalidate;
--	}
--
- 	cpumask_andnot(tmp->addmask, excpus, cs->effective_xcpus);
- 	cpumask_andnot(tmp->delmask, cs->effective_xcpus, excpus);
- 
--	/*
--	 * Additions of remote CPUs is only allowed if those CPUs are
--	 * not allocated to other partitions and there are effective_cpus
--	 * left in the top cpuset.
--	 */
--	if (!cpumask_empty(tmp->addmask)) {
--		WARN_ON_ONCE(cpumask_intersects(tmp->addmask, subpartitions_cpus));
--		if (!capable(CAP_SYS_ADMIN))
--			cs->prs_err = PERR_ACCESS;
--		else if (cpumask_intersects(tmp->addmask, subpartitions_cpus) ||
--			 cpumask_subset(top_cpuset.effective_cpus, tmp->addmask))
--			cs->prs_err = PERR_NOCPUS;
--		else if ((prs == PRS_ISOLATED) &&
--			 !isolated_cpus_can_update(tmp->addmask, tmp->delmask))
--			cs->prs_err = PERR_HKEEPING;
--		if (cs->prs_err)
--			goto invalidate;
--	}
-+	err = validate_remote_partition(cs, cs->partition_root_state, excpus,
-+					tmp->addmask, tmp->delmask);
-+	if (err)
-+		return remote_partition_disable(cs, err, tmp);
- 
- 	partition_update(cs, cs->partition_root_state, xcpus, excpus, tmp);
- 	/*
-@@ -1718,9 +1724,6 @@ static void remote_cpus_update(struct cpuset *cs, struct cpumask *xcpus,
- 	cpuset_update_tasks_cpumask(&top_cpuset, tmp->new_cpus);
- 	update_sibling_cpumasks(&top_cpuset, NULL, tmp);
- 	return;
--
--invalidate:
--	remote_partition_disable(cs, tmp);
- }
- 
- static bool is_user_xcpus_exclusive(struct cpuset *cs)
-@@ -2302,11 +2305,11 @@ static void partition_cpus_change(struct cpuset *cs, struct cpuset *trialcs,
- 	prs_err = validate_partition(cs, trialcs->partition_root_state,
- 			trialcs->effective_xcpus, trialcs->effective_xcpus, NULL);
- 	if (prs_err)
--		trialcs->prs_err = cs->prs_err = prs_err;
-+		trialcs->prs_err = prs_err;
- 
- 	if (is_remote_partition(cs)) {
- 		if (trialcs->prs_err)
--			remote_partition_disable(cs, tmp);
-+			remote_partition_disable(cs, trialcs->prs_err, tmp);
- 		else
- 			remote_cpus_update(cs, trialcs->exclusive_cpus,
- 					   trialcs->effective_xcpus, tmp);
-@@ -2846,7 +2849,7 @@ static int update_prstate(struct cpuset *cs, int new_prs)
- 		 * disables child partitions.
- 		 */
- 		if (is_remote_partition(cs))
--			remote_partition_disable(cs, &tmpmask);
-+			remote_partition_disable(cs, PERR_NONE, &tmpmask);
- 		else
- 			local_partition_disable(cs, PERR_NONE, &tmpmask);
- 		/*
-@@ -3696,8 +3699,7 @@ static void cpuset_hotplug_update_tasks(struct cpuset *cs, struct tmpmasks *tmp)
- 		if (cpumask_empty(subpartitions_cpus) ||
- 		    (cpumask_empty(&new_cpus) &&
- 		     partition_is_populated(cs, NULL))) {
--			cs->prs_err = PERR_HOTPLUG;
--			remote_partition_disable(cs, tmp);
-+			remote_partition_disable(cs, PERR_HOTPLUG, tmp);
- 			compute_effective_cpumask(&new_cpus, cs, parent);
- 		}
- 		goto update_tasks;
--- 
-2.34.1
+Reviewed-by: Yu Kuai <yukuai@fnnas.com>
 
+>
+> diff --git a/block/bfq-cgroup.c b/block/bfq-cgroup.c
+> index 9fb9f3533150..6a75fe1c7a5c 100644
+> --- a/block/bfq-cgroup.c
+> +++ b/block/bfq-cgroup.c
+> @@ -380,7 +380,7 @@ static void bfqg_stats_add_aux(struct bfqg_stats *to,=
+ struct bfqg_stats *from)
+>   	blkg_rwstat_add_aux(&to->merged, &from->merged);
+>   	blkg_rwstat_add_aux(&to->service_time, &from->service_time);
+>   	blkg_rwstat_add_aux(&to->wait_time, &from->wait_time);
+> -	bfq_stat_add_aux(&from->time, &from->time);
+> +	bfq_stat_add_aux(&to->time, &from->time);
+>   	bfq_stat_add_aux(&to->avg_queue_size_sum, &from->avg_queue_size_sum);
+>   	bfq_stat_add_aux(&to->avg_queue_size_samples,
+>   			  &from->avg_queue_size_samples);
+
+--=20
+Thansk,
+Kuai
