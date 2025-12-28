@@ -1,108 +1,72 @@
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.12])
+Received: from wxsgout04.xfusion.com (wxsgout03.xfusion.com [36.139.52.80])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 197B013D539;
-	Sun, 28 Dec 2025 02:02:50 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.12
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 306CF5CDF1;
+	Sun, 28 Dec 2025 13:20:33 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=36.139.52.80
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1766887372; cv=none; b=dsmB3IYvK1H5zV37NbJYG3oCg8JDVrK23GJJhchN3gqisa7bscFS3uSbp9NstZPmi2d6tRcUATWyEDeyiSURVk+OEoRvl6LhlplMP9BzIVzUqPpU7DfLl+a9KziMX9crrFV3KdmULGdVMtDxEEyrl6KLTyrN4PGl/pIvDtPpDts=
+	t=1766928038; cv=none; b=i/lb9/qzCzH5guYvr3QCM46hz2YAC7eQzpDKMP4yLe2SCUkc+kfERqZl6E63TSquPdJvA3+evdKICJTY2XLyOfHpT+3yVFxgWCJDRNq4yXuWGhkASNuzRXAO+AZfOTT99RK8CWk3kRmNFNGDbP9o6oZC3rSfc7NMW9x8tdoj5KE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1766887372; c=relaxed/simple;
-	bh=z2IaYp58Msew3QS/60tkLCoX0j0xeHozTFQSPz4iw2E=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=Ael9reSkr/btyYbahpGZT15iqH8cGvXPlxE78Xiq7iRJJtNVO/Qfid7BNfKmOGi8rmnIP0ZFNgDum3S1nzb00irm6aPiITPQYJU0ybldWH45kRKmkfAORrEOQBlrEGkA+xu5a/uT7XMkN9q08w/Y3cacWoGiz359ZTqWRcSkp/A=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=MA0AW7J+; arc=none smtp.client-ip=198.175.65.12
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="MA0AW7J+"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1766887371; x=1798423371;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:in-reply-to;
-  bh=z2IaYp58Msew3QS/60tkLCoX0j0xeHozTFQSPz4iw2E=;
-  b=MA0AW7J+b6y/BXMEqcxfoNatQk2VGoY4Twl6BYvnDJmfFL1lkmoLAgYr
-   QNQW0tpSoxfwIBrsuI4R6BEMyB2iO12WddX36Mw3iGsV3YEJ70hOewsph
-   QyvcDkqPbfjGKPi5iZ94Haxc8iKq/zvF0iCf049xC2mWkNHYSSTEDlFGU
-   Haa+s5Ro5SrZqHPNmEyTxlwgIcdkb9nxMSSOjq5caFOaFCKzkOxe74lh/
-   Fw9Wd80Y11CC6MmBQWDcqBuH0NuTy/SEJtezJQOe0o68HZjjgOGvEkMgu
-   NMEMjtes6UuUtBsIyk+OZzJutmmW8c1P0Zjv/WlOxQ40hPZbsy5GPvY0s
-   A==;
-X-CSE-ConnectionGUID: Qvz/T0tSRFmaGsdvWL0VkQ==
-X-CSE-MsgGUID: ZGTyvElcTTSF4Ce28+gnow==
-X-IronPort-AV: E=McAfee;i="6800,10657,11654"; a="80008890"
-X-IronPort-AV: E=Sophos;i="6.21,182,1763452800"; 
-   d="scan'208";a="80008890"
-Received: from fmviesa008.fm.intel.com ([10.60.135.148])
-  by orvoesa104.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 27 Dec 2025 18:02:50 -0800
-X-CSE-ConnectionGUID: fId7WcIxQQ6EbFuYnqCJNg==
-X-CSE-MsgGUID: 21J7Q3W4Q/6LKmiB1y74FQ==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.21,182,1763452800"; 
-   d="scan'208";a="200936737"
-Received: from lkp-server02.sh.intel.com (HELO dd3453e2b682) ([10.239.97.151])
-  by fmviesa008.fm.intel.com with ESMTP; 27 Dec 2025 18:02:45 -0800
-Received: from kbuild by dd3453e2b682 with local (Exim 4.98.2)
-	(envelope-from <lkp@intel.com>)
-	id 1vZg7H-000000006Bx-07Jm;
-	Sun, 28 Dec 2025 02:02:43 +0000
-Date: Sun, 28 Dec 2025 10:02:18 +0800
-From: kernel test robot <lkp@intel.com>
-To: Chen Ridong <chenridong@huaweicloud.com>, akpm@linux-foundation.org,
-	axelrasmussen@google.com, yuanchu@google.com, weixugc@google.com,
-	david@kernel.org, lorenzo.stoakes@oracle.com,
-	Liam.Howlett@oracle.com, vbabka@suse.cz, rppt@kernel.org,
-	surenb@google.com, mhocko@suse.com, corbet@lwn.net,
-	hannes@cmpxchg.org, roman.gushchin@linux.dev,
-	shakeel.butt@linux.dev, muchun.song@linux.dev,
-	zhengqi.arch@bytedance.com, mkoutny@suse.com
-Cc: llvm@lists.linux.dev, oe-kbuild-all@lists.linux.dev, linux-mm@kvack.org,
-	linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org,
-	cgroups@vger.kernel.org, lujialin4@huawei.com,
-	chenridong@huaweicloud.com
-Subject: Re: [PATCH -next v2 7/7] mm/mglru: remove memcg disable handling
- from lru_gen_shrink_node
-Message-ID: <202512280931.jlaLW51Y-lkp@intel.com>
-References: <20251224073032.161911-8-chenridong@huaweicloud.com>
+	s=arc-20240116; t=1766928038; c=relaxed/simple;
+	bh=w4RNxWHCUqFL/L2DzHQb4YxOGTGp2O/u2ZH/OwjQw4Y=;
+	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=Qla03OyFNbg72pAMPTu4p9EYF7GxbSTtGItHplHSTic6KGwmRB7D5OxD3t49if2rwpCFT0Xr8bWwID+iGmTLO5HW2SlpaVDZhqNTt8aX2e2TLSgX6js0nj+mRS4bNLyosEAmVuZ+kkES1ywR1RzVMTuJ2IJeDNo83CLa59IWtC8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=xfusion.com; spf=pass smtp.mailfrom=xfusion.com; arc=none smtp.client-ip=36.139.52.80
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=xfusion.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=xfusion.com
+Received: from wuxpheds03048.xfusion.com (unknown [10.32.143.30])
+	by wxsgout04.xfusion.com (SkyGuard) with ESMTPS id 4dfKK241ZGzBBx5y;
+	Sun, 28 Dec 2025 21:03:02 +0800 (CST)
+Received: from DESKTOP-Q8I2N5U.xfusion.com (10.82.130.100) by
+ wuxpheds03048.xfusion.com (10.32.143.30) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_RSA_WITH_AES_128_CBC_SHA256) id 15.2.2562.20;
+ Sun, 28 Dec 2025 21:04:41 +0800
+From: shechenglong <shechenglong@xfusion.com>
+To: <yukuai@fnnas.com>, <axboe@kernel.dk>
+CC: <cgroups@vger.kernel.org>, <chenjialong@xfusion.com>,
+	<josef@toxicpanda.com>, <linux-block@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>, <stone.xulei@xfusion.com>, <tj@kernel.org>,
+	shechenglong <shechenglong@xfusion.com>
+Subject: [PATCH v2 1/1] block,bfq: fix aux stat accumulation destination
+Date: Sun, 28 Dec 2025 21:04:26 +0800
+Message-ID: <20251228130426.1338-2-shechenglong@xfusion.com>
+X-Mailer: git-send-email 2.37.1.windows.1
+In-Reply-To: <20251228130426.1338-1-shechenglong@xfusion.com>
+References: <71df89fb-1766-40d5-8dd5-5d0c6f49519e@fnnas.com>
+ <20251228130426.1338-1-shechenglong@xfusion.com>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20251224073032.161911-8-chenridong@huaweicloud.com>
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-ClientProxiedBy: wuxpheds03045.xfusion.com (10.32.131.99) To
+ wuxpheds03048.xfusion.com (10.32.143.30)
 
-Hi Chen,
+Route bfqg_stats_add_aux() time accumulation into the destination
+stats object instead of the source, aligning with other stat fields.
 
-kernel test robot noticed the following build warnings:
+Reviewed-by: Yu Kuai <yukuai@fnnas.com>
+Signed-off-by: shechenglong <shechenglong@xfusion.com>
+---
+ block/bfq-cgroup.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-[auto build test WARNING on v6.19-rc2]
-[also build test WARNING on linus/master next-20251219]
-[cannot apply to akpm-mm/mm-everything rppt-memblock/for-next rppt-memblock/fixes]
-[If your patch is applied to the wrong git tree, kindly drop us a note.
-And when submitting patch, we suggest to use '--base' as documented in
-https://git-scm.com/docs/git-format-patch#_base_tree_information]
-
-url:    https://github.com/intel-lab-lkp/linux/commits/Chen-Ridong/mm-mglru-use-mem_cgroup_iter-for-global-reclaim/20251224-154725
-base:   v6.19-rc2
-patch link:    https://lore.kernel.org/r/20251224073032.161911-8-chenridong%40huaweicloud.com
-patch subject: [PATCH -next v2 7/7] mm/mglru: remove memcg disable handling from lru_gen_shrink_node
-config: x86_64-randconfig-001-20251228 (https://download.01.org/0day-ci/archive/20251228/202512280931.jlaLW51Y-lkp@intel.com/config)
-compiler: clang version 20.1.8 (https://github.com/llvm/llvm-project 87f0227cb60147a26a1eeb4fb06e3b505e9c7261)
-reproduce (this is a W=1 build): (https://download.01.org/0day-ci/archive/20251228/202512280931.jlaLW51Y-lkp@intel.com/reproduce)
-
-If you fix the issue in a separate patch/commit (i.e. not just a new version of
-the same patch/commit), kindly add following tags
-| Reported-by: kernel test robot <lkp@intel.com>
-| Closes: https://lore.kernel.org/oe-kbuild-all/202512280931.jlaLW51Y-lkp@intel.com/
-
-All warnings (new ones prefixed by >>):
-
->> mm/vmscan.o: warning: objtool: shrink_node_memcgs+0xc16: sibling call from callable instruction with modified stack frame
-
+diff --git a/block/bfq-cgroup.c b/block/bfq-cgroup.c
+index 9fb9f3533150..6a75fe1c7a5c 100644
+--- a/block/bfq-cgroup.c
++++ b/block/bfq-cgroup.c
+@@ -380,7 +380,7 @@ static void bfqg_stats_add_aux(struct bfqg_stats *to, struct bfqg_stats *from)
+ 	blkg_rwstat_add_aux(&to->merged, &from->merged);
+ 	blkg_rwstat_add_aux(&to->service_time, &from->service_time);
+ 	blkg_rwstat_add_aux(&to->wait_time, &from->wait_time);
+-	bfq_stat_add_aux(&from->time, &from->time);
++	bfq_stat_add_aux(&to->time, &from->time);
+ 	bfq_stat_add_aux(&to->avg_queue_size_sum, &from->avg_queue_size_sum);
+ 	bfq_stat_add_aux(&to->avg_queue_size_samples,
+ 			  &from->avg_queue_size_samples);
 -- 
-0-DAY CI Kernel Test Service
-https://github.com/intel/lkp-tests/wiki
+2.43.0
+
