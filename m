@@ -1,90 +1,125 @@
-Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-dl1-f74.google.com (mail-dl1-f74.google.com [74.125.82.74])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 57FD41F4168;
-	Thu,  8 Jan 2026 02:13:10 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.51
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 51816145355
+	for <cgroups@vger.kernel.org>; Thu,  8 Jan 2026 03:32:50 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.82.74
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1767838393; cv=none; b=usqA9HbAdHvhlw+W1zifNby1Nic4O5VhIjIq8h/eAcwMvWNRQbGv5qCMM6kEfe7JQg6WlAbsFbktfJYzsxgW2W41z4ZhzuzPVdlCyeQv1KYJd/B+JeEIctnZytaZk7O31IBP+/oEkd0yIbPyKMwHHLiVntMQ2Ddu+kcD7UA+aWY=
+	t=1767843171; cv=none; b=pGf16eWbYyv1c+HqxIJ1I+kXp1bNDnbskQyuYfj2rkXV/2Hs/SYsWZfmQFAWZs9I52UiMHN8acB6C6vxE79bd1dzmKpE8wORbBzKjpAvgvw4Es57N71l2RM68J7CH7cYwSPrMgm5X2Ka0hm6MckWsWItgRoDrz7xdrwayhM8uiQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1767838393; c=relaxed/simple;
-	bh=RLcMg3grPexfbM2TmCCRtpJOZq4fw4amoYAWLVmrMBk=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=otVjqbro+/y/0sn//pio9pC2G7l7po/hzCgdNnez12ymH427J7Djb8Uho7bulWwiPDDJNnLM545THhAKDEEAqg8sB8f2BBI777wKdDX1bM2QaIJ+Vo7F1tCqLNAXUlou2o5DeFMTDQY6bnifrPda7vKvPL13vEzzNTByFaKxKDk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.51
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
-Received: from mail.maildlp.com (unknown [172.19.163.177])
-	by dggsgout11.his.huawei.com (SkyGuard) with ESMTPS id 4dmnwq2PTXzYQtvC;
-	Thu,  8 Jan 2026 09:52:59 +0800 (CST)
-Received: from mail02.huawei.com (unknown [10.116.40.128])
-	by mail.maildlp.com (Postfix) with ESMTP id 31CF84058D;
-	Thu,  8 Jan 2026 09:53:02 +0800 (CST)
-Received: from huaweicloud.com (unknown [10.50.87.129])
-	by APP4 (Coremail) with SMTP id gCh0CgAXd_f8DV9pVBQTDA--.41552S4;
-	Thu, 08 Jan 2026 09:53:02 +0800 (CST)
-From: Zheng Qixing <zhengqixing@huaweicloud.com>
-To: tj@kernel.org,
-	josef@toxicpanda.com,
-	axboe@kernel.dk,
-	yukuai@fnnas.com
-Cc: cgroups@vger.kernel.org,
-	linux-block@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	yi.zhang@huawei.com,
-	yangerkun@huawei.com,
-	houtao1@huawei.com,
-	zhengqixing@huawei.com
-Subject: [PATCH 0/3] blk-cgroup: cleanup and bugfixs in blk-cgroup
-Date: Thu,  8 Jan 2026 09:44:13 +0800
-Message-Id: <20260108014416.3656493-1-zhengqixing@huaweicloud.com>
-X-Mailer: git-send-email 2.39.2
+	s=arc-20240116; t=1767843171; c=relaxed/simple;
+	bh=9JBbWmTH96Cmq+82N16gONcZj3kcx3AiPUO2FGeZD6Y=;
+	h=Date:In-Reply-To:Mime-Version:References:Message-ID:Subject:From:
+	 To:Cc:Content-Type; b=bqQ9UAbtpXiPMvbV2+br1iDZo1Szt9ZS8+b82YaT7o2qnemEoo0WaQ99hKOojkePMor9+QqtCj04fygdoelheLD18MVOVrWhzXwXMzl2d444uVq9cOZem5p02BrOKXWlKDscatloAtYzWsItkabbppYa3N0jfNGbvapIZsinqKk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=flex--bingjiao.bounces.google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=u0wDgVKZ; arc=none smtp.client-ip=74.125.82.74
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=flex--bingjiao.bounces.google.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="u0wDgVKZ"
+Received: by mail-dl1-f74.google.com with SMTP id a92af1059eb24-11f3b5411c7so10168201c88.1
+        for <cgroups@vger.kernel.org>; Wed, 07 Jan 2026 19:32:50 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20230601; t=1767843169; x=1768447969; darn=vger.kernel.org;
+        h=cc:to:from:subject:message-id:references:mime-version:in-reply-to
+         :date:from:to:cc:subject:date:message-id:reply-to;
+        bh=ESVCnXmqmRAQ5ODTER3FAbfmr9FGldplMCss/ukq60A=;
+        b=u0wDgVKZbREiBz+BRqkcfB+cNvjHWID+TFXOReryGr4DAEhf8r7Gb6wwvPaxwghKYr
+         aJttHYyS166F8gZ5XdJURGb0v5DGyvORKp8iZ+aUAX430ooHj7ZXhPdu1N9jBo/drlRb
+         +RdpOzml+ByLQcUGFTGXBSHhOLybHBtc0m4zhHE5tCGQUGEZgC1TyejGmC9NFN7Buqu0
+         v8JoI/tHpPB6bLieFxdPp5jIgm+AzJZpRVNeZhrSo0qG46cANTvmSQwvUMIcQOoxG4Od
+         7WSltz61to2sMfGHtMZ9bmjomefFop2NKhRBIuqhnTBIvCLYQc3L5SAKeFHuFh+zXcMx
+         kHKA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1767843169; x=1768447969;
+        h=cc:to:from:subject:message-id:references:mime-version:in-reply-to
+         :date:x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=ESVCnXmqmRAQ5ODTER3FAbfmr9FGldplMCss/ukq60A=;
+        b=jMCmeRfUlZgziD5Z9Bm69GWUp4GJSNlXmZ5RPeJfVfwaM0hyJlzpkk/Lt3O+vhD1nf
+         zqjqJmVTqudmt6GZ2ISZo5XqXKL3/p+HQJ51txZC5c/vM/MUVky16pzmULTcV+SMc57S
+         hSE7tHqjd7OXmh5bEbXYEhC6IpWtgxR302JUW7I2wxOJiC4O0cjakcn06wIPQ6XSSOsv
+         NGGYYap/yv259Jd0QgWbSJD77mue3p4FVyn0pthEesKGds8yUIo1mpqIQWwLEqlX42/W
+         NnITNy9V4qKq6k1Iu8F8A7EEbRQQuK3WT+53u46sJkGFbb0+nm1fuCeDMU0FBuQC6rAZ
+         sHfw==
+X-Forwarded-Encrypted: i=1; AJvYcCXblIZV/uiFJJfzIT6hnZn6JW+9BxuI/kTD2rRnHzwTLzfjUUb7rhvg1fFnPF90cZsmxRh4pOc0@vger.kernel.org
+X-Gm-Message-State: AOJu0YxeKZ3MyCEnYY2yflEHHiYb9EvgmrKQXc5p2l0OEG+GPzKDqzMF
+	BlQLFm719Tba6iAgNqEHCqbWIGpUYSKE8p1BwDXHJj7FPNcuCZSazprCU+5b0zeBWa+PKhu5g4W
+	bVUA17JdrK4ZKJQ==
+X-Google-Smtp-Source: AGHT+IHrHf9fQdWJM0zf8KVA8vtxEJSCgjeMUhdBV5auR7muROG41/P3KxOzRQbybgRMtKfRwajiaD1GuyIrkw==
+X-Received: from dlbrs6.prod.google.com ([2002:a05:7022:f686:b0:11b:b064:f5dc])
+ (user=bingjiao job=prod-delivery.src-stubby-dispatcher) by
+ 2002:a05:7022:e08:b0:11b:4351:2687 with SMTP id a92af1059eb24-121f8ad0889mr4234493c88.17.1767843169334;
+ Wed, 07 Jan 2026 19:32:49 -0800 (PST)
+Date: Thu,  8 Jan 2026 03:32:45 +0000
+In-Reply-To: <20260106075703.1420072-1-bingjiao@google.com>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:gCh0CgAXd_f8DV9pVBQTDA--.41552S4
-X-Coremail-Antispam: 1UD129KBjvdXoWrtFyUAFy5KFyfXryxCFW3KFg_yoWxCwc_uF
-	yvyFy8Xw45ZF4fCFZ3tFnxXryUCr4UWr40vF1IgrW7Jry3XrsxJ3ZFy3y5XF1xZFW3JFy5
-	Jryqqr4kArnFkjkaLaAFLSUrUUUUjb8apTn2vfkv8UJUUUU8Yxn0WfASr-VFAUDa7-sFnT
-	9fnUUIcSsGvfJTRUUUbIkYFVCjjxCrM7AC8VAFwI0_Gr0_Xr1l1xkIjI8I6I8E6xAIw20E
-	Y4v20xvaj40_Wr0E3s1l1IIY67AEw4v_Jr0_Jr4l8cAvFVAK0II2c7xJM28CjxkF64kEwV
-	A0rcxSw2x7M28EF7xvwVC0I7IYx2IY67AKxVW7JVWDJwA2z4x0Y4vE2Ix0cI8IcVCY1x02
-	67AKxVW8Jr0_Cr1UM28EF7xvwVC2z280aVAFwI0_GcCE3s1l84ACjcxK6I8E87Iv6xkF7I
-	0E14v26rxl6s0DM2AIxVAIcxkEcVAq07x20xvEncxIr21l5I8CrVACY4xI64kE6c02F40E
-	x7xfMcIj6xIIjxv20xvE14v26r1Y6r17McIj6I8E87Iv67AKxVW8Jr0_Cr1UMcvjeVCFs4
-	IE7xkEbVWUJVW8JwACjcxG0xvY0x0EwIxGrwACI402YVCY1x02628vn2kIc2xKxwCY1x02
-	62kKe7AKxVWUtVW8ZwCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7xkEbVWUJVW8JwC20s
-	026c02F40E14v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E67AF67kF1VAFwI0_
-	Jw0_GFylIxkGc2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUJVWUCwCI42IY6xIIjxv20x
-	vEc7CjxVAFwI0_Gr0_Cr1lIxAIcVCF04k26cxKx2IYs7xG6r1j6r1xMIIF0xvEx4A2jsIE
-	14v26r1j6r4UMIIF0xvEx4A2jsIEc7CjxVAFwI0_Gr0_Gr1UYxBIdaVFxhVjvjDU0xZFpf
-	9x07ULdbbUUUUU=
-X-CM-SenderInfo: x2kh0wptl0x03j6k3tpzhluzxrxghudrp/
+Mime-Version: 1.0
+References: <20260106075703.1420072-1-bingjiao@google.com>
+X-Mailer: git-send-email 2.52.0.457.g6b5491de43-goog
+Message-ID: <20260108033248.2791579-1-bingjiao@google.com>
+Subject: [PATCH v7 0/2] mm/vmscan: fix demotion targets checks in reclaim/demotion
+From: Bing Jiao <bingjiao@google.com>
+To: linux-mm@kvack.org
+Cc: linux-kernel@vger.kernel.org, akpm@linux-foundation.org, gourry@gourry.net, 
+	longman@redhat.com, hannes@cmpxchg.org, mhocko@kernel.org, 
+	roman.gushchin@linux.dev, shakeel.butt@linux.dev, muchun.song@linux.dev, 
+	tj@kernel.org, mkoutny@suse.com, david@kernel.org, zhengqi.arch@bytedance.com, 
+	lorenzo.stoakes@oracle.com, axelrasmussen@google.com, 
+	chenridong@huaweicloud.com, yuanchu@google.com, weixugc@google.com, 
+	cgroups@vger.kernel.org, joshua.hahnjy@gmail.com, bingjiao@google.com
+Content-Type: text/plain; charset="UTF-8"
 
-From: Zheng Qixing <zhengqixing@huawei.com>
+Hi Andrew,
 
-Hi,
+I am sorry for issuing a new patch version after v6 has been merged into
+mm-hotfixes-unstable.
 
-This series contains three patches.
+Main updates in v7:
 
-Patch 1 is a cleanup change which extracts the common teardown sequence
-into a helper.
+1. Fixed a bug in v6.
 
-Patches 2 and 3 fix a use-after-free issue triggered by the concurrency
-between switching the device I/O scheduler and blkcg deletion.
+   Specifically, next_demotion_node() may return NUMA_NO_NODE if nodes
+   were hot-unplugged. V6 directly checks
+   node_isset(target_nid, allowed_mask), which will cause out-of-boundary
+   bug if target_nid is NUMA_NO_NODE (-1).
 
-Zheng Qixing (3):
-  blk-cgroup: factor policy pd teardown loop into helper
-  blk-cgroup: fix uaf in blkcg_activate_policy() racing with
-    blkg_free_workfn()
-  blk-cgroup: skip dying blkg in blkcg_activate_policy()
+2. Preferred node selection.
 
- block/blk-cgroup.c | 63 +++++++++++++++++++++++-----------------------
- 1 file changed, 31 insertions(+), 32 deletions(-)
+   [Patch 1/2] originally implemented a random selection from
+   allowed nodes if the preferred node from next_demotion_node()
+   was missing from mems_allowed. This behavior contradicts the
+   purpose of migration_target_control.nid, which is intended to
+   identify the preferred node nearest to the source.
 
--- 
-2.39.2
+   To resolve this inconsistency, incorporat the preferred node
+   selection patch into this series.
+
+
+If there is a consensus among reviewers to backport Patch 2/2
+alongside Patch 1/2, they can be combined.
+Otherwise, I will post Patch 2/2 in another series.
+
+Many thanks!
+
+Best regards,
+Bing
+
+Bing Jiao (2):
+  mm/vmscan: fix demotion targets checks in reclaim/demotion
+  mm/vmscan: select the closest preferred node in demote_folio_list()
+
+ include/linux/cpuset.h       |  6 ++--
+ include/linux/memcontrol.h   |  6 ++--
+ include/linux/memory-tiers.h |  6 ++--
+ kernel/cgroup/cpuset.c       | 54 ++++++++++++++++++++++++------------
+ mm/memcontrol.c              | 16 +++++++++--
+ mm/memory-tiers.c            | 11 +++++---
+ mm/vmscan.c                  | 49 +++++++++++++++++++++++++-------
+ 7 files changed, 105 insertions(+), 43 deletions(-)
+
+--
+2.52.0.457.g6b5491de43-goog
 
