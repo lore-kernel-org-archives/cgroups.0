@@ -1,58 +1,74 @@
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from sg-1-12.ptr.blmpb.com (sg-1-12.ptr.blmpb.com [118.26.132.12])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7809638B645;
-	Thu,  8 Jan 2026 13:52:14 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 42C12218E91
+	for <cgroups@vger.kernel.org>; Thu,  8 Jan 2026 16:12:35 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=118.26.132.12
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1767880337; cv=none; b=DY5T6d7q4yvkVnSfkI8PLveWhleKUm8W9wT3lhRlaOMTZCDmsuRmxnotW63BC6DCVRQIW0xCfx3t8HvhHMJngLnqYdM+eCy3aEFuybR37a2uGy5n+Jb+XTgHyYgM/4Hr7kpvvciUrcOcELHcIc0wpOBMjEOaV/hg/RbeE+EtzBI=
+	t=1767888758; cv=none; b=qxArskMmA97rhdMC3hY5MCre87TtaXIujClcS968BUfrAsPG54C/d527Nxszm5SyOxdenNBJWuV9vUqDxKEVcCfKk/xQH4qRPPDzHd9rkC7f3+GA7EJqFjd6GA3tT72RZFStEkpjqw2sjZKU5DjYuDyGwrtjx767nWUX7PaJgQ4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1767880337; c=relaxed/simple;
-	bh=M7NmYC/Iylm9myghHwqILim55SAUt9QrM+UZYk0eJlw=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=mzuZuftHp25DNS55sSAofvfJL+LkM9NQvCOm7dpZ/bJs2PPYy8mfq/d0d4BgJb329oHY1O3/HNjrRnXSr32N2OJ3n1eie1shGedYTTLTdXhQyIBYJrMX0+TgU6Oi5pYRGvtrSj1s/Ekm7f5BpZWaxgGGLByB0C1cjx0ckQHJok0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=Di4j+R9k; arc=none smtp.client-ip=198.137.202.133
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
+	s=arc-20240116; t=1767888758; c=relaxed/simple;
+	bh=SohaF2/SMnoHVjrTkmr4uq3Mx3bR62uwbaZmAhynnI8=;
+	h=To:Date:Message-Id:In-Reply-To:From:Subject:Content-Type:Cc:
+	 Mime-Version:References; b=dP6HXZyF+9L3wFWv1oPoU+uy6wCV6yNwo+hePOLnQNtYsmAJ4onJADDXc6P5YH7IqkBezCezws6cfkMnrIUKdPkr3TUnTPxNI2iaEjJlCDA8mslTG8PF3Bu/rVAP8HLKrs8wZ1yfDFa3XAJR0Mc5WHJZmiNDh+rO+7Umc2r5MqE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=fnnas.com; spf=none smtp.mailfrom=fnnas.com; dkim=pass (2048-bit key) header.d=fnnas-com.20200927.dkim.feishu.cn header.i=@fnnas-com.20200927.dkim.feishu.cn header.b=0oMxbA/e; arc=none smtp.client-ip=118.26.132.12
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=fnnas.com
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=fnnas.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="Di4j+R9k"
+	dkim=pass (2048-bit key) header.d=fnnas-com.20200927.dkim.feishu.cn header.i=@fnnas-com.20200927.dkim.feishu.cn header.b="0oMxbA/e"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
-	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=M7NmYC/Iylm9myghHwqILim55SAUt9QrM+UZYk0eJlw=; b=Di4j+R9kLqA3lWNhGbECjRl2Ya
-	bkBwXDK0fuqmHJtkr9n1SppYje7O1U/jbEoiceQ8gLEhvTdC2jz5oXEWzaIdWLYFT4zWRYJ2J8MxG
-	24cAu8ywmVEUSkosNHWqEO5cC4+WmbDF31SUP9ThzWF4L7nJ3LAiiVJSZCHE4RZiOB45JiIhh5NnA
-	r+88IG3izle6/WJ7fj58AdHeP3a0piaGt+lsOXX1UPad+ERnv+zz2VdTrz/zO/ZFm2CTXH6g8/qfS
-	J30SsCmHGo0bLqiTO/F84fqu0+/niVQsbmIbdS6a9/bPCsUjFo8oG5BAJLJ3CXswTim08rYAv5wQP
-	Lc/pcqAQ==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.98.2 #2 (Red Hat Linux))
-	id 1vdqQv-0000000HEdd-0r8g;
-	Thu, 08 Jan 2026 13:52:13 +0000
-Date: Thu, 8 Jan 2026 05:52:13 -0800
-From: Christoph Hellwig <hch@infradead.org>
-To: Zheng Qixing <zhengqixing@huaweicloud.com>
-Cc: tj@kernel.org, josef@toxicpanda.com, axboe@kernel.dk, yukuai@fnnas.com,
-	cgroups@vger.kernel.org, linux-block@vger.kernel.org,
-	linux-kernel@vger.kernel.org, yi.zhang@huawei.com,
-	yangerkun@huawei.com, houtao1@huawei.com, zhengqixing@huawei.com
-Subject: Re: [PATCH 3/3] blk-cgroup: skip dying blkg in
- blkcg_activate_policy()
-Message-ID: <aV-2jeMsLFdFRsp5@infradead.org>
-References: <20260108014416.3656493-1-zhengqixing@huaweicloud.com>
- <20260108014416.3656493-4-zhengqixing@huaweicloud.com>
+ s=s1; d=fnnas-com.20200927.dkim.feishu.cn; t=1767888750;
+  h=from:subject:mime-version:from:date:message-id:subject:to:cc:
+ reply-to:content-type:mime-version:in-reply-to:message-id;
+ bh=bkP5A+DWSl0+EX6qB6tFi7CpTKd+rQhuRBEv+xFcGek=;
+ b=0oMxbA/eKMCuKhF6uUOF9n6uJkQRE2Wcu1/h65OCgzsQV1aCSA/NxE2vR+SKQXAAUksUYN
+ frXnY6I6t2kT8QnlvMTBu/bfOBDtHqbm/WMc4yrW1GfFP1GBmhLyGpi10KK9hljB1J7toh
+ NiAho8eAor6howwr+0lb838OGq2ijtdpLoG8rah2fyRbFFP6+ouaf+ktfrOlbp1X7qujG7
+ W2ApHSarhRQU7VKRzFxPB5i24ODJB3Sabnd5sgoEb649xf5Ekfrb10PGO1mIDNntBSGE4I
+ grHr2EUaYDvlHX8N//Vt3yX/8Zyx76JDZPC2kvsJdzkJY+H9jOBy9C5VvYEcWA==
+Content-Language: en-US
+To: "Zheng Qixing" <zhengqixing@huaweicloud.com>, <tj@kernel.org>, 
+	<josef@toxicpanda.com>, <axboe@kernel.dk>
+Date: Fri, 9 Jan 2026 00:12:26 +0800
+Message-Id: <a81a5d38-4ad8-4b46-98dd-0bca721516ce@fnnas.com>
+In-Reply-To: <20260108014416.3656493-2-zhengqixing@huaweicloud.com>
+From: "Yu Kuai" <yukuai@fnnas.com>
+Subject: Re: [PATCH 1/3] blk-cgroup: factor policy pd teardown loop into helper
+User-Agent: Mozilla Thunderbird
+X-Original-From: Yu Kuai <yukuai@fnnas.com>
+Reply-To: yukuai@fnnas.com
+Received: from [192.168.1.104] ([39.182.0.185]) by smtp.feishu.cn with ESMTPS; Fri, 09 Jan 2026 00:12:28 +0800
+X-Lms-Return-Path: <lba+2695fd76d+e5927c+vger.kernel.org+yukuai@fnnas.com>
+Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=UTF-8
+Cc: <cgroups@vger.kernel.org>, <linux-block@vger.kernel.org>, 
+	<linux-kernel@vger.kernel.org>, <yi.zhang@huawei.com>, 
+	<yangerkun@huawei.com>, <houtao1@huawei.com>, <zhengqixing@huawei.com>, 
+	<yukuai@fnnas.com>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260108014416.3656493-4-zhengqixing@huaweicloud.com>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+Mime-Version: 1.0
+References: <20260108014416.3656493-1-zhengqixing@huaweicloud.com> <20260108014416.3656493-2-zhengqixing@huaweicloud.com>
 
-Looks good:
+=E5=9C=A8 2026/1/8 9:44, Zheng Qixing =E5=86=99=E9=81=93:
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+> From: Zheng Qixing<zhengqixing@huawei.com>
+>
+> Move the teardown sequence which offlines and frees per-policy
+> blkg_policy_data (pd) into a helper for readability.
+>
+> No functional change intended.
+>
+> Signed-off-by: Zheng Qixing<zhengqixing@huawei.com>
+> ---
+>   block/blk-cgroup.c | 58 +++++++++++++++++++++-------------------------
+>   1 file changed, 27 insertions(+), 31 deletions(-)
 
+Reviewed-by: Yu Kuai <yukuai@fnnas.com>
+
+--=20
+Thansk,
+Kuai
