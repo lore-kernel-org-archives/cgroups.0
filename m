@@ -1,138 +1,102 @@
-Received: from mail-qk1-f173.google.com (mail-qk1-f173.google.com [209.85.222.173])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from casper.infradead.org (casper.infradead.org [90.155.50.34])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7EC084735BD
-	for <cgroups@vger.kernel.org>; Thu,  8 Jan 2026 11:40:02 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.222.173
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6EE81338592;
+	Thu,  8 Jan 2026 11:42:15 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=90.155.50.34
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1767872406; cv=none; b=LzbiOivolByJcILavGgMTG3jAnMvjErvtHRrCZU7O97lbRXe4swpq2F1ltmq3F3n2K+kQK7QZQbMbQzJdAwSqjBGu8fLmRPVLwEcYKbNNMIN3yLbJ/rOcPmcc3dNcr+783HUmEAMTPd3Ot9/TIdS59BWijHa4/48IhrjLckryWE=
+	t=1767872539; cv=none; b=udr3EQ4yQdnl20ORWSuIqbUmJzQ75yeS0W4466tUVd0wfpW0ecswDPAQbAPelIKYlDtKQlqRb3EEIDO7fWqG0QPoYVK80SS1ThWPJoP6CzUU/ooLS8FH1gg2vEmv5icuwkBWiq4sAj9JSw9J9DPcIXnpykESlyCD7qOj4VUyKv4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1767872406; c=relaxed/simple;
-	bh=ezvnqHz57gvkldOznzeZCMww1jUfcQ7xappaEfnvzZE=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=ZZ2TrnUR8xI7sBTd7QpEmuZXer2kldcO8wVuFLZy99L6Gjz8BqTiupNMDLtjMrIwKLbJTw5Wezi3IfEobn4/B71CEU1rq1AzYVHSRN0K4WdUiTTywyri76BRtfR84lML21DJhMSuA/T8T3ObZdwu0Q60+0PNXyJAUriLOiZo3jE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=YawHteLV; arc=none smtp.client-ip=209.85.222.173
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
+	s=arc-20240116; t=1767872539; c=relaxed/simple;
+	bh=ttupqEGkMEcEuPViZy3HWzygBgTOKjkQ58B9GvzZqPo=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=O6jZF41Fnu1HmjDIKnYRVaDrgfE7d5YrsZNsXwipF9a7qS1pNMSpP/npEwY2UiKigJC3bo2l1A5Uzy+emydD1Dy+3g6x/o1s/iUuRByUidFrEYBa76xtfvoLbAOJcNlBXw05TQby+uehJVqbjYaDH4Lff4u0MApeZ1+AjmToNSE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=DNkbDbQW; arc=none smtp.client-ip=90.155.50.34
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="YawHteLV"
-Received: by mail-qk1-f173.google.com with SMTP id af79cd13be357-8b220ddc189so403195985a.0
-        for <cgroups@vger.kernel.org>; Thu, 08 Jan 2026 03:40:01 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20230601; t=1767872400; x=1768477200; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=De/F7GrZ3a7XQW11zwFhVMyznAHPN5+HCcRNv17+1Go=;
-        b=YawHteLVrnHK3lXXOFIIgMvlqbUWb1l2jMcI7SZhdlee5Hk49JnqZPZHuqm+TVpzZz
-         4RicRRov650HZEdbMMi3ueF/cXYISxpVbPE3M4WZVRsxHM53TZnDdoRJiva3rFqsnjTV
-         GwOZxFVa5V0hxW/DDbqvAXSnvAQLvH1evxeMNUpFshLrEWEsFXmo+o29w3mve3mIjfPW
-         lBrdOYalCBklb+kcFbqrC1c0jeb6nOYkmKKQMNaEkoWGHs070V9YKA7TKkSYwaBRL/b5
-         e+ky/HkNZclcQoKMLxzmqhmjvq57wXiaiGu2KK7noDOY9rdvSGbmVPMYab+QmIgXiGUT
-         zHSg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1767872400; x=1768477200;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to;
-        bh=De/F7GrZ3a7XQW11zwFhVMyznAHPN5+HCcRNv17+1Go=;
-        b=ryTpizj8bdCJr9snw7HfE4dqQal0bxmCJ1v1JT3L4GlsLXyOMWQtt8iQLjvD7FfYif
-         Y1ey18Ehc0BlgnGtNXLU2cWIxptuTP8L1mAHYFR+m+oRrBCB+k5yJwpzkprKhPvq3I2H
-         NC/i8+O92t5q/TBMbkUmDnEH77Qr8bi34iIMfA3L8u06nSXUGBLeWgQnciS8VuH4Zbjv
-         ZmV43617gTCy7YPPvzCQSa8KSSP2oJbYVGxQwH45xyweA4YEJX/RXPC1ZJOS8RmlJej6
-         q2hodLzW2C3jh+BYDuxUwJKA46e5rPv6+7M7/fYfjycUhG9bAZxBaRcc0/Z/w28wfWbi
-         o+vw==
-X-Forwarded-Encrypted: i=1; AJvYcCVD2J7kgJ1zczyp71cITtb6+Ly2pbBlRanzGllhqOM+SeOvGEJ5ePCaTXpEWo73y5qEe/SedwzB@vger.kernel.org
-X-Gm-Message-State: AOJu0YzBce0EFD3hVH9xxzgLonEMN+mmP2PyUILXM/aosSseDbFyVNzH
-	Xi4ZtG3CLkKl2D7jqpzJyVT4dyJ066NlHhVma75KRd5nXJbm6t/yUA2EhE9m5iNbzRn5R7slp+/
-	aLxTLf6Nq8ogOGVG/vuK15UXSZeqVz6/FlGfzHVDl
-X-Gm-Gg: AY/fxX4Xo33DRo3OMJEds/J7OI9nbbIvbXSqRthelQ+y+mToke7vMzBSz1SGK+JqDd7
-	nzChy1uigwPjREKxygXQAAGOzveWsFUGb2eZd6guA263ApxFy9egDPPx/pKVX63WTfgAfH0uWkb
-	HCjgkBsg9jQ7BjL+ivmX/D6P+Xhq358kqfEVxIMjhW5R9fGYZW4dICddKQNRLF5PfEXMZePxhI0
-	u38WPQ/X86CyU5IjGJ93wXQKZCmea++Ff3WQ9SNXKHafIGYpje9GTjMBOhAWwu2JuDMC+iGFcWg
-	Nbm72GsADLCZaKW41/3cNTJhA/yz6YWhHuCU
-X-Google-Smtp-Source: AGHT+IEtTsutQpO25KKJJxkwWclrV1NkoOFyJBOS1res7lIatKk2McpUxH3uFSbvGt+LR+VAYJv6MCV9dzQjj1c4j+4=
-X-Received: by 2002:a05:6214:20c4:b0:87c:152c:7b25 with SMTP id
- 6a1803df08f44-8908417a83emr85986576d6.13.1767872399549; Thu, 08 Jan 2026
- 03:39:59 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="DNkbDbQW"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
+	References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+	Content-Transfer-Encoding:Content-ID:Content-Description;
+	bh=auld4VZzwjVZ31uDi1pYt/0YjX5oiUGQGK3GzcaTNUs=; b=DNkbDbQWcWwr1ypqVVlaMKGHEK
+	zB2ik2MFJ67Fd97QEp38RHTpH+a3EJRrUWQR2vOT/NIf3/6WdEJnn9743FkjVsWh3YM/tZanTwtb/
+	AMIKbzaTVmKCnjnEE2icYVImYDXEld1WKF2gx1IkDU3aleDda9qUuBBwxsrUpIp+qvcjgttsrYTIK
+	aJ60s2W+IL20lO4h7NVdMjuvEcStMLq/DpOQS5l7hUVc54SaTJuozrRlzseICl7c51mwlEl3udKtd
+	+AAdD4W8CVKGdbGZ2I1nsjIzTr6gk24/lH+GV84qEBg7IBgc8LESR3w9sdjhlAagl0s2X0yVEAX/b
+	hZNXEmlw==;
+Received: from 77-249-17-252.cable.dynamic.v4.ziggo.nl ([77.249.17.252] helo=noisy.programming.kicks-ass.net)
+	by casper.infradead.org with esmtpsa (Exim 4.98.2 #2 (Red Hat Linux))
+	id 1vdoP0-0000000EsPO-0AbM;
+	Thu, 08 Jan 2026 11:42:06 +0000
+Received: by noisy.programming.kicks-ass.net (Postfix, from userid 1000)
+	id 42184300E8E; Thu, 08 Jan 2026 12:42:05 +0100 (CET)
+Date: Thu, 8 Jan 2026 12:42:05 +0100
+From: Peter Zijlstra <peterz@infradead.org>
+To: Waiman Long <llong@redhat.com>
+Cc: cgroups@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Tejun Heo <tj@kernel.org>, Chen Ridong <chenridong@huaweicloud.com>,
+	Pierre Gondois <pierre.gondois@arm.com>,
+	Ingo Molnar <mingo@redhat.com>,
+	Vincent Guittot <vincent.guittot@linaro.org>,
+	Dietmar Eggemann <dietmar.eggemann@arm.com>,
+	Steven Rostedt <rostedt@goodmis.org>,
+	Ben Segall <bsegall@google.com>, Mel Gorman <mgorman@suse.de>,
+	Valentin Schneider <vschneid@redhat.com>,
+	Juri Lelli <juri.lelli@redhat.com>, Pingfan Liu <piliu@redhat.com>
+Subject: Re: [PATCHv2 0/2] sched/deadline: Fix potential race in
+ dl_add_task_root_domain()
+Message-ID: <20260108114205.GJ272712@noisy.programming.kicks-ass.net>
+References: <20251119095525.12019-3-piliu@redhat.com>
+ <20251125032630.8746-1-piliu@redhat.com>
+ <aSVlX5Rk1y2FuThP@jlelli-thinkpadt14gen4.remote.csb>
+ <9deefb73-fb3a-4bb0-a808-88c478ea3240@redhat.com>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20260105080230.13171-1-harry.yoo@oracle.com> <20260105080230.13171-2-harry.yoo@oracle.com>
-In-Reply-To: <20260105080230.13171-2-harry.yoo@oracle.com>
-From: Alexander Potapenko <glider@google.com>
-Date: Thu, 8 Jan 2026 12:39:22 +0100
-X-Gm-Features: AQt7F2p4_VUyRgHz6qqEM5-JBZ5E2KV2nkrPg5vKNyZeCt2rwmq1SfsxSID667s
-Message-ID: <CAG_fn=XCx9-uYOhRQXTde7ud=H9kwM_Sf3ZjHQd9hfYDspzeOA@mail.gmail.com>
-Subject: Re: [PATCH V5 1/8] mm/slab: use unsigned long for orig_size to ensure
- proper metadata align
-To: Harry Yoo <harry.yoo@oracle.com>
-Cc: akpm@linux-foundation.org, vbabka@suse.cz, andreyknvl@gmail.com, 
-	cl@gentwo.org, dvyukov@google.com, hannes@cmpxchg.org, linux-mm@kvack.org, 
-	mhocko@kernel.org, muchun.song@linux.dev, rientjes@google.com, 
-	roman.gushchin@linux.dev, ryabinin.a.a@gmail.com, shakeel.butt@linux.dev, 
-	surenb@google.com, vincenzo.frascino@arm.com, yeoreum.yun@arm.com, 
-	tytso@mit.edu, adilger.kernel@dilger.ca, linux-ext4@vger.kernel.org, 
-	linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, hao.li@linux.dev, 
-	stable@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <9deefb73-fb3a-4bb0-a808-88c478ea3240@redhat.com>
 
-On Mon, Jan 5, 2026 at 9:02=E2=80=AFAM Harry Yoo <harry.yoo@oracle.com> wro=
-te:
->
-> When both KASAN and SLAB_STORE_USER are enabled, accesses to
-> struct kasan_alloc_meta fields can be misaligned on 64-bit architectures.
-> This occurs because orig_size is currently defined as unsigned int,
-> which only guarantees 4-byte alignment. When struct kasan_alloc_meta is
-> placed after orig_size, it may end up at a 4-byte boundary rather than
-> the required 8-byte boundary on 64-bit systems.
->
-> Note that 64-bit architectures without HAVE_EFFICIENT_UNALIGNED_ACCESS
-> are assumed to require 64-bit accesses to be 64-bit aligned.
-> See HAVE_64BIT_ALIGNED_ACCESS and commit adab66b71abf ("Revert:
-> "ring-buffer: Remove HAVE_64BIT_ALIGNED_ACCESS"") for more details.
->
-> Change orig_size from unsigned int to unsigned long to ensure proper
-> alignment for any subsequent metadata. This should not waste additional
-> memory because kmalloc objects are already aligned to at least
-> ARCH_KMALLOC_MINALIGN.
->
-> Suggested-by: Andrey Ryabinin <ryabinin.a.a@gmail.com>
-> Cc: stable@vger.kernel.org
-> Fixes: 6edf2576a6cc ("mm/slub: enable debugging memory wasting of kmalloc=
-")
-> Signed-off-by: Harry Yoo <harry.yoo@oracle.com>
-> ---
->  mm/slub.c | 14 +++++++-------
->  1 file changed, 7 insertions(+), 7 deletions(-)
->
-> diff --git a/mm/slub.c b/mm/slub.c
-> index ad71f01571f0..1c747435a6ab 100644
-> --- a/mm/slub.c
-> +++ b/mm/slub.c
-> @@ -857,7 +857,7 @@ static inline bool slab_update_freelist(struct kmem_c=
-ache *s, struct slab *slab,
->   * request size in the meta data area, for better debug and sanity check=
-.
->   */
->  static inline void set_orig_size(struct kmem_cache *s,
-> -                               void *object, unsigned int orig_size)
-> +                               void *object, unsigned long orig_size)
->  {
->         void *p =3D kasan_reset_tag(object);
->
-> @@ -867,10 +867,10 @@ static inline void set_orig_size(struct kmem_cache =
-*s,
->         p +=3D get_info_end(s);
->         p +=3D sizeof(struct track) * 2;
->
-> -       *(unsigned int *)p =3D orig_size;
-> +       *(unsigned long *)p =3D orig_size;
+On Wed, Jan 07, 2026 at 02:57:00PM -0500, Waiman Long wrote:
+> 
+> On 11/25/25 3:14 AM, Juri Lelli wrote:
+> > Hi,
+> > 
+> > On 25/11/25 11:26, Pingfan Liu wrote:
+> > > These two patches address the issue reported by Juri [1] (thanks!).
+> > > 
+> > > The first removes an unnecessary comment, the second is the actual fix.
+> > > 
+> > > @Tejun, while these could be squashed together, I kept them separate to
+> > > maintain the one-patch-one-purpose rule. let me know if you'd like me to
+> > > resend these in a different format, or feel free to adjust as needed.
+> > > 
+> > > [1]: https://lore.kernel.org/lkml/aSBjm3mN_uIy64nz@jlelli-thinkpadt14gen4.remote.csb
+> > > 
+> > > Pingfan Liu (2):
+> > >    sched/deadline: Remove unnecessary comment in
+> > >      dl_add_task_root_domain()
+> > >    sched/deadline: Fix potential race in dl_add_task_root_domain()
+> > > 
+> > >   kernel/sched/deadline.c | 12 ++----------
+> > >   1 file changed, 2 insertions(+), 10 deletions(-)
+> > For both
+> > 
+> > Acked-by: Juri Lelli <juri.lelli@redhat.com>
+> 
+> Peter,
+> 
+> Are these 2 patches eligible to be merged into the the scheduler branch of
+> the tip tree? These are bug fixes to the deadline scheduler code.
 
-Instead of calculating the offset of the original size in several
-places, should we maybe introduce a function that returns a pointer to
-it?
+Thanks for the ping -- just to double check, I need to take the v2
+patches, that are posted inside the v7 thread?
+
+I mean; I absolutely detest posting new series in the same thread as an
+older series and then you go and do non-linear versioning just to make
+it absolutely impossible to tell what's what. :-(
