@@ -1,264 +1,507 @@
-Received: from mx0a-00069f02.pphosted.com (mx0a-00069f02.pphosted.com [205.220.165.32])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pj1-f51.google.com (mail-pj1-f51.google.com [209.85.216.51])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E72823A7F6B;
-	Thu,  8 Jan 2026 09:04:21 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=205.220.165.32
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1767863073; cv=fail; b=MFpUrqm7DQhbq5utHjoq34QhK3l87Xw34wm+pQ2LpMaN+WK1EHwgRiNcscuo5zAmEsvvQvcotqVC6zLo0X1zbNDgkJhHOni1oApR6oqaxtfTwBCD+KmL03LL3JPyyVtzVk8XORY346r75ijTM8gZSn4+3GkEWUq2zykBCCZTwY4=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1767863073; c=relaxed/simple;
-	bh=5Bpb/qg0UD9XIZvO+eqDBetEsxhse0/8pGt+Cgs7hyA=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:Content-Type:
-	 Content-Disposition:In-Reply-To:MIME-Version; b=NK1OSyyqcRayjpKEQJzFD168BSryWc4NaNbxXPfTqqEB7k4lviqA0MMht1W976tJY/xD8/HWRDivsw+wgAUwT5Mb3pVKCef9SijZVlW5+mu8VaOf81HFEgjzX2J4lcIRtFnmPz/mHcZYe8UWqXiV5gtv4JpOSopeN+vsXDVB8d0=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=fU5hpL4f; dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b=v81gw6AJ; arc=fail smtp.client-ip=205.220.165.32
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oracle.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E33783C1997
+	for <cgroups@vger.kernel.org>; Thu,  8 Jan 2026 09:36:25 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.51
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1767864992; cv=none; b=r+0qIEv0TPRDlrZWyiUA4saddKj+h+VsaTj8hp9J7yRuu23ciTvCt910GieN/nPV0V54kjcZDYozPPUj0hkebNtG3JfWsL8kr7zNLUwh7KOKTLLp+GOKzKL3wyfQTDRXLKk7fabLTmQsIAzQahPRHoLzUAmp31pmG9d1lmUMTYQ=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1767864992; c=relaxed/simple;
+	bh=z5vkkbGDVR6r6tL312e5eblDlnh/A3XrI22sJyNt0bE=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=tQt+yiz4GMT37Jb08U6s2SwV4TTBe4bp4KLjoAlQ234czQ1Qa+EuMJ462tfQY4e1T/gHxyL9JHDiuLAozM6pBgbigqWpIFbZhYTAnaT5zQAeFwe1RPdfgUy5degEGf7m1d14FGeRKLSWuLuZEIxRkEjNJ9U/Wd9FM1rfBQoWhok=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=ZBM4+8Qs; arc=none smtp.client-ip=209.85.216.51
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="fU5hpL4f";
-	dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b="v81gw6AJ"
-Received: from pps.filterd (m0246627.ppops.net [127.0.0.1])
-	by mx0b-00069f02.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 6084acmW3711761;
-	Thu, 8 Jan 2026 09:02:54 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=cc
-	:content-type:date:from:in-reply-to:message-id:mime-version
-	:references:subject:to; s=corp-2025-04-25; bh=tnFgBZ//FXNQIuSVX8
-	95a7jwkt94u25JR97v5nYMaPk=; b=fU5hpL4feHqB4JnSiEXNcQxSOxTadBozKQ
-	tM6uTEMPyiDLQIHIoaYjgdSCpd7aMD6IgxMQ9NSIH6xTdtWgLSIrAZ46C68Nxqpw
-	yV2ucqJxb0kfPoS8PLUAarAZLadQpQnGSdDQOFsJHsZWTiNHWBdWV3LRdEl+fI8Q
-	W4qntTj2wNAo5MX1T9GiRMsXEePPneVOrN1gyS2kmNvY+igL67BULDc2V2aVAOfa
-	EwvaXcWBaKp94zBOLxsPUdBvTt5rCdf25CjCM4qkVtOTqGK5mU0Apfh87ryg6ydb
-	WtHYq+7glHi0HTBJnNhfwHsXh0XgX1fGKcu7TJWgqSdl4u96M0dg==
-Received: from iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta03.appoci.oracle.com [130.35.103.27])
-	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 4bj5pnr7nr-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Thu, 08 Jan 2026 09:02:53 +0000 (GMT)
-Received: from pps.filterd (iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
-	by iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (8.18.1.2/8.18.1.2) with ESMTP id 6088lQ2r026334;
-	Thu, 8 Jan 2026 09:02:52 GMT
-Received: from byapr05cu005.outbound.protection.outlook.com (mail-westusazon11010008.outbound.protection.outlook.com [52.101.85.8])
-	by iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTPS id 4besjn4c58-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Thu, 08 Jan 2026 09:02:52 +0000
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=tpXgqTKXhSCpePOTXDEXkDZY/nVVv0C3b9DYZ8lviZVcAG/h7w1QTiF2JjPWuJQ3POLuL2ibGLWWVxwjxhqEYZU0tKcqvDZrUr5/0cbPKat58YObuNo1K0cCBVrIwi2RDvgvoU+NlQHkcFyoxh6JjI/Al5NXN6e0veXbyPGyIDFcErnYDOkzdCpe8acZ/LZLv10bWCaUyZe/znxXUvBFWVX1dOsQHQBVf8uw2KVZ82S9VmXaoxlwusDN1vuuQohxyKi+smYkJOn4ERQaAJVOj3Hls4yJAbNIQfdUwAc+sIAA7gPrHn5GoKHAWc145GHhigTZc9N3Ic39OJKhDgmd/g==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=tnFgBZ//FXNQIuSVX895a7jwkt94u25JR97v5nYMaPk=;
- b=eySMZ7a17QPOY6fKx5vozgijCo9YlbsvrzY9X8YQgcValhaW9CnBpQm3WxmNSiwtM9CsaJ7NylpSY8/Dtz8bI0u7nfyHD5IE7mz5AKqwgWNRZKWzYztz13pdOsJ2fIkCCZuMiQgfgiWQ4nWvduJA1deISZYxv5l9NqkhqKKDsT7p3NRGgiI/JYzpErscPOIwT0ivj93Qaemo9+moux+S8p1c/IVwYbtp7sw3DX5Sh1xLYkikKVf6/5wIJrHiLYcSndWaoXlhzi7DEVyGBw7WXxNwd1wgu4mm930KQyPX1PvoqPyckj/ZJY0nhe1RXW7PuNBXG9qOyJEX9Ci2yOpbmg==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
- dkim=pass header.d=oracle.com; arc=none
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="ZBM4+8Qs"
+Received: by mail-pj1-f51.google.com with SMTP id 98e67ed59e1d1-34f2a0c4574so2386380a91.1
+        for <cgroups@vger.kernel.org>; Thu, 08 Jan 2026 01:36:24 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=tnFgBZ//FXNQIuSVX895a7jwkt94u25JR97v5nYMaPk=;
- b=v81gw6AJeb3BWzbe3U9p7o/UiaBK++CO0fRZpDsKxxp/24hS/SsuehFFBis3/oO7ybAcKiG0Nt9T56D4g0y7bFbABhNd6E/XmFv+ULaDUNp1V9PTXWcZeOiKvjQYN6NC5+r8YE9/Rjt7+DCx7pONgpGJF6owHnWgWgsh6UHdyNs=
-Received: from CH3PR10MB7329.namprd10.prod.outlook.com (2603:10b6:610:12c::16)
- by IA1PR10MB7388.namprd10.prod.outlook.com (2603:10b6:208:42c::15) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9499.2; Thu, 8 Jan
- 2026 09:02:49 +0000
-Received: from CH3PR10MB7329.namprd10.prod.outlook.com
- ([fe80::c2a4:fdda:f0c2:6f71]) by CH3PR10MB7329.namprd10.prod.outlook.com
- ([fe80::c2a4:fdda:f0c2:6f71%7]) with mapi id 15.20.9499.002; Thu, 8 Jan 2026
- 09:02:48 +0000
-Date: Thu, 8 Jan 2026 18:02:38 +0900
-From: Harry Yoo <harry.yoo@oracle.com>
-To: Vlastimil Babka <vbabka@suse.cz>
-Cc: akpm@linux-foundation.org, andreyknvl@gmail.com, cl@gentwo.org,
-        dvyukov@google.com, glider@google.com, hannes@cmpxchg.org,
-        linux-mm@kvack.org, mhocko@kernel.org, muchun.song@linux.dev,
-        rientjes@google.com, roman.gushchin@linux.dev, ryabinin.a.a@gmail.com,
-        shakeel.butt@linux.dev, surenb@google.com, vincenzo.frascino@arm.com,
-        yeoreum.yun@arm.com, tytso@mit.edu, adilger.kernel@dilger.ca,
-        linux-ext4@vger.kernel.org, linux-kernel@vger.kernel.org,
-        cgroups@vger.kernel.org, hao.li@linux.dev
-Subject: Re: [PATCH V5 8/8] mm/slab: place slabobj_ext metadata in unused
- space within s->size
-Message-ID: <aV9yrnpk1sEDIJEY@hyeyoo>
-References: <20260105080230.13171-1-harry.yoo@oracle.com>
- <20260105080230.13171-9-harry.yoo@oracle.com>
- <8c67dcbe-f393-4da6-8d24-f9da79c246c4@suse.cz>
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <8c67dcbe-f393-4da6-8d24-f9da79c246c4@suse.cz>
-X-ClientProxiedBy: SL2P216CA0116.KORP216.PROD.OUTLOOK.COM (2603:1096:101::13)
- To CH3PR10MB7329.namprd10.prod.outlook.com (2603:10b6:610:12c::16)
+        d=gmail.com; s=20230601; t=1767864983; x=1768469783; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=miqdi3JWBKoxNnDoIDRRY9WTssFbqfALy728r5SCWyA=;
+        b=ZBM4+8Qs1lwBkzYtf/BgkSLN3ebPtIVWZQdIXILLD7Sr7sR40kVTC6tj0Dsy+bVi7k
+         t8bUHMkaCMDg1RsOgxVdXV7voDZzYPnsEE8U/0xbvUZBg6Uu7fWaUdiPLjaIcjpKeVB6
+         OssJ7ef5JC32D8jXHMwGT/nVdqVQA8quUi7q4PO0SlRfH/aSxNAT86Lf4WDupnRl9ydY
+         7oI9SKjKUBNSI3tBY2Lddi7W2hpBVXCZr7DDbit8B2V4I2v23Y1sH4y0VUtemVGtmJtq
+         dds64sjLqN5NTvzDDwazMpt+SUIHHSrhRhvfQtprn0fOp4uCK0ZNad9+1xgDRICv922f
+         KNZg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1767864983; x=1768469783;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=miqdi3JWBKoxNnDoIDRRY9WTssFbqfALy728r5SCWyA=;
+        b=aZEeWdU6RiqTr0ozNb+w3E2CXQ/BcuodnPrRvRUU1MeEbMnS2QWU2meVNF+YVvqe56
+         hKgNj5pdNcJs/CqH4A23uiqxgksHHX/Pm8R8q4C/SRWMkAGgCJsvjmkBg0ZJKxvrXfVj
+         YCxDOytjWZQNKYXQXsI+DFZ5DJdcgY9knHZeMTcuqJ7RTfWCJeqJ/P4fhB2l1XE8thUC
+         VZh3qciPF4NJxPnx9GnuiLdjovF4csE/2KIioaowd7bN6SsHaNn840szmF1wRMIiI6M0
+         5itn9ZFfNyu5jZY9nujHdZEYv40J4ZzKQaJI3hXoGfR7ascj5r9UU/6veiDPqyWQe2Yj
+         7Alw==
+X-Forwarded-Encrypted: i=1; AJvYcCVl649YTxKQJhtQYSUTXC1FH2a5qeER9FjEKh+flxnmeM7swIo4geGriYABxePh/U7fABB52hGU@vger.kernel.org
+X-Gm-Message-State: AOJu0YwBDUZm6/gNZZpQrlv+P96U83TlXlqOhQjtnrQh/YVqYD5Z2d77
+	bktjvTFVON/uLsTo01Zg+ruP/NHNmWn7I3IB1t1RYmv8s3UUuU2LWl8540n+Ug==
+X-Gm-Gg: AY/fxX5BXt+imwu2pleYthipcCz7B+E6ybNKVLmebXAjxrdtqrfjnctL3pOQXqVs/xp
+	3ngJUNVkovMCIuXOwkCZpodA3HVofRewAdp5v/qNeObhdAKqSqlk07dM7McVYsQYM84owCrYRaO
+	/Ee/AJVKIdXfPsPYTVh+CRZR3fZLrhpQGBoA9p3tUH42OWo2OAs9aKY1ulW3sanlrnncWHR93mO
+	SOouNnnWC6Igkwl/EsvX6xPJiy2ry3DXmcGuwPb2kFqmfm6mamo2QJzAatJSEnwS9FZa1HNhKVD
+	zrvlhMYLRZU1SilbrHdrwcZJ7yhlcseZ4cddY8X8H8XJ/p6YTfLBqf4UroyT4w3uFg8WFOFKYqV
+	Ll/HnRR/grlB1d6Ra73vZzFFu6uM5ZNp63klBjiZ1bOb/7rXoNHAxdqdPjE54R6pLg2O6lBb1ma
+	VNk+cZZ78y1c6++9umNcuZ+k8=
+X-Google-Smtp-Source: AGHT+IHSReaBoY0payJlLNXxYuXOcysW/4kuuotsiPj+TOOyIlWaCgj/F8BpW7CjLFi/EpDUUEbMPg==
+X-Received: by 2002:a17:903:1b4c:b0:2a1:3cd9:a734 with SMTP id d9443c01a7336-2a3ee49cfc7mr47710045ad.43.1767864982383;
+        Thu, 08 Jan 2026 01:36:22 -0800 (PST)
+Received: from NV-J4GCB44.nvidia.com ([103.74.125.162])
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2a3f3115682sm37460985ad.55.2026.01.08.01.36.19
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 08 Jan 2026 01:36:21 -0800 (PST)
+From: Jianyue Wu <wujianyue000@gmail.com>
+X-Google-Original-From: Jianyue Wu <jianyuew@nvidia.com>
+To: jianyuew@nvidia.com,
+	hannes@cmpxchg.org
+Cc: Jianyue Wu <wujianyue000@gmail.com>,
+	mhocko@kernel.org,
+	roman.gushchin@linux.dev,
+	shakeel.butt@linux.dev,
+	muchun.song@linux.dev,
+	akpm@linux-foundation.org,
+	linux-mm@kvack.org,
+	cgroups@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH] mm: optimize stat output for 11% sys time reduce
+Date: Thu,  8 Jan 2026 17:36:02 +0800
+Message-ID: <20260108093610.212023-1-jianyuew@nvidia.com>
+X-Mailer: git-send-email 2.43.0
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: CH3PR10MB7329:EE_|IA1PR10MB7388:EE_
-X-MS-Office365-Filtering-Correlation-Id: 5248b206-a86f-4bc4-8236-08de4e94b1da
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam: BCL:0;ARA:13230040|366016|1800799024|7416014|376014;
-X-Microsoft-Antispam-Message-Info:
-	=?us-ascii?Q?CKvnobftYhxdsOaZTzFJepPEeHqOraOMuTSI+mneeuUt4+pXkKDbFkD5n29n?=
- =?us-ascii?Q?PifUYJas3tIMd/yz4P8TACWsrWuKMJeKKpT3MUQdW+LKCHfhfUp/GrblRPY9?=
- =?us-ascii?Q?kyq4HTy3Fc/PngErQOip48FVr/C+6uwzWrqp9nbNhuZtB0z6Aj621LxKq5mT?=
- =?us-ascii?Q?Fl0EVdSqV6Iv72Ix21q+fq6icKOVr2trZp5s5k9VUp3PujbF1Sen40+VfD2p?=
- =?us-ascii?Q?CE7cPjX68NI52NxhAHb2gra8QtN/kzNTBX7dPYMI4kpKSvEl6WZBiZo5yjQx?=
- =?us-ascii?Q?zCrtqmLFMNJTakEuMNzSmlXPtSNUZeLkHNFQqDYNbe1isR7DnCw0OKSmjxoZ?=
- =?us-ascii?Q?RH6l8PNzRW4sdOn5Xdl6VJ8XbRCR8gN9mBS80kgJ6qLohA0WCOvm4+dY3lB3?=
- =?us-ascii?Q?4ss/tCz9LVfEqA+FWH/cWWmF+oets1mVXHg4kU4mHkIKsEqgjJi9ANEpO/Uw?=
- =?us-ascii?Q?S9R0UZH9AZtFbVTf7YieCzWy/ZRVTLSiUOE+Xb6zPGvZSAGA8puI2kv50KrT?=
- =?us-ascii?Q?k0v4mTf6qdPQDhOVaTpqmQqm0cDHD4O2LStvLfBmd2tU9JsRtytZdJYNrswy?=
- =?us-ascii?Q?nPS/kkIL0r0OY3nJP8Zyl4qX7ggiZyyD8jV5kqb2Gblr/KuRLy4SFxbY35uj?=
- =?us-ascii?Q?UHmWkV/NVMxKERrUqS5TRpvqXQsW6MV+DpinD01kAuJywtfYmLiDXX56SP/y?=
- =?us-ascii?Q?xjuVfpCEb1pakHvfMh91965+GeC0N0FBVjumE9IeA9/bm2OpWgVsactX6JSp?=
- =?us-ascii?Q?1KtAgfy1wT5pf8qwkseX3r3pBuwXeFVSdrle55P5WnzGV7WFExW1fUYtj4tE?=
- =?us-ascii?Q?am3+b0czz8OAxl9YD/FXtZkUzQC56SdfD3ffIEu4ui94HNpqEWJB9aNINMCR?=
- =?us-ascii?Q?TUXH8kbQejNDnRDiPugFgkSmzMZjTiJRSpPtvUlk4bQ1zosqglGE/ljYrn4Y?=
- =?us-ascii?Q?6BXL24ZMJByrlCW2rOdo6Iby6FFOkE/juHdIlGmG5qbtYmBBmU6P4oukr/NL?=
- =?us-ascii?Q?yby4ZKZEvh3Ur9Hy/RbKlBhXlSQ9YmfxPZL90YX2zY8ZJydLNNN1oDFsgIqZ?=
- =?us-ascii?Q?/A6XZBPriOQH3zCRKUN5Zxz9BSMZ6AmCWvlaxNS9k8MJKhk9Bd4ISrnV9zrS?=
- =?us-ascii?Q?bZlRhwnI9dXXMpHyjT/eXMOCUzzJHIjhscQOPgNMWiclQrsI1mxIkVR3Y5QV?=
- =?us-ascii?Q?i5wemET7vlJtj4cNjAi1UvX8GSavsUm31mTWkSSRxpvfY2QMPxms0PV5nLFx?=
- =?us-ascii?Q?fyGIbDgPjjOjGZxSdHxRMBJmEiX5geL+KKtwY+KEj87vrtj1HMyGtpCSNJCT?=
- =?us-ascii?Q?WhwLXZjsY2R6bvTphRYldmM92+fml9fvb8djfQMA92nMDIeQ6rMEgf9iZvGE?=
- =?us-ascii?Q?T/MXCmGxvUcnah3ANIeLGVc7rZCDl8Ebz6YrupD9rme5W7QdDpiOyFWrAWgl?=
- =?us-ascii?Q?T6mYi/JqVpNJytbG2PuZHpgR5ARGTndc?=
-X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:CH3PR10MB7329.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(366016)(1800799024)(7416014)(376014);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0:
-	=?us-ascii?Q?phqKG1Ss8dc23Ezmn5ZiCdKGf0fpWAkP+4W5Gad9xPLCRLMRJ5bOrjq1xAlr?=
- =?us-ascii?Q?6r3EPXhciNjg2/fybg6p2V02xprl2tpYIwu6aRUdux3c2BbSIdnTWfXzqVPS?=
- =?us-ascii?Q?kF+bt7l43K8R3jXXONloNVKul7v9aXmMuKwchjBlq/vlVZiIjarCMAnXQbWm?=
- =?us-ascii?Q?DmWQ90czw1//a53KFtvHurGBBVN7X3EhZax51nMHXM9drhf71xMzzrINmpVA?=
- =?us-ascii?Q?nCofWYzKDn7dbG+dn37qQT9MTQQWWleYZqqY1zvQIRPKLNYqmfFNMzcgDloX?=
- =?us-ascii?Q?sM6YLixr8XOsyVDWnSJE/soNOQmQxOaQ3NSAKIyUFgNXpIiv5QeINtSXv6Oq?=
- =?us-ascii?Q?zCPNlNE2p6o8OtOVnOG/pQg1mg/wLMoHfyqYQl0nYlLkkSeeJ9r1JlxUrwOq?=
- =?us-ascii?Q?TfSX/PzKyaeSirFe+/TRNLrORmOKINJ7/uFNxaja2epXyTtqJy2tsNZKEOJt?=
- =?us-ascii?Q?th24HUJ4tEQ21jNV6E5YylAgwHVc7MvFzUhbyUVJMOhGgJ6MxpShTLft/hn8?=
- =?us-ascii?Q?cv6B5h36bKKOl13l4Lmkfj3esB2bmmoZX1yudobx0aJ4DHizuexr6PqnPgDZ?=
- =?us-ascii?Q?jGQL/7aYIo6LPqZu2vEgQEVSvS46E17IMWXjzqKDO5j9Goj8hGMiK7G7eYld?=
- =?us-ascii?Q?hZtQTv7gkWGUYQZ7iWFrpsDluCQc6UftBjKbV4Y9v/5YZj9PdSX+f2rnHRbN?=
- =?us-ascii?Q?+rU7ghNFSKhnbRID0+cWteZ89dyCqKV7iZJTltw+SysWkJaTtbOViDsAgjQB?=
- =?us-ascii?Q?nL2IU7gqlrgAed/uFid1BvCp/6jOtOmkLwcoFzWPNKbIFyaoaiNngMtSMBXl?=
- =?us-ascii?Q?ttwoVtL5T33NYBX+oL2QIluAEnp6CUhejKOPj7CgK5Zj6jxrhIKanbHILk8e?=
- =?us-ascii?Q?dDEJ7mq8ez76r+8UQBcJvYCXnSrPORs7h2ZYYyGCPcycP35Xyxr6J2kMcy/b?=
- =?us-ascii?Q?gsXj9KOBSO2Q/xWpBsWMFFu5D+MbUTLqJh+m3+x4LpH262pNkwx2BQ/g+JYT?=
- =?us-ascii?Q?bEFE7C4pBo/dTtGPqwFnwzKAHDOq7FgydAnXwnNqv2RYjOO1HUSFILzruFil?=
- =?us-ascii?Q?Wi6JHVaDvgKSu+YgzHDlx8OPm6oAlzM9AW5YbPR0j9/DaAl5sEuXDLm9zcVz?=
- =?us-ascii?Q?JoXd4Of61Z7muQRScZdGcWAVdQVOTM9/SpwrIZU2zQjSlXHH80+f34hyzonv?=
- =?us-ascii?Q?nIuLKR0JQiy64n2m0f2MU0HNlckOMjuVatxKHhlh7MMdPmrKqf+nt8ySQlGo?=
- =?us-ascii?Q?/TTh+qBnC0FRzTZb8WbpqPyXWn06zE/6izb5nWbENI4YKaSFZHsN9D5C4gye?=
- =?us-ascii?Q?dQlsdJt/plJjUbhnuWOvpzPMyImkVGFtEPxtJDt1bwkN0QJ3jwQj/yEAYJ7L?=
- =?us-ascii?Q?aMP++CKQuXK8tteVWsW907XMyIafcU4rI/zD8mjCX1boE1qfir7NaLBxHBZ0?=
- =?us-ascii?Q?zQWzQcDKbxNEFkX23KlUlsMZ/4QJAq2PHRZQbOzZziUF3iJ9Y6walWytb5eV?=
- =?us-ascii?Q?beHhKy1vffNHLME6UdfDjxw7gGwCzxFTwblhh4V94b7GIUkdwMbk3mbIUCOr?=
- =?us-ascii?Q?XtLJKbo8ZF8FA1xLSHxGl/cxAbieUoRKrlx5FYWq4JWn18FDUsXCYA0SYc9y?=
- =?us-ascii?Q?09k/Yd1AFHn4GgborEZpEJ7YjFtwYOi3oCbYiE1CXAgz+rxz0x/Zn8aXq3N8?=
- =?us-ascii?Q?gx/cNL5FrEPTYT6tSVjfATm0713hUZs7K7JXtPPoOnLXniSSXUmwzCeWwTw5?=
- =?us-ascii?Q?fSZS/nF7LQ=3D=3D?=
-X-MS-Exchange-AntiSpam-ExternalHop-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0:
-	ntn1CwnazwbSB4TanxD6m/LX3QucahDxHHEJa3bmikT5vblpL6LwxmD6ujWJs9eo0gcMyuR9l132EsDaAPuQhfxiHmwnCA2nFD0stJgaKb3EUBKbyciiZR1+TKgNM3B5m4XGaCHqH8oytprM9Cb5VSaVC8Itc2c1O5tEGQuIaJzgvmM7GH4H7bpCt3OVWSQ5Gd1/DKl+VzlUcCv2nA/oWMZz519BHIZPJU5kelgGR/NRAp0eQKWmPUdp276U71zP+4gbCQW8CwQs7APQePieMfsS3E75aUzAExdbb7ioUFZRPSyXwRAyHdpd+lPppYKO+BQYQv1AxG6CjdFd8WHArvRxkd9guOxDr+YMazZjAG1jIcS63BVuE2/byZpJv/ZdkboRFCxAEoyPpOrZ6BGX5corC6FL4fhzRVnaaFKM+cRqqf5OdPtkfmGIS4bmSxiqr5po7CLW6APuR8GznldkzNboTwOV+0xvTX/76MnGD63H7c3mVNx/m2FnWiPRa2o4RtzsjrjwEOP3cU2Yt5lQnpEUZQWfRVZvBZd42vaylhRL7SIYYh01YYjH52nDZiPpjppnrgp0Sj1NUEahMFgiF/qW6lCM5RiFMa+xxGMUGvU=
-X-OriginatorOrg: oracle.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 5248b206-a86f-4bc4-8236-08de4e94b1da
-X-MS-Exchange-CrossTenant-AuthSource: CH3PR10MB7329.namprd10.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 08 Jan 2026 09:02:48.2047
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: beIR/4tAUJL7p1pgzLeZX4xMrm3dehp5cqdyRj0h51ZhoMJDIXPlaXcOwd+bmimlHyc5efTUKv+3xAwh+VlI+g==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: IA1PR10MB7388
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1121,Hydra:6.1.9,FMLib:17.12.100.49
- definitions=2026-01-08_01,2026-01-07_03,2025-10-01_01
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 bulkscore=0 malwarescore=0
- spamscore=0 suspectscore=0 mlxscore=0 mlxlogscore=999 phishscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2512120000
- definitions=main-2601080060
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwMTA4MDA2MCBTYWx0ZWRfXzI2Ffmdo2CKr
- hlBlMvl4pe8clfkHORQsWi0UYpZu2GYKPCyLFC/jUxsH+KSJAP3o3TmPzh49NB33nLnz1GePfT+
- SIQ2cNjmAA+u8AnfsHYJODMrg9rdj4KLtAPQku3I3itvG4WqKInOOnqjNjD9KvwN+aklTRKgMKF
- U3MslpzkQDRGl3rGwcOOB+CiVYDWoPqBQmi5dka2zPUT6DeL3ByQMEyqq3H1ZrEFAV9j5Xmb2t2
- vwCTsg0LdLfNbDO8GO28NDhA/9P7R5/eCUjwJTfav/PW5CBXwyO3uLwWg22lJU7FgZ9rHB0YB3p
- K8IK8L+UIB4jD0RHfLcJMReNos1G9ueAwQRYRol3X2aeLva0RMQM9gygx3fwiozKyfA8TNL179T
- n4GebUDnYBMQUuiQK3RsTELBxKZH6NGUEBjEmX17nstyDrsYi0olSbfdQs9P6XWT/bMrSG0TuJ+
- JJfLZ51zwBz+pxoSORzg+0bTbAuN3VzSW5W7qEWQ=
-X-Proofpoint-GUID: rr5PSOV_s08tNo15-XnH_N_5umSx7_y2
-X-Proofpoint-ORIG-GUID: rr5PSOV_s08tNo15-XnH_N_5umSx7_y2
-X-Authority-Analysis: v=2.4 cv=dOerWeZb c=1 sm=1 tr=0 ts=695f72bd b=1 cx=c_pps
- a=qoll8+KPOyaMroiJ2sR5sw==:117 a=qoll8+KPOyaMroiJ2sR5sw==:17
- a=6eWqkTHjU83fiwn7nKZWdM+Sl24=:19 a=z/mQ4Ysz8XfWz/Q5cLBRGdckG28=:19
- a=lCpzRmAYbLLaTzLvsPZ7Mbvzbb8=:19 a=xqWC_Br6kY4A:10 a=kj9zAlcOel0A:10
- a=vUbySO9Y5rIA:10 a=GoEa3M9JfhUA:10 a=VkNPw1HP01LnGYTKEx00:22
- a=LsrSTTMk-Wra0dZZUtAA:9 a=CjuIK1q_8ugA:10 cc=ntf awl=host:12110
+Content-Transfer-Encoding: 8bit
 
-On Wed, Jan 07, 2026 at 06:33:52PM +0100, Vlastimil Babka wrote:
-> On 1/5/26 09:02, Harry Yoo wrote:
-> > diff --git a/mm/slub.c b/mm/slub.c
-> > index 50b74324e550..43fdbff9d09b 100644
-> > --- a/mm/slub.c
-> > +++ b/mm/slub.c
-> > @@ -977,6 +977,39 @@ static inline bool obj_exts_in_slab(struct kmem_cache *s, struct slab *slab)
-> >  {
-> >  	return false;
-> >  }
-> > +
-> > +#endif
-> > +
-> > +#if defined(CONFIG_SLAB_OBJ_EXT) && defined(CONFIG_64BIT)
-> > +static bool obj_exts_in_object(struct kmem_cache *s)
-> > +{
-> > +	return s->flags & SLAB_OBJ_EXT_IN_OBJ;
-> 
-> So this is a property of the cache.
+From: Jianyue Wu <wujianyue000@gmail.com>
 
-Right.
+Replace seq_printf/seq_buf_printf with lightweight helpers to avoid
+printf parsing in memcg stats output.
 
-> > @@ -2280,7 +2322,8 @@ static inline void free_slab_obj_exts(struct slab *slab)
-> >  		return;
-> >  	}
-> >  
-> > -	if (obj_exts_in_slab(slab->slab_cache, slab)) {
-> > +	if (obj_exts_in_slab(slab->slab_cache, slab) ||
-> > +			obj_exts_in_object(slab->slab_cache)) {
-> 
-> Here we check that property to determine if we can return early and not do
-> kfree().
+Key changes:
+- Add memcg_seq_put_name_val() for seq_file "name value\n" formatting
+- Add memcg_seq_buf_put_name_val() for seq_buf "name value\n" formatting
+- Update __memory_events_show(), swap_events_show(),
+  memory_stat_format(), memory_numa_stat_show(), and related helpers
 
-Right.
+Performance:
+- 1M reads of memory.stat+memory.numa_stat
+- Before: real 0m9.663s, user 0m4.840s, sys 0m4.823s
+- After:  real 0m9.051s, user 0m4.775s, sys 0m4.275s (~11.4% sys drop)
 
-> > @@ -2326,6 +2369,23 @@ static void alloc_slab_obj_exts_early(struct kmem_cache *s, struct slab *slab)
-> >  			obj_exts |= MEMCG_DATA_OBJEXTS;
-> >  		slab->obj_exts = obj_exts;
-> >  		slab_set_stride(slab, sizeof(struct slabobj_ext));
-> > +	} else if (obj_exts_in_object(s)) {
-> > +		unsigned int offset = obj_exts_offset_in_object(s);
-> 
-> But we reach this only when need_slab_obj_exts() is true above. So there
-> might be slabs from caches where obj_exts_in_object() is true, but still
-> have obj_exts allocated by kmalloc, and we leak them in
-> free_slab_obj_exts().
+Tests:
+- Script:
+  for ((i=1; i<=1000000; i++)); do
+      : > /dev/null < /sys/fs/cgroup/memory.stat
+      : > /dev/null < /sys/fs/cgroup/memory.numa_stat
+  done
 
-Oh god, right!
+Signed-off-by: Jianyue Wu <wujianyue000@gmail.com>
+Signed-off-by: Jianyue Wu <jianyuew@nvidia.com>
+---
+ mm/memcontrol-v1.c | 97 ++++++++++++++++++++++++++--------------------
+ mm/memcontrol-v1.h | 34 ++++++++++++++++
+ mm/memcontrol.c    | 87 ++++++++++++++++++++++-------------------
+ 3 files changed, 137 insertions(+), 81 deletions(-)
 
-> (and we perform some incorrect action wherever else
-> obj_exts_in_object() is checked) AFAIU?
-
-Yes.
-
-It must check if slabs actually have allocated obj_exts from wasted space...
-
-> So I think we need to check obj_exts_in_slab() (in the simplified way I
-> suggested for patch 7/8) first, and only look at obj_exts_in_object()
-> afterwards to distinguish the exact layout where needed?
-> (i.e. free_slab_obj_exts() is fine to just check obj_exts_in_slab()).
-
-That'll work, will do.
-
+diff --git a/mm/memcontrol-v1.c b/mm/memcontrol-v1.c
+index 6eed14bff742..400feb798aec 100644
+--- a/mm/memcontrol-v1.c
++++ b/mm/memcontrol-v1.c
+@@ -10,7 +10,7 @@
+ #include <linux/poll.h>
+ #include <linux/sort.h>
+ #include <linux/file.h>
+-#include <linux/seq_buf.h>
++#include <linux/string.h>
+ 
+ #include "internal.h"
+ #include "swap.h"
+@@ -1795,25 +1795,33 @@ static int memcg_numa_stat_show(struct seq_file *m, void *v)
+ 	mem_cgroup_flush_stats(memcg);
+ 
+ 	for (stat = stats; stat < stats + ARRAY_SIZE(stats); stat++) {
+-		seq_printf(m, "%s=%lu", stat->name,
+-			   mem_cgroup_nr_lru_pages(memcg, stat->lru_mask,
+-						   false));
+-		for_each_node_state(nid, N_MEMORY)
+-			seq_printf(m, " N%d=%lu", nid,
+-				   mem_cgroup_node_nr_lru_pages(memcg, nid,
+-							stat->lru_mask, false));
++		seq_puts(m, stat->name);
++		seq_put_decimal_ull(m, "=",
++				    (u64)mem_cgroup_nr_lru_pages(memcg, stat->lru_mask,
++								  false));
++		for_each_node_state(nid, N_MEMORY) {
++			seq_put_decimal_ull(m, " N", nid);
++		seq_put_decimal_ull(m, "=",
++				    (u64)mem_cgroup_node_nr_lru_pages(memcg, nid,
++								       stat->lru_mask, false));
++		}
+ 		seq_putc(m, '\n');
+ 	}
+ 
+ 	for (stat = stats; stat < stats + ARRAY_SIZE(stats); stat++) {
+ 
+-		seq_printf(m, "hierarchical_%s=%lu", stat->name,
+-			   mem_cgroup_nr_lru_pages(memcg, stat->lru_mask,
+-						   true));
+-		for_each_node_state(nid, N_MEMORY)
+-			seq_printf(m, " N%d=%lu", nid,
+-				   mem_cgroup_node_nr_lru_pages(memcg, nid,
+-							stat->lru_mask, true));
++		seq_puts(m, "hierarchical_");
++		seq_puts(m, stat->name);
++		seq_put_decimal_ull(m, "=",
++				    (u64)mem_cgroup_nr_lru_pages(memcg, stat->lru_mask,
++								 true));
++		for_each_node_state(nid, N_MEMORY) {
++			seq_put_decimal_ull(m, " N", nid);
++			seq_put_decimal_ull(m, "=",
++					    (u64)mem_cgroup_node_nr_lru_pages(memcg, nid,
++									      stat->lru_mask,
++									      true));
++		}
+ 		seq_putc(m, '\n');
+ 	}
+ 
+@@ -1879,17 +1887,17 @@ void memcg1_stat_format(struct mem_cgroup *memcg, struct seq_buf *s)
+ 		unsigned long nr;
+ 
+ 		nr = memcg_page_state_local_output(memcg, memcg1_stats[i]);
+-		seq_buf_printf(s, "%s %lu\n", memcg1_stat_names[i], nr);
++		memcg_seq_buf_put_name_val(s, memcg1_stat_names[i], (u64)nr);
+ 	}
+ 
+ 	for (i = 0; i < ARRAY_SIZE(memcg1_events); i++)
+-		seq_buf_printf(s, "%s %lu\n", vm_event_name(memcg1_events[i]),
+-			       memcg_events_local(memcg, memcg1_events[i]));
++		memcg_seq_buf_put_name_val(s, vm_event_name(memcg1_events[i]),
++					   (u64)memcg_events_local(memcg, memcg1_events[i]));
+ 
+ 	for (i = 0; i < NR_LRU_LISTS; i++)
+-		seq_buf_printf(s, "%s %lu\n", lru_list_name(i),
+-			       memcg_page_state_local(memcg, NR_LRU_BASE + i) *
+-			       PAGE_SIZE);
++		memcg_seq_buf_put_name_val(s, lru_list_name(i),
++					   memcg_page_state_local(memcg, NR_LRU_BASE + i) *
++					   PAGE_SIZE);
+ 
+ 	/* Hierarchical information */
+ 	memory = memsw = PAGE_COUNTER_MAX;
+@@ -1897,28 +1905,33 @@ void memcg1_stat_format(struct mem_cgroup *memcg, struct seq_buf *s)
+ 		memory = min(memory, READ_ONCE(mi->memory.max));
+ 		memsw = min(memsw, READ_ONCE(mi->memsw.max));
+ 	}
+-	seq_buf_printf(s, "hierarchical_memory_limit %llu\n",
+-		       (u64)memory * PAGE_SIZE);
+-	seq_buf_printf(s, "hierarchical_memsw_limit %llu\n",
+-		       (u64)memsw * PAGE_SIZE);
++	memcg_seq_buf_put_name_val(s, "hierarchical_memory_limit",
++				   (u64)memory * PAGE_SIZE);
++	memcg_seq_buf_put_name_val(s, "hierarchical_memsw_limit",
++				   (u64)memsw * PAGE_SIZE);
+ 
+ 	for (i = 0; i < ARRAY_SIZE(memcg1_stats); i++) {
+ 		unsigned long nr;
+ 
+-		nr = memcg_page_state_output(memcg, memcg1_stats[i]);
+-		seq_buf_printf(s, "total_%s %llu\n", memcg1_stat_names[i],
+-			       (u64)nr);
++	nr = memcg_page_state_output(memcg, memcg1_stats[i]);
++	seq_buf_puts(s, "total_");
++	memcg_seq_buf_put_name_val(s, memcg1_stat_names[i],
++				   (u64)nr);
+ 	}
+ 
+-	for (i = 0; i < ARRAY_SIZE(memcg1_events); i++)
+-		seq_buf_printf(s, "total_%s %llu\n",
+-			       vm_event_name(memcg1_events[i]),
+-			       (u64)memcg_events(memcg, memcg1_events[i]));
++	for (i = 0; i < ARRAY_SIZE(memcg1_events); i++) {
++		seq_buf_puts(s, "total_");
++		memcg_seq_buf_put_name_val(s,
++					   vm_event_name(memcg1_events[i]),
++					   (u64)memcg_events(memcg, memcg1_events[i]));
++	}
+ 
+-	for (i = 0; i < NR_LRU_LISTS; i++)
+-		seq_buf_printf(s, "total_%s %llu\n", lru_list_name(i),
+-			       (u64)memcg_page_state(memcg, NR_LRU_BASE + i) *
+-			       PAGE_SIZE);
++	for (i = 0; i < NR_LRU_LISTS; i++) {
++		seq_buf_puts(s, "total_");
++		memcg_seq_buf_put_name_val(s, lru_list_name(i),
++					   (u64)memcg_page_state(memcg, NR_LRU_BASE + i) *
++					   (PAGE_SIZE));
++	}
+ 
+ #ifdef CONFIG_DEBUG_VM
+ 	{
+@@ -1933,8 +1946,8 @@ void memcg1_stat_format(struct mem_cgroup *memcg, struct seq_buf *s)
+ 			anon_cost += mz->lruvec.anon_cost;
+ 			file_cost += mz->lruvec.file_cost;
+ 		}
+-		seq_buf_printf(s, "anon_cost %lu\n", anon_cost);
+-		seq_buf_printf(s, "file_cost %lu\n", file_cost);
++		memcg_seq_buf_put_name_val(s, "anon_cost", (u64)anon_cost);
++		memcg_seq_buf_put_name_val(s, "file_cost", (u64)file_cost);
+ 	}
+ #endif
+ }
+@@ -1969,10 +1982,10 @@ static int mem_cgroup_oom_control_read(struct seq_file *sf, void *v)
+ {
+ 	struct mem_cgroup *memcg = mem_cgroup_from_seq(sf);
+ 
+-	seq_printf(sf, "oom_kill_disable %d\n", READ_ONCE(memcg->oom_kill_disable));
+-	seq_printf(sf, "under_oom %d\n", (bool)memcg->under_oom);
+-	seq_printf(sf, "oom_kill %lu\n",
+-		   atomic_long_read(&memcg->memory_events[MEMCG_OOM_KILL]));
++	memcg_seq_put_name_val(sf, "oom_kill_disable", READ_ONCE(memcg->oom_kill_disable));
++	memcg_seq_put_name_val(sf, "under_oom", (bool)memcg->under_oom);
++	memcg_seq_put_name_val(sf, "oom_kill",
++			       (u64)atomic_long_read(&memcg->memory_events[MEMCG_OOM_KILL]));
+ 	return 0;
+ }
+ 
+diff --git a/mm/memcontrol-v1.h b/mm/memcontrol-v1.h
+index 6358464bb416..a4ac2d869506 100644
+--- a/mm/memcontrol-v1.h
++++ b/mm/memcontrol-v1.h
+@@ -4,6 +4,9 @@
+ #define __MM_MEMCONTROL_V1_H
+ 
+ #include <linux/cgroup-defs.h>
++#include <linux/seq_buf.h>
++#include <linux/seq_file.h>
++#include <linux/sprintf.h>
+ 
+ /* Cgroup v1 and v2 common declarations */
+ 
+@@ -33,6 +36,37 @@ int memory_stat_show(struct seq_file *m, void *v);
+ void mem_cgroup_id_get_many(struct mem_cgroup *memcg, unsigned int n);
+ struct mem_cgroup *mem_cgroup_id_get_online(struct mem_cgroup *memcg);
+ 
++/* Max 2^64 - 1 = 18446744073709551615 (20 digits) */
++#define MEMCG_DEC_U64_MAX_LEN 20
++
++static inline void memcg_seq_put_name_val(struct seq_file *m, const char *name,
++					  u64 val)
++{
++	seq_puts(m, name);
++	/* need a space between name and value */
++	seq_put_decimal_ull(m, " ", val);
++	seq_putc(m, '\n');
++}
++
++static inline void memcg_seq_buf_put_name_val(struct seq_buf *s,
++					      const char *name, u64 val)
++{
++	char num_buf[MEMCG_DEC_U64_MAX_LEN];
++	int num_len;
++
++	num_len = num_to_str(num_buf, sizeof(num_buf), val, 0);
++	if (num_len <= 0)
++		return;
++
++	if (seq_buf_puts(s, name))
++		return;
++	if (seq_buf_putc(s, ' '))
++		return;
++	if (seq_buf_putmem(s, num_buf, num_len))
++		return;
++	seq_buf_putc(s, '\n');
++}
++
+ /* Cgroup v1-specific declarations */
+ #ifdef CONFIG_MEMCG_V1
+ 
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index 86f43b7e5f71..62652a3c8681 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -42,6 +42,7 @@
+ #include <linux/bit_spinlock.h>
+ #include <linux/rcupdate.h>
+ #include <linux/limits.h>
++#include <linux/sprintf.h>
+ #include <linux/export.h>
+ #include <linux/list.h>
+ #include <linux/mutex.h>
+@@ -1485,26 +1486,26 @@ static void memcg_stat_format(struct mem_cgroup *memcg, struct seq_buf *s)
+ 			continue;
+ #endif
+ 		size = memcg_page_state_output(memcg, memory_stats[i].idx);
+-		seq_buf_printf(s, "%s %llu\n", memory_stats[i].name, size);
++		memcg_seq_buf_put_name_val(s, memory_stats[i].name, size);
+ 
+ 		if (unlikely(memory_stats[i].idx == NR_SLAB_UNRECLAIMABLE_B)) {
+ 			size += memcg_page_state_output(memcg,
+ 							NR_SLAB_RECLAIMABLE_B);
+-			seq_buf_printf(s, "slab %llu\n", size);
++			memcg_seq_buf_put_name_val(s, "slab", size);
+ 		}
+ 	}
+ 
+ 	/* Accumulated memory events */
+-	seq_buf_printf(s, "pgscan %lu\n",
+-		       memcg_events(memcg, PGSCAN_KSWAPD) +
+-		       memcg_events(memcg, PGSCAN_DIRECT) +
+-		       memcg_events(memcg, PGSCAN_PROACTIVE) +
+-		       memcg_events(memcg, PGSCAN_KHUGEPAGED));
+-	seq_buf_printf(s, "pgsteal %lu\n",
+-		       memcg_events(memcg, PGSTEAL_KSWAPD) +
+-		       memcg_events(memcg, PGSTEAL_DIRECT) +
+-		       memcg_events(memcg, PGSTEAL_PROACTIVE) +
+-		       memcg_events(memcg, PGSTEAL_KHUGEPAGED));
++	memcg_seq_buf_put_name_val(s, "pgscan",
++				   memcg_events(memcg, PGSCAN_KSWAPD) +
++				   memcg_events(memcg, PGSCAN_DIRECT) +
++				   memcg_events(memcg, PGSCAN_PROACTIVE) +
++				   memcg_events(memcg, PGSCAN_KHUGEPAGED));
++	memcg_seq_buf_put_name_val(s, "pgsteal",
++				   memcg_events(memcg, PGSTEAL_KSWAPD) +
++				   memcg_events(memcg, PGSTEAL_DIRECT) +
++				   memcg_events(memcg, PGSTEAL_PROACTIVE) +
++				   memcg_events(memcg, PGSTEAL_KHUGEPAGED));
+ 
+ 	for (i = 0; i < ARRAY_SIZE(memcg_vm_event_stat); i++) {
+ #ifdef CONFIG_MEMCG_V1
+@@ -1512,9 +1513,9 @@ static void memcg_stat_format(struct mem_cgroup *memcg, struct seq_buf *s)
+ 		    memcg_vm_event_stat[i] == PGPGOUT)
+ 			continue;
+ #endif
+-		seq_buf_printf(s, "%s %lu\n",
+-			       vm_event_name(memcg_vm_event_stat[i]),
+-			       memcg_events(memcg, memcg_vm_event_stat[i]));
++		memcg_seq_buf_put_name_val(s,
++					   vm_event_name(memcg_vm_event_stat[i]),
++					   memcg_events(memcg, memcg_vm_event_stat[i]));
+ 	}
+ }
+ 
+@@ -4218,10 +4219,12 @@ static void mem_cgroup_attach(struct cgroup_taskset *tset)
+ 
+ static int seq_puts_memcg_tunable(struct seq_file *m, unsigned long value)
+ {
+-	if (value == PAGE_COUNTER_MAX)
++	if (value == PAGE_COUNTER_MAX) {
+ 		seq_puts(m, "max\n");
+-	else
+-		seq_printf(m, "%llu\n", (u64)value * PAGE_SIZE);
++	} else {
++		seq_put_decimal_ull(m, "", (u64)value * PAGE_SIZE);
++		seq_putc(m, '\n');
++	}
+ 
+ 	return 0;
+ }
+@@ -4247,7 +4250,8 @@ static int peak_show(struct seq_file *sf, void *v, struct page_counter *pc)
+ 	else
+ 		peak = max(fd_peak, READ_ONCE(pc->local_watermark));
+ 
+-	seq_printf(sf, "%llu\n", peak * PAGE_SIZE);
++	seq_put_decimal_ull(sf, "", peak * PAGE_SIZE);
++	seq_putc(sf, '\n');
+ 	return 0;
+ }
+ 
+@@ -4480,16 +4484,16 @@ static ssize_t memory_max_write(struct kernfs_open_file *of,
+  */
+ static void __memory_events_show(struct seq_file *m, atomic_long_t *events)
+ {
+-	seq_printf(m, "low %lu\n", atomic_long_read(&events[MEMCG_LOW]));
+-	seq_printf(m, "high %lu\n", atomic_long_read(&events[MEMCG_HIGH]));
+-	seq_printf(m, "max %lu\n", atomic_long_read(&events[MEMCG_MAX]));
+-	seq_printf(m, "oom %lu\n", atomic_long_read(&events[MEMCG_OOM]));
+-	seq_printf(m, "oom_kill %lu\n",
+-		   atomic_long_read(&events[MEMCG_OOM_KILL]));
+-	seq_printf(m, "oom_group_kill %lu\n",
+-		   atomic_long_read(&events[MEMCG_OOM_GROUP_KILL]));
+-	seq_printf(m, "sock_throttled %lu\n",
+-		   atomic_long_read(&events[MEMCG_SOCK_THROTTLED]));
++	memcg_seq_put_name_val(m, "low", atomic_long_read(&events[MEMCG_LOW]));
++	memcg_seq_put_name_val(m, "high", atomic_long_read(&events[MEMCG_HIGH]));
++	memcg_seq_put_name_val(m, "max", atomic_long_read(&events[MEMCG_MAX]));
++	memcg_seq_put_name_val(m, "oom", atomic_long_read(&events[MEMCG_OOM]));
++	memcg_seq_put_name_val(m, "oom_kill",
++			       atomic_long_read(&events[MEMCG_OOM_KILL]));
++	memcg_seq_put_name_val(m, "oom_group_kill",
++			       atomic_long_read(&events[MEMCG_OOM_GROUP_KILL]));
++	memcg_seq_put_name_val(m, "sock_throttled",
++			       atomic_long_read(&events[MEMCG_SOCK_THROTTLED]));
+ }
+ 
+ static int memory_events_show(struct seq_file *m, void *v)
+@@ -4544,7 +4548,7 @@ static int memory_numa_stat_show(struct seq_file *m, void *v)
+ 		if (memory_stats[i].idx >= NR_VM_NODE_STAT_ITEMS)
+ 			continue;
+ 
+-		seq_printf(m, "%s", memory_stats[i].name);
++		seq_puts(m, memory_stats[i].name);
+ 		for_each_node_state(nid, N_MEMORY) {
+ 			u64 size;
+ 			struct lruvec *lruvec;
+@@ -4552,7 +4556,10 @@ static int memory_numa_stat_show(struct seq_file *m, void *v)
+ 			lruvec = mem_cgroup_lruvec(memcg, NODE_DATA(nid));
+ 			size = lruvec_page_state_output(lruvec,
+ 							memory_stats[i].idx);
+-			seq_printf(m, " N%d=%llu", nid, size);
++
++			seq_put_decimal_ull(m, " N", nid);
++			seq_putc(m, '=');
++			seq_put_decimal_ull(m, "", size);
+ 		}
+ 		seq_putc(m, '\n');
+ 	}
+@@ -4565,7 +4572,8 @@ static int memory_oom_group_show(struct seq_file *m, void *v)
+ {
+ 	struct mem_cgroup *memcg = mem_cgroup_from_seq(m);
+ 
+-	seq_printf(m, "%d\n", READ_ONCE(memcg->oom_group));
++	seq_put_decimal_ll(m, "", READ_ONCE(memcg->oom_group));
++	seq_putc(m, '\n');
+ 
+ 	return 0;
+ }
+@@ -5373,12 +5381,12 @@ static int swap_events_show(struct seq_file *m, void *v)
+ {
+ 	struct mem_cgroup *memcg = mem_cgroup_from_seq(m);
+ 
+-	seq_printf(m, "high %lu\n",
+-		   atomic_long_read(&memcg->memory_events[MEMCG_SWAP_HIGH]));
+-	seq_printf(m, "max %lu\n",
+-		   atomic_long_read(&memcg->memory_events[MEMCG_SWAP_MAX]));
+-	seq_printf(m, "fail %lu\n",
+-		   atomic_long_read(&memcg->memory_events[MEMCG_SWAP_FAIL]));
++	memcg_seq_put_name_val(m, "high",
++			       atomic_long_read(&memcg->memory_events[MEMCG_SWAP_HIGH]));
++	memcg_seq_put_name_val(m, "max",
++			       atomic_long_read(&memcg->memory_events[MEMCG_SWAP_MAX]));
++	memcg_seq_put_name_val(m, "fail",
++			       atomic_long_read(&memcg->memory_events[MEMCG_SWAP_FAIL]));
+ 
+ 	return 0;
+ }
+@@ -5564,7 +5572,8 @@ static int zswap_writeback_show(struct seq_file *m, void *v)
+ {
+ 	struct mem_cgroup *memcg = mem_cgroup_from_seq(m);
+ 
+-	seq_printf(m, "%d\n", READ_ONCE(memcg->zswap_writeback));
++	seq_put_decimal_ll(m, "", READ_ONCE(memcg->zswap_writeback));
++	seq_putc(m, '\n');
+ 	return 0;
+ }
+ 
 -- 
-Cheers,
-Harry / Hyeonggon
+2.43.0
+
