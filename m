@@ -1,47 +1,47 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8CEEE30C603
-	for <cgroups@vger.kernel.org>; Mon, 12 Jan 2026 04:09:48 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EC8A42D6E5C
+	for <cgroups@vger.kernel.org>; Mon, 12 Jan 2026 04:09:53 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1768190993; cv=none; b=KPiC6JCsNCEW8U39abu/xfgTtbEfHHmYmlw4lKkTi7VD8FuhHI0TfC0GnQO+YgCeQYznCmzc0jKXgsj48pM4F8fc2+/9zaEzgIvpxg7zWHMUDn4wkeYW4NwMoG/DW+Xhk2KEDu8kFZjjndbCBQTF+YYS/hFE++s/WjUX5DzdCeM=
+	t=1768190997; cv=none; b=Jeuojqo28NYsWdw1TiPzwCngOoYcUNZtU+qEYL1P22ZcfqT16eJT4fPh6AN0qj/taYA3/0F7nUZYr2vYibQ7EK9YvCbXryJoZTTVhUI1qVB4BUfJVScYNAyOclU4b7zl5Vuw7f/D3UpojpvNiNXmptLwC2jQppR/zFJqlaRgYeA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1768190993; c=relaxed/simple;
-	bh=/Hr5td0q2fKUO8L0UFsfzO/yV0xkttzaHGLMqqbjcaA=;
+	s=arc-20240116; t=1768190997; c=relaxed/simple;
+	bh=36mAFxRYaNY06HT5BGbXc/h0ywPNpQUoVyhIHkIpbeE=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=Py5bZOS39R5uCvo++LjdJWW5yysU/RhvP2Z2TQ0a+VPCk+vEG5iIv+mM7/y+vRN2na2I8I+m/Jr84AHgHJqHM28hMb+hkqkCCxioVxY0nYyQ2R7oZwkPN7+Q1jHpTar6owmnaMQHz5OizSL1f4R/EJeDxkwRP0CzrAeaOW3YCS8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=Q5xKH1eN; arc=none smtp.client-ip=170.10.133.124
+	 MIME-Version; b=ZW0p8STf4FujxiPvPq/kFVyMgEeNweCagAm0ogI1ugQiXEMlFHMFRpwZQYqsQGASWQF10OAKttHlsWmNvpJM1vRXZG/MqBfCk7IoJAxiGW4a92AIzqa2XZbLTxBsgSnrOcqGHSZfFP+FpkqSDXwjleC8KCA93Ymbqg/BK4l33uk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=BLk97nY2; arc=none smtp.client-ip=170.10.129.124
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="Q5xKH1eN"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="BLk97nY2"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1768190987;
+	s=mimecast20190719; t=1768190993;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=B2dX1nduvd1Y2+YZKFwl6uVgXF8yg4bmyS1EUMGzFdk=;
-	b=Q5xKH1eNKCl0XoHGJQr7Jrsrx/+BnJy6zCWfKRbWGhcFb6Ey0nDi7WjLqoF8lq2oXrINzK
-	Lh9vNFzHz9gP1l2dsOEFmOdeLFmSWNIo9yUoOPaLCi1jr4amGf5KRa9It4Kp3TQcKf6azu
-	zpPaOkwQ4vY8FS9LyMoueqA9MvPVaWI=
-Received: from mx-prod-mc-01.mail-002.prod.us-west-2.aws.redhat.com
- (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
+	bh=3GpY/lMd+KwV4w59jZdkQcFRXk2EASk1qcLjb4w5/n4=;
+	b=BLk97nY2lb/zHLMtLq/D4DKUq9OHHxjf9WjDtI286JkkL/XxYSD39mdivpk6fekgESKKCF
+	H8qV+fBdY4dBwnxA9GPO6ZUKYrTkuqwxlXjHuneuXwLsUEMBLfov6O6otz6BQYwZ/dT16V
+	1h5rYtpTsJTiReUwaeUNyuGOc0X7e3A=
+Received: from mx-prod-mc-06.mail-002.prod.us-west-2.aws.redhat.com
+ (ec2-35-165-154-97.us-west-2.compute.amazonaws.com [35.165.154.97]) by
  relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-582-LwE81DWaNQenJOz7_L9xJg-1; Sun,
- 11 Jan 2026 23:09:44 -0500
-X-MC-Unique: LwE81DWaNQenJOz7_L9xJg-1
-X-Mimecast-MFC-AGG-ID: LwE81DWaNQenJOz7_L9xJg_1768190982
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-445-MqGcoMbrN6u6Hp13QHFIsQ-1; Sun,
+ 11 Jan 2026 23:09:49 -0500
+X-MC-Unique: MqGcoMbrN6u6Hp13QHFIsQ-1
+X-Mimecast-MFC-AGG-ID: MqGcoMbrN6u6Hp13QHFIsQ_1768190988
 Received: from mx-prod-int-06.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-06.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.93])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
-	by mx-prod-mc-01.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 2A63919560B2;
-	Mon, 12 Jan 2026 04:09:42 +0000 (UTC)
+	by mx-prod-mc-06.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 774C618005AE;
+	Mon, 12 Jan 2026 04:09:47 +0000 (UTC)
 Received: from llong-thinkpadp16vgen1.westford.csb (unknown [10.22.88.71])
-	by mx-prod-int-06.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id 4BD0718007D2;
-	Mon, 12 Jan 2026 04:09:39 +0000 (UTC)
+	by mx-prod-int-06.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id 6F19618007D2;
+	Mon, 12 Jan 2026 04:09:45 +0000 (UTC)
 From: Waiman Long <longman@redhat.com>
 To: Tejun Heo <tj@kernel.org>,
 	Johannes Weiner <hannes@cmpxchg.org>,
@@ -56,9 +56,9 @@ Cc: linux-kernel@vger.kernel.org,
 	Chen Ridong <chenridong@huaweicloud.com>,
 	Waiman Long <longman@redhat.com>,
 	Chen Ridong <chenridong@huawei.com>
-Subject: [PATCH cgroup/for-6.20 v4 1/5] cgroup/cpuset: Streamline rm_siblings_excl_cpus()
-Date: Sun, 11 Jan 2026 23:08:52 -0500
-Message-ID: <20260112040856.460904-2-longman@redhat.com>
+Subject: [PATCH cgroup/for-6.20 v4 3/5] cgroup/cpuset: Don't fail cpuset.cpus change in v2
+Date: Sun, 11 Jan 2026 23:08:54 -0500
+Message-ID: <20260112040856.460904-4-longman@redhat.com>
 In-Reply-To: <20260112040856.460904-1-longman@redhat.com>
 References: <20260112040856.460904-1-longman@redhat.com>
 Precedence: bulk
@@ -70,63 +70,118 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-Scanned-By: MIMEDefang 3.4.1 on 10.30.177.93
 
-If exclusive_cpus is set, effective_xcpus must be a subset of
-exclusive_cpus. Currently, rm_siblings_excl_cpus() checks both
-exclusive_cpus and effective_xcpus consecutively. It is simpler
-to check only exclusive_cpus if non-empty or just effective_xcpus
-otherwise.
+Commit fe8cd2736e75 ("cgroup/cpuset: Delay setting of CS_CPU_EXCLUSIVE
+until valid partition") introduced a new check to disallow the setting
+of a new cpuset.cpus.exclusive value that is a superset of a sibling's
+cpuset.cpus value so that there will at least be one CPU left in the
+sibling in case the cpuset becomes a valid partition root. This new
+check does have the side effect of failing a cpuset.cpus change that
+make it a subset of a sibling's cpuset.cpus.exclusive value.
 
-No functional change is expected.
+With v2, users are supposed to be allowed to set whatever value they
+want in cpuset.cpus without failure. To maintain this rule, the check
+is now restricted to only when cpuset.cpus.exclusive is being changed
+not when cpuset.cpus is changed.
+
+The cgroup-v2.rst doc file is also updated to reflect this change.
 
 Signed-off-by: Waiman Long <longman@redhat.com>
-Reviewed-by: Chen Ridong<chenridong@huawei.com>
+Reviewed-by: Chen Ridong <chenridong@huawei.com>
 ---
- kernel/cgroup/cpuset.c | 24 +++++++++++++++---------
- 1 file changed, 15 insertions(+), 9 deletions(-)
+ Documentation/admin-guide/cgroup-v2.rst |  8 +++----
+ kernel/cgroup/cpuset.c                  | 30 ++++++++++++-------------
+ 2 files changed, 19 insertions(+), 19 deletions(-)
 
+diff --git a/Documentation/admin-guide/cgroup-v2.rst b/Documentation/admin-guide/cgroup-v2.rst
+index 7f5b59d95fce..510df2461aff 100644
+--- a/Documentation/admin-guide/cgroup-v2.rst
++++ b/Documentation/admin-guide/cgroup-v2.rst
+@@ -2561,10 +2561,10 @@ Cpuset Interface Files
+ 	Users can manually set it to a value that is different from
+ 	"cpuset.cpus".	One constraint in setting it is that the list of
+ 	CPUs must be exclusive with respect to "cpuset.cpus.exclusive"
+-	of its sibling.  If "cpuset.cpus.exclusive" of a sibling cgroup
+-	isn't set, its "cpuset.cpus" value, if set, cannot be a subset
+-	of it to leave at least one CPU available when the exclusive
+-	CPUs are taken away.
++	and "cpuset.cpus.exclusive.effective" of its siblings.	Another
++	constraint is that it cannot be a superset of "cpuset.cpus"
++	of its sibling in order to leave at least one CPU available to
++	that sibling when the exclusive CPUs are taken away.
+ 
+ 	For a parent cgroup, any one of its exclusive CPUs can only
+ 	be distributed to at most one of its child cgroups.  Having an
 diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
-index 221da921b4f9..da2b3b51630e 100644
+index 894131f47f78..4819ab429771 100644
 --- a/kernel/cgroup/cpuset.c
 +++ b/kernel/cgroup/cpuset.c
-@@ -1355,23 +1355,29 @@ static int rm_siblings_excl_cpus(struct cpuset *parent, struct cpuset *cs,
- 	int retval = 0;
+@@ -609,33 +609,31 @@ static inline bool cpusets_are_exclusive(struct cpuset *cs1, struct cpuset *cs2)
  
- 	if (cpumask_empty(excpus))
--		return retval;
-+		return 0;
+ /**
+  * cpus_excl_conflict - Check if two cpusets have exclusive CPU conflicts
+- * @cs1: first cpuset to check
+- * @cs2: second cpuset to check
++ * @trial:	the trial cpuset to be checked
++ * @sibling:	a sibling cpuset to be checked against
++ * @xcpus_changed: set if exclusive_cpus has been set
+  *
+  * Returns: true if CPU exclusivity conflict exists, false otherwise
+  *
+  * Conflict detection rules:
+  * 1. If either cpuset is CPU exclusive, they must be mutually exclusive
+  * 2. exclusive_cpus masks cannot intersect between cpusets
+- * 3. The allowed CPUs of one cpuset cannot be a subset of another's exclusive CPUs
++ * 3. The allowed CPUs of a sibling cpuset cannot be a subset of the new exclusive CPUs
+  */
+-static inline bool cpus_excl_conflict(struct cpuset *cs1, struct cpuset *cs2)
++static inline bool cpus_excl_conflict(struct cpuset *trial, struct cpuset *sibling,
++				      bool xcpus_changed)
+ {
+ 	/* If either cpuset is exclusive, check if they are mutually exclusive */
+-	if (is_cpu_exclusive(cs1) || is_cpu_exclusive(cs2))
+-		return !cpusets_are_exclusive(cs1, cs2);
++	if (is_cpu_exclusive(trial) || is_cpu_exclusive(sibling))
++		return !cpusets_are_exclusive(trial, sibling);
  
- 	/*
--	 * Exclude exclusive CPUs from siblings
-+	 * Remove exclusive CPUs from siblings
- 	 */
+ 	/* Exclusive_cpus cannot intersect */
+-	if (cpumask_intersects(cs1->exclusive_cpus, cs2->exclusive_cpus))
++	if (cpumask_intersects(trial->exclusive_cpus, sibling->exclusive_cpus))
+ 		return true;
+ 
+-	/* The cpus_allowed of one cpuset cannot be a subset of another cpuset's exclusive_cpus */
+-	if (!cpumask_empty(cs1->cpus_allowed) &&
+-	    cpumask_subset(cs1->cpus_allowed, cs2->exclusive_cpus))
+-		return true;
+-
+-	if (!cpumask_empty(cs2->cpus_allowed) &&
+-	    cpumask_subset(cs2->cpus_allowed, cs1->exclusive_cpus))
++	/* The cpus_allowed of a sibling cpuset cannot be a subset of the new exclusive_cpus */
++	if (xcpus_changed && !cpumask_empty(sibling->cpus_allowed) &&
++	    cpumask_subset(sibling->cpus_allowed, trial->exclusive_cpus))
+ 		return true;
+ 
+ 	return false;
+@@ -672,6 +670,7 @@ static int validate_change(struct cpuset *cur, struct cpuset *trial)
+ {
+ 	struct cgroup_subsys_state *css;
+ 	struct cpuset *c, *par;
++	bool xcpus_changed;
+ 	int ret = 0;
+ 
  	rcu_read_lock();
- 	cpuset_for_each_child(sibling, css, parent) {
-+		struct cpumask *sibling_xcpus;
-+
- 		if (sibling == cs)
+@@ -728,10 +727,11 @@ static int validate_change(struct cpuset *cur, struct cpuset *trial)
+ 	 * overlap. exclusive_cpus cannot overlap with each other if set.
+ 	 */
+ 	ret = -EINVAL;
++	xcpus_changed = !cpumask_equal(cur->exclusive_cpus, trial->exclusive_cpus);
+ 	cpuset_for_each_child(c, css, par) {
+ 		if (c == cur)
  			continue;
- 
--		if (cpumask_intersects(excpus, sibling->exclusive_cpus)) {
--			cpumask_andnot(excpus, excpus, sibling->exclusive_cpus);
--			retval++;
--			continue;
--		}
--		if (cpumask_intersects(excpus, sibling->effective_xcpus)) {
--			cpumask_andnot(excpus, excpus, sibling->effective_xcpus);
-+		/*
-+		 * If exclusive_cpus is defined, effective_xcpus will always
-+		 * be a subset. Otherwise, effective_xcpus will only be set
-+		 * in a valid partition root.
-+		 */
-+		sibling_xcpus = cpumask_empty(sibling->exclusive_cpus)
-+			      ? sibling->effective_xcpus
-+			      : sibling->exclusive_cpus;
-+
-+		if (cpumask_intersects(excpus, sibling_xcpus)) {
-+			cpumask_andnot(excpus, excpus, sibling_xcpus);
- 			retval++;
- 		}
- 	}
+-		if (cpus_excl_conflict(trial, c))
++		if (cpus_excl_conflict(trial, c, xcpus_changed))
+ 			goto out;
+ 		if (mems_excl_conflict(trial, c))
+ 			goto out;
 -- 
 2.52.0
 
