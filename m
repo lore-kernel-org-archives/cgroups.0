@@ -1,285 +1,430 @@
-Received: from mx0b-00069f02.pphosted.com (mx0b-00069f02.pphosted.com [205.220.177.32])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-wr1-f54.google.com (mail-wr1-f54.google.com [209.85.221.54])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C5206369218;
-	Tue, 13 Jan 2026 06:20:31 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=205.220.177.32
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1768285233; cv=fail; b=U+1v15MbL2CU/2gYtTeLhsWLr8vroeMdIL88OHrmDAmuMWamlmRAVtg5ilgf+Xr5em7M8Y92xARZbT6I5TvEOu0sHtW2Te2MenBSJSw3VLP7wU0N0rO/OZ6eIFvXDLZqPG4Ta9aeQyClll706kwfz4Mx6tG5A+0KcreTD1XUBkk=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1768285233; c=relaxed/simple;
-	bh=J0nQJM6mlR7W9WqtJfyTtYRQO3UqBh41pR7CIEfXO8M=;
-	h=From:To:Cc:Subject:Date:Message-ID:Content-Type:MIME-Version; b=h6/zUJaNfmfb2aC/lEMH5hrf0GQ/eUwFWjMbrt2kiWAXDsHnY3B1DlslY+S7mnPFAs2IKv2gdeqWmHh2Ql1KolwyjFPv1gTx5kq09sBfGPJS8u9vwyoTO2Ue4svsBodK1CdOjhdkWcuBL94nP7OOcftUYI7odTkUHBE5HTqxO+0=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=q9bOaNeT; dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b=FP3U3ozE; arc=fail smtp.client-ip=205.220.177.32
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oracle.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7066E310636
+	for <cgroups@vger.kernel.org>; Tue, 13 Jan 2026 07:36:09 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.54
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1768289773; cv=none; b=XMImiWM0UFBvPQ+SXTIVqIUBx4OV9ETAuCbmK1s/ZE9+cY2XlbLgnzYdOxq6TMZxc36+kiXykKnxc2CZ4L5c+UMf/fQvKNQF0UkvG9DMxS4ekGB2s20hiLGcQW92FkEISQjIem+v1MWm5XiPNK4eDu4cUy280IEhtQPg2d9EBoM=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1768289773; c=relaxed/simple;
+	bh=cD1gmgCMZ2kKsY2iSVlykludi8YdzF4sn4ccaRGgEW4=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=uerYVx48u+aaK2XhCXmn02Pv/2lZ+8JCBLDLzfEkNYk/WARQ9HIV0a1HqeSsa+8L/2e2XdmkQU8KmuVxOVKKc4XdtJ0K99wR2yT7lj3CbRyFVWghlgP+sxwKC/yYsptJ8x7TWzarrfdWgFq2lZN+qr6lFSOW/Yu6S6/6aluCTlM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=UdmXy+QH; arc=none smtp.client-ip=209.85.221.54
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="q9bOaNeT";
-	dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b="FP3U3ozE"
-Received: from pps.filterd (m0246631.ppops.net [127.0.0.1])
-	by mx0b-00069f02.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 60D1iYE92686260;
-	Tue, 13 Jan 2026 06:18:57 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=cc
-	:content-transfer-encoding:content-type:date:from:message-id
-	:mime-version:subject:to; s=corp-2025-04-25; bh=P+Ip1YfyyFcaYNzF
-	lUNuswMYnRJgu97QFo5jcV5uz2s=; b=q9bOaNeT6yEluUgLQpJ1OPqjHud/UusU
-	7Y/z1eQFa/Yw38nn6J2y61weq04lnJWJZtggyhcRP9WrXemleytYmTUnlRwKKG4n
-	9sEJHhM4Mw/I3pFKqZSI0F+GoOLXuOBT8JkrWkiL8e8EIYe+tmnlVfqVUPYIAw3+
-	ksEAgLfaXg5fyi5+c2whXlAsU+9L51q9ZeErjuJ7IRoB6LUkHj+vXYmP/b6FIYQo
-	OAqHzs133TREdR32MqtW8TNjv0k3e1bYIDO/NBX6BZAJEVh0W2RqWZEhf8liCu6Q
-	V50Ejrj5ljJZJY54j72oJe2A2t9croNIKOe/z6PuPswJSNofcVbiNA==
-Received: from iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta03.appoci.oracle.com [130.35.103.27])
-	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 4bkntb2xus-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Tue, 13 Jan 2026 06:18:57 +0000 (GMT)
-Received: from pps.filterd (iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
-	by iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (8.18.1.2/8.18.1.2) with ESMTP id 60D5O5Gi004123;
-	Tue, 13 Jan 2026 06:18:56 GMT
-Received: from ph7pr06cu001.outbound.protection.outlook.com (mail-westus3azon11010061.outbound.protection.outlook.com [52.101.201.61])
-	by iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTPS id 4bkd7j4d5c-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Tue, 13 Jan 2026 06:18:56 +0000
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=oI98jd5spPn7MvGs2y+exZeCXhxZCYV3No6Zs1d5MtE68qMoPzeNPgfkkjRcqYLteNPNmcSGHibWWHhs8OGqu467yoZ/dsTeDh4GFpfdIyKNlvBryKZ3kuQ1fIf18+q9q+q0lfJ35ZxeRrMrUPszyHe6QJSRXlkDIfnwYX3HXc7PBJQYdD9kbUs0HuG5N0bFalWjOICW39ONjfSRC1skzExVQWf52YIq5Pht+uhNC0mMl89Mx0vfBXCjNGdiGcOzVTcSQQo/px49plGlHn5w8QvpM/Bpf7g022eK7n0kkpqGDciE7D967e9urehujzesOCEsgnfrXpv145Zc9ke7kQ==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=P+Ip1YfyyFcaYNzFlUNuswMYnRJgu97QFo5jcV5uz2s=;
- b=NfzZB3X1K2d7Ho9Rb9VIBV9wu3FjfsXIOiB8h/Zb85t0niBnb5Lu/wEuI/nvwJT3Mj8+eO8avh6QFQlMX0zM6SdC2IWHmgXIqh/YXSVoIi8UIHTuh3unTI+DYh+sZD307ZHV8KV0oVZCtiNQTZcBlukeeviBDJ5Wcas1aDNSq1SwaJudPnASoenqMJyqSjdN6Psuc3qNfstXDDZSWvTxeAzj9lhxeOB0pGbjCvYoel5UxFKPrk5dFaqwGYngMv0ssHtvpC2eN+jYiTwUDDL4FG6KqMoNR17gTuzrPeh649ZFugCO1rXta7j6GgX/ul7K96OgX5AwrvujFcf9Iop7Gw==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
- dkim=pass header.d=oracle.com; arc=none
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="UdmXy+QH"
+Received: by mail-wr1-f54.google.com with SMTP id ffacd0b85a97d-42fbc3056afso4127674f8f.2
+        for <cgroups@vger.kernel.org>; Mon, 12 Jan 2026 23:36:09 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=P+Ip1YfyyFcaYNzFlUNuswMYnRJgu97QFo5jcV5uz2s=;
- b=FP3U3ozENK35uEYPG2UVsEPMRfDp8HNLJiEPZwPko3TN8bB4fDoFZ1E42d3tCHAyXSdPzOkKsAJKFwaayRRz0ZYNkhWlgC/v7A9RZlj0/YzW3Yww2I138h17j6LOOyBNZEuHfnnZokTlpqX3OFA5DYOKVjS7yOmZokIwTckvXi0=
-Received: from CH3PR10MB7329.namprd10.prod.outlook.com (2603:10b6:610:12c::16)
- by BN0PR10MB5095.namprd10.prod.outlook.com (2603:10b6:408:123::23) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9499.7; Tue, 13 Jan
- 2026 06:18:52 +0000
-Received: from CH3PR10MB7329.namprd10.prod.outlook.com
- ([fe80::c2a4:fdda:f0c2:6f71]) by CH3PR10MB7329.namprd10.prod.outlook.com
- ([fe80::c2a4:fdda:f0c2:6f71%7]) with mapi id 15.20.9499.005; Tue, 13 Jan 2026
- 06:18:52 +0000
-From: Harry Yoo <harry.yoo@oracle.com>
-To: akpm@linux-foundation.org, vbabka@suse.cz
-Cc: andreyknvl@gmail.com, cl@gentwo.org, dvyukov@google.com, glider@google.com,
-        hannes@cmpxchg.org, linux-mm@kvack.org, mhocko@kernel.org,
-        muchun.song@linux.dev, rientjes@google.com, roman.gushchin@linux.dev,
-        ryabinin.a.a@gmail.com, shakeel.butt@linux.dev, surenb@google.com,
-        vincenzo.frascino@arm.com, yeoreum.yun@arm.com, harry.yoo@oracle.com,
-        tytso@mit.edu, adilger.kernel@dilger.ca, linux-ext4@vger.kernel.org,
-        linux-kernel@vger.kernel.org, cgroups@vger.kernel.org,
-        hao.li@linux.dev
-Subject: [PATCH V6 0/9] mm/slab: reduce slab accounting memory overhead by allocating slabobj_ext metadata within unsed slab space 
-Date: Tue, 13 Jan 2026 15:18:36 +0900
-Message-ID: <20260113061845.159790-1-harry.yoo@oracle.com>
-X-Mailer: git-send-email 2.43.0
-Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-ClientProxiedBy: SEWP216CA0076.KORP216.PROD.OUTLOOK.COM
- (2603:1096:101:2bc::18) To CH3PR10MB7329.namprd10.prod.outlook.com
- (2603:10b6:610:12c::16)
+        d=gmail.com; s=20230601; t=1768289768; x=1768894568; darn=vger.kernel.org;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=eUozRbnze9HzpC21A9V0Ws1+iVaj/6k577CuB99o4e0=;
+        b=UdmXy+QH1e7OlgjAv0ItCRvAhfpk/BnC/RF0654E178f8y7MRUcqRjMrMbQDbQsChl
+         gY6zgtrt4LxDIFNayujDCxK6jRBVI2GpeDYR7zX/+wIQP696UzGixV5CDw8t29BLwJBc
+         DeIFIzNahafIJTVBkD/bG/m2CPQcb6mdNDZJFa5ZcWpcX60sIStT+LVPRR7vfKN/SpxQ
+         3pVe34VFK8UPEmcrqQRmxdvTwyXDUYfRHHebRP6vVznYtPfGHodb28Umde+9uo4lz79B
+         tkvSCVT7Sk7W2W/y9zlOG7+W1k1ostJMvD914ArhWNfLAOEk8Ya9+p7SrAjninG59J/6
+         jyuA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1768289768; x=1768894568;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-gg:x-gm-message-state:from
+         :to:cc:subject:date:message-id:reply-to;
+        bh=eUozRbnze9HzpC21A9V0Ws1+iVaj/6k577CuB99o4e0=;
+        b=GyT3ExXwJgnCqkEn70w83mxtYEUcp7MWV6+lsTWPEPtVN2m59OZ9O8VpXRr6eblR9N
+         K/gKWhj6EJihv2CuGOsiV8L41IDo2VpDnajnsmZeKo1gMQULDYQCzitmSxR/7mZAoEWe
+         J6QUqpHTaW3hj/V7CnqxG/Xws1xGv8PPjaTPPiaDkNS6lD4RL3IG54Iw98g/dqf+CJeM
+         aOOh5hRTDBjKLyueIMQNoMirPMkV2+HzYEdM6D4rmapd//T6zGH4w8Du5ptVxJ3uWRsn
+         aam64op2TyWxTzZ1dEL2vYgkiFK6Lql0uy+Khf4HkvkNwmqa077XcUAaiTO+Mx/DM4aa
+         UjWw==
+X-Forwarded-Encrypted: i=1; AJvYcCVQVdv4sgMlGDTGhjv4+NNUa/8UfwgSAbZHSPDRhlvPYGxwc2UdvHeCujlBV1fj2Wh40hkDcU1F@vger.kernel.org
+X-Gm-Message-State: AOJu0YzV+eIRPS3o+M/nSqroskh8/im02QwSyPeIQ3dvLRMT6mfUYhH0
+	GjH6cPYJiw2xKziDry6yVrmZEuviZvZjSaS+9vyMbMNU0EAZgptJ8ToUMtyEnaFpyMKTE/i52kW
+	OwBIlHSwraEv/Z7OLW/+l3AvgssGHHiQ=
+X-Gm-Gg: AY/fxX54j8UTuWd6fWsgO+4RwIQmvMC4zDHMgZTX4lNXbBB8f+6iSLrQ3cX/LTgmSbJ
+	45iXbvbjSFxqgnaEK3eYjoSp/ukK3XsQsHEgWhBk4CzsyPMNR3k/jFirv821/5wycFsaBJqrp6F
+	kBMAxw53Av4DwI9Al+yVfA/HIc02/cw/tYLfcRnPUwgUr/nvSFsNR37BPC8RNzUytsTU8Sw/nS0
+	l7RlXnilXhr49IPh7GU8alTzUrNA+e64ehmN85qCwZVxZuDTDfUgelPmoPTL3yKMCFE2q8=
+X-Google-Smtp-Source: AGHT+IH9RAgZVfoszvmI2rHlHQQ/65rwZdAI+w8Ko1vSjYRWtReTjlaib+Hvfplj6jXWv7FNxUvUF0QpMOELK4Wju5M=
+X-Received: by 2002:a05:6000:4301:b0:42b:5592:ebe6 with SMTP id
+ ffacd0b85a97d-432c32f701cmr20640766f8f.0.1768289767408; Mon, 12 Jan 2026
+ 23:36:07 -0800 (PST)
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: CH3PR10MB7329:EE_|BN0PR10MB5095:EE_
-X-MS-Office365-Filtering-Correlation-Id: 3d9af1be-c732-4d4b-46d0-08de526b9f7b
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam: BCL:0;ARA:13230040|376014|366016|7416014|1800799024;
-X-Microsoft-Antispam-Message-Info:
-	=?us-ascii?Q?7s9Uub6t+33q/YHrRkATBY27R9/0pHLbVxSGoj92VBR99xkjNJemb4dLlBGY?=
- =?us-ascii?Q?Lv3DKeb/AdiT5F+MPJKDGZM5jgFEQfbPnsNsZdEZSwmZHdl7+AWpcLVfQNCM?=
- =?us-ascii?Q?9RA2RJNrCFyiIjUEfhoa9M7I8LMHatfg/hINzXhebfOGKC8Or19Y4/3KXeR7?=
- =?us-ascii?Q?kkkZiF5anJ7x2w9DrzCUmvQNmjf5MB+5o6nnm2PoXP/6OUIQdAY5EwUnt3l6?=
- =?us-ascii?Q?BPB295gv19pnSWHXBjet9khkmHDo2BRp98yvtUa27wtff5NZUb6jjxpYLk3z?=
- =?us-ascii?Q?tEQlSuJZAkqub2dGxS7xTaPC+D2e5J64sm1L/3WvnP1zl/XF2Mk3unSQViyW?=
- =?us-ascii?Q?OliPZxfMTDrGWzIZEEqUZWo5AklWxgr0qEVPpIP8XEFkabC2BF/Bq7kEFiN8?=
- =?us-ascii?Q?X/foVF2S4FxNzuz/sEcgVH0YF8AlQodcE3Dkp3MLFw9GY3pTiH4RGzEoZ4n8?=
- =?us-ascii?Q?kvJi+jiQAOrZzvh8T3N7F0defC7vcEK/qTWOCHIkKlbJMKxhn0PhVoNSSNuQ?=
- =?us-ascii?Q?bAUaCk7Y1H6GyxnnI7QwyhzGOgNmu7fSxu/BKykpu4PeHlZPy1VPxCZRF/W1?=
- =?us-ascii?Q?YkOBhSuPlwDv/hz3SDLtzXsmFZnwK62T51mwVzylsA5J8rAAypiloAaRt09n?=
- =?us-ascii?Q?ocAipXeE8D9t04+Rs53td47NltmHhjiRgn1U48j84PijN2JRSTedsd84k4i6?=
- =?us-ascii?Q?kOSpTY7bexCG7gBhVk3i9PlNAmXrg24PEjtWYkn6MeZ0c+to7j+UBmbw0uHf?=
- =?us-ascii?Q?GQqrWuVCOrWRly3SZRle91AX5Us2KVDU5FV5OMJXO9HCLFn9uh+B8KNvA9DD?=
- =?us-ascii?Q?7KF8a4qU5V0d6xbDxGFt6rA6MBCZp0jWFurOcJxsOuRNGeezPBGGPXynHOGe?=
- =?us-ascii?Q?2fe3kgL+YAcIh4gsJN1HZ7/ceDq4Ff6zd1szhHt8uWuPj2S9h9LLog3Ri7Nu?=
- =?us-ascii?Q?ZvMCpizfh705V5SCZp+hp5tZYFIbZyOalAOEpiXgJ+FW/uMexMvUYTlBJi+v?=
- =?us-ascii?Q?boaVRhvxHgtnhR9uio8J+tSNg/i9n4x53vzVWBsYk3rnPn5lR6LrmOlyQHVF?=
- =?us-ascii?Q?+W9aRWl1GKmi5HHkJlnr9K0cv9S6ko/n91S1crA0p7rjuMJiohKG+P/eVeDp?=
- =?us-ascii?Q?EZjiaBIfBheFHmJo7Db03Zc6us9LfWNHr2lxooZdCoPTKszr8YYa2usGZ6Gy?=
- =?us-ascii?Q?6uYOKV6UdnxcEMs6zcGn19BYGa4EMNtynprtFkQH4ki5edTpIsccl6iZ6hSE?=
- =?us-ascii?Q?w0BF8uMxA5RkivrOytNhArNcwFrYnm20nk3jMGiHLaZQ8x0Gorn/TJvjhJ2H?=
- =?us-ascii?Q?iSTo/gmc35gwes/I28FYYNclqvjIa6VsJr9RqbEHF2y56UlIHWVfaC1qEJSU?=
- =?us-ascii?Q?M6RkKXnqLjkDTDJt2OvUSTIsJAb04zliA+9lPzYpBqMENZCEpm9NK3JT7Jzy?=
- =?us-ascii?Q?3JHpgNiInBLWQvSUmkW8DXzdcmen/LMhEQCqEyDvrfL7J1ymF5Sa7Q=3D=3D?=
-X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:CH3PR10MB7329.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(376014)(366016)(7416014)(1800799024);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0:
-	=?us-ascii?Q?mporZ3tlS+4GsBzFVNiY5L2Y25bcmimX5+ZNxfkJEVVYHAxFsf/jc5L596bw?=
- =?us-ascii?Q?rW41z1e+mYwMpvu1TQdeMLTvmtsPJeQwwWfE2EuRTNA+1azZM0zKR5BwfJDo?=
- =?us-ascii?Q?KWcg/CbajBFnUUlafN0m/7ddznZySTJhWx6/QFa4pG4lLJ6+1kAjGzGWTJrR?=
- =?us-ascii?Q?byvG2dYa/nKnEeXAyhm+XPQbfON283a4PnMfomF+lJu9JsXLIPJP2ZBYpvDw?=
- =?us-ascii?Q?JBP5nC/S5AUQbmMqf5TyoVzlClgAqikARrNrfvoa24jJ3yJIXcXyCia4nmbK?=
- =?us-ascii?Q?KiZks7gD1wRAzFIYVupNNV0zk65iDOwRjSCH0EiSze6HCAKbziSpf+eQBw4J?=
- =?us-ascii?Q?4K8Y//uaeLP942wLxUk/aTJskLCV0Ge43YDHxuSL17XmtLz1JPluTVscN4DV?=
- =?us-ascii?Q?8N1bNTin5FSf6U2C6CxCYzZik9oVI6sTmU+p3o/X8hL1LnmCmPn0YFlqIkUl?=
- =?us-ascii?Q?9SQB2/+kbUDxVpqq68NWToPGdSMyPjEoExWX2yCdhZtClQwYbVhNp7sUthZw?=
- =?us-ascii?Q?9s45IZXTORkVKkDMsHK+BGVx3oZSeTiVbiJrcVxXOPWgBrXR80oAAWzLCFNy?=
- =?us-ascii?Q?32PnLAkFBUowY07jAIPNk5doFeY/lt9LuLr6ial1L5uohvdSf+oHapC+EEkT?=
- =?us-ascii?Q?uaSBWBlZT+MPFdV77ailjOwOt69ec3OdY371r9Ik9Rte70asYZq1Txu1DX3T?=
- =?us-ascii?Q?rMVzSBwJv+ynR1o+Xhtk+773F8l6vHR32I56vRcXufhLV7yvGfKj92EloieJ?=
- =?us-ascii?Q?RtHShzMYKclyuQnpQxdFAibm+/RWSDODpUoN2Apx1hW28oHzvEfQj9LEg23r?=
- =?us-ascii?Q?tDovYkc7XvcpB0544mcr7XdJTlmy58+Bl+C8LqN1uh1uIX7szZU1L3WyMaS+?=
- =?us-ascii?Q?lc4Hx0Dpf3rxGb/X+xiZYYdR8GPL3P6gAF4B5StcZBRh9Dgmv3Gwl6JPqeE5?=
- =?us-ascii?Q?ObT0mcyZtMGB5x9CEBTxyC1j8NxsXX9WJtXgQ/DbtrDBMvdwPUqE5tIF2mEg?=
- =?us-ascii?Q?K+Xwo8E4p6VUdemDNjrCYKad7BL8dOPEDDVC8P1E9dVHvjGrwFSzHbW78YQo?=
- =?us-ascii?Q?h1mquz7Y7uOmrfoJ2sGhd1KBsXuYltv6dko5o9EsfQnWDXeB9tyYJ8ujVCwz?=
- =?us-ascii?Q?yD8KNBVjsZ2C0ZwlXbKnfO1ejpUtZjG44fQ0bw3zEBgwAnRs81D849AKprCX?=
- =?us-ascii?Q?3Yc3OfVcFP1YWTCR0hskIvj8KxwxV2YFs8H7Cf4sMixqK5gGSiyHLzsoxRYM?=
- =?us-ascii?Q?1GzL/9B+0EOvGL2R9muGtF991v7XaKFZk+AGgIeg9WHJiWnuuhKEuzT1eRF1?=
- =?us-ascii?Q?IFL9taC9z/JJgtf9Qgf0Pe73qu2qlQN2SWa81hFni8Vqc69ac3x1GKHaCUnM?=
- =?us-ascii?Q?RYsxojgVVhV+fEOieV9N79hqxmBY+MeooXLDIUeuRgK1dfeZ/3p7TAAT6Yty?=
- =?us-ascii?Q?/Lq9/Y8Tir7ef0iddnzxxQhSKOIUpBV9W2EjkMDCWKuZTvdOQqxrRZNF7h6I?=
- =?us-ascii?Q?aJASSWzHg81NTWGHUqj5LtmlnUJ0crbPblKk/9dHN2qmvxYIm31qPfEGU0OR?=
- =?us-ascii?Q?MV7F1hYO/Oj7jEMWDBLyNprGERH7UaaPzvzOAu4BP0LnB+7kzBtN20gaQmSl?=
- =?us-ascii?Q?lcCfDilVbBG5QC3HWozdw/sbbOD3DqEboNQaZUJnXnKTzLMS89MJNEi0QPv0?=
- =?us-ascii?Q?JzmGcC6JsQ6IgCw0DtvSdieANCYwlEEBHGWkSqySSMhG6MJ174dDgJdbWBtb?=
- =?us-ascii?Q?8XztuQ+b5w=3D=3D?=
-X-MS-Exchange-AntiSpam-ExternalHop-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0:
-	6PDxpUdGIwMFdK+i6ezUGm4F+0p1WKTV1YJWnCaH22yhZoBcS8MkWqUNROFhcK8SSI/rcuH3MRKk0wykUc0m/O1v9i/EtERksrL3WDrrW+mnY+fQ5XW+fjntBMszsyCCx50MMWBZSV1objLn9HhQp8JBLmR+3rzi8rkaf3IvVlmIukyV3OB2aZmCAvy6dBZqh44PCXjJY/AZ9QVxJwIBL1odaGPcFYcMFa2BpvYneKo0N5wzbckp6RAURk8Nd1yGOQQ1ozj9v7pDV/+tg53W5aSCwEcqTxyPROdD+ifVdRmdsch+MXxGLjT3ec4JAuFdMM9FLpMfL22+fVZItLX5eO3Kmh4NEyqDTscwJT7eZzYgP0yJ0PHPMrZZgf5ttiXE3wdKT7XpW3OX5QXhsqsA9ofUq9zJjWGH2P3zJQOQKKCcAASLx93frMiT552QGkrI9jMYtIjs61zSlrR2NmDlLjWSlXvuX+GJO1pDfnAyJCyp9+5ZWCcAVink7DcFSqLLtTNxosTVBiO1PqV6qtLXvYMCuJro7xnqcIZSbCH+sbQD/OYVJsA/LPGL3tasdiEZqBNG2wJgzPxNGyVcdmX6nv2wvGveEDfsvO4PGOgF3CI=
-X-OriginatorOrg: oracle.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 3d9af1be-c732-4d4b-46d0-08de526b9f7b
-X-MS-Exchange-CrossTenant-AuthSource: CH3PR10MB7329.namprd10.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 13 Jan 2026 06:18:52.5044
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: kxQJMgeoARIH3zDR7a8mAcnU//iyYhteaGlVTGpfTICXEkTSyiqu1bapj2wa2xRTdgDmYZ5Acc9ko6rulH6x1w==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: BN0PR10MB5095
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1121,Hydra:6.1.9,FMLib:17.12.100.49
- definitions=2026-01-13_01,2026-01-09_02,2025-10-01_01
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxlogscore=999 suspectscore=0
- malwarescore=0 spamscore=0 adultscore=0 mlxscore=0 phishscore=0
- bulkscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2512120000 definitions=main-2601130050
-X-Proofpoint-GUID: Cspvcz9dADQwWATGxmlmo0NHy1FjXUJq
-X-Proofpoint-ORIG-GUID: Cspvcz9dADQwWATGxmlmo0NHy1FjXUJq
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwMTEzMDA1MCBTYWx0ZWRfX9Aha8hNEqV9f
- SMhSWh1vhR+iYZc6q0knQRbChxGsW0QbwNnHG5tvUU9i2opVHWxXHDMxg1uhGabdnAmjie9GdTS
- KusL4vLEWft2ms70bKrEf6qLiIZhRcuhN1EFHiYyG7/bi7HZFaY6iLPKLaW3o/3ACa/kUNZeMvY
- xY+9cZEvdKR+3rG6TWA4kV26pW575ZDx293ToPRnVJ+0Bx0DM5Kj6iz3eNXB/S3GBz5zX3Kj//6
- cTbt4TGjOuJ+J7R47BwZerNvqgLKY0zlkF5JHNhdDH9KF+j5xR4U+f8b5ni+XtvSBUXvrkB1OjW
- 7t7jGBqcN9IAGhc+MfLI/yFz7fVscAXlW1b4kq+gc7OWoXXtPCxPFc95TjMyo3iAm29iXTH3gQc
- A5PrX+AnWkyFP1WNhflsemP1fjk9Inj8f/2qsAacvrPLu+xTukoVodTD5NZYcFHyoZCGBRcNmto
- bSStQkhKIdCa7eV4N/ujKKvztaFX2wl3zjiYprI0=
-X-Authority-Analysis: v=2.4 cv=fIc0HJae c=1 sm=1 tr=0 ts=6965e3d1 b=1 cx=c_pps
- a=qoll8+KPOyaMroiJ2sR5sw==:117 a=qoll8+KPOyaMroiJ2sR5sw==:17
- a=6eWqkTHjU83fiwn7nKZWdM+Sl24=:19 a=z/mQ4Ysz8XfWz/Q5cLBRGdckG28=:19
- a=lCpzRmAYbLLaTzLvsPZ7Mbvzbb8=:19 a=xqWC_Br6kY4A:10 a=vUbySO9Y5rIA:10
- a=GoEa3M9JfhUA:10 a=VkNPw1HP01LnGYTKEx00:22 a=VwQbUJbxAAAA:8 a=yPCof4ZbAAAA:8
- a=WS-UKqYZhYmZd4hvbKIA:9 cc=ntf awl=host:12110
+References: <20260108203755.1163107-1-gourry@gourry.net> <20260108203755.1163107-8-gourry@gourry.net>
+ <i6o5k4xumd5i3ehl6ifk3554sowd2qe7yul7vhaqlh2zo6y7is@z2ky4m432wd6>
+ <aWF1uDdP75gOCGLm@gourry-fedora-PF4VCD3F> <4ftthovin57fi4blr2mardw4elwfsiv6vrkhrjqjsfvvuuugjj@uivjc5uzj5ys>
+In-Reply-To: <4ftthovin57fi4blr2mardw4elwfsiv6vrkhrjqjsfvvuuugjj@uivjc5uzj5ys>
+From: Nhat Pham <nphamcs@gmail.com>
+Date: Tue, 13 Jan 2026 16:35:55 +0900
+X-Gm-Features: AZwV_QhbH32JBJthS6KlFQhKn8wWXAfJ1iISfNLvWOTOVFurrrg7BnRers1QG9U
+Message-ID: <CAKEwX=MftJXOE8H=m1C=_RVL8cu516efixTwcaQMBB9pdj=K+g@mail.gmail.com>
+Subject: Re: [RFC PATCH v3 7/8] mm/zswap: compressed ram direct integration
+To: Yosry Ahmed <yosry.ahmed@linux.dev>
+Cc: Gregory Price <gourry@gourry.net>, linux-mm@kvack.org, cgroups@vger.kernel.org, 
+	linux-cxl@vger.kernel.org, linux-doc@vger.kernel.org, 
+	linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org, 
+	kernel-team@meta.com, longman@redhat.com, tj@kernel.org, hannes@cmpxchg.org, 
+	mkoutny@suse.com, corbet@lwn.net, gregkh@linuxfoundation.org, 
+	rafael@kernel.org, dakr@kernel.org, dave@stgolabs.net, 
+	jonathan.cameron@huawei.com, dave.jiang@intel.com, alison.schofield@intel.com, 
+	vishal.l.verma@intel.com, ira.weiny@intel.com, dan.j.williams@intel.com, 
+	akpm@linux-foundation.org, vbabka@suse.cz, surenb@google.com, mhocko@suse.com, 
+	jackmanb@google.com, ziy@nvidia.com, david@kernel.org, 
+	lorenzo.stoakes@oracle.com, Liam.Howlett@oracle.com, rppt@kernel.org, 
+	axelrasmussen@google.com, yuanchu@google.com, weixugc@google.com, 
+	yury.norov@gmail.com, linux@rasmusvillemoes.dk, rientjes@google.com, 
+	shakeel.butt@linux.dev, chrisl@kernel.org, kasong@tencent.com, 
+	shikemeng@huaweicloud.com, bhe@redhat.com, baohua@kernel.org, 
+	chengming.zhou@linux.dev, roman.gushchin@linux.dev, muchun.song@linux.dev, 
+	osalvador@suse.de, matthew.brost@intel.com, joshua.hahnjy@gmail.com, 
+	rakie.kim@sk.com, byungchul@sk.com, ying.huang@linux.alibaba.com, 
+	apopple@nvidia.com, cl@gentwo.org, harry.yoo@oracle.com, 
+	zhengqi.arch@bytedance.com
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-V5: https://lore.kernel.org/linux-mm/20260105080230.13171-1-harry.yoo@oracle.com
-V5 -> V6:
+On Tue, Jan 13, 2026 at 6:13=E2=80=AFAM Yosry Ahmed <yosry.ahmed@linux.dev>=
+ wrote:
+>
+> On Fri, Jan 09, 2026 at 04:40:08PM -0500, Gregory Price wrote:
+> > On Fri, Jan 09, 2026 at 04:00:00PM +0000, Yosry Ahmed wrote:
+> > > On Thu, Jan 08, 2026 at 03:37:54PM -0500, Gregory Price wrote:
+> > >
+> > > If the memory is byte-addressable, using it as a second tier makes it
+> > > directly accessible without page faults, so the access latency is muc=
+h
+> > > better than a swapped out page in zswap.
+> > >
+> > > Are there some HW limitations that allow a node to be used as a backe=
+nd
+> > > for zswap but not a second tier?
+> > >
+> >
+> > Coming back around - presumably any compressed node capable of hosting =
+a
+> > proper tier would be compatible with zswap, but you might have hardware
+> > which is sufficiently slow(er than dram, faster than storage) that usin=
+g
+> > it as a proper tier may be less efficient than incurring faults.
+> >
+> > The standard I've been using is 500ns+ cacheline fetches, but this is
+> > somewhat arbitrary.  Even 500ns might be better than accessing multi-us
+> > storage, but then when you add compression you might hit 600ns-1us.
+> >
+> > This is besides the point, and apologies for the wall of text below,
+> > feel free to skip this next section - writing out what hardware-specifi=
+c
+> > details I can share for the sake of completeness.
+>
+> The wall of text is very helpful :)
+>
+> >
+> >
+> > Some hardware details
+> > =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
+> > The way every proposed piece of compressed memory hardware I have seen
+> > would operate is essentially by lying about its capacity to the
+> > operating system - and then providing mechanisms to determine when the
+> > compression ratio becomes is dropping to dangerous levels.
+> >
+> > Hardware Says : 8GB
+> > Hardware Has  : 1GB
+> > Node Capacity : 8GB
+> >
+> > The capacity numbers are static.  Even with hotplug, they must be
+> > considered static - because the runtime compression ratio can change.
+> >
+> > If the device fails to achieve a 4:1 compression ratio, and real usage
+> > starts to exceed real capacity - the system will fail.
+> > (dropped writes, poisons, machine checks, etc).
+> >
+> > We can mitigate this with strong write-controls and querying the device
+> > for compression ratio data prior to actually migrating a page.
+>
+> I am a little bit confused about this. Why do we only need to query the
+> device before migrating the page?
+>
+> Are we checking if the device has enough memory for the worst case
+> scenario (i.e. PAGE_SIZE)?
+>
+> Or are we checking if the device can compress this specific page and
+> checking if it can compress it and store it? This seems like it could be
+> racy and there might be some throwaway work.
+>
+> I guess my question is: why not just give the page to the device and get
+> either: successfully compressed and stored OR failed?
+>
+> Another question, can the device or driver be configured such that we
+> reject pages that compress poorly to avoid wasting memory and BW on the
+> device for little savings?
+>
+> >
+> > Why Zswap to start
+> > =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
+> > ZSwap is an existing, clean read and write control path control.
+> >    - We fault on all accesses.
+> >    - It otherwise uses system memory under the hood (kmalloc)
+> >
+> > I decided to use zswap as a proving ground for the concept.  While the
+> > design in this patch is simplistic (and as you suggest below, can
+> > clearly be improved), it demonstrates the entire concept:
+> >
+> > on demotion:
+> > - allocate a page from private memory
+> > - ask the driver if it's safe to use
+> > - if safe -> migrate
+> >   if unsafe -> fallback
+> >
+> > on memory access:
+> > - "promote" to a real page
+> > - inform the driver the page has been released (zero or discard)
+> >
+> > As you point out, the real value in byte-accessible memory is leaving
+> > the memory mapped, the only difference on cram.c and zswap.c in the
+> > above pattern would be:
+> >
+> > on demotion:
+> > - allocate a page from private memory
+> > - ask the driver if it's safe to use
+> > - if safe -> migrate and remap the page as RO in page tables
+> >   if unsafe
+> >      -> trigger reclaim on cram node
+> >      -> fallback to another demotion
+> >
+> > on *write* access:
+> > - promote to real page
+> > - clean up the compressed page
+>
+> This makes sense. I am assuming the main benefit of zswap.c over cram.c
+> in this scenario is limiting read accesses as well.
+>
+> [..]
+> > > So the CXL code tells zswap what nodes are usable, then zswap tries
+> > > getting a page from these nodes and checking them using APIs provided=
+ by
+> > > the CXL code.
+> > >
+> > > Wouldn't it be a better abstraction if the nodemask lived in the CXL
+> > > code and an API was exposed to zswap just to allocate a page to copy =
+to?
+> > > Or we can abstract the copy as well and provide an API that directly
+> > > tries to copy the page to the compressible node.
+> > >
+> > > IOW move zswap_compress_direct() (probably under a different name?) a=
+nd
+> > > zswap_direct_nodes into CXL code since it's not really zswap logic.
+> > >
+> > > Also, I am not sure if the zswap_compress_direct() call and check wou=
+ld
+> > > introduce any latency, since almost all existing callers will pay for=
+ it
+> > > without benefiting.
+> > >
+> > > If we move the function into CXL code, we could probably have an inli=
+ne
+> > > wrapper in a header with a static key guarding it to make there is no
+> > > overhead for existing users.
+> > >
+> >
+> >
+> > CXL is also the wrong place to put it - cxl is just one potential
+> > source of such a node.  We'd want that abstracted...
+> >
+> > So this looks like a good use of memor-tiers.c - do dispatch there and
+> > have it set static branches for various features on node registration.
+> >
+> > struct page* mt_migrate_page_to(NODE_TYPE, src, &size);
+> > -> on success return dst page and the size of the page on hardware
+> >    (target_size would address your accounting notes below)
+> >
+> > Then have the migrate function in mt do all the node_private callbacks.
+> >
+> > So that would limit the zswap internal change to
+> >
+> > if (zswap_node_check()) { /* static branch check */
+> >     cpage =3D mt_migrate_page_to(NODE_PRIVATE_ZSWAP, src, &size);
+> >     if (compressed_page) {
+> >         entry->page_handle =3D cpage;
+> >         entry->length =3D size;
+> >         entry->direct =3D true;
+> >       return true;
+> >     }
+> > }
+> > /* Fallthrough */
+>
+> Yeah I didn't necessarily mean CXL code, but whatever layer is
+> responsible for keeping track of which nodes can be used for what.
+>
+> >
+> > ack. this is all great, thank you.
+> >
+> > ... snip ...
+> > > > entry->length =3D size
+> > >
+> > > I don't think this works. Setting entry->length =3D PAGE_SIZE will ca=
+use a
+> > > few problems, off the top of my head:
+> > >
+> > > 1. An entire page of memory will be charged to the memcg, so swapping
+> > > out the page won't reduce the memcg usage, which will cause thrashing
+> > > (reclaim with no progress when hitting the limit).
+> > >
+> > > Ideally we'd get the compressed length from HW and record it here to
+> > > charge it appropriately, but I am not sure how we actually want to
+> > > charge memory on a compressed node. Do we charge the compressed size =
+as
+> > > normal memory? Does it need separate charging and a separate limit?
+> > >
+> > > There are design discussions to be had before we commit to something.
+> >
+> > I have a feeling tracking individual page usage would be way too
+> > granular / inefficient, but I will consult with some folks on whether
+> > this can be quieried.  If so, we can add way to get that info.
+> >
+> > node_private_page_size(page) -> returns device reported page size.
+> >
+> > or work it directly into the migrate() call like above
+> >
+> > --- assuming there isn't a way and we have to deal with fuzzy math ---
+> >
+> > The goal should definitely be to leave the charging statistics the same
+> > from the perspective of services - i.e zswap should charge a whole page=
+,
+> > because according to the OS it just used a whole page.
+> >
+> > What this would mean is memcg would have to work with fuzzy data.
+> > If 1GB is charged and the compression ratio is 4:1, reclaim should
+> > operate (by way of callback) like it has used 256MB.
+> >
+> > I think this is the best you can do without tracking individual pages.
+>
+> This part needs more thought. Zswap cannot charge a full page because
+> then from the memcg perspective reclaim is not making any progress.
+> OTOH, as you mention, from the system perspective we just consumed a
+> full page, so not charging that would be inconsistent.
+>
+> This is not a zswap-specific thing though, even with cram.c we have to
+> figure out how to charge memory on the compressed node to the memcg.
+> It's perhaps not as much of a problem as with zswap because we are not
+> dealing with reclaim not making progress.
+>
+> Maybe the memcg limits need to be "enlightened" about different tiers?
+> We did have such discussions in the past outside the context of
+> compressed memory, for memory tiering in general.
 
-- Patch 1: Added Closes: tag for related discussion (Vlastimil)
-  https://lore.kernel.org/linux-mm/1372138e-5837-4634-81de-447a1ef0a5ad@suse.cz
+What if we add a reclaim flag that says "hey, we are hitting actual
+memory limit and need to make memory reclaim forward progress".
 
-- Patch 3: Addressed Vlastimil's comments
-  https://lore.kernel.org/linux-mm/e28c08e4-5048-429b-97a0-8d51e494efcd@suse.cz
+Then, we can have zswap skip compressed cxl backend and fall back to
+real compression.
 
-- Patch 4: Fixed incorrect function prototype of slab_obj_ext() on
-  !CONFIG_SLAB_OBJ_EXT builds and kept pointer type in
-  free_slab_obj_exts() (Hao, Vlastimil)
-  https://lore.kernel.org/linux-mm/n6kyluk3nahdxytwek4ijzy4en6mc6ps7fjjgftww4ith7llom@cijm4who24w2
-  https://lore.kernel.org/linux-mm/473d479c-4eae-4589-b8c2-e2a29e8e6bc1@suse.cz
+(Maybe also demotion, which only move memory from one node to another,
+as well as the new cram.c stuff? This will technically also save some
+wasted work, as in the status quo we will need to do a demotion pass
+first, before having to reclaiom memory from the bottom tier anyway?
+But not sure if we want this).
 
-- Patch 7, 9: Rewrote obj_exts_in_slab() to check if the pointer is within the
-  slab's range, and distinguish by stride (Vlastimil)
-  https://lore.kernel.org/linux-mm/644e163d-edd9-4128-9516-0f70a25526df@suse.cz
+>
+> Not sure if this is the right place to discuss this, but I see the memcg
+> folks CC'd so maybe it is :)
+>
+> >
+> > >
+> > > 2. The page will be incorrectly counted in
+> > > zswap_stored_incompressible_pages.
+> > >
+> >
+> > If we can track individual page size, then we can fix that.
+> >
+> > If we can't, then we'd need zswap_stored_direct_pages and to do the
+> > accounting a bit differently.  Probably want direct_pages accounting
+> > anyway, so i might just add that.
+>
+> Yeah probably the easiest way to deal with this, assuming we keep
+> entry->length as PAGE_SIZE.
 
-- Patch 9: Fixed potentioal memory leak due to incorrect impl. of
-  obj_exts_in_object() (Vlastimil)
-  https://lore.kernel.org/linux-mm/8c67dcbe-f393-4da6-8d24-f9da79c246c4@suse.cz/
+Yeah this one is no big deal. I like a new informative counter :)
 
-- Patch 9: Fixed incorrect ksize() implementation (Hao)
-  https://lore.kernel.org/linux-mm/fgx3lapibabra4x7tewx55nuvxz235ruvm3agpprjbdcmt3rc6@h54ln5tfdssz
-
-When CONFIG_MEMCG and CONFIG_MEM_ALLOC_PROFILING are enabled,
-the kernel allocates two pointers per object: one for the memory cgroup
-(actually, obj_cgroup) to which it belongs, and another for the code
-location that requested the allocation.
-
-In two special cases, this overhead can be eliminated by allocating
-slabobj_ext metadata from unused space within a slab:
-
-  Case 1. The "leftover" space after the last slab object is larger than
-          the size of an array of slabobj_ext.
-
-  Case 2. The per-object alignment padding is larger than
-          sizeof(struct slabobj_ext).
-
-For these two cases, one or two pointers can be saved per slab object.
-Examples: ext4 inode cache (case 1) and xfs inode cache (case 2).
-That's approximately 0.7-0.8% (memcg) or 1.5-1.6% (memcg + mem profiling)
-of the total inode cache size.
-
-Implementing case 2 is not straightforward, because the existing code
-assumes that slab->obj_exts is an array of slabobj_ext, while case 2
-breaks the assumption.
-
-As suggested by Vlastimil, abstract access to individual slabobj_ext
-metadata via a new helper named slab_obj_ext():
-
-static inline struct slabobj_ext *slab_obj_ext(struct slab *slab,
-                                               unsigned long obj_exts,
-                                               unsigned int index)
-{
-        return (struct slabobj_ext *)(obj_exts + slab_get_stride(slab) * index);
-} 
-
-In the normal case (including case 1), slab->obj_exts points to an array
-of slabobj_ext, and the stride is sizeof(struct slabobj_ext).
-
-In case 2, the stride is s->size and
-slab->obj_exts = slab_address(slab) + s->red_left_pad + (offset of slabobj_ext)
-
-With this approach, the memcg charging fastpath doesn't need to care the
-storage method of slabobj_ext.
-
-Harry Yoo (9):
-  mm/slab: use unsigned long for orig_size to ensure proper metadata
-    align
-  mm/slab: allow specifying free pointer offset when using constructor
-  ext4: specify the free pointer offset for ext4_inode_cache
-  mm/slab: abstract slabobj_ext access via new slab_obj_ext() helper
-  mm/slab: use stride to access slabobj_ext
-  mm/memcontrol,alloc_tag: handle slabobj_ext access under KASAN poison
-  mm/slab: save memory by allocating slabobj_ext array from leftover
-  mm/slab: move [__]ksize and slab_ksize() to mm/slub.c
-  mm/slab: place slabobj_ext metadata in unused space within s->size
-
- fs/ext4/super.c      |  20 +-
- include/linux/slab.h |  39 ++--
- mm/memcontrol.c      |  31 +++-
- mm/slab.h            | 145 +++++++++++----
- mm/slab_common.c     |  69 +------
- mm/slub.c            | 429 +++++++++++++++++++++++++++++++++++++------
- 6 files changed, 552 insertions(+), 181 deletions(-)
-
--- 
-2.43.0
-
+>
+> >
+> > > Aside from that, zswap_total_pages() will be wrong now, as it gets th=
+e
+> > > pool size from zsmalloc and these pages are not allocated from zsmall=
+oc.
+> > > This is used when checking the pool limits and is exposed in stats.
+> > >
+> >
+> > This is ignorance of zswap on my part, and yeah good point.  Will look
+> > into this accounting a little more.
+>
+> This is similar-ish to the memcg charging problem, how do we count the
+> compressed memory usage toward the global zswap limit? Do we keep this
+> limit for the top-tier? If not, do we charge full size for pages in
+> c.zswap or compressed size?
+>
+> Do we need a separate limit for c.zswap? Probably not if the whole node
+> is dedicated for zswap usage.
+>
+> >
+> > > > +         memcpy_folio(folio, 0, zfolio, 0, PAGE_SIZE);
+> > >
+> > > Why are we using memcpy_folio() here but copy_mc_highpage() on the
+> > > compression path? Are they equivalent?
+> > >
+> >
+> > both are in include/linux/highmem.h
+> >
+> > I was avoiding page->folio conversions in the compression path because
+> > I had a struct page already.
+> >
+> > tl;dr: I'm still looking for the "right" way to do this.  I originally
+> > had a "HACK:" tag here previously but seems I definitely dropped it
+> > prematurely.
+>
+> Not a big deal. An RFC or HACK or whatever tag just usually helps signal
+> to everyone (and more importantly, to Andrew) that this should not be
+> merged as-is.
+>
+> >
+> > (I also think this code can be pushed into mt_ or callbacks)
+>
+> Agreed.
+>
+> >
+> > > > + if (entry->direct) {
+> > > > +         struct page *freepage =3D (struct page *)entry->handle;
+> > > > +
+> > > > +         node_private_freed(freepage);
+> > > > +         __free_page(freepage);
+> > > > + } else
+> > > > +         zs_free(pool->zs_pool, entry->handle);
+> > >
+> > > This code is repeated in zswap_entry_free(), we should probably wrap =
+it
+> > > in a helper that frees the private page or the zsmalloc entry based o=
+n
+> > > entry->direct.
+> > >
+> >
+> > ack.
+> >
+> > Thank you again for taking a look, this has been enlightening.  Good
+> > takeaways for the rest of the N_PRIVATE design.
+>
+> Thanks for kicking off the discussion here, an interesting problem to
+> solve for sure :)
+>
+> >
+> > I think we can minimize zswap changes even further given this.
+> >
+> > ~Gregory
