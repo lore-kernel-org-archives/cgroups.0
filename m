@@ -1,32 +1,32 @@
-Received: from out-173.mta0.migadu.com (out-173.mta0.migadu.com [91.218.175.173])
+Received: from out-189.mta1.migadu.com (out-189.mta1.migadu.com [95.215.58.189])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DD52936BCDC
-	for <cgroups@vger.kernel.org>; Thu, 15 Jan 2026 10:42:28 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.173
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F33223624A4
+	for <cgroups@vger.kernel.org>; Thu, 15 Jan 2026 10:45:03 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=95.215.58.189
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1768473750; cv=none; b=BA4kI7y4sS3+R0F8ydEtE3pEK5gEo/f3GNu1W1q5Yd280dh5Dl3af/xV6ExkzYn3EhA0EJ6QLm2rhGRQJsVYIhH8C0N61a+9VQoDzgG6c2T6kznweSPUjW3JsQG5b73kRTk6shpgsLaiTeXb+WtqhRxLLhTtq84rzmUCLwMyDC8=
+	t=1768473907; cv=none; b=Vt/EzTVRjEGM5p+mfa1hBAULojJcPq5G7fV58M/ROz0+lTmb3WsBtKZ8heU3S8A/BNBVBZ2pxPZFrIAB1CzQxgCmY8t5QnhjFasGyjjGJW7LYpGU8IomyBhWl7yT74F0sL6Y/F1eq+BgPOr71JJTuL6IS0Onh4fzFQxFJxqA0WQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1768473750; c=relaxed/simple;
-	bh=iIesyBXtdQ65YAAFaKdmM1zXogdCBJafql7Y94TavGs=;
+	s=arc-20240116; t=1768473907; c=relaxed/simple;
+	bh=s95oR5aVdsmGeLaeafLLG4cq5VR4MyR68EWUNAGRCcw=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=hXR+Vzvh4D+fg0RR4fvM2PMix1od3GNsmtfDq7mbpPkJNXfl+dfD20wrygf5RI8EOK/M2BljF5dl9IbeBCFdyHulqqgAnATIBFLQ6gLdh5V5a0gJTTw41PvsSrv1Xl5ZA2PT3+5KiHk5IoLHAOTlx/AmhLNwYFAi53mRVfRg6hY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=Wjil01Sl; arc=none smtp.client-ip=91.218.175.173
+	 MIME-Version; b=WKwEBJRaEjfvNBK1iQxUS4WC2fA9BQIdDf4QLPfQhJWaeQxEpI5XoMZ7jKfGD4Al4BHZMUA3gXUVVmObTqiZnrUcSDTr3OyeXNOP6BBYxd3l05oGZFQFTIGm7zrlMf2uvr0ilqWN4ZpLVhzRyUjFfdHeim294CCINbFoIUPtbXg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=lm2WJvf6; arc=none smtp.client-ip=95.215.58.189
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="Wjil01Sl"
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="lm2WJvf6"
 X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
-	t=1768473736;
+	t=1768473901;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=35UwOuLDsnd+wCybJPYIumYnuCDYEBE4kSwMd4EKtLc=;
-	b=Wjil01SlR/oO7ddWVF49DyCoOjfKHh07SUGNGDI5HCIsrjvSeoqifmv9AxWbx4+r/9Accg
-	xm/7eIh6IpHq1vGFGhm+D736fbxhaDbjIzkk4sdm67r6ezQZNKn6v6uQFw4duXQqns8ZX+
-	5kRtoV8q19bi9FkiFYCz+UndmsiMrCc=
+	bh=ZLIFIOyWqYN3PmkXuq0N2mr92XQ1neHYGXezRRaTTrs=;
+	b=lm2WJvf6qTegKG7MdxdW+Y5SP8hIXdeQ1TjGe2H1Kwj5kc39uQZrjHtOWQv4e8K3dfT320
+	jsRwhPHng6BBn02joaa1i31xS8uucFCisjw1TmbIc3KD00CVJzlRaSon8SsP6nhBRr7aIg
+	c9lSCwlvLjxaHCPcVEMvm3aIlnCkc2I=
 From: Qi Zheng <qi.zheng@linux.dev>
 To: hannes@cmpxchg.org,
 	hughd@google.com,
@@ -54,11 +54,11 @@ Cc: linux-mm@kvack.org,
 	linux-kernel@vger.kernel.org,
 	cgroups@vger.kernel.org,
 	Qi Zheng <zhengqi.arch@bytedance.com>
-Subject: [PATCH v3 28/30 fix 1/2] mm: memcontrol: fix lruvec_stats->state_local reparenting
-Date: Thu, 15 Jan 2026 18:41:38 +0800
-Message-ID: <e5afd1b5ae95d70f82433b9b4e13201342d16707.1768473427.git.zhengqi.arch@bytedance.com>
-In-Reply-To: <b11a0bde9fe18673a61a79398f226ad7cb04a894.1768389889.git.zhengqi.arch@bytedance.com>
-References: <b11a0bde9fe18673a61a79398f226ad7cb04a894.1768389889.git.zhengqi.arch@bytedance.com>
+Subject: [PATCH v3 26/30 fix] mm: mglru: do not call update_lru_size() during reparenting
+Date: Thu, 15 Jan 2026 18:44:44 +0800
+Message-ID: <20260115104444.85986-1-qi.zheng@linux.dev>
+In-Reply-To: <92e0728fed3d68855173352416cf8077670610f0.1768389889.git.zhengqi.arch@bytedance.com>
+References: <92e0728fed3d68855173352416cf8077670610f0.1768389889.git.zhengqi.arch@bytedance.com>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
@@ -70,118 +70,69 @@ X-Migadu-Flow: FLOW_OUT
 
 From: Qi Zheng <zhengqi.arch@bytedance.com>
 
+Only non-hierarchical lruvec_stats->state_local needs to be reparented,
+so handle it in reparent_state_local(), and remove the unreasonable
+update_lru_size() call in __lru_gen_reparent_memcg().
+
 Signed-off-by: Qi Zheng <zhengqi.arch@bytedance.com>
 ---
- include/linux/memcontrol.h |  2 --
- mm/memcontrol-v1.c         |  8 --------
- mm/memcontrol-v1.h         |  5 ++++-
- mm/memcontrol.c            | 19 ++++++++-----------
- 4 files changed, 12 insertions(+), 22 deletions(-)
+ mm/vmscan.c | 16 +++++++++-------
+ 1 file changed, 9 insertions(+), 7 deletions(-)
 
-diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
-index 1fe554eec1e25..e0b84b109b7ac 100644
---- a/include/linux/memcontrol.h
-+++ b/include/linux/memcontrol.h
-@@ -944,8 +944,6 @@ bool memcg_vm_event_item_valid(enum vm_event_item idx);
- unsigned long lruvec_page_state(struct lruvec *lruvec, enum node_stat_item idx);
- unsigned long lruvec_page_state_local(struct lruvec *lruvec,
- 				      enum node_stat_item idx);
--void reparent_memcg_lruvec_state_local(struct mem_cgroup *memcg,
--				       struct mem_cgroup *parent, int idx);
+diff --git a/mm/vmscan.c b/mm/vmscan.c
+index 56714f3bc6f88..5e7a32e3cffbc 100644
+--- a/mm/vmscan.c
++++ b/mm/vmscan.c
+@@ -4544,7 +4544,6 @@ static void __lru_gen_reparent_memcg(struct lruvec *child_lruvec, struct lruvec
+ 				     int zone, int type)
+ {
+ 	struct lru_gen_folio *child_lrugen, *parent_lrugen;
+-	enum lru_list lru = type * LRU_INACTIVE_FILE;
+ 	int i;
  
- void mem_cgroup_flush_stats(struct mem_cgroup *memcg);
- void mem_cgroup_flush_stats_ratelimited(struct mem_cgroup *memcg);
-diff --git a/mm/memcontrol-v1.c b/mm/memcontrol-v1.c
-index 03b924920d6a5..daf9bad8c45ea 100644
---- a/mm/memcontrol-v1.c
-+++ b/mm/memcontrol-v1.c
-@@ -1909,14 +1909,6 @@ void reparent_memcg1_state_local(struct mem_cgroup *memcg, struct mem_cgroup *pa
- 		reparent_memcg_state_local(memcg, parent, memcg1_stats[i]);
- }
+ 	child_lrugen = &child_lruvec->lrugen;
+@@ -4553,7 +4552,6 @@ static void __lru_gen_reparent_memcg(struct lruvec *child_lruvec, struct lruvec
+ 	for (i = 0; i < get_nr_gens(child_lruvec, type); i++) {
+ 		int gen = lru_gen_from_seq(child_lrugen->max_seq - i);
+ 		long nr_pages = child_lrugen->nr_pages[gen][type][zone];
+-		int dst_lru_active = lru_gen_is_active(parent_lruvec, gen) ? LRU_ACTIVE : 0;
  
--void reparent_memcg1_lruvec_state_local(struct mem_cgroup *memcg, struct mem_cgroup *parent)
--{
--	int i;
+ 		/* Assuming that child pages are colder than parent pages */
+ 		list_splice_init(&child_lrugen->folios[gen][type][zone],
+@@ -4562,8 +4560,6 @@ static void __lru_gen_reparent_memcg(struct lruvec *child_lruvec, struct lruvec
+ 		WRITE_ONCE(child_lrugen->nr_pages[gen][type][zone], 0);
+ 		WRITE_ONCE(parent_lrugen->nr_pages[gen][type][zone],
+ 			   parent_lrugen->nr_pages[gen][type][zone] + nr_pages);
 -
--	for (i = 0; i < ARRAY_SIZE(memcg1_stats); i++)
--		reparent_memcg_lruvec_state_local(memcg, parent, memcg1_stats[i]);
--}
--
- void memcg1_stat_format(struct mem_cgroup *memcg, struct seq_buf *s)
- {
- 	unsigned long memory, memsw;
-diff --git a/mm/memcontrol-v1.h b/mm/memcontrol-v1.h
-index 45528195d3578..5b1188f3d4173 100644
---- a/mm/memcontrol-v1.h
-+++ b/mm/memcontrol-v1.h
-@@ -75,7 +75,6 @@ void memcg1_uncharge_batch(struct mem_cgroup *memcg, unsigned long pgpgout,
+-		update_lru_size(parent_lruvec, lru + dst_lru_active, zone, nr_pages);
+ 	}
+ }
  
- void memcg1_stat_format(struct mem_cgroup *memcg, struct seq_buf *s);
- void reparent_memcg1_state_local(struct mem_cgroup *memcg, struct mem_cgroup *parent);
--void reparent_memcg1_lruvec_state_local(struct mem_cgroup *memcg, struct mem_cgroup *parent);
+@@ -4575,15 +4571,21 @@ void lru_gen_reparent_memcg(struct mem_cgroup *memcg, struct mem_cgroup *parent)
+ 		struct lruvec *child_lruvec, *parent_lruvec;
+ 		int type, zid;
+ 		struct zone *zone;
++		enum lru_list lru;
  
- void memcg1_account_kmem(struct mem_cgroup *memcg, int nr_pages);
- static inline bool memcg1_tcpmem_active(struct mem_cgroup *memcg)
-@@ -116,6 +115,10 @@ static inline void memcg1_uncharge_batch(struct mem_cgroup *memcg,
+ 		child_lruvec = get_lruvec(memcg, nid);
+ 		parent_lruvec = get_lruvec(parent, nid);
  
- static inline void memcg1_stat_format(struct mem_cgroup *memcg, struct seq_buf *s) {}
- 
-+static inline void reparent_memcg1_state_local(struct mem_cgroup *memcg, struct mem_cgroup *parent)
-+{
-+}
+-		for_each_managed_zone_pgdat(zone, NODE_DATA(nid), zid, MAX_NR_ZONES - 1) {
++		for_each_managed_zone_pgdat(zone, NODE_DATA(nid), zid, MAX_NR_ZONES - 1)
+ 			for (type = 0; type < ANON_AND_FILE; type++)
+ 				__lru_gen_reparent_memcg(child_lruvec, parent_lruvec, zid, type);
+-			mem_cgroup_update_lru_size(parent_lruvec, LRU_UNEVICTABLE, zid,
+-				mem_cgroup_get_zone_lru_size(child_lruvec, LRU_UNEVICTABLE, zid));
 +
- static inline void memcg1_account_kmem(struct mem_cgroup *memcg, int nr_pages) {}
- static inline bool memcg1_tcpmem_active(struct mem_cgroup *memcg) { return false; }
- static inline bool memcg1_charge_skmem(struct mem_cgroup *memcg, unsigned int nr_pages,
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index 7333a37830051..b7b35143d4d2d 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -225,13 +225,13 @@ static inline struct obj_cgroup *__memcg_reparent_objcgs(struct mem_cgroup *memc
- 	return objcg;
- }
- 
--#ifdef CONFIG_MEMCG_V1
-+static void reparent_memcg_lruvec_state_local(struct mem_cgroup *memcg,
-+					      struct mem_cgroup *parent, int idx);
- static void __mem_cgroup_flush_stats(struct mem_cgroup *memcg, bool force);
- 
- static inline void reparent_state_local(struct mem_cgroup *memcg, struct mem_cgroup *parent)
- {
--	if (cgroup_subsys_on_dfl(memory_cgrp_subsys))
--		return;
-+	int i;
- 
- 	synchronize_rcu();
- 
-@@ -239,13 +239,10 @@ static inline void reparent_state_local(struct mem_cgroup *memcg, struct mem_cgr
- 
- 	/* The following counts are all non-hierarchical and need to be reparented. */
- 	reparent_memcg1_state_local(memcg, parent);
--	reparent_memcg1_lruvec_state_local(memcg, parent);
--}
--#else
--static inline void reparent_state_local(struct mem_cgroup *memcg, struct mem_cgroup *parent)
--{
++		for_each_lru(lru) {
++			for_each_managed_zone_pgdat(zone, NODE_DATA(nid), zid, MAX_NR_ZONES - 1) {
++				unsigned long size = mem_cgroup_get_zone_lru_size(child_lruvec, lru, zid);
 +
-+	for (i = 0; i < NR_LRU_LISTS; i++)
-+		reparent_memcg_lruvec_state_local(memcg, parent, i);
++				mem_cgroup_update_lru_size(parent_lruvec, lru, zid, size);
++			}
+ 		}
+ 	}
  }
--#endif
- 
- static inline void reparent_locks(struct mem_cgroup *memcg, struct mem_cgroup *parent)
- {
-@@ -510,8 +507,8 @@ unsigned long lruvec_page_state_local(struct lruvec *lruvec,
- 	return x;
- }
- 
--void reparent_memcg_lruvec_state_local(struct mem_cgroup *memcg,
--				       struct mem_cgroup *parent, int idx)
-+static void reparent_memcg_lruvec_state_local(struct mem_cgroup *memcg,
-+					      struct mem_cgroup *parent, int idx)
- {
- 	int i = memcg_stats_index(idx);
- 	int nid;
 -- 
 2.20.1
 
