@@ -1,127 +1,168 @@
-Received: from mail-wm1-f49.google.com (mail-wm1-f49.google.com [209.85.128.49])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from out-183.mta0.migadu.com (out-183.mta0.migadu.com [91.218.175.183])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E99922C08DC
-	for <cgroups@vger.kernel.org>; Thu, 15 Jan 2026 09:39:12 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.49
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3EBC036BCD8
+	for <cgroups@vger.kernel.org>; Thu, 15 Jan 2026 10:42:27 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.183
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1768469954; cv=none; b=PEKBcVcsQgYvI3UGPiY4bSaPNKOOWFSrZHdui9eGkTDrCWrV0dbQv2bdRk3VprMQ0bW/mXiKyZhXX5IDQfw8Pt+qU8dnshcC5+xSX9Mw9b+1JhXQzF/TAmFQXyOKOohYIvtvsiFfm6VD7oNxLw9WBqrX8gxtuyx7Wvll8S09kKk=
+	t=1768473748; cv=none; b=TZ7pRAJOuSMfTDcBisUzZFoGxFxP3Qr7sfyotVmoquo33O5WYspJXfK3dU1OxJIK6Mn1Dy059Tpwq+PDgpGp2s/zgB7pE5KikAUGRKqeZqbKRABjf1yO+nv6XcKDh+jYqCM/HkpXNSlrBZL1/yMEmb3fkC2yPLG9qFYOWTpZtr0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1768469954; c=relaxed/simple;
-	bh=IpKdm4vm1xXiTCAlkhSwSqOJm8VYAroIug3XCsnyJgo=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=CLrZwW28K0R+RmQ0xh8UPCq9AQuGp3zs3fa5sy6REC3/n5mmB4JMdM8bFkF219CvGYtn+mMqIDd4A89+crLvPdfzfKzS7ErWSyoOvGtnETxhiT1o1YCbEvXeDJdqqU6Y7HHPx9DKuGAcF+EfzXHUHnwnliJ/tshWzULzAkQjK7w=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com; spf=pass smtp.mailfrom=suse.com; dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b=dbsaX3Tv; arc=none smtp.client-ip=209.85.128.49
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.com
+	s=arc-20240116; t=1768473748; c=relaxed/simple;
+	bh=yeLT8ea22Q+eQ+HR8faVgUCzSzHvWZ5LtzNVc+qcdc8=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=K/JlS+B2MjWbL9eefWXe9z0y5EVoes1fgz76YZ1vr/GFGzobwFihR8z01KRbdqrXSAs7/hhYGdi/ooWOKOjTFyrFb8LceK/vWsm3Y0zWGA15+/lP026SZT42Clm8d21n/GWnbP78M/MUPAB6TD7HocHH6jRds7UbRaO+8AmbvQ0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=Gd1WwsIh; arc=none smtp.client-ip=91.218.175.183
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b="dbsaX3Tv"
-Received: by mail-wm1-f49.google.com with SMTP id 5b1f17b1804b1-4801c314c84so1463405e9.0
-        for <cgroups@vger.kernel.org>; Thu, 15 Jan 2026 01:39:12 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=suse.com; s=google; t=1768469951; x=1769074751; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=IpKdm4vm1xXiTCAlkhSwSqOJm8VYAroIug3XCsnyJgo=;
-        b=dbsaX3TvS3zLj/8HBTXY1PQPRgAwkuIm1De8IuyGdZDraFiJdbh0nox8oK3YZQUH7J
-         ZhyNaxvbkxM+Jdk4/Difgtj5y48E3UXY1It57q8LT+Ms1WQxxLbKzevXduR2BiTbE0lf
-         jgwsX/WE4lRxoDe1VjRolIIKL7rRE5EcotMw35qYTSElvTEO7HitpfBJHsJNYqmhVJnD
-         1RVtunosc6TKz83erKNmHj9tuzB8p4UkLkDiuwxexIHuqJTLW8Y79jslTNXatAE4XD9f
-         i2Yp2lszMWhF7Hcpi0Rik3u4twVnBzGUplW5Q+rEkrM3cFaFEHGCWozmKoS0ZOEIuNlo
-         7N0g==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1768469951; x=1769074751;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-gg:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=IpKdm4vm1xXiTCAlkhSwSqOJm8VYAroIug3XCsnyJgo=;
-        b=BwhhBfpeVuBu3/juyCK1RxF+UIxgHbFtX3van9Xcze/cchdsji8Dh+WX7+nyoeARJp
-         9AG3aIypgaCQdU/Zpp4I4pYseNBPuUG5yS8Qee0T//qiZX5nTuHmYDG2JA3GosmxfpZ0
-         2V9MrzKCVhTUmMonlvJZ8OE7dRyy+VpMjTS89S/FWgdN7h3r8Zk4pe3GxwRGFbiPJHtf
-         z4sOKJF84NRma5AyYtxAHbpiMDxh3mcUpXtYjyKmKvMoXTS9jirXhkZGzzYLzcYQxGiQ
-         W4BbnkR6ZEYpEjldfe2saEy1CGRPYRmfcHg8WFyHBjDsK15XhuzUtyZG1CCsIIISoXuq
-         nNoA==
-X-Forwarded-Encrypted: i=1; AJvYcCUvIcmeL7ht+jvVRtcQBkCvODwga/WFHsTiK65N3HArnVf7MdDO4DkOek11cW3NLRu9DpaG6ilr@vger.kernel.org
-X-Gm-Message-State: AOJu0YyE5hnAJVgm2rLNYnYZ9Oe5kYRHHKMxFJLy1+rHCS1N5Iwkt/j3
-	fiZdF3n/h9gxgttV77N0aDEj3TUdWE/J8bhGTL8tejoRd2nqOTVtIgT8Jqb9+682bjQ=
-X-Gm-Gg: AY/fxX5Y5sbf+WEIMSYbnCbvEThilumrJpI72XKxtlBCADYEgXSDSKMHteud6bPUY+j
-	ThdM4NJJ7pH3DQ1+5qKCY8HZj7EHDWmV4SXWBqTCeG2d2qOpVqCiwi6ENCKPwG8tCB/tpJxLQii
-	DzwlDb5M2ky4ZvH9icsxsBxszoefPmHiVVr+lnJhri8dpjvgpqIBIYhCbjKrpA2gC/cJBdNMeYq
-	McjekHmvz8C23pTEW1hHLGPFLKQ/wJP6ergL8L5QfqtHPqgikACwnE9DgOLJJ/awkysD8MpmWZj
-	+EHy/6i6ashGJTKGJSMCu943Kxj9804jwvgSn0bbmxluRsGJBmNwmeovmvq2Jniihs9qV2JzPSB
-	xQILCJsFaxnlKSqVIgBumv1YtPtHBGo78JGRZ11DLaGLeuiiYLtJveI+2O8YvgVtCPXqWR3AwMD
-	WLzJzs02VQfF2GFksVLxAAkUxI0EwX/Fg=
-X-Received: by 2002:a05:600c:4750:b0:480:1c75:407c with SMTP id 5b1f17b1804b1-4801c754220mr4477325e9.2.1768469951289;
-        Thu, 15 Jan 2026 01:39:11 -0800 (PST)
-Received: from blackdock.suse.cz (nat2.prg.suse.com. [195.250.132.146])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-47f428ac749sm37266595e9.5.2026.01.15.01.39.10
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 15 Jan 2026 01:39:10 -0800 (PST)
-Date: Thu, 15 Jan 2026 10:39:09 +0100
-From: Michal =?utf-8?Q?Koutn=C3=BD?= <mkoutny@suse.com>
-To: Zheng Qixing <zhengqixing@huaweicloud.com>
-Cc: Yu Kuai <yukuai@fnnas.com>, tj@kernel.org, josef@toxicpanda.com, 
-	axboe@kernel.dk, hch@infradead.org, cgroups@vger.kernel.org, 
-	linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, yi.zhang@huawei.com, 
-	yangerkun@huawei.com, houtao1@huawei.com, zhengqixing@huawei.com
-Subject: Re: [PATCH v2 1/3] blk-cgroup: fix race between policy activation
- and blkg destruction
-Message-ID: <xjwdgvoc6fw65yvtuyz7ku6dtjqzpf2ipty7ei5qcrfo7brxee@slit46ljmaoz>
-References: <20260113061035.1902522-1-zhengqixing@huaweicloud.com>
- <20260113061035.1902522-2-zhengqixing@huaweicloud.com>
- <le5sjny634ffj6piswnkhkh33eq5cbclgysedyjl2bcuijiutf@f3j6ozw7zuuc>
- <edf84e44-d7e3-4a34-ad49-90ab5a4f545e@huaweicloud.com>
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="Gd1WwsIh"
+X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
+	t=1768473743;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=E21X6Rw5hX+kzgnPEdRnLJU6eESdHa8WNZNfTERO9us=;
+	b=Gd1WwsIhns0nEOkvgNwLvRtzBTjlgigfzTtsf/Lb9TtF1sy9u8ynT8tTtHvToPAmD9bKkj
+	jySAiCoogyimKgEEdnUnz4OYpXIgetozQzJOLMdwOln6mXBS6sD9efPIvExQ3Bck6SDxKt
+	gdtnGkpuXaea0OZt5Mg6e1+YFZ9zmVw=
+From: Qi Zheng <qi.zheng@linux.dev>
+To: hannes@cmpxchg.org,
+	hughd@google.com,
+	mhocko@suse.com,
+	roman.gushchin@linux.dev,
+	shakeel.butt@linux.dev,
+	muchun.song@linux.dev,
+	david@kernel.org,
+	lorenzo.stoakes@oracle.com,
+	ziy@nvidia.com,
+	harry.yoo@oracle.com,
+	yosry.ahmed@linux.dev,
+	imran.f.khan@oracle.com,
+	kamalesh.babulal@oracle.com,
+	axelrasmussen@google.com,
+	yuanchu@google.com,
+	weixugc@google.com,
+	chenridong@huaweicloud.com,
+	mkoutny@suse.com,
+	akpm@linux-foundation.org,
+	hamzamahfooz@linux.microsoft.com,
+	apais@linux.microsoft.com,
+	lance.yang@linux.dev
+Cc: linux-mm@kvack.org,
+	linux-kernel@vger.kernel.org,
+	cgroups@vger.kernel.org,
+	Qi Zheng <zhengqi.arch@bytedance.com>
+Subject: [PATCH v3 28/30 fix 2/2] mm: memcontrol: change state_locals to atomic_long_t type
+Date: Thu, 15 Jan 2026 18:41:39 +0800
+Message-ID: <4aad240fe536ce024c002087b2c395a197928e8a.1768473427.git.zhengqi.arch@bytedance.com>
+In-Reply-To: <e5afd1b5ae95d70f82433b9b4e13201342d16707.1768473427.git.zhengqi.arch@bytedance.com>
+References: <e5afd1b5ae95d70f82433b9b4e13201342d16707.1768473427.git.zhengqi.arch@bytedance.com>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha512;
-	protocol="application/pgp-signature"; boundary="l27swnkbzqhelwte"
-Content-Disposition: inline
-In-Reply-To: <edf84e44-d7e3-4a34-ad49-90ab5a4f545e@huaweicloud.com>
+Content-Transfer-Encoding: 8bit
+X-Migadu-Flow: FLOW_OUT
 
+From: Qi Zheng <zhengqi.arch@bytedance.com>
 
---l27swnkbzqhelwte
-Content-Type: text/plain; protected-headers=v1; charset=us-ascii
-Content-Disposition: inline
-Subject: Re: [PATCH v2 1/3] blk-cgroup: fix race between policy activation
- and blkg destruction
-MIME-Version: 1.0
+Signed-off-by: Qi Zheng <zhengqi.arch@bytedance.com>
+---
+ mm/memcontrol.c | 21 ++++++++++-----------
+ 1 file changed, 10 insertions(+), 11 deletions(-)
 
-On Thu, Jan 15, 2026 at 11:27:47AM +0800, Zheng Qixing <zhengqixing@huaweicloud.com> wrote:
-> Yes, this issue was discovered by injecting memory allocation failure at
-> ->pd_alloc_fn(..., GFP_KERNEL) in blkcg_activate_policy().
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index b7b35143d4d2d..c303c483f55a4 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -456,7 +456,7 @@ struct lruvec_stats {
+ 	long state[NR_MEMCG_NODE_STAT_ITEMS];
+ 
+ 	/* Non-hierarchical (CPU aggregated) state */
+-	long state_local[NR_MEMCG_NODE_STAT_ITEMS];
++	atomic_long_t state_local[NR_MEMCG_NODE_STAT_ITEMS];
+ 
+ 	/* Pending child counts during tree propagation */
+ 	long state_pending[NR_MEMCG_NODE_STAT_ITEMS];
+@@ -499,7 +499,7 @@ unsigned long lruvec_page_state_local(struct lruvec *lruvec,
+ 		return 0;
+ 
+ 	pn = container_of(lruvec, struct mem_cgroup_per_node, lruvec);
+-	x = READ_ONCE(pn->lruvec_stats->state_local[i]);
++	x = atomic_long_read(&(pn->lruvec_stats->state_local[i]));
+ #ifdef CONFIG_SMP
+ 	if (x < 0)
+ 		x = 0;
+@@ -524,8 +524,7 @@ static void reparent_memcg_lruvec_state_local(struct mem_cgroup *memcg,
+ 
+ 		parent_pn = container_of(parent_lruvec, struct mem_cgroup_per_node, lruvec);
+ 
+-		WRITE_ONCE(parent_pn->lruvec_stats->state_local[i],
+-			   parent_pn->lruvec_stats->state_local[i] + value);
++		atomic_long_add(value, &(parent_pn->lruvec_stats->state_local[i]));
+ 	}
+ }
+ 
+@@ -620,8 +619,8 @@ struct memcg_vmstats {
+ 	unsigned long		events[NR_MEMCG_EVENTS];
+ 
+ 	/* Non-hierarchical (CPU aggregated) page state & events */
+-	long			state_local[MEMCG_VMSTAT_SIZE];
+-	unsigned long		events_local[NR_MEMCG_EVENTS];
++	atomic_long_t		state_local[MEMCG_VMSTAT_SIZE];
++	atomic_long_t		events_local[NR_MEMCG_EVENTS];
+ 
+ 	/* Pending child counts during tree propagation */
+ 	long			state_pending[MEMCG_VMSTAT_SIZE];
+@@ -824,7 +823,7 @@ unsigned long memcg_page_state_local(struct mem_cgroup *memcg, int idx)
+ 	if (WARN_ONCE(BAD_STAT_IDX(i), "%s: missing stat item %d\n", __func__, idx))
+ 		return 0;
+ 
+-	x = READ_ONCE(memcg->vmstats->state_local[i]);
++	x = atomic_long_read(&(memcg->vmstats->state_local[i]));
+ #ifdef CONFIG_SMP
+ 	if (x < 0)
+ 		x = 0;
+@@ -841,7 +840,7 @@ void reparent_memcg_state_local(struct mem_cgroup *memcg,
+ 	if (WARN_ONCE(BAD_STAT_IDX(i), "%s: missing stat item %d\n", __func__, idx))
+ 		return;
+ 
+-	WRITE_ONCE(parent->vmstats->state_local[i], parent->vmstats->state_local[i] + value);
++	atomic_long_add(value, &(parent->vmstats->state_local[i]));
+ }
+ #endif
+ 
+@@ -1001,7 +1000,7 @@ unsigned long memcg_events_local(struct mem_cgroup *memcg, int event)
+ 	if (WARN_ONCE(BAD_STAT_IDX(i), "%s: missing stat item %d\n", __func__, event))
+ 		return 0;
+ 
+-	return READ_ONCE(memcg->vmstats->events_local[i]);
++	return atomic_long_read(&(memcg->vmstats->events_local[i]));
+ }
+ #endif
+ 
+@@ -4126,7 +4125,7 @@ struct aggregate_control {
+ 	/* pointer to the aggregated (CPU and subtree aggregated) counters */
+ 	long *aggregate;
+ 	/* pointer to the non-hierarchichal (CPU aggregated) counters */
+-	long *local;
++	atomic_long_t *local;
+ 	/* pointer to the pending child counters during tree propagation */
+ 	long *pending;
+ 	/* pointer to the parent's pending counters, could be NULL */
+@@ -4165,7 +4164,7 @@ static void mem_cgroup_stat_aggregate(struct aggregate_control *ac)
+ 
+ 		/* Aggregate counts on this level and propagate upwards */
+ 		if (delta_cpu)
+-			ac->local[i] += delta_cpu;
++			atomic_long_add(delta_cpu, &(ac->local[i]));
+ 
+ 		if (delta) {
+ 			ac->aggregate[i] += delta;
+-- 
+2.20.1
 
-Fair enough.
-
-> Commit f1c006f1c685 ("blk-cgroup: synchronize pd_free_fn() from
-> blkg_free_workfn() and blkcg_deactivate_policy()") delays
-> list_del_init(&blkg->q_node) until after pd_free_fn() in blkg_free_workfn().
-
-IIUC, the point was to delay it from blkg_destroy until blkg_free_workfn
-but then inside blkg_free_workfn it may have gone too far where it calls
-pd_free_fn's before actual list removal.
-
-(I'm Cc'ing the correct Kuai's address now.)
-IOW, I'm wondering whether mere swap of these two actions (pd_free_fn
-and list removal) wouldn't be a sufficient fix for the discovered issue
-(instead of expanding lock coverage).
-
-Thanks,
-Michal
-
---l27swnkbzqhelwte
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-
-iJEEABYKADkWIQRCE24Fn/AcRjnLivR+PQLnlNv4CAUCaWi1uxsUgAAAAAAEAA5t
-YW51MiwyLjUrMS4xMSwyLDIACgkQfj0C55Tb+AjBoQD+P0vwCMjZtjVGS9olloNJ
-W00FAlkbpKQbdfBF2UpOw6gA/3cd7/jS+Q2klkyaKhjtBWnmlIXM9qQIMhNR6dfO
-P9EA
-=EJwI
------END PGP SIGNATURE-----
-
---l27swnkbzqhelwte--
