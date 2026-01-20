@@ -1,27 +1,27 @@
 Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 60B2242EECF;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8C94040F8EB;
 	Tue, 20 Jan 2026 13:57:49 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.51
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1768917472; cv=none; b=kh2bifKUdhmREWtC28TDzo3aIAX8Do0MiAA5s1EkU8xdAavSc/0hSDY1Cs10KZRyDhl716LRDkPKms8Zy2IuFFhQ69QoG1WxW0jeyuioS2GjE7XExBssHLuypq1SmGDmaJK0W5FPQ4jEvf6OV1FjD25VipEZKpAfs9OrHlDGMB0=
+	t=1768917472; cv=none; b=ATpJQMJ2vxcQqP/5c4Eyk65VyB0jI8abmrcs57tOlYCSntudAY6o50eXzNmgxa51Q/fykN5yUPis26oHEeSK5Er/eX82un622Q2oAR9B4hWHfnwU+IXD7WMq3vKjltZxwq3CO+Dkmslhe00+qKP7qr3A38rS+rI4E6m0F5G7PZc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1768917472; c=relaxed/simple;
-	bh=cCpdy+/A49B4NCr7Pt/CUB5D1XH6Ky191EJUEsDJTa0=;
+	bh=/PeaWaI60R9lnXpsGvOkNcWV5Hr9Ff9iTWyfPXHCr7c=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=Githd1gjBfpa5Wrls9uPJl0OIoGBchwu+sDQqq0cn9dXVxZkYPvHco5auo8FSDDI0bsEuklNFjqhfcw0DB8CXGBNxlBOb37gMRanNZ7SDy4FYwyn93RJTn4IbpJCOM5eI8HrOMraJJXPsdFTQ9u/gG8K11C4mWuTOWiA2kkgMQM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.51
+	 MIME-Version; b=NjwbLWxvY/InCVKa8wdOA/uNW37SAMPtwzcZw8o3dz7WKZKqfDKieQD3yTDrHua7CVZViU++vpgh+kiGxPjwVivzuk4zHgBILAw6WhMjgITvfr7fEvV8YIc3sfoPMNvZFIUfQW3y8UM3Iu8tLyH15eImhobHYkLJoghEfD9XfLQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=none smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.51
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
-Received: from mail.maildlp.com (unknown [172.19.163.198])
-	by dggsgout11.his.huawei.com (SkyGuard) with ESMTPS id 4dwTR71Z3RzYQvHc;
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=huaweicloud.com
+Received: from mail.maildlp.com (unknown [172.19.163.177])
+	by dggsgout11.his.huawei.com (SkyGuard) with ESMTPS id 4dwTR72yB4zYQvJ0;
 	Tue, 20 Jan 2026 21:57:23 +0800 (CST)
 Received: from mail02.huawei.com (unknown [10.116.40.128])
-	by mail.maildlp.com (Postfix) with ESMTP id 1A50A40574;
+	by mail.maildlp.com (Postfix) with ESMTP id 4B7314058D;
 	Tue, 20 Jan 2026 21:57:47 +0800 (CST)
 Received: from hulk-vt.huawei.com (unknown [10.67.174.121])
-	by APP4 (Coremail) with SMTP id gCh0CgCnCPnQiW9pwhTxEQ--.10691S4;
+	by APP4 (Coremail) with SMTP id gCh0CgCnCPnQiW9pwhTxEQ--.10691S6;
 	Tue, 20 Jan 2026 21:57:46 +0800 (CST)
 From: Chen Ridong <chenridong@huaweicloud.com>
 To: akpm@linux-foundation.org,
@@ -49,9 +49,9 @@ Cc: linux-mm@kvack.org,
 	lujialin4@huawei.com,
 	chenridong@huaweicloud.com,
 	ryncsn@gmail.com
-Subject: [RFC PATCH -next 2/7] mm/mglru: make calls to flush_reclaim_state() similar for MGLRU and non-MGLRU
-Date: Tue, 20 Jan 2026 13:42:51 +0000
-Message-Id: <20260120134256.2271710-3-chenridong@huaweicloud.com>
+Subject: [RFC PATCH -next 4/7] mm/mglru: extend lru_gen_shrink_lruvec to support root reclaim
+Date: Tue, 20 Jan 2026 13:42:53 +0000
+Message-Id: <20260120134256.2271710-5-chenridong@huaweicloud.com>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20260120134256.2271710-1-chenridong@huaweicloud.com>
 References: <20260120134256.2271710-1-chenridong@huaweicloud.com>
@@ -62,69 +62,62 @@ List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:gCh0CgCnCPnQiW9pwhTxEQ--.10691S4
-X-Coremail-Antispam: 1UD129KBjvJXoW7WrW8ArWkWr43Wr15uw43trb_yoW8WFWUpF
-	ZxGry8ta1rArnIgwnIvF48W3s0vw4UKry5Jrs093WfAasxJr1YkrZxCrW0krWrWryvqrW3
-	Wr12gw1UZ3yUA3JanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDU0xBIdaVrnRJUUUmY14x267AKxVWrJVCq3wAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
-	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2048vs2IY020E87I2jVAFwI0_Jryl82xGYIkIc2
-	x26xkF7I0E14v26ryj6s0DM28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48ve4kI8wA2z4x0
-	Y4vE2Ix0cI8IcVAFwI0_Ar0_tr1l84ACjcxK6xIIjxv20xvEc7CjxVAFwI0_Gr1j6F4UJw
-	A2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x0267AKxVW0oVCq3wAS
-	0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG6I80ewAv7VC0I7IYx2
-	IY67AKxVWUGVWUXwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFVCjc4AY6r1j6r4UM4x0
-	Y48IcxkI7VAKI48JM4x0x7Aq67IIx4CEVc8vx2IErcIFxwACI402YVCY1x02628vn2kIc2
-	xKxwCY1x0262kKe7AKxVW8ZVWrXwCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7xkEbVWU
-	JVW8JwC20s026c02F40E14v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E67AF67
-	kF1VAFwI0_GFv_WrylIxkGc2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUJVWUCwCI42IY
-	6xIIjxv20xvEc7CjxVAFwI0_Cr0_Gr1UMIIF0xvE42xK8VAvwI8IcIk0rVWUJVWUCwCI42
-	IY6I8E87Iv67AKxVWUJVW8JwCI42IY6I8E87Iv6xkF7I0E14v26r4j6r4UJbIYCTnIWIev
-	Ja73UjIFyTuYvjTRRCJPDUUUU
+X-CM-TRANSID:gCh0CgCnCPnQiW9pwhTxEQ--.10691S6
+X-Coremail-Antispam: 1UD129KBjvJXoWrKF4xKF1rJrWUWFWrWw4kJFb_yoW8Jr1rpa
+	9xW3y5Za4rAr4ag3s3Xa1kWa4F9w48GFyxJrZxXr1rAF1fXFy5K3y2kr4UCrW5Aw4kXry3
+	XFyYgryUX3WUXFJanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDU0xBIdaVrnRJUUUmS14x267AKxVWrJVCq3wAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
+	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2048vs2IY020E87I2jVAFwI0_JF0E3s1l82xGYI
+	kIc2x26xkF7I0E14v26ryj6s0DM28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48ve4kI8wA2
+	z4x0Y4vE2Ix0cI8IcVAFwI0_Ar0_tr1l84ACjcxK6xIIjxv20xvEc7CjxVAFwI0_Gr1j6F
+	4UJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x0267AKxVW0oVCq
+	3wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG6I80ewAv7VC0I7
+	IYx2IY67AKxVWUGVWUXwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFVCjc4AY6r1j6r4U
+	M4x0Y48IcxkI7VAKI48JM4x0x7Aq67IIx4CEVc8vx2IErcIFxwACI402YVCY1x02628vn2
+	kIc2xKxwCY1x0262kKe7AKxVW8ZVWrXwCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7xkE
+	bVWUJVW8JwC20s026c02F40E14v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E67
+	AF67kF1VAFwI0_GFv_WrylIxkGc2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUJVWUCwCI
+	42IY6xIIjxv20xvEc7CjxVAFwI0_Gr1j6F4UJwCI42IY6xAIw20EY4v20xvaj40_Jr0_JF
+	4lIxAIcVC2z280aVAFwI0_Jr0_Gr1lIxAIcVC2z280aVCY1x0267AKxVW8Jr0_Cr1UYxBI
+	daVFxhVjvjDU0xZFpf9x0pRiF4iUUUUU=
 X-CM-SenderInfo: hfkh02xlgr0w46kxt4xhlfz01xgou0bp/
 
 From: Chen Ridong <chenridong@huawei.com>
 
-Currently, flush_reclaim_state is placed differently between
-shrink_node_memcgs and shrink_many. shrink_many (only used for gen-LRU)
-calls it after each lruvec is shrunk, while shrink_node_memcgs calls it
-only after all lruvecs have been shrunk.
+The upcoming patch will integrate shrink_many and shrink_node_memcgs.
+Currently, lru_gen_shrink_lruvec only supports non-root reclaim invoked
+from shrink_node_memcgs. This patch extends it to also handle root reclaim.
 
-This patch moves flush_reclaim_state into shrink_node_memcgs and calls it
-after each lruvec. This unifies the behavior and is reasonable because:
-
-1. flush_reclaim_state adds current->reclaim_state->reclaimed to
-   sc->nr_reclaimed.
-2. For non-MGLRU root reclaim, this can help stop the iteration earlier
-   when nr_to_reclaim is reached.
-3. For non-root reclaim, the effect is negligible since flush_reclaim_state
-   does nothing in that case.
+Since the initial setup for root reclaim is already completed in
+lru_gen_shrink_node, we can simply call try_to_shrink_lruvec within
+lru_gen_shrink_lruvec for root reclaim.
 
 Signed-off-by: Chen Ridong <chenridong@huawei.com>
 ---
- mm/vmscan.c | 3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
+ mm/vmscan.c | 10 +++++++++-
+ 1 file changed, 9 insertions(+), 1 deletion(-)
 
 diff --git a/mm/vmscan.c b/mm/vmscan.c
-index 3759cd52c336..5a156ff48520 100644
+index ab7a74de80da..27c6fdbc9394 100644
 --- a/mm/vmscan.c
 +++ b/mm/vmscan.c
-@@ -6182,6 +6182,7 @@ static void shrink_node_memcgs(pg_data_t *pgdat, struct scan_control *sc)
- 					   sc->nr_scanned - scanned,
- 					   sc->nr_reclaimed - reclaimed);
+@@ -5039,7 +5039,15 @@ static void lru_gen_shrink_lruvec(struct lruvec *lruvec, struct scan_control *sc
+ {
+ 	struct blk_plug plug;
  
-+			flush_reclaim_state(sc);
- 			/* If partial walks are allowed, bail once goal is reached */
- 			if (partial && sc->nr_reclaimed >= sc->nr_to_reclaim) {
- 				mem_cgroup_iter_break(target_memcg, memcg);
-@@ -6218,8 +6219,6 @@ static void shrink_node(pg_data_t *pgdat, struct scan_control *sc)
+-	VM_WARN_ON_ONCE(root_reclaim(sc));
++	/*
++	 * For root reclaim, the initial setup has already been completed externally;
++	 * proceed directly with the shrinking operation.
++	 */
++	if (root_reclaim(sc)) {
++		try_to_shrink_lruvec(lruvec, sc);
++		return;
++	}
++
+ 	VM_WARN_ON_ONCE(!sc->may_writepage || !sc->may_unmap);
  
- 	shrink_node_memcgs(pgdat, sc);
- 
--	flush_reclaim_state(sc);
--
- 	nr_node_reclaimed = sc->nr_reclaimed - nr_reclaimed;
- 
- 	/* Record the subtree's reclaim efficiency */
+ 	lru_add_drain();
 -- 
 2.34.1
 
