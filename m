@@ -1,124 +1,130 @@
-Received: from mail-wr1-f46.google.com (mail-wr1-f46.google.com [209.85.221.46])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BD31D439005
-	for <cgroups@vger.kernel.org>; Tue, 20 Jan 2026 13:37:49 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.46
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 60B2242EECF;
+	Tue, 20 Jan 2026 13:57:49 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.51
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1768916271; cv=none; b=N5M7FlLhd7TtjxMbs/2/wxK4Z3rzTY+0bzv3gnFXrEOhsmeTvxyLlgfziyaBsRP7aGTOecyOZLoVPYboFtMZvByspyvhkl0pCTzu3lANJa51SznI0Fzm87EZ4VuInMslWC1WIQUWDpR0qEm3NoxmcVnRzDLtYu6Wmmt/xsyftdM=
+	t=1768917472; cv=none; b=kh2bifKUdhmREWtC28TDzo3aIAX8Do0MiAA5s1EkU8xdAavSc/0hSDY1Cs10KZRyDhl716LRDkPKms8Zy2IuFFhQ69QoG1WxW0jeyuioS2GjE7XExBssHLuypq1SmGDmaJK0W5FPQ4jEvf6OV1FjD25VipEZKpAfs9OrHlDGMB0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1768916271; c=relaxed/simple;
-	bh=gTnXdgMDVecZFQ0m9ML2y4y93A7dJ/ojmG/6i+ZUuuc=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=g833FnsR+10eP6yb/4bdjv04/DYYItjtH6zyh27VCH/0XomQANle6Vy1bEpVt50kp3C0ZlQKoWetM9Ks+TuWYEKN+25HSylXDy9xL5zYdmcJQoET463+maLKewiSBQRzQd94YXz31ZRcOcLgqSIPQ0/F5UE035ELDdRwQIYmmB4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com; spf=pass smtp.mailfrom=suse.com; dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b=bTi15G0j; arc=none smtp.client-ip=209.85.221.46
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b="bTi15G0j"
-Received: by mail-wr1-f46.google.com with SMTP id ffacd0b85a97d-42fbc305914so4398137f8f.0
-        for <cgroups@vger.kernel.org>; Tue, 20 Jan 2026 05:37:49 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=suse.com; s=google; t=1768916268; x=1769521068; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=9Gpn+s9YpaeBzBoWidLlFD1oUE21mqMH9dB3U385I3k=;
-        b=bTi15G0jeFkVgJ/LdWfGr6gzIfV6uUnsLr6RlZKepRrLSTqgBKC34a28IS1BxM+93L
-         HV3Q52zs5y3L6Kywi9/mRKYxNmMHv6JXJtQWC05sF2XGjQgkfIzgqRs2h6zGY2jJLsJf
-         XJiWkqhUHsZbevQh5ujE0tCB1wMwVUqExWycEfY9i0RZdKbpIoE7Incn7mbHZPoc78pD
-         XDpc7ZwXV+79WG6nkJiUt7Wb7wpY0pBbV6uYRwzFkVYi8KiTNnOz3WwhNDuYFG80CmLy
-         EmZ0HsuXB1nES7MezrViY2JCh/QpJy6CfjMh5NhQ44beVqZ0MdCg7+hnt5FWrx/vbz0D
-         goeg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1768916268; x=1769521068;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-gg:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=9Gpn+s9YpaeBzBoWidLlFD1oUE21mqMH9dB3U385I3k=;
-        b=JMvHCTWnBnf57x/D2dggEvD9nmSYyua9MUb4zmG7FDIIrm+v/1bQ/NdHpECf8UZfjx
-         7e/c85qj7AhOzMytww+BeILonApgSKOGtA/F3/yJthj6gODfXoxAEmQNgI80ckpDS9rh
-         y+BLzDM4Jn4Ig0oIuWnVxCXLFVmVFRJF4poCbGi4MimiuhCn6ExCoHWjKL5dQ+ECc2Nw
-         LyLhf3sO6OCFSIFL+eqoqGmiJ0zyZF4phAmY8F+dMkhrRx8BMkI879l7r97X+GQNZNrR
-         9+Gt/39R5VyvfdVrGZXVbpN2ZQuNj3AP+Ag9rCHFpw2luPqV7kPU2B7oIjwW6iGTGWiY
-         Vp8A==
-X-Forwarded-Encrypted: i=1; AJvYcCU5xaayFnjIv/isOSGrTRid2ftTL7GpBlzh6kG0f7qg8pt8dpLDPvf8Xip6O5PoR9B4gXxvrzWV@vger.kernel.org
-X-Gm-Message-State: AOJu0YxgpwDUPZKQtmAarx81EYIZTfeTO6RE5Qo2JKN4/hj2O8J8Q2cT
-	dzJvqC0UFVCQHotIruNgZT5GCuSwBfAKxFuTLAaWrrLv3NC1IU53f3FZwswmB82lJrs=
-X-Gm-Gg: AZuq6aLBceOe85aVh/fOiRGSmwn5jf3rwvsVKIWGxCplFWu/rPtLpz5WoS9sVBVMMUz
-	jJDs36Mgzu1+XczzHkLkMow05pzAq/6oDWH6ZlkU37E8YwOkXwBL/EhcVYhiyT0p+Zc5np9D1x7
-	uGNpi05r7U8i0recjrvXiOA0vcdlVxc9T/N4DkCrL5zjPsAn6D9CECchvZUb3nsVUhSG5Fbr8P8
-	9Us+FKJGvjKf9PqqHuqqkjAOW1o28wJfYygc/Tk/ONF+tyylA7/vZ40gYh4MDdnJeOrHY/gvMX7
-	zKTHP3GEgJicw2EnND3tcyT4ZPqy14fWW5a7oCzf0DD5VdgK25+x9dZvLheITb4mS5HPct5ZraY
-	SmFgsHJlYtnyUf8YA+DKfXJvZqOkXW1/EiOobcqc8j1wSkvsHQlv2nd2yO4GY5gEdYU+xDZU3vi
-	yNTVhMHEr3JtpEVNU0xisYVvAt3xIzGXY=
-X-Received: by 2002:a05:6000:3110:b0:430:f72e:c998 with SMTP id ffacd0b85a97d-4358ff302b0mr2976938f8f.51.1768916267928;
-        Tue, 20 Jan 2026 05:37:47 -0800 (PST)
-Received: from blackdock.suse.cz (nat2.prg.suse.com. [195.250.132.146])
-        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-43595e0a705sm1296239f8f.14.2026.01.20.05.37.46
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 20 Jan 2026 05:37:47 -0800 (PST)
-Date: Tue, 20 Jan 2026 14:37:45 +0100
-From: Michal =?utf-8?Q?Koutn=C3=BD?= <mkoutny@suse.com>
-To: Tang Yizhou <yizhou.tang@shopee.com>
-Cc: tj@kernel.org, corbet@lwn.net, axboe@kernel.dk, hch@lst.de, 
-	cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] docs: Fix blk-iolatency peer throttling description
-Message-ID: <guqq2cm3mk5qf45rcman3twiu7vax4sgkrhj23jrjb26tt3sk3@bh2h6s7givfq>
-References: <20260114110837.84126-1-yizhou.tang@shopee.com>
+	s=arc-20240116; t=1768917472; c=relaxed/simple;
+	bh=cCpdy+/A49B4NCr7Pt/CUB5D1XH6Ky191EJUEsDJTa0=;
+	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
+	 MIME-Version; b=Githd1gjBfpa5Wrls9uPJl0OIoGBchwu+sDQqq0cn9dXVxZkYPvHco5auo8FSDDI0bsEuklNFjqhfcw0DB8CXGBNxlBOb37gMRanNZ7SDy4FYwyn93RJTn4IbpJCOM5eI8HrOMraJJXPsdFTQ9u/gG8K11C4mWuTOWiA2kkgMQM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.51
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
+Received: from mail.maildlp.com (unknown [172.19.163.198])
+	by dggsgout11.his.huawei.com (SkyGuard) with ESMTPS id 4dwTR71Z3RzYQvHc;
+	Tue, 20 Jan 2026 21:57:23 +0800 (CST)
+Received: from mail02.huawei.com (unknown [10.116.40.128])
+	by mail.maildlp.com (Postfix) with ESMTP id 1A50A40574;
+	Tue, 20 Jan 2026 21:57:47 +0800 (CST)
+Received: from hulk-vt.huawei.com (unknown [10.67.174.121])
+	by APP4 (Coremail) with SMTP id gCh0CgCnCPnQiW9pwhTxEQ--.10691S4;
+	Tue, 20 Jan 2026 21:57:46 +0800 (CST)
+From: Chen Ridong <chenridong@huaweicloud.com>
+To: akpm@linux-foundation.org,
+	axelrasmussen@google.com,
+	yuanchu@google.com,
+	weixugc@google.com,
+	david@kernel.org,
+	lorenzo.stoakes@oracle.com,
+	Liam.Howlett@oracle.com,
+	vbabka@suse.cz,
+	rppt@kernel.org,
+	surenb@google.com,
+	mhocko@suse.com,
+	corbet@lwn.net,
+	skhan@linuxfoundation.org,
+	hannes@cmpxchg.org,
+	roman.gushchin@linux.dev,
+	shakeel.butt@linux.dev,
+	muchun.song@linux.dev,
+	zhengqi.arch@bytedance.com
+Cc: linux-mm@kvack.org,
+	linux-doc@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	cgroups@vger.kernel.org,
+	lujialin4@huawei.com,
+	chenridong@huaweicloud.com,
+	ryncsn@gmail.com
+Subject: [RFC PATCH -next 2/7] mm/mglru: make calls to flush_reclaim_state() similar for MGLRU and non-MGLRU
+Date: Tue, 20 Jan 2026 13:42:51 +0000
+Message-Id: <20260120134256.2271710-3-chenridong@huaweicloud.com>
+X-Mailer: git-send-email 2.34.1
+In-Reply-To: <20260120134256.2271710-1-chenridong@huaweicloud.com>
+References: <20260120134256.2271710-1-chenridong@huaweicloud.com>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha512;
-	protocol="application/pgp-signature"; boundary="a7wrzm4rterhhl2u"
-Content-Disposition: inline
-In-Reply-To: <20260114110837.84126-1-yizhou.tang@shopee.com>
+Content-Transfer-Encoding: 8bit
+X-CM-TRANSID:gCh0CgCnCPnQiW9pwhTxEQ--.10691S4
+X-Coremail-Antispam: 1UD129KBjvJXoW7WrW8ArWkWr43Wr15uw43trb_yoW8WFWUpF
+	ZxGry8ta1rArnIgwnIvF48W3s0vw4UKry5Jrs093WfAasxJr1YkrZxCrW0krWrWryvqrW3
+	Wr12gw1UZ3yUA3JanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDU0xBIdaVrnRJUUUmY14x267AKxVWrJVCq3wAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
+	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2048vs2IY020E87I2jVAFwI0_Jryl82xGYIkIc2
+	x26xkF7I0E14v26ryj6s0DM28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48ve4kI8wA2z4x0
+	Y4vE2Ix0cI8IcVAFwI0_Ar0_tr1l84ACjcxK6xIIjxv20xvEc7CjxVAFwI0_Gr1j6F4UJw
+	A2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x0267AKxVW0oVCq3wAS
+	0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG6I80ewAv7VC0I7IYx2
+	IY67AKxVWUGVWUXwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFVCjc4AY6r1j6r4UM4x0
+	Y48IcxkI7VAKI48JM4x0x7Aq67IIx4CEVc8vx2IErcIFxwACI402YVCY1x02628vn2kIc2
+	xKxwCY1x0262kKe7AKxVW8ZVWrXwCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7xkEbVWU
+	JVW8JwC20s026c02F40E14v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E67AF67
+	kF1VAFwI0_GFv_WrylIxkGc2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUJVWUCwCI42IY
+	6xIIjxv20xvEc7CjxVAFwI0_Cr0_Gr1UMIIF0xvE42xK8VAvwI8IcIk0rVWUJVWUCwCI42
+	IY6I8E87Iv67AKxVWUJVW8JwCI42IY6I8E87Iv6xkF7I0E14v26r4j6r4UJbIYCTnIWIev
+	Ja73UjIFyTuYvjTRRCJPDUUUU
+X-CM-SenderInfo: hfkh02xlgr0w46kxt4xhlfz01xgou0bp/
 
+From: Chen Ridong <chenridong@huawei.com>
 
---a7wrzm4rterhhl2u
-Content-Type: text/plain; protected-headers=v1; charset=iso-8859-1
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
-Subject: Re: [PATCH] docs: Fix blk-iolatency peer throttling description
-MIME-Version: 1.0
+Currently, flush_reclaim_state is placed differently between
+shrink_node_memcgs and shrink_many. shrink_many (only used for gen-LRU)
+calls it after each lruvec is shrunk, while shrink_node_memcgs calls it
+only after all lruvecs have been shrunk.
 
-On Wed, Jan 14, 2026 at 07:08:37PM +0800, Tang Yizhou <yizhou.tang@shopee.c=
-om> wrote:
-> From: Tang Yizhou <yizhou.tang@shopee.com>
->=20
-> The current text states that peers with a lower latency target are
-> throttled, which is the opposite of the actual behavior. In fact,
-> blk-iolatency throttles peer groups with a higher latency target in order
-> to protect the more latency-sensitive group.
->=20
-> In addition, peer groups without a configured latency target are also
-> throttled, as they are treated as lower priority compared to groups with
-> explicit latency requirements.
->=20
-> Update the documentation to reflect the correct throttling behavior.
->=20
-> Signed-off-by: Tang Yizhou <yizhou.tang@shopee.com>
-> ---
->  Documentation/admin-guide/cgroup-v2.rst | 10 ++++++----
->  1 file changed, 6 insertions(+), 4 deletions(-)
+This patch moves flush_reclaim_state into shrink_node_memcgs and calls it
+after each lruvec. This unifies the behavior and is reasonable because:
 
-Not a big deal but it could've been confusing.
+1. flush_reclaim_state adds current->reclaim_state->reclaimed to
+   sc->nr_reclaimed.
+2. For non-MGLRU root reclaim, this can help stop the iteration earlier
+   when nr_to_reclaim is reached.
+3. For non-root reclaim, the effect is negligible since flush_reclaim_state
+   does nothing in that case.
 
+Signed-off-by: Chen Ridong <chenridong@huawei.com>
+---
+ mm/vmscan.c | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
 
-Acked-by: Michal Koutn=FD <mkoutny@suse.com>
+diff --git a/mm/vmscan.c b/mm/vmscan.c
+index 3759cd52c336..5a156ff48520 100644
+--- a/mm/vmscan.c
++++ b/mm/vmscan.c
+@@ -6182,6 +6182,7 @@ static void shrink_node_memcgs(pg_data_t *pgdat, struct scan_control *sc)
+ 					   sc->nr_scanned - scanned,
+ 					   sc->nr_reclaimed - reclaimed);
+ 
++			flush_reclaim_state(sc);
+ 			/* If partial walks are allowed, bail once goal is reached */
+ 			if (partial && sc->nr_reclaimed >= sc->nr_to_reclaim) {
+ 				mem_cgroup_iter_break(target_memcg, memcg);
+@@ -6218,8 +6219,6 @@ static void shrink_node(pg_data_t *pgdat, struct scan_control *sc)
+ 
+ 	shrink_node_memcgs(pgdat, sc);
+ 
+-	flush_reclaim_state(sc);
+-
+ 	nr_node_reclaimed = sc->nr_reclaimed - nr_reclaimed;
+ 
+ 	/* Record the subtree's reclaim efficiency */
+-- 
+2.34.1
 
---a7wrzm4rterhhl2u
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-
-iJEEABYKADkWIQRCE24Fn/AcRjnLivR+PQLnlNv4CAUCaW+FJBsUgAAAAAAEAA5t
-YW51MiwyLjUrMS4xMSwyLDIACgkQfj0C55Tb+AgjhgEAh55N7s2KF8zIbaLqmKfv
-rpGZ2vfoGKPfzLdrAdSMHfwBAJIuTXk022wa5HgcNGfMQmlSFOK1m6XMkaTX+kMG
-o+kF
-=O7oY
------END PGP SIGNATURE-----
-
---a7wrzm4rterhhl2u--
