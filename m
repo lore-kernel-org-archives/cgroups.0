@@ -1,124 +1,86 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5BBEF309DCB;
-	Fri, 23 Jan 2026 09:19:01 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 85D4B3164D3;
+	Fri, 23 Jan 2026 09:19:06 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1769159941; cv=none; b=mr4LrCXVwQ6D8mFcIpd5feWj9H/TFXIhRlnLzwJg6KLCLUn32FrVvlrA4cDAyzolNqbwKYWnFscZVf/bfCSqkK7XvV+7DbtC4OGaVP0WfgfCgxU0rQ3RQNVvGM4/n7fOgThClZCzdoz3V7racSbyIm6U50cPLS4UddgI8RLnLmA=
+	t=1769159946; cv=none; b=JxsVbiJz189epFbCcOSiwc91QNe9RXe2kmLsKBl5xC347L3CIwQCy9o1AHav4z/rIraaa7oh7jnAi4eRMf8Bw/dU0netSZRCWzHbWgIRdcc2GKzMireZXmOgDS1//NuZb4vvC3Th8WPvIlVzZcW5gCrqRV5yQRe/Pex9+Qf9rT8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1769159941; c=relaxed/simple;
-	bh=lAPN0HhdMwPzTnR1YDIQgmBs7lFW2+TjNgBMANKYj8Y=;
+	s=arc-20240116; t=1769159946; c=relaxed/simple;
+	bh=++ck5HBZpMPSGGpoonSSzPKOjTBgq1xO2oJuGzY5lWE=;
 	h=Content-Type:MIME-Version:Message-Id:In-Reply-To:References:
-	 Subject:From:To:Cc:Date; b=EYNyBprusl6f58nGCsBO3VrFODESkRybtYMOQ+TvqEsfskyasFqqcfS87FZdGCuprGsqbhE9gREzvOSmaPm2xc+fYOTzfVWaoRV22dkiR0bVl7Ku2NLOR/M6d99z1bLz0EhCH0Wl/bWEHbRzDeJdqgPfnWaDCLMD/eUatwTLxhQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=N5SCKLXy; arc=none smtp.client-ip=10.30.226.201
+	 Subject:From:To:Cc:Date; b=kh9df3Cxw3l5ZxN+Ohjod6jJfJkF2xTf8aP/BNAEVdlf5g6vUZSG0Jkoqy9Lz8ISs4yuJHCZSyoQ15RI0HC4yj8UiJBwOV7htFT++MzcAkW2/ROg3T2V1U8Xfzujpch3uQ5l+FBeiWM6kvM38FvwNhEeHNLOxry2Jnd4m13bD9c=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=InW/yky3; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="N5SCKLXy"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id DFBFFC19422;
-	Fri, 23 Jan 2026 09:18:59 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="InW/yky3"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 67D6FC19422;
+	Fri, 23 Jan 2026 09:19:05 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1769159941;
-	bh=lAPN0HhdMwPzTnR1YDIQgmBs7lFW2+TjNgBMANKYj8Y=;
+	s=k20201202; t=1769159946;
+	bh=++ck5HBZpMPSGGpoonSSzPKOjTBgq1xO2oJuGzY5lWE=;
 	h=In-Reply-To:References:Subject:From:To:Cc:Date:From;
-	b=N5SCKLXyAELrFNy+gkbgIPeqfEvjDDv6H9Nvceu5DlOURyvJQieEH89DsJoE871Lq
-	 F2KUj/E1ZofIKSKhXCfShq5QIzhc1EcGMdvPIHwDrDBUa1pQuvRAG1+OsMTUnHte5F
-	 /HOCWw4+OY36AeeDHJA09t7H3R1zVLSMM461NItNIhQ6QMp6xN2sNq9SBi/saCLzcy
-	 k771BwY2DcyxlCXkJim6NjWEBd9Drwa3SKlUi9lSmE4oJ3fygQGYmlJiUQYGIRQT8m
-	 uyRo+ni/Wa9GwHvAM16GSiQ3a4Klus5nCUx1cvz/JOXgUw6S8/ZUxtBxt3MQK0lzUf
-	 mlUpBzxraCRvw==
-Content-Type: multipart/mixed; boundary="===============6891829209060571098=="
+	b=InW/yky3spHD+VBL/Qubq9HdIWp1bq9AGY9a5aZ2YmU+pKqOnipVCfNDJt14vOnFo
+	 9Ft2oZDTviiR/bowI6zlIWddMT8I5Ul7/TZjzSq3JSZd1SYjENW4vkO7jIvqbMaawn
+	 ZibHjAyS5VJ3/jb4FYoyWyCYRBVcqkQs1KNNTLluXVTdzOG+9IifYB1/nsbs00FAEO
+	 4ubr6fqhaf0Ta0LmzkjnYVMYIyxIE8RQaBGp9BoMpXuBsCGu5egLFcs/4p21F10B67
+	 jBlGYrsbfePzLz78Gmx5Qsgj6QPP10wXwijDTMui34uAx8ZMNJVrrAfd8OWAU3eX0T
+	 cQcdYe91kgOwA==
+Content-Type: multipart/mixed; boundary="===============0725732639387219158=="
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Message-Id: <0031e5a293a89b42ac55e019d44bc9cf6ad0eca5ab75f07eb1f12b46a5ec560c@mail.kernel.org>
-In-Reply-To: <e6ec046aab6205c6c381fdc4860decf6b8643ea8.1769157382.git.zhuhui@kylinos.cn>
-References: <e6ec046aab6205c6c381fdc4860decf6b8643ea8.1769157382.git.zhuhui@kylinos.cn>
-Subject: Re: [RFC PATCH bpf-next v3 12/12] samples/bpf: Add memcg priority control example
+Message-Id: <b0f009e6e0f8ec688597c5c3954b3335069f3aa60441a7c3f44246af7a9c4629@mail.kernel.org>
+In-Reply-To: <e34da0fc270eb7cc41f6b388026f503799541675.1769157382.git.zhuhui@kylinos.cn>
+References: <e34da0fc270eb7cc41f6b388026f503799541675.1769157382.git.zhuhui@kylinos.cn>
+Subject: Re: [RFC PATCH bpf-next v3 02/12] bpf: initial support for attaching struct ops to cgroups
 From: bot+bpf-ci@kernel.org
 To: hui.zhu@linux.dev,akpm@linux-foundation.org,hannes@cmpxchg.org,mhocko@kernel.org,roman.gushchin@linux.dev,shakeel.butt@linux.dev,muchun.song@linux.dev,ast@kernel.org,daniel@iogearbox.net,andrii@kernel.org,martin.lau@linux.dev,eddyz87@gmail.com,song@kernel.org,yonghong.song@linux.dev,john.fastabend@gmail.com,kpsingh@kernel.org,sdf@fomichev.me,haoluo@google.com,jolsa@kernel.org,shuah@kernel.org,peterz@infradead.org,ojeda@kernel.org,nathan@kernel.org,kees@kernel.org,tj@kernel.org,jeffxu@chromium.org,mkoutny@suse.com,kernel@jfarr.cc,brauner@kernel.org,rdunlap@infradead.org,brgerst@gmail.com,masahiroy@kernel.org,davem@davemloft.net,kuba@kernel.org,hawk@kernel.org,inwardvessel@gmail.com,willemb@google.com,kerneljasonxing@gmail.com,paul.chaignon@gmail.com,a.s.protopopov@gmail.com,ameryhung@gmail.com,chenridong@huaweicloud.com,lance.yang@linux.dev,jiayuan.chen@linux.dev,linux-kernel@vger.kernel.org,linux-mm@kvack.org,cgroups@vger.kernel.org,bpf@vger.kernel.org,netdev@vger.kernel.org,linux-kselftest@vger.kernel.org
-Cc: zhuhui@kylinos.cn,geliang@kernel.org,ast@kernel.org,andrii@kernel.org,daniel@iogearbox.net,martin.lau@kernel.org,eddyz87@gmail.com,yonghong.song@linux.dev,clm@meta.com,ihor.solodrai@linux.dev
-Date: Fri, 23 Jan 2026 09:18:59 +0000 (UTC)
+Cc: ast@kernel.org,andrii@kernel.org,daniel@iogearbox.net,martin.lau@kernel.org,eddyz87@gmail.com,yonghong.song@linux.dev,clm@meta.com,ihor.solodrai@linux.dev
+Date: Fri, 23 Jan 2026 09:19:05 +0000 (UTC)
 
---===============6891829209060571098==
+--===============0725732639387219158==
 Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7bit
 
-> diff --git a/samples/bpf/Makefile b/samples/bpf/Makefile
-> index 95a4fa1f1e44..6416c8aa3034 100644
+> diff --git a/kernel/bpf/bpf_struct_ops.c b/kernel/bpf/bpf_struct_ops.c
+> index de01cf3025b3..f575c5cd0dc8 100644
 
 [ ... ]
 
-> @@ -360,6 +366,7 @@ BPF_SKELS_LINKED := $(addprefix $(obj)/,$(LINKED_SKELS))
+> @@ -1377,6 +1378,18 @@ int bpf_struct_ops_link_create(union bpf_attr *attr)
+>  	}
+>  	bpf_link_init(&link->link, BPF_LINK_TYPE_STRUCT_OPS, &bpf_struct_ops_map_lops, NULL,
+>  		      attr->link_create.attach_type);
+> +#ifdef CONFIG_CGROUPS
+> +	if (attr->link_create.cgroup.relative_fd) {
+> +		struct cgroup *cgrp;
+> +
+> +		cgrp = cgroup_get_from_fd(attr->link_create.cgroup.relative_fd);
+> +		if (IS_ERR(cgrp))
+> +			return PTR_ERR(cgrp);
+                        ^^^^^^^^^^^^^^^^^
+
+When cgroup_get_from_fd() fails, this returns directly without cleaning
+up. At this point in bpf_struct_ops_link_create(), link has already been
+allocated via kzalloc() and map has a reference from bpf_map_get().
+
+Should this use goto err_out instead? The err_out label calls
+bpf_map_put(map) and kfree(link), which would be needed here but are
+bypassed by the direct return.
+
+> +
+> +		link->cgroup_id = cgroup_id(cgrp);
+> +		cgroup_put(cgrp);
+> +	}
+> +#endif /* CONFIG_CGROUPS */
 >
->  $(BPF_SKELS_LINKED): $(BPF_OBJS_LINKED) $(BPFTOOL)
->  	@echo "  BPF GEN-OBJ " $(@:.skel.h=)
-> +	echo $(Q)$(BPFTOOL) gen object $(@:.skel.h=.lbpf.o) $(addprefix $(obj)/,$($(@F)-deps))
->  	$(Q)$(BPFTOOL) gen object $(@:.skel.h=.lbpf.o) $(addprefix $(obj)/,$($(@F)-deps))
-
-Was this debug echo intended to be left in? The line without the @ prefix
-will print the unexpanded command during the build, which looks like
-leftover debug output.
-
-> diff --git a/samples/bpf/memcg.c b/samples/bpf/memcg.c
-> new file mode 100644
-> index 000000000000..85432cb01c27
-> --- /dev/null
-> +++ b/samples/bpf/memcg.c
-
-[ ... ]
-
-> +	high_cgroup_id = get_cgroup_id(high_path);
-> +	if (!high_cgroup_id)
-> +		goto out;
-> +	high_cgroup_fd = open(high_path, O_RDONLY);
-> +	if (high_cgroup_fd < 0) {
-> +		fprintf(stderr,
-> +			"ERROR: open high cgroup '%s' failed: %d\n",
-> +			low_path, errno);
-                        ^^^^^^^^
-
-Should this be high_path instead of low_path? The error message says
-"open high cgroup" but prints low_path.
-
-[ ... ]
-
-> +	struct bpf_link *link = NULL, *link_low = NULL, *link_high = NULL;
-
-[ ... ]
-
-> +	if (over_high_ms) {
-
-[ ... ]
-
-> +		link_low = bpf_map__attach_struct_ops_opts(map, &opts);
-
-[ ... ]
-
-> +	if (use_below_low || use_below_min) {
-> +		map = bpf_object__find_map_by_name(obj, "high_mcg_ops");
-
-[ ... ]
-
-> +		link_low = bpf_map__attach_struct_ops_opts(map, &opts);
-                ^^^^^^^^
-
-This assigns to link_low again, overwriting the previous link if both
-over_high_ms and (use_below_low || use_below_min) are set. Should this
-be link_high instead? The link_high variable is declared but never
-assigned, and the first bpf_link would be leaked in this scenario.
-
-[ ... ]
-
-> +out:
-> +	bpf_link__destroy(link);
-> +	bpf_link__destroy(link_low);
-> +	bpf_link__destroy(link_high);
-
-Here link_high is always NULL since it was never assigned above.
+>  	err = bpf_link_prime(&link->link, &link_primer);
+>  	if (err)
 
 
 ---
@@ -127,4 +89,4 @@ See: https://github.com/kernel-patches/vmtest/blob/master/ci/claude/README.md
 
 CI run summary: https://github.com/kernel-patches/bpf/actions/runs/21280790825
 
---===============6891829209060571098==--
+--===============0725732639387219158==--
