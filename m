@@ -1,75 +1,125 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7A65C33FE36;
-	Fri, 23 Jan 2026 09:19:03 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3369935CBA7;
+	Fri, 23 Jan 2026 09:29:44 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1769159949; cv=none; b=cpIiQai7X8efslQ0Pox+36Y6gY4+NyTXeAvpPbdDxhhhKFeQ/bTQMivzegS4vPfuel+1jUq9TTkXWU7hi4iBiKtrpbe7PiwxHPhWt5Ujg4VmTi49trSGB10jEoJbBsEZy8S384iBwSXljXgni46ABff4tAj4LLxFQKdRYsgks4Q=
+	t=1769160585; cv=none; b=LHiJSD3Gob+r5JX9zETb/awZSr2ea/ZK2ZEDUS1ksZ+hzzmKUC2X5URcw5IfGlIHpTq/tDu4rbQllC7mVM+I6Y7LANrojWQ3kcqMu5OjjcSHYAI9i1PRW04zmy6RVDtjG8CgrBBJHkP5V5Fex/vy7Rl2L0ebm48tSBAYOfqxTEs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1769159949; c=relaxed/simple;
-	bh=sxaiTV/qjZ9OJLWuPUm5lpJHeVnyKAH5pIqR5axWKB8=;
+	s=arc-20240116; t=1769160585; c=relaxed/simple;
+	bh=UyNyhPZNlArXXC7DbgAjDuFCRG6qfF3Bxd1E4/+otZQ=;
 	h=Content-Type:MIME-Version:Message-Id:In-Reply-To:References:
-	 Subject:From:To:Cc:Date; b=J3fuQ9i1AXeDENuSC8vZu1NoruhuDy5Q0tE+JYH22dQJNqBwffnls9BEsIjfmiTZm5OCkJPycWTfPBCetNSvnsovX2yKzKwdxBQTX3+gr3Eu2d6gLj7ax3ijzjC0fVt8WP7bkKmggAuYdIIogpNJ2q3O8lAqoPIoABB4p2CVTWU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=kiwWVxqw; arc=none smtp.client-ip=10.30.226.201
+	 Subject:From:To:Cc:Date; b=Dh523JGo0n+bew7FNcysg2vc1aZDalWamyBmQM94M5BkypMKgUTzfY5mDa36DRxj0nbyW9z6EoC1N2Kj9GMr7tK2PK5yHOhMoWUDfav9DyMhggsN0r0Rs8CCw1fhyY8rnFqqhsf2NK/2sHsQwY9apJkZP0kc6tKXg7A9Rf2NFHo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=F4nwAcHu; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="kiwWVxqw"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3B4B0C116D0;
-	Fri, 23 Jan 2026 09:19:02 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="F4nwAcHu"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6B97AC116D0;
+	Fri, 23 Jan 2026 09:29:42 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1769159943;
-	bh=sxaiTV/qjZ9OJLWuPUm5lpJHeVnyKAH5pIqR5axWKB8=;
+	s=k20201202; t=1769160584;
+	bh=UyNyhPZNlArXXC7DbgAjDuFCRG6qfF3Bxd1E4/+otZQ=;
 	h=In-Reply-To:References:Subject:From:To:Cc:Date:From;
-	b=kiwWVxqwhLtICIYNAcF3V6WIubpaoam1UBgKy1c2x3txZXWC6q/CUSDTEEgAIWnSk
-	 KXT8Dfsl3g+fQTcj94wL+fWM2u3jZ+5yLtLVsPdtlBrnoX57qVIjJizC7LlhxREbHT
-	 x2USTPdVOG0S2IAJPc4BQnNEkGTBLTEfKce5lBHI1nRyFBGI6UqYtkurROa0l8JFD8
-	 gyqpPZwgCw4cJEyO+prp7szjajg5CiSXvHZ7geqQGSFMMxg8yVs7rwhv28gEDMRUNj
-	 v9rjQiJ1HImsMMOLlPkKxHg7gD4JcfQuCeGjIlq9QebL7CahgT/cSaNgLXTQnrxb9L
-	 H8CcOpfVl2dYQ==
-Content-Type: multipart/mixed; boundary="===============6020917005380425134=="
+	b=F4nwAcHuuogXfFilu9ZLMVOGjf65Q6kn1NjG9xHyDQjxcKw8mechHmV/2UoKNz9eX
+	 yJdAhjb8zATwBjMJEYORx1exA7ugxyGbFhiybcChfKths7LymkhEC8uUfdVAqQ+Cnk
+	 /o1gx/rRVWYfwSVJFVNyAAXiwr1O1zLo//uJpXLFBwn0PcbFklSM0Rpv0xAMtPn4j2
+	 8YndREmYbf+pnDgoHlMqu3Gq3NgBZT0dv6A66E1CQjJOxJ8Zib3HFLfoE1BkDFnBx4
+	 NoGBDqusxbltNqeA4KQjr/pVHZpn9vRTit7GBPlVxmcI/2vSzgNvZoaVTOpUcKsHcM
+	 nAuh2eNSimJrg==
+Content-Type: multipart/mixed; boundary="===============7572374899106477181=="
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Message-Id: <30378be80fdf3abf59019b02fe9dd351d63e9d71b9f074a9dd79de1b6a9bd6c9@mail.kernel.org>
-In-Reply-To: <03bf6aafe30def690c63e454d76e733f27dff4b3.1769157382.git.zhuhui@kylinos.cn>
-References: <03bf6aafe30def690c63e454d76e733f27dff4b3.1769157382.git.zhuhui@kylinos.cn>
-Subject: Re: [RFC PATCH bpf-next v3 05/12] libbpf: introduce bpf_map__attach_struct_ops_opts()
+Message-Id: <d2161f4252546f252dd0a84c461ba5dbb3b63e22d4826771edd8f1f30df050bc@mail.kernel.org>
+In-Reply-To: <9f072e53f79ceaea43e3730476494517e453530a.1769157382.git.zhuhui@kylinos.cn>
+References: <9f072e53f79ceaea43e3730476494517e453530a.1769157382.git.zhuhui@kylinos.cn>
+Subject: Re: [RFC PATCH bpf-next v3 10/12] mm/bpf: Add BPF_F_ALLOW_OVERRIDE support for  memcg_bpf_ops
 From: bot+bpf-ci@kernel.org
 To: hui.zhu@linux.dev,akpm@linux-foundation.org,hannes@cmpxchg.org,mhocko@kernel.org,roman.gushchin@linux.dev,shakeel.butt@linux.dev,muchun.song@linux.dev,ast@kernel.org,daniel@iogearbox.net,andrii@kernel.org,martin.lau@linux.dev,eddyz87@gmail.com,song@kernel.org,yonghong.song@linux.dev,john.fastabend@gmail.com,kpsingh@kernel.org,sdf@fomichev.me,haoluo@google.com,jolsa@kernel.org,shuah@kernel.org,peterz@infradead.org,ojeda@kernel.org,nathan@kernel.org,kees@kernel.org,tj@kernel.org,jeffxu@chromium.org,mkoutny@suse.com,kernel@jfarr.cc,brauner@kernel.org,rdunlap@infradead.org,brgerst@gmail.com,masahiroy@kernel.org,davem@davemloft.net,kuba@kernel.org,hawk@kernel.org,inwardvessel@gmail.com,willemb@google.com,kerneljasonxing@gmail.com,paul.chaignon@gmail.com,a.s.protopopov@gmail.com,ameryhung@gmail.com,chenridong@huaweicloud.com,lance.yang@linux.dev,jiayuan.chen@linux.dev,linux-kernel@vger.kernel.org,linux-mm@kvack.org,cgroups@vger.kernel.org,bpf@vger.kernel.org,netdev@vger.kernel.org,linux-kselftest@vger.kernel.org
-Cc: ast@kernel.org,andrii@kernel.org,daniel@iogearbox.net,martin.lau@kernel.org,eddyz87@gmail.com,yonghong.song@linux.dev,clm@meta.com,ihor.solodrai@linux.dev
-Date: Fri, 23 Jan 2026 09:19:02 +0000 (UTC)
+Cc: zhuhui@kylinos.cn,geliang@kernel.org,ast@kernel.org,andrii@kernel.org,daniel@iogearbox.net,martin.lau@kernel.org,eddyz87@gmail.com,yonghong.song@linux.dev,clm@meta.com,ihor.solodrai@linux.dev
+Date: Fri, 23 Jan 2026 09:29:42 +0000 (UTC)
 
---===============6020917005380425134==
+--===============7572374899106477181==
 Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7bit
 
-> diff --git a/tools/lib/bpf/libbpf.map b/tools/lib/bpf/libbpf.map
-> index d18fbcea7578..2bf514462045 100644
-> --- a/tools/lib/bpf/libbpf.map
-> +++ b/tools/lib/bpf/libbpf.map
-> @@ -453,5 +453,5 @@ LIBBPF_1.7.0 {
->  		bpf_map__exclusive_program;
->  		bpf_prog_assoc_struct_ops;
->  		bpf_program__assoc_struct_ops;
-> -		btf__permute;
-> +		bpf_map__attach_struct_ops_opts;
->  } LIBBPF_1.6.0;
+> diff --git a/mm/bpf_memcontrol.c b/mm/bpf_memcontrol.c
+> index 415e3c59b6a6..0ded1fdd0de8 100644
+> --- a/mm/bpf_memcontrol.c
+> +++ b/mm/bpf_memcontrol.c
 
-Was the removal of btf__permute from the symbol map intentional? The function
-is still implemented in btf.c and declared with LIBBPF_API in btf.h.
+[ ... ]
 
-It looks like the line was replaced instead of having a new line added. This
-would break applications using btf__permute() with link-time or runtime errors.
+> static int bpf_memcg_ops_reg(void *kdata, struct bpf_link *link)
+> {
+> 	struct bpf_struct_ops_link *ops_link
+> 		= container_of(link, struct bpf_struct_ops_link, link);
+> 	struct memcg_bpf_ops *ops = kdata;
+> 	struct mem_cgroup *memcg, *iter = NULL;
+> 	int err = 0;
+>
+> +	if (ops_link->flags & ~BPF_F_ALLOW_OVERRIDE) {
+> +		pr_err("attach only support BPF_F_ALLOW_OVERRIDE\n");
+> +		return -EOPNOTSUPP;
+> +	}
+> +
+> 	memcg = mem_cgroup_get_from_ino(ops_link->cgroup_id);
+> 	if (IS_ERR_OR_NULL(memcg))
+> 		return PTR_ERR(memcg);
+>
+> 	cgroup_lock();
+> +
+> +	if (READ_ONCE(memcg->bpf_ops)) {
+> +		/* Check if bpf_ops of the parent is BPF_F_ALLOW_OVERRIDE. */
+> +		if (memcg->bpf_ops_flags & BPF_F_ALLOW_OVERRIDE) {
+> +			iter = parent_mem_cgroup(memcg);
+> +
+> +			if (!iter)
+> +				goto busy_out;
+> +			if (READ_ONCE(iter->bpf_ops) !=
+> +			    READ_ONCE(memcg->bpf_ops))
+> +				goto busy_out;
+> +		} else {
+> +busy_out:
+> +			err = -EBUSY;
+> +			goto unlock_out;
+> +		}
+> +	}
+> +
+> 	while ((iter = mem_cgroup_iter(memcg, iter, NULL))) {
+                                      ^^^^
 
-Perhaps this should be:
+When the override check passes (all conditions at lines 363-377 are met),
+iter is set to parent_mem_cgroup(memcg) but is never reset to NULL before
+this loop. Should iter be reset to NULL here?
 
-  bpf_program__assoc_struct_ops;
-  bpf_map__attach_struct_ops_opts;
-  btf__permute;
+The mem_cgroup_iter() function expects prev (iter) to be either NULL or a
+previous result from iterating within memcg's descendants. When iter points
+to memcg's parent, the iteration will not correctly traverse memcg's
+subtree since parent is outside that subtree.
+
+For comparison, bpf_memcg_ops_unreg() correctly resets iter to NULL before
+its loop:
+
+> +	iter = NULL;
+> +	while ((iter = mem_cgroup_iter(memcg, iter, NULL))) {
+
+> 		if (READ_ONCE(iter->bpf_ops)) {
+> -			mem_cgroup_iter_break(memcg, iter);
+> -			err = -EBUSY;
+> -			break;
+> +			/* cannot override existing bpf_ops of sub-cgroup. */
+> +			continue;
+> 		}
+> 		WRITE_ONCE(iter->bpf_ops, ops);
+> +		iter->bpf_ops_flags = ops_link->flags;
+> 	}
+
+[ ... ]
 
 
 ---
@@ -78,4 +128,4 @@ See: https://github.com/kernel-patches/vmtest/blob/master/ci/claude/README.md
 
 CI run summary: https://github.com/kernel-patches/bpf/actions/runs/21280790825
 
---===============6020917005380425134==--
+--===============7572374899106477181==--
