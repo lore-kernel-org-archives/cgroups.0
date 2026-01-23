@@ -1,102 +1,124 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 365C930DD38;
-	Fri, 23 Jan 2026 09:18:58 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5BBEF309DCB;
+	Fri, 23 Jan 2026 09:19:01 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1769159939; cv=none; b=VuTugaWKxMyLeDd1/ySSLu7InJZKj0RV0UCFb/PS5dJ0uyInpSPxhwwUPTy6oovRVBA7C03o71UP5yCdaIXo+hBYJ4p26XROGz7UoMRsyU9QKeqgKX4Rea4CS7Fmv3wJZpY0lXO7ifwOoUTbUw7ghagOjB6fp3V7KJGCo7Ev3pE=
+	t=1769159941; cv=none; b=mr4LrCXVwQ6D8mFcIpd5feWj9H/TFXIhRlnLzwJg6KLCLUn32FrVvlrA4cDAyzolNqbwKYWnFscZVf/bfCSqkK7XvV+7DbtC4OGaVP0WfgfCgxU0rQ3RQNVvGM4/n7fOgThClZCzdoz3V7racSbyIm6U50cPLS4UddgI8RLnLmA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1769159939; c=relaxed/simple;
-	bh=Yj/0342sqfLBIPiqehTF1fNxuPJu6F+hRc2WRAQWcuA=;
+	s=arc-20240116; t=1769159941; c=relaxed/simple;
+	bh=lAPN0HhdMwPzTnR1YDIQgmBs7lFW2+TjNgBMANKYj8Y=;
 	h=Content-Type:MIME-Version:Message-Id:In-Reply-To:References:
-	 Subject:From:To:Cc:Date; b=Z6biVbITpMU8gOaJ0M3IFpLhbB+366vhYz4Yvn4em5cFQixtTf6QJ60gAniPEsVCwJ66GWTQ2z4eJvc5GzcJ08YN58u4gaJxOgIvVHRd9wbsFNh/i7ISt2QD8pqnAAHaWUH5gVQAi1/b/p+dciXkjOOxgxIYW+OoNAIr4VPjDwQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=o4KhXs3I; arc=none smtp.client-ip=10.30.226.201
+	 Subject:From:To:Cc:Date; b=EYNyBprusl6f58nGCsBO3VrFODESkRybtYMOQ+TvqEsfskyasFqqcfS87FZdGCuprGsqbhE9gREzvOSmaPm2xc+fYOTzfVWaoRV22dkiR0bVl7Ku2NLOR/M6d99z1bLz0EhCH0Wl/bWEHbRzDeJdqgPfnWaDCLMD/eUatwTLxhQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=N5SCKLXy; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="o4KhXs3I"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 00317C4CEF1;
-	Fri, 23 Jan 2026 09:18:57 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="N5SCKLXy"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id DFBFFC19422;
+	Fri, 23 Jan 2026 09:18:59 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1769159938;
-	bh=Yj/0342sqfLBIPiqehTF1fNxuPJu6F+hRc2WRAQWcuA=;
+	s=k20201202; t=1769159941;
+	bh=lAPN0HhdMwPzTnR1YDIQgmBs7lFW2+TjNgBMANKYj8Y=;
 	h=In-Reply-To:References:Subject:From:To:Cc:Date:From;
-	b=o4KhXs3IAcxW1VHcGUecCF0/Sd7ez/fIAyJCNmpzuKqaaLt4qW5en1ElzlA4OJbJE
-	 +aAmUlTDGNVZI3jZkb0+DXyxqDTqjDszWBJkqewICLJTj+zHBVzoi9gvNjnAO70BXW
-	 1HCZfTQjLTUqc5WZxtjXU7kD8RoGWCHn6oO/Ps6Luo2dj1GLKwuDboFQTpqeRHCVRA
-	 BfEt6HkYtr+gh1Qj6OUQR72ELqo3q+KUOkC53xoZBwbwYtGkq87mmerADXL4iK4QJR
-	 lT8eojQQ5dLFc8JseAMWYZuwuqcHgi1o1QsY82a6qbTcmTfJfmAmXonS2Oe2VrsA1f
-	 crOk4bVvC5+Lw==
-Content-Type: multipart/mixed; boundary="===============1550164231886997435=="
+	b=N5SCKLXyAELrFNy+gkbgIPeqfEvjDDv6H9Nvceu5DlOURyvJQieEH89DsJoE871Lq
+	 F2KUj/E1ZofIKSKhXCfShq5QIzhc1EcGMdvPIHwDrDBUa1pQuvRAG1+OsMTUnHte5F
+	 /HOCWw4+OY36AeeDHJA09t7H3R1zVLSMM461NItNIhQ6QMp6xN2sNq9SBi/saCLzcy
+	 k771BwY2DcyxlCXkJim6NjWEBd9Drwa3SKlUi9lSmE4oJ3fygQGYmlJiUQYGIRQT8m
+	 uyRo+ni/Wa9GwHvAM16GSiQ3a4Klus5nCUx1cvz/JOXgUw6S8/ZUxtBxt3MQK0lzUf
+	 mlUpBzxraCRvw==
+Content-Type: multipart/mixed; boundary="===============6891829209060571098=="
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Message-Id: <806d3538bf542f23b9b89c35199996f195e82b2cdde50c40ca8478cbbe6af3fb@mail.kernel.org>
-In-Reply-To: <db8b80a445a61b437c35c71ec2edb573002656fc.1769157382.git.zhuhui@kylinos.cn>
-References: <db8b80a445a61b437c35c71ec2edb573002656fc.1769157382.git.zhuhui@kylinos.cn>
-Subject: Re: [RFC PATCH bpf-next v3 11/12] selftests/bpf: Add test for memcg_bpf_ops hierarchies
+Message-Id: <0031e5a293a89b42ac55e019d44bc9cf6ad0eca5ab75f07eb1f12b46a5ec560c@mail.kernel.org>
+In-Reply-To: <e6ec046aab6205c6c381fdc4860decf6b8643ea8.1769157382.git.zhuhui@kylinos.cn>
+References: <e6ec046aab6205c6c381fdc4860decf6b8643ea8.1769157382.git.zhuhui@kylinos.cn>
+Subject: Re: [RFC PATCH bpf-next v3 12/12] samples/bpf: Add memcg priority control example
 From: bot+bpf-ci@kernel.org
 To: hui.zhu@linux.dev,akpm@linux-foundation.org,hannes@cmpxchg.org,mhocko@kernel.org,roman.gushchin@linux.dev,shakeel.butt@linux.dev,muchun.song@linux.dev,ast@kernel.org,daniel@iogearbox.net,andrii@kernel.org,martin.lau@linux.dev,eddyz87@gmail.com,song@kernel.org,yonghong.song@linux.dev,john.fastabend@gmail.com,kpsingh@kernel.org,sdf@fomichev.me,haoluo@google.com,jolsa@kernel.org,shuah@kernel.org,peterz@infradead.org,ojeda@kernel.org,nathan@kernel.org,kees@kernel.org,tj@kernel.org,jeffxu@chromium.org,mkoutny@suse.com,kernel@jfarr.cc,brauner@kernel.org,rdunlap@infradead.org,brgerst@gmail.com,masahiroy@kernel.org,davem@davemloft.net,kuba@kernel.org,hawk@kernel.org,inwardvessel@gmail.com,willemb@google.com,kerneljasonxing@gmail.com,paul.chaignon@gmail.com,a.s.protopopov@gmail.com,ameryhung@gmail.com,chenridong@huaweicloud.com,lance.yang@linux.dev,jiayuan.chen@linux.dev,linux-kernel@vger.kernel.org,linux-mm@kvack.org,cgroups@vger.kernel.org,bpf@vger.kernel.org,netdev@vger.kernel.org,linux-kselftest@vger.kernel.org
 Cc: zhuhui@kylinos.cn,geliang@kernel.org,ast@kernel.org,andrii@kernel.org,daniel@iogearbox.net,martin.lau@kernel.org,eddyz87@gmail.com,yonghong.song@linux.dev,clm@meta.com,ihor.solodrai@linux.dev
-Date: Fri, 23 Jan 2026 09:18:57 +0000 (UTC)
+Date: Fri, 23 Jan 2026 09:18:59 +0000 (UTC)
 
---===============1550164231886997435==
+--===============6891829209060571098==
 Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7bit
 
-> diff --git a/tools/testing/selftests/bpf/prog_tests/memcg_ops.c b/tools/testing/selftests/bpf/prog_tests/memcg_ops.c
-> index 9a8d16296f2d..bab9f3094f59 100644
-> --- a/tools/testing/selftests/bpf/prog_tests/memcg_ops.c
-> +++ b/tools/testing/selftests/bpf/prog_tests/memcg_ops.c
+> diff --git a/samples/bpf/Makefile b/samples/bpf/Makefile
+> index 95a4fa1f1e44..6416c8aa3034 100644
 
 [ ... ]
 
-> +void test_memcg_ops_hierarchies(void)
-> +{
-> +	int ret, first = -1, second = -1, third = -1;
-> +	struct memcg_ops *skel;
-> +	struct bpf_map *map;
-> +	struct bpf_link *link1 = NULL, *link2 = NULL, *link3 = NULL;
+> @@ -360,6 +366,7 @@ BPF_SKELS_LINKED := $(addprefix $(obj)/,$(LINKED_SKELS))
+>
+>  $(BPF_SKELS_LINKED): $(BPF_OBJS_LINKED) $(BPFTOOL)
+>  	@echo "  BPF GEN-OBJ " $(@:.skel.h=)
+> +	echo $(Q)$(BPFTOOL) gen object $(@:.skel.h=.lbpf.o) $(addprefix $(obj)/,$($(@F)-deps))
+>  	$(Q)$(BPFTOOL) gen object $(@:.skel.h=.lbpf.o) $(addprefix $(obj)/,$($(@F)-deps))
+
+Was this debug echo intended to be left in? The line without the @ prefix
+will print the unexpanded command during the build, which looks like
+leftover debug output.
+
+> diff --git a/samples/bpf/memcg.c b/samples/bpf/memcg.c
+> new file mode 100644
+> index 000000000000..85432cb01c27
+> --- /dev/null
+> +++ b/samples/bpf/memcg.c
 
 [ ... ]
 
-> +	opts.relative_fd = second;
-> +	opts.flags = 0;
-> +	link2 = bpf_map__attach_struct_ops_opts(map, &opts);
-> +	if (!ASSERT_OK_PTR(link2, "bpf_map__attach_struct_ops_opts"))
-> +		goto cleanup;
-> +
-> +	opts.relative_fd = third;
-> +	opts.flags = 0;
-> +	link2 = bpf_map__attach_struct_ops_opts(map, &opts);
-> +	if (!ASSERT_ERR_PTR(link3, "bpf_map__attach_struct_ops_opts"))
-                          ^^^^^
+> +	high_cgroup_id = get_cgroup_id(high_path);
+> +	if (!high_cgroup_id)
+> +		goto out;
+> +	high_cgroup_fd = open(high_path, O_RDONLY);
+> +	if (high_cgroup_fd < 0) {
+> +		fprintf(stderr,
+> +			"ERROR: open high cgroup '%s' failed: %d\n",
+> +			low_path, errno);
+                        ^^^^^^^^
 
-The result of the third bpf_map__attach_struct_ops_opts() call is stored in
-link2, but the assertion checks link3. Since link3 is initialized to NULL
-and never modified, the ASSERT_ERR_PTR check does not validate the actual
-return value of the third attachment.
+Should this be high_path instead of low_path? The error message says
+"open high cgroup" but prints low_path.
 
-Should this be assigning to link3 instead of link2?
+[ ... ]
 
-> +		goto cleanup;
-> +
-> +cleanup:
-> +	bpf_link__destroy(link1);
-> +	bpf_link__destroy(link2);
+> +	struct bpf_link *link = NULL, *link_low = NULL, *link_high = NULL;
 
-If the fix is to use link3 for the third attachment result, should
-bpf_link__destroy(link3) be added here as well?
+[ ... ]
 
-> +	memcg_ops__detach(skel);
-> +	close(first);
-> +	close(second);
-> +	close(third);
-> +	cleanup_cgroup_environment();
-> +}
+> +	if (over_high_ms) {
+
+[ ... ]
+
+> +		link_low = bpf_map__attach_struct_ops_opts(map, &opts);
+
+[ ... ]
+
+> +	if (use_below_low || use_below_min) {
+> +		map = bpf_object__find_map_by_name(obj, "high_mcg_ops");
+
+[ ... ]
+
+> +		link_low = bpf_map__attach_struct_ops_opts(map, &opts);
+                ^^^^^^^^
+
+This assigns to link_low again, overwriting the previous link if both
+over_high_ms and (use_below_low || use_below_min) are set. Should this
+be link_high instead? The link_high variable is declared but never
+assigned, and the first bpf_link would be leaked in this scenario.
+
+[ ... ]
+
+> +out:
+> +	bpf_link__destroy(link);
+> +	bpf_link__destroy(link_low);
+> +	bpf_link__destroy(link_high);
+
+Here link_high is always NULL since it was never assigned above.
 
 
 ---
@@ -105,4 +127,4 @@ See: https://github.com/kernel-patches/vmtest/blob/master/ci/claude/README.md
 
 CI run summary: https://github.com/kernel-patches/bpf/actions/runs/21280790825
 
---===============1550164231886997435==--
+--===============6891829209060571098==--
