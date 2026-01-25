@@ -1,31 +1,31 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A0F4E1F9F7A;
-	Sun, 25 Jan 2026 22:46:17 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A33132F3622;
+	Sun, 25 Jan 2026 22:46:25 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1769381177; cv=none; b=nYvKCxdP9uMF5eG57OM7zCOoH/rpQryQJJyB4xsBkKwvlt4gCelq7C+8RNlTMZ+A6MhLz8FPfcVcXmPrg/AF5FdSw3PCRtnbvSxBl1PaIdqEMrYS82/FjWBht/h9hVhDmP1jwvuNLm0ZlZl1gqSN5We1FS7ZH3JBKQd8g9IVJBg=
+	t=1769381185; cv=none; b=hW7TlBQPldRwT9KofIY7wN7QkNvbmNDlM80WkeskGac1C3UXWuG4l/1yFpEJsyqJ16Wal10U96UQ1baZZ6FNxZUYQDoQbpM11xawWcL+cTfU9WjUXaLKsSF9vPQV5CCPCPvYG62aJAVsr2tmcwzxtDSKiUObdsRRQZsnEEBkABM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1769381177; c=relaxed/simple;
-	bh=xkhk7ZGxynk2RcaH6iYDB0TKNwEPyWR7khi8Efbu4u0=;
+	s=arc-20240116; t=1769381185; c=relaxed/simple;
+	bh=gBHkj0y4jQxeMV2qzbEciSScfrXq1yZennkNx/2Itiw=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=OEWVr6owVRyAV0nY1hDIjQSFWNePyqkt/DAhI9IWPWpbDqcr0zgYMGSD+mKYiJCa8wsMCZrTa86vQD3fEnpFefLReVwE/diTacSP+Ix3DLLOkWfCWwf9amhj0Ly7JBGNT7hR1JE9fA35OrE3/v4YsBpOr6FbnHymI/o9JbRtvck=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=bd15xw5x; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version; b=pCaS/Gye8K3RXPjbKxvOJdPXbiNFYGqUYQeFuYto285COa4+HRjrnKbqqKXi8sG5fMktcpoh5LqPFzuSLK3VRyjIwvT0u4htQ0cLSj8ZIaHPgq+x4JnSXKTx39olHBXKEIJ1Zzx3uOc6sW/GKOUi0/CEXbvADwuqOG1yZ+ha9xo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Vya0JZRe; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="bd15xw5x"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9D6ACC16AAE;
-	Sun, 25 Jan 2026 22:46:09 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Vya0JZRe"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id EB51CC2BC9E;
+	Sun, 25 Jan 2026 22:46:17 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1769381177;
-	bh=xkhk7ZGxynk2RcaH6iYDB0TKNwEPyWR7khi8Efbu4u0=;
+	s=k20201202; t=1769381185;
+	bh=gBHkj0y4jQxeMV2qzbEciSScfrXq1yZennkNx/2Itiw=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=bd15xw5xwORVoabUcDJ1q5vVXlUYP45MmfLpf1Wj7eumbe1G1offqX/LsP2i05p8/
-	 HJs/Ycv5vPdLg/ki6rSHV563InBaJlvvNpL0K92O622nmbd042+g9S/1wd4T6PYK2D
-	 9aiGuiOJSIPrOirt4z5JnC4GNDrneBm2dNyp/TSMPtL+M/AkK0EU8o6AL54sojyU6/
-	 6MOAnKTImcHfao+B+LDXo/+Z63S6rC0oSeuJTmLh4N6F1x8dDaL2uM2Wa/ReCCKUzp
-	 mY/kmoEtTP6ML9TH1hzaspFsZoenAkurH84HQ+FPm7nCHw49b+ruwIfNkN/xPSnIhb
-	 Q51QFBv+lYVgQ==
+	b=Vya0JZRerX6XRdRcf+3ZmdU/VAEs0kDelL44rPDaZbuk+MvP/g/c9RDBz3cwK8BoY
+	 RJpqDdp3lBNV9gvBtq9dlULnElIRSCM8Z+CopO4Ea9g6llbuGy+G63Wj0iiJxtbkIJ
+	 V/QGhA02i88H47QMfQ8qzNvuiNvyd0ROzYl5Vnjc/2bAW5o2ZkH+2zGUY4dk7766yu
+	 L9cRZiPRF+c/XXRBcW3h7By3oYGAZjVTS4iymb87J/ESjS71Q6dPiSD2CcWX4s05ii
+	 H6etrU7Qh8TJQVkTFdSCJCTwcVkl1DsOcbVuDcGZwbYaQiS0nykmw2se/R0Q65O1Rk
+	 RkKVvaqqzrzUw==
 From: Frederic Weisbecker <frederic@kernel.org>
 To: LKML <linux-kernel@vger.kernel.org>
 Cc: Frederic Weisbecker <frederic@kernel.org>,
@@ -65,9 +65,9 @@ Cc: Frederic Weisbecker <frederic@kernel.org>,
 	linux-mm@kvack.org,
 	linux-pci@vger.kernel.org,
 	netdev@vger.kernel.org
-Subject: [PATCH 03/33] memcg: Prepare to protect against concurrent isolated cpuset change
-Date: Sun, 25 Jan 2026 23:45:10 +0100
-Message-ID: <20260125224541.50226-4-frederic@kernel.org>
+Subject: [PATCH 04/33] mm: vmstat: Prepare to protect against concurrent isolated cpuset change
+Date: Sun, 25 Jan 2026 23:45:11 +0100
+Message-ID: <20260125224541.50226-5-frederic@kernel.org>
 X-Mailer: git-send-email 2.51.1
 In-Reply-To: <20260125224541.50226-1-frederic@kernel.org>
 References: <20260125224541.50226-1-frederic@kernel.org>
@@ -80,66 +80,42 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
 The HK_TYPE_DOMAIN housekeeping cpumask will soon be made modifiable at
-runtime. In order to synchronize against memcg workqueue to make sure
-that no asynchronous draining is pending or executing on a newly made
-isolated CPU, target and queue a drain work under the same RCU critical
-section.
+runtime. In order to synchronize against vmstat workqueue to make sure
+that no asynchronous vmstat work is pending or executing on a newly made
+isolated CPU, target and queue a vmstat work under the same RCU read
+side critical section.
 
-Whenever housekeeping will update the HK_TYPE_DOMAIN cpumask, a memcg
+Whenever housekeeping will update the HK_TYPE_DOMAIN cpumask, a vmstat
 workqueue flush will also be issued in a further change to make sure
 that no work remains pending after a CPU has been made isolated.
 
 Signed-off-by: Frederic Weisbecker <frederic@kernel.org>
 ---
- mm/memcontrol.c | 21 +++++++++++++++++----
- 1 file changed, 17 insertions(+), 4 deletions(-)
+ mm/vmstat.c | 10 ++++++----
+ 1 file changed, 6 insertions(+), 4 deletions(-)
 
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index be810c1fbfc3..2289a0299331 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -2003,6 +2003,19 @@ static bool is_memcg_drain_needed(struct memcg_stock_pcp *stock,
- 	return flush;
- }
+diff --git a/mm/vmstat.c b/mm/vmstat.c
+index 65de88cdf40e..ed19c0d42de6 100644
+--- a/mm/vmstat.c
++++ b/mm/vmstat.c
+@@ -2144,11 +2144,13 @@ static void vmstat_shepherd(struct work_struct *w)
+ 		 * infrastructure ever noticing. Skip regular flushing from vmstat_shepherd
+ 		 * for all isolated CPUs to avoid interference with the isolated workload.
+ 		 */
+-		if (cpu_is_isolated(cpu))
+-			continue;
++		scoped_guard(rcu) {
++			if (cpu_is_isolated(cpu))
++				continue;
  
-+static void schedule_drain_work(int cpu, struct work_struct *work)
-+{
-+	/*
-+	 * Protect housekeeping cpumask read and work enqueue together
-+	 * in the same RCU critical section so that later cpuset isolated
-+	 * partition update only need to wait for an RCU GP and flush the
-+	 * pending work on newly isolated CPUs.
-+	 */
-+	guard(rcu)();
-+	if (!cpu_is_isolated(cpu))
-+		schedule_work_on(cpu, work);
-+}
-+
- /*
-  * Drains all per-CPU charge caches for given root_memcg resp. subtree
-  * of the hierarchy under it.
-@@ -2032,8 +2045,8 @@ void drain_all_stock(struct mem_cgroup *root_memcg)
- 				      &memcg_st->flags)) {
- 			if (cpu == curcpu)
- 				drain_local_memcg_stock(&memcg_st->work);
--			else if (!cpu_is_isolated(cpu))
--				schedule_work_on(cpu, &memcg_st->work);
-+			else
-+				schedule_drain_work(cpu, &memcg_st->work);
- 		}
+-		if (!delayed_work_pending(dw) && need_update(cpu))
+-			queue_delayed_work_on(cpu, mm_percpu_wq, dw, 0);
++			if (!delayed_work_pending(dw) && need_update(cpu))
++				queue_delayed_work_on(cpu, mm_percpu_wq, dw, 0);
++		}
  
- 		if (!test_bit(FLUSHING_CACHED_CHARGE, &obj_st->flags) &&
-@@ -2042,8 +2055,8 @@ void drain_all_stock(struct mem_cgroup *root_memcg)
- 				      &obj_st->flags)) {
- 			if (cpu == curcpu)
- 				drain_local_obj_stock(&obj_st->work);
--			else if (!cpu_is_isolated(cpu))
--				schedule_work_on(cpu, &obj_st->work);
-+			else
-+				schedule_drain_work(cpu, &obj_st->work);
- 		}
+ 		cond_resched();
  	}
- 	migrate_enable();
 -- 
 2.51.1
 
