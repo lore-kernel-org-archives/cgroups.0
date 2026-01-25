@@ -1,31 +1,31 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 252FD30DD1A;
-	Sun, 25 Jan 2026 22:49:31 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 99AC330DD1A;
+	Sun, 25 Jan 2026 22:49:40 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1769381372; cv=none; b=m5HK+TqyerT9nLShjRG75GShpvqQrzIIQ2g4V7v/SaXZkGp+UAMhCx0Xo6Hl1bxcj7qF76FfIe3+mZ1VeEYZFsdruUn8P7HEgQPFZbXDyh+k5A3lje3TWXL9+pJaKR5BvdhFEiA7UrQNPFlbO/xdvVMxhjX1JrtBDskRF/2bZAE=
+	t=1769381380; cv=none; b=qnSzJoSxET4RX2mFm2ndxwI+d0lDKEQj5Q98wJ+pVAaKuIowG0BmBU2VQZiKCfk1u2unAQnHl5O8NztfXaIcD/z0WHKkehVzqYC8g9+dr7kFaLjp/TZFJ6Q35k1SyEVJQm61pmyIpDKvcOtPxsNrEqDSJtNWYICewrSHMNPSoLg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1769381372; c=relaxed/simple;
-	bh=OKxr66AuTYpmtINGeWatnOeeLWTfC6xUU/wfI1fZOeA=;
+	s=arc-20240116; t=1769381380; c=relaxed/simple;
+	bh=txAoH54KyHKbuey5FYwPXMe7a123Tyjq6wOFllqOg9U=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=hSe8p2pVYN+Sn/mzuuMn7YrrhNSMSMqZ641Dju7XnsH+58W0kR23lg6dUsYXBkLD7xsNHqzjJnMFbCYPA/Qpn7tnCgEtYSP3ai0ncWhq3Jd2KH6XlMOCzchmSK+2lMg1xZ4LOtARLSE89KzW0Q5hZhx/rUQRbMd7YdaL90Xt/As=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=d70jxwgb; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version; b=p8Na8v2E3BpOjSyNJLC9Y+X6xhGntINCKR6+c9ZHSZHz9IWhuNDRyh0NESfAk4zGXfn5Pce/ZoEqHBpwmB/t5AhFF1yz2Ax8H+2c8MFM69EOHSYatIjSDwLeLrZweRFVXjuOJIPFeof3ZiGTSKkAzVR/3mGXlu8Gbo7RQ5P0ARE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ct+/Hpif; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="d70jxwgb"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 305D3C4AF09;
-	Sun, 25 Jan 2026 22:49:24 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ct+/Hpif"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3229EC4CEF1;
+	Sun, 25 Jan 2026 22:49:32 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1769381371;
-	bh=OKxr66AuTYpmtINGeWatnOeeLWTfC6xUU/wfI1fZOeA=;
+	s=k20201202; t=1769381380;
+	bh=txAoH54KyHKbuey5FYwPXMe7a123Tyjq6wOFllqOg9U=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=d70jxwgbF/CNKBtHpaDvSsHZFYSPWkBvVnaAo4Av7c4PHeWTyYMkUFCWk1jjxGKNg
-	 ixqOpT8qvOYKSjtsZSCMAxfq7drEFvjvij9M7sOtf0wWj+Pkq1eQNV9zAPnH2LLJ46
-	 U6kk8bKaPMuJWDxKBXAF79yPSO65UoKLNwQx9uXrJSiRc7H0bx78/0545kNWuHswIp
-	 S4GznnYh2O52k0q8L/eji+euYnCkrI0H2+gU/UbY7iY7yHVhxStXJ4Nf3l8V8yA0hF
-	 ZIkhMGFhYHD8fmUu1Q2R3M0YoaEAcVq1tLFbqt3BP9IobTzV3xnL9TVhgs2t81yeWW
-	 nwPYM711OQw3w==
+	b=ct+/Hpif4Fc82u2iven2KRFCFhW56c3/+0FaStQzwSlTMN2Gippl3VCDYfCTDGlsH
+	 grRUbkAjXxFz8QNUB32ATVc6ffl7ouZv2PQIqbvN0EmXZclBnjEpbADbXDw8OYIS6i
+	 RYSxBDD9lok+I+KvwO2sO129c1HXWc4DfBbJmfGbA7lLTnLjszzo8qkICZAnGRGmF7
+	 SmjCO4HNh4E+cJw7qaQN1zg4efuWoM6ocDBuEXWoktF2g9cEtNKKAozJwfn+fhoVY0
+	 zUgi+HoSWTvagYHbpkikZfHRj1znB0oDpDKy9Bc2PDCxrGkPfYZQsaq7Fpj4bCfnKa
+	 ds8venZCqWWkQ==
 From: Frederic Weisbecker <frederic@kernel.org>
 To: LKML <linux-kernel@vger.kernel.org>
 Cc: Frederic Weisbecker <frederic@kernel.org>,
@@ -65,9 +65,9 @@ Cc: Frederic Weisbecker <frederic@kernel.org>,
 	linux-mm@kvack.org,
 	linux-pci@vger.kernel.org,
 	netdev@vger.kernel.org
-Subject: [PATCH 27/33] kthread: Rely on HK_TYPE_DOMAIN for preferred affinity management
-Date: Sun, 25 Jan 2026 23:45:34 +0100
-Message-ID: <20260125224541.50226-28-frederic@kernel.org>
+Subject: [PATCH 28/33] sched: Switch the fallback task allowed cpumask to HK_TYPE_DOMAIN
+Date: Sun, 25 Jan 2026 23:45:35 +0100
+Message-ID: <20260125224541.50226-29-frederic@kernel.org>
 X-Mailer: git-send-email 2.51.1
 In-Reply-To: <20260125224541.50226-1-frederic@kernel.org>
 References: <20260125224541.50226-1-frederic@kernel.org>
@@ -79,46 +79,32 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Unbound kthreads want to run neither on nohz_full CPUs nor on domain
-isolated CPUs. And since nohz_full implies domain isolation, checking
-the latter is enough to verify both.
+Tasks that have all their allowed CPUs offline don't want their affinity
+to fallback on either nohz_full CPUs or on domain isolated CPUs. And
+since nohz_full implies domain isolation, checking the latter is enough
+to verify both.
 
-Therefore exclude kthreads from domain isolation.
+Therefore exclude domain isolation from fallback task affinity.
 
 Signed-off-by: Frederic Weisbecker <frederic@kernel.org>
-Reviewed-by: Waiman Long <longman@redhat.com>
+Acked-by: Waiman Long <longman@redhat.com>
 ---
- kernel/kthread.c | 8 +++++---
- 1 file changed, 5 insertions(+), 3 deletions(-)
+ include/linux/mmu_context.h | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/kernel/kthread.c b/kernel/kthread.c
-index 85ccf5bb17c9..968fa5868d21 100644
---- a/kernel/kthread.c
-+++ b/kernel/kthread.c
-@@ -362,18 +362,20 @@ static void kthread_fetch_affinity(struct kthread *kthread, struct cpumask *cpum
- {
- 	const struct cpumask *pref;
- 
-+	guard(rcu)();
-+
- 	if (kthread->preferred_affinity) {
- 		pref = kthread->preferred_affinity;
- 	} else {
- 		if (kthread->node == NUMA_NO_NODE)
--			pref = housekeeping_cpumask(HK_TYPE_KTHREAD);
-+			pref = housekeeping_cpumask(HK_TYPE_DOMAIN);
- 		else
- 			pref = cpumask_of_node(kthread->node);
- 	}
- 
--	cpumask_and(cpumask, pref, housekeeping_cpumask(HK_TYPE_KTHREAD));
-+	cpumask_and(cpumask, pref, housekeeping_cpumask(HK_TYPE_DOMAIN));
- 	if (cpumask_empty(cpumask))
--		cpumask_copy(cpumask, housekeeping_cpumask(HK_TYPE_KTHREAD));
-+		cpumask_copy(cpumask, housekeeping_cpumask(HK_TYPE_DOMAIN));
- }
- 
- static void kthread_affine_node(void)
+diff --git a/include/linux/mmu_context.h b/include/linux/mmu_context.h
+index ac01dc4eb2ce..ed3dd0f3fe19 100644
+--- a/include/linux/mmu_context.h
++++ b/include/linux/mmu_context.h
+@@ -24,7 +24,7 @@ static inline void leave_mm(void) { }
+ #ifndef task_cpu_possible_mask
+ # define task_cpu_possible_mask(p)	cpu_possible_mask
+ # define task_cpu_possible(cpu, p)	true
+-# define task_cpu_fallback_mask(p)	housekeeping_cpumask(HK_TYPE_TICK)
++# define task_cpu_fallback_mask(p)	housekeeping_cpumask(HK_TYPE_DOMAIN)
+ #else
+ # define task_cpu_possible(cpu, p)	cpumask_test_cpu((cpu), task_cpu_possible_mask(p))
+ #endif
 -- 
 2.51.1
 
