@@ -1,32 +1,32 @@
-Received: from out-172.mta1.migadu.com (out-172.mta1.migadu.com [95.215.58.172])
+Received: from out-189.mta1.migadu.com (out-189.mta1.migadu.com [95.215.58.189])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7AA623321BD
-	for <cgroups@vger.kernel.org>; Tue, 27 Jan 2026 09:43:33 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=95.215.58.172
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 556BE334C1F
+	for <cgroups@vger.kernel.org>; Tue, 27 Jan 2026 09:43:44 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=95.215.58.189
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1769507015; cv=none; b=GIISYrMJS04R2eUYxb/bwzFS7XDIU6pF1bWgQTQQIA7afYKduFRqLr/Y3zGjssGeBJd97Og0pC3qmPR/Tf2FhzZuAuzN6uuIEa3P1GXUsuHHPtwyGxen6SfAiY19NRYEUpyaY83ZxRacEHTn1JSYuSxBfgbE0z1Cdlbh4TDFSRE=
+	t=1769507027; cv=none; b=nGOC5jeTM1K1VPt8tXRLhKHCn/dXm4eYfX6zzU13TYz6CAkk/HMijNdza4NtzVdD83RJ6qFEBrF6K1Y4dqofFeQCqgMxFPfdMEKjV0CHRXAzMpsnbvwRMIRRgegHuUsx6geDFMhl0OjmicGuQ3/qTYMw9FVLZxR0RJ2ULEnUnKk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1769507015; c=relaxed/simple;
-	bh=ICuHoMZgwyeQHMZZvgMtyo6q66wG5W6MOEIDq951aKE=;
+	s=arc-20240116; t=1769507027; c=relaxed/simple;
+	bh=1QNC2bfHfbW9SQUgfvnKGdBr0YOvFpgcnrQNCW/0a+Y=;
 	h=From:To:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=mk93ME1SS+TNsTkrkysqk2e4/Nve+GX7FshwDeuqVmCqvAaNMK37ZbEX9w8/6zHIYIkniKffOHb+aIZPDtbTHj4hTOcYRssy3IUaDdgmjwVcrQ6Kw2KpDMm1fAW79bjvDWI513IjhDgEDk7APj8ttawZt5YCPXLUzNILs9Y2Roc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=vUqg2TQG; arc=none smtp.client-ip=95.215.58.172
+	 MIME-Version; b=Rl6r9oKmLLqZrRkS4jssdOCUKi+Q8TJ0i1QgQetT13nWp2kvNxQFAKCShTZkq4uXw0HiaUxpL41mZa4MQdEU/89nK946eRgC044JPydiFRQw0T653mXfotaBZkuiq754bWyhAShvAchlRuSPl4f72k2rOsbs+vO1tgmwfWv3YIE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=YQXTc1qw; arc=none smtp.client-ip=95.215.58.189
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="vUqg2TQG"
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="YQXTc1qw"
 X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
-	t=1769507010;
+	t=1769507022;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:mime-version:mime-version:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=RkVeShES4B2VgCiXTgzhTlETaaAj+olyI2gU3ClsRew=;
-	b=vUqg2TQGgleAvGPxg6XpPWj0hk+VX3LBsQJb5GxaEMooMNP/ieKchFW14UMkjxRPh0Q6a+
-	r1cWOTF9Zw4grH9/KRuvlSn+G1E4enTMa1Zz7X/x7mCHk+mujGKmLYodR2iDlRzqHsXUHV
-	e2hnU95tejeSh9IVMOfF/K+2v8LQ8k0=
+	bh=ycrFyw6aXaYmQPmQruEJsfLSWjPHoV8ar+xnlNHnd9w=;
+	b=YQXTc1qwSK8YUcIlgs8w3Xp+DkzqZVrK9w7JA7p4wJtHvmD4cMt1T5d62d/hZOzzrTSVBH
+	tUdc78LPAuaxmK47I0TuUtkE7/SOXlNqNq3qwXbzCw/sb/tzsdCY85bnStZpiMVXlLQBKB
+	KxpyEQ0JelY7vPIP2LXhZyj+susJMGg=
 From: Hui Zhu <hui.zhu@linux.dev>
 To: Andrew Morton <akpm@linux-foundation.org>,
 	Johannes Weiner <hannes@cmpxchg.org>,
@@ -77,9 +77,9 @@ To: Andrew Morton <akpm@linux-foundation.org>,
 	bpf@vger.kernel.org,
 	netdev@vger.kernel.org,
 	linux-kselftest@vger.kernel.org
-Subject: [RFC PATCH bpf-next v5 01/12] bpf: move bpf_struct_ops_link into bpf.h
-Date: Tue, 27 Jan 2026 17:42:38 +0800
-Message-ID: <3a6694566eedbf17f84dbe5ffafe9aa0aa32108c.1769506741.git.zhuhui@kylinos.cn>
+Subject: [RFC PATCH bpf-next v5 02/12] bpf: initial support for attaching struct ops to cgroups
+Date: Tue, 27 Jan 2026 17:42:39 +0800
+Message-ID: <1c5845208d235e5deb37807f3be93af325033ba5.1769506741.git.zhuhui@kylinos.cn>
 In-Reply-To: <cover.1769506741.git.zhuhui@kylinos.cn>
 References: <cover.1769506741.git.zhuhui@kylinos.cn>
 Precedence: bulk
@@ -93,53 +93,64 @@ X-Migadu-Flow: FLOW_OUT
 
 From: Roman Gushchin <roman.gushchin@linux.dev>
 
-Move struct bpf_struct_ops_link's definition into bpf.h,
-where other custom bpf links definitions are.
+When a struct ops is being attached and a bpf link is created,
+allow to pass a cgroup fd using bpf attr, so that struct ops
+can be attached to a cgroup instead of globally.
 
-It's necessary to access its members from outside of generic
-bpf_struct_ops implementation, which will be done by following
-patches in the series.
+Attached struct ops doesn't hold a reference to the cgroup,
+only preserves cgroup id.
 
 Signed-off-by: Roman Gushchin <roman.gushchin@linux.dev>
 ---
- include/linux/bpf.h         | 6 ++++++
- kernel/bpf/bpf_struct_ops.c | 6 ------
- 2 files changed, 6 insertions(+), 6 deletions(-)
+ include/linux/bpf.h         |  1 +
+ kernel/bpf/bpf_struct_ops.c | 15 +++++++++++++++
+ 2 files changed, 16 insertions(+)
 
 diff --git a/include/linux/bpf.h b/include/linux/bpf.h
-index 4427c6e98331..899dd911dc82 100644
+index 899dd911dc82..720055d1dbce 100644
 --- a/include/linux/bpf.h
 +++ b/include/linux/bpf.h
-@@ -1891,6 +1891,12 @@ struct bpf_raw_tp_link {
- 	u64 cookie;
+@@ -1895,6 +1895,7 @@ struct bpf_struct_ops_link {
+ 	struct bpf_link link;
+ 	struct bpf_map __rcu *map;
+ 	wait_queue_head_t wait_hup;
++	u64 cgroup_id;
  };
  
-+struct bpf_struct_ops_link {
-+	struct bpf_link link;
-+	struct bpf_map __rcu *map;
-+	wait_queue_head_t wait_hup;
-+};
-+
  struct bpf_link_primer {
- 	struct bpf_link *link;
- 	struct file *file;
 diff --git a/kernel/bpf/bpf_struct_ops.c b/kernel/bpf/bpf_struct_ops.c
-index c43346cb3d76..de01cf3025b3 100644
+index de01cf3025b3..c807793e7633 100644
 --- a/kernel/bpf/bpf_struct_ops.c
 +++ b/kernel/bpf/bpf_struct_ops.c
-@@ -55,12 +55,6 @@ struct bpf_struct_ops_map {
- 	struct bpf_struct_ops_value kvalue;
- };
+@@ -13,6 +13,7 @@
+ #include <linux/btf_ids.h>
+ #include <linux/rcupdate_wait.h>
+ #include <linux/poll.h>
++#include <linux/cgroup.h>
  
--struct bpf_struct_ops_link {
--	struct bpf_link link;
--	struct bpf_map __rcu *map;
--	wait_queue_head_t wait_hup;
--};
--
- static DEFINE_MUTEX(update_mutex);
+ struct bpf_struct_ops_value {
+ 	struct bpf_struct_ops_common_value common;
+@@ -1377,6 +1378,20 @@ int bpf_struct_ops_link_create(union bpf_attr *attr)
+ 	}
+ 	bpf_link_init(&link->link, BPF_LINK_TYPE_STRUCT_OPS, &bpf_struct_ops_map_lops, NULL,
+ 		      attr->link_create.attach_type);
++#ifdef CONFIG_CGROUPS
++	if (attr->link_create.cgroup.relative_fd) {
++		struct cgroup *cgrp;
++
++		cgrp = cgroup_get_from_fd(attr->link_create.cgroup.relative_fd);
++		if (IS_ERR(cgrp)) {
++			err = PTR_ERR(cgrp);
++			goto err_out;
++		}
++
++		link->cgroup_id = cgroup_id(cgrp);
++		cgroup_put(cgrp);
++	}
++#endif /* CONFIG_CGROUPS */
  
- #define VALUE_PREFIX "bpf_struct_ops_"
+ 	err = bpf_link_prime(&link->link, &link_primer);
+ 	if (err)
 -- 
 2.43.0
 
