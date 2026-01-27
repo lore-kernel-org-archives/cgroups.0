@@ -1,100 +1,123 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 954813358CA;
-	Tue, 27 Jan 2026 10:08:37 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 87EC031196F;
+	Tue, 27 Jan 2026 12:45:09 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1769508517; cv=none; b=dFzdED9D7VUKK7j/y6dCxCLTfWDTBuL2pyiB9EGSziHJhfy0VM4JvtPHB59Ep1HYIruloU179K/fHXXQaWm6kKpLiWMH4W7a812aOjY6l+Xmjx8EQp572A+zH4ly+kI+EAQhq6p9CE1KT3tBh1MXnrfF7nP/7ialKRSTjEgtoNY=
+	t=1769517909; cv=none; b=lSaDGX+vfHBP5n5Pq9+3wdY0jj5gTkKrSdKnBkT22eVxosjmYrX747N1J7hONcm3HhopVBxy7dX9lO5IphbQi8vKDCxRGS2kGEOFR47iXNsa3WtxMff+RQ2/GrM50PS8I7qDjhc5VB3tf4UrmZKNIG098uVx9EoPgS7MEXLcIDw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1769508517; c=relaxed/simple;
-	bh=5stgSFPOFTFIULArixFeHkYV56tWc18IJxdLX0dDglY=;
-	h=Content-Type:MIME-Version:Message-Id:In-Reply-To:References:
-	 Subject:From:To:Cc:Date; b=RPvwNuFyQPHA2NI9T4WnIMNI8lCEInCa8fkbTXmSSCl+2K3h4woM8AnEnsd/Mx1mjQSUxxOQoRZ9hQdG/bY4iGPKbDzk+IFSHYpyyuwZ1PKiC1/S7oBxwsE5HcMrdLf4aBYWPytywZi0SWw9XznEIXx9+59LKx0wDffkZ1e0czw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=NV3uG0II; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1769517909; c=relaxed/simple;
+	bh=ofe10jGZoPAqJE9FQOSEtDptbVaYpx/CGbuhre/HHNI=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=sY28Rn/e1mXjEU2LhmjdcPJH81QrLEnSpQwoivZDBNh1UzjSHjL5Mgvd9+5s/Pm5peJ4cEO5ywkCytNg0Gw0v/+rEhP/gncGyNmEfbfOV3rrRcmC+KF8P6h2NsNi5Ovd0q3QMmrvB/uZsq1ItPJe7UiUWBi/thOktr2/LO/ICjY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ZqptSIfL; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="NV3uG0II"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 88634C116C6;
-	Tue, 27 Jan 2026 10:08:36 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ZqptSIfL"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id AACFEC116C6;
+	Tue, 27 Jan 2026 12:45:08 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1769508517;
-	bh=5stgSFPOFTFIULArixFeHkYV56tWc18IJxdLX0dDglY=;
-	h=In-Reply-To:References:Subject:From:To:Cc:Date:From;
-	b=NV3uG0IIJ6oSlguw1ZOHGTXtX0nknoen7oyTS8zTEgfLxcLcEXtD4qakjZdS+GRDN
-	 m/iMbO0lg+p37/K4dLa4XKE/hjJWpm7tTOpi+ndk9g64uAZDiw7gXbWFhKVHyvI7fO
-	 N9Dd9ZbQbIMC5rO1zWbIt3ZFZ1ARRxKSqZdp/SejHNvFxXCWHQl0v9TgiD9otDZ388
-	 ypdzcpuHPEWW1mOZF60Aan+OvKkWE0pYm4UcReG1RH+fTqE9qxWp611DJfQBcShTs6
-	 MlaGeAKzvdLhhZwxWiiTXlvTt8fD+2pcZncfLOhT9+en3swcxHqgm4KxDgl8rYJqPd
-	 6SrdFZVC+e2Yg==
-Content-Type: multipart/mixed; boundary="===============4752217963743545921=="
+	s=k20201202; t=1769517909;
+	bh=ofe10jGZoPAqJE9FQOSEtDptbVaYpx/CGbuhre/HHNI=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=ZqptSIfLm29TLryUzU52GQpI9Y5j/egT2jG8/oQhaPPiFuy2brZcTTjX8upURbbwK
+	 O2avXbgCiqu9oze4K2pbYNChHpLvtm1Jz9vMFgmPsvm1Qg+qCGw0xz/oS/xiGbbAQa
+	 SpjcCq8AzzyIPMh00tl2Kgj9nT4Pwz/av8vbzs9TI8IvS0TbBOA5TPk5EJhldEKCd8
+	 z9JwUU8X8St7FkUL33asPHS0EmzbQdBqKLrg7pOsDN/QpZKsgStUPPRJtFFRc43nWE
+	 6CsKod/Uczqk8wBl9Y2/65PFXOSK8XPZjs8cgK1siNQjv5//Rrl9afMnIDi/jt4EBR
+	 gt2lbSbmoncAQ==
+Date: Tue, 27 Jan 2026 13:45:06 +0100
+From: Frederic Weisbecker <frederic@kernel.org>
+To: Michal Hocko <mhocko@suse.com>
+Cc: LKML <linux-kernel@vger.kernel.org>,
+	Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny@suse.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Catalin Marinas <catalin.marinas@arm.com>,
+	Chen Ridong <chenridong@huawei.com>,
+	Danilo Krummrich <dakr@kernel.org>,
+	"David S . Miller" <davem@davemloft.net>,
+	Eric Dumazet <edumazet@google.com>,
+	Gabriele Monaco <gmonaco@redhat.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Ingo Molnar <mingo@redhat.com>, Jakub Kicinski <kuba@kernel.org>,
+	Jens Axboe <axboe@kernel.dk>, Johannes Weiner <hannes@cmpxchg.org>,
+	Lai Jiangshan <jiangshanlai@gmail.com>,
+	Marco Crivellari <marco.crivellari@suse.com>,
+	Muchun Song <muchun.song@linux.dev>,
+	Paolo Abeni <pabeni@redhat.com>,
+	Peter Zijlstra <peterz@infradead.org>, Phil Auld <pauld@redhat.com>,
+	"Rafael J . Wysocki" <rafael@kernel.org>,
+	Roman Gushchin <roman.gushchin@linux.dev>,
+	Shakeel Butt <shakeel.butt@linux.dev>,
+	Simon Horman <horms@kernel.org>, Tejun Heo <tj@kernel.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Vlastimil Babka <vbabka@suse.cz>, Waiman Long <longman@redhat.com>,
+	Will Deacon <will@kernel.org>, cgroups@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, linux-block@vger.kernel.org,
+	linux-mm@kvack.org, linux-pci@vger.kernel.org,
+	netdev@vger.kernel.org
+Subject: Re: [PATCH 03/33] memcg: Prepare to protect against concurrent
+ isolated cpuset change
+Message-ID: <aXizUsfywjtIIN50@localhost.localdomain>
+References: <20260125224541.50226-1-frederic@kernel.org>
+ <20260125224541.50226-4-frederic@kernel.org>
+ <aXeZQoSHJ9QX7B6W@tiehlicka>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Message-Id: <6173f32708a0a1401350ac03dfeb0c3a6b212331b233b3269ff708dfc74dcffe@mail.kernel.org>
-In-Reply-To: <f14f1ad53f742f993a7ac5cb5ba6eaee26bebd91.1769506741.git.zhuhui@kylinos.cn>
-References: <f14f1ad53f742f993a7ac5cb5ba6eaee26bebd91.1769506741.git.zhuhui@kylinos.cn>
-Subject: Re: [RFC PATCH bpf-next v5 08/12] mm: memcontrol: Add BPF struct_ops for memory controller
-From: bot+bpf-ci@kernel.org
-To: hui.zhu@linux.dev,akpm@linux-foundation.org,hannes@cmpxchg.org,mhocko@kernel.org,roman.gushchin@linux.dev,shakeel.butt@linux.dev,muchun.song@linux.dev,ast@kernel.org,daniel@iogearbox.net,andrii@kernel.org,martin.lau@linux.dev,eddyz87@gmail.com,song@kernel.org,yonghong.song@linux.dev,john.fastabend@gmail.com,kpsingh@kernel.org,sdf@fomichev.me,haoluo@google.com,jolsa@kernel.org,shuah@kernel.org,peterz@infradead.org,ojeda@kernel.org,nathan@kernel.org,kees@kernel.org,tj@kernel.org,jeffxu@chromium.org,mkoutny@suse.com,kernel@jfarr.cc,brauner@kernel.org,rdunlap@infradead.org,brgerst@gmail.com,masahiroy@kernel.org,davem@davemloft.net,kuba@kernel.org,hawk@kernel.org,inwardvessel@gmail.com,willemb@google.com,kerneljasonxing@gmail.com,paul.chaignon@gmail.com,a.s.protopopov@gmail.com,ameryhung@gmail.com,chenridong@huaweicloud.com,lance.yang@linux.dev,jiayuan.chen@linux.dev,linux-kernel@vger.kernel.org,linux-mm@kvack.org,cgroups@vger.kernel.org,bpf@vger.kernel.org,netdev@vger.kernel.org,linux-kselftest@vger.kernel.org
-Cc: zhuhui@kylinos.cn,geliang@kernel.org,ast@kernel.org,andrii@kernel.org,daniel@iogearbox.net,martin.lau@kernel.org,eddyz87@gmail.com,yonghong.song@linux.dev,clm@meta.com,ihor.solodrai@linux.dev
-Date: Tue, 27 Jan 2026 10:08:36 +0000 (UTC)
+Content-Type: text/plain; charset=iso-8859-1
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <aXeZQoSHJ9QX7B6W@tiehlicka>
 
---===============4752217963743545921==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
+Le Mon, Jan 26, 2026 at 05:41:38PM +0100, Michal Hocko a écrit :
+> On Sun 25-01-26 23:45:10, Frederic Weisbecker wrote:
+> > The HK_TYPE_DOMAIN housekeeping cpumask will soon be made modifiable at
+> > runtime. In order to synchronize against memcg workqueue to make sure
+> > that no asynchronous draining is pending or executing on a newly made
+> > isolated CPU, target and queue a drain work under the same RCU critical
+> > section.
+> > 
+> > Whenever housekeeping will update the HK_TYPE_DOMAIN cpumask, a memcg
+> > workqueue flush will also be issued in a further change to make sure
+> > that no work remains pending after a CPU has been made isolated.
+> > 
+> > Signed-off-by: Frederic Weisbecker <frederic@kernel.org>
+> > ---
+> >  mm/memcontrol.c | 21 +++++++++++++++++----
+> >  1 file changed, 17 insertions(+), 4 deletions(-)
+> > 
+> > diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+> > index be810c1fbfc3..2289a0299331 100644
+> > --- a/mm/memcontrol.c
+> > +++ b/mm/memcontrol.c
+> > @@ -2003,6 +2003,19 @@ static bool is_memcg_drain_needed(struct memcg_stock_pcp *stock,
+> >  	return flush;
+> >  }
+> >  
+> > +static void schedule_drain_work(int cpu, struct work_struct *work)
+> > +{
+> > +	/*
+> > +	 * Protect housekeeping cpumask read and work enqueue together
+> > +	 * in the same RCU critical section so that later cpuset isolated
+> > +	 * partition update only need to wait for an RCU GP and flush the
+> > +	 * pending work on newly isolated CPUs.
+> > +	 */
+> > +	guard(rcu)();
+> > +	if (!cpu_is_isolated(cpu))
+> > +		schedule_work_on(cpu, work);
+> 
+> Shouldn't this in the guarded rcu section?
 
-> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-> index 1f74fce27677..8d90575aa77d 100644
-> --- a/mm/memcontrol.c
-> +++ b/mm/memcontrol.c
+This is what guard(rcu)() does, right?
+Or am I missing something?
 
-[ ... ]
+Thanks.
 
-> @@ -2530,10 +2537,14 @@ static int try_charge_memcg(struct mem_cgroup *memcg, gfp_t gfp_mask,
->  	 * kernel. If this is successful, the return path will see it
->  	 * when it rechecks the overage and simply bail out.
->  	 */
-> -	if (current->memcg_nr_pages_over_high > MEMCG_CHARGE_BATCH &&
-> -	    !(current->flags & PF_MEMALLOC) &&
-> -	    gfpflags_allow_blocking(gfp_mask))
-> -		__mem_cgroup_handle_over_high(gfp_mask);
-> +	if (gfpflags_allow_blocking(gfp_mask)) {
-> +		unsigned long bpf_high_delay;
-> +
-> +		bpf_high_delay = bpf_memcg_get_high_delay(orig_memcg);
-> +		if (bpf_high_delay ||
-> +		    current->memcg_nr_pages_over_high > MEMCG_CHARGE_BATCH)
-> +			__mem_cgroup_handle_over_high(gfp_mask, bpf_high_delay);
-> +	}
-
-The old code checked !(current->flags & PF_MEMALLOC) before calling
-__mem_cgroup_handle_over_high(). This check appears to be missing in the
-new code.
-
-When PF_MEMALLOC is set, the task is already in the memory reclaim context.
-Calling __mem_cgroup_handle_over_high() from such a context would invoke
-reclaim_high() -> try_to_free_mem_cgroup_pages(), potentially causing
-reclaim recursion.
-
-Was the removal of the PF_MEMALLOC check intentional? If a BPF program
-returns a non-zero delay from get_high_delay_ms while the task is in a
-reclaim context, could this lead to recursive reclaim or deadlock?
-
-
----
-AI reviewed your patch. Please fix the bug or email reply why it's not a bug.
-See: https://github.com/kernel-patches/vmtest/blob/master/ci/claude/README.md
-
-CI run summary: https://github.com/kernel-patches/bpf/actions/runs/21392729810
-
-AI-authorship-score: low
-AI-authorship-explanation: The code shows typical human characteristics including a refactoring oversight that AI would likely not make; the commit follows standard kernel conventions and has multiple human authors.
-issues-found: 1
-issue-severity-score: medium
-issue-severity-explanation: Missing PF_MEMALLOC check could cause memory reclaim recursion when BPF programs are attached, potentially leading to system instability.
-
---===============4752217963743545921==--
+-- 
+Frederic Weisbecker
+SUSE Labs
