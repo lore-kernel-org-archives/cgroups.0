@@ -1,26 +1,27 @@
 Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 09EDF2FF664;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E522927AC45;
 	Sat, 31 Jan 2026 09:26:49 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.51
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1769851612; cv=none; b=CIv70RLcETuDbTYR1qnnKBN2Yu1m1clmJXVsNXpOfXZKdMMaAg7bgkLJgu0cP8atiG0J6tZhcyxE+S9M2efbvjX8nD4vlIOAqW5z5KNAy2z6Rrhe3/bOuyzXg19V4ozxOVsCyeWWLlVFb4/NMderXoSoiDKkQEOi4d1kynJb7LQ=
+	t=1769851612; cv=none; b=uPNS6PolSnbjxLDP2sCzlUrq336eMBnYoIILgvynacL9soygFEd0Atg61ueTErt1jmXS2WpkfS8o2kLTEanApKndnJIWUrvnpjSD/P5fYVE7brYi7HuMPl2VOX4tqn6dyD63I0OeAvXLEQyMQBvOPLk9TuSa2L8ZzBhIkO66Jss=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1769851612; c=relaxed/simple;
-	bh=7Ipm0wQ1ap/lpUFLo8RMxtk6d/EXU+hziSKGYstB2LY=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=s6CVbskP5Pxv7H0lfnO8WQqHAR7m86zgU75kWBrsaJt0NokNbTGF39Tb1gKzCBugAvUrxJDGfN/9NQygINOsJYgM8qbyp/u8RcXOttCYJFmdlwZhED9pEH9VIn8D4luoVdEdQyZUSGdYx4FZDiv2vnZzzKlLaUX/D6D1ie9PtxU=
+	bh=hC7x/vCAvQAvs0+QLz8KOv1SfSo5ck+pajC0BQOCxxQ=;
+	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
+	 MIME-Version; b=LjVanohFqbFO5BCxzTch19+/b7IFa4dRqanS47hclpN5NJ4DxqT/FW+p5Nm23OnJrYJY6SWfboITcEaIZC9vCU3cZq3pGLLmopb2C+JbXh3rke21tatUij6DsWVXy0MGjzOqUvjF8bGTnEiNQGL1TZF5mmHRmUgSmvfGk6h+7uY=
 ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.51
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
-Received: from mail.maildlp.com (unknown [172.19.163.170])
-	by dggsgout11.his.huawei.com (SkyGuard) with ESMTPS id 4f36v15hfzzYQtm7;
+Received: from mail.maildlp.com (unknown [172.19.163.177])
+	by dggsgout11.his.huawei.com (SkyGuard) with ESMTPS id 4f36v16TH3zYQtm7;
 	Sat, 31 Jan 2026 17:26:05 +0800 (CST)
 Received: from mail02.huawei.com (unknown [10.116.40.128])
-	by mail.maildlp.com (Postfix) with ESMTP id DDD1D4056E;
-	Sat, 31 Jan 2026 17:26:47 +0800 (CST)
+	by mail.maildlp.com (Postfix) with ESMTP id 0596540591;
+	Sat, 31 Jan 2026 17:26:48 +0800 (CST)
 Received: from hulk-vt.huawei.com (unknown [10.67.174.121])
-	by APP4 (Coremail) with SMTP id gCh0CgD3V_jRyn1pwSIEFw--.14901S2;
+	by APP4 (Coremail) with SMTP id gCh0CgD3V_jRyn1pwSIEFw--.14901S4;
 	Sat, 31 Jan 2026 17:26:47 +0800 (CST)
 From: Chen Ridong <chenridong@huaweicloud.com>
 To: dev@lankhorst.se,
@@ -34,10 +35,12 @@ Cc: cgroups@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
 	lujialin4@huawei.com,
 	chenridong@huaweicloud.com
-Subject: [PATCH -next 0/3] cgroup/dmem: bugfixes
-Date: Sat, 31 Jan 2026 09:11:59 +0000
-Message-Id: <20260131091202.344788-1-chenridong@huaweicloud.com>
+Subject: [PATCH -next 2/3] cgroup/dmem: avoid rcu warning when unregister region
+Date: Sat, 31 Jan 2026 09:12:01 +0000
+Message-Id: <20260131091202.344788-3-chenridong@huaweicloud.com>
 X-Mailer: git-send-email 2.34.1
+In-Reply-To: <20260131091202.344788-1-chenridong@huaweicloud.com>
+References: <20260131091202.344788-1-chenridong@huaweicloud.com>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
@@ -45,35 +48,92 @@ List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:gCh0CgD3V_jRyn1pwSIEFw--.14901S2
-X-Coremail-Antispam: 1UD129KBjDUn29KB7ZKAUJUUUUU529EdanIXcx71UUUUU7v73
-	VFW2AGmfu7bjvjm3AaLaJ3UjIYCTnIWjp_UUUYm7AC8VAFwI0_Gr0_Xr1l1xkIjI8I6I8E
-	6xAIw20EY4v20xvaj40_Wr0E3s1l1IIY67AEw4v_Jr0_Jr4l8cAvFVAK0II2c7xJM28Cjx
-	kF64kEwVA0rcxSw2x7M28EF7xvwVC0I7IYx2IY67AKxVWDJVCq3wA2z4x0Y4vE2Ix0cI8I
-	cVCY1x0267AKxVW8Jr0_Cr1UM28EF7xvwVC2z280aVAFwI0_GcCE3s1l84ACjcxK6I8E87
-	Iv6xkF7I0E14v26rxl6s0DM2AIxVAIcxkEcVAq07x20xvEncxIr21l5I8CrVACY4xI64kE
-	6c02F40Ex7xfMcIj6xIIjxv20xvE14v26r1Y6r17McIj6I8E87Iv67AKxVWUJVW8JwAm72
-	CE4IkC6x0Yz7v_Jr0_Gr1lF7xvr2IYc2Ij64vIr41lF7I21c0EjII2zVCS5cI20VAGYxC7
-	M4IIrI8v6xkF7I0E8cxan2IY04v7MxAIw28IcxkI7VAKI48JMxAqzxv26xkF7I0En4kS14
-	v26r1q6r43MxC20s026xCaFVCjc4AY6r1j6r4UMI8I3I0E5I8CrVAFwI0_Jr0_Jr4lx2Iq
-	xVCjr7xvwVAFwI0_JrI_JrWlx4CE17CEb7AF67AKxVWUtVW8ZwCIc40Y0x0EwIxGrwCI42
-	IY6xIIjxv20xvE14v26r1j6r1xMIIF0xvE2Ix0cI8IcVCY1x0267AKxVW8JVWxJwCI42IY
-	6xAIw20EY4v20xvaj40_Jr0_JF4lIxAIcVC2z280aVAFwI0_Jr0_Gr1lIxAIcVC2z280aV
-	CY1x0267AKxVW8Jr0_Cr1UYxBIdaVFxhVjvjDU0xZFpf9x0JUp6wZUUUUU=
+X-CM-TRANSID:gCh0CgD3V_jRyn1pwSIEFw--.14901S4
+X-Coremail-Antispam: 1UD129KBjvJXoW7uFyUtw18trWfGrWkArWxCrg_yoW8KF1Dpa
+	98CFy3Gw4rZr47Za10yayrur95Za1kXw4UC397Gw43JFn7Gw1Yqan7Aa4YvFy5AFWa9w4a
+	vFs0vr12kw48Aw7anT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDU0xBIdaVrnRJUUUQm14x267AKxVWrJVCq3wAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
+	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2048vs2IY020E87I2jVAFwI0_Jryl82xGYIkIc2
+	x26xkF7I0E14v26ryj6s0DM28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48ve4kI8wA2z4x0
+	Y4vE2Ix0cI8IcVAFwI0_tr0E3s1l84ACjcxK6xIIjxv20xvEc7CjxVAFwI0_Gr1j6F4UJw
+	A2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x0267AKxVW0oVCq3wAS
+	0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG6I80ewAv7VC0I7IYx2
+	IY67AKxVWUXVWUAwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFVCjc4AY6r1j6r4UM4x0
+	Y48IcxkI7VAKI48JM4x0x7Aq67IIx4CEVc8vx2IErcIFxwACI402YVCY1x02628vn2kIc2
+	xKxwCY1x0262kKe7AKxVWUtVW8ZwCF04k20xvY0x0EwIxGrwCF54CYxVCY1x0262kKe7AK
+	xVWUtVW8ZwCFx2IqxVCFs4IE7xkEbVWUJVW8JwC20s026c02F40E14v26r1j6r18MI8I3I
+	0E7480Y4vE14v26r106r1rMI8E67AF67kF1VAFwI0_Jw0_GFylIxkGc2Ij64vIr41lIxAI
+	cVC0I7IYx2IY67AKxVWUJVWUCwCI42IY6xIIjxv20xvEc7CjxVAFwI0_Gr0_Cr1lIxAIcV
+	CF04k26cxKx2IYs7xG6r1j6r1xMIIF0xvEx4A2jsIE14v26r4j6F4UMIIF0xvEx4A2jsIE
+	c7CjxVAFwI0_Gr1j6F4UJbIYCTnIWIevJa73UjIFyTuYvjfUoa9aDUUUU
 X-CM-SenderInfo: hfkh02xlgr0w46kxt4xhlfz01xgou0bp/
 
 From: Chen Ridong <chenridong@huawei.com>
 
-This series fix three bugs.
+A warnning was detected:
 
-Chen Ridong (3):
-  cgroup/dmem: fix NULL pointer dereference when setting max
-  cgroup/dmem: avoid rcu warning when unregister region
-  cgroup/dmem: avoid pool UAF
+ WARNING: suspicious RCU usage
+ 6.19.0-rc7-next-20260129+ #1101 Tainted: G           O
+ kernel/cgroup/dmem.c:456 suspicious rcu_dereference_check() usage!
 
- kernel/cgroup/dmem.c | 72 +++++++++++++++++++++++++++++++++++++++-----
- 1 file changed, 65 insertions(+), 7 deletions(-)
+ other info that might help us debug this:
 
+ rcu_scheduler_active = 2, debug_locks = 1
+ 1 lock held by insmod/532:
+  #0: ffffffff85e78b38 (dmemcg_lock){+.+.}-dmem_cgroup_unregister_region+
+
+ stack backtrace:
+ CPU: 2 UID: 0 PID: 532 Comm: insmod Tainted: 6.19.0-rc7-next-
+ Tainted: [O]=OOT_MODULE
+ Call Trace:
+  <TASK>
+  dump_stack_lvl+0xb0/0xd0
+  lockdep_rcu_suspicious+0x151/0x1c0
+  dmem_cgroup_unregister_region+0x1e2/0x380
+  ? __pfx_dmem_test_init+0x10/0x10 [dmem_uaf]
+  dmem_test_init+0x65/0xff0 [dmem_uaf]
+  do_one_initcall+0xbb/0x3a0
+
+The macro list_for_each_rcu() must be used within an RCU read-side critical
+section (between rcu_read_lock() and rcu_read_unlock()). Using it outside
+that context, as seen in dmem_cgroup_unregister_region(), triggers the
+lockdep warning because the RCU protection is not guaranteed.
+
+Replace list_for_each_rcu() with list_for_each_entry_safe(), which is
+appropriate for traversal under spinlock protection where nodes may be
+deleted.
+
+Fixes: b168ed458dde ("kernel/cgroup: Add "dmem" memory accounting cgroup")
+Signed-off-by: Chen Ridong <chenridong@huawei.com>
+---
+ kernel/cgroup/dmem.c | 7 ++-----
+ 1 file changed, 2 insertions(+), 5 deletions(-)
+
+diff --git a/kernel/cgroup/dmem.c b/kernel/cgroup/dmem.c
+index 30f96627860c..b17f48bdef81 100644
+--- a/kernel/cgroup/dmem.c
++++ b/kernel/cgroup/dmem.c
+@@ -423,7 +423,7 @@ static void dmemcg_free_region(struct kref *ref)
+  */
+ void dmem_cgroup_unregister_region(struct dmem_cgroup_region *region)
+ {
+-	struct list_head *entry;
++	struct dmem_cgroup_pool_state *pool, *next;
+ 
+ 	if (!region)
+ 		return;
+@@ -433,10 +433,7 @@ void dmem_cgroup_unregister_region(struct dmem_cgroup_region *region)
+ 	/* Remove from global region list */
+ 	list_del_rcu(&region->region_node);
+ 
+-	list_for_each_rcu(entry, &region->pools) {
+-		struct dmem_cgroup_pool_state *pool =
+-			container_of(entry, typeof(*pool), region_node);
+-
++	list_for_each_entry_safe(pool, next, &region->pools, region_node) {
+ 		list_del_rcu(&pool->css_node);
+ 	}
+ 
 -- 
 2.34.1
 
