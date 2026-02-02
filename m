@@ -1,129 +1,130 @@
-Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
+Received: from casper.infradead.org (casper.infradead.org [90.155.50.34])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7DB772E7185;
-	Mon,  2 Feb 2026 12:42:14 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.51
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5E64035E53C;
+	Mon,  2 Feb 2026 13:05:37 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=90.155.50.34
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1770036139; cv=none; b=A2snzJIRCqeBJcQsBYR01Pbjnun2mzK7SP263jwB43Slrv9/oRZC1kcZe/SrIZnNvGT4eUy7+2jci1CGdSkSFtr4d7lmOO6AoHPOiEIeVb5adxj1XDDdSfaa6eKnszuKUUPay8bqVVsmsxiWNXtNW0DVz+TiO7TiRfP2bxlHSrM=
+	t=1770037539; cv=none; b=jT6W1ifUOGqJXcH7MwbD+lhClZR2saAL85Bquqaay+eZSLt1cktl9AL8O9kbQzYE8OFwaTzX78lF8lFGOElDbd2Omw8Iv5LtpsCHKpYluCmxJiRdDaXwldlJxibj9i4LlITK8wbjERFAKsiTJ37f9U9KXDfE5XdfBdwI2CsHLoU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1770036139; c=relaxed/simple;
-	bh=SyqtQPnPXw0GUmPyHRqgLP2+GiVntEoeujEnzZN995Y=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=g3xrjbQFku9bu0slh+4EBqURnQWdXI4Eimdv//FixGAEbSkRhEVU3bx1LW03/JlWVPImQHSSYa3YZa+99iGoxDWlR553tXRULkNOMyQQgBnq12O3qo2LMT8zBGSMq6vpPzGnAMZoVFem64qaqYXm0b0Xy19H30acuaauL6ZkL4E=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.51
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
-Received: from mail.maildlp.com (unknown [172.19.163.177])
-	by dggsgout11.his.huawei.com (SkyGuard) with ESMTPS id 4f4R7S5C3PzYQv5x;
-	Mon,  2 Feb 2026 20:41:24 +0800 (CST)
-Received: from mail02.huawei.com (unknown [10.116.40.112])
-	by mail.maildlp.com (Postfix) with ESMTP id 6D47F40593;
-	Mon,  2 Feb 2026 20:42:10 +0800 (CST)
-Received: from hulk-vt.huawei.com (unknown [10.67.174.121])
-	by APP1 (Coremail) with SMTP id cCh0CgDXj+WWm4Bpt7ipFw--.14648S3;
-	Mon, 02 Feb 2026 20:42:10 +0800 (CST)
-From: Chen Ridong <chenridong@huaweicloud.com>
-To: dev@lankhorst.se,
-	mripard@kernel.org,
-	natalie.vock@gmx.de,
-	tj@kernel.org,
-	hannes@cmpxchg.org,
-	mkoutny@suse.com
-Cc: cgroups@vger.kernel.org,
-	dri-devel@lists.freedesktop.org,
-	linux-kernel@vger.kernel.org,
-	lujialin4@huawei.com,
-	chenridong@huaweicloud.com
-Subject: [PATCH -next v2 1/4] cgroup/dmem: fix NULL pointer dereference when setting max
-Date: Mon,  2 Feb 2026 12:27:16 +0000
-Message-Id: <20260202122719.414466-2-chenridong@huaweicloud.com>
-X-Mailer: git-send-email 2.34.1
-In-Reply-To: <20260202122719.414466-1-chenridong@huaweicloud.com>
-References: <20260202122719.414466-1-chenridong@huaweicloud.com>
+	s=arc-20240116; t=1770037539; c=relaxed/simple;
+	bh=F8crWnNiW1I5eGPcpKlPggbez0s5Ewo7AQLN4ei6+kM=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=GijowU/UqTsYXoS0fIMrKtl6q+CbGj8s9wbyBbbr6UftcVfJQJwzOpoxOYeQxUR6RzEjX5eZfuFPtkgav5NWZ1fyd9TBA1XQzPW2aUXKgIpIuGjgc/95pCPyqvCYEB0nnwVRgpkNmwz2waYisvjhEAdRctVC269z9GUxMNzMguI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=pF3ZFb+y; arc=none smtp.client-ip=90.155.50.34
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=infradead.org
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="pF3ZFb+y"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
+	References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+	Content-Transfer-Encoding:Content-ID:Content-Description;
+	bh=WjzS76ZEx91D+z7A9/8sYiyzf4PTQPs3YN9XfWKCgtc=; b=pF3ZFb+yciTFja/40tXjEOuvgo
+	yrElhcy7bKt/xk0cEvyTjkRke0yv5oIN5Ml7PRqiOmjxGKbkydNnuuZM7Os8SeJ6+d+2nFVPT6wpa
+	SfQ53pF/16SfXLZz7KLbcKN9OKr17D3x8HDLP2Cq0fnz0g3hspkWDvqlXedI2UNRrSa942SK+/HLs
+	RATTy5+7bp5yclCUCIKklffARUoMxjFG0sFUPof5fSGTz2fHE7AIjoIvoVt1VfLmAeS0yHXOZ8gjf
+	MFN7vtryUH/v1T/HWsxW9q+ribGGxVggE3aVjE1OnfpPdADE7d/ey0hTWe+cryQbNlzw72yi51l0v
+	6RqZmtdA==;
+Received: from 2001-1c00-8d85-5700-266e-96ff-fe07-7dcc.cable.dynamic.v6.ziggo.nl ([2001:1c00:8d85:5700:266e:96ff:fe07:7dcc] helo=noisy.programming.kicks-ass.net)
+	by casper.infradead.org with esmtpsa (Exim 4.98.2 #2 (Red Hat Linux))
+	id 1vmtcN-0000000GWAx-23vt;
+	Mon, 02 Feb 2026 13:05:27 +0000
+Received: by noisy.programming.kicks-ass.net (Postfix, from userid 1000)
+	id DCC80300208; Mon, 02 Feb 2026 14:05:26 +0100 (CET)
+Date: Mon, 2 Feb 2026 14:05:26 +0100
+From: Peter Zijlstra <peterz@infradead.org>
+To: Waiman Long <longman@redhat.com>
+Cc: Chen Ridong <chenridong@huaweicloud.com>, Tejun Heo <tj@kernel.org>,
+	Johannes Weiner <hannes@cmpxchg.org>,
+	Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny@suse.com>,
+	Ingo Molnar <mingo@redhat.com>, Juri Lelli <juri.lelli@redhat.com>,
+	Vincent Guittot <vincent.guittot@linaro.org>,
+	Steven Rostedt <rostedt@goodmis.org>,
+	Ben Segall <bsegall@google.com>, Mel Gorman <mgorman@suse.de>,
+	Valentin Schneider <vschneid@redhat.com>,
+	Anna-Maria Behnsen <anna-maria@linutronix.de>,
+	Frederic Weisbecker <frederic@kernel.org>,
+	Thomas Gleixner <tglx@linutronix.de>, Shuah Khan <shuah@kernel.org>,
+	cgroups@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-kselftest@vger.kernel.org
+Subject: Re: [PATCH/for-next v2 1/2] cgroup/cpuset: Defer
+ housekeeping_update() call from CPU hotplug to workqueue
+Message-ID: <20260202130526.GE1395266@noisy.programming.kicks-ass.net>
+References: <20260130154254.1422113-1-longman@redhat.com>
+ <20260130154254.1422113-2-longman@redhat.com>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:cCh0CgDXj+WWm4Bpt7ipFw--.14648S3
-X-Coremail-Antispam: 1UD129KBjvJXoW7CFWrtF1xXryrAryDtF4ruFg_yoW8uFyxpr
-	1rGryUCr48tr1UAF40vF15Zry5GF4xAa17Jwn7Jwn5JF1UKw1UtrykJ3yUJF98Jry7uw4I
-	qFn8Zw4Iq345taUanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDU0xBIdaVrnRJUUUm014x267AKxVW5JVWrJwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
-	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2048vs2IY020E87I2jVAFwI0_Jr4l82xGYIkIc2
-	x26xkF7I0E14v26r4j6ryUM28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48ve4kI8wA2z4x0
-	Y4vE2Ix0cI8IcVAFwI0_Ar0_tr1l84ACjcxK6xIIjxv20xvEc7CjxVAFwI0_Gr1j6F4UJw
-	A2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x0267AKxVW0oVCq3wAS
-	0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG6I80ewAv7VC0I7IYx2
-	IY67AKxVWUJVWUGwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFVCjc4AY6r1j6r4UM4x0
-	Y48IcxkI7VAKI48JM4x0x7Aq67IIx4CEVc8vx2IErcIFxwACI402YVCY1x02628vn2kIc2
-	xKxwCY1x0262kKe7AKxVWUtVW8ZwCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7xkEbVWU
-	JVW8JwC20s026c02F40E14v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E67AF67
-	kF1VAFwI0_Jw0_GFylIxkGc2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUJVWUCwCI42IY
-	6xIIjxv20xvEc7CjxVAFwI0_Gr0_Cr1lIxAIcVCF04k26cxKx2IYs7xG6r1j6r1xMIIF0x
-	vEx4A2jsIE14v26r1j6r4UMIIF0xvEx4A2jsIEc7CjxVAFwI0_Gr0_Gr1UYxBIdaVFxhVj
-	vjDU0xZFpf9x0JU2dgAUUUUU=
-X-CM-SenderInfo: hfkh02xlgr0w46kxt4xhlfz01xgou0bp/
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260130154254.1422113-2-longman@redhat.com>
 
-From: Chen Ridong <chenridong@huawei.com>
+On Fri, Jan 30, 2026 at 10:42:53AM -0500, Waiman Long wrote:
 
-An issue was triggered:
+> +/* Both cpuset_mutex and cpus_read_locked acquired */
+> +static bool cpuset_locked;
+> +
+>  /*
+>   * A flag to force sched domain rebuild at the end of an operation.
+>   * It can be set in
+> @@ -285,10 +288,12 @@ void cpuset_full_lock(void)
+>  {
+>  	cpus_read_lock();
+>  	mutex_lock(&cpuset_mutex);
+> +	cpuset_locked = true;
+>  }
+>  
+>  void cpuset_full_unlock(void)
+>  {
+> +	cpuset_locked = false;
+>  	mutex_unlock(&cpuset_mutex);
+>  	cpus_read_unlock();
+>  }
 
- BUG: kernel NULL pointer dereference, address: 0000000000000000
- #PF: supervisor read access in kernel mode
- #PF: error_code(0x0000) - not-present page
- PGD 0 P4D 0
- Oops: Oops: 0000 [#1] SMP NOPTI
- CPU: 15 UID: 0 PID: 658 Comm: bash Tainted: 6.19.0-rc6-next-2026012
- Tainted: [O]=OOT_MODULE
- Hardware name: QEMU Standard PC (i440FX + PIIX, 1996),
- RIP: 0010:strcmp+0x10/0x30
- RSP: 0018:ffffc900017f7dc0 EFLAGS: 00000246
- RAX: 0000000000000000 RBX: 0000000000000000 RCX: ffff888107cd4358
- RDX: 0000000019f73907 RSI: ffffffff82cc381a RDI: 0000000000000000
- RBP: ffff8881016bef0d R08: 000000006c0e7145 R09: 0000000056c0e714
- R10: 0000000000000001 R11: ffff888107cd4358 R12: 0007ffffffffffff
- R13: ffff888101399200 R14: ffff888100fcb360 R15: 0007ffffffffffff
- CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
- CR2: 0000000000000000 CR3: 0000000105c79000 CR4: 00000000000006f0
- Call Trace:
-  <TASK>
-  dmemcg_limit_write.constprop.0+0x16d/0x390
-  ? __pfx_set_resource_max+0x10/0x10
-  kernfs_fop_write_iter+0x14e/0x200
-  vfs_write+0x367/0x510
-  ksys_write+0x66/0xe0
-  do_syscall_64+0x6b/0x390
-  entry_SYSCALL_64_after_hwframe+0x76/0x7e
- RIP: 0033:0x7f42697e1887
+> @@ -1293,14 +1308,30 @@ static bool prstate_housekeeping_conflict(int prstate, struct cpumask *new_cpus)
+>   */
+>  static void update_isolation_cpumasks(void)
+>  {
+> -	int ret;
+> +	static DECLARE_WORK(isolcpus_work, isolcpus_workfn);
+>  
+>  	if (!isolated_cpus_updating)
+>  		return;
+>  
+> -	ret = housekeeping_update(isolated_cpus);
+> -	WARN_ON_ONCE(ret < 0);
+> +	/*
+> +	 * This function can be reached either directly from regular cpuset
+> +	 * control file write (cpuset_locked) or via hotplug (cpus_write_lock
+> +	 * && cpuset_mutex held). In the later case, we defer the
+> +	 * housekeeping_update() call to the system_unbound_wq to avoid the
+> +	 * possibility of deadlock. This also means that there will be a short
+> +	 * period of time where HK_TYPE_DOMAIN housekeeping cpumask will lag
+> +	 * behind isolated_cpus.
+> +	 */
+> +	if (!cpuset_locked) {
 
-It was trriggered setting max without limitation, the command is like:
-"echo test/region0 > dmem.max". To fix this issue, add check whether
-options is valid after parsing the region_name.
+I agree with Chen that this is bloody terrible.
 
-Fixes: b168ed458dde ("kernel/cgroup: Add "dmem" memory accounting cgroup")
-Signed-off-by: Chen Ridong <chenridong@huawei.com>
----
- kernel/cgroup/dmem.c | 3 +++
- 1 file changed, 3 insertions(+)
+At the very least this should have:
 
-diff --git a/kernel/cgroup/dmem.c b/kernel/cgroup/dmem.c
-index e12b946278b6..1f0d6caaf2fb 100644
---- a/kernel/cgroup/dmem.c
-+++ b/kernel/cgroup/dmem.c
-@@ -700,6 +700,9 @@ static ssize_t dmemcg_limit_write(struct kernfs_open_file *of,
- 		if (!region_name[0])
- 			continue;
- 
-+		if (!options || !*options)
-+			return -EINVAL;
-+
- 		rcu_read_lock();
- 		region = dmemcg_get_region_by_name(region_name);
- 		rcu_read_unlock();
--- 
-2.34.1
+	lockdep_assert_held(&cpuset_mutex);
 
+But ideally you'd do patches against this and tip/locking/core that add
+proper __guarded_by() annotations to this.
+
+> +		/*
+> +		 * We rely on WORK_STRUCT_PENDING_BIT to not requeue a work
+> +		 * item that is still pending.
+> +		 */
+> +		queue_work(system_unbound_wq, &isolcpus_work);
+> +		return;
+> +	}
+>  
+> +	WARN_ON_ONCE(housekeeping_update(isolated_cpus) < 0);
+>  	isolated_cpus_updating = false;
+>  }
