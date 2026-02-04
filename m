@@ -1,165 +1,155 @@
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.20])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from sg-1-22.ptr.blmpb.com (sg-1-22.ptr.blmpb.com [118.26.132.22])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CD22C34F257;
-	Wed,  4 Feb 2026 05:02:13 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.20
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D91953816E9
+	for <cgroups@vger.kernel.org>; Wed,  4 Feb 2026 06:44:41 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=118.26.132.22
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1770181334; cv=none; b=k3TQ0TNzvgQrVpSj4S38IBt/s5qC9I5rxmxCSHEQonZwUGRO1BWSU9cbmwC6u0ihNGUBnzSCDzYOgF2d5WBanvyyQxAzrkMVrf1Ry31ujrnR9GNEgBFrA6uGHF/otaXMVtJ2koJtDalS5y3+XZTLN2WNLWQcTPNNOHaqPICc2Ws=
+	t=1770187483; cv=none; b=nPR0yovCr0O/qWGLmqbBtPZdfDccRb5n3P3S2sV8373o+jLq1ocKkOvz4dV89A5G+kSBAxCWR7T6Dxnm2mbgQCMPWlMKtkoK+9dWNfxcXsuOnwzyt5nmI+ZJptrclB+lL0PgCC5wlXziLa7Rgka3h47skmVIEWvBINUOkJusEQE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1770181334; c=relaxed/simple;
-	bh=BssClzJli42sqwnuhq7EEp2oGu8Z3L8cVPtpreDMGtc=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=EMEmgBok5BMinqtA/PK1ZNMeHYkK8Sr4VkRzbcwu5FbfjJfB3TqfGIQBSXrtm83sgH1GzCCzprpVcNX6ZdynrNTSUlV6QlKdpn03MZEAWOjbv2Dtr6GNYawHQx0JeN0ZEoQkPvZCik3JrfdJ6oBYKi3vuHWaggjHx5SSE0p9PfE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=mVgo4JZw; arc=none smtp.client-ip=198.175.65.20
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
+	s=arc-20240116; t=1770187483; c=relaxed/simple;
+	bh=Z/qv8hIzfC+7bCZ6iww8n5urT94nR+ZITtVjDfdX/2M=;
+	h=To:Subject:References:Mime-Version:In-Reply-To:Cc:Content-Type:
+	 From:Date:Message-Id; b=VP6oSnjvUYamkIs+LcqPzQB9yxgd4G+CuhCXOCj1f1UfVlGLa3TL7wexMsgcebmOtco/YbCV6PoDko5CFrqHRYpPhNmTtakezgsnVfpf9h0KEdPczbNiaz/J0N+nGcU6QRa1AiDVjHtJVxwIz8UW0018OLxai7fMkT4P90TSVjg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=fnnas.com; spf=pass smtp.mailfrom=fnnas.com; dkim=pass (2048-bit key) header.d=fnnas-com.20200927.dkim.feishu.cn header.i=@fnnas-com.20200927.dkim.feishu.cn header.b=WtZyk/Ia; arc=none smtp.client-ip=118.26.132.22
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=fnnas.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fnnas.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="mVgo4JZw"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1770181334; x=1801717334;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:in-reply-to;
-  bh=BssClzJli42sqwnuhq7EEp2oGu8Z3L8cVPtpreDMGtc=;
-  b=mVgo4JZwFyU56rcObsmZRQVRlWYJGQiWb+dOGnrZg0ONCbgf/rPeTBj9
-   vb6UtP4JjGW6BVXQTbZjqbu2WjN3SLNHNVqVsfktj5ARuulkbNHADqtKV
-   VLzBbmXUiB+fMFjjEsEwNX9KTJ5RQMJIQ7FLOLChdXKUSxTHgCMqMVeaK
-   Bm6smQqgLZuxg7WaRyPSiq2Jjjjl/wp3rimW8Ke4ml/IVqGbfJtM4IEGJ
-   ok7coKSNpIgSELHUK3JsyzH6tgLu/UGWUG0nBGlxoAs29M5ltAsaDlpXb
-   cvKz6GdMfLqToH41rZD8OFkuWddRIIZt9RkBFo+SUxq6W4zM2yB1zUFBP
-   w==;
-X-CSE-ConnectionGUID: l/PZ6WedTyueOgh/uO1g1w==
-X-CSE-MsgGUID: 4rWHnChQRHGPOjkfHOmxdQ==
-X-IronPort-AV: E=McAfee;i="6800,10657,11691"; a="71086376"
-X-IronPort-AV: E=Sophos;i="6.21,272,1763452800"; 
-   d="scan'208";a="71086376"
-Received: from orviesa002.jf.intel.com ([10.64.159.142])
-  by orvoesa112.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 03 Feb 2026 21:02:13 -0800
-X-CSE-ConnectionGUID: r6WIlB3hRYOB1WMvBCSX1g==
-X-CSE-MsgGUID: 4L+xrWR+RMKF3IcyS644EA==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.21,272,1763452800"; 
-   d="scan'208";a="240739427"
-Received: from yilunxu-optiplex-7050.sh.intel.com (HELO localhost) ([10.239.159.165])
-  by orviesa002.jf.intel.com with ESMTP; 03 Feb 2026 21:01:47 -0800
-Date: Wed, 4 Feb 2026 12:43:16 +0800
-From: Xu Yilun <yilun.xu@linux.intel.com>
-To: Jason Gunthorpe <jgg@ziepe.ca>
-Cc: Sean Christopherson <seanjc@google.com>,
-	Ackerley Tng <ackerleytng@google.com>,
-	Alexey Kardashevskiy <aik@amd.com>, cgroups@vger.kernel.org,
-	kvm@vger.kernel.org, linux-doc@vger.kernel.org,
-	linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-kselftest@vger.kernel.org, linux-mm@kvack.org,
-	linux-trace-kernel@vger.kernel.org, x86@kernel.org,
-	akpm@linux-foundation.org, binbin.wu@linux.intel.com, bp@alien8.de,
-	brauner@kernel.org, chao.p.peng@intel.com, chenhuacai@kernel.org,
-	corbet@lwn.net, dave.hansen@intel.com, dave.hansen@linux.intel.com,
-	david@redhat.com, dmatlack@google.com, erdemaktas@google.com,
-	fan.du@intel.com, fvdl@google.com, haibo1.xu@intel.com,
-	hannes@cmpxchg.org, hch@infradead.org, hpa@zytor.com,
-	hughd@google.com, ira.weiny@intel.com, isaku.yamahata@intel.com,
-	jack@suse.cz, james.morse@arm.com, jarkko@kernel.org,
-	jgowans@amazon.com, jhubbard@nvidia.com, jroedel@suse.de,
-	jthoughton@google.com, jun.miao@intel.com, kai.huang@intel.com,
-	keirf@google.com, kent.overstreet@linux.dev,
-	liam.merwick@oracle.com, maciej.wieczor-retman@intel.com,
-	mail@maciej.szmigiero.name, maobibo@loongson.cn,
-	mathieu.desnoyers@efficios.com, maz@kernel.org, mhiramat@kernel.org,
-	mhocko@kernel.org, mic@digikod.net, michael.roth@amd.com,
-	mingo@redhat.com, mlevitsk@redhat.com, mpe@ellerman.id.au,
-	muchun.song@linux.dev, nikunj@amd.com, nsaenz@amazon.es,
-	oliver.upton@linux.dev, palmer@dabbelt.com, pankaj.gupta@amd.com,
-	paul.walmsley@sifive.com, pbonzini@redhat.com, peterx@redhat.com,
-	pgonda@google.com, prsampat@amd.com, pvorel@suse.cz,
-	qperret@google.com, richard.weiyang@gmail.com,
-	rick.p.edgecombe@intel.com, rientjes@google.com,
-	rostedt@goodmis.org, roypat@amazon.co.uk, rppt@kernel.org,
-	shakeel.butt@linux.dev, shuah@kernel.org, steven.price@arm.com,
-	steven.sistare@oracle.com, suzuki.poulose@arm.com, tabba@google.com,
-	tglx@linutronix.de, thomas.lendacky@amd.com, vannapurve@google.com,
-	vbabka@suse.cz, viro@zeniv.linux.org.uk, vkuznets@redhat.com,
-	wei.w.wang@intel.com, will@kernel.org, willy@infradead.org,
-	wyihan@google.com, xiaoyao.li@intel.com, yan.y.zhao@intel.com,
-	yilun.xu@intel.com, yuzenghui@huawei.com, zhiquan1.li@intel.com
-Subject: Re: [RFC PATCH v1 05/37] KVM: guest_memfd: Wire up
- kvm_get_memory_attributes() to per-gmem attributes
-Message-ID: <aYLOZIZU0nwk+0UN@yilunxu-OptiPlex-7050>
-References: <cover.1760731772.git.ackerleytng@google.com>
- <071a3c6603809186e914fe5fed939edee4e11988.1760731772.git.ackerleytng@google.com>
- <07836b1d-d0d8-40f2-8f7b-7805beca31d0@amd.com>
- <CAEvNRgEuez=JbArRf2SApLAL0usv5-Q6q=nBPOFMHrHGaKAtMw@mail.gmail.com>
- <20260129003753.GZ1641016@ziepe.ca>
- <aXqx3_eE0rNh6nP0@google.com>
- <aYHGVQTF6RUs7r3g@yilunxu-OptiPlex-7050>
- <20260203181618.GY2328995@ziepe.ca>
+	dkim=pass (2048-bit key) header.d=fnnas-com.20200927.dkim.feishu.cn header.i=@fnnas-com.20200927.dkim.feishu.cn header.b="WtZyk/Ia"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+ s=s1; d=fnnas-com.20200927.dkim.feishu.cn; t=1770187471;
+  h=from:subject:mime-version:from:date:message-id:subject:to:cc:
+ reply-to:content-type:mime-version:in-reply-to:message-id;
+ bh=i+9AfGJMfN0HhM1ZePCGgsCVg25yjlBNrKsHci7KeXU=;
+ b=WtZyk/Ia9Ih6K3JtUnKkxsNQ3Rlbm9m+IwZlUSmBe8EKgnJvHaDl9eIHjuiFgNVV31MvqD
+ LhY6ee8tovGwYC09pKLcTjNW2MXPAYy5mptkxNTt219/tT0Q4XkVStafaNZS/saFb9sqyP
+ inBlj0Wrk2iEHr4er/ZDY5M2kKSRWX8EHZsW82WvZt2e/t1J6UH/pqVIoWB2cq+F23c5Ms
+ nQyhXpDrFqONCi+9P52knBk78aQDMpRjIMCUHyaddMcOmsmLecLCIBAFDgIQfWS8nGw5Do
+ ArL40qMSjan2GRG+d3fJ5n5+jU9BzDyc0YAkFkU9XRx7jZQAgZwH5s0AjfIBKw==
+To: =?utf-8?q?Michal_Koutn=C3=BD?= <mkoutny@suse.com>
+Subject: Re: [PATCH v2 6/7] blk-cgroup: allocate pds before freezing queue in blkcg_activate_policy()
+X-Lms-Return-Path: <lba+26982eacd+847e39+vger.kernel.org+yukuai@fnnas.com>
+Received: from [192.168.1.104] ([39.182.0.137]) by smtp.feishu.cn with ESMTPS; Wed, 04 Feb 2026 14:44:28 +0800
+References: <20260203080602.726505-1-yukuai@fnnas.com> <20260203080602.726505-7-yukuai@fnnas.com> <gq45vl55n2gucipjc5jk5e5kp7ups3nw672ua6nvksooycezv5@lfr62hy5br4f>
+Reply-To: yukuai@fnnas.com
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260203181618.GY2328995@ziepe.ca>
+Mime-Version: 1.0
+In-Reply-To: <gq45vl55n2gucipjc5jk5e5kp7ups3nw672ua6nvksooycezv5@lfr62hy5br4f>
+Cc: <tj@kernel.org>, <josef@toxicpanda.com>, <axboe@kernel.dk>, 
+	<cgroups@vger.kernel.org>, <linux-block@vger.kernel.org>, 
+	<linux-kernel@vger.kernel.org>, <zhengqixing@huawei.com>, 
+	<hch@infradead.org>, <ming.lei@redhat.com>, <nilay@linux.ibm.com>, 
+	<yukuai@fnnas.com>
+Content-Language: en-US
+Content-Type: text/plain; charset=UTF-8
+From: "Yu Kuai" <yukuai@fnnas.com>
+Date: Wed, 4 Feb 2026 14:44:26 +0800
+Message-Id: <fe9f7cc4-a9dc-4809-9d98-d5158c17c983@fnnas.com>
+User-Agent: Mozilla Thunderbird
+Content-Transfer-Encoding: quoted-printable
+X-Original-From: Yu Kuai <yukuai@fnnas.com>
 
-On Tue, Feb 03, 2026 at 02:16:18PM -0400, Jason Gunthorpe wrote:
-> On Tue, Feb 03, 2026 at 05:56:37PM +0800, Xu Yilun wrote:
-> > > +1.  For guest_memfd, we initially defined per-VM memory attributes to track
-> > > private vs. shared.  But as Ackerley noted, we are in the process of deprecating
-> > > that support, e.g. by making it incompatible with various guest_memfd features,
-> > > in favor of having each guest_memfd instance track the state of a given page.
-> > > 
-> > > The original guest_memfd design was that it would _only_ hold private pages, and
-> > > so tracking private vs. shared in guest_memfd didn't make any sense.  As we've
-> > > pivoted to in-place conversion, tracking private vs. shared in the guest_memfd
-> > > has basically become mandatory.  We could maaaaaybe make it work with per-VM
-> > > attributes, but it would be insanely complex.
-> > > 
-> > > For a dmabuf fd, the story is the same as guest_memfd.  Unless private vs. shared
-> > > is all or nothing, and can never change, then the only entity that can track that
-> > > info is the owner of the dmabuf.  And even if the private vs. shared attributes
-> > > are constant, tracking it external to KVM makes sense, because then the provider
-> > > can simply hardcode %true/%false.  
-> > 
-> > For CoCo-VM and Tee-IO, I'm wondering if host or KVM has to maintain
-> > the private/shared attribute for "assigned MMIO". I'm not naming them
-> > "host MMIO" cause unlike RAM host never needs to access them, either in
-> > private manner or shared manner.
-> > 
-> > Traditionally, host maps these MMIOs only because KVM needs HVA->HPA
-> > mapping to find pfn and setup KVM MMU.
-> 
-> This is not actually completely true, the host mapping still ends up
-> being used by KVM if it happens to trap and emulate a MMIO touching
-> instruction.
-> 
-> It really shouldn't do this, but there is a whole set of complex
-> machinery in KVM and qemu to handle this case.
-> 
-> For example if the MSI-X window is not properly aligned then you have
-> some MMIO that is trapped and must be reflected to real HW.
+Hi,
 
-In this case, the affected pages are not assigned MMIOs and KVM won't
-import them. Mapping them is just OK.
+=E5=9C=A8 2026/2/3 17:06, Michal Koutn=C3=BD =E5=86=99=E9=81=93:
+> On Tue, Feb 03, 2026 at 04:06:01PM +0800, Yu Kuai <yukuai@fnnas.com> wrot=
+e:
+>> Some policies like iocost and iolatency perform percpu allocation in
+>> pd_alloc_fn(). Percpu allocation with queue frozen can cause deadlock
+>> because percpu memory reclaim may issue IO.
+>>
+>> Now that q->blkg_list is protected by blkcg_mutex,
+> With this ^^^
+>
+> ...
+>> restructure
+>> blkcg_activate_policy() to allocate all pds before freezing the queue:
+>> 1. Allocate all pds with GFP_KERNEL before freezing the queue
+>> 2. Freeze the queue
+>> 3. Initialize and online all pds
+>>
+>> Note: Future work is to remove all queue freezing before
+>> blkcg_activate_policy() to fix the deadlocks thoroughly.
+>>
+>> Signed-off-by: Yu Kuai <yukuai@fnnas.com>
+>> ---
+>>   block/blk-cgroup.c | 90 +++++++++++++++++-----------------------------
+>>   1 file changed, 32 insertions(+), 58 deletions(-)
+>>
+>> diff --git a/block/blk-cgroup.c b/block/blk-cgroup.c
+>> index 0206050f81ea..7fcb216917d0 100644
+>> --- a/block/blk-cgroup.c
+>> +++ b/block/blk-cgroup.c
+>> @@ -1606,8 +1606,7 @@ static void blkcg_policy_teardown_pds(struct reque=
+st_queue *q,
+>>   int blkcg_activate_policy(struct gendisk *disk, const struct blkcg_pol=
+icy *pol)
+>>   {
+>>   	struct request_queue *q =3D disk->queue;
+>> -	struct blkg_policy_data *pd_prealloc =3D NULL;
+>> -	struct blkcg_gq *blkg, *pinned_blkg =3D NULL;
+>> +	struct blkcg_gq *blkg;
+>>   	unsigned int memflags;
+>>   	int ret;
+>>  =20
+>> @@ -1622,90 +1621,65 @@ int blkcg_activate_policy(struct gendisk *disk, =
+const struct blkcg_policy *pol)
+> ...
+>
+>> +	/* Now freeze queue and initialize/online all pds */
+>> +	if (queue_is_mq(q))
+>> +		memflags =3D blk_mq_freeze_queue(q);
+>> +
+>> +	spin_lock_irq(&q->queue_lock);
+>> +	list_for_each_entry_reverse(blkg, &q->blkg_list, q_node) {
+>> +		struct blkg_policy_data *pd =3D blkg->pd[pol->plid];
+>> +
+>> +		/* Skip dying blkg */
+>> +		if (hlist_unhashed(&blkg->blkcg_node))
+>> +			continue;
+>> +
+>> +		spin_lock(&blkg->blkcg->lock);
+>>   		if (pol->pd_init_fn)
+>>   			pol->pd_init_fn(pd);
+>> -
+>>   		if (pol->pd_online_fn)
+>>   			pol->pd_online_fn(pd);
+>>   		pd->online =3D true;
+>> -
+>>   		spin_unlock(&blkg->blkcg->lock);
+>>   	}
+>>  =20
+>>   	__set_bit(pol->plid, q->blkcg_pols);
+>> -	ret =3D 0;
+>> -
+>>   	spin_unlock_irq(&q->queue_lock);
+>> -out:
+>> -	mutex_unlock(&q->blkcg_mutex);
+>> +
+>>   	if (queue_is_mq(q))
+>>   		blk_mq_unfreeze_queue(q, memflags);
+>> -	if (pinned_blkg)
+>> -		blkg_put(pinned_blkg);
+>> -	if (pd_prealloc)
+>> -		pol->pd_free_fn(pd_prealloc);
+>> -	return ret;
+>> +	mutex_unlock(&q->blkcg_mutex);
+>> +	return 0;
+> Why is q->queue_lock still needed here?
 
-> 
-> So the sharable parts of the BAR should still end up being mmaped into
-> userspace, I think.
+I do want to remove queue_lock for accessing blkgs. However, this set just =
+protect q->blkg_list
+with blkg_mutex, and I'll remove the queue_lock after everything is convert=
+ed to blkg_mutex.
 
-This does mean we can't make VFIO totally unmappable. But VFIO can still
-try to create unmappable dmabufs for assigned MMIO regions, fail dmabuf
-creation or fail mmap() based on the addresses.
+>
+> Thanks,
+> Michal
 
-> 
-> Which means we need VFIO to know what they are, and hopefully it is
-> just static based on the TDISP reports..
-
-I don't think VMM need to check TDISP report. The only special thing is
-the MSI-X mixed pages which can be figured out by standard PCI
-discovery.
-
-Seems this doesn't impact the idea that KVM needs no implication of
-Private/Shared from VFIO, as long as VFIO keeps exported dmabufs
-unmapped.
+--=20
+Thansk,
+Kuai
