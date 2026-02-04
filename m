@@ -1,32 +1,32 @@
-Received: from out-171.mta0.migadu.com (out-171.mta0.migadu.com [91.218.175.171])
+Received: from out-185.mta0.migadu.com (out-185.mta0.migadu.com [91.218.175.185])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C833326299;
-	Wed,  4 Feb 2026 08:57:46 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.171
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 40AE436E496;
+	Wed,  4 Feb 2026 08:57:58 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.185
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1770195467; cv=none; b=ptgmkHL6BN8S8hiu1QQtI1oQER37fC0HgIgfjlDWS+EbNZp8aFnIftkoOu7HYtzmK/Oq4QpmQ9wnDh8zQmL9Y1uA195BZco9C4NsZXbcoVW1cHFfxYgQPo0K5E6LKoAGFMvKgVxTk6BlJvOyYnlh1cn71KA3N9pYblG81626mmU=
+	t=1770195478; cv=none; b=ecfSybsEo9Melc7m7zXLT6svOL7FeFXKOFF8ekAed6xzHk03L+wvcVeCZkDac0+YTHouyPpDolQ5lip7scl4jk+s0GLXjS2IRUyvgkqvPtT+HTTxVWZ8nmWLErq99P/0Ja/jYdaWpP8npIt1BWYUUYo9Yn53pPf+PnMcmwZUyCA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1770195467; c=relaxed/simple;
-	bh=N8uerXNrtYXAXsXSofx5ACpCyBePZpfRxoCGMF6fYG0=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=o4TI1G4yLstJPtMdk5xlxvCeJlB/JYNlrb537AeIsa6ba49vuKSO3/efKLQhl3ZeWP+AYbxnSiVVGjtSBD5k6fDD3vkKdjTnOWEMvceVELjbs2j/eBrlXYdhrnERI2liiSEG/LrRlpJDKoESqNTcm+a9aZQd+4yIe5pX704M2bc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=RY1vW+qt; arc=none smtp.client-ip=91.218.175.171
+	s=arc-20240116; t=1770195478; c=relaxed/simple;
+	bh=2k9LiI+M//qM4q+K2IyZ0CNDJt0ZnwZ2pxw6XNWmxxQ=;
+	h=From:To:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=KDUyoynhmmNQo9tW6mFwrCBDymU8Gh6B7W0rdNFRHxBwsNmhOJMOkEkk7okK13z3ciIIL+wMO13qbCBPyBFuLnRfHumEtR472v3AQUuGqMOQeGmMoD5XPaNMlEda/+JnXy9CwVQvhB2Zp9AjVb0Zr+p0iyAZVn6MfpSv7hTE+uo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=j+/sNfKq; arc=none smtp.client-ip=91.218.175.185
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="RY1vW+qt"
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="j+/sNfKq"
 X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
-	t=1770195464;
+	t=1770195476;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:
+	 to:to:cc:mime-version:mime-version:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=R9sBuFUW725uaUgAoHBNUzbcXyyILwwKmBSUQhglIbE=;
-	b=RY1vW+qtMDKwQl9rjfLkIOtyLgswYcVFWriYQGB5ViEB8shz43J9Ec08uBIyeeeiZyfnQZ
-	E/0McPljtFAhv6dfAVv85rfIYU71RM+5tUag8YupjCOOz5QzN3oXtc4pl30wlaALRD4YFl
-	JIp9lG9tLFZz9mEN0ps3XsU5fir3MBk=
+	bh=MZDHd5qG1jM6uT5/JnPwA06VDLOpkfHtWx6qC88p08g=;
+	b=j+/sNfKqPAOt3+5b9qqvboBCLMIRWvQkiEytxqq65LKild8mFPBHco8437hrKDSJ/FO2Ru
+	WI9FwySeMP/6bAaqUD+l8BEyUmLMTc4KZc5MndwPuYvFVX541n0N/3HX/qFkPL+TKMuxiA
+	SQ2BD5VAs/vfz6ulz0pWeYkHBdJ5u5w=
 From: Hui Zhu <hui.zhu@linux.dev>
 To: Andrew Morton <akpm@linux-foundation.org>,
 	Johannes Weiner <hannes@cmpxchg.org>,
@@ -77,10 +77,9 @@ To: Andrew Morton <akpm@linux-foundation.org>,
 	bpf@vger.kernel.org,
 	netdev@vger.kernel.org,
 	linux-kselftest@vger.kernel.org
-Cc: Kumar Kartikeya Dwivedi <memxor@gmail.com>
-Subject: [RFC PATCH bpf-next v6 03/12] bpf: mark struct oom_control's memcg field as TRUSTED_OR_NULL
-Date: Wed,  4 Feb 2026 16:56:24 +0800
-Message-ID: <f2ff420de45ea9a1ec9a7d29328e4df47aa168d7.1770194182.git.zhuhui@kylinos.cn>
+Subject: [RFC PATCH bpf-next v6 04/12] mm: define mem_cgroup_get_from_ino() outside of CONFIG_SHRINKER_DEBUG
+Date: Wed,  4 Feb 2026 16:56:25 +0800
+Message-ID: <b917a3c79f2670b65db00e0ae5437029bf23c286.1770194182.git.zhuhui@kylinos.cn>
 In-Reply-To: <cover.1770194182.git.zhuhui@kylinos.cn>
 References: <cover.1770194182.git.zhuhui@kylinos.cn>
 Precedence: bulk
@@ -94,42 +93,64 @@ X-Migadu-Flow: FLOW_OUT
 
 From: Roman Gushchin <roman.gushchin@linux.dev>
 
-Struct oom_control is used to describe the OOM context.
-It's memcg field defines the scope of OOM: it's NULL for global
-OOMs and a valid memcg pointer for memcg-scoped OOMs.
-Teach bpf verifier to recognize it as trusted or NULL pointer.
-It will provide the bpf OOM handler a trusted memcg pointer,
-which for example is required for iterating the memcg's subtree.
+mem_cgroup_get_from_ino() can be reused by the BPF OOM implementation,
+but currently depends on CONFIG_SHRINKER_DEBUG. Remove this dependency.
 
 Signed-off-by: Roman Gushchin <roman.gushchin@linux.dev>
-Acked-by: Kumar Kartikeya Dwivedi <memxor@gmail.com>
 ---
- kernel/bpf/verifier.c | 5 +++++
- 1 file changed, 5 insertions(+)
+ include/linux/memcontrol.h | 4 ++--
+ mm/memcontrol.c            | 2 --
+ 2 files changed, 2 insertions(+), 4 deletions(-)
 
-diff --git a/kernel/bpf/verifier.c b/kernel/bpf/verifier.c
-index c2f2650db9fd..cca36edb460d 100644
---- a/kernel/bpf/verifier.c
-+++ b/kernel/bpf/verifier.c
-@@ -7242,6 +7242,10 @@ BTF_TYPE_SAFE_TRUSTED_OR_NULL(struct vm_area_struct) {
- 	struct file *vm_file;
- };
+diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
+index 229ac9835adb..f3b8c71870d8 100644
+--- a/include/linux/memcontrol.h
++++ b/include/linux/memcontrol.h
+@@ -833,9 +833,9 @@ static inline unsigned long mem_cgroup_ino(struct mem_cgroup *memcg)
+ {
+ 	return memcg ? cgroup_ino(memcg->css.cgroup) : 0;
+ }
++#endif
  
-+BTF_TYPE_SAFE_TRUSTED_OR_NULL(struct oom_control) {
-+	struct mem_cgroup *memcg;
-+};
-+
- static bool type_is_rcu(struct bpf_verifier_env *env,
- 			struct bpf_reg_state *reg,
- 			const char *field_name, u32 btf_id)
-@@ -7284,6 +7288,7 @@ static bool type_is_trusted_or_null(struct bpf_verifier_env *env,
- 	BTF_TYPE_EMIT(BTF_TYPE_SAFE_TRUSTED_OR_NULL(struct socket));
- 	BTF_TYPE_EMIT(BTF_TYPE_SAFE_TRUSTED_OR_NULL(struct dentry));
- 	BTF_TYPE_EMIT(BTF_TYPE_SAFE_TRUSTED_OR_NULL(struct vm_area_struct));
-+	BTF_TYPE_EMIT(BTF_TYPE_SAFE_TRUSTED_OR_NULL(struct oom_control));
+ struct mem_cgroup *mem_cgroup_get_from_ino(unsigned long ino);
+-#endif
  
- 	return btf_nested_type_is_trusted(&env->log, reg, field_name, btf_id,
- 					  "__safe_trusted_or_null");
+ static inline struct mem_cgroup *mem_cgroup_from_seq(struct seq_file *m)
+ {
+@@ -1298,12 +1298,12 @@ static inline unsigned long mem_cgroup_ino(struct mem_cgroup *memcg)
+ {
+ 	return 0;
+ }
++#endif
+ 
+ static inline struct mem_cgroup *mem_cgroup_get_from_ino(unsigned long ino)
+ {
+ 	return NULL;
+ }
+-#endif
+ 
+ static inline struct mem_cgroup *mem_cgroup_from_seq(struct seq_file *m)
+ {
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index 3808845bc8cc..1f74fce27677 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -3658,7 +3658,6 @@ struct mem_cgroup *mem_cgroup_from_id(unsigned short id)
+ 	return xa_load(&mem_cgroup_ids, id);
+ }
+ 
+-#ifdef CONFIG_SHRINKER_DEBUG
+ struct mem_cgroup *mem_cgroup_get_from_ino(unsigned long ino)
+ {
+ 	struct cgroup *cgrp;
+@@ -3679,7 +3678,6 @@ struct mem_cgroup *mem_cgroup_get_from_ino(unsigned long ino)
+ 
+ 	return memcg;
+ }
+-#endif
+ 
+ static void free_mem_cgroup_per_node_info(struct mem_cgroup_per_node *pn)
+ {
 -- 
 2.43.0
 
