@@ -1,149 +1,172 @@
-Received: from out-174.mta0.migadu.com (out-174.mta0.migadu.com [91.218.175.174])
+Received: from out-172.mta1.migadu.com (out-172.mta1.migadu.com [95.215.58.172])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 49ABA3EBF05
-	for <cgroups@vger.kernel.org>; Fri,  6 Feb 2026 06:13:58 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.174
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 32F0A2EC0B0
+	for <cgroups@vger.kernel.org>; Fri,  6 Feb 2026 07:22:41 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=95.215.58.172
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1770358438; cv=none; b=sDS8DBtRethN9dnUeZyceaG1peh7knOqyVgnUyYGD3ioiMuxeFKbATZrojHAFNIxkqJIto4JnS69WA0najmHpqmcdPcIyM/yktEvbbjGySFEoAHve/G9HLoBLPfFwcyEYydlTjmwdS5ngIRhIDJ1/oW0WyFEqSLWR7O0+bJJKiE=
+	t=1770362561; cv=none; b=LNnx/BSNzJBTdMbbb9QAuY6FVDruXB9PXjeWlLMZGKfUlzLgOWAf3mz2+8xwvE848n4TSG8ORCIz7pSYycSsWYy7G/j7wovITjUA3i1NO8toaaZngRRkEiuwAcHbujZ85hDDETefn74FTrljZEg61nyd0D50j/3I80PuVwWuNgk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1770358438; c=relaxed/simple;
-	bh=YQZcsbIkMDeeqlGN/DppM+neQzqtF6hjMnlLeBiLaI0=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=pJ4fxKqj1xch9zSDjfOoijPBeH9DeesBoMb+n8UQh1W0zt/9n4i9qvw8pgUr2OB+oX9aMFQbMnG/2rOB+n+u/U8507XKz+SkBqZark9KlivUIo9g8muX+mn1JAQsYrwpV6rOT+VxE8EyLZgJVqoPSA2SCwws2XhcdoEZJSYt+50=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=dC/jcKtH; arc=none smtp.client-ip=91.218.175.174
+	s=arc-20240116; t=1770362561; c=relaxed/simple;
+	bh=F7W3yiVr/M0UglItoXhkGkH8zbC0c5HRKNf8oOiaVgk=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=mJVzFObTYlPgfvMFH76SFkELEDAxtygi1UJnpsExgtYa8ZVGlEKgwaib7kg6KylSw9E9OmnF00gyhyogGJNWVcdAt/tfvXOwWETqTQJrdZPbbJOxOioN0dTsOLpZWjLCobz8pD7VXPLuDhruvErhdN69Odx1ucwfxVFWERhcwYo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=kWhW/9Q2; arc=none smtp.client-ip=95.215.58.172
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="dC/jcKtH"
-Message-ID: <cbb1ba53-134b-487f-87c0-85ca4791773e@linux.dev>
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="kWhW/9Q2"
+X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
-	t=1770358426;
+	t=1770362559;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 to:to:cc:cc:mime-version:mime-version:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=f4dJ2KwSmRisMZ/4xd6+bG4Q7esCOyMfca25PcWP+cI=;
-	b=dC/jcKtHfNMquOXuvapGfNJT6W1nn2qqoibSINRKajvM0TW82x5ygrDaisDNQCL1sOpKRb
-	2Iek+94Q6nTAH410kB+pam/JhF6U0VU9rOG6KsRRZh90nRYs6AGKXl7HpvTUhbSIzEJOTi
-	PqcAcaDs4RZo9IVv8sPt/yUhOLquyhE=
-Date: Fri, 6 Feb 2026 14:13:32 +0800
+	bh=FlgnQqPR0Eqtlq7a3B9xxhSsLwOvW1r1+v4iZpc7xIc=;
+	b=kWhW/9Q2R5RI8yTcLIJXaW0F0l2jwPZG+wn3xYTgRi6V2vts0omDsq/CDPphq2QsoFQECt
+	pB69MQnUf5fELBEb3fISrxDsqxbq4Sup6C9qWK5NiqR0+CP+L6VppMGK7XQRDgrd+KCkPl
+	HxmYS3RrMHIqcKlfVnmPms3K/Gs431M=
+From: Jiayuan Chen <jiayuan.chen@linux.dev>
+To: linux-mm@kvack.org
+Cc: Jiayuan Chen <jiayuan.chen@shopee.com>,
+	Nhat Pham <nphamcs@gmail.com>,
+	Tejun Heo <tj@kernel.org>,
+	Johannes Weiner <hannes@cmpxchg.org>,
+	=?UTF-8?q?Michal=20Koutn=C3=BD?= <mkoutny@suse.com>,
+	Jonathan Corbet <corbet@lwn.net>,
+	Michal Hocko <mhocko@kernel.org>,
+	Roman Gushchin <roman.gushchin@linux.dev>,
+	Shakeel Butt <shakeel.butt@linux.dev>,
+	Muchun Song <muchun.song@linux.dev>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Yosry Ahmed <yosry.ahmed@linux.dev>,
+	Chengming Zhou <chengming.zhou@linux.dev>,
+	Shuah Khan <shuah@kernel.org>,
+	cgroups@vger.kernel.org,
+	linux-doc@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	linux-kselftest@vger.kernel.org
+Subject: [PATCH v2 1/2] mm: zswap: add per-memcg stat for incompressible pages
+Date: Fri,  6 Feb 2026 15:22:15 +0800
+Message-ID: <20260206072220.144008-2-jiayuan.chen@linux.dev>
+In-Reply-To: <20260206072220.144008-1-jiayuan.chen@linux.dev>
+References: <20260206072220.144008-1-jiayuan.chen@linux.dev>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Subject: Re: [PATCH v4 24/31] mm: memcontrol: prepare for reparenting LRU
- pages for lruvec lock
-To: kernel test robot <lkp@intel.com>, hannes@cmpxchg.org, hughd@google.com,
- mhocko@suse.com, roman.gushchin@linux.dev, shakeel.butt@linux.dev,
- muchun.song@linux.dev, david@kernel.org, lorenzo.stoakes@oracle.com,
- ziy@nvidia.com, harry.yoo@oracle.com, yosry.ahmed@linux.dev,
- imran.f.khan@oracle.com, kamalesh.babulal@oracle.com,
- axelrasmussen@google.com, yuanchu@google.com, weixugc@google.com,
- chenridong@huaweicloud.com, mkoutny@suse.com, akpm@linux-foundation.org,
- hamzamahfooz@linux.microsoft.com, apais@linux.microsoft.com,
- lance.yang@linux.dev, bhe@redhat.com
-Cc: oe-kbuild-all@lists.linux.dev, linux-mm@kvack.org,
- linux-kernel@vger.kernel.org, cgroups@vger.kernel.org,
- Muchun Song <songmuchun@bytedance.com>, Qi Zheng <zhengqi.arch@bytedance.com>
-References: <e27edb311dda624751cb41860237f290de8c16ae.1770279888.git.zhengqi.arch@bytedance.com>
- <202602052203.U8hxsh2N-lkp@intel.com>
-X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
-From: Qi Zheng <qi.zheng@linux.dev>
-In-Reply-To: <202602052203.U8hxsh2N-lkp@intel.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 X-Migadu-Flow: FLOW_OUT
 
+From: Jiayuan Chen <jiayuan.chen@shopee.com>
 
+The global zswap_stored_incompressible_pages counter was added in commit
+dca4437a5861 ("mm/zswap: store <PAGE_SIZE compression failed page as-is")
+to track how many pages are stored in raw (uncompressed) form in zswap.
+However, in containerized environments, knowing which cgroup is
+contributing incompressible pages is essential for effective resource
+management [1].
 
-On 2/5/26 11:02 PM, kernel test robot wrote:
-> Hi Qi,
-> 
-> kernel test robot noticed the following build errors:
-> 
-> [auto build test ERROR on next-20260204]
-> [cannot apply to akpm-mm/mm-everything brauner-vfs/vfs.all trace/for-next tj-cgroup/for-next linus/master dennis-percpu/for-next v6.19-rc8 v6.19-rc7 v6.19-rc6 v6.19-rc8]
-> [If your patch is applied to the wrong git tree, kindly drop us a note.
-> And when submitting patch, we suggest to use '--base' as documented in
-> https://git-scm.com/docs/git-format-patch#_base_tree_information]
-> 
-> url:    https://github.com/intel-lab-lkp/linux/commits/Qi-Zheng/mm-memcontrol-remove-dead-code-of-checking-parent-memory-cgroup/20260205-170812
-> base:   next-20260204
-> patch link:    https://lore.kernel.org/r/e27edb311dda624751cb41860237f290de8c16ae.1770279888.git.zhengqi.arch%40bytedance.com
-> patch subject: [PATCH v4 24/31] mm: memcontrol: prepare for reparenting LRU pages for lruvec lock
-> config: nios2-allnoconfig (https://download.01.org/0day-ci/archive/20260205/202602052203.U8hxsh2N-lkp@intel.com/config)
-> compiler: nios2-linux-gcc (GCC) 11.5.0
-> reproduce (this is a W=1 build): (https://download.01.org/0day-ci/archive/20260205/202602052203.U8hxsh2N-lkp@intel.com/reproduce)
-> 
-> If you fix the issue in a separate patch/commit (i.e. not just a new version of
-> the same patch/commit), kindly add following tags
-> | Reported-by: kernel test robot <lkp@intel.com>
-> | Closes: https://lore.kernel.org/oe-kbuild-all/202602052203.U8hxsh2N-lkp@intel.com/
-> 
-> All errors (new ones prefixed by >>):
-> 
->     nios2-linux-ld: mm/swap.o: in function `__page_cache_release.part.0':
->     swap.c:(.text+0x4c): undefined reference to `lruvec_unlock_irqrestore'
->>> swap.c:(.text+0x4c): relocation truncated to fit: R_NIOS2_CALL26 against `lruvec_unlock_irqrestore'
->     nios2-linux-ld: mm/swap.o: in function `__folio_put':
->     swap.c:(.text+0x2ac): undefined reference to `lruvec_unlock_irqrestore'
->     swap.c:(.text+0x2ac): relocation truncated to fit: R_NIOS2_CALL26 against `lruvec_unlock_irqrestore'
->     nios2-linux-ld: mm/swap.o: in function `folios_put_refs':
->     swap.c:(.text+0x384): undefined reference to `lruvec_unlock_irqrestore'
->     swap.c:(.text+0x384): relocation truncated to fit: R_NIOS2_CALL26 against `lruvec_unlock_irqrestore'
->     nios2-linux-ld: mm/swap.o: in function `folio_batch_move_lru':
->     swap.c:(.text+0x4ac): undefined reference to `lruvec_unlock_irqrestore'
->     swap.c:(.text+0x4ac): relocation truncated to fit: R_NIOS2_CALL26 against `lruvec_unlock_irqrestore'
->>> nios2-linux-ld: swap.c:(.text+0x50c): undefined reference to `lruvec_unlock_irqrestore'
->     swap.c:(.text+0x50c): relocation truncated to fit: R_NIOS2_CALL26 against `lruvec_unlock_irqrestore'
->     nios2-linux-ld: mm/swap.o: in function `folio_activate':
->     swap.c:(.text+0x21d8): undefined reference to `lruvec_unlock_irq'
->>> swap.c:(.text+0x21d8): relocation truncated to fit: R_NIOS2_CALL26 against `lruvec_unlock_irq'
->     nios2-linux-ld: mm/vmscan.o: in function `move_folios_to_lru':
->     vmscan.c:(.text+0xa4c): undefined reference to `lruvec_unlock_irq'
->>> vmscan.c:(.text+0xa4c): relocation truncated to fit: R_NIOS2_CALL26 against `lruvec_unlock_irq'
->>> nios2-linux-ld: vmscan.c:(.text+0xaa4): undefined reference to `lruvec_unlock_irq'
->     vmscan.c:(.text+0xaa4): relocation truncated to fit: R_NIOS2_CALL26 against `lruvec_unlock_irq'
->     nios2-linux-ld: vmscan.c:(.text+0xcac): undefined reference to `lruvec_unlock_irq'
->     vmscan.c:(.text+0xcac): relocation truncated to fit: R_NIOS2_CALL26 against `lruvec_unlock_irq'
->     nios2-linux-ld: vmscan.c:(.text+0xd8c): undefined reference to `lruvec_unlock_irq'
->     vmscan.c:(.text+0xd8c): relocation truncated to fit: R_NIOS2_CALL26 against `lruvec_unlock_irq'
->     nios2-linux-ld: mm/vmscan.o: in function `shrink_active_list':
->     vmscan.c:(.text+0x11e0): undefined reference to `lruvec_lock_irq'
->     vmscan.c:(.text+0x11e0): additional relocation overflows omitted from the output
->     nios2-linux-ld: vmscan.c:(.text+0x12a0): undefined reference to `lruvec_unlock_irq'
->>> nios2-linux-ld: vmscan.c:(.text+0x144c): undefined reference to `lruvec_lock_irq'
->     nios2-linux-ld: mm/vmscan.o: in function `check_move_unevictable_folios':
->     vmscan.c:(.text+0x15d4): undefined reference to `lruvec_unlock_irq'
->     nios2-linux-ld: vmscan.c:(.text+0x1958): undefined reference to `lruvec_unlock_irq'
->     nios2-linux-ld: mm/vmscan.o: in function `shrink_inactive_list':
->     vmscan.c:(.text+0x2f8c): undefined reference to `lruvec_lock_irq'
->     nios2-linux-ld: vmscan.c:(.text+0x307c): undefined reference to `lruvec_unlock_irq'
->     nios2-linux-ld: vmscan.c:(.text+0x31dc): undefined reference to `lruvec_lock_irq'
->     nios2-linux-ld: mm/vmscan.o: in function `folio_isolate_lru':
->     vmscan.c:(.text+0x48a4): undefined reference to `lruvec_unlock_irq'
->     nios2-linux-ld: mm/mlock.o: in function `__munlock_folio':
->     mlock.c:(.text+0x968): undefined reference to `lruvec_unlock_irq'
->     nios2-linux-ld: mm/mlock.o: in function `__mlock_folio':
->     mlock.c:(.text+0xe5c): undefined reference to `lruvec_unlock_irq'
->     nios2-linux-ld: mm/mlock.o: in function `mlock_folio_batch.constprop.0':
->     mlock.c:(.text+0x158c): undefined reference to `lruvec_unlock_irq'
->>> nios2-linux-ld: mlock.c:(.text+0x1808): undefined reference to `lruvec_unlock_irq'
+Add a new memcg stat 'zswap_incomp' to track incompressible pages per
+cgroup. This helps administrators and orchestrators to:
 
-Ouch, I move lruvec_lock_irq() and its firends to memcontrol.c to fix
-the compilation errors related to __acquires/__releases, but I forgot
-that memcontrol.c will only be compiled under CONFIG_MEMCG.
+1. Identify workloads that produce incompressible data (e.g., encrypted
+   data, already-compressed media, random data) and may not benefit from
+   zswap.
 
-Hi Shakeel, for simplicity, perhaps keeping lruvec_lock_irq() and its
-firends in memcontrol.h and drop __acquires/__releases would be a
-better option?
+2. Make informed decisions about workload placement - moving
+   incompressible workloads to nodes with larger swap backing devices
+   rather than relying on zswap.
 
-Thanks,
-Qi
+3. Debug zswap efficiency issues at the cgroup level without needing to
+   correlate global stats with individual cgroups.
 
+While the compression ratio can be estimated from existing stats
+(zswap / zswapped * PAGE_SIZE), this doesn't distinguish between
+"uniformly poor compression" and "a few completely incompressible pages
+mixed with highly compressible ones". The zswap_incomp stat provides
+direct visibility into the latter case.
 
-> 
+[1]: https://lore.kernel.org/linux-mm/CAF8kJuONDFj4NAksaR4j_WyDbNwNGYLmTe-o76rqU17La=nkOw@mail.gmail.com/
+Acked-by: Nhat Pham <nphamcs@gmail.com>
+Signed-off-by: Jiayuan Chen <jiayuan.chen@shopee.com>
+---
+ Documentation/admin-guide/cgroup-v2.rst | 5 +++++
+ include/linux/memcontrol.h              | 1 +
+ mm/memcontrol.c                         | 8 ++++++++
+ 3 files changed, 14 insertions(+)
+
+diff --git a/Documentation/admin-guide/cgroup-v2.rst b/Documentation/admin-guide/cgroup-v2.rst
+index 7f5b59d95fce..78a329414615 100644
+--- a/Documentation/admin-guide/cgroup-v2.rst
++++ b/Documentation/admin-guide/cgroup-v2.rst
+@@ -1737,6 +1737,11 @@ The following nested keys are defined.
+ 	  zswpwb
+ 		Number of pages written from zswap to swap.
+ 
++	  zswap_incomp
++		Number of incompressible pages currently stored in zswap
++		without compression. These pages could not be compressed to
++		a size smaller than PAGE_SIZE, so they are stored as-is.
++
+ 	  thp_fault_alloc (npn)
+ 		Number of transparent hugepages which were allocated to satisfy
+ 		a page fault. This counter is not present when CONFIG_TRANSPARENT_HUGEPAGE
+diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
+index b6c82c8f73e1..d8ec05dd5d43 100644
+--- a/include/linux/memcontrol.h
++++ b/include/linux/memcontrol.h
+@@ -39,6 +39,7 @@ enum memcg_stat_item {
+ 	MEMCG_KMEM,
+ 	MEMCG_ZSWAP_B,
+ 	MEMCG_ZSWAPPED,
++	MEMCG_ZSWAP_INCOMP,
+ 	MEMCG_NR_STAT,
+ };
+ 
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index 007413a53b45..a6b6cf5f1aeb 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -341,6 +341,7 @@ static const unsigned int memcg_stat_items[] = {
+ 	MEMCG_KMEM,
+ 	MEMCG_ZSWAP_B,
+ 	MEMCG_ZSWAPPED,
++	MEMCG_ZSWAP_INCOMP,
+ };
+ 
+ #define NR_MEMCG_NODE_STAT_ITEMS ARRAY_SIZE(memcg_node_stat_items)
+@@ -1346,6 +1347,7 @@ static const struct memory_stat memory_stats[] = {
+ #ifdef CONFIG_ZSWAP
+ 	{ "zswap",			MEMCG_ZSWAP_B			},
+ 	{ "zswapped",			MEMCG_ZSWAPPED			},
++	{ "zswap_incomp",		MEMCG_ZSWAP_INCOMP		},
+ #endif
+ 	{ "file_mapped",		NR_FILE_MAPPED			},
+ 	{ "file_dirty",			NR_FILE_DIRTY			},
+@@ -5458,6 +5460,9 @@ void obj_cgroup_charge_zswap(struct obj_cgroup *objcg, size_t size)
+ 	memcg = obj_cgroup_memcg(objcg);
+ 	mod_memcg_state(memcg, MEMCG_ZSWAP_B, size);
+ 	mod_memcg_state(memcg, MEMCG_ZSWAPPED, 1);
++	/* size == PAGE_SIZE means compression failed, page is incompressible */
++	if (size == PAGE_SIZE)
++		mod_memcg_state(memcg, MEMCG_ZSWAP_INCOMP, 1);
+ 	rcu_read_unlock();
+ }
+ 
+@@ -5481,6 +5486,9 @@ void obj_cgroup_uncharge_zswap(struct obj_cgroup *objcg, size_t size)
+ 	memcg = obj_cgroup_memcg(objcg);
+ 	mod_memcg_state(memcg, MEMCG_ZSWAP_B, -size);
+ 	mod_memcg_state(memcg, MEMCG_ZSWAPPED, -1);
++	/* size == PAGE_SIZE means compression failed, page is incompressible */
++	if (size == PAGE_SIZE)
++		mod_memcg_state(memcg, MEMCG_ZSWAP_INCOMP, -1);
+ 	rcu_read_unlock();
+ }
+ 
+-- 
+2.43.0
 
