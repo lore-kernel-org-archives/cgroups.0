@@ -1,43 +1,43 @@
-Received: from out-181.mta0.migadu.com (out-181.mta0.migadu.com [91.218.175.181])
+Received: from out-185.mta0.migadu.com (out-185.mta0.migadu.com [91.218.175.185])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8A114331216
-	for <cgroups@vger.kernel.org>; Thu,  5 Feb 2026 21:33:58 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.181
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4FD6A222580
+	for <cgroups@vger.kernel.org>; Fri,  6 Feb 2026 00:40:11 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.185
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1770327239; cv=none; b=me+9TIp9HxiT+j886EDjGOPv4HBxC8dvnGsGOTanzmERcBqyuNHJmCUZR5EID74ppcVs6hjiBYCxBbslvWtHH8n73hj7q9AIwUgLw1Y6hjN0RGfpxz8pZn8mni8uqwqNxmqq+0KhJLZPUdy6++MM6jWna0VzD0XxlmcXEqqA/wM=
+	t=1770338411; cv=none; b=EjjOT0b9oosSluYeEHiWOYDbeU+tPY6+uYql1HxRNqrG5C7LQzhZG53RRcCPx3YDciWDnMRCW/F6qGRJNGbckBdMOKmzLPM7vxtoGgK6B3zBamnNMZ21A836inGkxo2mcxdLF7K837viuztBkIVH8n0aqPRecyTMPVtbc8QCK9s=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1770327239; c=relaxed/simple;
-	bh=QenuOkM5vCUH9qfZMONavaaNBnQ8vllRJg4GbuBpVbI=;
+	s=arc-20240116; t=1770338411; c=relaxed/simple;
+	bh=wg7C66KfUZMw+KAmdObeQ1o0Sk8H0a0r22F7oj+ulNQ=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=upH2mTkfjJl5UjESbeqxo9suRAG8owdlS4gfrkKFlAqHDNLU+A+DPccaToC6GHqZD+wsFD+twQ8kO3XJO08FbfBfft6EKIMVM/CXQlxNux7jPfwm15Z2LJdDA4iAe+LmfOfZ9k07RH9xNbH5q9PyheEowDSAwTPGu+ySXjI75Ys=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=KnjjFg3Z; arc=none smtp.client-ip=91.218.175.181
+	 Content-Type:Content-Disposition:In-Reply-To; b=uZLzKvzBH/tPzTzJF7ErbN7Sm2W7udt/vP1VOohpVPMEkjZPB5vMVzDemW3w3B1oJNfzAkUtPYIvutP5O0k/DqdqedHToqQ70Dtdb4djoBNLHJhJvlXqskIIuigAc7OuGzUhwjcvDyRToMcajSFPRHiwnVsOfk62sUHzZ9OyzMI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=PBX6ioe2; arc=none smtp.client-ip=91.218.175.185
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="KnjjFg3Z"
-Date: Thu, 5 Feb 2026 13:33:50 -0800
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="PBX6ioe2"
+Date: Fri, 6 Feb 2026 00:39:53 +0000
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
-	t=1770327236;
+	t=1770338399;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
 	 in-reply-to:in-reply-to:references:references;
-	bh=+qpr3waIcmIzqz7i9F6KVzxWpJS3O2v0oEGwyPDl/Qc=;
-	b=KnjjFg3ZoglQX/inTXLusN3966exuJUxp2WyryH2K3LXnD6N6OIeQHR3Qu5ALTGC0KkvfK
-	LkUXJjI1jLCH0qdOoR1EXvIbk4bik6qKdIzt3l82icJgDAUj5Q4Aw3T6Gf9jrLlb/Gvm9Y
-	5RA/xE3IcfAEvy1PHanFM9IFTKkBC7o=
+	bh=j9x8Oha2FCRFhdP6sFQHAlg53hGqhvSeJttZv66OvZ8=;
+	b=PBX6ioe2oqYVg2VIrumnJ5LBuevyOQhXyW2HDSYuOkiAbnLGQKkZOnXszTzLZ3cAgq8/Tw
+	by0miBErTtiCs3CQx/DwEYoCUFeEajenBetDIISemUatz6Z2UmyO5vpj2QPNtdJqHQCeAn
+	pTn1Kb/cEEe1P4i9RX10dHJ5P695r2M=
 X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
-From: Shakeel Butt <shakeel.butt@linux.dev>
+From: Yosry Ahmed <yosry.ahmed@linux.dev>
 To: Jiayuan Chen <jiayuan.chen@linux.dev>
 Cc: linux-mm@kvack.org, Jiayuan Chen <jiayuan.chen@shopee.com>, 
 	Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, 
-	Roman Gushchin <roman.gushchin@linux.dev>, Muchun Song <muchun.song@linux.dev>, 
-	Yosry Ahmed <yosry.ahmed@linux.dev>, Nhat Pham <nphamcs@gmail.com>, 
+	Roman Gushchin <roman.gushchin@linux.dev>, Shakeel Butt <shakeel.butt@linux.dev>, 
+	Muchun Song <muchun.song@linux.dev>, Nhat Pham <nphamcs@gmail.com>, 
 	Chengming Zhou <chengming.zhou@linux.dev>, Andrew Morton <akpm@linux-foundation.org>, 
 	Nick Terrell <terrelln@fb.com>, David Sterba <dsterba@suse.com>, cgroups@vger.kernel.org, 
 	linux-kernel@vger.kernel.org
 Subject: Re: [PATCH v1] mm: zswap: add per-memcg stat for incompressible pages
-Message-ID: <aYUKpZ8nCB6MTQGY@linux.dev>
+Message-ID: <hevovghpl2udhpof66oz26ulrpqcrtuwjxcakyskoeoil2wo6x@osbrncj7ifwz>
 References: <20260205053013.25134-1-jiayuan.chen@linux.dev>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
@@ -128,11 +128,6 @@ On Thu, Feb 05, 2026 at 01:30:12PM +0800, Jiayuan Chen wrote:
 > [1] https://gist.github.com/mrpre/00432c6154250326994fbeaf62e0e6f1
 > 
 > Signed-off-by: Jiayuan Chen <jiayuan.chen@shopee.com>
-
-Overall looks good but as Nhat suggested please update v2
-documentation.
-
-
 > ---
 >  include/linux/memcontrol.h | 1 +
 >  include/linux/zswap.h      | 9 +++++++++
@@ -150,6 +145,110 @@ documentation.
 >  	MEMCG_ZSWAPPED,
 > +	MEMCG_ZSWAP_RAW,
 
-Hmm I don't like the name though. How about INCOMPRESSIBLE or INCOMP for
-short?
+Please change the name as Shakeel suggested.
 
+>  	MEMCG_NR_STAT,
+>  };
+>  
+> diff --git a/include/linux/zswap.h b/include/linux/zswap.h
+> index 30c193a1207e..94f84b154b71 100644
+> --- a/include/linux/zswap.h
+> +++ b/include/linux/zswap.h
+> @@ -7,6 +7,15 @@
+>  
+>  struct lruvec;
+>  
+> +/*
+> + * Check if a zswap entry is stored in raw (uncompressed) form.
+> + * This happens when compression doesn't reduce the size.
+> + */
+> +static inline bool zswap_is_raw(size_t size)
+
+Internall as well, please rename this to zswap_is_incompressible() or
+zswap_is_incomp(). Not a big fan of the helper because it doesn't add
+much, but I don't feel strongly either way.
+
+> +{
+> +	return size == PAGE_SIZE;
+> +}
+> +
+>  extern atomic_long_t zswap_stored_pages;
+>  
+>  #ifdef CONFIG_ZSWAP
+> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+> index 007413a53b45..32fb801530a3 100644
+> --- a/mm/memcontrol.c
+> +++ b/mm/memcontrol.c
+> @@ -341,6 +341,7 @@ static const unsigned int memcg_stat_items[] = {
+>  	MEMCG_KMEM,
+>  	MEMCG_ZSWAP_B,
+>  	MEMCG_ZSWAPPED,
+> +	MEMCG_ZSWAP_RAW,
+>  };
+>  
+>  #define NR_MEMCG_NODE_STAT_ITEMS ARRAY_SIZE(memcg_node_stat_items)
+> @@ -1346,6 +1347,7 @@ static const struct memory_stat memory_stats[] = {
+>  #ifdef CONFIG_ZSWAP
+>  	{ "zswap",			MEMCG_ZSWAP_B			},
+>  	{ "zswapped",			MEMCG_ZSWAPPED			},
+> +	{ "zswpraw",			MEMCG_ZSWAP_RAW			},
+
+Here as well: zswap_incompressible or zswap_incomp?
+
+Other than the renames and doc, LGTM.
+
+>  #endif
+>  	{ "file_mapped",		NR_FILE_MAPPED			},
+>  	{ "file_dirty",			NR_FILE_DIRTY			},
+> @@ -5458,6 +5460,8 @@ void obj_cgroup_charge_zswap(struct obj_cgroup *objcg, size_t size)
+>  	memcg = obj_cgroup_memcg(objcg);
+>  	mod_memcg_state(memcg, MEMCG_ZSWAP_B, size);
+>  	mod_memcg_state(memcg, MEMCG_ZSWAPPED, 1);
+> +	if (zswap_is_raw(size))
+> +		mod_memcg_state(memcg, MEMCG_ZSWAP_RAW, 1);
+>  	rcu_read_unlock();
+>  }
+>  
+> @@ -5481,6 +5485,8 @@ void obj_cgroup_uncharge_zswap(struct obj_cgroup *objcg, size_t size)
+>  	memcg = obj_cgroup_memcg(objcg);
+>  	mod_memcg_state(memcg, MEMCG_ZSWAP_B, -size);
+>  	mod_memcg_state(memcg, MEMCG_ZSWAPPED, -1);
+> +	if (zswap_is_raw(size))
+> +		mod_memcg_state(memcg, MEMCG_ZSWAP_RAW, -1);
+>  	rcu_read_unlock();
+>  }
+>  
+> diff --git a/mm/zswap.c b/mm/zswap.c
+> index 3d2d59ac3f9c..54ab4d126f64 100644
+> --- a/mm/zswap.c
+> +++ b/mm/zswap.c
+> @@ -723,7 +723,7 @@ static void zswap_entry_free(struct zswap_entry *entry)
+>  		obj_cgroup_uncharge_zswap(entry->objcg, entry->length);
+>  		obj_cgroup_put(entry->objcg);
+>  	}
+> -	if (entry->length == PAGE_SIZE)
+> +	if (zswap_is_raw(entry->length))
+>  		atomic_long_dec(&zswap_stored_incompressible_pages);
+>  	zswap_entry_cache_free(entry);
+>  	atomic_long_dec(&zswap_stored_pages);
+> @@ -941,7 +941,7 @@ static bool zswap_decompress(struct zswap_entry *entry, struct folio *folio)
+>  	zs_obj_read_sg_begin(pool->zs_pool, entry->handle, input, entry->length);
+>  
+>  	/* zswap entries of length PAGE_SIZE are not compressed. */
+> -	if (entry->length == PAGE_SIZE) {
+> +	if (zswap_is_raw(entry->length)) {
+>  		WARN_ON_ONCE(input->length != PAGE_SIZE);
+>  		memcpy_from_sglist(kmap_local_folio(folio, 0), input, 0, PAGE_SIZE);
+>  		dlen = PAGE_SIZE;
+> @@ -1448,7 +1448,7 @@ static bool zswap_store_page(struct page *page,
+>  		obj_cgroup_charge_zswap(objcg, entry->length);
+>  	}
+>  	atomic_long_inc(&zswap_stored_pages);
+> -	if (entry->length == PAGE_SIZE)
+> +	if (zswap_is_raw(entry->length))
+>  		atomic_long_inc(&zswap_stored_incompressible_pages);
+>  
+>  	/*
+> -- 
+> 2.43.0
+> 
