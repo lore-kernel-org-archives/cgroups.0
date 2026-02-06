@@ -1,48 +1,50 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3817E376488
-	for <cgroups@vger.kernel.org>; Fri,  6 Feb 2026 14:40:15 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3D55340B6E5
+	for <cgroups@vger.kernel.org>; Fri,  6 Feb 2026 14:40:16 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1770388816; cv=none; b=pYY7ciLiZurbk3X54YuZ1iZRvdHu/70M2Dy9U0kiebEsNC61gYPdzzXyTxXbIBqNNKJoFcMPzXtOz69+dTjORnZwAtgSf1JKC8ADQXDsse8r1vnLQgmPBL4nxg6jDL+Pjd4py6MvU4iKYXqMQn/DPN3xgfnki/MU0PNrIYU3Wpw=
+	t=1770388816; cv=none; b=ipKJpl2+3n7rAb27gDC7RRcVgruXecwjLetqTmH9WmkflOYkG3b4B0BMU2vbfKavV8nEyDdzt67xCYTEj2CBU0E1085uX3CGorv6UpPzpNfPrHOaX/MqBeY5imfNr+MAjIlpinirNR9Cj3vyap4ucjomXJq9dLIxPSzg0+bauG4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1770388816; c=relaxed/simple;
-	bh=9o+mBU4e8Zgy1c2zCjPizhrxqwt+dEg1yc9v5J326d8=;
-	h=Message-ID:Date:From:To:Cc:Subject; b=stEvcmVqEiXBduh7NqXwWSt3cNoOWOTPQvOj2Cu0TV/lCHCNDSw1vzGVUZVQphLGwAd2T6pcw/7gxGH1N/kmrJaiM5OLRcc+vhrLbfUlfHw1t1kKEWgs4YVV98MTqCAV/lmBHw8WQLOpsyFWG9uXwO2LlgfPvDod5cU0uvvPNEY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=CojOxct5; arc=none smtp.client-ip=170.10.129.124
+	bh=5MTIYnSrhIUJ17bD+PnmP1FVtEy0iYc8v1FyJh5RjRo=;
+	h=Message-ID:Date:From:To:Cc:Subject:References:MIME-Version:
+	 Content-Type; b=AKXiKyetskf+OqRB0enKPeR+0TjCnvgYCcZqBxi2E7ujUyLGZpB+sKb0sZcdJxurs9kXde6X9sbEyy8faVSCy0rQ6pl2U0er4bzKS8FBKZeZkpwoI82awpXLGWPdPu09uauOh0g52LkCagaez++99qST4zsddG8dbZ12p03RDqQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=gC0ibn7H; arc=none smtp.client-ip=170.10.133.124
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="CojOxct5"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="gC0ibn7H"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
 	s=mimecast20190719; t=1770388815;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc; bh=ZJOPyIeuN4YpQvteY0c57G969uic9qUJI9o0lGN6g88=;
-	b=CojOxct5xFfu+mH+QoLT4aPr37RDsRPg8hv3z2OMXeXFQDIikDOQFypbLt0B64XtvjLdCD
-	A1OP/0x+rWumMv1Shoca7DHNtN5YD4opsObInV/YRajn5Ma52WowKtXMFFnm33ttBMTl8j
-	DqELE3fF/SG1frGKGtxmJSkbkpa/vtk=
-Received: from mx-prod-mc-08.mail-002.prod.us-west-2.aws.redhat.com
- (ec2-35-165-154-97.us-west-2.compute.amazonaws.com [35.165.154.97]) by
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 references:references; bh=+1brVgWYEq0ZWfMlhAaXgacR5RpthFeG1w4z1Bx58lo=;
+	b=gC0ibn7HrOczrkfW1t+0KlC5fufcDSqAtOH0LW4KywTcBwcYm1/gCXEI8VO60NsgHGYKPx
+	iBiXIpDJbI6OsROBEuMmGZdfLoS7r86zXN/TImyL4U7bu/TB8Acqadfz39wzUDInWLXeRW
+	fGY+/VpztmarF2LXpdGe9NiaOOvyd6k=
+Received: from mx-prod-mc-03.mail-002.prod.us-west-2.aws.redhat.com
+ (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
  relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-647-_sk-7kBwPcOgQlIMf14EzA-1; Fri,
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-358-qKQQ0E6EO7K-OUnMby61xQ-1; Fri,
  06 Feb 2026 09:40:12 -0500
-X-MC-Unique: _sk-7kBwPcOgQlIMf14EzA-1
-X-Mimecast-MFC-AGG-ID: _sk-7kBwPcOgQlIMf14EzA_1770388809
+X-MC-Unique: qKQQ0E6EO7K-OUnMby61xQ-1
+X-Mimecast-MFC-AGG-ID: qKQQ0E6EO7K-OUnMby61xQ_1770388809
 Received: from mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.17])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
-	by mx-prod-mc-08.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id AF63118005B6;
+	by mx-prod-mc-03.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 1A5E91955DCA;
 	Fri,  6 Feb 2026 14:40:09 +0000 (UTC)
 Received: from tpad.localdomain (unknown [10.22.74.16])
-	by mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 3DF8B19373D8;
+	by mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id A2978192C7CA;
 	Fri,  6 Feb 2026 14:40:07 +0000 (UTC)
 Received: by tpad.localdomain (Postfix, from userid 1000)
-	id A16CE400DF80B; Fri,  6 Feb 2026 11:39:20 -0300 (-03)
-Message-ID: <20260206143430.021026873@redhat.com>
+	id A8AB741DF09D7; Fri,  6 Feb 2026 11:39:20 -0300 (-03)
+Message-ID: <20260206143741.557251404@redhat.com>
 User-Agent: quilt/0.66
-Date: Fri, 06 Feb 2026 11:34:30 -0300
+Date: Fri, 06 Feb 2026 11:34:32 -0300
 From: Marcelo Tosatti <mtosatti@redhat.com>
 To: linux-kernel@vger.kernel.org,
  cgroups@vger.kernel.org,
@@ -62,177 +64,142 @@ Cc: Johannes Weiner <hannes@cmpxchg.org>,
  Leonardo Bras <leobras@redhat.com>,
  Thomas Gleixner <tglx@linutronix.de>,
  Waiman Long <longman@redhat.com>,
- Boqun Feng <boqun.feng@gmail.com>
-Subject: [PATCH 0/4] Introduce QPW for per-cpu operations
-X-Scanned-By: MIMEDefang 3.0 on 10.30.177.17
+ Boqun Feng <boqun.feng@gmail.com>,
+ Marcelo Tosatti <mtosatti@redhat.com>
+Subject: [PATCH 2/4] mm/swap: move bh draining into a separate workqueue
+References: <20260206143430.021026873@redhat.com>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+X-Scanned-By: MIMEDefang 3.0 on 10.30.177.17
 
-The problem:
-Some places in the kernel implement a parallel programming strategy
-consisting on local_locks() for most of the work, and some rare remote
-operations are scheduled on target cpu. This keeps cache bouncing low since
-cacheline tends to be mostly local, and avoids the cost of locks in non-RT
-kernels, even though the very few remote operations will be expensive due
-to scheduling overhead.
+Separate the bh draining into a separate workqueue
+(from the mm lru draining), so that its possible to switch
+the mm lru draining to QPW.
 
-On the other hand, for RT workloads this can represent a problem: getting
-an important workload scheduled out to deal with remote requests is
-sure to introduce unexpected deadline misses.
+To switch bh draining to QPW, it would be necessary to add
+a spinlock to addition of bhs to percpu cache, and that is a
+very hot path.
 
-The idea:
-Currently with PREEMPT_RT=y, local_locks() become per-cpu spinlocks.
-In this case, instead of scheduling work on a remote cpu, it should
-be safe to grab that remote cpu's per-cpu spinlock and run the required
-work locally. That major cost, which is un/locking in every local function,
-already happens in PREEMPT_RT.
+Signed-off-by: Marcelo Tosatti <mtosatti@redhat.com>
+---
+ mm/swap.c |   52 +++++++++++++++++++++++++++++++++++++---------------
+ 1 file changed, 37 insertions(+), 15 deletions(-)
 
-Also, there is no need to worry about extra cache bouncing:
-The cacheline invalidation already happens due to schedule_work_on().
-
-This will avoid schedule_work_on(), and thus avoid scheduling-out an
-RT workload.
-
-Proposed solution:
-A new interface called Queue PerCPU Work (QPW), which should replace
-Work Queue in the above mentioned use case.
-
-If PREEMPT_RT=n this interfaces just wraps the current
-local_locks + WorkQueue behavior, so no expected change in runtime.
-
-If PREEMPT_RT=y, or CONFIG_QPW=y, queue_percpu_work_on(cpu,...) will
-lock that cpu's per-cpu structure and perform work on it locally. 
-This is possible because on functions that can be used for performing
-remote work on remote per-cpu structures, the local_lock (which is already
-a this_cpu spinlock()), will be replaced by a qpw_spinlock(), which
-is able to get the per_cpu spinlock() for the cpu passed as parameter.
-
-RFC->v1:
-
-- Introduce CONFIG_QPW and qpw= kernel boot option to enable 
-  remote spinlocking and execution even on !CONFIG_PREEMPT_RT
-  kernels (Leonardo Bras).
-- Move buffer_head draining to separate workqueue (Marcelo Tosatti).
-- Convert mlock per-CPU page lists to QPW (Marcelo Tosatti).
-- Drop memcontrol convertion (as isolated CPUs are not targets
-  of queue_work_on anymore).
-- Rebase SLUB against Vlastimil's slab/next.
-- Add basic document for QPW (Waiman Long).
-
-
-The following testcase triggers lru_add_drain_all on an isolated CPU
-(that does sys_write to a file before entering its realtime 
-loop).
-
-/* 
- * Simulates a low latency loop program that is interrupted
- * due to lru_add_drain_all. To trigger lru_add_drain_all, run:
- *
- * blockdev --flushbufs /dev/sdX
- *
- */ 
-#define _GNU_SOURCE
-#include <fcntl.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <sys/mman.h>
-#include <string.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <stdlib.h>
-#include <stdarg.h>
-#include <pthread.h>
-#include <sched.h>
-#include <unistd.h>
-
-int cpu;
-
-static void *run(void *arg)
-{
-	pthread_t current_thread;
-	cpu_set_t cpuset;
-	int ret, nrloops;
-	struct sched_param sched_p;
-	pid_t pid;
-	int fd;
-	char buf[] = "xxxxxxxxxxx";
-
-	CPU_ZERO(&cpuset);
-	CPU_SET(cpu, &cpuset);
-
-	current_thread = pthread_self();    
-	ret = pthread_setaffinity_np(current_thread, sizeof(cpu_set_t), &cpuset);
-	if (ret) {
-		perror("pthread_setaffinity_np failed\n");
-		exit(0);
-	}
-
-	memset(&sched_p, 0, sizeof(struct sched_param));
-	sched_p.sched_priority = 1;
-	pid = gettid();
-	ret = sched_setscheduler(pid, SCHED_FIFO, &sched_p);
-	if (ret) {
-		perror("sched_setscheduler");
-		exit(0);
-	}
-
-	fd = open("/tmp/tmpfile", O_RDWR|O_CREAT|O_TRUNC);
-	if (fd == -1) {
-		perror("open");
-		exit(0);
-	}
-
-	ret = write(fd, buf, sizeof(buf));
-	if (ret == -1) {
-		perror("write");
-		exit(0);
-	}
-
-	do { 
-		nrloops = nrloops+2;
-		nrloops--;
-	} while (1);
-}
-
-int main(int argc, char *argv[])
-{
-        int fd, ret;
-	pthread_t thread;
-	long val;
-	char *endptr, *str;
-	struct sched_param sched_p;
-	pid_t pid;
-
-	if (argc != 2) {
-		printf("usage: %s cpu-nr\n", argv[0]);
-		printf("where CPU number is the CPU to pin thread to\n");
-		exit(0);
-	}
-	str = argv[1];
-	cpu = strtol(str, &endptr, 10);
-	if (cpu < 0) {
-		printf("strtol returns %d\n", cpu);
-		exit(0);
-	}
-	printf("cpunr=%d\n", cpu);
-
-	memset(&sched_p, 0, sizeof(struct sched_param));
-	sched_p.sched_priority = 1;
-	pid = getpid();
-	ret = sched_setscheduler(pid, SCHED_FIFO, &sched_p);
-	if (ret) {
-		perror("sched_setscheduler");
-		exit(0);
-	}
-
-	pthread_create(&thread, NULL, run, NULL);
-
-	sleep(5000);
-
-	pthread_join(thread, NULL);
-}
+Index: slab/mm/swap.c
+===================================================================
+--- slab.orig/mm/swap.c
++++ slab/mm/swap.c
+@@ -745,12 +745,11 @@ void lru_add_drain(void)
+  * the same cpu. It shouldn't be a problem in !SMP case since
+  * the core is only one and the locks will disable preemption.
+  */
+-static void lru_add_and_bh_lrus_drain(void)
++static void lru_add_mm_drain(void)
+ {
+ 	local_lock(&cpu_fbatches.lock);
+ 	lru_add_drain_cpu(smp_processor_id());
+ 	local_unlock(&cpu_fbatches.lock);
+-	invalidate_bh_lrus_cpu();
+ 	mlock_drain_local();
+ }
+ 
+@@ -769,10 +768,17 @@ static DEFINE_PER_CPU(struct work_struct
+ 
+ static void lru_add_drain_per_cpu(struct work_struct *dummy)
+ {
+-	lru_add_and_bh_lrus_drain();
++	lru_add_mm_drain();
+ }
+ 
+-static bool cpu_needs_drain(unsigned int cpu)
++static DEFINE_PER_CPU(struct work_struct, bh_add_drain_work);
++
++static void bh_add_drain_per_cpu(struct work_struct *dummy)
++{
++	invalidate_bh_lrus_cpu();
++}
++
++static bool cpu_needs_mm_drain(unsigned int cpu)
+ {
+ 	struct cpu_fbatches *fbatches = &per_cpu(cpu_fbatches, cpu);
+ 
+@@ -783,8 +789,12 @@ static bool cpu_needs_drain(unsigned int
+ 		folio_batch_count(&fbatches->lru_deactivate) ||
+ 		folio_batch_count(&fbatches->lru_lazyfree) ||
+ 		folio_batch_count(&fbatches->lru_activate) ||
+-		need_mlock_drain(cpu) ||
+-		has_bh_in_lru(cpu, NULL);
++		need_mlock_drain(cpu);
++}
++
++static bool cpu_needs_bh_drain(unsigned int cpu)
++{
++	return has_bh_in_lru(cpu, NULL);
+ }
+ 
+ /*
+@@ -807,7 +817,7 @@ static inline void __lru_add_drain_all(b
+ 	 * each CPU.
+ 	 */
+ 	static unsigned int lru_drain_gen;
+-	static struct cpumask has_work;
++	static struct cpumask has_mm_work, has_bh_work;
+ 	static DEFINE_MUTEX(lock);
+ 	unsigned cpu, this_gen;
+ 
+@@ -870,20 +880,31 @@ static inline void __lru_add_drain_all(b
+ 	WRITE_ONCE(lru_drain_gen, lru_drain_gen + 1);
+ 	smp_mb();
+ 
+-	cpumask_clear(&has_work);
++	cpumask_clear(&has_mm_work);
++	cpumask_clear(&has_bh_work);
+ 	for_each_online_cpu(cpu) {
+-		struct work_struct *work = &per_cpu(lru_add_drain_work, cpu);
++		struct work_struct *mm_work = &per_cpu(lru_add_drain_work, cpu);
++		struct work_struct *bh_work = &per_cpu(bh_add_drain_work, cpu);
++
++		if (cpu_needs_mm_drain(cpu)) {
++			INIT_WORK(mm_work, lru_add_drain_per_cpu);
++			queue_work_on(cpu, mm_percpu_wq, mm_work);
++			__cpumask_set_cpu(cpu, &has_mm_work);
++		}
+ 
+-		if (cpu_needs_drain(cpu)) {
+-			INIT_WORK(work, lru_add_drain_per_cpu);
+-			queue_work_on(cpu, mm_percpu_wq, work);
+-			__cpumask_set_cpu(cpu, &has_work);
++		if (cpu_needs_bh_drain(cpu)) {
++			INIT_WORK(bh_work, bh_add_drain_per_cpu);
++			queue_work_on(cpu, mm_percpu_wq, bh_work);
++			__cpumask_set_cpu(cpu, &has_bh_work);
+ 		}
+ 	}
+ 
+-	for_each_cpu(cpu, &has_work)
++	for_each_cpu(cpu, &has_mm_work)
+ 		flush_work(&per_cpu(lru_add_drain_work, cpu));
+ 
++	for_each_cpu(cpu, &has_bh_work)
++		flush_work(&per_cpu(bh_add_drain_work, cpu));
++
+ done:
+ 	mutex_unlock(&lock);
+ }
+@@ -929,7 +950,8 @@ void lru_cache_disable(void)
+ #ifdef CONFIG_SMP
+ 	__lru_add_drain_all(true);
+ #else
+-	lru_add_and_bh_lrus_drain();
++	lru_add_mm_drain();
++	invalidate_bh_lrus_cpu();
+ #endif
+ }
+ 
 
 
