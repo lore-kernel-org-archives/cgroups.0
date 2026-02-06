@@ -1,33 +1,35 @@
-Received: from out-181.mta1.migadu.com (out-181.mta1.migadu.com [95.215.58.181])
+Received: from out-177.mta1.migadu.com (out-177.mta1.migadu.com [95.215.58.177])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8E16930B51D
-	for <cgroups@vger.kernel.org>; Fri,  6 Feb 2026 07:22:44 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=95.215.58.181
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E5E9730AD1D;
+	Fri,  6 Feb 2026 07:22:47 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=95.215.58.177
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1770362564; cv=none; b=Odu2O1JOk4et/xVSNwaRn500Dy9X1KkLv7bJyIVti27EfUiAFd+I4BCQAIL1Ocq/a6ZKs5jVQpQZ36QOQPmS+7UJ58a0ups2xGmqFhVVbl/hj3EWkwt/mu6nplqVLAc91c1LzKJl6KegHS9AxPiOt0R38iarIZtjYyxC3rYhaqA=
+	t=1770362568; cv=none; b=Kh3kHbQ15qHJXwck4bMvW0w0fRmxZZdEsjxiKzXQH/BRTOhWqpZRRoGe6W+HjXuRL6rWFs/4qrPh27dpRVtgEA9AMAPZ718BZcxOmyAInD/q/dMLyYDhGPeix23f9PTn7FfKAwVoPIKxGNf4E19KH5WrIfYOFJ1Qs7HBunp/3u4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1770362564; c=relaxed/simple;
-	bh=Onzvce5Nzkj3pJmnRVm5lfenrB7dgKRCKFm1hNfC8eQ=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=kkmO9XqMrfq7X2zCjXePW16a1UySFX/ppKcdh7GuDyYMlFXzwYXGuan9PPvZMUk6JLz4Vo0LgUmGm6RTTFXUtEbTIuKHxQHIn/RZtEus2ozW4bLO2zWkZSIVzv9QqAs3mho9RXyWDqzqdWP0UdekpAxFuncHk5CGpZCmB6MquPc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=ZthEn73D; arc=none smtp.client-ip=95.215.58.181
+	s=arc-20240116; t=1770362568; c=relaxed/simple;
+	bh=W7Pj5IOXmHNCfVzPNifKS2LnKgE5X8L1spcNsvgNAyA=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=ZMlB3JILTc7ZWVrFak+8g0pP0q0t1vF/NAqWvhJwfJc3rYE/Lcx4fG/N78DRBomg+dcTl4BOafJrhJ/2ml6wK4r+HYA1o+DoEJXuQB/wPX3G9Q728rGvLnFWVX1L1lhTUzKMi/y+x4j7wFtzUmX1lDryePlgLNj5TK0WGQdDv04=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=K+C4Ejc5; arc=none smtp.client-ip=95.215.58.177
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="ZthEn73D"
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="K+C4Ejc5"
 X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
-	t=1770362552;
+	t=1770362566;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:
-	 content-transfer-encoding:content-transfer-encoding;
-	bh=XrFsXOEXMwmpE+X7noVwyIey4LQ89wmI4Q6a+MI4j84=;
-	b=ZthEn73DhQMpdw0mejJoSncG/7xCwqooUAFD5+w2kfvO+ILzsyQhn4EWIpHRg550dU2drV
-	HMdw15SxF0yj/wsHKFu+8sovUsh3uMIk3MVfJeydVqkX5C+ibmTZlN/mCxD9U8BmDw9Dmu
-	c5ReqVc4wiHyTXNbPw8eQoNDoezjqXo=
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=QVhNoOKTqhs5FIM84PwOapldZJ1EjdC0zJo6ufYFyUo=;
+	b=K+C4Ejc5kYVa1AMupNC5l8ot9jFScgXyb+D+zIw9ZBvY3NiXL0rK4kEbWmFA7i7a1LUKEa
+	8/aC154zcQVvLVXsflxO27dIvGWhoyBQ8v3NYygtLhMZecbpziRI9uYqN2sJFcY5KWYXcX
+	97o64Jq7iwPbBEtR111+cZx2n28j/rk=
 From: Jiayuan Chen <jiayuan.chen@linux.dev>
 To: linux-mm@kvack.org
-Cc: Jiayuan Chen <jiayuan.chen@linux.dev>,
+Cc: Jiayuan Chen <jiayuan.chen@shopee.com>,
 	Tejun Heo <tj@kernel.org>,
 	Johannes Weiner <hannes@cmpxchg.org>,
 	=?UTF-8?q?Michal=20Koutn=C3=BD?= <mkoutny@suse.com>,
@@ -45,9 +47,11 @@ Cc: Jiayuan Chen <jiayuan.chen@linux.dev>,
 	linux-doc@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
 	linux-kselftest@vger.kernel.org
-Subject: [PATCH v2 0/2] mm: zswap: add per-memcg stat for incompressible pages
-Date: Fri,  6 Feb 2026 15:22:14 +0800
-Message-ID: <20260206072220.144008-1-jiayuan.chen@linux.dev>
+Subject: [PATCH v2 2/2] selftests/cgroup: add test for zswap incompressible pages
+Date: Fri,  6 Feb 2026 15:22:16 +0800
+Message-ID: <20260206072220.144008-3-jiayuan.chen@linux.dev>
+In-Reply-To: <20260206072220.144008-1-jiayuan.chen@linux.dev>
+References: <20260206072220.144008-1-jiayuan.chen@linux.dev>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
@@ -57,36 +61,166 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-Migadu-Flow: FLOW_OUT
 
-In containerized environments, knowing which cgroup is contributing
-incompressible pages to zswap is essential for effective resource
-management. This series adds a new per-memcg stat 'zswap_incomp' to
-track incompressible pages, along with a selftest.
+From: Jiayuan Chen <jiayuan.chen@shopee.com>
 
-Patch 1: Add the per-memcg zswap_incomp stat and documentation
-Patch 2: Add selftest for the new stat
+Add test_zswap_incompressible() to verify that the zswap_incomp memcg
+stat correctly tracks incompressible pages.
 
-Changes v1 -> v2:
-https://lore.kernel.org/linux-mm/20260205053013.25134-1-jiayuan.chen@linux.dev/
+The test allocates memory filled with random data from /dev/urandom,
+which cannot be effectively compressed by zswap. When this data is
+swapped out to zswap, it should be stored as-is and tracked by the
+zswap_incomp counter.
 
-- Rename zswpraw/MEMCG_ZSWAP_RAW to zswap_incomp/MEMCG_ZSWAP_INCOMP
-  (Shakeel Butt, Yosry Ahmed)
-- Drop zswap_is_incomp() helper, keep opencode (size == PAGE_SIZE) with
-  comments explaining the incompressibility check (Yosry Ahmed)
-- Add documentation in cgroup-v2.rst (Nhat Pham, SeongJae Park)
-- Add selftest as a separate patch (Nhat Pham)
-- Add reference link to Chris Li's discussion on the need for per-memcg
-  incompressible page tracking (Nhat Pham)
+The test verifies that:
+1. Pages are swapped out to zswap (zswpout increases)
+2. Incompressible pages are tracked (zswap_incomp increases)
 
-Jiayuan Chen (2):
-  mm: zswap: add per-memcg stat for incompressible pages
-  selftests/cgroup: add test for zswap incompressible pages
+test:
+dd if=/dev/zero of=/swapfile bs=1M count=2048
+chmod 600 /swapfile
+mkswap /swapfile
+swapon /swapfile
+echo Y > /sys/module/zswap/parameters/enabled
 
- Documentation/admin-guide/cgroup-v2.rst     |  5 ++
- include/linux/memcontrol.h                  |  1 +
- mm/memcontrol.c                             |  8 ++
+./test_zswap
+ TAP version 13
+ 1..8
+ ok 1 test_zswap_usage
+ ok 2 test_swapin_nozswap
+ ok 3 test_zswapin
+ ok 4 test_zswap_writeback_enabled
+ ok 5 test_zswap_writeback_disabled
+ ok 6 test_no_kmem_bypass
+ ok 7 test_no_invasive_cgroup_shrink
+ ok 8 test_zswap_incompressible
+ Totals: pass:8 fail:0 xfail:0 xpass:0 skip:0 error:0
+
+Signed-off-by: Jiayuan Chen <jiayuan.chen@shopee.com>
+---
  tools/testing/selftests/cgroup/test_zswap.c | 96 +++++++++++++++++++++
- 4 files changed, 110 insertions(+)
+ 1 file changed, 96 insertions(+)
 
+diff --git a/tools/testing/selftests/cgroup/test_zswap.c b/tools/testing/selftests/cgroup/test_zswap.c
+index 64ebc3f3f203..8cb8a131357d 100644
+--- a/tools/testing/selftests/cgroup/test_zswap.c
++++ b/tools/testing/selftests/cgroup/test_zswap.c
+@@ -5,6 +5,7 @@
+ #include <unistd.h>
+ #include <stdio.h>
+ #include <signal.h>
++#include <fcntl.h>
+ #include <sys/sysinfo.h>
+ #include <string.h>
+ #include <sys/wait.h>
+@@ -574,6 +575,100 @@ static int test_no_kmem_bypass(const char *root)
+ 	return ret;
+ }
+ 
++static int allocate_random_and_wait(const char *cgroup, void *arg)
++{
++	size_t size = (size_t)arg;
++	char *mem;
++	int fd;
++	ssize_t n;
++
++	mem = malloc(size);
++	if (!mem)
++		return -1;
++
++	/* Fill with random data from /dev/urandom - incompressible */
++	fd = open("/dev/urandom", O_RDONLY);
++	if (fd < 0) {
++		free(mem);
++		return -1;
++	}
++
++	for (size_t i = 0; i < size; ) {
++		n = read(fd, mem + i, size - i);
++		if (n <= 0)
++			break;
++		i += n;
++	}
++	close(fd);
++
++	/* Touch all pages to ensure they're faulted in */
++	for (size_t i = 0; i < size; i += 4096)
++		mem[i] = mem[i];
++
++	/* Keep memory alive for parent to reclaim and check stats */
++	pause();
++	free(mem);
++	return 0;
++}
++
++static long get_zswap_incomp(const char *cgroup)
++{
++	return cg_read_key_long(cgroup, "memory.stat", "zswap_incomp ");
++}
++
++/*
++ * Test that incompressible pages (random data) are tracked by zswap_incomp.
++ *
++ * Since incompressible pages stored in zswap are charged at full PAGE_SIZE
++ * (no memory savings), we cannot rely on memory.max pressure to push them
++ * into zswap. Instead, we allocate random data within memory.max, then use
++ * memory.reclaim to proactively push pages into zswap while checking the stat
++ * before the child exits (zswap_incomp is a gauge that decreases on free).
++ */
++static int test_zswap_incompressible(const char *root)
++{
++	int ret = KSFT_FAIL;
++	char *test_group;
++	long zswap_incomp;
++	pid_t child_pid;
++	int child_status;
++
++	test_group = cg_name(root, "zswap_incompressible_test");
++	if (!test_group)
++		goto out;
++	if (cg_create(test_group))
++		goto out;
++	if (cg_write(test_group, "memory.max", "32M"))
++		goto out;
++
++	child_pid = cg_run_nowait(test_group, allocate_random_and_wait,
++				  (void *)MB(4));
++	if (child_pid < 0)
++		goto out;
++
++	/* Wait for child to finish allocating */
++	usleep(500000);
++
++	/* Proactively reclaim to push random pages into zswap */
++	cg_write_numeric(test_group, "memory.reclaim", MB(4));
++
++	zswap_incomp = get_zswap_incomp(test_group);
++	if (zswap_incomp <= 0) {
++		ksft_print_msg("zswap_incomp not increased: %ld\n", zswap_incomp);
++		goto out_kill;
++	}
++
++	ret = KSFT_PASS;
++
++out_kill:
++	kill(child_pid, SIGTERM);
++	waitpid(child_pid, &child_status, 0);
++out:
++	cg_destroy(test_group);
++	free(test_group);
++	return ret;
++}
++
+ #define T(x) { x, #x }
+ struct zswap_test {
+ 	int (*fn)(const char *root);
+@@ -586,6 +681,7 @@ struct zswap_test {
+ 	T(test_zswap_writeback_disabled),
+ 	T(test_no_kmem_bypass),
+ 	T(test_no_invasive_cgroup_shrink),
++	T(test_zswap_incompressible),
+ };
+ #undef T
+ 
 -- 
 2.43.0
 
