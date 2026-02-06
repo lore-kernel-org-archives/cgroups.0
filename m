@@ -1,50 +1,50 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B2DC341C2E0
-	for <cgroups@vger.kernel.org>; Fri,  6 Feb 2026 14:40:16 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AB59F4218BE
+	for <cgroups@vger.kernel.org>; Fri,  6 Feb 2026 14:40:17 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1770388817; cv=none; b=TvvEUL+XCje13g+zwTEU81NKLzZESxa70Gkt6sSHkBgz4hiCN5fyKwB7Ty0pLsEsBlHdOqEx62xAw5py74Vn2V4ce/aQmtXteVZHE5HtqQv6vofPaqGIF6w0PFFa9o4ieHHWBUodnLaTWU6JIaJzazTg4LVCzmLDeWyVzUUW++k=
+	t=1770388818; cv=none; b=X/uIR8dLuMSq6CkisYjsj6tS2HmvGrUPu9AruDGDzyUVu/QSmQjbw1TCpZPQu6JMU4+8TfjM2/d6AVWkpSrR4wBtpLyyQVYgc3MFZca2gRskuP5zJi/33e4KWLznVDXtiQIfWapoG4INciP4gerTj9JcLyg8sxbCmNTCvb+heUs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1770388817; c=relaxed/simple;
-	bh=674iJzfGbFsX2qbg3ceilngtOic4gGutdvqYvY0LB34=;
+	s=arc-20240116; t=1770388818; c=relaxed/simple;
+	bh=zyitgazVbNyRejUntdJMXClL49rmA/pJjcIiOHvRTe0=;
 	h=Message-ID:Date:From:To:Cc:Subject:References:MIME-Version:
-	 Content-Type; b=TUx6mvAXvCGNG78MYukugHQuqo6VZDIY1PLVAul5fRGeWjq6MwpurBD0Gn/3hUTDu2+nwliysgpd1fz+kVnGXo1NfljHt4OFUEVQStABWP+0YQlPaXbRpQUDO7amkuURYZDrjaiBQWAxOB34p8JW5gAnZyPziN6vSgJi/P4CtSE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=QxlPvTUb; arc=none smtp.client-ip=170.10.129.124
+	 Content-Type; b=ShRTNLCPRA1MmdAu7h6JlNJU1aRW3p2GLQWLPasJ7c4uziaFEnHOGPamlizblB/XU3EBv606Qa6vy1EkvNqSt5L1lYgeZeQhn89xeocTXWjNPj+TsaP0a8ncVtFbLwI8mroIDIxIzxrbIL1xIPpm7VGTA1chlcJbJPik1L6GiiA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=GkmU7uh9; arc=none smtp.client-ip=170.10.133.124
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="QxlPvTUb"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="GkmU7uh9"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
 	s=mimecast20190719; t=1770388816;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 references:references; bh=fEOvqcoh1Fhr9YWKofxCBfvK5qH5BMzdkv72N1ftR1w=;
-	b=QxlPvTUbfiLgDH9WB/xoUOgYDlwXe0MXskg87fr8gSI2PxpvZUTnBlEid+loVMYV1ziwl7
-	0h3WSPd/N+49NyaB82iDCBQFELO3vogk/5Chj2fD9joU0dQ3n81QaScY9P1mjKthiOvhHk
-	vXrLZiWW5u5EsQ3glYn2zajbALrfdW4=
-Received: from mx-prod-mc-03.mail-002.prod.us-west-2.aws.redhat.com
+	 references:references; bh=u+vDHDuyg1tZxOCkT1e6XPP9sTvmKQrxuHI3KpZjiIU=;
+	b=GkmU7uh9y0gpLuPuZSGlU92gs8uC4/iGzEui3fA6QRl4cTWsSoiaR28LWoo/lQr3ILjYd8
+	pCrrn9XqOEvusLtjW9QhlZ9iMacz+MmxER/Cpg2op2GO0eUF1P0aNFrrnoYaWUfUIYEDzl
+	itqiXnP9zLqJEWPvQECFw9HNeLm6Uvw=
+Received: from mx-prod-mc-05.mail-002.prod.us-west-2.aws.redhat.com
  (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
  relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-631-xgRGpuo7OGSRD_FKQvVXFw-1; Fri,
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-450--cr5hfH1OYSwaV0E10P2yA-1; Fri,
  06 Feb 2026 09:40:12 -0500
-X-MC-Unique: xgRGpuo7OGSRD_FKQvVXFw-1
-X-Mimecast-MFC-AGG-ID: xgRGpuo7OGSRD_FKQvVXFw_1770388810
+X-MC-Unique: -cr5hfH1OYSwaV0E10P2yA-1
+X-Mimecast-MFC-AGG-ID: -cr5hfH1OYSwaV0E10P2yA_1770388810
 Received: from mx-prod-int-06.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-06.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.93])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
-	by mx-prod-mc-03.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id AF7461955DC2;
+	by mx-prod-mc-05.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id B95CA1955F68;
 	Fri,  6 Feb 2026 14:40:09 +0000 (UTC)
 Received: from tpad.localdomain (unknown [10.22.74.16])
-	by mx-prod-int-06.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id A09A918004AD;
+	by mx-prod-int-06.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 793AF1800464;
 	Fri,  6 Feb 2026 14:40:07 +0000 (UTC)
 Received: by tpad.localdomain (Postfix, from userid 1000)
-	id A63C641D2D126; Fri,  6 Feb 2026 11:39:20 -0300 (-03)
-Message-ID: <20260206143741.525190180@redhat.com>
+	id B0BD0401E2F84; Fri,  6 Feb 2026 11:39:20 -0300 (-03)
+Message-ID: <20260206143741.589656953@redhat.com>
 User-Agent: quilt/0.66
-Date: Fri, 06 Feb 2026 11:34:31 -0300
+Date: Fri, 06 Feb 2026 11:34:33 -0300
 From: Marcelo Tosatti <mtosatti@redhat.com>
 To: linux-kernel@vger.kernel.org,
  cgroups@vger.kernel.org,
@@ -66,7 +66,7 @@ Cc: Johannes Weiner <hannes@cmpxchg.org>,
  Waiman Long <longman@redhat.com>,
  Boqun Feng <boqun.feng@gmail.com>,
  Marcelo Tosatti <mtosatti@redhat.com>
-Subject: [PATCH 1/4] Introducing qpw_lock() and per-cpu queue & flush work
+Subject: [PATCH 3/4] swap: apply new queue_percpu_work_on() interface
 References: <20260206143430.021026873@redhat.com>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
@@ -77,466 +77,433 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 X-Scanned-By: MIMEDefang 3.4.1 on 10.30.177.93
 
-Some places in the kernel implement a parallel programming strategy
-consisting on local_locks() for most of the work, and some rare remote
-operations are scheduled on target cpu. This keeps cache bouncing low since
-cacheline tends to be mostly local, and avoids the cost of locks in non-RT
-kernels, even though the very few remote operations will be expensive due
-to scheduling overhead.
+Make use of the new qpw_{un,}lock*() and queue_percpu_work_on()
+interface to improve performance & latency on PREEMPT_RT kernels.
 
-On the other hand, for RT workloads this can represent a problem:
-scheduling work on remote cpu that are executing low latency tasks
-is undesired and can introduce unexpected deadline misses.
+For functions that may be scheduled in a different cpu, replace
+local_{un,}lock*() by qpw_{un,}lock*(), and replace schedule_work_on() by
+queue_percpu_work_on(). The same happens for flush_work() and
+flush_percpu_work().
 
-It's interesting, though, that local_lock()s in RT kernels become
-spinlock(). We can make use of those to avoid scheduling work on a remote
-cpu by directly updating another cpu's per_cpu structure, while holding
-it's spinlock().
+The change requires allocation of qpw_structs instead of a work_structs,
+and changing parameters of a few functions to include the cpu parameter.
 
-In order to do that, it's necessary to introduce a new set of functions to
-make it possible to get another cpu's per-cpu "local" lock (qpw_{un,}lock*)
-and also the corresponding queue_percpu_work_on() and flush_percpu_work()
-helpers to run the remote work.
-
-Users of non-RT kernels but with low latency requirements can select
-similar functionality by using the CONFIG_QPW compile time option.
-
-On CONFIG_QPW disabled kernels, no changes are expected, as every
-one of the introduced helpers work the exactly same as the current
-implementation:
-qpw_{un,}lock*()        ->  local_{un,}lock*() (ignores cpu parameter)
-queue_percpu_work_on()  ->  queue_work_on()
-flush_percpu_work()     ->  flush_work()
-
-For QPW enabled kernels, though, qpw_{un,}lock*() will use the extra
-cpu parameter to select the correct per-cpu structure to work on,
-and acquire the spinlock for that cpu.
-
-queue_percpu_work_on() will just call the requested function in the current
-cpu, which will operate in another cpu's per-cpu object. Since the
-local_locks() become spinlock()s in QPW enabled kernels, we are
-safe doing that.
-
-flush_percpu_work() then becomes a no-op since no work is actually
-scheduled on a remote cpu.
-
-Some minimal code rework is needed in order to make this mechanism work:
-The calls for local_{un,}lock*() on the functions that are currently
-scheduled on remote cpus need to be replaced by qpw_{un,}lock_n*(), so in
-QPW enabled kernels they can reference a different cpu. It's also
-necessary to use a qpw_struct instead of a work_struct, but it just
-contains a work struct and, in CONFIG_QPW, the target cpu.
-
-This should have almost no impact on non-CONFIG_QPW kernels: few
-this_cpu_ptr() will become per_cpu_ptr(,smp_processor_id()).
-
-On CONFIG_QPW kernels, this should avoid deadlines misses by
-removing scheduling noise.
+This should bring no relevant performance impact on non-RT kernels:
+For functions that may be scheduled in a different cpu, the local_*lock's
+this_cpu_ptr() becomes a per_cpu_ptr(smp_processor_id()).
 
 Signed-off-by: Leonardo Bras <leobras@redhat.com>
 Signed-off-by: Marcelo Tosatti <mtosatti@redhat.com>
----
- Documentation/admin-guide/kernel-parameters.txt |   10 +
- Documentation/locking/qpwlocks.rst              |   63 +++++++
- MAINTAINERS                                     |    6 
- include/linux/qpw.h                             |  190 ++++++++++++++++++++++++
- init/Kconfig                                    |   35 ++++
- kernel/Makefile                                 |    2 
- kernel/qpw.c                                    |   26 +++
- 7 files changed, 332 insertions(+)
- create mode 100644 include/linux/qpw.h
- create mode 100644 kernel/qpw.c
 
-Index: slab/Documentation/admin-guide/kernel-parameters.txt
+---
+ mm/internal.h   |    4 +-
+ mm/mlock.c      |   71 ++++++++++++++++++++++++++++++++------------
+ mm/page_alloc.c |    2 -
+ mm/swap.c       |   90 +++++++++++++++++++++++++++++++-------------------------
+ 4 files changed, 108 insertions(+), 59 deletions(-)
+
+Index: slab/mm/mlock.c
 ===================================================================
---- slab.orig/Documentation/admin-guide/kernel-parameters.txt
-+++ slab/Documentation/admin-guide/kernel-parameters.txt
-@@ -2819,6 +2819,16 @@ Kernel parameters
- 
- 			The format of <cpu-list> is described above.
- 
-+	qpw=		[KNL,SMP] Select a behavior on per-CPU resource sharing
-+			and remote interference mechanism on a kernel built with
-+			CONFIG_QPW.
-+			Format: { "0" | "1" }
-+			0 - local_lock() + queue_work_on(remote_cpu)
-+			1 - spin_lock() for both local and remote operations
-+
-+			Selecting 1 may be interesting for systems that want
-+			to avoid interruption & context switches from IPIs.
-+
- 	iucv=		[HW,NET]
- 
- 	ivrs_ioapic	[HW,X86-64]
-Index: slab/MAINTAINERS
-===================================================================
---- slab.orig/MAINTAINERS
-+++ slab/MAINTAINERS
-@@ -21291,6 +21291,12 @@ F:	Documentation/networking/device_drive
- F:	drivers/bus/fsl-mc/
- F:	include/uapi/linux/fsl_mc.h
- 
-+QPW
-+M:	Leonardo Bras <leobras@redhat.com>
-+S:	Supported
-+F:	include/linux/qpw.h
-+F:	kernel/qpw.c
-+
- QT1010 MEDIA DRIVER
- L:	linux-media@vger.kernel.org
- S:	Orphan
-Index: slab/include/linux/qpw.h
-===================================================================
---- /dev/null
-+++ slab/include/linux/qpw.h
-@@ -0,0 +1,190 @@
-+/* SPDX-License-Identifier: GPL-2.0 */
-+#ifndef _LINUX_QPW_H
-+#define _LINUX_QPW_H
-+
-+#include "linux/spinlock.h"
-+#include "linux/local_lock.h"
-+#include "linux/workqueue.h"
-+
-+#ifndef CONFIG_QPW
-+
-+typedef local_lock_t qpw_lock_t;
-+typedef local_trylock_t qpw_trylock_t;
-+
-+struct qpw_struct {
-+	struct work_struct work;
-+};
-+
-+#define qpw_lock_init(lock)			\
-+	local_lock_init(lock)
-+
-+#define qpw_trylock_init(lock)			\
-+	local_trylock_init(lock)
-+
-+#define qpw_lock(lock, cpu)			\
-+	local_lock(lock)
-+
-+#define qpw_lock_irqsave(lock, flags, cpu)	\
-+	local_lock_irqsave(lock, flags)
-+
-+#define qpw_trylock(lock, cpu)			\
-+	local_trylock(lock)
-+
-+#define qpw_trylock_irqsave(lock, flags, cpu)	\
-+	local_trylock_irqsave(lock, flags)
-+
-+#define qpw_unlock(lock, cpu)			\
-+	local_unlock(lock)
-+
-+#define qpw_unlock_irqrestore(lock, flags, cpu)	\
-+	local_unlock_irqrestore(lock, flags)
-+
-+#define qpw_lockdep_assert_held(lock)		\
-+	lockdep_assert_held(lock)
-+
-+#define queue_percpu_work_on(c, wq, qpw)	\
-+	queue_work_on(c, wq, &(qpw)->work)
-+
-+#define flush_percpu_work(qpw)			\
-+	flush_work(&(qpw)->work)
-+
-+#define qpw_get_cpu(qpw)	smp_processor_id()
-+
-+#define qpw_is_cpu_remote(cpu)		(false)
-+
-+#define INIT_QPW(qpw, func, c)			\
-+	INIT_WORK(&(qpw)->work, (func))
-+
-+#else /* CONFIG_QPW */
-+
-+DECLARE_STATIC_KEY_MAYBE(CONFIG_QPW_DEFAULT, qpw_sl);
-+
-+typedef union {
-+	spinlock_t sl;
-+	local_lock_t ll;
-+} qpw_lock_t;
-+
-+typedef union {
-+	spinlock_t sl;
-+	local_trylock_t ll;
-+} qpw_trylock_t;
-+
-+struct qpw_struct {
-+	struct work_struct work;
-+	int cpu;
-+};
-+
-+#define qpw_lock_init(lock)								\
-+	do {										\
-+		if (static_branch_maybe(CONFIG_QPW_DEFAULT, &qpw_sl))			\
-+			spin_lock_init(lock.sl);					\
-+		else									\
-+			local_lock_init(lock.ll);					\
-+	} while (0)
-+
-+#define qpw_trylock_init(lock)								\
-+	do {										\
-+		if (static_branch_maybe(CONFIG_QPW_DEFAULT, &qpw_sl))			\
-+			spin_lock_init(lock.sl);					\
-+		else									\
-+			local_trylock_init(lock.ll);					\
-+	} while (0)
-+
-+#define qpw_lock(lock, cpu)								\
-+	do {										\
-+		if (static_branch_maybe(CONFIG_QPW_DEFAULT, &qpw_sl))			\
-+			spin_lock(per_cpu_ptr(lock.sl, cpu));				\
-+		else									\
-+			local_lock(lock.ll);						\
-+	} while (0)
-+
-+#define qpw_lock_irqsave(lock, flags, cpu)						\
-+	do {										\
-+		if (static_branch_maybe(CONFIG_QPW_DEFAULT, &qpw_sl))			\
-+			spin_lock_irqsave(per_cpu_ptr(lock.sl, cpu), flags);		\
-+		else									\
-+			local_lock_irqsave(lock.ll, flags);				\
-+	} while (0)
-+
-+#define qpw_trylock(lock, cpu)								\
-+	({										\
-+		int t;									\
-+		if (static_branch_maybe(CONFIG_QPW_DEFAULT, &qpw_sl))			\
-+			t = spin_trylock(per_cpu_ptr(lock.sl, cpu));			\
-+		else									\
-+			t = local_trylock(lock.ll);					\
-+		t;									\
-+	})
-+
-+#define qpw_trylock_irqsave(lock, flags, cpu)						\
-+	({										\
-+		int t;									\
-+		if (static_branch_maybe(CONFIG_QPW_DEFAULT, &qpw_sl))			\
-+			t = spin_trylock_irqsave(per_cpu_ptr(lock.sl, cpu), flags);	\
-+		else									\
-+			t = local_trylock_irqsave(lock.ll, flags);			\
-+		t;									\
-+	})
-+
-+#define qpw_unlock(lock, cpu)								\
-+	do {										\
-+		if (static_branch_maybe(CONFIG_QPW_DEFAULT, &qpw_sl)) {			\
-+			spin_unlock(per_cpu_ptr(lock.sl, cpu));				\
-+		} else {								\
-+			local_unlock(lock.ll);						\
-+		}									\
-+	} while (0)
-+
-+#define qpw_unlock_irqrestore(lock, flags, cpu)						\
-+	do {										\
-+		if (static_branch_maybe(CONFIG_QPW_DEFAULT, &qpw_sl))			\
-+			spin_unlock_irqrestore(per_cpu_ptr(lock.sl, cpu), flags);	\
-+		else									\
-+			local_unlock_irqrestore(lock.ll, flags);			\
-+	} while (0)
-+
-+#define qpw_lockdep_assert_held(lock)							\
-+	do {										\
-+		if (static_branch_maybe(CONFIG_QPW_DEFAULT, &qpw_sl))			\
-+			lockdep_assert_held(this_cpu_ptr(lock.sl));			\
-+		else									\
-+			lockdep_assert_held(this_cpu_ptr(lock.ll));			\
-+	} while (0)
-+
-+#define queue_percpu_work_on(c, wq, qpw)						\
-+	do {										\
-+		int __c = c;								\
-+		struct qpw_struct *__qpw = (qpw);					\
-+		if (static_branch_maybe(CONFIG_QPW_DEFAULT, &qpw_sl)) {			\
-+			WARN_ON((__c) != __qpw->cpu);					\
-+			__qpw->work.func(&__qpw->work);					\
-+		} else {								\
-+			queue_work_on(__c, wq, &(__qpw)->work);				\
-+		}									\
-+	} while (0)
-+
-+/*
-+ * Does nothing if QPW is set to use spinlock, as the task is already done at the
-+ * time queue_percpu_work_on() returns.
-+ */
-+#define flush_percpu_work(qpw)								\
-+	do {										\
-+		struct qpw_struct *__qpw = (qpw);					\
-+		if (!static_branch_maybe(CONFIG_QPW_DEFAULT, &qpw_sl)) {		\
-+			flush_work(&__qpw->work);					\
-+		}									\
-+	} while (0)
-+
-+#define qpw_get_cpu(w)			container_of((w), struct qpw_struct, work)->cpu
-+
-+#define qpw_is_cpu_remote(cpu)		((cpu) != smp_processor_id())
-+
-+#define INIT_QPW(qpw, func, c)								\
-+	do {										\
-+		struct qpw_struct *__qpw = (qpw);					\
-+		INIT_WORK(&__qpw->work, (func));					\
-+		__qpw->cpu = (c);							\
-+	} while (0)
-+
-+#endif /* CONFIG_QPW */
-+#endif /* LINUX_QPW_H */
-Index: slab/init/Kconfig
-===================================================================
---- slab.orig/init/Kconfig
-+++ slab/init/Kconfig
-@@ -747,6 +747,41 @@ config CPU_ISOLATION
- 
- 	  Say Y if unsure.
- 
-+config QPW
-+	bool "Queue per-CPU Work"
-+	depends on SMP || COMPILE_TEST
-+	default n
-+	help
-+	  Allow changing the behavior on per-CPU resource sharing with cache,
-+	  from the regular local_locks() + queue_work_on(remote_cpu) to using
-+	  per-CPU spinlocks on both local and remote operations.
-+
-+	  This is useful to give user the option on reducing IPIs to CPUs, and
-+	  thus reduce interruptions and context switches. On the other hand, it
-+	  increases generated code and will use atomic operations if spinlocks
-+	  are selected.
-+
-+	  If set, will use the default behavior set in QPW_DEFAULT unless boot
-+	  parameter qpw is passed with a different behavior.
-+
-+	  If unset, will use the local_lock() + queue_work_on() strategy,
-+	  regardless of the boot parameter or QPW_DEFAULT.
-+
-+	  Say N if unsure.
-+
-+config QPW_DEFAULT
-+	bool "Use per-CPU spinlocks by default"
-+	depends on QPW
-+	default n
-+	help
-+	  If set, will use per-CPU spinlocks as default behavior for per-CPU
-+	  remote operations.
-+
-+	  If unset, will use local_lock() + queue_work_on(cpu) as default
-+	  behavior for remote operations.
-+
-+	  Say N if unsure
-+
- source "kernel/rcu/Kconfig"
- 
- config IKCONFIG
-Index: slab/kernel/Makefile
-===================================================================
---- slab.orig/kernel/Makefile
-+++ slab/kernel/Makefile
-@@ -140,6 +140,8 @@ obj-$(CONFIG_WATCH_QUEUE) += watch_queue
- obj-$(CONFIG_RESOURCE_KUNIT_TEST) += resource_kunit.o
- obj-$(CONFIG_SYSCTL_KUNIT_TEST) += sysctl-test.o
- 
-+obj-$(CONFIG_QPW) += qpw.o
-+
- CFLAGS_kstack_erase.o += $(DISABLE_KSTACK_ERASE)
- CFLAGS_kstack_erase.o += $(call cc-option,-mgeneral-regs-only)
- obj-$(CONFIG_KSTACK_ERASE) += kstack_erase.o
-Index: slab/kernel/qpw.c
-===================================================================
---- /dev/null
-+++ slab/kernel/qpw.c
-@@ -0,0 +1,26 @@
-+// SPDX-License-Identifier: GPL-2.0
-+#include "linux/export.h"
-+#include <linux/sched.h>
+--- slab.orig/mm/mlock.c
++++ slab/mm/mlock.c
+@@ -25,17 +25,16 @@
+ #include <linux/memcontrol.h>
+ #include <linux/mm_inline.h>
+ #include <linux/secretmem.h>
 +#include <linux/qpw.h>
-+#include <linux/string.h>
-+
-+DEFINE_STATIC_KEY_MAYBE(CONFIG_QPW_DEFAULT, qpw_sl);
-+EXPORT_SYMBOL(qpw_sl);
-+
-+static int __init qpw_setup(char *str)
+ 
+ #include "internal.h"
+ 
+ struct mlock_fbatch {
+-	local_lock_t lock;
++	qpw_lock_t lock;
+ 	struct folio_batch fbatch;
+ };
+ 
+-static DEFINE_PER_CPU(struct mlock_fbatch, mlock_fbatch) = {
+-	.lock = INIT_LOCAL_LOCK(lock),
+-};
++static DEFINE_PER_CPU(struct mlock_fbatch, mlock_fbatch);
+ 
+ bool can_do_mlock(void)
+ {
+@@ -209,18 +208,25 @@ static void mlock_folio_batch(struct fol
+ 	folios_put(fbatch);
+ }
+ 
+-void mlock_drain_local(void)
++void mlock_drain_cpu(int cpu)
+ {
+ 	struct folio_batch *fbatch;
+ 
+-	local_lock(&mlock_fbatch.lock);
+-	fbatch = this_cpu_ptr(&mlock_fbatch.fbatch);
++	qpw_lock(&mlock_fbatch.lock, cpu);
++	fbatch = per_cpu_ptr(&mlock_fbatch.fbatch, cpu);
+ 	if (folio_batch_count(fbatch))
+ 		mlock_folio_batch(fbatch);
+-	local_unlock(&mlock_fbatch.lock);
++	qpw_unlock(&mlock_fbatch.lock, cpu);
+ }
+ 
+-void mlock_drain_remote(int cpu)
++void mlock_drain_local(void)
 +{
-+	int opt;
++	migrate_disable();
++	mlock_drain_cpu(smp_processor_id());
++	migrate_enable();
++}
 +
-+	if (!get_option(&str, &opt)) {
-+		pr_warn("QPW: invalid qpw parameter: %s, ignoring.\n", str);
-+		return 0;
++void mlock_drain_offline(int cpu)
+ {
+ 	struct folio_batch *fbatch;
+ 
+@@ -242,9 +248,12 @@ bool need_mlock_drain(int cpu)
+ void mlock_folio(struct folio *folio)
+ {
+ 	struct folio_batch *fbatch;
++	int cpu;
+ 
+-	local_lock(&mlock_fbatch.lock);
+-	fbatch = this_cpu_ptr(&mlock_fbatch.fbatch);
++	migrate_disable();
++	cpu = smp_processor_id();
++	qpw_lock(&mlock_fbatch.lock, cpu);
++	fbatch = per_cpu_ptr(&mlock_fbatch.fbatch, cpu);
+ 
+ 	if (!folio_test_set_mlocked(folio)) {
+ 		int nr_pages = folio_nr_pages(folio);
+@@ -257,7 +266,8 @@ void mlock_folio(struct folio *folio)
+ 	if (!folio_batch_add(fbatch, mlock_lru(folio)) ||
+ 	    !folio_may_be_lru_cached(folio) || lru_cache_disabled())
+ 		mlock_folio_batch(fbatch);
+-	local_unlock(&mlock_fbatch.lock);
++	qpw_unlock(&mlock_fbatch.lock, cpu);
++	migrate_enable();
+ }
+ 
+ /**
+@@ -268,9 +278,13 @@ void mlock_new_folio(struct folio *folio
+ {
+ 	struct folio_batch *fbatch;
+ 	int nr_pages = folio_nr_pages(folio);
++	int cpu;
++
++	migrate_disable();
++	cpu = smp_processor_id();
++	qpw_lock(&mlock_fbatch.lock, cpu);
+ 
+-	local_lock(&mlock_fbatch.lock);
+-	fbatch = this_cpu_ptr(&mlock_fbatch.fbatch);
++	fbatch = per_cpu_ptr(&mlock_fbatch.fbatch, cpu);
+ 	folio_set_mlocked(folio);
+ 
+ 	zone_stat_mod_folio(folio, NR_MLOCK, nr_pages);
+@@ -280,7 +294,8 @@ void mlock_new_folio(struct folio *folio
+ 	if (!folio_batch_add(fbatch, mlock_new(folio)) ||
+ 	    !folio_may_be_lru_cached(folio) || lru_cache_disabled())
+ 		mlock_folio_batch(fbatch);
+-	local_unlock(&mlock_fbatch.lock);
++	migrate_enable();
++	qpw_unlock(&mlock_fbatch.lock, cpu);
+ }
+ 
+ /**
+@@ -290,9 +305,13 @@ void mlock_new_folio(struct folio *folio
+ void munlock_folio(struct folio *folio)
+ {
+ 	struct folio_batch *fbatch;
++	int cpu;
+ 
+-	local_lock(&mlock_fbatch.lock);
+-	fbatch = this_cpu_ptr(&mlock_fbatch.fbatch);
++	migrate_disable();
++	cpu = smp_processor_id();
++	qpw_lock(&mlock_fbatch.lock, cpu);
++
++	fbatch = per_cpu_ptr(&mlock_fbatch.fbatch, cpu);
+ 	/*
+ 	 * folio_test_clear_mlocked(folio) must be left to __munlock_folio(),
+ 	 * which will check whether the folio is multiply mlocked.
+@@ -301,7 +320,8 @@ void munlock_folio(struct folio *folio)
+ 	if (!folio_batch_add(fbatch, folio) ||
+ 	    !folio_may_be_lru_cached(folio) || lru_cache_disabled())
+ 		mlock_folio_batch(fbatch);
+-	local_unlock(&mlock_fbatch.lock);
++	qpw_unlock(&mlock_fbatch.lock, cpu);
++	migrate_enable();
+ }
+ 
+ static inline unsigned int folio_mlock_step(struct folio *folio,
+@@ -823,3 +843,18 @@ void user_shm_unlock(size_t size, struct
+ 	spin_unlock(&shmlock_user_lock);
+ 	put_ucounts(ucounts);
+ }
++
++int __init mlock_init(void)
++{
++	unsigned int cpu;
++
++	for_each_possible_cpu(cpu) {
++		struct mlock_fbatch *fbatch = &per_cpu(mlock_fbatch, cpu);
++
++		qpw_lock_init(&fbatch->lock);
 +	}
-+
-+	if (opt)
-+		static_branch_enable(&qpw_sl);
-+	else
-+		static_branch_disable(&qpw_sl);
 +
 +	return 0;
 +}
-+__setup("qpw=", qpw_setup);
-Index: slab/Documentation/locking/qpwlocks.rst
++
++module_init(mlock_init);
+Index: slab/mm/swap.c
 ===================================================================
---- /dev/null
-+++ slab/Documentation/locking/qpwlocks.rst
-@@ -0,0 +1,63 @@
-+.. SPDX-License-Identifier: GPL-2.0
+--- slab.orig/mm/swap.c
++++ slab/mm/swap.c
+@@ -35,7 +35,7 @@
+ #include <linux/uio.h>
+ #include <linux/hugetlb.h>
+ #include <linux/page_idle.h>
+-#include <linux/local_lock.h>
++#include <linux/qpw.h>
+ #include <linux/buffer_head.h>
+ 
+ #include "internal.h"
+@@ -52,7 +52,7 @@ struct cpu_fbatches {
+ 	 * The following folio batches are grouped together because they are protected
+ 	 * by disabling preemption (and interrupts remain enabled).
+ 	 */
+-	local_lock_t lock;
++	qpw_lock_t lock;
+ 	struct folio_batch lru_add;
+ 	struct folio_batch lru_deactivate_file;
+ 	struct folio_batch lru_deactivate;
+@@ -61,14 +61,11 @@ struct cpu_fbatches {
+ 	struct folio_batch lru_activate;
+ #endif
+ 	/* Protecting the following batches which require disabling interrupts */
+-	local_lock_t lock_irq;
++	qpw_lock_t lock_irq;
+ 	struct folio_batch lru_move_tail;
+ };
+ 
+-static DEFINE_PER_CPU(struct cpu_fbatches, cpu_fbatches) = {
+-	.lock = INIT_LOCAL_LOCK(lock),
+-	.lock_irq = INIT_LOCAL_LOCK(lock_irq),
+-};
++static DEFINE_PER_CPU(struct cpu_fbatches, cpu_fbatches);
+ 
+ static void __page_cache_release(struct folio *folio, struct lruvec **lruvecp,
+ 		unsigned long *flagsp)
+@@ -183,22 +180,24 @@ static void __folio_batch_add_and_move(s
+ 		struct folio *folio, move_fn_t move_fn, bool disable_irq)
+ {
+ 	unsigned long flags;
++	int cpu;
+ 
+ 	folio_get(folio);
+ 
++	cpu = smp_processor_id();
+ 	if (disable_irq)
+-		local_lock_irqsave(&cpu_fbatches.lock_irq, flags);
++		qpw_lock_irqsave(&cpu_fbatches.lock_irq, flags, cpu);
+ 	else
+-		local_lock(&cpu_fbatches.lock);
++		qpw_lock(&cpu_fbatches.lock, cpu);
+ 
+-	if (!folio_batch_add(this_cpu_ptr(fbatch), folio) ||
++	if (!folio_batch_add(per_cpu_ptr(fbatch, cpu), folio) ||
+ 			!folio_may_be_lru_cached(folio) || lru_cache_disabled())
+-		folio_batch_move_lru(this_cpu_ptr(fbatch), move_fn);
++		folio_batch_move_lru(per_cpu_ptr(fbatch, cpu), move_fn);
+ 
+ 	if (disable_irq)
+-		local_unlock_irqrestore(&cpu_fbatches.lock_irq, flags);
++		qpw_unlock_irqrestore(&cpu_fbatches.lock_irq, flags, cpu);
+ 	else
+-		local_unlock(&cpu_fbatches.lock);
++		qpw_unlock(&cpu_fbatches.lock, cpu);
+ }
+ 
+ #define folio_batch_add_and_move(folio, op)		\
+@@ -358,9 +357,10 @@ static void __lru_cache_activate_folio(s
+ {
+ 	struct folio_batch *fbatch;
+ 	int i;
++	int cpu = smp_processor_id();
+ 
+-	local_lock(&cpu_fbatches.lock);
+-	fbatch = this_cpu_ptr(&cpu_fbatches.lru_add);
++	qpw_lock(&cpu_fbatches.lock, cpu);
++	fbatch = per_cpu_ptr(&cpu_fbatches.lru_add, cpu);
+ 
+ 	/*
+ 	 * Search backwards on the optimistic assumption that the folio being
+@@ -381,7 +381,7 @@ static void __lru_cache_activate_folio(s
+ 		}
+ 	}
+ 
+-	local_unlock(&cpu_fbatches.lock);
++	qpw_unlock(&cpu_fbatches.lock, cpu);
+ }
+ 
+ #ifdef CONFIG_LRU_GEN
+@@ -653,9 +653,9 @@ void lru_add_drain_cpu(int cpu)
+ 		unsigned long flags;
+ 
+ 		/* No harm done if a racing interrupt already did this */
+-		local_lock_irqsave(&cpu_fbatches.lock_irq, flags);
++		qpw_lock_irqsave(&cpu_fbatches.lock_irq, flags, cpu);
+ 		folio_batch_move_lru(fbatch, lru_move_tail);
+-		local_unlock_irqrestore(&cpu_fbatches.lock_irq, flags);
++		qpw_unlock_irqrestore(&cpu_fbatches.lock_irq, flags, cpu);
+ 	}
+ 
+ 	fbatch = &fbatches->lru_deactivate_file;
+@@ -733,10 +733,12 @@ void folio_mark_lazyfree(struct folio *f
+ 
+ void lru_add_drain(void)
+ {
+-	local_lock(&cpu_fbatches.lock);
+-	lru_add_drain_cpu(smp_processor_id());
+-	local_unlock(&cpu_fbatches.lock);
+-	mlock_drain_local();
++	int cpu = smp_processor_id();
 +
-+=========
-+QPW locks
-+=========
++	qpw_lock(&cpu_fbatches.lock, cpu);
++	lru_add_drain_cpu(cpu);
++	qpw_unlock(&cpu_fbatches.lock, cpu);
++	mlock_drain_cpu(cpu);
+ }
+ 
+ /*
+@@ -745,30 +747,32 @@ void lru_add_drain(void)
+  * the same cpu. It shouldn't be a problem in !SMP case since
+  * the core is only one and the locks will disable preemption.
+  */
+-static void lru_add_mm_drain(void)
++static void lru_add_mm_drain(int cpu)
+ {
+-	local_lock(&cpu_fbatches.lock);
+-	lru_add_drain_cpu(smp_processor_id());
+-	local_unlock(&cpu_fbatches.lock);
+-	mlock_drain_local();
++	qpw_lock(&cpu_fbatches.lock, cpu);
++	lru_add_drain_cpu(cpu);
++	qpw_unlock(&cpu_fbatches.lock, cpu);
++	mlock_drain_cpu(cpu);
+ }
+ 
+ void lru_add_drain_cpu_zone(struct zone *zone)
+ {
+-	local_lock(&cpu_fbatches.lock);
+-	lru_add_drain_cpu(smp_processor_id());
++	int cpu = smp_processor_id();
 +
-+Some places in the kernel implement a parallel programming strategy
-+consisting on local_locks() for most of the work, and some rare remote
-+operations are scheduled on target cpu. This keeps cache bouncing low since
-+cacheline tends to be mostly local, and avoids the cost of locks in non-RT
-+kernels, even though the very few remote operations will be expensive due
-+to scheduling overhead.
++	qpw_lock(&cpu_fbatches.lock, cpu);
++	lru_add_drain_cpu(cpu);
+ 	drain_local_pages(zone);
+-	local_unlock(&cpu_fbatches.lock);
+-	mlock_drain_local();
++	qpw_unlock(&cpu_fbatches.lock, cpu);
++	mlock_drain_cpu(cpu);
+ }
+ 
+ #ifdef CONFIG_SMP
+ 
+-static DEFINE_PER_CPU(struct work_struct, lru_add_drain_work);
++static DEFINE_PER_CPU(struct qpw_struct, lru_add_drain_qpw);
+ 
+-static void lru_add_drain_per_cpu(struct work_struct *dummy)
++static void lru_add_drain_per_cpu(struct work_struct *w)
+ {
+-	lru_add_mm_drain();
++	lru_add_mm_drain(qpw_get_cpu(w));
+ }
+ 
+ static DEFINE_PER_CPU(struct work_struct, bh_add_drain_work);
+@@ -883,12 +887,12 @@ static inline void __lru_add_drain_all(b
+ 	cpumask_clear(&has_mm_work);
+ 	cpumask_clear(&has_bh_work);
+ 	for_each_online_cpu(cpu) {
+-		struct work_struct *mm_work = &per_cpu(lru_add_drain_work, cpu);
++		struct qpw_struct *mm_qpw = &per_cpu(lru_add_drain_qpw, cpu);
+ 		struct work_struct *bh_work = &per_cpu(bh_add_drain_work, cpu);
+ 
+ 		if (cpu_needs_mm_drain(cpu)) {
+-			INIT_WORK(mm_work, lru_add_drain_per_cpu);
+-			queue_work_on(cpu, mm_percpu_wq, mm_work);
++			INIT_QPW(mm_qpw, lru_add_drain_per_cpu, cpu);
++			queue_percpu_work_on(cpu, mm_percpu_wq, mm_qpw);
+ 			__cpumask_set_cpu(cpu, &has_mm_work);
+ 		}
+ 
+@@ -900,7 +904,7 @@ static inline void __lru_add_drain_all(b
+ 	}
+ 
+ 	for_each_cpu(cpu, &has_mm_work)
+-		flush_work(&per_cpu(lru_add_drain_work, cpu));
++		flush_percpu_work(&per_cpu(lru_add_drain_qpw, cpu));
+ 
+ 	for_each_cpu(cpu, &has_bh_work)
+ 		flush_work(&per_cpu(bh_add_drain_work, cpu));
+@@ -950,7 +954,7 @@ void lru_cache_disable(void)
+ #ifdef CONFIG_SMP
+ 	__lru_add_drain_all(true);
+ #else
+-	lru_add_mm_drain();
++	lru_add_mm_drain(smp_processor_id());
+ 	invalidate_bh_lrus_cpu();
+ #endif
+ }
+@@ -1124,6 +1128,7 @@ static const struct ctl_table swap_sysct
+ void __init swap_setup(void)
+ {
+ 	unsigned long megs = PAGES_TO_MB(totalram_pages());
++	unsigned int cpu;
+ 
+ 	/* Use a smaller cluster for small-memory machines */
+ 	if (megs < 16)
+@@ -1136,4 +1141,11 @@ void __init swap_setup(void)
+ 	 */
+ 
+ 	register_sysctl_init("vm", swap_sysctl_table);
 +
-+On the other hand, for RT workloads this can represent a problem:
-+scheduling work on remote cpu that are executing low latency tasks
-+is undesired and can introduce unexpected deadline misses.
++	for_each_possible_cpu(cpu) {
++		struct cpu_fbatches *fbatches = &per_cpu(cpu_fbatches, cpu);
 +
-+QPW locks help to convert sites that use local_locks (for cpu local operations)
-+and queue_work_on (for queueing work remotely, to be executed
-+locally on the owner cpu of the lock) to QPW locks.
-+
-+The lock is declared qpw_lock_t type.
-+The lock is initialized with qpw_lock_init.
-+The lock is locked with qpw_lock (takes a lock and cpu as a parameter).
-+The lock is unlocked with qpw_unlock (takes a lock and cpu as a parameter).
-+
-+The qpw_lock_irqsave function disables interrupts and saves current interrupt state,
-+cpu as a parameter.
-+
-+For trylock variant, there is the qpw_trylock_t type, initialized with
-+qpw_trylock_init. Then the corresponding qpw_trylock and
-+qpw_trylock_irqsave.
-+
-+work_struct should be replaced by qpw_struct, which contains a cpu parameter
-+(owner cpu of the lock), initialized by INIT_QPW.
-+
-+The queue work related functions (analogous to queue_work_on and flush_work) are:
-+queue_percpu_work_on and flush_percpu_work.
-+
-+The behaviour of the QPW functions is as follows:
-+
-+* !CONFIG_PREEMPT_RT and !CONFIG_QPW (or CONFIG_QPW and qpw=off kernel
-+boot parameter):
-+        - qpw_lock:                     local_lock
-+        - qpw_lock_irqsave:             local_lock_irqsave
-+        - qpw_trylock:                  local_trylock
-+        - qpw_trylock_irqsave:          local_trylock_irqsave
-+        - qpw_unlock:                   local_unlock
-+        - queue_percpu_work_on:         queue_work_on
-+        - flush_percpu_work:            flush_work
-+
-+* CONFIG_PREEMPT_RT or CONFIG_QPW (and CONFIG_QPW_DEFAULT or qpw=on kernel
-+boot parameter),
-+        - qpw_lock:                     spin_lock
-+        - qpw_lock_irqsave:             spin_lock_irqsave
-+        - qpw_trylock:                  spin_trylock
-+        - qpw_trylock_irqsave:          spin_trylock_irqsave
-+        - qpw_unlock:                   spin_unlock
-+        - queue_percpu_work_on:         executes work function on caller cpu
-+        - flush_percpu_work:            empty
-+
-+qpw_get_cpu(work_struct), to be called from within qpw work function,
-+returns the target cpu.
++		qpw_lock_init(&fbatches->lock);
++		qpw_lock_init(&fbatches->lock_irq);
++	}
+ }
+Index: slab/mm/internal.h
+===================================================================
+--- slab.orig/mm/internal.h
++++ slab/mm/internal.h
+@@ -1061,10 +1061,12 @@ static inline void munlock_vma_folio(str
+ 		munlock_folio(folio);
+ }
+ 
++int __init mlock_init(void);
+ void mlock_new_folio(struct folio *folio);
+ bool need_mlock_drain(int cpu);
+ void mlock_drain_local(void);
+-void mlock_drain_remote(int cpu);
++void mlock_drain_cpu(int cpu);
++void mlock_drain_offline(int cpu);
+ 
+ extern pmd_t maybe_pmd_mkwrite(pmd_t pmd, struct vm_area_struct *vma);
+ 
+Index: slab/mm/page_alloc.c
+===================================================================
+--- slab.orig/mm/page_alloc.c
++++ slab/mm/page_alloc.c
+@@ -6251,7 +6251,7 @@ static int page_alloc_cpu_dead(unsigned
+ 	struct zone *zone;
+ 
+ 	lru_add_drain_cpu(cpu);
+-	mlock_drain_remote(cpu);
++	mlock_drain_offline(cpu);
+ 	drain_pages(cpu);
+ 
+ 	/*
 
 
