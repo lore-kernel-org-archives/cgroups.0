@@ -1,54 +1,67 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-wm1-f51.google.com (mail-wm1-f51.google.com [209.85.128.51])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CF99F31195D
-	for <cgroups@vger.kernel.org>; Wed, 11 Feb 2026 15:43:13 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 06171341ADD
+	for <cgroups@vger.kernel.org>; Wed, 11 Feb 2026 16:38:50 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.51
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1770824596; cv=none; b=HgfzOyk0zA0PcF1u5UkB0bGQoTsaaB9NOo+Xov5PdZ+Q5JP+Y15dVd82X1l2h0l8gfSyDce4EcmGBHqw2lgyj7FsSc56nESeHMK4yxzS47bpFW/2ZhvJvcYZYCCMDyvDctUw/od36ysK8imTJllAYZPUz43ZUKzUQzfEfjODYzI=
+	t=1770827932; cv=none; b=uM2SVrsPeh6JPqsFOFCrezv+OnEFgYerlDKDY+jGTuqMWkejkpeRl43Lv4fyKb2VT1nO8xEoczaV8UNKG2+xUwWXvUcV46LshKbzTyrB37zJE7YHYK1CXCvdErJLQ9y1bWV3WfaqMeGBhqxmmT8IMzpnGT83JT7KcGABt7H+k0Y=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1770824596; c=relaxed/simple;
-	bh=cx5p1N0pxNkNyb36JTGId6j7cNzPbI2HBY0TDNnjvyo=;
+	s=arc-20240116; t=1770827932; c=relaxed/simple;
+	bh=wKPgU70r+RXsB8BUm9KzRnLKjcz/48fhcjMA7YFyamE=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=GgwLvnlekmKL1Zfqsirf8U4HHKjVbt/xnMHpcc7kTSe7ZMSDJs6uuI0biH2Inc0OOiccjmYvUy9zKx69VWnJ62sb31M707odjBDTErP06DLix0D/gaXOncLjxjbp50U4tgWImwI5f1Js1UikYIYHzh52Z9ZqfXuK3mAlcqbPLVk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=gKVu/p8g; arc=none smtp.client-ip=170.10.129.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	 Content-Type:Content-Disposition:In-Reply-To; b=tjbVBjICr35LRU54kns8uSZU3dKHw3zU8V2G1hBiBJUtVAe3myUJFuqPF60BF0eMAnkp2tYFDuCir0uOSIJRoJZrZKC2rc7UAbcYybdQKUHLB/b4ZECJICSwHQVljlE4YfRBLon1yGYvXoq5VYL7oT61k3mGSLzzFPOMxW5HKeg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com; spf=pass smtp.mailfrom=suse.com; dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b=gv/EfUgY; arc=none smtp.client-ip=209.85.128.51
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="gKVu/p8g"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1770824593;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=1jx1hsuuG7ObMhO/uK+TRbv/qG1QFFvi3Ae/jdkXmec=;
-	b=gKVu/p8gLhfHc6dtBBwuIWU4BjNVSkuxtzgWPdqb1SxDmfaDxUF8BhRLXGYhrlb22a6inO
-	iwLMMdb3tFG0gwcah1v7fqXPFyEN1mynogooHsVTFiqosH0BBX8ZPOjfVcfB4tImgUWlY3
-	7gYgyfNvt12WKIwSJiQ7JWIzljbt1pM=
-Received: from mx-prod-mc-08.mail-002.prod.us-west-2.aws.redhat.com
- (ec2-35-165-154-97.us-west-2.compute.amazonaws.com [35.165.154.97]) by
- relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-121-hUcKwGwXPeOaG_WdkWuOAw-1; Wed,
- 11 Feb 2026 10:43:06 -0500
-X-MC-Unique: hUcKwGwXPeOaG_WdkWuOAw-1
-X-Mimecast-MFC-AGG-ID: hUcKwGwXPeOaG_WdkWuOAw_1770824584
-Received: from mx-prod-int-01.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-01.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.4])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mx-prod-mc-08.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id DCECD1800370;
-	Wed, 11 Feb 2026 15:43:03 +0000 (UTC)
-Received: from tpad.localdomain (unknown [10.96.133.3])
-	by mx-prod-int-01.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id 057AA30002D5;
-	Wed, 11 Feb 2026 15:43:02 +0000 (UTC)
-Received: by tpad.localdomain (Postfix, from userid 1000)
-	id 492B8400DF78C; Wed, 11 Feb 2026 09:09:02 -0300 (-03)
-Date: Wed, 11 Feb 2026 09:09:02 -0300
-From: Marcelo Tosatti <mtosatti@redhat.com>
-To: Leonardo Bras <leobras.c@gmail.com>
+	dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b="gv/EfUgY"
+Received: by mail-wm1-f51.google.com with SMTP id 5b1f17b1804b1-48327b8350dso48956335e9.1
+        for <cgroups@vger.kernel.org>; Wed, 11 Feb 2026 08:38:50 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=suse.com; s=google; t=1770827929; x=1771432729; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=i0jBOVRTgFoZvFipnRn5zFhtmX70ZXn6LNFpcY6w9QM=;
+        b=gv/EfUgYUTgj3ovl3WMbMKwbqSGn4IXJJkE/o8E6KhjEIL1THFHG0JMAGc1Dr0VLt/
+         3CCuf9fVi8owxy4MLMckWITWWk/HsHsY1CcM0spEj3LNMbacJKAqqnnJ8JQbUd3uLhSN
+         8NbKQNItI+F2spdqDqT71oHwOgzh4NzQDVplu6MrhUYdjlVITDT9zBsf0TQPxnmaWhsh
+         NjUuUaGHvbLjeSD83H9Cox8AFEmrjjTs3EEuEVKTieUXywDFwgKZDx9Tqg+/7DCNAypd
+         8QcCZP6NaT+Er3ljrJZzQlaUgWlp3VTLlJlb1gOiYSrKPhAeB6PM4b3E4u2e1rbO1aHy
+         jA5A==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1770827929; x=1771432729;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-gg:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=i0jBOVRTgFoZvFipnRn5zFhtmX70ZXn6LNFpcY6w9QM=;
+        b=i6mwF30rMIs7N6ifJFAB59w8a1ThGPljYt9RrPVPMP8dZNH8XjHKEaYhBm02sJSFM+
+         GrecPd0mucsP+ZIHX1tJTcnR3ibibkcFAYIFBZ59eXd5+ySfUm/4cbvb/OveZDvYSKRk
+         PhWLtJg6aGt/VS/wiI1532ilC5g9oskrcyBKSJtaxQ82P9FfMcep6YKSTHBZ544x9j4S
+         KmfG/IrZRb5CujD/+tzUMKWQ2I5LpFVYlfSgAQwlJ32Kn24QsulamdjMGWvserXDlCbi
+         ktGFIZNnBoXncX3FCzcVHAS4pAanNsFY8RFBKkd2JlYi9eCoS44b5DLGantsEw2E+a6Q
+         Ys3A==
+X-Forwarded-Encrypted: i=1; AJvYcCWi0EXOKbxOkrKzOR2oHy0K7MFzPe3IS0FBKXN6UtDuB94Trm8XaAOEy6vDbgnVgwp3OZjfTpXh@vger.kernel.org
+X-Gm-Message-State: AOJu0Yz2WhM0eoN1oHgQ5I6Vt+RrV5jz0QjiOQKzaiUVgd5AMkYFuZ5y
+	+9gbzWkOsPx7GlKsrCcGGYlxJbUWzAR54BOUVTreEI/SnPkSwv8NBsOuP8kKDj/wG/c=
+X-Gm-Gg: AZuq6aKW64Jpo+fwV/U2nx7k7ftb9sXfU3I13ob6UMb+vBc8GXaBhfa07w4j0nnPnRy
+	0AyLIwJtrq06Hv7nAz1kscAS6aZGSjwgC1VQR9unrYBT869ZkjkjsTBc1lggHZrdC1N5IAv+dNL
+	Ddx4SPQuOLWPzXgEDc1tRrmrJlm0njFN+WLXOBXzu3tgUuvn342jQReJQjMrQw7cHYLztvyoOyw
+	nBYIgYh9VZPvh+ACZrzRV3i9JkEIPDKudH5iUf3TRhxi8G7k58mkRiZB9OPwg670lBbjAzxcL2K
+	DJTZSq539SKhXK59qDum/rNWHSbZWkTSB63OE2o6KI19+XldM3R993WXPNHpTH6xEUXc+ldHlR1
+	TaDHUoYGlo9eF7ZzanxW44/thzkOXCFO78hCHGMacAem/D1WoYBYdj9YHM/NASOo9bQmu6zfTqo
+	ArPxTJOx+x8O9ICa2AldeGjWTrkV0EV2c7ddsi
+X-Received: by 2002:a05:600c:a4f:b0:480:4b5d:9ec with SMTP id 5b1f17b1804b1-4835b947ce1mr36415155e9.33.1770827929279;
+        Wed, 11 Feb 2026 08:38:49 -0800 (PST)
+Received: from localhost (109-81-83-241.rct.o2.cz. [109.81.83.241])
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-4835a5bf1efsm47887645e9.0.2026.02.11.08.38.48
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 11 Feb 2026 08:38:48 -0800 (PST)
+Date: Wed, 11 Feb 2026 17:38:47 +0100
+From: Michal Hocko <mhocko@suse.com>
+To: Marcelo Tosatti <mtosatti@redhat.com>
 Cc: linux-kernel@vger.kernel.org, cgroups@vger.kernel.org,
 	linux-mm@kvack.org, Johannes Weiner <hannes@cmpxchg.org>,
-	Michal Hocko <mhocko@kernel.org>,
 	Roman Gushchin <roman.gushchin@linux.dev>,
 	Shakeel Butt <shakeel.butt@linux.dev>,
 	Muchun Song <muchun.song@linux.dev>,
@@ -60,12 +73,13 @@ Cc: linux-kernel@vger.kernel.org, cgroups@vger.kernel.org,
 	Hyeonggon Yoo <42.hyeyoo@gmail.com>,
 	Leonardo Bras <leobras@redhat.com>,
 	Thomas Gleixner <tglx@linutronix.de>,
-	Waiman Long <longman@redhat.com>, Boqun Feng <boqun.feng@gmail.com>
-Subject: Re: [PATCH 1/4] Introducing qpw_lock() and per-cpu queue & flush work
-Message-ID: <aYxxXrG1UVvHUGHP@tpad>
+	Waiman Long <longman@redhat.com>, Boqun Feng <boqun.feng@gmail.com>,
+	Frederic Weisbecker <fweisbecker@suse.de>
+Subject: Re: [PATCH 0/4] Introduce QPW for per-cpu operations
+Message-ID: <aYywl1hdBQP2_slo@tiehlicka>
 References: <20260206143430.021026873@redhat.com>
- <20260206143741.525190180@redhat.com>
- <aYaEZGImn7qayP12@WindFlash>
+ <aYs6Ju2G4bm6_tl2@tiehlicka>
+ <aYxviLoWsrLqDU7o@tpad>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
@@ -74,91 +88,45 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <aYaEZGImn7qayP12@WindFlash>
-X-Scanned-By: MIMEDefang 3.4.1 on 10.30.177.4
+In-Reply-To: <aYxviLoWsrLqDU7o@tpad>
 
-Hi Leonardo,
+On Wed 11-02-26 09:01:12, Marcelo Tosatti wrote:
+> On Tue, Feb 10, 2026 at 03:01:10PM +0100, Michal Hocko wrote:
+[...]
+> > What about !PREEMPT_RT? We have people running isolated workloads and
+> > these sorts of pcp disruptions are really unwelcome as well. They do not
+> > have requirements as strong as RT workloads but the underlying
+> > fundamental problem is the same. Frederic (now CCed) is working on
+> > moving those pcp book keeping activities to be executed to the return to
+> > the userspace which should be taking care of both RT and non-RT
+> > configurations AFAICS.
+> 
+> Michal,
+> 
+> For !PREEMPT_RT, _if_ you select CONFIG_QPW=y, then there is a kernel
+> boot option qpw=y/n, which controls whether the behaviour will be
+> similar (the spinlock is taken on local_lock, similar to PREEMPT_RT).
 
-On Fri, Feb 06, 2026 at 09:16:36PM -0300, Leonardo Bras wrote:
-> > ===================================================================
-> > --- slab.orig/MAINTAINERS
-> > +++ slab/MAINTAINERS
-> > @@ -21291,6 +21291,12 @@ F:	Documentation/networking/device_drive
-> >  F:	drivers/bus/fsl-mc/
-> >  F:	include/uapi/linux/fsl_mc.h
-> >  
-> > +QPW
-> > +M:	Leonardo Bras <leobras@redhat.com>
-> 
-> Thanks for keeping that up :)
-> Could you please change this line to 
-> 
-> +M:	Leonardo Bras <leobras.c@gmail.com>
-> 
-> As I don't have access to Red Hat's mail anymore.
-> The signoffs on each commit should be fine to keep :)
+My bad. I've misread the config space of this.
 
-Done.
+> If CONFIG_QPW=n, or kernel boot option qpw=n, then only local_lock 
+> (and remote work via work_queue) is used.
+> 
+> What "pcp book keeping activities" you refer to ? I don't see how
+> moving certain activities that happen under SLUB or LRU spinlocks
+> to happen before return to userspace changes things related 
+> to avoidance of CPU interruption ?
 
-> 
-> > +S:	Supported
-> > +F:	include/linux/qpw.h
-> > +F:	kernel/qpw.c
-> > +
-> 
-> Should we also add the Documentation file as well?
-> 
-> +F:	Documentation/locking/qpwlocks.rst
+Essentially delayed operations like pcp state flushing happens on return
+to the userspace on isolated CPUs. No locking changes are required as
+the work is still per-cpu.
 
-Done.
+In other words the approach Frederic is working on is to not change the
+locking of pcp delayed work but instead move that work into well defined
+place - i.e. return to the userspace.
 
-> > +The queue work related functions (analogous to queue_work_on and flush_work) are:
-> > +queue_percpu_work_on and flush_percpu_work.
-> > +
-> > +The behaviour of the QPW functions is as follows:
-> > +
-> > +* !CONFIG_PREEMPT_RT and !CONFIG_QPW (or CONFIG_QPW and qpw=off kernel
-> 
-> I don't think PREEMPT_RT is needed here (maybe it was copied from the 
-> previous QPW version which was dependent on PREEMPT_RT?)
-
-Ah, OK, my bad. Well, shouldnt CONFIG_PREEMPT_RT select CONFIG_QPW and
-CONFIG_QPW_DEFAULT=y ?
-
-> > +boot parameter):
-> > +        - qpw_lock:                     local_lock
-> > +        - qpw_lock_irqsave:             local_lock_irqsave
-> > +        - qpw_trylock:                  local_trylock
-> > +        - qpw_trylock_irqsave:          local_trylock_irqsave
-> > +        - qpw_unlock:                   local_unlock
-> > +        - queue_percpu_work_on:         queue_work_on
-> > +        - flush_percpu_work:            flush_work
-> > +
-> > +* CONFIG_PREEMPT_RT or CONFIG_QPW (and CONFIG_QPW_DEFAULT or qpw=on kernel
-> 
-> Same here
-> 
-> > +boot parameter),
-> > +        - qpw_lock:                     spin_lock
-> > +        - qpw_lock_irqsave:             spin_lock_irqsave
-> > +        - qpw_trylock:                  spin_trylock
-> > +        - qpw_trylock_irqsave:          spin_trylock_irqsave
-> > +        - qpw_unlock:                   spin_unlock
-> > +        - queue_percpu_work_on:         executes work function on caller cpu
-> > +        - flush_percpu_work:            empty
-> > +
-> > +qpw_get_cpu(work_struct), to be called from within qpw work function,
-> > +returns the target cpu.
-> > 
-> > 
-> 
-> 
-> Other than that, LGTM!
-> 
-> Reviewed-by: Leonardo Bras <leobras.c@gmail.com>
-> 
-> Thanks!
-> Leo
-> 
-> 
-
+Btw. have you measure the impact of preempt_disbale -> spinlock on hot
+paths like SLUB sheeves?
+-- 
+Michal Hocko
+SUSE Labs
