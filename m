@@ -1,53 +1,54 @@
 Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ED385310636
-	for <cgroups@vger.kernel.org>; Wed, 11 Feb 2026 15:43:11 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CF99F31195D
+	for <cgroups@vger.kernel.org>; Wed, 11 Feb 2026 15:43:13 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1770824593; cv=none; b=F6ZjO3lWmOFDQECqZoMK0aH4qqqKJNxrt+an2zhkIqwpa6Jws+N/qUHCm0awW7HmtfPPQA27dRukHBf5nnc6k8dYTLd07N8Qt++hl5FYw4R7lkM4znCWRTMVYjtDyV2MQbfirvJh8hPcV8NKvhAYBLbtKeyNhXQXhqosvOcSSco=
+	t=1770824596; cv=none; b=HgfzOyk0zA0PcF1u5UkB0bGQoTsaaB9NOo+Xov5PdZ+Q5JP+Y15dVd82X1l2h0l8gfSyDce4EcmGBHqw2lgyj7FsSc56nESeHMK4yxzS47bpFW/2ZhvJvcYZYCCMDyvDctUw/od36ysK8imTJllAYZPUz43ZUKzUQzfEfjODYzI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1770824593; c=relaxed/simple;
-	bh=KASUW0pyryAgersxWpn6QLBWZqNmrD3crrlaDFyAuR0=;
+	s=arc-20240116; t=1770824596; c=relaxed/simple;
+	bh=cx5p1N0pxNkNyb36JTGId6j7cNzPbI2HBY0TDNnjvyo=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=C4Ll/ge2wzMtcQW/oqZ9nKo2LYtR2s3pofhhs4x9SqRkuWBoYy2//9u/Z1HPu8Ide9e54afbHybpJMCrI9hubZRELvQb9/4FAUWPhY40wjNUW7NZPbgiSTd7JX/Xps7tlQuexWXGbSTQNUmeyZRRkSWYWGYUeVmD5LKV8lD5Ees=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=UDb9hAux; arc=none smtp.client-ip=170.10.129.124
+	 Content-Type:Content-Disposition:In-Reply-To; b=GgwLvnlekmKL1Zfqsirf8U4HHKjVbt/xnMHpcc7kTSe7ZMSDJs6uuI0biH2Inc0OOiccjmYvUy9zKx69VWnJ62sb31M707odjBDTErP06DLix0D/gaXOncLjxjbp50U4tgWImwI5f1Js1UikYIYHzh52Z9ZqfXuK3mAlcqbPLVk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=gKVu/p8g; arc=none smtp.client-ip=170.10.129.124
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="UDb9hAux"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="gKVu/p8g"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1770824591;
+	s=mimecast20190719; t=1770824593;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
 	 in-reply-to:in-reply-to:references:references;
-	bh=wE7la7K/IKWK0kSdZLLaAcmHE3mv3hvFTPaHbiBOxk8=;
-	b=UDb9hAux+qJH2e75ZO/z/a2h9EOA84fAhccaZ1tiGzSSYLt9La2GZ/mI2gdyrN7Msr/2We
-	KBM1XxMNVsylYQyFxMik0dIV3N2FFWfl4xem+EgbeSd4Om+e1PDfPMNP1r+imRVTYht2CM
-	AojUOG4YviyG8UJA6zPGy62DQLl+ZpE=
-Received: from mx-prod-mc-03.mail-002.prod.us-west-2.aws.redhat.com
- (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
+	bh=1jx1hsuuG7ObMhO/uK+TRbv/qG1QFFvi3Ae/jdkXmec=;
+	b=gKVu/p8gLhfHc6dtBBwuIWU4BjNVSkuxtzgWPdqb1SxDmfaDxUF8BhRLXGYhrlb22a6inO
+	iwLMMdb3tFG0gwcah1v7fqXPFyEN1mynogooHsVTFiqosH0BBX8ZPOjfVcfB4tImgUWlY3
+	7gYgyfNvt12WKIwSJiQ7JWIzljbt1pM=
+Received: from mx-prod-mc-08.mail-002.prod.us-west-2.aws.redhat.com
+ (ec2-35-165-154-97.us-west-2.compute.amazonaws.com [35.165.154.97]) by
  relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-61-CvMfWgf9MqKHQQmxAVGhcg-1; Wed,
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-121-hUcKwGwXPeOaG_WdkWuOAw-1; Wed,
  11 Feb 2026 10:43:06 -0500
-X-MC-Unique: CvMfWgf9MqKHQQmxAVGhcg-1
-X-Mimecast-MFC-AGG-ID: CvMfWgf9MqKHQQmxAVGhcg_1770824584
-Received: from mx-prod-int-06.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-06.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.93])
+X-MC-Unique: hUcKwGwXPeOaG_WdkWuOAw-1
+X-Mimecast-MFC-AGG-ID: hUcKwGwXPeOaG_WdkWuOAw_1770824584
+Received: from mx-prod-int-01.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-01.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.4])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
-	by mx-prod-mc-03.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 0E0861955F28;
-	Wed, 11 Feb 2026 15:43:04 +0000 (UTC)
-Received: from tpad.localdomain (unknown [10.96.133.3])
-	by mx-prod-int-06.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id 0F7911800668;
+	by mx-prod-mc-08.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id DCECD1800370;
 	Wed, 11 Feb 2026 15:43:03 +0000 (UTC)
+Received: from tpad.localdomain (unknown [10.96.133.3])
+	by mx-prod-int-01.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id 057AA30002D5;
+	Wed, 11 Feb 2026 15:43:02 +0000 (UTC)
 Received: by tpad.localdomain (Postfix, from userid 1000)
-	id 7DAC1400DF589; Wed, 11 Feb 2026 09:11:21 -0300 (-03)
-Date: Wed, 11 Feb 2026 09:11:21 -0300
+	id 492B8400DF78C; Wed, 11 Feb 2026 09:09:02 -0300 (-03)
+Date: Wed, 11 Feb 2026 09:09:02 -0300
 From: Marcelo Tosatti <mtosatti@redhat.com>
-To: Michal Hocko <mhocko@suse.com>
+To: Leonardo Bras <leobras.c@gmail.com>
 Cc: linux-kernel@vger.kernel.org, cgroups@vger.kernel.org,
 	linux-mm@kvack.org, Johannes Weiner <hannes@cmpxchg.org>,
+	Michal Hocko <mhocko@kernel.org>,
 	Roman Gushchin <roman.gushchin@linux.dev>,
 	Shakeel Butt <shakeel.butt@linux.dev>,
 	Muchun Song <muchun.song@linux.dev>,
@@ -59,13 +60,12 @@ Cc: linux-kernel@vger.kernel.org, cgroups@vger.kernel.org,
 	Hyeonggon Yoo <42.hyeyoo@gmail.com>,
 	Leonardo Bras <leobras@redhat.com>,
 	Thomas Gleixner <tglx@linutronix.de>,
-	Waiman Long <longman@redhat.com>, Boqun Feng <boqun.feng@gmail.com>,
-	Frederic Weisbecker <fweisbecker@suse.de>
-Subject: Re: [PATCH 0/4] Introduce QPW for per-cpu operations
-Message-ID: <aYxx6cq6he6jTIZI@tpad>
+	Waiman Long <longman@redhat.com>, Boqun Feng <boqun.feng@gmail.com>
+Subject: Re: [PATCH 1/4] Introducing qpw_lock() and per-cpu queue & flush work
+Message-ID: <aYxxXrG1UVvHUGHP@tpad>
 References: <20260206143430.021026873@redhat.com>
- <aYs6Ju2G4bm6_tl2@tiehlicka>
- <aYxviLoWsrLqDU7o@tpad>
+ <20260206143741.525190180@redhat.com>
+ <aYaEZGImn7qayP12@WindFlash>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
@@ -74,79 +74,91 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <aYxviLoWsrLqDU7o@tpad>
-X-Scanned-By: MIMEDefang 3.4.1 on 10.30.177.93
+In-Reply-To: <aYaEZGImn7qayP12@WindFlash>
+X-Scanned-By: MIMEDefang 3.4.1 on 10.30.177.4
 
-On Wed, Feb 11, 2026 at 09:01:12AM -0300, Marcelo Tosatti wrote:
-> On Tue, Feb 10, 2026 at 03:01:10PM +0100, Michal Hocko wrote:
-> > On Fri 06-02-26 11:34:30, Marcelo Tosatti wrote:
-> > > The problem:
-> > > Some places in the kernel implement a parallel programming strategy
-> > > consisting on local_locks() for most of the work, and some rare remote
-> > > operations are scheduled on target cpu. This keeps cache bouncing low since
-> > > cacheline tends to be mostly local, and avoids the cost of locks in non-RT
-> > > kernels, even though the very few remote operations will be expensive due
-> > > to scheduling overhead.
-> > > 
-> > > On the other hand, for RT workloads this can represent a problem: getting
-> > > an important workload scheduled out to deal with remote requests is
-> > > sure to introduce unexpected deadline misses.
-> > > 
-> > > The idea:
-> > > Currently with PREEMPT_RT=y, local_locks() become per-cpu spinlocks.
-> > > In this case, instead of scheduling work on a remote cpu, it should
-> > > be safe to grab that remote cpu's per-cpu spinlock and run the required
-> > > work locally. That major cost, which is un/locking in every local function,
-> > > already happens in PREEMPT_RT.
-> > > 
-> > > Also, there is no need to worry about extra cache bouncing:
-> > > The cacheline invalidation already happens due to schedule_work_on().
-> > > 
-> > > This will avoid schedule_work_on(), and thus avoid scheduling-out an
-> > > RT workload.
-> > > 
-> > > Proposed solution:
-> > > A new interface called Queue PerCPU Work (QPW), which should replace
-> > > Work Queue in the above mentioned use case.
-> > > 
-> > > If PREEMPT_RT=n this interfaces just wraps the current
-> > > local_locks + WorkQueue behavior, so no expected change in runtime.
-> > > 
-> > > If PREEMPT_RT=y, or CONFIG_QPW=y, queue_percpu_work_on(cpu,...) will
-> > > lock that cpu's per-cpu structure and perform work on it locally. 
-> > > This is possible because on functions that can be used for performing
-> > > remote work on remote per-cpu structures, the local_lock (which is already
-> > > a this_cpu spinlock()), will be replaced by a qpw_spinlock(), which
-> > > is able to get the per_cpu spinlock() for the cpu passed as parameter.
+Hi Leonardo,
+
+On Fri, Feb 06, 2026 at 09:16:36PM -0300, Leonardo Bras wrote:
+> > ===================================================================
+> > --- slab.orig/MAINTAINERS
+> > +++ slab/MAINTAINERS
+> > @@ -21291,6 +21291,12 @@ F:	Documentation/networking/device_drive
+> >  F:	drivers/bus/fsl-mc/
+> >  F:	include/uapi/linux/fsl_mc.h
+> >  
+> > +QPW
+> > +M:	Leonardo Bras <leobras@redhat.com>
+> 
+> Thanks for keeping that up :)
+> Could you please change this line to 
+> 
+> +M:	Leonardo Bras <leobras.c@gmail.com>
+> 
+> As I don't have access to Red Hat's mail anymore.
+> The signoffs on each commit should be fine to keep :)
+
+Done.
+
+> 
+> > +S:	Supported
+> > +F:	include/linux/qpw.h
+> > +F:	kernel/qpw.c
+> > +
+> 
+> Should we also add the Documentation file as well?
+> 
+> +F:	Documentation/locking/qpwlocks.rst
+
+Done.
+
+> > +The queue work related functions (analogous to queue_work_on and flush_work) are:
+> > +queue_percpu_work_on and flush_percpu_work.
+> > +
+> > +The behaviour of the QPW functions is as follows:
+> > +
+> > +* !CONFIG_PREEMPT_RT and !CONFIG_QPW (or CONFIG_QPW and qpw=off kernel
+> 
+> I don't think PREEMPT_RT is needed here (maybe it was copied from the 
+> previous QPW version which was dependent on PREEMPT_RT?)
+
+Ah, OK, my bad. Well, shouldnt CONFIG_PREEMPT_RT select CONFIG_QPW and
+CONFIG_QPW_DEFAULT=y ?
+
+> > +boot parameter):
+> > +        - qpw_lock:                     local_lock
+> > +        - qpw_lock_irqsave:             local_lock_irqsave
+> > +        - qpw_trylock:                  local_trylock
+> > +        - qpw_trylock_irqsave:          local_trylock_irqsave
+> > +        - qpw_unlock:                   local_unlock
+> > +        - queue_percpu_work_on:         queue_work_on
+> > +        - flush_percpu_work:            flush_work
+> > +
+> > +* CONFIG_PREEMPT_RT or CONFIG_QPW (and CONFIG_QPW_DEFAULT or qpw=on kernel
+> 
+> Same here
+> 
+> > +boot parameter),
+> > +        - qpw_lock:                     spin_lock
+> > +        - qpw_lock_irqsave:             spin_lock_irqsave
+> > +        - qpw_trylock:                  spin_trylock
+> > +        - qpw_trylock_irqsave:          spin_trylock_irqsave
+> > +        - qpw_unlock:                   spin_unlock
+> > +        - queue_percpu_work_on:         executes work function on caller cpu
+> > +        - flush_percpu_work:            empty
+> > +
+> > +qpw_get_cpu(work_struct), to be called from within qpw work function,
+> > +returns the target cpu.
 > > 
-> > What about !PREEMPT_RT? We have people running isolated workloads and
-> > these sorts of pcp disruptions are really unwelcome as well. They do not
-> > have requirements as strong as RT workloads but the underlying
-> > fundamental problem is the same. Frederic (now CCed) is working on
-> > moving those pcp book keeping activities to be executed to the return to
-> > the userspace which should be taking care of both RT and non-RT
-> > configurations AFAICS.
+> > 
 > 
-> Michal,
 > 
-> For !PREEMPT_RT, _if_ you select CONFIG_QPW=y, then there is a kernel
-> boot option qpw=y/n, which controls whether the behaviour will be
-> similar (the spinlock is taken on local_lock, similar to PREEMPT_RT).
+> Other than that, LGTM!
 > 
-> If CONFIG_QPW=n, or kernel boot option qpw=n, then only local_lock 
-> (and remote work via work_queue) is used.
-
-OK, this is not true. There is only CONFIG_QPW and the qpw=yes/no kernel 
-boot option for control.
-
-CONFIG_PREEMPT_RT should probably select CONFIG_QPW=y and
-CONFIG_QPW_DEFAULT=y.
-
-> What "pcp book keeping activities" you refer to ? I don't see how
-> moving certain activities that happen under SLUB or LRU spinlocks
-> to happen before return to userspace changes things related 
-> to avoidance of CPU interruption ?
+> Reviewed-by: Leonardo Bras <leobras.c@gmail.com>
 > 
-> Thanks
+> Thanks!
+> Leo
+> 
 > 
 
