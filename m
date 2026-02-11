@@ -1,95 +1,143 @@
-Received: from ms.lwn.net (ms.lwn.net [45.79.88.28])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CA5C027FD56;
-	Wed, 11 Feb 2026 15:02:34 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.79.88.28
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E8DC52D9EF0
+	for <cgroups@vger.kernel.org>; Wed, 11 Feb 2026 15:43:10 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1770822156; cv=none; b=cbVzQuAmyShKWpFGX9T5Ehoq82vF0doxiFGpO72RNiab/5P3dBNHA+TaBi1qopeJ6r1EBmtjEEQRma/JVS8XHLaRHWXGrhxHezHEEVPyhisxc4adQywgrwP+Rk00tDFhZnmnWU+ucMIc/09SruZZwWg0XGcoDX3ULzNzbXGunD0=
+	t=1770824592; cv=none; b=IyBX5/kHmXIsMPWhLHdSLA69+AgxQhp4G1YfrAViSj5ScPzNc1K+uZeZA8E6lpqY0NfpZ+HNSNtG1jSViTknlORj5Y209/c5D6CVae8x7UxU3J0y67Do8QnY6vpG6xlOq/+27+AbWr6DCL8XgUVFvqZdul74hA+gtisG+mYlbJk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1770822156; c=relaxed/simple;
-	bh=rrvyiIc/o8FkZYCQ7mUHp/9VbmvT7q/TyTPBahJPoD8=;
-	h=From:To:Cc:Subject:In-Reply-To:References:Date:Message-ID:
-	 MIME-Version:Content-Type; b=E1ntQ3fTCH/FkGFZ/t3zYsYbg/NM3T59xvcZZ9/LBup4sQshde65uL5aJPmpjgyxlbEoCxWgJgFh8KtsvG1ZZ2rzTAFeHjnrSzVhVit+BRo1J6iBbMWErY96Im2uVZVjRCF+1Vzv5BIzlYYmjWb1CZSvtHndHSEzs3JTIKux5gc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lwn.net; spf=pass smtp.mailfrom=lwn.net; dkim=pass (2048-bit key) header.d=lwn.net header.i=@lwn.net header.b=THxYDRk6; arc=none smtp.client-ip=45.79.88.28
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lwn.net
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lwn.net
+	s=arc-20240116; t=1770824592; c=relaxed/simple;
+	bh=f8P4Oik573PqSqcMl2nrdc4aRqLgKVEZJJEx7z4rc54=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=WJeL+BUMIrNaYsxK76G4lNai66BkH/A3D9NreVMKz7bL+uZBB9XE8iMdjHt5xF7BQT0PQBRkpABwvNEUb03P9NMbAuPN3NuGriNtPQRqYUqLGaGigAm68lACEtPhDysenNDfuLz6Nuqt9fcb4P8wTH0v9dnAqd/FGr5NgOYjFqs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=fVc7/mIe; arc=none smtp.client-ip=170.10.133.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=lwn.net header.i=@lwn.net header.b="THxYDRk6"
-DKIM-Filter: OpenDKIM Filter v2.11.0 ms.lwn.net B569740C7C
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=lwn.net; s=20201203;
-	t=1770822147; bh=EIbkpU9L1q/Nn/4cX/6BL8Iuu3XPE9u3NeZNNDIBeiI=;
-	h=From:To:Cc:Subject:In-Reply-To:References:Date:From;
-	b=THxYDRk6VMiU4F937KJveX3oFXnsKmLrts04KYb7VIrQJHnSXwbpAqP5PyOBzv99i
-	 WdUSlSI+NN2sy2xu7E9WohDoUN5nwnXzl/M1MBY/zCJHoQhJz7dlL21wlNymQ+cZZv
-	 2Wf1mJIlZxbpiiuwdpDvJEaKawgC0Ay34EkluUGbeX3pSpYAJjn6jW+nNuMsoSuVvF
-	 bhB7IPMl8OP7+B8BIRp958GzqE2QWZa2CMk1ZWWZPlxqE9BqOH4//3bFz11GO3h4Kp
-	 4KuRQK9ss27/NXgE3a47534lp6LInMhapPvQQ6K8M2S1w5MZFUTu0x/hapt3GOkXLn
-	 vhBYMtOharEGA==
-Received: from localhost (unknown [IPv6:2601:280:4600:27b::1fe])
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="fVc7/mIe"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1770824590;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=QAsCSJyvhO4BKRpaZq8qCLo9xLrC1Bu2FU5B/EJQXzA=;
+	b=fVc7/mIejKqxg3q6sUgGOM1cUtTs8f7Kr4rU/MDJp0BH8eIjDdgx5nIf8wcyGyzGF8F2vU
+	I2/i7SsoRT2+iRD3Ti2wcmrcyvPNaHapAzuycKNZ734wO0lH7+g7zS2nJpTzQfXYteLQAE
+	0DZBJo9/8/uQ3leV7VO6YKKBgO9C6pI=
+Received: from mx-prod-mc-06.mail-002.prod.us-west-2.aws.redhat.com
+ (ec2-35-165-154-97.us-west-2.compute.amazonaws.com [35.165.154.97]) by
+ relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-608-VY_sHjiSNkmUh9yogSGtRA-1; Wed,
+ 11 Feb 2026 10:43:06 -0500
+X-MC-Unique: VY_sHjiSNkmUh9yogSGtRA-1
+X-Mimecast-MFC-AGG-ID: VY_sHjiSNkmUh9yogSGtRA_1770824584
+Received: from mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.12])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange ECDHE (prime256v1) server-signature ECDSA (prime256v1) server-digest SHA256)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
-	by ms.lwn.net (Postfix) with ESMTPSA id B569740C7C;
-	Wed, 11 Feb 2026 15:02:27 +0000 (UTC)
-From: Jonathan Corbet <corbet@lwn.net>
-To: Tang Yizhou <yizhou.tang@shopee.com>
-Cc: tj@kernel.org, axboe@kernel.dk, hch@lst.de, cgroups@vger.kernel.org,
- linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, mkoutny@suse.com
-Subject: Re: [PATCH] docs: Fix blk-iolatency peer throttling description
-In-Reply-To: <CACuPKxnY0Uo6RU5Cw2_fS=hQcjUBwiA+G3U-LUaviVYyf0Pojw@mail.gmail.com>
-References: <20260114110837.84126-1-yizhou.tang@shopee.com>
- <guqq2cm3mk5qf45rcman3twiu7vax4sgkrhj23jrjb26tt3sk3@bh2h6s7givfq>
- <CACuPKxnY0Uo6RU5Cw2_fS=hQcjUBwiA+G3U-LUaviVYyf0Pojw@mail.gmail.com>
-Date: Wed, 11 Feb 2026 08:02:26 -0700
-Message-ID: <874inn2uil.fsf@trenco.lwn.net>
+	by mx-prod-mc-06.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id DA8E7180057E;
+	Wed, 11 Feb 2026 15:43:03 +0000 (UTC)
+Received: from tpad.localdomain (unknown [10.96.133.3])
+	by mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id 0104D19560B7;
+	Wed, 11 Feb 2026 15:43:02 +0000 (UTC)
+Received: by tpad.localdomain (Postfix, from userid 1000)
+	id 5CE154036F1D0; Wed, 11 Feb 2026 09:01:12 -0300 (-03)
+Date: Wed, 11 Feb 2026 09:01:12 -0300
+From: Marcelo Tosatti <mtosatti@redhat.com>
+To: Michal Hocko <mhocko@suse.com>
+Cc: linux-kernel@vger.kernel.org, cgroups@vger.kernel.org,
+	linux-mm@kvack.org, Johannes Weiner <hannes@cmpxchg.org>,
+	Roman Gushchin <roman.gushchin@linux.dev>,
+	Shakeel Butt <shakeel.butt@linux.dev>,
+	Muchun Song <muchun.song@linux.dev>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Christoph Lameter <cl@linux.com>, Pekka Enberg <penberg@kernel.org>,
+	David Rientjes <rientjes@google.com>,
+	Joonsoo Kim <iamjoonsoo.kim@lge.com>,
+	Vlastimil Babka <vbabka@suse.cz>,
+	Hyeonggon Yoo <42.hyeyoo@gmail.com>,
+	Leonardo Bras <leobras@redhat.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Waiman Long <longman@redhat.com>, Boqun Feng <boqun.feng@gmail.com>,
+	Frederic Weisbecker <fweisbecker@suse.de>
+Subject: Re: [PATCH 0/4] Introduce QPW for per-cpu operations
+Message-ID: <aYxviLoWsrLqDU7o@tpad>
+References: <20260206143430.021026873@redhat.com>
+ <aYs6Ju2G4bm6_tl2@tiehlicka>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <aYs6Ju2G4bm6_tl2@tiehlicka>
+X-Scanned-By: MIMEDefang 3.0 on 10.30.177.12
 
-Tang Yizhou <yizhou.tang@shopee.com> writes:
+On Tue, Feb 10, 2026 at 03:01:10PM +0100, Michal Hocko wrote:
+> On Fri 06-02-26 11:34:30, Marcelo Tosatti wrote:
+> > The problem:
+> > Some places in the kernel implement a parallel programming strategy
+> > consisting on local_locks() for most of the work, and some rare remote
+> > operations are scheduled on target cpu. This keeps cache bouncing low since
+> > cacheline tends to be mostly local, and avoids the cost of locks in non-RT
+> > kernels, even though the very few remote operations will be expensive due
+> > to scheduling overhead.
+> > 
+> > On the other hand, for RT workloads this can represent a problem: getting
+> > an important workload scheduled out to deal with remote requests is
+> > sure to introduce unexpected deadline misses.
+> > 
+> > The idea:
+> > Currently with PREEMPT_RT=y, local_locks() become per-cpu spinlocks.
+> > In this case, instead of scheduling work on a remote cpu, it should
+> > be safe to grab that remote cpu's per-cpu spinlock and run the required
+> > work locally. That major cost, which is un/locking in every local function,
+> > already happens in PREEMPT_RT.
+> > 
+> > Also, there is no need to worry about extra cache bouncing:
+> > The cacheline invalidation already happens due to schedule_work_on().
+> > 
+> > This will avoid schedule_work_on(), and thus avoid scheduling-out an
+> > RT workload.
+> > 
+> > Proposed solution:
+> > A new interface called Queue PerCPU Work (QPW), which should replace
+> > Work Queue in the above mentioned use case.
+> > 
+> > If PREEMPT_RT=n this interfaces just wraps the current
+> > local_locks + WorkQueue behavior, so no expected change in runtime.
+> > 
+> > If PREEMPT_RT=y, or CONFIG_QPW=y, queue_percpu_work_on(cpu,...) will
+> > lock that cpu's per-cpu structure and perform work on it locally. 
+> > This is possible because on functions that can be used for performing
+> > remote work on remote per-cpu structures, the local_lock (which is already
+> > a this_cpu spinlock()), will be replaced by a qpw_spinlock(), which
+> > is able to get the per_cpu spinlock() for the cpu passed as parameter.
+> 
+> What about !PREEMPT_RT? We have people running isolated workloads and
+> these sorts of pcp disruptions are really unwelcome as well. They do not
+> have requirements as strong as RT workloads but the underlying
+> fundamental problem is the same. Frederic (now CCed) is working on
+> moving those pcp book keeping activities to be executed to the return to
+> the userspace which should be taking care of both RT and non-RT
+> configurations AFAICS.
 
-> On Tue, Jan 20, 2026 at 9:37=E2=80=AFPM Michal Koutn=C3=BD <mkoutny@suse.=
-com> wrote:
->>
->> On Wed, Jan 14, 2026 at 07:08:37PM +0800, Tang Yizhou <yizhou.tang@shope=
-e.com> wrote:
->> > From: Tang Yizhou <yizhou.tang@shopee.com>
->> >
->> > The current text states that peers with a lower latency target are
->> > throttled, which is the opposite of the actual behavior. In fact,
->> > blk-iolatency throttles peer groups with a higher latency target in or=
-der
->> > to protect the more latency-sensitive group.
->> >
->> > In addition, peer groups without a configured latency target are also
->> > throttled, as they are treated as lower priority compared to groups wi=
-th
->> > explicit latency requirements.
->> >
->> > Update the documentation to reflect the correct throttling behavior.
->> >
->> > Signed-off-by: Tang Yizhou <yizhou.tang@shopee.com>
->> > ---
->> >  Documentation/admin-guide/cgroup-v2.rst | 10 ++++++----
->> >  1 file changed, 6 insertions(+), 4 deletions(-)
->>
->> Not a big deal but it could've been confusing.
->>
->>
->> Acked-by: Michal Koutn=C3=BD <mkoutny@suse.com>
->
-> Hi Jon, just checking in, do you think this patch is ready to be merged?
+Michal,
 
-Tejun usually takes cgroup-related docs changes directly, so I was
-deferring on this one.  If the preference is for it to go through the
-docs tree I can certainly pick it up.
+For !PREEMPT_RT, _if_ you select CONFIG_QPW=y, then there is a kernel
+boot option qpw=y/n, which controls whether the behaviour will be
+similar (the spinlock is taken on local_lock, similar to PREEMPT_RT).
 
-Thanks,
+If CONFIG_QPW=n, or kernel boot option qpw=n, then only local_lock 
+(and remote work via work_queue) is used.
 
-jon
+What "pcp book keeping activities" you refer to ? I don't see how
+moving certain activities that happen under SLUB or LRU spinlocks
+to happen before return to userspace changes things related 
+to avoidance of CPU interruption ?
+
+Thanks
+
