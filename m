@@ -1,73 +1,74 @@
 Received: from mx0a-00069f02.pphosted.com (mx0a-00069f02.pphosted.com [205.220.165.32])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8D91B331A5F;
-	Wed, 11 Feb 2026 10:14:54 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8C08219EED3;
+	Wed, 11 Feb 2026 10:20:34 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=205.220.165.32
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1770804896; cv=fail; b=uC2+RdNR4HK7azNdxjDrmJ8bXW8nhkwOpZf5TnR0CBkT00qeXAnosq0u7KA8EvIdrGmtV3W6ZoGgl4DMVjK5Xjw4q9CeevfHqWSg9MGJdYKcMskBtiEvn1oeSPZix/po7a8qjOxItMj9vGqVCl/d5vTDCfduy5K+gb2iAs0fw6g=
+	t=1770805236; cv=fail; b=FCW6L4O4CI7/d/F55H45zX2/3gI+GFqgvjGxco0nWV5hkXUgXvD0WLJyGNSyWCXjJlRQa9WSIaoVRWRT86kVczlkZ10Y74avkufhpTXMh2PR1y++DDnzzEDnNFhWwPM07xH2DCGLSS+3xgpNQEP4Lerc1Y4oNA1J6zUKxEIUQCg=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1770804896; c=relaxed/simple;
-	bh=vd3FtpKxb3bB9BUX+MyFHuAInpdSUemHQDa5AaKKmok=;
+	s=arc-20240116; t=1770805236; c=relaxed/simple;
+	bh=IPkjMPdyB6txM8Q1nYxRCdUmqTKzKHZqTo26HJbjPnU=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:Content-Type:
-	 Content-Disposition:In-Reply-To:MIME-Version; b=uCGu4u0OFrigLSYVU8gkYwwlyM59Dcc7X9f53Z2C7hXp1Imte+qKXMAJNe/OTU1WbkuAQ7L1ycp4anez3FkBCOEzcr5aclNYYyJrUD6XrwML7DNov9HpefrcTQfB13iq7nG/zmtmynzrcJl4n+44FAhGNyW3I+FxljKxXcaPSR4=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=WLEQ6pei; dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b=Oj+kXqiN; arc=fail smtp.client-ip=205.220.165.32
+	 Content-Disposition:In-Reply-To:MIME-Version; b=SPYFZxTu0yA1uzz0Kt9WIfg8FBAj6MhGcxMutUxWwrJHTXsbfqVwwHMQlWSKN+QtqYs9Ey0Ik5S2jx8Dz7xY6NBfynWMlgIxiUcWPPOSLqDFdb53Xd+7EQqBxoBGwFoNSBEbAExssd6slY8ysAxXa85XsZewhqp0VtUe/JlX8U4=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=M7TFJewa; dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b=rEWy9pmU; arc=fail smtp.client-ip=205.220.165.32
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oracle.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="WLEQ6pei";
-	dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b="Oj+kXqiN"
-Received: from pps.filterd (m0246629.ppops.net [127.0.0.1])
-	by mx0b-00069f02.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 61B9wNqf1815499;
-	Wed, 11 Feb 2026 10:14:29 GMT
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="M7TFJewa";
+	dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b="rEWy9pmU"
+Received: from pps.filterd (m0333521.ppops.net [127.0.0.1])
+	by mx0b-00069f02.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 61B6g90V064746;
+	Wed, 11 Feb 2026 08:53:52 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=cc
 	:content-type:date:from:in-reply-to:message-id:mime-version
-	:references:subject:to; s=corp-2025-04-25; bh=VUF4zGjKdKtqB/4mxr
-	dEjDZ2MDWT58hrl+yYD9l12R4=; b=WLEQ6pei8AsbHkJxe5u3y0obQJnvNnP/95
-	495jpZyVVGyFoKG5DraTBYNn92U1O5onfeR9oovb8gepVB7eyopFN0hSRiO2LMEn
-	1zHa507lvgVKuosLAIC4pSZ0X8apybFgI27tWFKBZ2xQAEWgqet9SAgcCATgCo+k
-	3mtSKu6+sWL5HT7NvCKZpDmjfA3fBPQplWnGpG9A+UNk++MfwE0cOIZgN0Qqt5eU
-	6dIuIGFE7ahVp402fX7nvw4W7JbFzeFCHCjSB6Tka0MaYyR+2Mvay68FgZYyFim4
-	7m6CnfpCuJv2bVQBlq0Tp1ltHTmL/1Wsd1dsg7SA0YtIvAi/Y2FQ==
-Received: from phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta03.appoci.oracle.com [138.1.37.129])
-	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 4c5xh8wnd3-1
+	:references:subject:to; s=corp-2025-04-25; bh=KorXeNvNh/2bF2nV4i
+	2MzMaxcrAO4N9h0IwiNlgknj0=; b=M7TFJewa/mGc0qrMD9HOa60St9hzMX1o84
+	UW2S3In0/vP0lzrTx6m8+Uq5zsh8zLLUkc4qzW79lCWvfx7906XtV0mO/OhXOgh/
+	WwwP+MGbUihXabHo6Hqh5hPR0KHebYWL7gqVuLZ/p08KuUV9d/FbKxzmNc9LNkmx
+	k+SVMavAhATupmY88GCBlG6kzYarNEQXLQTa7qkllWMJc/vfuvM/WzHjB8VjPcHS
+	USuaIuGtJjYuyyO3zX1c8gWvWSqDf5/hSjr7puRvBAlD9GsmicLvRmnY+hFu4gi4
+	TD6yRo9hXQDwTx5ba5fX+m70tDEWuHmRBdMdX6uazXIeIo+6i7iQ==
+Received: from phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta01.appoci.oracle.com [138.1.114.2])
+	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 4c88n7h31m-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Wed, 11 Feb 2026 10:14:28 +0000 (GMT)
-Received: from pps.filterd (phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
-	by phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (8.18.1.2/8.18.1.2) with ESMTP id 61B8bqYZ033798;
-	Wed, 11 Feb 2026 10:14:28 GMT
-Received: from ch5pr02cu005.outbound.protection.outlook.com (mail-northcentralusazon11012032.outbound.protection.outlook.com [40.107.200.32])
-	by phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTPS id 4c82464a94-1
+	Wed, 11 Feb 2026 08:53:52 +0000 (GMT)
+Received: from pps.filterd (phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
+	by phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (8.18.1.2/8.18.1.2) with ESMTP id 61B8QEFE030032;
+	Wed, 11 Feb 2026 08:53:51 GMT
+Received: from cy3pr05cu001.outbound.protection.outlook.com (mail-westcentralusazon11013028.outbound.protection.outlook.com [40.93.201.28])
+	by phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTPS id 4c82299yy8-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Wed, 11 Feb 2026 10:14:28 +0000
+	Wed, 11 Feb 2026 08:53:51 +0000
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=BYhZjDTEfMcqJbI4G5sgVvsi6/W9lhu+6vb5PRNUJYELaLv4sQWkiGxnDvMWl0SkzSQDdFK2FlxL29/Z6q5ummtX0wQfvy5kX1ZTRJT4Mok4byNpkoF7H4604txiBHOg79y2QSE6UmdwPrtI+OAR5nsuQmWopGAW5JTfl4LuLPHu5CwEq1D0lXnbJTWOeka5WSz4z1Ni4arjvE2ps9bcpsYsYPToeZXVrjXant0qbhMPg6TFKUG/UnNDcPiRReey6RQRvwnz53n3fooetSTjvIosfrNrNkZAnmMkriaXMmuaWQzbAogg8Dbi6aDVwDuANGwUoyj8jVkTjj9K91qW2w==
+ b=F5RnTnIYTfhZtqxPflCDt9cNqyoR8jA/YFf9nlIOusPUY+oVgtFYJoMS1XskeZYCoyj5NXMXYu7xTZNiwpynWEg9v4yGqbepzwcahnhfgO07a+GwHpZ4I+XZRGBQLYYN6LPPeH4m1/Yn1mvJa1cF+rT5Wd8P5QHoVDptYObV4kEj3z+F25GY/TMJ3a3Tg5RC4MqSQ1reOB0Bbn2RVkQQixMSVKhdllLDTvBV1RGWBUWF9YoR5qlSTL04uSyYB5zhcAbm0JYggPgwzksQJbsuikJqGu5Rx89n4HFjJh/z/VIZgQ9Ci5dTnTvzMz6riiKM8eGygA+gceMbrMOWMBu25A==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector10001;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=VUF4zGjKdKtqB/4mxrdEjDZ2MDWT58hrl+yYD9l12R4=;
- b=W3txCO6ztVUP+qvhAOn/9uZM9+X3h+4v+OQMiqaRahe1Cs6M5O/2xyc1EZVfP8w7eqgsKPNBZOc2W0MvQtZGS1x9FqL19pDqxGJQSaJ7ieWOeMB8KZtD5WP9zy+DJAljQiM2xRFS+HoDQ0M5EcHg/e6m5LV3kp+l0WOGK353h3jhGtFzmoBw6P+Q08tzPw7p3qSrx4aXVPvyD6sYbtGyyUr+RpdcZy2A4jxLZljjedDq/uy6ykYC/diWN21BOTSMsFHAwKvMGGafNvath0Pfazq0xjRtxa4HRHR5UtgszgcHm4YJIjI+7Ej8Kgl6JqLO4dQ2gT4C6CncdtIQJAwRDw==
+ bh=KorXeNvNh/2bF2nV4i2MzMaxcrAO4N9h0IwiNlgknj0=;
+ b=FBZIJ/Cl/k8HAV/oDk0sIHXvqbDCPmA2aUIC2YlIia24WXWxdGClPIN/6EetcBy4LzXLslb7d9dKZrHr8gsUd5k/Fe2ogJFL+PBwLCb34Kr5Z/yZV3cqVuoine+gduZKsNfxSAIEiCLV1gFSB92FjQNwNdgzXbaxdxMGzu+WK577GStkJw8mYVi2+GpXHcJRogSK3pvjR9eWfrZaMJnmL64uLB5gMTHDYUrpBkkRg7No847sT3Z+yEgUg5jDqWMV+QKHvyI8KUcWyMO1IuC+cg22UdtgW9dndzyCQJwhgY6DFuwdavej34P4h0lnWVc3h6ktyCj7deE785UP1d3ZWw==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
  dkim=pass header.d=oracle.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
  d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=VUF4zGjKdKtqB/4mxrdEjDZ2MDWT58hrl+yYD9l12R4=;
- b=Oj+kXqiN0ED7UvuzhQ16qknndDKNkn1h/ytr7rzvsAAYhpVxWVoa/QWF1pSK49BsRmt61tYRMq/iFrbxLyRF1EV/Oxz6jPQAGxix2TQr1FnLRkqdCRg/zuv//F8ItSvChDw0AXLNW4D6DTlTYh1IRLUNkAGkm7e2buHg5RsG+hc=
-Received: from DS0PR10MB7341.namprd10.prod.outlook.com (2603:10b6:8:f8::22) by
- BL4PR10MB8231.namprd10.prod.outlook.com (2603:10b6:208:4e6::22) with
+ bh=KorXeNvNh/2bF2nV4i2MzMaxcrAO4N9h0IwiNlgknj0=;
+ b=rEWy9pmU4SIuh4VyAivZBW7/nK3YMSiIhEb7yczBfwdpDJop7BKjkyPp3VVotl+wBRtx90avU1i2uKe8TfVWBV4yEhNxhZpfIw4EkO2pq/onXLDr9tokfbcyMPFGf71QCJQ/Z1DsHUOsRrvpw7v+r4b9IDqYL7Fvv1mvgDbtdQw=
+Received: from CH3PR10MB7329.namprd10.prod.outlook.com (2603:10b6:610:12c::16)
+ by SJ5PPF6998A7572.namprd10.prod.outlook.com (2603:10b6:a0f:fc02::7a3) with
  Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9520.5; Wed, 11 Feb
- 2026 10:14:25 +0000
-Received: from DS0PR10MB7341.namprd10.prod.outlook.com
- ([fe80::81bc:4372:aeda:f71d]) by DS0PR10MB7341.namprd10.prod.outlook.com
- ([fe80::81bc:4372:aeda:f71d%5]) with mapi id 15.20.9611.008; Wed, 11 Feb 2026
- 10:14:25 +0000
-Date: Wed, 11 Feb 2026 19:14:18 +0900
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9587.19; Wed, 11 Feb
+ 2026 08:53:47 +0000
+Received: from CH3PR10MB7329.namprd10.prod.outlook.com
+ ([fe80::c2a4:fdda:f0c2:6f71]) by CH3PR10MB7329.namprd10.prod.outlook.com
+ ([fe80::c2a4:fdda:f0c2:6f71%7]) with mapi id 15.20.9587.017; Wed, 11 Feb 2026
+ 08:53:47 +0000
+Date: Wed, 11 Feb 2026 17:53:38 +0900
 From: Harry Yoo <harry.yoo@oracle.com>
-To: Shakeel Butt <shakeel.butt@linux.dev>
-Cc: Dev Jain <dev.jain@arm.com>, Andrew Morton <akpm@linux-foundation.org>,
+To: Dev Jain <dev.jain@arm.com>
+Cc: Shakeel Butt <shakeel.butt@linux.dev>,
+        Andrew Morton <akpm@linux-foundation.org>,
         Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>,
         Roman Gushchin <roman.gushchin@linux.dev>,
         Muchun Song <muchun.song@linux.dev>, Qi Zheng <qi.zheng@linux.dev>,
@@ -75,8 +76,10 @@ Cc: Dev Jain <dev.jain@arm.com>, Andrew Morton <akpm@linux-foundation.org>,
         cgroups@vger.kernel.org, linux-kernel@vger.kernel.org,
         Meta kernel team <kernel-team@meta.com>
 Subject: Re: [PATCH 1/4] memcg: use mod_node_page_state to update stats
-Message-ID: <aYxWekRpQ2w4J_R8@hyeyoo>
-References: <05aec69b-8e73-49ac-aa89-47b371fb6269@arm.com>
+Message-ID: <aYxDkkDI4mk3r011@hyeyoo>
+References: <2638bd96-d8cc-4733-a4ce-efdf8f223183@arm.com>
+ <51819ca5a15d8928caac720426cd1ce82e89b429@linux.dev>
+ <05aec69b-8e73-49ac-aa89-47b371fb6269@arm.com>
  <aYOuCmjQ5lGm8Mup@linux.dev>
  <4847c300-c7bb-4259-867c-4bbf4d760576@arm.com>
  <aYQuj6Ot-JS4tXvY@hyeyoo>
@@ -84,14 +87,12 @@ References: <05aec69b-8e73-49ac-aa89-47b371fb6269@arm.com>
  <b77dc11e-fe09-4f0c-a912-d05faa01ff1c@arm.com>
  <aYtbevHEwx_3fn0Q@linux.dev>
  <5a6782f3-d758-4d9c-975b-5ae4b5d80d4e@arm.com>
- <aYxDkkDI4mk3r011@hyeyoo>
- <aYxIr5neJP8wBdZg@linux.dev>
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <aYxIr5neJP8wBdZg@linux.dev>
-X-ClientProxiedBy: SE2P216CA0020.KORP216.PROD.OUTLOOK.COM
- (2603:1096:101:114::11) To DS0PR10MB7341.namprd10.prod.outlook.com
- (2603:10b6:8:f8::22)
+In-Reply-To: <5a6782f3-d758-4d9c-975b-5ae4b5d80d4e@arm.com>
+X-ClientProxiedBy: SE2P216CA0124.KORP216.PROD.OUTLOOK.COM
+ (2603:1096:101:2c7::8) To CH3PR10MB7329.namprd10.prod.outlook.com
+ (2603:10b6:610:12c::16)
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
@@ -99,184 +100,238 @@ List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: DS0PR10MB7341:EE_|BL4PR10MB8231:EE_
-X-MS-Office365-Filtering-Correlation-Id: 51c9bf3b-2560-463e-c633-08de6956552d
+X-MS-TrafficTypeDiagnostic: CH3PR10MB7329:EE_|SJ5PPF6998A7572:EE_
+X-MS-Office365-Filtering-Correlation-Id: dec19e74-d170-41c0-796e-08de694b1164
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam: BCL:0;ARA:13230040|366016|1800799024|7416014|376014;
+X-Microsoft-Antispam: BCL:0;ARA:13230040|366016|1800799024|376014|7416014;
 X-Microsoft-Antispam-Message-Info:
-	=?us-ascii?Q?qoPBKvFEd3CXXPzJXh4qDEK8/0WLXDV8AjJY0Z1WV8lfNmXk2eo4yodiR7ol?=
- =?us-ascii?Q?72vMdNhHn+Kq+Ggr4E4IGYdcsaj1RkVCdc0HwQ3sR94uRQ5O2PhiQah7vA8b?=
- =?us-ascii?Q?BY0MlEL3RISWPTLAE+j3QbUhtPR2tZT9yeBT0jtXyD4oHAMl+VeeLDne2BeI?=
- =?us-ascii?Q?pRinkPVqsOUxEGu2/miPfRvRjamRESy/CiBYjjbaYg0AZtIvA9r0VFxPN6ul?=
- =?us-ascii?Q?viR00nFbdsY5WBlDT8sct8dXwsGHDuUuI2tzht6yYk3t8Nj9kcPBpZg25PkQ?=
- =?us-ascii?Q?fVJD8stQhG4nIg71PCsoRdCmTdVzzbzx4vVR21t/0VQd5TqbGOjRodZ6Cz/2?=
- =?us-ascii?Q?2gdKKsDSn8UfJWMPZYg4Mdc0jCob+5ybtb5e1BbX0wNLbRKo09CxMyQUM5Sz?=
- =?us-ascii?Q?YpiN6sq8Won+vKxZo0Qd/wO4PcVFBlx5xKSQH9TuOoib4GC9fzFEFuejb2QW?=
- =?us-ascii?Q?3aeQNaptHS9LynHwpSxlbKFP4fz2iR0j+xVT/zC/Jwa70ZRDlrpuIq5ikshR?=
- =?us-ascii?Q?vfnKQxLX7MSYUpowJxU4+JyIEJYVQfRbxe2pBeo4opNfP5zbgmDhyJGofMXw?=
- =?us-ascii?Q?c7YtJ36tOOYC88P6Je8StUTyIhK8wocMmKXZ2+J7GQzP5CyMPQcv+5VQIG3k?=
- =?us-ascii?Q?bj8GXf2HgfUplg/kGNnA885efbO88cnygNAEEnVhupYEe/EF2i/Rps7Voqjd?=
- =?us-ascii?Q?9gv3qIIUs/kiSGYxga3W1BTD7VBzCMAk9jJtsG5vELCMXJv18iKo9wz95+w0?=
- =?us-ascii?Q?vKw613X90TsHjhdM1VujlZJ2YqC0Xz0U8/2UsFIQwYUXwSjL8PWhH1fiIUdf?=
- =?us-ascii?Q?h1sDvNCEkdQnfICLADb9K3VXgGolQxLZV3lBVy48tA1Lw1TXC9z6ymB0uemJ?=
- =?us-ascii?Q?nvHJT1SI5m6FDc1ZqEZzFHKxvwgjTQ7osbyEdBsznzBtKOoa5PzGBCkkHMif?=
- =?us-ascii?Q?8Zwr8l4eHkXTbFs7PS2WBdPAsccGU/7GY1NlbAzR755MICrwamqDqJPYxoGm?=
- =?us-ascii?Q?q6M49kyWb6FdyVgg0BmCtNlBzH6TaXa1uhDXCFxZcqYKWi2t6Sa5YZgoVG5i?=
- =?us-ascii?Q?G8lWK6D1TgzauDY8gzIHoaQkGDZRobkpkZD6T1jc6ZqRgX9JEYVRfZD2c++u?=
- =?us-ascii?Q?NvfdQIKUjig5xulWyByNLttwA3eIZudyjOlx9daS8p52VUsCKYB6aFsBbdnH?=
- =?us-ascii?Q?EFzpe6HsOlP6YpEmQm7Zb2WRoYhvbh1DytAsbAQUgHXFGy0bKWKTCOmBdPoa?=
- =?us-ascii?Q?gtusbsfIFPZ22oZq67maFYdermU+bsVCfkodJMQkZvoXUbmqKmvBSRkOOBvM?=
- =?us-ascii?Q?4CEfeXk2RmxilISviHbCY8geLziypsRlV/20q+a0hi81qMvQMXITtw5NgpCS?=
- =?us-ascii?Q?VAQllL1zi8dlUYzh6hzTaUMUDKUvrh2xSa2r2xs7M+TyfprZkk7edBvbViC4?=
- =?us-ascii?Q?tf1cx/qHAe4yqvVJr5nlkP79itgll4h+83IK29PaPrrsgMxq8PUo2WUSdH4M?=
- =?us-ascii?Q?VxeQTvdTfD4GKyBZTUZC4KX2Ohg8EdeBGH8MTofuSOaxYdykhGBL/IVAddLp?=
- =?us-ascii?Q?UprY59xc3rk2Vy3HCxQ=3D?=
+	=?us-ascii?Q?/mKvH1P+GmfrqU6h3CJ9H2diCX6LXQwScJaDeURcrD8p6reGXMNNblZz16DW?=
+ =?us-ascii?Q?EJKFmNuNo/teT7kR22OHxC044K35Rq8h5BAFhxGprUmyYyazrfFvOTVemB9U?=
+ =?us-ascii?Q?mjUHT27r6TSptQHmJbRdQgghlWy/MEyQmcOca2AzpMIppYUcW1gq2Xfa3MSO?=
+ =?us-ascii?Q?WJ2qmi9eUPZ53rHozj7JSgUU++9T+p08u6OKTRZEHeR3BlSmh55J+rECnehZ?=
+ =?us-ascii?Q?8iLV5KUBApvgr1H7oXxUN4hsFIUx+ulF/Vd73L5+wIHwpuvtoAun0QqveZZN?=
+ =?us-ascii?Q?XubKDvIVb3lGUSrDm+mdSRPp9I/hSlxCERj+auWAJFJwKq3LyZdTHC5UVhig?=
+ =?us-ascii?Q?NpnOta1RcMceESUas867GISJNJLQHEDegxfbveaslVpUpQ8MgW2F3gajtXoE?=
+ =?us-ascii?Q?b2kx4yhXh0jj3DoeDnbySIORJ7St7AmDNWeZUR4zpHmVmm7lnIMeWWI4ALFG?=
+ =?us-ascii?Q?Hk5r9NxO5SyEx+K4hA7zF74zkXn3S0x7Fah7YHZZqcINSixyhKdrDiMvSlrt?=
+ =?us-ascii?Q?MbPy70aDadFDNbuwFPHYlywUUrPBhxsuZgPah6N71ibu/t2F4vB3/9qoa/fl?=
+ =?us-ascii?Q?IICCUgpUBlyIKd96rvGcJqEtIWmONyR1tMarqJ5GTyliSbI1pbGYrjFnEKng?=
+ =?us-ascii?Q?0TvxvRpbUxNjO4aJX/D1N2gnZkG9oecItPqgrs5i3+ODzuhfKIWTjbJEyXIt?=
+ =?us-ascii?Q?V6eRtNuEHpy4tBut+Z2aHIMrPPJ1GdlCrxyRQpvVZBdl70MoT6uSSyhF28Qc?=
+ =?us-ascii?Q?qttjGMPDWaIviwKzK6Os/+1P25Iacch7gjPCrXJwZNFjAwmRNRVLGYPNA++j?=
+ =?us-ascii?Q?svZLxjmogEqPyXUiLdyqf61fClH7MKYxyMtntgVw5rNtcfKjAP3Wusymx2Is?=
+ =?us-ascii?Q?TmhuSE4ymIb/HJukQ0Q3/WuzHPv7Ia3fpdW4fyk6POPxgNBDd9HhExp2qaMK?=
+ =?us-ascii?Q?EVJIoTAB+1wJ5BHnOFa3NSmBzzTiBL2xeJoWiPEUz8Enj3ewXr319yu49oLx?=
+ =?us-ascii?Q?yqWs9teNWcsYrfWdfMzuly4qesHvqOv64YRC0pq8L0KbALX6p93d6Xfr1PQp?=
+ =?us-ascii?Q?r3KXh89z0RdV4nHiQ/oQpG+ntfcnpX+USw/rJDdvyIA9OxwDvTbfzyTfnbSI?=
+ =?us-ascii?Q?n/i+Ee9v6LWRBN8WNktTaE/PXfUr/dRlqqKKEqm5k3Btzo9my/yFSVFTMK1k?=
+ =?us-ascii?Q?po9efuMSDVRrcjg6HbocNkx2om1ugDZYqO0rzPE8e98kXFv8ucEml9o9i8E3?=
+ =?us-ascii?Q?cBxvjpAJUjZgQxaowdp8QHfjim1DGtFxMp3lt2Uagj3CMo/6UAGluxCm9YQS?=
+ =?us-ascii?Q?un7m6L+VmP6d3/M3wBIEMzIlvZdWD+Rf0trTcdRAJVB5B1qGMV61dQn05h/4?=
+ =?us-ascii?Q?EdUrZLND84OwBsetBhP25ZAJQuj4Rl31HgqQuvq0SLfKcxUretSXGhDctY07?=
+ =?us-ascii?Q?D6eW0duYOhbY7WAjCHkPKo/+hzVSM2/wShJICUSZZeFa/l57VCTbioJNMtMA?=
+ =?us-ascii?Q?VAPgWjYbEXwoZ534di8eCXTp/RSYpHEkadUkCkIt4MWKv7D8jDW+s75SNpGA?=
+ =?us-ascii?Q?g/UdGWOjEKj+pbaJY7k=3D?=
 X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DS0PR10MB7341.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(366016)(1800799024)(7416014)(376014);DIR:OUT;SFP:1101;
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:CH3PR10MB7329.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(366016)(1800799024)(376014)(7416014);DIR:OUT;SFP:1101;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
 X-MS-Exchange-AntiSpam-MessageData-0:
-	=?us-ascii?Q?So0pDTwpJ187UOY+OXo+alFumfb6c6vtL/3eQaiU1yjZzxFQMMgqIFOkAs7f?=
- =?us-ascii?Q?6ukEx1I1dXAXEVgXXQHL1y7jy5ocDvsfiX/DY47fmBnBFQjo9e5cAkGwkCMD?=
- =?us-ascii?Q?RvRayhKMhNhJwItYrGfWOLQfVvl19MLf7JC5/3wjN6ddk7z9GJSBtCymt9KI?=
- =?us-ascii?Q?WEzi10sezHviWjAjbp+xsYLckFIfydm/AUEMp7OLjhq5T0Bp4uKq5XmhQcwG?=
- =?us-ascii?Q?l/+/aXUXyd44WEvB8Z2krCQEtJY4C7lIT/9qorOzq5UMuR8oGq5qkR2jD+tn?=
- =?us-ascii?Q?ZnmelqDyakh5fjeX1vF/2FeDqs5qbw6wyCVPJhib9eleRvpUm2OkESDe16yf?=
- =?us-ascii?Q?1oDUuDETcWEUMNdDAjua77yv9rNDnYzWqs4rXgBHMNNnIqELyU5cbjUmzSVC?=
- =?us-ascii?Q?Jn4aY56N3rA/23Z8fM5YkG/yVcmFgh6WaMg+/zvVIK/gxv4PeqrsDFchYc3j?=
- =?us-ascii?Q?771yuV/hmSI9i7oHxvhy0MOCqNvSa30MPRRZIuppiZhJqyjwTXdupU04IAOn?=
- =?us-ascii?Q?KEVf9UEDulxpseCPPwmgvixpCccnIL69kn4BYJdW9K4+ntQ7YR6FOwGY9lZE?=
- =?us-ascii?Q?f0zowlBmcbts+i7WI4K0O/2l/kYh4QceDv+J85lMaNvJU3GmznXjduIem8/2?=
- =?us-ascii?Q?2Ca9YyPEhUB9hP5il78DcZzaaNSimPloyNJIjQrJ/NEaLPGtHrJZKzKR9ALW?=
- =?us-ascii?Q?YJqDNeHpNaA397GBlH0dojEYF39J0PMkUj2pYslL2BfXlknyqGHtPfaAqfjS?=
- =?us-ascii?Q?uUQv2QgVpDP1TZ+Zvldd6MZdQ8xlDgwxc91RRsOjD6HW3OTKSxJ+pcUvrpP+?=
- =?us-ascii?Q?sfO8RW4ja5zZBJESvrsEZzIJ2hqCle9sGRdFER2Pbsftv1LSnxTmrVMx+6OQ?=
- =?us-ascii?Q?ozohxgLJ7GsbU9FLdMLZpczxDgWRxoFR8OyAFKvyS/gn9ccyg4FnYlW5bfrL?=
- =?us-ascii?Q?wer3i+VMxsRz8s+mms4BiwzLb5RamcMeZdJyiZvpxlPdKudVXNehCkWPKwYi?=
- =?us-ascii?Q?/gMS86KRATitU0HqCVV/ju+rlO0FoKo6OMOFeZmcvzo8CYkLzTcJI3C+xM6T?=
- =?us-ascii?Q?HCJziI5+kXEJfFRLPP42nvCIuzsSQh75sj/AZNahAXckcYKwLpHsWHIlNEaG?=
- =?us-ascii?Q?Ys01jfa7D+v3f910DTHzOKzmWyfAc/gyYPh1i2LByn791V/xe9HaUEcd7JGT?=
- =?us-ascii?Q?QapvwQchoGN/fpgMJP4OK+lSB0U0Ex/FbIBE2aU1K8zetKL0eeebDsou9SHz?=
- =?us-ascii?Q?WicL8hUC/Jjdy11MZHAWgBFjOVh0HpfCsrEL7qM5hiHEm9yFfatvxsV6RJw2?=
- =?us-ascii?Q?cxrRG7P8m/HYCXjb7BUQSriVc1DEhJN5OonYts2mTEFVhoO+2gPj0KNKEvK2?=
- =?us-ascii?Q?kGDnbkSaIVIXP3b61/WXyINKcw92HKOvICeIoJC3czF0WOFaq3c12Rq3PqIM?=
- =?us-ascii?Q?d2xZS2UAmA+IIwL+n4Hb3D5RZ4HbPzygHsUpKmjJyoCPbsuBvJKNmjbI0ZWa?=
- =?us-ascii?Q?ZwA1yNwSxOjrqw+xzuCZanUerHFGgCXSpFv0nkETjHMixb2PegPdWROo8Fyu?=
- =?us-ascii?Q?zi+OOJDzG6pc5YBlz8rKw2n03o3dzp7L2md/Huwl7M0lF7Z7Sgg/JSaxROSn?=
- =?us-ascii?Q?AHojnZXQkoFjAUWb7VD8ZePkguH2pSYg9guMzgofedI3nAKDzNg5eNRfPm0n?=
- =?us-ascii?Q?l3qmxsGg8/TffXiIeqKrdPJwPdptTvzMScTI8TG55zYpwnKEqTCoxj2sy+ah?=
- =?us-ascii?Q?4p1aN5R5rQ=3D=3D?=
+	=?us-ascii?Q?M3AUvqQgHB/jw+++P/uSOc+WHaXCg6QMIKtqbvJMBUeJRKcxoeC1Y5+nduyL?=
+ =?us-ascii?Q?ocop/tshQnh+vmW42ahiglUtq8GulxCT3WGHfdODukQdRhMcR9RC+qdUxUJ8?=
+ =?us-ascii?Q?HqndSVoorqE1qXkVl03e9Z4o6XzUHVulGVZsldHlMtvAOAFCrbwFJTUVdGAg?=
+ =?us-ascii?Q?zS0apQPgE4xXkvdTtzl8EYDdOifojfcCQ95s2kVptggG9lsNlRPKfIBP0xN/?=
+ =?us-ascii?Q?Zx7Ue1pyhvun1zT5yC7JHTcz+reM3R7akefdbDYvHwAsFlho6s7BUdY3jod8?=
+ =?us-ascii?Q?qWJxaDtzpn27zr0ns/EJuXELvgsh8kgsgXSixWOFuRxFF11beH9FzcEjtPeJ?=
+ =?us-ascii?Q?Umgjx/S72/tq4RLbGXvF7OSaIeKeWvdT0XZIWUvuwJJnh10ssBK3jXiiKSTT?=
+ =?us-ascii?Q?cayqO2lVsVGHRPRdWKvA0bT4cGLxF/gwoHeZfQRatgLzvYPWWsktC0cNeQTl?=
+ =?us-ascii?Q?+Y92Eoh3TkU9qpUCEz2x5KUew9PZAffPe6QJTekbOo+8JHXJBUNKUF9whasd?=
+ =?us-ascii?Q?g2nDFrXBDjtqRo29ctu6uTskHxkL2F2TX/8qHSnxGQl8rwJjA4TCTDiGrSZM?=
+ =?us-ascii?Q?VReTavvz2J+V4x/7XpXaXIekd6qc9oSIXfC7DruzoFPRx9Ar9pTZ7m/IxHXr?=
+ =?us-ascii?Q?vOuH2ElDkXGsUAr1eJIfcw7ERK0KO5GXGOQms4dR0pep2txLP3WQjhH7dSsq?=
+ =?us-ascii?Q?xHwM5cbJd1lo+H2Gn5MYwXT6SfdWuGunAPzOSDJ2LwrFAPvTWHa+8ofWbAOt?=
+ =?us-ascii?Q?QkMDcEce6iZqMeBV54FhY1IRoZGRe6hE+yPBhCyzj3uZobqhkdV3YBNZ92Jm?=
+ =?us-ascii?Q?gKTZiOXTzjdBc6cTnFGVZSFm/jXy73NvPaZCMFAiDa/YzSvD/qiXZ+bTk/mk?=
+ =?us-ascii?Q?l1u2PMw/A3xiiN1a80vU8LUieP+0mSj/ey8+fD3ewSSMrKc79JfOgD6xgIOt?=
+ =?us-ascii?Q?YMHsrXfDgqpVapaQ0GE327dF+gEN+Qw5nIZVePvHeVwwQU0xAPekzss9Lo0K?=
+ =?us-ascii?Q?KTbeLhA7TPVGJFEAHcLLP0kZmaoKMSwxgbItJ8/v62TA/I73R5N+ErJF73hy?=
+ =?us-ascii?Q?cXIf6LV6J7LKa3lgIUUZfIwho9inTa0gtvDZPHcjaAmjV9n50OV6HoCewtNz?=
+ =?us-ascii?Q?Q24iT0uSmV++XGpi1Z4LUkVn1IGusRD46km6fIMW0VYRkSBBTj84EyraYfLz?=
+ =?us-ascii?Q?AnnjLc596s1r5ITUplWPSBU82NdzKT/ilPtqepR+JAHkGoxEsQPfS17l7w9L?=
+ =?us-ascii?Q?e0kNP6nKy1ePyLiwvhiI/yft9Cz5xCOH0L3M5l+EEw5Q5/MR9FdNW+IZJq8s?=
+ =?us-ascii?Q?NrUA8RhSlMYBXxdJcOTqr7QyGyfgko0QJn+gUdgrSiiI8u3CBfU6ZQK+Lt5z?=
+ =?us-ascii?Q?nc2yf3MJBsnHSsthUFgu6yyDrBq9ByqFcAYb+tYWGpyIwHBMsIvuFr+jd1lP?=
+ =?us-ascii?Q?g2Rfr48PE992BnB+Y5BDiu81czoxhF8513B0oFAbf8gG5TVR2oJKZ8ENWw7x?=
+ =?us-ascii?Q?uXKxHfdFS8t00BnAOiJkX/9L8q1Yl9rb6GtxNogTrBqRI+JFCm8x8/+FKh8c?=
+ =?us-ascii?Q?nxQiKGlcftonjYeuQbonjjALG0uTwJiVip24g4UspRVPvWDPPfM8uQ22YIp1?=
+ =?us-ascii?Q?6jSSXWHGIkXQqZl8YkaEzpEhR9GlIZZMx3QLO7Xnmtc7MqCC6CA15MD9HVax?=
+ =?us-ascii?Q?TOwzAs4gcPf+7r7HeiQIoEXol99EoG3zXpbku8EXXpAUvf111jSM0qkVhpFf?=
+ =?us-ascii?Q?zGPc1ZVvNw=3D=3D?=
 X-MS-Exchange-AntiSpam-ExternalHop-MessageData-ChunkCount: 1
 X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0:
-	7VKUTmQk6f7xD6sBGKSEP/5nkrK2BBSkIYjIyb6AkrarSs+M3KJMYBc1W4GqIgGxtwFEVWxypYlkY2xJ3mm/E+kUUFUMgsXpRt2wgg8l1Fr/F8F/I/uymfj6YjiUfKY3y8lHogfIWa9TNvNT8MHLCn1vzcaTVOAFLforacQSvNoHrqWkAFQNscilMq2fY7VApzc0UF9ziqAoTmywGGo+c6dZo0hJ9DIJrDq6zXwh6zz4ntbwdbWzvdYFoSRohoLKgUDCEq+mLFEQgrvUIii8PQoIkm9hHZ3MTyUXmP5vdxWekAWaODN3SyGlBnukv5mYbvdGN6AsAhG/CkCan2ZQvq64fNywyARs9U7t0nZw2h86HY5rG3q2Zs38GYNvoctAJUqYQEAnL42k4Db4DezxUbBBq0EeAO/9qqQwY7Y8kGeASFpmEW1DShH/6vkt9+p7xG9B3zoH7wLUWOwqQa44dYXkx8BW0aH6dZGxGrR5hO7vnTc63HlUJ9MHdy14K6Rcp/bMhtnw9cQd5zZg0FCWkNLb9bZNz1dV+C6OpQcUPM52i1H5ZtZY80fo2zSb8TAqwGG8M4GrAD233uduY7Yz47P8+pee8NvRrFAagzNTI50=
+	/ZcW2Gc9pPReAm9saJwGDldLkuQlpvPeOge9ljfOKjq8r50ZUl1NEOJW6MwZDoGIcxAEu8f2rawM282aCgK5hffzHhtL/E1BRfprZ9kMOmZPP1raUCypadTEsEvUvd4iIDagKHdziMbVV6Q7AXmYduNoLIFxPSx3HRGxkU2QbZkjTApEkg1ET1ia3/C59zu/tEZwBfqtRRxcht4kl2qBm7pjpm7dlp4efENhipwhNWVIQDC375/WTyabkrlOcR0+oLtioizgfcUk3tCs5RVMIkMJMTrFE0luvaf+GPou+tasB4KpY+WfJPTjQldFSEnvczBtnXmBR6ErBxyGa3KSgbgX73+JSYWgXCdnAHfe2uBMapVIlC9WMBcKblab4PPbwr+t+RipE32VIbpgasV5TDzMQJ/Sag6wmKoqOEyDfN3TfUTOOmpf+OEPTkpSMNToAypGhqPgIRsE/mEf66zrJ/Ymr8pe2tePOjZ/YvU2jbd4JdhdlgZOnA9uOmI2NuTH4hWbYQxA/eu4pndcZeX9M8A0hs0Jyxn44GR6uBB5ayfdSpG6jmAenZpoXUOLHT8oyyZT5drFcq92keO2fFD4gFkoj0riGR2L9UBrHgg3sN8=
 X-OriginatorOrg: oracle.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 51c9bf3b-2560-463e-c633-08de6956552d
-X-MS-Exchange-CrossTenant-AuthSource: DS0PR10MB7341.namprd10.prod.outlook.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: dec19e74-d170-41c0-796e-08de694b1164
+X-MS-Exchange-CrossTenant-AuthSource: CH3PR10MB7329.namprd10.prod.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 11 Feb 2026 10:14:25.3415
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 11 Feb 2026 08:53:47.1010
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
 X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
 X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: 6AsCz19131zlmjKG4EE633bF4N+/zlGsSpwLU2sne8Pv3k41q/HwakqRs38DLerhnKapomk5CcnyGT8lv8oIxQ==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: BL4PR10MB8231
+X-MS-Exchange-CrossTenant-UserPrincipalName: ty7FAozu9YFbT1CJV9PIX+J7MsxRZGrVzbBTZBW9aPtfvp8vaQHy2dEAUxpmwGEHfpLlDGuEn7u1yaH0gR9nUA==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: SJ5PPF6998A7572
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.293,Aquarius:18.0.1121,Hydra:6.1.51,FMLib:17.12.100.49
  definitions=2026-02-10_03,2026-02-10_03,2025-10-01_01
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxscore=0 malwarescore=0 bulkscore=0
- adultscore=0 phishscore=0 suspectscore=0 spamscore=0 mlxlogscore=999
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2601150000
- definitions=main-2602110083
-X-Authority-Analysis: v=2.4 cv=YbOwJgRf c=1 sm=1 tr=0 ts=698c5684 b=1 cx=c_pps
- a=WeWmnZmh0fydH62SvGsd2A==:117 a=WeWmnZmh0fydH62SvGsd2A==:17
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 spamscore=0 adultscore=0
+ mlxlogscore=999 malwarescore=0 phishscore=0 suspectscore=0 bulkscore=0
+ mlxscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2601150000 definitions=main-2602110072
+X-Proofpoint-ORIG-GUID: MnryAtHr-6ZRf7Dtx_TTUoOFWrGED301
+X-Proofpoint-GUID: MnryAtHr-6ZRf7Dtx_TTUoOFWrGED301
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwMjExMDA3MSBTYWx0ZWRfX3lvWaPH7D9bh
+ BpYMYTGhh2W4Dst7bqrgVjoQc4MAwobbc4kySz+cWvcbHEAFNpzs80NIbEa1AR+cM3vCrpVRglQ
+ s0vonZbQKeR5oaJNUFhagJFcEDYEFXwy9YaxvIrm7HHSkhAS0DMv/nw+FyoJz75GkRiFMPVLBPx
+ i1r1rOKRnTXJ3rNIN+wXEQkac6dJ2Ccifg3V+oXt+ym3hVsvowy0et9yIn3l4czPxJ6rU4qLhdP
+ MA3WEeezrC9gh/HzBQtMX13RMV6WxVJv48vi97eOvOSr+QMamsFUYnvnstkAm2NaCTFvc3S10IN
+ FQumkfnzaCxzdtG06pXiAE1CMHnYLI37JLNIKSHSH3wn5RhEGDXIOpWfGJ+BhrN7G5VLGX8QMAI
+ 8ycn1eQssfcxDjmaMpumt9tJqp/AoGqiOBffuLvKhEDB5o/b/DtyMJ5cEBBgSonz/2CzlzjaI5m
+ tlYybtDypTTE539gh6g==
+X-Authority-Analysis: v=2.4 cv=O5c0fR9W c=1 sm=1 tr=0 ts=698c43a0 cx=c_pps
+ a=XiAAW1AwiKB2Y8Wsi+sD2Q==:117 a=XiAAW1AwiKB2Y8Wsi+sD2Q==:17
  a=6eWqkTHjU83fiwn7nKZWdM+Sl24=:19 a=z/mQ4Ysz8XfWz/Q5cLBRGdckG28=:19
  a=lCpzRmAYbLLaTzLvsPZ7Mbvzbb8=:19 a=xqWC_Br6kY4A:10 a=kj9zAlcOel0A:10
  a=HzLeVaNsDn8A:10 a=GoEa3M9JfhUA:10 a=VkNPw1HP01LnGYTKEx00:22
- a=Mpw57Om8IfrbqaoTuvik:22 a=GgsMoib0sEa3-_RKJdDe:22 a=5HfSyctdvlnlvKIfFqIA:9
- a=CjuIK1q_8ugA:10
-X-Proofpoint-ORIG-GUID: 4lyWe7Ji13YfzbRkD9otvsa_lUaSoi_x
-X-Proofpoint-GUID: 4lyWe7Ji13YfzbRkD9otvsa_lUaSoi_x
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjYwMjExMDA4NCBTYWx0ZWRfX5sVXvQzlwkUX
- ic8CC0S4L51hPCVLxfRwQ5iCkmPPmygvUdOz0+0xIT46Jwuxo3OMdVneGpYrEvQl+TjbDad0alI
- 46AiDfYQn7yui2QSn5WoOGNe8yDJ0xjsGXi09EfYswT6GdMCPYWhMBBu3TXIVFpnhsKw69/rAB1
- 6NGRZq9ToL3z5rJOgDe6gWz+mPC0WEPs3voKtCfk9s0fps7YvTc1evtq4h37kywGxWxDqHNqSCK
- 8g/jaIkR5e2C1YfVu2xhp4jcf7qYFHQzyv+dq23rH011mCE8mbbj/Z0X1EAdKvSKLIvJAZeKqqs
- ZiNwX7uxlCmIPKjxKbzfHb8i30d69O1ye3ZIDRG9whBCpAPigJse2EUE7Qorub4TK4A2XGQndV1
- spIiNHjSAw5TpiIwtLnUxGNJB8Uy+OpZZ0avotxKdlqlTE8E8l3aC0xzZsb8iDwgYmiHJLk4+qs
- ED8HtyRU2k6SrD3VgFw==
+ a=Mpw57Om8IfrbqaoTuvik:22 a=GgsMoib0sEa3-_RKJdDe:22 a=VwQbUJbxAAAA:8
+ a=7CQSdrXTAAAA:8 a=Cy7045DbtAwES53Bu6YA:9 a=CjuIK1q_8ugA:10
+ a=a-qgeE7W1pNrGK8U0ZQC:22
 
-On Wed, Feb 11, 2026 at 01:24:35AM -0800, Shakeel Butt wrote:
-> On Wed, Feb 11, 2026 at 05:53:38PM +0900, Harry Yoo wrote:
-> > On Wed, Feb 11, 2026 at 01:07:40PM +0530, Dev Jain wrote:
-> > > 
-> > > On 10/02/26 9:59 pm, Shakeel Butt wrote:
-> > > > On Tue, Feb 10, 2026 at 01:08:49PM +0530, Dev Jain wrote:
-> > > > [...]
-> > > >>> Oh so it is arm64 specific issue. I tested on x86-64 machine and it solves
-> > > >>> the little regression it had before. So, on arm64 all this_cpu_ops i.e. without
-> > > >>> double underscore, uses LL/SC instructions. 
-> > > >>>
-> > > >>> Need more thought on this. 
-> > > >>>
-> > > >>>>> Also can you confirm whether my analysis of the regression was correct?
-> > > >>>>>  Because if it was, then this diff looks wrong - AFAIU preempt_disable()
-> > > >>>>>  won't stop an irq handler from interrupting the execution, so this
-> > > >>>>>  will introduce a bug for code paths running in irq context.
-> > > >>>>>
-> > > >>>> I was worried about the correctness too, but this_cpu_add() is safe
-> > > >>>> against IRQs and so the stat will be _eventually_ consistent?
-> > > >>>>
-> > > >>>> Ofc it's so confusing! Maybe I'm the one confused.
-> > > >>> Yeah there is no issue with proposed patch as it is making the function
-> > > >>> re-entrant safe.
-> > > >> Ah yes, this_cpu_add() does the addition in one shot without read-modify-write.
-> > > >>
-> > > >> I am still puzzled whether the original patch was a bug fix or an optimization.
-> > > > The original patch was a cleanup patch. The memcg stats update functions
-> > > > were already irq/nmi safe without disabling irqs and that patch did the
-> > > > same for the numa stats. Though it seems like that is causing regression
-> > > > for arm64 as this_cpu* ops are expensive on arm64. 
-> > > >
-> > > >> The patch description says that node stat updation uses irq unsafe interface.
-> > > >> Therefore, we had foo() calling __foo() nested with local_irq_save/restore. But
-> > > >> there were code paths which directly called __foo() - so, your patch fixes a bug right
-> > > > No, those places were already disabling irqs and should be fine.
-> > > 
-> > > Please correct me if I am missing something here. Simply putting an
-> > > if (!irqs_disabled()) -> dump_stack() in __lruvec_stat_mod_folio, before
-> > > calling __mod_node_page_state, reveals:
-> > > 
-> > > [ 6.486375] Call trace:
-> > > [ 6.486376] show_stack+0x20/0x38 (C)
-> > > [ 6.486379] dump_stack_lvl+0x74/0x90
-> > > [ 6.486382] dump_stack+0x18/0x28
-> > > [ 6.486383] __lruvec_stat_mod_folio+0x160/0x180
-> > > [ 6.486385] folio_add_file_rmap_ptes+0x128/0x480
-> > > [ 6.486388] set_pte_range+0xe8/0x320
-> > > [ 6.486389] finish_fault+0x260/0x508
-> > > [ 6.486390] do_fault+0x2d0/0x598
-> > > [ 6.486391] __handle_mm_fault+0x398/0xb60
-> > > [ 6.486393] handle_mm_fault+0x15c/0x298
-> > > [ 6.486394] __get_user_pages+0x204/0xb88
-> > > [ 6.486395] populate_vma_page_range+0xbc/0x1b8
-> > > [ 6.486396] __mm_populate+0xcc/0x1e0
-> > > [ 6.486397] __arm64_sys_mlockall+0x1d4/0x1f8
-> > > [ 6.486398] invoke_syscall+0x50/0x120
-> > > [ 6.486399] el0_svc_common.constprop.0+0x48/0xf0
-> > > [ 6.486400] do_el0_svc+0x24/0x38
-> > > [ 6.486400] el0_svc+0x34/0xf0
-> > > [ 6.486402] el0t_64_sync_handler+0xa0/0xe8
-> > > [ 6.486404] el0t_64_sync+0x198/0x1a0
-> > > 
-> > > Indeed finish_fault() takes a PTL spin lock without irq disablement.
-> > 
-> > That indeed looks incorrect to me.
-> > I was assuming __foo() is always called with IRQs disabled!
+On Wed, Feb 11, 2026 at 01:07:40PM +0530, Dev Jain wrote:
 > 
-> Not necessarily. For stats which never get updated in IRQ context, can
-> be updated using __foo() with just premption disabled.
+> On 10/02/26 9:59 pm, Shakeel Butt wrote:
+> > On Tue, Feb 10, 2026 at 01:08:49PM +0530, Dev Jain wrote:
+> > [...]
+> >>> Oh so it is arm64 specific issue. I tested on x86-64 machine and it solves
+> >>> the little regression it had before. So, on arm64 all this_cpu_ops i.e. without
+> >>> double underscore, uses LL/SC instructions. 
+> >>>
+> >>> Need more thought on this. 
+> >>>
+> >>>>> Also can you confirm whether my analysis of the regression was correct?
+> >>>>>  Because if it was, then this diff looks wrong - AFAIU preempt_disable()
+> >>>>>  won't stop an irq handler from interrupting the execution, so this
+> >>>>>  will introduce a bug for code paths running in irq context.
+> >>>>>
+> >>>> I was worried about the correctness too, but this_cpu_add() is safe
+> >>>> against IRQs and so the stat will be _eventually_ consistent?
+> >>>>
+> >>>> Ofc it's so confusing! Maybe I'm the one confused.
+> >>> Yeah there is no issue with proposed patch as it is making the function
+> >>> re-entrant safe.
+> >> Ah yes, this_cpu_add() does the addition in one shot without read-modify-write.
+> >>
+> >> I am still puzzled whether the original patch was a bug fix or an optimization.
+> > The original patch was a cleanup patch. The memcg stats update functions
+> > were already irq/nmi safe without disabling irqs and that patch did the
+> > same for the numa stats. Though it seems like that is causing regression
+> > for arm64 as this_cpu* ops are expensive on arm64. 
+> >
+> >> The patch description says that node stat updation uses irq unsafe interface.
+> >> Therefore, we had foo() calling __foo() nested with local_irq_save/restore. But
+> >> there were code paths which directly called __foo() - so, your patch fixes a bug right
+> > No, those places were already disabling irqs and should be fine.
+> 
+> Please correct me if I am missing something here. Simply putting an
+> if (!irqs_disabled()) -> dump_stack() in __lruvec_stat_mod_folio, before
+> calling __mod_node_page_state, reveals:
+> 
+> [ 6.486375] Call trace:
+> [ 6.486376] show_stack+0x20/0x38 (C)
+> [ 6.486379] dump_stack_lvl+0x74/0x90
+> [ 6.486382] dump_stack+0x18/0x28
+> [ 6.486383] __lruvec_stat_mod_folio+0x160/0x180
+> [ 6.486385] folio_add_file_rmap_ptes+0x128/0x480
+> [ 6.486388] set_pte_range+0xe8/0x320
+> [ 6.486389] finish_fault+0x260/0x508
+> [ 6.486390] do_fault+0x2d0/0x598
+> [ 6.486391] __handle_mm_fault+0x398/0xb60
+> [ 6.486393] handle_mm_fault+0x15c/0x298
+> [ 6.486394] __get_user_pages+0x204/0xb88
+> [ 6.486395] populate_vma_page_range+0xbc/0x1b8
+> [ 6.486396] __mm_populate+0xcc/0x1e0
+> [ 6.486397] __arm64_sys_mlockall+0x1d4/0x1f8
+> [ 6.486398] invoke_syscall+0x50/0x120
+> [ 6.486399] el0_svc_common.constprop.0+0x48/0xf0
+> [ 6.486400] do_el0_svc+0x24/0x38
+> [ 6.486400] el0_svc+0x34/0xf0
+> [ 6.486402] el0t_64_sync_handler+0xa0/0xe8
+> [ 6.486404] el0t_64_sync+0x198/0x1a0
+> 
+> Indeed finish_fault() takes a PTL spin lock without irq disablement.
 
-Ah, thanks. I was missing that aspect.
+That indeed looks incorrect to me.
+I was assuming __foo() is always called with IRQs disabled!
+
+> > I am working on adding batched stats update functionality in the hope
+> > that will fix the regression.
+> 
+> Thanks! FYI, I have zeroed in the issue on to preempt_disable(). Dropping this
+> from _pcpu_protect_return solves the regression.
+
+That's interesting, why is the cost of preempt disable/enable so high?
+
+> Unlike x86, arm64 does a preempt_disable
+> when doing this_cpu_*. On a cursory look it seems like this is unnecessary - since we
+> are doing preempt_enable() immediately after reading the pointer, CPU migration is
+> possible anyways, so there is nothing to be gained by reading pcpu pointer with
+> preemption disabled. I am investigating whether we can simply drop this in general.
+
+Let me quote an old email from Mark Rutland [1]:
+> We also thought that initially, but there's a sbutle race that can
+> occur, and so we added code to disable preemption in commit:
+> 
+>   f3eab7184ddcd486 ("arm64: percpu: Make this_cpu accessors pre-empt safe")
+> 
+> The problem on arm64 is that our atomics take a single base register,
+> and we have to generate the percpu address with separate instructions
+> from the atomic itself. That means we can get preempted between address
+> generation and the atomic, which is problematic for sequences like:
+> 
+> 	// Thread-A			// Thread-B
+> 
+> 	this_cpu_add(var)
+> 					local_irq_disable(flags)
+> 					...
+> 					v = __this_cpu_read(var);
+> 					v = some_function(v);
+> 					__this_cpu_write(var, v);
+> 					...
+> 					local_irq_restore(flags)
+> 
+> ... which can unexpectedly race as:
+> 
+> 
+> 	// Thread-A			// Thread-B
+> 
+> 	< generate CPU X addr >
+> 	< preempted >
+> 
+> 					< scheduled on CPU X >
+> 					local_irq_disable(flags);
+> 					v = __this_cpu_read(var);
+> 
+> 	< scheduled on CPU Y >
+> 	< add to CPU X's var >
+> 					v = some_function(v);
+> 					__this_cpu_write(var, v);
+> 					local_irq_restore(flags);
+> 
+> ... and hence we lose an update to a percpu variable.
+
+... so, removing preempt disable _in general_ is probably not a good idea.
+
+[1] https://lore.kernel.org/all/20190311164837.GD24275@lakrids.cambridge.arm.com
 
 -- 
 Cheers,
