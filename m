@@ -1,32 +1,32 @@
-Received: from out-171.mta1.migadu.com (out-171.mta1.migadu.com [95.215.58.171])
+Received: from out-178.mta1.migadu.com (out-178.mta1.migadu.com [95.215.58.178])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1DC8F2D592D
-	for <cgroups@vger.kernel.org>; Thu, 12 Feb 2026 08:23:58 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=95.215.58.171
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 393A613B58C
+	for <cgroups@vger.kernel.org>; Thu, 12 Feb 2026 08:24:05 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=95.215.58.178
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1770884640; cv=none; b=g+eA+qsvYoZfYsuczYFnhfgD8Jh75Ul4CqZn09wxEziXqb4vrdJsHwJcjeECDfbRNyYe3blFwKxrEHAVykCFxjDoz2/T65WG+A2OOhR0+mKDEmSWwOqXWcCKsYE9WrBAP8FuBaeTF4cc8sOoWVXkY4BneTcc27r3UdXYVrYvWXo=
+	t=1770884646; cv=none; b=EzPksiwwzpWtxn5lO83R3vBwiyBNgoHTgWyfVQrDQeEG0w5iX8IKwdkPn3b4/z7YzmRiS7SA8OUaXaGw4z0uiNydnOHCtX/UeFRCFlII0ZNUHWm7BYz1uYnn2rlQB1T9BUGrqY4uB70BNVLl18DE6BOHYWQcbfa0dzz03PR3aGE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1770884640; c=relaxed/simple;
-	bh=r6OgvQEi15eLD8Z0lMy3VJnZSrA8sKhWevT7njpVbU4=;
+	s=arc-20240116; t=1770884646; c=relaxed/simple;
+	bh=Yw/U2u1kO0ZIn9Mc2bMQ0zLjlvy7XjdcIIQ7GR3MAd4=;
 	h=From:To:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=ebuWRURsOvlMv6dgqn6ZSuKxKKxr5SoJOH1hqzixx9Y6LegrxrW04wdt3ThKdgGO9v1pxYKSfY3w5dFc1MBSb54c0N5aWPNtY9QZjJq+modmEgdw/GWXKl8c7ufLjfRUJ5sal14Wo04vqvI2XMMWSXu1e4+4c4K6pkpyzBeHyKI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=HJ0OIcoA; arc=none smtp.client-ip=95.215.58.171
+	 MIME-Version; b=YlXqiaZq2HzeE+wqENaLTQXCW14H06XyLjd/GXhj2Xq8tCu8hVJyxCaD1SSC9Pc8jELuxpNgSdjn2NpgPON8hYpTu2iW0W/cC2ddTbThq48lZ3YpUuRrlGanNkyoOMqig4u+t/7N4vH6lJqnODzRv0BwPhjX0vm4AhMxU92ncKU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=mtLG1Cj7; arc=none smtp.client-ip=95.215.58.178
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="HJ0OIcoA"
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="mtLG1Cj7"
 X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
-	t=1770884637;
+	t=1770884643;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:mime-version:mime-version:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=6JEGc5je/wM02pWehmFOl3sKJ7z0YxNGSRtnUE/RPCI=;
-	b=HJ0OIcoA3oOP4U35yiAgKDYaQEY7TuX0qZLIDHgEFaDpBmCxjWW09jCTIjMQzH8JMX5S9F
-	xrjh3BlaT9jvCMCDi44I3clcJ/Li+Q3ml5I/JJo7Viwh8gqwadztOu8XjVc6gL933c7r54
-	OCbBi0K4vo3sxio7V14h6YbB0bfqkCg=
+	bh=Qa7yRxcpGL3PnKF4R1l2meMqj6ZYK13/0dyEKREpmhI=;
+	b=mtLG1Cj7F/NN0pQvl1k5tAmMqtzQ0Q7TM4SCVi9GMjgpIDSLSvRuNgxNUBKEWiMccVbj7z
+	K8W4rDks82e97Z8KcgkhM8a3y1wY/HTQgqGjhSAkMrndvzi66dbkI4Pxi7c8hQrM0ljZR8
+	mAMheL03KE5ojdB75JZXNKsapNcnw0A=
 From: Hui Zhu <hui.zhu@linux.dev>
 To: Johannes Weiner <hannes@cmpxchg.org>,
 	Michal Hocko <mhocko@kernel.org>,
@@ -54,9 +54,9 @@ To: Johannes Weiner <hannes@cmpxchg.org>,
 	linux-kernel@vger.kernel.org,
 	bpf@vger.kernel.org,
 	linux-kselftest@vger.kernel.org
-Subject: [PATCH bpf-next 2/3] mm/memcontrol: Return error when accessing kmem with nokmem
-Date: Thu, 12 Feb 2026 16:23:15 +0800
-Message-ID: <733422f72ccbac94126ae67b9e49f4a3d460b76a.1770883926.git.zhuhui@kylinos.cn>
+Subject: [PATCH bpf-next 3/3] selftests/bpf: Skip test_kmem when cgroup.memory=nokmem
+Date: Thu, 12 Feb 2026 16:23:16 +0800
+Message-ID: <2f6ee1db173b67a636b2caa85744cb4ce8114e64.1770883926.git.zhuhui@kylinos.cn>
 In-Reply-To: <cover.1770883926.git.zhuhui@kylinos.cn>
 References: <cover.1770883926.git.zhuhui@kylinos.cn>
 Precedence: bulk
@@ -70,38 +70,60 @@ X-Migadu-Flow: FLOW_OUT
 
 From: Hui Zhu <zhuhui@kylinos.cn>
 
-When running tests on hosts with cgroup.memory=nokmem enabled for
-performance reasons, test_kmem always gets a value of 0 for kmem
-statistics.
+When cgroup.memory=nokmem is set in kernel command line, kmem
+accounting is disabled and the test_kmem subtest will fail.
 
-Since BPF programs cannot easily determine whether kmem is enabled,
-add a check in memcg_stat_item_valid() to return an error when
-attempting to access MEMCG_KMEM statistics while kmem accounting
-is disabled via cgroup_memory_nokmem.
-
-This prevents BPF programs from silently receiving zero values and
-allows them to properly handle the case where kmem accounting is
-unavailable.
+Add a check to skip this test when the parameter is present.
 
 Signed-off-by: Hui Zhu <zhuhui@kylinos.cn>
 ---
- mm/memcontrol.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+ .../bpf/prog_tests/cgroup_iter_memcg.c        | 28 +++++++++++++++++++
+ 1 file changed, 28 insertions(+)
 
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index 129eed3ff5bb..4d8419623d1c 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -667,7 +667,8 @@ unsigned long memcg_page_state(struct mem_cgroup *memcg, int idx)
+diff --git a/tools/testing/selftests/bpf/prog_tests/cgroup_iter_memcg.c b/tools/testing/selftests/bpf/prog_tests/cgroup_iter_memcg.c
+index 13b299512429..203e6b091a21 100644
+--- a/tools/testing/selftests/bpf/prog_tests/cgroup_iter_memcg.c
++++ b/tools/testing/selftests/bpf/prog_tests/cgroup_iter_memcg.c
+@@ -134,11 +134,39 @@ static void test_shmem(struct bpf_link *link, struct memcg_query *memcg_query)
+ 	shm_unlink("/tmp_shmem");
+ }
  
- bool memcg_stat_item_valid(int idx)
++static bool cmdline_has(const char *arg)
++{
++	char cmdline[4096];
++	int fd;
++	ssize_t len;
++	bool ret = false;
++
++	fd = open("/proc/cmdline", O_RDONLY);
++	if (fd < 0)
++		return false;
++
++	len = read(fd, cmdline, sizeof(cmdline) - 1);
++	close(fd);
++	if (len < 0)
++		return false;
++
++	cmdline[len] = '\0';
++	if (strstr(cmdline, arg))
++		ret = true;
++
++	return ret;
++}
++
+ #define NR_PIPES 64
+ static void test_kmem(struct bpf_link *link, struct memcg_query *memcg_query)
  {
--	if ((u32)idx >= MEMCG_NR_STAT)
-+	if ((u32)idx >= MEMCG_NR_STAT ||
-+	    (cgroup_memory_nokmem && (u32)idx == MEMCG_KMEM))
- 		return false;
+ 	int fds[NR_PIPES][2], i;
  
- 	return !BAD_STAT_IDX(memcg_stats_index(idx));
++	if (cmdline_has("cgroup.memory=nokmem")) {
++		test__skip();
++		return;
++	}
++
+ 	/*
+ 	 * Increase kmem value by creating pipes which will allocate some
+ 	 * kernel buffers.
 -- 
 2.43.0
 
