@@ -1,30 +1,32 @@
-Received: from out-181.mta1.migadu.com (out-181.mta1.migadu.com [95.215.58.181])
+Received: from out-183.mta1.migadu.com (out-183.mta1.migadu.com [95.215.58.183])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6E0312D0614;
-	Fri, 13 Feb 2026 07:24:17 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=95.215.58.181
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 204EC2D7DD3;
+	Fri, 13 Feb 2026 07:24:21 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=95.215.58.183
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1770967458; cv=none; b=UC4uD4oWIISvhi4MDFU1TZevZFTw6PGQ6B1H0DXn+LWynvdukV7f6Eredljox6THtJNtPSeKI7QXdw2diEr156CVQhD+PDcx4Ex29T2tY9PQ3I0WR7ti5Tu1oijoxrEzY4MDYWHV4Xg01w9xsZZd9xnwjMztDCEPDd5kD4cDsj8=
+	t=1770967463; cv=none; b=SBDkS6RjbpRpNDfhPSJK6YZeLWWuY6ljUYvxRZeHoosmCcQ4keYpFb6Eu1Fk6n5/mCeaBzyxyOzhYXdPuJ7B0IyWnT82GsQdDfIGs0IVtqzndPjbgeairExo4BXrYQs/10YwbwG6qEMoQfsETObHWRKOwfLbc1+iiE/A6S35Z6A=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1770967458; c=relaxed/simple;
-	bh=uySMJvyft9jtAkrDAcp3YGsuHvDvCEgMDRF46Oa4B0Y=;
-	h=From:To:Subject:Date:Message-ID:MIME-Version; b=Ff49jPTW9zfezy+qnf9neTe6T/qrhIqOEWTFSoI+/dOzC8aO/JFk/X6SXHm9GUJByJkVxQG1kQjNAFnoluM0xWIiuyzv8x/DoziPxfYxxYBef+8o/EmCoaXLnJ50VSf2ulP4Da6KOx9Y1QSUiTI1UkDVcotP9F3lvowyPW/RpRw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=bLZRB+KC; arc=none smtp.client-ip=95.215.58.181
+	s=arc-20240116; t=1770967463; c=relaxed/simple;
+	bh=/y1+LlZYtoPLhLVI3OIgJxxN7FJlVk5SJJIQ0nJt5eg=;
+	h=From:To:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=Lxb0EFb8gELCIBZGrJRKY4u5R0KOS96HwSec6P4Pmh0gG53spS+dXHrLiY3d+y4uJM44y8siyajJ3EHMp/PiVkuz/AjGxA0qPTcOlRk3Ig+FZX4LzFfpKvC8NNTpfNUxvzoJGtlxljH4v0G+0IxRa01JIlEfMQ3DEnT4/ZadfpU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=AxOI7my/; arc=none smtp.client-ip=95.215.58.183
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="bLZRB+KC"
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="AxOI7my/"
 X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
-	t=1770967445;
+	t=1770967460;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:mime-version:mime-version:
-	 content-transfer-encoding:content-transfer-encoding;
-	bh=VwNvFdIKZszOyx5SX4bymsUV474G0+X1JTSop6CJF0M=;
-	b=bLZRB+KCujV6r+3tDxD/hCqTqrXaKPY5gKNVJCgqvm9HEhbrD39q8vpE7E4wD5kgiOVmdu
-	eq3Sxy4rSM5H+g/vAMMjoAVUXltZTcZ7hYvyfJsPlHilNj02Y6e7JkSl0xQxzUDRmYi4BO
-	fKZGFZsoa+VTnuaiC587gmVcpj4IImo=
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=E55JfgQKp+ZEiIAnBu3r9GQXW9g+xnXnuS4C381ry3Y=;
+	b=AxOI7my/78Mr4e23DAMG8qSm8RywqTJoU/wugb08PyinUbE2c+4BRDnDNkUbmTScXCCZBZ
+	hBlp4yETtJ+NjBdDb+TczClhFhU6q1d8Ub0jqbhpQLyaIC9CxgzlOwAhiaPifXtNr33Zye
+	CeoaKYGftGe+eQ3I9FNd48m6bPHv0Xg=
 From: Hui Zhu <hui.zhu@linux.dev>
 To: Johannes Weiner <hannes@cmpxchg.org>,
 	Michal Hocko <mhocko@kernel.org>,
@@ -52,9 +54,11 @@ To: Johannes Weiner <hannes@cmpxchg.org>,
 	linux-kernel@vger.kernel.org,
 	bpf@vger.kernel.org,
 	linux-kselftest@vger.kernel.org
-Subject: [PATCH bpf-next v2 0/3] Fix test_cgroup_iter_memcg issues found during back-porting
-Date: Fri, 13 Feb 2026 15:23:38 +0800
-Message-ID: <cover.1770965805.git.zhuhui@kylinos.cn>
+Subject: [PATCH bpf-next v2 3/3] bpf: selftests: Skip kmem test when cgroup.memory=nokmem is set
+Date: Fri, 13 Feb 2026 15:23:41 +0800
+Message-ID: <447797edc394ab8a8b2484bb6c92b56115254e27.1770965805.git.zhuhui@kylinos.cn>
+In-Reply-To: <cover.1770965805.git.zhuhui@kylinos.cn>
+References: <cover.1770965805.git.zhuhui@kylinos.cn>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
@@ -66,33 +70,65 @@ X-Migadu-Flow: FLOW_OUT
 
 From: Hui Zhu <zhuhui@kylinos.cn>
 
-While back-porting "mm: bpf kfuncs to access memcg data", I
-encountered issues with test_cgroup_iter_memcg, specifically
-in test_kmem.
+When cgroup.memory=nokmem is set in the kernel command line, kmem
+accounting is disabled. This causes the test_kmem subtest in
+cgroup_iter_memcg to fail because it expects non-zero kmem values.
 
-These patches are my fixes for the problems I encountered.
+Fix this by checking /proc/cmdline for the nokmem parameter. If
+found, verify that kmem value is zero and return early, skipping
+the pipe creation test that would otherwise fail.
 
-Changelog:
-v2:
-According to the comments of JP Kobryn, added bpf_core_enum_value()
-usage in the BPF program to handle cross-kernel enum value differences
-at load-time instead of compile-time.
-Dropped the mm/memcontrol.c patch.
-Modified test_kmem handling: instead of skipping when nokmem is set,
-verify that kmem value is zero as expected.
-According to the comments of bot, fixed assertion message: changed
-"bpf_mem_cgroup_page_state" to "bpf_mem_cgroup_vm_events" for PGFAULT
-check.
+Signed-off-by: Hui Zhu <zhuhui@kylinos.cn>
+---
+ .../bpf/prog_tests/cgroup_iter_memcg.c        | 30 +++++++++++++++++++
+ 1 file changed, 30 insertions(+)
 
-Hui Zhu (3):
-  bpf: Use bpf_core_enum_value for stats in cgroup_iter_memcg
-  selftests/bpf: Check bpf_mem_cgroup_page_state return value
-  bpf: selftests: Skip kmem test when cgroup.memory=nokmem is set
-
- .../bpf/prog_tests/cgroup_iter_memcg.c        | 42 +++++++++++++++++++
- .../selftests/bpf/progs/cgroup_iter_memcg.c   | 41 ++++++++++++++----
- 2 files changed, 76 insertions(+), 7 deletions(-)
-
+diff --git a/tools/testing/selftests/bpf/prog_tests/cgroup_iter_memcg.c b/tools/testing/selftests/bpf/prog_tests/cgroup_iter_memcg.c
+index 897b17b58df3..2b9c148cebf0 100644
+--- a/tools/testing/selftests/bpf/prog_tests/cgroup_iter_memcg.c
++++ b/tools/testing/selftests/bpf/prog_tests/cgroup_iter_memcg.c
+@@ -134,11 +134,41 @@ static void test_shmem(struct bpf_link *link, struct memcg_query *memcg_query)
+ 	shm_unlink("/tmp_shmem");
+ }
+ 
++static bool cmdline_has(const char *arg)
++{
++	char cmdline[4096];
++	int fd;
++	ssize_t len;
++	bool ret = false;
++
++	fd = open("/proc/cmdline", O_RDONLY);
++	if (fd < 0)
++		return false;
++
++	len = read(fd, cmdline, sizeof(cmdline) - 1);
++	close(fd);
++	if (len < 0)
++		return false;
++
++	cmdline[len] = '\0';
++	if (strstr(cmdline, arg))
++		ret = true;
++
++	return ret;
++}
++
+ #define NR_PIPES 64
+ static void test_kmem(struct bpf_link *link, struct memcg_query *memcg_query)
+ {
+ 	int fds[NR_PIPES][2], i;
+ 
++	if (cmdline_has("cgroup.memory=nokmem")) {
++		if (!ASSERT_OK(read_stats(link), "read stats"))
++			return;
++		ASSERT_EQ(memcg_query->memcg_kmem, 0, "kmem value");
++		return;
++	}
++
+ 	/*
+ 	 * Increase kmem value by creating pipes which will allocate some
+ 	 * kernel buffers.
 -- 
 2.43.0
 
