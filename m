@@ -1,48 +1,48 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F1E4D2F619A;
-	Fri, 13 Feb 2026 07:56:55 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 42006314A95;
+	Fri, 13 Feb 2026 07:56:57 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1770969416; cv=none; b=Qng8ijXz1SjKY9cwrvPGkZluqNeTlvysldAFRmXe6fGr6mFRdbwd6LptEvbrRiLEyy2iOQE7Kr28fhWFHegfxoFou7FEGUuD5vdeVQ2/sSxxfiXfJMlJD5D9R2NVHzSNG/wMDzlIRyZlvSLiEMDNv2DGlfXHuuY9q3j5DnZpz7g=
+	t=1770969417; cv=none; b=YfP3LNX31bFIXm5++057LFujHvak4LILAXDI4vQA+TIAyfFcDQYVH1FH03EiJYVhCJhNifpbcYXLvNTiryRbIPPxwuEV0k/xu68lxTPz/q0UivCNKWpfVCM+M27xC+NckRhizZ/Ms/yFdz0gwYOaAu8rXfEpfmXhGaAQdOmbwag=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1770969416; c=relaxed/simple;
-	bh=Ksw0hqi4Ayhwf33M+Hk7rydODnGoE7z6sHemjEQ9aP8=;
+	s=arc-20240116; t=1770969417; c=relaxed/simple;
+	bh=PpQWvYCrQta7omtcLnAeHaRE+LVjwufS1aP9UvbTMQA=;
 	h=Content-Type:MIME-Version:Message-Id:In-Reply-To:References:
-	 Subject:From:To:Cc:Date; b=EgUNao4Ux6lzYwQwC+ZvUM5fhgAno90VX6pfTTgaxhhQhrm5fF3ppois9oPyYy4Jcac+h9Z5bmq679w+we8e3pvk6S8iIHtCzDokHgHMerv0KVKhqZfbUxKcItVcVwe55HrvL4e+tYlAVJ4HcCayBGBrFDnQFocLaa/qGvypHmg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ES4O2rdX; arc=none smtp.client-ip=10.30.226.201
+	 Subject:From:To:Cc:Date; b=D1/NkbbX/wme9bh/Oe6sKdRKPvbMkvU8X26nosXLPyBJvPb++Vr94uSc+KsOryN5sphiASjIXAZMtSslDG4jn8//YWZPHcn1G4Phod6iRSUBrkCzC5MspilRv9vsjI4+MlGqzzANuoTZ4quipexF2D+0eKysrP1cQGgbXATov3c=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Dj0ruJXc; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ES4O2rdX"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1D032C116C6;
-	Fri, 13 Feb 2026 07:56:55 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Dj0ruJXc"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B6798C2BC86;
+	Fri, 13 Feb 2026 07:56:56 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1770969415;
-	bh=Ksw0hqi4Ayhwf33M+Hk7rydODnGoE7z6sHemjEQ9aP8=;
+	s=k20201202; t=1770969417;
+	bh=PpQWvYCrQta7omtcLnAeHaRE+LVjwufS1aP9UvbTMQA=;
 	h=In-Reply-To:References:Subject:From:To:Cc:Date:From;
-	b=ES4O2rdXCJS9AyDu3Ot580ALW9FC0Yn5MyYq8xtyxsKCrh+icFHLqS081duHsE0dr
-	 xRgmys72IN5z4IA37aw5wzPzvpyqn2CSP1qEafGOqYF/FNC7/dCxrO1Xpz99bSWq66
-	 ZTgkjOo9s+sgMHBoxMkgIg6w9+4PeVSVrYWyNt6P8QEYP774ahcPylmRUiZCQ41i3a
-	 pLKQtF5ObvDQqD1PpR5MsT1t9dE6V1y3axPYsuo6qJr9QTHnElAJhwv0IPNUlrT7fi
-	 5r91DiMbxYeua+uX+fYobQJKmXo/cRAwzIvcfkiz5c9I9qPJCZJAdrcjn974sVckd8
-	 +kT5ihcL3jwng==
-Content-Type: multipart/mixed; boundary="===============0586976686014415741=="
+	b=Dj0ruJXcAKlcq/8kwv/FD7QRg5vxmqV7VF3eF8+UgOpcVkQXVZU57zwM9H6nqivEG
+	 fUeDyj6+Fi5MrsHqR5qNpy+eK6N2XXvaNTp2DyP3FUl4ewGkX6+2lHwKHzUqR89e0s
+	 bYWQ3DfnyzZstdvVar2Tf8feoi7ySq8bnEQKBUzT8Gj4l2ahDFpyUf1Lm3QLQyfsIu
+	 XGKvpRxaHH3qzh2W7I7NjjQN4AcAezIGkmyh0PF/FXP/U/S8QEKZtOutvZzsXwBaEp
+	 ZYtioZHBCvbOisz0mgJvGwsu6IR/5zWN4L700WmT58qzu9fDkkbkbyu8DqFQcDxnQG
+	 IyFyvuDLLQPvQ==
+Content-Type: multipart/mixed; boundary="===============6972505930256429267=="
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Message-Id: <9e26a97b0019726973b42c668185a64f588ecc2a0773dd683fd930eeef243470@mail.kernel.org>
-In-Reply-To: <447797edc394ab8a8b2484bb6c92b56115254e27.1770965805.git.zhuhui@kylinos.cn>
-References: <447797edc394ab8a8b2484bb6c92b56115254e27.1770965805.git.zhuhui@kylinos.cn>
-Subject: Re: [PATCH bpf-next v2 3/3] bpf: selftests: Skip kmem test when cgroup.memory=nokmem is set
+Message-Id: <1d048c48e087e02590e6943bdfed93db4202f3c600155483cc38cea21e565f8b@mail.kernel.org>
+In-Reply-To: <ba61b77c71b6285eefa022a84bf80c5913b313de.1770965805.git.zhuhui@kylinos.cn>
+References: <ba61b77c71b6285eefa022a84bf80c5913b313de.1770965805.git.zhuhui@kylinos.cn>
+Subject: Re: [PATCH bpf-next v2 2/3] selftests/bpf: Check bpf_mem_cgroup_page_state return value
 From: bot+bpf-ci@kernel.org
 To: hui.zhu@linux.dev,hannes@cmpxchg.org,mhocko@kernel.org,roman.gushchin@linux.dev,shakeel.butt@linux.dev,muchun.song@linux.dev,akpm@linux-foundation.org,ast@kernel.org,daniel@iogearbox.net,andrii@kernel.org,martin.lau@linux.dev,eddyz87@gmail.com,song@kernel.org,yonghong.song@linux.dev,john.fastabend@gmail.com,kpsingh@kernel.org,sdf@fomichev.me,haoluo@google.com,jolsa@kernel.org,shuah@kernel.org,zhuhui@kylinos.cn,inwardvessel@gmail.com,cgroups@vger.kernel.org,linux-mm@kvack.org,linux-kernel@vger.kernel.org,bpf@vger.kernel.org,linux-kselftest@vger.kernel.org
 Cc: ast@kernel.org,andrii@kernel.org,daniel@iogearbox.net,martin.lau@kernel.org,eddyz87@gmail.com,yonghong.song@linux.dev,clm@meta.com,ihor.solodrai@linux.dev
-Date: Fri, 13 Feb 2026 07:56:55 +0000 (UTC)
+Date: Fri, 13 Feb 2026 07:56:56 +0000 (UTC)
 
---===============0586976686014415741==
+--===============6972505930256429267==
 Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7bit
@@ -53,53 +53,38 @@ Content-Transfer-Encoding: 7bit
 
 [ ... ]
 
-> +static bool cmdline_has(const char *arg)
-> +{
+> @@ -143,6 +151,8 @@ static void test_kmem(struct bpf_link *link, struct memcg_query *memcg_query)
+>  	if (!ASSERT_OK(read_stats(link), "read stats"))
+>  		goto cleanup;
+>
+> +	ASSERT_NEQ(memcg_query->memcg_kmem, (unsigned long)-1,
+> +		  "bpf_mem_cgroup_vm_events MEMCG_KMEM");
 
-[ ... ]
+Should this assertion string say "bpf_mem_cgroup_page_state MEMCG_KMEM"
+instead?  The BPF program in progs/cgroup_iter_memcg.c populates
+memcg_kmem using bpf_mem_cgroup_page_state(), not
+bpf_mem_cgroup_vm_events():
 
-> +	cmdline[len] = '\0';
-> +	if (strstr(cmdline, arg))
-> +		ret = true;
-> +
-> +	return ret;
-> +}
+    idx = bpf_core_enum_value(enum memcg_stat_item, MEMCG_KMEM);
+    ...
+    memcg_query.memcg_kmem = bpf_mem_cgroup_page_state(memcg, idx);
 
-[ ... ]
+> @@ -170,6 +180,8 @@ static void test_pgfault(struct bpf_link *link, struct memcg_query *memcg_query)
+>  	if (!ASSERT_OK(read_stats(link), "read stats"))
+>  		goto cleanup;
+>
+> +	ASSERT_NEQ(memcg_query->pgfault, (unsigned long)-1,
+> +		  "bpf_mem_cgroup_page_state PGFAULT");
 
-> +	if (cmdline_has("cgroup.memory=nokmem")) {
+Similarly, should this say "bpf_mem_cgroup_vm_events PGFAULT"?  The BPF
+program retrieves pgfault using bpf_mem_cgroup_vm_events():
 
-The kernel's cgroup.memory= parameter accepts a comma-separated list
-of options.  The parser in mm/memcontrol.c cgroup_memory() splits the
-value on commas with strsep():
+    idx = bpf_core_enum_value(enum vm_event_item, PGFAULT);
+    ...
+    memcg_query.pgfault = bpf_mem_cgroup_vm_events(memcg, idx);
 
-mm/memcontrol.c:cgroup_memory() {
-    while ((token = strsep(&s, ",")) != NULL) {
-        ...
-        if (!strcmp(token, "nokmem"))
-            cgroup_memory_nokmem = true;
-        ...
-    }
-}
-
-This means valid command lines include configurations like
-"cgroup.memory=nosocket,nokmem" or "cgroup.memory=nobpf,nokmem".
-
-Since cmdline_has() uses strstr() to match the full literal string
-"cgroup.memory=nokmem", it only matches when nokmem is the first (or
-only) option.  For "cgroup.memory=nosocket,nokmem", strstr() won't
-find "cgroup.memory=nokmem" as a substring, so the check returns
-false even though nokmem is active.
-
-Would it be more robust to search for just "nokmem" within the
-cgroup.memory= value, or to split on commas similar to how the kernel
-parses it?
-
-> +		if (!ASSERT_OK(read_stats(link), "read stats"))
-> +			return;
-> +		ASSERT_EQ(memcg_query->memcg_kmem, 0, "kmem value");
-> +		return;
-> +	}
+It looks like the two assertion description strings for test_kmem and
+test_pgfault were swapped.
 
 
 ---
@@ -109,9 +94,9 @@ See: https://github.com/kernel-patches/vmtest/blob/master/ci/claude/README.md
 CI run summary: https://github.com/kernel-patches/bpf/actions/runs/21978734425
 
 AI-authorship-score: low
-AI-authorship-explanation: The patch addresses a specific real-world back-porting issue, shows iterative development across versions in response to human reviewer feedback, and uses standard kernel C patterns with no hallmarks of AI generation.
-issues-found: 1
+AI-authorship-explanation: The commit describes a specific back-porting scenario, and the copy-paste error in swapped assertion strings is characteristic of human authorship.
+issues-found: 2
 issue-severity-score: low
-issue-severity-explanation: The strstr-based cmdline check misses nokmem when it is not the first option in a comma-separated cgroup.memory= value, causing the test to fail on those configurations instead of being skipped.
+issue-severity-explanation: Two assertion description strings are swapped between test_kmem and test_pgfault, producing misleading diagnostics on test failure but not affecting test correctness or system stability.
 
---===============0586976686014415741==--
+--===============6972505930256429267==--
