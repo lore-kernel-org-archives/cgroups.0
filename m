@@ -1,73 +1,103 @@
-Received: from sg-1-19.ptr.blmpb.com (sg-1-19.ptr.blmpb.com [118.26.132.19])
+Received: from mail-qk1-f180.google.com (mail-qk1-f180.google.com [209.85.222.180])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BE03516CD33
-	for <cgroups@vger.kernel.org>; Fri, 13 Feb 2026 16:54:34 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=118.26.132.19
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7E8FD250BEC
+	for <cgroups@vger.kernel.org>; Fri, 13 Feb 2026 20:09:07 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.222.180
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1771001677; cv=none; b=GwEIw+vCnTmeovSuoF8xrbz3bmHVQl00g7CNghCZJWiFubX2T/nn7pY7McmWT+ZhuzqMQmoiLQBbDMTsnSm0mubf7HZt1zgmQnDIH8ElRtOVM4QRqJRCSN7M5dUawBQU0CexkeNxjEOFnqi4mSpGYBG5VNEVjk678eUluY32vnc=
+	t=1771013350; cv=none; b=myz4rBtyB97UmyYuC9LbXTkCoKpb/x5b88LBDwguXYNFigwc95+5g7aAiBHD5seoJOZOmEUagK8DW5DGHyH/QTDTzE/J04uFdWKf2NLhWbCgZLTKkSJYoKqjSMPz8GGONWtSw8Q2gHKVKyGFM8+XIHxxWGYMRcF9wOcmLZUM/wo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1771001677; c=relaxed/simple;
-	bh=G2BnGX26PUJwPNtKkgDw/Z/6YxRQh+f8bAqoAuDkZEc=;
-	h=Content-Type:Subject:Date:To:References:Cc:Mime-Version:
-	 In-Reply-To:From:Message-Id; b=YYP6pCkTJsH+21KhjzoRIsxBcVIN7q0PF7vg4yjhdY0rTBPXsgRCdlsHLAwN8xX7KWKwE0HqMK2FI/aA7ZniqHpH34v0Suvnm8A6IZjLWPZCMtFMr5daRhr+Z5xHJ5LF2mKfoyjRlYS3zKHNBxrrvrB45Ets4bB6JtV4bPaQvXg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=fnnas.com; spf=pass smtp.mailfrom=fnnas.com; dkim=pass (2048-bit key) header.d=fnnas-com.20200927.dkim.feishu.cn header.i=@fnnas-com.20200927.dkim.feishu.cn header.b=KXQwlwDV; arc=none smtp.client-ip=118.26.132.19
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=fnnas.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fnnas.com
+	s=arc-20240116; t=1771013350; c=relaxed/simple;
+	bh=grx87uhUn214R0/16Oz25CTUsC7j9HEq906lrr+h3BU=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=fv/53yK0Gi4YUlwQL4lErXziujVoJ17g60o0MxmTQJZowrxcvFlDG7w6VhapIsS3BhviSwKmx79tdYdU6snXs8ZwXLh6IWOm9TPLyJJr/Vz5/700VTTWV0Y694b2VE46B7D3QyH1sLEfWjsBXalnM0SlXieWtFqSsw+AWql0AQU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=cmpxchg.org; spf=pass smtp.mailfrom=cmpxchg.org; dkim=pass (2048-bit key) header.d=cmpxchg.org header.i=@cmpxchg.org header.b=ISJN1gNM; arc=none smtp.client-ip=209.85.222.180
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=cmpxchg.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=cmpxchg.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fnnas-com.20200927.dkim.feishu.cn header.i=@fnnas-com.20200927.dkim.feishu.cn header.b="KXQwlwDV"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
- s=s1; d=fnnas-com.20200927.dkim.feishu.cn; t=1771001668;
-  h=from:subject:mime-version:from:date:message-id:subject:to:cc:
- reply-to:content-type:mime-version:in-reply-to:message-id;
- bh=G2BnGX26PUJwPNtKkgDw/Z/6YxRQh+f8bAqoAuDkZEc=;
- b=KXQwlwDVoeV68Rlu0oEVJu4Lg47uzpXzUtH96viL2v3Xs68gacIGKwNCoVOZFcoyyLaEer
- ymGWnnngyfo4xnbaHcYKZMF1Fv6BI5KnF7xgLrYwoacbnPZklLjpxDYvNBEkdu8RAg+r5z
- 15ZlDskw2mYj4Vyz9Z1pXpOw5T3Sp5brjn3WpRqsrC27JahEe6zAvBfY0Qxyci+3l56LXV
- oK8ibWD51JQu4BLfsLxqw/56CKfqq1neAfXyDosFOReQ5Z5e9qQa8MYjTSkiczPQmhbM9M
- GS4XvgXZVpEA2+ql53FXQ4APk5fmFePZNHxY5DvGHD1b8Ll0K1wKm6EKfeArBQ==
-Content-Type: text/plain; charset=UTF-8
-X-Original-From: Yu Kuai <yukuai@fnnas.com>
-X-Lms-Return-Path: <lba+2698f5742+765c66+vger.kernel.org+yukuai@fnnas.com>
-Subject: Re: [RFC PATCH] blk-iocost: introduce 'linear-max' cost model for cloud disk
-Date: Sat, 14 Feb 2026 00:54:22 +0800
-Received: from [192.168.1.104] ([39.182.0.132]) by smtp.feishu.cn with ESMTPS; Sat, 14 Feb 2026 00:54:25 +0800
-User-Agent: Mozilla Thunderbird
-Content-Transfer-Encoding: quoted-printable
-Content-Language: en-US
-Reply-To: yukuai@fnnas.com
-To: "Jialin Wang" <wjl.linux@gmail.com>
-References: <20260213073829.182168-1-wjl.linux@gmail.com> <890f2571-fb46-4ff2-b7ea-7cfa10bc8797@fnnas.com> <CAG18Jnyvs9Ob2WKQV0LQYGrq3F+czrRukhxW5JCza0iZQvbh-g@mail.gmail.com>
-Cc: <tj@kernel.org>, <josef@toxicpanda.com>, <axboe@kernel.dk>, 
-	<lianux.mm@gmail.com>, <cgroups@vger.kernel.org>, 
-	<linux-block@vger.kernel.org>, <linux-kernel@vger.kernel.org>, 
-	<yukuai@fnnas.com>
+	dkim=pass (2048-bit key) header.d=cmpxchg.org header.i=@cmpxchg.org header.b="ISJN1gNM"
+Received: by mail-qk1-f180.google.com with SMTP id af79cd13be357-8cb3fb47559so128864485a.1
+        for <cgroups@vger.kernel.org>; Fri, 13 Feb 2026 12:09:07 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=cmpxchg.org; s=google; t=1771013346; x=1771618146; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=7qPVnjkUUN7g5ZDl/2W4jZj/HTnTNtx2ZZEtCyQsavo=;
+        b=ISJN1gNMABWfEcEWMcyhsdgo47V34/ALFe2OAjLgxd/QJYVOTlYx21N0K4YvOGsqGR
+         IMNoqTAU3j+qVs3ypYQozP+fIIiluWv5w8z3ItT32q4wLYJe3FOrp888OS9i2y/mcQru
+         2DuTAyahPq6QW2lrZBTHL0tJZ+hKa/9SpZ2hT3dxo3//u2qGrRn6h7/+54kQCmD8PDzG
+         0Z5/gdoUt/Kl9cFEJWy/15pvyIKMxIuodSRhjJob82yLXFdaUU4xtJyp9MBNt8K9vhF/
+         dgEvRKvIhxRVyPFKiHHsHAB0p0ul3khzh/0edKI8myov36ARug9WOo98onbK2FuICTnC
+         qaPg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1771013346; x=1771618146;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-gg:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=7qPVnjkUUN7g5ZDl/2W4jZj/HTnTNtx2ZZEtCyQsavo=;
+        b=uGBLOk/ngQR1uHvCy6Tv6zeNPiJthEZmg5A9p43YMsUVyD/jrB2wUlUCiQz07W4bT+
+         0G+Wpe8YpYHIfF7r3BJ2UGFScce1UCT8bExd60r7YLsx/C6us0aS91hdBLJ637vemlqe
+         OCQEo3tGPRKhavs8Zho2GmYQFkrNjzTNvnsM5vLvy0ZpSIumpSLvUU+U6eq5xLfJrRI0
+         +aZGOoR2GnmtuWmGU+rx58GEIVsh5IC34BLz9cIXa2u39zTidHOqXFxvG+AYMZ4B7rWl
+         DWfmrWYgZtcACO8IZboVJWxzKjhbmC3dbVWULpWzOrSsB4Ku+0x36/ZKcBZ8ZiLc/Qm9
+         T1Bw==
+X-Gm-Message-State: AOJu0YxFtI0jAz3JrHhxKwP8eT1YncE+WvgKizMpynOG23lAYGcygf0P
+	M9wnnCE53ys8VQ1DaHfEB80GQ9//BS+g3ByzKHiJoHxumn24rBfau8J3IlcasM88Eqw=
+X-Gm-Gg: AZuq6aI1MNLpNVzIEYzPeMHjt2kiygyrhcXulWCW94du3m/YZnsLIqzaJGrKAicYtsx
+	8f+FyeetDijlwF2tlXuhUtFRhViyZVHt+I7Mpx8l7K19SAZ5jhb/3qYlYmg7Bb49qh1Y4gGuPQL
+	VEmnptthd0Wm35eaTC0H9CziCQpaVfrIDPA47YZgw8OrQGlDwSoFtOVbtIFsg3uwVFAa9oB2Ru/
+	k/47wwLQ6+qq2WT0tmdPMji+8AzdEEKqmFk55FmqnyqhM32/HKNi8lXodaZet/zhugmhqPWk3LT
+	YMHYl8aOYZUsTdjTyfXVnEfNAA0zuJd/rZ8nuvp3yT0UpDDo1AgJqlLSPRrC/EmDenGvgwLSMyv
+	Un/bV/Zv7WthaFM6ddVDxOjfH8hB5byU723KCLIZgcpGgmsJ0ILHZzCgGE54tbr84v7VIuy/pwm
+	49Z9iA5fw9pOBxf/wJvkUKgg==
+X-Received: by 2002:a05:620a:1a13:b0:8cb:3bca:bb3a with SMTP id af79cd13be357-8cb4249f104mr378592785a.67.1771013346200;
+        Fri, 13 Feb 2026 12:09:06 -0800 (PST)
+Received: from localhost ([2603:7000:c00:3a00:365a:60ff:fe62:ff29])
+        by smtp.gmail.com with ESMTPSA id af79cd13be357-8cb2b1c7ef7sm723625085a.28.2026.02.13.12.09.05
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 13 Feb 2026 12:09:05 -0800 (PST)
+Date: Fri, 13 Feb 2026 15:08:57 -0500
+From: Johannes Weiner <hannes@cmpxchg.org>
+To: Kairui Song <ryncsn@gmail.com>
+Cc: cgroups@vger.kernel.org, linux-mm@kvack.org,
+	Michal Hocko <mhocko@kernel.org>,
+	Roman Gushchin <roman.gushchin@linux.dev>,
+	Shakeel Butt <shakeel.butt@linux.dev>,
+	Muchun Song <muchun.song@linux.dev>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	linux-kernel@vger.kernel.org, Kairui Song <kasong@tencent.com>
+Subject: Re: [PATCH] memcg: consolidate private id refcount get/put helpers
+Message-ID: <aY-E2Rj2gBrBHJsT@cmpxchg.org>
+References: <20260213-memcg-privid-v1-1-d8cb7afcf831@tencent.com>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0
-In-Reply-To: <CAG18Jnyvs9Ob2WKQV0LQYGrq3F+czrRukhxW5JCza0iZQvbh-g@mail.gmail.com>
-From: "Yu Kuai" <yukuai@fnnas.com>
-Message-Id: <a18d26f4-a494-48b2-8024-4de1047afb25@fnnas.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260213-memcg-privid-v1-1-d8cb7afcf831@tencent.com>
 
-Hi,
+On Fri, Feb 13, 2026 at 06:03:32PM +0800, Kairui Song wrote:
+> From: Kairui Song <kasong@tencent.com>
+> 
+> We currently have two different sets of helpers for getting or putting
+> the private IDs' refcount for order 0 and large folios. This is
+> redundant. Just use one and always acquire the refcount of the swapout
+> folio size unless it's zero, and put the refcount using the folio size
+> if the charge failed, since the folio size can't change. Then there is
+> no need to update the refcount for tail pages.
+> 
+> Same for freeing, then only one pair of get/put helper is needed now.
+> 
+> The performance might be slightly better, too: both "inc unless zero"
+> and "add unless zero" use the same cmpxchg implementation. For large
+> folios, we saved an atomic operation. And for both order 0 and large
+> folios, we saved a branch.
+> 
+> Signed-off-by: Kairui Song <kasong@tencent.com>
 
-=E5=9C=A8 2026/2/13 20:24, Jialin Wang =E5=86=99=E9=81=93:
-> Do you have any specific thoughts or suggestions on the best way to combi=
-ne
-> these two mechanisms? I would really value your advice on the implementat=
-ion
-> direction.
+Nice improvement!
 
-Implement a new model in iocost, you'll configure bps/iops_limit the same a=
-s
-blk-throttle, you'll also need something like tg_dispatch_bps/iops_time() a=
-nd
-throtl_charge_bps/iops_bio() to calculate cost by max(bps_cost, iops_cost).
-
-
---=20
-Thansk,
-Kuai
+Acked-by: Johannes Weiner <hannes@cmpxchg.org>
