@@ -1,32 +1,30 @@
-Received: from out-170.mta1.migadu.com (out-170.mta1.migadu.com [95.215.58.170])
+Received: from out-181.mta1.migadu.com (out-181.mta1.migadu.com [95.215.58.181])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 11A542D7DD3
-	for <cgroups@vger.kernel.org>; Fri, 13 Feb 2026 07:24:16 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=95.215.58.170
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6E0312D0614;
+	Fri, 13 Feb 2026 07:24:17 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=95.215.58.181
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1770967458; cv=none; b=Y2Wsr2DtiVxA5RcjXazedO8OYXJutwazN4qmInPXOq5JUlELY84FMziPHj0asCMGrBXreZjuK1AhFvVrcGuZfalwlzNVZoiecCYh8PIrjpSUPRsnL5/jGfXZRJf4Ij4O2hNDsRkf+OMQ6pRO3hxfyns6gF0OKeADJP+G9pzOSZQ=
+	t=1770967458; cv=none; b=UC4uD4oWIISvhi4MDFU1TZevZFTw6PGQ6B1H0DXn+LWynvdukV7f6Eredljox6THtJNtPSeKI7QXdw2diEr156CVQhD+PDcx4Ex29T2tY9PQ3I0WR7ti5Tu1oijoxrEzY4MDYWHV4Xg01w9xsZZd9xnwjMztDCEPDd5kD4cDsj8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1770967458; c=relaxed/simple;
-	bh=Iuf/jG1P1xgDjqZYNlxi2enRJMWQkBrEDPdJgXR1x88=;
-	h=From:To:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=Hx3Ewy4Q43C7nwCHEB7BVdutHm02hr/AjezI62z9NU0K4hqPVxfhHFrS9jVoXogIHpCk49fY1BFfAXd+caOrgk0ChZf00e/gKYVEMCrKjCcp8LRPIxTU4Jjo5f8Dhy4bUotrYchYY2Do7+UWt5Pc+DbiwNykNBVhkueUby8kdXY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=cc3fpTVf; arc=none smtp.client-ip=95.215.58.170
+	bh=uySMJvyft9jtAkrDAcp3YGsuHvDvCEgMDRF46Oa4B0Y=;
+	h=From:To:Subject:Date:Message-ID:MIME-Version; b=Ff49jPTW9zfezy+qnf9neTe6T/qrhIqOEWTFSoI+/dOzC8aO/JFk/X6SXHm9GUJByJkVxQG1kQjNAFnoluM0xWIiuyzv8x/DoziPxfYxxYBef+8o/EmCoaXLnJ50VSf2ulP4Da6KOx9Y1QSUiTI1UkDVcotP9F3lvowyPW/RpRw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=bLZRB+KC; arc=none smtp.client-ip=95.215.58.181
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="cc3fpTVf"
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="bLZRB+KC"
 X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
-	t=1770967455;
+	t=1770967445;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:mime-version:mime-version:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=HW+lAdpZxdJcNgAcGUXKCZ/ga5dHaGdja+4OcUdB4U4=;
-	b=cc3fpTVfk4UjRwRea3SPdpj0kMzH1jIgL2ZENeZFz4l/ch+kXyBmx4iuQ6GHsvobdljBxm
-	Zjd3mc9KkrGsTIZwIDoqz4fE63dyYV5bc5DJZFI87FljWPb7n7Gza8GpxVzbE3/jZb23Yg
-	ia+RRy9hEvB7mBrPZqh015f4DQ+PNzQ=
+	 content-transfer-encoding:content-transfer-encoding;
+	bh=VwNvFdIKZszOyx5SX4bymsUV474G0+X1JTSop6CJF0M=;
+	b=bLZRB+KCujV6r+3tDxD/hCqTqrXaKPY5gKNVJCgqvm9HEhbrD39q8vpE7E4wD5kgiOVmdu
+	eq3Sxy4rSM5H+g/vAMMjoAVUXltZTcZ7hYvyfJsPlHilNj02Y6e7JkSl0xQxzUDRmYi4BO
+	fKZGFZsoa+VTnuaiC587gmVcpj4IImo=
 From: Hui Zhu <hui.zhu@linux.dev>
 To: Johannes Weiner <hannes@cmpxchg.org>,
 	Michal Hocko <mhocko@kernel.org>,
@@ -54,11 +52,9 @@ To: Johannes Weiner <hannes@cmpxchg.org>,
 	linux-kernel@vger.kernel.org,
 	bpf@vger.kernel.org,
 	linux-kselftest@vger.kernel.org
-Subject: [PATCH bpf-next v2 2/3] selftests/bpf: Check bpf_mem_cgroup_page_state return value
-Date: Fri, 13 Feb 2026 15:23:40 +0800
-Message-ID: <ba61b77c71b6285eefa022a84bf80c5913b313de.1770965805.git.zhuhui@kylinos.cn>
-In-Reply-To: <cover.1770965805.git.zhuhui@kylinos.cn>
-References: <cover.1770965805.git.zhuhui@kylinos.cn>
+Subject: [PATCH bpf-next v2 0/3] Fix test_cgroup_iter_memcg issues found during back-porting
+Date: Fri, 13 Feb 2026 15:23:38 +0800
+Message-ID: <cover.1770965805.git.zhuhui@kylinos.cn>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
@@ -70,69 +66,33 @@ X-Migadu-Flow: FLOW_OUT
 
 From: Hui Zhu <zhuhui@kylinos.cn>
 
-When back-porting test_progs to different kernel versions, I encountered
-an issue where the test_cgroup_iter_memcg test would falsely pass even
-when bpf_mem_cgroup_page_state() failed.
+While back-porting "mm: bpf kfuncs to access memcg data", I
+encountered issues with test_cgroup_iter_memcg, specifically
+in test_kmem.
 
-This patch adds explicit checks to ensure bpf_mem_cgroup_page_state()
-doesn't return -1 before validating the actual statistics values.
+These patches are my fixes for the problems I encountered.
 
-Signed-off-by: Hui Zhu <zhuhui@kylinos.cn>
----
- .../selftests/bpf/prog_tests/cgroup_iter_memcg.c     | 12 ++++++++++++
- 1 file changed, 12 insertions(+)
+Changelog:
+v2:
+According to the comments of JP Kobryn, added bpf_core_enum_value()
+usage in the BPF program to handle cross-kernel enum value differences
+at load-time instead of compile-time.
+Dropped the mm/memcontrol.c patch.
+Modified test_kmem handling: instead of skipping when nokmem is set,
+verify that kmem value is zero as expected.
+According to the comments of bot, fixed assertion message: changed
+"bpf_mem_cgroup_page_state" to "bpf_mem_cgroup_vm_events" for PGFAULT
+check.
 
-diff --git a/tools/testing/selftests/bpf/prog_tests/cgroup_iter_memcg.c b/tools/testing/selftests/bpf/prog_tests/cgroup_iter_memcg.c
-index a5afd16705f0..897b17b58df3 100644
---- a/tools/testing/selftests/bpf/prog_tests/cgroup_iter_memcg.c
-+++ b/tools/testing/selftests/bpf/prog_tests/cgroup_iter_memcg.c
-@@ -53,6 +53,8 @@ static void test_anon(struct bpf_link *link, struct memcg_query *memcg_query)
- 	if (!ASSERT_OK(read_stats(link), "read stats"))
- 		goto cleanup;
- 
-+	ASSERT_NEQ(memcg_query->nr_anon_mapped, (unsigned long)-1,
-+		  "bpf_mem_cgroup_page_state NR_ANON_MAPPED");
- 	ASSERT_GT(memcg_query->nr_anon_mapped, 0, "final anon mapped val");
- 
- cleanup:
-@@ -88,6 +90,10 @@ static void test_file(struct bpf_link *link, struct memcg_query *memcg_query)
- 	if (!ASSERT_OK(read_stats(link), "read stats"))
- 		goto cleanup_map;
- 
-+	ASSERT_NEQ(memcg_query->nr_file_pages, (unsigned long)-1,
-+		  "bpf_mem_cgroup_page_state NR_FILE_PAGES");
-+	ASSERT_NEQ(memcg_query->nr_file_mapped, (unsigned long)-1,
-+		  "bpf_mem_cgroup_page_state NR_FILE_MAPPED");
- 	ASSERT_GT(memcg_query->nr_file_pages, 0, "final file value");
- 	ASSERT_GT(memcg_query->nr_file_mapped, 0, "final file mapped value");
- 
-@@ -119,6 +125,8 @@ static void test_shmem(struct bpf_link *link, struct memcg_query *memcg_query)
- 	if (!ASSERT_OK(read_stats(link), "read stats"))
- 		goto cleanup;
- 
-+	ASSERT_NEQ(memcg_query->nr_shmem, (unsigned long)-1,
-+		  "bpf_mem_cgroup_page_state NR_SHMEM");
- 	ASSERT_GT(memcg_query->nr_shmem, 0, "final shmem value");
- 
- cleanup:
-@@ -143,6 +151,8 @@ static void test_kmem(struct bpf_link *link, struct memcg_query *memcg_query)
- 	if (!ASSERT_OK(read_stats(link), "read stats"))
- 		goto cleanup;
- 
-+	ASSERT_NEQ(memcg_query->memcg_kmem, (unsigned long)-1,
-+		  "bpf_mem_cgroup_vm_events MEMCG_KMEM");
- 	ASSERT_GT(memcg_query->memcg_kmem, 0, "kmem value");
- 
- cleanup:
-@@ -170,6 +180,8 @@ static void test_pgfault(struct bpf_link *link, struct memcg_query *memcg_query)
- 	if (!ASSERT_OK(read_stats(link), "read stats"))
- 		goto cleanup;
- 
-+	ASSERT_NEQ(memcg_query->pgfault, (unsigned long)-1,
-+		  "bpf_mem_cgroup_page_state PGFAULT");
- 	ASSERT_GT(memcg_query->pgfault, 0, "final pgfault val");
- 
- cleanup:
+Hui Zhu (3):
+  bpf: Use bpf_core_enum_value for stats in cgroup_iter_memcg
+  selftests/bpf: Check bpf_mem_cgroup_page_state return value
+  bpf: selftests: Skip kmem test when cgroup.memory=nokmem is set
+
+ .../bpf/prog_tests/cgroup_iter_memcg.c        | 42 +++++++++++++++++++
+ .../selftests/bpf/progs/cgroup_iter_memcg.c   | 41 ++++++++++++++----
+ 2 files changed, 76 insertions(+), 7 deletions(-)
+
 -- 
 2.43.0
 
