@@ -1,66 +1,30 @@
-Received: from mail-qk1-f196.google.com (mail-qk1-f196.google.com [209.85.222.196])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D2AC82C237F
-	for <cgroups@vger.kernel.org>; Fri, 13 Feb 2026 21:37:31 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.222.196
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E8CFA1B4257;
+	Sat, 14 Feb 2026 00:56:58 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.51
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1771018653; cv=none; b=X6+rGGM8BYSLPs5RZbh4VImaOd3TRnglXnmaVNMiW56eGFUX9TJRgR73vgEXK36jji4bEWhC48zNM18962uRqQ7FVrqPtWUnAp9XVthVjf+EyCG8rxQexLY5YqLqGM1CU7fi0dXnyTUhoYdAHZ9T14jeW2e5o7XweEInCLLoLSE=
+	t=1771030622; cv=none; b=K421zcdH2jEmnIDqaGVVsugLyl3Im3qgqVuTDYrKar228tqCIyfGfNpTXtk8Y3t8qV+5LlD7vPBaDq7UkQATrpu1DN18e4SmxUNmm4s9zvYlEO3zatHfnI5p69QhyxWXyLz41RtvE0msT+RfHZ4WSv+a1hIzLQltImBTl5BswvM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1771018653; c=relaxed/simple;
-	bh=mH50sMrriyGDz+Qbrz5Taix8L1V/wsCNQUq+G3Lfn6k=;
+	s=arc-20240116; t=1771030622; c=relaxed/simple;
+	bh=6lrl2zwtHTEWqL5rziYNgUXc18UcYAQ8wiVP1VFgwsY=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=f83nabcOYEfRP16OFHID9+DkiujzmMz6sKgtvielrP9iixf9ZQ793MRF0FdFGCIN+CKASwA1ie0fWR1AQoHb8uQ1D5XRBybj/Bc8M63o5ocXvtr4YAMAVTzqp5nRUxvx7g1ksn7iZmH9FBDlg608lweZEjSWeiC7DGH2Qh2x9RM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=dbIFYCQE; arc=none smtp.client-ip=209.85.222.196
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="dbIFYCQE"
-Received: by mail-qk1-f196.google.com with SMTP id af79cd13be357-8cb38e86cf2so153834885a.1
-        for <cgroups@vger.kernel.org>; Fri, 13 Feb 2026 13:37:31 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1771018651; x=1771623451; darn=vger.kernel.org;
-        h=content-transfer-encoding:in-reply-to:from:content-language
-         :references:cc:to:subject:user-agent:mime-version:date:message-id
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=yr4En5251tETgtYzeFZ5nnuFAQ7w2oyqC71nR7DQ8Wk=;
-        b=dbIFYCQEAE6zC7ve1vlS9DJNfP7xlls4Aralt8YA5iSQaOHkFxhsgxolL57kg1aOEb
-         JWa/Usc3e5TwUjZqOzaCSi5wwv+rVM7eGNDlmeq8m+J7C4FMRergH1dOwZk/5pgm2CjK
-         mqaHAVKtuwZ9OsYpiLlEGai9Nwf60s258EZzNiIFUuogedSSylTEQMDad0NOg0ugVfDx
-         sxWkYaNv88wAjdD0vJyj+G9eAiKU/ECrfLvxrQdXO1r8MRe8QAPog1sHteQuhTWKkFdf
-         MTtbXy4EQWUWp6D3azMWMe35y9MRu147DeGRM1ZtnwVw47AbryDMLDT4eE+5SAkMhcar
-         gThw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1771018651; x=1771623451;
-        h=content-transfer-encoding:in-reply-to:from:content-language
-         :references:cc:to:subject:user-agent:mime-version:date:message-id
-         :x-gm-gg:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=yr4En5251tETgtYzeFZ5nnuFAQ7w2oyqC71nR7DQ8Wk=;
-        b=uKuTDyiHywDObAKeNsP8p85soBKXoJp5RZz8CtS1tX0V0I50uBikXP7Ca20E/JIzzC
-         hb1RZdJHndqazeHKYJ5yV6HltMssLvMZ9198x991Q8tVMMzxD5O+SQv+Ja96ocSFPqTL
-         58Fu3PRX9UNOSHfsLe3GLYETpiJ3D8w7qfxAQsNky/yMBQr8oS+ZrAM88X70CUQt7AY/
-         7wpYv3TQbzsOIYFZPYceGVV2OsW7OE6wLWrTIOV9UfAuCVc+Xjx2jCeCqCWgN2USxDQ+
-         4VNVMUWh8g6lmtgCKdBq3bDqgNAb4vNOd6xQzy7LZtcZF/huzMEg4bsf8vMXE6qpAOFw
-         NHPA==
-X-Forwarded-Encrypted: i=1; AJvYcCWjV925tBhfdzML3rTbtEk36hbX8c2z6hIS77otDEXwpPX8didYgsQTPQm0FbKS0l6xekFQpnBj@vger.kernel.org
-X-Gm-Message-State: AOJu0Yx6DWLgiptIri4YsNNZB4PpNS6uf3KEMns/ff8YhtZGdcFzFeUn
-	IB8LLAEFPFjpJo9876SOPH4s939IuaIgIukxMKMVyRTQMi6hACQrfcI20EQY8J7D
-X-Gm-Gg: AZuq6aIrsxXZTUQ/A57FfuKAezO4Y6DoZKS6hpETO0xPFbtt8QImJ1+5cINiX9kVcdg
-	HbIcoWtx37DnPUguoh6jnUKfWW5TKgGfVvPPXCcsfl3eblKCYFZ6NV/QXrkH7AQuHeEDH7VgQ00
-	MncXystiQwFxR6MKG4xIMS4nMgKhMzjT8tJGiNNyRW90JQRujvWttAjzvwbgxcWcQbB75bdT7sc
-	+Hk8hUDEXO25jLfa3gRrO6CtIqfja0aMglrU6XAcTTk1daCKq82O2owWz5gFF4r0Cbmj8mZltsq
-	eOfEYKhR5dzRh9LcmZqw0LUuS9ZpDF/0MdPacT3MoY5OCA4Man6AcyPcEz9INApvCGY6RB4UzgP
-	2GRM7ZOuXEg10dHhsDc+MpWFR7MUM5XnEEKwZv4SWYKHeac+llBmGsNu289RReaPopcX8tGoh6l
-	Qf3aLN/e37RLQlL6XTm3bP4jsmXM4SFad/
-X-Received: by 2002:a05:7022:618e:b0:11a:f5e0:dc8 with SMTP id a92af1059eb24-1273ae30dbemr1295141c88.28.1771012577689;
-        Fri, 13 Feb 2026 11:56:17 -0800 (PST)
-Received: from [192.168.4.196] ([73.222.117.172])
-        by smtp.gmail.com with ESMTPSA id a92af1059eb24-1272a69cc93sm8742855c88.6.2026.02.13.11.56.15
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Fri, 13 Feb 2026 11:56:17 -0800 (PST)
-Message-ID: <fd56ae2c-64ac-46bd-bcb2-503df995a6a1@gmail.com>
-Date: Fri, 13 Feb 2026 11:56:15 -0800
+	 In-Reply-To:Content-Type; b=bqoJ6UvLRdL+SqNryPYMM3CcUF12DAcp6J1mC0CPE8fseAKgoLzNpZovyLY7YK298aevf+cZTDPgenfXCewwXVl/xnuIYee1q3C+s517cZQRD6nHV+knDMJloEKUoH6vBdKvXIc1TalYBJ53F58WGjxCVd8/9eXpnZ2GpNDPef8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.51
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
+Received: from mail.maildlp.com (unknown [172.19.163.198])
+	by dggsgout11.his.huawei.com (SkyGuard) with ESMTPS id 4fCVwz5VNHzYQtHj;
+	Sat, 14 Feb 2026 08:56:51 +0800 (CST)
+Received: from mail02.huawei.com (unknown [10.116.40.128])
+	by mail.maildlp.com (Postfix) with ESMTP id 13C1740539;
+	Sat, 14 Feb 2026 08:56:56 +0800 (CST)
+Received: from [10.67.111.176] (unknown [10.67.111.176])
+	by APP4 (Coremail) with SMTP id gCh0CgB3I_RWyI9ppdNrHQ--.4951S2;
+	Sat, 14 Feb 2026 08:56:55 +0800 (CST)
+Message-ID: <f96cb0e5-da3d-422a-aa14-2a52f5f0aad9@huaweicloud.com>
+Date: Sat, 14 Feb 2026 08:56:54 +0800
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
@@ -68,89 +32,183 @@ List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 1/2] mm/mempolicy: track page allocations per mempolicy
-To: Vlastimil Babka <vbabka@suse.cz>, linux-mm@kvack.org
-Cc: apopple@nvidia.com, akpm@linux-foundation.org, axelrasmussen@google.com,
- byungchul@sk.com, cgroups@vger.kernel.org, david@kernel.org,
- eperezma@redhat.com, gourry@gourry.net, jasowang@redhat.com,
- hannes@cmpxchg.org, joshua.hahnjy@gmail.com, Liam.Howlett@oracle.com,
- linux-kernel@vger.kernel.org, lorenzo.stoakes@oracle.com,
- matthew.brost@intel.com, mst@redhat.com, mhocko@suse.com, rppt@kernel.org,
- muchun.song@linux.dev, zhengqi.arch@bytedance.com, rakie.kim@sk.com,
- roman.gushchin@linux.dev, shakeel.butt@linux.dev, surenb@google.com,
- virtualization@lists.linux.dev, weixugc@google.com,
- xuanzhuo@linux.alibaba.com, ying.huang@linux.alibaba.com,
- yuanchu@google.com, ziy@nvidia.com, kernel-team@meta.com
-References: <20260212045109.255391-1-inwardvessel@gmail.com>
- <20260212045109.255391-2-inwardvessel@gmail.com>
- <96b63efb-551f-4dd5-b4a2-ac67da577431@suse.cz>
- <b5927ae8-3108-4d65-bee9-be306fb697b4@gmail.com>
- <d52066f1-c83e-4406-adca-5a403adb4f44@suse.cz>
+Subject: Re: [PATCH] memcg: consolidate private id refcount get/put helpers
+To: Kairui Song <ryncsn@gmail.com>, cgroups@vger.kernel.org,
+ linux-mm@kvack.org
+Cc: Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>,
+ Roman Gushchin <roman.gushchin@linux.dev>,
+ Shakeel Butt <shakeel.butt@linux.dev>, Muchun Song <muchun.song@linux.dev>,
+ Andrew Morton <akpm@linux-foundation.org>, linux-kernel@vger.kernel.org,
+ Kairui Song <kasong@tencent.com>
+References: <20260213-memcg-privid-v1-1-d8cb7afcf831@tencent.com>
 Content-Language: en-US
-From: "JP Kobryn (Meta)" <inwardvessel@gmail.com>
-In-Reply-To: <d52066f1-c83e-4406-adca-5a403adb4f44@suse.cz>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+From: Chen Ridong <chenridong@huaweicloud.com>
+In-Reply-To: <20260213-memcg-privid-v1-1-d8cb7afcf831@tencent.com>
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
+X-CM-TRANSID:gCh0CgB3I_RWyI9ppdNrHQ--.4951S2
+X-Coremail-Antispam: 1UD129KBjvJXoW3Gw1UtFWkWF15AryUXFWfuFg_yoW7urWDpF
+	sIkan0yayrJrW7GF1Ska429FyfZa18Xw45XFyxKw17Zrnxtw15XF17tr98XayUCF97trsx
+	Jan0yr1kGw4YyFJanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDU0xBIdaVrnRJUUUvjb4IE77IF4wAFF20E14v26r4j6ryUM7CY07I20VC2zVCF04k2
+	6cxKx2IYs7xG6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rwA2F7IY1VAKz4
+	vEj48ve4kI8wA2z4x0Y4vE2Ix0cI8IcVAFwI0_Ar0_tr1l84ACjcxK6xIIjxv20xvEc7Cj
+	xVAFwI0_Cr0_Gr1UM28EF7xvwVC2z280aVAFwI0_GcCE3s1l84ACjcxK6I8E87Iv6xkF7I
+	0E14v26rxl6s0DM2AIxVAIcxkEcVAq07x20xvEncxIr21l5I8CrVACY4xI64kE6c02F40E
+	x7xfMcIj6xIIjxv20xvE14v26r1j6r18McIj6I8E87Iv67AKxVWUJVW8JwAm72CE4IkC6x
+	0Yz7v_Jr0_Gr1lF7xvr2IY64vIr41lFIxGxcIEc7CjxVA2Y2ka0xkIwI1lc7CjxVAaw2AF
+	wI0_Jw0_GFyl42xK82IYc2Ij64vIr41l4I8I3I0E4IkC6x0Yz7v_Jr0_Gr1lx2IqxVAqx4
+	xG67AKxVWUJVWUGwC20s026x8GjcxK67AKxVWUGVWUWwC2zVAF1VAY17CE14v26r1q6r43
+	MIIYrxkI7VAKI48JMIIF0xvE2Ix0cI8IcVAFwI0_Jr0_JF4lIxAIcVC0I7IYx2IY6xkF7I
+	0E14v26r4j6F4UMIIF0xvE42xK8VAvwI8IcIk0rVWUJVWUCwCI42IY6I8E87Iv67AKxVWU
+	JVW8JwCI42IY6I8E87Iv6xkF7I0E14v26r4j6r4UJbIYCTnIWIevJa73UjIFyTuYvjxUF1
+	v3UUUUU
+X-CM-SenderInfo: hfkh02xlgr0w46kxt4xhlfz01xgou0bp/
 
-On 2/13/26 12:54 AM, Vlastimil Babka wrote:
-> On 2/12/26 22:25, JP Kobryn wrote:
->> On 2/12/26 7:24 AM, Vlastimil Babka wrote:
->>> On 2/12/26 05:51, JP Kobryn wrote:
->>>> It would be useful to see a breakdown of allocations to understand which
->>>> NUMA policies are driving them. For example, when investigating memory
->>>> pressure, having policy-specific counts could show that allocations were
->>>> bound to the affected node (via MPOL_BIND).
->>>>
->>>> Add per-policy page allocation counters as new node stat items. These
->>>> counters can provide correlation between a mempolicy and pressure on a
->>>> given node.
->>>>
->>>> Signed-off-by: JP Kobryn <inwardvessel@gmail.com>
->>>> Suggested-by: Johannes Weiner <hannes@cmpxchg.org>
->>>
->>> Are the numa_{hit,miss,etc.} counters insufficient? Could they be extended
->>> in a way that would capture any missing important details? A counter per
->>> policy type seems exhaustive, but then on one hand it might be not important
->>> to distinguish beetween some of them, and on the other hand it doesn't track
->>> the nodemask anyway.
->>
->> The two patches of the series should complement each other. When
->> investigating memory pressure, we could identify the affected nodes
->> (patch 2). Then we can cross-reference the policy-specific stats to find
->> any correlation (this patch).
->>
->> I think extending numa_* counters would call for more permutations to
->> account for the numa stat per policy. I think distinguishing between
->> MPOL_DEFAULT and MPOL_BIND is meaningful, for example. Am I
+
+
+On 2026/2/13 18:03, Kairui Song wrote:
+> From: Kairui Song <kasong@tencent.com>
 > 
-> Are there other useful examples or would it be enough to add e.g. a
-> numa_bind counter to the numa_hit/miss/etc?
+> We currently have two different sets of helpers for getting or putting
+> the private IDs' refcount for order 0 and large folios. This is
+> redundant. Just use one and always acquire the refcount of the swapout
+> folio size unless it's zero, and put the refcount using the folio size
+> if the charge failed, since the folio size can't change. Then there is
+> no need to update the refcount for tail pages.
+> 
+> Same for freeing, then only one pair of get/put helper is needed now.
+> 
+> The performance might be slightly better, too: both "inc unless zero"
+> and "add unless zero" use the same cmpxchg implementation. For large
+> folios, we saved an atomic operation. And for both order 0 and large
+> folios, we saved a branch.
+> 
+> Signed-off-by: Kairui Song <kasong@tencent.com>
+> ---
+>  mm/memcontrol-v1.c |  5 +----
+>  mm/memcontrol-v1.h |  4 ++--
+>  mm/memcontrol.c    | 29 +++++++----------------------
+>  3 files changed, 10 insertions(+), 28 deletions(-)
+> 
+> diff --git a/mm/memcontrol-v1.c b/mm/memcontrol-v1.c
+> index 0e3d972fad33..c28a060abc64 100644
+> --- a/mm/memcontrol-v1.c
+> +++ b/mm/memcontrol-v1.c
+> @@ -635,11 +635,8 @@ void memcg1_swapout(struct folio *folio, swp_entry_t entry)
+>  	 * have an ID allocated to it anymore, charge the closest online
+>  	 * ancestor for the swap instead and transfer the memory+swap charge.
+>  	 */
+> -	swap_memcg = mem_cgroup_private_id_get_online(memcg);
+>  	nr_entries = folio_nr_pages(folio);
+> -	/* Get references for the tail pages, too */
+> -	if (nr_entries > 1)
+> -		mem_cgroup_private_id_get_many(swap_memcg, nr_entries - 1);
+> +	swap_memcg = mem_cgroup_private_id_get_online(memcg, nr_entries);
+>  	mod_memcg_state(swap_memcg, MEMCG_SWAP, nr_entries);
+>  
+>  	swap_cgroup_record(folio, mem_cgroup_private_id(swap_memcg), entry);
+> diff --git a/mm/memcontrol-v1.h b/mm/memcontrol-v1.h
+> index 49933925b4ba..dbbd0e13d4ff 100644
+> --- a/mm/memcontrol-v1.h
+> +++ b/mm/memcontrol-v1.h
+> @@ -28,8 +28,8 @@ unsigned long memcg_events(struct mem_cgroup *memcg, int event);
+>  unsigned long memcg_page_state_output(struct mem_cgroup *memcg, int item);
+>  int memory_stat_show(struct seq_file *m, void *v);
+>  
+> -void mem_cgroup_private_id_get_many(struct mem_cgroup *memcg, unsigned int n);
+> -struct mem_cgroup *mem_cgroup_private_id_get_online(struct mem_cgroup *memcg);
+> +struct mem_cgroup *mem_cgroup_private_id_get_online(struct mem_cgroup *memcg,
+> +						    unsigned int n);
+>  
+>  /* Cgroup v1-specific declarations */
+>  #ifdef CONFIG_MEMCG_V1
+> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+> index 007413a53b45..4425ef51feae 100644
+> --- a/mm/memcontrol.c
+> +++ b/mm/memcontrol.c
+> @@ -3564,13 +3564,7 @@ static void mem_cgroup_private_id_remove(struct mem_cgroup *memcg)
+>  	}
+>  }
+>  
+> -void __maybe_unused mem_cgroup_private_id_get_many(struct mem_cgroup *memcg,
+> -					   unsigned int n)
+> -{
+> -	refcount_add(n, &memcg->id.ref);
+> -}
+> -
+> -static void mem_cgroup_private_id_put_many(struct mem_cgroup *memcg, unsigned int n)
+> +static inline void mem_cgroup_private_id_put(struct mem_cgroup *memcg, unsigned int n)
+>  {
+>  	if (refcount_sub_and_test(n, &memcg->id.ref)) {
+>  		mem_cgroup_private_id_remove(memcg);
+> @@ -3580,14 +3574,9 @@ static void mem_cgroup_private_id_put_many(struct mem_cgroup *memcg, unsigned in
+>  	}
+>  }
+>  
+> -static inline void mem_cgroup_private_id_put(struct mem_cgroup *memcg)
+> +struct mem_cgroup *mem_cgroup_private_id_get_online(struct mem_cgroup *memcg, unsigned int n)
+>  {
+> -	mem_cgroup_private_id_put_many(memcg, 1);
+> -}
+> -
+> -struct mem_cgroup *mem_cgroup_private_id_get_online(struct mem_cgroup *memcg)
+> -{
+> -	while (!refcount_inc_not_zero(&memcg->id.ref)) {
+> +	while (!refcount_add_not_zero(n, &memcg->id.ref)) {
+>  		/*
+>  		 * The root cgroup cannot be destroyed, so it's refcount must
+>  		 * always be >= 1.
+> @@ -3888,7 +3877,7 @@ static void mem_cgroup_css_offline(struct cgroup_subsys_state *css)
+>  
+>  	drain_all_stock(memcg);
+>  
+> -	mem_cgroup_private_id_put(memcg);
+> +	mem_cgroup_private_id_put(memcg, 1);
+>  }
+>  
+>  static void mem_cgroup_css_released(struct cgroup_subsys_state *css)
+> @@ -5170,19 +5159,15 @@ int __mem_cgroup_try_charge_swap(struct folio *folio, swp_entry_t entry)
+>  		return 0;
+>  	}
+>  
+> -	memcg = mem_cgroup_private_id_get_online(memcg);
+> +	memcg = mem_cgroup_private_id_get_online(memcg, nr_pages);
+>  
+>  	if (!mem_cgroup_is_root(memcg) &&
+>  	    !page_counter_try_charge(&memcg->swap, nr_pages, &counter)) {
+>  		memcg_memory_event(memcg, MEMCG_SWAP_MAX);
+>  		memcg_memory_event(memcg, MEMCG_SWAP_FAIL);
+> -		mem_cgroup_private_id_put(memcg);
+> +		mem_cgroup_private_id_put(memcg, nr_pages);
+>  		return -ENOMEM;
+>  	}
+> -
+> -	/* Get references for the tail pages, too */
+> -	if (nr_pages > 1)
+> -		mem_cgroup_private_id_get_many(memcg, nr_pages - 1);
+>  	mod_memcg_state(memcg, MEMCG_SWAP, nr_pages);
+>  
+>  	swap_cgroup_record(folio, mem_cgroup_private_id(memcg), entry);
+> @@ -5211,7 +5196,7 @@ void __mem_cgroup_uncharge_swap(swp_entry_t entry, unsigned int nr_pages)
+>  				page_counter_uncharge(&memcg->swap, nr_pages);
+>  		}
+>  		mod_memcg_state(memcg, MEMCG_SWAP, -nr_pages);
+> -		mem_cgroup_private_id_put_many(memcg, nr_pages);
+> +		mem_cgroup_private_id_put(memcg, nr_pages);
+>  	}
+>  	rcu_read_unlock();
+>  }
+> 
+> ---
+> base-commit: 9fff1ab283e0982c2b8e73f1d2246fd38caf40c8
+> change-id: 20260213-memcg-privid-6ba2773b5ca2
+> 
+> Best regards,
 
-Aside from bind, it's worth emphasizing that with default policy
-tracking we could see if the local node is the source of pressure. In
-the interleave case, we would be able to see if the loads are being
-balanced or, in the weighted case, being distributed properly.
+Reviewed-by: Chen Ridong <chenridong@huaweicloud.com>
 
-On extending the numa stats instead, I looked into this some more. I'm
-not sure if they're a good fit. They seem more about whether the
-allocator succeeded at placement rather than which policy drove the
-allocation. Thoughts?
+-- 
+Best regards,
+Ridong
 
-> What I'm trying to say the level of detail you are trying to add to the
-> always-on counters seems like more suitable for tracepoints. The counters
-> should be limited to what's known to be useful and not "everything we are
-> able to track and possibly could need one day".
-In a triage scenario, having the stats collected up to the time of the
-reported issue would be better. We make use of the tool called below[0].
-It periodically samples the system and allows us to view the
-historical state prior to the issue. If we started at the time of the
-incident and attached tracepoints it would be too late.
-
-The triage workflow would look like this:
-1) Pressure/OOMs reported while system-wide memory is free.
-2) Check per-node pgscan/pgsteal stats (provided by patch 2) to narrow
-down node(s) under pressure.
-3) Check per-policy allocation counters (this patch) on that node to
-find what policy was driving it.
-
-[0] https://github.com/facebookincubator/below
