@@ -1,37 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7B3FB30F819;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7F039318BAC;
 	Thu, 19 Feb 2026 23:42:07 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1771544527; cv=none; b=oa/QEuw/e6OCCPoxJmUAwERYXOeiKmX8TrxSIAaiPR0yMHOeUTVoycUglJrpaQoD4zUbwmPVTBmE0Ii6W2iaEvtBXfeAWGgW1j5REy8gC77nfXd18rQ73AAUe0hHjnpjBUaVg7FXt2iRnfiipvQhjUZwpdrx9vx1mPBbhv32Oas=
+	t=1771544527; cv=none; b=Fw1w/0ju0qYaBGN8egrqkyTh95pUnt+mt/b+abgBYbj54srFN7D4gGnMRohWIil0DEATz4wYHue7kaMWUSuPMaS2s5MMHUSV3gjz3RUjLIp3pwcKb2WKL50YJsfZHycTprzkpSPbvHefv2vIIDuF18Eer26PRrP85ftnRLVl4IQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1771544527; c=relaxed/simple;
-	bh=ob6VrZobjIxhJd1syjRnD0Fz6UDbLx7k9+0T35c5Ifk=;
+	bh=WSo3skmLSrebPHHPF6qNxghI6awr0lM5qgwbnMJhTJI=;
 	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=Voazdn/u1uhBX4/cVwPqKuivrr7yOdiCke6mApIIr7yrJLSA4AXvShEAxSnFOckrdfrtx4caSwK8wHsW7llhXE+MKJsKYIx2g8/gqpyqaUQrcdcHtx2Az+AD1ycYQr69o5s9yRJcUOFrgLB6FLuttiF8kxjyEmthK5QtiGRE0Xs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=RX0imueN; arc=none smtp.client-ip=10.30.226.201
+	 In-Reply-To:To:Cc; b=rQlv6VVqTyumqNQnMfBs43FfVA4JqudMZS4HTyEC6syJIBCmAmG6tvL8auxO3hKZNk2svFmi6qgmGva/Nzz9+xdqoMQHXFc6vCyljMLJ7dgShMwC63BsX1JDnN1WWpmIJIIrFbYyvA7N/84eKMw8q0PmDkwAoXouZAjEru1hiW0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=VFXvPCuF; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="RX0imueN"
-Received: by smtp.kernel.org (Postfix) with ESMTPS id 2A7D0C19423;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="VFXvPCuF"
+Received: by smtp.kernel.org (Postfix) with ESMTPS id 55FA9C19424;
 	Thu, 19 Feb 2026 23:42:07 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
 	s=k20201202; t=1771544527;
-	bh=ob6VrZobjIxhJd1syjRnD0Fz6UDbLx7k9+0T35c5Ifk=;
+	bh=WSo3skmLSrebPHHPF6qNxghI6awr0lM5qgwbnMJhTJI=;
 	h=From:Date:Subject:References:In-Reply-To:To:Cc:Reply-To:From;
-	b=RX0imueNLxnKo6rUXkF0FvQ104tNzT+RDIgI3/9VpHbGhPl5ylP02acqwECdl9lIi
-	 csDtkTmVwrUdMm5ocEnx0KSqrFsH/NreFVdyX+OZz4oV8nTO/fXJ36uuqx+Q90OLqj
-	 QtHAv2ozRZVQlO8EJXfZhrov9EzaOU6DtSnvEkEfSoNOFrDO2rl3il4T2iEK1xPhdM
-	 29LcWXU+gcudZkW0wUMrsTxx4l6WtZfZQ1NcX7b3Hh9Jg0JurM3DDaBiyeaCNZlvq4
-	 MbrubBu3OlOc0PTIHbGKHerkilSmMx8S+PT5KLNpXaFyRD3kgWmbMEqZZtvNd24yTF
-	 3WbmjOcRZVPJg==
+	b=VFXvPCuF/nFHG4CnQmBgxAzX0WavcFlKpayccYoFpNvlmlr/wDxM390ScxIPDw5cE
+	 G4eIy5QNLNoncH59IZhtYkzpyDAep36Ox4c8lbgWjVIAh/otAcZp3MleL8iI4BPd5f
+	 uPURcb37dfXpMKGvM8non1GZ5Ntww1seUbgE11QXxJh4qGASLGDlO4Y5TktKwoHz/0
+	 JR1m8gvalduWPdKkJivQnvXxtgdgMuuQEtXNSUiyfIy+gQ3ijhtMgtpy9vkmKwXxgy
+	 D2CGhiUe//3Z2fPXChgIpzEsdE3B/ZmQcDf5YhuhIwnGSGbc4deN2xkHW09XWcpClv
+	 XZbTUmznSrKUQ==
 Received: from aws-us-west-2-korg-lkml-1.web.codeaurora.org (localhost.localdomain [127.0.0.1])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 185FBC531EA;
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 447A5C531EC;
 	Thu, 19 Feb 2026 23:42:07 +0000 (UTC)
 From: Kairui Song via B4 Relay <devnull+kasong.tencent.com@kernel.org>
-Date: Fri, 20 Feb 2026 07:42:02 +0800
-Subject: [PATCH RFC 01/15] mm: move thp_limit_gfp_mask to header
+Date: Fri, 20 Feb 2026 07:42:04 +0800
+Subject: [PATCH RFC 03/15] mm, swap: move conflict checking logic of out
+ swap cache adding
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
@@ -40,7 +41,7 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-Id: <20260220-swap-table-p4-v1-1-104795d19815@tencent.com>
+Message-Id: <20260220-swap-table-p4-v1-3-104795d19815@tencent.com>
 References: <20260220-swap-table-p4-v1-0-104795d19815@tencent.com>
 In-Reply-To: <20260220-swap-table-p4-v1-0-104795d19815@tencent.com>
 To: linux-mm@kvack.org
@@ -58,11 +59,11 @@ Cc: Andrew Morton <akpm@linux-foundation.org>,
  Qi Zheng <zhengqi.arch@bytedance.com>, linux-kernel@vger.kernel.org, 
  cgroups@vger.kernel.org, Kairui Song <kasong@tencent.com>
 X-Mailer: b4 0.14.3
-X-Developer-Signature: v=1; a=ed25519-sha256; t=1771544524; l=3548;
+X-Developer-Signature: v=1; a=ed25519-sha256; t=1771544524; l=2479;
  i=kasong@tencent.com; s=kasong-sign-tencent; h=from:subject:message-id;
- bh=EsaDsTDGqRS39tj8l8nvpBNRy9miEhNym6TC8RjJmDw=;
- b=wZakvnnlS13do00sOlIWHX8u8pD1P7hONi6OwqAIkTyXNu+BQg7Edjqh/iZMYuGM58ZYbJdRG
- 6jgP9IrnMLJDt6qpU2w2ZuSjAyEz0NYHpKdYslZ4KSCbENbjAT0krGo
+ bh=rqW0brukQP1nLveDT5lSrI7q5RqloSsXptUI4qjvbG0=;
+ b=baKnG1/Gi7wFMKTzje7SnEgg9EDLUa44x9RAZMPl9v/vf3/tXIL//YuczgbEESSIT40UR2HUU
+ O82G6iejjPfADkB7eXmmU+PTBDK4/16jjf74zjEuJmZ1qNRnyE7B6fM
 X-Developer-Key: i=kasong@tencent.com; a=ed25519;
  pk=kCdoBuwrYph+KrkJnrr7Sm1pwwhGDdZKcKrqiK8Y1mI=
 X-Endpoint-Received: by B4 Relay for kasong@tencent.com/kasong-sign-tencent
@@ -72,111 +73,98 @@ Reply-To: kasong@tencent.com
 
 From: Kairui Song <kasong@tencent.com>
 
-No feature change, to be used later.
+No feature change, make later commits easier to review.
 
 Signed-off-by: Kairui Song <kasong@tencent.com>
 ---
- include/linux/huge_mm.h | 24 ++++++++++++++++++++++++
- mm/shmem.c              | 30 +++---------------------------
- 2 files changed, 27 insertions(+), 27 deletions(-)
+ mm/swap_state.c | 55 ++++++++++++++++++++++++++++++-------------------------
+ 1 file changed, 30 insertions(+), 25 deletions(-)
 
-diff --git a/include/linux/huge_mm.h b/include/linux/huge_mm.h
-index a4d9f964dfde..d522e798822d 100644
---- a/include/linux/huge_mm.h
-+++ b/include/linux/huge_mm.h
-@@ -237,6 +237,30 @@ static inline bool thp_vma_suitable_order(struct vm_area_struct *vma,
- 	return true;
+diff --git a/mm/swap_state.c b/mm/swap_state.c
+index 53fa95059012..1e340faea9ac 100644
+--- a/mm/swap_state.c
++++ b/mm/swap_state.c
+@@ -137,6 +137,28 @@ void *swap_cache_get_shadow(swp_entry_t entry)
+ 	return NULL;
  }
  
-+/*
-+ * Make sure huge_gfp is always more limited than limit_gfp.
-+ * Some of the flags set permissions, while others set limitations.
-+ */
-+static inline gfp_t thp_limit_gfp_mask(gfp_t huge_gfp, gfp_t limit_gfp)
++static int __swap_cache_add_check(struct swap_cluster_info *ci,
++				  unsigned int ci_off, unsigned int nr,
++				  void **shadow)
 +{
-+	gfp_t allowflags = __GFP_IO | __GFP_FS | __GFP_RECLAIM;
-+	gfp_t denyflags = __GFP_NOWARN | __GFP_NORETRY;
-+	gfp_t zoneflags = limit_gfp & GFP_ZONEMASK;
-+	gfp_t result = huge_gfp & ~(allowflags | GFP_ZONEMASK);
++	unsigned int ci_end = ci_off + nr;
++	unsigned long old_tb;
 +
-+	/* Allow allocations only from the originally specified zones. */
-+	result |= zoneflags;
++	if (unlikely(!ci->table))
++		return -ENOENT;
++	do {
++		old_tb = __swap_table_get(ci, ci_off);
++		if (unlikely(swp_tb_is_folio(old_tb)))
++			return -EEXIST;
++		if (unlikely(!__swp_tb_get_count(old_tb)))
++			return -ENOENT;
++		if (swp_tb_is_shadow(old_tb))
++			*shadow = swp_tb_to_shadow(old_tb);
++	} while (++ci_off < ci_end);
 +
-+	/*
-+	 * Minimize the result gfp by taking the union with the deny flags,
-+	 * and the intersection of the allow flags.
-+	 */
-+	result |= (limit_gfp & denyflags);
-+	result |= (huge_gfp & limit_gfp) & allowflags;
-+
-+	return result;
++	return 0;
 +}
 +
- /*
-  * Filter the bitfield of input orders to the ones suitable for use in the vma.
-  * See thp_vma_suitable_order().
-diff --git a/mm/shmem.c b/mm/shmem.c
-index b976b40fd442..9f054b5aae8e 100644
---- a/mm/shmem.c
-+++ b/mm/shmem.c
-@@ -1788,30 +1788,6 @@ static struct folio *shmem_swapin_cluster(swp_entry_t swap, gfp_t gfp,
- 	return folio;
+ void __swap_cache_add_folio(struct swap_cluster_info *ci,
+ 			    struct folio *folio, swp_entry_t entry)
+ {
+@@ -179,43 +201,26 @@ static int swap_cache_add_folio(struct folio *folio, swp_entry_t entry,
+ {
+ 	int err;
+ 	void *shadow = NULL;
+-	unsigned long old_tb;
++	unsigned int ci_off;
+ 	struct swap_info_struct *si;
+ 	struct swap_cluster_info *ci;
+-	unsigned int ci_start, ci_off, ci_end;
+ 	unsigned long nr_pages = folio_nr_pages(folio);
+ 
+ 	si = __swap_entry_to_info(entry);
+-	ci_start = swp_cluster_offset(entry);
+-	ci_end = ci_start + nr_pages;
+-	ci_off = ci_start;
+ 	ci = swap_cluster_lock(si, swp_offset(entry));
+-	if (unlikely(!ci->table)) {
+-		err = -ENOENT;
+-		goto failed;
++	ci_off = swp_cluster_offset(entry);
++	err = __swap_cache_add_check(ci, ci_off, nr_pages, &shadow);
++	if (err) {
++		swap_cluster_unlock(ci);
++		return err;
+ 	}
+-	do {
+-		old_tb = __swap_table_get(ci, ci_off);
+-		if (unlikely(swp_tb_is_folio(old_tb))) {
+-			err = -EEXIST;
+-			goto failed;
+-		}
+-		if (unlikely(!__swp_tb_get_count(old_tb))) {
+-			err = -ENOENT;
+-			goto failed;
+-		}
+-		if (swp_tb_is_shadow(old_tb))
+-			shadow = swp_tb_to_shadow(old_tb);
+-	} while (++ci_off < ci_end);
++
+ 	__swap_cache_add_folio(ci, folio, entry);
+ 	swap_cluster_unlock(ci);
+ 	if (shadowp)
+ 		*shadowp = shadow;
+-	return 0;
+ 
+-failed:
+-	swap_cluster_unlock(ci);
+-	return err;
++	return 0;
  }
  
--/*
-- * Make sure huge_gfp is always more limited than limit_gfp.
-- * Some of the flags set permissions, while others set limitations.
-- */
--static gfp_t limit_gfp_mask(gfp_t huge_gfp, gfp_t limit_gfp)
--{
--	gfp_t allowflags = __GFP_IO | __GFP_FS | __GFP_RECLAIM;
--	gfp_t denyflags = __GFP_NOWARN | __GFP_NORETRY;
--	gfp_t zoneflags = limit_gfp & GFP_ZONEMASK;
--	gfp_t result = huge_gfp & ~(allowflags | GFP_ZONEMASK);
--
--	/* Allow allocations only from the originally specified zones. */
--	result |= zoneflags;
--
--	/*
--	 * Minimize the result gfp by taking the union with the deny flags,
--	 * and the intersection of the allow flags.
--	 */
--	result |= (limit_gfp & denyflags);
--	result |= (huge_gfp & limit_gfp) & allowflags;
--
--	return result;
--}
--
- #ifdef CONFIG_TRANSPARENT_HUGEPAGE
- bool shmem_hpage_pmd_enabled(void)
- {
-@@ -2062,7 +2038,7 @@ static struct folio *shmem_swap_alloc_folio(struct inode *inode,
- 		     non_swapcache_batch(entry, nr_pages) != nr_pages)
- 			goto fallback;
- 
--		alloc_gfp = limit_gfp_mask(vma_thp_gfp_mask(vma), gfp);
-+		alloc_gfp = thp_limit_gfp_mask(vma_thp_gfp_mask(vma), gfp);
- 	}
- retry:
- 	new = shmem_alloc_folio(alloc_gfp, order, info, index);
-@@ -2138,7 +2114,7 @@ static int shmem_replace_folio(struct folio **foliop, gfp_t gfp,
- 	if (nr_pages > 1) {
- 		gfp_t huge_gfp = vma_thp_gfp_mask(vma);
- 
--		gfp = limit_gfp_mask(huge_gfp, gfp);
-+		gfp = thp_limit_gfp_mask(huge_gfp, gfp);
- 	}
- #endif
- 
-@@ -2545,7 +2521,7 @@ static int shmem_get_folio_gfp(struct inode *inode, pgoff_t index,
- 		gfp_t huge_gfp;
- 
- 		huge_gfp = vma_thp_gfp_mask(vma);
--		huge_gfp = limit_gfp_mask(huge_gfp, gfp);
-+		huge_gfp = thp_limit_gfp_mask(huge_gfp, gfp);
- 		folio = shmem_alloc_and_add_folio(vmf, huge_gfp,
- 				inode, index, fault_mm, orders);
- 		if (!IS_ERR(folio)) {
+ /**
 
 -- 
 2.53.0
