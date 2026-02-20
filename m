@@ -1,192 +1,164 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-ed1-f43.google.com (mail-ed1-f43.google.com [209.85.208.43])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1EDE71E2614
-	for <cgroups@vger.kernel.org>; Fri, 20 Feb 2026 16:57:43 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1771606665; cv=none; b=X1d/wPROBzw1zGsFL5KriVJ4YKUXlqBvXd93KyvQEakYy4n6kEwx/Wn8podnSRQHuqpxhgnYOE7ugHylTWpgLI+Ju/DY0gxQM01TAswidPVaTojwveSSW6Rr5k+27nnRQb31Nwk97DVFYDuhzvZgvsLDtoEE7RL9ihkZKVaSOyM=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1771606665; c=relaxed/simple;
-	bh=HO8vqlhUqYO9Q0m7TXQgLUFtI/JjPD4eg51nNNk10GA=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=Co7I4fwIjejQ8MDLbHuEnqno2TG/+o39ufnFozbLxmbAbQTNEfNhrBju8UivHyGw32affJDDrPKDF2zk6RQGqPAI5haFDimMBrDzOY2PSwCyRPvkF3QqYcwjvikhVsJgJhxhDNKFe8rwSHoKwecSWPO0DK4E9E3R2vLMW3qQqBg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=IPz+rktC; arc=none smtp.client-ip=170.10.133.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 57E3632A3FF
+	for <cgroups@vger.kernel.org>; Fri, 20 Feb 2026 17:16:10 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.208.43
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1771607771; cv=pass; b=eUOXInyA9qymLj8OxHot1oeEQF/rrJesorNWYQBpltUTl7zOjspHAt2gY9lv6qd9Rq/If1rROuXUgStWCPK6H/wktwFK/aK620yRpFqZo1ayXfJPZXmHCy3zfXQ6ryh3TEw7UnFtAOexH/7iEyODhmH3SII9CB0Ncknme6zzy3Q=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1771607771; c=relaxed/simple;
+	bh=qUpADLv3fW4c6VKkfzK/U52QH49WpAV8Od6WUnTJ06g=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=fF6Wob3DHtggsmnB1WruKAgF7cUiUPS/Ohrl5EMrozGSx/6BRbbX7fYvT5t7aBI2tS//k/uy7FfQrqjR5WLNJhShzPZWjhNK9XntKUUvLQ3tzvCEj6/948bTIkXR26cmQMMionp6T11fs6q/POg6nf+xWz6vbP8QujzkZ46mGVI=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=T7lquW24; arc=pass smtp.client-ip=209.85.208.43
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="IPz+rktC"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1771606663;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=FOyp2mMMM2tbgcKpJAWgPFOB0aCyHCshmwfn3XakoHc=;
-	b=IPz+rktC0P6JqDT4/C7PjyI8b5c0x14bpKTDPuZu404bQaUm4AfjRowuXT8uscqbR94/a9
-	5Jgsb5HsuxZwqHzbhS2Q9P+b0hre9lhwX8LrMVAVkWEEK/J6lpE0HIaMVDvbmIE2jjP+H7
-	6qIk4G5nmtsk0+VoiY/grH9MDgR4gbo=
-Received: from mx-prod-mc-06.mail-002.prod.us-west-2.aws.redhat.com
- (ec2-35-165-154-97.us-west-2.compute.amazonaws.com [35.165.154.97]) by
- relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-614-WumhJ1N_NBewOjTnDhcEaQ-1; Fri,
- 20 Feb 2026 11:57:37 -0500
-X-MC-Unique: WumhJ1N_NBewOjTnDhcEaQ-1
-X-Mimecast-MFC-AGG-ID: WumhJ1N_NBewOjTnDhcEaQ_1771606655
-Received: from mx-prod-int-08.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-08.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.111])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mx-prod-mc-06.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id F12F318004BB;
-	Fri, 20 Feb 2026 16:57:34 +0000 (UTC)
-Received: from tpad.localdomain (unknown [10.96.133.4])
-	by mx-prod-int-08.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 540671800352;
-	Fri, 20 Feb 2026 16:57:33 +0000 (UTC)
-Received: by tpad.localdomain (Postfix, from userid 1000)
-	id B3C7B401D5D4C; Fri, 20 Feb 2026 13:51:13 -0300 (-03)
-Date: Fri, 20 Feb 2026 13:51:13 -0300
-From: Marcelo Tosatti <mtosatti@redhat.com>
-To: Michal Hocko <mhocko@suse.com>
-Cc: Leonardo Bras <leobras.c@gmail.com>, linux-kernel@vger.kernel.org,
-	cgroups@vger.kernel.org, linux-mm@kvack.org,
-	Johannes Weiner <hannes@cmpxchg.org>,
-	Roman Gushchin <roman.gushchin@linux.dev>,
-	Shakeel Butt <shakeel.butt@linux.dev>,
-	Muchun Song <muchun.song@linux.dev>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Christoph Lameter <cl@linux.com>, Pekka Enberg <penberg@kernel.org>,
-	David Rientjes <rientjes@google.com>,
-	Joonsoo Kim <iamjoonsoo.kim@lge.com>,
-	Vlastimil Babka <vbabka@suse.cz>,
-	Hyeonggon Yoo <42.hyeyoo@gmail.com>,
-	Leonardo Bras <leobras@redhat.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Waiman Long <longman@redhat.com>, Boqun Feng <boqun.feng@gmail.com>,
-	Frederic Weisbecker <fweisbecker@suse.de>
-Subject: Re: [PATCH 0/4] Introduce QPW for per-cpu operations
-Message-ID: <aZiRAa6uf4KhscJC@tpad>
-References: <20260206143430.021026873@redhat.com>
- <aYs6Ju2G4bm6_tl2@tiehlicka>
- <aYxviLoWsrLqDU7o@tpad>
- <aYywl1hdBQP2_slo@tiehlicka>
- <aZDw6xI2izFDfuuu@WindFlash>
- <aZL45yORfkNvS9Rs@tiehlicka>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="T7lquW24"
+Received: by mail-ed1-f43.google.com with SMTP id 4fb4d7f45d1cf-6597a7bd7d6so3064802a12.3
+        for <cgroups@vger.kernel.org>; Fri, 20 Feb 2026 09:16:10 -0800 (PST)
+ARC-Seal: i=1; a=rsa-sha256; t=1771607769; cv=none;
+        d=google.com; s=arc-20240605;
+        b=EVFEnUTkv8Sq6mLNpHpuWbIhgnsswELiKCCsgE5gkRhFBy9aX5gI4DlrpTUHnYokrc
+         AWMNhFmCsAiDM1ryM1UatXLrFqMXmK+iBZLDKXEcgw8ygrFD8bxgO9DTSHlZprsWgocq
+         fEJKr7E4SEzhaPPDqioOwWMnnFZ48T1QgAxhWZTI+neMAeA4jypcTb12N7hoSscZh7Lw
+         TS36lE6qZ8/KQoh7g13fzyPuoy7ROSvt5WtdEBRCn5juAJdX/HPLrsLyilQsFQH/j18O
+         GwhYyy1VQzJirdsj2kgANNnI4ZcQDIXrcIR24zixinhxj6p7+Yw6jHjMb/G6o8RwUEfB
+         VIZQ==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20240605;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:dkim-signature;
+        bh=+FIG9q/M+yTBjTrAHAw7SaWHpsPSmQOUIDS7bx4BpBE=;
+        fh=eh6MzEl93B7jjFW+YYvc3IEMZnEjU7r5OsAQLOwnadU=;
+        b=PYdOMDvzdkrtYyxMviEDXnIZsCM/nO2e9BWpgdsTvkXVb4ogehz9Js7qoOHyaY5kSb
+         ORo5enByhG445enc1zDmZ6RLZrA9vo01brmR1yOP2esLm9aGFtnHaWwQFAyiXWXRtDzB
+         uOkk2yrKYmXSyWgli/OjLFCcu4sIMLMKlyg0uerbQR4arHn61wXeRkSWuyhdXqrWDAv3
+         D6wvA/vrTZhDTSUyKaw6SPqVfAeFqiZwffjCyoBHItKT8nuvlpt3aKQL90pxpYJhuB7D
+         xfDHIzrrnAOXBGMmw7PE3lcNhIXIqTJer9HrdPL+SHK7Q7Qje2oK0BeXlIUnNLXHT6VB
+         4raw==;
+        darn=vger.kernel.org
+ARC-Authentication-Results: i=1; mx.google.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1771607769; x=1772212569; darn=vger.kernel.org;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=+FIG9q/M+yTBjTrAHAw7SaWHpsPSmQOUIDS7bx4BpBE=;
+        b=T7lquW24vMSRjgoEygIGRyE08/+q4o+RUfMXAZBhrE/0bR2snow2U7+jW02AKYKsl3
+         0YinK1VhhMdJbjruFy0rRj7VFT1eAKRxExNJgq+w/96MK3FpoSSbHoiwo568oGgUFcV/
+         BadXZPqH8QETK/iUAk+5JN3M8UF9i2vEDzFR1Lh/p/SNlEEaxzxLlhOKAd5iMABhg67Y
+         g/Ad2mlze4BV1iucz8EwJBH6ee0Zlnk+ZY8V/3L7z0QnrI3Se4T5q+ukxFzE+g1cD60d
+         vQVR09MX8uP3WurKjZkhRDQEA3klgP4YGhWfAa8WAIkHgux/rUjyFrQD1qx6bzq5Ytka
+         qlyg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1771607769; x=1772212569;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-gg:x-gm-message-state:from
+         :to:cc:subject:date:message-id:reply-to;
+        bh=+FIG9q/M+yTBjTrAHAw7SaWHpsPSmQOUIDS7bx4BpBE=;
+        b=TNzKs1+QZ1QUydpph4yBMkkDdK1J5YlAjV2A9OfpkYIlfgYMB8kb38RkbcXy4P/NC+
+         amudayHb1i1qHKYX2SjBsptps4UUmxy+rDJNVdV0gl7yFyImhOZtHnv1p/Y6num9JrlD
+         KcXbpkbQ+OOxZWlr3i9qmQxV4Zag87EAw0uc/eMgeRl5amS3ifk1e/IxQJPP0m5T6xO3
+         9fkPqV2eLibi0B5t/NZ4k2oWnyWas8JWjjOLXP1Ai1tftqVWFj88tB8/Dm4jYrtpL3qP
+         fU50Eh4AAcaVlrxQzB9lGwb4P0ZpDO5wARMExvupxDmhHF6S9iunOuRIuUofEY94pyWN
+         SNRw==
+X-Forwarded-Encrypted: i=1; AJvYcCXQ8jMtl7sABdIw5acB98PH18KJr005ypGFFUfVFQiGrgbiSbtzd9S2onHnmbzKnHWJ6tMiYoWT@vger.kernel.org
+X-Gm-Message-State: AOJu0YwmMesXf0gZND7W17M5uVQbhEBUbjjyjlZUfyKIU7UlAlCVAg4j
+	paXUqbqHjH15bHJJGZEb8k+kUVhViT9wTZnsT82TZO6N0CKE3pC/YCKsuX1yrnjrJLFTFMkz9MG
+	J58sr7f4ZEVuU2E//unb0V5gyYtWEiV4=
+X-Gm-Gg: AZuq6aIeq5uFYSo2nHKVA8OnXyWSFu3PcUQ7spzM8NvyIN0smJ6Mtj6vm/nh1SyKVKk
+	U9ebIkpd5W33sBA1W2hDsRWT8oPX58FNo/ozolrfZVIMhNGyRIeHJEetysvqbTun2Bc9p9sYRJO
+	Na4ZCtBk43av7DgLnVxgbGOPvJkBt5IIEWNcZSm2iJ0E+4ON/KmdGEtR2CcD+2r5+ez7Ai7voTH
+	VYBW0NsLMB1PHNwgsyGQjMTQYe1CTESWNOVCUNOo8oxzjw2aFI3ETEaZOHp+Xni59UAd1f8C8U6
+	t1pwvBc+WZfZeKY/MyrFCI0gQF3uBgUZnGZPdZO2tA==
+X-Received: by 2002:a05:6402:50d2:b0:64b:58c0:a393 with SMTP id
+ 4fb4d7f45d1cf-65ea4f07f63mr241574a12.30.1771607768401; Fri, 20 Feb 2026
+ 09:16:08 -0800 (PST)
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <aZL45yORfkNvS9Rs@tiehlicka>
-X-Scanned-By: MIMEDefang 3.4.1 on 10.30.177.111
+References: <20260220055449.3073-1-tjmercier@google.com> <20260220055449.3073-3-tjmercier@google.com>
+ <aZh-orwoaeAh52Bf@slm.duckdns.org>
+In-Reply-To: <aZh-orwoaeAh52Bf@slm.duckdns.org>
+From: Amir Goldstein <amir73il@gmail.com>
+Date: Fri, 20 Feb 2026 19:15:56 +0200
+X-Gm-Features: AaiRm51-NxZivWP9n79oFDzWvBAa9d7rBDJz7DAiXkp5nty2l6CfzMRpgIoYHak
+Message-ID: <CAOQ4uxjgXa1q-8-ajSBwza-Tkv91tFP-_wWzCQPW+PwJMehEWA@mail.gmail.com>
+Subject: Re: [PATCH v4 2/3] kernfs: Send IN_DELETE_SELF and IN_IGNORED
+To: Tejun Heo <tj@kernel.org>
+Cc: "T.J. Mercier" <tjmercier@google.com>, gregkh@linuxfoundation.org, 
+	driver-core@lists.linux.dev, linux-kernel@vger.kernel.org, 
+	cgroups@vger.kernel.org, linux-fsdevel@vger.kernel.org, jack@suse.cz, 
+	shuah@kernel.org, linux-kselftest@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-On Mon, Feb 16, 2026 at 12:00:55PM +0100, Michal Hocko wrote:
-> On Sat 14-02-26 19:02:19, Leonardo Bras wrote:
-> > On Wed, Feb 11, 2026 at 05:38:47PM +0100, Michal Hocko wrote:
-> > > On Wed 11-02-26 09:01:12, Marcelo Tosatti wrote:
-> > > > On Tue, Feb 10, 2026 at 03:01:10PM +0100, Michal Hocko wrote:
-> > > [...]
-> > > > > What about !PREEMPT_RT? We have people running isolated workloads and
-> > > > > these sorts of pcp disruptions are really unwelcome as well. They do not
-> > > > > have requirements as strong as RT workloads but the underlying
-> > > > > fundamental problem is the same. Frederic (now CCed) is working on
-> > > > > moving those pcp book keeping activities to be executed to the return to
-> > > > > the userspace which should be taking care of both RT and non-RT
-> > > > > configurations AFAICS.
-> > > > 
-> > > > Michal,
-> > > > 
-> > > > For !PREEMPT_RT, _if_ you select CONFIG_QPW=y, then there is a kernel
-> > > > boot option qpw=y/n, which controls whether the behaviour will be
-> > > > similar (the spinlock is taken on local_lock, similar to PREEMPT_RT).
-> > > 
-> > > My bad. I've misread the config space of this.
-> > > 
-> > > > If CONFIG_QPW=n, or kernel boot option qpw=n, then only local_lock 
-> > > > (and remote work via work_queue) is used.
-> > > > 
-> > > > What "pcp book keeping activities" you refer to ? I don't see how
-> > > > moving certain activities that happen under SLUB or LRU spinlocks
-> > > > to happen before return to userspace changes things related 
-> > > > to avoidance of CPU interruption ?
-> > > 
-> > > Essentially delayed operations like pcp state flushing happens on return
-> > > to the userspace on isolated CPUs. No locking changes are required as
-> > > the work is still per-cpu.
-> > > 
-> > > In other words the approach Frederic is working on is to not change the
-> > > locking of pcp delayed work but instead move that work into well defined
-> > > place - i.e. return to the userspace.
-> > > 
-> > > Btw. have you measure the impact of preempt_disbale -> spinlock on hot
-> > > paths like SLUB sheeves?
-> > 
-> > Hi Michal,
-> > 
-> > I have done some study on this (which I presented on Plumbers 2023):
-> > https://lpc.events/event/17/contributions/1484/ 
-> > 
-> > Since they are per-cpu spinlocks, and the remote operations are not that 
-> > frequent, as per design of the current approach, we are not supposed to see 
-> > contention (I was not able to detect contention even after stress testing 
-> > for weeks), nor relevant cacheline bouncing.
-> > 
-> > That being said, for RT local_locks already get per-cpu spinlocks, so there 
-> > is only difference for !RT, which as you mention, does preemtp_disable():
-> > 
-> > The performance impact noticed was mostly about jumping around in 
-> > executable code, as inlining spinlocks (test #2 on presentation) took care 
-> > of most of the added extra cycles, adding about 4-14 extra cycles per 
-> > lock/unlock cycle. (tested on memcg with kmalloc test)
-> > 
-> > Yeah, as expected there is some extra cycles, as we are doing extra atomic 
-> > operations (even if in a local cacheline) in !RT case, but this could be 
-> > enabled only if the user thinks this is an ok cost for reducing 
-> > interruptions.
-> > 
-> > What do you think?
-> 
-> The fact that the behavior is opt-in for !RT is certainly a plus. I also
-> do not expect the overhead to be really be really big. To me, a much
-> more important question is which of the two approaches is easier to
-> maintain long term. The pcp work needs to be done one way or the other.
-> Whether we want to tweak locking or do it at a very well defined time is
-> the bigger question.
+On Fri, Feb 20, 2026 at 4:32=E2=80=AFPM Tejun Heo <tj@kernel.org> wrote:
+>
+> Hello,
+>
+> On Thu, Feb 19, 2026 at 09:54:47PM -0800, T.J. Mercier wrote:
+> > Currently some kernfs files (e.g. cgroup.events, memory.events) support
+> > inotify watches for IN_MODIFY, but unlike with regular filesystems, the=
+y
+> > do not receive IN_DELETE_SELF or IN_IGNORED events when they are
+> > removed. This means inotify watches persist after file deletion until
+> > the process exits and the inotify file descriptor is cleaned up, or
+> > until inotify_rm_watch is called manually.
+> >
+> > This creates a problem for processes monitoring cgroups. For example, a
+> > service monitoring memory.events for memory.high breaches needs to know
+> > when a cgroup is removed to clean up its state. Where it's known that a
+> > cgroup is removed when all processes die, without IN_DELETE_SELF the
+> > service must resort to inefficient workarounds such as:
+> >   1) Periodically scanning procfs to detect process death (wastes CPU
+> >      and is susceptible to PID reuse).
+> >   2) Holding a pidfd for every monitored cgroup (can exhaust file
+> >      descriptors).
+> >
+> > This patch enables IN_DELETE_SELF and IN_IGNORED events for kernfs file=
+s
+> > and directories by clearing inode i_nlink values during removal. This
+> > allows VFS to make the necessary fsnotify calls so that userspace
+> > receives the inotify events.
+> >
+> > As a result, applications can rely on a single existing watch on a file
+> > of interest (e.g. memory.events) to receive notifications for both
+> > modifications and the eventual removal of the file, as well as automati=
+c
+> > watch descriptor cleanup, simplifying userspace logic and improving
+> > efficiency.
+> >
+> > There is gap in this implementation for certain file removals due their
+> > unique nature in kernfs. Directory removals that trigger file removals
+> > occur through vfs_rmdir, which shrinks the dcache and emits fsnotify
+> > events after the rmdir operation; there is no issue here. However kernf=
+s
+> > writes to particular files (e.g. cgroup.subtree_control) can also cause
+> > file removal, but vfs_write does not attempt to emit fsnotify events
+> > after the write operation, even if i_nlink counts are 0. As a usecase
+> > for monitoring this category of file removals is not known, they are
+> > left without having IN_DELETE or IN_DELETE_SELF events generated.
+>
+> Adding a comment with the above content would probably be useful. It also
+> might be worthwhile to note that fanotify recursive monitoring wouldn't w=
+ork
+> reliably as cgroups can go away while inodes are not attached.
 
-Without patchset:
-================
+Sigh.. it's a shame to grow more weird semantics.
 
-[ 1188.050725] kmalloc_bench: Avg cycles per kmalloc: 159
+But I take this back to the POV of "remote" vs. "local" vfs notifications.
+the IN_DELETE_SELF events added by this change are actually
+"local" vfs notifications.
 
-With qpw patchset, CONFIG_QPW=n:
-================================
+If we would want to support monitoring cgroups fs super block
+for all added/removed cgroups with fanotify, we would be able
+to implement this as "remote" notifications and in this case, adding
+explicit fsnotify() calls could make sense.
 
-[   50.292190] kmalloc_bench: Avg cycles per kmalloc: 163
-
-With qpw patchset, CONFIG_QPW=y, qpw=0:
-=======================================
-
-[   29.872153] kmalloc_bench: Avg cycles per kmalloc: 170
-
-
-With qpw patchset, CONFIG_QPW=y, qpw=1:
-========================================
-
-[   37.494687] kmalloc_bench: Avg cycles per kmalloc: 190
-
-With PREEMPT_RT enabled, qpw=0:
-===============================
-
-[   65.163251] kmalloc_bench: Avg cycles per kmalloc: 181
-
-With PREEMPT_RT enabled, no patchset:
-=====================================
-[   52.701639] kmalloc_bench: Avg cycles per kmalloc: 185
-
-With PREEMPT_RT enabled, qpw=1:
-==============================
-
-[   35.103830] kmalloc_bench: Avg cycles per kmalloc: 196
-
-
+Thanks,
+Amir.
