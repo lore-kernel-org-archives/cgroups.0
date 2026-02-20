@@ -1,49 +1,49 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B608E2FF164
-	for <cgroups@vger.kernel.org>; Fri, 20 Feb 2026 16:57:41 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3063D2FF17D
+	for <cgroups@vger.kernel.org>; Fri, 20 Feb 2026 16:57:42 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1771606663; cv=none; b=hIg7pCfrCwaJH000pTmJ7+jmlAuIJuHtX3RJBrxC0y8UqvrzdghTqZM8211LmOXNjlnpjGqF4MLFfo2rev9/p6TV4VfGRZVIzDJQM1pC0fbGfknzZKfT5CmgJTdTh/N99BeNBkJeSNtzptOftbJAAjHbYuubhOZDhnlP/we9uUw=
+	t=1771606663; cv=none; b=SgDOSFzQdIwpcizyDXaeWk/EnS9R3ykmZnXFK+nrMvD64vy/iWjG1r3EES3RKgNbog8e51diejLSQbIUSf65/hSyocwnBNT1OGvYgh13bVJY2Gw6WqUwbcwISDainazHvrTZAs5u2xegFZA83YNQqkuSuElp4dYTIie9mxujKys=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1771606663; c=relaxed/simple;
-	bh=cAS+G5NxeRxa2EgBonAJ6Nr0/6q4BTUxv7Uxpi8YpVU=;
+	bh=mDcQA1kZmkvT9fLI9bJbP+72dmGJKBsoPf+IAsIz7qw=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=Y2jRkdH9AVTgRAlqWJxTEGH3fpY9gBR5WXExhHFdm4/iykqgVDIB9RsLUtc2WOVD4XKEpBinn0pvAm2rE61wBbIAsaRsL+LCHOgwYzcU+1jL7+jp5CY/LhAwe93M1ew4+QD0yi2YpDR9uE6r4zq8OSywEpJ1DPRZFgZAUFCaVR8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=hvID6KTk; arc=none smtp.client-ip=170.10.133.124
+	 Content-Type:Content-Disposition:In-Reply-To; b=TqnMKw32XeIYm7S2XpPVYhtjAN6JZnhETk8NODSN9MnzJ6IYPm5j20N/6Rr+YamoxBpGOR/p7xE14V3XV6uGu+U4DFUwOmBfCOGoVrGkJ3vcu/8fACe5VWds+/IqoWAJM7vZo6BQxsubZb/Ib2GUMW23IW1rCBupuieaF3FFlCI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=bhZlI3iy; arc=none smtp.client-ip=170.10.129.124
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="hvID6KTk"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="bhZlI3iy"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1771606660;
+	s=mimecast20190719; t=1771606661;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
 	 in-reply-to:in-reply-to:references:references;
-	bh=ppw4K3DbmN7RYbMzOdLadd1esQw4LW4oIH3NAVRbdGA=;
-	b=hvID6KTk7cJ8KfTm12IqeVih2XA09Q3i3rzjImHhHCPiHxq5AMXVUSMU+KqjpNgSXcLFFe
-	wBIZ1v/3sCDyMeS42hFCZfGu3I5Yz2tlqnNwHLFl1Ef8QiCSpdv4E3VGl50ut5S+Io5E8p
-	kwbp/Z/BVKXdzTrg6Bqt0vPvmQ0q+PE=
-Received: from mx-prod-mc-06.mail-002.prod.us-west-2.aws.redhat.com
- (ec2-35-165-154-97.us-west-2.compute.amazonaws.com [35.165.154.97]) by
+	bh=VVlPMF6mEVM5q0VRz5UF5IyvMK8+8R+3jexPuVtyib0=;
+	b=bhZlI3iyEl21IF3QbgSxo1LiLt0ZflysnYT//ptaO+Im81rKXCxvSmyMhbJaHdYwpRzCV2
+	jlGBXUVXFOEqQpqspGTyxa5+dlEYklNVf6CdrD+ldwiIvvNXK/L+2uOsrJ0EwXdN5ohvAT
+	98VnR9dL3bF8rnh+wn2U78rqxCmto14=
+Received: from mx-prod-mc-01.mail-002.prod.us-west-2.aws.redhat.com
+ (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
  relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-252-3ATclVuAMMCAteY8vl0Zow-1; Fri,
- 20 Feb 2026 11:57:37 -0500
-X-MC-Unique: 3ATclVuAMMCAteY8vl0Zow-1
-X-Mimecast-MFC-AGG-ID: 3ATclVuAMMCAteY8vl0Zow_1771606655
-Received: from mx-prod-int-06.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-06.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.93])
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-433-oubCWipYPzGnS0az61n1-A-1; Fri,
+ 20 Feb 2026 11:57:38 -0500
+X-MC-Unique: oubCWipYPzGnS0az61n1-A-1
+X-Mimecast-MFC-AGG-ID: oubCWipYPzGnS0az61n1-A_1771606655
+Received: from mx-prod-int-08.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-08.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.111])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
-	by mx-prod-mc-06.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 2210B180057E;
+	by mx-prod-mc-01.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 38B751956051;
 	Fri, 20 Feb 2026 16:57:35 +0000 (UTC)
 Received: from tpad.localdomain (unknown [10.96.133.4])
-	by mx-prod-int-06.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id B0CC61800671;
+	by mx-prod-int-08.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id B39E31800590;
 	Fri, 20 Feb 2026 16:57:33 +0000 (UTC)
 Received: by tpad.localdomain (Postfix, from userid 1000)
-	id 6B833401E19EF; Fri, 20 Feb 2026 11:30:16 -0300 (-03)
-Date: Fri, 20 Feb 2026 11:30:16 -0300
+	id B752A402754C9; Fri, 20 Feb 2026 13:55:57 -0300 (-03)
+Date: Fri, 20 Feb 2026 13:55:57 -0300
 From: Marcelo Tosatti <mtosatti@redhat.com>
 To: Michal Hocko <mhocko@suse.com>
 Cc: Leonardo Bras <leobras.c@gmail.com>, linux-kernel@vger.kernel.org,
@@ -63,15 +63,14 @@ Cc: Leonardo Bras <leobras.c@gmail.com>, linux-kernel@vger.kernel.org,
 	Waiman Long <longman@redhat.com>, Boqun Feng <boqun.feng@gmail.com>,
 	Frederic Weisbecker <fweisbecker@suse.de>
 Subject: Re: [PATCH 0/4] Introduce QPW for per-cpu operations
-Message-ID: <aZhv+Bw7nKKmbFdq@tpad>
+Message-ID: <aZiSHT5DwIZwc/cH@tpad>
 References: <20260206143430.021026873@redhat.com>
  <aYs6Ju2G4bm6_tl2@tiehlicka>
  <aYxviLoWsrLqDU7o@tpad>
  <aYywl1hdBQP2_slo@tiehlicka>
  <aZDw6xI2izFDfuuu@WindFlash>
  <aZL45yORfkNvS9Rs@tiehlicka>
- <aZcr255pGT3B/eaL@tpad>
- <aZdk19MqYhWK90Do@tiehlicka>
+ <aZiRAa6uf4KhscJC@tpad>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
@@ -80,71 +79,176 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <aZdk19MqYhWK90Do@tiehlicka>
-X-Scanned-By: MIMEDefang 3.4.1 on 10.30.177.93
+In-Reply-To: <aZiRAa6uf4KhscJC@tpad>
+X-Scanned-By: MIMEDefang 3.4.1 on 10.30.177.111
 
-On Thu, Feb 19, 2026 at 08:30:31PM +0100, Michal Hocko wrote:
-> On Thu 19-02-26 12:27:23, Marcelo Tosatti wrote:
-> > Michal,
+On Fri, Feb 20, 2026 at 01:51:13PM -0300, Marcelo Tosatti wrote:
+> On Mon, Feb 16, 2026 at 12:00:55PM +0100, Michal Hocko wrote:
+> > On Sat 14-02-26 19:02:19, Leonardo Bras wrote:
+> > > On Wed, Feb 11, 2026 at 05:38:47PM +0100, Michal Hocko wrote:
+> > > > On Wed 11-02-26 09:01:12, Marcelo Tosatti wrote:
+> > > > > On Tue, Feb 10, 2026 at 03:01:10PM +0100, Michal Hocko wrote:
+> > > > [...]
+> > > > > > What about !PREEMPT_RT? We have people running isolated workloads and
+> > > > > > these sorts of pcp disruptions are really unwelcome as well. They do not
+> > > > > > have requirements as strong as RT workloads but the underlying
+> > > > > > fundamental problem is the same. Frederic (now CCed) is working on
+> > > > > > moving those pcp book keeping activities to be executed to the return to
+> > > > > > the userspace which should be taking care of both RT and non-RT
+> > > > > > configurations AFAICS.
+> > > > > 
+> > > > > Michal,
+> > > > > 
+> > > > > For !PREEMPT_RT, _if_ you select CONFIG_QPW=y, then there is a kernel
+> > > > > boot option qpw=y/n, which controls whether the behaviour will be
+> > > > > similar (the spinlock is taken on local_lock, similar to PREEMPT_RT).
+> > > > 
+> > > > My bad. I've misread the config space of this.
+> > > > 
+> > > > > If CONFIG_QPW=n, or kernel boot option qpw=n, then only local_lock 
+> > > > > (and remote work via work_queue) is used.
+> > > > > 
+> > > > > What "pcp book keeping activities" you refer to ? I don't see how
+> > > > > moving certain activities that happen under SLUB or LRU spinlocks
+> > > > > to happen before return to userspace changes things related 
+> > > > > to avoidance of CPU interruption ?
+> > > > 
+> > > > Essentially delayed operations like pcp state flushing happens on return
+> > > > to the userspace on isolated CPUs. No locking changes are required as
+> > > > the work is still per-cpu.
+> > > > 
+> > > > In other words the approach Frederic is working on is to not change the
+> > > > locking of pcp delayed work but instead move that work into well defined
+> > > > place - i.e. return to the userspace.
+> > > > 
+> > > > Btw. have you measure the impact of preempt_disbale -> spinlock on hot
+> > > > paths like SLUB sheeves?
+> > > 
+> > > Hi Michal,
+> > > 
+> > > I have done some study on this (which I presented on Plumbers 2023):
+> > > https://lpc.events/event/17/contributions/1484/ 
+> > > 
+> > > Since they are per-cpu spinlocks, and the remote operations are not that 
+> > > frequent, as per design of the current approach, we are not supposed to see 
+> > > contention (I was not able to detect contention even after stress testing 
+> > > for weeks), nor relevant cacheline bouncing.
+> > > 
+> > > That being said, for RT local_locks already get per-cpu spinlocks, so there 
+> > > is only difference for !RT, which as you mention, does preemtp_disable():
+> > > 
+> > > The performance impact noticed was mostly about jumping around in 
+> > > executable code, as inlining spinlocks (test #2 on presentation) took care 
+> > > of most of the added extra cycles, adding about 4-14 extra cycles per 
+> > > lock/unlock cycle. (tested on memcg with kmalloc test)
+> > > 
+> > > Yeah, as expected there is some extra cycles, as we are doing extra atomic 
+> > > operations (even if in a local cacheline) in !RT case, but this could be 
+> > > enabled only if the user thinks this is an ok cost for reducing 
+> > > interruptions.
+> > > 
+> > > What do you think?
 > > 
-> > Again, i don't see how moving operations to happen at return to 
-> > kernel would help (assuming you are talking about 
-> > "context_tracking,x86: Defer some IPIs until a user->kernel transition").
+> > The fact that the behavior is opt-in for !RT is certainly a plus. I also
+> > do not expect the overhead to be really be really big. To me, a much
+> > more important question is which of the two approaches is easier to
+> > maintain long term. The pcp work needs to be done one way or the other.
+> > Whether we want to tweak locking or do it at a very well defined time is
+> > the bigger question.
 > 
-> Nope, I am not talking about IPIs, although those are an example of pcp
-> state as well. I am sorry I do not have a link handy, I am pretty sure
-> Frederic will have that. Another example, though, was vmstat flushes
-> that need to be pcp. There are many other examples. 
+> Without patchset:
+> ================
 > 
-> [...]
+> [ 1188.050725] kmalloc_bench: Avg cycles per kmalloc: 159
 > 
-> > You can't delay either kmalloc (removal of object from per-CPU freelist), 
-> > or kfree (return of object from per-CPU freelist), or kmem_cache_shrink 
-> > or kmem_cache_shrink to return to userspace.
+> With qpw patchset, CONFIG_QPW=n:
+> ================================
 > 
-> Why?
+> [   50.292190] kmalloc_bench: Avg cycles per kmalloc: 163
+> 
+> With qpw patchset, CONFIG_QPW=y, qpw=0:
+> =======================================
+> 
+> [   29.872153] kmalloc_bench: Avg cycles per kmalloc: 170
+> 
+> 
+> With qpw patchset, CONFIG_QPW=y, qpw=1:
+> ========================================
+> 
+> [   37.494687] kmalloc_bench: Avg cycles per kmalloc: 190
+> 
+> With PREEMPT_RT enabled, qpw=0:
+> ===============================
+> 
+> [   65.163251] kmalloc_bench: Avg cycles per kmalloc: 181
+> 
+> With PREEMPT_RT enabled, no patchset:
+> =====================================
+> [   52.701639] kmalloc_bench: Avg cycles per kmalloc: 185
+> 
+> With PREEMPT_RT enabled, qpw=1:
+> ==============================
+> 
+> [   35.103830] kmalloc_bench: Avg cycles per kmalloc: 196
 
-Because kernel code might need to use that object right away, so it
-needs to be allocated right after kmalloc returns.
+#include <linux/module.h>
+#include <linux/kernel.h>
+#include <linux/slab.h>
+#include <linux/timex.h>
+#include <linux/preempt.h>
+#include <linux/irqflags.h>
+#include <linux/vmalloc.h>
 
-> > What i missing something here? (or do you have something on your mind
-> > which i can't see).
-> 
-> I am really sorry for being really vague here. Let me try to draw
-> a more abstract problem definition and let's see whether we are trying
-> to solve the same problem here. Maybe not...
-> 
-> I believe the main usecase of the interest here is uninterrupted
-> userspace execution
+MODULE_LICENSE("GPL");
+MODULE_AUTHOR("Gemini AI");
+MODULE_DESCRIPTION("A simple kmalloc performance benchmark");
 
-The main usecase of interest is uninterrupted userspace execution, yes.
+static int size = 64; // Default allocation size in bytes
+module_param(size, int, 0644);
 
-It is a good thing if you can enter the kernel, say perform system 
-calls, and not be interrupted as well.
+static int iterations = 1000000; // Default number of iterations
+module_param(iterations, int, 0644);
 
-> and delayed pcp work that migh disturb such workload
-> after it has returned to the userspace. Right?
-> That is usually hauskeeping work that for, performance reasons, doesn't
-> happen in hot paths while the workload was executing in the kernel
-> space.
-> 
-> There are more ways to deal with that. You can either change the hot
-> path to not require deferred operation (tricky withtout introducing
-> regressions for most workloads) or you can define a more suitable place
-> to perform the housekeeping while still running in the kernel. 
-> 
-> Your QWP work relies on local_lock -> spin_lock transition and
-> performing the pcp work remotely so you do not need to disturb that
-> remote cpu. Correct?
-> 
-> Alternative approach is to define a moment when the housekeeping
-> operation is performed on that local cpu while still running in the
-> kernel space - e.g. when returning to the userspace. Delayed work is
-> then not necessary and userspace is not disrupted after returning to the
-> userspace.
-> 
-> Do I make more sense or does the above sound like a complete gibberish?
+static int __init kmalloc_bench_init(void) {
+    void **ptrs;
+    cycles_t start, end;
+    uint64_t total_cycles;
+    int i;
+    pr_info("kmalloc_bench: Starting test (size=%d, iterations=%d)\n", size, iterations);
 
-OK, sure, but can't see how you can do that with per-CPU caches for
-kmalloc, for example.
+    // Allocate an array to store pointers to avoid immediate kfree-reuse optimization
+    ptrs = vmalloc(sizeof(void *) * iterations);
+    if (!ptrs) {
+        pr_err("kmalloc_bench: Failed to allocate pointer array\n");
+        return -ENOMEM;
+    }
+
+    preempt_disable();
+    start = get_cycles();
+
+    for (i = 0; i < iterations; i++) {
+        ptrs[i] = kmalloc(size, GFP_ATOMIC);
+    }
+
+    end = get_cycles();
+
+    total_cycles = end - start;
+    preempt_enable();
+
+    pr_info("kmalloc_bench: Total cycles for %d allocs: %llu\n", iterations, total_cycles);
+    pr_info("kmalloc_bench: Avg cycles per kmalloc: %llu\n", total_cycles / iterations);
+
+    // Cleanup
+    for (i = 0; i < iterations; i++) {
+        kfree(ptrs[i]);
+    }
+    vfree(ptrs);
+
+    return 0;
+}
+
+static void __exit kmalloc_bench_exit(void) {
+    pr_info("kmalloc_bench: Module unloaded\n");
+}
+
 
