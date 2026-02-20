@@ -1,148 +1,184 @@
-Received: from mail-ed1-f42.google.com (mail-ed1-f42.google.com [209.85.208.42])
+Received: from mail-wr1-f44.google.com (mail-wr1-f44.google.com [209.85.221.44])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5E9D434C81F
-	for <cgroups@vger.kernel.org>; Fri, 20 Feb 2026 20:11:28 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.208.42
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1771618289; cv=pass; b=sgv934cxSkI0LLdFDN1i4qhNn3H7uH7KnntrIZkY6tVPaUsQ3KkcX0aJ8gyhWdvdZw592DfS91BmCusgplCqHNYMqbVguUZC3dwC+DFGVU97eJQlQ6ZzMny4OY9wVCOt1tuEAlTVQm+ubcTS1n25twIH+L/ClmiGG+W+MpPw660=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1771618289; c=relaxed/simple;
-	bh=8JIRve8c15z5WReqA76soUL+Zt57OlSrG42LMMnF8oo=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=Vrt6vh+MWzb3D77a7HjsLksotU/1cTQu/UCvIAgfGCaCo1UrlpLpnhOxayECFkDJe30358iiN/Jf1b/BFxpyYADYzN2iZ3tbzXt3Yy8p5aQ5x6FJwdwXCdxxT0Na+M/Pej0HpoO40zVNHwo3Cjag4jzhrkwNLgsqOt5JxzicU+g=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=f8mkqqus; arc=pass smtp.client-ip=209.85.208.42
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3B99B189F30
+	for <cgroups@vger.kernel.org>; Fri, 20 Feb 2026 21:58:28 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.44
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1771624709; cv=none; b=ipEtTh5MW+tOLeg7+QJrKOnxsBRpbFZ2nSoOcd7QlxAkouFGuymhpY6Ru1E2CDTNqorfV+/R64hUEB30pLAwKem5HkfOYE8iTwymDPgdCnE+kRoKZdaGRDEZdDX6tgThdImbC1TgvHrrxSiVFFRgmZmPCynGq0StgPbX9zxP4oY=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1771624709; c=relaxed/simple;
+	bh=AOvfcc/Xozq8XEFtYt/HhA21k8kpHeqmR1iDAT8zXTQ=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type:Content-Disposition; b=puMTZ+kfxhBEZSE4NH5+xwDTyZzWd30X+uxrjh2fipgT//+LZxw1ksbr4ybIwSGApWc0B60ZzXCaMMIDzIPlxogQj8qQRc41XJX9TZs+QN3jzb+rdmYEPXjVwWLfrY1bqZhD0Hg2rGsW4UKD5ENnQjxszSHP/o1mzOQ90T3tFu8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=d+9lE5Dt; arc=none smtp.client-ip=209.85.221.44
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="f8mkqqus"
-Received: by mail-ed1-f42.google.com with SMTP id 4fb4d7f45d1cf-65a2fea1a1eso5632532a12.0
-        for <cgroups@vger.kernel.org>; Fri, 20 Feb 2026 12:11:28 -0800 (PST)
-ARC-Seal: i=1; a=rsa-sha256; t=1771618287; cv=none;
-        d=google.com; s=arc-20240605;
-        b=DrOyDqpcKVS8/Z6sQKIItOpOiVlBjX0pg+G5dZAu5zvNOT74/PJDJu2pgZYW0KmP0R
-         yxFZ+lzwFeJaS0m4gfycUU2XyMkFJ13TfySGJY2snINfV6WhttbFub0CMLZ9P01lH6xU
-         6exOyUgZLfXilgWe5eFL2yoW55qPDGuTO5SRL7Plep6GKya2PL8NL+uELqwXT/SFfvxs
-         7ItKpPjG2oDaAtjZsse5qNuEy1vA4fPFzjM0zcefFxaah7mC8RxejEcTB/mmLAxnCgbZ
-         cSGTw1k8jG4IRl/ZHxI8EFXyD4ELeO+TXl9Kf1tBpW9v9uBiQGToRAkea3yzi4/vvXEo
-         6dNA==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20240605;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:dkim-signature;
-        bh=8JIRve8c15z5WReqA76soUL+Zt57OlSrG42LMMnF8oo=;
-        fh=Qr/j0mq2yt52Pg9YYZHdtHfrWWxRluyh4IvhNdoJeyo=;
-        b=PySzKSeIKcopKkiJpeFh+bf70QfLOQlBBVNxAM2iF/cD5B7PgSELL2zXNMrLtDZKX1
-         xjQkJk6SMWtWZHBvnomgUl7Be7bc9VBleJJf0XuDJch18T1jhXatqV/VBQrfW19E3omn
-         Xmz2aZJ9EjTssaVCdxW4ZDSD/CkWyDmjNTVDfDXAb93ubNKkosku69XX/3Ys9jQpi/2I
-         qLjqJ9To199dLUVrsrGvIavuUgd82KEYYX8gTi7UnclaZYq1XzsHM6RB8LYhoCDf/Xgm
-         DO2sYGpUrVhjY9233TB1QEcXLaX3vGjBwPviVsSb7EtBw0FuFwEVwKaXBy7ggHSjvAS1
-         KT4Q==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="d+9lE5Dt"
+Received: by mail-wr1-f44.google.com with SMTP id ffacd0b85a97d-4362197d174so1639547f8f.3
+        for <cgroups@vger.kernel.org>; Fri, 20 Feb 2026 13:58:28 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1771618287; x=1772223087; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=8JIRve8c15z5WReqA76soUL+Zt57OlSrG42LMMnF8oo=;
-        b=f8mkqqusXyvhQHYJaW28XHtVosjcC4aCNi5gxBqXFpMFduCOtx9B4ESK58h4qjyURX
-         qbdSwrNMJo1V38YR0AweM7yRTBdzEmfCrRbB6+uJNSAOAYLWRVr0QPhSIfPCYZMZGJD2
-         HXOQ47u/T3UIOdn1rCIQ7gP0+OSV/ZwCtJqC0oUxradIsOcPcqFsQZRATEPAbyLstIaf
-         0UVCLltkLCpFNLjhei+C/BzUpWD2X9/A0yVzKWHIFS6RPERFDv/ZC7h6+OrSsf006ydK
-         Y9liG18m7K0QpNMGP3FJ3+3h+2cSaIToBz78h3p4z6Hp6bqTxisdE1uSEXqS+/TddAEp
-         ymyA==
+        d=gmail.com; s=20230601; t=1771624707; x=1772229507; darn=vger.kernel.org;
+        h=content-transfer-encoding:content-disposition:mime-version
+         :references:in-reply-to:message-id:date:subject:cc:to:from:from:to
+         :cc:subject:date:message-id:reply-to;
+        bh=sv6xYJAa/oThbMSrWyTLhp6ItSvlOyI8CiwPK1KtBnU=;
+        b=d+9lE5DtQTFp93PSTQsZqwvjI0xaI6SHKdrTyZ7qEYTMQke8/pr6QleJJGEpwAU2L2
+         6YHMaR3AXfh/w1Iqwa+QUfjTUfhWG95QUMzDmY6FqyaltyUNWoHd0vCOqt9Cr3HcnQo7
+         Cjxh4xp9L0TFrnaZceISqrVO3HiwmuEX6C11PgrDOmT0UigyFUUFykPH9LOKivmrCjQ+
+         Gu056Jt63fxEEIQk3QDydOJzC6Eimdtub5NXf3m6VQetF2OTrGZPwMmwB/OUgKg7Ki8s
+         6rmhzHwsLb9G+XPoNq29dhkHRn3ZEgT9d7jlCSDIT+R75SuNBxpqpOYFU1xbTyNl2vcx
+         sN+w==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1771618287; x=1772223087;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to;
-        bh=8JIRve8c15z5WReqA76soUL+Zt57OlSrG42LMMnF8oo=;
-        b=ZU1Yy6TTNRkTrtn2ulWCerppK2m6Bq2rPwPLgoXkwuTPviU5jGzNbVTGyQ7QVvg5PA
-         pd8OgOsrHYq/1eJF21ZLjsdbQtVNA6+4Fcu+GW/cIdEhYkMFS3iINFiF/okZzNTZK+lp
-         IVFK9NgYQ3p3Qke8YQlsa6d8U/iL4RLa2ViaxJEDhcpK746O88LPJXUyLrcZ0cFqAbG0
-         0dv6w4VY8E34tZXcix4VN629AvD1la7wX0Bfwxat/ckUGwdR/1+KvzQ8ru9i8MJbnfLI
-         cvZR8rrCLgsnpCPiQwU2eQwjEeZE2BnamilzkswmmhXj5o3iHnZLdXd3ti0huXqdepYe
-         sR7w==
-X-Forwarded-Encrypted: i=1; AJvYcCUn5bscg4s3VD8cCBjhZ/p0nuvNBYIz42cIDQMqo9JbSiCL5+e4Wxo30j8J5Q3k1HDKkqxv/V6V@vger.kernel.org
-X-Gm-Message-State: AOJu0Yw4kPBXriLSamr12JCxVNlL/NbiUrb9kVgvFIx4VukBczb8Xbfj
-	6wQm0j61UYatmLFbv6EM0EZO0gRvKyrWJD6zXsaMR7j8InMMzcMr1FZtlNfUu6DXSrNERV3T+IT
-	wF1YlekBpZw5enutzfrzaj3EqVhZnc6k=
-X-Gm-Gg: AZuq6aLV/q3Y3ouANJJIBwTey8q7GCHcHcMoBvmsKGqAo+pAoNOJgtg+zzUXT8uopRG
-	EqXlR7l/v3HVbV558bwWgYn5jN5n3l0+VfrmT85PThaJGuiMKwSz2g12Uv69k8kSyAwNmTiedKC
-	D4WThNUCrZ2SPOAHcenGNWAq9BeNtdFqKLuC3LE7aGovYGedeSHLJRzfwbjn+KDjMRTAw4BVTY1
-	zuZJaUPYaE8kTGR2LgZe4Cya/nNAvuasJUaGisBt82lkdXUNQd4Nddrwb/wtdw2HztWYhzrF4Vz
-	B21z5yVrg7QHFW8GGqGmc1X1Xqf7ndXNrcNGH+zVRw==
-X-Received: by 2002:a17:907:1b25:b0:b3a:8070:e269 with SMTP id
- a640c23a62f3a-b9081089466mr60024866b.14.1771618286359; Fri, 20 Feb 2026
- 12:11:26 -0800 (PST)
+        d=1e100.net; s=20230601; t=1771624707; x=1772229507;
+        h=content-transfer-encoding:content-disposition:mime-version
+         :references:in-reply-to:message-id:date:subject:cc:to:from:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=sv6xYJAa/oThbMSrWyTLhp6ItSvlOyI8CiwPK1KtBnU=;
+        b=uKbXvVB6ZqvvNghxKuknB1wj+Cp+JkzCmUFIKxxkvuI94ztBLkF2TYFAFr0O1VQY16
+         lVpvulRr5392a7lqee1Xx6PAesCPePbdV2EBOXWB8kowWSi1VZTQOWS36OuF/iacV/6l
+         nCNrPnatoMYp8hyYyNUmSQ4fNkuVUW4LGOTeaJePjKRUDJmPj2BIVfuu4cWAvyQbqDBW
+         eSBSOzC3e+fJ8Y2bigWItlvGQlNoZKdEM+/R2agEkeBcDPQ2rYbiVw3HHKA2My0HTrOv
+         Yiew0xm52QGvpHsIKVKwpyYORszGSG8DDHVJiEzmKORzDb240c7OgQ9enz7E0O/IrGo3
+         Wa1A==
+X-Forwarded-Encrypted: i=1; AJvYcCV2/lC9CdCbMHMjADyZFhihwR3tbWHaQyxSJcdKz5Fh+5FJRaTfZ+CiISL41A4XGsyHp1aBjYzm@vger.kernel.org
+X-Gm-Message-State: AOJu0Yy+UNJzxS5i1nC/qfiwoO4peC5S9y6BM1ZS7uGnxSN1c85exbAs
+	vVIGBldXp7eosn8LcTg+w/ZmWKTV6S/W3YytAG0eGF+i3NQykqwFxBl8
+X-Gm-Gg: AZuq6aKZdxcLwVdatm9J7jwI/hrj5oUJ/G1C0B+j+oikcYyEA1+tnEk/fxsbsrGFVyU
+	3iGqduoGQkd0fKCp5OQIhsRL8slHFobCxF5mOmLVkuanQbXOhUtcdqXHw4mTTrtyCUhk14jUifT
+	Tj9A8nX9jfcbrjp1/8/Q0v/WINz/kcevi75jHucLoU90oG9YEbo6oGSB0k7MqgoANkqrec7mtgV
+	YZyq8bs5u70WWF64WW+KbF00U9z6VeiXXA+d3n57Izc4SlvX49AUxQYOdSghfZrmDN7lTtm3xjg
+	h5L6uAI/VQM5spN3ho1L4npMXEKswxtO+YvMxorOQmOvSj2iHpHuqxsvOIovpAnkNTQpUUoPgoX
+	akbih0u7i+1VDPaT/rciMn2GeEEWI/L4IyKlXSBYR36cvxRy/4MpNr5o2vWl8KEyaPz7V0LKlSA
+	2x+PQRMFWMA0yk+0pkKjfvXPQi/i0awNwIhGD5kaWh8BgR5Q==
+X-Received: by 2002:a05:6000:248a:b0:436:3475:473e with SMTP id ffacd0b85a97d-4396f187ebemr2551008f8f.51.1771624706322;
+        Fri, 20 Feb 2026 13:58:26 -0800 (PST)
+Received: from WindFlash.powerhub ([2a0a:ef40:1b2a:fa01:9944:6a8c:dc37:eba5])
+        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-43970c00768sm910737f8f.10.2026.02.20.13.58.25
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 20 Feb 2026 13:58:25 -0800 (PST)
+From: Leonardo Bras <leobras.c@gmail.com>
+To: Michal Hocko <mhocko@suse.com>
+Cc: Leonardo Bras <leobras.c@gmail.com>,
+	Marcelo Tosatti <mtosatti@redhat.com>,
+	linux-kernel@vger.kernel.org,
+	cgroups@vger.kernel.org,
+	linux-mm@kvack.org,
+	Johannes Weiner <hannes@cmpxchg.org>,
+	Roman Gushchin <roman.gushchin@linux.dev>,
+	Shakeel Butt <shakeel.butt@linux.dev>,
+	Muchun Song <muchun.song@linux.dev>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Christoph Lameter <cl@linux.com>,
+	Pekka Enberg <penberg@kernel.org>,
+	David Rientjes <rientjes@google.com>,
+	Joonsoo Kim <iamjoonsoo.kim@lge.com>,
+	Vlastimil Babka <vbabka@suse.cz>,
+	Hyeonggon Yoo <42.hyeyoo@gmail.com>,
+	Leonardo Bras <leobras@redhat.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Waiman Long <longman@redhat.com>,
+	Boqun Feng <boqun.feng@gmail.com>,
+	Frederic Weisbecker <fweisbecker@suse.de>
+Subject: Re: [PATCH 0/4] Introduce QPW for per-cpu operations
+Date: Fri, 20 Feb 2026 18:58:14 -0300
+Message-ID: <aZjY9h3XXMNY-Ytd@WindFlash>
+X-Mailer: git-send-email 2.53.0
+In-Reply-To: <aZL45yORfkNvS9Rs@tiehlicka>
+References: <20260206143430.021026873@redhat.com> <aYs6Ju2G4bm6_tl2@tiehlicka> <aYxviLoWsrLqDU7o@tpad> <aYywl1hdBQP2_slo@tiehlicka> <aZDw6xI2izFDfuuu@WindFlash> <aZL45yORfkNvS9Rs@tiehlicka>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20260220055449.3073-1-tjmercier@google.com> <20260220055449.3073-3-tjmercier@google.com>
- <aZh-orwoaeAh52Bf@slm.duckdns.org> <CAOQ4uxjgXa1q-8-ajSBwza-Tkv91tFP-_wWzCQPW+PwJMehEWA@mail.gmail.com>
- <aZi6_K-pSRwAe7F5@slm.duckdns.org>
-In-Reply-To: <aZi6_K-pSRwAe7F5@slm.duckdns.org>
-From: Amir Goldstein <amir73il@gmail.com>
-Date: Fri, 20 Feb 2026 22:11:15 +0200
-X-Gm-Features: AaiRm51G-BEIzt0SxbA22TK8LiihbDavtfXN5tpD9EpODADyVmlHbWbL_HHf7gc
-Message-ID: <CAOQ4uxjZZSRBwZ2ZL31juAUu0-sAUnPrJWvQuJ2NDaWZMeq0Fg@mail.gmail.com>
-Subject: Re: [PATCH v4 2/3] kernfs: Send IN_DELETE_SELF and IN_IGNORED
-To: Tejun Heo <tj@kernel.org>
-Cc: "T.J. Mercier" <tjmercier@google.com>, gregkh@linuxfoundation.org, 
-	driver-core@lists.linux.dev, linux-kernel@vger.kernel.org, 
-	cgroups@vger.kernel.org, linux-fsdevel@vger.kernel.org, jack@suse.cz, 
-	shuah@kernel.org, linux-kselftest@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
 
-On Fri, Feb 20, 2026 at 8:50=E2=80=AFPM Tejun Heo <tj@kernel.org> wrote:
->
-> Hello,
->
-> On Fri, Feb 20, 2026 at 07:15:56PM +0200, Amir Goldstein wrote:
-> ...
-> > > Adding a comment with the above content would probably be useful. It =
-also
-> > > might be worthwhile to note that fanotify recursive monitoring wouldn=
-'t work
-> > > reliably as cgroups can go away while inodes are not attached.
-> >
-> > Sigh.. it's a shame to grow more weird semantics.
->
-> Yeah, I mean, kernfs *is* weird.
->
-> > But I take this back to the POV of "remote" vs. "local" vfs notificatio=
-ns.
-> > the IN_DELETE_SELF events added by this change are actually
-> > "local" vfs notifications.
-> >
-> > If we would want to support monitoring cgroups fs super block
-> > for all added/removed cgroups with fanotify, we would be able
-> > to implement this as "remote" notifications and in this case, adding
-> > explicit fsnotify() calls could make sense.
->
-> Yeah, that can be useful. For cgroupfs, there would probably need to be a
-> way to scope it so that it can be used on delegation boundaries too (whic=
-h
-> we can require to coincide with cgroup NS boundaries).
+On Mon, Feb 16, 2026 at 12:00:55PM +0100, Michal Hocko wrote:
+> On Sat 14-02-26 19:02:19, Leonardo Bras wrote:
+> > On Wed, Feb 11, 2026 at 05:38:47PM +0100, Michal Hocko wrote:
+> > > On Wed 11-02-26 09:01:12, Marcelo Tosatti wrote:
+> > > > On Tue, Feb 10, 2026 at 03:01:10PM +0100, Michal Hocko wrote:
+> > > [...]
+> > > > > What about !PREEMPT_RT? We have people running isolated workloads and
+> > > > > these sorts of pcp disruptions are really unwelcome as well. They do not
+> > > > > have requirements as strong as RT workloads but the underlying
+> > > > > fundamental problem is the same. Frederic (now CCed) is working on
+> > > > > moving those pcp book keeping activities to be executed to the return to
+> > > > > the userspace which should be taking care of both RT and non-RT
+> > > > > configurations AFAICS.
+> > > > 
+> > > > Michal,
+> > > > 
+> > > > For !PREEMPT_RT, _if_ you select CONFIG_QPW=y, then there is a kernel
+> > > > boot option qpw=y/n, which controls whether the behaviour will be
+> > > > similar (the spinlock is taken on local_lock, similar to PREEMPT_RT).
+> > > 
+> > > My bad. I've misread the config space of this.
+> > > 
+> > > > If CONFIG_QPW=n, or kernel boot option qpw=n, then only local_lock 
+> > > > (and remote work via work_queue) is used.
+> > > > 
+> > > > What "pcp book keeping activities" you refer to ? I don't see how
+> > > > moving certain activities that happen under SLUB or LRU spinlocks
+> > > > to happen before return to userspace changes things related 
+> > > > to avoidance of CPU interruption ?
+> > > 
+> > > Essentially delayed operations like pcp state flushing happens on return
+> > > to the userspace on isolated CPUs. No locking changes are required as
+> > > the work is still per-cpu.
+> > > 
+> > > In other words the approach Frederic is working on is to not change the
+> > > locking of pcp delayed work but instead move that work into well defined
+> > > place - i.e. return to the userspace.
+> > > 
+> > > Btw. have you measure the impact of preempt_disbale -> spinlock on hot
+> > > paths like SLUB sheeves?
+> > 
+> > Hi Michal,
+> > 
+> > I have done some study on this (which I presented on Plumbers 2023):
+> > https://lpc.events/event/17/contributions/1484/ 
+> > 
+> > Since they are per-cpu spinlocks, and the remote operations are not that 
+> > frequent, as per design of the current approach, we are not supposed to see 
+> > contention (I was not able to detect contention even after stress testing 
+> > for weeks), nor relevant cacheline bouncing.
+> > 
+> > That being said, for RT local_locks already get per-cpu spinlocks, so there 
+> > is only difference for !RT, which as you mention, does preemtp_disable():
+> > 
+> > The performance impact noticed was mostly about jumping around in 
+> > executable code, as inlining spinlocks (test #2 on presentation) took care 
+> > of most of the added extra cycles, adding about 4-14 extra cycles per 
+> > lock/unlock cycle. (tested on memcg with kmalloc test)
+> > 
+> > Yeah, as expected there is some extra cycles, as we are doing extra atomic 
+> > operations (even if in a local cacheline) in !RT case, but this could be 
+> > enabled only if the user thinks this is an ok cost for reducing 
+> > interruptions.
+> > 
+> > What do you think?
+> 
+> The fact that the behavior is opt-in for !RT is certainly a plus. I also
+> do not expect the overhead to be really be really big. 
 
-I have no idea what the above means.
-I could ask Gemini or you and I prefer the latter ;)
-What are delegation boundaries and NFS boundaries in this context?
+Awesome! Thanks for reviewing!
 
-> Would it be possible to make FAN_MNT_ATTACH work for that?
->
+> To me, a much
+> more important question is which of the two approaches is easier to
+> maintain long term. The pcp work needs to be done one way or the other.
+> Whether we want to tweak locking or do it at a very well defined time is
+> the bigger question.
 
-FAN_MNT_ATTACH is an event generated on a mntns object.
-If "cgroup NS boundaries" is referring to a mntns object and if
-this object is available in the context of cgroup create/destroy
-then it should be possible.
+That crossed my mind as well, and I went with the idea of changing locking 
+because I was working on workloads in which deferring work to a kernel 
+re-entry would cause deadline misses as well. Or more critically, the 
+drains could take forever, as some of those tasks would avoid returning to 
+kernel as much as possible. 
 
-But FAN_MNT_ATTACH reports a mountid. Is there a mountid
-to report on cgroup create? Probably not?
-
-Thanks,
-Amir.
+Thanks!
+Leo
