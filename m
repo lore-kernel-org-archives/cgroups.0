@@ -1,125 +1,201 @@
-Received: from mail-vs1-f45.google.com (mail-vs1-f45.google.com [209.85.217.45])
+Received: from mail-qv1-f46.google.com (mail-qv1-f46.google.com [209.85.219.46])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4379131A7E1
-	for <cgroups@vger.kernel.org>; Fri, 20 Feb 2026 19:02:50 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.217.45
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1717331A7E1
+	for <cgroups@vger.kernel.org>; Fri, 20 Feb 2026 19:10:38 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.219.46
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1771614173; cv=none; b=FQRQ8FpPp1KdjKFHxTF3Lj6/Sk5TkCeatrkjGwjuMFo0sE5QPERAT25VIaxYSLzkf9lCgsi13BxT7SMrM9aMawgJdqP5GivdA4rh+epTAhyQYmclgwhqUK6/7wB83sEJSYe+MklsM7g7N4nIDNsEM7f/UvJfGNlvHm1dahOHlQA=
+	t=1771614640; cv=none; b=Noyi4gkPHUxgoRTRqXVZC5nF4iZ0vrNXpbqq3sK4A4MqpITU3SI2TB1qihQ4tQYaBMKPk+4LUHDQpurZB4fiznuUx88mrHPTzDJ/tpqw29vPXCvII+mtMEq+C1YNdInLiuzRge8Z4v3EfsmKqkirTKKjMqk+Qh/1kT7t3R/17xw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1771614173; c=relaxed/simple;
-	bh=Cd+jqZjh3WAVSRNIVyZ6GsQswDgTs8XBJ+R9F/1aitQ=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=ZfA4pZcunj1OpJAIDXdxLN5MOAJ6+Uwed52qya3Ptm/z72gZlpNPfydqqildS1+mL7Dq/uX1lF72yFuW9iEqYOcOtJT2jqR4YtBfjoh8bTRvXZHgHQxILm2EFkAVlTT8rPDNfd5PfN+ZzuzEsA+fNdZyFqfNemBlpBAwhKzVuyc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=cmpxchg.org; spf=pass smtp.mailfrom=cmpxchg.org; dkim=pass (2048-bit key) header.d=cmpxchg.org header.i=@cmpxchg.org header.b=AOUk5rAV; arc=none smtp.client-ip=209.85.217.45
+	s=arc-20240116; t=1771614640; c=relaxed/simple;
+	bh=utJESbMjuYKt520hS9qyPp85rEhDO7vmzpqGJ8Lrwno=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=ZnT48jSFA5lpbEHGer4yS0XcNh3GZbsESU7kBfqsRh1jmrgOxHxytWzNltxzhZmYOBwcISniR3NFUoBOv6QjWZdKQ7Q3cOpAhyeHBwwypqjyLLzoYE7WgtFuQRBL774dbjK0nGuE/IYsfoQIUpA8EZX0PSm26HAAzEJH2sb6tD8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=cmpxchg.org; spf=pass smtp.mailfrom=cmpxchg.org; dkim=pass (2048-bit key) header.d=cmpxchg.org header.i=@cmpxchg.org header.b=TmnfVjnI; arc=none smtp.client-ip=209.85.219.46
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=cmpxchg.org
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=cmpxchg.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=cmpxchg.org header.i=@cmpxchg.org header.b="AOUk5rAV"
-Received: by mail-vs1-f45.google.com with SMTP id ada2fe7eead31-5fc419c346fso700801137.2
-        for <cgroups@vger.kernel.org>; Fri, 20 Feb 2026 11:02:50 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=cmpxchg.org header.i=@cmpxchg.org header.b="TmnfVjnI"
+Received: by mail-qv1-f46.google.com with SMTP id 6a1803df08f44-896fcfc591eso22555556d6.2
+        for <cgroups@vger.kernel.org>; Fri, 20 Feb 2026 11:10:38 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=cmpxchg.org; s=google; t=1771614170; x=1772218970; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=trvZR2sCF4V60jHjOkl0avZ915H6as3fJB6OlIOoH5U=;
-        b=AOUk5rAV+hlsJaXE1F+bnciosMajG7pl6bg+mIRhdq+zzlDAndmIYksPbOOI2e43Bv
-         bNOgkViOVd7LCRABYVG8G2IAyBx4DXkMI/2J59h6vsIQPZZ5m9u3eCmvhOu7oEhqZtdB
-         78ldPSzPQJiHHUvH3pLSg6a28yp/WDtg1QZdD+oBuHVX7TKqjkCUeOnKSq3wtsjearE7
-         /PnAsGCNH3tfYsOnmICFSL14JKTcfzSVWmoeiKYtWpJ3M8uMrizjPrRHK9oCOzZ51YUj
-         NYg9jO3nJYkEmSNQwttNRq/8ULWeSEl+9AGwBulxJJNzWc6446yhNHoo/djvJYXaPpaG
-         vQGw==
+        d=cmpxchg.org; s=google; t=1771614638; x=1772219438; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=zRgCQhFlEEQQz8iVKpR/+XrwMVRXcKNbXIMlR69ixQE=;
+        b=TmnfVjnIZhLDXV3cs5Pg0CEBeFf10iPC7u5atUalRV09oU+/sJrJfsNeKocLjoxI15
+         YKH95ixb796wOFaiHY8E0dasqQvYXrCej1R1SnQ9s5tM97OiEiH/nO29si5ZOtO6Efy0
+         1vW+ORiXD1KUYGHtc/tJqvK2Tvwuxsdkgo2w0tHjTDgGmGw8vvwQYOkOtuOwDWE2rXmt
+         k2a5xyZfJJBtZtwODU0emXcQjVxGwX+WBOcKDaNth/aKA5LJ19fQ+crHGiqsk03VTOpE
+         wAVXPfLDZsp/g2uFW73cjP+F9GO/GR6gH3n5AazPFe1issJiOjwOOvBj66CWQEEnNMCO
+         ZseQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1771614170; x=1772218970;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-gg:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=trvZR2sCF4V60jHjOkl0avZ915H6as3fJB6OlIOoH5U=;
-        b=SwI3nCm3Dd8TA7r8cMoYZsOHqEutLXjnkX1d4uLgPkEarGMdAm37rOMdnxuEYE1MkI
-         I2pUTm7lWeEuiCvtg6IV7oxaxKBLD6Ms9r3O+DoBKDqaSb/keNPctGDtwE/7u8quYmzu
-         tSRna/q8+UBugarujud+UYF5GoVPxlfyPHODmiRH5sHTud+AfoiGvPCvdoOKHA4/WfTZ
-         L1Bw86TM64WTBhuoLYE1dUyQLKIKaFqAwYcuLXuqBmbZaIW+7EN5gBmsxdtbQik5tNub
-         5kDrgvYzVxy5QBlr5WuuFiFitQDntm2ewyE5WTvCUAMeHjecrsAUF5zNSIRmeL3rw9IM
-         5j5Q==
-X-Forwarded-Encrypted: i=1; AJvYcCX2MoM/4a7NRrkn1YtW5Q9zmH/d7iKrhHm5mXTfPO8YlVQF8jVkW74kHqL7NHmn02r7IqTHnfsb@vger.kernel.org
-X-Gm-Message-State: AOJu0Yz7QvCYcPlcgteV2J7zZPeYRicC1DGj/+TKJXW499R3Jx+xW7wP
-	BKD13q0vXqJ3S/mbENg57VCrgfSrUnef/ezZvoJV91ewpkOWabESuks0cF6PM5BewRy/fAFfsJO
-	Y9lHI
-X-Gm-Gg: AZuq6aLP0J238xQzD0GpeVxDJx6Lu9hz2+5x0BkMmoHEeBv0peqFaXwq0rYV+8wWeCU
-	otiMCqP+kzYzFOBAV56teKgZQUXFYxQ9wWWVxiAfkEV8jEU3ujbcGIQlnWfGOpWWfRrB4nvBLuQ
-	/DrqSTS3gcIfsYD9ZJuXEuIZUnPQnqgooh1VooYKGAPKMChQRP6GVYDHiV74pX4Fh/k+8Hhai3a
-	EmqG6yNc31SYiAR/sDOWfEs5I3cdLxBrtwZKbQqXSyWzvd3196j2OVQN4GFTuloKW2Mfm0gc9vJ
-	OLQeYHHZW2Y5yLKJdwowuajWTTnDkNUxR4R9vJcqJ9iCrbgBq4iBP0ZhsPRXSG8QzgpmD40S6zK
-	KMFFHOM7+rOlTbCYlgpZDzMigbGi2w2NW40J5+VgQCEE016vP9gNm4wvDCKqwlzs08t6CarcjNY
-	2l8iAAm8ouC6YsdXDEBmAlsg==
-X-Received: by 2002:a05:6102:a4f:b0:5ee:a7e9:f157 with SMTP id ada2fe7eead31-5feb31253ddmr438759137.40.1771614169735;
-        Fri, 20 Feb 2026 11:02:49 -0800 (PST)
+        d=1e100.net; s=20230601; t=1771614638; x=1772219438;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
+         :to:cc:subject:date:message-id:reply-to;
+        bh=zRgCQhFlEEQQz8iVKpR/+XrwMVRXcKNbXIMlR69ixQE=;
+        b=rgLXWyZy4Q3/eu5WZLBJEw/t0+cW8g3CJX/YvO3AZFsssXCqX8rWpDr6N0ZULwCvSL
+         vuClzIDujkfTn1FxnZJX2PXAxLvtckdXmm7NH3C4rLFchelNRe4dSA4CIYHWzRIWnUUN
+         Nn0IKpVK2gdxTDT5Lhrg3GCEnMeu10gr9U/87C5BbmINa3NKBFBQHe48x+L3XQPl6kad
+         0S0Yglb3CCMcBXEEdmMjhiCz68IXp1Ttoutyo6p2lGwL/yHAqZMu7KHrdcP8/hVQOkJq
+         7gjdWFMTopee7YDvVj95/duqaTGXLYrKcsGgA4NsfJo68Ev+GYSSQHnX1rhIg4DcPjxj
+         qu1g==
+X-Forwarded-Encrypted: i=1; AJvYcCVP+JQzmZg0Tv1FZy1a74HTBTuakQR89pYCeU1l6Wev4CTJKmZfHmXRO0pzjgIKSJ1eeaT3T4Gw@vger.kernel.org
+X-Gm-Message-State: AOJu0YyqpsJwRJmtpZD0h2MMyy/NP32JwTFNC7vtr8mkor/Z9K0CSWWr
+	6XpMz5de1oUyncBgyjaNdqhEG6A8sx4sZCXjd2ysyzyk+Kpi3vGnlFxNtYHhX4O8g3U=
+X-Gm-Gg: AZuq6aK5A5MMhvs/Qhk0Prrfzi2RlEhKZyVQW7mCGyhXH0+Alz7Hg2jPSkNsiJ5xX6B
+	4bUB8BdjEijWGJ9ibLm2FFVDjo/WroLadCXiGsCSQmrw6Isp1C5zRXJbA+kiEUPIN8OGp/Egomi
+	TNH2HUNfPyfN4vCsHQui8qNO7RlOeh896D9x90DEk6/1IWGfjnewrO4GlNj/dydt0LWyz+BBkPA
+	900jWL7JimItlpZ6ZbkqUuRTMhzuLwsODTYW/E2OQkIt17+0ptqZG9X6DdAWV4VgV1JJUqkRDX2
+	GoemodF/vb8vG8ICEFk9wbZ1rQXm0BCAVhs2HRBbueQXmDKcpBroaWNChFvBvNVEyoxCZJJa/sQ
+	upgxTkKSrTdXI8p5Bs0CmJyVpSD0fEuFp5/fI9YPRk9/7hO3d6wHAQ4nKrdQmpEkd3LC0nAPVKv
+	jiOEDRrQCwOISYtU2TNTpFNA==
+X-Received: by 2002:ad4:5c6e:0:b0:894:562d:c0b9 with SMTP id 6a1803df08f44-89979d45c79mr15844316d6.0.1771614638028;
+        Fri, 20 Feb 2026 11:10:38 -0800 (PST)
 Received: from localhost ([2603:7000:c00:3a00:365a:60ff:fe62:ff29])
-        by smtp.gmail.com with ESMTPSA id d75a77b69052e-5070d6df498sm488911cf.30.2026.02.20.11.02.48
+        by smtp.gmail.com with ESMTPSA id af79cd13be357-8cb8d1013fesm18977785a.36.2026.02.20.11.10.37
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 20 Feb 2026 11:02:49 -0800 (PST)
-Date: Fri, 20 Feb 2026 14:02:48 -0500
+        Fri, 20 Feb 2026 11:10:37 -0800 (PST)
 From: Johannes Weiner <hannes@cmpxchg.org>
-To: "JP Kobryn (Meta)" <jp.kobryn@linux.dev>
-Cc: linux-mm@kvack.org, mst@redhat.com, mhocko@suse.com, vbabka@suse.cz,
-	apopple@nvidia.com, akpm@linux-foundation.org,
-	axelrasmussen@google.com, byungchul@sk.com, cgroups@vger.kernel.org,
-	david@kernel.org, eperezma@redhat.com, gourry@gourry.net,
-	jasowang@redhat.com, joshua.hahnjy@gmail.com,
-	Liam.Howlett@oracle.com, linux-kernel@vger.kernel.org,
-	lorenzo.stoakes@oracle.com, matthew.brost@intel.com,
-	rppt@kernel.org, muchun.song@linux.dev, zhengqi.arch@bytedance.com,
-	rakie.kim@sk.com, roman.gushchin@linux.dev, shakeel.butt@linux.dev,
-	surenb@google.com, virtualization@lists.linux.dev,
-	weixugc@google.com, xuanzhuo@linux.alibaba.com,
-	ying.huang@linux.alibaba.com, yuanchu@google.com, ziy@nvidia.com,
-	kernel-team@meta.com
-Subject: Re: [PATCH v5] mm: move pgscan, pgsteal, pgrefill to node stats
-Message-ID: <aZiv2ASYc46m7K_c@cmpxchg.org>
-References: <20260219235846.161910-1-jp.kobryn@linux.dev>
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: Uladzislau Rezki <urezki@gmail.com>,
+	Joshua Hahn <joshua.hahnjy@gmail.com>,
+	Michal Hocko <mhocko@suse.com>,
+	Roman Gushchin <roman.gushchin@linux.dev>,
+	Shakeel Butt <shakeel.butt@linux.dev>,
+	Muchun Song <muchun.song@linux.dev>,
+	linux-mm@kvack.org,
+	cgroups@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH 2/2] mm: memcontrol: switch to native NR_VMALLOC vmstat counter
+Date: Fri, 20 Feb 2026 14:10:35 -0500
+Message-ID: <20260220191035.3703800-2-hannes@cmpxchg.org>
+X-Mailer: git-send-email 2.53.0
+In-Reply-To: <20260220191035.3703800-1-hannes@cmpxchg.org>
+References: <20260220191035.3703800-1-hannes@cmpxchg.org>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260219235846.161910-1-jp.kobryn@linux.dev>
+Content-Transfer-Encoding: 8bit
 
-On Thu, Feb 19, 2026 at 03:58:46PM -0800, JP Kobryn (Meta) wrote:
-> There are situations where reclaim kicks in on a system with free memory.
-> One possible cause is a NUMA imbalance scenario where one or more nodes are
-> under pressure. It would help if we could easily identify such nodes.
-> 
-> Move the pgscan, pgsteal, and pgrefill counters from vm_event_item to
-> node_stat_item to provide per-node reclaim visibility. With these counters
-> as node stats, the values are now displayed in the per-node section of
-> /proc/zoneinfo, which allows for quick identification of the affected
-> nodes.
-> 
-> /proc/vmstat continues to report the same counters, aggregated across all
-> nodes. But the ordering of these items within the readout changes as they
-> move from the vm events section to the node stats section.
-> 
-> Memcg accounting of these counters is preserved. The relocated counters
-> remain visible in memory.stat alongside the existing aggregate pgscan and
-> pgsteal counters.
-> 
-> However, this change affects how the global counters are accumulated.
-> Previously, the global event count update was gated on !cgroup_reclaim(),
-> excluding memcg-based reclaim from /proc/vmstat. Now that
-> mod_lruvec_state() is being used to update the counters, the global
-> counters will include all reclaim. This is consistent with how pgdemote
-> counters are already tracked.
-> 
-> Finally, the virtio_balloon driver is updated to use
-> global_node_page_state() to fetch the counters, as they are no longer
-> accessible through the vm_events array.
-> 
-> Signed-off-by: JP Kobryn <jp.kobryn@linux.dev>
-> Suggested-by: Johannes Weiner <hannes@cmpxchg.org>
-> Acked-by: Michael S. Tsirkin <mst@redhat.com>
-> Reviewed-by: Vlastimil Babka (SUSE) <vbabka@kernel.org>
+Eliminates the custom memcg counter and results in a single,
+consolidated accounting call in vmalloc code.
 
-Acked-by: Johannes Weiner <hannes@cmpxchg.org>
+Signed-off-by: Johannes Weiner <hannes@cmpxchg.org>
+---
+ include/linux/memcontrol.h |  1 -
+ mm/memcontrol.c            |  4 ++--
+ mm/vmalloc.c               | 16 ++++------------
+ 3 files changed, 6 insertions(+), 15 deletions(-)
+
+diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
+index 67f154de10bc..c7cc4e50e59a 100644
+--- a/include/linux/memcontrol.h
++++ b/include/linux/memcontrol.h
+@@ -35,7 +35,6 @@ enum memcg_stat_item {
+ 	MEMCG_SWAP = NR_VM_NODE_STAT_ITEMS,
+ 	MEMCG_SOCK,
+ 	MEMCG_PERCPU_B,
+-	MEMCG_VMALLOC,
+ 	MEMCG_KMEM,
+ 	MEMCG_ZSWAP_B,
+ 	MEMCG_ZSWAPPED,
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index 129eed3ff5bb..fef5bdd887e0 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -317,6 +317,7 @@ static const unsigned int memcg_node_stat_items[] = {
+ 	NR_SHMEM_THPS,
+ 	NR_FILE_THPS,
+ 	NR_ANON_THPS,
++	NR_VMALLOC,
+ 	NR_KERNEL_STACK_KB,
+ 	NR_PAGETABLE,
+ 	NR_SECONDARY_PAGETABLE,
+@@ -339,7 +340,6 @@ static const unsigned int memcg_stat_items[] = {
+ 	MEMCG_SWAP,
+ 	MEMCG_SOCK,
+ 	MEMCG_PERCPU_B,
+-	MEMCG_VMALLOC,
+ 	MEMCG_KMEM,
+ 	MEMCG_ZSWAP_B,
+ 	MEMCG_ZSWAPPED,
+@@ -1359,7 +1359,7 @@ static const struct memory_stat memory_stats[] = {
+ 	{ "sec_pagetables",		NR_SECONDARY_PAGETABLE		},
+ 	{ "percpu",			MEMCG_PERCPU_B			},
+ 	{ "sock",			MEMCG_SOCK			},
+-	{ "vmalloc",			MEMCG_VMALLOC			},
++	{ "vmalloc",			NR_VMALLOC			},
+ 	{ "shmem",			NR_SHMEM			},
+ #ifdef CONFIG_ZSWAP
+ 	{ "zswap",			MEMCG_ZSWAP_B			},
+diff --git a/mm/vmalloc.c b/mm/vmalloc.c
+index a49a46de9c4f..8773bc0c4734 100644
+--- a/mm/vmalloc.c
++++ b/mm/vmalloc.c
+@@ -3446,9 +3446,6 @@ void vfree(const void *addr)
+ 
+ 	if (unlikely(vm->flags & VM_FLUSH_RESET_PERMS))
+ 		vm_reset_perms(vm);
+-	/* All pages of vm should be charged to same memcg, so use first one. */
+-	if (vm->nr_pages && !(vm->flags & VM_MAP_PUT_PAGES))
+-		mod_memcg_page_state(vm->pages[0], MEMCG_VMALLOC, -vm->nr_pages);
+ 	for (i = 0; i < vm->nr_pages; i++) {
+ 		struct page *page = vm->pages[i];
+ 
+@@ -3458,7 +3455,7 @@ void vfree(const void *addr)
+ 		 * can be freed as an array of order-0 allocations
+ 		 */
+ 		if (!(vm->flags & VM_MAP_PUT_PAGES))
+-			dec_node_page_state(page, NR_VMALLOC);
++			mod_lruvec_page_state(page, NR_VMALLOC, -1);
+ 		__free_page(page);
+ 		cond_resched();
+ 	}
+@@ -3649,7 +3646,7 @@ vm_area_alloc_pages(gfp_t gfp, int nid,
+ 			continue;
+ 		}
+ 
+-		mod_node_page_state(page, NR_VMALLOC, 1 << large_order);
++		mod_lruvec_page_state(page, NR_VMALLOC, 1 << large_order);
+ 
+ 		split_page(page, large_order);
+ 		for (i = 0; i < (1U << large_order); i++)
+@@ -3696,7 +3693,7 @@ vm_area_alloc_pages(gfp_t gfp, int nid,
+ 							pages + nr_allocated);
+ 
+ 			for (i = nr_allocated; i < nr_allocated + nr; i++)
+-				inc_node_page_state(pages[i], NR_VMALLOC);
++				mod_lruvec_page_state(pages[i], NR_VMALLOC, 1);
+ 
+ 			nr_allocated += nr;
+ 
+@@ -3722,7 +3719,7 @@ vm_area_alloc_pages(gfp_t gfp, int nid,
+ 		if (unlikely(!page))
+ 			break;
+ 
+-		mod_node_page_state(page, NR_VMALLOC, 1 << order);
++		mod_lruvec_page_state(page, NR_VMALLOC, 1 << order);
+ 
+ 		/*
+ 		 * High-order allocations must be able to be treated as
+@@ -3866,11 +3863,6 @@ static void *__vmalloc_area_node(struct vm_struct *area, gfp_t gfp_mask,
+ 			vmalloc_gfp_adjust(gfp_mask, page_order), node,
+ 			page_order, nr_small_pages, area->pages);
+ 
+-	/* All pages of vm should be charged to same memcg, so use first one. */
+-	if (gfp_mask & __GFP_ACCOUNT && area->nr_pages)
+-		mod_memcg_page_state(area->pages[0], MEMCG_VMALLOC,
+-				     area->nr_pages);
+-
+ 	/*
+ 	 * If not enough pages were obtained to accomplish an
+ 	 * allocation request, free them via vfree() if any.
+-- 
+2.53.0
+
