@@ -1,42 +1,77 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A242A20D4FC;
-	Fri, 20 Feb 2026 15:32:51 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B608E2FF164
+	for <cgroups@vger.kernel.org>; Fri, 20 Feb 2026 16:57:41 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1771601571; cv=none; b=oXMinaPxJoREmTS2+L2Sv7nfo94deKzMf/jgdMb3jp6FfQFTJbVC7BK0AGLSrdElYXRjrt04kl7CD4YXsjVir32/TEdF9hbCj1lo8xSMBHdtmc37i4g5PXIMFtTRSQOb2sS9f5l3GoUQ+lNsxnY/JrkbOQlZDtQXWeAHsTBx7oc=
+	t=1771606663; cv=none; b=hIg7pCfrCwaJH000pTmJ7+jmlAuIJuHtX3RJBrxC0y8UqvrzdghTqZM8211LmOXNjlnpjGqF4MLFfo2rev9/p6TV4VfGRZVIzDJQM1pC0fbGfknzZKfT5CmgJTdTh/N99BeNBkJeSNtzptOftbJAAjHbYuubhOZDhnlP/we9uUw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1771601571; c=relaxed/simple;
-	bh=fDGKx15Hxqu+IAN7+rfHjM/yq650i7Sc39dis0PLF/g=;
+	s=arc-20240116; t=1771606663; c=relaxed/simple;
+	bh=cAS+G5NxeRxa2EgBonAJ6Nr0/6q4BTUxv7Uxpi8YpVU=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=ovF74aNiiPSaa4IHMjhQqwyBf0RaxJM9QYADPxmEW1Zr/iJKApB/NfJDBp23a6hxAyvaCWyvl2m7zbZkylVx71bZr0+Oyk3vi9gn7YJqwXx8mUPZ+eSlSzMxLtl6vX5m55/4YaXPO7AJdM0Vl9zBbIkZ7pBRX1cNYhnOE4GheWg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=NXNhPjGQ; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=Y2jRkdH9AVTgRAlqWJxTEGH3fpY9gBR5WXExhHFdm4/iykqgVDIB9RsLUtc2WOVD4XKEpBinn0pvAm2rE61wBbIAsaRsL+LCHOgwYzcU+1jL7+jp5CY/LhAwe93M1ew4+QD0yi2YpDR9uE6r4zq8OSywEpJ1DPRZFgZAUFCaVR8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=hvID6KTk; arc=none smtp.client-ip=170.10.133.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="NXNhPjGQ"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1AB33C116D0;
-	Fri, 20 Feb 2026 15:32:51 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1771601571;
-	bh=fDGKx15Hxqu+IAN7+rfHjM/yq650i7Sc39dis0PLF/g=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=NXNhPjGQ5QYdl2bepA45yrtfCNKVLOylDAjxOF/AapIKqvwIuSWKCdEnAq/ROa/vL
-	 /vAOR/A2XkzziqUbY0+z5TKG5+JuI6+1iEzQj7RPwwmkYsx3ZkExH2hLM1/tD/Opyj
-	 uc9hwq131dSEDzwcPWTODZ9ToJuWyq2eVltFZ2zczZh5yB3+5zYb+iYTBWilhChA/I
-	 cI78u1BZB8rKMcUhhawofYf8MYo0c0b72ZPffmYlGaXjZC4OcXNKiMfQ/3yQDkcSkh
-	 eALixBppGk8Z5U+FBqU7mq5zsnvO/j40psyEG2XLkL4+ejYhXzDpWfXoJ02gSxvsry
-	 Dmd1AA7UlewNA==
-Date: Fri, 20 Feb 2026 05:32:50 -1000
-From: Tejun Heo <tj@kernel.org>
-To: "T.J. Mercier" <tjmercier@google.com>
-Cc: gregkh@linuxfoundation.org, driver-core@lists.linux.dev,
-	linux-kernel@vger.kernel.org, cgroups@vger.kernel.org,
-	linux-fsdevel@vger.kernel.org, jack@suse.cz, amir73il@gmail.com,
-	shuah@kernel.org, linux-kselftest@vger.kernel.org
-Subject: Re: [PATCH v4 2/3] kernfs: Send IN_DELETE_SELF and IN_IGNORED
-Message-ID: <aZh-orwoaeAh52Bf@slm.duckdns.org>
-References: <20260220055449.3073-1-tjmercier@google.com>
- <20260220055449.3073-3-tjmercier@google.com>
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="hvID6KTk"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1771606660;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=ppw4K3DbmN7RYbMzOdLadd1esQw4LW4oIH3NAVRbdGA=;
+	b=hvID6KTk7cJ8KfTm12IqeVih2XA09Q3i3rzjImHhHCPiHxq5AMXVUSMU+KqjpNgSXcLFFe
+	wBIZ1v/3sCDyMeS42hFCZfGu3I5Yz2tlqnNwHLFl1Ef8QiCSpdv4E3VGl50ut5S+Io5E8p
+	kwbp/Z/BVKXdzTrg6Bqt0vPvmQ0q+PE=
+Received: from mx-prod-mc-06.mail-002.prod.us-west-2.aws.redhat.com
+ (ec2-35-165-154-97.us-west-2.compute.amazonaws.com [35.165.154.97]) by
+ relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-252-3ATclVuAMMCAteY8vl0Zow-1; Fri,
+ 20 Feb 2026 11:57:37 -0500
+X-MC-Unique: 3ATclVuAMMCAteY8vl0Zow-1
+X-Mimecast-MFC-AGG-ID: 3ATclVuAMMCAteY8vl0Zow_1771606655
+Received: from mx-prod-int-06.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-06.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.93])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mx-prod-mc-06.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 2210B180057E;
+	Fri, 20 Feb 2026 16:57:35 +0000 (UTC)
+Received: from tpad.localdomain (unknown [10.96.133.4])
+	by mx-prod-int-06.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id B0CC61800671;
+	Fri, 20 Feb 2026 16:57:33 +0000 (UTC)
+Received: by tpad.localdomain (Postfix, from userid 1000)
+	id 6B833401E19EF; Fri, 20 Feb 2026 11:30:16 -0300 (-03)
+Date: Fri, 20 Feb 2026 11:30:16 -0300
+From: Marcelo Tosatti <mtosatti@redhat.com>
+To: Michal Hocko <mhocko@suse.com>
+Cc: Leonardo Bras <leobras.c@gmail.com>, linux-kernel@vger.kernel.org,
+	cgroups@vger.kernel.org, linux-mm@kvack.org,
+	Johannes Weiner <hannes@cmpxchg.org>,
+	Roman Gushchin <roman.gushchin@linux.dev>,
+	Shakeel Butt <shakeel.butt@linux.dev>,
+	Muchun Song <muchun.song@linux.dev>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Christoph Lameter <cl@linux.com>, Pekka Enberg <penberg@kernel.org>,
+	David Rientjes <rientjes@google.com>,
+	Joonsoo Kim <iamjoonsoo.kim@lge.com>,
+	Vlastimil Babka <vbabka@suse.cz>,
+	Hyeonggon Yoo <42.hyeyoo@gmail.com>,
+	Leonardo Bras <leobras@redhat.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Waiman Long <longman@redhat.com>, Boqun Feng <boqun.feng@gmail.com>,
+	Frederic Weisbecker <fweisbecker@suse.de>
+Subject: Re: [PATCH 0/4] Introduce QPW for per-cpu operations
+Message-ID: <aZhv+Bw7nKKmbFdq@tpad>
+References: <20260206143430.021026873@redhat.com>
+ <aYs6Ju2G4bm6_tl2@tiehlicka>
+ <aYxviLoWsrLqDU7o@tpad>
+ <aYywl1hdBQP2_slo@tiehlicka>
+ <aZDw6xI2izFDfuuu@WindFlash>
+ <aZL45yORfkNvS9Rs@tiehlicka>
+ <aZcr255pGT3B/eaL@tpad>
+ <aZdk19MqYhWK90Do@tiehlicka>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
@@ -45,59 +80,71 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20260220055449.3073-3-tjmercier@google.com>
+In-Reply-To: <aZdk19MqYhWK90Do@tiehlicka>
+X-Scanned-By: MIMEDefang 3.4.1 on 10.30.177.93
 
-Hello,
-
-On Thu, Feb 19, 2026 at 09:54:47PM -0800, T.J. Mercier wrote:
-> Currently some kernfs files (e.g. cgroup.events, memory.events) support
-> inotify watches for IN_MODIFY, but unlike with regular filesystems, they
-> do not receive IN_DELETE_SELF or IN_IGNORED events when they are
-> removed. This means inotify watches persist after file deletion until
-> the process exits and the inotify file descriptor is cleaned up, or
-> until inotify_rm_watch is called manually.
+On Thu, Feb 19, 2026 at 08:30:31PM +0100, Michal Hocko wrote:
+> On Thu 19-02-26 12:27:23, Marcelo Tosatti wrote:
+> > Michal,
+> > 
+> > Again, i don't see how moving operations to happen at return to 
+> > kernel would help (assuming you are talking about 
+> > "context_tracking,x86: Defer some IPIs until a user->kernel transition").
 > 
-> This creates a problem for processes monitoring cgroups. For example, a
-> service monitoring memory.events for memory.high breaches needs to know
-> when a cgroup is removed to clean up its state. Where it's known that a
-> cgroup is removed when all processes die, without IN_DELETE_SELF the
-> service must resort to inefficient workarounds such as:
->   1) Periodically scanning procfs to detect process death (wastes CPU
->      and is susceptible to PID reuse).
->   2) Holding a pidfd for every monitored cgroup (can exhaust file
->      descriptors).
+> Nope, I am not talking about IPIs, although those are an example of pcp
+> state as well. I am sorry I do not have a link handy, I am pretty sure
+> Frederic will have that. Another example, though, was vmstat flushes
+> that need to be pcp. There are many other examples. 
 > 
-> This patch enables IN_DELETE_SELF and IN_IGNORED events for kernfs files
-> and directories by clearing inode i_nlink values during removal. This
-> allows VFS to make the necessary fsnotify calls so that userspace
-> receives the inotify events.
+> [...]
 > 
-> As a result, applications can rely on a single existing watch on a file
-> of interest (e.g. memory.events) to receive notifications for both
-> modifications and the eventual removal of the file, as well as automatic
-> watch descriptor cleanup, simplifying userspace logic and improving
-> efficiency.
+> > You can't delay either kmalloc (removal of object from per-CPU freelist), 
+> > or kfree (return of object from per-CPU freelist), or kmem_cache_shrink 
+> > or kmem_cache_shrink to return to userspace.
 > 
-> There is gap in this implementation for certain file removals due their
-> unique nature in kernfs. Directory removals that trigger file removals
-> occur through vfs_rmdir, which shrinks the dcache and emits fsnotify
-> events after the rmdir operation; there is no issue here. However kernfs
-> writes to particular files (e.g. cgroup.subtree_control) can also cause
-> file removal, but vfs_write does not attempt to emit fsnotify events
-> after the write operation, even if i_nlink counts are 0. As a usecase
-> for monitoring this category of file removals is not known, they are
-> left without having IN_DELETE or IN_DELETE_SELF events generated.
+> Why?
 
-Adding a comment with the above content would probably be useful. It also
-might be worthwhile to note that fanotify recursive monitoring wouldn't work
-reliably as cgroups can go away while inodes are not attached.
+Because kernel code might need to use that object right away, so it
+needs to be allocated right after kmalloc returns.
 
-> Suggested-by: Jan Kara <jack@suse.cz>
-> Signed-off-by: T.J. Mercier <tjmercier@google.com>
+> > What i missing something here? (or do you have something on your mind
+> > which i can't see).
+> 
+> I am really sorry for being really vague here. Let me try to draw
+> a more abstract problem definition and let's see whether we are trying
+> to solve the same problem here. Maybe not...
+> 
+> I believe the main usecase of the interest here is uninterrupted
+> userspace execution
 
-Acked-by: Tejun Heo <tj@kernel.org>
+The main usecase of interest is uninterrupted userspace execution, yes.
 
-Thanks.
+It is a good thing if you can enter the kernel, say perform system 
+calls, and not be interrupted as well.
 
--- 
-tejun
+> and delayed pcp work that migh disturb such workload
+> after it has returned to the userspace. Right?
+> That is usually hauskeeping work that for, performance reasons, doesn't
+> happen in hot paths while the workload was executing in the kernel
+> space.
+> 
+> There are more ways to deal with that. You can either change the hot
+> path to not require deferred operation (tricky withtout introducing
+> regressions for most workloads) or you can define a more suitable place
+> to perform the housekeeping while still running in the kernel. 
+> 
+> Your QWP work relies on local_lock -> spin_lock transition and
+> performing the pcp work remotely so you do not need to disturb that
+> remote cpu. Correct?
+> 
+> Alternative approach is to define a moment when the housekeeping
+> operation is performed on that local cpu while still running in the
+> kernel space - e.g. when returning to the userspace. Delayed work is
+> then not necessary and userspace is not disrupted after returning to the
+> userspace.
+> 
+> Do I make more sense or does the above sound like a complete gibberish?
+
+OK, sure, but can't see how you can do that with per-CPU caches for
+kmalloc, for example.
+
