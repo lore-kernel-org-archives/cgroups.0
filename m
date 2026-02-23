@@ -1,56 +1,54 @@
 Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8C7EE3A9DB9
-	for <cgroups@vger.kernel.org>; Tue, 24 Feb 2026 18:26:31 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 459393A1A28
+	for <cgroups@vger.kernel.org>; Tue, 24 Feb 2026 18:26:33 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1771957594; cv=none; b=DwmA3PP0CUxEOMmxMxqL1Cd6rNmc9+fzLTZIy/3WRED0p1ijtQtcikVzWEMZ431yBOaLXOIXwutTqUbcabHeGpNOxd6haOq0wvYFM9FCimvFFCT4ltm94uoTOtngHC1rDLqcqhzheEWIarPWrpWH7VEqyv19e+qJzZpiLthzAtY=
+	t=1771957597; cv=none; b=EbTRarkiDSNl8Ne4b/TIP6eq2YVyOkEOXxCC4OtS1M1gQO0gpgWpVRH8EYqrbatNpncuKodYUp7NLkO3r8AJ32hSso4/PDIDFzVMoAFFpR566nUD6XK+ipVdE8/mCN/ppGk99ze8YH78CNCBzz9EAOH7QvLMwOJPKX20dxKxwW4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1771957594; c=relaxed/simple;
-	bh=tZ6lBQWuYTfqUbN2qwwVjecInGeYkTto8OO+tVC6hLM=;
+	s=arc-20240116; t=1771957597; c=relaxed/simple;
+	bh=ujg4JwIYLvspkvuyEEPh1L3eQ2IzutQT2hoqTvgB6zA=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=sDb6QH0lMqTWLeiVZ+rdlQuz/0NNRAIaVajUBfJdfHlRi9PK6tNIUoRhqQKzSoQrmn+B6qV1SJnFcXreSR6GN1vN9edV0hc6H1eVJIMy75pGyQxcZNYM4jB5qgenDQFkJHL9cUTwtekq8cx9xl+I/V+LJBGh5v2qB8uAOMKT990=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=E5+4dnoh; arc=none smtp.client-ip=170.10.133.124
+	 Content-Type:Content-Disposition:In-Reply-To; b=V+hNH2WYlG26+hNuMMHFJAPVKPlpHoldqkOq6VknGrqUGze6yFLRa4L/klTSQAXlsZnf+XgNKvPE96sJ8WfsKYWBQytnOoKWBtxyeilrn7OYf3SgReUEBonbPAO2lm+b7XlDwlnIiH8pMXuCFRdM+v0Mk9zXh2nmbnkZQnF/9aQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=ikHv1j9R; arc=none smtp.client-ip=170.10.133.124
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="E5+4dnoh"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="ikHv1j9R"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1771957590;
+	s=mimecast20190719; t=1771957592;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=Kj/fGA5yp0dGoSw6F29+YuThvBFpON14H3YrN8gK7+w=;
-	b=E5+4dnohZPnezFlTJF/iX90se25eI1lTsOc2NLaIkrMUWO0xsZGr+TdKzUunW2/EIKXcLq
-	mO79cV8XUwZBtdheHXn8na/FNx+QuN/9qDX+TlPsaN1VuxTbg+Qug5rbzgW+e+FTdB1an3
-	zoyv/+WeDhnzi7NfJot9Qklvi8p+D6g=
+	bh=7Uf5EJf+Tw5nbDLapVKw8M9tfsonMMBNq6SuwMEXglI=;
+	b=ikHv1j9RgVuBVPSnBFHJihg8CIcM7hkeclLRTYYhYaPcc1yp8i+mAhvbplMRyAdWS5VgfB
+	bTl0OqaMUNTnHovMrvkK/UprpvsQX2mNz+fhzKAV6pOj9ibU7j4QgJRon+tJWxAK0IWG7Z
+	7frj3xoDQjTSEKUf63z+3/3sGRw3/B0=
 Received: from mx-prod-mc-08.mail-002.prod.us-west-2.aws.redhat.com
  (ec2-35-165-154-97.us-west-2.compute.amazonaws.com [35.165.154.97]) by
  relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-150-7KYmAGGrNIq1EsaTJSiqCQ-1; Tue,
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-414-58eZhZIcMliTHgOPkvQPJA-1; Tue,
  24 Feb 2026 13:26:26 -0500
-X-MC-Unique: 7KYmAGGrNIq1EsaTJSiqCQ-1
-X-Mimecast-MFC-AGG-ID: 7KYmAGGrNIq1EsaTJSiqCQ_1771957582
-Received: from mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.17])
+X-MC-Unique: 58eZhZIcMliTHgOPkvQPJA-1
+X-Mimecast-MFC-AGG-ID: 58eZhZIcMliTHgOPkvQPJA_1771957582
+Received: from mx-prod-int-06.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-06.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.93])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
-	by mx-prod-mc-08.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 161F918002C2;
+	by mx-prod-mc-08.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 08FF21800578;
 	Tue, 24 Feb 2026 18:26:22 +0000 (UTC)
 Received: from tpad.localdomain (unknown [10.96.133.3])
-	by mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 149F61955F43;
+	by mx-prod-int-06.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 2CF1C1800370;
 	Tue, 24 Feb 2026 18:26:19 +0000 (UTC)
 Received: by tpad.localdomain (Postfix, from userid 1000)
-	id E09A4402DED09; Tue, 24 Feb 2026 15:12:32 -0300 (-03)
-Date: Tue, 24 Feb 2026 15:12:32 -0300
+	id CBBF340164D27; Mon, 23 Feb 2026 08:20:51 -0300 (-03)
+Date: Mon, 23 Feb 2026 08:20:51 -0300
 From: Marcelo Tosatti <mtosatti@redhat.com>
-To: Frederic Weisbecker <frederic@kernel.org>
-Cc: Vlastimil Babka <vbabka@suse.com>, Michal Hocko <mhocko@suse.com>,
-	Leonardo Bras <leobras.c@gmail.com>, linux-kernel@vger.kernel.org,
-	cgroups@vger.kernel.org, linux-mm@kvack.org,
-	Johannes Weiner <hannes@cmpxchg.org>,
+To: Michal Hocko <mhocko@suse.com>
+Cc: Vlastimil Babka <vbabka@suse.com>, Leonardo Bras <leobras.c@gmail.com>,
+	linux-kernel@vger.kernel.org, cgroups@vger.kernel.org,
+	linux-mm@kvack.org, Johannes Weiner <hannes@cmpxchg.org>,
 	Roman Gushchin <roman.gushchin@linux.dev>,
 	Shakeel Butt <shakeel.butt@linux.dev>,
 	Muchun Song <muchun.song@linux.dev>,
@@ -63,158 +61,75 @@ Cc: Vlastimil Babka <vbabka@suse.com>, Michal Hocko <mhocko@suse.com>,
 	Leonardo Bras <leobras@redhat.com>,
 	Thomas Gleixner <tglx@linutronix.de>,
 	Waiman Long <longman@redhat.com>, Boqun Feng <boqun.feng@gmail.com>,
-	Frederic Weisbecker <fweisbecker@suse.de>,
-	Waiman Long <llong@redhat.com>
+	Frederic Weisbecker <fweisbecker@suse.de>
 Subject: Re: [PATCH 0/4] Introduce QPW for per-cpu operations
-Message-ID: <aZ3qEHzgI8Zuv7IU@tpad>
-References: <20260206143430.021026873@redhat.com>
- <aYs6Ju2G4bm6_tl2@tiehlicka>
- <aYxviLoWsrLqDU7o@tpad>
+Message-ID: <aZw4E9+aN3QjMZsB@tpad>
+References: <aYxviLoWsrLqDU7o@tpad>
  <aYywl1hdBQP2_slo@tiehlicka>
  <aZDw6xI2izFDfuuu@WindFlash>
  <aZL45yORfkNvS9Rs@tiehlicka>
  <aZcr255pGT3B/eaL@tpad>
  <3f2b985a-2fb0-4d63-9dce-8a9cad8ce464@suse.com>
  <aZibbYH7yrDZlnJh@tpad>
- <aZ24eAiQpo64-0Kz@pavilion.home>
+ <a1c11a09-da88-4edd-9571-0f792b59e9c3@suse.com>
+ <aZivpwJnIGKdAMYE@tpad>
+ <aZwZrw_LTilXsPd4@tiehlicka>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <aZ24eAiQpo64-0Kz@pavilion.home>
-X-Scanned-By: MIMEDefang 3.0 on 10.30.177.17
+In-Reply-To: <aZwZrw_LTilXsPd4@tiehlicka>
+X-Scanned-By: MIMEDefang 3.4.1 on 10.30.177.93
 
-On Tue, Feb 24, 2026 at 03:40:56PM +0100, Frederic Weisbecker wrote:
-> Le Fri, Feb 20, 2026 at 02:35:41PM -0300, Marcelo Tosatti a écrit :
+On Mon, Feb 23, 2026 at 10:11:11AM +0100, Michal Hocko wrote:
+> On Fri 20-02-26 16:01:59, Marcelo Tosatti wrote:
+> > On Fri, Feb 20, 2026 at 06:58:10PM +0100, Vlastimil Babka wrote:
+> [...]
+> > > >> So if we can assume that workloads on isolated cpus make syscalls only
+> > > >> rarely, and when they do they can tolerate them being slower, I think the
+> > > >> "avoid sheaves on isolated cpus" would be the best way here.
+> > > > 
+> > > > I am not sure its safe to assume that. Ask Gemini about isolcpus use
+> > > > cases and:
+> > > 
+> > > I don't think it's answering the question about syscalls. But didn't read
+> > > too closely given the nature of it.
 > > 
-> > I am not sure its safe to assume that. Ask Gemini about isolcpus use
-> 
-> Erm... ok fine let's see that :-)
-> 
-> > cases and:
+> > People use isolcpus with all kinds of programs. 
 > > 
-> > 1. High-Frequency Trading (HFT)
-> > In the world of HFT, microseconds are the difference between profit and loss. 
-> > Traders use isolcpus to pin their execution engines to specific cores.
+> > > > For example, AF_XDP bypass uses system calls (and wants isolcpus):
+> > > > 
+> > > > https://www.quantvps.com/blog/kernel-bypass-in-hft?srsltid=AfmBOoryeSxuuZjzTJIC9O-Ag8x4gSwjs-V4Xukm2wQpGmwDJ6t4szuE
+> > > 
+> > > Didn't spot system calls mentioned TBH.
 > > 
-> > The Goal: Eliminate "jitter" caused by the OS moving other processes onto the same core.
-> > 
-> > The Benefit: Guaranteed execution time and ultra-low latency.
+> > I don't see why you want to reduce performance of applications that 
+> > execute on isolcpus=, if you can avoid that.
 > 
-> That would be full isolation (aka nohz_full) because the goal here is to beat
-> the competitors. As such the software latency must tend toward hardware latency.
-> 
-> I wouldn't expect any syscall here but a full userspace stack with DPDK for
-> example.
-> 
-> I put that in the 5g uRLLC (or similar low latency networking) usecase family.
-> 
-> > 
-> > 2. Real-Time Audio & Video Processing
-> > If you are running a Digital Audio Workstation (DAW) or a live video encoding rig, a tiny "hiccup" in CPU availability results in an audible pop or a dropped frame.
-> > 
-> > The Goal: Reserve cores specifically for the Digital Signal Processor (DSP) or the encoder.
-> > 
-> > The Benefit: Smooth, glitch-free media streams even when the rest of the
-> > system is busy.
-> 
-> Here I expect weaker isolation requirements with syscalls involved. Scheduler
-> domain isolation alone (aka isolcpus=[domain]) would fit.
-> 
-> > 
-> > 3. Network Function Virtualization (NFV) & DPDK
-> > For high-speed networking (like 10Gbps+ traffic), the Data Plane Development Kit (DPDK) uses "poll mode" drivers. These drivers constantly loop to check for new packets rather than waiting for interrupts.
-> > 
-> > The Goal: Isolate cores so they can run at 100% utilization just checking for network packets.
-> > 
-> > The Benefit: Maximum throughput and zero packet loss in high-traffic
-> > environments.
-> 
-> I put that in the 5g uRLLC usecase family as well (again or similar low latency networking).
-> 
-> > 4. Gaming & Simulation
-> > Competitive gamers or flight simulator enthusiasts sometimes isolate a few cores to handle the game's main thread, while leaving the rest of the OS (Discord, Chrome, etc.) to the remaining cores.
-> > 
-> > The Goal: Prevent background Windows/Linux tasks from stealing cycles from the game engine.
-> > 
-> > The Benefit: More consistent 1% low FPS and reduced input lag.
-> 
-> That's domain isolation because frequent syscalls are unavoidable.
-> 
-> > 
-> > 5. Deterministic Scientific Computing
-> > If you're running a simulation that needs to take exactly the same amount of time every time it runs (for benchmarking or safety-critical testing), you can't have the OS interference messing with your metrics.
-> > 
-> > The Goal: Remove the variability of the Linux scheduler.
-> > 
-> > The Benefit: Highly repeatable, deterministic results.
-> 
-> I guess here there are plenty of flavours. The only one I know of is this
-> power simulator that relies of nohz_full. Not sure about the implementation
-> relying on syscalls or not:
-> 
-> https://dpsim.fein-aachen.org/docs/getting-started/real-time/
-> 
-> > For example, AF_XDP bypass uses system calls (and wants isolcpus):
-> > 
-> > https://www.quantvps.com/blog/kernel-bypass-in-hft?srsltid=AfmBOoryeSxuuZjzTJIC9O-Ag8x4gSwjs-V4Xukm2wQpGmwDJ6t4szuE
-> 
-> That's HFT again and they state that they rely on polling userspace drivers so
-> I don't expect syscalls.
-> 
-> But anyway here is a summary I would propose:
-> 
-> * Domain isolation alone is a good fit when some glitches must be avoided but
->   kernel work is still necessary: non critical high volume networking or data
->   capture, video games, etc...
-> 
-> * Full isolation is a better fit for ultra low latency requirement, in this case
->   the kernel is only good for preparatory work and interface layout between
->   userspace and the hardware (VFIO).
-> 
->   I've observed 3 patterns so far:
-> 
->     - Low latency networking with DPDK, eg: 5g uRLLC (should be syscalls free)
->     - Scientific simulation (not sure about syscalls)
->     - HPC computation such as LLM (not sure about syscalls).
-> 
-> Is flushing work only relevant for full isolation? If so I can't say which is
-> the best solution between flushing pending work on syscall exit and doing that
-> remotely. But if it's relevant also for domain isolation, then the remote
-> work is better because it doesn't add unecessary work on syscalls which still
-> happen in this mode.
+> If you can avoid that by making performance bad for everybody else then
+> then it seems safer to sacrifice those workloads that are much more
+> special - i.e. cpu isolation.
+> -- 
+> Michal Hocko
+> SUSE Labs
 
-Yes, see my last email about HPC.
+Performance is not bad for everyone else:
 
-> At least doing things remotely should be free of any surprising side-effects.
-> But we must determine how to properly activate the isolated mode (switch to
-> spinlocks) depending on the isolation mode which can be not only defined
-> on boot but also on runtime (at least for domain isolation through cpusets
-> but it will be the case as well with nohz_full in the future).
-> 
-> Thanks.
+Without patchset:                                                                                                             
+================                                                                                                              
+                                                                                                                              
+[ 1188.050725] kmalloc_bench: Avg cycles per kmalloc: 159                                                                     
+                                                                                                                              
+With qpw patchset, CONFIG_QPW=n:                                                                                              
+================================                                                                                              
+                                                                                                                              
+[   50.292190] kmalloc_bench: Avg cycles per kmalloc: 163          
 
-If you boot with remote spinlocks (qpw=1) today, then you can't change
-that.
+And its probably possible to remove those 4 cycles.
 
-You could, because its a static key:
-
-#define qpw_lock(lock, cpu)                                                             \
-        do {                                                                            \
-                if (static_branch_maybe(CONFIG_QPW_DEFAULT, &qpw_sl))                   \
-                        spin_lock(per_cpu_ptr(lock.sl, cpu));                           \
-                else                                                                    \
-                        local_lock(lock.ll);                                            \
-        } while (0)
-
-But haven't thought about switching on runtime (and don't see why it
-would be necessary to switch on runtime). It is independent of 
-switching CPUs to/from being isolated (or nohz_full).
-
-OK will address the remaining comments and repost.
+Which makes reduction of performance of isolcpus not necessary.
 
