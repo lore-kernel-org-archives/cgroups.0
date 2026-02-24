@@ -1,119 +1,170 @@
-Received: from dggsgout12.his.huawei.com (dggsgout12.his.huawei.com [45.249.212.56])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-ej1-f50.google.com (mail-ej1-f50.google.com [209.85.218.50])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8E37633EB13;
-	Tue, 24 Feb 2026 08:09:34 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.56
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1771920578; cv=none; b=QDKF8Eo1ycySdSWIOculUi6V3DTZr9Iex18RFIN16K4x5bp+sWMrdm/ulC7H+pU+C3IsP4K/VgcxZoAhWN7X8Yb2IBx0nZxlogw7Ciq3HGegAQFrAq1egURxGxjzO3RYWfFyPwfDzLZCpNMQ/e5E+nGJLLgP4oXUzuQ3WX53gnU=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1771920578; c=relaxed/simple;
-	bh=/rff5WuuETbz3+BdREVdFqh43GqqchT9R+JQhxQA66Y=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=h+2kCq9Q9LaN2NcI4u8ZNCQGDX8ef73afQsWB0sNHR8oX1nE+o7So2/fFEp9PN5L/R94krqYmoUQ91Y6yT6bZHKvLcmFtiRpuMVvNjciqAZ+WdyndVJThV1lFDG73ds9bskXit7KARufBoltnEbx6mqDhYQ/0dY3yl16OR/s5/8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.56
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
-Received: from mail.maildlp.com (unknown [172.19.163.198])
-	by dggsgout12.his.huawei.com (SkyGuard) with ESMTPS id 4fKqdl5vFKzKHLyV;
-	Tue, 24 Feb 2026 15:50:35 +0800 (CST)
-Received: from mail02.huawei.com (unknown [10.116.40.128])
-	by mail.maildlp.com (Postfix) with ESMTP id AE58E40573;
-	Tue, 24 Feb 2026 15:51:29 +0800 (CST)
-Received: from [10.67.111.176] (unknown [10.67.111.176])
-	by APP4 (Coremail) with SMTP id gCh0CgC3Y_R_WJ1pWTFIIg--.8099S2;
-	Tue, 24 Feb 2026 15:51:29 +0800 (CST)
-Message-ID: <0d339d59-5208-4a41-8931-12aff1874edb@huaweicloud.com>
-Date: Tue, 24 Feb 2026 15:51:27 +0800
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1F32F36683E
+	for <cgroups@vger.kernel.org>; Tue, 24 Feb 2026 08:34:38 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.218.50
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1771922080; cv=pass; b=dDGOsR492wX+QJrUywmvH1PdzPHJAZvLtQFqevG4paYxK/O/Q7lLeJpokkb38AZ1CfahVnjIU5UjeYLDJDbfsJS1pWypD36tdy6TfQ7y821/dnynoJuhHhT4mrMO7+s00VTb1tisEKa7T5CXgJt8db08SQO/ZNGlSqnZx4N7JNs=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1771922080; c=relaxed/simple;
+	bh=znXHW9n/+MokWp37xWDCKYppH1hLZZhDTU4jhuelsIw=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=gkXAu6Kuvg7ldAcFSCbe4isrq7wKQXD1cRgv2VKQBHwfJh+2pzmUnLvCLA1J3/jyjAm+Detx+YKaiL3jcvnMJq5GsWT7iylbwy7mWmYw3BotSfBaZzhNgu0CTIUiATRZYUnYZjz2M05rRzjzZP4PpKdt2MvLXh2Gjyr+lWFahNc=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=b9BNenl5; arc=pass smtp.client-ip=209.85.218.50
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="b9BNenl5"
+Received: by mail-ej1-f50.google.com with SMTP id a640c23a62f3a-b90bc00578cso176757966b.0
+        for <cgroups@vger.kernel.org>; Tue, 24 Feb 2026 00:34:38 -0800 (PST)
+ARC-Seal: i=1; a=rsa-sha256; t=1771922077; cv=none;
+        d=google.com; s=arc-20240605;
+        b=LpU6B4hM4or/t4X9738U9ZiMEudaZnin29HZc5NACc6w9qfs5Nh5EUHoapVuxKJ574
+         YILegxZt9WRkAS03EZUR+eD1aMbcLIj6ermgCWUtbexbSgkgn0E328ka7C+hkL/4NTOi
+         J1mQQ7aisO1WAoEcmbWkMU5a4HSsZlFHXDh2Uyp0zPxiRwHvtUKhVQ1k4X8sOdffmnFe
+         ZfSY5xBjN0l9M0g5CIbG4ihJ+hJR+ghe4KbdJ2XygRnlV81QiavkmTiTCrlR5CbaA75P
+         s74bzcFLkW3I+boUD5D1iXiT8sZ3dWR+/ocgMqeacU/gOsdkx+ZI1HU3/2u5eAl3yZjL
+         iiQg==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20240605;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:dkim-signature;
+        bh=znXHW9n/+MokWp37xWDCKYppH1hLZZhDTU4jhuelsIw=;
+        fh=BcZJSph3yI7l3ukMpRhKikrDW1Z5iYXRvB+IcsHTzPU=;
+        b=SUU3A4DKlCl4GpwPR8u8nC5EXTyclIc6GHK+uSAvoQifp1+X9szPQcmRsornN4HPvD
+         e1c9TKK1RQXtsgf605+CB4AqjQLhGeshcIeu+b1soPptRaEezSAavEQmFcDcd73U9t+U
+         O3nw4iVKyBKyiFzyR6fj988aFy993DgsC6qyjO+jHcwWCGV34eNTfw9lREEFWiT/2klr
+         GikHdLKTdvk/yRMjFahXjuuTkpx3NALL+qq+DkLVgSl8hiePX2G2rwywS5aRqiSISenC
+         av5t6hTrGYJ+5i5pG/zGAHzPbgXFBOOUakckyDdLFOox2BtrzTVWZi3rYOTlbHDO1q1F
+         WP6A==;
+        darn=vger.kernel.org
+ARC-Authentication-Results: i=1; mx.google.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1771922077; x=1772526877; darn=vger.kernel.org;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=znXHW9n/+MokWp37xWDCKYppH1hLZZhDTU4jhuelsIw=;
+        b=b9BNenl51tWccleK87ahRDVLDNQOjS5VL+Hxnfs2wl8JqAeQ49g7DDHlN6vYqZddjJ
+         Ne8RfvrAf13RWQrfE49JoAuRefMcGsRxH3E0NW2KG/0YT2DFim03WhqbKzB9wPmfNjxS
+         10ynrNRF/BAc36HVSFTWKhrQ8hfVf4EnG8q6qdQ3zLW2GdMnAcXVWff2cZhFC6ZRsrPK
+         i/Rozx432Xt7o8b1voZ2wY4pZyjsJk1BfA1zgoXJXPhfNOULJdyHHt4+riqLJEhdO6PX
+         up5rjoj2guwVgmuTZ1/oEnR3+KfmEsD17cEpeaQmXEOAITIfTMPQhL0yQLVUNit4MlYw
+         7TPg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1771922077; x=1772526877;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-gg:x-gm-message-state:from
+         :to:cc:subject:date:message-id:reply-to;
+        bh=znXHW9n/+MokWp37xWDCKYppH1hLZZhDTU4jhuelsIw=;
+        b=YiGjwnCFiWrE7bPgipaiXJUJvudFXh/dFca1uqZWds/ZEA6XVCFaVI0QLH5k8Wzqed
+         HA2KPeopgT/huw8Ua5hwXV0mWQa71KmCVvl5MOg1vPAPPV/KHXTNrsUcW5LlkTiktjyJ
+         DxhAeojAvWGH6/grjvBS78VbAXwPDtw3zUBUrz/zwUMfgyMceYgU6m/WNXiddSYwiNEL
+         5Ume96wmZNZWnrrNWAk6w8wTP1KtbfbAYw13qP1NRz3M7Lmtj6AX7CFgNBiuXY9PVeM1
+         7YSN+bk7srmIKbde/LikoZuzJ1vVeLp1sI2ZO9ErzOUq8Avt8PykPALTcrI2sRu7t2Wt
+         /Atw==
+X-Forwarded-Encrypted: i=1; AJvYcCUzRDvOAu7NQyX00n7AI3u5Hsseu+lYtsWp6JaXNqRSBgHAEDttG+5c979rr6nXCg+4E6pz2iRD@vger.kernel.org
+X-Gm-Message-State: AOJu0YwvtxcGwK8qYK/bwf7QUSstL9DBBXCT8aCQkgNCtBwaicsUjrcW
+	/QFn//Tsjri8ZwfdSXAWZ1layCQPfBDX4jRskJNkUFmZSZJZgddE6yZop8/x0zB677IKbGpnRVO
+	+gbiVG8iE3TNn8aFykMvUzA70+YfLZ2Y=
+X-Gm-Gg: AZuq6aJTmYeKT1VqeKMCKLsubP7vxm/O4pv8yPiK5Hja42g4warb/rOGypavh21QsyS
+	d5hrN08FLNoiL+ajBLg9SeLMazfAZjQ/9VK1yoSNYenoRrjfHJdgeJsmvzOyoUiift0hJmoF5K4
+	LbzQP1brsSkf53uoTVWdfzZ0fSejz1fjXzlBr5H7au79NXaz2WeDbPViojuhoWhyErzZqexvXfl
+	4NzHBoOXG2zNhmOVRob62kjEqtpakG4Ys5EvWcoSc8H0cjBM4H0Omw9fqFbzcumXdnXqh/RqOkh
+	vb0fhsCVrtg0t7cjyHz95sOd48C2xwA1T3TpYNXHAppQIdZmn1k=
+X-Received: by 2002:a17:907:5cd:b0:b86:f999:15ba with SMTP id
+ a640c23a62f3a-b90819bf271mr738575366b.18.1771922077181; Tue, 24 Feb 2026
+ 00:34:37 -0800 (PST)
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v6 0/8] cgroup/cpuset: Fix partition related locking
- issues
-To: Waiman Long <llong@redhat.com>, Tejun Heo <tj@kernel.org>
-Cc: Johannes Weiner <hannes@cmpxchg.org>, Michal Koutny <mkoutny@suse.com>,
- Ingo Molnar <mingo@redhat.com>, Peter Zijlstra <peterz@infradead.org>,
- Juri Lelli <juri.lelli@redhat.com>,
- Vincent Guittot <vincent.guittot@linaro.org>,
- Steven Rostedt <rostedt@goodmis.org>, Ben Segall <bsegall@google.com>,
- Mel Gorman <mgorman@suse.de>, Valentin Schneider <vschneid@redhat.com>,
- Frederic Weisbecker <frederic@kernel.org>,
- Thomas Gleixner <tglx@linutronix.de>, Shuah Khan <shuah@kernel.org>,
- cgroups@vger.kernel.org, linux-kernel@vger.kernel.org,
- linux-kselftest@vger.kernel.org
-References: <20260221185418.29319-1-longman@redhat.com>
- <9cc7401e7137e27cd2f02625aab23330@kernel.org>
- <3a3548ae-c5e1-4ef0-86dd-f66bcd2c6d78@redhat.com>
-Content-Language: en-US
-From: Chen Ridong <chenridong@huaweicloud.com>
-In-Reply-To: <3a3548ae-c5e1-4ef0-86dd-f66bcd2c6d78@redhat.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:gCh0CgC3Y_R_WJ1pWTFIIg--.8099S2
-X-Coremail-Antispam: 1UD129KBjvJXoW7Aw4UuFW5ArWfKrW7Ar1fZwb_yoW8XF4DpF
-	WqgFy5tw4YkrsYk3Wqy342gr18t3ykCF1Dtr1qg3s5JFW3tF1rur4j9rn8Cr1kWFs3CryU
-	Zrya9ay3WFnFywUanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDU0xBIdaVrnRJUUUv0b4IE77IF4wAFF20E14v26ryj6rWUM7CY07I20VC2zVCF04k2
-	6cxKx2IYs7xG6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rwA2F7IY1VAKz4
-	vEj48ve4kI8wA2z4x0Y4vE2Ix0cI8IcVAFwI0_Ar0_tr1l84ACjcxK6xIIjxv20xvEc7Cj
-	xVAFwI0_Gr1j6F4UJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x
-	0267AKxVW0oVCq3wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG
-	6I80ewAv7VC0I7IYx2IY67AKxVWUJVWUGwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFV
-	Cjc4AY6r1j6r4UM4x0Y48IcVAKI48JM4IIrI8v6xkF7I0E8cxan2IY04v7MxkF7I0En4kS
-	14v26r4a6rW5MxAIw28IcxkI7VAKI48JMxC20s026xCaFVCjc4AY6r1j6r4UMI8I3I0E5I
-	8CrVAFwI0_Jr0_Jr4lx2IqxVCjr7xvwVAFwI0_JrI_JrWlx4CE17CEb7AF67AKxVW8ZVWr
-	XwCIc40Y0x0EwIxGrwCI42IY6xIIjxv20xvE14v26r1j6r1xMIIF0xvE2Ix0cI8IcVCY1x
-	0267AKxVW8JVWxJwCI42IY6xAIw20EY4v20xvaj40_Jr0_JF4lIxAIcVC2z280aVAFwI0_
-	Jr0_Gr1lIxAIcVC2z280aVCY1x0267AKxVW8JVW8JrUvcSsGvfC2KfnxnUUI43ZEXa7IU0
-	s2-5UUUUU==
-X-CM-SenderInfo: hfkh02xlgr0w46kxt4xhlfz01xgou0bp/
+References: <20260220-swap-table-p4-v1-0-104795d19815@tencent.com>
+ <20260220-swap-table-p4-v1-8-104795d19815@tencent.com> <aZyCJ6pH4hey-ZoU@cmpxchg.org>
+In-Reply-To: <aZyCJ6pH4hey-ZoU@cmpxchg.org>
+From: Kairui Song <ryncsn@gmail.com>
+Date: Tue, 24 Feb 2026 16:34:00 +0800
+X-Gm-Features: AaiRm53rAvIIoLImS2kI3nJgno-CbLxDv74dTHqbZXtKN15KdUZ64c26Zb5nj1k
+Message-ID: <CAMgjq7Aq5ckraKtNtet8+1ANuqnitFsXxefbDJQZpBxNmaW7Cg@mail.gmail.com>
+Subject: Re: [PATCH RFC 08/15] mm, swap: store and check memcg info in the
+ swap table
+To: Johannes Weiner <hannes@cmpxchg.org>
+Cc: Kairui Song via B4 Relay <devnull+kasong.tencent.com@kernel.org>, linux-mm@kvack.org, 
+	Andrew Morton <akpm@linux-foundation.org>, David Hildenbrand <david@kernel.org>, 
+	Lorenzo Stoakes <lorenzo.stoakes@oracle.com>, Zi Yan <ziy@nvidia.com>, 
+	Baolin Wang <baolin.wang@linux.alibaba.com>, Barry Song <baohua@kernel.org>, 
+	Hugh Dickins <hughd@google.com>, Chris Li <chrisl@kernel.org>, 
+	Kemeng Shi <shikemeng@huaweicloud.com>, Nhat Pham <nphamcs@gmail.com>, 
+	Baoquan He <bhe@redhat.com>, Yosry Ahmed <yosry.ahmed@linux.dev>, 
+	Youngjun Park <youngjun.park@lge.com>, Chengming Zhou <chengming.zhou@linux.dev>, 
+	Roman Gushchin <roman.gushchin@linux.dev>, Shakeel Butt <shakeel.butt@linux.dev>, 
+	Muchun Song <muchun.song@linux.dev>, Qi Zheng <zhengqi.arch@bytedance.com>, 
+	linux-kernel@vger.kernel.org, cgroups@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
+On Tue, Feb 24, 2026 at 12:46=E2=80=AFAM Johannes Weiner <hannes@cmpxchg.or=
+g> wrote:
+>
+> On Fri, Feb 20, 2026 at 07:42:09AM +0800, Kairui Song via B4 Relay wrote:
+> > From: Kairui Song <kasong@tencent.com>
+> >
+> > To prepare for merging the swap_cgroup_ctrl into the swap table, store
+> > the memcg info in the swap table on swapout.
+> >
+> > This is done by using the existing shadow format.
+> >
+> > Note this also changes the refault counting at the nearest online memcg
+> > level:
+> >
+> > Unlike file folios, anon folios are mostly exclusive to one mem cgroup,
+> > and each cgroup is likely to have different characteristics.
+>
+> This is not correct.
+>
+> As much as I like the idea of storing the swap_cgroup association
+> inside the shadow entry, the refault evaluation needs to happen at the
+> level that drove eviction.
+>
+> Consider a workload that is split into cgroups purely for accounting,
+> not for setting different limits:
+>
+> workload (limit domain)
+> `- component A
+> `- component B
+>
+> This means the two components must compete freely, and it must behave
+> as if there is only one LRU. When pages get reclaimed in a round-robin
+> fashion, both A and B get aged at the same pace. Likewise, when pages
+> in A refault, they must challenge the *combined* workingset of both A
+> and B, not just the local pages.
+>
+> Otherwise, you risk retaining stale workingset in one subgroup while
+> the other one is thrashing. This breaks userspace expectations.
+>
 
+Hi Johannes, thanks for pointing this out.
 
-On 2026/2/24 5:11, Waiman Long wrote:
-> 
-> On 2/23/26 3:57 PM, Tejun Heo wrote:
->> Hello,
->>
->>> Waiman Long (8):
->>>    cgroup/cpuset: Fix incorrect change to effective_xcpus in
->>> partition_xcpus_del()
->>>    cgroup/cpuset: Fix incorrect use of cpuset_update_tasks_cpumask() in
->>> update_cpumasks_hier()
->>>    cgroup/cpuset: Clarify exclusion rules for cpuset internal variables
->>>    cgroup/cpuset: Set isolated_cpus_updating only if isolated_cpus is changed
->>>    kselftest/cgroup: Simplify test_cpuset_prs.sh by removing "S+" command
->>>    cgroup/cpuset: Move housekeeping_update()/rebuild_sched_domains() together
->>>    cgroup/cpuset: Defer housekeeping_update() calls from CPU hotplug to
->>> workqueue
->>>    cgroup/cpuset: Call housekeeping_update() without holding cpus_read_lock
->> Applied 1-8 to cgroup/for-7.0-fixes with the following minor fixups:
->>
->> - 5/8: Removed a duplicate test entry that resulted from the "S+"
->>    removal (two previously-different lines becoming identical).
->>
->> - 8/8: Fixed typos in commit message ("essentally" -> "essentially",
->>    "beforce" -> "before") and code comment ("top_cpuset_mutex" ->
->>    "cpuset_top_mutex").
->>
->> This has gone through more than enough iterations. We can resolve further
->> issues if there's any incrementally.
-> 
-> Thanks for fixing the errors.
-> 
-> Cheers,
-> Longman
-> 
+I'm just not sure how much of a real problem this is. The refault
+challenge change was made in commit b910718a948a which was before anon
+shadow was introduced. And shadows could get reclaimed, especially
+when under pressure (and we could be doing that again by reclaiming
+full_clusters with swap tables). And MGLRU simply ignores the
+target_memcg here yet it performs surprisingly well with multiple
+memcg setups. And I did find a comment in workingset.c saying the
+kernel used to activate all pages, which is also fine. And that commit
+also mentioned the active list shrinking, but anon active list gets
+shrinked just fine without refault feedback in shrink_lruvec under
+can_age_anon_pages.
 
-This series looks good to me, it's much clearer now.
+So in this RFC I just be a bit aggressive and changed it. I can do
+some tests with different memory size setup.
 
-Thanks.
-
--- 
-Best regards,
-Ridong
-
+If we are not OK with it, then just use a ci->memcg_table then we are
+fine, everything is still dynamic but single slot usage could be a bit
+higher, 8 bytes to 10 bytes: and maybe find a way later to make
+ci->memcg_table NULL and shrink back to 8 bytes with, e.g. MGLRU and
+balance the memcg with things like aging feed back maybe (the later
+part is just idea but seems doable?).
