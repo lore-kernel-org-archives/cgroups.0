@@ -1,222 +1,135 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-qk1-f169.google.com (mail-qk1-f169.google.com [209.85.222.169])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 470283A7F7A
-	for <cgroups@vger.kernel.org>; Tue, 24 Feb 2026 18:26:34 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7F31723D7E3
+	for <cgroups@vger.kernel.org>; Tue, 24 Feb 2026 18:49:25 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.222.169
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1771957597; cv=none; b=ES0SDQ3y3FxRfUWUidGIHWLuiE419WIzWFjM/xPNr1NyZmPE0H/DomJVg7ztiUFIcoQh0xpEtDzFEEf2L2iKc1eZ7BrObP0/CaIMmrJ+FA1/8syK1b2Jcs4tdU1xxHW0fhJZMJjjakSZMS7HLE3GWSYNESkIzpO8oGGrGpUPJkc=
+	t=1771958966; cv=none; b=TcPqU4+a5bBhSmMXS8AD4vbxT3dME77Xao6UfO1qHdqCORlz5T8eTL6D1hjWzCZfKIi1FgeKYj3itS2Q7mCgpKYt1v5ungVS7geQBhF8Be3AeCuFXN8fxTQmSqj1eZRSNCkH9sfJ2bK6hyC7/ygr8c7DWAmmv4fzpmZNByBHKqY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1771957597; c=relaxed/simple;
-	bh=FvnmLGPLHXyhrj1/5cDyraosP4vIqR+3YxSc01p6IV8=;
+	s=arc-20240116; t=1771958966; c=relaxed/simple;
+	bh=k+k/ky5K4U9YDjJn6omM+gNVT1kvEpYyJXBxCe7iuvY=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=BhbuxqWT6YS9WCo6a8V6Hw2mY3cecjTUGuK7EE+n+TVZpaQ7wYaahRDs1k5JKiQXSBXcnDw+SyewT3AIcNPBnEYOPsh80lSbBo0dSShT9DCu/aKV7K4pVZcI/z35Cfj5tgVWUoRG1HS3g1xJo7TJdPCKf2upwkKjOI4MnxwmXas=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=bF3F2z5K; arc=none smtp.client-ip=170.10.133.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	 Content-Type:Content-Disposition:In-Reply-To; b=OPSzMx9rPRP9JNeWkmVWYbIRF6oPs2XYYafuFQZ70olBkTbnMxILVG7h25WffwWcCEglMNKroufhBh2fGqADHizWRpNuhCEzciir/h7FSnEd8JUu9bCkhWerhkWKFl8UUSiILxMbg/mOmBGsm79mUp24X5LBLi93JWjBoTypMLc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=gourry.net; spf=pass smtp.mailfrom=gourry.net; dkim=pass (2048-bit key) header.d=gourry.net header.i=@gourry.net header.b=icVbHHVB; arc=none smtp.client-ip=209.85.222.169
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=gourry.net
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gourry.net
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="bF3F2z5K"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1771957593;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=GML4cQKyFDkRjMCJYN18Tp92PgzLzTZvQzyFw96BP3s=;
-	b=bF3F2z5KPKvrW+rZuaf/dwt8q4GKDZOOoRHjnOacrHc/n7ly0Ixgx1w8RgMGebx8n982i1
-	GQNepjq9iCQABVlEqf2n5vBogWNvOEt7D0Le8LL0ZHDnRotqCGBAAVRNaVJVLoqkyHdEd0
-	VRYuZaXHci70go+ZWWGteJjjhXuh6vw=
-Received: from mx-prod-mc-05.mail-002.prod.us-west-2.aws.redhat.com
- (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
- relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-140-4_cKb8SaPYe60uVj9YEhjw-1; Tue,
- 24 Feb 2026 13:26:27 -0500
-X-MC-Unique: 4_cKb8SaPYe60uVj9YEhjw-1
-X-Mimecast-MFC-AGG-ID: 4_cKb8SaPYe60uVj9YEhjw_1771957582
-Received: from mx-prod-int-01.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-01.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.4])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mx-prod-mc-05.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 09ED319560BA;
-	Tue, 24 Feb 2026 18:26:22 +0000 (UTC)
-Received: from tpad.localdomain (unknown [10.96.133.3])
-	by mx-prod-int-01.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 0FCBC3003D88;
-	Tue, 24 Feb 2026 18:26:19 +0000 (UTC)
-Received: by tpad.localdomain (Postfix, from userid 1000)
-	id 976304028250B; Tue, 24 Feb 2026 14:23:25 -0300 (-03)
-Date: Tue, 24 Feb 2026 14:23:25 -0300
-From: Marcelo Tosatti <mtosatti@redhat.com>
-To: Frederic Weisbecker <frederic@kernel.org>
-Cc: Michal Hocko <mhocko@suse.com>, Leonardo Bras <leobras.c@gmail.com>,
-	linux-kernel@vger.kernel.org, cgroups@vger.kernel.org,
-	linux-mm@kvack.org, Johannes Weiner <hannes@cmpxchg.org>,
+	dkim=pass (2048-bit key) header.d=gourry.net header.i=@gourry.net header.b="icVbHHVB"
+Received: by mail-qk1-f169.google.com with SMTP id af79cd13be357-8cb5c9ba82bso936890385a.2
+        for <cgroups@vger.kernel.org>; Tue, 24 Feb 2026 10:49:25 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gourry.net; s=google; t=1771958964; x=1772563764; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=jVC2sVLMOxnBh5X5m0M42esgcaqLVi1+yt0xbhnz3dk=;
+        b=icVbHHVBEEJhfl/ty9MkmsXGatTK5dKtkU3CSyFAlyN7zwofX0D1+9E4XkbPiYNTaQ
+         ABo9gLMM1jZHBosM+kZsNsqIF3pw+rGMmgIrr6uWAHUSbr5vU3HZoBAkiazVWW8YOJMk
+         2rPCl5Qt6dsSS0BP6+/Rnt04+2MZweqXaS8HBX1o3aL18J9Dr8IjnwT3d2SUMXmQ4c7Y
+         1QrbRPy6EzyiKcelVwAP5JYc20lagSMPQQQA01Vxnql9X9ZN/dVCPVzO667NtWiilgcP
+         afu0Sn1Z05Z4Re3X/sitNrXClncyBASH2584Ij5NJQev4Vu8/BM/tlZtK+JTYjC2nXlF
+         q8Zg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1771958964; x=1772563764;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-gg:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=jVC2sVLMOxnBh5X5m0M42esgcaqLVi1+yt0xbhnz3dk=;
+        b=u08YPwS7AjEAE7WWtYGJc31v1+0+ElKRqqYRw4mfwd1XeJIUoAUo7SpeW9QASJXL5l
+         9wy1/WtyUb6cFiUlPMN2t3jtHZU3zEz0cUkMh3Z1/Xp+FzzTjP0N0Ls80TRXnmMEYo26
+         j1nW6A5IxnF30/JSOGRce+mBxqf5x6P/gl+MlJ7Nj1t9GeAPnC3vCwdxX5HPrzJJx2ht
+         WXkKwoFy/AB33WtpIGBsFZdAAG5wpQaCYUMzvK8wFcyjw4LHjNco/3iVtkqIWzESqF9Q
+         C/OQBzAB4oQp1InROhqEKusiUb61VII3UmpvUBsYkKpYw8lszNKWj40SuDBo6i54Nql0
+         zcRg==
+X-Forwarded-Encrypted: i=1; AJvYcCULYjDXC2c1djiFeMBRlr64n2bA7RF/8y2gpup2RGLQC+6QIh+KSa+1aRaU5JNEcYDLJlMWqdbO@vger.kernel.org
+X-Gm-Message-State: AOJu0YyHUOQZRLEGB3JLos4JoF+YfG/N0k3cuhTkPM72O//lUl4ALk3f
+	ETz/BUGrIL1bIqk6AxFygfY98srPI7nEDhzjsTfubyAoTx9Xo3h0j5sc9yrKOclsnnA=
+X-Gm-Gg: AZuq6aK1g7VYlWLLEpnwqAGAFwXzqqMVgpeNmbhd/rXSUZVYXBOMzBHCPkj/BVY8g9L
+	YqPfrf7h/YoD1wpTu06c1BpyJi8YGY+jk+ym9+68RtNAQiTFbHZG6ei9aZzHiooFiH4sRmWKriw
+	1gMQi0yIu2cxlXcLnnCOY0M/lvy7pjNhWrbV6ZAoETgtsEAFlmp0q6XFfr6ENGDyO71d8p7/xQR
+	MY2bR/vKX7mVSVnJqlGckCJ8kq1wzSVaCoCZHSefsrm03t+lYF8zZ1INfi03AKMD5DP2anjbH9s
+	Em02dG53KTHcG2EW4sImvN1AtD6/BKXGBWZ8W8364t13AvPPQ6oQnh2EgqWj541ey20mJKtmCm1
+	Ui3GrlrnkTOfxEd7mKMsBLVyyuw1QvFhjTsYfrrui47BcMfERlFzAe5TxcbJMFYjlvEK6RWHxxd
+	P77uC9zBFvr3FYk0lOZHSx75+st/vraWkHv4gbxZMHYk03cT5hjxUVOAousMA/Fpc18FAPRxpHz
+	VUVoWEw5A==
+X-Received: by 2002:a05:620a:280c:b0:8cb:5442:d537 with SMTP id af79cd13be357-8cb8c9e005dmr1650957585a.12.1771958964121;
+        Tue, 24 Feb 2026 10:49:24 -0800 (PST)
+Received: from gourry-fedora-PF4VCD3F (pool-96-255-20-138.washdc.ftas.verizon.net. [96.255.20.138])
+        by smtp.gmail.com with ESMTPSA id af79cd13be357-8cb8d122906sm1023135085a.51.2026.02.24.10.49.23
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 24 Feb 2026 10:49:23 -0800 (PST)
+Date: Tue, 24 Feb 2026 13:49:21 -0500
+From: Gregory Price <gourry@gourry.net>
+To: Joshua Hahn <joshua.hahnjy@gmail.com>
+Cc: Michal Hocko <mhocko@suse.com>, Johannes Weiner <hannes@cmpxchg.org>,
+	Kaiyang Zhao <kaiyang2@cs.cmu.edu>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	David Hildenbrand <david@kernel.org>,
+	Lorenzo Stoakes <lorenzo.stoakes@oracle.com>,
+	"Liam R . Howlett" <Liam.Howlett@oracle.com>,
+	Vlastimil Babka <vbabka@kernel.org>,
+	Mike Rapoport <rppt@kernel.org>,
+	Suren Baghdasaryan <surenb@google.com>,
 	Roman Gushchin <roman.gushchin@linux.dev>,
 	Shakeel Butt <shakeel.butt@linux.dev>,
 	Muchun Song <muchun.song@linux.dev>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Christoph Lameter <cl@linux.com>, Pekka Enberg <penberg@kernel.org>,
-	David Rientjes <rientjes@google.com>,
-	Joonsoo Kim <iamjoonsoo.kim@lge.com>,
-	Vlastimil Babka <vbabka@suse.cz>,
-	Hyeonggon Yoo <42.hyeyoo@gmail.com>,
-	Leonardo Bras <leobras@redhat.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Waiman Long <longman@redhat.com>, Boqun Feng <boqun.feng@gmail.com>,
-	Frederic Weisbecker <fweisbecker@suse.de>
-Subject: Re: [PATCH 0/4] Introduce QPW for per-cpu operations
-Message-ID: <aZ3ejedS7nE5mnva@tpad>
-References: <20260206143430.021026873@redhat.com>
- <aYs6Ju2G4bm6_tl2@tiehlicka>
- <aYxviLoWsrLqDU7o@tpad>
- <aYywl1hdBQP2_slo@tiehlicka>
- <aZDw6xI2izFDfuuu@WindFlash>
- <aZL45yORfkNvS9Rs@tiehlicka>
- <aZcr255pGT3B/eaL@tpad>
- <aZdk19MqYhWK90Do@tiehlicka>
- <aZzM_44L1vKzcOCy@pavilion.home>
+	Waiman Long <longman@redhat.com>,
+	Chen Ridong <chenridong@huaweicloud.com>, Tejun Heo <tj@kernel.org>,
+	Michal Koutny <mkoutny@suse.com>,
+	Axel Rasmussen <axelrasmussen@google.com>,
+	Yuanchu Xie <yuanchu@google.com>, Wei Xu <weixugc@google.com>,
+	Qi Zheng <zhengqi.arch@bytedance.com>, linux-mm@kvack.org,
+	cgroups@vger.kernel.org, linux-kernel@vger.kernel.org,
+	kernel-team@meta.com
+Subject: Re: [RFC PATCH 0/6] mm/memcontrol: Make memcg limits tier-aware
+Message-ID: <aZ3ysV-k1UisnPRG@gourry-fedora-PF4VCD3F>
+References: <aZ2LC0KPF0xsAwAL@tiehlicka>
+ <20260224161357.2622501-1-joshua.hahnjy@gmail.com>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <aZzM_44L1vKzcOCy@pavilion.home>
-X-Scanned-By: MIMEDefang 3.4.1 on 10.30.177.4
+In-Reply-To: <20260224161357.2622501-1-joshua.hahnjy@gmail.com>
 
-On Mon, Feb 23, 2026 at 10:56:15PM +0100, Frederic Weisbecker wrote:
-> Le Thu, Feb 19, 2026 at 08:30:31PM +0100, Michal Hocko a écrit :
-> > On Thu 19-02-26 12:27:23, Marcelo Tosatti wrote:
-> > > Michal,
-> > > 
-> > > Again, i don't see how moving operations to happen at return to 
-> > > kernel would help (assuming you are talking about 
-> > > "context_tracking,x86: Defer some IPIs until a user->kernel transition").
-> > 
-> > Nope, I am not talking about IPIs, although those are an example of pcp
-> > state as well. I am sorry I do not have a link handy, I am pretty sure
-> > Frederic will have that. Another example, though, was vmstat flushes
-> > that need to be pcp. There are many other examples.
+On Tue, Feb 24, 2026 at 08:13:56AM -0800, Joshua Hahn wrote:
+> ... snip ...
+
+Just injecting a few points here
+(disclosure: I have been in the development loop for this feature)
+
 > 
-> Here it is:
+> > Otherwise promotions would make sure to that we have the most active
+> > memory in the top tier.
 > 
-> https://lore.kernel.org/all/20250410152327.24504-1-frederic@kernel.org/
+
+Yes / No.  This makes the assumption that you always want this.
+
+Barring a minimum Quality of Service mechanism (as Joshua explains)
+this reduces the usefulness of a secondary tier of memory.
+
+Services will just prefer not to be deployed to these kinds of
+machines because the performance variance is too high.
+
 > 
-> Thanks.
+> > Is this typical in real life configurations?
+> 
+> I would say so. I think that the two examples above are realistic
+> scenarios that cloud providers and hyperscalers might face on tiered systems.
+> 
 
-Frederic,
+The answer is unequivocally yes.
 
-I think this is a valid solution, however on systems with many CPUs, in
-nohz_full, performing system calls, can't there be significant increase
-of lru_lock contention ? Consider 100+ CPUs performing many system calls
-which add 1 or 2 folios to per-CPU LRU lists.
+Lacking tier-awareness is actually a huge blocker for deploying mixed
+workloads on large, dense memory systems with multiple tiers (2+).
 
+Technically we're already at 4-ish tiers: DDR, CXL, ZSWAP, SWAP.
 
-Note: if you are confident about the above not being a problem, 
-this approach looks good to me.
+We have zswap/swap controls in cgroups already, we just lack that same
+control for coherent memory tiers.  This tries to use the existing nobs
+(max/high/low/min) to do what they already do - just proportionally.
 
-commit eb709b0d062efd653a61183af8e27b2711c3cf5c
-Author: Shaohua Li <shaohua.li@intel.com>
-Date:   Tue May 24 17:12:55 2011 -0700
-
-    mm: batch activate_page() to reduce lock contention
-    
-    The zone->lru_lock is heavily contented in workload where activate_page()
-    is frequently used.  We could do batch activate_page() to reduce the lock
-    contention.  The batched pages will be added into zone list when the pool
-    is full or page reclaim is trying to drain them.
-    
-    For example, in a 4 socket 64 CPU system, create a sparse file and 64
-    processes, processes shared map to the file.  Each process read access the
-    whole file and then exit.  The process exit will do unmap_vmas() and cause
-    a lot of activate_page() call.  In such workload, we saw about 58% total
-    time reduction with below patch.  Other workloads with a lot of
-    activate_page also benefits a lot too.
-
-...
-    The most significent are:
-      case-lru-file-readtwice     -11.69%
-      case-mmap-pread-rand        -15.26%
-      case-mmap-pread-seq         -69.72%
-
-Some Gemini answers (question was "list of nohz_full usecases"):
-
-2. Scientific Simulation & Research
-
-Research institutions (like CERN, NASA, or national labs) use nohz_full
-for "tightly coupled" parallel workloads.
-
-Workloads: Molecular dynamics, fluid dynamics (CFD), and weather forecasting (e.g., WRF models).
-
-The "Barrier" Problem: In massive clusters using MPI (Message Passing
-Interface), all CPUs often have to reach a synchronization barrier
-before the next step of a simulation. If one CPU is delayed by a few
-milliseconds due to a timer tick, all other thousands of CPUs sit idle
-waiting for it. nohz_full prevents this "tail latency" from stalling the
-entire supercomputer.
-
-...
-
-4. Competitive Benchmarking & Kernel Development
-Performance engineers use this mode to get "clean" numbers when testing
-new hardware or compilers.
-
-Workloads: Core-to-core latency tests, cache-bandwidth benchmarks, and
-standard suites like SPEC CPU.
-
-Goal: Eliminating the "noise" of the operating system so that the
-results reflect pure hardware performance.
-
-...
-
-Summary Table: Who uses nohz_full?
-User Group       Primary Workload       Why they use it
-Quant Firms      High-Frequency Trading To prevent micro-stutter during trade execution.
-Research Labs    MPI-based Simulations  To avoid the "slowest node" stalling the whole cluster.
-Telcos/ISP       5G/Packet Processing   To ensure wire-speed processing without interrupts.
-Hardware Vendors Chip Validation        To benchmark CPU performance without OS interference.
-
-
-Here is how scientific simulations handle system calls:
-
-1. The "Compute-Loop" (Low Syscall)
-
-The core of a simulation (like a GROMACS molecular dynamics step) is
-just raw math: fetching data from RAM, doing floating-point arithmetic
-(AVX/SSE), and writing it back.
-
-During the loop: The CPU stays in "Userspace" for millions of cycles
-without ever asking the kernel for help.
-
-Why it works: Since there are no system calls, nohz_full can
-successfully turn off the timer tick, allowing the CPU to focus 100% on
-the math.
-
-2. The "Communication-Phase" (High Syscall)
-
-System calls usually happen only at the end of a computation block, when
-the simulation needs to talk to other nodes.
-
-The Tools: MPI (Message Passing Interface) uses system calls like write,
-sendmsg, or specialized RDMA calls to move data across the network.
-
-The Pattern: These simulations follow a "Burst" pattern—long periods
-of zero system calls (computation) followed by a quick burst of system
-calls (synchronization).
-
-3. When are they "Syscall Intensive"?
-
-There are specific parts of a simulation that are intensive, but
-researchers try to minimize them:
-
-I/O Operations: Writing "checkpoints" or large trajectory files to disk
-(using write()). This is why high-end HPC systems use Asynchronous I/O
-or dedicated I/O nodes—to keep the compute cores from getting bogged
-down in system calls.
-
-Memory Allocation: Constantly calling malloc/free involves the brk or
-mmap system calls. Optimized simulation tools pre-allocate all the
-memory they need at startup to avoid this.
-
+~Gregory
