@@ -1,35 +1,35 @@
 Received: from us-smtp-delivery-44.mimecast.com (us-smtp-delivery-44.mimecast.com [207.211.30.44])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D6059246BCD
-	for <cgroups@vger.kernel.org>; Tue, 24 Feb 2026 02:10:52 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 180C124DCF9
+	for <cgroups@vger.kernel.org>; Tue, 24 Feb 2026 02:10:54 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=207.211.30.44
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1771899054; cv=none; b=iUErhfX6JU83FFNwahxCZsG5iSBzjXm9U1ORGEXbXs7kZKpT+fZ7HSbjr5Abs40PUw2QaoSbav+NbJKC3QjhB3GEQrf3ffovpWgpvip+HhK5E4pCxDsVPf6zuxMAgJJxjtqllPWZyl/QYCuF1nR1mWEdjCGX2MGPMGquq9uBp0o=
+	t=1771899055; cv=none; b=dp34JNuxP7SidJjntWRP67qaAmeyONgTcpWV8b2N+seB4rK8IpLW/B4nKrML2Qt/2YN6LbduhJg6s4wPyIikqGfMxwok8OJyrFQ2vj5zN3XTApv5IQHeWDQ2d5ozwNh9sTgkpOEWKHNXwJKj3Idcub4nUEhbd89xlyyaVWJesuM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1771899054; c=relaxed/simple;
-	bh=RTwohFh0UDgaIEQi07FMM3QAkD4M0JP97YJTd8SDxMw=;
+	s=arc-20240116; t=1771899055; c=relaxed/simple;
+	bh=8SPKN+VEJpp/IvQ6mM7afxx8SBvGqfwBf9dg8+RI9+0=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:content-type; b=pPYqm4pC9q02MDnWXsAMHqMeKmoswWYanbyNQ3A0NcJfBFA2Jsj9upqbWsT8ZPkKYWE5IZsTpwAfffpv1tsALtuG6wUHDqxycK1IpqyCkz9D5BnuB4V1vb+jgRcjDJejS2/rcwXKvNOH5mmoqmX7vHVjHxbpwLol3H8wF12E/xY=
+	 MIME-Version:content-type; b=HUsOT4+SjuRxfq/UmDE/EVu2+i4psiB+W7wyut1QP24fpBJ8dlovQEN2l6WPrIyIi9QP6GfQY0QHAeAmKVtxn/Grvp9A1Zh0jJyFupT4kPfvXypLPPUM8ZeMg+GEQbCki6mHSudyYgQzp6NLXO+OwYgON9fAkQ6e9dgdpLXj6vc=
 ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=gmail.com; spf=fail smtp.mailfrom=gmail.com; arc=none smtp.client-ip=207.211.30.44
 Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=gmail.com
 Received: from mx-prod-mc-03.mail-002.prod.us-west-2.aws.redhat.com
  (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
  relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-537-Sp8pyhrQP7iOSukqY0aa_w-1; Mon,
- 23 Feb 2026 21:09:38 -0500
-X-MC-Unique: Sp8pyhrQP7iOSukqY0aa_w-1
-X-Mimecast-MFC-AGG-ID: Sp8pyhrQP7iOSukqY0aa_w_1771898976
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-651-Gu23DrAwPaW1DJz4qCirLA-1; Mon,
+ 23 Feb 2026 21:10:50 -0500
+X-MC-Unique: Gu23DrAwPaW1DJz4qCirLA-1
+X-Mimecast-MFC-AGG-ID: Gu23DrAwPaW1DJz4qCirLA_1771899048
 Received: from mx-prod-int-01.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-01.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.4])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
-	by mx-prod-mc-03.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 3F4EA1956075;
-	Tue, 24 Feb 2026 02:09:36 +0000 (UTC)
+	by mx-prod-mc-03.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 580981956078;
+	Tue, 24 Feb 2026 02:10:48 +0000 (UTC)
 Received: from dreadlord.taild9177d.ts.net (unknown [10.67.32.38])
-	by mx-prod-int-01.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id CB87230001BB;
-	Tue, 24 Feb 2026 02:09:29 +0000 (UTC)
+	by mx-prod-int-01.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id 221763003D91;
+	Tue, 24 Feb 2026 02:10:41 +0000 (UTC)
 From: Dave Airlie <airlied@gmail.com>
 To: dri-devel@lists.freedesktop.org,
 	tj@kernel.org,
@@ -43,9 +43,9 @@ Cc: cgroups@vger.kernel.org,
 	Dave Chinner <david@fromorbit.com>,
 	Waiman Long <longman@redhat.com>,
 	simona@ffwll.ch
-Subject: [PATCH 04/16] ttm/pool: drop numa specific pools
-Date: Tue, 24 Feb 2026 12:06:21 +1000
-Message-ID: <20260224020854.791201-5-airlied@gmail.com>
+Subject: [PATCH 14/16] amdgpu: add support for memory cgroups
+Date: Tue, 24 Feb 2026 12:06:31 +1000
+Message-ID: <20260224020854.791201-15-airlied@gmail.com>
 In-Reply-To: <20260224020854.791201-1-airlied@gmail.com>
 References: <20260224020854.791201-1-airlied@gmail.com>
 Precedence: bulk
@@ -56,73 +56,137 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 X-Scanned-By: MIMEDefang 3.4.1 on 10.30.177.4
 X-Mimecast-Spam-Score: 0
-X-Mimecast-MFC-PROC-ID: UJlmBfoGfIu64cbnFft9ocqVS8vLq-NwFlmoCo_GTYs_1771898976
+X-Mimecast-MFC-PROC-ID: vE5-hHws3pKZENSHWIZ18jdwpy-Qg2houfDh6p-acpQ_1771899048
 X-Mimecast-Originator: gmail.com
 Content-Transfer-Encoding: quoted-printable
 content-type: text/plain; charset=WINDOWS-1252; x-default=true
 
 From: Dave Airlie <airlied@redhat.com>
 
-The list_lru will now handle numa for us, so no need to keep
-separate pool types for it. Just consolidate into the global ones.
+This adds support for adding a obj cgroup to a buffer object,
+and passing in the placement flags to make sure it's accounted
+properly.
 
-This adds a debugfs change to avoid dumping non-existant orders due
-to this change.
-
-Cc: Christian Koenig <christian.koenig@amd.com>
-Cc: Johannes Weiner <hannes@cmpxchg.org>
 Signed-off-by: Dave Airlie <airlied@redhat.com>
 ---
- drivers/gpu/drm/ttm/ttm_pool.c | 13 ++-----------
- 1 file changed, 2 insertions(+), 11 deletions(-)
+ drivers/gpu/drm/amd/amdgpu/amdgpu_gem.c    |  1 +
+ drivers/gpu/drm/amd/amdgpu/amdgpu_object.c | 13 +++++++++----
+ drivers/gpu/drm/amd/amdgpu/amdgpu_object.h |  1 +
+ drivers/gpu/drm/amd/amdgpu/amdgpu_ttm.c    |  3 +++
+ mm/memcontrol.c                            |  1 +
+ 5 files changed, 15 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/gpu/drm/ttm/ttm_pool.c b/drivers/gpu/drm/ttm/ttm_pool.=
-c
-index 2947ffc51351..3989e15ab5b0 100644
---- a/drivers/gpu/drm/ttm/ttm_pool.c
-+++ b/drivers/gpu/drm/ttm/ttm_pool.c
-@@ -406,17 +406,11 @@ static struct ttm_pool_type *ttm_pool_select_type(str=
-uct ttm_pool *pool,
- #ifdef CONFIG_X86
- =09switch (caching) {
- =09case ttm_write_combined:
--=09=09if (pool->nid !=3D NUMA_NO_NODE)
--=09=09=09return &pool->caching[caching].orders[order];
--
- =09=09if (ttm_pool_uses_dma32(pool))
- =09=09=09return &global_dma32_write_combined[order];
+diff --git a/drivers/gpu/drm/amd/amdgpu/amdgpu_gem.c b/drivers/gpu/drm/amd/=
+amdgpu/amdgpu_gem.c
+index a6107109a2b8..d067e8565400 100644
+--- a/drivers/gpu/drm/amd/amdgpu/amdgpu_gem.c
++++ b/drivers/gpu/drm/amd/amdgpu/amdgpu_gem.c
+@@ -184,6 +184,7 @@ int amdgpu_gem_object_create(struct amdgpu_device *adev=
+, unsigned long size,
+ =09bp.domain =3D initial_domain;
+ =09bp.bo_ptr_size =3D sizeof(struct amdgpu_bo);
+ =09bp.xcp_id_plus1 =3D xcp_id_plus1;
++=09bp.objcg =3D get_obj_cgroup_from_current();
 =20
- =09=09return &global_write_combined[order];
- =09case ttm_uncached:
--=09=09if (pool->nid !=3D NUMA_NO_NODE)
--=09=09=09return &pool->caching[caching].orders[order];
--
- =09=09if (ttm_pool_uses_dma32(pool))
- =09=09=09return &global_dma32_uncached[order];
-=20
-@@ -1291,7 +1285,7 @@ int ttm_pool_debugfs(struct ttm_pool *pool, struct se=
-q_file *m)
- {
- =09unsigned int i;
-=20
--=09if (!ttm_pool_uses_dma_alloc(pool) && pool->nid =3D=3D NUMA_NO_NODE) {
-+=09if (!ttm_pool_uses_dma_alloc(pool)) {
- =09=09seq_puts(m, "unused\n");
- =09=09return 0;
+ =09r =3D amdgpu_bo_create_user(adev, &bp, &ubo);
+ =09if (r)
+diff --git a/drivers/gpu/drm/amd/amdgpu/amdgpu_object.c b/drivers/gpu/drm/a=
+md/amdgpu/amdgpu_object.c
+index 1fb956400696..248e9c5554de 100644
+--- a/drivers/gpu/drm/amd/amdgpu/amdgpu_object.c
++++ b/drivers/gpu/drm/amd/amdgpu/amdgpu_object.c
+@@ -159,7 +159,7 @@ void amdgpu_bo_placement_from_domain(struct amdgpu_bo *=
+abo, u32 domain)
+ =09=09places[c].mem_type =3D
+ =09=09=09abo->flags & AMDGPU_GEM_CREATE_PREEMPTIBLE ?
+ =09=09=09AMDGPU_PL_PREEMPT : TTM_PL_TT;
+-=09=09places[c].flags =3D 0;
++=09=09places[c].flags =3D TTM_PL_FLAG_MEMCG;
+ =09=09/*
+ =09=09 * When GTT is just an alternative to VRAM make sure that we
+ =09=09 * only use it as fallback and still try to fill up VRAM first.
+@@ -174,7 +174,7 @@ void amdgpu_bo_placement_from_domain(struct amdgpu_bo *=
+abo, u32 domain)
+ =09=09places[c].fpfn =3D 0;
+ =09=09places[c].lpfn =3D 0;
+ =09=09places[c].mem_type =3D TTM_PL_SYSTEM;
+-=09=09places[c].flags =3D 0;
++=09=09places[c].flags =3D TTM_PL_FLAG_MEMCG;
+ =09=09c++;
  =09}
-@@ -1302,10 +1296,7 @@ int ttm_pool_debugfs(struct ttm_pool *pool, struct s=
-eq_file *m)
- =09for (i =3D 0; i < TTM_NUM_CACHING_TYPES; ++i) {
- =09=09if (!ttm_pool_select_type(pool, i, 0))
- =09=09=09continue;
--=09=09if (ttm_pool_uses_dma_alloc(pool))
--=09=09=09seq_puts(m, "DMA ");
--=09=09else
--=09=09=09seq_printf(m, "N%d ", pool->nid);
-+=09=09seq_puts(m, "DMA ");
- =09=09switch (i) {
- =09=09case ttm_cached:
- =09=09=09seq_puts(m, "\t:");
+=20
+@@ -654,16 +654,21 @@ int amdgpu_bo_create(struct amdgpu_device *adev,
+ =09=09size =3D ALIGN(size, PAGE_SIZE);
+ =09}
+=20
+-=09if (!amdgpu_bo_validate_size(adev, size, bp->domain))
++=09if (!amdgpu_bo_validate_size(adev, size, bp->domain)) {
++=09=09obj_cgroup_put(bp->objcg);
+ =09=09return -ENOMEM;
++=09}
+=20
+ =09BUG_ON(bp->bo_ptr_size < sizeof(struct amdgpu_bo));
+=20
+ =09*bo_ptr =3D NULL;
+ =09bo =3D kvzalloc(bp->bo_ptr_size, GFP_KERNEL);
+-=09if (bo =3D=3D NULL)
++=09if (bo =3D=3D NULL) {
++=09=09obj_cgroup_put(bp->objcg);
+ =09=09return -ENOMEM;
++=09}
+ =09drm_gem_private_object_init(adev_to_drm(adev), &bo->tbo.base, size);
++=09ttm_bo_set_cgroup(&bo->tbo, bp->objcg); /* hand the reference to the tt=
+m bo */
+ =09bo->tbo.base.funcs =3D &amdgpu_gem_object_funcs;
+ =09bo->vm_bo =3D NULL;
+ =09bo->preferred_domains =3D bp->preferred_domain ? bp->preferred_domain :
+diff --git a/drivers/gpu/drm/amd/amdgpu/amdgpu_object.h b/drivers/gpu/drm/a=
+md/amdgpu/amdgpu_object.h
+index 912c9afaf9e1..b03c34ce7809 100644
+--- a/drivers/gpu/drm/amd/amdgpu/amdgpu_object.h
++++ b/drivers/gpu/drm/amd/amdgpu/amdgpu_object.h
+@@ -55,6 +55,7 @@ struct amdgpu_bo_param {
+ =09enum ttm_bo_type=09=09type;
+ =09bool=09=09=09=09no_wait_gpu;
+ =09struct dma_resv=09=09=09*resv;
++=09struct obj_cgroup               *objcg;
+ =09void=09=09=09=09(*destroy)(struct ttm_buffer_object *bo);
+ =09/* xcp partition number plus 1, 0 means any partition */
+ =09int8_t=09=09=09=09xcp_id_plus1;
+diff --git a/drivers/gpu/drm/amd/amdgpu/amdgpu_ttm.c b/drivers/gpu/drm/amd/=
+amdgpu/amdgpu_ttm.c
+index e50c133e87df..5919db47f1a2 100644
+--- a/drivers/gpu/drm/amd/amdgpu/amdgpu_ttm.c
++++ b/drivers/gpu/drm/amd/amdgpu/amdgpu_ttm.c
+@@ -152,11 +152,14 @@ static void amdgpu_evict_flags(struct ttm_buffer_obje=
+ct *bo,
+ =09=09=09amdgpu_bo_placement_from_domain(abo, AMDGPU_GEM_DOMAIN_GTT |
+ =09=09=09=09=09=09=09AMDGPU_GEM_DOMAIN_CPU);
+ =09=09}
++=09=09for (int i =3D 0; i < abo->placement.num_placement; i++)
++=09=09=09abo->placements[i].flags &=3D ~TTM_PL_FLAG_MEMCG;
+ =09=09break;
+ =09case TTM_PL_TT:
+ =09case AMDGPU_PL_PREEMPT:
+ =09default:
+ =09=09amdgpu_bo_placement_from_domain(abo, AMDGPU_GEM_DOMAIN_CPU);
++=09=09abo->placements[0].flags &=3D ~TTM_PL_FLAG_MEMCG;
+ =09=09break;
+ =09}
+ =09*placement =3D abo->placement;
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index 90bb3e00c258..25390e542dc8 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -2779,6 +2779,7 @@ __always_inline struct obj_cgroup *current_obj_cgroup=
+(void)
+=20
+ =09return objcg;
+ }
++EXPORT_SYMBOL_GPL(current_obj_cgroup);
+=20
+ struct obj_cgroup *get_obj_cgroup_from_folio(struct folio *folio)
+ {
 --=20
 2.52.0
 
