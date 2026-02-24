@@ -1,34 +1,35 @@
 Received: from us-smtp-delivery-44.mimecast.com (us-smtp-delivery-44.mimecast.com [205.139.111.44])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 505115695
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BC8DC24A07C
 	for <cgroups@vger.kernel.org>; Tue, 24 Feb 2026 02:11:03 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.139.111.44
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1771899064; cv=none; b=pApDPMnsPzGmwjE83f6lZdqberH7JMGbsdOdvqSXTp/nWM/esNP8aIv9GGGZ2NvMyq2WnfjTuRuhdwz6/mcBzENSwkTnRF5JFeTywpjpKyitmBjebE9uG7HfsibrqCJb2XER4dj0x80XQ0sP1MArBOyn4devrK274cEhLfCWwdg=
+	t=1771899065; cv=none; b=ga52Izwl54VBJAVnSW7ZqTKdkcbdZVXQV4ymK9QyHsxp3IjxrCb9SDJMTLQnxGoSUxbK9ZrfjJc5+qrObIxr6GXYZ2ILvPGKV6h21tEiovAd1Bd5TxGOqxhNzzKrpAwaJjus5T235TCMlXOq0664QrxYa5I1GGzXKY50FAhqY6U=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1771899064; c=relaxed/simple;
-	bh=mLwkLCGK5m19WDAYI3PGrtOhTiRxU4T79yqCB33BSKw=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version:content-type; b=gnC0aRnbAqYz406pUO9vjPf70ExVDVqKVIHyhPS16gRTGYFp0U4Eyx48XZclt6B10YsNG+OMC3KOGEeOB3rJcFN7VDhxNDI/6biSukdtA5dCfaJQSS4TnDMVnvJb/hlexQaDd7qDkW3gI8uxmsMQnGnW32GBulKSwRYx9iIU9JI=
+	s=arc-20240116; t=1771899065; c=relaxed/simple;
+	bh=HqVplUTzy4SW3SIutBmYzVXjc6mQpYg8Dbfp1ru1H1k=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=iZ9aGDdJsSMmuB121wgLC5l2Fmbopjl0jrDJi0vJ6GN3zURY/4wHbO9MC/ls/0FMNnnoTQfPB2qEQiKi3fbAZUcN0QAoV1KV9k0jBWurDILSd9OW+Kpwh2vRZH5Z0qOnXFmw7wgzXVj0TToK6r0+lWXYqeuEMnwJXrhldAYSBpw=
 ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=gmail.com; spf=fail smtp.mailfrom=gmail.com; arc=none smtp.client-ip=205.139.111.44
 Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=gmail.com
 Received: from mx-prod-mc-08.mail-002.prod.us-west-2.aws.redhat.com
  (ec2-35-165-154-97.us-west-2.compute.amazonaws.com [35.165.154.97]) by
  relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-544-2jacT_uKPOG0QRweED8zwQ-1; Mon,
- 23 Feb 2026 21:09:08 -0500
-X-MC-Unique: 2jacT_uKPOG0QRweED8zwQ-1
-X-Mimecast-MFC-AGG-ID: 2jacT_uKPOG0QRweED8zwQ_1771898947
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-454-vWItk_WnNme-VSybPgePAQ-1; Mon,
+ 23 Feb 2026 21:10:57 -0500
+X-MC-Unique: vWItk_WnNme-VSybPgePAQ-1
+X-Mimecast-MFC-AGG-ID: vWItk_WnNme-VSybPgePAQ_1771899055
 Received: from mx-prod-int-01.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-01.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.4])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
-	by mx-prod-mc-08.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 752B51800465;
-	Tue, 24 Feb 2026 02:09:06 +0000 (UTC)
+	by mx-prod-mc-08.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id BB8FA18002CE;
+	Tue, 24 Feb 2026 02:10:55 +0000 (UTC)
 Received: from dreadlord.taild9177d.ts.net (unknown [10.67.32.38])
-	by mx-prod-int-01.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id 874D530001BB;
-	Tue, 24 Feb 2026 02:08:59 +0000 (UTC)
+	by mx-prod-int-01.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id 3B93030001BB;
+	Tue, 24 Feb 2026 02:10:48 +0000 (UTC)
 From: Dave Airlie <airlied@gmail.com>
 To: dri-devel@lists.freedesktop.org,
 	tj@kernel.org,
@@ -42,9 +43,11 @@ Cc: cgroups@vger.kernel.org,
 	Dave Chinner <david@fromorbit.com>,
 	Waiman Long <longman@redhat.com>,
 	simona@ffwll.ch
-Subject: drm/ttm/memcg/lru: enable memcg tracking for ttm and amdgpu driver (complete series v5)
-Date: Tue, 24 Feb 2026 12:06:17 +1000
-Message-ID: <20260224020854.791201-1-airlied@gmail.com>
+Subject: [PATCH 15/16] ttm: add support for a module option to disable memcg integration
+Date: Tue, 24 Feb 2026 12:06:32 +1000
+Message-ID: <20260224020854.791201-16-airlied@gmail.com>
+In-Reply-To: <20260224020854.791201-1-airlied@gmail.com>
+References: <20260224020854.791201-1-airlied@gmail.com>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
@@ -53,87 +56,120 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 X-Scanned-By: MIMEDefang 3.4.1 on 10.30.177.4
 X-Mimecast-Spam-Score: 0
-X-Mimecast-MFC-PROC-ID: NINPoWkJzyuygexsgCZAXv6tVzF95E0U28ErmuCW9dE_1771898947
+X-Mimecast-MFC-PROC-ID: _V3Ny20LqJrbAs6M2-hda0NhVbmgf4_a3Dj9KARuAVY_1771899055
 X-Mimecast-Originator: gmail.com
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: quoted-printable
-content-type: text/plain; charset=WINDOWS-1252; x-default=true
 
-Hi all,
+From: Dave Airlie <airlied@redhat.com>
 
-This time I really want to make forward progress on landing this. I'll like=
-ly merge the first
-half into drm-next soon, but I'd like to get it all landed.
+This adds a kconfig and a module option to turn off ttm memcg
+integration completely.
 
-The main changes since v4, is I did an AI review of the patchset and it fin=
-d a bug=20
-with the reclaim codepaths when no memcg was around, and a bug in the diff =
-calcs
-for accounted pages I introduced.
+When this is used, no object will ever end up using memcg aware
+paths.
 
-Christian, I think you said patch 4 got lost last time, hopefully you get i=
-t this time.
+There is an existing workload that cgroup support might regress,
+the systems are setup to allocate 1GB of uncached pages at system
+startup to prime the pool, then any further users will take them
+from the pool. The current cgroup code might handle that, but
+it also may regress, so add an option to ttm to avoid using
+memcg for the pool pages.
 
-Patches still needing ack/review:
-ttm/pool: drop numa specific pools
-ttm/pool: track allocated_pages per numa node.
-ttm: add objcg pointer to bo and tt (v2)
-ttm/pool: enable memcg tracking and shrinker. (v2)
-amdgpu: add support for memory cgroups
+Reviewed-by: Christian K=C3=B6nig <christian.koenig@amd.com>
+Signed-off-by: Dave Airlie <airlied@redhat.com>
+---
+ drivers/gpu/drm/Kconfig        |  7 +++++++
+ drivers/gpu/drm/ttm/ttm_pool.c | 24 +++++++++++++++++++++---
+ 2 files changed, 28 insertions(+), 3 deletions(-)
 
-Differences since v1 posting:
-1. added ttm_bo_set_cgroup wrapper - the cgroup reference is passed to the =
-ttm object.
-2. put the cgroup reference in ttm object release
-3. rebase onto 6.19-rc1
-4. added xe support patch from Maarten.
-
-Differences since v2 posting:
-1. Squashed exports into where they are used (Shakeel)
-2. Fixed bug in uncharge path memcg
-3. Fixed config bug in the module option.
-
-Differences since 1st posting:
-1. Added patch 18: add a module option to allow pooled pages to not be stor=
-ed in the lru per-memcg
-   (Requested by Christian Konig)
-2. Converged the naming and stats between vmstat and memcg (Suggested by Sh=
-akeel Butt)
-3. Cleaned up the charge/uncharge code and some other bits.
-
-Dave.
-
-Original cover letter:
-tl;dr: start using list_lru/numa/memcg in GPU driver core and amdgpu driver=
- for now.
-
-This is a complete series of patches, some of which have been sent before a=
-nd reviewed,
-but I want to get the complete picture for others, and try to figure out ho=
-w best to land this.
-
-There are 3 pieces to this:
-01->02: add support for global gpu stat counters (previously posted, patch =
-2 is newer)
-03->06: port ttm pools to list_lru for numa awareness
-07->13: add memcg stats + gpu apis, then port ttm pools to memcg aware list=
-_lru and shrinker
-14: enable amdgpu to use new functionality.
-15: add a module option to turn it all off.
-
-The biggest difference in the memcg code from previously is I discovered wh=
-at
-obj cgroups were designed for and I'm reusing the page/objcg intergration t=
-hat=20
-already exists, to avoid reinventing that wheel right now.
-
-There are some igt-gpu-tools tests I've written at:
-https://gitlab.freedesktop.org/airlied/igt-gpu-tools/-/tree/amdgpu-cgroups?=
-ref_type=3Dheads
-
-One problem is there are a lot of delayed action, that probably means the t=
-esting
-needs a bit more robustness, but the tests validate all the basic paths.
-
-Regards,
-Dave.
+diff --git a/drivers/gpu/drm/Kconfig b/drivers/gpu/drm/Kconfig
+index d3d52310c9cc..81227ff10fff 100644
+--- a/drivers/gpu/drm/Kconfig
++++ b/drivers/gpu/drm/Kconfig
+@@ -239,6 +239,13 @@ config DRM_TTM_HELPER
+ =09help
+ =09  Helpers for ttm-based gem objects
+=20
++config DRM_TTM_MEMCG
++=09bool "Enable TTM mem cgroup by default"
++=09depends on DRM_TTM
++=09depends on MEMCG
++=09help
++=09  Enable the memcg integration by default
++
+ config DRM_GEM_DMA_HELPER
+ =09tristate
+ =09depends on DRM
+diff --git a/drivers/gpu/drm/ttm/ttm_pool.c b/drivers/gpu/drm/ttm/ttm_pool.=
+c
+index 4b0c7d70b60f..d23255375219 100644
+--- a/drivers/gpu/drm/ttm/ttm_pool.c
++++ b/drivers/gpu/drm/ttm/ttm_pool.c
+@@ -119,6 +119,24 @@ static unsigned long page_pool_size;
+ MODULE_PARM_DESC(page_pool_size, "Number of pages in the WC/UC/DMA pool pe=
+r NUMA node");
+ module_param(page_pool_size, ulong, 0644);
+=20
++/*
++ * Don't use the memcg aware lru for pooled pages.
++ *
++ * There are use-cases where for example one application in a cgroup will =
+preallocate 1GB
++ * of uncached pages, and immediately release them into the pool, for othe=
+r consumers
++ * to use. This use-case could be handled with a proper cgroup hierarchy, =
+but to allow
++ * that use case to continue to operate as-is, add a module option.
++ *
++ * This still stores the pages in the list_lru, it just doesn't use the me=
+mcg when
++ * adding/removing them.
++ */
++#define DEFAULT_TTM_MEMCG IS_ENABLED(CONFIG_DRM_TTM_MEMCG)
++static bool ttm_memcg =3D DEFAULT_TTM_MEMCG;
++
++MODULE_PARM_DESC(ttm_memcg, "Allow using cgroups with TTM "
++=09=09 "[default=3D" __stringify(DEFAULT_TTM_MEMCG) "])");
++module_param(ttm_memcg, bool, 0444);
++
+ static unsigned long pool_node_limit[MAX_NUMNODES];
+ static atomic_long_t allocated_pages[MAX_NUMNODES];
+=20
+@@ -315,7 +333,7 @@ static void ttm_pool_type_give(struct ttm_pool_type *pt=
+, struct page *p)
+=20
+ =09INIT_LIST_HEAD(&p->lru);
+ =09rcu_read_lock();
+-=09list_lru_add(&pt->pages, &p->lru, nid, page_memcg_check(p));
++=09list_lru_add(&pt->pages, &p->lru, nid, ttm_memcg ? page_memcg_check(p) =
+: NULL);
+ =09rcu_read_unlock();
+=20
+ =09atomic_long_add(num_pages, &allocated_pages[nid]);
+@@ -364,7 +382,7 @@ static struct page *ttm_pool_type_take(struct ttm_pool_=
+type *pt, int nid,
+ =09struct page *page_out =3D NULL;
+ =09int ret;
+ =09struct mem_cgroup *orig_memcg =3D orig_objcg ? get_mem_cgroup_from_objc=
+g(orig_objcg) : NULL;
+-=09struct mem_cgroup *memcg =3D orig_memcg;
++=09struct mem_cgroup *memcg =3D ttm_memcg ? orig_memcg : NULL;
+=20
+ =09/*
+ =09 * Attempt to get a page from the current memcg, but if it hasn't got a=
+ny in it's level,
+@@ -835,7 +853,7 @@ static int __ttm_pool_alloc(struct ttm_pool *pool, stru=
+ct ttm_tt *tt,
+ =09bool allow_pools;
+ =09struct page *p;
+ =09int r;
+-=09struct obj_cgroup *objcg =3D memcg_account ? tt->objcg : NULL;
++=09struct obj_cgroup *objcg =3D (ttm_memcg && memcg_account) ? tt->objcg :=
+ NULL;
+=20
+ =09WARN_ON(!alloc->remaining_pages || ttm_tt_is_populated(tt));
+ =09WARN_ON(alloc->dma_addr && !pool->dev);
+--=20
+2.52.0
 
