@@ -1,65 +1,65 @@
-Received: from mail-wm1-f47.google.com (mail-wm1-f47.google.com [209.85.128.47])
+Received: from mail-qk1-f176.google.com (mail-qk1-f176.google.com [209.85.222.176])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 60ECD3783A0
-	for <cgroups@vger.kernel.org>; Tue, 24 Feb 2026 16:09:10 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.47
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0683D3A7F71
+	for <cgroups@vger.kernel.org>; Tue, 24 Feb 2026 16:40:59 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.222.176
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1771949352; cv=none; b=VYh9ZdVzGmUihfBF9QJsSpWD3hSSkvFlOOHmBncmVOGWcUIInCm/sL6BWL+hgS3NicZJMCS5kWPsdTuXyEDJJfBtY9bf3NLDAZ+qoGHOiGl0e6BF0vDYjhIrxy1XI5oetlZyiidJJNnH9fHPrYqr5tXeaPMiFoXMIXWa6Bi8+aw=
+	t=1771951261; cv=none; b=EFygI0BapamKOcRUBEZL5+4oEyhncV7gksIVKOS6sBlkpM4iikJpwYoGESL9vTw2/HGHTivaLiQT8/lHNJHUjdFWCCCQjPV16ytSlRa+AuPoTB/OyEMoRmF/F779ujBzdeaOqDR2XN+hWJmEPYZMXxcC/8GKYS8iC8vUeGy7H/U=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1771949352; c=relaxed/simple;
-	bh=gcOVIWxso//u5STCAsSUyqcj9HENSM+7z2h4r2LOA9E=;
+	s=arc-20240116; t=1771951261; c=relaxed/simple;
+	bh=6tN46Xm4mRCtsXcuU76Ja3fFPNwgbAGUHf2/1sYMEws=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=LqqrdJ2wqUsM8WnNiScPBcoTmpCEqBDy4jljoFC97PrXXxUf1qLmBUzMN8CT4Cg6NcxPFYY0YvvmNwMdKLvrAtAlPKL7pHEvAwAkWlUHD+mZa+rsby6rcYayIH5Wai3BD67WOevWXYBFyS97vaKvN8D+Ebhcfoq5l3lTDbQtgkc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=ursulin.net; spf=pass smtp.mailfrom=ursulin.net; dkim=pass (2048-bit key) header.d=ursulin.net header.i=@ursulin.net header.b=MGNRQgzY; arc=none smtp.client-ip=209.85.128.47
+	 In-Reply-To:Content-Type; b=gGAhougzJ9oqGcfjICBwyWYo6svdD4otaLq3Pe6W3c3qZKZkuk1JYoBPSg7I+9VymWvS7XEr8hZovMEIS9prQspx0N5T6Y3kjWwz85KXVxxFQMj/9uQ8tqzT9YL8bf4j6W1QZOROTXbEyXJ5Ryrp7uvguwfccztx2w9HZEvXCvk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=ursulin.net; spf=pass smtp.mailfrom=ursulin.net; dkim=pass (2048-bit key) header.d=ursulin.net header.i=@ursulin.net header.b=WP8BZDg/; arc=none smtp.client-ip=209.85.222.176
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=ursulin.net
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ursulin.net
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=ursulin.net header.i=@ursulin.net header.b="MGNRQgzY"
-Received: by mail-wm1-f47.google.com with SMTP id 5b1f17b1804b1-4836f4cbe0bso43401835e9.3
-        for <cgroups@vger.kernel.org>; Tue, 24 Feb 2026 08:09:10 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=ursulin.net header.i=@ursulin.net header.b="WP8BZDg/"
+Received: by mail-qk1-f176.google.com with SMTP id af79cd13be357-8cb3825b0fbso557855785a.0
+        for <cgroups@vger.kernel.org>; Tue, 24 Feb 2026 08:40:59 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=ursulin.net; s=google; t=1771949349; x=1772554149; darn=vger.kernel.org;
+        d=ursulin.net; s=google; t=1771951259; x=1772556059; darn=vger.kernel.org;
         h=content-transfer-encoding:in-reply-to:from:content-language
          :references:cc:to:subject:user-agent:mime-version:date:message-id
          :from:to:cc:subject:date:message-id:reply-to;
-        bh=xEMwUsFe80O7FQT2pky6cbdem5vVaUv5gBoDleT5nkE=;
-        b=MGNRQgzYtkzjDr8D+7g8YRa0PeV/wIQ7ERCL9kKDNlzQ0xCNDBXttHrWpx1FGNbTj+
-         WVLrUFexv9Ng4cOpb1/Oq4+6eWx0AG8Kc3PfsTuE9rPR8o7cnfal9LpehmwwQJL0W5UY
-         lHDt4DaKOsxKviZwSaXp7Y8cGL1jeXuRwG42mo1oQ+qlKCp0XEUKmzNw7EQ+gne7yaSK
-         X8iFuGrckHrxnSMh8YsX+23blVnZcDgWcwrpdVjCGUbWVQ9oTS3T6m2U0aC7OhYjiY62
-         N8t+Hp1rHg03iXLdlAdZ7zFjxfaegaym6GCh88beJDmDeYgFhSpdG+Ejb+JL3eOToXzt
-         zGTw==
+        bh=r+EJH7jh13bei8cB8TSdZaGztFOiCPjhWGdzC+WxWgY=;
+        b=WP8BZDg/sw9QDYQ1WCe5eygSXYv0iXmQVNqORyf8+PVlGpoVFywROx7RCbgPNUDjgb
+         KBW8Db/X1a6o4h0gbHjDMa6xJD701JmvkVJkk8wA1I4SykDxmhesoAvj5TQl1iOLC70A
+         GjLBcLrlAblQ0s+rhPaUM9dpL5IBQmugeY2R3Fb5cqaeK7UrKVNbbOjyvuVTjXqPmDZQ
+         1iLIzw/k/O3QeXPNL76b+nxq8KtP5J8aoWDjjqNW523nn1MseknBNf0GVR2HBeh39Qhr
+         djqz/qdrVYq8egLZMjhwTE5A7nKeckOHxmd5c1KmN7LoeQB7YfyAEyTAT4Pwg5A3ifSu
+         uLWQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1771949349; x=1772554149;
+        d=1e100.net; s=20230601; t=1771951259; x=1772556059;
         h=content-transfer-encoding:in-reply-to:from:content-language
          :references:cc:to:subject:user-agent:mime-version:date:message-id
          :x-gm-gg:x-gm-message-state:from:to:cc:subject:date:message-id
          :reply-to;
-        bh=xEMwUsFe80O7FQT2pky6cbdem5vVaUv5gBoDleT5nkE=;
-        b=unlWyUW6XjemKcgTYnBjy7l9yp90pwvbaEIUYUlalgo+osXc3ZgCd+THVNjFB3eLfJ
-         1fnZy5gB7dmnwuyR1+LrXR1UkOAlbXcVr/3DRaGhq9T96QxheXk0W6BfW3/GApMa4QS0
-         mkELOui0r93HJRIsgq345UipU0Ktjcp0GqL9gd5eRmyU2158kabqf2g+oCnqUlhty7fV
-         10XqGBYd7ZN1xjmSYMiim98ZCEI40RHFgAIH1mnaN8Ew6eXh89zf6TlVCW7nmG1GB1LF
-         BUGfJV6b6+fGoxXiuSKVLCPkE6SYgCHvCBnoRIfOiIKQMFnto9hWYG42HBCyZGH+WFJF
-         Q4Gg==
-X-Gm-Message-State: AOJu0Yx4fVu/zcoNWEcgyG9+ME+FBwQpxHRB7IlidBLoNnMG/ehao42E
-	3f344kwepPMgjEfrP/DrzMBHDrSpOY7YB2bkV14i7/NYzSnxKoqRd14FvHylIunLeQ0=
-X-Gm-Gg: AZuq6aLOYUxzY59OEtMCGr2u5kKHVs5yF0rOEodL+JRLrlOIsR+/oRW0khgIAaU38Uv
-	VV1qmAC9ORoxDB3qK7w1yqY57Eq9S2l/wiURqfMx0N14zNpPBb2MpGekRaQEpyQPQ3PKLHAGseU
-	tahM6aB1mkQtNX4I/AoaVPKTN3rREGQZxQLPgk0NF3P0NqPTfPEAi68kwzwtn6GsJtiAC/gqBQ3
-	uOi1cQdT5RBbeF6museuJmZgl/W5aRNGfEhDxnd+em0xITJIcFWzuvrRMkJXqKyvrDJM/92RD21
-	gtxH4TxK2VG84Tu+Cx0XM1Q6nUx2Xi46/JQULTXMaWU02BROgysekSYm3Yts+nuPWj7xW31/AZI
-	iGFJ0l0130YM3/cDxObyAlDzifkM2s0kezjNtiHsciOuSYFJTEPc9liue7KVs5zavs53/lyC44h
-	EgmeZKs5zRS9qJy7XWgkgWn44Qe4KNqtHQk2EUr+yKGFyB
-X-Received: by 2002:a05:600c:c4a5:b0:483:7783:5382 with SMTP id 5b1f17b1804b1-483a95e6b64mr191933505e9.27.1771949348294;
-        Tue, 24 Feb 2026 08:09:08 -0800 (PST)
+        bh=r+EJH7jh13bei8cB8TSdZaGztFOiCPjhWGdzC+WxWgY=;
+        b=IlTHjDmtOcbAyjoaaB6myneKOKNAMxk8yOM7Aw6r1NKsbLtxNaUCt6t5HN41+kzx0x
+         tNvGqte/e6ZKfrSAiSUn92pv2TIEQBENoKY/GPfOi6EiX33MQ5dJzhOIaa8VKRHgeneT
+         +reXj2EkBGoROAYAiryRluZoMay/gPlD+xphok1s4BPZwc9g4yeWxkgnLxfoOypjHcdh
+         V3p2arrZyR+vdC/p6pmZNb1X82nW2oVlwnffOV7ify5G4v0Dqv/fZMw+EyubBuAxou7/
+         zA8rW10kqA4IgGaBgoZIgR1RlSJbFLnCrwwMqA7eOstr5Kl3kt3lLU0rYr8QIdBco0UR
+         Hl0Q==
+X-Gm-Message-State: AOJu0YxQhJKunPd5bGOefYusqJWBIZoFFqFLF+Tcsbj+soAbjz8/NLcI
+	J47wbqPH1miharAnVyxyH7QHr53CqrAI4OZOdmTMapXdHFnm9RfTwFZ9dQTfm7nWd68=
+X-Gm-Gg: AZuq6aI1GSYqdbqEa0E4gMZt3vr0wgladE39WkTS/SATgRTUjrZg+r1gpwH+LnMAjVq
+	519/EEc758pJbtSL+Y1iLLZeVEsmNZZz7U8Bck3l9H7682XkqdEhtjZWDI1bBUU0i5GLsi6F1mS
+	pbfdkpoSd9TfgeLuEp+a6u4WXvzhwtLh1bFeriuUhIVHO+OHfPzvxf6qPTpSJYrIM8hi3uMa6GC
+	zAx+L6QTeJA6Askx0j3o6YRSHLSdMsKRn8+9LbkAPKZV4ubvq+hoTGxFdJWttAbWCu+DEon9CpJ
+	98CHC/tqN8pT/+ejaNBdMa7C94GIGk0d6omUteBxpq0NXiQLL7UkQP8ir9052nYEY6p3cfdXT5O
+	1OqDvutGPztUC13RzjgwT8HlhMB/fFNpg9I6MTpsXrVIqJw5TE9duC+QEwTjlLwr/f6UkrEP8So
+	c6EvURmN8rMqH9oerDl3wOpu0XJopuk/0h1sgP5Jkx468D
+X-Received: by 2002:a05:620a:1904:b0:8ca:110b:38cc with SMTP id af79cd13be357-8cb8ca0df13mr1574911285a.27.1771951258511;
+        Tue, 24 Feb 2026 08:40:58 -0800 (PST)
 Received: from [192.168.0.101] ([90.240.106.137])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-483bd75df90sm7650265e9.14.2026.02.24.08.09.07
+        by smtp.gmail.com with ESMTPSA id af79cd13be357-8cb8d120e11sm1019605585a.49.2026.02.24.08.40.56
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 24 Feb 2026 08:09:07 -0800 (PST)
-Message-ID: <3e820754-681c-4def-8e70-e1b88ed092e5@ursulin.net>
-Date: Tue, 24 Feb 2026 16:09:07 +0000
+        Tue, 24 Feb 2026 08:40:58 -0800 (PST)
+Message-ID: <4d9e2fb9-1cea-476e-b7f8-d2caaef4a579@ursulin.net>
+Date: Tue, 24 Feb 2026 16:40:55 +0000
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
@@ -67,8 +67,8 @@ List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v3 3/5] drm/ttm: Make a helper for attempting allocation
- in a place
+Subject: Re: [PATCH v3 4/5] drm/ttm: Be more aggressive when allocating below
+ protection limit
 To: Natalie Vock <natalie.vock@gmx.de>, Maarten Lankhorst <dev@lankhorst.se>,
  Maxime Ripard <mripard@kernel.org>, Tejun Heo <tj@kernel.org>,
  Johannes Weiner <hannes@cmpxchg.org>, =?UTF-8?Q?Michal_Koutn=C3=BD?=
@@ -80,254 +80,282 @@ To: Natalie Vock <natalie.vock@gmx.de>, Maarten Lankhorst <dev@lankhorst.se>,
  Simona Vetter <simona@ffwll.ch>
 Cc: cgroups@vger.kernel.org, dri-devel@lists.freedesktop.org
 References: <20251110-dmemcg-aggressive-protect-v3-0-219ffcfc54e9@gmx.de>
- <20251110-dmemcg-aggressive-protect-v3-3-219ffcfc54e9@gmx.de>
+ <20251110-dmemcg-aggressive-protect-v3-4-219ffcfc54e9@gmx.de>
 Content-Language: en-GB
 From: Tvrtko Ursulin <tursulin@ursulin.net>
-In-Reply-To: <20251110-dmemcg-aggressive-protect-v3-3-219ffcfc54e9@gmx.de>
+In-Reply-To: <20251110-dmemcg-aggressive-protect-v3-4-219ffcfc54e9@gmx.de>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 
 
 On 10/11/2025 12:37, Natalie Vock wrote:
-> ttm_bo_alloc_place is a new helper function to make an attempt at
-> allocating a bo's resource in a specific place. It also makes decisions
-> on whether eviction should be attempted: If -ENOSPC is returned,
-> allocation should not be retried.
-
-At first I thought the new helper will get used from more than one call 
-site but it seems that is not the case? No objections to extract some 
-code to be clear, just that when I see a patch title of "making a 
-helper" I expect something different.
-
-Is there any functional difference here or it is just prep to enable 
-easier extending in the following patch? If no functional difference it 
-is good to state that in the commit message. If functional difference 
-please explain what and why.
-
-Also please explain that the patch is only adding a new struct parameter 
-as a preparation for it being extended.
-
+> When the cgroup's memory usage is below the low/min limit and allocation
+> fails, try evicting some unprotected buffers to make space. Otherwise,
+> application buffers may be forced to go into GTT even though usage is
+> below the corresponding low/min limit, if other applications filled VRAM
+> with their allocations first.
 > 
 > Signed-off-by: Natalie Vock <natalie.vock@gmx.de>
 > ---
->   drivers/gpu/drm/ttm/ttm_bo.c | 98 +++++++++++++++++++++++++++++++++-----------
->   1 file changed, 73 insertions(+), 25 deletions(-)
+>   drivers/gpu/drm/ttm/ttm_bo.c       | 75 ++++++++++++++++++++++++++++++++++----
+>   drivers/gpu/drm/ttm/ttm_resource.c | 48 +++++++++++++++++-------
+>   include/drm/ttm/ttm_resource.h     |  6 ++-
+>   3 files changed, 108 insertions(+), 21 deletions(-)
 > 
 > diff --git a/drivers/gpu/drm/ttm/ttm_bo.c b/drivers/gpu/drm/ttm/ttm_bo.c
-> index f4d9e68b21e70..829d994798835 100644
+> index 829d994798835..bd467c965e1bc 100644
 > --- a/drivers/gpu/drm/ttm/ttm_bo.c
 > +++ b/drivers/gpu/drm/ttm/ttm_bo.c
-> @@ -489,6 +489,11 @@ int ttm_bo_evict_first(struct ttm_device *bdev, struct ttm_resource_manager *man
->   	return ret;
+> @@ -490,8 +490,12 @@ int ttm_bo_evict_first(struct ttm_device *bdev, struct ttm_resource_manager *man
 >   }
 >   
-> +struct ttm_bo_alloc_state {
-> +	/** @limit_pool: Which pool limit we should test against */
-> +	struct dmem_cgroup_pool_state *limit_pool;
-> +};
-> +
->   /**
->    * struct ttm_bo_evict_walk - Parameters for the evict walk.
->    */
-> @@ -504,12 +509,13 @@ struct ttm_bo_evict_walk {
->   	/** @evicted: Number of successful evictions. */
->   	unsigned long evicted;
->   
-> -	/** @limit_pool: Which pool limit we should test against */
-> -	struct dmem_cgroup_pool_state *limit_pool;
->   	/** @try_low: Whether we should attempt to evict BO's with low watermark threshold */
->   	bool try_low;
->   	/** @hit_low: If we cannot evict a bo when @try_low is false (first pass) */
->   	bool hit_low;
-> +
-> +	/** @alloc_state: */
-> +	struct ttm_bo_alloc_state *alloc_state;
+>   struct ttm_bo_alloc_state {
+> +	/** @charge_pool: The memory pool the resource is charged to */
+> +	struct dmem_cgroup_pool_state *charge_pool;
+>   	/** @limit_pool: Which pool limit we should test against */
+>   	struct dmem_cgroup_pool_state *limit_pool;
+> +	/** @only_evict_unprotected: If eviction should be restricted to unprotected BOs */
+> +	bool only_evict_unprotected;
 >   };
 >   
->   static s64 ttm_bo_evict_cb(struct ttm_lru_walk *walk, struct ttm_buffer_object *bo)
-> @@ -518,8 +524,9 @@ static s64 ttm_bo_evict_cb(struct ttm_lru_walk *walk, struct ttm_buffer_object *
->   		container_of(walk, typeof(*evict_walk), walk);
->   	s64 lret;
+>   /**
+> @@ -546,7 +550,7 @@ static s64 ttm_bo_evict_cb(struct ttm_lru_walk *walk, struct ttm_buffer_object *
+>   	evict_walk->evicted++;
+>   	if (evict_walk->res)
+>   		lret = ttm_resource_alloc(evict_walk->evictor, evict_walk->place,
+> -					  evict_walk->res, NULL);
+> +					  evict_walk->res, evict_walk->alloc_state->charge_pool);
+>   	if (lret == 0)
+>   		return 1;
+>   out:
+> @@ -589,7 +593,7 @@ static int ttm_bo_evict_alloc(struct ttm_device *bdev,
+>   	lret = ttm_lru_walk_for_evict(&evict_walk.walk, bdev, man, 1);
 >   
-> -	if (!dmem_cgroup_state_evict_valuable(evict_walk->limit_pool, bo->resource->css,
-> -					      evict_walk->try_low, &evict_walk->hit_low))
-> +	if (!dmem_cgroup_state_evict_valuable(evict_walk->alloc_state->limit_pool,
-> +					      bo->resource->css, evict_walk->try_low,
-> +					      &evict_walk->hit_low))
->   		return 0;
+>   	/* One more attempt if we hit low limit? */
+> -	if (!lret && evict_walk.hit_low) {
+> +	if (!lret && evict_walk.hit_low && !state->only_evict_unprotected) {
+
+What is unprotected synonymous with? No low watermark set? Should 
+dmem_cgroup_state_evict_valuable() even set *hit_low = true for if low 
+is not set to begin with?
+
+>   		evict_walk.try_low = true;
+>   		lret = ttm_lru_walk_for_evict(&evict_walk.walk, bdev, man, 1);
+>   	}
+> @@ -610,7 +614,8 @@ static int ttm_bo_evict_alloc(struct ttm_device *bdev,
+>   	} while (!lret && evict_walk.evicted);
 >   
->   	if (bo->pin_count || !bo->bdev->funcs->eviction_valuable(bo, evict_walk->place))
-> @@ -561,7 +568,7 @@ static int ttm_bo_evict_alloc(struct ttm_device *bdev,
->   			      struct ttm_operation_ctx *ctx,
->   			      struct ww_acquire_ctx *ticket,
->   			      struct ttm_resource **res,
-> -			      struct dmem_cgroup_pool_state *limit_pool)
-> +			      struct ttm_bo_alloc_state *state)
+>   	/* We hit the low limit? Try once more */
+> -	if (!lret && evict_walk.hit_low && !evict_walk.try_low) {
+> +	if (!lret && evict_walk.hit_low && !evict_walk.try_low &&
+> +			!state->only_evict_unprotected) {
+>   		evict_walk.try_low = true;
+>   		goto retry;
+>   	}
+> @@ -719,20 +724,72 @@ static int ttm_bo_alloc_at_place(struct ttm_buffer_object *bo,
+>   				 struct ttm_resource **res,
+>   				 struct ttm_bo_alloc_state *alloc_state)
 >   {
->   	struct ttm_bo_evict_walk evict_walk = {
->   		.walk = {
-> @@ -574,7 +581,7 @@ static int ttm_bo_evict_alloc(struct ttm_device *bdev,
->   		.place = place,
->   		.evictor = evictor,
->   		.res = res,
-> -		.limit_pool = limit_pool,
-> +		.alloc_state = state,
->   	};
->   	s64 lret;
+> -	bool may_evict;
+> +	bool may_evict, below_low = false;
+>   	int ret;
 >   
-> @@ -688,6 +695,47 @@ static int ttm_bo_add_move_fence(struct ttm_buffer_object *bo,
->   	return ret;
->   }
->   
-> +
-> +/**
-> + * ttm_bo_alloc_at_place - Attempt allocating a BO's backing store in a place
-> + *
-> + * @bo: The buffer to allocate the backing store of
-> + * @place: The place to attempt allocation in
-> + * @ctx: ttm_operation_ctx associated with this allocation
-> + * @force_space: If we should evict buffers to force space
-> + * @res: On allocation success, the resulting struct ttm_resource.
-> + * @alloc_state: Object holding allocation state such as charged cgroups.
-> + *
-> + * Returns:
-> + * -EBUSY: No space available, but allocation should be retried with eviction.
-
-With or after eviction?
-
-> + * -ENOSPC: No space available, allocation should not be retried.
-> + * -ERESTARTSYS: An interruptible sleep was interrupted by a signal.
-
--EAGAIN cannot get out from ttm_resource_alloc()? In the current 
-codebase or only with this patch?
-
-> + *
-> + */
-> +static int ttm_bo_alloc_at_place(struct ttm_buffer_object *bo,
-> +				 const struct ttm_place *place,
-> +				 struct ttm_operation_ctx *ctx,
-> +				 bool force_space,
-> +				 struct ttm_resource **res,
-> +				 struct ttm_bo_alloc_state *alloc_state)
-
-Maybe you did not write this but I am curious and thinking out loud 
-here. The documentation for struct ttm_operation_ctx among other things 
-says:
-
-"""
-  * Context for TTM operations like changing buffer placement or general 
-memory
-  * allocation.
-"""
-
-Hence I am wondering if the new alloc_state couldn't simply go in there? 
-Which would make the function prototype identical to the existing 
-ttm_bo_alloc_resource and is also already passed through the relevant 
-call chains. Which raises another question - why did 
-ttm_bo_evict_alloc() need to have struct dmem_cgroup_pool_state as a 
-separate argument and why it couldn't be passed in the context?
-
-> +{
-> +	bool may_evict;
-> +	int ret;
-> +
-> +	may_evict = (force_space && place->mem_type != TTM_PL_SYSTEM);
-> +
-> +	ret = ttm_resource_alloc(bo, place, res,
-> +				 force_space ? &alloc_state->limit_pool : NULL);
-> +
+>   	may_evict = (force_space && place->mem_type != TTM_PL_SYSTEM);
+> +	ret = ttm_resource_try_charge(bo, place, &alloc_state->charge_pool,
+> +				      force_space ? &alloc_state->limit_pool : NULL);
 > +	if (ret) {
-> +		if ((ret == -ENOSPC || ret == -EAGAIN) && may_evict)
-> +			ret = -EBUSY;
+> +		/*
+> +		 * -EAGAIN means the charge failed, which we treat like an
+> +		 * allocation failure. Therefore, return an error code indicating
+> +		 * the allocation failed - either -EBUSY if the allocation should
+> +		 * be retried with eviction, or -ENOSPC if there should be no second
+> +		 * attempt.
+> +		 */
+> +		if (ret == -EAGAIN)
+> +			ret = may_evict ? -EBUSY : -ENOSPC;
 > +		return ret;
 > +	}
+>   
+> -	ret = ttm_resource_alloc(bo, place, res,
+> -				 force_space ? &alloc_state->limit_pool : NULL);
+> +	/*
+> +	 * cgroup protection plays a special role in eviction.
+> +	 * Conceptually, protection of memory via the dmem cgroup controller
+> +	 * entitles the protected cgroup to use a certain amount of memory.
+> +	 * There are two types of protection - the 'low' limit is a
+> +	 * "best-effort" protection, whereas the 'min' limit provides a hard
+> +	 * guarantee that memory within the cgroup's allowance will not be
+> +	 * evicted under any circumstance.
+> +	 *
+> +	 * To faithfully model this concept in TTM, we also need to take cgroup
+> +	 * protection into account when allocating. When allocation in one
+> +	 * place fails, TTM will default to trying other places first before
+> +	 * evicting.
+> +	 * If the allocation is covered by dmem cgroup protection, however,
+> +	 * this prevents the allocation from using the memory it is "entitled"
+> +	 * to. To make sure unprotected allocations cannot push new protected
+> +	 * allocations out of places they are "entitled" to use, we should
+> +	 * evict buffers not covered by any cgroup protection, if this
+> +	 * allocation is covered by cgroup protection.
+> +	 *
+> +	 * Buffers covered by 'min' protection are a special case - the 'min'
+> +	 * limit is a stronger guarantee than 'low', and thus buffers protected
+> +	 * by 'low' but not 'min' should also be considered for eviction.
+> +	 * Buffers protected by 'min' will never be considered for eviction
+> +	 * anyway, so the regular eviction path should be triggered here.
+> +	 * Buffers protected by 'low' but not 'min' will take a special
+> +	 * eviction path that only evicts buffers covered by neither 'low' or
+> +	 * 'min' protections.
+> +	 */
+> +	may_evict |= dmem_cgroup_below_min(NULL, alloc_state->charge_pool);
+> +	below_low = dmem_cgroup_below_low(NULL, alloc_state->charge_pool);
+> +	alloc_state->only_evict_unprotected = !may_evict && below_low;
 > +
-> +	return 0;
+> +	ret = ttm_resource_alloc(bo, place, res, alloc_state->charge_pool);
+>   
+>   	if (ret) {
+> -		if ((ret == -ENOSPC || ret == -EAGAIN) && may_evict)
+> +		if ((ret == -ENOSPC || ret == -EAGAIN) &&
+> +				(may_evict || below_low))
+>   			ret = -EBUSY;
+>   		return ret;
+>   	}
+>   
+> +	/*
+> +	 * Ownership of charge_pool has been transferred to the TTM resource,
+> +	 * don't make the caller think we still hold a reference to it.
+> +	 */
+> +	alloc_state->charge_pool = NULL;
+>   	return 0;
+>   }
+>   
+> @@ -787,6 +844,7 @@ static int ttm_bo_alloc_resource(struct ttm_buffer_object *bo,
+>   				res, &alloc_state);
+>   
+>   		if (ret == -ENOSPC) {
+> +			dmem_cgroup_pool_state_put(alloc_state.charge_pool);
+>   			dmem_cgroup_pool_state_put(alloc_state.limit_pool);
+>   			continue;
+>   		} else if (ret == -EBUSY) {
+> @@ -796,11 +854,14 @@ static int ttm_bo_alloc_resource(struct ttm_buffer_object *bo,
+>   			dmem_cgroup_pool_state_put(alloc_state.limit_pool);
+>   
+>   			if (ret) {
+> +				dmem_cgroup_pool_state_put(
+> +						alloc_state.charge_pool);
+
+Funky line break.
+
+>   				if (ret != -ENOSPC && ret != -EBUSY)
+>   					return ret;
+>   				continue;
+>   			}
+>   		} else if (ret) {
+> +			dmem_cgroup_pool_state_put(alloc_state.charge_pool);
+>   			dmem_cgroup_pool_state_put(alloc_state.limit_pool);
+>   			return ret;
+>   		}
+> diff --git a/drivers/gpu/drm/ttm/ttm_resource.c b/drivers/gpu/drm/ttm/ttm_resource.c
+> index e2c82ad07eb44..fcfa8b51b0337 100644
+> --- a/drivers/gpu/drm/ttm/ttm_resource.c
+> +++ b/drivers/gpu/drm/ttm/ttm_resource.c
+> @@ -372,30 +372,52 @@ void ttm_resource_fini(struct ttm_resource_manager *man,
+>   }
+>   EXPORT_SYMBOL(ttm_resource_fini);
+>   
+> +/**
+> + * ttm_resource_try_charge - charge a resource manager's cgroup pool
+> + * @bo: buffer for which an allocation should be charged
+> + * @place: where the allocation is attempted to be placed
+> + * @ret_pool: on charge success, the pool that was charged
+> + * @ret_limit_pool: on charge failure, the pool responsible for the failure
+> + *
+> + * Should be used to charge cgroups before attempting resource allocation.
+> + * When charging succeeds, the value of ret_pool should be passed to
+> + * ttm_resource_alloc.
+> + *
+> + * Returns: 0 on charge success, negative errno on failure.
+> + */
+> +int ttm_resource_try_charge(struct ttm_buffer_object *bo,
+> +			    const struct ttm_place *place,
+> +			    struct dmem_cgroup_pool_state **ret_pool,
+> +			    struct dmem_cgroup_pool_state **ret_limit_pool)
+> +{
+> +	struct ttm_resource_manager *man =
+> +		ttm_manager_type(bo->bdev, place->mem_type);
+> +
+> +	if (!man->cg) {
+> +		*ret_pool = NULL;
+> +		if (ret_limit_pool)
+> +			*ret_limit_pool = NULL;
+> +		return 0;
+> +	}
+> +
+> +	return dmem_cgroup_try_charge(man->cg, bo->base.size, ret_pool,
+> +				      ret_limit_pool);
 > +}
 > +
->   /**
->    * ttm_bo_alloc_resource - Allocate backing store for a BO
->    *
-> @@ -713,7 +761,9 @@ static int ttm_bo_alloc_resource(struct ttm_buffer_object *bo,
->   				 bool force_space,
->   				 struct ttm_resource **res)
+>   int ttm_resource_alloc(struct ttm_buffer_object *bo,
+>   		       const struct ttm_place *place,
+>   		       struct ttm_resource **res_ptr,
+> -		       struct dmem_cgroup_pool_state **ret_limit_pool)
+> +		       struct dmem_cgroup_pool_state *charge_pool)
 >   {
-> +	struct ttm_bo_alloc_state alloc_state = {0};
-
-= {}; is usually enough.
-
-Any particular reason to move this and the manager outside of the loop?
-
->   	struct ttm_device *bdev = bo->bdev;
-> +	struct ttm_resource_manager *man;
->   	struct ww_acquire_ctx *ticket;
->   	int i, ret;
+>   	struct ttm_resource_manager *man =
+>   		ttm_manager_type(bo->bdev, place->mem_type);
+> -	struct dmem_cgroup_pool_state *pool = NULL;
+>   	int ret;
 >   
-> @@ -724,9 +774,6 @@ static int ttm_bo_alloc_resource(struct ttm_buffer_object *bo,
+> -	if (man->cg) {
+> -		ret = dmem_cgroup_try_charge(man->cg, bo->base.size, &pool, ret_limit_pool);
+> -		if (ret)
+> -			return ret;
+> -	}
+> -
+>   	ret = man->func->alloc(man, bo, place, res_ptr);
+> -	if (ret) {
+> -		if (pool)
+> -			dmem_cgroup_uncharge(pool, bo->base.size);
+> +	if (ret)
+>   		return ret;
+> -	}
 >   
->   	for (i = 0; i < placement->num_placement; ++i) {
->   		const struct ttm_place *place = &placement->placement[i];
-> -		struct dmem_cgroup_pool_state *limit_pool = NULL;
-> -		struct ttm_resource_manager *man;
-> -		bool may_evict;
->   
->   		man = ttm_manager_type(bdev, place->mem_type);
->   		if (!man || !ttm_resource_manager_used(man))
-> @@ -736,25 +783,26 @@ static int ttm_bo_alloc_resource(struct ttm_buffer_object *bo,
->   				    TTM_PL_FLAG_FALLBACK))
->   			continue;
->   
-> -		may_evict = (force_space && place->mem_type != TTM_PL_SYSTEM);
-> -		ret = ttm_resource_alloc(bo, place, res, force_space ? &limit_pool : NULL);
-> -		if (ret) {
-> -			if (ret != -ENOSPC && ret != -EAGAIN) {
-> -				dmem_cgroup_pool_state_put(limit_pool);
-> -				return ret;
-> -			}
-> -			if (!may_evict) {
-> -				dmem_cgroup_pool_state_put(limit_pool);
-> -				continue;
-> -			}
-> +		ret = ttm_bo_alloc_at_place(bo, place, ctx, force_space,
-> +				res, &alloc_state);
->   
-> +		if (ret == -ENOSPC) {
-> +			dmem_cgroup_pool_state_put(alloc_state.limit_pool);
-> +			continue;
+> -	(*res_ptr)->css = pool;
+> +	(*res_ptr)->css = charge_pool;
 
-I always disliked the TTM eviction logic and now I remember why. It 
-requires a brain size of a small planet to figure out the flow.. :) I'd 
-say this change makes it more readable.
-
-> +		} else if (ret == -EBUSY) {
->   			ret = ttm_bo_evict_alloc(bdev, man, place, bo, ctx,
-> -						 ticket, res, limit_pool);
-> -			dmem_cgroup_pool_state_put(limit_pool);
-> -			if (ret == -EBUSY)
-> +						 ticket, res, &alloc_state);
-> +
-> +			dmem_cgroup_pool_state_put(alloc_state.limit_pool);
-> +
-> +			if (ret) {
-> +				if (ret != -ENOSPC && ret != -EBUSY)
-> +					return ret;
->   				continue;
-
-Is this a functional change and why? Before only EBUSY went to the next 
-placement. Now ENOSPC does as well.
+Is it possible to somehow split this patch into two? I mean first a 
+patch which changes the prototype of ttm_resource_alloc(), adjusting the 
+callers, set out new rules for owning the charge pool, etc, then the 
+patch which only adds the cgroup smarts to ttm_bo_alloc_at_place(). If 
+that could be made without creating any functional difference to the 
+eviction alone I think it could make it easier to review.
 
 Regards,
 
 Tvrtko
 
-> -			if (ret)
-> -				return ret;
-> +			}
-> +		} else if (ret) {
-> +			dmem_cgroup_pool_state_put(alloc_state.limit_pool);
-> +			return ret;
->   		}
 >   
->   		ret = ttm_bo_add_move_fence(bo, man, ctx->no_wait_gpu);
+>   	spin_lock(&bo->bdev->lru_lock);
+>   	ttm_resource_add_bulk_move(*res_ptr, bo);
+> diff --git a/include/drm/ttm/ttm_resource.h b/include/drm/ttm/ttm_resource.h
+> index e52bba15012f7..3aef7efdd7cfb 100644
+> --- a/include/drm/ttm/ttm_resource.h
+> +++ b/include/drm/ttm/ttm_resource.h
+> @@ -442,10 +442,14 @@ void ttm_resource_init(struct ttm_buffer_object *bo,
+>   void ttm_resource_fini(struct ttm_resource_manager *man,
+>   		       struct ttm_resource *res);
+>   
+> +int ttm_resource_try_charge(struct ttm_buffer_object *bo,
+> +			    const struct ttm_place *place,
+> +			    struct dmem_cgroup_pool_state **ret_pool,
+> +			    struct dmem_cgroup_pool_state **ret_limit_pool);
+>   int ttm_resource_alloc(struct ttm_buffer_object *bo,
+>   		       const struct ttm_place *place,
+>   		       struct ttm_resource **res,
+> -		       struct dmem_cgroup_pool_state **ret_limit_pool);
+> +		       struct dmem_cgroup_pool_state *charge_pool);
+>   void ttm_resource_free(struct ttm_buffer_object *bo, struct ttm_resource **res);
+>   bool ttm_resource_intersects(struct ttm_device *bdev,
+>   			     struct ttm_resource *res,
 > 
 
