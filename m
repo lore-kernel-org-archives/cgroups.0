@@ -1,188 +1,184 @@
-Received: from us-smtp-delivery-44.mimecast.com (us-smtp-delivery-44.mimecast.com [205.139.111.44])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-ej1-f45.google.com (mail-ej1-f45.google.com [209.85.218.45])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9FB2A24A07C
-	for <cgroups@vger.kernel.org>; Tue, 24 Feb 2026 02:11:10 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.139.111.44
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1771899071; cv=none; b=JpgJaJTnoQKfEuLH+3FiUuUnpP1EcBOQaL4TtzCKw00odIwToev4fhHofiIa5INdYeRm8y+Xki/ieYXglAlI/9CA3bYu2llJkH6o9Rul4GGUrOgoLFG26ZuYMLyrXRrkgndTCAWIizxWJLakMoKOhUOJyfS503Oi/M3SWGzID40=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1771899071; c=relaxed/simple;
-	bh=5g4/cCk1FoqNCQf3MsuoeYRTVCiBwfGjxds79J8cnZY=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:content-type; b=ockc/Jtzauy6tdf2fw4QLcxTlsDhn9k31y6IJRPpGHWfza9fzVp7h+1L5VjYsvEzrrNLqfdZ0BidX99a8VckcBKdYpCBpwi8V0NM1+Zg79hiWGwF00YHf4hirP8Zc1tzb+NUMo8cZC5RD1SrGRshltwB8VQ2PZRlZ1e61+qQ/l0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=gmail.com; spf=fail smtp.mailfrom=gmail.com; arc=none smtp.client-ip=205.139.111.44
-Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=gmail.com
-Received: from mx-prod-mc-05.mail-002.prod.us-west-2.aws.redhat.com
- (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
- relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-422-vrMaxZtWOamwfNix5OMg8A-1; Mon,
- 23 Feb 2026 21:11:04 -0500
-X-MC-Unique: vrMaxZtWOamwfNix5OMg8A-1
-X-Mimecast-MFC-AGG-ID: vrMaxZtWOamwfNix5OMg8A_1771899063
-Received: from mx-prod-int-01.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-01.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.4])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mx-prod-mc-05.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id ED9421956095;
-	Tue, 24 Feb 2026 02:11:02 +0000 (UTC)
-Received: from dreadlord.taild9177d.ts.net (unknown [10.67.32.38])
-	by mx-prod-int-01.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id 9F43C30001BB;
-	Tue, 24 Feb 2026 02:10:56 +0000 (UTC)
-From: Dave Airlie <airlied@gmail.com>
-To: dri-devel@lists.freedesktop.org,
-	tj@kernel.org,
-	christian.koenig@amd.com,
-	Johannes Weiner <hannes@cmpxchg.org>,
-	Michal Hocko <mhocko@kernel.org>,
-	Roman Gushchin <roman.gushchin@linux.dev>,
-	Shakeel Butt <shakeel.butt@linux.dev>,
-	Muchun Song <muchun.song@linux.dev>
-Cc: cgroups@vger.kernel.org,
-	Dave Chinner <david@fromorbit.com>,
-	Waiman Long <longman@redhat.com>,
-	simona@ffwll.ch
-Subject: [PATCH 16/16] xe: create a flag to enable memcg accounting for XE as well.
-Date: Tue, 24 Feb 2026 12:06:33 +1000
-Message-ID: <20260224020854.791201-17-airlied@gmail.com>
-In-Reply-To: <20260224020854.791201-1-airlied@gmail.com>
-References: <20260224020854.791201-1-airlied@gmail.com>
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CDB6424A07C
+	for <cgroups@vger.kernel.org>; Tue, 24 Feb 2026 02:11:20 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.218.45
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1771899082; cv=pass; b=upH9kox4o+6Ru/aC8N54Y/UD6xjteIqumXO/D3Z6i9OBMLVs2W7AO7p+4E90b2N/DGl2ZR42iYCqOdXzjbphzuLzMFcF5onGqdUXOM6f8X7b8AlHLJrr6e6jp3QIh3PaeTRR1zNlu7uhKPYmT2xaqWXqrxktoCMtvOL/AzJJZh4=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1771899082; c=relaxed/simple;
+	bh=G/sOxQ2/3tQquWg2P4Ie/65TyReHtVOMzMTfaa1ea8E=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=d1iIekg0yO46NMEWJ3ZQfvpW49XBQfoRqh8M4WnrcGvHM9kuoQOpyDXQSHbN2KcxrVTCexNxCm/acaTTCgAeh5zXLEmKjyUPJtAp4NrYGo6axUjBTYpJG1r0RXq/d2xEDQmzIvFmjaJnfE3/roXUe8VxFfpAaQ3aDJy0A1RbRyY=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=g7zs6DzT; arc=pass smtp.client-ip=209.85.218.45
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="g7zs6DzT"
+Received: by mail-ej1-f45.google.com with SMTP id a640c23a62f3a-b8845cb5862so820149166b.3
+        for <cgroups@vger.kernel.org>; Mon, 23 Feb 2026 18:11:20 -0800 (PST)
+ARC-Seal: i=1; a=rsa-sha256; t=1771899079; cv=none;
+        d=google.com; s=arc-20240605;
+        b=XUKN1DmHLn8sgvTdh+InG9F+MiUDx8fL1YN1ZDyISOb7XCqLt4CbucQIcltyjjQeVc
+         E3CKp2KdCabX4ks5ETJscv830vXrxV8kSzPnHY4dQcNAX1AgGlAT53Emw83AJb8WEeT/
+         FlpVU9Jh0YTJu5BY1/lEbFNDlvMJGlV+ow9IgFKeINzEipXMqL4idR5TkdVIo9hMnDbe
+         HaXm1HYcYsX8+1ol3u+v3Htsb51cOQIaF+crPT8rlB8KFvQGjoMNoJ6VGVk49ZmomnO7
+         Ug+49O2wtX5jTUAD4vlI2a4jvNPVTRxbZQCFWYE5RvS8uGaJHuAbiBEyPoVV5Vcl4WfY
+         gP+A==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20240605;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:dkim-signature;
+        bh=eFA8Gu4szBvFtRfGkwR0vdAO1QkTVvSnODLMLCE2WIA=;
+        fh=fsc8L0XFLU8i4xwgYX0qQMpgAwc8MqP9OS4uNI1h3iw=;
+        b=gOCL1YJljFxBEkGwzRdZciCIUJiUR8Rzcbhgyoq34I02uVQw279xVnFeLz3nCXt1uQ
+         botEYcMcTrzENywKccLOPQfK8KA3ujABnpQl1tA2i384zh5P+y7VqPoLXCC+/qUg2NFI
+         3nGwPdiuiOx1SynVrEXnU5JmUZigh/lzDkXnDyJzh5K39FwnRJzy7kFECYzFqOjb3tKG
+         5CoN/4vuCS7tPEqtMqNFpgOzLQhWbNklJo9FSQseR/WFUkWSH6KZUPbB1X5Pc+MXeW0M
+         m1XwSeIM6402FQxN+nK1Y5yNdG8wk6HB3bqjppnFbvAx76dgv7a5c3YHJ4cLkKjAwTd/
+         HCQA==;
+        darn=vger.kernel.org
+ARC-Authentication-Results: i=1; mx.google.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1771899079; x=1772503879; darn=vger.kernel.org;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=eFA8Gu4szBvFtRfGkwR0vdAO1QkTVvSnODLMLCE2WIA=;
+        b=g7zs6DzTsUJtwh0il7F/4WBHo9E565Rpl+uGVI2jlxJ4uNZ+HvoaT7aJXPmjOir6f3
+         YXNdAwDd46ZNo8nBTx1sp5QX81JHktcPsTx4u2kha+Do11jLKH8F5zFHt1xV5AHICBdj
+         gW2B9a+kPyGQxNTFqOnQKtOCHdiBNJetdAtm+aZiIn1klUgw1AA92VsaSDybJwKQBGpK
+         xOd/XmLBDjChZfSwLRfJbVKImVZ/nCnOAbh5W2hZuVpzxRw2Y31ON1bsed6pzS65lYAG
+         uUrZdF9jakI6pSRvlfyGqrZxenJvVOxnRN3ePaAoZHTfNXtUF2vxogqUbtpTVBjvZzVP
+         WARg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1771899079; x=1772503879;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-gg:x-gm-message-state:from
+         :to:cc:subject:date:message-id:reply-to;
+        bh=eFA8Gu4szBvFtRfGkwR0vdAO1QkTVvSnODLMLCE2WIA=;
+        b=GBhBMz+obMoAfYQhLboHJyZwHghOKy1hmpVktMuMpD6HUjxOjmL96U5F8alRckd5og
+         iWomTt3SBYhe0e1tM/DEjzO9f8y44hafMFaMdbvZEeGUWTzMqPQmRuJt2rp56GJ89Zkf
+         M+brbDxcBBDjTICgOhyAkVOJHhY2YNKcWuLRhSDNPoGJjIaxmfqlv9aE1FNbqn4gR66x
+         Kev/WeiMm15FBG7xWtPRca3whe9v2I62HjHNi6q4Tm6yWH/CO1YbOYru9doO6vaG44Du
+         NR4n6bh+UrQIrocpVQJbmqhgvDqpP4fLvtm6Zs2MJtDYCTq3yqhNaJN32rHty9wJdWf3
+         fY2A==
+X-Forwarded-Encrypted: i=1; AJvYcCWRap/m3G9f3FWsg+AdEBTjYLKBz9WG73xXYgXCKnucxp05dUMj1VFwt83TnKY4XD56q008iK0m@vger.kernel.org
+X-Gm-Message-State: AOJu0YwwyqCuslaCmL2kdV+swuRxoGqDNUn/x0EarXKwvoKkFaPDzGWf
+	88QIs90Aupa+yWQa2b8unhxZ6VaS3eRH0/rWeW9YpQigzr0fmd0jUrPa6Z1WJeLwNO7BPwxauUj
+	d6H4/WtZq1AODr7W1YtYmJmCVMFViiCM=
+X-Gm-Gg: AZuq6aLvcysns9zpf4MnT/NxwnUupxc5Bi0RV1PGqD+QzJFZalitZ5KeB1HOkSX7DLP
+	0zehTJlXCj2fhvdNWc8jo7Ez1oxXgXeMnS+1qk31tcWak9ctSlNFHPCXbLdL06XRvGovE68fEFI
+	S4XbGJsFYQwgIDpTu1M64AL3sFGdi1qvvJ2LNeF0NdwhcGIZvONvhCiCgPjVn/VXknyX6889eUc
+	1QaGUcN+1oNtJCZWGXsEnlUDMYUyVWLP7NYRyLIIZz/YU2y4KTs9IAjsC3LS54I4iojz1/nxW0O
+	/2bdljVy4CNdxYl1MkIJCRpkgBIB4B22b5hyJzM7
+X-Received: by 2002:a17:906:6b96:b0:b8d:bf4d:7463 with SMTP id
+ a640c23a62f3a-b9081b4e964mr504856266b.31.1771899078951; Mon, 23 Feb 2026
+ 18:11:18 -0800 (PST)
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-Scanned-By: MIMEDefang 3.4.1 on 10.30.177.4
-X-Mimecast-Spam-Score: 0
-X-Mimecast-MFC-PROC-ID: 8s2Od3QIUpDFXcG-Tj1-ppVPqCMxIz2beAVT0OhrjPs_1771899063
-X-Mimecast-Originator: gmail.com
+References: <20260220-swap-table-p4-v1-0-104795d19815@tencent.com> <aZyFxKGXc8J6PIij@cmpxchg.org>
+In-Reply-To: <aZyFxKGXc8J6PIij@cmpxchg.org>
+From: Kairui Song <ryncsn@gmail.com>
+Date: Tue, 24 Feb 2026 10:10:42 +0800
+X-Gm-Features: AaiRm503gqQwqplXGOPWtkC6hEz-XK9q1g7AWXt5tyf9jgc_DTnRm0pF7psYupY
+Message-ID: <CAMgjq7AyL4=cN1mQ=i56j-kOvEaZXyT-3Wu063vM5JijXcFDLg@mail.gmail.com>
+Subject: Re: [PATCH RFC 00/15] mm, swap: swap table phase IV with dynamic
+ ghost swapfile
+To: Johannes Weiner <hannes@cmpxchg.org>
+Cc: Kairui Song via B4 Relay <devnull+kasong.tencent.com@kernel.org>, linux-mm@kvack.org, 
+	Andrew Morton <akpm@linux-foundation.org>, David Hildenbrand <david@kernel.org>, 
+	Lorenzo Stoakes <lorenzo.stoakes@oracle.com>, Zi Yan <ziy@nvidia.com>, 
+	Baolin Wang <baolin.wang@linux.alibaba.com>, Barry Song <baohua@kernel.org>, 
+	Hugh Dickins <hughd@google.com>, Chris Li <chrisl@kernel.org>, 
+	Kemeng Shi <shikemeng@huaweicloud.com>, Nhat Pham <nphamcs@gmail.com>, 
+	Baoquan He <bhe@redhat.com>, Yosry Ahmed <yosry.ahmed@linux.dev>, 
+	Youngjun Park <youngjun.park@lge.com>, Chengming Zhou <chengming.zhou@linux.dev>, 
+	Roman Gushchin <roman.gushchin@linux.dev>, Shakeel Butt <shakeel.butt@linux.dev>, 
+	Muchun Song <muchun.song@linux.dev>, Qi Zheng <zhengqi.arch@bytedance.com>, 
+	linux-kernel@vger.kernel.org, cgroups@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
-content-type: text/plain; charset=WINDOWS-1252; x-default=true
 
-From: Maarten Lankhorst <dev@lankhorst.se>
+On Tue, Feb 24, 2026 at 1:00=E2=80=AFAM Johannes Weiner <hannes@cmpxchg.org=
+> wrote:
+>
+> On Fri, Feb 20, 2026 at 07:42:01AM +0800, Kairui Song via B4 Relay wrote:
+> > - 8 bytes per slot memory usage, when using only plain swap.
+> >   - And the memory usage can be reduced to 3 or only 1 byte.
+> > - 16 bytes per slot memory usage, when using ghost / virtual zswap.
+> >   - Zswap can just use ci_dyn->virtual_table to free up it's content
+> >     completely.
+> >   - And the memory usage can be reduced to 11 or 8 bytes using the same
+> >     code above.
+> >   - 24 bytes only if including reverse mapping is in use.
+>
+> That seems to tie us pretty permanently to duplicate metadata.
+>
+> For every page that was written to disk through zswap, we have an
+> entry in the ghost swapfile, and an entry in the backend swapfile, no?
 
-This adds support for memcg accounting to ttm object used by xe driver.
+No, only one entry in the ghost swapfile (xswap or virtual swap file,
+anyway it's just a name). The one in the physical swap is a reverse
+mapping entry, it tells which slot in the ghost swapfile is pointing
+to the physical slot, so swapoff / migration of the physical slot can
+be done in O(1) time.
 
-Signed-off-by: Maarten Lankhorst <dev@lankhorst.se>
-Signed-off-by: Dave Airlie <airlied@redhat.com>
----
- drivers/gpu/drm/xe/xe_bo.c  | 10 +++++++---
- drivers/gpu/drm/xe/xe_bo.h  |  1 +
- drivers/gpu/drm/xe/xe_lrc.c |  3 ++-
- drivers/gpu/drm/xe/xe_oa.c  |  3 ++-
- drivers/gpu/drm/xe/xe_pt.c  |  3 ++-
- 5 files changed, 14 insertions(+), 6 deletions(-)
+So, zero duplicate of any data.
 
-diff --git a/drivers/gpu/drm/xe/xe_bo.c b/drivers/gpu/drm/xe/xe_bo.c
-index fae2d738ecd2..44ad97b7e0c1 100644
---- a/drivers/gpu/drm/xe/xe_bo.c
-+++ b/drivers/gpu/drm/xe/xe_bo.c
-@@ -56,6 +56,7 @@ static const struct ttm_place sys_placement_flags =3D {
- =09.flags =3D 0,
- };
-=20
-+/* TTM_PL_FLAG_MEMCG is not set, those placements are used for eviction */
- static struct ttm_placement sys_placement =3D {
- =09.num_placement =3D 1,
- =09.placement =3D &sys_placement_flags,
-@@ -194,8 +195,8 @@ static void try_add_system(struct xe_device *xe, struct=
- xe_bo *bo,
-=20
- =09=09bo->placements[*c] =3D (struct ttm_place) {
- =09=09=09.mem_type =3D XE_PL_TT,
--=09=09=09.flags =3D (bo_flags & XE_BO_FLAG_VRAM_MASK) ?
--=09=09=09TTM_PL_FLAG_FALLBACK : 0,
-+=09=09=09.flags =3D TTM_PL_FLAG_MEMCG | ((bo_flags & XE_BO_FLAG_VRAM_MASK)=
- ?
-+=09=09=09TTM_PL_FLAG_FALLBACK : 0),
- =09=09};
- =09=09*c +=3D 1;
- =09}
-@@ -2216,6 +2217,9 @@ struct xe_bo *xe_bo_init_locked(struct xe_device *xe,=
- struct xe_bo *bo,
- =09placement =3D (type =3D=3D ttm_bo_type_sg ||
- =09=09     bo->flags & XE_BO_FLAG_DEFER_BACKING) ? &sys_placement :
- =09=09&bo->placement;
-+
-+=09if (bo->flags & XE_BO_FLAG_ACCOUNTED)
-+=09=09ttm_bo_set_cgroup(&bo->ttm, get_obj_cgroup_from_current());
- =09err =3D ttm_bo_init_reserved(&xe->ttm, &bo->ttm, type,
- =09=09=09=09   placement, alignment,
- =09=09=09=09   &ctx, NULL, resv, xe_ttm_bo_destroy);
-@@ -3193,7 +3197,7 @@ int xe_gem_create_ioctl(struct drm_device *dev, void =
-*data,
- =09if (XE_IOCTL_DBG(xe, args->size & ~PAGE_MASK))
- =09=09return -EINVAL;
-=20
--=09bo_flags =3D 0;
-+=09bo_flags =3D XE_BO_FLAG_ACCOUNTED;
- =09if (args->flags & DRM_XE_GEM_CREATE_FLAG_DEFER_BACKING)
- =09=09bo_flags |=3D XE_BO_FLAG_DEFER_BACKING;
-=20
-diff --git a/drivers/gpu/drm/xe/xe_bo.h b/drivers/gpu/drm/xe/xe_bo.h
-index c914ab719f20..2c2a93d018fe 100644
---- a/drivers/gpu/drm/xe/xe_bo.h
-+++ b/drivers/gpu/drm/xe/xe_bo.h
-@@ -52,6 +52,7 @@
- #define XE_BO_FLAG_CPU_ADDR_MIRROR=09BIT(24)
- #define XE_BO_FLAG_FORCE_USER_VRAM=09BIT(25)
- #define XE_BO_FLAG_NO_COMPRESSION=09BIT(26)
-+#define XE_BO_FLAG_ACCOUNTED=09=09BIT(27)
-=20
- /* this one is trigger internally only */
- #define XE_BO_FLAG_INTERNAL_TEST=09BIT(30)
-diff --git a/drivers/gpu/drm/xe/xe_lrc.c b/drivers/gpu/drm/xe/xe_lrc.c
-index b0f037bc227f..e4f2d6db18b3 100644
---- a/drivers/gpu/drm/xe/xe_lrc.c
-+++ b/drivers/gpu/drm/xe/xe_lrc.c
-@@ -1466,7 +1466,8 @@ static int xe_lrc_init(struct xe_lrc *lrc, struct xe_=
-hw_engine *hwe,
- =09=09   XE_BO_FLAG_GGTT_INVALIDATE;
-=20
- =09if ((vm && vm->xef) || init_flags & XE_LRC_CREATE_USER_CTX) /* userspac=
-e */
--=09=09bo_flags |=3D XE_BO_FLAG_PINNED_LATE_RESTORE | XE_BO_FLAG_FORCE_USER=
-_VRAM;
-+=09=09bo_flags |=3D XE_BO_FLAG_PINNED_LATE_RESTORE | XE_BO_FLAG_FORCE_USER=
-_VRAM |
-+=09=09=09    XE_BO_FLAG_ACCOUNTED;
-=20
- =09lrc->bo =3D xe_bo_create_pin_map_novm(xe, tile,
- =09=09=09=09=09    bo_size,
-diff --git a/drivers/gpu/drm/xe/xe_oa.c b/drivers/gpu/drm/xe/xe_oa.c
-index 4dd3f29933cf..2606395aafdd 100644
---- a/drivers/gpu/drm/xe/xe_oa.c
-+++ b/drivers/gpu/drm/xe/xe_oa.c
-@@ -887,7 +887,8 @@ static int xe_oa_alloc_oa_buffer(struct xe_oa_stream *s=
-tream, size_t size)
-=20
- =09bo =3D xe_bo_create_pin_map_novm(stream->oa->xe, stream->gt->tile,
- =09=09=09=09       size, ttm_bo_type_kernel,
--=09=09=09=09       XE_BO_FLAG_SYSTEM | XE_BO_FLAG_GGTT, false);
-+=09=09=09=09       XE_BO_FLAG_SYSTEM | XE_BO_FLAG_GGTT |
-+=09=09=09=09       XE_BO_FLAG_ACCOUNTED, false);
- =09if (IS_ERR(bo))
- =09=09return PTR_ERR(bo);
-=20
-diff --git a/drivers/gpu/drm/xe/xe_pt.c b/drivers/gpu/drm/xe/xe_pt.c
-index 13b355fadd58..c1157dd56923 100644
---- a/drivers/gpu/drm/xe/xe_pt.c
-+++ b/drivers/gpu/drm/xe/xe_pt.c
-@@ -122,7 +122,8 @@ struct xe_pt *xe_pt_create(struct xe_vm *vm, struct xe_=
-tile *tile,
- =09=09   XE_BO_FLAG_IGNORE_MIN_PAGE_SIZE |
- =09=09   XE_BO_FLAG_NO_RESV_EVICT | XE_BO_FLAG_PAGETABLE;
- =09if (vm->xef) /* userspace */
--=09=09bo_flags |=3D XE_BO_FLAG_PINNED_LATE_RESTORE | XE_BO_FLAG_FORCE_USER=
-_VRAM;
-+=09=09bo_flags |=3D XE_BO_FLAG_PINNED_LATE_RESTORE | XE_BO_FLAG_FORCE_USER=
-_VRAM |
-+=09=09=09    XE_BO_FLAG_ACCOUNTED;
-=20
- =09pt->level =3D level;
-=20
---=20
-2.52.0
+>
+> > - Minimal code review or maintenance burden. All layers are using the e=
+xact
+> >   same infrastructure for metadata / allocation / synchronization, maki=
+ng
+> >   all API and conventions consistent and easy to maintain.
+> > - Writeback, migration and compaction are easily supportable since both
+> >   reverse mapping and reallocation are prepared. We just need a
+> >   folio_realloc_swap to allocate new entries for the existing entry, an=
+d
+> >   fill the swap table with a reserve map entry.
+> > - Fast swapoff: Just read into ghost / virtual swap cache.
+>
+> Can we get this for disk swap as well? ;)
+>
+> Zswap swapoff is already fairly fast, albeit CPU intense. It's the
+> scattered IO that makes swapoff on disks so terrible.
 
+I am talking about disk swap here, not zswap. Swapoff of a physical
+entry just loads the swap data in the virtual slot according to the
+reverse mapping entry.
+
+> > free -m
+> >                total        used        free      shared  buff/cache   =
+available
+> > Mem:            1465         250         927           1         356   =
+     1215
+> > Swap:       15269887           0    15269887
+>
+> I'm not a fan of this. This makes free(1) output kind of useless, and
+> very misleading. The swap space presented here has nothing to do with
+> actual swap capacity, and the actual disk swap capacity is obscured.
+>
+> And how would a user choose this size? How would a distribution?
+
+It can be dynamic (just si->max +=3D 2M on every cluster allocation
+since it's really just a number now). Can be hidden, and can have an
+infinite size. That's just an interface design that can be flexibly
+changed.
+
+For example if we just set this to a super large value and hide it, it
+will look identical to vss from userspace perspect, but stay optional
+and zero overhead for existing ZRAM or plain swap users.
+
+> The only limit is compression ratio, and you don't know this in
+> advance. This restriction seems pretty arbitrary and avoidable.
+
+Just as a reference: In practice we limit our ZRAM setup to 1/4 or 1:1
+of the total RAM to avoid the machine goto endless reclaim and never
+go OOM.
+
+But we can also have an infinite size ZSWAP now, with this series.
