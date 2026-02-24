@@ -1,388 +1,153 @@
-Received: from BN1PR04CU002.outbound.protection.outlook.com (mail-eastus2azon11010005.outbound.protection.outlook.com [52.101.56.5])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-ej1-f41.google.com (mail-ej1-f41.google.com [209.85.218.41])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1757826ADC
-	for <cgroups@vger.kernel.org>; Tue, 24 Feb 2026 07:50:46 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.56.5
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CBBD92765F8
+	for <cgroups@vger.kernel.org>; Tue, 24 Feb 2026 08:09:26 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.218.41
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1771919448; cv=fail; b=ct7+G0nNYBpLjx8IA7qK3+z+HI3MYNJ+1G/2lowur7SXGCTn0sEJSKfT1saA6kRY8adkFftVz7WzejtkgOOaBA4gZl26Zp1GgLaPAkPERobp0Ol0bKTIrD8kHaD+4a4TGEPgmm9XHAXmKGdj4Xo/tL0CmvC1PWyx4nTLd0+MO58=
+	t=1771920568; cv=pass; b=DjEfmeHXFW3chlp1qAZUqcDQcK9JohAS3Yj0RzmguLGtTv0+0WGMzyhXx673G9DFUUsQD5Q7Zzrzfj+9BKeChvBNpy3/pXOiTlWcPkF+B36JF1vFdCf/17o8ndYtjlUG0EqBIOj03mvADlab8IUiqpkPLeWq1fk7Fv972BtM5S8=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1771919448; c=relaxed/simple;
-	bh=L9C/GJOxrIW3u7iF7ph0ERhORT/WI5f/UR7gJaVRi+w=;
-	h=Message-ID:Date:Subject:To:Cc:References:From:In-Reply-To:
-	 Content-Type:MIME-Version; b=efg2JM0GGSG9gf+kYQKgYuQatyDJiJ3q7vbHRYzU+dz22rD6cb6kXGYRk5g2OuU0qfptJNTxC/k+5DO6swHS9DJeFlycv8W1RnEQ891iaBtNy3pWKC2CDKT+10UjDUz/y9moc/AY1H2Cq19pkt108Q3XiaW6nOKQRV+mVYwVTkQ=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amd.com; spf=fail smtp.mailfrom=amd.com; dkim=pass (1024-bit key) header.d=amd.com header.i=@amd.com header.b=kTsnVnqO; arc=fail smtp.client-ip=52.101.56.5
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amd.com
-Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=amd.com
+	s=arc-20240116; t=1771920568; c=relaxed/simple;
+	bh=FNPuP84vk79KL266z/45Fs7Uqy7CpD2+o8LZg3RRQ4E=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=mt/A0NC58aQuCzDO/rrsk5K8AYwVB8Dd8T0/lH3RaN5N+F1boEPvOLLfQR2rRdTUCCl3qCzAEcoTs2wyLB5vqAmucLloS/8TehHtprbtHuiIeMegKVrqfNFx2rZU3Rf5nrCt4U2NFaEwvHGh7r9KO3RAUPDBun+PlDRcgw1kLSI=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=nV+TNY/Q; arc=pass smtp.client-ip=209.85.218.41
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=amd.com header.i=@amd.com header.b="kTsnVnqO"
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=HEIfk3GJ1M/J/hI1eLWPkD31FZFti1QIZkqWVL3Oa8AlXKw9H7UOJtgILv9JelGPkcBhH2K/HlNBhrXsmW0XIu+vBj+UJ11hnoxwrA0YhiYbbIOnMYBkJ00tIAr+lv6aMkxhJ+95aKfsFn0AGWDp8atPsThCn5tMnEarUnjFRVFmqQTvW+90M3WtgSHEmoAi8xf326adDrfjPrkQOVrXc/144FMrTXAmnG9vxvlRI6jLmKtbhyF4U9lVuL7ozZzK+/v2Ob5t8LkWImzL0y4ZaLVvx86jTTbspg88UR67LXPu6Eq0aCcdEmkvhpmKpB7COqoI+vpp40aUmx1i+Kt+ww==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=n4M0Nka/fBb/OExOiN9tMahrpTD7H247alVVBJRZAhA=;
- b=URaNDz4PdJ3uAo7BAFAe01Xjdv/LlblB3u27DTeVTma3Pt5zv+b1aA5Qq7dax0i13rVbRik55UNj0cPkMmVzbvPGXHf8BiG8RXbt1NK+8kvEyuF58D6PTmXpzCFoENYz5eAOLr+UOSISd+4pVFF6biMWOuIUls4yu7hiYTpa9mzeqz0qDt+Y6YgGtjtiV6+dpVruv1A7sf+T45JkAybFx9ZKGmJeT/rKS2+0/8zPRQOnMTm+SblIJpmzMyF6Cu80D0iAN4scNmvvg7WhlIb6w4WGB/p2ErXgOmw6+az8pHitYwfkutkVmTFQF1QjkLdtWHtZU372HwzPM6rZC3Nx9A==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=amd.com; dmarc=pass action=none header.from=amd.com; dkim=pass
- header.d=amd.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=amd.com; s=selector1;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=n4M0Nka/fBb/OExOiN9tMahrpTD7H247alVVBJRZAhA=;
- b=kTsnVnqOSZCdnVLfcTdhHH+xYzU3AgVVAFMEjZPHFX/+w/4jfnJtb4sHzGafpMnuSmxpEJCbFEFev/sQGcN6bhnvDpzrt+YJuK4nYI6g5/DKWB8mCGVEYU0Zznn6ZWJqXqrtUcMk5ll4k3+/GCAKk33AL88wyyO3gzXYToCIDTY=
-Authentication-Results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=amd.com;
-Received: from PH7PR12MB5685.namprd12.prod.outlook.com (2603:10b6:510:13c::22)
- by BL4PR12MB9483.namprd12.prod.outlook.com (2603:10b6:208:590::15) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9632.22; Tue, 24 Feb
- 2026 07:50:44 +0000
-Received: from PH7PR12MB5685.namprd12.prod.outlook.com
- ([fe80::ce69:cfae:774d:a65c]) by PH7PR12MB5685.namprd12.prod.outlook.com
- ([fe80::ce69:cfae:774d:a65c%5]) with mapi id 15.20.9632.017; Tue, 24 Feb 2026
- 07:50:44 +0000
-Message-ID: <ee914ffb-5c3d-4d41-abdb-5ed02db326c6@amd.com>
-Date: Tue, 24 Feb 2026 08:50:37 +0100
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 07/16] memcg: add support for GPU page counters. (v4)
-To: Dave Airlie <airlied@gmail.com>, dri-devel@lists.freedesktop.org,
- tj@kernel.org, Johannes Weiner <hannes@cmpxchg.org>,
- Michal Hocko <mhocko@kernel.org>, Roman Gushchin <roman.gushchin@linux.dev>,
- Shakeel Butt <shakeel.butt@linux.dev>, Muchun Song <muchun.song@linux.dev>
-Cc: cgroups@vger.kernel.org, Dave Chinner <david@fromorbit.com>,
- Waiman Long <longman@redhat.com>, simona@ffwll.ch
-References: <20260224020854.791201-1-airlied@gmail.com>
- <20260224020854.791201-8-airlied@gmail.com>
-Content-Language: en-US
-From: =?UTF-8?Q?Christian_K=C3=B6nig?= <christian.koenig@amd.com>
-In-Reply-To: <20260224020854.791201-8-airlied@gmail.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
-X-ClientProxiedBy: FR4P281CA0076.DEUP281.PROD.OUTLOOK.COM
- (2603:10a6:d10:cd::20) To PH7PR12MB5685.namprd12.prod.outlook.com
- (2603:10b6:510:13c::22)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="nV+TNY/Q"
+Received: by mail-ej1-f41.google.com with SMTP id a640c23a62f3a-b88593aa4dcso733416766b.3
+        for <cgroups@vger.kernel.org>; Tue, 24 Feb 2026 00:09:26 -0800 (PST)
+ARC-Seal: i=1; a=rsa-sha256; t=1771920565; cv=none;
+        d=google.com; s=arc-20240605;
+        b=WzAFi+STFvpw7W1kULn5jwJ/GyBcTOCEkavNk00TxqA7yYVY2Ddji7ePlQ+6SQwull
+         xrTrL/nZOInKSRZ/EMHyJM8OoAsnPfYD/VWb8hsZT40AcJeuSXYyuu4STKgJhma8mK6l
+         v2kKf0opx7Hq3ie3V9cUxUXGpFa2tRfgNfyJY59ZQpqipEfW0qNVWkwX+Z4DNQKlAIL0
+         U+9YIvwfU9TUAOMWhKjRCXBWpOlR3CcN9TBwTAyC6kMPmLM/MuxXKnNBOMbzwUi1VWXn
+         8wCJnjP/rRBnpNwKBAfwAncCCC1wr9gRmh2pqufavjGNSjgkhPBjfyRwBRfZO0W9uhwz
+         7wAA==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20240605;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:dkim-signature;
+        bh=FNPuP84vk79KL266z/45Fs7Uqy7CpD2+o8LZg3RRQ4E=;
+        fh=jZei27DK3BKhjuPEWApo/cd8v0u3zjO/X1qcrzAeD2k=;
+        b=NgBdaya8CaanfNs4RAc6B0P+Srs9n47AhxcODUxiz1gthXAu2T2nA4aGGbL2CaOYWX
+         LpF803aokfNT9T22Vnz0rUkIyzhQxvjq1ai5PBrDafFs2rnMeAih+Q6gyHVfcsznbCNp
+         s3Ngmm61z7LW+2PanRH9F7PVgoz/4Jg6nKvrLBIvAQuYwMA5LFY7iRmsfi9PW9FouKk0
+         Ur8O4PNma5mv1epVWmaKgur9z5zlyApWE4uH0P41yoOg4EO5AJF7ZQL0sQJgTJA76IZK
+         61AfjCCylWSjOUzXe7eR97LE8gUl8+WkiWhqrfTS/czvNtON95sQRc/7N7I5hXHx8YV0
+         wj8w==;
+        darn=vger.kernel.org
+ARC-Authentication-Results: i=1; mx.google.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1771920565; x=1772525365; darn=vger.kernel.org;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=FNPuP84vk79KL266z/45Fs7Uqy7CpD2+o8LZg3RRQ4E=;
+        b=nV+TNY/QgHXl+ppL3fHvVveBxMO/lsApY9mQ2moZKejhn48EgqDTOQciBH3htH38QA
+         qEqfnxr/Wdh8bPVULzNGtpcpsCUEQwXO/6Q7m74ZdqTnWubh5nFEGs37+IRkEXUlaXPW
+         9n/mDa9NKQVbOY3228EXL6FueRT1bsYgr9I0cd3moeMFTjMYx2pV1hea96rRvU35kmUu
+         axbgr5zYA17o7CRfkIzzlvN1qbVSon/D1U5r+wrtOSnKqTGazbKwC/OMsKw8fGDaLl9X
+         XttY/W1kgFrZLFx8OCpBAUMIFxoPAZe9OQTdvBqwCk3xiCMpZs48XFtTrtMr1ob4TIrB
+         7jzg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1771920565; x=1772525365;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-gg:x-gm-message-state:from
+         :to:cc:subject:date:message-id:reply-to;
+        bh=FNPuP84vk79KL266z/45Fs7Uqy7CpD2+o8LZg3RRQ4E=;
+        b=c+SVh+4y1TMoSlb9h/FhDx/RxJTpKKuRoTSbkO/YYfwWHKMr7BoaZoYUSWwcWRvmRS
+         POxyy0aSgbg2Nu0fUM6jkl4I28AuhI9oIUTB9ZmoUTGG+EzKkRJW02spw7/OBFlKtu+Y
+         30apl9RjjoFqs48CZXRSD9S2tE/ClJPSEvpc/C7BUO5paJDVzOePqewPlfGUnbg7F2ln
+         dApTx49OhQ4IuGq/H04+gqNYKmhEdrX4YzkVXasyQ8ldIESCg5B1sNUskMPzj9G1vBfx
+         Zy9VATtgJK22NnhFkiakFja3xMqQgXXC3vgv/gFmhMVPo4AVQnGyu72nahuNtT6G+hb9
+         jqEA==
+X-Forwarded-Encrypted: i=1; AJvYcCWx/L4Ek/uUzrzuWow0GNWPqi7DDE9tjm8f4V54OjPbhV4y58tyrShipa8dn1hP0WodZKS+HIOu@vger.kernel.org
+X-Gm-Message-State: AOJu0YyxL5dV8oIo/AMSxDj72svYm5n1m77hNidjwZk0w0qrTC7FQz6n
+	sft6Snwi+S11P8joBLyiDLnTwVbJisC2nvrmj1yNswYb8k7LTtbZlLzSwdhoY1HOHAUYqzVkuPG
+	Ddr/vZge8/8elso3lqMATinRdfvoUZ38=
+X-Gm-Gg: AZuq6aIfTGvjxXw5bWXFYZz/c29UY1SWQtJpPoROKLbhTFM79AXf5D0mApj5u9nFU18
+	mae6L7FSHrdr5s7QgwtTIkYbQEMyf51PGBCTkGszyUGmt6LZxeaqeAkx2dmVJIvVZyRTMPoxKeK
+	5+ryLGgjld0t/uujPzBN0K9D2zRKUcFuY2iH9VJM2WfYGrplf3B7vf+YMkcB23XmTFeaBsUQm/w
+	NZ10Rqa7TDauSwzJijXG/3LVesmApDim7U2KPgBdAfwbXfKt6/eUpk9J8dfdJ6LLQ+qvSFN2s7B
+	sBnhWaYuP5tCfwk6C260rxZ9Aqb3hhtCB84ghvXn
+X-Received: by 2002:a17:907:e105:b0:b8e:92e:d316 with SMTP id
+ a640c23a62f3a-b9081bfed88mr370513066b.56.1771920564862; Tue, 24 Feb 2026
+ 00:09:24 -0800 (PST)
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: PH7PR12MB5685:EE_|BL4PR12MB9483:EE_
-X-MS-Office365-Filtering-Correlation-Id: 5481521a-fdd3-40ad-100f-08de737969f4
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|1800799024|7416014|376014|366016|7142099003;
-X-Microsoft-Antispam-Message-Info:
-	=?utf-8?B?cjB3dmppWFNVcjlmQjcwQmNjN0JTcUdMcFJZenNET3JVS0JEOXZZaUdwdkRj?=
- =?utf-8?B?Y01WSWhXeGR3TEQwZmRoRFRCVHl5aTRRWEhZMXRkOCtlWk5CTDJkbkJLemNL?=
- =?utf-8?B?WGZHOFB4L1NySGlaYmx5TklJOWQ3NFhYVE82d2NzWXFUeHdmcEhPdTFMVzZD?=
- =?utf-8?B?S3ZtV2tQL2l1NGNqaXkrd2phQitCVGpGL29ORlMzT0pBOC9XbFlLc0htT2dZ?=
- =?utf-8?B?SWtvOWpGa3FhcjdEWU82Uk45b1cybDd4MUNMRGJKQU9WbU9hT25CcjdkRFZ5?=
- =?utf-8?B?eC9uQThiWmdqSEdLNWlVZmh0YWhsbzdLNkFZdTJzcVlQT0xxV281VlNaRHhw?=
- =?utf-8?B?S2xMaHNxVEpXbjJVc09FMEpidSthajgzcHJSNXZvRzBncDR6M0Rod2ZPTVU0?=
- =?utf-8?B?UDRPMTl0b0htVk9SVHg4RnBGNXp1ejdPVzcwK1orMFpsdHYyMW95aXNDRTE0?=
- =?utf-8?B?ZHk5VWdCYUFCTUdsbWtVVWZvY1dxM2JYSUNoZE9qWllrQTFKWU5QNS9qV29H?=
- =?utf-8?B?OTVHdzdWSVZldFlRY0UzbW9OU3ArOFpENkZ0M1JBcVpBZ0svbDdhQmdsU3hG?=
- =?utf-8?B?cUdJMlFvRHBIbWNFaEVtTEROSU5BNE1WOE42ZExobVhMclpMSi9uMFRFMGxP?=
- =?utf-8?B?MlZWL29xbUVzdXZoSTYyYUpRTWp4MVF5UjNGQlpibFdQWnJjTnVTMFdRM1Bh?=
- =?utf-8?B?S3NsM0lhVEJ0d05SY1dwMC9nYVBPU0xLQk5LN2JmSkZjLzh1QmJUOUNzQW5L?=
- =?utf-8?B?ZmVnSXc4QXJWWFRJR3VKYzRVajdETlpYZnNYbG50WDV5MzQ5MmJtL292Nkgw?=
- =?utf-8?B?VTdZMktPREk2Y05aVUVDL3JEZ25aQ3FjVExDcjBjWVFRbCsxN3ZsMU1VRnFa?=
- =?utf-8?B?TlJXYVA5em9xT1JnUkZQUU12SEJ1ZlkzamFyL094WDJRLy9wd3pJcEh4Uno3?=
- =?utf-8?B?cDVwOWdqaTNkRXhkcmtIN3l0RDR5Tjdhci9zaGlHZDMwazRtOTJTUWNNb2Y3?=
- =?utf-8?B?SHVjVTRjcUltZ1lRSEdvOXh3cGt4ZENVcXJDWnN0S05FaWJhVjlVRC9XL0Yy?=
- =?utf-8?B?dFZNaGJuUGFVNm9XenlkK0xvZlR0cktmUHFQdjdOZ1dTVnJiMEp4aXkvMmJL?=
- =?utf-8?B?VlQ4M0V6aTJyMVVzUmRLOTBNNm1ENlZQdFFUYzZjNVBySkhBVEVLYXMva2c3?=
- =?utf-8?B?NlZ4d2Y4NjJkWFZXVThxTGw5akJXdFdPR0FaVXcvaGplVi9ZZEJXUDBrcWRa?=
- =?utf-8?B?NWdTQnlJbmRFQXlDNWxkSGlTQkV6aGtSK203Q3JHOEVIOHNBRWFtYXJUdHF0?=
- =?utf-8?B?LzVMUERXaVFocEVVZnVMVFIya0xkazJSdmpReG80NEUwRTJxT3daUVcybHk4?=
- =?utf-8?B?L1dZa0hmR3NqTnM0TjZzZTI1clBGOHV1cXA1WVlUaEFFL1hGcmdaVllFcmFI?=
- =?utf-8?B?MnpaL2tZQ3JkKzZMUkNJMllHRE1lUEM3aEw3NWJaUWJ3MjlaWXdxd1ZkMnpL?=
- =?utf-8?B?bmlPMURPUUpxL2VwRHJvOHZnMTR2SzZnUHpLRk9aTVU1bG1ubTJOb2I2dmll?=
- =?utf-8?B?NVEwbWY0UDZZZDVySk5uMW8xaWl4UE4vMDY1YWF0Z1NIT2EycGR3S01HRjY4?=
- =?utf-8?B?WnY2MGZicWdnUTNOYjlJa1ArbFY5R2ZLRXU5N0RMQ2t0V2phcXJaVW81U1Zk?=
- =?utf-8?B?NzExOEN5eFMrV004OE5FSU5RZFVMMG5xRG9sUGk5YkZOKzVNdktUOGNqbUJz?=
- =?utf-8?B?RzJjMXpMdkRVT3JXNmVWc1JYWGk5S2llMzFEcXc3NFVLM2s1bXFEOUR6Y1Nn?=
- =?utf-8?B?K25WTmFNRWw0MjRPRjZ1QUtlN2tzSUw0alUzWGhIM0UyYWE4SlE2WnhRVWRH?=
- =?utf-8?B?MDdGdE44ODBtRFBQZysvckJuaGprdUlpSi8zNEx5bEhFOWtlYjlMR2diVE0x?=
- =?utf-8?B?eGRobFNLM2pHdFFXZGFOdHhqWFFQNTdEajhvMG43aE03RE1VWlVzNURrbG05?=
- =?utf-8?B?OGV5eGFpWlhSdFcwS2hLZi83dFRhZkxDZ2thMGZ6dTJlSmQxaG5Sd2xrNkZv?=
- =?utf-8?B?a2hwbHkxTGxUQ2lSemtOZ0Q3R0R5aWZNVzhPQUlmUDNXQ1B5OVdGSG81cy9M?=
- =?utf-8?Q?rxRU=3D?=
-X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:PH7PR12MB5685.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(1800799024)(7416014)(376014)(366016)(7142099003);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0:
-	=?utf-8?B?YmZvbHJYcVkrbEl5dVRsQ0Y4cjI5STA4R1gydkgyNkdtR2xDbWU5QThCTnlQ?=
- =?utf-8?B?Mit6NWxkWDNjM3lCdDJMajIwNU9yTXdhMnlxemlTb1RUOG1VaEQ0UGp4WnFn?=
- =?utf-8?B?OVV6K1kwSTdYdDhVaHlnYWM4ZHRybE5zTkFLOFlROVlYR2g2bXFPZFVMNndr?=
- =?utf-8?B?UzArMmRXZVZ5Z1M5YVF5ZDN4RWpKRzY4Q2hvK2FkYjE3K3Zzd0hSKzZTdUdI?=
- =?utf-8?B?VTM1WGhYK0JCdFJTeTJpVlF2S3lEZEtNL1c5ZVV6VUFiUUxIN0ozWmxZa1ZB?=
- =?utf-8?B?ZFNwdVUzb2J0cEdObThJaTMzK2RJTTVGeHAvZEFDdk5JcGNUWDRmOUJ4YTcr?=
- =?utf-8?B?UlFPU1VwUC93KzVkK1BZL2VDZk8wRWs4TTZ3YzF1YlpISDJWSmNFZDd4dUJB?=
- =?utf-8?B?cGNxN3V0MGkrcThES1JzTnkxNXlXbE9tVTVDYW5IaGdLclBVTTh0bElVRmZm?=
- =?utf-8?B?N3FtcHljdm5ic0xMQXVlcmVSblE2TXRLam1ZZkY2dW9ZekNNRTBvYnNpNkpi?=
- =?utf-8?B?MFc1TVBiR1Q5QUY3M0hhNlNpMWkvOUZPbXhHWjNpTEJzV3RjazdNcXlDV09M?=
- =?utf-8?B?T1JtZW5JZFFTd0kyWm9EZlVaclVRb291SEY2TnFtczNucTdTQkpuMnpSS1Qw?=
- =?utf-8?B?U2luUVVxQjl5UlVvQThxMENMMFBxWHRWRVJVQjltUjFOOFg0QXgvc0VlQWM4?=
- =?utf-8?B?ZlBOeUFTM3NENjRZY2U1dHRHUXE5V3hjNGYzYld2anl0dWc0NTIrNEhRblB2?=
- =?utf-8?B?c25xVUh6aUVnQm8xTm9Dc21pamxKOGRsWGJnUlFSaVZZcHorQ0ZVc25GaWtW?=
- =?utf-8?B?NlY3SWt4WnNpek1reEZxRHJJZU5TQUE2SURudWg2SHdWL1BtRXBnSUtyaVFO?=
- =?utf-8?B?V2RQT2N1ZlZlT2Y2TGxVcGVGUzBEaW9nMDlMS0doRWxGQlBGYjdQcktKVUJh?=
- =?utf-8?B?MkdNUVEwUmJyNWg3Mlh1N21FZHcyQjNjT0diZklLOFRJa2VrcTZTcmoxc09O?=
- =?utf-8?B?TWlDN1o5U255OHFmcnZpMng1VkU5VXBJUjFPU05LSVBsUVJ0WFhDUlk5MnA3?=
- =?utf-8?B?SjlnY09FWWx3V2ZmM0FhM05NcDc2QWRodUNscXNlajdxMHdoNlBFY0lWdWxx?=
- =?utf-8?B?NWZGd3hGNVZaTWkyaGloU2JPWklJelRkK1ZsNmlsTEs0RnUyK3ovb21KUUJw?=
- =?utf-8?B?cEdwUzFSZmdiWXVROC9yMWZoSXVzZHFHM1ppMnJ3cWZ3eGcyMWlnNFY2bTZP?=
- =?utf-8?B?a0tGSVYrV2tSdG5CTUdnTE5ITHR6ZVRDejFVS2w5UmZlcDkwZ0g3bzdpSnlF?=
- =?utf-8?B?cUc0UnlCY0RoeTV6anRrWS9pUERNWjc1aW5DUkRYSmJlcXRtQ3BBekJONEZP?=
- =?utf-8?B?NFVzTFROWmkxS0tiRlcyaEhydXdUcVhDSVQrV3RpS3dnRjcwWVpuZlo1YkVO?=
- =?utf-8?B?ZXp2TEhTMTJBTlNHVXFjbW5xZUhwNkFhSmNGUWRWY2VwRXpKc2JxZVJkV0Va?=
- =?utf-8?B?N2NPc1E1WnlsQnF2MTEwQStjc3NPa1BGeklKeWJybkRTK0xvU2lJSXNuaWxl?=
- =?utf-8?B?UDJtd25mb0VFY2dTeWtwWkU0bzc5YnhUNGMzMjBoTWNMWEtnMFRPay9uTEQy?=
- =?utf-8?B?dThxeTF4YUxyQXB2aS9nVFplVTBKeVZ6Z25hY29GZFdUamlJd2NsQTd3SDBh?=
- =?utf-8?B?YlZJL0p0dURXNW5Rd3ZQOXd5cUQ2b2ZaZTIvQ0EzRjJNY0FLL1ZyRis4MjZ1?=
- =?utf-8?B?T0t4YzRBNktqRElPQ1lTa2hJWEVmMDVHUFdnZ21pMDB0TDh3QjlVSC9YN2NC?=
- =?utf-8?B?VGswcnUxQit5Ny9JeXdDblQzQUNFQ0tvd28yWndwZzJsdWp3cGZUWlk3ZUVx?=
- =?utf-8?B?UWRWZEU1MW1xbVlLM1lTL2t1N01nZlVBcExzWEcrUTg4dUFsemVJbHNTLzJ2?=
- =?utf-8?B?TFhqVmhJT0RJRGZhSlpKb1dicHJlUHlPUDFXa0NMdXpSNWhtL0dZZHZQRm1N?=
- =?utf-8?B?azJWdWx1bUFldHV3b2p4ci85dVcrY3c3NTh5clVrQ1phc3JnazRBVFF1Sk1p?=
- =?utf-8?B?Z05nY0NWNU12bktHWkg0NGk4UThIWDhLZlo1TXREcGdlWTN0S2VLTnVyRFhj?=
- =?utf-8?B?SzhSZndlbTlxUVZvNGFJdGt0N1BXekpUZ1J3NVU4dlNieWdOSmNYQk16UnpN?=
- =?utf-8?B?M2pDMm0wUER5OE5ua3FPcnc2ZVF6Tm9kSGtaTWI0ZTl2N2FmMGNQV1hEbVJt?=
- =?utf-8?B?SHdWUWlOQUgyVWp4QzNCcjZFUUN6Sk5tajJtMERrU041Q0VpVnVUZ3BicndV?=
- =?utf-8?Q?9pGS4BP4gB9GfeXWP6?=
-X-OriginatorOrg: amd.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 5481521a-fdd3-40ad-100f-08de737969f4
-X-MS-Exchange-CrossTenant-AuthSource: PH7PR12MB5685.namprd12.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 24 Feb 2026 07:50:44.0819
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 3dd8961f-e488-4e60-8e11-a82d994e183d
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: YgGKMkZZOKaKl0aY1d4QSJsRt5+JnikTnnIPHmU7aWVQo64+2MaAVYJGIETABADf
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: BL4PR12MB9483
+References: <20260220-swap-table-p4-v1-0-104795d19815@tencent.com>
+ <20260220-swap-table-p4-v1-6-104795d19815@tencent.com> <aZ0oXHNMe7_3P9OT@linux.dev>
+In-Reply-To: <aZ0oXHNMe7_3P9OT@linux.dev>
+From: Kairui Song <ryncsn@gmail.com>
+Date: Tue, 24 Feb 2026 16:08:48 +0800
+X-Gm-Features: AaiRm516C6c119n55RhFty8hjIzFAw2otJUtAgUiNrhV_yc3b5XfX7wnRNLLbjo
+Message-ID: <CAMgjq7CRpM7no85OxMpDNAW=kCOr5i5CmKeJGd6VY8yYu6sEYA@mail.gmail.com>
+Subject: Re: [PATCH RFC 06/15] memcg, swap: reparent the swap entry on swapin
+ if swapout cgroup is dead
+To: Shakeel Butt <shakeel.butt@linux.dev>
+Cc: linux-mm@kvack.org, Andrew Morton <akpm@linux-foundation.org>, 
+	David Hildenbrand <david@kernel.org>, Lorenzo Stoakes <lorenzo.stoakes@oracle.com>, Zi Yan <ziy@nvidia.com>, 
+	Baolin Wang <baolin.wang@linux.alibaba.com>, Barry Song <baohua@kernel.org>, 
+	Hugh Dickins <hughd@google.com>, Chris Li <chrisl@kernel.org>, 
+	Kemeng Shi <shikemeng@huaweicloud.com>, Nhat Pham <nphamcs@gmail.com>, 
+	Baoquan He <bhe@redhat.com>, Johannes Weiner <hannes@cmpxchg.org>, Yosry Ahmed <yosry.ahmed@linux.dev>, 
+	Youngjun Park <youngjun.park@lge.com>, Chengming Zhou <chengming.zhou@linux.dev>, 
+	Roman Gushchin <roman.gushchin@linux.dev>, Muchun Song <muchun.song@linux.dev>, 
+	Qi Zheng <zhengqi.arch@bytedance.com>, linux-kernel@vger.kernel.org, 
+	cgroups@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-On 2/24/26 03:06, Dave Airlie wrote:
-> From: Dave Airlie <airlied@redhat.com>
-> 
-> This introduces 2 new statistics and 3 new memcontrol APIs for dealing
-> with GPU system memory allocations.
-> 
-> The stats corresponds to the same stats in the global vmstat,
-> for number of active GPU pages, and number of pages in pools that
-> can be reclaimed.
-> 
-> The first API charges a order of pages to a objcg, and sets
-> the objcg on the pages like kmem does, and updates the active/reclaim
-> statistic.
-> 
-> The second API uncharges a page from the obj cgroup it is currently charged
-> to.
-> 
-> The third API allows moving a page to/from reclaim and between obj cgroups.
-> When pages are added to the pool lru, this just updates accounting.
-> When pages are being removed from a pool lru, they can be taken from
-> the parent objcg so this allows them to be uncharged from there and transferred
-> to a new child objcg.
-> 
-> Acked-by: Christian König <christian.koenig@amd.com>
+On Tue, Feb 24, 2026 at 1:44=E2=80=AFPM Shakeel Butt <shakeel.butt@linux.de=
+v> wrote:
+>
+> On Fri, Feb 20, 2026 at 07:42:07AM +0800, Kairui Song via B4 Relay wrote:
+> > From: Kairui Song <kasong@tencent.com>
+> >
+> > As a result this will always charge the swapin folio into the dead
+> > cgroup's parent cgroup, and ensure folio->swap belongs to folio_memcg.
+>
+> I directly jump to this patch and the opening statement is confusing. Ple=
+ase
+> make the commit message self contained.
+>
+> > This only affects some uncommon behavior if we move the process between
+> > memcg.
+> >
+> > When a process that previously swapped some memory is moved to another
+> > cgroup, and the cgroup where the swap occurred is dead, folios for
+> > swap in of old swap entries will be charged into the new cgroup.
+> > Combined with the lazy freeing of swap cache, this leads to a strange
+> > situation where the folio->swap entry belongs to a cgroup that is not
+> > folio->memcg.
+>
+> Why is this an issue (i.e. folio->swap's cgroup different from
+> folio->memcg)?
 
-I have to take that back.
+It's an issue for this series, if we want to track the folio->swap
+using folio->memcg to avoid an external array to record folio->swap's
+memcgid.
 
-After going over the different use cases I'm now pretty convinced that charging any GPU/TTM allocation to memcg is the wrong approach to the problem.
+>
+> >
+> > Swapin from dead zombie memcg might be rare in practise, cgroups are
+> > offlined only after the workload in it is gone, which requires zapping
+> > the page table first, and releases all swap entries. Shmem is
+> > a bit different, but shmem always has swap count =3D=3D 1, and force
+> > releases the swap cache. So, for shmem charging into the new memcg and
+> > release entry does look more sensible.
+>
+> Is this behavior same for all types of memory backed by shmem (i.e. MAP_S=
+HARED,
+> memfd etc)? What about cow anon memory shared between parent and child
+> processes?
 
-Instead TTM should have a dmem_cgroup_pool which can limit the amount of system memory each cgroup can use from GTT.
-
-The use case that GTT memory should account to memcg is actually only valid for an extremely small number of HPC customers and for those use cases we have different approaches to solve this issue (udmabuf, system DMA-buf heap, etc...).
-
-What we can do is to say that this dmem_cgroup_pool then also accounts to memcg for selected cgroups. This would not only make it superflous to have different flags in drivers and TTM to turn this feature on/off, but also allow charging VRAM or other local memory to memcg because they use system memory as fallback for device memory.
-
-In other more high level words memcg is actually the swapping space for dmem.
-
-Regards,
-Christian.
-
-> Signed-off-by: Dave Airlie <airlied@redhat.com>
-> ---
-> v2: use memcg_node_stat_items
-> v3: fix null ptr dereference in uncharge
-> v4: AI review: fix parameter names, fix problem with reclaim moving doing wrong thing
-> ---
->  Documentation/admin-guide/cgroup-v2.rst |   6 ++
->  include/linux/memcontrol.h              |  11 +++
->  mm/memcontrol.c                         | 104 ++++++++++++++++++++++++
->  3 files changed, 121 insertions(+)
-> 
-> diff --git a/Documentation/admin-guide/cgroup-v2.rst b/Documentation/admin-guide/cgroup-v2.rst
-> index 91beaa6798ce..3ea7f1a399e8 100644
-> --- a/Documentation/admin-guide/cgroup-v2.rst
-> +++ b/Documentation/admin-guide/cgroup-v2.rst
-> @@ -1573,6 +1573,12 @@ The following nested keys are defined.
->  	  vmalloc (npn)
->  		Amount of memory used for vmap backed memory.
->  
-> +	  gpu_active (npn)
-> +		Amount of system memory used for GPU devices.
-> +
-> +	  gpu_reclaim (npn)
-> +		Amount of system memory cached for GPU devices.
-> +
->  	  shmem
->  		Amount of cached filesystem data that is swap-backed,
->  		such as tmpfs, shm segments, shared anonymous mmap()s
-> diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
-> index 70b685a85bf4..4f75d64f5fca 100644
-> --- a/include/linux/memcontrol.h
-> +++ b/include/linux/memcontrol.h
-> @@ -1583,6 +1583,17 @@ static inline void mem_cgroup_flush_foreign(struct bdi_writeback *wb)
->  #endif	/* CONFIG_CGROUP_WRITEBACK */
->  
->  struct sock;
-> +bool mem_cgroup_charge_gpu_page(struct obj_cgroup *objcg, struct page *page,
-> +			   unsigned int order,
-> +			   gfp_t gfp_mask, bool reclaim);
-> +void mem_cgroup_uncharge_gpu_page(struct page *page,
-> +				  unsigned int order,
-> +				  bool reclaim);
-> +bool mem_cgroup_move_gpu_page_reclaim(struct obj_cgroup *objcg,
-> +				      struct page *page,
-> +				      unsigned int order,
-> +				      bool to_reclaim);
-> +
->  #ifdef CONFIG_MEMCG
->  extern struct static_key_false memcg_sockets_enabled_key;
->  #define mem_cgroup_sockets_enabled static_branch_unlikely(&memcg_sockets_enabled_key)
-> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-> index a52da3a5e4fd..90bb3e00c258 100644
-> --- a/mm/memcontrol.c
-> +++ b/mm/memcontrol.c
-> @@ -333,6 +333,8 @@ static const unsigned int memcg_node_stat_items[] = {
->  #ifdef CONFIG_HUGETLB_PAGE
->  	NR_HUGETLB,
->  #endif
-> +	NR_GPU_ACTIVE,
-> +	NR_GPU_RECLAIM,
->  };
->  
->  static const unsigned int memcg_stat_items[] = {
-> @@ -1360,6 +1362,8 @@ static const struct memory_stat memory_stats[] = {
->  	{ "percpu",			MEMCG_PERCPU_B			},
->  	{ "sock",			MEMCG_SOCK			},
->  	{ "vmalloc",			MEMCG_VMALLOC			},
-> +	{ "gpu_active",			NR_GPU_ACTIVE			},
-> +	{ "gpu_reclaim",		NR_GPU_RECLAIM	                },
->  	{ "shmem",			NR_SHMEM			},
->  #ifdef CONFIG_ZSWAP
->  	{ "zswap",			MEMCG_ZSWAP_B			},
-> @@ -5133,6 +5137,106 @@ void mem_cgroup_flush_workqueue(void)
->  	flush_workqueue(memcg_wq);
->  }
->  
-> +/**
-> + * mem_cgroup_charge_gpu_page - charge a page to GPU memory tracking
-> + * @objcg: objcg to charge, NULL charges root memcg
-> + * @page: page to charge
-> + * @order: page allocation order
-> + * @gfp_mask: gfp mode
-> + * @reclaim: charge the reclaim counter instead of the active one.
-> + *
-> + * Charge the order sized @page to the objcg. Returns %true if the charge fit within
-> + * @objcg's configured limit, %false if it doesn't.
-> + */
-> +bool mem_cgroup_charge_gpu_page(struct obj_cgroup *objcg, struct page *page,
-> +				unsigned int order, gfp_t gfp_mask, bool reclaim)
-> +{
-> +	unsigned int nr_pages = 1 << order;
-> +	struct mem_cgroup *memcg = NULL;
-> +	struct lruvec *lruvec;
-> +	int ret;
-> +
-> +	if (objcg) {
-> +		memcg = get_mem_cgroup_from_objcg(objcg);
-> +
-> +		ret = try_charge_memcg(memcg, gfp_mask, nr_pages);
-> +		if (ret) {
-> +			mem_cgroup_put(memcg);
-> +			return false;
-> +		}
-> +
-> +		obj_cgroup_get(objcg);
-> +		page_set_objcg(page, objcg);
-> +	}
-> +
-> +	lruvec = mem_cgroup_lruvec(memcg, page_pgdat(page));
-> +	mod_lruvec_state(lruvec, reclaim ? NR_GPU_RECLAIM : NR_GPU_ACTIVE, nr_pages);
-> +
-> +	mem_cgroup_put(memcg);
-> +	return true;
-> +}
-> +EXPORT_SYMBOL_GPL(mem_cgroup_charge_gpu_page);
-> +
-> +/**
-> + * mem_cgroup_uncharge_gpu_page - uncharge a page from GPU memory tracking
-> + * @page: page to uncharge
-> + * @order: order of the page allocation
-> + * @reclaim: uncharge the reclaim counter instead of the active.
-> + */
-> +void mem_cgroup_uncharge_gpu_page(struct page *page,
-> +				  unsigned int order, bool reclaim)
-> +{
-> +	struct obj_cgroup *objcg = page_objcg(page);
-> +	struct mem_cgroup *memcg;
-> +	struct lruvec *lruvec;
-> +	int nr_pages = 1 << order;
-> +
-> +	memcg = objcg ? get_mem_cgroup_from_objcg(objcg) : NULL;
-> +
-> +	lruvec = mem_cgroup_lruvec(memcg, page_pgdat(page));
-> +	mod_lruvec_state(lruvec, reclaim ? NR_GPU_RECLAIM : NR_GPU_ACTIVE, -nr_pages);
-> +
-> +	if (memcg && !mem_cgroup_is_root(memcg))
-> +		refill_stock(memcg, nr_pages);
-> +	page->memcg_data = 0;
-> +	obj_cgroup_put(objcg);
-> +	mem_cgroup_put(memcg);
-> +}
-> +EXPORT_SYMBOL_GPL(mem_cgroup_uncharge_gpu_page);
-> +
-> +/**
-> + * mem_cgroup_move_gpu_reclaim - move pages from gpu to gpu reclaim and back
-> + * @new_objcg: objcg to move page to, NULL if just stats update.
-> + * @nr_pages: number of pages to move
-> + * @to_reclaim: true moves pages into reclaim, false moves them back
-> + */
-> +bool mem_cgroup_move_gpu_page_reclaim(struct obj_cgroup *new_objcg,
-> +				      struct page *page,
-> +				      unsigned int order,
-> +				      bool to_reclaim)
-> +{
-> +	struct obj_cgroup *objcg = page_objcg(page);
-> +
-> +	if (!objcg || !new_objcg || objcg == new_objcg) {
-> +		struct mem_cgroup *memcg = objcg ? get_mem_cgroup_from_objcg(objcg) : NULL;
-> +		struct lruvec *lruvec;
-> +		unsigned long flags;
-> +		int nr_pages = 1 << order;
-> +
-> +		lruvec = mem_cgroup_lruvec(memcg, page_pgdat(page));
-> +		local_irq_save(flags);
-> +		mod_lruvec_state(lruvec, to_reclaim ? NR_GPU_RECLAIM : NR_GPU_ACTIVE, nr_pages);
-> +		mod_lruvec_state(lruvec, to_reclaim ? NR_GPU_ACTIVE : NR_GPU_RECLAIM, -nr_pages);
-> +		local_irq_restore(flags);
-> +		mem_cgroup_put(memcg);
-> +		return true;
-> +	} else {
-> +		mem_cgroup_uncharge_gpu_page(page, order, true);
-> +		return mem_cgroup_charge_gpu_page(new_objcg, page, order, 0, false);
-> +	}
-> +}
-> +EXPORT_SYMBOL_GPL(mem_cgroup_move_gpu_page_reclaim);
-> +
->  static int __init cgroup_memory(char *s)
->  {
->  	char *token;
-
+It's the same. If the memcg is dead and a swap entry's memcgid record
+points to the dead memcg, then whoever reads this swap entry recharges
+the swapin folio.
