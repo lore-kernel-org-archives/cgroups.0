@@ -1,35 +1,35 @@
-Received: from us-smtp-delivery-44.mimecast.com (us-smtp-delivery-44.mimecast.com [205.139.111.44])
+Received: from us-smtp-delivery-44.mimecast.com (us-smtp-delivery-44.mimecast.com [207.211.30.44])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4121323EA83
-	for <cgroups@vger.kernel.org>; Tue, 24 Feb 2026 02:09:29 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.139.111.44
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C1E3523EA83
+	for <cgroups@vger.kernel.org>; Tue, 24 Feb 2026 02:09:51 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=207.211.30.44
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1771898971; cv=none; b=raxjDQuSfqaMhe82Nzg9iYUCoTZDllqw6EKFz3pQrjhKD37Zw/Wr0rHidtuBCC85zqcHPtb4aQyq5V1LjhpPB6q3SDJzsKgf99Sbx6e43gu08pikjbnUPaGDnya38V9jcMCuy+DvhvO5i7ZtwxbBom9uSOBxiGYQDptuWjpIkcQ=
+	t=1771898993; cv=none; b=StCYM5p15hbdyn1Y2tiD4FJehVb1VGJRkhKWzQnIYXuGAVEkmZFZBL6RvN2aj2fpEKodS+u0FI62v3dDxbnfprcNOoWPVUSwOe/c1lMXBQ5TkhK3xHP73R6EnaTgmHO3Xd1lwkIQKLh3befcFWVbb3Um5YHoSWD/FqzYuLMlykY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1771898971; c=relaxed/simple;
-	bh=uE/ueCU1MVGP8LlI+rR03jlLtzCn0Uuwfp90UyKV2xo=;
+	s=arc-20240116; t=1771898993; c=relaxed/simple;
+	bh=PXNOLXZcZstWqzbYt17UPITh9uLSd4OYaD9oGfRFx3o=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=APwV3JxdsuoX9c+Rayfv3N5X9voYG9N/IWMYpZKqzHM31hdA9mTO7n+bwiNWRZ1miOHaipecqu65yWyvM+vif2mIL+B9v1KHqiRk6nd9YnfaE7X0QHMy+Kz7ycfNQJ8IoDlWtG0J8f4VN9mR7cy0P+Fmo2+TjT7fbXyb8FwZiv8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=gmail.com; spf=fail smtp.mailfrom=gmail.com; arc=none smtp.client-ip=205.139.111.44
+	 MIME-Version:Content-Type; b=agoyHhO3wdy/kXBcDWHA8OZPnzKM5tOW8hrnJbmAq+vE+muDGlQnkZk9O78fewsyLzcImqf//SKLRLTinc2QvSobUcnsSoB/xrLYXBaIMDDVq08jbtpCMjGM+28F62R171gU2MQ/gaaMADMN0BI+hxli4rseoaG+GIYSK+rJixc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=gmail.com; spf=fail smtp.mailfrom=gmail.com; arc=none smtp.client-ip=207.211.30.44
 Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=gmail.com
 Received: from mx-prod-mc-06.mail-002.prod.us-west-2.aws.redhat.com
  (ec2-35-165-154-97.us-west-2.compute.amazonaws.com [35.165.154.97]) by
  relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-480-PBWt6mehN1SC1_bVkPrOxw-1; Mon,
- 23 Feb 2026 21:09:23 -0500
-X-MC-Unique: PBWt6mehN1SC1_bVkPrOxw-1
-X-Mimecast-MFC-AGG-ID: PBWt6mehN1SC1_bVkPrOxw_1771898962
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-649-YPm3JPQjNdiXoq3y15mdjQ-1; Mon,
+ 23 Feb 2026 21:09:44 -0500
+X-MC-Unique: YPm3JPQjNdiXoq3y15mdjQ-1
+X-Mimecast-MFC-AGG-ID: YPm3JPQjNdiXoq3y15mdjQ_1771898983
 Received: from mx-prod-int-01.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-01.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.4])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
-	by mx-prod-mc-06.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 960D21800259;
-	Tue, 24 Feb 2026 02:09:21 +0000 (UTC)
+	by mx-prod-mc-06.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 52C74180025C;
+	Tue, 24 Feb 2026 02:09:43 +0000 (UTC)
 Received: from dreadlord.taild9177d.ts.net (unknown [10.67.32.38])
-	by mx-prod-int-01.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id F2F7230001BB;
-	Tue, 24 Feb 2026 02:09:14 +0000 (UTC)
+	by mx-prod-int-01.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id 1D5E330001BB;
+	Tue, 24 Feb 2026 02:09:36 +0000 (UTC)
 From: Dave Airlie <airlied@gmail.com>
 To: dri-devel@lists.freedesktop.org,
 	tj@kernel.org,
@@ -43,9 +43,9 @@ Cc: cgroups@vger.kernel.org,
 	Dave Chinner <david@fromorbit.com>,
 	Waiman Long <longman@redhat.com>,
 	simona@ffwll.ch
-Subject: [PATCH 02/16] drm/ttm: use gpu mm stats to track gpu memory allocations. (v4)
-Date: Tue, 24 Feb 2026 12:06:19 +1000
-Message-ID: <20260224020854.791201-3-airlied@gmail.com>
+Subject: [PATCH 05/16] ttm/pool: make pool shrinker NUMA aware (v2)
+Date: Tue, 24 Feb 2026 12:06:22 +1000
+Message-ID: <20260224020854.791201-6-airlied@gmail.com>
 In-Reply-To: <20260224020854.791201-1-airlied@gmail.com>
 References: <20260224020854.791201-1-airlied@gmail.com>
 Precedence: bulk
@@ -56,136 +56,131 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 X-Scanned-By: MIMEDefang 3.4.1 on 10.30.177.4
 X-Mimecast-Spam-Score: 0
-X-Mimecast-MFC-PROC-ID: 0TFV0qAOWreNYtSMnyUKLsKKbT4nnqwXEX6KF7t4dO4_1771898962
+X-Mimecast-MFC-PROC-ID: aba4Yv-Sagb5ktwGceVNNgayyH3HIGHLrViJCm6RTTk_1771898983
 X-Mimecast-Originator: gmail.com
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: quoted-printable
 
 From: Dave Airlie <airlied@redhat.com>
 
-This uses the newly introduced per-node gpu tracking stats,
-to track GPU memory allocated via TTM and reclaimable memory in
-the TTM page pools.
-
-These stats will be useful later for system information and
-later when mem cgroups are integrated.
+This enable NUMA awareness for the shrinker on the
+ttm pools.
 
 Cc: Christian Koenig <christian.koenig@amd.com>
-Cc: Matthew Brost <matthew.brost@intel.com>
-Cc: Johannes Weiner <hannes@cmpxchg.org>
-Cc: linux-mm@kvack.org
-Cc: Andrew Morton <akpm@linux-foundation.org>
-Acked-by: Christian K=C3=B6nig <christian.koenig@amd.com>
+Cc: Dave Chinner <david@fromorbit.com>
+Reviewed-by: Christian K=C3=B6nig <christian.koenig@amd.com>
 Signed-off-by: Dave Airlie <airlied@redhat.com>
 
 ---
-v2: add reclaim parameters and adjust the right counters.
-v3: drop the nid helper and get it from page.
-v4: use mod_lruvec_page_state (Shakeel)
+v2: AI review - found reverse diff calculation
 ---
- drivers/gpu/drm/ttm/ttm_pool.c | 21 +++++++++++++++------
- 1 file changed, 15 insertions(+), 6 deletions(-)
+ drivers/gpu/drm/ttm/ttm_pool.c | 38 +++++++++++++++++++---------------
+ 1 file changed, 21 insertions(+), 17 deletions(-)
 
 diff --git a/drivers/gpu/drm/ttm/ttm_pool.c b/drivers/gpu/drm/ttm/ttm_pool.=
 c
-index c0d95559197c..6891776cad75 100644
+index 3989e15ab5b0..880228132b91 100644
 --- a/drivers/gpu/drm/ttm/ttm_pool.c
 +++ b/drivers/gpu/drm/ttm/ttm_pool.c
-@@ -159,8 +159,10 @@ static struct page *ttm_pool_alloc_page(struct ttm_poo=
-l *pool, gfp_t gfp_flags,
-=20
- =09if (!ttm_pool_uses_dma_alloc(pool)) {
- =09=09p =3D alloc_pages_node(pool->nid, gfp_flags, order);
--=09=09if (p)
-+=09=09if (p) {
- =09=09=09p->private =3D order;
-+=09=09=09mod_lruvec_page_state(p, NR_GPU_ACTIVE, 1 << order);
-+=09=09}
- =09=09return p;
- =09}
-=20
-@@ -195,7 +197,7 @@ static struct page *ttm_pool_alloc_page(struct ttm_pool=
- *pool, gfp_t gfp_flags,
-=20
- /* Reset the caching and pages of size 1 << order */
- static void ttm_pool_free_page(struct ttm_pool *pool, enum ttm_caching cac=
-hing,
--=09=09=09       unsigned int order, struct page *p)
-+=09=09=09       unsigned int order, struct page *p, bool reclaim)
- {
- =09unsigned long attr =3D DMA_ATTR_FORCE_CONTIGUOUS;
- =09struct ttm_pool_dma *dma;
-@@ -210,6 +212,8 @@ static void ttm_pool_free_page(struct ttm_pool *pool, e=
-num ttm_caching caching,
- #endif
-=20
- =09if (!pool || !ttm_pool_uses_dma_alloc(pool)) {
-+=09=09mod_lruvec_page_state(p, reclaim ? NR_GPU_RECLAIM : NR_GPU_ACTIVE,
-+=09=09=09=09      -(1 << order));
- =09=09__free_pages(p, order);
- =09=09return;
- =09}
-@@ -297,6 +301,9 @@ static void ttm_pool_type_give(struct ttm_pool_type *pt=
-, struct page *p)
- =09list_add(&p->lru, &pt->pages);
- =09spin_unlock(&pt->lock);
- =09atomic_long_add(1 << pt->order, &allocated_pages);
-+
-+=09mod_lruvec_page_state(p, NR_GPU_ACTIVE, -num_pages);
-+=09mod_lruvec_page_state(p, NR_GPU_RECLAIM, num_pages);
+@@ -423,12 +423,12 @@ static struct ttm_pool_type *ttm_pool_select_type(str=
+uct ttm_pool *pool,
+ =09return NULL;
  }
 =20
- /* Take pages from a specific pool_type, return NULL when nothing availabl=
-e */
-@@ -308,6 +315,8 @@ static struct page *ttm_pool_type_take(struct ttm_pool_=
-type *pt)
- =09p =3D list_first_entry_or_null(&pt->pages, typeof(*p), lru);
- =09if (p) {
- =09=09atomic_long_sub(1 << pt->order, &allocated_pages);
-+=09=09mod_lruvec_page_state(p, NR_GPU_ACTIVE, (1 << pt->order));
-+=09=09mod_lruvec_page_state(p, NR_GPU_RECLAIM, -(1 << pt->order));
- =09=09list_del(&p->lru);
- =09}
- =09spin_unlock(&pt->lock);
-@@ -340,7 +349,7 @@ static void ttm_pool_type_fini(struct ttm_pool_type *pt=
-)
+-/* Free pages using the global shrinker list */
+-static unsigned int ttm_pool_shrink(void)
++/* Free pages using the per-node shrinker list */
++static unsigned int ttm_pool_shrink(int nid, unsigned long num_to_free)
+ {
++=09LIST_HEAD(dispose);
+ =09struct ttm_pool_type *pt;
+ =09unsigned int num_pages;
+-=09struct page *p;
+=20
+ =09down_read(&pool_shrink_rwsem);
+ =09spin_lock(&shrinker_lock);
+@@ -436,13 +436,10 @@ static unsigned int ttm_pool_shrink(void)
+ =09list_move_tail(&pt->shrinker_list, &shrinker_list);
  =09spin_unlock(&shrinker_lock);
 =20
- =09while ((p =3D ttm_pool_type_take(pt)))
--=09=09ttm_pool_free_page(pt->pool, pt->caching, pt->order, p);
-+=09=09ttm_pool_free_page(pt->pool, pt->caching, pt->order, p, true);
- }
+-=09p =3D ttm_pool_type_take(pt, ttm_pool_nid(pt->pool));
+-=09if (p) {
+-=09=09ttm_pool_free_page(pt->pool, pt->caching, pt->order, p, true);
+-=09=09num_pages =3D 1 << pt->order;
+-=09} else {
+-=09=09num_pages =3D 0;
+-=09}
++=09num_pages =3D list_lru_walk_node(&pt->pages, nid, pool_move_to_dispose_=
+list, &dispose, &num_to_free);
++=09num_pages *=3D 1 << pt->order;
++
++=09ttm_pool_dispose_list(pt, &dispose);
+ =09up_read(&pool_shrink_rwsem);
 =20
- /* Return the pool_type to use for the given caching and order */
-@@ -392,7 +401,7 @@ static unsigned int ttm_pool_shrink(void)
-=20
- =09p =3D ttm_pool_type_take(pt);
- =09if (p) {
--=09=09ttm_pool_free_page(pt->pool, pt->caching, pt->order, p);
-+=09=09ttm_pool_free_page(pt->pool, pt->caching, pt->order, p, true);
- =09=09num_pages =3D 1 << pt->order;
- =09} else {
- =09=09num_pages =3D 0;
-@@ -484,7 +493,7 @@ static pgoff_t ttm_pool_unmap_and_free(struct ttm_pool =
-*pool, struct page *page,
- =09if (pt)
- =09=09ttm_pool_type_give(pt, page);
- =09else
--=09=09ttm_pool_free_page(pool, caching, order, page);
-+=09=09ttm_pool_free_page(pool, caching, order, page, false);
-=20
- =09return nr;
- }
-@@ -789,7 +798,7 @@ static int __ttm_pool_alloc(struct ttm_pool *pool, stru=
+ =09return num_pages;
+@@ -791,6 +788,7 @@ static int __ttm_pool_alloc(struct ttm_pool *pool, stru=
 ct ttm_tt *tt,
+ =09=09pt =3D ttm_pool_select_type(pool, page_caching, order);
+ =09=09if (pt && allow_pools)
+ =09=09=09p =3D ttm_pool_type_take(pt, ttm_pool_nid(pool));
++
+ =09=09/*
+ =09=09 * If that fails or previously failed, allocate from system.
+ =09=09 * Note that this also disallows additional pool allocations using
+@@ -941,8 +939,10 @@ void ttm_pool_free(struct ttm_pool *pool, struct ttm_t=
+t *tt)
+ {
+ =09ttm_pool_free_range(pool, tt, tt->caching, 0, tt->num_pages);
+=20
+-=09while (atomic_long_read(&allocated_pages) > page_pool_size)
+-=09=09ttm_pool_shrink();
++=09while (atomic_long_read(&allocated_pages) > page_pool_size) {
++=09=09unsigned long diff =3D atomic_long_read(&allocated_pages) - page_poo=
+l_size;
++=09=09ttm_pool_shrink(ttm_pool_nid(pool), diff);
++=09}
+ }
+ EXPORT_SYMBOL(ttm_pool_free);
+=20
+@@ -1197,7 +1197,7 @@ static unsigned long ttm_pool_shrinker_scan(struct sh=
+rinker *shrink,
+ =09unsigned long num_freed =3D 0;
+=20
+ =09do
+-=09=09num_freed +=3D ttm_pool_shrink();
++=09=09num_freed +=3D ttm_pool_shrink(sc->nid, sc->nr_to_scan);
+ =09while (num_freed < sc->nr_to_scan &&
+ =09       atomic_long_read(&allocated_pages));
+=20
+@@ -1325,11 +1325,15 @@ static int ttm_pool_debugfs_shrink_show(struct seq_=
+file *m, void *data)
+ =09=09.nr_to_scan =3D TTM_SHRINKER_BATCH,
+ =09};
+ =09unsigned long count;
++=09int nid;
+=20
+ =09fs_reclaim_acquire(GFP_KERNEL);
+-=09count =3D ttm_pool_shrinker_count(mm_shrinker, &sc);
+-=09seq_printf(m, "%lu/%lu\n", count,
+-=09=09   ttm_pool_shrinker_scan(mm_shrinker, &sc));
++=09for_each_node(nid) {
++=09=09sc.nid =3D nid;
++=09=09count =3D ttm_pool_shrinker_count(mm_shrinker, &sc);
++=09=09seq_printf(m, "%d: %lu/%lu\n", nid, count,
++=09=09=09   ttm_pool_shrinker_scan(mm_shrinker, &sc));
++=09}
+ =09fs_reclaim_release(GFP_KERNEL);
+=20
  =09return 0;
+@@ -1377,7 +1381,7 @@ int ttm_pool_mgr_init(unsigned long num_pages)
+ #endif
+ #endif
 =20
- error_free_page:
--=09ttm_pool_free_page(pool, page_caching, order, p);
-+=09ttm_pool_free_page(pool, page_caching, order, p, false);
+-=09mm_shrinker =3D shrinker_alloc(0, "drm-ttm_pool");
++=09mm_shrinker =3D shrinker_alloc(SHRINKER_NUMA_AWARE, "drm-ttm_pool");
+ =09if (!mm_shrinker)
+ =09=09return -ENOMEM;
 =20
- error_free_all:
- =09if (tt->restore)
 --=20
 2.52.0
 
