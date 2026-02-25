@@ -1,31 +1,31 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2EFF02D77FA;
-	Wed, 25 Feb 2026 05:01:13 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0F1052D876B;
+	Wed, 25 Feb 2026 05:01:14 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1771995673; cv=none; b=MdHuMS8gnPFz0cXSEALzUX70MYenyu2e1LIKRZT2zzUrpaosKtkVw8eRM/WkBzMBaRTxkugjTR2bKNlIT+aKzIo4x8WL5FxNoIpr+445zYwr1Fwpz6UW+PmD5GoF2XKKzCgMTjzcS0ahMaf3f5pNQ9OT6eztnltkyiHvf8a/nzA=
+	t=1771995674; cv=none; b=pZrYV3hX9kJJg4J/IXXOSzVMDedv0fy2GMuIQdqXQ4FpnMgJULXJuEmralFtFvwtkraYNOur/OHYbYvgZqk7Xu5FR/FitK6xcNKX76S0pVXoiFDadAY/TXEtpWjeqpfWrimUsAa1JZzqcSf+iGHIMFg76mkp/YE3iqPiLf4gzG8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1771995673; c=relaxed/simple;
-	bh=nC/y+Q1GXw/2eyYYfy80AaGlsw6Nuh7Pb1KJE/rv2U8=;
+	s=arc-20240116; t=1771995674; c=relaxed/simple;
+	bh=jUl6gnrkvDeq7jxlxPhGwDFU5y6TZIsFSFNiP3mvHJw=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=LQ13cnlO3TwnM4urkdAeM+Zs+Lxjt7g0cDYHIe96Vk2zWDwJ/1ZxlQA04fePIO8Zg6NBPjV5jC4gpf5IQWtl3Y0lVWkKn8sNSDxuXPXdatLlbfRw9xhlfoVCVeItyjEd9WoZJiUkU8NayVL6D6cMMLf91nIr0E3LUYpUGAJhSm8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=abDuhjD4; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version; b=Kh+l6nP3+4LoOAmWQdn/d43U2l9FJ0B7GEJNqYgc9yU7ZXs3BwVJv7IYVnxvnUOz9B8KkSrqn8dMVvpgMTO2yX/tKQGkVMllG8xaEPk968N+bpdnp35DyksPU+/EWWXIWlmrLhN5SXOViA9NfpSYBtndr4DrsL3zaH1u4HE64t8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=BnuI2kvq; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="abDuhjD4"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id BB2FCC19422;
-	Wed, 25 Feb 2026 05:01:12 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="BnuI2kvq"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C9239C2BCAF;
+	Wed, 25 Feb 2026 05:01:13 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1771995672;
-	bh=nC/y+Q1GXw/2eyYYfy80AaGlsw6Nuh7Pb1KJE/rv2U8=;
+	s=k20201202; t=1771995673;
+	bh=jUl6gnrkvDeq7jxlxPhGwDFU5y6TZIsFSFNiP3mvHJw=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=abDuhjD4ZYLJR6VOWISRW61bxiQQnY+ZyDcklm1xqbbX20zDGDhyPIT+GtHJ4opdD
-	 3jv2ZNk9C6Nirabaz4aPipL6CaLvuyJInJryfrPcbVZNi8Lp3Zi0fXZgKjclUU0GwE
-	 /nCXzg8y6E+n4OwxEgWcJ0MN6UjOeVr4jWebrUdz54/Aq+RI34ylJQm9R7GdFtL1aN
-	 FQEO5gN8/9za/iz6bC2aZFJtbWlrPDEOckjEF+V2Df9PBXrS2pc1yabBOojMFmP2YG
-	 dSAcTkbfuih5pncr9ynAO254eMgwWLEMh13/aH/1IpQ5Ytx5FjXPF0QLmjt7KL1XnW
-	 EO0CgXugXaHmA==
+	b=BnuI2kvqDk68Fh80hgfXQfrUiD3IDeW7hwFMUzBkdO3VWhuRG9NAmgAjVcFo8iMIt
+	 3KZnlHjFnPR+Dnqhc3L2FXbYK+l1RZgxmqnpoZaHEfieNk0x3VqNljApjWqz4bBMPA
+	 fQuzwta2uBRCSetd2IQux1W/gJJ+2tX9jRR53ZNbQQMZQAqYJtT2vmbMSAI2AB+Li0
+	 DcqLsvp+Ru0GZZwfOscJDZeZ5ANR+ArNb5urQPNcdpP0ZGCPOfzuCJSchzzM2Rfu4K
+	 drexPtfbHzU0yMMtReGL4HhRWQqiGqXOOAMrNvZ6mufjHvGqX8pxGhyuXQBC2c5XbG
+	 e2aHV+KAQfp9Q==
 From: Tejun Heo <tj@kernel.org>
 To: linux-kernel@vger.kernel.org,
 	sched-ext@lists.linux.dev
@@ -37,10 +37,11 @@ Cc: void@manifault.com,
 	mkoutny@suse.com,
 	cgroups@vger.kernel.org,
 	Tejun Heo <tj@kernel.org>,
+	Ingo Molnar <mingo@redhat.com>,
 	Peter Zijlstra <peterz@infradead.org>
-Subject: [PATCH 02/34] sched_ext: Add @kargs to scx_fork()
-Date: Tue, 24 Feb 2026 19:00:37 -1000
-Message-ID: <20260225050109.1070059-3-tj@kernel.org>
+Subject: [PATCH 03/34] sched/core: Swap the order between sched_post_fork() and cgroup_post_fork()
+Date: Tue, 24 Feb 2026 19:00:38 -1000
+Message-ID: <20260225050109.1070059-4-tj@kernel.org>
 X-Mailer: git-send-email 2.53.0
 In-Reply-To: <20260225050109.1070059-1-tj@kernel.org>
 References: <20260225050109.1070059-1-tj@kernel.org>
@@ -52,65 +53,36 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Make sched_cgroup_fork() pass @kargs to scx_fork(). This will be used to
-determine @p's cgroup for cgroup sub-sched support.
+The planned sched_ext cgroup sub-scheduler support needs the newly forked
+task to be associated with its cgroup in its post_fork() hook. There is no
+existing ordering requirement between the two now. Swap them and note the
+new ordering requirement.
 
 Signed-off-by: Tejun Heo <tj@kernel.org>
+Cc: Ingo Molnar <mingo@redhat.com>
 Cc: Peter Zijlstra <peterz@infradead.org>
 ---
- kernel/sched/core.c | 2 +-
- kernel/sched/ext.c  | 2 +-
- kernel/sched/ext.h  | 4 ++--
- 3 files changed, 4 insertions(+), 4 deletions(-)
+ kernel/fork.c | 6 +++++-
+ 1 file changed, 5 insertions(+), 1 deletion(-)
 
-diff --git a/kernel/sched/core.c b/kernel/sched/core.c
-index 759777694c78..7ba80220a276 100644
---- a/kernel/sched/core.c
-+++ b/kernel/sched/core.c
-@@ -4721,7 +4721,7 @@ int sched_cgroup_fork(struct task_struct *p, struct kernel_clone_args *kargs)
- 		p->sched_class->task_fork(p);
- 	raw_spin_unlock_irqrestore(&p->pi_lock, flags);
+diff --git a/kernel/fork.c b/kernel/fork.c
+index e832da9d15a4..eb839b207cd4 100644
+--- a/kernel/fork.c
++++ b/kernel/fork.c
+@@ -2463,8 +2463,12 @@ __latent_entropy struct task_struct *copy_process(
+ 		fd_install(pidfd, pidfile);
  
--	return scx_fork(p);
-+	return scx_fork(p, kargs);
- }
+ 	proc_fork_connector(p);
+-	sched_post_fork(p);
++	/*
++	 * sched_ext needs @p to be associated with its cgroup in its post_fork
++	 * hook. cgroup_post_fork() should come before sched_post_fork().
++	 */
+ 	cgroup_post_fork(p, args);
++	sched_post_fork(p);
+ 	perf_event_fork(p);
  
- void sched_cancel_fork(struct task_struct *p)
-diff --git a/kernel/sched/ext.c b/kernel/sched/ext.c
-index 25b9b488ed1f..edc88c1f744d 100644
---- a/kernel/sched/ext.c
-+++ b/kernel/sched/ext.c
-@@ -3167,7 +3167,7 @@ void scx_pre_fork(struct task_struct *p)
- 	percpu_down_read(&scx_fork_rwsem);
- }
- 
--int scx_fork(struct task_struct *p)
-+int scx_fork(struct task_struct *p, struct kernel_clone_args *kargs)
- {
- 	percpu_rwsem_assert_held(&scx_fork_rwsem);
- 
-diff --git a/kernel/sched/ext.h b/kernel/sched/ext.h
-index 43429b33e52c..0b7fc46aee08 100644
---- a/kernel/sched/ext.h
-+++ b/kernel/sched/ext.h
-@@ -11,7 +11,7 @@
- void scx_tick(struct rq *rq);
- void init_scx_entity(struct sched_ext_entity *scx);
- void scx_pre_fork(struct task_struct *p);
--int scx_fork(struct task_struct *p);
-+int scx_fork(struct task_struct *p, struct kernel_clone_args *kargs);
- void scx_post_fork(struct task_struct *p);
- void scx_cancel_fork(struct task_struct *p);
- bool scx_can_stop_tick(struct rq *rq);
-@@ -44,7 +44,7 @@ bool scx_prio_less(const struct task_struct *a, const struct task_struct *b,
- 
- static inline void scx_tick(struct rq *rq) {}
- static inline void scx_pre_fork(struct task_struct *p) {}
--static inline int scx_fork(struct task_struct *p) { return 0; }
-+static inline int scx_fork(struct task_struct *p, struct kernel_clone_args *kargs) { return 0; }
- static inline void scx_post_fork(struct task_struct *p) {}
- static inline void scx_cancel_fork(struct task_struct *p) {}
- static inline u32 scx_cpuperf_target(s32 cpu) { return 0; }
+ 	trace_task_newtask(p, clone_flags);
 -- 
 2.53.0
 
