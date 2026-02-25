@@ -1,128 +1,191 @@
-Received: from mail-ed1-f42.google.com (mail-ed1-f42.google.com [209.85.208.42])
+Received: from mail-ot1-f51.google.com (mail-ot1-f51.google.com [209.85.210.51])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D61DB3ED11F
-	for <cgroups@vger.kernel.org>; Wed, 25 Feb 2026 19:58:36 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.208.42
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772049518; cv=pass; b=JyegpqFPkbs+4UHk7TKghiulTP9fnI4A/PZRsTHt2Z25fMho3BifLhxc6yjyb19eRJ5gf+Ogf4fGKqCO6ON43em9KrqI6YeKVU3Yn2IuUn9YjTThyzI3HWo/VuNyZ8JdT8r1R0QEjbGgyWxnHHLrS1CvruphjocVoqy2naxeOvA=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772049518; c=relaxed/simple;
-	bh=GyourlDdj2Tljzk6rLtG6gEQuh1sMzPbchn9jIwrybE=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=GrqfecdojQo3pF/UkE5CvE+34rttJJGwkhVxnF4lyUigTeBF3MZimjWoy4Lp+naTGkM1HmcOweaiti/GcS0yqstLQhHX1GQRhEKFWlRxKdTnSU/r+ur8EFt2U1Ma1SoNpIXMykZEO3iWW3QMguP5U3hQ4AKTD0JnwVhSe1Ugg9Q=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=bFL6eTNt; arc=pass smtp.client-ip=209.85.208.42
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7379A30DD00
+	for <cgroups@vger.kernel.org>; Wed, 25 Feb 2026 20:27:05 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.51
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1772051226; cv=none; b=iuSoTeB4AfRk+IAbQl5iosZyeej9ZHoBlNT82jA2FcMxmX2Hzcv7+JJDx4ZOFGfgH05OZZQ6Qu3lO3IQeG9nCTQmYg257I0Je5kNC5p3m5tvAi+bwlJSextSCK2xvICntGxY/x3E4GnwbyandQeILdSQgjFV2M9WBZFWAmLzAYE=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1772051226; c=relaxed/simple;
+	bh=uQ5ODX6Ec6bUxHv4xNuvgLmwIhwEhBrFm24dfHVZiWw=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=P6FunksfXnc8lqcbInz01UMv6IjvCO2bAd+O7s5TL7upIWl3ydTUeUfG6tODor5Icfb7VG488L+TTrtbhhbV/DIHkKjeaNbJhmNg3iuy19zUvikhMAEyXiyHPHp5GNlJxMYiJVTTwadSshj/Um9DX20qDwC47RTYtVINuqhGBPM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=nVJFmv7+; arc=none smtp.client-ip=209.85.210.51
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="bFL6eTNt"
-Received: by mail-ed1-f42.google.com with SMTP id 4fb4d7f45d1cf-65c01595082so204113a12.3
-        for <cgroups@vger.kernel.org>; Wed, 25 Feb 2026 11:58:36 -0800 (PST)
-ARC-Seal: i=1; a=rsa-sha256; t=1772049515; cv=none;
-        d=google.com; s=arc-20240605;
-        b=LSEqoyFMukDPrQTWtv5CuuJgzr479d2RHMlGmtlRZ3YxUkdsjMVXXbIn4/FLv9BT41
-         GJ/DvHmc78fr7Y74d9vjOoVNO9API1aUwqc7k7S7yZzU4Tzb0XWs1lMm+8mV3Go5ZxKl
-         +8XAQBbjRtjcliP8nSAcILTFH1ePpnoJLYxj0pF4qEhl4BxNa28pqtarjpikU5+l6bJ9
-         rBGPot3n1DelVm2sSDN/pMlN2XnGSZa52rUlVHQSBtTLfnuMFj3KcJfwCYSym7/DYHU8
-         ksL+qjY99KNiumcCjpQuo25D9xXn6sBvsd9HOFmGA3sYw6XQ7ERFZpdsYuq53qmb3eHB
-         db7A==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20240605;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:dkim-signature;
-        bh=GyourlDdj2Tljzk6rLtG6gEQuh1sMzPbchn9jIwrybE=;
-        fh=UTrliKBwtJ6qLUeEGybzPan0+3vN34jwImGVsvoH9k8=;
-        b=kDzFKtyECv1CYtAH5jgGAeBtukVM7d2WF+DB29rCjYh3Wi/PYWoiIAW/QWqxOhGyOq
-         fLBDHTBbKmgB+wkoHKUYuETLJPiWbeKKDv0y3YKp9U4gMaO4VM43GU5pPSo1k7AKMoKO
-         1sAIDxkvhFoZkFSpqwCwhPb7Tn9zW0mKmYCkjVTkBsQfoZy8jmxNNkkmG+Jw23iJUV/h
-         /pNgey/iaE8G8Wgl7DxzO1/zmhNjNMXYFAP+pLRObBLbqpJhyKnXE0xOL+QI+nVcKGcJ
-         xvtxhMWBMJa3dUVvQ5g+VRjUYSD7t1U+DqxK0tMguVZa3wOvNh9G9KwfyhzF35P/Bixo
-         fcbQ==;
-        darn=vger.kernel.org
-ARC-Authentication-Results: i=1; mx.google.com; arc=none
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="nVJFmv7+"
+Received: by mail-ot1-f51.google.com with SMTP id 46e09a7af769-7d19bfe1190so10831a34.1
+        for <cgroups@vger.kernel.org>; Wed, 25 Feb 2026 12:27:05 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20230601; t=1772049515; x=1772654315; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
+        d=gmail.com; s=20230601; t=1772051224; x=1772656024; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=GyourlDdj2Tljzk6rLtG6gEQuh1sMzPbchn9jIwrybE=;
-        b=bFL6eTNt0ihHjvtATq7bScLjK6enVQGNaoem2xoRRLK8Ew4nYSJazV6bWkZMPxAQsV
-         UhC3mWJsZfeF/A+u0J9AQnY+7p187R8GY2Prhip4N7tba3TFsVbslyQrXbEYPDw7rH9+
-         aY4p0XwM6xLTAjaRC/dSltMfEDlKjahJVjAjjwlLCKECBOxIaoyoTQ9rcm+FG/PZwqxb
-         1tckypd6k6VNo9ETKnLnu77yPdZuWOB1Q715+HhSbCH4w2Sjmm1Safjpuv3SEtiqghCw
-         kgI44223VIKCrX99yUGJ8RFA+XPX6GEwl3t304vtzkgePB7xkzHfF2oBjUYo+7cuugim
-         gDUg==
+        bh=EnoCZpEnsiZT/nYZfVWRoHJkjSlEny21hV+TMR2IO+k=;
+        b=nVJFmv7+kU5hG6NS+CZUn9TF+MHgSNOB/IFg8QlTD9P6+ZpWfxRf57ra9RD9DArXwk
+         tjXyl4WdguH1HHXZcmCW7UEp5hHWbSadPVpbRs/EpDn/bKxJ91Um19Gk7WmG4EgS118w
+         jJxqhxE/t246Sc4WbUDBBHdK7+7fNcEs7eXtlWgaqR4eDinqBuRBxqw/cU9u6Vk1osO4
+         kDqnwqDY7C8sTb4k9NyXHu+9EhG8wOzi6FBGNaKPtv4KBgFHOb+/kIDCFAELMCAtcVw8
+         z4Vi0AKLqI+DKQ3JCuZKrH0YifTuQjBHlIJjE7ksI/ykQaCVwV1puU/DbfKhM0k+ys+0
+         lYXw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1772049515; x=1772654315;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-gg:x-gm-message-state:from
+        d=1e100.net; s=20230601; t=1772051224; x=1772656024;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
          :to:cc:subject:date:message-id:reply-to;
-        bh=GyourlDdj2Tljzk6rLtG6gEQuh1sMzPbchn9jIwrybE=;
-        b=ikXvXqKrqsulSRWZL6MAWj8JNVYcmnw8tL8x01Vf/TJ2ln/iJs4h3o5UXIvYKP9DoE
-         rbNb77rJLQmG6yImMuMU9eb2eFtSU6bVXBLhZPsm1iSMiK2sS0ZRPfeLbMv6xiW3vRKP
-         FSpmJju5zdwl616XjJpfRgwRjtTueEtKKLtKufHydEtCDFlMaiPLXzV6LEh5iqfuwKXq
-         NOjfeo31ch1HQjppW2/a6Rjw6aoNHuLe0SaOZmorVG1VXKBVMxLrhBBmt2G1WL859kKR
-         7U3VdmiUVx6vFTyFKlhhvDXISbQhu2WsF1628ttPUCXomN0i7zcy7ay2NMd/5fhDNODx
-         LOUQ==
-X-Forwarded-Encrypted: i=1; AJvYcCUeYU8EoWUgVzC8vAau/RQBTaA4+Ql2C8xiwEpru2YC9xkLjxleZuldlO+e5sFcxI2UnQxVgRgj@vger.kernel.org
-X-Gm-Message-State: AOJu0Ywqsy+yycxasQ/GwFTALC/PQn4whPsxXgeFOAQ+v09LooGbV425
-	k7QY7xgMZfnDfUupUQM38cMsE9zIatj8F0NHDIcu49YJepbOVAy28iMNQtflc7accC/A00hT/mM
-	I+0qttTcwV+AJWPgbzJeAL/GLwiNyGDzQ3z/elblp
-X-Gm-Gg: ATEYQzwXFAmpdgaSau7sED15dIVSQkt52+xC4jgBSc1RlZTxnIJeWIaifawnfaFtuZQ
-	oPvhMB5bwsoHY1pzZliKeTdJWYd8NGyOWB2jba2fY7MrbEmu725cD7ZAawnFMtFD7XrzWZ4c3AY
-	rIlCDyQRh0p6xxSNyB6jalUclQHidNjir+vq3h/F7LtGQyX10fSau8Kc+eJKXSprLdLfeaa+/fJ
-	p4I9jcEIoqk56is2bGYSSquj+u/fSRE9I/U+NtTZMUB51rstg7027lWh2po/A2vzdA79tB35UWV
-	vXdJfiYPQKhsIWWTVZgmihT/0fhM60byun3Y8BHJ938KBdHMWVpm1M064HPnIOfdROhQCw==
-X-Received: by 2002:a17:906:209c:b0:b87:1590:d528 with SMTP id
- a640c23a62f3a-b9081b6d72cmr674923766b.40.1772049514649; Wed, 25 Feb 2026
- 11:58:34 -0800 (PST)
+        bh=EnoCZpEnsiZT/nYZfVWRoHJkjSlEny21hV+TMR2IO+k=;
+        b=pki5kYYkPrwMgx7ieefUf9PjxAcpCcLP7Wrj5YAQs+W0Y935FC1LkMZeaEsxcGArnV
+         fE71aAyGEU2I6YeJVA8V1c2m4eupWg3xw5XKRlgSKLcvYgIlMR6yH/BsjlEReNVpEgnY
+         GZ3/ylCMLFzHr2F4msq3iYMzLQDVt43z504f1B9z2lbWUFlL1jc4kjqyKeEnaLTcJsnM
+         AfJR0ZdPyLVXbpt8EYp/nRLhGxt8amHnkYq1uWi+xpQgk6shwXwGDnWXO023F2Kt+VPN
+         f8Di6yeED9nASyX+csGIGRpZTYrDfn19nmKir6s1y/VK3GOMLAjKqBzDsA0XUFEYXUwa
+         Xq9w==
+X-Forwarded-Encrypted: i=1; AJvYcCWFXs1WOvyv0YpMGoR9ySTDMDRD2r3PfdGdRUP8culo+R1UJRyaHMFctSWmHbaMnSFGlJ0K+m8C@vger.kernel.org
+X-Gm-Message-State: AOJu0Yy/tfqwDLrellm5n2iCo96VVHC/r2n+tXj3se6Woen79ZVtTJDJ
+	/QTg7pnzAVQ0uI/LLra2+uPlkGLPkQn0rmHUMplzhBI/nP3Zc8qiyp4B
+X-Gm-Gg: ATEYQzxlpUlLzUiDg64cgrkiVOQU82oBdexEomvmMLnV2yk08XQ6rhdplOwIeltCAXs
+	/Hy8Gzf/UDGQzWaAnan3PVQ+5dmZyi3ov7WN7vCHL4eoK8bqN79SgIIDTDlY+xm+dahgleZfcka
+	0/vlT9I6l5yKXy+wRhj5dX9bx3a+c5iutvYZspQgF0c0Edbu54iYC6zxIvV8e7KVlrPjpYFVL4K
+	yIrqIob7bx2fnquqlAMnO+6RrpASDIf7c03f9nqPMDHGJYy3qB7BvkFYfuvhqie/UIx2jYAkKsL
+	v2lL91nkuX37cYGdPBRsS9q6awU9xAJpV8f7Ld2s7gY9sSPD9jhxkk2wWBvaTwFfK43xEWtdtLL
+	1liiIHW0UQIwWbVtU8zcC0X8gr1uxr8GaQ1Inuy7xK8XrF7mEp6OrlV9/lm98tunuF1tcEJnh3Z
+	HN0dNlbPrHlg5y3rl0/dEv
+X-Received: by 2002:a05:6830:6c07:b0:7cf:e4a1:8b6b with SMTP id 46e09a7af769-7d52bdf6e7fmr9810731a34.4.1772051224348;
+        Wed, 25 Feb 2026 12:27:04 -0800 (PST)
+Received: from localhost ([2a03:2880:10ff:2::])
+        by smtp.gmail.com with ESMTPSA id 46e09a7af769-7d58644edf0sm8089a34.2.2026.02.25.12.27.02
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 25 Feb 2026 12:27:02 -0800 (PST)
+From: Joshua Hahn <joshua.hahnjy@gmail.com>
+To: Ackerley Tng <ackerleytng@google.com>
+Cc: akpm@linux-foundation.org,
+	dan.j.williams@intel.com,
+	david@kernel.org,
+	fvdl@google.com,
+	hannes@cmpxchg.org,
+	jgg@nvidia.com,
+	jiaqiyan@google.com,
+	jthoughton@google.com,
+	kalyazin@amazon.com,
+	mhocko@kernel.org,
+	michael.roth@amd.com,
+	muchun.song@linux.dev,
+	osalvador@suse.de,
+	pasha.tatashin@soleen.com,
+	pbonzini@redhat.com,
+	peterx@redhat.com,
+	pratyush@kernel.org,
+	rick.p.edgecombe@intel.com,
+	rientjes@google.com,
+	roman.gushchin@linux.dev,
+	seanjc@google.com,
+	shakeel.butt@linux.dev,
+	shivankg@amd.com,
+	vannapurve@google.com,
+	yan.y.zhao@intel.com,
+	cgroups@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	linux-mm@kvack.org
+Subject: Re: [RFC PATCH v1 1/7] mm: hugetlb: Consolidate interpretation of gbl_chg within alloc_hugetlb_folio()
+Date: Wed, 25 Feb 2026 12:27:00 -0800
+Message-ID: <20260225202701.4104505-1-joshua.hahnjy@gmail.com>
+X-Mailer: git-send-email 2.47.3
+In-Reply-To: <fa4172f57caf8fd3013d13d96211de6bb8cf6d38.1770854662.git.ackerleytng@google.com>
+References: 
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <cover.1770854662.git.ackerleytng@google.com> <67a62716952c806c2a512e98bcac1f5224ada324.1770854662.git.ackerleytng@google.com>
-In-Reply-To: <67a62716952c806c2a512e98bcac1f5224ada324.1770854662.git.ackerleytng@google.com>
-From: James Houghton <jthoughton@google.com>
-Date: Wed, 25 Feb 2026 11:57:58 -0800
-X-Gm-Features: AaiRm52wU6KkL251Z2G8sJq02VAiPYyNCCNpcDmsxM2CKPU8i6iZmZDmernmq44
-Message-ID: <CADrL8HVSqhdUAQ=OPicZSPnaCXQMTweZ0rqvXp_86p_xnZ1Bbw@mail.gmail.com>
-Subject: Re: [RFC PATCH v1 3/7] mm: hugetlb: Move mpol interpretation out of dequeue_hugetlb_folio_vma()
-To: Ackerley Tng <ackerleytng@google.com>
-Cc: akpm@linux-foundation.org, dan.j.williams@intel.com, david@kernel.org, 
-	fvdl@google.com, hannes@cmpxchg.org, jgg@nvidia.com, jiaqiyan@google.com, 
-	kalyazin@amazon.com, mhocko@kernel.org, michael.roth@amd.com, 
-	muchun.song@linux.dev, osalvador@suse.de, pasha.tatashin@soleen.com, 
-	pbonzini@redhat.com, peterx@redhat.com, pratyush@kernel.org, 
-	rick.p.edgecombe@intel.com, rientjes@google.com, roman.gushchin@linux.dev, 
-	seanjc@google.com, shakeel.butt@linux.dev, shivankg@amd.com, 
-	vannapurve@google.com, yan.y.zhao@intel.com, cgroups@vger.kernel.org, 
-	linux-kernel@vger.kernel.org, linux-mm@kvack.org
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 8bit
 
-On Wed, Feb 11, 2026 at 4:37=E2=80=AFPM Ackerley Tng <ackerleytng@google.co=
-m> wrote:
->
-> Move memory policy interpretation out of dequeue_hugetlb_folio_vma() and
-> into alloc_hugetlb_folio() to separate reading and interpretation of memo=
-ry
-> policy from actual allocation.
->
-> Also rename dequeue_hugetlb_folio_vma() to
-> dequeue_hugetlb_folio_with_mpol() to remove association with vma and to
-> align with alloc_buddy_hugetlb_folio_with_mpol().
->
-> This will later allow memory policy to be interpreted outside of the
-> process of allocating a hugetlb folio entirely. This opens doors for othe=
-r
-> callers of the HugeTLB folio allocation function, such as guest_memfd,
-> where memory may not always be mapped and hence may not have an associate=
-d
-> vma.
->
+On Wed, 11 Feb 2026 16:37:12 -0800 Ackerley Tng <ackerleytng@google.com> wrote:
+
+> Previously, gbl_chg was passed from alloc_hugetlb_folio() into
+> dequeue_hugetlb_folio_vma(), leaking the concept of gbl_chg into
+> dequeue_hugetlb_folio_vma().
+> 
+> This patch consolidates the interpretation of gbl_chg into
+> alloc_hugetlb_folio(), also renaming dequeue_hugetlb_folio_vma() to
+> dequeue_hugetlb_folio() so dequeue_hugetlb_folio() can just focus on
+> dequeuing a folio.
+> 
 > No functional change intended.
->
+> 
 > Signed-off-by: Ackerley Tng <ackerleytng@google.com>
+> Reviewed-by: James Houghton <jthoughton@google.com>
 
-Reviewed-by: James Houghton <jthoughton@google.com>
+Makes sense to me, this seems like a reasonable semantic change even
+without factoring out hugetlb_alloc_folio. Thank you!
+
+Reviewed-by: Joshua Hahn <joshua.hahnjy@gmail.com>
+
+> ---
+>  mm/hugetlb.c | 24 +++++++++---------------
+>  1 file changed, 9 insertions(+), 15 deletions(-)
+> 
+> diff --git a/mm/hugetlb.c b/mm/hugetlb.c
+> index a1832da0f6236..fd067bd394ee0 100644
+> --- a/mm/hugetlb.c
+> +++ b/mm/hugetlb.c
+> @@ -1380,7 +1380,7 @@ static unsigned long available_huge_pages(struct hstate *h)
+>  
+>  static struct folio *dequeue_hugetlb_folio_vma(struct hstate *h,
+>  				struct vm_area_struct *vma,
+> -				unsigned long address, long gbl_chg)
+> +				unsigned long address)
+>  {
+>  	struct folio *folio = NULL;
+>  	struct mempolicy *mpol;
+> @@ -1388,13 +1388,6 @@ static struct folio *dequeue_hugetlb_folio_vma(struct hstate *h,
+>  	nodemask_t *nodemask;
+>  	int nid;
+>  
+> -	/*
+> -	 * gbl_chg==1 means the allocation requires a new page that was not
+> -	 * reserved before.  Making sure there's at least one free page.
+> -	 */
+> -	if (gbl_chg && !available_huge_pages(h))
+> -		goto err;
+> -
+>  	gfp_mask = htlb_alloc_mask(h);
+>  	nid = huge_node(vma, address, gfp_mask, &mpol, &nodemask);
+>  
+> @@ -1412,9 +1405,6 @@ static struct folio *dequeue_hugetlb_folio_vma(struct hstate *h,
+>  
+>  	mpol_cond_put(mpol);
+>  	return folio;
+> -
+> -err:
+> -	return NULL;
+>  }
+>  
+>  #ifdef CONFIG_ARCH_HAS_GIGANTIC_PAGE
+> @@ -2962,12 +2952,16 @@ struct folio *alloc_hugetlb_folio(struct vm_area_struct *vma,
+>  		goto out_uncharge_cgroup_reservation;
+>  
+>  	spin_lock_irq(&hugetlb_lock);
+> +
+>  	/*
+> -	 * glb_chg is passed to indicate whether or not a page must be taken
+> -	 * from the global free pool (global change).  gbl_chg == 0 indicates
+> -	 * a reservation exists for the allocation.
+> +	 * gbl_chg == 0 indicates a reservation exists for the allocation - so
+> +	 * try dequeuing a page. If there are available_huge_pages(), try using
+> +	 * them!
+>  	 */
+> -	folio = dequeue_hugetlb_folio_vma(h, vma, addr, gbl_chg);
+> +	folio = NULL;
+> +	if (!gbl_chg || available_huge_pages(h))
+> +		folio = dequeue_hugetlb_folio_vma(h, vma, addr);
+> +
+>  	if (!folio) {
+>  		spin_unlock_irq(&hugetlb_lock);
+>  		folio = alloc_buddy_hugetlb_folio_with_mpol(h, vma, addr);
+> -- 
+> 2.53.0.310.g728cabbaf7-goog
+> 
+> 
