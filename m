@@ -1,32 +1,32 @@
-Received: from out-179.mta0.migadu.com (out-179.mta0.migadu.com [91.218.175.179])
+Received: from out-174.mta0.migadu.com (out-174.mta0.migadu.com [91.218.175.174])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2F3AC30C361
-	for <cgroups@vger.kernel.org>; Wed, 25 Feb 2026 07:55:00 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.179
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 32FC230B53F
+	for <cgroups@vger.kernel.org>; Wed, 25 Feb 2026 07:55:11 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.174
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772006101; cv=none; b=SyrSutRxl/e74JUttDtLtbLmUqUv3tooX5hZfHDqqLttFnxSyxFcQHRC8YOY3cQe1uHllX+0MLiQ0Tk8Ch3d3ZsN8X/C2FUSLBqzlxxOI1OETNonKWEh89u3mh3UBQBBBz6Ui2zITCpoUpt6nwfOh2Y3lyKGYiNmCO6YPFcxjY8=
+	t=1772006112; cv=none; b=I8K9NjMf+H6lDD2vh6HC2YYut9Z8H4Wc+9jHE25X5XO2D0MaVPKot831YbFObfqtnRc28R4ZgulGlQrpHAOunK0giT+zEgi+PVpfFNPKEYTfjKH+wLddOmrTQeltch0VhyF30KOPXByQQpItQLyGRe7Z3ed0C13ubB6y8gijLno=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772006101; c=relaxed/simple;
-	bh=6p1rTQSn/szsvXfKM1Mr1/YwGhM74koqcntWzctOIok=;
+	s=arc-20240116; t=1772006112; c=relaxed/simple;
+	bh=g3B0/y0HnBKBMdib3yq+p45Vtq4UjGZbi5z7OwUWoXU=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=Rfjf46+CPbdabZzqJYtqshZqTzENcksF63dPjHkWHmna/Qm5RMMedZ+k1gQmvREsSw/kzLLJniFR4nfXp0y7pUKF6ol6jSYG0C1p8jyX8a/ky14xHKRjCEEw4lHP0xSi/OcAafKcmGU9bUu0Z6q5SoxylkmdLF2KzOpjzs8sSlI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=tle46y7d; arc=none smtp.client-ip=91.218.175.179
+	 MIME-Version; b=biyAH+NrVMDWY3kWnbDtA2to7Ca3HHbVmQ9+B3t+21Z/BVhLTjz+1UBVXSN7wm8PtOoPTQOQc0aX9h/QVDg6II7XWKUIO/G6n8nojxPdc9wYA5BK5DqU1Pn99fxeQQXto52HUC4Ok3LKXViuEq4Hbj7LzhWhqfGFTirU0DBsyxA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=mCSZNJHf; arc=none smtp.client-ip=91.218.175.174
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="tle46y7d"
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="mCSZNJHf"
 X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
-	t=1772006098;
+	t=1772006108;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=9FlmauyfzMJ30WpiQCMliVOAMipux2gAWQ7/AZwbz08=;
-	b=tle46y7d9kpYoWp6mN0mjfokD8fL+rIjd2+QtkwlVOIykASwxMaLLCVFA8y7YQFZgxCmax
-	2dDyGcyd0b7Yif8LBIthUvv2UVBO1nf/20x50SR2qOAcZY52F43E35EmlD0lQrkgUa2DjF
-	t852LCK+qY1BZyxlVhY8cYjbSnH6SvE=
+	bh=f+e+MrbxStkCyw/Uqa2jpcsS2d2D2I5PIhTEX7t4Mug=;
+	b=mCSZNJHfd90ZlK4cL+EpjAjgG1SmuZQe0G4TFl8RoR7n2xLpoLbc6jStwi1xux9axli6/6
+	EQODJy4LkMiQAImbBjOMfcXIqUhYX5TsUF6lfISMhfG7fGhrsibZOPahSWZL8MZcvLqoWC
+	OAqKtL7dmPmtfU2i3Fjaj2AwhHi975w=
 From: Qi Zheng <qi.zheng@linux.dev>
 To: hannes@cmpxchg.org,
 	hughd@google.com,
@@ -57,9 +57,9 @@ Cc: linux-mm@kvack.org,
 	cgroups@vger.kernel.org,
 	Muchun Song <songmuchun@bytedance.com>,
 	Qi Zheng <zhengqi.arch@bytedance.com>
-Subject: [PATCH v5 21/32] mm: swap: prevent lruvec release in lru_gen_clear_refs()
-Date: Wed, 25 Feb 2026 15:53:04 +0800
-Message-ID: <986cd26227191a48a7c34a2a15812d361f4ebd53.1772005110.git.zhengqi.arch@bytedance.com>
+Subject: [PATCH v5 22/32] mm: workingset: prevent lruvec release in workingset_activation()
+Date: Wed, 25 Feb 2026 15:53:05 +0800
+Message-ID: <c6130476affbba0a7d309a887c3df11e0167990b.1772005110.git.zhengqi.arch@bytedance.com>
 In-Reply-To: <cover.1772005110.git.zhengqi.arch@bytedance.com>
 References: <cover.1772005110.git.zhengqi.arch@bytedance.com>
 Precedence: bulk
@@ -79,7 +79,7 @@ released without the rcu read lock or a reference to its memory
 cgroup.
 
 In the current patch, the rcu read lock is employed to safeguard
-against the release of the lruvec in lru_gen_clear_refs().
+against the release of the lruvec in workingset_activation().
 
 This serves as a preparatory measure for the reparenting of the
 LRU pages.
@@ -90,37 +90,26 @@ Reviewed-by: Harry Yoo <harry.yoo@oracle.com>
 Acked-by: Johannes Weiner <hannes@cmpxchg.org>
 Acked-by: Shakeel Butt <shakeel.butt@linux.dev>
 ---
- mm/swap.c | 8 +++++---
- 1 file changed, 5 insertions(+), 3 deletions(-)
+ mm/workingset.c | 5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
 
-diff --git a/mm/swap.c b/mm/swap.c
-index 245ba159e01d7..cb1148a92d8ec 100644
---- a/mm/swap.c
-+++ b/mm/swap.c
-@@ -412,18 +412,20 @@ static void lru_gen_inc_refs(struct folio *folio)
- 
- static bool lru_gen_clear_refs(struct folio *folio)
- {
--	struct lru_gen_folio *lrugen;
- 	int gen = folio_lru_gen(folio);
- 	int type = folio_is_file_lru(folio);
-+	unsigned long seq;
- 
- 	if (gen < 0)
- 		return true;
- 
- 	set_mask_bits(&folio->flags.f, LRU_REFS_FLAGS | BIT(PG_workingset), 0);
- 
--	lrugen = &folio_lruvec(folio)->lrugen;
-+	rcu_read_lock();
-+	seq = READ_ONCE(folio_lruvec(folio)->lrugen.min_seq[type]);
-+	rcu_read_unlock();
- 	/* whether can do without shuffling under the LRU lock */
--	return gen == lru_gen_from_seq(READ_ONCE(lrugen->min_seq[type]));
-+	return gen == lru_gen_from_seq(seq);
+diff --git a/mm/workingset.c b/mm/workingset.c
+index 2de2a355f0f86..95d722a452e1c 100644
+--- a/mm/workingset.c
++++ b/mm/workingset.c
+@@ -603,8 +603,11 @@ void workingset_activation(struct folio *folio)
+ 	 * Filter non-memcg pages here, e.g. unmap can call
+ 	 * mark_page_accessed() on VDSO pages.
+ 	 */
+-	if (mem_cgroup_disabled() || folio_memcg_charged(folio))
++	if (mem_cgroup_disabled() || folio_memcg_charged(folio)) {
++		rcu_read_lock();
+ 		workingset_age_nonresident(folio_lruvec(folio), folio_nr_pages(folio));
++		rcu_read_unlock();
++	}
  }
  
- #else /* !CONFIG_LRU_GEN */
+ /*
 -- 
 2.20.1
 
