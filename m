@@ -1,71 +1,125 @@
-Received: from casper.infradead.org (casper.infradead.org [90.155.50.34])
+Received: from out-172.mta1.migadu.com (out-172.mta1.migadu.com [95.215.58.172])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DFE7423ABB9
-	for <cgroups@vger.kernel.org>; Wed, 25 Feb 2026 16:23:33 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=90.155.50.34
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9D5103D7D9C
+	for <cgroups@vger.kernel.org>; Wed, 25 Feb 2026 16:56:10 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=95.215.58.172
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772036615; cv=none; b=hJRRrN4qMDj3C7K5p2an+3W9KbdTQIk9EeDVsjWDqFubpWgev97umKu/9oO8Umd7E4GRVFkffOMKHnwirX1Y+nZ1cmnhvpWa2slatFzkFrUWPyWXRrCAnTsrQyQ0JBsa8FhRO7X72LjC7yGI9RB7LsT4Ln0WuUrhycIgNLxFWbA=
+	t=1772038574; cv=none; b=GYnn5JpvJwMxe2VuKwiyhuiLyNGiwLdq3bGOW+gAiU8Et4j4ToWewziBBD7OXdS1KwcVz4aDHL+aoXa7/chltvdriUfeHhoJcivTSHKgrwgsknC1XbZvBdhD2cTt79Pj6PI9ekifEk1bUm33TJwMla8GICCyNj73ramT29T72/k=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772036615; c=relaxed/simple;
-	bh=Weuq9NOr4EE8HFSVzkX9AfjgTaI9mVdLfkc0Epf387M=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=WRkWLaCXuyk67A3PiP4mVeXH8YOp5R5lSmJjoeh1k3gH2IaVbKQVdD0YVc+244MvqkdSWlkjXXlkP4VRT32xXTvz4cyJbZ8rVQULtbKa9BNLuhyqBe89o7kYZiq1KKgbCzk6Xz+AF4yr4OUeBtyUPHMV0/Lky/k95jVmwVwhVYw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=JrMI/oge; arc=none smtp.client-ip=90.155.50.34
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=infradead.org
+	s=arc-20240116; t=1772038574; c=relaxed/simple;
+	bh=MkdGCXcVppG/A2jjAYS5dLK+LnljSe05UrL/1fOAnms=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=PtyAtSjrF4iQKGqx9F0s6eHYn03q1uS7QZBIYMZUs1dvlrPy0Iiw82G/3UDtwAYdDRAjygZAhARo03kM0h/9GOWsY38aHJX8a8p+SPJr+/pazjkBeIqqZUlS3ZR3kXsTWZWPcV/1JOwruTMumWWY7RDNMi0MEOraRoscUYDtt4c=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=FFPwNoyo; arc=none smtp.client-ip=95.215.58.172
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="JrMI/oge"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=casper.20170209; h=Content-Transfer-Encoding:MIME-Version:
-	Message-ID:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:Content-ID:
-	Content-Description:In-Reply-To:References;
-	bh=Fxhu6JylkiDzMEjDuKttQE1tDuQQiQGKZbk6dmKVauI=; b=JrMI/ogeMG5ARWoH7nHxTdwz1c
-	1WigUWPSDL/tBc6/MJCvGPEsYLso4MDLWEQ67hdA9u6mxgKSfEZck3k0WZpk5nP+XTLv3e4euQ9Rc
-	fBhqQppdIDwa8rLrvOx3oqqfp0mFjlpUXwtBa/Rt5TEiE8fhekPjOMYGdm5lZZNShw3QAiNGaoqCx
-	KY7VvhUCR/rpICJMpLn+Ge/NN8wawNIhBOfgMY8aq1Hwv71R1U3szl7eankJB9q+tkXgkoeEjXN8v
-	RJt6NQU5eOzDbWKskkRx9IIz/tJLs+/KLyMShzZoXtmfMOmbr2uSZCk2hhVovwxujRt+800kJ8VK9
-	MOuFv+Ag==;
-Received: from willy by casper.infradead.org with local (Exim 4.98.2 #2 (Red Hat Linux))
-	id 1vvHfV-00000001K4m-1vwH;
-	Wed, 25 Feb 2026 16:23:21 +0000
-From: "Matthew Wilcox (Oracle)" <willy@infradead.org>
-To: Johannes Weiner <hannes@cmpxchg.org>,
-	Michal Hocko <mhocko@kernel.org>,
-	Roman Gushchin <roman.gushchin@linux.dev>,
-	Shakeel Butt <shakeel.butt@linux.dev>,
-	cgroups@vger.kernel.org,
-	linux-mm@kvack.org
-Cc: "Matthew Wilcox (Oracle)" <willy@infradead.org>
-Subject: [PATCH 0/3] Make memcg location more flexible
-Date: Wed, 25 Feb 2026 16:22:14 +0000
-Message-ID: <20260225162319.315281-1-willy@infradead.org>
-X-Mailer: git-send-email 2.51.0
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="FFPwNoyo"
+Date: Wed, 25 Feb 2026 08:55:54 -0800
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
+	t=1772038568;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=1rwb9ZB8iGf8KTJOkEtuivHllAa1gLbstzaN/aCan+o=;
+	b=FFPwNoyoqhV82NnpPDbeYKTGPtM2BEZYDwDRl9XwLldIas6KaJOPbCxZAWeYKabMotZwEG
+	YcWJ1zYO82FLrAybyYRppCNSXKZdhfch59fw6UcHsMn8vYcRj57HH5icCTV0+knmO0xEQW
+	HBXz3CfPvyML+adagDnokYNS5V2LbAk=
+X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
+From: Shakeel Butt <shakeel.butt@linux.dev>
+To: "Matthew Wilcox (Oracle)" <willy@infradead.org>
+Cc: Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, 
+	Roman Gushchin <roman.gushchin@linux.dev>, cgroups@vger.kernel.org, linux-mm@kvack.org, 
+	Axel Rasmussen <axelrasmussen@google.com>
+Subject: Re: [PATCH 3/3] ptdesc: Account page tables to memcgs again
+Message-ID: <aZ8oT-n4a8VDY2AH@linux.dev>
+References: <20260225162319.315281-1-willy@infradead.org>
+ <20260225162319.315281-4-willy@infradead.org>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20260225162319.315281-4-willy@infradead.org>
+X-Migadu-Flow: FLOW_OUT
 
-Different memdescs should have the flexibility to place their memcg
-wherever they need to.  That means that instead of indirecting through
-lruvec_stat_mod_folio() and extracting the memcg from the folio,
-we need an interface which takes the memcg as a parameter.  It turns
-out we already need to do that for slabs, and this memcg_stat_mod()
-interface also works for that use case.
+On Wed, Feb 25, 2026 at 04:22:17PM +0000, Matthew Wilcox (Oracle) wrote:
+> Commit f0c92726e89f removed the accounting of page tables to memcgs.
+> Reintroduce it.
+> 
+> Fixes: f0c92726e89f (ptdesc: remove references to folios from __pagetable_ctor() and pagetable_dtor())
+> Reported-by: Axel Rasmussen <axelrasmussen@google.com>
+> Signed-off-by: Matthew Wilcox (Oracle) <willy@infradead.org>
+> ---
+>  include/linux/mm.h       | 15 +++++++++++++--
+>  include/linux/mm_types.h |  6 +++---
+>  2 files changed, 16 insertions(+), 5 deletions(-)
+> 
+> diff --git a/include/linux/mm.h b/include/linux/mm.h
+> index 5be3d8a8f806..34bc6f00ed7b 100644
+> --- a/include/linux/mm.h
+> +++ b/include/linux/mm.h
+> @@ -3519,21 +3519,32 @@ static inline unsigned long ptdesc_nr_pages(const struct ptdesc *ptdesc)
+>  	return compound_nr(ptdesc_page(ptdesc));
+>  }
+>  
+> +static inline struct mem_cgroup *pagetable_memcg(const struct ptdesc *ptdesc)
+> +{
+> +#ifdef CONFIG_MEMCG
+> +	return ptdesc->pt_memcg;
+> +#else
+> +	return NULL;
+> +#endif
+> +}
+> +
+>  static inline void __pagetable_ctor(struct ptdesc *ptdesc)
+>  {
+>  	pg_data_t *pgdat = NODE_DATA(memdesc_nid(ptdesc->pt_flags));
+> +	struct mem_cgroup *memcg = pagetable_memcg(ptdesc);
+>  
+>  	__SetPageTable(ptdesc_page(ptdesc));
+> -	mod_node_page_state(pgdat, NR_PAGETABLE, ptdesc_nr_pages(ptdesc));
+> +	memcg_stat_mod(memcg, pgdat, NR_PAGETABLE, ptdesc_nr_pages(ptdesc));
+>  }
+>  
+>  static inline void pagetable_dtor(struct ptdesc *ptdesc)
+>  {
+>  	pg_data_t *pgdat = NODE_DATA(memdesc_nid(ptdesc->pt_flags));
+> +	struct mem_cgroup *memcg = pagetable_memcg(ptdesc);
+>  
+>  	ptlock_free(ptdesc);
+>  	__ClearPageTable(ptdesc_page(ptdesc));
+> -	mod_node_page_state(pgdat, NR_PAGETABLE, -ptdesc_nr_pages(ptdesc));
+> +	memcg_stat_mod(memcg, pgdat, NR_PAGETABLE, -ptdesc_nr_pages(ptdesc));
+>  }
+>  
+>  static inline void pagetable_dtor_free(struct ptdesc *ptdesc)
+> diff --git a/include/linux/mm_types.h b/include/linux/mm_types.h
+> index 3cc8ae722886..e9b1da04938a 100644
+> --- a/include/linux/mm_types.h
+> +++ b/include/linux/mm_types.h
+> @@ -564,7 +564,7 @@ FOLIO_MATCH(compound_head, _head_3);
+>   * @ptl:              Lock for the page table.
+>   * @__page_type:      Same as page->page_type. Unused for page tables.
+>   * @__page_refcount:  Same as page refcount.
+> - * @pt_memcg_data:    Memcg data. Tracked for page tables here.
+> + * @pt_memcg:         Memcg that this page table belongs to.
+>   *
+>   * This struct overlays struct page for now. Do not modify without a good
+>   * understanding of the issues.
+> @@ -602,7 +602,7 @@ struct ptdesc {
+>  	unsigned int __page_type;
+>  	atomic_t __page_refcount;
+>  #ifdef CONFIG_MEMCG
+> -	unsigned long pt_memcg_data;
+> +	struct mem_cgroup *pt_memcg;
 
-Matthew Wilcox (Oracle) (3):
-  memcg: Add memcg_stat_mod()
-  memcg: Simplify mod_lruvec_kmem_state()
-  ptdesc: Account page tables to memcgs again
-
- include/linux/mm.h       | 15 +++++++++++++--
- include/linux/mm_types.h |  6 +++---
- include/linux/vmstat.h   |  9 ++++++++-
- mm/memcontrol.c          | 40 ++++++++++++++--------------------------
- 4 files changed, 38 insertions(+), 32 deletions(-)
-
--- 
-2.47.3
+This is kernel memory, so this would be struct obj_cgroup * instead of struct
+mem_cgroup pointer. We will need something similar to __folio_objcg(), maybe
+__ptdesc_objcg() and then call obj_cgroup_memcg() on it. Basically how
+folio_memcg() handles the kernel memory.
 
