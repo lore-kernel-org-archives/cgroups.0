@@ -1,32 +1,32 @@
-Received: from out-172.mta0.migadu.com (out-172.mta0.migadu.com [91.218.175.172])
+Received: from out-182.mta0.migadu.com (out-182.mta0.migadu.com [91.218.175.182])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7E9292C15B5;
-	Wed, 25 Feb 2026 07:54:29 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.172
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F35032F60CC
+	for <cgroups@vger.kernel.org>; Wed, 25 Feb 2026 07:54:38 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.182
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772006070; cv=none; b=CALDzrZKYCpWspKHupKQtp8T1vtzxcJcuDEMJo4GjLsihAruTdE/lnuU0A74xC4bZc01P/xrGO/0y2Y8Ypz44eE3g1nwB7qBRsJ0cRWBgdqDXlXuxumDSC66omXV+vNQz9dK5b7Ew4blopw3vmB/zHv0L+6+sWFA/yHQ/S3YHCc=
+	t=1772006080; cv=none; b=in9tAh8GkGEQBP4Oflf2PER07QwRiIaBVqj2TUYbn2724iREqwVEeP3fp5568TDlfnBgWDv76pBLTUoSotb3bb4wcsJtZjN3tj6JnGJUhwflHXBEPfHW7ZYeZG31LKGrj9tt/HKygE6UUFlHu8sOgcTUiEEwgtLTYoiWTiSBoIM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772006070; c=relaxed/simple;
-	bh=foPF5gf9399mlEYKh0nP2hLyaTs4UeimkKcCKOYDhM8=;
+	s=arc-20240116; t=1772006080; c=relaxed/simple;
+	bh=bjPjSCY1jeT+Ai30FFIgq0m+z5z98B08y7d45jjzYqU=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=alssRcnulR2Ygqr3r5O++IS4iMTVUK9M1CL1ynOSPV232lVHEGOs189Wv1z6laABNkc4Po3eZLwvK4j/S/6XtXYV7iHhE7pztrT5oXfGSYZRxbULpmjHxMLap4IAngoADJVedLswyeMnfeh3A9qgHwyofvV2H6rTDK6cF2i5F+I=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=IoHzQvlA; arc=none smtp.client-ip=91.218.175.172
+	 MIME-Version; b=XyiGjnPdfpJlLyqJ71diDKpXYjs6X7vHNfjeCdliCrlB9vbGmnBbCAP+QyHrwDiP8jK0Oc78lCx1I/p7uw5ARu4DD+aSq2W44JF+5ME3kgPNXQWf81Pp5JF69hRs3zbf6UvSQkKmL8G39y7wCOS3WCWBWDQXo/B7C86WxkYvOBY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=FIZR0Qm6; arc=none smtp.client-ip=91.218.175.182
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="IoHzQvlA"
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="FIZR0Qm6"
 X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
-	t=1772006067;
+	t=1772006077;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=MuGdh3NsMuiZscvyzRC4/MBSUBTvm1soytMKG+347XA=;
-	b=IoHzQvlAdr4rD+FD/M5TxeHkj6Z1Yf3Bt9mMo1cNdw5GWe/sW34+7poVSghcGyT342IZtt
-	uyNiSKWskcxowhg7UNCTpsl/XrHNJXDbnchSCSD4L3deiGKznqgitW3WfMW3V9dYHDj12n
-	d2IHaA31CwO+7R93t9aiC9+l+QHv1oY=
+	bh=ai/SdLNl7tLi9uYAWt04inUE82NVSwYAydx9AFMCLgs=;
+	b=FIZR0Qm6YsSN2bu+kckrpQ3wMkRnx5m8rMnPbZ0u/yPdaJZS/plcMwHKY0/yuQiRSTnI26
+	v1IUp1pu9lbGYmtwTTAUwyTBfLrEFeLngzNrzcj6ltsC2MNiAGC9erc18yrZDVmvepotcJ
+	1KNooDChqwnGs3TJ6DD3JQhD5ELe9lM=
 From: Qi Zheng <qi.zheng@linux.dev>
 To: hannes@cmpxchg.org,
 	hughd@google.com,
@@ -55,10 +55,11 @@ To: hannes@cmpxchg.org,
 Cc: linux-mm@kvack.org,
 	linux-kernel@vger.kernel.org,
 	cgroups@vger.kernel.org,
+	Muchun Song <songmuchun@bytedance.com>,
 	Qi Zheng <zhengqi.arch@bytedance.com>
-Subject: [PATCH v5 18/32] mm: zswap: prevent memory cgroup release in zswap_compress()
-Date: Wed, 25 Feb 2026 15:53:01 +0800
-Message-ID: <340f315050fb8a67caaf01b4836d4f38a41cf1a8.1772005110.git.zhengqi.arch@bytedance.com>
+Subject: [PATCH v5 19/32] mm: workingset: prevent lruvec release in workingset_refault()
+Date: Wed, 25 Feb 2026 15:53:02 +0800
+Message-ID: <e3a8c19a9b18422b43213f6c89c451c5b6ca1577.1772005110.git.zhengqi.arch@bytedance.com>
 In-Reply-To: <cover.1772005110.git.zhengqi.arch@bytedance.com>
 References: <cover.1772005110.git.zhengqi.arch@bytedance.com>
 Precedence: bulk
@@ -70,44 +71,63 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-Migadu-Flow: FLOW_OUT
 
-From: Qi Zheng <zhengqi.arch@bytedance.com>
+From: Muchun Song <songmuchun@bytedance.com>
 
-In the near future, a folio will no longer pin its corresponding memory
-cgroup. To ensure safety, it will only be appropriate to hold the rcu read
-lock or acquire a reference to the memory cgroup returned by
-folio_memcg(), thereby preventing it from being released.
+In the near future, a folio will no longer pin its corresponding
+memory cgroup. So an lruvec returned by folio_lruvec() could be
+released without the rcu read lock or a reference to its memory
+cgroup.
 
-In the current patch, the rcu read lock is employed to safeguard against
-the release of the memory cgroup in zswap_compress().
+In the current patch, the rcu read lock is employed to safeguard
+against the release of the lruvec in workingset_refault().
 
+This serves as a preparatory measure for the reparenting of the
+LRU pages.
+
+Signed-off-by: Muchun Song <songmuchun@bytedance.com>
 Signed-off-by: Qi Zheng <zhengqi.arch@bytedance.com>
-Acked-by: Johannes Weiner <hannes@cmpxchg.org>
-Acked-by: Shakeel Butt <shakeel.butt@linux.dev>
-Acked-by: Muchun Song <muchun.song@linux.dev>
 Reviewed-by: Harry Yoo <harry.yoo@oracle.com>
+Acked-by: Shakeel Butt <shakeel.butt@linux.dev>
 ---
- mm/zswap.c | 3 +++
- 1 file changed, 3 insertions(+)
+ mm/workingset.c | 8 ++++++--
+ 1 file changed, 6 insertions(+), 2 deletions(-)
 
-diff --git a/mm/zswap.c b/mm/zswap.c
-index a399f7a108304..fb525874a1b6b 100644
---- a/mm/zswap.c
-+++ b/mm/zswap.c
-@@ -893,11 +893,14 @@ static bool zswap_compress(struct page *page, struct zswap_entry *entry,
- 	 * to the active LRU list in the case.
+diff --git a/mm/workingset.c b/mm/workingset.c
+index 6971aa163e466..2de2a355f0f86 100644
+--- a/mm/workingset.c
++++ b/mm/workingset.c
+@@ -546,6 +546,7 @@ bool workingset_test_recent(void *shadow, bool file, bool *workingset,
+ void workingset_refault(struct folio *folio, void *shadow)
+ {
+ 	bool file = folio_is_file_lru(folio);
++	struct mem_cgroup *memcg;
+ 	struct lruvec *lruvec;
+ 	bool workingset;
+ 	long nr;
+@@ -567,11 +568,12 @@ void workingset_refault(struct folio *folio, void *shadow)
+ 	 * locked to guarantee folio_memcg() stability throughout.
  	 */
- 	if (comp_ret || !dlen || dlen >= PAGE_SIZE) {
-+		rcu_read_lock();
- 		if (!mem_cgroup_zswap_writeback_enabled(
- 					folio_memcg(page_folio(page)))) {
-+			rcu_read_unlock();
- 			comp_ret = comp_ret ? comp_ret : -EINVAL;
- 			goto unlock;
- 		}
-+		rcu_read_unlock();
- 		comp_ret = 0;
- 		dlen = PAGE_SIZE;
- 		dst = kmap_local_page(page);
+ 	nr = folio_nr_pages(folio);
+-	lruvec = folio_lruvec(folio);
++	memcg = get_mem_cgroup_from_folio(folio);
++	lruvec = mem_cgroup_lruvec(memcg, folio_pgdat(folio));
+ 	mod_lruvec_state(lruvec, WORKINGSET_REFAULT_BASE + file, nr);
+ 
+ 	if (!workingset_test_recent(shadow, file, &workingset, true))
+-		return;
++		goto out;
+ 
+ 	folio_set_active(folio);
+ 	workingset_age_nonresident(lruvec, nr);
+@@ -587,6 +589,8 @@ void workingset_refault(struct folio *folio, void *shadow)
+ 		lru_note_cost_refault(folio);
+ 		mod_lruvec_state(lruvec, WORKINGSET_RESTORE_BASE + file, nr);
+ 	}
++out:
++	mem_cgroup_put(memcg);
+ }
+ 
+ /**
 -- 
 2.20.1
 
