@@ -1,258 +1,122 @@
-Received: from mout.gmx.net (mout.gmx.net [212.227.17.22])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-qt1-f182.google.com (mail-qt1-f182.google.com [209.85.160.182])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E17D23ACF08
-	for <cgroups@vger.kernel.org>; Wed, 25 Feb 2026 12:11:38 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=212.227.17.22
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772021500; cv=none; b=k8CLkFqRmv95jQy+mf3PAV78S/5QFeuEV2zJ49FPmasXOVIpHoUSvdFdfHH1PKf8rm38MObBG9iSkVEt+GN6iHSDSuBl0nfWTg7tB/zvXdJL4LnVpVRKGnd8yfqt5RYfo3ayQGFASXugg0+r4faFuVyANaS1LXKy1JEk0BG4AbE=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772021500; c=relaxed/simple;
-	bh=qhRMvLdfOu/o7xkhVrfpxq9LZASbwetI63D5pQDnd+E=;
-	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=Ouheagg9lEPE7EogVwgwFmVAZJzduq7rtPNaThmvSaGxxgLKb1rRUh72E85Ut/zx9QeSnOPwDYR2cZAARn1vb0rLvpripyO+LkQbMXZc/UZEwwdTtIiL6my1imak7i/ik8RyGyP7V1wsiwWfEtfEBusGWcgVbXzq1d9Evt2rJ4A=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=gmx.de; spf=pass smtp.mailfrom=gmx.de; dkim=pass (2048-bit key) header.d=gmx.de header.i=natalie.vock@gmx.de header.b=Z0swi7LP; arc=none smtp.client-ip=212.227.17.22
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=gmx.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmx.de
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 706FB2DEA8F
+	for <cgroups@vger.kernel.org>; Wed, 25 Feb 2026 12:19:25 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=209.85.160.182
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1772021966; cv=pass; b=O7nAN3tR6jXEDl9lh1mWFqzaPdXLCuWtUYdtzgWMPvv7rJzooxdM3v3eM3+AnxOeKuIcMPwA0aE+hR8cAZfwOU3bk7TAsYNEhHtpEfD1U5MwmBacEw1f+6L6mpn9RudRTNXzL2sYSDCp2VAAYUlK5C/a0MlV4PsuhMfXpuc8Jfc=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1772021966; c=relaxed/simple;
+	bh=5GivVNyIA8JAZFbbK477torhwiVkLccEddGHhqwOeMg=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=oIfnfldEQVQNUN2koG9/A5tx8eV7CpmZvNwpVT6meKQvL+vnCO7zIf8P+/jh+PjCHBIKbeaa7MzLHKszOPYcvHLdda/n7QQggJbjmLyTub3RZ17N9rFqpUY0lGwDhRpK5u8L0dPH72s5hgyHR4zvj1zuoX2lCr3hb0dGDkKML5c=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=K04LkvhF; arc=pass smtp.client-ip=209.85.160.182
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmx.de header.i=natalie.vock@gmx.de header.b="Z0swi7LP"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gmx.de;
-	s=s31663417; t=1772021482; x=1772626282; i=natalie.vock@gmx.de;
-	bh=q8d/INciGs3GtpmGMXofrGqKkK5LmgQ1t/UI/+v7EsM=;
-	h=X-UI-Sender-Class:From:Date:Subject:MIME-Version:Content-Type:
-	 Content-Transfer-Encoding:Message-Id:References:In-Reply-To:To:Cc:
-	 cc:content-transfer-encoding:content-type:date:from:message-id:
-	 mime-version:reply-to:subject:to;
-	b=Z0swi7LPUtbMUk8qjGpPVhft/sedzlfsXROBgVPsefBx8k7Q8lqKuVnCYkhx7vUc
-	 5L4yIZJxmaiu9fXXmDISLpRssF95dr1XqRmtAaMLTYMNFQkKdwZifPwzyBYA8jD4P
-	 jfljNUv20VZ7ACSMPgcd0dlmpeVPjTwRQlpBwxoZCUMtM0jvlR5C0VqfcAuZNQ94d
-	 C/HvwJmcDYVnVJpXvKyVemLtOuCNQLBgXJ2LTqa6nT6+QE1sqcFDBaoUBCIin1esK
-	 xoljVXDUtrvwGEHvfubiYXTANhaUBEHtWijdYec5PJcnSSYWQ6YMU2pjZtFxZ+x9T
-	 Jf3qGiR4QTLee2BtYA==
-X-UI-Sender-Class: 724b4f7f-cbec-4199-ad4e-598c01a50d3a
-Received: from client.hidden.invalid by mail.gmx.net (mrgmx104
- [212.227.17.168]) with ESMTPSA (Nemesis) id 1N5GE1-1vlLrE1rCn-00vjMt; Wed, 25
- Feb 2026 13:11:01 +0100
-From: Natalie Vock <natalie.vock@gmx.de>
-Date: Wed, 25 Feb 2026 13:10:49 +0100
-Subject: [PATCH v4 5/6] drm/ttm: Be more aggressive when allocating below
- protection limit
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="K04LkvhF"
+Received: by mail-qt1-f182.google.com with SMTP id d75a77b69052e-506a019a7f3so83923441cf.3
+        for <cgroups@vger.kernel.org>; Wed, 25 Feb 2026 04:19:25 -0800 (PST)
+ARC-Seal: i=1; a=rsa-sha256; t=1772021964; cv=none;
+        d=google.com; s=arc-20240605;
+        b=V9yG3JTLOeXBBYa7iF0hDnYEc7W02vaHiWEDmYQIImAz3qkNr62yOGzMEfsSPxKQq8
+         GJ7xQHmZF8ENhNtTjoGDo5L4XkMbekCMI/ag/JvFcpGSOKRhsRbMsPsnhzaBp+j3vI5z
+         GnX53UJYewNBDWz4DCZaGp/dcFiezuxp1X091XoXh9i79hdv+4sLKnCJLMCwaGSr7T2B
+         yCQ0qCIC1vxZcCsrDpFjyieTjC9egHoZ68+WzxanFn0TOQHI3AfCAjGbM02ejAsY4Xsn
+         Xvk3ByyfKa+0UhIl2S5Aw/k7T009fFINL7qbXQgIC6+SxPxmC7VnHUJXwmknoeRZD5zu
+         qb1w==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20240605;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:dkim-signature;
+        bh=5GivVNyIA8JAZFbbK477torhwiVkLccEddGHhqwOeMg=;
+        fh=fLwoKLa+Y/TI2t8gbLu9+BoV7Z5ynOdn6i1IjZ2UqqY=;
+        b=XGbUA+plpcsruYAhetNw0UeuMLFR+5EsB7LUBfBbglKXo+9ibjijgT5liuM3/QYr2d
+         lyS6y9vq4ZlQAC4uTSw2Nf7N9/TNzkb0dgBEKsE+V1gB3JSfra1cxq5eqpuxnn9vuwJU
+         u2HRdVD48mboKOFb1cV3di8jl1yxde1KHOzi5ZpFVNZnGnwTz8MsUam3xZQ08EZGKylF
+         Dix6OUmy7s1nGtz8ID5pwXQwoHggqo4Qw5bGJxQ0bPzvvZ0t+BKRIKCzWyGTsGsyCs04
+         ZC6J7qY2EbhZWSw/ECKcNIZLI9m8V5bK04gNexOaF2TmF0lMS+tcJ/w+PiudMOLg7CHZ
+         UTcA==;
+        darn=vger.kernel.org
+ARC-Authentication-Results: i=1; mx.google.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1772021964; x=1772626764; darn=vger.kernel.org;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=5GivVNyIA8JAZFbbK477torhwiVkLccEddGHhqwOeMg=;
+        b=K04LkvhFjIHd/a4A0la6HG2BdNnEqA/3bikRoBSQjWAE+yNFRkXtALhqtv04A3MK4Z
+         d5jUmWMkSPcpUG995Ujp4xTdK/fCi1C2PchXw4DdBnf5eljyAerIXAfsYVyKmmNeh1P5
+         HKc1QGL2xIXW4fjAr39JGnvny0kGODZEuD5ADEilt25Cj7Uuf8xFUKsz8KrxKqz/zzgL
+         B5eKabZVojKhkA94h2SsljGbuntuwKXMzt6+mPxV7zGxZpbJz4dFdQ3tCxoaJ1+Jcpy3
+         +cWdyjluuRpb34ryDA3ayFNkV3qaf4ixILXGn8GjqQY1vluJLUHH9uy2eqZ64a3vwkPT
+         lUOw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1772021964; x=1772626764;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-gg:x-gm-message-state:from
+         :to:cc:subject:date:message-id:reply-to;
+        bh=5GivVNyIA8JAZFbbK477torhwiVkLccEddGHhqwOeMg=;
+        b=LYyR5B9Vqsn0u0CJaOIN0gSuG4nIMq9ffBzZ96e2xsL7vL94fcmoC8PxusrdsPgOuS
+         GISJnElmDsw+px0R0INzao7sKvpPxkHcWbGOXjDeH32Zo7GVyKhoCh5j0EfT32UrQfUC
+         8CYDfD3AiU1B39pmprZ6mJhwOqyOgH8AjQ7ob+KXJOAn8nevK8BbsW5gm/2UzK5beci/
+         laxaWHzi1xL9LCWmch9BUrPQ+g1/IjHmyvSXg23tHDKaFxSi6Ldrfr/dglX4BWjplz4c
+         eFF2L0A8MfsUhYG/U8oGVk/74HxerfO7cq3asz/9c3+FfvBpgVtIEDT+An+CPKJCj7As
+         dRqQ==
+X-Forwarded-Encrypted: i=1; AJvYcCXOCw2YiZKAg+n8QYzmukUFLogmpwZeVcq2QJOsr5Z7H1eRI38tbYNmdghIIVp5uSvgMV2SIiEu@vger.kernel.org
+X-Gm-Message-State: AOJu0YxuNhUh5dCP41vEfpz4KNWGpDROF7eI5U/CdJ1lrkuJxGe7gcVA
+	duWfwgqusqeRH8zjPdzq/JFOcFAgpCfbmGT4GB/BkUemlqcJSnTm0SovI7pzuKUIXlgEOfU5cZ1
+	73hOI4if/oMr4LHyA+X4gzZS8Z3HmADk=
+X-Gm-Gg: ATEYQzypc3oP8RYraUEHzRBs0UNSyogP64PXpzcgPIEKnIF1lkuUMRXPSS010VNccad
+	2XfH/IWdCnQdfg3f+er2iBRZOs0nmLvOR+RROieBNX4B7iWC4BTG2SFJ0Tlwi2+mFDTHsnNAp1l
+	AVfDZd82t5fq7agtAeHgVhFShcXjmX2x/IyFJO9iYYo+DZq73HFbtxqxQIowbuFREyW+M0DVTbZ
+	rU8oGdRhNcg9quIoIcEbKrPWxBeizzPYTkOLopcfVuFwuqzO8JOYtQ5immREnvHb2oYYFc23/Yf
+	o/pjCQ==
+X-Received: by 2002:ac8:7f91:0:b0:506:9ad2:8d4a with SMTP id
+ d75a77b69052e-50741fcfdd3mr1385691cf.75.1772021964065; Wed, 25 Feb 2026
+ 04:19:24 -0800 (PST)
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+References: <20260220-swap-table-p4-v1-0-104795d19815@tencent.com> <20260220-swap-table-p4-v1-12-104795d19815@tencent.com>
+In-Reply-To: <20260220-swap-table-p4-v1-12-104795d19815@tencent.com>
+From: Barry Song <21cnbao@gmail.com>
+Date: Wed, 25 Feb 2026 20:19:14 +0800
+X-Gm-Features: AaiRm511TxBGRVuIyMzvT0fAaZozlquA48wNCycgFlMQWIgQStFaENf0SwcgBCQ
+Message-ID: <CAGsJ_4yv31utMTsZcRf5adeUzC7NnE0DfMKRFi3v1iCxfdXbdw@mail.gmail.com>
+Subject: Re: [PATCH RFC 12/15] mm, swap: merge zeromap into swap table
+To: kasong@tencent.com
+Cc: linux-mm@kvack.org, Andrew Morton <akpm@linux-foundation.org>, 
+	David Hildenbrand <david@kernel.org>, Lorenzo Stoakes <lorenzo.stoakes@oracle.com>, Zi Yan <ziy@nvidia.com>, 
+	Baolin Wang <baolin.wang@linux.alibaba.com>, Hugh Dickins <hughd@google.com>, 
+	Chris Li <chrisl@kernel.org>, Kemeng Shi <shikemeng@huaweicloud.com>, 
+	Nhat Pham <nphamcs@gmail.com>, Baoquan He <bhe@redhat.com>, Johannes Weiner <hannes@cmpxchg.org>, 
+	Yosry Ahmed <yosry.ahmed@linux.dev>, Youngjun Park <youngjun.park@lge.com>, 
+	Chengming Zhou <chengming.zhou@linux.dev>, Roman Gushchin <roman.gushchin@linux.dev>, 
+	Shakeel Butt <shakeel.butt@linux.dev>, Muchun Song <muchun.song@linux.dev>, 
+	Qi Zheng <zhengqi.arch@bytedance.com>, linux-kernel@vger.kernel.org, 
+	cgroups@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
-Message-Id: <20260225-dmemcg-aggressive-protect-v4-5-de847ab35184@gmx.de>
-References: <20260225-dmemcg-aggressive-protect-v4-0-de847ab35184@gmx.de>
-In-Reply-To: <20260225-dmemcg-aggressive-protect-v4-0-de847ab35184@gmx.de>
-To: Maarten Lankhorst <dev@lankhorst.se>, 
- Maxime Ripard <mripard@kernel.org>, Tejun Heo <tj@kernel.org>, 
- Johannes Weiner <hannes@cmpxchg.org>, 
- =?utf-8?q?Michal_Koutn=C3=BD?= <mkoutny@suse.com>, 
- Christian Koenig <christian.koenig@amd.com>, Huang Rui <ray.huang@amd.com>, 
- Matthew Auld <matthew.auld@intel.com>, 
- Matthew Brost <matthew.brost@intel.com>, 
- Maarten Lankhorst <maarten.lankhorst@linux.intel.com>, 
- Thomas Zimmermann <tzimmermann@suse.de>, David Airlie <airlied@gmail.com>, 
- Simona Vetter <simona@ffwll.ch>, Tvrtko Ursulin <tursulin@ursulin.net>
-Cc: cgroups@vger.kernel.org, dri-devel@lists.freedesktop.org, 
- Natalie Vock <natalie.vock@gmx.de>
-X-Mailer: b4 0.14.3
-X-Provags-ID: V03:K1:lHOa+lMXM29tMcaWUwOZ6RWmyTVoksV3EGMhrd43NPxAiTI8Mnm
- bYXelh2r6AFNPJSCGz/UjsfnbS8MK5T8MBaqBN/xRzBuyv3DVzlv6//881UKY9AlwsMc3KV
- fcoBcbuR1VgTOwmRJ6L9rOa1aH779Vt16dIpjvT29yyH2enMYNhmamzF9WseNKVqYjaL2y4
- WNOAuyYPMvexTYAGZLDag==
-X-Spam-Flag: NO
-UI-OutboundReport: notjunk:1;M01:P0:p6dD6nOkA2c=;EaDq0wItOu6l5XjOh1nifNo6GW2
- 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
 
-When the cgroup's memory usage is below the low/min limit and allocation
-fails, try evicting some unprotected buffers to make space. Otherwise,
-application buffers may be forced to go into GTT even though usage is
-below the corresponding low/min limit, if other applications filled VRAM
-with their allocations first.
+On Fri, Feb 20, 2026 at 7:42=E2=80=AFAM Kairui Song via B4 Relay
+<devnull+kasong.tencent.com@kernel.org> wrote:
+>
+> From: Kairui Song <kasong@tencent.com>
+>
+> By reserving one bit for the counting part, we can easily merge the
+> zeromap into the swap table.
 
-Signed-off-by: Natalie Vock <natalie.vock@gmx.de>
-=2D--
- drivers/gpu/drm/ttm/ttm_bo.c | 52 +++++++++++++++++++++++++++++++++++++++=
-=2D----
- 1 file changed, 47 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/gpu/drm/ttm/ttm_bo.c b/drivers/gpu/drm/ttm/ttm_bo.c
-index a8914d20b0c32..401a6846b470f 100644
-=2D-- a/drivers/gpu/drm/ttm/ttm_bo.c
-+++ b/drivers/gpu/drm/ttm/ttm_bo.c
-@@ -494,6 +494,10 @@ struct ttm_bo_alloc_state {
- 	struct dmem_cgroup_pool_state *charge_pool;
- 	/** @limit_pool: Which pool limit we should test against */
- 	struct dmem_cgroup_pool_state *limit_pool;
-+	/** @only_evict_unprotected: If only unprotected BOs, i.e. BOs whose cgr=
-oup
-+	 *  is exceeding its dmem low/min protection, should be considered for e=
-viction
-+	 */
-+	bool only_evict_unprotected;
- };
-=20
- /**
-@@ -590,8 +594,12 @@ static int ttm_bo_evict_alloc(struct ttm_device *bdev=
-,
- 	evict_walk.walk.arg.trylock_only =3D true;
- 	lret =3D ttm_lru_walk_for_evict(&evict_walk.walk, bdev, man, 1);
-=20
--	/* One more attempt if we hit low limit? */
--	if (!lret && evict_walk.hit_low) {
-+	/* If we failed to find enough BOs to evict, but we skipped over
-+	 * some BOs because they were covered by dmem low protection, retry
-+	 * evicting these protected BOs too, except if we're told not to
-+	 * consider protected BOs at all.
-+	 */
-+	if (!lret && evict_walk.hit_low && !state->only_evict_unprotected) {
- 		evict_walk.try_low =3D true;
- 		lret =3D ttm_lru_walk_for_evict(&evict_walk.walk, bdev, man, 1);
- 	}
-@@ -612,7 +620,8 @@ static int ttm_bo_evict_alloc(struct ttm_device *bdev,
- 	} while (!lret && evict_walk.evicted);
-=20
- 	/* We hit the low limit? Try once more */
--	if (!lret && evict_walk.hit_low && !evict_walk.try_low) {
-+	if (!lret && evict_walk.hit_low && !evict_walk.try_low &&
-+			!state->only_evict_unprotected) {
- 		evict_walk.try_low =3D true;
- 		goto retry;
- 	}
-@@ -722,7 +731,7 @@ static int ttm_bo_alloc_at_place(struct ttm_buffer_obj=
-ect *bo,
- 				 struct ttm_resource **res,
- 				 struct ttm_bo_alloc_state *alloc_state)
- {
--	bool may_evict;
-+	bool may_evict, below_low =3D false;
- 	int ret;
-=20
- 	may_evict =3D (force_space && place->mem_type !=3D TTM_PL_SYSTEM);
-@@ -741,10 +750,43 @@ static int ttm_bo_alloc_at_place(struct ttm_buffer_o=
-bject *bo,
- 		return ret;
- 	}
-=20
-+	/*
-+	 * cgroup protection plays a special role in eviction.
-+	 * Conceptually, protection of memory via the dmem cgroup controller
-+	 * entitles the protected cgroup to use a certain amount of memory.
-+	 * There are two types of protection - the 'low' limit is a
-+	 * "best-effort" protection, whereas the 'min' limit provides a hard
-+	 * guarantee that memory within the cgroup's allowance will not be
-+	 * evicted under any circumstance.
-+	 *
-+	 * To faithfully model this concept in TTM, we also need to take cgroup
-+	 * protection into account when allocating. When allocation in one
-+	 * place fails, TTM will default to trying other places first before
-+	 * evicting.
-+	 * If the allocation is covered by dmem cgroup protection, however,
-+	 * this prevents the allocation from using the memory it is "entitled"
-+	 * to. To make sure unprotected allocations cannot push new protected
-+	 * allocations out of places they are "entitled" to use, we should
-+	 * evict buffers not covered by any cgroup protection, if this
-+	 * allocation is covered by cgroup protection.
-+	 *
-+	 * Buffers covered by 'min' protection are a special case - the 'min'
-+	 * limit is a stronger guarantee than 'low', and thus buffers protected
-+	 * by 'low' but not 'min' should also be considered for eviction.
-+	 * Buffers protected by 'min' will never be considered for eviction
-+	 * anyway, so the regular eviction path should be triggered here.
-+	 * Buffers protected by 'low' but not 'min' will take a special
-+	 * eviction path that only evicts buffers covered by neither 'low' or
-+	 * 'min' protections.
-+	 */
-+	may_evict |=3D dmem_cgroup_below_min(NULL, alloc_state->charge_pool);
-+	below_low =3D dmem_cgroup_below_low(NULL, alloc_state->charge_pool);
-+	alloc_state->only_evict_unprotected =3D !may_evict && below_low;
-+
- 	ret =3D ttm_resource_alloc(bo, place, res, alloc_state->charge_pool);
-=20
- 	if (ret) {
--		if (ret =3D=3D -ENOSPC && may_evict)
-+		if (ret =3D=3D -ENOSPC && (may_evict || below_low))
- 			ret =3D -EBUSY;
- 		return ret;
- 	}
+Hi Kairui,
 
-=2D-=20
-2.53.0
+I know you're saving space by removing the zeromap memory,
+but do you think a bitmap can sometimes be faster
+than iterating over multiple data points to set or get bits?
+Or is the performance difference too small to notice?
 
+Thanks
+Barry
