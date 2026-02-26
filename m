@@ -1,55 +1,54 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 28F9F411607
-	for <cgroups@vger.kernel.org>; Mon,  2 Mar 2026 15:53:28 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BF86441C0DE
+	for <cgroups@vger.kernel.org>; Mon,  2 Mar 2026 15:53:32 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772466813; cv=none; b=T0i+gBPsB9rZe2cflz4shoqVPXklorpX7+mZvb7e9ntr4W4RiJ3zkNXjvVkeVY8fdaUxjiVa/IsNX+jxUSikg6rw4CqGNBTy0DCB1hm6WUClMLDr6KMdBdLisGk9agphDEqhQ65K9oEqrW7SPLF60uToMTMDJoWHzxkSmxskjaA=
+	t=1772466818; cv=none; b=e7k/zdTTUr608fH/BcFqRib6h7JHBVpMgORLzO6MnP5IaJ/lAbhHvU/ta8HomMOHwfRPGdwG4xAWawOEqB5EK82DiCVVi8IQGbaoqmgFbxrv2RKd+/31ZH1MWSb4x48ifEjlHPUYyLsoW4GxVTJKPYGZcUWNrZcHM7y0XrJbTfM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772466813; c=relaxed/simple;
-	bh=WIbh+is4KvNzRkch3zcJp52bSKjLueSHIQxVDyUP5ww=;
+	s=arc-20240116; t=1772466818; c=relaxed/simple;
+	bh=3hTs6TdlYIZr2CVpEVhU2U0naEH31kgEN2TXKH8ea2I=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=p5wshMRzx2kTzfT6VGF9jjgBDItipcvXF4R+xuLkYMIr0ZVvq5k00MD7hKmKe8arcfhhphTydQoutVNSdXltvtG9uL4WKRzAO7RmC4u85s5bpFDTO4u1SGdW0/osYdvfwpAunO9mxUM40Y0VoHj81Tm2zAUyvneZVIouyhLBMuU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=Nl1ciV1n; arc=none smtp.client-ip=170.10.129.124
+	 Content-Type:Content-Disposition:In-Reply-To; b=Ya2HKo09EecQLreNMAL1tLW4EPHJsvzBNigA3Qa7/bz5FbDB7z/tKhwYeSZy2kSXT0XIO0m3TEAf4oHZMuMCo24xM4aL1ntzHbCMnBIsi78aDgct69ViULuuuq1KzCjgD/b74cKeVJp8ypILcmnwObeYsY77CHugfI4MJmOfhAo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=XZeLSDdS; arc=none smtp.client-ip=170.10.133.124
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="Nl1ciV1n"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="XZeLSDdS"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1772466808;
+	s=mimecast20190719; t=1772466811;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=q5je42QRO4AOiyaMXgXsTKWPYijh9+PVOYu2ob4k4BI=;
-	b=Nl1ciV1nk9HNdv1ZcB4W5QFNKojATCaQg6wET/Me1eqHEbTP7Z7pu0bDuTLAAHLjD7z7Jr
-	Sa0LeMqUYntbel5Rc8VYPBwkXK6JtaZH4fwZzKqes7YF7HSTFlzyhCMjEKQV+8bGB0ZdrY
-	gCZl/Ls9cbu4FlK6kSulfBBeuLwj3nU=
-Received: from mx-prod-mc-06.mail-002.prod.us-west-2.aws.redhat.com
- (ec2-35-165-154-97.us-west-2.compute.amazonaws.com [35.165.154.97]) by
+	bh=dLbuFPWOWGHaHFWL2ILwbNpXfhNKBfkyvba0iiQAlY0=;
+	b=XZeLSDdSWtRQSpIuotJ/0D9qV4f1mY6f2QdXqDbns0rZj/rg8VVOBWGCMsHHjvieowNgm9
+	t6TmCf7CeYo6+Y4LQM/W16lSzxR3jPlLRgwWQokMHaYRCtzioj5+uhGJZauqG5dvtWoIPQ
+	L32pYMSvmA2+4j5uaOayfHNnGc9gz34=
+Received: from mx-prod-mc-05.mail-002.prod.us-west-2.aws.redhat.com
+ (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
  relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-691-tvROHLPWMWegtmx-T6a-ig-1; Mon,
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-650-h8wrkvvyNiGreQWPAh48UQ-1; Mon,
  02 Mar 2026 10:53:25 -0500
-X-MC-Unique: tvROHLPWMWegtmx-T6a-ig-1
-X-Mimecast-MFC-AGG-ID: tvROHLPWMWegtmx-T6a-ig_1772466802
-Received: from mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.12])
+X-MC-Unique: h8wrkvvyNiGreQWPAh48UQ-1
+X-Mimecast-MFC-AGG-ID: h8wrkvvyNiGreQWPAh48UQ_1772466802
+Received: from mx-prod-int-08.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-08.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.111])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
-	by mx-prod-mc-06.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 32AE21800365;
+	by mx-prod-mc-05.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 7682819560A2;
 	Mon,  2 Mar 2026 15:53:22 +0000 (UTC)
 Received: from tpad.localdomain (unknown [10.96.133.6])
-	by mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id E899119560A7;
+	by mx-prod-int-08.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id F3D2A1800592;
 	Mon,  2 Mar 2026 15:53:20 +0000 (UTC)
 Received: by tpad.localdomain (Postfix, from userid 1000)
-	id 82AC5401E0CDF; Thu, 26 Feb 2026 08:41:09 -0300 (-03)
-Date: Thu, 26 Feb 2026 08:41:09 -0300
+	id C42E64014FBC7; Thu, 26 Feb 2026 12:49:18 -0300 (-03)
+Date: Thu, 26 Feb 2026 12:49:18 -0300
 From: Marcelo Tosatti <mtosatti@redhat.com>
-To: Frederic Weisbecker <frederic@kernel.org>
-Cc: Michal Hocko <mhocko@suse.com>, Leonardo Bras <leobras.c@gmail.com>,
-	linux-kernel@vger.kernel.org, cgroups@vger.kernel.org,
+To: Leonardo Bras <leobras.c@gmail.com>
+Cc: linux-kernel@vger.kernel.org, cgroups@vger.kernel.org,
 	linux-mm@kvack.org, Johannes Weiner <hannes@cmpxchg.org>,
+	Michal Hocko <mhocko@kernel.org>,
 	Roman Gushchin <roman.gushchin@linux.dev>,
 	Shakeel Butt <shakeel.butt@linux.dev>,
 	Muchun Song <muchun.song@linux.dev>,
@@ -61,69 +60,102 @@ Cc: Michal Hocko <mhocko@suse.com>, Leonardo Bras <leobras.c@gmail.com>,
 	Hyeonggon Yoo <42.hyeyoo@gmail.com>,
 	Leonardo Bras <leobras@redhat.com>,
 	Thomas Gleixner <tglx@linutronix.de>,
-	Waiman Long <longman@redhat.com>, Boqun Feng <boqun.feng@gmail.com>,
-	Frederic Weisbecker <fweisbecker@suse.de>
-Subject: Re: [PATCH 0/4] Introduce QPW for per-cpu operations
-Message-ID: <aaAxVbt/DQyTgIs3@tpad>
-References: <aYs6Ju2G4bm6_tl2@tiehlicka>
- <aYxviLoWsrLqDU7o@tpad>
- <aYywl1hdBQP2_slo@tiehlicka>
- <aZDw6xI2izFDfuuu@WindFlash>
- <aZL45yORfkNvS9Rs@tiehlicka>
- <aZcr255pGT3B/eaL@tpad>
- <aZdk19MqYhWK90Do@tiehlicka>
- <aZzM_44L1vKzcOCy@pavilion.home>
- <aZ3ejedS7nE5mnva@tpad>
- <aZ9ugjKvb4U7_R93@pavilion.home>
+	Waiman Long <longman@redhat.com>, Boqun Feng <boqun.feng@gmail.com>
+Subject: Re: [PATCH 3/4] swap: apply new queue_percpu_work_on() interface
+Message-ID: <aaBrfg0ozWK4moxC@tpad>
+References: <20260206143430.021026873@redhat.com>
+ <20260206143741.589656953@redhat.com>
+ <aYaQFM9sBbauUn5c@WindFlash>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <aZ9ugjKvb4U7_R93@pavilion.home>
-X-Scanned-By: MIMEDefang 3.0 on 10.30.177.12
+In-Reply-To: <aYaQFM9sBbauUn5c@WindFlash>
+X-Scanned-By: MIMEDefang 3.4.1 on 10.30.177.111
 
-On Wed, Feb 25, 2026 at 10:49:54PM +0100, Frederic Weisbecker wrote:
+On Fri, Feb 06, 2026 at 10:06:28PM -0300, Leonardo Bras wrote:
+> > +	cpu = smp_processor_id();
+> 
+> Wondering if for these cases it would make sense to have something like:
+> 
+> qpw_get_local_cpu() and 
+> qpw_put_local_cpu() 
+> 
+> so we could encapsulate these migrate_{en,dis}able()
+> and the smp_processor_id().
+> 
+> Or even,
+> 
+> int qpw_local_lock() {
+> 	migrate_disable();
+> 	cpu = smp_processor_id();
+> 	qpw_lock(..., cpu);
+> 
+> 	return cpu;
+> }
+> 
+> and
+> 
+> qpw_local_unlock(cpu){
+> 	qpw_unlock(...,cpu);
+> 	migrate_enable();
+> } 
+> 
+> so it's more direct to convert the local-only cases.
+> 
+> What do you think?
 
-<snip>
+Switched to local_qpw_lock variants.
 
-> > There are specific parts of a simulation that are intensive, but
-> > researchers try to minimize them:
+> >  {
+> > -	local_lock(&cpu_fbatches.lock);
+> > -	lru_add_drain_cpu(smp_processor_id());
+> 
+> and here ?
+
+Fixed lack of migrate_disable/migrate_enable, thanks!
+
+> > @@ -950,7 +954,7 @@ void lru_cache_disable(void)
+> >  #ifdef CONFIG_SMP
+> >  	__lru_add_drain_all(true);
+> >  #else
+> > -	lru_add_mm_drain();
+> 
+> and here, I wonder
+
+This is !CONFIG_SMP, so smp_processor_id is always 0.
+
+> >  	drain_pages(cpu);
+> >  
+> >  	/*
 > > 
-> > I/O Operations: Writing "checkpoints" or large trajectory files to disk
-> > (using write()). This is why high-end HPC systems use Asynchronous I/O
-> > or dedicated I/O nodes—to keep the compute cores from getting bogged
-> > down in system calls.
 > > 
-> > Memory Allocation: Constantly calling malloc/free involves the brk or
-> > mmap system calls. Optimized simulation tools pre-allocate all the
-> > memory they need at startup to avoid this.
 > 
-> Ok. I asked a similar question and got this (you made me use an LLM for the
-> first time btw, I held out for 4 years... I'm sure I can wait 4 more years until
-> the next usage :o)
+> TBH, I am still trying to understand if we need the migrate_{en,dis}able():
+> - There is a data dependency beween cpu being filled and being used.
+> - If we get the cpu, and then migrate to a different cpu, the operation 
+>   will still be executed with the data from that starting cpu 
 
-You should use it more often, it can save a significant amount of time
-:-)
+Yes, but on a remote CPU. What prevents the original CPU from accessing 
+its per-CPU local data, therefore racing with the code executing on the
+remote CPU.
 
-> ### 2. The "Slow Path" (System Calls / Syscalls)
+> - But maybe the compiler tries to optize this because the processor number 
+>   can be on a register and of easy access, which would break this.
 > 
-> Passing through the kernel (a syscall) is necessary in certain situations, but it is "expensive" because it forces a **context switch**, which flushes CPU caches.
+> Maybe a READ_ONCE() on smp_processor_id() should suffice?
 > 
-> * **Initialization:** During startup (`MPI_Init`), many syscalls are used to create sockets, map shared memory (`mmap`), and configure network interfaces.
-> * **Standard TCP/IP:** If you are not using a high-performance network (RDMA) but simple Ethernet instead, MPI must call `send()` and `recv()`, which are syscalls. The Linux kernel then takes over to manage the TCP/IP stack.
-> * **Sleep Mode (Blocking):** If an MPI process waits for a message for too long, it may decide to "go to sleep" to yield the CPU to another task via syscalls like `futex()` or `poll()`.
+> Other than that, all the conversions done look correct.
 > 
-> **In summary:** MPI synchronization aims to be **100% User-Space** (via memory polling) to avoid syscall latency. It is precisely because MPI tries to bypass the kernel that we use `nohz_full`: we are asking the kernel not to even "knock on the CPU's door" with its clock interruptions.
-
-Of course, there is a cost to system calls. However, considering
-"low latency applications must necessarily remain in userspace,
-therefore lets optimize only for that case" is limiting IMHO.
-
-Should avoid interruptions whenever possible, for isolated CPUs
-(in userspace _and_ kernelspace).
+> That being said, I understand very little about mm code, so let's hope we 
+> get proper feedback from those who do :) 
+> 
+> Thanks!
+> Leo
+> 
+> 
 
