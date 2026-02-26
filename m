@@ -1,99 +1,82 @@
-Received: from mail-ot1-f51.google.com (mail-ot1-f51.google.com [209.85.210.51])
+Received: from mail-oi1-f173.google.com (mail-oi1-f173.google.com [209.85.167.173])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A9ED935A3A1
-	for <cgroups@vger.kernel.org>; Thu, 26 Feb 2026 18:08:24 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.51
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AD792423A8E
+	for <cgroups@vger.kernel.org>; Thu, 26 Feb 2026 19:29:40 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.167.173
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772129306; cv=none; b=eT0sMp2Jp9VrNBMh/5arTZIarFtJc1A/iRShfK88LiP2w1nYl2+7BZn032J9awmczdw37hTMKIceGymgVocdhy0JfU2g+Zdh29VAV8nJeCcZr/GKrFOxyjYMc0htki2J/aBw9wb8gSVpZWbazxwo51e4wwzTVSHvs2UxVtvs24o=
+	t=1772134181; cv=none; b=Uwa13Fn7Q88tt9JCwbEtJd2shsdE90XWHdZQBQ/YOy7pZcHivFi/BifBgTHq9zJb4Je2Pkkdaqjtgpl44F1r07mwx5eJXyHE0XOCPbnh6Dmuhn0fI1OPfDLqpOImMEjKmwpWxNLprx6eYSnL1iL8xANmAdlDjfdpr9USoAfPaVc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772129306; c=relaxed/simple;
-	bh=XrT6+F4L/RdfSwyg3Ac65ntxz3H2SsHPU5uO2O7bnKU=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=K7lyiaAuhkiG08ZTIpZ06xYu1H3E0UBTLCIvogJ4XL8Mt0eB28MkwfyHokIdZAYOGxtEx5ReErCCvkVi5sSoMdk3icnwOZlKTCU6c3zJvJk7EwBa3oqbyVAKqInCEM+wZ9mXedSQIRcXD9ubv4o66QpkuFu1/xQcO/OTrOSwErE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=J/dllCtX; arc=none smtp.client-ip=209.85.210.51
+	s=arc-20240116; t=1772134181; c=relaxed/simple;
+	bh=ZdlDkTKjnXNgim5fvDAs8eRO7tVH7SG/4iGWsBd1uts=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=SNce37DY32YCrgx3CnKgR3yMS2nfPROHmQrYTezDo0xXbIALPovmLgcZG/Xr2ja+n79zf7g3lkl1iSyVhTY5A8CSmN0OYNH+ypDo+AtuOOdbRtCKhkaYF98UgmMPhKrqjtnJAwIDv2jS9CPZGWmuZkgHEuI7sMDrGuHw3vGyXac=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=UcnLBdpr; arc=none smtp.client-ip=209.85.167.173
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="J/dllCtX"
-Received: by mail-ot1-f51.google.com with SMTP id 46e09a7af769-7d18a9d2b1aso1259548a34.2
-        for <cgroups@vger.kernel.org>; Thu, 26 Feb 2026 10:08:24 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="UcnLBdpr"
+Received: by mail-oi1-f173.google.com with SMTP id 5614622812f47-464ba2bb3aeso348668b6e.1
+        for <cgroups@vger.kernel.org>; Thu, 26 Feb 2026 11:29:40 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1772129303; x=1772734103; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=wcq9MDR3n757j4ORZwFr28h6INReHt+LZDRBVW4SzF0=;
-        b=J/dllCtXpL1DPs0TPWfxlx9LUW6VL0zoQx54nbCMchOg3/T83WmHxF9u/v2X+NOYFQ
-         n5pn50xOxhOPAtLIdLwHPqBUPsfnrEMTj7MJLteJgmEE2Rn0uTiGuIf/vjRHxB+deW2S
-         qK8IuOxznSsB+ZSffjU03JuEAuibwsr6NTPKp4FDVjtTlrdBAKcmDhGYD7et25m6FWZR
-         Ne91mt8D415tHsqsa5Bv9Jl9P38G0z/z0jA16SoevmSp3tyuHT2iAsCB1/SBCW4WDLki
-         Kzdq0rl7F1lEtHAJw9H0Buqxw432wpvRAs0PcnhBS4hKtpXLouLRF9x55W2ItRiNYu4+
-         oUSA==
+        d=gmail.com; s=20230601; t=1772134179; x=1772738979; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=AADVg9qc0LmRgS4Sxkhna0+iWY0MK1VRsyPEGxGIkaA=;
+        b=UcnLBdprFaEXwODqHMAKGvKC2E3y/FeEp42toSIxAwrto1HNlAuQZjj/0ar5+j7wRE
+         PwZFTfODuOHEWUtv9h6/HQPfNu8cKv5Qv7nW04QnuNngFKWUtAYiwYHKmMB/xSagBny0
+         xJp5NlWvK50RQLfMiT0vA5XA2aQQkLEj9/Xjf3iL5X4TeszebU2rW3CRpqIoNuyv6CVv
+         29OnmqQOZGKUB/tZXQ8gA5tkaVje2gjkFJlWg8wPWKZms0TdAgIIXYjIWD4Sy7961gTl
+         27GwfUMNI3oGbey7DitDJjem8GPB3V5+hL19fLfQpsFJflCjxeUq+f/9RVKSicVOCjbc
+         H3iA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1772129303; x=1772734103;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to;
-        bh=wcq9MDR3n757j4ORZwFr28h6INReHt+LZDRBVW4SzF0=;
-        b=qxmfxkQKsTJOxOL+PlwTDQN2qhFMXL683LobCMD2i+wMfoQW4l6eOah91z4iwlhK3a
-         2DaSOBt+5zBtrUPK2vHW57s8Ga+jeM9/vaRpGv3rmehLmsT1vH0cHZSs5dI951sxm1k5
-         Sxr9shbXEiuuo5nWM+OrAgZrhLvbxaOtNQlyxJ0Um8gbVg8yt0t6oyLurOrygGlMRfoz
-         o4wddhDUBJ6n5jUo9ZAWFK3IHcsk1BkQKweRqlvvGC+GDWJszdyOuX4M+D7TMfLAgH4Q
-         BXFCdOmGTq4x3KKmTwNnEWaWbWKsQoDNDPW8PFK3azM9u4t2+SNijmzQaAHojvvSC7Ji
-         ReUA==
-X-Forwarded-Encrypted: i=1; AJvYcCXOoNOthbzbsmbXo9z2dfEV+tmuzDy18gS0U4UYJdCbe1h7LY9EXXW6ikSQ/fpJGzHoGXYC+SR2@vger.kernel.org
-X-Gm-Message-State: AOJu0YwDEaGxhHGe+N+XgZKMXjrURsCBLRBuj70MXgoUvK6dDH4EpcH7
-	6EVxrwniCVPZaqRlLh20Nq/AtBlvXlsWzKzyLFU0J2kz9UVcw7WCCunE
-X-Gm-Gg: ATEYQzyC3i2syrOmuTcit+SA9mpDoxgvdv7rmr3c8jm7GpxyD1SpHWPkt4im09vgzIx
-	0nx5kBIw/fw6dVeCrtiJH2/7RbX0fiqpLYM8knEP35qDdRx3/a/cpAJNqaw7mln7quX2AUCsy6/
-	gDLa+Tr9m6y7guHFkVRVj4bxJu8V/PCI441j5mnQ2UUC1Gl9ZlPL27XODG4xOw/Jlh9lEXLSiWG
-	O0X4pTLEg9lh8e4gI9L8nWyVxVPAiT+1XBoEJO0dta8kGx5d+h/k9U4PupPUnJX5uKikiyk15/C
-	fslH1sS9qb4wpaQLGM14rJVaa6XDlS8SOFf96fWCQ1Vdnk6zcTG/1A1bG1CMYJoqQgVFDc8LLgM
-	7bVZLa/3IPxwmtwEO6cEo3+BLox+22j3LRdQOJDFQdArOKb4X23DX25F9gIFweV/oNP50hfsGSy
-	2bq5OZKImrPNT4rVIXhgAA1+fGD7jtBnyg
-X-Received: by 2002:a05:6830:6201:b0:7d4:96c3:3f97 with SMTP id 46e09a7af769-7d591b0f5acmr73197a34.2.1772129303538;
-        Thu, 26 Feb 2026 10:08:23 -0800 (PST)
-Received: from localhost ([2a03:2880:10ff:70::])
-        by smtp.gmail.com with ESMTPSA id 46e09a7af769-7d58666ed17sm2433431a34.27.2026.02.26.10.08.22
+        d=1e100.net; s=20230601; t=1772134179; x=1772738979;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=AADVg9qc0LmRgS4Sxkhna0+iWY0MK1VRsyPEGxGIkaA=;
+        b=Ronz1br9bibPZAr3kHWa1n3AKxPlBBzHRKuGmD8LnwnfL+TGojC+Rd7u7Mm1P8iFwT
+         CQJX3OnnGaDlC3d3AqkoicBjfpIz6S+nDE87rwiQvjzd4ZgxUiUbNFMTn5ltebT9LhdW
+         /98p7nJKojmOe31YavKsOSpYI0TDBdsQgH0pXv9S1jAq0Kdc8oait6K1elG1bCQH66P6
+         8QKVDQdFn4dxNsx/VncIFqdaLIwp42yzoAeTtrrhGJCzajC/YkECW/vUjkp44QiGYxbU
+         l3bCgQxTz05xqvoC1nr3aFfYNTNAPjUlcvfdtiTLx2wUVBBjoA9Rbp2eBUUU+Ne/1mwL
+         PwsQ==
+X-Forwarded-Encrypted: i=1; AJvYcCVH8e3btXm7g52783rdQA9IUKtbglmUs490H2O9asU2UaxWnwPiPMdIgi6cdaB7uUzWSFgktF5s@vger.kernel.org
+X-Gm-Message-State: AOJu0YyhvCpzgRk2JRrzAZqxbM19WqXplKpbAtVHmEibAN5+BK2jmJKV
+	mx9M6eC/L7d/jzq5ugNeZUgL0MzZbAxgpdoE76vh+YCKfIaUagFijfVP
+X-Gm-Gg: ATEYQzxTEpAZnTEKsTXhfzmw8u0SnYyWgXU3V6qfM40F2rQMvNC8cCKV8hQibzeusxJ
+	WIsi0l+O/nM4+feoGozF+4Y4+a195P7Ytv0EXhURVNtdpSAAlz8QK6P+QNHe5+D4OmWBnLojTU/
+	kwTyWHaQNW196FG8RYCU9iK23YtV1Oo/7lMAgOuWXI+PFbMq3dXctDHNJXC2OLZ5GBgHl3Sv7ig
+	Wuel8fIHSeJw2vVMt0L8ouOkDHgOwek3BB+JvmoX61TP4baRIYSjQE9QOZJJ4efhEa3kskOuHuU
+	101587wuPl8eMQ5RMwQOqTKQWievENfN431lQBdwPS46u5tCKuFc8H0eadgyOkTQhrE55hKppt0
+	QWRmc5PTFvAlrFidvshqwtYqi72qmRWd5Mh6OWwM854i0HjH9FDI+XuiokMzXrDL51qZSwMEyyR
+	iataOj00pzW7nFHjnvNoeqjQ==
+X-Received: by 2002:a05:6808:5143:b0:45f:ea8:4184 with SMTP id 5614622812f47-464bed8fce7mr134294b6e.13.1772134179339;
+        Thu, 26 Feb 2026 11:29:39 -0800 (PST)
+Received: from localhost ([2a03:2880:10ff:43::])
+        by smtp.gmail.com with ESMTPSA id 5614622812f47-464bb5e417fsm450688b6e.16.2026.02.26.11.29.37
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 26 Feb 2026 10:08:23 -0800 (PST)
+        Thu, 26 Feb 2026 11:29:37 -0800 (PST)
 From: Joshua Hahn <joshua.hahnjy@gmail.com>
-To: Ackerley Tng <ackerleytng@google.com>
-Cc: akpm@linux-foundation.org,
-	dan.j.williams@intel.com,
-	david@kernel.org,
-	fvdl@google.com,
-	hannes@cmpxchg.org,
-	jgg@nvidia.com,
-	jiaqiyan@google.com,
-	jthoughton@google.com,
-	kalyazin@amazon.com,
-	mhocko@kernel.org,
-	michael.roth@amd.com,
-	muchun.song@linux.dev,
-	osalvador@suse.de,
-	pasha.tatashin@soleen.com,
-	pbonzini@redhat.com,
-	peterx@redhat.com,
-	pratyush@kernel.org,
-	rick.p.edgecombe@intel.com,
-	rientjes@google.com,
-	roman.gushchin@linux.dev,
-	seanjc@google.com,
-	shakeel.butt@linux.dev,
-	shivankg@amd.com,
-	vannapurve@google.com,
-	yan.y.zhao@intel.com,
+To: Minchan Kim <minchan@kernel.org>,
+	Sergey Senozhatsky <senozhatsky@chromium.org>
+Cc: Johannes Weiner <hannes@cmpxchg.org>,
+	Yosry Ahmed <yosry.ahmed@linux.dev>,
+	Nhat Pham <hoangnhat.pham@linux.dev>,
+	Nhat Pham <nphamcs@gmail.com>,
+	Chengming Zhou <chengming.zhou@linux.dev>,
+	Michal Hocko <mhocko@kernel.org>,
+	Roman Gushchin <roman.gushchin@linux.dev>,
+	Shakeel Butt <shakeel.butt@linux.dev>,
+	Muchun Song <muchun.song@linux.dev>,
+	Andrew Morton <akpm@linux-foundation.org>,
 	cgroups@vger.kernel.org,
+	linux-mm@kvack.org,
 	linux-kernel@vger.kernel.org,
-	linux-mm@kvack.org
-Subject: Re: [RFC PATCH v1 0/7] Open HugeTLB allocation routine for more generic use
-Date: Thu, 26 Feb 2026 10:08:21 -0800
-Message-ID: <20260226180821.2218448-1-joshua.hahnjy@gmail.com>
+	kernel-team@meta.com
+Subject: [PATCH 0/8] mm/zswap, zsmalloc: Per-memcg-lruvec zswap accounting
+Date: Thu, 26 Feb 2026 11:29:23 -0800
+Message-ID: <20260226192936.3190275-1-joshua.hahnjy@gmail.com>
 X-Mailer: git-send-email 2.47.3
-In-Reply-To: <CAEvNRgGaJXbOGPQSgvo3rVDfis22DC4hYy=2Rczas0Vm3o66kQ@mail.gmail.com>
-References: 
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
@@ -102,132 +85,102 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-On Wed, 25 Feb 2026 19:37:04 -0800 Ackerley Tng <ackerleytng@google.com> wrote:
+INTRODUCTION
+============
+The current design for zswap and zsmalloc leaves a clean divide between
+layers of the memory stack. At the higher level, we have zswap, which
+interacts directly with memory consumers, compression algorithms, and
+handles memory usage accounting via memcg limits. At the lower level,
+we have zsmalloc, which handles the page allocation and migration of
+physical pages.
 
-> Joshua Hahn <joshua.hahnjy@gmail.com> writes:
-> 
-> > On Wed, 11 Feb 2026 16:37:11 -0800 Ackerley Tng <ackerleytng@google.com> wrote:
-> >
-> > Hi Ackerly, I hope you're donig well!
-> >
-> > [...snip...]
-> >
-> >> I would like to get feedback on:
-> >>
-> >> 1. Opening up HugeTLB's allocation for more generic use
-> >
-> > I'm not entirely familiar with guest_memfd, so pleae excuse my ignorance
-> > if I'm missing anything obvious.
-> 
-> Happy to take questions! Thank you for your thoughts and reviews!
+While this logical separation simplifies the codebase, it leaves
+problems for accounting that requires both memory cgroup awareness and
+physical memory location. To name a few:
 
-Of course, thank you for your work, Ackerley!
+ - On tiered systems, it is impossible to understand how much toptier
+   memory a cgroup is using, since zswap has no understanding of where
+   the compressed memory is physically stored.
+   + With SeongJae Park's work to store incompressible pages as-is in
+     zswap [1], the size of compressed memory can become non-trivial,
+     and easily consume a meaningful portion of memory.
 
-> > But I'm wondering what hugeTLB offers
-> > that other hugepage solutions cannot offer for guest_memfd, if the
-> > goal of this series is to decouple it from hugeTLBfs.
-> >
-> 
-> The one other huge page source that we've explored is THP pages from the
-> buddy allocator. Compared to HugeTLB, huge pages from the buddy
-> allocator
-> 
-> + Has a maximum size of 2M
-> + Does not guarantee huge pages the way HugeTLB does - HugeTLB pages are
->   allocated at boot, and guest_memfd can reserve pages at guest_memfd
->   creation time.
-> + Allocation of HugeTLB pages is also really fast, it's just dequeuing
->   from a preallocated pool
+ - cgroups that restrict memory nodes have no control over which nodes
+   their zswapped objects live on. This can lead to unexpectedly high
+   fault times for workloads, who must eat the remote access latency
+   cost of retrieving the compressed object from a remote node.
+   + Nhat Pham addressed this issue via a best-effort attempt to place
+     compressed objects in the same page as the original page, but this
+     cannot guarantee complete isolation [2].
 
-All of these make sense. Just wanted to know if guest_memfd had any
-unique usecases for hugeTLB that normal hugetlbfs didn't have.
+ - On the flip side, zsmalloc's ignorance of cgroup also makes its
+   shrinker memcg-unaware, which can lead to ineffective reclaim when
+   pressure is localized to a single cgroup.
 
-> The last reason to use HugeTLB is not because of any inherent advantage
-> of using HugeTLB over other sources of huge pages, but for
-> administrative/scheduling purposes:
-> 
->   Given that existing non-guest_memfd workloads are already using
->   HugeTLB, for optimal scheduling, machine memory is already carved up
->   in HugeTLB pages for these workloads. Workloads that require using
->   guest_memfd (like Confidential VMs) must also use HugeTLB to
->   participate in optimial workload scheduling across machines.
-> 
-> >> 2. Reverting and re-adopting the try-commit-cancel protocol for memory
-> >>    charging
-> >
-> > On the second point, I am wondering if reintroducing the try-commit-cancel
-> > protocol is tied to factoring out hugetlb_alloc_folio. When I removed
-> > the protocol a while back, the justification was that for the most part,
-> > grabbing a hugetlb folio was a relatively cheap & fast operation, since
-> > hugetlb mostly operates out of a preallocated pool.
-> >
-> > So the cost of being wrong, going above the limit, and having to return
-> > the hugetlb folio was also relatively low.
-> >
-> 
-> Thanks for this! I saw your patch to just optimistically grab a HugeTLB
-> page :) For that patch, the primary reason was to simplify the logic,
-> and the simplification was justifiable because grabbing a folio is
-> cheap, right? (And so grabbing a folio being cheap wasn't a reason in
-> itself?)
+Until recently, zpool acted as another layer of indirection between
+zswap and zsmalloc, which made bridging memcg and physical location
+difficult. Now that zsmalloc is the only allocator backend for zswap and
+zram [3], it is possible to move memory-cgroup accounting to the
+zsmalloc layer.
 
-Yes, exactly!
+Introduce a new per-zpdesc array of objcg pointers to track
+per-memcg-lruvec memory usage by zswap, while leaving zram users
+unaffected.
 
-> > It seems like this patch series introduces some new paths for hugetlb
-> > pages to be consumed (specifically, without a reservation or vma).
-> > I imagine that these new paths make the slowpath for hugetlb more frequent,
-> > which makes the cost of assuming that the memcg limit is OK higher?
-> > I think explicitly spelling this out in the justification for reintroducing
-> > the charging protocol could be helpful.
-> >
-> 
-> Yes, I should have done that. Will copy the following to the next
-> revision.
+This creates one source of truth for NR_ZSWAP, and more accurate
+accounting for NR_ZSWAPPED.
 
-Thank you for considering!
+This brings sizeof(struct zpdesc) from 56 bytes to 64 bytes, but this
+increase in size is unseen by the rest of the system because zpdesc
+overlays struct page. Implementation details and care taken to handle
+the page->memcg_data field can be found in patch 3.
 
-> The main reason is that reintroducing the charging protocol is the
-> clearest way (for me) to cleanly refactor out hugetlb_alloc_folio()
-> without worrying about the edge cases around HugeTLB reservations and
-> charging.
-> 
-> If I didn't reintroduce the charging protocol, I would have to depend on
-> freeing the new hugetlb folio on memcg charging failure, and the freeing
-> in turn depends on the subpool correctly being set in the folio, and the
-> presence of the subpool influences (in free_huge_folio()) whether the
-> reservation was returned to the global hstate. Aaannnd... there's also a
-> hugetlb_restore_reserve flag that controls whether to return the folio
-> to the subpool (and the hstate). I find folio_clear_hugetlb_restore_reserve()
-> on certain code paths kind of magical/unexplained too.
+In addition, move the accounting of memcg charges to the zsmalloc layer,
+whose only user is zswap at the moment.
 
-I see, if it makes the code simpler to introduce the protocol again, I see
-no reason why we shouldn't revert the patch : -)
+PATCH OUTLINE
+=============
+Patches 1 and 2 are small cleanups that make the codebase consistent and
+easier to digest.
 
-> I would rather iron out those charging and reservation details
-> separately from this series (with more testing support).
-> 
-> On the other hand, reintroducing the charging protocol has the benefit
-> of avoiding allocations (not just dequeuing, if surplus HugeTLB pages
-> are required) if the memcg limit is hit. Also, if the original reason
-> for removing the protocol was to simplify the code, refactoring out
-> hugetlb_alloc_folio() also simplifies the code, and I think it's
-> actually nice that memcg charging is done the same way as the other two
-> (h_cg and h_cg_rsvd charging). After hugetlb_alloc_folio() is refactored
-> out, the gotos make all three charging systems consistent and symmetric,
-> which I think is nice to have :)
-> 
-> I hope the consistent/symmetric charging among all 3 systems is welcome,
-> what do you think?
+Patches 3, 4, and 5 allocate and populate the new zpdesc->objcgs field
+with compressed objects' obj_cgroups. zswap_entry->objcgs is removed,
+and redirected to look at the zspage for memcg information.
 
-For the hugetlbfs case, the path to allocate a hugeTLB page on demand
-makes sense, so I definitely see the argument for avoiding allocations.
-Does guest_memfd also have a path to allocate a hugeTLB page outside of
-the boottime reservations? In that case I think it would be nice to
-clarify that the allocation failure case optimization is also for
-guest_memfd, not only for hugetlbfs.
+Patch 6 moves the charging and lifetime management of obj_cgroups to
+the zsmalloc layer, which leaves zswap only as a plumbing layer to hand
+cgroup information to zsmalloc.
 
-Symmetric charging is definitely welcome : -) All of your reasons make
-sense to me, I just wanted to ask and make sure.
+Patches 7 and 8 introduce node counters and memcg-lruvec counters for
+zswap. Special care is taken for compressed objects that span multiple
+nodes.
 
-Thanks for your thoughts! I hope you have a great day!!
-Joshua
+[1] https://lore.kernel.org/linux-mm/20250822190817.49287-1-sj@kernel.org/
+[2] https://lore.kernel.org/linux-mm/20250402204416.3435994-1-nphamcs@gmail.com/#t3
+[3] https://lore.kernel.org/linux-mm/20250829162212.208258-1-hannes@cmpxchg.org/
+[4] https://lore.kernel.org/linux-mm/c8bc2dce-d4ec-c16e-8df4-2624c48cfc06@google.com/
+
+Joshua Hahn (8):
+  mm/zsmalloc: Rename zs_object_copy to zs_obj_copy
+  mm/zsmalloc: Make all obj_idx unsigned ints
+  mm/zsmalloc: Introduce objcgs pointer in struct zpdesc
+  mm/zsmalloc: Store obj_cgroup pointer in zpdesc
+  mm/zsmalloc,zswap: Redirect zswap_entry->obcg to zpdesc
+  mm/zsmalloc, zswap: Handle objcg charging and lifetime in zsmalloc
+  mm/memcontrol: Track MEMCG_ZSWAPPED in bytes
+  mm/vmstat, memcontrol: Track ZSWAP_B, ZSWAPPED_B per-memcg-lruvec
+
+ drivers/block/zram/zram_drv.c |  17 +-
+ include/linux/memcontrol.h    |  15 +-
+ include/linux/mmzone.h        |   2 +
+ include/linux/zsmalloc.h      |   6 +-
+ mm/memcontrol.c               |  68 ++------
+ mm/vmstat.c                   |   2 +
+ mm/zpdesc.h                   |  25 ++-
+ mm/zsmalloc.c                 | 282 ++++++++++++++++++++++++++++++++--
+ mm/zswap.c                    |  67 ++++----
+ 9 files changed, 345 insertions(+), 139 deletions(-)
+
+-- 
+2.47.3
+
