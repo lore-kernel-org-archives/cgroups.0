@@ -1,144 +1,129 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2DCDF387372
-	for <cgroups@vger.kernel.org>; Mon,  2 Mar 2026 15:53:21 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 28F9F411607
+	for <cgroups@vger.kernel.org>; Mon,  2 Mar 2026 15:53:28 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772466802; cv=none; b=WWh8RVZ7dDdCkEktLdmToUtiaiJJdkDJF78mG0S30WbgqYtUNw7dVl8mTVwZfrOjeBCMaOJFEtjoqf6yP1UfvzlPCsVDntBlE9ldGnT0PzyjVSvXSTJ7ozGyzm62F/OFsnKqD2apMlnPWxLdOQloweU2yPqLNuJM4zWM72Rp+XA=
+	t=1772466813; cv=none; b=T0i+gBPsB9rZe2cflz4shoqVPXklorpX7+mZvb7e9ntr4W4RiJ3zkNXjvVkeVY8fdaUxjiVa/IsNX+jxUSikg6rw4CqGNBTy0DCB1hm6WUClMLDr6KMdBdLisGk9agphDEqhQ65K9oEqrW7SPLF60uToMTMDJoWHzxkSmxskjaA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772466802; c=relaxed/simple;
-	bh=Lzcw9bSxmejm0gJDOTach+8XGgnELPRdfMZnwQFuwiY=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=qtUPlPMicF5Pd4CuulORYKVH6s4/yl5cyu7f05tOPuqyoch2u39ZvMZT5zIBFrY8vN1pUIKiAYsgcwiM+oRmdIE8K9dMZwHE2gtHx9sObTqvH6/A4mlk0tuuGP9fLToGSTz8XtjsihQUgu0Zo+XfRi7p87FU4LpAOLWuWkD7yb0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=eCB+SkR+; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1772466813; c=relaxed/simple;
+	bh=WIbh+is4KvNzRkch3zcJp52bSKjLueSHIQxVDyUP5ww=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=p5wshMRzx2kTzfT6VGF9jjgBDItipcvXF4R+xuLkYMIr0ZVvq5k00MD7hKmKe8arcfhhphTydQoutVNSdXltvtG9uL4WKRzAO7RmC4u85s5bpFDTO4u1SGdW0/osYdvfwpAunO9mxUM40Y0VoHj81Tm2zAUyvneZVIouyhLBMuU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=Nl1ciV1n; arc=none smtp.client-ip=170.10.129.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="eCB+SkR+"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A29D5C2BCB7
-	for <cgroups@vger.kernel.org>; Mon,  2 Mar 2026 15:53:21 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1772466801;
-	bh=Lzcw9bSxmejm0gJDOTach+8XGgnELPRdfMZnwQFuwiY=;
-	h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
-	b=eCB+SkR+v2AojvuGPK20HGDla7EykNAGMD5qya144xypRtN5GzUmuArNyTTTiJaFs
-	 6IIYsGXW6bpBJvgMIwI/dnIrOGTDYgDijE01p81q0RHg6e7tLEuTtW3wI/qAF5DlCW
-	 hwER0nCkM02bkQ45v78lSXTUHYd0U3U/YjmRTQOFs/2zSn3+MOoFDt0N8RyXIba0i4
-	 GVpEMeLV5gN1v3kNRfJvfhsR/754C06q7sGynIQUOjasUyfRJgLQezitgBTEr+Z1dq
-	 xdeVlklYTDmUz4N4SboVuIeuyscuKyaEc3qdtfg6Rnb0kjIR7kdTMU6ifFdnVllAHc
-	 G+S+E0noPWL/g==
-Received: by mail-ej1-f45.google.com with SMTP id a640c23a62f3a-b936505e7a0so106583966b.1
-        for <cgroups@vger.kernel.org>; Mon, 02 Mar 2026 07:53:21 -0800 (PST)
-X-Forwarded-Encrypted: i=1; AJvYcCVljOQ8+M30HBhbtufPY6hp7QG3elLF4o9SMF74+sRyYqbcdp+pqJfxH89OwHsCVPkzP3GAHAtg@vger.kernel.org
-X-Gm-Message-State: AOJu0YyyoBeJbGu3s4o0i3AyJuT3pc1V0GiDxznv8DyaQ9QaOCINMPYr
-	fxW/pffNn+bItOsLrY3TqTcY+JKspm0NRwnsZdpWSEp4322lg6BgFCQdvJvvzC8/23AiE289HEn
-	dTJDg4HIyXbTMcJgYnL9mGYkih1+Dyg4=
-X-Received: by 2002:a17:907:7b8e:b0:b8e:a126:66be with SMTP id
- a640c23a62f3a-b9375932a96mr906965466b.18.1772466800366; Mon, 02 Mar 2026
- 07:53:20 -0800 (PST)
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="Nl1ciV1n"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1772466808;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=q5je42QRO4AOiyaMXgXsTKWPYijh9+PVOYu2ob4k4BI=;
+	b=Nl1ciV1nk9HNdv1ZcB4W5QFNKojATCaQg6wET/Me1eqHEbTP7Z7pu0bDuTLAAHLjD7z7Jr
+	Sa0LeMqUYntbel5Rc8VYPBwkXK6JtaZH4fwZzKqes7YF7HSTFlzyhCMjEKQV+8bGB0ZdrY
+	gCZl/Ls9cbu4FlK6kSulfBBeuLwj3nU=
+Received: from mx-prod-mc-06.mail-002.prod.us-west-2.aws.redhat.com
+ (ec2-35-165-154-97.us-west-2.compute.amazonaws.com [35.165.154.97]) by
+ relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-691-tvROHLPWMWegtmx-T6a-ig-1; Mon,
+ 02 Mar 2026 10:53:25 -0500
+X-MC-Unique: tvROHLPWMWegtmx-T6a-ig-1
+X-Mimecast-MFC-AGG-ID: tvROHLPWMWegtmx-T6a-ig_1772466802
+Received: from mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.12])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mx-prod-mc-06.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 32AE21800365;
+	Mon,  2 Mar 2026 15:53:22 +0000 (UTC)
+Received: from tpad.localdomain (unknown [10.96.133.6])
+	by mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id E899119560A7;
+	Mon,  2 Mar 2026 15:53:20 +0000 (UTC)
+Received: by tpad.localdomain (Postfix, from userid 1000)
+	id 82AC5401E0CDF; Thu, 26 Feb 2026 08:41:09 -0300 (-03)
+Date: Thu, 26 Feb 2026 08:41:09 -0300
+From: Marcelo Tosatti <mtosatti@redhat.com>
+To: Frederic Weisbecker <frederic@kernel.org>
+Cc: Michal Hocko <mhocko@suse.com>, Leonardo Bras <leobras.c@gmail.com>,
+	linux-kernel@vger.kernel.org, cgroups@vger.kernel.org,
+	linux-mm@kvack.org, Johannes Weiner <hannes@cmpxchg.org>,
+	Roman Gushchin <roman.gushchin@linux.dev>,
+	Shakeel Butt <shakeel.butt@linux.dev>,
+	Muchun Song <muchun.song@linux.dev>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Christoph Lameter <cl@linux.com>, Pekka Enberg <penberg@kernel.org>,
+	David Rientjes <rientjes@google.com>,
+	Joonsoo Kim <iamjoonsoo.kim@lge.com>,
+	Vlastimil Babka <vbabka@suse.cz>,
+	Hyeonggon Yoo <42.hyeyoo@gmail.com>,
+	Leonardo Bras <leobras@redhat.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Waiman Long <longman@redhat.com>, Boqun Feng <boqun.feng@gmail.com>,
+	Frederic Weisbecker <fweisbecker@suse.de>
+Subject: Re: [PATCH 0/4] Introduce QPW for per-cpu operations
+Message-ID: <aaAxVbt/DQyTgIs3@tpad>
+References: <aYs6Ju2G4bm6_tl2@tiehlicka>
+ <aYxviLoWsrLqDU7o@tpad>
+ <aYywl1hdBQP2_slo@tiehlicka>
+ <aZDw6xI2izFDfuuu@WindFlash>
+ <aZL45yORfkNvS9Rs@tiehlicka>
+ <aZcr255pGT3B/eaL@tpad>
+ <aZdk19MqYhWK90Do@tiehlicka>
+ <aZzM_44L1vKzcOCy@pavilion.home>
+ <aZ3ejedS7nE5mnva@tpad>
+ <aZ9ugjKvb4U7_R93@pavilion.home>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <ef13e5974343b37ae2a0e28aff03ea2d033cb888.1772005110.git.zhengqi.arch@bytedance.com>
- <20260228072556.31793-1-qi.zheng@linux.dev>
-In-Reply-To: <20260228072556.31793-1-qi.zheng@linux.dev>
-From: Yosry Ahmed <yosry@kernel.org>
-Date: Mon, 2 Mar 2026 07:53:08 -0800
-X-Gmail-Original-Message-ID: <CAO9r8zNYFvNnz_oTu10kPBYL6=1ZewKUMRYcMmcMdSqbro_miA@mail.gmail.com>
-X-Gm-Features: AaiRm53G0wvbwkndbhtmVzlFp2bgI26S0fTTYledhanzWTm5GQC0n2lE4RDJ0yo
-Message-ID: <CAO9r8zNYFvNnz_oTu10kPBYL6=1ZewKUMRYcMmcMdSqbro_miA@mail.gmail.com>
-Subject: Re: [PATCH v5 update 29/32] mm: memcontrol: prepare for reparenting
- non-hierarchical stats
-To: Qi Zheng <qi.zheng@linux.dev>
-Cc: hannes@cmpxchg.org, hughd@google.com, mhocko@suse.com, 
-	roman.gushchin@linux.dev, shakeel.butt@linux.dev, muchun.song@linux.dev, 
-	david@kernel.org, lorenzo.stoakes@oracle.com, ziy@nvidia.com, 
-	harry.yoo@oracle.com, yosry.ahmed@linux.dev, imran.f.khan@oracle.com, 
-	kamalesh.babulal@oracle.com, axelrasmussen@google.com, yuanchu@google.com, 
-	weixugc@google.com, chenridong@huaweicloud.com, mkoutny@suse.com, 
-	akpm@linux-foundation.org, hamzamahfooz@linux.microsoft.com, 
-	apais@linux.microsoft.com, lance.yang@linux.dev, bhe@redhat.com, 
-	usamaarif642@gmail.com, linux-mm@kvack.org, linux-kernel@vger.kernel.org, 
-	cgroups@vger.kernel.org, Qi Zheng <zhengqi.arch@bytedance.com>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <aZ9ugjKvb4U7_R93@pavilion.home>
+X-Scanned-By: MIMEDefang 3.0 on 10.30.177.12
 
-[..]
-> @@ -763,6 +851,64 @@ unsigned long memcg_page_state_local(struct mem_cgroup *memcg, int idx)
->  #endif
->         return x;
->  }
-> +
-> +static void __mod_memcg_state(struct mem_cgroup *memcg,
-> +                             enum memcg_stat_item idx, int val)
-> +{
-> +       int i = memcg_stats_index(idx);
-> +       int cpu;
-> +
-> +       if (mem_cgroup_disabled())
-> +               return;
-> +
-> +       cpu = get_cpu();
-> +
-> +       this_cpu_add(memcg->vmstats_percpu->state[i], val);
-> +       val = memcg_state_val_in_pages(idx, val);
-> +       memcg_rstat_updated(memcg, val, cpu);
-> +       trace_mod_memcg_state(memcg, idx, val);
-> +
-> +       put_cpu();
-> +}
-> +
-> +static void __mod_memcg_lruvec_state(struct lruvec *lruvec,
-> +                                    enum node_stat_item idx, int val)
-> +{
-> +       struct mem_cgroup_per_node *pn;
-> +       struct mem_cgroup *memcg;
-> +       int i = memcg_stats_index(idx);
-> +       int cpu;
-> +
-> +       pn = container_of(lruvec, struct mem_cgroup_per_node, lruvec);
-> +       memcg = pn->memcg;
-> +
-> +       cpu = get_cpu();
-> +
-> +       /* Update memcg */
-> +       this_cpu_add(memcg->vmstats_percpu->state[i], val);
-> +
-> +       /* Update lruvec */
-> +       this_cpu_add(pn->lruvec_stats_percpu->state[i], val);
-> +
-> +       val = memcg_state_val_in_pages(idx, val);
-> +       memcg_rstat_updated(memcg, val, cpu);
-> +       trace_mod_memcg_lruvec_state(memcg, idx, val);
-> +
-> +       put_cpu();
-> +}
+On Wed, Feb 25, 2026 at 10:49:54PM +0100, Frederic Weisbecker wrote:
 
-I don't think we should end up with two copies of
-__mod_memcg_state/mod_memcg_state() and
-__mod_memcg_lruvec_state/mod_memcg_lruvec_state(). I meant to refactor
-mod_memcg_state() to call __mod_memcg_state(), where the latter does
-not call get_non_dying_memcg_{start/end}(). Same for
-mod_memcg_lruvec_state().
+<snip>
 
-> +
-> +void reparent_memcg_state_local(struct mem_cgroup *memcg,
-> +                               struct mem_cgroup *parent, int idx)
-> +{
-> +       int i = memcg_stats_index(idx);
-> +       unsigned long value = memcg_page_state_local(memcg, idx);
-> +
-> +       if (WARN_ONCE(BAD_STAT_IDX(i), "%s: missing stat item %d\n", __func__, idx))
-> +               return;
-> +
-> +       __mod_memcg_state(memcg, idx, -value);
-> +       __mod_memcg_state(parent, idx, value);
-> +}
->  #endif
->
->  static void mod_memcg_lruvec_state(struct lruvec *lruvec,
-> --
-> 2.20.1
->
->
+> > There are specific parts of a simulation that are intensive, but
+> > researchers try to minimize them:
+> > 
+> > I/O Operations: Writing "checkpoints" or large trajectory files to disk
+> > (using write()). This is why high-end HPC systems use Asynchronous I/O
+> > or dedicated I/O nodes—to keep the compute cores from getting bogged
+> > down in system calls.
+> > 
+> > Memory Allocation: Constantly calling malloc/free involves the brk or
+> > mmap system calls. Optimized simulation tools pre-allocate all the
+> > memory they need at startup to avoid this.
+> 
+> Ok. I asked a similar question and got this (you made me use an LLM for the
+> first time btw, I held out for 4 years... I'm sure I can wait 4 more years until
+> the next usage :o)
+
+You should use it more often, it can save a significant amount of time
+:-)
+
+> ### 2. The "Slow Path" (System Calls / Syscalls)
+> 
+> Passing through the kernel (a syscall) is necessary in certain situations, but it is "expensive" because it forces a **context switch**, which flushes CPU caches.
+> 
+> * **Initialization:** During startup (`MPI_Init`), many syscalls are used to create sockets, map shared memory (`mmap`), and configure network interfaces.
+> * **Standard TCP/IP:** If you are not using a high-performance network (RDMA) but simple Ethernet instead, MPI must call `send()` and `recv()`, which are syscalls. The Linux kernel then takes over to manage the TCP/IP stack.
+> * **Sleep Mode (Blocking):** If an MPI process waits for a message for too long, it may decide to "go to sleep" to yield the CPU to another task via syscalls like `futex()` or `poll()`.
+> 
+> **In summary:** MPI synchronization aims to be **100% User-Space** (via memory polling) to avoid syscall latency. It is precisely because MPI tries to bypass the kernel that we use `nohz_full`: we are asking the kernel not to even "knock on the CPU's door" with its clock interruptions.
+
+Of course, there is a cost to system calls. However, considering
+"low latency applications must necessarily remain in userspace,
+therefore lets optimize only for that case" is limiting IMHO.
+
+Should avoid interruptions whenever possible, for isolated CPUs
+(in userspace _and_ kernelspace).
+
