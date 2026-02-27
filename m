@@ -1,71 +1,74 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BAA4736921B;
-	Fri, 27 Feb 2026 19:50:08 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0DD68466B75;
+	Fri, 27 Feb 2026 19:51:40 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772221808; cv=none; b=L1907kC/sqtvPZkcuT2ZIcuDzmioIj3GhgLqW5mIRQYolXOCJj+SJ5lxEKLr/79RcdePsG4fCEFkmGG2L6H5ThEbLDbWTWPwVR2bm5oEXf8alCdphZrLn24ARbHx4V2jZFYLHRQ06I2SfJKu9zeR73khd87Ta+I4Uv2sD7i3e8g=
+	t=1772221901; cv=none; b=V9mfj10Rcl/nVVrBv0lSPK8fPJ/QTg5hqcAqyjagZ0MKdIpTDLZtSwduJWMLRKjZL6hA8s5ysA632xuDRSPp8/lomVBC3xOAsnT0rOXsRcGG5Wpodk18Az37V+1gJxy1Y3InD0kFaCDl/eMkcQicYJDQ5r+F/7zwpgSipq0O+KY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772221808; c=relaxed/simple;
-	bh=AxSwpsDmZB71i2iDeLN0Jw/yz74vwe+juNUzt8qw6iA=;
+	s=arc-20240116; t=1772221901; c=relaxed/simple;
+	bh=H9t4oVPCtn/Tas9C8HMkqiYEEpOkr8l8V3fRwzfjY1Q=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=W/EBoF3HKqkvzrlFA2WuCZ9AxBANjqW+TSK0y3tEEhC/fniDWVJR7mT0Rp5fdomTAiDHlMV+Fpp85YI+wk4ybmnBG6qKvBT2DtxC9PjSONoE5ANY5N1bhw3+2u3uSAZvH2suPrrWOKS55oiddTZAgldNcFWdJOBVo+eaPsxwrAA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=P6FWDw0o; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=TgirD3JxCTlhzT06CCRdEq73Qn9xTzknPVA9auvqqS7PYtc+EGd1+StmOtsUZUPStsNBN88ORwL0Cx+fr7KCVbu8NJcxD+vGDQtvMc5c/3e3Ciwv5ZhVLpKq/KN65coJ2i3puACLSZofIj5Abne7Chf3iChYzQVEJnppZoOovFA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=qfA4x46C; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="P6FWDw0o"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 40B63C19421;
-	Fri, 27 Feb 2026 19:50:08 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="qfA4x46C"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8304DC116C6;
+	Fri, 27 Feb 2026 19:51:40 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1772221808;
-	bh=AxSwpsDmZB71i2iDeLN0Jw/yz74vwe+juNUzt8qw6iA=;
+	s=k20201202; t=1772221900;
+	bh=H9t4oVPCtn/Tas9C8HMkqiYEEpOkr8l8V3fRwzfjY1Q=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=P6FWDw0obIHq0Qc4ZQC+Rssv/kX9vJ38WTU1CDwADId+fny/K3Tw15sfPUJ9o0l/Q
-	 +rsP7NPXZHAF+9KD3R8AA46ArLS30aVvRHf3W7ErCNfBEJYgOHlhLKVQS1Q4limEkG
-	 +7jc4gOy4C/NKPZzI3Fp16Ec5ks5wyFJ0xPiIDSWweYobR9YBAC6X3LB2lEaUZuWhs
-	 aE+tdlW8HWFRpQnWs6YcGeTwTpqnF/1KhIHlv03rmXeooS8wUjHtEO4kbsJkpI28eO
-	 FmkZEifSux0OCOPjGaQXiLREOE9/jnuushhZtiyYmV7t1Q5+nf1T7ovDgedsjhnzfY
-	 mghWHFB5MK0Uw==
-Date: Fri, 27 Feb 2026 09:50:07 -1000
+	b=qfA4x46CwwrWp2clyHpugUeX4xCFq0iHicmVaY316qRKcm9oPSVvbOjt3PzHNtNOc
+	 WaBCBnieG+H4WHQjes3nlmrMFp18p31v+sLEBr9wyv7AnYXD6uNtbUDAX6AVNOsL4y
+	 e+c7O6vUKZQBqFThbbhru02ezH/fJIURQYuDmpe1G5Y9jUp7O+wpMJJMrW4buvAUzT
+	 JG8PD/ruAGR6wLXxSMbfsdYG7RPfWokp534JntiXxLXbFm28zjQEHcA3/xUZXKqEjr
+	 e0A4xzheDBPy48YK5AEYB2uXH6LbAQoCmGI9UDY5aiaKOpdjOKUtZP52y15ogwiYFt
+	 0L5O8AfLFjUXg==
+Date: Fri, 27 Feb 2026 09:51:39 -1000
 From: Tejun Heo <tj@kernel.org>
 To: Andrea Righi <arighi@nvidia.com>
 Cc: linux-kernel@vger.kernel.org, sched-ext@lists.linux.dev,
 	void@manifault.com, changwoo@igalia.com, emil@etsalapatis.com,
 	hannes@cmpxchg.org, mkoutny@suse.com, cgroups@vger.kernel.org
-Subject: Re: [PATCH 13/34] sched_ext: Refactor task init/exit helpers
-Message-ID: <aaH1b9tpCzWG3--x@slm.duckdns.org>
+Subject: Re: [PATCH 07/34] sched_ext: Introduce cgroup sub-sched support
+Message-ID: <aaH1y7ZXepwjL58X@slm.duckdns.org>
 References: <20260225050109.1070059-1-tj@kernel.org>
- <20260225050109.1070059-14-tj@kernel.org>
- <aaE_9YPu3T-pMXfO@gpd4>
+ <20260225050109.1070059-8-tj@kernel.org>
+ <aaBsRu4_4OXv4d7-@gpd4>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <aaE_9YPu3T-pMXfO@gpd4>
+In-Reply-To: <aaBsRu4_4OXv4d7-@gpd4>
 
-Hello,
-
-On Fri, Feb 27, 2026 at 07:55:49AM +0100, Andrea Righi wrote:
-...
-> Without CONFIG_EXT_GROUP_SCHED we get this:
+On Thu, Feb 26, 2026 at 04:52:38PM +0100, Andrea Righi wrote:
+> On Tue, Feb 24, 2026 at 07:00:42PM -1000, Tejun Heo wrote:
+> ...
+> > +/**
+> > + * scx_is_descendant - Test whether sched is a descendant
+> > + * @sch: sched to test
+> > + * @ancestor: ancestor sched to test against
+> > + *
+> > + * Test whether @sch is a descendant of @ancestor.
+> > + */
+> > +static bool scx_is_descendant(struct scx_sched *sch, struct scx_sched *ancestor)
+> > +{
+> > +	if (sch->level < ancestor->level)
+> > +		return false;
+> > +	return sch->ancestors[ancestor->level] == ancestor;
+> > +}
 > 
-> In file included from kernel/sched/build_policy.c:62:
-> kernel/sched/ext.c: In function ‘__scx_init_task’:
-> kernel/sched/ext.c:3228:28: error: unused variable ‘tg’ [-Werror=unused-variable]
->  3228 |         struct task_group *tg = task_group(p);
->       |                            ^~
-> cc1: all warnings being treated as errors
-> 
-> Maybe wrap tg inside an #ifdef CONFIG_EXT_GROUP_SCHED or we can do
-> SCX_INIT_TASK_ARGS_CGROUP(task_group(p)) directly.
+> This seems to be used only later (patch 31/34), so it's an unused function
+> for now and may break git bisect. Maybe we should introduce this later?
 
-Yeah, there were a number of build failures w/o cgroup / cpu control
-enabled. Fixed in my tree. Should be okay on the next posting.
+It's kinda nice to introduce the basic organizational things together but
+yeah the warnings are annoying. I'll move it to the first user.
 
 Thanks.
 
