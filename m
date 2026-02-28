@@ -1,135 +1,316 @@
-Received: from out-185.mta0.migadu.com (out-185.mta0.migadu.com [91.218.175.185])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E536036E475
-	for <cgroups@vger.kernel.org>; Sat, 28 Feb 2026 14:20:56 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.185
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6DD3E3E7158;
+	Sat, 28 Feb 2026 19:08:02 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772288458; cv=none; b=AtsW2tc4+0XCJF3bvFqYOvqfVqmBDl1Y4zocxK61NOwcIgpmvOD440q7+jfocXjuSAk6rMYEk3n8rOqD/J6DogqrYkcJEFhntcUz05cjOEkEmsPumnYnuot4BokuhSDZop2+W7G5E0P9ylnIYdBCZZrD8ieGzlxO+uIYKhoacww=
+	t=1772305682; cv=none; b=sFQDZCjXLgp5KBqaqtxh/d7gP2gSAPsapAG1k3ybqci+zhlZR9GG52HGrb7bcqN42vyYvgE7w320HmEzQLQS0EjjkZQF5ZPQ5KdeEDwNdUmdFqtDp6YQMPlfMIw/Ru9rSDoekuajwI+qnW3NmmTRAIcghFddFEJ9MfyTt2zUrwE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772288458; c=relaxed/simple;
-	bh=nBmlPo5O/CjJtH+LnUDf9peXd0tMjIrIR3KIGzfZdA4=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=GRaQ18lvdeAar73SZ/jp/dFJrvJnrJyZAkgmEhpz2Z74HYETLvnWV82I+EVe4jkSTvzuT9j9ORbGLY+HZEIaT21Uk9s9teKU5eEOn3OuCfCtUTyWkeKyUqvbHqBXeSUft/Cjf4dV1vzBMhyjiOJSagFfJmJNPgYdpq2tBtjcqJ0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=CoTmr6uO; arc=none smtp.client-ip=91.218.175.185
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
+	s=arc-20240116; t=1772305682; c=relaxed/simple;
+	bh=ECFj6PIlpgHGhqNluMLaNy+SmRjHOXDaaWlrfELFWo0=;
+	h=Date:From:To:Cc:Subject:Message-Id:In-Reply-To:References:
+	 Mime-Version:Content-Type; b=E0xDn3aisxB9l0a6ZlEOIar3CFIwQN81asQro/tDaKE2b1FyAp5z2bR6yJZqzx4VAdzwgTVG0BnaU268sih32s4PFBECfVEXmx9yykdFWpWkNy/TBN1E+E188138MyqxPBR3fDeIDBsHw+BsC0DhSsRETbKpAzyJSlfFa0ggS7I=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (1024-bit key) header.d=linux-foundation.org header.i=@linux-foundation.org header.b=yfql9eeJ; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="CoTmr6uO"
-X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
-	t=1772288445;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=mBR7DSPv0SQTUni7LYAlRsXlj4uQvQDqYNhgjcl//5E=;
-	b=CoTmr6uOZUtm/aSGvKdQHWKa+316V6kLKQ3lL9j/1AgwB07qO6ga1qSdBot1NMHwMCvzqI
-	Nc8JlGKFJYpmR3QLBk0JvXCLav1konHLC2VKHKBodvXDu1asnQl0bmvbQawP4tOvijwRFz
-	5XerhCSv6PraS2o22S9wCKt/q2MOwtE=
-From: Shakeel Butt <shakeel.butt@linux.dev>
-To: Tejun Heo <tj@kernel.org>
-Cc: Johannes Weiner <hannes@cmpxchg.org>,
-	=?UTF-8?q?Michal=20Koutn=C3=BD?= <mkoutny@suse.com>,
-	Roman Gushchin <roman.gushchin@linux.dev>,
-	Kuniyuki Iwashima <kuniyu@google.com>,
-	Daniel Sedlak <daniel.sedlak@cdn77.com>,
-	Meta kernel team <kernel-team@meta.com>,
-	linux-mm@kvack.org,
-	netdev@vger.kernel.org,
-	cgroups@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Jakub Kicinski <kuba@kernel.org>
-Subject: [PATCH 2/3] cgroup: add lockless fast-path checks to cgroup_file_notify()
-Date: Sat, 28 Feb 2026 06:20:17 -0800
-Message-ID: <20260228142018.3178529-3-shakeel.butt@linux.dev>
-In-Reply-To: <20260228142018.3178529-1-shakeel.butt@linux.dev>
-References: <20260228142018.3178529-1-shakeel.butt@linux.dev>
+	dkim=pass (1024-bit key) header.d=linux-foundation.org header.i=@linux-foundation.org header.b="yfql9eeJ"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2702FC116D0;
+	Sat, 28 Feb 2026 19:08:01 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linux-foundation.org;
+	s=korg; t=1772305682;
+	bh=ECFj6PIlpgHGhqNluMLaNy+SmRjHOXDaaWlrfELFWo0=;
+	h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
+	b=yfql9eeJU+5rH9cNSzrzpm/RDZf7mTiaCCY25VcG+3U0s9O2PQ5HPfwAl8tKdillT
+	 VDaJjVMqrk6F5sF7EKI/xo+I9pi6J89yETNqcyg64igqrmsRoBIpbxAhwj58eVG8Q3
+	 Cs66D+FaBMq7EiWWU36EFJXdEU1+PNSH//muc41A=
+Date: Sat, 28 Feb 2026 11:08:00 -0800
+From: Andrew Morton <akpm@linux-foundation.org>
+To: Qi Zheng <qi.zheng@linux.dev>
+Cc: hannes@cmpxchg.org, hughd@google.com, mhocko@suse.com,
+ roman.gushchin@linux.dev, shakeel.butt@linux.dev, muchun.song@linux.dev,
+ david@kernel.org, lorenzo.stoakes@oracle.com, ziy@nvidia.com,
+ harry.yoo@oracle.com, yosry.ahmed@linux.dev, imran.f.khan@oracle.com,
+ kamalesh.babulal@oracle.com, axelrasmussen@google.com, yuanchu@google.com,
+ weixugc@google.com, chenridong@huaweicloud.com, mkoutny@suse.com,
+ hamzamahfooz@linux.microsoft.com, apais@linux.microsoft.com,
+ lance.yang@linux.dev, bhe@redhat.com, usamaarif642@gmail.com,
+ linux-mm@kvack.org, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org,
+ Qi Zheng <zhengqi.arch@bytedance.com>, Yosry Ahmed <yosry@kernel.org>
+Subject: Re: [PATCH v5 update 29/32] mm: memcontrol: prepare for reparenting
+ non-hierarchical stats
+Message-Id: <20260228110800.50bfca2a90912142c11e2922@linux-foundation.org>
+In-Reply-To: <20260228072556.31793-1-qi.zheng@linux.dev>
+References: <ef13e5974343b37ae2a0e28aff03ea2d033cb888.1772005110.git.zhengqi.arch@bytedance.com>
+	<20260228072556.31793-1-qi.zheng@linux.dev>
+X-Mailer: Sylpheed 3.8.0beta1 (GTK+ 2.24.33; x86_64-pc-linux-gnu)
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-Migadu-Flow: FLOW_OUT
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 
-Add two lockless checks before acquiring the lock:
+On Sat, 28 Feb 2026 15:25:56 +0800 Qi Zheng <qi.zheng@linux.dev> wrote:
 
-1. READ_ONCE(cfile->kn) NULL check to skip torn-down files.
-2. READ_ONCE(cfile->notified_at) check to skip when within the
-   rate-limit window (~10ms).
+> To resolve the dying memcg issue, we need to reparent LRU folios of child
+> memcg to its parent memcg. This could cause problems for non-hierarchical
+> stats.
+> 
+> As Yosry Ahmed pointed out:
+> 
+> ```
+> In short, if memory is charged to a dying cgroup at the time of
+> reparenting, when the memory gets uncharged the stats updates will occur
+> at the parent. This will update both hierarchical and non-hierarchical
+> stats of the parent, which would corrupt the parent's non-hierarchical
+> stats (because those counters were never incremented when the memory was
+> charged).
+> ```
+> 
+> Now we have the following two types of non-hierarchical stats, and they
+> are only used in CONFIG_MEMCG_V1:
+> 
+> a. memcg->vmstats->state_local[i]
+> b. pn->lruvec_stats->state_local[i]
+> 
+> To ensure that these non-hierarchical stats work properly, we need to
+> reparent these non-hierarchical stats after reparenting LRU folios. To
+> this end, this commit makes the following preparations:
+> 
+> 1. implement reparent_state_local() to reparent non-hierarchical stats
+> 2. make css_killed_work_fn() to be called in rcu work, and implement
+>    get_non_dying_memcg_start() and get_non_dying_memcg_end() to avoid race
+>    between mod_memcg_state()/mod_memcg_lruvec_state()
+>    and reparent_state_local()
 
-Both checks have safe error directions -- a stale read can only cause
-unnecessary lock acquisition, never a missed notification.  Annotate
-all write sites with WRITE_ONCE() to pair with the lockless readers.
+That's a big update (delta patch is below).
 
-The trade-off is that trailing timer_reduce() calls during bursts are
-skipped, so the deferred notification that delivers the final state
-may be lost.  This is acceptable for the primary callers like
-__memcg_memory_event() where events keep arriving.
+What did it all do?
 
-Signed-off-by: Shakeel Butt <shakeel.butt@linux.dev>
-Reported-by: Jakub Kicinski <kuba@kernel.org>
----
- kernel/cgroup/cgroup.c | 21 ++++++++++++++-------
- 1 file changed, 14 insertions(+), 7 deletions(-)
+I've bookmarked these reviewer comments:
 
-diff --git a/kernel/cgroup/cgroup.c b/kernel/cgroup/cgroup.c
-index 33282c7d71e4..5473ebd0f6c1 100644
---- a/kernel/cgroup/cgroup.c
-+++ b/kernel/cgroup/cgroup.c
-@@ -1749,7 +1749,7 @@ static void cgroup_rm_file(struct cgroup *cgrp, const struct cftype *cft)
- 		struct cgroup_file *cfile = (void *)css + cft->file_offset;
+https://lkml.kernel.org/r/CAO9r8zOhZgrym6oSrtg7b+HmNHEfWuAzZ0i8eYhm5-OEnfFLdw@mail.gmail.com
+https://lkml.kernel.org/r/aZ-R87JfacQ2gGq1@linux.dev
+https://lkml.kernel.org/r/aZ-kefGBeT-RzGcG@linux.dev
+
+Were they all addressed in some fashion?
+
+
+ include/linux/memcontrol.h |    1 
+ mm/memcontrol-v1.h         |    1 
+ mm/memcontrol.c            |   89 ++++++++++++++++++++++++++---------
+ 3 files changed, 68 insertions(+), 23 deletions(-)
+
+--- a/include/linux/memcontrol.h~mm-memcontrol-prepare-for-reparenting-non-hierarchical-stats-update
++++ a/include/linux/memcontrol.h
+@@ -956,7 +956,6 @@ static inline void mod_memcg_page_state(
  
- 		spin_lock_irq(&cgroup_file_kn_lock);
--		cfile->kn = NULL;
-+		WRITE_ONCE(cfile->kn, NULL);
- 		spin_unlock_irq(&cgroup_file_kn_lock);
+ unsigned long memcg_events(struct mem_cgroup *memcg, int event);
+ unsigned long memcg_page_state(struct mem_cgroup *memcg, int idx);
+-
+ unsigned long memcg_page_state_output(struct mem_cgroup *memcg, int item);
+ bool memcg_stat_item_valid(int idx);
+ bool memcg_vm_event_item_valid(enum vm_event_item idx);
+--- a/mm/memcontrol.c~mm-memcontrol-prepare-for-reparenting-non-hierarchical-stats-update
++++ a/mm/memcontrol.c
+@@ -234,11 +234,19 @@ static inline void reparent_state_local(
+ 	if (cgroup_subsys_on_dfl(memory_cgrp_subsys))
+ 		return;
  
- 		timer_delete_sync(&cfile->notify_timer);
-@@ -4430,7 +4430,7 @@ static int cgroup_add_file(struct cgroup_subsys_state *css, struct cgroup *cgrp,
- 		timer_setup(&cfile->notify_timer, cgroup_file_notify_timer, 0);
++	/*
++	 * Reparent stats exposed non-hierarchically. Flush @memcg's stats first
++	 * to read its stats accurately , and conservatively flush @parent's
++	 * stats after reparenting to avoid hiding a potentially large stat
++	 * update (e.g. from callers of mem_cgroup_flush_stats_ratelimited()).
++	 */
+ 	__mem_cgroup_flush_stats(memcg, true);
  
- 		spin_lock_irq(&cgroup_file_kn_lock);
--		cfile->kn = kn;
-+		WRITE_ONCE(cfile->kn, kn);
- 		spin_unlock_irq(&cgroup_file_kn_lock);
- 	}
+ 	/* The following counts are all non-hierarchical and need to be reparented. */
+ 	reparent_memcg1_state_local(memcg, parent);
+ 	reparent_memcg1_lruvec_state_local(memcg, parent);
++
++	__mem_cgroup_flush_stats(parent, true);
+ }
+ #else
+ static inline void reparent_state_local(struct mem_cgroup *memcg, struct mem_cgroup *parent)
+@@ -442,7 +450,7 @@ struct lruvec_stats {
+ 	long state[NR_MEMCG_NODE_STAT_ITEMS];
  
-@@ -4686,20 +4686,27 @@ int cgroup_add_legacy_cftypes(struct cgroup_subsys *ss, struct cftype *cfts)
-  */
- void cgroup_file_notify(struct cgroup_file *cfile)
+ 	/* Non-hierarchical (CPU aggregated) state */
+-	atomic_long_t state_local[NR_MEMCG_NODE_STAT_ITEMS];
++	long state_local[NR_MEMCG_NODE_STAT_ITEMS];
+ 
+ 	/* Pending child counts during tree propagation */
+ 	long state_pending[NR_MEMCG_NODE_STAT_ITEMS];
+@@ -485,7 +493,7 @@ unsigned long lruvec_page_state_local(st
+ 		return 0;
+ 
+ 	pn = container_of(lruvec, struct mem_cgroup_per_node, lruvec);
+-	x = atomic_long_read(&(pn->lruvec_stats->state_local[i]));
++	x = READ_ONCE(pn->lruvec_stats->state_local[i]);
+ #ifdef CONFIG_SMP
+ 	if (x < 0)
+ 		x = 0;
+@@ -494,6 +502,9 @@ unsigned long lruvec_page_state_local(st
+ }
+ 
+ #ifdef CONFIG_MEMCG_V1
++static void __mod_memcg_lruvec_state(struct lruvec *lruvec,
++				     enum node_stat_item idx, int val);
++
+ void reparent_memcg_lruvec_state_local(struct mem_cgroup *memcg,
+ 				       struct mem_cgroup *parent, int idx)
  {
--	unsigned long flags;
-+	unsigned long flags, last, next;
- 	struct kernfs_node *kn = NULL;
+@@ -506,12 +517,10 @@ void reparent_memcg_lruvec_state_local(s
+ 	for_each_node(nid) {
+ 		struct lruvec *child_lruvec = mem_cgroup_lruvec(memcg, NODE_DATA(nid));
+ 		struct lruvec *parent_lruvec = mem_cgroup_lruvec(parent, NODE_DATA(nid));
+-		struct mem_cgroup_per_node *parent_pn;
+ 		unsigned long value = lruvec_page_state_local(child_lruvec, idx);
  
-+	if (!READ_ONCE(cfile->kn))
-+		return;
-+
-+	last = READ_ONCE(cfile->notified_at);
-+	if (time_before_eq(jiffies, last + CGROUP_FILE_NOTIFY_MIN_INTV))
-+		return;
-+
- 	spin_lock_irqsave(&cgroup_file_kn_lock, flags);
- 	if (cfile->kn) {
--		unsigned long last = cfile->notified_at;
--		unsigned long next = last + CGROUP_FILE_NOTIFY_MIN_INTV;
-+		last = cfile->notified_at;
-+		next = last + CGROUP_FILE_NOTIFY_MIN_INTV;
- 
--		if (time_in_range(jiffies, last, next)) {
-+		if (time_before_eq(jiffies, next)) {
- 			timer_reduce(&cfile->notify_timer, next);
- 		} else {
- 			kn = cfile->kn;
- 			kernfs_get(kn);
--			cfile->notified_at = jiffies;
-+			WRITE_ONCE(cfile->notified_at, jiffies);
- 		}
+-		parent_pn = container_of(parent_lruvec, struct mem_cgroup_per_node, lruvec);
+-
+-		atomic_long_add(value, &(parent_pn->lruvec_stats->state_local[i]));
++		__mod_memcg_lruvec_state(child_lruvec, idx, -value);
++		__mod_memcg_lruvec_state(parent_lruvec, idx, value);
  	}
- 	spin_unlock_irqrestore(&cgroup_file_kn_lock, flags);
--- 
-2.47.3
+ }
+ #endif
+@@ -598,7 +607,7 @@ struct memcg_vmstats {
+ 	unsigned long		events[NR_MEMCG_EVENTS];
+ 
+ 	/* Non-hierarchical (CPU aggregated) page state & events */
+-	atomic_long_t		state_local[MEMCG_VMSTAT_SIZE];
++	long			state_local[MEMCG_VMSTAT_SIZE];
+ 	unsigned long		events_local[NR_MEMCG_EVENTS];
+ 
+ 	/* Pending child counts during tree propagation */
+@@ -835,7 +844,7 @@ unsigned long memcg_page_state_local(str
+ 	if (WARN_ONCE(BAD_STAT_IDX(i), "%s: missing stat item %d\n", __func__, idx))
+ 		return 0;
+ 
+-	x = atomic_long_read(&(memcg->vmstats->state_local[i]));
++	x = READ_ONCE(memcg->vmstats->state_local[i]);
+ #ifdef CONFIG_SMP
+ 	if (x < 0)
+ 		x = 0;
+@@ -843,6 +852,51 @@ unsigned long memcg_page_state_local(str
+ 	return x;
+ }
+ 
++static void __mod_memcg_state(struct mem_cgroup *memcg,
++			      enum memcg_stat_item idx, int val)
++{
++	int i = memcg_stats_index(idx);
++	int cpu;
++
++	if (mem_cgroup_disabled())
++		return;
++
++	cpu = get_cpu();
++
++	this_cpu_add(memcg->vmstats_percpu->state[i], val);
++	val = memcg_state_val_in_pages(idx, val);
++	memcg_rstat_updated(memcg, val, cpu);
++	trace_mod_memcg_state(memcg, idx, val);
++
++	put_cpu();
++}
++
++static void __mod_memcg_lruvec_state(struct lruvec *lruvec,
++				     enum node_stat_item idx, int val)
++{
++	struct mem_cgroup_per_node *pn;
++	struct mem_cgroup *memcg;
++	int i = memcg_stats_index(idx);
++	int cpu;
++
++	pn = container_of(lruvec, struct mem_cgroup_per_node, lruvec);
++	memcg = pn->memcg;
++
++	cpu = get_cpu();
++
++	/* Update memcg */
++	this_cpu_add(memcg->vmstats_percpu->state[i], val);
++
++	/* Update lruvec */
++	this_cpu_add(pn->lruvec_stats_percpu->state[i], val);
++
++	val = memcg_state_val_in_pages(idx, val);
++	memcg_rstat_updated(memcg, val, cpu);
++	trace_mod_memcg_lruvec_state(memcg, idx, val);
++
++	put_cpu();
++}
++
+ void reparent_memcg_state_local(struct mem_cgroup *memcg,
+ 				struct mem_cgroup *parent, int idx)
+ {
+@@ -852,7 +906,8 @@ void reparent_memcg_state_local(struct m
+ 	if (WARN_ONCE(BAD_STAT_IDX(i), "%s: missing stat item %d\n", __func__, idx))
+ 		return;
+ 
+-	atomic_long_add(value, &(parent->vmstats->state_local[i]));
++	__mod_memcg_state(memcg, idx, -value);
++	__mod_memcg_state(parent, idx, value);
+ }
+ #endif
+ 
+@@ -4174,8 +4229,6 @@ struct aggregate_control {
+ 	long *aggregate;
+ 	/* pointer to the non-hierarchichal (CPU aggregated) counters */
+ 	long *local;
+-	/* pointer to the atomic non-hierarchichal (CPU aggregated) counters */
+-	atomic_long_t *alocal;
+ 	/* pointer to the pending child counters during tree propagation */
+ 	long *pending;
+ 	/* pointer to the parent's pending counters, could be NULL */
+@@ -4213,12 +4266,8 @@ static void mem_cgroup_stat_aggregate(st
+ 		}
+ 
+ 		/* Aggregate counts on this level and propagate upwards */
+-		if (delta_cpu) {
+-			if (ac->local)
+-				ac->local[i] += delta_cpu;
+-			else if (ac->alocal)
+-				atomic_long_add(delta_cpu, &(ac->alocal[i]));
+-		}
++		if (delta_cpu)
++			ac->local[i] += delta_cpu;
+ 
+ 		if (delta) {
+ 			ac->aggregate[i] += delta;
+@@ -4289,8 +4338,7 @@ static void mem_cgroup_css_rstat_flush(s
+ 
+ 	ac = (struct aggregate_control) {
+ 		.aggregate = memcg->vmstats->state,
+-		.local = NULL,
+-		.alocal = memcg->vmstats->state_local,
++		.local = memcg->vmstats->state_local,
+ 		.pending = memcg->vmstats->state_pending,
+ 		.ppending = parent ? parent->vmstats->state_pending : NULL,
+ 		.cstat = statc->state,
+@@ -4323,8 +4371,7 @@ static void mem_cgroup_css_rstat_flush(s
+ 
+ 		ac = (struct aggregate_control) {
+ 			.aggregate = lstats->state,
+-			.local = NULL,
+-			.alocal = lstats->state_local,
++			.local = lstats->state_local,
+ 			.pending = lstats->state_pending,
+ 			.ppending = plstats ? plstats->state_pending : NULL,
+ 			.cstat = lstatc->state,
+--- a/mm/memcontrol-v1.h~mm-memcontrol-prepare-for-reparenting-non-hierarchical-stats-update
++++ a/mm/memcontrol-v1.h
+@@ -45,7 +45,6 @@ static inline bool do_memsw_account(void
+ 
+ unsigned long memcg_events_local(struct mem_cgroup *memcg, int event);
+ unsigned long memcg_page_state_local(struct mem_cgroup *memcg, int idx);
+-void mod_memcg_page_state_local(struct mem_cgroup *memcg, int idx, unsigned long val);
+ unsigned long memcg_page_state_local_output(struct mem_cgroup *memcg, int item);
+ bool memcg1_alloc_events(struct mem_cgroup *memcg);
+ void memcg1_free_events(struct mem_cgroup *memcg);
+_
 
