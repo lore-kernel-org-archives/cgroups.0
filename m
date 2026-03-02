@@ -1,121 +1,79 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+Received: from out-188.mta1.migadu.com (out-188.mta1.migadu.com [95.215.58.188])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A17183FFAB2
-	for <cgroups@vger.kernel.org>; Mon,  2 Mar 2026 14:15:22 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 864294014B1
+	for <cgroups@vger.kernel.org>; Mon,  2 Mar 2026 14:15:54 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=95.215.58.188
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772460923; cv=none; b=D4gYf6OtQVrS1S0oSY+xXoci8fL4w6EvDOmR1eaJg2Qy5YCHCgmlRBftQYE/flf45E1U0hb/fpcP/UeHIxiuVEOpLurChjqalxB7+0VFRe3iWZESLuTj2XK4rHQvZ9+iWRb/q/BZ8RNzuJQIVzGrxkOQy1ZiPsuExWzMNc7bcbo=
+	t=1772460955; cv=none; b=ff9ZdkaF0QxU8dtapz4vF3IFAZh+kKrF51fDfR3hALHnPg0M5Ql+3ssdV2EgVKOnWC96+3rYjubwXbB6sXIY+FHKw6nW55FPl9XdMsTwraPSmpuzyA53640jJSjUFUs72NHkYYHuErlsTu/4ISCytrLrlMBEk2mmHGyyjVSApJw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772460923; c=relaxed/simple;
-	bh=PO9LFxjHRiXSZV0ZTkBcY+OJzR2dcqixVUYO6d+SoyE=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=bIML0GZtk8+IohM7JjXwff/xuptEVvHtS+WkWtyk5neUi6gu6l++J4OjJHdaCynxkR9I67OdX8NY6jtZP7V5rG0FsaehDnQaGGCOC8y/FuFaTqoeK9N8HKHfpn8t8bmJI+TOckzUiEVHYMTYX3P+NsNV3NKGZZ5bBhieFYaTwfE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=CtR1/196; arc=none smtp.client-ip=170.10.133.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	s=arc-20240116; t=1772460955; c=relaxed/simple;
+	bh=KIsFIDvd0JO4zb9rQ7koT4BxFd5V++oEZyikGV2lFsc=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=fOdZbHea6ONji48HQ+McugFd/s+JhOb09YEmOMHvj4lg2StyHeBBXiVJwzEQBpEPlikkd2WFxVtgxfdtMw6sVFfq4o8PKscuVpjq9hlHNzfdRx8hnet5BuykvQVDAJlR1zyXhP/3+iWH1nyl8y2SiFYKEpTy047H9njw0bpCXHs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=XB1pfTP5; arc=none smtp.client-ip=95.215.58.188
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="CtR1/196"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1772460921;
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="XB1pfTP5"
+Date: Mon, 2 Mar 2026 06:15:45 -0800
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
+	t=1772460952;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=4PUUY1opl6eDiW1jZM0WQddZV4oH4gcaLepSTLvQvQY=;
-	b=CtR1/196Ns+BIIUSYGlYQhblRZQHo1oCJrDZs7xShZiSzqJFohZY0vf+U4TSv41Wz3wsxR
-	RveWgzYwD9LTFgqWa7+ABgpiuxqLWyQQ2R4LaNedrrBUoPzR1d7EDW5iDk9fAKb3BnzSZm
-	amgNX85nYGQ0OOYudzALZT6BP083lnY=
-Received: from mx-prod-mc-05.mail-002.prod.us-west-2.aws.redhat.com
- (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
- relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-428-GXUYZp7WMB23NG-YsYS2RQ-1; Mon,
- 02 Mar 2026 09:15:18 -0500
-X-MC-Unique: GXUYZp7WMB23NG-YsYS2RQ-1
-X-Mimecast-MFC-AGG-ID: GXUYZp7WMB23NG-YsYS2RQ_1772460916
-Received: from mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.12])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mx-prod-mc-05.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id A2EFF19560B9;
-	Mon,  2 Mar 2026 14:15:15 +0000 (UTC)
-Received: from [10.22.65.79] (unknown [10.22.65.79])
-	by mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id 2221A19560A7;
-	Mon,  2 Mar 2026 14:15:12 +0000 (UTC)
-Message-ID: <69ec4b3c-818b-4784-9b90-1ac5e977ae58@redhat.com>
-Date: Mon, 2 Mar 2026 09:15:11 -0500
+	bh=z/EVA7c5dM/CMIsC5H/wd0QWQksrsEBgYswy6gN4Re4=;
+	b=XB1pfTP5+/ixFozi8gJbJackW08qw1bJDmRZcbeMcPTwK+lYX/rPcssduU7Prdja5dbtRP
+	9NWUyq14HBut2Cm59kPT4u1eEB4Wy0xZ5XB2qE7wEdgY917rXr7vFOMS2qqiCSEnTV/djD
+	Yb7eQhEYVbKmZmf74r1qrW969/xBeKQ=
+X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
+From: Shakeel Butt <shakeel.butt@linux.dev>
+To: Christian =?utf-8?B?S8O2bmln?= <christian.koenig@amd.com>
+Cc: Dave Airlie <airlied@gmail.com>, dri-devel@lists.freedesktop.org, 
+	tj@kernel.org, Johannes Weiner <hannes@cmpxchg.org>, 
+	Michal Hocko <mhocko@kernel.org>, Roman Gushchin <roman.gushchin@linux.dev>, 
+	Muchun Song <muchun.song@linux.dev>, cgroups@vger.kernel.org, Dave Chinner <david@fromorbit.com>, 
+	Waiman Long <longman@redhat.com>, simona@ffwll.ch
+Subject: Re: [PATCH 07/16] memcg: add support for GPU page counters. (v4)
+Message-ID: <aaWZrTZGsxxjbBYv@linux.dev>
+References: <20260224020854.791201-1-airlied@gmail.com>
+ <20260224020854.791201-8-airlied@gmail.com>
+ <ee914ffb-5c3d-4d41-abdb-5ed02db326c6@amd.com>
+ <CAPM=9txUuS-qzA+gX2DvTuYR2OZ79RG86FuDA6czkpuJ_SR6KQ@mail.gmail.com>
+ <4fddf319-50c4-40ab-9e36-04d629a8855e@amd.com>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v6 8/8] cgroup/cpuset: Call housekeeping_update() without
- holding cpus_read_lock
-To: Frederic Weisbecker <frederic@kernel.org>
-Cc: Chen Ridong <chenridong@huaweicloud.com>, Tejun Heo <tj@kernel.org>,
- Johannes Weiner <hannes@cmpxchg.org>, =?UTF-8?Q?Michal_Koutn=C3=BD?=
- <mkoutny@suse.com>, Ingo Molnar <mingo@redhat.com>,
- Peter Zijlstra <peterz@infradead.org>, Juri Lelli <juri.lelli@redhat.com>,
- Vincent Guittot <vincent.guittot@linaro.org>,
- Steven Rostedt <rostedt@goodmis.org>, Ben Segall <bsegall@google.com>,
- Mel Gorman <mgorman@suse.de>, Valentin Schneider <vschneid@redhat.com>,
- Thomas Gleixner <tglx@linutronix.de>, Shuah Khan <shuah@kernel.org>,
- cgroups@vger.kernel.org, linux-kernel@vger.kernel.org,
- linux-kselftest@vger.kernel.org
-References: <20260221185418.29319-1-longman@redhat.com>
- <20260221185418.29319-9-longman@redhat.com> <aaV/Jme7NAooNxZQ@lothringen>
-Content-Language: en-US
-From: Waiman Long <longman@redhat.com>
-In-Reply-To: <aaV/Jme7NAooNxZQ@lothringen>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-X-Scanned-By: MIMEDefang 3.0 on 10.30.177.12
+In-Reply-To: <4fddf319-50c4-40ab-9e36-04d629a8855e@amd.com>
+X-Migadu-Flow: FLOW_OUT
 
-On 3/2/26 7:14 AM, Frederic Weisbecker wrote:
-> On Sat, Feb 21, 2026 at 01:54:18PM -0500, Waiman Long wrote:
->> The current cpuset partition code is able to dynamically update
->> the sched domains of a running system and the corresponding
->> HK_TYPE_DOMAIN housekeeping cpumask to perform what is essentally the
->> "isolcpus=domain,..." boot command line feature at run time.
->>
->> The housekeeping cpumask update requires flushing a number of different
->> workqueues which may not be safe with cpus_read_lock() held as the
->> workqueue flushing code may acquire cpus_read_lock() or acquiring locks
->> which have locking dependency with cpus_read_lock() down the chain. Below
->> is an example of such circular locking problem.
->>
->>    ======================================================
->>    WARNING: possible circular locking dependency detected
->>    6.18.0-test+ #2 Tainted: G S
->>    ------------------------------------------------------
->>    test_cpuset_prs/10971 is trying to acquire lock:
->>    ffff888112ba4958 ((wq_completion)sync_wq){+.+.}-{0:0}, at: touch_wq_lockdep_map+0x7a/0x180
->>
->>    but task is already holding lock:
->>    ffffffffae47f450 (cpuset_mutex){+.+.}-{4:4}, at: cpuset_partition_write+0x85/0x130
->>
->>    which lock already depends on the new lock.
->>
->>    the existing dependency chain (in reverse order) is:
->>    -> #4 (cpuset_mutex){+.+.}-{4:4}:
->>    -> #3 (cpu_hotplug_lock){++++}-{0:0}:
->>    -> #2 (rtnl_mutex){+.+.}-{4:4}:
->>    -> #1 ((work_completion)(&arg.work)){+.+.}-{0:0}:
->>    -> #0 ((wq_completion)sync_wq){+.+.}-{0:0}:
->>
->>    Chain exists of:
->>      (wq_completion)sync_wq --> cpu_hotplug_lock --> cpuset_mutex
-> Which workqueue is involved here that holds rtnl_mutex?
-> Is this an existing problem or added test code?
+On Wed, Feb 25, 2026 at 10:09:55AM +0100, Christian König wrote:
+> On 2/24/26 20:28, Dave Airlie wrote:
+[...]
+> 
+> > This has been a pain in the ass for desktop for years, and I'd like to
+> > fix it, the HPC use case if purely a driver for me doing the work.
+> 
+> Wait a second. How does accounting to cgroups help with that in any way?
+> 
+> The last time I looked into this problem the OOM killer worked based on the per task_struct stats which couldn't be influenced this way.
+> 
 
-Circular locking dependency here may not necessarily mean that 
-rtnl_mutex is directly used in a work function.  However it can be used 
-in a locking chain involving multiple parties that can result in a 
-deadlock situation if they happen in the right order. So it is better 
-safe that sorry even if the chance of this occurrence is minimal.
+It depends on the context of the oom-killer. If the oom-killer is triggered due
+to memcg limits then only the processes in the scope of the memcg will be
+targetted by the oom-killer. With the specific setting, the oom-killer can kill
+all the processes in the target memcg.
 
-Cheers,
-Longman
-
+However nowadays the userspace oom-killer is preferred over the kernel
+oom-killer due to flexibility and configurability. Userspace oom-killers like
+systmd-oomd, Android's LMKD or fb-oomd are being used in containerized
+environments. Such oom-killers looks at memcg stats and hiding something
+something from memcg i.e. not charging to memcg will hide such usage from these
+oom-killers.
