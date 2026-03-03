@@ -1,121 +1,112 @@
-Received: from out-171.mta1.migadu.com (out-171.mta1.migadu.com [95.215.58.171])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B2E8E4D90CC
-	for <cgroups@vger.kernel.org>; Tue,  3 Mar 2026 16:26:41 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=95.215.58.171
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8191A37CD59
+	for <cgroups@vger.kernel.org>; Tue,  3 Mar 2026 16:44:34 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772555205; cv=none; b=R4kbi/1rsdfB+yrDCq2Ty3yYqbGxjAfVGsFF0z49Nvy7l9ZKMYxBQFvCjfsElOC0bWC0AL028fKohlJ4jct1wvhMv3nZbbanDIoErCftd+NNxiSAZ/WLGd52c7SpmMQmWBYTcLxm5MgpHNyLcgeR9UjvZxdZ7iXlkyqobxGsxs8=
+	t=1772556274; cv=none; b=dy3CX6GMoHpQUNL7C6X62j1NDHtfRB12TUBvXQ0noufHO+dk/ZxYV1fnkMfr3RPfPfnwBwSWK1ryFczqbEVLDF39MysL6EjsYR/Bz1GzJZaleBPbH1eo+gzJhxDeYpRyo299R1f/lVIQEEuLNYSaAWXClX3DH+POrFcxM6wqqAw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772555205; c=relaxed/simple;
-	bh=3mi18L2XAhtNJP4w0YftC8HpJpTk85/bCiQBpe/fGzY=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=GTfq4pszXcc5zZm8wcd1ZcKYoydwsf5CJn28X4WC8vz3oRcMvC/WkG+6rTXgGqAohUxp9zmc4XZa6DMXnB/VO9UQSNgOQOTl4dX6Fv1aQWlHsuC4flJyZhq/I6BaMjRX4zB2PMhSAC/IqwUTtcm4dSHaiLwpaHIdaJJUpieYsGA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=cTct34xt; arc=none smtp.client-ip=95.215.58.171
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
+	s=arc-20240116; t=1772556274; c=relaxed/simple;
+	bh=GD8R4MrS3YxxeJH+XqUwYY0ZgQukNMSTXS7hk3+dkhw=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=idLpgWkW8oT3Ump+jHnjoPMi1P9/lgrMKHjiCxF5XcnSjJPZNmSR79AkPtwEZQE4o7YReGEEzym+bEEfm+P0jdZpFk9LtLg+Hl2obtM1dBimkjN3JtLRaYFRjWEuoD9IzCMXFQ0673YpQG7Iv3cw15xRAFehjNiNuSQCexQlS8o=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=UCs4Bq9x; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="cTct34xt"
-Date: Tue, 3 Mar 2026 08:26:31 -0800
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
-	t=1772555199;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=KWZ2Q88mCamuBtdqha7mUqDv9x9r6pDkpjHI+V+2Iuk=;
-	b=cTct34xtiw6UR8JCa5DZiQShjiTVn3S5vutC2R8hjpvh0fvfPB7sIcEkVQf5PVaPUOsDgw
-	GqfOywqGUWr+JlDAE+MQRWf2kugQdKM6+VZtboockpUKIh1M73Pijxkld7/AO6m/7+azjf
-	xB1dcAQPS3aOKgl2l9uuAU7qOxT+suc=
-X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
-From: Shakeel Butt <shakeel.butt@linux.dev>
-To: Johannes Weiner <hannes@cmpxchg.org>
-Cc: "Vlastimil Babka (SUSE)" <vbabka@kernel.org>, 
-	Hao Li <hao.li@linux.dev>, Andrew Morton <akpm@linux-foundation.org>, 
-	Michal Hocko <mhocko@kernel.org>, Roman Gushchin <roman.gushchin@linux.dev>, 
-	Vlastimil Babka <vbabka@suse.cz>, Harry Yoo <harry.yoo@oracle.com>, linux-mm@kvack.org, 
-	cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 5/5] mm: memcg: separate slab stat accounting from objcg
- charge cache
-Message-ID: <aacLODh5BY45Zp9s@linux.dev>
-References: <20260302195305.620713-1-hannes@cmpxchg.org>
- <20260302195305.620713-6-hannes@cmpxchg.org>
- <ji2jjt4vtmt2ox7wzytpivttc4z7j3u6cwmv23r6xit5322gns@te4t4djl5nlk>
- <541a6661-7bfe-4517-a32c-5839002c61e5@kernel.org>
- <aablae2eFl9ne5fW@linux.dev>
- <aacBoazC21TAi-Q2@cmpxchg.org>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="UCs4Bq9x"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 43E25C2BCB4
+	for <cgroups@vger.kernel.org>; Tue,  3 Mar 2026 16:44:34 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1772556274;
+	bh=GD8R4MrS3YxxeJH+XqUwYY0ZgQukNMSTXS7hk3+dkhw=;
+	h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
+	b=UCs4Bq9x70nl85+v+7lx+5fxXDSiy1/L1s882ijSWgoOXGAHqqFbB3LIzwWfhGPHa
+	 sLvBiNGJgqfLmqFH2hTJuTzuKBVa10PynN/CRC5q/T2GBVh8sbMIMVEEPAJE5VtZZT
+	 DATB6dKCk1GvngeQc75cLoGOrnZ0aQqEwhkmDRfHJ9Dm2lW3Egrxb+CgK2doq/0nle
+	 VlqSiAP6TFR2UWMQwBe3X08EF58ofHmH6IK6tSr6g20D0/j7zgfBGc6xAT0jZhUSgf
+	 Gu+kDkTynguPLCzel88ifRGSRee1UTnjeK50yAnBvMJnvMRdjBXTtlheGQj0k+byCC
+	 rzCd36trU+vEw==
+Received: by mail-qv1-f43.google.com with SMTP id 6a1803df08f44-89a14be4733so3147716d6.2
+        for <cgroups@vger.kernel.org>; Tue, 03 Mar 2026 08:44:34 -0800 (PST)
+X-Forwarded-Encrypted: i=1; AJvYcCX1p5IvUh+FCkgXsHrWRigZ2tHEk0ccNt/VuiI5KspfyLNwEKh3mdLg3IKI9w+RFN6Cdu8D7Daa@vger.kernel.org
+X-Gm-Message-State: AOJu0YzA4ToBLbRD5VYnttqBfvUoDJo63PAOEFhxJTf46SRMrFoWMkp7
+	IsI0xzdUcSLs8NHmpMiNZe+xHKPtPk2JJQTdZcOGMoHMZT1jg8JnpVDIss4tCwWOcG8gfAa0KDw
+	t28BoiFxZdDoHdjnTl0knLP4mkmKOyMw=
+X-Received: by 2002:a05:6214:d4b:b0:89a:14c5:f53 with SMTP id
+ 6a1803df08f44-89a14c511a9mr11079146d6.53.1772556273364; Tue, 03 Mar 2026
+ 08:44:33 -0800 (PST)
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <aacBoazC21TAi-Q2@cmpxchg.org>
-X-Migadu-Flow: FLOW_OUT
+References: <20260220-work-bpf-namespace-v1-0-866207db7b83@kernel.org>
+ <20260220-work-bpf-namespace-v1-1-866207db7b83@kernel.org>
+ <CAPhsuW63sEvK50ELaxo4LxjCS-2RdfxDzuMYhW59PDUHfF0-iQ@mail.gmail.com>
+ <20260227-nullnummer-eisdiele-08db4c8fe99e@brauner> <CAPhsuW5GCK02OXvFeNQVW-QoX9eJ7CyiT=oEDsCYyht-Hve3sQ@mail.gmail.com>
+ <20260302-begehbar-kanister-9801d1198abf@brauner>
+In-Reply-To: <20260302-begehbar-kanister-9801d1198abf@brauner>
+From: Song Liu <song@kernel.org>
+Date: Tue, 3 Mar 2026 08:44:22 -0800
+X-Gmail-Original-Message-ID: <CAPhsuW4gRcU-5RhiR=BcDS3J=Px+5n_4nbex+KjAkw0fzXFTZg@mail.gmail.com>
+X-Gm-Features: AaiRm52-DKXlpufIhvmyCV4nEob2wQGCqkaDCXdRM0qSJ1z5Eq_QFD3SWEY4o-Q
+Message-ID: <CAPhsuW4gRcU-5RhiR=BcDS3J=Px+5n_4nbex+KjAkw0fzXFTZg@mail.gmail.com>
+Subject: Re: [PATCH 1/4] ns: add bpf hooks
+To: Christian Brauner <brauner@kernel.org>
+Cc: Alexei Starovoitov <ast@kernel.org>, Daniel Borkmann <daniel@iogearbox.net>, 
+	Andrii Nakryiko <andrii@kernel.org>, Martin KaFai Lau <martin.lau@linux.dev>, Tejun Heo <tj@kernel.org>, 
+	KP Singh <kpsingh@kernel.org>, bpf@vger.kernel.org, linux-kernel@vger.kernel.org, 
+	cgroups@vger.kernel.org, Lennart Poettering <lennart@poettering.net>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-On Tue, Mar 03, 2026 at 10:43:29AM -0500, Johannes Weiner wrote:
-> On Tue, Mar 03, 2026 at 05:45:18AM -0800, Shakeel Butt wrote:
-> > On Tue, Mar 03, 2026 at 11:42:31AM +0100, Vlastimil Babka (SUSE) wrote:
-> > > On 3/3/26 09:54, Hao Li wrote:
-> > > > On Mon, Mar 02, 2026 at 02:50:18PM -0500, Johannes Weiner wrote:
-> > > >>  
-> > > >> +static void refill_obj_stock(struct obj_cgroup *objcg,
-> > > >> +			     unsigned int nr_bytes,
-> > > >> +			     bool allow_uncharge)
-> > > >> +{
-> > > >> +	struct obj_stock_pcp *stock = trylock_stock();
-> > > >> +	__refill_obj_stock(objcg, stock, nr_bytes, allow_uncharge);
-> > > >> +	unlock_stock(stock);
-> > > > 
-> > > > Hi Johannes,
-> > > > 
-> > > > I noticed that after this patch, obj_cgroup_uncharge_pages() is now inside
-> > > > the obj_stock.lock critical section. Since obj_cgroup_uncharge_pages() calls
-> > > > refill_stock(), which seems non-trivial, this might increase the lock hold time.
-> > > > In particular, could that lead to more failed trylocks for IRQ handlers on
-> > > > non-RT kernel (or for tasks that preempt others on RT kernel)?
-> 
-> Good catch. I did ponder this, but forgot by the time I wrote the
-> changelog.
-> 
-> > > Yes, it also seems a bit self-defeating? (at least in theory)
-> > > 
-> > > refill_obj_stock()
-> > >   trylock_stock()
-> > >   __refill_obj_stock()
-> > >     obj_cgroup_uncharge_pages()
-> > >       refill_stock()
-> > >         local_trylock() -> nested, will fail
-> > 
-> > Not really as the local_locks are different i.e. memcg_stock.lock in
-> > refill_stock() and obj_stock.lock in refill_obj_stock().
-> 
-> Right, refilling the *byte* stock could produce enough excess that we
-> refill the *page* stock. Which in turn could produce enough excess
-> that we drain that back to the page counters (shared atomics).
-> 
-> > However Hao's concern is valid and I think it can be easily fixed by
-> > moving obj_cgroup_uncharge_pages() out of obj_stock.lock.
-> 
-> Note that we now have multiple callsites of __refill_obj_stock(). Do
-> we care enough to move this to the caller?
-> 
-> There are a few other places with a similar pattern:
-> 
-> - drain_obj_stock(): calls memcg_uncharge() under the lock
-> - drain_stock(): calls memcg_uncharge() under the lock
-> - refill_stock(): still does full drain_stock()
-> 
-> All of these could be more intentional about only updating the per-cpu
-> data under the lock and the page counters outside of it.
-> 
-> Given that IRQ allocations/frees are rare, nested ones even rarer, and
-> the "slowpath" is a few extra atomics, I'm not sure it's worth the
-> code complication. At least until proven otherwise.
-> 
-> What do you think?
+On Mon, Mar 2, 2026 at 1:46=E2=80=AFAM Christian Brauner <brauner@kernel.or=
+g> wrote:
+>
+> On Fri, Feb 27, 2026 at 08:38:48AM -0800, Song Liu wrote:
+> > On Fri, Feb 27, 2026 at 2:28=E2=80=AFAM Christian Brauner <brauner@kern=
+el.org> wrote:
+> > [...]
+> > > >
+> > > > If we change the hook as
+> > > >
+> > > >    bpf_lsm_namespace_alloc(ns, inum);
+> > > >
+> > > > We can move it to the beginning of __ns_common_init().
+> > > > This change allows blocking __ns_common_init() before
+> > > > it makes any changes to the ns. Is this a better approach?
+> > >
+> > > I don't think it matters tbh. We have no control when exactly
+> > > __ns_common_init() is called. That's up to the containing namespace. =
+We
+> > > can't rely on the namespace to have been correctly set up at this tim=
+e.
+> > > My main goal was to have struct ns_common to be fully initialized
+> > > already so that direct access to it's field already makes sense.
+> >
+> > Good point on having ns_common initialized. Besides inum, we
+> > should also pass ns_type and ops into the hook.
+>
+> But why? The struct ns_common is already fully initialized when it is
+> passed to bpf_lsm_namespace_alloc() including ops, inum, ns_type etc.
 
-Yes this makes sense. We already have at least one evidence (bug Hao fixed) that
-these are very rare, so optimizing for such cases will just increase complexity
-without real benefit.
+I meant if we pull bpf_lsm_namespace_alloc() to the beginning of
+__ns_common_init(), we need ns_type etc. because ns_common
+is not fully initialized. IOW, I agree with your early comment.
+
+> >
+> > OTOH, shall we have the hook before proc_alloc_inum()? With
+> > this change, the hook can block the operation before it causes
+> > any contention on proc_inum_ida. IOW, how about we have:
+>
+> I think that contention is meaningless and I'd rather have struct
+> ns_common fully set up so that all fields can be accessed.
+
+If contention is not a concern, which I believe you know better
+than I do, I think this patch works fine. So
+
+Acked-by: Song Liu <song@kernel.org>
+
+Thanks,
+Song
