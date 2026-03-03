@@ -1,99 +1,63 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B258432694E;
-	Tue,  3 Mar 2026 21:48:58 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B8A661A682A;
+	Tue,  3 Mar 2026 22:31:54 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772574538; cv=none; b=OhPh2Ep2jPySvx2gWPWzNFzmTaqNUGj3uY7MouUzRdRkqt7EQ6337ex37HwqmswGI7Yv176aEWBXpbrO79obAK5BoAVR/9pDhV9kvM7ksCDzeTcxNpgC1tY0YqdFOVpfD9d71a3p7dSKXrXCZieDN8Xlc5M/m1/ZtaI+hfUbX70=
+	t=1772577114; cv=none; b=gA8j0brn7sMfQtHic+AWGIUJPlGm8x82yEVSc/5Hv7Amn5ck6g3/TE3L9obsmDr1y8sarGRqlbJw7ixfGuRa+MJ2diaLjDGSkMuLLuoHW6pMQY9RtJXE+1mh+3DGTNVCbZUlS3gmPJQEYprfBRP9hVvP1BeCWHVsdnVSDzjESUw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772574538; c=relaxed/simple;
-	bh=8omlh4NObVF6slvvfUOPZq5TrbA7XAx7668EqE2O1rw=;
-	h=Date:Message-ID:From:To:Cc:Subject; b=MYYbcjj06FmnCdfb8DmRiQQ7M/cC3KbLcIZuMSSRjjZlS2mVab4g2nae99ergGBS2poJukxlfUc11oycuf6/SWN4je5/hmeqKMgC2NQ0RwxrmL01UBoQJLO9Y402Ec9bClhYLyN+ALp0PcExBMNJB3IjdAQjjnUjYgN7LXpyI1I=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=gn26ajll; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1772577114; c=relaxed/simple;
+	bh=v3f00Vag9Cu3Wo438Z0DHq/NDXP7R7GlttfbGNgydwA=;
+	h=Subject:From:In-Reply-To:References:Message-Id:Date:To:Cc; b=USxKwuqtL54TbzgHMiXoaMAXzYjjMB51fRDQxixOpJ92+nQEi+nPCoJ+x4lbW77BLPp32e6l6yo+CzCg0G/WXshUNcNA/TWJV+mouEbMl1vB3ZfP5sqcyt04kI3mtU+haKxbuzNSl4hD/0sr1b+UZF6wU/RAKwz7v95mwp5bvv4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=q5VEDb6g; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="gn26ajll"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 32BB4C2BC87;
-	Tue,  3 Mar 2026 21:48:58 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="q5VEDb6g"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5DA56C116C6;
+	Tue,  3 Mar 2026 22:31:54 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1772574538;
-	bh=8omlh4NObVF6slvvfUOPZq5TrbA7XAx7668EqE2O1rw=;
-	h=Date:From:To:Cc:Subject:From;
-	b=gn26ajllrjDjaExmfTpKej9DJwd4Miq8Y8J45GfdwAMGy/xtfyhZ6KUJ2NugzKlxi
-	 VFizePvDvZIrpy1XxTy8tGCWXsCZqaiPRaiN1z0KlA1lBPSNlTmnQWvK7azSE/iApK
-	 4uyIbxoz4Rmvy78qtd57Zit7n3Xp3hXnFCJQO5ATw0mk1Lex6chHv6Ftx6RNY5J9YF
-	 uQ4S5FuU+b4yTEOhPRbm+5MsH0w+L/lPW4IUIaL9aplilDOSzOxHik5B2C6cELkMIH
-	 HeyiKPyeHTSiSi51kFrZeoBogshuZn5+C/JVqkiC9Cd3bEtU/VUMmSkBjbqKSzkBNY
-	 hAwbZRWo3KH9g==
-Date: Tue, 03 Mar 2026 11:48:57 -1000
-Message-ID: <c04ce0bbeb7a461f3bb0d571ff5a2911@kernel.org>
-From: Tejun Heo <tj@kernel.org>
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: cgroups@vger.kernel.org,
- Waiman Long <longman@redhat.com>,
- linux-kernel@vger.kernel.org
-Subject: [GIT PULL] cgroup: Fixes for v7.0-rc2
+	s=k20201202; t=1772577114;
+	bh=v3f00Vag9Cu3Wo438Z0DHq/NDXP7R7GlttfbGNgydwA=;
+	h=Subject:From:In-Reply-To:References:Date:To:Cc:From;
+	b=q5VEDb6ge331fjkWlRJFKaQFmK4VfJjuygvaxip3C1UacOeqqUz8G4piZlk/T0GXy
+	 WqYRInpUtWOV1rHJChwIe2uTJLJqkCYg6QQeStVzLTFYei5L9KTDCqjBoYTbGRr1V8
+	 CUxb6Rvkkc4pvuoK7B/teh+LLy8FUPPLZyqSxl7l/irJ3OVbVERzkurcVBtr9ME2wT
+	 EL/ew0OChsSYgjYUKRkqx8pRUn8IkX1ME+ElIwC1N/hn3XAmPutbaLpVEuTPIfIE/V
+	 k4hhRx1kMzaUanIGywA3FpEHLIYix+Nc3eaBnxzRIf/nyV3lF2Sm8EJu77+qwZsFIU
+	 uboYfSKwa48Jg==
+Received: from [10.30.226.235] (localhost [IPv6:::1])
+	by aws-us-west-2-korg-oddjob-rhel9-1.codeaurora.org (Postfix) with ESMTP id B9E963808200;
+	Tue,  3 Mar 2026 22:31:56 +0000 (UTC)
+Subject: Re: [GIT PULL] cgroup: Fixes for v7.0-rc2
+From: pr-tracker-bot@kernel.org
+In-Reply-To: <c04ce0bbeb7a461f3bb0d571ff5a2911@kernel.org>
+References: <c04ce0bbeb7a461f3bb0d571ff5a2911@kernel.org>
+X-PR-Tracked-List-Id: <linux-kernel.vger.kernel.org>
+X-PR-Tracked-Message-Id: <c04ce0bbeb7a461f3bb0d571ff5a2911@kernel.org>
+X-PR-Tracked-Remote: https://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git tags/cgroup-for-7.0-rc2-fixes
+X-PR-Tracked-Commit-Id: 085f067389d12bd9800c0a9672a174c1de7a8069
+X-PR-Merge-Tree: torvalds/linux.git
+X-PR-Merge-Refname: refs/heads/master
+X-PR-Merge-Commit-Id: 0031c06807cfa8aa51a759ff8aa09e1aa48149af
+Message-Id: <177257711522.1500124.6671998072182867424.pr-tracker-bot@kernel.org>
+Date: Tue, 03 Mar 2026 22:31:55 +0000
+To: Tejun Heo <tj@kernel.org>
+Cc: Linus Torvalds <torvalds@linux-foundation.org>, cgroups@vger.kernel.org, Waiman Long <longman@redhat.com>, linux-kernel@vger.kernel.org
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 
-Hello,
+The pull request you sent on Tue, 03 Mar 2026 11:48:57 -1000:
 
-The following changes since commit 37a93dd5c49b5fda807fd204edf2547c3493319c:
+> https://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git tags/cgroup-for-7.0-rc2-fixes
 
-  Merge tag 'net-next-7.0' of git://git.kernel.org/pub/scm/linux/kernel/git/netdev/net-next (2026-02-11 19:31:52 -0800)
+has been merged into torvalds/linux.git:
+https://git.kernel.org/torvalds/c/0031c06807cfa8aa51a759ff8aa09e1aa48149af
 
-are available in the Git repository at:
+Thank you!
 
-  https://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git tags/cgroup-for-7.0-rc2-fixes
-
-for you to fetch changes up to 085f067389d12bd9800c0a9672a174c1de7a8069:
-
-  cgroup/cpuset: fix null-ptr-deref in rebuild_sched_domains_cpuslocked (2026-02-25 07:39:04 -1000)
-
-----------------------------------------------------------------
-cgroup: Fixes for v7.0-rc2
-
-- Fix circular locking dependency in cpuset partition code by deferring
-  housekeeping_update() calls to a workqueue instead of calling them
-  directly under cpus_read_lock.
-
-- Fix null-ptr-deref in rebuild_sched_domains_cpuslocked() when
-  generate_sched_domains() returns NULL due to kmalloc failure.
-
-- Fix incorrect cpuset behavior for effective_xcpus in
-  partition_xcpus_del() and cpuset_update_tasks_cpumask() in
-  update_cpumasks_hier().
-
-- Fix race between task migration and cgroup iteration.
-
-----------------------------------------------------------------
-Chen Ridong (1):
-      cgroup/cpuset: fix null-ptr-deref in rebuild_sched_domains_cpuslocked
-
-Qingye Zhao (1):
-      cgroup: fix race between task migration and iteration
-
-Waiman Long (8):
-      cgroup/cpuset: Fix incorrect change to effective_xcpus in partition_xcpus_del()
-      cgroup/cpuset: Fix incorrect use of cpuset_update_tasks_cpumask() in update_cpumasks_hier()
-      cgroup/cpuset: Clarify exclusion rules for cpuset internal variables
-      cgroup/cpuset: Set isolated_cpus_updating only if isolated_cpus is changed
-      kselftest/cgroup: Simplify test_cpuset_prs.sh by removing "S+" command
-      cgroup/cpuset: Move housekeeping_update()/rebuild_sched_domains() together
-      cgroup/cpuset: Defer housekeeping_update() calls from CPU hotplug to workqueue
-      cgroup/cpuset: Call housekeeping_update() without holding cpus_read_lock
-
- kernel/cgroup/cgroup.c                            |   1 +
- kernel/cgroup/cpuset.c                            | 222 ++++++++++++++-------
- kernel/sched/isolation.c                          |   4 +-
- kernel/time/timer_migration.c                     |   4 +-
- tools/testing/selftests/cgroup/test_cpuset_prs.sh | 224 +++++++++++-----------
- 5 files changed, 266 insertions(+), 189 deletions(-)
-
-Thanks.
-
---
-tejun
+-- 
+Deet-doot-dot, I am a bot.
+https://korg.docs.kernel.org/prtracker.html
