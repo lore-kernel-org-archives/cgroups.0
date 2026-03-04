@@ -1,19 +1,19 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7A5DF36D9EB;
-	Wed,  4 Mar 2026 07:38:16 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F1A6D36D9EB;
+	Wed,  4 Mar 2026 07:38:18 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772609896; cv=none; b=puzQqpdlt/7XWqnau7lKGICXEu099JzhJWuyO3wrPpCh6XqOwRKfiS9WVGONZrAyEtMlRLliHFVT7N9oFY1GIBDbA1vLQ+/cTCfVRh6uNusPHK8MW3CyawuBBsxHZy/FGmR5JW3MBP2SIk5zbqkfM+m/Ge97h9MN2fRlVWDf9Qs=
+	t=1772609899; cv=none; b=Eq7n7op5wjzObuy3soeLEAKcZl/j348GkWVrhuSaVuF+WDnzt/aXGTH18DhoSC/OAKls01eaaQqvZSHatPeqLnKHq61G4ik5ew1vTp5QmLedhT+bk1nJNVGKuYeCSgopWuYRPdCPvamQmTPQA+bZ5mJQBeOcilDvtSY86mOpVw4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772609896; c=relaxed/simple;
-	bh=rhAh8Qt6BcEMTM98R8MnFkUNtJyn1YPkVEfNxMDnwP4=;
+	s=arc-20240116; t=1772609899; c=relaxed/simple;
+	bh=1NXvgTVosEtMAJVxyd/ZLi5HROrezuItv5ZNVXIfWjg=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=KF7I2TQlu/JHlRTB4ALf5eaMhU4fJhh+y9jAwHzINMOqE+x2RGmEOQg5OpOsfiExZk/Kwxyy2SDAExwgkmXFrrmZyYONSP1+q5iOliofhBkMXZJlzCxvTCX+oYOkyNK7kNXJ3X1vmqouq54khqwkYw9iFRK/d5jXLWyzpn0uEUU=
+	 MIME-Version; b=hdZ1SGbzsk2IwWHevUetQcBIwkW4rpuKUAz3Lg3k/zU6wernlR2zhzoC9bDQVjGxKdRydr1zCNxeyNCj6+sd2PWAcRQ/TsfTkzZbBmi9SR4T4EgCtsyvMrMpg1tULhp2OeE2/4Me5l15BO3+VKEZbwKnUsvR9EbYxi89NRCG49k=
 ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id F3556C2BC87;
-	Wed,  4 Mar 2026 07:38:13 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A757FC19423;
+	Wed,  4 Mar 2026 07:38:16 +0000 (UTC)
 From: Yu Kuai <yukuai@fnnas.com>
 To: Tejun Heo <tj@kernel.org>,
 	Josef Bacik <josef@toxicpanda.com>,
@@ -24,9 +24,9 @@ Cc: cgroups@vger.kernel.org,
 	Zheng Qixing <zhengqixing@huawei.com>,
 	Ming Lei <ming.lei@redhat.com>,
 	Nilay Shroff <nilay@linux.ibm.com>
-Subject: [PATCH v3 1/7] blk-cgroup: protect q->blkg_list iteration in blkg_destroy_all() with blkcg_mutex
-Date: Wed,  4 Mar 2026 15:38:02 +0800
-Message-ID: <20260304073809.3438679-2-yukuai@fnnas.com>
+Subject: [PATCH v3 2/7] bfq: protect q->blkg_list iteration in bfq_end_wr_async() with blkcg_mutex
+Date: Wed,  4 Mar 2026 15:38:03 +0800
+Message-ID: <20260304073809.3438679-3-yukuai@fnnas.com>
 X-Mailer: git-send-email 2.51.0
 In-Reply-To: <20260304073809.3438679-1-yukuai@fnnas.com>
 References: <20260304073809.3438679-1-yukuai@fnnas.com>
@@ -38,46 +38,57 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-blkg_destroy_all() iterates q->blkg_list without holding blkcg_mutex,
-which can race with blkg_free_workfn() that removes blkgs from the list
-while holding blkcg_mutex.
+bfq_end_wr_async() iterates q->blkg_list while only holding bfqd->lock,
+but not blkcg_mutex. This can race with blkg_free_workfn() that removes
+blkgs from the list while holding blkcg_mutex.
 
-Add blkcg_mutex protection around the q->blkg_list iteration to prevent
-potential list corruption or use-after-free issues.
+Add blkcg_mutex protection in bfq_end_wr() before taking bfqd->lock to
+ensure proper synchronization when iterating q->blkg_list.
 
 Signed-off-by: Yu Kuai <yukuai@fnnas.com>
 ---
- block/blk-cgroup.c | 3 +++
- 1 file changed, 3 insertions(+)
+ block/bfq-cgroup.c  | 3 ++-
+ block/bfq-iosched.c | 6 ++++++
+ 2 files changed, 8 insertions(+), 1 deletion(-)
 
-diff --git a/block/blk-cgroup.c b/block/blk-cgroup.c
-index 3cffb68ba5d8..0bc7b19399b6 100644
---- a/block/blk-cgroup.c
-+++ b/block/blk-cgroup.c
-@@ -574,6 +574,7 @@ static void blkg_destroy_all(struct gendisk *disk)
+diff --git a/block/bfq-cgroup.c b/block/bfq-cgroup.c
+index 6a75fe1c7a5c..839d266a6aa6 100644
+--- a/block/bfq-cgroup.c
++++ b/block/bfq-cgroup.c
+@@ -940,7 +940,8 @@ void bfq_end_wr_async(struct bfq_data *bfqd)
+ 	list_for_each_entry(blkg, &bfqd->queue->blkg_list, q_node) {
+ 		struct bfq_group *bfqg = blkg_to_bfqg(blkg);
+ 
+-		bfq_end_wr_async_queues(bfqd, bfqg);
++		if (bfqg)
++			bfq_end_wr_async_queues(bfqd, bfqg);
+ 	}
+ 	bfq_end_wr_async_queues(bfqd, bfqd->root_group);
+ }
+diff --git a/block/bfq-iosched.c b/block/bfq-iosched.c
+index b180ce583951..14ca67a616b7 100644
+--- a/block/bfq-iosched.c
++++ b/block/bfq-iosched.c
+@@ -2645,6 +2645,9 @@ static void bfq_end_wr(struct bfq_data *bfqd)
+ 	struct bfq_queue *bfqq;
  	int i;
  
- restart:
-+	mutex_lock(&q->blkcg_mutex);
- 	spin_lock_irq(&q->queue_lock);
- 	list_for_each_entry(blkg, &q->blkg_list, q_node) {
- 		struct blkcg *blkcg = blkg->blkcg;
-@@ -592,6 +593,7 @@ static void blkg_destroy_all(struct gendisk *disk)
- 		if (!(--count)) {
- 			count = BLKG_DESTROY_BATCH_SIZE;
- 			spin_unlock_irq(&q->queue_lock);
-+			mutex_unlock(&q->blkcg_mutex);
- 			cond_resched();
- 			goto restart;
- 		}
-@@ -611,6 +613,7 @@ static void blkg_destroy_all(struct gendisk *disk)
++#ifdef CONFIG_BFQ_GROUP_IOSCHED
++	mutex_lock(&bfqd->queue->blkcg_mutex);
++#endif
+ 	spin_lock_irq(&bfqd->lock);
  
- 	q->root_blkg = NULL;
- 	spin_unlock_irq(&q->queue_lock);
-+	mutex_unlock(&q->blkcg_mutex);
+ 	for (i = 0; i < bfqd->num_actuators; i++) {
+@@ -2656,6 +2659,9 @@ static void bfq_end_wr(struct bfq_data *bfqd)
+ 	bfq_end_wr_async(bfqd);
+ 
+ 	spin_unlock_irq(&bfqd->lock);
++#ifdef CONFIG_BFQ_GROUP_IOSCHED
++	mutex_unlock(&bfqd->queue->blkcg_mutex);
++#endif
  }
  
- static void blkg_iostat_set(struct blkg_iostat *dst, struct blkg_iostat *src)
+ static sector_t bfq_io_struct_pos(void *io_struct, bool request)
 -- 
 2.51.0
 
