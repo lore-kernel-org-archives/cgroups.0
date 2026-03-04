@@ -1,88 +1,91 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C47313CD8A3;
-	Wed,  4 Mar 2026 19:22:18 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BC5193E51CA;
+	Wed,  4 Mar 2026 22:03:08 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772652138; cv=none; b=pIw4i3IJBmq4WFLLwbnQwE6BgGOsQuBvEejXLzO5QaxLCUGPp6V0O64o+kaoFJGuJFHd2jCrowGsO8OM+py1Al7kwGrhncXVxsgRXrHVt3XDFkcJyRZE0+KdB93l+MahkD/BDS54fmAL//kXBPc9u7SKkBxL+q3fk7YmzzF5hcE=
+	t=1772661788; cv=none; b=P47CwMNfYCGOk/AZc/ZXZKD6FBOE6/I0eHeSYqfk0CyahcvbEJ0KwW0l6DYG1Qu9ADhHjt3LYQO4rwHsDO+X3ckwa8Th19Bpzk/VcHiO5UytD30LaaOyOIjsPk7jVY5wCPLjI5VcekaqBiO76m/AdJwDdJbpfrMydgqi2xjPGUw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772652138; c=relaxed/simple;
-	bh=pgoTi6PGFtDox7b9hbGxnsMNwDeGnoXcoXrDbFeJ/gM=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=ML99TdCAyKT89aiqpTSFE/Gu/DVJpstgkqoRkS/eVWeFbE8rWmvNlQxPAQ9hhcJm5H/sAIezG/6mRT2b7L9pT3pFK2sGBpg9AQUflqULcuSy9VsRFE3/3UJlczJOjp4mODlOz2HRWn2QU04l8rTuGvDYhUomKKfUNWYxWKbnob0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=qBfQQ4H4; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1772661788; c=relaxed/simple;
+	bh=QcDeX+4A0lvHQQbRg9leLOGUG35mNFYWz5fL5TVLF1Q=;
+	h=Date:From:To:Cc:Subject:Message-Id:In-Reply-To:References:
+	 Mime-Version:Content-Type; b=UReHcx6aluB+F3msyf/OmEuif775EZsJte5BuxoYe6Q9ybMUITbjR6sAjdinuVdXVNpm9c/YbriRKGURo2FDaNYEKCeV8n2Kw7laNkHfMjsEG1F6S5X/fSP21Xyx0eeA+XjOyodZTZNRteOd/1VnGxM202AouKw8iLJSraYJUqk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (1024-bit key) header.d=linux-foundation.org header.i=@linux-foundation.org header.b=rlpLqS/K; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="qBfQQ4H4"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 480CAC4CEF7;
-	Wed,  4 Mar 2026 19:22:18 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1772652138;
-	bh=pgoTi6PGFtDox7b9hbGxnsMNwDeGnoXcoXrDbFeJ/gM=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=qBfQQ4H4I1of8QHOgpD8BDtMbgfyuB2shTLSPqX6lCVJHMqSdD1dmO1GaoLmyTEGx
-	 7ZGCCAo2xCSuga54+a6vbhppKzU8tUo9DAe4EgCHY5cw9BsQtVHNgXw5BiLna52jDf
-	 +NMhlOzFWOrT/YHpSxZ20y0n4an2xnwKbxpOcb+h5zXH6ivS9QqQ8dkiBQMOyPXcTj
-	 L/HBSdMBPaXWABOGbATxs3pRtzvwzMEOfRcq1QGToOK+DpObwmrDoHrwqb29CCS6FW
-	 RrpttvqieV3YzneG3QOXVXfRY73gy8Gf1x06CdfApjQ6/QbeOzcnkod74biTAvX7BE
-	 1Y/xiZ9mVWe1A==
-Date: Wed, 4 Mar 2026 09:22:17 -1000
-From: Tejun Heo <tj@kernel.org>
-To: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
-Cc: linux-rt-devel@lists.linux.dev, cgroups@vger.kernel.org,
-	Johannes Weiner <hannes@cmpxchg.org>,
-	Michal Koutny <mkoutny@suse.com>,
-	Clark Williams <clrkwllms@kernel.org>,
-	Steven Rostedt <rostedt@goodmis.org>,
-	Bert Karwatzki <spasswolf@web.de>
-Subject: Re: [PATCH] cgroup: Don't expose dead tasks in cgroup
-Message-ID: <aaiGaV6vdb0cFiei@slm.duckdns.org>
-References: <20260302120738.6KkDipsR@linutronix.de>
- <20260303131301.ieSSCM4n@linutronix.de>
- <aachZbIFl6HCFSxD@slm.duckdns.org>
- <e3897a34013dcc785e93f503512574c9@kernel.org>
- <20260304191617.xFJgRT85@linutronix.de>
+	dkim=pass (1024-bit key) header.d=linux-foundation.org header.i=@linux-foundation.org header.b="rlpLqS/K"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A735FC19425;
+	Wed,  4 Mar 2026 22:03:07 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linux-foundation.org;
+	s=korg; t=1772661788;
+	bh=QcDeX+4A0lvHQQbRg9leLOGUG35mNFYWz5fL5TVLF1Q=;
+	h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
+	b=rlpLqS/Kj6XuSnENrppvplSEKrxYqPvM+aALj0ec5JjEL9u5ixAsovpcNNV7ejj0S
+	 ljLr1AObex51OKKnoemq2v5AjE6O6xx8BW7Uq/Mxw9EQkmTCgKqYr0ac2XQl6ye+cM
+	 GGkekwE02kT/+Xw0PJzgRoeJlHS3jhSKzvw6sAt4=
+Date: Wed, 4 Mar 2026 14:03:07 -0800
+From: Andrew Morton <akpm@linux-foundation.org>
+To: Yosry Ahmed <yosry@kernel.org>
+Cc: Qi Zheng <qi.zheng@linux.dev>, hannes@cmpxchg.org, hughd@google.com,
+ mhocko@suse.com, roman.gushchin@linux.dev, shakeel.butt@linux.dev,
+ muchun.song@linux.dev, david@kernel.org, lorenzo.stoakes@oracle.com,
+ ziy@nvidia.com, harry.yoo@oracle.com, yosry.ahmed@linux.dev,
+ imran.f.khan@oracle.com, kamalesh.babulal@oracle.com,
+ axelrasmussen@google.com, yuanchu@google.com, weixugc@google.com,
+ chenridong@huaweicloud.com, mkoutny@suse.com,
+ hamzamahfooz@linux.microsoft.com, apais@linux.microsoft.com,
+ lance.yang@linux.dev, bhe@redhat.com, usamaarif642@gmail.com,
+ linux-mm@kvack.org, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org,
+ Qi Zheng <zhengqi.arch@bytedance.com>
+Subject: Re: [PATCH v5 update 29/32] mm: memcontrol: prepare for reparenting
+ non-hierarchical stats
+Message-Id: <20260304140307.f51a33f77f6ddc1dfc0cf476@linux-foundation.org>
+In-Reply-To: <vfmyb3pp2gatdrqa2uimw44pxioreo7zc373zn7buvdfzhejew@ndhaa4yl3bvh>
+References: <ef13e5974343b37ae2a0e28aff03ea2d033cb888.1772005110.git.zhengqi.arch@bytedance.com>
+	<20260228072556.31793-1-qi.zheng@linux.dev>
+	<CAO9r8zNYFvNnz_oTu10kPBYL6=1ZewKUMRYcMmcMdSqbro_miA@mail.gmail.com>
+	<de1476aa-20a3-420e-9cd7-9238efd3c85f@linux.dev>
+	<46bgg2vwqvmex7wtk2fkvf454tqgaychb7l4odnnrx7svci5ha@vy4b4ophm763>
+	<22cca07c-49e0-42e8-b937-7b1c7c51e78d@linux.dev>
+	<vfmyb3pp2gatdrqa2uimw44pxioreo7zc373zn7buvdfzhejew@ndhaa4yl3bvh>
+X-Mailer: Sylpheed 3.7.0 (GTK+ 2.24.33; x86_64-pc-linux-gnu)
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20260304191617.xFJgRT85@linutronix.de>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 
-Hello,
+On Wed, 4 Mar 2026 13:57:41 +0000 Yosry Ahmed <yosry@kernel.org> wrote:
 
-On Wed, Mar 04, 2026 at 08:16:17PM +0100, Sebastian Andrzej Siewior wrote:
-> --- a/kernel/cgroup/cgroup.c
-> +++ b/kernel/cgroup/cgroup.c
-> @@ -5108,6 +5108,8 @@ static void css_task_iter_advance(struct css_task_iter *it)
->  		return;
->  
->  	task = list_entry(it->task_pos, struct task_struct, cg_list);
-> +	if ((task->flags & PF_EXITING) && !atomic_read(&task->signal->live))
-> +		goto repeat;
->  
->  	if (it->flags & CSS_TASK_ITER_PROCS) {
->  		/* if PROCS, skip over tasks which aren't group leaders */
+> > > What about this (untested), it should apply on top of 'mm: memcontrol:
+> > > eliminate the problem of dying memory cgroup for LRU folios' in mm-new,
+> > > so maybe it needs to be broken down across different patches:
+> > > 
+> > 
+> > I applied  and tested it, so the final updated patches is as follows,
+> > If there are no problems, I will send out the official patches.
 > 
-> does work.
-> So we delay the removal due to sched_ext and then hide due to userspace.
-> Nice ;)
+> If I am not mistaken, Andrew prefers fixups to what he already has in
+> mm-new (Andrew, please correct me if I am wrong).
 
-sched_ext made it more visible but the problem is shared in cgroup
-controller in general. We don't want a cgroup to become empty while there's
-active resource consumption going on and we tell userspace the task is dead
-before it switches out for the last time, so...
+Yes, if the changes are reasonably small and the code has already
+undergone significant review.
 
-> The signal check is to see the zombies, so you they pop up in the list
-> until a waitpid()?
-> Anyway, do you want me make a proper patch out of it?
+Although the mm-new branch is quite speculative/early so I guess this
+is less important there.
 
-Yes, please.
+Adding a sprinkle of -fix patches can be a pain all round, so nowadays
+if someone sends a replacement series I'll generate and send a
+what-you-changed-since-last-time diff.  So
 
-Thanks.
+- we can check that the diff matches the changelogged updates
+- reviewers don't have to re-review everything
+- the author can eyeball it and think "yup, I meant to change that".
 
--- 
-tejun
+I believe this series is due for quite a few updates so a full v6
+resend series would be appropriate.  I'll generate the
+how-you-changed-mm.git email from that.
+
