@@ -1,32 +1,32 @@
-Received: from out-184.mta0.migadu.com (out-184.mta0.migadu.com [91.218.175.184])
+Received: from out-173.mta0.migadu.com (out-173.mta0.migadu.com [91.218.175.173])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8CEA4374191
-	for <cgroups@vger.kernel.org>; Thu,  5 Mar 2026 11:56:56 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.184
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3AC83396B77
+	for <cgroups@vger.kernel.org>; Thu,  5 Mar 2026 11:57:07 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.173
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772711817; cv=none; b=kt4j3QheDOGZUnUkfFAIt5kH02suthv9E/cLGalMpcsl6g10SiAd0Bo7gcVuz8HL7GwCxeVX0OaA+6WT52KQdiAimWk7kUTunoWbRTZVmL5fnGQbxMCuPQWAQu2FnUCFPi+q+wbVKCAzJ8nbeUmBNXUb7R1OJEqIc5J1i3VWl3o=
+	t=1772711828; cv=none; b=W8VfMTAkXLtXQe4marS7lDxecapBqWsY8jbugr4Ypg4VCrZtO/0ETCS55fxO+rDSAVltkEHXm7EKIiXEjwhCBlXG3s5ZK9INIV4qdMNjV0PI68npTZ3YLgqDRDJO+nCHlaK9YTLsdYhihkhKjjcDzaj+qytVGzF3DY+Tj3moBIM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772711817; c=relaxed/simple;
-	bh=o93nMP7jIhsr634EbTQj/Xvx2WphgmVbqrbjgWYGleQ=;
+	s=arc-20240116; t=1772711828; c=relaxed/simple;
+	bh=UcvEXyOAO8ytx6gVQoTdCNbrrABjtlHmCjWfboxYXdw=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=NpbCA26BjJtHyOL9QEDlNHXZ8ptXTK3ILYyGneNN1XN0N+pFFtKWOYecz7o/vwY1xXY/gGtd3rjMExMBzMne2zC2qsXJfGL9qRt6+6WzGe6KB4sAaSKpeo+3Lk3oFfrT7hmnYZJ2nB8pPy5gR0PBYnxWKermE1pJFi/JHM5x8ig=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=fe+nMrSJ; arc=none smtp.client-ip=91.218.175.184
+	 MIME-Version; b=hL8xugzk+ys9t6hp18cvusHxxmONMACaPSayanP77l3slgQst3lXLYrbU6El9W4Lm4J6xObcCx25aoi9nrfOsXEyxoxbDN3y2TFE3VuSEmdWxkXbyF1nVJIjycz724EyLy8wpUp3SjGVdX4jy1OtYFTym+PfautUToeXaewu6Fs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=mDHzNUEq; arc=none smtp.client-ip=91.218.175.173
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="fe+nMrSJ"
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="mDHzNUEq"
 X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
-	t=1772711814;
+	t=1772711825;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=ZbG23+zJ5fPDETZsA4JYiiScdZSpnAwzCU/omjW9+7Y=;
-	b=fe+nMrSJbiyNEjT8QnfP2jiU7zSCtJUFDhUkZ6xW8MCf6wGdRSGgSko4Kwhc4zPQBedWa5
-	DmrzF7ubIzkhASX91nLHrdY9b0eWVYN48Ccc0XZJ8LXDN4O7BgEnue4o3MoZ2JmNDreaDv
-	bQfDWzg57Ggq6hClfYxiaK4sGUfw26M=
+	bh=MMHHbOrsvMEf7fKsOGegfWk7YRVFbtR0jAiLvTiMweo=;
+	b=mDHzNUEqAQqp7SL0gmqequ7wqLe6seQrDyt4SxyM3fHn/DvPTQvI5jYPRoQYMnXXn+LlcW
+	wmz1cq6L2WlD5784mqCaAOhK+e8AJDvNjI5x1EIKMdRyQDa/cS71gR+Lr6mLQ9MVqyXQXs
+	07pwy8XxAKhcCGpQBwjvKf2U6ifeoWw=
 From: Qi Zheng <qi.zheng@linux.dev>
 To: hannes@cmpxchg.org,
 	hughd@google.com,
@@ -55,11 +55,10 @@ To: hannes@cmpxchg.org,
 Cc: linux-mm@kvack.org,
 	linux-kernel@vger.kernel.org,
 	cgroups@vger.kernel.org,
-	Muchun Song <songmuchun@bytedance.com>,
 	Qi Zheng <zhengqi.arch@bytedance.com>
-Subject: [PATCH v6 16/33] mm: workingset: prevent memory cgroup release in lru_gen_eviction()
-Date: Thu,  5 Mar 2026 19:52:34 +0800
-Message-ID: <f37e8ae2d84ddc690813d834cd75735d52d1bc78.1772711148.git.zhengqi.arch@bytedance.com>
+Subject: [PATCH v6 17/33] mm: thp: prevent memory cgroup release in folio_split_queue_lock{_irqsave}()
+Date: Thu,  5 Mar 2026 19:52:35 +0800
+Message-ID: <ca2957c0df1126b2c71b40c738018fd5255525a6.1772711148.git.zhengqi.arch@bytedance.com>
 In-Reply-To: <cover.1772711148.git.zhengqi.arch@bytedance.com>
 References: <cover.1772711148.git.zhengqi.arch@bytedance.com>
 Precedence: bulk
@@ -71,61 +70,62 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-Migadu-Flow: FLOW_OUT
 
-From: Muchun Song <songmuchun@bytedance.com>
+From: Qi Zheng <zhengqi.arch@bytedance.com>
 
-In the near future, a folio will no longer pin its corresponding
-memory cgroup. To ensure safety, it will only be appropriate to
-hold the rcu read lock or acquire a reference to the memory cgroup
-returned by folio_memcg(), thereby preventing it from being released.
+In the near future, a folio will no longer pin its corresponding memory
+cgroup. To ensure safety, it will only be appropriate to hold the rcu read
+lock or acquire a reference to the memory cgroup returned by
+folio_memcg(), thereby preventing it from being released.
 
-In the current patch, the rcu read lock is employed to safeguard
-against the release of the memory cgroup in lru_gen_eviction().
+In the current patch, the rcu read lock is employed to safeguard against
+the release of the memory cgroup in folio_split_queue_lock{_irqsave}().
 
-This serves as a preparatory measure for the reparenting of the
-LRU pages.
-
-Signed-off-by: Muchun Song <songmuchun@bytedance.com>
 Signed-off-by: Qi Zheng <zhengqi.arch@bytedance.com>
 Reviewed-by: Harry Yoo <harry.yoo@oracle.com>
 Acked-by: Johannes Weiner <hannes@cmpxchg.org>
 Acked-by: Shakeel Butt <shakeel.butt@linux.dev>
+Acked-by: David Hildenbrand (Red Hat) <david@kernel.org>
+Acked-by: Muchun Song <muchun.song@linux.dev>
 ---
- mm/workingset.c | 9 +++++++--
- 1 file changed, 7 insertions(+), 2 deletions(-)
+ mm/huge_memory.c | 20 ++++++++++++++++++--
+ 1 file changed, 18 insertions(+), 2 deletions(-)
 
-diff --git a/mm/workingset.c b/mm/workingset.c
-index 5e8b6e62a6175..6971aa163e466 100644
---- a/mm/workingset.c
-+++ b/mm/workingset.c
-@@ -244,12 +244,15 @@ static void *lru_gen_eviction(struct folio *folio)
- 	int refs = folio_lru_refs(folio);
- 	bool workingset = folio_test_workingset(folio);
- 	int tier = lru_tier_from_refs(refs, workingset);
--	struct mem_cgroup *memcg = folio_memcg(folio);
-+	struct mem_cgroup *memcg;
- 	struct pglist_data *pgdat = folio_pgdat(folio);
-+	unsigned short memcg_id;
+diff --git a/mm/huge_memory.c b/mm/huge_memory.c
+index f6c0a86055bdc..56db54fa48181 100644
+--- a/mm/huge_memory.c
++++ b/mm/huge_memory.c
+@@ -1157,13 +1157,29 @@ split_queue_lock_irqsave(int nid, struct mem_cgroup *memcg, unsigned long *flags
  
- 	BUILD_BUG_ON(LRU_GEN_WIDTH + LRU_REFS_WIDTH >
- 		     BITS_PER_LONG - max(EVICTION_SHIFT, EVICTION_SHIFT_ANON));
- 
+ static struct deferred_split *folio_split_queue_lock(struct folio *folio)
+ {
+-	return split_queue_lock(folio_nid(folio), folio_memcg(folio));
++	struct deferred_split *queue;
++
 +	rcu_read_lock();
-+	memcg = folio_memcg(folio);
- 	lruvec = mem_cgroup_lruvec(memcg, pgdat);
- 	lrugen = &lruvec->lrugen;
- 	min_seq = READ_ONCE(lrugen->min_seq[type]);
-@@ -257,8 +260,10 @@ static void *lru_gen_eviction(struct folio *folio)
- 
- 	hist = lru_hist_from_seq(min_seq);
- 	atomic_long_add(delta, &lrugen->evicted[hist][type][tier]);
-+	memcg_id = mem_cgroup_private_id(memcg);
++	queue = split_queue_lock(folio_nid(folio), folio_memcg(folio));
++	/*
++	 * The memcg destruction path is acquiring the split queue lock for
++	 * reparenting. Once you have it locked, it's safe to drop the rcu lock.
++	 */
 +	rcu_read_unlock();
- 
--	return pack_shadow(mem_cgroup_private_id(memcg), pgdat, token, workingset, type);
-+	return pack_shadow(memcg_id, pgdat, token, workingset, type);
++
++	return queue;
  }
  
- /*
+ static struct deferred_split *
+ folio_split_queue_lock_irqsave(struct folio *folio, unsigned long *flags)
+ {
+-	return split_queue_lock_irqsave(folio_nid(folio), folio_memcg(folio), flags);
++	struct deferred_split *queue;
++
++	rcu_read_lock();
++	queue = split_queue_lock_irqsave(folio_nid(folio), folio_memcg(folio), flags);
++	rcu_read_unlock();
++
++	return queue;
+ }
+ 
+ static inline void split_queue_unlock(struct deferred_split *queue)
 -- 
 2.20.1
 
