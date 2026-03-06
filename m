@@ -1,121 +1,59 @@
-Received: from out-173.mta0.migadu.com (out-173.mta0.migadu.com [91.218.175.173])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 196A647799B
-	for <cgroups@vger.kernel.org>; Fri,  6 Mar 2026 20:29:49 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.173
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 05C383502BA;
+	Fri,  6 Mar 2026 22:48:19 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1772828991; cv=none; b=NPjKdgy0x/1UpkNQd4301x4ZeXqc5gf7PBuISQUWLDp+xJF6+UKSpIfoQyKcaLd1Ykd5lm5OwGXsJvKNGgBz3idvFNdsTZyoS8+qfjH8jSPJi7+6HRKGozPrgB9jEi2r+1AeCuCXyRysCeClYEPqeZiDeHdFCu23uovnFHmOsX0=
+	t=1772837300; cv=none; b=HYymTBXhNklSbbYL43y7c28smTOOXuLgURZ+WSWwihKka+9yYo0EXjqUApTVoMk0Nk3qXB8sIT0VOXqiKNbVm0uljOdHwWL+YSz3qkomeMuWyD2AD14bcXpmcA5Yj9W2mECvoIlFM92YPwfS1SSNLjtS7FrXSJjq5wxV+vTtZlU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1772828991; c=relaxed/simple;
-	bh=rFfmioNiorqkmxbTrUeBgC8NnB58UG6HTHT7bTr4Blo=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=Z/HR9ygWRqu+wV8IsslWnEU+84es3JbaGMUYoZ0clh6VT4I6D8k6oYEpdNYzVQy2dqoYtWLlAbJT7GUeMJ31hsy0/5ZPFO6aQlApz6Yu7KpyEkHc5+d0BaKIVvvakTvm46MgoPYoVokCto14CaeHj7uRqABjvKfBeNXj1/lcwCQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=iupAZja8; arc=none smtp.client-ip=91.218.175.173
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
+	s=arc-20240116; t=1772837300; c=relaxed/simple;
+	bh=izRaMOOe9JYV+HyxNgh8xIBq9SoerJw5ZWQCKg89Q9M=;
+	h=Date:Message-ID:From:To:Cc:Subject:In-Reply-To:References; b=Oj8QDHFymPOSR5RHHEBwCiM5Mok2rmIZ4XTITHN/oJreBYp/E4pYg15fUn/9o9NG3HnyM+Smu/tIW28WeZWwyUyyEwodbmGWXsGI/Me0B21p9N8VsP609j3GXsLjUR8y/J+73Kp7a29b8QGRX3mZ6iS/O63fVNFvyR8/GbGjkUE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=NyZ3aRE/; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="iupAZja8"
-X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
-	t=1772828978;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=xu4FOpsB3tis67Vr0ogStH5duKlNRv21WglBri7UTcs=;
-	b=iupAZja8wy6lFb/pwYfc8nhuO+aJSry5Kzt+7aHHLHQlaMXK2PAsZMFNNd66go/2W6Kkwe
-	vdSCNOLTyQowEMIgGXwIyWRJErAzaAgNXx4GOqe/oeRcXdJ66tdgH5XHnVRTlmSidJ3kyS
-	lzPKFMCdB6Vy+1HRz3vUG4R4h/6qZ20=
-From: Usama Arif <usama.arif@linux.dev>
-To: Qi Zheng <qi.zheng@linux.dev>
-Cc: Usama Arif <usama.arif@linux.dev>,
-	hannes@cmpxchg.org,
-	hughd@google.com,
-	mhocko@suse.com,
-	roman.gushchin@linux.dev,
-	shakeel.butt@linux.dev,
-	muchun.song@linux.dev,
-	david@kernel.org,
-	lorenzo.stoakes@oracle.com,
-	ziy@nvidia.com,
-	harry.yoo@oracle.com,
-	yosry.ahmed@linux.dev,
-	imran.f.khan@oracle.com,
-	kamalesh.babulal@oracle.com,
-	axelrasmussen@google.com,
-	yuanchu@google.com,
-	weixugc@google.com,
-	chenridong@huaweicloud.com,
-	mkoutny@suse.com,
-	akpm@linux-foundation.org,
-	hamzamahfooz@linux.microsoft.com,
-	apais@linux.microsoft.com,
-	lance.yang@linux.dev,
-	bhe@redhat.com,
-	usamaarif642@gmail.com,
-	linux-mm@kvack.org,
-	linux-kernel@vger.kernel.org,
-	cgroups@vger.kernel.org,
-	Qi Zheng <zhengqi.arch@bytedance.com>
-Subject: Re: [PATCH v6 31/33] mm: memcontrol: convert objcg to be per-memcg per-node type
-Date: Fri,  6 Mar 2026 12:29:28 -0800
-Message-ID: <20260306202931.3878822-1-usama.arif@linux.dev>
-In-Reply-To: <56c04b1c5d54f75ccdc12896df6c1ca35403ecc3.1772711148.git.zhengqi.arch@bytedance.com>
-References: 
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="NyZ3aRE/"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7CAABC4CEF7;
+	Fri,  6 Mar 2026 22:48:19 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1772837299;
+	bh=izRaMOOe9JYV+HyxNgh8xIBq9SoerJw5ZWQCKg89Q9M=;
+	h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
+	b=NyZ3aRE/NNQexOPSXkS9MxNa1zN0Wed11ah7s2GgLXCM161K3+kfRnTkjv/0gzP5C
+	 0IMbWyzODDyuCqxc+W6OAA+t735BAv4ObCiIyMYjf/xRH88bXTKmGZXPcQZHO9o+Ez
+	 NcDfXP3DJEdMjZUmqPpuLM78vltZAe/deAtjgmOCHtEywPuzOspoqI/Xn4rnDvLqkb
+	 3LrkDnRUim5GxnSEUQNnpP6mNmiRH9P6UzO+lMTnbkpfpwJsjCKfR3tzXQSnIHplse
+	 2ILDdFW47nimoXmzN3YmkYEZI/5wAOOJMWbrGzsHfbpAmd13DSUNqjzpWcjyvTVSco
+	 060/JSaszLS9Q==
+Date: Fri, 06 Mar 2026 12:48:18 -1000
+Message-ID: <3b3a143326fcff2d21a7e7d801bc3aa8@kernel.org>
+From: Tejun Heo <tj@kernel.org>
+To: Sebastian Andrzej Siewior <bigeasy@linutronix.de>,
+ linux-rt-devel@lists.linux.dev,
+ cgroups@vger.kernel.org
+Cc: Johannes Weiner <hannes@cmpxchg.org>,
+ Michal Koutny <mkoutny@suse.com>,
+ Clark Williams <clrkwllms@kernel.org>,
+ Steven Rostedt <rostedt@goodmis.org>,
+ Bert Karwatzki <spasswolf@web.de>
+Subject: Re: [PATCH v2] cgroup: Don't expose dead tasks in cgroup
+In-Reply-To: <20260306192235.DY60tMnM@linutronix.de>
+References: <20260306192235.DY60tMnM@linutronix.de>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-Migadu-Flow: FLOW_OUT
 
-On Thu,  5 Mar 2026 19:52:49 +0800 Qi Zheng <qi.zheng@linux.dev> wrote:
+Applied to cgroup/for-7.0-fixes with the following fixes.
 
-> From: Qi Zheng <zhengqi.arch@bytedance.com>
-> 
-> Convert objcg to be per-memcg per-node type, so that when reparent LRU
-> folios later, we can hold the lru lock at the node level, thus avoiding
-> holding too many lru locks at once.
-> 
-> Signed-off-by: Qi Zheng <zhengqi.arch@bytedance.com>
-> Acked-by: Shakeel Butt <shakeel.butt@linux.dev>
-> ---
->  include/linux/memcontrol.h | 23 +++++------
->  include/linux/sched.h      |  2 +-
->  mm/memcontrol.c            | 79 +++++++++++++++++++++++---------------
->  3 files changed, 62 insertions(+), 42 deletions(-)
-> 
+- s/removed the cgroup/removed from the cgroup/
+- s/constrains/constraints/
+- Fixes tag SHA trimmed to 12 chars
+- s/exitting/exiting/ and s/task which are/tasks that are/ in comment
+- Added Cc: stable
 
-[...]
+Thanks.
 
-> @@ -4087,7 +4100,13 @@ static int mem_cgroup_css_online(struct cgroup_subsys_state *css)
->  	xa_store(&mem_cgroup_private_ids, memcg->id.id, memcg, GFP_KERNEL);
->  
->  	return 0;
-> -free_shrinker:
-> +free_objcg:
-> +	for_each_node(nid) {
-> +		struct mem_cgroup_per_node *pn = memcg->nodeinfo[nid];
-> +
-> +		if (pn && pn->orig_objcg)
-> +			obj_cgroup_put(pn->orig_objcg);
-
-Is it possible that you might call obj_cgroup_put twice on the same cgroup?
-
-If css_create fails, css_free_rwork_fn is queued, which ends up calling
-mem_cgroup_css_free which calls obj_cgroup_put again?
-
-Maybe adding pn->orig_objcg = NULL overhere after obj_cgroup_put
-is enough to prevent the double put from causing issues?
-
-> +	}
->  	free_shrinker_info(memcg);
->  offline_kmem:
->  	memcg_offline_kmem(memcg);
-> -- 
-> 2.20.1
-> 
-> 
+--
+tejun
