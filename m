@@ -1,199 +1,143 @@
-Received: from mail-wm1-f43.google.com (mail-wm1-f43.google.com [209.85.128.43])
+Received: from mail-wr1-f53.google.com (mail-wr1-f53.google.com [209.85.221.53])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8C4042741B6
-	for <cgroups@vger.kernel.org>; Mon,  9 Mar 2026 16:45:20 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.43
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CDBD933A039
+	for <cgroups@vger.kernel.org>; Mon,  9 Mar 2026 18:07:07 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.53
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773074722; cv=none; b=A6hbSkPgeLDTD9i9ttZBWts4NlH0sHo8SqCr9nr+w5dkKIwN/QNQD1ApyRoJcQ6IJn3GKfBSoou1Wqh3askKe+05NxdyIi0Tjy/w3vDXsIvZCOn43Od29TBajOBUYmAaTW5WFxWddaEBx3Q+DbNtR9Wpq/5qiVD3KAXpA7vllA8=
+	t=1773079629; cv=none; b=iACtfLV2pp8FoOVO68LTV7Z88TnwHKPDV7nLK3xHWMjRSSBhDQL55SCW0/XFP7Zi7uPgcS1sWcdNjsr5DFzCSBk3t0h2ChIDhvsR1XJWOl+sBV5OktLDIorvDNlXjtsv+ZlZFJZnbtR0anoguKsF2JbCYM/VPnzhrk/EuUOL/Ag=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773074722; c=relaxed/simple;
-	bh=icjWP1L+DoRJUOSBMBCHZ0UgNuHL2LRNvLvlEm6xUEk=;
+	s=arc-20240116; t=1773079629; c=relaxed/simple;
+	bh=MmljSQnw2lcYLsSo3FghZOv/9z9lThlxmlthDeAKQp4=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=hdrM2onPsWwLTbmR1T+a/HHlRVJwTD+rVBsYJOawQPWJ7UtjclTEDPethClQJoJ1E6Z8kUy8pfwi01A3bFF9paNd8BNCF4ST3I6hDO4LKd4mlFEqfkIkLH2NGGeU1cKWCwbWHiwTgEXtruv0WV/GxGfekGoh8jWm0LtZ9Zd/fik=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com; spf=pass smtp.mailfrom=suse.com; dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b=enOEeJHq; arc=none smtp.client-ip=209.85.128.43
+	 Content-Type:Content-Disposition:In-Reply-To; b=J6x/PcY0UoWXLFlijWqQss7k82YseuhvXcsurQfbyFOZmqJ6dESrHwjItJmuCLxHfTW08zMqdH1Ngvog0JH5bt/jR3/ot3yhFnLqWtzk9T1M2zWXK5cKazfZ7efQEl80xB0EJHNKtxq3Wn4SGKCCCed/pkH3QaaKl0WfetvGpkA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com; spf=pass smtp.mailfrom=suse.com; dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b=D3SxbZGT; arc=none smtp.client-ip=209.85.221.53
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b="enOEeJHq"
-Received: by mail-wm1-f43.google.com with SMTP id 5b1f17b1804b1-48534237460so18820035e9.3
-        for <cgroups@vger.kernel.org>; Mon, 09 Mar 2026 09:45:20 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b="D3SxbZGT"
+Received: by mail-wr1-f53.google.com with SMTP id ffacd0b85a97d-439af7d77f0so7694410f8f.0
+        for <cgroups@vger.kernel.org>; Mon, 09 Mar 2026 11:07:07 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=suse.com; s=google; t=1773074719; x=1773679519; darn=vger.kernel.org;
+        d=suse.com; s=google; t=1773079626; x=1773684426; darn=vger.kernel.org;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=C4TrHsDF1RGNreebKCbrcf0d+wkWEPrj32T2lm3DYKI=;
-        b=enOEeJHqOmpmU3RKhKiCoChpyREgkwdH269FQxg/xsYwnZyNj4YIbsCYnFUWU2YMsL
-         OIq4x2bm9ZI7BFN2pyb2FiGyh9XSEDjqKfaIeSqolc9l5HEXEqwWQpIMDLmedAyQmUPp
-         pm1iPR/YJKM3Xt+PjfYhnTyrl7SzIOrJ4uGZ6DLrykBZaOaisCqGXlJga9ue8NsHUPHE
-         bNALsT9XvKTAIbxE/nlASx2EkZe24u9mnyVmx4rCDYwSrtO4fAg7tPr5d/x23NuPeZLb
-         LpEX/N2AktNJ2KNu8ARri0ePI6+n7yh4SjGILTZQHlgBT05SyJeU0ZGwJZcR6mY0EcNh
-         bagQ==
+        bh=MrfDzIDC5Rwkn3qiBzXUKn7XOVFFMBF2JI8saiP7iIE=;
+        b=D3SxbZGT9Lz/X6NgZ1mHGvVazeFTqbOb+mX+TpTFjbUPJUZY0K/f/Cpxjfm/uOubGF
+         Xrp5QMS93zFqoO8hkb8PLN3q5DdW6V6bVd3++6JIr4AOxVjZT1m9NyBj0ebk45rxlSZo
+         e4cDAcDYIap7KFnDY8Cd1kqK9TsgzK/qdm5j0BJmqoNfCMJkUGBpFy62Xora3AnRWF4N
+         PqsNb06kPaUoxdfoPl+pKNIuwXXUIxhJFXM4MQ5pX6ucOVrSS9Ta84tAbr91pEqYFRZ/
+         r/GxtSS4K69EKQQ3MJ5FaMJSuEVN5vnsIb6b4p7c+/OPcawjwZXqIEIt7rn75plc7fXl
+         IvQA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1773074719; x=1773679519;
+        d=1e100.net; s=20230601; t=1773079626; x=1773684426;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:x-gm-gg:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=C4TrHsDF1RGNreebKCbrcf0d+wkWEPrj32T2lm3DYKI=;
-        b=HUFKhTzCVJAzEWzVUUwCQwnG/Bn7g+UE1prJBz639is/yT5hcKdERh47zRvKkGT7tH
-         UcApwKIb5k3CUvWyx/lhOtnCeX+amq94wy5WUHVGme1CL0Zu1NEasH4KOoeIqsYXfQah
-         aXdHKVV/vkxtBcwl+KDwB9u8tYMvvjFAH575Q992me16g6vBzRI4cjKo/fvpz12hZ3I/
-         gZebcFW6323txdcYV8CuC7AdtjtxUSdLh4CQMWrjWHxMtBA8Gamh5iX6Z5qCjlf1jPqf
-         OjdjoCw94DgldyZCdNL/5nVOgxzkfThR2PpixUEA1JTCzkleq0aX/YJGDhUZx4LOduQq
-         2F/g==
-X-Forwarded-Encrypted: i=1; AJvYcCVYwyUNWtr+8wqQeWQ8e6hYRlbIIYvoZXHa1LxTd9Bb9eRG+tGe8tfGKTezD6gjjpYUT14Hgr3J@vger.kernel.org
-X-Gm-Message-State: AOJu0YzuW6g1/LBuqyj+/Ys7eHIyD4t1Hx9Ba/LzgzDxjZNbIkjgr9xt
-	sLkZtTs9SjoljxvY4IwHAN4jQAkUzqPR3jy8bIj0ZlvQ4PrR7GaEyT6QZng6M8UUDr8=
-X-Gm-Gg: ATEYQzz75MOr/TpXA79/ZwtFc2mLwBeeUp+qaCMPRGjCOcyZfOADHZSPUHEQoxlwZpl
-	bNZEaO7ltj3iOo50ZW2/C9IcwST7fT3XHiq9y+wmqmXr7PkgEVizWd7xJK0/1MIOC9CZx8ZlOzc
-	EqbxlM1A1Agk5gy8PfOhHBU+zOV/egQ/kU/5mI2pamNs4bRyGvpRykBV/8B0j5TqbDxGOQqILqr
-	WM9U6ifWGE33cOygjRKZw7uQOu6N+6FdrtT1a+w5E2bIUFPuw2ZZ/nwxdQ0TGjSWMs8XciQCBUe
-	H5XGn6frsOMdWmB3AejMizT4dONfiYevhTkNxFN1yPsxnDyzDyPod8We6Y716Aucg3L1PHDvaIr
-	xfEsv+C4Ac3gxJrzjYatMCXMhEGarYao50+DAEhS60RiO8rroOsVH+IdwHMvEsX+SyRnBKF01HB
-	R4p+GxYqcwJKdFMi4tg5BktfUNhnyseqch+fZ0/PPveXg=
-X-Received: by 2002:a05:600c:3b17:b0:483:7903:c3b1 with SMTP id 5b1f17b1804b1-4852695aeb9mr189560675e9.20.1773074718746;
-        Mon, 09 Mar 2026 09:45:18 -0700 (PDT)
+        bh=MrfDzIDC5Rwkn3qiBzXUKn7XOVFFMBF2JI8saiP7iIE=;
+        b=KpHs2dvydegVE0WXvfxAfWhFiqQzXk3X/lwe5WxAQaIsYjAvoA4rA37glWMub+2njY
+         KQ230AGlyXYMo448LhDGkYi2+EVUGLvxld9dIZEZgvVTpG5Gze26PJYDbRDsIh8KR5Lt
+         EbDDrXLOyq7sD33DTliXNxKlmdslYRUrU0eBeyC/UBnTs0wk3YP/ueYY75HKjwWV+U3t
+         qpgWovVxU7qXQa3/lzV6ibdlTBqOaiYyyvJHhK5Z7c9NLZsc1FwYYsR4Mb9arzmgio6l
+         iwAiiO1EZKebTyezrOVS5WmdJ9tcpNx0N/DiBM48HzCgJEYu5wQnT4OHkYoyXu+O5zSa
+         De9w==
+X-Forwarded-Encrypted: i=1; AJvYcCU76ePmCudKfNIRdmFgSLhHcHJz7p2KoTmg2v+2SiSr08Ub4DpbscUroqsJc4iiPxJNebFkghhN@vger.kernel.org
+X-Gm-Message-State: AOJu0Yy56KvpeRQguD/zgne//TplIUtjy/CpslN1Po6liMc9vwXZYA9n
+	tz5BOw78SV316DXaUNt96XNHV2Z1BeVlOo46L6MzurCXvwspjxfBKxCQLz5JVIQI1iY=
+X-Gm-Gg: ATEYQzzpxzQ5hcSj0F6aFIwlzNAwpGAtw8DcPZqqYV+Dt3F3/foodtaV5FeYzKHx1kk
+	i2sq55jYARf2nf3R+RmU2FH3Z1pqzYbuoUOCzPf79Ua2Np+FVv/ld0eAXFyxn16hrl1lmOQbq3X
+	eDWSFr/Mh5X3QZAUyIfAVP0WZ5UqTPUHd94kt10WCYn7GVH2SHsuZLaYSsilgIjML+73pJUAacf
+	9pMm1TWH0mvq4vCIjagiFz40yqKln+xZlEJjbFwIAFvmblg2F4vGAccqFY15AXkrfPLnrJRePXc
+	/GnT1I0YRYA507a78ot/PLiZpqzG05ygWHMsXojOS9XtpOnsEDxHjWIz3cKAExe8394wIkBZ3UZ
+	Qw+1Zoh1SH8Md4FpTJyoFtAPSXPftNGVmNYPqkkOWjvlPRsu1oam6ua+GcYyofamjpNnkGbp43q
+	/XYuH7WWrY5/saBoAWHV80ETR5Wr5y/bNJ96BF/SIAyis=
+X-Received: by 2002:a05:6000:220d:b0:439:c43a:acb1 with SMTP id ffacd0b85a97d-439da67c0bcmr22231635f8f.35.1773079626120;
+        Mon, 09 Mar 2026 11:07:06 -0700 (PDT)
 Received: from blackdock.suse.cz (nat2.prg.suse.com. [195.250.132.146])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-48541a8d4desm3471025e9.8.2026.03.09.09.45.17
+        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-439dae2ba66sm24939422f8f.20.2026.03.09.11.07.05
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 09 Mar 2026 09:45:18 -0700 (PDT)
-Date: Mon, 9 Mar 2026 17:45:16 +0100
+        Mon, 09 Mar 2026 11:07:05 -0700 (PDT)
+Date: Mon, 9 Mar 2026 19:07:04 +0100
 From: Michal =?utf-8?Q?Koutn=C3=BD?= <mkoutny@suse.com>
-To: Christian Brauner <brauner@kernel.org>
-Cc: Alexei Starovoitov <ast@kernel.org>, 
-	Daniel Borkmann <daniel@iogearbox.net>, Andrii Nakryiko <andrii@kernel.org>, 
-	Martin KaFai Lau <martin.lau@linux.dev>, Tejun Heo <tj@kernel.org>, KP Singh <kpsingh@kernel.org>, 
-	bpf@vger.kernel.org, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, 
-	Lennart Poettering <lennart@poettering.net>
-Subject: Re: [PATCH 2/4] cgroup: add bpf hook for attach
-Message-ID: <ptsniiapf4wkho5qsjdbzog7zrago6bifqlsbauabosq4xnbna@vxvsno4cp4id>
-References: <20260220-work-bpf-namespace-v1-0-866207db7b83@kernel.org>
- <20260220-work-bpf-namespace-v1-2-866207db7b83@kernel.org>
- <tmihfspwvvxv6sle27br4dgsbvepacnqj74zfscndkz722ssby@244dku2izea7>
- <20260227-ballverlust-abziehen-51ec7de2d16a@brauner>
+To: Waiman Long <longman@redhat.com>
+Cc: Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, 
+	Roman Gushchin <roman.gushchin@linux.dev>, Shakeel Butt <shakeel.butt@linux.dev>, 
+	Muchun Song <muchun.song@linux.dev>, Andrew Morton <akpm@linux-foundation.org>, 
+	Tejun Heo <tj@kernel.org>, Shuah Khan <shuah@kernel.org>, Mike Rapoport <rppt@kernel.org>, 
+	linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, linux-mm@kvack.org, 
+	linux-kselftest@vger.kernel.org
+Subject: Re: [PATCH] selftest: memcg: Skp memcg_sock test if address family
+ not supported
+Message-ID: <4ddd3jascnb6nt7quhyjfmsgsmtfmjofwmnrgjktz57cfbfymj@6ejbdgbg4lz2>
+References: <20260309160205.651754-1-longman@redhat.com>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: multipart/signed; micalg=pgp-sha512;
+	protocol="application/pgp-signature"; boundary="yd53fwzzczbtgjoq"
 Content-Disposition: inline
-In-Reply-To: <20260227-ballverlust-abziehen-51ec7de2d16a@brauner>
-
-Hello.
-
-On Fri, Feb 27, 2026 at 02:44:27PM +0100, Christian Brauner <brauner@kernel.org> wrote:
-> So calling this misconfiguration is like taking a shortcut
-> by simply pointing to a different destination. But fine, let's say you
-> insist on this not being valid.
-
-I understand this in analogy with filesystem organization -- there's the
-package manager that ensures files are put in right places,
-non-conflicting and trackable.  Subtrees may be delegated (e.g.
-/usr/local).  If root (or whoever has perms for it), decides to
-manipulate the files, its up to them what they end up with.
-
-> The implementation atop of a single superblock like cgroupfs is
-> questionable.
-
-(This is an interesting topic which I'd like to discuss some other
-time not to diverge here.)
-
-> But in general the point is that there's no mechanism to enforce cgroup
-> tree policy currently in a sufficiently flexible manner.
-> 
-> > root detaching/disabling these hook progs anyway?)
-> 
-> I cannot help but read this as you asking me "What if you're too dumb to
-> write a security policy that isn't self-defeating?" :)
-
-I was just trying to express that there's only one level of root (user).
-(Cautionary example are "containers" that executed as (host) root.
-Lockdown neglected.)
-
-> bpf has security hooks for itself including security_bpf(). First thing
-> that comes to mind is to have security.bpf.* or trusted.* xattrs on
-> selected processes like PID 1 that mark it as eligible for modifying BPF
-> state or BPF LSM programs supervising link/prog detach, update etc and
-> then designating only PID 1 as handing out those magical xattrs. Can be
-> as fine-grained as needed and that tells everyone else to go away and do
-> something else.
-
-(These are too many new concepts for me, I must skip it now. I may catch
-up after more study.)
-
-> systemd will gain the ability to implement policy to control cgroup tree
-> modifications in as much details as it needs without having the kernel
-> in need to be aware of it. This can take various forms by marking only
-> select processes as being eligible for managing cgroup migrations or
-> even just locking down specific cgroups.
-
-This is how I understand the goal could be expressed in current terms:
-
-  a) allowlisting processes that can do migrations
-     # common ancestor of all + access to each dst
-     chown -R :grA $root_cgroup/cgroup.procs
-     chmod -R g+w $root_cgroup/cgroup.procs
-
-     # static:
-       usermod -G grA user_of_pid
-       (re)start pid
-     # or in spawner:
-       fork
-       setgroups([grA])
-       exec
-
-  b) rules that are specific to cgroup (subtree)
-    # applying same like above but to a $lower_group
-
-    $ setfacl -R -m g:grB:w $lower_group/cgroup.procs
-    setfacl: cgroup.procs: Operation not supported
-    # here I notice why current impl isn't sufficient
-
-Also, if I understand this correctly you semm to move from the semantics
-where users (UIDs) are subjects to a different one where it's bound to
-processes (PIDs).
+In-Reply-To: <20260309160205.651754-1-longman@redhat.com>
 
 
-> The policy needs to be flexible so it can be live-updated, switched into
-> auditing mode, and losened, tightened on-demand as needed.
+--yd53fwzzczbtgjoq
+Content-Type: text/plain; protected-headers=v1; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
+Subject: Re: [PATCH] selftest: memcg: Skp memcg_sock test if address family
+ not supported
+MIME-Version: 1.0
 
-OK.
-(I'd add that policy should be also easily debuggable/troubleshootable.)
+On Mon, Mar 09, 2026 at 12:02:05PM -0400, Waiman Long <longman@redhat.com> =
+wrote:
+> On systems where IPv6 isn't enabled or not configured to support
+> SOCK_STREAM, the test_memcg_sock test always fails.
 
-> Ok, let's start with cgroup_can_fork(). The sched ext hook isn't a
-> generic permission check. It's called way after
-> cgroup_attach_permissions() and is a per cgroup controller check that is
-> only called for some cgroup controllers. So effectively useless to pull
-> up (Notice also, how some controllers like cpuset call additional
-> security hooks already.).
+I think IPv6 is not substantial for the check...
 
-There could be one BPF predicate (on the cgroup level) and potentially
-pass per-controller data, so that function could employ (or not) those.
-It's true that semantics would be a bit different because of implicit
-migrations happening with controller en-/disablement.
+> The purpose of the test_memcg_sock test is to verify that
+> memory.stat.sock and memory.current values are close.
 
-What I don't like about the multiple hooks is that there'd be several
-places to check when one is trying to figure out why a migration failed.
+=2E.. so this should work with IPv4 too.
 
+> If the socket() call fails, there is no way we can test that. I
+> believe it is better to just skip the test in this case instead of
+> reporting a test failure hinting that there may be something wrong
+> with the memcg code.
 
-> On top of that this looks like a category mistake imho. The callbacks
-> are a dac-like permission mechanism whereas the hooks is actual mac
-> permission checking. I'm not sure lumping this together with
-> per-cgroup-controller migration preparations will be very clean. I think
-> it will end up looking rather confusing. But that's best left to you
-> cgroup maintainers, I think.
+Yes, the skip on (any) socket creation is also (independently) good.
 
-This paragraph hinted me at (yet) another mechanism in the kernel (and
-you also mentioned it with cpuset) -- the LSM hooks. Namely, if this was
-security_cgroup_attach() hook, the logic could be expressed with other
-existing modules, IIUC, one of them is BPF. Would that fulfil the
-behaviors you're missing?
+> @@ -1460,6 +1466,9 @@ static int test_memcg_sock(const char *root)
+>  	free(memcg);
+> =20
+>  	return ret;
+> +skip:
+> +	ret =3D KSFT_SKIP;
+> +	goto cleanup;
 
-(I'm proposing this as potentially less confusing/known "evil" approach
-to the scenarios considered above.)
+Maybe make this analogous with other cases where there is no specific skip-=
+label but
 
+	if (err =3D=3D EAFNOSUPPORT) {
+		ret =3D KSFT_SKIP;
+		goto cleanup;
+	}
 
 Thanks,
 Michal
+
+--yd53fwzzczbtgjoq
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iJEEABYKADkWIQRCE24Fn/AcRjnLivR+PQLnlNv4CAUCaa8MRBsUgAAAAAAEAA5t
+YW51MiwyLjUrMS4xMiwyLDIACgkQfj0C55Tb+AjPoQD+PmjLLORgemm6L6Wd7y1R
+hoB0caqu50AlVSz1SKP3ThsBAP+AO9l6EzSrSBWNiUV7LSV/NsXeLyrdxjriU91M
+fVEL
+=GNSq
+-----END PGP SIGNATURE-----
+
+--yd53fwzzczbtgjoq--
