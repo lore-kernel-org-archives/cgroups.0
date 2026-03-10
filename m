@@ -1,105 +1,134 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from m16.mail.163.com (m16.mail.163.com [117.135.210.2])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 27D4942B728;
-	Tue, 10 Mar 2026 10:06:48 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0A02D387361;
+	Tue, 10 Mar 2026 11:39:10 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=117.135.210.2
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773137208; cv=none; b=GqawTLQP+pGf6SCujERnqmBicJCAyDQ5oBrPXlsnuRzmdNRf1l/hc+sDRoYhm/NDou8TWqCk8TBo6G18GirVt4ucOFPGq7+cnR1NPFnWD/EiRcqmss0g1b4ey9XKUzEqW07pI1i29ME/o+e4chEJASSQRi4SM4eIOFsBArtdgUs=
+	t=1773142754; cv=none; b=sT6sfjsAWe8SOoDwR52/3GE1cF4cbRLeNgjkb85d/PeotzKKUMVwWC80EFmTGJpMpbx/EkvLkwSLsPNU4RQvKjufW51J8BoHQNNlRgHB7QI70MRehD+2q/lhENO2/ntjGvS9jXtft6chG2eqn3Vn553vKipcqpgcUni90vMK1vk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773137208; c=relaxed/simple;
-	bh=W4CTub0Sa88sKKNCsV7akuk2L56fgLFSCEVuVsLi5N4=;
-	h=Message-ID:Date:MIME-Version:From:Subject:To:Cc:References:
-	 In-Reply-To:Content-Type; b=iZqN3115qAUb4LpN9TNKZvEc8L6KQCpnZ8zokn0uiCaB273e6IYhZLIW3KzUK+6a/gMF8oaFCLLT2c5f3kMuMMsc2ypVoVobCPwHHM27TQt5wjfAczVsw2RIJeWrtSSeGzcsYo8lEBSDr8aTbwd4Ut59wv99NYuFtueuR4nGSOw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=mffQwmEU; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1773142754; c=relaxed/simple;
+	bh=cxMVR6IX9dyBlWdtTxMmXlOemN7P7NKpH4TNjdg+5vc=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=KPR2FjUYnM9rODFNR0MCbZAC8lF9O0cZ4lTT+OYKPzNqtng+LURzeh8ZdQhhlEba+oxeSUS+vuxgAiI309vJj/H7jsh+x/4F+HgS43l/DmJ6O5SbQLyLJomF5dl+Xw+0kx5H0tizcBQkgkqxOdqoPWxE7dFecCBh7bUPmgRVSOY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=I6slFtHH; arc=none smtp.client-ip=117.135.210.2
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="mffQwmEU"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C4EF4C19423;
-	Tue, 10 Mar 2026 10:06:44 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1773137208;
-	bh=W4CTub0Sa88sKKNCsV7akuk2L56fgLFSCEVuVsLi5N4=;
-	h=Date:From:Subject:To:Cc:References:In-Reply-To:From;
-	b=mffQwmEUr06v4k/y5Wr5pQqSjZjrr3p5wQsKp12EJx7cBlr2cCr+KXTspy1x0Rdhk
-	 6TOCiBL89tbh/AEp9qlvqto4iIivLN/Dg6/zA9QZx9tP6EzutiQUE6WWV1Wzl9WUqQ
-	 cfoJ986b8ifQjBR+0WqZa3y18URtV4iST9OLW6arc8PTOwTc8jMLb804uaJlz9e/8r
-	 gmmCxhRShwL9bEFoUqqlEurRfx8/uugM52V2h20qIkYK55n/RD+iuWGC4cp6jdgIUp
-	 CF6QrzDR/92ko7b/TcgATw438hSMtsHagIVeDTuUDj3VtP0qxaFtGHesoiuyxgwwki
-	 c0tSgtW0pF2GA==
-Message-ID: <a61a876d-6377-4e7a-9651-e0fc05819a72@kernel.org>
-Date: Tue, 10 Mar 2026 11:06:42 +0100
+	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="I6slFtHH"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
+	s=s110527; h=From:To:Subject:Date:Message-ID:MIME-Version; bh=2P
+	j32kdU73jtg0RPPrl74jg5H3Dfkdxo7gX8u6gz0W4=; b=I6slFtHH7b6XoU4ZtK
+	JOQZmU4X+zhk+Ii3QIxTkYg8QjveW1L6lTP9UGDOYKveh65rb5Z578OSr73hNyo7
+	N+pxW9cFm6GgAC/vQpUKi8CUb33h4IFGsPkdUZn/bCLXqHyim+FWy/+098NZ+2Vu
+	8q583NsBxI9hhsezEZVIro/mg=
+Received: from ubuntu24-z.. (unknown [])
+	by gzga-smtp-mtada-g1-2 (Coremail) with SMTP id _____wAXvQ+eArBpwhXAAA--.11763S4;
+	Tue, 10 Mar 2026 19:38:10 +0800 (CST)
+From: ranxiaokai627@163.com
+To: hannes@cmpxchg.org,
+	mhocko@kernel.org,
+	roman.gushchin@linux.dev,
+	shakeel.butt@linux.dev,
+	muchun.song@linux.dev,
+	akpm@linux-foundation.org,
+	vbabka@kernel.org,
+	harry.yoo@oracle.com,
+	hao.li@linux.dev,
+	cl@gentwo.org,
+	rientjes@google.com
+Cc: cgroups@vger.kernel.org,
+	linux-mm@kvack.org,
+	linux-kernel@vger.kernel.org,
+	ran.xiaokai@zte.com.cn,
+	ranxiaokai627@163.com,
+	stable@vger.kernel.org
+Subject: [PATCH 2/2] memcg: fix kmem over-charging for embedded obj_exts array
+Date: Tue, 10 Mar 2026 11:38:04 +0000
+Message-ID: <20260310113804.245647-3-ranxiaokai627@163.com>
+X-Mailer: git-send-email 2.43.0
+In-Reply-To: <20260310113804.245647-1-ranxiaokai627@163.com>
+References: <20260310113804.245647-1-ranxiaokai627@163.com>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-From: vbabka@kernel.org
-Subject: Re: [PATCH] mm/slab: fix an incorrect check in obj_exts_alloc_size()
-Content-Language: en-US
-To: Harry Yoo <harry.yoo@oracle.com>
-Cc: adilger.kernel@dilger.ca, akpm@linux-foundation.org,
- cgroups@vger.kernel.org, hannes@cmpxchg.org, hao.li@linux.dev,
- linux-ext4@vger.kernel.org, linux-fsdevel@vger.kernel.org,
- linux-kernel@vger.kernel.org, linux-mm@kvack.org, shicenci@gmail.com,
- cl@gentwo.org, rientjes@google.com, roman.gushchin@linux.dev,
- viro@zeniv.linux.org.uk, surenb@google.com, stable@vger.kernel.org
-References: <aa5NmA25QsFDMhof@hyeyoo>
- <20260309072219.22653-1-harry.yoo@oracle.com>
- <0a25d83b-c6ea-4230-a89d-1f496b91764c@kernel.org> <aa-PQBn5d0-U-sKg@hyeyoo>
-In-Reply-To: <aa-PQBn5d0-U-sKg@hyeyoo>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
+X-CM-TRANSID:_____wAXvQ+eArBpwhXAAA--.11763S4
+X-Coremail-Antispam: 1Uf129KBjvJXoWxGr1kCw4UJrW3ZF4ftw47Arb_yoW5Gr47pF
+	y3C3sFy3yrZFZ7WrsFqFsru34fZ3yvvFyUCayxtr1kZFsxtw1vva1Yvry8JFZ8JFWxGF1q
+	qrn8Kr1rWayUA3DanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x0zR58nnUUUUU=
+X-CM-SenderInfo: xudq5x5drntxqwsxqiywtou0bp/xtbCxgIve2mwAqJlqAAA3k
 
-On 3/10/26 04:25, Harry Yoo wrote:
-> On Mon, Mar 09, 2026 at 03:00:17PM +0100, vbabka@kernel.org wrote:
->> On 3/9/26 08:22, Harry Yoo wrote:
->> > obj_exts_alloc_size() prevents recursive allocation of slabobj_ext
->> > array from the same cache, to avoid creating slabs that are never freed.
->> > 
->> > There is one mistake that returns the original size when memory
->> > allocation profiling is disabled. The assumption was that
->> > memcg-triggered slabobj_ext allocation is always served from
->> > KMALLOC_CGROUP type. But this is wrong [1]: when the caller specifies
->> > both __GFP_RECLAIMABLE and __GFP_ACCOUNT with SLUB_TINY enabled, the
->> > allocation is served from normal kmalloc. This is because kmalloc_type()
->> > prioritizes __GFP_RECLAIMABLE over __GFP_ACCOUNT, and SLUB_TINY aliases
->> > KMALLOC_RECLAIM with KMALLOC_NORMAL.
->> 
->> Hm that's suboptimal (leads to sparsely used obj_exts in normal kmalloc
->> slabs) and maybe separately from this hotfix we could make sure that with
->> SLUB_TINY, __GFP_ACCOUNT is preferred going forward?
-> 
-> To be honest, I don't a have strong opinion on that.
-> 
-> Is grouping by mobility (for anti-fragmentation less) important on
-> SLUB_TINY systems?
+From: Ran Xiaokai <ran.xiaokai@zte.com.cn>
 
-Yeah, that's why "KMALLOC_RECLAIM = KMALLOC_NORMAL" there. So prioritizing
-__GFP_RECLAIMABLE does nothing there, it goes to the same kmalloc_normal
-cache. It only results in ignoring KMALLOC_CGROUP.
-(I think in practice SLUB_TINY systems wouldn't enabled CONFIG_MEMCG either,
-so it's a low priority, but still logical imho).
+Since commit a77d6d338685 ("mm/slab: place slabobj_ext metadata
+in unused space within s->size"), the struct slabobj_ext array
+can use slab leftover space or be embedded into the slub object
+to save memory by calling alloc_slab_obj_exts_early(). In these
+cases, no extra kmalloc space is allocated to store the obj_exts array.
 
->> > As a result, the recursion guard is bypassed and the problematic slabs
->> > can be created. Fix this by removing the mem_alloc_profiling_enabled()
->> > check entirely. The remaining is_kmalloc_normal() check is still
->> > sufficient to detect whether the cache is of KMALLOC_NORMAL type and
->> > avoid bumping the size if it's not.
->> > 
->> > Without SLUB_TINY, no functional change intended.
->> > With SLUB_TINY, allocations with __GFP_ACCOUNT|__GFP_RECLAIMABLE
->> > now allocate a larger array if the sizes equal.
->> > 
->> > Reported-by: Zw Tang <shicenci@gmail.com>
->> > Fixes: 280ea9c3154b ("mm/slab: avoid allocating slabobj_ext array from its own slab")
->> > Closes: https://lore.kernel.org/linux-mm/CAPHJ_VKuMKSke8b11AZQw1PTSFN4n2C0gFxC6xGOG0ZLHgPmnA@mail.gmail.com
->> > Cc: stable@vger.kernel.org
->> > Signed-off-by: Harry Yoo <harry.yoo@oracle.com>
->> 
->> Added to slab/for-next-fixes, thanks!
-> 
-> Thanks!
-> 
+Optimize obj_full_size() behavior to avoid over-charging kmem
+for objects whose obj_exts use slab leftover space or are embedded
+in the object.
+
+Fixes: a77d6d338685 ("mm/slab: place slabobj_ext metadata in unused space within s->size")
+Cc: stable@vger.kernel.org
+Signed-off-by: Ran Xiaokai <ran.xiaokai@zte.com.cn>
+---
+ mm/memcontrol.c | 19 ++++++++++++++-----
+ 1 file changed, 14 insertions(+), 5 deletions(-)
+
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index 87614cfc4a3e..d6289a5cd6f3 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -3199,11 +3199,20 @@ void obj_cgroup_uncharge(struct obj_cgroup *objcg, size_t size)
+ 	refill_obj_stock(objcg, size, true, 0, NULL, 0);
+ }
+ 
+-static inline size_t obj_full_size(struct kmem_cache *s)
++static inline size_t obj_full_size(struct kmem_cache *s, struct slab *slab)
+ {
++	if (obj_exts_in_slab(s, slab)) {
++		/*
++		 * If obj_exts array uses slab leftover space or is embedded
++		 * in object, no extra space is allocated, just charge the
++		 * object size.
++		 */
++		return s->size;
++	}
++
+ 	/*
+-	 * For each accounted object there is an extra space which is used
+-	 * to store obj_cgroup membership. Charge it too.
++	 * For caches whose obj_exts array is allocated separately
++	 * outside of slab, also charge the objcg pointer.
+ 	 */
+ 	return s->size + sizeof(struct obj_cgroup *);
+ }
+@@ -3270,7 +3279,7 @@ bool __memcg_slab_post_alloc_hook(struct kmem_cache *s, struct list_lru *lru,
+ 		 * TODO: we could batch this until slab_pgdat(slab) changes
+ 		 * between iterations, with a more complicated undo
+ 		 */
+-		if (obj_cgroup_charge_account(objcg, flags, obj_full_size(s),
++		if (obj_cgroup_charge_account(objcg, flags, obj_full_size(s, slab),
+ 					slab_pgdat(slab), cache_vmstat_idx(s)))
+ 			return false;
+ 
+@@ -3289,7 +3298,7 @@ bool __memcg_slab_post_alloc_hook(struct kmem_cache *s, struct list_lru *lru,
+ void __memcg_slab_free_hook(struct kmem_cache *s, struct slab *slab,
+ 			    void **p, int objects, unsigned long obj_exts)
+ {
+-	size_t obj_size = obj_full_size(s);
++	size_t obj_size = obj_full_size(s, slab);
+ 
+ 	for (int i = 0; i < objects; i++) {
+ 		struct obj_cgroup *objcg;
+-- 
+2.25.1
+
 
