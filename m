@@ -1,79 +1,48 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+Received: from out-184.mta0.migadu.com (out-184.mta0.migadu.com [91.218.175.184])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5E34B2D595D
-	for <cgroups@vger.kernel.org>; Wed, 11 Mar 2026 16:37:49 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0F64935AC3E
+	for <cgroups@vger.kernel.org>; Wed, 11 Mar 2026 17:00:23 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.184
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773247070; cv=none; b=Zq58OW4dNoLypEG+uLhm4OnAewvK+Wfm2R4/fpk3cM7XvkBFpeqV7+LLQe7EaSGwI7DBtgTvA24f59tIH6V8Zr4923ToTDmhrQMve1p6uM1/5MF4kpDcRyJPQ8H1Fx73Ji52rkjZ4L7f/Zy2uOYBFuEz1bSzKA2SMt+nt5ge+Yg=
+	t=1773248425; cv=none; b=dEYq6m8VA3hCT7QC27s1EZb0Bs2+zdmKSTPqxEo+JX5mtgDmkTgWP+kobHz/2P2s002EuEHVKGJBedQzosVdy2CDyTG1TtdnNNAw+noiFXqv1Syc/ezWjXnS8GyNab5mZ6oOexauP1lLglo/fjPM+F0I/u7M3Va/xpBA5b8KqWg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773247070; c=relaxed/simple;
-	bh=5OvuHZyQrLn200Z63geYiTj5JvynNGQ7QO/CdyCFQAs=;
+	s=arc-20240116; t=1773248425; c=relaxed/simple;
+	bh=35TT/u99aRALHa0hnM2POym+gxT3aGGRaU/TmPXQhL8=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=Py4lOb+OUho59pWyzAREPZYM0duZia8X1iFk+5ptc7GXj/mWrdcdVJ3uhAdVzk/lJwuzeOu22O5td+Pm1bD4ezQS9yYOZvL2sSQiAgLFwpYi2PLJ08TnSk3lSEkgXy529cJapgiTTy/PnK6QVXzJTE66nzw0a/V6DJyBINsJC/c=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=PTJTNxua; arc=none smtp.client-ip=170.10.129.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	 Content-Type:Content-Disposition:In-Reply-To; b=eP9Uf5tmsEfElmkK33dNoh0F1NaLQBQEhrqPOHpJ5O1jnA5RfmpwzVnC82iRzcE68GGcImshFqwC2qyZ5f98qD3v2kswBmJ3wR2Fw8bCMKc2r9Xuvu81EFsRBxVbDhwzVhz46Sluad6oefNcnR7NxPgulus0UFEWVpVR2wXwS2Q=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=pjqpT2QE; arc=none smtp.client-ip=91.218.175.184
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="PTJTNxua"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1773247068;
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="pjqpT2QE"
+Date: Wed, 11 Mar 2026 10:00:05 -0700
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
+	t=1773248411;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
 	 in-reply-to:in-reply-to:references:references;
-	bh=R/zsIrZ3k0UmQpOmPvuPlBsjs52eW5q3aaq8jYkZIKQ=;
-	b=PTJTNxuad3oxbmGZPg39cbV/AkWVnm1ZcvSEyUO+pwtL2/I3oFnvSFPQfAOh6pJQoVSeW4
-	Rerzd0gflzmefJugGApJpV7zbbC11Nczu+p+ZSqki2Nl9DxIig2xLssJ4laD3fjzYlWxex
-	YWqih5nmo/HIyuTdp1OOgvstxac48OE=
-Received: from mx-prod-mc-05.mail-002.prod.us-west-2.aws.redhat.com
- (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
- relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-661-032I48B1PwuD_vNs1Xdqig-1; Wed,
- 11 Mar 2026 12:37:44 -0400
-X-MC-Unique: 032I48B1PwuD_vNs1Xdqig-1
-X-Mimecast-MFC-AGG-ID: 032I48B1PwuD_vNs1Xdqig_1773247060
-Received: from mx-prod-int-01.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-01.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.4])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mx-prod-mc-05.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 855CE195609E;
-	Wed, 11 Mar 2026 16:37:39 +0000 (UTC)
-Received: from tpad.localdomain (unknown [10.96.133.6])
-	by mx-prod-int-01.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 0FC843000223;
-	Wed, 11 Mar 2026 16:37:36 +0000 (UTC)
-Received: by tpad.localdomain (Postfix, from userid 1000)
-	id 71EC1401E2187; Wed, 11 Mar 2026 07:23:32 -0300 (-03)
-Date: Wed, 11 Mar 2026 07:23:32 -0300
-From: Marcelo Tosatti <mtosatti@redhat.com>
-To: Leonardo Bras <leobras.c@gmail.com>
-Cc: Michal Hocko <mhocko@suse.com>, linux-kernel@vger.kernel.org,
-	cgroups@vger.kernel.org, linux-mm@kvack.org,
-	Johannes Weiner <hannes@cmpxchg.org>,
-	Roman Gushchin <roman.gushchin@linux.dev>,
-	Shakeel Butt <shakeel.butt@linux.dev>,
-	Muchun Song <muchun.song@linux.dev>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Christoph Lameter <cl@linux.com>, Pekka Enberg <penberg@kernel.org>,
-	David Rientjes <rientjes@google.com>,
-	Joonsoo Kim <iamjoonsoo.kim@lge.com>,
-	Vlastimil Babka <vbabka@suse.cz>,
-	Hyeonggon Yoo <42.hyeyoo@gmail.com>,
-	Leonardo Bras <leobras@redhat.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Waiman Long <longman@redhat.com>, Boqun Feng <boqun.feng@gmail.com>,
-	Frederic Weisbecker <fweisbecker@suse.de>
-Subject: Re: [PATCH 0/4] Introduce QPW for per-cpu operations
-Message-ID: <abFCpCTB64NACMH2@tpad>
-References: <aYywl1hdBQP2_slo@tiehlicka>
- <aZDw6xI2izFDfuuu@WindFlash>
- <aZL45yORfkNvS9Rs@tiehlicka>
- <aZjY9h3XXMNY-Ytd@WindFlash>
- <aZwYmNuucBspCYhk@tiehlicka>
- <aaJDjmnfuo8AM6J9@WindFlash>
- <aaYpICV55B70U1I2@tpad>
- <aa20uDGqnmiqYJ1w@WindFlash>
- <abCL8vE3cttL1Yq0@tpad>
- <abCxXZCJPgNuOPG2@WindFlash>
+	bh=8u7gOfH94HKLacZFGszI8Rx3/Wm+sBV0C+t5lK8/D3g=;
+	b=pjqpT2QEx4QK4mt9WWipNl59lZpDJsmlzMJx2BS0z9m7lFDATjsn4sT7L1t5WG0S8BWeR7
+	30jtKuIoe2+ew2uhWL2YcasG+2v14BUqCRQ1kfYnUQH31uq5teDA8hxaVhrB9tOQ0locxG
+	WlaeoTQ+EuQzlgyi0SYgYA6788FQ2UM=
+X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
+From: Shakeel Butt <shakeel.butt@linux.dev>
+To: Jiayuan Chen <jiayuan.chen@linux.dev>
+Cc: lsf-pc@lists.linux-foundation.org, 
+	Andrew Morton <akpm@linux-foundation.org>, Tejun Heo <tj@kernel.org>, Michal Hocko <mhocko@suse.com>, 
+	Johannes Weiner <hannes@cmpxchg.org>, Alexei Starovoitov <ast@kernel.org>, 
+	Michal =?utf-8?Q?Koutn=C3=BD?= <mkoutny@suse.com>, Roman Gushchin <roman.gushchin@linux.dev>, 
+	Hui Zhu <hui.zhu@linux.dev>, JP Kobryn <inwardvessel@gmail.com>, 
+	Muchun Song <muchun.song@linux.dev>, Geliang Tang <geliang@kernel.org>, 
+	Sweet Tea Dorminy <sweettea-kernel@dorminy.me>, Emil Tsalapatis <emil@etsalapatis.com>, 
+	David Rientjes <rientjes@google.com>, Martin KaFai Lau <martin.lau@linux.dev>, 
+	Meta kernel team <kernel-team@meta.com>, linux-mm@kvack.org, cgroups@vger.kernel.org, bpf@vger.kernel.org, 
+	linux-kernel@vger.kernel.org
+Subject: Re: [LSF/MM/BPF TOPIC] Reimagining Memory Cgroup (memcg_ext)
+Message-ID: <abGdmslfvNTiQUJm@linux.dev>
+References: <20260307182424.2889780-1-shakeel.butt@linux.dev>
+ <6076b8c2-c198-442d-974f-b3084a0cd1b1@linux.dev>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
@@ -82,186 +51,38 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <abCxXZCJPgNuOPG2@WindFlash>
-X-Scanned-By: MIMEDefang 3.4.1 on 10.30.177.4
+In-Reply-To: <6076b8c2-c198-442d-974f-b3084a0cd1b1@linux.dev>
+X-Migadu-Flow: FLOW_OUT
 
-On Tue, Mar 10, 2026 at 09:03:41PM -0300, Leonardo Bras wrote:
-> On Tue, Mar 10, 2026 at 06:24:02PM -0300, Marcelo Tosatti wrote:
-> > On Sun, Mar 08, 2026 at 02:41:12PM -0300, Leonardo Bras wrote:
-> > > On Mon, Mar 02, 2026 at 09:19:44PM -0300, Marcelo Tosatti wrote:
-> > > > On Fri, Feb 27, 2026 at 10:23:27PM -0300, Leonardo Bras wrote:
-> > > > > On Mon, Feb 23, 2026 at 10:06:32AM +0100, Michal Hocko wrote:
-> > > > > > On Fri 20-02-26 18:58:14, Leonardo Bras wrote:
-> > > > > > > On Mon, Feb 16, 2026 at 12:00:55PM +0100, Michal Hocko wrote:
-> > > > > > > > On Sat 14-02-26 19:02:19, Leonardo Bras wrote:
-> > > > > > > > > On Wed, Feb 11, 2026 at 05:38:47PM +0100, Michal Hocko wrote:
-> > > > > > > > > > On Wed 11-02-26 09:01:12, Marcelo Tosatti wrote:
-> > > > > > > > > > > On Tue, Feb 10, 2026 at 03:01:10PM +0100, Michal Hocko wrote:
-> > > > > > > > > > [...]
-> > > > > > > > > > > > What about !PREEMPT_RT? We have people running isolated workloads and
-> > > > > > > > > > > > these sorts of pcp disruptions are really unwelcome as well. They do not
-> > > > > > > > > > > > have requirements as strong as RT workloads but the underlying
-> > > > > > > > > > > > fundamental problem is the same. Frederic (now CCed) is working on
-> > > > > > > > > > > > moving those pcp book keeping activities to be executed to the return to
-> > > > > > > > > > > > the userspace which should be taking care of both RT and non-RT
-> > > > > > > > > > > > configurations AFAICS.
-> > > > > > > > > > > 
-> > > > > > > > > > > Michal,
-> > > > > > > > > > > 
-> > > > > > > > > > > For !PREEMPT_RT, _if_ you select CONFIG_QPW=y, then there is a kernel
-> > > > > > > > > > > boot option qpw=y/n, which controls whether the behaviour will be
-> > > > > > > > > > > similar (the spinlock is taken on local_lock, similar to PREEMPT_RT).
-> > > > > > > > > > 
-> > > > > > > > > > My bad. I've misread the config space of this.
-> > > > > > > > > > 
-> > > > > > > > > > > If CONFIG_QPW=n, or kernel boot option qpw=n, then only local_lock 
-> > > > > > > > > > > (and remote work via work_queue) is used.
-> > > > > > > > > > > 
-> > > > > > > > > > > What "pcp book keeping activities" you refer to ? I don't see how
-> > > > > > > > > > > moving certain activities that happen under SLUB or LRU spinlocks
-> > > > > > > > > > > to happen before return to userspace changes things related 
-> > > > > > > > > > > to avoidance of CPU interruption ?
-> > > > > > > > > > 
-> > > > > > > > > > Essentially delayed operations like pcp state flushing happens on return
-> > > > > > > > > > to the userspace on isolated CPUs. No locking changes are required as
-> > > > > > > > > > the work is still per-cpu.
-> > > > > > > > > > 
-> > > > > > > > > > In other words the approach Frederic is working on is to not change the
-> > > > > > > > > > locking of pcp delayed work but instead move that work into well defined
-> > > > > > > > > > place - i.e. return to the userspace.
-> > > > > > > > > > 
-> > > > > > > > > > Btw. have you measure the impact of preempt_disbale -> spinlock on hot
-> > > > > > > > > > paths like SLUB sheeves?
-> > > > > > > > > 
-> > > > > > > > > Hi Michal,
-> > > > > > > > > 
-> > > > > > > > > I have done some study on this (which I presented on Plumbers 2023):
-> > > > > > > > > https://lpc.events/event/17/contributions/1484/ 
-> > > > > > > > > 
-> > > > > > > > > Since they are per-cpu spinlocks, and the remote operations are not that 
-> > > > > > > > > frequent, as per design of the current approach, we are not supposed to see 
-> > > > > > > > > contention (I was not able to detect contention even after stress testing 
-> > > > > > > > > for weeks), nor relevant cacheline bouncing.
-> > > > > > > > > 
-> > > > > > > > > That being said, for RT local_locks already get per-cpu spinlocks, so there 
-> > > > > > > > > is only difference for !RT, which as you mention, does preemtp_disable():
-> > > > > > > > > 
-> > > > > > > > > The performance impact noticed was mostly about jumping around in 
-> > > > > > > > > executable code, as inlining spinlocks (test #2 on presentation) took care 
-> > > > > > > > > of most of the added extra cycles, adding about 4-14 extra cycles per 
-> > > > > > > > > lock/unlock cycle. (tested on memcg with kmalloc test)
-> > > > > > > > > 
-> > > > > > > > > Yeah, as expected there is some extra cycles, as we are doing extra atomic 
-> > > > > > > > > operations (even if in a local cacheline) in !RT case, but this could be 
-> > > > > > > > > enabled only if the user thinks this is an ok cost for reducing 
-> > > > > > > > > interruptions.
-> > > > > > > > > 
-> > > > > > > > > What do you think?
-> > > > > > > > 
-> > > > > > > > The fact that the behavior is opt-in for !RT is certainly a plus. I also
-> > > > > > > > do not expect the overhead to be really be really big. 
-> > > > > > > 
-> > > > > > > Awesome! Thanks for reviewing!
-> > > > > > > 
-> > > > > > > > To me, a much
-> > > > > > > > more important question is which of the two approaches is easier to
-> > > > > > > > maintain long term. The pcp work needs to be done one way or the other.
-> > > > > > > > Whether we want to tweak locking or do it at a very well defined time is
-> > > > > > > > the bigger question.
-> > > > > > > 
-> > > > > > > That crossed my mind as well, and I went with the idea of changing locking 
-> > > > > > > because I was working on workloads in which deferring work to a kernel 
-> > > > > > > re-entry would cause deadline misses as well. Or more critically, the 
-> > > > > > > drains could take forever, as some of those tasks would avoid returning to 
-> > > > > > > kernel as much as possible. 
-> > > > > > 
-> > > > > > Could you be more specific please?
-> > > > > 
-> > > > > Hi Michal,
-> > > > > Sorry for the delay
-> > > > > 
-> > > > > I think Marcelo covered some of the main topics earlier in this 
-> > > > > thread:
-> > > > > 
-> > > > > https://lore.kernel.org/all/aZ3ejedS7nE5mnva@tpad/
-> > > > > 
-> > > > > But in syntax:
-> > > > > - There are workloads that are projected not avoid as much as possible 
-> > > > > return to kernelspace, as they are either cpu intensive, or latency 
-> > > > > sensitive (RT workloads) such as low-latency automation.
-> > > > > 
-> > > > > There are scenarios such as industrial automation in which 
-> > > > > the applications are supposed to reply a request in less than 50us since it 
-> > > > > was generated (IIRC), so sched-out, dealing with interruptions, or syscalls 
-> > > > > are a no-go. In those cases, using cpu isolation is a must, and since it 
-> > > > > can stay really long running in userspace, it may take a very long time to 
-> > > > > do any syscall to actually perform the scheduled flush.
-> > > > > 
-> > > > > - Other workloads may need to use syscalls, or rely in interrupts, such as 
-> > > > > HPC, but it's also not interesting to take long on them, as the time spent 
-> > > > > there is time not used for processing the required data.
-> > > > > 
-> > > > > Let's say that for the sake of cpu isolation, a lot of different
-> > > > > requests made to given isolated cpu are batched to be run on syscall 
-> > > > > entry/exit. It means the next syscall may take much longer than 
-> > > > > usual.
-> > > > > - This may break other RT workloads such as  sensor/sound/image sampling, 
-> > > > > which could be generally ok with some of the faster syscalls for their 
-> > > > > application, and now may perceive an error because one of those syscalls 
-> > > > > took too long. 
-> > > > > 
-> > > > > While the qpw approach may cost a few extra cycles, it operates remotelly 
-> > > > > and makes the system a bit more predictable. 
-> > > > > 
-> > > > > Also, when I was planning the mechanism, I remember it was meant to add 
-> > > > > zero overhead in case of CONFIG_QPW=n, very little overhead in case of 
-> > > > > CONFIG_QPW=y + qpw=0 (a couple of static branches, possibly with the 
-> > > > > cost removed by the cpu branch predictor),  and only add a few cycles in 
-> > > > > case of qpw=1 + !RT. Which means we may be missing just a few adjustments 
-> > > > > to get there.
-> > > > 
-> > > > Leo,
-> > > > 
-> > > > v2 of the patchset adds only 2 cycles to CONFIG_QPW=y + qpw=0. 
-> > > > The larger overhead was due to migrate_disable, which is now (on v2)
-> > > > hidden inside the static branch.
-> > > > My bad.
-> > > 
-> > > Hi Marcelo,
-> > > 
-> > > Great, hiding migrate_disable under the static branch is the best scenario.
-> > > 
-> > > I wonder why we spend 2 cycles on the static branches, though, should be 
-> > > close to nothing unless the branch predictor is too busy already. Well, we 
-> > > can always try to optimize in a different way.
-> > > 
-> > > Thanks for the effort on this!
-> > 
-> > Leo,
-> > 
-> > migrate_enable was leaking out of the static key section 
-> > into the common error path.
-> > 
-> > With preempt_disable, as suggested by Vlastimil, those 2 cycles are
-> > gone:
-> > 
-> > [   61.217232] kmalloc_bench: Avg cycles per kmalloc: 164
-> > [   68.047789] kmalloc_bench: Avg cycles per kmalloc: 165
-> > [   73.266568] kmalloc_bench: Avg cycles per kmalloc: 165
-> > [  120.634168] kmalloc_bench: Avg cycles per kmalloc: 164
-> > [  127.617872] kmalloc_bench: Avg cycles per kmalloc: 164
-> > [  157.803679] kmalloc_bench: Avg cycles per kmalloc: 163
-> > [root@fedvm kmalloc-perf-test]# dmesg | grep qpw
-> > [    0.000000] Command line: BOOT_IMAGE=(hd0,gpt2)/vmlinuz-tip root=UUID=35cfa00b-ed70-483f-b7b2-1964e14f719e ro rootflags=subvol=root console=ttyS0,115200 qpw=0 skew_tick=1 tsc=reliable rcupdate.rcu_normal_after_boot=1 rcutree.nohz_full_patience_delay=1000 isolcpus=managed_irq,domain,14,15 amd_pstate=disable nosoftlockup crashkernel=1024M
-> > [    0.118274] Kernel command line: BOOT_IMAGE=(hd0,gpt2)/vmlinuz-tip root=UUID=35cfa00b-ed70-483f-b7b2-1964e14f719e ro rootflags=subvol=root console=ttyS0,115200 qpw=0 skew_tick=1 tsc=reliable rcupdate.rcu_normal_after_boot=1 rcutree.nohz_full_patience_delay=1000 isolcpus=managed_irq,domain,14,15 amd_pstate=disable nosoftlockup crashkernel=1024M
-> > 
+On Wed, Mar 11, 2026 at 12:57:34PM +0800, Jiayuan Chen wrote:
 > 
-> Ohh, awesome then.
-> That means we can have a QPW-enabled kernel and zero overhead perceived if 
-> qpw=0, right?
+> On 3/8/26 2:24 AM, Shakeel Butt wrote:
+[...]
+> > 
+> > Per-Memcg Background Reclaim
+> > 
+> > In the new memcg world, with the goal of (mostly) eliminating direct synchronous
+> > reclaim for limit enforcement, provide per-memcg background reclaimers which can
+> > scale across CPUs with the allocation rate.
+> 
+> This sounds like a very useful approach. I have a few questions I'm thinking
+> through:
+> 
+> How would you approach implementing this background reclaim? I'm imagining
+> something like asynchronous memory.reclaim operations - is that in line
+> with your thinking?
 
-Yes.
+Yes something similar. I still need to figure out the details of the mechanism
+but it will be calling try_to_free_mem_cgroup_pages(). More specifically the
+context need more thought because we need to account the CPU consumption of
+those background reclaimers to corresponding cgroup. Will we be using BPF
+workqueues or something else, need more investigation.
 
-> (Yeah, instruction cache will have to fetch extra instructions, but 
-> hopefully that stays hidden enough.)
+> 
+> And regarding cold page identification - do you have a preferred approach?
+> I'm curious what the most practical way would be to accurately identify
+> which pages to reclaim.
 
+That's orthogonal and is the job of the reclaim mechanism which can traditional
+LRU or MGLRU.
+> 
