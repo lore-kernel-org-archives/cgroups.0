@@ -1,21 +1,21 @@
-Received: from out-173.mta1.migadu.com (out-173.mta1.migadu.com [95.215.58.173])
+Received: from out-172.mta1.migadu.com (out-172.mta1.migadu.com [95.215.58.172])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0F323346FD2
-	for <cgroups@vger.kernel.org>; Thu, 12 Mar 2026 03:06:25 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=95.215.58.173
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 04A7F35DA74
+	for <cgroups@vger.kernel.org>; Thu, 12 Mar 2026 03:36:34 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=95.215.58.172
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773284787; cv=none; b=eBlfmH/LzfHIquy9RXxdIKvbYkUq9VAiiObAHS0101lO09ypcS3ZkXEizzU3FReMSmOUfCrg/hWXlY6sH4NIQ7ZgS6TWrwhWaqKzBAR3Rg0qdHpm1K513MzZstBorHxe93IVWMLKTyRRTnTTfv/7T6I9KFImnYt/lNTvqXMOB4k=
+	t=1773286596; cv=none; b=u/LX+uin086ywFYYBcaNCgBA/L16gXVKyGFloYEf1fC9d4sZavyfmL21et/WCxsKGz40bRLoZHghqdoZf6tH7L2sKU9jinWFzD+PS2IZBOyHe3RN0lKjQo722lGnT5t6T2XQXEVzQ1uliRSod+KLffLKb6zXCQFiNAaKuexNJ08=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773284787; c=relaxed/simple;
-	bh=nE5AMFpGsYulA3SBB9yV6+pLXbVr74EEqXaQ81S5vag=;
+	s=arc-20240116; t=1773286596; c=relaxed/simple;
+	bh=gA79HwwC9YG0qehzJSnQ5zdv8V0OGEbH1xlPeE/ltJg=;
 	h=MIME-Version:Date:Content-Type:From:Message-ID:Subject:To:Cc:
-	 In-Reply-To:References; b=DzneuMfTDyR5QU/1TUIJYV+vNqBxmancKpDXn8GSO1Sdtqp8GQJYyc1LZ+VxaUxlXdK7GJxK8ZJoCsG3wsaHu9oIzQEmY/RxQLo5RkJpZjFPFAglM8IqOcwb1Z75q7YwhNdbYbDtRMA+4ou0MQcp9q6cojRUPdwBFlgQ3+NRlpw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=pyJEnX9t; arc=none smtp.client-ip=95.215.58.173
+	 In-Reply-To:References; b=Xw+DZJzH5VRxeV0wHttVvOOTNKZ+MYQzm0wzKgadQmSXH81LuBiGylU0VpdkXozNM+7z2l1ZuMuPeIURUQCurg3Up9B1OVI9ovcxoSuFVU8AOrS5n00Nv9I4nI7JMlddRR1aVYUneFPXqF7E/RkJEjHW3SlwnLyD43XJulpOwEw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=IYZJby7Y; arc=none smtp.client-ip=95.215.58.172
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="pyJEnX9t"
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="IYZJby7Y"
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
@@ -23,21 +23,21 @@ List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
-	t=1773284773;
+	t=1773286583;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=BGFurI1HMiVQpe/Es2aqTyJkXs9oXmKfRP7Wks7PWJc=;
-	b=pyJEnX9tlRFDhTKkp80yezWuK2gIgc9vl+h3GItPkMF87DL/OK/8rlPY4hhNx5BPULTuui
-	Wi40eGSovMFNAU+BtvJDgBWC0lM6qKR1FKBmKGUKXoZw3KfKJhaQ9RuuD5nH+6LXoogTNg
-	zrm+4j5Av+dwyOI1ru5JFur2V3/H51c=
-Date: Thu, 12 Mar 2026 03:06:04 +0000
+	bh=sIeIxnDFvCAVP63KN+jaya1voCxZiwj51bRsQygs0ok=;
+	b=IYZJby7YmNF5PqJObweKxlt2ztpfKjN1MBTXhN0dFwGBJiLYqMS0qgEUy1itQcuW8lfJ/X
+	MlXMyOy3uccORXsDLLBn5YQPZEHeG82Dc6J6io5oum0++DdKfNv9AXbaoxzAnTfsg6ItS1
+	P4z3KYzUznaP8gVpK/Pcy0wg8BxYNT8=
+Date: Thu, 12 Mar 2026 03:36:11 +0000
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: quoted-printable
 X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
 From: hui.zhu@linux.dev
-Message-ID: <e0390b058eb5123c99e6c8a72306efe7a1770411@linux.dev>
+Message-ID: <12bb0c22707193b94e7740b562daec80300544fe@linux.dev>
 TLS-Required: No
 Subject: Re: [LSF/MM/BPF TOPIC] Reimagining Memory Cgroup (memcg_ext)
 To: "Shakeel Butt" <shakeel.butt@linux.dev>,
@@ -114,9 +114,6 @@ o either
 >=20
 >=20Here is the list of features and capabilities I want to enable in the
 > redesigned memcg limit enforcement world.
-
-Thanks for summarizing and categorizing all of this.
-
 >=20
 >=20Per-Memcg Background Reclaim
 >=20
@@ -125,6 +122,22 @@ synchronous
 > reclaim for limit enforcement, provide per-memcg background reclaimers =
 which can
 > scale across CPUs with the allocation rate.
+
+I am aware that several companies maintain out-of-tree patches for
+asynchronous reclaim, though some have not yet attempted to upstream
+them.
+
+Would it be feasible to introduce a generic memcg asynchronous reclaim
+framework into the upstream kernel, where eBPF is used to orchestrate
+and control the reclaim logic? In this model, the kernel's role would
+be to enforce "guardrails" for these operations=E2=80=94for instance,
+restricting a BPF program to initiating only one asynchronous reclaim
+pass at a time=E2=80=94to ensure system safety and predictability.
+
+Best,
+Hui
+
+
 >=20
 >=20Lock-Aware Throttling
 >=20
@@ -148,10 +161,6 @@ can
 > identify the threads or thread pools on their performance-critical path=
 s and
 > the memcg enforcement mechanism should not throttle them.
-
-Does this mean that different threads within the same memcg can be
-selectively exempt from throttling control via BPF?
-
 >=20
 >=20Combined Memory and Swap Limits
 >=20
@@ -171,14 +180,6 @@ signals
 > such as working set estimation, PSI, refault rates, or a combination th=
 ereof to
 > automatically adapt to the workload's current memory needs.
-
-This part is what we are interesting now.
-https://www.spinics.net/lists/kernel/msg6037006.html this is the RFC for =
-it.
-
-Best,
-Hui
-
 >=20
 >=20Shared Memory Semantics
 >=20
