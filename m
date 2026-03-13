@@ -1,109 +1,83 @@
-Received: from out-179.mta1.migadu.com (out-179.mta1.migadu.com [95.215.58.179])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D7C253DD53B
-	for <cgroups@vger.kernel.org>; Fri, 13 Mar 2026 18:29:19 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=95.215.58.179
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7ED5138737E;
+	Fri, 13 Mar 2026 20:28:43 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773426561; cv=none; b=t8gZjYtKZGAoLNa5WlTcB5NWnV4BBFXaPYJt/jmSTtV/A9UPNqB3Ab+HhlsgpbD66rmhRAyYj82gMrSahfcUkTXq00gdIOUwa/AT3jJ0kHDutwRb9FjN/MzKy2ims/3GTcmVB+ug74O+N7bKBq9rARtoBekoO2tPyST2tQuTiAg=
+	t=1773433723; cv=none; b=b8AiubMifgN7RFsG3i1ZtWCFV3cmEDuh8NCDNil0FKa2sMesbSMUHoJcI/IISC19B9oLSnXEtM4UMnhV8nP5sNicGb3z3r4oKW8w3FEec+KRCpnyxLzThdUoyJdqXS6JgmRmDvILfuI1YVG5RNRcyAJkEre5meNMikhaUA0JQp0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773426561; c=relaxed/simple;
-	bh=beT3slSxigQWpRi2wAgooEEIOo5XJcpPrhDfU9dsQZI=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=Ief7uPwYYRSC82lyMo4Dbk5vpaqnYpf54mxiaFgpkygJzmJq0L3JkmJa63pzdtOYOW5L6XHGFKNSpN2U6gvyGsf2/QzWYsnuK/HtUTd2YdgMBF0oHQm2jsLwz18RdGAEeIgDB72u87vjPSZGNwjQIFxmyD8JZg+b4ABMZgsuqmc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=gOjsee/7; arc=none smtp.client-ip=95.215.58.179
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
+	s=arc-20240116; t=1773433723; c=relaxed/simple;
+	bh=4CxQS1xFdi5X8fdTBOGLQwCS3T4yj6Ky5udoOs3A7Vc=;
+	h=Date:Message-ID:From:To:Cc:Subject; b=GkGZjv2fYjcGc9cQuSdJ02HGDbpFvRKRmaXcV6WsSe07U0oIwJ6fQjFfUPAu7hBryIezcwzHeTcIHSLNwG1Y9meueNVW+XwD15P/Lrqfp4/taqAp4hfQhNBhjdncKbj0Z6HNaxkiZJ+99fuk6tLKs4+M3/Xz81ieFC2uGo0BfJI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=tOgytqqA; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="gOjsee/7"
-Message-ID: <cdc56556-2f69-46b7-8a7c-0f144a36004c@linux.dev>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
-	t=1773426547;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=Pv/nqWXHkfj7NbNE0aFGYmPjuMP96PKFI4ITkk92xic=;
-	b=gOjsee/7ePXLg2aXVQRCN98jWrWOJGc7S6Od5X5MCK2XmZiOGkbnjW7aiGdNYAKZEniFby
-	yIlBZdhFvB+0R6tKrR+2QHRw41SgEFGPECC6cQR00lVPRhhcghOc3/uCGAMO4OCyycW0lq
-	ZTmH8SsM0A6v+7eY3IHoq5fzhd3ix7E=
-Date: Fri, 13 Mar 2026 11:28:52 -0700
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="tOgytqqA"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0A58BC19421;
+	Fri, 13 Mar 2026 20:28:42 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1773433723;
+	bh=4CxQS1xFdi5X8fdTBOGLQwCS3T4yj6Ky5udoOs3A7Vc=;
+	h=Date:From:To:Cc:Subject:From;
+	b=tOgytqqANy4gdRfOeGJAnxONSmFGD71i6XBHOSd0zpVHp3DkKRjZHedDXhau6o5qo
+	 T/ebBXGIgwoss5ONxiKqK3mDx7RaAtLTO7Jo1inkymZeI28YjzQFALS6gIJ6iFIcN1
+	 Wk2d/+to43ZbSFNWlGYuGEFeT/iBVcb/BALUuivxKT2DjIt0XTXgYfC20RreQJuGgs
+	 1EhssOFtwzEibyFaKVK3dGb01PD4xUk61O1Lzd2XR6s30qae2BdytlM3q3wHCKPCs/
+	 Di0aKTx0et+8gNVZp+mt8ozzKhAun2ve65S/seqlEpKoM4hlh6mGDL2jyI6hi8hnki
+	 q/qmGy6pDUXsQ==
+Date: Fri, 13 Mar 2026 10:28:42 -1000
+Message-ID: <bec9d24e3542e85a4bdb229dee142b19@kernel.org>
+From: Tejun Heo <tj@kernel.org>
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: Johannes Weiner <hannes@cmpxchg.org>,
+ Michal Koutny <mkoutny@suse.com>,
+ Waiman Long <longman@redhat.com>,
+ cgroups@vger.kernel.org,
+ linux-kernel@vger.kernel.org
+Subject: [GIT PULL] cgroup: Fixes for v7.0-rc3
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Subject: Re: [PATCH v2] mm/mempolicy: track page allocations per mempolicy
-To: "Huang, Ying" <ying.huang@linux.alibaba.com>,
- "Vlastimil Babka (SUSE)" <vbabka@kernel.org>
-Cc: linux-mm@kvack.org, akpm@linux-foundation.org, mhocko@suse.com,
- apopple@nvidia.com, axelrasmussen@google.com, byungchul@sk.com,
- cgroups@vger.kernel.org, david@kernel.org, eperezma@redhat.com,
- gourry@gourry.net, jasowang@redhat.com, hannes@cmpxchg.org,
- joshua.hahnjy@gmail.com, Liam.Howlett@oracle.com,
- linux-kernel@vger.kernel.org, lorenzo.stoakes@oracle.com,
- matthew.brost@intel.com, mst@redhat.com, rppt@kernel.org,
- muchun.song@linux.dev, zhengqi.arch@bytedance.com, rakie.kim@sk.com,
- roman.gushchin@linux.dev, shakeel.butt@linux.dev, surenb@google.com,
- virtualization@lists.linux.dev, weixugc@google.com,
- xuanzhuo@linux.alibaba.com, yuanchu@google.com, ziy@nvidia.com,
- kernel-team@meta.com
-References: <20260307045520.247998-1-jp.kobryn@linux.dev>
- <3a42463b-9ddd-4d64-b64c-6c2e6e4fc75d@kernel.org>
- <343bbd5b-67a0-46c4-8ec4-69158bf26b3f@linux.dev>
- <874imkpba1.fsf@DESKTOP-5N7EMDA>
- <cd3d7e2c-79fa-4c00-89ad-83beddf98bae@linux.dev>
- <60f71f4c-71d9-4751-8c6b-10179b98bef0@kernel.org>
- <87zf4cnkip.fsf@DESKTOP-5N7EMDA>
-Content-Language: en-US
-X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
-From: "JP Kobryn (Meta)" <jp.kobryn@linux.dev>
-In-Reply-To: <87zf4cnkip.fsf@DESKTOP-5N7EMDA>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-X-Migadu-Flow: FLOW_OUT
 
-On 3/13/26 2:31 AM, Huang, Ying wrote:
-> "Vlastimil Babka (SUSE)" <vbabka@kernel.org> writes:
-> 
->> On 3/13/26 07:14, JP Kobryn (Meta) wrote:
->>> On 3/12/26 10:07 PM, Huang, Ying wrote:
->>>> "JP Kobryn (Meta)" <jp.kobryn@linux.dev> writes:
->>>>
->>>>> On 3/12/26 6:40 AM, Vlastimil Babka (SUSE) wrote:
->>>>>
->>>>> How about I change from per-policy hit/miss/foreign triplets to a single
->>>>> aggregated policy triplet (i.e. just 3 new counters which account for
->>>>> all policies)? They would follow the same hit/miss/foreign semantics
->>>>> already proposed (visible in quoted text above). This would still
->>>>> provide the otherwise missing signal of whether policy-driven
->>>>> allocations to a node are intentional or fallback.
->>>>>
->>>>> Note that I am also planning on moving the stats off of the memcg so the
->>>>> 3 new counters will be global per-node in response to similar feedback.
->>>>
->>>> Emm, what's the difference between these newly added counters and the
->>>> existing numa_hit/miss/foreign counters?
->>>
->>> The existing counters don't account for node masks in the policies that
->>> make use of them. An allocation can land on a node in the mask and still
->>> be considered a miss because it wasn't the preferred node.
->>
->> That sounds like we could just a new counter e.g. numa_hit_preferred and
->> adjust definitions accordingly? Or some other variant that fills the gap?
-> 
-> Or can we adjust the semantics of numa_hit/miss/foreign to consider the
-> preferred nodemask instead of the preferred node?  Is there some
-> programs to depends on the current behavior?
+Hello,
 
-Good question. I think it comes down to whether the existing semantics
-are correct with respect to policies that make use of node masks. I gave
-some thoughts on this in the previous reply to Vlastimil. That
-correctness may be outside of the scope of this patch, but I can give
-that a try afterward. I'd like to send a revision that reduces the new
-counters to just 3 and moves them off of the memcg (as previously
-mentioned in thread).
+The following changes since commit 5ee8dbf54602dc340d6235b1d6aa17c0f283f48c:
 
-I know numastat is one consumer of the existing stats. It seems up to
-the user on the interpretation of the data. Not sure about others.
+  Merge tag 'fsverity-for-linus' of git://git.kernel.org/pub/scm/fs/fsverity/linux (2026-03-05 11:52:03 -0800)
+
+are available in the Git repository at:
+
+  https://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git tags/cgroup-for-7.0-rc3-fixes
+
+for you to fetch changes up to a72f73c4dd9b209c53cf8b03b6e97fcefad4262c:
+
+  cgroup: Don't expose dead tasks in cgroup (2026-03-06 12:43:25 -1000)
+
+----------------------------------------------------------------
+cgroup: Fixes for v7.0-rc3
+
+- Hide PF_EXITING tasks from cgroup.procs to avoid exposing dead tasks
+  that haven't been removed yet, fixing a systemd timeout issue on
+  PREEMPT_RT.
+
+- Call rebuild_sched_domains() directly in CPU hotplug instead of
+  deferring to a workqueue, fixing a race where online/offline CPUs
+  could briefly appear in stale sched domains.
+
+----------------------------------------------------------------
+Sebastian Andrzej Siewior (1):
+      cgroup: Don't expose dead tasks in cgroup
+
+Waiman Long (1):
+      cgroup/cpuset: Call rebuild_sched_domains() directly in hotplug
+
+ kernel/cgroup/cgroup.c |  6 +++++
+ kernel/cgroup/cpuset.c | 59 ++++++++++++++++++++++++++------------------------
+ 2 files changed, 37 insertions(+), 28 deletions(-)
+
+Thanks.
+
+--
+tejun
