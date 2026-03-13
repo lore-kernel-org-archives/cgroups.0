@@ -1,107 +1,125 @@
-Received: from mail-qv1-f46.google.com (mail-qv1-f46.google.com [209.85.219.46])
+Received: from mail-wr1-f50.google.com (mail-wr1-f50.google.com [209.85.221.50])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B91212153D8
-	for <cgroups@vger.kernel.org>; Fri, 13 Mar 2026 16:49:19 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.219.46
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0D1543CCFDB
+	for <cgroups@vger.kernel.org>; Fri, 13 Mar 2026 17:33:17 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.50
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773420561; cv=none; b=lBsS7elTDs+dYniUUWm1fXoNOvoqSF3jCoVKry98UwA1rUtQZvW8EcjEz3BDYWCMc2HFfPLH1SwOL5ujwdD2o16UtCumE4zRUvzT2di1/WmKpHczOwd926BqB/UbDQfiBX9LS3f8H5YZQE09j4WLZuRzUWMnabkIXFk/7UhdIMI=
+	t=1773423200; cv=none; b=pVMVLfcwxNdVabs1J2mtvUAVt3knLM6SacLIG/xvcK3KS5bii3trTxiouk5x/hqUEXjBn8LqNosZeJ96q9Ph0pUFbyhjNBZLCg32LYxqEyIvqlC+LYDjXU6Ky6+e/YnzNdYB2z1LTy8zcELQU1nBUWqgbUgdmlQ/mf8mTpdZ9N4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773420561; c=relaxed/simple;
-	bh=Fvu4rFLx4/jHcluR8mvL4PiOo3RupiVNDxoPUUpdiNY=;
+	s=arc-20240116; t=1773423200; c=relaxed/simple;
+	bh=1FvDrns+VIGibt6LZ2i1UDMFhT9gPnHDIu+JbLlvxuY=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=EFtWIacE6l/HUO1Z+GssJJgYwfNC9LddRj93EY/d5rLleWLjvZa/eJC8HaqXcov7c7y3ClzqgPdf7Tq29ss3SRvhpn09KKbVagSQaEuRBI+e/96zfFtjpROE0kciYm16/c3lNJWRdPn63+pPC99N9Xr7l0EBNgPXMMny7RTzGXc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=cmpxchg.org; spf=pass smtp.mailfrom=cmpxchg.org; dkim=pass (2048-bit key) header.d=cmpxchg.org header.i=@cmpxchg.org header.b=FkSE+ibx; arc=none smtp.client-ip=209.85.219.46
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=cmpxchg.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=cmpxchg.org
+	 Content-Type:Content-Disposition:In-Reply-To; b=cYyoEnV4AnNjByJQyZ89USLfGt4CWj/bNcpiM2kzq3l7MWNNgXjQDmxPOxT6LDbKJDHtF7sF11OkMFo35tPrfgpHDR4aW96pAKnxj2LwpTbPd3yEyv+++KKZ8pa2CJ6pJ9DlvwIAscwHIMkp3FRKT8o8U8riWucN/apAc+trRt4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com; spf=pass smtp.mailfrom=suse.com; dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b=QfPgFXCO; arc=none smtp.client-ip=209.85.221.50
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=cmpxchg.org header.i=@cmpxchg.org header.b="FkSE+ibx"
-Received: by mail-qv1-f46.google.com with SMTP id 6a1803df08f44-899fb2b94c1so31611246d6.3
-        for <cgroups@vger.kernel.org>; Fri, 13 Mar 2026 09:49:19 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b="QfPgFXCO"
+Received: by mail-wr1-f50.google.com with SMTP id ffacd0b85a97d-439c944bb62so2005716f8f.3
+        for <cgroups@vger.kernel.org>; Fri, 13 Mar 2026 10:33:17 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=cmpxchg.org; s=google; t=1773420558; x=1774025358; darn=vger.kernel.org;
+        d=suse.com; s=google; t=1773423196; x=1774027996; darn=vger.kernel.org;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=5OoZ6jFB25D0x8NU02gRfdPPo1/nMY4T6UovZLQVRg8=;
-        b=FkSE+ibx44xTjdz6Klzc/l+h2PnRPwi5Qrxm3vIBXdXu+CHd/vI+fwgnm/QOi6VCoi
-         6qG+N5JtgDyLwQg8L9UoSXytJig1Q5Y8SfjWLVC58QPVP+piY0AO82l760vtqdOFsHyG
-         tZINB5JPFL9O4ZiVGUiP4RR85OuLKoLkLompk/57Xr+gzMatMxlTqyRI10RiOyWfNJIJ
-         6rPaeJRz92fkFv9iDKp3m/mXsOJo8u7I6Lr3nvUGQc9kW8kF6PqWLn75lRlfCC/cI3+4
-         P5ZpDDjjqW1+W3Vii8O455VnNpigcXXoSzI99nRmU8TvObTIOsgtClyOPfPyjuZDvVgC
-         owVQ==
+        bh=VJae3vdCXODBTLWKk6GJMYHIzIpo0Y/QKoeFPWW1RnQ=;
+        b=QfPgFXCOkyhAvoqEjfDEPs+kIc38kCq3u7ZeHtUPoyalR8YqVCxX6rwDYjJcgi8uhB
+         S139Wm7ZoOnUZBWNOXKS4W0gszQJHNVQls0HK/IMHJ/msIU+eeFsdI8Ph/IDh0QlCo88
+         Byq6+iOZxzDOwUuofhXkeaEljle9d9VzHGpazw8+NYbRrT0y0D0EnPJq2D61bgHyrz3t
+         VI+qOMSUlNG3ksEEcwa+YS1xuUR4hP8vKhxxRhl4DqB/hKEwbvX7LFhc9fboU9N4XD4o
+         Pncwv5J1mGLHMbNoT2VuIdgDDxErdIj+WYpruBa2g4tUY52SfqPCaV0TMoTHEWN3smDN
+         jiwQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20251104; t=1773420558; x=1774025358;
+        d=1e100.net; s=20251104; t=1773423196; x=1774027996;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:x-gm-gg:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=5OoZ6jFB25D0x8NU02gRfdPPo1/nMY4T6UovZLQVRg8=;
-        b=jMFZPec7lm76HAHI0Iutlw3X35Td2tdpNdHMHxSnnZXnyLz5dpBvoz7CNp+5leFzpF
-         PeEOdBfJ8AIdRHgI5WHW8UepWi2zRNqIwA6zuDMJHuMSUsP/MgD9TGBhkaDJqJqXmVi3
-         elvx04PPQn1D3Li+6kEQ8DmUoSco08PDbZXDyM9l/rsCzyXCQSasg/3vRz5aGSKelfMO
-         pYCxJO3QQ52y89Sk4dd14r2WywO8EtT69A1bckrBPdeY+LoY0Jfy6jyENqf+T3LIsgPu
-         4SS1UBfd8LWvpSjXrjCIk4njdXp0pPXlMiZfG3EalRq6At5GBArv99beRsmARVMm5+R+
-         ZKBg==
-X-Forwarded-Encrypted: i=1; AJvYcCUbJW247fff43APTU4Ug3kRclx2Lt5gJjwQPHshVktktNbog5Z9bWdLBoX4W/0k68Ke30sXelQI@vger.kernel.org
-X-Gm-Message-State: AOJu0YzIi+exfdFdwWPWBBBkimMpe0hJ2VFcK43IG4niN93SnbNhYeYi
-	1Y9LR+QpHZqZzBn3y2KAS1371ONABHYf8Y7xT1n8seFtKeV+8rPOrAW4AQNywkw0W0c=
-X-Gm-Gg: ATEYQzxgCiXT0CnkXkBsF+98+MauJg+p9hWW2YeeDT3d7DkHR11XjXKt375jGC+xmiu
-	TGj2Ted2K9AP97853E9D+zXDsoBp4KZP0sNk+1qqNxNj8VccedeebTs607ulGYzdW+RkbD8K6vW
-	L+FXUEmIB7/bKlaK7y34OYGM47myzcRB2qdO0gkTjhKoMfNJ44KMDo9+20jVBgNLdFp6YXzOgmA
-	zOHmvRmKzgBS4hhb0fJSgYLAju6klDPNEqG+ksqjrlGg8YdXUoFzs+h2YFysIzSQqt6p45UdiiP
-	CpMG8mMkpClSBHqBnikZSreWwcbLZeOsmuAhyi4zif13ll3QfxdfGXMhc5UHfSMJ+lJzP4PMxji
-	dULAMRWIRA5x+UVD0HvBmiwerlPGJRofZ7nXjshjMfGsPHoYEDCj6IAyuAgCKWXswcJHqeS6sSr
-	lTNmKG3LzL5Khevdi1SLbf1g==
-X-Received: by 2002:ad4:5c49:0:b0:89a:ff2:b8d3 with SMTP id 6a1803df08f44-89a81f8c6c3mr64520096d6.43.1773420558533;
-        Fri, 13 Mar 2026 09:49:18 -0700 (PDT)
-Received: from localhost ([2603:7000:c00:3a00:365a:60ff:fe62:ff29])
-        by smtp.gmail.com with ESMTPSA id 6a1803df08f44-89a65bd318fsm58816146d6.8.2026.03.13.09.49.16
+        bh=VJae3vdCXODBTLWKk6GJMYHIzIpo0Y/QKoeFPWW1RnQ=;
+        b=i4xsNkZbu14aopacmSp4O4QuQeBRnxvRhRQaXJki84YQP9zmeLwexf4JMkeHyT1HQv
+         aN855lQC0z/VYHsCy5oNtDDDzZ4iQbDHRwxoO/N0clVdTue4fk8rCRv0eKyAVdjrdB0e
+         KGvGYr6daJWGMPxjlM7g3WzRRmO+WQT1yXAWmN7Jm8ceFX4lN8g3ndm+oz03IiHoucue
+         w3mff0mc80JZB+L09eFPV5sqysmXD2fTQ++PpCK8j/gzuFiyPM3iuTqZUJSLjqvXdr4H
+         bC0nk4qTxgBg+qfhf/6KTOZNS51zQhPvVLu5S1j6a4NDeYHximC24Hk783xhq+bobW6o
+         bKCg==
+X-Gm-Message-State: AOJu0YwawpwvSZuYsxJkjOxbRTGLqHMsS7HUa2ktqyj1Gpflltk/MM3e
+	BcB5lC03dnBGOdj6HPodkThT8KR1yGgrjCktPvY/C6jGU3Ojdj/ZjDFjrzrgzaF12tk=
+X-Gm-Gg: ATEYQzwGllp03/xz/oldKodOzSzQqIEMsHhwMP8Q7KCE+a/TWCvKxb8NNtJsODUGde0
+	9zIrN/eMqsEJfE65vOQtoFWGbrFqqydgn8RxyQrmrIWMbd1/keX9w70e2irzMKa0x7SFjQ7rbd0
+	UlGpI/ZO8GZ7AUicK7M8UhmFUu8JlSK79XSNQ7gGouMt0MMCs7/qlxGpN7PNtLL5eRspvuzkdpn
+	Zo7rIZjPZFLx2SDuQJm7+o6YRrc6vUC0uiYj4Ltp+VT+3Y1LpEKQ7d1uJhfkHOVz5G+MAMx5R9n
+	rMBMWbAYWJdcWHUmYDKAuvLulDlNFr1lyDPZannemdYauUEz8wvpHSSWycEDATbXsMNzFwKqTt5
+	io6M3pqFD6l8dS97oG9VdpYPmFSB7SJkmGocNK7MOdEE/UZdgHOYaekI6pMrCEYpwIJpHHz1Oup
+	3M9KvjGLZGF8/Vd25j3GnC4Ewm095ygVpTmgnDKAyQI0+ipYX7vNiFFQ==
+X-Received: by 2002:a05:6000:1787:b0:439:c677:5145 with SMTP id ffacd0b85a97d-43a04d880e8mr8009601f8f.22.1773423196103;
+        Fri, 13 Mar 2026 10:33:16 -0700 (PDT)
+Received: from blackdock.suse.cz (nat2.prg.suse.com. [195.250.132.146])
+        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-43a03cfd18fsm10687099f8f.36.2026.03.13.10.33.15
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 13 Mar 2026 09:49:17 -0700 (PDT)
-Date: Fri, 13 Mar 2026 12:49:16 -0400
-From: Johannes Weiner <hannes@cmpxchg.org>
-To: Joshua Hahn <joshua.hahnjy@gmail.com>
-Cc: Minchan Kim <minchan@kernel.org>,
-	Sergey Senozhatsky <senozhatsky@chromium.org>,
-	Yosry Ahmed <yosry.ahmed@linux.dev>,
-	Nhat Pham <hoangnhat.pham@linux.dev>, Nhat Pham <nphamcs@gmail.com>,
-	Chengming Zhou <chengming.zhou@linux.dev>,
-	Michal Hocko <mhocko@kernel.org>,
-	Roman Gushchin <roman.gushchin@linux.dev>,
-	Shakeel Butt <shakeel.butt@linux.dev>,
-	Muchun Song <muchun.song@linux.dev>,
-	Andrew Morton <akpm@linux-foundation.org>, cgroups@vger.kernel.org,
-	linux-mm@kvack.org, linux-kernel@vger.kernel.org,
-	kernel-team@meta.com
-Subject: Re: [PATCH 07/11] mm/zsmalloc, zswap: Handle objcg charging and
- lifetime in zsmalloc
-Message-ID: <abRADNpx8vhTMP-d@cmpxchg.org>
-References: <abMzKa27khxDLO_D@cmpxchg.org>
- <20260313153434.4074128-1-joshua.hahnjy@gmail.com>
+        Fri, 13 Mar 2026 10:33:15 -0700 (PDT)
+Date: Fri, 13 Mar 2026 18:33:14 +0100
+From: Michal =?utf-8?Q?Koutn=C3=BD?= <mkoutny@suse.com>
+To: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
+Cc: cgroups@vger.kernel.org, linux-rt-devel@lists.linux.dev, 
+	Ben Segall <bsegall@google.com>, Clark Williams <clrkwllms@kernel.org>, 
+	Dietmar Eggemann <dietmar.eggemann@arm.com>, Ingo Molnar <mingo@redhat.com>, 
+	Johannes Weiner <hannes@cmpxchg.org>, Juri Lelli <juri.lelli@redhat.com>, Mel Gorman <mgorman@suse.de>, 
+	Peter Zijlstra <peterz@infradead.org>, Steven Rostedt <rostedt@goodmis.org>, Tejun Heo <tj@kernel.org>, 
+	Valentin Schneider <vschneid@redhat.com>, Vincent Guittot <vincent.guittot@linaro.org>
+Subject: Re: [PATCH] cgroup: Move cgroup_task_dead() to task_struct clean up
+Message-ID: <ydymxaffr2s7npif37msq5q467m2ql26ib6wifwoztuhqmg4ao@id5c532lhorb>
+References: <20260311120829.rEHY-xh9@linutronix.de>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: multipart/signed; micalg=pgp-sha512;
+	protocol="application/pgp-signature"; boundary="icf7bhdyxkpgumzx"
 Content-Disposition: inline
-In-Reply-To: <20260313153434.4074128-1-joshua.hahnjy@gmail.com>
+In-Reply-To: <20260311120829.rEHY-xh9@linutronix.de>
 
-On Fri, Mar 13, 2026 at 08:34:33AM -0700, Joshua Hahn wrote:
-> > IOW, it's better move that obj_cgroup_get() when you add and store
-> > zspage->objcgs[]. If zswap stil has a reference at that point in the
-> > series, then it's fine for there to be two separate obj_cgroup_get()
-> > as well, with later patches deleting the zswap one when its
-> > entry->objcg pointer disappears.
-> 
-> Sounds good with me. Maybe for the code block above I just move it one
-> line up so that it happens before the zspage->objcgs set and
-> make it more obvious that it's associated with setting the objcg
-> pointer and not with the charge?
-> 
-> And for the freeing section, putting after we set the pointer to
-> NULL could be more obvious?
 
-That makes sense to me!
+--icf7bhdyxkpgumzx
+Content-Type: text/plain; protected-headers=v1; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
+Subject: Re: [PATCH] cgroup: Move cgroup_task_dead() to task_struct clean up
+MIME-Version: 1.0
 
-Thanks
+Hello.
+
+On Wed, Mar 11, 2026 at 01:08:29PM +0100, Sebastian Andrzej Siewior <bigeas=
+y@linutronix.de> wrote:
+> @@ -7084,6 +7031,7 @@ void cgroup_task_free(struct task_struct *task)
+>  {
+>  	struct css_set *cset =3D task_css_set(task);
+> =20
+> +	cgroup_task_dead(task);
+>  	if (!list_empty(&task->cg_list)) {
+>  		spin_lock_irq(&css_set_lock);
+>  		css_set_skip_task_iters(task_css_set(task), task);
+
+Erm, isn't this way too late?
+I see that cset->dying_tasks is appended in do_cgroup_task_dead() (which
+I was used to find in cgroup_exit()).
+
+(Also, whole cgroup_task_dead() becomes single use thing so it could be
+open-coded in the place where it belongs.)
+
+Thanks,
+Michal
+
+--icf7bhdyxkpgumzx
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iJEEABYKADkWIQRCE24Fn/AcRjnLivR+PQLnlNv4CAUCabRKUxsUgAAAAAAEAA5t
+YW51MiwyLjUrMS4xMiwyLDIACgkQfj0C55Tb+AhC+wD6AwoXxqDMnAvLA0fFaR3n
+RBbBzz+2eCAG2EiT+fz0vMwBAPJW2izPg9m5qc1JgR/a4wkmjgFaAPU3uckGFNu8
+R/IP
+=fA8G
+-----END PGP SIGNATURE-----
+
+--icf7bhdyxkpgumzx--
