@@ -1,40 +1,40 @@
-Received: from desiato.infradead.org (desiato.infradead.org [90.155.92.199])
+Received: from casper.infradead.org (casper.infradead.org [90.155.50.34])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 943063659FA;
-	Tue, 17 Mar 2026 10:47:46 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=90.155.92.199
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 830FA364925;
+	Tue, 17 Mar 2026 10:47:45 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=90.155.50.34
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773744469; cv=none; b=UMG072a1Pa1MeAT8Ly3pUMSDDIJObzhuHO0IF29PYdgtrwudADRMXEJ65UN7QQpGPwvhTlKR1014n8lJR+qrLplouCepLetzTtrfcjUOhSEh/gIPlK/dgqP/TkpCd28lKRcbtnMRkIog8C9OX9yjtkmoNtaiWAgSvz26/v6as/Q=
+	t=1773744469; cv=none; b=M/74pH3YEMpRnYKQnVHARQcOraJr4VZwkQGkumdgmnAZm2BIGVdLvgpb+QW2AIgnzxc2HyDDVcrpGMLuTKu/ULS8q8M19fg21ZRsJPimuKu+i2VndwzUs98J4h85ZoKP67GZjUXX6bonkh95PfpPDq1SRaAG07efJbt7LC0MCK4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1773744469; c=relaxed/simple;
-	bh=+pFF1AelRju298M6nOKw8/46MZRO/cTJx2ER7TBzv7M=;
+	bh=BGCul55Vi9g6OEb/YK/4n28IrjDLTj1cMq11HW01sMA=;
 	h=Message-ID:Date:From:To:Cc:Subject:References:MIME-Version:
-	 Content-Type; b=KMGfdqswsF9Ovl+mIehPTNHgSlMHMGq+AjKMvF4fBi4VWOipenMjBZDAnlSCRm4iyZMxdq9DdxphSkYZWcfiJwVkTKEltz9JxAn8DRBhvI45g84j5+iiV3tpxor86u8kKxxZUqpAlv2WwcQPOYqZKffTkfcVePKtPoMeYbfmbEo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=j/WkfZSk; arc=none smtp.client-ip=90.155.92.199
+	 Content-Type; b=GnyrU89YiX51HA7Y0fi07RHjHH6Nqj2gSPoXP3bD5+oJIorzBdENqlIq9dfY5YkpTRdWlQL8nWhz5jvhe2ZbI6kQS+PjA8/YZmzir7uWHuRjn5oQKkZbYE1L1ZmQ7WbZ00gq+qLHjj+8fUY+Xv1j+H4YHi6CFaGyA2j/no+VpvM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=bECMsyEM; arc=none smtp.client-ip=90.155.50.34
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="j/WkfZSk"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="bECMsyEM"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=desiato.20200630; h=Content-Type:MIME-Version:References:
+	d=infradead.org; s=casper.20170209; h=Content-Type:MIME-Version:References:
 	Subject:Cc:To:From:Date:Message-ID:Sender:Reply-To:Content-Transfer-Encoding:
 	Content-ID:Content-Description:In-Reply-To;
-	bh=senJf2wakpmdGrsim4pMJJFM9+m5WIr95mcaSzWPbVY=; b=j/WkfZSkvwvSjSiz0uvv/G/gGI
-	2Pdj75YO4x6l2Rpc9iCkiaMV05cH862ToCeuTi5RwaJT6+zwGZQrt4sKRcIrskrYNamGOO2f1hvTL
-	yGHZQc2BhptyaV8j49Iyq0ZTb3595Qnap9GbQMlmzKcRi0Pl+k/dSarO1SRLXcCvWlbMM5KFdWaJ6
-	pVfo0dBeHZeuSim8M1Dt57Y7R6uLsgdQyK6ZtgZZniSptHltQZZPhwIQkd+jD9/FXvjO+nxJOg2LC
-	dCdRxRX3IMvF9IzGAbHLXZl6txt5OTTWAlEygu0rQ2ELvoZJG+xhB0I+zjMgPhdozOJmYw7qWQHjG
-	vJWYeyvg==;
+	bh=1uNe0XdInvRjclNE9H5+/v0jGlGWKmLTRIC+ImkMMgE=; b=bECMsyEMEcS35UkOR0CvcVT6Jm
+	OG/caR4uU65ZsfZopdqAp6ocB44xslaF8rE9D+xhPqP5iOYtyob2YE0bn4b85YeY3xsXxsiRkEfVw
+	ysSXVk3bss3jzlYShCzg4NEogniQNNUBvZPGVJjz6GL7mE+Y4Ie/RUNX2UMvZeHaKgm8YfALOvjrr
+	yNceYQsCpgk7cp3j7lendqD6JtRzYh5R1yUvFum0YGB5c3vdio4T7YplzwSu8HghUjJuc4Gyub/LK
+	Cfv/qoGFXVzliTKyjvZIJb2BwADo0fFCvGLW4iXksTQcU+3sXCRV9X5QH6GZoM0PToObzEbLj1AAr
+	ol0ccsmQ==;
 Received: from 77-249-17-252.cable.dynamic.v4.ziggo.nl ([77.249.17.252] helo=noisy.programming.kicks-ass.net)
-	by desiato.infradead.org with esmtpsa (Exim 4.98.2 #2 (Red Hat Linux))
-	id 1w2RxY-00000008kbs-1VAE;
+	by casper.infradead.org with esmtpsa (Exim 4.98.2 #2 (Red Hat Linux))
+	id 1w2RxY-00000002YWq-0siI;
 	Tue, 17 Mar 2026 10:47:36 +0000
 Received: by noisy.programming.kicks-ass.net (Postfix, from userid 0)
-	id 2B93B3032EB; Tue, 17 Mar 2026 11:47:35 +0100 (CET)
-Message-ID: <20260317104342.931729160@infradead.org>
+	id 21A083032BC; Tue, 17 Mar 2026 11:47:35 +0100 (CET)
+Message-ID: <20260317104342.700967988@infradead.org>
 User-Agent: quilt/0.68
-Date: Tue, 17 Mar 2026 10:51:18 +0100
+Date: Tue, 17 Mar 2026 10:51:16 +0100
 From: Peter Zijlstra <peterz@infradead.org>
 To: mingo@kernel.org
 Cc: longman@redhat.com,
@@ -54,7 +54,7 @@ Cc: longman@redhat.com,
  linux-kernel@vger.kernel.org,
  jstultz@google.com,
  kprateek.nayak@amd.com
-Subject: [RFC][PATCH 5/8] sched/fair: Add cgroup_mode: CONCUR
+Subject: [RFC][PATCH 3/8] sched/fair: Add cgroup_mode: UP
 References: <20260317095113.387450089@infradead.org>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
@@ -64,132 +64,64 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 
-A variation of MAX; where instead of assuming maximal concurrent, this scales
-with 'min(nr_tasks, nr_cpus)'. This handles the low concurrency cases more
-gracefully, with the exception of CPU affnity.
-
-Note: the tracking of tg->tasks is somewhat expensive :-/
+Instead of calculating the proportional fraction of tg->shares for
+each CPU, just give each CPU the full measure, ignoring these pesky
+SMP problems.
 
 Signed-off-by: Peter Zijlstra (Intel) <peterz@infradead.org>
 ---
- kernel/sched/debug.c |    1 +
- kernel/sched/fair.c  |   38 +++++++++++++++++++++++++++++++++++---
- kernel/sched/sched.h |    3 +++
- 3 files changed, 39 insertions(+), 3 deletions(-)
+ kernel/sched/debug.c |    3 ++-
+ kernel/sched/fair.c  |   19 ++++++++++++++++++-
+ 2 files changed, 20 insertions(+), 2 deletions(-)
 
 --- a/kernel/sched/debug.c
 +++ b/kernel/sched/debug.c
-@@ -593,6 +593,7 @@ int cgroup_mode = 1;
+@@ -588,9 +588,10 @@ static void debugfs_fair_server_init(voi
+ }
+ 
+ #ifdef CONFIG_FAIR_GROUP_SCHED
+-int cgroup_mode = 0;
++int cgroup_mode = 1;
+ 
  static const char *cgroup_mode_str[] = {
- 	"up",
++	"up",
  	"smp",
-+	"concur",
- 	"max",
  };
  
 --- a/kernel/sched/fair.c
 +++ b/kernel/sched/fair.c
-@@ -4210,6 +4210,30 @@ static long calc_max_shares(struct cfs_r
- 	return __calc_smp_shares(cfs_rq, tg_shares * nr, max_shares);
+@@ -4152,7 +4152,7 @@ static inline int throttled_hierarchy(st
+  *
+  * hence icky!
+  */
+-static long calc_group_shares(struct cfs_rq *cfs_rq)
++static long calc_smp_shares(struct cfs_rq *cfs_rq)
+ {
+ 	long tg_weight, tg_shares, load, shares;
+ 	struct task_group *tg = cfs_rq->tg;
+@@ -4187,6 +4187,23 @@ static long calc_group_shares(struct cfs
  }
  
-+static inline int tg_tasks(struct task_group *tg)
+ /*
++ * Ignore this pesky SMP stuff, use (4).
++ */
++static long calc_up_shares(struct cfs_rq *cfs_rq)
 +{
-+	return max(1, atomic_long_read(&tg->tasks));
++	struct task_group *tg = cfs_rq->tg;
++	return READ_ONCE(tg->shares);
++}
++
++static long calc_group_shares(struct cfs_rq *cfs_rq)
++{
++	if (cgroup_mode == 0)
++		return calc_up_shares(cfs_rq);
++
++	return calc_smp_shares(cfs_rq);
 +}
 +
 +/*
-+ * Func: min(fraction(num * tg->shares), nice -20); where
-+ *       num = min(nr_tasks, nr_cpus)
-+ *
-+ * Similar to max, except scale with min(nr_tasks, nr_cpus), which gives
-+ * a far more natural distrubution. Can still create edge case using CPU
-+ * affinity.
-+ */
-+static long calc_concur_shares(struct cfs_rq *cfs_rq)
-+{
-+	struct task_group *tg = cfs_rq->tg;
-+	int nr_cpus = tg_cpus(tg);
-+	int nr_tasks = tg_tasks(tg);
-+	int nr = min(nr_tasks, nr_cpus);
-+	long tg_shares = READ_ONCE(tg->shares);
-+	long max_shares = scale_load(sched_prio_to_weight[0]);
-+	return __calc_smp_shares(cfs_rq, nr * tg_shares, max_shares);
-+}
-+
- /*
-  * Func: fraction(tg->shares)
-  *
-@@ -4236,6 +4260,8 @@ static long calc_group_shares(struct cfs
- 	if (cgroup_mode == 0)
- 		return calc_up_shares(cfs_rq);
- 	if (cgroup_mode == 2)
-+		return calc_concur_shares(cfs_rq);
-+	if (cgroup_mode == 3)
- 		return calc_max_shares(cfs_rq);
- 
- 	return calc_smp_shares(cfs_rq);
-@@ -4381,7 +4407,7 @@ static inline bool cfs_rq_is_decayed(str
+  * Recomputes the group entity based on the current state of its group
+  * runqueue.
   */
- static inline void update_tg_load_avg(struct cfs_rq *cfs_rq)
- {
--	long delta;
-+	long delta, dt;
- 	u64 now;
- 
- 	/*
-@@ -4403,16 +4429,19 @@ static inline void update_tg_load_avg(st
- 		return;
- 
- 	delta = cfs_rq->avg.load_avg - cfs_rq->tg_load_avg_contrib;
--	if (abs(delta) > cfs_rq->tg_load_avg_contrib / 64) {
-+	dt = cfs_rq->h_nr_queued - cfs_rq->tg_tasks_contrib;
-+	if (dt || abs(delta) > cfs_rq->tg_load_avg_contrib / 64) {
- 		atomic_long_add(delta, &cfs_rq->tg->load_avg);
-+		atomic_long_add(dt, &cfs_rq->tg->tasks);
- 		cfs_rq->tg_load_avg_contrib = cfs_rq->avg.load_avg;
-+		cfs_rq->tg_tasks_contrib = cfs_rq->h_nr_queued;
- 		cfs_rq->last_update_tg_load_avg = now;
- 	}
- }
- 
- static inline void clear_tg_load_avg(struct cfs_rq *cfs_rq)
- {
--	long delta;
-+	long delta, dt;
- 	u64 now;
- 
- 	/*
-@@ -4423,8 +4452,11 @@ static inline void clear_tg_load_avg(str
- 
- 	now = sched_clock_cpu(cpu_of(rq_of(cfs_rq)));
- 	delta = 0 - cfs_rq->tg_load_avg_contrib;
-+	dt = 0 - cfs_rq->tg_tasks_contrib;
- 	atomic_long_add(delta, &cfs_rq->tg->load_avg);
-+	atomic_long_add(dt, &cfs_rq->tg->tasks);
- 	cfs_rq->tg_load_avg_contrib = 0;
-+	cfs_rq->tg_tasks_contrib = 0;
- 	cfs_rq->last_update_tg_load_avg = now;
- }
- 
---- a/kernel/sched/sched.h
-+++ b/kernel/sched/sched.h
-@@ -491,6 +491,8 @@ struct task_group {
- 	 * will also be accessed at each tick.
- 	 */
- 	atomic_long_t		load_avg ____cacheline_aligned;
-+	atomic_long_t		tasks;
-+
- #endif /* CONFIG_FAIR_GROUP_SCHED */
- 
- #ifdef CONFIG_RT_GROUP_SCHED
-@@ -720,6 +722,7 @@ struct cfs_rq {
- #ifdef CONFIG_FAIR_GROUP_SCHED
- 	u64			last_update_tg_load_avg;
- 	unsigned long		tg_load_avg_contrib;
-+	unsigned long		tg_tasks_contrib;
- 	long			propagate;
- 	long			prop_runnable_sum;
- 
 
 
