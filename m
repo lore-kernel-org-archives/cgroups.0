@@ -1,40 +1,40 @@
 Received: from casper.infradead.org (casper.infradead.org [90.155.50.34])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3A529368941;
-	Tue, 17 Mar 2026 10:47:47 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E9AAB367F28;
+	Tue, 17 Mar 2026 10:47:46 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=90.155.50.34
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773744469; cv=none; b=sPw7ykfPcxrUV9z26a+ouYzG14VDa9VyON3x08ub0GKV/vSmsrv4X6R3ynZPEuo6tAKcSeAYPXpdIVVbV1q4qZtKCDP93WDL/tnxmqpbT3gdJuAhn6OlMolKjZPD4io5PCR3pleQnBsAzTuLZdn4zJ0kbgDftLwImX6NPtkwo1o=
+	t=1773744469; cv=none; b=O9yHOVFptG7qeh1nQWdRNy4r7tfcNutwBegFN/ZndZXAWRT/sR03ye+mf1Hk7n5pTOsck5eOsQQziwazb9v7Rql6CP+vn42I8ybo3w4tX6GhGKO5JxG/36QjGWYbrhbCS9Z/4cubckijVSonzBpZ6YZYmfABBsOdZpp/8Z8nPfw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1773744469; c=relaxed/simple;
-	bh=oz/nKY2JY2XxmQP/gISL7Loky6Je7txW6d2OIdUr/kE=;
+	bh=RMQtBLhBRrnECy14R/UPmUDg8ctH2OwIAZ8x50M/5Zc=;
 	h=Message-ID:Date:From:To:Cc:Subject:References:MIME-Version:
-	 Content-Type; b=Yb71hQ/XGlDcThVc2gQqLZVZH9TK4Z7klyfkSfZJpJIgLh2qf1XWj9KoeCD16LNje28ZV57I/gqB9y/h6iYhi4uAi5kt2HOwsTnjunPMU91QiKjs/ec4gEJD3ee0xz75OoObxrPAbf0qknHIAvl5XY61yvp/dh+ssqWCbl8MhNY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=MvcxCoip; arc=none smtp.client-ip=90.155.50.34
+	 Content-Type; b=QRrMbv+N5h/un8thUj8/3Fsi8sYYKI7OkEyEhi2bOMhxRw0AO/VcY6wlccVv3/KS8YKntNqxkhfQY0NzFUbja0MYzdF/L84jAZwdXKqXaLR0Rf1F5LEXfP7UDBer8defhZRFLdcBa3Bjow9kLpBvDnBwiI84IkDyReWf4HMYp6k=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=Kwai421O; arc=none smtp.client-ip=90.155.50.34
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="MvcxCoip"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="Kwai421O"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=infradead.org; s=casper.20170209; h=Content-Type:MIME-Version:References:
 	Subject:Cc:To:From:Date:Message-ID:Sender:Reply-To:Content-Transfer-Encoding:
 	Content-ID:Content-Description:In-Reply-To;
-	bh=LnEpHpYBQaWBKPY9OFV1cbVCVT8OOVFifXCq/B8ezh4=; b=MvcxCoipidWfptwr+HKRyouzJp
-	1E7XI/4OYkFYDg31PdPgW+Mz7tO8c4jUlLdfVcgf+gwFio6LZjCxK7f0uwLAQU7buOhGXdFweTZON
-	vOniltKienhNdXVEwOEYKUtWZYEQu+BO5eQkkWP0+KuhKyVy9BOfg4nECvHh+OUDIk0sZei7vB8tq
-	JYSQWu8jxgZmAWxwAJ/wapG5aVTSmEIPEh+JpIf1IGR9yPuKs51uzTCCejINUsUnGJpS8NhKCX3+c
-	1AFglnqX3Ijsqx+xAvuwb1z2w2qRrFdihs54OlW1dXfQnejrdmbJGhV4md+YqD6gR6aWb56eLisHc
-	FHWLVQ/A==;
-Received: from 77-249-17-252.cable.dynamic.v4.ziggo.nl ([77.249.17.252] helo=noisy.programming.kicks-ass.net)
+	bh=DHfVDiTvL7Puoc1oBq/QUXOiKwIW1u/4kXnBI0NvDWE=; b=Kwai421OCN2DDVqJxiYqjWzJ48
+	PUDWWCBRMrTCjBj3f3dQnK218yXjiPNLkF1V52YPRUnJRKYixGqSoEXaYzkFBB5k1q6Wb+rc3petw
+	+GqqOex8fNta1Y7qpnTY/WH9YiVXXfuoKmnJnifDDVRajqQmd8zODOYdcwzqdSEW5EXTYPsQkJb2M
+	dktYFx7X0JqJuXSERsO2XUCd3+/ddfl95i6iYBLwLFFdongMRF4Lsc10GaekvkDiecjxbJEhFWKax
+	Tr55DDqVTpXImP2T5MWQvMjFVvsb/9Ny7/vio3MxBpCCwgg+HEYBKqICSR5h3lGOltI9srNQdEY+B
+	oFUX69gw==;
+Received: from 2001-1c00-8d85-5700-266e-96ff-fe07-7dcc.cable.dynamic.v6.ziggo.nl ([2001:1c00:8d85:5700:266e:96ff:fe07:7dcc] helo=noisy.programming.kicks-ass.net)
 	by casper.infradead.org with esmtpsa (Exim 4.98.2 #2 (Red Hat Linux))
-	id 1w2RxY-00000002YWu-1SN9;
+	id 1w2RxY-00000002YWp-0uWV;
 	Tue, 17 Mar 2026 10:47:36 +0000
 Received: by noisy.programming.kicks-ass.net (Postfix, from userid 0)
-	id 2FE103032ED; Tue, 17 Mar 2026 11:47:35 +0100 (CET)
-Message-ID: <20260317104343.103915618@infradead.org>
+	id 1736330324D; Tue, 17 Mar 2026 11:47:35 +0100 (CET)
+Message-ID: <20260317104342.467728645@infradead.org>
 User-Agent: quilt/0.68
-Date: Tue, 17 Mar 2026 10:51:19 +0100
+Date: Tue, 17 Mar 2026 10:51:14 +0100
 From: Peter Zijlstra <peterz@infradead.org>
 To: mingo@kernel.org
 Cc: longman@redhat.com,
@@ -54,7 +54,7 @@ Cc: longman@redhat.com,
  linux-kernel@vger.kernel.org,
  jstultz@google.com,
  kprateek.nayak@amd.com
-Subject: [RFC][PATCH 6/8] sched/fair: Add newidle balance to pick_task_fair()
+Subject: [RFC][PATCH 1/8] sched/debug: Collapse subsequent CONFIG_SCHED_CLASS_EXT sections
 References: <20260317095113.387450089@infradead.org>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
@@ -64,64 +64,170 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 
-With commit 50653216e4ff ("sched: Add support to pick functions to
-take rf") removing the balance callback, the pick_task() callback is
-in charge of newidle balancing.
-
-This means pick_task_fair() should do so too. This hasn't been a
-problem in practise because pick_next_task_fair() is used. However,
-since we'll be removing that one shortly, make sure pick_next_task()
-is up to scratch.
 
 Signed-off-by: Peter Zijlstra (Intel) <peterz@infradead.org>
 ---
- kernel/sched/fair.c |   13 ++++++++++++-
- 1 file changed, 12 insertions(+), 1 deletion(-)
+ kernel/sched/debug.c |   92 ++++++++++++++++++++++++---------------------------
+ 1 file changed, 44 insertions(+), 48 deletions(-)
 
---- a/kernel/sched/fair.c
-+++ b/kernel/sched/fair.c
-@@ -8892,16 +8892,18 @@ static void wakeup_preempt_fair(struct r
- }
+--- a/kernel/sched/debug.c
++++ b/kernel/sched/debug.c
+@@ -445,6 +445,8 @@ static const struct file_operations fair
+ 	.release	= single_release,
+ };
  
- static struct task_struct *pick_task_fair(struct rq *rq, struct rq_flags *rf)
-+	__must_hold(__rq_lockp(rq))
- {
- 	struct sched_entity *se;
- 	struct cfs_rq *cfs_rq;
- 	struct task_struct *p;
- 	bool throttled;
-+	int new_tasks;
- 
- again:
- 	cfs_rq = &rq->cfs;
- 	if (!cfs_rq->nr_queued)
--		return NULL;
-+		goto idle;
- 
- 	throttled = false;
- 
-@@ -8922,6 +8924,14 @@ static struct task_struct *pick_task_fai
- 	if (unlikely(throttled))
- 		task_throttle_setup_work(p);
- 	return p;
++static struct dentry *debugfs_sched;
 +
-+idle:
-+	new_tasks = sched_balance_newidle(rq, rf);
-+	if (new_tasks < 0)
-+		return RETRY_TASK;
-+	if (new_tasks > 0)
-+		goto again;
-+	return NULL;
- }
+ #ifdef CONFIG_SCHED_CLASS_EXT
+ static ssize_t
+ sched_ext_server_runtime_write(struct file *filp, const char __user *ubuf,
+@@ -477,75 +479,92 @@ static const struct file_operations ext_
+ 	.llseek		= seq_lseek,
+ 	.release	= single_release,
+ };
+-#endif /* CONFIG_SCHED_CLASS_EXT */
  
- static void __set_next_task_fair(struct rq *rq, struct task_struct *p, bool first);
-@@ -9011,6 +9021,7 @@ pick_next_task_fair(struct rq *rq, struc
- 
- static struct task_struct *
- fair_server_pick_task(struct sched_dl_entity *dl_se, struct rq_flags *rf)
-+	__must_hold(__rq_lockp(dl_se->rq))
+ static ssize_t
+-sched_fair_server_period_write(struct file *filp, const char __user *ubuf,
+-			       size_t cnt, loff_t *ppos)
++sched_ext_server_period_write(struct file *filp, const char __user *ubuf,
++			      size_t cnt, loff_t *ppos)
  {
- 	return pick_task_fair(dl_se->rq, rf);
+ 	long cpu = (long) ((struct seq_file *) filp->private_data)->private;
+ 	struct rq *rq = cpu_rq(cpu);
+ 
+ 	return sched_server_write_common(filp, ubuf, cnt, ppos, DL_PERIOD,
+-					&rq->fair_server);
++					&rq->ext_server);
  }
+ 
+-static int sched_fair_server_period_show(struct seq_file *m, void *v)
++static int sched_ext_server_period_show(struct seq_file *m, void *v)
+ {
+ 	unsigned long cpu = (unsigned long) m->private;
+ 	struct rq *rq = cpu_rq(cpu);
+ 
+-	return sched_server_show_common(m, v, DL_PERIOD, &rq->fair_server);
++	return sched_server_show_common(m, v, DL_PERIOD, &rq->ext_server);
+ }
+ 
+-static int sched_fair_server_period_open(struct inode *inode, struct file *filp)
++static int sched_ext_server_period_open(struct inode *inode, struct file *filp)
+ {
+-	return single_open(filp, sched_fair_server_period_show, inode->i_private);
++	return single_open(filp, sched_ext_server_period_show, inode->i_private);
+ }
+ 
+-static const struct file_operations fair_server_period_fops = {
+-	.open		= sched_fair_server_period_open,
+-	.write		= sched_fair_server_period_write,
++static const struct file_operations ext_server_period_fops = {
++	.open		= sched_ext_server_period_open,
++	.write		= sched_ext_server_period_write,
+ 	.read		= seq_read,
+ 	.llseek		= seq_lseek,
+ 	.release	= single_release,
+ };
+ 
+-#ifdef CONFIG_SCHED_CLASS_EXT
++static void debugfs_ext_server_init(void)
++{
++	struct dentry *d_ext;
++	unsigned long cpu;
++
++	d_ext = debugfs_create_dir("ext_server", debugfs_sched);
++	if (!d_ext)
++		return;
++
++	for_each_possible_cpu(cpu) {
++		struct dentry *d_cpu;
++		char buf[32];
++
++		snprintf(buf, sizeof(buf), "cpu%lu", cpu);
++		d_cpu = debugfs_create_dir(buf, d_ext);
++
++		debugfs_create_file("runtime", 0644, d_cpu, (void *) cpu, &ext_server_runtime_fops);
++		debugfs_create_file("period", 0644, d_cpu, (void *) cpu, &ext_server_period_fops);
++	}
++}
++#endif /* CONFIG_SCHED_CLASS_EXT */
++
+ static ssize_t
+-sched_ext_server_period_write(struct file *filp, const char __user *ubuf,
+-			      size_t cnt, loff_t *ppos)
++sched_fair_server_period_write(struct file *filp, const char __user *ubuf,
++			       size_t cnt, loff_t *ppos)
+ {
+ 	long cpu = (long) ((struct seq_file *) filp->private_data)->private;
+ 	struct rq *rq = cpu_rq(cpu);
+ 
+ 	return sched_server_write_common(filp, ubuf, cnt, ppos, DL_PERIOD,
+-					&rq->ext_server);
++					&rq->fair_server);
+ }
+ 
+-static int sched_ext_server_period_show(struct seq_file *m, void *v)
++static int sched_fair_server_period_show(struct seq_file *m, void *v)
+ {
+ 	unsigned long cpu = (unsigned long) m->private;
+ 	struct rq *rq = cpu_rq(cpu);
+ 
+-	return sched_server_show_common(m, v, DL_PERIOD, &rq->ext_server);
++	return sched_server_show_common(m, v, DL_PERIOD, &rq->fair_server);
+ }
+ 
+-static int sched_ext_server_period_open(struct inode *inode, struct file *filp)
++static int sched_fair_server_period_open(struct inode *inode, struct file *filp)
+ {
+-	return single_open(filp, sched_ext_server_period_show, inode->i_private);
++	return single_open(filp, sched_fair_server_period_show, inode->i_private);
+ }
+ 
+-static const struct file_operations ext_server_period_fops = {
+-	.open		= sched_ext_server_period_open,
+-	.write		= sched_ext_server_period_write,
++static const struct file_operations fair_server_period_fops = {
++	.open		= sched_fair_server_period_open,
++	.write		= sched_fair_server_period_write,
+ 	.read		= seq_read,
+ 	.llseek		= seq_lseek,
+ 	.release	= single_release,
+ };
+-#endif /* CONFIG_SCHED_CLASS_EXT */
+-
+-static struct dentry *debugfs_sched;
+ 
+ static void debugfs_fair_server_init(void)
+ {
+@@ -568,29 +587,6 @@ static void debugfs_fair_server_init(voi
+ 	}
+ }
+ 
+-#ifdef CONFIG_SCHED_CLASS_EXT
+-static void debugfs_ext_server_init(void)
+-{
+-	struct dentry *d_ext;
+-	unsigned long cpu;
+-
+-	d_ext = debugfs_create_dir("ext_server", debugfs_sched);
+-	if (!d_ext)
+-		return;
+-
+-	for_each_possible_cpu(cpu) {
+-		struct dentry *d_cpu;
+-		char buf[32];
+-
+-		snprintf(buf, sizeof(buf), "cpu%lu", cpu);
+-		d_cpu = debugfs_create_dir(buf, d_ext);
+-
+-		debugfs_create_file("runtime", 0644, d_cpu, (void *) cpu, &ext_server_runtime_fops);
+-		debugfs_create_file("period", 0644, d_cpu, (void *) cpu, &ext_server_period_fops);
+-	}
+-}
+-#endif /* CONFIG_SCHED_CLASS_EXT */
+-
+ static __init int sched_init_debug(void)
+ {
+ 	struct dentry __maybe_unused *numa;
 
 
