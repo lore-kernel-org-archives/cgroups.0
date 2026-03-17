@@ -1,116 +1,259 @@
-Received: from out30-112.freemail.mail.aliyun.com (out30-112.freemail.mail.aliyun.com [115.124.30.112])
+Received: from forwardcorp1d.mail.yandex.net (forwardcorp1d.mail.yandex.net [178.154.239.200])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0D7C514D719;
-	Tue, 17 Mar 2026 06:45:10 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=115.124.30.112
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B95563603FB;
+	Tue, 17 Mar 2026 10:01:24 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=178.154.239.200
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773729913; cv=none; b=BzLtoH3CDEspw3BbJlWhXFojbeFqvmT19dMO0JZxP8mdSa0wHA/nqLxCboQ7Xf2Fq1W7j54oBBbpTY4fSwul5Ze3uiKKt+7ygvgsxS7a6RCuXtJexFI3EFpC2PNx8FGT26k1zcfOHRphM1VHP9kvFVW3XNrc7uLmjlGRapl4S08=
+	t=1773741694; cv=none; b=OYNWOKru9Kg5srhcaosjqTIgkqmSKhrhlsaaRZzeaXxuJL3//+Bmv+FE5AtGUATpLMlLuXmUfqxyUKcuDUMg3K+7fmfcbCPIogj3PbavkroeV04moeVu4u9K4kRSRNxVYmqNa9nWojXC09gWrGqhriQwWdKSvEaeO8R7Y4tz50A=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773729913; c=relaxed/simple;
-	bh=8ghl4Tyasnsz0ekbvIT4f5knJlPJmBDwa+JdA1ozBxQ=;
-	h=From:To:Cc:Subject:In-Reply-To:References:Date:Message-ID:
-	 MIME-Version:Content-Type; b=qPJ6VfJ7rVjMWV1bE4SVPPfU7n/2XqpsFi5Gs0+l+YLDxLgToAi6IIQCx1B0prOXNgxYqmb01cIt0impIM1cPWysb0N2y76pEZQlaD8XCBjRIBtu2fXK8kMLnkS0F7WrYLxy4FdW183D+m576mWgORqfpsJhzGOdxzofqGMFebw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.alibaba.com; spf=pass smtp.mailfrom=linux.alibaba.com; dkim=pass (1024-bit key) header.d=linux.alibaba.com header.i=@linux.alibaba.com header.b=NodgPK+6; arc=none smtp.client-ip=115.124.30.112
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.alibaba.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.alibaba.com
+	s=arc-20240116; t=1773741694; c=relaxed/simple;
+	bh=O6DQX1i3ghyPxBCoFPCcEj5ppTfZr3EyMPXH+i/RwS0=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=oMFVfHWihbLmPwiB4goE74ogIrSeir/dzB101Y9H9EwuHBVJQ3yvTkyUEFF2pFYlOjeui2dRnS6FRqzYGeEvTHi52zBvq1xnjfFXvYggtbpFC1ALHoHshdHsTSyhc6iE23PJhCrn2oceMi4b4py3BimuLvtt7xM4IwDOyhmw7MI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=yandex-team.ru; spf=pass smtp.mailfrom=yandex-team.ru; dkim=pass (1024-bit key) header.d=yandex-team.ru header.i=@yandex-team.ru header.b=LV7BfUkj; arc=none smtp.client-ip=178.154.239.200
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=yandex-team.ru
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=yandex-team.ru
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.alibaba.com header.i=@linux.alibaba.com header.b="NodgPK+6"
-DKIM-Signature:v=1; a=rsa-sha256; c=relaxed/relaxed;
-	d=linux.alibaba.com; s=default;
-	t=1773729909; h=From:To:Subject:Date:Message-ID:MIME-Version:Content-Type;
-	bh=d9m8AenGNBSpK6f9o8GrCon857vC2vFuEB2dcmCEqmU=;
-	b=NodgPK+6dMbsoNxKCOUFABB5sTnX/b91O4OB0qArN11uTlAl/bU7IXw2m2OH0Cz1YYXvuSwT0Q36PXu4OKZ2WJ1n004RV+/mGSlDRbS6XW2W3Zzd+C0j12V0f5nOGpF/VzpzExUl003vx4UMQQyd8ktXORCLXZO1mihya3Hrydw=
-X-Alimail-AntiSpam:AC=PASS;BC=-1|-1;BR=01201311R131e4;CH=green;DM=||false|;DS=||;FP=0|-1|-1|-1|0|-1|-1|-1;HT=maildocker-contentspam011083073210;MF=ying.huang@linux.alibaba.com;NM=1;PH=DS;RN=33;SR=0;TI=SMTPD_---0X.9ya0W_1773729894;
-Received: from DESKTOP-5N7EMDA(mailfrom:ying.huang@linux.alibaba.com fp:SMTPD_---0X.9ya0W_1773729894 cluster:ay36)
-          by smtp.aliyun-inc.com;
-          Tue, 17 Mar 2026 14:45:07 +0800
-From: "Huang, Ying" <ying.huang@linux.alibaba.com>
-To: "JP Kobryn (Meta)" <jp.kobryn@linux.dev>
-Cc: "Vlastimil Babka (SUSE)" <vbabka@kernel.org>,  linux-mm@kvack.org,
-  akpm@linux-foundation.org,  mhocko@suse.com,  apopple@nvidia.com,
-  axelrasmussen@google.com,  byungchul@sk.com,  cgroups@vger.kernel.org,
-  david@kernel.org,  eperezma@redhat.com,  gourry@gourry.net,
-  jasowang@redhat.com,  hannes@cmpxchg.org,  joshua.hahnjy@gmail.com,
-  Liam.Howlett@oracle.com,  linux-kernel@vger.kernel.org,
-  lorenzo.stoakes@oracle.com,  matthew.brost@intel.com,  mst@redhat.com,
-  rppt@kernel.org,  muchun.song@linux.dev,  zhengqi.arch@bytedance.com,
-  rakie.kim@sk.com,  roman.gushchin@linux.dev,  shakeel.butt@linux.dev,
-  surenb@google.com,  virtualization@lists.linux.dev,  weixugc@google.com,
-  xuanzhuo@linux.alibaba.com,  yuanchu@google.com,  ziy@nvidia.com,
-  kernel-team@meta.com
-Subject: Re: [PATCH v2] mm/mempolicy: track page allocations per mempolicy
-In-Reply-To: <0d66401f-9874-4047-971b-632723b0b7ee@linux.dev> (JP Kobryn's
-	message of "Mon, 16 Mar 2026 21:37:01 -0700")
-References: <20260307045520.247998-1-jp.kobryn@linux.dev>
-	<3a42463b-9ddd-4d64-b64c-6c2e6e4fc75d@kernel.org>
-	<343bbd5b-67a0-46c4-8ec4-69158bf26b3f@linux.dev>
-	<874imkpba1.fsf@DESKTOP-5N7EMDA>
-	<cd3d7e2c-79fa-4c00-89ad-83beddf98bae@linux.dev>
-	<60f71f4c-71d9-4751-8c6b-10179b98bef0@kernel.org>
-	<c4e5cc3c-5daa-404e-8c55-cface8aa969d@linux.dev>
-	<87sea0o55p.fsf@DESKTOP-5N7EMDA>
-	<0d66401f-9874-4047-971b-632723b0b7ee@linux.dev>
-Date: Tue, 17 Mar 2026 14:44:59 +0800
-Message-ID: <87a4w7x8d0.fsf@DESKTOP-5N7EMDA>
-User-Agent: Gnus/5.13 (Gnus v5.13)
+	dkim=pass (1024-bit key) header.d=yandex-team.ru header.i=@yandex-team.ru header.b="LV7BfUkj"
+Received: from mail-nwsmtp-smtp-corp-main-80.iva.yp-c.yandex.net (mail-nwsmtp-smtp-corp-main-80.iva.yp-c.yandex.net [IPv6:2a02:6b8:c0c:a189:0:640:4da6:0])
+	by forwardcorp1d.mail.yandex.net (Yandex) with ESMTPS id D6069808C1;
+	Tue, 17 Mar 2026 13:01:15 +0300 (MSK)
+Received: from d-tatianin-lin.yandex-team.ru (unknown [2a02:6bf:8080:d39::1:8])
+	by mail-nwsmtp-smtp-corp-main-80.iva.yp-c.yandex.net (smtpcorp/Yandex) with ESMTPSA id 61JriZ1AFGk0-wyXdH7ES;
+	Tue, 17 Mar 2026 13:01:14 +0300
+Precedence: bulk
+X-Yandex-Fwd: 1
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=yandex-team.ru;
+	s=default; t=1773741675;
+	bh=JcziJH+Lgmx8myte1snEBSSR9HR2TBhqNDuBSlGHOoA=;
+	h=Message-Id:Date:Cc:Subject:To:From;
+	b=LV7BfUkjTudv76BV+c8nj0F9NGOK+53stLPSGJDBxMyW79CcXtZw9ELdaxjVbRnEK
+	 apHm+bnFS5FlwmAxnMnB/giJdvhqh9ZeLifT+Y8FKoGjg3Iy1JozOiTE71aWL50PkA
+	 suomKgNL8Iyepf3E9lTsYHp2w7mK+RyKlxPwTmPY=
+Authentication-Results: mail-nwsmtp-smtp-corp-main-80.iva.yp-c.yandex.net; dkim=pass header.i=@yandex-team.ru
+From: Daniil Tatianin <d-tatianin@yandex-team.ru>
+To: Johannes Weiner <hannes@cmpxchg.org>
+Cc: Daniil Tatianin <d-tatianin@yandex-team.ru>,
+	Michal Hocko <mhocko@kernel.org>,
+	Roman Gushchin <roman.gushchin@linux.dev>,
+	Shakeel Butt <shakeel.butt@linux.dev>,
+	Muchun Song <muchun.song@linux.dev>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	David Hildenbrand <david@kernel.org>,
+	Lorenzo Stoakes <ljs@kernel.org>,
+	"Liam R. Howlett" <Liam.Howlett@oracle.com>,
+	Vlastimil Babka <vbabka@kernel.org>,
+	Mike Rapoport <rppt@kernel.org>,
+	Suren Baghdasaryan <surenb@google.com>,
+	Axel Rasmussen <axelrasmussen@google.com>,
+	Yuanchu Xie <yuanchu@google.com>,
+	Wei Xu <weixugc@google.com>,
+	Brendan Jackman <jackmanb@google.com>,
+	Zi Yan <ziy@nvidia.com>,
+	cgroups@vger.kernel.org,
+	linux-mm@kvack.org,
+	linux-kernel@vger.kernel.org,
+	yc-core@yandex-team.ru
+Subject: [PATCH] mm: add memory.compact_unevictable_allowed cgroup attribute
+Date: Tue, 17 Mar 2026 13:00:58 +0300
+Message-Id: <20260317100058.2316997-1-d-tatianin@yandex-team.ru>
+X-Mailer: git-send-email 2.34.1
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ascii
+Content-Transfer-Encoding: 8bit
 
-"JP Kobryn (Meta)" <jp.kobryn@linux.dev> writes:
+The current global sysctl compact_unevictable_allowed is too coarse.
+In environments with mixed workloads, we may want to protect specific
+important cgroups from compaction to ensure their stability and
+responsiveness, while allowing compaction for others.
 
-> On 3/15/26 7:54 PM, Huang, Ying wrote:
->> "JP Kobryn (Meta)" <jp.kobryn@linux.dev> writes:
->> 
->>> On 3/13/26 12:34 AM, Vlastimil Babka (SUSE) wrote:
->>>> On 3/13/26 07:14, JP Kobryn (Meta) wrote:
->>>>> On 3/12/26 10:07 PM, Huang, Ying wrote:
->>>>>> "JP Kobryn (Meta)" <jp.kobryn@linux.dev> writes:
->>>>>>
->>>>>>> On 3/12/26 6:40 AM, Vlastimil Babka (SUSE) wrote:
->>>>>>>
->>>>>>> How about I change from per-policy hit/miss/foreign triplets to a single
->>>>>>> aggregated policy triplet (i.e. just 3 new counters which account for
->>>>>>> all policies)? They would follow the same hit/miss/foreign semantics
->>>>>>> already proposed (visible in quoted text above). This would still
->>>>>>> provide the otherwise missing signal of whether policy-driven
->>>>>>> allocations to a node are intentional or fallback.
->>>>>>>
->>>>>>> Note that I am also planning on moving the stats off of the memcg so the
->>>>>>> 3 new counters will be global per-node in response to similar feedback.
->>>>>>
->>>>>> Emm, what's the difference between these newly added counters and the
->>>>>> existing numa_hit/miss/foreign counters?
->>>>>
->>>>> The existing counters don't account for node masks in the policies that
->>>>> make use of them. An allocation can land on a node in the mask and still
->>>>> be considered a miss because it wasn't the preferred node.
->>>> That sounds like we could just a new counter e.g. numa_hit_preferred
->>>> and
->>>> adjust definitions accordingly? Or some other variant that fills the gap?
->>>
->>> It's an interesting thought. Looking into these existing counters more,
->>> the in-kernel direct node allocations, which don't fall under any
->>> mempolicy, are also included in these stats. One good example might be
->>> include/linux/skbuff.h, where __dev_alloc_pages() calls
->>> alloc_pages_node_noprof(NUMA_NO_NODE, ...) which eventually reaches
->>> zone_statistics() and increments the stats.
->> IIUC, the default memory policy is used here, that is, MPOL_LOCAL.
->
-> I'm not seeing that. zone_statistics() is eventually reached.
-> alloc_pages_mpol() is not.
+This patch introduces a per-memcg compact_unevictable_allowed attribute.
+This allows granular control over whether unevictable pages in a specific
+cgroup can be compacted. The global sysctl still takes precedence if set
+to disallow compaction, but this new setting allows opting out specific
+cgroups.
 
-Yes.  The page isn't allocated through alloc_pages_mpol().  For example,
-if we want to allocate pages for the kernel instead of user space
-applications.  However, IMHO, the equivalent memory policy is
-MPOL_LOCAL, that is, allocate from local node firstly, then fallback to
-other nodes.  I don't think that alloc_pages_mpol() is so special.
+This also adds a new ISOLATE_UNEVICTABLE_CHECK_MEMCG flag to
+isolate_migratepages_block to preserve the old behavior for the
+ISOLATE_UNEVICTABLE flag unconditionally used by
+isolage_migratepages_range.
 
+Signed-off-by: Daniil Tatianin <d-tatianin@yandex-team.ru>
 ---
-Best Regards,
-Huang, Ying
+ include/linux/memcontrol.h | 19 ++++++++++++++++++
+ include/linux/mmzone.h     |  5 +++++
+ mm/compaction.c            | 21 +++++++++++++++++---
+ mm/memcontrol.c            | 40 ++++++++++++++++++++++++++++++++++++++
+ 4 files changed, 82 insertions(+), 3 deletions(-)
+
+diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
+index 70b685a85bf4..13b7ef6cf511 100644
+--- a/include/linux/memcontrol.h
++++ b/include/linux/memcontrol.h
+@@ -227,6 +227,12 @@ struct mem_cgroup {
+ 	 */
+ 	bool oom_group;
+ 
++	/*
++	 * Is compaction allowed to take unevictable pages accounted to
++	 * this cgroup?
++	 */
++	bool compact_unevictable_allowed;
++
+ 	int swappiness;
+ 
+ 	/* memory.events and memory.events.local */
+@@ -640,6 +646,14 @@ static inline bool mem_cgroup_below_min(struct mem_cgroup *target,
+ 		page_counter_read(&memcg->memory);
+ }
+ 
++static inline bool mem_cgroup_compact_unevictable_allowed(struct mem_cgroup *memcg)
++{
++	if (mem_cgroup_disabled() || !memcg)
++		return true;
++
++	return READ_ONCE(memcg->compact_unevictable_allowed);
++}
++
+ int __mem_cgroup_charge(struct folio *folio, struct mm_struct *mm, gfp_t gfp);
+ 
+ /**
+@@ -1092,6 +1106,11 @@ static inline bool mem_cgroup_disabled(void)
+ 	return true;
+ }
+ 
++static inline bool mem_cgroup_compact_unevictable_allowed(struct mem_cgroup *memcg)
++{
++	return true;
++}
++
+ static inline void memcg_memory_event(struct mem_cgroup *memcg,
+ 				      enum memcg_memory_event event)
+ {
+diff --git a/include/linux/mmzone.h b/include/linux/mmzone.h
+index 3e51190a55e4..dadc9b66efa1 100644
+--- a/include/linux/mmzone.h
++++ b/include/linux/mmzone.h
+@@ -701,6 +701,11 @@ struct lruvec {
+ #define ISOLATE_ASYNC_MIGRATE	((__force isolate_mode_t)0x4)
+ /* Isolate unevictable pages */
+ #define ISOLATE_UNEVICTABLE	((__force isolate_mode_t)0x8)
++/*
++ * Isolate unevictable pages, but honor the page's cgroup settings if it
++ * explicitly disallows unevictable isolation.
++ */
++#define ISOLATE_UNEVICTABLE_CHECK_MEMCG ((__force isolate_mode_t)0x10)
+ 
+ /* LRU Isolation modes. */
+ typedef unsigned __bitwise isolate_mode_t;
+diff --git a/mm/compaction.c b/mm/compaction.c
+index 1e8f8eca318c..0dbb81aa5d2e 100644
+--- a/mm/compaction.c
++++ b/mm/compaction.c
+@@ -1098,8 +1098,22 @@ isolate_migratepages_block(struct compact_control *cc, unsigned long low_pfn,
+ 		is_unevictable = folio_test_unevictable(folio);
+ 
+ 		/* Compaction might skip unevictable pages but CMA takes them */
+-		if (!(mode & ISOLATE_UNEVICTABLE) && is_unevictable)
+-			goto isolate_fail_put;
++		if (is_unevictable) {
++			if (mode & ISOLATE_UNEVICTABLE_CHECK_MEMCG) {
++				struct mem_cgroup *memcg;
++
++				rcu_read_lock();
++				memcg = folio_memcg_check(folio);
++
++				if (!mem_cgroup_compact_unevictable_allowed(memcg)) {
++					rcu_read_unlock();
++					goto isolate_fail_put;
++				}
++
++				rcu_read_unlock();
++			} else if (!(mode & ISOLATE_UNEVICTABLE))
++				goto isolate_fail_put;
++		}
+ 
+ 		/*
+ 		 * To minimise LRU disruption, the caller can indicate with
+@@ -2049,7 +2063,8 @@ static isolate_migrate_t isolate_migratepages(struct compact_control *cc)
+ 	unsigned long low_pfn;
+ 	struct page *page;
+ 	const isolate_mode_t isolate_mode =
+-		(sysctl_compact_unevictable_allowed ? ISOLATE_UNEVICTABLE : 0) |
++		(sysctl_compact_unevictable_allowed ?
++			ISOLATE_UNEVICTABLE_CHECK_MEMCG : 0) |
+ 		(cc->mode != MIGRATE_SYNC ? ISOLATE_ASYNC_MIGRATE : 0);
+ 	bool fast_find_block;
+ 
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index 772bac21d155..bd0230d93dd8 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -3839,6 +3839,8 @@ mem_cgroup_css_alloc(struct cgroup_subsys_state *parent_css)
+ 	WRITE_ONCE(memcg->zswap_writeback, true);
+ #endif
+ 	page_counter_set_high(&memcg->swap, PAGE_COUNTER_MAX);
++	WRITE_ONCE(memcg->compact_unevictable_allowed,
++		mem_cgroup_compact_unevictable_allowed(parent));
+ 	if (parent) {
+ 		WRITE_ONCE(memcg->swappiness, mem_cgroup_swappiness(parent));
+ 
+@@ -4608,6 +4610,37 @@ static ssize_t memory_oom_group_write(struct kernfs_open_file *of,
+ 	return nbytes;
+ }
+ 
++static int memory_compact_unevictable_allowed_show(struct seq_file *m, void *v)
++{
++	struct mem_cgroup *memcg = mem_cgroup_from_seq(m);
++
++	seq_printf(m, "%d\n", READ_ONCE(memcg->compact_unevictable_allowed));
++
++	return 0;
++}
++
++static ssize_t memory_compact_unevictable_allowed_write(
++	struct kernfs_open_file *of, char *buf, size_t nbytes, loff_t off)
++{
++	struct mem_cgroup *memcg = mem_cgroup_from_css(of_css(of));
++	int ret, allowed;
++
++	buf = strstrip(buf);
++	if (!buf)
++		return -EINVAL;
++
++	ret = kstrtoint(buf, 0, &allowed);
++	if (ret)
++		return ret;
++
++	if (allowed != 0 && allowed != 1)
++		return -EINVAL;
++
++	WRITE_ONCE(memcg->compact_unevictable_allowed, allowed);
++
++	return nbytes;
++}
++
+ static ssize_t memory_reclaim(struct kernfs_open_file *of, char *buf,
+ 			      size_t nbytes, loff_t off)
+ {
+@@ -4692,6 +4725,13 @@ static struct cftype memory_files[] = {
+ 		.flags = CFTYPE_NS_DELEGATABLE,
+ 		.write = memory_reclaim,
+ 	},
++	{
++		.name = "compact_unevictable_allowed",
++		/* For root use /proc/sys/vm/compact_unevictable_allowed */
++		.flags = CFTYPE_NOT_ON_ROOT,
++		.seq_show = memory_compact_unevictable_allowed_show,
++		.write = memory_compact_unevictable_allowed_write,
++	},
+ 	{ }	/* terminate */
+ };
+ 
+-- 
+2.34.1
+
