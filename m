@@ -1,40 +1,40 @@
-Received: from casper.infradead.org (casper.infradead.org [90.155.50.34])
+Received: from desiato.infradead.org (desiato.infradead.org [90.155.92.199])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E9AAB367F28;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 943063659FA;
 	Tue, 17 Mar 2026 10:47:46 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=90.155.50.34
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=90.155.92.199
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773744469; cv=none; b=O9yHOVFptG7qeh1nQWdRNy4r7tfcNutwBegFN/ZndZXAWRT/sR03ye+mf1Hk7n5pTOsck5eOsQQziwazb9v7Rql6CP+vn42I8ybo3w4tX6GhGKO5JxG/36QjGWYbrhbCS9Z/4cubckijVSonzBpZ6YZYmfABBsOdZpp/8Z8nPfw=
+	t=1773744469; cv=none; b=UMG072a1Pa1MeAT8Ly3pUMSDDIJObzhuHO0IF29PYdgtrwudADRMXEJ65UN7QQpGPwvhTlKR1014n8lJR+qrLplouCepLetzTtrfcjUOhSEh/gIPlK/dgqP/TkpCd28lKRcbtnMRkIog8C9OX9yjtkmoNtaiWAgSvz26/v6as/Q=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1773744469; c=relaxed/simple;
-	bh=RMQtBLhBRrnECy14R/UPmUDg8ctH2OwIAZ8x50M/5Zc=;
+	bh=+pFF1AelRju298M6nOKw8/46MZRO/cTJx2ER7TBzv7M=;
 	h=Message-ID:Date:From:To:Cc:Subject:References:MIME-Version:
-	 Content-Type; b=QRrMbv+N5h/un8thUj8/3Fsi8sYYKI7OkEyEhi2bOMhxRw0AO/VcY6wlccVv3/KS8YKntNqxkhfQY0NzFUbja0MYzdF/L84jAZwdXKqXaLR0Rf1F5LEXfP7UDBer8defhZRFLdcBa3Bjow9kLpBvDnBwiI84IkDyReWf4HMYp6k=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=Kwai421O; arc=none smtp.client-ip=90.155.50.34
+	 Content-Type; b=KMGfdqswsF9Ovl+mIehPTNHgSlMHMGq+AjKMvF4fBi4VWOipenMjBZDAnlSCRm4iyZMxdq9DdxphSkYZWcfiJwVkTKEltz9JxAn8DRBhvI45g84j5+iiV3tpxor86u8kKxxZUqpAlv2WwcQPOYqZKffTkfcVePKtPoMeYbfmbEo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=j/WkfZSk; arc=none smtp.client-ip=90.155.92.199
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="Kwai421O"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="j/WkfZSk"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=casper.20170209; h=Content-Type:MIME-Version:References:
+	d=infradead.org; s=desiato.20200630; h=Content-Type:MIME-Version:References:
 	Subject:Cc:To:From:Date:Message-ID:Sender:Reply-To:Content-Transfer-Encoding:
 	Content-ID:Content-Description:In-Reply-To;
-	bh=DHfVDiTvL7Puoc1oBq/QUXOiKwIW1u/4kXnBI0NvDWE=; b=Kwai421OCN2DDVqJxiYqjWzJ48
-	PUDWWCBRMrTCjBj3f3dQnK218yXjiPNLkF1V52YPRUnJRKYixGqSoEXaYzkFBB5k1q6Wb+rc3petw
-	+GqqOex8fNta1Y7qpnTY/WH9YiVXXfuoKmnJnifDDVRajqQmd8zODOYdcwzqdSEW5EXTYPsQkJb2M
-	dktYFx7X0JqJuXSERsO2XUCd3+/ddfl95i6iYBLwLFFdongMRF4Lsc10GaekvkDiecjxbJEhFWKax
-	Tr55DDqVTpXImP2T5MWQvMjFVvsb/9Ny7/vio3MxBpCCwgg+HEYBKqICSR5h3lGOltI9srNQdEY+B
-	oFUX69gw==;
-Received: from 2001-1c00-8d85-5700-266e-96ff-fe07-7dcc.cable.dynamic.v6.ziggo.nl ([2001:1c00:8d85:5700:266e:96ff:fe07:7dcc] helo=noisy.programming.kicks-ass.net)
-	by casper.infradead.org with esmtpsa (Exim 4.98.2 #2 (Red Hat Linux))
-	id 1w2RxY-00000002YWp-0uWV;
+	bh=senJf2wakpmdGrsim4pMJJFM9+m5WIr95mcaSzWPbVY=; b=j/WkfZSkvwvSjSiz0uvv/G/gGI
+	2Pdj75YO4x6l2Rpc9iCkiaMV05cH862ToCeuTi5RwaJT6+zwGZQrt4sKRcIrskrYNamGOO2f1hvTL
+	yGHZQc2BhptyaV8j49Iyq0ZTb3595Qnap9GbQMlmzKcRi0Pl+k/dSarO1SRLXcCvWlbMM5KFdWaJ6
+	pVfo0dBeHZeuSim8M1Dt57Y7R6uLsgdQyK6ZtgZZniSptHltQZZPhwIQkd+jD9/FXvjO+nxJOg2LC
+	dCdRxRX3IMvF9IzGAbHLXZl6txt5OTTWAlEygu0rQ2ELvoZJG+xhB0I+zjMgPhdozOJmYw7qWQHjG
+	vJWYeyvg==;
+Received: from 77-249-17-252.cable.dynamic.v4.ziggo.nl ([77.249.17.252] helo=noisy.programming.kicks-ass.net)
+	by desiato.infradead.org with esmtpsa (Exim 4.98.2 #2 (Red Hat Linux))
+	id 1w2RxY-00000008kbs-1VAE;
 	Tue, 17 Mar 2026 10:47:36 +0000
 Received: by noisy.programming.kicks-ass.net (Postfix, from userid 0)
-	id 1736330324D; Tue, 17 Mar 2026 11:47:35 +0100 (CET)
-Message-ID: <20260317104342.467728645@infradead.org>
+	id 2B93B3032EB; Tue, 17 Mar 2026 11:47:35 +0100 (CET)
+Message-ID: <20260317104342.931729160@infradead.org>
 User-Agent: quilt/0.68
-Date: Tue, 17 Mar 2026 10:51:14 +0100
+Date: Tue, 17 Mar 2026 10:51:18 +0100
 From: Peter Zijlstra <peterz@infradead.org>
 To: mingo@kernel.org
 Cc: longman@redhat.com,
@@ -54,7 +54,7 @@ Cc: longman@redhat.com,
  linux-kernel@vger.kernel.org,
  jstultz@google.com,
  kprateek.nayak@amd.com
-Subject: [RFC][PATCH 1/8] sched/debug: Collapse subsequent CONFIG_SCHED_CLASS_EXT sections
+Subject: [RFC][PATCH 5/8] sched/fair: Add cgroup_mode: CONCUR
 References: <20260317095113.387450089@infradead.org>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
@@ -64,170 +64,132 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 
+A variation of MAX; where instead of assuming maximal concurrent, this scales
+with 'min(nr_tasks, nr_cpus)'. This handles the low concurrency cases more
+gracefully, with the exception of CPU affnity.
+
+Note: the tracking of tg->tasks is somewhat expensive :-/
 
 Signed-off-by: Peter Zijlstra (Intel) <peterz@infradead.org>
 ---
- kernel/sched/debug.c |   92 ++++++++++++++++++++++++---------------------------
- 1 file changed, 44 insertions(+), 48 deletions(-)
+ kernel/sched/debug.c |    1 +
+ kernel/sched/fair.c  |   38 +++++++++++++++++++++++++++++++++++---
+ kernel/sched/sched.h |    3 +++
+ 3 files changed, 39 insertions(+), 3 deletions(-)
 
 --- a/kernel/sched/debug.c
 +++ b/kernel/sched/debug.c
-@@ -445,6 +445,8 @@ static const struct file_operations fair
- 	.release	= single_release,
+@@ -593,6 +593,7 @@ int cgroup_mode = 1;
+ static const char *cgroup_mode_str[] = {
+ 	"up",
+ 	"smp",
++	"concur",
+ 	"max",
  };
  
-+static struct dentry *debugfs_sched;
-+
- #ifdef CONFIG_SCHED_CLASS_EXT
- static ssize_t
- sched_ext_server_runtime_write(struct file *filp, const char __user *ubuf,
-@@ -477,75 +479,92 @@ static const struct file_operations ext_
- 	.llseek		= seq_lseek,
- 	.release	= single_release,
- };
--#endif /* CONFIG_SCHED_CLASS_EXT */
- 
- static ssize_t
--sched_fair_server_period_write(struct file *filp, const char __user *ubuf,
--			       size_t cnt, loff_t *ppos)
-+sched_ext_server_period_write(struct file *filp, const char __user *ubuf,
-+			      size_t cnt, loff_t *ppos)
- {
- 	long cpu = (long) ((struct seq_file *) filp->private_data)->private;
- 	struct rq *rq = cpu_rq(cpu);
- 
- 	return sched_server_write_common(filp, ubuf, cnt, ppos, DL_PERIOD,
--					&rq->fair_server);
-+					&rq->ext_server);
+--- a/kernel/sched/fair.c
++++ b/kernel/sched/fair.c
+@@ -4210,6 +4210,30 @@ static long calc_max_shares(struct cfs_r
+ 	return __calc_smp_shares(cfs_rq, tg_shares * nr, max_shares);
  }
  
--static int sched_fair_server_period_show(struct seq_file *m, void *v)
-+static int sched_ext_server_period_show(struct seq_file *m, void *v)
- {
- 	unsigned long cpu = (unsigned long) m->private;
- 	struct rq *rq = cpu_rq(cpu);
- 
--	return sched_server_show_common(m, v, DL_PERIOD, &rq->fair_server);
-+	return sched_server_show_common(m, v, DL_PERIOD, &rq->ext_server);
- }
- 
--static int sched_fair_server_period_open(struct inode *inode, struct file *filp)
-+static int sched_ext_server_period_open(struct inode *inode, struct file *filp)
- {
--	return single_open(filp, sched_fair_server_period_show, inode->i_private);
-+	return single_open(filp, sched_ext_server_period_show, inode->i_private);
- }
- 
--static const struct file_operations fair_server_period_fops = {
--	.open		= sched_fair_server_period_open,
--	.write		= sched_fair_server_period_write,
-+static const struct file_operations ext_server_period_fops = {
-+	.open		= sched_ext_server_period_open,
-+	.write		= sched_ext_server_period_write,
- 	.read		= seq_read,
- 	.llseek		= seq_lseek,
- 	.release	= single_release,
- };
- 
--#ifdef CONFIG_SCHED_CLASS_EXT
-+static void debugfs_ext_server_init(void)
++static inline int tg_tasks(struct task_group *tg)
 +{
-+	struct dentry *d_ext;
-+	unsigned long cpu;
-+
-+	d_ext = debugfs_create_dir("ext_server", debugfs_sched);
-+	if (!d_ext)
-+		return;
-+
-+	for_each_possible_cpu(cpu) {
-+		struct dentry *d_cpu;
-+		char buf[32];
-+
-+		snprintf(buf, sizeof(buf), "cpu%lu", cpu);
-+		d_cpu = debugfs_create_dir(buf, d_ext);
-+
-+		debugfs_create_file("runtime", 0644, d_cpu, (void *) cpu, &ext_server_runtime_fops);
-+		debugfs_create_file("period", 0644, d_cpu, (void *) cpu, &ext_server_period_fops);
-+	}
++	return max(1, atomic_long_read(&tg->tasks));
 +}
-+#endif /* CONFIG_SCHED_CLASS_EXT */
 +
- static ssize_t
--sched_ext_server_period_write(struct file *filp, const char __user *ubuf,
--			      size_t cnt, loff_t *ppos)
-+sched_fair_server_period_write(struct file *filp, const char __user *ubuf,
-+			       size_t cnt, loff_t *ppos)
++/*
++ * Func: min(fraction(num * tg->shares), nice -20); where
++ *       num = min(nr_tasks, nr_cpus)
++ *
++ * Similar to max, except scale with min(nr_tasks, nr_cpus), which gives
++ * a far more natural distrubution. Can still create edge case using CPU
++ * affinity.
++ */
++static long calc_concur_shares(struct cfs_rq *cfs_rq)
++{
++	struct task_group *tg = cfs_rq->tg;
++	int nr_cpus = tg_cpus(tg);
++	int nr_tasks = tg_tasks(tg);
++	int nr = min(nr_tasks, nr_cpus);
++	long tg_shares = READ_ONCE(tg->shares);
++	long max_shares = scale_load(sched_prio_to_weight[0]);
++	return __calc_smp_shares(cfs_rq, nr * tg_shares, max_shares);
++}
++
+ /*
+  * Func: fraction(tg->shares)
+  *
+@@ -4236,6 +4260,8 @@ static long calc_group_shares(struct cfs
+ 	if (cgroup_mode == 0)
+ 		return calc_up_shares(cfs_rq);
+ 	if (cgroup_mode == 2)
++		return calc_concur_shares(cfs_rq);
++	if (cgroup_mode == 3)
+ 		return calc_max_shares(cfs_rq);
+ 
+ 	return calc_smp_shares(cfs_rq);
+@@ -4381,7 +4407,7 @@ static inline bool cfs_rq_is_decayed(str
+  */
+ static inline void update_tg_load_avg(struct cfs_rq *cfs_rq)
  {
- 	long cpu = (long) ((struct seq_file *) filp->private_data)->private;
- 	struct rq *rq = cpu_rq(cpu);
+-	long delta;
++	long delta, dt;
+ 	u64 now;
  
- 	return sched_server_write_common(filp, ubuf, cnt, ppos, DL_PERIOD,
--					&rq->ext_server);
-+					&rq->fair_server);
- }
+ 	/*
+@@ -4403,16 +4429,19 @@ static inline void update_tg_load_avg(st
+ 		return;
  
--static int sched_ext_server_period_show(struct seq_file *m, void *v)
-+static int sched_fair_server_period_show(struct seq_file *m, void *v)
- {
- 	unsigned long cpu = (unsigned long) m->private;
- 	struct rq *rq = cpu_rq(cpu);
- 
--	return sched_server_show_common(m, v, DL_PERIOD, &rq->ext_server);
-+	return sched_server_show_common(m, v, DL_PERIOD, &rq->fair_server);
- }
- 
--static int sched_ext_server_period_open(struct inode *inode, struct file *filp)
-+static int sched_fair_server_period_open(struct inode *inode, struct file *filp)
- {
--	return single_open(filp, sched_ext_server_period_show, inode->i_private);
-+	return single_open(filp, sched_fair_server_period_show, inode->i_private);
- }
- 
--static const struct file_operations ext_server_period_fops = {
--	.open		= sched_ext_server_period_open,
--	.write		= sched_ext_server_period_write,
-+static const struct file_operations fair_server_period_fops = {
-+	.open		= sched_fair_server_period_open,
-+	.write		= sched_fair_server_period_write,
- 	.read		= seq_read,
- 	.llseek		= seq_lseek,
- 	.release	= single_release,
- };
--#endif /* CONFIG_SCHED_CLASS_EXT */
--
--static struct dentry *debugfs_sched;
- 
- static void debugfs_fair_server_init(void)
- {
-@@ -568,29 +587,6 @@ static void debugfs_fair_server_init(voi
+ 	delta = cfs_rq->avg.load_avg - cfs_rq->tg_load_avg_contrib;
+-	if (abs(delta) > cfs_rq->tg_load_avg_contrib / 64) {
++	dt = cfs_rq->h_nr_queued - cfs_rq->tg_tasks_contrib;
++	if (dt || abs(delta) > cfs_rq->tg_load_avg_contrib / 64) {
+ 		atomic_long_add(delta, &cfs_rq->tg->load_avg);
++		atomic_long_add(dt, &cfs_rq->tg->tasks);
+ 		cfs_rq->tg_load_avg_contrib = cfs_rq->avg.load_avg;
++		cfs_rq->tg_tasks_contrib = cfs_rq->h_nr_queued;
+ 		cfs_rq->last_update_tg_load_avg = now;
  	}
  }
  
--#ifdef CONFIG_SCHED_CLASS_EXT
--static void debugfs_ext_server_init(void)
--{
--	struct dentry *d_ext;
--	unsigned long cpu;
--
--	d_ext = debugfs_create_dir("ext_server", debugfs_sched);
--	if (!d_ext)
--		return;
--
--	for_each_possible_cpu(cpu) {
--		struct dentry *d_cpu;
--		char buf[32];
--
--		snprintf(buf, sizeof(buf), "cpu%lu", cpu);
--		d_cpu = debugfs_create_dir(buf, d_ext);
--
--		debugfs_create_file("runtime", 0644, d_cpu, (void *) cpu, &ext_server_runtime_fops);
--		debugfs_create_file("period", 0644, d_cpu, (void *) cpu, &ext_server_period_fops);
--	}
--}
--#endif /* CONFIG_SCHED_CLASS_EXT */
--
- static __init int sched_init_debug(void)
+ static inline void clear_tg_load_avg(struct cfs_rq *cfs_rq)
  {
- 	struct dentry __maybe_unused *numa;
+-	long delta;
++	long delta, dt;
+ 	u64 now;
+ 
+ 	/*
+@@ -4423,8 +4452,11 @@ static inline void clear_tg_load_avg(str
+ 
+ 	now = sched_clock_cpu(cpu_of(rq_of(cfs_rq)));
+ 	delta = 0 - cfs_rq->tg_load_avg_contrib;
++	dt = 0 - cfs_rq->tg_tasks_contrib;
+ 	atomic_long_add(delta, &cfs_rq->tg->load_avg);
++	atomic_long_add(dt, &cfs_rq->tg->tasks);
+ 	cfs_rq->tg_load_avg_contrib = 0;
++	cfs_rq->tg_tasks_contrib = 0;
+ 	cfs_rq->last_update_tg_load_avg = now;
+ }
+ 
+--- a/kernel/sched/sched.h
++++ b/kernel/sched/sched.h
+@@ -491,6 +491,8 @@ struct task_group {
+ 	 * will also be accessed at each tick.
+ 	 */
+ 	atomic_long_t		load_avg ____cacheline_aligned;
++	atomic_long_t		tasks;
++
+ #endif /* CONFIG_FAIR_GROUP_SCHED */
+ 
+ #ifdef CONFIG_RT_GROUP_SCHED
+@@ -720,6 +722,7 @@ struct cfs_rq {
+ #ifdef CONFIG_FAIR_GROUP_SCHED
+ 	u64			last_update_tg_load_avg;
+ 	unsigned long		tg_load_avg_contrib;
++	unsigned long		tg_tasks_contrib;
+ 	long			propagate;
+ 	long			prop_runnable_sum;
+ 
 
 
