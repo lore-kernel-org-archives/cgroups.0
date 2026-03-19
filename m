@@ -1,47 +1,47 @@
 Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7653839150A
-	for <cgroups@vger.kernel.org>; Thu, 19 Mar 2026 17:39:14 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 419A63DD50C
+	for <cgroups@vger.kernel.org>; Thu, 19 Mar 2026 17:39:19 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773941962; cv=none; b=UTRqcd6PcJR9n948mwHw685s0lD+EUGqbDclNk2BaqtMOvqN18xJscqaCzVy4oc0BL14rzxvkNZswc7D2MrB52GpulBTYUYnTdT+1xl40ApsJ23EBFdGry0KlcFqkq4z98CcsznXCMCl+M+mj/CL/joLmDj1sYiW7EaS4Nj8d4Q=
+	t=1773941965; cv=none; b=U0A9DsDU7QKoxIJu3qBJvWFbrXENPYbYtARazOA02vJthcysi6bfg5qXdZijocoxDHh2Uytp3yGGb8yLOEoEnpyR76u0zv1TpPeqm7p7Xt4qFVwtDXzb+TIQL5wMFrTHhht2WK98EY9kRoxzMg23vSpEFzk1c7pJ01+njDB66TE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773941962; c=relaxed/simple;
-	bh=nxAjAjAgP+lCo3v+SKq8jvMRzDUk+BwOWF50IkkWiZc=;
+	s=arc-20240116; t=1773941965; c=relaxed/simple;
+	bh=wFAtlTmn43+vpFnlZmsivMZE1tzHU7BC53jPKGhv5C0=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=Fotom8vhK25a+yHFTkM+c04gL3cdJTZcqoI1kOZj7L2bhe6o5Jkp4vFVnUIXRl192rnRjSV4J4y175hZzFqvqc0az7MXYkImya1ppSj5o1XCxltJi2+V/JVbh6hzvxv4RxJwompxAigF2eQJZfRXXpbwqW/g9CDWFDa+BZtbcTA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=c74EOEhF; arc=none smtp.client-ip=170.10.129.124
+	 MIME-Version; b=RgUpNrhuNuH9r8UIOy/dFVTY4fI7VEm3rtNEmGt4Uk7G/T68svF5teGil2a8FdSNAo2J3eVd7iT1m2viTvBTSlGth8TNpiJLAocbOJ4cMSdAV+MwOArsTmXZl6Nzu6SRO8CusrlR59TdS1oE9I3393eN4ipAWenVOAYnsEEa7ww=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=aLalJSfs; arc=none smtp.client-ip=170.10.129.124
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="c74EOEhF"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="aLalJSfs"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1773941953;
+	s=mimecast20190719; t=1773941959;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=zkUulf/dklOOtLe7ygalmkfZiPOwnIaF4ZwIQQPoF50=;
-	b=c74EOEhFY26gD/pSfhuOPbFpMlWZGIU9DEFs9oQqyYPjVa1kLBDC4Q/3ozg8UIi60L3/QH
-	Q61lj+Lfu05K8EjEeVe49rXJMcDm4kcdLREAZ+0mmvfCtNh2lIBKw2xf51vIUZ0jZLymzV
-	pHqKQNfbRH21VTryPOgv+5JnsxWb50c=
-Received: from mx-prod-mc-03.mail-002.prod.us-west-2.aws.redhat.com
- (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
+	bh=y8AJoJFhemnk1DLT2xYvQamPJ/h63aubGqhq+ZDBiKQ=;
+	b=aLalJSfsmaq/XAgufrfop47XPy6TGfAHnjZL+TUpl2wzWuhlEqa2WcpwTyfCZ4Bz2eZSLy
+	QFLSAD3j3cpYpzN2wmgHes4/zyYRg2j57BklIiMUV1H5GQfudrPS45G3d+alOqIBK3mc+l
+	WVRRbA/YmB5u9gU8ddvVix3DgoP3aFw=
+Received: from mx-prod-mc-06.mail-002.prod.us-west-2.aws.redhat.com
+ (ec2-35-165-154-97.us-west-2.compute.amazonaws.com [35.165.154.97]) by
  relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-611-HIcTViPWP_quBmhI6xe-QA-1; Thu,
- 19 Mar 2026 13:39:08 -0400
-X-MC-Unique: HIcTViPWP_quBmhI6xe-QA-1
-X-Mimecast-MFC-AGG-ID: HIcTViPWP_quBmhI6xe-QA_1773941946
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-45-N4MyzdgGOh-xRtock0apmA-1; Thu,
+ 19 Mar 2026 13:39:15 -0400
+X-MC-Unique: N4MyzdgGOh-xRtock0apmA-1
+X-Mimecast-MFC-AGG-ID: N4MyzdgGOh-xRtock0apmA_1773941953
 Received: from mx-prod-int-01.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-01.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.4])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
-	by mx-prod-mc-03.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id CB044195607B;
-	Thu, 19 Mar 2026 17:39:05 +0000 (UTC)
+	by mx-prod-mc-06.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id D731818005BB;
+	Thu, 19 Mar 2026 17:39:12 +0000 (UTC)
 Received: from llong-thinkpadp16vgen1.westford.csb (unknown [10.22.80.194])
-	by mx-prod-int-01.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id C4BCD30001A1;
-	Thu, 19 Mar 2026 17:39:02 +0000 (UTC)
+	by mx-prod-int-01.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id A7CE330001A1;
+	Thu, 19 Mar 2026 17:39:09 +0000 (UTC)
 From: Waiman Long <longman@redhat.com>
 To: Johannes Weiner <hannes@cmpxchg.org>,
 	Michal Hocko <mhocko@kernel.org>,
@@ -63,9 +63,9 @@ Cc: linux-kernel@vger.kernel.org,
 	Guopeng Zhang <zhangguopeng@kylinos.cn>,
 	Li Wang <liwan@redhat.com>,
 	Waiman Long <longman@redhat.com>
-Subject: [PATCH 5/7] selftests: memcg: Reduce the expected swap.peak with larger page size
-Date: Thu, 19 Mar 2026 13:37:50 -0400
-Message-ID: <20260319173752.1472864-6-longman@redhat.com>
+Subject: [PATCH 7/7] selftests: memcg: Treat failure for zeroing sock in test_memcg_sock as XFAIL
+Date: Thu, 19 Mar 2026 13:37:52 -0400
+Message-ID: <20260319173752.1472864-8-longman@redhat.com>
 In-Reply-To: <20260319173752.1472864-1-longman@redhat.com>
 References: <20260319173752.1472864-1-longman@redhat.com>
 Precedence: bulk
@@ -77,97 +77,58 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-Scanned-By: MIMEDefang 3.4.1 on 10.30.177.4
 
-When running the test_memcg_swap_max_peak test which sets swap.max
-to 30M on an arm64 system with 64k page size, the test failed as the
-swap.peak could only reach up only to 27,328,512 bytes (about 25.45
-MB which is lower than the expected 29M) before the allocating task
-got oom-killed.
+Although there is supposed to be a periodic and asynchronous flush of
+stats every 2 seconds, the actual time lag between succesive runs can
+actually vary quite a bit. In fact, I have seen time lag of up to 10s
+of seconds in some cases.
 
-It is likely due to the fact that it takes longer to write out a larger
-page to swap and hence a lower swap.peak is being reached. Setting
-memory.high to 29M to throttle memory allocation when nearing memory.max
-helps, but it still could only reach up to 29,032,448 bytes (about
-27.04M). As a result, we have to reduce the expected swap.peak with
-larger page size. Now swap.peak is expected to reach only 27M with 64k
-page, 29M with 4k page and 28M with 16k page.
+At the end of test_memcg_sock, it waits up to 3 seconds for the
+"sock" attribute of memory.stat to go back down to 0. Obviously it
+may occasionally fail especially when the kernel has large page size
+(e.g. 64k). Treat this failure as an expected failure (XFAIL) to
+distinguish it from the other failure cases.
 
 Signed-off-by: Waiman Long <longman@redhat.com>
 ---
- .../selftests/cgroup/test_memcontrol.c        | 26 ++++++++++++++++---
- 1 file changed, 22 insertions(+), 4 deletions(-)
+ tools/testing/selftests/cgroup/test_memcontrol.c | 13 ++++++++++++-
+ 1 file changed, 12 insertions(+), 1 deletion(-)
 
 diff --git a/tools/testing/selftests/cgroup/test_memcontrol.c b/tools/testing/selftests/cgroup/test_memcontrol.c
-index 2c3a838536ae..4f12d4b4f9f8 100644
+index 0ef09bafa68c..9206da51ac83 100644
 --- a/tools/testing/selftests/cgroup/test_memcontrol.c
 +++ b/tools/testing/selftests/cgroup/test_memcontrol.c
-@@ -1032,6 +1032,7 @@ static int test_memcg_swap_max_peak(const char *root)
- 	char *memcg;
- 	long max, peak;
- 	struct stat ss;
-+	long swap_peak;
- 	int swap_peak_fd = -1, mem_peak_fd = -1;
- 
- 	/* any non-empty string resets */
-@@ -1119,6 +1120,23 @@ static int test_memcg_swap_max_peak(const char *root)
- 	if (cg_write(memcg, "memory.max", "30M"))
+@@ -1486,12 +1486,20 @@ static int test_memcg_sock(const char *root)
+ 	 * Poll memory.stat for up to 3 seconds (~FLUSH_TIME plus some
+ 	 * scheduling slack) and require that the "sock " counter
+ 	 * eventually drops to zero.
++	 *
++	 * The actual run-to-run elapse time between consecutive run
++	 * of asynchronous memcg rstat flush may varies quite a bit.
++	 * So the 3 seconds wait time may not be enough for the "sock"
++	 * counter to go down to 0. Treat it as a XFAIL instead of
++	 * a FAIL.
+ 	 */
+ 	sock_post = cg_read_key_long_poll(memcg, "memory.stat", "sock ", 0,
+ 					 MEMCG_SOCKSTAT_WAIT_RETRIES,
+ 					 DEFAULT_WAIT_INTERVAL_US);
+-	if (sock_post)
++	if (sock_post) {
++		ret = KSFT_XFAIL;
  		goto cleanup;
++	}
  
-+	/*
-+	 * The swap.peak that can be reached will depend on the system page
-+	 * size. With larger page size (e.g. 64k), it takes more time to write
-+	 * the anonymous memory page to swap and so the peak reached will be
-+	 * lower before the memory allocation process get oom-killed. One way
-+	 * to allow the swap.peak to go higher is to throttle memory allocation
-+	 * by setting memory.high to, say, 29M to give more time to swap out the
-+	 * memory before oom-kill. This is still not enough for it to reach
-+	 * 29M reachable with 4k page. So we still need to reduce the expected
-+	 * swap.peak accordingly.
-+	 */
-+	swap_peak = (page_size == KB(4)) ? MB(29) :
-+		   ((page_size <= KB(16)) ? MB(28) : MB(27));
-+
-+	if (cg_write(memcg, "memory.high", "29M"))
-+		goto cleanup;
-+
- 	/* Should be killed by OOM killer */
- 	if (!cg_run(memcg, alloc_anon, (void *)MB(100)))
- 		goto cleanup;
-@@ -1134,7 +1152,7 @@ static int test_memcg_swap_max_peak(const char *root)
- 		goto cleanup;
+ 	ret = KSFT_PASS;
  
- 	peak = cg_read_long(memcg, "memory.swap.peak");
--	if (peak < MB(29))
-+	if (peak < swap_peak)
- 		goto cleanup;
- 
- 	peak = cg_read_long_fd(mem_peak_fd);
-@@ -1142,7 +1160,7 @@ static int test_memcg_swap_max_peak(const char *root)
- 		goto cleanup;
- 
- 	peak = cg_read_long_fd(swap_peak_fd);
--	if (peak < MB(29))
-+	if (peak < swap_peak)
- 		goto cleanup;
- 
- 	/*
-@@ -1181,7 +1199,7 @@ static int test_memcg_swap_max_peak(const char *root)
- 	if (cg_read_long(memcg, "memory.peak") < MB(29))
- 		goto cleanup;
- 
--	if (cg_read_long(memcg, "memory.swap.peak") < MB(29))
-+	if (cg_read_long(memcg, "memory.swap.peak") < swap_peak)
- 		goto cleanup;
- 
- 	if (cg_run(memcg, alloc_anon_50M_check_swap, (void *)MB(30)))
-@@ -1196,7 +1214,7 @@ static int test_memcg_swap_max_peak(const char *root)
- 		goto cleanup;
- 
- 	peak = cg_read_long(memcg, "memory.swap.peak");
--	if (peak < MB(29))
-+	if (peak < swap_peak)
- 		goto cleanup;
- 
- 	peak = cg_read_long_fd(mem_peak_fd);
+@@ -1753,6 +1761,9 @@ int main(int argc, char **argv)
+ 		case KSFT_SKIP:
+ 			ksft_test_result_skip("%s\n", tests[i].name);
+ 			break;
++		case KSFT_XFAIL:
++			ksft_test_result_xfail("%s\n", tests[i].name);
++			break;
+ 		default:
+ 			ksft_test_result_fail("%s\n", tests[i].name);
+ 			break;
 -- 
 2.53.0
 
