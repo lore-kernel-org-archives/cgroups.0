@@ -1,47 +1,47 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 601D63DEFE0
-	for <cgroups@vger.kernel.org>; Thu, 19 Mar 2026 17:39:12 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1C87A3ECBCC
+	for <cgroups@vger.kernel.org>; Thu, 19 Mar 2026 17:39:16 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1773941958; cv=none; b=MyjhGavteht1L3cibPCBvyWvnS6oAzfbNz1WCZ4ffAS8WM7eyoBsH6OOYDAUJaReN3NdwSOk2rTqDxKmnXskWERlZvhhBN/BYmaA2ual65TmXCflVzU9w73KR1EVJ58x919WCTZP6qiEPmLWNi7I6j1ZOQd05a3TkBPWVcAfXi0=
+	t=1773941961; cv=none; b=mX3akN74Ffeab6PNuARmPwst5WFk3FANHj6kGZFfOlq49WkSR3c3mec1hCr0N022FW9VuYdAv1KDB08t5b86+XmP5qbpUO/U3qWZsxb7SAThRzIpJ21LW9HpV/GIHRcwfwmfDFL0+V6G4ARVWgvM846G9AmJvux8ZKt1JW9580k=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1773941958; c=relaxed/simple;
-	bh=1YF3Po/hWcN908df/JjlPnlSCsp5XMq/OPhqEQrLq8U=;
+	s=arc-20240116; t=1773941961; c=relaxed/simple;
+	bh=mInYEpsHgQ0sSu1v8PF2dLL2Vd4hkmR1DRzwhCUTikg=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=YaR6GwMz3n2V3hkNNnlp0JM1h0h3IOJKdFqZ9v4Kh4vWTDTCewMkK87w6r0yP2nUXa4iX3m9esCLteTh7rtlrurrOwXYWv/QCVB+l3ecxeOlQuvoG/p++dgc2NCJfX41FzlpyTO4uN2AVtztTA3BFbNqb9qJQ0n46U1U7H6XDyY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=BTFY0yJc; arc=none smtp.client-ip=170.10.129.124
+	 MIME-Version; b=k9pGAQbotjThVoeciFxrcjpqbq0tC4aLH5XTcsZwVYgIRmX3bAtED6Uz/pukL2Bxpztz43Hp/BxTSusyhEUzN82XIaVkh3M6T4jWHIqANRIIhnW5R3SfTVTf7kfBjy42QaviKYP37Nq92tQ7UrFGoYEUk5zorLleOsSd8hTxKaA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=hMmpcTci; arc=none smtp.client-ip=170.10.133.124
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="BTFY0yJc"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="hMmpcTci"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1773941951;
+	s=mimecast20190719; t=1773941955;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=dNJ6Lq8/T1XPjKqwxrWp5F2Bbd2jRHO9QNryMAsqUQU=;
-	b=BTFY0yJcTVNb7qCVvr8B5wtw4c0H2No3xheW3Sm6qI8r8yJt1nh/8Hq4cvpXmlFa3uI/Gw
-	YMwgGiH4d8SMwpY08iSiiI6VOcAclWtWQi9rkW60+D3Wl33FAVoj85rZu2vH7OBdS/lRqW
-	+eCMHBWmrdrHHUIjsnKR11Yt7t02b2Y=
-Received: from mx-prod-mc-03.mail-002.prod.us-west-2.aws.redhat.com
+	bh=08dKphVfSTLtdpNxVh0zM+lKvwtD8+RfKPGuI2AqB10=;
+	b=hMmpcTcipKnDtTj6w1vteAIVmN9utZYTsMFnXHhNRwKBwn2HEWWjrHHCnoEvrZU81TND/S
+	mecFRKaDlgTpLj0WT3zg/4XGX2oqlrUAbym3QC0LBHDoBWk5ZrVPFgErRhcWF3zB6Pti1L
+	p3fBLeBDpeEE2twCFkH00g8DURIabR4=
+Received: from mx-prod-mc-05.mail-002.prod.us-west-2.aws.redhat.com
  (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
  relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-687-31Ev_X7TNdGagwe5I4LhcA-1; Thu,
- 19 Mar 2026 13:39:05 -0400
-X-MC-Unique: 31Ev_X7TNdGagwe5I4LhcA-1
-X-Mimecast-MFC-AGG-ID: 31Ev_X7TNdGagwe5I4LhcA_1773941942
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-212-FclM--_NPeiuVWdz8HznfA-1; Thu,
+ 19 Mar 2026 13:39:12 -0400
+X-MC-Unique: FclM--_NPeiuVWdz8HznfA-1
+X-Mimecast-MFC-AGG-ID: FclM--_NPeiuVWdz8HznfA_1773941949
 Received: from mx-prod-int-01.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-01.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.4])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
-	by mx-prod-mc-03.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 8A0481944F05;
-	Thu, 19 Mar 2026 17:39:02 +0000 (UTC)
+	by mx-prod-mc-05.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 525641955F6A;
+	Thu, 19 Mar 2026 17:39:09 +0000 (UTC)
 Received: from llong-thinkpadp16vgen1.westford.csb (unknown [10.22.80.194])
-	by mx-prod-int-01.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id 7068D30001A1;
-	Thu, 19 Mar 2026 17:38:59 +0000 (UTC)
+	by mx-prod-int-01.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id 0FE4130001A1;
+	Thu, 19 Mar 2026 17:39:05 +0000 (UTC)
 From: Waiman Long <longman@redhat.com>
 To: Johannes Weiner <hannes@cmpxchg.org>,
 	Michal Hocko <mhocko@kernel.org>,
@@ -63,9 +63,9 @@ Cc: linux-kernel@vger.kernel.org,
 	Guopeng Zhang <zhangguopeng@kylinos.cn>,
 	Li Wang <liwan@redhat.com>,
 	Waiman Long <longman@redhat.com>
-Subject: [PATCH 4/7] selftests: memcg: Increase error tolerance in accordance with page size
-Date: Thu, 19 Mar 2026 13:37:49 -0400
-Message-ID: <20260319173752.1472864-5-longman@redhat.com>
+Subject: [PATCH 6/7] selftests: memcg: Don't call reclaim_until() if already in target
+Date: Thu, 19 Mar 2026 13:37:51 -0400
+Message-ID: <20260319173752.1472864-7-longman@redhat.com>
 In-Reply-To: <20260319173752.1472864-1-longman@redhat.com>
 References: <20260319173752.1472864-1-longman@redhat.com>
 Precedence: bulk
@@ -77,114 +77,52 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-Scanned-By: MIMEDefang 3.4.1 on 10.30.177.4
 
-It was found that some of the tests in test_memcontrol can fail more
-readily if system page size is larger than 4k. It is because the actual
-memory.current value deviates more from the expected value with larger
-page size.  To avoid this failure, the error tolerance is now increased
-in accordance to the current system page size value. The page size
-scale factor is set to 2 for 64k page and 1 for 16k page.
+Near the end of test_memcg_protection(), reclaim_until() is called
+to reduce memory.current of children[0] to 10M. It was found that
+with larger page size (e.g. 64k) the various memory cgroups in
+test_memcg_protection() would deviate further from the expected values
+especially for the test_memcg_low test. As a result, children[0] might
+have reached the target already without reclamation. The will cause the
+reclaim_until() function to report failure as no reclamation is needed.
 
-Changes are made in alloc_pagecache_max_30M(), test_memcg_protection()
-and alloc_anon_50M_check_swap() to increase the error tolerance for
-memory.current for larger page size. The current set of values are
-chosen to ensure that the relevant test_memcontrol tests no longer
-have any test failure in a 100 repeated run of test_memcontrol with a
-4k/16k/64k page size kernels on an arm64 system.
+Avoid this unexpected failure by skipping the reclaim_until() call if
+memory.current of children[0] has already reached the target size for
+kernel with non-4k page size.
 
 Signed-off-by: Waiman Long <longman@redhat.com>
 ---
- .../cgroup/lib/include/cgroup_util.h          |  1 +
- .../selftests/cgroup/test_memcontrol.c        | 23 ++++++++++++++-----
- 2 files changed, 18 insertions(+), 6 deletions(-)
+ tools/testing/selftests/cgroup/test_memcontrol.c | 11 ++++++++++-
+ 1 file changed, 10 insertions(+), 1 deletion(-)
 
-diff --git a/tools/testing/selftests/cgroup/lib/include/cgroup_util.h b/tools/testing/selftests/cgroup/lib/include/cgroup_util.h
-index 77f386dab5e8..c25228a78b8b 100644
---- a/tools/testing/selftests/cgroup/lib/include/cgroup_util.h
-+++ b/tools/testing/selftests/cgroup/lib/include/cgroup_util.h
-@@ -6,6 +6,7 @@
- #define PAGE_SIZE 4096
- #endif
- 
-+#define KB(x) (x << 10)
- #define MB(x) (x << 20)
- 
- #define USEC_PER_SEC	1000000L
 diff --git a/tools/testing/selftests/cgroup/test_memcontrol.c b/tools/testing/selftests/cgroup/test_memcontrol.c
-index 3cc8a432be91..2c3a838536ae 100644
+index 4f12d4b4f9f8..0ef09bafa68c 100644
 --- a/tools/testing/selftests/cgroup/test_memcontrol.c
 +++ b/tools/testing/selftests/cgroup/test_memcontrol.c
-@@ -26,6 +26,7 @@
- static bool has_localevents;
- static bool has_recursiveprot;
- static int page_size;
-+static int pscale_factor;	/* Page size scale factor */
+@@ -490,6 +490,7 @@ static int test_memcg_protection(const char *root, bool min)
+ 	long current;
+ 	int i, attempts;
+ 	int fd;
++	bool do_reclaim;
  
- int get_temp_fd(void)
- {
-@@ -571,16 +572,17 @@ static int test_memcg_protection(const char *root, bool min)
- 	if (cg_run(parent[2], alloc_anon, (void *)MB(148)))
+ 	fd = get_temp_fd();
+ 	if (fd < 0)
+@@ -602,7 +603,15 @@ static int test_memcg_protection(const char *root, bool min)
+ 				       9 + (min ? 0 : 6) * pscale_factor))
  		goto cleanup;
  
--	if (!values_close(cg_read_long(parent[1], "memory.current"), MB(50), 3))
-+	if (!values_close(cg_read_long(parent[1], "memory.current"), MB(50),
-+				       3 + (min ? 0 : 4) * pscale_factor))
- 		goto cleanup;
- 
- 	for (i = 0; i < ARRAY_SIZE(children); i++)
- 		c[i] = cg_read_long(children[i], "memory.current");
- 
--	if (!values_close(c[0], MB(29), 15))
-+	if (!values_close(c[0], MB(29), 15 + 3 * pscale_factor))
- 		goto cleanup;
- 
--	if (!values_close(c[1], MB(21), 20))
-+	if (!values_close(c[1], MB(21), 20 + pscale_factor))
- 		goto cleanup;
- 
- 	if (c[3] != 0)
-@@ -596,7 +598,8 @@ static int test_memcg_protection(const char *root, bool min)
- 	}
- 
- 	current = min ? MB(50) : MB(30);
--	if (!values_close(cg_read_long(parent[1], "memory.current"), current, 3))
-+	if (!values_close(cg_read_long(parent[1], "memory.current"), current,
-+				       9 + (min ? 0 : 6) * pscale_factor))
- 		goto cleanup;
- 
- 	if (!reclaim_until(children[0], MB(10)))
-@@ -684,7 +687,7 @@ static int alloc_pagecache_max_30M(const char *cgroup, void *arg)
- 		goto cleanup;
- 
- 	current = cg_read_long(cgroup, "memory.current");
--	if (!values_close(current, MB(30), 5))
-+	if (!values_close(current, MB(30), 5 + (pscale_factor ? 2 : 0)))
- 		goto cleanup;
- 
- 	ret = 0;
-@@ -1004,7 +1007,7 @@ static int alloc_anon_50M_check_swap(const char *cgroup, void *arg)
- 		*ptr = 0;
- 
- 	mem_current = cg_read_long(cgroup, "memory.current");
--	if (!mem_current || !values_close(mem_current, mem_max, 3))
-+	if (!mem_current || !values_close(mem_current, mem_max, 6 + pscale_factor))
- 		goto cleanup;
- 
- 	swap_current = cg_read_long(cgroup, "memory.swap.current");
-@@ -1681,6 +1684,14 @@ int main(int argc, char **argv)
- 	int i, proc_status;
- 
- 	page_size = sysconf(_SC_PAGE_SIZE);
+-	if (!reclaim_until(children[0], MB(10)))
 +	/*
-+	 * It is found that the actual memory.current value can deviate more
-+	 * from the expected value with larger page size. So error tolerance
-+	 * will have to be increased a bit more for larger page size.
++	 * With larger page size, it is possible that memory.current of
++	 * children[0] is close to 10M. Skip the reclaim_until() call if
++	 * that is the case.
 +	 */
-+	if (page_size > KB(4))
-+		pscale_factor = (page_size >= KB(64)) ? 2 : 1;
-+
- 	ksft_print_header();
- 	ksft_set_plan(ARRAY_SIZE(tests));
- 	if (cg_find_unified_root(root, sizeof(root), NULL))
++	current = cg_read_long(children[0], "memory.current");
++	do_reclaim = (page_size == KB(4)) ||
++		     ((current > MB(10)) && !values_close(current, MB(10), 3));
++	if (do_reclaim && !reclaim_until(children[0], MB(10)))
+ 		goto cleanup;
+ 
+ 	if (min) {
 -- 
 2.53.0
 
