@@ -1,41 +1,54 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from galois.linutronix.de (Galois.linutronix.de [193.142.43.55])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3DB9F358389;
-	Tue, 24 Mar 2026 07:50:39 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 29C04366061;
+	Tue, 24 Mar 2026 08:21:56 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=193.142.43.55
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1774338640; cv=none; b=UjGnbiLy3hXBIkFjHNCcNcDHg5zRdlcBG/yGdHChA+oLXPloVWRDTYlZ72aYIyx3EeDVu06PzR40xWCk0h41xlc6wzSisDJ/KhiWQQ76QS1C2nypIvPxiuuUq+fxIHhSWBu7APf1M9YwicAVO7nbOfn30ZLzb3eI1H2CJvW1jtc=
+	t=1774340522; cv=none; b=eP2FSPF1634KHjKhixZyIErxCojIdWsnRlVvL6deweWZJm5EhVy7YFlpnXuN8PKE9hBtvDrUXaIomwCGxFucMK8P1ix+8l6xWX9v6GBIkMWrk5JwQsIrvjuwTt2XxDt0ZiL5hzK+6ieYs6XGGJoFDcO+hcPbDJubhd7CCENlnVk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1774338640; c=relaxed/simple;
-	bh=Yri2ClEjU2+0SMqF8PImVQJCXMkFkh+FbB0c9K/U5b0=;
+	s=arc-20240116; t=1774340522; c=relaxed/simple;
+	bh=JnGJ5biCq/QEW/LA87r0v58dhqrJm9NANFByZWvH7pU=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=kPvIH39S4VgHEEc4PmQN9ijsAt068NPwgmT0p2+pYtdSBOPrqQbNsc6v++Bf89fx3uaoWfGf1G7drM7sRa+t/b8KhVQhmvF8NCVL3iP+yhpsXdlRqPWH6zfIWrUviSot485OMgPZ0CLiK0gbpqUPN/I0XWO0k0QRZA6LTbRzBJk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=d8VLevzQ; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=H9p+x83k7piIXi0kUjDjhq5UoYqIXH/sae9touoxpAamA9cd/qokeblC329JtBMjBQbSoiEqgItygfi8ATOLcibA9DkHac5AS4hXYVh3060jBO962XtKWB7uTTbOK9yhsejJjmyo3VLI2HpFWtu9qhyRsem18mQyUVA9g1KCPD0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linutronix.de; spf=pass smtp.mailfrom=linutronix.de; dkim=pass (2048-bit key) header.d=linutronix.de header.i=@linutronix.de header.b=HJGLEOfa; dkim=permerror (0-bit key) header.d=linutronix.de header.i=@linutronix.de header.b=531903oW; arc=none smtp.client-ip=193.142.43.55
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linutronix.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linutronix.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="d8VLevzQ"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C19A5C19424;
-	Tue, 24 Mar 2026 07:50:37 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1774338639;
-	bh=Yri2ClEjU2+0SMqF8PImVQJCXMkFkh+FbB0c9K/U5b0=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=d8VLevzQrNUHLXXVnh/6kWUA+VU1HtY3P7aVBYwGJdoz3yEaltCNAhStneLZTg262
-	 kVcPKZibPSDv7ZmCik/iBks5/W68+xxUMOzEhgWmUJpGVvage0Kd6X12aVw8aKx0Ik
-	 7go3GjOwIy5Q58vaBAUUxIj17TfMHT7sogmJ711xlmi8pVwarjVnNAtH2x6WrUGB8V
-	 9c1LaJQl8S2hiJL+UQi9549ARka4dtV++ULvV4qeRJocHQwAoUFfr338mXqdK1uyC5
-	 2I4eDMOeLzNqsPqjstPy/Mi/SFIPmehVMIR+UebapesQ4aWcMB3jPpEVXXxUN+/fof
-	 OJ9pDp7iyGjzQ==
-Date: Tue, 24 Mar 2026 08:50:35 +0100
-From: Christian Brauner <brauner@kernel.org>
+	dkim=pass (2048-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="HJGLEOfa";
+	dkim=permerror (0-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="531903oW"
+Date: Tue, 24 Mar 2026 09:21:47 +0100
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
+	s=2020; t=1774340509;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=k4HQ7OepA4zahepNUycO6sBiDAAl4/bkLE1Pcm9/xYc=;
+	b=HJGLEOfacDWwcz/0bQ7+Gs/zj6cQ714VedIjSTqlC0S73SXSvBh4A6gbw2yRmCEnjdVjMm
+	z3hzS46rL48+boTW45m3uSNAzip8wfE4LgvR3fVrU1pHXD11uUHSkZSnkT6cUC5QXw8H2+
+	c/Thef7Z0AhKHA1lX923oNZN1f0CR3hXHtaFcuuxwxgpkQiJGSfulAdR3Jj6D4dzpzaSs6
+	4Kn/FHh0IItKRKUyoj2acYGBR7w/TuEnTCb+QcHHGf8pI6cAeJEaSGW73I+bACaC5wRyS9
+	NOeMBopD4L7RQUcY6PhjxlJkGt4lx5O3nBqT0BkJNsI+Q0jZfd8Zzj0ypHZkzw==
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
+	s=2020e; t=1774340509;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=k4HQ7OepA4zahepNUycO6sBiDAAl4/bkLE1Pcm9/xYc=;
+	b=531903oWPxcGu2Ij5B5aMdGLWW8tTQv9ntKuFo+Rz3flw+4EpwmMZ6R+HzOl7sZoZAZCQm
+	2EV5H53bcY1S8CDA==
+From: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
 To: Tejun Heo <tj@kernel.org>
-Cc: cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, 
-	Sebastian Andrzej Siewior <bigeasy@linutronix.de>, Johannes Weiner <hannes@cmpxchg.org>, 
-	Michal Koutny <mkoutny@suse.com>, Shuah Khan <shuah@kernel.org>, linux-kselftest@vger.kernel.org
-Subject: Re: [PATCH cgroup/for-7.0-fixes] selftests/cgroup: Don't test
- populated synchrony against task exit
-Message-ID: <20260324-deshalb-gemolken-5e28f48cdc9c@brauner>
-References: <49dca9aa15c6c46de60f1ba4ef2b25d0@kernel.org>
+Cc: cgroups@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Bert Karwatzki <spasswolf@web.de>, Michal Koutny <mkoutny@suse.com>,
+	kernel test robot <oliver.sang@intel.com>
+Subject: Re: [PATCH] cgroup: Wait for dying tasks to leave on rmdir
+Message-ID: <20260324082147.9ysLN_6x@linutronix.de>
+References: <20260323035806.724798-1-tj@kernel.org>
+ <20260323113252.xsuwQA3z@linutronix.de>
+ <acGavAFVTfggKIKy@slm.duckdns.org>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
@@ -44,33 +57,65 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <49dca9aa15c6c46de60f1ba4ef2b25d0@kernel.org>
+Content-Transfer-Encoding: quoted-printable
+In-Reply-To: <acGavAFVTfggKIKy@slm.duckdns.org>
 
-On Mon, Mar 23, 2026 at 10:28:29AM -1000, Tejun Heo wrote:
-> test_cgcore_populated (test_core) and test_cgkill_{simple,tree,forkbomb}
-> (test_kill) check cgroup.events "populated 0" immediately after reaping
-> child tasks with waitpid(). This used to work because cgroup_task_exit() in
-> do_exit() unlinked tasks from css_sets before exit_notify() woke up
-> waitpid().
-> 
-> d245698d727a ("cgroup: Defer task cgroup unlink until after the task is done
-> switching out") moved the unlink to cgroup_task_dead() in
-> finish_task_switch(), which runs after exit_notify(). The populated counter
-> is now decremented after the parent's waitpid() can return, so there is no
-> longer a synchronous ordering guarantee. On PREEMPT_RT, where
-> cgroup_task_dead() is further deferred through lazy irq_work, the race
-> window is even larger.
-> 
-> The synchronous populated transition was never part of the cgroup interface
-> contract - it was an implementation artifact. Use cg_read_strcmp_wait() which
-> retries for up to 1 second, matching what these tests actually need to
-> verify: that the cgroup eventually becomes unpopulated after all tasks exit.
-> 
-> Fixes: d245698d727a ("cgroup: Defer task cgroup unlink until after the task is done switching out")
-> Reported-by: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
-> Signed-off-by: Tejun Heo <tj@kernel.org>
-> Cc: Christian Brauner <brauner@kernel.org>
-> Cc: cgroups@vger.kernel.org
-> ---
+On 2026-03-23 09:55:40 [-1000], Tejun Heo wrote:
+> Hello,
+Hi,
 
-Seems fine to me.
+> > Then I added my RCU patch. This led to a problem already during boot up
+> > (didn't manage to get to the test suite).
+>=20
+> Is that the patch to move cgroup_task_dead() to delayed_put_task_struct()=
+? I
+> don't think we can delay populated state update till usage count reaches
+> zero. e.g. bpf_task_acquire() can be used by arbitrary bpf programs and w=
+ill
+> pin the usage count indefinitely delaying populated state update. Similar=
+ to
+> delaying the event to free path, you can construct a deadlock scenario to=
+o.
+
+Okay, then. I expected it to be limited window within a bpf program or
+the sched_ext.
+
+> > systemd-1 places modprobe-1044 in a cgroup, then destroys the cgroup.
+> > It hangs in cgroup_drain_dying() because nr_populated_csets is still 1.
+> > modprobe-1044 is still there in Z so the cgroup removal didn't get there
+> > yet. That irq_work was quicker than RCU in this case. This can be
+> > reproduced without RCU by
+>=20
+> Isn't this the exact scenario? systemd is the one who should reap and drop
+> the usage count but it's waiting for rmdir() to finish which can't finish
+> due to the usage count which hasn't been reapted by systemd? We can't
+> interlock these two. They have to make progress independently.
+
+But nobody is holding it back. For some reason systemd-1 did not reap
+modprobe-1044 first but went first for the rmdir(). I noticed it with
+RCU first but it was also there after delayed the cleanup by one second
+without RCU.
+
+> > -       irq_work_queue(this_cpu_ptr(&cgrp_dead_tasks_iwork));
+> > +       schedule_delayed_work(this_cpu_ptr(&cgrp_delayed_tasks_iwork), =
+HZ);
+> >=20
+> > So there is always a one second delay. If I give up waiting after 10secs
+> > then it boots eventually and there are no zombies around. The test_core
+> > seems to complete=E2=80=A6
+> >=20
+> > Having the irq_work as-is, then the "cgroup_dead()" happens on the HZ
+> > tick. test_core then complains just with
+> > | not ok 7 test_cgcore_populated
+>=20
+> The test is assuming that waitpid() success guarantees cgroup !populated
+> event. While before all these changes, that held, it wasn't intentional a=
+nd
+> the test just picked up on arbitrary ordering. I'll just remove that
+> particular test.
+
+okay. Thanks.
+
+> Thanks.
+
+Sebastian
