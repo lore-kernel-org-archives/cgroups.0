@@ -1,78 +1,156 @@
-Received: from galois.linutronix.de (Galois.linutronix.de [193.142.43.55])
+Received: from lgeamrelo03.lge.com (lgeamrelo03.lge.com [156.147.51.102])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0B9F57263B;
-	Wed, 25 Mar 2026 18:06:25 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=193.142.43.55
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3F890311975
+	for <cgroups@vger.kernel.org>; Wed, 25 Mar 2026 18:36:50 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=156.147.51.102
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1774461987; cv=none; b=jEAf633IgFE/eo9ZvoPbPtfpeApxwt5LhWPAtq3uqPk84cdpFZxdIfLRovBtuS6PFsya4IQtm7Xo/ycQyY1lU+uN40XSXT7m6pZVkB+TsDULHxlY0Y+PP6yZAMXzAy+FLhJws1gLtHDgtiO/H7uQptxzf7aOV3AAGWnaGJAWfMw=
+	t=1774463814; cv=none; b=COo0gaTq22oUNxI/KiM3PGhIGdTKUd5bx5xdPTsBBXDJ36WKrA/cVeX8IlnKyxSKZdITTp1W97nGLgE5FGELv7W/kDvcrFA+KeF25G55rauk7vTJUH3JdNLbe9r/Gnj8iIUXxq5d/M4HAEcyNFCNT2MnKeSE/aI3DhMADJNRp2c=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1774461987; c=relaxed/simple;
-	bh=bD7MgkNGeu/Yje4V0Nr7YUOixmtk7YxumIFtxeHnw90=;
+	s=arc-20240116; t=1774463814; c=relaxed/simple;
+	bh=caD87+u92zEtkpCjBqLx1b1xohIodhH4i7hTlROlaGc=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=IkQQctbMYGBjBQS57VA1FLmH5LtdRDrPX5ZxbRcSfqRUh0id3FyOtDzdiq/fSwqo3bBrmZ4HOpOgojXj0KYFiYlXNwHcXUmeGdKJzPPtSluxnMobR/K1uMvxha/G1UvUq/2A6tZ+ZVevMNd+0dv/W3kxZ9jtAldU2Zca6onbu5E=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linutronix.de; spf=pass smtp.mailfrom=linutronix.de; dkim=pass (2048-bit key) header.d=linutronix.de header.i=@linutronix.de header.b=f5KmIQxm; dkim=permerror (0-bit key) header.d=linutronix.de header.i=@linutronix.de header.b=8e3O1glO; arc=none smtp.client-ip=193.142.43.55
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linutronix.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linutronix.de
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="f5KmIQxm";
-	dkim=permerror (0-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="8e3O1glO"
-Date: Wed, 25 Mar 2026 19:06:23 +0100
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
-	s=2020; t=1774461984;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=bD7MgkNGeu/Yje4V0Nr7YUOixmtk7YxumIFtxeHnw90=;
-	b=f5KmIQxmTtrxyQQ9o80lfRyp9VEq9de3cjg41orhSja1frgOuVyybJGcIME2TonXxm1/wV
-	2/9/6V1VdAI3sxgOIYJeQs65pBfweoXP0NtGqKzmIdrJEv+eA8sepARP3s6i1ZJPkhrcNJ
-	IgAByzL1tE/fMGUtoVPoOdZm77qotZtlrU4z8E1rBlP6LgSRLnDNhl+5Q9jZ9xkcVtc7tq
-	K/2Q7/7tTIDHogKRwWzdoBWUj2MDl6PdSOLHymv65VEQrLbKBr/TJCUw0TvU5nQBBg/ZTy
-	fPVEnIr7rKODPMuvi3KSvNZwrFNI7uz8D5TpLMy9u0LOekjzEkPWXvZNnNzGuw==
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
-	s=2020e; t=1774461984;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=bD7MgkNGeu/Yje4V0Nr7YUOixmtk7YxumIFtxeHnw90=;
-	b=8e3O1glO3toTLmT9JDpNbveiRsZYf2rVEVppEuBDjwzvf2CYdqfYrdsNOP3JJYtvwkzY+t
-	g0PfQFZR5J818/CA==
-From: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
-To: Tejun Heo <tj@kernel.org>
-Cc: cgroups@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Bert Karwatzki <spasswolf@web.de>, Michal Koutny <mkoutny@suse.com>,
-	Johannes Weiner <hannes@cmpxchg.org>,
-	kernel test robot <oliver.sang@intel.com>
-Subject: Re: [PATCH v3 cgroup/for-7.0-fixes] cgroup: Fix cgroup_drain_dying()
- testing the wrong condition
-Message-ID: <20260325180623.EcyNsp2L@linutronix.de>
-References: <68d8881fd985a410c0f619f009334c28@kernel.org>
+	 Content-Type:Content-Disposition:In-Reply-To; b=WBalaqtsD6aHRmvtSMlQF1m83wKCZ+lFquXcX/p94ADjsbaRlOnd/Gq22Oe5PQBFTVNyvI4+gLX2OO6qNHFELau0IgUx8GiJczgU77OxKjyCVLwZVRvgPyykAWFNoU7ZugCNuTeTZHIWp2h/x2KOtHBX6g6dDs07J/tdZ+WwrpU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lge.com; spf=pass smtp.mailfrom=lge.com; arc=none smtp.client-ip=156.147.51.102
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lge.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lge.com
+Received: from unknown (HELO yjaykim-PowerEdge-T330) (10.177.112.156)
+	by 156.147.51.102 with ESMTP; 26 Mar 2026 03:36:49 +0900
+X-Original-SENDERIP: 10.177.112.156
+X-Original-MAILFROM: youngjun.park@lge.com
+Date: Thu, 26 Mar 2026 03:36:49 +0900
+From: YoungJun Park <youngjun.park@lge.com>
+To: Nhat Pham <nphamcs@gmail.com>
+Cc: kasong@tencent.com, Liam.Howlett@oracle.com, akpm@linux-foundation.org,
+	apopple@nvidia.com, axelrasmussen@google.com, baohua@kernel.org,
+	baolin.wang@linux.alibaba.com, bhe@redhat.com, byungchul@sk.com,
+	cgroups@vger.kernel.org, chengming.zhou@linux.dev,
+	chrisl@kernel.org, corbet@lwn.net, david@kernel.org,
+	dev.jain@arm.com, gourry@gourry.net, hannes@cmpxchg.org,
+	hughd@google.com, jannh@google.com, joshua.hahnjy@gmail.com,
+	lance.yang@linux.dev, lenb@kernel.org, linux-doc@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-mm@kvack.org,
+	linux-pm@vger.kernel.org, lorenzo.stoakes@oracle.com,
+	matthew.brost@intel.com, mhocko@suse.com, muchun.song@linux.dev,
+	npache@redhat.com, pavel@kernel.org, peterx@redhat.com,
+	peterz@infradead.org, pfalcato@suse.de, rafael@kernel.org,
+	rakie.kim@sk.com, roman.gushchin@linux.dev, rppt@kernel.org,
+	ryan.roberts@arm.com, shakeel.butt@linux.dev,
+	shikemeng@huaweicloud.com, surenb@google.com, tglx@kernel.org,
+	vbabka@suse.cz, weixugc@google.com, ying.huang@linux.alibaba.com,
+	yosry.ahmed@linux.dev, yuanchu@google.com,
+	zhengqi.arch@bytedance.com, ziy@nvidia.com, kernel-team@meta.com,
+	riel@surriel.com
+Subject: Re: [PATCH v5 00/21] Virtual Swap Space
+Message-ID: <acQrQYHJgqof0yx4@yjaykim-PowerEdge-T330>
+References: <20260320192735.748051-1-nphamcs@gmail.com>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
-In-Reply-To: <68d8881fd985a410c0f619f009334c28@kernel.org>
+In-Reply-To: <20260320192735.748051-1-nphamcs@gmail.com>
 
-On 2026-03-25 07:23:48 [-1000], Tejun Heo wrote:
-> cgroup_drain_dying() was using cgroup_is_populated() to test whether ther=
-e are
-> dying tasks to wait for. cgroup_is_populated() tests nr_populated_csets,
-> nr_populated_domain_children and nr_populated_threaded_children, but
-> cgroup_drain_dying() only needs to care about this cgroup's own tasks - w=
-hether
-> there are children is cgroup_destroy_locked()'s concern.
-=E2=80=A6
+On Fri, Mar 20, 2026 at 12:27:14PM -0700, Nhat Pham wrote:
+> 
+> This patch series is based on 6.19. There are a couple more
+> swap-related changes in mainline that I would need to coordinate
+> with, but I still want to send this out as an update for the
+> regressions reported by Kairui Song in [15]. It's probably easier
+> to just build this thing rather than dig through that series of
+> emails to get the fix patch :)
 
-Tested-by: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
+Hi Nhat,
 
-The only issue I see is if I delay the irq_work callback by a second.
-Other than that, I don't see any problems.
+I wanted to fully understand the patches before asking questions,
+but reviewing everything takes time, and I didn't want to miss the
+timing. So let me share some thoughts and ask about your direction. 
 
-Sebastian
+These are the perspectives I'm coming from:
+
+Pros:
+- The architecture is very clean.
+- Zero entries currently consume swap space, which can prevent
+  actual swap usage in some cases.
+- It resolves zswap's dependency on swap device size.
+- And so on.
+
+Cons:
+- An additional virtual allocation step is introduced per every swap.
+- not easy to merge (change swap infrastructure totally?)
+
+To address the cons, I think if we can demonstrate that the
+benefits always outweigh the costs, it could fully replace the
+existing mechanism. However, if this can be applied selectively,
+we get only the pros without the cons.
+
+1. Modularization
+
+You removed CONFIG_* and went with a unified approach. I recall
+you were also considering a module-based structure at some point.
+What are your thoughts on that direction?
+
+If we take that approach, we could extend the recent swap ops
+patchset (https://lore.kernel.org/linux-mm/20260302104016.163542-1-bhe@redhat.com/)
+as follows:
+- Make vswap a swap module
+- Have cluster allocation functions reside in swapops
+- Enable vswap through swapon
+
+I think this could result in a similar structure. An additional
+benefit would be that it enables various configurations:
+
+- vswap + regular swap together
+- vswap only
+- And other combinations
+
+And merge is not that hard. it is not the total change of swap infra structure.
+
+But, swapoff fastness might disappear? it is not that critical as I think.
+
+2. Flash-friendly swap integration (for my use case)
+
+I've been thinking about the flash-friendly swap concept that
+I mentioned before and recently proposed:
+(https://lore.kernel.org/linux-mm/aZW0voL4MmnMQlaR@yjaykim-PowerEdge-T330/)
+
+One of its core functions requires buffering RAM-swapped pages
+and writing them sequentially at an appropriate time -- not
+immediately, but in proper block-sized units, sequentially.
+
+This means allocated offsets must essentially be virtual, and
+physical offsets need to be managed separately at the actual
+write time.
+
+If we integrate this into the current vswap, we would either
+need vswap itself to handle the sequential writes (bypassing
+the physical device and receiving pages directly), or swapon
+a swap device and have vswap obtain physical offsets from it.
+But since those offsets cannot be used directly (due to
+buffering and sequential write requirements), they become
+virtual too, resulting in:
+
+  virtual -> virtual -> physical
+
+This triple indirection is not ideal.
+
+However, if the modularization from point 1 is achieved and
+vswap acts as a swap device itself, then we can cleanly
+establish a:
+
+  virtual -> physical
+
+relationship within it.
+
+I noticed you seem to be exploring collaboration with Kairui
+as well. I'm curious whether you have a compromise direction
+in mind, or if you plan to stick with the current approach.
+
+P.S. I definitely want to review the vswap code in detail
+when I get the time. great work and code.
+
+Thanks,
+Youngjun Park
