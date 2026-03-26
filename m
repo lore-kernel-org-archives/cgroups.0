@@ -1,63 +1,72 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 836A530AAB8;
-	Wed, 25 Mar 2026 23:20:05 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 63EE640DFBA;
+	Thu, 26 Mar 2026 00:02:07 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1774480805; cv=none; b=fQ7ACLlz2pxEXpzu4YoCL8IZho7XuBM6hVss8HBMImZ4L1gcy3lmH0xl7ZWM2UeoKYLm1i6XjTmVw9aOb1lumUt6U4BH83tqPQy3P5I7udET2ZnnNDfQwqGeGa9iIot3NspkaoEIovIfKBSZvlezKBdtFnESV9NZsXrWPcSadys=
+	t=1774483327; cv=none; b=lTffMlxdPEpbjxOCXyI5JflhZzBVvJuKvwAAFSe1QOhemv98wAyFX/XjIQZa1fqMuhgolOuipU7Adl/sx6zJzCOwpM4OQx7ulJN4gYwSh8rz6OXjBFI9Xcea2nVXr4IqHr11CreiR1Epz9FeeYOgJWKTNgHDeHOEaswsVrE3Bd0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1774480805; c=relaxed/simple;
-	bh=9s00olhICAUUbLnAIWavWFOvPO+7LJvV6aw+2t+Tz1M=;
-	h=Date:From:To:Cc:Subject:Message-Id:In-Reply-To:References:
-	 Mime-Version:Content-Type; b=gUTvDqHZX9d2dv5sfhaN73MELQFvHwyyLGsoMPtzlMj7/UX0irEreArzh1CqWbsfBQqIjx6k0UEF0KSRww+v65lveHgprBZCJp+zO4vm70KsRJqFbGK2L5/HpKhzO8KBktNjpFQd66imF9EZpFTOr+5CDeri59yif2S5SFf04Kc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (1024-bit key) header.d=linux-foundation.org header.i=@linux-foundation.org header.b=UGPBngko; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1774483327; c=relaxed/simple;
+	bh=3xxVnXVbNEeoSMgDa1a5nGKHxLS0wuYpyW49atelE5U=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=toOk47++x8FLXQh4RtYv/9oz5xrzbJqjC/LcseVvLFCuLnqR2fM/W26FvfIqa26Q2Q2w2lkYl9CmWMW0zdijVcYgyQOBygyl7f82FI0e7txNYZlG5+C7z4h9PAyreTdua/G8mCMK1Oz1JdchYS6gL+OdQEtn6Alwmoys4Bbl0Wo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=s9/Wx+mV; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux-foundation.org header.i=@linux-foundation.org header.b="UGPBngko"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 76A89C4CEF7;
-	Wed, 25 Mar 2026 23:20:04 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linux-foundation.org;
-	s=korg; t=1774480805;
-	bh=9s00olhICAUUbLnAIWavWFOvPO+7LJvV6aw+2t+Tz1M=;
-	h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
-	b=UGPBngkoEYosW/NnjPjNa5ydoYzla43Bwu9Hf7K8VvGyw1KnWKVVge2ZOw6+orvd8
-	 nlg3rdGKT5SJCoMUYkBH+IDURtV47KARSb0umR3PAPvYwRxsDajCGQifkujroH3hvB
-	 muTNsLeYiQlROjTXLUK0ODgZzNXdzIjZ+gchS9AM=
-Date: Wed, 25 Mar 2026 16:20:03 -0700
-From: Andrew Morton <akpm@linux-foundation.org>
-To: Youngjun Park <youngjun.park@lge.com>
-Cc: Chris Li <chrisl@kernel.org>, linux-mm@kvack.org,
- cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, kasong@tencent.com,
- hannes@cmpxchg.org, mhocko@kernel.org, roman.gushchin@linux.dev,
- shakeel.butt@linux.dev, muchun.song@linux.dev, shikemeng@huaweicloud.com,
- nphamcs@gmail.com, bhe@redhat.com, baohua@kernel.org, gunho.lee@lge.com,
- taejoon.song@lge.com, hyungjun.cho@lge.com, mkoutny@suse.com
-Subject: Re: [PATCH v5 0/4] mm/swap, memcg: Introduce swap tiers for cgroup
- based swap control
-Message-Id: <20260325162003.136dc86796eb124d3c7210ac@linux-foundation.org>
-In-Reply-To: <20260325175453.2523280-1-youngjun.park@lge.com>
-References: <20260325175453.2523280-1-youngjun.park@lge.com>
-X-Mailer: Sylpheed 3.7.0 (GTK+ 2.24.33; x86_64-pc-linux-gnu)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="s9/Wx+mV"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D9089C4CEF7;
+	Thu, 26 Mar 2026 00:02:06 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1774483327;
+	bh=3xxVnXVbNEeoSMgDa1a5nGKHxLS0wuYpyW49atelE5U=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=s9/Wx+mVa3jpWBeu/9tRolQBqtBSNjqUWUAtqfoe98tHKrABo3ph3Cjel449fAouR
+	 IqckYRAlH6kmWC6DxlxE6oy4FNcIEtqQhmmhM02zryQkOJ9BgIiS5Wq4CvXbcMSy5D
+	 2cIncXlLKakoTSfQliSq15QRLgbjlg+1K9ykKvDFxXEdn+MujmIpHeBZcLf5jtPkT4
+	 JDTAqZxZOtfpU5Ytv8m93cjt7UhjCT+Z4qOvsJeQ2eVU5kd5Nu3U7rRcXTeYUdRyRo
+	 eVYVWdC3j7KyWuJJ/iLBwBHP2pASvKSJwF+fru2ARXvBScwyHzfFP2ZTy8wQeaI7Vi
+	 vojSt75pa/wTg==
+Date: Wed, 25 Mar 2026 14:02:05 -1000
+From: Tejun Heo <tj@kernel.org>
+To: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
+Cc: cgroups@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Bert Karwatzki <spasswolf@web.de>, Michal Koutny <mkoutny@suse.com>,
+	Johannes Weiner <hannes@cmpxchg.org>,
+	kernel test robot <oliver.sang@intel.com>
+Subject: Re: [PATCH v3 cgroup/for-7.0-fixes] cgroup: Fix cgroup_drain_dying()
+ testing the wrong condition
+Message-ID: <acR3fYVD_blwD93_@slm.duckdns.org>
+References: <68d8881fd985a410c0f619f009334c28@kernel.org>
+ <20260325180623.EcyNsp2L@linutronix.de>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20260325180623.EcyNsp2L@linutronix.de>
 
-On Thu, 26 Mar 2026 02:54:49 +0900 Youngjun Park <youngjun.park@lge.com> wrote:
+On Wed, Mar 25, 2026 at 07:06:23PM +0100, Sebastian Andrzej Siewior wrote:
+> On 2026-03-25 07:23:48 [-1000], Tejun Heo wrote:
+> > cgroup_drain_dying() was using cgroup_is_populated() to test whether there are
+> > dying tasks to wait for. cgroup_is_populated() tests nr_populated_csets,
+> > nr_populated_domain_children and nr_populated_threaded_children, but
+> > cgroup_drain_dying() only needs to care about this cgroup's own tasks - whether
+> > there are children is cgroup_destroy_locked()'s concern.
+> …
+> 
+> Tested-by: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
+> 
+> The only issue I see is if I delay the irq_work callback by a second.
+> Other than that, I don't see any problems.
 
-> This is v5 of the "Swap Tiers" series.
+What issue do you see when delaying it by a second? Just things being slowed
+down?
 
-Thanks.  I'd prefer to hold off until the next cycle, please.  As I
-mentioned in 
-
-https://lkml.kernel.org/r/20260323202941.08ddf2b0411501cae801ab4c@linux-foundation.org
-
-Also, AI review had a lot to say, Please take a look.  Should you do
-so, I'm interested in learning how much of that material was useful. 
 Thanks.
 
-https://sashiko.dev/#/patchset/20260325175453.2523280-1-youngjun.park%40lge.com
+-- 
+tejun
