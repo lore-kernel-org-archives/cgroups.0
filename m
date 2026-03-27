@@ -1,47 +1,48 @@
 Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.15])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D40A93D34B8;
-	Fri, 27 Mar 2026 08:16:35 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D46EA3D3CE2;
+	Fri, 27 Mar 2026 08:16:39 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.15
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1774599399; cv=none; b=Qn+tz5ea+UJQCZ/VmLj3rxwYSJMVIHuJobbQUW/DBp3lDyY1N+Zb0NTe/9q1NjlXbJGYDr93g621b3JI1jfUwvftTS0yW6NKJ4O8LaUqmMHA261/lfavtIztm5tNzysaIGsG8NEfvRuSLVOtPwnw734Z4nnOFxek35Q11Bfvecg=
+	t=1774599402; cv=none; b=u1zHaIihdCTy6+vVTXzVjiPaxawtKdbMU5ITn2BtSfCgJr6xK1WnV/qKE03mSr53BduZ5v6Yvnl5HRZCGnFVpQkCngpUvs5k9ZSroA4B2sQvWUpbTIPDTWh26GdwLIcrrHyHtsaLjjq+RP4+2IisPWD4teFXFOJMZnKEmEaYrz8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1774599399; c=relaxed/simple;
-	bh=VWKC7WfF9sq0UPoXI/VTX8BADLs4AZocKbls3bQOtDg=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version:Content-Type; b=d0Y9opLC5DGH4BDfffk0+dgo4JAX+8aWo1rSSl/IM0cQOz5a+rr0MXU+T1DRiktWG3Z3UFuMP/FZBZ0jwZmrmiszIroHDLK2gCW7hexOyADdi+ogIKXAQzCjg3PK+6zwn7kR+PWekAQYXPbfNn8u1PtLr7XarV0+GoEfurKIYHA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=IjPAppD9; arc=none smtp.client-ip=192.198.163.15
+	s=arc-20240116; t=1774599402; c=relaxed/simple;
+	bh=qeVWa8r7f4q+L+gXinu2pi9ngSyC1Swgdgb8weA16QE=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=a1I87N7Qe/qgcX5i6FGo2u8E7QVnf8boFInW4LvARMFjLXdyApc8Z2WKOVQoo8C/KRWBgDZsLgikKOyFWYG8UHP13F58QoUFlQ+yi47iqvGWJBQaBtch+YlC4AbNXxNKY8mNdiohClBdQ6rzgBi2jp5aSAmG6X77tQJC0nlUDDg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=eY+9MLoE; arc=none smtp.client-ip=192.198.163.15
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="IjPAppD9"
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="eY+9MLoE"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1774599396; x=1806135396;
-  h=from:to:cc:subject:date:message-id:mime-version:
-   content-transfer-encoding;
-  bh=VWKC7WfF9sq0UPoXI/VTX8BADLs4AZocKbls3bQOtDg=;
-  b=IjPAppD9IltDznlhQAQ8c1kPCFSczHWmPf9jvhmE5Ssek8kMGpWrNhms
-   AVOmMkVYl7SZ8mzXBCFWPEVT8gpcS7O6FhIWrN2KfmcaisTqiL7ZVkE1v
-   FsgXZX/WrJ3uED7t7+Qu+UGK/czZ2X1jU8ZYdZRKf0vLmN8GrsNiadp91
-   bv3TDEs/p1eB7OHLI6vHXx6XqHmnhgu90Mufs4Ii9yZGrqnUfq3TQwVkc
-   iX9I0JEUE2Bc0iTfpgTFAurdRfD5zXI5LNOFUsBrIwVAZhIJv5SEKqwN3
-   c+PpCCcwfAsXqYMzJnOm6A2/Nc/23CQVOjDFbKyRIZsOknhN8aS2uIPjW
+  t=1774599400; x=1806135400;
+  h=from:to:cc:subject:date:message-id:in-reply-to:
+   references:mime-version:content-transfer-encoding;
+  bh=qeVWa8r7f4q+L+gXinu2pi9ngSyC1Swgdgb8weA16QE=;
+  b=eY+9MLoEt7lonn2S0RKrSwDKQHlrVNSfz1jSuRZ5yfkJO6jxqdGJqXIO
+   hU4Mjghm0UnRJmgVTV2RJbOylg2JNOOYfKGUTjOEeYFVm2e2aT9Adt5GY
+   v/+b/40BbMLmLC8INFxEMeuziwWBnd6GscIBV+aK0yBWDzRty+cwCIDCL
+   oMoeL+DfqJOQeBXbaTg2cYF0TpsCpByob290y4Gvhey/oIqshcMk1b6xB
+   pfcZVCOEqeC8Uk3e1+IqoMbQJKoDEG8m/71T2v6sh033MNkFpuW1timlA
+   Mf7c3ZA2OdC+HpHjJRyIljoC0eKGbCwk7OaHZT6rVQLHPu07ExFLlUZee
    Q==;
-X-CSE-ConnectionGUID: pI654IuASY6VLUyNuAl6Fw==
-X-CSE-MsgGUID: jbEMKyyiQE6C32Cr+Gp8OA==
-X-IronPort-AV: E=McAfee;i="6800,10657,11741"; a="75784013"
+X-CSE-ConnectionGUID: IgebWfR3Rn2BF5bkBMyQTg==
+X-CSE-MsgGUID: aCLoj+RLQ5yqef9pbhW2BA==
+X-IronPort-AV: E=McAfee;i="6800,10657,11741"; a="75784035"
 X-IronPort-AV: E=Sophos;i="6.23,143,1770624000"; 
-   d="scan'208";a="75784013"
+   d="scan'208";a="75784035"
 Received: from orviesa002.jf.intel.com ([10.64.159.142])
-  by fmvoesa109.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 27 Mar 2026 01:16:34 -0700
-X-CSE-ConnectionGUID: NcH4tAOxSSul0MwY0s8pQQ==
-X-CSE-MsgGUID: 0XW60LgxTiaGYZloM+zPAQ==
+  by fmvoesa109.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 27 Mar 2026 01:16:39 -0700
+X-CSE-ConnectionGUID: GKBuzr8rT1imynU1RhvNpw==
+X-CSE-MsgGUID: dir45kgJQ6GnreQLIax5Cg==
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="6.23,143,1770624000"; 
-   d="scan'208";a="255747866"
+   d="scan'208";a="255747888"
 Received: from egrumbac-mobl6.ger.corp.intel.com (HELO fedora) ([10.245.244.146])
-  by orviesa002-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 27 Mar 2026 01:16:29 -0700
+  by orviesa002-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 27 Mar 2026 01:16:34 -0700
 From: =?UTF-8?q?Thomas=20Hellstr=C3=B6m?= <thomas.hellstrom@linux.intel.com>
 To: intel-xe@lists.freedesktop.org
 Cc: =?UTF-8?q?Thomas=20Hellstr=C3=B6m?= <thomas.hellstrom@linux.intel.com>,
@@ -64,10 +65,12 @@ Cc: =?UTF-8?q?Thomas=20Hellstr=C3=B6m?= <thomas.hellstrom@linux.intel.com>,
 	dri-devel@lists.freedesktop.org,
 	amd-gfx@lists.freedesktop.org,
 	linux-kernel@vger.kernel.org
-Subject: [PATCH 0/5] Add reclaim to the dmem cgroup controller
-Date: Fri, 27 Mar 2026 09:15:55 +0100
-Message-ID: <20260327081600.4885-1-thomas.hellstrom@linux.intel.com>
+Subject: [PATCH 1/5] cgroup/dmem: Return error when setting max below current usage
+Date: Fri, 27 Mar 2026 09:15:56 +0100
+Message-ID: <20260327081600.4885-2-thomas.hellstrom@linux.intel.com>
 X-Mailer: git-send-email 2.53.0
+In-Reply-To: <20260327081600.4885-1-thomas.hellstrom@linux.intel.com>
+References: <20260327081600.4885-1-thomas.hellstrom@linux.intel.com>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
@@ -77,39 +80,67 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
-When writing a "max" limit lower than the current usage, the
-existing code silently failed. This series aims to improve
-on that by returning -EBUSY on failure and also attempt
-to synchronously reclaim device memory to push the usage
-under the new max limit to avoid the error.
+Return -EBUSY to userspace when writing dmem.max below the cgroup's
+current device memory usage, rather than silently leaving the limit
+unchanged.
 
-Patch 1 implements error propagation.
-Patch 2 implements and documents a reclaim callback interface
-      for the dmem controller.
-Patch 3 implements a TTM reclaim callback.
-Patch 4-5 hooks up the reclaim callback to the dmem cgroups-
-      aware drivers xe and amdgpu.
+Assisted-by: GitHub Copilot:claude-sonnet-4.6
+Signed-off-by: Thomas Hellström <thomas.hellstrom@linux.intel.com>
+---
+ kernel/cgroup/dmem.c | 14 ++++++++------
+ 1 file changed, 8 insertions(+), 6 deletions(-)
 
-Thomas Hellström (5):
-  cgroup/dmem: Return error when setting max below current usage
-  cgroup/dmem: Add reclaim callback for lowering max below current usage
-  drm/ttm: Hook up a cgroup-aware reclaim callback for the dmem
-    controller
-  drm/xe: Wire up dmem cgroup reclaim for VRAM manager
-  drm/amdgpu: Wire up dmem cgroup reclaim for VRAM manager
-
- drivers/gpu/drm/amd/amdgpu/amdgpu_ttm.c      |   2 +-
- drivers/gpu/drm/amd/amdgpu/amdgpu_vram_mgr.c |  10 +-
- drivers/gpu/drm/ttm/ttm_bo.c                 |  95 ++++++++++++++++-
- drivers/gpu/drm/ttm/ttm_bo_util.c            |   3 +-
- drivers/gpu/drm/ttm/ttm_resource.c           |  36 +++++++
- drivers/gpu/drm/xe/xe_ttm_vram_mgr.c         |  19 ++--
- include/drm/ttm/ttm_bo.h                     |  10 ++
- include/drm/ttm/ttm_resource.h               |   4 +
- include/linux/cgroup_dmem.h                  |  11 ++
- kernel/cgroup/dmem.c                         | 102 ++++++++++++++++---
- 10 files changed, 265 insertions(+), 27 deletions(-)
-
+diff --git a/kernel/cgroup/dmem.c b/kernel/cgroup/dmem.c
+index 9d95824dc6fa..3e6d4c0b26a1 100644
+--- a/kernel/cgroup/dmem.c
++++ b/kernel/cgroup/dmem.c
+@@ -144,22 +144,24 @@ static void free_cg_pool(struct dmem_cgroup_pool_state *pool)
+ 	dmemcg_pool_put(pool);
+ }
+ 
+-static void
++static int
+ set_resource_min(struct dmem_cgroup_pool_state *pool, u64 val)
+ {
+ 	page_counter_set_min(&pool->cnt, val);
++	return 0;
+ }
+ 
+-static void
++static int
+ set_resource_low(struct dmem_cgroup_pool_state *pool, u64 val)
+ {
+ 	page_counter_set_low(&pool->cnt, val);
++	return 0;
+ }
+ 
+-static void
++static int
+ set_resource_max(struct dmem_cgroup_pool_state *pool, u64 val)
+ {
+-	page_counter_set_max(&pool->cnt, val);
++	return page_counter_set_max(&pool->cnt, val);
+ }
+ 
+ static u64 get_resource_low(struct dmem_cgroup_pool_state *pool)
+@@ -726,7 +728,7 @@ static int dmemcg_parse_limit(char *options, struct dmem_cgroup_region *region,
+ 
+ static ssize_t dmemcg_limit_write(struct kernfs_open_file *of,
+ 				 char *buf, size_t nbytes, loff_t off,
+-				 void (*apply)(struct dmem_cgroup_pool_state *, u64))
++				 int (*apply)(struct dmem_cgroup_pool_state *, u64))
+ {
+ 	struct dmemcg_state *dmemcs = css_to_dmemcs(of_css(of));
+ 	int err = 0;
+@@ -773,7 +775,7 @@ static ssize_t dmemcg_limit_write(struct kernfs_open_file *of,
+ 		}
+ 
+ 		/* And commit */
+-		apply(pool, new_limit);
++		err = apply(pool, new_limit);
+ 		dmemcg_pool_put(pool);
+ 
+ out_put:
 -- 
 2.53.0
 
