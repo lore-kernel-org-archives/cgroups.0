@@ -1,47 +1,40 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 963CA42669C;
-	Tue, 31 Mar 2026 16:41:38 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 749463A3E9A;
+	Tue, 31 Mar 2026 19:05:07 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1774975298; cv=none; b=HRwA/tSbYMiYhFyWlijW5khMjlVeZK4V7gOX55LT5kjVi32ChMfXjqLRm7vr9EjdugjZjnINekckWIFzUEsrw1t/LzjmsKkOCy7ZA1VjTak2/yhcCmN3eZxl0CrV6OvtyDt5u0CSqCIGofEF7N/2Nk8GhZTKRqHbjTIkpj67icY=
+	t=1774983907; cv=none; b=VEnnrqJPWfxpGZkU94thK2/J6Oop34DsmyJAwcdupAUsD9GLOCkM8OgbX21kUm/Cmr0hitO0uD80tH7QAR6GXFEB2LkLkJnPqRb3o2QhmAx1+NIqS47BZbwYn1UP3O3kGR4svN6kOlLyf9hdQfs29nHYtBE5NqEE7Mvji38Jnv4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1774975298; c=relaxed/simple;
-	bh=ywVHlTRf5Tl9PysYqy8ehrxhpxHsZDl2JA5xh4pA8mc=;
+	s=arc-20240116; t=1774983907; c=relaxed/simple;
+	bh=Nn8nJ9ACyiayGIy4vaoRzdPmvTc+PqkI2j2N8Z/yEHs=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=WbXXNadmV9guW1T5mI9qF6meYUJNW+o3zJAK4KRLBsxYoOKOtDvVTd0N751PpEUQ/LrZ5c/sysYGOFSr+r3DINdjgNmTflq+1EAXrhZoG1zlHWgR4DqBnr5Bb0aagKNIM125xY2m/QqLeCsjovaTiAfSsrTFQYN9CDMLdeGt2oY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=IpoZhlqW; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=mQBPje5K+Pn1FxCFEIJmzoeARg2+qQn1nwvSnCzPeVenb+ix02lfDn6Trq8D3f/Jd71YL+dCBVPGzzXiwabVXoxza89nHootrMGD5YjJkVsRw/S2O6gUggcAfX048DQsyVMsLGUfD75VX+qhI1jRyC4ilSOEUXYjl+Fcp05H9yE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ltDdDrho; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="IpoZhlqW"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 33591C2BCB1;
-	Tue, 31 Mar 2026 16:41:38 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ltDdDrho"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id ECF90C19423;
+	Tue, 31 Mar 2026 19:05:06 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1774975298;
-	bh=ywVHlTRf5Tl9PysYqy8ehrxhpxHsZDl2JA5xh4pA8mc=;
+	s=k20201202; t=1774983907;
+	bh=Nn8nJ9ACyiayGIy4vaoRzdPmvTc+PqkI2j2N8Z/yEHs=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=IpoZhlqW77ifhqsrVptmAFxDbIwtx3rAPM8fBui7v2JQSwdJHRZorsMPaAaUAtkCX
-	 HiyVJxZZldfllhLGXBRgY6g0GGsiIviwg2ZVaIjg+jWqDqC8jSDT8szOFkU0JjzQTY
-	 rQMGkJjSfj0liCM8zOCIlkKnxDeFb9P9mFA7rtn7//srCjmnJ0jBqR3QHh3vF7NxcT
-	 /rZaOvvGEVJCnB2UwAPA9GOjDD5a0zsg5OIfFrdjFaTURtr98LVei7vhu+k+RAiFHH
-	 RuBV+gR9z+VSlG3pRQrlxoDIVYiEJgX69ObHWc+MSXnlUCRGnnhbdNwwsLRaTzQwiY
-	 6wUuw/CT6KfQA==
-Date: Wed, 1 Apr 2026 01:41:36 +0900
-From: "Harry Yoo (Oracle)" <harry@kernel.org>
-To: Shakeel Butt <shakeel.butt@linux.dev>
-Cc: Hui Zhu <hui.zhu@linux.dev>, Johannes Weiner <hannes@cmpxchg.org>,
-	Michal Hocko <mhocko@kernel.org>,
-	Roman Gushchin <roman.gushchin@linux.dev>,
-	Muchun Song <muchun.song@linux.dev>,
-	Andrew Morton <akpm@linux-foundation.org>, cgroups@vger.kernel.org,
-	linux-mm@kvack.org, linux-kernel@vger.kernel.org,
-	Hui Zhu <zhuhui@kylinos.cn>, Vlastimil Babka <vbabka@kernel.org>,
-	Hao Li <hao.li@linux.dev>
-Subject: Re: [PATCH mm-stable v3] mm/memcontrol: batch memcg charging in
- __memcg_slab_post_alloc_hook
-Message-ID: <acv5QCe0qMUUW2xP@hyeyoo>
-References: <20260331091707.226786-1-hui.zhu@linux.dev>
- <acvnjCr26zpQUW0h@linux.dev>
+	b=ltDdDrhojmUVgrVlRwfoQReNDwpr72og04x0q105qzcJAymDtPFaiEHO+c+5ea5CI
+	 l9iRkdcmQuQX93qX+4onS31dfh20p7OHu/TFqpRNKz26MV3C1gTDRW3iNdMspri2cV
+	 0smR6ujOeUcleBwt5MKnV+3FL9TsGqHQ4nL945KTFSgoeIc/bulsn+P6YYFM48sf4B
+	 /O7RUhmLxLSO3s3tCtZ3DQpS5IVU11U3EZSXRYrSL1ew4VbhR/cb/7Xqucyb9dDACX
+	 4/Qcq275UM/kUNdU/sIiUlN/NRteeZzXMj82wgkDtfeQi1SVyJT6J7EXTQb+V1yhsg
+	 19I3h+xc4Q8aQ==
+Date: Tue, 31 Mar 2026 09:05:06 -1000
+From: Tejun Heo <tj@kernel.org>
+To: Jackie Liu <liu.yun@linux.dev>
+Cc: hch@lst.de, axboe@kernel.dk, cgroups@vger.kernel.org,
+	linux-block@vger.kernel.org
+Subject: Re: [PATCH] blk-cgroup: fix disk reference leak in
+ blkcg_maybe_throttle_current()
+Message-ID: <acwa4uiQX0L6XynR@slm.duckdns.org>
+References: <20260331085054.46857-1-liu.yun@linux.dev>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
@@ -50,73 +43,27 @@ List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <acvnjCr26zpQUW0h@linux.dev>
+In-Reply-To: <20260331085054.46857-1-liu.yun@linux.dev>
 
-On Tue, Mar 31, 2026 at 08:32:30AM -0700, Shakeel Butt wrote:
-> On Tue, Mar 31, 2026 at 05:17:07PM +0800, Hui Zhu wrote:
-> > From: Hui Zhu <zhuhui@kylinos.cn>
-> > 
-> > When kmem_cache_alloc_bulk() allocates multiple objects, the post-alloc
-> > hook __memcg_slab_post_alloc_hook() previously charged memcg one object
-> > at a time, even though consecutive objects may reside on slabs backed by
-> > the same pgdat node.
-> > 
-> > Batch the memcg charging by scanning ahead from the current position to
-> > find a contiguous run of objects whose slabs share the same pgdat, then
-> > issue a single __obj_cgroup_charge() / __consume_obj_stock() call for
-> > the entire run. The per-object obj_ext assignment loop is preserved as-is
-> > since it cannot be further collapsed.
-> > 
-> > This implements the TODO comment left in commit bc730030f956 ("memcg:
-> > combine slab obj stock charging and accounting").
-> > 
-> > The existing error-recovery contract is unchanged: if size == 1 then
-> > memcg_alloc_abort_single() will free the sole object, and for larger
-> > bulk allocations kmem_cache_free_bulk() will uncharge any objects that
-> > were already charged before the failure.
-> > 
-> > Benchmark using kmem_cache_alloc_bulk() with SLAB_ACCOUNT
-> > (iters=100000):
-> > 
-> >   bulk=32  before: 215 ns/object   after: 174 ns/object  (-19%)
-> >   bulk=1   before: 344 ns/object   after: 335 ns/object  (  ~)
-> > 
-> > No measurable regression for bulk=1, as expected.
-> > 
-> > Signed-off-by: Hui Zhu <zhuhui@kylinos.cn>
+On Tue, Mar 31, 2026 at 04:50:54PM +0800, Jackie Liu wrote:
+> Add the missing put_disk() on the error path in
+> blkcg_maybe_throttle_current(). When blkcg lookup, blkg lookup, or
+> blkg_tryget() fails, the function jumps to the out label which only
+> calls rcu_read_unlock() but does not release the disk reference acquired
+> by blkcg_schedule_throttle() via get_device(). Since current->throttle_disk
+> is already set to NULL before the lookup, blkcg_exit() cannot release
+> this reference either, causing the disk to never be freed.
 > 
-> Do we have an actual user of kmem_cache_alloc_bulk(GFP_ACCOUNT) in kernel?
+> Restore the reference release that was present as blk_put_queue() in the
+> original code but was inadvertently dropped during the conversion from
+> request_queue to gendisk.
+> 
+> Fixes: f05837ed73d0 ("blk-cgroup: store a gendisk to throttle in struct task_struct")
+> Signed-off-by: Jackie Liu <liuyun01@kylinos.cn>
 
-Apparently we have a SLAB_ACCOUNT user in io_uring.c.
-(perhaps it's the only user?)
+Acked-by: Tejun Heo <tj@kernel.org>
 
-> If yes, can you please benchmark that usage? Otherwise can we please wait for
-> an actual user before adding more complexity? Or you can look for opportunities
-> for kmem_cache_alloc_bulk(GFP_ACCOUNT) users and add the optimization along with
-> the user.
-
-Good point. I was also wondering what are use cases benefiting
-from this beyond the microbenchmark.
-
-> Have you looked at the bulk free side? I think we already have rcu freeing in
-> bulk as a user. Did you find any opportunities in optimizing the
-> __memcg_slab_free_hook() from bulk free?
-
-Probably a bit out of scope but one thing to note on slab side:
-kfree_bulk() (called by kfree_rcu batching) doesn't specify slab cache,
-and it builds a detached freelist which contains objects from the same slab.
-
-On the other hand kmem_cache_free_bulk() with non-NULL slab cache
-simply calls free_to_pcs_bulk() and it passes objects one by one to
-__memcg_slab_free_hook() since objects may not come from the same slab.
-
-Now that we have sheaves enabled for (almost) all slab caches, it might
-be worth revisiting - e.g. sort objects by slab cache and
-pass them to free_to_pcs_bulk() instead of building a detached freelist.
-
-And let __memcg_slab_free_hook() handle objects from the same cache but
-from different slabs.
+Thanks.
 
 -- 
-Cheers,
-Harry / Hyeonggon
+tejun
