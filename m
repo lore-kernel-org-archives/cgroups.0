@@ -1,234 +1,239 @@
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.19])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A970931F9B8
-	for <cgroups@vger.kernel.org>; Thu,  2 Apr 2026 07:14:59 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.19
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 330953939C8
+	for <cgroups@vger.kernel.org>; Thu,  2 Apr 2026 09:27:11 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1775114101; cv=none; b=p1aM+bt/FialSNRb6UmN3xmDchYI2pz747Fk2GIYpalaxcbbCSi8li8r4D2zt2bJbaiDdaIOGmpMd9OOJD7ylqN6D+jMqtaInkucQYjENhOrqjdtDI3PqVewl23JdbS6Zl7qNxB1hp/wAH/GSSeHQf5ENF0BrNQaG0i477YhB5s=
+	t=1775122040; cv=none; b=rrMiBPAmXg9DdreZYZvI7d+mQ26GuAID/FhEw4h8hAbS+/uXd0PNUkUlsnX13V7MbUEILrUKUH1nBcKG/V+N7dIx5PkX7kPJ/8QIMWzYXwaEdZIK0YSHLrHm7U7E1ZhRlt614Ls7MRoNemu8UePlC9x89tsXnJ/brU5Iy7Du+BQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1775114101; c=relaxed/simple;
-	bh=Zz3QFolsBooTwj9/JGKVIxrmSpQaLZ/wWH76gYcnY2I=;
-	h=Date:From:To:Cc:Subject:Message-ID; b=XkfjX52pyyYFlKk9O4Dc6GAuKYRHhDs6U9wtWDsU9+k+pWMotVAUCk3f7Zb8lyd2VcTzcrYgfmpxOj8y+qlA1SnevfB9J7nQLBn7lrGNsNHKid1dNrKg/3eWoRjB7s9Zre+GBkMPgIbYGG3xQhknPZ1zAgcPf085yHSflqyL/VQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=Q9pVp1Oz; arc=none smtp.client-ip=192.198.163.19
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
+	s=arc-20240116; t=1775122040; c=relaxed/simple;
+	bh=8HBEZkldhVOCvg+h8X+QyqxrVDgc44S4RwM2B4Lv89Q=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=rwj3RTtF4z09CE5a+2zarbP2p07L4WRyVHJI7aZEUoUkpaPb3DA+kAXQy8dD993JtfZVb1Jai02RCeLOR3NMjgJ+NtxnAqSszz788MwVKoOfNei3gPZSXrT5XX42EsACgnK8Lhui2Qsb9YoH8RRLMhYuuvbAPmRM5aDJJnN/m5Q=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=WxcNR/jT; dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b=J180q0GQ; arc=none smtp.client-ip=170.10.133.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="Q9pVp1Oz"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1775114100; x=1806650100;
-  h=date:from:to:cc:subject:message-id;
-  bh=Zz3QFolsBooTwj9/JGKVIxrmSpQaLZ/wWH76gYcnY2I=;
-  b=Q9pVp1OzIJGCC4qJd65OP+V6z2tFmNVY9fNvz+Kw5gd9mmacdCA9x/Yk
-   ZxIXq8r2C7jkE4tuVuoW1rn4Ogzj7O/WjyhBYruOPkNSyHEff8INqSHU6
-   YEh41BPj47IlcrMrSSemAtWM2Wtw1c/TX0zIsl4BLI6FW9A8fw9urAFK8
-   vjDDi84FzbNVDjtCcxNDIvIVk2idvAyibvFHDcpJ0gbg0meXYnbg5p3SR
-   kFkCRdCpuN3nzsIs0Ddf3rdo/56gDG4PWmJzgiQXUfseEmFpOUdK93MF7
-   Z5Xjbk5RdHfGdnJfu3faqKnLF1RaRnQBRrH+uPgCyn1QMpuPhBIs7/1oV
-   g==;
-X-CSE-ConnectionGUID: cnJo3RVkSIWoIue4XffWjQ==
-X-CSE-MsgGUID: D/JAZUGCRRSHGG4rRwRcZw==
-X-IronPort-AV: E=McAfee;i="6800,10657,11746"; a="75204307"
-X-IronPort-AV: E=Sophos;i="6.23,155,1770624000"; 
-   d="scan'208";a="75204307"
-Received: from orviesa005.jf.intel.com ([10.64.159.145])
-  by fmvoesa113.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 02 Apr 2026 00:14:59 -0700
-X-CSE-ConnectionGUID: m7xpED9fS9GRXb3ZXdk18A==
-X-CSE-MsgGUID: AuR8z7o/QOC43y0lgX1Ihg==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.23,155,1770624000"; 
-   d="scan'208";a="231850113"
-Received: from lkp-server02.sh.intel.com (HELO cedfeeed6c12) ([10.239.97.151])
-  by orviesa005.jf.intel.com with ESMTP; 02 Apr 2026 00:14:57 -0700
-Received: from kbuild by cedfeeed6c12 with local (Exim 4.98.2)
-	(envelope-from <lkp@intel.com>)
-	id 1w8CGU-000000000Z4-460H;
-	Thu, 02 Apr 2026 07:14:54 +0000
-Date: Thu, 02 Apr 2026 10:01:42 +0800
-From: kernel test robot <lkp@intel.com>
-To: Tejun Heo <tj@kernel.org>
-Cc: cgroups@vger.kernel.org
-Subject: [tj-cgroup:for-next] BUILD SUCCESS
- 72156392efe9c6f7e7d801a66757af90d60240a1
-Message-ID: <202604021036.fOlHbfll-lkp@intel.com>
-User-Agent: s-nail v14.9.25
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="WxcNR/jT";
+	dkim=pass (2048-bit key) header.d=redhat.com header.i=@redhat.com header.b="J180q0GQ"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1775122030;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=36+ATcVryHEsHCfEL0i5GnGjSCxjk7f9m5BZERXBqcg=;
+	b=WxcNR/jTpy8FNj3+m3kIgzNB1kOzMLYe0bTrsZTpfy2RpPXaqdvhaOhjhIVfNV/iGMzI9P
+	VdKpbqKYmDZ3SQ9H+0Q7h6m56zoh2MGbKhTmQhqD9ctVa+FwWM5RwthGMmweWVXxNPqH5Z
+	Zodjx1FueDTYs6Gx+24wIA0xJ3kRWDE=
+Received: from mail-pj1-f69.google.com (mail-pj1-f69.google.com
+ [209.85.216.69]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-462-MeOSfxCdOPuhIJSJ9YJ3xA-1; Thu, 02 Apr 2026 05:27:09 -0400
+X-MC-Unique: MeOSfxCdOPuhIJSJ9YJ3xA-1
+X-Mimecast-MFC-AGG-ID: MeOSfxCdOPuhIJSJ9YJ3xA_1775122028
+Received: by mail-pj1-f69.google.com with SMTP id 98e67ed59e1d1-35da99b90f6so824352a91.1
+        for <cgroups@vger.kernel.org>; Thu, 02 Apr 2026 02:27:08 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=redhat.com; s=google; t=1775122028; x=1775726828; darn=vger.kernel.org;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :mime-version:references:message-id:subject:cc:to:from:date:from:to
+         :cc:subject:date:message-id:reply-to;
+        bh=36+ATcVryHEsHCfEL0i5GnGjSCxjk7f9m5BZERXBqcg=;
+        b=J180q0GQPV0hVzyI1LSWUzdunwlCqdvAbMluYOJpoyMvgzWAzljWCOaI9zzUvvFJcD
+         ZUAT8Xu++6Ynh/1n+sAfMpRVDPi/FVm3qbyFaSh6H3fPnylL5/tsyWvZ1SLrYVJD+o5c
+         6/tPuaE+Cy/uhlBNYpyrijYtmx4fs7kc6FqRYBtGdbKrnS80NKUU0YeHsp9NNMMc6Bf5
+         3Gb/2h2up4dQifohO3u9MxJ/y3+QW3U7dMf90vBbxdtbt3UEhQwHrmZNcEG2+fg6NMPl
+         EPpAE9qarkD4+hdKuEngS0fvhHrrPy0ygUc2l/Jc01fk0hckVrt0Wv+zQ73+vino/DJ0
+         KOPQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1775122028; x=1775726828;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :mime-version:references:message-id:subject:cc:to:from:date:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=36+ATcVryHEsHCfEL0i5GnGjSCxjk7f9m5BZERXBqcg=;
+        b=JTzx7s/hm9CCTQYUqDrE4xoE1erSK1WgKSvYSAehzSbHPCl+w4x0BdNMsUiDvzFeyV
+         gsl+0og/nnzVNF2Kc5Oxgj+WiXHfGsstLuS8wsLkrKWBSiGZuTGB25SsLoAHlaeYd4Uo
+         cFlBukkRofx/P0oBvMXkWikMM4aF8XZw5GOnIERukwzerAqbnvH6YBK355SNCknuScTn
+         Wf0SzA44YiF5k+DEQskgJd/6qrSUUpgsQjAs386DWouUoQc+MVnaoiSZ1OUxseZEujiV
+         AcnYG1LJzVKRKddbUYozaP/9fMHL/iIQlhI6IpSjU9By2fK+gblvj9wCGlQHS11lHi5H
+         qVQQ==
+X-Forwarded-Encrypted: i=1; AJvYcCW16G9YrsBFchXWn24KuEMkhC7tzTI6W67ZhhWJTaKHhaHHMev7P8JL+sKTiUOYb4XrJAR8MX7Z@vger.kernel.org
+X-Gm-Message-State: AOJu0YwwEEyv/NVj8xwg0tOb8qvYZKkjZmmve6ZQ4pzhj0xmpbpztge4
+	SXSAiEA/My9e0JaYQr7Es74n0X1SeZeqStMnm3gwmVLvyQN+JNHcufJuIJVx/HlwxgVux/7ZYtJ
+	FqCsUEUdnliPy37C3+mtD14r5ymVenpMUxAr7XOc6NIWqs9IbOQG8E5Rg8fM=
+X-Gm-Gg: AeBDieurOT1G7rfhm0HdmpTzJRTlpBHry+lFsGVVCsKbEwtYu5hyKs7JikwtKgiJ6+s
+	weMAv+l0T4KK5M9KDIxO4g1gemuSE1QvQmfvx80OdlYFQ+pBtq+ino/8spALp02Zfg5LjoWOMew
+	z441my5Jact0qZYXhq0NlcMNSxvsX9JP1ve5BNPzTECWGtot97tLJ10yjyZ3y3zMZa4DmUyP4Mg
+	6lvHMflsGiS/BMJOb2FiWVHkV6cD2UUMEpgHt/y5C0gc7aWC2cUScDEdRgr+CHEkxfKhwX4fzlw
+	ANM+IIEv0e27IMdtD3fbjnE4Q3ftWVo3BCyDctkf/690akTOgAg0aAHb1/0Y6ZvsrYHIyQ4/fqY
+	wVMaGHCN5TKydvCAiTw==
+X-Received: by 2002:a17:90b:3947:b0:35b:e566:15a6 with SMTP id 98e67ed59e1d1-35dc6f4f018mr6646525a91.28.1775122027806;
+        Thu, 02 Apr 2026 02:27:07 -0700 (PDT)
+X-Received: by 2002:a17:90b:3947:b0:35b:e566:15a6 with SMTP id 98e67ed59e1d1-35dc6f4f018mr6646481a91.28.1775122027294;
+        Thu, 02 Apr 2026 02:27:07 -0700 (PDT)
+Received: from redhat.com ([209.132.188.88])
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2b27477736dsm22344875ad.24.2026.04.02.02.27.05
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 02 Apr 2026 02:27:06 -0700 (PDT)
+Date: Thu, 2 Apr 2026 17:27:04 +0800
+From: Li Wang <liwang@redhat.com>
+To: Michal =?utf-8?Q?Koutn=C3=BD?= <mkoutny@suse.com>
+Cc: Waiman Long <longman@redhat.com>, Johannes Weiner <hannes@cmpxchg.org>,
+	Michal Hocko <mhocko@kernel.org>,
+	Roman Gushchin <roman.gushchin@linux.dev>,
+	Shakeel Butt <shakeel.butt@linux.dev>,
+	Muchun Song <muchun.song@linux.dev>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tejun Heo <tj@kernel.org>, Shuah Khan <shuah@kernel.org>,
+	Mike Rapoport <rppt@kernel.org>, linux-kernel@vger.kernel.org,
+	cgroups@vger.kernel.org, linux-mm@kvack.org,
+	linux-kselftest@vger.kernel.org,
+	Sean Christopherson <seanjc@google.com>,
+	James Houghton <jthoughton@google.com>,
+	Sebastian Chlad <sebastianchlad@gmail.com>,
+	Guopeng Zhang <zhangguopeng@kylinos.cn>, Li Wang <liwan@redhat.com>
+Subject: Re: [PATCH v2 1/7] memcg: Scale up vmstats flush threshold with
+ int_sqrt(nr_cpus+2)
+Message-ID: <ac42aIDVaGim5moO@redhat.com>
+References: <20260320204241.1613861-1-longman@redhat.com>
+ <20260320204241.1613861-2-longman@redhat.com>
+ <n6mhkjsxsami3qmczkdh57eep4lmcgbtyl7ox3ajzveke44yf6@m4bjevvsr47k>
 Precedence: bulk
 X-Mailing-List: cgroups@vger.kernel.org
 List-Id: <cgroups.vger.kernel.org>
 List-Subscribe: <mailto:cgroups+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:cgroups+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <n6mhkjsxsami3qmczkdh57eep4lmcgbtyl7ox3ajzveke44yf6@m4bjevvsr47k>
 
-tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git for-next
-branch HEAD: 72156392efe9c6f7e7d801a66757af90d60240a1  Merge branch 'for-7.0-fixes' into for-next
+Hi Michal,
 
-elapsed time: 1533m
+> Hello Waiman and Li.
+> ...
+> The explanation seems [1] to just pick a function because log seemed too
+> slow.
+> 
+> (We should add a BPF hook to calculate the threshold. Haha, Date:)
+> 
+> The threshold has twofold role: to bound error and to preserve some
+> performance thanks to laziness and these two go against each other when
+> determining the threshold. The reasoning for linear scaling is that
+> _each_ CPU contributes some updates so that preserves the laziness.
+> Whereas error capping would hint to no dependency on nr_cpus.
+> 
+> My idea is that a job associated to a selected memcg doesn't necessarily
+> run on _all_ CPUs of (such big) machines but effectively cause updates
+> on J CPUs. (Either they're artificially constrained or they simply are
+> not-so-parallel jobs.) 
 
-configs tested: 157
-configs skipped: 2
+> Hence the threshold should be based on that J and not actual nr_cpus.
 
-The following configs have been built successfully.
-More configs may be tested in the coming days.
+I completely agree on this point.
 
-tested configs:
-alpha                             allnoconfig    gcc-15.2.0
-alpha                            allyesconfig    gcc-15.2.0
-arc                              allmodconfig    clang-16
-arc                               allnoconfig    gcc-15.2.0
-arc                              allyesconfig    clang-23
-arc                   randconfig-001-20260401    clang-23
-arc                   randconfig-002-20260401    clang-23
-arm                               allnoconfig    gcc-15.2.0
-arm                              allyesconfig    clang-16
-arm                   randconfig-001-20260401    clang-23
-arm                   randconfig-002-20260401    clang-23
-arm                   randconfig-003-20260401    clang-23
-arm                   randconfig-004-20260401    clang-23
-arm64                            allmodconfig    clang-23
-arm64                             allnoconfig    gcc-15.2.0
-arm64                 randconfig-001-20260401    gcc-15.2.0
-arm64                 randconfig-002-20260401    gcc-15.2.0
-arm64                 randconfig-003-20260401    gcc-15.2.0
-arm64                 randconfig-004-20260401    gcc-15.2.0
-csky                             allmodconfig    gcc-15.2.0
-csky                              allnoconfig    gcc-15.2.0
-csky                  randconfig-001-20260401    gcc-15.2.0
-csky                  randconfig-002-20260401    gcc-15.2.0
-hexagon                          allmodconfig    gcc-15.2.0
-hexagon                           allnoconfig    gcc-15.2.0
-hexagon               randconfig-001-20260401    gcc-15.2.0
-hexagon               randconfig-002-20260401    gcc-15.2.0
-i386                             allmodconfig    clang-20
-i386                              allnoconfig    gcc-15.2.0
-i386                             allyesconfig    clang-20
-i386        buildonly-randconfig-001-20260401    gcc-14
-i386        buildonly-randconfig-002-20260401    gcc-14
-i386        buildonly-randconfig-003-20260401    gcc-14
-i386        buildonly-randconfig-004-20260401    gcc-14
-i386        buildonly-randconfig-005-20260401    gcc-14
-i386        buildonly-randconfig-006-20260401    gcc-14
-i386                  randconfig-001-20260401    gcc-14
-i386                  randconfig-002-20260401    gcc-14
-i386                  randconfig-003-20260401    gcc-14
-i386                  randconfig-004-20260401    gcc-14
-i386                  randconfig-005-20260401    gcc-14
-i386                  randconfig-006-20260401    gcc-14
-i386                  randconfig-007-20260401    gcc-14
-i386                  randconfig-011-20260401    clang-20
-i386                  randconfig-012-20260401    clang-20
-i386                  randconfig-013-20260401    clang-20
-i386                  randconfig-014-20260401    clang-20
-i386                  randconfig-015-20260401    clang-20
-i386                  randconfig-016-20260401    clang-20
-i386                  randconfig-017-20260401    clang-20
-loongarch                        allmodconfig    clang-23
-loongarch                         allnoconfig    gcc-15.2.0
-loongarch                           defconfig    clang-19
-loongarch             randconfig-001-20260401    gcc-15.2.0
-loongarch             randconfig-002-20260401    gcc-15.2.0
-m68k                             allmodconfig    gcc-15.2.0
-m68k                              allnoconfig    gcc-15.2.0
-m68k                             allyesconfig    clang-16
-m68k                                defconfig    clang-19
-microblaze                        allnoconfig    gcc-15.2.0
-microblaze                       allyesconfig    gcc-15.2.0
-microblaze                          defconfig    clang-19
-mips                              allnoconfig    gcc-15.2.0
-mips                             allyesconfig    gcc-15.2.0
-nios2                            allmodconfig    clang-23
-nios2                             allnoconfig    clang-23
-nios2                               defconfig    clang-19
-nios2                 randconfig-001-20260401    gcc-15.2.0
-nios2                 randconfig-002-20260401    gcc-15.2.0
-openrisc                         allmodconfig    clang-23
-openrisc                          allnoconfig    clang-23
-openrisc                            defconfig    gcc-15.2.0
-parisc                            allnoconfig    clang-23
-parisc                           allyesconfig    clang-19
-parisc                              defconfig    gcc-15.2.0
-parisc                randconfig-001-20260401    gcc-8.5.0
-parisc                randconfig-002-20260401    gcc-8.5.0
-parisc64                            defconfig    clang-19
-powerpc                           allnoconfig    clang-23
-powerpc                       holly_defconfig    clang-23
-powerpc               randconfig-001-20260401    gcc-8.5.0
-powerpc               randconfig-002-20260401    gcc-8.5.0
-powerpc64             randconfig-001-20260401    gcc-8.5.0
-powerpc64             randconfig-002-20260401    gcc-8.5.0
-riscv                            allmodconfig    clang-23
-riscv                             allnoconfig    clang-23
-riscv                            allyesconfig    clang-16
-riscv                               defconfig    gcc-15.2.0
-riscv                 randconfig-001-20260401    gcc-9.5.0
-riscv                 randconfig-002-20260401    gcc-9.5.0
-s390                             allmodconfig    clang-19
-s390                              allnoconfig    clang-23
-s390                                defconfig    gcc-15.2.0
-s390                  randconfig-001-20260401    gcc-9.5.0
-s390                  randconfig-002-20260401    gcc-9.5.0
-sh                               allmodconfig    gcc-15.2.0
-sh                                allnoconfig    clang-23
-sh                               allyesconfig    clang-19
-sh                                  defconfig    gcc-14
-sh                    randconfig-001-20260401    gcc-9.5.0
-sh                    randconfig-002-20260401    gcc-9.5.0
-sparc                             allnoconfig    clang-23
-sparc                               defconfig    gcc-15.2.0
-sparc                 randconfig-001-20260401    clang-16
-sparc                 randconfig-002-20260401    clang-16
-sparc64                          allmodconfig    clang-23
-sparc64                             defconfig    gcc-14
-sparc64               randconfig-001-20260401    clang-16
-sparc64               randconfig-002-20260401    clang-16
-um                               allmodconfig    clang-19
-um                                allnoconfig    clang-23
-um                               allyesconfig    gcc-15.2.0
-um                                  defconfig    gcc-14
-um                             i386_defconfig    gcc-14
-um                    randconfig-001-20260401    clang-16
-um                    randconfig-002-20260401    clang-16
-um                           x86_64_defconfig    gcc-14
-x86_64                           allmodconfig    clang-20
-x86_64                            allnoconfig    clang-23
-x86_64                           allyesconfig    clang-20
-x86_64      buildonly-randconfig-001-20260401    gcc-12
-x86_64      buildonly-randconfig-002-20260401    gcc-12
-x86_64      buildonly-randconfig-003-20260401    gcc-12
-x86_64      buildonly-randconfig-004-20260401    gcc-12
-x86_64      buildonly-randconfig-005-20260401    gcc-12
-x86_64      buildonly-randconfig-006-20260401    gcc-12
-x86_64                              defconfig    gcc-14
-x86_64                                  kexec    clang-20
-x86_64                randconfig-001-20260401    clang-20
-x86_64                randconfig-002-20260401    clang-20
-x86_64                randconfig-003-20260401    clang-20
-x86_64                randconfig-004-20260401    clang-20
-x86_64                randconfig-005-20260401    clang-20
-x86_64                randconfig-006-20260401    clang-20
-x86_64                randconfig-011-20260401    gcc-14
-x86_64                randconfig-012-20260401    gcc-14
-x86_64                randconfig-013-20260401    gcc-14
-x86_64                randconfig-014-20260401    gcc-14
-x86_64                randconfig-015-20260401    gcc-14
-x86_64                randconfig-016-20260401    gcc-14
-x86_64                randconfig-071-20260401    gcc-14
-x86_64                randconfig-072-20260401    gcc-14
-x86_64                randconfig-073-20260401    gcc-14
-x86_64                randconfig-074-20260401    gcc-14
-x86_64                randconfig-075-20260401    gcc-14
-x86_64                randconfig-076-20260401    gcc-14
-x86_64                               rhel-9.4    clang-20
-x86_64                           rhel-9.4-bpf    gcc-14
-x86_64                          rhel-9.4-func    clang-20
-x86_64                    rhel-9.4-kselftests    clang-20
-x86_64                         rhel-9.4-kunit    gcc-14
-x86_64                           rhel-9.4-ltp    gcc-14
-x86_64                          rhel-9.4-rust    clang-20
-xtensa                            allnoconfig    clang-23
-xtensa                           allyesconfig    clang-23
-xtensa                randconfig-001-20260401    clang-16
-xtensa                randconfig-002-20260401    clang-16
+> Now the question is what is expected (CPU) size of a job and for that
+> I'd would consider a distribution like:
+> - 1 job of size nr_cpus, // you'd overcommit your machine with bigger job
+> - 2 jobs of size nr_cpus/2,
+> - 3 jobs of size nr_cpus/3,
+> - ...
+> - nr_cpus jobs of size 1. // you'd underutilize the machine with fewer
+> 
+> Note this is quite naïve and arbitrary deliberation of mine but it
+> results in something like Pareto distribution which is IMO quite
+> reasonable. With (only) that assumption, I can estimate the average size
+> of jobs like
+> 	nr_cpus / (log(nr_cpus) + 1)
+> (it's natural logarithm from harmonic series and +1 is from that
+> approximation too, it comes handy also on UP)
+> 
+> 	log(x) = ilog2(x) * log(2)/log(e) ~ ilog2(x) * 0.69
+> 	log(x) ~ 45426 * ilog2(x) / 65536
+> 
+> or 
+> 	65536*nr_cpus / (45426 * ilog2(nr_cpus) + 65536)
+> 
+> 
+> with kernel functions:
+> 	var1 = 65536*nr_cpus / (45426 * ilog2(nr_cpus) + 65536)
+> 	var2 = DIV_ROUND_UP(65536*nr_cpus, 45426 * ilog2(nr_cpus) + 65536)
+> 	var3 = roundup_pow_of_two(var2)
+> 
+> I hope I don't need to present any more numbers at this moment because
+> the parameter derivation is backed by solid theory ;-) [*]
+> [*]
 
---
-0-DAY CI Kernel Test Service
-https://github.com/intel/lkp-tests/wiki
+It is a elegant method but still not based on the J CPUs.
+
+As you capture the core tension: bounding error wants the threshold
+as small as possible, while preserving laziness wants it as large as
+possible. Any scheme is a compromise between the two.
+
+But there has several practical issues:
+
+The threshold formula is system-wide, while each memcg has its own counter,
+they all evaluate against the same MEMCG_CHARGE_BATCH * f(nr_cpu_ids),
+with no awareness of how many CPUs are actually active for that particular
+memcg. Small tasks with J=2 coexist with large services where J approaches
+nr_cpus, yet they all face the same threshold. The ln-harmonic formula
+optimizes for the average J, but workloads that most critically need
+accurate memory.stat are precisely those spanning many CPUs, well above
+average.
+
+Moreover, the "average J" estimate assumes tasks are uniformly distributed
+across CPUs, which rarely holds in practice with cpuset constraints, NUMA
+affinity, and nested cgroup hierarchies. And even accepting that estimate,
+the data shows ln-harmonic still yields 237MB of error at 2048 CPUs with
+64K pages — still large enough to cause selftest failures.
+
+In short: the theoretical analysis is sound, but the conclusion conflates
+average case with worst case. Under the constraint of a single global
+threshold, sqrt remains the more robust choice.
+
+In future, if the J-sensory threshold per-memcg can be achieved, then your
+ln-harmonic method is the most ideal formula.
+
+To compare the three methods (linear, sqrt, ln-harmonic):
+
+4K page size (BATCH=64):
+
+  CPUs   linear   sqrt     ln-var3
+  --------------------------------
+  1      256KB    256KB     256KB
+  2      512KB    512KB     512KB
+  4      1MB      512KB     512KB
+  8      2MB      768KB     1MB
+  16     4MB      1MB       2MB
+  32     8MB      1.25MB    2MB
+  64     16MB     2MB       4MB
+  128    32MB     2.75MB    8MB
+  256    64MB     4MB       16MB
+  512    128MB    5.5MB     32MB
+  1024   256MB    8MB       64MB
+  2048   512MB    11.25MB   64MB
+
+64K page size (BATCH=16):
+
+  CPUs   linear   sqrt     ln-var3
+  --------------------------------
+  1      1MB      1MB      1MB
+  2      2MB      2MB      2MB
+  4      4MB      2MB      2MB
+  8      8MB      3MB      4MB
+  16     16MB     4MB      8MB
+  32     32MB     5MB      8MB
+  64     64MB     8MB      16MB
+  128    128MB    11MB     32MB
+  256    256MB    16MB     64MB
+  512    512MB    22MB     128MB
+  1024   1GB      32MB     256MB
+  2048   2GB      45MB     256MB
+
+-- 
+Regards,
+Li Wang
+
